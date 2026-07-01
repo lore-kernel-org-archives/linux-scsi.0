@@ -1,103 +1,97 @@
-Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
+Received: from relay.hostedemail.com (smtprelay0017.hostedemail.com [216.40.44.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A69D481229
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Jul 2026 12:48:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABA6E481AA0;
+	Wed,  1 Jul 2026 12:57:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782910136; cv=none; b=i1HSb5a4U+DUulMaCXZAcPDQjyg2ALxDBS1Fw+k2ZTAGV8GBE0dSu6CgRNl+xZp2NPlb7+G05sQVlEqNKzqCobzgLbyAehXhzH+gjzljJnejIat7KeNYANPbc4VNktV/qutTiD/lQxsZDsaFjGNYsV22nSbOeV3Lxy6mku/4P5M=
+	t=1782910668; cv=none; b=a5AC093Rewh3vqcTbhL2Dkcvu4fak6EFZUH0y+kk+ctUBCnUEydxnfcJSJ7Stjf3FyFRnQPdBq8RmLEW6Oc1ICSHhRWjJ3Dvu3dKTZeiMDGpgW79ibADosgCJgTXir+32NORfi6Cpy5G3S6bqT/LAfA2dI95+J5EKDZnDxKXH0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782910136; c=relaxed/simple;
-	bh=KrbAL+jYS+hZiiGaRPke6Ow+yaawnGG5ncHBToAf/Q0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KKxo9AiT95mXozMhnA/FwNiIHK1XxIM/Pzytuvh6EfDPyvYE2wS4bl4Qz6JBZbQ8k+k45W85nOT4BwAsYClqWMU152QngE57TlKeQ4arTLkx8R20v2uy4Qnl7f6mgpUXWVHpZoLZkkzgOrVQ+QApLtDbS6bO2gOnjKzvdswSYbA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
-Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
-	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id A3D4D47855;
-	Wed, 01 Jul 2026 14:48:52 +0200 (CEST)
-Message-ID: <a84b11e8-4205-481e-8da1-17103029940e@proxmox.com>
-Date: Wed, 1 Jul 2026 14:48:51 +0200
+	s=arc-20240116; t=1782910668; c=relaxed/simple;
+	bh=zkYhl3CtbmJbats+wc7zDUgYg3p4SDBgKRAXiMc3XmQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=sAsNwjeekkO0m7607RSc6KKfIvEeHLAI41C8LDvyxrXnUBy3K/ubweXeSrjaGccT8jQPBzELsON+Eds2al9SEPomJRD4XZvvfzUHl57lpBBTFx/oiWN8xErx7JeAKPOa/PeCta/Fns9w8WnAZml0OnRrHbt0jTyDw1pvCSsUwAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+Received: from omf09.hostedemail.com (lb01a-stub [10.200.18.249])
+	by unirelay06.hostedemail.com (Postfix) with ESMTP id 658361C62DE;
+	Wed,  1 Jul 2026 12:57:43 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf09.hostedemail.com (Postfix) with ESMTPA id 322E920025;
+	Wed,  1 Jul 2026 12:57:39 +0000 (UTC)
+Date: Wed, 1 Jul 2026 08:57:40 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: "Peter Wang (=?UTF-8?B?546L5L+h5Y+L?=)" <peter.wang@mediatek.com>
+Cc: "linux-trace-kernel@vger.kernel.org"
+ <linux-trace-kernel@vger.kernel.org>, "CC Chou (=?UTF-8?B?5ZGo5b+X5p2w?=)"
+ <cc.chou@mediatek.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+ "bvanassche@acm.org" <bvanassche@acm.org>, "linux-scsi@vger.kernel.org"
+ <linux-scsi@vger.kernel.org>, "linux-mediatek@lists.infradead.org"
+ <linux-mediatek@lists.infradead.org>, "Chaotian Jing (=?UTF-8?B?5LqV5pyd?=
+ =?UTF-8?B?5aSp?=)" <Chaotian.Jing@mediatek.com>, "Eddie Huang (
+ =?UTF-8?B?6buD5pm65YKR?=)" <eddie.huang@mediatek.com>, "Qilin Tan (
+ =?UTF-8?B?6LCt6bqS6bqf?=)" <Qilin.Tan@mediatek.com>, "Lin Gui (
+ =?UTF-8?B?5qGC5p6X?=)" <Lin.Gui@mediatek.com>, "Yi-fan Peng (
+ =?UTF-8?B?5b2t576/5Yeh?=)" <Yi-fan.Peng@mediatek.com>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "Jiajie Hao (
+ =?UTF-8?B?6YOd5Yqg6IqC?=)" <jiajie.hao@mediatek.com>, "Naomi Chu (
+ =?UTF-8?B?5pyx6Kmg55Sw?=)" <Naomi.Chu@mediatek.com>, "Alice Chao (
+ =?UTF-8?B?6LaZ54+u5Z2H?=)" <Alice.Chao@mediatek.com>, "Ed Tsai (
+ =?UTF-8?B?6JSh5a6X6LuS?=)" <Ed.Tsai@mediatek.com>, wsd_upstream
+ <wsd_upstream@mediatek.com>, "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "Chun-Hung Wu (
+ =?UTF-8?B?5ber6ae/5a6P?=)" <Chun-hung.Wu@mediatek.com>, "Tun-yu Yu (
+ =?UTF-8?B?5ri45pWm6IG/?=)" <Tun-yu.Yu@mediatek.com>
+Subject: Re: [PATCH v3] ufs: core: add hba parameter to trace events
+Message-ID: <20260701085740.218cf4d9@gandalf.local.home>
+In-Reply-To: <e4c090a5b8402fe3db137d986f9a6639de73cc67.camel@mediatek.com>
+References: <20250214083026.1177880-1-peter.wang@mediatek.com>
+	<20260630165612.3e21b510@gandalf.local.home>
+	<20260630174949.16a9d867@gandalf.local.home>
+	<e4c090a5b8402fe3db137d986f9a6639de73cc67.camel@mediatek.com>
+X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: megaraid_sas: fix PRP list out-of-bounds write
-To: Thorsten Leemhuis <regressions@leemhuis.info>, me@magik.net,
- Mats.topstad@intility.no, mail@danielfernau.com
-Cc: chandrakanth.patil@broadcom.com, kashyap.desai@broadcom.com,
- linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
- megaraidlinux.pdl@broadcom.com, regressions@lists.linux.dev,
- shivasharan.srikanteshwara@broadcom.com, sumit.saxena@broadcom.com,
- Friedrich Weber <f.weber@proxmox.com>
-References: <b8fcdb5e-f2be-4bd0-914d-d03e87af9630@leemhuis.info>
- <1cbf0f3e-4d6b-40ce-9d7b-3e9ea7e8f03e@proxmox.com>
- <49954999-5c2e-4fa7-9674-736e5f7b4216@leemhuis.info>
-Content-Language: en-US
-From: Mira Limbeck <m.limbeck@proxmox.com>
-In-Reply-To: <49954999-5c2e-4fa7-9674-736e5f7b4216@leemhuis.info>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Bm-Milter-Handled: 55990f41-d878-4baa-be0a-ee34c49e34d2
-X-Bm-Transport-Timestamp: 1782910126947
+Content-Transfer-Encoding: quoted-printable
+X-Rspamd-Queue-Id: 322E920025
+X-Stat-Signature: x4gaju9sut5o7zrucc5oguhexokm5rdk
+X-Rspamd-Server: rspamout04
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX1/xreLa1BHmWb4rHSrAqeiMAemv580Qk8c=
+X-HE-Tag: 1782910659-907956
+X-HE-Meta: U2FsdGVkX18uy8au4Rgvq2R6ekNAy0sdc9mHg58V3h96aUiu9oQdJ2/1GCr5+z2r+5PpfLpBlBg7IRhUbQeou81TUk42Azl+X2S+Hkty9dWbxZJXyy6N8NggGIn1XLp2xLKWAPQRdrLL4upLNH/ViBJAAHDaNf1Q4Hd47iTapNl7J5CSubOReveK35FqfMZ0OBcViFip23edw6/DjxOR40ny15SkTkLs2pyFRbhRaogeSMlRypQQ7R2j+1RmrMgbCNMmx1cnUoE0wR+6+2JrXLjTcnAf0XpQEy96PopahgsYq/La/2evA5+vZhEEg6fCPQuAHoGW65zPW+4tnIianQzwFA+ax4sQ
 
-On 7/1/26 2:24 PM, Thorsten Leemhuis wrote:
-> On 7/1/26 13:09, Mira Limbeck wrote:
->> We've seen some similar looking logs, but since they didn't mention
->> `prp` at all, we haven't responded here before.
-> 
-> Thx for chiming in here.
-> 
->> Instead we sent a mail
->> to the linux-scsi list [0], but got no response so far.
->>
->> In our case the issue was first introduced by commit:
->> 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
-> 
-> Any reason why you didn't CC the author and the committer of that
-> change? Even if the bug is in the driver that might have been a good
-> idea, but before doing that, let's do something else first:
-> 
->> This is similar to an issue we previously reported with the mpt3sas
->> driver [1].
->>
->> At least for our tests and one of our users we can say with certainty
->> that reducing the queue sectors back to the previous value fixed the
->> issue. In our tests this was done manually, and for one of our users
->> with their root on the disks, it was handled via udev rules.
->>
->> echo 1280 > /sys/block/<dev>/queue/max_sectors_kb
-> You also in your [0] mentioned that 12da89e8844a ("block: open code
-> bio_add_page and fix handling of mismatching P2P ranges") fixed things
-> in v7.0. Make me wonder if that is the case for the others affected by
-> this. Hence:
-> 
-> Lukasz, Mats, Daniel, have you checked if 7.1 or 7.2-rc2 are still affected?
-> 
-> Ciao, Thorsten
-Actually, this only helped in our test cases. Some of our users that
-were affected with kernel 6.17 had no issues with kernel 7.0, while
-others still experience those issues.
-So those 2 patches only fixed the issues for a subset of users.
+On Wed, 1 Jul 2026 06:11:37 +0000
+Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) <peter.wang@mediatek.com> wrote:
+=20
+> However, I am curious: if the HBA is removed, implying that the=20
+> storage would become unusable, might the system encounter an=20
+> I/O hang or shutdown, potentially preventing its detection?=20
+> Perhaps it's a theoretical issue that would not manifest=20
+> in a real-world situation?
 
-Originally we thought that it fixes the issue for those using KIOXIA
-NVMes, while those with Microns were still affected. But since then we
-had additional reports where users with KIOXIA NVMes also still
-experienced issues with kernel 7.0.
-This we only found out last week though.
+Note, it doesn't necessarily mean that the device itself was removed. The
+issue is that a pointer to an allocated descriptor is saved in the ring buf=
+fer.
 
-We're still in the process of finding a reproducer that isn't fixed by
-that change.
+Maybe once the device is created it will never go way. But what happens if
+for some reason the descriptor is freed and reallocated? Now the old
+descriptor pointer is still in the ring buffer.
 
-> 
->> [0]
->> https://lore.kernel.org/all/d171cc76-bf25-48ce-b482-d344669dfc24@proxmox.com/
->> [1]
->> https://lore.kernel.org/all/7a0cfc66-3131-4b94-87f2-cbb96595ebb6@kernel.org/
-> 
+What in the logic guarantees that the pointer will never be freed?
 
+And lets say there is an issue and the hba is freed and you debug this by
+dumping the trace buffer via ftrace_dump_on_oops. Now the dump itself may
+crash and you don't have a way to debug what happened.
+
+One other point that causes issues here. It makes user space tracing
+useless. Try tracing this with "trace-cmd record". These events will not be
+able to be parsed.
+
+-- Steve
 
