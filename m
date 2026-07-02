@@ -1,132 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 599F539DBF7
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 18:11:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B44A339844
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 18:12:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783015897; cv=none; b=eTu/pU81YS0HBO5XYklsu9o9PoxPQI+x2ynDWyHQCKUA5ahS+kXayZYvE0ynzL8QvprBCcSTlZDcXAjUdr0YqAiKrggY4AK6AIceoLV3NP9/nDAhKfnltMxz5yGQ1gEqx8YePqmOZkSguM5DcpUbBGfLPDESD7zFLJUcQa7RDhA=
+	t=1783015960; cv=none; b=P4cCQdOHVynWswGAgCx7qMX3gePKWNeB8745N/fFU4bbl13mQki+IE+6NasNMSWP14a0rpiYGt4dpWib1+XXZoLRvF8S32wjSzzcc+2trbxmVH0Swnm8zEMESZ9reae5G492MuHOF2i9xrBHIBrkDgLSQKsx3gRZip9fHm6OLLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783015897; c=relaxed/simple;
-	bh=VKmDJYcixLqKm9xmJ7RpWcEZGft7Vw0NIa8x9ETs6yA=;
+	s=arc-20240116; t=1783015960; c=relaxed/simple;
+	bh=CIZn3dO5QhDJHu+kv56fAnzazmnxF80XAtWODXedGx8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lnSPdUjPsAr2CeSJDocwGGbvbgJzivGxoJrhTvB5MSA2PiYwUgzaEGdFpgz/TOGksXwFXStw8prCa48ZYBg8u8v34s7eMtUxoabevj8VXMr2s23MPvB4lpKlwhRWT+r9lflcKQ5OSN497b1Gsw40TPV0iFEw+1cs5pk45qMN/tQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dJUAhIJ/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=bLUG1a/8qkot6Fduok8o/P+KLmGZpxbBrala2khkwL95RYkxvHyg8CUJqqrLzyUaBtXShUL/NYsHiP8ldPzCX4WJ/vj+9MWiLcgvijX/ZZfweIwPFs/nJXAQAoIa+HHKrr8FqMi5wxFw4l5PhXIRZJwidGc5otsR8T/6bSnQwfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lrTX3K+9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dJUAhIJ/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2E1D1F000E9;
-	Thu,  2 Jul 2026 18:11:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lrTX3K+9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C22AF1F000E9;
+	Thu,  2 Jul 2026 18:12:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783015896;
-	bh=BrvLD9+rn1M5/Cbrj3q/7qlFjMmdGd7VWKGrxwHLfwE=;
+	s=k20260515; t=1783015959;
+	bh=e8XcgFjZpAWEq9zbP/2tdrVEIEAq7zbK3BppP/QpJQQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dJUAhIJ/wX2L21RtjZ3+tOHVcGsm15eGoFyGQjPHTDfH7xNXS+ZmfVlo0dbIbxV2Q
-	 i8yLl6swzBbwa/uYi+ms98eTH8lgXkIwIWzJY4LngiOqj/GyrPsRGf/RY03KpCkGKz
-	 /vP5hdHMaZ0KKeenljDrzNSFvtOXIf3Vp5lbejAkxka8yrNEooHUc0Q+ZXMUh5dcDy
-	 VPaFfeHXXUOZLxwwH+32hIH9GlVTmHgj/bk07ZRRwaayAc67rWlQjIctD8S1P/DNRZ
-	 zFrUIPrORsCr5IXom0XUz+ULOIDY7Hvd7O7Gw60ROXnvdMNzOOmQ1Dx/RVGfgeNHkk
-	 ddUxfvWaNDDgA==
+	b=lrTX3K+9Dz7yEiMEDatS+E/+mQlN36gOGsfLmhlS19zSaLBqDvCcNcYTQp/k4KUdG
+	 WiUDcNNGGPG5GPIXhMbuUJcpNsHSAYLUOfmdzYxV9yd2ojomAMIlMA4dYKlM9VjCDI
+	 aMTGBhdGENUOOnb1C2ylsuWP3/BdDezdzl32lJeXxfMsVTnZRNONNrdIC9t1gUkwWC
+	 oCAg1E9GR9UmQ6cweImlMfAxufnkG/otb712LTjbAPrhcvceMV7ZS/bYhZoBggS1KD
+	 XIn4XL+GlLKB2H5jCXEUigK/HhffTWhAhPec32ckDzC9q97iyIgOP6dYfgqkcUsxe8
+	 W0KwocqkMhIxw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/8] ibmvfc: Add NOOP command support
+Subject: Re: [PATCH v3 4/8] ibmvfc: define asynchronous sub-queue
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260702-ibmvfc-fpin-support-v3-2-d95b9547cf88@linux.ibm.com>
+In-Reply-To: <20260702-ibmvfc-fpin-support-v3-4-d95b9547cf88@linux.ibm.com>
 References: <20260702-ibmvfc-fpin-support-v3-0-d95b9547cf88@linux.ibm.com>
- <20260702-ibmvfc-fpin-support-v3-2-d95b9547cf88@linux.ibm.com>
+ <20260702-ibmvfc-fpin-support-v3-4-d95b9547cf88@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 18:11:35 +0000
-Message-Id: <20260702181135.D2E1D1F000E9@smtp.kernel.org>
+Date: Thu, 02 Jul 2026 18:12:38 +0000
+Message-Id: <20260702181238.C22AF1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [High] Incomplete and insecure VFC_NOOP handling in `ibmvfc_handle_scrq` =
-leads to protocol bypass and potential data corruption.
-
 Pre-existing issues:
-- [High] Untrusted Pointer Dereference in `ibmvfc_handle_scrq` leading to k=
-ernel panic.
+- [High] This problem wasn't introduced by this patch, but the driver reads=
+ `setup->num_scsi_subq_channels` directly from a hypervisor-modified DMA bu=
+ffer without validating it against the allocated size of the internal queue=
+ array, leading to a potential heap buffer overflow.
 --
 
-commit 026aa88f6415105823a4b94ede2214dbab9c0f42
+commit caceab058540895b7bcd0e5a48d2dfd281f362ec
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-    ibmvfc: Add NOOP command support
-   =20
-    This patch adds support for receiving and recognizing VFC_NOOP
-    messages from VIOS. This is done by defining the VFC_NOOP CRQ format,
-    recognizing the VFC_NOOP CRQ format in the CRQ handler, and setting
-    the "can use VFC_NOOP" bit in the capabilities sent during NPIV login.
+ibmvfc: define asynchronous sub-queue
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvf=
-c.c
-> index b63f41a6cfffd..110d77b9aac32 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+Defines the asynchronous sub-queue structure, modifies the existing
+channel setup structure, adds the asynchronous sub-queue to the
+channels structure, and adds flags needed to tell VIOS to use the
+sub-queue.
 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvf=
+c.h
+> index adfd67e85af86..f38dfae9924ca 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
 [ ... ]
-
-> @@ -4099,6 +4109,10 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *=
-crq, struct ibmvfc_host *vhost
->  		return;
->  	}
-> =20
-> +	/* Some CRQs, e.g. a VFC_NOOP command CRQ, do not have an ioba, so evt =
-is NULL. */
-> +	if (!evt)
-> +		return;
-> +
+> @@ -579,6 +581,7 @@ struct ibmvfc_channel_setup {
+>  	struct srp_direct_buf buffer;
+>  	__be64 reserved2[5];
+>  	__be64 channel_handles[IBMVFC_MAX_CHANNELS];
+> +	__be64 async_subq_handle;
 
 [Severity: High]
-Does this blanket check safely handle VFC_NOOP messages?
+This isn't a bug introduced by this patch, but since the driver reads
+setup->num_scsi_subq_channels directly from a hypervisor-modified DMA buffe=
+r,
+could this lead to a potential heap buffer overflow?
 
-If the VIOS sends a VFC_NOOP message with a valid, non-zero ioba that
-corresponds to an active SCSI command, the sub-CRQ handler bypasses the
-if (!evt) check. It will proceed to validate the event and erroneously
-complete the active SCSI command using the NOOP's payload.
+Looking at drivers/scsi/ibmvscsi/ibmvfc.c:ibmvfc_channel_setup_done():
 
-Additionally, this blanket check silently drops any other malformed zero-io=
-ba
-CRQs without logging them, and bypasses the IBMVFC_SUPPORT_NOOP_CMD capabil=
-ity
-validation that is explicitly implemented in the main ibmvfc_handle_crq()
-handler.=20
+	active_queues =3D be32_to_cpu(setup->num_scsi_subq_channels);
+	scrqs->active_queues =3D active_queues;
+	...
+		for (i =3D 0; i < active_queues; i++)
+			scrqs->scrqs[i].vios_cookie =3D
+				be64_to_cpu(setup->channel_handles[i]);
 
-Should the Sub-CRQ handler explicitly verify crq->format =3D=3D IBMVFC_VFC_=
-NOOP
-exactly like the main handler does?
+If the VIOS partition responds with an unexpectedly large value for
+setup->num_scsi_subq_channels, would the driver write out of bounds into the
+queue array without validating against the allocated size?
 
-[Severity: High]
-This is a pre-existing issue, but can the event validation later in
-ibmvfc_handle_scrq() cause a kernel panic due to a wild pointer dereference?
-
-The ioba is cast directly to the evt pointer. If the hypervisor or VIOS sen=
-ds
-a Sub-CRQ message with a malicious or uninitialized non-zero ioba value, evt
-is dereferenced before it is validated:
-
-drivers/scsi/ibmvscsi/ibmvfc.c:ibmvfc_handle_scrq() {
-    ...
-	if (unlikely(!ibmvfc_valid_event(&evt->queue->evt_pool, evt))) {
-    ...
-}
-
-Could the struct ibmvfc_queue be passed directly to the handler so
-scrq->evt_pool can be used for validation without dereferencing the
-untrusted evt pointer?
-
->  	/* The only kind of payload CRQs we should get are responses to
->  	 * things we send. Make sure this response is to something we
->  	 * actually sent
+>  } __packed __aligned(8);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702-ibmvfc-fpi=
-n-support-v3-0-d95b9547cf88@linux.ibm.com?part=3D2
+n-support-v3-0-d95b9547cf88@linux.ibm.com?part=3D4
