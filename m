@@ -1,105 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78731431E49;
-	Thu,  2 Jul 2026 02:38:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7EF81FF5E3;
+	Thu,  2 Jul 2026 02:44:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782959899; cv=none; b=eofwL23NIdEl4Krg6Ofxe6jO/ifqmIIkHpb6dS93Oh3ssO/plwexzeH2Y34pYr+4GbMF+Mw67tKEzqU2/jFRLE7l6ssmmNlFvXB/zlEyc2BpbXdQiwfQ8w4NPrrxJ0xyZ4/Hstc7sqXAO+/Y6xuTdpFnxZOGlnADIP8QZWG+mOU=
+	t=1782960272; cv=none; b=dcK3ar6lCYPDZBX7ShC63m8lLqnaFWsqWBw2GTG4p+XKgKn+wyNXm2DEgS9ZE1aDtdl0nHTUXCWVN727KN7KbSCh8B29ncyu7EwEObCnlUhkG0ZD59x1azq81Ldu/avUJB/BJGKFMLX5Rvc9CfkkpjjwULDHA3px8/cTqrcGPW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782959899; c=relaxed/simple;
-	bh=vh/jTv7R6a9TeyhyLanp45MTiX3GjgtJpLShHsPG7rM=;
+	s=arc-20240116; t=1782960272; c=relaxed/simple;
+	bh=iaLiBAEXIAQC9OJt2+FV4879LBdJkr2JGxuJIUuXc68=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=YhhfWEq/SD3ZHr3rQL2W7FdO/mLugXLr6+MnwCRiLLp6MkUBm2NwQQkCgpcqBSJ6EycJEOqneudwD/fQcawRypkqN/W4uQ7xqbtukOb/69A0wl7cqj/4vWQXOO/OOkCIuhVBGIXSw21F5KoRGNL1pFJ7vFpNxsIRsdrSCREy5ds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kNhoLGII; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ka1M1RmQETxnM/Zc+HpCkmTbcQ1qieQA8AECTO2uydgz4KSLdJ0dQB6UH3Eqn5xy2WxhMdrxoRalkkCDD/F3I31T2/eCtIZyySgc6uN2mQ80eMcR+z35oDAGOW6XnPZacic4bDfiSxs1ak5u7wMDFF7Evq+89eIgAyw4rkR7G3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j92jm5p3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kNhoLGII"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC27A1F000E9;
-	Thu,  2 Jul 2026 02:38:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j92jm5p3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 207401F000E9;
+	Thu,  2 Jul 2026 02:44:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782959898;
-	bh=b1GXHfFyvAN2Z7/b/Bgo7L2sJPaZrnifzqvI1I3y1/8=;
+	s=k20260515; t=1782960271;
+	bh=k3gy6Cd83Qy4wDk4bfEyPNTCMUN0tEa2iENDgCHUu2U=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kNhoLGIIqxq6zV7xtvVBSfWwjXtyOfPAACYVp4GBeAPC0zAKNjZ2dOHXIqN3JDx2i
-	 oobaSZLU1BFHqjdsLLBh8qhernMKaXaXJRkJJqR99Me8Ye3XHUimcZdcXil7Cxd815
-	 782HMhRSyjdh1KRTSzHuV3AitmlGNGMvwnqOk14CqpoKnu5nsKkVnnVFrNOB6xU4MU
-	 93Umsd6NGOl0F6u7RVNR/A+g698EcfNFKNLUE6BE96mQKkKEQlElisjyW7rH+bxZ3r
-	 2e+VIa8TFyD4B4ljWjgD3WbYkkJqYAZ+VHNvT6JYWMu0voI1IKSvFPHssYQGnNnwsK
-	 2BoThung9Yu5Q==
+	b=j92jm5p3NHpRDcYGdVkDkmksl+LACFjTY1JGxLJDXPWtPIpZ5HQi/FrWY9pT7gEmU
+	 F426Y1f8ldohuEogKvcoMayEGjeSXDJUgQ1+mFdpsYc8uWy/Boz/1OecZZCZt6B4wK
+	 QhGJ6Oi24ePbB/VSq2kSwD8oLoCnVUSqvxsYensMKSkUv7kHteprfVrO1ire+WANgG
+	 h9VdVZH3+ZomPg3KVlNSeElc6MBniXYiwiMr8drIBVKHjpj8VLqwgvS1s9x9SEelFA
+	 tXaI3uCOy6IV5/E5XlYJao4aHMcuFo7w9nSAk7AHjcjWISz1Wkc79OVcjS6lKmEEX1
+	 foIewdp6/6GRg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/3] scsi: ufs: spacemit: dt-bindings: Add UFS
- controller for K3 SoC
+Subject: Re: [PATCH 3/3] riscv: dts: spacemit: k3: Add UFS support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yixun Lan" <dlan@kernel.org>
-Cc: robh@kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260702-08-k3-ufs-support-v1-1-1a64a3ab128f@kernel.org>
+Cc: devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260702-08-k3-ufs-support-v1-3-1a64a3ab128f@kernel.org>
 References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
- <20260702-08-k3-ufs-support-v1-1-1a64a3ab128f@kernel.org>
+ <20260702-08-k3-ufs-support-v1-3-1a64a3ab128f@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 02:38:17 +0000
-Message-Id: <20260702023817.AC27A1F000E9@smtp.kernel.org>
+Date: Thu, 02 Jul 2026 02:44:30 +0000
+Message-Id: <20260702024431.207401F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [Low] The example device tree node is missing the required `interrupts` p=
-roperty, causing schema validation (`dt_binding_check`) to fail.
-- [Low] The `freq-table-hz` property in the example uses an invalid flat ar=
-ray syntax for a matrix property and relies on a deprecated binding.
+- [Low] Undeclared clock macro CLK_APMU_UFS_REFCLK will break device tree c=
+ompilation.
+- [Low] The `ufshc@c0e00000` node is placed out of order inside the `soc` b=
+us node.
+- [Low] Missing commas in the freq-table-hz array will cause dtbs_check sch=
+ema validation to fail.
 --
 
-commit 1206e23c10bdd35379971f48c29e246d5b43200d
+commit 065548f4228bb50038a171b531eac2901642579a
 Author: Yixun Lan <dlan@kernel.org>
 
-scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
+riscv: dts: spacemit: k3: Add UFS support
 
-Document the compatible for UFS (Universal Flash Storage) Host Controller
-which found in SpacemiT K3 SoC chip. This adds the YAML schema defining=20
-features like MIPI UniPro v1.61 and M-PHY v3.0 compliance.
-
-> diff --git a/Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.yaml=
- b/Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.yaml
-> new file mode 100644
-> index 0000000000000..e6cb6fb2496c8
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.yaml
+This commit adds UFS Host Controller support for the SpacemiT K3 SoC. It al=
+so
+enables it on both the Pico-ITX and CoM260-IFX boards.
 
 [ ... ]
 
-> +examples:
-> +  - |
-> +    #include <dt-bindings/clock/spacemit,k3-clocks.h>
-> +    #include <dt-bindings/reset/spacemit,k3-resets.h>
-> +    ufs@c0e00000 {
-> +        compatible =3D "spacemit,k3-ufshc";
-> +        reg =3D <0xc0e00000 0x40000>;
+> diff --git a/arch/riscv/boot/dts/spacemit/k3.dtsi b/arch/riscv/boot/dts/s=
+pacemit/k3.dtsi
+> index 19fc9b49668ed..6c0b0598d5c86 100644
+> --- a/arch/riscv/boot/dts/spacemit/k3.dtsi
+> +++ b/arch/riscv/boot/dts/spacemit/k3.dtsi
+> @@ -1186,5 +1186,18 @@ maplic: interrupt-controller@f1800000 {
+>  			riscv,num-sources =3D <512>;
+>  			status =3D "reserved";
+>  		};
+> +
+> +		ufshc: ufshc@c0e00000 {
 
 [Severity: Low]
-Does this example node miss the interrupts property? The included
-ufs-common.yaml schema requires an interrupts property, which might cause
-make dt_binding_check to fail validation here.
+Is this node placed in the correct order? The ufshc@c0e00000 node is append=
+ed
+at the end of the file, after interrupt-controller@f1800000. Should child n=
+odes
+of a bus be sorted in ascending order by their unit-address?
 
-> +        clocks =3D <&syscon_apmu CLK_APMU_UFS_ACLK>,
-> +        <&syscon_apmu CLK_APMU_UFS_REFCLK>;
-> +        clock-names =3D "aclk", "ref_clk";
-> +        resets =3D <&syscon_apmu RESET_APMU_UFS_ACLK>;
-> +        freq-table-hz =3D <491520000 491520000 19200000 19200000>;
+> +			compatible =3D "spacemit,k3-ufshc";
+> +			reg =3D <0x0 0xc0e00000 0x0 0x40000>;
+> +			clocks =3D <&syscon_apmu CLK_APMU_UFS_ACLK>,
+> +				 <&syscon_apmu CLK_APMU_UFS_REFCLK>;
 
 [Severity: Low]
-Is this the correct formatting for freq-table-hz? This property expects a
-multi-dimensional array, so writing it as a flat array (rather than
-<A B>, <C D>) will likely cause dt-schema validation to fail.
+Does this undeclared clock macro CLK_APMU_UFS_REFCLK cause the device tree
+compilation (make dtbs) to fail with a syntax error?
 
-Also, does this introduce a deprecated property to a new binding?
+> +			clock-names =3D "aclk", "ref_clk";
+> +			resets =3D <&syscon_apmu RESET_APMU_UFS_ACLK>;
+> +			interrupts =3D <135 IRQ_TYPE_LEVEL_HIGH>;
+> +			freq-table-hz =3D <491520000 491520000 19200000 19200000>;
 
-> +        lanes-per-direction =3D <2>;
-> +    };
+[Severity: Low]
+Will the missing commas here cause dtbs_check schema validation to fail?
+
+The ufs-common.yaml schema requires freq-table-hz to be a list of arrays
+(min/max frequency tuples per clock). When written as a flat array without
+separating commas, dtc processes it into a single array which the YAML sche=
+ma
+validator may reject since it expects exact 2-element inner tuples.
+
+> +			lanes-per-direction =3D <2>;
+> +			status =3D "disabled";
+> +		};
+>  	};
+>  };
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702-08-k3-ufs-=
-support-v1-0-1a64a3ab128f@kernel.org?part=3D1
+support-v1-0-1a64a3ab128f@kernel.org?part=3D3
