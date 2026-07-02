@@ -1,145 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0BCB17A2F6
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 04:12:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD7F30F52A;
+	Thu,  2 Jul 2026 04:17:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782965537; cv=none; b=CtP4XSJNmjehENH/qLq5Q+QwpIejjXUWf2WSj96LCNVmY40Cd8WM2KXUrmK9DNkJlVlCJhVwwl0e28L4HhjpqkIt5tkrqB5CjLlkcUH1a8kVK0F/OlbQX1PKGJiumlLDwAsqtx58iNvjztfwlz68sXb+RPNB/qZ/evCbLeKfDRs=
+	t=1782965863; cv=none; b=OWy6cPJJconuL7yUsu78lmBGMuwM8/aXG5UiVRjFn5s5ij/E4kSqQSGoglJCWC0qJzOxLRn8AxpoO/axHFA2NHN4UgXWOoymkCYAma7GFObrYUEud4f/BHGZSodqjlzXguhs8bjDeCZPJ7WE6TxDae+pieWU/iLJr8ojsut6Jvw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782965537; c=relaxed/simple;
-	bh=FjgTOXgnM2K3xDeWprQgnzDAJxH78bqWqK3p3GeEckM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PYPOZu49SKSDiUYh9GaR44U2P/gucE8rEvkFsLP3/LXQ/J2lM8fYLvWB5U+VVl7dkEq07OwOLgN39GcwDiw6+EwC7MJJv72QT4rDBOw90ItUC5EIvzeWjLKfF6dRWxP39lkwhkC/TezdMBn8WYVZaHflu4kOdiKdlJxUt37BmHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GXO7HYXL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782965863; c=relaxed/simple;
+	bh=Eh1S6f/p1a+pqy1wseo/5q5I6puAwd7ZwhEiGMCDyQM=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dATvvUtVOtJYJ0jnOUCWSEdwAJfvQiQ45YEO9CxzXcGhRoS7iorEnEEVYPLh3fjLKQ/uI+ADpSLL44WKwTqEIL9sgZnP51LQHONeIXG0N/U+yaVD2gTn6yi8c4FpFr8R0kJKF8RoD8CxAFN8Yn8EA4VTU3L3YxbnH9owA74VCEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=WFLMT+vv; arc=none smtp.client-ip=113.46.200.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GXO7HYXL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15EE31F000E9;
-	Thu,  2 Jul 2026 04:12:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782965536;
-	bh=TGluO1vohf5oKGgnwnVYdizqb+xc5MTDuY9zUg9IP1s=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GXO7HYXL49nLV/5MRPeI3UXkG+usUzRQUmMvdaznpMk98yXJ9OYku5aLsGrvR23Lf
-	 KP+obXxDbWDiJbIt6xVJmrX0YA17HpxQbJCWSCAah8Oq7pQAes3FFfnnx+rlUk3oFh
-	 XdVAPh+FNO2T29hGF5o3+kZGVB8nl/wo+fdSvaZPyXTwLEIxR9FdcKLHahzc2w/kqX
-	 lVwOrjad0287Lk/DjVYSxgaikywLQv0kxvG4EZJtdNJsT9eYvKHSMWfrp7Pbg7JJYm
-	 AWS45GKvujueqHtydsoU6WPGac5xZ4GnWfj6CZ9E+STFj+E5myOb2LIvq3XPuzlb7m
-	 IOBa4WqN4F4Jw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] scsi: scsi_lib: add spinup_notify callback for
- ASC/ASCQ=0x04/0x11
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Xingui Yang" <yangxingui@huawei.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260702035724.2059166-2-yangxingui@huawei.com>
-References: <20260702035724.2059166-1-yangxingui@huawei.com>
- <20260702035724.2059166-2-yangxingui@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 04:12:15 +0000
-Message-Id: <20260702041216.15EE31F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="WFLMT+vv"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=83tRieJRpHXzPE2uWQuHWYJ1Y5EHPHIlqvfzV+ivG80=;
+	b=WFLMT+vvqVs7UP8prS05a0Ks8NDwmRhoR6gPyjgj8/P0yYJ8fdDs9ETUzuAgDSXFMWxcrRJoA
+	6xwiB4t51JWB5W988uTBrNp+fw0rECk4AziIsJs6BzzaQDCB7sMIqme+BMkPIRbbuN0pCAdFH/W
+	LKgrRuB//HKq8N7Ri2RPJH0=
+Received: from mail.maildlp.com (unknown [172.19.163.0])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4grNFl2vr4z1T4k9;
+	Thu,  2 Jul 2026 11:50:35 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id 41EAB4057F;
+	Thu,  2 Jul 2026 11:59:27 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Thu, 2 Jul 2026 11:59:26 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<john.g.garry@oracle.com>, <dlemoal@kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+Subject: [PATCH 0/2] scsi: support spinup notification for SAS SSP devices in Active_Wait/Idle_Wait state
+Date: Thu, 2 Jul 2026 11:57:22 +0800
+Message-ID: <20260702035724.2059166-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] The `spinup_notify` API lacks context documentation, risking `sche=
-duling while atomic` bugs in hardware drivers.
-- [High] Unmitigated concurrent `spinup_notify` invocations could flood LLD=
-D hardware queues.
---
+When a SAS HDD connected via SSP (Serial Attached SCSI Protocol) is powered
+up with the RNOT (Ready Not Optimized) bit set, the device enters the
+Active_Wait or Idle_Wait power state per the SAS protocol specification. In
+this state, the device does not respond to standard SCSI START_STOP spinup
+commands and instead returns NOT_READY with ASC/ASCQ = 0x04/0x11 ("Logical
+unit not ready, notify (enable spinup) required").
 
-commit 171fafeb5fbd92de731525186cc8f26d24a7be8e
-Author: Xingui Yang <yangxingui@huawei.com>
+Without handling this condition, the SCSI mid-layer will indefinitely retry
+the command with ACTION_DELAYED_RETRY, resulting in the disk never spinning
+up and becoming unusable. A typical manifestation is:
 
-scsi: scsi_lib: add spinup_notify callback for ASC/ASCQ=3D0x04/0x11
+  sd 4:0:9:0: [sde] Spinning up disk...
+  ...not responding...
+  sd 4:0:9:0: [sde] Sense Key : Not Ready
+  sd 4:0:9:0: [sde] Add. Sense: Logical unit not ready, notify (enable spinup) required
 
-When a SCSI device returns NOT_READY with ASC/ASCQ =3D 0x04/0x11 ("notify
-(enable spinup) required"), the device is in Active_Wait or Idle_Wait power
-state. Add an optional spinup_notify callback to struct scsi_host_template
-that is invoked before ACTION_DELAYED_RETRY.
+To resolve this, the SAS controller needs to send a NOTIFY(ENABLE SPINUP)
+primitive to the target phy, which transitions the device out of the waiting
+state and allows normal spinup to proceed.
 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index daeb3693fe559..140c41a2fe03b 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -905,6 +905,10 @@ static void scsi_io_completion_action(struct scsi_cm=
-nd *cmd, int result)
->  				case 0x1a: /* start stop unit in progress */
->  				case 0x1b: /* sanitize in progress */
->  				case 0x1d: /* configuration in progress */
-> +					if (sshdr.ascq =3D=3D 0x11 &&
-> +					    cmd->device->host->hostt->spinup_notify)
-> +						cmd->device->host->hostt->spinup_notify(
-> +							cmd->device);
+This patch series addresses the issue:
 
-[Severity: High]
-Could this cause a regression by flooding hardware queues with concurrent
-spinup_notify invocations?
+Adds a new optional spinup_notify callback to struct scsi_host_template
+in the SCSI mid-layer. When ASC/ASCQ = 0x04/0x11 is detected in
+scsi_io_completion_action(), the callback is invoked before the mid-layer
+falls through to ACTION_DELAYED_RETRY, giving the LLDD an opportunity to
+perform controller-specific spinup notification.
 
-If multiple async commands are in flight when a device goes into a standby
-state, they will all fail and return not ready with ascq =3D=3D 0x11 almost
-simultaneously.
+Xingui Yang (2):
+  scsi: scsi_lib: add spinup_notify callback for ASC/ASCQ=0x04/0x11
+  scsi: hisi_sas: add spinup_notify callback to handle
+    Active_Wait/Idle_Wait SSP devices
 
-Since scsi_io_completion_action() invokes spinup_notify unconditionally for
-every command, this could cause a thundering herd.
+ drivers/scsi/hisi_sas/hisi_sas.h       |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 25 +++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  1 +
+ drivers/scsi/scsi_lib.c                |  4 ++++
+ include/scsi/scsi_host.h               |  9 +++++++++
+ 7 files changed, 42 insertions(+)
 
-For example, in the subsequent patch for hisi_sas, this triggers concurrent,
-unlocked read-modify-write operations on the SL_CONTROL register:
+-- 
+2.43.0
 
-hisi_sas_v3_hw.c:sl_notify_ssp_v3_hw() {
-    ...
-    sl_control |=3D SL_CONTROL_NOTIFY_EN_MSK;
-    hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-    ...
-}
-
->  					action =3D ACTION_DELAYED_RETRY;
->  					break;
->  				case 0x0a: /* ALUA state transition */
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 7e2011830ba4b..500fad5ffab68 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -374,6 +374,15 @@ struct scsi_host_template {
->  #define SCSI_ADAPTER_RESET	1
->  #define SCSI_FIRMWARE_RESET	2
-> =20
-> +	/*
-> +	 * Optional callback invoked when a device returns NOT_READY with
-> +	 * ASC/ASCQ =3D 0x04/0x11 ("notify (enable spinup) required").
-> +	 * This allows LLDDs to perform controller-specific spinup
-> +	 * notification before the mid-layer retries.
-> +	 *
-> +	 * Status: OPTIONAL
-> +	 */
-> +	void (*spinup_notify)(struct scsi_device *sdev);
-
-[Severity: High]
-Should this document the context constraints to prevent scheduling while
-atomic regressions?
-
-Since scsi_io_completion_action() is called from atomic context, any driver
-implementing this callback must not sleep.
-
-Without this documentation, it is easy to introduce bugs. For instance, the
-subsequent patch in this series calls msleep(1) inside sl_notify_ssp_v3_hw()
-via this callback:
-
-hisi_sas_v3_hw.c:sl_notify_ssp_v3_hw() {
-    ...
-    msleep(1);
-    ...
-}
-
-> =20
->  	/*
->  	 * Name of proc directory
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702035724.2059=
-166-1-yangxingui@huawei.com?part=3D1
