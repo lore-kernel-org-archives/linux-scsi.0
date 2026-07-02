@@ -1,225 +1,182 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5872035B653
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 18:14:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 251401C695
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 18:16:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783016043; cv=none; b=K52wnmjp2ZNqplSgKAaAGL+mwXryWocHJONkeAb6t3gC6Zb9oRB5sHhS9oVxP5LuuifQnIKM6GDSEmLD9gxNVPP5uLkDm/H8wzpzsV/VHjE0aGeDNQWU5SQfVGktHGPt21Rnc8wDzLME2CLj6d+07gbQUVqRmqLo95lZviem6ZQ=
+	t=1783016196; cv=none; b=Rs1RGZ99nkUlNFrrfWPYlQ5zxlJ2NLZinE+gZpkc4Sgb86aYFp3wZfzmmIF0wVRdjRD1pT5/l9i4NWW5EqRaflQeiBqLLp56xmLq1Lce1rx8c2oIH+Je0ul+RoCnUZ6Pbx1ghmYxBnVuvHItewfPRMAtri1/CsMs8aU9f8WPzsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783016043; c=relaxed/simple;
-	bh=pvLCpz+dDomQwOPQO2i2wt+idJSzmtia2VEC1TbrXbc=;
+	s=arc-20240116; t=1783016196; c=relaxed/simple;
+	bh=S3OEemLAj24uCxbKOVOriUGCDtwHvdhp7IsQXw6TbtA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nQIDoFKwQvwzRLtE1EME78Czq7wdhVei7m99MLxtoNLGC5TsS4ZIdP/CBGHNbUWOvAHPuhZySQvDCiYvFTL1LDce44z2qBx7N8ASoD+9lqwS4DSiLSjnOAicMLLacFXofdcMyZEwjTmHUM4rvMbyJKkmAaHNybVOEcRVGC+PAVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WBeFoubD; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=OgxOP8n1X/Su7bw2Z6u/OrhRIlNfoLxc7sI6dzsl8yffz0A2wYgimz2UfNGYbVRRsDLWpjUWtZC1WZEjsRvvM0s8iYFL/RIu527lwM4JdWdx70cRgK4XBWHfloVpPI0L29yVF5SYs8LuNkN01XXLQiRgmExjcjOB+ghxJqjdFRc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ln8Hoh/p; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WBeFoubD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D874A1F000E9;
-	Thu,  2 Jul 2026 18:14:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ln8Hoh/p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D11571F000E9;
+	Thu,  2 Jul 2026 18:16:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783016041;
-	bh=8wO9OelhFRWIV7tGPYv/eNnOygzYlnSFT5PYNb+j3A8=;
+	s=k20260515; t=1783016195;
+	bh=aqE1Zn8M8PYoR7f680eYsdo9d0k3o8o0IfDC+W0zBhA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WBeFoubDIphFn5/3sUF6TdTGy+L377di/rqOFGll1cNf1P4Jj8Se2uRDXpA2kj9wO
-	 eYAo57GwlZELXfjZ6+umD6BI+3CFF26Q42sPsqZz1GB/MSIRyuFflTuMPK5QAckph9
-	 LezGJwo8CPQEiK3KUMPxGdLZzAqLUC5vXJJ9m4x0VCozia+IslGEXRIyKTvLvvk6Q6
-	 ThpPe4fdMSiPIeDFKLIfjkUyfn7vzLKXStmXzWfrZLirZlLzVD49UjsT2TRur+VOXa
-	 HQghc1XCbF0nNZyLvUDKeI8ksx8dGvWE9K2Nk34QSMkH2YXdMhMKKBD7jfcJRISHWZ
-	 5GEItQd7mywtQ==
+	b=Ln8Hoh/prvNN+8b+RN9tHsu0e9xMfWT09eqjoGCT3BqKIkAjOqx5wF2JkAwtbrPZP
+	 ASYaJYCPQg1GhL1gRJZKpSrZrG0CgcTxm1Okj+T6ItJirQvDqCtdtKqg9VXoqK/nIp
+	 eF1qGUZws47doCNqEJpTbhy46eJFEBkqUNPKvzWhQNFXGRT2MyLNcz/N+F+AxFgmGG
+	 9MI5mAdvpZZa3XoQFwDXdu4k42W+DgUGXLezcyall4ED1TULBO1jJm7AFxnthk6ELG
+	 LxrVx9BP0uDvLu17G/lXZKlpmXvkF+fvAhT30gzcLZccYy8nPvFZjE0naAeFw1ySSD
+	 ApAqpOBKtT1bQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 6/8] ibmvfc: extend async event handlers to handle
- async sub queue events
+Subject: Re: [PATCH v3 1/8] ibmvfc: add basic FPIN support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260702-ibmvfc-fpin-support-v3-6-d95b9547cf88@linux.ibm.com>
+In-Reply-To: <20260702-ibmvfc-fpin-support-v3-1-d95b9547cf88@linux.ibm.com>
 References: <20260702-ibmvfc-fpin-support-v3-0-d95b9547cf88@linux.ibm.com>
- <20260702-ibmvfc-fpin-support-v3-6-d95b9547cf88@linux.ibm.com>
+ <20260702-ibmvfc-fpin-support-v3-1-d95b9547cf88@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 18:14:00 +0000
-Message-Id: <20260702181400.D874A1F000E9@smtp.kernel.org>
+Date: Thu, 02 Jul 2026 18:16:34 +0000
+Message-Id: <20260702181634.D11571F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-
-New issues:
-- [Critical] Out-of-bounds Read and Type Confusion due to missing loop exit=
- check.
-- [High] Use-after-free race condition due to unlocked access without refer=
-ence counting.
-- [Medium] Unconditional read of `subq->id.node_name` without validating th=
-e `IBMVFC_ASYNC_ID_IS_ASSOC_ID` flag.
-- [Low] Dead code due to impossible null check `(!crq && !subq)`.
-
-Pre-existing issues:
-- [High] Missing read-before-write memory barrier when yielding asynchronou=
-s queue descriptors.
+- [Critical] Use-After-Free (UAF) on target structure during asynchronous F=
+PIN processing.
+- [High] Out-of-bounds Memory Access / Type Confusion due to misused list i=
+terator.
+- [Medium] Incorrect lifecycle cleanup ordering allows FPIN work item to ru=
+n on a removed transport device.
+- [Medium] The KUnit test unconditionally fails on systems without the IBM =
+Virtual FC hardware instead of gracefully skipping.
 --
 
-commit a60f2aaa0542637dd0e4a584dadf2c01fa2e0409
+commit ef1762da1f48d8a096031c317c4a9bf573f1b39e
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-ibmvfc: extend async event handlers to handle async sub queue events
+ibmvfc: add basic FPIN support
 
-This patch extends the ibmvfc driver to process asynchronous sub-queue CRQs=
-=20
-alongside the existing async CRQs. It modifies ibmvfc_handle_async and=20
-ibmvfc_process_async_work to handle the new sub-queue event structures.
+This commit adds basic FPIN message support to the ibmvfc driver. It adds
+FPIN handling to the async event handler, offloads processing to a work
+queue, and converts the VIOS FPIN messages to struct fc_els_fpin.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvf=
 c.c
-> index 804887fb56357..4678d76c84fe2 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
 [ ... ]
-> @@ -3356,26 +3377,51 @@ static void ibmvfc_process_async_work(struct work=
-_struct *work)
->  {
+> @@ -3185,16 +3189,228 @@ static const char *ibmvfc_get_link_state(enum ib=
+mvfc_ae_link_state state)
 [ ... ]
->  	aw =3D container_of(work, struct ibmvfc_async_work, async_work_s);
->  	vhost =3D aw->vhost;
-> +	is_subq =3D aw->is_subq;
-> +	if (is_subq)
-> +		subq =3D &aw->crq.subq;
-> +	else
-> +		crq =3D &aw->crq.async_crq;
-> =20
-> -	if (!crq->scsi_id && !crq->wwpn && !crq->node_name)
-> +	if (!crq && !subq) {
-
-[Severity: Low]
-Is this null check reachable? Since crq and subq are assigned the addresses
-of fields inside the aw struct, it appears they can never evaluate to NULL,
-making this check and the following error branch dead code.
-
-> +		dev_err_ratelimited(vhost->dev,
-> +				    "FPIN event received, unable to process\n");
-> +		goto end;
-> +	}
-> +
-> +	if (crq) {
-> +		wwpn =3D crq->wwpn;
-> +		node_name =3D crq->node_name;
-> +		scsi_id =3D crq->scsi_id;
-> +	} else {
-> +		wwpn =3D subq->wwpn;
-> +		node_name =3D subq->id.node_name;
-
-[Severity: Medium]
-Does this code safely read the node_name field?=20
-
-The id field is a union of node_name and assoc_id. If the firmware sets the=
-=20
-IBMVFC_ASYNC_ID_IS_ASSOC_ID flag on this sub-queue event, wouldn't this=20
-unconditional read of node_name result in comparing an association ID again=
-st=20
-tgt->ids.node_name later on, potentially causing valid events to be discard=
-ed?
-
-> +		scsi_id =3D 0;
-> +	}
-> +
-> +	if (!scsi_id && !wwpn && !node_name)
->  		goto end;
-> =20
->  	spin_lock_irqsave(vhost->host->host_lock, flags);
->  	list_for_each_entry_safe(tgt, next, &vhost->targets, queue) {
-> -		if (crq->scsi_id && cpu_to_be64(tgt->scsi_id) !=3D crq->scsi_id)
-> +		if (scsi_id && cpu_to_be64(tgt->scsi_id) !=3D scsi_id)
->  			continue;
-> -		if (crq->wwpn && cpu_to_be64(tgt->ids.port_name) !=3D crq->wwpn)
-> +		if (wwpn && cpu_to_be64(tgt->ids.port_name) !=3D wwpn)
->  			continue;
-> -		if (crq->node_name && cpu_to_be64(tgt->ids.node_name) !=3D crq->node_n=
+> +static void ibmvfc_process_async_work(struct work_struct *work)
+> +{
+[ ... ]
+> +	spin_lock_irqsave(vhost->host->host_lock, flags);
+> +	list_for_each_entry_safe(tgt, next, &vhost->targets, queue) {
+> +		if (crq->scsi_id && cpu_to_be64(tgt->scsi_id) !=3D crq->scsi_id)
+> +			continue;
+> +		if (crq->wwpn && cpu_to_be64(tgt->ids.port_name) !=3D crq->wwpn)
+> +			continue;
+> +		if (crq->node_name && cpu_to_be64(tgt->ids.node_name) !=3D crq->node_n=
 ame)
-> +		if (node_name && cpu_to_be64(tgt->ids.node_name) !=3D node_name)
->  			continue;
->  		if (!tgt->rport)
->  			continue;
-> @@ -3388,41 +3434,71 @@ static void ibmvfc_process_async_work(struct work=
-_struct *work)
->  		goto end;
->  	}
+> +			continue;
+> +		if (!tgt->rport)
+> +			continue;
+> +		break;
+> +	}
+> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+> +
+> +	if (!tgt || !tgt->rport) {
+
+[Severity: High]
+Does this list iterator evaluation correctly determine if the target was fo=
+und?
+
+If an asynchronous FPIN event is received with a wwpn or scsi_id that does =
+not
+match any active target (for example, immediately after a target disconnect=
+s),
+the list_for_each_entry_safe() loop finishes without executing a break.
+At this point, the list iterator tgt points to the list head, not NULL.
+
+The validation check if (!tgt || !tgt->rport) is bypassed because tgt is a
+valid pointer, and its rport member maps to vhost->crq.msgs which contains a
+valid initialized pointer. This causes the function to mistakenly treat the
+vhost struct fields as a target struct, which can result in an out-of-bounds
+read and a crash.
 
 [Severity: Critical]
-If the list iteration finishes without finding a match, doesn't tgt end up
-pointing to the list head (&vhost->targets) rather than a valid target?=20
+Is it possible for a concurrent system event to free the target structure h=
+ere?
 
-If so, the subsequent check if (!tgt || !tgt->rport) operates on this
-invalid pointer. Since rport happens to be at an offset that might overlap
-with valid data in the host struct, could this bypass the safety check
-and lead to memory corruption when accessing tgt->wwpn or tgt->vhost->host=
-=20
-when creating the FPIN descriptor?
+When the target is successfully matched in the loop, the spinlock
+vhost->host->host_lock is immediately dropped. The function proceeds to acc=
+ess
+tgt->wwpn and tgt->vhost->host to populate the FPIN descriptor without acqu=
+iring
+a reference count via kref_get(&tgt->kref).
 
-> -	fpin =3D ibmvfc_basic_fpin_to_desc(crq, tgt->wwpn);
-> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+Because ibmvfc_process_async_work() runs asynchronously in fpin_workq, a
+concurrent event (such as a link down or fabric logout) could acquire the
+host lock, delete the target, and invoke kref_put(), freeing the memory for
+tgt. The subsequent reads by this worker thread would then result in a
+use-after-free.
 
-[Severity: High]
-Is it safe to drop the vhost->host->host_lock here without first acquiring
-a reference to tgt via kref_get(&tgt->kref)?=20
-
-Could a concurrent thread processing a logout execute ibmvfc_del_tgt and fr=
-ee=20
-the target memory before this async work thread finishes accessing tgt->wwp=
-n=20
-and tgt->vhost->host?
-
+> +		dev_err_ratelimited(vhost->dev, "Invalid target for FPIN\n");
+> +		goto end;
+> +	}
 [ ... ]
-> @@ -3388,41 +3434,71 @@ VISIBLE_IF_KUNIT void ibmvfc_handle_async(void *c=
-rq,
-> +	if (is_subq) {
-> +		subq =3D crq;
-> +		event =3D be16_to_cpu(subq->event);
-> +		link_state =3D subq->link_state;
-> +		scsi_id =3D 0;
-> +		wwpn =3D subq->wwpn;
-> +		node_name =3D subq->id.node_name;
+> @@ -6453,6 +6686,8 @@ static void ibmvfc_remove(struct vio_dev *vdev)
+>  	ibmvfc_release_crq_queue(vhost);
+> =20
+>  	ibmvfc_free_mem(vhost);
+> +	destroy_workqueue(vhost->fpin_workq);
+> +	vhost->fpin_workq =3D NULL;
+>  	spin_lock(&ibmvfc_driver_lock);
 
 [Severity: Medium]
-Similar to the question above in ibmvfc_process_async_work, is it safe to=20
-read node_name here without first verifying the IBMVFC_ASYNC_ID_IS_ASSOC_ID=
-=20
-flag in subq->flags?
+What prevents pending FPIN tasks from executing on removed infrastructure?
+
+The destroy_workqueue(vhost->fpin_workq) call occurs at the very end of
+ibmvfc_remove(), long after fc_remove_host(vhost->host) and
+scsi_remove_host(vhost->host) have been called earlier in the lifecycle.
+
+Because destroy_workqueue() flushes and executes all pending work items, any
+queued asynchronous FPIN messages will be processed against a host whose rp=
+orts
+are deleted and whose sysfs transport representation has been torn down.
 
 [ ... ]
-> @@ -3492,16 +3568,26 @@ VISIBLE_IF_KUNIT void ibmvfc_handle_async(void *c=
-rq,
->  	default:
-> -		dev_err(vhost->dev, "Unknown async event received: %lld\n", crq->event=
-);
-> +		dev_err(vhost->dev, "Unknown async event received: %llu\n", event);
->  		break;
->  	}
-> +
-> +	if (is_subq)
-> +		subq->valid =3D 0;
-> +	else
-> +		async_crq->valid =3D 0;
-> +	wmb();
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
+/ibmvfc_kunit.c
+> new file mode 100644
+> index 0000000000000..e41e2a49e5497
+> --- /dev/null
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+[ ... ]
+> @@ -0,0 +1,131 @@
+[ ... ]
+> +static void ibmvfc_async_fpin_test(struct kunit *test)
+> +{
+[ ... ]
+> +	headp =3D ibmvfc_get_headp();
+> +	KUNIT_ASSERT_FALSE_MSG(test, list_empty(headp), "No ibmvfc devices avai=
+lable\n");
 
-[Severity: High]
-This is a pre-existing issue, but does this code need a full memory barrier
-before clearing the valid bit?=20
+[Severity: Medium]
+Could this KUnit test gracefully skip instead of forcing a hard failure on
+systems without the IBM Virtual FC hardware?
 
-The driver reads the DMA-mapped payload earlier in ibmvfc_handle_async, and=
-=20
-setting valid =3D 0 yields the slot back to the hardware. On architectures =
-like=20
-PowerPC, without a read-before-write mb() before the valid assignment, coul=
-d=20
-the CPU reorder the write before the payload reads, allowing hardware to=20
-overwrite the event data while the driver is still processing it?
-
->  }
->  EXPORT_SYMBOL_IF_KUNIT(ibmvfc_handle_async);
+The test unconditionally asserts that ibmvfc_head is not empty. Executing t=
+his
+module on architectures or systems lacking the specific IBM POWER Virtual FC
+hardware directly invokes a failure instead of yielding via kunit_skip().
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702-ibmvfc-fpi=
-n-support-v3-0-d95b9547cf88@linux.ibm.com?part=3D6
+n-support-v3-0-d95b9547cf88@linux.ibm.com?part=3D1
