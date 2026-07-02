@@ -1,110 +1,110 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C7AC3E173B
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 08:08:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 021E642B72A
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 08:21:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782979710; cv=none; b=ZWM5nfoE3u9XngUHIcnBi8AdOyXcqoI8BqQf+d0BDRSNtzMT8ctigZImKV8Ic6RI+6cf0/8CvnitTSZ4tzM9c1dhJ1ltTAgq7her+/hYFtDnLY9CnAIy2oi75E2SEc+LpMQ4IeFntn9KmBsGSgy1ZPcXOVvCZclJfbnKXqE52Kw=
+	t=1782980507; cv=none; b=rsN1O2aGNJK93xwerZZTH8BPDf1Dtayu3tAz+DKQ4MDDhI41biY1O8V3C2gZDa6JhvYzwK+jfPoTqiCmISdi98oTPvEug6Fa83cUUgumGqbrE1Jw2yd2U5A0T9HuorguY8+TkYfPwubaEdq7vpiJS/8xvHOYMVJ2BrRmVL53rXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782979710; c=relaxed/simple;
-	bh=pwiVFkeQnCttoDbb09pbQ4jq5kWqQHsBcVoqyTATkis=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IhdrEPzw+kgdbuCqi+b/PPe9g6oixNSXMqJZr31FevQnKEP6MszXeYNWd5q6cJWcbMZqqTYF2LSIG43Ut9NYGuXMAFtoCg6bQUcEO72zTB/6QqT46FO7RGRdV6KKTogd+whrkQ73+xTsWV38bXR7xZjPrRSD3IwJbqbQKAeWBz0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Z8WQ+9eH; arc=none smtp.client-ip=209.85.221.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1782980507; c=relaxed/simple;
+	bh=R4mp7V+YISkOypWb0SQxXjiw/iBRtLqjKB6U4228okw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=j4nFgghguLzsx2/P1C1bWXfTDeEJ0Agb85pTF5tHW7bXuF+lryoQCl7Kg9uTEYMbh3EUaG89jZ6mPupwB5ZRiQ+Kd0WrUgQ8iRmMCH5Fk9EtQWCd2C2CK2nSiCST4o+DNtqMWUayW9a8gqEJsx36rCyo8m2zMxs1kwYUK8eQQYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=kuCy1KHz; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Z8WQ+9eH"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-4758bd3731bso216256f8f.0
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Jul 2026 01:08:29 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="kuCy1KHz"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2c9c9916f75so8787345ad.0
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Jul 2026 01:21:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1782979708; x=1783584508; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=uS/X0/8CmnUDQ6B8grMHPvwwaVFQGYkdZZB6z5qqXrM=;
-        b=Z8WQ+9eHsEjGqg7ZuJUrrBdhJ3MUFucdAa5iPH49ir7LBULtNgMdcozF8mwwGQE/jy
-         yU3vERqjlmrsql6GyUGGD38dBzgHnbcTaMRFvumui+EU+SnuJAID/Oeezqtce+umtuLn
-         DzrS5z+vjqmTVkizKtVoWE47qDYYV06AZ5xH9Z/h7j/qkkReFFHFeIyNMG7+H6JY4iXP
-         szzBoeCTSej7sKXmIZ9dNVpHu+vp6pcp25vZ2lJ8CY20H3COCdYdnfwW2nruMQSvURT0
-         OqBFQlnNMvpRzyJwbpPZoQ8w87vtg1VjUWJ3S1vh3UFHAtepmDuIZzirVyzWBcUp45nt
-         T5lg==
+        d=chromium.org; s=google; t=1782980505; x=1783585305; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=jxRVo9aIbyDvvuZPFaTnF8c++ORfuni0RdSeL1BmfKU=;
+        b=kuCy1KHzHoeS2zEmb+4FSTe9q4dN8DxeqHzlrHeFiGfr6pOA4wadlZkzN2gCvijbvy
+         N+Jh5AUOz8BZjwQfwJEvHJI2CSuXfdNzBMNB9JhnNqWRRHGujDHeMIMjwVpbW4xFQ55B
+         9uAaQbKHY5tQo9lLaGdovLGaYaKNvzuamDnmo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782979708; x=1783584508;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=uS/X0/8CmnUDQ6B8grMHPvwwaVFQGYkdZZB6z5qqXrM=;
-        b=ZeXQDMLfyoD/vVQqadUPWORxoO3S9IL86HDgX7KcCFFq9Qi9rGJgCpbpXzPjxzQaXM
-         IGweKXqyElNJKrIBh1zRvj6YidvmF5jLnsxHapbBBUu64toVjeEeMViaX7Pk0EjrYgW4
-         +8kfrD0pGegh0ush96/o50hRW0iegRlH1nkiLBUCon+2idpOA+ci5fRdlvU3nZ0knIC6
-         L8SDnwOTtbfzfJn63AwCY4bUkKUEeIqjWCy+euSKSxLgp8BXruvIayhtW2Vfdi4I2/g/
-         zIG8ry0vLTO16CQSOmaBZYEj3IfhYKtHVwveTnGx95He5wsWTN0jjFZwrDaDxDi5sk7C
-         AUXA==
-X-Forwarded-Encrypted: i=1; AHgh+Rqt5o8oWqhd8viCm6jzsXH+WyPVr/CPNC3jlzuEaJ5ea6h+GLaT6Ob7M/qr6g0nWq/QktrGSqa/M7v5@vger.kernel.org
-X-Gm-Message-State: AOJu0YwxYM+RhV/lor6TeP6XGmwqh1bhslzIsvKJMUI2ptmcMOsnbjIZ
-	eJGpx6f1XH+lInWCXgRG8AoIT44H4JaZTz6ohSvABJavsDpTGmS9v4SYN7F8Ju58jEY=
-X-Gm-Gg: AfdE7cmUjRKVI196vokkEZqIptTmdukR8bjCXelMLyGXcxZ3zldZ3Tumq4TU/aG7Oeg
-	Hi571S6arHGYq0CeNN4AWPrpGQ4pNA1A43dvolV2aMa+pWVpOxkOrM+N2VV4gzB5XvrYmBq3xca
-	RbA0/7kb180HQV6mlmi7ckgqWMcoi/yuS78SnyowBaUgvR83DsD4nS7wR0qe40QPVJeGBHUKv+W
-	oaLu5hhTcOhGzaUdjsvvHF5CV/stJxAw47o1GlY+AYB0F4xPphdecBVFpMAWs0XgMQXwvgMfgMk
-	IqaTtk7SOITuSpBWmjNnFwZgPSl0jNYE5Vr3sI5BzXGt5+SZWPp46AMUBUZnNFehV3dh9kjO42M
-	dueNAOw5YzM/ADkV2iwANWVAIULH/JT3UpjQdf0kBGLbgKk6TCM3y1UyveLx6BuZSlNP/jbvvLS
-	yhXjvwTHl7d68+mUJ9n1RnItllTfBjq0OXnD5N0+/oQ2pP5lKPoLJUUCfC
-X-Received: by 2002:a05:6000:2203:b0:473:536b:5d1a with SMTP id ffacd0b85a97d-47743d71b1bmr6959077f8f.7.1782979707557;
-        Thu, 02 Jul 2026 01:08:27 -0700 (PDT)
-Received: from ?IPV6:2001:a61:1344:a301:8020:436f:b412:795e? ([2001:a61:1344:a301:8020:436f:b412:795e])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-477db8a4b73sm6769213f8f.15.2026.07.02.01.08.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Jul 2026 01:08:27 -0700 (PDT)
-Message-ID: <ea2e824c-dded-423e-a242-56b9860d3430@suse.com>
-Date: Thu, 2 Jul 2026 10:08:26 +0200
+        d=1e100.net; s=20251104; t=1782980505; x=1783585305;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=jxRVo9aIbyDvvuZPFaTnF8c++ORfuni0RdSeL1BmfKU=;
+        b=XIU/P19Pkp1eVVMa8ngNN4Zodf6Na7EcwOkUu5hNBGcqMWLLjU2f8KhM/VMxwYCQWg
+         CkutsclsppOAOHv5Ixgq6BSGDVGkiRXq7WBCFe663ENsCARRu8q8GzG3foGNu6ChhH7R
+         fq86u5nu1op/bvne5JpHzEnO2HS+jMFNbN1mx7Eo7vTRJ3KQcsAJOyCm6Y6Yo0ezE766
+         Z+XAVkZNdqNVIpQ9Iipa87Bq4Ajc2e03Qg9Z9AVjwp/kJNN17I6hhp1NNSABlnMNp7jj
+         +fYJW8lY2XFzEE2DuU2bXKSCDbSNSjLbh6ID5Ahy3h/LB4OhX7QOGpFlIu15+udKLM7G
+         xw+w==
+X-Forwarded-Encrypted: i=1; AHgh+RoWllzXQvi/jJCgcPNuDvyBvd41UqjHg9nJhA6pCbZxlFtUgHZBzWNC99yn5um5quHRLl70KhdSpxeL@vger.kernel.org
+X-Gm-Message-State: AOJu0YzZDxZuJ9gF2QPcpkmiBufQOwi21v03iJbpcNDNzRqMEgmSibyz
+	d7DvthijBX6tejux32DOj2AGpr6IDYmpvUAhfxV+3BSjr49tEl3hymvjpYfMVddB2g==
+X-Gm-Gg: AfdE7cnaZbtDpl7/FhhcKBml5ZaqsozFi5GDrJ2gLk8BNjdDaJ08PzYC9C6QS+fFbuV
+	rln6YwN3+rA4gyK2MNr7Bkh/kfM6ws0lPoErJRjaV2PVlSRH+cnAfeHapFavFU7/KoNSApHGEzK
+	5kIa0COI4NQsNzxPsFIpXd1Daj2fhGLXK4rUS080X2RvGZjOGpZinJYRCXEUs29RHMArlEfblLb
+	hbC9bp5Ir6jRQ4VSzDYEZdCZZtL3Q5gcY46YzzM7hD3mPhsmXRq7O6FXaLtzlgELBtWEg/viL1t
+	IYgPCZq+gvAlVDrmli/r8obF1a3aIZ+2pM8H2ZA938JROgodiML4y6L05uz/GpEDyvGYt6g4ND+
+	7fJU3ZUiC3W2ekMeNlH6za0DOmksspoQ7DlR7Mj6sXjmbYFI2emTAgedngpVr7cYT9sY1P1cN5z
+	ypHh6lgcRntrYwpiKkt7M9qJW98VYEgq5W5HJwesWy1qfhP2xanjfA
+X-Received: by 2002:a17:902:d2c1:b0:2c9:aae1:a61a with SMTP id d9443c01a7336-2ca7e6bf4dcmr59316055ad.14.1782980505205;
+        Thu, 02 Jul 2026 01:21:45 -0700 (PDT)
+Received: from google.com ([2a00:79e0:2031:6:4e88:f8c5:c424:2d65])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ca9a7c397asm10090435ad.0.2026.07.02.01.21.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Jul 2026 01:21:44 -0700 (PDT)
+Date: Thu, 2 Jul 2026 17:21:41 +0900
+From: Sergey Senozhatsky <senozhatsky@chromium.org>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Sergey Senozhatsky <senozhatsky@chromium.org>, 
+	Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org, Tomasz Figa <tfiga@chromium.org>
+Subject: Re: [usb-storage] [RFC PATCH] usb: storage: uas: limit consecutive
+ device resets in error handling
+Message-ID: <akYexlPJiSlhYICe@google.com>
+References: <20260701040335.810297-1-senozhatsky@chromium.org>
+ <e2599d9b-5dd9-47db-8339-f1aa825a11d6@suse.com>
+ <akXJuqvHLUpcjXIv@google.com>
+ <ea2e824c-dded-423e-a242-56b9860d3430@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [usb-storage] [RFC PATCH] usb: storage: uas: limit consecutive
- device resets in error handling
-To: Sergey Senozhatsky <senozhatsky@chromium.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org,
- linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
- linux-kernel@vger.kernel.org, Tomasz Figa <tfiga@chromium.org>
-References: <20260701040335.810297-1-senozhatsky@chromium.org>
- <e2599d9b-5dd9-47db-8339-f1aa825a11d6@suse.com> <akXJuqvHLUpcjXIv@google.com>
-Content-Language: en-US
-From: Oliver Neukum <oneukum@suse.com>
-In-Reply-To: <akXJuqvHLUpcjXIv@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <ea2e824c-dded-423e-a242-56b9860d3430@suse.com>
 
+On (26/07/02 10:08), Oliver Neukum wrote:
+> On 02.07.26 04:25, Sergey Senozhatsky wrote:
+> 
+> > <4>[ 750.651133] rq: tag=0 hctx=0 op=WRITE sector=13860872 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> > <4>[ 750.651205] rq: tag=1 hctx=0 op=WRITE sector=13865992 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> > <4>[ 750.651263] rq: tag=2 hctx=0 op=WRITE sector=13863944 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> > <4>[ 750.651320] rq: tag=3 hctx=0 op=WRITE sector=13862920 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> > <4>[ 750.651379] rq: tag=4 hctx=0 op=WRITE sector=13861896 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> > <4>[ 750.651437] rq: tag=5 hctx=0 op=WRITE sector=13864968 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> 
+> [..]
+> > <4>[ 812.091136] rq: tag=0 hctx=0 op=WRITE sector=13863944 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> > <4>[ 812.091194] rq: tag=1 hctx=0 op=WRITE sector=13862920 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> > <4>[ 812.091242] rq: tag=2 hctx=0 op=WRITE sector=13861896 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> > <4>[ 812.091289] rq: tag=3 hctx=0 op=WRITE sector=13860872 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> > <4>[ 812.091335] rq: tag=4 hctx=0 op=WRITE sector=13865992 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> > <4>[ 812.091381] rq: tag=5 hctx=0 op=WRITE sector=13864968 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> 
+> This looks to me like the block layer keeps writing to the same sectors.
+> In other words the issue I see is with the block layer.
 
+Oh, this is just our simple blk-mq watchdog.  Those are the same 5
+stalled requests (WRITES), it's just they got reported twice - same
+tags, same sectors, etc. they just got older (age 78k ms -> 137k ms
+since submission).
 
-On 02.07.26 04:25, Sergey Senozhatsky wrote:
+> Do you know what triggers the error handler at the very first timeﬂ
 
-> <4>[ 750.651133] rq: tag=0 hctx=0 op=WRITE sector=13860872 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651205] rq: tag=1 hctx=0 op=WRITE sector=13865992 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651263] rq: tag=2 hctx=0 op=WRITE sector=13863944 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651320] rq: tag=3 hctx=0 op=WRITE sector=13862920 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651379] rq: tag=4 hctx=0 op=WRITE sector=13861896 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651437] rq: tag=5 hctx=0 op=WRITE sector=13864968 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-
-[..]
-> <4>[ 812.091136] rq: tag=0 hctx=0 op=WRITE sector=13863944 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091194] rq: tag=1 hctx=0 op=WRITE sector=13862920 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091242] rq: tag=2 hctx=0 op=WRITE sector=13861896 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091289] rq: tag=3 hctx=0 op=WRITE sector=13860872 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091335] rq: tag=4 hctx=0 op=WRITE sector=13865992 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091381] rq: tag=5 hctx=0 op=WRITE sector=13864968 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-
-This looks to me like the block layer keeps writing to the same sectors.
-In other words the issue I see is with the block layer. Do you know what
-triggers the error handler at the very first time√ü
-
-	Regards
-		Oliver
-
+Unfortunately, no.
