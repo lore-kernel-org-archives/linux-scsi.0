@@ -1,152 +1,110 @@
-Received: from mx1.white.stw.pengutronix.de (mx1.white.stw.pengutronix.de [185.203.200.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B34A3D34B6;
-	Thu,  2 Jul 2026 07:53:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.200.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C7AC3E173B
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 08:08:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782978832; cv=none; b=F/sVCDgMqT2CMj81ZHhk9xT1AmFws4E18EjaFFwSF1X2GLbX3GXdU7HtvXz/hKA4qm7Yo4X4Nm7uX9aj7JUr5vhx+5/+tqdzSKYTJEIAC8qSOAMq4nPxfT1Y91Bnesp/Jb9Ya21CNvED9vNEc/u/CzsoDDbODk24kvLHMHcTW70=
+	t=1782979710; cv=none; b=ZWM5nfoE3u9XngUHIcnBi8AdOyXcqoI8BqQf+d0BDRSNtzMT8ctigZImKV8Ic6RI+6cf0/8CvnitTSZ4tzM9c1dhJ1ltTAgq7her+/hYFtDnLY9CnAIy2oi75E2SEc+LpMQ4IeFntn9KmBsGSgy1ZPcXOVvCZclJfbnKXqE52Kw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782978832; c=relaxed/simple;
-	bh=Pe93Bh10IOKLtnaCQ1jZVfixg2proisvXEBBme7mEZ4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=q3exHeIwMtvPp5HaAlTyLUYbOERATDlXTUz3b/BR9j1i6Hzmfw/5b90YHy+SyHw417edeVSv+XK9vDNF+1H+Rji5B529QkcmgQ4hG9nM0WKQBigCW4yfj4ykNkuh3ORhp6dVX20kDn2x/vwRlbxdjxa2oTV3WgrpUbkp33XEkHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.200.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
-Received: from drehscheibe.grey.stw.pengutronix.de (drehscheibe.grey.stw.pengutronix.de [IPv6:2a0a:edc0:0:c01:1d::a2])
-	(Authenticated sender: relay-from-drehscheibe.grey.stw.pengutronix.de)
-	by mx1.white.stw.pengutronix.de (Postfix) with ESMTPSA id 1A7AC2003DD;
-	Thu, 02 Jul 2026 09:53:41 +0200 (CEST)
-Received: from lupine.office.stw.pengutronix.de ([2a0a:edc0:0:900:1d::4e] helo=lupine)
-	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <p.zabel@pengutronix.de>)
-	id 1wfCEv-005i6i-02;
-	Thu, 02 Jul 2026 09:53:41 +0200
-Received: from pza by lupine with local (Exim 4.98.2)
-	(envelope-from <p.zabel@pengutronix.de>)
-	id 1wfCEp-0000000032p-3mmg;
-	Thu, 02 Jul 2026 09:53:35 +0200
-Message-ID: <c49d9bea7f9a172a97d0acfaa9680bdac80f75e1.camel@pengutronix.de>
-Subject: Re: [PATCH 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
- driver
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: Yixun Lan <dlan@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri
- Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, Rob
- Herring	 <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor
- Dooley	 <conor+dt@kernel.org>, "James E.J. Bottomley"	
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"	
- <martin.petersen@oracle.com>, Paul Walmsley <pjw@kernel.org>, Palmer
- Dabbelt	 <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, Alexandre
- Ghiti	 <alex@ghiti.fr>
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, 
-	linux-kernel@vger.kernel.org
-Date: Thu, 02 Jul 2026 09:53:35 +0200
-In-Reply-To: <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
-References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
-	 <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2-0+deb13u1 
+	s=arc-20240116; t=1782979710; c=relaxed/simple;
+	bh=pwiVFkeQnCttoDbb09pbQ4jq5kWqQHsBcVoqyTATkis=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IhdrEPzw+kgdbuCqi+b/PPe9g6oixNSXMqJZr31FevQnKEP6MszXeYNWd5q6cJWcbMZqqTYF2LSIG43Ut9NYGuXMAFtoCg6bQUcEO72zTB/6QqT46FO7RGRdV6KKTogd+whrkQ73+xTsWV38bXR7xZjPrRSD3IwJbqbQKAeWBz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Z8WQ+9eH; arc=none smtp.client-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Z8WQ+9eH"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-4758bd3731bso216256f8f.0
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Jul 2026 01:08:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1782979708; x=1783584508; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=uS/X0/8CmnUDQ6B8grMHPvwwaVFQGYkdZZB6z5qqXrM=;
+        b=Z8WQ+9eHsEjGqg7ZuJUrrBdhJ3MUFucdAa5iPH49ir7LBULtNgMdcozF8mwwGQE/jy
+         yU3vERqjlmrsql6GyUGGD38dBzgHnbcTaMRFvumui+EU+SnuJAID/Oeezqtce+umtuLn
+         DzrS5z+vjqmTVkizKtVoWE47qDYYV06AZ5xH9Z/h7j/qkkReFFHFeIyNMG7+H6JY4iXP
+         szzBoeCTSej7sKXmIZ9dNVpHu+vp6pcp25vZ2lJ8CY20H3COCdYdnfwW2nruMQSvURT0
+         OqBFQlnNMvpRzyJwbpPZoQ8w87vtg1VjUWJ3S1vh3UFHAtepmDuIZzirVyzWBcUp45nt
+         T5lg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782979708; x=1783584508;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=uS/X0/8CmnUDQ6B8grMHPvwwaVFQGYkdZZB6z5qqXrM=;
+        b=ZeXQDMLfyoD/vVQqadUPWORxoO3S9IL86HDgX7KcCFFq9Qi9rGJgCpbpXzPjxzQaXM
+         IGweKXqyElNJKrIBh1zRvj6YidvmF5jLnsxHapbBBUu64toVjeEeMViaX7Pk0EjrYgW4
+         +8kfrD0pGegh0ush96/o50hRW0iegRlH1nkiLBUCon+2idpOA+ci5fRdlvU3nZ0knIC6
+         L8SDnwOTtbfzfJn63AwCY4bUkKUEeIqjWCy+euSKSxLgp8BXruvIayhtW2Vfdi4I2/g/
+         zIG8ry0vLTO16CQSOmaBZYEj3IfhYKtHVwveTnGx95He5wsWTN0jjFZwrDaDxDi5sk7C
+         AUXA==
+X-Forwarded-Encrypted: i=1; AHgh+Rqt5o8oWqhd8viCm6jzsXH+WyPVr/CPNC3jlzuEaJ5ea6h+GLaT6Ob7M/qr6g0nWq/QktrGSqa/M7v5@vger.kernel.org
+X-Gm-Message-State: AOJu0YwxYM+RhV/lor6TeP6XGmwqh1bhslzIsvKJMUI2ptmcMOsnbjIZ
+	eJGpx6f1XH+lInWCXgRG8AoIT44H4JaZTz6ohSvABJavsDpTGmS9v4SYN7F8Ju58jEY=
+X-Gm-Gg: AfdE7cmUjRKVI196vokkEZqIptTmdukR8bjCXelMLyGXcxZ3zldZ3Tumq4TU/aG7Oeg
+	Hi571S6arHGYq0CeNN4AWPrpGQ4pNA1A43dvolV2aMa+pWVpOxkOrM+N2VV4gzB5XvrYmBq3xca
+	RbA0/7kb180HQV6mlmi7ckgqWMcoi/yuS78SnyowBaUgvR83DsD4nS7wR0qe40QPVJeGBHUKv+W
+	oaLu5hhTcOhGzaUdjsvvHF5CV/stJxAw47o1GlY+AYB0F4xPphdecBVFpMAWs0XgMQXwvgMfgMk
+	IqaTtk7SOITuSpBWmjNnFwZgPSl0jNYE5Vr3sI5BzXGt5+SZWPp46AMUBUZnNFehV3dh9kjO42M
+	dueNAOw5YzM/ADkV2iwANWVAIULH/JT3UpjQdf0kBGLbgKk6TCM3y1UyveLx6BuZSlNP/jbvvLS
+	yhXjvwTHl7d68+mUJ9n1RnItllTfBjq0OXnD5N0+/oQ2pP5lKPoLJUUCfC
+X-Received: by 2002:a05:6000:2203:b0:473:536b:5d1a with SMTP id ffacd0b85a97d-47743d71b1bmr6959077f8f.7.1782979707557;
+        Thu, 02 Jul 2026 01:08:27 -0700 (PDT)
+Received: from ?IPV6:2001:a61:1344:a301:8020:436f:b412:795e? ([2001:a61:1344:a301:8020:436f:b412:795e])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-477db8a4b73sm6769213f8f.15.2026.07.02.01.08.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 02 Jul 2026 01:08:27 -0700 (PDT)
+Message-ID: <ea2e824c-dded-423e-a242-56b9860d3430@suse.com>
+Date: Thu, 2 Jul 2026 10:08:26 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [usb-storage] [RFC PATCH] usb: storage: uas: limit consecutive
+ device resets in error handling
+To: Sergey Senozhatsky <senozhatsky@chromium.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org,
+ linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+ linux-kernel@vger.kernel.org, Tomasz Figa <tfiga@chromium.org>
+References: <20260701040335.810297-1-senozhatsky@chromium.org>
+ <e2599d9b-5dd9-47db-8339-f1aa825a11d6@suse.com> <akXJuqvHLUpcjXIv@google.com>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <akXJuqvHLUpcjXIv@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Do, 2026-07-02 at 02:31 +0000, Yixun Lan wrote:
-> SpacemiT K3 SoC consist of UFS (Universal Flash Storage) Host Controller
-> which has features compatible with JEDEC UFS 2.2, MIPI UniPro v1.61 and
-> M-PHY v3.0 standard.
->=20
-> Signed-off-by: Yixun Lan <dlan@kernel.org>
-> ---
->  drivers/ufs/host/Kconfig        |  12 +
->  drivers/ufs/host/Makefile       |   1 +
->  drivers/ufs/host/ufs-spacemit.c | 931 ++++++++++++++++++++++++++++++++++=
-++++++
->  drivers/ufs/host/ufs-spacemit.h |  90 ++++
->  4 files changed, 1034 insertions(+)
->=20
-[...]
-> --- /dev/null
-> +++ b/drivers/ufs/host/ufs-spacemit.c
-> @@ -0,0 +1,931 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/*
-> + * Copyright (c) 2026 SpacemiT (Hangzhou) Technology Co. Ltd
-> + */
-> +
-> +#include <linux/clk.h>
-> +#include <linux/clk-provider.h>
-> +#include <linux/delay.h>
-> +#include <linux/io.h>
-> +#include <linux/module.h>
-> +#include <linux/of.h>
-> +#include <linux/platform_device.h>
 
-Missing #include <linux/reset.h> for
-devm_reset_control_get_optional_exclusive_deasserted() below.
-Don't rely on indirect includes.
 
-[...]
-> +/**
-> + * ufs_spacemit_init - init phy and prepare clk
-> + * @hba: host controller instance
-> + */
-> +static int ufs_spacemit_init(struct ufs_hba *hba)
-> +{
-> +	int err =3D 0;
-> +	struct device *dev =3D hba->dev;
-> +	struct ufs_spacemit_host *host;
-> +
-> +	host =3D devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
-> +	if (!host)
-> +		return -ENOMEM;
-> +
-> +	host->rst =3D devm_reset_control_get_optional_exclusive_deasserted(dev,=
- NULL);
+On 02.07.26 04:25, Sergey Senozhatsky wrote:
 
-Why is this stored in struct ufs_spacemit_host at all? As far as I can
-see it is never used again, so this could be a local variable.
+> <4>[ 750.651133] rq: tag=0 hctx=0 op=WRITE sector=13860872 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> <4>[ 750.651205] rq: tag=1 hctx=0 op=WRITE sector=13865992 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> <4>[ 750.651263] rq: tag=2 hctx=0 op=WRITE sector=13863944 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> <4>[ 750.651320] rq: tag=3 hctx=0 op=WRITE sector=13862920 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> <4>[ 750.651379] rq: tag=4 hctx=0 op=WRITE sector=13861896 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
+> <4>[ 750.651437] rq: tag=5 hctx=0 op=WRITE sector=13864968 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
 
-[...]
-> diff --git a/drivers/ufs/host/ufs-spacemit.h b/drivers/ufs/host/ufs-space=
-mit.h
-> new file mode 100644
-> index 000000000000..6ae3c263a360
-> --- /dev/null
-> +++ b/drivers/ufs/host/ufs-spacemit.h
-> @@ -0,0 +1,90 @@
-> +/* SPDX-License-Identifier: GPL-2.0-only */
-> +/*
-> + * SpacemiT UFS Host Controller driver
-> + *
-> + * Copyright (c) 2026 SpacemiT (Hangzhou) Technology Co. Ltd
-> + */
-> +
-> +#ifndef _UFS_SPACEMIT_H_
-> +#define _UFS_SPACEMIT_H_
-> +
-> +#include <linux/reset-controller.h>
+[..]
+> <4>[ 812.091136] rq: tag=0 hctx=0 op=WRITE sector=13863944 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> <4>[ 812.091194] rq: tag=1 hctx=0 op=WRITE sector=13862920 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> <4>[ 812.091242] rq: tag=2 hctx=0 op=WRITE sector=13861896 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> <4>[ 812.091289] rq: tag=3 hctx=0 op=WRITE sector=13860872 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> <4>[ 812.091335] rq: tag=4 hctx=0 op=WRITE sector=13865992 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
+> <4>[ 812.091381] rq: tag=5 hctx=0 op=WRITE sector=13864968 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
 
-Drop this, we are not implementing a reset controller driver here.
+This looks to me like the block layer keeps writing to the same sectors.
+In other words the issue I see is with the block layer. Do you know what
+triggers the error handler at the very first timeß
 
-> +#include <linux/reset.h>
+	Regards
+		Oliver
 
-You could replace this with a struct reset_control forward declaration.
-Or drop it ...
-
-[...]
-> +struct ufs_spacemit_host {
-> +	struct ufs_hba *hba;
-> +	struct ufs_pa_layer_attr dev_req_params;
-> +	struct reset_control *rst;
-
-... if you end up removing the rst field entirely.
-
-regards
-Philipp
