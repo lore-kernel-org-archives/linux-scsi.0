@@ -1,114 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A450282F15
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 03:50:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED39C34C130;
+	Thu,  2 Jul 2026 03:59:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782964234; cv=none; b=lfIuFlUey7D5LK9SMV+jSoucN8tpW8y9yzdF/uHps5ftZF2j7uJq5CoJrEuhwKknD0fv0StYVZc+FN8YR974/29F5o1fnSHzUqwNNBvpQ1jhgUrRzjJtv45xnC9TNAevZbambsel+BK2PzlKWAe613Q8kfNP0k1qTq+o1c2wyIg=
+	t=1782964778; cv=none; b=rxbn+U0JvgyhOsMLmCowpFCPI3gIJ3TzAHgucP+R93YFQtpF3PUnhNAqcthnGNSNCtx2AOyuPErSHV7v1j5oJZXCbgqAAk/UmNnlddUXZX65sPL5Kgyj9+6MS9t2vQePmzs9T5+kazbdTyIhGwA4UEQe/f3daz4YYd90uP+R2sw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782964234; c=relaxed/simple;
-	bh=mTBo2ihvkwORhk6/Us9pZDnsn5lOW4/uTQjaes/XaA8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=G8lNZE/GfkhFTwQMCmEIUYw9m+t0+t9s5w01xFZZY9zGssnvheu4zXhjbGp05SlO/wZCzNCPQ17F9+AeNqGgQq4vmoKNBph6JtZCuO9Tb0g4igcj8xdz/xNHY/ZSBLv/6RTXm8rVkjOoIX6X1uBTc6eaIcA4OzcPYAooeX1OS/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OPV4aJli; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782964778; c=relaxed/simple;
+	bh=UunjM0092egpSTA5aUPq6+VjOAPUA2ekuy9Des6nBwI=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=N1QdwYKZB0j2bVPXpCn+ADUyASuHaNiZsYtth+ycpQWOfZzYQTjoOun2YfEdFqEx3obj0wdStlfcVAmjkm9ZDL8ck3Z6ZerDSWvlvSpWkT7ORfWP2U06//z7D7sFtpKzoPVO5pQ54mogfaHQCqv62am3BXSdhKbaoaqOKzaRVO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=huE0Ywh+; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OPV4aJli"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2D181F000E9;
-	Thu,  2 Jul 2026 03:50:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782964233;
-	bh=Y0sFSZQ3txRIqm2zt6bdfiamkGiWya221NRZj5+w3xo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OPV4aJlip+ds53aoZFatXUkjkjJmauesXgxOizMNFFZEJ+tYHLCVJ1PwCSrXg/TaK
-	 DkAWUyLHq9JNzhbIxFPHEWcBC5WXEDO21wDgbv27po/Mnxv3Tn+TOiPFxfJyMkeRsa
-	 a7JvRi0vQlURTbsrMETGCS/wJfHYqM1HeNoZb38bBojKuSl+ALqUWhFadHBlugU6Zt
-	 v8XQ337+pOgfJZ4qy7mLMD3rtEvj95Iws7ZcruMcMArPocFA8JJaNsJ2KWo/d9uktz
-	 MKfk5f9LUhJRQOEq2qKGC7qd3cRWq1o4hguXVLyWIDctYoP70joCRoMrcdHw0VAIFO
-	 qmdjq3Jf6HpyQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: libsas: fix HA resume deadlock and hisi_sas
- disk-wake race
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Xingui Yang" <yangxingui@huawei.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260702033211.1743313-1-yangxingui@huawei.com>
-References: <20260702033211.1743313-1-yangxingui@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 02 Jul 2026 03:50:32 +0000
-Message-Id: <20260702035032.F2D181F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="huE0Ywh+"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=nP/NXLt1Leq0gYIF0Cpx+S7okE/swTivpVbp85RmJC4=;
+	b=huE0Ywh+UQWA5FOZBBUmAdNBx3iyVUp4MF8kJq5IGSs1zKf0vrYBjBQWrqkCjnHxYkA83bL4o
+	0txMfFz5R84VFscRuJqz9oglWihnhBHx6+jPHowQKM3CZG038AMnAWaBI+DaWWPK3VbJMT0dgVS
+	trbzjpUl7ZLF5VaHXFMkFpo=
+Received: from mail.maildlp.com (unknown [172.19.163.104])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4grNFl6r6Dzcb34;
+	Thu,  2 Jul 2026 11:50:35 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id B51564058C;
+	Thu,  2 Jul 2026 11:59:27 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Thu, 2 Jul 2026 11:59:27 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<john.g.garry@oracle.com>, <dlemoal@kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+Subject: [PATCH 1/2] scsi: scsi_lib: add spinup_notify callback for ASC/ASCQ=0x04/0x11
+Date: Thu, 2 Jul 2026 11:57:23 +0800
+Message-ID: <20260702035724.2059166-2-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260702035724.2059166-1-yangxingui@huawei.com>
+References: <20260702035724.2059166-1-yangxingui@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+When a SCSI device returns NOT_READY with ASC/ASCQ = 0x04/0x11
+("notify (enable spinup) required"), the device is in Active_Wait or
+Idle_Wait power state and will not respond to standard START_STOP
+spinup commands.
 
-Pre-existing issues:
-- [High] Hardware initialization race: scsi_unblock_requests() allows I/O d=
-ispatch to uninitialized hardware in _resume_v3_hw().
---
+Add an optional spinup_notify callback to struct scsi_host_template.
+When ASCQ=0x11 is detected in the mid-layer, invoke this callback
+before ACTION_DELAYED_RETRY, allowing LLDDs to perform controller-
+specific spinup notification.
 
-commit 9e820865310a614d1e3c143d85daf43eae7329e2
-Author: Xingui Yang <yangxingui@huawei.com>
+Example log:
+[Tue Jun 23 08:34:44 2026] sd 4:0:9:0: [sde] Spinning up disk...
+[Tue Jun 23 08:36:22 2026] ...not responding...
+[Tue Jun 23 08:36:24 2026] sd 4:0:9:0: [sde] Sense Key : Not Ready
+[Tue Jun 23 08:36:24 2026] sd 4:0:9:0: [sde] Add. Sense: Logical unit
+  not ready, notify (enable spinup) required
 
-scsi: libsas: fix HA resume deadlock and hisi_sas disk-wake race
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+ drivers/scsi/scsi_lib.c  | 4 ++++
+ include/scsi/scsi_host.h | 9 +++++++++
+ 2 files changed, 13 insertions(+)
 
-This commit fixes a resume deadlock by moving the PHYE_RESUME_TIMEOUT
-notification to occur after sas_drain_work(). It restores the standard
-sas_resume_ha() behavior in hisi_sas and removes the no-sync variant.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b67f0dc79499..33c4339ca8c5 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -905,6 +905,10 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
+ 				case 0x1a: /* start stop unit in progress */
+ 				case 0x1b: /* sanitize in progress */
+ 				case 0x1d: /* configuration in progress */
++					if (sshdr.ascq == 0x11 &&
++					    cmd->device->host->hostt->spinup_notify)
++						cmd->device->host->hostt->spinup_notify(
++							cmd->device);
+ 					action = ACTION_DELAYED_RETRY;
+ 					break;
+ 				case 0x0a: /* ALUA state transition */
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 7e2011830ba4..500fad5ffab6 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -374,6 +374,15 @@ struct scsi_host_template {
+ #define SCSI_ADAPTER_RESET	1
+ #define SCSI_FIRMWARE_RESET	2
+ 
++	/*
++	 * Optional callback invoked when a device returns NOT_READY with
++	 * ASC/ASCQ = 0x04/0x11 ("notify (enable spinup) required").
++	 * This allows LLDDs to perform controller-specific spinup
++	 * notification before the mid-layer retries.
++	 *
++	 * Status: OPTIONAL
++	 */
++	void (*spinup_notify)(struct scsi_device *sdev);
+ 
+ 	/*
+ 	 * Name of proc directory
+-- 
+2.43.0
 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_s=
-as/hisi_sas_v3_hw.c
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> @@ -5262,14 +5262,7 @@ static int _resume_v3_hw(struct device *device)
-> =20
-> [ ... ]
-> =20
->  	scsi_unblock_requests(shost);
->  	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
-> =20
->  	sas_prep_resume_ha(sha);
->  	rc =3D hw_init_v3_hw(hisi_hba);
-
-[Severity: High]
-This is a pre-existing issue, but I noticed a potential hardware
-initialization race here.
-
-Does unblocking requests before hw_init_v3_hw() completes allow pending I/O
-to be dispatched to uninitialized hardware?
-
-During PM resume, _resume_v3_hw() calls scsi_unblock_requests() and clears
-HISI_SAS_REJECT_CMD_BIT. Any blocked block-layer requests could immediately
-be dispatched to hisi_sas_queue_command().
-
-These requests would be written to the controller hardware before it has
-been reset or initialized by hw_init_v3_hw().
-
-Could this lead to hardware corruption, SErrors, or system lockups on
-standard suspend/resume cycles if there is pending I/O?
-
->  	if (rc) {
->  		scsi_remove_host(shost);
->  		return rc;
->  	}
->  	phys_init_v3_hw(hisi_hba);
-> =20
-> -	/*
-> -	 * If a directly-attached disk is removed during suspend, a deadlock
-> -	 * may occur, as the PHYE_RESUME_TIMEOUT processing will require the
-> -	 * hisi_hba->device to be active, which can only happen when resume
-> -	 * completes. So don't wait for the HA event workqueue to drain upon
-> -	 * resume.
-> -	 */
-> -	sas_resume_ha_no_sync(sha);
-> +	sas_resume_ha(sha);
->  	clear_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260702033211.1743=
-313-1-yangxingui@huawei.com?part=3D1
