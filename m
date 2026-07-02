@@ -1,177 +1,179 @@
-Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B79E5349CF2;
-	Thu,  2 Jul 2026 17:22:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783012933; cv=pass; b=UCnpsioRfjlHJzqGKY/X4zeiblILh+m9F0FqixAehAf1l3qLFDElJglA9dDBMs2AZ0rhZdQxqQ26Rz6qhcjMkjG8/iCJ7BuDLB0rnHhraXunUaYiRlRw20BMa+fkG1jgeZL+i4xTnFXM4B6OvDE4eRBCR4FNNQlp9fNYBFX+ao4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783012933; c=relaxed/simple;
-	bh=WKXl5DNRTgzt+SOnpU70QjMbXzXMWWllLiITV91acYQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I90mUcbihD88arxiWEGQahu/yi1alfpsFb1je28qasaRA6ayVPh1o5TFQNL9sSzzoJ3ijwgJvbs9uZHTpuNrlpLZg4wC+WQCvgiAR3Xezbwd8oGLbv4WC9lHtEGiIFzuSEocOJA42R8MsBvSJX95kHzcF9oJHS5nzUjSQNRaMeo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc; spf=pass smtp.mailfrom=ziyao.cc; dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b=GyeG/Lbv; arc=pass smtp.client-ip=136.143.188.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ziyao.cc
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziyao.cc
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6579C39A079;
+	Thu,  2 Jul 2026 17:59:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783015179; cv=none; b=gA1E1siPLuIFQJbe2eph8gTx3N/zZ36dQfy+NPHg1P6OZxRpMA6mPPSdvWWuPhEzlPqGbGKU+wFAz6u+hWZGnK/z6iS4lf+xevPvQ42MYTkOkxwEGSHewCrnDzjYvLJqi8HB/8dOuyYY2XNBuGm9G0CJ0phKE5CdMd3Oc2h64i8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783015179; c=relaxed/simple;
+	bh=w2tfk98n+UCuaS+Oy2S54hKGlB1cAWyRh+N4+QYXZvY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=MnUT49ZKbT+PNUgHh3N62NcKmRpL//Fmp8bK59d01TT3M9HZetp078jpKq+J5R4ZCTBHPcLy0VP+xhJW9rjKnixVBSAq+MhrfedgHTT0+IhoJRePQFzgyMBLt7Mw85/G/mp67FU8/DUdKC6xjR7cUoez2RSC0OHC7MEd3FBHNHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ReJCx9xE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ziyao.cc header.i=me@ziyao.cc header.b="GyeG/Lbv"
-ARC-Seal: i=1; a=rsa-sha256; t=1783012899; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=JHbhhu4+gy/a0FtQBodKmH8tfye9dtnI1bra6MNmLaCFkNqrb6FXQm+VYdeZBVT1XDPEzGR+7i/ylQHeq2Oa2tgpQ+uOuURs5SAAeZPLdm7RqW4j6QEIvUgCmCfb/emvoiH8kDK4XAD0liQ4DojFCNT1i018rJGIqegCfkqAk2g=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1783012899; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=3pNo6VHmqaTxuE9Yer6GmVl/yimS+PJKHFrww1qNWgY=; 
-	b=OFguuJ8cZm/Z2FXaJI8Xjy5LXQWg71bg1+t2pLK8ialmgDWF5vwlUBuZlJJpApz39jT27oiMKHfEFibUxg7grafkn3BmhAsgpuNMOFXAeyCuaVhJeqmUtYNJNYBZDhyc6AvIhXR4nuPA/KqLbEBvrkQjQZlHzxr6FbBgIpdpP7U=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=ziyao.cc;
-	spf=pass  smtp.mailfrom=me@ziyao.cc;
-	dmarc=pass header.from=<me@ziyao.cc>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783012899;
-	s=zmail; d=ziyao.cc; i=me@ziyao.cc;
-	h=Date:Date:From:From:To:To:Cc:Cc:Subject:Subject:Message-ID:References:MIME-Version:Content-Type:In-Reply-To:Message-Id:Reply-To;
-	bh=3pNo6VHmqaTxuE9Yer6GmVl/yimS+PJKHFrww1qNWgY=;
-	b=GyeG/LbvT2GVo1Bb8LvkcalxaeCk2VKhcP9DZy7NKFE0TZ3C8Uokxn91yfyBo/RR
-	aK45+fEeyVHJXFO2ePAQhUUZVr3s7ZCG8b+XbFNxhaVerhRczGNuJqZTER5j5zOWOUr
-	+AG0Va499glfZqqM6lkE9WYO+Ab1ZBbhbqC/nNKQ=
-Received: by mx.zohomail.com with SMTPS id 1783012895431464.9970225222668;
-	Thu, 2 Jul 2026 10:21:35 -0700 (PDT)
-Date: Thu, 2 Jul 2026 17:21:08 +0000
-From: Yao Zi <me@ziyao.cc>
-To: Yixun Lan <dlan@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-kernel@vger.kernel.org, Yao Zi <me@ziyao.cc>
-Subject: Re: [PATCH 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
- driver
-Message-ID: <akaeBJv5T3YmlfpC@pie>
-References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
- <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ReJCx9xE"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 31B82C4AF09;
+	Thu,  2 Jul 2026 17:59:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1783015179;
+	bh=w2tfk98n+UCuaS+Oy2S54hKGlB1cAWyRh+N4+QYXZvY=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=ReJCx9xEr2sTEvBQrgxMHsJZ8JWuUpmASjKEB6DnSbES9wOYu14T32kRERx7uPtZH
+	 jWCZQDvH3LO/TM5rJfOE/u9Qc0WikSf4fiPNye2gyg4neeQBQCDeOjyChkPWHbCNfS
+	 19VtyYwOEPD1zDjwFoCex9xyqngni2Bo41yU/JBhI+H5P0SPq5ZrN8zfpM1RrR+3Ly
+	 kTM8zQpeMDzpNZe/h174cbKEV3E5tqQ2EjSw6irHO1rutuSeCJgxQEZG61bwA7iAcR
+	 0SyLthyDtCX8x4Jg1xBzpc5ctVdxln1gQzijgyzyxGwtByTJRGHX56eL3ZUKg86ZKw
+	 cx6tfLCUQkNKw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 152EEC43327;
+	Thu,  2 Jul 2026 17:59:39 +0000 (UTC)
+From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
+Date: Thu, 02 Jul 2026 12:59:32 -0500
+Subject: [PATCH v3 2/8] ibmvfc: Add NOOP command support
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
-X-ZohoMailClient: External
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260702-ibmvfc-fpin-support-v3-2-d95b9547cf88@linux.ibm.com>
+References: <20260702-ibmvfc-fpin-support-v3-0-d95b9547cf88@linux.ibm.com>
+In-Reply-To: <20260702-ibmvfc-fpin-support-v3-0-d95b9547cf88@linux.ibm.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+ Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.ibm.com>, 
+ Greg Joyce <gjoyce@linux.ibm.com>, Kyle Mahlkuch <kmahlkuc@linux.ibm.com>, 
+ Dave Marquardt <davemarq@linux.ibm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783015177; l=4073;
+ i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
+ bh=6CCiDtpYdacbzUgnPOO62NTyDOad19qQmC79kAzA9z4=;
+ b=OocrBSHZmXuBKR2A57MxZwSgjooHvtwEWlmkYpvQOMknQ4IUD0BxzWm+jSqGats20tZC5LWBV
+ UyGSExQIVDgDxcj2S3D3EG8xn4aU30c3brvon9gSp6QuFGzhy79lldC
+X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
+ pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
+X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
+ auth_id=689
+X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
+Reply-To: davemarq@linux.ibm.com
 
-On Thu, Jul 02, 2026 at 02:31:36AM +0000, Yixun Lan wrote:
-> SpacemiT K3 SoC consist of UFS (Universal Flash Storage) Host Controller
-> which has features compatible with JEDEC UFS 2.2, MIPI UniPro v1.61 and
-> M-PHY v3.0 standard.
-> 
-> Signed-off-by: Yixun Lan <dlan@kernel.org>
-> ---
->  drivers/ufs/host/Kconfig        |  12 +
->  drivers/ufs/host/Makefile       |   1 +
->  drivers/ufs/host/ufs-spacemit.c | 931 ++++++++++++++++++++++++++++++++++++++++
->  drivers/ufs/host/ufs-spacemit.h |  90 ++++
->  4 files changed, 1034 insertions(+)
+From: Dave Marquardt <davemarq@linux.ibm.com>
 
-...
+This patch adds support for receiving and recognizing VFC_NOOP
+messages from VIOS. This is done by
+- defining the VFC_NOOP CRQ format
+- recognizing the VFC_NOOP CRQ format in the CRQ handler. If the VIOS
+  has not provided the "support VFC_NOOP" bit in its capabilities on
+  NPIV login, note that the VFC_NOOP is unexpected
+- setting the "can use VFC_NOOP" bit in the capabilities sent during
+  NPIV login
 
-> +static int ufs_spacemit_wait_mphy_pll_lock(struct ufs_hba *hba)
-> +{
-> +	int timeout = MPHY_PLL_LOCK_TIMEOUT_US;
-> +	u32 val;
-> +
-> +	while (timeout-- > 0) {
-> +		val = ufshcd_readl(hba, UFS_PHY_MNG_BASE + UFS_MPHY_PU_CTRL);
-> +		if (val & MPHY_PLL_LOCK_BIT)
-> +			return 0;
-> +
-> +		udelay(1);
-> +	}
-> +
-> +	dev_err(hba->dev, "M-PHY PLL lock timeout\n");
-> +	return -ETIMEDOUT;
-> +}
+Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 16 +++++++++++++++-
+ drivers/scsi/ibmvscsi/ibmvfc.h | 23 +++++++++++++----------
+ 2 files changed, 28 insertions(+), 11 deletions(-)
 
-Could this loop be replaced by read_poll_timeout() like
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index b63f41a6cfff..110d77b9aac3 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1512,7 +1512,9 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+ 		login_info->flags |= cpu_to_be16(IBMVFC_CLIENT_MIGRATED);
+ 
+ 	login_info->max_cmds = cpu_to_be32(max_cmds);
+-	login_info->capabilities = cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN);
++	login_info->capabilities =
++		cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN |
++			    IBMVFC_CAN_USE_NOOP_CMD);
+ 
+ 	if (vhost->mq_enabled || vhost->using_channels)
+ 		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
+@@ -3569,6 +3571,14 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
+ 	if (crq->format == IBMVFC_ASYNC_EVENT)
+ 		return;
+ 
++	if (crq->format == IBMVFC_VFC_NOOP) {
++		if (vhost->state == IBMVFC_ACTIVE &&
++		    !ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NOOP_CMD))
++			dev_err_ratelimited(vhost->dev,
++					    "Received unexpected NOOP command from partner\n");
++		return;
++	}
++
+ 	/* The only kind of payload CRQs we should get are responses to
+ 	 * things we send. Make sure this response is to something we
+ 	 * actually sent
+@@ -4099,6 +4109,10 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost
+ 		return;
+ 	}
+ 
++	/* Some CRQs, e.g. a VFC_NOOP command CRQ, do not have an ioba, so evt is NULL. */
++	if (!evt)
++		return;
++
+ 	/* The only kind of payload CRQs we should get are responses to
+ 	 * things we send. Make sure this response is to something we
+ 	 * actually sent
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index f69e0605a78d..526632cb7237 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -175,11 +175,12 @@ struct ibmvfc_npiv_login {
+ #define IBMVFC_FLUSH_ON_HALT		0x02
+ 	__be32 max_cmds;
+ 	__be64 capabilities;
+-#define IBMVFC_CAN_MIGRATE		0x01
+-#define IBMVFC_CAN_USE_CHANNELS		0x02
+-#define IBMVFC_CAN_HANDLE_FPIN		0x04
+-#define IBMVFC_CAN_USE_MAD_VERSION	0x08
+-#define IBMVFC_CAN_SEND_VF_WWPN		0x10
++#define IBMVFC_CAN_MIGRATE		0x001
++#define IBMVFC_CAN_USE_CHANNELS		0x002
++#define IBMVFC_CAN_HANDLE_FPIN		0x004
++#define IBMVFC_CAN_USE_MAD_VERSION	0x008
++#define IBMVFC_CAN_SEND_VF_WWPN		0x010
++#define IBMVFC_CAN_USE_NOOP_CMD		0x200
+ 	__be64 node_name;
+ 	struct srp_direct_buf async;
+ 	u8 partition_name[IBMVFC_MAX_NAME];
+@@ -221,11 +222,12 @@ struct ibmvfc_npiv_login_resp {
+ #define IBMVFC_NATIVE_FC		0x01
+ 	__be32 reserved;
+ 	__be64 capabilities;
+-#define IBMVFC_CAN_FLUSH_ON_HALT	0x08
+-#define IBMVFC_CAN_SUPPRESS_ABTS	0x10
+-#define IBMVFC_MAD_VERSION_CAP		0x20
+-#define IBMVFC_HANDLE_VF_WWPN		0x40
+-#define IBMVFC_CAN_SUPPORT_CHANNELS	0x80
++#define IBMVFC_CAN_FLUSH_ON_HALT	0x0008
++#define IBMVFC_CAN_SUPPRESS_ABTS	0x0010
++#define IBMVFC_MAD_VERSION_CAP		0x0020
++#define IBMVFC_HANDLE_VF_WWPN		0x0040
++#define IBMVFC_CAN_SUPPORT_CHANNELS	0x0080
++#define IBMVFC_SUPPORT_NOOP_CMD		0x1000
+ 	__be32 max_cmds;
+ 	__be32 scsi_id_sz;
+ 	__be64 max_dma_len;
+@@ -621,6 +623,7 @@ struct ibmvfc_trace_entry {
+ enum ibmvfc_crq_formats {
+ 	IBMVFC_CMD_FORMAT		= 0x01,
+ 	IBMVFC_ASYNC_EVENT	= 0x02,
++	IBMVFC_VFC_NOOP		= 0x03,
+ 	IBMVFC_MAD_FORMAT		= 0x04,
+ };
+ 
 
-	read_poll_timeout(ufshcd_readl, val, val & MPHY_PLL_LOCK_BIT,
-			 1, MPHY_PLL_LOCK_TIMEOUT_US, false, hba,
-			 UFS_PHY_MSG_BASE + UFS_MPHY_PU_CTRL);
+-- 
+2.54.0
 
 
-...
-
-> +/**
-> + * ufs_spacemit_init - init phy and prepare clk
-> + * @hba: host controller instance
-> + */
-> +static int ufs_spacemit_init(struct ufs_hba *hba)
-> +{
-> +	int err = 0;
-> +	struct device *dev = hba->dev;
-> +	struct ufs_spacemit_host *host;
-> +
-> +	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
-> +	if (!host)
-> +		return -ENOMEM;
-> +
-> +	host->rst = devm_reset_control_get_optional_exclusive_deasserted(dev, NULL);
-
-"resets" property is marked as required in the binding, but the optional
-API is used here. Is this expected?
-
-...
-
-> +/**
-> + * ufs_spacemit_hce_enable_notify - Configure HCE enable sequence
-> + * @hba: host controller instance
-> + * @status: notification status (PRE_CHANGE or POST_CHANGE)
-> + *
-> + * Configures host controller enable with proper sequencing.
-> + * Handles crypto enable if supported.
-> + *
-> + * Returns: 0 on success
-> + */
-> +static int ufs_spacemit_hce_enable_notify(struct ufs_hba *hba,
-> +					  enum ufs_notify_change_status status)
-> +{
-> +	struct ufs_spacemit_host *host = ufshcd_get_variant(hba);
-> +	u32 enable_val, val;
-> +
-> +	if (status == PRE_CHANGE) {
-> +		enable_val = CONTROLLER_ENABLE;
-> +
-> +		if (hba->caps & UFSHCD_CAP_CRYPTO)
-> +			enable_val = CRYPTO_GENERAL_ENABLE | CONTROLLER_ENABLE;
-> +
-> +		if (!host->first_hce_done) {
-> +			host->first_hce_done = true;
-> +			dev_dbg(hba->dev, "First HCE enable\n");
-> +		} else {
-> +			val = ufshcd_readl(hba, REG_CONTROLLER_ENABLE);
-> +			if (val == enable_val) {
-> +				ufshcd_writel(hba, enable_val & (1 << CONTROLLER_ENABLE),
-> +					      REG_CONTROLLER_ENABLE);
-> +
-> +				while (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) ==
-> +				       (enable_val & (1 << CONTROLLER_ENABLE)))
-> +					;
-
-Shouldn't we set a timeout for the polling loop?
-
-> +			}
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-
-Regards,
-Yao Zi
