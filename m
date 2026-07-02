@@ -1,164 +1,152 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx1.white.stw.pengutronix.de (mx1.white.stw.pengutronix.de [185.203.200.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6456534EF03
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2026 07:50:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B34A3D34B6;
+	Thu,  2 Jul 2026 07:53:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.200.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782978601; cv=none; b=pTQmnn56Jyeob7VfBVhRl61q2DSQLjNXHAFX04dM3Vl1DqT/nLRBSOvC887KDKdtXJKny4EAtlAXqaBIEIDeGMkSPDZll4lascj4LmfPTF4nI7Fa/cEj955T87bFc9q82qS7twNpmpLhdLDmLrJuPogB9MmFl/iCaSvJVrtgKEI=
+	t=1782978832; cv=none; b=F/sVCDgMqT2CMj81ZHhk9xT1AmFws4E18EjaFFwSF1X2GLbX3GXdU7HtvXz/hKA4qm7Yo4X4Nm7uX9aj7JUr5vhx+5/+tqdzSKYTJEIAC8qSOAMq4nPxfT1Y91Bnesp/Jb9Ya21CNvED9vNEc/u/CzsoDDbODk24kvLHMHcTW70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782978601; c=relaxed/simple;
-	bh=/QK23YA5B51C042jTB7VpX+A7kWU/DcuJxKWdmEbgoI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hPNg4UX/e0LWHT5Z7HOH0bNHSDRoNKxmL5gLHag0FvmpjkI7lrQZdxQ0Euu2lkjsCDp9VtoSny+HKqWRuWRydJ8qHYjHm2GsEmsFdz8i9Ew/1r/ngwsuqnrQaaZlsxykLLAuwoMh5haU6Lneq5ehEvoirJHiSn5iCZEh8zWXkOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XQYJfahc; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=UKnIYph4; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XQYJfahc";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="UKnIYph4"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6627TsAZ3964218
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Jul 2026 07:49:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	S7ozycuXvkZs4Tkt6aCM8DhAm1NjHTo0vIUPCujt0Z8=; b=XQYJfahcM+dBOGoa
-	P0CjOjEXDvaEjFa5G/kPEVvKk0YlcRw+Q0zJiMC1Cx711gkJ0JAG6XU1M9Jptodg
-	NuBIHZKqpQd6Jz627Rv5CiqE+WX7XkiNM/VJTHqwm2MonNWcBXFZFeLUxh8AIxo1
-	bQnmZ+n49XAoEI/CtVgtAxRXTsahWquPrq50YzWyJPscf/P61gnUJJvKFav2oF2F
-	M4SSZJUbNXoErbVnAqkIioo1GFpqdXXzk+Pq1qKqo+hm/OO0dHe4bBF2mfD8B+nE
-	rR8bukToiVRIon0IYXE5JtI++QrjcbLexXerhpizqmKgyPNobyYWNKM+7cV4K9b0
-	Du0ZjA==
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f5knc02gn-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 02 Jul 2026 07:49:58 +0000 (GMT)
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-845317fa7e6so2351273b3a.3
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Jul 2026 00:49:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1782978598; x=1783583398; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=S7ozycuXvkZs4Tkt6aCM8DhAm1NjHTo0vIUPCujt0Z8=;
-        b=UKnIYph4SE9XF//hko2wYNfWFKY7PJ10hXqYP544lUl0tQUPCJvGyYRSjmewmxaTs6
-         fFq0qDeuFOD5kFsxDrOg2EdYjh7rONHzHp7OF0wIe1UmStECRTjB2uUyZd14r6CqEjL2
-         w9FbEcA6fB4uPyVTwoDC8mojm2buJhxyvckvzQnPuZA4+oNioEb6/RwrrwSUCMpDxm5P
-         XhvpI94QH6MQgmaRA77Wm9ET7psCE8vQ0KU82cQCgyhfNlSW9BEzV1Lblq0FtNgzjReg
-         brVSkwlr/yIK0GppS+cH7do9Jx0YO1LloxaTtF7c5eKQks+QwVqthkeINTUB7KwVPYkb
-         +Uqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782978598; x=1783583398;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=S7ozycuXvkZs4Tkt6aCM8DhAm1NjHTo0vIUPCujt0Z8=;
-        b=WoTPiA1f28bztjbZTtfbr0zCXHcvQkL8qu+0GxNcM1xx1blhyDKB9d94ffnA8wGETM
-         fjj/WtEFZ+IGfNont4hQqLBdhgHxzxPRhpOcDr0zHNwriG72/5jr/ab5cMFV7ZyZKIlW
-         /tsdSXi7HUXgLf+NLWgxXDqfGK2rle4XcpLrP0qbZ9Yo/gYCxuNMyJS+nNXlYZ7E5aT1
-         ngV9LBh8ValUu6fiTZH1n+8s40Sc0J1JxQfhHRSNsmZJ+hsXmu6xo6SzDOf90HgAQWPu
-         LNnl61G9ygkA2COnW3X44kvzI7rONg5CeGVil/t/vnYfaSylxJWuXceCdf3lJFYY2Hdv
-         j+yQ==
-X-Gm-Message-State: AOJu0YyW9s7xyz3KppVgFp+UPVRc57IoX4aDOc6+876P0ISooZVVKf2Y
-	NW8o+Sne/VpiQ64THa59+f7q0UW0c5oUJHAYIZnv7BAD/ebemo1HVQq/opN0cYdgqwMxf5rpwBQ
-	Ve6vjWN7UYaSOh0UqB7u3hLNGu3l8uH0ztI81m3AfNsCU8T6NnEGWAWq2Dq0iPGlfG4UdPB/14I
-	0=
-X-Gm-Gg: AfdE7ck/FW/FvW86ExJ9anypZ09TVHlMnqI1Bsv0mGoLBY3IwFKyEHDT064mlutwwTI
-	jnlZZyfl9qHGa0lw9iSHmlJ/JSzuO7F+Q9Hx/oVyqr58272qW6MpyYEoIEy5tCGIN6rWgjCihm5
-	qHnnMmbVzqcwScMNUJ9OR7J3hY/jH9PX4NM2ZXqv0ZMKG0grmw1iTdm42Gz1POB6bMbjSgahKCz
-	l7qgWWFuRr6PYLsEPIxskiAEIoJZQbfHUsrHEICM8oL5EYdlHRwvsvAlny2VBhPYOQs1QP2dLru
-	ZUGey/PUaxIhzKTq7L7EH77unPuHK5/5No03XDDwaIGDMJmgGETNxSi/Lu86zI0ZRY4UJSiYn39
-	jGURB1zaYYDPkuYwwoPc36D+N469nlsVaEypEoAelzZkyjXrLOHhJSqNqvxqffFdR
-X-Received: by 2002:a05:6a00:1702:b0:842:6a97:52fb with SMTP id d2e1a72fcca58-847c07966a8mr5068808b3a.18.1782978597916;
-        Thu, 02 Jul 2026 00:49:57 -0700 (PDT)
-X-Received: by 2002:a05:6a00:1702:b0:842:6a97:52fb with SMTP id d2e1a72fcca58-847c07966a8mr5068789b3a.18.1782978597241;
-        Thu, 02 Jul 2026 00:49:57 -0700 (PDT)
-Received: from [10.110.61.213] (i-global254.qualcomm.com. [199.106.103.254])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-847cb75e7e8sm958602b3a.20.2026.07.02.00.49.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Jul 2026 00:49:56 -0700 (PDT)
-Message-ID: <763e75d3-b603-4e90-8877-e602fa6168a5@oss.qualcomm.com>
-Date: Thu, 2 Jul 2026 15:49:52 +0800
+	s=arc-20240116; t=1782978832; c=relaxed/simple;
+	bh=Pe93Bh10IOKLtnaCQ1jZVfixg2proisvXEBBme7mEZ4=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=q3exHeIwMtvPp5HaAlTyLUYbOERATDlXTUz3b/BR9j1i6Hzmfw/5b90YHy+SyHw417edeVSv+XK9vDNF+1H+Rji5B529QkcmgQ4hG9nM0WKQBigCW4yfj4ykNkuh3ORhp6dVX20kDn2x/vwRlbxdjxa2oTV3WgrpUbkp33XEkHE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.200.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from drehscheibe.grey.stw.pengutronix.de (drehscheibe.grey.stw.pengutronix.de [IPv6:2a0a:edc0:0:c01:1d::a2])
+	(Authenticated sender: relay-from-drehscheibe.grey.stw.pengutronix.de)
+	by mx1.white.stw.pengutronix.de (Postfix) with ESMTPSA id 1A7AC2003DD;
+	Thu, 02 Jul 2026 09:53:41 +0200 (CEST)
+Received: from lupine.office.stw.pengutronix.de ([2a0a:edc0:0:900:1d::4e] helo=lupine)
+	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <p.zabel@pengutronix.de>)
+	id 1wfCEv-005i6i-02;
+	Thu, 02 Jul 2026 09:53:41 +0200
+Received: from pza by lupine with local (Exim 4.98.2)
+	(envelope-from <p.zabel@pengutronix.de>)
+	id 1wfCEp-0000000032p-3mmg;
+	Thu, 02 Jul 2026 09:53:35 +0200
+Message-ID: <c49d9bea7f9a172a97d0acfaa9680bdac80f75e1.camel@pengutronix.de>
+Subject: Re: [PATCH 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
+ driver
+From: Philipp Zabel <p.zabel@pengutronix.de>
+To: Yixun Lan <dlan@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri
+ Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, Rob
+ Herring	 <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor
+ Dooley	 <conor+dt@kernel.org>, "James E.J. Bottomley"	
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"	
+ <martin.petersen@oracle.com>, Paul Walmsley <pjw@kernel.org>, Palmer
+ Dabbelt	 <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, Alexandre
+ Ghiti	 <alex@ghiti.fr>
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, 
+	linux-kernel@vger.kernel.org
+Date: Thu, 02 Jul 2026 09:53:35 +0200
+In-Reply-To: <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
+References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
+	 <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2-0+deb13u1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/3] scsi: ufs: Harden TX EQTR error handling paths
-To: Can Guo <can.guo@oss.qualcomm.com>, bvanassche@acm.org, beanhuo@micron.com,
-        peter.wang@mediatek.com, martin.petersen@oracle.com, mani@kernel.org
-Cc: linux-scsi@vger.kernel.org
-References: <20260625121306.1655467-1-can.guo@oss.qualcomm.com>
-Content-Language: en-US
-From: Ziqi Chen <ziqi.chen@oss.qualcomm.com>
-In-Reply-To: <20260625121306.1655467-1-can.guo@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: IjLEUfzKbws379H21delVfw6tWb5_fZp
-X-Authority-Analysis: v=2.4 cv=a4kAM0SF c=1 sm=1 tr=0 ts=6a461826 cx=c_pps
- a=m5Vt/hrsBiPMCU0y4gIsQw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=qGogzAylIKSnPewOibIA:9 a=QEXdDO2ut3YA:10
- a=IoOABgeZipijB_acs4fv:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzAyMDA3OSBTYWx0ZWRfX+/AwdwYVNuxm
- pT5wsrume39flwqsh1+c5BCiWkFcf+Rg2Kr/8+TmDEO2LB3rRKg32XM3a2gFFEdAKf3sxkTqhab
- rp2zxUk7wHUt1kHYyD2qx+K78E38BHu8rOGdGqu9tunP47YpoKA4TWJKryyw8hFTR8Rm1OQgID1
- hJ8XNlcATqys7N46tNkk6YDqY7qJhmC74VJccBQlNw69+ekTH4JISMuuVoW3rCfpP2H7kvB4uFn
- QCdOEiWD1kyNrRdPsgxUNcd8V8EbWK3GR/mkGvcrSsbYe1DykOafpp0HlCzZPyY1FgZtvUnyW0q
- DE55848Nnc5CHW/RMIncPCfCUnGsgLSl4VDvbXdsfSdA4kfeh1ApIjgVAjRsCV/FzCPfhdALVtm
- vUTnccBC/hXoMiOstkOuaRtsDs9tF6wyK4+UOFCH7pLcSc55M1H4Rd7JePViSQBIF3pqIkbYm/w
- o/rVrd6IJi5GRWiu8kA==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzAyMDA3OSBTYWx0ZWRfXzWoYUZQN3R6t
- T5E8twr09butXQlDeUC+FypIBvV5rxFgxdtESm0CEVMacVcKDs2sT5tRfXUBPh+YiKSIcA/QXqc
- RjqG3YFQA6d57C6fw2FDkYbCbpW0r6E=
-X-Proofpoint-GUID: IjLEUfzKbws379H21delVfw6tWb5_fZp
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-07-02_01,2026-06-26_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 clxscore=1015 impostorscore=0 malwarescore=0 adultscore=0
- suspectscore=0 priorityscore=1501 bulkscore=0 spamscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607020079
 
+On Do, 2026-07-02 at 02:31 +0000, Yixun Lan wrote:
+> SpacemiT K3 SoC consist of UFS (Universal Flash Storage) Host Controller
+> which has features compatible with JEDEC UFS 2.2, MIPI UniPro v1.61 and
+> M-PHY v3.0 standard.
+>=20
+> Signed-off-by: Yixun Lan <dlan@kernel.org>
+> ---
+>  drivers/ufs/host/Kconfig        |  12 +
+>  drivers/ufs/host/Makefile       |   1 +
+>  drivers/ufs/host/ufs-spacemit.c | 931 ++++++++++++++++++++++++++++++++++=
+++++++
+>  drivers/ufs/host/ufs-spacemit.h |  90 ++++
+>  4 files changed, 1034 insertions(+)
+>=20
+[...]
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-spacemit.c
+> @@ -0,0 +1,931 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * Copyright (c) 2026 SpacemiT (Hangzhou) Technology Co. Ltd
+> + */
+> +
+> +#include <linux/clk.h>
+> +#include <linux/clk-provider.h>
+> +#include <linux/delay.h>
+> +#include <linux/io.h>
+> +#include <linux/module.h>
+> +#include <linux/of.h>
+> +#include <linux/platform_device.h>
 
-On 6/25/2026 8:13 PM, Can Guo wrote:
-> TX Equalization training currently has a few error-path gaps that can
-> make the flow brittle and can leave variant/device cleanup incomplete.
->
-> This series hardens TX EQTR in three places:
->
-> 1. ufs-qcom: route SW FOM setup failures through the shared cleanup path
->     so temporary device TX EQ settings are restored and link recovery is
->     always attempted before exit.
-> 2. core: treat RX_FOM DME read failures as best effort so TX EQTR can
->     continue, and force failed lanes to deterministic 0 FOM.
-> 3. core: always run tx_eqtr POST_CHANGE notify once PRE_CHANGE succeeds,
->     even when TX EQTR fails, so variant cleanup is not skipped.
->
-> Together these changes improve TX EQTR robustness without changing the
-> normal success path.
->
-> Dependency note:
-> PATCH 3/3 depends on the patch below, which is still under review:
-> https://lore.kernel.org/all/c71af930-c7b4-4480-b125-f35cbe35a16f@oss.qualcomm.com/
->
-> Please apply this series on top of that patch (or a tree containing it).
->
-> v1 -> v2:
-> - Adopted Peter's comment (Patch 2)
->
-> Can Guo (3):
->    scsi: ufs: ufs-qcom: Restore TX Equalization settings on FOM failure
->    scsi: ufs: core: Tolerate RX_FOM read failures in TX EQTR
->    scsi: ufs: core: Always run tx_eqtr POST_CHANGE notify
->
->   drivers/ufs/core/ufs-txeq.c | 33 ++++++++++++++++++++++++---------
->   drivers/ufs/host/ufs-qcom.c |  9 ++++-----
->   2 files changed, 28 insertions(+), 14 deletions(-)
-Reviewed-by: Ziqi Chen <ziqi.chen@oss.qualcomm.com>
+Missing #include <linux/reset.h> for
+devm_reset_control_get_optional_exclusive_deasserted() below.
+Don't rely on indirect includes.
+
+[...]
+> +/**
+> + * ufs_spacemit_init - init phy and prepare clk
+> + * @hba: host controller instance
+> + */
+> +static int ufs_spacemit_init(struct ufs_hba *hba)
+> +{
+> +	int err =3D 0;
+> +	struct device *dev =3D hba->dev;
+> +	struct ufs_spacemit_host *host;
+> +
+> +	host =3D devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+> +	if (!host)
+> +		return -ENOMEM;
+> +
+> +	host->rst =3D devm_reset_control_get_optional_exclusive_deasserted(dev,=
+ NULL);
+
+Why is this stored in struct ufs_spacemit_host at all? As far as I can
+see it is never used again, so this could be a local variable.
+
+[...]
+> diff --git a/drivers/ufs/host/ufs-spacemit.h b/drivers/ufs/host/ufs-space=
+mit.h
+> new file mode 100644
+> index 000000000000..6ae3c263a360
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-spacemit.h
+> @@ -0,0 +1,90 @@
+> +/* SPDX-License-Identifier: GPL-2.0-only */
+> +/*
+> + * SpacemiT UFS Host Controller driver
+> + *
+> + * Copyright (c) 2026 SpacemiT (Hangzhou) Technology Co. Ltd
+> + */
+> +
+> +#ifndef _UFS_SPACEMIT_H_
+> +#define _UFS_SPACEMIT_H_
+> +
+> +#include <linux/reset-controller.h>
+
+Drop this, we are not implementing a reset controller driver here.
+
+> +#include <linux/reset.h>
+
+You could replace this with a struct reset_control forward declaration.
+Or drop it ...
+
+[...]
+> +struct ufs_spacemit_host {
+> +	struct ufs_hba *hba;
+> +	struct ufs_pa_layer_attr dev_req_params;
+> +	struct reset_control *rst;
+
+... if you end up removing the rst field entirely.
+
+regards
+Philipp
