@@ -1,103 +1,123 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04ABE2FFF81
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 12:43:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F03A534041E
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 12:44:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783082612; cv=none; b=XDHmNnXZhsVsVSlQEpbqniihq7IW2ZKt7DQsQaqGtSlC1bRs9tI/O8skgGXzAUAHSVFZJjy/RTwQIQbNtRdjerSgwJTE+BPb1MLKWD6abA7ZInuO76mbOkS1APRCmhvweklwARXC4D1O5zpHbxTlKs+jo+Ble1nNq57LuKUbiwo=
+	t=1783082644; cv=none; b=WvfUi4TpbkKlqebxQuCmY8VQrw6g9MXLTk5lggpmESF0iVixOxYmwv/mRjZgEVdzupA6XekDYjRYtBgE2WfZviqgQiezLmPT4jn/OXG2Db/FIsnjxzD5KjOlpmHrBa5yEYTYrT41ncQstNyPyVYqnv5rjfVHzHRUbCtERHEKd4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783082612; c=relaxed/simple;
-	bh=N2r0Kqm8XcayRuQFJp4+WFi6LqIsrEJ6dFQ3Jv0KMC4=;
+	s=arc-20240116; t=1783082644; c=relaxed/simple;
+	bh=GMSr2CQgRvCfEGrkKrlq+u7r8J8nt81I4/5PV8usons=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=I3DKdAr32kjlvz6g9w7obXnAcNBMgYGGGX2KE54/drf4hasBZMxVtcU8U/DP8B4sSfjlijrNWJkx17MLWDWcBs4zJRX0yCx6FyXtEjkbx82pW5JV8WhMcchMYIwiFjpm4Vg171EAWc5CdfYpwqE/X3PExKmUFlsJDtZwXd8vvME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jvqqxG12; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=FCcZELeyndeoywVGoKB7WPXl4gmcR9MmmGu3J05G29b2Th+5DOxvyk5H+wIC59QzMkElXI2F8se+1v7RazdXWWtkTlj1tNwn4i/OvcUNfVorgrCvDINWimHlD8CrfihD1mROaan5q1HZ1iLJxkwdUrIcrCpUzTE7V0pIh0NdfZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eYgg9vxU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jvqqxG12"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6476A1F000E9;
-	Fri,  3 Jul 2026 12:43:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eYgg9vxU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C6251F000E9;
+	Fri,  3 Jul 2026 12:44:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783082610;
-	bh=5QhaG8RWqoNX6C2ogPUCjl96ecnpIAZYCi9Jzn0t8XQ=;
+	s=k20260515; t=1783082642;
+	bh=jiD6HCpZ3/f3Y2PeWuoFm/Ttpo2vjJbmsFOz0JDeRRk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jvqqxG12qQjyQgS9bJcuT/X6R5il8sizWJwmM2b2r1nqJ4MGw0EDzGVAmRH1dc/NX
-	 p2aceXoboM845XGTBzLp9xzU8uPiQFVDVYKeuiJyOh7E+E8qW82vxuNiedHxSTRirg
-	 iqOXmARnSiO7E9xPrvFUCXloXyHS3C3g8/xbgP4sK0qo/CCkZjDLKdzRWQ8XIxLKit
-	 of0nAws9H471HkbIgWccYB8tDOL+EjXSuLKRWNgPkMq09IH81nv3aepncdKtC42n7b
-	 ASFIdT7AT8dwpDXhRQOh3Yyf34p1imqTrz2xxFC0asYsq1Etdcy0mDNSoZ2OvYeXUT
-	 ykTA/tJwrNhjA==
+	b=eYgg9vxUC4JHkjWSpJ1et7Vcti2gQdL3FO58KsjbvIY05kAkRNOsWVD5GlnKRncFt
+	 0IxS/w4FkXw+//RPRgNeRfr0e35lgGarRa51s8Kg0kl3y1m+ydGUQvTuJ+/Tnfvugq
+	 HdNfSy9wcJ+RphRPixyolk/r6wN65SPx33k9kOFAmucIS6CGPr0rQqlI8M4sCl+p80
+	 7H9jaM0sZgHG1787Rq18DTr2KfYIsVPdJ+GtoXMggnvI72ZJdlqnxhyMac5ZRWwgW0
+	 lIzPADqt4Oj6gKyRBk7XAyZs5Hiclp+2f2X8Bs0DcrrTNA0bnyy93gd/dkYbDoA1Hq
+	 jHtshzvZa6tjg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 15/17] scsi: sd: add mpath_dev file
+Subject: Re: [PATCH v3 16/17] scsi: sd: add mpath_numa_nodes dev attribute
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260703103402.3725011-16-john.g.garry@oracle.com>
+In-Reply-To: <20260703103402.3725011-17-john.g.garry@oracle.com>
 References: <20260703103402.3725011-1-john.g.garry@oracle.com>
- <20260703103402.3725011-16-john.g.garry@oracle.com>
+ <20260703103402.3725011-17-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 12:43:29 +0000
-Message-Id: <20260703124330.6476A1F000E9@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 12:44:01 +0000
+Message-Id: <20260703124402.6C6251F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Concurrent sysfs read of `mpath_dev` can trigger a Use-After-Free =
-of `sd_mpath_disk` during device removal.
+
+New issues:
+- [Low] Build failure due to undefined function `mpath_numa_nodes_show`.
+
+Pre-existing issues:
+- [Critical] Race condition during device removal leads to a Use-After-Free=
+ of `sd_mpath_disk`.
 --
 
-commit 96501c42f9a149bd257256a80ef8d931781b2efe
+commit 90ab5069ccf099a5f4cd42027fac637f7869d718
 Author: John Garry <john.g.garry@oracle.com>
 
-scsi: sd: add mpath_dev file
+scsi: sd: add mpath_numa_nodes dev attribute
 
-This commit adds a mpath_dev sysfs file to allow looking up the multipath
-disk from the per-path gendisk directory.
+Add an attribute to show multipath NUMA node per-path (scsi_disk).
 
 > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index a9a29e50f5eec..0c77466f8291a 100644
+> index 0c77466f8291a..5e0514304d81f 100644
 > --- a/drivers/scsi/sd.c
 > +++ b/drivers/scsi/sd.c
-[ ... ]
-> @@ -4059,6 +4059,52 @@ static int sd_mpath_revalidate_head(struct scsi_di=
-sk *sdkp)
-> =20
->  	return ret;
+> @@ -4075,8 +4075,22 @@ static ssize_t sd_mpath_dev_show(struct device *de=
+v,
 >  }
-> +
-> +static ssize_t sd_mpath_dev_show(struct device *dev,
-> +			struct device_attribute *attr, char *page)
+>  static DEVICE_ATTR(mpath_dev, 0444, sd_mpath_dev_show, NULL);
+
+[Severity: Critical]
+This is a pre-existing issue, but does device removal race with sysfs reads
+and cause a Use-After-Free?
+
+Looking at sd_remove(), sd_mpath_remove(sdkp) is called before del_gendisk(=
+),
+which frees sd_mpath_disk but leaves the sysfs attributes active:
+
+	if (sdp->scsi_mpath_dev)
+		sd_mpath_remove(sdkp);
+
+	scsi_autopm_get_device(sdkp->device);
+
+	device_del(&sdkp->disk_dev);
+	del_gendisk(sdkp->disk);
+
+If a local user concurrently reads the mpath_dev sysfs attribute, won't
+sd_mpath_dev_show() blindly dereference the freed sd_mpath_disk? Will the
+newly added attribute suffer from a similar lifecycle problem?
+
+> =20
+> +static ssize_t sd_mpath_numa_nodes_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
 > +{
 > +	struct gendisk *gd =3D dev_to_disk(dev);
 > +	struct scsi_disk *sdkp =3D gd->private_data;
-> +	struct sd_mpath_disk *sd_mpath_disk =3D sdkp->sd_mpath_disk;
-> +	struct scsi_mpath_head *scsi_mpath_head =3D sd_mpath_disk->scsi_mpath_h=
-ead;
-
-[Severity: High]
-Can reading this sysfs attribute concurrently with device removal trigger a
-use-after-free of sdkp->sd_mpath_disk?
-
-During device teardown, sd_remove() calls sd_mpath_remove() before calling
-del_gendisk(). This frees the multipath structures, but the mpath_dev sysfs
-attribute (which is tied to the gendisk) remains active and accessible until
-del_gendisk() finally tears it down.
-
-If a user continuously reads this attribute during hot-unplug or module
-removal, it appears we could blindly dereference the freed sd_mpath_disk
-pointer here.
-
-> +	struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
-> +	struct gendisk *disk =3D mpath_head->disk;
-> +	struct device *disk_dev =3D disk_to_dev(disk);
+> +	struct scsi_device *sdev =3D sdkp->device;
+> +	struct scsi_mpath_device *scsi_mpath_dev =3D sdev->scsi_mpath_dev;
+> +	struct mpath_device *mpath_device =3D &scsi_mpath_dev->mpath_device;
 > +
-> +	return print_dev_t(page, disk_dev->devt);
+> +	return mpath_numa_nodes_show(mpath_device, buf);
+
+[Severity: Low]
+Will this compile correctly? I couldn't find a declaration or definition for
+mpath_numa_nodes_show() anywhere. Could this lead to an implicit function
+declaration and a subsequent linker error?
+
 > +}
+> +static DEVICE_ATTR(mpath_numa_nodes, 0444, sd_mpath_numa_nodes_show, NUL=
+L);
+> +
+>  static struct attribute *sd_mpath_dev_attrs[] =3D {
+>  	&dev_attr_mpath_dev.attr,
+> +	&dev_attr_mpath_numa_nodes.attr,
+>  	NULL
+>  };
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703103402.3725=
-011-1-john.g.garry@oracle.com?part=3D15
+011-1-john.g.garry@oracle.com?part=3D16
