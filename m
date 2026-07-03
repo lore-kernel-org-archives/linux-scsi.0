@@ -1,170 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 831906FBF;
-	Fri,  3 Jul 2026 01:28:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 507D71A6807;
+	Fri,  3 Jul 2026 02:28:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783042084; cv=none; b=R5nlfY8ImthLqCLSNSnCcaHlS6Eeue+X9IWEWI1/CWWtnHOCFWViLgN+X0gnLCsvqOXi6hGT8WT7mu3HF3zGK4eMgEIFyH7Zer83C0kn1Oed1D6Z2yl2x46+4nAI4+Gc/NCAO8e06jZ4nAgFUnY3KRT3XDf3374l3S8BrJpfc1c=
+	t=1783045721; cv=none; b=sv+oyMzxdl0e00G73ByCFHCFVh4DN8IbMbH5LdR7lXtUT20fXf+W5CJ1ul61S8e+/4asiiOPqV38Wx/tSUz+7I9cs0Hm2nwvgcOl3DFSuieQ3YPJYHxU8rHirzvbP6uV9HiblOgCfhyFz8Vhczlx93pifIT6C8K7bMoluCuyeR8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783042084; c=relaxed/simple;
-	bh=MUBvwv5+qEDS6F9yzR9TIwGgOKaDH1YKncy/OHf2mP4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CjFu88AX/wGeXOJ9RIkukWe7i8p7bPTWLXDxS+qzGDwEnY0Lz7MtoAx9ihsfZK5JAXuQf01E71/rvVhuW9PnuPrpIm52YWAV2wItkmE6vdC0z5rjJ+4N9ZSyUPY/y3q8aclP0/s43Bw6YBeIdzMw5ZabG+8N+GP4ulcS4tfsbn8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TT0sywZD; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783045721; c=relaxed/simple;
+	bh=c0cdLC+hJRPInEpxcRbnWrcotPQJO1KLSKlqoVtUeGs=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DzypmYRAH5MXd45VWEAZq4L39tuIo/9K60GvTTV3uxFWpBIx3ujwF/bduVWQtn0vTfDPXr1N3CSLSP398tymGFbYa7UUh79TCDWLNgmIDNAQYxaSSD+BZRmYf0IKwOmnoCuLSEZIa3uCQbqBeQNQhmvqtqG83Q825MUY7GLHDUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=jxGCiCa7; arc=none smtp.client-ip=113.46.200.221
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TT0sywZD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CDDE1F000E9;
-	Fri,  3 Jul 2026 01:28:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783042083;
-	bh=0eXGKOcKQVdU/sbnJjxGRITWvo+67g14j4Em8TkDCvg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TT0sywZD2HYWh3962wb2Zk7EFaRUAkSkh8KYupweqLXhoGcHxJC/ftAv+XD3uz/oL
-	 yB6EGIyqj8DjKp9sgh6Sg7wD+CycIhRZtn/ZuFwTjj5osNGk6WXj0Yx0mTogfV7Py7
-	 WOuL31iMTiW25Swp2w4nr8gW5ehQTCOr8lPmzv9pXDAyG/lVgLFrxLMLbpq6H6eDZF
-	 M2s1yOH7D9PW5kZ6dOhr5mkwVVLvu8ks1acPWETCoKdLrDc+shDHScUms8ACZmrE8L
-	 wZythJEl7kTS3xNOK1q4GVfYDGZsqSn6YmKNVYLwte5fS5UYIrKQBzlHyDy7SzZDK7
-	 RVHk3MWL5Q/oA==
-Date: Fri, 3 Jul 2026 01:28:00 +0000
-From: Yixun Lan <dlan@kernel.org>
-To: Yao Zi <me@ziyao.cc>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
- driver
-Message-ID: <20260703012800-GKC35811@kernel.org>
-References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
- <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
- <akaeBJv5T3YmlfpC@pie>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="jxGCiCa7"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=49Pofb5TdlkLBj7PQnskmHFYTGlaCtbu0uyBHb/GpgU=;
+	b=jxGCiCa7EIlz8Ed5n+iehHoInhBYoD9ah6C0vZ8TN7T0wz4Bsl585hJAj3+xd/376QhGplMbP
+	vp9vUdx0JYUeUcU2oDcMHLENtR4JKLQ5kqXoIf0XTLmD3w9i8Ahip09dKWb3Uv/QY+KJYra0MJv
+	fej6WwFX6hnFBkTNgmr+Ttk=
+Received: from mail.maildlp.com (unknown [172.19.162.223])
+	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4gryB63lXWzRhRN;
+	Fri,  3 Jul 2026 10:19:26 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id F295740577;
+	Fri,  3 Jul 2026 10:28:35 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Fri, 3 Jul 2026 10:28:35 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<john.g.garry@oracle.com>, <dlemoal@kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+Subject: [PATCH v2 0/2] scsi: support spinup notification for SAS SSP devices in Active_Wait/Idle_Wait state
+Date: Fri, 3 Jul 2026 10:28:31 +0800
+Message-ID: <20260703022833.36847-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <akaeBJv5T3YmlfpC@pie>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
-Hi Yao,
+When a SAS HDD connected via SSP (Serial Attached SCSI Protocol) is powered
+up with the RNOT (Ready Not Optimized) bit set, the device enters the
+Active_Wait or Idle_Wait power state per the SAS protocol specification. In
+this state, the device does not respond to standard SCSI START_STOP spinup
+commands and instead returns NOT_READY with ASC/ASCQ = 0x04/0x11 ("Logical
+unit not ready, notify (enable spinup) required").
 
-On 17:21 Thu 02 Jul     , Yao Zi wrote:
-> On Thu, Jul 02, 2026 at 02:31:36AM +0000, Yixun Lan wrote:
-> > SpacemiT K3 SoC consist of UFS (Universal Flash Storage) Host Controller
-> > which has features compatible with JEDEC UFS 2.2, MIPI UniPro v1.61 and
-> > M-PHY v3.0 standard.
-> > 
-> > Signed-off-by: Yixun Lan <dlan@kernel.org>
-> > ---
-> >  drivers/ufs/host/Kconfig        |  12 +
-> >  drivers/ufs/host/Makefile       |   1 +
-> >  drivers/ufs/host/ufs-spacemit.c | 931 ++++++++++++++++++++++++++++++++++++++++
-> >  drivers/ufs/host/ufs-spacemit.h |  90 ++++
-> >  4 files changed, 1034 insertions(+)
-> 
-> ...
-> 
-> > +static int ufs_spacemit_wait_mphy_pll_lock(struct ufs_hba *hba)
-> > +{
-> > +	int timeout = MPHY_PLL_LOCK_TIMEOUT_US;
-> > +	u32 val;
-> > +
-> > +	while (timeout-- > 0) {
-> > +		val = ufshcd_readl(hba, UFS_PHY_MNG_BASE + UFS_MPHY_PU_CTRL);
-> > +		if (val & MPHY_PLL_LOCK_BIT)
-> > +			return 0;
-> > +
-> > +		udelay(1);
-> > +	}
-> > +
-> > +	dev_err(hba->dev, "M-PHY PLL lock timeout\n");
-> > +	return -ETIMEDOUT;
-> > +}
-> 
-> Could this loop be replaced by read_poll_timeout() like
-> 
-> 	read_poll_timeout(ufshcd_readl, val, val & MPHY_PLL_LOCK_BIT,
-> 			 1, MPHY_PLL_LOCK_TIMEOUT_US, false, hba,
-> 			 UFS_PHY_MSG_BASE + UFS_MPHY_PU_CTRL);
-> 
-I think so, thanks for the suggestion
+Without handling this condition, the SCSI mid-layer will indefinitely retry
+the command with ACTION_DELAYED_RETRY, resulting in the disk never spinning
+up and becoming unusable. A typical manifestation is:
 
-> 
-> ...
-> 
-> > +/**
-> > + * ufs_spacemit_init - init phy and prepare clk
-> > + * @hba: host controller instance
-> > + */
-> > +static int ufs_spacemit_init(struct ufs_hba *hba)
-> > +{
-> > +	int err = 0;
-> > +	struct device *dev = hba->dev;
-> > +	struct ufs_spacemit_host *host;
-> > +
-> > +	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
-> > +	if (!host)
-> > +		return -ENOMEM;
-> > +
-> > +	host->rst = devm_reset_control_get_optional_exclusive_deasserted(dev, NULL);
-> 
-> "resets" property is marked as required in the binding, but the optional
-> API is used here. Is this expected?
-> 
-Ok, I will switch to non-optional API and check return value
+  sd 4:0:9:0: [sde] Spinning up disk...
+  ...not responding...
+  sd 4:0:9:0: [sde] Sense Key : Not Ready
+  sd 4:0:9:0: [sde] Add. Sense: Logical unit not ready, notify (enable spinup) required
 
-> ...
-> 
-> > +/**
-> > + * ufs_spacemit_hce_enable_notify - Configure HCE enable sequence
-> > + * @hba: host controller instance
-> > + * @status: notification status (PRE_CHANGE or POST_CHANGE)
-> > + *
-> > + * Configures host controller enable with proper sequencing.
-> > + * Handles crypto enable if supported.
-> > + *
-> > + * Returns: 0 on success
-> > + */
-> > +static int ufs_spacemit_hce_enable_notify(struct ufs_hba *hba,
-> > +					  enum ufs_notify_change_status status)
-> > +{
-> > +	struct ufs_spacemit_host *host = ufshcd_get_variant(hba);
-> > +	u32 enable_val, val;
-> > +
-> > +	if (status == PRE_CHANGE) {
-> > +		enable_val = CONTROLLER_ENABLE;
-> > +
-> > +		if (hba->caps & UFSHCD_CAP_CRYPTO)
-> > +			enable_val = CRYPTO_GENERAL_ENABLE | CONTROLLER_ENABLE;
-> > +
-> > +		if (!host->first_hce_done) {
-> > +			host->first_hce_done = true;
-> > +			dev_dbg(hba->dev, "First HCE enable\n");
-> > +		} else {
-> > +			val = ufshcd_readl(hba, REG_CONTROLLER_ENABLE);
-> > +			if (val == enable_val) {
-> > +				ufshcd_writel(hba, enable_val & (1 << CONTROLLER_ENABLE),
-> > +					      REG_CONTROLLER_ENABLE);
-> > +
-> > +				while (ufshcd_readl(hba, REG_CONTROLLER_ENABLE) ==
-> > +				       (enable_val & (1 << CONTROLLER_ENABLE)))
-> > +					;
-> 
-> Shouldn't we set a timeout for the polling loop?
-> 
-Yes, good idea and will do in next version
+To resolve this, the SAS controller needs to send a NOTIFY(ENABLE SPINUP)
+primitive to the target phy, which transitions the device out of the waiting
+state and allows normal spinup to proceed.
+
+This patch series addresses the issue:
+
+Adds a new optional spinup_notify callback to struct scsi_host_template
+in the SCSI mid-layer. When ASC/ASCQ = 0x04/0x11 is detected in
+scsi_io_completion_action(), the callback is invoked before the mid-layer
+falls through to ACTION_DELAYED_RETRY, giving the LLDD an opportunity to
+perform controller-specific spinup notification.
+
+Changes in v2 (addressing Sashiko AI review on v1):
+- Add softirq context documentation to spinup_notify in scsi_host.h
+- Defer sl_notify_ssp() to ordered workqueue, fixing msleep-in-
+  atomic bug, preventing RMW races on SL_CONTROL, and deduplicating
+  concurrent callbacks via queue_work()
+
+Xingui Yang (2):
+  scsi: scsi_lib: add spinup_notify callback for ASC/ASCQ=0x04/0x11
+  scsi: hisi_sas: add spinup_notify callback to handle
+    Active_Wait/Idle_Wait SSP devices
+
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 34 ++++++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  1 +
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  1 +
+ drivers/scsi/scsi_lib.c                |  4 +++
+ include/scsi/scsi_host.h               | 12 +++++++++
+ 7 files changed, 55 insertions(+)
 
 -- 
-Yixun Lan (dlan)
+2.43.0
+
