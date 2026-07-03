@@ -1,234 +1,207 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E50093BB10C
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 10:45:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56BAF3BA253
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 10:45:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783075508; cv=none; b=LP9PP3XwSSe7I3FYggTXDO3C9PB9iON0wgRzNEpsCCWZFHQwiVyFdjFP+PMR3sW1bJ3yDmCYEZLz8nU7ejpBHIb6n6MrDJ7DnX4U99M2fEKNaRNZ8Vevw52jfJmYXpJFzaMS38SQd2Ng5xruVjyzMt20C3Qsj2VULJVtlxl+48Y=
+	t=1783075560; cv=none; b=ISFZNHjo8+TY4DgZeM20bGvlqg4qxMi3DGxn3ZLpn8PDmR83D7XWJ8+evR2WpuKP9qCG0xxlFNDi+rmv4YK9SDmKRm77Hgbe7CZw6rjiW2I0XTYCfylbd+CokHKUHJKVa+rDb6BKOyMVo/an6psTFXPQ/33kexgn7JL4R6tWJYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783075508; c=relaxed/simple;
-	bh=j8pkVEqSf/46PfaHjEs/tIur6m6COjc2qB5C/ML68q4=;
+	s=arc-20240116; t=1783075560; c=relaxed/simple;
+	bh=XgUZtbP9w0t6Q2ykhDDEwcI0vUhPQXTVa5iBPKR+hGU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=p/hHkL2cwQRkYZSRcMAuanU8g4/iJDrAv9P3Ryycq/nYnOMGjJsFAP6XBS3uKo+L3RSo3xUFEDVzzMm1CO3t1aRenmYaFbJGFzeUIOICYTIzqTeEoS0UuDya6cSYcXiWJlDu9NIaUOLRG6u5ufq8V9AO4y0tk/mOQjHghxVJceo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RZb/AzmF; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=aSMRArno+YHnJPZx7hjnnLHn7CZsspvxJHeQ7UQjpSJTTE0BraBlBBgoPHoWqE/fqRKIFmi3sxqt0ygYRAr/dbB5/xOCep0k1fY67V4exX6xn7k9rgQ4mJRYctEqvJUDdhGWcfjdXJepY5ly7nDD8x1kI9kXuj3GFV9qoWlB7Vc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aDvplC2z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RZb/AzmF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CF051F000E9;
-	Fri,  3 Jul 2026 10:45:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aDvplC2z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC6B71F000E9;
+	Fri,  3 Jul 2026 10:45:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783075506;
-	bh=51MIHWFxJZP7Ohizw1Cf7Vb6UBRLRp/J8PbETkNL6ow=;
+	s=k20260515; t=1783075557;
+	bh=VUmiubtXSP2oI3Hp29pCTi2EaUvOTqb/gBUygY3Uua4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RZb/AzmFEeGpP0HhjGfYhypmf+OtA2TxpwJRW2s3TWtiRbkIPZqCRFGOjum37HCqX
-	 p8nhH4h5C3IOIsx8oVSGV03bTHx3ACwdINxLrdBV99EcA9TssAok4J2/sGvP9xo4WJ
-	 99hjQ8C5sgaHEjxnZrNOuhj3rsO8YSWURWLw6Xp9ZlEXaG/5IQmthGc+K7MXivkQDc
-	 /5SlzTepPiyCaJNLskNrzqaw92qx34Go28OLo3aR9sMSeq0UIXa+ZRxxpb6ZWguAJa
-	 yCr8SpB8qZE3X3APT7TTb/ASNCIKnjqJQ8WEerXaZF07qfw5fx5ajD/F/Isv6J497L
-	 ZRBGv2yfCVvIQ==
+	b=aDvplC2zQ7PDn9GzSOOQ9wT3AKBPOsNprzTn8Ud+kQeAt7AsE20LJB+3QoW4/Dv3U
+	 KjbjlrwNe71M0vgBFev8W9DL7fGVQ8YmeFaOjUHm2C2ycEfRFua7U74B6d0NOm9oF9
+	 WwDD/xTkQfNRC6cYaOL3sSJDdC2+q1q00aDHgGIdra+N88nOLCflMjiwSXrmG4cAh8
+	 FDnkGOe5NU8e5WHd+oXGFWnQeX7c2WPBAt8oNEKFd9SE6Pn5OEUN4S942rtmVkzbP5
+	 1aiKriLnBvKSHtCzvg6zIko7smouP3ObaodO+5fN1BzMCeYyH6ECchfBAnH7k72XG/
+	 Sx/JNy3y2gEFg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 06/13] libmultipath: Add delayed removal support
+Subject: Re: [PATCH v3 03/13] libmultipath: Add path selection support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260703102918.3723667-7-john.g.garry@oracle.com>
+In-Reply-To: <20260703102918.3723667-4-john.g.garry@oracle.com>
 References: <20260703102918.3723667-1-john.g.garry@oracle.com>
- <20260703102918.3723667-7-john.g.garry@oracle.com>
+ <20260703102918.3723667-4-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 10:45:06 +0000
-Message-Id: <20260703104506.9CF051F000E9@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 10:45:55 +0000
+Message-Id: <20260703104556.AC6B71F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
+Thank you for your contribution! Sashiko AI review found 6 potential issue(=
 s) to consider:
-- [High] Repeated calls to `mpath_can_remove_head()` leak module references=
- when removal work is already pending.
-- [High] Race condition between `mpath_add_device()`, `mpath_can_remove_hea=
-d()`, and `mpath_remove_head_work()` leads to use-after-free of mpath_head.
-- [High] Missing cancellation of delayed removal work on `mpath_head` teard=
-own results in Use-After-Free.
-- [High] `mpath_head->drv_module` is never initialized by the subsystem API=
-, leading to a silent failure to pin the driver module.
-- [Medium] Disabling delayed removal via sysfs fails to cancel already pend=
-ing removal work, leading to unexpected device removal.
-- [Low] Incompatible pointer type passed to `kstrtouint()` causes compiler =
-warnings.
-- [Low] Integer overflow when calculating the delay for `mod_delayed_work()=
-` results in severely shortened delays.
+- [High] `mpath_round_robin_path` enters an infinite loop if the current ca=
+ched path (`old`) is concurrently removed.
+- [High] Unsafe usage of `list_is_singular()` on an RCU list leads to data =
+races and routes I/O to a removed path.
+- [High] `mpath_numa_path` fails to verify if the cached path is disabled b=
+efore returning it, potentially routing I/O to a disabled path.
+- [High] `mpath_alloc_head_disk` leaves an ERR_PTR in `mpath_head->disk` on=
+ failure, causing cleanup paths to crash.
+- [Medium] NULL pointer dereference in `mpath_queue_depth_path` if a device=
+ does not provide `nr_active`.
+- [Medium] The `.get_access_state` callback is missing from `struct mpath_h=
+ead_template`, violating the documented API intent.
 --
 
-commit c00bb95222f826ebc3e8dbd55ff6884abf84858e
+commit e941f797884516dd9568e0b668984eb3c895248a
 Author: John Garry <john.g.garry@oracle.com>
 
-libmultipath: Add delayed removal support
+    libmultipath: Add path selection support
    =20
-Add support for delayed removal, same as exists for NVMe.
-   =20
-The purpose of this feature is to keep the multipath disk and cdev present
-for intermittent periods of no available path.
+    Add code for path selection.
 
-> diff --git a/lib/multipath.c b/lib/multipath.c
-> index 007aa34796569..78f88b0664c78 100644
-> --- a/lib/multipath.c
-> +++ b/lib/multipath.c
-> @@ -61,6 +61,8 @@ void mpath_add_device(struct mpath_device *mpath_device,
->  	mutex_lock(&mpath_head->lock);
->  	list_add_tail_rcu(&mpath_device->siblings, &mpath_head->dev_list);
->  	mutex_unlock(&mpath_head->lock);
-> +	if (cancel_delayed_work(&mpath_head->remove_work))
-> +		module_put(mpath_head->drv_module);
->  }
-
-[Severity: High]
-Does this code introduce a use-after-free race condition?
-
-If the delayed removal timer is already executing, cancel_delayed_work()
-returns false.=20
-
-mpath_add_device() will successfully add the device, but the
-already-executing mpath_remove_head_work() unconditionally calls
-mpath_head->mpdt->remove_head() without checking for newly added devices.
-
-Could the newly added device access the destroyed mpath_head?
-
-[ ... ]
-
-> @@ -518,6 +530,39 @@ static void mpath_requeue_work(struct work_struct *w=
-ork)
-> +bool mpath_can_remove_head(struct mpath_head *mpath_head)
-> +{
-> +	bool remove =3D false;
-> +
-> +	mutex_lock(&mpath_head->lock);
-> +	/*
-> +	 * Ensure that no one could remove this module while the head
-> +	 * remove work is pending.
-> +	 */
-> +	if (mpath_head_queue_if_no_path(mpath_head) &&
-> +		try_module_get(mpath_head->drv_module)) {
-
-[Severity: High]
-Is mpath_head->drv_module initialized anywhere in the subsystem API?
-
-If it remains uninitialized (e.g., NULL from zero-allocated structures),
-try_module_get(NULL) will silently succeed.=20
-
-Could this lead to a failure to pin the driver module, potentially resulting
-in a crash if the module is unloaded while the timer is pending?
-
-> +
-> +		mod_delayed_work(mpath_wq, &mpath_head->remove_work,
-> +				mpath_head->delayed_removal_secs * HZ);
-
-[Severity: High]
-Does this unconditionally increment the module reference count even when the
-timer is already pending?
-
-If mpath_can_remove_head() is called multiple times, try_module_get()
-will increment the reference count on each call.=20
-
-However, mod_delayed_work() merely modifies the existing timer. When the
-timer eventually fires, mpath_remove_head_work() calls module_put() only
-once, leaking the additional module references and preventing unloading.
-
-[Severity: Low]
-Does this multiplication overflow on 32-bit systems?
-
-mpath_head->delayed_removal_secs is an unsigned int, and HZ is typically
-an integer.=20
-
-Could their product overflow 32-bit arithmetic before being promoted to
-unsigned long for mod_delayed_work(), leading to shortened delays?
-
-> +	} else {
-> +		remove =3D true;
-> +	}
-> +
-> +	mutex_unlock(&mpath_head->lock);
-> +	return remove;
-> +}
-> +EXPORT_SYMBOL_GPL(mpath_can_remove_head);
-> +
-> +static void mpath_remove_head_work(struct work_struct *work)
-> +{
-> +	struct mpath_head *mpath_head =3D container_of(to_delayed_work(work),
-> +			struct mpath_head, remove_work);
-> +	struct module *drv_module =3D mpath_head->drv_module;
-> +
-> +	mpath_head->mpdt->remove_head(mpath_head);
-> +	module_put(drv_module);
-> +}
-
-[ ... ]
-
-> @@ -562,6 +607,9 @@ int mpath_alloc_head_disk(struct mpath_head *mpath_he=
-ad,
->  	mpath_head->disk->private_data =3D mpath_head;
->  	mpath_head->disk->fops =3D &mpath_ops;
-> =20
-> +	INIT_DELAYED_WORK(&mpath_head->remove_work, mpath_remove_head_work);
-> +	mpath_head->delayed_removal_secs =3D 0;
-> +
->  	set_bit(GD_SUPPRESS_PART_SCAN, &mpath_head->disk->state);
-
-[Severity: High]
-Is the delayed removal work reliably canceled during final teardown?
-
-During explicit device teardown (like a driver unbind), functions like
-mpath_head_cleanup() are called to free resources.=20
-
-Since this patch doesn't add a cancel_delayed_work_sync() call to the
-cleanup path, could an active timer fire after the mpath_head has been
-freed, leading to a use-after-free?
-
-[ ... ]
-
-> @@ -605,6 +653,47 @@ void mpath_device_set_live(struct mpath_device *mpat=
-h_device)
-> +ssize_t mpath_delayed_removal_secs_store(struct mpath_head *mpath_head,
-> +			const char *buf, size_t count)
-> +{
-> +	ssize_t ret;
-> +	int sec;
-> +
-> +	ret =3D kstrtouint(buf, 0, &sec);
-
-[Severity: Low]
-Does passing an int pointer to kstrtouint() cause compiler warnings?
-
-sec is declared as an int, but kstrtouint() strictly expects an unsigned
-int *.=20
-
-Could this cause an incompatible pointer type warning and potential undefin=
-ed
-behavior on architectures with differing int/unsigned int layouts?
-
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	mutex_lock(&mpath_head->lock);
-> +	mpath_head->delayed_removal_secs =3D sec;
-> +	if (sec)
-> +		set_bit(MPATH_HEAD_QUEUE_IF_NO_PATH, &mpath_head->flags);
-> +	else
-> +		clear_bit(MPATH_HEAD_QUEUE_IF_NO_PATH, &mpath_head->flags);
+>     NVMe ANA is abstracted into enum mpath_access_state. The motivation h=
+ere is
+>     so that SCSI ALUA can be used. Callbacks .is_disabled, .is_optimized,
+>     .get_access_state are added to get the path access state.
 
 [Severity: Medium]
-Should the active timer be canceled when delayed removal is disabled?
+The commit message mentions adding a .get_access_state callback, but it app=
+ears
+to be missing from struct mpath_head_template. Is this intentional, or shou=
+ld
+it be included in the struct definition to avoid requiring drivers to direc=
+tly
+modify the access_state field?
 
-When a user writes 0 to disable the feature, this code clears the flag but
-misses a call to cancel_delayed_work(&mpath_head->remove_work).=20
+[ ... ]
+> diff --git a/lib/multipath.c b/lib/multipath.c
+> index 79be84d3d4f75..21f7ffdb22d60 100644
+> --- a/lib/multipath.c
+> +++ b/lib/multipath.c
+[ ... ]
+> +static struct mpath_device *mpath_round_robin_path(
+> +				struct mpath_head *mpath_head)
+> +{
+> +	struct mpath_device *mpath_device, *found =3D NULL;
+> +	int node =3D numa_node_id();
+> +	enum mpath_access_state access_state_old;
+> +	struct mpath_device *old =3D
+> +			srcu_dereference(mpath_head->current_path[node],
+> +				&mpath_head->srcu);
+> +
+> +	if (unlikely(!old))
+> +		return __mpath_find_path(mpath_head, node);
+> +
+> +	if (list_is_singular(&mpath_head->dev_list)) {
+> +		if (mpath_path_is_disabled(mpath_head, old))
+> +			return NULL;
+> +		return old;
+> +	}
 
-If the timer is already pending, will it continue to run and eventually
-destroy the head, contrary to the user's configuration?
+[Severity: High]
+Could using list_is_singular() here lead to data races? Since this list is
+managed with RCU, and list_is_singular() evaluates head->next =3D=3D head->=
+prev,
+it might read inconsistent prev pointers during concurrent updates. Also, i=
+f old
+was concurrently removed and only one valid path remains, would this return
+the removed old path instead of the new remaining path?
 
-> +	mutex_unlock(&mpath_head->lock);
+> +
+> +	for (mpath_device =3D mpath_next_dev(mpath_head, old);
+> +	    mpath_device && mpath_device !=3D old;
+> +	    mpath_device =3D mpath_next_dev(mpath_head, mpath_device)) {
+
+[Severity: High]
+Does this loop terminate safely if old has been concurrently removed from t=
+he list?
+If old is unlinked via list_del_rcu(), mpath_device !=3D old will always be=
+ true.
+Could this result in an infinite loop wrapping around the active elements
+indefinitely, leading to a lockup if no path is MPATH_STATE_OPTIMIZED?
+
+> +
+> +		if (mpath_path_is_disabled(mpath_head, mpath_device))
+> +			continue;
+[ ... ]
+> +static struct mpath_device *mpath_queue_depth_path(
+> +				struct mpath_head *mpath_head)
+> +{
+> +	struct mpath_device *best_opt =3D NULL, *mpath_device;
+> +	struct mpath_device *best_nonopt =3D NULL;
+> +	unsigned int min_depth_opt =3D UINT_MAX, min_depth_nonopt =3D UINT_MAX;
+> +	unsigned int depth;
+> +
+> +	list_for_each_entry_srcu(mpath_device, &mpath_head->dev_list, siblings,
+> +				 srcu_read_lock_held(&mpath_head->srcu)) {
+> +
+> +		if (mpath_path_is_disabled(mpath_head, mpath_device))
+> +			continue;
+> +
+> +		depth =3D atomic_read(mpath_device->nr_active);
+
+[Severity: Medium]
+Could this dereference a NULL pointer if a device was added without providi=
+ng
+an nr_active atomic counter during mpath_add_device()? If userspace sets the
+I/O policy to 'queue-depth' via sysfs, would it crash here?
+
+> +
+> +		switch (mpath_device->access_state) {
+[ ... ]
+> +static struct mpath_device *mpath_numa_path(struct mpath_head *mpath_hea=
+d)
+> +{
+> +	int node =3D numa_node_id();
+> +	struct mpath_device *mpath_device;
+> +
+> +	mpath_device =3D srcu_dereference(mpath_head->current_path[node],
+> +					&mpath_head->srcu);
+> +	if (unlikely(!mpath_device))
+> +		return __mpath_find_path(mpath_head, node);
+> +	if (unlikely(!mpath_path_is_optimized(mpath_head, mpath_device)))
+> +		return __mpath_find_path(mpath_head, node);
+> +	return mpath_device;
+> +}
+
+[Severity: High]
+Does this correctly validate the cached path before returning it? Unlike ot=
+her
+path selection functions, this omits checking mpath_path_is_disabled().
+If a path transitions to a disabled state but remains marked as optimized, =
+could
+mpath_numa_path() incorrectly continue to route I/O to it?
+
+[ ... ]
+> @@ -103,7 +339,8 @@ EXPORT_SYMBOL_GPL(mpath_put_disk);
+>  int mpath_alloc_head_disk(struct mpath_head *mpath_head,
+>  			struct queue_limits *lim, int numa_node)
+>  {
+> -	if (!mpath_head->disk_groups || !mpath_head->parent)
+> +	if (!mpath_head->disk_groups || !mpath_head->parent ||
+> +	    !mpath_head->iopolicy)
+>  		return -EINVAL;
+> =20
+>  	mpath_head->disk =3D blk_alloc_disk(lim, numa_node);
+
+[Severity: High]
+If blk_alloc_disk() fails, it returns an ERR_PTR. If this is assigned direc=
+tly
+to mpath_head->disk and an error is returned without setting mpath_head->di=
+sk
+back to NULL, could this cause subsequent cleanup paths (like mpath_put_dis=
+k())
+to crash when they check if (mpath_head->disk) and attempt to put an ERR_PT=
+R?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703102918.3723=
-667-1-john.g.garry@oracle.com?part=3D6
+667-1-john.g.garry@oracle.com?part=3D3
