@@ -1,145 +1,210 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAE52331EB6
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 10:49:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9A1D3ACA77
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 10:49:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783075757; cv=none; b=RJM5qibtRzpJJmBSeLkBC3Khj4Xr6EP7tROZPW0MRbEknVsy4iMO9de3peCnpgjK9ZGCmx+XioDuCoScl/MtX/rATgvFmByl6QayHGCowCvSa1Kq3PAfCgXULj8O6yYwZaBoypch9JQt66T5dwJQzu9rJ1p6hOcoVfnSPqjWKDE=
+	t=1783075762; cv=none; b=mEpf/vfudWV+ZhkPSmjBgUfXVQM4XLYUFST7gv33k4WGQv+j8SMvQ6P788wleXqOgrH5gT0wj4XU5I1zN3A8L+ozeB6qw3SwSzXZbvajbZ2K9z9QcbQ0HMomMAxD3tJkyTaTWxFyH/K62kOIrI8WLp/+DGHrc9SFkbWmsf0tH3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783075757; c=relaxed/simple;
-	bh=KMNAOBsdW7VszHV/dB2OPDm//huZtrLX0s7OgzK293M=;
+	s=arc-20240116; t=1783075762; c=relaxed/simple;
+	bh=VNPxXkwn6wAPB4nOsAssBcKFFGanhd613MjQ/aUPKTo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EKHEmGTVnQboULGzdpsfekc7q6nRKhcH4OT0G8PdvkRW1xJlI3/0ZqsqepLr6LQHlMGShKkcU59p5kTIuatZBbGKc3ZAcQ5lZXqQERtf37BcbhApGUYQYZM2wdo883cRuhGaBPo2ilsndPBu5f1M76Jjld3kwuDVEQOro5OCReg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NnXPTX7o; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Sj/7XPTyELXi46tXaeSma4eT094kGOJniKqYwZr9TnqbbHMO6JpW1DqPVWa0YuDqPp83Z1w6m33kBh+N/OkE+BITe2GzfV8qWtktxsZZLzNvhUHADOiEpIpWi6rFCr6RtY/5pVkEhOPjqxexoH1djmzOmfwyt/UCjV4bAG4w/lU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jLKVXeUN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NnXPTX7o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EBEA1F000E9;
-	Fri,  3 Jul 2026 10:49:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jLKVXeUN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2095C1F000E9;
+	Fri,  3 Jul 2026 10:49:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783075755;
-	bh=0ohOmmhKeR8I3Vx4CzDLogop48qwzi+u7c4/bf2d0K4=;
+	s=k20260515; t=1783075761;
+	bh=hGBsaqb9ji6fy3bxS1fsfbyfbyBJq458moLK45gVvMc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NnXPTX7oQ28P1+Wm+9rEzQ0Gnonj6jRahcWcylZBxdp7ZVj+zRao9/D0Z1S0HcTC8
-	 dL3zK67mu7+7PAvDTjUGB05bcajFa/79Pl11pulll97VlyJKjGkkSMi+chPRc/Aw+q
-	 g4Ruga1ISZc6IBZ0xQA/WOwM9qiJHSVxDIMn6GOYIX76a0RFPAyQReC6mx7fJlf0EQ
-	 scOU/iBX4KS+wFgCKG1Gm5hqz653Nhzz7JXzxmnRMj40yA4wapNwD0ZWWFwCqDeTtJ
-	 Hxs7KAL4nZBmtdil1E+aQ94hJnVXYpnEM9sy9nNZJFzMIljqTEnHAXMx9eC6Npfbps
-	 fURcEmpJAnVyQ==
+	b=jLKVXeUN8I+Qo9ldZU2tvRpX274oDKB6pA+dstdoVum5Xq0I6zwTI1KqMnsod5r+V
+	 ZCUGskE+EeaELiUk4/2CiaIMCJMS1bqj7QIovTeelu/oas2yiB6MT0Ym9yTEIMXkCG
+	 4J+cFNq1gJawqHMQWr/xm5ETmZVNtWYoGxzP49MVAOtmpoPTLr6n+c8c7OWJxzxU2/
+	 2Zdt+L70u05j0BMTpLw2rzIHZkJcxboJvFr/m5INM/EZQW9IP9M+nWlEkj4hO9NZjm
+	 5mrwbJz+fHG9+vSvDpyo/cSozQ/7izkzFvtObElWJwwBNDHPRXIQlzWaCZ3OsS84J/
+	 PXL6uDTFwwUnA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 04/13] libmultipath: Add bio handling
+Subject: Re: [PATCH v3 02/17] scsi-multipath: introduce scsi_device head
+ structure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260703102918.3723667-5-john.g.garry@oracle.com>
-References: <20260703102918.3723667-1-john.g.garry@oracle.com>
- <20260703102918.3723667-5-john.g.garry@oracle.com>
+In-Reply-To: <20260703103402.3725011-3-john.g.garry@oracle.com>
+References: <20260703103402.3725011-1-john.g.garry@oracle.com>
+ <20260703103402.3725011-3-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 10:49:14 +0000
-Message-Id: <20260703104915.5EBEA1F000E9@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 10:49:20 +0000
+Message-Id: <20260703104921.2095C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] TOCTOU race in `mpath_remove_disk` can strand a bio on `requeue_li=
-st`, causing `del_gendisk` to deadlock.
-- [Medium] The `trace_block_bio_remap` tracepoint is called with the wrong =
-device argument for `old_dev`, causing the trace event to emit identical de=
-vices for source and destination.
+- [High] Self-deadlock in scsi_mpath_find_head() due to kref_put() triggeri=
+ng release while holding scsi_mpath_heads_lock.
+- [High] Double-free and use-after-free of scsi_mpath_head in the error pat=
+h of scsi_mpath_alloc_head().
+- [High] NULL pointer dereference and invalid device_unregister() execution=
+ when tearing down a failed device_add() in scsi_mpath_dev_alloc().
 --
 
-commit 1f99dbf217347b66f1710f734eac617209a4e8c6
+commit d7eb5e4fb506178f4a58d8aa264acf8230ebb5fa
 Author: John Garry <john.g.garry@oracle.com>
 
-libmultipath: Add bio handling
+scsi-multipath: introduce scsi_device head structure
 
-This commit adds per-path bio submission support and failover requeuing
-logic for libmultipath. It introduces mechanisms similar to NVMe multipath
-to clone bios and submit them with the REQ_MPATH flag.
+This patch introduces a scsi_mpath_head structure to manage multipathing
+for a scsi_device. It maintains a list of scsi_mpath_head structures
+to look up matching multipathed devices by their unique ID. A new sysfs
+device class is also added to manage the scsi_mpath_head device members.
 
-> diff --git a/lib/multipath.c b/lib/multipath.c
-> index 21f7ffdb22d60..81e737c1ce469 100644
-> --- a/lib/multipath.c
-> +++ b/lib/multipath.c
-
+> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+> index ff37cfdf2f9d1..65ee3da5cc7fc 100644
+> --- a/drivers/scsi/scsi_multipath.c
+> +++ b/drivers/scsi/scsi_multipath.c
 [ ... ]
-
-> @@ -243,6 +242,81 @@ static struct mpath_device *mpath_find_path(struct m=
-path_head *mpath_head)
-> +static void mpath_bdev_submit_bio(struct bio *bio)
+> @@ -88,6 +146,71 @@ static int scsi_multipath_sdev_init(struct scsi_devic=
+e *sdev)
+[ ... ]
+> +static struct scsi_mpath_head *scsi_mpath_alloc_head(void)
 > +{
-
 [ ... ]
-
-> +		bio_set_dev(bio, mpath_device->disk->part0);
-> +		/*
-> +		 * Use BIO_REMAPPED to skip bio_check_eod() when this bio
-> +		 * enters submit_bio_noacct() for the per-path device. The EOD
-> +		 * check already passed on the multipath head.
-> +		 */
-> +		bio_set_flag(bio, BIO_REMAPPED);
-> +		bio->bi_opf |=3D REQ_MPATH;
-> +		trace_block_bio_remap(bio, disk_devt(mpath_device->disk),
-> +				      bio->bi_iter.bi_sector);
-
-[Severity: Medium]
-Does this tracepoint call incorrectly use the target path device instead of
-the original head device?=20
-
-By passing disk_devt(mpath_device->disk), it seems the trace event will log
-the new path device as both the source and destination, which might break
-trace analysis. Should this be disk_devt(mpath_head->disk)?
-
-> +		submit_bio_noacct(bio);
-> +	} else if (mpath_available_path(mpath_head)) {
-> +		dev_warn_ratelimited(dev, "no usable path - requeuing I/O\n");
+> +	ret =3D dev_set_name(&scsi_mpath_head->dev, "scsi_mpath_device%d",
+> +				scsi_mpath_head->index);
+> +	if (ret) {
+> +		put_device(&scsi_mpath_head->dev);
+> +		goto out_free_ida;
+> +	}
 > +
-> +		spin_lock_irq(&mpath_head->requeue_lock);
-> +		bio_list_add(&mpath_head->requeue_list, bio);
-> +		spin_unlock_irq(&mpath_head->requeue_lock);
-> +		atomic_long_inc(&mpath_head->requeue_no_usable_path_cnt);
-> +	} else {
-
-[ ... ]
-
-> @@ -314,11 +389,34 @@ static void multipath_partition_scan_work(struct wo=
-rk_struct *work)
->  void mpath_remove_disk(struct mpath_head *mpath_head)
->  {
->  	if (test_and_clear_bit(MPATH_HEAD_DISK_LIVE, &mpath_head->flags)) {
->  		struct gendisk *disk =3D mpath_head->disk;
-> =20
-> +		/*
-> +		 * requeue I/O after MPATH_HEAD_DISK_LIVE has been cleared
-> +		 * to allow multipath to fail all I/O.
-> +		 */
-> +		mpath_schedule_requeue_work(mpath_head);
+> +	return scsi_mpath_head;
 > +
->  		mpath_synchronize(mpath_head);
+> +out_free_ida:
+> +	ida_free(&scsi_multipath_dev_ida, scsi_mpath_head->index);
+> +out_put_head:
+> +	mpath_put_head(&scsi_mpath_head->mpath_head);
+> +out_free:
+> +	kfree(scsi_mpath_head);
+> +	return NULL;
+> +}
 
 [Severity: High]
-Could scheduling the requeue work before synchronizing SRCU cause a deadlock
-during device removal?
+Will this cause a double-free on the error path?
 
-If mpath_bdev_submit_bio() checks mpath_available_path() and sees the disk
-is live, but then gets preempted before taking the requeue_lock,
-mpath_remove_disk() might clear MPATH_HEAD_DISK_LIVE and schedule the
-requeue worker.
+If dev_set_name() fails, put_device() is called which triggers the
+scsi_mpath_head_release() callback, freeing the IDA and the structure itsel=
+f.
 
-The worker would run and find the requeue_list empty. When the submitter
-wakes up and adds the bio, it will be stranded on the requeue_list.
+The code then falls through to the out_free_ida label which calls ida_free()
+and kfree() a second time on the already freed pointer.
 
-Because the bio holds a q_usage_counter reference, will del_gendisk()
-hang forever waiting for the queue to freeze?
+> +
+> +static struct scsi_mpath_head *scsi_mpath_find_head(
+> +			struct scsi_mpath_device *scsi_mpath_dev)
+> +{
+[ ... ]
+> +	list_for_each_entry(scsi_mpath_head, &scsi_mpath_heads_list, entry) {
+> +		ret =3D scsi_mpath_get_head(scsi_mpath_head);
+> +		if (ret)
+> +			continue;
+> +		if (strncmp(scsi_mpath_head->vpd_id,
+> +			scsi_mpath_dev->device_id_str,
+> +			SCSI_MPATH_DEVICE_ID_LEN) =3D=3D 0) {
+> +
+> +			return scsi_mpath_head;
+> +		}
+> +		scsi_mpath_put_head(scsi_mpath_head);
+> +	}
+> +
+> +	return NULL;
+> +}
+[ ... ]
+> @@ -116,13 +240,58 @@ int scsi_mpath_dev_alloc(struct scsi_device *sdev)
+[ ... ]
+> +	mutex_lock(&scsi_mpath_heads_lock);
+> +	scsi_mpath_head =3D scsi_mpath_find_head(sdev->scsi_mpath_dev);
+> +	if (scsi_mpath_head)
+> +		goto found;
+> +	scsi_mpath_head =3D scsi_mpath_alloc_head();
+> +	if (!scsi_mpath_head) {
+> +		sdev_printk(KERN_NOTICE, sdev, "could not allocate multipath head, dev=
+ice multipathing disabled\n");
+> +		mutex_unlock(&scsi_mpath_heads_lock);
+> +		goto out_uninit;
+> +	}
+> +
+> +	strscpy(scsi_mpath_head->vpd_id, sdev->scsi_mpath_dev->device_id_str,
+> +			SCSI_MPATH_DEVICE_ID_LEN);
+> +
+> +	ret =3D device_add(&scsi_mpath_head->dev);
+> +	if (ret) {
+> +		mutex_unlock(&scsi_mpath_heads_lock);
+> +		goto out_put_head;
+> +	}
+> +
+> +	list_add_tail(&scsi_mpath_head->entry, &scsi_mpath_heads_list);
+> +found:
+> +	mutex_unlock(&scsi_mpath_heads_lock);
+[ ... ]
+> +out_put_head:
+> +	scsi_mpath_put_head(scsi_mpath_head);
+>  out_uninit:
+>  	scsi_multipath_sdev_uninit(sdev);
+>  	return ret;
+>  }
+[ ... ]
+> +static void scsi_mpath_free_head(struct kref *ref)
+> +{
+> +	struct scsi_mpath_head *scsi_mpath_head =3D
+> +		container_of(ref, struct scsi_mpath_head, ref);
+> +
+[ ... ]
+> +	mutex_lock(&scsi_mpath_heads_lock);
+> +	list_del_init(&scsi_mpath_head->entry);
+> +	mutex_unlock(&scsi_mpath_heads_lock);
+> +
+> +	device_unregister(&scsi_mpath_head->dev);
+> +}
 
->  		del_gendisk(disk);
->  	}
+[Severity: High]
+Could this lead to an AB-BA self-deadlock?
+
+The scsi_mpath_dev_alloc() function acquires scsi_mpath_heads_lock before
+calling scsi_mpath_find_head(). During iteration, scsi_mpath_find_head()
+takes a temporary reference to each head.
+
+If a concurrent thread drops its reference to a head just as we process it,
+our scsi_mpath_put_head() call might drop the refcount to 0.
+
+This would trigger scsi_mpath_free_head(), which unconditionally tries to
+acquire scsi_mpath_heads_lock. Since the non-recursive mutex is already held
+by the current thread in scsi_mpath_dev_alloc(), it appears this would free=
+ze
+the thread.
+
+[Severity: High]
+Is there a risk of a NULL pointer dereference and invalid device unregistra=
+tion
+here if device_add() fails?
+
+If device_add() fails in scsi_mpath_dev_alloc(), we jump to out_put_head and
+call scsi_mpath_put_head(). This drops the refcount to 0 and triggers this
+cleanup function.
+
+However, the scsi_mpath_head was just allocated with kzalloc and never added
+to the list, so entry.next and entry.prev are NULL. Calling list_del_init()
+would dereference these NULL pointers.
+
+Furthermore, calling device_unregister() will invoke device_del() on a devi=
+ce
+that failed device_add(), which violates the driver core API.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703102918.3723=
-667-1-john.g.garry@oracle.com?part=3D4
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703103402.3725=
+011-1-john.g.garry@oracle.com?part=3D2
