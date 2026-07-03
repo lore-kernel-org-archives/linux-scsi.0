@@ -1,182 +1,145 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54CDF306774
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 11:10:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4DB2388885
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 11:11:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783077048; cv=none; b=hVMvtetoUqK0VNmJVtQVv9BhnprbqzsJY875nc1Mg5BEk8pWe0dY7uVQOEEOFqaJ8M2jO3ZpwAdoXkmSIJAH/XqVk5hv4ykNreAYAMcRnXrct5ueaKejrjjnWNcjoU0X8i9OePm/jxzHZAlilrmej2cIZzEqvo3vUYZSDef9MUE=
+	t=1783077107; cv=none; b=kM04s5YGgi5mw/vDvRi7wENKXX6dGC8FkGdEr9rKE8kK5nzo8/OoIB4KpVTw/ql/U12mwIr1T/J2pxJfZ1Xot2nT+hWEblie0KGRQwglXwFP7Jbf4xv46tK0FrbwEdqX1gQpAWn/zqNyNTnvJjU3129a2P4j4/XkIpx18pc6OWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783077048; c=relaxed/simple;
-	bh=i4f2nRJfU6lFlb4UIfFx5AGh048WGCuQjXCSJkMzjsI=;
+	s=arc-20240116; t=1783077107; c=relaxed/simple;
+	bh=8QRyana2mIVwo+KzH3MUXWFMOWC7ssMaaOjHiU9vgrI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=YahtvN/Qd39lj2aOlahSkpuuta91EQQuGpTUUmSpD20fpe4WD/zU82EasKA0TDliofiffRgAYnFCNLcQWq8bDqWCLeX9ZHYDUX9mg6yfaZjbivR+WUFvvcHL1rQ/iG8KQHstUJKqTHr/5UgBdPz9a7a0Ekwvyc0wW9l1dXKSqcg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b7ERPjqh; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=OL7vGzDtxFxHToOIZQQcJSKWXVRdriokxrQ/q8NRfZjnQ9A/oJzq0OaDgtAqHKzjbyuVGS/prFrL0bvsvjp+rGJmt7+jKQoq0PxmoUvItdTncuyfyhqOl4wJOOrXYv86uFVCW0zdDggMAN5ZQc4mLyIgdtQ6MOo6tZQ5kufLqnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BJw9efiS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b7ERPjqh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C57061F000E9;
-	Fri,  3 Jul 2026 11:10:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BJw9efiS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EA151F00A3A;
+	Fri,  3 Jul 2026 11:11:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783077046;
-	bh=D0ZDc9oZknVyvfZPUH/B0qYHYw4NKKwpWmPzp8WBZN4=;
+	s=k20260515; t=1783077105;
+	bh=V/9OZg3T7glbMFzp7Z/NI+Dt8/7M8IVwM/4W439AgOU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=b7ERPjqhQCmbz4kJC8bwNnYpqvE9SoaOY8DXuhG8geO8kgSj/HcEorJdY3ALNAz66
-	 LSbkqSZREXqqXzADa74OXuzlwUX7z8Y2YHnlFe9te1pD+Pw59VA4/V2IRAvIE8LSd7
-	 MPQdhsjlSscuyalpbQe1ufiJ3XQGm+IBkjU3FmsH4Z4IPc6ccXCEzBLx0sbUUXqxA2
-	 jV1HjZs8LJ3Ix2NzHb84Q8kCJmreouiwz0AlFXSvlVPTmdDyzkBquJD4yD43jYEGId
-	 fCCEbN/g9SU4RzBlXzlPWh++OKEMlLAUnMGfDto2wQD3qL7VWOSA05D0n221cWHzZV
-	 jYoVyPY9obJxQ==
+	b=BJw9efiSI+Ufa+9MvdeYWH+8lNC8Gb4uvS/8tVpPMO6vOT4pvvavk9oLiqBI+4V8C
+	 iTCEcoDkttSc+xTdCorfLPN9/B1PyMB1MpJsEckwEAu8kFoUdpAOdjWzlDJJ//mp4j
+	 EDF5f27pgD9oCoawFI8Xp0h4jBNHH9b8k/vWRRlRu4TBa1zEPVmweF78uH+5907bRX
+	 Q8F/a0thKk9elAWFqd4Rd4X9jUIiVvirBLtZD9Jh4FYJpO98A+WvegTmeyP4Ymqrx4
+	 HXOtbRBDccoClTiMQyCd9K3kpOY7gptBHIzkWt+lb2z2onwtXPac4x/nC85Pt6+OE+
+	 //CJs6oqVQ4gA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 04/17] scsi-multipath: support iopolicy
+Subject: Re: [PATCH v3 05/10] nvme-multipath: add nvme_mpath_cdev_ioctl()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260703103402.3725011-5-john.g.garry@oracle.com>
-References: <20260703103402.3725011-1-john.g.garry@oracle.com>
- <20260703103402.3725011-5-john.g.garry@oracle.com>
+In-Reply-To: <20260703103204.3724406-6-john.g.garry@oracle.com>
+References: <20260703103204.3724406-1-john.g.garry@oracle.com>
+ <20260703103204.3724406-6-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 11:10:46 +0000
-Message-Id: <20260703111046.C57061F000E9@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 11:11:44 +0000
+Message-Id: <20260703111145.4EA151F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [Medium] Newly allocated multipath heads ignore the module parameter defa=
-ult for `multipath_iopolicy`.
-- [Medium] Lack of synchronization in `scsi_mpath_device_iopolicy_store()` =
-allows concurrent writes to race and corrupt state.
-- [Low] The patch calls several undefined core `mpath_` functions and uses =
-undefined types, causing build failures.
-
-Pre-existing issues:
-- [Critical] The error path in `scsi_mpath_alloc_head()` performs manual cl=
-eanup after `put_device()`, leading to double-free bugs.
-- [High] If `device_add()` fails in `scsi_mpath_dev_alloc()`, the error cle=
-anup path crashes due to uninitialized list management and invalid device u=
-nregistration.
+- [Critical] Accessing `ns->ctrl` in `_nvme_ns_chr_ioctl()` leads to a Use-=
+After-Free because the SRCU read lock protecting the namespace is dropped b=
+y the caller.
+- [Critical] `nvme_mpath_ioctl_begin()` fails to initialize `*data` for non=
+-controller ioctls, causing a NULL pointer dereference or crash in `nvme_mp=
+ath_ioctl_finish()`.
 --
 
-commit dcaa6fb2d7264e46f58295ab1af4b1021442b793
+commit 7c14abcc0f25bf0d710bcb67c0dbd7f7f3dc3774
 Author: John Garry <john.g.garry@oracle.com>
 
-scsi-multipath: support iopolicy
+nvme-multipath: add nvme_mpath_cdev_ioctl()
 
-Add support to set the multipath iopolicy. The iopolicy member is per=20
-scsi_mpath_head structure. A module param is added so that the default=20
-iopolicy may be set.
+This commit adds nvme_mpath_cdev_ioctl() and related ioctl lifecycle
+callbacks to handle SRCU read lock dropping during controller command
+IOCTL handling for NVMe multipath character devices.
 
-> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-> index cb433a028dbff..6159803d4cbb8 100644
-> --- a/drivers/scsi/scsi_multipath.c
-> +++ b/drivers/scsi/scsi_multipath.c
+> diff --git a/drivers/nvme/host/ioctl.c b/drivers/nvme/host/ioctl.c
+> index 664216eece4a6..14ac86b8b1a8a 100644
+> --- a/drivers/nvme/host/ioctl.c
+> +++ b/drivers/nvme/host/ioctl.c
+
 [ ... ]
-> @@ -95,8 +112,36 @@ static ssize_t scsi_mpath_device_vpd_id_show(struct d=
-evice *dev,
+
+> @@ -689,6 +695,29 @@ int nvme_ns_chr_uring_cmd_iopoll(struct io_uring_cmd=
+ *ioucmd,
+>  	return 0;
 >  }
->  static DEVICE_ATTR(vpd_id, S_IRUGO, scsi_mpath_device_vpd_id_show, NULL);
-> =20
-> +static ssize_t scsi_mpath_device_iopolicy_store(struct device *dev,
-> +		struct device_attribute *attr, const char *buf, size_t count)
+>  #ifdef CONFIG_NVME_MULTIPATH
+> +long nvme_mpath_cdev_ioctl(struct mpath_device *mpath_device, unsigned i=
+nt cmd,
+> +					unsigned long arg, bool open_for_write)
 > +{
-> +	struct scsi_mpath_head *scsi_mpath_head =3D
-> +		container_of(dev, struct scsi_mpath_head, dev);
-> +	struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
-> +
-> +	if (!mpath_iopolicy_store(&scsi_mpath_head->iopolicy, buf, count))
-> +		return -EINVAL;
-
-[Severity: Low]
-Are the functions mpath_iopolicy_store(), mpath_clear_paths(), and
-mpath_schedule_requeue_work() defined anywhere in the kernel tree?
-It looks like calling these will cause build failures.
-
-> +
-> +	mpath_clear_paths(mpath_head);
-> +	mpath_schedule_requeue_work(mpath_head);
-
-[Severity: Medium]
-Are these sequential operations safe from race conditions when called
-without holding any locks?
-
-If multiple threads write to the sysfs attribute concurrently, could they
-race and potentially duplicate path clearing or corrupt the I/O policy
-state?
-
-> +	return count;
+> +	return _nvme_ns_chr_ioctl(nvme_mpath_to_ns(mpath_device), cmd,
+> +			arg, open_for_write);
 > +}
-[ ... ]
-> @@ -201,7 +246,9 @@ static struct scsi_mpath_head *scsi_mpath_alloc_head(=
-void)
-> =20
->  	if (mpath_head_init(&scsi_mpath_head->mpath_head))
->  		goto out_free;
-> +
->  	scsi_mpath_head->mpath_head.mpdt =3D &smpdt;
-> +	scsi_mpath_head->mpath_head.iopolicy =3D &scsi_mpath_head->iopolicy;
-
-[Severity: Medium]
-Will newly allocated multipath heads ignore the module parameter default
-for multipath_iopolicy?
-
-Since scsi_mpath_head is kzalloc'd, iopolicy defaults to zero
-(MPATH_IOPOLICY_NUMA). This assignment hooks up the pointer but doesn't
-initialize it with the global iopolicy module parameter.
 
 [Severity: Critical]
-This is a pre-existing issue, but does the error path in this function
-cause a double-free?
+Could this lead to a use-after-free on the namespace object?
 
-If dev_set_name() fails further down in scsi_mpath_alloc_head():
+When a userspace program issues a controller ioctl on a multipath char devi=
+ce,
+the generic mpath_chr_ioctl() drops the SRCU read lock before calling
+nvme_mpath_cdev_ioctl().=20
 
-	if (ret) {
-		put_device(&scsi_mpath_head->dev);
-		goto out_free_ida;
-	}
+While nvme_mpath_ioctl_begin() takes a reference to the controller, the
+namespace object itself is left unprotected during this window. If the
+namespace is concurrently removed, passing the unprotected ns pointer down =
+to
+_nvme_ns_chr_ioctl() and dereferencing ns->ctrl could access freed memory.
 
-The put_device() call drops the refcount to 0 and synchronously invokes
-scsi_mpath_head_release(), which frees the IDA slot, uninitializes the
-mpath head, and calls kfree(scsi_mpath_head).
+> +
+> +void nvme_mpath_ioctl_begin(struct mpath_device *mpath_device,
+> +		unsigned int cmd, void **data)
+> +{
+> +	struct nvme_ctrl *ctrl =3D nvme_mpath_to_ns(mpath_device)->ctrl;
+> +
+> +	if (is_ctrl_ioctl(cmd)) {
+> +		nvme_get_ctrl(ctrl);
+> +		*data =3D ctrl;
+> +	}
+> +}
 
-The code then jumps to out_free_ida:
+[Severity: Critical]
+Does this leave *data uninitialized or unmodified for non-controller ioctls?
 
-out_free_ida:
-	ida_free(&scsi_multipath_dev_ida, scsi_mpath_head->index);
-out_put_head:
-	mpath_put_head(&scsi_mpath_head->mpath_head);
-out_free:
-	kfree(scsi_mpath_head);
+If a user issues a standard ioctl (like NVME_IOCTL_ID), is_ctrl_ioctl(cmd)
+will evaluate to false, meaning *data is not assigned here.
 
-This manually repeats all of these steps, leading to a double-free and
-use-after-free memory corruption.
+> +
+> +void nvme_mpath_ioctl_finish(void *opaque)
+> +{
+> +	nvme_put_ctrl(opaque);
+> +}
 
-[Severity: High]
-This is a pre-existing issue, but can the device addition error path lead
-to a NULL pointer dereference?
+[Severity: Critical]
+Is it safe to unconditionally call nvme_put_ctrl() here?
 
-If device_add() fails in scsi_mpath_dev_alloc(), it jumps to out_put_head
-and calls scsi_mpath_put_head(), which invokes scsi_mpath_free_head():
+If nvme_mpath_ioctl_begin() did not set *data (because it was not a control=
+ler
+ioctl), opaque might be NULL or uninitialized garbage.=20
 
-static void scsi_mpath_free_head(struct kref *ref)
+Calling nvme_put_ctrl() unconditionally:
+
+static inline void nvme_put_ctrl(struct nvme_ctrl *ctrl)
 {
-	...
-	mutex_lock(&scsi_mpath_heads_lock);
-	list_del_init(&scsi_mpath_head->entry);
+        put_device(ctrl->device);
+}
 
-Because device_add() failed, the object was never added to the list via
-list_add_tail(). Since scsi_mpath_head was allocated with kzalloc(),
-entry.next and entry.prev are NULL, and list_del_init() will dereference
-these NULL pointers.
-
-Additionally, device_unregister() is called on a device that failed
-device_add(), which violates driver core API expectations.
+will dereference ctrl->device, which could result in a panic if opaque is N=
+ULL
+or an invalid pointer. Should there be a check before calling nvme_put_ctrl=
+()?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703103402.3725=
-011-1-john.g.garry@oracle.com?part=3D4
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703103204.3724=
+406-1-john.g.garry@oracle.com?part=3D5
