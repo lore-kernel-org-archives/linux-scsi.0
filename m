@@ -1,183 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 199FC3C9886
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 11:04:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D68643BD63B
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 11:06:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783076665; cv=none; b=JLKp6BkvhiMR1xfYHcPF/+Ka1pWddV5kynO4NQfzNvqzlb9noCBUuFyqZ0mHNh/gd5rGhlRj1CGoEksDrqydgNwm+Ah1nCzQsX2XnAsrivCQUFvPno6LRBChVELdNE6gbuiiHW8bgYwMCX6jl56SjWdPAJ9Ix677hHx01yYeogw=
+	t=1783076807; cv=none; b=LR1gT3f6YSkW7lk5BpbIR3mcTfy7Nm1iWckTGvgp3d4mFO8nS+n4IR1d0I9qyHr4KUxAomQIcwcvsmGYa3UGiKS3v1IPO9nwq/VH+g8x3IVkKN486rYOXNTprO19adNrLMvB39tFRVw0vJ4wRNMkLYdYqAW5GsgjDTNqGtQasNU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783076665; c=relaxed/simple;
-	bh=Lh+TN5fZQFC7Nt3ycZ65nPn6trjAnlFaoQ9PAGX0ljc=;
+	s=arc-20240116; t=1783076807; c=relaxed/simple;
+	bh=7/qqfttO0D9ZITUuiYUzPoFWgtQAijV9whUkwQuV6RM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=huI4NMrism/vA4cfXHYogmfsvHTF8505CS7jEqC/wrvPTjdYpChrgNo3z2DMQ6XJt7mPzd86cAkcKrH37z5P/cXsAP6Vz84peDIUntxarlzXvpHVjQD5u9G8EVN1jXvvkAoPZrMy5OAF7oIaVbdPf5pTibmpqjNZWETnToyleTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ekt1H7V8; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=WnHzbqsB4+zDF1Ve/gBZA+1mjfAc8OgNW1foHjOWV0B756w0kpke12HyRrJFsXMD7uPgspn037+ysb3QivUbw818lYi94yaCQMWzz39/IjudGdI/nctbFMtQM8+q9DyNX8rXQ+qZHihOgStaXD95H56ZVPLLaLWd6/Shv1GL3FQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WLcKxda4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ekt1H7V8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A480E1F000E9;
-	Fri,  3 Jul 2026 11:04:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WLcKxda4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 568861F000E9;
+	Fri,  3 Jul 2026 11:06:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783076663;
-	bh=UNbg9l43cddvZV0jVX1LEgnOu27p4ujR3UtYBc3WbjY=;
+	s=k20260515; t=1783076805;
+	bh=dyb+TJVQ53uVQJMYv+HsuMPxnR+mVqTP5prs1/XIjQ8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ekt1H7V8lYkJ679wqunxJ0/2Z3Crp8z8vrJWpHsTdERkar0vRlxjT3bhdRMxTBDsl
-	 1u8gJGa8ZWFNbEDlEuJXkrGkSg1oyH0tQz1iF3Avj7l5+A40HCKWZkGLnwPo0qaDYa
-	 jSJ7xMm9gTC0R0sML4tjtsZivGHuoDQoUgdmFrLOoBxeeM/wD4nqPfmJA7PvxtGrj/
-	 /9+O+RD0RilBj+Nwfm2b7tacl4LqWMMVFBaznUHKG+D+XznpQ0ENnvt8woDVm5WMCy
-	 HAz0hPKmeYotg0BmG1SnIvWiDktkH0CtZ4RCeorLw7HWUY+1yW5UBENRuaN88Wz+ch
-	 eyLa3c2Pg1ndg==
+	b=WLcKxda4ZkqcLMq7S3SaIH4r0YMt6jLhExpdPQ9l4m30bvn7SgOwZdrbh0B6HmcCc
+	 JtpCW7R3MsudzlYcg6uvrd7/8t2XBKlFrCZ3g3lPz73Cc/k0TE54sPD7ouuFTKOkVE
+	 uNXpwwLhPvx5SI8teuOBbmVvy1vk7EpT9EpQiU4UozrhWCoIAqaZimVFoNGAcJ+1Mt
+	 v7LTSYOv/6L1sNSwTx7bh5YrKHBMa/EHgiV66vHEIKUyUi+QlNS3OCtsvDDUcn2QDY
+	 XfojKj03r05RhW5hN2R8Fz4art1+DdFumyduTUqEVvWCGszjqMAdHYDbJMPe8CkzYb
+	 ZCLf1bn3A7flg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 03/17] scsi-multipath: provide sysfs link from to
- scsi_device
+Subject: Re: [PATCH v3 04/10] nvme-multipath: add nvme_mpath_is_{disabled,
+ optimised}
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260703103402.3725011-4-john.g.garry@oracle.com>
-References: <20260703103402.3725011-1-john.g.garry@oracle.com>
- <20260703103402.3725011-4-john.g.garry@oracle.com>
+In-Reply-To: <20260703103204.3724406-5-john.g.garry@oracle.com>
+References: <20260703103204.3724406-1-john.g.garry@oracle.com>
+ <20260703103204.3724406-5-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 11:04:23 +0000
-Message-Id: <20260703110423.A480E1F000E9@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 11:06:44 +0000
+Message-Id: <20260703110645.568861F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Double free and use-after-free of `scsi_mpath_head` on `dev_set_na=
-me()` error path.
-- [High] NULL pointer dereference from uninitialized `list_head` on `device=
-_add()` error path.
+- [Low] The patch relies on missing structs, headers, and Kconfig symbols, =
+causing a fatal build failure.
 --
 
-commit d7eb5e4fb506178f4a58d8aa264acf8230ebb5fa
+commit b4542aff5d48fe0783ce1a5c4b163d732171214c
 Author: John Garry <john.g.garry@oracle.com>
 
-scsi-multipath: introduce scsi_device head structure
+nvme-multipath: add nvme_mpath_is_{disabled, optimised}
 
-This commit introduces the scsi_mpath_head structure to manage multipathing
-for SCSI devices. It adds a list to look up matching multipathed SCSI devic=
-es
-using their unique IDs and creates a new scsi_mpath_device_class for managi=
-ng
-the head devices.
+This commit adds nvme_mpath_is_disabled and nvme_mpath_is_optimized callbac=
+ks
+for multipath devices. It wires these up to the mpath_head_template structu=
+re.
 
-> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-> index ff37cfdf2f9d1..65ee3da5cc7fc 100644
-> --- a/drivers/scsi/scsi_multipath.c
-> +++ b/drivers/scsi/scsi_multipath.c
-> @@ -88,6 +146,71 @@ static int scsi_multipath_sdev_init(struct scsi_devic=
-e *sdev)
-[ ... ]
-> +static struct scsi_mpath_head *scsi_mpath_alloc_head(void)
-> +{
-> +	struct scsi_mpath_head *scsi_mpath_head;
-> +	int ret;
-> +
-> +	scsi_mpath_head =3D kzalloc(sizeof(*scsi_mpath_head), GFP_KERNEL);
-> +	if (!scsi_mpath_head)
-> +		return NULL;
-[ ... ]
-> +	device_initialize(&scsi_mpath_head->dev);
-> +	scsi_mpath_head->dev.class =3D &scsi_mpath_device_class;
-> +	ret =3D dev_set_name(&scsi_mpath_head->dev, "scsi_mpath_device%d",
-> +				scsi_mpath_head->index);
-> +	if (ret) {
-> +		put_device(&scsi_mpath_head->dev);
-> +		goto out_free_ida;
-> +	}
-> +
-> +	return scsi_mpath_head;
-> +
-> +out_free_ida:
-> +	ida_free(&scsi_multipath_dev_ida, scsi_mpath_head->index);
-> +out_put_head:
-> +	mpath_put_head(&scsi_mpath_head->mpath_head);
-> +out_free:
-> +	kfree(scsi_mpath_head);
-> +	return NULL;
-> +}
-
-[Severity: High]
-Does this error path cause a use-after-free and double free?
-
-If dev_set_name() fails, put_device() drops the kobject refcount to zero,
-which triggers scsi_mpath_head_release() to free the IDA index and kfree
-the scsi_mpath_head structure.
-
-When the code falls through to out_free_ida, it attempts to free the index
-again using the already-freed pointer, and finally calls kfree() a second
-time.
-
-> @@ -96,6 +219,7 @@ static void scsi_multipath_sdev_uninit(struct scsi_dev=
-ice *sdev)
-[ ... ]
->  int scsi_mpath_dev_alloc(struct scsi_device *sdev)
->  {
-> +	struct scsi_mpath_head *scsi_mpath_head;
->  	int ret;
-[ ... ]
-> +	ret =3D device_add(&scsi_mpath_head->dev);
-> +	if (ret) {
-> +		mutex_unlock(&scsi_mpath_heads_lock);
-> +		goto out_put_head;
-> +	}
-> +
-> +	list_add_tail(&scsi_mpath_head->entry, &scsi_mpath_heads_list);
-> +found:
-> +	mutex_unlock(&scsi_mpath_heads_lock);
-> +	ret =3D ida_alloc(&scsi_mpath_head->ida, GFP_KERNEL);
-> +	if (ret < 0)
-> +		goto out_put_head;
-> +	sdev->scsi_mpath_dev->index =3D ret;
-> +
-> +	sdev->scsi_mpath_dev->scsi_mpath_head =3D scsi_mpath_head;
-> +	return 0;
-> +out_put_head:
-> +	scsi_mpath_put_head(scsi_mpath_head);
->  out_uninit:
->  	scsi_multipath_sdev_uninit(sdev);
->  	return ret;
+> diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
+> index e0573ca71ec60..6d3df1775dbeb 100644
+> --- a/drivers/nvme/host/multipath.c
+> +++ b/drivers/nvme/host/multipath.c
+> @@ -305,6 +305,11 @@ static bool nvme_path_is_disabled(struct nvme_ns *ns)
+>  	return false;
 >  }
-
-> @@ -133,13 +302,47 @@ void scsi_mpath_dev_release(struct scsi_device *sde=
-v)
-[ ... ]
-> +static void scsi_mpath_free_head(struct kref *ref)
+> =20
+> +static bool nvme_mpath_is_disabled(struct mpath_device *mpath_device)
 > +{
-> +	struct scsi_mpath_head *scsi_mpath_head =3D
-> +		container_of(ref, struct scsi_mpath_head, ref);
-> +
-> +	/*
-> +	 * If we race with scsi_mpath_find_head(), then that function may
-> +	 * find this scsi_mpath_head in the heads list; however we would fail
-> +	 * to take a reference to this scsi_mpath_head and continue the search.
-> +	 * As such, it is safe to call device_unregister (and free
-> +	 * scsi_mpath_head) after we delete this head from the list.
-> +	 */
-> +	mutex_lock(&scsi_mpath_heads_lock);
-> +	list_del_init(&scsi_mpath_head->entry);
-> +	mutex_unlock(&scsi_mpath_heads_lock);
-> +
-> +	device_unregister(&scsi_mpath_head->dev);
+
+[Severity: Low]
+Does this patch depend on other missing patches in a series?
+
+Compiling this change fails because struct mpath_device is an incomplete ty=
+pe.
+It appears other dependencies like <linux/multipath.h> or LIBMULTIPATH are
+missing from the tree.
+
+> +	return nvme_path_is_disabled(nvme_mpath_to_ns(mpath_device));
 > +}
-
-[Severity: High]
-Can this list_del_init() and device_unregister() crash if called from the
-device_add() error path in scsi_mpath_dev_alloc()?
-
-If device_add() fails, scsi_mpath_put_head() is called, which eventually
-invokes this cleanup function. However, because device_add() failed before
-list_add_tail() was called, and the list head was never initialized on the
-kzalloc-ed structure, the list pointers are NULL. This would cause a NULL
-pointer dereference in list_del_init().
-
-Additionally, device_unregister() expects the device to have been
-successfully added, which isn't the case on this error path.
+> +
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703103402.3725=
-011-1-john.g.garry@oracle.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703103204.3724=
+406-1-john.g.garry@oracle.com?part=3D4
