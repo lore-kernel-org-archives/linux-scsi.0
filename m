@@ -1,173 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E56833D2FE6
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 12:25:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04ABE2FFF81
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 12:43:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783081517; cv=none; b=SLvMr2U28J89TvgME2VvC4hQWEgMlsrhnpFU1HG7jX0yhVhefHnptUNXpKJ4hhud57QwZtCd1kdxd1VUpvMej7YdbGm11wE6CpBJL7j2v1UJcawOWOcosRmC0mqplo4cpP1yYZ4Q1hGwkk4hfgSH3O6/ZWiIhYq9qeM71hEsKfw=
+	t=1783082612; cv=none; b=XDHmNnXZhsVsVSlQEpbqniihq7IW2ZKt7DQsQaqGtSlC1bRs9tI/O8skgGXzAUAHSVFZJjy/RTwQIQbNtRdjerSgwJTE+BPb1MLKWD6abA7ZInuO76mbOkS1APRCmhvweklwARXC4D1O5zpHbxTlKs+jo+Ble1nNq57LuKUbiwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783081517; c=relaxed/simple;
-	bh=9oDSVv1FTJYFxu/Rr3rH4gX6ASAjjg+Kpe6bASxR8d8=;
+	s=arc-20240116; t=1783082612; c=relaxed/simple;
+	bh=N2r0Kqm8XcayRuQFJp4+WFi6LqIsrEJ6dFQ3Jv0KMC4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IRO0rLXBiOvKIdIzuVcgkEmShMpY2lIesVx5QMFJ5/cgMPJXF0tuBv1y0Op9qLWor1Hg1McmM7uCvrBfth8eEzl3oIVsw9NhwS6vRLFWgpenSItzc+BITzxuA4FDnaJSorZijuAzaMVf4/jFEY25lVbKRw+YHoonuFbDFAE0pU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ar6wHRK7; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=I3DKdAr32kjlvz6g9w7obXnAcNBMgYGGGX2KE54/drf4hasBZMxVtcU8U/DP8B4sSfjlijrNWJkx17MLWDWcBs4zJRX0yCx6FyXtEjkbx82pW5JV8WhMcchMYIwiFjpm4Vg171EAWc5CdfYpwqE/X3PExKmUFlsJDtZwXd8vvME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jvqqxG12; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ar6wHRK7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B9AC1F00A3A;
-	Fri,  3 Jul 2026 12:25:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jvqqxG12"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6476A1F000E9;
+	Fri,  3 Jul 2026 12:43:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783081515;
-	bh=o7cnjRS6Nx+egr8+cSgCyoT1LNMEmUg/ysZ2IFmDJZs=;
+	s=k20260515; t=1783082610;
+	bh=5QhaG8RWqoNX6C2ogPUCjl96ecnpIAZYCi9Jzn0t8XQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ar6wHRK7URRfT1UHZMooDWkWdbiGEBCO9R/v5XocPG+U5eQPJP/1MZg9y8Ozgm2tq
-	 cFy9b+FINeP+2tSipvgrzRwLIHDZ8yKuxHrYz2z503smEjqaPNE/JiKrzBwGgltItZ
-	 Fl0dyXmhpZy8/lH+ESmsoGhetgVP4cJc4hxkRaJ5jQjOIa61e7U8N7UIN02dIFx1tK
-	 fGU8gLKvWgza4xzjz3vHQwxnMtq32nSGIjngfa8tXvfrSZ63FOCfe66S3caXi10xQi
-	 TLXVNNikZN/f37Sp8gRze1FKXK03D8WPCpbvH5seST3BaK4s6YI27RUJ2UKHoa4WML
-	 pFtlsc/UeioBw==
+	b=jvqqxG12qQjyQgS9bJcuT/X6R5il8sizWJwmM2b2r1nqJ4MGw0EDzGVAmRH1dc/NX
+	 p2aceXoboM845XGTBzLp9xzU8uPiQFVDVYKeuiJyOh7E+E8qW82vxuNiedHxSTRirg
+	 iqOXmARnSiO7E9xPrvFUCXloXyHS3C3g8/xbgP4sK0qo/CCkZjDLKdzRWQ8XIxLKit
+	 of0nAws9H471HkbIgWccYB8tDOL+EjXSuLKRWNgPkMq09IH81nv3aepncdKtC42n7b
+	 ASFIdT7AT8dwpDXhRQOh3Yyf34p1imqTrz2xxFC0asYsq1Etdcy0mDNSoZ2OvYeXUT
+	 ykTA/tJwrNhjA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 14/17] scsi: sd: add multipath disk attr groups
+Subject: Re: [PATCH v3 15/17] scsi: sd: add mpath_dev file
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260703103402.3725011-15-john.g.garry@oracle.com>
+In-Reply-To: <20260703103402.3725011-16-john.g.garry@oracle.com>
 References: <20260703103402.3725011-1-john.g.garry@oracle.com>
- <20260703103402.3725011-15-john.g.garry@oracle.com>
+ <20260703103402.3725011-16-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 12:25:14 +0000
-Message-Id: <20260703122515.6B9AC1F00A3A@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 12:43:29 +0000
+Message-Id: <20260703124330.6476A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [Low] The patch references several undeclared identifiers and undefined f=
-unctions, which will cause fatal compilation and linker errors.
-
-Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but error paths in `=
-sd_mpath_probe()` incorrectly use `kfree()` instead of `put_device()` after=
- `device_initialize()`, leaking kobject resources. Furthermore, it cannot t=
-rivially use `put_device()` without causing a use-after-free and IDA corrup=
-tion.
+- [High] Concurrent sysfs read of `mpath_dev` can trigger a Use-After-Free =
+of `sd_mpath_disk` during device removal.
 --
 
-commit c032527f31f85b7a1e95cfcc2527fe7e368f3474
+commit 96501c42f9a149bd257256a80ef8d931781b2efe
 Author: John Garry <john.g.garry@oracle.com>
 
-scsi: sd: add multipath disk attr groups
+scsi: sd: add mpath_dev file
 
-Set multipath disk attr groups, which includes delayed disk removal and
-everything from mpath_attr_group.
+This commit adds a mpath_dev sysfs file to allow looking up the multipath
+disk from the per-path gendisk directory.
 
 > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 3df70b24b688e..a9a29e50f5eec 100644
+> index a9a29e50f5eec..0c77466f8291a 100644
 > --- a/drivers/scsi/sd.c
 > +++ b/drivers/scsi/sd.c
-
 [ ... ]
-
-> @@ -4106,6 +4106,41 @@ static void sd_mpath_add_disk(struct scsi_disk *sd=
-kp)
->  	mpath_device_set_live(mpath_device);
+> @@ -4059,6 +4059,52 @@ static int sd_mpath_revalidate_head(struct scsi_di=
+sk *sdkp)
+> =20
+>  	return ret;
 >  }
-> =20
-> +static ssize_t sd_mpath_device_delayed_removal_store(struct device *dev,
-> +		struct device_attribute *attr, const char *buf, size_t count)
+> +
+> +static ssize_t sd_mpath_dev_show(struct device *dev,
+> +			struct device_attribute *attr, char *page)
 > +{
-> +	struct mpath_head *mpath_head =3D mpath_bd_device_to_head(dev);
-> +
-> +	return mpath_delayed_removal_secs_store(mpath_head, buf, count);
-> +}
-> +
-> +static ssize_t sd_mpath_device_delayed_removal_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct mpath_head *mpath_head =3D mpath_bd_device_to_head(dev);
-> +
-> +	return mpath_delayed_removal_secs_show(mpath_head, buf);
-> +}
-
-[Severity: Low]
-Are the functions mpath_bd_device_to_head(), mpath_delayed_removal_secs_sto=
-re(),
-and mpath_delayed_removal_secs_show() declared anywhere? It looks like they
-might be missing, which would cause a build error.
-
-> +
-> +static DEVICE_ATTR(delayed_removal_secs, S_IRUGO | S_IWUSR,
-> +		sd_mpath_device_delayed_removal_show,
-> +		sd_mpath_device_delayed_removal_store);
-> +
-> +static struct attribute *sd_mpath_disk_attrs[] =3D {
-> +	&dev_attr_delayed_removal_secs.attr,
-> +	NULL
-> +};
-> +
-> +static const struct attribute_group sd_mpath_disk_attr_group =3D {
-> +	.attrs		=3D sd_mpath_disk_attrs,
-> +};
-> +
-> +static const struct attribute_group *sd_mpath_disk_attr_groups[] =3D {
-> +	&sd_mpath_disk_attr_group,
-> +	&mpath_attr_group,
-
-[Severity: Low]
-Is the external variable mpath_attr_group declared and defined? Building wi=
-th
-this patch applied results in an undeclared identifier error.
-
-> +	NULL
-> +};
-> +
->  static int sd_mpath_probe(struct scsi_disk *sdkp)
->  {
->  	struct scsi_device *sdp =3D sdkp->device;
-> @@ -4161,6 +4196,7 @@ static int sd_mpath_probe(struct scsi_disk *sdkp)
-> =20
->  	mpath_head->parent =3D &sd_mpath_disk->dev;
->  	mpath_head->drv_module =3D THIS_MODULE;
-> +	mpath_head->disk_groups =3D sd_mpath_disk_attr_groups;
->  	error =3D mpath_alloc_head_disk(mpath_head, &lim,
->  				dev_to_node(dma_dev));
->  	if (error)
+> +	struct gendisk *gd =3D dev_to_disk(dev);
+> +	struct scsi_disk *sdkp =3D gd->private_data;
+> +	struct sd_mpath_disk *sd_mpath_disk =3D sdkp->sd_mpath_disk;
+> +	struct scsi_mpath_head *scsi_mpath_head =3D sd_mpath_disk->scsi_mpath_h=
+ead;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but since we are modifying
-sd_mpath_probe(), is it safe to use kfree() on error paths after
-device_initialize() has been called on sd_mpath_disk->dev?
+Can reading this sysfs attribute concurrently with device removal trigger a
+use-after-free of sdkp->sd_mpath_disk?
 
-If mpath_alloc_head_disk() fails, the code jumps to out_free_disk:
+During device teardown, sd_remove() calls sd_mpath_remove() before calling
+del_gendisk(). This frees the multipath structures, but the mpath_dev sysfs
+attribute (which is tied to the gendisk) remains active and accessible until
+del_gendisk() finally tears it down.
 
-drivers/scsi/sd.c:sd_mpath_probe() {
-    ...
-    device_initialize(&sd_mpath_disk->dev);
-    ...
-    error =3D mpath_alloc_head_disk(mpath_head, &lim, dev_to_node(dma_dev));
-    if (error)
-        goto out_free_disk;
-    ...
-out_free_disk:
-    kfree(sd_mpath_disk);
-    ...
-}
+If a user continuously reads this attribute during hot-unplug or module
+removal, it appears we could blindly dereference the freed sd_mpath_disk
+pointer here.
 
-Should this use put_device() instead to ensure the kobject internals are
-properly cleaned up?
-
-However, calling put_device() would invoke sd_mpath_disk_release(), which
-unconditionally calls ida_free() and scsi_mpath_put_head(). Would
-sd_mpath_disk_release() need to be updated to handle partial initialization=
- if
-put_device() were used here?
+> +	struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
+> +	struct gendisk *disk =3D mpath_head->disk;
+> +	struct device *disk_dev =3D disk_to_dev(disk);
+> +
+> +	return print_dev_t(page, disk_dev->devt);
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703103402.3725=
-011-1-john.g.garry@oracle.com?part=3D14
+011-1-john.g.garry@oracle.com?part=3D15
