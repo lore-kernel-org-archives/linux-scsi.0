@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A90563CBE7E
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 12:03:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3086339714
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 12:08:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783080220; cv=none; b=awVt/xignyRnSTeVv3y0GMpnwNHNBR1PPHZsqcSjMe6jH3JUeofx3E+JdigTZNFXEkJ9b1AJoEf83+XitVg+wZzkcQQR6fMKghkp7C9G4ztbLOE+cX2fmcLBhUxZx+7FNWRaTJ4NyKgU+eIHr70U2iPa1fZyzSaF7KK8QIWEWPs=
+	t=1783080518; cv=none; b=OLko7AcM+L8pCCWeT1uHmtGgq540udFxy615p8ijbEOytx1yrscMgGf2wHLBy+N81yMSC6iSgKKV+x96KMfiOPRQkFBrUtw/d3YsNz1CnyodheZ1JCfFhZt0JSmxUaLw6uXQvXk0FNNvjG5u0aScEYI26i3iFDzhgVPzq0OiVcU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783080220; c=relaxed/simple;
-	bh=PW7ksLokOHhYKfuXgMLFwXWNkC0PloF/hAQW7EhCDzI=;
+	s=arc-20240116; t=1783080518; c=relaxed/simple;
+	bh=mxP+GBUDCMkwBUfPSpm7jnV60S0d8IQyuNWYWHj/fEQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=R0Y1z9KPD1YYk4wqH616QULo76AEE6RK491HMXaWKcosgyP8CGju68ZXmqzOajVzV78yQ+BMF3GqGXyRdCmClDhxSvh3HL9Yu4N8y/yFjt2CfOt9Cbc5GHBkJsQbdq/3JHvzXBI1Y7q9XiFfieRsjO0H5x7YTwI+7TcNq9fPkfo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e8ngsJQ/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=uC4XzImcpmoLqDqrgNSCwsxtk8g3Nphf0fwHbISv/+U4OFn/3pW8M9ZhfnshsD4QLXUYQTeLAZgSDrHfqw9Cjbsy8OtIXUfAb7FiYSGnDCdZESNdtwI64dP7bncwwFu6oOxUHPr7Jj5RV3ITTfa6E65zV19Ymqdp5GQNR1+Q8Rs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pd+jKcmI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e8ngsJQ/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F35081F000E9;
-	Fri,  3 Jul 2026 12:03:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pd+jKcmI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C6661F000E9;
+	Fri,  3 Jul 2026 12:08:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783080219;
-	bh=RvOqyft5LBYm6nW48TTBsDDyaLyTV/DydHksnbnhXBw=;
+	s=k20260515; t=1783080517;
+	bh=ON7QXCPMa1W/r1OHUc6vK8JSRaISh1zfqTOiNx2nRog=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=e8ngsJQ/R+56aiUXH4xFZ9emQvizqBRyw/ZTueoi+0toaJaRyfFGe0ehku54izAjm
-	 2Em+4sbbNyDFvrcV/MGk4F8GHUwwXwUcWTQH8J3SDXznLol3cKLEOyn+78b0BmVEmF
-	 P0Sp2UcdH1ardBWZvf6FDyUoFqIdFamr2+WwTeK54NO4K2+rjcHfOjefs3c1x3+cg2
-	 iC0VBSDkhNBtXajbjMMQvqgcLGb9VlqU/yOLFVlolee6Gs5tS7zndfG5nifXWYFA4j
-	 eDcnCIIfQ6I2aOQ4uZHL+sCuqdabtb1Y5SdSdnlbjG4+mQ6nJmPel4vdFed6omBdWk
-	 yw86dR9kn/O6w==
+	b=Pd+jKcmIT3NjrVr3Y6fFsaeaTBXacStG8eOQ3GtjdnkHkkc28uLS3PLQjml1ebvu/
+	 gYDmEHYitb/wiVWuBOM4nmXU/QVcGiBaMjeic3qEq+5s9zDEZwbQ8SuJjSg08jcWFz
+	 n71bfWHXG7fgcrUzphcvTbBz2uH8VmGaKJB/rwR6e/PQRLZQgXQLKKW0jhSt4InsVM
+	 PdLoy1M8YfVC0NV1U4yWJ/ALTBSuaVVASJfuXBmZ1hCfP5J90BugxbNQBmYrVlHVUg
+	 7pDwm80H1dGaw7sOgp2Yy2wwGsGVzAQWDST8+qCJdxY/BsyoLlmt5jIvQc47Q5/G5H
+	 LsSSH9bMEknPg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 10/17] scsi-multipath: block PR commands
+Subject: Re: [PATCH v3 11/17] scsi-multipath: add delayed disk removal
+ support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260703103402.3725011-11-john.g.garry@oracle.com>
+In-Reply-To: <20260703103402.3725011-12-john.g.garry@oracle.com>
 References: <20260703103402.3725011-1-john.g.garry@oracle.com>
- <20260703103402.3725011-11-john.g.garry@oracle.com>
+ <20260703103402.3725011-12-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 12:03:38 +0000
-Message-Id: <20260703120338.F35081F000E9@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 12:08:36 +0000
+Message-Id: <20260703120837.6C6661F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,104 +47,80 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Double-free and use-after-free of `scsi_mpath_head` and its resour=
-ces on the `dev_set_name` failure path.
-- [High] Calling `list_del_init` on an uninitialized list_head and `device_=
-unregister` on a failed device addition.
+- [High] Memory leak during module unload due to flawed bus driver broadcas=
+t for delayed removal.
+- [Medium] Use-After-Free (UAF) hazard during SCSI driver iteration because=
+ the iterator continues after the structure is freed.
 --
 
-commit 3be4a33456416864c9e49c5cfb76773fb5375009
+commit b2a49437af44776426456e634c1ad321526ae49c
 Author: John Garry <john.g.garry@oracle.com>
+scsi-multipath: add delayed disk removal support
 
-scsi-multipath: block PR commands
-
-For initial scsi-multipath support, do not support Persistent Reservations
-(PRs). This change intercepts PR SCSI commands for passthrough and rejects
-them since PR support for SCSI is quite complicated.
+This commit adds core support for delayed disk removal in SCSI multipath.=20
+It introduces a new scsi_driver callback to handle the removal work,=20
+ensuring that the driver maintains a reference to the multipath device while
+active.
 
 > diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-> index 61fa2e4cdfdab..b4d9d6518b4fe 100644
 > --- a/drivers/scsi/scsi_multipath.c
 > +++ b/drivers/scsi/scsi_multipath.c
 
 [ ... ]
 
-While reviewing this file, I noticed a couple of pre-existing issues:
+> @@ -355,7 +355,25 @@ static bool scsi_mpath_available_path(struct mpath_d=
+evice *mpath_device)
+> +static int scsi_mpath_remove_head_drv(struct device_driver *drv, void *d=
+ata)
+> +{
+> +	struct scsi_mpath_head *scsi_mpath_head =3D data;
+> +	struct scsi_driver *scsi_driver =3D to_scsi_driver(drv);
+> +
+> +	if (scsi_driver->mpath_remove_head)
+> +		scsi_driver->mpath_remove_head(scsi_mpath_head);
+> +
+> +	return 0;
 
-drivers/scsi/scsi_multipath.c:scsi_mpath_alloc_head() {
-    ...
-	ret =3D dev_set_name(&scsi_mpath_head->dev, "scsi_mpath_device%d",
-				scsi_mpath_head->index);
-	if (ret) {
-		put_device(&scsi_mpath_head->dev);
-		goto out_free_ida;
-	}
-    ...
-}
+[Severity: Medium]
+Is there a potential use-after-free hazard during the bus iteration here?
+
+When a device hot-unplug triggers delayed head removal, the sd driver will
+process it and drop the final reference to the scsi_mpath_head structure,
+freeing it.
+
+Because this iterator callback unconditionally returns 0, bus_for_each_drv()
+will continue iterating through other registered SCSI drivers (like sr).
+
+Could this result in passing a freed scsi_mpath_head pointer to subsequent
+drivers in the iteration? Should the iteration abort once the target driver
+successfully handles the removal?
+
+> +}
+> +
+> +static void scsi_mpath_remove_head_work(struct mpath_head *mpath_head)
+> +{
+> +	bus_for_each_drv(&scsi_bus_type, NULL, to_scsi_mpath_head(mpath_head),
+> +		scsi_mpath_remove_head_drv);
 
 [Severity: High]
-This is a pre-existing issue, but can this lead to a double-free?
+Can this leak memory during module unload?
 
-If dev_set_name() fails, the error path calls put_device(). Since
-device_initialize() sets the kref count to 1, this drops the count to 0 and
-immediately invokes the release function scsi_mpath_head_release().
-
-The scsi_mpath_head_release() function will free the scsi_mpath_head memory
-via kfree() as well as associated resources like the IDA and bioset.
-
-The code then incorrectly falls through to out_free_ida, executing ida_free=
+When the sd module is unloaded, driver_unregister() calls bus_remove_driver=
 (),
-mpath_put_head(), bioset_exit(), and a second kfree() on the already freed
-scsi_mpath_head pointer. Will this result in a double-free and memory
-corruption?
+which removes the driver from the bus's klist_drivers list before calling
+driver_detach() to unbind devices.
 
-A similar issue appears in a different error path:
+If detaching the devices triggers a delayed removal of the multipath head,
+this workqueue executes and attempts to find the responsible driver by
+broadcasting to all drivers on scsi_bus_type. Since the sd driver was alrea=
+dy
+removed from the bus list, the iterator fails to find it.
 
-drivers/scsi/scsi_multipath.c:scsi_mpath_dev_alloc() {
-    ...
-	ret =3D device_add(&scsi_mpath_head->dev);
-	if (ret) {
-		mutex_unlock(&scsi_mpath_heads_lock);
-		goto out_put_head;
-	}
-    ...
-}
+Does this cause the targeted mpath_remove_head callback to be missed,
+permanently leaking the scsi_mpath_head and sd_mpath_disk structures?
 
-Which eventually calls the release function:
-
-drivers/scsi/scsi_multipath.c:scsi_mpath_free_head() {
-    ...
-	list_del_init(&scsi_mpath_head->entry);
-	mutex_unlock(&scsi_mpath_heads_lock);
-
-	device_unregister(&scsi_mpath_head->dev);
-    ...
-}
-
-[Severity: High]
-This is a pre-existing issue, but does this release function operate on an
-unlinked list head and a partially initialized device?
-
-In scsi_mpath_dev_alloc(), if device_add() fails, it jumps to out_put_head =
-and
-calls scsi_mpath_put_head(). This drops the reference to 0 and invokes
-scsi_mpath_free_head().
-
-When scsi_mpath_free_head() calls list_del_init(&scsi_mpath_head->entry), t=
-he
-entry is uninitialized (zeroed by kzalloc) because device_add() failed befo=
-re
-list_add_tail() was ever called. Can this result in a NULL pointer derefere=
-nce
-when __list_del_entry() attempts to link the pointers?
-
-Furthermore, it then unconditionally calls device_unregister(). Does this
-incorrectly attempt to device_del() a device that was never successfully ad=
-ded,
-leading to driver core warnings or crashes?
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703103402.3725=
-011-1-john.g.garry@oracle.com?part=3D10
+011-1-john.g.garry@oracle.com?part=3D11
