@@ -1,119 +1,184 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BB4C3C4552
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 11:26:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D9225785D
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Jul 2026 11:32:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783077975; cv=none; b=qU8ljK87aBM0ZPcjNXD7qgRmScX4gGBcEqpk4PyqIF5A8YGRbnfrczqPaArofi82XSH+KHqqp1sVc1G0Aql+QIgdPvfhIW4rrQSVJ+4xSN21gGFS7C7mfn4eZsDMibvzOW/vt5yK32wzaQu3ntFLQT7hdTV47cFe3Tl+M7xOzH8=
+	t=1783078347; cv=none; b=EcKPLsjRlfU4boIcBIzr1UZ7I4cNAgWZnHwHRZmTwMWZ64fs4h5S5Lzj90X9dmMcD5azdXwjlNLqjs8IYz4BbkBE3TtlZ6G2lA5zq3HVQN1hjSCXC5fswiRH4/vRgFDJGx1KMJ2PqNmnP4yB0C7EBIk7CgRX6pFeBd7ZoyIjTkw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783077975; c=relaxed/simple;
-	bh=abyZE+fP4YShSnVhfntIZHJjpAz55CZK3vk3nt2QMto=;
+	s=arc-20240116; t=1783078347; c=relaxed/simple;
+	bh=ukE469K47m3E1lgRuFuDIVCLx5i24H5q99QohedjLdg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=F/L1FMXMH+p9XuzdpxgyRh4VgTla5f+WVyBQNFkNMArBs1HKAHqI1DbWDTVtfwV63JDmoeZrDJHm3PLD9yIWHPekUki6hXkBd8d+kSqbPmv8KlOlzyTE5svzzubffJ22L7gNz7b9NUVHSZabSTFvq76jNXvtgSMW0K+g+iK0stE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BFss7JPQ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=KjVi3QkU/NPvjXPavL8t7J9Uxb/dHzJY4JjrtRaPpo3FTQam4X/u3/ZaNkamhfvb+6NOOMloaHZ9mt8DeYsItaIMLMTZZUu1jhBou19mJqLuEkMHzYh+MPxInyjP5Sr9+JUqYhcnI6C8nFCNhqQFXgheaWrgij6EcZPB+r/D+i8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QJkOrBF8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BFss7JPQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 525E51F000E9;
-	Fri,  3 Jul 2026 11:26:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QJkOrBF8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D312B1F000E9;
+	Fri,  3 Jul 2026 11:32:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783077963;
-	bh=LnxbWnFw0KTYGleESATOsnFsWZwQD+SSRkUdv/e4Q8U=;
+	s=k20260515; t=1783078346;
+	bh=tXXNRXhP6JFPQM/VAx+UFIIlZ+4JceYlzxVaq/51wGs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BFss7JPQXw4q6E++6TJIe4aZs8xaaDuKMd8e/vFJK7yZPdswfs7RP7TCOwlcIiDl/
-	 ekiCKV7MJ6BhP1ic4qA+Fp3WLP3WkrXrd//y0dVijNTOTiwFFzXsExVMAtVrZLJJeW
-	 /U6CV4BiijtmOkSTTgY2KwSizE/ynilKmBiAAwUST0h/AOUNLVj2Z4pEpgLFqg5sjJ
-	 S+oku9AWq0neHW9IgNozNdj4M9yD0jX5obV5jOLgpIxoTXKhOgj8nc02xputnh8uWe
-	 pGVSkAWKls4hrJsec/9vYpzC4qUqjeD1ZEUmkE+aiqOC22jahjgKq3eaxvPtWHeHT1
-	 l7kBBI+kchE8A==
+	b=QJkOrBF8X2rW+fsz/KPw0yG4RPAQNb03j6H2Zw9t+EQtJOZsZ1Ijcrq8/yqkLZrIH
+	 GzA8KbOHZcxUdwQb9kpP1ZdWDJz18y6YdO2DORFvYBmozVu+A5hxB3lY/pGRI7AMG9
+	 1Q6P4biU1ry5/QGr5EB42X7eBUKa/l4vBhMMeFXQdabLzxV3JpUqLp9RbhlkKOLGVX
+	 o5SGs8t0F7R1IQTpYL28kMD5hAwdqDNvaaaQ0nxTjvTEc0pNzQfz/cDIiFkUqnuiwC
+	 iaTdNhnyKmJ+z9UjdfSLjMcFrHPjwOjNGAdYNH2D3gxv1qFRzSs2rC9FQg2/Mg77C/
+	 wdZ+jhV/xJ14A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 05/17] scsi-multipath: clone each bio
+Subject: Re: [PATCH v3 06/17] scsi-multipath: clear path when device is
+ blocked
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260703103402.3725011-6-john.g.garry@oracle.com>
+In-Reply-To: <20260703103402.3725011-7-john.g.garry@oracle.com>
 References: <20260703103402.3725011-1-john.g.garry@oracle.com>
- <20260703103402.3725011-6-john.g.garry@oracle.com>
+ <20260703103402.3725011-7-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 03 Jul 2026 11:26:02 +0000
-Message-Id: <20260703112603.525E51F000E9@smtp.kernel.org>
+Date: Fri, 03 Jul 2026 11:32:25 +0000
+Message-Id: <20260703113225.D312B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-- [High] Destroying the bio pool before draining inflight IOs during teardo=
-wn leads to memory corruption.
-- [High] Manual cleanup on the dev_set_name() error path after put_device()=
- causes deterministic double-free and use-after-free vulnerabilities.
+
+New issues:
+- [Critical] Unsafe lockless access to `scsi_mpath_head` in `scsi_mpath_dev=
+_clear_path` races with device removal, causing a NULL pointer dereference =
+or Use-After-Free.
+- [High] Adding a blocking synchronization call to the `nowait` context of =
+`__scsi_internal_device_block_nowait` violates non-blocking guarantees.
+- [High] Publishing `sdev->scsi_mpath_dev` before `scsi_mpath_head` is init=
+ialized leads to NULL pointer dereferences during concurrent block requests.
+
+Pre-existing issues:
+- [High] The error path in `scsi_mpath_alloc_head()` double-frees the `scsi=
+_mpath_head` structure and its associated resources.
+- [High] The error path for `device_add()` failure in `scsi_mpath_dev_alloc=
+()` causes a NULL pointer dereference and an invalid `device_unregister()`.
 --
 
-commit 31da3ef05c72ae055a7ebbed278c14967c624ea3
+commit 848d562af61faa57ddead6bc3e5e7a75ce63ea4e
 Author: John Garry <john.g.garry@oracle.com>
+Subject: scsi-multipath: clear path when device is blocked
 
-scsi-multipath: clone each bio
+This patch adds scsi_mpath_dev_clear_path() to clear a device path when it
+becomes blocked. It updates __scsi_internal_device_block_nowait() to call
+this new function when a path is available.
 
-For failover handling, we will take the approach to resubmit each
-bio. Unlike NVMe, for SCSI there is no guarantee that any bio submitted
-is either all or none completed. As such, for failover handling clone
-and submit each bio.
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index daeb3693fe559..3c493068adb98 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+[ ... ]
+> @@ -2923,6 +2924,8 @@ EXPORT_SYMBOL(scsi_target_resume);
+> =20
+>  static int __scsi_internal_device_block_nowait(struct scsi_device *sdev)
+>  {
+> +	if (sdev->scsi_mpath_dev)
 
+[Severity: High]
+Does this early access race with device probe?=20
+
+If scsi_multipath_sdev_init() publishes sdev->scsi_mpath_dev before
+allocating scsi_mpath_head, could an asynchronous block request see this as
+true and invoke scsi_mpath_dev_clear_path(), leading to a NULL pointer
+dereference on the head?
+
+> +		scsi_mpath_dev_clear_path(sdev->scsi_mpath_dev);
+>  	if (scsi_device_set_state(sdev, SDEV_BLOCK))
+>  		return scsi_device_set_state(sdev, SDEV_CREATED_BLOCK);
+> =20
 > diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-> index 6159803d4cbb8..ca4ab720c19af 100644
+> index ca4ab720c19af..0f3f3f9fa5fae 100644
 > --- a/drivers/scsi/scsi_multipath.c
 > +++ b/drivers/scsi/scsi_multipath.c
-> @@ -96,6 +96,7 @@ static void scsi_mpath_head_release(struct device *dev)
->  		container_of(dev, struct scsi_mpath_head, dev);
->  	struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
-> =20
-> +	bioset_exit(&scsi_mpath_head->bio_pool);
-
-[Severity: High]
-Does destroying the bio pool here before draining inflight IOs lead to memo=
-ry
-corruption?
-
-If a device is removed, the final reference to the scsi_mpath_head might be
-dropped before the underlying request queue is frozen. Because the queue is
-not yet drained, inflight cloned bios can still complete after the pool is
-destroyed. When they do, scsi_mpath_clone_end_io() calls bio_put(), which
-will attempt to return the clone to this destroyed bio_pool, causing a
-use-after-free.
-
->  	ida_free(&scsi_multipath_dev_ida, scsi_mpath_head->index);
->  	mpath_head_uninit(mpath_head);
-
 [ ... ]
+> @@ -113,6 +113,17 @@ static ssize_t scsi_mpath_device_vpd_id_show(struct =
+device *dev,
+>  }
+>  static DEVICE_ATTR(vpd_id, S_IRUGO, scsi_mpath_device_vpd_id_show, NULL);
+> =20
+> +void scsi_mpath_dev_clear_path(struct scsi_mpath_device *scsi_mpath_dev)
+> +{
+> +	struct mpath_device *mpath_device =3D &scsi_mpath_dev->mpath_device;
+> +	struct scsi_mpath_head *scsi_mpath_head =3D scsi_mpath_dev->scsi_mpath_=
+head;
 
-> @@ -270,6 +300,8 @@ static struct scsi_mpath_head *scsi_mpath_alloc_head(=
-void)
->  	ida_free(&scsi_multipath_dev_ida, scsi_mpath_head->index);
->  out_put_head:
->  	mpath_put_head(&scsi_mpath_head->mpath_head);
-> +out_bioset_exit:
-> +	bioset_exit(&scsi_mpath_head->bio_pool);
->  out_free:
->  	kfree(scsi_mpath_head);
+[Severity: Critical]
+Is this lockless access safe against concurrent device removal?
+
+If scsi_mpath_remove_head() drops the head reference locklessly and sets:
+    scsi_mpath_dev->scsi_mpath_head =3D NULL;
+
+Could a concurrent event hitting __scsi_internal_device_block_nowait()
+unconditionally call this and blindly dereference the NULL or freed
+scsi_mpath_head?
+
+> +	struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
+> +
+> +	if (mpath_clear_current_path(mpath_device))
+> +		mpath_synchronize(mpath_head);
 
 [Severity: High]
-Can this error cleanup path cause a double-free vulnerability?
+Does this introduce a sleeping call into a nowait context?
 
-If dev_set_name() fails earlier in scsi_mpath_alloc_head(), the code will
-call put_device() which drops the kobject reference count and synchronously
-invokes scsi_mpath_head_release().
+__scsi_internal_device_block_nowait() is designed not to sleep to preserve
+batching optimizations. Since mpath_synchronize() typically sleeps to wait
+for grace periods or draining I/O, will calling it here break those
+optimizations or cause scheduling while atomic panics?
 
-scsi_mpath_head_release() completely tears down and frees the scsi_mpath_he=
-ad
-structure, but the error path then continues through these manual cleanup
-steps, executing bioset_exit() and kfree() on the already freed pointer.
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_mpath_dev_clear_path);
+> +
+>  static ssize_t scsi_mpath_device_iopolicy_store(struct device *dev,
 
->  	return NULL;
->  }
+
+While reviewing this patch, I also noticed a couple of pre-existing issues
+in the earlier patches of this series:
+
+[Severity: High]
+This is a pre-existing issue, but does the error path in
+scsi_mpath_alloc_head() double-free the structure?
+
+If dev_set_name() fails:
+    if (dev_set_name(&scsi_mpath_head->dev, ...)) {
+        put_device(&scsi_mpath_head->dev);
+        goto out_free_ida;
+    }
+
+put_device() drops the refcount to 0, which invokes the release function
+scsi_mpath_head_release() to free the structure and its resources.
+The code then falls through to out_free_ida where it manually executes the
+IDA free, bioset exit, and a second kfree() on the already freed struct.
+
+
+[Severity: High]
+This is a pre-existing issue, but does the error path for device_add()
+cause a NULL pointer dereference in scsi_mpath_dev_alloc()?
+
+If device_add() fails, it jumps to out_put_head:
+    ret =3D device_add(&scsi_mpath_head->dev);
+    if (ret) {
+        mutex_unlock(&scsi_mpath_heads_lock);
+        goto out_put_head;
+    }
+
+This ultimately calls scsi_mpath_free_head(), which unconditionally
+executes:
+    list_del_init(&scsi_mpath_head->entry);
+
+Since the device was never added to the list on this error path, entry is
+still zero-initialized. Will list_del_init() dereference a NULL pointer
+here? Also, would the cleanup code call device_unregister() on a device
+that failed device_add()?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260703103402.3725=
-011-1-john.g.garry@oracle.com?part=3D5
+011-1-john.g.garry@oracle.com?part=3D6
