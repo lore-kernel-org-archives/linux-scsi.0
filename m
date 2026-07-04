@@ -1,113 +1,114 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1D3B1DED40
-	for <linux-scsi@vger.kernel.org>; Sat,  4 Jul 2026 17:48:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28C0B208D0
+	for <linux-scsi@vger.kernel.org>; Sat,  4 Jul 2026 17:58:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783187315; cv=none; b=RA1qPqXuClMOCq6X6tVJ6uEqM7QR1AShiAcQZZfndv33+FFrjOElbBXL7+SbeUNQyDWqcO2s6TVkDOmBFD0QVRO9otauti+O5PWueGuHr2iB52k4QfM1SUQ8YJJPRP4afTbeQTyMGjWcOKPvtJpKDAy+YiHfRNpD4l3IXscf+aM=
+	t=1783187894; cv=none; b=UHGxNSc82Z/yZlZo+uUG9AEuPe7X9c/ArATY2zYa+9Zx3uqMv+wdA1FqIGt1lgmGMdgsy20rAa9VZr4vnJxRVcsia2YQLdVQ585S850y4beuXlnfodgFmYEc4+WNwT3qAk63jkIP7hHe9otv+d9FOCWAh9InTAOOW5dZXEcmaq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783187315; c=relaxed/simple;
-	bh=UtUu5BioZuJKfFmTZv0SLYsE6ePCGt9kpNlHvIfI8tg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TOrxhN8HrbocD4a9ZRKooSNxN2cYzNWQQcNR46n8uLiXJQshyVHvpAVPAEET8fSJkY8V/ePCS3RbLJbR0T4+ORRoHXMm3Z0IAnEfUCTw7DbZgWUKa7nAP8sPGBnPdjMXQM31lIhIcnma3razDtZta0555fkANCJRgsBvfkVucw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EwNsYfS2; arc=none smtp.client-ip=209.85.210.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1783187894; c=relaxed/simple;
+	bh=CciqR7jhXiWmsRR2DW4F3pz73CVbVsd71cVK6w6XYSw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=EFDJ/H7Iu4YfTJEmFt+LiCCrSo++DwJVPSodoo/MkH/+p1ND7YhsMihvKAoSqfTCc1g/1VfsFuqdkFwW0Jd8qc1eAvQABC/Gehi2AR8i4af5YHlPX0KDU4V1F5Ug9bABltbVl/6qqBwjj2qbhXdP17UK9AlwE4rP7m2OcHSDl3c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bE2jrQW3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EwNsYfS2"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-8453427d3f4so1390574b3a.3
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Jul 2026 10:48:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783187313; x=1783792113; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=sn9RvgI/yVMwEfWJXk2ielNPfuat7hoo2D7L75ktDis=;
-        b=EwNsYfS27efKosx997XVsKwnYDa8kFfgk9ia0aMpj7+A99uGa+RVC2OcwRxKbh3MdF
-         GlwkIBS2eTup5ZrGgOMqHuE64Ceyw7bkU8kZ0mRV+28Im1IieUUQkuL9hZqM8XOzdmZl
-         1wEmhRkpj1KfTDnWqiV9pEcSo7cgcb43qQTLvqeArqAaSsGLaJqDuH8nXnEp9w3cNvIK
-         UfAxhHZj3LJS9034rNjmrzTRJ5KcN2JvwbUjrQW/Oo2S+9Hh8cpS4oahSQQbxa6iZ/Cm
-         Nt97Xd3sKErHu2G+P0JOCyhrZnXmsIEeoPVneJN7gI2vqEIek2IPtd3x+rzhGR8rhYeB
-         8tDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783187313; x=1783792113;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sn9RvgI/yVMwEfWJXk2ielNPfuat7hoo2D7L75ktDis=;
-        b=CJkr5Nz0AkAjbb/9hsOwr8OiFVSbhNONZVftTMKrv0Jymd1bnND6hxVh5pJqmLspvK
-         bo30Y6l4n1aNlCvbDfcTqkZ38qkpNYaX+7b1mLP9PA9xuvkmZ2rXrUQ4x8PbD67sN2kG
-         x4DrwqbNFTU6GpAJaUul/z/n4Dj1HoMNq6mY652/Pcuk6okFS4irEOBZ5rZ8BKqvc31I
-         w8Ev7F0mwVxp330Onl7q+i8wIFInaR2wFu5zVOgCbkW2ZhgaWnAI2jmrfxtH5BUGqbql
-         OYMtBLq1vpCt9WW/8snGI+6ybZEzmo2PsGM2j0piwtwz0aFZd0pwFCJn3CmbQKlLC6qo
-         l5zw==
-X-Forwarded-Encrypted: i=1; AFNElJ8IWypXkyhGInrx3F3vE7YsS1a2SEL50M/aUnvKt/4LYZ83tdqI5ptIiLp21SVvGjp+tOASOr6lQlLU@vger.kernel.org
-X-Gm-Message-State: AOJu0YyBOnbTNrEFyxeEywce6wI9Ot0WTFeDZsmy5Qf7JpFqaALEGgLg
-	W68dOPxjJBGY7Brrn4SVnzHcXIDgurxBze142P7U6LEP0fgUU6vJ/MHK
-X-Gm-Gg: AfdE7cmvcbRLGxm9YHcdYtj/GyHBtFYYez7tv5Wl463EbhZQNgKd5UKjF+mv9SvQuOc
-	0ixAM1C6tfYiDqW8ggq+/KuHyhz9LVc4O45eHpy/jczF0NG3xknDu0+SHEEYbGRQRH/iOxo0EH1
-	6QQBYqP69mrA7+fv1ytRSHW5RQTVq4rsbtwnQevyq3Gi7PeAQgBve0lP2MOGRTLTAcgRHSqFvED
-	J9pR33y1BVBlx4VlmVmoDLegkRRvByxnFRIp12Dx+qDw0R01oIUDiq6EF8+BSJFjtGDe03INjL1
-	7qujaAljEM/cE4Y+B9NpkaP2wYsACyOky/jmfZesvzUAQvRNQniHmGoNn6+guLkQpgw5IzmpbDM
-	hUb0aSB6hiFflbyHCD2uw932sOWY3gLUu27aphSpX7S56ka0trwHUe8A1y/h4/hHxYPT3QEg=
-X-Received: by 2002:a05:6a20:c79b:b0:3b2:a809:1000 with SMTP id adf61e73a8af0-3c03e1a28b6mr4198185637.3.1783187313259;
-        Sat, 04 Jul 2026 10:48:33 -0700 (PDT)
-Received: from lgs.. ([2001:250:5800:1000::f280])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c9e91b07639sm3857271a12.21.2026.07.04.10.48.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 04 Jul 2026 10:48:32 -0700 (PDT)
-From: Guangshuo Li <lgs201920130244@gmail.com>
-To: Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Anil Gurumurthy <agurumurthy@marvell.com>,
-	Himanshu Madhani <hmadhani2024@gmail.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Guangshuo Li <lgs201920130244@gmail.com>
-Subject: [PATCH] scsi: qla2xxx: Fix BSG request hang on flash image validation failure
-Date: Sun,  5 Jul 2026 01:46:03 +0800
-Message-ID: <20260704174603.255881-1-lgs201920130244@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bE2jrQW3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E1051F000E9;
+	Sat,  4 Jul 2026 17:58:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783187892;
+	bh=Pdj4FYRLzPu9WjEYRfDmdJpSSOvTKHX/PHtuHNukZ5c=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bE2jrQW3qKGDnVPJlRginMCHmRqC+15/RYWqFFrW8S1uTcLvxULTo8pIdSpu72EnV
+	 6FVrD36MvaTCSiLe6E3B4OWOqSGxofKPGYUqHY3tTGK89OFJ8z0BMb6lU9gMA6OqXM
+	 4G/UqbsWWLnCBK04fZ3Pio5VLv2y24H57OgAs6vrlnlOxQ1XMQcwDy2z5tj5wIul5b
+	 hI12SZMKvzSc99IKAYgBdTQXYZASNH0+meSX3ZrOKyS0E0Iy/x/D19t0Xij2Nby6YQ
+	 zuEVn0icYnLTT+Riwq4NBGiGkmhs918aI6bjZKCSNLH7gkGdomt8wW7ykwonU+IsLM
+	 5d6taxf6rAiQQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: Fix BSG request hang on flash image
+ validation failure
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Guangshuo Li" <lgs201920130244@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260704174603.255881-1-lgs201920130244@gmail.com>
+References: <20260704174603.255881-1-lgs201920130244@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 04 Jul 2026 17:58:12 +0000
+Message-Id: <20260704175812.9E1051F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-qla28xx_validate_flash_image() validates a flash image and reports the
-result through the BSG reply. It only calls bsg_job_done() when the
-validation succeeds.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Critical] Returning a negative error code to the BSG core truncates the =
+reply payload, silently discarding vendor-specific diagnostic codes and bre=
+aking userspace API expectations.
+--
 
-However, the function always returns QLA_SUCCESS. If validation fails,
-bsg_job_done() is skipped but the zero return value tells the BSG core
-that the request was accepted and will be completed asynchronously. No
-one completes the request afterwards, so the BSG request remains
-in-flight until it times out.
+commit 4f9a7c7b8cae4329ddb272256609d33b20e03bb0
+Author: Guangshuo Li <lgs201920130244@gmail.com>
 
-Return the validation error when bsg_job_done() is not called. This lets
-the BSG core complete the request with an error instead of waiting for a
-completion that will never happen.
+scsi: qla2xxx: Fix BSG request hang on flash image validation failure
 
-Fixes: c2c68225b145 ("scsi: qla2xxx: Fix bsg_done() causing double free")
-Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
----
- drivers/scsi/qla2xxx/qla_bsg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch aims to fix a hang when flash image validation fails. It modifies
+qla28xx_validate_flash_image() to return an error code instead of QLA_SUCCE=
+SS
+when validation fails. This prevents the BSG request from remaining in-flig=
+ht
+until it times out.
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 5e910b5ca670..5b2201859f73 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -3369,5 +3369,5 @@ static int qla28xx_validate_flash_image(struct bsg_job *bsg_job)
- 		bsg_job_done(bsg_job, bsg_reply->result,
- 			     bsg_reply->reply_payload_rcv_len);
- 
--	return QLA_SUCCESS;
-+	return rval;
- }
--- 
-2.43.0
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index 5e910b5ca670d..5b2201859f730 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -3369,5 +3369,5 @@ static int qla28xx_validate_flash_image(struct bsg_=
+job *bsg_job)
+>  		bsg_job_done(bsg_job, bsg_reply->result,
+>  			     bsg_reply->reply_payload_rcv_len);
+> =20
+> -	return QLA_SUCCESS;
+> +	return rval;
 
+[Severity: Critical]
+Does returning a negative error code here truncate the reply payload and
+discard the vendor-specific diagnostic codes?
+
+Earlier in qla28xx_validate_flash_image(), the code carefully constructs
+an extended vendor status payload:
+
+    if (rval)
+        bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =3D
+            (state =3D=3D 39) ? EXT_STATUS_IMG_SET_VALID_ERR :
+            EXT_STATUS_IMG_SET_CONFIG_ERR;
+
+However, when this function returns a negative error code instead of
+QLA_SUCCESS, the BSG core intercepts it as a transport failure.
+
+This occurs in the transport layer:
+
+drivers/scsi/scsi_transport_fc.c:fc_bsg_host_dispatch() {
+    ...
+    if (ret) {
+        /* transport error */
+        job->reply_len =3D sizeof(uint32_t);
+        ...
+    }
+    ...
+}
+
+Will this force the reply length to 4 bytes and silently drop the
+reply_data payload, breaking userspace API expectations for these
+validation errors?
+
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260704174603.2558=
+81-1-lgs201920130244@gmail.com?part=3D1
