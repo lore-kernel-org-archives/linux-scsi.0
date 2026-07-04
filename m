@@ -1,87 +1,121 @@
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 989DA215075;
-	Sat,  4 Jul 2026 01:09:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF8C4208D0
+	for <linux-scsi@vger.kernel.org>; Sat,  4 Jul 2026 01:13:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783127394; cv=none; b=L56jqKqzNOG7UzXiAYZah4nccrAYhhyRP51g8NVtcxkHGByIzqnTDFBqBSGXbc+oUt2qN5K1uDGM7sN24xTJMYt5v8bk1SpjyLjYoh7FHGQE0fh+DTIhHJA11GR7C6jR6QvLQwOmmp8HSZf8pl9UoQ1SYyv26ffiUGUWiKDLqJE=
+	t=1783127599; cv=none; b=K5SC7kXNAc0h9t7pNUSmWxYkKXYt/JGbrUudrwt/yR6IggADLC14+NPxWExmCVc+/U6mpPR7xUZu9Y0bUaMdd0A5rBa/R1rBvNf13ewTwQFjNu2MkYF8oFs+Hu8Na+2cxP2MmUSSkPbA0k3qscsjIJd7lW60KuIv3zKiWyn9f0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783127394; c=relaxed/simple;
-	bh=7sdzQ9GYnvBK1pPNhOde3D1gp3/5F+iYNxw8Hy+NYTQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Dy8rYLMnq733RkasgCNFDDcAIuruEAtLZ8hBk79Hc355c7cPsZUEOEb5DVAbQumsimSB/ymlzXYUWHdDVr0FdzcF/nEU1fPgEkzKxa1xdwUQKvL8jfhiGNu4JgYCtGzfEi0ne9+E3I0gstLSKpd7yBH0dblmoLWjf8gOLk/qWaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.245.140])
-	by APP-05 (Coremail) with SMTP id zQCowAA3xglZXUhqmZfEFg--.53954S2;
-	Sat, 04 Jul 2026 09:09:45 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: Don Brace <don.brace@microchip.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: storagedev@microchip.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>
-Subject: [PATCH] scsi: hpsa: validate active path number before enclosure arrays
-Date: Sat,  4 Jul 2026 09:09:43 +0800
-Message-ID: <20260704010943.16707-1-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1783127599; c=relaxed/simple;
+	bh=gVlP0EOj99AMYOqAJl+SvToBWL4BpO77O4QXthsqIoY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=CaqnwVik2kqu5BVkoOyWN/zb6Rs+oRWeIQyc9I8GWVlHwF7249MW4FmZ5nXO9BBJRyIluhM4Krxa7dhy7TsKSB0IFYTYkVvadtbtrMWwls3zuHqJEg9xZeDO9kcnEhfr6Dr8DW9MOdMRqea5axfp6XP7FbkDFZT2dl44AKWrN9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LAk1Koj9; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LAk1Koj9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6172B1F000E9;
+	Sat,  4 Jul 2026 01:13:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783127597;
+	bh=d/sgVXdAf8ZKEwpHmiSr9ADBBuMNdmlXycxkAM17JSI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=LAk1Koj9XD6uKCnFfNA935UGWWVWkhlryz4KgOvPmwu2Th9XaimTY/vfbVcdImAiv
+	 6bL2o5kL7kBr57gYpXcJPfEJopXG8UwN6kN2IublX6v8d/LA0QwtRgKYvyUDVnGTVc
+	 badvFYoQ2++D7jqdRAb+E0HWH84zTFZ+OnULot7n6CvxtIjctSjT/CyaIGpiJhebkq
+	 BjRRQEiDwhVaPkLYvMN2BiLaDCUBx31e/CXRCh3Q54kt1m6P2kfaXCOPyNfMc8hePe
+	 D7g00/RN6YEGiUlQ2JWYhfpODY6DK3D7VfYffYF0+VqnTHMDL9TxEe0vbAGHDPcM2c
+	 AiWRaSdMdQAzg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: 3w-9xxx: bound firmware error string parsing
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Pengpeng Hou" <pengpeng@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260704010512.71912-1-pengpeng@iscas.ac.cn>
+References: <20260704010512.71912-1-pengpeng@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 04 Jul 2026 01:13:16 +0000
+Message-Id: <20260704011317.6172B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAA3xglZXUhqmZfEFg--.53954S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7JFWfGFyfCry7JFyktFWfuFg_yoWfZwc_uF
-	Z5ur4Iqw4jka4I93W7Krs5Z34I9w4xWr1Fka9FqrWfXa4Sqrsay34kJryrXw4UG3y8XF1q
-	93Z09r48ZF4jkjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb4AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVW8Jr
-	0_Cr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
-	6r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
-	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCI
-	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
-	AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_
-	Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbPl1P
-	UUUUU==
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-hpsa_get_enclosure_info() uses the firmware-provided
-active_path_number as an index into the eight-entry box[] and
-phys_connector[] arrays in struct hpsa_scsi_dev_t.  The value is not
-checked before the array write and connector copy.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Reject enclosure information with an out-of-range active path number
-before updating those fixed per-path arrays.
+Pre-existing issues:
+- [High] The identical out-of-bounds read and copy vulnerabilities fixed by=
+ this patch in the 3w-9xxx driver also exist in the 3w-sas driver, but were=
+ missed. The `twl_aen_queue_event` function calls `strlen(header->err_speci=
+fic_desc)` without bounds checking, which can read past the fixed 98-byte f=
+irmware array. Furthermore, it uses the resulting unbounded pointer `error_=
+str` to calculate the copy length for a `memcpy()` into the 98-byte `event-=
+>parameter_data` array, leading to a heap buffer overflow. A similar unboun=
+ded `strlen()` is also present in `twl_fill_sense`.
+--
 
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
----
- drivers/scsi/hpsa.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+commit 18b063874ec862a643c52abdfc2ae2cc3b0824b7
+Author: Pengpeng Hou <pengpeng@iscas.ac.cn>
 
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3501,6 +3501,14 @@
- 
- 	ei = c->err_info;
- 	if (ei->CommandStatus != 0 && ei->CommandStatus != CMD_DATA_UNDERRUN) {
-+		rc = -1;
-+		goto out;
-+	}
-+
-+	if (id_phys->active_path_number >= ARRAY_SIZE(encl_dev->box)) {
-+		dev_warn(&h->pdev->dev,
-+			 "%s: invalid active path %u for bdi[0x%x]\n",
-+			 __func__, id_phys->active_path_number, bmic_device_index);
- 		rc = -1;
- 		goto out;
- 	}
+scsi: 3w-9xxx: bound firmware error string parsing
 
+This commit bounds firmware error string parsing in the 3w-9xxx driver.
+It replaces unbounded strlen() calls with strnlen() and enforces null
+termination to prevent potential out-of-bounds reads and writes.
+
+> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+> index 9b93a2440af8f..d6e183517797e 100644
+> --- a/drivers/scsi/3w-9xxx.c
+> +++ b/drivers/scsi/3w-9xxx.c
+[ ... ]
+> @@ -404,11 +405,21 @@ static void twa_aen_queue_event(TW_Device_Extension=
+ *tw_dev, TW_Command_Apache_H
+>  	tw_dev->error_sequence_id++;
+> =20
+>  	/* Check for embedded error string */
+> -	error_str =3D &(header->err_specific_desc[strlen(header->err_specific_d=
+esc)+1]);
+> -
+>  	header->err_specific_desc[sizeof(header->err_specific_desc) - 1] =3D '\=
+0';
+> -	event->parameter_len =3D strlen(header->err_specific_desc);
+> -	memcpy(event->parameter_data, header->err_specific_desc, event->paramet=
+er_len + (error_str[0] =3D=3D '\0' ? 0 : (1 + strlen(error_str))));
+> +	desc_len =3D strnlen(header->err_specific_desc,
+> +			   sizeof(header->err_specific_desc));
+
+[Severity: High]
+This is a pre-existing issue, but the identical out-of-bounds read and copy
+vulnerabilities fixed here also exist in the 3w-sas driver.
+
+In drivers/scsi/3w-sas.c:twl_aen_queue_event(), the code calls
+strlen(header->err_specific_desc) without bounds checking, which can read
+past the fixed firmware array if the SCSI controller firmware sends an AEN
+lacking a null terminator:
+
+    error_str =3D &(header->err_specific_desc[strlen(header->err_specific_d=
+esc)+1]);
+    ...
+    event->parameter_len =3D strlen(header->err_specific_desc);
+    memcpy(event->parameter_data, header->err_specific_desc, event->paramet=
+er_len + 1 + strlen(error_str));
+
+This uses the unbounded pointer error_str to calculate the copy length for a
+memcpy() into the event->parameter_data array, leading to a heap buffer=20
+overflow.
+
+A similar unbounded strlen() is also present in drivers/scsi/3w-sas.c in
+twl_fill_sense():
+
+    error_str =3D &(header->err_specific_desc[strlen(header->err_specific_d=
+esc) + 1]);
+
+Would it make sense to extend these bounds checking fixes to the 3w-sas
+driver as well?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260704010512.7191=
+2-1-pengpeng@iscas.ac.cn?part=3D1
