@@ -1,187 +1,113 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D7C727732
-	for <linux-scsi@vger.kernel.org>; Sat,  4 Jul 2026 14:01:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1D3B1DED40
+	for <linux-scsi@vger.kernel.org>; Sat,  4 Jul 2026 17:48:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783173693; cv=none; b=X6Vay61c5BMEiXpMs0+MyL2ED9zH4VVcAf2V1u+B5PRZBxQxC07w/9cZ24NVE4Ppfcg9/2bDk9as6c6srMrmU6iscXtOjO2aPl98+30k0nlaS12GS/sbP9paNCzzlcEQkGI1eqJmCvTbKhOSfzGykmoUqphjqV3KJcZMOQSFI8Q=
+	t=1783187315; cv=none; b=RA1qPqXuClMOCq6X6tVJ6uEqM7QR1AShiAcQZZfndv33+FFrjOElbBXL7+SbeUNQyDWqcO2s6TVkDOmBFD0QVRO9otauti+O5PWueGuHr2iB52k4QfM1SUQ8YJJPRP4afTbeQTyMGjWcOKPvtJpKDAy+YiHfRNpD4l3IXscf+aM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783173693; c=relaxed/simple;
-	bh=X/aUfjm1ytiWBQKSsoJFWVGuSu64ruDLhkhKQT26bFE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sFu45RolPNb6lfv37zaxkNcnELBM82CT4fM+yZQIMrUVYPL7EuyiRRxFRPkh7GvfTfn1sRAEW9NY5jR0qz+AzLCssKh5vSK5HHY29KJQ2+G1TObXn2XRdWxknuCS5xy7LYxtUI7ypxCi+PC3/JSihGhSnJlTfBY2aVHJUezKUIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GdExZnqj; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=o/4AwnQB; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1783187315; c=relaxed/simple;
+	bh=UtUu5BioZuJKfFmTZv0SLYsE6ePCGt9kpNlHvIfI8tg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TOrxhN8HrbocD4a9ZRKooSNxN2cYzNWQQcNR46n8uLiXJQshyVHvpAVPAEET8fSJkY8V/ePCS3RbLJbR0T4+ORRoHXMm3Z0IAnEfUCTw7DbZgWUKa7nAP8sPGBnPdjMXQM31lIhIcnma3razDtZta0555fkANCJRgsBvfkVucw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EwNsYfS2; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GdExZnqj";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="o/4AwnQB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783173690;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RG/qppTW5QiC+uZfEkeQXRtZMh5udm6vGfwyGZ5WcNg=;
-	b=GdExZnqjL2NeVQ+cDqXeKIAtJHB2x9I2HccmDwu660Z6cRIj87POxO2BeTHg6TZqSRZddJ
-	Ylztll9lScqjyKsENT+wpdENR4XRC9PgucUY++vZRW9Yegs8lnB3IcsnQQ0NvTQeWO5ikU
-	y1/I1rm2fZtYmFcUvoA5i//9/If02vU=
-Received: from mail-yw1-f198.google.com (mail-yw1-f198.google.com
- [209.85.128.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-619-ee9v1MI_NcyZu4pnZkL4bw-1; Sat, 04 Jul 2026 10:01:28 -0400
-X-MC-Unique: ee9v1MI_NcyZu4pnZkL4bw-1
-X-Mimecast-MFC-AGG-ID: ee9v1MI_NcyZu4pnZkL4bw_1783173686
-Received: by mail-yw1-f198.google.com with SMTP id 00721157ae682-8114ebd5deeso41881797b3.2
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Jul 2026 07:01:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EwNsYfS2"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-8453427d3f4so1390574b3a.3
+        for <linux-scsi@vger.kernel.org>; Sat, 04 Jul 2026 10:48:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1783173686; x=1783778486; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RG/qppTW5QiC+uZfEkeQXRtZMh5udm6vGfwyGZ5WcNg=;
-        b=o/4AwnQBIBCB9VNZn1OUWd8KvkgEDu76HuY/iTlO8ZpmenIq6JVQRYUUt4J2oR63EK
-         NrjZugP+UO+e06V+a/Uui0pDUIgcP3Mp2q81sqRcmYA9iVWosJmrTnb4lrC4/edRFBRF
-         mAKdI9bM48rHx495j7yKMxHSUhDcIeXq5a7LsBMml3VDo9IRwaqbJa4NDKQJSdBknePV
-         h+eMoMLaYL9XHO9lOAi4p/TwUfY7UpGDJVEcGQUSD4rMDrJh0zrsDqQTqS3yJPp0XoCP
-         BTOdGN4Ad60bT4+jYm0hqKUZ8NmR8xsgBpz3Hw4oyz2zU0L/TmtmvEgRI36KdaXGcIqI
-         X+3Q==
+        d=gmail.com; s=20251104; t=1783187313; x=1783792113; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=sn9RvgI/yVMwEfWJXk2ielNPfuat7hoo2D7L75ktDis=;
+        b=EwNsYfS27efKosx997XVsKwnYDa8kFfgk9ia0aMpj7+A99uGa+RVC2OcwRxKbh3MdF
+         GlwkIBS2eTup5ZrGgOMqHuE64Ceyw7bkU8kZ0mRV+28Im1IieUUQkuL9hZqM8XOzdmZl
+         1wEmhRkpj1KfTDnWqiV9pEcSo7cgcb43qQTLvqeArqAaSsGLaJqDuH8nXnEp9w3cNvIK
+         UfAxhHZj3LJS9034rNjmrzTRJ5KcN2JvwbUjrQW/Oo2S+9Hh8cpS4oahSQQbxa6iZ/Cm
+         Nt97Xd3sKErHu2G+P0JOCyhrZnXmsIEeoPVneJN7gI2vqEIek2IPtd3x+rzhGR8rhYeB
+         8tDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783173686; x=1783778486;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=RG/qppTW5QiC+uZfEkeQXRtZMh5udm6vGfwyGZ5WcNg=;
-        b=gqZbtdw3dJI4ZfhFa58yzmZ4d4SysOvAdWWgG+6qA1qALIPOb+e0fKYZ+tmBHxtgYK
-         AtJV0wQOhMemICv0vuDlNN56QQ3J1t2OSJwobJyuWrDTwN0yvficQi0/t7cJmYz9sX1m
-         7cMpCnBBzGyZv5qJ5/0fz7u67ybJeN6PELwlSfNdmKrIgDAHXuCI+hGdoPPgcQDZLG6C
-         ZlSjYnbTFtkokk7xEZaP8LVqGYQEzZXkdBPLbqoOrczjYM70ThYYgD0tEZKTb7exfF4q
-         nF+tcv84y8PldlIyMEypLm2kjNEeeuf0INhZr/n7fU2Uegyx629igRScIiznzWCH7xjj
-         94QQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpsnzmtdYg3m1B0G0znScjMkm51vpnpSFOQsYD5BgA0KSb+UIo6Kuby+CWcfruAeEyR9gTQ7Uwac232@vger.kernel.org
-X-Gm-Message-State: AOJu0YyFEVzXnAESaV0tyVhKuS53YCJAyJ2+HyEaJBK/Ir/0s+/W8hCB
-	uITFgMuHkcjC3L+K3V311uLaHmnOHVM0gA7Mkui4KGGX1WuKSpjC0UcRfCHfbfFx2koWCH/4rLJ
-	uWNdnycxyuzooH5tZTEwOAiKVextyeSrUGtzVKFWrPAqRYk/zUDLP4mfGgqrRvVQ=
-X-Gm-Gg: AfdE7cnyl3U+QczfQrpmb/gRaAbx0jsu8zpcfzBC1BJCIhHjYDYOT7hn4V3sPQnh0uN
-	cYoDlzR/Dqm7WR7YX5DfMShtDmD9YtTtJi1TR3tyitk9hD4mJpU+Ln+hTPmshYhLz/xzC4ovqE5
-	ao2Ya4VQKo/Q6GHWDOGsawltE2lixDGMd2AbrzH+HU7g7nIw0y2XdxfEBo1dyBms+OkPIgMfvqu
-	VYMAyWmivbd6wAD+Uqix8+FyYLbTpO+UwCpQXCX7ccPhOrKNL3YRSLdvneCirOoERUNilERxKM7
-	m2MjWSx3w6e+wupsUSGqHfbTz6kESEuk0GsApDTx/pwSOqoNMp8cHXuAua5posc=
-X-Received: by 2002:a05:690e:454d:20b0:666:3330:3d8f with SMTP id 956f58d0204a3-66652e9dc1emr2462590d50.51.1783173685469;
-        Sat, 04 Jul 2026 07:01:25 -0700 (PDT)
-X-Received: by 2002:a05:690e:454d:20b0:666:3330:3d8f with SMTP id 956f58d0204a3-66652e9dc1emr2462196d50.51.1783173681958;
-        Sat, 04 Jul 2026 07:01:21 -0700 (PDT)
-Received: from rhdev ([2600:1700:f361:20bf::14c1])
-        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-666408b2d99sm2171811d50.20.2026.07.04.07.01.20
+        d=1e100.net; s=20251104; t=1783187313; x=1783792113;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sn9RvgI/yVMwEfWJXk2ielNPfuat7hoo2D7L75ktDis=;
+        b=CJkr5Nz0AkAjbb/9hsOwr8OiFVSbhNONZVftTMKrv0Jymd1bnND6hxVh5pJqmLspvK
+         bo30Y6l4n1aNlCvbDfcTqkZ38qkpNYaX+7b1mLP9PA9xuvkmZ2rXrUQ4x8PbD67sN2kG
+         x4DrwqbNFTU6GpAJaUul/z/n4Dj1HoMNq6mY652/Pcuk6okFS4irEOBZ5rZ8BKqvc31I
+         w8Ev7F0mwVxp330Onl7q+i8wIFInaR2wFu5zVOgCbkW2ZhgaWnAI2jmrfxtH5BUGqbql
+         OYMtBLq1vpCt9WW/8snGI+6ybZEzmo2PsGM2j0piwtwz0aFZd0pwFCJn3CmbQKlLC6qo
+         l5zw==
+X-Forwarded-Encrypted: i=1; AFNElJ8IWypXkyhGInrx3F3vE7YsS1a2SEL50M/aUnvKt/4LYZ83tdqI5ptIiLp21SVvGjp+tOASOr6lQlLU@vger.kernel.org
+X-Gm-Message-State: AOJu0YyBOnbTNrEFyxeEywce6wI9Ot0WTFeDZsmy5Qf7JpFqaALEGgLg
+	W68dOPxjJBGY7Brrn4SVnzHcXIDgurxBze142P7U6LEP0fgUU6vJ/MHK
+X-Gm-Gg: AfdE7cmvcbRLGxm9YHcdYtj/GyHBtFYYez7tv5Wl463EbhZQNgKd5UKjF+mv9SvQuOc
+	0ixAM1C6tfYiDqW8ggq+/KuHyhz9LVc4O45eHpy/jczF0NG3xknDu0+SHEEYbGRQRH/iOxo0EH1
+	6QQBYqP69mrA7+fv1ytRSHW5RQTVq4rsbtwnQevyq3Gi7PeAQgBve0lP2MOGRTLTAcgRHSqFvED
+	J9pR33y1BVBlx4VlmVmoDLegkRRvByxnFRIp12Dx+qDw0R01oIUDiq6EF8+BSJFjtGDe03INjL1
+	7qujaAljEM/cE4Y+B9NpkaP2wYsACyOky/jmfZesvzUAQvRNQniHmGoNn6+guLkQpgw5IzmpbDM
+	hUb0aSB6hiFflbyHCD2uw932sOWY3gLUu27aphSpX7S56ka0trwHUe8A1y/h4/hHxYPT3QEg=
+X-Received: by 2002:a05:6a20:c79b:b0:3b2:a809:1000 with SMTP id adf61e73a8af0-3c03e1a28b6mr4198185637.3.1783187313259;
+        Sat, 04 Jul 2026 10:48:33 -0700 (PDT)
+Received: from lgs.. ([2001:250:5800:1000::f280])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c9e91b07639sm3857271a12.21.2026.07.04.10.48.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 04 Jul 2026 07:01:21 -0700 (PDT)
-Date: Sat, 4 Jul 2026 10:01:19 -0400
-From: Jennifer Berringer <jberring@redhat.com>
-To: Yixun Lan <dlan@kernel.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Sat, 04 Jul 2026 10:48:32 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	Anil Gurumurthy <agurumurthy@marvell.com>,
+	Himanshu Madhani <hmadhani2024@gmail.com>,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] riscv: dts: spacemit: k3: Add UFS support
-Message-ID: <akkSL1nQ5UieqHNs@rhdev>
-References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
- <20260702-08-k3-ufs-support-v1-3-1a64a3ab128f@kernel.org>
+Cc: Guangshuo Li <lgs201920130244@gmail.com>
+Subject: [PATCH] scsi: qla2xxx: Fix BSG request hang on flash image validation failure
+Date: Sun,  5 Jul 2026 01:46:03 +0800
+Message-ID: <20260704174603.255881-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260702-08-k3-ufs-support-v1-3-1a64a3ab128f@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jul 02, 2026 at 02:31:37AM +0000, Yixun Lan wrote:
-> Add UFS Host Controller support for SpacemiT K3 SoC, and enable
-> it both on both Pico-ITX and CoM260-IFX boards.
-> 
-> Signed-off-by: Yixun Lan <dlan@kernel.org>
-> ---
->  arch/riscv/boot/dts/spacemit/k3-com260-ifx.dts |  4 ++++
->  arch/riscv/boot/dts/spacemit/k3-pico-itx.dts   |  4 ++++
->  arch/riscv/boot/dts/spacemit/k3.dtsi           | 13 +++++++++++++
->  3 files changed, 21 insertions(+)
-> 
-> diff --git a/arch/riscv/boot/dts/spacemit/k3-com260-ifx.dts b/arch/riscv/boot/dts/spacemit/k3-com260-ifx.dts
-> index 238bb03d0e9e..b37e1c7b03e3 100644
-> --- a/arch/riscv/boot/dts/spacemit/k3-com260-ifx.dts
-> +++ b/arch/riscv/boot/dts/spacemit/k3-com260-ifx.dts
-> @@ -19,3 +19,7 @@ chosen {
->  		stdout-path = "serial0:115200n8";
->  	};
->  };
-> +
-> +&ufshc {
-> +	status = "okay";
-> +};
+qla28xx_validate_flash_image() validates a flash image and reports the
+result through the BSG reply. It only calls bsg_job_done() when the
+validation succeeds.
 
-I believe k3-com260.dtsi would be a more fitting file for this change.
-UFS is soldered on the underside of the compute module and not part of
-the carrier board.
+However, the function always returns QLA_SUCCESS. If validation fails,
+bsg_job_done() is skipped but the zero return value tells the BSG core
+that the request was accepted and will be completed asynchronously. No
+one completes the request afterwards, so the BSG request remains
+in-flight until it times out.
 
-Because it is next to the microSD card slot, a picture showing both can
-be seen in section 5.12 (TF-Card Interface) of the PDF version of the K3
-CoM260 User Guide. That picture is notably not visible in the HTML
-version.
+Return the validation error when bsg_job_done() is not called. This lets
+the BSG core complete the request with an error instead of waiting for a
+completion that will never happen.
 
-https://www.spacemit.com/community/document/info?lang=en&nodepath=hardware/eco/k3_com260/com260_user_guide.md
+Fixes: c2c68225b145 ("scsi: qla2xxx: Fix bsg_done() causing double free")
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+---
+ drivers/scsi/qla2xxx/qla_bsg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> diff --git a/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts b/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
-> index b89c1521e664..f1560a5a9031 100644
-> --- a/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
-> +++ b/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
-> @@ -221,3 +221,7 @@ hub@1 {
->  &usb2_phy {
->  	status = "okay";
->  };
-> +
-> +&ufshc {
-> +	status = "okay";
-> +};
-
-Nit: if sorted by label, ufshc would be before usb2_host.
-
-> diff --git a/arch/riscv/boot/dts/spacemit/k3.dtsi b/arch/riscv/boot/dts/spacemit/k3.dtsi
-> index 19fc9b49668e..6c0b0598d5c8 100644
-> --- a/arch/riscv/boot/dts/spacemit/k3.dtsi
-> +++ b/arch/riscv/boot/dts/spacemit/k3.dtsi
-> @@ -1186,5 +1186,18 @@ maplic: interrupt-controller@f1800000 {
->  			riscv,num-sources = <512>;
->  			status = "reserved";
->  		};
-> +
-> +		ufshc: ufshc@c0e00000 {
-> +			compatible = "spacemit,k3-ufshc";
-> +			reg = <0x0 0xc0e00000 0x0 0x40000>;
-> +			clocks = <&syscon_apmu CLK_APMU_UFS_ACLK>,
-> +				 <&syscon_apmu CLK_APMU_UFS_REFCLK>;
-> +			clock-names = "aclk", "ref_clk";
-> +			resets = <&syscon_apmu RESET_APMU_UFS_ACLK>;
-> +			interrupts = <135 IRQ_TYPE_LEVEL_HIGH>;
-> +			freq-table-hz = <491520000 491520000 19200000 19200000>;
-> +			lanes-per-direction = <2>;
-> +			status = "disabled";
-> +		};
->  	};
->  };
-> 
-> -- 
-> 2.54.0
-> 
-
-Best regards,
-Jennifer
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 5e910b5ca670..5b2201859f73 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -3369,5 +3369,5 @@ static int qla28xx_validate_flash_image(struct bsg_job *bsg_job)
+ 		bsg_job_done(bsg_job, bsg_reply->result,
+ 			     bsg_reply->reply_payload_rcv_len);
+ 
+-	return QLA_SUCCESS;
++	return rval;
+ }
+-- 
+2.43.0
 
