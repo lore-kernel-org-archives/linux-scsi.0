@@ -1,130 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E0FEDDC5
-	for <linux-scsi@vger.kernel.org>; Sat,  4 Jul 2026 02:18:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C86A2EA154;
+	Sat,  4 Jul 2026 06:13:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783131497; cv=none; b=SJ8zvEo75djxOmlsRSIH/CoJrOZrC/3+JOlC3ZbkKkh5Xo50sQP+O5Y6lDetezE2yYmbPUO6MgUnyxxBRsTARaKVUXiLuUQNRD3j5Te29KtSO42vwvGRtm1xZBJ6GnXV14mBoWxxoD71p9rNxfM25+lu3QqHgcp09XxdTBFZ/e4=
+	t=1783145621; cv=none; b=OI+RT71yk8BK5JYAaVfzsinofywgYeEIVJ4UmTwXgbQZXeyjIIbUEi8uRGVyyl2W1RcJvxd6GI5vqQHXVJYvZtFdqLunFZJozVE9GU/U3G/PguKAU8B5lAeHXwg3SFlR2RlDCKtaBPkKVYTRcQLugasIk/OUO1kMMT+gq6TXb5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783131497; c=relaxed/simple;
-	bh=mYUlQ1ywTmUBeP98Ku8ftAGMvO7wS+OaXKXoEivWv4A=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=YjzFbPv3kPGYI1lYFVpOlPMTIKB2EGsqpquFpQQstXDr9rNBI0hkNvyKO2Tv4cV95cBvx98g1OPRJXitdZVsje97NPk7zcQuqIkchRwep9MoWEs3x/br7cYrRTNhZwbDJWCv0at+x5HHtmgPYJFrairwTGNKZ3jkfHbDfIcY3Ac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WJxE31rT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783145621; c=relaxed/simple;
+	bh=Ae3LLEbj1wUuBML+5S1ihzOWqgCBFcJMramPuzJ2xd0=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=JnkHT56L/16OpsHklReqjdBENm4KeNJ8krvY+xgqwaeYCpo1vn7XM6ldpog3APvcLcR0Q7jdkDpZTCFovl5hDEHmT5O/cqj3nWmovd3vFQBbRgTJiLJqqmuk2wrc/77ocuL9DETmps8fwOESW4ECk7RfHQUDJjyEyX4VKTaf9Tw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MWX88DRk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WJxE31rT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1078C1F000E9;
-	Sat,  4 Jul 2026 02:18:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MWX88DRk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F8791F000E9;
+	Sat,  4 Jul 2026 06:13:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783131495;
-	bh=IWt/dmpzgSBUQi+u7WrI9wz6qHu2J0sqzniULaCa9Ug=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WJxE31rT6qgjS6ThMogmmiKU+Hjua6PyNV7DGxzMmwksleV8Me2lKC2aixSlGh1mT
-	 15Xz+VcQmAhsa6fTE+qM8n+U5q+fsxA0meUrFqgS5ClamdvltDdCxmROF1s/limBrx
-	 OsX/ZgN5Yymo6l3gAmHtAs+7aOZjwCkVSPYioujnW+oqfIIy6T6tVz4a2qWTT5EV1T
-	 9N9X56ysHYcJifCa2G51DtgtKestGVZfe3LcF0er/UqLhRXyoaviYPGDeB9z3Yd9g/
-	 v9TQdH+1Bf5cOYTuydBiMyusjct0tDzzsmL5UYwB21VODYyVNmg++vWNx3BJHUwXcq
-	 e/kHwBzj6km4Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: smartpqi: drain controller workers before
- freeing controller
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Fan Wu" <fanwu01@zju.edu.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260704015011.21283-1-fanwu01@zju.edu.cn>
-References: <20260701142757.8447-1-fanwu01@zju.edu.cn>
- <20260704015011.21283-1-fanwu01@zju.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 04 Jul 2026 02:18:14 +0000
-Message-Id: <20260704021815.1078C1F000E9@smtp.kernel.org>
+	s=k20260515; t=1783145620;
+	bh=ws31OmbOfyl6nG5V5F4r74N/O/5v/oyarnt17TdEJgI=;
+	h=From:Subject:Date:To:Cc;
+	b=MWX88DRkGxlLPON9lrKAXoGQa79xdBX5lFfhacabPYFPrPz34p12iRiw+TNwZZqFl
+	 eHWwuUoqzxXQLe++dTq/rqQRlSk7EuxD9oiJ1dCQcNfOcDveHiOk7tUMsyxYZ5JPo6
+	 CHjCWcvK6EAdykMI0ZmaO3SF4jFWciHhfsAjez9CqPeEQLiji4hp6N3PrG6Bggj2Dq
+	 Nduf44gCIxmxfdvcRyFB9AgPD4yYK9Ff5mN6uk3HgGBBx2V0qqFgk6vMyILXOii0+e
+	 90nKN3JZ6m4Dnotxn79/J9AWOc3kyt/FrEsuoj9QFjmD5TLkVoUdM/Hq2SftGjY8/H
+	 bVjJwFTtDqAYg==
+From: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
+Subject: [PATCH v2 0/4] scsi: replace __get_free_pages() with kmalloc()
+Date: Sat, 04 Jul 2026 09:13:33 +0300
+Message-Id: <20260704-b4-scsi-v2-0-7d2d21a810de@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAI2kSGoC/z2OTQ6CMBCFr0JmbU0LFcSV9zAsmDLAqCmmg0RDu
+ LsUjcvv5f3NIBSYBE7JDIEmFh78CukuAdfXviPFzcqQ6jTXuTEKrRInrBqNmtAey0NrYXU/ArX
+ 82pou1ZfliVdyY4xHB9ZCCkPtXR+liFHuWcYhvLcHk4nx31im/2OTUVrZ0raYFYRU4PlGwdN9P
+ 4QOqmVZPlrQABPIAAAA
+X-Change-ID: 20260611-b4-scsi-d0b0eb4895f4
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Brian King <brking@us.ibm.com>, Hannes Reinecke <hare@suse.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ Matthew Wilcox <willy@infradead.org>, Mike Rapoport <rppt@kernel.org>, 
+ Wen Xiong <wenxiong@linux.ibm.com>, linux-kernel@vger.kernel.org, 
+ linux-mm@kvack.org, linux-scsi@vger.kernel.org, 
+ target-devel@vger.kernel.org, Hannes Reinecke <hare@kernel.org>, 
+ John Garry <john.g.garry@oracle.com>
+X-Mailer: b4 0.16-dev
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+This is a (small) part of larger work of replacing page allocator calls
+with kmalloc.
 
-New issues:
-- [High] Waking up all threads on `block_requests_wait` causes a Use-After-=
-Free for synchronous user threads (e.g., ioctls) because `ctrl_info` is fre=
-ed without waiting for them to complete.
+My initial intention a few month ago was to remove ugly casts [1], but then
+willy pointed out that Linus objected to something like this [2] and it
+looks like more than a decade old technical debt.
 
-Pre-existing issues:
-- [High] The heartbeat timer can be re-armed by the OFA quiesce worker duri=
-ng teardown and is never stopped again, leading to a Use-After-Free when th=
-e timer expires.
+Largely, anything that doesn't need struct page (or a memdesc in the
+future) should just use kmalloc() or kvmalloc() to allocate memory.
+kmalloc() guarantees alignment, physical contiguity and working
+virt_to_phys() and beside nicer API that returns void * on alloc and
+doesn't require to know the allocation size on free, kmalloc() provides
+better debugging capabilities than page allocator.
+
+Another thing is that touching these allocation sites gives the reviewers
+opportunity to see if a PAGE_SIZE buffer is actually needed or maybe
+another size is appropriate.
+
+For larger allocations that don't need physically contiguous memory
+kvmalloc() can be a better option that __get_free_pages() because under
+memory pressure it's is easier to allocate several order-0 pages than a
+physically contiguous chunk with the same number of pages.
+
+And last, but not least, removing needless calls to page allocator should
+help with memdesc (aka project folio) conversion. There will be way less
+places to audit to see if the user was actually using struct page.
+
+Also in git:
+https://git.kernel.org/pub/scm/linux/kernel/git/rppt/linux.git gfp-to-kmalloc/scsi
+
+[1] https://lore.kernel.org/all/20251018093002.3660549-1-rppt@kernel.org/
+[2] https://lore.kernel.org/all/CA+55aFwp4iy4rtX2gE2WjBGFL=NxMVnoFeHqYa2j1dYOMMGqxg@mail.gmail.com/ 
+
+---
+v2 changes:
+* replace GFP_ATOMIC with GFP_NOIO in ipr driver
+
+v1: https://patch.msgid.link/20260630-b4-scsi-v1-0-494fb37ebe7b@kernel.org
+
+---
+Mike Rapoport (Microsoft) (4):
+      scsi: target: file: use kmalloc() to allocate temporary protection buffer
+      scsi: proc: use kmalloc() in proc writers
+      scsi: ipr: use kmalloc() to allocate IPR dump buffer memory
+      scsi: sym53c8xx_2: replace __get_free_pages() with kmalloc()
+
+ drivers/scsi/ipr.c                  | 4 ++--
+ drivers/scsi/scsi_devinfo.c         | 5 +++--
+ drivers/scsi/scsi_proc.c            | 9 +++++----
+ drivers/scsi/sym53c8xx_2/sym_hipd.h | 4 ++--
+ drivers/target/target_core_file.c   | 4 ++--
+ 5 files changed, 14 insertions(+), 12 deletions(-)
+---
+base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+change-id: 20260611-b4-scsi-d0b0eb4895f4
+
 --
+Sincerely yours,
+Mike.
 
-commit 753a17ed3e0060de6ddd2fedeade46717222e86f
-Author: Fan Wu <fanwu01@zju.edu.cn>
-
-scsi: smartpqi: drain controller workers before freeing controller
-
-This commit addresses use-after-free bugs by draining several delayed worke=
-rs
-and event workers in pqi_free_ctrl_resources(). It also unblocks requests
-before cancelling the event worker to prevent it from waiting indefinitely
-during controller removal.
-
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpq=
-i/smartpqi_init.c
-> index 5ec583dc2e7df..707693d2eb80a 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -8897,7 +8897,19 @@ static void pqi_free_interrupts(struct pqi_ctrl_in=
-fo *ctrl_info)
-> =20
->  static void pqi_free_ctrl_resources(struct pqi_ctrl_info *ctrl_info)
->  {
-> +	/*
-> +	 * Release blocked workers first.  Disable ctrl_offline_work before
-> +	 * freeing IRQs because its callback can also free them.  event_work
-> +	 * can requeue rescan_work, so drain event_work before cancelling
-> +	 * rescan again.
-> +	 */
-> +	pqi_ctrl_unblock_requests(ctrl_info);
-
-[Severity: High]
-Does waking up all threads on block_requests_wait here cause a
-use-after-free for synchronous user threads?
-
-By calling pqi_ctrl_unblock_requests() (which wakes up all threads on
-ctrl_info->block_requests_wait), user threads blocked in
-pqi_wait_if_ctrl_blocked() during ioctl calls like
-pqi_submit_raid_request_synchronous() will be unblocked.
-
-Since there is no subsequent synchronization to wait for these threads to
-finish, won't they resume execution and dereference ctrl_info after
-pqi_free_ctrl_info() frees it at the end of pqi_free_ctrl_resources()?
-
-> +	disable_work_sync(&ctrl_info->ctrl_offline_work);
->  	pqi_free_interrupts(ctrl_info);
-> +	cancel_work_sync(&ctrl_info->event_work);
-> +	pqi_cancel_rescan_worker(ctrl_info);
-> +	cancel_work_sync(&ctrl_info->ofa_memory_alloc_work);
-> +	cancel_work_sync(&ctrl_info->ofa_quiesce_work);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but can the heartbeat timer be
-re-armed by the OFA quiesce worker and cause a use-after-free?
-
-When cancel_work_sync() runs, if the OFA quiesce worker is currently
-executing, it can call pqi_process_soft_reset(). Under error conditions,
-this can lead to pqi_ofa_ctrl_unquiesce(), which re-arms the timer via
-pqi_start_heartbeat_timer().
-
-Since the teardown path does not stop the timer again after draining the
-workers, won't the timer remain armed when the controller is freed, leading
-to a use-after-free when the timer fires and dereferences ctrl_info in
-pqi_heartbeat_timer_handler()?
-
->  	if (ctrl_info->queue_memory_base)
->  		dma_free_coherent(&ctrl_info->pci_dev->dev,
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260704015011.2128=
-3-1-fanwu01@zju.edu.cn?part=3D1
