@@ -1,153 +1,111 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC2593B7B68
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Jul 2026 17:35:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B643E31CA4E;
+	Mon,  6 Jul 2026 17:56:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783359320; cv=none; b=nrj2SSFPcuh5vOSrH9VUQ/LKg+sd2H5mBIya0AXUrFG0PGHIt7han3hRxXp1tvgO4RYD6FGq8T9FdyY518xmN3YQ4y0FTstatS2urbuBbNnraFSzNj4y1hrals8FaEaCMxMD3kqrbLUb/EmIBxFEUZoHzZbKl1YDZDNYk8lOejU=
+	t=1783360575; cv=none; b=aUbefXAV5EI6egq6CeEWjsOpa6MAPyhC/E+qFMZTX/6gwobrEIXhKCLc8WyRKrMK3/514+P8bfdZ1OPkYTxNIlgSLxjaxJQ0QdHluRSkiSRP49nmV0agJZjDKNypKQg/ZGXapwXwY3v4VhZW0azV+V87apFoP+EZKt707l5mPyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783359320; c=relaxed/simple;
-	bh=K71e339q7TqUJAYyqWN/qTmLFxi/UmIsTHjT1hjaeqU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RC8ZKK91MNWJzmU2q2L2cjDGnYh4Lddd4/USAjeiROhtNqdX17UYhE8/fOfivynKQhy+Jn7FqC9UnWomfY5Mu/xXVQ4WTRZB6ZLQis9vhqkOT3T1CSrTFSX1Dp6bHAg7B2gMcFUYf+I0rTy9WlOEAROpWDSm/SjSPvmeXSWMBCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=gC6p/kdt; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1783360575; c=relaxed/simple;
+	bh=8Tk/PjWPbnTR1IBa1OywOq3vwJKIu20nWioenIVvgBE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Y0Wtot7f2BMtqG2SZtLCUg1DYZopOkOMKPLJ3VakvMvqL2fD7PFgxWdrRy8b0XiFneeqPvZ4kscB0+fI4fFJa1/HEibCwtzyH3ha5qfAGxVAHF9OW57scPNRlCnYbZ6/N3znV0ot14Ohoi6s084k7EYU00BvrxkATg9LWu0l2VQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=YIcozZb/; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="gC6p/kdt"
-Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 666GjHPe1857558
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Jul 2026 10:35:18 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=7BEFwvLjfQl1CU/gINz2nIT5ihFDOQBXSnV7ryfq5nA=; b=gC6p/kdtv4S3
-	5iAnxxTCjI0t29upJ7M1WwxJ+pUDzj5nRcV5bDi9yths7feGAp2bP0Ss36dkg/XS
-	AtjSuRlt1K1E3F3GiuVVBuQgT8Om6KRiiJE2rY1BAUp+hyFedIyB/GAEiuF1AKRq
-	3qCnwuDCJ1VwmFVwecVzT8JmiscPfKmywlmkaBNhX2M82jlrZEjydLk2lvfTGU2H
-	LNwrRZkZ60dWg1RN5Bw8+DPuvK9B0mXihSxi9JXIZSoksGiCnhAusALH3C+QQMYG
-	NNbrFqphmh5OHdgP1ohQuXUCNOJIt05L1wdQ6i+yuwUrTDGdCpFaDROwTEjR5OX2
-	adZbx+RwYg==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4f6wg1m9b4-14
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 06 Jul 2026 10:35:18 -0700 (PDT)
-Received: from twshared98500.16.frc2.facebook.com (2620:10d:c085:108::150d) by
- mail.thefacebook.com (2620:10d:c08b:78::c78f) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.41; Mon, 6 Jul 2026 17:35:15 +0000
-Received: by devbig197.nha3.facebook.com (Postfix, from userid 544533)
-	id 58E03249DC6D9; Mon,  6 Jul 2026 10:34:55 -0700 (PDT)
-From: Keith Busch <kbusch@meta.com>
-To: <linux-block@vger.kernel.org>
-CC: <linux-scsi@vger.kernel.org>, <axboe@kernel.dk>, <hch@lst.de>,
-        <bvanassche@acm.org>, <sumit.saxena@broadcom.com>,
-        Keith Busch
-	<kbusch@kernel.org>
-Subject: [RFC PATCH 3/6] blk-mq: factor out a per-hctx tag busy iterator
-Date: Mon, 6 Jul 2026 10:34:35 -0700
-Message-ID: <20260706173438.3537347-4-kbusch@meta.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260706173438.3537347-1-kbusch@meta.com>
-References: <20260706173438.3537347-1-kbusch@meta.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="YIcozZb/"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gvBqd0fKZz1XM6JQ;
+	Mon,  6 Jul 2026 17:56:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1783360568; x=1785952569; bh=DZMX73GcZThripYdnzjra9O4
+	QSoz/b28yq+rPQy6+qg=; b=YIcozZb/OweJOgaDwqZ+EQqa2liDAALzs+wKbZWM
+	LBuIaXyi6eQA9cZGVX9i8VBdhvO0VKletRLn2gtEoqxdkHQwv1GAkWQshgFavVWG
+	mwYcs8dpTcSUswmhMW/L1Bili8vJmWPPWZejJvkbwEtActSF7jlegrsvpqhO93Xx
+	n3JGmo8Gu/neUJgNoyzEC2az5KviwV0RGHS6jEv/5aeyrk5yhTHJND0clqFzjvTn
+	3OcnmS3P6/QcT62LTIkRWjJatSSxw2NWBgvuRGmemPKroe5UYDbVbTjol4VdF0ah
+	bM4NHmHD7HcGxKYT1Zdsl2mIGGn6SzZMyebE1bRD2r7PcQ==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id R61eMYN1_fQM; Mon,  6 Jul 2026 17:56:08 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gvBqV5K5Pz1XM6J4;
+	Mon,  6 Jul 2026 17:56:06 +0000 (UTC)
+Message-ID: <6db8dcc3-6f79-4407-a5de-ec80915bc73a@acm.org>
+Date: Mon, 6 Jul 2026 10:56:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-GUID: arWGIM35ajAFhdpDzNvCTQF192Q2TcMR
-X-Proofpoint-ORIG-GUID: arWGIM35ajAFhdpDzNvCTQF192Q2TcMR
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA2MDE3NyBTYWx0ZWRfXwDE8uMW8k+JJ
- zRL25DtwMSewYbHwzgITSrJsM7jTrgTAoD+gK+lx0bMsxlX05H1QhsV5o6ChkZkRtytKb/9FjNL
- ABG0G4WKOmN9aWRqgMyDL3+PZ+kZKA7U0gSgFvNcMwEh389sinRykzbLAE9HgdMcZlrvRNA6zCP
- BwDJ3nebv2nhyMKeqigFD8shnggtY7xEzCcV9IsXWCUSxjU5VTgWhmh4Ns9V7Mn9wLgPHapVqFv
- FQhabL5V0/JjYNDo3UlzCL+8plbVwLlIUeG0YBidTDGd4qFofofRZAcY+mQ5AL6eT+sI/a9e258
- uo4UKQ03hNQ+wFJyuZEzJH3C1jLpmwLO8mKa/BkPdHnWhwomalsXrfNMXdILp6vjd3c7fguwPEd
- NthF2Nu9jIeKfkkg4nF+w2TiriSkX++mRwkM7lbh/m5PhZhAbquJLNpDlA/bcKMii/GEJ5DRoGP
- sZThB1rGF6kb8gC5y0A==
-X-Authority-Analysis: v=2.4 cv=EpfiaycA c=1 sm=1 tr=0 ts=6a4be756 cx=c_pps
- a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
- a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=8elwO82fXORLTBIkMd32:22 a=VwQbUJbxAAAA:8 a=7mcLuo5Pn-Xy9yioAo8A:9
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA2MDE3NyBTYWx0ZWRfX7NuN1RGifz7U
- f8nSJIonl1s2QP8MAtntSEziPFTi4GeBBPEaIDNh9AReToOwzOSNPJfkaKSDPpiKqFH/7za9P/5
- do5zPoojfKEvGSfc7b8br3qErHhCG6g=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-06_02,2026-07-06_02,2025-10-01_01
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 0/6] sbitmap enforced fairness for blk-mq
+To: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, axboe@kernel.dk, hch@lst.de,
+ sumit.saxena@broadcom.com, Keith Busch <kbusch@kernel.org>
+References: <20260706173438.3537347-1-kbusch@meta.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260706173438.3537347-1-kbusch@meta.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Keith Busch <kbusch@kernel.org>
+On 7/6/26 10:34 AM, Keith Busch wrote:
+> There have been a few proposals to remove the blk-mq tag fairness
+> algorithm:
+> 
+>   https://lore.kernel.org/linux-block/20240529213921.3166462-1-bvanassche@acm.org/
+>   https://lore.kernel.org/linux-block/20260609121806.2121755-1-sumit.saxena@broadcom.com/
 
-Make a helper for walking the busy tags of specific hardware queue based
-on the per-hctx walk into __blk_mq_hctx_tag_busy_iter() so it can be
-reused to iterate a single hardware queue's tags. No functional change.
+There have been more proposals to remove the fairness code from other
+kernel contributors. I proposed to remove the tag fairness code because
+prior attempts to solve UFS performance issues were not good enough for
+the upstream kernel.
 
-Signed-off-by: Keith Busch <kbusch@kernel.org>
----
- block/blk-mq-tag.c | 40 ++++++++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 16 deletions(-)
+> Both abandon blk-mq's attempt to enforce tag allocation limits on the
+> per-queue/per-hctx users that share tag space. This can harm resource
+> allocation for lesser devices sharing the space, potentially starving,
+> them from fair progress by a highly utilized device.
 
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index 0dd497225c74a..58cf480df9c69 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -582,6 +582,28 @@ void blk_mq_tagset_wait_completed_request(struct blk=
-_mq_tag_set *tagset)
- }
- EXPORT_SYMBOL(blk_mq_tagset_wait_completed_request);
-=20
-+static void __blk_mq_hctx_tag_busy_iter(struct blk_mq_hw_ctx *hctx,
-+					busy_tag_iter_fn *fn, void *priv)
-+{
-+	struct blk_mq_tags *tags =3D hctx->tags;
-+
-+	/*
-+	 * If no software queues are currently mapped to this hardware queue,
-+	 * there's nothing to check
-+	 */
-+	if (!blk_mq_hw_queue_mapped(hctx))
-+		return;
-+
-+	if (tags->nr_reserved_tags)
-+		bt_for_each(hctx, hctx->queue, &tags->breserved_tags, fn, priv, true);
-+	bt_for_each(hctx, hctx->queue, &tags->bitmap_tags, fn, priv, false);
-+}
-+
- /**
-  * blk_mq_queue_tag_busy_iter - iterate over all requests with a driver =
-tag
-  * @q:		Request queue to examine.
-@@ -621,22 +643,8 @@ void blk_mq_queue_tag_busy_iter(struct request_queue=
- *q, busy_tag_iter_fn *fn,
- 		struct blk_mq_hw_ctx *hctx;
- 		unsigned long i;
-=20
--		queue_for_each_hw_ctx(q, hctx, i) {
--			struct blk_mq_tags *tags =3D hctx->tags;
--			struct sbitmap_queue *bresv =3D &tags->breserved_tags;
--			struct sbitmap_queue *btags =3D &tags->bitmap_tags;
--
--			/*
--			 * If no software queues are currently mapped to this
--			 * hardware queue, there's nothing to check
--			 */
--			if (!blk_mq_hw_queue_mapped(hctx))
--				continue;
--
--			if (tags->nr_reserved_tags)
--				bt_for_each(hctx, q, bresv, fn, priv, true);
--			bt_for_each(hctx, q, btags, fn, priv, false);
--		}
-+		queue_for_each_hw_ctx(q, hctx, i)
-+			__blk_mq_hctx_tag_busy_iter(hctx, fn, priv);
- 	}
- 	srcu_read_unlock(&q->tag_set->tags_srcu, srcu_idx);
- 	blk_queue_exit(q);
---=20
-2.52.0
+Has this starving phenomenon ever been observed? I think that the
+measurement data that I published shows that the fairness properties of
+the current sbitmap implementation are good enough.
+
+> This series proposes an entirely different fairness mechanism that
+> doesn't require per-IO atomic accounting:
+> 
+>    First, the sbitmap API is augmented with a ranged allocator. This
+>    allows a client to carve the depth into exclusive ranges for specific
+>    users.
+>    
+>    Second, you can optionally declare a percentage of that pool to be
+>    fair game for anyone to allocate from. This provides a way to
+>    guarantee minimum tag space for each client while allowing a user to
+>    over-allocate its fair budget on demand into the shared zone.
+
+What software layer is expected to set these percentages? My patch
+series intentionally removes the fairness mechanism because that's
+exactly what the legacy code path in the UFS driver needs. The UFS
+WLUN and data logical units share a single tag set. Any activity on
+the WLUN increases the number of active queues and hence reduces the
+number of tags available for any data logical units.
+
+Additionally, what is the performance impact of this patch series?
+Removing the tag fairness code increases IOPS so this patch series
+probably has a performance impact.
+
+Thanks,
+
+Bart.
 
