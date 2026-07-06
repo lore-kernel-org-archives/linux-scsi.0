@@ -1,83 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 627753B27D8;
-	Mon,  6 Jul 2026 09:01:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7D9042CB19;
+	Mon,  6 Jul 2026 09:14:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783328468; cv=none; b=hwsqlVZcJu0tmq5eDVuPpa5Yyc23YoflUuxzhr70eRiDeVrM2QztUTb/k/OPgcb9Kv+QHV7EcZidBp5sLc83mREAdyG8pdVTpM+bOO3tQFc0HdQDBAWECHAPuIN3e59yUA/uWn0hTM6k2DKSOC1Bk7HXrXOMVDamFHT0DunVm2w=
+	t=1783329301; cv=none; b=SVyE5cnNfdbZv8eRZipHrVh1vrpNBlEWe9FrYVaivDhlteACsaAVi5MjeBXuhVgms8FSLOHDQKrjcJumiVYmk5u9cjOLUqhtzg/nCg/pRx3q3J7f4kKkRaJRmErySjH+hEStxKB7bHpgO/YbQpkYxdtvDle71TWfGUWSqiDtImM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783328468; c=relaxed/simple;
-	bh=Y+LvtnbFS7Pk8rMTIi6bBfp9mbHm4Uhyusiwi5v+XCg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=TnTxvwtvybETXEDYkJ9BaLyLe/dxdBcMFbQ5Zr8y4tQh13C2IFgu4U8bDILkKCtmX8VYYz/DdK8PBsu9d8FDA4wXJIn3QPEldOOwdUlJILpINWvnZSGAIRvD201sZ5YdYj2rFIki3fxDQUJC1IfNDHv/wuIXnYsdcAY4K4TQgDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FzGTWbLT; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FzGTWbLT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C9C41F00A3A;
-	Mon,  6 Jul 2026 09:00:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783328456;
-	bh=3fHynrpnm/i0ACjcT4Z/n2urCPV7odE64YZ7oCtLtRg=;
-	h=Date:Subject:To:References:From:In-Reply-To;
-	b=FzGTWbLTzr/WvlX+6Me+CfuAk9B81b8QLqJOQ0qnfE6AWdtbWxq/YWZOIiwmraUMN
-	 4Uo/xwZ5DVmWtfGZWJX1Z1PkRe6uDbflrGZEpWEDloJw2aZs0kSuj1raS9qkkDWkkt
-	 UjNO0AF3otjkbWsmRYngK6AiEv691y13bFQ7zMHH4ZE1m3rzXJ9BnUGM0akmzf9d0u
-	 zTEkaet4KR0OAea7YJ6eQ0UUUr0a0U8fMmBJAsPDjTlgF9y7GEMYPXSAoNZSLH2K0p
-	 D4GLcjDXLYM3mnS43XFU7iwNFmLwij67RkyHrDvlQGRnF7TdkEF2s6sUtdN3+kLJXZ
-	 Q7yWMrKIzhCqA==
-Message-ID: <cfc34288-244e-417a-9586-36fc2b2642c3@kernel.org>
-Date: Mon, 6 Jul 2026 18:00:45 +0900
+	s=arc-20240116; t=1783329301; c=relaxed/simple;
+	bh=I0l1TmY+4WUC7T8BmrT/+R5RJBO69D+iu9VhsTrl5+E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=E7LUJKWTVaIL7h7zvWPdfvdgxVO3+TWU0SwYFKH80H7hrS7RasBayDNg4r5Sb+LSPzZhQnyqFlXoTRtz9ljwwgsAP8G2unoLditdV+4wYM5SH2MEOkh41E/4OPtPq0XJK7grSBJ6oVYiwONXeJpkDhT8qO33gi4/A9yA8A1Krv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.245.140])
+	by APP-01 (Coremail) with SMTP id qwCowADHZc4BcktqdgTxBA--.35036S2;
+	Mon, 06 Jul 2026 17:14:42 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Pengpeng <pengpeng@iscas.ac.cn>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Brian Bunker <brian@purestorage.com>,
+	Riya Savla <rsavla@purestorage.com>,
+	Krishna Kant <krishna.kant@purestorage.com>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Kees Cook <kees@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: scsi_dh_alua: validate RTPG descriptors
+Date: Mon,  6 Jul 2026 17:14:40 +0800
+Message-ID: <20260706091440.77131-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 1/9] scsi: scsi_debug: move ASC and ASCQ definitions to
- scsi_proto.h
-To: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260706065610.3559692-1-dlemoal@kernel.org>
- <20260706065610.3559692-2-dlemoal@kernel.org>
- <78b0142a-23a6-4959-8535-fef18d62bb46@suse.de>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <78b0142a-23a6-4959-8535-fef18d62bb46@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:qwCowADHZc4BcktqdgTxBA--.35036S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Wry7Ww43tFyDAr4UJw48Crg_yoW8JF43pF
+	yDGa4YyryUWF17uF1Uuw4Iq3W3uay09ayfWay2v3s5CasrJFW5try3Kr1Yqa97JFZ7XryU
+	Zr1Yya47ZFn8Cr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9014x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8Jw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1x
+	MIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
+	VFxhVjvjDU0xZFpf9x0JUL0edUUUUU=
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-On 7/6/26 5:44 PM, Hannes Reinecke wrote:
-> Weelll ... _technically_ the ASC/ASCQ codes have to be evaluated
-> together, and the individual definitions only make sense for a
-> combination of ASC/ASCQ codes.
+From: Pengpeng <pengpeng@iscas.ac.cn>
 
-Yes, I am well aware.
+alua_rtpg() walks REPORT TARGET PORT GROUPS descriptors using the
+response length, but the loop reads descriptor bytes 2 and 7 before
+proving that the current descriptor has the fixed eight-byte header.
 
-> EG SPC-5 defines the ASC/ASCQ 0x20/0x00 as 'Invalid command opcode',
-> but with this we would deocde it as 'INVALID_OPCODE'/'POWER_ON_RESET_ASCQ',
-> but 'POWER ON RESET OCCURRED' is ASC/ASCQ 0x29/0x00.
-> So if we were to define ASCQ codes we would need to define the
-> ASCQ codes for each ASC to avoid these issues.
+Stop parsing a truncated trailing descriptor before reading its group id,
+state fields or relative target port count.
 
-Yes, this is messy. But re-check the specs. There are plenty of places that say
-"with additional sense code XXX" without actually specifying the exact
-combination of ASC/ASCQ as they are defined on the T10 site
-(https://www.t10.org/lists/asc-num.htm).
+Signed-off-by: Pengpeng <pengpeng@iscas.ac.cn>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-> Makes me wonder if we shouldn't introduce u16 for sense code
-> handling ...
-
-Maybe, but that will be more work as we have many functions and code that
-handle asc and ascq separatly. Which I kind of like.
-
-The main benefit of having the macros and using them is code readability: the
-values used/tested for ASC & ASCQ become self explanatory, making it far easier
-to match code and specs.
-
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 80ab0ff921d4..f63f32bad12a 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -681,7 +681,12 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 	for (k = tpg_desc_tbl_off, desc = buff + tpg_desc_tbl_off;
+ 	     k < len;
+ 	     k += off, desc += off) {
+-		u16 group_id = get_unaligned_be16(&desc[2]);
++		u16 group_id;
++
++		if (len - k < 8)
++			break;
++
++		group_id = get_unaligned_be16(&desc[2]);
+ 
+ 		spin_lock_irqsave(&port_group_lock, flags);
+ 		tmp_pg = alua_find_get_pg(pg->device_id_str, pg->device_id_len,
 -- 
-Damien Le Moal
-Western Digital Research
+2.43.0
+
