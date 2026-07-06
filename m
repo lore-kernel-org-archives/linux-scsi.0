@@ -1,53 +1,53 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020136.outbound.protection.outlook.com [52.101.196.136])
+Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022093.outbound.protection.outlook.com [52.101.101.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B05FB379C5B;
-	Mon,  6 Jul 2026 14:11:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B48F537A49D;
+	Mon,  6 Jul 2026 14:11:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.93
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783347115; cv=fail; b=vGgyvTJkcU1r4jdNtQFJp9nHJ5Eo/xJrOZ0xBtLteywBos6fQCTa3JlK4ipthFSvqYWUa5fSCebQXtorUZAyPN1cpX8Tycp7UjUCk7qw/RzJcvatnJvwXrPcVhac8Wh5fBZbZ1IW1c6PoxX4R0EAmD+YUjgLyBOGXu01FTpY8rU=
+	t=1783347116; cv=fail; b=gWdgPv/zsGxJ2QEh8VtdkRDJ2VefdEgtJLZXn9VVvTj77tAmFjDa0hhKTlLTETytoE9sXb5BYhoROL8g0ktpMsb+8xqMvQ1KrxwfRKBglV6LFVY0sVaYaYX9K7WsN+0keWuucs7Cszy68sboSvK4iQIujal2e9vqZSXIIvQ1dSk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783347115; c=relaxed/simple;
-	bh=rbBgToMbuEBiN10J1PqepILFai3LonLZ15AWi0qSW/I=;
+	s=arc-20240116; t=1783347116; c=relaxed/simple;
+	bh=8gJVnailyzMYXVEeFt/Vs6x7yjYC1eVNKx3NdE39Fcg=;
 	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=QbXaVjbGMFBPd7WGw62uWsIRCQNvObFU8EcX9FUm2WUzxh753uUMDBL7hjToEExRqQRZORY+y6KQXqWzo1UrWriWsk5nnv8B4e6bAhLW1VgvwN1nGvdeWQD6FLn21Pak3SgrASNTnPqwChvy/rVPM3/dxW+D6JLUNp1nqhL8UqE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=mDlQIOi/; arc=fail smtp.client-ip=52.101.196.136
+	 To:Cc:MIME-Version; b=eEI6vH0JSRwWnKP3F7uQe/kQRMM+MgA4baeiX/VYKCnVpnhfw6ByhtAfOX3gCdZ0k0G9GdkdzlX1Ui/bAZjLAKvsR8zOUn0JQSnUe9MTnujii9VRs1Vpunw+01zbJfMAHPZgNueQd2X5wStmx3fFUR3pos1KliDIRkBFDtW33jI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=h80EzHfX; arc=fail smtp.client-ip=52.101.101.93
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="mDlQIOi/"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="h80EzHfX"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Xd6CzndBlAIcbiMULUx/yVdabptshpvwJw/RUzLhFXanH3ZvSkqK/o5LRdaeJAeGuW+OEki4S5fClKR2MAidJ0t7MCCpgdMd2awUgCCk0qz+4x/6/qSaxqSNg/gSvutzM096cjjqM/pjit/eykOU2xhqHyKgCnI9H/2YvtLfkPKeYdUmojbg1pznB59gc8Z1Pc/z1IYqmx4qyswVCL7fpf41A8gZ3hFsXNWslWoufnFFGlnzfzz10CWku2HymxhZuLXx3TPyMPcE40VHUXZqKiGg2xu6D8zmdzMwiBJkfXOS6AxOtvxAPYtkPv6oMdn/Wos5e/15asx64HmL9ydABw==
+ b=XYySDryJ/buv9mQmv4xEDd52qMCeZHzJcuBorl2UgwaIw1DYNGGDSpZsZ48cNDSujZRwDgF+WLGu2HdlwlEaa/xehS/J5Q9c0zyOEIi6+pSQnLKJ+7VYRAWlb7t9lmwJR4wZiiNoaXOaLCBUwZcpEYCE5tcvQEbiIJHANH2sxhyGy9LU3b9Dlwmwzn4dZ7y1PwdGVD6juizuXECRZziV2Oirp3miRju9RB+I0bQu9WrOGaXzAM7eyQRDKA3YdDvi+JrfztUmAE9n+ifJqwAhkakuyfH3lEiYvfhdGoSxQFt1kYtoNzc8UeWKDoPwWWTB4Z2O1z+vUQVGjMuA9/is0w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oT1dzY/rsFmfcLIFZ+LzLqLLm1cGpsCS2Uce9MdN8AY=;
- b=eDnUwIB0fPdKks/0+CWeH5pID8BxwgGtUNcU7wmS2ESf5lN20WnEJCt9IHZXrm+pG97pVa89FYWjsr2f+ySqq5okID1U5EAuU8PDLEkmpPObdCjcn/iiMZAhkItGxLy6IIVnS+vMsO5LQ1VzD0Wq0CdlYgZHZouciLHsOMzO2JFQHR6dDf1BC+5yDx8/M1A6biNFoASF2YnEKj4aZL+54/OkVgNU2XDKITJAYNV27bPMjyarzP+gC/AQf5zts3Unq86TtGbBZCXzwuwjQjiCLwyTpkHm4G7OznWN2jVv+xnHbiPKywxIqiKExqv+Jd2BGqofwjJYV/W6TGcLPO3+ag==
+ bh=xq9AjxX3EhxMdox1zaGtdiqE4DTflnHv8h5VPtjrvBQ=;
+ b=V1hYkrmzaW1mwjinE1H1YW0Dp67Dh54NUGjvban8PdWAyPpZ9i2yeh+sBfiXx5+1V7U9BQaQGp1Na/vqLMYCVsOZdTPcQaEvDacJ0AHMCP8DzT9gCk/k7WfT2zNjNZ9R1+DmEDDPcchfPOL1c+bchSZ2hPb08S8D7M7hD81Tiryf4gpFr6ZDK9M93h7NWxApiMlArrzSmZ8G+m10UTFXmc2vbUq/3Y6PXfk6hMxO38T1zC3TsDeB4eGKiQ4eibK3fnwstrSSgGWD8TcT2Gj1skc4VpmHH/YmCGeq9xosuT+yBvossOI5a3R2yawFFpr1f/hTa6foO9rTqis4s8T7mw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oT1dzY/rsFmfcLIFZ+LzLqLLm1cGpsCS2Uce9MdN8AY=;
- b=mDlQIOi/+RSbFvpx0ILBltaHB7rFES3YJd8UXI+ceYT5DS3l1YiWC48eHs3FQGo+seG8PCjmCvLt6V6f0BB9kFi45oQ69rGgAKGfCinFY4m44USpe4Y/bgpZjHe2pVt09Rq5TCuSpovmWmzO1CskQvVBgy+7YxClB37V7suvqgY=
+ bh=xq9AjxX3EhxMdox1zaGtdiqE4DTflnHv8h5VPtjrvBQ=;
+ b=h80EzHfXSX7+ZuRb1JGRPniAHT6oiWrry7XG0AKT1Dnk9aeWjC2bDYfmua1zbSXFlbauzuwMqWMzFok/S5Z2rK2EtzGLiANiiU4Kn/ftVr6q+1pzinZPINkIWh4skmJG3Ox3sA2aIdk96LMQEUsZZo4sS1Hsda17jrQhvI0+xQ0=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by CW1P265MB9444.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:28e::12) with
+ by LO0P265MB7176.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:334::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.11; Mon, 6 Jul
- 2026 14:11:40 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.9; Mon, 6 Jul 2026
+ 14:11:37 +0000
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0181.008; Mon, 6 Jul 2026
- 14:11:40 +0000
+ 14:11:37 +0000
 From: Gary Guo <gary@garyguo.net>
-Date: Mon, 06 Jul 2026 15:11:18 +0100
-Subject: [PATCH v3 6/9] agp/amd-k7: don't rely on address of pci_device_id
+Date: Mon, 06 Jul 2026 15:11:14 +0100
+Subject: [PATCH v3 2/9] nsp32: don't store pci_device_id
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260706-pci_id_fix-v3-6-2d48fc025acc@garyguo.net>
+Message-Id: <20260706-pci_id_fix-v3-2-2d48fc025acc@garyguo.net>
 References: <20260706-pci_id_fix-v3-0-2d48fc025acc@garyguo.net>
 In-Reply-To: <20260706-pci_id_fix-v3-0-2d48fc025acc@garyguo.net>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
@@ -72,11 +72,11 @@ Cc: linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
  netdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
  Gary Guo <gary@garyguo.net>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1783347093; l=2620;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783347093; l=2148;
  i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=rbBgToMbuEBiN10J1PqepILFai3LonLZ15AWi0qSW/I=;
- b=wBtOqWl0+YJ+nMZ++pzf1Dr9tZh7MtGUgOXaUJYRJvgqMrdLY5acGNmdmmbE9fKJrw0Vxi06K
- bcNCUC6oVJKCdesTQFEssMOIqTyZuZssGhcwcbCiPJN71nFO5jF22RF
+ bh=8gJVnailyzMYXVEeFt/Vs6x7yjYC1eVNKx3NdE39Fcg=;
+ b=UCYP4Ad+cGJRz7LHkxbQP/fAbWQaXxUU0/ZomDW/7YEd/lc8WqjI8UKyvDYeA76FqM5Fby0XC
+ Mw7KJeZAzz9CMR/lgW8R9LRsWqXs0bCxjZ4wVWHB90pW1Qx09NkoIME
 X-Developer-Key: i=gary@garyguo.net; a=ed25519;
  pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
 X-ClientProxiedBy: LO4P123CA0509.GBRP123.PROD.OUTLOOK.COM
@@ -89,152 +89,132 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CW1P265MB9444:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4d7a3806-7eaf-4de3-672e-08dedb687dde
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO0P265MB7176:EE_
+X-MS-Office365-Filtering-Correlation-Id: abec78db-9d4a-4d12-7e4f-08dedb687cb8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|10070799003|23010399003|376014|1800799024|366016|56012099006|3023799007|18002099003|22082099003|921020;
+	BCL:0;ARA:13230040|376014|10070799003|366016|23010399003|7416014|1800799024|921020|18002099003|22082099003|56012099006;
 X-Microsoft-Antispam-Message-Info:
-	NrUgavoWYu+5PlftNIV/l6HZzmfHeWhFYOL3vd4t1prg3Gfh0DZu0DtuwMQG2ps2NPM3txKJZywi3rHquKdtqLP3u/1bFwjmWY1BWn3IFzWnXvfpX4Lp8tknpImwwxCRZ/Bwo4YGP2zhCFWd7TtXDC1ibQR9MqlaHqA8NoQ6seZuIz/pHSpceinCinHg9TFeyDLdnsjtw41zf7PyjqcKN0eTfq0b/i/424MboEMjcgBIt4BJvGnUebmNde4Kj4wCmbmGrzD0Mb5cSGEzOVbld/t6NxWwSlmokevdile+9CbYnvQMIgLO5QpH8aR1d4B+tv0jHgas4+dYc1mm96PF/eFjt+on0qTqv+c8easlE50YukEiOwNeG/tfo7faR6RkwgeCPkh36UZz174bD+bTskv/Mhmz0bFgGy1qqNLuEZ/TXq1eATKf9686dfPgyjW79dM8oYhFnAOcps0A7+nX9QgzeC/Aqx57fC3FI+ajiQLLf3ooHrMnarMCyL6TyLq1Eozzu1p8Jz1OdETXYH8OOyJTTp7Oiza9Ej1luQ1unt2SMovAIkvxpW7nB9oj870L6BmwS3sAcG6yZla1K8HqH3kp1X3BWWispntEjAKNEuHnnoZC0A9As53C5RtTOdp4foAaXN45opTq2kwzRzYbHh0EwlqkCXaRDQf4+AuVf4xIFcPniSGF5CEVUVQcVxvy5uOvX1uttwAWJE/fcMbfQA==
+	UbXG9GsU1FSKbryXNj1ixY8ulEGz6ba0NrFDpDeBNP8/dymKu0d1XcL+j4SEtPU49xL4Crs60B6s282Fq8hE6fOjCzI3b7guO1YQHXTszoAhgIQ22HETr0rPA1OU+8k1HrZcxy6jmNRtYLb/sEbE5FIC9C9ioPa61cuv7ndC22cXg5z39Wpu4mMU8I6MxAmp/bmINfo7NMhKBFmxf+5Q+T801zcivTpLJnn/imnLqfslclZT/1kciihDFEFAdUhukgh+A+vx262QpW03mxIDPNsw2PS+cGK3vFLwwCv6sXoUGeADwCMLqOtM877EhXhVTc+3R5G6oSE10oP5M9StMOsmWAzCqsrjavcHZzpIcp9kiiKEpXeLXFyM4hvwuyQ50+c2l8Kd55CVTnqoLYoUrp0l+86SleyGyPlQG0YoBynqANxyOwbunngRAWTGHT4yqdaiYrwDt8RbzbdHCKlBfFpQSGt616XQrvKGOffpIRtifMj0oIuZE/Etg7oSyj1pU7RBrjsJKqNDox70wOhf0nGGHlOxXxsxF15uxoQWlt0Z5Wu+3IjWCdV/lE8Hq7RO+bjU1xlu/i6VQqYLz+3rzWMfXhZnJTIIGUZp/5Av8lUvwrMERoZaQgWkNHFO/YvZxOulFZRrjSkZCK+3tC+X9KKAMPQ3lF82YJz/CdX3R5ufYwBXb9GaluQJF/7xatx5fcJbU4D+OBs6+4rkWO++iA==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(10070799003)(23010399003)(376014)(1800799024)(366016)(56012099006)(3023799007)(18002099003)(22082099003)(921020);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(10070799003)(366016)(23010399003)(7416014)(1800799024)(921020)(18002099003)(22082099003)(56012099006);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?QkxQTWY3WDRYL3NBelJkbUFjV2M3b0tld0crWE9pWnYvUDluQTRPR3Voby96?=
- =?utf-8?B?enZsRkFZTWVwVXpxU0RhN1hOaGtISDNUamxNVUF1OUtuTlo4cUxybWduVVBV?=
- =?utf-8?B?dFk2eEdnbUltZVRFMS8zemtQU1J0RU1Ya0xLZy9TWmxoWXlma01xOXYwbmVs?=
- =?utf-8?B?bTBZS01MS0ZlY0U3VGx0c1VBS2FlN20rZ0RhREtaMi9qc0h3MGNuUWs4bDJM?=
- =?utf-8?B?cWV4YTJnRjZ4S0R5WSt2bEk2TjJNc21kQWEzVmN6R242WmMza2l1TW8yeGRv?=
- =?utf-8?B?RW9WTzgzWlZTWURjcHprc3QxNFozVzBLNWRnLzJIN3U5TDNnWUQxdXVvRkI0?=
- =?utf-8?B?bmIxTWVLZXVCZW9nWUZ5YkxQbkRKa0RoajIyQmVjV21sc0xRVUpoQk9qOFNn?=
- =?utf-8?B?Ylg3RmE3a1QrbEZLa0JWMnlMeExlTmsxZmVNV1BWYWNGSXM0eVc2MzNJVGxh?=
- =?utf-8?B?Q3kwZWJzeHJlTTRsb0J6cEVLSnJGZVdiMjVaRWtGbkovZGhPZVZEbmxUZmZ5?=
- =?utf-8?B?QmIyMWRWQVZya3FrUU91Wlg5TEd5RlFSMkpSUFErMm5ZUHhwcFJYN0FsTFB3?=
- =?utf-8?B?bHQzbWVIWkZvbklCR0g5NEhFaVNxQndBT1o4UUZnWkxobHU5UW54SUxLNlhJ?=
- =?utf-8?B?MDZ0YlVpR2g1OGNhaFRSbWRRR1prakNjL0NYbTdEZFlJeWIyVy9mOWFCenlO?=
- =?utf-8?B?dzVNQVVNdHBzdkxFT00wQzZXeEpJL08xbnZFdkR6azZYNnprblpUaGpodGZo?=
- =?utf-8?B?Zmg3UCtXVHI5ckJaVHdMSHhJTUl5M2JKUWhJTGZqV280cHA1T1IrYkEwUGNo?=
- =?utf-8?B?RG4xb3ViWC9TZzQzbks3a1hYazIydXp1V0FpWEptbjhiTENiankyUVovanJX?=
- =?utf-8?B?U2gvZHV0VFFvajRlR2R3dVpodzAybEdCMjhSaFFWbG1zWGJqaXNzaWNsMVpm?=
- =?utf-8?B?bXhBb2l2UjN5WFRzY2xZaGFsdWF6bDN1aUZ6NE9pajBZR0w4QkdGMGJxQzZZ?=
- =?utf-8?B?eEdwREs4bnZRZHpYMGNzaHd2dnBveGtEdkhIM2ZnQi9KVVk0cGxNdnY1ZEtU?=
- =?utf-8?B?MFZUZzFPdHBaREpPYi95ZmErWEpYZ1lzUmFvZmZjV2dEUEhyS3EwUDQzR3Rv?=
- =?utf-8?B?VkZVS1o0MzJpcWtCbEVUWnVhVWxwSTZvc0ZUK0xRQWw2T2Y5dXZlVjRoNFY0?=
- =?utf-8?B?NjlHZFVMb2IzcDZHM1RnbkF2Y2F3Vy9kYTRuZE1kMHRkQXFRajZ0T1lIaTdt?=
- =?utf-8?B?UkdCWWJpVkExcS9sQmh3UnlseVkzdEVrUFczeFd2WFJKeUpHblhxaXpqdEFY?=
- =?utf-8?B?RXNzV2gwcENlM205Z21LcVMxc1piNkNsVVlyTGJJa1E4UVF0VklhS3BuN1Zl?=
- =?utf-8?B?M2hIUndhbWpsRWxIRVhXLzBySExQbEw2WC9zcVNtWlFPRDNDeDhlTEJ6aG8x?=
- =?utf-8?B?WU40RWtMYVNvbjR4QjBxcTJGcm5IUTk4aG9wdlN3S1cyK2trL3Y3TXRGYklF?=
- =?utf-8?B?a25XOHMySTM4L2VzdGFvMisvTTViUlZweUhydkIxMXRtMlR3TGh2USthR21k?=
- =?utf-8?B?WlhJQlY2NTAveGJBTHJoNkZ1VHFzQnhjNHFBUFp5M0M3OU1xTkgwSVRuNHhE?=
- =?utf-8?B?TllGVjhGSk9WRHZKK0NsQk5hQmV4RDlyNTVkNnRDa3RLaFpqSzh6UFdwU25v?=
- =?utf-8?B?MDVMWXkzWHZkalByYmVscUVtUDlvZmJ6VDBGV2s0VGFGY1hqc3RYZGZDanBG?=
- =?utf-8?B?SnpQVnRtSkM1Nm9HNmIveENjYnNnY0xDaUJWNkpTd1lFYkw5Q2FxWlhLZk02?=
- =?utf-8?B?ZnRreFM5K3o3SmxZb1dZVU5iSTYwK2xvL3AyZTVZRXRoQU9Cb3dMaHJLMHli?=
- =?utf-8?B?ODkvWGdYQ0ZEUENHL1lBSkxlTHlTVEJNeGQ5ZU5pSVdCcFE0TmhUU0xBWGNm?=
- =?utf-8?B?N0NOZC9DQ3hHdEJzR2V3aW05cVVMZHhJT0V6UUsrZitxQ29yNDkxM0htMUpn?=
- =?utf-8?B?c3dJSFNUbTB1MHErK3UvM2hTMGdlc3VtMFJSRnJDZUZVRW16V2tIZElYQXRL?=
- =?utf-8?B?Tm90ck1PdUxiQmtCTlhuMmpRZmRGUTZZbkZCSXhCUXZYeHBrQzlCMTVQOXBX?=
- =?utf-8?B?Ym5tRzk4NVZmeG1KQnlTM2tDM0FZM0hJbXZTSTJHRmZTWUFzMS9BRFVUbk9V?=
- =?utf-8?B?RWtWR0kwOFVJNmRRZ0trUlJJUTVMc0h3UHZjTGZtOTVmYXRrbCtGbGtRZG02?=
- =?utf-8?B?VVFvd3RuTTNvTDIyWEJBd2V2WkQ2blMxTjRUeWUvZzlpeUZ3aFdhdGhIYWI5?=
- =?utf-8?B?OHdzTG0wM25ZTU8xRXllR044UXZNMERHeG5ZOFhxaXVnVHhtSTNNUT09?=
+	=?utf-8?B?Nk51bEFvWlFoL3VnQWZwWW1TOXJXQk0yV2J2UDFHSGJTcm9Cajl6dS9PVE93?=
+ =?utf-8?B?UkF6RFhyZURRS1dvSjQrVHc5WkpsaG1JVUhNb24zY1pLbkJkUzJnOWtqV0Rw?=
+ =?utf-8?B?Ym1oblVmcFB4Zkk1UExEcmk3c2tVa3kzb1cyZnQvbUpiRUJmNmpkYlVnRE4v?=
+ =?utf-8?B?TVZrMEdzZnlNNHloaVd1SEhZU2IvdFZoTEQxWjMxalgwUGtZWmhwT2k2Wlg4?=
+ =?utf-8?B?VXZUVmZXN1pYZGVYVkFsNkNNQXphZDZadW95cG4wSUJHaDBRUzdLbGJLZklu?=
+ =?utf-8?B?bWV3dWtyT1d5MDV1REVLMThsK2dRWkZrOTFtMTN2Tk5XNm0xSmUrTU1oWldh?=
+ =?utf-8?B?TkN2NWNDOEdCakM0Yk5uSW4vZ0lCMHcyN3NiNDhWb0pDUnBsUWVtdVZmRUls?=
+ =?utf-8?B?VFhxeVdnZEE2dGF5TktWMXVKaUxZSlRMTzhKZEdMcHlRb0c2WnIxVUpENmpG?=
+ =?utf-8?B?TmY1djVlTWdSZU1FYThJenlid1lEKzFsaXBTTEYyWUc5MDkvWXUxRHUvcjY0?=
+ =?utf-8?B?UHhvR3A1NnNyWCtmM3dNQUtCekZpeTdwSVFGZjdHK0ZYdXNvYmRiQnAwc2Ew?=
+ =?utf-8?B?SzcwN3Bzd3l3TDFoZzlwSE1GMHgyYW9la0JZeDBuTWZhdlZJVHJwQUJxMTNT?=
+ =?utf-8?B?SUFZVWc3ZGh2V3Q5YUNYbVE5NkVCaGNHb3djYkh6THpwcWtDT3BZTlpFdkJO?=
+ =?utf-8?B?UVJIVEVJZHd1dUNXRE96VVRxMkhrdC9Bd1NmVis4M2pzU1d6RzFHU04zQWhX?=
+ =?utf-8?B?Vy9CSTMvZyt0UktOK3RONm9QQlIxOXdyU1hybHJxRGlrVnhxSjNuYnpLVG5B?=
+ =?utf-8?B?aWlhd1FKU000UHV1T1JzR0RoTVMyVmVkMzRTMkVncThwT3IrdXJQcWFWM2ov?=
+ =?utf-8?B?YzVhUmZWL3pDeFQyZ09OSUtiVHRqc1NvaVBTZ1lCSzlOZDFacFJYNW5sZ1hu?=
+ =?utf-8?B?YVJuRmpXNmZ3eUNRdTI1QUdwcTlUY2I2Tkt0anBuN0s2L3p2ZTU3Vjl5SC81?=
+ =?utf-8?B?VUFTRUZtKy9VU1paZ0c4eHZaZlhBdDhTMEh1NnpqKy9CaDVoTDdIZXljN015?=
+ =?utf-8?B?anFBcllaZ0xTdnBqK3JTRnd4Ry9JRDgzRmhaeFZyWkc1VkNpSG9lb2NTWDBw?=
+ =?utf-8?B?aDU4Mi8wTjdTZDBBYnpPRnlZMm45ODdIYmlxV0dIa0ZuSnJMUG9OM3FIVzd1?=
+ =?utf-8?B?VW05VG5mbGV1QXQxM29zbnNIUHQ5dFowa2drM0VMbWJCSFpTd2MzVW9kUUNX?=
+ =?utf-8?B?Y2FSanV4emZvWkY5VUhoeFVPTTNDU1lMS2tCdTh4VytVR3ZPT2d2WC9KRFNI?=
+ =?utf-8?B?TVhCa0ZkYzVtQTN1QTdRelI1dk1sN3luaEprbWk0UlpiUmZmVkFXeGdjZWUz?=
+ =?utf-8?B?M3hZNytETWovYWJYVWtjZVEyckZyMkpISXhsNmgvazAra0F4NTVHSkgzcG0r?=
+ =?utf-8?B?eURxK1kxNWhLTnZ3bExLSHIwTHN5ZXRiOWJEN1NmSVo3aDYxZkNraXdPVGZw?=
+ =?utf-8?B?Q0FmckFhcWZnbEEvYTVqRGQrTExSbm9GRTNIa0RpLzlmV2gwaFZCcjFHcnRa?=
+ =?utf-8?B?bmFQZk0xckNtenlwcmNpYURiYnZjdDEzbldpdVc4RmFlNlNuRm5sMkVpMTlt?=
+ =?utf-8?B?QUJQcUN6dDlkcllPR0RyZ0ZOdEdCL2g1V1JlcWhxMTk2S1B0NmtLU3NHeHRi?=
+ =?utf-8?B?UEtjRGVyYnhRbFNjTUlRVVh5MnQ5UjBTNi93Q0lLcEozcThtMXNLKzVaTU4w?=
+ =?utf-8?B?Z2orQ09kbHNiYW0yYW9RWXRvRXJ0TjJ5M0Y3K3orWnZrdGs4RktiemdGRGE3?=
+ =?utf-8?B?VGQ3OWxCSTJNOGN4V3BFRkpJUjlscU1VVVVHOG5sc3pCUXlhWUpXbGQ2SHNv?=
+ =?utf-8?B?QTRaZjlDVmZVbWFyL3FKM3JrTEU4VFNjeTUvMXlDTkFMNGRMUHBlTG1USHVQ?=
+ =?utf-8?B?UUlQVnRIN2lWSDRBWW5kdVR2TE5NV1hUTnZEeVZhY3BxN25kVUdSeXM3Rk1q?=
+ =?utf-8?B?R05ZNXNzVmxVV3VlN0c2YVUyK1NHMHc4QXZIK2JySmw0bW1ka01TR1VqemRH?=
+ =?utf-8?B?eDJwVWhUd0pvdi9YWEljNTkzQ01tYnFWTk5WYTJ3YUVRZkdPazM3WkhNRGM5?=
+ =?utf-8?B?MmpIVjFiMFNiSUwwdmJnTndONW1GeVlGMVVWdXVHRWtBYnFmMG5PNHEvZmtq?=
+ =?utf-8?B?T2paTnVUZW1leGdNRVE3dHpoYWNaQzFsclVCZ09mTU9DVVZkRklFS2w0Rlox?=
+ =?utf-8?B?d0ZkVFUxcG5aaktHbGpQVzc0bnNLaVB5RnJ3VDErQWtsTitlbVZxUFQ0OW9i?=
+ =?utf-8?B?MlZPaTlKVjVnekZ6OWtKSWtPNTZsYS9qY3RYQXFFMDJnczVYU3JQdz09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4d7a3806-7eaf-4de3-672e-08dedb687dde
+X-MS-Exchange-CrossTenant-Network-Message-Id: abec78db-9d4a-4d12-7e4f-08dedb687cb8
 X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jul 2026 14:11:36.8847
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jul 2026 14:11:34.9518
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hBcAKTQg69JF1C6h/RJcb4IG1OqRxDwF5RuUh9TsBybMM0FP+z7ulu2eUddD6URm45i8SoHlHXQAjMLcfQJC7Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CW1P265MB9444
+X-MS-Exchange-CrossTenant-UserPrincipalName: b6LLbmIV2viLKIyn3Od+tY3bpCYNEf0S/1yO/m8li85uNWU7Jc/2a3vK6z3M+H1IOtaFwLctlpJdFnRr5zu+Sw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB7176
 
-Address of pci_device_id cannot be relied on due to presence of dynamic ID
-and driver_override. Use driver_data instead.
+pci_device_id is not guaranteed to live longer than probe due to presence
+of dynamic ID. All information apart from driver_data can be easily
+retrieved from pci_dev, so just store driver_data.
 
+Reviewed-by: Danilo Krummrich <dakr@kernel.org>
 Signed-off-by: Gary Guo <gary@garyguo.net>
 ---
- drivers/char/agp/amd-k7-agp.c | 26 ++++----------------------
- 1 file changed, 4 insertions(+), 22 deletions(-)
+ drivers/scsi/nsp32.c | 8 ++++----
+ drivers/scsi/nsp32.h | 8 ++++----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/char/agp/amd-k7-agp.c b/drivers/char/agp/amd-k7-agp.c
-index 898ff30ffd46..4d201e71c517 100644
---- a/drivers/char/agp/amd-k7-agp.c
-+++ b/drivers/char/agp/amd-k7-agp.c
-@@ -387,37 +387,17 @@ static const struct agp_bridge_driver amd_irongate_driver = {
- 	.agp_type_to_mask_type  = agp_generic_type_to_mask_type,
- };
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index e893d5677241..9c9281222a0a 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -1470,7 +1470,7 @@ static int nsp32_show_info(struct seq_file *m, struct Scsi_Host *host)
+ 		   (nsp32_read2(base, INDEX_REG) >> 8) & 0xff);
  
--static struct agp_device_ids amd_agp_device_ids[] =
--{
--	{
--		.device_id	= PCI_DEVICE_ID_AMD_FE_GATE_7006,
--		.chipset_name	= "Irongate",
--	},
--	{
--		.device_id	= PCI_DEVICE_ID_AMD_FE_GATE_700E,
--		.chipset_name	= "761",
--	},
--	{
--		.device_id	= PCI_DEVICE_ID_AMD_FE_GATE_700C,
--		.chipset_name	= "760MP",
--	},
--	{ }, /* dummy final entry, always present */
--};
--
- static int agp_amdk7_probe(struct pci_dev *pdev,
- 			   const struct pci_device_id *ent)
+ 	mode_reg = nsp32_index_read1(base, CHIP_MODE);
+-	model    = data->pci_devid->driver_data;
++	model    = data->model;
+ 
+ #ifdef CONFIG_PM
+ 	seq_printf(m, "Power Management:      %s\n",
+@@ -2907,8 +2907,8 @@ static int nsp32_eh_host_reset(struct scsi_cmnd *SCpnt)
+  */
+ static int nsp32_getprom_param(nsp32_hw_data *data)
  {
- 	struct agp_bridge_data *bridge;
- 	u8 cap_ptr;
--	int j;
+-	int vendor = data->pci_devid->vendor;
+-	int device = data->pci_devid->device;
++	int vendor = data->Pci->vendor;
++	int device = data->Pci->device;
+ 	int ret, i;
+ 	int __maybe_unused val;
  
- 	cap_ptr = pci_find_capability(pdev, PCI_CAP_ID_AGP);
- 	if (!cap_ptr)
- 		return -ENODEV;
+@@ -3340,7 +3340,7 @@ static int nsp32_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
  
--	j = ent - agp_amdk7_pci_table;
--	dev_info(&pdev->dev, "AMD %s chipset\n",
--		 amd_agp_device_ids[j].chipset_name);
-+	dev_info(&pdev->dev, "AMD %s chipset\n", (const char *)ent->driver_data);
+ 	data->Pci	  = pdev;
+-	data->pci_devid   = id;
++	data->model       = id->driver_data;
+ 	data->IrqNumber   = pdev->irq;
+ 	data->BaseAddress = pci_resource_start(pdev, 0);
+ 	data->NumAddress  = pci_resource_len  (pdev, 0);
+diff --git a/drivers/scsi/nsp32.h b/drivers/scsi/nsp32.h
+index 924889f8bd37..9e65771cb592 100644
+--- a/drivers/scsi/nsp32.h
++++ b/drivers/scsi/nsp32.h
+@@ -564,10 +564,10 @@ typedef struct _nsp32_hw_data {
  
- 	bridge = agp_alloc_bridge();
- 	if (!bridge)
-@@ -492,7 +472,6 @@ static int agp_amdk7_resume(struct device *dev)
- 	return amd_irongate_driver.configure();
- }
+ 	struct scsi_cmnd *CurrentSC;
  
--/* must be the same order as name table above */
- static const struct pci_device_id agp_amdk7_pci_table[] = {
- 	{
- 	.class		= (PCI_CLASS_BRIDGE_HOST << 8),
-@@ -501,6 +480,7 @@ static const struct pci_device_id agp_amdk7_pci_table[] = {
- 	.device		= PCI_DEVICE_ID_AMD_FE_GATE_7006,
- 	.subvendor	= PCI_ANY_ID,
- 	.subdevice	= PCI_ANY_ID,
-+	.driver_data	= (kernel_ulong_t)"Irongate",
- 	},
- 	{
- 	.class		= (PCI_CLASS_BRIDGE_HOST << 8),
-@@ -509,6 +489,7 @@ static const struct pci_device_id agp_amdk7_pci_table[] = {
- 	.device		= PCI_DEVICE_ID_AMD_FE_GATE_700E,
- 	.subvendor	= PCI_ANY_ID,
- 	.subdevice	= PCI_ANY_ID,
-+	.driver_data	= (kernel_ulong_t)"761",
- 	},
- 	{
- 	.class		= (PCI_CLASS_BRIDGE_HOST << 8),
-@@ -517,6 +498,7 @@ static const struct pci_device_id agp_amdk7_pci_table[] = {
- 	.device		= PCI_DEVICE_ID_AMD_FE_GATE_700C,
- 	.subvendor	= PCI_ANY_ID,
- 	.subdevice	= PCI_ANY_ID,
-+	.driver_data	= (kernel_ulong_t)"760MP",
- 	},
- 	{ }
- };
+-	struct pci_dev             *Pci;
+-	const struct pci_device_id *pci_devid;
+-	struct Scsi_Host           *Host;
+-	spinlock_t                  Lock;
++	struct pci_dev    *Pci;
++	int                model;
++	struct Scsi_Host  *Host;
++	spinlock_t         Lock;
+ 
+ 	char info_str[100];
+ 
 
 -- 
 2.54.0
