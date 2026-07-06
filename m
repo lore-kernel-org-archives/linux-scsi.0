@@ -1,48 +1,48 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C78CE3A7820;
-	Mon,  6 Jul 2026 14:22:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D77E3B71D9;
+	Mon,  6 Jul 2026 14:31:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783347768; cv=none; b=A/3DEwuDPEcCr33aN/MGKfvy4AN/yAZE604p14TX2cP72XSzj0xf8OPj0C+kpfLCfwCbVFgyRF/mn++GgZtQvK/DoL481u28XYYQgBL3aMV3m44Nq3pS99zi1ZWkVo5/f9DNbiwFPyEsfhtght/5lKAf9Rx/6lBP6kuSfYjqsgc=
+	t=1783348264; cv=none; b=k5kwK+JrxcVf/azpGWFQtyuHGv6btVL9J78rdgJZPnoMy8ehcl7BJ5h0vx/kl8bWlki68RLK7jcSTh12Idgf1PUJhsGWbgVrOqf3h82Xjb1SFWH349pqLuulkn3c0ScZ/EX1H9URrXjE2d2fLLkfIb/W/rWUjyz/YQzz9NIAteo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783347768; c=relaxed/simple;
-	bh=l+zxTiyfnQT0eysEB6of4dvMgiahZQ7ChlScDNv1Yiw=;
+	s=arc-20240116; t=1783348264; c=relaxed/simple;
+	bh=q9GK6bYnXn+9vYNx5TDT5YEMb+vEmZpe052l3zrdCc8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HnLxOXyk5Xrd5GoM7eBSmtS4CJwDK4Bb9SP1onZSj0w0jOppndhOOwB7MTybUtDQQRyVTQ/f/kWB/34HjRzCyKxO6z0UBTmQi2luYK09VpEjfGTy3M3nr/t8MzBWba42kegY5V2J7KNUSGETEvThebYoVaoR09g0KXK9BIr4nAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=WjSeJ9OH; arc=none smtp.client-ip=199.89.1.16
+	 In-Reply-To:Content-Type; b=r8ej0E4T9J94RkZjhihHbfboT0jDE/GI7AaUXqe3ZRX0bh5NuA9ECWjKvEsF4Ljp/LiSVLxtD5rfudMBXEuO4aJgESv5z1mkO72BAoJlycqJps9USx1FoAIuQS7sdnweqcjAaaJ7v7xoG6X57VJdBU9zCKVqbAJ67Nzg4XusQUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=0c3KThoN; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="WjSeJ9OH"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="0c3KThoN"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gv65L2C74zlh2rv;
-	Mon,  6 Jul 2026 14:22:46 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gv6Gt5t7sz1XM6JQ;
+	Mon,  6 Jul 2026 14:31:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1783347760; x=1785939761; bh=nNBgelGx3mRHB1Sk5a7CnC2Z
-	kQzCv7a96N3gJ4wVDB8=; b=WjSeJ9OHxdnhHGFWk9TUUbnt3jX8Ymc6r3jz9TJj
-	ez/HdYwTjuedq4ro0I5QZ5x3xgfy22awka48jYZZG1zG19XVpNWJrG+jXrFSsh/T
-	gTSCT31A9ErEsasllYzvPabk5wW4iCHMayq7P/RhjDx4HoBPuq2fTOdppotx00Sz
-	+HG8GmFS9+At83m9++D/TgFQjyBduHKbpLIH4j1Av9Z4VSumPk3s4zMd5XsiB06W
-	Eu4NcW3uBgxyEJw2hbbfJ2hCI0Tgj/HiK5A56GiLo+JxkfGYqNgWv06T9hqDOCvU
-	Y9n65NK0RgepmzzIiaCeRC+NSAZsYQvEH1K55nb/+f8ADQ==
+	 s=mr01; t=1783348255; x=1785940256; bh=5WDgo9lmNh3Xyf9j8EEI0vRR
+	XaSVdYjT506xHbEN1fA=; b=0c3KThoNK4z9G0ehbqg4LxOhOidVljxVhjg8BBRX
+	u+ByfWi1C/h2X6eRONtbbRed9JGhhmzMhEplWkL3DUdzUbvwk11RQ/yfNPN9uKo6
+	WGGBZN6KJ1CEUp5GuagxdDo/X128o1E3PjTOLkWTNmWgHcsotFsSMWAYGyPBhL3s
+	6sUpi3PGH3d404G+urNN67HnhARvzNPnVtjvowUQmbPcIlvky/IBACHXdTvpqVk4
+	1Q5cypi9NuC4B9/koyySzcOOz8jAwXEXZVFs3SmK3jwUmeVbetyk84bEd1W5ngyb
+	YfxKWBePAW7StoBDr0DDUO35XkhtlGA5nzPWa+Ico1RYsg==
 X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id y8tVbxUS7moB; Mon,  6 Jul 2026 14:22:40 +0000 (UTC)
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id GHaJqUMP8Wa0; Mon,  6 Jul 2026 14:30:55 +0000 (UTC)
 Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gv6585pJkzlgtd0;
-	Mon,  6 Jul 2026 14:22:36 +0000 (UTC)
-Message-ID: <a1621138-9051-4845-b74e-a3e9e895133d@acm.org>
-Date: Mon, 6 Jul 2026 07:22:35 -0700
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gv6Gd4cp3z1XM6J4;
+	Mon,  6 Jul 2026 14:30:49 +0000 (UTC)
+Message-ID: <4244935a-8a49-42b0-ac27-234d2367e3e3@acm.org>
+Date: Mon, 6 Jul 2026 07:30:48 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,50 +50,48 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ufs: core: tracing: Do not dereference pointers in
- TP_printk()
-To: Steven Rostedt <rostedt@goodmis.org>, LKML
- <linux-kernel@vger.kernel.org>,
- Linux Trace Kernel <linux-trace-kernel@vger.kernel.org>,
- linux-scsi@vger.kernel.org
-Cc: Masami Hiramatsu <mhiramat@kernel.org>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
- <avri.altman@sandisk.com>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
+Subject: Re: [PATCH] scsi: ufs: core: Avoid sleeping in hard interrupt context
+ when PREEMP_RT is enabled.
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ Gregory CLEMENT <gregory.clement@bootlin.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+ Avri Altman <avri.altman@sandisk.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
  "Martin K. Petersen" <martin.petersen@oracle.com>,
- Peter Wang <peter.wang@mediatek.com>
-References: <20260630185412.283c26c5@gandalf.local.home>
+ Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+ Vladimir Kondratiev <vladimir.kondratiev@mobileye.com>,
+ =?UTF-8?Q?Beno=C3=AEt_Monin?= <benoit.monin@bootlin.com>,
+ =?UTF-8?Q?Th=C3=A9o_Lebrun?= <theo.lebrun@bootlin.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-rt-devel@lists.linux.dev
+References: <20260630-ufshcd-spinlock-sleep-fix-v1-1-339b05a1c6f4@bootlin.com>
+ <20260630141513.ujz0Ef-O@linutronix.de>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260630185412.283c26c5@gandalf.local.home>
+In-Reply-To: <20260630141513.ujz0Ef-O@linutronix.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 6/30/26 3:54 PM, Steven Rostedt wrote:
-> The trace events in drivers/ufs/core/ufs_trace.h were converted to take a
-> pointer to the hba structure as an argument for the tracepoint and then in
-> TP_printk() the printing of the dev_name from the ring buffer was
-> converted to using the dev dereferenced pointer from the hba saved
-> pointer.
+On 6/30/26 7:15 AM, Sebastian Andrzej Siewior wrote:
+>  From ufshcd_intr():
+> |         intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+> |         enabled_intr_status = intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+> |
+> |         ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
 > 
-> This is not allowed as the TP_printk() is executed at the time the trace
-> event is read from /sys/kernel/tracing/trace file. That can happen
-> literally, seconds, minutes, hours, weeks, days, or even months later!
-> There is no guarantee that the hba pointer will still exist by the time it
-> is dereferenced when the "trace" file is read.
-> 
-> Instead, save the device name from the hba pointer at the time the
-> tracepoint is called and place it into the ring buffer event. Then the
-> TP_printk() can read the name directly from the ring buffer and remove the
-> possibility that it will read a freed pointer and crash the kernel.
-> 
-> This was detected when testing the trace event code that looks for
-> TP_printk() parameters doing illegal derferences[1]
-> 
-> [1] https://lore.kernel.org/all/20260630184836.74d477b6@gandalf.local.home/
+> What does this do? Does it disable the IRQ source? If so then
+> IRQF_ONESHOT should be removed.
 
-Thanks Steven!
+Writing into the REG_INTERRUPT_STATUS register clears the bits that are
+set in the first argument of writel().
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> |         /* Directly handle interrupts since MCQ ESI handlers does the hard job */
+> |         return ufshcd_sl_intr(hba, enabled_intr_status);
+> 
+> If not, why is this not part of the threaded handler?
+If MCQ is disabled, ufshcd_sl_intr() processes all types of interrupts.
+If MCQ is enabled, the ESI interrupt handlers process I/O completions
+and ufshcd_sl_intr() processes the remaining interrupt types.
 
+Bart.
