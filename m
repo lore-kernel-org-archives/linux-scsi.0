@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10A793E51F4;
-	Mon,  6 Jul 2026 06:56:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB4173E314F;
+	Mon,  6 Jul 2026 06:56:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783320988; cv=none; b=hhVWhCWpNW9whXatqncWqJV+UalUkAwkrYzJua+emM8ucPXdXsYi/SrFFNtl2ZbIoPvhhVDRx/Cx01t/fNqzcfKLi2H0r9dFSFnq0EfKu0xnxx5uchLJtogsU6BwGC38X+Yexm0N1Q03pFDPJjodku7dSENyQ/Fv/5FyMJr7NJI=
+	t=1783320992; cv=none; b=tcimqbIOkAe/IkX7HHjyj0zSNlHnDDbzEAhnRqVcUKruGcYvedQhLDvks5AlrSDUL2iyYTJCIbNGRHY0yTdO5UGVS2eeps7W64/fb4jrrAgBVTvOsaQ9Zi5IqrqNHrVSOz1Hn4WI8lF2vYDZcboiVgJydjvXVY37YzTyUgwnsv0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783320988; c=relaxed/simple;
-	bh=XDEYCIjpRaFmxTp/j15UBCW1IPEAw6dxYdsGjl3NkUI=;
+	s=arc-20240116; t=1783320992; c=relaxed/simple;
+	bh=1S8MukVQWAt2TvgKv8H9JHH+47XdYtjjKeM6dgApaag=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=O4hNiVPAMQDTAwYnSm9JlrWP5iS4Kk/U8lV1xKAl5JCWX/a6IBOvyT+5+6FS4Zox+YfNSwHCxxNnHZk7WpsQZH+ieJYwnlnun3Ls7xQ37PCfH0qWHonZjonLTPVNddduZ5olH2O+MttiCm6lTxeXP/6/LIaK44leAORpNEw6tHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IcKhc//k; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=brS0acZIP7o5jrT1q9t1zVGnCtDPM8FP0LpFePcfMSzNWdOJ4sGpnRH0weQ7f+HbbdHHx2OS9m+yuq5rqxTqhcMjlA+PkEKNUay8w3iTILc2EUiCcUdVRxNdbQGbG4rP82lT80/TaULBzbc8OgCC/6cL6F2KVEF88Tzho1jj3oI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RtXW0Ysh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IcKhc//k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EFC51F00A3A;
-	Mon,  6 Jul 2026 06:56:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RtXW0Ysh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96E611F00A3F;
+	Mon,  6 Jul 2026 06:56:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783320982;
-	bh=RcHH7CKonuhS3diyXn9gLrAYvT+qDsf4+11LSt2XpnM=;
+	s=k20260515; t=1783320984;
+	bh=FjbjPaF+PBCW2mgKIAOnT6ndXe156Obrd2ujFbbaRWU=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=IcKhc//kqIeUULWZscAgf6wfRN3V84rmBOkVObB1vUYE4JxDN2eMdGynVUWbAg7qy
-	 LW95lLVukSuF+wd5H8sAAM0JRw+2UqaS4hy/8lBakveDwRGgsMiOtDDOZ7oR3mD9tG
-	 a6vx4MRceGE5EmSDKBhqTJN8ku0IWbdcMBySOoHoxnHMJdEt+XxT0Zc8H/ZZJXg6Ft
-	 hZMJR4FtzierqfWVIs7P2o3vt0UFGUtibL6bCt05m3SOd1O9ENRJEfkVu1MdxfHW6Y
-	 Y9j3RusBT6q0qx+7/bBUro81ehtMhzYYwYUmkDsEHsw4dIjKwEYKwSp1t+WTVwRlT/
-	 RPDR+I8ObBL2A==
+	b=RtXW0YshupR+WrRAEvfieoJ3VirywRRIYxFAaFqHuoKJwMBDeqTMdgE1K6MWFEbwg
+	 J07G5dWHN4KJzXIE1OGEMLSVfwACWh3YoVfBIqu/PcOoigpkUiUX93+Ski9ta2kTqk
+	 wPDBvBTt0Eg82dWVKD7Beqmnsdzhx6c3zWkZb6o1wtNoKG33zhOCBs2YOTVPQy77qL
+	 w76/gnnoKmP8YGGo3S1OcxpHA2+3BHz96gzI0s7zcXQktol3Y5thjmX3LON3GHFK1u
+	 t2JBURCNScWPZSTxiIhDKZktXkQa96YnvFqjUxwUYqVzbOcQNqDTVbwTKJzl0TXnXV
+	 FM294SA//MKiA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v1 1/9] scsi: scsi_debug: move ASC and ASCQ definitions to scsi_proto.h
-Date: Mon,  6 Jul 2026 15:56:02 +0900
-Message-ID: <20260706065610.3559692-2-dlemoal@kernel.org>
+Subject: [PATCH v1 3/9] ata: libata: improve the definition of device flags
+Date: Mon,  6 Jul 2026 15:56:04 +0900
+Message-ID: <20260706065610.3559692-4-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260706065610.3559692-1-dlemoal@kernel.org>
 References: <20260706065610.3559692-1-dlemoal@kernel.org>
@@ -45,137 +45,122 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The scsi_debug driver internally defines lots of SCSI additional sense
-codes (ASC) and additional sense code qualifiers (ASCQ). Move these
-definitions to include/scsi/scsi_proto.h so that they can be reused
-elsewhere in the SCSI and ATA code. This also makes the scsi_debug.c file
-a little smaller.
+The flags field of struct ata_device has the unsigned long type. Define
+all the ATA_DFLAG_XXX flags using a 1UL bit shift to match this type, thus
+avoiding flags to become signed values (e.g. for bit 31 flag).
+
+To avoid all other values defined in the same enum as the ATA_DFLAG_XXX
+flags to implicitly also become unsigned long values, move the device
+flags definition to a separate enum.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/scsi_debug.c | 46 -----------------------------------
- include/scsi/scsi_proto.h | 51 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 51 insertions(+), 46 deletions(-)
+ include/linux/libata.h | 85 ++++++++++++++++++++++--------------------
+ 1 file changed, 45 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 9d1c9c41d0f9..4a95e6bae38b 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -67,52 +67,6 @@ static const char *sdebug_version_date = "20210520";
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 96e626d6a7ca..736ba8a6a77b 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -121,6 +121,50 @@ enum {
+ 	ATA_QUIRK_NO_FUA		= BIT_ULL(__ATA_QUIRK_NO_FUA),
+ };
  
- #define MY_NAME "scsi_debug"
++/*
++ * struct ata_device flags
++ */
++enum {
++	ATA_DFLAG_LBA		= (1UL << 0), /* device supports LBA */
++	ATA_DFLAG_LBA48		= (1UL << 1), /* device supports LBA48 */
++	ATA_DFLAG_CDB_INTR	= (1UL << 2), /* device asserts INTRQ when ready for CDB */
++	ATA_DFLAG_NCQ		= (1UL << 3), /* device supports NCQ */
++	ATA_DFLAG_FLUSH_EXT	= (1UL << 4), /* do FLUSH_EXT instead of FLUSH */
++	ATA_DFLAG_ACPI_PENDING	= (1UL << 5), /* ACPI resume action pending */
++	ATA_DFLAG_ACPI_FAILED	= (1UL << 6), /* ACPI on devcfg has failed */
++	ATA_DFLAG_AN		= (1UL << 7), /* AN configured */
++	ATA_DFLAG_TRUSTED	= (1UL << 8), /* device supports trusted send/recv */
++	ATA_DFLAG_FUA		= (1UL << 9), /* device supports FUA */
++	ATA_DFLAG_DMADIR	= (1UL << 10), /* device requires DMADIR */
++	ATA_DFLAG_NCQ_SEND_RECV = (1UL << 11), /* device supports NCQ SEND and RECV */
++	ATA_DFLAG_NCQ_PRIO	= (1UL << 12), /* device supports NCQ priority */
++	ATA_DFLAG_CDL		= (1UL << 13), /* supports cmd duration limits */
++	ATA_DFLAG_CFG_MASK	= (1UL << 14) - 1,
++
++	ATA_DFLAG_PIO		= (1UL << 14), /* device limited to PIO mode */
++	ATA_DFLAG_NCQ_OFF	= (1UL << 15), /* device limited to non-NCQ mode */
++	ATA_DFLAG_SLEEPING	= (1UL << 16), /* device is sleeping */
++	ATA_DFLAG_DUBIOUS_XFER	= (1UL << 17), /* data transfer not verified */
++	ATA_DFLAG_NO_UNLOAD	= (1UL << 18), /* device doesn't support unload */
++	ATA_DFLAG_UNLOCK_HPA	= (1UL << 19), /* unlock HPA */
++	ATA_DFLAG_INIT_MASK	= (1UL << 20) - 1,
++
++	ATA_DFLAG_NCQ_PRIO_ENABLED = (1UL << 20), /* Priority cmds sent to dev */
++	ATA_DFLAG_CDL_ENABLED	= (1UL << 21), /* cmd duration limits is enabled */
++	ATA_DFLAG_RESUMING	= (1UL << 22),  /* Device is resuming */
++	ATA_DFLAG_DETACH	= (1UL << 24),
++	ATA_DFLAG_DETACHED	= (1UL << 25),
++	ATA_DFLAG_DA		= (1UL << 26), /* device supports Device Attention */
++	ATA_DFLAG_DEVSLP	= (1UL << 27), /* device supports Device Sleep */
++	ATA_DFLAG_ACPI_DISABLED = (1UL << 28), /* ACPI for the device is disabled */
++	ATA_DFLAG_D_SENSE	= (1UL << 29), /* Descriptor sense requested */
++
++	ATA_DFLAG_FEATURES_MASK	= (ATA_DFLAG_TRUSTED | ATA_DFLAG_DA |	\
++				   ATA_DFLAG_DEVSLP | ATA_DFLAG_NCQ_SEND_RECV | \
++				   ATA_DFLAG_NCQ_PRIO | ATA_DFLAG_FUA | \
++				   ATA_DFLAG_CDL)
++};
++
+ enum {
+ 	/* various global constants */
+ 	LIBATA_MAX_PRD		= ATA_MAX_PRD / 2,
+@@ -146,46 +190,7 @@ enum {
+ 	ATA_TFLAG_FUA		= (1 << 5), /* enable FUA */
+ 	ATA_TFLAG_POLLING	= (1 << 6), /* set nIEN to 1 and use polling */
  
--/* Additional Sense Code (ASC) */
--#define NO_ADDITIONAL_SENSE 0x0
--#define OVERLAP_ATOMIC_COMMAND_ASC 0x0
--#define OVERLAP_ATOMIC_COMMAND_ASCQ 0x23
--#define FILEMARK_DETECTED_ASCQ 0x1
--#define EOP_EOM_DETECTED_ASCQ 0x2
--#define BEGINNING_OF_P_M_DETECTED_ASCQ 0x4
--#define EOD_DETECTED_ASCQ 0x5
--#define LOGICAL_UNIT_NOT_READY 0x4
--#define LOGICAL_UNIT_COMMUNICATION_FAILURE 0x8
--#define UNRECOVERED_READ_ERR 0x11
--#define PARAMETER_LIST_LENGTH_ERR 0x1a
--#define INVALID_OPCODE 0x20
--#define LBA_OUT_OF_RANGE 0x21
--#define INVALID_FIELD_IN_CDB 0x24
--#define INVALID_FIELD_IN_PARAM_LIST 0x26
--#define WRITE_PROTECTED 0x27
--#define UA_READY_ASC 0x28
--#define UA_RESET_ASC 0x29
--#define UA_CHANGED_ASC 0x2a
--#define TOO_MANY_IN_PARTITION_ASC 0x3b
--#define TARGET_CHANGED_ASC 0x3f
--#define LUNS_CHANGED_ASCQ 0x0e
--#define INSUFF_RES_ASC 0x55
--#define INSUFF_RES_ASCQ 0x3
--#define POWER_ON_RESET_ASCQ 0x0
--#define POWER_ON_OCCURRED_ASCQ 0x1
--#define BUS_RESET_ASCQ 0x2	/* scsi bus reset occurred */
--#define MODE_CHANGED_ASCQ 0x1	/* mode parameters changed */
--#define CAPACITY_CHANGED_ASCQ 0x9
--#define SAVING_PARAMS_UNSUP 0x39
--#define TRANSPORT_PROBLEM 0x4b
--#define THRESHOLD_EXCEEDED 0x5d
--#define LOW_POWER_COND_ON 0x5e
--#define MISCOMPARE_VERIFY_ASC 0x1d
--#define MICROCODE_CHANGED_ASCQ 0x1	/* with TARGET_CHANGED_ASC */
--#define MICROCODE_CHANGED_WO_RESET_ASCQ 0x16
--#define WRITE_ERROR_ASC 0xc
--#define UNALIGNED_WRITE_ASCQ 0x4
--#define WRITE_BOUNDARY_ASCQ 0x5
--#define READ_INVDATA_ASCQ 0x6
--#define READ_BOUNDARY_ASCQ 0x7
--#define ATTEMPT_ACCESS_GAP 0x9
--#define INSUFF_ZONE_ASCQ 0xe
--/* see drivers/scsi/sense_codes.h */
+-	/* struct ata_device stuff */
+-	ATA_DFLAG_LBA		= (1 << 0), /* device supports LBA */
+-	ATA_DFLAG_LBA48		= (1 << 1), /* device supports LBA48 */
+-	ATA_DFLAG_CDB_INTR	= (1 << 2), /* device asserts INTRQ when ready for CDB */
+-	ATA_DFLAG_NCQ		= (1 << 3), /* device supports NCQ */
+-	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
+-	ATA_DFLAG_ACPI_PENDING	= (1 << 5), /* ACPI resume action pending */
+-	ATA_DFLAG_ACPI_FAILED	= (1 << 6), /* ACPI on devcfg has failed */
+-	ATA_DFLAG_AN		= (1 << 7), /* AN configured */
+-	ATA_DFLAG_TRUSTED	= (1 << 8), /* device supports trusted send/recv */
+-	ATA_DFLAG_FUA		= (1 << 9), /* device supports FUA */
+-	ATA_DFLAG_DMADIR	= (1 << 10), /* device requires DMADIR */
+-	ATA_DFLAG_NCQ_SEND_RECV = (1 << 11), /* device supports NCQ SEND and RECV */
+-	ATA_DFLAG_NCQ_PRIO	= (1 << 12), /* device supports NCQ priority */
+-	ATA_DFLAG_CDL		= (1 << 13), /* supports cmd duration limits */
+-	ATA_DFLAG_CFG_MASK	= (1 << 14) - 1,
 -
- /* Additional Sense Code Qualifier (ASCQ) */
- #define ACK_NAK_TO 0x3
- 
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index f64385cde5b9..965cde7ebc5b 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -233,6 +233,57 @@ enum sam_status {
- #define MISCOMPARE          0x0e
- #define COMPLETED	    0x0f
- 
-+/*
-+ * Additional Sense Codes (ASC).
-+ */
-+#define NO_ADDITIONAL_SENSE		0x00
-+#define OVERLAP_ATOMIC_COMMAND_ASC	0x00
-+#define LOGICAL_UNIT_NOT_READY		0x04
-+#define LOGICAL_UNIT_COMMUNICATION_FAILURE 0x8
-+#define WRITE_ERROR_ASC			0x0c
-+#define UNRECOVERED_READ_ERR		0x11
-+#define PARAMETER_LIST_LENGTH_ERR	0x1a
-+#define MISCOMPARE_VERIFY_ASC		0x1d
-+#define INVALID_OPCODE			0x20
-+#define LBA_OUT_OF_RANGE		0x21
-+#define INVALID_FIELD_IN_CDB		0x24
-+#define INVALID_FIELD_IN_PARAM_LIST	0x26
-+#define WRITE_PROTECTED			0x27
-+#define UA_READY_ASC			0x28
-+#define UA_RESET_ASC			0x29
-+#define UA_CHANGED_ASC			0x2a
-+#define TOO_MANY_IN_PARTITION_ASC	0x3b
-+#define TARGET_CHANGED_ASC		0x3f
-+#define SAVING_PARAMS_UNSUP		0x39
-+#define TRANSPORT_PROBLEM		0x4b
-+#define INSUFF_RES_ASC			0x55
-+#define LOW_POWER_COND_ON		0x5e
-+#define THRESHOLD_EXCEEDED		0x5d
-+
-+/*
-+ * Additional Sense Code Qualifiers (ASCQ).
-+ */
-+#define POWER_ON_RESET_ASCQ		0x00
-+#define MODE_CHANGED_ASCQ		0x01	/* mode parameters changed */
-+#define FILEMARK_DETECTED_ASCQ		0x01
-+#define POWER_ON_OCCURRED_ASCQ		0x01
-+#define MICROCODE_CHANGED_ASCQ		0x01	/* with TARGET_CHANGED_ASC */
-+#define BUS_RESET_ASCQ			0x02	/* scsi bus reset occurred */
-+#define EOP_EOM_DETECTED_ASCQ		0x02
-+#define INSUFF_RES_ASCQ			0x03
-+#define BEGINNING_OF_P_M_DETECTED_ASCQ	0x04
-+#define UNALIGNED_WRITE_ASCQ		0x04
-+#define EOD_DETECTED_ASCQ		0x05
-+#define WRITE_BOUNDARY_ASCQ		0x05
-+#define READ_INVDATA_ASCQ		0x06
-+#define READ_BOUNDARY_ASCQ		0x07
-+#define CAPACITY_CHANGED_ASCQ		0x09
-+#define ATTEMPT_ACCESS_GAP		0x09
-+#define LUNS_CHANGED_ASCQ		0x0e
-+#define INSUFF_ZONE_ASCQ		0x0e
-+#define MICROCODE_CHANGED_WO_RESET_ASCQ 0x16
-+#define OVERLAP_ATOMIC_COMMAND_ASCQ	0x23
-+
- /*
-  *  DEVICE TYPES
-  *  Please keep them in 0x%02x format for $MODALIAS to work
+-	ATA_DFLAG_PIO		= (1 << 14), /* device limited to PIO mode */
+-	ATA_DFLAG_NCQ_OFF	= (1 << 15), /* device limited to non-NCQ mode */
+-	ATA_DFLAG_SLEEPING	= (1 << 16), /* device is sleeping */
+-	ATA_DFLAG_DUBIOUS_XFER	= (1 << 17), /* data transfer not verified */
+-	ATA_DFLAG_NO_UNLOAD	= (1 << 18), /* device doesn't support unload */
+-	ATA_DFLAG_UNLOCK_HPA	= (1 << 19), /* unlock HPA */
+-	ATA_DFLAG_INIT_MASK	= (1 << 20) - 1,
+-
+-	ATA_DFLAG_NCQ_PRIO_ENABLED = (1 << 20), /* Priority cmds sent to dev */
+-	ATA_DFLAG_CDL_ENABLED	= (1 << 21), /* cmd duration limits is enabled */
+-	ATA_DFLAG_RESUMING	= (1 << 22),  /* Device is resuming */
+-	ATA_DFLAG_DETACH	= (1 << 24),
+-	ATA_DFLAG_DETACHED	= (1 << 25),
+-	ATA_DFLAG_DA		= (1 << 26), /* device supports Device Attention */
+-	ATA_DFLAG_DEVSLP	= (1 << 27), /* device supports Device Sleep */
+-	ATA_DFLAG_ACPI_DISABLED = (1 << 28), /* ACPI for the device is disabled */
+-	ATA_DFLAG_D_SENSE	= (1 << 29), /* Descriptor sense requested */
+-
+-	ATA_DFLAG_FEATURES_MASK	= (ATA_DFLAG_TRUSTED | ATA_DFLAG_DA |	\
+-				   ATA_DFLAG_DEVSLP | ATA_DFLAG_NCQ_SEND_RECV | \
+-				   ATA_DFLAG_NCQ_PRIO | ATA_DFLAG_FUA | \
+-				   ATA_DFLAG_CDL),
+-
++	/* sturct ata_device class. */
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+ 	ATA_DEV_ATA_UNSUP	= 2,	/* ATA device (unsupported) */
 -- 
 2.54.0
 
