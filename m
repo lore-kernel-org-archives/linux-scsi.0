@@ -1,106 +1,163 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE09543C7BD;
-	Mon,  6 Jul 2026 18:26:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD8723AE704
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Jul 2026 23:30:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783362365; cv=none; b=DLxnpqeUfd0RetetOhHlVEJotfahCorX8m1fTQR4kO/vvQUc/vz+z1gCmrGZBIe4rrZLy9SXRivO2Key+wITBjRKRePO73LUIhPI0p3xlLMJ13bVRelhG4TbEjayUK2RB6GLQ356npglGgfayrotSzjqAopsj0To04+ZOJ7r/K4=
+	t=1783380636; cv=none; b=TZphy/QY0izkCCOBu4BSAf+dx6tCOPVr4nAIx3n92Im1aMv6XsmvcrDCkbjFXLY4Xdn8iZ8tF/OHNVzJVcRjd4jgAUVACxRjOfN++pjFuUZ0NTPTY1l7VioRFdJGrcAKpvnoEu8iuB5rs9eR+0Zx3fjVHKYFf9zjvJWIY5v2aHQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783362365; c=relaxed/simple;
-	bh=MavHpYLeD2XbEmIPY4vakrO883UsSfl0C9Q6pWPZmJo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pgudOPNB3JnQHthDyoiM2r04sMP7VVWx6FVbeDB9csfxDkJKN4acPzW8B8DDs19639lioGNU6uQdOLBn4ftGLhyptcVaBmGc/WopyCIXsQYOfnulmKhJxzPoIBVxIGr/3mGBzvkTwqry8UODD+Gu7d+pAhfU1jNucAao3ZJMlBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e37/CpCQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783380636; c=relaxed/simple;
+	bh=SLW8WrLBlFCgWLBf7dnpDb/jTAtbAWktNj6RWs4dTvg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RDViRlp7Vp0EKoZZB4GA/du1CZPEjQcFEyof8rJ/T2EeKpKeTlcLCkxceMdEjTJ4YahhxsLm6AJCtaAgCRMvUb/+3vCKGavntRn1B+syy6hn7NLUS2W52bsnDDtnF9CZ5MSH7OwhT/QI4mD00+0vA2haD7r7Dqb3UyQwcUfYYYI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T989Z/6E; arc=none smtp.client-ip=209.85.219.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e37/CpCQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AAF41F000E9;
-	Mon,  6 Jul 2026 18:26:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783362363;
-	bh=zV+tx3ZMxfpBxIT6Hf0j+6VrwjuhUDO+r30EXf7SWks=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=e37/CpCQh3wmddMYsVPts/0+ZL8gbjDMqdAq3jjMF/b/SbkMAxtYNMeeB6qy+Q1c4
-	 qOHobjmO9hwOuYsg8ce65YlNlr9oJWzlIaN9jvlXkYe8kBKgHfPLMqDbXtFHiaWgXy
-	 moO1yhUMAMRjm578NvTPBO+neRuo4rMDQpagay5hkFzXjf3kBXzqIhDrYHPQVPTXQd
-	 kJgJskcs8KfVFN8zd/WgA+cCDy18BHgCGdIqrKsqenlk32NsG4Q5l9X7aJlNwXstzk
-	 Yu7czRvPlz3rywNDpoVvDOJqV74lgGNprWew6sjG4NRBQnuB2uMlbWB09/BgvQqLRX
-	 ep85JW1vLda/A==
-Date: Mon, 6 Jul 2026 12:26:01 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Keith Busch <kbusch@meta.com>, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org, axboe@kernel.dk, hch@lst.de,
-	sumit.saxena@broadcom.com
-Subject: Re: [RFC PATCH 0/6] sbitmap enforced fairness for blk-mq
-Message-ID: <akvzOT55mYMVXhn-@kbusch-mbp>
-References: <20260706173438.3537347-1-kbusch@meta.com>
- <6db8dcc3-6f79-4407-a5de-ec80915bc73a@acm.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T989Z/6E"
+Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-8eefd0c5f59so24105676d6.3
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Jul 2026 16:30:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783380633; x=1783985433; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OBr+hnnFmHItjtpfNGkl7u5UUjWMDOi9fk/G15N4o2Y=;
+        b=T989Z/6Ej/mppJX/sweFwrtgfsA5QzAUvGu+CIlzmRm3ycajwMsXC00I26pgbe4Ntf
+         /9PJfzuLjspjbeiendXaIkgGv0RFBARgrmK8d94gKqMddVSzsU2WZeDQKT0BOGPXfdRi
+         x4BG8TREtvv/7NUUtHqpD6BP3HLEsJX2FMhvntrdw77Bznx1XZvGeGGoQAgE8DSXNMiR
+         LRdeWcbOOkYluHXqRTNDP5H+00FI+TVx0NIgQE+/efcfk+rid0aHL3WXvTirpdRZuUTA
+         /qheak8owHgTAI6WSO7FOKyfvosKUgRGxJXam9CxrGFlnuUbrddJCbNV/mTF3sTdywzD
+         +d/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783380633; x=1783985433;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=OBr+hnnFmHItjtpfNGkl7u5UUjWMDOi9fk/G15N4o2Y=;
+        b=KczOjTeA2G53SugupaQMNhc8Y5PEmUY+P+pellkrnN7HrTQ1XDRcDIBh6OvpWJsGWi
+         p86Gp0lwJ5i6BkKKlMx0f1L0iUutN14MBFRFkjt1qMwcL+VjRzqL3VtIfCGqFwSZL6hR
+         RGgQyxbKTbjf5FCkvL/MebxQE+3HSxuaKwZ4wbvTRnxshkoxls6DxRf61mCuU/sT0XgY
+         RkROuK5+yNrJqSTN4lZj4egoisWSSKBCe82fD21UqtpFZIt+RyNcG2ALSiIkRf4vYRtp
+         h84TAG/SFOlo+rvD673wcODb3qpB6CbKPjsl1umqQwwLKDK0jExvc4Wkzj5KVqYH0vN8
+         7iuQ==
+X-Gm-Message-State: AOJu0YwmRVFdi2nnbVDuBUUg+ejk7HK474ZjLBSrp6A80akXpRuuf3vj
+	JqByKDHgYk+AysfQUIkTGSJeBBTt7gi3zG4e27AYQyqKrYqiAFOlVafNR23kiA==
+X-Gm-Gg: AfdE7cl/LWmOlWX3B6VWj9xZTucwBnVwZ8nxIjfaw34kCjrZQ880fXIy4j0gho6QR4M
+	i8y1BDyygYe3OUMYxW1x8PlQqxdhCscmksjp5SZuBuXRUud76Bi33Nz+phwnlGpaHCXnWyZ38vm
+	1FGMDYfgcw5nZ/slj5ndgogf8qKa4PlYvON1ygJ+nVvI0K0R9ekJssRrY0MQ/ZU0llD6sklxtuN
+	+APpkrfkBe1HuBI4zjh8P+TbHsddTP8e7jzL7ThcBsGaQ3EUWATZxbnFHIbuea/ktygQORP6Imm
+	XfqZv0dxVTBZVWTeIYww0mDdxwhXtzI0EDX0oPsqGyyZml9wvWayisy3h3htV59i/0jIlUOPLwX
+	w5S04K9LxD4ixdpU9qmVXktsp6pZVpZlVBfFgPLgM5m4vyaFCeZn4yld0Pg9gr4hb/oqYM4FPM2
+	0KAHzQF0oZjn7yLouvDCtTBnjQgCA7ol7FYdvvjU4BA8RE68nmiQF114JwjFX1yPwWtp5b01NS8
+	HDjAklRviG9yzrIENEf
+X-Received: by 2002:a05:6214:202b:b0:8f2:8fe9:752e with SMTP id 6a1803df08f44-8fcb4fe943dmr37631566d6.53.1783380632620;
+        Mon, 06 Jul 2026 16:30:32 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e34])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8f46e371bdfsm146137956d6.1.2026.07.06.16.30.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Jul 2026 16:30:31 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Kees Cook <kees@kernel.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	linux-kernel@vger.kernel.org (open list),
+	linux-hardening@vger.kernel.org (open list:KERNEL HARDENING (not covered by other areas):Keyword:\b__counted_by(_le|_be|_ptr)?\b)
+Subject: [PATCHv3] scsi: st: use kzalloc_array()
+Date: Mon,  6 Jul 2026 16:30:29 -0700
+Message-ID: <20260706233029.814601-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6db8dcc3-6f79-4407-a5de-ec80915bc73a@acm.org>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jul 06, 2026 at 10:56:05AM -0700, Bart Van Assche wrote:
-> On 7/6/26 10:34 AM, Keith Busch wrote:
-> > There have been a few proposals to remove the blk-mq tag fairness
-> > algorithm:
-> > 
-> >   https://lore.kernel.org/linux-block/20240529213921.3166462-1-bvanassche@acm.org/
-> >   https://lore.kernel.org/linux-block/20260609121806.2121755-1-sumit.saxena@broadcom.com/
-> 
-> There have been more proposals to remove the fairness code from other
-> kernel contributors. I proposed to remove the tag fairness code because
-> prior attempts to solve UFS performance issues were not good enough for
-> the upstream kernel.
-> 
-> > Both abandon blk-mq's attempt to enforce tag allocation limits on the
-> > per-queue/per-hctx users that share tag space. This can harm resource
-> > allocation for lesser devices sharing the space, potentially starving,
-> > them from fair progress by a highly utilized device.
-> 
-> Has this starving phenomenon ever been observed? 
+Merge allocations to simplify memory management with kzalloc_array(). No
+need to kfree separately.
 
-If you're asking if a production workload sees the phenomenon, no
-because they run the code that has enforced fairness.
+Add __counted_by for extra runtime analysis. Move counting variable
+assignment after allocation as kzalloc_flex() does this with newer
+compilers.
 
-> I think that the
-> measurement data that I published shows that the fairness properties of
-> the current sbitmap implementation are good enough.
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ v3: typo fix
+ v2: remove the kfree and add a description.
+ drivers/scsi/st.c | 13 +++----------
+ drivers/scsi/st.h |  3 ++-
+ 2 files changed, 5 insertions(+), 11 deletions(-)
 
-I can trivially wire up a test where one queue allocates 100% of the
-tags for long running commands, and all the other queues that want to
-start a short running command can't proceed.
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index f1c3c4946637..55238f23f743 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -149,7 +149,7 @@ static struct st_dev_parm {
+    mode counts */
+ static const char *st_formats[] = {
+ 	"",  "r", "k", "s", "l", "t", "o", "u",
+-	"m", "v", "p", "x", "a", "y", "q", "z"}; 
++	"m", "v", "p", "x", "a", "y", "q", "z"};
+ 
+ /* The default definitions have been moved to st_options.h */
+ 
+@@ -3973,21 +3973,15 @@ static struct st_buffer *new_tape_buffer(int max_sg)
+ {
+ 	struct st_buffer *tb;
+ 
+-	tb = kzalloc_obj(struct st_buffer);
++	tb = kzalloc_flex(*tb, reserved_pages, max_sg);
+ 	if (!tb) {
+ 		printk(KERN_NOTICE "st: Can't allocate new tape buffer.\n");
+ 		return NULL;
+ 	}
+-	tb->frp_segs = 0;
+ 	tb->use_sg = max_sg;
++	tb->frp_segs = 0;
+ 	tb->buffer_size = 0;
+ 
+-	tb->reserved_pages = kzalloc_objs(struct page *, max_sg);
+-	if (!tb->reserved_pages) {
+-		kfree(tb);
+-		return NULL;
+-	}
+-
+ 	return tb;
+ }
+ 
+@@ -4533,7 +4527,6 @@ static void scsi_tape_release(struct kref *kref)
+ 
+ 	if (tpnt->buffer) {
+ 		normalize_buffer(tpnt->buffer);
+-		kfree(tpnt->buffer->reserved_pages);
+ 		kfree(tpnt->buffer);
+ 	}
+ 
+diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
+index 0d7c4b8c2c8a..759f4c43d563 100644
+--- a/drivers/scsi/st.h
++++ b/drivers/scsi/st.h
+@@ -45,7 +45,6 @@ struct st_buffer {
+ 	int syscall_result;
+ 	struct st_request *last_SRpnt;
+ 	struct st_cmdstatus cmdstat;
+-	struct page **reserved_pages;
+ 	int reserved_page_order;
+ 	struct page **mapped_pages;
+ 	struct rq_map_data map_data;
+@@ -53,6 +52,8 @@ struct st_buffer {
+ 	unsigned short use_sg;	/* zero or max number of s/g segments for this adapter */
+ 	unsigned short sg_segs;		/* number of segments in s/g list */
+ 	unsigned short frp_segs;	/* number of buffer segments */
++
++	struct page *reserved_pages[] __counted_by(use_sg);
+ };
+ 
+ /* The tape mode definition */
+-- 
+2.55.0
 
-> >    Second, you can optionally declare a percentage of that pool to be
-> >    fair game for anyone to allocate from. This provides a way to
-> >    guarantee minimum tag space for each client while allowing a user to
-> >    over-allocate its fair budget on demand into the shared zone.
-> 
-> What software layer is expected to set these percentages? 
-
-It's a tagset parameter that the LLD can set to whatever it needs.
-
-> My patch
-> series intentionally removes the fairness mechanism because that's
-> exactly what the legacy code path in the UFS driver needs. The UFS
-> WLUN and data logical units share a single tag set. Any activity on
-> the WLUN increases the number of active queues and hence reduces the
-> number of tags available for any data logical units.
-> 
-> Additionally, what is the performance impact of this patch series?
-
-It removes the per-io atomics, so impact is it goes faster if that was
-your bottle-neck.
-
-> Removing the tag fairness code increases IOPS so this patch series
-> probably has a performance impact.
-
-You can declare the entire tagset is shared if you want. That should get
-you what you were going for, but we still have an option to spatially
-constrain others that want fairness with this series.
