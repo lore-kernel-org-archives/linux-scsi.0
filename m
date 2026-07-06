@@ -1,48 +1,48 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D77E3B71D9;
-	Mon,  6 Jul 2026 14:31:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 493E3395240;
+	Mon,  6 Jul 2026 14:34:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783348264; cv=none; b=k5kwK+JrxcVf/azpGWFQtyuHGv6btVL9J78rdgJZPnoMy8ehcl7BJ5h0vx/kl8bWlki68RLK7jcSTh12Idgf1PUJhsGWbgVrOqf3h82Xjb1SFWH349pqLuulkn3c0ScZ/EX1H9URrXjE2d2fLLkfIb/W/rWUjyz/YQzz9NIAteo=
+	t=1783348457; cv=none; b=CgSuT91AbKK8jtNmcvhmv1FCu0zgbdQWOTGQL5QZGobaxnCQebRgWpEbO3yjZrWY7yjCE3u8B7nAlvLZhbt8QzbzMJiLY5qVIdi+ZgtH6ppCu+D90Wq0qMO+mx4aefrXvN07rZDhGqq5FZVkViZCX1zZycUIN64e3jrDvRovE5w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783348264; c=relaxed/simple;
-	bh=q9GK6bYnXn+9vYNx5TDT5YEMb+vEmZpe052l3zrdCc8=;
+	s=arc-20240116; t=1783348457; c=relaxed/simple;
+	bh=FgCPWeln/kFw6RqWaS+SBhkbZJD5o4OXKGkFlXMgb5w=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=r8ej0E4T9J94RkZjhihHbfboT0jDE/GI7AaUXqe3ZRX0bh5NuA9ECWjKvEsF4Ljp/LiSVLxtD5rfudMBXEuO4aJgESv5z1mkO72BAoJlycqJps9USx1FoAIuQS7sdnweqcjAaaJ7v7xoG6X57VJdBU9zCKVqbAJ67Nzg4XusQUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=0c3KThoN; arc=none smtp.client-ip=199.89.1.14
+	 In-Reply-To:Content-Type; b=KsvXqW0P9mzoTy7XY0yeoOCXBi5yhu6hBhCd6gsqLSViCoV3b7lrWYnhKEn0MKJnE6YYJ0uAwLa8DeUeRr4GszbozBqyUiiqbrRFdeivANOfZL/w9ADbtcexoiHEeXTEGCLtYiMN3QzXvQCOQbKLwuhDqFsOVnYMiVYxmBa3pVc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=OMxqNgmG; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="0c3KThoN"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="OMxqNgmG"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gv6Gt5t7sz1XM6JQ;
-	Mon,  6 Jul 2026 14:31:02 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gv6Lb5J75z1XM6JQ;
+	Mon,  6 Jul 2026 14:34:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1783348255; x=1785940256; bh=5WDgo9lmNh3Xyf9j8EEI0vRR
-	XaSVdYjT506xHbEN1fA=; b=0c3KThoNK4z9G0ehbqg4LxOhOidVljxVhjg8BBRX
-	u+ByfWi1C/h2X6eRONtbbRed9JGhhmzMhEplWkL3DUdzUbvwk11RQ/yfNPN9uKo6
-	WGGBZN6KJ1CEUp5GuagxdDo/X128o1E3PjTOLkWTNmWgHcsotFsSMWAYGyPBhL3s
-	6sUpi3PGH3d404G+urNN67HnhARvzNPnVtjvowUQmbPcIlvky/IBACHXdTvpqVk4
-	1Q5cypi9NuC4B9/koyySzcOOz8jAwXEXZVFs3SmK3jwUmeVbetyk84bEd1W5ngyb
-	YfxKWBePAW7StoBDr0DDUO35XkhtlGA5nzPWa+Ico1RYsg==
+	 s=mr01; t=1783348451; x=1785940452; bh=WuLwV49+spEMXEvaQgJi0tNh
+	xysoBrN7TbxsHcJzTwY=; b=OMxqNgmG98PbJ8CEJC6yoRiX3vib7Qy+2WwEY1Bs
+	6yL1HeHGEnME5BQBjwUk7jRvbwqVnoly5UQ1pktvYtGvvk/pvVIVLxcrSNQLM5Pj
+	Oi/FleC0vtAIre+UXqjR8ao86EDBIA0U+oiL2Tgpl+b9yZuRzR4iL8KCajQcHiOm
+	ZEn2ynTVlHdDEW7lPz6TAJ2csvsOmIjJGwO4JZQt0xRY+tUwchrIMOyUOYVl+GQg
+	ov+KFzD8X4mc5gZjEB06YcG/mc+dVBa5kpi8FxsPhLrJbW2BsPXkavYh6NcEp0r0
+	w92qtZUP5hdOYFD/F6S72kCLWXd8XQOgPX9alBS87F2KFg==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id GHaJqUMP8Wa0; Mon,  6 Jul 2026 14:30:55 +0000 (UTC)
+ id N-qZJ22PTEzd; Mon,  6 Jul 2026 14:34:11 +0000 (UTC)
 Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gv6Gd4cp3z1XM6J4;
-	Mon,  6 Jul 2026 14:30:49 +0000 (UTC)
-Message-ID: <4244935a-8a49-42b0-ac27-234d2367e3e3@acm.org>
-Date: Mon, 6 Jul 2026 07:30:48 -0700
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gv6LR2sC0z1XM6J4;
+	Mon,  6 Jul 2026 14:34:07 +0000 (UTC)
+Message-ID: <88ee8295-80cc-411c-a1c2-d6c9e7ef5d03@acm.org>
+Date: Mon, 6 Jul 2026 07:34:06 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,48 +50,32 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: Avoid sleeping in hard interrupt context
- when PREEMP_RT is enabled.
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Gregory CLEMENT <gregory.clement@bootlin.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@sandisk.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- Vladimir Kondratiev <vladimir.kondratiev@mobileye.com>,
- =?UTF-8?Q?Beno=C3=AEt_Monin?= <benoit.monin@bootlin.com>,
- =?UTF-8?Q?Th=C3=A9o_Lebrun?= <theo.lebrun@bootlin.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-rt-devel@lists.linux.dev
-References: <20260630-ufshcd-spinlock-sleep-fix-v1-1-339b05a1c6f4@bootlin.com>
- <20260630141513.ujz0Ef-O@linutronix.de>
+Subject: Re: [PATCH 3/3] scsi: ufs: core: Always run tx_eqtr POST_CHANGE
+ notify
+To: Can Guo <can.guo@oss.qualcomm.com>, beanhuo@micron.com,
+ peter.wang@mediatek.com, martin.petersen@oracle.com, mani@kernel.org
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+ Avri Altman <avri.altman@wdc.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20260620080322.3765210-1-can.guo@oss.qualcomm.com>
+ <20260620080322.3765210-4-can.guo@oss.qualcomm.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260630141513.ujz0Ef-O@linutronix.de>
+In-Reply-To: <20260620080322.3765210-4-can.guo@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 6/30/26 7:15 AM, Sebastian Andrzej Siewior wrote:
->  From ufshcd_intr():
-> |         intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
-> |         enabled_intr_status = intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
-> |
-> |         ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+On 6/20/26 1:03 AM, Can Guo wrote:
+> ufshcd_tx_eqtr() skips POST_CHANGE notify when __ufshcd_tx_eqtr()
+> fails. That can leave variant cleanup incomplete when PRE_CHANGE saved
+> temporary state that POST_CHANGE is expected to restore.
 > 
-> What does this do? Does it disable the IRQ source? If so then
-> IRQF_ONESHOT should be removed.
-
-Writing into the REG_INTERRUPT_STATUS register clears the bits that are
-set in the first argument of writel().
-
-> |         /* Directly handle interrupts since MCQ ESI handlers does the hard job */
-> |         return ufshcd_sl_intr(hba, enabled_intr_status);
+> Always call POST_CHANGE once PRE_CHANGE has succeeded. Keep the TX EQTR
+> result as the primary return value, and only propagate POST_CHANGE
+> failure when TX EQTR itself succeeded.
 > 
-> If not, why is this not part of the threaded handler?
-If MCQ is disabled, ufshcd_sl_intr() processes all types of interrupts.
-If MCQ is enabled, the ESI interrupt handlers process I/O completions
-and ufshcd_sl_intr() processes the remaining interrupt types.
+> Log PRE_CHANGE and POST_CHANGE notify failures to make variant callback
+> failures visible in TX EQTR error paths.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Bart.
