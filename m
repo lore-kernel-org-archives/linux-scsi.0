@@ -1,172 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C048D35BDA4
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:06:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E803388E58
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:06:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783407974; cv=none; b=F6rS8/nwVOrXFuPiqMRQlv1ykIRV5rbimqZbSdqwIChiXhu9F2VZ2KAYFmix9uVgnPvek9of3cSzXD1sowytOSbuTOBmTkOiZojjGPwCYUBhcbuX78Oxyj8r/BMG1BfJh5T94Eu4uwi9AWXmULGaRvzPs+7rQv4VIy88qEf6J38=
+	t=1783407999; cv=none; b=S4TEutlCk7RVcALO/HYXX+IoT6L68AMw41vhewc4r3hYpyg1F05oILp7MRLV9sieg1ex6mvUeIwAvnMDq83KEAHtNDQhahHEJ00AeDkVlVEaqu31O7vTQIQrG2Dyzg8Ga8GhiDxjGlhidj1TshEYCm7hF5AYQyUAt6MmgMXbJxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783407974; c=relaxed/simple;
-	bh=DX53sKnWlK5Y2P6C2k57HqWSyHLbaN2ygzxabVlqoRg=;
+	s=arc-20240116; t=1783407999; c=relaxed/simple;
+	bh=nmvMIbd5iqtiu32DP5VP86u65ZEGaCejkXITqcWzR+E=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uFGMRBaDO/PnT/CvRNYSmUlUPbADIO2Avo00io04pBk8P1CsEIsNnil4yybPV3Vwy8H9CsLMHA9k90ze5BkjqOReEiW1msHThgabpe9hJZb9Nf6P+5J/NxYuqv9bTUUDRxFIHUTy1ICY9IE9C2v1Zri5pxda+zXmEfjUDBqCnU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DUa4x379; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=WrOOmu7XQASZzg/tVjB2OCCPgUdFPsMxqSoON5nA+Umen6FmVcAuaaO36Bb3Uu/6LSJf9KbwHUVd1Mz7MwOn6iKxswjgCqxorsyiIfPX/1BY0UsD3nG95hURkRBR/R3/6JYcPHtWVosR7aOpMeMMjYkbT7w7AkuciHYafqQw6+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dZQHnNEn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DUa4x379"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06C2B1F000E9;
-	Tue,  7 Jul 2026 07:06:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dZQHnNEn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50E081F000E9;
+	Tue,  7 Jul 2026 07:06:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783407972;
-	bh=ZIki8Vj6wRu605USRa4bp4e0F05a2Hz+rTVZu3A4j9E=;
+	s=k20260515; t=1783407998;
+	bh=KkHANDaqXC3+DiJhPoBWVYXPLthfRFe9+ErRFVSsLNU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DUa4x379Q5mOZpUdoUwBk2uZmDxha1cPLqx1KMMMmn8R5+NOk/ecdCmCIklySxfUP
-	 aRVtYfLBWeVqk7nNVwXDkQQvffw6D8tdWzDAwu3jkXpyjYFeBD4CETyj4EWONP7Yl5
-	 M32PTMYop8eb+HyDvFXiijowMgQcJBfLIw7souynLVmN5uT2DXzC56spHslJ4YkVrE
-	 98qFek6KNPZKsGkF5p4iH9ofTDwTEnAwrX0MwwSQrO7QLbXFkWni0rpmMUockkb9G2
-	 g8qFFdJlSZqy3mtPozGouJAAXf8IHpme56GdjOGTC5MlQKznX4XZz8PVA5oQeThoUh
-	 4dHxKWPpL9Esg==
+	b=dZQHnNEna9MdaXR2FqwSuRMIs3FFrOSNaSoV1LLKgUMMQIQS2k6VDc7498t+NI+ca
+	 r+0sKex4tNtXgMIYajcC/yTvnGZn6TJkDoMEc1iG+v6NDaVGoxL11JQXWllxH9T7Er
+	 yx0UcDk+Gj1JnQlLppLamH9k/p3YTAi4GC+z7wxj10xapHuU1XqN1NTRCY7d2EEbX4
+	 pT66eux4KrwgTd6FCEPClSoMZ3e042loMriJCb+UjrHvS2iEG9qPP54uuv6s4tcg9D
+	 W5k/GrfW4djElDy1wM5PvFoCY8Ex5LG0KwCVebDn3NVbAbPVEnWpO2YC1RlPNOtstC
+	 xpjQOynKll9qQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 53/88] scsi: qla2xxx: Zero dport diagnostics buffer
- to avoid info leak
+Subject: Re: [PATCH v3 56/88] scsi: qla2xxx: Clamp MSI-X derived queue
+ counts to avoid truncation
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-54-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-57-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-54-njavali@marvell.com>
+ <20260707055435.2680300-57-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:06:11 +0000
-Message-Id: <20260707070612.06C2B1F000E9@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:06:37 +0000
+Message-Id: <20260707070638.50E081F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Uninitialized kernel stack memory leak and severe stack buffer=
- overflow in multiple BSG handlers.
-- [High] Calling `memset()` on a buffer after `dma_map_single()` and using =
-unaligned structs causes DMA cacheline sharing and data corruption.
-- [High] Out-of-bounds heap read due to missing `bsg_job->request_len` vali=
-dation.
+- [High] This problem wasn't introduced by this patch, but the patch failed=
+ to fully resolve the ZERO_SIZE_PTR vulnerability it aimed to fix. A malici=
+ous or misconfigured PCI device returning a capability offset that causes h=
+a->msix_count to become 0 still leads to a ZERO_SIZE_PTR allocation and sub=
+sequent out-of-bounds write.
 --
 
---- Patch [53]: [PATCH v3 53/88] scsi: qla2xxx: Zero dport diagnostics buff=
-er to avoid info leak ---
-commit 4b26f2e53fe6f8ddd499850e1bc9b9280efa8bd9
+--- Patch [56]: [PATCH v3 56/88] scsi: qla2xxx: Clamp MSI-X derived queue c=
+ounts to avoid truncation ---
+commit 96603c11bc04fcf9f524adb1b5140a4ef7b1d7f9
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Zero dport diagnostics buffer to avoid info leak
+scsi: qla2xxx: Clamp MSI-X derived queue counts to avoid truncation
 
-This commit fixes an information leak in qla2x00_do_dport_diagnostics().
-It changes the allocation of the qla_dport_diag response buffer from
-kmalloc_obj() to kzalloc_obj() to ensure the buffer is fully zeroed
-before it is copied to user space.
+This commit adds qla_calc_queue_count() to clamp the derived MSI-X queue
+count into a valid range. This prevents an allocation of zero elements
+that leads to memory corruption when too many vectors are advertised.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index fade3638d31cb..e7739cead967a 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -2792,7 +2792,7 @@ qla2x00_do_dport_diagnostics(struct bsg_job *bsg_jo=
-b)
->  	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
->  		return -EPERM;
-> =20
-> -	dd =3D kmalloc_obj(*dd);
-> +	dd =3D kzalloc_obj(*dd);
->  	if (!dd) {
->  		ql_log(ql_log_warn, vha, 0x70db,
->  		    "Failed to allocate memory for dport.\n");
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 186c6c7a39448..5209dda454596 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -2132,7 +2132,7 @@ qla2x00_iospace_config(struct qla_hw_data *ha)
+>  		ha->msix_count =3D msix + 1;
+>  		/* Max queues are bounded by available msix vectors */
+>  		/* MB interrupt uses 1 vector */
+> -		ha->max_req_queues =3D ha->msix_count - 1;
+> +		ha->max_req_queues =3D qla_calc_queue_count(ha->msix_count);
 
 [Severity: High]
-This is a pre-existing issue, but does calling memset() on a buffer after
-dma_map_single() corrupt the DMA data?
+This isn't a bug introduced by this patch, but it looks like the ZERO_SIZE_=
+PTR
+vulnerability this patch aims to fix might still be reachable through a
+different path.
 
-In drivers/scsi/qla2xxx/qla_mbx.c:qla26xx_dport_diagnostics(), the code doe=
-s:
+If a malicious or misconfigured PCI device returns 0xFFFF for
+QLA_PCI_MSIX_CONTROL, could ha->msix_count wrap to 0?
 
-	dd_dma =3D dma_map_single(&vha->hw->pdev->dev,
-	    dd_buf, size, DMA_FROM_DEVICE);
-...
-	memset(dd_buf, 0, size);
+drivers/scsi/qla2xxx/qla_os.c:qla2x00_iospace_config() {
+    ...
+    pci_read_config_word(ha->pdev, QLA_PCI_MSIX_CONTROL, &msix);
+    ha->msix_count =3D msix + 1;
+    ...
+}
 
-The dma_map_single() call invalidates the CPU cache for the buffer on
-non-coherent architectures. The immediate memset() dirties the CPU cache li=
-nes,
-which could overwrite the diagnostic data written by the device via DMA if
-they are evicted to main memory.
+Later in qla24xx_enable_msix(), if pci_alloc_irq_vectors() successfully
+allocates vectors (e.g., returning 2), the condition (ret < ha->msix_count)
+evaluates as (2 < 0) due to type promotion, which is false:
 
-Additionally, the mapped buffer dd_buf starts at an offset that may not be
-aligned to ARCH_DMA_MINALIGN. Mapping unaligned buffers can corrupt adjacent
-struct fields sharing the same cache line. The same DMA cacheline sharing a=
-nd
-memset corruption pattern occurs in qla26xx_dport_diagnostics_v2().
+drivers/scsi/qla2xxx/qla_isr.c:qla24xx_enable_msix() {
+    ...
+    } else if (ret < ha->msix_count) {
+        ...
+        ha->msix_count =3D ret;
+    }
+    ...
+    ha->msix_entries =3D kzalloc_objs(struct qla_msix_entry, ha->msix_count=
+);
+    ...
+}
 
+This leaves ha->msix_count at 0, resulting in kzalloc_objs() returning
+ZERO_SIZE_PTR.
 
-[Severity: Critical]
-This is a pre-existing issue, but is there a risk of an uninitialized kernel
-stack memory leak and stack buffer overflow in multiple BSG handlers?
+When the base vectors are unconditionally initialized shortly after, does
+this cause an out-of-bounds write by dereferencing ZERO_SIZE_PTR (0x10)?
 
-In drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_read_i2c():
-
-	uint8_t bsg[DMA_POOL_SIZE];
-	struct qla_i2c_access *i2c =3D (void *)bsg;
-...
-	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-	    bsg_job->request_payload.sg_cnt, i2c, sizeof(*i2c));
-
-	rval =3D qla2x00_read_sfp(vha, sfp_dma, sfp,
-		i2c->device, i2c->offset, i2c->length, i2c->option);
-...
-	memcpy(i2c->buffer, sfp, i2c->length);
-	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-	    bsg_job->reply_payload.sg_cnt, i2c, sizeof(*i2c));
-
-If the user provides a short payload, i2c->length remains uninitialized. It=
- is
-then used as the size for memcpy() without bounds checking, which could cau=
-se a
-stack buffer overflow (writing past the bsg array) and a heap out-of-bounds
-read from the sfp DMA pool buffer.
-
-Passing this unbounded length to qla2x00_read_sfp() can also cause a DMA
-buffer overflow into the kernel heap. Finally, the bsg buffer is copied back
-to user space, potentially leaking uninitialized kernel stack memory. A sim=
-ilar
-leak pattern exists in qla2x00_read_fru_status().
-
-
-[Severity: High]
-This is a pre-existing issue, but does this code read out-of-bounds heap me=
-mory
-if the user provides a short request?
-
-In drivers/scsi/qla2xxx/qla_bsg.c:qla84xx_mgmt_cmd(), the handler expects a
-vendor-specific structure appended to the generic request:
-
-	ql84_mgmt =3D (void *)bsg_request + sizeof(struct fc_bsg_request);
-	switch (ql84_mgmt->mgmt.cmd) {
-
-While the block layer validates that bsg_job->request_len covers the generic
-struct fc_bsg_request, there does not appear to be validation that it covers
-the appended qla_bsg_a84_mgmt structure.
-
-If a user issues a BSG command with a request_len of exactly
-sizeof(struct fc_bsg_request), this function will read out of bounds from t=
-he
-allocated heap buffer, which can cause a kernel panic if the read crosses a
-page boundary. A similar out-of-bounds heap read exists in qla24xx_iidma() =
-due
-to a lack of request_len validation for the appended qla_port_param structu=
-re.
+drivers/scsi/qla2xxx/qla_isr.c:qla24xx_enable_msix() {
+    ...
+    /* Enable MSI-X vectors for the base queue */
+    for (i =3D 0; i < QLA_BASE_VECTORS; i++) {
+        qentry =3D &ha->msix_entries[i];
+        qentry->handle =3D rsp;
+    ...
+}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D53
+300-1-njavali@marvell.com?part=3D56
