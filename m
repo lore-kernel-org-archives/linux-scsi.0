@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 834CB226CF6
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:03:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49BF237756E
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:03:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783407819; cv=none; b=H2F4F8UGYuOIkcavt0TQ8Hb79pEbntvhAsBs4pErGLm8MLITGQsucTwhVzZRmMhpYnvOtvG8p6vI5lV6HvqdvY0yY2AucOkChGLl8f2Q3gmtT2lbNPfw1kAkSeEMvwyApGXGeSPGmb8oAZxroSPeYAzArh5C4jdcksBzVnjvC1I=
+	t=1783407831; cv=none; b=lMSpfKDLNj7RKp5AwTQiPM1+Smh2s0OuOyJNz3E6z9tVOYInnAE8xknJ5wuoeBiNCltw7kNgL6IL572uWiqxKjfVMwcs3duXXaIsCXC+ybryw4vilLBhLKyaOpjYM/FGyfH7SwoewbHDgVU5noePGdfzUmZbnP+UxmXPDKyvECM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783407819; c=relaxed/simple;
-	bh=/dT47W6X37W8aMV6fhLoQxmQnJVzAa9FF5BV2I32kQ4=;
+	s=arc-20240116; t=1783407831; c=relaxed/simple;
+	bh=pyGoLbvZT9I8l5whKaRBp654srzoUqZG8qrVpASW0Tc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ITzalKGj4HkALEnLE1Au82wiyE4nyZ0oOHnM2G2Wcd1E8VBDWJLhdtUv1KLm/p+XYCkrTHir/L0TeG5ehUH55Xpdwb9oL7Jdgm0vbiPZ9b5SY6409zrRvvpBbnIBlCf4gCxBHbL6eRS5XAUhUFpuwBpvd5mMNDM1VBl7J2hlO30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=En3ae+8o; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=uAmsWnqc7NLIKmOL0Ayw+b9UtTuhc4I1RcPQlE8HbE/amd7ckgZ/iqzx+i+4VjLae5MM0oH7Aio/ymklD3BWbvVOOzkUPbxaOh0ZdGxVBz30Pc6esbz05aSiWLzlfXF0SFYZi/JowEvY01+nRYRGPcy3FflyqMd9wdd7i6cN+kE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T5PobWRn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="En3ae+8o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B20C1F000E9;
-	Tue,  7 Jul 2026 07:03:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T5PobWRn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F3AE1F000E9;
+	Tue,  7 Jul 2026 07:03:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783407818;
-	bh=nvRvQQug9yOpjBkEOXRDY/WICEMZLdlGbHjWHesO3mQ=;
+	s=k20260515; t=1783407830;
+	bh=cMBQS142wmSTUcxWjR3qlTnA8xutf5Z5zLd8nQiR80Y=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=En3ae+8oOdG6Q/1ozeeHI27iKA2l1MgefBL/I+YGbiPbCMCIcbMTlu6O1xpBoZ4wQ
-	 xnV9duGbXyQyGOT+0+MwKRcu2LQva3dCvWwYcjh4tZ/14HKtwwi6Ai0eOxQVutY9SR
-	 6xjR6UodwUC6FzU5xmwNt662/L1pwr8JKaIcs86cbDyCEiGRlhlbOcLMYlrfAFTM2J
-	 xt55RUlZKa1fSQP3xnR9Vfa/vOSKAmba9ZFajw2XI/p1+XtIcbwLypZ/LM2WkOkQL9
-	 1cuKARUHY3sDcLpVszx0ms8wcxChyMsG260c4F//JLVY0qOGOs3oFue6k/JWfwAK6L
-	 67olu0NsmGcKQ==
+	b=T5PobWRnSaKLfZKNRWR4FEvEdzgf9Oe3oQOfwW8FUs+VcUbUOiC7ZmSXjhSfJMYm1
+	 lYaImSFaz75D9hytlQZQyeJzkpEPvsiEl4CwUDNg6HreTlPWTuB3bfeAbOU48zG2BB
+	 HmQSQtPG12Puhd31/stUWL0BjXHlAgNcocfWahvfdEyYXkdyWVpf6ZjJabDVJDaQTy
+	 86P+GmlinFyIYW2XdpFtp9qYJr5mmP77tBaX0mQBoW7dXuPlA8iUGjXgjFI3HWeICu
+	 4o6D6hr0I/lqbvDrNTXYuvXS/irg3Eg9CsVbtn7GYZ6TI1aYoLpE9xk0nh9sk+n+m9
+	 du/YU4ECIqbIw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 50/88] scsi: qla2xxx: Hold vport reference in
- qla24xx_report_id_acquisition()
+Subject: Re: [PATCH v3 54/88] scsi: qla2xxx: Fix BSG job leak on validate
+ flash image error path
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-51-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-55-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-51-njavali@marvell.com>
+ <20260707055435.2680300-55-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:03:37 +0000
-Message-Id: <20260707070338.1B20C1F000E9@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:03:48 +0000
+Message-Id: <20260707070350.0F3AE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,91 +48,104 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
-New issues:
-- [High] The lockless atomic_dec(&vp->vref_count) lacks a memory barrier, a=
-llowing CPU reordering that leads to a Use-After-Free.
-
 Pre-existing issues:
-- [High] Failing to check the VPORT_DELETE flag before updating the vport a=
-llows a dying vport to be resurrected into the global B-tree, creating a da=
-ngling pointer.
+- [High] Payload truncation and loss of vendor response on error paths in B=
+SG handlers.
+- [High] Out-of-bounds read of `vendor_cmd` array and other flexible fields=
+ due to insufficient `request_len` validation in the BSG transport and qla2=
+xxx driver.
 --
 
---- Patch [50]: [PATCH v3 50/88] scsi: qla2xxx: Hold vport reference in qla=
-24xx_report_id_acquisition() ---
-commit cc05285288870e8f9cfc205d3a17b3cc31c7a415
+--- Patch [54]: [PATCH v3 54/88] scsi: qla2xxx: Fix BSG job leak on validat=
+e flash image error path ---
+commit e89e7bde46a1b68a965d717fd50351f1638ad942
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Hold vport reference in qla24xx_report_id_acquisition()
+scsi: qla2xxx: Fix BSG job leak on validate flash image error path
 
-This commit acquires a vport reference (vref_count) under vport_slock
-during format 1 ID acquisition to prevent concurrent teardown. The
-reference is dropped after the last use of the vp pointer.
+This commit removes the conditional check around bsg_job_done() in
+qla28xx_validate_flash_image() to ensure the BSG job is always completed.
+Since the function unconditionally returns QLA_SUCCESS, the transport layer
+will not complete the job, so the driver must do it to prevent resource
+leaks on error paths.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
-x.c
-> index 59023492c5a98..ba4a4764de1fb 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -4267,6 +4267,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,=
- void *pkt)
->  			list_for_each_entry(vp, &ha->vp_list, list) {
->  				if (vp_idx =3D=3D vp->vp_idx) {
->  					found =3D 1;
-> +					atomic_inc(&vp->vref_count);
->  					break;
->  				}
->  			}
-
-[Severity: High]
-This is a pre-existing issue, but should we check for the VPORT_DELETE flag
-here before taking the reference?
-
-If qla24xx_vport_delete() is running concurrently, it sets VPORT_DELETE and
-clears vha->d_id.b24. If we don't check test_bit(VPORT_DELETE, &vp->dpc_fla=
-gs),
-we could take a reference on a dying vport.
-
-When qla_update_host_map(vp, id) is subsequently called just below this blo=
-ck,
-it might re-insert this dying vp back into the ha->host_map B-tree.
-
-After the reference is dropped and the vport freed, could this leave a dang=
-ling
-pointer in the B-tree?
-
-Also, is it safe that qla_update_host_map(vp, id) is called without holding
-ha->vport_slock?
-
-[ ... ]
-
-> @@ -4284,6 +4285,8 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,=
- void *pkt)
->  			set_bit(VP_IDX_ACQUIRED, &vp->vp_flags);
->  			set_bit(REGISTER_FC4_NEEDED, &vp->dpc_flags);
->  			set_bit(REGISTER_FDMI_NEEDED, &vp->dpc_flags);
-> +
-> +			atomic_dec(&vp->vref_count);
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index e7739cead967a..0c9174d6c887a 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -3782,9 +3782,8 @@ static int qla28xx_validate_flash_image(struct bsg_=
+job *bsg_job)
+>  	bsg_reply->result =3D DID_OK << 16;
+>  	bsg_reply->reply_payload_rcv_len =3D 0;
+>  	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
+> -	if (!rval)
+> -		bsg_job_done(bsg_job, bsg_reply->result,
+> -			     bsg_reply->reply_payload_rcv_len);
+> +	bsg_job_done(bsg_job, bsg_reply->result,
+> +		     bsg_reply->reply_payload_rcv_len);
+> =20
+>  	return QLA_SUCCESS;
+>  }
 
 [Severity: High]
-Could the CPU reorder the set_bit() stores to happen after this atomic_dec(=
-)?
+This is a pre-existing issue, but other BSG handlers seem to share the
+same flawed error-handling pattern that was just fixed here. For example,=20
+in drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_mailbox_passthru():
 
-On weakly-ordered architectures like ARM64 or PowerPC, atomic_dec() does not
-provide a memory barrier.
+        if (!ret)
+                bsg_job_done(bsg_job, bsg_reply->result,=20
+                             bsg_reply->reply_payload_rcv_len);
+        kfree(req_data);
+        return ret;
 
-If qla24xx_deallocate_vp_id() is polling for atomic_read(&vp->vref_count) =
-=3D=3D 0
-concurrently, it might observe the 0 and free the vp struct before the
-set_bit() operations are globally visible.
+And similarly in qla2x00_manage_host_stats():
 
-Would it be safer to use atomic_dec_and_test() or add a memory barrier here
-to ensure the bit flag updates complete before the reference is released?
+        if (!ret)
+                bsg_job_done(bsg_job, bsg_reply->result,
+                             bsg_reply->reply_payload_rcv_len);
+        return ret;
 
->  		}
->  		set_bit(VP_DPC_NEEDED, &vha->dpc_flags);
->  		qla2xxx_wake_dpc(vha);
+When ret !=3D 0, bsg_job_done() is skipped and the error code is returned
+to the transport. Does this cause the transport's error path to force
+reply_payload_rcv_len =3D 0, discarding the mbx_out registers and vendor=20
+status?
+
+If so, user space applications relying on the BSG vendor response=20
+payload to diagnose command failures might receive truncated payloads.
+
+[Severity: High]
+This is also a pre-existing issue, but could there be an out-of-bounds
+read of the vendor_cmd array due to insufficient request_len validation?
+
+In drivers/scsi/scsi_transport_fc.c:fc_bsg_host_dispatch(), the switch=20
+statement updates cmdlen but appears to skip bounds-checking=20
+job->request_len against it:
+
+        cmdlen +=3D sizeof(struct fc_bsg_host_vendor);
+        if ((shost->hostt->vendor_id =3D=3D 0L) ||
+            (bsg_request->rqst_data.h_vendor.vendor_id !=3D
+                shost->hostt->vendor_id)) {
+
+Then, down in drivers/scsi/qla2xxx/qla_bsg.c:qla24xx_bsg_request(), the=20
+driver blindly accesses vendor_cmd[0] before checking msgcode or=20
+request_len:
+
+        if (bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_MAN=
+AGE_HOST_PORT ||
+            bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_GET=
+_HOST_STATS)
+
+And in qla2x00_process_loopback(), it accesses vendor_cmd[1] and [2]:
+
+        elreq.options =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
+        elreq.iteration_count =3D
+            bsg_request->rqst_data.h_vendor.vendor_cmd[2];
+
+If a privileged user sends a BSG command with a request_len smaller than=20
+the expected size, could this lead to an out-of-bounds read past the=20
+allocated buffer?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D50
+300-1-njavali@marvell.com?part=3D54
