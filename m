@@ -1,168 +1,117 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D8CA13D53C
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:38:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC8BA3AFD1E
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:38:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409888; cv=none; b=Nec+NRwgZZetehEIrs0H9sYIpHnxeLiwW640zoaciCe5fx6Sy+XGKaTxmh7cVVxFZOElzRFugu4T3RXWohmAJUiFzqcZ1qRS0tPB0kqmHMsK9vxbHfgpc4LzJ1b9DtcFhKP/kNzFhMSFTljirPAxLEbjWU0Ezxggnc0pis8iIbI=
+	t=1783409900; cv=none; b=VS1iVwX6+OrONXpOZpCgWysq0t/agpxSW9xlu26Q7HdZiHY7pMuIEQ6f688C31FO2KgzjYHE9ptHVny0yibcGgGWIB38JEzjee/Y8xvHG9h8YJ+UK1GYI1g2n3SdHyGg/Y+JaxYaHG1sB/d/DteLgwJklFqsIMUydWyi5tEO9G0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409888; c=relaxed/simple;
-	bh=Pq8gTWX6YESQQ58mQoXUz2qoz7ECp58m9x5iuG9f9yY=;
+	s=arc-20240116; t=1783409900; c=relaxed/simple;
+	bh=WNEMkbFL0OGQA6gvul+JT717OUhszUKhmTJVDMa91BM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Q/BGJpoAqSor2rfFULk4HgLtpQbcO7Q3ejOKo8VjNwN659O016DRDXfYqyyQNrFdyfts+eeVlkK0dXx20Bj6jqzEGcZ8OlIGkPSQxrW941VrnAA8Eb39af3z9ndu+qViRCBmUpB7dt7R3ulrTk3S9nqSBPugBzXwLqdky3zJ3nk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K9Yi8bJw; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jCETjqVI6IA9zPzrciBbuI4oA0jSHGkH8pMT3PudlaaTVJiZlIRPKC5ldc7Zv5QpkIz5Do4m0hIFQheywDqaZo4eKvmBLEhp8friA+czvp3ZjUiFJ+QoIqduJEJ5KeqOmXjqU0UZt60uxzpUJ2bOPllxBWy5+CtYY95fK3vEvWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d+1JkcLg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K9Yi8bJw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBC5F1F000E9;
-	Tue,  7 Jul 2026 07:38:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d+1JkcLg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32A691F000E9;
+	Tue,  7 Jul 2026 07:38:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409887;
-	bh=KgBWFGnFHqJwIIAVFaJvRuPnkF/MykAzhZrboRXfF4Y=;
+	s=k20260515; t=1783409899;
+	bh=aM8c2Yv/wapCFYa00MtmndzyxpsuJWXLzAWkHkn/Nzs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=K9Yi8bJwOSspcQKlc5RSuSNyfAT/C87fu/rnJaxcqa+mySKT6vQn72HVr8IkgE5Zn
-	 AfgPGFi2jBvGf1IEEoceiWj4Uc/Yd4H6C6aNcWsYd0adDIEWF0CqA4zc/P8hnWPYbc
-	 E2/yFUcL/KDBS0j51wX9id5KNj1eUtqWujrYahWXEaQiW2cVbMP4xLSGH1h2wA8i6I
-	 fR8ed6n2HAjxbPopLCz+948nqrhh0xrCJZls8M1kPpTLW4KovkvCU0jU0tO9hDd28R
-	 oPgopb7DdBI0yIDGfeeX7xjbxhsFp3SLkgzMoUPIpQT0B6lwzkC3m1/2ZEALGBZBUb
-	 GsbPcM8AK0Www==
+	b=d+1JkcLgteIj7exeE+b1FtdjHPzG5g6sR/HH1XAWs0V0S2tAdD9F08miYAsmXFs5p
+	 hW1xy8cozrKFV3CWn8l3NJxd7oZ2emBBR3IKQHW4v7OovJc4oKwYycnxYooB3S6yB1
+	 qc35Pdw4jxDzxhQD+IXf3hVENufTQABmK+/8axf2lfMK5bZOJVqGp3duJzM8G+ehWn
+	 jSu3N+VxuD/5jX2zFm/Z0Gjrvt88yqH+EQ9BcCoPukPltdRmxl5Y7A2/M1UKhfB+45
+	 /IiMc/pTKzywe5Vjulvazbt2dXhDrG5QDl0dIn/7vzMDf3Uq4anDY8FQHX53ADIhAK
+	 UeiWKUx1cvlmQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 80/88] scsi: qla2xxx: Skip NVMe LS reject IOCB when
- FW not started
+Subject: Re: [PATCH v3 86/88] scsi: qla2xxx: Zero SFP DMA buffer in FRU/I2C
+ bsg handlers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-81-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-87-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-81-njavali@marvell.com>
+ <20260707055435.2680300-87-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:38:06 +0000
-Message-Id: <20260707073806.DBC5F1F000E9@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:38:18 +0000
+Message-Id: <20260707073819.32A691F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Use-After-Free and list corruption on NVMe LS response error p=
-ath.
-- [Critical] Concurrent lockless list manipulation of `fcport->unsol_ctx_he=
-ad` across interrupt and process contexts.
-- [High] Lockless read-modify-write bitfield race on `ha->flags` corrupts s=
-tate and causes lost interrupts.
+- [High] Heap buffer overflow in qla_edif_process_els() due to unbounded us=
+er payload lengths.
 --
 
---- Patch [80]: [PATCH v3 80/88] scsi: qla2xxx: Skip NVMe LS reject IOCB wh=
-en FW not started ---
-commit 4b34d405682300e7feb89bc5e0c5433498c1683d
+--- Patch [86]: [PATCH v3 86/88] scsi: qla2xxx: Zero SFP DMA buffer in FRU/=
+I2C bsg handlers ---
+commit 5b2a349a69efbe478558db07cf4b96e8fb11e62b
 Author: Nilesh Javali <njavali@marvell.com>
-Date:   Tue Jul 7 05:54:27 2026 +0000
 
-scsi: qla2xxx: Skip NVMe LS reject IOCB when FW not started
+scsi: qla2xxx: Zero SFP DMA buffer in FRU/I2C bsg handlers
 
-This patch modifies the error paths in qla_nvme_xmt_ls_rsp() and
-qla2xxx_process_purls_pkt() to check if the firmware is started before
-sending an NVMe LS reject IOCB. This avoids ringing the doorbell and queuing
-IOCBs when the firmware is stopped or resetting.
+The FRU and I2C bsg handlers stage their transfer in a DMA_POOL_SIZE
+bounce buffer obtained from dma_pool_alloc(), which does not zero the
+allocation. This commit changes these handlers to use dma_pool_zalloc()
+to prevent writing stale heap memory to the device flash.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
-vme.c
-> index fc8a344ec7d81..28a04e0ff660b 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -441,9 +441,11 @@ static int qla_nvme_xmt_ls_rsp(struct nvme_fc_local_=
-port *lport,
->  	a.vp_idx =3D vha->vp_idx;
->  	a.nport_handle =3D uctx->nport_handle;
->  	a.xchg_address =3D uctx->exchange_address;
-> -	spin_lock_irqsave(ha->base_qpair->qp_lock_ptr, flags);
-> -	qla_nvme_ls_reject_iocb(vha, ha->base_qpair, &a, true);
-> -	spin_unlock_irqrestore(ha->base_qpair->qp_lock_ptr, flags);
-> +	if (ha->flags.fw_started) {
-
-[Severity: High]
-This is a pre-existing issue, but does using a bitfield for ha->flags cause
-read-modify-write races?
-
-Looking at struct qla_hw_data, fw_started and mbox_int share the same 32-bit
-word:
-
-drivers/scsi/qla2xxx/qla_def.h:
-	volatile struct {
-		uint32_t	mbox_int		:1;
-...
-		uint32_t	fw_started:1;
-...
-	} flags;
-
-Since qla2x00_abort_isp_cleanup() locklessly clears fw_started in process
-context, and qla2x00_mbx_completion() sets mbox_int in interrupt context,
-couldn't a concurrent update cause one of the flags to be lost and stall the
-firmware initialization?
-
-> +		spin_lock_irqsave(ha->base_qpair->qp_lock_ptr, flags);
-> +		qla_nvme_ls_reject_iocb(vha, ha->base_qpair, &a, true);
-> +		spin_unlock_irqrestore(ha->base_qpair->qp_lock_ptr, flags);
-> +	}
->  	kfree(uctx);
-
-[Severity: Critical]
-This is a pre-existing issue, but does this error path leave a dangling
-pointer in the fcport->unsol_ctx_head list?
-
-When kfree(uctx) is called here, it doesn't appear to be removed from the
-list via list_del(&uctx->elem). Later unsolicited requests could then attem=
-pt
-to use list_add_tail() on the corrupted list pointers of the freed block,
-potentially leading to slab corruption.
-
->  	return rval;
->  }
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index e671c3de8c058..51ab638b4fc09 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -1994,7 +1994,7 @@ qla2x00_update_fru_versions(struct bsg_job *bsg_job)
+>  	struct qla_image_version *image;
+>  	uint32_t count;
+>  	dma_addr_t sfp_dma;
+> -	void *sfp =3D dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
+> +	void *sfp =3D dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
+> =20
+>  	if (!sfp) {
+>  		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =3D
 
 [ ... ]
 
-> @@ -1321,9 +1323,14 @@ qla2xxx_process_purls_pkt(struct scsi_qla_host *vh=
-a, struct purex_item *item)
->  		a.vp_idx =3D vha->vp_idx;
->  		a.nport_handle =3D uctx->nport_handle;
->  		a.xchg_address =3D uctx->exchange_address;
-> -		spin_lock_irqsave(vha->hw->base_qpair->qp_lock_ptr, flags);
-> -		qla_nvme_ls_reject_iocb(vha, vha->hw->base_qpair, &a, true);
-> -		spin_unlock_irqrestore(vha->hw->base_qpair->qp_lock_ptr, flags);
-> +		if (vha->hw->flags.fw_started) {
-> +			spin_lock_irqsave(vha->hw->base_qpair->qp_lock_ptr,
-> +					  flags);
-> +			qla_nvme_ls_reject_iocb(vha, vha->hw->base_qpair, &a,
-> +						true);
-> +			spin_unlock_irqrestore(vha->hw->base_qpair->qp_lock_ptr,
-> +					       flags);
-> +		}
->  		list_del(&uctx->elem);
+[Severity: High]
+This isn't a bug introduced by this patch, but while reviewing the DMA pool
+usage in BSG handlers, I noticed a potential buffer overflow in
+qla_edif_process_els() located in drivers/scsi/qla2xxx/qla_edif.c.
 
-[Severity: Critical]
-This is a pre-existing issue, but does this list manipulation require a=20
-spinlock to prevent concurrent corruption?
+Does this code allow an unbounded copy into the fixed-size purex_dma_pool?
 
-The list_del(&uctx->elem) here executes in a workqueue context. At the same
-time, qla2xxx_process_purls_iocb() adds to this list from the hardware
-response queue ISR context:
+drivers/scsi/qla2xxx/qla_edif.c:qla_edif_process_els() {
+        ...
+        sp->remap.req.len =3D bsg_job->request_payload.payload_len;
+        sp->remap.req.buf =3D dma_pool_alloc(ha->purex_dma_pool, GFP_KERNEL,
+                                           &sp->remap.req.dma);
+        ...
+        sg_copy_to_buffer(bsg_job->request_payload.sg_list,
+            bsg_job->request_payload.sg_cnt, sp->remap.req.buf,
+            sp->remap.req.len);
+        ...
+        sp->remap.rsp.len =3D bsg_job->reply_payload.payload_len;
+        sp->remap.rsp.buf =3D dma_pool_alloc(ha->purex_dma_pool, GFP_KERNEL,
+                                           &sp->remap.rsp.dma);
+        ...
+}
 
-drivers/scsi/qla2xxx/qla_nvme.c:qla2xxx_process_purls_iocb()
-    INIT_LIST_HEAD(&uctx->elem);
-    list_add_tail(&uctx->elem, &fcport->unsol_ctx_head);
+Since purex_dma_pool has a fixed object size (2112 bytes), can a user submit
+a BSG request with a request_payload.payload_len or
+reply_payload.payload_len greater than 2112 bytes?
 
-Could overlapping unsolicited requests race between the interrupt and workq=
-ueue
-contexts and corrupt the prev/next pointers?
-
->  		kfree(uctx);
->  	}
+If so, could this cause an out-of-bounds write on the DMA pool memory during
+the sg_copy_to_buffer() call or during the firmware DMA transfer?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D80
+300-1-njavali@marvell.com?part=3D86
