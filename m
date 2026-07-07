@@ -1,63 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF1FF3F4123;
-	Tue,  7 Jul 2026 14:12:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F25B642640E;
+	Tue,  7 Jul 2026 14:12:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783433542; cv=none; b=JEm5T2xPIUb1ZN2vzLfx/eetNss2E8Qwpj+gAUywNnhM5tB1jZdScsnQCcdFyNOle2bZKlEgGTS7uxvbouTze1ESH9tPu4THdad+vAXAgaiUC3XICEiohF8eQ9NMIl3/HIjb53o++QkwJebniqnfkwr/ep9NwLC+8PU/XNx69S4=
+	t=1783433543; cv=none; b=kNLjV10Aw5O4L2Fxa1YXH3fHbrxQPCpLlWZScKpx8XNTyPTA4mTNywVBHvnB2DKapm4IvR8gXsfjpudXZ6v/bdhmE2/97LGuaVUDTVknI346h6SmkXUjiWGeASozsOwqbW7hsOfvI4PY8lV8Ac8WJC8WOm/4CJOwrWeS9RNODYU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783433542; c=relaxed/simple;
-	bh=UfmXVhSM5Umjns2A9HvBx2SkFQe8VPlW+QWf63BmQAk=;
+	s=arc-20240116; t=1783433543; c=relaxed/simple;
+	bh=jA9Ju4PIhu1ffgguky4STt6TzXMN7ues9/+gqUty3/0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CQ3huJSl4ZJ2LfReX1GSDBMzvKOoi8LS2b4GpC1a5PvJ8i/RpuWaPZ1OLMytrddZOWTB5qrm0nWouyDLU3K4+tHbb9MySi/saYv1gZ5AY8a2OLqSZ35oMIBRvti7ofVsraOdROa/HzwedBwcKdDeh9TO3tgx5VPVeFtkNCsI6tQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gBG3ZsPE; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=PpudfKdDs85AQRWmS3sv/E2kkAtDGL8HdkXgW1b8TQqqHQJgE0pxc5NFhZWv3EWKgMMOF1XXqZLn1BKC0vkgftZJHZCPeKP7xymenEmRifKN6D5KXR8gnI2sfLvrW3GMvAjJsDvIdU3hyhiGzSq/chO2OiZ4UL1b8xRiD+om160=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PEozfLmb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gBG3ZsPE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10BE61F000E9;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PEozfLmb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 024481F00A3D;
 	Tue,  7 Jul 2026 14:12:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783433540;
-	bh=UfmXVhSM5Umjns2A9HvBx2SkFQe8VPlW+QWf63BmQAk=;
+	s=k20260515; t=1783433541;
+	bh=jA9Ju4PIhu1ffgguky4STt6TzXMN7ues9/+gqUty3/0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gBG3ZsPEWjvZExJhMn5eRA+6Oj2wVar8453d1Ihc58vUeC6K1REcnEX1b0GRkajrr
-	 4pk98SRWjIkzI0Ut7XnTI9Evd+3AshYw7APhC601CmAn7xVDkr0wgmzt7RJwivIVjj
-	 x1wSeulDOE3mlrOmJB+LNeD5y4MUxckboK/JsMRmwvSKa3OUVJiPdAF1m95zYelD1B
-	 DgpmEaCok3QPESmRKAy8GyuCyV4GzdcxGaRzvWInTCSpEGkFO9iplD3jPb/pdq8h3t
-	 yjA+/6+iDQs55osPHVqW6LW8LWn9GhSQw4/3mCAX2SkvImnXnobrTKKYQt27Rv9bm2
-	 GImWhNFWg194A==
+	b=PEozfLmbcNcu9IQcd+7U97REqOs0CUoZKiHeyGMuYGdHwII8G7PriyYvg0bD5wZ1d
+	 a4zWQJw5K8fx+cMWk+zfoxjtE6dfa4Xeny0vRi5DOotxtsTd16zFJ2H7YLpwQpDST7
+	 8vDAPtwDm7H5Ed0TrssWGZf5PCgpHlkCbVqKIRh+U6Z5sTvRupupvh8IWcf7T4+/80
+	 2smlsH/8woTT/s1dcNe4R+3quoqmOU66NN+ufgVUCz489buY6QqtLzK4Mo0MnDwcKv
+	 YpsNP6yjEhxsBG+aB4a099ybTyqnr9UBhlPfQj6rXboHmd4H1Hpj53SNG9on9d/5jE
+	 1TRnVU6RTjygQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 8/9] pci: fix dyn_id add TOCTOU
+Subject: Re: [PATCH v3 9/9] pci: fix UAF when probe runs concurrent to dyn
+ ID removal
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260706-pci_id_fix-v3-8-2d48fc025acc@garyguo.net>
+Cc: linux-scsi@vger.kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, dlemoal@kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260706-pci_id_fix-v3-9-2d48fc025acc@garyguo.net>
 References: <20260706-pci_id_fix-v3-0-2d48fc025acc@garyguo.net>
- <20260706-pci_id_fix-v3-8-2d48fc025acc@garyguo.net>
+ <20260706-pci_id_fix-v3-9-2d48fc025acc@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 14:12:19 +0000
-Message-Id: <20260707141220.10BE61F000E9@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 14:12:20 +0000
+Message-Id: <20260707141221.024481F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> Currently there is a TOCTOU issue in new_id_store as the dyn ID insertion
-> in pci_add_dynid and the pci_match_device are in separate critical
-> sections.
+> Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
+> as remove_id_store can free the node. Thus, make a copy in
+> pci_match_device. Also, clarify that the id parameter is only valid during
+> probe.
 >=20
-> Fix this by moving the existing ID check to inside pci_add_dynid and only
-> check against the static ID table outside the critical section.
->=20
-> Fixes: 3853f9123c18 ("PCI: Avoid duplicate IDs in driver dynamic IDs list=
-")
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel=
+.org/
+> Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
 > Signed-off-by: Gary Guo <gary@garyguo.net>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-pci_id_fix=
--v3-0-2d48fc025acc@garyguo.net?part=3D8
+-v3-0-2d48fc025acc@garyguo.net?part=3D9
 
