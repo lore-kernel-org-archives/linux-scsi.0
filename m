@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BACFE3B95EC
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:35:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD823ACA71
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:37:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409710; cv=none; b=FzCoeZtJkGGfmlkamDhRhX9Eu3gNNsHuUkVeqvp3CmyGWnAUt4Hu+qHYueY36PmQLZiGJNRqYi1FMNcXL/xuoj5XWsr/xMvRgQ4f34ZV+KNjn4A4MlbY47DZZ8b69o74iYyMmkPbFXYJHTseOgT/ICMwQmMwOuTQ0KELl5bPwLE=
+	t=1783409825; cv=none; b=QV7sdTOlcLvMAJLWQ8GIrwpXtKLGtCnNc6iWT/WVBJW05qfTOrrq3IVmYcjatlhc0aKlPrKlpPFWhmxdDRkIaS60CRFGO3KRoBxN0WIYuVhUWv/7BZRqaKS97jg6nJ8xn80HWKjbl5cDLuR9udCZom1lVV13fNqy6kOXl9A/zMQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409710; c=relaxed/simple;
-	bh=ahCQcKDywbRbL3Ue7bBUC+qD+iHwn5F60hV1VDIJcns=;
+	s=arc-20240116; t=1783409825; c=relaxed/simple;
+	bh=XxtJSwBvT+MI12+oQ/Hw2xgi0txEGBNo+i4w0oAYoy4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bDou8aop0/gezVizAQMnn+9b3IS/icO0Wd7z/0rnSi5faJrcqS+qCE626o4FofvcpyV8cOElY+Ru4OyBNNS+YO+7el4kA1b176xRPzSmKXhtykDB5iOErvz7pNAiJKVmDUiIuP+JVypPub2Mc/i4AXbvp6T0/1wbk/lDcCFoYtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DSQ7dJ5e; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Htgv7Y/L1+yraPI2371izIHUH0lE7I70/qA1TTA9+6+EZ8e7KaaIb1YD3uAVV8e7wBFvtFNYU4adviFQyEbDhC6vF+Eu6Ba1D88m/ZMuw6weDLH2WMj4sHslyIvoE3UUReMK4oGDgR2w1xy6U7cKb56cReGPNskMtuL6r4E4ee4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PeexPT17; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DSQ7dJ5e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78AFD1F00A3A;
-	Tue,  7 Jul 2026 07:35:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PeexPT17"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ECA01F000E9;
+	Tue,  7 Jul 2026 07:37:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409709;
-	bh=tmbEksB6eziSSfEAnVW4MsAIZ0J6q+osNzqaJq2n+Wo=;
+	s=k20260515; t=1783409824;
+	bh=3ISMWDOtsjE8T7ZeLZkCYl6XhrA6Bp3hRmHqjyn846c=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DSQ7dJ5eZBT3YCyr5D63At2Tu5txzLLh3EE/R7G5RS+fcySQnhibnXkKjNDS/J8Tx
-	 ufHFYSrkq0qKRkbrJ2alLxcTfh/Vvt+WTj2dLe6I4HyE2cUHSKUqHWTyLYi/w6qcGs
-	 TP0cNt4jWo1xlvXqfEzbEAAn/iHLeBXBp5tnjfDk0WrOjBIiVJDbeKb5w6soMAIzY3
-	 1LNxz4MJyTs8zaqXmWxM12katPlvNzIfffze+WDH4eQWbmurNF/FICuYN3O8AlDlUa
-	 fROj3ORwx4ebYWKDHDahJ3nm3hTvj5LLDUsKBQtXJm4eKQL4lzuc5zTdYuLur8fQp6
-	 3GPgntSW55Qtg==
+	b=PeexPT17ruOVZkhzmJW6FOeQzzTx2D+lVpw40ZKGsKuYo3Wc6hD0ch8yyyRCrUqS4
+	 tVNWshk3HR7r4Bq/lYKIIJYEZLR4kHtQOdD6xm2+Ox9hRI9XOPha1kRhFwmgIGJ75j
+	 g+9RGTciizmcH/PdxG02xPMA6tLwuww34HOc8bnuE/1ninM1tws+XYSqSnpvK5rBKo
+	 UitewU20wZHBYH5aEHJw5WETEU7bsxqxnE7WisaybS/C83jDcy9WKlbXjuhSz/uZLH
+	 SleVbHdvVrzBbZ9VWC7LKvXG09Ts5GMjHdpFAMi7E7sggd4e6g3WqlOA4Ov6uTK/Sd
+	 VNLIF1o/UvApg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 88/88] scsi: qla2xxx: Update version to
- 12.00.00.2607b1
+Subject: Re: [PATCH v3 84/88] scsi: qla2xxx: Zero-init bsg stack buffers to
+ avoid info leak
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-89-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-85-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-89-njavali@marvell.com>
+ <20260707055435.2680300-85-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:35:09 +0000
-Message-Id: <20260707073509.78AFD1F00A3A@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:37:03 +0000
+Message-Id: <20260707073704.2ECA01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,81 +47,89 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The odd-length version string causes an infinite loop condition ev=
-aluation, resulting in an out-of-bounds memory read into firmware mailbox r=
-egisters.
-- [Medium] The new QLA_DRIVER_BETA_VER (2607) exceeds 8 bits, causing data =
-corruption and truncation in minidump headers.
+
+Pre-existing issues:
+- [High] The `qla24xx_iidma` BSG handler fails to validate `bsg_job->reques=
+t_len`, leading to heap out-of-bounds read and write vulnerabilities when p=
+rocessing a short request.
+- [High] Missing bounds check on user-supplied `i2c->length` in `qla2x00_re=
+ad_i2c` allows kernel stack buffer overflow and DMA memory corruption.
 --
 
---- Patch [88]: [PATCH v3 88/88] scsi: qla2xxx: Update version to 12.00.00.=
-2607b1 ---
-commit 7835c1af22d4a49f4cede46a4b0344d098aa7b95
+--- Patch [84]: [PATCH v3 84/88] scsi: qla2xxx: Zero-init bsg stack buffers=
+ to avoid info leak ---
+commit e991f43fbeb0a4f289a4242fcd01f28211667aba
 Author: Nilesh Javali <njavali@marvell.com>
+scsi: qla2xxx: Zero-init bsg stack buffers to avoid info leak
 
-scsi: qla2xxx: Update version to 12.00.00.2607b1
+This patch zero-initializes the stack buffers in several qla2xxx bsg handle=
+rs
+to prevent leaking stale kernel stack memory to user space on short request=
+s.
+It explicitly sets the bsg arrays to zero at declaration across the handler=
+s.
 
-This commit updates the driver version, major, minor, patch, and beta
-version macros to reflect the new 12.00.00.2607b1 release.
-
-> diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/ql=
-a_version.h
-> index 9564beafdab71..1c0b01d703509 100644
-> --- a/drivers/scsi/qla2xxx/qla_version.h
-> +++ b/drivers/scsi/qla2xxx/qla_version.h
-> @@ -6,9 +6,9 @@
->  /*
->   * Driver version
->   */
-> -#define QLA2XXX_VERSION      "10.02.10.100-k"
-> +#define QLA2XXX_VERSION      "12.00.00.2607b1"
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index 55142df30bda7..cb7227298b24b 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+[ ... ]
+> @@ -2163,7 +2163,7 @@ qla2x00_read_i2c(struct bsg_job *bsg_job)
+>  	scsi_qla_host_t *vha =3D shost_priv(host);
+>  	struct qla_hw_data *ha =3D vha->hw;
+>  	int rval =3D 0;
+> -	uint8_t bsg[DMA_POOL_SIZE];
+> +	uint8_t bsg[DMA_POOL_SIZE] =3D {};
+>  	struct qla_i2c_access *i2c =3D (void *)bsg;
+>  	dma_addr_t sfp_dma;
+>  	uint8_t *sfp =3D dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
 
 [Severity: High]
-Does changing the version string length to an odd number (15 characters)
-cause an out-of-bounds read?
+This is a pre-existing issue, but does this function lack a bounds check on
+the user-supplied i2c->length?
 
-In drivers/scsi/qla2xxx/qla_mbx.c:qla82xx_set_driver_version(), the loop
-decrements the length by 2 on each iteration:
+In qla2x00_write_i2c(), there is a check to ensure i2c->length is not larger
+than sizeof(i2c->buffer). However, in qla2x00_read_i2c(), the unvalidated
+i2c->length is passed directly to qla2x00_read_sfp():
 
-        for (i =3D 4; i < 16 && len; i++, str++, len -=3D 2) {
-                mcp->mb[i] =3D le16_to_cpup(str);
-                mcp->out_mb |=3D 1<<i;
-        }
+    rval =3D qla2x00_read_sfp(vha, sfp_dma, sfp,
+        i2c->device, i2c->offset, i2c->length, i2c->option);
 
-Since len starts as an odd number, len -=3D 2 will skip 0 and evaluate to
-true for subsequent checks, causing the loop to continue reading past the
-end of the string into adjacent memory until i reaches 16.
+Could this instruct the firmware to perform a DMA transfer larger than the
+allocated sfp buffer?
 
-> =20
-> -#define QLA_DRIVER_MAJOR_VER	10
-> -#define QLA_DRIVER_MINOR_VER	02
-> -#define QLA_DRIVER_PATCH_VER	10
-> -#define QLA_DRIVER_BETA_VER	100
-> +#define QLA_DRIVER_MAJOR_VER	12
-> +#define QLA_DRIVER_MINOR_VER	00
-> +#define QLA_DRIVER_PATCH_VER	00
-> +#define QLA_DRIVER_BETA_VER	2607
+Following that, the unbounded length is used in memcpy():
 
-[Severity: Medium]
-Will this new beta version exceed 8-bit packing constraints and corrupt the
-version data?
+    memcpy(i2c->buffer, sfp, i2c->length);
 
-The value 2607 requires 12 bits, but it is used in contexts expecting an
-8-bit value. For example, in drivers/scsi/qla2xxx/qla_nx.c:qla82xx_md_colle=
-ct(),
-it spills into the patch version byte due to an unmasked bitwise OR:
+Since i2c points to the local bsg stack array, could a length greater than
+248 bytes cause a kernel stack buffer overflow?
 
-        tmplt_hdr->driver_info[1] =3D (QLA_DRIVER_MAJOR_VER << 24) |
-            (QLA_DRIVER_MINOR_VER << 16) | (QLA_DRIVER_PATCH_VER << 8) |
-            QLA_DRIVER_BETA_VER;
 
-Additionally, in drivers/scsi/qla2xxx/qla_tmpl.c:qla27xx_driver_info(), it
-is parsed using the %hhu format string which silently truncates 2607 to 47:
+While reviewing the BSG handlers in this file, I also noticed another
+pre-existing issue in qla24xx_iidma().
 
-        WARN_ON_ONCE(sscanf(qla2x00_version_str,
-                            "%hhu.%hhu.%hhu.%hhu",
-                            v + 0, v + 1, v + 2, v + 3) !=3D 4);
+[Severity: High]
+This is a pre-existing issue, but does qla24xx_iidma() fail to validate
+bsg_job->request_len?
+
+In qla24xx_iidma(), port_param is derived by appending the size of the
+request header to the user-supplied bsg_request:
+
+    port_param =3D (void *)bsg_request + sizeof(struct fc_bsg_request);
+
+If a user provides a short request where bsg_job->request_len is not
+sufficiently large, port_param points past the end of the buffer.
+
+The function then passes &port_param->speed to qla2x00_get_idma_speed():
+
+    rval =3D qla2x00_get_idma_speed(vha, fcport->loop_id,
+            &port_param->speed, mb);
+
+Could this result in an out-of-bounds heap read and write when the speed
+is read from or written to the out-of-bounds location?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D88
+300-1-njavali@marvell.com?part=3D84
