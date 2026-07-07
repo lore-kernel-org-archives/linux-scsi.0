@@ -1,113 +1,107 @@
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC40B27466A
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:59:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17855217F27
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:10:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783403960; cv=none; b=U3qWwE4lxhAkDenk89v+37fH/uKmW84BcR4+t6I3oAhk70TGHOyfGNxcqHAPX+G/Rr4BH5YZcPztoL31UDq24HTpbigMdYI7jX3Tf9xBj7Wf/b5hfPjHQ1gTHeOcJI7wcnAzoKmeuLsqrDHUNoiOv8772GAV08LB94SXfmyCL/E=
+	t=1783404609; cv=none; b=fphPUpYqwIy2CncVb6v0yb7OVHyp2qlte1MSOVMJwVv5eS7yH9hSjjCsghHQ2vQ2Scs1WlUSzxPFJ0QXlt0BgbcEXDa+xWARHkdmV3idBE9c99QPGy5kpHVB7SQ9n9wyCUexSez7PedEF6zEMhiTPehgqEvz3NTVEad3ioxcebY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783403960; c=relaxed/simple;
-	bh=z1OG++VA2DZC0ndvEW/Mn4o/qYcKQ4QDLEOG6NA0fKo=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cuATsv8cFPvEO6pbR8x5xtK4tWDtvUYLYuW4i+4H40VMjuYwI4QELRDt9r7IekwZbRvwVit3fOQh7Y084Ja1B3tWizBfGymfImVRL9lKRvf+8yw5M1bygVtIt3KRc1C3CuYSjprMlTgOGF2hJJMv5jATlWNR4949WynEyinVHOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=YiW2VSu9; arc=none smtp.client-ip=67.231.156.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
+	s=arc-20240116; t=1783404609; c=relaxed/simple;
+	bh=IQr9Zy8A9Wi2VbQDG2E2zncwHBZYeN/VNpiIzil6JK8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=HpSa4M1tKIoBeiSHPKefhTqNKe9Zjvqff23NaN++jzUfuEJlmflSKl4BdbtPx3tzH8/oCo4s99Bdu7r0JUReqAKfH6HXxVzhfG72gUt0pW37GBJ1PLFjWXF2R9GNpAFYlZ4LKS8tUN0AnDYeHpCEQevD0Vmq4xcxiICy9K+ZDZc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KxEWox+c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="YiW2VSu9"
-Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 667481QK872631;
-	Mon, 6 Jul 2026 22:59:16 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=P
-	Z8KuWBuTohPk3rqHF5P7xyNSJpfEqLHxxSIDgjTm+8=; b=YiW2VSu9oP2PatXmc
-	gKMDUlTlHPE73RI4SCwrK8j87d8g7wMsCRxNpT7MwiAfSk4jls8Y6dvvq8sWyP5J
-	kiHiBQKtTj7YwwvpHakej/U9yjd4pZY4GLgZyWb9c3RH3uuM7+nM1XVvK0W2D3f3
-	pS8JTUtIaPdMmuFd8OoCnkVJFyrUMhhNAV2c2NN2ydFOf/K+v6Ot3diz4nKE2DP0
-	Sk9QVQstf6xXuJ0vqAfupJJwG6Is+K1Jr/wIL2XHVfoqP85GKur5qjHsVxnPbSbf
-	N62tfBrRiRVmXGo9JMKe+aET+Z4wn9FHAjWynM5LC0UKCuhcBcDCOda9LJthRhjw
-	lEOGA==
-Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4f8f9waacx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 Jul 2026 22:59:16 -0700 (PDT)
-Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
- DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 6 Jul 2026 22:59:15 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
- (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 6 Jul 2026 22:59:15 -0700
-Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 2DA6F3F7066;
-	Mon,  6 Jul 2026 22:59:12 -0700 (PDT)
-From: Nilesh Javali <njavali@marvell.com>
-To: <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
-        <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
-        <hare@suse.com>
-Subject: [PATCH v3 88/88] scsi: qla2xxx: Update version to 12.00.00.2607b1
-Date: Tue, 7 Jul 2026 11:24:35 +0530
-Message-ID: <20260707055435.2680300-89-njavali@marvell.com>
-X-Mailer: git-send-email 2.23.1
-In-Reply-To: <20260707055435.2680300-1-njavali@marvell.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KxEWox+c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 945C51F000E9;
+	Tue,  7 Jul 2026 06:10:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783404607;
+	bh=5KWsHFH69uQHo6MfsgbAuI1fOeg2rLcHliHYQdsQMyE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=KxEWox+c1G7oTqoGCCKgS1pPR+B+U/7iXLTaF8riQN6sUb6nTly0ItW6dZiFAZLK5
+	 9r8tQ1EZTnikYRdLpvFa3+0m+A25+CVhR4ZZu3Vzb34GAYTxm6NxxIfeES9InsNW4A
+	 hHTOkXA1snNEYG6DzQkl6AQeBF/Nc7lfoMcseW/LkSaxxD3ymxqJ5gm+VjVtzqt9xi
+	 hSRTpdux8Ai1RxBMRrEc4WRHgxbBX/NQlZAZO3C/M5fuZVU1KyohRKWNBt1xFLvlr9
+	 ALZiAayCTap9JVg12uF5vGthoqfWy5TyX6S9HYpkRV2LWhq8LjlhiesWybvtmrDTUW
+	 ILQ85+yjhW1sA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 10/88] scsi: qla2xxx: Add extended status
+ continuation and marker IOCBs
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nilesh Javali" <njavali@marvell.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260707055435.2680300-11-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
+ <20260707055435.2680300-11-njavali@marvell.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 07 Jul 2026 06:10:07 +0000
+Message-Id: <20260707061007.945C51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: totyBfqUH4fzGQa39HuuDRzh8HDGU665
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX5a8GahIrk6Nw
- 9jsac04fr8y8edfcE9I1MQz9aU4bXDt5lFrWhOUnFi2tQD6Z+PYr0mdBs3lzUW6XzGaXzvkcAN8
- i5tliuGR0uTEWHSue6q0J6djNEfS6u6/OWTjnAweyu/p+fi0Bqqe9hKUCq9uXrjgoD62iN93LcD
- srQWzX9U/Enjq5cgB5WnwfeKtzxtFLnLLVScpMpvzDe6FDHztIcbvqStQL6tG+SWuu1Fg2pUmpy
- /j27LLQW6py+SRodPr5eZtFwAVCAy/8nFWkJVtAgLwnxg9BwojbG6mO+0UUzj2eQNpx3HqqjlLq
- UXoWilFKReaocdBqc01VLCWp1ARtlAIbinU03Clfn2p9kbm2xmF9VBSb5geEPEREVXYCUuYpx7z
- D/FBZFqcDtFipXxcBbgwNWPw14lH0i2ci92JdVptWYP2ZOeqegLsiQCrCLtn7TD+H66gfZ3TO8x
- ZhphiknTBVMPnhROzJg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX0zJj1xcpiLkU
- YzpLZExq27OwCUxXwxCREXbywZ9KI7Tg0IaLx5SXlnxdb5asuLPg77rNYeD6SAG+tBHHraReSQq
- Gk+MxB5cvkFKlkdgHNcUZ3eV7McLv64=
-X-Proofpoint-GUID: totyBfqUH4fzGQa39HuuDRzh8HDGU665
-X-Authority-Analysis: v=2.4 cv=SY/HsPRu c=1 sm=1 tr=0 ts=6a4c95b4 cx=c_pps
- a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
- a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=qit2iCtTFQkLgVSMPQTB:22 a=M5GUcnROAAAA:8 a=A3DpSSew800dloXByJsA:9
- a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-07_01,2026-07-06_02,2025-10-01_01
 
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] Meaningful code and commit message mismatch regarding added stru=
+ctures.
+--
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 9564beafdab7..1c0b01d70350 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -6,9 +6,9 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.02.10.100-k"
-+#define QLA2XXX_VERSION      "12.00.00.2607b1"
- 
--#define QLA_DRIVER_MAJOR_VER	10
--#define QLA_DRIVER_MINOR_VER	02
--#define QLA_DRIVER_PATCH_VER	10
--#define QLA_DRIVER_BETA_VER	100
-+#define QLA_DRIVER_MAJOR_VER	12
-+#define QLA_DRIVER_MINOR_VER	00
-+#define QLA_DRIVER_PATCH_VER	00
-+#define QLA_DRIVER_BETA_VER	2607
--- 
-2.47.3
+--- Patch [10]: [PATCH v3 10/88] scsi: qla2xxx: Add extended status continu=
+ation and marker IOCBs ---
+commit f6e2db946a6c0b0669be6dd9042f40e733197841
+Author: Anil Gurumurthy <agurumurthy@marvell.com>
 
+scsi: qla2xxx: Add extended status continuation and marker IOCBs
+
+This commit adds the 128-byte extended status continuation structure for
+29xx firmware. It also includes the qla_fw29.h header into qla_def.h.
+
+> scsi: qla2xxx: Add extended status continuation and marker IOCBs
+>=20
+> Add the 128-byte sts_cont_entry_ext_t and mrk_entry_ext_t
+> structures required by 29xx firmware.
+
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
+f.h
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+
+[ ... ]
+
+> @@ -2360,6 +2361,15 @@ typedef struct {
+>  	uint8_t reserved_2[48];
+>  } mrk_entry_t;
+> =20
+> +/* 29xx definitions */
+> +struct sts_cont_entry_ext {
+> +	uint8_t entry_type;		/* Entry type. */
+> +	uint8_t entry_count;		/* Entry count. */
+> +	uint8_t sys_define;		/* System defined. */
+> +	uint8_t entry_status;		/* Entry Status. */
+> +	uint8_t data[124];		/* data */
+> +};
+
+[Severity: Medium]
+This isn't a bug in the code, but is the description in the commit message
+accurate for this specific patch?
+
+The commit message explicitly claims to add two structures: the extended
+status continuation (sts_cont_entry_ext_t) and the marker IOCB
+(mrk_entry_ext_t).
+
+However, looking at drivers/scsi/qla2xxx/qla_def.h, only struct
+sts_cont_entry_ext is added here, and it omits the _t typedef referenced
+in the description. There is no mrk_entry_ext_t structure included in this
+change.
+
+Could the commit message be updated to reflect the actual contents, or is
+the mrk_entry_ext_t structure unintentionally missing from this patch?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
+300-1-njavali@marvell.com?part=3D10
