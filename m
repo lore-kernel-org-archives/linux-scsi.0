@@ -1,64 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F25B642640E;
-	Tue,  7 Jul 2026 14:12:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 134ED348C70
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 15:13:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783433543; cv=none; b=kNLjV10Aw5O4L2Fxa1YXH3fHbrxQPCpLlWZScKpx8XNTyPTA4mTNywVBHvnB2DKapm4IvR8gXsfjpudXZ6v/bdhmE2/97LGuaVUDTVknI346h6SmkXUjiWGeASozsOwqbW7hsOfvI4PY8lV8Ac8WJC8WOm/4CJOwrWeS9RNODYU=
+	t=1783437218; cv=none; b=OMjS7iXKkhFtw225OJEoxAg70QSRyXxIYOtA4/AzQ38Sanj6fsSukZFxhbdWQXObqBZpt0RBZJXqYjkiFtJbp5blPCLMd2wiSPGN8fd/4PKUJsS0qow3F1/dqutCHCh2ymYD6iovZPUrZCVEv0QJVv7WTgHNPFhS4PDcypwoHc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783433543; c=relaxed/simple;
-	bh=jA9Ju4PIhu1ffgguky4STt6TzXMN7ues9/+gqUty3/0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PpudfKdDs85AQRWmS3sv/E2kkAtDGL8HdkXgW1b8TQqqHQJgE0pxc5NFhZWv3EWKgMMOF1XXqZLn1BKC0vkgftZJHZCPeKP7xymenEmRifKN6D5KXR8gnI2sfLvrW3GMvAjJsDvIdU3hyhiGzSq/chO2OiZ4UL1b8xRiD+om160=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PEozfLmb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783437218; c=relaxed/simple;
+	bh=tNyb5KERqmdGvt814UOI5CF6LIvyKei+Q8ac+RDq/KA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fmrYNtkZTGfWpLLGzRMMzI84aspn3UenGQ1UpqZ2r2pMFgOS8pQtjpA+m8JLRzwTvzlqapKmSCQvk6KD5NzuvitlrD6wuSA7M3d6As2wJuctoSNQLUTT+JtuUwneaXuuJq+KCl2g/Qy+C8O/N77Eg6HtLMLmdsiM8aM62uIYFvc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=esPo86+J; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PEozfLmb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 024481F00A3D;
-	Tue,  7 Jul 2026 14:12:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783433541;
-	bh=jA9Ju4PIhu1ffgguky4STt6TzXMN7ues9/+gqUty3/0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PEozfLmbcNcu9IQcd+7U97REqOs0CUoZKiHeyGMuYGdHwII8G7PriyYvg0bD5wZ1d
-	 a4zWQJw5K8fx+cMWk+zfoxjtE6dfa4Xeny0vRi5DOotxtsTd16zFJ2H7YLpwQpDST7
-	 8vDAPtwDm7H5Ed0TrssWGZf5PCgpHlkCbVqKIRh+U6Z5sTvRupupvh8IWcf7T4+/80
-	 2smlsH/8woTT/s1dcNe4R+3quoqmOU66NN+ufgVUCz489buY6QqtLzK4Mo0MnDwcKv
-	 YpsNP6yjEhxsBG+aB4a099ybTyqnr9UBhlPfQj6rXboHmd4H1Hpj53SNG9on9d/5jE
-	 1TRnVU6RTjygQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 9/9] pci: fix UAF when probe runs concurrent to dyn
- ID removal
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Gary Guo" <gary@garyguo.net>
-Cc: linux-scsi@vger.kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, dlemoal@kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260706-pci_id_fix-v3-9-2d48fc025acc@garyguo.net>
-References: <20260706-pci_id_fix-v3-0-2d48fc025acc@garyguo.net>
- <20260706-pci_id_fix-v3-9-2d48fc025acc@garyguo.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 14:12:20 +0000
-Message-Id: <20260707141221.024481F00A3D@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="esPo86+J"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-8478cc93299so4815654b3a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2026 08:13:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783437216; x=1784042016; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=KWgWLU531wg7fILloa6RX/bN9zEBjLF+DYHSduibKQw=;
+        b=esPo86+JdAUxmjwCXDGZ4O8m8/ybbhYzVUeuBadOFQTxfn0Bj8cAHErCeIrRz0GSeV
+         qR4jV6miq/CjJtlOBM6x/wXZ7ec8d4YE8ITCmN0VxG3K7nVrmP/55MoxZyvToj37qbCc
+         eMrBwrlu80LOrlXj4/lZ+cuaesdrMvCwjD+j0PWrGZ0lisK5u6mHc2eaiFx6+oqr6mVn
+         0d3m6Y7Zljahl9eQKgwE8BjluIqMx+vT0pv+7c+qxgkJ4nczT9lCusUMNuddRZkzB4Pa
+         AIySueBgeeFZnlJ+gO7pYGLQRRhSAYkGHpmGuLvC3/Dl0LZBvNH9CRxRGQ/OMBZm6fiC
+         qUHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783437216; x=1784042016;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KWgWLU531wg7fILloa6RX/bN9zEBjLF+DYHSduibKQw=;
+        b=p2mA+4uXuX30bJynNgGGHesWzkgR9qweKwF0c5n7m2AGUrm+V1jECo+8YJ7ZYMftn+
+         8ueQa3Wu4E89wFabFgggUu5jL6YkDOjj+KcsOJmB6Q/evpprk3guEjMiwFTO6wMpiARM
+         gCl2xj93HO+zjFTupnr1VPiln7YMiDSs9qMC56rdZqrUnJoo7TM5WA6kO869cIdbC1ur
+         ZC4ZXGS79cv1hthOUQdpKqLIMvO0Tp59kbbEQy2aO+laBlMp7G0iBvNjr7dVHEdJHQ0E
+         y+QAi0ziZCm2NDbv90CuD9CyI8JcOFe5qvJz3NOyPcHCWtAiVFbvCkQAmNYpxV2WjRcw
+         X/eQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpERuu9urLmjaEEOpjD4iz1I1jf+VSDxxZU5be7AeEOfOctrclIh3aXlFQ2Pmk1npMzPve9Wsvbnd5a@vger.kernel.org
+X-Gm-Message-State: AOJu0YxBxhC8cYvIa36riK3rmtZEZSR2kIqK7fW/hSM8zpcgiDwk8F2e
+	nvwTVittbATPzLm17VTjtOBAbCIwN5aphHu81VuQ4leryWAonsgVjluf
+X-Gm-Gg: AfdE7cnPrSdXg1dyNM11rZ7X+ZwEpHZHS616PYZyaj9IojxKtSVQX0LgTsb+QYtDO4I
+	AyW4v51LFafspMluf1j9UZj+uyHAE4m+z8kRw/HY1q5MSP8hOdD1bUq42s/hCc7IkJfu8MRaaBB
+	LlCIto11fYgi86dJqDA0eLhIbvki13Icf6Lv5+np79cPHScKUkuOtuKpbpO1kMjAaV7TdB5iyxF
+	Dcg7WFNzRw19QMmRLb0Wr8KGZli20zNtlMyD9KPZte22WOnRsEd/MRopkyY+tR7YO+qnmRMCV/s
+	cRmhBCGa5lAW2U/nbLHcV1kABoSNCqz2t/jkfads1VOWLxt/AYwJB4DgJw9CE1lFEak9mxyqiDf
+	zmoh7hwGENL1hjm9WWMMht89dQCynDQEQzJo/1B6/j9ltkHLMb2NiSkn5e1/GMxO/SinqlLki6o
+	7rlQM6yAkL0nOGI64jQHKTVqHJhJhlAtkoKA5dAe9sOds=
+X-Received: by 2002:a05:6a00:908d:b0:847:1d73:f753 with SMTP id d2e1a72fcca58-84826df100cmr5597938b3a.45.1783437216361;
+        Tue, 07 Jul 2026 08:13:36 -0700 (PDT)
+Received: from haichao.tail057a43.ts.net ([2001:da8:e000:1206:239e:a31b:1d0d:374f])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-847f6ddc974sm5717672b3a.60.2026.07.07.08.13.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Jul 2026 08:13:35 -0700 (PDT)
+From: Ruoyu Wang <ruoyuw560@gmail.com>
+To: martin.petersen@oracle.com
+Cc: agrover@redhat.com,
+	roland@kernel.org,
+	nab@linux-iscsi.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Ruoyu Wang <ruoyuw560@gmail.com>
+Subject: [PATCH] scsi: target: iscsi: Clear sequence list after PDU allocation failure
+Date: Tue,  7 Jul 2026 23:13:30 +0800
+Message-ID: <20260707151330.2334097-1-ruoyuw560@gmail.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-> Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
-> as remove_id_store can free the node. Thus, make a copy in
-> pci_match_device. Also, clarify that the id parameter is only valid during
-> probe.
->=20
-> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel=
-.org/
-> Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
-> Signed-off-by: Gary Guo <gary@garyguo.net>
+iscsit_build_pdu_and_seq_lists() publishes cmd->seq_list after the
+sequence-list allocation succeeds. If the later PDU-list allocation
+fails, the error path frees the local seq pointer and returns with
+cmd->seq_list still pointing at that freed memory.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+The same command is then converted into a reject command, and its normal
+release path frees cmd->seq_list again. Clear the published sequence-list
+state after freeing seq so command release does not see a stale cleanup
+pointer.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-pci_id_fix=
--v3-0-2d48fc025acc@garyguo.net?part=3D9
+This issue was found by a static analysis checker and confirmed by
+manual source review.
+Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
+Signed-off-by: Ruoyu Wang <ruoyuw560@gmail.com>
+---
+ drivers/target/iscsi/iscsi_target_seq_pdu_list.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/target/iscsi/iscsi_target_seq_pdu_list.c b/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
+index 75c37c8866c86..2571097436399 100644
+--- a/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
++++ b/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
+@@ -549,6 +549,8 @@ int iscsit_build_pdu_and_seq_lists(
+ 		if (!pdu) {
+ 			pr_err("Unable to allocate struct iscsi_pdu list.\n");
+ 			kfree(seq);
++			cmd->seq_list = NULL;
++			cmd->seq_count = 0;
+ 			return -ENOMEM;
+ 		}
+ 		cmd->pdu_list = pdu;
+-- 
+2.51.0
 
