@@ -1,56 +1,56 @@
-Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46B227466A
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:58:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC22C27466A
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:58:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783403915; cv=none; b=L78gC8yKxzsWo56mI9MxQhhvwWQjPQDa7ujXKIDbERXgPB/z5dtUFLvbo8C+ilCNmah62COL4NSUqwI866WlJTvLmWEwhlcPCTmibRuRrEcFMapS7WLqnTCM634Nn19+bRZQElLT8SrSKO21VA3osL/+JE6v6XtGHIY2Bo71LHk=
+	t=1783403917; cv=none; b=L+UYmvyMPa95iZ5I9r6wZAR3K45eXTESTXBT8fMrqO3YLudW8PBfFKReABUVpmsZJjU04/Fv2oVkIjyavNoiQC98LxAH+ior71LqVSM2B1jWUHY0xoBO7AIjmTIVl7aWRFxI6vSL8giEkmHZXt783nJGQetRfklIJjWJ76Rnpr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783403915; c=relaxed/simple;
-	bh=AIRnhFtUGpk0oJmKRm0up6gpgMDXppRqOyl07ovSDGc=;
+	s=arc-20240116; t=1783403917; c=relaxed/simple;
+	bh=fBBXRqroHIyInSv8VurgXn012HiECQabeFaV7KSxl7Y=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=frQ6nqfKM0hz43EoQtefitfgGNhYd7Qu+3KDdA8iDDaeegVSKoP8m4HIw4fOMRieyhgP8WLv3crZCD6z02kKTAeM/53KbVigQSVgpQWi7CPTPS++iymw4KKG7PT4WiXe0Zd5a9hv23TOYTZXUxZe2WFU+06tHjzO2CRg/jMIb1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=WErZHi18; arc=none smtp.client-ip=67.231.148.174
+	 MIME-Version:Content-Type; b=AeFtV4o1/jBJUYcj49drpNm4U3HGiSSjqRQ/KQiY+Qd9MvLWdA0gLbrGL4kAT7dCd5QeNF066YXtQuhNWIOQSnAsvTRFor0MRDzeGiSiQYILH9ktto87SR8KZRUde2hlGoG7akrtEUsbBTO7zrh0T/SVCR6hgg6Iei8qN0Tyy0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=YjyqhsUq; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="WErZHi18"
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 667493tx1620032;
-	Mon, 6 Jul 2026 22:58:30 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="YjyqhsUq"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66748cwo1656123;
+	Mon, 6 Jul 2026 22:58:33 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=x
-	tPgcq4Q8ZdapILQc98VQD17R2HWwbrMtRGoKKum78Y=; b=WErZHi18ltp8uk9dO
-	XFlYGZODgmWTwh8jnGIAVhKCwer1twUBQNb6rFPynh4nHFP5LAmtIaWfj2EgAdp0
-	WylIkxIF4ng5Hl9SsDs4vWXVcvkr0wvu/LnwbB0Q37RX1sj6icsxeCgHkAjNv6XZ
-	50/glD/9GqoIBAmbWhZh718NWGk+mDSpP04Lw/mDQ7VNBNAgk0DD2GlBZp2Rem4W
-	ECUbUs9h8HT8RI8GwPPHz/uYdROXTTe4hNTZhszjBNtn0sYLnETDbVwlguu4XfGD
-	8WKkRpcndPzVq5V+V+GLR4xDUHKnihzrurTcVKtadQfAjZ4AdTWq5USbLukvRFVj
-	RkWmw==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=Z
+	/FDRetihfpMcPWvNkVI+VhFuZQYHacqzAtHgf4BqAo=; b=YjyqhsUqD+X5bw6ko
+	N8r8E7OFbfWyJzVVgI+Dcxzv4N7wZTuyUe40ybMYUNTZopq6dpiDah/bfR+j4bfL
+	4ziaF+KHoGx3GKSwn0J+yDVfGHgKO1CBvF45+B+mdYn8GrIzlgrB0RabAj1Qcvbe
+	shkA5LzgeHmthdkwWDt6IJeAC9H1A/JfHT4720hOfrWL/gsRYOMM3kpDNH7AeZj0
+	yK4FVmORtX+nzlbr/bIJyS69HyVIkYwCnqLMNX69lbjQAMxA5gGkvw461FbaDl3S
+	QEl9HetXOqaeCAlZfhH9WHtc3Zh5ya4Oi5lDmlUfoFJYDycf7lvgkulS/AyBHS0P
+	zzwHA==
 Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4f8p31gqnw-1
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4f71phqe3n-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 Jul 2026 22:58:30 -0700 (PDT)
+	Mon, 06 Jul 2026 22:58:33 -0700 (PDT)
 Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
  DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 6 Jul 2026 22:58:29 -0700
+ 15.2.1544.25; Mon, 6 Jul 2026 22:58:32 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
  (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 6 Jul 2026 22:58:29 -0700
+ Transport; Mon, 6 Jul 2026 22:58:32 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id F13683F7066;
-	Mon,  6 Jul 2026 22:58:26 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id D8B393F7066;
+	Mon,  6 Jul 2026 22:58:29 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v3 72/88] scsi: qla2xxx: Quiesce response IRQ before freeing request queue
-Date: Tue, 7 Jul 2026 11:24:19 +0530
-Message-ID: <20260707055435.2680300-73-njavali@marvell.com>
+Subject: [PATCH v3 73/88] scsi: qla2xxx: Reject non-SCSI SRB on status IOCB fast path
+Date: Tue, 7 Jul 2026 11:24:20 +0530
+Message-ID: <20260707055435.2680300-74-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260707055435.2680300-1-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
@@ -62,90 +62,86 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfXyH8t49B/uKM4
- /IZt37AmgSHNplUDlBA8/7Ni+YmdT2xY+CBmT4g0tYdN7QAX5CHREZIuiTIGyGhySdbvDvGH0r1
- I6SlCsOBmKUOXXac034eEGcEh9EyML0=
-X-Proofpoint-GUID: yWG1no5-5IL6tTDMaKo5Pm2Ybu9sFeTc
-X-Proofpoint-ORIG-GUID: yWG1no5-5IL6tTDMaKo5Pm2Ybu9sFeTc
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX0oJk2LY2NZLJ
- +3gK+HDZnwQhme8+QjwF1Ot8jXE4yLR1CwIHpTsbeXN7FS838CdUUhsIiyOIVThntoxK9YcsnI/
- V7DWHx5ffsxlMam3yQ6PmyB3nJohb+41urx9sfhbMHv/OGEJpFiBKQpMayjQUthr1jLaCrUf7oq
- au5cHOLVr/3TcDJjDi8VcmJ0j9xrJzbSYWe3aj5uwiXzLcnZ8psJESbi2UwGCQcwvYLxqNkruCe
- tzOGj8FBMXrWrhaDUgbE4SoZhLUufuRuPFoYPrLT+yk2AeBP16vqJrm3fexp0UsJ4lBRpvsd7Z6
- 6Ez5RqcT0QNtcMFUGicUs0+SrGOz0WkjM6J2Hygw0iJXlOPxihyPcJm9h6eFMoLRvxXHcrhX4oA
- q5ehwitUIiDQzAgTpn8YzoXjXixwYrCS16eIkHk83uPLEk9Vs0XuYefRlwtod738sieYDOKnnRH
- WJW0vsljSncLlB9Ch/A==
-X-Authority-Analysis: v=2.4 cv=c5ubhx9l c=1 sm=1 tr=0 ts=6a4c9586 cx=c_pps
+X-Proofpoint-GUID: 5y6mYHRR5XcJY01y7kSckfzGU6bJmyo9
+X-Authority-Analysis: v=2.4 cv=Hf4kiCE8 c=1 sm=1 tr=0 ts=6a4c9589 cx=c_pps
  a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=EAYMVhzMl8SCOHhVQcBL:22 a=VwQbUJbxAAAA:8 a=1XWaLZrsAAAA:8 a=M5GUcnROAAAA:8
- a=sKRAhAwF3i9_E2ufpE8A:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+ a=QXcCYyLzdtTjyudCfB6f:22 a=VwQbUJbxAAAA:8 a=1XWaLZrsAAAA:8 a=M5GUcnROAAAA:8
+ a=EU0T8PXIzCELTDrB-04A:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-ORIG-GUID: 5y6mYHRR5XcJY01y7kSckfzGU6bJmyo9
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfXzxYLZZRvKdaS
+ 346/5TfiwqZc8uas9fqPtKlqpmwKXla1e8DkBgzovFoL6SZQffrea+MZqQI+Gyvk5MGNaHe29X8
+ 5eizN0Kn2zk4LU5b2z1+efQt7PT3IZI=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX1IMsY5MxF4Pg
+ w1eSuOKDoPKfIevi6UI9Zwr3TAcJb8ABn8uqGGfcXopK1am7GSqDCMExnXOKxDlI3P0Z1/KpnRu
+ XXg5zuKdJ+eB2KuiBofphL+nEK7F/rKUtJW9VISXqDXwka2xHRbz8E8CatcCLWt/Icq3UWoGApF
+ VF6d1N+k0rDOQdtnG+x+MjJv4/MkY8L8snJbMJPUm/SxvFjecm03W+wTKk1U0RXl6O7nsXTmagf
+ hge6jQi5v87S/1oBMER19sCgxN5e8WGxyXEpSDZTw/MNMHAzH5wm5ViLWRCoMaQGIZprW89mJGn
+ /HKgHHqBCisgT55WygH0e++xQptLnLXvL3IynQWtAfu730X1YsAnCPwIjzsmVgQ8OewKYW6I8bu
+ edNh6+U8+wcmy1HmA81BBgpNU4kv7YLszJNAuytxYNhJmSBPaSwZVwL1PFC7oi4wJrr7aQt0oyJ
+ 0mQhtGh0O+wecW74RVA==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-07_01,2026-07-06_02,2025-10-01_01
 
-qla2xxx_delete_qpair() deletes the request queue before the response
-queue. qla25xx_delete_req_que() frees the request queue memory
-(kfree(req) in qla25xx_free_req_que()), but the response-queue MSI-X is
-only released later, in qla25xx_free_rsp_que(). In that window the
-response interrupt can still fire, qla2xxx_msix_rsp_q() queues
-qpair->q_work, and qla_do_work() -> qla24xx_process_response_queue()
-dereferences the now-freed rsp->req (LOGINOUT/CT/ELS entries and the
-status path), a use-after-free.
+qla2x00_status_entry() filters out non-TYPE_SRB entries and the
+SRB_NVME_CMD, SRB_BIDI_CMD and SRB_TM_CMD types, then falls through to a
+SCSI fast path that assumes the command is an SRB_SCSI_CMD. The first
+thing on that path, qla_chk_edif_rx_sa_delete_pending(), and the
+subsequent handling both evaluate GET_CMD_SP(sp), i.e. sp->u.scmd.cmd.
 
-The cancel_work_sync() added for the qpair teardown lives in the
-response free path, which runs after the request queue is already freed,
-so it does not protect rsp->req.
+The srb u union overlays the SCSI command pointer with other command
+layouts (bsg_job, iocb_cmd). If firmware delivers an unexpected
+STATUS_TYPE IOCB for a non-SCSI handle, sp->u.scmd.cmd can read as a
+non-NULL garbage pointer, bypassing the NULL checks in
+qla_chk_edif_rx_sa_delete_pending() and at the cp == NULL test, and
+leading to a wild pointer dereference.
 
-Release the response-queue interrupt and flush qpair->q_work before
-deleting the request queue, so no late completion can reach the freed
-request queue. Clearing have_irq makes the subsequent
-qla25xx_free_rsp_que() skip its free_irq(), and the firmware
-queue-delete order (request then response) is preserved; the
-request-delete mailbox completes on the default vector and is unaffected
-by dropping the qpair response interrupt early.
+Reject any SRB whose type is not SRB_SCSI_CMD before entering the fast
+path. The outstanding_cmds slot is left untouched so a genuinely
+non-SCSI command still completes through its proper handler.
 
-Fixes: d74595278f4a ("scsi: qla2xxx: Add multiple queue pair functionality.")
+Fixes: dd30706e73b7 ("scsi: qla2xxx: edif: Add key update")
 Cc: stable@vger.kernel.org
 Reported-by: Sashiko <sashiko-dev@google.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/scsi/qla2xxx/qla_dbg.c | 2 +-
+ drivers/scsi/qla2xxx/qla_isr.c | 8 ++++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 76b7ed501b04..d678e27213a9 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -10686,11 +10686,28 @@ int qla2xxx_delete_qpair(struct scsi_qla_host *vha, struct qla_qpair *qpair)
- {
- 	int ret = QLA_FUNCTION_FAILED;
- 	struct qla_hw_data *ha = qpair->hw;
-+	struct rsp_que *rsp = qpair->rsp;
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 4f756468ea64..196cfa8f8623 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -16,7 +16,7 @@
+  * |                              |                    | 0x2127-0x2128  |
+  * | Queue Command and IO tracing |       0x3074       | 0x300b         |
+  * |                              |                    | 0x3027-0x3028  |
+- * |                              |                    | 0x303d-0x3041  |
++ * |                              |                    | 0x303e-0x3041  |
+  * |                              |                    | 0x302e,0x3033  |
+  * |                              |                    | 0x3036,0x3038  |
+  * |                              |                    | 0x303a		|
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 829671937f92..96b4721b4810 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3541,6 +3541,14 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 		return;
+ 	}
  
- 	qpair->delete_in_progress = 1;
- 
- 	qla_free_buf_pool(qpair);
- 
-+	/*
-+	 * The response-queue interrupt schedules qla_do_work(), which
-+	 * dereferences qpair->rsp->req.  Release the interrupt and flush
-+	 * any pending work before the request queue is freed below so a
-+	 * late completion cannot touch the freed request queue.  The
-+	 * firmware queue-delete order (request then response) is kept.
-+	 */
-+	if (rsp && rsp->msix && rsp->msix->have_irq) {
-+		free_irq(rsp->msix->vector, rsp->msix->handle);
-+		rsp->msix->have_irq = 0;
-+		rsp->msix->in_use = 0;
-+		rsp->msix->handle = NULL;
++	/* Everything below is the SCSI fast path; reject other SRB types. */
++	if (sp->type != SRB_SCSI_CMD) {
++		ql_dbg(ql_dbg_io, vha, 0x303d,
++		    "Unexpected SRB type %x for status IOCB, sp %p.\n",
++		    sp->type, sp);
++		return;
 +	}
-+	if (rsp && ha->wq)
-+		cancel_work_sync(&qpair->q_work);
 +
- 	ret = qla25xx_delete_req_que(vha, qpair->req);
- 	if (ret != QLA_SUCCESS)
- 		goto fail;
+ 	/* Fast path completion. */
+ 	qla_chk_edif_rx_sa_delete_pending(vha, sp, pkt);
+ 	sp->qpair->cmd_completion_cnt++;
 -- 
 2.47.3
 
