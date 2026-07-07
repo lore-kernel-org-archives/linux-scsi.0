@@ -1,177 +1,147 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BE2D3A7F4C
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:35:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6EE3A8746
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:35:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783406138; cv=none; b=kjLUYBPxdHGWGl45gORQLI6qFup9mQ7xL7MdvmvVwwRmvuBqGUF/0DDux0Ueb5pajkK584hRC/kHfhDurfvAVL99ZizPGrpqOiBKh37lvAXe+gUnD4YqsCKlGFyqhrgSZABonRMZnUiZL6CUSsRRwLN7j0Q3fxB620RzhBCXLOY=
+	t=1783406150; cv=none; b=CnKqLREwj5lBbkqvE1D5pfWITDbCMOH6Cc6VMGIXsMFCs9MB0ULCsaDuXhG7DPHHqHkeLslrzvuIfyeV/mbv7/hR5xbOkDF4JnDCaV7YUPTRIAdjjq6Ih3iBAbpft41d9/RNn5YVbk94hdDcSoZ0LsmEAwKUuhPRno43YlIPW7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783406138; c=relaxed/simple;
-	bh=HsfRANJ8SZVGiOcgizA995BLaW4naRvkgZTG9haqqG8=;
+	s=arc-20240116; t=1783406150; c=relaxed/simple;
+	bh=3mdNhTCV/plW7n425FlPkqFdnwOZC+2rxhAVInUBkq4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tOhQwZTB/HPnj8Kl6lAkx8fGYwWEqWcvngkwu5ZkyjQHav4Pu0sTVv0/maoiXa0ZGZ5t9FOo17fE8bjgMy1XZ9vD17Mikb9+C0XDHV13xUZPgmEOPyeOrQ7pnPo5j4J8RXQuLCkRiVFZK4Sdnusy04slb1e08n7f8OwHx6dMh7s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bTFUSKDb; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Au0mnCzzQuqX73R+FlY/cLU3tpmV66koQJYLru2v/ceoGWR4ausIFIlYDfKF861hErF0umleDNIdwfenopXWeT3h7jy3Ony0EwD6DL+ZuL8YrbiUbWhkCszAplBR9AfC9sU4eYlDETChl3m41lGa5KaUNejoned3UU9+rg6N50Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bZpwi6R/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bTFUSKDb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6EBA1F00A3A;
-	Tue,  7 Jul 2026 06:35:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bZpwi6R/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A2B61F00A3A;
+	Tue,  7 Jul 2026 06:35:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783406137;
-	bh=0wbni04SwGjBcTdZVrSJzYO9+Jm9+KRGORmshJiZdXU=;
+	s=k20260515; t=1783406148;
+	bh=qOPEfGql6D+f+dFlx6GsPv6CWQ9TtDnIx+MB2USN0j8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bTFUSKDb6aJRKRSvPrHpH1+DCwUh+tlZVWP9k3of13pwOD9zXB8rl5VVLFvBN+MhL
-	 kEsYoHIDSaIrnKpMiOviWRidpkzRr6Y6NGjm+l6ng7JJVv1wl6b8wq1Rdd1UzkOJpU
-	 mOXWyds8+SN97uUg0lfhyxfQ37L65I9Bmewr3UwWJAHeuZ6ENBDT6Bs7Ez0PKIMdtK
-	 9d134YgwX537AVnBENMErZAC69w5i4rZ2Txu1N3ChZKHLa9rHq682dkU7fAtccGzmv
-	 EXILh0ceP+tK2GMIAEb/I8f5tMvdc4hvFfR0XMDdztg+KTO/+HKCqyAJkS1X9UtIS9
-	 kgwoPOc5SLu3A==
+	b=bZpwi6R/5a1sxaEbsLODraKNXxHAo4XqgxCXoxW/zBnRsbT1732yaczE5G4rtznEv
+	 bkD/H9EXUCx4GoNClnTzqzrtUW2buG6Jn/qqYgbgUMe/xE+PoVwGOf8HbRVwIS+aPQ
+	 U9UD5hhdWIj6VOJXbilGTlQSztIG9BO9WiJ/otBOMeY06VNuSKAXmb6qW4qhIKwp6B
+	 TNauai7KkyfBqiFA6GjJfvfHSw866SmoUSh+f2+/Y7LmKgMQbjcYh0DTUYVmhlzbFn
+	 Xpzo6xjz9twgJBGbPNy6O63HpWU+iRqWBa+wmYLtUs5ZZaeYgJ9TH5r8OHp6DSGY5Z
+	 NGkf10nO9PCRQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 28/88] scsi: qla2xxx: Enhance purex_entry handling
+Subject: Re: [PATCH v3 29/88] scsi: qla2xxx: Update handling of ELS IOCBs
  for 29xx series
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-29-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-30-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-29-njavali@marvell.com>
+ <20260707055435.2680300-30-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 06:35:36 +0000
-Message-Id: <20260707063536.E6EBA1F00A3A@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 06:35:47 +0000
+Message-Id: <20260707063548.3A2B61F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Copying continuation IOCBs will trigger a runtime panic under CONF=
-IG_FORTIFY_SOURCE=3Dy on 29xx hardware because the memcpy source bound is e=
-valuated against a 64-byte struct while copying up to 124 bytes.
-
-Pre-existing issues:
-- [High] Non-atomic memset of the locklessly shared `default_item` creates =
-a race condition that corrupts payload and control structures for concurren=
-t PUREX allocations.
+- [High] Hardware-facing structures use C bitfields for little-endian 16-bi=
+t integers, breaking on big-endian architectures.
+- [High] The extended ABTS response IOCB leaves the upper 64 bytes of the r=
+eused DMA buffer uninitialized, leaking stale hardware completion data.
+- [High] Virtual Port index (vp_idx) >=3D 256 is truncated and corrupted du=
+ring ABTS response processing on 29xx adapters due to an invalid struct cas=
+t.
 --
 
---- Patch [28]: [PATCH v3 28/88] scsi: qla2xxx: Enhance purex_entry handlin=
-g for 29xx series ---
-commit 085db48bd7b4d1648d53d6f0f6d5ff0614740cce
+--- Patch [29]: [PATCH v3 29/88] scsi: qla2xxx: Update handling of ELS IOCB=
+s for 29xx series ---
+commit 75f1549af39bd863f96218c48272faaf14654107
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Enhance purex_entry handling for 29xx series
+scsi: qla2xxx: Update handling of ELS IOCBs for 29xx series
 
-Update function signatures and internal logic across qla_edif.c, qla_isr.c,
-and qla_os.c to accept a generic pointer for packet data. This differentiat=
-es
-between standard purex_entry_24xx and the extended purex_entry_24xx_ext
-structures based on IS_QLA29XX(). It ensures proper initialization and
-processing of command and response data for both 64-byte and 128-byte
-PUREX IOCBs.
+Update ELS IOCB handling to support the extended 128-byte els_entry_24xx_ext
+structure used by 29xx series adapters. Change the signatures of ELS issue
+paths to accept a generic void pointer and introduce a helper
+qla_els_set_vp_sof() for encoding vp_index and sof_type.
 
+> diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla=
+_inline.h
+> index cc613bc98e926..695a5b7fc7946 100644
+> --- a/drivers/scsi/qla2xxx/qla_inline.h
+> +++ b/drivers/scsi/qla2xxx/qla_inline.h
+> @@ -863,3 +863,31 @@ qla_sts_fwi2_extract(struct qla_hw_data *ha, void *p=
+kt,
+[ ... ]
+> +static inline void
+> +qla_els_set_vp_sof(struct scsi_qla_host *vha, void *pkt, u16 vp_idx)
+> +{
+> +	if (IS_QLA29XX(vha->hw)) {
+> +		struct els_entry_24xx_ext *ext =3D pkt;
+> +
+> +		ext->vp_index =3D vp_idx;
+> +		ext->sof_type =3D ELS_EXT_EST_SOFI3;
+
+[Severity: High]
+Are C bitfields being used for a hardware-facing structure here?
+
+If els_entry_24xx_ext uses __le16 with bitfields for vp_index and sof_type,
+the memory layout will be compiler- and endian-dependent. On big-endian
+architectures, the bitfields will be packed in reverse order compared to
+what the little-endian hardware expects, which could corrupt the virtual
+port and SOF values.
+
+> +	} else {
+> +		struct els_entry_24xx *e =3D pkt;
+> +
+> +		e->vp_index =3D vp_idx;
+> +		e->sof_type =3D EST_SOFI3;
+> +	}
+> +}
 > diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
 r.c
+> index c4e2e62f924ff..e2653620e80be 100644
 > --- a/drivers/scsi/qla2xxx/qla_isr.c
 > +++ b/drivers/scsi/qla2xxx/qla_isr.c
-
+> @@ -83,6 +83,8 @@ qla24xx_process_abts(struct scsi_qla_host *vha, struct =
+purex_item *pkt)
 [ ... ]
-
-> @@ -262,14 +275,24 @@ int __qla_copy_purex_to_buffer(struct scsi_qla_host=
- *vha,
->  	}
-> =20
->  	pending_bytes =3D total_bytes =3D tpad;
-> -	no_bytes =3D (pending_bytes > sizeof(purex->els_frame_payload))  ?
-> -	    sizeof(purex->els_frame_payload) : pending_bytes;
-> +	no_bytes =3D (pending_bytes > payload_size) ?
-> +		payload_size : pending_bytes;
-> +	if (IS_QLA29XX(ha)) {
-> +		struct purex_entry_24xx_ext *purex_ext =3D *pkt;
-> =20
-> -	memcpy(buf, &purex->els_frame_payload[0], no_bytes);
-> +		memcpy(buf, &purex_ext->els_frame_payload[0], no_bytes);
-> +	} else {
-> +		memcpy(buf, &purex->els_frame_payload[0], no_bytes);
-> +	}
->  	buffer_copy_offset +=3D no_bytes;
->  	pending_bytes -=3D no_bytes;
->  	--entry_count_remaining;
-> =20
-> +	/*
-> +	 * response_t::signature and struct response_ext::signature are both u32
-> +	 * at offset 60 (handle:4 + data[52]:60), so the 24xx view writes
-> +	 * the right slot regardless of stride.
-> +	 */
->  	((response_t *)purex)->signature =3D RESPONSE_PROCESSED;
->  	/* flush signature */
->  	wmb();
+>  	/* send ABTS response */
+> -	abts_rsp =3D (void *)rsp_els;
+> +	abts_rsp =3D rsp_pkt;
+>  	memset(abts_rsp, 0, sizeof(*abts_rsp));
 
 [Severity: High]
-Will this cause a runtime panic under CONFIG_FORTIFY_SOURCE=3Dy on 29xx har=
-dware
-when processing continuation IOCBs?
+Could this memset clear only 64 bytes instead of the full 128 bytes allocat=
+ed
+for 29xx adapters?
 
-Later in __qla_copy_purex_to_buffer() (and similarly in
-qla27xx_copy_multiple_pkt() and qla27xx_copy_fpin_pkt()), the continuation
-IOCB data is extracted using the 64-byte struct view:
-
-do {
-    while ((total_bytes > 0) && (entry_count_remaining > 0)) {
-        *pkt =3D rsp_q->ring_ptr;
-        data =3D ((sts_cont_entry_t *)*pkt)->data;
-        data_sz =3D qla_sts_cont_data_size(ha);
-        ...
-        memcpy((buf + buffer_copy_offset), data, no_bytes);
-
-The compiler tracks the object size of sts_cont_entry_t::data as exactly
-60 bytes. On 29xx hardware, data_sz can be up to 124 bytes. Is it possible
-that FORTIFY_SOURCE will intercept this as a deterministic out-of-bounds
-read (124 > 60) and panic the kernel?
-
-[ ... ]
-
-> @@ -1075,9 +1110,9 @@ qla24xx_alloc_purex_item(scsi_qla_host_t *vha, uint=
-16_t size)
->  	struct purex_item *item =3D NULL;
->  	uint8_t item_hdr_size =3D sizeof(*item);
-> =20
-> -	if (size > QLA_DEFAULT_PAYLOAD_SIZE) {
-> +	if (size > QLA_MAX_IOCB_SIZE) {
->  		item =3D kzalloc(item_hdr_size +
-> -		    (size - QLA_DEFAULT_PAYLOAD_SIZE), GFP_ATOMIC);
-> +		    (size - QLA_MAX_IOCB_SIZE), GFP_ATOMIC);
->  	} else {
->  		if (atomic_inc_return(&vha->default_item.in_use) =3D=3D 1) {
->  			item =3D &vha->default_item;
+Since abts_rsp is a pointer to the 64-byte legacy struct abts_entry_24xx,
+sizeof(*abts_rsp) is 64. If the buffer was populated during the ELS_IOCB_TY=
+PE
+command earlier in this function, could this leave stale hardware completion
+data in the upper 64 bytes when the buffer is reused for the ABTS_RSP_TYPE
+command?
 
 [Severity: High]
-This is a pre-existing issue, but can the non-atomic memset of default_item
-create a race condition here?
+Further down in this function, does this legacy cast corrupt the 9th bit of
+the virtual port index for 29xx adapters?
 
-If heavy I/O exhausts standard PUREX item allocations,
-qla24xx_alloc_purex_item() falls back to the locklessly shared default_item:
+    abts_rsp->vp_idx =3D abts->vp_idx;
+    abts_rsp->sof_type =3D abts->sof_type & 0xf0;
 
-    if (atomic_inc_return(&vha->default_item.in_use) =3D=3D 1) {
-        item =3D &vha->default_item;
+Since the 29xx hardware packs these into a single 16-bit word, the 9th bit
+of vp_idx resides in the lower nibble of the byte corresponding to the lega=
+cy
+8-bit sof_type. Masking with 0xf0 would erase the 9th bit of vp_idx,
+potentially breaking I/O aborts on virtual ports with an ID >=3D 256.
 
-When this item is later freed in qla24xx_free_purex_item(), a non-atomic
-memset is used to clear it:
-
-drivers/scsi/qla2xxx/qla_os.c:qla24xx_free_purex_item() {
-    if (item =3D=3D &item->vha->default_item)
-        memset(&item->vha->default_item, 0, sizeof(struct purex_item));
-}
-
-If memset clears the in_use atomic flag before finishing zeroing the rest
-of the struct, could a concurrent hardware interrupt successfully claim the
-item and begin writing its payload, only to have the ongoing memset
-overwrite and corrupt the newly written data?
+>  	abts_rsp->entry_type =3D ABTS_RSP_TYPE;
+>  	abts_rsp->entry_count =3D 1;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D28
+300-1-njavali@marvell.com?part=3D29
