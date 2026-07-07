@@ -1,56 +1,56 @@
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BCE03101CE
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:55:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0E3D386576
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:55:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783403714; cv=none; b=Ak4n3OgaBfDtP2buqZS+utvRQyyfPc9oVgVTijReTU8zPww4/0JwYMl5iGuAWndSSnnaemHxysZSRGkWZfpuGc1Jv8j0xMpRTaBIJu8woJQQcIOkJWO28TU8WzkJLr5NjrS7VaxgVT8tOyQYmLPVDc4fCeFiN9fTvcHIr/qjoKI=
+	t=1783403716; cv=none; b=XopDMKcvhNKNWsIHX/LJ+ShJk5GzP9WNeCZiiju04owlelmLNCC7ImXKO9kLgWnCKieTr8jXx3aMTtJLJE1r9fHVAE9gsXXh2huCGLJkMGZVOQPNa+92JotsVTeMKnSJcQCJFT5RUrZz6ApWuQNhC03ZRBM/eBAN22MoMuk2klQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783403714; c=relaxed/simple;
-	bh=wUwCdTLqeTveXQ2sZB3F5+Tl9KjJSLF9ddr2wS1DUVA=;
+	s=arc-20240116; t=1783403716; c=relaxed/simple;
+	bh=o9b5d1qkIzFKZnRXVjj0cCWV6EQplZAX7+bBQaCuqAQ=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pOnIkI/3aQlzqeeyXb0drKFpClfPWEKT33ZheR+aAJRxtdPrGU7Lpkkre2V0dypGA4fZDxNJnXaoY3Fx8Ke39Oh/THQLpV6EK1UdxyiGvwy4EXk6MnP/HM1bbg0RApIR9UdBfllWF5TJWa8f+2i2wn4F4GlLJqeYCE7CAC+B0T0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=dl3obiqm; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=aFkbxBRsCYiJlBkIKAfNIKH+HmtqQTldI82oesoU0W+FpcDJhetxe7iR+2H+5t+kswLCUt+1tEI4+yjVL56dmnakKKVMdZVs9188HPGluZvLhqXWIb1mLpmA4EpJGqGnvKHmEHVvRh9xOqVkJoHKDZzrMdB3HF8mHJB7zSR77i8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=c3r+KW+a; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="dl3obiqm"
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66748Zlm1656002;
-	Mon, 6 Jul 2026 22:55:03 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="c3r+KW+a"
+Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66748VkL873616;
+	Mon, 6 Jul 2026 22:55:12 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=g
-	LXtos2qZsv6py2/WGKHX12163VwODweXZBNyU+5CWo=; b=dl3obiqmLXs0TY13y
-	DOnG3Ac8hZOg/2sVgaU8WY2k1rIt6EFK6gZ+TWPr5K4OQGqhEXQzVlWkqsWue0SW
-	IX3b+q5h/nD10AjL2fFzH8SRluGj+HJVO3/gQx0+5xi4tNvdCIMVcvj0WjDoCz+8
-	sbsp5pUClWeSl+GUyqbLeNMB4bwUpbu8qXCHgPcgFjMSpc3EG4+9+Wqy6lKdJDRk
-	r3l93WVCCfA+k+WMkAiYqJfqQsMeYb2UFzLhzCByYXHf64a24++6UQGPwgVbjEgr
-	eaREA8CFH39fwK4xFt5Nb8cXyxMj0j5TIAG/bRFT3pbpA0NB3ulvI+yVdWojHoqJ
-	LfosQ==
-Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4f71phqdqw-1
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=T
+	YwJ0pUxWrkA2ck1aSbpBOuVPvyRi6R0/R+nksrkPtM=; b=c3r+KW+aPOjpBwz1u
+	vLw2ys4xK3VirJ4jFSVS0n/kfMyuxuVhV69TWetXUqnpFnZax4GUJguIOte5Y3oj
+	pEo2VZS9pvymPMh+mxPwaXdIjkTbEqs/uEzOMzrsjfUSgSBG75T1htWgs8wTLivY
+	0LeKDFWE4G7RKww9dXhgvHFZZZ7nuIZWSpDe6VE9XHiKALxC2vVt80r1GwHDTXuw
+	6Tc1saOOPmzQyc+vvHAYckPf/pVs/YNK8HzlPRDqjLTN4hnd0UoxM9fVqh9afqXw
+	FJrmPlXmdy3l6RiZ3zEwuSM0SR4TYjrbIecUQ9pTZ2o7HGGvl6JC/U5RyamifX2m
+	3PPQw==
+Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4f8f9wa9yg-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 Jul 2026 22:55:03 -0700 (PDT)
-Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
- DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
+	Mon, 06 Jul 2026 22:55:12 -0700 (PDT)
+Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
+ DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 6 Jul 2026 22:55:01 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
- (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 6 Jul 2026 22:55:01 -0700
+ 15.2.1544.25; Mon, 6 Jul 2026 22:55:11 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
+ (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Mon, 6 Jul 2026 22:55:11 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 7D9903F7066;
-	Mon,  6 Jul 2026 22:54:59 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id D596E3F7066;
+	Mon,  6 Jul 2026 22:55:08 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v3 01/88] scsi: qla2xxx: Add 29xx series PCI device ID support
-Date: Tue, 7 Jul 2026 11:23:08 +0530
-Message-ID: <20260707055435.2680300-2-njavali@marvell.com>
+Subject: [PATCH v3 04/88] scsi: qla2xxx: Add 29xx support in queue initialisation path
+Date: Tue, 7 Jul 2026 11:23:11 +0530
+Message-ID: <20260707055435.2680300-5-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260707055435.2680300-1-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
@@ -62,350 +62,255 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-GUID: 5DUS4zncAhwSRKQttKcn04FFgGrIRvBO
-X-Authority-Analysis: v=2.4 cv=Hf4kiCE8 c=1 sm=1 tr=0 ts=6a4c94b7 cx=c_pps
- a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
+X-Proofpoint-ORIG-GUID: nswjcF2k4eGhwQu6WBGz-bSUHennGt1O
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1MyBTYWx0ZWRfX86SKbCV5CBsA
+ ccAnLFWokd2YXzeVD2QiYDorRtq25kyBka/I/PGp8RrPxWoJj1S2Ko3GXrSdYZeiStk+TFYmITl
+ 9NyL2mbJvF8kn5ZczJkUPOihmegzo/lHXy3tYt51+K4Mg44+hfDXBdLAyYeVjhkbACoY7MdTTkX
+ 7WaJScXO7fPtt4AZeenlaZBJ2lhZ5YHPrX4b+DDRvmM1vDAWt56gXca6u1q8ceGvlHma4CiyDHi
+ FD4xw6BNLjM4UmI5z8gC6C+q77j7XjZbrO+iO+9Sj9KGvxCBaBN0/F/l7RdtTjusPXgquQXzHky
+ Ry314mTH8oxno4sUsiY8GLLr5TAfuURIKEeLACRDSpnf9iAMQ/QcQp0LlR7UqASSQIjswAaajjl
+ oK/iykvsaSCtVcuxoQtYitigFzTSYoAHzjlnC+exvopU8FcklyLsBHydRlUuwyehLGrQbrHEGfU
+ oFzZE1fcGwdafLqnP3g==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1MyBTYWx0ZWRfXyrCHZqvGr9MS
+ IArXSr5rmaP6lPIqFoPMF7CHaK862hb1eF499QpJ1nVBRvSQYAEn5GJN+CfE/sBupJa780d6W5N
+ SgiSqLjavIyqq/ZMx2MkhtmwHhUdojQ=
+X-Proofpoint-GUID: nswjcF2k4eGhwQu6WBGz-bSUHennGt1O
+X-Authority-Analysis: v=2.4 cv=SY/HsPRu c=1 sm=1 tr=0 ts=6a4c94c0 cx=c_pps
+ a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=9Ko3Zm86dqrhGpwkZ8sA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-ORIG-GUID: 5DUS4zncAhwSRKQttKcn04FFgGrIRvBO
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1MyBTYWx0ZWRfXxfgMZYX8o4IG
- oqmhUdwDoeFQt40WhmYn0aT2505Mqc2tA9Q9S8FYsh9rOzZFsh24ZjI7kn8XMNyhmREZax82eva
- nAdyUE6XggUy5D27Ls2b9BPELBhBIyk=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1MyBTYWx0ZWRfX++KWuUlgr+JD
- u7rQepOyfZ2uE664yCG4jppM1HGvDRXdTy42iQmWjDZaPa/hoALLCkGVOUtBC6Hwfx+F/GdJgTI
- oSzHFtp1O2a2R+1FOepzDDudlQq+ZLyRDH584jgYjvzpTR0vQkTWhc5/cEOxQF43/9vevXuCOGG
- 46qgzg9eG9guUgNbhxqN1iocAVuOL6tgdFLCT6Rl6Hv3Ue9BZ2ACHQ+HRxpnyPOWaw5aCavIfgQ
- F9pRGTMQ4PZXJImN7jONB5hBSHadKq4wm3zTaxoMre9xL5caocfgp7QHAKT3sSUhgvqoTb2u0mz
- B+aVJHVuo2VSeHP7t22V4YkK73UOuvf+QoNViR3vJ1n+f3uCXROqC1UCAaCf/2Ge8ktauLNzD+K
- /q7cBl0iIvBgXOBxu1+CrhTS2bi1/1O+x7TiuVWNH5V1QUVURTmULWOtgZaKaObypBYHKq/6UGa
- cUGqHGzgTxcNCB8PZTA==
+ a=qit2iCtTFQkLgVSMPQTB:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
+ a=37MPRnnHHgc3qPsYtIsA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-07_01,2026-07-06_02,2025-10-01_01
 
 From: Manish Rangankar <mrangankar@marvell.com>
 
-The QLA29xx is a new generation FC HBA that shares much of its
-architecture with the 27xx/28xx family.  Register the new PCI
-device IDs, wire up IS_QLA29XX() capability checks in the probe
-and ISP-flags paths, and extend speed-capability logic so the
-driver correctly recognises and initialises 29xx adapters.
+Extend the queue initialisation and multi-queue management mailbox
+commands to include IS_QLA29XX() checks, following the same mailbox
+interface as 27xx/28xx.
+
+Unlike earlier adapters that use 64-byte request/response ring entries
+(request_t / response_t), 29xx uses 128-byte entries.  Add struct
+request_ext and struct response_ext, which extend the legacy 64-byte
+layout with a 64-byte reserved area.  The first 64 bytes are
+layout-compatible with the legacy structures, so common header
+accesses remain valid.
+
+The enlarged entry stride doubles the DMA ring memory allocated for
+both request and response queues on 29xx, and all ring pointer
+arithmetic must account for the wider entries (handled by later
+patches in this series).
 
 Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_def.h  | 33 +++++++++++----
- drivers/scsi/qla2xxx/qla_init.c |  2 +-
- drivers/scsi/qla2xxx/qla_isr.c  |  5 ++-
- drivers/scsi/qla2xxx/qla_os.c   | 74 ++++++++++++++++++++++++++-------
- 4 files changed, 88 insertions(+), 26 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h | 30 ++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_mbx.c | 20 +++++++++++++-------
+ drivers/scsi/qla2xxx/qla_mid.c | 25 +++++++++++++++++++++----
+ 3 files changed, 64 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 5593ad7fad27..6337a056b149 100644
+index 89ddf332cdbd..1ec7ee578e0c 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3528,7 +3528,6 @@ struct isp_operations {
- #define QLA_MIDX_DEFAULT	0
- #define QLA_MIDX_RSP_Q		1
- #define QLA_PCI_MSIX_CONTROL	0xa2
--#define QLA_83XX_PCI_MSIX_CONTROL	0x92
+@@ -1989,6 +1989,18 @@ typedef struct {
+ #define RESPONSE_PROCESSED	0xDEADDEAD	/* Signature */
+ } response_t;
  
- struct scsi_qla_host;
- 
-@@ -4287,6 +4286,10 @@ struct qla_hw_data {
- #define PCI_DEVICE_ID_QLOGIC_ISP2089	0x2089
- #define PCI_DEVICE_ID_QLOGIC_ISP2281	0x2281
- #define PCI_DEVICE_ID_QLOGIC_ISP2289	0x2289
-+#define PCI_DEVICE_ID_QLOGIC_ISP2099	0x2099
-+#define PCI_DEVICE_ID_QLOGIC_ISP2299	0x2299
-+#define PCI_DEVICE_ID_QLOGIC_ISP2091	0x2091
-+#define PCI_DEVICE_ID_QLOGIC_ISP2291	0x2291
- 
- 	uint32_t	isp_type;
- #define DT_ISP2100                      BIT_0
-@@ -4316,7 +4319,11 @@ struct qla_hw_data {
- #define DT_ISP2089			BIT_24
- #define DT_ISP2281			BIT_25
- #define DT_ISP2289			BIT_26
--#define DT_ISP_LAST			(DT_ISP2289 << 1)
-+#define DT_ISP2299			BIT_27
-+#define DT_ISP2099			BIT_28
-+#define DT_ISP2091			BIT_29
-+#define DT_ISP2291			BIT_30
-+#define DT_ISP_LAST			((uint32_t)DT_ISP2291 << 1)
- 
- 	uint32_t	device_type;
- #define DT_T10_PI                       BIT_25
-@@ -4353,6 +4360,10 @@ struct qla_hw_data {
- #define IS_QLA2261(ha)	(DT_MASK(ha) & DT_ISP2261)
- #define IS_QLA2081(ha)	(DT_MASK(ha) & DT_ISP2081)
- #define IS_QLA2281(ha)	(DT_MASK(ha) & DT_ISP2281)
-+#define IS_QLA2299(ha)	(DT_MASK(ha) & DT_ISP2299)
-+#define IS_QLA2099(ha)	(DT_MASK(ha) & DT_ISP2099)
-+#define IS_QLA2091(ha)	(DT_MASK(ha) & DT_ISP2091)
-+#define IS_QLA2291(ha)	(DT_MASK(ha) & DT_ISP2291)
- 
- #define IS_QLA23XX(ha)  (IS_QLA2300(ha) || IS_QLA2312(ha) || IS_QLA2322(ha) || \
- 			IS_QLA6312(ha) || IS_QLA6322(ha))
-@@ -4363,6 +4374,9 @@ struct qla_hw_data {
- #define IS_QLA84XX(ha)  (IS_QLA8432(ha))
- #define IS_QLA27XX(ha)  (IS_QLA2071(ha) || IS_QLA2271(ha) || IS_QLA2261(ha))
- #define IS_QLA28XX(ha)	(IS_QLA2081(ha) || IS_QLA2281(ha))
-+#define IS_QLA29XX(ha)	(IS_QLA2099(ha) || IS_QLA2299(ha) || \
-+			 IS_QLA2091(ha) || IS_QLA2291(ha))
++struct response_ext {
++	uint8_t		entry_type;		/* Entry type. */
++	uint8_t		entry_count;		/* Entry count. */
++	uint8_t		sys_define;		/* System defined. */
++	uint8_t		entry_status;		/* Entry Status. */
++	uint32_t	handle;			/* System defined handle */
++	uint8_t		data[52];
++	uint32_t	signature;
++	uint8_t		reserved[64];
++#define RESPONSE_PROCESSED	0xDEADDEAD	/* Signature */
++};
 +
- #define IS_QLA24XX_TYPE(ha)     (IS_QLA24XX(ha) || IS_QLA54XX(ha) || \
- 				IS_QLA84XX(ha))
- #define IS_CNA_CAPABLE(ha)	(IS_QLA81XX(ha) || IS_QLA82XX(ha) || \
-@@ -4372,9 +4386,10 @@ struct qla_hw_data {
- 				IS_QLA25XX(ha) || IS_QLA81XX(ha) || \
- 				IS_QLA82XX(ha) || IS_QLA83XX(ha) || \
- 				IS_QLA8044(ha) || IS_QLA27XX(ha) || \
--				IS_QLA28XX(ha))
-+				IS_QLA28XX(ha) || IS_QLA29XX(ha))
- #define IS_MSIX_NACK_CAPABLE(ha) (IS_QLA81XX(ha) || IS_QLA83XX(ha) || \
--				IS_QLA27XX(ha) || IS_QLA28XX(ha))
-+				IS_QLA27XX(ha) || IS_QLA28XX(ha) || \
-+				IS_QLA29XX(ha))
- #define IS_NOPOLLING_TYPE(ha)	(IS_QLA81XX(ha) && (ha)->flags.msix_enabled)
- #define IS_FAC_REQUIRED(ha)	(IS_QLA81XX(ha) || IS_QLA83XX(ha) || \
- 				IS_QLA27XX(ha) || IS_QLA28XX(ha))
-@@ -4390,9 +4405,9 @@ struct qla_hw_data {
- #define HAS_EXTENDED_IDS(ha)    ((ha)->device_type & DT_EXTENDED_IDS)
- #define IS_CT6_SUPPORTED(ha)	((ha)->device_type & DT_CT6_SUPPORTED)
- #define IS_MQUE_CAPABLE(ha)	(IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
--				 IS_QLA28XX(ha))
-+				 IS_QLA28XX(ha) || IS_QLA29XX(ha))
- #define IS_BIDI_CAPABLE(ha) \
--    (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha))
-+    (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha) || IS_QLA29XX(ha))
- /* Bit 21 of fw_attributes decides the MCTP capabilities */
- #define IS_MCTP_CAPABLE(ha)	(IS_QLA2031(ha) && \
- 				((ha)->fw_attributes_ext[0] & BIT_0))
-@@ -4408,12 +4423,12 @@ struct qla_hw_data {
- 	(QLA_NVME_IOS(_sp) && QLA_ABTS_FW_ENABLED(_sp->fcport->vha->hw))
+ /*
+  * ISP queue - ATIO queue entry definition.
+  */
+@@ -2067,6 +2079,24 @@ typedef struct {
+ 	struct dsd64 dsd[2];
+ } cmd_a64_entry_t, request_t;
  
- #define IS_PI_UNINIT_CAPABLE(ha)	(IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
--					 IS_QLA28XX(ha))
-+					 IS_QLA28XX(ha) || IS_QLA29XX(ha))
- #define IS_PI_IPGUARD_CAPABLE(ha)	(IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
--					 IS_QLA28XX(ha))
-+					 IS_QLA28XX(ha) || IS_QLA29XX(ha))
- #define IS_PI_DIFB_DIX0_CAPABLE(ha)	(0)
- #define IS_PI_SPLIT_DET_CAPABLE_HBA(ha)	(IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
--					IS_QLA28XX(ha))
-+					IS_QLA28XX(ha) || IS_QLA29XX(ha))
- #define IS_PI_SPLIT_DET_CAPABLE(ha)	(IS_PI_SPLIT_DET_CAPABLE_HBA(ha) && \
-     (((ha)->fw_attributes_h << 16 | (ha)->fw_attributes) & BIT_22))
- #define IS_ATIO_MSIX_CAPABLE(ha) (IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e746c9274cde..e23e7ac48ae2 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2773,7 +2773,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
- 	ha->isp_ops->reset_chip(vha);
- 
- 	/* Check for secure flash support */
--	if (IS_QLA28XX(ha)) {
-+	if (IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
- 		if (rd_reg_word(&reg->mailbox12) & BIT_0)
- 			ha->flags.secure_adapter = 1;
- 		ql_log(ql_log_info, vha, 0xffff, "Secure Adapter: %s\n",
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 33776330956c..c47c38e099ff 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -4663,7 +4663,8 @@ qla2x00_request_irqs(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	/* If possible, enable MSI-X. */
- 	if (ql2xenablemsix == 0 || (!IS_QLA2432(ha) && !IS_QLA2532(ha) &&
- 	    !IS_QLA8432(ha) && !IS_CNA_CAPABLE(ha) && !IS_QLA2031(ha) &&
--	    !IS_QLAFX00(ha) && !IS_QLA27XX(ha) && !IS_QLA28XX(ha)))
-+	    !IS_QLAFX00(ha) && !IS_QLA27XX(ha) && !IS_QLA28XX(ha) &&
-+	    !IS_QLA29XX(ha)))
- 		goto skip_msi;
- 
- 	if (ql2xenablemsix == 2)
-@@ -4702,7 +4703,7 @@ qla2x00_request_irqs(struct qla_hw_data *ha, struct rsp_que *rsp)
- 
- 	if (!IS_QLA24XX(ha) && !IS_QLA2532(ha) && !IS_QLA8432(ha) &&
- 	    !IS_QLA8001(ha) && !IS_P3P_TYPE(ha) && !IS_QLAFX00(ha) &&
--	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha))
-+	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha))
- 		goto skip_msi;
- 
- 	ret = pci_alloc_irq_vectors(ha->pdev, 1, 1, PCI_IRQ_MSI);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 72b1c28e4dae..c91d2b8bd08e 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -429,7 +429,8 @@ static void qla_init_base_qpair(struct scsi_qla_host *vha, struct req_que *req,
- 	qla_cpu_update(rsp->qpair, raw_smp_processor_id());
- 	ha->base_qpair->pdev = ha->pdev;
- 
--	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha))
-+	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha) ||
++struct request_ext {
++	uint8_t entry_type;		/* Entry type. */
++	uint8_t entry_count;		/* Entry count. */
++	uint8_t sys_define;		/* System defined. */
++	uint8_t entry_status;		/* Entry Status. */
++	uint32_t handle;		/* System handle. */
++	target_id_t target;		/* SCSI ID */
++	__le16  lun;			/* SCSI LUN */
++	__le16  control_flags;		/* Control flags. */
++	uint16_t reserved_1;
++	__le16  timeout;		/* Command timeout. */
++	__le16  dseg_count;		/* Data segment count. */
++	uint8_t scsi_cdb[MAX_CMDSZ];	/* SCSI command words. */
++	uint32_t byte_count;		/* Total byte count. */
++	struct dsd64 dsd[2];
++	uint8_t reserved[64];
++};
++
+ /*
+  * ISP queue - continuation entry structure definition.
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 2d052f870b2b..2b232b225c90 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -4584,7 +4584,8 @@ qla25xx_init_req_que(struct scsi_qla_host *vha, struct req_que *req)
+ 	mcp->mb[12] = req->qos;
+ 	mcp->mb[11] = req->vp_idx;
+ 	mcp->mb[13] = req->rid;
+-	if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha))
++	if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha) ||
 +	    IS_QLA29XX(ha))
- 		ha->base_qpair->reqq_start_iocbs = qla_83xx_start_iocbs;
- }
+ 		mcp->mb[15] = 0;
  
-@@ -2153,8 +2154,6 @@ qla2x00_iospace_config(struct qla_hw_data *ha)
- static int
- qla83xx_iospace_config(struct qla_hw_data *ha)
+ 	mcp->mb[4] = req->id;
+@@ -4599,9 +4600,10 @@ qla25xx_init_req_que(struct scsi_qla_host *vha, struct req_que *req)
+ 	mcp->tov = MBX_TOV_SECONDS * 2;
+ 
+ 	if (IS_QLA81XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha) ||
+-	    IS_QLA28XX(ha))
++	    IS_QLA28XX(ha) || IS_QLA29XX(ha))
+ 		mcp->in_mb |= MBX_1;
+-	if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
++	if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha) ||
++	    IS_QLA29XX(ha)) {
+ 		mcp->out_mb |= MBX_15;
+ 		/* debug q create issue in SR-IOV */
+ 		mcp->in_mb |= MBX_9 | MBX_8 | MBX_7;
+@@ -4610,7 +4612,8 @@ qla25xx_init_req_que(struct scsi_qla_host *vha, struct req_que *req)
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	if (!(req->options & BIT_0)) {
+ 		wrt_reg_dword(req->req_q_in, 0);
+-		if (!IS_QLA83XX(ha) && !IS_QLA27XX(ha) && !IS_QLA28XX(ha))
++		if (!IS_QLA83XX(ha) && !IS_QLA27XX(ha) && !IS_QLA28XX(ha) &&
++		    !IS_QLA29XX(ha))
+ 			wrt_reg_dword(req->req_q_out, 0);
+ 	}
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+@@ -4654,7 +4657,8 @@ qla25xx_init_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
+ 	mcp->mb[5] = rsp->length;
+ 	mcp->mb[14] = rsp->msix->entry;
+ 	mcp->mb[13] = rsp->rid;
+-	if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha))
++	if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha) ||
++	    IS_QLA29XX(ha))
+ 		mcp->mb[15] = 0;
+ 
+ 	mcp->mb[4] = rsp->id;
+@@ -4671,7 +4675,8 @@ qla25xx_init_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
+ 	if (IS_QLA81XX(ha)) {
+ 		mcp->out_mb |= MBX_12|MBX_11|MBX_10;
+ 		mcp->in_mb |= MBX_1;
+-	} else if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
++	} else if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha) ||
++		   IS_QLA29XX(ha)) {
+ 		mcp->out_mb |= MBX_15|MBX_12|MBX_11|MBX_10;
+ 		mcp->in_mb |= MBX_1;
+ 		/* debug q create issue in SR-IOV */
+@@ -4681,7 +4686,8 @@ qla25xx_init_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	if (!(rsp->options & BIT_0)) {
+ 		wrt_reg_dword(rsp->rsp_q_out, 0);
+-		if (!IS_QLA83XX(ha) && !IS_QLA27XX(ha) && !IS_QLA28XX(ha))
++		if (!IS_QLA83XX(ha) && !IS_QLA27XX(ha) && !IS_QLA28XX(ha) &&
++		    !IS_QLA29XX(ha))
+ 			wrt_reg_dword(rsp->rsp_q_in, 0);
+ 	}
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index c563133f751e..e75b7ae22bc5 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -574,9 +574,13 @@ qla25xx_free_req_que(struct scsi_qla_host *vha, struct req_que *req)
  {
--	uint16_t msix;
--
- 	if (pci_request_selected_regions(ha->pdev, ha->bars,
- 	    QLA2XXX_DRIVER_NAME)) {
- 		ql_log_pci(ql_log_fatal, ha->pdev, 0x0117,
-@@ -2203,10 +2202,18 @@ qla83xx_iospace_config(struct qla_hw_data *ha)
- 	ha->msixbase = ioremap(pci_resource_start(ha->pdev, 2),
- 			pci_resource_len(ha->pdev, 2));
- 	if (ha->msixbase) {
-+		int msix_cnt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint16_t que_id = req->id;
++	uint16_t reqsz;
 +
- 		/* Read MSIX vector size of the board */
--		pci_read_config_word(ha->pdev,
--		    QLA_83XX_PCI_MSIX_CONTROL, &msix);
--		ha->msix_count = (msix & PCI_MSIX_FLAGS_QSIZE)  + 1;
-+		msix_cnt = pci_msix_vec_count(ha->pdev);
-+		if (msix_cnt <= 0) {
-+			ql_log_pci(ql_log_warn, ha->pdev, 0x0120,
-+				   "Failed to read MSI-X count (%d), falling back to base vectors.\n",
-+				   msix_cnt);
-+			goto mqiobase_exit;
-+		}
-+		ha->msix_count = msix_cnt;
++	reqsz = IS_QLA29XX(ha) ? sizeof(struct request_ext) :
++				 sizeof(request_t);
+ 
+ 	dma_free_coherent(&ha->pdev->dev, (req->length + 1) *
+-		sizeof(request_t), req->ring, req->dma);
++			  reqsz, req->ring, req->dma);
+ 	req->ring = NULL;
+ 	req->dma = 0;
+ 	if (que_id) {
+@@ -594,6 +598,10 @@ qla25xx_free_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint16_t que_id = rsp->id;
++	uint16_t rspsz;
 +
- 		/*
- 		 * By default, driver uses at least two msix vectors
- 		 * (default & rspq)
-@@ -2796,6 +2803,20 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
- 		ha->device_type |= DT_T10_PI;
- 		ha->fw_srisc_address = RISC_START_ADDRESS_2400;
- 		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2099:
-+	case PCI_DEVICE_ID_QLOGIC_ISP2299:
-+	case PCI_DEVICE_ID_QLOGIC_ISP2091:
-+	case PCI_DEVICE_ID_QLOGIC_ISP2291:
-+		ha->isp_type |= DT_ISP2299;
-+		ha->isp_type |= DT_ISP2099;
-+		ha->isp_type |= DT_ISP2091;
-+		ha->isp_type |= DT_ISP2291;
-+		ha->device_type |= DT_ZIO_SUPPORTED;
-+		ha->device_type |= DT_FWI2;
-+		ha->device_type |= DT_IIDMA;
-+		ha->device_type |= DT_T10_PI;
-+		ha->fw_srisc_address = RISC_START_ADDRESS_2400;
-+		break;
++	rspsz = IS_QLA29XX(ha) ? sizeof(struct response_ext) :
++				 sizeof(response_t);
+ 
+ 	if (rsp->msix && rsp->msix->have_irq) {
+ 		free_irq(rsp->msix->vector, rsp->msix->handle);
+@@ -601,8 +609,9 @@ qla25xx_free_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
+ 		rsp->msix->in_use = 0;
+ 		rsp->msix->handle = NULL;
+ 	}
++
+ 	dma_free_coherent(&ha->pdev->dev, (rsp->length + 1) *
+-		sizeof(response_t), rsp->ring, rsp->dma);
++			  rspsz, rsp->ring, rsp->dma);
+ 	rsp->ring = NULL;
+ 	rsp->dma = 0;
+ 	if (que_id) {
+@@ -706,6 +715,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
+ 	uint16_t que_id = 0;
+ 	device_reg_t *reg;
+ 	uint32_t cnt;
++	uint16_t reqsz;
+ 
+ 	req = kzalloc_obj(struct req_que);
+ 	if (req == NULL) {
+@@ -714,9 +724,12 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
+ 		goto failed;
  	}
  
- 	if (IS_QLA82XX(ha))
-@@ -2803,8 +2824,8 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
- 	else {
- 		/* Get adapter physical port no from interrupt pin register. */
- 		pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &ha->port_no);
--		if (IS_QLA25XX(ha) || IS_QLA2031(ha) ||
--		    IS_QLA27XX(ha) || IS_QLA28XX(ha))
-+		if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
-+		    IS_QLA28XX(ha) || IS_QLA29XX(ha))
- 			ha->port_no--;
- 		else
- 			ha->port_no = !(ha->port_no & 1);
-@@ -2936,7 +2957,11 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2081 ||
- 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2281 ||
- 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2089 ||
--	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2289) {
-+	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2289 ||
-+	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2099 ||
-+	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2299 ||
-+	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2091 ||
-+	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2291) {
- 		bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 		mem_only = 1;
- 		ql_dbg_pci(ql_dbg_init, pdev, 0x0007,
-@@ -2998,7 +3023,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
++	reqsz = IS_QLA29XX(ha) ? sizeof(struct request_ext) :
++				 sizeof(request_t);
++
+ 	req->length = REQUEST_ENTRY_CNT_24XX;
+ 	req->ring = dma_alloc_coherent(&ha->pdev->dev,
+-			(req->length + 1) * sizeof(request_t),
++			(req->length + 1) * reqsz,
+ 			&req->dma, GFP_KERNEL);
+ 	if (req->ring == NULL) {
+ 		ql_log(ql_log_fatal, base_vha, 0x00da,
+@@ -833,6 +846,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
+ 	struct scsi_qla_host *vha = pci_get_drvdata(ha->pdev);
+ 	uint16_t que_id = 0;
+ 	device_reg_t *reg;
++	uint16_t rspsz;
  
- 	/* Set EEH reset type to fundamental if required by hba */
- 	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha) ||
--	    IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha))
-+	    IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha) ||
-+	    IS_QLA29XX(ha))
- 		pdev->needs_freset = 1;
- 
- 	ha->prev_topology = 0;
-@@ -3195,6 +3221,22 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->flash_data_off = FARX_ACCESS_FLASH_DATA_28XX;
- 		ha->nvram_conf_off = ~0;
- 		ha->nvram_data_off = ~0;
-+	} else if (IS_QLA29XX(ha)) {
-+		ha->portnum = PCI_FUNC(ha->pdev->devfn);
-+		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2400;
-+		ha->mbx_count = MAILBOX_REGISTER_COUNT;
-+		req_length = REQUEST_ENTRY_CNT_83XX;
-+		rsp_length = RESPONSE_ENTRY_CNT_83XX;
-+		ha->max_loop_id = SNS_LAST_LOOP_ID_2300;
-+		ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
-+		ha->gid_list_info_size = 8;
-+		ha->optrom_size = OPTROM_SIZE_28XX;
-+		ha->nvram_npiv_size = QLA_MAX_VPORTS_QLA25XX;
-+		ha->isp_ops = &qla27xx_isp_ops;
-+		ha->flash_conf_off = ~0;
-+		ha->flash_data_off = ~0;
-+		ha->nvram_conf_off = ~0;
-+		ha->nvram_data_off = ~0;
+ 	rsp = kzalloc_obj(struct rsp_que);
+ 	if (rsp == NULL) {
+@@ -841,9 +855,12 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
+ 		goto failed;
  	}
  
- 	ql_dbg_pci(ql_dbg_init, pdev, 0x001e,
-@@ -3373,7 +3415,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	rsp->rsp_q_in = &ha->iobase->isp24.rsp_q_in;
- 	rsp->rsp_q_out = &ha->iobase->isp24.rsp_q_out;
- 	if (ha->mqenable || IS_QLA83XX(ha) || IS_QLA27XX(ha) ||
--	    IS_QLA28XX(ha)) {
-+	    IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
- 		req->req_q_in = &ha->mqiobase->isp25mq.req_q_in;
- 		req->req_q_out = &ha->mqiobase->isp25mq.req_q_out;
- 		rsp->rsp_q_in = &ha->mqiobase->isp25mq.rsp_q_in;
-@@ -3898,7 +3940,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 		return;
- 
- 	if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
--	    IS_QLA28XX(ha)) {
-+	    IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
- 		if (ha->flags.fw_started)
- 			qla2x00_abort_isp_cleanup(base_vha);
- 	} else if (!IS_QLAFX00(ha)) {
-@@ -4387,7 +4429,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 
- 	/* Get consistent memory allocated for EX-INIT-CB. */
- 	if (IS_CNA_CAPABLE(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
--	    IS_QLA28XX(ha)) {
-+	    IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
- 		ha->ex_init_cb = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
- 		    &ha->ex_init_cb_dma);
- 		if (!ha->ex_init_cb)
-@@ -4397,7 +4439,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 	}
- 
- 	/* Get consistent memory allocated for Special Features-CB. */
--	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
-+	if (IS_QLA27XX(ha) || IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
- 		ha->sf_init_cb = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL,
- 						&ha->sf_init_cb_dma);
- 		if (!ha->sf_init_cb)
-@@ -8155,6 +8197,10 @@ static const struct pci_device_id qla2xxx_pci_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2281) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2089) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2289) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2099) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2299) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2091) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2291) },
- 	{ 0 },
- };
- MODULE_DEVICE_TABLE(pci, qla2xxx_pci_tbl);
++	rspsz = IS_QLA29XX(ha) ? sizeof(struct response_ext) :
++				 sizeof(response_t);
++
+ 	rsp->length = RESPONSE_ENTRY_CNT_MQ;
+ 	rsp->ring = dma_alloc_coherent(&ha->pdev->dev,
+-			(rsp->length + 1) * sizeof(response_t),
++			(rsp->length + 1) * rspsz,
+ 			&rsp->dma, GFP_KERNEL);
+ 	if (rsp->ring == NULL) {
+ 		ql_log(ql_log_warn, base_vha, 0x00e1,
 -- 
 2.47.3
 
