@@ -1,142 +1,117 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32B7223183F
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:31:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A43A82F12A5
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:31:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783405900; cv=none; b=oPla+Qo34+h85ES/tHFH1NNOhS7V+vYVZAUiBzpTowGRzClrlQF5h7Opz+qKILuFgjFTwo0KwzcY36yqnNFGHsdab2CxTLApK9TmF6qXe1Jvi2unEUi3A3W1VihUSWyG9GuOXpPR91gjV6qhd44SmsxLdfOMqm35SduIKnTs56g=
+	t=1783405900; cv=none; b=RcMhRNHtnX+P0oNepp+WVb8hlh0Nz1AttL0Kv6Xsu1SZzLziqKQmcVmh6LliE5cezhrKw9K/C6qSMLnI7JL/EueStnan7eWJn94VvLivz65P0cXfLfWMbQAOuLJPj7lEQflq/4bPmUxVYw0/krTJgaoA97PTLZCVN5rMIA7uriM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1783405900; c=relaxed/simple;
-	bh=QBoILBrADClDsycYTW/aLRr/ULJAwzfVqGUHcf5Ncko=;
+	bh=3lTMA9Vgt6ZROG+IO34vuZxFajRhCpLoNYfwWKKJOiE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jjyYP6Ra3XUOFdfIoRhVJYqqODfavWYlIZeQse8o0vLHCZGVhClyszbALrmE5G+gQNc44SVnKZoa+/jOxidGG0alEpBuaXeUpx4eFe2DfzD5ny7yI2x6rofb1VJe4ZDxy5FtCkEtpHWWaFCBO4QyeRU5mNijqzj4N/u3PUAiXoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IoQNwDci; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=l/Y08kZBMl8TMvZOmtAXjsDU2I75Z5PAXUZlmHiXzSr4OeJdAK8QhLoaGjM0iFObYkZOSsxxQddAjhvQhAAByqefmsXITsMPYXLZTcIiZxXt1DOQAKZZoOMuXt7cXCC4p2KKsGpOyk5nGk9lTKUBZmvxCm6w2Sr/Rk4dbphA6Fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EYBYQg3C; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IoQNwDci"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CC5E1F000E9;
-	Tue,  7 Jul 2026 06:31:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EYBYQg3C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DF101F00ACA;
+	Tue,  7 Jul 2026 06:31:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783405898;
-	bh=OQPEVozNhoiENDPtA/SSiLkTdEyPsSZI/A2IfZeLHHU=;
+	s=k20260515; t=1783405899;
+	bh=cHi/dHTZ7AHoDWgItcNIe+pzc1wxRyVaaj2pI1/jKYk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IoQNwDciFBuMHXwypYQgjIO3Zn58Ix2hl2bXamZ3h4QIbxF4VFzGTp/GXLbK5IbrJ
-	 qik2n/wV1Amuwo3ZwuUOMWxgKMBTCBqm7JhfmH+SlZWlNn9K/BYsvyFQV2QZLYDx6J
-	 jaQtQ3GaVN0mtFJK03PT4bx0q8aaj9p3betwv4b6zlALJskxoApVEk5RZpkAU1Wy7e
-	 qixCr5ImH1Kf6a1E0XzSAz9cQfzifounfBF1sTZ597Mq4qjac/uJLshF4P7z85Hd4x
-	 RIgwJq0ZCTFLo5epAX41iEr1z0UnMSmAZjPEz9ngh6kT0cV7/rvHYYLOqiTc5VU5DI
-	 XXMOtUEewLGrA==
+	b=EYBYQg3CW8wwUIA+bfrCXI8xcWumQSJzafCXx3Va0zjR3LUOOWIJfFMTkyegGbwMG
+	 6RTROBDG/zJRZbSnXFNnmmzcCftMnTBh5MOV5JOeKMnWExzFJkm63kmtGfP8gJlSdq
+	 WY+B2bRTQyMfDbXxpXaQ85GGEiXHh+cGlHGNC84Li2KEOekztFvEVgqu+9FnXJcE+K
+	 IeKjvhV4JO3h9NQVURpSorUDS1La9DKsNlTH+eNEagWLM/dXmajemVrDqRUfphLtMn
+	 EeoTh4Jos6YBwdb1K1Fp76IVeaTE5zEErgmBkWtj0MEUI9Ud9zBo45jtIx5BErzCNy
+	 f7qpkvciRQv/w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 25/88] scsi: qla2xxx: Handle sts_cont_entry_ext_t for
- 29xx adapters
+Subject: Re: [PATCH v3 30/88] scsi: qla2xxx: Add size check for ELS status
+ entry layout on 29xx
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-26-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-31-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-26-njavali@marvell.com>
+ <20260707055435.2680300-31-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Tue, 07 Jul 2026 06:31:38 +0000
-Message-Id: <20260707063138.9CC5E1F000E9@smtp.kernel.org>
+Message-Id: <20260707063139.5DF101F00ACA@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [Critical] FORTIFY_SOURCE panic during 128-byte continuation packet proce=
-ssing on QLA29XX adapters due to statically tracked source pointer bounds.
-
-Pre-existing issues:
-- [Critical] A crafted FPIN, ELS, or SENSE payload containing the `RESPONSE=
-_PROCESSED` signature causes a hard lockup or permanently stalls the respon=
-se queue.
+- [High] Hardware DMA structures use C bit-fields which break cross-archite=
+cture endianness safety.
 --
 
---- Patch [25]: [PATCH v3 25/88] scsi: qla2xxx: Handle sts_cont_entry_ext_t=
- for 29xx adapters ---
-commit ba18e4a152f622363daff6c96a006be46727237c
+--- Patch [30]: [PATCH v3 30/88] scsi: qla2xxx: Add size check for ELS stat=
+us entry layout on 29xx ---
+commit be1adf44a1c5565c9a85fa67802469ba04fa81af
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Handle sts_cont_entry_ext_t for 29xx adapters
+scsi: qla2xxx: Add size check for ELS status entry layout on 29xx
 
-This commit updates the QLogic qla2xxx driver to handle 128-byte response
-queue entries for 29xx adapters. It introduces a new size calculation
-routine and updates the status continuation IOCB processing paths to branch
-based on the adapter type, ensuring correct data payload sizes are used.
+Add a BUILD_BUG_ON in qla2x00_module_init() to validate that struct
+els_sts_entry_24xx_ext is 128 bytes, matching the 29xx firmware IOCB
+size. It also documents the overlay layout in qla24xx_els_ct_entry().
 
 > diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
 r.c
+> index e2653620e80be..c286465ae013d 100644
 > --- a/drivers/scsi/qla2xxx/qla_isr.c
 > +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -271,10 +276,12 @@ int __qla_copy_purex_to_buffer(struct scsi_qla_host=
- *vha,
-> =20
->  	do {
->  		while ((total_bytes > 0) && (entry_count_remaining > 0)) {
-> -			new_pkt =3D (sts_cont_entry_t *)rsp_q->ring_ptr;
-> -			*pkt =3D new_pkt;
-> +			*pkt =3D rsp_q->ring_ptr;
-> +			data =3D ((sts_cont_entry_t *)*pkt)->data;
-> +			data_sz =3D qla_sts_cont_data_size(ha);
+> @@ -2359,6 +2359,22 @@ static void
+>  qla24xx_els_ct_entry(scsi_qla_host_t *v, struct req_que *req,
+>  		     void *pkt, int iocb_type)
+>  {
+> +	/*
+> +	 * els_sts_entry_24xx_ext (29xx) overlays els_sts_entry_24xx for every
+> +	 * field touched in this completion handler: comp_status (offset 8),
+> +	 * total_byte_count (32), error_subcode_1 (36), error_subcode_2 (40),
+> +	 * d_id[]/s_id[] (24..29), control_flags (30) all sit at byte-identical
+> +	 * offsets in both layouts (only vp_index/sof_type at offset 14-15 are
+> +	 * bit-packed differently, and that field is write-only on the issue
 
-[Severity: Critical]
-Will this trigger a FORTIFY_SOURCE panic on 29xx adapters?
+[Severity: High]
+Does this bit-packing break cross-architecture endianness safety for the
+hardware DMA structures?
 
-When extracting the data pointer in __qla_copy_purex_to_buffer(), the
-packet is explicitly cast to sts_cont_entry_t, which defines the data
-array as fixed at 60 bytes. Later in the loop, memcpy() copies up to
-data_sz (124 bytes for 29xx) from this pointer.
+The documentation mentions that vp_index/sof_type are bit-packed, and
+looking at the struct definition for els_entry_24xx_ext:
 
-Since the compiler statically tracks the bounds of the 60-byte array,
-won't this cause a panic when processing larger continuation packets?
-This same pattern appears to be introduced in qla27xx_copy_multiple_pkt(),
-qla27xx_copy_fpin_pkt(), and qla2x00_status_cont_entry().
+drivers/scsi/qla2xxx/qla_fw29.h:
+	__le16	vp_index : 9;		/* VP Index 9bits */
+	__le16	reserved_1_sof : 3;
+	__le16	sof_type : 4;
 
-> =20
-> -			if (new_pkt->entry_type !=3D STATUS_CONT_TYPE) {
-> +			if (((sts_cont_entry_t *)*pkt)->entry_type !=3D
-> +			    STATUS_CONT_TYPE) {
->  				ql_log(ql_log_warn, vha, 0x507a,
->  				    "Unexpected IOCB type, partial data 0x%x\n",
->  				    buffer_copy_offset);
+And how it is written to the structure:
+
+drivers/scsi/qla2xxx/qla_inline.h:qla_els_set_vp_sof() {
+	struct els_entry_24xx_ext *ext =3D pkt;
+
+	ext->vp_index =3D vp_idx;
+	ext->sof_type =3D ELS_EXT_EST_SOFI3;
+}
+
+Since C standard bit-field layout depends on the compiler's ABI and
+endianness, won't this result in garbled values being sent to the 29xx
+hardware on big-endian systems?
+
+Could this be updated to use an integer type like __le16 with explicit
+bitwise shifts and masks instead of C bit-fields?
+
+> +	 * path -- we never read it here). All reads in this function are
+> +	 * therefore stride-agnostic and go through a single struct
+
 [ ... ]
-> -			((response_t *)new_pkt)->signature =3D RESPONSE_PROCESSED;
-> +			((response_t *)*pkt)->signature =3D RESPONSE_PROCESSED;
-
-[Severity: Critical]
-This is a pre-existing issue, but could a crafted payload cause a hard
-lockup or queue stall?
-
-The driver uses the in-band sentinel value RESPONSE_PROCESSED
-(0xDEADDEAD) at offset 60 to detect when the hardware has finished DMAing
-the slot. However, this offset aliases with the packet payload itself
-(for example, bytes 56-59 of sts_cont_entry_t::data).
-
-If a remote target or fabric switch sends an FPIN, ELS frame, or SCSI
-SENSE response containing 0xDEADDEAD at this exact offset, the hardware
-will write this into the ring slot. When the driver polls the signature
-in functions like qla27xx_copy_multiple_pkt() or
-qla24xx_process_response_queue():
-
-    if (rsp_q->ring_ptr->signature =3D=3D RESPONSE_PROCESSED) {
-        ...
-        cpu_relax();
-        continue;
-    }
-
-Won't it mistakenly assume the slot is unwritten, leading to an infinite
-spin loop or a permanently stalled queue?
-
->  			/* flush signature */
->  			wmb();
->  		}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D25
+300-1-njavali@marvell.com?part=3D30
