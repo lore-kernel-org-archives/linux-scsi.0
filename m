@@ -1,147 +1,249 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6EE3A8746
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:35:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AF11221546
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:36:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783406150; cv=none; b=CnKqLREwj5lBbkqvE1D5pfWITDbCMOH6Cc6VMGIXsMFCs9MB0ULCsaDuXhG7DPHHqHkeLslrzvuIfyeV/mbv7/hR5xbOkDF4JnDCaV7YUPTRIAdjjq6Ih3iBAbpft41d9/RNn5YVbk94hdDcSoZ0LsmEAwKUuhPRno43YlIPW7E=
+	t=1783406170; cv=none; b=Ikwv9Fnf4CDkeNlVfSAQZYf1otdvK4RAp6127EtwnVMRc/G+dFZmSWOSMSZSbJSsvIfukZ+Bdv/dAyO/xnIxxlfCvQxeYutHtaxp0X6/9GdVyL3ArOxhzBlCVjw1ryXaPQ42pl6k+RnIeN5c6nc3obBOo+xIAdW9aEKm+69J1Fs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783406150; c=relaxed/simple;
-	bh=3mdNhTCV/plW7n425FlPkqFdnwOZC+2rxhAVInUBkq4=;
+	s=arc-20240116; t=1783406170; c=relaxed/simple;
+	bh=1MnLt96ChTLj6lnhexLIhjpc9/azX+AXy+sKmT4A2Zo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Au0mnCzzQuqX73R+FlY/cLU3tpmV66koQJYLru2v/ceoGWR4ausIFIlYDfKF861hErF0umleDNIdwfenopXWeT3h7jy3Ony0EwD6DL+ZuL8YrbiUbWhkCszAplBR9AfC9sU4eYlDETChl3m41lGa5KaUNejoned3UU9+rg6N50Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bZpwi6R/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=r0NWTGGCmJRgfLbpaPRLBAFPCPIWYqlVt17iYGDiyppazy9EazYL+rKmDt+KQEFKqt15yi0FuyK1rnDQ7+I+i9kxbYK7Zy9paDv+W0Gk9o5T/ESHONh2CtxmX9HTzU7MeWzFAvE2GdiHcIRqaRoaruAgecG+3V2XLy96sk4cRP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TWpdDphd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bZpwi6R/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A2B61F00A3A;
-	Tue,  7 Jul 2026 06:35:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TWpdDphd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA6421F00A3F;
+	Tue,  7 Jul 2026 06:36:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783406148;
-	bh=qOPEfGql6D+f+dFlx6GsPv6CWQ9TtDnIx+MB2USN0j8=;
+	s=k20260515; t=1783406169;
+	bh=2656gtF1GNtQTP3yqj6brjiO3gvX9XBcW8DryMdIiVc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bZpwi6R/5a1sxaEbsLODraKNXxHAo4XqgxCXoxW/zBnRsbT1732yaczE5G4rtznEv
-	 bkD/H9EXUCx4GoNClnTzqzrtUW2buG6Jn/qqYgbgUMe/xE+PoVwGOf8HbRVwIS+aPQ
-	 U9UD5hhdWIj6VOJXbilGTlQSztIG9BO9WiJ/otBOMeY06VNuSKAXmb6qW4qhIKwp6B
-	 TNauai7KkyfBqiFA6GjJfvfHSw866SmoUSh+f2+/Y7LmKgMQbjcYh0DTUYVmhlzbFn
-	 Xpzo6xjz9twgJBGbPNy6O63HpWU+iRqWBa+wmYLtUs5ZZaeYgJ9TH5r8OHp6DSGY5Z
-	 NGkf10nO9PCRQ==
+	b=TWpdDphd36hYp2MLixmzC4sRw9DsCC8eNDZrMMa7wAlLtHTcVFSm66s37ZGaGP6KI
+	 4CGKEwmfYsVOgF+8N+HvAvqHHLprDIzRVaGNPFWYaJMhzIDdglxA0EXqg7A6mHMJdR
+	 acl8IpcuxwTmI+0brNiO39ZDnzK0FoN/skKnFpNICDxWqJ27cYNqYmHOqhQfsSmOH7
+	 bB4lFlpHSlw4xjhgO25JslWTPLtqF1BbWKIPmhqgo0BTp/ozXn1TNRjjbSamE85Hfu
+	 iw3Wm4JMpWsveKX77RUcFqyFq6P9iHAKzE5ylCzovFYQVLzYCJueWVGftXRDMkhli/
+	 trojl6hHIYG4A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 29/88] scsi: qla2xxx: Update handling of ELS IOCBs
- for 29xx series
+Subject: Re: [PATCH v3 19/88] scsi: qla2xxx: Enable serdes, resource count
+ and FCE trace for 29xx
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-30-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-20-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-30-njavali@marvell.com>
+ <20260707055435.2680300-20-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 06:35:47 +0000
-Message-Id: <20260707063548.3A2B61F00A3A@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 06:36:08 +0000
+Message-Id: <20260707063608.EA6421F00A3F@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-- [High] Hardware-facing structures use C bitfields for little-endian 16-bi=
-t integers, breaking on big-endian architectures.
-- [High] The extended ABTS response IOCB leaves the upper 64 bytes of the r=
-eused DMA buffer uninitialized, leaking stale hardware completion data.
-- [High] Virtual Port index (vp_idx) >=3D 256 is truncated and corrupted du=
-ring ABTS response processing on 29xx adapters due to an invalid struct cas=
-t.
+
+New issues:
+- [High] Multi-queue qpairs on 29xx miss the inline IOCB submission optimiz=
+ation, leading to request ring corruption.
+
+Pre-existing issues:
+- [High] Enabling FCE trace via debugfs when `fw_dump` is already allocated=
+ causes a vmalloc out-of-bounds write during firmware dump.
+- [High] Race condition between disabling FCE trace via debugfs and capturi=
+ng a firmware dump leads to a Use-After-Free of `ha->fce`.
+- [High] TOCTOU race condition in `qla2x00_dfs_fce_release()` causing a NUL=
+L pointer dereference.
+- [High] Data race on bitfields in `ha->flags` between process context and =
+hardware interrupt context.
 --
 
---- Patch [29]: [PATCH v3 29/88] scsi: qla2xxx: Update handling of ELS IOCB=
-s for 29xx series ---
-commit 75f1549af39bd863f96218c48272faaf14654107
+--- Patch [19]: [PATCH v3 19/88] scsi: qla2xxx: Enable serdes, resource cou=
+nt and FCE trace for 29xx ---
+commit edd8bd44658eaa99ef8b8fe98bcd34952eb875a0
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Update handling of ELS IOCBs for 29xx series
+scsi: qla2xxx: Enable serdes, resource count and FCE trace for 29xx
 
-Update ELS IOCB handling to support the extended 128-byte els_entry_24xx_ext
-structure used by 29xx series adapters. Change the signatures of ELS issue
-paths to accept a generic void pointer and introduce a helper
-qla_els_set_vp_sof() for encoding vp_index and sof_type.
+The 29xx adapters share the diagnostic and management interfaces
+already supported on ISP27xx/28xx, but several family capability
+gates still omitted IS_QLA29XX(), leaving these paths unreachable
+on 29xx.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla=
-_inline.h
-> index cc613bc98e926..695a5b7fc7946 100644
-> --- a/drivers/scsi/qla2xxx/qla_inline.h
-> +++ b/drivers/scsi/qla2xxx/qla_inline.h
-> @@ -863,3 +863,31 @@ qla_sts_fwi2_extract(struct qla_hw_data *ha, void *p=
-kt,
+> diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_df=
+s.c
+> index 43970caca7b39..177d47e92e494 100644
+> --- a/drivers/scsi/qla2xxx/qla_dfs.c
+> +++ b/drivers/scsi/qla2xxx/qla_dfs.c
+> @@ -497,7 +497,7 @@ qla2x00_dfs_fce_write(struct file *file, const char _=
+_user *buffer,
+>  	unsigned long enable;
+> =20
+>  	if (!IS_QLA25XX(ha) && !IS_QLA81XX(ha) && !IS_QLA83XX(ha) &&
+> -	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha)) {
+> +	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha)) {
+>  		ql_dbg(ql_dbg_user, vha, 0xd034,
+>  		       "this adapter does not support FCE.");
+>  		return -EINVAL;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but enabling FCE trace via debug=
+fs
+when fw_dump is already allocated seems to cause a vmalloc out-of-bounds wr=
+ite
+during a firmware dump.
+
+If ql2xallocfwdump is true, qla2x00_alloc_fw_dump() is called at probe while
+ha->fce is still NULL, omitting FCE_SIZE.  If we then enable FCE via debugf=
+s:
+
+drivers/scsi/qla2xxx/qla_dfs.c:qla2x00_dfs_fce_write() {
+    ...
+    if (!ha->flags.fce_dump_buf_alloced)
+        qla2x00_alloc_fw_dump(vha);
+    ...
+}
+
+qla2x00_alloc_fw_dump() returns early if ha->fw_dump is non-NULL, skipping
+the resize.  When the dump is later captured:
+
+drivers/scsi/qla2xxx/qla_dbg.c:qla25xx_copy_fce() {
+    ...
+    memcpy(iter_reg, ha->fce, ntohl(fcec->size));
+    ...
+}
+
+Does this blindly copy FCE_SIZE into the undersized dump buffer, triggering=
+ an
+out-of-bounds write?
+
+[Severity: High]
+This is a pre-existing issue, but there appears to be a race condition betw=
+een
+disabling FCE trace and capturing a firmware dump that leads to a
+use-after-free.
+
+Disabling FCE frees the DMA memory and NULLs ha->fce holding only
+ha->fce_mutex:
+
+drivers/scsi/qla2xxx/qla_dfs.c:qla2x00_dfs_fce_write() {
+    ...
+    qla2x00_free_fce_trace(ha);
+    ...
+}
+
+However, a concurrent firmware dump executes under ha->hardware_lock but not
+ha->fce_mutex.  If the debugfs thread frees the trace buffer between the
+firmware dump's NULL check and the subsequent memcpy():
+
+drivers/scsi/qla2xxx/qla_dbg.c:qla25xx_copy_fce() {
+    ...
+    memcpy(iter_reg, ha->fce, ntohl(fcec->size));
+    ...
+}
+
+Could this result in a use-after-free read and data leak?
+
+[Severity: High]
+This is a pre-existing issue, but does qla2x00_dfs_fce_release() have a TOC=
+TOU
+race causing a NULL pointer dereference?
+
+The guard condition is checked outside the critical section:
+
+drivers/scsi/qla2xxx/qla_dfs.c:qla2x00_dfs_fce_release() {
+    ...
+    if (ha->flags.fce_enabled || !ha->fce)
+        goto out;
+
+    mutex_lock(&ha->fce_mutex);
+    ...
+}
+
+If a concurrent thread writes 0 to the FCE node, it acquires the mutex,
+frees ha->fce, and sets it to NULL.  When the first thread resumes, it
+acquires the mutex and executes:
+
+drivers/scsi/qla2xxx/qla_dfs.c:qla2x00_dfs_fce_release() {
+    ...
+    memset(ha->fce, 0, fce_calc_size(ha->fce_bufs));
+    ...
+}
+
+Will this panic the kernel by dereferencing the newly NULL'd pointer?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does modifying user_enabled_=
+fce
+cause a data race with hardware interrupt context?
+
+In qla2x00_dfs_fce_write():
+
+drivers/scsi/qla2xxx/qla_dfs.c:qla2x00_dfs_fce_write() {
+    ...
+    ha->flags.user_enabled_fce =3D 1;
+    ...
+}
+
+This executes in process context holding only fce_mutex.  However, it shares
+the same 32-bit word as mbox_int:
+
+drivers/scsi/qla2xxx/qla_def.h:
+    volatile struct {
+        uint32_t    mbox_int            :1;
+        ...
+        uint32_t    user_enabled_fce    :1;
+        ...
+
+The compiler updates these via non-atomic read-modify-write instructions.
+If the ISR sets ha->flags.mbox_int =3D 1 under hardware_lock while the proc=
+ess
+context is in the middle of its RMW cycle, won't the process context overwr=
+ite
+the ISR's update, clearing mbox_int and causing dropped mailbox interrupts?
+
 [ ... ]
-> +static inline void
-> +qla_els_set_vp_sof(struct scsi_qla_host *vha, void *pkt, u16 vp_idx)
-> +{
-> +	if (IS_QLA29XX(vha->hw)) {
-> +		struct els_entry_24xx_ext *ext =3D pkt;
-> +
-> +		ext->vp_index =3D vp_idx;
-> +		ext->sof_type =3D ELS_EXT_EST_SOFI3;
+
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index bd0684d97fef1..ae9bf68710793 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -3733,7 +3733,7 @@ int qla2x00_alloc_fce_trace(scsi_qla_host_t *vha)
+>  		return -EINVAL;
+> =20
+>  	if (!IS_QLA25XX(ha) && !IS_QLA81XX(ha) && !IS_QLA83XX(ha) &&
+> -	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha))
+> +	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha))
+>  		return -EINVAL;
+> =20
+>  	if (ha->fce) {
 
 [Severity: High]
-Are C bitfields being used for a hardware-facing structure here?
+When dynamically creating multi-queue qpairs for a 29xx adapter, target pat=
+hs
+can fall back to calling qla2x00_start_iocbs() if the inline IOCB submission
+optimization is missed:
 
-If els_entry_24xx_ext uses __le16 with bitfields for vp_index and sof_type,
-the memory layout will be compiler- and endian-dependent. On big-endian
-architectures, the bitfields will be packed in reverse order compared to
-what the little-endian hardware expects, which could corrupt the virtual
-port and SOF values.
+drivers/scsi/qla2xxx/qla_init.c:qla2xxx_create_qpair() {
+    ...
+    if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha))
+        qpair->reqq_start_iocbs =3D qla_83xx_start_iocbs;
+    ...
+}
 
-> +	} else {
-> +		struct els_entry_24xx *e =3D pkt;
-> +
-> +		e->vp_index =3D vp_idx;
-> +		e->sof_type =3D EST_SOFI3;
-> +	}
-> +}
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
-r.c
-> index c4e2e62f924ff..e2653620e80be 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -83,6 +83,8 @@ qla24xx_process_abts(struct scsi_qla_host *vha, struct =
-purex_item *pkt)
-[ ... ]
->  	/* send ABTS response */
-> -	abts_rsp =3D (void *)rsp_els;
-> +	abts_rsp =3D rsp_pkt;
->  	memset(abts_rsp, 0, sizeof(*abts_rsp));
+Because 29xx adapters use 128-byte IOCBs and track the ring slot using
+req->ring_ext_ptr, qla2x00_start_iocbs() fails to advance ring_ext_ptr.
 
-[Severity: High]
-Could this memset clear only 64 bytes instead of the full 128 bytes allocat=
-ed
-for 29xx adapters?
-
-Since abts_rsp is a pointer to the 64-byte legacy struct abts_entry_24xx,
-sizeof(*abts_rsp) is 64. If the buffer was populated during the ELS_IOCB_TY=
-PE
-command earlier in this function, could this leave stale hardware completion
-data in the upper 64 bytes when the buffer is reused for the ABTS_RSP_TYPE
-command?
-
-[Severity: High]
-Further down in this function, does this legacy cast corrupt the 9th bit of
-the virtual port index for 29xx adapters?
-
-    abts_rsp->vp_idx =3D abts->vp_idx;
-    abts_rsp->sof_type =3D abts->sof_type & 0xf0;
-
-Since the 29xx hardware packs these into a single 16-bit word, the 9th bit
-of vp_idx resides in the lower nibble of the byte corresponding to the lega=
-cy
-8-bit sof_type. Masking with 0xf0 would erase the 9th bit of vp_idx,
-potentially breaking I/O aborts on virtual ports with an ID >=3D 256.
-
->  	abts_rsp->entry_type =3D ABTS_RSP_TYPE;
->  	abts_rsp->entry_count =3D 1;
+Does the lack of IS_QLA29XX(ha) here cause the next request to blindly over=
+write
+the same ring slot, corrupting the hardware request queue?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D29
+300-1-njavali@marvell.com?part=3D19
