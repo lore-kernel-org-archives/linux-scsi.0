@@ -1,202 +1,159 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E20D8321420
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:46:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A6C3321420
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:48:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783406764; cv=none; b=HlXkHMDhsGaNQosQWIC5d77Dt6GDbmF1CTC3RD9x59bBp3RE57Pv6jRIk22qXrjw8OmsHRGBFhVEGqmAYLW0u63JzHj7mYtfNKKFZK9bzqsb3/Kt+Fh2Gt9jn7OXkbHXLzftPFHSVFRNnMOge4CodKU16B9vtEKQ2DL3QYWmJuI=
+	t=1783406929; cv=none; b=KTqu+NAHaxBHNznrPxMJKc2esPQHMH7bc5TQFAabS8wPNROS2xjb7MITx/5iu2Qk1zmQGPOcr1xVLDUkqUgqctq/ce+3d2TDtwNjVrUn/YifeAcGKwil2OuFc5sY07VI+tvmu9sJlF5M5lT+hev67z6K+bzlEERtjL58RnF6a3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783406764; c=relaxed/simple;
-	bh=ww3NFXkP0LtPji49rBaABTq1gO9YPK4GgbeZtc0FDBc=;
+	s=arc-20240116; t=1783406929; c=relaxed/simple;
+	bh=MANKzUmOD5MuQ6SfOf4OHmxhoRsOzSQ7Fk2p0hpRDTY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Ef6zDG1rdcyDCSDg0TDgbHCpOKVA+RmpVQ7JB+w4eMMV1MTGDcP+Jkzqclj7eseCjeX1Q2yD8RMjbMFnJTiCKVGxKZdNrE4cyWk3kL6xO0I7y4oRlNGJS10n3ijM1gl/jfe86kW66yIAW0UBqUA0GdzBCH0m4IdwLKD1Iz1KZ+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jemkbbLk; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=XAQzpYBqA9f0MzhvOVJbentGdW498bj0pO/wkb1L1PzrCvMk9h/BksXFFtttpQ5Sj7NlizieQB73qj/BxaeyQMa2azcILuCkKTiyjDQV6UsOHk0P5dGo9llRnFy4hkhd9f6MOiLj59kyj43CcxVaTp/Kw4GxQKq4OUdmbwxGTpw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wcj3i2Qt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jemkbbLk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CE8C1F00A3A;
-	Tue,  7 Jul 2026 06:46:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wcj3i2Qt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31C211F00A3A;
+	Tue,  7 Jul 2026 06:48:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783406762;
-	bh=CDA6u8xujY8ZommqWssZHC1jQtldKspYu4KZ0jvAwT4=;
+	s=k20260515; t=1783406928;
+	bh=8LPT/W/dvowW1uRLP31sEAl7ymiPE45RaI/fHX879lY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jemkbbLkoLOJ/HkTJXGnLSryG+FIVVQ0cGl7FAdOZMtb5aFYyG7Y2ynJ3wYcXzq5E
-	 wthMYrnBzYOwodVVHSv5+w8sedsm1ymg0GAm5mEESwKOuvodzxIBTp2fdRIBlWVpJp
-	 bhwFfGuALuGwCU3ew9jv6qVnfGP0F5eCkyrYzmC+vzvJ/3JPsozLYGchMwgf2q66y1
-	 pnw4bPz9QkO65qk0aLTJ7pkwz70TgfyaSKGBvvYV3IHkYdBHaol0Bo0Ay3dDVaVnbr
-	 /6c9LTRyIe0h+MuhVi+jOc1CGv0WsrvqtbVRrJcQruyywhtpkX1Xiln4l5ceK0bHc3
-	 g+FtINUmYRtpw==
+	b=Wcj3i2QtOX8T2m20bvAl/2J6HCocY2ofn0InmUqXcHxWd6srNQ0vIALSG6/HFrN2D
+	 ke3lH2dudIbpHGZELxGcj1Xti0h07Ja1Kc+vXogpNRqvXjGjZELuPrShCT6STSwQef
+	 f1nzWUrVG6UmHU+OoIuS2PdzEuX4SeuVH2AZAAXZPIxkTxrd+wo0yYwkIJOcA14mXr
+	 Ujt1nKuAOd9KBAItp0hHrXFUEUmZZXijnQDZyFRG5wzewQpzlOn8AfJnQ8VLZ4pKpK
+	 xyrPbCxCrv6xOTxyPZNtNo2cqNZ1iczio8bqg6wKlU8SlWsK53SlYrJDmUlxHZUH4h
+	 3o0+LCm1FfKjQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 34/88] scsi: qla2xxx: Enhance ABTS processing for
- 29xx series
+Subject: Re: [PATCH v3 39/88] scsi: qla2xxx: Adjust feature gating in BSG
+ paths for 29xx support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-35-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-40-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-35-njavali@marvell.com>
+ <20260707055435.2680300-40-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 06:46:02 +0000
-Message-Id: <20260707064602.8CE8C1F00A3A@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 06:48:47 +0000
+Message-Id: <20260707064848.31C211F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Hardware DMA structure `struct abts_entry_24xx_ext` uses C bitfiel=
-ds for `vp_idx` and `sof_type`, causing silent data corruption on big-endia=
-n architectures.
+- [Medium] Incomplete Feature Enablement: D-port diagnostics v2 API is not =
+enabled for QLA29xx adapters because the IS_DPORT_CAPABLE macro was not upd=
+ated, causing the command to unconditionally reject QLA29xx.
 
 Pre-existing issues:
-- [High] DMA buffer use-after-free and memory corruption when exchange term=
-ination IOCB times out.
+- [Critical] Information Leak: The function qla2x00_do_dport_diagnostics() =
+leaks up to 62 bytes of uninitialized kernel heap memory to user space.
+- [High] Resource Leak / Hanging Process: BSG job hangs indefinitely on val=
+idation error because `bsg_job_done()` is skipped but the function returns =
+`QLA_SUCCESS`.
 --
 
---- Patch [34]: [PATCH v3 34/88] scsi: qla2xxx: Enhance ABTS processing for=
- 29xx series ---
-commit f8517ffc817e63944bb6e7bda5e281dcbfefa061
-Author: Nilesh Javali <njavali@marvell.com>
+--- Patch [39]: [PATCH v3 39/88] scsi: qla2xxx: Adjust feature gating in BS=
+G paths for 29xx support ---
+commit 9bba08258f3cd9b122f24b8370fef88669196b77
+Author: Manish Rangankar <mrangankar@marvell.com>
 
-scsi: qla2xxx: Enhance ABTS processing for 29xx series
+scsi: qla2xxx: Adjust feature gating in BSG paths for 29xx support
 
-Use extended ABTS entry structures for 29xx series adapters to properly han=
-dle
-the larger 128-byte IOCB format. Introduce type-generic macros that leverage
-the shared field names between abts_entry_24xx and abts_entry_24xx_ext to
-avoid code duplication. Add BUILD_BUG_ON size check for struct
-abts_entry_24xx_ext.
+Extend qla2xxx BSG command handling to recognize QLA29xx adapters and
+align feature availability with hardware capabilities.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
-r.c
-> index dd4416a3bf3ae..774ccf6b2adc8 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -72,15 +72,89 @@ static inline void display_Laser_info(scsi_qla_host_t=
- *vha,
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index 8a969174a261e..fade3638d31cb 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
 
 [ ... ]
 
-> +#define QLA_BUILD_ABTS_BA_ACC(rsp, src, sof_val, fctl) do {		\
-> +	memset((rsp), 0, sizeof(*(rsp)));				\
-> +	(rsp)->entry_type =3D ABTS_RSP_TYPE;				\
-> +	(rsp)->entry_count =3D 1;						\
-> +	(rsp)->nport_handle =3D (src)->nport_handle;			\
-> +	(rsp)->vp_idx =3D (src)->vp_idx;					\
-> +	(rsp)->sof_type =3D (sof_val);					\
+> @@ -2789,7 +2789,7 @@ qla2x00_do_dport_diagnostics(struct bsg_job *bsg_jo=
+b)
+>  	struct qla_dport_diag *dd;
+> =20
+>  	if (!IS_QLA83XX(vha->hw) && !IS_QLA27XX(vha->hw) &&
+> -	    !IS_QLA28XX(vha->hw))
+> +	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
+>  		return -EPERM;
 
-[Severity: High]
-Does this assignment in QLA_BUILD_ABTS_BA_ACC cause a regression via silent
-data corruption on big-endian architectures?
+[Severity: Medium]
+Does enabling QLA29xx here leave out the v2 diagnostics interface?
 
-Because vp_idx and sof_type are defined as C bitfields within
-struct abts_entry_24xx_ext (e.g. __le16 vp_idx : 9; __le16 sof_type : 4;),
-their memory layout is implementation-defined and endian-dependent.
+Looking at qla2x00_do_dport_diagnostics_v2() in the same file, it relies on
+the IS_DPORT_CAPABLE macro:
 
-On big-endian CPUs, the compiler packs the bitfield starting from the
-most-significant bit, placing vp_idx at the top of the __le16, contradicting
-the hardware's fixed expectation.=20
+    if (!IS_DPORT_CAPABLE(vha->hw))
+            return -EPERM;
 
-Could this cause the hardware to receive incorrect data, leading to dropped
-exchanges or failed commands?
+Since IS_DPORT_CAPABLE in qla_def.h only checks for 83XX, 27XX, and 28XX,
+won't qla2x00_do_dport_diagnostics_v2() incorrectly reject QLA29xx adapters
+and fail with -EPERM?
+
+[Severity: Critical]
+This is a pre-existing issue, but does enabling this function for QLA29xx
+expose an information leak?
+
+In qla2x00_do_dport_diagnostics(), the dd structure is allocated without
+zeroing the memory:
+
+    dd =3D kmalloc_obj(*dd);
+
+Later, sg_copy_to_buffer() only overwrites the portion of dd provided by
+the user's request payload, which can leave bytes uninitialized (such as
+the unused fields). Finally, sg_copy_from_buffer() copies the entire
+sizeof(*dd) back to the reply payload:
+
+    sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
+        bsg_job->reply_payload.sg_cnt, dd, sizeof(*dd));
+
+Could this leak uninitialized kernel heap memory back to user space?
 
 [ ... ]
 
-> @@ -140,60 +212,27 @@ qla24xx_process_abts(struct scsi_qla_host *vha, str=
-uct purex_item *pkt)
->  	}
+> @@ -2915,8 +2915,13 @@ qla2x00_get_flash_image_status(struct bsg_job *bsg=
+_job)
+>  	struct qla_active_regions regions =3D { };
+>  	struct active_regions active_regions =3D { };
 > =20
->  	/* send ABTS response */
-> -	abts_rsp =3D rsp_pkt;
-> -	memset(abts_rsp, 0, sizeof(*abts_rsp));
-> -	abts_rsp->entry_type =3D ABTS_RSP_TYPE;
-> -	abts_rsp->entry_count =3D 1;
-> -	abts_rsp->nport_handle =3D abts->nport_handle;
-> -	abts_rsp->vp_idx =3D abts->vp_idx;
-> -	abts_rsp->sof_type =3D abts->sof_type & 0xf0;
-> -	abts_rsp->rx_xch_addr =3D abts->rx_xch_addr;
-> -	abts_rsp->d_id[0] =3D abts->s_id[0];
-> -	abts_rsp->d_id[1] =3D abts->s_id[1];
-> -	abts_rsp->d_id[2] =3D abts->s_id[2];
-> -	abts_rsp->r_ctl =3D FC_ROUTING_BLD | FC_R_CTL_BLD_BA_ACC;
-> -	abts_rsp->s_id[0] =3D abts->d_id[0];
-> -	abts_rsp->s_id[1] =3D abts->d_id[1];
-> -	abts_rsp->s_id[2] =3D abts->d_id[2];
-> -	abts_rsp->cs_ctl =3D abts->cs_ctl;
-> -	/* include flipping bit23 in fctl */
-> -	fctl =3D ~(abts->f_ctl[2] | 0x7F) << 16 |
-> -	    FC_F_CTL_LAST_SEQ | FC_F_CTL_END_SEQ | FC_F_CTL_SEQ_INIT;
-> -	abts_rsp->f_ctl[0] =3D fctl >> 0 & 0xff;
-> -	abts_rsp->f_ctl[1] =3D fctl >> 8 & 0xff;
-> -	abts_rsp->f_ctl[2] =3D fctl >> 16 & 0xff;
-> -	abts_rsp->type =3D FC_TYPE_BLD;
-> -	abts_rsp->rx_id =3D abts->rx_id;
-> -	abts_rsp->ox_id =3D abts->ox_id;
-> -	abts_rsp->payload.ba_acc.aborted_rx_id =3D abts->rx_id;
-> -	abts_rsp->payload.ba_acc.aborted_ox_id =3D abts->ox_id;
-> -	abts_rsp->payload.ba_acc.high_seq_cnt =3D cpu_to_le16(~0);
-> -	abts_rsp->rx_xch_addr_to_abort =3D abts->rx_xch_addr_to_abort;
-> -	ql_dbg(ql_dbg_init, vha, 0x028b,
-> -	    "Sending BA ACC response to ABTS %#x...\n",
-> -	    abts->rx_xch_addr_to_abort);
-> -	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x028b,
-> -	    "-------- ELS RSP -------\n");
-> -	ql_dump_buffer(ql_dbg_init + ql_dbg_verbose, vha, 0x028b,
-> -	    (uint8_t *)abts_rsp, sizeof(*abts_rsp));
-> -	rval =3D qla2x00_issue_iocb(vha, abts_rsp, dma, 0);
-> -	if (rval) {
-> -		ql_log(ql_log_warn, vha, 0x028c,
-> -		    "%s: iocb failed to execute -> %x\n", __func__, rval);
-> -	} else if (abts_rsp->comp_status) {
-> -		ql_log(ql_log_warn, vha, 0x028d,
-> -		    "%s: iocb failed to complete -> completion=3D%#x subcode=3D(%#x,%#=
-x)\n",
-> -		    __func__, abts_rsp->comp_status,
-> -		    abts_rsp->payload.error.subcode1,
-> -		    abts_rsp->payload.error.subcode2);
-> +	if (IS_QLA29XX(ha)) {
-> +		struct abts_entry_24xx_ext *rsp_ext =3D rsp_pkt;
+> -	qla27xx_get_active_image(vha, &active_regions);
+> -	regions.global_image =3D active_regions.global;
+> +	if (IS_QLA29XX(ha))
+> +		return -EPERM;
 > +
-> +		QLA_BUILD_ABTS_BA_ACC(rsp_ext, abts_ext,
-> +		    abts_ext->sof_type, fctl);
-> +		QLA_LOG_ISSUE_ABTS_RSP(vha, rsp_ext, dma, rval);
->  	} else {
-> -		ql_dbg(ql_dbg_init, vha, 0x028ea,
-> -		    "%s: done.\n", __func__);
-> +		struct abts_entry_24xx *abts_rsp =3D rsp_pkt;
-> +
-> +		QLA_BUILD_ABTS_BA_ACC(abts_rsp, abts,
-> +		    abts->sof_type & 0xf0, fctl);
-> +		QLA_LOG_ISSUE_ABTS_RSP(vha, abts_rsp, dma, rval);
->  	}
-> =20
->  	dma_free_coherent(&ha->pdev->dev, rsp_sz, rsp_pkt, dma);
->  }
+> +	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
+> +		qla27xx_get_active_image(vha, &active_regions);
+> +		regions.global_image =3D active_regions.global;
+> +	}
 
 [Severity: High]
-This is a pre-existing issue, but does qla24xx_process_abts() in
-drivers/scsi/qla2xxx/qla_isr.c have a DMA buffer use-after-free or memory
-corruption if the initial exchange termination IOCB times out?
+This is a pre-existing issue, but while reviewing the flash image handling
+in this file, I noticed a potential hang in qla28xx_validate_flash_image().
 
-If the initial qla2x00_issue_iocb() operation to terminate the exchange tim=
-es
-out, it returns an error, but the hardware may still be actively reading or
-preparing to read from the DMA address.=20
+When validation fails and rval is non-zero, the error path explicitly skips
+calling bsg_job_done() but still returns QLA_SUCCESS:
 
-The driver then continues execution here, overwrites this same rsp_pkt buff=
-er
-via memset() in QLA_BUILD_ABTS_BA_ACC, attempts to issue it a second time f=
-or
-the ABTS response, and finally calls dma_free_coherent().=20
+    if (!rval)
+            bsg_job_done(bsg_job, bsg_reply->result,
+                         bsg_reply->reply_payload_rcv_len);
 
-If the firmware continues processing, could it read/write to freed memory or
-interpret the ABTS response data as the original termination command?
+    return QLA_SUCCESS;
+
+Since the BSG core expects bsg_job_done() to be called if the driver
+returns a success code, won't this cause the user space process to hang
+indefinitely waiting for the job to complete?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D34
+300-1-njavali@marvell.com?part=3D39
