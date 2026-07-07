@@ -1,56 +1,56 @@
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ABAD386571
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:55:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BCE03101CE
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:55:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783403713; cv=none; b=QZhSxompVHfKg8tUFf/1+WchTeHRhhQbmN0z333aXIahdD53iUrKkitnydBlt5WLt1gYhggWXwJDsIK11I5MhS3pOEUiELzxfqfkO3BkJUvGSHGmvJo4AgoQwRUILdm9kVmAI+lMNjnNmxF7FsASe5iDfoqZYjj5B64rio0B8qg=
+	t=1783403714; cv=none; b=Ak4n3OgaBfDtP2buqZS+utvRQyyfPc9oVgVTijReTU8zPww4/0JwYMl5iGuAWndSSnnaemHxysZSRGkWZfpuGc1Jv8j0xMpRTaBIJu8woJQQcIOkJWO28TU8WzkJLr5NjrS7VaxgVT8tOyQYmLPVDc4fCeFiN9fTvcHIr/qjoKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783403713; c=relaxed/simple;
-	bh=34gmT2s23uXWBXJSMMWHYFW+sO38BhZgtGwKhWnsOBs=;
+	s=arc-20240116; t=1783403714; c=relaxed/simple;
+	bh=wUwCdTLqeTveXQ2sZB3F5+Tl9KjJSLF9ddr2wS1DUVA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=P9BAquu7loQAtwjAJ3Lnjqys9xiGT0H42VVU4C+7cZn81y7M58q/Jsi5DIMzPXjCOltKCzteeQGHgWQX2Oma08klG1ml0HJs0OcJgpI/Pugsws3geZk++5586j7jgVCfRwEZmFFxJTpbLQ16O9kML2nH9fQCY3eYgyIfVpaFhG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=ho3q+gov; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=pOnIkI/3aQlzqeeyXb0drKFpClfPWEKT33ZheR+aAJRxtdPrGU7Lpkkre2V0dypGA4fZDxNJnXaoY3Fx8Ke39Oh/THQLpV6EK1UdxyiGvwy4EXk6MnP/HM1bbg0RApIR9UdBfllWF5TJWa8f+2i2wn4F4GlLJqeYCE7CAC+B0T0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=dl3obiqm; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="ho3q+gov"
-Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 667481Ph872631;
-	Mon, 6 Jul 2026 22:55:09 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="dl3obiqm"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66748Zlm1656002;
+	Mon, 6 Jul 2026 22:55:03 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=X
-	/qOH1k216iN06aGGaYFNhMJPefYpgL6djyImr0+hak=; b=ho3q+gov6xbXEFBfH
-	CG6mpRZw5gAeg/3XYljddRcJKkTJ9BgN4wU4a6AkDFjhZD/DKs83pPfGgHbUZx28
-	lLENcP8Ve5u7sTjAYmYadDIHR0/OJLjUfvp4l14SfPWA/WdgzkOTBNCceFoU4MkV
-	as9O76QH4Qjp4kO1rO5lzh+gezpltjcV7KLACUMduZrSdfNyCFEuTGXuAyvw4ezv
-	XmxUGjcW74FjzxyqTdKpGaWEk8adPHm2YDj4M1lUgJAzjQ5lbEfrecFxLHsZWAIj
-	rRhZug+tPn0sblpMc81WmZ8u35ptC80gtW7VcsiS3/0eMvRDL9oYhF0s9L3f6Wwk
-	XgeeQ==
-Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4f8f9wa9ya-1
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=g
+	LXtos2qZsv6py2/WGKHX12163VwODweXZBNyU+5CWo=; b=dl3obiqmLXs0TY13y
+	DOnG3Ac8hZOg/2sVgaU8WY2k1rIt6EFK6gZ+TWPr5K4OQGqhEXQzVlWkqsWue0SW
+	IX3b+q5h/nD10AjL2fFzH8SRluGj+HJVO3/gQx0+5xi4tNvdCIMVcvj0WjDoCz+8
+	sbsp5pUClWeSl+GUyqbLeNMB4bwUpbu8qXCHgPcgFjMSpc3EG4+9+Wqy6lKdJDRk
+	r3l93WVCCfA+k+WMkAiYqJfqQsMeYb2UFzLhzCByYXHf64a24++6UQGPwgVbjEgr
+	eaREA8CFH39fwK4xFt5Nb8cXyxMj0j5TIAG/bRFT3pbpA0NB3ulvI+yVdWojHoqJ
+	LfosQ==
+Received: from dc5-exch05.marvell.com ([199.233.59.128])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4f71phqdqw-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 Jul 2026 22:55:09 -0700 (PDT)
-Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
- DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
+	Mon, 06 Jul 2026 22:55:03 -0700 (PDT)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 6 Jul 2026 22:55:08 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
- (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 6 Jul 2026 22:55:08 -0700
+ 15.2.1544.25; Mon, 6 Jul 2026 22:55:01 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Mon, 6 Jul 2026 22:55:01 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 8AF653F7066;
-	Mon,  6 Jul 2026 22:55:05 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id 7D9903F7066;
+	Mon,  6 Jul 2026 22:54:59 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v3 03/88] scsi: qla2xxx: Add NVRAM config support for 29xx adapters
-Date: Tue, 7 Jul 2026 11:23:10 +0530
-Message-ID: <20260707055435.2680300-4-njavali@marvell.com>
+Subject: [PATCH v3 01/88] scsi: qla2xxx: Add 29xx series PCI device ID support
+Date: Tue, 7 Jul 2026 11:23:08 +0530
+Message-ID: <20260707055435.2680300-2-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260707055435.2680300-1-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
@@ -62,316 +62,350 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: jptSZya0KGsPPxdJZoywyKR3eNzi0Fb6
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1MyBTYWx0ZWRfXyAWEjBy5R/0X
- wwEOnt32rI/n8Bok6FDd3oUCO2y6gvwqrLmkXG/VCdHNVUuZWB1pOpYyd6KqJkLi4JgmL0KgVNB
- 0PAhESFP/ZQTPp5HPL6NzVhytv4M4TMYHLiSwQJ9eQWQYH5PaJzuPvDQEy7MLTHMwKZw2lOXex8
- S/EykmqlISQoqTWZDP2v6ReqskOIzAtzEPy7X5KGIMEED7gSGJyWWJ3EeX3xejG/Eb+6jx52FUJ
- GNTLE2UK3DQsBueKyFKDLglIxxCpnWUhUuu+uIZojoEyGlYXYdYUfY30Bk58dr3J+cO49LWbntT
- 1RB2MdUIuHyiLRwnXO0t7qdBrADkGAtiZpIUJ3kvbYT4WMbXdGYG0d2sH1YgIGuHA7jJDQGeZjz
- HLB1D+mLyO9G3IsY6MpOdEiZjg7yJQW0EgkHeFZJz8XVLCqrMK/m6DFN2Mt3k6Rk/SjJMVhwMzC
- Ypa4xajqlSouFfSUJ3A==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1MyBTYWx0ZWRfXz3P2bxQsg6i2
- FPIxYllpWDPvh25elFVfpwLSB8xGF2kXuW1D+RSe8eCSGGMl2Y2ic659lVCYHn4mcElewx8OFqs
- 4S4WrsKmXktKCHHbf8EmwtaqkCKCXns=
-X-Proofpoint-GUID: jptSZya0KGsPPxdJZoywyKR3eNzi0Fb6
-X-Authority-Analysis: v=2.4 cv=SY/HsPRu c=1 sm=1 tr=0 ts=6a4c94bd cx=c_pps
- a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
+X-Proofpoint-GUID: 5DUS4zncAhwSRKQttKcn04FFgGrIRvBO
+X-Authority-Analysis: v=2.4 cv=Hf4kiCE8 c=1 sm=1 tr=0 ts=6a4c94b7 cx=c_pps
+ a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=qit2iCtTFQkLgVSMPQTB:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=vvvcwNWBXVQ8D827hgEA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+ a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
+ a=9Ko3Zm86dqrhGpwkZ8sA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-ORIG-GUID: 5DUS4zncAhwSRKQttKcn04FFgGrIRvBO
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1MyBTYWx0ZWRfXxfgMZYX8o4IG
+ oqmhUdwDoeFQt40WhmYn0aT2505Mqc2tA9Q9S8FYsh9rOzZFsh24ZjI7kn8XMNyhmREZax82eva
+ nAdyUE6XggUy5D27Ls2b9BPELBhBIyk=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1MyBTYWx0ZWRfX++KWuUlgr+JD
+ u7rQepOyfZ2uE664yCG4jppM1HGvDRXdTy42iQmWjDZaPa/hoALLCkGVOUtBC6Hwfx+F/GdJgTI
+ oSzHFtp1O2a2R+1FOepzDDudlQq+ZLyRDH584jgYjvzpTR0vQkTWhc5/cEOxQF43/9vevXuCOGG
+ 46qgzg9eG9guUgNbhxqN1iocAVuOL6tgdFLCT6Rl6Hv3Ue9BZ2ACHQ+HRxpnyPOWaw5aCavIfgQ
+ F9pRGTMQ4PZXJImN7jONB5hBSHadKq4wm3zTaxoMre9xL5caocfgp7QHAKT3sSUhgvqoTb2u0mz
+ B+aVJHVuo2VSeHP7t22V4YkK73UOuvf+QoNViR3vJ1n+f3uCXROqC1UCAaCf/2Ge8ktauLNzD+K
+ /q7cBl0iIvBgXOBxu1+CrhTS2bi1/1O+x7TiuVWNH5V1QUVURTmULWOtgZaKaObypBYHKq/6UGa
+ cUGqHGzgTxcNCB8PZTA==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-07_01,2026-07-06_02,2025-10-01_01
 
 From: Manish Rangankar <mrangankar@marvell.com>
 
-Extend the NVRAM read and configuration-apply paths to handle the
-29xx series.  The 29xx NVRAM layout is similar to the 81xx family,
-so reuse the existing nvram_81xx parsing while adding
-29xx-specific fields and init-sequence integration.
+The QLA29xx is a new generation FC HBA that shares much of its
+architecture with the 27xx/28xx family.  Register the new PCI
+device IDs, wire up IS_QLA29XX() capability checks in the probe
+and ISP-flags paths, and extend speed-capability logic so the
+driver correctly recognises and initialises 29xx adapters.
 
 Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |   1 +
- drivers/scsi/qla2xxx/qla_fw.h   |  42 ++++++++++-
- drivers/scsi/qla2xxx/qla_init.c | 123 +++++++++++++++++++++++++-------
- drivers/scsi/qla2xxx/qla_os.c   |   2 +
- 4 files changed, 141 insertions(+), 27 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  | 33 +++++++++++----
+ drivers/scsi/qla2xxx/qla_init.c |  2 +-
+ drivers/scsi/qla2xxx/qla_isr.c  |  5 ++-
+ drivers/scsi/qla2xxx/qla_os.c   | 74 ++++++++++++++++++++++++++-------
+ 4 files changed, 88 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index b5ad6ed3d5d1..89ddf332cdbd 100644
+index 5593ad7fad27..6337a056b149 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -4469,6 +4469,7 @@ struct qla_hw_data {
- 	uint16_t	vpd_size;
- 	uint16_t	vpd_base;
- 	void		*vpd;
-+	struct qla_flash_memo_block *fiv;
+@@ -3528,7 +3528,6 @@ struct isp_operations {
+ #define QLA_MIDX_DEFAULT	0
+ #define QLA_MIDX_RSP_Q		1
+ #define QLA_PCI_MSIX_CONTROL	0xa2
+-#define QLA_83XX_PCI_MSIX_CONTROL	0x92
  
- 	uint16_t	loop_reset_delay;
- 	uint8_t		retry_count;
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index d27d09964a24..42f6125b3cfb 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -1676,6 +1676,8 @@ struct qla_flt_location {
- #define FLT_REG_VPD_SEC_27XX_2	0xD8
- #define FLT_REG_VPD_SEC_27XX_3	0xDA
- #define FLT_REG_NVME_PARAMS_27XX	0x21
-+#define FLT_REG_FMB_PRI		0xDF
-+#define FLT_REG_FMB_SEC		0x124
+ struct scsi_qla_host;
  
- /* 28xx */
- #define FLT_REG_AUX_IMG_PRI_28XX	0x125
-@@ -2110,7 +2112,7 @@ struct nvram_81xx {
- 	 * BIT 7    = SCM Disabled if BIT is set (1)
- 	 * BIT 8-15 = Unused
- 	 */
--	uint16_t enhanced_features;
-+	__le16	enhanced_features;
+@@ -4287,6 +4286,10 @@ struct qla_hw_data {
+ #define PCI_DEVICE_ID_QLOGIC_ISP2089	0x2089
+ #define PCI_DEVICE_ID_QLOGIC_ISP2281	0x2281
+ #define PCI_DEVICE_ID_QLOGIC_ISP2289	0x2289
++#define PCI_DEVICE_ID_QLOGIC_ISP2099	0x2099
++#define PCI_DEVICE_ID_QLOGIC_ISP2299	0x2299
++#define PCI_DEVICE_ID_QLOGIC_ISP2091	0x2091
++#define PCI_DEVICE_ID_QLOGIC_ISP2291	0x2291
  
- 	uint16_t reserved_24[4];
+ 	uint32_t	isp_type;
+ #define DT_ISP2100                      BIT_0
+@@ -4316,7 +4319,11 @@ struct qla_hw_data {
+ #define DT_ISP2089			BIT_24
+ #define DT_ISP2281			BIT_25
+ #define DT_ISP2289			BIT_26
+-#define DT_ISP_LAST			(DT_ISP2289 << 1)
++#define DT_ISP2299			BIT_27
++#define DT_ISP2099			BIT_28
++#define DT_ISP2091			BIT_29
++#define DT_ISP2291			BIT_30
++#define DT_ISP_LAST			((uint32_t)DT_ISP2291 << 1)
  
-@@ -2338,4 +2340,42 @@ struct qla_fcp_prio_cfg {
+ 	uint32_t	device_type;
+ #define DT_T10_PI                       BIT_25
+@@ -4353,6 +4360,10 @@ struct qla_hw_data {
+ #define IS_QLA2261(ha)	(DT_MASK(ha) & DT_ISP2261)
+ #define IS_QLA2081(ha)	(DT_MASK(ha) & DT_ISP2081)
+ #define IS_QLA2281(ha)	(DT_MASK(ha) & DT_ISP2281)
++#define IS_QLA2299(ha)	(DT_MASK(ha) & DT_ISP2299)
++#define IS_QLA2099(ha)	(DT_MASK(ha) & DT_ISP2099)
++#define IS_QLA2091(ha)	(DT_MASK(ha) & DT_ISP2091)
++#define IS_QLA2291(ha)	(DT_MASK(ha) & DT_ISP2291)
  
- #define NVRAM_DUAL_FCP_NVME_FLAG_OFFSET	0x196
- 
-+struct qla_fmb_version {
-+	uint8_t major;
-+	uint8_t minor;
-+	uint8_t sub;
-+	uint8_t build;
-+};
+ #define IS_QLA23XX(ha)  (IS_QLA2300(ha) || IS_QLA2312(ha) || IS_QLA2322(ha) || \
+ 			IS_QLA6312(ha) || IS_QLA6322(ha))
+@@ -4363,6 +4374,9 @@ struct qla_hw_data {
+ #define IS_QLA84XX(ha)  (IS_QLA8432(ha))
+ #define IS_QLA27XX(ha)  (IS_QLA2071(ha) || IS_QLA2271(ha) || IS_QLA2261(ha))
+ #define IS_QLA28XX(ha)	(IS_QLA2081(ha) || IS_QLA2281(ha))
++#define IS_QLA29XX(ha)	(IS_QLA2099(ha) || IS_QLA2299(ha) || \
++			 IS_QLA2091(ha) || IS_QLA2291(ha))
 +
-+struct qla_fmb_upd_time {
-+	__le16   year;
-+	uint8_t  month;
-+	uint8_t  day;
-+
-+	uint8_t  hour;
-+	uint8_t  minute;
-+	uint8_t  second;
-+	uint8_t  reserved;
-+};
-+
-+struct qla_flash_memo_block {
-+	__le32   signature;	/* "FMBS" */
-+#define QLFC_FMB_SIG	cpu_to_le32(0x53424D46)
-+	__le32   length;
-+	__le32   version;
-+#define QLFC_FMB_VERSION 3
-+	__le32   checksum;
-+	struct qla_fmb_version ffv_ver;
-+	struct qla_fmb_version mbi_ver;
-+	struct {
-+		__le16   year;
-+		uint8_t  month;
-+		uint8_t  day;
-+		uint8_t  reserve[4];
-+	} bld_time;
-+	uint8_t tool_id[4];
-+	struct qla_fmb_upd_time upd_time;
-+	struct qla_fmb_version  tool_version;
-+};
-+
- #endif
+ #define IS_QLA24XX_TYPE(ha)     (IS_QLA24XX(ha) || IS_QLA54XX(ha) || \
+ 				IS_QLA84XX(ha))
+ #define IS_CNA_CAPABLE(ha)	(IS_QLA81XX(ha) || IS_QLA82XX(ha) || \
+@@ -4372,9 +4386,10 @@ struct qla_hw_data {
+ 				IS_QLA25XX(ha) || IS_QLA81XX(ha) || \
+ 				IS_QLA82XX(ha) || IS_QLA83XX(ha) || \
+ 				IS_QLA8044(ha) || IS_QLA27XX(ha) || \
+-				IS_QLA28XX(ha))
++				IS_QLA28XX(ha) || IS_QLA29XX(ha))
+ #define IS_MSIX_NACK_CAPABLE(ha) (IS_QLA81XX(ha) || IS_QLA83XX(ha) || \
+-				IS_QLA27XX(ha) || IS_QLA28XX(ha))
++				IS_QLA27XX(ha) || IS_QLA28XX(ha) || \
++				IS_QLA29XX(ha))
+ #define IS_NOPOLLING_TYPE(ha)	(IS_QLA81XX(ha) && (ha)->flags.msix_enabled)
+ #define IS_FAC_REQUIRED(ha)	(IS_QLA81XX(ha) || IS_QLA83XX(ha) || \
+ 				IS_QLA27XX(ha) || IS_QLA28XX(ha))
+@@ -4390,9 +4405,9 @@ struct qla_hw_data {
+ #define HAS_EXTENDED_IDS(ha)    ((ha)->device_type & DT_EXTENDED_IDS)
+ #define IS_CT6_SUPPORTED(ha)	((ha)->device_type & DT_CT6_SUPPORTED)
+ #define IS_MQUE_CAPABLE(ha)	(IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
+-				 IS_QLA28XX(ha))
++				 IS_QLA28XX(ha) || IS_QLA29XX(ha))
+ #define IS_BIDI_CAPABLE(ha) \
+-    (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha))
++    (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha) || IS_QLA29XX(ha))
+ /* Bit 21 of fw_attributes decides the MCTP capabilities */
+ #define IS_MCTP_CAPABLE(ha)	(IS_QLA2031(ha) && \
+ 				((ha)->fw_attributes_ext[0] & BIT_0))
+@@ -4408,12 +4423,12 @@ struct qla_hw_data {
+ 	(QLA_NVME_IOS(_sp) && QLA_ABTS_FW_ENABLED(_sp->fcport->vha->hw))
+ 
+ #define IS_PI_UNINIT_CAPABLE(ha)	(IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
+-					 IS_QLA28XX(ha))
++					 IS_QLA28XX(ha) || IS_QLA29XX(ha))
+ #define IS_PI_IPGUARD_CAPABLE(ha)	(IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
+-					 IS_QLA28XX(ha))
++					 IS_QLA28XX(ha) || IS_QLA29XX(ha))
+ #define IS_PI_DIFB_DIX0_CAPABLE(ha)	(0)
+ #define IS_PI_SPLIT_DET_CAPABLE_HBA(ha)	(IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
+-					IS_QLA28XX(ha))
++					IS_QLA28XX(ha) || IS_QLA29XX(ha))
+ #define IS_PI_SPLIT_DET_CAPABLE(ha)	(IS_PI_SPLIT_DET_CAPABLE_HBA(ha) && \
+     (((ha)->fw_attributes_h << 16 | (ha)->fw_attributes) & BIT_22))
+ #define IS_ATIO_MSIX_CAPABLE(ha) (IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e23e7ac48ae2..f5d230fc3642 100644
+index e746c9274cde..e23e7ac48ae2 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -4194,11 +4194,11 @@ qla24xx_detect_sfp(scsi_qla_host_t *vha)
- 	used_nvram = 0;
- 	ha->flags.lr_detected = 0;
- 	if (IS_BPM_RANGE_CAPABLE(ha) &&
--	    (nv->enhanced_features & NEF_LR_DIST_ENABLE)) {
-+	    (le16_to_cpu(nv->enhanced_features) & NEF_LR_DIST_ENABLE)) {
- 		used_nvram = 1;
- 		ha->flags.lr_detected = 1;
- 		ha->lr_distance =
--		    (nv->enhanced_features >> LR_DIST_NV_POS)
-+		    (le16_to_cpu(nv->enhanced_features) >> LR_DIST_NV_POS)
- 		     & LR_DIST_NV_MASK;
- 	}
+@@ -2773,7 +2773,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ 	ha->isp_ops->reset_chip(vha);
  
-@@ -9306,34 +9306,97 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
- 	if (IS_P3P_TYPE(ha) || IS_QLA8031(ha))
- 		ha->vpd_size = FA_VPD_SIZE_82XX;
- 
--	if (IS_QLA28XX(ha) || IS_QLA27XX(ha))
--		qla28xx_get_aux_images(vha, &active_regions);
--
- 	/* Get VPD data into cache */
- 	ha->vpd = ha->nvram + VPD_OFFSET;
- 
--	faddr = ha->flt_region_vpd;
+ 	/* Check for secure flash support */
 -	if (IS_QLA28XX(ha)) {
--		if (active_regions.aux.vpd_nvram == QLA27XX_SECONDARY_IMAGE)
--			faddr = ha->flt_region_vpd_sec;
-+	if (IS_QLA29XX(ha)) {
-+		uint16_t fw_options = 0, r_code;
-+		uint32_t vpd_r[] = {FLT_REG_VPD_0, FLT_REG_VPD_1,
-+				    FLT_REG_VPD_2, FLT_REG_VPD_3};
-+		uint32_t nvram_r[] = {FLT_REG_NVRAM_0, FLT_REG_NVRAM_1,
-+				      FLT_REG_NVRAM_2, FLT_REG_NVRAM_3};
-+		void *buf;
-+
-+		BUILD_BUG_ON((VPD_OFFSET + FA_NVRAM_VPD_SIZE +
-+			      sizeof(struct qla_flash_memo_block)) >
-+			     MAX_NVRAM_SIZE);
-+
-+		ha->fiv = (struct qla_flash_memo_block *)
-+			((char *)ha->vpd + ha->vpd_size);
-+
-+		buf = qla29xx_read_optrom_data(vha, FLT_REG_FMB_PRI,
-+					       fw_options, ha->fiv, 0,
-+					       sizeof(struct qla_flash_memo_block));
-+		if (!buf) {
-+			ql_log(ql_log_info, vha, 0x01be,
-+			    "Unable to read Flash Image Version.\n");
-+		} else if (ha->fiv->signature != QLFC_FMB_SIG) {
-+			ql_log(ql_log_warn, vha, 0x01bf,
-+			    "Invalid FMB signature %#x, expected %#x.\n",
-+			    le32_to_cpu(ha->fiv->signature),
-+			    le32_to_cpu(QLFC_FMB_SIG));
-+			ha->fiv = NULL;
-+		} else {
-+			ql_log(ql_log_info, vha, 0x0024,
-+			    "Flash Image Version %u.%02u.%02u\n",
-+			    ha->fiv->mbi_ver.major,
-+			    ha->fiv->mbi_ver.minor,
-+			    ha->fiv->mbi_ver.sub);
-+		}
-+
-+		if (ha->port_no >= ARRAY_SIZE(vpd_r)) {
-+			ql_log(ql_log_warn, vha, 0x002e,
-+			    "Invalid port number %u, skipping VPD/NVRAM read.\n",
-+			    ha->port_no);
-+			goto out_29xx;
-+		}
-+
-+		r_code = vpd_r[ha->port_no];
-+		buf = qla29xx_read_optrom_data(vha, r_code, fw_options,
-+					       ha->vpd, 0, ha->vpd_size);
-+		if (!buf)
-+			ql_log(ql_log_info, vha, 0x002d,
-+			    "Unable to read VPD info.\n");
-+
-+		r_code = nvram_r[ha->port_no];
-+		buf = qla29xx_read_optrom_data(vha, r_code, fw_options,
-+					       ha->nvram, 0, ha->nvram_size);
-+		if (!buf)
-+			ql_log(ql_log_info, vha, 0x0013,
-+			    "Unable to read nvram config info.\n");
-+out_29xx:
-+	} else {
-+		if (IS_QLA28XX(ha) || IS_QLA27XX(ha))
-+			qla28xx_get_aux_images(vha, &active_regions);
-+
-+		faddr = ha->flt_region_vpd;
-+		if (IS_QLA28XX(ha)) {
-+			if (active_regions.aux.vpd_nvram ==
-+			    QLA27XX_SECONDARY_IMAGE)
-+				faddr = ha->flt_region_vpd_sec;
-+			ql_dbg(ql_dbg_init, vha, 0x0110,
-+			    "Loading %s nvram image.\n",
-+			    active_regions.aux.vpd_nvram ==
-+			    QLA27XX_PRIMARY_IMAGE ?
-+			    "primary" : "secondary");
-+		}
-+		ha->isp_ops->read_optrom(vha, ha->vpd, faddr << 2,
-+					 ha->vpd_size);
-+
-+		/* Get NVRAM data into cache and calculate checksum. */
-+		faddr = ha->flt_region_nvram;
-+		if (IS_QLA28XX(ha)) {
-+			if (active_regions.aux.vpd_nvram ==
-+			    QLA27XX_SECONDARY_IMAGE)
-+				faddr = ha->flt_region_nvram_sec;
-+		}
- 		ql_dbg(ql_dbg_init, vha, 0x0110,
- 		    "Loading %s nvram image.\n",
- 		    active_regions.aux.vpd_nvram == QLA27XX_PRIMARY_IMAGE ?
- 		    "primary" : "secondary");
-+		ha->isp_ops->read_optrom(vha, ha->nvram, faddr << 2,
-+					 ha->nvram_size);
- 	}
--	ha->isp_ops->read_optrom(vha, ha->vpd, faddr << 2, ha->vpd_size);
--
--	/* Get NVRAM data into cache and calculate checksum. */
--	faddr = ha->flt_region_nvram;
--	if (IS_QLA28XX(ha)) {
--		if (active_regions.aux.vpd_nvram == QLA27XX_SECONDARY_IMAGE)
--			faddr = ha->flt_region_nvram_sec;
--	}
--	ql_dbg(ql_dbg_init, vha, 0x0110,
--	    "Loading %s nvram image.\n",
--	    active_regions.aux.vpd_nvram == QLA27XX_PRIMARY_IMAGE ?
--	    "primary" : "secondary");
--	ha->isp_ops->read_optrom(vha, ha->nvram, faddr << 2, ha->nvram_size);
++	if (IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
+ 		if (rd_reg_word(&reg->mailbox12) & BIT_0)
+ 			ha->flags.secure_adapter = 1;
+ 		ql_log(ql_log_info, vha, 0xffff, "Secure Adapter: %s\n",
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 33776330956c..c47c38e099ff 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -4663,7 +4663,8 @@ qla2x00_request_irqs(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	/* If possible, enable MSI-X. */
+ 	if (ql2xenablemsix == 0 || (!IS_QLA2432(ha) && !IS_QLA2532(ha) &&
+ 	    !IS_QLA8432(ha) && !IS_CNA_CAPABLE(ha) && !IS_QLA2031(ha) &&
+-	    !IS_QLAFX00(ha) && !IS_QLA27XX(ha) && !IS_QLA28XX(ha)))
++	    !IS_QLAFX00(ha) && !IS_QLA27XX(ha) && !IS_QLA28XX(ha) &&
++	    !IS_QLA29XX(ha)))
+ 		goto skip_msi;
  
- 	dptr = (__force __le32 *)nv;
- 	for (cnt = 0, chksum = 0; cnt < ha->nvram_size >> 2; cnt++, dptr++)
-@@ -9386,7 +9449,10 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
- 		nv->login_timeout = cpu_to_le16(0);
- 		nv->firmware_options_1 =
- 		    cpu_to_le32(BIT_14|BIT_13|BIT_2|BIT_1);
--		nv->firmware_options_2 = cpu_to_le32(2 << 4);
-+		if (IS_QLA29XX(ha))
-+			nv->firmware_options_2 = cpu_to_le32(BIT_4);
-+		else
-+			nv->firmware_options_2 = cpu_to_le32(BIT_5);
- 		nv->firmware_options_2 |= cpu_to_le32(BIT_12);
- 		nv->firmware_options_3 = cpu_to_le32(2 << 13);
- 		nv->host_p = cpu_to_le32(BIT_11|BIT_10);
-@@ -9468,9 +9534,13 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
- 		icb->node_name[0] &= 0xF0;
- 	}
+ 	if (ql2xenablemsix == 2)
+@@ -4702,7 +4703,7 @@ qla2x00_request_irqs(struct qla_hw_data *ha, struct rsp_que *rsp)
  
--	if (IS_QLA28XX(ha) || IS_QLA27XX(ha)) {
--		if ((nv->enhanced_features & BIT_7) == 0)
-+	/* SCM Enabled in NVRAM */
-+	if (IS_QLA29XX(ha) || IS_QLA28XX(ha) || IS_QLA27XX(ha)) {
-+		if ((le16_to_cpu(nv->enhanced_features) & BIT_7) == 0) {
-+			ql_log(ql_log_info, vha, 0x0062,
-+			       "USCM enabled in NVRAM\n");
- 			ha->flags.scm_supported_a = 1;
-+		}
- 	}
+ 	if (!IS_QLA24XX(ha) && !IS_QLA2532(ha) && !IS_QLA8432(ha) &&
+ 	    !IS_QLA8001(ha) && !IS_P3P_TYPE(ha) && !IS_QLAFX00(ha) &&
+-	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha))
++	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha))
+ 		goto skip_msi;
  
- 	/* Set host adapter parameters. */
-@@ -9546,7 +9616,8 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
- 
- 	/* if not running MSI-X we need handshaking on interrupts */
- 	if (!vha->hw->flags.msix_enabled &&
--	    (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha)))
-+	    (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha) ||
-+	     IS_QLA29XX(ha)))
- 		icb->firmware_options_2 |= cpu_to_le32(BIT_22);
- 
- 	/* Enable ZIO. */
+ 	ret = pci_alloc_irq_vectors(ha->pdev, 1, 1, PCI_IRQ_MSI);
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index ebb97329e6ea..c3eb941f71ad 100644
+index 72b1c28e4dae..c91d2b8bd08e 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4620,6 +4620,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- fail_free_nvram:
- 	kfree(ha->nvram);
- 	ha->nvram = NULL;
-+	ha->fiv = NULL;
- fail_free_ctx_mempool:
- 	mempool_destroy(ha->ctx_mempool);
- 	ha->ctx_mempool = NULL;
-@@ -5085,6 +5086,7 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 	ha->optrom_buffer = NULL;
- 	kfree(ha->nvram);
- 	ha->nvram = NULL;
-+	ha->fiv = NULL;
- 	kfree(ha->npiv_info);
- 	ha->npiv_info = NULL;
- 	kfree(ha->swl);
+@@ -429,7 +429,8 @@ static void qla_init_base_qpair(struct scsi_qla_host *vha, struct req_que *req,
+ 	qla_cpu_update(rsp->qpair, raw_smp_processor_id());
+ 	ha->base_qpair->pdev = ha->pdev;
+ 
+-	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha))
++	if (IS_QLA27XX(ha) || IS_QLA83XX(ha) || IS_QLA28XX(ha) ||
++	    IS_QLA29XX(ha))
+ 		ha->base_qpair->reqq_start_iocbs = qla_83xx_start_iocbs;
+ }
+ 
+@@ -2153,8 +2154,6 @@ qla2x00_iospace_config(struct qla_hw_data *ha)
+ static int
+ qla83xx_iospace_config(struct qla_hw_data *ha)
+ {
+-	uint16_t msix;
+-
+ 	if (pci_request_selected_regions(ha->pdev, ha->bars,
+ 	    QLA2XXX_DRIVER_NAME)) {
+ 		ql_log_pci(ql_log_fatal, ha->pdev, 0x0117,
+@@ -2203,10 +2202,18 @@ qla83xx_iospace_config(struct qla_hw_data *ha)
+ 	ha->msixbase = ioremap(pci_resource_start(ha->pdev, 2),
+ 			pci_resource_len(ha->pdev, 2));
+ 	if (ha->msixbase) {
++		int msix_cnt;
++
+ 		/* Read MSIX vector size of the board */
+-		pci_read_config_word(ha->pdev,
+-		    QLA_83XX_PCI_MSIX_CONTROL, &msix);
+-		ha->msix_count = (msix & PCI_MSIX_FLAGS_QSIZE)  + 1;
++		msix_cnt = pci_msix_vec_count(ha->pdev);
++		if (msix_cnt <= 0) {
++			ql_log_pci(ql_log_warn, ha->pdev, 0x0120,
++				   "Failed to read MSI-X count (%d), falling back to base vectors.\n",
++				   msix_cnt);
++			goto mqiobase_exit;
++		}
++		ha->msix_count = msix_cnt;
++
+ 		/*
+ 		 * By default, driver uses at least two msix vectors
+ 		 * (default & rspq)
+@@ -2796,6 +2803,20 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
+ 		ha->device_type |= DT_T10_PI;
+ 		ha->fw_srisc_address = RISC_START_ADDRESS_2400;
+ 		break;
++	case PCI_DEVICE_ID_QLOGIC_ISP2099:
++	case PCI_DEVICE_ID_QLOGIC_ISP2299:
++	case PCI_DEVICE_ID_QLOGIC_ISP2091:
++	case PCI_DEVICE_ID_QLOGIC_ISP2291:
++		ha->isp_type |= DT_ISP2299;
++		ha->isp_type |= DT_ISP2099;
++		ha->isp_type |= DT_ISP2091;
++		ha->isp_type |= DT_ISP2291;
++		ha->device_type |= DT_ZIO_SUPPORTED;
++		ha->device_type |= DT_FWI2;
++		ha->device_type |= DT_IIDMA;
++		ha->device_type |= DT_T10_PI;
++		ha->fw_srisc_address = RISC_START_ADDRESS_2400;
++		break;
+ 	}
+ 
+ 	if (IS_QLA82XX(ha))
+@@ -2803,8 +2824,8 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
+ 	else {
+ 		/* Get adapter physical port no from interrupt pin register. */
+ 		pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &ha->port_no);
+-		if (IS_QLA25XX(ha) || IS_QLA2031(ha) ||
+-		    IS_QLA27XX(ha) || IS_QLA28XX(ha))
++		if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
++		    IS_QLA28XX(ha) || IS_QLA29XX(ha))
+ 			ha->port_no--;
+ 		else
+ 			ha->port_no = !(ha->port_no & 1);
+@@ -2936,7 +2957,11 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2081 ||
+ 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2281 ||
+ 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2089 ||
+-	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2289) {
++	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2289 ||
++	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2099 ||
++	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2299 ||
++	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2091 ||
++	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2291) {
+ 		bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 		mem_only = 1;
+ 		ql_dbg_pci(ql_dbg_init, pdev, 0x0007,
+@@ -2998,7 +3023,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	/* Set EEH reset type to fundamental if required by hba */
+ 	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha) ||
+-	    IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha))
++	    IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha) ||
++	    IS_QLA29XX(ha))
+ 		pdev->needs_freset = 1;
+ 
+ 	ha->prev_topology = 0;
+@@ -3195,6 +3221,22 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ha->flash_data_off = FARX_ACCESS_FLASH_DATA_28XX;
+ 		ha->nvram_conf_off = ~0;
+ 		ha->nvram_data_off = ~0;
++	} else if (IS_QLA29XX(ha)) {
++		ha->portnum = PCI_FUNC(ha->pdev->devfn);
++		ha->max_fibre_devices = MAX_FIBRE_DEVICES_2400;
++		ha->mbx_count = MAILBOX_REGISTER_COUNT;
++		req_length = REQUEST_ENTRY_CNT_83XX;
++		rsp_length = RESPONSE_ENTRY_CNT_83XX;
++		ha->max_loop_id = SNS_LAST_LOOP_ID_2300;
++		ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
++		ha->gid_list_info_size = 8;
++		ha->optrom_size = OPTROM_SIZE_28XX;
++		ha->nvram_npiv_size = QLA_MAX_VPORTS_QLA25XX;
++		ha->isp_ops = &qla27xx_isp_ops;
++		ha->flash_conf_off = ~0;
++		ha->flash_data_off = ~0;
++		ha->nvram_conf_off = ~0;
++		ha->nvram_data_off = ~0;
+ 	}
+ 
+ 	ql_dbg_pci(ql_dbg_init, pdev, 0x001e,
+@@ -3373,7 +3415,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	rsp->rsp_q_in = &ha->iobase->isp24.rsp_q_in;
+ 	rsp->rsp_q_out = &ha->iobase->isp24.rsp_q_out;
+ 	if (ha->mqenable || IS_QLA83XX(ha) || IS_QLA27XX(ha) ||
+-	    IS_QLA28XX(ha)) {
++	    IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
+ 		req->req_q_in = &ha->mqiobase->isp25mq.req_q_in;
+ 		req->req_q_out = &ha->mqiobase->isp25mq.req_q_out;
+ 		rsp->rsp_q_in = &ha->mqiobase->isp25mq.rsp_q_in;
+@@ -3898,7 +3940,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 		return;
+ 
+ 	if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
+-	    IS_QLA28XX(ha)) {
++	    IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
+ 		if (ha->flags.fw_started)
+ 			qla2x00_abort_isp_cleanup(base_vha);
+ 	} else if (!IS_QLAFX00(ha)) {
+@@ -4387,7 +4429,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
+ 
+ 	/* Get consistent memory allocated for EX-INIT-CB. */
+ 	if (IS_CNA_CAPABLE(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
+-	    IS_QLA28XX(ha)) {
++	    IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
+ 		ha->ex_init_cb = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
+ 		    &ha->ex_init_cb_dma);
+ 		if (!ha->ex_init_cb)
+@@ -4397,7 +4439,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
+ 	}
+ 
+ 	/* Get consistent memory allocated for Special Features-CB. */
+-	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
++	if (IS_QLA27XX(ha) || IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
+ 		ha->sf_init_cb = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL,
+ 						&ha->sf_init_cb_dma);
+ 		if (!ha->sf_init_cb)
+@@ -8155,6 +8197,10 @@ static const struct pci_device_id qla2xxx_pci_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2281) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2089) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2289) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2099) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2299) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2091) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP2291) },
+ 	{ 0 },
+ };
+ MODULE_DEVICE_TABLE(pci, qla2xxx_pci_tbl);
 -- 
 2.47.3
 
