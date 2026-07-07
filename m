@@ -1,140 +1,133 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9739842254D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DE293E1CED;
 	Tue,  7 Jul 2026 14:12:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783433539; cv=none; b=dyWWrcTrNNJkeRHSHtrDQ31wFo1B8C30pnziUBX0PlbI78fAtpJghL7TbJQLoU0cl03Hc++QWTxrU81SA6HoYbp7XAJzXwBVSJHhC7P65BUsuODodzyoF0CBoeV3yovid0V+i+z5uk6wDg5aIPxaCQuklKr9v1EWgB5YHLNOH8I=
+	t=1783433540; cv=none; b=U8kkv0YiKtkdHAv6Ye9rpZRzEPE2WWy9s34fZ67Q+/VwPlVz93TMeznZr26nAdoUzwiSjH0i+7lRFR7vvCAby+joHiYzBAClPCSM6zNJIR1iQmLoH7ZZ0d++qge96asIQQS677vp4Bke6jgny2QLkoAgs8LgcGMRyYiRI0kYGGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783433539; c=relaxed/simple;
-	bh=OVtv5I8nY4k2+NYX38ZksLgxwnnzdn3K5q5ZwzIS0IQ=;
+	s=arc-20240116; t=1783433540; c=relaxed/simple;
+	bh=p0mQel9DC1hPpIN8aHPoXJhvg1E/GYDsq2Z3kIl22ik=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VWo0jCuwitOuvODhu3diBKA9w0SllCl0J+enOrGpw9BwbpraRxFAQ6tUXmsM5ms76SUXS1W1lfGb1abalJun9Q+pZneNfEcce3I8/azCXk0Iybi4c96hYzUOTf7mlDK+n6HB6ZUkiMCYaX/Hm/8ZeM5biivMI0tzxJTgg2b/Qsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OY9UAjLm; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=iBAxYUwunlsymwStYNQsuHdn9PJv1R4uUf9PyNFqNAl42y3aYpqeqfns7t6FtpOX8AX1BboE80ZK8dYc8+CAF7jfxBRNP33FpG2Soae4joSTZg2WB9lFdJdy/BBgeWpmfQsoxThSiB+SYlaU1P79EmNnPHhMjYN8negcQ38gW0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k2N4TQ+V; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OY9UAjLm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 732CB1F00A3D;
-	Tue,  7 Jul 2026 14:12:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k2N4TQ+V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE9E61F00A3E;
+	Tue,  7 Jul 2026 14:12:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783433534;
-	bh=U5EcTzMi/IEhPzzjYbkg3G4Fs0byQhzWOrG0+G6+GxA=;
+	s=k20260515; t=1783433535;
+	bh=Gt09LEKUndiVYYYMJSzo6DYkKsxFB07zGbnbbg4BCQk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OY9UAjLmHX7VOWczV4GzyLSPcp3qcOXPB8C8UHf/FjXSbaKixLkYEMIZLdlmg8e/T
-	 uLpQ0jlOeisX4MmqXhsCTvp5AZzzG54zP6/8SA8btCC8fhiVVsct3j2UhkJpFnMzQ7
-	 cVkAqkFP2s73jAbrhd4ivkCBCxEi9ss1NDkiOBTkdYwDTT1UEuVVyrqVB64i9emHRM
-	 NXuABlgr+mWKHW77lHpfVabsSOEENApUnZo0vhd/gQAQfj+uG4DsiewZvFfvDDcVyf
-	 4a6SlpLVGos4exgUsABwA8XwS5ZpRB98XKRHXbwpPtQsAgvIWLYF3VU1a1AbHrnD5F
-	 4w5oxVaC2vwyQ==
+	b=k2N4TQ+V4vLr6mOUnpMtQHmPAprYeJFQ2iNsLHJYinxKfP5omKlH9iCok7V0cRUPX
+	 Q/K5GPxdb6N5GpgE3OBcNriMI9r4ecgpYuupYEhSG6LJU4Q076cEznDHyif7YHa0k6
+	 onDBM/OBpWIoDGxWnjcbnkmvWZiVwOEpezhG6mfpnIlF+m+QlUIReg9sP2E+fd+g2J
+	 FpEUG/M5LXJoX5jYvvQfRd4kSpZZp8kSoGCacizsg80GZLoD83SRzDXh1DZbt0kyCe
+	 pHAA/4MbZ6OxnQ7QF0suYeD4lK2MF9//veQhFQNbXfGNVgYtrzCXEHbyHLKno3ShDV
+	 UxjaIKdStOCaQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/9] nsp32: don't store pci_device_id
+Subject: Re: [PATCH v3 3/9] ipack: tpci200: don't store pci_device_id
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, cassel@kernel.org, linux-scsi@vger.kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260706-pci_id_fix-v3-2-2d48fc025acc@garyguo.net>
+Cc: linux-pci@vger.kernel.org, cassel@kernel.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, dlemoal@kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260706-pci_id_fix-v3-3-2d48fc025acc@garyguo.net>
 References: <20260706-pci_id_fix-v3-0-2d48fc025acc@garyguo.net>
- <20260706-pci_id_fix-v3-2-2d48fc025acc@garyguo.net>
+ <20260706-pci_id_fix-v3-3-2d48fc025acc@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 14:12:13 +0000
-Message-Id: <20260707141213.732CB1F00A3D@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 14:12:14 +0000
+Message-Id: <20260707141214.CE9E61F00A3E@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Unvalidated `driver_data` from PCI dynamic IDs can cause an out-of=
--bounds array access on `nsp32_model`.
-- [High] Global structure `nsp32_data_base` is used for passing probe state=
-, causing data races on parallel probing.
-- [High] A failure in `nsp32_detect()` returns 1, causing `nsp32_probe()` t=
-o report success. This leads to a NULL pointer dereference in `nsp32_remove=
-()` and memory leaks.
+- [High] Unconditional return of 1 in `ipack_unregister_bus_member` halts b=
+us device iteration prematurely, leaving most devices orphaned but still re=
+gistered.
 --
 
-commit 96fc8cc24426c19e6b0431d668e3217eed8887c7
+commit 6023ba18e50f5578e133a944842fdee804f479b0
 Author: Gary Guo <gary@garyguo.net>
 
-nsp32: don't store pci_device_id
+    ipack: tpci200: don't store pci_device_id
+   =20
+    pci_device_id is not guaranteed to live longer than probe due to presen=
+ce
+    of dynamic ID. This stored ID is unused so remove it.
 
-This commit removes the storage of pci_device_id in the nsp32 hardware
-data structure, as it may not outlive the probe function when dynamic IDs
-are used. Instead, it directly stores the driver_data which is the only
-information needed later.
-
-> diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-> index e893d56772417..9c9281222a0ac 100644
-> --- a/drivers/scsi/nsp32.c
-> +++ b/drivers/scsi/nsp32.c
-> @@ -1470,7 +1470,7 @@ static int nsp32_show_info(struct seq_file *m, stru=
-ct Scsi_Host *host)
->  		   (nsp32_read2(base, INDEX_REG) >> 8) & 0xff);
+> diff --git a/drivers/ipack/carriers/tpci200.c b/drivers/ipack/carriers/tp=
+ci200.c
+> index 05dcb6675cd66..1cf51f7632932 100644
+> --- a/drivers/ipack/carriers/tpci200.c
+> +++ b/drivers/ipack/carriers/tpci200.c
+> @@ -562,7 +562,6 @@ static int tpci200_pci_probe(struct pci_dev *pdev,
 > =20
->  	mode_reg =3D nsp32_index_read1(base, CHIP_MODE);
-> -	model    =3D data->pci_devid->driver_data;
-> +	model    =3D data->model;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does this unvalidated model
-value lead to an out-of-bounds read?
-
-If a privileged user writes a dynamic ID via the new_id sysfs interface
-and passes a driver_data value greater than or equal to 7, it seems this
-could read outside the bounds of nsp32_model[] when printing further down
-in nsp32_show_info() or nsp32_probe():
-
-    seq_printf(m, "OEM:                   %ld, %s\n",
-               (mode_reg & (OEM0|OEM1)), nsp32_model[model]);
-
-[ ... ]
-> @@ -3340,7 +3340,7 @@ static int nsp32_probe(struct pci_dev *pdev, const =
-struct pci_device_id *id)
->  	}
+>  	/* Save struct pci_dev pointer */
+>  	tpci200->info->pdev =3D pdev;
+> -	tpci200->info->id_table =3D (struct pci_device_id *)id;
 > =20
->  	data->Pci	  =3D pdev;
-> -	data->pci_devid   =3D id;
-> +	data->model       =3D id->driver_data;
+>  	/* register the device and initialize it */
+>  	ret =3D tpci200_install(tpci200);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does writing to data here
-cause a data race if multiple devices matching the driver are probed
-concurrently?
+This is a pre-existing issue, but I noticed a potential use-after-free duri=
+ng
+bus unregistration that I wanted to ask about.
 
-Looking at nsp32_probe(), data points to the static global
-nsp32_data_base structure:
+When a carrier driver is unbound and calls ipack_bus_unregister(), it uses
+bus_for_each_dev() to iterate and unregister child devices:
 
-    nsp32_hw_data *data =3D &nsp32_data_base;
+drivers/ipack/ipack.c:ipack_bus_unregister() {
+    ...
+	bus_for_each_dev(&ipack_bus_type, NULL, bus,
+		ipack_unregister_bus_member);
+	ida_free(&ipack_ida, bus->bus_nr);
+	kfree(bus);
+    ...
+}
 
-Since multiple probes will write to this shared structure before it is copi=
-ed
-to the per-instance allocation in nsp32_detect(), could this corrupt
-device-specific state like MMIO addresses, IRQs, and PCI device pointers?
+However, the callback unconditionally returns 1:
 
-[Severity: High]
-This isn't a bug introduced by this patch, but could this probe function
-return a false success on failure, leading to a NULL pointer dereference
-on removal?
+drivers/ipack/ipack.c:ipack_unregister_bus_member() {
+    ...
+	if (idev->bus =3D=3D bus)
+		ipack_device_del(idev);
 
-If nsp32_detect() fails and returns 1, nsp32_probe() propagates this
-positive value. The PCI driver core treats positive returns as success and
-binds the device without setting the driver data.
+	return 1;
+}
 
-Later, when the device is unbound, nsp32_remove() calls pci_get_drvdata(),
-receives NULL, and passes it to scsi_remove_host(host). Because
-scsi_remove_host() dereferences its argument unconditionally, wouldn't
-this cause a kernel panic?
+Since bus_for_each_dev() halts iteration on any non-zero return value, does
+this stop after evaluating only the first device in the bus list?
 
->  	data->IrqNumber   =3D pdev->irq;
->  	data->BaseAddress =3D pci_resource_start(pdev, 0);
->  	data->NumAddress  =3D pci_resource_len  (pdev, 0);
+If the iteration stops prematurely, the remaining devices would be orphaned=
+ but
+stay registered. Because ipack_bus_unregister() immediately frees the bus
+structure after the iteration, could this result in a use-after-free if an
+ipack client driver later binds to one of these orphaned devices or their s=
+ysfs
+attributes are accessed?
 
-[ ... ]
+> diff --git a/drivers/ipack/carriers/tpci200.h b/drivers/ipack/carriers/tp=
+ci200.h
+> index e79ac64abcffa..a2bf3125794b7 100644
+> --- a/drivers/ipack/carriers/tpci200.h
+> +++ b/drivers/ipack/carriers/tpci200.h
+> @@ -145,7 +145,6 @@ struct tpci200_slot {
+>   */
+>  struct tpci200_infos {
+>  	struct pci_dev			*pdev;
+> -	struct pci_device_id		*id_table;
+>  	struct tpci200_regs __iomem	*interface_regs;
+>  	void __iomem			*cfg_regs;
+>  	struct ipack_bus_device		*ipack_bus;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-pci_id_fix=
--v3-0-2d48fc025acc@garyguo.net?part=3D2
+-v3-0-2d48fc025acc@garyguo.net?part=3D3
