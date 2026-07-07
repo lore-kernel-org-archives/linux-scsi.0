@@ -1,105 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49B1F42314A;
-	Tue,  7 Jul 2026 14:12:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF1FF3F4123;
+	Tue,  7 Jul 2026 14:12:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783433542; cv=none; b=DlLLJYWKaOfiG4G4/KhRGLcpHG+ZI+T+S5olMm3D+AiJFg/hQhEQl2FntV2szOSPFZHAGIgJ5JsMqXElxKst8UlItLIlI+DKTBTx/cgUELjGjvbuxW1eXmfUfQfkkl0vvDGMUaVU8+vVarzuvePzC9Y6ym2XchGz+AjCLg+Vkyc=
+	t=1783433542; cv=none; b=JEm5T2xPIUb1ZN2vzLfx/eetNss2E8Qwpj+gAUywNnhM5tB1jZdScsnQCcdFyNOle2bZKlEgGTS7uxvbouTze1ESH9tPu4THdad+vAXAgaiUC3XICEiohF8eQ9NMIl3/HIjb53o++QkwJebniqnfkwr/ep9NwLC+8PU/XNx69S4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1783433542; c=relaxed/simple;
-	bh=8KGxQUIYijneXejQU1xUh12K1iXtl/B/4fmXY/wY4W4=;
+	bh=UfmXVhSM5Umjns2A9HvBx2SkFQe8VPlW+QWf63BmQAk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FjlFwNJNcBLPQBFixGS2icYOSAZPl2xpGMgf1toBqg1XXU93GHxTPymyghFDExy211ENjoywMLPJEstog81EcDD9xRtmX+NPkF8L70kiL8b3pogu5jwxrwsT1wA/BVdQzabSMo4wFqyOhgTUqW2WXhWZlrKmeCVvOnOi0bm/Kb4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cGBb9ons; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=CQ3huJSl4ZJ2LfReX1GSDBMzvKOoi8LS2b4GpC1a5PvJ8i/RpuWaPZ1OLMytrddZOWTB5qrm0nWouyDLU3K4+tHbb9MySi/saYv1gZ5AY8a2OLqSZ35oMIBRvti7ofVsraOdROa/HzwedBwcKdDeh9TO3tgx5VPVeFtkNCsI6tQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gBG3ZsPE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cGBb9ons"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A81461F00A3F;
-	Tue,  7 Jul 2026 14:12:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gBG3ZsPE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10BE61F000E9;
+	Tue,  7 Jul 2026 14:12:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783433537;
-	bh=gXo2I8WWUUzgL/fzewhPwv7C4pNjWmnVuQkBdkwQytA=;
+	s=k20260515; t=1783433540;
+	bh=UfmXVhSM5Umjns2A9HvBx2SkFQe8VPlW+QWf63BmQAk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cGBb9onsGAIZPitkRw5XzB8sdi9TzT0+mWgJ88+xKSfVaNXwiE0MVxJhjmyL7aFSR
-	 60jEXj5mO7CSyk7oYCICfNtfvbRzrEJoOOi7p6hkCS5+kBSHK9ZhYF6WIQ6cZLcZXa
-	 d9I4iW9Zo1IViScC7COKbeB6iTQAOKIeC0gogTVm4zeXXbp/ot8iHgU+TRgDGWSkyf
-	 m2rU/FeDgdWcFSPfnT6nuZzqtAanQpVRKtoO3ZGZ5FcLUJKBkA+N+A+X9pXQ1G0zAK
-	 VHxJsNUyNq2/x68A6mOD9sHCTjXJipculoBeJoKOy1eLMkMiKtvRJr4KSIxTm69fA7
-	 LO7WUZcPL3DrQ==
+	b=gBG3ZsPEWjvZExJhMn5eRA+6Oj2wVar8453d1Ihc58vUeC6K1REcnEX1b0GRkajrr
+	 4pk98SRWjIkzI0Ut7XnTI9Evd+3AshYw7APhC601CmAn7xVDkr0wgmzt7RJwivIVjj
+	 x1wSeulDOE3mlrOmJB+LNeD5y4MUxckboK/JsMRmwvSKa3OUVJiPdAF1m95zYelD1B
+	 DgpmEaCok3QPESmRKAy8GyuCyV4GzdcxGaRzvWInTCSpEGkFO9iplD3jPb/pdq8h3t
+	 yjA+/6+iDQs55osPHVqW6LW8LWn9GhSQw4/3mCAX2SkvImnXnobrTKKYQt27Rv9bm2
+	 GImWhNFWg194A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 5/9] agp/via: don't rely on address of pci_device_id
+Subject: Re: [PATCH v3 8/9] pci: fix dyn_id add TOCTOU
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, cassel@kernel.org, dri-devel@lists.freedesktop.org, dlemoal@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260706-pci_id_fix-v3-5-2d48fc025acc@garyguo.net>
+Cc: linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org
+In-Reply-To: <20260706-pci_id_fix-v3-8-2d48fc025acc@garyguo.net>
 References: <20260706-pci_id_fix-v3-0-2d48fc025acc@garyguo.net>
- <20260706-pci_id_fix-v3-5-2d48fc025acc@garyguo.net>
+ <20260706-pci_id_fix-v3-8-2d48fc025acc@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 14:12:16 +0000
-Message-Id: <20260707141216.A81461F00A3F@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 14:12:19 +0000
+Message-Id: <20260707141220.10BE61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] When a device binds via `driver_override`, the PCI core passes a ge=
-neric `pci_device_id_any` struct with `driver_data` set to 0. Passing this =
-NULL pointer to the `%s` format specifier results in an unhandled `(null)` =
-log output.
---
+> Currently there is a TOCTOU issue in new_id_store as the dyn ID insertion
+> in pci_add_dynid and the pci_match_device are in separate critical
+> sections.
+>=20
+> Fix this by moving the existing ID check to inside pci_add_dynid and only
+> check against the static ID table outside the critical section.
+>=20
+> Fixes: 3853f9123c18 ("PCI: Avoid duplicate IDs in driver dynamic IDs list=
+")
+> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-commit cefd4bbcd02b1f8d8a6df6f9aa562b23cee64272
-Author: Gary Guo <gary@garyguo.net>
-
-agp/via: don't rely on address of pci_device_id
-   =20
-Address of pci_device_id cannot be relied on due to presence of dynamic ID
-and driver_override. Use driver_data instead.
-
-> diff --git a/drivers/char/agp/via-agp.c b/drivers/char/agp/via-agp.c
-> index 8b19a5d1a09b4..ab3b73dd080af 100644
-> --- a/drivers/char/agp/via-agp.c
-> +++ b/drivers/char/agp/via-agp.c
-[ ... ]
-> @@ -437,17 +239,14 @@ static void check_via_agp3 (struct agp_bridge_data =
-*bridge)
-> =20
->  static int agp_via_probe(struct pci_dev *pdev, const struct pci_device_i=
-d *ent)
->  {
-> -	struct agp_device_ids *devs =3D via_agp_device_ids;
->  	struct agp_bridge_data *bridge;
-> -	int j =3D 0;
->  	u8 cap_ptr;
-> =20
->  	cap_ptr =3D pci_find_capability(pdev, PCI_CAP_ID_AGP);
->  	if (!cap_ptr)
->  		return -ENODEV;
-> =20
-> -	j =3D ent - agp_via_pci_table;
-> -	printk (KERN_INFO PFX "Detected VIA %s chipset\n", devs[j].chipset_name=
-);
-> +	dev_info(&pdev->dev, "Detected VIA %s chipset\n", (const char *)ent->dr=
-iver_data);
-
-[Severity: Low]
-Could this result in printing a (null) value to the kernel log?
-
-If an administrator forces binding of the driver to a device using the sysfs
-driver_override feature, the PCI core passes a generic pci_device_id_any st=
-ruct
-with driver_data set to 0.
-
-Passing this NULL pointer to the %s format specifier in dev_info() would
-print (null) in the kernel logs instead of a valid string. Is it possible
-to check ent->driver_data for NULL before attempting to print it, or fall b=
-ack
-to a default string?
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-pci_id_fix=
--v3-0-2d48fc025acc@garyguo.net?part=3D5
+-v3-0-2d48fc025acc@garyguo.net?part=3D8
+
