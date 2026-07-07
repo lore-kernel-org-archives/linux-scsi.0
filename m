@@ -1,130 +1,186 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 957F93B19D1
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:18:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE3373BA22E
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:18:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783408704; cv=none; b=sv7XQ+xWFf+U7e6Ud5wE3iBaCnz27OKGV9V2JaNIdfmI6WoZoH2sGRRxGg5pnLMMP8Ht7909oFsvrsg3GXnjEbsPplNQ+qQlGUebn5N+VvmZhG9aFAzajFoyCi7/hqwiJ8DjQVjLUUJ+DZUWzKhfw9/ZW+00Jfa5wzwockY0lZc=
+	t=1783408709; cv=none; b=eUoz6MNh2ozDljcRB/wMKP4xmSZNn0OJL7gsYuBUNWy0dE2HmqKp4mvdyv2OAaeWLV7TZVKOwkcgjSAMfVm/qq5gR4I5PPg8h/9gz15rN5ideiSRpRu1JB/jiRTBIAqaE6mgDGZfwGirq/eR3S/fdwlrQfi/WqMIq4A85zp1eqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783408704; c=relaxed/simple;
-	bh=jnjRgj8leRfsBy2PZ9SFW3Ob61m3ps7YdLNEAnyFLdI=;
+	s=arc-20240116; t=1783408709; c=relaxed/simple;
+	bh=aws5Pdtj6CU8lc7N+LE6kWtffwWBwMhC9jIArHYRdvw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=JcdmoE9HpldDiaeBdHU5YMTpntdhLrOu/CN4sexdT/r1x/Y5mbqvD3c4xcpBP7/rQXccsbJhDQ/TynT1mkHQX4nClzHpl5DXEdtxJGCsIizEGcTUFMEmR4a8siL8MXVU4VDT8Udg3JxzdchqWf3blYdcbnMAkHstLcPfjQsTI4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mLLXDM+N; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=XWD7e+yOXvVDYdLh5d6ebvyf2FfRgRGd8yckO6wqbbgyroHlPiZtQx5f3+Q0gfnZj7pUyy1jXgZ5Za8OD4NFNraEkkC5WQHxsEHbrnlFPe8UOMbWnPVLsfYIxdxbFpW+/KcpEduuzgCXY9fiGjwzAwgZW8tmv0fJ8amusopMUzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ORoSrBqO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mLLXDM+N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 062DD1F000E9;
-	Tue,  7 Jul 2026 07:18:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ORoSrBqO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0A8F1F00A3A;
+	Tue,  7 Jul 2026 07:18:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1783408696;
-	bh=Fn+U3QWsMyUmSDGUuFB7Tb5hYhXvKtnqBQRygLwN8PU=;
+	bh=5AhPO9C8guRNPJ4OfJaC1p+Y4ve4jtM+rvzs38CjaoU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mLLXDM+N2owDXP5BK+xJFXxqqC3LiQWJlh8m1NS+UA36NQqxHg0C8AV/0d39oseMR
-	 sRRpQtR+nj5OssZCN9D9JisoFWofSsggfvpS35SDo8AUPBooodslGbV7RxwklfE0v4
-	 6SiFE0XsmLpC6Y8bDvB0WQq07wl6VcxN/QD8mLeGu9zEtsGPcIF0DiiEnl/ZYNq9JM
-	 ZlY75T2pPAv/4BAZ3SHhkuPyaqZJ3sxxERptCkHrJOLQzYO/NhB1v9hJC3bN8QLYEx
-	 SwMXJ7YFsY0i68QJRQLyKBL71GVZrhooK2kxKxSwyG1eyaKeZ9peFQ9MMJFOhpl2KP
-	 5bySSXU8gjOxw==
+	b=ORoSrBqOgiPRJuo3zDsolcmhPODzQcm48G6yXwxE2yx3SRC3Mop/KCfLr3jorWNm5
+	 kXlk0R/Q8YJb6WshQqqbfZBl9Z6n9+VH3VmM/rIFRGve5OgYvgBHaEzC60x97DRxI0
+	 7qGVHwG59/WLTj0RxNXbujsEldydBHBSnKlI51vJg+4zzRvaDetxYA0aMOXLvAE9HX
+	 TTn6iKDLdaRUVaduXmYltT3ZTC08sTY5F7CsVBCp4+FeP+dOwygBysU0AsJcQwNS03
+	 aYtJKQnU/2lziJEPaOOmMuaxcVswcgD7aTTm7veY2P6JGSV7NNI1DKpidQTHJmW0hN
+	 n2Hd/Wme8giDg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 63/88] scsi: qla2xxx: Zero mailbox struct in
- qla2x00_get_firmware_state()
+Subject: Re: [PATCH v3 57/88] scsi: qla2xxx: Improve firmware dump data
+ capture
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-64-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-58-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-64-njavali@marvell.com>
+ <20260707055435.2680300-58-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:18:15 +0000
-Message-Id: <20260707071816.062DD1F000E9@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:18:16 +0000
+Message-Id: <20260707071816.B0A8F1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Uninitialized kernel stack memory disclosure vulnerability remains=
- unfixed in the sysfs handler `qla2x00_fw_state_show()` on the success path.
+- [High] Dynamic reallocation of `ha->fw_dump` races with firmware dump cap=
+ture in the interrupt handler, leading to a Use-After-Free.
+- [High] Unprotected read-modify-write of the `flags` bitfield causes a dat=
+a race that can drop concurrent flag updates (e.g., `lip_ae`).
+- [Medium] The mailbox registers (`mbregs`) are dumped in native byte order=
+, which breaks parsing on Big-Endian architectures.
 --
 
---- Patch [63]: [PATCH v3 63/88] scsi: qla2xxx: Zero mailbox struct in qla2=
-x00_get_firmware_state() ---
-commit 9d1cc31f70b4b1282c00f58b1e61ed39b581f84d
-Author: Nilesh Javali <njavali@marvell.com>
+--- Patch [57]: [PATCH v3 57/88] scsi: qla2xxx: Improve firmware dump data =
+capture ---
+commit 17ed3e31ad505ff9b7203eaec313bd7169cf990b
+Author: Quinn Tran <qutran@marvell.com>
 
-scsi: qla2xxx: Zero mailbox struct in qla2x00_get_firmware_state()
+scsi: qla2xxx: Improve firmware dump data capture
 
-This commit zero-initializes the mailbox command structure in
-qla2x00_get_firmware_state() to prevent leaking uninitialized kernel stack
-memory on failure paths. It ensures that when early returns occur, userspace
-receives deterministic zeroed state rather than stack contents.
+Capture as much firmware dump data as possible. Save the mailbox
+registers at start-of-day, before firmware execution, so they are
+available in the dump, and allocate a guestimate dump buffer early
+during driver load to capture failures that happen before the final
+dump buffer is sized.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
-x.c
-> index ba4a4764de1fb..ab5648eb5f206 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -2276,6 +2276,8 @@ qla2x00_get_firmware_state(scsi_qla_host_t *vha, ui=
-nt16_t *states)
->  	if (!ha->flags.fw_started)
->  		return QLA_FUNCTION_FAILED;
-> =20
-> +	memset(&mc, 0, sizeof(mc));
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index ae9bf68710793..9d6b229bd3525 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+[ ... ]
+> @@ -3907,13 +3888,11 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+[ ... ]
+>  		fw_dump =3D vmalloc(dump_size);
+>  		if (!fw_dump) {
+[ ... ]
+>  		} else {
+>  			mutex_lock(&ha->optrom_mutex);
+> -			if (ha->fw_dumped) {
+> -				memcpy(fw_dump, ha->fw_dump, ha->fw_dump_len);
+> -				vfree(ha->fw_dump);
 > +
->  	mcp->mb[0] =3D MBC_GET_FIRMWARE_STATE;
->  	mcp->out_mb =3D MBX_0;
->  	if (IS_FWI2_CAPABLE(vha->hw))
+> +			if (ha->fw_dumped || ha->mpi_fw_dumped) {
+> +				prev_fw_dump =3D ha->fw_dump;
+> +
+> +				if (ha->fw_dumped)
+> +					memcpy(fw_dump, prev_fw_dump,
+> +					    ha->fw_dump_len);
+> +
+> +				if (IS_QLA27XX(ha) || IS_QLA28XX(ha) ||
+> +				    IS_QLA29XX(ha)) {
+> +					prev_mpi_fw_dump =3D ha->mpi_fw_dump;
+> +					ha->mpi_fw_dump =3D (char *)fw_dump +
+> +						ha->fwdt[0].dump_size;
+> +
+> +					if (ha->mpi_fw_dumped)
+> +						memcpy(ha->mpi_fw_dump,
+> +						    prev_mpi_fw_dump,
+> +						    ha->mpi_fw_dump_len);
+> +				}
+> +				vfree(prev_fw_dump);
+>  				ha->fw_dump =3D fw_dump;
 
 [Severity: High]
-This is a pre-existing issue, but does this still leak uninitialized stack
-memory on the success path for adapters that are not FWI2 capable?
+Could this lead to a Use-After-Free if the interrupt handler accesses the
+firmware dump concurrently?
 
-Looking at the caller qla2x00_fw_state_show() in
-drivers/scsi/qla2xxx/qla_attr.c, an uninitialized array is declared on the
-stack and passed to qla2x00_get_firmware_state():
+Since qla2x00_alloc_fw_dump() frees and reassigns ha->fw_dump while holding
+optrom_mutex, but the interrupt handler (which calls qla27xx_fwdump())
+writes to ha->fw_dump holding only hardware_lock, a concurrent firmware
+crash might cause the ISR to write into the freed buffer.
 
-drivers/scsi/qla2xxx/qla_attr.c:qla2x00_fw_state_show() {
-	uint16_t state[16];
-        ...
-	rval =3D qla2x00_get_firmware_state(vha, state);
-        ...
-}
+[ ... ]
+> @@ -4928,6 +4934,8 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+>  		ql_dbg(ql_dbg_init, vha, 0x00d3,
+>  		    "Init Firmware -- success.\n");
+>  		vha->u_ql2xexchoffld =3D vha->u_ql2xiniexchg =3D 0;
+> +		vha->hw->flags.t262_fail =3D 0;
+> +		vha->hw->flags.t272_fail =3D 0;
+>  	}
+> =20
+>  	return (rval);
 
-When qla2x00_get_firmware_state() completes successfully, it only populates
-states[1] through states[5] if the adapter is FWI2 capable:
+[Severity: High]
+Does modifying these bitfields without a lock cause a data race that could
+drop concurrent flag updates?
 
-drivers/scsi/qla2xxx/qla_mbx.c:qla2x00_get_firmware_state() {
-	states[0] =3D mcp->mb[1];
-	if (IS_FWI2_CAPABLE(vha->hw)) {
-		states[1] =3D mcp->mb[2];
-		states[2] =3D mcp->mb[3];  /* SFP info */
-		states[3] =3D mcp->mb[4];
-		states[4] =3D mcp->mb[5];
-		states[5] =3D mcp->mb[6];  /* DPORT status */
-        ...
-}
+These flags reside in the same 32-bit memory word as lip_ae and n2n_ae in
+struct qla_hw_data. Because bitfield assignment compiles to a
+read-modify-write operation, updating them here without holding
+hardware_lock could overwrite and lose an asynchronous event update (like
+lip_ae being set by the ISR).
 
-However, qla2x00_fw_state_show() unconditionally formats all six elements i=
-nto
-the sysfs output buffer, which could expose uninitialized stack memory to
-userspace for non-FWI2 adapters:
+> diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_t=
+mpl.c
+> index b0a74b036cf4b..fd39841274974 100644
+> --- a/drivers/scsi/qla2xxx/qla_tmpl.c
+> +++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+[ ... ]
+> @@ -536,13 +547,12 @@ qla27xx_fwdt_entry_t269(struct scsi_qla_host *vha,
+>  {
+>  	ql_dbg(ql_dbg_misc, vha, 0xd20d,
+>  	    "%s: scratch [%lx]\n", __func__, *len);
+> -	qla27xx_insert32(0xaaaaaaaa, buf, len);
+> -	qla27xx_insert32(0xbbbbbbbb, buf, len);
+> -	qla27xx_insert32(0xcccccccc, buf, len);
+> -	qla27xx_insert32(0xdddddddd, buf, len);
+> -	qla27xx_insert32(*len + sizeof(uint32_t), buf, len);
+> +
+> +	/* The data format is based on entry type t260. */
+> +	qla27xx_insert32(offsetof(struct device_reg_24xx, mailbox0), buf, len);
+> +	qla27xx_insertbuf(vha->hw->mbregs, sizeof(vha->hw->mbregs), buf, len);
 
-drivers/scsi/qla2xxx/qla_attr.c:qla2x00_fw_state_show() {
-        ...
-	return scnprintf(buf, PAGE_SIZE, "0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n",
-	    state[0], state[1], state[2], state[3], state[4], state[5]);
-}
+[Severity: Medium]
+Are the mailbox registers being dumped in native byte order instead of
+Little-Endian?
 
-Should the state array be zero-initialized in qla2x00_fw_state_show(), or
-should qla2x00_get_firmware_state() guarantee all returned values are
-initialized regardless of the adapter capability?
+Since mbregs was populated using rd_reg_word() (which converts to host byte
+order), qla27xx_insertbuf() will copy these bytes directly into the dump,
+which may corrupt the diagnostic data on Big-Endian architectures.
+
+>  	if (buf)
+> -		ent->t269.scratch_size =3D 5 * sizeof(uint32_t);
+> +		ent->t269.scratch_size =3D sizeof(uint32_t) + sizeof(vha->hw->mbregs);
+> =20
+>  	return qla27xx_next_entry(ent);
+>  }
+
+[Severity: Medium]
+Could this assignment break parsing tools expecting a standard Little-Endian
+format?
+
+Directly assigning a native uint32_t constant to ent->t269.scratch_size (wh=
+ich
+is an __le32 field) will store the size in native byte order. It likely nee=
+ds
+cpu_to_le32().
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D63
+300-1-njavali@marvell.com?part=3D57
