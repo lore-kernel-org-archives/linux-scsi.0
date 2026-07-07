@@ -1,56 +1,56 @@
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+Received: from mx0a-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D1D6202C48
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:57:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD92238735D
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:57:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783403876; cv=none; b=kiQTq1SEpV6qEsqnsjIv2iWcX9++w+zE/wVNvlr5K3qHEYugeUxzCDtekzDOCKI2NhMVRZTjq+0YQD06BPYE1B+28LXR346FqpQVbh1XpSQ4vR4EftTcL6mX4D/pANWdWbrfib00GD7zbkcw5b1ZeUcOZcsU3POMXzToH/2EjlY=
+	t=1783403880; cv=none; b=svE1wEy7obYgtxdeYn1mu6KvZ9lS9zTf4PR8BkJfqVzObZPaIv61+kuLUZwQ0CETHQAnMQ2b1sodSuJycdtR5DQaAL8VQDDO2C2vKWSR/ggPL+JH6KW4nIrMwkqBaSI/2oxFISQOJwUvp9bEYY/bMW1AHv4GyzVxE6CsWYYuw+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783403876; c=relaxed/simple;
-	bh=uO6kl9eKtt799SsMuqSnfVfC2DDZuV/Pb6pJaH0U1ns=;
+	s=arc-20240116; t=1783403880; c=relaxed/simple;
+	bh=WO3U4C2zB6ml6gXZ9gVsdbOpVyj5Mh8n599BdbOCALc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YKCJjcdxFwLB3RknA+b/Sb7c51fxo58ZweFL747vNxbMQ2B8HssexRxwL+vxOkrsKO2VFou7yyt5Gwb1AY9PFDHVHiB1tLdWOEwhzyQMH0Ju3g5REplJU/EGrt1DbrQA4T5HZtOo35Yyq7w4KrtqUhSJz+Z21sBw2MVpTrHVWk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=QQJUWH1q; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=VjCKqsB6Os9s2aphDIWFomqnJKblorD2RTU209C22cmzOffasvbpNxjurT1wMnadEdPz8i3YbUbQqdu46D/nS+mGoYk2yp5h1qT/VJ5dGENryCeONQu6tEnK2Zm4sD7wyXTsAaY9xU2C5RDptlEP5G16XuK2s48C6WpDtOh18vo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=DDp2p1Sm; arc=none smtp.client-ip=67.231.148.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="QQJUWH1q"
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66748cwm1656123;
-	Mon, 6 Jul 2026 22:57:53 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="DDp2p1Sm"
+Received: from pps.filterd (m0431384.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66747g2Y854295;
+	Mon, 6 Jul 2026 22:57:55 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=Y
-	Uuu9l0l/XK8CC2qRXyeLbcREjVKvLhCm66VH+lnciU=; b=QQJUWH1qV2cYb72qt
-	pcYo6MtTf0caTL7GZg962jEcPTPCMAWoFleEsNxXCEtOCbwX2YPFWC1ERXz8R6t7
-	HeHDNmOHSE+S+7q/ra6FJksJO3PRyUgOtFzxUXvzlqFVjkr4rcwl68xryjHcA/IP
-	9doKyQdD3kFiswokO6kiULFvaM7DmNjUdav5WcqKzPfGbCeFRwZ0YHZsgc9BYREJ
-	xjRq0i9JkB8idNrgruqFhWwDRPbQfY6mDKbRz8y0V5wB3WD/KuZErqyREl0ihlLG
-	d7wBUz5voTDZAk/G1vk24zcC6y0gMNj/zUY8xbUnzQnAPdMh9MMaZa9Ci6AoRL3N
-	l5tbg==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=E
+	XHVsqBRi9UAPD5CZLR4mrTMvjd2VtUE+Sj9zcngls0=; b=DDp2p1SmM95AX7CT+
+	ugaQzvBxVhOcyWlxuZbtswxHT1QRwObIqZOVaovYw8XmwRcNqGyH8WGgMs8IfsUf
+	96BZPcLiQbQR+3Db6b5lbUKIiwMp9YvkWlN2cMTf13xJs29P8CN5NQ8kGuWOrGCb
+	cWgRvUP9IuTZDzj7clmvBMlNOF/LRzEFE+FuEXbCR9ug62y7ohp4s9b2/bSH2PAf
+	Ax7fwXvkV/jcBnCg8DH2MOC1MAB8dq7NycksdPJi9j2MssbKo+SI2RY4a9e30jp/
+	6wYmpw5ujd89KZSlRxG0VM41lkUjW1xrzAmZ/TZP7vqtxuNAwAB307UGO8rrRUXr
+	ZN5Sg==
 Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4f71phqe0u-1
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4f8p2y0q7g-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 Jul 2026 22:57:53 -0700 (PDT)
+	Mon, 06 Jul 2026 22:57:55 -0700 (PDT)
 Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
  DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 6 Jul 2026 22:57:51 -0700
+ 15.2.1544.25; Mon, 6 Jul 2026 22:57:54 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
  (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 6 Jul 2026 22:57:51 -0700
+ Transport; Mon, 6 Jul 2026 22:57:54 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 7521A3F7066;
-	Mon,  6 Jul 2026 22:57:49 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id 4EC9F3F7066;
+	Mon,  6 Jul 2026 22:57:52 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v3 59/88] scsi: qla2xxx: Fix use-after-free of qpair work on queue teardown
-Date: Tue, 7 Jul 2026 11:24:06 +0530
-Message-ID: <20260707055435.2680300-60-njavali@marvell.com>
+Subject: [PATCH v3 60/88] scsi: qla2xxx: Clarify MPI optrom address/length units
+Date: Tue, 7 Jul 2026 11:24:07 +0530
+Message-ID: <20260707055435.2680300-61-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260707055435.2680300-1-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
@@ -62,69 +62,58 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-GUID: RRCMBMUsfYyRLXQdrPe2_ADYT_m5v5uR
-X-Authority-Analysis: v=2.4 cv=Hf4kiCE8 c=1 sm=1 tr=0 ts=6a4c9561 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX62nHGAZcQ8t1
+ N6sBzYkktzZbxi1VIKg+sww6qwX16Cvo4tKiO9FtH7hSPBPt6d6t7GGRd0fizfy9v0xCtw48RrZ
+ XuOp+34vMI8qoqcd9xFKkI9LzGKCQ/fbh5jIorScRoSBqdT89cDEXOdvFGnwFc0MGrIMV4AEuS4
+ O9T4B7WrIHxz1bMSeWyGgBYwCbPCGdkT2EwKkRZ+buxpsn2uvIgEfHU+RQosIPb0PGmp8vXCVKF
+ iRuBYuaYymrTayogu9IiDE8m2xL9U+kBGJ6td1ygM3wvC7+JcGnVXzDZx4TR06dcIDZMqlDjm8W
+ 5UX6bNXI1TmLztlqFTcPGqpRicis3Mw3V+EVaMCa0CnYt8NRJ3TgZXTI4sjwtaRxVvI1mrwlLDN
+ xZNTFyFBazRL7LIEtOIgwQkdprbzmiWAl6fXa+AM2397TCLmcLhN1O/NzYbv3mlgvxvgvIUhZtE
+ Xw57aH2nt/pFGlL9xqw==
+X-Authority-Analysis: v=2.4 cv=GoByPE1C c=1 sm=1 tr=0 ts=6a4c9563 cx=c_pps
  a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=XKIxJgsWfSig-t-KSc0A:9
+ a=TtqV-g6YmW1Jfm2GSLaY:22 a=M5GUcnROAAAA:8 a=xjKyJS20Z64PywUY4jsA:9
  a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-ORIG-GUID: RRCMBMUsfYyRLXQdrPe2_ADYT_m5v5uR
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX2Ikb/SwlF5qX
- fVvUqTruYOCODpwSmYKjz69JPkxheGXTvFO1pVsSWa68tPJQ7akmOB8evhpEyLhCXRcpHi4mOQy
- htosB8Wev1KHui5rjQVaXO725qtNnJQ=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfXy4/PEk21ANwD
- ofRmsRbih8om6zFizsksKxfBOj1x0c+dkwA5U35mkGpeIoZ1F8ElUds/QDP2TpzDbHlccVA9KOp
- sch0nVPZNH0/aAC/yNtvHIJKmapbf0cJkmZxWi6u7rToqYwUKx3OqB5gUSgzaAk0h9/nZsG95D7
- PWdcw7oNq5bwQOxL1Syr0j/Frd6G+RANIe4339QqiQOB0EYc7FJKT3lLEqYDxsPCU3UN+PukAkE
- 3UErMlCKMFkOUDEnnRM0devTNgSqVl8FLcqqwIXOs8jzIYS23BmXomMLKywwH1181PWPncT//bL
- JklPEj+Mzxv3cKjUes1CAIHC/fmt389aFWNAV1osLWucuN1LNtYaDVbeGbFUGwx8TnbWQX2ZLp2
- QxjN9JH8htFWgE62tvYQv5rq77sTs9b8Yp8PEx4aioIMvS3AC+82oQBskTEcUCXuKKIXlaEXAPe
- 1rFkI1wOAT3SqOI0emg==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX2stjwufk4jYl
+ FLqryhwjQfxesq3l5r9mEJ7N3ORn5tpGV9gfSZVUfI61mgHcMOhNAcuf4/WxYCodJR8TV2gZylS
+ xWs34uNU+Cmm5I3kZSZVEEF71gOr/sc=
+X-Proofpoint-ORIG-GUID: 9vOkVkmJDtwAyHW5KdEWLQqFPyb78PGO
+X-Proofpoint-GUID: 9vOkVkmJDtwAyHW5KdEWLQqFPyb78PGO
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-07_01,2026-07-06_02,2025-10-01_01
 
-The response queue MSI-X handler qla2xxx_msix_rsp_q() schedules
-qla_do_work() via queue_work(ha->wq, &qpair->q_work). qla_do_work()
-dereferences the qpair (vha, rsp) and takes qpair->qp_lock.
+The kdoc for qla29xx_mpi_optrom_data() described @offset as an "Offset into
+the device memory", which reads like a byte address and invites confusion
+with the per-chunk word-granular address advance in the transfer loop.
 
-During teardown, qla2xxx_delete_qpair() deletes the response queue, which
-calls free_irq() in qla25xx_free_rsp_que(), and then frees the queue and
-the qpair. free_irq() waits for running hardirq handlers but does not
-cancel work already placed on ha->wq. A still-pending q_work then runs
-qla_do_work() against the freed qpair and response queue, causing a
-use-after-free. This is especially likely during full adapter teardown,
-where destroy_workqueue(ha->wq) forces pending work to run after the queue
-pairs have been freed.
+MBC_LOAD_DUMP_MPI_RAM is word-addressed: @offset is an MPI RAM address in
+32-bit words, and @length is a byte count that is converted internally to a
+word count. Document this to reflect the existing behavior. No functional
+change.
 
-Flush the work item with cancel_work_sync() in qla25xx_free_rsp_que()
-after free_irq() has released the interrupt (so no new work can be
-queued) and before the response queue and qpair memory are freed (so the
-flushed handler still sees valid memory). Guard on rsp->qpair and ha->wq
-to match the INIT_WORK() condition and avoid operating on an
-uninitialized work_struct.
-
-Fixes: 68ca949cdb04 ("[SCSI] qla2xxx: Add CPU affinity support.")
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_mid.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/qla2xxx/qla_sup.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index b7d9c1a53f3c..33bfc61d8165 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -606,6 +606,10 @@ qla25xx_free_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
- 		rsp->msix->handle = NULL;
- 	}
- 
-+	/* Flush any queued response work before freeing the queue/qpair. */
-+	if (rsp->qpair && ha->wq)
-+		cancel_work_sync(&rsp->qpair->q_work);
-+
- 	if (rsp->ring)
- 		dma_free_coherent(&ha->pdev->dev,
- 				  (rsp->length + 1) * rsp_entry_size,
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index 1f5596a4c405..d70ddba84305 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -562,8 +562,9 @@ static void set_chunk_mpi_bits(uint16_t *options, int count, int total)
+  * @vha: Pointer to SCSI QLogic host structure.
+  * @opts: Options for the operation.
+  * @buf: Buffer to read from/write to.
+- * @offset: Offset into the device memory.
+- * @length: Length of data, in bytes.
++ * @offset: MPI RAM address, in 32-bit words (MBC_LOAD_DUMP_MPI_RAM is
++ *	    word-addressed; not a byte offset).
++ * @length: Length of data, in bytes (converted internally to a word count).
+  * @op: Operation, either QLA29XX_MPI_OP_DUMP or QLA29XX_MPI_OP_LOAD.
+  *
+  * Returns:
 -- 
 2.47.3
 
