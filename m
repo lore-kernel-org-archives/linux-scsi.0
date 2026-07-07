@@ -1,130 +1,195 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E803388E58
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:06:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36ECE3AB5BB
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:07:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783407999; cv=none; b=S4TEutlCk7RVcALO/HYXX+IoT6L68AMw41vhewc4r3hYpyg1F05oILp7MRLV9sieg1ex6mvUeIwAvnMDq83KEAHtNDQhahHEJ00AeDkVlVEaqu31O7vTQIQrG2Dyzg8Ga8GhiDxjGlhidj1TshEYCm7hF5AYQyUAt6MmgMXbJxg=
+	t=1783408079; cv=none; b=N7MQAlEhElkGh7LFDBXj9HN/0Jl5spubrgt5ntqLw0VwXpcRgo4eoBCQ/BdmT/eOwGeKVXUb80SRBMKry2xPG6m4mwSC+mKWGX9Bzt2UIv6+Py33n5SSD4q3htK4TYrCnDfeujn7pqpMbYhXvd5oCUf//M04YnaJOZjVMcqDtJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783407999; c=relaxed/simple;
-	bh=nmvMIbd5iqtiu32DP5VP86u65ZEGaCejkXITqcWzR+E=;
+	s=arc-20240116; t=1783408079; c=relaxed/simple;
+	bh=I3WlmSJUztZGl3vpwPkYSktEOpYZkICFQB+7JLPobUs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WrOOmu7XQASZzg/tVjB2OCCPgUdFPsMxqSoON5nA+Umen6FmVcAuaaO36Bb3Uu/6LSJf9KbwHUVd1Mz7MwOn6iKxswjgCqxorsyiIfPX/1BY0UsD3nG95hURkRBR/R3/6JYcPHtWVosR7aOpMeMMjYkbT7w7AkuciHYafqQw6+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dZQHnNEn; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=qqKhqjg8bsjdotOoeNSEk69wzWG6Rvu8MiLlbKR67Gkr7mK4esJv3d+UdndS8x/BoJW2FejYPagTlQmAojVSIy4DourC1AgJA5keKI4UXISihD7LbimJJ7rrd2iamHUEIuWLHl9HK/oFojRavo9EtdDuhcb7dqxMmtOggM+pWcU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PuCCi6QM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dZQHnNEn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50E081F000E9;
-	Tue,  7 Jul 2026 07:06:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PuCCi6QM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E487C1F000E9;
+	Tue,  7 Jul 2026 07:07:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783407998;
-	bh=KkHANDaqXC3+DiJhPoBWVYXPLthfRFe9+ErRFVSsLNU=;
+	s=k20260515; t=1783408078;
+	bh=iroSRFvXvRdtx9PBdMxzPIqsb77LtzF2u5954618eFU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dZQHnNEna9MdaXR2FqwSuRMIs3FFrOSNaSoV1LLKgUMMQIQS2k6VDc7498t+NI+ca
-	 r+0sKex4tNtXgMIYajcC/yTvnGZn6TJkDoMEc1iG+v6NDaVGoxL11JQXWllxH9T7Er
-	 yx0UcDk+Gj1JnQlLppLamH9k/p3YTAi4GC+z7wxj10xapHuU1XqN1NTRCY7d2EEbX4
-	 pT66eux4KrwgTd6FCEPClSoMZ3e042loMriJCb+UjrHvS2iEG9qPP54uuv6s4tcg9D
-	 W5k/GrfW4djElDy1wM5PvFoCY8Ex5LG0KwCVebDn3NVbAbPVEnWpO2YC1RlPNOtstC
-	 xpjQOynKll9qQ==
+	b=PuCCi6QMxfcH15BgkM1k/IAoWirRQnm9MzwPp+eVgYGFGumeXANBMsim6V1yeiE4S
+	 bSKfpOiT7dVW5Z+683gFmow0e1dapXj1/N1/g8YRfV1Deia/ihdeZksJjX2h38vbpE
+	 FN45s5bSYWNxUIF5sWyqBP5PaeXBfzqSgJWAqgEhR6WtQYJDhEWPn5lgA6j0oeMwmp
+	 IW5Z7861lqc/lposoRZs1ynvRNFNOsujABlH74tLF80qYZWqQ+XI6YSLF8gcEQ1moS
+	 HgijPgpySgQ9t1tIc5WBLB9/fQ5i6go0i6jOXk2cdZQeIwKe/lHsIUm46thXx2dMVH
+	 TiGTeFqG4t6lA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 56/88] scsi: qla2xxx: Clamp MSI-X derived queue
- counts to avoid truncation
+Subject: Re: [PATCH v3 52/88] scsi: qla2xxx: Hold qpair lock when sending
+ NVMe LS reject
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-57-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-53-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-57-njavali@marvell.com>
+ <20260707055435.2680300-53-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:06:37 +0000
-Message-Id: <20260707070638.50E081F000E9@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:07:57 +0000
+Message-Id: <20260707070757.E487C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but the patch failed=
- to fully resolve the ZERO_SIZE_PTR vulnerability it aimed to fix. A malici=
-ous or misconfigured PCI device returning a capability offset that causes h=
-a->msix_count to become 0 still leads to a ZERO_SIZE_PTR allocation and sub=
-sequent out-of-bounds write.
+- [Critical] Concurrent, unprotected modifications to `fcport->unsol_ctx_he=
+ad` lead to list corruption.
+- [Critical] Missing `list_del()` before freeing `uctx` on the error path i=
+n `qla_nvme_xmt_ls_rsp()` causes use-after-free and list corruption.
+- [High] Concurrent calls to `qla_nvme_ls_reject_iocb()` corrupt the shared=
+ HBA-wide DMA buffer `vha->hw->lsrjt.c`.
+- [High] Hardware request ring and MMIO doorbell are accessed unconditional=
+ly on error paths even when the firmware is not started.
 --
 
---- Patch [56]: [PATCH v3 56/88] scsi: qla2xxx: Clamp MSI-X derived queue c=
-ounts to avoid truncation ---
-commit 96603c11bc04fcf9f524adb1b5140a4ef7b1d7f9
+--- Patch [52]: [PATCH v3 52/88] scsi: qla2xxx: Hold qpair lock when sendin=
+g NVMe LS reject ---
+commit f0adf8d49d698bd5a0280fe2d4d514336c997f62
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Clamp MSI-X derived queue counts to avoid truncation
+scsi: qla2xxx: Hold qpair lock when sending NVMe LS reject
 
-This commit adds qla_calc_queue_count() to clamp the derived MSI-X queue
-count into a valid range. This prevents an allocation of zero elements
-that leads to memory corruption when too many vectors are advertised.
+qla_nvme_ls_reject_iocb() allocates from and advances the request ring
+through __qla2x00_alloc_iocbs() (which assumes the hardware_lock is held)
+and qla2x00_start_iocbs() (which advances the ring and rings the
+request-in doorbell), but takes no lock itself. Two of its callers invoke
+it without the producer lock held.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 186c6c7a39448..5209dda454596 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -2132,7 +2132,7 @@ qla2x00_iospace_config(struct qla_hw_data *ha)
->  		ha->msix_count =3D msix + 1;
->  		/* Max queues are bounded by available msix vectors */
->  		/* MB interrupt uses 1 vector */
-> -		ha->max_req_queues =3D ha->msix_count - 1;
-> +		ha->max_req_queues =3D qla_calc_queue_count(ha->msix_count);
+> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
+vme.c
+> index 3b2f255a5d7d4..8dc6df6c2e1c5 100644
+> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+
+[ ... ]
+
+> @@ -440,7 +441,9 @@ static int qla_nvme_xmt_ls_rsp(struct nvme_fc_local_p=
+ort *lport,
+>  	a.vp_idx =3D vha->vp_idx;
+>  	a.nport_handle =3D uctx->nport_handle;
+>  	a.xchg_address =3D uctx->exchange_address;
+> +	spin_lock_irqsave(ha->base_qpair->qp_lock_ptr, flags);
+>  	qla_nvme_ls_reject_iocb(vha, ha->base_qpair, &a, true);
+> +	spin_unlock_irqrestore(ha->base_qpair->qp_lock_ptr, flags);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but it looks like the ZERO_SIZE_=
-PTR
-vulnerability this patch aims to fix might still be reachable through a
-different path.
+This is a pre-existing issue, but does this error path access the hardware
+request ring and MMIO doorbell unconditionally even when the firmware is not
+started?
 
-If a malicious or misconfigured PCI device returns 0xFFFF for
-QLA_PCI_MSIX_CONTROL, could ha->msix_count wrap to 0?
+Earlier in the function, there is a check:
 
-drivers/scsi/qla2xxx/qla_os.c:qla2x00_iospace_config() {
-    ...
-    pci_read_config_word(ha->pdev, QLA_PCI_MSIX_CONTROL, &msix);
-    ha->msix_count =3D msix + 1;
-    ...
-}
+    if (!ha->flags.fw_started)
+        goto out;
+       =20
+If we jump to the out label because the firmware is offline or in reset,
+we still call qla_nvme_ls_reject_iocb() here, which allocates IOCBs and
+explicitly rings the MMIO doorbell. Can accessing ring structures and
+ringing doorbells when the firmware is stopped result in hardware state
+machine violations or a PCI Master Abort?
 
-Later in qla24xx_enable_msix(), if pci_alloc_irq_vectors() successfully
-allocates vectors (e.g., returning 2), the condition (ret < ha->msix_count)
-evaluates as (2 < 0) due to type promotion, which is false:
+>  	kfree(uctx);
 
-drivers/scsi/qla2xxx/qla_isr.c:qla24xx_enable_msix() {
-    ...
-    } else if (ret < ha->msix_count) {
-        ...
-        ha->msix_count =3D ret;
-    }
-    ...
-    ha->msix_entries =3D kzalloc_objs(struct qla_msix_entry, ha->msix_count=
-);
-    ...
-}
+[Severity: Critical]
+This isn't a bug introduced by this patch, but is a list_del() call missing
+before freeing uctx on this error path?
 
-This leaves ha->msix_count at 0, resulting in kzalloc_objs() returning
-ZERO_SIZE_PTR.
+If qla_nvme_xmt_ls_rsp() encounters an error and jumps to the out label,
+it frees uctx via kfree(uctx). However, uctx was previously added to
+fcport->unsol_ctx_head in qla2xxx_process_purls_iocb(). Won't skipping
+list_del() leave a freed structure linked in the active list, leading to a
+use-after-free the next time the list is traversed?
 
-When the base vectors are unconditionally initialized shortly after, does
-this cause an out-of-bounds write by dereferencing ZERO_SIZE_PTR (0x10)?
+>  	return rval;
+>  }
 
-drivers/scsi/qla2xxx/qla_isr.c:qla24xx_enable_msix() {
-    ...
-    /* Enable MSI-X vectors for the base queue */
-    for (i =3D 0; i < QLA_BASE_VECTORS; i++) {
-        qentry =3D &ha->msix_entries[i];
-        qentry->handle =3D rsp;
-    ...
-}
+[ ... ]
+
+> @@ -1243,6 +1246,10 @@ static void qla_nvme_lsrjt_pt_iocb(struct scsi_qla=
+_host *vha,
+>  	}
+>  }
+> =20
+> +/*
+> + * Allocates from and advances the request ring, so the caller must hold
+> + * qp->qp_lock_ptr (the response-queue caller already holds it).
+> + */
+>  static int
+>  qla_nvme_ls_reject_iocb(struct scsi_qla_host *vha, struct qla_qpair *qp,
+>  			struct qla_nvme_lsrjt_pt_arg *a, bool is_xchg_terminate)
+
+[Severity: High]
+This is a pre-existing issue, but are there missing concurrency protections
+around the formatting of the HBA-wide DMA buffer vha->hw->lsrjt.c?
+
+When qla_nvme_ls_reject_iocb() is called with is_xchg_terminate =3D false
+from qla2xxx_process_purls_iocb(), it formats the reject payload directly
+into this single shared buffer and submits an asynchronous command pointing
+to its DMA address:
+
+    qla_nvme_fc_format_rjt((void *)vha->hw->lsrjt.c, a->opcode,
+                           a->reason, a->explanation, 0);
+    a->tx_addr =3D vha->hw->lsrjt.cdma;
+
+Since it can be called concurrently on different response queues (which
+hold different qp_lock_ptr locks), could the payload be overwritten before
+hardware DMA completes, causing the hardware to transmit mixed or corrupted
+NVMe LS reject payloads?
+
+[ ... ]
+
+> @@ -1311,7 +1319,9 @@ qla2xxx_process_purls_pkt(struct scsi_qla_host *vha=
+, struct purex_item *item)
+>  		a.vp_idx =3D vha->vp_idx;
+>  		a.nport_handle =3D uctx->nport_handle;
+>  		a.xchg_address =3D uctx->exchange_address;
+> +		spin_lock_irqsave(vha->hw->base_qpair->qp_lock_ptr, flags);
+>  		qla_nvme_ls_reject_iocb(vha, vha->hw->base_qpair, &a, true);
+> +		spin_unlock_irqrestore(vha->hw->base_qpair->qp_lock_ptr, flags);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this function also issue
+a reject unconditionally on the error path without checking if the firmware
+is started?
+
+If the firmware is stopped, could calling qla_nvme_ls_reject_iocb() here
+result in similar hardware state machine violations?
+
+>  		list_del(&uctx->elem);
+
+[Severity: Critical]
+This is a pre-existing issue, but does list_del() need a dedicated lock to
+protect against concurrent list modifications?
+
+The fcport->unsol_ctx_head list is modified in qla2xxx_process_purls_iocb()
+using list_add_tail() while holding only the queue pair's hardware lock.
+Meanwhile, list_del() is called here in a workqueue context entirely
+unprotected.
+
+Could multiple PURLS packets processed concurrently trigger concurrent
+list_add_tail() and list_del() calls, leading to list corruption and kernel
+panics?
+
+>  		kfree(uctx);
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D56
+300-1-njavali@marvell.com?part=3D52
