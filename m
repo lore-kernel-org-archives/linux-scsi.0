@@ -1,56 +1,56 @@
-Received: from mx0a-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6491527466A
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:56:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A4DE27466A
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:56:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783403784; cv=none; b=pUiVhJmi3hJZs95eT/t1FM/lOkUtKNB5Zc+tmx0MinNkIpuPVAI6ybte4jhhq2imyZjCs45iy3QRjzJ4C7YS4IaJ+h9tWudO8a3NFOVtI1irHKVO1hzNykKsYFin4P6ZS0J8oqXC5Px5cl8oz4J529MDTdorG2JmxK33xAZOkSo=
+	t=1783403787; cv=none; b=kBRSsP0yfY7HNZ0zuh1sy8dEendmdJFXFrY85ObZxXOTa5eTfanX1JtT4i++/OLhJApEp4zbj944jjDyN4BgtQpeVnLGf8ITga+o6xfrOACWdJkF1IsCPCbzcSrYd1+51LjThD4JuKrHjTZAMmia8QYRBk7jYa9lIxQF9Q4qnoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783403784; c=relaxed/simple;
-	bh=aeoj+TKVG4K7zt2vZjjjWRUqpBhPcvXRT3obtH7kTRY=;
+	s=arc-20240116; t=1783403787; c=relaxed/simple;
+	bh=XX58EnIRH3v9eX+/CplarHBSNlxqsfy6HRLuA90yvAc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CorqMGIK8tpfTlf8OD7muUYuEVVmPliLzId3nCuvajKj6r18Sjqbu4kMnF3ayOLGGV9GlxnVubyE28t0IgZcOtuRMtUJyLGuBmvngmGaPVG6ax7Xk8aNRlF3qW6XWEMF304Dqwpx2RU/yFYQywhIrdKx+XtiC+VxY1FpSwpmBKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Qt6DyjIm; arc=none smtp.client-ip=67.231.148.174
+	 MIME-Version:Content-Type; b=HYW1rGeWGzM7xiP+ac53/wHvDKFvSG6oxE0yCgsdnK6IkmrvvM4ePpwhq3M3LZME1Vh/UV54M7IMkVN7mFZ1x0aPUskf/SHqRYvmBIefPyxaI7xh5NCSxjv4OC0YI3TqcLfQALJ1sffilgKih4LYAmsj0l3ZyqNTV2J03o4pk/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=CALLmVaT; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Qt6DyjIm"
-Received: from pps.filterd (m0431384.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66747glA854300;
-	Mon, 6 Jul 2026 22:56:20 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="CALLmVaT"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66748bZT1656071;
+	Mon, 6 Jul 2026 22:56:23 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=H
-	TQcmojL9UK4MzQpaXDH3soApy6Q/ggSACzP1rlJ3fM=; b=Qt6DyjIm5IEie9HJo
-	PKl2RpOqaV2wdv8fLuSVPCy2ljFPYYfcOV8y5nb1K1JJHbx2tL9zo/MXjOnch9Sn
-	VMpjbbvsmzK1wKo/WFk7fodDtS8frx5PzcNymJHZAwOaO+hTfUlWIMzEv5FFMz7r
-	X4wvNVUffegR6ZfCNwduJDJNQws/uRSluqJYjd7+aQDrxRg2a6MqeoenwCskHn5P
-	8324FiVCTuPvDeNIIuI2J3ehxNhmyfy/yDBp5f3CRgpOMcDOFVkDjoy8mLK7oU5w
-	CgbBHh5/mP7hjtNtxpEgQjE1/tIPegBhU+9lbHWYfpVQwhSIL4DzaHJ7+dXuEL8B
-	3Mf3w==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=Z
+	BaZMq8w+ubURs7xzcyTLNlevI3uu66PGqzq9p/QOGI=; b=CALLmVaTljUbniI2y
+	VEKt16Vt7fQogxTzQETsujpjgTAvuoQGgTCk9h/xayvhFjNjGMeoNAHj3Vvv04Ia
+	RKwoqc78HHSYRd4RKvhaPkTjWD3BDDIfcG9eCbaadFnVT4a6SB7g4+jPYQiVZkQC
+	tmXzyImEIg+99HNnVuj2Xbk6kQnfIJMT/hfhyrY0Pf5CPQvA24AD5O06Fyqx52FO
+	oH0CP2r7PNpyNrjbmHWp4GwhC+POyGInYLIuWcKNVmdqgZnKV7ARLFa6b4rRP7tN
+	m0V6Df4lPElXoVq3XfQQqLr6n803VIkR/2SJB8/lGI0GA5jscTBuuUz6hJvMhDd9
+	+42Ow==
 Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4f8p2y0q34-1
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4f71phqdvq-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 Jul 2026 22:56:19 -0700 (PDT)
+	Mon, 06 Jul 2026 22:56:23 -0700 (PDT)
 Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
  DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 6 Jul 2026 22:56:19 -0700
+ 15.2.1544.25; Mon, 6 Jul 2026 22:56:21 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
  (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 6 Jul 2026 22:56:19 -0700
+ Transport; Mon, 6 Jul 2026 22:56:21 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id A31BA3F7067;
-	Mon,  6 Jul 2026 22:56:16 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id 8074E3F7066;
+	Mon,  6 Jul 2026 22:56:19 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v3 27/88] scsi: qla2xxx: Enhance ct_entry_24xx_ext iocb handling for 29xx series
-Date: Tue, 7 Jul 2026 11:23:34 +0530
-Message-ID: <20260707055435.2680300-28-njavali@marvell.com>
+Subject: [PATCH v3 28/88] scsi: qla2xxx: Enhance purex_entry handling for 29xx series
+Date: Tue, 7 Jul 2026 11:23:35 +0530
+Message-ID: <20260707055435.2680300-29-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260707055435.2680300-1-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
@@ -62,378 +62,464 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfXyahSwtN3AOa+
- AXVaKbIye47tenvJXgrGYle4yb7RSAS7MIFrSrPy1wkDyJ2z5S/d8Hsp2oGXQqYjRd1f/OX9lfC
- phnGaj1U8o758GkkjG2xoyxw6KwqcE+UwIIjcMWxGEvh6hq+H4bBa0vwrWmx3AIDpsqOqO+fk6k
- mINs/cp+zetQujhC3MGwH/A3BuNKv7LTns8pwB9mI+8BvuLcYTuRXJEwXbSVwl+js6jHMKgL/xb
- RFe6aYwxL/ABIrk0aVe3Ff334fYHtCtcHIu/vUQxggz1D/jQTAMavz0gS2lOOKBEt/l+JAOejlB
- sOHSq2ft8uTXaTQ7WQY0rMlLtTcfd6n5ebZH9LUHG877v5kjvi0Ru9pUEZD7/zoLc6OoR1ef00s
- Jp8EwneS0CYwO1CFzHIPkZD14KFLG0IAMhLG09S7o4cYFWuwIWwKFBdCVP6W2jElfjYsqmKAZJB
- SbGEHVR1GKkX++0ULNA==
-X-Authority-Analysis: v=2.4 cv=GoByPE1C c=1 sm=1 tr=0 ts=6a4c9503 cx=c_pps
+X-Proofpoint-GUID: 8mY9nAhq5ZEZqwHVUpYgKAxSqwv3LBQ8
+X-Authority-Analysis: v=2.4 cv=Hf4kiCE8 c=1 sm=1 tr=0 ts=6a4c9507 cx=c_pps
  a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=TtqV-g6YmW1Jfm2GSLaY:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=-cAsXcPlQew20VEo0WgA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX5MgtoshXo/Um
- GW8npZ2G0kDhfRKdZoWAZoFjavW2pYlneDzjGziGW6fmO/9bmYxXO1HsT12hp5EALif8XcxL8q/
- cDUV26+qkqZLf+wF8JDX26zscm/VqHU=
-X-Proofpoint-ORIG-GUID: e_bgAFxqPYU09OcVphT1Lkhstal0ba_f
-X-Proofpoint-GUID: e_bgAFxqPYU09OcVphT1Lkhstal0ba_f
+ a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
+ a=cxd6FSJZLq2k18q51YsA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-ORIG-GUID: 8mY9nAhq5ZEZqwHVUpYgKAxSqwv3LBQ8
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfXwJuvCaaBcu2T
+ aXxOJ4wuMFarorhkKFnhw+sj0bWvFDM/0jWvsu9EIGLenGta8+2NRlg2E4kCgj+zjVmQvDAObvK
+ vbsKY7dIo4Vp+0h49RLCTTkDq42tQWI=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX/CcLWYnU88Hv
+ hWrDXSQj3JuAQ87yBzUExcd87Yc620/WEctc+BXD9AQ3gYiK5YKAop4X8d32BTcogGYZJMhewYc
+ 21ft9dA5Z8vjVutQJIR2qG79sjv0pvPt9JVSY04ya8iQhdexNB/v/mjnSbS0R/bXrtIb75KgRQv
+ LoExZ3kRJUeXIwc1uVW43j5k0+xAfb5uG282Qck2cmtP0IFfX/wPGenrPZmMC9sGxID1FG6j+QQ
+ sTDuSQogT9kelknpkZv+UQF+4Hr4edkANVBz0eu5DoCNEMqdwScmD3nH/F8oH8zufJTdBpyJuPi
+ DBIUUyxuffVWIiCJimSQWlZv/MdQNoPmgrW1vg/TJM5pM7aFioDfy1iH40TsvxqFjEGGG90yjG0
+ tyR37cya5cRyrUVO2jvfBTsFxIDaZVFFCkG5t90gQDO+wrdyCITfbF+Gk22t9YdYgm2ysWMxw4I
+ IDzqG4aLLOf3o2CElng==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-07_01,2026-07-06_02,2025-10-01_01
 
-Refine the handling of I/O control blocks (IOCBs) for the 29xx series
-by introducing support for the extended structure ct_entry_24xx_ext.
-Update function signatures to accept a generic pointer for IOCB packets,
-differentiating between standard and extended structures, and ensuring
-proper initialization and processing of command and response data.
-Additionally, the size check for the extended structure is added to
-maintain integrity.
+Update function signatures and internal logic across qla_edif.c,
+qla_isr.c, and qla_os.c to accept a generic pointer for packet data and
+differentiate between standard purex_entry_24xx and the extended
+purex_entry_24xx_ext structures based on IS_QLA29XX().
+
+This ensures proper initialization and processing of command and response
+data for both 64-byte and 128-byte PUREX IOCBs across all ELS paths
+including auth_els, RDP, copy_std_pkt, copy_multiple_pkt, consume_iocb,
+and copy_purex_to_buffer.
+
+Where the two layouts overlap at byte-identical offsets (entry_count,
+frame_size, nport_handle, rx_xchg_addr, ox_id, status_flags,
+trunc_frame_size, s_id, d_id, els_frame_payload base, and
+response_t::signature), use a single struct purex_entry_24xx * view to
+avoid duplicating read paths.  Branch only where field encoding differs:
+vp_idx (u8 at offset 6 in 24xx vs __le16 at offsets 6-7 in 29xx) and
+els_frame_payload[] array length (20 vs 84 bytes, handled via a
+sizeof_field()-based payload_size local).
 
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_gs.c   | 156 ++++++++++++++++++++++++--------
- drivers/scsi/qla2xxx/qla_iocb.c |  78 ++++++++++------
- drivers/scsi/qla2xxx/qla_os.c   |   1 +
- 3 files changed, 168 insertions(+), 67 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |  3 +-
+ drivers/scsi/qla2xxx/qla_edif.c | 65 ++++++++++++++++-------
+ drivers/scsi/qla2xxx/qla_isr.c  | 94 ++++++++++++++++++++++++++-------
+ drivers/scsi/qla2xxx/qla_os.c   | 24 +++++++--
+ 4 files changed, 142 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 514f04aa1423..7a4d2fdc095f 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -68,30 +68,62 @@ void *
- qla24xx_prep_ms_iocb(scsi_qla_host_t *vha, struct ct_arg *arg)
- {
- 	struct qla_hw_data *ha = vha->hw;
--	struct ct_entry_24xx *ct_pkt;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 0bbe2bae7101..3e2f1d8ba904 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -5000,6 +5000,7 @@ struct active_regions {
+ #define QLA_SET_DATA_RATE_LR	2 /* Set speed and initiate LR */
  
--	ct_pkt = (struct ct_entry_24xx *)arg->iocb;
--	memset(ct_pkt, 0, sizeof(struct ct_entry_24xx));
-+	if (IS_QLA29XX(ha)) {
-+		struct ct_entry_24xx_ext *ct_pkt;
- 
--	ct_pkt->entry_type = CT_IOCB_TYPE;
--	ct_pkt->entry_count = 1;
--	ct_pkt->nport_handle = cpu_to_le16(arg->nport_handle);
--	ct_pkt->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
--	ct_pkt->cmd_dsd_count = cpu_to_le16(1);
--	ct_pkt->rsp_dsd_count = cpu_to_le16(1);
--	ct_pkt->rsp_byte_count = cpu_to_le32(arg->rsp_size);
--	ct_pkt->cmd_byte_count = cpu_to_le32(arg->req_size);
-+		ct_pkt = (struct ct_entry_24xx_ext *)arg->iocb;
-+		memset(ct_pkt, 0, sizeof(struct ct_entry_24xx_ext));
- 
--	put_unaligned_le64(arg->req_dma, &ct_pkt->dsd[0].address);
--	ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
-+		ct_pkt->entry_type = CT_IOCB_TYPE;
-+		ct_pkt->entry_count = 1;
-+		ct_pkt->nport_handle = cpu_to_le16(arg->nport_handle);
-+		ct_pkt->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
-+		ct_pkt->cmd_dsd_count = cpu_to_le16(1);
-+		ct_pkt->rsp_dsd_count = cpu_to_le16(1);
-+		ct_pkt->rsp_byte_count = cpu_to_le32(arg->rsp_size);
-+		ct_pkt->cmd_byte_count = cpu_to_le32(arg->req_size);
- 
--	put_unaligned_le64(arg->rsp_dma, &ct_pkt->dsd[1].address);
--	ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
--	ct_pkt->vp_index = vha->vp_idx;
-+		put_unaligned_le64(arg->req_dma,
-+				   &ct_pkt->dsd[0].address);
-+		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
- 
--	vha->qla_stats.control_requests++;
-+		put_unaligned_le64(arg->rsp_dma,
-+				   &ct_pkt->dsd[1].address);
-+		ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
-+		ct_pkt->vp_index = cpu_to_le16(vha->vp_idx);
-+
-+		vha->qla_stats.control_requests++;
-+
-+		return ct_pkt;
-+	} else {
-+		struct ct_entry_24xx *ct_pkt;
-+
-+		ct_pkt = (struct ct_entry_24xx *)arg->iocb;
-+		memset(ct_pkt, 0, sizeof(struct ct_entry_24xx));
-+
-+		ct_pkt->entry_type = CT_IOCB_TYPE;
-+		ct_pkt->entry_count = 1;
-+		ct_pkt->nport_handle = cpu_to_le16(arg->nport_handle);
-+		ct_pkt->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
-+		ct_pkt->cmd_dsd_count = cpu_to_le16(1);
-+		ct_pkt->rsp_dsd_count = cpu_to_le16(1);
-+		ct_pkt->rsp_byte_count = cpu_to_le32(arg->rsp_size);
-+		ct_pkt->cmd_byte_count = cpu_to_le32(arg->req_size);
-+
-+		put_unaligned_le64(arg->req_dma,
-+				   &ct_pkt->dsd[0].address);
-+		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
- 
--	return (ct_pkt);
-+		put_unaligned_le64(arg->rsp_dma,
-+				   &ct_pkt->dsd[1].address);
-+		ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
-+		ct_pkt->vp_index = vha->vp_idx;
-+
-+		vha->qla_stats.control_requests++;
-+
-+		return ct_pkt;
-+	}
- }
- 
- /**
-@@ -132,7 +164,10 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
- 		    routine, ms_pkt->entry_status, vha->d_id.b.domain,
- 		    vha->d_id.b.area, vha->d_id.b.al_pa);
- 	} else {
--		if (IS_FWI2_CAPABLE(ha))
-+		if (IS_QLA29XX(ha))
-+			comp_status = le16_to_cpu(
-+			    ((struct ct_entry_24xx_ext *)ms_pkt)->comp_status);
-+		else if (IS_FWI2_CAPABLE(ha))
- 			comp_status = le16_to_cpu(
- 			    ((struct ct_entry_24xx *)ms_pkt)->comp_status);
- 		else
-@@ -1437,42 +1472,85 @@ void *
- qla24xx_prep_ms_fdmi_iocb(scsi_qla_host_t *vha, uint32_t req_size,
-     uint32_t rsp_size)
- {
--	struct ct_entry_24xx *ct_pkt;
- 	struct qla_hw_data *ha = vha->hw;
- 
--	ct_pkt = (struct ct_entry_24xx *)ha->ms_iocb;
--	memset(ct_pkt, 0, sizeof(struct ct_entry_24xx));
-+	if (IS_QLA29XX(ha)) {
-+		struct ct_entry_24xx_ext *ct_pkt;
-+
-+		ct_pkt = (struct ct_entry_24xx_ext *)ha->ms_iocb;
-+		memset(ct_pkt, 0, sizeof(struct ct_entry_24xx_ext));
-+
-+		ct_pkt->entry_type = CT_IOCB_TYPE;
-+		ct_pkt->entry_count = 1;
-+		ct_pkt->nport_handle =
-+		    cpu_to_le16(vha->mgmt_svr_loop_id);
-+		ct_pkt->timeout =
-+		    cpu_to_le16(ha->r_a_tov / 10 * 2);
-+		ct_pkt->cmd_dsd_count = cpu_to_le16(1);
-+		ct_pkt->rsp_dsd_count = cpu_to_le16(1);
-+		ct_pkt->rsp_byte_count = cpu_to_le32(rsp_size);
-+		ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
-+
-+		put_unaligned_le64(ha->ct_sns_dma,
-+				   &ct_pkt->dsd[0].address);
-+		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
-+
-+		put_unaligned_le64(ha->ct_sns_dma,
-+				   &ct_pkt->dsd[1].address);
-+		ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
-+		ct_pkt->vp_index = cpu_to_le16(vha->vp_idx);
- 
--	ct_pkt->entry_type = CT_IOCB_TYPE;
--	ct_pkt->entry_count = 1;
--	ct_pkt->nport_handle = cpu_to_le16(vha->mgmt_svr_loop_id);
--	ct_pkt->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
--	ct_pkt->cmd_dsd_count = cpu_to_le16(1);
--	ct_pkt->rsp_dsd_count = cpu_to_le16(1);
--	ct_pkt->rsp_byte_count = cpu_to_le32(rsp_size);
--	ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
-+		return ct_pkt;
-+	} else {
-+		struct ct_entry_24xx *ct_pkt;
-+
-+		ct_pkt = (struct ct_entry_24xx *)ha->ms_iocb;
-+		memset(ct_pkt, 0, sizeof(struct ct_entry_24xx));
-+
-+		ct_pkt->entry_type = CT_IOCB_TYPE;
-+		ct_pkt->entry_count = 1;
-+		ct_pkt->nport_handle =
-+		    cpu_to_le16(vha->mgmt_svr_loop_id);
-+		ct_pkt->timeout =
-+		    cpu_to_le16(ha->r_a_tov / 10 * 2);
-+		ct_pkt->cmd_dsd_count = cpu_to_le16(1);
-+		ct_pkt->rsp_dsd_count = cpu_to_le16(1);
-+		ct_pkt->rsp_byte_count = cpu_to_le32(rsp_size);
-+		ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
- 
--	put_unaligned_le64(ha->ct_sns_dma, &ct_pkt->dsd[0].address);
--	ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
-+		put_unaligned_le64(ha->ct_sns_dma,
-+				   &ct_pkt->dsd[0].address);
-+		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
- 
--	put_unaligned_le64(ha->ct_sns_dma, &ct_pkt->dsd[1].address);
--	ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
--	ct_pkt->vp_index = vha->vp_idx;
-+		put_unaligned_le64(ha->ct_sns_dma,
-+				   &ct_pkt->dsd[1].address);
-+		ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
-+		ct_pkt->vp_index = vha->vp_idx;
- 
--	return ct_pkt;
-+		return ct_pkt;
-+	}
- }
- 
- static void
- qla2x00_update_ms_fdmi_iocb(scsi_qla_host_t *vha, uint32_t req_size)
- {
- 	struct qla_hw_data *ha = vha->hw;
--	ms_iocb_entry_t *ms_pkt = ha->ms_iocb;
--	struct ct_entry_24xx *ct_pkt = (struct ct_entry_24xx *)ha->ms_iocb;
- 
--	if (IS_FWI2_CAPABLE(ha)) {
-+	if (IS_QLA29XX(ha)) {
-+		struct ct_entry_24xx_ext *ct_pkt =
-+		    (struct ct_entry_24xx_ext *)ha->ms_iocb;
-+
-+		ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
-+		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
-+	} else if (IS_FWI2_CAPABLE(ha)) {
-+		struct ct_entry_24xx *ct_pkt =
-+		    (struct ct_entry_24xx *)ha->ms_iocb;
-+
- 		ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
- 		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
- 	} else {
-+		ms_iocb_entry_t *ms_pkt = ha->ms_iocb;
-+
- 		ms_pkt->req_bytecount = cpu_to_le32(req_size);
- 		ms_pkt->req_dsd.length = ms_pkt->req_bytecount;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index c0cec1f74dfc..79403d460977 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -3394,7 +3394,7 @@ qla2x00_ct_iocb(srb_t *sp, ms_iocb_entry_t *ct_iocb)
- }
- 
- static void
--qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
-+qla24xx_ct_iocb(srb_t *sp, void *pkt)
- {
- 	uint16_t        avail_dsds;
- 	struct dsd64	*cur_dsd;
-@@ -3406,36 +3406,50 @@ qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
- 	struct bsg_job *bsg_job = sp->u.bsg_job;
- 	int entry_count = 1;
- 
--	ct_iocb->entry_type = CT_IOCB_TYPE;
--        ct_iocb->entry_status = 0;
--        ct_iocb->sys_define = 0;
--        ct_iocb->handle = sp->handle;
--
--	ct_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
--	ct_iocb->vp_index = sp->vha->vp_idx;
--	ct_iocb->comp_status = cpu_to_le16(0);
--
- 	cmd_dsds = bsg_job->request_payload.sg_cnt;
- 	rsp_dsds = bsg_job->reply_payload.sg_cnt;
- 
--	ct_iocb->cmd_dsd_count = cpu_to_le16(cmd_dsds);
--        ct_iocb->timeout = 0;
--	ct_iocb->rsp_dsd_count = cpu_to_le16(rsp_dsds);
--        ct_iocb->cmd_byte_count =
--            cpu_to_le32(bsg_job->request_payload.payload_len);
-+	if (IS_QLA29XX(ha)) {
-+		struct ct_entry_24xx_ext *ct_iocb = pkt;
-+
-+		ct_iocb->entry_type = CT_IOCB_TYPE;
-+		ct_iocb->entry_status = 0;
-+		ct_iocb->sys_define = 0;
-+		ct_iocb->handle = sp->handle;
-+		ct_iocb->nport_handle =
-+		    cpu_to_le16(sp->fcport->loop_id);
-+		ct_iocb->vp_index = cpu_to_le16(sp->vha->vp_idx);
-+		ct_iocb->comp_status = cpu_to_le16(0);
-+		ct_iocb->cmd_dsd_count = cpu_to_le16(cmd_dsds);
-+		ct_iocb->timeout = 0;
-+		ct_iocb->rsp_dsd_count = cpu_to_le16(rsp_dsds);
-+		ct_iocb->cmd_byte_count =
-+		    cpu_to_le32(bsg_job->request_payload.payload_len);
-+		avail_dsds = NUM_CT_DSDS;
-+		cur_dsd = ct_iocb->dsd;
-+	} else {
-+		struct ct_entry_24xx *ct_iocb = pkt;
-+
-+		ct_iocb->entry_type = CT_IOCB_TYPE;
-+		ct_iocb->entry_status = 0;
-+		ct_iocb->sys_define = 0;
-+		ct_iocb->handle = sp->handle;
-+		ct_iocb->nport_handle =
-+		    cpu_to_le16(sp->fcport->loop_id);
-+		ct_iocb->vp_index = sp->vha->vp_idx;
-+		ct_iocb->comp_status = cpu_to_le16(0);
-+		ct_iocb->cmd_dsd_count = cpu_to_le16(cmd_dsds);
-+		ct_iocb->timeout = 0;
-+		ct_iocb->rsp_dsd_count = cpu_to_le16(rsp_dsds);
-+		ct_iocb->cmd_byte_count =
-+		    cpu_to_le32(bsg_job->request_payload.payload_len);
-+		avail_dsds = 2;
-+		cur_dsd = ct_iocb->dsd;
-+	}
- 
--	avail_dsds = 2;
--	cur_dsd = ct_iocb->dsd;
- 	index = 0;
- 
- 	for_each_sg(bsg_job->request_payload.sg_list, sg, cmd_dsds, index) {
--		/*
--		 * Allocate additional continuation packets.  24xx uses the
--		 * 64-byte cont_a64_entry_t (5 DSDs); 29xx uses the 128-byte
--		 * cont_a64_entry_ext_t (NUM_CONT1_DSDS) and advances through
--		 * the ring_ext_ptr stride so the CT head IOCB isn't
--		 * overlapped.
--		 */
- 		if (avail_dsds == 0) {
- 			if (IS_QLA29XX(ha)) {
- 				struct cont_a64_entry_ext *cont_pkt;
-@@ -3484,7 +3498,11 @@ qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
- 		append_dsd64(&cur_dsd, sg);
- 		avail_dsds--;
- 	}
--        ct_iocb->entry_count = entry_count;
-+
-+	if (IS_QLA29XX(ha))
-+		((struct ct_entry_24xx_ext *)pkt)->entry_count = entry_count;
-+	else
-+		((struct ct_entry_24xx *)pkt)->entry_count = entry_count;
- }
- 
+ #define QLA_DEFAULT_PAYLOAD_SIZE	64
++#define QLA_MAX_IOCB_SIZE		128
  /*
-@@ -3857,11 +3875,15 @@ qla2x00_mb_iocb(srb_t *sp, struct mbx_24xx_entry *mbx)
- }
+  * This item might be allocated with a size > sizeof(struct purex_item).
+  * The "size" variable gives the size of the payload (which
+@@ -5014,7 +5015,7 @@ struct purex_item {
+ 	atomic_t in_use;
+ 	uint16_t size;
+ 	struct {
+-		uint8_t iocb[64];
++		u8 iocb[QLA_MAX_IOCB_SIZE];
+ 	} iocb;
+ };
  
- static void
--qla2x00_ctpthru_cmd_iocb(srb_t *sp, struct ct_entry_24xx *ct_pkt)
-+qla2x00_ctpthru_cmd_iocb(srb_t *sp, void *pkt)
+diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
+index b05f8e0b705e..ade1d8178573 100644
+--- a/drivers/scsi/qla2xxx/qla_edif.c
++++ b/drivers/scsi/qla2xxx/qla_edif.c
+@@ -2534,7 +2534,7 @@ qla24xx_sa_replace_iocb(srb_t *sp, struct sa_update_28xx *sa_update_iocb)
+ 
+ void qla24xx_auth_els(scsi_qla_host_t *vha, void **pkt, struct rsp_que **rsp)
  {
--	sp->u.iocb_cmd.u.ctarg.iocb = ct_pkt;
-+	sp->u.iocb_cmd.u.ctarg.iocb = pkt;
- 	qla24xx_prep_ms_iocb(sp->vha, &sp->u.iocb_cmd.u.ctarg);
--	ct_pkt->handle = sp->handle;
-+
-+	if (IS_QLA29XX(sp->vha->hw))
-+		((struct ct_entry_24xx_ext *)pkt)->handle = sp->handle;
+-	struct purex_entry_24xx *p = *pkt;
++	struct qla_hw_data *ha = vha->hw;
+ 	struct enode		*ptr;
+ 	int		sid;
+ 	u16 totlen;
+@@ -2544,26 +2544,55 @@ void qla24xx_auth_els(scsi_qla_host_t *vha, void **pkt, struct rsp_que **rsp)
+ 	struct fc_port *fcport;
+ 	struct qla_els_pt_arg a;
+ 	be_id_t beid;
++	__le16 nport_handle;
++	__le32 rx_xchg_addr;
++	__le16 ox_id;
++	__le16 frame_size, status_flags, trunc_frame_size;
++	uint8_t s_id[3], d_id[3];
++	uint8_t vp_idx;
++	struct purex_entry_24xx *p = *pkt;
+ 
+ 	memset(&a, 0, sizeof(a));
+ 
++	/*
++	 * purex_entry_24xx_ext (29xx) overlays purex_entry_24xx for every
++	 * field touched here -- nport_handle, rx_xchg_addr, ox_id, frame_size,
++	 * status_flags, trunc_frame_size, s_id[3], d_id[3] -- with only
++	 * vp_idx differing in width (u8 at offset 6 vs __le16 at offsets 6-7,
++	 * with reserved2 at offset 7 in the 24xx layout). So all reads but
++	 * vp_idx go through a single struct purex_entry_24xx * view.
++	 */
++	nport_handle = p->nport_handle;
++	rx_xchg_addr = p->rx_xchg_addr;
++	ox_id = p->ox_id;
++	frame_size = p->frame_size;
++	status_flags = p->status_flags;
++	trunc_frame_size = p->trunc_frame_size;
++	memcpy(s_id, p->s_id, sizeof(s_id));
++	memcpy(d_id, p->d_id, sizeof(d_id));
++	if (IS_QLA29XX(ha))
++		vp_idx = le16_to_cpu(((struct purex_entry_24xx_ext *)
++				      *pkt)->vp_idx);
 +	else
-+		((struct ct_entry_24xx *)pkt)->handle = sp->handle;
++		vp_idx = p->vp_idx;
++
+ 	a.els_opcode = ELS_AUTH_ELS;
+-	a.nport_handle = p->nport_handle;
+-	a.rx_xchg_address = p->rx_xchg_addr;
+-	a.did.b.domain = p->s_id[2];
+-	a.did.b.area   = p->s_id[1];
+-	a.did.b.al_pa  = p->s_id[0];
++	a.nport_handle = nport_handle;
++	a.rx_xchg_address = rx_xchg_addr;
++	a.did.b.domain = s_id[2];
++	a.did.b.area   = s_id[1];
++	a.did.b.al_pa  = s_id[0];
+ 	a.tx_byte_count = a.tx_len = sizeof(struct fc_els_ls_rjt);
+-	a.tx_addr = vha->hw->elsrej.cdma;
++	a.tx_addr = ha->elsrej.cdma;
+ 	a.vp_idx = vha->vp_idx;
+ 	a.control_flags = EPD_ELS_RJT;
+-	a.ox_id = le16_to_cpu(p->ox_id);
++	a.ox_id = le16_to_cpu(ox_id);
+ 
+-	sid = p->s_id[0] | (p->s_id[1] << 8) | (p->s_id[2] << 16);
++	sid = s_id[0] | (s_id[1] << 8) | (s_id[2] << 16);
+ 
+-	totlen = (le16_to_cpu(p->frame_size) & 0x0fff) - PURX_ELS_HEADER_SIZE;
+-	if (le16_to_cpu(p->status_flags) & 0x8000) {
+-		totlen = le16_to_cpu(p->trunc_frame_size);
++	totlen = (le16_to_cpu(frame_size) & 0x0fff) - PURX_ELS_HEADER_SIZE;
++	if (le16_to_cpu(status_flags) & 0x8000) {
++		totlen = le16_to_cpu(trunc_frame_size);
+ 		qla_els_reject_iocb(vha, (*rsp)->qpair, &a);
+ 		__qla_consume_iocb(vha, pkt, rsp);
+ 		return;
+@@ -2600,12 +2629,12 @@ void qla24xx_auth_els(scsi_qla_host_t *vha, void **pkt, struct rsp_que **rsp)
+ 	purex = &ptr->u.purexinfo;
+ 	purex->pur_info.pur_sid = a.did;
+ 	purex->pur_info.pur_bytes_rcvd = totlen;
+-	purex->pur_info.pur_rx_xchg_address = le32_to_cpu(p->rx_xchg_addr);
+-	purex->pur_info.pur_nphdl = le16_to_cpu(p->nport_handle);
+-	purex->pur_info.pur_did.b.domain =  p->d_id[2];
+-	purex->pur_info.pur_did.b.area =  p->d_id[1];
+-	purex->pur_info.pur_did.b.al_pa =  p->d_id[0];
+-	purex->pur_info.vp_idx = p->vp_idx;
++	purex->pur_info.pur_rx_xchg_address = le32_to_cpu(rx_xchg_addr);
++	purex->pur_info.pur_nphdl = le16_to_cpu(nport_handle);
++	purex->pur_info.pur_did.b.domain =  d_id[2];
++	purex->pur_info.pur_did.b.area =  d_id[1];
++	purex->pur_info.pur_did.b.al_pa =  d_id[0];
++	purex->pur_info.vp_idx = vp_idx;
+ 
+ 	a.sid = purex->pur_info.pur_did;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index c38771e4202c..c4e2e62f924f 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -202,6 +202,11 @@ void __qla_consume_iocb(struct scsi_qla_host *vha,
+ 	struct rsp_que *rsp_q = *rsp;
+ 	response_t *new_pkt;
+ 	uint16_t entry_count_remaining;
++	/*
++	 * entry_count is u8 at offset 1 in both purex_entry_24xx and
++	 * purex_entry_24xx_ext, so the 24xx view is layout-compatible with
++	 * either stride.
++	 */
+ 	struct purex_entry_24xx *purex = *pkt;
+ 
+ 	entry_count_remaining = purex->entry_count;
+@@ -230,6 +235,14 @@ void __qla_consume_iocb(struct scsi_qla_host *vha,
+ int __qla_copy_purex_to_buffer(struct scsi_qla_host *vha,
+ 	void **pkt, struct rsp_que **rsp, u8 *buf, u32 buf_len)
+ {
++	/*
++	 * purex_entry_24xx_ext overlays purex_entry_24xx for entry_count
++	 * (offset 1), frame_size (offset 12) and els_frame_payload (offset
++	 * 44, base address only -- the array size grows from 20 to 84
++	 * bytes).  Header fields are read through the 24xx view; the
++	 * initial payload memcpy uses a purex_entry_24xx_ext pointer on
++	 * 29xx so that FORTIFY_SOURCE sees the correct 84-byte source.
++	 */
+ 	struct purex_entry_24xx *purex = *pkt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct rsp_que *rsp_q = *rsp;
+@@ -244,8 +257,8 @@ int __qla_copy_purex_to_buffer(struct scsi_qla_host *vha,
+ 	u16 tpad;
+ 
+ 	entry_count_remaining = purex->entry_count;
+-	total_bytes = (le16_to_cpu(purex->frame_size) & 0x0FFF)
+-		- PURX_ELS_HEADER_SIZE;
++	total_bytes = (le16_to_cpu(purex->frame_size) & 0x0FFF) -
++		PURX_ELS_HEADER_SIZE;
+ 
+ 	/*
+ 	 * end of payload may not end in 4bytes boundary.  Need to
+@@ -262,14 +275,24 @@ int __qla_copy_purex_to_buffer(struct scsi_qla_host *vha,
+ 	}
+ 
+ 	pending_bytes = total_bytes = tpad;
+-	no_bytes = (pending_bytes > sizeof(purex->els_frame_payload))  ?
+-	    sizeof(purex->els_frame_payload) : pending_bytes;
++	no_bytes = (pending_bytes > payload_size) ?
++		payload_size : pending_bytes;
++	if (IS_QLA29XX(ha)) {
++		struct purex_entry_24xx_ext *purex_ext = *pkt;
+ 
+-	memcpy(buf, &purex->els_frame_payload[0], no_bytes);
++		memcpy(buf, &purex_ext->els_frame_payload[0], no_bytes);
++	} else {
++		memcpy(buf, &purex->els_frame_payload[0], no_bytes);
++	}
+ 	buffer_copy_offset += no_bytes;
+ 	pending_bytes -= no_bytes;
+ 	--entry_count_remaining;
+ 
++	/*
++	 * response_t::signature and struct response_ext::signature are both u32
++	 * at offset 60 (handle:4 + data[52]:60), so the 24xx view writes
++	 * the right slot regardless of stride.
++	 */
+ 	((response_t *)purex)->signature = RESPONSE_PROCESSED;
+ 	/* flush signature */
+ 	wmb();
+@@ -849,6 +872,7 @@ qla27xx_copy_multiple_pkt(struct scsi_qla_host *vha, void **pkt,
+ 			  struct rsp_que **rsp, bool is_purls,
+ 			  bool byte_order)
+ {
++	struct purex_entry_24xx_ext *purex_ext = NULL;
+ 	struct purex_entry_24xx *purex = NULL;
+ 	struct pt_ls4_rx_unsol *purls = NULL;
+ 	struct qla_hw_data *ha = vha->hw;
+@@ -867,6 +891,13 @@ qla27xx_copy_multiple_pkt(struct scsi_qla_host *vha, void **pkt,
+ 			      PURX_ELS_HEADER_SIZE;
+ 		entry_count = entry_count_remaining = purls->entry_count;
+ 		payload_size = sizeof(purls->payload);
++	} else if (IS_QLA29XX(ha)) {
++		purex_ext = *pkt;
++		total_bytes = (le16_to_cpu(purex_ext->frame_size) & 0x0FFF) -
++			      PURX_ELS_HEADER_SIZE;
++		entry_count = entry_count_remaining =
++		    purex_ext->entry_count;
++		payload_size = sizeof(purex_ext->els_frame_payload);
+ 	} else {
+ 		purex = *pkt;
+ 		total_bytes = (le16_to_cpu(purex->frame_size) & 0x0FFF) -
+@@ -875,8 +906,8 @@ qla27xx_copy_multiple_pkt(struct scsi_qla_host *vha, void **pkt,
+ 		payload_size = sizeof(purex->els_frame_payload);
+ 	}
+ 
+-	if (total_bytes > sizeof(item->iocb.iocb))
+-		total_bytes = sizeof(item->iocb.iocb);
++	if (total_bytes > QLA_MAX_IOCB_SIZE)
++		total_bytes = QLA_MAX_IOCB_SIZE;
+ 
+ 	pending_bytes = total_bytes;
+ 	no_bytes = (pending_bytes > payload_size) ? payload_size :
+@@ -893,6 +924,8 @@ qla27xx_copy_multiple_pkt(struct scsi_qla_host *vha, void **pkt,
+ 
+ 	if (is_purls)
+ 		memcpy(iocb_pkt, &purls->payload[0], no_bytes);
++	else if (IS_QLA29XX(ha))
++		memcpy(iocb_pkt, &purex_ext->els_frame_payload[0], no_bytes);
+ 	else
+ 		memcpy(iocb_pkt, &purex->els_frame_payload[0], no_bytes);
+ 	buffer_copy_offset += no_bytes;
+@@ -901,6 +934,8 @@ qla27xx_copy_multiple_pkt(struct scsi_qla_host *vha, void **pkt,
+ 
+ 	if (is_purls)
+ 		((response_t *)purls)->signature = RESPONSE_PROCESSED;
++	else if (IS_QLA29XX(ha))
++		((struct response_ext *)purex_ext)->signature = RESPONSE_PROCESSED;
+ 	else
+ 		((response_t *)purex)->signature = RESPONSE_PROCESSED;
+ 	wmb();
+@@ -1075,9 +1110,9 @@ qla24xx_alloc_purex_item(scsi_qla_host_t *vha, uint16_t size)
+ 	struct purex_item *item = NULL;
+ 	uint8_t item_hdr_size = sizeof(*item);
+ 
+-	if (size > QLA_DEFAULT_PAYLOAD_SIZE) {
++	if (size > QLA_MAX_IOCB_SIZE) {
+ 		item = kzalloc(item_hdr_size +
+-		    (size - QLA_DEFAULT_PAYLOAD_SIZE), GFP_ATOMIC);
++		    (size - QLA_MAX_IOCB_SIZE), GFP_ATOMIC);
+ 	} else {
+ 		if (atomic_inc_return(&vha->default_item.in_use) == 1) {
+ 			item = &vha->default_item;
+@@ -1126,14 +1161,20 @@ qla24xx_queue_purex_item(scsi_qla_host_t *vha, struct purex_item *pkt,
+ static struct purex_item
+ *qla24xx_copy_std_pkt(struct scsi_qla_host *vha, void *pkt)
+ {
++	struct qla_hw_data *ha = vha->hw;
+ 	struct purex_item *item;
++	u16 copy_sz;
+ 
+-	item = qla24xx_alloc_purex_item(vha,
+-					QLA_DEFAULT_PAYLOAD_SIZE);
++	if (IS_QLA29XX(ha))
++		copy_sz = sizeof(struct purex_entry_24xx_ext);
++	else
++		copy_sz = QLA_DEFAULT_PAYLOAD_SIZE;
++
++	item = qla24xx_alloc_purex_item(vha, copy_sz);
+ 	if (!item)
+ 		return item;
+ 
+-	memcpy(&item->iocb, pkt, sizeof(item->iocb));
++	memcpy(&item->iocb, pkt, copy_sz);
+ 	return item;
  }
  
- static void qla2x00_send_notify_ack_iocb(srb_t *sp,
+@@ -1165,8 +1206,8 @@ qla27xx_copy_fpin_pkt(struct scsi_qla_host *vha, void **pkt,
+ 	total_bytes = (le16_to_cpu(purex->frame_size) & 0x0FFF)
+ 	    - PURX_ELS_HEADER_SIZE;
+ 
+-	if (total_bytes > sizeof(item->iocb.iocb))
+-		total_bytes = sizeof(item->iocb.iocb);
++	if (total_bytes > QLA_MAX_IOCB_SIZE)
++		total_bytes = QLA_MAX_IOCB_SIZE;
+ 
+ 	pending_bytes = total_bytes;
+ 	entry_count = entry_count_remaining = purex->entry_count;
+@@ -3995,6 +4036,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ {
+ 	void *pkt;
+ 	struct qla_hw_data *ha = vha->hw;
++	struct purex_entry_24xx_ext *purex_entry_ext;
+ 	struct purex_entry_24xx *purex_entry;
+ 	struct purex_item *pure_item;
+ 	struct pt_ls4_rx_unsol *p;
+@@ -4112,8 +4154,16 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ 			    (struct vp_ctrl_entry_24xx *)pkt);
+ 			break;
+ 		case PUREX_IOCB_TYPE:
+-			purex_entry = (void *)pkt;
+-			switch (purex_entry->els_frame_payload[3]) {
++			if (IS_QLA29XX(ha)) {
++				purex_entry_ext = (void *)pkt;
++				purex_entry = NULL;
++			} else {
++				purex_entry = (void *)pkt;
++				purex_entry_ext = NULL;
++			}
++			switch (IS_QLA29XX(ha) ?
++			    purex_entry_ext->els_frame_payload[3] :
++			    purex_entry->els_frame_payload[3]) {
+ 			case ELS_RDP:
+ 				pure_item = qla24xx_copy_std_pkt(vha, pkt);
+ 				if (!pure_item)
+@@ -4148,16 +4198,20 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ 					qla_rsp_ring_rewind_to(rsp,
+ 					    (response_t *)pkt, cur_ring_index);
+ 
+-					ql_dbg(ql_dbg_init, vha, 0x5091,
+-					    "Defer processing ELS opcode %#x...\n",
+-					    purex_entry->els_frame_payload[3]);
++				ql_dbg(ql_dbg_init, vha, 0x5091,
++				    "Defer processing ELS opcode %#x...\n",
++				    IS_QLA29XX(ha) ?
++				    purex_entry_ext->els_frame_payload[3] :
++				    purex_entry->els_frame_payload[3]);
+ 					return;
+ 				}
+ 				qla24xx_auth_els(vha, (void **)&pkt, &rsp);
+ 				break;
+ 			default:
+ 				ql_log(ql_log_warn, vha, 0x509c,
+-				       "Discarding ELS Request opcode 0x%x\n",
++				       "Discarding ELS Request opcode 0x%x...\n",
++				       IS_QLA29XX(ha) ?
++				       purex_entry_ext->els_frame_payload[3] :
+ 				       purex_entry->els_frame_payload[3]);
+ 			}
+ 			break;
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 4f7e5f9372ef..0b7c4ee73ebf 100644
+index 0b7c4ee73ebf..c327d053f8ee 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -8349,6 +8349,7 @@ qla2x00_module_init(void)
- 	BUILD_BUG_ON(sizeof(struct cmd_type_7_fx00) != 64);
- 	BUILD_BUG_ON(sizeof(struct cmd_type_crc_2) != 64);
- 	BUILD_BUG_ON(sizeof(struct ct_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct ct_entry_24xx_ext) != 128);
- 	BUILD_BUG_ON(sizeof(struct ct_fdmi1_hba_attributes) != 2604);
- 	BUILD_BUG_ON(sizeof(struct ct_fdmi2_hba_attributes) != 4424);
- 	BUILD_BUG_ON(sizeof(struct ct_fdmi2_port_attributes) != 4164);
+@@ -6138,13 +6138,15 @@ qla83xx_idc_lock(scsi_qla_host_t *base_vha, uint16_t requester_id)
+ }
+ 
+ static bool
+-qla25xx_rdp_rsp_reduce_size(struct scsi_qla_host *vha,
+-	struct purex_entry_24xx *purex)
++qla25xx_rdp_rsp_reduce_size(struct scsi_qla_host *vha, void *pkt)
+ {
++	struct purex_entry_24xx *purex = pkt;
+ 	char fwstr[16];
+-	u32 sid = purex->s_id[2] << 16 | purex->s_id[1] << 8 | purex->s_id[0];
++	u32 sid;
+ 	struct port_database_24xx *pdb;
+ 
++	sid = purex->s_id[2] << 16 | purex->s_id[1] << 8 | purex->s_id[0];
++
+ 	/* Domain Controller is always logged-out. */
+ 	/* if RDP request is not from Domain Controller: */
+ 	if (sid != 0xfffc01)
+@@ -6209,15 +6211,26 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha,
+ 	uint8_t *sfp = NULL;
+ 	uint16_t sfp_flags = 0;
+ 	uint rsp_payload_length = sizeof(*rsp_payload);
++	uint8_t vp_idx;
++	size_t purex_sz;
+ 	int rval;
+ 
+ 	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x0180,
+ 	    "%s: Enter\n", __func__);
+ 
++	if (IS_QLA29XX(ha)) {
++		vp_idx = le16_to_cpu(
++		    ((struct purex_entry_24xx_ext *)purex)->vp_idx);
++		purex_sz = sizeof(struct purex_entry_24xx_ext);
++	} else {
++		vp_idx = purex->vp_idx;
++		purex_sz = sizeof(*purex);
++	}
++
+ 	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x0181,
+ 	    "-------- ELS REQ -------\n");
+ 	ql_dump_buffer(ql_dbg_init + ql_dbg_verbose, vha, 0x0182,
+-	    purex, sizeof(*purex));
++	    purex, purex_sz);
+ 
+ 	if (qla25xx_rdp_rsp_reduce_size(vha, purex)) {
+ 		rsp_payload_length =
+@@ -6257,7 +6270,7 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha,
+ 	rsp_els->handle = 0;
+ 	rsp_els->nport_handle = purex->nport_handle;
+ 	rsp_els->tx_dsd_count = cpu_to_le16(1);
+-	rsp_els->vp_index = purex->vp_idx;
++	rsp_els->vp_index = vp_idx;
+ 	rsp_els->sof_type = EST_SOFI3;
+ 	rsp_els->rx_xchg_address = purex->rx_xchg_addr;
+ 	rsp_els->rx_dsd_count = 0;
+@@ -8378,6 +8391,7 @@ qla2x00_module_init(void)
+ 	BUILD_BUG_ON(sizeof(struct pt_ls4_request) != 64);
+ 	BUILD_BUG_ON(sizeof(struct pt_ls4_rx_unsol) != 64);
+ 	BUILD_BUG_ON(sizeof(struct purex_entry_24xx) != 64);
++	BUILD_BUG_ON(sizeof(struct purex_entry_24xx_ext) != 128);
+ 	BUILD_BUG_ON(sizeof(struct qla2100_fw_dump) != 123634);
+ 	BUILD_BUG_ON(sizeof(struct qla2300_fw_dump) != 136100);
+ 	BUILD_BUG_ON(sizeof(struct qla24xx_fw_dump) != 37976);
 -- 
 2.47.3
 
