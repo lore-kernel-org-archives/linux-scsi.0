@@ -1,177 +1,172 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F6DF374A0C
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:17:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1AA949620
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 06:21:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783405057; cv=none; b=tDlaeTrP7Bin5snQFnPfpVOadPyyRr31qCbAuiMpiaOoOYzyuDGXQ3ey8AL2J5NaFPbHnc0hOYI9OBHK6OwMb06Z7+roJASgx7KoAd7QHt9kmjQoc001HLK72PoBHoY9XzrJwXjsQjY5+ae/cSFopdhM0gSQ1L3juZv8xu2G34g=
+	t=1783405284; cv=none; b=APb3PgZBmW29FuRUINuPpAQB+M/fy3GXZI9QSCkk251h0luAHKUGaaD3UVW1ddf1UGnzynhnlh12ev+4rC/Q76hwn4EBXC6xiEJSNspoqufQeVZWb8krxMA8gn/v3t2H7era5kICqCAsBlB1p0ksTHVkHyaE7eVbXoqOULmXcrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783405057; c=relaxed/simple;
-	bh=GB8xTwUlkGj4X3CneGwaeSnu3YIRX8lsX58Wn3fgkoc=;
+	s=arc-20240116; t=1783405284; c=relaxed/simple;
+	bh=JyE83Kfbl+hUnT9jhDJHobEBKSPtAwJaIXpTuFBxT/M=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=J3nQHWHafILXH1htUC8BFztzsqeJvlxK4hmcSe+IONdxGKoL8iVBtfudncCoxxDFNb0E7AGdrm/DuIzpTzdkETYmQjaKkK6jA/l7F8I2rLv17nCJOChC+xhp8nSs9Jie6DhBsb1O8vaYbA5QVoLeUYydckz1L6MGeWfwRrXqzWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DDyp0ovh; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=naBDaVeDyLk20afR3b6czIHSlovttmVcvHbrmrWk+p3F7fKEH41yxloINxiRSRmWB/5sGOqQdWhIhjm9l8HFS3Efew2ylBr4ADSkdtEVhq8A4zhpcRI2R3efbMttvwNOdYmTZeB9H+rlpTd3TvwAkurLl4N0GkytGoxXSm1IF44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=My0Jt5pG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DDyp0ovh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C80641F000E9;
-	Tue,  7 Jul 2026 06:17:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="My0Jt5pG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 595771F000E9;
+	Tue,  7 Jul 2026 06:21:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783405056;
-	bh=Lkt/LiPUuXIZAOstQbn9u1jsWGVudl8FO8qtDfuTIiA=;
+	s=k20260515; t=1783405282;
+	bh=JL3mjFyz3ZX09htzm41bDjxSSnHjVFXCDCQ6f6ctVTY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DDyp0ovhF++j6vjzcMcQVBbrM5FdT/qJ7AUpJA/z5xmCGN48LaGaez21hzqwDjNwZ
-	 cPewWQsm2tVxD3/0zOKxQUW6MuM1Pbf5u9Qlcy/axxr9gnnXB5zcelZSFE8AW7PIJD
-	 FHhayG4O588h1T4EtASD008fJom6RzgQcoFuwe/g0W8ZMLeyhIAopB5RfhZc7YiWWC
-	 RFjVT6uniJR2CnoRKW7psSNU7keTNqROJ4vVTVhNJhRCNqcxmEXA//xy+nt8CLz4Kq
-	 18h5uQia4gUmmzaoPFR0bMLREqCqEGy74bkZX07FDDcYxPuwKtu/BaOsFVkb56qaza
-	 gIYXeQgk6/wSA==
+	b=My0Jt5pGx/05AO56OLV70gz123E6p+4bfe0/Sd8ZLoolVq73ar4593XElIqPzD7u8
+	 Sye9VcrnHDx8qO8hR9z9s7DmE/8pimq29RhfT+jC6hYblOUvxob9gZSdUC31Z9+ij5
+	 d6W2wyqvQMUIxmKDmNKshTPpQa07PY4i41TyKPDwoKnGIwW2ixztGfAK5Ul/Hkhlnl
+	 BNQ7BDAfnzFixmyUfo0+5LM0opsjAtO2IwvmE94ywORLJK2BXEBuAUUgNo7t8ksDPd
+	 XEelb/FgCatU7f5DlbnUuruojMGT5u8XZ0QGw4L68oWcHNFz2taA3nordvF52KrNG3
+	 v3iSyjiEFWgEw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 05/88] scsi: qla2xxx: Add FC operational firmware
- load for 29xx
+Subject: Re: [PATCH v3 01/88] scsi: qla2xxx: Add 29xx series PCI device ID
+ support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-6-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-2-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-6-njavali@marvell.com>
+ <20260707055435.2680300-2-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 06:17:35 +0000
-Message-Id: <20260707061735.C80641F000E9@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 06:21:21 +0000
+Message-Id: <20260707062122.595771F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Endianness bug in `qla29xx_process_rd_image` breaks firmware loadi=
-ng on little-endian hosts.
-- [High] `qla29xx_isp_ops` assigns incompatible legacy optrom callbacks, le=
-ading to hardware address corruption.
-- [Medium] Unvalidated template size leads to Slab Out-of-Bounds read.
-- [Medium] Hardcoded dump size in `ql_dump_buffer` can cause a Slab Out-of-=
-Bounds read.
+- [High] Incomplete hardware initialization and capability detection for QL=
+A29XX adapters.
+- [Medium] Missing speed-capability logic modifications promised in the com=
+mit message.
 --
 
---- Patch [5]: [PATCH v3 05/88] scsi: qla2xxx: Add FC operational firmware =
-load for 29xx ---
-commit 75f7a974c78a546ee01a4760d5cbc3099056329d
+--- Patch [1]: [PATCH v3 01/88] scsi: qla2xxx: Add 29xx series PCI device I=
+D support ---
+commit bb93cf91545563a12abad49c8f50d47644a2f103
 Author: Manish Rangankar <mrangankar@marvell.com>
+Date:   Tue Jul 7 05:53:08 2026 +0000
 
-scsi: qla2xxx: Add FC operational firmware load for 29xx
+    scsi: qla2xxx: Add 29xx series PCI device ID support
+   =20
+    The QLA29xx is a new generation FC HBA that shares much of its
+    architecture with the 27xx/28xx family.  Register the new PCI
+    device IDs, wire up IS_QLA29XX() capability checks in the probe
+    and ISP-flags paths,
 
-This commit adds support to load 29xx FC operational firmware from the
-filesystem and to set up the corresponding firmware dump template. It
-follows the same request_firmware and segment-load pattern used by earlier
-adapters in the driver.
+>     and extend speed-capability logic so the driver correctly recognises =
+and initialises 29xx adapters.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
-nit.c
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
+[Severity: Medium]
+This isn't a bug, but the commit message states it extends speed-capability
+logic. Are there changes missing from this patch? I don't see any
+modifications related to speed capability or link rates in the diff.
+
+>    =20
+>     Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+>     Signed-off-by: Nilesh Javali <njavali@marvell.com>
+>     Reviewed-by: Hannes Reinecke <hare@kernel.org>
+
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
+f.h
+> index 5593ad7fad274..6337a056b1497 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+
 [ ... ]
-> @@ -9128,6 +9131,537 @@ qla81xx_load_risc(scsi_qla_host_t *vha, uint32_t =
-*srisc_addr)
-[ ... ]
-> +				if (is_first_segment)
-> +					opt |=3D BIT_3;
-> +				if (is_last_segment)
-> +					opt |=3D BIT_4;
-> +
-> +				memcpy((char *)dcode, (char *)fwcode, size);
-> +
-> +			ql_dbg(ql_dbg_init, vha, 0x0098,
+
+> @@ -4372,9 +4386,10 @@ struct qla_hw_data {
+>  				IS_QLA25XX(ha) || IS_QLA81XX(ha) || \
+>  				IS_QLA82XX(ha) || IS_QLA83XX(ha) || \
+>  				IS_QLA8044(ha) || IS_QLA27XX(ha) || \
+> -				IS_QLA28XX(ha))
+> +				IS_QLA28XX(ha) || IS_QLA29XX(ha))
+>  #define IS_MSIX_NACK_CAPABLE(ha) (IS_QLA81XX(ha) || IS_QLA83XX(ha) || \
+> -				IS_QLA27XX(ha) || IS_QLA28XX(ha))
+> +				IS_QLA27XX(ha) || IS_QLA28XX(ha) || \
+> +				IS_QLA29XX(ha))
+>  #define IS_NOPOLLING_TYPE(ha)	(IS_QLA81XX(ha) && (ha)->flags.msix_enable=
+d)
+>  #define IS_FAC_REQUIRED(ha)	(IS_QLA81XX(ha) || IS_QLA83XX(ha) || \
+>  				IS_QLA27XX(ha) || IS_QLA28XX(ha))
 
 [Severity: High]
-Does this break the DMA endianness translation on little-endian hosts?
-The TIM section correctly uses swab32() to convert the big-endian firmware
-blob into CPU-endian 32-bit words, but here the ARR sections use a raw
-memcpy() in qla29xx_process_rd_image(). On little-endian architectures,
-this will preserve the big-endian byte order in memory, potentially causing
-the adapter DMA to receive byte-swapped instructions and fail to load the
-firmware.
+Should IS_FAC_REQUIRED also be updated to include IS_QLA29XX(ha)? It looks
+like it was missed here, which could cause missing hardware capability
+detection.
 
 [ ... ]
-> +	buf =3D qla29xx_read_optrom_data(vha, FLT_REG_FW_DUMP_TMPLT, 0,
-> +				       fw_dump_tmplt, 0,
-> +				       ha->fw_dump_tmplt_len);
-> +	if (!buf) {
-> +		ql_log(ql_log_info, vha, 0x0013,
-> +		       "Unable to read fw dump temp info.\n");
-> +		goto free_fw_dump;
-> +	}
-> +
-> +	ql_dump_buffer(ql_dbg_init, vha, 0x006b,
-> +		       (char *)fw_dump_tmplt, 1024);
-> +
 
-[Severity: Medium]
-Could this hardcoded 1024-byte size cause a slab out-of-bounds read?
-The fw_dump_tmplt buffer is allocated dynamically based on
-ha->fw_dump_tmplt_len in qla29xx_load_fw_template(). If the actual template
-length returned by the hardware is less than 1024 bytes, this will read
-past the end of the kzalloc allocation when logging.
+> @@ -4408,12 +4423,12 @@ struct qla_hw_data {
+>  #define IS_PI_SPLIT_DET_CAPABLE(ha)	(IS_PI_SPLIT_DET_CAPABLE_HBA(ha) && \
+>      (((ha)->fw_attributes_h << 16 | (ha)->fw_attributes) & BIT_22))
+>  #define IS_ATIO_MSIX_CAPABLE(ha) (IS_QLA83XX(ha) || IS_QLA27XX(ha) || \
 
-> +	for (j =3D 0; j < templates; j++, fwdt++) {
-> +		vfree(fwdt->template);
-> +		fwdt->template =3D NULL;
-> +		fwdt->length =3D 0;
-> +
-> +		template_size =3D le32_to_cpu(((__le32 *)fw_dump_tmplt)[2]);
-> +
-> +		ql_dbg(ql_dbg_init, vha, 0x0161,
-> +		       "-> fwdt%u template array at %p (0x%x bytes)\n",
-> +		       j, fw_dump_tmplt, template_size);
-> +
-> +		if (!template_size || !~template_size ||
-> +		    template_size > ha->fw_dump_tmplt_len) {
-> +			ql_dbg(ql_dbg_init, vha, 0x0162,
-> +			       "-> fwdt%u failed to read array\n", j);
-> +			goto failed;
-> +		}
-> +
-> +		fwdt->template =3D vmalloc(template_size);
-> +		if (!fwdt->template) {
-> +			ql_log(ql_log_warn, vha, 0x0164,
-> +			       "-> fwdt%u failed allocate template.\n", j);
-> +			goto failed;
-> +		}
-> +
-> +		dcode =3D fwdt->template;
-> +		memcpy((char *)dcode, (char *)fw_dump_tmplt, template_size);
-> +
-> +		if (!qla27xx_fwdt_template_valid(dcode)) {
+[Severity: High]
+Should IS_ATIO_MSIX_CAPABLE and IS_SHADOW_REG_CAPABLE be updated to include
+IS_QLA29XX(ha) as well? The macro definitions appear to omit the new adapte=
+rs,
+which might break ATIO interrupt setup and shadow register support.
 
-[Severity: Medium]
-Is there a missing minimum size check for template_size here?
-If the template_size read from the flash template buffer is extremely
-small (for example, 4 bytes), the vmalloc allocation succeeds, but
-qla27xx_fwdt_template_valid() will read past the end of the allocated
-buffer while verifying the template header, which requires up to 32 bytes.
-
-[ ... ]
 > diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 72b1c28e4dae0..c91d2b8bd08e7 100644
 > --- a/drivers/scsi/qla2xxx/qla_os.c
 > +++ b/drivers/scsi/qla2xxx/qla_os.c
+
 [ ... ]
-> @@ -2640,6 +2640,45 @@ static struct isp_operations qla27xx_isp_ops =3D {
-[ ... ]
-> +	.beacon_blink		=3D qla83xx_beacon_blink,
-> +	.read_optrom		=3D qla25xx_read_optrom_data,
-> +	.write_optrom		=3D qla24xx_write_optrom_data,
-> +	.get_flash_version	=3D qla24xx_get_flash_version,
+
+> @@ -3195,6 +3221,22 @@ qla2x00_probe_one(struct pci_dev *pdev, const stru=
+ct pci_device_id *id)
+>  		ha->flash_data_off =3D FARX_ACCESS_FLASH_DATA_28XX;
+>  		ha->nvram_conf_off =3D ~0;
+>  		ha->nvram_data_off =3D ~0;
+> +	} else if (IS_QLA29XX(ha)) {
+> +		ha->portnum =3D PCI_FUNC(ha->pdev->devfn);
+> +		ha->max_fibre_devices =3D MAX_FIBRE_DEVICES_2400;
+> +		ha->mbx_count =3D MAILBOX_REGISTER_COUNT;
+> +		req_length =3D REQUEST_ENTRY_CNT_83XX;
+> +		rsp_length =3D RESPONSE_ENTRY_CNT_83XX;
 
 [Severity: High]
-Are these legacy optrom callbacks compatible with the 29xx initialization?
-In qla2x00_probe_one(), the ha->flash_data_off for 29xx adapters is
-initialized to ~0 (0xFFFFFFFF). If qla25xx_read_optrom_data calculates the
-hardware flash address by evaluating ha->flash_data_off + offset, it will
-wrap around to offset - 1. Could this lead to corrupted hardware address
-reads if an unprivileged user reads the sysfs optrom node?
+Does this initialization block miss the ha->tgt.atio_q_length setup?
+Looking at qla2x00_probe_one(), the older 27xx and 28xx families initialize
+this field:
+
+	} else if (IS_QLA28XX(ha)) {
+		...
+		req_length =3D REQUEST_ENTRY_CNT_83XX;
+		rsp_length =3D RESPONSE_ENTRY_CNT_83XX;
+		ha->tgt.atio_q_length =3D ATIO_ENTRY_CNT_24XX;
+
+Would omitting it for IS_QLA29XX(ha) break Target mode (ATIO)? Also, should
+qlt_probe_one_stage1() in qla_target.c and hardware mailbox functions in
+qla_mbx.c (such as qla25xx_init_req_que()) be updated to include the
+new IS_QLA29XX(ha) check?
+
+> +		ha->max_loop_id =3D SNS_LAST_LOOP_ID_2300;
+> +		ha->init_cb_size =3D sizeof(struct mid_init_cb_81xx);
+> +		ha->gid_list_info_size =3D 8;
+> +		ha->optrom_size =3D OPTROM_SIZE_28XX;
+> +		ha->nvram_npiv_size =3D QLA_MAX_VPORTS_QLA25XX;
+> +		ha->isp_ops =3D &qla27xx_isp_ops;
+> +		ha->flash_conf_off =3D ~0;
+> +		ha->flash_data_off =3D ~0;
+> +		ha->nvram_conf_off =3D ~0;
+> +		ha->nvram_data_off =3D ~0;
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D5
+300-1-njavali@marvell.com?part=3D1
