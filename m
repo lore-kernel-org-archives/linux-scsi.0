@@ -1,58 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A54342315B;
-	Tue,  7 Jul 2026 14:12:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE699383310;
+	Tue,  7 Jul 2026 14:12:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783433542; cv=none; b=UmejuSZGIWMjR5vEOgUiXda1ChfMeeGlpYW+EcNI4A0IO3PMNXg2oJXb0k8OQfy7M65E5m0RDPfmeJHb9zuOtlXy3VbrNH92kdU6m/nT6sLag5jnWRNDyg/QKoqKi4J3pWFa4GiuZMBlM8FBHEgDF2SFNBJhotWgI4vrQ81K7/w=
+	t=1783433542; cv=none; b=BYyFxqGzZMRE2ZB6JUO/AqgQGU+siovPIPeNjn0h2qGZdsd7Y7Brx02Wgvz4Rx7WOYfl9tD906qem6oMZRNW06M0VqssVPBGivwRz4GQg+rISX8Vw1SJ3TXbNC5dVV9uTqF8DcqJTKDMXJ0JlfoKTJdpV99OdwwdPNxenvekTmY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1783433542; c=relaxed/simple;
-	bh=+Q8bsBDe/NPd3jPzAf281UsX9sWgZa/fkzVNcKGpaGw=;
+	bh=eyDgeJF51paQKpDoILd8CGhbNI4Uaxh0TsSiULTfk8w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hIZ2IxuQ3pB/39iwYtxfzDxps+wf3nMizIFp5GjaycqxDQ9atPvfxk1lcgPubURkrEVWufy+O7+bGa4VbLcml6Bc8NRFFB8xSIH57zLr4qs+h2oC+ls8HzfzOoMz+EnL34yGSsjdp73vp7bl3jMy7wYkU0D39a43jUybpGzR2G4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ig139JRf; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=shtq3Tfc8KdjuUwfOxe/DX8s+3x55itlexs2rNTlZzWRb/PrcVmZkCsFbx631RkrlMuPXNDRFctQO9UWOD2I2v/g6rYLCCun2KZeMteW47JQMEFVTRrzHYMiV7/iHbrSnLkEPCWb9DsM6xx2nGJSKEqjmUSx5YkOqYilToqUicI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=erjAGEwi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ig139JRf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 929C91F00ACA;
-	Tue,  7 Jul 2026 14:12:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="erjAGEwi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA3991F00AC4;
+	Tue,  7 Jul 2026 14:12:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783433538;
-	bh=+Q8bsBDe/NPd3jPzAf281UsX9sWgZa/fkzVNcKGpaGw=;
+	s=k20260515; t=1783433536;
+	bh=eyDgeJF51paQKpDoILd8CGhbNI4Uaxh0TsSiULTfk8w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ig139JRfu1SsHtLD/2CqUoX+sR1iL+JWLycuQ54NG3jIc6EfG/OLqzcUJ90VDAsDv
-	 N7QhOF7tkFzEN8yVg2vzpzHYvmKwydMnu64BXpUxTTMhZTaIM/TcvISYuzZfvE0FxC
-	 kdc1R8QtMsy/hGvikB47Phpvlke1bSJe3a27PnGGJgWRzhqlGZRAqRjQrNj0UJ7iXE
-	 yNPQ3zup4TXVy0L7NMwYSwVsF9RBkGhxrW31zvhz1Gnz/fvU+sxVN1X10W0rVKtZpx
-	 49hPNYUbOkkhGgjTNPtvbcFI8Hh6yqpgL5S/9rstz9UyR5QBOGFWXieBe2Hofd0cDW
-	 zqv6yK6NFfCFA==
+	b=erjAGEwiejadxQ7ohbGW/96YMylj6W/A2WCbZ6MXSH9f836pRgXyv3aymOsKTfVsi
+	 KeaMvO3G+cIQpu0lwfPvatqtzVIqqfurk7wHMs5kYOavLU7lv1SJ54GaDmYI+oirq+
+	 NQVIjHhMKr6iH4jN3wvMepxe2dDIhkRhkmLBbBhlvXy1QsRNd26XEKTXTkKCFwXN6N
+	 piL4fZ4ebmJGA4DqmXwn48Bcvl6Rsu8FZ1gyKXpJlRRMSGJfDY1Z7mZdY++EWx/hZg
+	 Sn+uHMjtbDbK1ZypURU5O1K8CSaDK577IZbETbvzd2D38+CaA+8Eb/Qd9rF9QS3pvs
+	 KvdZsSes8qs5Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 6/9] agp/amd-k7: don't rely on address of
- pci_device_id
+Subject: Re: [PATCH v3 4/9] mlxsw: don't store pci_device_id
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: cassel@kernel.org, dlemoal@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260706-pci_id_fix-v3-6-2d48fc025acc@garyguo.net>
+Cc: dri-devel@lists.freedesktop.org, dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260706-pci_id_fix-v3-4-2d48fc025acc@garyguo.net>
 References: <20260706-pci_id_fix-v3-0-2d48fc025acc@garyguo.net>
- <20260706-pci_id_fix-v3-6-2d48fc025acc@garyguo.net>
+ <20260706-pci_id_fix-v3-4-2d48fc025acc@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 14:12:17 +0000
-Message-Id: <20260707141217.929C91F00ACA@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 14:12:15 +0000
+Message-Id: <20260707141215.BA3991F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> Address of pci_device_id cannot be relied on due to presence of dynamic ID
-> and driver_override. Use driver_data instead.
+> pci_device_id is not guaranteed to live longer than probe due to presence
+> of dynamic ID. This stored ID is unused so remove it.
 >=20
+> Reviewed-by: Danilo Krummrich <dakr@kernel.org>
+> Reviewed-by: Petr Machata <petrm@nvidia.com>
 > Signed-off-by: Gary Guo <gary@garyguo.net>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260706-pci_id_fix=
--v3-0-2d48fc025acc@garyguo.net?part=3D6
+-v3-0-2d48fc025acc@garyguo.net?part=3D4
 
