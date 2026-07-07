@@ -1,182 +1,157 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 736833ACA43
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:21:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6FA63E5A07
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:22:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783408909; cv=none; b=PlTvtdvIoZWiQEe1LOOzOwJeZDD47TCs1LmhY4Tba96nRuyxxuya6GieI/Hq5YgLt7jal4lJAwSnbF+98kQ01CK517XzUB9xm0sRMqMgpsy3w5GL+Yhs/lWPMAJiS7hVHQL+3AywB2PJ/gZ8qNJSH8EhfaXxH1Oa81vbSxsXRcc=
+	t=1783408935; cv=none; b=aqXZ4lMZR+K41aMNuAnN/eN/h80Lmug1Tt+0PlW8y09YWPeb/gC6U2j7uM1kRmhiN5t/IIFWMoYtxV8Dw5gfeXNgpt4Yyn81qYuKc7OZPZTrJG6MZ8+IsrnJ4K6vEuHnsbsQk+XrQDef/kyt3HJ8lmMKwxPxgeAFVoj13qjk9DU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783408909; c=relaxed/simple;
-	bh=NGbUWvRj4fhe66zt0q3+4tko5yJPvB4+Wj53fQc27Y4=;
+	s=arc-20240116; t=1783408935; c=relaxed/simple;
+	bh=Kd0jDlMkJ2EBgRA4013BUtNRIy7U2svbfXKeS1ylDSs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=boyv5vK//iUZrZCUCOCy6Ds7q5iIgraZa3sxM3C43AASA08zvxdzoPfsgWSTMM2AgXI9KHinN2wHn1MagOaqqns5JALs3R67M7GXEEPMAyhlxGKvSejvKgNdvxbMmYQ76o1Rb92eueLxcNgfTVzu1ERNUzKGE4ctXvQVPsKxf58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c9fX0OT1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=KfRVSbsUpGTRiHDsqde5BY2kNulRkelLOsn59YuEVX39cFSDRNPD1M+iPJUMOEkd/pT3RA+fT/49ESH6ajtawlhXJ4EVdZ3HeIkvYxS+q8Q3makWsHcLHtJUbqpiU0MIJzdAi7uxmRjEvZ5JAyUqLFmzQiD7jvqg2fd1J6qtCHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IcxCcPzW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c9fX0OT1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B63E1F00ACA;
-	Tue,  7 Jul 2026 07:21:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IcxCcPzW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EE311F000E9;
+	Tue,  7 Jul 2026 07:22:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783408896;
-	bh=AbU2MhciiCTyv+gPvqzycwdA7yqAPhNzeLqdeMSvNjQ=;
+	s=k20260515; t=1783408923;
+	bh=RcaqWTvJLY8NvtVFjZA32Hdei+5INZVAq3SsXTpML8k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=c9fX0OT1uSGw05535Gurux1JLD3rou58SKhjXiq46rdevNxfw46aLnK/ZgvM2F7xQ
-	 000DDEcQY/G31RX/7WGtilXhOIlsaTCZQpWOcV6chU0va9XB8CAXOrgnnetQTpvNuf
-	 j48/BEgw+YMhSUrCE7R+skrNk0J2O1WWEGEvrRxsf/ulwvbLIEBdm2KvPhy/0s7eus
-	 H041W8Jj3Gq7MRlg43KwBBMmffdIM+ruT9UQGnXkZAjxxjO+yNampufgZX1cWNUV94
-	 FifJ3fs51VJjbnIhGrP86r7lfg85mLOw3XBGEdCWMNKrLdmLaxGO5Z2zoq29XygB7j
-	 B4HTS4sWoPYfQ==
+	b=IcxCcPzWYIoW2gd8YROa5NYIzL0P9ZEaEEcOoSXprsDynsNra9Pq0wfuGPWkumw39
+	 Ygp74ubqP6hJLPrMzEwO0+q38LXiOy08pQpsXnTR3veZVKGp1tYmIDAuiFX+4P47TC
+	 RI03D5pqeM1dju0ZI1dIYbFUhYY2OSk4CChp7OHgEkhNXcT1cjMdvPukIzgXwKr2M2
+	 A0R8bwEMGDsrgT2ELAjbKBTwRNRCaVcxhSRg44gmzEGn/cAdosaBYCl0uhxRJ2q8lK
+	 nAgWSAJUgGqpgARpAzzjzgzsuOqtiuzhXinUfbZfzGy1Tsun2qil5aKFsb3i9+WE6r
+	 oAvHfNaBCt4Uw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 71/88] scsi: qla2xxx: Avoid req_q_map double-read in
- qla2x00_error_entry()
+Subject: Re: [PATCH v3 72/88] scsi: qla2xxx: Quiesce response IRQ before
+ freeing request queue
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-72-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-73-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-72-njavali@marvell.com>
+ <20260707055435.2680300-73-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:21:35 +0000
-Message-Id: <20260707072136.5B63E1F00ACA@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:22:02 +0000
+Message-Id: <20260707072203.3EE311F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Lockless early clearing of `rsp->msix->in_use` creates a race cond=
+ition that leads to an IRQ double-free and cross-qpair interrupt hijacking.
+
 Pre-existing issues:
-- [Critical] Missing bounds and NULL pointer checks on hardware-supplied qu=
-eue index in QLAFX00 handlers lead to OOB reads and wild pointer dereferenc=
-es.
-- [High] The patch transforms a NULL pointer dereference into a Use-After-F=
-ree and fails to prevent compiler reloads due to a missing READ_ONCE().
-- [High] Out-of-bounds array access on `req_q_map` before validation in `ql=
-a2x00_status_entry`.
-- [High] Lack of bounds checking for target QID index on `req_q_map` array =
-access in `qlt_ctio_to_cmd`.
+- [High] Use-after-free of `rsp->req` in the `qla2xxx_create_qpair` error p=
+ath.
+- [High] Use-after-free on `qp->buf_pool.buf_map` during queue teardown due=
+ to early `qla_free_buf_pool`.
 --
 
---- Patch [71]: [PATCH v3 71/88] scsi: qla2xxx: Avoid req_q_map double-read=
- in qla2x00_error_entry() ---
-commit c14818342918ef21459d32bbecb1126af60c505c
+--- Patch [72]: [PATCH v3 72/88] scsi: qla2xxx: Quiesce response IRQ before=
+ freeing request queue ---
+commit ae81f8a97822c69143d672e39645c29cff10e16e
 Author: Nilesh Javali <njavali@marvell.com>
+Subject: scsi: qla2xxx: Quiesce response IRQ before freeing request queue
 
-scsi: qla2xxx: Avoid req_q_map double-read in qla2x00_error_entry()
+This patch quiesces the response IRQ and flushes pending work before freeing
+the request queue in qla2xxx_delete_qpair(). This prevents a regression whe=
+re
+late completions could dereference a freed request queue.
 
-This patch attempts to fix a potential double-read of the request queue map
-in the error entry ISR. It caches the map slot into a local variable to
-perform the NULL check and subsequent use. The issue was observed during
-queue teardown when the map slot is cleared concurrently.
+Fixes: d74595278f4a ("scsi: qla2xxx: Add multiple queue pair functionality.=
+")
+Cc: stable@vger.kernel.org
+Reported-by: Sashiko <sashiko-dev@google.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
-r.c
-> index 91a8344fea6c7..829671937f92e 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -3927,10 +3927,12 @@ qla2x00_error_entry(scsi_qla_host_t *vha, struct =
-rsp_que *rsp, sts_entry_t *pkt)
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index 76b7ed501b04e..d678e27213a94 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -10686,11 +10686,28 @@ int qla2xxx_delete_qpair(struct scsi_qla_host *=
+vha, struct qla_qpair *qpair)
+>  {
+>  	int ret =3D QLA_FUNCTION_FAILED;
+>  	struct qla_hw_data *ha =3D qpair->hw;
+> +	struct rsp_que *rsp =3D qpair->rsp;
+> =20
+>  	qpair->delete_in_progress =3D 1;
+> =20
+>  	qla_free_buf_pool(qpair);
+
+[Severity: High]
+This is a pre-existing issue, but by calling qla_free_buf_pool() here, the
+buf_map and other arrays are freed before the interrupt is disabled and
+pending work is flushed. If a late hardware completion arrives during this
+window, could qla_do_work() process it and invoke qla_put_buf()?
+
+If that happens, does this code execute clear_bit(dsc->tag,
+qp->buf_pool.buf_map) on the freed memory?
+
+> +	/*
+> +	 * The response-queue interrupt schedules qla_do_work(), which
 [ ... ]
-> =20
-> -	if (que >=3D ha->max_req_queues || !ha->req_q_map[que])
-> +	if (que >=3D ha->max_req_queues)
->  		goto fatal;
-> =20
->  	req =3D ha->req_q_map[que];
-> +	if (!req)
-> +		goto fatal;
+> +	 * firmware queue-delete order (request then response) is kept.
+> +	 */
+> +	if (rsp && rsp->msix && rsp->msix->have_irq) {
+> +		free_irq(rsp->msix->vector, rsp->msix->handle);
+> +		rsp->msix->have_irq =3D 0;
+> +		rsp->msix->in_use =3D 0;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but caching the pointer without
-READ_ONCE() might allow the compiler to reload the pointer from memory,
-potentially re-introducing the NULL dereference.
+Does clearing rsp->msix->in_use here without holding ha->mq_lock prematurely
+expose the msix_entry to reallocation?
 
-Additionally, does this code allow a use-after-free?
+If a concurrent qla2xxx_create_qpair() allocates this entry for a new queue
+pair and requests the IRQ, it will set msix->have_irq =3D 1.
 
-As mentioned in the commit message, qla25xx_free_req_que() runs concurrently
-and clears the slot before freeing the queue:
+When this teardown path subsequently reaches qla25xx_free_rsp_que(), it
+evaluates the shared struct and could incorrectly execute free_irq() on the
+new queue pair's active IRQ handler. Should we wait to clear in_use until t=
+he
+original teardown path is fully complete?
 
-> drivers/scsi/qla2xxx/qla_mid.c:qla25xx_free_req_que() {
-> ...
->         mutex_lock(&ha->mq_lock);
->         ha->req_q_map[que_id] =3D NULL;
->         clear_bit(que_id, ha->req_qid_map);
->         mutex_unlock(&ha->mq_lock);
->     }
->     kfree(req->outstanding_cmds);
->     kfree(req);
-> }
-
-Since this ISR does not synchronize with the teardown, could the ISR fetch
-the pointer just before it is cleared, pass the NULL check, and then access
-req after it has been freed by the other CPU?
-
-
-[Severity: Critical]
-This is a pre-existing issue, but does qlafx00_status_entry() lack bounds
-and NULL pointer checks on the hardware-supplied queue index?
-
-> drivers/scsi/qla2xxx/qla_mr.c:qlafx00_status_entry() {
->     ...
->     que =3D MSW(hindex);
->     req =3D ha->req_q_map[que];
->=20
->     /* Validate handle. */
->     if (handle < req->num_outstanding_cmds)
->     ...
-> }
-
-Could a malformed hardware response trigger an out-of-bounds read and
-subsequent wild pointer dereference if que exceeds max_req_queues or req
-is NULL?
-
-This same pattern appears to be present in qlafx00_multistatus_entry()
-and qlafx00_error_entry().
-
+> +		rsp->msix->handle =3D NULL;
+> +	}
+> +	if (rsp && ha->wq)
+> +		cancel_work_sync(&qpair->q_work);
+> +
+>  	ret =3D qla25xx_delete_req_que(vha, qpair->req);
+>  	if (ret !=3D QLA_SUCCESS)
+>  		goto fail;
 
 [Severity: High]
-This is a pre-existing issue, but does qla2x00_status_entry() access the
-array before validating the index bounds?
+This isn't a bug introduced by this patch, but while reviewing the
+fix for the teardown path, I noticed a similar issue in the error path of
+qla2xxx_create_qpair():
 
-> drivers/scsi/qla2xxx/qla_isr.c:qla2x00_status_entry() {
->     ...
->     que =3D MSW(sts->handle);
->     req =3D ha->req_q_map[que];
->=20
->     /* Check for invalid queue pointer */
->     if (req =3D=3D NULL ||
->         que >=3D find_first_zero_bit(ha->req_qid_map, ha->max_req_queues)=
-) {
->     ...
-> }
+drivers/scsi/qla2xxx/qla_init.c:qla2xxx_create_qpair() {
+[ ... ]
+fail_mempool:
+	qla25xx_delete_req_que(vha, qpair->req);
+fail_req:
+	qla25xx_delete_rsp_que(vha, qpair->rsp);
+[ ... ]
+}
 
-Can a corrupted hardware input cause an out-of-bounds memory read during
-the assignment to req, before the bounds check evaluates?
-
-
-[Severity: High]
-This is a pre-existing issue, but does qlt_ctio_to_cmd() access the
-req_q_map array without bounds checking?
-
-> drivers/scsi/qla2xxx/qla_target.c:qlt_ctio_to_cmd() {
->     ...
->     int qid =3D GET_QID(handle);
->     ...
->     } else if (vha->hw->req_q_map[qid]) {
->         ql_dbg(ql_dbg_tgt_mgt, vha, 0x1000a,
->             "qla_target(%d): CTIO completion with different QID %d handle=
- %x\n",
->             vha->vp_idx, rsp->id, handle);
->         req =3D vha->hw->req_q_map[qid];
->     ...
-> }
-
-Could an untrusted hardware handle with a qid exceeding max_req_queues
-cause an out-of-bounds read?
+If a failure occurs after the queues are created, the request queue is freed
+while the response queue's interrupt is still active. Can an interrupt fire
+here and schedule qla_do_work(), leading to a dereference of the freed
+rsp->req in qla24xx_process_response_queue()?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D71
+300-1-njavali@marvell.com?part=3D72
