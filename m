@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC8BA3AFD1E
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:38:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9C4E13D53C
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 07:38:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783409900; cv=none; b=VS1iVwX6+OrONXpOZpCgWysq0t/agpxSW9xlu26Q7HdZiHY7pMuIEQ6f688C31FO2KgzjYHE9ptHVny0yibcGgGWIB38JEzjee/Y8xvHG9h8YJ+UK1GYI1g2n3SdHyGg/Y+JaxYaHG1sB/d/DteLgwJklFqsIMUydWyi5tEO9G0=
+	t=1783409924; cv=none; b=Txcu7NKIjEQiHOaiTIWaZoOAoSAI3UqZhTXNDbINmfIJoMRFBBbxwR9d/YcicASDITd1+X3m2ed7h7oRmJj4cWxuzwJi1R41wpFxdiIoq7RNT08yLaYK9STkfpnIw5fnF80rafl3Eqd9PuMdLS8vfPHR7ZeUi1AlCvFNR+tXCb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783409900; c=relaxed/simple;
-	bh=WNEMkbFL0OGQA6gvul+JT717OUhszUKhmTJVDMa91BM=;
+	s=arc-20240116; t=1783409924; c=relaxed/simple;
+	bh=uAJ72TZCjNrJi6rt6VCy1/xMOOQ3m6mC0mSgfX0Mwx4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jCETjqVI6IA9zPzrciBbuI4oA0jSHGkH8pMT3PudlaaTVJiZlIRPKC5ldc7Zv5QpkIz5Do4m0hIFQheywDqaZo4eKvmBLEhp8friA+czvp3ZjUiFJ+QoIqduJEJ5KeqOmXjqU0UZt60uxzpUJ2bOPllxBWy5+CtYY95fK3vEvWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d+1JkcLg; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=IOLSe1YYIPAzvCij9PT2TShHfYFJvvmS/7UV10XbMCE+BfXGtB82ZF07xY31jytXvWKf3Js/SB9fzL5bphVFHN0IaMczi0/TV2LAYAXx28AnUC7lo4fErDxPPbYqjvUdiBcJgixiW2VNf8hdfcpVLpZLsVvrfNM743K8GPfr2i8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TaEGcyfx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d+1JkcLg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32A691F000E9;
-	Tue,  7 Jul 2026 07:38:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TaEGcyfx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 577961F000E9;
+	Tue,  7 Jul 2026 07:38:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783409899;
-	bh=aM8c2Yv/wapCFYa00MtmndzyxpsuJWXLzAWkHkn/Nzs=;
+	s=k20260515; t=1783409922;
+	bh=Ny8B1f1QS/dAynkazBjLkBYsoFXFGINzP9iBnqMxDrM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=d+1JkcLgteIj7exeE+b1FtdjHPzG5g6sR/HH1XAWs0V0S2tAdD9F08miYAsmXFs5p
-	 hW1xy8cozrKFV3CWn8l3NJxd7oZ2emBBR3IKQHW4v7OovJc4oKwYycnxYooB3S6yB1
-	 qc35Pdw4jxDzxhQD+IXf3hVENufTQABmK+/8axf2lfMK5bZOJVqGp3duJzM8G+ehWn
-	 jSu3N+VxuD/5jX2zFm/Z0Gjrvt88yqH+EQ9BcCoPukPltdRmxl5Y7A2/M1UKhfB+45
-	 /IiMc/pTKzywe5Vjulvazbt2dXhDrG5QDl0dIn/7vzMDf3Uq4anDY8FQHX53ADIhAK
-	 UeiWKUx1cvlmQ==
+	b=TaEGcyfxt3HZIx6X2RxvGA3EMidHrmPUFf/JQ/Bqkc9WM1OafdMaVQCjkgeHMGvRs
+	 fezLx1C90AAh9ssgg6E3PuZ6+mETtrr2erb4DTRCvGQvjI4EiDwdWKVHWwWoEyUSN0
+	 cpYCzssb1gjxNKWGC9RIcni1zqC+LdZZN4xCrzFnYxrTAqZBQ5+lKYCdkK/ieyZ046
+	 zaqHpzpQHXJFrj3vDy04b03UfFpaRvZLLGsYYI2O7RqBBvpSbHfpyMhosrZOcAIq02
+	 6z68XANc0B6E7mzssjo3Ym37G9JnB3iHPbc/7kL3VUbR8Vi2H2gdyoM3lfRIwrWN7X
+	 3S8K+2csSM4iA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 86/88] scsi: qla2xxx: Zero SFP DMA buffer in FRU/I2C
- bsg handlers
+Subject: Re: [PATCH v3 82/88] scsi: qla2xxx: Serialize NVMe unsol ctx list
+ with a per-fcport lock
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260707055435.2680300-87-njavali@marvell.com>
+In-Reply-To: <20260707055435.2680300-83-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
- <20260707055435.2680300-87-njavali@marvell.com>
+ <20260707055435.2680300-83-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 07 Jul 2026 07:38:18 +0000
-Message-Id: <20260707073819.32A691F000E9@smtp.kernel.org>
+Date: Tue, 07 Jul 2026 07:38:41 +0000
+Message-Id: <20260707073842.577961F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,71 +47,65 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Heap buffer overflow in qla_edif_process_els() due to unbounded us=
-er payload lengths.
+- [Medium] The `unsol_ctx_head` list is functionally write-only and never t=
+raversed, making the list and the newly added `unsol_ctx_lock` dead state t=
+hat should be removed instead of synchronized.
 --
 
---- Patch [86]: [PATCH v3 86/88] scsi: qla2xxx: Zero SFP DMA buffer in FRU/=
-I2C bsg handlers ---
-commit 5b2a349a69efbe478558db07cf4b96e8fb11e62b
+--- Patch [82]: [PATCH v3 82/88] scsi: qla2xxx: Serialize NVMe unsol ctx li=
+st with a per-fcport lock ---
+commit f8ccd94b18e0f83a1d0b27da47b7d2c7baf3e9c0
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Zero SFP DMA buffer in FRU/I2C bsg handlers
+scsi: qla2xxx: Serialize NVMe unsol ctx list with a per-fcport lock
 
-The FRU and I2C bsg handlers stage their transfer in a DMA_POOL_SIZE
-bounce buffer obtained from dma_pool_alloc(), which does not zero the
-allocation. This commit changes these handlers to use dma_pool_zalloc()
-to prevent writing stale heap memory to the device flash.
+This commit introduces a per-fcport spinlock to serialize accesses to
+the unsol_ctx_head list. It adds the lock to protect list_add_tail and
+list_del operations from concurrent accesses in different contexts.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index e671c3de8c058..51ab638b4fc09 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -1994,7 +1994,7 @@ qla2x00_update_fru_versions(struct bsg_job *bsg_job)
->  	struct qla_image_version *image;
->  	uint32_t count;
->  	dma_addr_t sfp_dma;
-> -	void *sfp =3D dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
-> +	void *sfp =3D dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
-> =20
->  	if (!sfp) {
->  		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =3D
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
+f.h
+> index bb4305f6a364c..afbd056148bd5 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+[ ... ]
+> @@ -2645,6 +2645,8 @@ typedef struct fc_port {
+>  	struct list_head list;
+>  	struct scsi_qla_host *vha;
+>  	struct list_head unsol_ctx_head;
+> +	/* Serializes unsol_ctx_head against ISR, DPC and NVMe transport. */
+> +	spinlock_t unsol_ctx_lock;
+
+[Severity: Medium]
+Is the unsol_ctx_head list ever actually read or traversed anywhere in the
+codebase? Looking through the driver, it appears this list might be=20
+functionally write-only. If the list is dead state, would it be better
+to completely remove unsol_ctx_head and uctx->elem rather than adding a
+spinlock to protect them?
 
 [ ... ]
+> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
+vme.c
+> index 36b742f73abf3..beccece1e7d92 100644
+> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+[ ... ]
+> @@ -1439,7 +1446,9 @@ void qla2xxx_process_purls_iocb(void **pkt, struct =
+rsp_que **rsp)
+>  	uctx->ox_id =3D p->ox_id;
+>  	qla_rport->uctx =3D uctx;
+>  	INIT_LIST_HEAD(&uctx->elem);
+> +	spin_lock_irqsave(&fcport->unsol_ctx_lock, flags);
+>  	list_add_tail(&uctx->elem, &fcport->unsol_ctx_head);
+> +	spin_unlock_irqrestore(&fcport->unsol_ctx_lock, flags);
+>  	item->purls_context =3D (void *)uctx;
 
-[Severity: High]
-This isn't a bug introduced by this patch, but while reviewing the DMA pool
-usage in BSG handlers, I noticed a potential buffer overflow in
-qla_edif_process_els() located in drivers/scsi/qla2xxx/qla_edif.c.
-
-Does this code allow an unbounded copy into the fixed-size purex_dma_pool?
-
-drivers/scsi/qla2xxx/qla_edif.c:qla_edif_process_els() {
-        ...
-        sp->remap.req.len =3D bsg_job->request_payload.payload_len;
-        sp->remap.req.buf =3D dma_pool_alloc(ha->purex_dma_pool, GFP_KERNEL,
-                                           &sp->remap.req.dma);
-        ...
-        sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-            bsg_job->request_payload.sg_cnt, sp->remap.req.buf,
-            sp->remap.req.len);
-        ...
-        sp->remap.rsp.len =3D bsg_job->reply_payload.payload_len;
-        sp->remap.rsp.buf =3D dma_pool_alloc(ha->purex_dma_pool, GFP_KERNEL,
-                                           &sp->remap.rsp.dma);
-        ...
-}
-
-Since purex_dma_pool has a fixed object size (2112 bytes), can a user submit
-a BSG request with a request_payload.payload_len or
-reply_payload.payload_len greater than 2112 bytes?
-
-If so, could this cause an out-of-bounds write on the DMA pool memory during
-the sg_copy_to_buffer() call or during the firmware DMA transfer?
+[Severity: Medium]
+Does taking this new spinlock in the hot path to add an element to an=20
+unused list introduce unnecessary synchronization overhead? If the list
+is never traversed, could we avoid this performance penalty by removing
+the list operations entirely instead of serializing it?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260707055435.2680=
-300-1-njavali@marvell.com?part=3D86
+300-1-njavali@marvell.com?part=3D82
