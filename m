@@ -1,56 +1,56 @@
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+Received: from mx0a-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75FA527466A
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:56:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6491527466A
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 05:56:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783403782; cv=none; b=mcbr2PSCTqA+hqWi7IIlTLo4QmrjFgpwLluE/zbwhrQEXdEtcDsEmMvBnDdi8y3BJ2qsRnwJlb5X7YxCfy6XPIKUEWfzMrDOzjtAxNtc6iUNAidgUdwmMR8snbei+60rTdxWMBbCTre0XvkpElSeyfVF2OLhF/uo1SPnz+KiSKI=
+	t=1783403784; cv=none; b=pUiVhJmi3hJZs95eT/t1FM/lOkUtKNB5Zc+tmx0MinNkIpuPVAI6ybte4jhhq2imyZjCs45iy3QRjzJ4C7YS4IaJ+h9tWudO8a3NFOVtI1irHKVO1hzNykKsYFin4P6ZS0J8oqXC5Px5cl8oz4J529MDTdorG2JmxK33xAZOkSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783403782; c=relaxed/simple;
-	bh=raYVDgcto8+UIidof5+PGevIFhfnUlUwSFMceLHIOHo=;
+	s=arc-20240116; t=1783403784; c=relaxed/simple;
+	bh=aeoj+TKVG4K7zt2vZjjjWRUqpBhPcvXRT3obtH7kTRY=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HuUWTQbrpBeqDbEU5J1752LFVPRebVB+hqXJdTBbIn3whuFp5PIX6QVWVWjbAwEIczdwd4VCHel0PT1SwaNk+G2ch6O/6oJgDxRZC5G3jk8OS/kRIW5JewtEPzv6PqcLgx2swMBmIcI4G3tdNgtgo3DcUJePEd9XGAwJcX91wTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=BeZc6jD9; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=CorqMGIK8tpfTlf8OD7muUYuEVVmPliLzId3nCuvajKj6r18Sjqbu4kMnF3ayOLGGV9GlxnVubyE28t0IgZcOtuRMtUJyLGuBmvngmGaPVG6ax7Xk8aNRlF3qW6XWEMF304Dqwpx2RU/yFYQywhIrdKx+XtiC+VxY1FpSwpmBKA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Qt6DyjIm; arc=none smtp.client-ip=67.231.148.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="BeZc6jD9"
-Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 667483tc872835;
-	Mon, 6 Jul 2026 22:56:17 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Qt6DyjIm"
+Received: from pps.filterd (m0431384.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66747glA854300;
+	Mon, 6 Jul 2026 22:56:20 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=u
-	NTtviPdNU4y271er4E4/S4ObGaK/YMokcc6dgn/w3U=; b=BeZc6jD9qKdAG3sT8
-	KKENM6yEFRNymQzLZur+x2nRzzDlex3Cv48omQQYeiQ7+6p9SSZ0+h1+v1V9+FXT
-	4syGf/lECc49JMXU1AvD6PEd5U07Kqdz7Zzota2pZuHX9Gi9akDOsWIvp+kLHBgC
-	4ONoktegxDE5IY0N2nTAVPPgHTPIReTzwwzBkuRysil4qDiTyz1pcHLEujnyL2CH
-	SEytf9O9E776bzooU7CFV7SOxUX0Aw8wRJJeorm+y+kluQwcwVt2oqUfNP0TDGlz
-	c5HExcc6yH2aCjOWjBNBEEsCaZvQnZW+pZNxLrunYjOXCtbsPcEIFHWJS2RHSyJC
-	TEwWA==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=H
+	TQcmojL9UK4MzQpaXDH3soApy6Q/ggSACzP1rlJ3fM=; b=Qt6DyjIm5IEie9HJo
+	PKl2RpOqaV2wdv8fLuSVPCy2ljFPYYfcOV8y5nb1K1JJHbx2tL9zo/MXjOnch9Sn
+	VMpjbbvsmzK1wKo/WFk7fodDtS8frx5PzcNymJHZAwOaO+hTfUlWIMzEv5FFMz7r
+	X4wvNVUffegR6ZfCNwduJDJNQws/uRSluqJYjd7+aQDrxRg2a6MqeoenwCskHn5P
+	8324FiVCTuPvDeNIIuI2J3ehxNhmyfy/yDBp5f3CRgpOMcDOFVkDjoy8mLK7oU5w
+	CgbBHh5/mP7hjtNtxpEgQjE1/tIPegBhU+9lbHWYfpVQwhSIL4DzaHJ7+dXuEL8B
+	3Mf3w==
 Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4f8f9waa28-1
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4f8p2y0q34-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 Jul 2026 22:56:17 -0700 (PDT)
+	Mon, 06 Jul 2026 22:56:19 -0700 (PDT)
 Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
  DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 6 Jul 2026 22:56:16 -0700
+ 15.2.1544.25; Mon, 6 Jul 2026 22:56:19 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
  (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 6 Jul 2026 22:56:16 -0700
+ Transport; Mon, 6 Jul 2026 22:56:19 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id C87E53F7066;
-	Mon,  6 Jul 2026 22:56:13 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id A31BA3F7067;
+	Mon,  6 Jul 2026 22:56:16 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v3 26/88] scsi: qla2xxx: Update handling of status entries for 29xx series
-Date: Tue, 7 Jul 2026 11:23:33 +0530
-Message-ID: <20260707055435.2680300-27-njavali@marvell.com>
+Subject: [PATCH v3 27/88] scsi: qla2xxx: Enhance ct_entry_24xx_ext iocb handling for 29xx series
+Date: Tue, 7 Jul 2026 11:23:34 +0530
+Message-ID: <20260707055435.2680300-28-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260707055435.2680300-1-njavali@marvell.com>
 References: <20260707055435.2680300-1-njavali@marvell.com>
@@ -62,492 +62,378 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: 4dxTekgbKB6CzapT0EZ4E0rp9DF9JA81
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX/ymEh3CWPy4s
- SC3I1PBXgcZ85cgNqJ5KLoTobN4qy/g9abAkXCMCxdCgoo/ZZNJSopCv+yJIuySFRW6ZCXOiLuo
- k/VB6Bz6RlP8VmgRj8ReF9hepM2nmN44RXf9UT1VFmh76FImItzYOrW+LJ2e6uxMclOJ8oVjiXP
- LHTi6ViEdGhAFsoPJIwS7EQPjvVeJED0+ky1AtJFg4uFaQjq70uztGtznvT659AqprpP1gDInxg
- HZv+WuufA0a9alupJeaEKlYu05O+pBxLCMw3+/K4utncXYF8REp0EcVtlWQdvFRfNCPdL5RJbYo
- Fgp16b8iA9grujZ3CuSsldrUhupv5m9yr7Co1GkiOS95EPUEke+LVzGhG7TuPliou3Rm+VBQbR+
- uLGFx/iwjRETpvhTd87hYvEyM1j9ptwhXnA9JtsGqwb9fhWGZ1CqD439w7yaRGzky211bEc2d32
- xYMOJF5lBlYjGPmghTg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfXzB2BeOktDoBS
- bqYMPcPAjWglolWL0/cHtApfASnHsleCCZTwqN26TvTM3Dav2JbyAK9aUw4NpAmUCvDxesh0XtZ
- OjcF1yYScnsztuBQZx6CLaE3NiRCF68=
-X-Proofpoint-GUID: 4dxTekgbKB6CzapT0EZ4E0rp9DF9JA81
-X-Authority-Analysis: v=2.4 cv=SY/HsPRu c=1 sm=1 tr=0 ts=6a4c9501 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfXyahSwtN3AOa+
+ AXVaKbIye47tenvJXgrGYle4yb7RSAS7MIFrSrPy1wkDyJ2z5S/d8Hsp2oGXQqYjRd1f/OX9lfC
+ phnGaj1U8o758GkkjG2xoyxw6KwqcE+UwIIjcMWxGEvh6hq+H4bBa0vwrWmx3AIDpsqOqO+fk6k
+ mINs/cp+zetQujhC3MGwH/A3BuNKv7LTns8pwB9mI+8BvuLcYTuRXJEwXbSVwl+js6jHMKgL/xb
+ RFe6aYwxL/ABIrk0aVe3Ff334fYHtCtcHIu/vUQxggz1D/jQTAMavz0gS2lOOKBEt/l+JAOejlB
+ sOHSq2ft8uTXaTQ7WQY0rMlLtTcfd6n5ebZH9LUHG877v5kjvi0Ru9pUEZD7/zoLc6OoR1ef00s
+ Jp8EwneS0CYwO1CFzHIPkZD14KFLG0IAMhLG09S7o4cYFWuwIWwKFBdCVP6W2jElfjYsqmKAZJB
+ SbGEHVR1GKkX++0ULNA==
+X-Authority-Analysis: v=2.4 cv=GoByPE1C c=1 sm=1 tr=0 ts=6a4c9503 cx=c_pps
  a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=qit2iCtTFQkLgVSMPQTB:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=eacJ5Deg6zpetDbprnAA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+ a=TtqV-g6YmW1Jfm2GSLaY:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
+ a=-cAsXcPlQew20VEo0WgA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzA3MDA1NCBTYWx0ZWRfX5MgtoshXo/Um
+ GW8npZ2G0kDhfRKdZoWAZoFjavW2pYlneDzjGziGW6fmO/9bmYxXO1HsT12hp5EALif8XcxL8q/
+ cDUV26+qkqZLf+wF8JDX26zscm/VqHU=
+X-Proofpoint-ORIG-GUID: e_bgAFxqPYU09OcVphT1Lkhstal0ba_f
+X-Proofpoint-GUID: e_bgAFxqPYU09OcVphT1Lkhstal0ba_f
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-07_01,2026-07-06_02,2025-10-01_01
 
-Modify the handling of status entries in the qla2xxx driver to
-accommodate the extended structure for the 29xx series. Changes include
-updating function signatures to accept a generic pointer for status
-packets, and adjusting the logic to differentiate between the standard
-and extended status entries. This ensures proper processing of
-completion statuses and error handling for the new hardware
-capabilities.
+Refine the handling of I/O control blocks (IOCBs) for the 29xx series
+by introducing support for the extended structure ct_entry_24xx_ext.
+Update function signatures to accept a generic pointer for IOCB packets,
+differentiating between standard and extended structures, and ensuring
+proper initialization and processing of command and response data.
+Additionally, the size check for the extended structure is added to
+maintain integrity.
 
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_edif.c   |  15 ++--
- drivers/scsi/qla2xxx/qla_gbl.h    |   2 +-
- drivers/scsi/qla2xxx/qla_inline.h |  45 ++++++++++++
- drivers/scsi/qla2xxx/qla_isr.c    | 111 +++++++++++++++++++-----------
- drivers/scsi/qla2xxx/qla_mbx.c    |  28 ++++----
- drivers/scsi/qla2xxx/qla_os.c     |   1 +
- 6 files changed, 143 insertions(+), 59 deletions(-)
+ drivers/scsi/qla2xxx/qla_gs.c   | 156 ++++++++++++++++++++++++--------
+ drivers/scsi/qla2xxx/qla_iocb.c |  78 ++++++++++------
+ drivers/scsi/qla2xxx/qla_os.c   |   1 +
+ 3 files changed, 168 insertions(+), 67 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
-index 4416197a35b0..b05f8e0b705e 100644
---- a/drivers/scsi/qla2xxx/qla_edif.c
-+++ b/drivers/scsi/qla2xxx/qla_edif.c
-@@ -3501,12 +3501,15 @@ static void __chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha,
- }
- 
- void qla_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha,
--		srb_t *sp, struct sts_entry_24xx *sts24)
-+		srb_t *sp, void *pkt)
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 514f04aa1423..7a4d2fdc095f 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -68,30 +68,62 @@ void *
+ qla24xx_prep_ms_iocb(scsi_qla_host_t *vha, struct ct_arg *arg)
  {
-+	struct sts_entry_24xx *sts24 = pkt;
-+	struct sts_entry_24xx_ext *stsext = pkt;
-+	struct qla_hw_data *ha = vha->hw;
- 	fc_port_t *fcport = sp->fcport;
--	/* sa_index used by this iocb */
- 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
- 	uint32_t handle;
-+	uint16_t sa_index;
+ 	struct qla_hw_data *ha = vha->hw;
+-	struct ct_entry_24xx *ct_pkt;
  
- 	handle = (uint32_t)LSW(sts24->handle);
- 
-@@ -3514,8 +3517,12 @@ void qla_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha,
- 	if (cmd->sc_data_direction != DMA_FROM_DEVICE)
- 		return;
- 
--	return __chk_edif_rx_sa_delete_pending(vha, fcport, handle,
--	   le16_to_cpu(sts24->edif_sa_index));
-+	if (IS_QLA29XX(ha))
-+		sa_index = le16_to_cpu(stsext->read_sa_index);
-+	else
-+		sa_index = le16_to_cpu(sts24->edif_sa_index);
-+
-+	return __chk_edif_rx_sa_delete_pending(vha, fcport, handle, sa_index);
- }
- 
- void qlt_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha, fc_port_t *fcport,
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 04f4cfadc510..2b66c59e9a6d 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -136,7 +136,7 @@ void qla_edif_sadb_release(struct qla_hw_data *ha);
- int qla_edif_sadb_build_free_pool(struct qla_hw_data *ha);
- void qla_edif_sadb_release_free_pool(struct qla_hw_data *ha);
- void qla_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha,
--		srb_t *sp, struct sts_entry_24xx *sts24);
-+		srb_t *sp, void *pkt);
- void qlt_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha, fc_port_t *fcport,
- 		struct ctio7_from_24xx *ctio);
- void qla2x00_release_all_sadb(struct scsi_qla_host *vha, struct fc_port *fcport);
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 8c581e37e6c3..cc613bc98e92 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -818,3 +818,48 @@ static inline bool val_is_in_range(u32 val, u32 start, u32 end)
- 	else
- 		return false;
- }
-+
-+/*
-+ * Common fields extracted from FWI2 status IOCBs.  Populated once so
-+ * callers avoid duplicated IS_QLA29XX() branches for every field access.
-+ */
-+struct qla_sts_fwi2 {
-+	u8  *data;
-+	u32 data_sz;
-+	u16 scsi_status;
-+	u16 sts_qual;
-+	u32 sense_len;
-+	u32 rsp_data_len;
-+	u32 rsp_residual_count;
-+};
-+
-+static inline void
-+qla_sts_fwi2_extract(struct qla_hw_data *ha, void *pkt,
-+		      struct qla_sts_fwi2 *sf)
-+{
+-	ct_pkt = (struct ct_entry_24xx *)arg->iocb;
+-	memset(ct_pkt, 0, sizeof(struct ct_entry_24xx));
 +	if (IS_QLA29XX(ha)) {
-+		struct sts_entry_24xx_ext *s = pkt;
++		struct ct_entry_24xx_ext *ct_pkt;
+ 
+-	ct_pkt->entry_type = CT_IOCB_TYPE;
+-	ct_pkt->entry_count = 1;
+-	ct_pkt->nport_handle = cpu_to_le16(arg->nport_handle);
+-	ct_pkt->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
+-	ct_pkt->cmd_dsd_count = cpu_to_le16(1);
+-	ct_pkt->rsp_dsd_count = cpu_to_le16(1);
+-	ct_pkt->rsp_byte_count = cpu_to_le32(arg->rsp_size);
+-	ct_pkt->cmd_byte_count = cpu_to_le32(arg->req_size);
++		ct_pkt = (struct ct_entry_24xx_ext *)arg->iocb;
++		memset(ct_pkt, 0, sizeof(struct ct_entry_24xx_ext));
+ 
+-	put_unaligned_le64(arg->req_dma, &ct_pkt->dsd[0].address);
+-	ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
++		ct_pkt->entry_type = CT_IOCB_TYPE;
++		ct_pkt->entry_count = 1;
++		ct_pkt->nport_handle = cpu_to_le16(arg->nport_handle);
++		ct_pkt->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
++		ct_pkt->cmd_dsd_count = cpu_to_le16(1);
++		ct_pkt->rsp_dsd_count = cpu_to_le16(1);
++		ct_pkt->rsp_byte_count = cpu_to_le32(arg->rsp_size);
++		ct_pkt->cmd_byte_count = cpu_to_le32(arg->req_size);
+ 
+-	put_unaligned_le64(arg->rsp_dma, &ct_pkt->dsd[1].address);
+-	ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
+-	ct_pkt->vp_index = vha->vp_idx;
++		put_unaligned_le64(arg->req_dma,
++				   &ct_pkt->dsd[0].address);
++		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
+ 
+-	vha->qla_stats.control_requests++;
++		put_unaligned_le64(arg->rsp_dma,
++				   &ct_pkt->dsd[1].address);
++		ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
++		ct_pkt->vp_index = cpu_to_le16(vha->vp_idx);
 +
-+		sf->scsi_status = le16_to_cpu(s->u2.scsi_status);
-+		sf->sts_qual = le16_to_cpu(s->u2.retry_delay_timer);
-+		sf->sense_len = le32_to_cpu(s->u2.sense_len);
-+		sf->rsp_data_len = le32_to_cpu(s->u2.rsp_data_len_ndma);
-+		sf->rsp_residual_count = le32_to_cpu(s->u2.rsp_residual_count);
-+		sf->data = s->u2.data;
-+		sf->data_sz = sizeof(s->u2.data);
-+		host_to_fcp_swap(s->u2.data, sizeof(s->u2.data));
-+		host_to_fcp_swap(s->act_dif, sizeof(s->act_dif));
-+		host_to_fcp_swap(s->exp_dif, sizeof(s->exp_dif));
++		vha->qla_stats.control_requests++;
++
++		return ct_pkt;
 +	} else {
-+		struct sts_entry_24xx *s = pkt;
++		struct ct_entry_24xx *ct_pkt;
 +
-+		sf->scsi_status = le16_to_cpu(s->scsi_status);
-+		sf->sts_qual = le16_to_cpu(s->status_qualifier);
-+		sf->sense_len = le32_to_cpu(s->sense_len);
-+		sf->rsp_data_len = le32_to_cpu(s->rsp_data_len);
-+		sf->rsp_residual_count = le32_to_cpu(s->rsp_residual_count);
-+		sf->data = s->data;
-+		sf->data_sz = sizeof(s->data);
-+		host_to_fcp_swap(s->data, sizeof(s->data));
++		ct_pkt = (struct ct_entry_24xx *)arg->iocb;
++		memset(ct_pkt, 0, sizeof(struct ct_entry_24xx));
++
++		ct_pkt->entry_type = CT_IOCB_TYPE;
++		ct_pkt->entry_count = 1;
++		ct_pkt->nport_handle = cpu_to_le16(arg->nport_handle);
++		ct_pkt->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
++		ct_pkt->cmd_dsd_count = cpu_to_le16(1);
++		ct_pkt->rsp_dsd_count = cpu_to_le16(1);
++		ct_pkt->rsp_byte_count = cpu_to_le32(arg->rsp_size);
++		ct_pkt->cmd_byte_count = cpu_to_le32(arg->req_size);
++
++		put_unaligned_le64(arg->req_dma,
++				   &ct_pkt->dsd[0].address);
++		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
+ 
+-	return (ct_pkt);
++		put_unaligned_le64(arg->rsp_dma,
++				   &ct_pkt->dsd[1].address);
++		ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
++		ct_pkt->vp_index = vha->vp_idx;
++
++		vha->qla_stats.control_requests++;
++
++		return ct_pkt;
 +	}
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index f668012de3d4..c38771e4202c 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2307,8 +2307,9 @@ qla2x00_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ }
+ 
+ /**
+@@ -132,7 +164,10 @@ qla2x00_chk_ms_status(scsi_qla_host_t *vha, ms_iocb_entry_t *ms_pkt,
+ 		    routine, ms_pkt->entry_status, vha->d_id.b.domain,
+ 		    vha->d_id.b.area, vha->d_id.b.al_pa);
+ 	} else {
+-		if (IS_FWI2_CAPABLE(ha))
++		if (IS_QLA29XX(ha))
++			comp_status = le16_to_cpu(
++			    ((struct ct_entry_24xx_ext *)ms_pkt)->comp_status);
++		else if (IS_FWI2_CAPABLE(ha))
+ 			comp_status = le16_to_cpu(
+ 			    ((struct ct_entry_24xx *)ms_pkt)->comp_status);
+ 		else
+@@ -1437,42 +1472,85 @@ void *
+ qla24xx_prep_ms_fdmi_iocb(scsi_qla_host_t *vha, uint32_t req_size,
+     uint32_t rsp_size)
+ {
+-	struct ct_entry_24xx *ct_pkt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+-	ct_pkt = (struct ct_entry_24xx *)ha->ms_iocb;
+-	memset(ct_pkt, 0, sizeof(struct ct_entry_24xx));
++	if (IS_QLA29XX(ha)) {
++		struct ct_entry_24xx_ext *ct_pkt;
++
++		ct_pkt = (struct ct_entry_24xx_ext *)ha->ms_iocb;
++		memset(ct_pkt, 0, sizeof(struct ct_entry_24xx_ext));
++
++		ct_pkt->entry_type = CT_IOCB_TYPE;
++		ct_pkt->entry_count = 1;
++		ct_pkt->nport_handle =
++		    cpu_to_le16(vha->mgmt_svr_loop_id);
++		ct_pkt->timeout =
++		    cpu_to_le16(ha->r_a_tov / 10 * 2);
++		ct_pkt->cmd_dsd_count = cpu_to_le16(1);
++		ct_pkt->rsp_dsd_count = cpu_to_le16(1);
++		ct_pkt->rsp_byte_count = cpu_to_le32(rsp_size);
++		ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
++
++		put_unaligned_le64(ha->ct_sns_dma,
++				   &ct_pkt->dsd[0].address);
++		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
++
++		put_unaligned_le64(ha->ct_sns_dma,
++				   &ct_pkt->dsd[1].address);
++		ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
++		ct_pkt->vp_index = cpu_to_le16(vha->vp_idx);
+ 
+-	ct_pkt->entry_type = CT_IOCB_TYPE;
+-	ct_pkt->entry_count = 1;
+-	ct_pkt->nport_handle = cpu_to_le16(vha->mgmt_svr_loop_id);
+-	ct_pkt->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
+-	ct_pkt->cmd_dsd_count = cpu_to_le16(1);
+-	ct_pkt->rsp_dsd_count = cpu_to_le16(1);
+-	ct_pkt->rsp_byte_count = cpu_to_le32(rsp_size);
+-	ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
++		return ct_pkt;
++	} else {
++		struct ct_entry_24xx *ct_pkt;
++
++		ct_pkt = (struct ct_entry_24xx *)ha->ms_iocb;
++		memset(ct_pkt, 0, sizeof(struct ct_entry_24xx));
++
++		ct_pkt->entry_type = CT_IOCB_TYPE;
++		ct_pkt->entry_count = 1;
++		ct_pkt->nport_handle =
++		    cpu_to_le16(vha->mgmt_svr_loop_id);
++		ct_pkt->timeout =
++		    cpu_to_le16(ha->r_a_tov / 10 * 2);
++		ct_pkt->cmd_dsd_count = cpu_to_le16(1);
++		ct_pkt->rsp_dsd_count = cpu_to_le16(1);
++		ct_pkt->rsp_byte_count = cpu_to_le32(rsp_size);
++		ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
+ 
+-	put_unaligned_le64(ha->ct_sns_dma, &ct_pkt->dsd[0].address);
+-	ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
++		put_unaligned_le64(ha->ct_sns_dma,
++				   &ct_pkt->dsd[0].address);
++		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
+ 
+-	put_unaligned_le64(ha->ct_sns_dma, &ct_pkt->dsd[1].address);
+-	ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
+-	ct_pkt->vp_index = vha->vp_idx;
++		put_unaligned_le64(ha->ct_sns_dma,
++				   &ct_pkt->dsd[1].address);
++		ct_pkt->dsd[1].length = ct_pkt->rsp_byte_count;
++		ct_pkt->vp_index = vha->vp_idx;
+ 
+-	return ct_pkt;
++		return ct_pkt;
++	}
+ }
  
  static void
- qla24xx_els_ct_entry(scsi_qla_host_t *v, struct req_que *req,
--    struct sts_entry_24xx *pkt, int iocb_type)
-+		     void *pkt, int iocb_type)
+ qla2x00_update_ms_fdmi_iocb(scsi_qla_host_t *vha, uint32_t req_size)
  {
-+	struct sts_entry_24xx *sts24 = pkt;
- 	struct els_sts_entry_24xx *ese = (struct els_sts_entry_24xx *)pkt;
- 	const char func[] = "ELS_CT_IOCB";
- 	const char *type;
-@@ -2331,9 +2332,9 @@ qla24xx_els_ct_entry(scsi_qla_host_t *v, struct req_que *req,
- 
- 	type = NULL;
- 
--	comp_status = fw_status[0] = le16_to_cpu(pkt->comp_status);
--	fw_status[1] = le32_to_cpu(((struct els_sts_entry_24xx *)pkt)->error_subcode_1);
--	fw_status[2] = le32_to_cpu(((struct els_sts_entry_24xx *)pkt)->error_subcode_2);
-+	comp_status = fw_status[0] = le16_to_cpu(sts24->comp_status);
-+	fw_status[1] = le32_to_cpu(ese->error_subcode_1);
-+	fw_status[2] = le32_to_cpu(ese->error_subcode_2);
- 
- 	switch (sp->type) {
- 	case SRB_ELS_CMD_RPT:
-@@ -2669,7 +2670,9 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 	srb_t *sp;
- 	struct srb_iocb *iocb;
- 	struct sts_entry_24xx *sts = (struct sts_entry_24xx *)tsk;
-+	struct qla_hw_data *ha = vha->hw;
- 	u16 comp_status;
-+	struct qla_sts_fwi2 sf;
- 
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, tsk);
- 	if (!sp)
-@@ -2691,18 +2694,19 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 		    "Async-%s error - hdl=%x completion status(%x).\n",
- 		    type, sp->handle, comp_status);
- 		iocb->u.tmf.data = QLA_FUNCTION_FAILED;
--	} else if ((le16_to_cpu(sts->scsi_status) &
--	    SS_RESPONSE_INFO_LEN_VALID)) {
--		host_to_fcp_swap(sts->data, sizeof(sts->data));
--		if (le32_to_cpu(sts->rsp_data_len) < 4) {
--			ql_log(ql_log_warn, fcport->vha, 0x503b,
--			    "Async-%s error - hdl=%x not enough response(%d).\n",
--			    type, sp->handle, sts->rsp_data_len);
--		} else if (sts->data[3]) {
--			ql_log(ql_log_warn, fcport->vha, 0x503c,
--			    "Async-%s error - hdl=%x response(%x).\n",
--			    type, sp->handle, sts->data[3]);
--			iocb->u.tmf.data = QLA_FUNCTION_FAILED;
-+	} else {
-+		qla_sts_fwi2_extract(ha, tsk, &sf);
-+		if (sf.scsi_status & SS_RESPONSE_INFO_LEN_VALID) {
-+			if (sf.rsp_data_len < 4) {
-+				ql_log(ql_log_warn, fcport->vha, 0x503b,
-+				    "Async-%s error - hdl=%x not enough response(%d).\n",
-+				    type, sp->handle, sf.rsp_data_len);
-+			} else if (sf.data[3]) {
-+				ql_log(ql_log_warn, fcport->vha, 0x503c,
-+				    "Async-%s error - hdl=%x response(%x).\n",
-+				    type, sp->handle, sf.data[3]);
-+				iocb->u.tmf.data = QLA_FUNCTION_FAILED;
-+			}
- 		}
- 	}
- 
-@@ -2731,7 +2735,8 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req, void *tsk)
- 
- 	if (iocb->u.tmf.data != QLA_SUCCESS)
- 		ql_dump_buffer(ql_dbg_async + ql_dbg_buffer, sp->vha, 0x5055,
--		    sts, sizeof(*sts));
-+		    tsk, IS_QLA29XX(ha) ?
-+		    sizeof(struct sts_entry_24xx_ext) : sizeof(*sts));
- 
- 	sp->done(sp, 0);
- }
-@@ -2742,6 +2747,8 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
- 	fc_port_t *fcport;
- 	struct srb_iocb *iocb;
- 	struct sts_entry_24xx *sts = (struct sts_entry_24xx *)tsk;
-+	struct sts_entry_24xx_ext *stsext = (struct sts_entry_24xx_ext *)tsk;
-+	struct qla_hw_data *ha = vha->hw;
- 	uint16_t        state_flags;
- 	struct nvmefc_fcp_req *fd;
- 	uint16_t        ret = QLA_SUCCESS;
-@@ -2793,7 +2800,10 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		uint32_t *inbuf, *outbuf;
- 		uint16_t iter;
- 
--		inbuf = (uint32_t *)&sts->nvme_ersp_data;
-+		if (IS_QLA29XX(ha))
-+			inbuf = (uint32_t *)stsext->u2.nvme_ersp_data;
-+		else
-+			inbuf = (uint32_t *)&sts->nvme_ersp_data;
- 		outbuf = (uint32_t *)fd->rspaddr;
- 		iocb->u.nvme.rsp_pyld_len = sts->nvme_rsp_pyld_len;
- 		if (unlikely(le16_to_cpu(iocb->u.nvme.rsp_pyld_len) >
-@@ -3038,16 +3048,26 @@ qla2x00_handle_sense(srb_t *sp, uint8_t *sense_data, uint32_t par_sense_len,
-  * to indicate to the kernel that the HBA detected error.
-  */
- static inline int
--qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
-+qla2x00_handle_dif_error(srb_t *sp, void *pkt)
- {
- 	struct scsi_qla_host *vha = sp->vha;
-+	struct qla_hw_data *ha = vha->hw;
- 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
--	uint8_t		*ap = &sts24->data[12];
--	uint8_t		*ep = &sts24->data[20];
-+	struct sts_entry_24xx *sts24 = pkt;
-+	struct sts_entry_24xx_ext *stsext = pkt;
-+	uint8_t		*ap, *ep;
- 	uint32_t	e_ref_tag, a_ref_tag;
- 	uint16_t	e_app_tag, a_app_tag;
- 	uint16_t	e_guard, a_guard;
- 
-+	if (IS_QLA29XX(ha)) {
-+		ap = stsext->act_dif;
-+		ep = stsext->exp_dif;
-+	} else {
-+		ap = &sts24->data[12];
-+		ep = &sts24->data[20];
-+	}
-+
- 	/*
- 	 * swab32 of the "data" field in the beginning of qla2x00_status_entry()
- 	 * would make guard field appear at offset 2
-@@ -3060,7 +3080,7 @@ qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
- 	e_ref_tag = get_unaligned_le32(ep + 4);
- 
- 	ql_dbg(ql_dbg_io, vha, 0x3023,
--	    "iocb(s) %p Returned STATUS.\n", sts24);
-+	    "iocb(s) %px Returned STATUS.\n", pkt);
- 
- 	ql_dbg(ql_dbg_io, vha, 0x3024,
- 	    "DIF ERROR in cmd 0x%x lba 0x%llx act ref"
-@@ -3192,7 +3212,9 @@ qla25xx_process_bidir_status_iocb(scsi_qla_host_t *vha, void *pkt,
- 
- 	if (IS_FWI2_CAPABLE(ha)) {
- 		comp_status = le16_to_cpu(sts24->comp_status);
--		scsi_status = le16_to_cpu(sts24->scsi_status) & SS_MASK;
-+		scsi_status = IS_QLA29XX(ha) ?
-+		    le16_to_cpu(((struct sts_entry_24xx_ext *)pkt)->u2.scsi_status) & SS_MASK :
-+		    le16_to_cpu(sts24->scsi_status) & SS_MASK;
- 	} else {
- 		comp_status = le16_to_cpu(sts->comp_status);
- 		scsi_status = le16_to_cpu(sts->scsi_status) & SS_MASK;
-@@ -3328,10 +3350,13 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
- 	int res = 0;
- 	uint16_t state_flags = 0;
- 	uint16_t sts_qual = 0;
-+	struct qla_sts_fwi2 sf;
- 
- 	if (IS_FWI2_CAPABLE(ha)) {
- 		comp_status = le16_to_cpu(sts24->comp_status);
--		scsi_status = le16_to_cpu(sts24->scsi_status) & SS_MASK;
-+		scsi_status = IS_QLA29XX(ha) ?
-+		    le16_to_cpu(((struct sts_entry_24xx_ext *)pkt)->u2.scsi_status) & SS_MASK :
-+		    le16_to_cpu(sts24->scsi_status) & SS_MASK;
- 		state_flags = le16_to_cpu(sts24->state_flags);
- 	} else {
- 		comp_status = le16_to_cpu(sts->comp_status);
-@@ -3402,7 +3427,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
- 	}
- 
- 	/* Fast path completion. */
--	qla_chk_edif_rx_sa_delete_pending(vha, sp, sts24);
-+	qla_chk_edif_rx_sa_delete_pending(vha, sp, pkt);
- 	sp->qpair->cmd_completion_cnt++;
- 
- 	if (comp_status == CS_COMPLETE && scsi_status == 0) {
-@@ -3429,20 +3454,20 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
- 	sense_len = par_sense_len = rsp_info_len = resid_len =
- 	    fw_resid_len = 0;
- 	if (IS_FWI2_CAPABLE(ha)) {
-+		qla_sts_fwi2_extract(ha, pkt, &sf);
- 		if (scsi_status & SS_SENSE_LEN_VALID)
--			sense_len = le32_to_cpu(sts24->sense_len);
-+			sense_len = sf.sense_len;
- 		if (scsi_status & SS_RESPONSE_INFO_LEN_VALID)
--			rsp_info_len = le32_to_cpu(sts24->rsp_data_len);
-+			rsp_info_len = sf.rsp_data_len;
- 		if (scsi_status & (SS_RESIDUAL_UNDER | SS_RESIDUAL_OVER))
--			resid_len = le32_to_cpu(sts24->rsp_residual_count);
-+			resid_len = sf.rsp_residual_count;
- 		if (comp_status == CS_DATA_UNDERRUN)
- 			fw_resid_len = le32_to_cpu(sts24->residual_len);
--		rsp_info = sts24->data;
--		sense_data = sts24->data;
--		host_to_fcp_swap(sts24->data, sizeof(sts24->data));
-+		rsp_info = sf.data;
-+		sense_data = sf.data;
-+		par_sense_len = sf.data_sz;
-+		sts_qual = sf.sts_qual;
- 		ox_id = le16_to_cpu(sts24->ox_id);
--		par_sense_len = sizeof(sts24->data);
--		sts_qual = le16_to_cpu(sts24->status_qualifier);
- 	} else {
- 		if (scsi_status & SS_SENSE_LEN_VALID)
- 			sense_len = le16_to_cpu(sts->req_sense_length);
-@@ -3642,7 +3667,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
- 		break;
- 
- 	case CS_DIF_ERROR:
--		logit = qla2x00_handle_dif_error(sp, sts24);
-+		logit = qla2x00_handle_dif_error(sp, pkt);
- 		res = cp->result;
- 		break;
- 
-@@ -3667,7 +3692,8 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
- 		    ox_id, cp->cmnd, scsi_bufflen(cp), rsp_info_len,
- 		    resid_len, fw_resid_len, sp, cp);
- 		ql_dump_buffer(ql_dbg_tgt + ql_dbg_verbose, vha, 0xe0ee,
--		    pkt, sizeof(*sts24));
-+		    pkt, IS_QLA29XX(ha) ?
-+		    sizeof(struct sts_entry_24xx_ext) : sizeof(*sts24));
- 		res = DID_ERROR << 16;
- 		vha->hw_err_cnt++;
- 		break;
-@@ -3967,7 +3993,7 @@ static void qla_marker_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
- void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 	struct rsp_que *rsp)
- {
--	struct sts_entry_24xx *pkt;
-+	void *pkt;
  	struct qla_hw_data *ha = vha->hw;
- 	struct purex_entry_24xx *purex_entry;
- 	struct purex_item *pure_item;
-@@ -3997,13 +4023,13 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+-	ms_iocb_entry_t *ms_pkt = ha->ms_iocb;
+-	struct ct_entry_24xx *ct_pkt = (struct ct_entry_24xx *)ha->ms_iocb;
  
- 	while (rsp->ring_index != rsp_in &&
- 		       rsp->ring_ptr->signature != RESPONSE_PROCESSED) {
--		pkt = (struct sts_entry_24xx *)rsp->ring_ptr;
-+		pkt = (void *)rsp->ring_ptr;
- 		cur_ring_index = rsp->ring_index;
- 
- 		qla_rsp_ring_advance(rsp);
- 
--		if (pkt->entry_status != 0) {
--			if (qla2x00_error_entry(vha, rsp, (sts_entry_t *) pkt))
-+		if (((response_t *)pkt)->entry_status != 0) {
-+			if (qla2x00_error_entry(vha, rsp, (sts_entry_t *)pkt))
- 				goto process_err;
- 
- 			((response_t *)pkt)->signature = RESPONSE_PROCESSED;
-@@ -4012,7 +4038,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 		}
- process_err:
- 
--		switch (pkt->entry_type) {
-+		switch (((response_t *)pkt)->entry_type) {
- 		case STATUS_TYPE:
- 			qla2x00_status_entry(vha, rsp, pkt);
- 			break;
-@@ -4063,7 +4089,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 			    rsp->req);
- 			break;
- 		case NOTIFY_ACK_TYPE:
--			if (pkt->handle == QLA_TGT_SKIP_HANDLE)
-+			if (((response_t *)pkt)->handle == QLA_TGT_SKIP_HANDLE)
- 				qlt_response_pkt_all_vps(vha, rsp,
- 				    (response_t *)pkt);
- 			else
-@@ -4156,7 +4182,8 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 			/* Type Not Supported. */
- 			ql_dbg(ql_dbg_async, vha, 0x5042,
- 			       "Received unknown response pkt type 0x%x entry status=%x.\n",
--			       pkt->entry_type, pkt->entry_status);
-+			       ((response_t *)pkt)->entry_type,
-+			       ((response_t *)pkt)->entry_status);
- 			break;
- 		}
- 		((response_t *)pkt)->signature = RESPONSE_PROCESSED;
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index c073dc35ef8e..f9b326c02055 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3407,6 +3407,7 @@ struct tsk_mgmt_cmd {
- 	union {
- 		struct tsk_mgmt_entry tsk;
- 		struct sts_entry_24xx sts;
-+		struct sts_entry_24xx_ext sts_ext;
- 	} p;
- };
- 
-@@ -3417,6 +3418,7 @@ __qla24xx_issue_tmf(char *name, uint32_t type, struct fc_port *fcport,
- 	int		rval, rval2;
- 	struct tsk_mgmt_cmd *tsk;
- 	struct sts_entry_24xx *sts;
-+	struct qla_sts_fwi2 sf;
- 	dma_addr_t	tsk_dma;
- 	scsi_qla_host_t *vha;
- 	struct qla_hw_data *ha;
-@@ -3474,18 +3476,20 @@ __qla24xx_issue_tmf(char *name, uint32_t type, struct fc_port *fcport,
- 		    "Failed to complete IOCB -- completion status (%x).\n",
- 		    le16_to_cpu(sts->comp_status));
- 		rval = QLA_FUNCTION_FAILED;
--	} else if (le16_to_cpu(sts->scsi_status) &
--	    SS_RESPONSE_INFO_LEN_VALID) {
--		if (le32_to_cpu(sts->rsp_data_len) < 4) {
--			ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1097,
--			    "Ignoring inconsistent data length -- not enough "
--			    "response info (%d).\n",
--			    le32_to_cpu(sts->rsp_data_len));
--		} else if (sts->data[3]) {
--			ql_dbg(ql_dbg_mbx, vha, 0x1098,
--			    "Failed to complete IOCB -- response (%x).\n",
--			    sts->data[3]);
--			rval = QLA_FUNCTION_FAILED;
-+	} else {
-+		qla_sts_fwi2_extract(ha, sts, &sf);
-+		if (sf.scsi_status & SS_RESPONSE_INFO_LEN_VALID) {
-+			if (sf.rsp_data_len < 4) {
-+				ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha,
-+				    0x1097,
-+				    "Ignoring inconsistent data length -- not enough response info (%d).\n",
-+				    sf.rsp_data_len);
-+			} else if (sf.data[3]) {
-+				ql_dbg(ql_dbg_mbx, vha, 0x1098,
-+				    "Failed to complete IOCB -- response (%x).\n",
-+				    sf.data[3]);
-+				rval = QLA_FUNCTION_FAILED;
-+			}
- 		}
+-	if (IS_FWI2_CAPABLE(ha)) {
++	if (IS_QLA29XX(ha)) {
++		struct ct_entry_24xx_ext *ct_pkt =
++		    (struct ct_entry_24xx_ext *)ha->ms_iocb;
++
++		ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
++		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
++	} else if (IS_FWI2_CAPABLE(ha)) {
++		struct ct_entry_24xx *ct_pkt =
++		    (struct ct_entry_24xx *)ha->ms_iocb;
++
+ 		ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
+ 		ct_pkt->dsd[0].length = ct_pkt->cmd_byte_count;
+ 	} else {
++		ms_iocb_entry_t *ms_pkt = ha->ms_iocb;
++
+ 		ms_pkt->req_bytecount = cpu_to_le32(req_size);
+ 		ms_pkt->req_dsd.length = ms_pkt->req_bytecount;
  	}
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index c0cec1f74dfc..79403d460977 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -3394,7 +3394,7 @@ qla2x00_ct_iocb(srb_t *sp, ms_iocb_entry_t *ct_iocb)
+ }
  
+ static void
+-qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
++qla24xx_ct_iocb(srb_t *sp, void *pkt)
+ {
+ 	uint16_t        avail_dsds;
+ 	struct dsd64	*cur_dsd;
+@@ -3406,36 +3406,50 @@ qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
+ 	struct bsg_job *bsg_job = sp->u.bsg_job;
+ 	int entry_count = 1;
+ 
+-	ct_iocb->entry_type = CT_IOCB_TYPE;
+-        ct_iocb->entry_status = 0;
+-        ct_iocb->sys_define = 0;
+-        ct_iocb->handle = sp->handle;
+-
+-	ct_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+-	ct_iocb->vp_index = sp->vha->vp_idx;
+-	ct_iocb->comp_status = cpu_to_le16(0);
+-
+ 	cmd_dsds = bsg_job->request_payload.sg_cnt;
+ 	rsp_dsds = bsg_job->reply_payload.sg_cnt;
+ 
+-	ct_iocb->cmd_dsd_count = cpu_to_le16(cmd_dsds);
+-        ct_iocb->timeout = 0;
+-	ct_iocb->rsp_dsd_count = cpu_to_le16(rsp_dsds);
+-        ct_iocb->cmd_byte_count =
+-            cpu_to_le32(bsg_job->request_payload.payload_len);
++	if (IS_QLA29XX(ha)) {
++		struct ct_entry_24xx_ext *ct_iocb = pkt;
++
++		ct_iocb->entry_type = CT_IOCB_TYPE;
++		ct_iocb->entry_status = 0;
++		ct_iocb->sys_define = 0;
++		ct_iocb->handle = sp->handle;
++		ct_iocb->nport_handle =
++		    cpu_to_le16(sp->fcport->loop_id);
++		ct_iocb->vp_index = cpu_to_le16(sp->vha->vp_idx);
++		ct_iocb->comp_status = cpu_to_le16(0);
++		ct_iocb->cmd_dsd_count = cpu_to_le16(cmd_dsds);
++		ct_iocb->timeout = 0;
++		ct_iocb->rsp_dsd_count = cpu_to_le16(rsp_dsds);
++		ct_iocb->cmd_byte_count =
++		    cpu_to_le32(bsg_job->request_payload.payload_len);
++		avail_dsds = NUM_CT_DSDS;
++		cur_dsd = ct_iocb->dsd;
++	} else {
++		struct ct_entry_24xx *ct_iocb = pkt;
++
++		ct_iocb->entry_type = CT_IOCB_TYPE;
++		ct_iocb->entry_status = 0;
++		ct_iocb->sys_define = 0;
++		ct_iocb->handle = sp->handle;
++		ct_iocb->nport_handle =
++		    cpu_to_le16(sp->fcport->loop_id);
++		ct_iocb->vp_index = sp->vha->vp_idx;
++		ct_iocb->comp_status = cpu_to_le16(0);
++		ct_iocb->cmd_dsd_count = cpu_to_le16(cmd_dsds);
++		ct_iocb->timeout = 0;
++		ct_iocb->rsp_dsd_count = cpu_to_le16(rsp_dsds);
++		ct_iocb->cmd_byte_count =
++		    cpu_to_le32(bsg_job->request_payload.payload_len);
++		avail_dsds = 2;
++		cur_dsd = ct_iocb->dsd;
++	}
+ 
+-	avail_dsds = 2;
+-	cur_dsd = ct_iocb->dsd;
+ 	index = 0;
+ 
+ 	for_each_sg(bsg_job->request_payload.sg_list, sg, cmd_dsds, index) {
+-		/*
+-		 * Allocate additional continuation packets.  24xx uses the
+-		 * 64-byte cont_a64_entry_t (5 DSDs); 29xx uses the 128-byte
+-		 * cont_a64_entry_ext_t (NUM_CONT1_DSDS) and advances through
+-		 * the ring_ext_ptr stride so the CT head IOCB isn't
+-		 * overlapped.
+-		 */
+ 		if (avail_dsds == 0) {
+ 			if (IS_QLA29XX(ha)) {
+ 				struct cont_a64_entry_ext *cont_pkt;
+@@ -3484,7 +3498,11 @@ qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
+ 		append_dsd64(&cur_dsd, sg);
+ 		avail_dsds--;
+ 	}
+-        ct_iocb->entry_count = entry_count;
++
++	if (IS_QLA29XX(ha))
++		((struct ct_entry_24xx_ext *)pkt)->entry_count = entry_count;
++	else
++		((struct ct_entry_24xx *)pkt)->entry_count = entry_count;
+ }
+ 
+ /*
+@@ -3857,11 +3875,15 @@ qla2x00_mb_iocb(srb_t *sp, struct mbx_24xx_entry *mbx)
+ }
+ 
+ static void
+-qla2x00_ctpthru_cmd_iocb(srb_t *sp, struct ct_entry_24xx *ct_pkt)
++qla2x00_ctpthru_cmd_iocb(srb_t *sp, void *pkt)
+ {
+-	sp->u.iocb_cmd.u.ctarg.iocb = ct_pkt;
++	sp->u.iocb_cmd.u.ctarg.iocb = pkt;
+ 	qla24xx_prep_ms_iocb(sp->vha, &sp->u.iocb_cmd.u.ctarg);
+-	ct_pkt->handle = sp->handle;
++
++	if (IS_QLA29XX(sp->vha->hw))
++		((struct ct_entry_24xx_ext *)pkt)->handle = sp->handle;
++	else
++		((struct ct_entry_24xx *)pkt)->handle = sp->handle;
+ }
+ 
+ static void qla2x00_send_notify_ack_iocb(srb_t *sp,
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index fdb53811e0c7..4f7e5f9372ef 100644
+index 4f7e5f9372ef..0b7c4ee73ebf 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -8400,6 +8400,7 @@ qla2x00_module_init(void)
- 	BUILD_BUG_ON(sizeof(struct rdp_rsp_payload) != 336);
- 	BUILD_BUG_ON(sizeof(struct sns_cmd_pkt) != 2064);
- 	BUILD_BUG_ON(sizeof(struct sts_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct sts_entry_24xx_ext) != 128);
- 	BUILD_BUG_ON(sizeof(struct tsk_mgmt_entry) != 64);
- 	BUILD_BUG_ON(sizeof(struct tsk_mgmt_entry_fx00) != 64);
- 	BUILD_BUG_ON(sizeof(struct verify_chip_entry_84xx) != 64);
+@@ -8349,6 +8349,7 @@ qla2x00_module_init(void)
+ 	BUILD_BUG_ON(sizeof(struct cmd_type_7_fx00) != 64);
+ 	BUILD_BUG_ON(sizeof(struct cmd_type_crc_2) != 64);
+ 	BUILD_BUG_ON(sizeof(struct ct_entry_24xx) != 64);
++	BUILD_BUG_ON(sizeof(struct ct_entry_24xx_ext) != 128);
+ 	BUILD_BUG_ON(sizeof(struct ct_fdmi1_hba_attributes) != 2604);
+ 	BUILD_BUG_ON(sizeof(struct ct_fdmi2_hba_attributes) != 4424);
+ 	BUILD_BUG_ON(sizeof(struct ct_fdmi2_port_attributes) != 4164);
 -- 
 2.47.3
 
