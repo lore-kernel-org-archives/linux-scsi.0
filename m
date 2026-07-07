@@ -1,39 +1,42 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7406F2FFFB5
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 03:04:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B94583603EE
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2026 03:04:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783393450; cv=none; b=obFQKVmT+bfh3uZ5NJaKX4aHH0l2aecP+2WqZrVOMVfqa5EZGUKSqaxLyVEeAqLwEic6xUE6Lo0aP74f0TV/b+X3L7fI+53dCQdYzimphW9+YCm11+4rshp+CZnAKzxBbY550Hmm35nhhHrakQ2QQUnEsd6xBPvg39Qxa2N7Fbg=
+	t=1783393452; cv=none; b=FO8aPUmac72A6rNQwG/K1sTZSnApsXFmr76/nuL2beYc3vhsVyl2QCsSOl4scV+lRQPgQ34XGk4pRsmY2H4hvK6dwHDLDXzNOMErvNIpGRfRNH4UBeX0Ays5bXFUs6hPpSaAIEdam1X3YRfb+End1LQxUosytTb4CCVhKWTuqFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783393450; c=relaxed/simple;
-	bh=BAa3ZIK91QlE1gma2GkZmvCfsbjGQy/B+kccbsT1850=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NQtZJW+k1FfOcGI5ChEqs/4P96edyTykgGkJ8bKPmH57D16A670QVE6wnohKayoEuveUE4KKV+POszPqAzGjsgMzU5+nLlzBy9liOw0/wlhvfOibCHJWDKyyPsy1qBlxEuF68TVS4iiFyWz9g3w+9D3YJPO50lw97DJT3dCWc4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gbxNoX1k; arc=none smtp.client-ip=117.135.210.3
+	s=arc-20240116; t=1783393452; c=relaxed/simple;
+	bh=EzkzojQSSbHiGfNtB88cJLqYSi9Pq0yRa/rOK1a7pG0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=jgnJmHLrnn4N6Wil2/9L7YzuABVCnZHQ66oTS54YOlhp2rbPkOletuWf9qRvk/HS7/c3JRD71dl8t90zzGC9NrSE+uk9+52IwIFUaIYw83OAKy1BWy14H2kKiuSdLayAWNFwXWlds3rEzY4VE3wzXnpviBZgvQgifHQZ8Q/nQW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=NxbycRTy; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gbxNoX1k"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="NxbycRTy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=kP
-	EC2RJesqDQeZ5pRWsySF5vDDyS8gbOsq6MeqhOrMY=; b=gbxNoX1kjWcFa3rt1v
-	RHju2pEpWvOwGVYeQ3Z2UcVq4+m+rsIKuB/CdzFdTGZpFieC/luwb9J/6rzh5D6M
-	IG5iG2Ks6InV7kGsghdBkBAImpYEY5hJzmes0dODJIa+n3YROVNUloajIwS7mz/U
-	ZV1CwPmpGe8pow0NFJ4hQXuiE=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=K/
+	mG0bGefzmsN/ihAQ7LmR0J/95mrKtn2QcAxqgIH1A=; b=NxbycRTy1F9dv41ngx
+	pY5DxW0WenuBZgEktEtVOZtzmjIdTPb/8q23zCoNTuybAO8j827SEZ8pQFetGAZI
+	GV22JNa37prBK9zsufO5UTF79zCYCXEpHS3PLbDLK3eYlqrOSi+dz3EWs0efbgj3
+	oSUTo5vwl5kaOL1KuWKBwQX4Q=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp5 (Coremail) with SMTP id QCgvCgD3HB2HbExqrYb5Fw--.30099S2;
-	Tue, 07 Jul 2026 11:03:36 +0800 (CST)
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgD3HB2HbExqrYb5Fw--.30099S5;
+	Tue, 07 Jul 2026 11:03:41 +0800 (CST)
 From: Yang Xiuwei <yangxiuwei@kylinos.cn>
 To: James.Bottomley@HansenPartnership.com,
 	martin.petersen@oracle.com
 Cc: dlemoal@kernel.org,
 	linux-scsi@vger.kernel.org,
 	Yang Xiuwei <yangxiuwei@kylinos.cn>
-Subject: [PATCH v2 0/3] scsi: sd: fix probe error cleanup, special_vec leak and sd_done() sense gate
-Date: Tue,  7 Jul 2026 11:03:30 +0800
-Message-Id: <20260707030333.22245-1-yangxiuwei@kylinos.cn>
+Subject: [PATCH v2 3/3] scsi: sd: fix sd_done() sense handling condition
+Date: Tue,  7 Jul 2026 11:03:33 +0800
+Message-Id: <20260707030333.22245-4-yangxiuwei@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20260707030333.22245-1-yangxiuwei@kylinos.cn>
+References: <20260707030333.22245-1-yangxiuwei@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,35 +44,40 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:QCgvCgD3HB2HbExqrYb5Fw--.30099S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7JF45Ar4xGryxuryUJw4fXwb_yoW3ZFc_CF
-	WSkayxGr4jqFZ3KFy0kr4YvrZav3yvgr4ruFnYgrW3CryxXrn5GFyY9rW5Xr18XFZYyF1U
-	Jr1DZw1rZryIqjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU8qjg7UUUUU==
+X-CM-TRANSID:QCgvCgD3HB2HbExqrYb5Fw--.30099S5
+X-Coremail-Antispam: 1Uf129KBjvdXoWrurWxAryftF1DCrW3AFyUtrb_yoWDJwb_ur
+	4Fgrn7Wr1j9rsIvrySkrW3Z3s29w4qqFnY9r1vv343AryUW3sFga4jvrZxAF48WrW0yF15
+	Jw4qyr1ayr1DXjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUnr-BtUUUUU==
 Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6gnqe2pMbIkssgAA3v
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6Q3rfGpMbI0fZwAA3M
 
-This series fixes three resource-handling bugs in drivers/scsi/sd.c:
-sd_probe() error cleanup, special_vec mempool leak on prep failure, and
-sd_done() sense handling.
+Only enter the sense_key switch when the command returned CHECK
+CONDITION with valid, non-deferred sense. The old condition let
+deferred or invalid sense fall through and mis-handle the I/O.
 
-Changes in v2:
-- Drop patch 2/4 (probe cleanup refactor through out_put).
-- Add Fixes tags per review on patches 2/3 and 3/3.
-- Reword the commit message of patch 3/3.
+Fixes: 03aba2f79594 ("[SCSI] sd/scsi_lib simplify sd_rw_intr and scsi_io_completion")
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
+---
+ drivers/scsi/sd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Link: https://lore.kernel.org/all/20260623100159.4018066-1-yangxiuwei@kylinos.cn/
-
-Yang Xiuwei (3):
-  scsi: sd: fix error handling in sd_probe() after large pool creation
-    failure
-  scsi: sd: fix special_vec mempool leak when scsi_alloc_sgtables()
-    fails
-  scsi: sd: fix sd_done() sense handling condition
-
- drivers/scsi/sd.c | 55 ++++++++++++++++++++++++++++++-----------------
- 1 file changed, 35 insertions(+), 20 deletions(-)
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 8fed1cda9ac8..a1b21ea14e54 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2419,8 +2419,8 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	}
+ 	sdkp->medium_access_timed_out = 0;
+ 
+-	if (!scsi_status_is_check_condition(result) &&
+-	    (!sense_valid || sense_deferred))
++	if (!scsi_status_is_check_condition(result) ||
++	    !sense_valid || sense_deferred)
+ 		goto out;
+ 
+ 	switch (sshdr.sense_key) {
 -- 
 2.25.1
 
