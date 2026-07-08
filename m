@@ -1,138 +1,202 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E241343933C
-	for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2026 19:18:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 840643ACF0C
+	for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2026 19:30:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783538306; cv=none; b=ceF7fPZZ5CKO19F8wqvtCVboTsN1Vg9952dXYOfbU8kfafJsI6y4xvxW7Y4MoyUzMs5WcEv1Ck6QQfA0uUr9lxrZEiFt6XSdVTGrZIniJ5HmD3DJh9SYqt1cO1rakuZRUSfzP4/KeSA75clYM7Rvzf9D0lkddZUEyvsiW1rAKAA=
+	t=1783539033; cv=none; b=P0b9nr3BptA7YYuISmaj9FGGMpmMtK3iKPJpsyNYg9EMxQ5/LWvUxBIyfTAymUgGV3sKNmWZOxtoxr4mCN2VmGc9Edk4BTc1sFL1jqwNtuuikZyo1n8YBBuHzEKOBRcOJJ7uspJJZvueLqdG61czk7+odBA7ppXS1TL8M19f+A8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783538306; c=relaxed/simple;
-	bh=EgHYVyzl2pOBaKjiW9vaLdgz6EdEhpMBNFqEtXbdUOU=;
+	s=arc-20240116; t=1783539033; c=relaxed/simple;
+	bh=7bcWT7ZI03knh2SNY/WYcI2H3WSqr2YojZCNz+kWZcg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Fyg/cDqdOvf1kGXKC3BGSVv73O1ksy5uFYgQlgqK4CTBKkMmMtkvt2i6qnx2N2ffRqKvTqm3yAXb8YsAhu7f5/TgyeO7nx9PquwwOgDWAYyiO6mFGBzlHz9Z60cpc1HLVwqMp5n5wvPw1DH+1QDDMoAaDAhj45J3qL3S5LqGZDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iGl09Zsp; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ve/cEtBvq8idC7OIPiDDswLcylpMJtf/IF+FpEEW0B9F3i6JaClRFoytGKtM/ARDzmghDLVyTG+FcWkpfDdrPDVaY96+yqj1GEgotuhkL+e/9CJoEt2WSZrjQHuAo51uve9FIh1fsx+HxaXcro5kr+apATg4QCnoCV8pArdRPqM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ey0idmSe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iGl09Zsp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C5AC1F00A3A;
-	Wed,  8 Jul 2026 19:18:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ey0idmSe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E7511F000E9;
+	Wed,  8 Jul 2026 19:30:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783538304;
-	bh=YbhhdVLfuUVxCEE1+MBGTZnJIbK4C2gt8odeacmzEew=;
+	s=k20260515; t=1783539030;
+	bh=NwYbVTMutHrOOT9P4Ge/Cn3WSe+SC2NpfyDDMImtldo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iGl09ZspDKNJuDRSASWrqNSihVH/d1Ce6E8aUKp67o80SCFvuHPCf8/lKIE8pnocZ
-	 2GTSDoku6N2PQZg5UVEwgkk5LXfr5viYQF5wHbY+SKc9DjWq3/ogSQBw3IFfcGyjGA
-	 nhcL6v5cZi9fa2RcKjJgnysJJrN4gouLyqGh6b9yFZhc9HMwuL5b1qTjc5pOCQqTw9
-	 9Ikncw3ITkW1Sl8R24GiYFh3g7p2K0PbXlSl/c8lvsDZIc/8aOgM39iaQxzNynupQD
-	 N8KEvRLqWhGj8sYTEPgOu48c2eVox+kYSUk9tpYUSokMjZA1V8/JGrvrcbcrxt2HM9
-	 HWo4v2McAFadw==
+	b=ey0idmSe6+Gh6/Tfdxhv8nSLsmYglFxIYFwvP8yBzPPCKGsP8II5g60kYvVi1u1zk
+	 pd1UE6EMos9aVtKHKPk0hNJkKTzo6Y9cP5mCFufXxWDwY3o8cFWpIAMAz19NonMN5P
+	 SBKOvP9OHfycMjxUBNflHt0IHKjqGLzezHsfkT7D4J7XriPbYvxw4rHLkNYFGKQurM
+	 0d7X7iSh1O8Ft66SJTJZAQxu54s2pHlmJ4Ly4JoFEeSBMgAAANP4+CTzcsea1Qca/2
+	 ZEygdrkpW93+uf/SXMl2/NacusKhAhcbO+fnD2L+mv72p77RJ3WFdnrNsnKY8uPWm5
+	 JhG3LoLjguyYw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 04/10] mpi3mr: Fix NVMe page size caching for
- non-operational devices
+Subject: Re: [PATCH v2 05/10] mpi3mr: Fix performance regression caused by
+ extended IRQ poll sleep
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260708183305.244485-5-ranjan.kumar@broadcom.com>
+In-Reply-To: <20260708183305.244485-6-ranjan.kumar@broadcom.com>
 References: <20260708183305.244485-1-ranjan.kumar@broadcom.com>
- <20260708183305.244485-5-ranjan.kumar@broadcom.com>
+ <20260708183305.244485-6-ranjan.kumar@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 08 Jul 2026 19:18:23 +0000
-Message-Id: <20260708191824.5C5AC1F00A3A@smtp.kernel.org>
+Date: Wed, 08 Jul 2026 19:30:29 +0000
+Message-Id: <20260708193030.5E7511F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] The `reset_to` and `abort_to` fields are left uninitialized for PC=
-Ie devices in error states, causing task management commands to time out in=
-stantly and trigger unintended full controller resets.
+- [Critical] The driver extracts `request_queue_id` from the hardware-popul=
+ated descriptor and uses it as an array index without bounds checking, lead=
+ing to out-of-bounds memory corruption.
+- [High] A TOCTOU race in `mpi3mr_process_op_reply_q` can cause operational=
+ reply descriptors to be missed, leading to IO stalls and timeouts.
+- [High] The threaded IRQ polling routine `mpi3mr_isr_poll` enters an unbou=
+nded busy-sleep loop waiting for slow hardware IOs to complete, causing sev=
+ere CPU consumption.
+- [High] An invalid `reply_frame_address` provided in a DMA reply descripto=
+r triggers a direct kernel panic.
 --
 
---- Patch [4]: [PATCH v2 04/10] mpi3mr: Fix NVMe page size caching for non-=
-operational devices ---
-commit a648ff0d4d5627aa485822e3033940c480028902
+--- Patch [5]: [PATCH v2 05/10] mpi3mr: Fix performance regression caused b=
+y extended IRQ poll sleep ---
+commit 6c88e5d170a116451ea90d4d4dc8870ab7372f57
 Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-mpi3mr: Fix NVMe page size caching for non-operational devices
+mpi3mr: Fix performance regression caused by extended IRQ poll sleep
 
-This patch populates the PCIe page size attribute for NVMe devices regardle=
-ss
-of their access status, ensuring management IOCTLs can reach the firmware.
-It also adds bounds checking for the firmware-provided page size to prevent
-undefined shift behavior, falling back to a default size if invalid.
+This commit reverts a previous change to the threaded IRQ poll sleep
+interval, restoring it to 2-20 us to fix a 7% throughput regression
+on NVMe direct-attached RAID10 configurations. It also adds missing
+dma_rmb() barriers in the admin and operational reply queue loops
+to ensure phase bit checks complete before payloads are read.
 
 Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@=
-broadcom.com?part=3D4
+broadcom.com?part=3D5
 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
-_os.c
-> index d2a20f2721dbf..df7365d19b44a 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -1354,12 +1354,14 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_io=
-c *mrioc,
->  		tgtdev->dev_spec.pcie_inf.capb =3D
->  		    le32_to_cpu(pcieinf->capabilities);
->  		tgtdev->dev_spec.pcie_inf.mdts =3D MPI3MR_DEFAULT_MDTS;
-> -		/* 2^12 =3D 4096 */
-> -		tgtdev->dev_spec.pcie_inf.pgsz =3D 12;
-> +		/* Validate firmware page size to prevent undefined shift behavior */
-> +		if (pcieinf->page_size > 0 && pcieinf->page_size < 31)
-> +			tgtdev->dev_spec.pcie_inf.pgsz =3D pcieinf->page_size;
-> +		else
-> +			tgtdev->dev_spec.pcie_inf.pgsz =3D 12; /* Default to 4096 (2^12) */
->  		if (dev_pg0->access_status =3D=3D MPI3_DEVICE0_ASTATUS_NO_ERRORS) {
->  			tgtdev->dev_spec.pcie_inf.mdts =3D
->  			    le32_to_cpu(pcieinf->maximum_data_transfer_size);
-> -			tgtdev->dev_spec.pcie_inf.pgsz =3D pcieinf->page_size;
->  			tgtdev->dev_spec.pcie_inf.reset_to =3D
->  			    max_t(u8, pcieinf->controller_reset_to,
->  			     MPI3MR_INTADMCMD_TIMEOUT);
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
+_fw.c
+> index 434b66f7b502d..2f787fa36ffdb 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+[ ... ]
+> @@ -568,6 +581,12 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mri=
+oc,
+>  		return 0;
+>  	}
+> =20
+> +	/*
+> +	 * Ensure that the descriptor payload is read only after
+> +	 * the phase bit check is complete.
+> +	 */
+> +	dma_rmb();
+> +
+>  	do {
+>  		if (mrioc->unrecoverable || mrioc->io_admin_reset_sync)
+>  			break;
+
+[Severity: Critical]
+This is a pre-existing issue, but does this code bounds check the queue ID
+before using it as an array index?
+
+In mpi3mr_process_op_reply_q(), the driver computes req_q_idx from
+device-supplied DMA memory:
+
+		req_q_idx =3D le16_to_cpu(reply_desc->request_queue_id) - 1;
+		op_req_q =3D &mrioc->req_qinfo[req_q_idx];
+
+		WRITE_ONCE(op_req_q->ci, le16_to_cpu(reply_desc->request_queue_ci));
+
+If the hardware provides an invalid queue ID (such as 0, underflowing to
+65535, or a value larger than mrioc->num_op_req_q), could this lead to an
+out-of-bounds memory write to the host kernel heap?
+
 
 [Severity: High]
-This is a pre-existing issue, but does exposing the device to IOCTLs by
-setting the page size here unintentionally turn a device error into a full
-controller reset?
+This isn't a bug introduced by this patch, but does
+mpi3mr_process_op_reply_desc() safely handle malformed DMA reply addresses?
 
-When an NVMe device is in an error state (e.g., NEEDS_INITIALIZATION),
-access_status !=3D NO_ERRORS, so reset_to and abort_to are left uninitializ=
-ed (0).
+If a malicious or faulty PCIe device sends an invalid reply_frame_address,
+mpi3mr_get_reply_virt_addr() will return NULL, triggering a panic:
 
-With this patch populating pgsz for these devices, management IOCTLs can pa=
-ss
-the driver's PRP validation and reach the firmware. If the IOCTL times out
-because the device is in an error state, the driver attempts recovery:
+		scsi_reply =3D mpi3mr_get_reply_virt_addr(mrioc,
+		    *reply_dma);
+		if (!scsi_reply) {
+			panic("%s: scsi_reply is NULL, this shouldn't happen\n",
+			    mrioc->name);
+			goto out;
+		}
 
-drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_issue_tm() {
-    ...
-	if (tgtdev) {
-		if (tgtdev->dev_type =3D=3D MPI3_DEVICE_DEVFORM_PCIE)
-			timeout =3D cmd_priv ? tgtdev->dev_spec.pcie_inf.abort_to
-					   : tgtdev->dev_spec.pcie_inf.reset_to;
-    ...
-}
+Could a compromised device or hypervisor repeatedly send crafted DMA frames
+containing invalid addresses to intentionally crash the host system?
 
-Since reset_to and abort_to are 0, wait_for_completion_timeout() fails
-instantly, causing the driver to falsely detect a TM timeout and
-unconditionally execute mpi3mr_soft_reset_handler(), resetting the entire
-controller.
+[ ... ]
+> @@ -594,6 +613,12 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mri=
+oc,
+>  		if ((le16_to_cpu(reply_desc->reply_flags) &
+>  		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) !=3D exp_phase)
+>  			break;
+> +
+> +		/*
+> +		 * Ensure that the descriptor payload is read only after
+> +		 * the phase bit check is complete.
+> +		 */
+> +		dma_rmb();
 
-Should reset_to and abort_to also be initialized with defaults even when the
-device is in an error state to prevent routine monitoring tools from trigge=
-ring
-an HBA reset?
+[Severity: High]
+This is a pre-existing issue, but is there a TOCTOU race condition when
+finishing descriptor processing in mpi3mr_process_op_reply_q()?
 
->  			tgtdev->dev_spec.pcie_inf.abort_to =3D
->  			    max_t(u8, pcieinf->nvme_abort_to,
->  			    MPI3MR_INTADMCMD_TIMEOUT);
->  		}
+If the active thread breaks out of the loop after checking the phase bit,
+but before it executes:
+
+	atomic_dec(&op_reply_q->in_use);
+
+And the hardware writes a new descriptor and triggers an MSI-X interrupt in
+that tiny window, the interrupt handler will fail the atomic_add_unless()
+check:
+
+	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1))
+		return 0;
+
+Will this permanently drop the interrupt without re-checking for newly
+arrived descriptors, potentially stalling the queue until another unrelated
+command completes?
+
+[ ... ]
+> @@ -744,7 +769,7 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *pri=
+vdata)
+>  			    mpi3mr_process_op_reply_q(mrioc,
+>  				intr_info->op_reply_q);
+> =20
+> -		usleep_range(MPI3MR_IRQ_POLL_SLEEP, MPI3MR_IRQ_POLL_SLEEP + 1);
+> +		usleep_range(MPI3MR_IRQ_POLL_SLEEP, 10 * MPI3MR_IRQ_POLL_SLEEP);
+> =20
+>  	} while (atomic_read(&intr_info->op_reply_q->pend_ios) &&
+>  	    (num_op_reply < mrioc->max_host_ios));
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this threaded IRQ polli=
+ng
+loop busy-wait unboundedly for slow hardware IOs?
+
+When pend_ios exceeds 8, mpi3mr_isr_poll is awoken. The thread loops and
+continuously executes usleep_range():
+
+	do {
+		...
+		usleep_range(MPI3MR_IRQ_POLL_SLEEP, 10 * MPI3MR_IRQ_POLL_SLEEP);
+
+	} while (atomic_read(&intr_info->op_reply_q->pend_ios) &&
+	    (num_op_reply < mrioc->max_host_ios));
+
+If multiple slow IOs are pending, will this keep the CPU occupied with
+thousands of context switches, rather than going to sleep and waiting for
+the actual hardware interrupt when the async IO finishes?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260708183305.2444=
-85-1-ranjan.kumar@broadcom.com?part=3D4
+85-1-ranjan.kumar@broadcom.com?part=3D5
