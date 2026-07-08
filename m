@@ -1,76 +1,76 @@
-Received: from mail-yx1-f99.google.com (mail-yx1-f99.google.com [74.125.224.99])
+Received: from mail-qt1-f225.google.com (mail-qt1-f225.google.com [209.85.160.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D16834D8D9D
-	for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2026 18:40:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5B724D8DA3
+	for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2026 18:40:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783536057; cv=none; b=dj3CtrUN4d/KHUpIMhd2Bw3P1dB+jduWcRQtdZiu4l1kUd3JzFzEozZYqp1u3Pd0YMzoSDswSLtNlpj2sOuuPD220DYH+BChrLCTuzMTJEjRfIeLe0NLR5SLbctp1fzjVHgv3opSHv3frzq6kp7Cex1bQk7zl6lox76h7VcWWWQ=
+	t=1783536060; cv=none; b=PxV8HldEYnVBLbdAqZvWEHwgE6KZavsdamhjidJkbMC2V3VSJw8vrAhD2IBPGnetpeVpSonNs7luYm+NAhzYW8i2jfG9jECmwc+UONmRRnJh3YEpI+PGdFxqVq49bnq54oDuZJfIbUpl9jera2n0qVbpw2iUxfF2oyu7BkLJQpA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783536057; c=relaxed/simple;
-	bh=/coSEKvdfv2ygDy00Muep9khgNmD0IE4RdckJhgLClk=;
+	s=arc-20240116; t=1783536060; c=relaxed/simple;
+	bh=AGk0MJGEpzshXszGBCvSYECLjox5oIF+9Y8PhOpIIXk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sfERL0FZeudKImaBBwB5AkCR7bXzUF8vA44X1bBSlxx/+9MdYXB6yW9w0lgr/9spmlT/I38ZWfD+KndDEfKom3AdeGGbA7SbRstYfIZCYyPaTeidZkmUpp/te1FZ8vCWqmdlfqCXgMLwsBOdg/W6osOEXS8D8Zyz0OqpW2syl7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=BvvMD55V; arc=none smtp.client-ip=74.125.224.99
+	 MIME-Version; b=XWxhiednTwpfsBM5lB2spg3Rw1OGb4nFyCXcfaQXgizrXPWqnt4bTaE3QGzyDAIZsW5zeu+fXnWkrnyfGoqCVgZA5jGWHu59VfBhinuCvP5i8Fpl3CA7IpYpTLrbdfp8P7SsZMOoz0vpXVU7cyoTLiLyr15jSZ1SYWfauJkW6aE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Xl1BilgF; arc=none smtp.client-ip=209.85.160.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BvvMD55V"
-Received: by mail-yx1-f99.google.com with SMTP id 956f58d0204a3-667b0ced2d3so706135d50.2
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2026 11:40:55 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Xl1BilgF"
+Received: by mail-qt1-f225.google.com with SMTP id d75a77b69052e-51c928bf172so950221cf.3
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2026 11:40:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783536055; x=1784140855;
+        d=1e100.net; s=20251104; t=1783536059; x=1784140859;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=cGJaBCHyG0cKu9ts2sNDVjyMs5gyGZginC8db5SRStg=;
-        b=ZgtF8ZV3Dbe0Mursc3nTeoaql4YNkm1kbuDVakkZkz/2x2alFfX70CJvY4DCutJeya
-         b1aMKO/o0voLOJ5oewHZ/ZRM/cKKtuqjXyRO3f/FL22tYs/xHWRPOimB2i4Yq2bPRPen
-         UZrGe+yr7EA51CQQfn4PCLX4Vg5AbpbC73kgHy/R6HH2YXDb3kNmezr5AKOwez2N9yCL
-         FXWMtJORnKA7E0nOESGf9/5iUaajXOKG6Yk4EIhZIK3L4NZn4H4CNlZOuYXxenbK3dGW
-         XiDks5jOtzTXvMlG4UEigGiKsopr3V1AINdfl6vscWKPGSz581F8OSZLHhyIPboJHij8
-         QS8A==
-X-Gm-Message-State: AOJu0YwUEU/Ko3V9I/n7Iyt0emuGxPb3TiC8GADNAP9EobHj0pqUs2TM
-	chs9/XwXMC/kJeev21FKZnEzbfpY+S1IbFIlhYNT+4e8GMiGaqxYEfUBAfNTJcuGKpUyGegTuhT
-	HRxWFjX7wudRPQSAQgvD6e94ggbTa0hyztkp7TFORekiEyVG6iS82i8OxBtKa9vIoEo26fEKwZF
-	BsI2KbSRkrcRZnEef3xeu1P/v05eSgvWAkoI6FEnorAzagSiJ9BJkqZul5RRRrPLTIZQB2T0oBR
-	Yg3wUjY6h7I+qY9
-X-Gm-Gg: AfdE7ckEZ1bt1KpbNWUAkwM/1nmM6mXpyUp1u0Ovk9SzVlOkbJ0ZlqvS2eYuZdj9gPu
-	WNgrSrHuuLFRwg7XAakSatAt2cItsuOTn9ZDfEKRy97kUeLbEhSUBbNBgej+Lug7u3c5+29sY0a
-	zhxD5oRZMG5Rj74bfwWGRFiWu6UmH9sYC+hREL1vZlvjKLIhRI9BkdKVhfIQNYQtWLcpBqMCBZ8
-	g//jzwKhN3imKXLRmaGAAWOMQ2ffIzJTCtMGSFqDuvT8SI1RHpBKq1oEhFd53oaWJxTVbyg5yB6
-	U7t/p1ks9Jr9N6zz7tJUwImRts1MyHoQjJeUxgFHk4CJgcnjfTAVR5gFs9OdUyTyOfArXm2ZdJA
-	q6f1CglTlJv4IjF/82+tNGH3o/VITrZnV4PxGRjdbDJ75AqeASi+azeQlgCeQe0Z698Depwe8UK
-	vD6l5DSpXIedc3uExiySFSF/67d31qFRNZnRzU8ztvk6I/2g==
-X-Received: by 2002:a05:690e:4390:b0:667:72da:e787 with SMTP id 956f58d0204a3-6679f151831mr2270288d50.60.1783536054549;
-        Wed, 08 Jul 2026 11:40:54 -0700 (PDT)
+        bh=dns3KcC8wp75jV+EFmchfrXNPHbBikOrwHZMHJQta/c=;
+        b=L00DkSdX8BTSLTpZGu75pQmPljkkJvMFLAZ3HmklcKPDBPqUZlQagMgaXM5UhGgPh2
+         AciWL5yMFtGR9ftVLAWo8HRto17/0369qkm1RntpD86dM3/m9YMAHAj6L4hZlY3dv3mn
+         PE6qLdpLsslQvkcMnAMaEKHR1E7awsFKJOw5SOnCQJBl2YfLoaPzPei0s3UVthPyP+N/
+         mWsFVgTIa2DXhf2P4YrVD1WkGlSGw2sObs0grr38I1WFHpH85UqLewhoRRGN/giT8kBx
+         vcKE/ocixuzN7qqzupMcAAcpUnLodmEUyELhJHTpt2qaUMfd5T6LiE+Rv3HND4utlt1o
+         T1LA==
+X-Gm-Message-State: AOJu0YxOLo95+EECCY2JbqqG9UQLaDoT7W8yTGLlChwt2NCPRXWN0TOU
+	hfTDXqOmEjVnYiiCtoA5EXCt2dcaVsnqbrGVhQngfcEPTx85LpGUIFcOkKibhV5WePSFcpMAqmh
+	BYhVC1cvndtcKV3VG/gCflgTzUPTHTqRkhOg6ZFJDLR0RpOWDiZE+pXWTpuPDnDdMDy91vweCHD
+	1rAOV7TyCoJSzGTsRgaJ1ynXaQjAMCqNYEFLRi/DiYLRswN3hCmodi/6VRM6iJ1XWaWSlnFw0Mu
+	L3mNUk1IiJmYW2R
+X-Gm-Gg: AfdE7ckQUesrl1d77NW+r7IpF6c0lzpzanl9VxdaIb2BhIdc6DQrc80FSvS9o1tSRqr
+	bZhMxZxTmXkr6tshKcbGmmoZrLn9xT46W+OX3bscx/R4vKNfwGVKaJpbbtRVkmgm9gcEuKc5d6j
+	Y/Gd3la1piXWFHp2K6oWsfFmg8luHBOjYjZ6441qaC4gb2J54X1QBd6dd1iGPHFr05VNT5x9FxN
+	UFRcgzEEmjWQM6r6XrgXzqb3Vr2POm6cTz47o4qKFn+p1gEVDGKm1rL0T2YrpYsBJ5J9X0MaN0z
+	Nq4Huvba9IoixiBCAENSAARMj8x24AqgH4WzhoWmBXg1gvcjFMK/7AN3bBf8EwcDrOo45562P1E
+	QX0OjRuUmW8js4FO9/CPLr/q1+lSqohnsEH+aP7mgVPjP8wOJ0y2k6kB67gzSVwKkKn8xunmDxu
+	ePavLLiS2yVa4RhCPu53dJ6GIBXqvcHD+PrkEZjpkE+JfSsw==
+X-Received: by 2002:a05:622a:294:b0:516:d699:a99b with SMTP id d75a77b69052e-51c8b3b4725mr48646361cf.40.1783536058477;
+        Wed, 08 Jul 2026 11:40:58 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-11.dlp.protect.broadcom.com. [144.49.247.11])
-        by smtp-relay.gmail.com with ESMTPS id 956f58d0204a3-66787b447fasm311228d50.29.2026.07.08.11.40.54
+        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-8fee9b71d5fsm1626516d6.11.2026.07.08.11.40.58
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 08 Jul 2026 11:40:54 -0700 (PDT)
+        Wed, 08 Jul 2026 11:40:58 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-c85798977dcso1568617a12.0
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2026 11:40:54 -0700 (PDT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-38869800848so249370a91.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2026 11:40:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1783536053; x=1784140853; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1783536057; x=1784140857; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=cGJaBCHyG0cKu9ts2sNDVjyMs5gyGZginC8db5SRStg=;
-        b=BvvMD55VlBeKx/XiBxOcFS4eIQCO0UQGhvVsrn9TVkFVeRD1dQcY+quBzOLv+VgeKn
-         QiUSEMsP+klbueIXLGrtsB+3CA3PLtMogMsjqvn1Vhvbvfg8h6jh7zJqAmEpl57smbLL
-         AyaXB9mgkPqPu0GgPWBzbxp072tK+/3KcVbHQ=
-X-Received: by 2002:a05:6a21:7117:b0:3c0:9c19:65b4 with SMTP id adf61e73a8af0-3c0bd39dec9mr4478572637.76.1783536053215;
-        Wed, 08 Jul 2026 11:40:53 -0700 (PDT)
-X-Received: by 2002:a05:6a21:7117:b0:3c0:9c19:65b4 with SMTP id adf61e73a8af0-3c0bd39dec9mr4478527637.76.1783536052598;
-        Wed, 08 Jul 2026 11:40:52 -0700 (PDT)
+        bh=dns3KcC8wp75jV+EFmchfrXNPHbBikOrwHZMHJQta/c=;
+        b=Xl1BilgFn3iR31EMGZYIYk2+NY4nD7G8Zo1rUCcjKfSgRujG4VDtE9I6ohgzZcsJtG
+         5bj3LxmW+H0ysjlvb8I1wudPrxuGYtnahcDLP9e8BJaYuvsSJhdmUHhDLHMB67buchAT
+         W9rkcPf/ZF/4uWjKistOSTl2cFntXsb9/fP9c=
+X-Received: by 2002:a17:90b:3ecd:b0:388:1927:fb1d with SMTP id 98e67ed59e1d1-3893fb74d16mr3492681a91.12.1783536056406;
+        Wed, 08 Jul 2026 11:40:56 -0700 (PDT)
+X-Received: by 2002:a17:90b:3ecd:b0:388:1927:fb1d with SMTP id 98e67ed59e1d1-3893fb74d16mr3492655a91.12.1783536055864;
+        Wed, 08 Jul 2026 11:40:55 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3117d847e17sm19820599eec.18.2026.07.08.11.40.49
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3117d847e17sm19820599eec.18.2026.07.08.11.40.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2026 11:40:52 -0700 (PDT)
+        Wed, 08 Jul 2026 11:40:55 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -78,11 +78,10 @@ Cc: sathya.prakash@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	vishakhavc@google.com,
 	ipylypiv@google.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	Sashiko <sashiko-bot@kernel.org>
-Subject: [PATCH v2 09/10] mpi3mr: Fix SAS PHY cleanup in host addition error paths
-Date: Thu,  9 Jul 2026 00:03:04 +0530
-Message-ID: <20260708183305.244485-10-ranjan.kumar@broadcom.com>
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v2 10/10] mpi3mr: Driver version update to 8.18.0.8.50
+Date: Thu,  9 Jul 2026 00:03:05 +0530
+Message-ID: <20260708183305.244485-11-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260708183305.244485-1-ranjan.kumar@broadcom.com>
 References: <20260708183305.244485-1-ranjan.kumar@broadcom.com>
@@ -95,130 +94,28 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-When adding a SAS host, the driver allocates a PHY array and subsequently
-creates individual SAS PHYs. If a later step fails, the error path exits
-without cleaning up previously allocated resources, resulting in leaks of
-both the PHY array and any registered SAS PHYs.
+Update driver version to 8.18.0.8.50
 
-Additionally, the return value of mpi3mr_add_host_phy() was being ignored.
-If it failed, mr_sas_phy->phy would be left as NULL, which could later
-lead to a NULL pointer dereference in mpi3mr_sas_port_add() when the
-attached device triggers a device addition event.
-
-Add a dedicated cleanup path that deletes any successfully created SAS
-PHYs and frees the PHY array before returning from initialization
-failure paths. Also, check the return value of mpi3mr_add_host_phy()
-and jump to the cleanup path on failure.
-
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@broadcom.com?part=9
-Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 33 ++++++++++++++++++--------
- 1 file changed, 23 insertions(+), 10 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index b51edbb921eb..a8b79da25d38 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -1216,13 +1216,14 @@ void mpi3mr_sas_host_add(struct mpi3mr_ioc *mrioc)
- 	}
- 	num_phys = sas_io_unit_pg0->num_phys;
- 	kfree(sas_io_unit_pg0);
-+	sas_io_unit_pg0 = NULL;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 1d11d7c69536..c6bbd6b33cfe 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -56,8 +56,8 @@ extern struct list_head mrioc_list;
+ extern int prot_mask;
+ extern atomic64_t event_counter;
  
- 	mrioc->sas_hba.host_node = 1;
- 	INIT_LIST_HEAD(&mrioc->sas_hba.sas_port_list);
- 	mrioc->sas_hba.parent_dev = &mrioc->shost->shost_gendev;
- 	mrioc->sas_hba.phy = kzalloc_objs(struct mpi3mr_sas_phy, num_phys);
- 	if (!mrioc->sas_hba.phy)
--		return;
-+		goto out;
+-#define MPI3MR_DRIVER_VERSION	"8.17.0.3.50"
+-#define MPI3MR_DRIVER_RELDATE	"09-January-2026"
++#define MPI3MR_DRIVER_VERSION	"8.18.0.8.50"
++#define MPI3MR_DRIVER_RELDATE	"26-June-2026"
  
- 	mrioc->sas_hba.num_phys = num_phys;
- 
-@@ -1230,12 +1231,12 @@ void mpi3mr_sas_host_add(struct mpi3mr_ioc *mrioc)
- 	    (num_phys * sizeof(struct mpi3_sas_io_unit0_phy_data));
- 	sas_io_unit_pg0 = kzalloc(sz, GFP_KERNEL);
- 	if (!sas_io_unit_pg0)
--		return;
-+		goto out_free_phy;
- 
- 	if (mpi3mr_cfg_get_sas_io_unit_pg0(mrioc, sas_io_unit_pg0, sz)) {
- 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
- 		    __FILE__, __LINE__, __func__);
--		goto out;
-+		goto out_free_phy;
- 	}
- 
- 	mrioc->sas_hba.handle = 0;
-@@ -1249,12 +1250,12 @@ void mpi3mr_sas_host_add(struct mpi3mr_ioc *mrioc)
- 		    MPI3_SAS_PHY_PGAD_FORM_PHY_NUMBER, i)) {
- 			ioc_err(mrioc, "failure at %s:%d/%s()!\n",
- 			    __FILE__, __LINE__, __func__);
--			goto out;
-+			goto out_free_phy;
- 		}
- 		if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
- 			ioc_err(mrioc, "failure at %s:%d/%s()!\n",
- 			    __FILE__, __LINE__, __func__);
--			goto out;
-+			goto out_free_phy;
- 		}
- 
- 		if (!mrioc->sas_hba.handle)
-@@ -1264,26 +1265,27 @@ void mpi3mr_sas_host_add(struct mpi3mr_ioc *mrioc)
- 
- 		if (!(mpi3mr_get_hba_port_by_id(mrioc, port_id)))
- 			if (!mpi3mr_alloc_hba_port(mrioc, port_id))
--				goto out;
-+				goto out_free_phy;
- 
- 		mrioc->sas_hba.phy[i].handle = mrioc->sas_hba.handle;
- 		mrioc->sas_hba.phy[i].phy_id = i;
- 		mrioc->sas_hba.phy[i].hba_port =
- 		    mpi3mr_get_hba_port_by_id(mrioc, port_id);
--		mpi3mr_add_host_phy(mrioc, &mrioc->sas_hba.phy[i],
--		    phy_pg0, mrioc->sas_hba.parent_dev);
-+		if (mpi3mr_add_host_phy(mrioc, &mrioc->sas_hba.phy[i],
-+		    phy_pg0, mrioc->sas_hba.parent_dev))
-+			goto out_free_phy;
- 	}
- 	if ((mpi3mr_cfg_get_dev_pg0(mrioc, &ioc_status, &dev_pg0,
- 	    sizeof(dev_pg0), MPI3_DEVICE_PGAD_FORM_HANDLE,
- 	    mrioc->sas_hba.handle))) {
- 		ioc_err(mrioc, "%s: device page0 read failed\n", __func__);
--		goto out;
-+		goto out_free_phy;
- 	}
- 	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
- 		ioc_err(mrioc, "device page read failed for handle(0x%04x), with ioc_status(0x%04x) failure at %s:%d/%s()!\n",
- 		    mrioc->sas_hba.handle, ioc_status, __FILE__, __LINE__,
- 		    __func__);
--		goto out;
-+		goto out_free_phy;
- 	}
- 	mrioc->sas_hba.enclosure_handle =
- 	    le16_to_cpu(dev_pg0.enclosure_handle);
-@@ -1306,6 +1308,17 @@ void mpi3mr_sas_host_add(struct mpi3mr_ioc *mrioc)
- 				le64_to_cpu(encl_pg0.enclosure_logical_id);
- 	}
- 
-+	goto out;
-+
-+out_free_phy:
-+	for (i = 0; i < mrioc->sas_hba.num_phys; i++) {
-+		if (mrioc->sas_hba.phy[i].phy)
-+			sas_phy_delete(mrioc->sas_hba.phy[i].phy);
-+	}
-+	kfree(mrioc->sas_hba.phy);
-+	mrioc->sas_hba.phy = NULL;
-+	mrioc->sas_hba.num_phys = 0;
-+
- out:
- 	kfree(sas_io_unit_pg0);
- }
+ #define MPI3MR_DRIVER_NAME	"mpi3mr"
+ #define MPI3MR_DRIVER_LICENSE	"GPL"
 -- 
 2.47.3
 
