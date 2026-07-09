@@ -1,111 +1,236 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3827D3CCA11
-	for <linux-scsi@vger.kernel.org>; Thu,  9 Jul 2026 06:30:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 781DA3C10AF;
+	Thu,  9 Jul 2026 07:18:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783578627; cv=none; b=Zr3uXuP4V7bTkG6Iak16xHUSWNP5xOZHYZ6y/nwy4OmnYPaHUg1oNTkAsNOIEA08SkUFkEGuNCVx4fBqEku97dYdiXGxPdfK1ufBewjhnOMXOdBs0K9Qyi6uH8MAI7OtwmP+iDJ/s1dArGvNdf/UE2roRs7jHXzSXnRmo9ygOH4=
+	t=1783581508; cv=none; b=hBfBRQmfFJHBa+OZBIjI5L3MuRDGPnYkPKD5U8iTCxxRC2DFddnkONYIcqFRXypsFZ4Q2OpdHHBhPs1KBxwmFce/yTyIgNBIItSlL2CnuhgRGi10XaZyySue8CFxeIrb7NM9AsFd+MMRWijmF9wyEWyGmtemIH4x/wvr+SPKSSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783578627; c=relaxed/simple;
-	bh=FmY1GURxHdlYEjzLC5TgEviPahh+J6k3G05i9GoPPcc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=URIxVa6CSvHuNgp53gROtPYLSLyw89mKK1hxvhD3bM+fov6rQFovTBd7pcC0Weyn4IHr70JejGyiFpRZiXct8hdTgcg3VZITLbvXZtteVwvJSdjCD3XsqYRFdvSDcekDlabBWe054rnCLoQVNC8PdVxYXq3aSNFQMAo0NBvxjZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Hg6hQAJh; arc=none smtp.client-ip=220.197.31.5
+	s=arc-20240116; t=1783581508; c=relaxed/simple;
+	bh=3Kn6Asu/GK2QewGnNyPr3r0WsFsrDP9EWXeRsKbom8Y=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mtC+N8bS4XL6f61lMslq9U1GpvdPyHcN1sJw6BEYRdUrwwonnjKLh7mDZ1xJ8gOG3jPfp3dKIcbgue9AvLLRVewcB4fMMyjC/SElOoAMZGF9X9fg1iVQjjoAx7ELRItYoWWO54L3+pICXDRmRS/ihhflM5mak/x0J4JHQAcal5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ZWe9lplt; arc=none smtp.client-ip=220.197.31.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Hg6hQAJh"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ZWe9lplt"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
-	Message-ID; bh=FmY1GURxHdlYEjzLC5TgEviPahh+J6k3G05i9GoPPcc=; b=H
-	g6hQAJhezCC5MzHZ6dWbjk5OX356eOavB+vzoCyvQ1i3IE7B9pRyXOpX68eZbwwN
-	2U2mNjW04wq+A9JblrnRKJraMAE62nrL9VlZG/Vgf55sJRp7wSWdFI4x3Eu0tjjA
-	ZC5p0LTdXAQsRcJ4Is2H4XFcfp6S2b2Fi6iZtRDwQg=
-Received: from kensanya$163.com ( [116.128.244.171] ) by
- ajax-webmail-wmsvr-40-126 (Coremail) ; Thu, 9 Jul 2026 14:29:57 +0800 (CST)
-Date: Thu, 9 Jul 2026 14:29:57 +0800 (CST)
-From: kensanya  <kensanya@163.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-Subject: Re:Re: [PATCH] target/stat: implement scsiPortBusyStatuses counter
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
- 20260511(2e539873) Copyright (c) 2002-2026 www.mailtech.cn 163com
-In-Reply-To: <20260708095722.A8E8C1F000E9@smtp.kernel.org>
-References: <20260708093433.838647-1-kensanya@163.com>
- <20260708095722.A8E8C1F000E9@smtp.kernel.org>
-X-NTES-SC: AL_Qu2TAfmct00i4SGdbOkcnkcTg+k8WMW1ufsg2Ydec8wEnB7m9hkNe3VsEnvs/+O1ASqpjzuPcSJl8eZwXoNhyzs8FfdDbdQRxgLY1ZO4Fw==
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=GBK
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=+n
+	h4PWUVd0enXrBygUSLENuQ5UoTQklbIU3BqiNPs/E=; b=ZWe9lpltEGmMZXxh0C
+	7w1zqMYxcw8y2p1eXZ7V623BG419v2kkL9h+CMQn+B2A0bWlrGiW5sf8qt7+dnp3
+	93Pl39DxU06j7vkGhoQF/u12x7eO4DykhECvICcLDgSIqUfKzWGSvRSeGY6TbzlM
+	ACs3355v6iHnX02aloBqH8MOU=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgD3iwMzS09q0GNBGw--.12571S2;
+	Thu, 09 Jul 2026 15:18:13 +0800 (CST)
+From: kensanya@163.com
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	TanZheng <tanzheng@kylinos.cn>
+Subject: [PATCH v2] target/stat: implement scsiPortBusyStatuses counter
+Date: Thu,  9 Jul 2026 15:18:05 +0800
+Message-Id: <20260709071805.769860-1-kensanya@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <786c67ad.4bd4.19f4591972e.Coremail.kensanya@163.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:figvCgDnn13mP09qv5QaAA--.220W
-X-CM-SenderInfo: 5nhq2txq1dqiywtou0bp/xtbCwgZ3U2pPP+bixwAA35
-X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PigvCgD3iwMzS09q0GNBGw--.12571S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW3JryDKF45CFWrXr1UuFWrGrg_yoWxJF1rpF
+	WUJFW5ArWDKFW8Ka18JF4jkrW5tw12gay2ka4xXas5Aws8trW3Cw1DJFW2vFs5JFWkG347
+	Wa1qyFs8Ka12qrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UG1v-UUUUU=
+X-CM-SenderInfo: 5nhq2txq1dqiywtou0bp/xtbCwRVOKmpPSzVW3wAA3i
 
-CgoKCgoKCgoKCgoKCgoKCgpBdCAyMDI2LTA3LTA4IDE3OjU3OjIyLCBzYXNoaWtvLWJvdEBrZXJu
-ZWwub3JnIHdyb3RlOgo+VGhhbmsgeW91IGZvciB5b3VyIGNvbnRyaWJ1dGlvbiEgU2FzaGlrbyBB
-SSByZXZpZXcgZm91bmQgMiBwb3RlbnRpYWwgaXNzdWUocykgdG8gY29uc2lkZXI6Cj4tIFtIaWdo
-XSBBY2Nlc3NpbmcgYGNtZGAgYWZ0ZXIgY2FsbGluZyBgcXVldWVfc3RhdHVzKClgIGNhbiBjYXVz
-ZSBhIFVzZS1BZnRlci1GcmVlLCBhcyB0aGUgY29tbWFuZCBtYXkgYmUgY29tcGxldGVkIGFuZCBm
-cmVlZCBhc3luY2hyb25vdXNseSBieSB0aGUgZmFicmljIGRyaXZlci4KPi0gW01lZGl1bV0gVGhl
-IGBzY3NpUG9ydEJ1c3lTdGF0dXNlc2AgaW1wbGVtZW50YXRpb24gb25seSB0cmFja3MgYFNBTV9T
-VEFUX0JVU1lgLCB2aW9sYXRpbmcgUkZDIDQ0NTUuCj4tLQo+Cj4tLS0gUGF0Y2ggWzFdOiBbUEFU
-Q0hdIHRhcmdldC9zdGF0OiBpbXBsZW1lbnQgc2NzaVBvcnRCdXN5U3RhdHVzZXMgY291bnRlciAt
-LS0KPmNvbW1pdCAwZTQ4MTkyYzdkMzQyYjIyODgxZWNiMGRlZTQ0NmFlMjg3ZTI0NjA3Cj5BdXRo
-b3I6IFRhblpoZW5nIDx0YW56aGVuZ0BreWxpbm9zLmNuPgo+Cj50YXJnZXQvc3RhdDogaW1wbGVt
-ZW50IHNjc2lQb3J0QnVzeVN0YXR1c2VzIGNvdW50ZXIKPiAgICAKPkltcGxlbWVudCBSRkMgNDQ1
-NSBzY3NpUG9ydEJ1c3lTdGF0dXNlcyAoQ29uZmlnRlMgYnVzeV9jb3VudCkgYnkgYWRkaW5nIGEK
-PnBlci1DUFUgYnVzeV9zdGF0dXNlcyBjb3VudGVyIHRvIHNjc2lfcG9ydF9zdGF0cywgaW5jcmVt
-ZW50aW5nIGl0IHdoZW4KPnRoZSB0YXJnZXQgc2VuZHMgU0FNX1NUQVRfQlVTWSwgYW5kIHN1bW1p
-bmcgYWxsIENQVXMgaW4gdGhlIHNob3cgaGFuZGxlci4KPgo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy90YXJnZXQvdGFyZ2V0X2NvcmVfc3RhdC5jIGIvZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVf
-c3RhdC5jCj4+IC0tLSBhL2RyaXZlcnMvdGFyZ2V0L3RhcmdldF9jb3JlX3N0YXQuYwo+PiArKysg
-Yi9kcml2ZXJzL3RhcmdldC90YXJnZXRfY29yZV9zdGF0LmMKPlsgLi4uIF0KPj4gK3ZvaWQgdGFy
-Z2V0X3N0YXRfY291bnRfYnVzeV9zdGF0dXMoc3RydWN0IHNlX2NtZCAqY21kKQo+PiArewo+PiAr
-CXN0cnVjdCBzZV9sdW4gKmx1biA9IGNtZC0+c2VfbHVuOwo+PiArCj4+ICsJaWYgKGNtZC0+c2Vf
-Y21kX2ZsYWdzICYgU0NGX1NDU0lfVE1SX0NEQikKPj4gKwkJcmV0dXJuOwo+PiArCj4+ICsJaWYg
-KGNtZC0+c2NzaV9zdGF0dXMgPT0gU0FNX1NUQVRfQlVTWSAmJiBsdW4gJiYgbHVuLT5sdW5fc3Rh
-dHMpCj4+ICsJCXRoaXNfY3B1X2luYyhsdW4tPmx1bl9zdGF0cy0+YnVzeV9zdGF0dXNlcyk7Cj4K
-PltTZXZlcml0eTogTWVkaXVtXQo+RG9lcyB0aGlzIGNvZGUgZnVsbHkgaW1wbGVtZW50IHRoZSBS
-RkMgNDQ1NSBzY3NpUG9ydEJ1c3lTdGF0dXNlcyBjb3VudGVyPwo+Cj5SRkMgNDQ1NSBzdGF0ZXMg
-dGhhdCBzY3NpUG9ydEJ1c3lTdGF0dXNlcyBtdXN0IGluY3JlbWVudCBmb3IgQlVTWSwgVEFTSyBT
-RVQKPkZVTEwsIGFuZCBBQ0EgQUNUSVZFIHN0YXR1c2VzLiBCeSBjaGVja2luZyBvbmx5IGZvciBT
-QU1fU1RBVF9CVVNZLCBkb2VzIHRoaXMKPnVuZGVyY291bnQgcG9ydCBidXN5IHN0YXR1c2VzIGR1
-cmluZyBxdWV1ZSBmdWxsIGV2ZW50cyAobGlrZQo+U0FNX1NUQVRfVEFTS19TRVRfRlVMTCk/Cj4K
-VGhpcyBwYXRjaCBjdXJyZW50bHkgb25seSBzdXBwb3J0cyB0aGUgc3RhdGlzdGljcyBvZiBzY3Np
-UG9ydEJ1c3lTdGF0dXNlcy4KPj4gK30KPlsgLi4uIF0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-dGFyZ2V0L3RhcmdldF9jb3JlX3RyYW5zcG9ydC5jIGIvZHJpdmVycy90YXJnZXQvdGFyZ2V0X2Nv
-cmVfdHJhbnNwb3J0LmMKPj4gLS0tIGEvZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfdHJhbnNw
-b3J0LmMKPj4gKysrIGIvZHJpdmVycy90YXJnZXQvdGFyZ2V0X2NvcmVfdHJhbnNwb3J0LmMKPlsg
-Li4uIF0KPj4gK3N0YXRpYyBpbnQgdGFyZ2V0X3F1ZXVlX3N0YXR1cyhzdHJ1Y3Qgc2VfY21kICpj
-bWQpCj4+ICt7Cj4+ICsJaW50IHJldDsKPj4gKwo+PiArCXJldCA9IGNtZC0+c2VfdGZvLT5xdWV1
-ZV9zdGF0dXMoY21kKTsKPj4gKwlpZiAoIXJldCkKPj4gKwkJdGFyZ2V0X3N0YXRfY291bnRfYnVz
-eV9zdGF0dXMoY21kKTsKPgo+W1NldmVyaXR5OiBIaWdoXQo+Q2FuIHRoaXMgcmVzdWx0IGluIGEg
-dXNlLWFmdGVyLWZyZWUgb24gdGhlIGNtZCBwb2ludGVyPwo+Cj5JZiBhIGZhYnJpYyBkcml2ZXIg
-KHN1Y2ggYXMgaWJfc3JwdCkgY2FsbHMgdGFyZ2V0X3NlbmRfYnVzeShjbWQpIGR1cmluZyBhCj5m
-YWlsdXJlIHBhdGgsIHRhcmdldF9xdWV1ZV9zdGF0dXMoKSB3aWxsIGludm9rZSB0aGUgZmFicmlj
-IGRyaXZlcidzCj5xdWV1ZV9zdGF0dXMoKSBjYWxsYmFjay4gVGhlIGZhYnJpYyBkcml2ZXIgbWln
-aHQgdHJhbnNtaXQgdGhlIHJlc3BvbnNlIGFuZCBpdHMKPmFzeW5jaHJvbm91cyBjb21wbGV0aW9u
-IGhhbmRsZXIgY291bGQgZHJvcCB0aGUgZmluYWwgcmVmZXJlbmNlIHRvIHRoZSBjb21tYW5kLAo+
-ZnJlZWluZyBpdHMgbWVtb3J5Lgo+Cj5XaGVuIHF1ZXVlX3N0YXR1cygpIHJldHVybnMsIHRhcmdl
-dF9xdWV1ZV9zdGF0dXMoKSBjYWxscwo+dGFyZ2V0X3N0YXRfY291bnRfYnVzeV9zdGF0dXMoY21k
-KSB3aGljaCBhY2Nlc3NlcyBjbWQtPnNlX2x1biBhbmQKPmNtZC0+c2NzaV9zdGF0dXMuIElzIGl0
-IHNhZmUgdG8gZGVyZWZlcmVuY2UgY21kIGhlcmUgYWZ0ZXIgcmVsaW5xdWlzaGluZwo+b3duZXJz
-aGlwIHRvIHF1ZXVlX3N0YXR1cygpPwo+CkNvdW50IGFmdGVyIGEgc3VjY2Vzc2Z1bCBxdWV1ZV9z
-dGF0dXMoKSBiZWNhdXNlIFJGQyA0NDU1IGNvdW50cyBzdGF0dXNlcyBhY3R1YWxseSBzZW50IApi
-eSB0aGUgcG9ydC4gRmFicmljIG1heSBmYWlsIGFuZCByZXRyeSB2aWEgcXVldWVfZnVsbCwgYW5k
-IG1heSBldmVuIGNoYW5nZSB0aGUgU0NTSSAKc3RhdHVzIG9uIGZhaWx1cmUgKGUuZy4gdGNtX2Zj
-IEJVU1kgofogVEFTS19TRVRfRlVMTCkuIENvdW50aW5nIGJlZm9yZSBzZW5kIHdvdWxkCm92ZXIt
-Y291bnQgYW5kIGRvdWJsZS1jb3VudCBvbiByZXRyaWVzLgoKUmVnYXJkaW5nIHRoZSBVQUYgaXNz
-dWUsIEkgd2lsbCByZWxlYXNlIHRoZSBzZWNvbmQgcGF0Y2guCj4+ICsKPj4gKwlyZXR1cm4gcmV0
-Owo+PiArfQo+Cj4tLSAKPlNhc2hpa28gQUkgcmV2aWV3IKGkIGh0dHBzOi8vc2FzaGlrby5kZXYv
-Iy9wYXRjaHNldC8yMDI2MDcwODA5MzQzMy44Mzg2NDctMS1rZW5zYW55YUAxNjMuY29tP3BhcnQ9
-MQoKQmVzdCByZWdhcmQhClRhblpoZW5nCg==
+From: TanZheng <tanzheng@kylinos.cn>
+
+Implement RFC 4455 scsiPortBusyStatuses (ConfigFS busy_count) by adding a
+per-CPU busy_statuses counter to scsi_port_stats, incrementing it when
+the target sends SAM_STAT_BUSY, and summing all CPUs in the show handler.
+
+Signed-off-by: TanZheng <tanzheng@kylinos.cn>
+---
+v2: 
+1.By taking snapshots of lun, scsi_status and flags before queue_status(),
+  the dereferencing of cmd after the callback is avoided.
+
+---
+ drivers/target/target_core_internal.h  |  2 ++
+ drivers/target/target_core_stat.c      | 31 ++++++++++++++++++++++++--
+ drivers/target/target_core_transport.c | 26 ++++++++++++++++-----
+ include/target/target_core_base.h      |  1 +
+ 4 files changed, 52 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index 763e6d26e187..c3aa8c514db7 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -161,6 +161,8 @@ void	target_queued_submit_work(struct work_struct *work);
+ void	target_stat_setup_dev_default_groups(struct se_device *);
+ void	target_stat_setup_port_default_groups(struct se_lun *);
+ void	target_stat_setup_mappedlun_default_groups(struct se_lun_acl *);
++void	target_stat_count_sent_status(struct se_lun *lun, u8 scsi_status,
++				      u32 flags);
+ 
+ /* target_core_xcopy.c */
+ extern struct se_portal_group xcopy_pt_tpg;
+diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
+index 083205052be2..8ae238287065 100644
+--- a/drivers/target/target_core_stat.c
++++ b/drivers/target/target_core_stat.c
+@@ -21,12 +21,30 @@
+ #include <linux/seq_file.h>
+ #include <linux/configfs.h>
+ 
++#include <scsi/scsi_proto.h>
++
+ #include <target/target_core_base.h>
+ #include <target/target_core_backend.h>
+ #include <target/target_core_fabric.h>
+ 
+ #include "target_core_internal.h"
+ 
++void target_stat_count_sent_status(struct se_lun *lun, u8 scsi_status,
++				 u32 flags)
++{
++	if (flags & SCF_SCSI_TMR_CDB)
++		return;
++
++	switch (scsi_status) {
++	case SAM_STAT_BUSY:
++		if (lun && lun->lun_stats)
++			this_cpu_inc(lun->lun_stats->busy_statuses);
++		break;
++	default:
++		break;
++	}
++}
++
+ #ifndef INITIAL_JIFFIES
+ #define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
+ #endif
+@@ -483,13 +501,22 @@ static ssize_t target_stat_port_busy_count_show(struct config_item *item,
+ {
+ 	struct se_lun *lun = to_stat_port(item);
+ 	struct se_device *dev;
++	struct scsi_port_stats *stats;
++	unsigned int cpu;
++	u64 sum = 0;
+ 	ssize_t ret = -ENODEV;
+ 
+ 	rcu_read_lock();
+ 	dev = rcu_dereference(lun->lun_se_dev);
+ 	if (dev) {
+-		/* FIXME: scsiPortBusyStatuses  */
+-		ret = snprintf(page, PAGE_SIZE, "%u\n", 0);
++		/* scsiPortBusyStatuses */
++		if (lun->lun_stats) {
++			for_each_possible_cpu(cpu) {
++				stats = per_cpu_ptr(lun->lun_stats, cpu);
++				sum += stats->busy_statuses;
++			}
++		}
++		ret = snprintf(page, PAGE_SIZE, "%llu\n", sum);
+ 	}
+ 	rcu_read_unlock();
+ 	return ret;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index fad03a15c969..bab5ee81817b 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -829,6 +829,20 @@ void transport_copy_sense_to_cmd(struct se_cmd *cmd, unsigned char *sense)
+ }
+ EXPORT_SYMBOL(transport_copy_sense_to_cmd);
+ 
++static int target_queue_status(struct se_cmd *cmd)
++{
++	int ret;
++	struct se_lun *lun = cmd->se_lun;
++	u8 scsi_status = cmd->scsi_status;
++	u32 flags = cmd->se_cmd_flags;
++
++	ret = cmd->se_tfo->queue_status(cmd);
++	if (!ret)
++		target_stat_count_sent_status(lun, scsi_status, flags);
++
++	return ret;
++}
++
+ static void target_handle_abort(struct se_cmd *cmd)
+ {
+ 	bool tas = cmd->transport_state & CMD_T_TAS;
+@@ -843,7 +857,7 @@ static void target_handle_abort(struct se_cmd *cmd)
+ 			pr_debug("Setting SAM_STAT_TASK_ABORTED status for CDB: 0x%02x, ITT: 0x%08llx\n",
+ 				 cmd->t_task_cdb[0], cmd->tag);
+ 			trace_target_cmd_complete(cmd);
+-			ret = cmd->se_tfo->queue_status(cmd);
++			ret = target_queue_status(cmd);
+ 			if (ret) {
+ 				transport_handle_queue_full(cmd, cmd->se_dev,
+ 							    ret, false);
+@@ -2170,7 +2184,7 @@ void transport_generic_request_failure(struct se_cmd *cmd,
+ 
+ queue_status:
+ 	trace_target_cmd_complete(cmd);
+-	ret = cmd->se_tfo->queue_status(cmd);
++	ret = target_queue_status(cmd);
+ 	if (!ret)
+ 		goto check_stop;
+ queue_full:
+@@ -2487,7 +2501,7 @@ static void transport_complete_qf(struct se_cmd *cmd)
+ 	case DMA_NONE:
+ queue_status:
+ 		trace_target_cmd_complete(cmd);
+-		ret = cmd->se_tfo->queue_status(cmd);
++		ret = target_queue_status(cmd);
+ 		break;
+ 	default:
+ 		break;
+@@ -2685,7 +2699,7 @@ static void target_complete_ok_work(struct work_struct *work)
+ 	case DMA_NONE:
+ queue_status:
+ 		trace_target_cmd_complete(cmd);
+-		ret = cmd->se_tfo->queue_status(cmd);
++		ret = target_queue_status(cmd);
+ 		if (ret)
+ 			goto queue_full;
+ 		break;
+@@ -3599,7 +3613,7 @@ transport_send_check_condition_and_sense(struct se_cmd *cmd,
+ 		translate_sense_reason(cmd, reason);
+ 
+ 	trace_target_cmd_complete(cmd);
+-	return cmd->se_tfo->queue_status(cmd);
++	return target_queue_status(cmd);
+ }
+ EXPORT_SYMBOL(transport_send_check_condition_and_sense);
+ 
+@@ -3615,7 +3629,7 @@ int target_send_busy(struct se_cmd *cmd)
+ 
+ 	cmd->scsi_status = SAM_STAT_BUSY;
+ 	trace_target_cmd_complete(cmd);
+-	return cmd->se_tfo->queue_status(cmd);
++	return target_queue_status(cmd);
+ }
+ EXPORT_SYMBOL(target_send_busy);
+ 
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 002b0fc57587..61a230331124 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -764,6 +764,7 @@ struct scsi_port_stats {
+ 	u64			cmd_pdus;
+ 	u64			tx_data_octets;
+ 	u64			rx_data_octets;
++	u64			busy_statuses;
+ };
+ 
+ struct se_lun {
+-- 
+2.25.1
+
