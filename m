@@ -1,241 +1,151 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
+Received: from sender-op-o14.zoho.eu (sender-op-o14.zoho.eu [136.143.169.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D46743890EA;
-	Thu,  9 Jul 2026 14:49:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36366333440;
+	Thu,  9 Jul 2026 15:06:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.14
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783608594; cv=pass; b=cBw4urkE446d1l+/kTVPlF9zP+RpRuMIFPbf+YSPYJAKTnYVQGdIAEUSUKiIUI7TogTdzGPxYBsMtna4h1YIg9AXsFDPI0mUJuC/W2SvoP9fHfe02Lu8g2l4mSP7ZJfTffAlCnFz1W6I7Z7jFshUP0L+4F3d+YHwxFyMmumtJOw=
+	t=1783609606; cv=pass; b=XffC3g6H9V9sGbn+EUH/hpclPaLwkY0wkXwBOFuGMycGmrM5+yfjfhmQZHPTPK8hR6GbzKaYb/Q8rw3VrLQB/vOHpgqeB773AP8vv/lhd/KW3vedmGYZPB9cMt/GPrQNSDK3usNfc62dmKTsYEFlw4XdAFb/kH9OUv7sHROoxLA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783608594; c=relaxed/simple;
-	bh=cThylUwJ/9f4okQW+8eU2MvlyJNg3yB4jm2Pa4NCeN4=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=RHNF3bNdWR5sB5CVeWJ5B3Y2MtGB07aJfn2t/JuvK1+nqg2ZDBuhqym/0AMozLiXX3EE+2cv7RN5cKIDS8KWg5l8cYkqluLRAwzEFaBO61krqUL6HOvRqb2VynD6PurGQeIyOdidfh+xc2DczzNcfyKczA4RNsdZZjAKYYs9/dU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=NcGTau66; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=wRWu19P+; arc=pass smtp.client-ip=85.215.255.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	s=arc-20240116; t=1783609606; c=relaxed/simple;
+	bh=84bIJyohN0btGTNkT/Q1umTDxT5SbFgG3xgDpsL0kbU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t9sTSsjJAX2c17fvQPOS9CgZ26BW1MFCqX0Rdke4N9HbpNEdubOPhn7lGBTWq4Cb+F2ULYlfm2oxC8TfPY4Q8yV/zlHqgppKUj0svGm6qBSuzL2UIiFkZDxe/Pof0EGmHz8/mkg8N9VmRx4qrIOvTFpTLHJnPRofiqTDIetDujg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=auditcode.ai; spf=pass smtp.mailfrom=auditcode.ai; dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b=NPxE7Vh0; arc=pass smtp.client-ip=136.143.169.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=auditcode.ai
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=auditcode.ai
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="NcGTau66";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="wRWu19P+"
-ARC-Seal: i=1; a=rsa-sha256; t=1783608581; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=STxS/tIqRoLoScRjenGG0bMT0CYHO/mtkFuORapJvQyZPF+jU5JEgX0NfxyQ7AJv9I
-    pDwhbmLwp23WUfk1fjKiTTKY7DmxH4u2ahwQFyhcH525JRLyEY9FPXAp44Gwlhj37iPp
-    3v4xk2Togr2L2S3Ykv/oXmH7hGudxl1O5AnrF4y4MQjdFw0jQ4/qjJSEBGXoF4RT7AVI
-    NioS2mSXRYFkMYKw0SPl3ho9lcOo+dSaDeybySflCsvXoGnuTC1tMA7haywL4JlGMpiX
-    9YxL+ZelzFoTHqX9zxGpEFo76Fe3ta+RoSeOO6vmlTksDdpfOQBb4Tl5oEXvRko+/2/q
-    HYxw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1783608581;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:To:From:Subject:Message-ID:Cc:Date:From:
-    Subject:Sender;
-    bh=cThylUwJ/9f4okQW+8eU2MvlyJNg3yB4jm2Pa4NCeN4=;
-    b=B/sgthHBEf4f8iqh1EW9xKC8JRePCa1bCj0N5ek9/5TlW7yOHmY047IRTFWi8/aE/s
-    rQl4GN1JoKsqRCupfpNk/svykE1+qMQXz3IbAOn7B9gdZQyWoxPuDgFO6P0mDNNebrD7
-    85FXqu7U73zulAZjXcFriy8Sp/zMRQ+VHRFKbZ/NRQXLrRciW8oHnIdJbhI/pidUNKy0
-    OFsycRJ++w7X6vNs9bCem4s7JybLLDft2EiBMbQVGvdhdjbQYjq4rtGd4ODNUQUdo1Xh
-    2nvI/1tUYHHfCuhM82VLYNda4zGdwTQdM9A8aPG25bnirtEmoceDwAIXqE7P50jxNlCT
-    kKbA==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1783608581;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:To:From:Subject:Message-ID:Cc:Date:From:
-    Subject:Sender;
-    bh=cThylUwJ/9f4okQW+8eU2MvlyJNg3yB4jm2Pa4NCeN4=;
-    b=NcGTau668lMF7Zor0PTx3DPRDORJNRWOKatca28A4ENhoJjiTKAt54lWmML/9UKhle
-    5DU3RppHL955CGKhlAN3tK9RP/2CPUV3vnnUdutQ2D0TxnadI9WYMzICpgKLapZZqxxR
-    6CNktl5ZUe6XzVihBQZoXqCj+xhKiS6M0CIEYysRNm5UAW0Bo/GH37QGlQs8PAYPk4qI
-    haxNTIiJBMhOFjiiKUIjZ1SAbI8qSbG7sY8j5PtpMPvKfde/W06EaqvZYhqb4UF/8YjQ
-    73b0OVrChLPQtrnm0nV25dTmb8R6r9cvzkZMRRqudmHRNAAoP0O2fG/C1xctp75NVznH
-    +DzA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1783608581;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:To:From:Subject:Message-ID:Cc:Date:From:
-    Subject:Sender;
-    bh=cThylUwJ/9f4okQW+8eU2MvlyJNg3yB4jm2Pa4NCeN4=;
-    b=wRWu19P+/rhIr/Jc9ENiGcLNrAov470a4nLBc+VH7Uy6ZmxPDlp8BZR/qU1bDOBHks
-    gQQ6+Z8VCLl+sQUw0ZCg==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZik"
-Received: from [10.176.237.62]
-    by smtp.strato.de (RZmta 55.5.6 AUTH)
-    with ESMTPSA id z4d388269End1Vm
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Thu, 9 Jul 2026 16:49:39 +0200 (CEST)
-Message-ID: <3335691dad233520fcc6947545739dccc37a98ec.camel@iokpp.de>
-Subject: Re: [PATCH] scsi: ufs: core: cancel RTC work in active-active
- suspend
-From: Bean Huo <beanhuo@iokpp.de>
-To: Guangshuo Li <lgs201920130244@gmail.com>, Alim Akhtar
- <alim.akhtar@samsung.com>, Avri Altman <avri.altman@sandisk.com>, Bart Van
- Assche <bvanassche@acm.org>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
- <martin.petersen@oracle.com>, Peter Wang <peter.wang@mediatek.com>, Bean
- Huo <beanhuo@micron.com>,  Can Guo <can.guo@oss.qualcomm.com>, Adrian
- Hunter <adrian.hunter@intel.com>, Thomas =?ISO-8859-1?Q?Wei=DFschuh?=
- <linux@weissschuh.net>, linux-scsi@vger.kernel.org, 
- linux-kernel@vger.kernel.org
-Date: Thu, 09 Jul 2026 16:49:38 +0200
-In-Reply-To: <2160d030b5a6414335c84cb89632384866d94e1a.camel@iokpp.de>
-References: <20260708124934.764281-1-lgs201920130244@gmail.com>
-	 <2160d030b5a6414335c84cb89632384866d94e1a.camel@iokpp.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b="NPxE7Vh0"
+ARC-Seal: i=1; a=rsa-sha256; t=1783609596; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=Eeu/Y4sA+biKDUZ6nW1Ng3w7r2HI7yF8z9tREDCoSfKxT0czi87i+MJwFdSebAQZvdXpGrdqcFOAbspWUjiScXHzQhN4BsMBlYB/0/TPll8tDpOEZIewF6V5tkgu35DquoFABIAh3plK83eCdO4xpa39VqcxPKzLAUfiTiXzs/w=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1783609596; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=DRFaL7M/HgkqlbgQPgTDq1S4xPq6b53kdKlRyfM4wCA=; 
+	b=KjolBSq5CHzs/r0MeNr1yx4otDOVYEtQKBAHxCAg3N7YVIsok1YcCoJtWisodf+h3e5bW2mcwezScv8G9HlpgSyg54LhLgYrC7wDuAzdZQXHwWYychrPRVipJkxHef99cfm2OHGtmRz60bp8Lx6kzf/yjGuaPIpFfosNK8C3T/Y=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	dkim=pass  header.i=auditcode.ai;
+	spf=pass  smtp.mailfrom=security@auditcode.ai;
+	dmarc=pass header.from=<security@auditcode.ai>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783609596;
+	s=zmail; d=auditcode.ai; i=security@auditcode.ai;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=DRFaL7M/HgkqlbgQPgTDq1S4xPq6b53kdKlRyfM4wCA=;
+	b=NPxE7Vh0SVwpMDvC/98kgLeK+29FPfiuIwW/olFC2cziQif0EexcIAelkTnANi+S
+	uz17MTJfj98raEesnu3908L/A9WZKGwghg39wvUnf/Thp1CiKn8aqGK419SUrSf+UG4
+	fAQycaJGX4dTZiYLUHjWQk3ntzXK0w/HIeM4fsTE=
+Received: by mx.zoho.eu with SMTPS id 1783609594491534.3593889803047;
+	Thu, 9 Jul 2026 17:06:34 +0200 (CEST)
+From: Ibrahim Hashimov <security@auditcode.ai>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: scsi_debug: fix REPORT ZONES alloc_len underflow OOB write
+Date: Thu,  9 Jul 2026 17:06:31 +0200
+Message-ID: <20260709150631.45018-1-security@auditcode.ai>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-Hi Guangshuo
+resp_report_zones() only rejects a REPORT ZONES(16) CDB when the
+requested allocation length (cmd[10..13], SBC/ZBC "ALLOCATION LENGTH")
+is exactly zero:
 
-would you like to update your patch with the consideration of RTC update re=
-sume?
+	alloc_len = get_unaligned_be32(cmd + 10);
+	if (alloc_len == 0)
+		return 0;	/* not an error */
+	...
+	rep_max_zones = (alloc_len - 64) >> ilog2(RZONES_DESC_HD);
 
+	arr = kzalloc(alloc_len, GFP_ATOMIC | __GFP_NOWARN);
+	...
+	desc = arr + 64;
 
-Kind regard,
-Bean
+For any nonzero alloc_len in the range 1..63, `alloc_len - 64`
+underflows (alloc_len and rep_max_zones are unsigned), turning
+rep_max_zones into a huge value (~2^25 for typical small alloc_len).
+Meanwhile arr is allocated with the raw, unvalidated alloc_len, so it
+can be smaller than the 64-byte report header. desc is then set to
+arr + 64, which already points past the end of the (too small)
+allocation, and the per-zone descriptor loop:
 
+	if (nrz < rep_max_zones) {
+		desc[0] = zsp->z_type;
+		...
+		put_unaligned_be64((u64)zsp->z_wp, desc + 24);
+		desc += 64;
+	}
 
-On Wed, 2026-07-08 at 23:04 +0200, Bean Huo wrote:
-> On Wed, 2026-07-08 at 20:49 +0800, Guangshuo Li wrote:
-> > UFS RTC support schedules ufs_rtc_update_work to periodically update th=
-e
-> > device RTC. The work can issue query commands and access the UFS host
-> > controller.
-> >=20
-> > __ufshcd_wl_suspend() cancels ufs_rtc_update_work in the common suspend
-> > path before calling the vendor suspend callback. However, the
-> > active-active path, where both the device power mode and link state sta=
-y
-> > active, jumps directly to vops_suspend after flushing exception handlin=
-g
-> > work. That jump bypasses the RTC work cancellation.
-> >=20
-> > If the RTC work runs while the vendor suspend callback is gating or
-> > otherwise changing hardware state, it can access the controller during
-> > suspend and trigger an SError.
-> >=20
-> > Cancel the RTC work in the active-active path before jumping to
-> > vops_suspend, matching the common suspend path.
-> >=20
-> > Fixes: 6bf999e0eb41 ("scsi: ufs: core: Add UFS RTC support")
->=20
->=20
-> this fix tag is wrong, should be:
-> Fixes: b0bd84c39289 ("scsi: ufs: core: Fix SError in ufshcd_rtc_work() du=
-ring
-> UFS suspend")
->=20
-> since 6bf999e0eb41 ("scsi: ufs: core: Add UFS RTC support") placed the ca=
-ncel
-> after the vops_suspend: label (after the POST_CHANGE vops call), so the
-> active-
-> active goto vops_suspend path did cancel the work. then b0bd84c39289 ("sc=
-si:
-> ufs: core: Fix SError in ufshcd_rtc_work() during UFS suspend", moved the
-> cancel
-> up above the PRE_CHANGE vops call to close a race in the common path. Tha=
-t
-> move
-> is what removed cancellation from the active-active path. So the correct =
-tag
-> is
-> Fixes: b0bd84c39289, not 6bf999e0eb41.
->=20
-> > Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
-> > ---
-> > =C2=A0drivers/ufs/core/ufshcd.c | 1 +
-> > =C2=A01 file changed, 1 insertion(+)
-> >=20
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index d3044a3089b5..9d5571a7aec2 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -10269,6 +10269,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *=
-hba,
-> > enum ufs_pm_op pm_op)
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-req_link_state =3D=3D UIC_LINK_ACTIVE_STATE) {
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_disable_auto_bkops(hba);
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0flush_work(&hba->eeh_work);
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
->=20
-> RTC updates stop permanently after the first active-active suspend. you n=
-eed
-> to
-> add resume:
->=20
->=20
->=20
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 376a314189e4..06f253b08b65 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -10339,6 +10339,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hb=
-a,
-> enum
-> ufs_pm_op pm_op)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 req_link=
-_state =3D=3D UIC_LINK_ACTIVE_STATE) {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 ufshcd_disable_auto_bkops(hba);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 flush_work(&hba->eeh_work);
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 goto vops_suspend;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
-> =C2=A0
-> @@ -10548,10 +10549,11 @@ static int __ufshcd_wl_resume(struct ufs_hba *h=
-ba,
-> enum ufs_pm_op pm_op)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 if (ret)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 goto set=
-_old_link_state;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 ufshcd_set_timestamp_attr(hba);
-> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 schedule_delayed_work(&hba->ufs_rtc_update_work,
-> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=20
-> msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
-> =C2=A0
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 schedule_delayed_work(&hba->ufs_rtc=
-_update_work,
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
-> +
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ufshcd_keep_autobkops_enab=
-led_except_suspend(hba))
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 ufshcd_enable_auto_bkops(hba);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 else
->=20
-> Kind regards,
-> Bean
->=20
->=20
->=20
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0goto vops_suspend;
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
-> > =C2=A0
->=20
+keeps writing 64-byte zone descriptors starting at that out-of-bounds
+pointer and marching forward, because the inflated rep_max_zones no
+longer bounds anything. A local CAP_SYS_RAWIO attacker who loads
+scsi_debug in zoned mode (zbc=host-managed) and sends a REPORT ZONES
+CDB with e.g. alloc_len=32 via SG_IO triggers a heap
+slab-out-of-bounds write, confirmed under KASAN
+("slab-out-of-bounds in resp_report_zones", writes landing at
+arr+64, arr+128, ... i.e. exactly the desc[0]/desc[1]/
+put_unaligned_be64(desc+8/16/24) sequence, stepping by 64 bytes per
+iteration).
+
+Every other REPORT-style/allocation-length-consuming handler in this
+file floors alloc_len against its own header/descriptor size before
+using it, e.g.:
+
+  resp_report_tgtpgs():        if (alloc_len < 4 || alloc_len > 0xffff) ...
+  resp_readcap16():            if (alloc_len < 24) return 0;
+  resp_get_stream_status():    if (alloc_len < 8) { ... }
+  resp_report_luns():          if (alloc_len < 4) { ... }
+
+resp_report_zones() is missing the equivalent floor. Since the report
+header itself is RZONES_DESC_HD (64) bytes, alloc_len must be at
+least that before rep_max_zones is computed and before desc is walked
+past the header. Add that check, rejecting an under-sized allocation
+length the same way resp_get_stream_status() rejects an under-sized
+one for the identical cmd[10..13] field (SDEB_IN_CDB, field offset
+10) via mk_sense_invalid_fld() + check_condition_result. alloc_len==0
+keeps its existing "not an error, nothing to report" fast path.
+
+This bounds both the underflowing subtraction and the kzalloc() size
+against the 64-byte header the function unconditionally writes,
+without touching the per-zone descriptor loop itself.
+
+Verified on a v6.19 KASAN build: issuing REPORT ZONES(16) via SG_IO
+with alloc_len=32 against a scsi_debug zbc=host-managed device hits
+the slab-out-of-bounds write in resp_report_zones() before this
+patch, and the same command no longer triggers a KASAN report once
+the floor check above is applied.
+
+Fixes: 7db0e0c8190a ("scsi: scsi_debug: Fix buffer size of REPORT ZONES command")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ibrahim Hashimov <security@auditcode.ai>
+Assisted-by: AuditCode-AI:2026.07
+---
+ drivers/scsi/scsi_debug.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 9d1c9c41d0f9..2fa887c65b61 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -5911,6 +5911,11 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+ 		return check_condition_result;
+ 	}
+ 
++	if (alloc_len < RZONES_DESC_HD) {
++		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 10, -1);
++		return check_condition_result;
++	}
++
+ 	rep_max_zones = (alloc_len - 64) >> ilog2(RZONES_DESC_HD);
+ 
+ 	arr = kzalloc(alloc_len, GFP_ATOMIC | __GFP_NOWARN);
+-- 
+2.50.1 (Apple Git-155)
 
