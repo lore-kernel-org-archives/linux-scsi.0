@@ -1,200 +1,262 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BDEC30DD1B
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2026 19:37:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 772493624D7
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2026 19:40:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783712226; cv=none; b=J3Uu887CLqVbJiLR/+fxWuyGS4irlsK5xcAumEEqVi2x++cq0ZODHaoI6f7VZpeaSdrmzK4FXSfLsiTVFihg3CX/F75zjgzb6jaWDl9C11AdEAkG5MCF0Lry72szR2JcywMIT3DnkTg0/UqDO5DS5DktRHcBAd8Slgc1vo7zYik=
+	t=1783712408; cv=none; b=PO6rzRTuN5CIKX71yYPykml+/Yj6Pns+376nJ8gdjiLQL4BLGBj02/OdHA1hHuiuRW9bDa96wXjURBBSDx/Nc6SR61COFioCuTRpqVaQb9kBCBzPnBOYlIjVwNaZ9T35MElirXY0GjS019nISCkiznS0wizjIn6PFTexPAQZpC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783712226; c=relaxed/simple;
-	bh=A1a6SC4GK9b4c0IPFaWeBP9FEP6ShsIS/rTKNDeUZiU=;
+	s=arc-20240116; t=1783712408; c=relaxed/simple;
+	bh=iLcc1IUhPbGepHtK64nbPBUpZhNUC/nNBGybKE+94nU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Cmedj4y0mO/MQGoioYT4hQZwRYK43WuZwknPV5qY+mp0YIOq+GFDuOpmnHJM4/56nCiyRduwu7zO6c/cyqB6Chccxic6ntj4BJ3flI9GVetkb3d7u8GKttTFLvXLlXpQe2NQ/hD2wl4qkX1C0RW0CVk+twP2buDZ44W5xt0slXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fS1KeBUQ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=B6rg0X3JaHhWSe10HmDav/VO9gWB+ah2a/ca6YUL7XbbkC+f+8mV0QCbIXMy+FEQpXiLiVElQxeDcJ8uLY6S07WkOdB0HofJbO6dgHgZs8dEsUpnNk7BcNUJBmZQaqt/O9pwtL7aaeURNkZQiYe+LOcLZAPaUxbbuHD9qZW5aKA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hReAGgJs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fS1KeBUQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DADCE1F000E9;
-	Fri, 10 Jul 2026 19:37:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hReAGgJs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA4D81F000E9;
+	Fri, 10 Jul 2026 19:40:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783712225;
-	bh=AqgpxYH2Z0l+e3epqgddnz4FHb5hx4UDdjd5X5NKG58=;
+	s=k20260515; t=1783712407;
+	bh=34WfdZ1gz+ZgpevwnNaPzGaN/Zj4sS+fPRdI+kIsJPs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fS1KeBUQxNj0CnhWupQnY30GbUw5JVLiq6J5zJYgzuHqgSqVKs7i1yEFHgt0gjp09
-	 g/P5YnAqBdasjNxpVxkL0oGZArmQajcVjqKEby1niSBmsN1YjMFQv6K30xYbSs2qOU
-	 c9E/dO5wI/sxPZZT4R6/TuOEIaJGiW7FxYYhFfUGUPpBnAuUg3Iz6hj5jYaiqWTTVw
-	 HKeK4FXu67oU8mc5NOsJaGD5nsne0HD5dz77/maAJp0llMvoUeIV5wBep+4EiLlT0M
-	 VlpDtE5NlWTzOgPKkJhlVQEaZQ4yg6PBz5I18lyRtwVfiyJv3P/O6auF8P0ynCN23V
-	 Df0ZDMjK10Etw==
+	b=hReAGgJsA4Sp7PYxscWXOorOr0SS04kZu4Fkj8unPNpzFRObZxtktksnWF/lncf4W
+	 jlO7KUUTQ72jjjmoZkY4BeaWk9h7xv6lX9x7T7sies1HD45qgPEplljBoSq3jvZFHe
+	 9Vj6AjyJGLnBEzBrIPBSyjBmAlDmjlq7CROgWD8dgk8wvLu8guYqRm/IOhOgPF0Ybk
+	 v41hoS1QLw6v70cbU0pFe3iF5dyAMtzf2UB26iiv/yZyQUgGpOozNs5/ehu/bCZsfp
+	 h9Qj7Bi+CvNNSwloODkePRBWHNwKWj+kDIgCTDr0GIl/zqRt2HiKJRfGImUgH+uG0M
+	 TgFOibojq7rXA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 6/8] ibmvfc: extend async event handlers to handle
- async sub queue events
+Subject: Re: [PATCH v4 4/8] ibmvfc: define asynchronous sub-queue
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260710-ibmvfc-fpin-support-v4-6-ef031ac19520@linux.ibm.com>
+In-Reply-To: <20260710-ibmvfc-fpin-support-v4-4-ef031ac19520@linux.ibm.com>
 References: <20260710-ibmvfc-fpin-support-v4-0-ef031ac19520@linux.ibm.com>
- <20260710-ibmvfc-fpin-support-v4-6-ef031ac19520@linux.ibm.com>
+ <20260710-ibmvfc-fpin-support-v4-4-ef031ac19520@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 19:37:04 +0000
-Message-Id: <20260710193704.DADCE1F000E9@smtp.kernel.org>
+Date: Fri, 10 Jul 2026 19:40:06 +0000
+Message-Id: <20260710194006.EA4D81F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
 
 New issues:
-- [High] The driver ignores the `IBMVFC_ASYNC_ID_IS_ASSOC_ID` flag when pro=
-cessing sub-queue events, incorrectly interpreting association IDs as node =
-names.
-- [High] Hardcoded event type in `ibmvfc_full_fpin_to_desc()` drops FPIN co=
-ngestion event classification.
+- [High] The driver unloads without explicitly flushing or canceling `fpin_=
+workq`, leading to a Use-After-Free.
+- [High] The error path in `ibmvfc_probe()` manually destroys a device-mana=
+ged workqueue, resulting in a double-free.
+- [High] The `ibmvfc_process_async_work()` function accesses a target objec=
+t outside of the host lock without holding a reference count, leading to a =
+TOCTOU Use-After-Free.
+- [High] The driver fails to clear the `valid` byte of asynchronous CRQ ent=
+ries after processing them, which will permanently stall asynchronous event=
+s.
 
 Pre-existing issues:
-- [High] Double-free and use-after-free of the FPIN workqueue due to incorr=
-ect mixing of `devm_alloc_workqueue()` and manual lifecycle management.
+- [High] Out-of-bounds array write when parsing channel setup completion fr=
+om VIOS.
 --
 
---- Patch [6]: [PATCH v4 6/8] ibmvfc: extend async event handlers to handle=
- async sub queue events ---
-commit f425472451b9ed0df3bb74b15fd60bb31167f05e
+--- Patch [4]: [PATCH v4 4/8] ibmvfc: define asynchronous sub-queue ---
+commit 9bd2cdf24ef9c308bf4803492cdf8f30fbef4057
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-ibmvfc: extend async event handlers to handle async sub queue events
-
-Refactor async event handling to support both traditional async CRQs and
-new asynchronous sub-queue CRQs.
+ibmvfc: define asynchronous sub-queue
+   =20
+Define data structures for asynchronous sub-queue support required for full=
+ and
+extended FPIN functionality. Introduce the ibmvfc_async_subq structure for
+async events, update channel setup capabilities, and negotiate async support
+with VIOS during login.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvf=
 c.c
-> index 586847ff3336d..ee56f13f1a979 100644
+> index 3dd2adda195ee..c95e78d729ed7 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
 
 [ ... ]
 
-> @@ -3349,6 +3349,27 @@ ibmvfc_basic_fpin_to_desc(struct ibmvfc_async_crq =
-*crq, u64 wwpn)
->  					  cpu_to_be32(1));
->  }
-> =20
-> +/**
-> + * ibmvfc_full_fpin_to_desc(): allocate and populate a struct fc_els_fpi=
-n struct
-> + * containing a descriptor.
-> + * @ibmvfc_fpin: Pointer to async subq FPIN data
-> + *
-> + * Allocate a struct fc_els_fpin containing a descriptor and populate
-> + * based on data from *ibmvfc_fpin.
-> + *
-> + * Return:
-> + * NULL     - unable to allocate structure
-> + * non-NULL - pointer to populated struct fc_els_fpin
-> + */
-> +static struct fc_els_fpin *
-> +ibmvfc_full_fpin_to_desc(struct ibmvfc_async_subq *ibmvfc_fpin)
+> @@ -3185,16 +3191,228 @@ static const char *ibmvfc_get_link_state(enum ib=
+mvfc_ae_link_state state)
+[ ... ]
+> +static void ibmvfc_process_async_work(struct work_struct *work)
 > +{
-> +	return ibmvfc_common_fpin_to_desc(ibmvfc_fpin->fpin_status, ibmvfc_fpin=
-->wwpn,
-> +					  cpu_to_be16(0), cpu_to_be16(0),
-> +					  cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_THRESHOLD),
-> +					  cpu_to_be32(1));
-> +}
-
-[Severity: High]
-Is it intentional to hardcode the event type to cpu_to_be16(0) here?
-
-Unlike ibmvfc_basic_fpin_to_desc() which maps the fpin_status to specific
-types like FPIN_CONGN_DEVICE_SPEC, this appears to drop the FPIN congestion
-event classification.
-
-Could this prevent the FC transport layer from updating the storage
-congestion statistics correctly?
-
-[ ... ]
-
-> @@ -3356,73 +3377,131 @@ static void ibmvfc_process_async_work(struct wor=
-k_struct *work)
-
-[ ... ]
-
-> +	if (crq) {
-> +		wwpn =3D crq->wwpn;
-> +		node_name =3D crq->node_name;
-> +		scsi_id =3D crq->scsi_id;
-> +	} else {
-> +		wwpn =3D subq->wwpn;
-> +		node_name =3D subq->id.node_name;
-> +		scsi_id =3D 0;
+> +	struct ibmvfc_target *tgt, *next;
+> +	struct ibmvfc_async_work *aw;
+> +	struct ibmvfc_async_crq *crq;
+> +	struct ibmvfc_host *vhost;
+> +	struct fc_els_fpin *fpin;
+> +	unsigned long flags;
+> +
+> +	aw =3D container_of(work, struct ibmvfc_async_work, async_work_s);
+> +	crq =3D &aw->crq;
+> +	vhost =3D aw->vhost;
+> +
+> +	if (!crq->scsi_id && !crq->wwpn && !crq->node_name)
+> +		goto end;
+> +
+> +	spin_lock_irqsave(vhost->host->host_lock, flags);
+> +	list_for_each_entry_safe(tgt, next, &vhost->targets, queue) {
+> +		if (crq->scsi_id && cpu_to_be64(tgt->scsi_id) !=3D crq->scsi_id)
+> +			continue;
+> +		if (crq->wwpn && cpu_to_be64(tgt->ids.port_name) !=3D crq->wwpn)
+> +			continue;
+> +		if (crq->node_name && cpu_to_be64(tgt->ids.node_name) !=3D crq->node_n=
+ame)
+> +			continue;
+> +		if (!tgt->rport)
+> +			continue;
+> +		break;
 > +	}
+> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+> +
+> +	if (list_entry_is_head(tgt, &vhost->targets, queue) || !tgt->rport) {
+> +		dev_err_ratelimited(vhost->dev, "Invalid target for FPIN\n");
+> +		goto end;
+> +	}
+> +
+> +	fpin =3D ibmvfc_basic_fpin_to_desc(crq, tgt->wwpn);
 
 [Severity: High]
-Does this code need to check the IBMVFC_ASYNC_ID_IS_ASSOC_ID flag before
-reading subq->id.node_name?
+What prevents a use-after-free here if a concurrent device deletion or logo=
+ut
+frees tgt immediately after the lock is dropped?
 
-If the VIOS provides an association ID instead of a node name and sets the
-flag in subq->flags, it seems the union would contain an assoc_id.
+Since the lock is dropped without acquiring a reference to tgt (via kref_ge=
+t),
+is it safe to access tgt->wwpn or pass tgt->vhost->host to fc_host_fpin_rcv=
+()
+outside of the lock?
 
-Could reading this unconditionally as a node_name cause target lookups to f=
-ail
-and silently drop events?
+[ ... ]
+
+> @@ -3803,8 +4041,6 @@ static void ibmvfc_tasklet(void *data)
+>  		/* Pull all the valid messages off the async CRQ */
+>  		while ((async =3D ibmvfc_next_async_crq(vhost)) !=3D NULL) {
+>  			ibmvfc_handle_async(async, vhost);
+> -			async->valid =3D 0;
+> -			wmb();
+>  		}
+
+[Severity: High]
+Is it intentional to remove the clearing of the valid byte here?
+
+The VIO CRQ protocol normally requires clearing the valid byte after consum=
+ing
+an entry. Without this, it seems the consumed entries are never freed, which
+could cause the async CRQ ring buffer to permanently fill up and stall
+asynchronous events.
 
 > =20
-> -	if (!crq->scsi_id && !crq->wwpn && !crq->node_name)
-> -		goto end;
-> +	if (!scsi_id && !wwpn && !node_name)
-> +		goto free;
+>  		/* Pull all the valid messages off the CRQ */
+> @@ -3818,8 +4054,6 @@ static void ibmvfc_tasklet(void *data)
+>  		if ((async =3D ibmvfc_next_async_crq(vhost)) !=3D NULL) {
+>  			vio_disable_interrupts(vdev);
+>  			ibmvfc_handle_async(async, vhost);
+> -			async->valid =3D 0;
+> -			wmb();
+>  		} else if ((crq =3D ibmvfc_next_crq(vhost)) !=3D NULL) {
+
+[ ... ]
+
+> @@ -5069,8 +5393,12 @@ static void ibmvfc_channel_setup_done(struct ibmvf=
+c_event *evt)
+>  		return;
+>  	}
 > =20
->  	spin_lock_irqsave(vhost->host->host_lock, flags);
-
-[Severity: High]
-This is a pre-existing issue, but is it safe to use this lock here during
-driver removal?
-
-If the vhost->fpin_workq was allocated with devm_alloc_workqueue(), it won't
-be destroyed until devres runs after ibmvfc_remove() completes.
-
-Since ibmvfc_remove() calls scsi_host_put(vhost->host), could an async FPIN
-event executing concurrently access the freed host lock? Also, on probe
-error paths, if destroy_workqueue() is called manually on a devm-managed
-workqueue, could this lead to a double-free when devres cleans it up?
-
-[ ... ]
-
-> @@ -3460,18 +3539,18 @@ VISIBLE_IF_KUNIT void ibmvfc_handle_async(void *c=
-rq,
-
-[ ... ]
-
-> +	if (is_subq) {
-> +		subq =3D crq;
-> +		event =3D be16_to_cpu(subq->event);
-> +		link_state =3D subq->link_state;
-> +		scsi_id =3D 0;
-> +		wwpn =3D subq->wwpn;
-> +		node_name =3D subq->id.node_name;
-
-[Severity: High]
-Similarly, does ibmvfc_handle_async() need to verify the
-IBMVFC_ASYNC_ID_IS_ASSOC_ID flag before extracting the node_name?
-
-If the subq->id union contains an association ID instead of a WWNN, could
-this result in failed target lookups for ELS_LOGO, PRLO, and PLOGI events?
-
+> -	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
+> -	wake_up(&vhost->work_wait_q);
+> +	if (ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_SCSI)) {
+> +		ibmvfc_fabric_login(vhost);
 > +	} else {
-> +		async_crq =3D crq;
-> +		event =3D be64_to_cpu(async_crq->event);
-> +		link_state =3D async_crq->link_state;
-> +		scsi_id =3D async_crq->scsi_id;
-> +		wwpn =3D async_crq->wwpn;
-> +		node_name =3D async_crq->node_name;
+> +		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
+> +		wake_up(&vhost->work_wait_q);
 > +	}
+>  }
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is there a bounds check
+missing for active_queues in this function?
+
+Looking earlier in ibmvfc_channel_setup_done(), active_queues is read from
+the VIOS hardware response and used as a loop bound:
+
+ibmvfc_channel_setup_done() {
+    ...
+    active_queues =3D be32_to_cpu(setup->num_scsi_subq_channels);
+    scrqs->active_queues =3D active_queues;
+    ...
+    for (i =3D 0; i < active_queues; i++)
+        scrqs->scrqs[i].vios_cookie =3D be64_to_cpu(setup->channel_handles[=
+i]);
+    ...
+}
+
+Could this loop write past the end of the scrqs->scrqs array if the VIOS
+returns a value greater than scrqs->max_queues?
+
+[ ... ]
+
+> @@ -6364,9 +6694,15 @@ static int ibmvfc_probe(struct vio_dev *vdev, cons=
+t struct vio_device_id *id)
+>  	INIT_WORK(&vhost->rport_add_work_q, ibmvfc_rport_add_thread);
+>  	mutex_init(&vhost->passthru_mutex);
+> =20
+> -	if ((rc =3D ibmvfc_alloc_mem(vhost)))
+> +	vhost->fpin_workq =3D devm_alloc_workqueue(vhost->dev, "%s-fpin-workq-%=
+u", 0, 0,
+> +						 IBMVFC_NAME, shost->host_no);
+> +	if (vhost->fpin_workq =3D=3D NULL)
+>  		goto free_scsi_host;
+> =20
+
+[Severity: High]
+Could this devm_alloc_workqueue() allocation lead to a use-after-free during
+driver unload?
+
+During driver unload, ibmvfc_remove() calls scsi_host_put() which frees the
+Scsi_Host and vhost structures. Since devres callbacks run after the remove
+function returns, the workqueue will be destroyed after vhost is already
+freed. If any pending ibmvfc_process_async_work() items execute, they would
+dereference the freed vhost structure.
+
+> +	rc =3D ibmvfc_alloc_mem(vhost);
+> +	if (rc)
+> +		goto free_workq;
+> +
+>  	vhost->work_thread =3D kthread_run(ibmvfc_work, vhost, "%s_%d", IBMVFC_=
+NAME,
+>  					 shost->host_no);
+> =20
+> @@ -6412,6 +6748,9 @@ static int ibmvfc_probe(struct vio_dev *vdev, const=
+ struct vio_device_id *id)
+>  	kthread_stop(vhost->work_thread);
+>  free_host_mem:
+>  	ibmvfc_free_mem(vhost);
+> +free_workq:
+> +	destroy_workqueue(vhost->fpin_workq);
+> +	vhost->fpin_workq =3D NULL;
+
+[Severity: High]
+Will manually destroying a devm-managed workqueue here cause a double-free?
+
+Because fpin_workq was allocated with devm_alloc_workqueue(), devres
+automatically registers an action to destroy it. If this error path manually
+calls destroy_workqueue(), it appears devres will try to destroy it a second
+time during automatic cleanup.
+
+>  free_scsi_host:
+>  	scsi_host_put(shost);
+>  out:
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710-ibmvfc-fpi=
-n-support-v4-0-ef031ac19520@linux.ibm.com?part=3D6
+n-support-v4-0-ef031ac19520@linux.ibm.com?part=3D4
