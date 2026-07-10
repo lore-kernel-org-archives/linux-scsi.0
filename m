@@ -1,224 +1,137 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C17E71F4C8E
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2026 19:31:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C82342C11CA
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2026 19:31:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783711866; cv=none; b=Ggfhj2IiFlj0ARGLqtMAIwC7590anmu675GqhjEuZ78gz73kfFg8PRSdV+jMQx8V4mwc8BwqK/dkCvLknfyXqeWH8yPkR+4OoFS+cZ6Y8qnNhfYciWubmo+vWyNx9KWG7AHDMpH63icFpPVEuVUgEOtaCpUxChGZOLK0eYcEBfE=
+	t=1783711871; cv=none; b=Ha3kAz2P5PR6ky4MHAQV7uHDlQgLkHsB0zROxcgKKJwb4t37rejg/um4VuzRvVXurt+MvUA4bqiB+lGkeg3Gg2VR3ojRWhf4F4kko8mNoEiT+irVLTnbJNe8tnMOuJCNzih32gKrePQtakJ/hbz27tI7UUYz/TfUKA9KZmshQZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783711866; c=relaxed/simple;
-	bh=F5g4+uaNLYQp9NoUKhEcPElsiVfn/SsjGGwnX1pY5eQ=;
+	s=arc-20240116; t=1783711871; c=relaxed/simple;
+	bh=N3FvxSwW4WXFJ+t3hq1tnWh3KDwCwI73QJQsuRnwo68=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=l4o7KM5bUug3KsPYgFPGn39REso6wL5xSXfMsVBxGpoCMIhxJrjKmGww62qd/yBqkPBNWSUkPqslBbU2yU568S3+fkPEaGEAIQIe8kAnR2/QFGPePN003XfGtE8LKATlkYVIvxt8Ji5NBdV8fqi6xYm0qQo5n3l+kCj+zv9fVyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kaKJ1NU/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=dET8GSNcjRWYyzY7h7z5N0aGbZaAjRaDfQSTthK0AGKEOsZsZGg8v0KsQCOTGU7r5EvnHEeBUd8aQ199bcN2U3gXlq+NQYgVa79RaXYofbc2D15j3w4ps8BG+Imm9qc/yxCXw3J7fgxlh8Njn0zamTwJHrEcPEKX1R7NqQwAjok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HrpjKqEP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kaKJ1NU/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DDBF1F000E9;
-	Fri, 10 Jul 2026 19:31:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HrpjKqEP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 540AA1F000E9;
+	Fri, 10 Jul 2026 19:31:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783711864;
-	bh=pLFwX/yGsK6EmFuKLwkcKNGbMKkAGCVwGDEx7etOvl4=;
+	s=k20260515; t=1783711870;
+	bh=pjkpytcZrf1vAWkND8GzNPXLQACBvxrKINIQm5bawRU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kaKJ1NU/WkMwhiD7mzaKpaYAfPg0FpYTxl7afzHd5PjJO2Zpo1NOW5Lw6gV2Se2SP
-	 3pey3mUPUYJejqu+hAl/N9r1HnmIO3pELPzKejvu0CvQSEQqs2Tor5pzDyfpekMwW4
-	 dSO55nGOlw4VHdweMJnvMSvoD7GztFFRKyRVJ6hTLMhUDcWR8Vg31tfMIvGdefakqn
-	 PxReKS6YQ6eSqNsmVPFAsb8uIKCayCDskf3GghfPQifg9XCWIpVrJA43AdiO39SRJn
-	 +trry0JvfLcH/t1Ug5Uz7Y38zKTSGTWRcbv/GYJFbNdBWNjvMVEg5MHGqDwd3rpaCr
-	 6nFHNUSmy6UYw==
+	b=HrpjKqEPc410bkiBKHp1kpQVvGBD4FJBDyLHM1LdXs0y674T94f+WyfZlqloro9o0
+	 sVeh6zP6V90p0oS+msqt6BVujWUEbB/J+IRUxq+l+WcAXF1yHxEXHtWVyfqrgGL6IB
+	 YhiYp0cSBf/7KZDBuyjiCIfGC29NE4wVqiD6lILSZUEwFIUaWvcPYYRh2cpnmyQhu7
+	 aljsTjsXIfxylWEnzWuto5U/HUhQHGyeuZN+1uT+0cEDUkSNy6HlB/X0DmJwBx23d0
+	 qqjGh++nEVvU111jClJ9O3QWggtawvkJdUzHVoTaPT5Si4mc7yyZeLPuYbwT2zM7Mo
+	 vjvo2atUYGQtA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 1/8] ibmvfc: add basic FPIN support
+Subject: Re: [PATCH v4 2/8] ibmvfc: Add NOOP command support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260710-ibmvfc-fpin-support-v4-1-ef031ac19520@linux.ibm.com>
+In-Reply-To: <20260710-ibmvfc-fpin-support-v4-2-ef031ac19520@linux.ibm.com>
 References: <20260710-ibmvfc-fpin-support-v4-0-ef031ac19520@linux.ibm.com>
- <20260710-ibmvfc-fpin-support-v4-1-ef031ac19520@linux.ibm.com>
+ <20260710-ibmvfc-fpin-support-v4-2-ef031ac19520@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 19:31:04 +0000
-Message-Id: <20260710193104.7DDBF1F000E9@smtp.kernel.org>
+Date: Fri, 10 Jul 2026 19:31:09 +0000
+Message-Id: <20260710193110.540AA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Critical] Removal of `async->valid =3D 0;` leads to an infinite loop and=
- stale message processing in the async CRQ tasklet.
-- [High] Missing reference count acquisition on `tgt` in `ibmvfc_process_as=
-ync_work` leads to Use-After-Free.
-- [High] Improper devres lifecycle management of `fpin_workq` causes a doub=
-le-free on probe failure and a Use-After-Free during device removal.
-- [Medium] Data races and potential use-after-free in the new KUnit test mo=
-dule due to lockless access of global and host device lists.
+
+New issues:
+- [Medium] The logic for logging unexpected NOOP messages contradicts the c=
+ommit message due to a state check that suppresses early NOOP logs.
+
+Pre-existing issues:
+- [Critical] In `ibmvfc_handle_scrq`, an unvalidated or forged `crq->ioba` =
+token from the VIOS causes a kernel panic or arbitrary code execution becau=
+se it is cast to an `evt` pointer and dereferenced before validation.
 --
 
---- Patch [1]: [PATCH v4 1/8] ibmvfc: add basic FPIN support ---
-commit d8410cbccc8b5f74d804dc594b4dd758bd093c6e
+--- Patch [2]: [PATCH v4 2/8] ibmvfc: Add NOOP command support ---
+commit 06afd3b464e63134568df7f26e9d5bc73cb9e427
 Author: Dave Marquardt <davemarq@linux.ibm.com>
+Subject: ibmvfc: Add NOOP command support
 
-ibmvfc: add basic FPIN support
-
-This patch implements basic Fabric Performance Impact Notifications (FPIN)=
-=20
-support to enable monitoring of fabric congestion and link integrity events.
-It adds async event handling that offloads FPIN processing to a workqueue
-and introduces a KUnit test module for validation.
+This commit adds support for VFC_NOOP messages from VIOS to enable keep-ali=
+ve
+functionality between the client and server. It sets the
+IBMVFC_CAN_USE_NOOP_CMD capability bit during NPIV login and defines the
+VFC_NOOP CRQ format handling.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvf=
 c.c
+> index d3fd1d3437c69..a7e3b7ee06835 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-
-[ ... ]
-
-> @@ -3185,16 +3189,228 @@ static const char *ibmvfc_get_link_state(enum ib=
-mvfc_ae_link_state state)
-> +static void ibmvfc_process_async_work(struct work_struct *work)
-> +{
-
-[ ... ]
-
-> +	spin_lock_irqsave(vhost->host->host_lock, flags);
-> +	list_for_each_entry_safe(tgt, next, &vhost->targets, queue) {
-> +		if (crq->scsi_id && cpu_to_be64(tgt->scsi_id) !=3D crq->scsi_id)
-> +			continue;
-> +		if (crq->wwpn && cpu_to_be64(tgt->ids.port_name) !=3D crq->wwpn)
-> +			continue;
-> +		if (crq->node_name && cpu_to_be64(tgt->ids.node_name) !=3D crq->node_n=
-ame)
-> +			continue;
-> +		if (!tgt->rport)
-> +			continue;
-> +		break;
-> +	}
-> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-> +
-> +	if (list_entry_is_head(tgt, &vhost->targets, queue) || !tgt->rport) {
-> +		dev_err_ratelimited(vhost->dev, "Invalid target for FPIN\n");
-> +		goto end;
-> +	}
-> +
-> +	fpin =3D ibmvfc_basic_fpin_to_desc(crq, tgt->wwpn);
-
-[Severity: High]
-Does this leave the target pointer vulnerable to a use-after-free?
-
-The lock protecting the vhost->targets list is dropped before we access=20
-tgt->wwpn and tgt->rport, without acquiring a reference via kref_get().
-
-If another thread handles a target logout or hotplug concurrently, it could=
-=20
-remove and free the target structure, causing memory corruption when we=20
-attempt to access it here.
-
-[ ... ]
-
-> @@ -3803,8 +4031,6 @@ static void ibmvfc_tasklet(void *data)
->  		/* Pull all the valid messages off the async CRQ */
->  		while ((async =3D ibmvfc_next_async_crq(vhost)) !=3D NULL) {
->  			ibmvfc_handle_async(async, vhost);
-> -			async->valid =3D 0;
-> -			wmb();
->  		}
-
-[Severity: Critical]
-Could removing this clearing operation lead to an infinite loop?
-
-The hardware signals a valid entry by setting the valid field to 0x80. By=20
-removing the clearing of async->valid, the driver's ring-buffer polling log=
-ic=20
-will mistakenly see the old, uncleared entries as new valid entries once th=
-e=20
-circular queue index wraps around.
-
-This would trap the system in an infinite loop within softirq context when=
-=20
-processing any valid async event.
-
-[ ... ]
-
-> @@ -6364,9 +6588,15 @@ static int ibmvfc_probe(struct vio_dev *vdev, cons=
-t struct vio_device_id *id)
-
-[ ... ]
-
-> -	if ((rc =3D ibmvfc_alloc_mem(vhost)))
-> +	vhost->fpin_workq =3D devm_alloc_workqueue(vhost->dev, "%s-fpin-workq-%=
-u", 0, 0,
-> +						 IBMVFC_NAME, shost->host_no);
-> +	if (vhost->fpin_workq =3D=3D NULL)
->  		goto free_scsi_host;
-
-[ ... ]
-
-> @@ -6412,6 +6642,9 @@ static int ibmvfc_probe(struct vio_dev *vdev, const=
- struct vio_device_id *id)
->  	kthread_stop(vhost->work_thread);
->  free_host_mem:
->  	ibmvfc_free_mem(vhost);
-> +free_workq:
-> +	destroy_workqueue(vhost->fpin_workq);
-> +	vhost->fpin_workq =3D NULL;
-
-[Severity: High]
-Can this result in a double-free on probe failure, and a use-after-free=20
-during device removal?
-
-The workqueue is allocated using devm_alloc_workqueue(). On probe failure,=
-=20
-destroy_workqueue() is called explicitly, and then devres will automaticall=
-y=20
-call it again during cleanup, causing a double-free.
-
-Additionally, during device removal in ibmvfc_remove(), the host is manuall=
-y=20
-freed before devres automatically cleans up the workqueue. If there are=20
-pending work items like ibmvfc_process_async_work(), they will execute and=
-=20
-attempt to dereference host pointers that have already been freed.
-
-[ ... ]
-
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
-/ibmvfc_kunit.c
-> --- /dev/null
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-
-[ ... ]
-
-> +static void ibmvfc_async_fpin_test(struct kunit *test)
-> +{
-
-[ ... ]
-
-> +	headp =3D ibmvfc_get_headp();
-> +	if (list_empty(headp))
-> +		kunit_skip(test, "No ibmvfc devices available");
-> +	queue =3D headp->next;
-> +	vhost =3D container_of(queue, struct ibmvfc_host, queue);
-> +
-> +	KUNIT_ASSERT_GE_MSG(test, vhost->num_targets, 1, "No targets");
-> +	tgt =3D list_first_entry(&vhost->targets, struct ibmvfc_target, queue);
+> @@ -3569,6 +3571,14 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *c=
+rq, struct ibmvfc_host *vhost,
+>  	if (crq->format =3D=3D IBMVFC_ASYNC_EVENT)
+>  		return;
+> =20
+> +	if (crq->format =3D=3D IBMVFC_VFC_NOOP) {
+> +		if (vhost->state =3D=3D IBMVFC_ACTIVE &&
+> +		    !ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NOOP_CMD))
+> +			dev_err_ratelimited(vhost->dev,
+> +					    "Received unexpected NOOP command from partner\n");
 
 [Severity: Medium]
-Is it safe to access the global ibmvfc_head list and vhost->targets list=20
-without holding the appropriate locks?
+Does this logic contradict the commit message? The commit message states we
+should log unexpected NOOP messages if received before VIOS advertises
+support during NPIV login.=20
 
-The test traverses the global ibmvfc_head without acquiring the=20
-ibmvfc_driver_lock, and then iterates over vhost->targets without acquiring=
-=20
-the vhost->host->host_lock.
+However, checking if the host state is IBMVFC_ACTIVE appears to actively
+suppress the error log if the host is still initializing during NPIV login.
+Any NOOP messages received in the pre-login window would silently fail this
+check and be dropped without logging.
 
-Since KUnit tests can run dynamically while other processes or the hypervis=
-or=20
-interact with the driver, concurrently adding or removing devices could mod=
-ify=20
-these lists and free structures, resulting in a use-after-free.
+> +		return;
+> +	}
+> +
+> [ ... ]
+> @@ -4095,7 +4105,15 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *=
+crq, struct ibmvfc_host *vhost
+>  	case IBMVFC_CRQ_XPORT_EVENT:
+>  		return;
+>  	default:
+> -		dev_err(vhost->dev, "Got and invalid message type 0x%02x\n", crq->vali=
+d);
+> +		dev_err(vhost->dev, "Got an invalid message type 0x%02x\n", crq->valid=
+);
+> +		return;
+> +	}
+> +
+> +	if (crq->format =3D=3D IBMVFC_VFC_NOOP)
+> +		return;
+> +
+> +	if (unlikely(!evt)) {
+> +		dev_err(vhost->dev, "Received null event\n");
+>  		return;
+>  	}
+
+[Severity: Critical]
+This is a pre-existing issue, but can an unvalidated or forged token from
+the VIOS cause a kernel panic or arbitrary code execution here?
+
+In ibmvfc_handle_scrq(), the token is cast directly to an evt pointer.
+Before evt is validated using ibmvfc_valid_event(), it appears the code
+accesses evt->queue->evt_pool.
+
+If the token is maliciously crafted, could dereferencing evt->queue cause a
+page fault? Furthermore, could a fake queue structure in guest memory bypass
+the bounds check, allowing a forged event to be placed on the queue and
+executing arbitrary code when evt->done(evt) is called later in
+ibmvfc_drain_sub_crq()?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710-ibmvfc-fpi=
-n-support-v4-0-ef031ac19520@linux.ibm.com?part=3D1
+n-support-v4-0-ef031ac19520@linux.ibm.com?part=3D2
