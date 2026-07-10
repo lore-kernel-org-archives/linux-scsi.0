@@ -1,264 +1,161 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from sender-op-o19.zoho.eu (sender-op-o19.zoho.eu [136.143.169.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2D6B23C39A
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2026 05:46:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783662368; cv=none; b=Yr9hTicjGWyNFuETwi1V9O7OXpR5jCn2GPC7RpQDxDPdP4UmkUIC8xiOiHDvfTZlH94DNs+DCWe43zILgdL074dYA/aXdSJ6kX+4kTkLWoSyyhMo+pa4ZrzYt0sAa6s41zETcEOXtUVHRscL5LUYQP7fCCstic/hF7QgNLSRot4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783662368; c=relaxed/simple;
-	bh=e3+kr2zi+pibibEpTe5Ah8tE4Vb0dpA/Fuua9zW9abY=;
-	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
-	 References; b=hbScGR9Ou85++ANI/SB9gwfx1Ug7pn7d1WlLjoJufmhYHgNGLjFtK7A0rMu2ttGwYbo0wX/T6N5iF2lwGEGC+Q6Gd4S6jogYTwnA80Gvk12crFvEzfiDA5TRQAZXEaJ5jPbdloKft5OGwrOrea1h+atcWvy71UjuhZlq5DTw6eQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=ES1xdzPz; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2738A3988E2;
+	Fri, 10 Jul 2026 05:58:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1783663120; cv=pass; b=FfKgr0AVO/+pqUdcLvNKYivWHbZBwU1/baz/7K8nG81Lh/Xh8QmUipkRavTfs6gBVjQ1D/Gx6y128HeTKdJglhPKw26BcJgQzXhNXm1OolH3CxKtnmgKwsWoySZbNvgZFqnh98bMLM+KgwIDY4K6E4IcjDF3Sw+f5ktlS9/dnyo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1783663120; c=relaxed/simple;
+	bh=KzuWyfg4UPR2voA0XeurZPkyLTxq8gx74y+5OrxnD2o=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Do6QI+hWx9STgBDXPA4z0adNrn47r7QP8YeewAac+KYtDdqPMBB5iH/edLB5S1IT9t7CGVPRvDHyKImCk/YeIHGRODEzDTA0dDXRZ8fFe/wjazwC9WV12SFtLoVE51B5uT9vjv4XAVDDJlfeBWi57ubI4NqpiKBxFf6rRXk9sl8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=auditcode.ai; spf=pass smtp.mailfrom=auditcode.ai; dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b=tMlak7R2; arc=pass smtp.client-ip=136.143.169.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=auditcode.ai
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=auditcode.ai
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ES1xdzPz"
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260710054557epoutp031a4b7c6e3dd3f11640c3aa930c081616~A13bUzgWE2040520405epoutp03G
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2026 05:45:57 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260710054557epoutp031a4b7c6e3dd3f11640c3aa930c081616~A13bUzgWE2040520405epoutp03G
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1783662357;
-	bh=e3+kr2zi+pibibEpTe5Ah8tE4Vb0dpA/Fuua9zW9abY=;
-	h=Subject:Reply-To:From:To:CC:Date:References:From;
-	b=ES1xdzPzmZ7aeteRu6dJ+M0FCgOUTDkP4bozB0Jmz4mBvMpz1PRf7U+l0OZ6Royhf
-	 A298BRfW2+4+fpuzMZqr6R+rWr0SjYoTnc8LrGC3gQjM4lt0e7rZFURh1wawKll1g9
-	 JrJq6AyhSHeGf3T9WKHHTDIzjW0CNImDyAFnWbJk=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
-	20260710054557epcas2p38105a1e45e67b972164bdc79cf7af928~A13at-DMG2584025840epcas2p3m;
-	Fri, 10 Jul 2026 05:45:57 +0000 (GMT)
-Received: from epcas2p4.samsung.com (unknown [182.195.38.208]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4gxLR860dRz2SSKY; Fri, 10 Jul
-	2026 05:45:56 +0000 (GMT)
+	dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b="tMlak7R2"
+ARC-Seal: i=1; a=rsa-sha256; t=1783663098; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=XRp3AB6pSsucizXYrcpP4A7QrUu5pZGBYGPiqQtBD3PK0hdReyVZlX1s78if8ioItSpuFW7N0A03eEZcqNPSnIkC3cBV0eLoQFz2Zp5JuWKJmnxX+jMON9KxwfSJ16bBLWKojXNJJI/7W7a+jT8vXh1IGXtmnvb5oXk4p/EKWPw=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1783663098; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=Jw7NNGzmu6cNvHW2t60/yQ1V2O6qaEt5DX69vlQC+DU=; 
+	b=Y6PTp/v2rlD+HBv0Uf7PIuFzNDR0C5q1Ezdou56H6y6ZS4eFQDw0W+KDICjZed6EFJAlK/s0ujx7lEyDS4EibP7BKcCDjcYQqr3CWVLAyZbx4xF02I3rOg/SNmwRYW7UWgMKsCighzuZjJIgz5o/GSvGSmsCxDnNv8AZgp24Ld0=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	dkim=pass  header.i=auditcode.ai;
+	spf=pass  smtp.mailfrom=security@auditcode.ai;
+	dmarc=pass header.from=<security@auditcode.ai>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1783663098;
+	s=zmail; d=auditcode.ai; i=security@auditcode.ai;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=Jw7NNGzmu6cNvHW2t60/yQ1V2O6qaEt5DX69vlQC+DU=;
+	b=tMlak7R2ODQiRmvHKRYc2UHql8xVSan3PmDnrQbzIObbYYTDvnVPpEabm5IpYtVA
+	9fHE6AvXL7U/3X7SkwKsJCXh5qcJ36sz3MWB9ZlcJHCTktx5RkWR4QLMLEhm+0uNhPk
+	uKYutT3Y/48kOYFeOy3TrKgw4VmFRj+trexv305A=
+Received: by mx.zoho.eu with SMTPS id 1783663094984324.05441366467164;
+	Fri, 10 Jul 2026 07:58:14 +0200 (CEST)
+From: Ibrahim Hashimov <security@auditcode.ai>
+To: martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	dlemoal@kernel.org
+Cc: shinichiro.kawasaki@wdc.com,
+	damien.lemoal@opensource.wdc.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH v3] scsi: scsi_debug: fix REPORT ZONES alloc_len underflow OOB write
+Date: Fri, 10 Jul 2026 07:57:55 +0200
+Message-ID: <20260710055755.53830-1-security@auditcode.ai>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <1357dbf9-e135-4ba3-896d-1472a208f82f@kernel.org>
+References: <1357dbf9-e135-4ba3-896d-1472a208f82f@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: [PATCH] scsi: ufs: Add support for the aggregated read query opcode
-Reply-To: hyenc.jeong@samsung.com
-Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
-From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
-To: "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "bvanassche@acm.org" <bvanassche@acm.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC: ALIM AKHTAR <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Hyeoncheol Jeong <hyenc.jeong@samsung.com>,
-	Jinyoung Choi <j-young.choi@samsung.com>, Dukhyun Kwon
-	<d_hyun.kwon@samsung.com>, Jeuk Kim <jeuk20.kim@samsung.com>, Keoseong Park
-	<keosung.park@samsung.com>, Jaemyung Lee <jaemyung.lee@samsung.com>, Jieon
-	Seol <jieon.seol@samsung.com>, Gyusun Lee <gyusun.lee@samsung.com>, Yunjae
-	Jo <yunjae00.jo@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20260710054556epcms2p68986e2af26f42e63c87ab8fde034e450@epcms2p6>
-Date: Fri, 10 Jul 2026 14:45:56 +0900
-X-CMS-MailID: 20260710054556epcms2p68986e2af26f42e63c87ab8fde034e450
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260710053524epcms2p82121eba4240c37112fc5669430035442
-References: <CGME20260710053524epcms2p82121eba4240c37112fc5669430035442@epcms2p6>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-UFS 5.0 / JEDEC 220H introduces the AGGREGATED READ query opcode (0x9),
-which retrieves an aggregated data packet from the device in a single
-query request. The packet may bundle multiple Descriptors, Attributes
-and Flags, each organized as a group with a group header, and is
-returned in the Data Segment of the QUERY RESPONSE UPIU.
+resp_report_zones() derives the number of zone descriptors that fit in
+the reply buffer from the command allocation length:
 
-Because an aggregated data packet can be considerably larger than a
-single descriptor (up to 4 KiB rather than the 255-byte descriptor
-limit), the response UPIU buffer must be enlarged to hold it. Introduce
-ALIGNED_RSP_UPIU_SIZE (4096) for the response_upiu=5B=5D area of the UTP
-command descriptor and program the response UPIU length in the UTRD
-accordingly.
+	rep_max_zones = (alloc_len - 64) >> ilog2(RZONES_DESC_HD);
 
-Teach the BSG raw-UPIU path and the device management command path to
-recognize the new opcode so that user space can issue aggregated reads
-and receive the returned data segment. Descriptor sizing now honors
-QUERY_AGGREGATED_MAX_SIZE for aggregated reads.
+	arr = kzalloc(alloc_len, GFP_ATOMIC | __GFP_NOWARN);
 
-Signed-off-by: Hyeoncheol Jeong <hyenc.jeong=40samsung.com>
+alloc_len is taken directly from the CDB and is fully controlled by the
+initiator. When alloc_len is smaller than the 64-byte report header
+(RZONES_DESC_HD), the subtraction underflows and rep_max_zones becomes a
+huge value. The buffer is then allocated with only alloc_len bytes, which
+is smaller than the 64-byte header the code unconditionally writes, and
+the descriptor loop is bounded by the bogus rep_max_zones. Both the header
+store and the following zone descriptors are then written past the end of
+the undersized allocation, corrupting adjacent slab memory.
+
+Fix it by sizing the buffer to a whole number of 64-byte blocks that
+cover the requested allocation length:
+
+	rep_max_zones =
+		(ALIGN((u64)alloc_len, RZONES_DESC_HD) - RZONES_DESC_HD)
+		>> ilog2(RZONES_DESC_HD);
+	arr_len = (u64)RZONES_DESC_HD * (rep_max_zones + 1);
+
+	arr = kzalloc(arr_len, GFP_ATOMIC | __GFP_NOWARN);
+
+RZONES_DESC_HD is a power of two, so ALIGN() rounds alloc_len up to the
+next multiple of 64 and rep_max_zones can no longer underflow: for any
+alloc_len of 1 to 64 it is 0, so only the header is built. arr_len is
+always RZONES_DESC_HD * (rep_max_zones + 1), which is exactly large enough
+for the header plus every descriptor the loop may write, so the report is
+always assembled within bounds, including a possibly partial trailing
+zone descriptor. The existing copy-out still transfers only what the host
+asked for:
+
+	fill_from_dev_buffer(scp, arr, min_t(u32, alloc_len, rep_len));
+
+so an allocation length that ends in the middle of a zone descriptor
+returns the correctly truncated partial descriptor, as permitted by the
+SCSI/ZBC specifications, while never reading past arr_len.
+
+The aligned length and the buffer size are computed in 64-bit (alloc_len
+is cast to u64 before ALIGN and the size product uses a u64 block size) so
+a crafted allocation length near U32_MAX cannot wrap them to a small value;
+such a request simply fails the large allocation and returns a check
+condition instead of overflowing the buffer.
+
+This was found by static analysis. A KASAN slab-out-of-bounds runtime
+reproduction of the original underflow is being re-run against the ALIGN
+based fix and will be reported separately.
+
+Fixes: 7db0e0c8190a ("scsi: scsi_debug: Fix buffer size of REPORT ZONES command")
+Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Ibrahim Hashimov <security@auditcode.ai>
+Assisted-by: AuditCode-AI:2026.07
 ---
-drivers/ufs/core/ufs_bsg.c 16 +++++++++++-----
-drivers/ufs/core/ufshcd.c=C2=A0=20=C2=A0=207=20++++---=0D=0Ainclude/ufs/ufs=
-.h=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=202=20++=0D=0Ainclude=
-/ufs/ufshci.h=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=208=20+++++++-=0D=0A4=20file=
-s=20changed,=2024=20insertions(+),=209=20deletions(-)=0D=0A=0D=0Adiff=20--g=
-it=20a/drivers/ufs/core/ufs_bsg.c=20b/drivers/ufs/core/ufs_bsg.c=0D=0Aindex=
-=2058b506eac6dc..176fedd496af=20100644=0D=0A---=20a/drivers/ufs/core/ufs_bs=
-g.c=0D=0A+++=20b/drivers/ufs/core/ufs_bsg.c=0D=0A=40=40=20-14,14=20+14,18=
-=20=40=40=0D=0A=23include=20=22ufshcd-priv.h=22=0D=0A=0D=0Astatic=20int=20u=
-fs_bsg_get_query_desc_size(struct=20ufs_hba=20*hba,=20int=20*desc_len,=0D=
-=0A-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=C2=A0=20=C2=A0=20=C2=A0=20struct=20utp_upiu_query=20*qr)=0D=0A+=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=C2=A0=20=C2=A0=
-=20=C2=A0=20struct=20utp_upiu_query=20*qr,=0D=0A+=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=C2=A0=20=C2=A0=20=C2=A0=20enu=
-m=20query_opcode=20desc_op)=0D=0A=7B=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0int=20desc_size=20=3D=20be16_to_cpu(qr->length);=0D=0A=0D=0A=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0if=20(desc_size=20<=3D=200)=0D=0A=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0ret=
-urn=20-EINVAL;=0D=0A=0D=0A-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0*desc_len=20=
-=3D=20min_t(int,=20QUERY_DESC_MAX_SIZE,=20desc_size);=0D=0A+=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0if=20(desc_op=20=3D=3D=20UPIU_QUERY_OPCODE_AGGREGATED_=
-READ)=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0*desc_len=20=3D=20min_t(int,=20QUERY_AGGREGATED_MAX_SIZE,=20desc_s=
-ize);=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0else=0D=0A+=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0*desc_len=20=3D=20=
-min_t(int,=20QUERY_DESC_MAX_SIZE,=20desc_size);=0D=0A=0D=0A=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0return=200;=0D=0A=7D=0D=0A=40=40=20-35,11=20+39,=
-12=20=40=40=20static=20int=20ufs_bsg_alloc_desc_buffer(struct=20ufs_hba=20*=
-hba,=20struct=20bsg_job=20*job,=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0u8=20*descp;=0D=0A=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0if=
-=20(desc_op=20=21=3D=20UPIU_QUERY_OPCODE_WRITE_DESC=20&&=0D=0A-=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=C2=A0=20=C2=A0=20desc_op=20=21=3D=20UPIU_QUERY_OPC=
-ODE_READ_DESC)=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=C2=A0=20=C2=A0=20=
-desc_op=20=21=3D=20UPIU_QUERY_OPCODE_READ_DESC=20&&=0D=0A+=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=C2=A0=20=C2=A0=20desc_op=20=21=3D=20UPIU_QUERY_OPCODE=
-_AGGREGATED_READ)=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0goto=20out;=0D=0A=0D=0A=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0qr=20=3D=20&bsg_request->upiu_req.qr;=0D=0A-=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0if=20(ufs_bsg_get_query_desc_size(hba,=20desc_len,=
-=20qr))=20=7B=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0if=20(ufs_bsg_get_q=
-uery_desc_size(hba,=20desc_len,=20qr,=20desc_op))=20=7B=0D=0A=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0dev_err(h=
-ba->dev,=20=22Illegal=20desc=20size=5Cn=22);=0D=0A=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0return=20-EINVAL;=0D=
-=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=7D=0D=0A=40=40=20-161,7=20+16=
-6,8=20=40=40=20static=20int=20ufs_bsg_request(struct=20bsg_job=20*job)=0D=
-=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=C2=A0=20=C2=A0=20=C2=A0=20buff,=20&=
-desc_len,=20desc_op);=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0if=20(ret)=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0dev_err(hba->dev,=20=22exe=20raw=20upiu:=20error=20code=20%d=5C=
-n=22,=20ret);=0D=0A-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0else=20if=20(desc_op=20=3D=3D=20UPIU_QUERY_OPCODE_READ_DE=
-SC=20&&=20desc_len)=20=7B=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0else=20if=20((desc_op=20=3D=3D=20UPIU_QUERY_O=
-PCODE_READ_DESC=20=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=C2=A0=20desc_o=
-p=20=3D=3D=20UPIU_QUERY_OPCODE_AGGREGATED_READ)=20&&=20desc_len)=20=7B=0D=
-=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0bsg_reply->reply_payload_rcv_len=
-=20=3D=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0sg_copy_from_buffer(job->request_payload.sg_list,=0D=0A=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=C2=A0=20=
-=C2=A0=20job->request_payload.sg_cnt,=0D=0Adiff=20--git=20a/drivers/ufs/cor=
-e/ufshcd.c=20b/drivers/ufs/core/ufshcd.c=0D=0Aindex=20d3044a3089b5..a366224=
-462ca=20100644=0D=0A---=20a/drivers/ufs/core/ufshcd.c=0D=0A+++=20b/drivers/=
-ufs/core/ufshcd.c=0D=0A=40=40=20-4108,14=20+4108,14=20=40=40=20static=20voi=
-d=20ufshcd_host_memory_configure(struct=20ufs_hba=20*hba)=0D=0A=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0utrdlp=5Bi=5D.prd_table_offset=20=3D=0D=0A=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0cpu_to=
-_le16(prdt_offset);=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0utrdlp=5B=
-i=5D.response_upiu_length=20=3D=0D=0A-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0cpu_to_le16(ALIGNED_UPIU_SIZE);=0D=0A+=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0cpu_to_le=
-16(ALIGNED_RSP_UPIU_SIZE);=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=7D=20else=20=7B=0D=0A=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0utrdlp=5Bi=5D.response_upiu_offset=20=3D=0D=0A=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0cpu=
-_to_le16(response_offset=20>>=202);=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0utrdlp=5Bi=5D.prd_table_offset=20=3D=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0cpu_to_le16(prdt_offset=20>=
->=202);=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0utrdlp=5Bi=5D.respons=
-e_upiu_length=20=3D=0D=0A-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0cpu_to_le16(ALIGNED_UPIU_SIZE=20>>=202);=0D=0A+=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0cpu_to_le16(=
-ALIGNED_RSP_UPIU_SIZE=20>>=202);=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=7D=0D=0A=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=7D=0D=0A=7D=0D=0A=40=40=20-7638,7=20+7638,8=20=40=40=20s=
-tatic=20int=20ufshcd_issue_devman_upiu_cmd(struct=20ufs_hba=20*hba,=0D=0A=
-=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0/*=20just=20copy=20the=20up=
-iu=20response=20as=20it=20is=20*/=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0memcpy(rsp_upiu,=20lrbp->ucd_rsp_ptr,=20sizeof(*rsp_upiu));=0D=0A-=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0if=20(desc_buff=20&&=20desc_op=20=3D=3D=20=
-UPIU_QUERY_OPCODE_READ_DESC)=20=7B=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0if=20(desc_buff=20&&=20(desc_op=20=3D=3D=20UPIU_QUERY_OPCODE_READ_DESC=
-=20=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=C2=A0=20desc_op=20=3D=3D=20UP=
-IU_QUERY_OPCODE_AGGREGATED_READ))=20=7B=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u8=20*descp=20=3D=20(u8=20*=
-)lrbp->ucd_rsp_ptr=20+=20sizeof(*rsp_upiu);=0D=0A=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u16=20resp_len=20=3D=
-=20be16_to_cpu(lrbp->ucd_rsp_ptr->header=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=C2=A0=20.data_segment_length);=0D=0Adiff=20--git=20a/include/ufs/=
-ufs.h=20b/include/ufs/ufs.h=0D=0Aindex=200d48e137d66d..01bf9a8c8bb3=2010064=
-4=0D=0A---=20a/include/ufs/ufs.h=0D=0A+++=20b/include/ufs/ufs.h=0D=0A=40=40=
-=20-25,6=20+25,7=20=40=40=20static_assert(sizeof(struct=20utp_upiu_query)=
-=20=3D=3D=2020);=0D=0A=0D=0A=23define=20GENERAL_UPIU_REQUEST_SIZE=20(sizeof=
-(struct=20utp_upiu_req))=0D=0A=23define=20QUERY_DESC_MAX_SIZE=C2=A0=20=C2=
-=A0=20=C2=A0=20255=0D=0A+=23define=20QUERY_AGGREGATED_MAX_SIZE=204096=0D=0A=
-=23define=20QUERY_DESC_MIN_SIZE=C2=A0=20=C2=A0=20=C2=A0=202=0D=0A=23define=
-=20QUERY_DESC_HDR_SIZE=C2=A0=20=C2=A0=20=C2=A0=202=0D=0A=23define=20QUERY_O=
-SF_SIZE=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20(GENERAL_UPIU_=
-REQUEST_SIZE=20-=20=5C=0D=0A=40=40=20-464,6=20+465,7=20=40=40=20enum=20quer=
-y_opcode=20=7B=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0UPIU_QUERY_OP=
-CODE_SET_FLAG=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=3D=200x6,=0D=0A=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0UPIU_QUERY_OPCODE_CLEAR_FLAG=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=3D=200x7,=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0UPIU_QUERY_OPCODE_TOGGLE_FLAG=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=3D=200x8,=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0UPIU_QUERY_OPCODE_AGGR=
-EGATED_READ=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=3D=200x9,=0D=0A=7D;=0D=0A=
-=0D=0A/*=20bRefClkFreq=20attribute=20values=20*/=0D=0Adiff=20--git=20a/incl=
-ude/ufs/ufshci.h=20b/include/ufs/ufshci.h=0D=0Aindex=209f0fdd850e54..682104=
-fb7390=20100644=0D=0A---=20a/include/ufs/ufshci.h=0D=0A+++=20b/include/ufs/=
-ufshci.h=0D=0A=40=40=20-18,6=20+18,12=20=40=40=20enum=20=7B=0D=0A=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0TASK_REQ_UPIU_SIZE_DWORDS=20=C2=A0=20=C2=
-=A0=20=C2=A0=20=C2=A0=3D=208,=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=
-=A0TASK_RSP_UPIU_SIZE_DWORDS=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=3D=208,=0D=
-=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0ALIGNED_UPIU_SIZE=20=C2=A0=20=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=3D=20512,=0D=
-=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0/*=0D=0A+=20=C2=A0=20=C2=A0=20=C2=
-=A0=20=C2=A0=20*=20The=20aggregated=20read=20opcode=20can=20return=20an=20a=
-ggregated=20data=20packet=20of=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=20*=20up=20to=20QUERY_AGGREGATED_MAX_SIZE=20bytes,=20so=20the=20response=
-=20UPIU=20buffer=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20*=20needs=20t=
-o=20be=20large=20enough=20to=20hold=20it.=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20*/=0D=0A+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0ALIGNED_RSP_UPIU_S=
-IZE=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=
-=3D=204096,=0D=0A=7D;=0D=0A=0D=0A/*=20UFSHCI=20Registers=20*/=0D=0A=40=40=
-=20-497,7=20+503,7=20=40=40=20struct=20ufshcd_sg_entry=20=7B=0D=0A=C2=A0=20=
-*/=0D=0Astruct=20utp_transfer_cmd_desc=20=7B=0D=0A=C2=A0=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0u8=20command_upiu=5BALIGNED_UPIU_SIZE=5D;=0D=0A-=20=C2=A0=
-=20=C2=A0=20=C2=A0=20=C2=A0u8=20response_upiu=5BALIGNED_UPIU_SIZE=5D;=0D=0A=
-+=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u8=20response_upiu=5BALIGNED_RSP_UPIU_=
-SIZE=5D;=0D=0A=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u8=20prd_table=5B=
-=5D;=0D=0A=7D;=0D=0A=0D=0A--=20=0D=0A2.25.1=0D=0A
+v3: adopt Damien Le Moal's ALIGN-based buffer sizing (Suggested-by) so a
+partial trailing zone descriptor is filled and returned per the SCSI/ZBC
+specs; v2 emitted only the report header for allocation lengths of 65..127
+bytes. The buffer is sized to a whole number of 64-byte blocks covering
+alloc_len; the existing min(alloc_len, rep_len) copy-out still truncates the
+transfer to the requested length.
+Computed in 64-bit to avoid a u32 wrap of the aligned length/size for
+allocation lengths near U32_MAX (which would otherwise reintroduce the
+overflow).
+v2: https://lore.kernel.org/linux-scsi/20260709194824.50777-1-security@auditcode.ai/
+ drivers/scsi/scsi_debug.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 9d1c9c41d0f9..12e5a8624511 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -5890,6 +5890,7 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+ 	u32 alloc_len, rep_opts, rep_len;
+ 	bool partial;
+ 	u64 lba, zs_lba;
++	u64 arr_len;
+ 	u8 *arr = NULL, *desc;
+ 	u8 *cmd = scp->cmnd;
+ 	struct sdeb_zone_state *zsp = NULL;
+@@ -5911,9 +5912,11 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+ 		return check_condition_result;
+ 	}
+ 
+-	rep_max_zones = (alloc_len - 64) >> ilog2(RZONES_DESC_HD);
++	rep_max_zones = (ALIGN((u64)alloc_len, RZONES_DESC_HD) - RZONES_DESC_HD) >>
++			ilog2(RZONES_DESC_HD);
++	arr_len = (u64)RZONES_DESC_HD * (rep_max_zones + 1);
+ 
+-	arr = kzalloc(alloc_len, GFP_ATOMIC | __GFP_NOWARN);
++	arr = kzalloc(arr_len, GFP_ATOMIC | __GFP_NOWARN);
+ 	if (!arr) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
+ 				INSUFF_RES_ASCQ);
+-- 
+2.50.1 (Apple Git-155)
+
