@@ -1,201 +1,182 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E83B01A681E;
-	Fri, 10 Jul 2026 00:24:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458A4175A7B;
+	Fri, 10 Jul 2026 00:58:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783643073; cv=none; b=usCXyqDRfbjY9xJM2vSSOS2xVtWoMIU9UcTVB1qtFjpP6bWiR92TnP5w65u1or+Z2Vx866qsMiPoGUNM6hBSOE83oGFrU0HsnxFG1CxIp834OuEf+FmxY+FDXKJQL9AakKz9YjUL0tHk+rlWXqBb7+AKkTeXx6rlZUQ55h1M7Os=
+	t=1783645118; cv=none; b=tLDnk9oRl+tPwz/dfpN1onorB9wwPCvOhNW6bEr1jHV50YOPEW28u+KWsLy9+I6e/tDW19SHRdcJIVzs0p9JMP4lU18v1c+6hCccw6jL0XWUpIPaUzGJjmlqfCFkomj6iNyzgmJ2XinP0iJZBjqpk4y8BMUru5hZjBJQ4kJL4Tw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783643073; c=relaxed/simple;
-	bh=1j9cQsfsDK/0QFkrvqF3ISU0W47cXjT/kv+EqPDklng=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BCkoC0GxhuJITrFqQXcL1UK29Tqegz5gE4hjatx+WE7+A0hlUmD2fEkzisgsBUMxwn5uR+EybdVpG8jbo+y2AFpScmkOAcRmtTT/HAgnzbNgMc09bLF+hCVpEQ+vzRRpOSKKyBMpA8uPlsYYp2FpvnwxkMowU8cuBqVIUOz66kQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UYEAooH0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783645118; c=relaxed/simple;
+	bh=kX8HnrLPuF/RCDXTRd7lEJw6/ycqb6qFRjd3WukkzUo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=svMB9DpDBiiVtk9dQLzuKZk7F/4UM7/Wq8zM7GesZNJz9yE1c1tRqniwz0bEPr/WRqaizz6ybyU1O7VBBboU9pBVx/Lem1j86FzPmRmo3OpT7CIxwO2pkFNYFbJgeCOG8h5MYdYJdSzLoPnvJcqE/oO8/I996055sW4HhGYulmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h5jYR1h1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UYEAooH0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3148D1F000E9;
-	Fri, 10 Jul 2026 00:24:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h5jYR1h1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E38811F000E9;
+	Fri, 10 Jul 2026 00:58:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783643071;
-	bh=p1dci4EoUtME2otBi8jU6WmMtv1TPe4Knf6QOX1mOWs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UYEAooH0ZbO16YLfB9O3hWq1QTwNHqRmW7VhPhCXwuyGGEy8AL7Jbi6HD6PpgflIc
-	 mRFkanZbWb7A3sRrCst2vl7ZVclH581HbcZHHf78ochR5tCVADxD1faC7ADO7ws3KO
-	 3Hp86QD9R2EMYzk/q6y/l7g+Zz5k5jLA/f4yvicj1RszbpQ4QIC8bRrrS7I3zrM2bv
-	 aAUCQWxYz24yY+f7HO5pQGfqxjfIGMcVJFsguLq/4//jvkDU5eqcnjF9KSTbjTOVj+
-	 Er6/56i0M93w+bVGzygRSJIRlR6wE4PQVY1PfbP8oUJ8xWoq1Wq2nHaTuRA/akXMIP
-	 Lmy1fJHKWX06Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/2] ata: libata-scsi: terminate deferred commands on
- time out
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org
-In-Reply-To: <20260710000646.1202200-2-dlemoal@kernel.org>
-References: <20260710000646.1202200-1-dlemoal@kernel.org>
- <20260710000646.1202200-2-dlemoal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 10 Jul 2026 00:24:30 +0000
-Message-Id: <20260710002431.3148D1F000E9@smtp.kernel.org>
+	s=k20260515; t=1783645116;
+	bh=M49Rsdk+yKBoXWSlkIuoNcmpgwLg1lupYccK7/fLgMY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=h5jYR1h1gsFprBQZ9hN1al2nZnNWZVK9hWfd+sfpX3V1O825c3ob1NyvhlOOFKs9C
+	 eXJVkSffXNTWhjaCwCk6mzy7zWW30iwwM8I7xUqhCEp9jYXja3d2wIpE1/DS+yQCCj
+	 KoYQfniiTzsGht+34bmmfMy5Zfct7hMeBS/0x7hcdFrcFHDV+twqraJ7BKMvNWB1Xm
+	 XvS5AgEHu/976Rd/gUa4XHDT5RGIUgQ5OmhBHGDqe9xtVwU4E5WfzMGlLXq3ZfJQrE
+	 XdTJCZdVm1n/u0EYVM1s5VAc9ZYcQzQtdJVwZgaHHhZr/CDY1qF1R5EqyvrIWzC6Dk
+	 FSKJfU3GL139A==
+Message-ID: <1357dbf9-e135-4ba3-896d-1472a208f82f@kernel.org>
+Date: Fri, 10 Jul 2026 09:58:22 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: scsi_debug: fix REPORT ZONES alloc_len underflow
+ OOB write
+To: Ibrahim Hashimov <security@auditcode.ai>, martin.petersen@oracle.com,
+ James.Bottomley@HansenPartnership.com
+Cc: shinichiro.kawasaki@wdc.com, damien.lemoal@opensource.wdc.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20260709150631.45018-1-security@auditcode.ai>
+ <20260709194824.50777-1-security@auditcode.ai>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260709194824.50777-1-security@auditcode.ai>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On 2026/07/10 4:48, Ibrahim Hashimov wrote:
+> resp_report_zones() reads the REPORT ZONES(16) ALLOCATION LENGTH field
+> (cmd[10..13]) into the unsigned alloc_len and, apart from the
+> alloc_len == 0 fast path, uses it without flooring it against the
+> 64-byte report header:
+> 
+> 	rep_max_zones = (alloc_len - 64) >> ilog2(RZONES_DESC_HD);
+> 	arr = kzalloc(alloc_len, GFP_ATOMIC | __GFP_NOWARN);
+> 	...
+> 	desc = arr + 64;
+> 
+> For any alloc_len in the range 1..63, alloc_len - 64 wraps around
+> (alloc_len and rep_max_zones are unsigned), so rep_max_zones becomes a
+> huge value instead of zero. At the same time arr is allocated with the
+> raw alloc_len, which is smaller than the 64-byte header the function
+> always builds, and desc is set to arr + 64, already past the end of the
+> allocation. The report header stores (put_unaligned_be32 at arr+0,
+> put_unaligned_be64 at arr+8 and arr+16) can then run past a sub-24-byte
+> buffer, and the per-zone descriptor loop, no longer bounded by the
+> inflated rep_max_zones, writes 64-byte descriptors from desc onward,
+> producing a slab out-of-bounds write.
+> 
+> Fix it the way ZBC and SPC require: allocation length truncation is not
+> an error, and a small alloc_len is a legitimate probe a host uses to
+> read the zone list length before allocating a full buffer. Clamp
+> rep_max_zones to zero when alloc_len is below the header size so no
+> descriptor is emitted, and size the allocation to at least the header
+> so the unconditional 64-byte header build cannot overflow. The existing
+> copy-out already truncates the result with
+> fill_from_dev_buffer(scp, arr, min_t(u32, alloc_len, rep_len)), so the
+> host still receives exactly the alloc_len bytes it asked for. There is
+> no functional change for alloc_len >= 64.
+> 
+> This supersedes the previous approach of rejecting a sub-header
+> allocation length with a check condition, which would have broken those
+> legitimate small-alloc_len probes.
+> 
+> Verified on a v6.19 KASAN build: with scsi_debug loaded as
+> zbc=host-managed, issuing REPORT ZONES(16) via SG_IO with alloc_len=32
+> triggers a KASAN slab-out-of-bounds write in resp_report_zones()
+> before this change, and the same command produces no report once the
+> clamp and allocation floor are applied. Reproduction requires
+> CAP_SYS_RAWIO to submit the raw CDB.
+> 
+> Fixes: 7db0e0c8190a ("scsi: scsi_debug: Fix buffer size of REPORT ZONES command")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ibrahim Hashimov <security@auditcode.ai>
+> Assisted-by: AuditCode-AI:2026.07
+> ---
+> v2: address sashiko-bot review of v1
+> (https://lore.kernel.org/linux-scsi/20260709150631.45018-1-security@auditcode.ai/):
+> rejecting a sub-header allocation length with a check condition violates the
+> ZBC/SPC rule that allocation-length truncation is not an error and breaks
+> legitimate small-alloc_len zone-list-length probes. Instead clamp rep_max_zones
+> to zero and floor the allocation at the 64-byte header, letting the existing
+> min(alloc_len, rep_len) copy-out return the truncated header. No functional
+> change for alloc_len >= 64.
+>  drivers/scsi/scsi_debug.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 9d1c9c41d0f9..a21d76fe35f6 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -5911,9 +5911,11 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+>  		return check_condition_result;
+>  	}
+>  
+> -	rep_max_zones = (alloc_len - 64) >> ilog2(RZONES_DESC_HD);
+> +	rep_max_zones = (alloc_len < RZONES_DESC_HD) ? 0 :
+> +			(alloc_len - RZONES_DESC_HD) >> ilog2(RZONES_DESC_HD);
 
-New issues:
-- [High] `ata_scsi_port_eh_timed_out` fails to set `ATA_PFLAG_EH_PENDING`, =
-which allows requeued deferred commands to be immediately re-issued and the=
- timed-out command itself to be erroneously executed, defeating the patch's=
- optimization and causing unnecessary hardware resets.
+Please expend this using an actual if:
 
-Pre-existing issues:
-- [Critical] A race condition between a deferred command's SCSI timeout and=
- its requeue completion causes the command to be silently dropped and repor=
-ted as successfully completed to the block layer, leading to silent data co=
-rruption.
---
+	if (alloc_len < RZONES_DESC_HD)
+		rep_max_zones = 0;
+	else
+		rep_max_zones =
+			(alloc_len - RZONES_DESC_HD) >> ilog2(RZONES_DESC_HD);
 
---- Patch [1]: [PATCH v2 1/2] ata: libata-scsi: terminate deferred commands=
- on time out ---
-commit a21f27abd9e61a32aa55fa1005071af9c225247b
-Author: Damien Le Moal <dlemoal@kernel.org>
+>  
+> -	arr = kzalloc(alloc_len, GFP_ATOMIC | __GFP_NOWARN);
+> +	arr = kzalloc(max_t(u32, alloc_len, RZONES_DESC_HD),
+> +		      GFP_ATOMIC | __GFP_NOWARN);
 
-ata: libata-scsi: terminate deferred commands on time out
+Yes, but this only partly address the issue. E.g. if the command has an
+allocation length of 64+32, rep_max_zones will incorrectly be 0, leaving the 32B
+after the header unfilled. Sure, that is a "useless" case since no one wants a
+partial zone descriptor. But the SCSI specs allow this, so let's do it correctly.
 
-If a command timeout occurs while we have a deferred non-NCQ command
-waiting to be issued, the SCSI EH task is never woken up. Avoid this
-unnecessary EH trigger additional wait time using the eh_timed_out SCSI
-host template operation to force a requeue of deferred QCs.
+I have a patch in my local queue that I was about to send to fix this, but you
+where faster :) What I did is:
 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 4a95e6bae38b..96a5a0af4564 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -5842,6 +5842,7 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+        unsigned int rep_max_zones, nrz = 0;
+        int ret = 0;
+        u32 alloc_len, rep_opts, rep_len;
++       u64 arr_len;
+        bool partial;
+        u64 lba, zs_lba;
+        u8 *arr = NULL, *desc;
+@@ -5865,9 +5866,11 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+                return check_condition_result;
+        }
 
-[ ... ]
+-       rep_max_zones = (alloc_len - 64) >> ilog2(RZONES_DESC_HD);
++       rep_max_zones =
++               (ALIGN(alloc_len, RZONES_DESC_HD) - RZONES_DESC_HD) >>
++		ilog2(RZONES_DESC_HD);
++       arr_len = RZONES_DESC_HD * (rep_max_zones + 1);
 
-> @@ -1694,16 +1695,19 @@ void ata_scsi_requeue_deferred_qc(struct ata_port=
- *ap)
->  	/*
->  	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
->  	 * do not try to be smart about what to do with this deferred command
-> -	 * and simply requeue it by completing it with DID_REQUEUE.
-> +	 * and simply requeue it by completing it with DID_REQUEUE. The
-> +	 * exception here is if the deferred qc timed out, in which case, we
-> +	 * leave it as is as ata_scsi_cmd_error_handler() will take care of it.
->  	 */
->  	ata_for_each_link(link, ap, PMP_FIRST) {
->  		struct ata_queued_cmd *qc =3D link->deferred_qc;
-> =20
-> -		if (qc) {
-> -			link->deferred_qc =3D NULL;
-> -			cancel_work(&link->deferred_qc_work);
-> -			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
-> -		}
-> +		if (!qc || qc->scsicmd =3D=3D timed_out_scmd)
-> +			continue;
-> +
-> +		link->deferred_qc =3D NULL;
-> +		cancel_work(&link->deferred_qc_work);
-> +		ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
+-       arr = kzalloc(alloc_len, GFP_ATOMIC | __GFP_NOWARN);
++       arr = kzalloc(arr_len, GFP_ATOMIC | __GFP_NOWARN);
+        if (!arr) {
+                mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
+                                INSUFF_RES_ASCQ);
 
-[Severity: Critical]
-This is a pre-existing issue, but won't the explicit invocation of this
-requeue logic on every command timeout make a regression more likely?
+With that, the buffer arr is always big enough to generate a correct report with
+no overflows, but at the end, we only transfer alloc_len, which may be less than
+arr_len.
 
-When ata_scsi_requeue_deferred_qc() completes a deferred command using
-ata_scsi_qc_done() with DID_REQUEUE, it unconditionally calls
-ata_qc_free(), which clears the active flag.
 
-If the block layer timer for this command expires concurrently,
-scsi_timeout() can win the race against the scsi_done() completion. The
-block layer marks the command as timed out and adds it to the SCSI EH queue.
-
-When SCSI EH runs ata_scsi_cmd_error_handler(), it iterates over all QCs to
-find the command. Since ata_qc_free() was already called and the deferred_qc
-pointer was set to NULL, it won't match the deferred check.
-
-Does this cause the loop to finish without finding the command and fall
-through to the successful completion branch:
-
-drivers/ata/libata-eh.c:ata_scsi_cmd_error_handler() {
-    ...
-    } else {
-        /* Normal completion occurred after
-         * SCSI timeout but before this point.
-         * Successfully complete it.
-         */
-        set_host_byte(scmd, DID_OK);
-        scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-    }
-}
-
-Could this result in the command being reported as successfully completed to
-the block layer, resulting in silent data corruption?
-
-[ ... ]
-
-> +static enum scsi_timeout_action
-> +ata_scsi_port_eh_timed_out(struct ata_port *ap, struct scsi_cmnd *scmd)
-> +{
-> +	unsigned long flags;
-> +
-> +	/*
-> +	 * We had a timeout, either for an NCQ command or for one deferred
-> +	 * queued command. If we have deferred QCs and we do not release them
-> +	 * immediately, we will have shost->host_failed !=3D scsi_host_busy()
-> +	 * until the deferred QCs also timeout. This unnecessarilly increases
-> +	 * the time it takes for scsi EH to start. Terminate all deferred QCs
-> +	 * to avoid that.
-> +	 */
-> +	spin_lock_irqsave(ap->lock, flags);
-> +	ata_scsi_requeue_deferred_qc(ap, scmd);
-> +	spin_unlock_irqrestore(ap->lock, flags);
-
-[Severity: High]
-Does this function need to set ATA_PFLAG_EH_PENDING?
-
-Because this flag is not set, ata_port_eh_scheduled() will evaluate to
-false. This allows the block layer to immediately retry the requeued
-commands, which __ata_scsi_queuecmd() will accept and re-defer, keeping
-the host busy.
-
-Furthermore, for the timed-out command itself (which is skipped by the
-requeue logic), ata_scsi_deferred_qc_work() can run concurrently:
-
-drivers/ata/libata-scsi.c:ata_scsi_deferred_qc_work() {
-    ...
-    qc =3D link->deferred_qc;
-    if (qc && !ata_port_eh_scheduled(ap)) {
-        WARN_ON_ONCE(ap->ops->qc_defer(qc));
-        link->deferred_qc =3D NULL;
-        ata_qc_issue(ap, qc);
-    }
-    ...
-}
-
-Since ata_port_eh_scheduled() evaluates to false, will this work item
-erroneously issue the timed-out command to the hardware right as it enters
-error handling?
-
-When EH finally runs, it would find the timed-out command actively executing
-in hardware instead of deferred, triggering a full port freeze and reset.
-Can this defeat the patch's intended optimization of cleanly terminating the
-timeout without a reset?
-
-> +
-> +	/*
-> +	 * Let scsi_timeout() know that it must continue with handling the
-> +	 * timeout as we in fact did not do much here.
-> +	 */
-> +	return SCSI_EH_NOT_HANDLED;
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710000646.1202=
-200-1-dlemoal@kernel.org?part=3D1
+-- 
+Damien Le Moal
+Western Digital Research
