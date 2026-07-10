@@ -1,132 +1,105 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3A33750DC
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2026 05:06:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DA2731352D
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Jul 2026 05:17:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783660018; cv=none; b=iyyp0yqkoicI8RzM0V/PyCA45mkCjP+MGD0d5hNTwZfVXmzT/wt/LJPTuWvhS5z1nxfldRCifJQfWERzA9mTRjjrHZjiiDKSTIMvWH3aI13WXwPPrCO/RfoTsy/Y9fO4YjyfJI2QovV9Jo+KA1OXE2LBKN2kzyCPDP2qVAhIAiY=
+	t=1783660626; cv=none; b=MqP0SXQ1vHhTl/vl07tTwSHRgvFdAN+jQQblgUCeNSqjWibLNCcDY4xyMysaYvmuvKOP2u9ONvp/PdJYS51P+C/Hi4ybEZ9fp65Qj+GUnRzZYq7wspQ0U9amHiLbcQhDnGlB1I4tfU9ihLm7BLPumWcBEM0kE6Pr4YMCpIc1/Z4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783660018; c=relaxed/simple;
-	bh=CBxJGxNLXTZa+4GkCgJgl7hIUuvDLwrTMXiLlOdjvAs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=K72lmKTvdCXaSSvzRxrb9cI5IMIhKADixFkGLLthjZqgyc4VPXtfFsEaK484lnhJTuEB6kIDHHHbpYwqrj4+S2b6HAVC37yIbInCdiV+jrMkS6qIsmQRJAzsymGbsVWfAu0VZiDR1oODc4xfh+WXM+gJ0aCwh0s6UQuCOoWOl8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DSF7xmFe; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1783660626; c=relaxed/simple;
+	bh=5wywzApX6wZ8veKiVUEh9kl9d37mgyz4UE+udseL2gY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=qePqrnpLv7crbJRpwqFeyADU6/GHoYddvYihi2g7LQVzqFUtksPuGjEEME9RfdumP4gc9WYwB5OYMsw7EuVBfHk0wwjbarGm4mb8HtwTaSDFt+vBV1k67nLqHHdDHGkvWWezmbP/l5Hs9ixM5+Os4eetVchNrFdwR+LjEHC6U1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lfKR8Lho; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DSF7xmFe"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2cacd69a9c0so4543155ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Jul 2026 22:06:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783660015; x=1784264815; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=pWNfAMp36IVbKDCLkOUVS83/PLFc14nRvYbSDKyBhWs=;
-        b=DSF7xmFeZ5CcUAKKkxU/UUwQgeytF1puvc+y66yAGfImBexwrFVsV82O3dZqCDmPp0
-         SPm+UP/KlmRqHKeQRVvcVN5sjYX/sI49a5p9eQhZA3c68NmncnA0rsQwwmtYFsKj2hIg
-         3LWrjyCA/tMZU/p9jycIjrjYMi63D+15r3T44V01bHSQ//yHlJ+bBb9Tu7Kx1HTXtL59
-         2HMFFplBIboY9gMRaOFzp8+8sDkxKxpK7lkLg1Owh8EVHEvztI7ek8GP9mQlRQsHHf/q
-         l+HtnjDgs84KNMhwdTPpUgVW7If3DoOfVDCCXn5JQvSaJ2YvRlfr4UsjjEU/ve/YhJuu
-         YOxw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783660015; x=1784264815;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=pWNfAMp36IVbKDCLkOUVS83/PLFc14nRvYbSDKyBhWs=;
-        b=FSdYw2EoDh4xIDfk+N6m2X1zlj521HWCuFOijOs4o4lgdpxcJNmPRSIJlg5ywoNGLg
-         K9sY7qg/shAd09h5W2Z52TM9eneZs2bDryirhK/dHtlFcqCFD4MG815tZxN6aInQOba4
-         1JCTSjekuQrRN1pF9TUWvIqBPbmbGxvD3JlbAZcJjq1wgDDwgUXUre3t4Dj7UT0csneO
-         eiDsFNbI3iDOszrbbKy7lzEVGRPf3Xxv9y5RoADBhWpnWBJKOsCeknSTEjd9ZjFkZFMo
-         5oG5nvvpSAz4ZoIJqRuFW5qHBVpTLlKF1bty0+YPkVZNx9Ut3Z7IBzMZKZAq0axiUa+D
-         uI3A==
-X-Forwarded-Encrypted: i=1; AHgh+Rq8aAGAocjZN4AMzZBF6w0WXTuJcnSCv5OX5mXGiCZT6tIVYDM6/wXlL/uBFXajmoaE+ivKikrMfm2a@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz4pmDk5t0guNzknqknNbHjBxqnEX+M++gr+htUAR4gPCGv159r
-	w7E4QKkXUXg2IPkz9sEXU1JvKxM2pBj5vCcRHjgn1r6t+iL7pdJ4McyN
-X-Gm-Gg: AfdE7ckKF8OzCD1qh0x73RXblGDiX5SypwjEeLrcEPkBIRy/CXh9KOOz6Hbzygdv2HS
-	Ds/Nv7+qO9sDBQRBWL9VJ/RIgZ4G+5IK0XzP+B/ecwM3BL8f+GNqfntZUKokqvCxA6jDUg9jlGg
-	fxAmqP+Piu/5j9dC9ZvYBo0cU4aVS+Yrr02wB51hwDaZbgSSjrhgNcxURzaQDP5qFjhf/zMk35F
-	77Adq2QQIm9Kc0JOi7Z2gsqC08JzdlpsywLWjCa0N23DF4niGajRzM5VANa2rq5gdf2w/Jxx3fS
-	OeRUWJV/u2zEbnsB9TDP46U1Y63YbZcvxzTWo7PAIKBNS7QVUwJUreU/7bXyZRSeFleERbVkUdF
-	K8p+irP44kCfndhuZWupR3ZnS+YGhDuMtIq2nFhs9KtLQo8YB0N5s8VzyKFKjJSYS50jHUR2LXu
-	HVkvCHTULz1s5Z6MS+Xd5sLEYrji1RVj/duaN6cvyunMu7kbfwkL/K0zlWLRYAtEsYxMCh2z6zU
-	RyfUlKHLyp+HusU
-X-Received: by 2002:a17:903:110f:b0:2c9:bd64:8c8b with SMTP id d9443c01a7336-2ccea40dd61mr109250695ad.31.1783660015427;
-        Thu, 09 Jul 2026 22:06:55 -0700 (PDT)
-Received: from nugod-NUC15CRHU5.tail9f095a.ts.net ([218.237.104.87])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ccc9d3c99fsm53688015ad.68.2026.07.09.22.06.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Jul 2026 22:06:54 -0700 (PDT)
-From: HyeongJun An <sammiee5311@gmail.com>
-To: Mike Christie <michael.christie@oracle.com>,
-	Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	HyeongJun An <sammiee5311@gmail.com>
-Subject: [PATCH] scsi: libiscsi_tcp: bound SCSI Response data segment to the connection buffer
-Date: Fri, 10 Jul 2026 14:06:45 +0900
-Message-ID: <20260710050645.1194212-1-sammiee5311@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lfKR8Lho"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A25541F000E9;
+	Fri, 10 Jul 2026 05:17:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783660624;
+	bh=NUSRwpx4/SpqRTtalXRTMXMNSgobvmiWWfrqei/Rs14=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=lfKR8Lhokqws5RXI1fe4sb9PcX0PPSgRxTYb0LA47jyM/KbrQlYCNl0w4KNYPSJKl
+	 OEmRn/KoO5/UigKPG8zrlVeu8Aqg1uTIeD4Amfx8wNh6jI78QwuT9SZNcNAcHR3GSq
+	 kjr+waeUjlBhzwYHA5rtKdbGl+M43Euz7TtEs5wT9xrnHt+2XzhKo0Lst6biZbSHtu
+	 rKVL1vkxxvD3PpEw5jYmQ4+Bs9e1VAjhIZfQTHtY54csAvsDsMGfNfdnHrsyprTC06
+	 gn5VQPKFNuRubEc0FlAO00p555nu5RvIJP71aBS2W5DK71w5VQoL4jNf3KKDWp3oFK
+	 fv4bLGF3yLu1A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: libiscsi_tcp: bound SCSI Response data segment to
+ the connection buffer
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "HyeongJun An" <sammiee5311@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260710050645.1194212-1-sammiee5311@gmail.com>
+References: <20260710050645.1194212-1-sammiee5311@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 10 Jul 2026 05:17:04 +0000
+Message-Id: <20260710051704.A25541F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+
+Pre-existing issues:
+- [Medium] In `iscsi_scsi_cmd_rsp()`, an incorrect bounds check allows a ma=
+licious or compromised iSCSI target to leak up to 2 bytes of uninitialized =
+kernel memory (or previous packet data) into the SCSI sense buffer via a cr=
+afted `CHECK_CONDITION` response.
+--
+
+--- Patch [1]: [PATCH] scsi: libiscsi_tcp: bound SCSI Response data segment=
+ to the connection buffer ---
+commit 997ca9836cebc0e8267dfdbdc7d5ae21d710b9fd
+Author: HyeongJun An <sammiee5311@gmail.com>
+
+scsi: libiscsi_tcp: bound SCSI Response data segment to the connection buff=
+er
 
 iscsi_tcp_hdr_dissect() receives the data segment of several PDU types
-into the fixed-size conn->data buffer, which is allocated for
-ISCSI_DEF_MAX_RECV_SEG_LEN (8192) bytes.  For the LOGIN_RSP, TEXT_RSP,
-REJECT and ASYNC_EVENT opcodes the dissect path already rejects a PDU
-whose DataSegmentLength exceeds that buffer.
+into the fixed-size conn->data buffer. This commit applies bounds
+checking for the SCSI Command Response path before copying the data
+segment to prevent overflowing the 8192-byte buffer.
 
-The SCSI Command Response (ISCSI_OP_SCSI_CMD_RSP) path also copies its
-data segment (sense/response data) into conn->data via
-iscsi_tcp_data_recv_prep(), but it does so without the same check.  The
-only upstream bound on in.datalen is conn->max_recv_dlength, the
-initiator's advertised MaxRecvDataSegmentLength, which is commonly
-negotiated well above 8192 (open-iscsi defaults to 262144).  A target
-that returns a SCSI Response with a DataSegmentLength between 8193 and
-max_recv_dlength therefore overflows the 8192-byte conn->data buffer.
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+> index 60cb6dc3c6f09..ef28543def9e8 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+> @@ -720,6 +720,18 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struc=
+t iscsi_hdr *hdr)
+>  		spin_unlock(&conn->session->back_lock);
+>  		break;
+>  	case ISCSI_OP_SCSI_CMD_RSP:
+> +		/*
+> +		 * Sense/response data is received into conn->data, so bound
+> +		 * it to that buffer like the responses handled below.
+> +		 */
+> +		if (tcp_conn->in.datalen > ISCSI_DEF_MAX_RECV_SEG_LEN) {
 
-Apply the same bound used by the sibling opcodes before handing the
-data segment to conn->data.
+[Severity: Medium]
+This is a pre-existing issue, but while looking at how sense data is read
+from conn->data, I noticed a potential out-of-bounds read in
+drivers/scsi/libiscsi.c:iscsi_scsi_cmd_rsp():
 
-Fixes: a081c13e39b5 ("[SCSI] iscsi_tcp: split module into lib and lld")
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: HyeongJun An <sammiee5311@gmail.com>
----
- drivers/scsi/libiscsi_tcp.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+        senselen =3D get_unaligned_be16(data);
+        if (datalen < senselen)
+                goto invalid_datalen;
 
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index e90805ba868f..790d11ec00bc 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -753,6 +753,18 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
- 		spin_unlock(&conn->session->back_lock);
- 		break;
- 	case ISCSI_OP_SCSI_CMD_RSP:
-+		/*
-+		 * Sense/response data is received into conn->data, so bound
-+		 * it to that buffer like the responses handled below.
-+		 */
-+		if (tcp_conn->in.datalen > ISCSI_DEF_MAX_RECV_SEG_LEN) {
-+			iscsi_conn_printk(KERN_ERR, conn,
-+					  "iscsi_tcp: received buffer of len %u but conn buffer is only %u (opcode %0x)\n",
-+					  tcp_conn->in.datalen,
-+					  ISCSI_DEF_MAX_RECV_SEG_LEN, opcode);
-+			rc = ISCSI_ERR_PROTO;
-+			break;
-+		}
- 		if (tcp_conn->in.datalen) {
- 			iscsi_tcp_data_recv_prep(tcp_conn);
- 			return 0;
--- 
-2.43.0
+        memcpy(sc->sense_buffer, data + 2,
+               min_t(uint16_t, senselen, SCSI_SENSE_BUFFERSIZE));
 
+Does this code read past the end of the received data? If datalen is exactly
+equal to senselen, the memcpy copies from data + 2, which could read 2 bytes
+past the valid data in the buffer and expose uninitialized or stale memory
+into the SCSI sense buffer. Should the bounds check be datalen < senselen +=
+ 2?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260710050645.1194=
+212-1-sammiee5311@gmail.com?part=3D1
