@@ -1,154 +1,212 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2CC31FBEBC;
-	Sat, 11 Jul 2026 09:09:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89084385D6C
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Jul 2026 09:21:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783760964; cv=none; b=DPInO7GnZb0soLerSgn0PQ/oFZafwAavlKW5wEAVb4dqbv/ET4gM1tfEt8WXrbP40Ols1d1UWphZYLVggut6XxoGh4zfH9mVQyIsiKB1tflbpvduKKLK3erD6HlDNLsey9rP8zuR+9J8CdKYvyZO70h12Enh/7K2J+0hMLLFXXM=
+	t=1783761709; cv=none; b=jWheG5pM3g5BJ6jml5GTi9tys3RukCqG7jwSCuV1J5bCpJRaS7SKCtOYBUM+IygWFmSK9r/N42wIZOP8mI4bIdBHX7W8tJsrsfXOSaqkp0HlAXrShAclF68AzX3KgNDkff9LhL1ecpyalH3Hsvy0CGl3BjSFi8h5HYLYZ7jbaps=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783760964; c=relaxed/simple;
-	bh=j/psRqZC2zyMs5v+BpWb9Fw3XxGllXyvripiwJktUjw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=aMGI0+bfzB3xB6v/N3jDxYBBSQ2qgJfZXPJRg/yFrbh5zrlBIFrhVHbkDDa6SttBZ4T9JHsiSTbgMyMHXypmed10v1BgbQOE3UAH/CoMPE9RZyibkdePs4vuID+RDITd+xhqtHhobF1w7x+ktArOdJBkrJU+sRUaz2/qoPbnq08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bCSQ5ERa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1783761709; c=relaxed/simple;
+	bh=94D/UKm4FRfjLoPMGoPYAJl6DRH5VVAc6CRTRZ3vwGs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=RMNJCbybz/1LxI5I1pBFpKEkY6FWIUolF3rp9dA7G5BTBnMSDt+Ol/VGUZVqB9W+epUgQ51ixDNu9f33ihhskrERE3fL62zh5YV1p46rzpgiW2pmH8rQXYMVNuE5L+ABHq7iYJmj+y2dnIjWEW8Pvs/UhaMlItz37LMQK5Sg6v4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XcmOvZby; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bCSQ5ERa"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 95CE6C2BCB9;
-	Sat, 11 Jul 2026 09:09:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1783760963;
-	bh=j/psRqZC2zyMs5v+BpWb9Fw3XxGllXyvripiwJktUjw=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=bCSQ5ERaeor70zDjIOW75rrQLoPGhaftuCOyirRpdHaqvC1W+FUYZSQsMY1p6rX0f
-	 v7Fh+4FEzjrPx5UeHinA1LHrllYIm0XfLse6xwWVim5vziF9Xqv2ZWTlDSq6nkUpxS
-	 2G/wGyk2ZHwTMFlllYyValxHLMZZYUAUqxDFW2G4uVJf8gMFS1RNkrmH0ePiVcY9Es
-	 2Lg5zZw40IN34yCDaxlE3bpbOHkeAiKcv52NitrP5alqG0tLIHTPHfRzTqFzbktCtw
-	 cXPWeH31dxLH4ImPeZ9qrBorAqcXr/EcDN+5WUJ82rxQA7C5vs+xUa2FFel5E3BoUX
-	 zH48HcGvnNojg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81958C43458;
-	Sat, 11 Jul 2026 09:09:23 +0000 (UTC)
-From: Bryam Vargas via B4 Relay <devnull+hexlabsecurity.proton.me@kernel.org>
-Date: Sat, 11 Jul 2026 04:09:23 -0500
-Subject: [PATCH v2] scsi: ses: validate the page 1 geometry before walking
- it
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XcmOvZby"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D90291F000E9;
+	Sat, 11 Jul 2026 09:21:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783761706;
+	bh=05fIE9gWXN0XU5nK/rJWWSF3LsvEm+mjPAdBOohOs3c=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=XcmOvZbyxT91ciz9x5tpHO3b4NAgS3XX5skq8ArjXuzMDg8sz7I9Wvsg8OsaWX1Tg
+	 SsgNlx2SWc8rB189mek2Dq20GYDx8hwPocBbyXPP1rWIYvl/v6Ycv0oyOWqJlqV1U9
+	 7b17mObh/uQmBcZrRHayyClCdM1xB6PFh8qIO2yzMaiWa3nci7H6Vi61I43dhbg+Om
+	 ShgSLN1hGRS72qECs0iSsJTFjtv+G/FzI5QNJIGmW1RHWPb7P3VXgsrWvZB9/fuXbx
+	 QarCNpKgIu8TA0at+4Jy2eBURd4MSnvIikwJ13TUoTggq8fgVPdVC+h0AggcUkVSpO
+	 TXTvTSNG6nZbQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] scsi: ses: validate the page 1 geometry before
+ walking it
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Bryam Vargas" <hexlabsecurity@proton.me>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260711-b4-disp-414d08d4-v2-1-784a01e8e2dd@proton.me>
+References: <20260711-b4-disp-414d08d4-v2-1-784a01e8e2dd@proton.me>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 11 Jul 2026 09:21:45 +0000
+Message-Id: <20260711092145.D90291F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260711-b4-disp-414d08d4-v2-1-784a01e8e2dd@proton.me>
-X-B4-Tracking: v=1; b=H4sIAEIIUmoC/x3MMQqAMAxA0atIZgNJrVa8ijioTTWLSgsiSO9uc
- XzD/y8kiSoJhuqFKLcmPY8CU1ew7vOxCaovBkOmI8eMi0Wv6ULL1lPvLToibhy3oWkNlOyKEvT
- 5l+OU8wezmJNyYgAAAA==
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1783760962; l=4018;
- i=hexlabsecurity@proton.me; s=proton; h=from:subject:message-id;
- bh=aGkqMij/fwiXWZbOxSwO7lO1Cb5QwO5aWgWs0GueIsg=;
- b=680iIPzuHZui8S3CwahOi6/WyhLQIEqbo7lI3t5qnYpeP3uXyWUDldfzivVzh39qoXtFpmJLd
- XNWCDkvqTDYB/XOCeac59jJNqxkHDtJdb8+lfDAGyTlfVppydNL3+Mu
-X-Developer-Key: i=hexlabsecurity@proton.me; a=ed25519;
- pk=dmppBMZNLLoPzxHi9l8tZDzEZUunPbgsYqIZYXeUrL0=
-X-Endpoint-Received: by B4 Relay for hexlabsecurity@proton.me/proton with
- auth_id=814
-X-Original-From: Bryam Vargas <hexlabsecurity@proton.me>
-Reply-To: hexlabsecurity@proton.me
 
-From: Bryam Vargas <hexlabsecurity@proton.me>
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+s) to consider:
 
-ses_intf_add() stores the enclosure's page 1 type-descriptor pointer and
-count (page1_types, page1_num_types); the page 2 walks,
-ses_enclosure_data_process() and the logical-id read in ses_show_id() all
-trust them.  Three device-supplied values go unbounded: the enclosure-
-descriptor skip loop reads a descriptor's length bytes while only checking
-its first byte is in range; the stored count is a device sum unrelated to
-what page 1 carries; and it is truncated into a short before being range-
-checked.  A short or inflated page 1 thus drives an out-of-bounds read of
-adjacent slab, some of which ses_show_id() returns to user space.
+Pre-existing issues:
+- [High] Diagnostic Page 2 Length Vulnerabilities: Missing bounds checks an=
+d signed integer overflows lead to massive out-of-bounds reads and writes.
+- [High] Missing minimum length check for the page 7 buffer leads to an out=
+-of-bounds read when skipping the overall descriptor.
+- [High] The enclosure device is exposed to sysfs and other subsystems befo=
+re its driver-private data is initialized, leading to a NULL pointer derefe=
+rence.
+- [High] The enclosure private data is freed before the device is unregiste=
+red, causing a Use-After-Free or NULL pointer dereference for concurrent us=
+ers.
+- [Medium] Concurrent disk probes trigger simultaneous, lockless modificati=
+ons to a shared diagnostic buffer, causing data corruption.
+--
 
-Bound the skip loop to a whole descriptor and validate the geometry once
-where it is parsed: reject a page too short for its logical id, a type
-array that ran past the buffer, or a count larger than the array holds --
-checking it before it is stored also keeps it inside the short.  Conforming
-enclosures are unaffected.
+--- Patch [1]: [PATCH v2] scsi: ses: validate the page 1 geometry before wa=
+lking it ---
+commit 622571462ff0a680551a5fb090d8b288e0c78b7c
+Author: Bryam Vargas <hexlabsecurity@proton.me>
 
-Fixes: 9927c68864e9 ("[SCSI] ses: add new Enclosure ULD")
-Closes: https://sashiko.dev/#/patchset/20260711-b4-disp-26cc3226-v1-1-e04c11c88996@proton.me?part=1
-Cc: stable@vger.kernel.org
-Signed-off-by: Bryam Vargas <hexlabsecurity@proton.me>
----
-Changes since v1 [1], addressing the Sashiko review of that posting:
- - Bound the enclosure-descriptor skip loop itself (type_ptr + 4 <= buf +
-   len).  v1 validated only after that loop ran, so a page 1 a few bytes
-   short of a descriptor was still read out of bounds inside the loop
-   before the check.
- - Validate the int type count before it is stored, not the short it
-   truncates to.  A device count of 65280 wraps a signed short to -256,
-   which slipped past the v1 range check; the int is bounded to
-   (buf+len-type_ptr)/4, below the short's range, so it cannot wrap once
-   stored.
+scsi: ses: validate the page 1 geometry before walking it
 
-Verified with an in-kernel KASAN model (7.2.0-rc1, kasan.fault=report) that
-replays the skip loop over a real kzalloc'd page 1:
- - old guard, 10-byte page 1 -> BUG: KASAN: slab-out-of-bounds read, 1 byte,
-   0 bytes to the right of the region; the tightened guard stops before it.
- - count 65280 -> the pre-store int check rejects it, the post-store short
-   check (v1) did not.
- - a conforming page 1 walks unchanged.
-Reproducer available on request.
+This patch bounds the skip loop to a whole descriptor and validates the pag=
+e 1
+geometry once where it is parsed. It rejects pages that are too short for
+their logical id, type arrays that run past the buffer, or counts larger
+than the array holds. This prevents out-of-bounds reads during the enclosure
+descriptor skip loop.
 
-[1] https://lore.kernel.org/all/20260711-b4-disp-26cc3226-v1-1-e04c11c88996@proton.me
----
- drivers/scsi/ses.c | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+> index 4c348645b04ee..907bb489252ad 100644
+> --- a/drivers/scsi/ses.c
+> +++ b/drivers/scsi/ses.c
+> @@ -742,11 +742,28 @@ static int ses_intf_add(struct device *cdev)
+>  	/* begin at the enclosure descriptor */
+>  	type_ptr =3D buf + 8;
+>  	/* skip all the enclosure descriptors */
+> -	for (i =3D 0; i < num_enclosures && type_ptr < buf + len; i++) {
+> +	for (i =3D 0; i < num_enclosures && type_ptr + 4 <=3D buf + len; i++) {
+>  		types +=3D type_ptr[2];
+>  		type_ptr +=3D type_ptr[3] + 4;
+>  	}
+> =20
+> +	/*
+> +	 * Validate the device-reported page 1 geometry before the accessors
+> +	 * walk it.  page1_types and page1_num_types come straight from the
+> +	 * enclosure; the page 2 descriptor walks (ses_get_page2_descriptor(),
+> +	 * ses_set_page2_descriptor()), ses_enclosure_data_process() and the
+> +	 * logical-id read in ses_show_id() all trust them.  Reject a page 1
+> +	 * shorter than its logical id, one whose descriptors ran past the end,
+> +	 * or one declaring more type descriptors than it carries.  Bounding the
+> +	 * count before it is stored also keeps it within its short.
+> +	 */
+> +	if (len < 8 + 4 + (int)sizeof(u64) ||
+> +	    type_ptr > buf + len ||
+> +	    types > (buf + len - type_ptr) / 4) {
+> +		err =3D -EINVAL;
+> +		goto err_free;
+> +	}
+> +
+>  	ses_dev->page1_types =3D type_ptr;
+>  	ses_dev->page1_num_types =3D types;
+> =20
 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 4c348645b04e..907bb489252a 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -742,11 +742,28 @@ static int ses_intf_add(struct device *cdev)
- 	/* begin at the enclosure descriptor */
- 	type_ptr = buf + 8;
- 	/* skip all the enclosure descriptors */
--	for (i = 0; i < num_enclosures && type_ptr < buf + len; i++) {
-+	for (i = 0; i < num_enclosures && type_ptr + 4 <= buf + len; i++) {
- 		types += type_ptr[2];
- 		type_ptr += type_ptr[3] + 4;
- 	}
- 
-+	/*
-+	 * Validate the device-reported page 1 geometry before the accessors
-+	 * walk it.  page1_types and page1_num_types come straight from the
-+	 * enclosure; the page 2 descriptor walks (ses_get_page2_descriptor(),
-+	 * ses_set_page2_descriptor()), ses_enclosure_data_process() and the
-+	 * logical-id read in ses_show_id() all trust them.  Reject a page 1
-+	 * shorter than its logical id, one whose descriptors ran past the end,
-+	 * or one declaring more type descriptors than it carries.  Bounding the
-+	 * count before it is stored also keeps it within its short.
-+	 */
-+	if (len < 8 + 4 + (int)sizeof(u64) ||
-+	    type_ptr > buf + len ||
-+	    types > (buf + len - type_ptr) / 4) {
-+		err = -EINVAL;
-+		goto err_free;
-+	}
-+
- 	ses_dev->page1_types = type_ptr;
- 	ses_dev->page1_num_types = types;
- 
+[Severity: High]
+This is a pre-existing issue, but does this code leave the page 2 length
+unvalidated?
 
----
-base-commit: dd3210c47e8d3ac6b4e9141fc68acc03b38c0ba3
-change-id: 20260711-b4-disp-414d08d4-70013715f352
+In drivers/scsi/ses.c:ses_intf_add(), the length is initialized directly
+from the device's diagnostic page:
 
-Best regards,
--- 
-Bryam Vargas <hexlabsecurity@proton.me>
+    len =3D (hdr_buf[2] << 8) + hdr_buf[3] + 4;
+    // ...
+    ses_dev->page2_len =3D len;
 
+Since struct ses_device declares short page2_len, a length greater than
+32767 overflows into a negative value, and a length less than 8 causes
+underflows.
 
+Can this result in a massive out-of-bounds write via
+memset(desc_ptr, 0, ses_dev->page2_len - 8) in ses_set_page2_descriptor(),
+and subsequent out-of-bounds accesses when advancing pointers in
+ses_get_page2_descriptor()?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is there a missing minimum
+length check for the page 7 buffer?
+
+Looking at drivers/scsi/ses.c:ses_enclosure_data_process(), if the device
+returns a page 7 length less than 8 (e.g., indicating 0 bytes of payload),
+kzalloc() allocates a 5-byte buffer:
+
+    page7_len =3D len =3D (hdr_buf[2] << 8) + hdr_buf[3] + 4;
+    buf =3D kzalloc(len + 1, GFP_KERNEL);
+    // ...
+    } else {
+        desc_ptr =3D buf + 8;
+        len =3D (desc_ptr[2] << 8) + desc_ptr[3];
+
+Does the unconditional desc_ptr =3D buf + 8 lead to a slab out-of-bounds re=
+ad
+when checking desc_ptr[2]?
+
+[Severity: High]
+This is a pre-existing issue, but is the enclosure device exposed before its
+private data is initialized?
+
+In drivers/scsi/ses.c:ses_intf_add(), the device is registered before the
+scratch payload is attached:
+
+    edev =3D enclosure_register(...);
+    // ...
+    edev->scratch =3D ses_dev;
+
+If a user process reads the sysfs id file or an asynchronous scsi probe
+matches the enclosure before edev->scratch is set, could this trigger a null
+pointer dereference?
+
+For example, in drivers/scsi/ses.c:ses_show_id():
+
+    struct ses_device *ses_dev =3D edev->scratch;
+    unsigned long long id =3D get_unaligned_be64(ses_dev->page1+8+4);
+
+Will this unconditionally dereference a null edev->scratch?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does the teardown sequence
+cause a use-after-free or null pointer dereference?
+
+In drivers/scsi/ses.c:ses_intf_remove_enclosure(), the private data is freed
+before the device is unregistered:
+
+    ses_dev =3D edev->scratch;
+    edev->scratch =3D NULL;
+
+    kfree(ses_dev->page10);
+    kfree(ses_dev->page1);
+    kfree(ses_dev->page2);
+    kfree(ses_dev);
+    // ...
+    enclosure_unregister(edev);
+
+Can concurrent sysfs reads or asynchronous scsi probes operating on the
+device during this window dereference the cleared edev->scratch, resulting
+in a crash?
+
+[Severity: Medium]
+This is a pre-existing issue, but do concurrent disk probes trigger
+data races on the shared diagnostic buffer?
+
+In drivers/scsi/ses.c:ses_enclosure_data_process():
+
+    /* re-read page 10 */
+    if (ses_dev->page10)
+        ses_recv_diag(sdev, 10, ses_dev->page10, ses_dev->page10_len);
+
+If multiple scsi devices probe concurrently, does this unconditionally
+issue ses_recv_diag() without locking, causing simultaneous hardware dma
+writes and parser reads on the exact same buffer?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260711-b4-disp-41=
+4d08d4-v2-1-784a01e8e2dd@proton.me?part=3D1
