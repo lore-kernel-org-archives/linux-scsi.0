@@ -1,116 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 743404C6D
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Jul 2026 15:14:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1F0E2E11C7;
+	Sat, 11 Jul 2026 15:21:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783782879; cv=none; b=sHfNxoOWZKMaemdSnL8yfhbMGIe3fTeW7wXpNffRqQy9BR/y8qWc+NnHST6PGopfm+JaOWINL7w3X2FYfN6myrDQNKWbkccCqcwJNyqNokUNKJ4mC7C1sgLkwBH3P3+5B38HcUv6krtXC+3LvzFQbVc0pxJZ9TEveTj+rn3Lmzs=
+	t=1783783297; cv=none; b=I5Q9V4epUKqIUKIbykZ77dYgokd3VBTc1hzzYMY4bydkdm6dKMPJx6huBLkBkAsQh3og2+a/U+zfgQjQuaUmnajUGSBmk5yFREP9eZwqLi/tJuKM2vE2cy840a0wStg5/Bn8XUH+wACmj489y2wuYwgK5iZYTbzwmNieWTgT+Zo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783782879; c=relaxed/simple;
-	bh=4TukFmOFHYjY8l6i9bLYTCYPI/aEqgtyISPnoCELzJY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uNWY5nYtITK5U3LCPqYsS42CugpnDSHUEbEaiLe8mR8ljpX3x7cUqHJUf0Cus95LhMqVU7Xlza+8U0qRBjXwIRWMYjpNUDXsVcKnKQEM6QyFYJbtCbEE3+sMwQkLMMwVHV12uIBHVT6y/FhbrhPu/hbWADYG80PbQBYorpgK5AM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DgkIxNw7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783783297; c=relaxed/simple;
+	bh=o9XAWD66ai+0Z3WcwldrjMlSlthY+1Kqo3Oox8uMmS0=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=AJHdVP17ECKnJEoLbT3u1yrqD2LndnPFjm6RkOqwmhbEQ85XaoWwapu5TwohHyImy/WrzzaK8deK/mumPkjORqv2pprAeNr0W+CR6S1x1XzzZSEnubC3hHUeu0TCZtv5m7vo/O8ugdA3YLZ3eUa6Hk70QQSYLSUgIooNriFpJ9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=eMVI1NjN; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=c8kmqXI9; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DgkIxNw7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC0711F00A3A;
-	Sat, 11 Jul 2026 15:14:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783782878;
-	bh=ZklACzRQzFzCKPXNp6u+U85nhVS/kQ6SulLE6sl/Oug=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DgkIxNw7zs8Mt+U1tqDYq7q5bL6sGfLhWNTwU2LVkY5v5jLSo7pvM3sUBLiDPgMYr
-	 vxrYh+Tr+Zay4VZta6h2XdWiuX2hDSi2mT1LFc2Z+Yfea11wja/dbR8fabppp3UuVh
-	 q/EN60rj0wY0PlI/ub1z119ojmflknI93dgB461WOL5i46br301LiK2YNUppZvippv
-	 1L8IFoBdMkXGuN33AkeVF4aEUHFOgynqBTOlFVmR4Y837bl8+KdjD/65Qy6Sqk3ooG
-	 RikHf7LdlqQqW2auJQjukChxZ3ZUqIdQe+UG/0VZP41kHKP/1diGLJ1Veet3l2pdD8
-	 sj1g0S+fVMsyA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: core: bound the VPD page 0x83 designator walk
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Michael Bommarito" <michael.bommarito@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260711150718.2916641-1-michael.bommarito@gmail.com>
-References: <20260711150718.2916641-1-michael.bommarito@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 11 Jul 2026 15:14:37 +0000
-Message-Id: <20260711151437.DC0711F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="eMVI1NjN";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="c8kmqXI9"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gyC8j6jmRzKvvr;
+	Sat, 11 Jul 2026 17:21:25 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1783783285;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=kH44882xOwsD4SfCnl+qgk2oMqAUi2EehaDoPIzn3X4=;
+	b=eMVI1NjNntkXUIL2KOm2VZts3RhfTzWVqESVgkEg1PEU0iNNOTLEy4oPU1sGltwuvADktu
+	29XhMgFGgB99GHjLXkAn5ozkGwVXTnUWBBmNLahKBuKQI8RFu1nsjv2tvFKSfvmDAtyj1O
+	lXeTa0MTvdh9lMX7wH0Z4HrZUVewtjTxlWk4QbVwtZ4evIKBzLeSF4SmncAmhlmzTH6lfO
+	ksEtFi2KZ9Zd1uON+d5igIc2yOUDcSKi98kj00W2rAeb7w1IRkWpYlhnb4PTXyjwtXe5ay
+	DtFsbogadRXZ3ZyFWqIHkaejjrBvgV4yEaPRdkLhep6OOvyMJ6Ju9mGHWYSjgw==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=c8kmqXI9;
+	spf=pass (outgoing_mbo_mout: domain of mhi@mailbox.org designates 2001:67c:2050:b231:465::102 as permitted sender) smtp.mailfrom=mhi@mailbox.org
+From: Maurice Hieronymus <mhi@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1783783283;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=kH44882xOwsD4SfCnl+qgk2oMqAUi2EehaDoPIzn3X4=;
+	b=c8kmqXI9fAQXUpbVt8GLOdc11hNZaJUQQYsS5cxln0FyNygQRxXRLlPlY4A/0KF/KVlnyq
+	89csec1W7y0LP0NuHF8OvgxGL8QwqVDg/yqjlR/tZT0U7N22e4zfIfz1jks9M3hooLWyED
+	CDY1JGEot2RA0xGQ/m+LTSdmCoWb3snkaAPehAWthZ4c9C+ImtG2A76FPCgJ1/TbH/2vmO
+	HwgjxsoeMhnxjxIUpu6BvcCkHiqsrmwmJoz/XnGg32ShT1AplRvrYoSH27jRz6L7EeMPnf
+	xNMJZmtF3EhCBlrp2XnEluRXkziEHFi6I+wVebbtpQX2hdjgVnKSjqP8z4pXDQ==
+Subject: [PATCH 0/2] PCI: Convert bitfield flags to atomic accessors
+Date: Sat, 11 Jul 2026 17:21:05 +0200
+Message-Id: <20260711-pci-dev-flags-v1-0-2fcf2811138c@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMQQqDMBBA0auEWTuQ2KK0VykuTDKjIyWVjEpBc
+ vem7fIt/j9BKQsp3M0JmQ5ReaUK1xgI85gmQonV0Nq2s71zuAbBSAfyc5wU2fvAV+abvTiozZq
+ J5f37PYa/dfcLhe07gVI+47rh/HEAAAA=
+X-Change-ID: 20260711-pci-dev-flags-fbbcf4ff9031
+To: Edward Cree <ecree.xilinx@gmail.com>, 
+ Andrew Lunn <andrew+netdev@lunn.ch>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Justin Tee <justin.tee@broadcom.com>, 
+ Paul Ely <paul.ely@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Juergen Gross <jgross@suse.com>, 
+ Stefano Stabellini <sstabellini@kernel.org>, 
+ Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>, 
+ Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Tamir Duberstein <tamird@kernel.org>, 
+ Alexandre Courbot <acourbot@nvidia.com>, 
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
+ Borislav Petkov <bp@alien8.de>, Tony Luck <tony.luck@intel.com>
+Cc: Danilo Krummrich <dakr@kernel.org>, rust-for-linux@vger.kernel.org, 
+ netdev@vger.kernel.org, linux-net-drivers@amd.com, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org, 
+ linux-edac@vger.kernel.org, Maurice Hieronymus <mhi@mailbox.org>
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783783272; l=2313;
+ i=mhi@mailbox.org; s=20260525; h=from:subject:message-id;
+ bh=o9XAWD66ai+0Z3WcwldrjMlSlthY+1Kqo3Oox8uMmS0=;
+ b=4RJCYIsxz6UvLYOQ6xqvhVEQoQSh4rZQVVIc7mWtjntBUq4ccNJ2KYKolDjFHU49aAutOyaus
+ A5Eqo668VqlDuoF/ENWHgCu8gHFoRAMIBVG+FaowFqe6tBmqjHocs5w
+X-Developer-Key: i=mhi@mailbox.org; a=ed25519;
+ pk=AHlEkGG3hpXZHntlEzF42Ip/LFyXWOgsNUvaHqAnV80=
+X-MBO-RS-ID: 7fb4275b43160de9afd
+X-MBO-RS-META: o4fyj9cuc9w1urffc3xfrywcrt7anabk
+X-Rspamd-Queue-Id: 4gyC8j6jmRzKvvr
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+`struct pci_dev` keeps ~60 flags in one C bitfield. Bits sharing a
+word must not be modified concurrently, but several writers take no
+common lock: `pci_set_master()` writes `is_busmaster` and can run
+without the device lock (e.g. runtime PM resume paths),
+`pci_disable_device()` clears it, and `broken_parity_status_store()`
+writes the same word from sysfs at any time without any lock.
 
-Pre-existing issues:
-- [High] Missing descriptor payload length check in `scsi_vpd_tpg_id()` lea=
-ds to an out-of-bounds read when accessing `d[6]` and `d[7]`.
---
+Convert these two bits to a new public `flags` bitmap accessed with
+atomic bitops, mirroring how the driver core replaced its
+`offline`/`offline_disabled` bitfield in commit a7cc262a1135 ("driver
+core: Replace dev->offline + ->offline_disabled with accessors").
+More bits can follow the same pattern later.
 
---- Patch [1]: [PATCH] scsi: core: bound the VPD page 0x83 designator walk =
+An alternative would be to reuse `priv_flags`, but its bit definitions
+and accessors are deliberately private to drivers/pci, while
+`is_busmaster` is accessed by xen-pciback, lpfc and sfc. Happy to
+respin that way if preferred.
+
+This is also a prerequisite for the Rust device enabling API rework
+[1]: the guard object planned there calls `pci_disable_device()` from
+contexts that may run concurrently with `pci_set_master()`, which
+requires `is_busmaster` to not be part of a shared bitfield word.
+
+Link: https://lore.kernel.org/rust-for-linux/DJOEYVBS17MJ.1YD3TNGQBWHNK@kernel.org/ [1]
+Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
 ---
-commit 390f380557d52bf9b1b813ffda5cbf376ee027a2
-Author: Michael Bommarito <michael.bommarito@gmail.com>
+Maurice Hieronymus (2):
+      PCI: Replace pci_dev->is_busmaster with accessors
+      PCI: Replace pci_dev->broken_parity_status with accessors
 
-scsi: core: bound the VPD page 0x83 designator walk
+ drivers/edac/edac_pci_sysfs.c               |  4 +--
+ drivers/net/ethernet/sfc/falcon/farch.c     |  2 +-
+ drivers/net/ethernet/sfc/siena/farch.c      |  2 +-
+ drivers/pci/pci-driver.c                    |  2 +-
+ drivers/pci/pci-sysfs.c                     |  4 +--
+ drivers/pci/pci.c                           |  6 ++---
+ drivers/scsi/lpfc/lpfc_init.c               |  4 +--
+ drivers/xen/xen-pciback/conf_space_header.c |  4 +--
+ drivers/xen/xen-pciback/pciback_ops.c       |  4 +--
+ include/linux/pci.h                         | 42 +++++++++++++++++++++++++++--
+ 10 files changed, 56 insertions(+), 18 deletions(-)
+---
+base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+change-id: 20260711-pci-dev-flags-fbbcf4ff9031
 
-This commit fixes an out-of-bounds read in the VPD page 0x83 designator
-walk by ensuring the designator length does not exceed the remaining bytes
-in the page. It updates scsi_vpd_lun_id(), scsi_vpd_tpg_id(), and
-sd_get_unique_id() to bound each iteration.
+Best regards,
+-- 
+Maurice Hieronymus <mhi@mailbox.org>
 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-
-[ ... ]
-
-> @@ -3546,8 +3554,14 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int =
-*rel_id)
->  		return -ENXIO;
->  	}
-> =20
-> -	d =3D vpd_pg83->data + 4;
-> -	while (d < vpd_pg83->data + vpd_pg83->len) {
-> +	for (off =3D 4; off < vpd_pg83->len; off +=3D d[3] + 4) {
-> +		if (vpd_pg83->len - off < 4)
-> +			break;
-> +
-> +		d =3D vpd_pg83->data + off;
-> +		if (d[3] > vpd_pg83->len - off - 4)
-> +			break;
-> +
->  		switch (d[1] & 0xf) {
->  		case 0x4:
->  			/* Relative target port */
->  			rel_port =3D get_unaligned_be16(&d[6]);
->  			break;
->  		case 0x5:
->  			/* Target port group */
->  			group_id =3D get_unaligned_be16(&d[6]);
->  			break;
-
-[Severity: High]
-This is a pre-existing issue, but can this code read out of bounds if the
-designator payload length is less than 4?
-
-In scsi_vpd_tpg_id(), the switch statement unconditionally reads d[6] and d=
-[7]
-via get_unaligned_be16 without verifying that the designator length (d[3]) =
-is
-at least 4.
-
-If a device or untrusted hypervisor backend provides a VPD page 0x83 contai=
-ning
-a designator with type 0x4 or 0x5 and a declared length (d[3]) of less than=
- 4,
-and this designator is positioned at the very end of the buffer, could the
-fixed-offset read at &d[6] access memory out of bounds?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260711150718.2916=
-641-1-michael.bommarito@gmail.com?part=3D1
