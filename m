@@ -1,212 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from SHSQR01.spreadtrum.com (unknown [222.66.158.135])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89084385D6C
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Jul 2026 09:21:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D4CC30F938;
+	Sat, 11 Jul 2026 11:22:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=222.66.158.135
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783761709; cv=none; b=jWheG5pM3g5BJ6jml5GTi9tys3RukCqG7jwSCuV1J5bCpJRaS7SKCtOYBUM+IygWFmSK9r/N42wIZOP8mI4bIdBHX7W8tJsrsfXOSaqkp0HlAXrShAclF68AzX3KgNDkff9LhL1ecpyalH3Hsvy0CGl3BjSFi8h5HYLYZ7jbaps=
+	t=1783768975; cv=none; b=VtyMrh0cXCGFaLTSVjUkRSChiwqzFOGj+QfIDRIaFhRNO+th9cXj+cFm/XaCxOBs1voSzORMG6FpFRk9MXNakElNa0NnLj1+ii6JDM735VLkBFem/PP2i8CHwSozvSAh5UZKuZfaBBJPd9XBBfglLzwT1yEMdI7iePv1crEXqVY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783761709; c=relaxed/simple;
-	bh=94D/UKm4FRfjLoPMGoPYAJl6DRH5VVAc6CRTRZ3vwGs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RMNJCbybz/1LxI5I1pBFpKEkY6FWIUolF3rp9dA7G5BTBnMSDt+Ol/VGUZVqB9W+epUgQ51ixDNu9f33ihhskrERE3fL62zh5YV1p46rzpgiW2pmH8rQXYMVNuE5L+ABHq7iYJmj+y2dnIjWEW8Pvs/UhaMlItz37LMQK5Sg6v4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XcmOvZby; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783768975; c=relaxed/simple;
+	bh=D0dwrnSmOBKFI/0heE7SKN6tSLsYQ71yibQoUv3B/yM=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=M4ilcS2GTvNP3Aje/2s4Rhf0OHCTnCqPkYDydlLxiK0KwGCkVhaglyQo6rgwuDxbk2JKH5ydd/fwr3vbwrEzORteuEv0XO7m1kcThwWxPGbCgXFRYUVPev0EuSlSRPEqm+lFRPeyrIcnrKUSAA/vNdaZDA+h41itPrXtJrRsdLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=unisoc.com; spf=pass smtp.mailfrom=unisoc.com; dkim=pass (2048-bit key) header.d=unisoc.com header.i=@unisoc.com header.b=Tsud9637; arc=none smtp.client-ip=222.66.158.135
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=unisoc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=unisoc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XcmOvZby"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D90291F000E9;
-	Sat, 11 Jul 2026 09:21:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783761706;
-	bh=05fIE9gWXN0XU5nK/rJWWSF3LsvEm+mjPAdBOohOs3c=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XcmOvZbyxT91ciz9x5tpHO3b4NAgS3XX5skq8ArjXuzMDg8sz7I9Wvsg8OsaWX1Tg
-	 SsgNlx2SWc8rB189mek2Dq20GYDx8hwPocBbyXPP1rWIYvl/v6Ycv0oyOWqJlqV1U9
-	 7b17mObh/uQmBcZrRHayyClCdM1xB6PFh8qIO2yzMaiWa3nci7H6Vi61I43dhbg+Om
-	 ShgSLN1hGRS72qECs0iSsJTFjtv+G/FzI5QNJIGmW1RHWPb7P3VXgsrWvZB9/fuXbx
-	 QarCNpKgIu8TA0at+4Jy2eBURd4MSnvIikwJ13TUoTggq8fgVPdVC+h0AggcUkVSpO
-	 TXTvTSNG6nZbQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: ses: validate the page 1 geometry before
- walking it
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bryam Vargas" <hexlabsecurity@proton.me>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260711-b4-disp-414d08d4-v2-1-784a01e8e2dd@proton.me>
-References: <20260711-b4-disp-414d08d4-v2-1-784a01e8e2dd@proton.me>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 11 Jul 2026 09:21:45 +0000
-Message-Id: <20260711092145.D90291F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=unisoc.com header.i=@unisoc.com header.b="Tsud9637"
+Received: from dlp.unisoc.com ([10.29.3.86])
+	by SHSQR01.spreadtrum.com with ESMTPS id 66BBLSuf006507
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
+	Sat, 11 Jul 2026 19:21:28 +0800 (+08)
+	(envelope-from kui.sun@unisoc.com)
+Received: from SHDLP.spreadtrum.com (zeshmbx09.spreadtrum.com [10.29.3.107])
+	by dlp.unisoc.com (SkyGuard) with ESMTPS id 4gy5qL5npcz2PXf5R;
+	Sat, 11 Jul 2026 19:21:02 +0800 (CST)
+Received: from zeshmbx08.spreadtrum.com (10.29.3.106) by
+ zeshmbx09.spreadtrum.com (10.29.3.107) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.48; Sat, 11 Jul 2026 19:21:26 +0800
+Received: from zeshmbx08.spreadtrum.com ([fe80::e01e:2441:3a50:dadb]) by
+ zeshmbx08.spreadtrum.com ([fe80::e01e:2441:3a50:dadb%17]) with mapi id
+ 15.00.1497.048; Sat, 11 Jul 2026 19:21:26 +0800
+From: =?utf-8?B?5a2Z6a2BIChLdWkgU3VuKQ==?= <kui.sun@unisoc.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>,
+        Neil Armstrong
+	<neil.armstrong@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "Avri
+ Altman" <avri.altman@wdc.com>,
+        "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>,
+        "andre.draszik@linaro.org"
+	<andre.draszik@linaro.org>
+CC: Peter Griffin <peter.griffin@linaro.org>,
+        Tudor Ambarus
+	<tudor.ambarus@linaro.org>,
+        Will McVicker <willmcvicker@google.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "kernel-team@android.com"
+	<kernel-team@android.com>,
+        "linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "stable@vger.kernel.org"
+	<stable@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org"
+	<linux-arm-msm@vger.kernel.org>,
+        =?utf-8?B?5byg5aaC5rOJIChSYWluIFpoYW5nKQ==?=
+	<Rain.Zhang@unisoc.com>,
+        "cixi.geng@linux.dev" <cixi.geng@linux.dev>,
+        =?utf-8?B?5ZSQ5pyI5p6XIChZdWVsaW4gVGFuZyk=?= <yuelin.tang@unisoc.com>,
+        =?utf-8?B?6ZmI5paH6LaFIChXZW5jaGFvIENoZW4p?= <Wenchao.Chen@unisoc.com>,
+        =?utf-8?B?QW5kcsOpIERyYXN6aWs=?= <andre.draszik@linaro.org>
+Subject: =?utf-8?B?562U5aSNOiBbUkZDXSBTaWduaWZpY2FudCBSYW5kb20gSS9PIFBlcmZvcm1h?=
+ =?utf-8?B?bmNlIFJlZ3Jlc3Npb24gaW4gTGludXggS2VybmVsIDYuMTggKFVwIHRvIDI3?=
+ =?utf-8?Q?.7%)_Likely_Caused_by_Commit_3c7ac40d7322?=
+Thread-Topic: [RFC] Significant Random I/O Performance Regression in Linux
+ Kernel 6.18 (Up to 27.7%) Likely Caused by Commit 3c7ac40d7322
+Thread-Index: Ad0PYz14eL5yCSXkTdewaVgxWTlWPgA1fqOAADuDkfA=
+Date: Sat, 11 Jul 2026 11:21:26 +0000
+Message-ID: <7863f3e51a8e4d52acdd24a6aea9cf5f@zeshmbx08.spreadtrum.com>
+References: <12a8417dc8644a71b9cb25c53c93805a@zeshmbx08.spreadtrum.com>
+ <d426b4d5-cdf5-4090-8e94-62e652f712dc@acm.org>
+In-Reply-To: <d426b4d5-cdf5-4090-8e94-62e652f712dc@acm.org>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-exchange-transport-fromentityheader: Hosted
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MAIL:SHSQR01.spreadtrum.com 66BBLSuf006507
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=unisoc.com;
+	s=default; t=1783768894;
+	bh=D0dwrnSmOBKFI/0heE7SKN6tSLsYQ71yibQoUv3B/yM=;
+	h=From:To:CC:Subject:Date:References:In-Reply-To;
+	b=Tsud9637hXldYBRVZtnzlyGuVje6EnMmzmwqtyW7eCY6iunWo1/QpxhyzuQed7c+b
+	 1MzD23C+0iLNeYPkYCe2N1UUwN+Z/FIhtj5+L9TWsIk55hpvrPC/eK1c7H/SQK8ZFk
+	 nAsPiQwC45ojsp6vF6zE0wtCI6riMkbKzrIenthuGwFpxq5jgNkP0Y3fDVEx6RO+aA
+	 NiDXZNzCPoyCATMvnD3lfeIEcEgxvJfh1L2qr/EPHGSqj+xQCs0OFMMn6Gko0Ehmtw
+	 PWYn5wOuSSl+l7QLVRpc1UfY1wmMSxPvlyo19cMHPe78kD98U+CrAtmqYYCoJ1ce4Q
+	 oC+xUX/dakAuw==
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
-
-Pre-existing issues:
-- [High] Diagnostic Page 2 Length Vulnerabilities: Missing bounds checks an=
-d signed integer overflows lead to massive out-of-bounds reads and writes.
-- [High] Missing minimum length check for the page 7 buffer leads to an out=
--of-bounds read when skipping the overall descriptor.
-- [High] The enclosure device is exposed to sysfs and other subsystems befo=
-re its driver-private data is initialized, leading to a NULL pointer derefe=
-rence.
-- [High] The enclosure private data is freed before the device is unregiste=
-red, causing a Use-After-Free or NULL pointer dereference for concurrent us=
-ers.
-- [Medium] Concurrent disk probes trigger simultaneous, lockless modificati=
-ons to a shared diagnostic buffer, causing data corruption.
---
-
---- Patch [1]: [PATCH v2] scsi: ses: validate the page 1 geometry before wa=
-lking it ---
-commit 622571462ff0a680551a5fb090d8b288e0c78b7c
-Author: Bryam Vargas <hexlabsecurity@proton.me>
-
-scsi: ses: validate the page 1 geometry before walking it
-
-This patch bounds the skip loop to a whole descriptor and validates the pag=
-e 1
-geometry once where it is parsed. It rejects pages that are too short for
-their logical id, type arrays that run past the buffer, or counts larger
-than the array holds. This prevents out-of-bounds reads during the enclosure
-descriptor skip loop.
-
-> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> index 4c348645b04ee..907bb489252ad 100644
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -742,11 +742,28 @@ static int ses_intf_add(struct device *cdev)
->  	/* begin at the enclosure descriptor */
->  	type_ptr =3D buf + 8;
->  	/* skip all the enclosure descriptors */
-> -	for (i =3D 0; i < num_enclosures && type_ptr < buf + len; i++) {
-> +	for (i =3D 0; i < num_enclosures && type_ptr + 4 <=3D buf + len; i++) {
->  		types +=3D type_ptr[2];
->  		type_ptr +=3D type_ptr[3] + 4;
->  	}
-> =20
-> +	/*
-> +	 * Validate the device-reported page 1 geometry before the accessors
-> +	 * walk it.  page1_types and page1_num_types come straight from the
-> +	 * enclosure; the page 2 descriptor walks (ses_get_page2_descriptor(),
-> +	 * ses_set_page2_descriptor()), ses_enclosure_data_process() and the
-> +	 * logical-id read in ses_show_id() all trust them.  Reject a page 1
-> +	 * shorter than its logical id, one whose descriptors ran past the end,
-> +	 * or one declaring more type descriptors than it carries.  Bounding the
-> +	 * count before it is stored also keeps it within its short.
-> +	 */
-> +	if (len < 8 + 4 + (int)sizeof(u64) ||
-> +	    type_ptr > buf + len ||
-> +	    types > (buf + len - type_ptr) / 4) {
-> +		err =3D -EINVAL;
-> +		goto err_free;
-> +	}
-> +
->  	ses_dev->page1_types =3D type_ptr;
->  	ses_dev->page1_num_types =3D types;
-> =20
-
-[Severity: High]
-This is a pre-existing issue, but does this code leave the page 2 length
-unvalidated?
-
-In drivers/scsi/ses.c:ses_intf_add(), the length is initialized directly
-from the device's diagnostic page:
-
-    len =3D (hdr_buf[2] << 8) + hdr_buf[3] + 4;
-    // ...
-    ses_dev->page2_len =3D len;
-
-Since struct ses_device declares short page2_len, a length greater than
-32767 overflows into a negative value, and a length less than 8 causes
-underflows.
-
-Can this result in a massive out-of-bounds write via
-memset(desc_ptr, 0, ses_dev->page2_len - 8) in ses_set_page2_descriptor(),
-and subsequent out-of-bounds accesses when advancing pointers in
-ses_get_page2_descriptor()?
-
-[Severity: High]
-This isn't a bug introduced by this patch, but is there a missing minimum
-length check for the page 7 buffer?
-
-Looking at drivers/scsi/ses.c:ses_enclosure_data_process(), if the device
-returns a page 7 length less than 8 (e.g., indicating 0 bytes of payload),
-kzalloc() allocates a 5-byte buffer:
-
-    page7_len =3D len =3D (hdr_buf[2] << 8) + hdr_buf[3] + 4;
-    buf =3D kzalloc(len + 1, GFP_KERNEL);
-    // ...
-    } else {
-        desc_ptr =3D buf + 8;
-        len =3D (desc_ptr[2] << 8) + desc_ptr[3];
-
-Does the unconditional desc_ptr =3D buf + 8 lead to a slab out-of-bounds re=
-ad
-when checking desc_ptr[2]?
-
-[Severity: High]
-This is a pre-existing issue, but is the enclosure device exposed before its
-private data is initialized?
-
-In drivers/scsi/ses.c:ses_intf_add(), the device is registered before the
-scratch payload is attached:
-
-    edev =3D enclosure_register(...);
-    // ...
-    edev->scratch =3D ses_dev;
-
-If a user process reads the sysfs id file or an asynchronous scsi probe
-matches the enclosure before edev->scratch is set, could this trigger a null
-pointer dereference?
-
-For example, in drivers/scsi/ses.c:ses_show_id():
-
-    struct ses_device *ses_dev =3D edev->scratch;
-    unsigned long long id =3D get_unaligned_be64(ses_dev->page1+8+4);
-
-Will this unconditionally dereference a null edev->scratch?
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the teardown sequence
-cause a use-after-free or null pointer dereference?
-
-In drivers/scsi/ses.c:ses_intf_remove_enclosure(), the private data is freed
-before the device is unregistered:
-
-    ses_dev =3D edev->scratch;
-    edev->scratch =3D NULL;
-
-    kfree(ses_dev->page10);
-    kfree(ses_dev->page1);
-    kfree(ses_dev->page2);
-    kfree(ses_dev);
-    // ...
-    enclosure_unregister(edev);
-
-Can concurrent sysfs reads or asynchronous scsi probes operating on the
-device during this window dereference the cleared edev->scratch, resulting
-in a crash?
-
-[Severity: Medium]
-This is a pre-existing issue, but do concurrent disk probes trigger
-data races on the shared diagnostic buffer?
-
-In drivers/scsi/ses.c:ses_enclosure_data_process():
-
-    /* re-read page 10 */
-    if (ses_dev->page10)
-        ses_recv_diag(sdev, 10, ses_dev->page10, ses_dev->page10_len);
-
-If multiple scsi devices probe concurrently, does this unconditionally
-issue ses_recv_diag() without locking, causing simultaneous hardware dma
-writes and parser reads on the exact same buffer?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260711-b4-disp-41=
-4d08d4-v2-1-784a01e8e2dd@proton.me?part=3D1
+V2UgaGF2ZSBhbHJlYWR5IGluY2x1ZGVkIHRoZXNlIHR3byBmaXhlcywgd2hpY2ggYXJlIHJlbGF0
+ZWQgdG8gc3RhYmlsaXR5LiBUaGUgaXNzdWUgd2UncmUgZW5jb3VudGVyaW5nIGlzIHBlcmZvcm1h
+bmNlLXJlbGF0ZWQNCg0KVGhhbmsgWW91Lg0KDQotLS0tLemCruS7tuWOn+S7ti0tLS0tDQrlj5Hk
+u7bkuro6IEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPiANCuWPkemAgeaXtumX
+tDogMjAyNuW5tDfmnIgxMOaXpSAyMjo1Ng0K5pS25Lu25Lq6OiDlrZnprYEgKEt1aSBTdW4pIDxr
+dWkuc3VuQHVuaXNvYy5jb20+OyBOZWlsIEFybXN0cm9uZyA8bmVpbC5hcm1zdHJvbmdAbGluYXJv
+Lm9yZz47IEFsaW0gQWtodGFyIDxhbGltLmFraHRhckBzYW1zdW5nLmNvbT47IEF2cmkgQWx0bWFu
+IDxhdnJpLmFsdG1hbkB3ZGMuY29tPjsgSmFtZXMgRS5KLiBCb3R0b21sZXkgPEphbWVzLkJvdHRv
+bWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb20+OyBNYXJ0aW4gSy4gUGV0ZXJzZW4gPG1hcnRpbi5w
+ZXRlcnNlbkBvcmFjbGUuY29tPjsgYW5kcmUuZHJhc3ppa0BsaW5hcm8ub3JnDQrmioTpgIE6IFBl
+dGVyIEdyaWZmaW4gPHBldGVyLmdyaWZmaW5AbGluYXJvLm9yZz47IFR1ZG9yIEFtYmFydXMgPHR1
+ZG9yLmFtYmFydXNAbGluYXJvLm9yZz47IFdpbGwgTWNWaWNrZXIgPHdpbGxtY3ZpY2tlckBnb29n
+bGUuY29tPjsgTWFuaXZhbm5hbiBTYWRoYXNpdmFtIDxtYW5pQGtlcm5lbC5vcmc+OyBrZXJuZWwt
+dGVhbUBhbmRyb2lkLmNvbTsgbGludXgtc2Ftc3VuZy1zb2NAdmdlci5rZXJuZWwub3JnOyBsaW51
+eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgc3Rh
+YmxlQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLW1zbUB2Z2VyLmtlcm5lbC5vcmc7IOW8oOWm
+guaziSAoUmFpbiBaaGFuZykgPFJhaW4uWmhhbmdAdW5pc29jLmNvbT47IGNpeGkuZ2VuZ0BsaW51
+eC5kZXY7IOWUkOaciOaelyAoWXVlbGluIFRhbmcpIDx5dWVsaW4udGFuZ0B1bmlzb2MuY29tPjsg
+6ZmI5paH6LaFIChXZW5jaGFvIENoZW4pIDxXZW5jaGFvLkNoZW5AdW5pc29jLmNvbT47IEFuZHLD
+qSBEcmFzemlrIDxhbmRyZS5kcmFzemlrQGxpbmFyby5vcmc+DQrkuLvpopg6IFJlOiBbUkZDXSBT
+aWduaWZpY2FudCBSYW5kb20gSS9PIFBlcmZvcm1hbmNlIFJlZ3Jlc3Npb24gaW4gTGludXggS2Vy
+bmVsIDYuMTggKFVwIHRvIDI3LjclKSBMaWtlbHkgQ2F1c2VkIGJ5IENvbW1pdCAzYzdhYzQwZDcz
+MjINCg0KDQrms6jmhI86IOi/meWwgemCruS7tuadpeiHquS6juWklumDqOOAgumZpOmdnuS9oOeh
+ruWumumCruS7tuWGheWuueWuieWFqO+8jOWQpuWImeS4jeimgeeCueWHu+S7u+S9lemTvuaOpeWS
+jOmZhOS7tuOAgg0KQ0FVVElPTjogVGhpcyBlbWFpbCBvcmlnaW5hdGVkIGZyb20gb3V0c2lkZSBv
+ZiB0aGUgb3JnYW5pemF0aW9uLiBEbyBub3QgY2xpY2sgbGlua3Mgb3Igb3BlbiBhdHRhY2htZW50
+cyB1bmxlc3MgeW91IHJlY29nbml6ZSB0aGUgc2VuZGVyIGFuZCBrbm93IHRoZSBjb250ZW50IGlz
+IHNhZmUuDQoNCg0KDQpPbiA3LzEwLzI2IDEyOjE3IEFNLCDlrZnprYEgKEt1aSBTdW4pIHdyb3Rl
+Og0KPiBUaHJvdWdoIGludmVzdGlnYXRpb24sIHdlIGlkZW50aWZpZWQgdGhhdCB1cHN0cmVhbSBj
+b21taXQgDQo+IDNjN2FjNDBkNzMyMjMyZmVjMGJhMzFkMGE1ZTNjYzljMTEyZmMyZTcsIG1lcmdl
+ZCBpbiBBcHJpbCAyMDI1LCBpcyANCj4gbGlrZWx5IHJlc3BvbnNpYmxlIGZvciB0aGlzIHBlcmZv
+cm1hbmNlIGRyb3AuDQpUd28gZml4ZXMgZm9yIHRoYXQgY29tbWl0IGFyZSBwcmVzZW50IGluIHRo
+ZSB1cHN0cmVhbSBrZXJuZWwuIEFyZSB0aGVzZSBmaXhlcyBwcmVzZW50IGluIHlvdXIga2VybmVs
+IHRyZWU/DQoNCmNvbW1pdCBlYWJjYWM4MDhjYTNlZTk4NzgyMjNkNGI0OWI3NTA5NzkwMjkwMTZi
+DQpBdXRob3I6IEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPg0KRGF0ZTogICBG
+cmkgQXVnIDE1IDA4OjU4OjIzIDIwMjUgLTA3MDANCg0KICAgICBzY3NpOiB1ZnM6IGNvcmU6IEZp
+eCBJUlEgbG9jayBpbnZlcnNpb24gZm9yIHRoZSBTQ1NJIGhvc3QgbG9jaw0KDQpjb21taXQgMDM0
+ZDMxOWM4ODk5ZThjNWMwYTM1YzY2OTJjN2ZjN2U4YzEyYzM3NA0KQXV0aG9yOiBOaXRpbiBSYXdh
+dCA8cXVpY19uaXRpcmF3YUBxdWljaW5jLmNvbT4NCkRhdGU6ICAgVHVlIEp1bCAyOSAwNDoyNzox
+MSAyMDI1ICswNTMwDQoNCiAgICAgc2NzaTogdWZzOiBjb3JlOiBGaXggaW50ZXJydXB0IGhhbmRs
+aW5nIGZvciBNQ1EgTW9kZQ0KDQpUaGFua3MsDQoNCkJhcnQuDQo=
