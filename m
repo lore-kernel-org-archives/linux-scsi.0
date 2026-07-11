@@ -1,145 +1,200 @@
-Received: from SHSQR01.spreadtrum.com (unknown [222.66.158.135])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f47.google.com (mail-qv1-f47.google.com [209.85.219.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D4CC30F938;
-	Sat, 11 Jul 2026 11:22:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=222.66.158.135
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B18B27B353
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Jul 2026 15:07:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783768975; cv=none; b=VtyMrh0cXCGFaLTSVjUkRSChiwqzFOGj+QfIDRIaFhRNO+th9cXj+cFm/XaCxOBs1voSzORMG6FpFRk9MXNakElNa0NnLj1+ii6JDM735VLkBFem/PP2i8CHwSozvSAh5UZKuZfaBBJPd9XBBfglLzwT1yEMdI7iePv1crEXqVY=
+	t=1783782444; cv=none; b=BbAGVGIF+ZcCd9Pp2SULHmRnVGjVFdImxGUTF/WomYIQ0SaoOTCvF10cDm1YIlC68EKHqG8cu1znWEFyf8XtmHVFpm6ymfaezSo/2kSeL9/wJhyfUp6G+Z6OiaFKol7ptuWdkHUCaUIE/F5/+/tubfiA0zF/NfNHeGUod66WWN4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783768975; c=relaxed/simple;
-	bh=D0dwrnSmOBKFI/0heE7SKN6tSLsYQ71yibQoUv3B/yM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=M4ilcS2GTvNP3Aje/2s4Rhf0OHCTnCqPkYDydlLxiK0KwGCkVhaglyQo6rgwuDxbk2JKH5ydd/fwr3vbwrEzORteuEv0XO7m1kcThwWxPGbCgXFRYUVPev0EuSlSRPEqm+lFRPeyrIcnrKUSAA/vNdaZDA+h41itPrXtJrRsdLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=unisoc.com; spf=pass smtp.mailfrom=unisoc.com; dkim=pass (2048-bit key) header.d=unisoc.com header.i=@unisoc.com header.b=Tsud9637; arc=none smtp.client-ip=222.66.158.135
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=unisoc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=unisoc.com
+	s=arc-20240116; t=1783782444; c=relaxed/simple;
+	bh=qZKp+z9HirEVTEKlUTkgUjk21u9/4uh/QDsm2GwhDqM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Qyk1wVROnFocWy+OIbFOJLV7gadpKv2zxuRpRSEs58OfYVuEXnRZeCdrDrjxsNLTf1xcHusCkgTcnPSsT/n5Wz+QX63O2C7JJpuu2fSWuqjmRG4VZjBLJAv0bKmUDTYLudo7GSyj/ISnzYeeFB2P5MWa2Bk20Heo9LDTZXN3THY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z1tezw0U; arc=none smtp.client-ip=209.85.219.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=unisoc.com header.i=@unisoc.com header.b="Tsud9637"
-Received: from dlp.unisoc.com ([10.29.3.86])
-	by SHSQR01.spreadtrum.com with ESMTPS id 66BBLSuf006507
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-	Sat, 11 Jul 2026 19:21:28 +0800 (+08)
-	(envelope-from kui.sun@unisoc.com)
-Received: from SHDLP.spreadtrum.com (zeshmbx09.spreadtrum.com [10.29.3.107])
-	by dlp.unisoc.com (SkyGuard) with ESMTPS id 4gy5qL5npcz2PXf5R;
-	Sat, 11 Jul 2026 19:21:02 +0800 (CST)
-Received: from zeshmbx08.spreadtrum.com (10.29.3.106) by
- zeshmbx09.spreadtrum.com (10.29.3.107) with Microsoft SMTP Server (TLS) id
- 15.0.1497.48; Sat, 11 Jul 2026 19:21:26 +0800
-Received: from zeshmbx08.spreadtrum.com ([fe80::e01e:2441:3a50:dadb]) by
- zeshmbx08.spreadtrum.com ([fe80::e01e:2441:3a50:dadb%17]) with mapi id
- 15.00.1497.048; Sat, 11 Jul 2026 19:21:26 +0800
-From: =?utf-8?B?5a2Z6a2BIChLdWkgU3VuKQ==?= <kui.sun@unisoc.com>
-To: "'Bart Van Assche'" <bvanassche@acm.org>,
-        Neil Armstrong
-	<neil.armstrong@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "Avri
- Altman" <avri.altman@wdc.com>,
-        "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>,
-        "andre.draszik@linaro.org"
-	<andre.draszik@linaro.org>
-CC: Peter Griffin <peter.griffin@linaro.org>,
-        Tudor Ambarus
-	<tudor.ambarus@linaro.org>,
-        Will McVicker <willmcvicker@google.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "kernel-team@android.com"
-	<kernel-team@android.com>,
-        "linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "stable@vger.kernel.org"
-	<stable@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org"
-	<linux-arm-msm@vger.kernel.org>,
-        =?utf-8?B?5byg5aaC5rOJIChSYWluIFpoYW5nKQ==?=
-	<Rain.Zhang@unisoc.com>,
-        "cixi.geng@linux.dev" <cixi.geng@linux.dev>,
-        =?utf-8?B?5ZSQ5pyI5p6XIChZdWVsaW4gVGFuZyk=?= <yuelin.tang@unisoc.com>,
-        =?utf-8?B?6ZmI5paH6LaFIChXZW5jaGFvIENoZW4p?= <Wenchao.Chen@unisoc.com>,
-        =?utf-8?B?QW5kcsOpIERyYXN6aWs=?= <andre.draszik@linaro.org>
-Subject: =?utf-8?B?562U5aSNOiBbUkZDXSBTaWduaWZpY2FudCBSYW5kb20gSS9PIFBlcmZvcm1h?=
- =?utf-8?B?bmNlIFJlZ3Jlc3Npb24gaW4gTGludXggS2VybmVsIDYuMTggKFVwIHRvIDI3?=
- =?utf-8?Q?.7%)_Likely_Caused_by_Commit_3c7ac40d7322?=
-Thread-Topic: [RFC] Significant Random I/O Performance Regression in Linux
- Kernel 6.18 (Up to 27.7%) Likely Caused by Commit 3c7ac40d7322
-Thread-Index: Ad0PYz14eL5yCSXkTdewaVgxWTlWPgA1fqOAADuDkfA=
-Date: Sat, 11 Jul 2026 11:21:26 +0000
-Message-ID: <7863f3e51a8e4d52acdd24a6aea9cf5f@zeshmbx08.spreadtrum.com>
-References: <12a8417dc8644a71b9cb25c53c93805a@zeshmbx08.spreadtrum.com>
- <d426b4d5-cdf5-4090-8e94-62e652f712dc@acm.org>
-In-Reply-To: <d426b4d5-cdf5-4090-8e94-62e652f712dc@acm.org>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-exchange-transport-fromentityheader: Hosted
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z1tezw0U"
+Received: by mail-qv1-f47.google.com with SMTP id 6a1803df08f44-8ee43b3e5abso13043156d6.3
+        for <linux-scsi@vger.kernel.org>; Sat, 11 Jul 2026 08:07:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1783782442; x=1784387242; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=SjugYT8ZtISkSYVVGIIzosPwNQGFsZmwG7TxRtXpKf8=;
+        b=Z1tezw0UbRvWXINJoNBR70j6cXSiS82PuOmpOyIjDE60chpzw7DXM4FUIQuabOsswe
+         CSJSB/R0uQdruN2tRHJ0rAZCfVgNg1LJnJPSo9JO97qPjdtfBr5pPIvznUF+KEHqDdye
+         HmmtSOaDgr/3me26R2TdNmbO9922URd7s32w1k2rubafSVxTtkqfXjkjUJb+AUZ62R1g
+         V2RRdG4urxrj/mI/zGMWbVo4lf6rzTqRNQoyNSek7o/ini/XHcrjjZ5ScmgDkRPJOyv8
+         WawAVELLBtotVXSQgkp2xVe5KBddcbs+JMXEMhYiQKj8niz29++SjDmQLnZeJ0DFd2bP
+         7UPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783782442; x=1784387242;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=SjugYT8ZtISkSYVVGIIzosPwNQGFsZmwG7TxRtXpKf8=;
+        b=Zki6ASXM8QXNz8C1SgD5ceXICCQ1FjUgJoowjbEsTLdZJvJMGOEq8G4p0EYkYz92sI
+         H0Qtd7YQD1xCyunDc05Ea+rgUw/thjOP7HG9PWcM8pwNUBvJ+L35YCwi/EX7scO3yOGg
+         vMYJeQS86pHWe/URTmM6ki4N8RaSLanRB4pzmpktcHikJYNG6cIOIaeNRe7I+WQhH8hz
+         AVgRjym53xbu2KFfuIjPhdj9jiEF/KPtu3VGUueq1cgCuOVZSMNpizi/fTeV8d7oZ+Dl
+         zEAjh8AFpaHoR4eaSEYy5LNiLfEYv8HKMM5SUgl+us4emx1O69r+SBI7QzQszYqbChTx
+         O8oA==
+X-Gm-Message-State: AOJu0YzgKi7pJaJe/wNWe+Rrsdog9qFsCtJKoS3t3vl5Rt8lf0SVTirk
+	0gXylJGF9qqcjpLjug6NmUcuxFryOhIRG6Tc9hU6LjCLKLCvVyiQYAjp
+X-Gm-Gg: AfdE7cmaJV2/hQ6SclFg63S2HVzEKniVr4dO49kI5WUR0dmYKMHA8od5Xkj2i0NyXOV
+	FOlUiPV4WUqBnx0HaZBcPm9vodzhStlVo2h/DBqj5i/yq8Y1VHoHbSKp8v7fGMdTzbM+5KimL1c
+	mjatNlTOnJUi1y+wm/xfbGzBL3DTUS5M55XHEEdhUYYrlW6GvVWANt+T9UQzGzpfoxfcSUSWt57
+	v9MG49XmUeBeJ+DHb5FbLRu1jFQSDdiPwZWvaQUDcAD8hjRrBAgG4E5YS1m5RkKW7jMepxgAvbv
+	UasKu4fLsZNbKRnkVby+bJulVBDGmrBw/I7KYIW12MgnZAaPK50pjFE6F6qvbIkuOno7dcqva0z
+	hPpo9veOBCUEwn9ncrjJJK1NbahxK7Waje5y3rSCkdowrfTqg64yUzR3dUvdgtj5qN5WZWB+ISW
+	5Jx70aAYacOb2rBnbFOXsSJSxKpE3MLAbseZLI7V/VafAn7f5IhKF7uzmXEx9rfpfuEKth0hy7x
+	Smz2xNW4w==
+X-Received: by 2002:a05:6214:2489:b0:8fd:6de3:dd78 with SMTP id 6a1803df08f44-90403d510b0mr35964526d6.58.1783782442051;
+        Sat, 11 Jul 2026 08:07:22 -0700 (PDT)
+Received: from server0 (c-68-48-65-54.hsd1.mi.comcast.net. [68.48.65.54])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9044a771331sm16469916d6.38.2026.07.11.08.07.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 11 Jul 2026 08:07:21 -0700 (PDT)
+From: Michael Bommarito <michael.bommarito@gmail.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: core: bound the VPD page 0x83 designator walk
+Date: Sat, 11 Jul 2026 11:07:18 -0400
+Message-ID: <20260711150718.2916641-1-michael.bommarito@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MAIL:SHSQR01.spreadtrum.com 66BBLSuf006507
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=unisoc.com;
-	s=default; t=1783768894;
-	bh=D0dwrnSmOBKFI/0heE7SKN6tSLsYQ71yibQoUv3B/yM=;
-	h=From:To:CC:Subject:Date:References:In-Reply-To;
-	b=Tsud9637hXldYBRVZtnzlyGuVje6EnMmzmwqtyW7eCY6iunWo1/QpxhyzuQed7c+b
-	 1MzD23C+0iLNeYPkYCe2N1UUwN+Z/FIhtj5+L9TWsIk55hpvrPC/eK1c7H/SQK8ZFk
-	 nAsPiQwC45ojsp6vF6zE0wtCI6riMkbKzrIenthuGwFpxq5jgNkP0Y3fDVEx6RO+aA
-	 NiDXZNzCPoyCATMvnD3lfeIEcEgxvJfh1L2qr/EPHGSqj+xQCs0OFMMn6Gko0Ehmtw
-	 PWYn5wOuSSl+l7QLVRpc1UfY1wmMSxPvlyo19cMHPe78kD98U+CrAtmqYYCoJ1ce4Q
-	 oC+xUX/dakAuw==
+Content-Transfer-Encoding: 7bit
 
-V2UgaGF2ZSBhbHJlYWR5IGluY2x1ZGVkIHRoZXNlIHR3byBmaXhlcywgd2hpY2ggYXJlIHJlbGF0
-ZWQgdG8gc3RhYmlsaXR5LiBUaGUgaXNzdWUgd2UncmUgZW5jb3VudGVyaW5nIGlzIHBlcmZvcm1h
-bmNlLXJlbGF0ZWQNCg0KVGhhbmsgWW91Lg0KDQotLS0tLemCruS7tuWOn+S7ti0tLS0tDQrlj5Hk
-u7bkuro6IEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPiANCuWPkemAgeaXtumX
-tDogMjAyNuW5tDfmnIgxMOaXpSAyMjo1Ng0K5pS25Lu25Lq6OiDlrZnprYEgKEt1aSBTdW4pIDxr
-dWkuc3VuQHVuaXNvYy5jb20+OyBOZWlsIEFybXN0cm9uZyA8bmVpbC5hcm1zdHJvbmdAbGluYXJv
-Lm9yZz47IEFsaW0gQWtodGFyIDxhbGltLmFraHRhckBzYW1zdW5nLmNvbT47IEF2cmkgQWx0bWFu
-IDxhdnJpLmFsdG1hbkB3ZGMuY29tPjsgSmFtZXMgRS5KLiBCb3R0b21sZXkgPEphbWVzLkJvdHRv
-bWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb20+OyBNYXJ0aW4gSy4gUGV0ZXJzZW4gPG1hcnRpbi5w
-ZXRlcnNlbkBvcmFjbGUuY29tPjsgYW5kcmUuZHJhc3ppa0BsaW5hcm8ub3JnDQrmioTpgIE6IFBl
-dGVyIEdyaWZmaW4gPHBldGVyLmdyaWZmaW5AbGluYXJvLm9yZz47IFR1ZG9yIEFtYmFydXMgPHR1
-ZG9yLmFtYmFydXNAbGluYXJvLm9yZz47IFdpbGwgTWNWaWNrZXIgPHdpbGxtY3ZpY2tlckBnb29n
-bGUuY29tPjsgTWFuaXZhbm5hbiBTYWRoYXNpdmFtIDxtYW5pQGtlcm5lbC5vcmc+OyBrZXJuZWwt
-dGVhbUBhbmRyb2lkLmNvbTsgbGludXgtc2Ftc3VuZy1zb2NAdmdlci5rZXJuZWwub3JnOyBsaW51
-eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgc3Rh
-YmxlQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLW1zbUB2Z2VyLmtlcm5lbC5vcmc7IOW8oOWm
-guaziSAoUmFpbiBaaGFuZykgPFJhaW4uWmhhbmdAdW5pc29jLmNvbT47IGNpeGkuZ2VuZ0BsaW51
-eC5kZXY7IOWUkOaciOaelyAoWXVlbGluIFRhbmcpIDx5dWVsaW4udGFuZ0B1bmlzb2MuY29tPjsg
-6ZmI5paH6LaFIChXZW5jaGFvIENoZW4pIDxXZW5jaGFvLkNoZW5AdW5pc29jLmNvbT47IEFuZHLD
-qSBEcmFzemlrIDxhbmRyZS5kcmFzemlrQGxpbmFyby5vcmc+DQrkuLvpopg6IFJlOiBbUkZDXSBT
-aWduaWZpY2FudCBSYW5kb20gSS9PIFBlcmZvcm1hbmNlIFJlZ3Jlc3Npb24gaW4gTGludXggS2Vy
-bmVsIDYuMTggKFVwIHRvIDI3LjclKSBMaWtlbHkgQ2F1c2VkIGJ5IENvbW1pdCAzYzdhYzQwZDcz
-MjINCg0KDQrms6jmhI86IOi/meWwgemCruS7tuadpeiHquS6juWklumDqOOAgumZpOmdnuS9oOeh
-ruWumumCruS7tuWGheWuueWuieWFqO+8jOWQpuWImeS4jeimgeeCueWHu+S7u+S9lemTvuaOpeWS
-jOmZhOS7tuOAgg0KQ0FVVElPTjogVGhpcyBlbWFpbCBvcmlnaW5hdGVkIGZyb20gb3V0c2lkZSBv
-ZiB0aGUgb3JnYW5pemF0aW9uLiBEbyBub3QgY2xpY2sgbGlua3Mgb3Igb3BlbiBhdHRhY2htZW50
-cyB1bmxlc3MgeW91IHJlY29nbml6ZSB0aGUgc2VuZGVyIGFuZCBrbm93IHRoZSBjb250ZW50IGlz
-IHNhZmUuDQoNCg0KDQpPbiA3LzEwLzI2IDEyOjE3IEFNLCDlrZnprYEgKEt1aSBTdW4pIHdyb3Rl
-Og0KPiBUaHJvdWdoIGludmVzdGlnYXRpb24sIHdlIGlkZW50aWZpZWQgdGhhdCB1cHN0cmVhbSBj
-b21taXQgDQo+IDNjN2FjNDBkNzMyMjMyZmVjMGJhMzFkMGE1ZTNjYzljMTEyZmMyZTcsIG1lcmdl
-ZCBpbiBBcHJpbCAyMDI1LCBpcyANCj4gbGlrZWx5IHJlc3BvbnNpYmxlIGZvciB0aGlzIHBlcmZv
-cm1hbmNlIGRyb3AuDQpUd28gZml4ZXMgZm9yIHRoYXQgY29tbWl0IGFyZSBwcmVzZW50IGluIHRo
-ZSB1cHN0cmVhbSBrZXJuZWwuIEFyZSB0aGVzZSBmaXhlcyBwcmVzZW50IGluIHlvdXIga2VybmVs
-IHRyZWU/DQoNCmNvbW1pdCBlYWJjYWM4MDhjYTNlZTk4NzgyMjNkNGI0OWI3NTA5NzkwMjkwMTZi
-DQpBdXRob3I6IEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPg0KRGF0ZTogICBG
-cmkgQXVnIDE1IDA4OjU4OjIzIDIwMjUgLTA3MDANCg0KICAgICBzY3NpOiB1ZnM6IGNvcmU6IEZp
-eCBJUlEgbG9jayBpbnZlcnNpb24gZm9yIHRoZSBTQ1NJIGhvc3QgbG9jaw0KDQpjb21taXQgMDM0
-ZDMxOWM4ODk5ZThjNWMwYTM1YzY2OTJjN2ZjN2U4YzEyYzM3NA0KQXV0aG9yOiBOaXRpbiBSYXdh
-dCA8cXVpY19uaXRpcmF3YUBxdWljaW5jLmNvbT4NCkRhdGU6ICAgVHVlIEp1bCAyOSAwNDoyNzox
-MSAyMDI1ICswNTMwDQoNCiAgICAgc2NzaTogdWZzOiBjb3JlOiBGaXggaW50ZXJydXB0IGhhbmRs
-aW5nIGZvciBNQ1EgTW9kZQ0KDQpUaGFua3MsDQoNCkJhcnQuDQo=
+scsi_vpd_lun_id(), scsi_vpd_tpg_id() and sd_get_unique_id() walk the VPD
+page 0x83 designator list with a stride of d[3] + 4 taken from the
+device-supplied designator length d[3], without checking it against the
+bytes remaining in the page. A device, or a compromised virtio/hypervisor
+block backend, that returns a page 0x83 whose final designator length runs
+past vpd_pg83->len makes the walk read out of bounds of the cached VPD
+buffer.
+
+Impact: a malicious or malfunctioning SCSI device, or a compromised
+hypervisor block backend, drives an out-of-bounds read of the cached VPD
+page 0x83 buffer (KASAN) during LUN-id, target-port-group, or unique-id
+computation.
+
+Bound each iteration: stop the walk when fewer than four header bytes
+remain and when the designator length exceeds the bytes left in the page,
+in all three walkers.
+
+Fixes: 9983bed3907c ("scsi: Add scsi_vpd_lun_id()")
+Cc: stable@vger.kernel.org
+Assisted-by: Claude:claude-opus-4-8
+Signed-off-by: Michael Bommarito <michael.bommarito@gmail.com>
+---
+ drivers/scsi/scsi_lib.c | 27 ++++++++++++++++++++-------
+ drivers/scsi/sd.c       | 10 +++++++++-
+ 2 files changed, 29 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 22e2e3223440d..407440bbf46c1 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3375,6 +3375,7 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+ 	u8 cur_id_size = 0;
+ 	const unsigned char *d, *cur_id_str;
+ 	const struct scsi_vpd *vpd_pg83;
++	size_t off;
+ 	int id_size = -EINVAL;
+ 
+ 	rcu_read_lock();
+@@ -3391,11 +3392,17 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+ 	}
+ 
+ 	memset(id, 0, id_len);
+-	for (d = vpd_pg83->data + 4;
+-	     d < vpd_pg83->data + vpd_pg83->len;
+-	     d += d[3] + 4) {
+-		u8 prio = designator_prio(d);
++	for (off = 4; off < vpd_pg83->len; off += d[3] + 4) {
++		u8 prio;
+ 
++		if (vpd_pg83->len - off < 4)
++			break;
++
++		d = vpd_pg83->data + off;
++		if (d[3] > vpd_pg83->len - off - 4)
++			break;
++
++		prio = designator_prio(d);
+ 		if (prio == 0 || cur_id_prio > prio)
+ 			continue;
+ 
+@@ -3545,6 +3552,7 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
+ {
+ 	const unsigned char *d;
+ 	const struct scsi_vpd *vpd_pg83;
++	size_t off;
+ 	int group_id = -EAGAIN, rel_port = -1;
+ 
+ 	rcu_read_lock();
+@@ -3554,8 +3562,14 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
+ 		return -ENXIO;
+ 	}
+ 
+-	d = vpd_pg83->data + 4;
+-	while (d < vpd_pg83->data + vpd_pg83->len) {
++	for (off = 4; off < vpd_pg83->len; off += d[3] + 4) {
++		if (vpd_pg83->len - off < 4)
++			break;
++
++		d = vpd_pg83->data + off;
++		if (d[3] > vpd_pg83->len - off - 4)
++			break;
++
+ 		switch (d[1] & 0xf) {
+ 		case 0x4:
+ 			/* Relative target port */
+@@ -3568,7 +3582,6 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
+ 		default:
+ 			break;
+ 		}
+-		d += d[3] + 4;
+ 	}
+ 	rcu_read_unlock();
+ 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 599e75f333343..5b8fa74052f2e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1949,6 +1949,7 @@ static int sd_get_unique_id(struct gendisk *disk, u8 id[16],
+ 	struct scsi_device *sdev = scsi_disk(disk)->device;
+ 	const struct scsi_vpd *vpd;
+ 	const unsigned char *d;
++	size_t off;
+ 	int ret = -ENXIO, len;
+ 
+ 	rcu_read_lock();
+@@ -1957,7 +1958,14 @@ static int sd_get_unique_id(struct gendisk *disk, u8 id[16],
+ 		goto out_unlock;
+ 
+ 	ret = -EINVAL;
+-	for (d = vpd->data + 4; d < vpd->data + vpd->len; d += d[3] + 4) {
++	for (off = 4; off < vpd->len; off += d[3] + 4) {
++		if (vpd->len - off < 4)
++			break;
++
++		d = vpd->data + off;
++		if (d[3] > vpd->len - off - 4)
++			break;
++
+ 		/* we only care about designators with LU association */
+ 		if (((d[1] >> 4) & 0x3) != 0x00)
+ 			continue;
+-- 
+2.53.0
+
