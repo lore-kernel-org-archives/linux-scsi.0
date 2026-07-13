@@ -1,159 +1,202 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3891F324B22
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 09:40:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C19863E2746;
+	Mon, 13 Jul 2026 10:51:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783935609; cv=none; b=Lb5VyV9Puvqy5yRRbadsJS9oMF0NP5IBqGLu3CnPWnlB37Da5FoLjeSdEFSTGIGQKJGwxIOR0WffBdqNoKIoD+DeqOa0OH9kuqJxnCaq5Rj0kAd4s4FpOdzXlQKB9H2S5fc1StOnvQVYE7bQKTtPtMB3PMCtEJECtStdoHMoXyU=
+	t=1783939871; cv=none; b=Binug6Ebwi2PfBXNk0RiESUSSzIr3y9392Tu+8lgWWQyeUnQvtRbG9R7/LfjTtz7GgCgkJ3C9uAM3DSqUyXj6jigN7gK5CQ2H4gYjAO8V3Qll3RAoVlaYWzIvNm3CJhLDUVZgFDvuMBvoxUT3i4+1tAknmH/qJ4Kfi8iy6pcE0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783935609; c=relaxed/simple;
-	bh=WZV6YgG+WpPiAKPk/A0W/yFsxqi/zkGwGIYdKYTnfLI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=rQ3+TswoC4Xg+mZFaYVwav+Q3cnRwZ5AyBMaJgV1IBwtbNyvZPF2psKkG0FJ3b8pXFgjJrvjXjr4ha+vqT1bvjR/jnbZEaegFjjFHzFzr4D5Fs3KilPyg2CEnE+asEgrN13F7I0rRZA0lYzSI6/QIkA/ehQvUCzyjutCCAMBoZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=n4nQr29G; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fhbTqDOz; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=n4nQr29G; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fhbTqDOz; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1783939871; c=relaxed/simple;
+	bh=OPfMRIa4nA9KedTVQcSOtY2NNVo7PJwo8kfHEMk2qLE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MVxKuOP/EQnfSvWH79JcU/E488ieax4FRZO9HxNKYmfT/9Tlqvif2J+ZmkxzXNpLdg5kUI/g/OobM7RI+50rkWS3Ios/E0v6I8wRRAUmWFvE57MJBAC6HSOT67GP+JPgYM+BoNxAE31LMDyEdWEvkb4T4bkQ0sjC8UYAg3fEYwk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mEOHFbNh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="n4nQr29G";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fhbTqDOz";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="n4nQr29G";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fhbTqDOz"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 89B8075AD7;
-	Mon, 13 Jul 2026 09:40:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1783935605; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QgRNBZ6eOhyxPXfPIS0NxMEzDxYbtCHx2kgnh8vNGa8=;
-	b=n4nQr29GgyJktRZHvm7LigRTvve9gI2nE9eE/Hou8MD2dScPJ/QHGy1XgsqxPvYPXzpVZo
-	twRYdgXk6RxBSpNiqduH4S6SW1kcpTvCdHW7gC+Jg1Za+JnmVusNBcnN2aUzbII5GBeiDc
-	9r3+cUwWlITtzvrqqRQQtgFlLq16lfA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1783935605;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QgRNBZ6eOhyxPXfPIS0NxMEzDxYbtCHx2kgnh8vNGa8=;
-	b=fhbTqDOzCqW+ALcisdicXA4p9Zo6W+iH3GGhbiolQt5H2OziVS+FhdBFO5h3cBHxc7ETME
-	+szNUOMt2tANqDDg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=n4nQr29G;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=fhbTqDOz
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1783935605; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QgRNBZ6eOhyxPXfPIS0NxMEzDxYbtCHx2kgnh8vNGa8=;
-	b=n4nQr29GgyJktRZHvm7LigRTvve9gI2nE9eE/Hou8MD2dScPJ/QHGy1XgsqxPvYPXzpVZo
-	twRYdgXk6RxBSpNiqduH4S6SW1kcpTvCdHW7gC+Jg1Za+JnmVusNBcnN2aUzbII5GBeiDc
-	9r3+cUwWlITtzvrqqRQQtgFlLq16lfA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1783935605;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QgRNBZ6eOhyxPXfPIS0NxMEzDxYbtCHx2kgnh8vNGa8=;
-	b=fhbTqDOzCqW+ALcisdicXA4p9Zo6W+iH3GGhbiolQt5H2OziVS+FhdBFO5h3cBHxc7ETME
-	+szNUOMt2tANqDDg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7540E779AE;
-	Mon, 13 Jul 2026 09:40:05 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id HpswHHWyVGqSBAAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 13 Jul 2026 09:40:05 +0000
-Message-ID: <bad09ed5-5785-48dd-8454-e054424e6da9@suse.de>
-Date: Mon, 13 Jul 2026 11:40:05 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mEOHFbNh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92AE01F000E9;
+	Mon, 13 Jul 2026 10:51:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783939870;
+	bh=tZkCzQFcbnjr4csOBbD7u4BPCfN0sfEmA68briBhZ40=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=mEOHFbNhq/Vq9ihpncTaawP5Dumq1hlknv4kyvlVW026DldcidW5uh5q1G6P6/47l
+	 buPj1fcNDtC4gBOzlk5iYcqpFvbilGdJtNoUDq6O8/sJ9kujODcENR59op0Gvw7lwD
+	 xAwL+n2qnZDakUwPJdvJC6Jlim988edojUbZaqZXHQN+IpBA1PyOMhapejhVZQa46J
+	 X59YkPteg3WOG2Lk+bWhr6xyZiueAOFqmoll7VuMxJjXoi4cVa+itA+3fGthm01/s3
+	 9CcIF0jxdZUJAmoVVFMJJAkKfzRph5TLVHtmCiQ54XxrP1P4zePf8suV4hlZzhSXg8
+	 Mok3ePWjmRNLw==
+Date: Mon, 13 Jul 2026 12:51:05 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Igor Pylypiv <ipylypiv@google.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH v3 1/2] ata: libata-scsi: terminate deferred commands on
+ time out
+Message-ID: <alTDGdJMA-XZHeS-@fedora>
+References: <20260713041252.463401-1-dlemoal@kernel.org>
+ <20260713041252.463401-2-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 9/9] ata: libata-scsi: add support for the REMOVE
- ELEMENT AND MODIFY ZONES command
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260706065610.3559692-1-dlemoal@kernel.org>
- <20260706065610.3559692-10-dlemoal@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260706065610.3559692-10-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Rspamd-Action: no action
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim,suse.de:mid];
-	FROM_HAS_DN(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[5];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim,suse.de:mid]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 89B8075AD7
-X-Spam-Score: -4.51
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260713041252.463401-2-dlemoal@kernel.org>
 
-On 7/6/26 8:56 AM, Damien Le Moal wrote:
-> Define the translation for the REMOVE ELEMENT AND MODIFY ZONES command
-> (SERVICE ACTION IN command with service action
-> SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES) into the ATA command
-> ATA_CMD_REMOVE_ELEMENT_AND_MODIFY_ZONES with the new function
-> ata_scsi_remove_element_and_modify_zones_xlat()
+On Mon, Jul 13, 2026 at 01:12:51PM +0900, Damien Le Moal wrote:
+> If a command timeout occurs while we have a deferred non-NCQ command
+> waiting to be issued, the SCSI EH task is not immediately woken up as the
+> waiting deferred command is never issued nor completed, thus leaving this
+> command to always be counted as "busy" for the SCSI host. This results in
+> the test "shost->host_failed != scsi_host_busy(shost))" in the function
+> scsi_error_handler() to always be true, keeping the EH task sleeping.
+> Eventually, when the deferred command also times out, the SCSI EH task
+> is woken up and the timeout processing occurs.
 > 
-> The array of supported commands ata_supported_cmds is modified to add a
-> new entry for this command. ata_scsi_cmd_is_supported() is also modify to
-> correctly handle this new entry depending on the target device flag
-> ATA_DFLAG_DEPOP being set, and the target device being a ZAC zoned device.
+> Avoid this unnecessary SCSI EH task wake-up additional time using the
+> eh_timed_out SCSI host template operation. The function
+> ata_scsi_eh_timed_out() is introduced to implement this operation. This
+> function calls the new helper ata_eh_schedule_deferred_qc_retry() to
+> schedule a retry through libata EH of all differed queued command, except
+
+s/differed/deferred/
+
+> for a differed queued commands that timed out as that case is handled in
+
+s/differed/deferred/
+
+> ata_scsi_cmd_error_handler().
 > 
+> Since ata_scsi_eh_timed_out() does not directly handles the timeout itself
+> and eventual re-issuing of deferred commands, this function returns
+> SCSI_EH_NOT_HANDLED to have scsi_timeout() continue with the regular
+> timeout handling, using scsi_abort_command() and scsi_eh_scmd_add(), thus
+> preventing the wkae-up delay for SCSI EH task.
+
+s/wkae-up/wake-up/
+
+> 
+> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
+> Cc: stable@vger.kernel.org
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ata/libata-scsi.c | 39 +++++++++++++++++++++++++++++++++++++++
->   include/linux/ata.h       |  1 +
->   2 files changed, 40 insertions(+)
+>  drivers/ata/libata-eh.c   | 35 ++++++++++++++++++++++++++++++++++-
+>  drivers/ata/libata-scsi.c | 22 ++++++++++++++++++++++
+>  drivers/ata/libata.h      |  2 ++
+>  include/linux/libata.h    |  2 ++
+>  4 files changed, 60 insertions(+), 1 deletion(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 05df7ea6954a..8e9d57c6f039 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -546,6 +546,31 @@ static void ata_eh_unload(struct ata_port *ap)
+>  	spin_unlock_irqrestore(ap->lock, flags);
+>  }
+>  
+> +void ata_eh_schedule_deferred_qc_retry(struct ata_port *ap,
+> +				       struct scsi_cmnd *scmd)
+> +{
+> +	struct ata_queued_cmd *qc;
+> +	struct ata_link *link;
+> +	unsigned long flags;
+> +
+> +	/*
+> +	 * Trigger EH for retrying any deferred qc that is not the queued
+> +	 * command for scmd.
+> +	 */
+> +	spin_lock_irqsave(ap->lock, flags);
+> +	ata_for_each_link(link, ap, PMP_FIRST) {
+> +		qc = link->deferred_qc;
+> +		if (!qc || qc->scsicmd == scmd)
+> +			continue;
+> +
+> +		link->deferred_qc = NULL;
+> +		cancel_work(&link->deferred_qc_work);
+> +		qc->flags |= ATA_QCFLAG_RETRY;
+> +		ata_qc_schedule_eh(qc);
+> +	}
+> +	spin_unlock_irqrestore(ap->lock, flags);
 
-Cheers,
+I was expecting you to modify ata_scsi_requeue_deferred_qc() to also
+requeue commands using this method, so we only have one of the functions.
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Would it work if you modify ata_scsi_requeue_deferred_qc() to essentially
+call this function instead?
+
+(They seem to have different locking requirements, so possibly create a
+__ata_scsi_requeue_deferred_qc() that has a lockdep_assert_held(ap->lock)
+and let ata_eh_schedule_deferred_qc_retry() take the lock and call
+__ata_scsi_requeue_deferred_qc(). Perhaps we can come up with better names,
+but you get the point.)
+
+
+Because, as far as I understood the Sashiko comment:
+
+"""
+[Severity: Critical]
+This is a pre-existing issue, but won't the explicit invocation of this
+requeue logic on every command timeout make a regression more likely?
+
+When ata_scsi_requeue_deferred_qc() completes a deferred command using
+ata_scsi_qc_done() with DID_REQUEUE, it unconditionally calls
+ata_qc_free(), which clears the active flag.
+"""
+
+I don't see how this patch will address the pre-existing issue Sashiko
+warned about.
+
+I think that we need to modify ata_scsi_requeue_deferred_qc() to
+also requeue commands via EH.
+
+Possibly it works because ata_scsi_requeue_deferred_qc() is currently
+always called by EH. But I think it would be simpler if we just have
+one function that always requeues/retries via EH, regardless if we
+already are in EH context or not.
+
+
+> +}
+> +
+>  /**
+>   *	ata_scsi_error - SCSI layer error handler callback
+>   *	@host: SCSI host on which error occurred
+> @@ -1214,9 +1239,17 @@ static void __ata_eh_qc_complete(struct ata_queued_cmd *qc)
+>  	struct scsi_cmnd *scmd = qc->scsicmd;
+>  	unsigned long flags;
+>  
+> +
+> +	/*
+> +	 * If we are retrying a deferred QC after a timeout, it is not active
+> +	 * and all we need to do is to complete it directly.
+> +	 */
+>  	spin_lock_irqsave(ap->lock, flags);
+>  	qc->scsidone = ata_eh_scsidone;
+> -	__ata_qc_complete(qc);
+> +	if ((qc->flags & ATA_QCFLAG_RETRY) && !(qc->flags & ATA_QCFLAG_ACTIVE))
+> +		qc->complete_fn(qc);
+> +	else
+> +		__ata_qc_complete(qc);
+
+I thought that we had to call scsi_eh_finish_cmd() for a command that was
+on the SCSI list of failed commands.
+
+See e.g. how ata_scsi_cmd_error_handler() currently calls scsi_eh_finish_cmd().
+
+What am I missing?
+
+Does the code still work if you simply unconditionally call
+__ata_qc_complete() here?
+
+(Even if it is slightly less efficient, I would prefer a single/unified path.
+This is only if we have a NCQ error or timeout, so I don't think it is super
+critical to prioritize efficiency over maintainability here.)
+
+
+Kind regards,
+Niklas
