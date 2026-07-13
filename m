@@ -1,60 +1,48 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C1C933BBB1;
-	Mon, 13 Jul 2026 16:26:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85AC4344D83;
+	Mon, 13 Jul 2026 17:12:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783960019; cv=none; b=OZ2qTce5SP9up+TjY+Y7q5xtMfeMd7YMGeU5JzOHne9aaXhOIxUdAN4IqWMibBzaWBhcMnHtG63oDu9c0dv+UTc+uszyjs3VgsyxMnAVfREgcevR0Zjvf0OxlOVCy13oSlVdmLEy9zU3lVVN6LjkmqBsTNyyUIlQTEobDzqjWhw=
+	t=1783962742; cv=none; b=mDxT4tgnEMDwglQxVhmzbnAqSNhjJsjwy41ovtVPNKsi9ERHXfFeYY6MQt5uWqxK06egA13rWABJ/x8YvcJLsKbjjKSF6geHaJ7irHP/JHBO/5O16EvzjZhuBSK9MQgNq4Py/axjd3hLYp523gXYzbdUG1xrLv/HXRIZj7lFuKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783960019; c=relaxed/simple;
-	bh=rmN/MIwCrtKt1JNedWCAhlBxBZDM3RDo/fAVpqbb/oc=;
+	s=arc-20240116; t=1783962742; c=relaxed/simple;
+	bh=LcDJfk9uAA8GpXhdM3BLWHuxHJLeab3IiWM2VbO+NbE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LL6yQv8EjlfPmGxd/od9f+YRUuW0T51eTC9mSgNUTTWQTaVwFa23ZCMlSS8RlxSbdt+sSfKzlmuMswa+259GJ3JbTUT9QL+bMDRG0aSR8cc9Z9cIYS96D0p5IWHsuFfsyYjMDbxGJ4P1Ih3fc7EFjGrmJJbS/hIR8SpG7NtAAt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=kA5fwkCR; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 In-Reply-To:Content-Type; b=E8mI+6x2xlKtOfMOcDx2GfWKJejge2OScc6uibASIapQWjFlqJdPmiJXjcbZSRZMlM1Km8TFeQJkvb/gK76iW9k/zjE1/FDSmoHg+23SYpCceBaMMErYDS9JEbuSeoUN4ZK3zb/KukvU80fdwcZXb2Cr/4INXF8mOebq7c2U970=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Aw0zskxL; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="kA5fwkCR"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66DFEFD4953913;
-	Mon, 13 Jul 2026 16:26:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=7955c4
-	I3vp022l/ik6C3QsYjOlR4y6dlTg0ovoSXVKk=; b=kA5fwkCRrmS2854N+6lHwx
-	z17Mb5BU5X2UYE79fXTAkL19lS0jpFoAcV3DpLkut3dTfYQZn/ScohjvFl/eVVkA
-	YltFTzmtyVVGOa2ecuh80JO3UUty2hhKlP2y5HsxkoLnc/BODo7izPPlh0zZebPa
-	H+8fw8T5v84tMZPktaVnkewJSIdAk844xF+8BxkuJrPmuRo/sP1+/Zm979q+JW9G
-	izrnhUMONijY9LLAFWLuB/MXZBs/tU2IJ+Jw2IJZqiLyXxg7qFABbWpj9J2z8rjZ
-	K280VlnQfjKI9zU4gzgZ+DVXw0JTsgroaQbrDb2im4Y3rkXb6ogsrAgwsCYqMq2A
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fcv3327p9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 13 Jul 2026 16:26:51 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66DGJhLk009857;
-	Mon, 13 Jul 2026 16:26:51 GMT
-Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4fc05pxrve-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 13 Jul 2026 16:26:51 +0000 (GMT)
-Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
-	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66DGQovN65470774
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 13 Jul 2026 16:26:50 GMT
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0266658063;
-	Mon, 13 Jul 2026 16:26:50 +0000 (GMT)
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5EEFC58056;
-	Mon, 13 Jul 2026 16:26:49 +0000 (GMT)
-Received: from [9.61.176.127] (unknown [9.61.176.127])
-	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 13 Jul 2026 16:26:49 +0000 (GMT)
-Message-ID: <3f8f6510-5751-425d-bb61-59c46565dd9c@linux.ibm.com>
-Date: Mon, 13 Jul 2026 11:26:48 -0500
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Aw0zskxL"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gzTWl6fF2zlh30T;
+	Mon, 13 Jul 2026 17:12:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1783962736; x=1786554737; bh=LcDJfk9uAA8GpXhdM3BLWHux
+	HJLeab3IiWM2VbO+NbE=; b=Aw0zskxL0CsQ40qx0AWoR/wai8Ko95dh0n0hGIVJ
+	kxApLJWZUG/TXwYy2PmTZoeBKpHf6+CbyLvYlxU1mYWAi4aesaspdTi2qgg1HUkQ
+	nijyjYAb0tcmWNr8jbTu0XyVlmcfElLfrTGmRouFu0S+gaRR4K9Qd7JBQ3RQRMiW
+	+PsaCNmJ5JXGvD8va1XZilf6Y/I1eLeRrVm31LPqtqbRWfbNKs6YV9WTRX4dtFRd
+	BMt9LVyWkFQqgikjACQrSSok8PXrgZOrpxpgy/VefC1iAzgWU8iZZaciEH+2+M+X
+	pB33Q2xKtRjYNiT3jlaK1li1PBfr/+KC+FSwrmPO9ZkFRw==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id qoJ5ryD0sC1y; Mon, 13 Jul 2026 17:12:16 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gzTWf0Xl0zlfl7l;
+	Mon, 13 Jul 2026 17:12:13 +0000 (UTC)
+Message-ID: <a235cc9a-9d4c-486e-81a0-b7df2fd1bbfe@acm.org>
+Date: Mon, 13 Jul 2026 10:12:12 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,59 +50,27 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] scsi: lpfc: Fix race conditions in ELS retry handling
-To: Paul Ely <paul.ely@broadcom.com>
-Cc: Justin Tee <justintee8345@gmail.com>, Daniel Wagner <dwagner@suse.de>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        thinhtr@linux.ibm.com, Justin Tee <justin.tee@broadcom.com>,
-        James Smart <james.smart@broadcom.com>
-References: <1c8a764c-fce1-4ce1-b797-47ac328cf3f2@linux.ibm.com>
- <CABPRKS_Ek4JHDs9pBg2nium+AjHhM_JQ8su1=vrcOg+xME7PjQ@mail.gmail.com>
- <3cf79f92-a492-45f4-838b-dcbef0a44147@flourine.local>
- <CAEQnVQmMfc96nWdC+0UA=vUrhHPSK38=rg+h3742AHTWD9qXYA@mail.gmail.com>
+Subject: Re: [PATCH v4] scsi: scsi_debug: fix REPORT ZONES alloc_len underflow
+ OOB write
+To: Ibrahim Hashimov <security@auditcode.ai>, martin.petersen@oracle.com,
+ James.Bottomley@HansenPartnership.com, dlemoal@kernel.org
+Cc: shinichiro.kawasaki@wdc.com, damien.lemoal@opensource.wdc.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20260710055755.53830-1-security@auditcode.ai>
+ <20260712183739.83915-1-security@auditcode.ai>
 Content-Language: en-US
-From: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
-In-Reply-To: <CAEQnVQmMfc96nWdC+0UA=vUrhHPSK38=rg+h3742AHTWD9qXYA@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260712183739.83915-1-security@auditcode.ai>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDE2OCBTYWx0ZWRfXxhssL3LWebp2
- 0eBvRySy9+AxCNnW/5sSPEToONt3MbLJjcaDose6SwRBQajOOkfGT/9VSnXO61Mv/XeZBx08/ep
- 4CvHhkmyU4/H0SQrN8aIsHZqXQP/0Fo=
-X-Authority-Analysis: v=2.4 cv=Mp1iLWae c=1 sm=1 tr=0 ts=6a5511cc cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=KneAjnFcxKRnfvGyJi4A:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: YS3E9nQSXLxPZfyuLr_po9y1LiIM1SpF
-X-Proofpoint-ORIG-GUID: YXb5uW4rpbWj7larwl46SctMTeVmUEIN
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDE2OCBTYWx0ZWRfX8QhbcRZi2QRD
- gq57J2+j8x715ZWbTNsAmZI1+flJosa3P/rPmfvsRHfbTCLtTgGNFtu/fW2j5Bt7fIze2b6i3jB
- 8aQ6RcxyXgY3iSzd0u5DjMI3acqe02+n3+B83+o8SVHwJpqb3ZU0hMckoB0i0NMgFPmeKvu5uQT
- hm7mJ3J5XgTPXYKkaFoo//JihukMLA/Hzf2Tu4YAuPWWF6gvHFnAt0xkDUONDz69Dkd45/dSOjp
- T1LXdGgHSiTjz04Kgkwa0Vf/AvOcZZIwXYtooCjD7IseLbGzV68wpTzc/SIrprz5PDNL4G3Zc3d
- TOA1JEBgDkp92xwYqOTrrFPD1jXW1KA5FkH8jRLQomK4IluSSbV1FkQgxZgKOLnM8WQyZA2VJwr
- CtiGzf8xxuZTFY825fjYpK6xPx2QEbGuAiyJGvnmFp4kcl3MiiU1xhB+2ZrFvTDCS4hL928N3X7
- NED62Zg3OhgaOX+yRjg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-13_04,2026-07-10_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 bulkscore=0 spamscore=0 malwarescore=0 lowpriorityscore=0
- impostorscore=0 priorityscore=1501 suspectscore=0 clxscore=1011 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607130168
+Content-Transfer-Encoding: 7bit
 
-On 6/18/26 8:39 AM, Paul Ely wrote:
-> Hello Daniel,
-> 
-> I have been testing Patch 1 of 3 for a while now but no reproduction.  I 
-> reviewed Patch 1 of 3 yesterday with Justin and we think it needs some 
-> minor rework.  
+On 7/12/26 11:37 AM, Ibrahim Hashimov wrote:
+> Clamp rep_max_zones to devip->nr_zones. The loop already stops at
+> sdebug_capacity (after nr_zones zones), so a report can never hold more
+> than nr_zones descriptors; the clamp does not change the report, it
+> only bounds arr_len to (nr_zones + 1) * RZONES_DESC_HD, a real device
+> property that can never reach 0x100000000.
 
-Hi Paul,
-If you have a reworked patch I'd be happy to test it.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Thanks,
-Kyle
