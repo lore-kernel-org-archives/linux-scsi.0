@@ -1,121 +1,102 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D56E33F368;
-	Mon, 13 Jul 2026 02:33:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DADCA3164D8
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 02:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783910043; cv=none; b=b+nN8pF/SyT3WAx9gQ2vzFwQZJTVCe1sgIGV8iQkU0gC7exSyIEf0TvDm8PRNWxzGZ/OjgxlajWWiy2x04p+OlQ8/K+RcANO6EXTpYqfoCF4LLrsJNHfVwObfzwZI+gcTL23Y+Rb9sRCwf142gOBr61iNdopvZkZiv3woPklY7c=
+	t=1783911158; cv=none; b=aTtycO76bpPFI6SZbLuGBoNQLSsVbU7wOn03FP4Uxs1w7RPe2zd6t53InPfeCskotncah5F26vsjWlwRH80N9vs55EAkgYWslmnJ4/21CBmaka3wUlfwxu8sVebuqmPbG4TqCQcYcyt7gHGJrRTg2ycxXajwE5rMUfNvupkMzuQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783910043; c=relaxed/simple;
-	bh=jwt2tryPTeJ9Hi3DSPFgB7yIT5PPdYH6XseGcDinOaQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hAtUZDdw6F4zfc6v2tyjcya6YROtiZO39LYOS7iqoIgPbIa9Rn/Qcr+qZf1m8NKdO9HVA7h/GDj1HWDj1ZAg4q3hMNdz1AhADZHu/zV3JCFEqoPF3RUSXzPUngaS03eL/eBqKf6uaPPetUgHOME8cFkMPws7nmy5HVmcEu5a5a8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=c3BNASgJ; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1783911158; c=relaxed/simple;
+	bh=RPJ/yFfdo2BqiRL2Bc2f+l++a0D6prSxSPsfAp/ClXY=;
+	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
+	 Content-Type:References; b=K+D2muPGHm0s8lsII4TOFOJFQLj6AGrx65uPo0HuwD1QQbTgR9QIwnI6bdCcQvvDuWoC85xCXVeM2Rq+rCmPPYpu8g8pxVC7QwN8ry1ulZbM4IS92uqFeGKRYkLdTYNxbY1aAb1095YaBMCtKFK4vAASCrS8fPBEPi2bfM9lvAA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=UBtLyIAe; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="c3BNASgJ"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66D0Bn8x165806;
-	Mon, 13 Jul 2026 02:33:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=qbv21PqstAcJbZkBnSBApkCoOs9joiHIT78ZoAOddoY=; b=
-	c3BNASgJ/+q9E/udTRtTod6NsuteUnovsLpsaBaiazGl0fZudtgaEXO/42nnTYfM
-	aelN1+0iNLEwSYiFEfDuRUV2MkDKgECdZFPXY/wbrv4KKY7w50eu0gMDF4TgdB2e
-	SvG2k2xlxk/0WGfBQYFqUwnS3ikiYhrtmF8jlekuGZd/khnsEtR2O80jEjhfXh3U
-	Zk5zVoULwNrex0DfWntJxN9SbBVchQdFdKrh46gxeVpHS+4bqSA8uWut64RlnfwK
-	6u/Fav4mB5B5BRt23xTVe+roUhoiMiSletXodhczneXPp0QS6YD+c5DDS35odhAH
-	9XZHFRBT5Oj/PshgUkKiRQ==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fbepn1cr3-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 13 Jul 2026 02:33:38 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66D2XV8W029220;
-	Mon, 13 Jul 2026 02:33:37 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fbc9fssv4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 13 Jul 2026 02:33:36 +0000 (GMT)
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 66D2O0cv010878;
-	Mon, 13 Jul 2026 02:33:36 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4fbc9fssh6-7;
-	Mon, 13 Jul 2026 02:33:36 +0000 (GMT)
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Ram Vegesna <ram.vegesna@broadcom.com>,
-        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-        WenTao Liang <vulab@iscas.ac.cn>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Vitaliy Shevtsov <v.shevtsov@mt-integration.ru>,
-        Daniel Wagner <dwagner@suse.de>, Kees Cook <kees@kernel.org>,
-        James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: elx: efct: fix refcount leak in efct_hw_io_abort()
-Date: Sun, 12 Jul 2026 22:32:38 -0400
-Message-ID: <178390967077.3399387.1650905221698217241.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260611053037.63756-1-vulab@iscas.ac.cn>
-References: <20260611053037.63756-1-vulab@iscas.ac.cn>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UBtLyIAe"
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260713025228epoutp04f9dd474e039e4e32e11ea0699ab48613~Bubzg_OSA1615216152epoutp04w
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 02:52:28 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260713025228epoutp04f9dd474e039e4e32e11ea0699ab48613~Bubzg_OSA1615216152epoutp04w
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1783911148;
+	bh=RPJ/yFfdo2BqiRL2Bc2f+l++a0D6prSxSPsfAp/ClXY=;
+	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+	b=UBtLyIAeZ3Eqp7pNGnjWTdJFNgofBQrAa1DE3sHmOUgEB1vSxsQqB56ijiiQ8OWyp
+	 7ZxlXhlqb08opttwYNQThrviEq7UJQoAPPUgbRWLYBe6UTfEOlOFHlOKWMMrOimvHw
+	 S4FptqzXF3viQxjmwCIGZ0hpgGV7v6Jcx4HMpm5Y=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
+	20260713025227epcas2p109a56ade85eb62cfacba0d0603338b80~BubzIiQpC1000110001epcas2p1q;
+	Mon, 13 Jul 2026 02:52:27 +0000 (GMT)
+Received: from epcas2p1.samsung.com (unknown [182.195.38.210]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4gz6Rb43k4z3hhT8; Mon, 13 Jul
+	2026 02:52:27 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+Subject: Re: [PATCH] scsi: ufs: Add support for the aggregated read query
+ opcode
+Reply-To: hyenc.jeong@samsung.com
+Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+To: Bart Van Assche <bvanassche@acm.org>,
+	"James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>
+CC: ALIM AKHTAR <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Jinyoung Choi <j-young.choi@samsung.com>,
+	Dukhyun Kwon <d_hyun.kwon@samsung.com>, Jeuk Kim <jeuk20.kim@samsung.com>,
+	Keoseong Park <keosung.park@samsung.com>, Jaemyung Lee
+	<jaemyung.lee@samsung.com>, Jieon Seol <jieon.seol@samsung.com>, Gyusun Lee
+	<gyusun.lee@samsung.com>, Yunjae Jo <yunjae00.jo@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <6d087f28-5795-4929-b5d3-3f78d9b9bc60@acm.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20260713025227epcms2p41de509bb713eb7a6be2c945073be6b3a@epcms2p4>
+Date: Mon, 13 Jul 2026 11:52:27 +0900
+X-CMS-MailID: 20260713025227epcms2p41de509bb713eb7a6be2c945073be6b3a
+Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-12_08,2026-07-10_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
- spamscore=0 suspectscore=0 bulkscore=0 lowpriorityscore=0 malwarescore=0
- mlxscore=0 mlxlogscore=712 phishscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2606160000 definitions=main-2607130023
-X-Proofpoint-GUID: pvgZCk64IZ3kbVMtlh1dSGW8aNRLyyxJ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDAyMyBTYWx0ZWRfX+Pox8jsLHujc
- 3Nxp+TZce+cNswCD9WtXhJUIFXlVlLVwpwwVVNdJ/dJIw3u/7dvqR21DvdnbJwn6/C0uBzZuFeH
- uRaaZiVgEjNmSlNksdq3x9jnOAyABIUmaYIyRUKMgdGpyZH4NnDaCw4Kir3Tkil5TFMVY+gPWEi
- EkTztdtV4keJn2g7hVPXGDKfN60Fj+DzbNfIJoSDGGocuhKcKM2snXCN+ljkZxRaEsAzs5pRLZH
- wcQSirBW/xtSASbSjSbAqcFNxZa9PJZe3ENKlhWGrBAUb8y4tEYZKmWBM+9NAzd53ZyjoLo09Tv
- +brF/NAKxZ+TbFfy1U3QR+bUck+r5WCFbYdKnCjyrVPbvyoSk+WVArGgN1SP1mkMtXtnKaYpjHe
- KoImGKbIbSnJJa9TVPMSBFqkGCsyqwq4FOwF8yeqonpJHvJtR/BLiek5lkzO2IV0V39P3K8glsy
- 0gq5tTBRYtpb3pswceGlKKTQJymkAposYBlj2hzQ=
-X-Authority-Analysis: v=2.4 cv=bJom5v+Z c=1 sm=1 tr=0 ts=6a544e82 b=1 cx=c_pps
- a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x0eKOSpe3m1H3M0S9YoZ:22 a=VwQbUJbxAAAA:8
- a=ylW9feQpB8xVrbssfo4A:9 a=QEXdDO2ut3YA:10 a=5yU3S35YU4bGjq-dph-N:22
- a=Bho9c0fBagfJEIQBS7DQ:22 cc=ntf awl=host:12221
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDAyMyBTYWx0ZWRfXwK3Ge9aavjFl
- CPq9DP+Bn5JPDInV7/jXRu5YbfnyjgWdpOInuafxgc5v2C0/O4gAr1f5DtC6uufydJD6/CM8Wbu
- Pvun+3MBJkIJGUwiv1X4GB5ydaMiE2jGcaBMtGy4G+xbaT2cJLf7
-X-Proofpoint-ORIG-GUID: pvgZCk64IZ3kbVMtlh1dSGW8aNRLyyxJ
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+cpgsPolicy: CPGSC10-223,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260710053524epcms2p82121eba4240c37112fc5669430035442
+References: <6d087f28-5795-4929-b5d3-3f78d9b9bc60@acm.org>
+	<20260710054556epcms2p68986e2af26f42e63c87ab8fde034e450@epcms2p6>
+	<CGME20260710053524epcms2p82121eba4240c37112fc5669430035442@epcms2p4>
 
-On Thu, 11 Jun 2026 13:30:37 +0800, WenTao Liang wrote:
+Hi Bart,
 
-> When efct_hw_reqtag_alloc() fails in efct_hw_io_abort(), the error
-> path returns -ENOSPC without releasing the reference obtained via
-> kref_get_unless_zero() earlier in the function. All other error
-> paths correctly drop the reference. This causes a permanent
-> reference leak on the io_to_abort object.
-> 
-> Additionally, the abort_in_progress flag is left set to true on
-> this path, which means future abort attempts for the same I/O will
-> immediately return -EINPROGRESS even though the abort was never
-> submitted, effectively blocking recovery.
-> 
-> [...]
-
-Applied to 7.2/scsi-fixes, thanks!
-
-[1/1] scsi: elx: efct: fix refcount leak in efct_hw_io_abort()
-      https://git.kernel.org/mkp/scsi/c/2c007acf7b31
-
--- 
-Martin K. Petersen
+On 7/10/26 02:46 PM, Bart Van Assche wrote:
+> On 7/9/26 10:45 PM, Hyeoncheol Jeong wrote:
+> > struct utp_transfer_cmd_desc =7B
+> >=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u8=20command_upiu=5BA=
+LIGNED_UPIU_SIZE=5D;=0D=0A>=20>=20-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u8=
+=20response_upiu=5BALIGNED_UPIU_SIZE=5D;=0D=0A>=20>=20+=20=C2=A0=20=C2=A0=
+=20=C2=A0=20=C2=A0u8=20response_upiu=5BALIGNED_RSP_UPIU_SIZE=5D;=0D=0A>=20>=
+=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u8=20prd_table=5B=5D;=0D=
+=0A>=20>=20=7D;=0D=0A>=0D=0A>=20This=20change=20increases=20the=20size=20of=
+=20every=20CQ=20entry=20and=20also=20of=20every=20LRB=0D=0A>=20entry=20by=
+=20about=204=20KiB.=20This=20is=20not=20acceptable.=0D=0A=0D=0AThanks=20for=
+=20the=20review.=20You're=20right=20=E2=80=94=20growing=20the=20shared=0D=
+=0Autp_transfer_cmd_desc=20enlarges=20the=20response=20area=20for=20every=
+=20tag,=0D=0Awhich=20is=20wasteful.=20The=20aggregated=20read=20only=20uses=
+=20the=20reserved=0D=0A(device=20management)=20tag,=20so=20only=20that=20ta=
+g=20needs=20the=20big=20buffer.=0D=0A=0D=0AWould=20it=20be=20okay=20to=20ke=
+ep=20utp_transfer_cmd_desc=20as=20is=20and=20give=0D=0Ajust=20the=20reserve=
+d=20tag=20a=20dedicated=204=20KiB=20response=20descriptor?=0D=0ARegular=20t=
+ags=20and=20normal=20I/O=20would=20stay=20unchanged.=0D=0A=0D=0ALet=20me=20=
+know=20if=20you'd=20prefer=20another=20approach.=0D=0A=0D=0AThanks.=0D=0A
