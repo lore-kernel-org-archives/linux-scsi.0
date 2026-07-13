@@ -1,160 +1,159 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1ED93DB980
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 09:01:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D229F3043BE
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 09:31:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783933277; cv=none; b=lOt3qJ043QJlx0gIqBA/8sV5n9CDltRwFkJV0+6M/xioptqbfCBX3x3Bo+frSDcrf8B13cJpdcS8GlRWuhrASzFMy0fWG6SYHjeJfBVtZUJvoe8426aR8749pkaN+7MT1Ee0f18V2nPyb1OAnLMAhXBO8zIk9e/3tN8baUEfLlg=
+	t=1783935069; cv=none; b=Z/3PxA6WVA4mH5uKd2wabTxpGJ0aGVcyh8kY3ezmUExKqqLvB1yd+YVNKOvaqH2fhGC6SQp/Xg1sjuRWEUuVdOfO+xUyzlJPINSfE1nMMLJ0Sqhti4kp4E48c705yyRhY6fGDeIWQIA300pbcQrttRxny9HU5Lz6W7ZEHU13o5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783933277; c=relaxed/simple;
-	bh=rHMuM7J4pRNHKBnY89EHxEjl8DVA50PBlRSK04Bbsms=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=X++CckTRhr7fvjhGJq0gyW5BsA96syfpndkhaLNFnxN3Os3wMKOZunDQG1gT3jjHbRod7HhI5UWKiOT7yyk949Xq4DXdC5iDtxNkHRw2VeIyDrZU4R9eG+hG/owlvyhvjG0GgCGS3Uut2YEKBnjHtqxE1ho1sGeN6XCR1G+QZJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gmHa0eqj; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1783935069; c=relaxed/simple;
+	bh=Lt9CbKHM2dEyt8pJFUtYtECqcJs2AWJuEaFHZmUtwFo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=Y51bZNhDdjY4Idp1ZMlo5wzOfU5MbnBcY5lUhtuLPazqNAxqIYtz0gT8B/F1rLTsC9Bdi7X9YH+Ciug/iaKYudYA6eSRi22W6PESle9+iwlJBFCAAJ6d2+Tc0J79cu3OqjQKhC4u6yvpuVwzNExJmHgrVUcuBCumsw596a7f5ls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=pPu/+Nys; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=2zrRRxgj; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=pPu/+Nys; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=2zrRRxgj; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gmHa0eqj"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1783933275;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=SVXsZ8MkliphxqtJRsm1Y1yxw0BKg93aj4HTiUHcmo4=;
-	b=gmHa0eqjfoL+AkDy3zX8kqD/emm0Se5pb6nNwaQDUW4ICJHPZuR+gD11gi54OiW4/fq3aC
-	ODQaIPLmIqCCSLVzMsq0NWk1S/F9Ug30f5uRf2zsvxN098Os3B5tP/MP9/kmOKCnYQZzlI
-	lWo0JNORF5g9DDMZ/Ov56qzU689h84Y=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-310-4Agobc53PIGHRaAsfq023A-1; Mon,
- 13 Jul 2026 05:01:12 -0400
-X-MC-Unique: 4Agobc53PIGHRaAsfq023A-1
-X-Mimecast-MFC-AGG-ID: 4Agobc53PIGHRaAsfq023A_1783933270
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="pPu/+Nys";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="2zrRRxgj";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="pPu/+Nys";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="2zrRRxgj"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EDD3A1954AE2;
-	Mon, 13 Jul 2026 09:01:09 +0000 (UTC)
-Received: from nprabudo-thinkpadp16vgen1.rmtin.csb (unknown [10.74.64.171])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 644E936F29;
-	Mon, 13 Jul 2026 09:01:05 +0000 (UTC)
-From: Nimal Prabudoss I <nprabudo@redhat.com>
-To: GR-QLogic-Storage-Upstream@marvell.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com
-Cc: jmeneghi@redhat.com,
-	mschmidt@redhat.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Nimal Prabudoss I <nprabudo@redhat.com>
-Subject: [PATCH] MAINTAINERS: Update QED and Broadcom maintainer entries
-Date: Mon, 13 Jul 2026 05:01:00 -0400
-Message-ID: <20260713090100.126362-1-nprabudo@redhat.com>
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 0ACE67585D;
+	Mon, 13 Jul 2026 09:31:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1783935065; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TsUdVrwUrMhswX+8JA+Xpt+8ICU4YT00IedOjZersEo=;
+	b=pPu/+NysXok8fPf/GYbPNgefWx2mt035Oj1eNUcJurT2l3IxqygBhdBHSLlWpIXkjargCE
+	vTlQNV0Wg2pQfkumGUM5Bx21mMGh64N3gvyuCDixAHh9Tdibfvh3WXKIPI62XOzgnzkvZR
+	+oebGdDNIt2M1O1SsN9ePVFH92WHAjk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1783935065;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TsUdVrwUrMhswX+8JA+Xpt+8ICU4YT00IedOjZersEo=;
+	b=2zrRRxgjbuR45buCjjWE13fC5gfMP7p7JghSgzgEHqkjdorrshInTCc6dq1YNYgIDWTdcd
+	INtrwFUSVmZviUAw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b="pPu/+Nys";
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=2zrRRxgj
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1783935065; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TsUdVrwUrMhswX+8JA+Xpt+8ICU4YT00IedOjZersEo=;
+	b=pPu/+NysXok8fPf/GYbPNgefWx2mt035Oj1eNUcJurT2l3IxqygBhdBHSLlWpIXkjargCE
+	vTlQNV0Wg2pQfkumGUM5Bx21mMGh64N3gvyuCDixAHh9Tdibfvh3WXKIPI62XOzgnzkvZR
+	+oebGdDNIt2M1O1SsN9ePVFH92WHAjk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1783935065;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TsUdVrwUrMhswX+8JA+Xpt+8ICU4YT00IedOjZersEo=;
+	b=2zrRRxgjbuR45buCjjWE13fC5gfMP7p7JghSgzgEHqkjdorrshInTCc6dq1YNYgIDWTdcd
+	INtrwFUSVmZviUAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EEAE3779AE;
+	Mon, 13 Jul 2026 09:31:04 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id tO/YOViwVGqdeQAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 13 Jul 2026 09:31:04 +0000
+Message-ID: <5f934a87-d87b-4f64-b915-5c39c391c56b@suse.de>
+Date: Mon, 13 Jul 2026 11:31:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 2/9] scsi: define depopulation capabilities related
+ service actions
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20260706065610.3559692-1-dlemoal@kernel.org>
+ <20260706065610.3559692-3-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260706065610.3559692-3-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
+X-Spam-Flag: NO
+X-Rspamd-Action: no action
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[5];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,suse.de:mid,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	URIBL_BLOCKED(0.00)[suse.de:email,suse.de:dkim,suse.de:mid,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 0ACE67585D
+X-Spam-Score: -4.51
 
----
- MAINTAINERS | 25 ++++++++++++++++++-------
- 1 file changed, 18 insertions(+), 7 deletions(-)
+On 7/6/26 8:56 AM, Damien Le Moal wrote:
+> Add to include/scsi/scsi_proto.h the definition of the four service
+> actions of the SERVICE ACTION IN (16) command for the storage element
+> depopulation and restoration capabilities, as defined in the SBC5 and
+> ZBC2 specifications. These are:
+>   - SAI_GET_PHYSICAL_ELEMENT_STATUS (GET PHYSICAL ELEMENT STATUS command)
+>   - SAI_REMOVE_ELEMENT_AND_TRUNCATE (REMOVE ELEMENT AND TRUNCATE command)
+>   - SAI_RESTORE_ELEMENTS_AND_REBUILD (RESTORE ELEMENTS AND REBUILD command)
+>   - SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES (REMOVE ELEMENT AND MODIFY ZONES
+>     command)
+> 
+> The physical element types and physical element health values reported by
+> the GET PHYSICAL ELEMENT STATUS command are also defined.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   include/scsi/scsi_proto.h | 23 +++++++++++++++++++++++
+>   1 file changed, 23 insertions(+)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 14968b84f0f6..7197b9aa4278 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4560,7 +4560,8 @@ F:	include/linux/bcm963xx_nvram.h
- F:	include/linux/bcm963xx_tag.h
- 
- BROADCOM BNX2 GIGABIT ETHERNET DRIVER
--M:	Rasesh Mody <rmody@marvell.com>
-+M:	Nimal Prabudoss <nprabudoss@marvell.com>
-+M:	Sharad Padol <spadol@marvell.com>
- M:	GR-Linux-NIC-Dev@marvell.com
- L:	netdev@vger.kernel.org
- S:	Supported
-@@ -4568,14 +4569,16 @@ F:	drivers/net/ethernet/broadcom/bnx2.*
- F:	drivers/net/ethernet/broadcom/bnx2_*
- 
- BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER
--M:	Saurav Kashyap <skashyap@marvell.com>
--M:	Javed Hasan <jhasan@marvell.com>
-+M:	Nimal Prabudoss <nprabudoss@marvell.com>
-+M:	Sharad Padol <spadol@marvell.com>
- M:	GR-QLogic-Storage-Upstream@marvell.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/bnx2fc/
- 
- BROADCOM BNX2I 1/10 GIGABIT iSCSI DRIVER
-+M:	Nimal Prabudoss <nprabudoss@marvell.com>
-+M:	Sharad Padol <spadol@marvell.com>
- M:	Nilesh Javali <njavali@marvell.com>
- M:	Manish Rangankar <mrangankar@marvell.com>
- M:	GR-QLogic-Storage-Upstream@marvell.com
-@@ -18927,7 +18930,8 @@ F:	drivers/infiniband/hw/qib/
- 
- QLOGIC QL41xxx FCOE DRIVER
- M:	Saurav Kashyap <skashyap@marvell.com>
--M:	Javed Hasan <jhasan@marvell.com>
-+M:	Nimal Prabudoss <nprabudoss@marvell.com>
-+M:	Sharad Padol <spadol@marvell.com>
- M:	GR-QLogic-Storage-Upstream@marvell.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
-@@ -18935,14 +18939,16 @@ F:	drivers/scsi/qedf/
- 
- QLOGIC QL41xxx ISCSI DRIVER
- M:	Nilesh Javali <njavali@marvell.com>
--M:	Manish Rangankar <mrangankar@marvell.com>
-+M:	Nimal Prabudoss <nprabudoss@marvell.com>
-+M:	Sharad Padol <spadol@marvell.com>
- M:	GR-QLogic-Storage-Upstream@marvell.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/qedi/
- 
- QLOGIC QL4xxx ETHERNET DRIVER
--M:	Manish Chopra <manishc@marvell.com>
-+M:	Nimal Prabudoss <nprabudoss@marvell.com>
-+M:	Sharad Padol <spadol@marvell.com>
- L:	netdev@vger.kernel.org
- S:	Supported
- F:	drivers/net/ethernet/qlogic/qed/
-@@ -18951,6 +18957,8 @@ F:	include/linux/qed/
- 
- QLOGIC QL4xxx RDMA DRIVER
- M:	Michal Kalderon <mkalderon@marvell.com>
-+M:	Nimal Prabudoss <nprabudoss@marvell.com>
-+M:	Sharad Padol <spadol@marvell.com>
- L:	linux-rdma@vger.kernel.org
- S:	Supported
- F:	drivers/infiniband/hw/qedr/
-@@ -18963,6 +18971,8 @@ S:	Maintained
- F:	drivers/scsi/qla1280.[ch]
- 
- QLOGIC QLA2XXX FC-SCSI DRIVER
-+M:	Nimal Prabudoss <nprabudoss@marvell.com>
-+M:	Sharad Padol <spadol@marvell.com>
- M:	Nilesh Javali <njavali@marvell.com>
- M:	GR-QLogic-Storage-Upstream@marvell.com
- L:	linux-scsi@vger.kernel.org
-@@ -18977,7 +18987,8 @@ F:	drivers/net/ethernet/qlogic/qla3xxx.*
- 
- QLOGIC QLA4XXX iSCSI DRIVER
- M:	Nilesh Javali <njavali@marvell.com>
--M:	Manish Rangankar <mrangankar@marvell.com>
-+M:	Nimal Prabudoss <nprabudoss@marvell.com>
-+M:	Sharad Padol <spadol@marvell.com>
- M:	GR-QLogic-Storage-Upstream@marvell.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
+Cheers,
+
+Hannes
 -- 
-2.54.0
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
