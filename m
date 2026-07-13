@@ -1,175 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 663E5342CBA
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 06:53:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D87FE368D4B;
+	Mon, 13 Jul 2026 07:08:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783925600; cv=none; b=Rv2ap9Ld2844CFREDDljghNeeEerDCxR4YnDFwBjs/DY6WAfxLdkyZwcWKpUwePjGYpuqknM1FWQEUyh8aunusSlAGQbJQVMrq2+tVszuBnhhhlgk8gMQvutWKGSWvUKY7GqWbWX1da9Ld3clKDV5vfAqGTH5xN17sFtu8XfXDM=
+	t=1783926529; cv=none; b=Qw8Gqszmowj4aQXdvGvrRKunQKdlDDhlkHjwL04vX9+delTaPTZVoh0DlKO7RA8x3WQ4lHglDicDsVAk3lPHX4a97tOInoeXx18dsOEjDNawWeGig7r7UVOBGYzgRMdvI8z1Ovg09GD3u92bVBL++dxKneukyehChi1Xjw8XdRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783925600; c=relaxed/simple;
-	bh=QDySocU4wJQi+Qzw2gR86fbLWbClmYgAtiy7lIDliIE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZnUkPxykMv05mDeAzIDSaFps48ORcmq+yG3EdmcB04BqKHk+YxQ1uiYj2zMTyFpvjr7v2cOjufrIEqo+wlEHLBVXU+5Xaa5o/7rgTq8s+P1IB6jlb9k+VILe+gsSH946WGW4lhjdeHqxEGHirA62OYyTREht/sydV20g+roMHxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G1gLxXMh; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783926529; c=relaxed/simple;
+	bh=7HaEFyemAtQ6rmV8FCm0qDb6NNiQQsQ8eMx5x/ZMQvY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=tF3XGneZY8zgRv+EApjc4fmouoGARZiWBAaj+P8VOEyJVqDiC8QISXRyxOnlu/3M6WfMtV5o8i3SiUpUjcpZ8Vf5zImdVWObzN2EUDrL4SSzxuSpv7ub3ZKnc+q1qVIC2VoLFxsjUSeXk7iBc6dDHLjUC3Bz/m0ucdMpfeRIJy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R+YV1YTj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G1gLxXMh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDEEE1F000E9;
-	Mon, 13 Jul 2026 06:53:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R+YV1YTj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3499F1F000E9;
+	Mon, 13 Jul 2026 07:08:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783925599;
-	bh=M/7qpbKNp6XrtBmWE/bpXppoP9nqKzj1L5P2sVhYe2s=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=G1gLxXMhQWmkIi87fmQKUXWXRm/ECGZUHZiA3FLTgLViq4/XC5fTh9UuLuaA3LQBM
-	 P1fOSqZT4cwX6Ci9ZnIPHkND17N6ZhS9LFsQCpqIircHcdY7DY0y9dye304OU8weIo
-	 RZd1rJdaSP1xjUnVCxE+87nPxs6DkuX1HTUCkeIMr64B5qW7a7id5dSDq+TO/qm2Zr
-	 kwljttADfBjFw/eNJMjj0j1IDVCgdZUZisiQgPkad10TajO3IciC7nZbrJt12o0Ho3
-	 /+XWGajWNPA4xlFXXRCjmu1mR3hR9n4T4YmmmgVGc2COcDkALNvxk9w72HRavM9vLo
-	 TeTlB8VtuG+Qg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: scsi_dh_rdac: fix NULL pointer dereference in
- error handling
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Aleksey Shishkin" <demonaxsh@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260713063640.3081603-1-demonaxsh@gmail.com>
-References: <20260713063640.3081603-1-demonaxsh@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 13 Jul 2026 06:53:18 +0000
-Message-Id: <20260713065318.CDEEE1F000E9@smtp.kernel.org>
+	s=k20260515; t=1783926528;
+	bh=IGt4+xk19bV/56VchxHCKTaDbb1pfUcwJG2Ttjez83Y=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=R+YV1YTjCJ35fax7cPw+DmrHyQIEnxPt/MDsJWNE8YK4uSpt6vQ6Tj+STj4NWA0w1
+	 tvFGSwXAFQy/a8LKt6v0tZZ++EMGUdMDpkoHTVmM27M8QX/AFnOsg1Oir1XI/jqxcM
+	 bUkFAm+ZWsg8xnyzgrcH6yQCTDNzu1QIy7EUOJLstt0MP0dF7NBfNsmCHEwh/hK2F4
+	 9cbF173kWDtFfBsiI1RV3kbvXqRrbNi4GxPofHyjf6yCP5OSfblHR/OXNYRjKnszJP
+	 JH6Pt9VEmYBetVAAQQKGs6MVu6RBCjaMIpXz5jd3hmIbG8D6kzkwbmjAvshYXnUG5y
+	 TtbJd9AHJWlhg==
+Message-ID: <c28763de-a024-4fd8-aeb7-c797b24e824f@kernel.org>
+Date: Mon, 13 Jul 2026 16:08:37 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 0/9] ATA support for storage element management
+ commands
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
+ linux-scsi@vger.kernel.org
+References: <20260706065610.3559692-1-dlemoal@kernel.org>
+ <yq1tsq3dhnv.fsf@ca-mkp.ca.oracle.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <yq1tsq3dhnv.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On 7/13/26 06:30, Martin K. Petersen wrote:
+> 
+> Damien,
+> 
+> Series looks OK to me.
+> 
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Pre-existing issues:
-- [Critical] A malicious SCSI device can trigger a stack buffer overflow in=
- `get_lun_info()` by providing an oversized `array_uniq_id_len` in VPD page=
- 0xC8.
-- [High] In the error handling path of `rdac_bus_attach()`, if an initializ=
-ation step such as `check_ownership` or `set_mode_select` fails, the handle=
-r data `h` is freed without removing `h->node` from the RCU-protected `h->c=
-tlr->dh_list`, causing a Use-After-Free.
-- [High] A time-of-check to time-of-use (TOCTOU) race condition between `rd=
-ac_bus_detach()` and the `send_mode_select()` workqueue function allows det=
-achment to proceed while work is actively executing, resulting in Use-After=
--Free of handler data.
---
+Thanks!
 
---- Patch [1]: [PATCH] scsi: scsi_dh_rdac: fix NULL pointer dereference in =
-error handling ---
-commit 712793434a46fcd5b5270defe36dc411e0363100
-Author: Aleksey Shishkin <aishishkin@cloud.ru>
-Subject: scsi: scsi_dh_rdac: fix NULL pointer dereference in error handling
+>> I have more patches for sd and scsi_debug (depop emulation) that
+>> depend on patch 1 & 2. So I am not sure how we should handle this
+>> series. Maybe we should create a "depop" topic branch in the scsi or
+>> libata tree ? I am open to suggestions.
+> 
+> I suggest you put this in a dedicated depop branch in ATA. And then I'll
+> pull that branch in if I need to.
 
-This patch fixes a logic error in error handling where the return code was
-incorrectly overwritten to SCSI_DH_OK after a failed get_controller() call,
-moving the assignment into the success block.
+I pushed the 2 scsi patches to:
 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/de=
-vice_handler/scsi_dh_rdac.c
-> index 88c8e36b221e2..ed02e1737bd79 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -455,9 +455,9 @@ static int initialize_controller(struct scsi_device *=
-sdev,
->  		else {
->  			h->sdev =3D sdev;
->  			list_add_rcu(&h->node, &h->ctlr->dh_list);
-> +			err =3D SCSI_DH_OK;
->  		}
+git@gitolite.kernel.org:pub/scm/linux/kernel/git/libata/linux
 
-[Severity: High]
-This is a pre-existing issue, but I noticed a potential use-after-free in t=
-he
-error handling path.
+to the branch:
 
-When initialize_controller() succeeds, it adds the node to the RCU list her=
-e.
-However, if a subsequent initialization step fails in rdac_bus_attach(),
-the error path looks like this:
+for-7.3-scsi-depop
 
-rdac_bus_attach() {
-    ...
-clean_ctlr:
-	spin_lock(&list_lock);
-	kref_put(&h->ctlr->kref, release_controller);
-	spin_unlock(&list_lock);
-
-failed:
-	kfree(h);
-}
-
-Is it possible to reach kfree(h) without removing the node from the
-controller's dh_list? If the controller remains alive and is shared by
-another LUN, could subsequent RCU traversals of the list access this freed
-memory?
-
->  		spin_unlock(&list_lock);
-> -		err =3D SCSI_DH_OK;
->  	}
->  	return err;
->  }
-
-[Severity: High]
-This is a pre-existing issue, but does rdac_bus_detach() have a race condit=
-ion
-with the mode select workqueue?
-
-In rdac_bus_detach(), the code locklessly checks ms_queued before flushing:
-
-rdac_bus_detach() {
-    ...
-    if (h->ctlr && h->ctlr->ms_queued)
-        flush_workqueue(kmpath_rdacd);
-    ...
-}
-
-However, the worker thread send_mode_select() clears this flag early before
-completing the potentially blocking SCSI command:
-
-send_mode_select() {
-    ...
-    ctlr->ms_queued =3D 0;
-    ctlr->ms_sdev =3D NULL;
-    ...
-}
-
-Could rdac_bus_detach() run concurrently during this window, see ms_queued =
-as
-zero, skip the workqueue flush, and proceed to free the handler data while
-the worker is still actively executing?
-
-[Severity: Critical]
-This is a pre-existing issue, but is there a potential stack buffer overflow
-in get_lun_info()?
-
-The function retrieves device data into inqp and uses array_uniq_id_len
-directly for a memory copy:
-
-get_lun_info() {
-    ...
-    memcpy(array_id, inqp->array_unique_id, inqp->array_uniq_id_len);
-    ...
-}
-
-The destination buffer is a 16-byte fixed-size stack array declared in
-rdac_bus_attach():
-
-rdac_bus_attach() {
-    char array_id[UNIQUE_ID_LEN];
-    ...
-}
-
-Since array_uniq_id_len is provided by the device (potentially up to 255),
-could an untrusted or misconfigured device provide an oversized length and
-overflow the stack frame?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260713063640.3081=
-603-1-demonaxsh@gmail.com?part=3D1
+-- 
+Damien Le Moal
+Western Digital Research
