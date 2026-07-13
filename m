@@ -1,127 +1,87 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F485199E89;
-	Mon, 13 Jul 2026 04:27:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AD9E360EE1;
+	Mon, 13 Jul 2026 05:43:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783916868; cv=none; b=ImCeeKZwwNZSHdRG024089yrAnW4FgjK7AvFVITm5orUG/mde8FuAF3aLxfb77FQTrk9yjSDHvrZV/clOgoseywkOS4WIA2Ei5nqMCiD6FSGsCzTR0xFsl0eGffcPXBGPW2KRlL0ajBmEO9QSByXjtu+G7oaVQo+RoD0TVeN5F0=
+	t=1783921431; cv=none; b=gIcpjwiOv7vJ8HHMgoyk/9q/4wpBkpvhGfilINDZ+FEJZcoLwgsrZTc+Z5BowVqhckQMcN82cAGMHf1mNAhQo1zTkHf3Gqmpwc3dUw1K/w14RzQ8Mm+ijio4l1DIOx+P33WlNAwi7ULJgidm1o0xFoUlOhL7lA0TQajp6QE2eRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783916868; c=relaxed/simple;
-	bh=P6JPsuWbnp1/BNgdwkE6Bs73iA+0varB/s4LkJRhdxQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=l256mODy48upJpU7hxAfuSZtOMWjO1prZUzkCEowK/RfpVb06/JKwRJbPIzSlnu6rtvk7jBZxNCDeUW6WaumYlZAqDYq10Gh98bXSPg8CZJoCoQI6Cd5y8G6edbf8E6RaqQNoElczrg3feHT83pJoR5SCpqx/0yc10l12XlpzxE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FJ89+ux+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783921431; c=relaxed/simple;
+	bh=fQQauDvquFNVkljquuUCTZ/0N14ZPibLdvgA2db5jr0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ktJ59r4TbMNix2fTxXOkgtye6eRgqc2iPou4aXFUyzaQ353sPNcawa9SVPa8QIPUlquQt+Kbf1R/dUibr2NR0D+/Ttnt6maHoZd6VqGar7BEns+qoZLmbxgrbG560d3bH/4tWprU2HAfd/3sZkORzEOs9ey7mC6CdQ6sbemP770=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OcedfHK4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FJ89+ux+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD74E1F000E9;
-	Mon, 13 Jul 2026 04:27:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OcedfHK4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E51F1F000E9;
+	Mon, 13 Jul 2026 05:43:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783916867;
-	bh=FlmJ36f7F9Av+KQkZus7sl3l5/UMwIXpDdSXoY1a7jM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=FJ89+ux+YtaiacuRKlhqpm8wWqnj+TitVC5o2+dM7XLqwHpthinCbqfyW59JD2fVv
-	 SGV2LmmjkceqNZ9mGnJ+yxD8+WNe2HplrCp2TsIMxu38eNQHb0Aoy1b0VitQbVPjeJ
-	 T70TlAOPtKv9wF2fC36gIPB8tjVJSUfkSSYLxUXI1QmeM2IrNKSzcCnVRlnp/cxgSM
-	 hjmZeLQmWRnA0r3IimV6v68crvt4QudyN5eElK0gSFAcIKWVSEE1LvaAyLhgu7FJzr
-	 03/PzHDhuffkHeuXGMBau9rI3mrg1kEh4Q5ZxotHmjWMyoWPlPzqiYDA/DsrvFQHtn
-	 AcdmBp64eafkA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/2] scsi: libsas: terminate deferred commands on
- time out
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
-In-Reply-To: <20260713041252.463401-3-dlemoal@kernel.org>
-References: <20260713041252.463401-1-dlemoal@kernel.org>
- <20260713041252.463401-3-dlemoal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 13 Jul 2026 04:27:46 +0000
-Message-Id: <20260713042746.CD74E1F000E9@smtp.kernel.org>
+	s=k20260515; t=1783921429;
+	bh=TzhiU6V/SRkdXn64SP6A00c/m/jt5XsqeIpJAiXO25w=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=OcedfHK4YYkqygLuGSwdXJLwD3T8hM+ps/HClwp81UQ1vD4ym3pyJuM0rkF3ABtRy
+	 tXPjc/4eAR7h9rEn5e4yRgUfS6XvF85jlXI234HKuiB1FG2VE6xbg6ljvIkY1wP8BR
+	 rzcOEpJJjPBQDkcqZ6UL2BY/+9x4RIAh3X7pJ96G9rE7Doiwdv9UN4V2FuJx8vRXIm
+	 FLkTOXzEzET45OMretFagfopv2HRQVEuodzsGAxTWp/Tza50IF0A2rK1ndMM1xGTKl
+	 r7u6IwA8e01rtuyTKd4G/t5uMQZ6lJevG8U7vOZXc38P0AaLpZxwds3akxOwdhZDcd
+	 7773YFJiq+TLA==
+Message-ID: <c276a318-34b6-403a-8dd0-0271764d5860@kernel.org>
+Date: Mon, 13 Jul 2026 14:43:37 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] scsi: scsi_debug: fix REPORT ZONES alloc_len underflow
+ OOB write
+To: Ibrahim Hashimov <security@auditcode.ai>, martin.petersen@oracle.com,
+ James.Bottomley@HansenPartnership.com
+Cc: bvanassche@acm.org, shinichiro.kawasaki@wdc.com,
+ damien.lemoal@opensource.wdc.com, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20260710055755.53830-1-security@auditcode.ai>
+ <20260712183739.83915-1-security@auditcode.ai>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20260712183739.83915-1-security@auditcode.ai>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] Missing function declaration for `ata_eh_schedule_deferred_qc_retry=
-()` when `CONFIG_SATA_HOST` is disabled, leading to a build failure.
---
+On 7/13/26 03:37, Ibrahim Hashimov wrote:
+> resp_report_zones() sizes the reply buffer from the CDB allocation
+> length. The v3 fix rounds alloc_len up with ALIGN() before deriving the
+> descriptor count:
+> 
+> 	rep_max_zones = (ALIGN((u64)alloc_len, RZONES_DESC_HD) -
+> 			 RZONES_DESC_HD) >> ilog2(RZONES_DESC_HD);
+> 	arr_len = (u64)RZONES_DESC_HD * (rep_max_zones + 1);
+> 
+> For alloc_len in 0xFFFFFFC1..0xFFFFFFFF, ALIGN() rounds up to
+> 0x100000000, so arr_len is 4 GB. On 32-bit, kzalloc()'s size_t is
+> 32-bit and truncates 0x100000000 to 0; kzalloc(0) returns
+> ZERO_SIZE_PTR, which passes the !arr check, and desc = arr + 64 is then
+> dereferenced in the loop -> out-of-bounds write / panic.
+> 
+> Clamp rep_max_zones to devip->nr_zones. The loop already stops at
+> sdebug_capacity (after nr_zones zones), so a report can never hold more
+> than nr_zones descriptors; the clamp does not change the report, it
+> only bounds arr_len to (nr_zones + 1) * RZONES_DESC_HD, a real device
+> property that can never reach 0x100000000.
+> 
+> Fixes: 7db0e0c8190a ("scsi: scsi_debug: Fix buffer size of REPORT ZONES command")
+> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ibrahim Hashimov <security@auditcode.ai>
+> Assisted-by: AuditCode-AI:2026.07
 
---- Patch [2]: [PATCH v3 2/2] scsi: libsas: terminate deferred commands on =
-time out ---
-commit 3af8343f458da773cfa43a85c2e86949acf28cc1
-Author: Damien Le Moal <dlemoal@kernel.org>
+Looks good.
 
-scsi: libsas: terminate deferred commands on time out
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-If a command timeout occurs while we have a deferred non-NCQ command waiting
-to be issued, the SCSI EH task is not immediately woken up. This patch avoi=
-ds
-this unnecessary wait by using the eh_timed_out SCSI host template operatio=
-n.
-
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sa=
-s_scsi_host.c
-> index c83282733ec4c..6b62522bd0b2e 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-[ ... ]
-> @@ -502,6 +502,23 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cm=
-d)
->  }
->  EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
-> =20
-> +/*
-> + * Handle deferred QCs in case of a command timeout.
-> + * See ata_scsi_eh_timed_out() for details.
-> + */
-> +enum scsi_timeout_action sas_eh_timed_out(struct scsi_cmnd *cmd)
-> +{
-> +	struct domain_device *dev =3D NULL;
-> +
-> +	if (cmd)
-> +		dev =3D cmd_to_domain_dev(cmd);
-> +	if (dev && dev_is_sata(dev))
-> +		ata_eh_schedule_deferred_qc_retry(dev->sata_dev.ap, cmd);
-> +
-> +	return SCSI_EH_NOT_HANDLED;
-> +}
-> +EXPORT_SYMBOL_GPL(sas_eh_timed_out);
-> +
-[ ... ]
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 327da43d74967..2ea7bfbdd867b 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1261,6 +1261,8 @@ extern int sata_link_hardreset(struct ata_link *lin=
-k,
->  extern int sata_link_resume(struct ata_link *link, const unsigned int *p=
-arams,
->  			    unsigned long deadline);
->  extern void ata_eh_analyze_ncq_error(struct ata_link *link);
-> +void ata_eh_schedule_deferred_qc_retry(struct ata_port *ap,
-> +				       struct scsi_cmnd *scmd);
->  #else
-
-[Severity: Low]
-Will this result in a build failure when CONFIG_SATA_HOST is disabled?
-
-The declaration for ata_eh_schedule_deferred_qc_retry() is placed inside
-this conditional block. When CONFIG_SATA_HOST is disabled, this declaration
-is omitted, but the function is still called unconditionally by
-sas_eh_timed_out() in sas_scsi_host.c (as well as ata_scsi_eh_timed_out()
-in libata-scsi.c).=20
-
-Since modern compilers treat implicit function declarations as errors, could
-this break the build under these configurations?
-
->  static inline const unsigned int *
->  sata_ehc_deb_timing(struct ata_eh_context *ehc)
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260713041252.4634=
-01-1-dlemoal@kernel.org?part=3D2
+-- 
+Damien Le Moal
+Western Digital Research
