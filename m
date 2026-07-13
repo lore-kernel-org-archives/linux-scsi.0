@@ -1,108 +1,143 @@
-Received: from mail-08.mail-europe.com (mail-08.mail-europe.com [57.129.93.249])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E25B734389B
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 21:08:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.129.93.249
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E54383B83E8;
+	Mon, 13 Jul 2026 23:41:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783976893; cv=none; b=s6inL0B2LYWVmKw+9KGZDz9+ZbfsaM+6svlQ1mjkxJjgRTcJKa5NMVwSvkTvLVT07VEdE2KW/I7eIjBFnK39UEw5K0VDNuJ7C2fODYphePr+sKE9i02NnHseTEfLHiorMcWG5xui5TuOAj2LanznoiIHyF4hCN6LTY1qVe3FHdM=
+	t=1783986078; cv=none; b=kJML4LwehbKscdZ5pvrdc24x4jmey/kwyBVZJJ9GN2t1oXi4pKee0xOX9395XfG/XyzHgquRSct/ouEtRNHzfVcAsZXdZ+0gF1Gj952Dk8H1G9ZCAdWpqjhFh8+fIVv375Go5bDswH+fznifgRagAhgNiZVjbc5Uzin2QzACtNY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783976893; c=relaxed/simple;
-	bh=Qtl5fkFXLFfwI7Gp9rLKD5YocvNVBC8HOnIYuYlpkxs=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nrqYQHeBny+qfe7uwVeWY20vVikwls56jjKzNV5aVqDL3H7DPvClbdHSea/k9z465lJ7TbLqtsUkXlyQz+EAAMuY+mHPX73hlnI3x/N5pLZmHr75qB2pvKJ5LqBR+EJM4OjCyDOiVuCvEPGDjSvc8tNljc7odJnJO1ASc/S8lts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=danielfernau.com; spf=pass smtp.mailfrom=danielfernau.com; dkim=pass (2048-bit key) header.d=danielfernau.com header.i=@danielfernau.com header.b=MZRaI9Lf; arc=none smtp.client-ip=57.129.93.249
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=danielfernau.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=danielfernau.com
+	s=arc-20240116; t=1783986078; c=relaxed/simple;
+	bh=6pwi1VCJHf0rxm4mkXBSpr6VjS+UlW1NSwlowOYYzk4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hvwmrUaOEuacymXrwCqnHp151jWpg5wPCZhbTy5Ig6sHhx8M2/JK4hxcX48raSs90NUqKaV/N9iwbHlW1OMz3GtmeheFAy3meR3IWk3dBevVwxqFugK3xeAMkyQw+W2Eo8LJl1sBzCibAwuURwKe+oFILXWXNQZ6d6jxa5yopk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dm3165CH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=danielfernau.com header.i=@danielfernau.com header.b="MZRaI9Lf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=danielfernau.com;
-	s=protonmail3; t=1783976873; x=1784236073;
-	bh=oATV7RVz7+2I28db7Ze02kZ11P/otyLyRcrwhNkRhso=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=MZRaI9LfzavR0QgifTDdCHN6/djt3lbXj04P+4Hmbdmjz/OuDEc4uRy/2yEsU4zf3
-	 kw8BKkxEn3cnRVxzNKpx4i8CGv7sTNBXljEDbGkqbzTSbVWBEjw75mJlmaaaVEyfL/
-	 MUkRARl9Q1C02DoxAVIPT2USdUsqdO4WN7Bo1LDxYkTdrm+LkOsGt5bmMiEl/rNUPp
-	 xyYZQGfDnLjTWmroTmwA5Q7i754Xj5fjgodpMlPOgkLvsSvtpgOTbQ0iAmXy4Q1b6h
-	 Gl24GPNjgPPs105OdTfk20R77ABbQr0BlpJOo7v/kk1ZcEQO95DwrCCo/lukcAom0g
-	 lRzj59Q7U2qRA==
-Date: Mon, 13 Jul 2026 21:07:48 +0000
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-From: Daniel Fernau <mail@danielfernau.com>
-Cc: Thorsten Leemhuis <regressions@leemhuis.info>, me@magik.net, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil <chandrakanth.patil@broadcom.com>, "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>, "regressions@lists.linux.dev" <regressions@lists.linux.dev>, Mats Topstad / Intility AS <Mats.topstad@intility.no>
-Subject: Re: [PATCH] scsi: megaraid_sas: fix PRP list out-of-bounds write
-Message-ID: <YKopBh5zwX7tXjDOqU7R0K9CQfVpd3r9_baFGNLwcZGgb4m0cddKjzuQwp0lWZJqixIfpiHm9YwjQfRvNJjBZwl1PaqtuuuCd7dJ4lmirSY=@danielfernau.com>
-In-Reply-To: <yq17bmzd5jr.fsf@ca-mkp.ca.oracle.com>
-References: <GPhsSM0vkgyIrs0DIZ62qeUZX7X4RxwQXVKiuvMx-lHQVSPDxpztUyQOGS0xikqvJ-Z94hMV-dW_5KN_0CX2hsfV7kTf_t0MTf6vdAAaSEc=@magik.net> <yq15x5lowt9.fsf@ca-mkp.ca.oracle.com> <b8fcdb5e-f2be-4bd0-914d-d03e87af9630@leemhuis.info> <yq17bmzd5jr.fsf@ca-mkp.ca.oracle.com>
-Feedback-ID: 131378921:user:proton
-X-Pm-Message-ID: e98a13889e7c7fadda74f80978dbb050068f867d
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dm3165CH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A65891F000E9;
+	Mon, 13 Jul 2026 23:41:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783986076;
+	bh=hyxeBqDuTcvdJl2lo1N8GMl6DBujM0bNNEnk6hJ3Xgg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Dm3165CHaS7aWW08TUp4a8QaffidG/nws7EqFfurrr4RbkdfNn14QsREFkXZx5NAl
+	 IG/8KlkolEupOPkaoV+faGbTqFXPJViexY9f+PTAR1hiJurH4hfSJ4tQshZcw6JpqC
+	 b5shRhZOwK2xsda/RUQt9ljLX4POFXCx/pyXKh2MgCVnEUykRCCY8GmHX/KnNoz+s1
+	 2dECdlx8yiu4ZvEY97ABfepjNaxb6jToCkwCKHmIEXEsktwDa+APobSdqYLfCTpYbj
+	 2pU84A23Se2+XP3ePXV6XfeVexBmLdCHkWWp7M+yDU6yRY2hKK2Ls6b4taJVQpUTEp
+	 YPv8PsEu5Jt/A==
+Message-ID: <7232aa1a-002a-4cd3-998a-0c0262822048@kernel.org>
+Date: Tue, 14 Jul 2026 08:41:04 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/2] ata: libata-scsi: terminate deferred commands on
+ time out
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>, John Garry <john.g.garry@oracle.com>,
+ Jason Yan <yanaijie@huawei.com>
+References: <20260713041252.463401-1-dlemoal@kernel.org>
+ <20260713041252.463401-2-dlemoal@kernel.org> <alUpbYeKFLrPvlFQ@google.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <alUpbYeKFLrPvlFQ@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi all,
+On 7/14/26 03:07, Igor Pylypiv wrote:
+> On Mon, Jul 13, 2026 at 01:12:51PM +0900, Damien Le Moal wrote:
+>> If a command timeout occurs while we have a deferred non-NCQ command
+>> waiting to be issued, the SCSI EH task is not immediately woken up as the
+>> waiting deferred command is never issued nor completed, thus leaving this
+>> command to always be counted as "busy" for the SCSI host. This results in
+>> the test "shost->host_failed != scsi_host_busy(shost))" in the function
+>> scsi_error_handler() to always be true, keeping the EH task sleeping.
+>> Eventually, when the deferred command also times out, the SCSI EH task
+>> is woken up and the timeout processing occurs.
+>>
+>> Avoid this unnecessary SCSI EH task wake-up additional time using the
+>> eh_timed_out SCSI host template operation. The function
+>> ata_scsi_eh_timed_out() is introduced to implement this operation. This
+>> function calls the new helper ata_eh_schedule_deferred_qc_retry() to
+>> schedule a retry through libata EH of all differed queued command, except
+>> for a differed queued commands that timed out as that case is handled in
+>> ata_scsi_cmd_error_handler().
+>>
+>> Since ata_scsi_eh_timed_out() does not directly handles the timeout itself
+>> and eventual re-issuing of deferred commands, this function returns
+>> SCSI_EH_NOT_HANDLED to have scsi_timeout() continue with the regular
+>> timeout handling, using scsi_abort_command() and scsi_eh_scmd_add(), thus
+>> preventing the wkae-up delay for SCSI EH task.
+>>
+>> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>> ---
+>>  drivers/ata/libata-eh.c   | 35 ++++++++++++++++++++++++++++++++++-
+>>  drivers/ata/libata-scsi.c | 22 ++++++++++++++++++++++
+>>  drivers/ata/libata.h      |  2 ++
+>>  include/linux/libata.h    |  2 ++
+>>  4 files changed, 60 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>> index 05df7ea6954a..8e9d57c6f039 100644
+>> --- a/drivers/ata/libata-eh.c
+>> +++ b/drivers/ata/libata-eh.c
+>> @@ -546,6 +546,31 @@ static void ata_eh_unload(struct ata_port *ap)
+>>  	spin_unlock_irqrestore(ap->lock, flags);
+>>  }
+>>  
+>> +void ata_eh_schedule_deferred_qc_retry(struct ata_port *ap,
+>> +				       struct scsi_cmnd *scmd)
+>> +{
+>> +	struct ata_queued_cmd *qc;
+>> +	struct ata_link *link;
+>> +	unsigned long flags;
+>> +
+>> +	/*
+>> +	 * Trigger EH for retrying any deferred qc that is not the queued
+>> +	 * command for scmd.
+>> +	 */
+>> +	spin_lock_irqsave(ap->lock, flags);
+>> +	ata_for_each_link(link, ap, PMP_FIRST) {
+>> +		qc = link->deferred_qc;
+>> +		if (!qc || qc->scsicmd == scmd)
+>> +			continue;
+>> +
+>> +		link->deferred_qc = NULL;
+>> +		cancel_work(&link->deferred_qc_work);
+>> +		qc->flags |= ATA_QCFLAG_RETRY;
+> 
+> 
+> Gemini pointed out an issue:
+> 
+> ata_scsi_cmd_error_handler() would skip this command because
+> ATA_QCFLAG_ACTIVE flag is not set and qc != qc->dev->link->deferred_qc
+> because ata_eh_schedule_deferred_qc_retry() set link->deferred_qc to NULL.
+> 
+> https://github.com/torvalds/linux/blob/master/drivers/ata/libata-eh.c#L655-L657
 
-Sorry for the late reply. I was unable to follow up on this earlier because=
- I had to prioritize other issues.
+And I think that is fine, since there was no errors with the deferred QCs. In
+this case, it falls into the last else after the loop, which does:
 
-In the meantime, we pinned our kernel to version 6.8.12-4-pve on Proxmox, w=
-hich has been stable for our use case and hardware. Given the recent 7.x re=
-lease, I will take another look this week and report back.
+	scmd->retries = scmd->allowed;
+	scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
 
-We are using KIOXIA NVMe SSDs, so we will see how it goes.
+and after that, ata_eh_finish() will retry the QCs because they are tagged with
+ATA_QCFLAG_EH and ATA_QCFLAG_RETRY.
 
-Thanks,
-Daniel
+I tested with AHCI, and checked that.
 
+If anything, the retries count should be checked because I think this path
+messes it up.
 
-
-
-On Sunday, July 12th, 2026 at 8:16 PM, Martin K. Petersen <martin.petersen@=
-oracle.com> wrote:
-
->
-> Thorsten,
->
-> > Martin, do you know if someone there ever looked into this regression
-> > and the proposed fix? I'm wondering because Daniel and Mats reported
-> > problems under the same subject line (in new threads), but also didn't
-> > get a reply.
->
-> I think this problem is just an unfortunate side effect of the kernel
-> being able to build bigger I/Os by default.
->
-> Typically NVMe SSDs report fairly modest maximum I/O sizes compared to
-> SCSI devices. I suspect this is why we only see this issue with a few
-> select models. My hunch is that these drives advertise a fairly large
-> MDTS.
->
-> Since there appears to be no traction wrt. fixing the MR PRP vs. SGL
-> chaining logic, I wonder if the patch below is sufficient?
->
-> --
-> Martin K. Petersen
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
-araid/megaraid_sas_base.c
-> index ecd365d78ae3..b93a6d1180ff 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -1978,7 +1978,8 @@ megasas_set_nvme_device_properties(struct scsi_devi=
-ce *sdev,
->  =09mr_nvme_pg_size =3D max_t(u32, instance->nvme_page_size,
->  =09=09=09=09MR_DEFAULT_NVME_PAGE_SIZE);
->
-> -=09lim->max_hw_sectors =3D max_io_size / 512;
-> +=09lim->max_hw_sectors =3D
-> +=09=09min(SZ_2M >> SECTOR_SHIFT, max_io_size >> SECTOR_SHIFT);
->  =09lim->virt_boundary_mask =3D mr_nvme_pg_size - 1;
->  }
->
->
+-- 
+Damien Le Moal
+Western Digital Research
