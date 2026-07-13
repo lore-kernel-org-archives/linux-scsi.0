@@ -1,64 +1,62 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9489F320CBE;
-	Mon, 13 Jul 2026 02:33:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 393D730E85B;
+	Mon, 13 Jul 2026 02:33:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783910034; cv=none; b=mRFqZ9+UYnjcL+0dVvYTspcTRmT/BE2IDrViRyR865pkFNmTLHtD4CWeMCEv6TIhN/9KIdOt2V3jH0D6tvdxS7DpftK5pO0mUczWV4CnR5ebujNrzQBPqPOF4NMpkHuO0fBzJ8HIZ2XHikdUbi9qgwBA3ZpNP+tQtW77/uc26qY=
+	t=1783910037; cv=none; b=ZGsY/MyrdWHdrAZ0xjPVwMJukw1hWznZS3mQKnLzSHPiPwXaP/BI0TE/HlnFrai3a8zuY5y8x2IZUzqIBn5PjodIdKDtuDRbv7gjzrw0Q12JnjXPqoCFEwbO+cFGXY6zwS7WRBYc+ecCr8OCw4Ym7+5hpwCj7OhLa2EmTCO0vmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783910034; c=relaxed/simple;
-	bh=JwUGr/Ti7iE1Mw2nLj6Cs9pZRcQsvTUTvjK84S/nkNU=;
+	s=arc-20240116; t=1783910037; c=relaxed/simple;
+	bh=jscg61bydUqM6wfltNVbpf5AxIonxBvFfhZirBzcZX0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DyCJkVplaDF59HRqxXka4YHUc7yfAnMQkeGsl7mitG5cwfGdKnlKVpN+xRUSiCjgpA1Zxp7VjL9E2Vn5diGJ/fIXMhLuSMznLK11sx06Po8PIxMrdzlWHhVSZJ9Gb48ZeVz4qWJEWIH8JV7n6T2z5szInceE59+fWZYlKxJuC8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=U0joJC+l; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=TjhFZEuSnel5likxwyLo4vc0CTC/MTrtfjsm/n9sNc7kB1gGHQ7zBvcFNUXl7dNoBLLr4wKVO3mfMy2Bprhlw0ntSGPWpgK1ETUs0FDGWky+zhiUayYk7bMw68lBUwmhsNe11JZvo3Vjn11E1sEgl2D26bDWuZzAGvNt7a1HMoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=gvaHL6Y3; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U0joJC+l"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66D1aetW312292;
-	Mon, 13 Jul 2026 02:33:36 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gvaHL6Y3"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66CNLBue074633;
+	Mon, 13 Jul 2026 02:33:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=Zs0KwdaIrpht3M00//i3ltWrOOqX3uEqhvLOiLXuuwc=; b=
-	U0joJC+lqaIrZU7raDpDbuMORuJPf6/W3tw+V0oIU3qTOjqwz0cP5eUSuS9RCyOE
-	anC2yiJK2b9t5bwSM7z/okOOewMX3ry+kcyeSKdCY77PMo6dt/T23pZF9GdJvwCC
-	m4wJrSBkSyibScby93GMpSP/DyVGm3vyVxit6HTqupEHi5x0cnkiuslxvYkeF2WH
-	ytdwO4CPicusK/sNPLceGPfNc9OjgWpAlVssetellWzZosm4TG6MhyzaltRLeKFv
-	pQqMB7Eie7sbOSeanW6uwcgCY8V8LuraQ9aHlOYMZc6av2NxaF0ALFHjJkfUCrCJ
-	B+yI73RUSK9BkkmhmimZwQ==
+	corp-2025-04-25; bh=JNrsmax3B2njcPmxIOmnTOdMWLtpd//Nu5/E7TuksVk=; b=
+	gvaHL6Y3IvIP5Svb4K2/k21cz1jMaOTxG2F5wkDPjrTzi60TlhmLnKhsSq3OEtUG
+	8NaNrJGUWVlX+M8zu6GJGBaGVIKSuPFALTCYTdnCDVr5L1spDH+jgEfSWpn53d+k
+	n0mYseV0Z0OxsapdeQ5jtdVNzkJU2jaT8Pu8jQhzF8/irwo7CWoS2QIP7nvwCQQ/
+	aqst/Py+QIbf7WZrguzfNamHH17oPS8s26Ra3EJT2D5uuecx2Hv9pirbwluIUnY4
+	1U0qfkk2VSGCqASbeigeBAI86I6Zew8eHHa8VfiiLCKryv4ScX7b5BxOMvDjC6jC
+	YgJDO9coMzVy8k1cQqJRzw==
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fbef0sc9p-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fbeedhcke-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Mon, 13 Jul 2026 02:33:36 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66D2XVhb029118;
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66D2XUQO029106;
 	Mon, 13 Jul 2026 02:33:35 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fbc9fssua-1
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fbc9fssuf-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Mon, 13 Jul 2026 02:33:35 +0000 (GMT)
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 66D2O0cn010878;
-	Mon, 13 Jul 2026 02:33:34 GMT
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 66D2O0cp010878;
+	Mon, 13 Jul 2026 02:33:35 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4fbc9fssh6-3;
-	Mon, 13 Jul 2026 02:33:34 +0000 (GMT)
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4fbc9fssh6-4;
+	Mon, 13 Jul 2026 02:33:35 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: James.Bottomley@HansenPartnership.com, david.carroll@microsemi.com,
-        justin.lindley@microsemi.com, scott.teel@microsemi.com,
-        Haoxiang Li <haoxiang_li2024@163.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org,
+To: justin.tee@broadcom.com, Abdun Nihaal <nihaal@cse.iitm.ac.in>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, paul.ely@broadcom.com,
+        James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: hpsa: fix DMA mapping leak on IOACCEL2 reset path
-Date: Sun, 12 Jul 2026 22:32:34 -0400
-Message-ID: <178390967070.3399387.4792832720199841376.b4-ty@oracle.com>
+Subject: Re: [PATCH] scsi: lpfc: Fix memory leak in lpfc_sli4_driver_resource_setup()
+Date: Sun, 12 Jul 2026 22:32:35 -0400
+Message-ID: <178390967061.3399387.10575322287465735663.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260622160028.1240496-1-haoxiang_li2024@163.com>
-References: <20260622160028.1240496-1-haoxiang_li2024@163.com>
+In-Reply-To: <20260707065304.949135-1-nihaal@cse.iitm.ac.in>
+References: <20260707065304.949135-1-nihaal@cse.iitm.ac.in>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,43 +70,40 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  definitions=2026-07-12_08,2026-07-10_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
  spamscore=0 suspectscore=0 bulkscore=0 lowpriorityscore=0 malwarescore=0
- mlxscore=0 mlxlogscore=874 phishscore=0 classifier=spam adjust=0 reason=mlx
+ mlxscore=0 mlxlogscore=504 phishscore=0 classifier=spam adjust=0 reason=mlx
  scancount=1 engine=8.19.0-2606160000 definitions=main-2607130023
-X-Proofpoint-GUID: uXdT1ndXp7OIpmv25I6rVT6_3mv9tPCc
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDAyMyBTYWx0ZWRfX+QYCb3MZpolp
- QHIuQ35lCud97vRwQNVZ86T6PnV4NXmaSUKKGSlcAOIP1feHnvLZoB7qI2EX3gcdQQJbjaxGC5E
- dE6FH3AoT+21t1ukLrJqXc8vtO1BcCFrpfztdapUxP73kzhRtR5M
-X-Authority-Analysis: v=2.4 cv=KJZqylFo c=1 sm=1 tr=0 ts=6a544e80 b=1 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=d+bFDxjE c=1 sm=1 tr=0 ts=6a544e80 b=1 cx=c_pps
  a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=EIcjfB9IiI4px24ztqRk:22 a=VwQbUJbxAAAA:8
- a=2s9cdLV0ugMkmbUsbZIA:9 a=QEXdDO2ut3YA:10 a=5yU3S35YU4bGjq-dph-N:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=RD47p0oAkeU5bO7t-o6f:22 a=VwQbUJbxAAAA:8
+ a=28YL1Oed_R0FaK7JHa8A:9 a=QEXdDO2ut3YA:10 a=5yU3S35YU4bGjq-dph-N:22
  a=Bho9c0fBagfJEIQBS7DQ:22 cc=ntf awl=host:12221
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDAyMyBTYWx0ZWRfX8/e2hFFimTEK
- r2Zm4hLgSoFXEd4SMB+oyX3F+IWsB1gqYUBBY++rgZQudohKHng4YJZ/v83L0N63c5O49WSj28o
- Kr3Xa/woAt3hn0fIhnrzDxPFsxX57hsBej57YWngoDnwmlh9xwDbux8uh2ixmcUGKVoeScZGBdH
- SV1HutfCxfztanMe5Rg2QPXo92OZLRhBkaKaFuhOAy1T5CP5wZvKhndOtl/ai3aRt7PDTFR2c/f
- Ey9o6FqfXQmqcxncqc61mNH2d2e4ylGJ/xpmVdQmPMO5VKQBOgyO5M2GPiOLO0xmbMyTY72LWA4
- cGWAu/Wp3e5kF7QpicC7g+J3DE3nKdgMJFFaD3y5O8lN2iukTaYvCGgQl2JXC1MOnKFJfY/FMOy
- aFuayfqiTv/Rr39uLWxkRWK1EYi+C9cPiMTs3XWePVccLNEPxHVmeH2QUUYf6vz/1rs3sbVA2Lh
- vcYelvbnr300RlsW/pf2oiDcqOxdxy1eq9FA3bxM=
-X-Proofpoint-ORIG-GUID: uXdT1ndXp7OIpmv25I6rVT6_3mv9tPCc
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzEzMDAyMyBTYWx0ZWRfX6fsJdTBQrZWN
+ sHW8n7U2AEk2KrEejuUjthZsfWAwlAitA6DcH4TceKidZOKF4p3EVfhieS/ZOUpzmzOzbTLx+de
+ Ec+q5ImKjk6XESbgp16TniKfgFyrhVO5A1nnRCINNFrcA0pVAAP4AfkoREOEBeNgsyMjHIivdUP
+ 5zgAqBZqSvJ7n7LLQgSZw/LdzM/NSjoW7kN3dyUTzKzFb7EN6CSWrUI2Ows8kWvuKrGVrcbaA3a
+ iL2O6p9Sa7FetYBlBc0Px7TMqqH9yzwc7rKy+lKHAYmvt23nw0olFPL70GWhw9LfoXZDy+LqjnC
+ l6R9cX/od2OO9Z/mcgBgVOf05/mtdqNPavHhd//XsUd+MdF8NSWc7hWeQ/JJs9umWx61PKEgbiT
+ ZCVeFcDzSEe/pIW4+qSWIqS/tbQwPLqyLpd2rOOuGIbqHYVTQszwjE6A5hDT/0G8oeKamRWg7H1
+ 19/b4nbMwicmyzju2dTXmrdvo55nyAMKxBvkX4mo=
+X-Proofpoint-GUID: sXOcxODMJvVTFwPOufvrxQC7-l9_2D-W
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzEzMDAyMyBTYWx0ZWRfX0UEmzsuPtndl
+ SgIkMzTRV0AyZAmv7ZaWvPWGmIY0P6zhxnIr4ep1lRcf9ddxFzirSRepjcG9QW3pOhyBcGQdA62
+ IZ9r2AZtTS+Sd9JVUPiNE22TT3DPu8D/GZPPsE8UBFT16iEU9e00
+X-Proofpoint-ORIG-GUID: sXOcxODMJvVTFwPOufvrxQC7-l9_2D-W
 
-On Tue, 23 Jun 2026 00:00:28 +0800, Haoxiang Li wrote:
+On Tue, 07 Jul 2026 12:23:02 +0530, Abdun Nihaal wrote:
 
-> If phys_disk->in_reset is set, the function returns directly without
-> undoing the resources acquired for the command. Add the missing error
-> cleanup by unmapping the IOACCEL2 SG chain block when needed, unmapping
-> the SCSI command, and dropping the outstanding IOACCEL command count
-> before returning.
+> The memory allocated for mboxq using mempool_alloc() is not freed in
+> some of the early exit error paths. Fix that by moving the
+> mempool_free() call to an earlier point after last use.
 > 
 > 
-> [...]
 
 Applied to 7.2/scsi-fixes, thanks!
 
-[1/1] scsi: hpsa: fix DMA mapping leak on IOACCEL2 reset path
-      https://git.kernel.org/mkp/scsi/c/e166bafc483e
+[1/1] scsi: lpfc: Fix memory leak in lpfc_sli4_driver_resource_setup()
+      https://git.kernel.org/mkp/scsi/c/1bd28625e25b
 
 -- 
 Martin K. Petersen
