@@ -1,102 +1,201 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DADCA3164D8
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 02:52:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 370AB3033FB;
+	Mon, 13 Jul 2026 03:09:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783911158; cv=none; b=aTtycO76bpPFI6SZbLuGBoNQLSsVbU7wOn03FP4Uxs1w7RPe2zd6t53InPfeCskotncah5F26vsjWlwRH80N9vs55EAkgYWslmnJ4/21CBmaka3wUlfwxu8sVebuqmPbG4TqCQcYcyt7gHGJrRTg2ycxXajwE5rMUfNvupkMzuQ=
+	t=1783912149; cv=none; b=iRt7kotQjCH6o17S6rn+muUr9FUhtyb1AnLlgJWaxIwAlRyDM5ooTRp16wi1iP6GFUKRgv41fLnrLSZGMgUSfFojgMOLgK8QMnlg7/mfefw7EXlLWIdrCLvCXnBKiH78l8VAvtbkDNxNUP0WuX5a7SeoOVqVY6l6DUPppSxXEdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783911158; c=relaxed/simple;
-	bh=RPJ/yFfdo2BqiRL2Bc2f+l++a0D6prSxSPsfAp/ClXY=;
-	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
-	 Content-Type:References; b=K+D2muPGHm0s8lsII4TOFOJFQLj6AGrx65uPo0HuwD1QQbTgR9QIwnI6bdCcQvvDuWoC85xCXVeM2Rq+rCmPPYpu8g8pxVC7QwN8ry1ulZbM4IS92uqFeGKRYkLdTYNxbY1aAb1095YaBMCtKFK4vAASCrS8fPBEPi2bfM9lvAA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=UBtLyIAe; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1783912149; c=relaxed/simple;
+	bh=iPm1CkyysknypVS0zzw0Gy/yyNOGB43dgSt44bWtmCc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=SabjDB369wrp7ledDZ/gdXu2ebS1wBZAOOdzbEgOn2yFVyK5Ie96oOwh4A7EoAAgRRjj7Xu/AKnAb6/wRHd9cZFGu1BYjz2DnpxLPEMN7whm09Ucx5OxehWEUghXs0MsrK/iYArNpC2OY+Sp4QM+GmfsGWVWYsGXVHXxWKJv5U4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=kIpbx+N/; arc=none smtp.client-ip=113.46.200.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UBtLyIAe"
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260713025228epoutp04f9dd474e039e4e32e11ea0699ab48613~Bubzg_OSA1615216152epoutp04w
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 02:52:28 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260713025228epoutp04f9dd474e039e4e32e11ea0699ab48613~Bubzg_OSA1615216152epoutp04w
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1783911148;
-	bh=RPJ/yFfdo2BqiRL2Bc2f+l++a0D6prSxSPsfAp/ClXY=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=UBtLyIAeZ3Eqp7pNGnjWTdJFNgofBQrAa1DE3sHmOUgEB1vSxsQqB56ijiiQ8OWyp
-	 7ZxlXhlqb08opttwYNQThrviEq7UJQoAPPUgbRWLYBe6UTfEOlOFHlOKWMMrOimvHw
-	 S4FptqzXF3viQxjmwCIGZ0hpgGV7v6Jcx4HMpm5Y=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
-	20260713025227epcas2p109a56ade85eb62cfacba0d0603338b80~BubzIiQpC1000110001epcas2p1q;
-	Mon, 13 Jul 2026 02:52:27 +0000 (GMT)
-Received: from epcas2p1.samsung.com (unknown [182.195.38.210]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4gz6Rb43k4z3hhT8; Mon, 13 Jul
-	2026 02:52:27 +0000 (GMT)
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="kIpbx+N/"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=9WHVBtbQCm82XiLgsizy3UmET/HI4v7pZLd0O5J2qR8=;
+	b=kIpbx+N/hhvupO76Ahxloy1yHysmSZe56lzP9dEjO+ShGOYvHdtMO9sB82iVmlvDXctPGFd97
+	w6SXdqj4KwlQHhV5QYI1lNQqgGQo01IyVjI7l1P019UBDo96bqsi4LG2VRLfmLsbpd5v9SQsa8s
+	7cWr2LayiNeEZKQMoqQhH/E=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4gz6bc1Hm8z12LGB;
+	Mon, 13 Jul 2026 10:59:24 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id 3B86A40579;
+	Mon, 13 Jul 2026 11:09:03 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Mon, 13 Jul 2026 11:09:02 +0800
+Message-ID: <cc320624-12ad-2341-88bc-ac76c6628904@huawei.com>
+Date: Mon, 13 Jul 2026 11:09:01 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: Re: [PATCH] scsi: ufs: Add support for the aggregated read query
- opcode
-Reply-To: hyenc.jeong@samsung.com
-Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
-From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
-To: Bart Van Assche <bvanassche@acm.org>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>
-CC: ALIM AKHTAR <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Jinyoung Choi <j-young.choi@samsung.com>,
-	Dukhyun Kwon <d_hyun.kwon@samsung.com>, Jeuk Kim <jeuk20.kim@samsung.com>,
-	Keoseong Park <keosung.park@samsung.com>, Jaemyung Lee
-	<jaemyung.lee@samsung.com>, Jieon Seol <jieon.seol@samsung.com>, Gyusun Lee
-	<gyusun.lee@samsung.com>, Yunjae Jo <yunjae00.jo@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <6d087f28-5795-4929-b5d3-3f78d9b9bc60@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20260713025227epcms2p41de509bb713eb7a6be2c945073be6b3a@epcms2p4>
-Date: Mon, 13 Jul 2026 11:52:27 +0900
-X-CMS-MailID: 20260713025227epcms2p41de509bb713eb7a6be2c945073be6b3a
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260710053524epcms2p82121eba4240c37112fc5669430035442
-References: <6d087f28-5795-4929-b5d3-3f78d9b9bc60@acm.org>
-	<20260710054556epcms2p68986e2af26f42e63c87ab8fde034e450@epcms2p6>
-	<CGME20260710053524epcms2p82121eba4240c37112fc5669430035442@epcms2p4>
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v9 2/2] scsi: libsas: Add linkrate and sas_addr change
+ detection in rediscover
+Content-Language: en-CA
+To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+References: <20260624063230.3264029-1-yangxingui@huawei.com>
+ <20260624063230.3264029-3-yangxingui@huawei.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <20260624063230.3264029-3-yangxingui@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepemh100006.china.huawei.com (7.202.181.89) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
-Hi Bart,
+Kindly ping for review...
 
-On 7/10/26 02:46 PM, Bart Van Assche wrote:
-> On 7/9/26 10:45 PM, Hyeoncheol Jeong wrote:
-> > struct utp_transfer_cmd_desc =7B
-> >=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u8=20command_upiu=5BA=
-LIGNED_UPIU_SIZE=5D;=0D=0A>=20>=20-=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u8=
-=20response_upiu=5BALIGNED_UPIU_SIZE=5D;=0D=0A>=20>=20+=20=C2=A0=20=C2=A0=
-=20=C2=A0=20=C2=A0u8=20response_upiu=5BALIGNED_RSP_UPIU_SIZE=5D;=0D=0A>=20>=
-=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0=20=C2=A0u8=20prd_table=5B=5D;=0D=
-=0A>=20>=20=7D;=0D=0A>=0D=0A>=20This=20change=20increases=20the=20size=20of=
-=20every=20CQ=20entry=20and=20also=20of=20every=20LRB=0D=0A>=20entry=20by=
-=20about=204=20KiB.=20This=20is=20not=20acceptable.=0D=0A=0D=0AThanks=20for=
-=20the=20review.=20You're=20right=20=E2=80=94=20growing=20the=20shared=0D=
-=0Autp_transfer_cmd_desc=20enlarges=20the=20response=20area=20for=20every=
-=20tag,=0D=0Awhich=20is=20wasteful.=20The=20aggregated=20read=20only=20uses=
-=20the=20reserved=0D=0A(device=20management)=20tag,=20so=20only=20that=20ta=
-g=20needs=20the=20big=20buffer.=0D=0A=0D=0AWould=20it=20be=20okay=20to=20ke=
-ep=20utp_transfer_cmd_desc=20as=20is=20and=20give=0D=0Ajust=20the=20reserve=
-d=20tag=20a=20dedicated=204=20KiB=20response=20descriptor?=0D=0ARegular=20t=
-ags=20and=20normal=20I/O=20would=20stay=20unchanged.=0D=0A=0D=0ALet=20me=20=
-know=20if=20you'd=20prefer=20another=20approach.=0D=0A=0D=0AThanks.=0D=0A
+On 2026/6/24 14:32, Xingui Yang wrote:
+> Introduce sas_dev_is_flutter() and sas_rediscover_ex_phy() to improve
+> flutter and device replace detection during rediscovery.
+> 
+> sas_dev_is_flutter() calls sas_ex_phy_discover() before looking up the
+> child device, which ensures the PHY state is always updated and avoids
+> a use-after-free since the child device pointer is obtained after the
+> sleeping SMP request completes.
+> 
+> It adds validation for linkrate and sas_addr changes. When the SAS
+> address changes, it restores phy->attached_sas_addr back to the original
+> address before returning false, ensuring sas_unregister_devs_sas_addr()
+> can properly match and unregister the old device via
+> sas_phy_match_dev_addr(). The sas_addr check is ordered before the
+> linkrate check to ensure the address restoration is not skipped when
+> both change simultaneously.
+> 
+> sas_rediscover_ex_phy() uses the async discovery pattern
+> (sas_discover_event) instead of the synchronous sas_discover_new() to
+> ensure proper ordering between device unregistration and rediscovery,
+> avoiding sysfs_warn_dup() errors.
+> 
+> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+> Suggested-by: John Garry <john.g.garry@oracle.com>
+> ---
+>   drivers/scsi/libsas/sas_expander.c | 83 +++++++++++++++++++++++++-----
+>   1 file changed, 69 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index fc6d8f3c9dca..e27953de2b4e 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -1967,6 +1967,72 @@ static bool dev_type_flutter(enum sas_device_type new, enum sas_device_type old)
+>   	return false;
+>   }
+>   
+> +static void sas_rediscover_ex_phy(struct domain_device *dev, int phy_id,
+> +				  bool last)
+> +{
+> +	struct expander_device *ex = &dev->ex_dev;
+> +	struct ex_phy *phy = &ex->ex_phy[phy_id];
+> +
+> +	phy->phy_change_count = -1;
+> +	ex->ex_change_count = -1;
+> +	sas_unregister_devs_sas_addr(dev, phy_id, last);
+> +	sas_discover_event(dev->port, DISCE_REVALIDATE_DOMAIN);
+> +}
+> +
+> +static bool sas_dev_is_flutter(struct domain_device *dev, int phy_id,
+> +			       u8 *sas_addr, enum sas_device_type type)
+> +{
+> +	struct expander_device *ex = &dev->ex_dev;
+> +	struct ex_phy *phy = &ex->ex_phy[phy_id];
+> +	struct domain_device *child_dev;
+> +	char *action = "";
+> +	int res;
+> +
+> +	if (SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr) ||
+> +	    !dev_type_flutter(type, phy->attached_dev_type))
+> +		return false;
+> +
+> +	res = sas_ex_phy_discover(dev, phy_id);
+> +	if (res)
+> +		return false;
+> +
+> +	child_dev = sas_ex_to_dev(dev, phy_id);
+> +	if (!child_dev)
+> +		goto out;
+> +
+> +	if (dev_is_sata(child_dev) &&
+> +	    phy->attached_dev_type == SAS_SATA_PENDING) {
+> +		action = ", needs recovery";
+> +		goto out;
+> +	}
+> +
+> +	if (SAS_ADDR(child_dev->sas_addr) != SAS_ADDR(phy->attached_sas_addr)) {
+> +		pr_info("ex %016llx phy%02d sas_addr changed from %016llx to %016llx\n",
+> +			SAS_ADDR(dev->sas_addr), phy_id,
+> +			SAS_ADDR(child_dev->sas_addr),
+> +			SAS_ADDR(phy->attached_sas_addr));
+> +		/*
+> +		 * Device unregistering relies on address matching. Restore
+> +		 * attached_sas_addr back to the original address so that the old
+> +		 * device can be unregistered later
+> +		 */
+> +		memcpy(phy->attached_sas_addr, child_dev->sas_addr, SAS_ADDR_SIZE);
+> +		return false;
+> +	}
+> +
+> +	if (child_dev->linkrate != phy->linkrate) {
+> +		pr_info("ex %016llx phy%02d linkrate changed from %d to %d\n",
+> +			SAS_ADDR(dev->sas_addr), phy_id,
+> +			child_dev->linkrate, phy->linkrate);
+> +		return false;
+> +	}
+> +
+> +out:
+> +	pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
+> +		 SAS_ADDR(dev->sas_addr), phy_id, action);
+> +	return true;
+> +}
+> +
+>   static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
+>   			      bool last, int sibling)
+>   {
+> @@ -2020,27 +2086,16 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
+>   		if (res == 0)
+>   			sas_set_ex_phy(dev, phy_id, disc_resp);
+>   		goto out_free_resp;
+> -	} else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
+> -		   dev_type_flutter(type, phy->attached_dev_type)) {
+> -		struct domain_device *ata_dev = sas_ex_to_ata(dev, phy_id);
+> -		char *action = "";
+> -
+> -		sas_ex_phy_discover(dev, phy_id);
+> +	}
+>   
+> -		if (ata_dev && phy->attached_dev_type == SAS_SATA_PENDING)
+> -			action = ", needs recovery";
+> -		pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
+> -			 SAS_ADDR(dev->sas_addr), phy_id, action);
+> +	if (sas_dev_is_flutter(dev, phy_id, sas_addr, type))
+>   		goto out_free_resp;
+> -	}
+>   
+>   	/* we always have to delete the old device when we went here */
+>   	pr_info("ex %016llx phy%02d replace %016llx\n",
+>   		SAS_ADDR(dev->sas_addr), phy_id,
+>   		SAS_ADDR(phy->attached_sas_addr));
+> -	sas_unregister_devs_sas_addr(dev, phy_id, last);
+> -
+> -	res = sas_discover_new(dev, phy_id);
+> +	sas_rediscover_ex_phy(dev, phy_id, last);
+>   out_free_resp:
+>   	kfree(disc_resp);
+>   	return res;
+> 
