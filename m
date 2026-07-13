@@ -1,40 +1,40 @@
 Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 370AB3033FB;
-	Mon, 13 Jul 2026 03:09:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B2DE23393C;
+	Mon, 13 Jul 2026 03:10:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783912149; cv=none; b=iRt7kotQjCH6o17S6rn+muUr9FUhtyb1AnLlgJWaxIwAlRyDM5ooTRp16wi1iP6GFUKRgv41fLnrLSZGMgUSfFojgMOLgK8QMnlg7/mfefw7EXlLWIdrCLvCXnBKiH78l8VAvtbkDNxNUP0WuX5a7SeoOVqVY6l6DUPppSxXEdM=
+	t=1783912219; cv=none; b=CbD6izjBghtF0U8Xdrc9j86InHRFVYL8vAH+oKKCjSYmW4bft4wszk0djVIeo9buIYTH0JXkwdy5FyJrSiqushpGboRJp5j8BQcP9c3ZOUvOmyKd739YjmGQ59JS1uZcSUq6sbUQn8oE6r5UwFme6N+4BddsL0kCtN6WJK8TGe8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783912149; c=relaxed/simple;
-	bh=iPm1CkyysknypVS0zzw0Gy/yyNOGB43dgSt44bWtmCc=;
+	s=arc-20240116; t=1783912219; c=relaxed/simple;
+	bh=cyycxXHtyPaZ6N8ijwl4HAdYJ1R54df1Fp8mlM2KYqc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=SabjDB369wrp7ledDZ/gdXu2ebS1wBZAOOdzbEgOn2yFVyK5Ie96oOwh4A7EoAAgRRjj7Xu/AKnAb6/wRHd9cZFGu1BYjz2DnpxLPEMN7whm09Ucx5OxehWEUghXs0MsrK/iYArNpC2OY+Sp4QM+GmfsGWVWYsGXVHXxWKJv5U4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=kIpbx+N/; arc=none smtp.client-ip=113.46.200.220
+	 In-Reply-To:Content-Type; b=cQmmJPWin3ZUOXPZrUV6blOXTZiij5Gkfkq3rj661f2LIXn2bpgBwa4N2nkf7cVF80gfCqDSOFgDZ7p0qSz+hwu3SzkncvFPo98Sz4DDMUBpthd/QG0B9X1AEYNbxJE0KOpvLxF/qUJF41zegSpVKLFnFydyTKZXZ6AugW4DJXM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=BNiqg9H1; arc=none smtp.client-ip=113.46.200.220
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="kIpbx+N/"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="BNiqg9H1"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=9WHVBtbQCm82XiLgsizy3UmET/HI4v7pZLd0O5J2qR8=;
-	b=kIpbx+N/hhvupO76Ahxloy1yHysmSZe56lzP9dEjO+ShGOYvHdtMO9sB82iVmlvDXctPGFd97
-	w6SXdqj4KwlQHhV5QYI1lNQqgGQo01IyVjI7l1P019UBDo96bqsi4LG2VRLfmLsbpd5v9SQsa8s
-	7cWr2LayiNeEZKQMoqQhH/E=
+	bh=Mwf4KJ9QNNlyIirxMTVeY9NBR/t9ZmwdBkcBaMxxFfc=;
+	b=BNiqg9H14m6kLvlSZRW/u378ht1B7fco13dNkcyfC4sPrw5cWOKh2LTgQ3in5WQMCU2LW1KqE
+	SygWOv5iYcQdibu04RaCJv8zu6b2mxSlWYmdF6JU/f22/+XXoLbK3CJEQ+Y+NbHDc5t2GmhO7tH
+	9U9tHLkWsHK1XhTR8LOkznM=
 Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4gz6bc1Hm8z12LGB;
-	Mon, 13 Jul 2026 10:59:24 +0800 (CST)
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4gz6cy19Msz12LGP;
+	Mon, 13 Jul 2026 11:00:34 +0800 (CST)
 Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3B86A40579;
-	Mon, 13 Jul 2026 11:09:03 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 3675440579;
+	Mon, 13 Jul 2026 11:10:13 +0800 (CST)
 Received: from [10.67.120.108] (10.67.120.108) by
  kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Mon, 13 Jul 2026 11:09:02 +0800
-Message-ID: <cc320624-12ad-2341-88bc-ac76c6628904@huawei.com>
-Date: Mon, 13 Jul 2026 11:09:01 +0800
+ 15.2.1544.36; Mon, 13 Jul 2026 11:10:12 +0800
+Message-ID: <379091c9-3cd2-7599-baae-8c7f278e7ec3@huawei.com>
+Date: Mon, 13 Jul 2026 11:10:11 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -43,18 +43,16 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.3.1
-Subject: Re: [PATCH v9 2/2] scsi: libsas: Add linkrate and sas_addr change
- detection in rediscover
+Subject: Re: [PATCH v2] scsi: libsas: fix HA resume deadlock and hisi_sas
+ disk-wake race
 Content-Language: en-CA
-To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>
+To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>
-References: <20260624063230.3264029-1-yangxingui@huawei.com>
- <20260624063230.3264029-3-yangxingui@huawei.com>
+	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <kangfenglong@huawei.com>
+References: <20260702033211.1743313-1-yangxingui@huawei.com>
 From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <20260624063230.3264029-3-yangxingui@huawei.com>
+In-Reply-To: <20260702033211.1743313-1-yangxingui@huawei.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: kwepemh100006.china.huawei.com (7.202.181.89) To
@@ -62,140 +60,134 @@ X-ClientProxiedBy: kwepemh100006.china.huawei.com (7.202.181.89) To
 
 Kindly ping for review...
 
-On 2026/6/24 14:32, Xingui Yang wrote:
-> Introduce sas_dev_is_flutter() and sas_rediscover_ex_phy() to improve
-> flutter and device replace detection during rediscovery.
+On 2026/7/2 11:32, Xingui Yang wrote:
+> Commit fbefe22811c3140 ("scsi: libsas: Don't always drain event workqueue
+> for HA resume") introduced sas_resume_ha_no_sync() to avoid a deadlock: the
+> PHYE_RESUME_TIMEOUT handler, running on the HA event workqueue, calls
+> sas_deform_port() -> sas_destruct_devices(), which removes SCSI devices and
+> waits for the host to become runtime-active. But the host cannot resume
+> until sas_resume_ha() -> sas_drain_work() returns, and the drain is blocked
+> on that very handler.
 > 
-> sas_dev_is_flutter() calls sas_ex_phy_discover() before looking up the
-> child device, which ensures the PHY state is always updated and avoids
-> a use-after-free since the child device pointer is obtained after the
-> sleeping SMP request completes.
+> However skipping the drain reintroduces a race: hisi_sas returns from
+> resume before all PHY UP work and libsas discovery work finish. The
+> controller may then autosuspend while disks are still waking up. The disks
+> issue IO to a suspended controller, the IO fails, and the disks get
+> disabled.
 > 
-> It adds validation for linkrate and sas_addr changes. When the SAS
-> address changes, it restores phy->attached_sas_addr back to the original
-> address before returning false, ensuring sas_unregister_devs_sas_addr()
-> can properly match and unregister the old device via
-> sas_phy_match_dev_addr(). The sas_addr check is ordered before the
-> linkrate check to ensure the address restoration is not skipped when
-> both change simultaneously.
+> Fix the deadlock at its source by moving the PHYE_RESUME_TIMEOUT
+> notification to after sas_drain_work(). By then the host resume is about to
+> complete, so device removal through device_link no longer blocks on the
+> resume and the cycle is broken.
 > 
-> sas_rediscover_ex_phy() uses the async discovery pattern
-> (sas_discover_event) instead of the synchronous sas_discover_new() to
-> ensure proper ordering between device unregistration and rediscovery,
-> avoiding sysfs_warn_dup() errors.
+> With the deadlock gone, restore sas_resume_ha() (the draining variant) in
+> hisi_sas and remove sas_resume_ha_no_sync().
 > 
+> Fixes: fbefe22811c3140 ("scsi: libsas: Don't always drain event workqueue for HA resume")
 > Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-> Suggested-by: John Garry <john.g.garry@oracle.com>
 > ---
->   drivers/scsi/libsas/sas_expander.c | 83 +++++++++++++++++++++++++-----
->   1 file changed, 69 insertions(+), 14 deletions(-)
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  9 +-------
+>   drivers/scsi/libsas/sas_init.c         | 32 ++++++++++++++------------
+>   include/scsi/libsas.h                  |  1 -
+>   3 files changed, 18 insertions(+), 24 deletions(-)
 > 
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index fc6d8f3c9dca..e27953de2b4e 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -1967,6 +1967,72 @@ static bool dev_type_flutter(enum sas_device_type new, enum sas_device_type old)
->   	return false;
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> index 0687bdefcd63..c8673ae4e472 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> @@ -5263,14 +5263,7 @@ static int _resume_v3_hw(struct device *device)
+>   	}
+>   	phys_init_v3_hw(hisi_hba);
+>   
+> -	/*
+> -	 * If a directly-attached disk is removed during suspend, a deadlock
+> -	 * may occur, as the PHYE_RESUME_TIMEOUT processing will require the
+> -	 * hisi_hba->device to be active, which can only happen when resume
+> -	 * completes. So don't wait for the HA event workqueue to drain upon
+> -	 * resume.
+> -	 */
+> -	sas_resume_ha_no_sync(sha);
+> +	sas_resume_ha(sha);
+>   	clear_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags);
+>   
+>   	dev_warn(dev, "end of resuming controller\n");
+> diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+> index 0bec236f0fb5..624850f1483d 100644
+> --- a/drivers/scsi/libsas/sas_init.c
+> +++ b/drivers/scsi/libsas/sas_init.c
+> @@ -410,7 +410,7 @@ static void sas_resume_insert_broadcast_ha(struct sas_ha_struct *ha)
+>   	}
 >   }
 >   
-> +static void sas_rediscover_ex_phy(struct domain_device *dev, int phy_id,
-> +				  bool last)
-> +{
-> +	struct expander_device *ex = &dev->ex_dev;
-> +	struct ex_phy *phy = &ex->ex_phy[phy_id];
-> +
-> +	phy->phy_change_count = -1;
-> +	ex->ex_change_count = -1;
-> +	sas_unregister_devs_sas_addr(dev, phy_id, last);
-> +	sas_discover_event(dev->port, DISCE_REVALIDATE_DOMAIN);
-> +}
-> +
-> +static bool sas_dev_is_flutter(struct domain_device *dev, int phy_id,
-> +			       u8 *sas_addr, enum sas_device_type type)
-> +{
-> +	struct expander_device *ex = &dev->ex_dev;
-> +	struct ex_phy *phy = &ex->ex_phy[phy_id];
-> +	struct domain_device *child_dev;
-> +	char *action = "";
-> +	int res;
-> +
-> +	if (SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr) ||
-> +	    !dev_type_flutter(type, phy->attached_dev_type))
-> +		return false;
-> +
-> +	res = sas_ex_phy_discover(dev, phy_id);
-> +	if (res)
-> +		return false;
-> +
-> +	child_dev = sas_ex_to_dev(dev, phy_id);
-> +	if (!child_dev)
-> +		goto out;
-> +
-> +	if (dev_is_sata(child_dev) &&
-> +	    phy->attached_dev_type == SAS_SATA_PENDING) {
-> +		action = ", needs recovery";
-> +		goto out;
-> +	}
-> +
-> +	if (SAS_ADDR(child_dev->sas_addr) != SAS_ADDR(phy->attached_sas_addr)) {
-> +		pr_info("ex %016llx phy%02d sas_addr changed from %016llx to %016llx\n",
-> +			SAS_ADDR(dev->sas_addr), phy_id,
-> +			SAS_ADDR(child_dev->sas_addr),
-> +			SAS_ADDR(phy->attached_sas_addr));
-> +		/*
-> +		 * Device unregistering relies on address matching. Restore
-> +		 * attached_sas_addr back to the original address so that the old
-> +		 * device can be unregistered later
-> +		 */
-> +		memcpy(phy->attached_sas_addr, child_dev->sas_addr, SAS_ADDR_SIZE);
-> +		return false;
-> +	}
-> +
-> +	if (child_dev->linkrate != phy->linkrate) {
-> +		pr_info("ex %016llx phy%02d linkrate changed from %d to %d\n",
-> +			SAS_ADDR(dev->sas_addr), phy_id,
-> +			child_dev->linkrate, phy->linkrate);
-> +		return false;
-> +	}
-> +
-> +out:
-> +	pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
-> +		 SAS_ADDR(dev->sas_addr), phy_id, action);
-> +	return true;
-> +}
-> +
->   static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
->   			      bool last, int sibling)
+> -static void _sas_resume_ha(struct sas_ha_struct *ha, bool drain)
+> +static void _sas_resume_ha(struct sas_ha_struct *ha)
 >   {
-> @@ -2020,27 +2086,16 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
->   		if (res == 0)
->   			sas_set_ex_phy(dev, phy_id, disc_resp);
->   		goto out_free_resp;
-> -	} else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
-> -		   dev_type_flutter(type, phy->attached_dev_type)) {
-> -		struct domain_device *ata_dev = sas_ex_to_ata(dev, phy_id);
-> -		char *action = "";
-> -
-> -		sas_ex_phy_discover(dev, phy_id);
-> +	}
+>   	const unsigned long tmo = msecs_to_jiffies(25000);
+>   	int i;
+> @@ -426,6 +426,21 @@ static void _sas_resume_ha(struct sas_ha_struct *ha, bool drain)
+>   		dev_info(ha->dev, "waiting up to 25 seconds for %d phy%s to resume\n",
+>   			 i, i > 1 ? "s" : "");
+>   	wait_event_timeout(ha->eh_wait_q, phys_suspended(ha) == 0, tmo);
+> +
+> +	/* all phys are back up or timed out, turn on i/o so we can
+> +	 * flush out disks that did not return
+> +	 */
+> +	scsi_unblock_requests(ha->shost);
+> +	sas_drain_work(ha);
+> +
+> +	/* Send PHYE_RESUME_TIMEOUT after sas_drain_work(). The handler
+> +	 * calls sas_deform_port() -> sas_destruct_devices(), which removes
+> +	 * SCSI devices and, for LLDDs using device_link() PM sync, waits
+> +	 * for the host to be runtime-active. Sending it before the drain
+> +	 * would deadlock: the drain waits for the handler, the handler
+> +	 * waits for host resume, and host resume waits for the drain to
+> +	 * finish.
+> +	 */
+>   	for (i = 0; i < ha->num_phys; i++) {
+>   		struct asd_sas_phy *phy = ha->sas_phy[i];
 >   
-> -		if (ata_dev && phy->attached_dev_type == SAS_SATA_PENDING)
-> -			action = ", needs recovery";
-> -		pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
-> -			 SAS_ADDR(dev->sas_addr), phy_id, action);
-> +	if (sas_dev_is_flutter(dev, phy_id, sas_addr, type))
->   		goto out_free_resp;
-> -	}
+> @@ -436,12 +451,6 @@ static void _sas_resume_ha(struct sas_ha_struct *ha, bool drain)
+>   		}
+>   	}
 >   
->   	/* we always have to delete the old device when we went here */
->   	pr_info("ex %016llx phy%02d replace %016llx\n",
->   		SAS_ADDR(dev->sas_addr), phy_id,
->   		SAS_ADDR(phy->attached_sas_addr));
-> -	sas_unregister_devs_sas_addr(dev, phy_id, last);
+> -	/* all phys are back up or timed out, turn on i/o so we can
+> -	 * flush out disks that did not return
+> -	 */
+> -	scsi_unblock_requests(ha->shost);
+> -	if (drain)
+> -		sas_drain_work(ha);
+>   	clear_bit(SAS_HA_RESUMING, &ha->state);
+>   
+>   	sas_queue_deferred_work(ha);
+> @@ -453,17 +462,10 @@ static void _sas_resume_ha(struct sas_ha_struct *ha, bool drain)
+>   
+>   void sas_resume_ha(struct sas_ha_struct *ha)
+>   {
+> -	_sas_resume_ha(ha, true);
+> +	_sas_resume_ha(ha);
+>   }
+>   EXPORT_SYMBOL(sas_resume_ha);
+>   
+> -/* A no-sync variant, which does not call sas_drain_ha(). */
+> -void sas_resume_ha_no_sync(struct sas_ha_struct *ha)
+> -{
+> -	_sas_resume_ha(ha, false);
+> -}
+> -EXPORT_SYMBOL(sas_resume_ha_no_sync);
 > -
-> -	res = sas_discover_new(dev, phy_id);
-> +	sas_rediscover_ex_phy(dev, phy_id, last);
->   out_free_resp:
->   	kfree(disc_resp);
->   	return res;
+>   void sas_suspend_ha(struct sas_ha_struct *ha)
+>   {
+>   	int i;
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index 163f23c92b41..36d4cb567837 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -680,7 +680,6 @@ extern int sas_register_ha(struct sas_ha_struct *);
+>   extern int sas_unregister_ha(struct sas_ha_struct *);
+>   extern void sas_prep_resume_ha(struct sas_ha_struct *sas_ha);
+>   extern void sas_resume_ha(struct sas_ha_struct *sas_ha);
+> -extern void sas_resume_ha_no_sync(struct sas_ha_struct *sas_ha);
+>   extern void sas_suspend_ha(struct sas_ha_struct *sas_ha);
+>   
+>   int sas_phy_reset(struct sas_phy *phy, int hard_reset);
 > 
