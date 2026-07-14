@@ -1,143 +1,133 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCD454D90D5
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 17:27:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D50762FF66B
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 17:31:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784050076; cv=none; b=MIc1uJaB/ZfF3/0RMg+dtSP9tC6xu/dwMmvAzEtq0LWm+sNcKjSDv8aFBVyYqzGSKjd8hE23vtVCzq+/CTaDtmljp0FVsMXRC+At+n9tlnqSL2mHS0uZWZTYxeyvbdioVqHPKO9THrMnxS+Sz2f2YYuu5/HFaZAk8bnbo4KaS3Q=
+	t=1784050298; cv=none; b=hvxweh4JkUgFgYJc8MWyFTd3ZyUaEepFv3Yy1HJ5R4EHBwzmj/5unaI8o3hf4di+mwN8S1wD2Ex8/5fBXhcNQLvSl/if3v/34olg8Ar1NFno8hryvgb6RYF+2Hg2GbkVtjfa9UobOJMBXn0Cywor4vWGiBGB2M90SfpIXtlSVik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784050076; c=relaxed/simple;
-	bh=f4gRRdyAk0SYh/aGqpacFBqr8KjG0ILqdRvv9QEbvHU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EJPQqujFWjshBj8tKA08PtSZZe0O7FbcqOGTe28mnPXjRGf2Iup7H+Wj2/o8a1Z87gF2oZaIs+P0HD/h+0lGHrGY7Na2hBZtsM9hg9CR04fvUeh4XE1oc1lfVbXJCtNdUUyibcqOWncLsmkUhHf6qK1Pjc9LTz/cDXnBbcpJZKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HSGIiyI0; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784050298; c=relaxed/simple;
+	bh=8ey2RU5yrw8n9aN8af4Dv/A8IwnzxppoSAwb/JvaLHs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=W8C6nk8q8RroFKRuNVngTWSg+AQhkdtTAmneDeHUIVlbQx2M6o3bIpLC0VXD5R0XSb76Sb+ggnsprG1+6J+QXGavsPbEZs491XwqKD7nbjlDWMq40y6v6g1vH4ujfOcmUqMzZ1sCimW/b98tRAcjXaf3Nc5kpP+yyiKJt3lcfZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eCm4kzmZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HSGIiyI0"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2ce7d2adef4so16985105ad.3
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 10:27:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784050072; x=1784654872; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=hgCzlBG6lq6b/rCZWmhMuZKJx8BuNSqfyPONIcSDu8U=;
-        b=HSGIiyI0sBpo4B2k5vZlWmmeNnwslAFVpFp+zHDEuyu0iNkS48ehg4uWM4wT5ZHCnb
-         P7vlF2dgRXz7DxSFqKiTy88Z8bOH6k4fTDTf5njOIUE8AZ+h++1w2jQBZWq/X6/cGVeP
-         co4KXKDHwrCr0pmaX8l+ZfhpWGx6GLlzgLYE0ep+JGbobaO0FVcGzDtjcofhPaXRb9xz
-         4vUh2krmWfid2TG69be4jv7K/YLWZQJUNMvkit73zS08scu1Q3OLhL0+WXA13C8TEV9t
-         7RBdizmLUhsvwltVOVuzIuRkHH618NCJMuopqxxq3HB8pftbFkeOj/PWWfV6zzNyqKCI
-         o/vQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784050072; x=1784654872;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=hgCzlBG6lq6b/rCZWmhMuZKJx8BuNSqfyPONIcSDu8U=;
-        b=aUZrQprAxHjw5DTGTPECi4PLLy2UsF33cZNBxKKfjVdLFzS0ZdfrL0nsgRz482eF15
-         lY7A+rbB0sskt7t2H2eRVqhK5xt11xlFEhZYHrUc5GcAG0MWY58iy6ZhDW4o1aePSUYm
-         iZftCoeYwcYUlcTjVbOZReWY3j/LeeSAcFwcxYYcgjp1fouQxBmLScYM/Pgf0pcL/OhI
-         n3t72zA6PSFiyaPacC97NAeSenjKiuxH9H/trOzkxZG/15icBncMmJ0f5P/8NqE4f/Dk
-         abV5c3xrsIOIJ3kBGO+FNKv1HshP8XypNPXKt6qo5N41iv9Aa9w4w6hffk64Lf5cVSq0
-         mX1A==
-X-Forwarded-Encrypted: i=1; AHgh+RqfpwWW3yp+6Iy5v2Tv3MGqx2Y37boFekzrmo61X5iXQ8AQWdB1TU4O5bcaMDiB1CrL5FF1uIRaEbQ+@vger.kernel.org
-X-Gm-Message-State: AOJu0YylUtY43ShgvOJSZkiZC/gclGbvq9trqXmFfb0JTnT4QKRLgv36
-	oEZ0Pe4mCH/+/oVfMm3SoSoRJwnFu+W8hQh1CLR9v6P4DOq+cGcBo8fe
-X-Gm-Gg: AfdE7cmsz0WrNe0Cogf9krtXi812qafNkL+mTbWThTUdTo4bzsisNFcbFltMellq6FR
-	Blf5F7Y2ReGIS8n6pQGZoNdTiiNp6XNGQaebFzAnZKRjruo6NEN7aczQiLlN12ouakIfqneycnW
-	RoX3HdaIG7BVa62xa0ec1CGl1Trux64uVczhLv87pzGZY3p9HHtS/rHJffxbk5uBhk4Q09Ifl/D
-	9ptzVl9RMcrmL3ZUAKGcspNorNCpgWr4Sx6mH52Tj8ywekHry3MQv1jrWRabO0Gcqqvccba+MW5
-	4SOXoqZK01zwCWJW2TUPz4UtXK3xnu5u29eP7B6N9vSbSuoTCEBucDBoop7Zdku60tX8RoIkWSP
-	demMicIjcE+wZ7NbocNhRXF8y1tNnvjjsVwe4KJg0JHcR1nBNDWHbdIlr8+lvRLzvoUtdve7QVo
-	5kTTeUjPXFQg==
-X-Received: by 2002:a05:6a20:7346:b0:3b9:545d:c006 with SMTP id adf61e73a8af0-3c110009a30mr16747753637.15.1784050072006;
-        Tue, 14 Jul 2026 10:27:52 -0700 (PDT)
-Received: from lgs.. ([101.76.249.46])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ca5b3643399sm10684428a12.22.2026.07.14.10.27.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jul 2026 10:27:51 -0700 (PDT)
-From: Guangshuo Li <lgs201920130244@gmail.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Can Guo <can.guo@oss.qualcomm.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Wang Shuaiwei <wangshuaiwei1@xiaomi.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Guangshuo Li <lgs201920130244@gmail.com>
-Subject: [PATCH v2] scsi: ufs: core: cancel RTC work in active-active suspend
-Date: Wed, 15 Jul 2026 01:27:26 +0800
-Message-ID: <20260714172726.1736967-1-lgs201920130244@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eCm4kzmZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52DCF1F000E9;
+	Tue, 14 Jul 2026 17:31:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784050296;
+	bh=paY9kDrtj/kMlHRSoFAydxsTPpjwVCOQ+9LaVCIRjDs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=eCm4kzmZhaPGbc/DMEFyN19TAddzkjzkaABaQg/LyO0aq2g5H26PHdvK5NZl0Qyw7
+	 u39RYa4SPwfd4Ggp11sgtuacwRXqy1RXfOelhEn+d5EcTSm97crHJdbt+3iZdd6dk7
+	 vUwrqctdr/qNUEKcAaiGmODwjgV3o5Z4Px7bFeutBq8ndYquJCr8OGxj6MQkjitMlx
+	 S7O4KoM75At82kJkcK9OMqXqb8/M6C1chNKyJv9U0PPmTgjzWwlJzT5m6nBWlU6ABK
+	 r98XT3nrYb12XJhlwDjS6ZtgL1tkh4Pg0c2Jt0S0xMBcf4mjcc+9NCzyYz5ZPr0YTP
+	 rtDh9nkQcOZFA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 48/56] scsi: qla2xxx: Bound VP index against VP_CTRL
+ IOCB bitmap size
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nilesh Javali" <njavali@marvell.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260714095353.289460-49-njavali@marvell.com>
+References: <20260714095353.289460-1-njavali@marvell.com>
+ <20260714095353.289460-49-njavali@marvell.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 14 Jul 2026 17:31:35 +0000
+Message-Id: <20260714173136.52DCF1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-UFS RTC support schedules ufs_rtc_update_work to periodically update the
-device RTC. The work can issue query commands and access the UFS host
-controller.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-A previous change moved the RTC work cancellation before the PRE_CHANGE
-vendor suspend callback to close a race in the common suspend path.
-However, the active-active path jumps directly to vops_suspend after
-flushing exception handling work and therefore bypasses the
-cancellation.
+Pre-existing issues:
+- [Critical] Double completion race between hardware interrupt and timer ti=
+meout leads to stack Use-After-Free.
+--
 
-If the RTC work runs while the vendor suspend callback is gating or
-otherwise changing hardware state, it can access the controller during
-suspend and trigger an SError.
+--- Patch [48]: [PATCH v4 48/56] scsi: qla2xxx: Bound VP index against VP_C=
+TRL IOCB bitmap size ---
+commit 2235c7e7d265883847cfc93768add50540a5f374
+Author: Nilesh Javali <njavali@marvell.com>
 
-Cancel the RTC work before entering the vendor suspend callback in the
-active-active path. Since this path now cancels the work, move the RTC
-work scheduling outside the device and link state restoration block in
-the resume path. This restarts RTC updates after an active-active
-suspend and resume cycle.
+scsi: qla2xxx: Bound VP index against VP_CTRL IOCB bitmap size
 
-Fixes: b0bd84c39289 ("scsi: ufs: core: Fix SError in ufshcd_rtc_work() during UFS suspend")
-Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
----
-v2:
-  - Correct the Fixes tag.
-  - Restart the RTC update work from the common resume path.
+The VP control IOCB selects its target virtual port by setting one bit
+in vp_idx_map, a fixed 16-byte array. This patch ensures vp_index does
+not exceed this capacity to prevent out-of-bounds writes.
 
- drivers/ufs/core/ufshcd.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mi=
+d.c
+> --- a/drivers/scsi/qla2xxx/qla_mid.c
+> +++ b/drivers/scsi/qla2xxx/qla_mid.c
+> @@ -987,6 +987,14 @@ int qla24xx_control_vp(scsi_qla_host_t *vha, int cmd)
+>  	if (vp_index =3D=3D 0 || vp_index >=3D ha->max_npiv_vports)
+>  		return QLA_PARAMETER_ERROR;
+> =20
+> +	/*
+> +	 * The VP_CTRL IOCB selects the target VP through a fixed 128-bit
+> +	 * (16-byte) vp_idx_map bitmap, so vp_index must fit within it even
+> +	 * if firmware advertises more NPIV vports.
+> +	 */
+> +	if (vp_index > sizeof_field(struct vp_ctrl_entry_24xx, vp_idx_map) * 8)
+> +		return QLA_PARAMETER_ERROR;
+> +
+>  	/* ref: INIT */
+>  	sp =3D qla2x00_get_sp(base_vha, NULL, GFP_KERNEL);
+>  	if (!sp)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index d3044a3089b5..c3b105b2678e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10269,6 +10269,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 			req_link_state == UIC_LINK_ACTIVE_STATE) {
- 		ufshcd_disable_auto_bkops(hba);
- 		flush_work(&hba->eeh_work);
-+		cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
- 		goto vops_suspend;
- 	}
- 
-@@ -10478,10 +10479,11 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		if (ret)
- 			goto set_old_link_state;
- 		ufshcd_set_timestamp_attr(hba);
--		schedule_delayed_work(&hba->ufs_rtc_update_work,
--				      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
- 	}
- 
-+	schedule_delayed_work(&hba->ufs_rtc_update_work,
-+			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
-+
- 	if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
- 		ufshcd_enable_auto_bkops(hba);
- 	else
--- 
-2.43.0
+[Severity: Critical]
+This is a pre-existing issue, but can a double completion race occur between
+the hardware interrupt and timer timeout, leading to a stack Use-After-Free?
 
+If qla2x00_sp_timeout() executes concurrently with the hardware completion
+interrupt, and qla24xx_async_abort_cmd() fails (for example, due to a full
+request queue), the timeout handler calls sp->done() unconditionally:
+
+drivers/scsi/qla2xxx/qla_init.c:qla2x00_async_iocb_timeout() {
+    rc =3D qla24xx_async_abort_cmd(sp, false);
+    if (rc) {
+        // ... lock and clear outstanding_cmds ...
+        sp->done(sp, QLA_FUNCTION_TIMEOUT);
+    }
+}
+
+Concurrently, the interrupt handler can also call sp->done(). Since
+timer_delete() returns 0 when the timer is already running, neither thread
+aborts in qla2x00_async_done():
+
+drivers/scsi/qla2xxx/qla_iocb.c:qla2x00_async_done() {
+    if (timer_delete(&sp->u.iocb_cmd.timer)) {
+        ...
+    }
+    sp->async_done(sp, res);
+}
+
+This allows both threads to locklessly read sp->comp and call complete() in
+qla_ctrlvp_sp_done().
+
+The first caller wakes up the main thread in qla24xx_control_vp(), which
+clears sp->comp locklessly and destroys the stack frame before returning:
+
+drivers/scsi/qla2xxx/qla_mid.c:qla24xx_control_vp() {
+    ...
+    wait_for_completion(&comp);
+    sp->comp =3D NULL;
+    ...
+}
+
+Does this expose the stack to memory corruption when the second racing thre=
+ad
+subsequently calls complete() on the destroyed frame?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714095353.2894=
+60-1-njavali@marvell.com?part=3D48
