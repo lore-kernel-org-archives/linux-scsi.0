@@ -1,179 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 889ED379EFF
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 10:43:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74E9734A3D6
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 10:49:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784025841; cv=none; b=lop/5/eIi9pPJvc0YIPH0XP8LZRhAfW/mVY9DQzoPUC5aasD6zj2t6JUTA2m0EbKbj77T5nmvnpgOo3TOBBJTys+kgrr9BFmTVcJYSKUVW0rrN9WN36JRXRKqDkY9BI1gLcJcOxC07xCcmaFUzIpxdyHSF3ZUt86Dmpj7olT59o=
+	t=1784026190; cv=none; b=Oo+jnfNf+NViByGEsYvE8TyZfTXeYHhq8qAZ96CI782DXtaVd+S4kwYAQBlMtrJfl5ocfOspaf6NLZ/0GLRtRi5faNUxIT7K2KHGg4PVHiaY/wGC5UtzvAKHtBmJRkvZTFfmJNuEIkwjWw69HuQG7yfy1ybVY7mcIHyi1b9lSHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784025841; c=relaxed/simple;
-	bh=oKe8arVsOSDs1GEkdUGFOj88bV8mRw7tzHdrdtY8pDs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OhJae6RIdjQ9Y3zrCTZwV6wzMjmaeJy2yb4VMFEIKrsiBip4CErAfylCePgx5cxli72EnYICvoKHkxHohZ23awwH0xTChEa7bPLWvoktum5YQ4vHoOSeSiwIabNKYzjTP+FDHrubUfP/Cwub5mi9h/T4lMqYae64v102GnlyjnA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k++aqu3T; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784026190; c=relaxed/simple;
+	bh=LojW2wY3VHLqJgFF1GSjT5lGd+0QwrjgK5ZbhA0zEw4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TmNgGsfub2qKQd2Q9I6UyR6NjFpNmks71ihgNkmfCzooyJgV0VuHJTu/rkNds9B4KsjWIRdAn5crqrv7qSIqUj7ZEDn9mZ/dlzIUNiN+zCnuA8xSv443q9jelxMGcG6IYcfgM3CHxF10R2M8UllGGq/sOsyDDshINi14dLPzlTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ENX08vIt; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k++aqu3T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 209991F000E9;
-	Tue, 14 Jul 2026 10:43:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784025835;
-	bh=cr7ATUlgm3BmIH67TiAsp//wHXyPnoesV/Ckxdieb5I=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=k++aqu3TNLAc3zE95B+8W03WBnlfWH3E96aeCYqm5PM4K0whfUbEZXcy23vsDzVFp
-	 +B8x4zDCZ0XywoCGuCUPlveOFeLhsA4cLSvPIGrXAPhD7Gp38pmpMVpTW1SWS6nxSE
-	 9Vf9gyDwZYucGy54aX/7U+Q7GSuYNPKW+978xyBK2XyWerfCy2JS7XZlyXjZDZISXU
-	 ottvQysPTlAC3RLMlPICKbU7ry2sNyyt3U9mprfJLRySUC4+pdoefAH8thnf+tCshD
-	 7xmOtdA3A3FYvBLe5aC/gP+BySSiAZ5Y4fmwui3YVFZ9eVby2LM8VIzHspvRjw8vtt
-	 kQM6zol7ZATeQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 05/56] scsi: qla2xxx: Add FC operational firmware
- load for 29xx
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nilesh Javali" <njavali@marvell.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714095353.289460-6-njavali@marvell.com>
-References: <20260714095353.289460-1-njavali@marvell.com>
- <20260714095353.289460-6-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 10:43:54 +0000
-Message-Id: <20260714104355.209991F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ENX08vIt"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2ce98cb8165so8260245ad.1
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 03:49:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784026189; x=1784630989; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=KkV4GjFgROz6Q/rW4BolM9fldQ0ZJ/AlEUz7p40vHb8=;
+        b=ENX08vIts2Pxk0Ad52Bw6r6X/FXWAwMeaI9Jaw/urotfXqX9je0Bn81bl7z6JD+uTp
+         x+Tou6WgmWYygPlG3Yi4b0XRR1sQVkkJoG7QDkbGN3zMQPBaEBOSOD/vZkQknber2CiS
+         H5pX1MPgvdmiBOKIyzgM/w5zfHhLlt1IMBtka87tbiHpZq2MiIg73aUbuz4D6eI9QDAj
+         zcT/AkMrooGOP7FkRPnGEDWtjiQEd5UhXu1IdXJjXRa2bul823OqrBPh+YQLBBRjO0FF
+         dWiym/RlvMkZHbgRvQLYd7GBtSDWSxZXM/zr+jGZnbtjVQWgrYUJIY6BY1BhhYk7Hv/U
+         g0IQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784026189; x=1784630989;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=KkV4GjFgROz6Q/rW4BolM9fldQ0ZJ/AlEUz7p40vHb8=;
+        b=BhdlEIy+2luLZm9nQoyXAgigBMRyfr3nyNq8wrpKZYf5tex/CzaFxyi8xrIRZQRSib
+         giuOJvJrXdVaOo3vPExcDCW/c5Il6N3I6g2gAkYKZqsfETXXxOTIxgXjLysNj2OSaKCZ
+         eLI8t9exIRtF85hwo0hqSsZ2smjWTdDZJBoxX1yq9Ucje0fw5/6ld8dBX722kBBOw5rV
+         jHD6Crk8NDhqTQEiTks8qBjDu/Sh11qe+RHWOSCyCxVSyfwJm939+ghTK/XG7c3/qcdq
+         YzexnA6fYloxSH7qC3dA/hzY+OQVN0KKYlRnX+Dce9z+cYhIc1di2ASqTSY8JU3ikPDv
+         t4mw==
+X-Forwarded-Encrypted: i=1; AHgh+RqSg+MvUhd1G7sX3UcXP5lrtkQVu0UDmZHJYgvmuvWKye7d7lG6FBuj5b94BbgRGbPMueTwuMqp8c3/@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz1kKHieXf1Exkow/OrW+sTGScX1KhGo+f6/hf0mCygJgLS6c8o
+	MQamDuUUNy9SL3tM5NVWQ2Q2uE0Y1dr2mU7mrFd0RO29If+3uji5tSwL
+X-Gm-Gg: AfdE7cnyyw9RFQRtaC/1h4leIK+BMfLPJ20U2Ml40bXaHaHpCU04w9CuFgJazQPUrBt
+	jyedr7C6vYD7MKSLrE2vUU48Lmg5W7MVf5GdbmrPQTjaNWvwW1qMT0ETCjmUrp97DQoE3867FvU
+	z3tTea/trA3v47mwSoEUQ2/BObzX1uRvo3v35TfQRN5V7vEpvwPs9hYcSgnoj9fFWf/XYqENyHW
+	ZInm5v1Qvj+Gwc7VfaCNQ3xDSOQCX9fff0/4HGxbyWjWXKYiaUpbO2zcAy2qZghveBiR2Hq2qpI
+	jOb9dMtAf4Jwwi/k7kbejZcuWBc20uZm7iKb7S3Cp+kYuakzlJEc5WEAu6Xop3g3WK5CrVjIOze
+	BZ4AIu4U0lMjaeceEaZmC8RWsC2Uov3CjwgKnJto33/KVd0yUgz5oOt5y+VXyJDbMdg+IvCwsMO
+	PBjBqJKOuZI+92CXqJWtogMVzBr93p/epGJ+aPTFW3u131b4f6Xr3ZO89IQhdBsRwCnbTnCyhh6
+	ra67gWmEacCveH0
+X-Received: by 2002:a17:903:298e:b0:2c9:97a7:3283 with SMTP id d9443c01a7336-2cea187c0d0mr121585965ad.23.1784026188650;
+        Tue, 14 Jul 2026 03:49:48 -0700 (PDT)
+Received: from nugod-NUC15CRHU5.tail9f095a.ts.net ([218.237.104.87])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cebec91c92sm38433615ad.56.2026.07.14.03.49.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jul 2026 03:49:48 -0700 (PDT)
+From: HyeongJun An <sammiee5311@gmail.com>
+To: Mike Christie <michael.christie@oracle.com>,
+	Lee Duncan <lduncan@suse.com>,
+	Chris Leech <cleech@redhat.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	HyeongJun An <sammiee5311@gmail.com>,
+	Sashiko AI <sashiko-bot@kernel.org>
+Subject: [PATCH] scsi: libiscsi: fix stale-data leak into the SCSI sense buffer
+Date: Tue, 14 Jul 2026 19:49:34 +0900
+Message-ID: <20260714104934.1404423-1-sammiee5311@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Missing `.start_scsi` function pointer in `qla29xx_isp_ops` leads =
-to NULL pointer dereference.
-- [Medium] Out-of-bounds read and missing minimum size check in `qla29xx_lo=
-ad_fw_template()`.
-- [Low] Wasteful use of `vmalloc()` for a small, short-lived 80-byte struct=
-ure (`struct fcop_header`).
---
+iscsi_scsi_cmd_rsp() copies the sense data of a SCSI Response from the
+target-supplied data segment.  The segment carries a 2-byte sense length
+followed by the sense bytes, so it must hold 2 + senselen bytes, but the
+bounds check only requires datalen >= senselen:
 
---- Patch [5]: [PATCH v4 05/56] scsi: qla2xxx: Add FC operational firmware =
-load for 29xx ---
-commit 9c9c2ed926e65df8d7c92e4c4efc603458f304c5
-Author: Manish Rangankar <mrangankar@marvell.com>
+	senselen = get_unaligned_be16(data);
+	if (datalen < senselen)
+		goto invalid_datalen;
+	memcpy(sc->sense_buffer, data + 2,
+	       min_t(uint16_t, senselen, SCSI_SENSE_BUFFERSIZE));
 
-scsi: qla2xxx: Add FC operational firmware load for 29xx
+A target that returns a SCSI Response whose datalen equals senselen (with
+senselen <= SCSI_SENSE_BUFFERSIZE) makes the memcpy() from data + 2 read
+up to two bytes past the received data.  Those bytes are stale conn->data
+contents and end up in the command's sense buffer, which is returned to
+userspace.
 
-This commit adds support for loading 29xx FC operational firmware from the
-filesystem. It implements the request_firmware and segment-load pattern
-used by earlier adapters and sets up the firmware dump template.
+Account for the 2-byte sense length prefix in the check.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
-nit.c
-> index f5d230fc3642d..f6a8bcbb2a037 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-[ ... ]
-> @@ -9128,6 +9131,539 @@ qla81xx_load_risc(scsi_qla_host_t *vha, uint32_t =
-*srisc_addr)
-[ ... ]
-> +static int
-> +qla29xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
-> +{
-> +	int rval;
-> +	struct fcop_header *header;
-> +	uint32_t *dcode =3D NULL;
-> +	struct fw_blob *blob;
-> +	__be32 *fwcode, *array1_addr, *array3_addr;
-> +	uint templates;
-> +	uint32_t array_size, risc_attr =3D 0;
-> +	ulong i;
-> +	uint j;
-> +	ulong dlen, array3_offset;
-> +	size_t max_dwords;
-> +	struct qla_hw_data *ha =3D vha->hw;
-> +	struct fwdt *fwdt =3D ha->fwdt;
-> +
-> +	header =3D vmalloc(sizeof(*header));
+Fixes: 7996a778ff8c ("[SCSI] iscsi: add libiscsi")
+Suggested-by: Sashiko AI <sashiko-bot@kernel.org>
+Assisted-by: Claude:claude-opus-4-8
+Signed-off-by: HyeongJun An <sammiee5311@gmail.com>
+---
+ drivers/scsi/libiscsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[Severity: Low]
-Is it necessary to use vmalloc() for this 80-byte fcop_header structure?
-Allocating such a small structure with vmalloc consumes a full page and TLB
-entries. Would it be better to allocate this on the stack or use kzalloc()=
-=20
-instead?
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 160f02f2f51d..5cbc51899de0 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -918,7 +918,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		}
+ 
+ 		senselen = get_unaligned_be16(data);
+-		if (datalen < senselen)
++		if (datalen < senselen + 2)
+ 			goto invalid_datalen;
+ 
+ 		memcpy(sc->sense_buffer, data + 2,
+-- 
+2.43.0
 
-> +	if (!header)
-> +		return QLA_FUNCTION_FAILED;
-[ ... ]
-> +static int
-> +qla29xx_load_fw_template(scsi_qla_host_t *vha)
-> +{
-[ ... ]
-> +	buf =3D qla29xx_read_optrom_data(vha, FLT_REG_FW_DUMP_TMPLT, 0,
-> +				       fw_dump_tmplt, 0,
-> +				       ha->fw_dump_tmplt_len);
-> +	if (!buf) {
-> +		ql_log(ql_log_info, vha, 0x0013,
-> +		       "Unable to read fw dump temp info.\n");
-> +		goto free_fw_dump;
-> +	}
-> +
-> +	ql_dump_buffer(ql_dbg_init, vha, 0x006b, fw_dump_tmplt,
-> +		       min_t(uint32_t, ha->fw_dump_tmplt_len, 1024));
-> +
-> +	for (j =3D 0; j < templates; j++, fwdt++) {
-> +		vfree(fwdt->template);
-> +		fwdt->template =3D NULL;
-> +		fwdt->length =3D 0;
-> +
-> +		template_size =3D le32_to_cpu(((__le32 *)fw_dump_tmplt)[2]);
-
-[Severity: Medium]
-Could this access out-of-bounds memory?
-
-This reads the third 32-bit word of the fw_dump_tmplt buffer. If the
-flash or firmware advertises a ha->fw_dump_tmplt_len that is smaller
-than 12 bytes, this will read past the end of the allocation. Should
-there be a minimum size check against fw_dump_tmplt_len before this
-access?
-
-> +
-> +		ql_dbg(ql_dbg_init, vha, 0x0161,
-> +		       "-> fwdt%u template array at %p (0x%x bytes)\n",
-> +		       j, fw_dump_tmplt, template_size);
-[ ... ]
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index c3eb941f71ad9..6560e58ad87c7 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-[ ... ]
-> @@ -2640,6 +2640,45 @@ static struct isp_operations qla27xx_isp_ops =3D {
->  	.initialize_adapter	=3D qla2x00_initialize_adapter,
->  };
-> =20
-> +static struct isp_operations qla29xx_isp_ops =3D {
-> +	.pci_config		=3D qla25xx_pci_config,
-> +	.reset_chip		=3D qla24xx_reset_chip,
-[ ... ]
-> +	.get_flash_version	=3D qla24xx_get_flash_version,
-> +	.start_scsi_mq		=3D qla2xxx_dif_start_scsi_mq,
-> +	.abort_isp		=3D qla2x00_abort_isp,
-
-[Severity: High]
-Does this isp_operations struct need a .start_scsi callback?
-
-In qla2xxx_queuecommand(), if multiqueue is disabled via module parameters
-(ql2xmqsupport=3D0) or falls back because MSI-X allocation fails, the code
-bypasses the MQ path and invokes:
-
-    rval =3D ha->isp_ops->start_scsi(sp);
-
-Since the .start_scsi pointer is omitted for 29xx, won't this result in a
-NULL pointer dereference?
-
-> +	.iospace_config		=3D qla83xx_iospace_config,
-> +	.initialize_adapter	=3D qla2x00_initialize_adapter,
-> +};
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714095353.2894=
-60-1-njavali@marvell.com?part=3D5
