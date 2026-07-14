@@ -1,202 +1,291 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f74.google.com (mail-ej1-f74.google.com [209.85.218.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3719012C534
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 01:05:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5C1F64AA4
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 01:30:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783991107; cv=none; b=h0qMb9D6xOk7x9082sQzooH4ZFL2T7B+WsekFK3yhaOZYNcenJl8Q2HIQkPZeNlYEIS+wZmT+9wsI68fLLbhp704Px+bHCbsELDG2ayGfghS+HMLbGdUnvQvfL81ju3aRZJKxqFvXmh/wDzynmcXv+Z1RgNeSTpcTE+cPDXuSNs=
+	t=1783992622; cv=none; b=CrU2yQjqBdvOnogfi+803KzdhJxCXo+uFtoeJiNE2dfIN0gRplECXtI68hw6JBkQ/V/Ejiq4Pq/05sJWX1A4Kn67Uou9bcUOFS2FeGry9tdiCNGfUO4FxzDRgKp/WfCznA9libyGe7UiK1hrSAWuDQMqRUnilWeO//V5KMqEtPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783991107; c=relaxed/simple;
-	bh=TxAvt2U/a++yBNfj7+KhkpF/uClaRBFU7YPBSN8cmjM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MHpd0//ezAencxVLaQO1huXHa1U8gJ+GL2xi6MCqVq9mIDiZBkPK7XWCnuioMcClIgFM3ACyNpDySYDSO7ECvDQk3dv+ec+Sy7ZRcM9jAjXAhv4WQmdUPjAz0ndLZ8zQzOe6XkYSUn3D9m/F4NgHRhjtMQlqK8S7arN+qMQY1ZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VPbRCCJb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783992622; c=relaxed/simple;
+	bh=a9DWazs9/MC5PYLQ/mCaTV4MuuSwH8woy8xm/jWnw8c=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=Kt8+cq2W8x897t45/kh6j5DQ2PEhy5Ic4cLgsVa+QLDRKyyH7wIwyEj8axx54kAPxQplaeqGz+o6Zlbcut4dLyQp/aaWZk95bcHdjJy2Je0+BUe22Q1woAIPKtVGf/EWp672rNruK+62M1k0YI1k7AIDF39BgbVz8hOZAmKgKoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=aA645a01; arc=none smtp.client-ip=209.85.218.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VPbRCCJb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD51E1F00A3A;
-	Tue, 14 Jul 2026 01:05:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783991105;
-	bh=5SY78+aLE8IqwGamDlIqdA7NmKVJxb8OUGnEnSoL7jg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VPbRCCJbedRQ9Y0t2Pxj6S9uK0gt6UqSc2aa4EZKbKFBDvEExjHcCnZGbAp4EUaDk
-	 drT0x202bkGLaoon4fCji6XEU5EJ/dcJtdmAtPsUN1RFFUDpT2wyoj9uAAh4eWp9n7
-	 7gMDLD6nVvIdiGnXmhgIwaHClePAug1CWAxYeM5Q4ngzKzhAzqB6AhlhY7hUwT4kEY
-	 Y5eBdhqumSySoSnkdS6KNadQnFrbxr0EGy7KfvmvofK4fa63R6NWEJ7CNvSV5kxfqx
-	 kI7bP8zrU819TACx4eLTcm0KwXsKwfrEhekFpxl6GXg/gJoDHn2oVuhSFg23dzkj59
-	 YXLQAF6HXvztg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 09/14] lpfc: Send inhibited ABORT_WQE when PLOGI CQE
- SEQUENCE_TMO is received
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Justin Tee" <justintee8345@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714011812.106753-10-justintee8345@gmail.com>
-References: <20260714011812.106753-1-justintee8345@gmail.com>
- <20260714011812.106753-10-justintee8345@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 01:05:05 +0000
-Message-Id: <20260714010505.AD51E1F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aA645a01"
+Received: by mail-ej1-f74.google.com with SMTP id a640c23a62f3a-c15deb3377eso336669366b.3
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 18:30:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1783992618; x=1784597418; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:references:mime-version:in-reply-to:date:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=YKrB3Ft0I68hztrro83NH+VbLgEvLq/HYPor88aI49c=;
+        b=aA645a01nIFZh6HAdB3GWVC99WODS4DXkCJ58ebS5fd0sniWOwNr8bjhusHwcx8SNp
+         zDZ18aAeK6guiKpLBxP5Wu3TtXsLST1xVzc0QDXp08uyxFB+9zHsm/zDMvfUlgklzffS
+         UCEWSwnsAgbAT6U+KVPXKUkwvwgHLaEh/UTnlqTJBIeDuhCZxRIDLe8M8r0/0OWGqnTT
+         H54utC5kZSdSTeTAVh2bP8iw6ESMkX0/x4KNH46z4ePgFCh+3QtPCA4Ln0LPSerowxjb
+         8Seoojs0qlHEec6pGfXnKfSWUbK+FxuxWdsNDrUddIHIPX3LitKqbwoA1DxOUFij9YHQ
+         PohQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1783992618; x=1784597418;
+        h=content-transfer-encoding:content-type:cc:to:from:subject
+         :message-id:references:mime-version:in-reply-to:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=YKrB3Ft0I68hztrro83NH+VbLgEvLq/HYPor88aI49c=;
+        b=rzG8R5UHe9B7lcrNx4Xi0e8laxWDpiLt3pXDrCXUQFDR3SZYcj5+Xq1CiPNSEwji1B
+         Ehcm6a8cd5qvH5EU48ah+N+LY2CqaGtRFQZ54d8O5l+myjY22HbCH957zTTWX+7fb4/i
+         naqYm0kuhtMNLyjIPKC2nEfyVLlQQBGyS6mQzBi4sXc3wD+YtfQlvRuhr8RYMAn8plkA
+         NvrQYzPn1G4lc32pcukkE4D2Qzj+XvKdYhdQpgn6hlURxJkWLmirhoq969RWhmV4/T01
+         43RSwYDxg3PT00Vm9vyHhgpQTzjYoK5/DIy5ZDd8LeCDdYQ04UweajwxzGuhjlnK6JeE
+         VQFw==
+X-Forwarded-Encrypted: i=1; AFNElJ9bAW2SOm45MVXX6vQ2bu/JWsCVuFZj7cdozT4lC+NbLLejltXVVxQhP3hoKDVp0PGuPIhcfJPvWfNN@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywk4fmF2Lqcy5YMcg0fpibq8kLwmvz2PPSdIn22d5O+oKiov03a
+	+MmFO06SBFUA0hnb9DpC25gU7EY0qJAOSt5oUSgySw4uLr9v6yTXv9c4HT+UceEXHaCzXFjclNw
+	FT9mJv08EvJleKfYytQ==
+X-Received: from ede14-n1.prod.google.com ([2002:a05:6402:20ce:10b0:698:572e:ccfe])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:907:940f:b0:c16:242a:4722 with SMTP id a640c23a62f3a-c16679ee252mr12031666b.22.1783992617943;
+ Mon, 13 Jul 2026 18:30:17 -0700 (PDT)
+Date: Tue, 14 Jul 2026 01:30:16 +0000
+In-Reply-To: <20260701141145.52A611F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+References: <20260701135015.81937-1-djeffery@redhat.com> <20260701135015.81937-4-djeffery@redhat.com>
+ <20260701141145.52A611F000E9@smtp.kernel.org>
+Message-ID: <9huzech6xsrb.fsf@tarunix.c.googlers.com>
+Subject: Re: [PATCH 3/5] driver core: async device shutdown infrastructure
+From: tarunsahu@google.com
+To: sashiko-reviews@lists.linux.dev, David Jeffery <djeffery@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
 
-New issues:
-- [High] Issuing an unconditional abort on an already-completed ELS command=
- introduces a tag-reuse race condition that can inadvertently abort a newly=
- allocated command.
+Hello,
 
-Pre-existing issues:
-- [High] Deadlock in `lpfc_sli_abort_iocb_ring` due to non-recursive double=
- acquisition of `pring->ring_lock`.
-- [High] Data race and list corruption from unlocked iteration of `pring->t=
-xcmplq` in `lpfc_sli_host_down`.
---
+These most of the errors are due to the device_add concurrently can add
+the device and device_shutdown can access it. One of the reason I think
+a device_add will be triggered while being shutdown is inserting the
+physical PCI device or USB stick etc.
 
---- Patch [9]: [PATCH v3 09/14] lpfc: Send inhibited ABORT_WQE when PLOGI C=
-QE SEQUENCE_TMO is received ---
-commit faea8f503d6a5b239d2ea58d59fefef913f41aeb
-Author: Justin Tee <justintee8345@gmail.com>
+But During shutdown, addition of a new device is not valid. So we can
+add a check something like
 
-lpfc: Send inhibited ABORT_WQE when PLOGI CQE SEQUENCE_TMO is received
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 76ba02c26aa5..c3795fa1cc26 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -3650,6 +3650,13 @@ int device_add(struct device *dev)
+        if (!dev)
+                goto done;
 
-This commit updates the driver to send an inhibited ABORT_WQE when a PLOGI
-CQE SEQUENCE_TIMEOUT is received. This allows the aborted CQE to return
-immediately instead of waiting for a BA_ACC.
++       if (unlikely(system_state =3D=3D SYSTEM_HALT ||
++                    system_state =3D=3D SYSTEM_POWER_OFF ||
++                    system_state =3D=3D SYSTEM_RESTART)) {
++               error =3D -ESHUTDOWN;
++               goto done;
++       }
++
+        if (!dev->p) {
+                error =3D device_private_init(dev);
+                if (error)
 
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 16b10377a0953..11c36968a2bed 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-[ ... ]
-> @@ -4893,7 +4897,38 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_=
-iocbq *cmdiocb,
->  				/* Reset the Link */
->  				link_reset =3D 1;
->  				break;
-> +			} else if (cmd =3D=3D ELS_CMD_PLOGI) {
-> +
-> +				/* if invalid ndlp, do not retry */
-> +				if (unlikely(!ndlp)) {
-> +					retry =3D 0;
-> +					break;
-> +				}
-> +
-> +				lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-> +						 "0159 PLOGI Sequence TMO for "
-> +						 "ndlp x%px x%lx x%x x%x x%x "
-> +						 "x%x x%x %u x%x\n",
-> +						 ndlp, ndlp->nlp_flag,
-> +						 ndlp->nlp_DID, ndlp->nlp_type,
-> +						 ndlp->nlp_fc4_type,
-> +						 ndlp->nlp_rpi, ndlp->nlp_state,
-> +						 kref_read(&ndlp->kref),
-> +						 ndlp->fc4_xpt_flags);
-> +
-> +				/* Abort all outstanding ELS and auto-ABTS.  If
-> +				 * no response for E_D_TOV, then it is unlikely
-> +				 * auto-ABTS would receive a response too.  So,
-> +				 * inhibit the abort for faster XRI release.
-> +				 * However, still proceed with delayed retry.
-> +				 */
-> +				pring =3D lpfc_phba_elsring(phba);
-> +				spin_lock_irqsave(&phba->hbalock, iflags);
-> +				lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb,
-> +							   true, NULL);
+We can also partially resolve the races partially by removing the manual
+kfree(dev->p) from device_add() error path. As put_device free it
+anyway when reference to devices reaches to 0. So if device_shutdown
+path takes reference, dev->p will not be released. And few races will be
+taken care of. But this will not resolve the deadlock and other races
+like the above change.
 
-[Severity: High]
-Could this unconditional abort introduce a tag reuse race condition?
+removing the kfree(dev->p) from device_add can be a independent patch.
+like:
 
-When a PLOGI command fails with a sequence timeout, this new logic issues
-an asynchronous abort and then returns 1 to retry.
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 4d026682944f..76ba02c26aa5 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -2614,6 +2614,7 @@ static void device_release(struct kobject *kobj)
+        struct device *dev =3D kobj_to_dev(kobj);
+        struct device_private *p =3D dev->p;
 
-Because lpfc_els_retry() returns 1, the caller lpfc_cmpl_els_plogi()
-immediately jumps to out_freeiocb and calls lpfc_els_free_iocb(), freeing
-the command.
++       dev->p =3D NULL;
+        /*
+         * Some platform devices are driven without driver attached
+         * and managed resources may have been acquired.  Make sure
+@@ -3824,8 +3825,6 @@ int device_add(struct device *dev)
+ parent_error:
+        put_device(parent);
+ name_error:
+-       kfree(dev->p);
+-       dev->p =3D NULL;
+        goto done;
+ }
+ EXPORT_SYMBOL_GPL(device_add);
 
-The command is returned to the free list since the exchange busy flag is
-only set on the response, not the command itself. Its tag then becomes
-available for reallocation. Since the abort is processed asynchronously by
-the HBA, could the firmware erroneously abort a newly allocated ELS command
-if the tag is reused quickly?
 
-> +				spin_unlock_irqrestore(&phba->hbalock, iflags);
->  			}
-> +
->  			retry =3D 1;
->  			delay =3D 100;
->  			break;
-[ ... ]
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 54bc5d8984fc2..0a300efc92401 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -4608,7 +4608,8 @@ lpfc_sli_abort_iocb_ring(struct lpfc_hba *phba, str=
-uct lpfc_sli_ring *pring)
->  	} else {
->  		/* Issue ABTS for everything on the txcmplq */
->  		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
-> -			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
-> +			lpfc_sli_issue_abort_iotag(phba, pring, iocb, false,
-> +						   NULL);
+~Tarun
 
-[Severity: High]
-This is a pre-existing issue, but does this lead to a deadlock on the ring
-lock?
 
-In lpfc_sli_abort_iocb_ring(), the ring lock is acquired before this loop:
+sashiko-bot@kernel.org writes:
 
-spin_lock_irq(plock);
-list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
-
-Inside the loop, lpfc_sli_issue_abort_iotag() is called, which then
-evaluates the ring and unconditionally acquires the exact same lock for
-SLI-4:
-
-spin_lock_irqsave(&pring->ring_lock, iflags);
-
-Since these spinlocks are not recursive, won't this cause an immediate
-deadlock?
-
->  	}
->  	spin_unlock_irq(plock);
-> =20
-[ ... ]
-> @@ -11998,7 +11999,7 @@ lpfc_sli_host_down(struct lpfc_vport *vport)
->  				if (iocb->vport !=3D vport)
->  					continue;
->  				lpfc_sli_issue_abort_iotag(phba, pring, iocb,
-> -							   NULL);
-> +							   false, NULL);
-
-[Severity: High]
-This is a pre-existing issue, but does this unlocked traversal of the
-completion queue invite data races or list corruption?
-
-In lpfc_sli_host_down(), the code explicitly drops the ring lock for SLI-4
-just before this loop:
-
-spin_unlock(&pring->ring_lock);
-list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list) {
-    ...
-}
-
-However, the completion queue is actively modified by concurrent completion
-handlers like lpfc_sli_sp_handle_rspiocb() which rely on the ring lock for
-synchronization. Is it safe to iterate this list while it could be
-modified concurrently?
-
->  			}
->  			pring->flag =3D prev_pring_flag;
->  		}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714011812.1067=
-53-1-justintee8345@gmail.com?part=3D9
+> Thank you for your contribution! Sashiko AI review found 4 potential issu=
+e(s) to consider:
+> - [High] Modifying the core.async_shutdown module parameter during shutdo=
+wn causes synchronous suppliers to skip waiting for asynchronous consumers.
+> - [High] Unregistered consumer devices will cause a NULL pointer derefere=
+nce during async shutdown dependency waiting.
+> - [High] Adding a new device with async shutdown enabled while its synchr=
+onous supplier is being processed leads to an unresolvable deadlock.
+> - [High] Dereferencing `dev->p->dead` without NULL checks causes a crash =
+if a concurrent `device_add()` fails.
+> --
+>
+> commit cf98cdf76df805443cc885868cb3d9e13da5501c
+> Author: David Jeffery <djeffery@redhat.com>
+>
+> driver core: async device shutdown infrastructure
+>
+> This commit allows devices to opt into asynchronous shutdown, executing i=
+n
+> parallel with unrelated devices after their dependencies shut down. Synch=
+ronous
+> shutdown devices will wait for their asynchronous dependencies. The featu=
+re is
+> enabled by default and can be toggled via the core.async_shutdown paramet=
+er.
+>
+>> diff --git a/drivers/base/core.c b/drivers/base/core.c
+>> --- a/drivers/base/core.c
+>> +++ b/drivers/base/core.c
+> [ ... ]
+>> +static bool wants_async_shutdown(struct device *dev)
+>> +{
+>> +	return async_shutdown && dev_async_shutdown(dev);
+>> +}
+>> +
+>> +static int wait_for_device_shutdown(struct device *dev, void *data)
+>> +{
+>> +	bool async =3D *(bool *)data;
+>> +
+>> +	if (async || wants_async_shutdown(dev))
+>> +		wait_for_completion(&dev->p->complete);
+>> +
+>> +	return 0;
+>> +}
+>
+> [Severity: High]
+> If a user-space process toggles the 0644 core.async_shutdown sysfs parame=
+ter
+> from 1 to 0 during shutdown, could this cause synchronous suppliers to sk=
+ip
+> waiting for their asynchronous consumers?
+>
+> If start_async_shutdown_devices() schedules an async consumer, and then t=
+he
+> parameter is toggled before the sync loop processes its supplier, the cal=
+l to
+> wants_async_shutdown(dev) here would evaluate to false.=20
+>
+> This would skip the wait_for_completion(), potentially causing the suppli=
+er
+> (e.g., a PCI bus) to shut down while its consumer is still active.
+>
+> [Severity: High]
+> Could this result in a NULL pointer dereference if the consumer is not ye=
+t
+> registered?
+>
+> The device_link_add() function allows creating links to consumer devices =
+that
+> haven't been registered yet, meaning their dev->p is NULL because
+> device_private_init() hasn't run.
+>
+> If wait_for_shutdown_dependencies() is called from the async pool, where =
+the
+> async argument is forced to true, the wait_for_completion() will
+> unconditionally evaluate &dev->p->complete, crashing on the NULL pointer.
+>
+> [ ... ]
+>> +static void __shutdown_one_device(struct device *dev)
+>>  {
+>>  	if (dev->p->dead)
+>>  		return;
+>
+> [Severity: High]
+> Could this cause a NULL pointer dereference if a concurrent device_add() =
+fails?
+>
+> If a concurrent device_add() fails after calling kobject_add(), its error=
+ path
+> calls kobject_del() and then frees and nullifies dev->p. Evaluating
+> dev->p->dead without checking if dev->p is valid could crash here.
+>
+> [ ... ]
+>> +static void start_async_shutdown_devices(void)
+>> +{
+>> +	struct device *dev, *next, *ndev, *needs_put =3D NULL;
+> [ ... ]
+>> +			needs_put =3D ndev;
+>> +			spin_lock(&devices_kset->list_lock);
+>> +			/*
+>> +			 * If the next device has been marked dead while the
+>> +			 * spinlock was released, it may no longer be on the
+>> +			 * devices_kset list. Restart the list walk to be safe
+>> +			 */
+>> +			if (ndev && ndev->p->dead)
+>> +				goto restart;
+>
+> [Severity: High]
+> Could ndev->p be NULL if a concurrent device_add() fails?
+>
+> If start_async_shutdown_devices() obtains a reference to next via
+> get_device(), and concurrently device_add() fails and clears dev->p,
+> reacquiring the lock and evaluating ndev->p->dead here could result in a =
+NULL
+> pointer dereference.
+>
+> [ ... ]
+>>  void device_shutdown(void)
+>>  {
+> [ ... ]
+>> -		shutdown_one_device(dev);
+>> +		if (!wants_async_shutdown(dev) || !shutdown_device_async(dev)) {
+>> +			wait_for_shutdown_dependencies(dev, false);
+>> +			shutdown_one_device(dev);
+>> +		}
+>> =20
+>>  		spin_lock(&devices_kset->list_lock);
+>>  	}
+>>  	spin_unlock(&devices_kset->list_lock);
+>
+> [Severity: High]
+> Can this sequence lead to an unresolvable deadlock if a new device is add=
+ed
+> concurrently?
+>
+> If a new device 'C' with DEV_FLAG_ASYNC_SHUTDOWN is added via hotplug
+> after its synchronous supplier 'S' has already been popped from
+> devices_kset by this loop, 'C' is appended to devices_kset.
+>
+> 'S' will call wait_for_shutdown_dependencies() and find 'C', blocking on
+> wait_for_completion(&C->p->complete) because wants_async_shutdown(C) is t=
+rue.
+>
+> Since 'C' was added after start_async_shutdown_devices() ran, it is not
+> running in the async pool. Because the sync loop is blocked on 'S', it wi=
+ll
+> never reach 'C' to start it, deadlocking the shutdown process permanently=
+.
+>
+> --=20
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701135015.81=
+937-1-djeffery@redhat.com?part=3D3
