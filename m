@@ -1,187 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 000AC26D4DD
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 00:51:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3430429BDBB
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 00:53:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783990275; cv=none; b=XY0I74H84wmfPg4kpWxbuyvS3LlzwU4NZKGJ4jqWA0zj02lUcYQyxPfjM1PmTXfZbdpXiNx7c8ivFq5zaVvy+LRPEljnByKb/GLXhlm8LlxacpXNEocwqVznbS35lroOi+r4ect674LdCC9Z8bEt0Amr6pd1aSQvmoyVyCLERpw=
+	t=1783990412; cv=none; b=qQexXeIxACmPcOHYpsjpCJ06KE1TdzoRYsllQN0OUACc+TTbMq4uMSm9/p/Ja2IuuN9Buzg4N4igM9RHrBQa1sEytcDRuepcTrnbojPjncNrtH4/+i6fTkEqM2jZ+r0N5MYdBGJr6d7yWk5Icox0QqZUTvKfoqn6Zf3ajWDGPEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783990275; c=relaxed/simple;
-	bh=aALfgiy3xVlUA2k6yCJOuu6G8zM37tonh0MUDe6X87E=;
+	s=arc-20240116; t=1783990412; c=relaxed/simple;
+	bh=SSoZaQWs8cekrgfNL4ze4oEcKmggCjwclb7UecsDssY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kx982BsSX9RLe44ItrX4+GCrTjInIFDv34gOh4z/Hi0NqOEX3givAFXC7tfWfnGSFpMiuAD80l9R31lmUSJRLAavX9XRCg3+kJ9t4uJk/NibHNTieOjUoKcq0HsItEaMciacTw0H1hbAgzve6iBlWjf4LMZpOP5eiF+jPZ2Vis4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AKmIbPaJ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=krdja2cOKOdCT2hi18IIddflXCRoAZZF+65iz0PHyivaVw+Q4bc4Rmv3yQu1W8K+BGFUExkrKNHLwRx6i9yClRN2e9FYLbsKQXM8yNAsZq8r81bOXRPUN2T641pW11v/sAa6OAyyYRFP6ZkX4QwfpOWlUW3yPAaJRUDq+/DLBjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AFYfEu93; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AKmIbPaJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C6A11F00A3A;
-	Tue, 14 Jul 2026 00:51:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AFYfEu93"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCE1D1F000E9;
+	Tue, 14 Jul 2026 00:53:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783990273;
-	bh=nnSu8/wPwi+UeXE9XeQFzFsY9DqRfgZU1etKDuO1+1s=;
+	s=k20260515; t=1783990403;
+	bh=iOQjdkxl3ayUv8Z28dAFso2E+Wh0l6MFhqHNhuPV1WU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AKmIbPaJz+QwOaKSDgKh0UKRgGI9I1us3CVQmwgut7zwXL7PTzjzCQR50kVh2jRGU
-	 FFXCL8G0SJsuVPAeyHDiHBq9/6Ogv78drh0HyLAJSXMImSXKk3CsSD3uLVDE7Fy1HB
-	 kxufkOQ59YIMXDpQ4c1pHFRuaWpiK3KdTjvUQ9HVAddLkLUd7ZDi0fOAj85nWb4rHr
-	 Tk27YC0R4OkvmRDK8wiT6Rgw88MRhz51qPwKIV0jxKKYuPeNgOZ7bSCUAX7qn8Lrc5
-	 Al3wXWmOwz5O7wTHDYRenmpxIeMX5kZDiKpSGlIm7ZZu0ykVvdCjs4F3/wOc6yt6o/
-	 0v1JQpPYnHuBg==
+	b=AFYfEu939E9Wltm7tXuwFQNWFexN/qbvB4xcEL/aX2W8WAjIDdbSQMxCdP7pk36Hh
+	 EWpuzgIPYrDerjFLJ+nGRf3qeOVcpKxyYXscGScMZEm5HiAakMfy4x7qeo6lM2liVY
+	 u8fmNprBDDrC2XLg6AJ1lCwTfJ8mVMaU29Yn72WBO881qJx8j0t98360Lr4kYq9xav
+	 x3Wm8X6RrXcPdHJMc7dekLyPMM7Ej+Fu01Cq2fmKpQPlEc+Vp7YWSM+Tb2VqOcjIyS
+	 Eomn+rgSaNNw3UuxP7I3xGX9UjCDSQ1CvgFGg9NRf4MaH1Yc90GpmCgU58D8oYqXFs
+	 OlqRj2xotaIgQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 01/14] lpfc: Fix use-after-free in
- lpfc_cmpl_ct_cmd_vmid
+Subject: Re: [PATCH v3 02/14] lpfc: Early return out of lpfc_els_abort when
+ HBA_SETUP flag is not set
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Justin Tee" <justintee8345@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714011812.106753-2-justintee8345@gmail.com>
+In-Reply-To: <20260714011812.106753-3-justintee8345@gmail.com>
 References: <20260714011812.106753-1-justintee8345@gmail.com>
- <20260714011812.106753-2-justintee8345@gmail.com>
+ <20260714011812.106753-3-justintee8345@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 00:51:12 +0000
-Message-Id: <20260714005113.5C6A11F00A3A@smtp.kernel.org>
+Date: Tue, 14 Jul 2026 00:53:21 +0000
+Message-Id: <20260714005322.DCE1D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Zeroing hash table elements before their removal causes a guar=
-anteed kernel panic, and unsafe hash table iteration breaks list cleanup.
-- [High] Multiple severe locking violations in the VMID hash table and arra=
-y accesses, including using a read lock for destructive writes and lockless=
- modifications.
-- [High] The SLI_CTAS_DALLAPP_ID handler leaks per-cpu memory by memsetting=
- the lpfc_vmid structure to zero without freeing `last_io_time`.
-- [High] In `lpfc_vmid_vport_cleanup`, `vport->vmid` is freed via `kfree` b=
-efore the code iterates over `vport->hash_table` to remove entries, resulti=
-ng in a Use-After-Free.
+- [High] The lockless check of the `HBA_SETUP` flag introduced to prevent a=
+ use-after-free is insufficient and suffers from a TOCTOU race, leaving the=
+ UAF vulnerability unmitigated.
+- [High] The iocb list entry is removed from the shared `txcmplq` without h=
+olding the required lock on an error path, leading to list corruption.
 --
 
---- Patch [1]: [PATCH v3 01/14] lpfc: Fix use-after-free in lpfc_cmpl_ct_cm=
-d_vmid ---
-commit ade52a05f937db7fd95e3ae568536fda43aeccdf
+--- Patch [2]: [PATCH v3 02/14] lpfc: Early return out of lpfc_els_abort wh=
+en HBA_SETUP flag is not set ---
+commit 686b3cec858238b11486ee8f0c3a182653eb8d41
 Author: Justin Tee <justintee8345@gmail.com>
 
-lpfc: Fix use-after-free in lpfc_cmpl_ct_cmd_vmid
+lpfc: Early return out of lpfc_els_abort when HBA_SETUP flag is not set
+   =20
+It is possible that a dev_loss_tmo callback fires during an hba reset.
+The ELS pring structure is cleared by the hba reset path and the
+dev_loss_tmo callback executing lpfc_els_abort could be using a stale ELS
+pring pointer.  To prevent such a condition, check if HBA_SETUP flag is set
+before proceeding to use the ELS pring pointer in lpfc_els_abort. There is
+no point to issue aborts when the sli port is not setup anyways.
 
-This commit removes an early call to lpfc_ct_free_iocb() in
-lpfc_cmpl_ct_cmd_vmid() for SLI_CTAS_DALLAPP_ID commands. This prevents a
-use-after-free of cmdiocb->rsp_dmabuf during CT LS_RJT response handling,
-relying instead on the existing free_res label for cleanup.
-
-> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-> index c7853e7fe0719..e14170550e697 100644
-> --- a/drivers/scsi/lpfc/lpfc_ct.c
-> +++ b/drivers/scsi/lpfc/lpfc_ct.c
-> @@ -3595,8 +3595,6 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct=
- lpfc_iocbq *cmdiocb,
->  	int i;
+> diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_=
+nportdisc.c
+> index 9c449055a55e6..2c8d995a45bf8 100644
+> --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+> @@ -227,6 +227,11 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_no=
+delist *ndlp)
+>  	struct lpfc_iocbq *iocb, *next_iocb;
+>  	int retval =3D 0;
 > =20
->  	cmd =3D be16_to_cpu(ctcmd->CommandResponse.bits.CmdRsp);
-> -	if (cmd =3D=3D SLI_CTAS_DALLAPP_ID)
-> -		lpfc_ct_free_iocb(phba, cmdiocb);
+> +	/* Exit early to prevent race with queue teardown. */
+> +	if (unlikely(phba->sli_rev =3D=3D LPFC_SLI_REV4 &&
+> +		     !test_bit(HBA_SETUP, &phba->hba_flag)))
+> +		return;
+> +
+
+[Severity: High]
+This is a pre-existing issue, but does this lockless check of HBA_SETUP
+still leave a time-of-check to time-of-use race window open?
+
+A concurrent HBA reset thread can clear HBA_SETUP and destroy the work
+queues:
+
+lpfc_wq_destroy()
+    kfree(wq->pring);
+    wq->pring =3D NULL;
+
+If this happens immediately after the lockless check in lpfc_els_abort()
+but before the pointer is used, could we still fetch a pointer that is
+about to be freed, and subsequently dereference it later when acquiring
+pring->ring_lock?
+
+>  	pring =3D lpfc_phba_elsring(phba);
 > =20
->  	if (lpfc_els_chk_latt(vport) || get_job_ulpstatus(phba, rspiocb)) {
->  		if (cmd !=3D SLI_CTAS_DALLAPP_ID)
-
-[Severity: Critical]
-This is a pre-existing issue, but looking further down in
-lpfc_cmpl_ct_cmd_vmid() under the SLI_CTAS_DALLAPP_ID case:
-
-    memset(vmp, 0, sizeof(struct lpfc_vmid));
-
-This zeroes the embedded hlist_node, including its pprev and next pointers.
-Right after this, the code attempts to remove these items:
-
-    if (!hash_empty(vport->hash_table))
-        hash_for_each(vport->hash_table, bucket, cur, hnode)
-            hash_del(&cur->hnode);
-
-Does calling hash_del() on these zeroed elements cause a NULL pointer
-dereference panic when it tries to write to *n->pprev?
-
-Also, since this iteration modifies the list, shouldn't it use
-hash_for_each_safe() to prevent breaking the iteration chain?
+>  	/* In case of error recovery path, we might have a NULL pring here */
 
 [Severity: High]
-This isn't a bug introduced by this patch, but there appear to be multiple
-locking violations in lpfc_cmpl_ct_cmd_vmid() that could lead to data races
-and corruption.
+This is a pre-existing issue, but does the error path later in
+lpfc_els_abort() remove the iocb from the shared txcmplq without holding
+the required locks?
 
-First, under the SLI_CTAS_DALLAPP_ID case, the memset() is performed under a
-read lock:
+	spin_unlock_irq(&phba->hbalock);
 
-    read_lock(&vport->vmid_lock);
-    for (i =3D 0; i < phba->cfg_max_vmid; i++) {
-        vmp =3D &vport->vmid[i];
-        if (vmp->flag !=3D LPFC_VMID_SLOT_FREE)
-            memset(vmp, 0, sizeof(struct lpfc_vmid));
-    }
-    read_unlock(&vport->vmid_lock);
+	if (test_bit(FC_UNLOADING, &phba->pport->load_flag) &&
+	    retval && retval !=3D IOCB_ABORTING) {
+		list_del_init(&iocb->list);
 
-Since read_lock() doesn't provide mutual exclusion against concurrent reade=
-rs,
-does this destructive write race with other readers?
+Since elements are iterated on pring->txcmplq using their list node and
+added to a local abort_list using their dlist node, the iocb->list is
+still linked into txcmplq.
 
-Additionally, the hash table iteration and deletion:
-
-    if (!hash_empty(vport->hash_table))
-        hash_for_each(vport->hash_table, bucket, cur, hnode)
-            hash_del(&cur->hnode);
-
-is performed entirely locklessly.
-
-Furthermore, earlier in the SLI_CTAS_RAPP_IDENT case:
-
-    vmp =3D lpfc_get_vmid_from_hashtable(vport, hash,
-                                       app->obj.entity_id);
-
-This lookup is also performed without holding any lock.
-
-Can these lockless operations and the write-under-read-lock cause list
-corruption?
-
-[Severity: High]
-This is a pre-existing issue, but the same memset() in lpfc_cmpl_ct_cmd_vmi=
-d()
-that zeroes the hlist_node:
-
-    memset(vmp, 0, sizeof(struct lpfc_vmid));
-
-also overwrites the entire lpfc_vmid struct. This struct contains a dynamic=
-ally
-allocated per-cpu pointer:
-
-    u64 __percpu *last_io_time;
-
-Does this zeroing cause an unrecoverable leak of the per-cpu memory allocat=
-ed
-for last_io_time?
-
-[Severity: High]
-This is also a pre-existing issue, but related to the VMID hash table clean=
-up
-seen above. In drivers/scsi/lpfc/lpfc_scsi.c:lpfc_vmid_vport_cleanup():
-
-    kfree(vport->vmid);
-
-    if (!hash_empty(vport->hash_table))
-        hash_for_each(vport->hash_table, bucket, cur, hnode)
-            hash_del(&cur->hnode);
-
-The hash table nodes (hnode) are embedded within the lpfc_vmid structures in
-the vport->vmid array.
-
-Since kfree(vport->vmid) is called before iterating the hash table, doesn't
-the subsequent hash_for_each() loop read from freed memory?
-
-Furthermore, shouldn't hash_for_each_safe() be used here as well since
-hash_del() modifies the list?
+Could modifying iocb->list here without pring->ring_lock or hbalock lead
+to list corruption if the shared list is concurrently accessed?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714011812.1067=
-53-1-justintee8345@gmail.com?part=3D1
+53-1-justintee8345@gmail.com?part=3D2
