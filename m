@@ -1,56 +1,56 @@
 Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD7E33EC2EF
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 09:54:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C5B3445AC0
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 09:54:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784022872; cv=none; b=sEZxKspt+YckGHNddII19/JKgMDltOe7YqlZvBhgaxBT32Hu+CuptXM9X0ADi7wyPzaLY2mrXv2A1vch5FFDeEC1SBeC2oGWi+G4SsbGOn7XQybS9HQjO3bzZnEKqLKRMgnaEqSf9RtCbY3chn2GhuxgsW0n8TZr6jrdn0Q26CI=
+	t=1784022877; cv=none; b=SYdasLmpCyT9aVsRBX0B9onsGNjIyHgNNpTceq2nkLEO3k8A8EoMAUiBAEany/pcUQFKIohUIv2ilKBNDBbRtNc7Jc1zedwBk1zNf1WxgUdAXpZhiyBfAMiR/d+4FOCjXoWv0Lwf5bhMvOEEUiV05inf/VTsQlLQFiHy0yz7na4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784022872; c=relaxed/simple;
-	bh=uOgiFMTdwtVZ8U/oFutaGQDWkePj1vhsDcIEctqlGc0=;
+	s=arc-20240116; t=1784022877; c=relaxed/simple;
+	bh=gEtZSGx+A+UODmcJhSk8/DM0onEgZ/8QCNK14bkqvlY=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FY1sV/1svtcigg+BTaX6Nb0j8EhocFoWyyZkYdnhWyHUsYKeotWeridKSnXd8giec4VlVDHzKrr6XZORmTynJRT/xDlDYrOcHlYnehZQ5FGuo4RByWJ8m0g6Yzr8U9jlNl4KuSsXIkrws4uJ5MyY8vzGOpTC+5B9lIBFhEx5+tg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Vq7vLvX0; arc=none smtp.client-ip=67.231.148.174
+	 MIME-Version:Content-Type; b=FRNsoopp/BeGhkTmGmOXJC2ri6/Q4ruVIbSQZkm2UQN2hnRlWqd1+hsu0es6bXq/gautGMN0NINtTYdjMb4l4MEwjGxlk0jI/v+hmZrIvH1gkTokbkAVZwq8DRdQGsm8Ci6Mo6Rt8Zy10tG4Gw1iygo5qSwcZX3HYl1iBownWfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Ga4wQqic; arc=none smtp.client-ip=67.231.148.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Vq7vLvX0"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Ga4wQqic"
 Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66E6UJYN3668179;
-	Tue, 14 Jul 2026 02:54:24 -0700
+	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66E6UJYO3668179;
+	Tue, 14 Jul 2026 02:54:28 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=e
-	GceIkWFP5+sCcf7Rblqie67ZO+wFzIqvS2AGOw+tos=; b=Vq7vLvX0wN+/fX9XQ
-	p7msaxD0cUbr1KLuAs0tFe0XgFXggFsia0RJK8Ih7i9l+7Ce8yX3PiQ5hpD+3Sia
-	TJe3UvHnxDrjkbOtc3ZS7NQID5rJmzrNphcgLK2pQiEtUBoDALjYxtqiyNFCNuvB
-	FX2fFYqiuxtevVRaRVOG32WvavizqbM454XS+i2m7nPa/ppD/WJa4Rq+IchAxmQ9
-	fXpXrsrEnEzpmgYUGsttfuZtYolI0KKeli+TVFtNMMmRyBLSxA0IRaMCyxbm2Ivd
-	AK+hbVaZ9pOhEYZlvlsFE0Je4kc0LI4Nh36f0QWJAAF4FcDGYcUwtM268KYUw9kk
-	tt1dA==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=B
+	Q3KdqTm8LJtIyUer+6d5uu9nmNbZjoPgeNJSk3nI4Q=; b=Ga4wQqicDjrLFA0pv
+	E9xYJdkHnXkuYlwRmcKI2ZEgrnDo3G+blHhCWKdmksFBHW3US7saLLKbvhKpMwCx
+	Tw7i4LNgs9imc1cri16x3/A69KI8QMRA2LjL4PTvnK9MOh2Q/Jr0iW/ppWukcflD
+	5mngHHrXZDAfl9PynLhuytMQOjXwWgR+BNwH8EWCiT2MytT1BpwKWD6EMVC/xmhO
+	2PA/sKXurM5VkHKA2ZhSV42pSVp2i42zQbgzSKkWbMc9zE3vRP5CXO57PznTAmvX
+	nlBrb+luIpAwR2rLUYTzss7ISRY84rAfMlFZKb7edwdhmHd2bZLR/7MYNKeklZRe
+	DE+RQ==
 Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4fcwvc3ekq-1
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4fcwvc3ekr-4
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 14 Jul 2026 02:54:24 -0700 (PDT)
+	Tue, 14 Jul 2026 02:54:28 -0700 (PDT)
 Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
  DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Tue, 14 Jul 2026 02:54:23 -0700
+ 15.2.1544.25; Tue, 14 Jul 2026 02:54:26 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
  (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Tue, 14 Jul 2026 02:54:23 -0700
+ Transport; Tue, 14 Jul 2026 02:54:26 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id CF7DD5E6867;
-	Tue, 14 Jul 2026 02:54:20 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id BDE7D5E6867;
+	Tue, 14 Jul 2026 02:54:23 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v4 06/56] scsi: qla2xxx: Remove redundant VPD flash read in sysfs read path
-Date: Tue, 14 Jul 2026 15:23:03 +0530
-Message-ID: <20260714095353.289460-7-njavali@marvell.com>
+Subject: [PATCH v4 07/56] scsi: qla2xxx: Add flash block read/write BSG support for 29xx
+Date: Tue, 14 Jul 2026 15:23:04 +0530
+Message-ID: <20260714095353.289460-8-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260714095353.289460-1-njavali@marvell.com>
 References: <20260714095353.289460-1-njavali@marvell.com>
@@ -62,55 +62,596 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: Yd85bZ-pzcYbUBhjBbySP7_RVDJWQftS
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE0MDEwMyBTYWx0ZWRfX2F6QF6Jqgzgd
- aqII8MwI6wBTnJ1vAfCPfjVI+IKeXKlJ4RGgH+Kr61zeZpdkzoEmxswaxKtW665L8omfN7khDQe
- 8G0BI6m9J+UWoeMMMaSun2302SRdCaQ=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE0MDEwMyBTYWx0ZWRfX8QIu7CmoUzXx
- Bs0erytJOCF84HZhnxB9evJhFM9TKnQ5niMuQ8G66FtdZijS7KADhRtR5RiifP+yUT/twiNaQIZ
- 5FUgQw0mcuq5mQ1WOtPfUUL+Wt5mZ7KqfaecWcU0wMpFmbsSwXVhDlhZKhQLrUr7jb0JQPKssQn
- Q0EmpTfOkKUxpR9uctWvxAHG6z0pBWb6lzriB0trs5ge4kuhe3H4GZVaq/3MEkcaMFDjGtz7ZQB
- GXJB7RY5YUhy/ibQF4FAQk+xwX9GhnCmJRRB2qOk7Hy3ccKT9Bakv4swy8RU9hgNJvT81D3hlTM
- CAhNquO7pwvRKXj62RtxSl7P5M8Cx3x3yvjsWYT9xXVPsrQ68WKUntDgkkmYkyXyXN6DgLnMj9n
- /L+66mjAXKFSUMpPz1ucNgtBOfA2QKC2OqSaZN/ngFS6nVTQi6U+4fGcrEZA2jq3SYz7FtHt3Zw
- cp2Osz7Xu0PDPgflqvQ==
-X-Authority-Analysis: v=2.4 cv=cIXQdFeN c=1 sm=1 tr=0 ts=6a560750 cx=c_pps
+X-Proofpoint-ORIG-GUID: NQ3Veh1wIEbY1S34YS8vtPseGxddkGae
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE0MDEwMyBTYWx0ZWRfX58hawIDJPqkQ
+ kqFQ7dUqtdyT6+d16pA7TYk867NAgFDSWG00JJ7ccSwgyodt6KLmBosRqPQisdT4M4fL3rt8ynb
+ bGbG3y8iTtOEKW/AUvWVhIPeAIaX/qk=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE0MDEwMyBTYWx0ZWRfX3iWoXBmyVV/R
+ KvVFsaXgZi0XiXbGeIqhnxGsmv4/qwZOyJeQaMxY+GPLytl8MTYfWmkbs998PNIcyxolNafP2a1
+ tZSAt+MSsfxViYFYd0UApRA9M73d4IuZmmhVJRgAXClReHWAtdkaNwsdpv23xKrWlBH30GjnC0F
+ nyXWf+JXESNIi0wq9P+jsoFUBaAg5M0FHqr6010VbkWSM0Fl9soZpt0xFMfhnNtJH7CXeQrd6CW
+ +sII1UNrhbW6w0UP2DidwDwlno68sviTcgyzm2GJBs/DZ8IRC4mNc/GgPwX4R0+1v+rhhkSDkge
+ /CNN1hA0AzTiG+pV+emipttagGoj3npZKZYseEOqLhKYbKYZzySGOQSo5e5rYbugnDfaeRPvlo9
+ YbKBVS7D1LdBlX3I6MWdc/w+M7fyr9MSKtpsqKN4UNZEg0s4qf2fjNoxxqvqGHcfg9Zuqd0Dg61
+ /Fbpqy16duPegeMr1Fg==
+X-Authority-Analysis: v=2.4 cv=cIXQdFeN c=1 sm=1 tr=0 ts=6a560754 cx=c_pps
  a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
  a=EAYMVhzMl8SCOHhVQcBL:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=eVv-LjW39nYWXZrQooYA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-GUID: Yd85bZ-pzcYbUBhjBbySP7_RVDJWQftS
+ a=ecOpJceL1o-S2swL3KwA:9 a=O8hF6Hzn-FEA:10 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-GUID: NQ3Veh1wIEbY1S34YS8vtPseGxddkGae
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-14_02,2026-07-10_01,2025-10-01_01
 
 From: Manish Rangankar <mrangankar@marvell.com>
 
-qla2x00_sysfs_read_vpd() called ha->isp_ops->read_optrom() a second
-time after releasing optrom_mutex. The repeated read is redundant and,
-unlike the first, runs without optrom_mutex held, exposing flash access
-to concurrent optrom operations. Drop the duplicate call.
+Introduce QL_VND_READ_FLASH_BLOCK and QL_VND_WRITE_FLASH_BLOCK
+BSG vendor commands so that userspace tools can perform flash
+block-level operations on 29xx adapters via the isp_ops
+interface.
 
-Fixes: 5fa8774c7f38 ("scsi: qla2xxx: Add 28xx flash primary/secondary status/image mechanism")
 Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_attr.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_bsg.c | 350 +++++++++++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_bsg.h |  16 ++
+ drivers/scsi/qla2xxx/qla_def.h |   7 +
+ drivers/scsi/qla2xxx/qla_gbl.h |   2 +
+ drivers/scsi/qla2xxx/qla_os.c  |  24 ++-
+ drivers/scsi/qla2xxx/qla_sup.c |   2 +-
+ 6 files changed, 359 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 6a05ce195aa0..800751ab562a 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -580,7 +580,6 @@ qla2x00_sysfs_read_vpd(struct file *filp, struct kobject *kobj,
- 	ha->isp_ops->read_optrom(vha, ha->vpd, faddr, ha->vpd_size);
- 	mutex_unlock(&ha->optrom_mutex);
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 5e910b5ca670..92a1af81c057 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1407,23 +1407,14 @@ qla24xx_iidma(struct bsg_job *bsg_job)
  
--	ha->isp_ops->read_optrom(vha, ha->vpd, faddr, ha->vpd_size);
- skip:
- 	return memory_read_from_buffer(buf, count, &off, ha->vpd, ha->vpd_size);
+ static int
+ qla2x00_optrom_setup(struct bsg_job *bsg_job, scsi_qla_host_t *vha,
+-	uint8_t is_update)
++	uint32_t start, uint8_t is_update)
+ {
+-	struct fc_bsg_request *bsg_request = bsg_job->request;
+-	uint32_t start = 0;
+ 	int valid = 0;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+ 	if (unlikely(pci_channel_offline(ha->pdev)))
+ 		return -EINVAL;
+ 
+-	start = bsg_request->rqst_data.h_vendor.vendor_cmd[1];
+-	if (start > ha->optrom_size) {
+-		ql_log(ql_log_warn, vha, 0x7055,
+-		    "start %d > optrom_size %d.\n", start, ha->optrom_size);
+-		return -EINVAL;
+-	}
+-
+ 	if (ha->optrom_state != QLA_SWAITING) {
+ 		ql_log(ql_log_info, vha, 0x7056,
+ 		    "optrom_state %d.\n", ha->optrom_state);
+@@ -1431,42 +1422,79 @@ qla2x00_optrom_setup(struct bsg_job *bsg_job, scsi_qla_host_t *vha,
+ 	}
+ 
+ 	ha->optrom_region_start = start;
+-	ql_dbg(ql_dbg_user, vha, 0x7057, "is_update=%d.\n", is_update);
+-	if (is_update) {
+-		if (ha->optrom_size == OPTROM_SIZE_2300 && start == 0)
+-			valid = 1;
+-		else if (start == (ha->flt_region_boot * 4) ||
+-		    start == (ha->flt_region_fw * 4))
+-			valid = 1;
+-		else if (IS_QLA24XX_TYPE(ha) || IS_QLA25XX(ha) ||
+-		    IS_CNA_CAPABLE(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
+-		    IS_QLA28XX(ha))
+-			valid = 1;
+-		if (!valid) {
+-			ql_log(ql_log_warn, vha, 0x7058,
+-			    "Invalid start region 0x%x/0x%x.\n", start,
+-			    bsg_job->request_payload.payload_len);
++
++	if (IS_QLA29XX(ha)) {
++		if (start > ha->optrom_size) {
++			ql_log(ql_log_warn, vha, 0x7055,
++			    "start %d > optrom_size %d.\n", start,
++			    ha->optrom_size);
+ 			return -EINVAL;
+ 		}
+ 
+-		ha->optrom_region_size = start +
+-		    bsg_job->request_payload.payload_len > ha->optrom_size ?
+-		    ha->optrom_size - start :
+-		    bsg_job->request_payload.payload_len;
+-		ha->optrom_state = QLA_SWRITING;
++		if (is_update) {
++			ha->optrom_region_size = start +
++			    bsg_job->request_payload.payload_len >
++			    ha->optrom_size ?
++			    ha->optrom_size - start :
++			    bsg_job->request_payload.payload_len;
++			ha->optrom_state = QLA_SWRITING;
++		} else {
++			ha->optrom_region_size = start +
++			    bsg_job->reply_payload.payload_len >
++			    ha->optrom_size ?
++			    ha->optrom_size - start :
++			    bsg_job->reply_payload.payload_len;
++			ha->optrom_state = QLA_SREADING;
++		}
+ 	} else {
+-		ha->optrom_region_size = start +
+-		    bsg_job->reply_payload.payload_len > ha->optrom_size ?
+-		    ha->optrom_size - start :
+-		    bsg_job->reply_payload.payload_len;
+-		ha->optrom_state = QLA_SREADING;
++		if (start > ha->optrom_size) {
++			ql_log(ql_log_warn, vha, 0x7055,
++			    "start %d > optrom_size %d.\n", start,
++			    ha->optrom_size);
++			return -EINVAL;
++		}
++
++		ql_dbg(ql_dbg_user, vha, 0x7057,
++		    "is_update=%d.\n", is_update);
++		if (is_update) {
++			if (ha->optrom_size == OPTROM_SIZE_2300 && start == 0)
++				valid = 1;
++			else if (start == (ha->flt_region_boot * 4) ||
++			    start == (ha->flt_region_fw * 4))
++				valid = 1;
++			else if (IS_QLA24XX_TYPE(ha) || IS_QLA25XX(ha) ||
++			    IS_CNA_CAPABLE(ha) || IS_QLA2031(ha) ||
++			    IS_QLA27XX(ha) || IS_QLA28XX(ha))
++				valid = 1;
++			if (!valid) {
++				ql_log(ql_log_warn, vha, 0x7058,
++				    "Invalid start region 0x%x/0x%x.\n",
++				    start,
++				    bsg_job->request_payload.payload_len);
++				return -EINVAL;
++			}
++
++			ha->optrom_region_size = start +
++			    bsg_job->request_payload.payload_len >
++			    ha->optrom_size ?
++			    ha->optrom_size - start :
++			    bsg_job->request_payload.payload_len;
++			ha->optrom_state = QLA_SWRITING;
++		} else {
++			ha->optrom_region_size = start +
++			    bsg_job->reply_payload.payload_len >
++			    ha->optrom_size ?
++			    ha->optrom_size - start :
++			    bsg_job->reply_payload.payload_len;
++			ha->optrom_state = QLA_SREADING;
++		}
+ 	}
+ 
+ 	ha->optrom_buffer = vzalloc(ha->optrom_region_size);
+ 	if (!ha->optrom_buffer) {
+ 		ql_log(ql_log_warn, vha, 0x7059,
+-		    "Read: Unable to allocate memory for optrom retrieval "
+-		    "(%x)\n", ha->optrom_region_size);
++		    "%s: Unable to allocate memory for optrom retrieval (%x)\n",
++		    __func__, ha->optrom_region_size);
+ 
+ 		ha->optrom_state = QLA_SWAITING;
+ 		return -ENOMEM;
+@@ -1478,17 +1506,25 @@ qla2x00_optrom_setup(struct bsg_job *bsg_job, scsi_qla_host_t *vha,
+ static int
+ qla2x00_read_optrom(struct bsg_job *bsg_job)
+ {
++	struct fc_bsg_request *bsg_request = bsg_job->request;
+ 	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
+ 	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
+ 	scsi_qla_host_t *vha = shost_priv(host);
+ 	struct qla_hw_data *ha = vha->hw;
++	uint32_t start = bsg_request->rqst_data.h_vendor.vendor_cmd[1];
+ 	int rval = 0;
+ 
+ 	if (ha->flags.nic_core_reset_hdlr_active)
+ 		return -EBUSY;
+ 
++	if (IS_QLA29XX(ha)) {
++		ql_log(ql_log_warn, vha, 0x7070,
++		    "Legacy optrom read not supported on 29xx.\n");
++		return -EINVAL;
++	}
++
+ 	mutex_lock(&ha->optrom_mutex);
+-	rval = qla2x00_optrom_setup(bsg_job, vha, 0);
++	rval = qla2x00_optrom_setup(bsg_job, vha, start, 0);
+ 	if (rval) {
+ 		mutex_unlock(&ha->optrom_mutex);
+ 		return rval;
+@@ -1515,14 +1551,16 @@ qla2x00_read_optrom(struct bsg_job *bsg_job)
+ static int
+ qla2x00_update_optrom(struct bsg_job *bsg_job)
+ {
++	struct fc_bsg_request *bsg_request = bsg_job->request;
+ 	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
+ 	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
+ 	scsi_qla_host_t *vha = shost_priv(host);
+ 	struct qla_hw_data *ha = vha->hw;
++	uint32_t start = bsg_request->rqst_data.h_vendor.vendor_cmd[1];
+ 	int rval = 0;
+ 
+ 	mutex_lock(&ha->optrom_mutex);
+-	rval = qla2x00_optrom_setup(bsg_job, vha, 1);
++	rval = qla2x00_optrom_setup(bsg_job, vha, start, 1);
+ 	if (rval) {
+ 		mutex_unlock(&ha->optrom_mutex);
+ 		return rval;
+@@ -1554,6 +1592,234 @@ qla2x00_update_optrom(struct bsg_job *bsg_job)
+ 	return rval;
  }
+ 
++/**
++ * qla29xx_validate_flash_region - Bounds-check a region-relative flash access.
++ * @vha: Pointer to SCSI QLogic host structure.
++ * @region_code: Flash region the access is confined to.
++ * @offset: Region-relative byte offset of the access.
++ * @len: Length in bytes of the access.
++ *
++ * The block read/write BSG commands operate on a region-relative offset.
++ * Validate that the requested offset and length lie entirely within the
++ * region's actual size (from the FLT) so a request cannot cross into an
++ * adjacent flash region.
++ *
++ * Returns 0 when the access is within the region, -EINVAL otherwise.
++ */
++static int
++qla29xx_validate_flash_region(scsi_qla_host_t *vha, uint32_t region_code,
++			      uint32_t offset, uint32_t len)
++{
++	struct qla_flt_region_data region;
++	uint32_t img_len;
++
++	if (qla29xx_get_flash_region(vha, region_code, &region) != QLA_SUCCESS)
++		return -EINVAL;
++
++	img_len = le32_to_cpu(region.image_length);
++	/* subtraction form avoids offset + len overflow */
++	if (offset > img_len || len > img_len - offset)
++		return -EINVAL;
++
++	return 0;
++}
++
++/**
++ * qla29xx_bsg_flash_block_read - Read flash block for QLA29XX.
++ * @bsg_job: BSG job structure.
++ *
++ * Returns 0 on success, error code on failure.
++ */
++static int qla29xx_bsg_flash_block_read(struct bsg_job *bsg_job)
++{
++	struct fc_bsg_request *bsg_req = bsg_job->request;
++	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
++	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
++	scsi_qla_host_t *vha = shost_priv(host);
++	struct qla_hw_data *ha = vha->hw;
++	struct qla_block_rw *brcmd;
++	void *buf;
++	uint16_t opts = 0;
++	int rval = 0;
++
++	if (bsg_job->request_len < sizeof(struct fc_bsg_request) +
++	    2 * sizeof(uint32_t) + sizeof(struct qla_block_rw))
++		return -EINVAL;
++
++	brcmd =
++	(struct qla_block_rw *)&bsg_req->rqst_data.h_vendor.vendor_cmd[2];
++
++	ql_log(ql_log_info, vha, 0x7062,
++	       "%s: region 0x%x options 0x%x rw_length 0x%x offset 0x%x chunk_length 0x%x\n",
++		__func__, brcmd->region, brcmd->options, brcmd->rw_length,
++		brcmd->region_offset, brcmd->chunk_length);
++
++	if (brcmd->region > U16_MAX) {
++		ql_log(ql_log_warn, vha, 0x7066,
++		       "%s: invalid region 0x%x\n", __func__, brcmd->region);
++		return -EINVAL;
++	}
++
++	if (qla29xx_validate_flash_region(vha, brcmd->region,
++					  brcmd->region_offset,
++					  bsg_job->reply_payload.payload_len)) {
++		ql_log(ql_log_warn, vha, 0x706a,
++		       "%s: region 0x%x offset 0x%x len 0x%x out of region bounds\n",
++		       __func__, brcmd->region, brcmd->region_offset,
++		       bsg_job->reply_payload.payload_len);
++		return -EINVAL;
++	}
++
++	mutex_lock(&ha->optrom_mutex);
++	rval = qla2x00_optrom_setup(bsg_job, vha, brcmd->region_offset, 0);
++	if (rval) {
++		mutex_unlock(&ha->optrom_mutex);
++		return rval;
++	}
++
++	check_and_set_mbc_bits(brcmd->options, opts, QLA_IS_TIM, BIT_15);
++	check_and_set_mbc_bits(brcmd->options, opts, QLA_IS_SECURE, BIT_7);
++	check_and_set_mbc_bits(brcmd->options, opts, QLA_UPDATE_MBR, BIT_8);
++
++	if (!ha->isp_ops->read_optrom_region) {
++		vfree(ha->optrom_buffer);
++		ha->optrom_buffer = NULL;
++		ha->optrom_state = QLA_SWAITING;
++		mutex_unlock(&ha->optrom_mutex);
++		return -EINVAL;
++	}
++
++	buf = ha->isp_ops->read_optrom_region(vha, brcmd->region, opts,
++				ha->optrom_buffer, ha->optrom_region_start,
++				ha->optrom_region_size);
++	if (!buf) {
++		ql_log(ql_log_warn, vha, 0x7063,
++			"%s failed to read flash region 0x%x\n",
++			__func__, brcmd->region);
++		bsg_reply->result = -EINVAL;
++		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =
++							EXT_STATUS_MAILBOX;
++		bsg_reply->reply_payload_rcv_len = 0;
++	} else {
++		bsg_reply->result = DID_OK;
++		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =
++			EXT_STATUS_OK;
++
++		ql_dump_buffer(ql_dbg_user + ql_dbg_verbose, vha, 0x72a6,
++			       ha->optrom_buffer, ha->optrom_region_size);
++
++		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
++				    bsg_job->reply_payload.sg_cnt,
++				    ha->optrom_buffer,
++				    ha->optrom_region_size);
++
++		bsg_reply->reply_payload_rcv_len = ha->optrom_region_size;
++	}
++	vfree(ha->optrom_buffer);
++	ha->optrom_buffer = NULL;
++	ha->optrom_state = QLA_SWAITING;
++	mutex_unlock(&ha->optrom_mutex);
++	bsg_job_done(bsg_job, bsg_reply->result,
++		     bsg_reply->reply_payload_rcv_len);
++
++	return 0;
++}
++
++/**
++ * qla29xx_bsg_flash_block_write - Write flash block for QLA29XX.
++ * @bsg_job: BSG job structure.
++ *
++ * Returns 0 on success, error code on failure.
++ */
++static int qla29xx_bsg_flash_block_write(struct bsg_job *bsg_job)
++{
++	struct fc_bsg_request *bsg_req = bsg_job->request;
++	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
++	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
++	scsi_qla_host_t *vha = shost_priv(host);
++	struct qla_hw_data *ha = vha->hw;
++	struct qla_block_rw *bwcmd;
++	uint16_t opts = 0;
++	int rval = 0;
++
++	if (bsg_job->request_len < sizeof(struct fc_bsg_request) +
++	    2 * sizeof(uint32_t) + sizeof(struct qla_block_rw))
++		return -EINVAL;
++
++	bwcmd =
++	   (struct qla_block_rw *)&bsg_req->rqst_data.h_vendor.vendor_cmd[2];
++
++	ql_log(ql_log_info, vha, 0x7064,
++	       "%s: region 0x%x options 0x%x rw_length 0x%x offset 0x%x chunk_length 0x%x\n",
++		__func__, bwcmd->region, bwcmd->options, bwcmd->rw_length,
++		bwcmd->region_offset, bwcmd->chunk_length);
++
++	if (bwcmd->region > U16_MAX) {
++		ql_log(ql_log_warn, vha, 0x7067,
++		       "%s: invalid region 0x%x\n", __func__, bwcmd->region);
++		return -EINVAL;
++	}
++
++	if (qla29xx_validate_flash_region(vha, bwcmd->region,
++					  bwcmd->region_offset,
++					  bsg_job->request_payload.payload_len)) {
++		ql_log(ql_log_warn, vha, 0x706b,
++		       "%s: region 0x%x offset 0x%x len 0x%x out of region bounds\n",
++		       __func__, bwcmd->region, bwcmd->region_offset,
++		       bsg_job->request_payload.payload_len);
++		return -EINVAL;
++	}
++
++	mutex_lock(&ha->optrom_mutex);
++	rval = qla2x00_optrom_setup(bsg_job, vha, bwcmd->region_offset, 1);
++	if (rval) {
++		mutex_unlock(&ha->optrom_mutex);
++		return rval;
++	}
++
++	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
++			bsg_job->request_payload.sg_cnt, ha->optrom_buffer,
++			ha->optrom_region_size);
++
++	ql_dump_buffer(ql_dbg_user + ql_dbg_verbose, vha, 0x73a6,
++		       ha->optrom_buffer, ha->optrom_region_size);
++
++	check_and_set_mbc_bits(bwcmd->options, opts, QLA_IS_TIM, BIT_15);
++	check_and_set_mbc_bits(bwcmd->options, opts, QLA_IS_SECURE, BIT_7);
++	check_and_set_mbc_bits(bwcmd->options, opts, QLA_UPDATE_MBR, BIT_8);
++
++	if (!ha->isp_ops->write_optrom_region) {
++		vfree(ha->optrom_buffer);
++		ha->optrom_buffer = NULL;
++		ha->optrom_state = QLA_SWAITING;
++		mutex_unlock(&ha->optrom_mutex);
++		return -EINVAL;
++	}
++
++	rval = ha->isp_ops->write_optrom_region(vha, bwcmd->region, opts,
++				ha->optrom_buffer, ha->optrom_region_start,
++				ha->optrom_region_size);
++	if (rval) {
++		ql_log(ql_log_warn, vha, 0x7065,
++			"%s failed to write flash %x\n", __func__, rval);
++		bsg_reply->result = -EINVAL;
++		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =
++							EXT_STATUS_MAILBOX;
++	} else {
++		bsg_reply->result = DID_OK;
++		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =
++			EXT_STATUS_OK;
++	}
++	vfree(ha->optrom_buffer);
++	ha->optrom_buffer = NULL;
++	ha->optrom_state = QLA_SWAITING;
++	mutex_unlock(&ha->optrom_mutex);
++	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
++	bsg_job_done(bsg_job, bsg_reply->result,
++			bsg_reply->reply_payload_rcv_len);
++	return 0;
++}
++
+ static int
+ qla2x00_update_fru_versions(struct bsg_job *bsg_job)
+ {
+@@ -3007,6 +3273,12 @@ qla2x00_process_vendor_specific(struct scsi_qla_host *vha, struct bsg_job *bsg_j
+ 	case QL_VND_MBX_PASSTHRU:
+ 		return qla2x00_mailbox_passthru(bsg_job);
+ 
++	case QL_VND_READ_FLASH_BLOCK:
++		return qla29xx_bsg_flash_block_read(bsg_job);
++
++	case QL_VND_WRITE_FLASH_BLOCK:
++		return qla29xx_bsg_flash_block_write(bsg_job);
++
+ 	default:
+ 		return -ENOSYS;
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
+index a920c8e482bc..ca0d83986b57 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.h
++++ b/drivers/scsi/qla2xxx/qla_bsg.h
+@@ -40,6 +40,8 @@
+ #define QL_VND_MBX_PASSTHRU		0x2B
+ #define QL_VND_DPORT_DIAGNOSTICS_V2	0x2C
+ #define QL_VND_IMG_SET_VALID	0x30
++#define QL_VND_READ_FLASH_BLOCK		0x33
++#define QL_VND_WRITE_FLASH_BLOCK	0x34
+ 
+ /* BSG Vendor specific subcode returns */
+ #define EXT_STATUS_OK			0
+@@ -83,6 +85,20 @@
+ #define ELS_OPCODE_BYTE			0x10
+ 
+ /* BSG Vendor specific definations */
++
++#define QLA_IS_TIM	0x1
++#define QLA_IS_SECURE	0x2
++#define QLA_UPDATE_MBR	0x4
++
++struct qla_block_rw {
++	uint32_t region;
++	uint32_t rw_length;
++	uint32_t options;
++	uint32_t region_offset;
++	uint32_t chunk_length;
++	uint8_t  reserved[44];
++} __packed;
++
+ #define A84_ISSUE_WRITE_TYPE_CMD        0
+ #define A84_ISSUE_READ_TYPE_CMD         1
+ #define A84_CLEANUP_CMD                 2
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 1ec7ee578e0c..719b6a1f9123 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3534,6 +3534,13 @@ struct isp_operations {
+ 	int (*write_optrom)(struct scsi_qla_host *, void *, uint32_t,
+ 		uint32_t);
+ 
++	void *(*read_optrom_region)(struct scsi_qla_host *vha,
++		uint16_t reg_code, uint16_t opts, void *buf,
++		uint32_t offset, uint32_t length);
++	int (*write_optrom_region)(struct scsi_qla_host *vha,
++		uint16_t reg_code, uint16_t opts, void *buf,
++		uint32_t offset, uint32_t length);
++
+ 	int (*get_flash_version) (struct scsi_qla_host *, void *);
+ 	int (*start_scsi) (srb_t *);
+ 	int (*start_scsi_mq) (srb_t *);
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index ca5a80b9c3d2..120a7b1bb217 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -697,6 +697,8 @@ extern int qla29xx_write_optrom_data(struct scsi_qla_host *vha,
+ 				     uint16_t reg_code, uint16_t opts,
+ 				     void *buf, uint32_t offset,
+ 				     uint32_t length);
++int qla29xx_get_flash_region(struct scsi_qla_host *vha, uint32_t code,
++			     struct qla_flt_region_data *region);
+ /*
+  * Global Function Prototypes in qla_dbg.c source file.
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 6560e58ad87c..948242f0088e 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2640,6 +2640,24 @@ static struct isp_operations qla27xx_isp_ops = {
+ 	.initialize_adapter	= qla2x00_initialize_adapter,
+ };
+ 
++static void *
++qla29xx_read_optrom_stub(struct scsi_qla_host *vha, void *buf,
++			 uint32_t offset, uint32_t length)
++{
++	ql_dbg(ql_dbg_init, vha, 0x0191,
++	    "read_optrom not supported on 29xx, use read_optrom_region.\n");
++	return NULL;
++}
++
++static int
++qla29xx_write_optrom_stub(struct scsi_qla_host *vha, void *buf,
++			  uint32_t offset, uint32_t length)
++{
++	ql_dbg(ql_dbg_init, vha, 0x0192,
++	    "write_optrom not supported on 29xx, use write_optrom_region.\n");
++	return QLA_FUNCTION_FAILED;
++}
++
+ static struct isp_operations qla29xx_isp_ops = {
+ 	.pci_config		= qla25xx_pci_config,
+ 	.reset_chip		= qla24xx_reset_chip,
+@@ -2670,8 +2688,10 @@ static struct isp_operations qla29xx_isp_ops = {
+ 	.beacon_on		= qla24xx_beacon_on,
+ 	.beacon_off		= qla24xx_beacon_off,
+ 	.beacon_blink		= qla83xx_beacon_blink,
+-	.read_optrom		= qla25xx_read_optrom_data,
+-	.write_optrom		= qla24xx_write_optrom_data,
++	.read_optrom		= qla29xx_read_optrom_stub,
++	.write_optrom		= qla29xx_write_optrom_stub,
++	.read_optrom_region	= qla29xx_read_optrom_data,
++	.write_optrom_region	= qla29xx_write_optrom_data,
+ 	.get_flash_version	= qla24xx_get_flash_version,
+ 	.start_scsi_mq		= qla2xxx_dif_start_scsi_mq,
+ 	.abort_isp		= qla2x00_abort_isp,
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index 381d09145378..51ea481c68eb 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -208,7 +208,7 @@ qla29xx_get_fdt_info(scsi_qla_host_t *vha)
+  *
+  * Returns QLA_SUCCESS on success or QLA_FUNCTION_FAILED on failure.
+  */
+-static int
++int
+ qla29xx_get_flash_region(struct scsi_qla_host *vha, uint32_t code,
+ 			 struct qla_flt_region_data *region)
+ {
 -- 
 2.47.3
 
