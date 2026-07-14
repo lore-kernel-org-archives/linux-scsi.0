@@ -1,56 +1,56 @@
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCE44355813
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 09:56:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A4732E2840
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 09:56:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784022962; cv=none; b=tzOP9rF/SHcE47JdOPCoW3Nj5tmKyn8QLrrtm/z++AS9kwZm67/0KdXqxU0zwbHoqx6of9PKRCBEd5WYRIciQyXmUaGPl4/yRRj7Yp46FqfhjYcA6IuYimhhcA2bYgCmcY4jfSekHCkwpFG6Jp2I9oAwLaQzAKnbdWZtxBN3kOs=
+	t=1784022967; cv=none; b=sB0loq1EIlx6/xLQY0P32cZ8DPterOiSYJ64U4YldwNFEw5UfWboJTBU2nCe13VVx2Y0K7fk395uj7XCjV3Vy8qimbdGsOUZ/1YalhFURwpoOb7BK6u6nHPVzrdQ6kPTLKrq8in4oMSm8858Ma8LyTU7wmi1Nd0FxCS0X/uVT9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784022962; c=relaxed/simple;
-	bh=eB9WP/wZa7W8e7GsWn57ny0lFbXTYL8w9EeakWCn+BA=;
+	s=arc-20240116; t=1784022967; c=relaxed/simple;
+	bh=Ny/wmJkIH2riATl5hAS5so2NU7zBA+aKr+5SqJLzyvc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZxI0cqc13zqxh8U5JdOSTnLehR4XHAUEw/OrbTJdRlH+4bPdFdrt9Ualfn/Slrfq/DPNtN8vQpZ3z+jQVDEJYSxFJ0OPMjYlEmkaeDrfHzL80WKWqyuVbZxQnV0yIJVJs56r8Sy1LRLYDGeekzJmqCY5XLABZypVz3wldmUmFe8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=aBs283Vf; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=lf/OjvNnepE/sH/k669Lg6EpYo2tueeJycsFY2ZkMm0sl9YfcRq5As5UEoRitfbmh9cTSuGKnn7GVUDJbr9koS+PCu9tz1NLyH7RaWI8UZ4SDZhniFBLETv9o39E4Rby8hDy7vwzCbtxcPNvNgIn+Zme27DalpyulJ8kMQ1dl4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=EIz9tGOo; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="aBs283Vf"
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66E6Ukqn3693372;
-	Tue, 14 Jul 2026 02:55:57 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="EIz9tGOo"
+Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66E6UDAp2407820;
+	Tue, 14 Jul 2026 02:56:02 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=s
-	fLoo/z9F6OeKGMx+MoQlIdc+XDzT5UUKELEdGDxIuI=; b=aBs283Vf3OqC5vFE/
-	H2QDMT4rwUfIGMsP9O7pmfAnSumQXDtHW8RY8mNXQVGekqDpn/M6GeST4n6Hb86R
-	onK6ECzrF58gdnsNgMEEP2HZAt6jILV7+FKp/DQdc8b16dNf/QeiD/lMT+IPEMdH
-	GsVU5wUmimxFE0ApV3N0XlTLd0HcUByTXAnANmbRoAaCEM/hUn6wSyPhIAnk5rIP
-	ebg8euWJBhAvwV3neZX74cZgOzA1BRG0j78soV9jGnmRfCeRBzGbV9VXUURkFp/S
-	OVQprpDGsitvfQ+D2Cbh183Zka57EtlTq7q0vII44Fhc/9RJDKmCeKHJ6XBP6wpK
-	QTVog==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=q
+	4yW5YH7N3m6boqPhsYRJso9KkGxFswOSD4Chq/CHbk=; b=EIz9tGOoZ8G+OSjvM
+	7PKSxZ6r9lFHMHXMGNLmnWuxbfZIbUlEXAsXZuU7v1rl7ArTtOMKnRnEKQPrYCjf
+	zu+0kJbkftO3oosEW5HdwBCVysfdGSbnV9Kcqe/KBlbwpqxialVowc31tTmNVzYt
+	ojexB37UP4TUaZ1ZIbjxLEIU33qRVk8QLQurV61HKuw17xnGTdFcl7+fg8rGVuIl
+	ISn/lEe9IrC9m2y+NjeiKgaExSV+2nkYbfBsm1ka94RDRcpgn8qpxxwO3JHc0OuA
+	yIR5ctlK8wy5WXtvKyAAS/QxT/AxVo9x+a4+vFsfHJGAlpGlzo9KLoAWcNP2GVqU
+	K3skA==
 Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4fbnbey8qp-1
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4fc6k9nq4c-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 14 Jul 2026 02:55:57 -0700 (PDT)
+	Tue, 14 Jul 2026 02:56:01 -0700 (PDT)
 Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
  DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Tue, 14 Jul 2026 02:55:56 -0700
+ 15.2.1544.25; Tue, 14 Jul 2026 02:55:59 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
  (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Tue, 14 Jul 2026 02:55:56 -0700
+ Transport; Tue, 14 Jul 2026 02:55:59 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 1CB935E6867;
-	Tue, 14 Jul 2026 02:55:53 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id 016075E6867;
+	Tue, 14 Jul 2026 02:55:56 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v4 36/56] scsi: qla2xxx: Add build-time size check for VP config IOCB layout
-Date: Tue, 14 Jul 2026 15:23:33 +0530
-Message-ID: <20260714095353.289460-37-njavali@marvell.com>
+Subject: [PATCH v4 37/56] scsi: qla2xxx: Add size check for extended VP report ID entry
+Date: Tue, 14 Jul 2026 15:23:34 +0530
+Message-ID: <20260714095353.289460-38-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260714095353.289460-1-njavali@marvell.com>
 References: <20260714095353.289460-1-njavali@marvell.com>
@@ -62,82 +62,182 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-GUID: Z1Vg3umnVUx0YW_DZTyj44n_GLSEK92o
-X-Authority-Analysis: v=2.4 cv=WOdPmHsR c=1 sm=1 tr=0 ts=6a5607ad cx=c_pps
+X-Proofpoint-ORIG-GUID: XABHEBuOvQ21NrKB-9bsGdCDukLhALWe
+X-Proofpoint-GUID: XABHEBuOvQ21NrKB-9bsGdCDukLhALWe
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE0MDEwMyBTYWx0ZWRfXx6JUp2Et44fP
+ B947pfM6gkrk0UtKpaZ16Yqk67jge8ZBwthXv4WZgVMId8OWNmeF++IQ1g2N0+40sc5OewBbjjg
+ zCOmq1YSeqMGTb2V2D5DPNLAPz4B5RI=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE0MDEwMyBTYWx0ZWRfXzr5Hc2hjEYVe
+ X/iZMEG5/yuWgBZA2sHeR+nzDZpfEBkLuUTvWu3iA00Qi0M06X33DqCXR8WXwK2M6lFfMA20Fk4
+ qpxGVF2qjJQIXKFy4kaGNE9pR3i5C3vHWXBsbkM+9PX7wJB9vYLi04viBdaI0VZS7/QzP3//E9r
+ tiABmt3mBH6sz/1+kIhQjmHZ0vHZZcufVnzIiQ+1iu9fOaTp7FsRa7SZU43dDOQgRjE1kedG0be
+ tsnEI1GA/JTdvbupypV5ee6NBQTNeFqnzkGWPRB37Fj7OHNKPi/fvYVB40OA8AOiuKbIOLwlFAc
+ IlUb0YNa/u8FssviDcZl9RP/j0fuPvfcwTGywgH8XeyCuiiMFe8FS/vlMDDRr5UV5cHyj0UREks
+ sLlEIVFH6JUmb/wWGjRuduCAUE99gktkReT24dHMVAqbsCyAparwDJ6ucXh/eJjYm+5rk9w622w
+ h6DE0Ec3UKRjFGS5+Vw==
+X-Authority-Analysis: v=2.4 cv=ULLt2ify c=1 sm=1 tr=0 ts=6a5607b1 cx=c_pps
  a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=QdJASnsuDdI3Qm7nM90A:9 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-ORIG-GUID: Z1Vg3umnVUx0YW_DZTyj44n_GLSEK92o
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE0MDEwMyBTYWx0ZWRfX0ILZNQf1NSK/
- wbPfePqL0IhXb48eiUhY7eoZ2CmH0755z+x5EcX2E9splaCe+WcpJYE8V6HfgN4kz/i39fl+GY2
- zxZgYzdp7qVtBSNGBQV3j507NzGJ9y0=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE0MDEwMyBTYWx0ZWRfX6ls3w8U+P029
- D1wR/WKLZ3BgjESyf7zZjYEU0W+raa0uUCmbV1qpA/zKqtbGKIBpZPlCujNM0eVSyJmwElWRTh8
- 9rd0pTbdUOKTCtQfD9koAb4YtqIfbH8bTABStDYlEetXml466Yc/wYYjmyfrtEMYHaMp3G2kLLd
- k9MA1+S+dzlzPMo1Oxxe5HtQo37vqjSgL1CkSmhHVCkVZEss+XwuCKfECsvVpLviuJuU6RMMtQH
- 6t27TIG1TVAecdaLQp1dgEk4Q/8IaCw4FR/MGp6z910uOmMPU6n70sbvf3b/Qaq/BLK4sfjePpE
- sYU1IGCurVyTvEgeIMLZVfP/UpIYx0OLf/EktRcWJqwMcSuVscChD3Dpiugz1ZNtsCHgObVhTE4
- pkRxCjMKAzzFSKHiax0yBEPHKbfLyk4bhlPmtb1F+VaiOB+sIDqhjTDdaOzTytvRXB+/3P7uSdU
- +ZFE/hXltgqIxj+G8+g==
+ a=qit2iCtTFQkLgVSMPQTB:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
+ a=0iNNLWs7SH7HZXNUcMcA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-14_02,2026-07-10_01,2025-10-01_01
 
-Add a BUILD_BUG_ON for struct vp_config_entry_24xx_ext to verify its
-128-byte size at compile time alongside the existing 64-byte check for
-struct vp_config_entry_24xx.
-
-Document in qla24xx_modify_vp_config() that the ext variant overlays
-the base 24xx layout for the first 64 bytes (all fields this helper
-reads and writes), so the IOCB can be built through a single struct
-vp_config_entry_24xx pointer regardless of the adapter's IOCB stride.
+Add reserved_end[64] padding to bring the struct to 128 bytes, matching
+the hardware IOCB stride.  Change qla24xx_report_id_acquisition() to
+accept a void pointer and extract vp_idx and vp_status from the extended
+structure on 29xx series adapters, maintaining data integrity for the
+larger IOCB format.
 
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 8 +++++++-
- drivers/scsi/qla2xxx/qla_os.c  | 1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_fw29.h |  1 +
+ drivers/scsi/qla2xxx/qla_gbl.h  |  3 +--
+ drivers/scsi/qla2xxx/qla_isr.c  |  3 +--
+ drivers/scsi/qla2xxx/qla_mbx.c  | 32 +++++++++++++++++++++-----------
+ drivers/scsi/qla2xxx/qla_os.c   |  1 +
+ 5 files changed, 25 insertions(+), 15 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_fw29.h b/drivers/scsi/qla2xxx/qla_fw29.h
+index 088a220472a5..a4aa5bacb171 100644
+--- a/drivers/scsi/qla2xxx/qla_fw29.h
++++ b/drivers/scsi/qla2xxx/qla_fw29.h
+@@ -693,6 +693,7 @@ struct vp_rpt_id_entry_24xx_ext {
+ 			uint8_t remote_nport_id[4];
+ 		} f2;
+ 	} u;
++	uint8_t reserved_end[64];
+ };
+ 
+ /*
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index fa302778d2ac..79a1e16d56ab 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -266,8 +266,7 @@ extern int qla24xx_modify_vp_config(scsi_qla_host_t *);
+ extern int qla2x00_send_change_request(scsi_qla_host_t *, uint16_t, uint16_t);
+ extern void qla2x00_vp_stop_timer(scsi_qla_host_t *);
+ extern int qla24xx_configure_vhba (scsi_qla_host_t *);
+-extern void qla24xx_report_id_acquisition(scsi_qla_host_t *,
+-    struct vp_rpt_id_entry_24xx *);
++extern void qla24xx_report_id_acquisition(scsi_qla_host_t *vha, void *pkt);
+ extern void qla2x00_do_dpc_all_vps(scsi_qla_host_t *);
+ extern int qla24xx_vport_create_req_sanity_check(struct fc_vport *);
+ extern scsi_qla_host_t *qla24xx_create_vhost(struct fc_vport *);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 7d2b6d135dc8..c6e2323518f7 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -4174,8 +4174,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ 			    qla_sts_cont_data_size(rsp->hw));
+ 			break;
+ 		case VP_RPT_ID_IOCB_TYPE:
+-			qla24xx_report_id_acquisition(vha,
+-			    (struct vp_rpt_id_entry_24xx *)pkt);
++			qla24xx_report_id_acquisition(vha, pkt);
+ 			break;
+ 		case LOGINOUT_PORT_IOCB_TYPE:
+ 			qla24xx_logio_entry(vha, rsp->req, pkt);
 diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 0d7aa6fce007..3ebda35dd584 100644
+index 3ebda35dd584..cec308811d9e 100644
 --- a/drivers/scsi/qla2xxx/qla_mbx.c
 +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4364,6 +4364,13 @@ qla24xx_modify_vp_config(scsi_qla_host_t *vha)
- 		return QLA_MEMORY_ALLOC_FAILED;
- 	}
+@@ -4086,15 +4086,18 @@ qla2x00_set_idma_speed(scsi_qla_host_t *vha, uint16_t loop_id,
+ }
  
-+	/*
-+	 * vp_config_entry_24xx_ext overlays vp_config_entry_24xx for the
-+	 * full 64-byte 24xx layout (the ext variant merely appends fields
-+	 * at offset 64+ which this helper never touches), so the IOCB is
-+	 * built and inspected through a single struct vp_config_entry_24xx
-+	 * pointer regardless of adapter stride.
-+	 */
- 	vpmod->entry_type = VP_CONFIG_IOCB_TYPE;
- 	vpmod->entry_count = 1;
- 	vpmod->command = VCT_COMMAND_MOD_ENABLE_VPS;
-@@ -4392,7 +4399,6 @@ qla24xx_modify_vp_config(scsi_qla_host_t *vha)
- 		    le16_to_cpu(vpmod->comp_status));
- 		rval = QLA_FUNCTION_FAILED;
- 	} else {
--		/* EMPTY */
- 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10c0,
- 		    "Done %s.\n", __func__);
- 		fc_vport_set_state(vha->fc_vport, FC_VPORT_INITIALIZING);
+ void
+-qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+-	struct vp_rpt_id_entry_24xx *rptid_entry)
++qla24xx_report_id_acquisition(scsi_qla_host_t *vha, void *pkt)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
++	struct vp_rpt_id_entry_24xx *rptid_entry = pkt;
++	struct vp_rpt_id_entry_24xx_ext *rptid_entry_ext = pkt;
+ 	scsi_qla_host_t *vp = NULL;
+ 	unsigned long   flags;
+ 	int found;
+ 	port_id_t id;
+ 	struct fc_port *fcport;
++	u16 vp_idx;
++	u8 vp_status;
+ 
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10b6,
+ 	    "Entered %s.\n", __func__);
+@@ -4102,6 +4105,14 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+ 	if (rptid_entry->entry_status != 0)
+ 		return;
+ 
++	if (IS_QLA29XX(ha)) {
++		vp_idx = rptid_entry_ext->vp_idx;
++		vp_status = rptid_entry_ext->vp_status;
++	} else {
++		vp_idx = rptid_entry->vp_idx;
++		vp_status = rptid_entry->vp_status;
++	}
++
+ 	id.b.domain = rptid_entry->port_id[2];
+ 	id.b.area   = rptid_entry->port_id[1];
+ 	id.b.al_pa  = rptid_entry->port_id[0];
+@@ -4124,9 +4135,8 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+ 	} else if (rptid_entry->format == 1) {
+ 		/* fabric */
+ 		ql_dbg(ql_dbg_async, vha, 0x10b9,
+-		    "Format 1: VP[%d] enabled - status %d - with "
+-		    "port id %02x%02x%02x.\n", rptid_entry->vp_idx,
+-			rptid_entry->vp_status,
++		    "Format 1: VP[%d] enabled - status %d - with port id %02x%02x%02x.\n",
++		    vp_idx, vp_status,
+ 		    rptid_entry->port_id[2], rptid_entry->port_id[1],
+ 		    rptid_entry->port_id[0]);
+ 		ql_dbg(ql_dbg_async, vha, 0x5075,
+@@ -4223,8 +4233,8 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+ 		/* buffer to buffer credit flag */
+ 		vha->flags.bbcr_enable = (rptid_entry->u.f1.bbcr & 0xf) != 0;
+ 
+-		if (rptid_entry->vp_idx == 0) {
+-			if (rptid_entry->vp_status == VP_STAT_COMPL) {
++		if (vp_idx == 0) {
++			if (vp_status == VP_STAT_COMPL) {
+ 				/* FA-WWN is only for physical port */
+ 				if (qla_ini_mode_enabled(vha) &&
+ 				    ha->flags.fawwpn_enabled &&
+@@ -4241,18 +4251,18 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+ 			set_bit(REGISTER_FC4_NEEDED, &vha->dpc_flags);
+ 			set_bit(REGISTER_FDMI_NEEDED, &vha->dpc_flags);
+ 		} else {
+-			if (rptid_entry->vp_status != VP_STAT_COMPL &&
+-				rptid_entry->vp_status != VP_STAT_ID_CHG) {
++			if (vp_status != VP_STAT_COMPL &&
++				vp_status != VP_STAT_ID_CHG) {
+ 				ql_dbg(ql_dbg_mbx, vha, 0x10ba,
+ 				    "Could not acquire ID for VP[%d].\n",
+-				    rptid_entry->vp_idx);
++				    vp_idx);
+ 				return;
+ 			}
+ 
+ 			found = 0;
+ 			spin_lock_irqsave(&ha->vport_slock, flags);
+ 			list_for_each_entry(vp, &ha->vp_list, list) {
+-				if (rptid_entry->vp_idx == vp->vp_idx) {
++				if (vp_idx == vp->vp_idx) {
+ 					found = 1;
+ 					break;
+ 				}
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index ad070c0bf7db..8e5d49abead4 100644
+index 8e5d49abead4..f539190dd504 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -8436,6 +8436,7 @@ qla2x00_module_init(void)
- 	BUILD_BUG_ON(sizeof(struct verify_chip_rsp_84xx) != 52);
- 	BUILD_BUG_ON(sizeof(struct vf_evfp_entry_24xx) != 56);
- 	BUILD_BUG_ON(sizeof(struct vp_config_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct vp_config_entry_24xx_ext) != 128);
+@@ -8440,6 +8440,7 @@ qla2x00_module_init(void)
  	BUILD_BUG_ON(sizeof(struct vp_ctrl_entry_24xx) != 64);
  	BUILD_BUG_ON(sizeof(struct vp_ctrl_entry_24xx_ext) != 128);
  	BUILD_BUG_ON(sizeof(struct vp_rpt_id_entry_24xx) != 64);
++	BUILD_BUG_ON(sizeof(struct vp_rpt_id_entry_24xx_ext) != 128);
+ 	BUILD_BUG_ON(sizeof(sts21_entry_t) != 64);
+ 	BUILD_BUG_ON(sizeof(sts22_entry_t) != 64);
+ 	BUILD_BUG_ON(sizeof(sts_cont_entry_t) != 64);
 -- 
 2.47.3
 
