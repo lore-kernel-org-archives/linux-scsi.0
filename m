@@ -1,179 +1,206 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E68F4963B8
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 15:52:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 647DB3890E0
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 16:02:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784044359; cv=none; b=fcPziR8oWWI1Iv29tSlS83l6FDj544undhpzQ09vT/dHGMYvdiZAbWZbK6VtM/FZws9Jb3VJ14RxHy+umvOlzDN6VOObwZaE4ak8DjxCELHH/OQaHOGPnzji57s8eirLQPkPbLKhAdgeVjndBWXeCJB4TxkuezU3W7HU399Qp60=
+	t=1784044979; cv=none; b=LrR05x7A8ZJ8ZK0N3BDbKkg0asI9NfOtDls0VxFvkObK9cR8Htiegs/MAAR2qCGPDQah/oBNStM93Zk1vwX9GJLWypXT6sOXJzC6ocDFr8839hs8RncRR52HAB/tySj4MyJ1EPn/MZ+HUgpXKNUwMUF89GYHBCz5zTHwUYwG+z8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784044359; c=relaxed/simple;
-	bh=eWLYyF9F1+nSI2CxRQtpD6kDUaJB2pn8oEBq0NQEeMc=;
+	s=arc-20240116; t=1784044979; c=relaxed/simple;
+	bh=DlhRYvLAhmnEf+dzxsC8Phj1dj/eoO7NJbJfsOeO01Q=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=iqoalctN7Y0keP6K+npe6K10DH1VSUUESzZCJHo2tFYZY50fb9eLKMtarUAUUU2Kt3ipOuVMl4ypJd4m/23JdjffRb2HAaphVdzh6mj2Ik4ccq4JMOj86Ea1bxs3GmWklcQR3xf98M+/rjvAlx0js4aPMxOTvL4VfWjRBtj+gvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F18V50zw; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=QpNd4HXAkfTxRtZtcv1LJGqyCaaR8wMs79myZSrlyebZiT1IPdspGm56vNDigExg76h2laLz5ZTata/0H/rGtnuKE26FZ0kN6jmZGfRbcOsBY0AosBdZ0esRpUPOL5LXSoIfljDnW4c4Q0hFvMgkEBQ1xEy+VyDeNaZZOxGCQpc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lsAduPnr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F18V50zw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53FDB1F000E9;
-	Tue, 14 Jul 2026 15:52:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lsAduPnr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E1921F000E9;
+	Tue, 14 Jul 2026 16:02:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784044356;
-	bh=VnqsJRm3pd0p8FmoFAFedvO9OiTmVlJrh/K0EUI0eKs=;
+	s=k20260515; t=1784044978;
+	bh=xFw5Z+FRKTtv6Sj99xC1SG5oBDNQlwrzQwmZV3tu++8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F18V50zwwHX0pPuhrLdNZlYbl7YB/lWa+tSOGaMvT/+CLwiwLAF0mbtWSYfDcw1uU
-	 aTZ02AK+zMewm00ZmBoDxAkziE+7XbJCoV6CMngN+h8tz9v+tO0R0rgBFzhMWYovZf
-	 J+UjSmLGSRF/32s1hpL+Lgmra5MwNOwo1uswZ2ejpiIDS4WtQPLOh1U77M/5xVOv2u
-	 Lh+nfl3UUnEFCMgs/jf5X3iqrwB/SPNXjth5Q+2oZRDWFojsTf9imaCutTAsjIwLKf
-	 /hykidGgrTkWOw+JTiASxvp4FujBIHf1hNry410dEQf4HORnw7ahSXI72b9AhDX2O3
-	 KSOaeq1iWHmGw==
+	b=lsAduPnr1onrDgG0pcZKFoXcLr02TnRhuOnON3dx71BI+BAn19lQj44hQZU7IyR45
+	 3tTZ7m5HSoLH+mIZIdn5mHKsdJZ3iya2BCEXAGkZJ9v0al4S7kmcnYtVNzukR3i4tO
+	 pwZAwk27PF5kfoAynzfA0OAxtqFczsC948OOmjiEulqAsaIyqmHXo9DbvQ3sJD1aiY
+	 Lvp9fy2FBfLTycyEiokpCykz/yKCMI64VvE6jBkxBdGL8mGj/xb4akTi5BdG8Yslw5
+	 YxrsM+NSS88bkjt/BoM9/a+x6P2EdvCjHgACt7XAbuV8Tz6RtRg+cX5219+f1FUM9k
+	 hXjZi9FeEauDg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 39/56] scsi: qla2xxx: Adjust feature gating in BSG
- paths for 29xx support
+Subject: Re: [PATCH v4 40/56] scsi: qla2xxx: Fix queue teardown NULL
+ dma_free and bitmap locking
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714095353.289460-40-njavali@marvell.com>
+In-Reply-To: <20260714095353.289460-41-njavali@marvell.com>
 References: <20260714095353.289460-1-njavali@marvell.com>
- <20260714095353.289460-40-njavali@marvell.com>
+ <20260714095353.289460-41-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 15:52:35 +0000
-Message-Id: <20260714155236.53FDB1F000E9@smtp.kernel.org>
+Date: Tue, 14 Jul 2026 16:02:57 +0000
+Message-Id: <20260714160258.0E1921F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Missing bounds check on user-supplied count leads to out-of-bo=
-unds stack read and information leak to hardware.
-- [High] Uninitialized kernel heap memory is leaked to user space in qla2x0=
-0_do_dport_diagnostics.
-- [High] Modifying a DMA buffer after mapping it for device use causes data=
- corruption on non-coherent architectures.
+- [High] Missing cancellation of `qpair->q_work` during queue pair teardown=
+ leads to Use-After-Free of `qpair`.
+- [High] DMA memory for queues is freed before safely clearing the queue po=
+inters, leading to a race condition and Use-After-Free by concurrent reader=
+s like firmware dump.
+- [High] Hardware-supplied queue indices are used to index `ha->req_q_map` =
+prior to bounds validation, leading to Out-of-Bounds Read.
+- [Medium] Host memory and DMA mappings are leaked during teardown if queue=
+s were allocated but not started in hardware.
 --
 
---- Patch [39]: [PATCH v4 39/56] scsi: qla2xxx: Adjust feature gating in BS=
-G paths for 29xx support ---
-commit 3425e7689599b4f90cb066bb5b9b5a8c81315e6d
-Author: Manish Rangankar <mrangankar@marvell.com>
+--- Patch [40]: [PATCH v4 40/56] scsi: qla2xxx: Fix queue teardown NULL dma=
+_free and bitmap locking ---
+commit 00cbb695fac148d9ec27ea62ef3a784eac6e57fb
+Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Adjust feature gating in BSG paths for 29xx support
+scsi: qla2xxx: Fix queue teardown NULL dma_free and bitmap locking
 
-Extend qla2xxx BSG command handling to recognize QLA29xx adapters and
-align feature availability with hardware capabilities. Allow QLA29xx in
-paths previously restricted to QLA27xx/28xx and restrict unsupported
-operations. Guard the active image layout logic with explicit checks.
+This patch fixes a potential panic when freeing uninitialized DMA memory on
+error paths. It also adds locking to prevent concurrent queue ID allocation
+races.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index 46eed5df7eefb..9ee56ccd52b01 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -2014,7 +2014,7 @@ static int qla2900_bsg_load_mpi(struct bsg_job *bsg=
-_job)
->  	bsg_job_done(bsg_job, bsg_reply->result,
->  		     bsg_reply->reply_payload_rcv_len);
+> diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mi=
+d.c
+> index bb2521c052bf8..7072af5b42178 100644
+> --- a/drivers/scsi/qla2xxx/qla_mid.c
+> +++ b/drivers/scsi/qla2xxx/qla_mid.c
+> @@ -576,16 +576,17 @@ qla25xx_free_req_que(struct scsi_qla_host *vha, str=
+uct req_que *req)
+>  	uint16_t que_id =3D req->id;
+>  	size_t req_entry_size =3D qla_req_entry_size(ha);
 > =20
-> -	return rval;
-> +	return 0;
->  }
+> -	dma_free_coherent(&ha->pdev->dev,
+> -			  (req->length + 1) * req_entry_size,
+> -			  req->ring, req->dma);
+> +	if (req->ring)
+> +		dma_free_coherent(&ha->pdev->dev,
+> +				  (req->length + 1) * req_entry_size,
+> +				  req->ring, req->dma);
 
-[Severity: Critical]
-This is a pre-existing issue, but could this lead to an out-of-bounds stack
-read?
+[Severity: High]
+This is a pre-existing issue, but does freeing the DMA memory here before
+clearing the queue pointer create a race condition?
 
-In the neighboring function qla2x00_update_fru_versions() in qla_bsg.c:
+If a firmware dump occurs concurrently (e.g., triggered by a mailbox timeou=
+t),
+it executes qla27xx_fwdt_entry_t263() under hardware_lock and reads
+from ha->req_q_map[i]. It could then copy from req->ring via
+qla27xx_insertbuf() after the memory has been freed here.
 
-	uint8_t bsg[DMA_POOL_SIZE];
-	struct qla_image_version_list *list =3D (void *)bsg;
-	...
-	image =3D list->version;
-	count =3D list->count;
+Would it be safer to nullify ha->req_q_map[que_id] before calling
+dma_free_coherent()?
 
-	while (count--) {
-		memcpy(sfp, &image->field_info, sizeof(image->field_info));
-		rval =3D qla2x00_write_sfp(vha, sfp_dma, sfp, ...);
-		...
-		image++;
-	}
-
-It reads the user-supplied list->count and uses it as a loop condition.
-If the count is maliciously large, could this loop iterate past the end of =
-the
-bsg stack array, reading out-of-bounds stack memory and sending it to the
-device via qla2x00_write_sfp()?
+>  	req->ring =3D NULL;
+>  	req->dma =3D 0;
+>  	if (que_id) {
+> +		mutex_lock(&ha->mq_lock);
+>  		ha->req_q_map[que_id] =3D NULL;
+> -		mutex_lock(&ha->vport_lock);
+>  		clear_bit(que_id, ha->req_qid_map);
+> -		mutex_unlock(&ha->vport_lock);
+> +		mutex_unlock(&ha->mq_lock);
+>  	}
+>  	kfree(req->outstanding_cmds);
+>  	kfree(req);
 
 [ ... ]
 
-> @@ -2855,7 +2855,7 @@ qla2x00_do_dport_diagnostics(struct bsg_job *bsg_jo=
-b)
->  	struct qla_dport_diag *dd;
-> =20
->  	if (!IS_QLA83XX(vha->hw) && !IS_QLA27XX(vha->hw) &&
-> -	    !IS_QLA28XX(vha->hw))
-> +	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
->  		return -EPERM;
-> =20
->  	dd =3D kmalloc_obj(*dd);
+> @@ -605,16 +606,17 @@ qla25xx_free_rsp_que(struct scsi_qla_host *vha, str=
+uct rsp_que *rsp)
+>  		rsp->msix->handle =3D NULL;
+>  	}
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does this allocation leak
-uninitialized kernel heap memory?
+This isn't a bug introduced by this patch, but is it possible for a pending
+work item to execute after the qpair is destroyed?
 
-If a user triggers this BSG request with a payload smaller than
-sizeof(struct qla_dport_diag), kmalloc_obj(*dd) leaves the buffer
-uninitialized, and sg_copy_to_buffer() only partially overwrites it.
+The interrupt handler qla2xxx_msix_rsp_q() queues qpair->q_work on the
+workqueue. During teardown, we free the IRQ here, but the already-queued
+work doesn't appear to be flushed or cancelled before qla2xxx_delete_qpair()
+frees the qpair structure.
 
-Then qla26xx_dport_diagnostics() memsets only dd->buf. The remaining 62 byt=
-es
-in dd->unused remain uninitialized before being copied back to userspace via
-sg_copy_from_buffer():
+When the work eventually executes, qla_do_work() resolves the qpair:
 
-	if (rval =3D=3D QLA_SUCCESS) {
-		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-		    bsg_job->reply_payload.sg_cnt, dd, sizeof(*dd));
-	}
+qla_do_work() {
+    struct qla_qpair *qpair =3D container_of(work, struct qla_qpair, q_work=
+);
+    ...
+}
 
-Could we use kzalloc_obj() instead?
+Could this lead to a use-after-free if the work runs after the qpair is
+freed?
 
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
-x.c
-> index cec308811d9eb..ce845afe3e16a 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -6566,7 +6566,7 @@ qla26xx_dport_diagnostics(scsi_qla_host_t *vha,
->  	dma_addr_t dd_dma;
-> =20
->  	if (!IS_QLA83XX(vha->hw) && !IS_QLA27XX(vha->hw) &&
-> -	    !IS_QLA28XX(vha->hw))
-> +	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
->  		return QLA_FUNCTION_FAILED;
-> =20
->  	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x119f,
+> -	dma_free_coherent(&ha->pdev->dev,
+> -			  (rsp->length + 1) * rsp_entry_size,
+> -			  rsp->ring, rsp->dma);
+> +	if (rsp->ring)
+> +		dma_free_coherent(&ha->pdev->dev,
+> +				  (rsp->length + 1) * rsp_entry_size,
+> +				  rsp->ring, rsp->dma);
+
+[ ... ]
+
+While reviewing the queue teardown paths, I also noticed a few other
+pre-existing issues in the driver:
+
+[Severity: Medium]
+This is a pre-existing issue, but does qla25xx_delete_req_que() leak memory
+if the queues were allocated but never started?
+
+In qla25xx_delete_req_que():
+
+qla25xx_delete_req_que() {
+    ...
+    if (req && vha->flags.qpairs_req_created) {
+        req->options |=3D BIT_0;
+        ret =3D qla25xx_init_req_que(vha, req);
+        if (ret !=3D QLA_SUCCESS)
+            return QLA_FUNCTION_FAILED;
+
+        qla25xx_free_req_que(vha, req);
+    }
+}
+
+If qpairs_req_created is false (such as during a driver initialization
+failure or if startqp was false), the check fails and we never call
+qla25xx_free_req_que(), which appears to leak the req structure and its DMA
+mappings.
 
 [Severity: High]
-This is a pre-existing issue, but does this modify a DMA buffer after mappi=
-ng
-it for device use?
+This is a pre-existing issue, but is it safe to use the hardware-supplied
+queue index before validating it?
 
-Looking at qla26xx_dport_diagnostics():
+In qla2x00_status_entry(), the hardware returns sts->handle which is
+used to look up the queue:
 
-	dd_dma =3D dma_map_single(&vha->hw->pdev->dev,
-	    dd_buf, size, DMA_FROM_DEVICE);
-	...
-	memset(dd_buf, 0, size);
+qla2x00_status_entry() {
+    ...
+    que =3D MSW(sts->handle);
+    req =3D ha->req_q_map[que];
 
-Modifying the buffer after mapping it with DMA_FROM_DEVICE violates the DMA
-API, which can cause data corruption on non-coherent architectures when the
-CPU writes dirty cache lines over the device's DMA writes.
+    /* Check for invalid queue pointer */
+    if (req =3D=3D NULL ||
+        que >=3D find_first_zero_bit(ha->req_qid_map, ha->max_req_queues)) {
+        ...
+}
 
-Should the memset() occur before the dma_map_single() call?
+The index que is used to access ha->req_q_map before checking if it is
+within bounds. A similar pattern exists in qlafx00_status_entry() where
+req is dereferenced before validation. Could a corrupted handle from
+the firmware cause an out-of-bounds read here?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714095353.2894=
-60-1-njavali@marvell.com?part=3D39
+60-1-njavali@marvell.com?part=3D40
