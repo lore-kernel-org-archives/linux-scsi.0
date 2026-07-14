@@ -1,142 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A22482DB7B4
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 17:24:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCD454D90D5
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 17:27:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784049848; cv=none; b=griq4sJJh6ncWH87DbLoFM5kUA1w0K+fJNWqcCIsIFkshk/AFmQFeCFK2ukGy5TiZi9uvnLtHNs+3/59TMPHJlVeUTVaKBRlmaj12as2HbghrH4C/0z8rPJNuBM9dqcsgtjC2/XO4SDw/w2acDUpPWpR3bcrGwIQ+UUyutjpSYs=
+	t=1784050076; cv=none; b=MIc1uJaB/ZfF3/0RMg+dtSP9tC6xu/dwMmvAzEtq0LWm+sNcKjSDv8aFBVyYqzGSKjd8hE23vtVCzq+/CTaDtmljp0FVsMXRC+At+n9tlnqSL2mHS0uZWZTYxeyvbdioVqHPKO9THrMnxS+Sz2f2YYuu5/HFaZAk8bnbo4KaS3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784049848; c=relaxed/simple;
-	bh=qPVME59PUDZTlP+LbrA+OrN88N2Fzau15jA0qQWKf8A=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bBWz4TQfOTzELim7od31iCfcQC0Q+Mn1LVThsLmi9h52xo2lxn/vX70xBrQBDLBUqgL3NT08Wfs9qHEnmLcLFHno8vhJXLHHQ0Tx1rVW2iGQ0RFAFDRpwAmge3YPfx5CjH9HN8PskKoSCQxtY+yH8jYqEmezk7IhWDriF532hts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQSrxE+d; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784050076; c=relaxed/simple;
+	bh=f4gRRdyAk0SYh/aGqpacFBqr8KjG0ILqdRvv9QEbvHU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EJPQqujFWjshBj8tKA08PtSZZe0O7FbcqOGTe28mnPXjRGf2Iup7H+Wj2/o8a1Z87gF2oZaIs+P0HD/h+0lGHrGY7Na2hBZtsM9hg9CR04fvUeh4XE1oc1lfVbXJCtNdUUyibcqOWncLsmkUhHf6qK1Pjc9LTz/cDXnBbcpJZKA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HSGIiyI0; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQSrxE+d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AED91F000E9;
-	Tue, 14 Jul 2026 17:24:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784049847;
-	bh=bU80hRUrN7n4Tee8a6EfwN8lfY0dg2X4fbnXSOVdSKI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hQSrxE+dqZybgbmWxadsUNPNeloiRvBYdqIQec2zSoufa4uYNrwDauijuVT30xpWg
-	 3W0ufOElP3n4YrvnDshHew1YMCg8/srpvMDPjuh6nSXncAW1t6jxbxY9PQ5EWw8Xkd
-	 Nra91LafP5kheesFKX5Qwyu5ke51Y76mkq2z3YvJLMSqvBr9cXe30KpKlqt+iPeY/i
-	 LDG/BQDoL+UbrBVJiUIbbe7gRUrZtSQqz2hPY/qXvyKxtngkOOSOhugOvxFIDCGCpq
-	 dTDCGl2+4uCH0pNn/yHkUCLGuDjpQ3+61kd32MlDUcTmajr/k18Q6V2wSyIm7xH0E1
-	 o1TFCTBEYwHmw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 46/56] scsi: qla2xxx: edif: Fix NULL pointer deref in
- RX SA delete check
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nilesh Javali" <njavali@marvell.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714095353.289460-47-njavali@marvell.com>
-References: <20260714095353.289460-1-njavali@marvell.com>
- <20260714095353.289460-47-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 17:24:06 +0000
-Message-Id: <20260714172407.0AED91F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HSGIiyI0"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2ce7d2adef4so16985105ad.3
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 10:27:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784050072; x=1784654872; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=hgCzlBG6lq6b/rCZWmhMuZKJx8BuNSqfyPONIcSDu8U=;
+        b=HSGIiyI0sBpo4B2k5vZlWmmeNnwslAFVpFp+zHDEuyu0iNkS48ehg4uWM4wT5ZHCnb
+         P7vlF2dgRXz7DxSFqKiTy88Z8bOH6k4fTDTf5njOIUE8AZ+h++1w2jQBZWq/X6/cGVeP
+         co4KXKDHwrCr0pmaX8l+ZfhpWGx6GLlzgLYE0ep+JGbobaO0FVcGzDtjcofhPaXRb9xz
+         4vUh2krmWfid2TG69be4jv7K/YLWZQJUNMvkit73zS08scu1Q3OLhL0+WXA13C8TEV9t
+         7RBdizmLUhsvwltVOVuzIuRkHH618NCJMuopqxxq3HB8pftbFkeOj/PWWfV6zzNyqKCI
+         o/vQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784050072; x=1784654872;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=hgCzlBG6lq6b/rCZWmhMuZKJx8BuNSqfyPONIcSDu8U=;
+        b=aUZrQprAxHjw5DTGTPECi4PLLy2UsF33cZNBxKKfjVdLFzS0ZdfrL0nsgRz482eF15
+         lY7A+rbB0sskt7t2H2eRVqhK5xt11xlFEhZYHrUc5GcAG0MWY58iy6ZhDW4o1aePSUYm
+         iZftCoeYwcYUlcTjVbOZReWY3j/LeeSAcFwcxYYcgjp1fouQxBmLScYM/Pgf0pcL/OhI
+         n3t72zA6PSFiyaPacC97NAeSenjKiuxH9H/trOzkxZG/15icBncMmJ0f5P/8NqE4f/Dk
+         abV5c3xrsIOIJ3kBGO+FNKv1HshP8XypNPXKt6qo5N41iv9Aa9w4w6hffk64Lf5cVSq0
+         mX1A==
+X-Forwarded-Encrypted: i=1; AHgh+RqfpwWW3yp+6Iy5v2Tv3MGqx2Y37boFekzrmo61X5iXQ8AQWdB1TU4O5bcaMDiB1CrL5FF1uIRaEbQ+@vger.kernel.org
+X-Gm-Message-State: AOJu0YylUtY43ShgvOJSZkiZC/gclGbvq9trqXmFfb0JTnT4QKRLgv36
+	oEZ0Pe4mCH/+/oVfMm3SoSoRJwnFu+W8hQh1CLR9v6P4DOq+cGcBo8fe
+X-Gm-Gg: AfdE7cmsz0WrNe0Cogf9krtXi812qafNkL+mTbWThTUdTo4bzsisNFcbFltMellq6FR
+	Blf5F7Y2ReGIS8n6pQGZoNdTiiNp6XNGQaebFzAnZKRjruo6NEN7aczQiLlN12ouakIfqneycnW
+	RoX3HdaIG7BVa62xa0ec1CGl1Trux64uVczhLv87pzGZY3p9HHtS/rHJffxbk5uBhk4Q09Ifl/D
+	9ptzVl9RMcrmL3ZUAKGcspNorNCpgWr4Sx6mH52Tj8ywekHry3MQv1jrWRabO0Gcqqvccba+MW5
+	4SOXoqZK01zwCWJW2TUPz4UtXK3xnu5u29eP7B6N9vSbSuoTCEBucDBoop7Zdku60tX8RoIkWSP
+	demMicIjcE+wZ7NbocNhRXF8y1tNnvjjsVwe4KJg0JHcR1nBNDWHbdIlr8+lvRLzvoUtdve7QVo
+	5kTTeUjPXFQg==
+X-Received: by 2002:a05:6a20:7346:b0:3b9:545d:c006 with SMTP id adf61e73a8af0-3c110009a30mr16747753637.15.1784050072006;
+        Tue, 14 Jul 2026 10:27:52 -0700 (PDT)
+Received: from lgs.. ([101.76.249.46])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-ca5b3643399sm10684428a12.22.2026.07.14.10.27.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jul 2026 10:27:51 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Bean Huo <beanhuo@micron.com>,
+	Can Guo <can.guo@oss.qualcomm.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	Wang Shuaiwei <wangshuaiwei1@xiaomi.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Guangshuo Li <lgs201920130244@gmail.com>
+Subject: [PATCH v2] scsi: ufs: core: cancel RTC work in active-active suspend
+Date: Wed, 15 Jul 2026 01:27:26 +0800
+Message-ID: <20260714172726.1736967-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+UFS RTC support schedules ufs_rtc_update_work to periodically update the
+device RTC. The work can issue query commands and access the UFS host
+controller.
 
-Pre-existing issues:
-- [Critical] The patch incompletely fixes a type confusion bug caused by la=
-te firmware completions, leaving a wild pointer dereference and out-of-boun=
-ds write unhandled.
-- [High] Non-SCSI commands that erroneously fall through to the SCSI comple=
-tion path are leaked because their completion callback is never executed if=
- the union alias evaluates to NULL.
---
+A previous change moved the RTC work cancellation before the PRE_CHANGE
+vendor suspend callback to close a race in the common suspend path.
+However, the active-active path jumps directly to vops_suspend after
+flushing exception handling work and therefore bypasses the
+cancellation.
 
---- Patch [46]: [PATCH v4 46/56] scsi: qla2xxx: edif: Fix NULL pointer dere=
-f in RX SA delete check ---
-commit 05a47ccd14015571b07bc1e0befc11762885c911
-Author: Nilesh Javali <njavali@marvell.com>
+If the RTC work runs while the vendor suspend callback is gating or
+otherwise changing hardware state, it can access the controller during
+suspend and trigger an SError.
 
-scsi: qla2xxx: edif: Fix NULL pointer deref in RX SA delete check
-   =20
-qla_chk_edif_rx_sa_delete_pending() obtains the SCSI command via
-GET_CMD_SP(sp) and immediately dereferences cmd->sc_data_direction.
-That command pointer can be NULL: the firmware may post a status
-completion for a command that has already been returned or aborted.
-The caller qla2x00_status_entry() acknowledges this on the very same
-status path, re-fetching GET_CMD_SP(sp) and bailing out with the
-"Command already returned" message when it is NULL -- but that check
-runs only after qla_chk_edif_rx_sa_delete_pending() has already
-dereferenced the pointer, so a NULL cmd crashes the kernel in
-interrupt context.
+Cancel the RTC work before entering the vendor suspend callback in the
+active-active path. Since this path now cancels the work, move the RTC
+work scheduling outside the device and link state restoration block in
+the resume path. This restarts RTC updates after an active-active
+suspend and resume cycle.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+Fixes: b0bd84c39289 ("scsi: ufs: core: Fix SError in ufshcd_rtc_work() during UFS suspend")
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+---
+v2:
+  - Correct the Fixes tag.
+  - Restart the RTC update work from the common resume path.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_e=
-dif.c
-> index ade1d81785736..bfa520f936a24 100644
-> --- a/drivers/scsi/qla2xxx/qla_edif.c
-> +++ b/drivers/scsi/qla2xxx/qla_edif.c
-> @@ -3540,6 +3540,9 @@ void qla_chk_edif_rx_sa_delete_pending(scsi_qla_hos=
-t_t *vha,
->  	uint32_t handle;
->  	uint16_t sa_index;
-> =20
-> +	if (!cmd)
-> +		return;
-> +
+ drivers/ufs/core/ufshcd.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-[Severity: Critical]
-This is a pre-existing issue, but does this check fully protect against wild
-pointers?
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index d3044a3089b5..c3b105b2678e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10269,6 +10269,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 			req_link_state == UIC_LINK_ACTIVE_STATE) {
+ 		ufshcd_disable_auto_bkops(hba);
+ 		flush_work(&hba->eeh_work);
++		cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
+ 		goto vops_suspend;
+ 	}
+ 
+@@ -10478,10 +10479,11 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		if (ret)
+ 			goto set_old_link_state;
+ 		ufshcd_set_timestamp_attr(hba);
+-		schedule_delayed_work(&hba->ufs_rtc_update_work,
+-				      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
+ 	}
+ 
++	schedule_delayed_work(&hba->ufs_rtc_update_work,
++			      msecs_to_jiffies(UFS_RTC_UPDATE_INTERVAL_MS));
++
+ 	if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
+ 		ufshcd_enable_auto_bkops(hba);
+ 	else
+-- 
+2.43.0
 
-If a non-SCSI command (like a BSG or ELS command) is completed with a
-STATUS_TYPE IOCB (e.g., due to a timeout or transport error), sp->type
-might not be SRB_SCSI_CMD.
-
-In that case, the union evaluation in GET_CMD_SP(sp) could yield a non-NULL
-wild pointer, leading to an out-of-bounds read when accessing
-cmd->sc_data_direction here:
-
-	if (cmd->sc_data_direction !=3D DMA_FROM_DEVICE)
-
-And similarly, the caller in qla2x00_status_entry() could cast this wild
-pointer as a valid scsi_cmnd and corrupt memory in scsi_set_resid().
-
-Should we verify sp->type =3D=3D SRB_SCSI_CMD before trusting GET_CMD_SP(sp=
-)?
-
-[Severity: High]
-This is also a pre-existing issue, but does the NULL check in the caller
-leak non-SCSI commands?
-
-Looking at qla2x00_status_entry() in drivers/scsi/qla2xxx/qla_isr.c:
-
-	cp =3D GET_CMD_SP(sp);
-	if (cp =3D=3D NULL) {
-		...
-		req->outstanding_cmds[handle] =3D NULL;
-		return;
-	}
-
-If a non-SCSI command (like an ELS PLOGI/LOGO command) is submitted, and the
-GET_CMD_SP(sp) union happens to evaluate to NULL (e.g., if the flags and
-els_cmd fields are zero), this path returns early without calling sp->done(=
-).
-
-Can this leak the command and cause threads waiting for completion to hang?
-
->  	handle =3D (uint32_t)LSW(sts24->handle);
-> =20
->  	/* find out if this status iosb is for a scsi read */
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714095353.2894=
-60-1-njavali@marvell.com?part=3D46
