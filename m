@@ -1,159 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C67C3BBFC4
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 13:45:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2554477E28;
+	Tue, 14 Jul 2026 13:46:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784036751; cv=none; b=ZL01X/zyQULU3vVl5ZIz0VvbvTv7Dljn++ALrqGm0lwRgpwDquF1c3IaccTmZjpAzp1LeqJpVsMKmpo9iCRBUWY6tp+rYiyOu/r19oGqXgUh2crmOy/TOD62vdASLXEIEDwIo6KnQGLY4+FVUaq4usNqa0IHHecExfn1gzianSQ=
+	t=1784036767; cv=none; b=PwTmMj2HtGNMPwBL6LkpZC4cSic6LjC7wRooe58XQbj/BI0dV5Xv0NvxMBnc8vbNL31lwp3FhHpnMwFPDfFhVYzzctFRcM+iWMfq1MXsg57LsnYvRCjhpXt2uYHww8HFc/1tRAT+9GiOR6sxVO+gAnRxt0jJ2j6lcVJe5RNYFeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784036751; c=relaxed/simple;
-	bh=8cOOz5cPo4HTzfxIZVBBIDUc0lr8ACGy+FalA7m5NZI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TXR0VhfsjAEwg/6/CsyKMrdz/dDjFe9Ki4WiLkhTyrzYkQ63v7PJO9uuY4UstH6aGKM9zTUN6zf+BagPAktzB7bLbgy3JX61MxpY4EBgA71TNcN9BIiWaAfwK2PUsJQsNKkysQP+aEhtQC5LN5367QntKdbwnVF4ndBJQ22Xkeg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SqYFGd7+; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SqYFGd7+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53F721F000E9;
-	Tue, 14 Jul 2026 13:45:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784036750;
-	bh=ZuWKjFzvOp5kblYDBoIEcDo4lgKitN2LbiZxBvKlneE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SqYFGd7+DBq71EuRrdzZ0UHzvR9coZIixMGe98oTZIQ4990uQK2RntjJHGR8xEKpE
-	 DyeAdCeVvDQdjsQjYidp7psVCucuEF5I05s2wIN1vNBytsCas1CGl2iwjWrYcVp6RB
-	 W00XsksqZqpXvgD06Od09YRoyw8DrFmMfpAieAnJ0jVBCItAC2GpFt3nqBh/TXJ+GX
-	 JlAAovjCzGR9Z8q6qGN1TPxFY9IvuKLqaTvnB3/Uar+wONXF8VeLHV5fAC/LzxZ7Ud
-	 UQEj/iH/cKKO0oMQ2M4Abr0Ru37GWDkE4TbfH1NhuDB0XNnbOZIusBgEUY2Bj6zSvG
-	 ZjbHucTApyE6A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 25/56] scsi: qla2xxx: Handle sts_cont_entry_ext_t for
- 29xx adapters
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nilesh Javali" <njavali@marvell.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714095353.289460-26-njavali@marvell.com>
-References: <20260714095353.289460-1-njavali@marvell.com>
- <20260714095353.289460-26-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 13:45:49 +0000
-Message-Id: <20260714134550.53F721F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1784036767; c=relaxed/simple;
+	bh=iQ66h0CSnaeDJY+5S4c4RU6btkxvwUiep2IzGUB8V3o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=c0Hsd/EfKWIrIQP1j6nU3N9XPFBW5aYB1yXUf/4sKKGYJHJ6WfaqAEl53XWvAY9ThgHlGacR7gb3co89eKbZv7LuTLqIhFqHmBbrUPU6Lixkd/vGc0rqN5rdYRqGZhLVf2rqOsGz6Pt/Jiucj7F7WqCu+XL5sgotde+tjfSiYIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 3D70168B05; Tue, 14 Jul 2026 15:45:59 +0200 (CEST)
+Date: Tue, 14 Jul 2026 15:45:58 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Caleb Sander Mateos <csander@purestorage.com>,
+	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 0/5] block: use integrity interval instead of sector
+ as seed
+Message-ID: <20260714134558.GA714@lst.de>
+References: <20260627054220.2174166-1-csander@purestorage.com> <yq1cxwrdgmx.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1cxwrdgmx.fsf@ca-mkp.ca.oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Critical] Reading up to 124 bytes from a pointer derived from a 60-byte =
-array triggers a FORTIFY_SOURCE runtime kernel panic on QLA29XX adapters.
---
+On Sun, Jul 12, 2026 at 07:09:01PM -0400, Martin K. Petersen wrote:
+> 
+> Caleb,
+> 
+> > The block integrity layer currently sets the integrity seed (initial
+> > reference tag) in units of 512-byte sectors.
+> 
+> ... because that is the fundamental addressing unit in the block layer.
+> 
+> > However, Type 1 and Type 2 ref tags are actually in units of integrity
+> > intervals.
+> 
+> They are not in units of anything until they reach their final
+> protection envelope.
 
---- Patch [25]: [PATCH v4 25/56] scsi: qla2xxx: Handle sts_cont_entry_ext_t=
- for 29xx adapters ---
-commit c469c92ca0a450f7a9aa8d8525c84c9f7c522b1c
-Author: Nilesh Javali <njavali@marvell.com>
-Subject: scsi: qla2xxx: Handle sts_cont_entry_ext_t for 29xx adapters
+If that is the assumption we need to clearly specify that somewhere,
+and also explain why that is a good idea.
 
-This commit adds support for 128-byte response queue entries on 29xx
-adapters. It updates status continuation IOCB processing paths to use
-the correct entry type and data payload size based on the adapter type.
+Most users of bip_set_seed seem to assume it is in integrity interval
+units, see commits:
 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
-r.c
-> index 26722afa937c8..f668012de3d44 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-[ ... ]
-> @@ -271,10 +276,12 @@ int __qla_copy_purex_to_buffer(struct scsi_qla_host=
- *vha,
-> =20
->  	do {
->  		while ((total_bytes > 0) && (entry_count_remaining > 0)) {
-> -			new_pkt =3D (sts_cont_entry_t *)rsp_q->ring_ptr;
-> -			*pkt =3D new_pkt;
-> +			*pkt =3D rsp_q->ring_ptr;
-> +			data =3D ((sts_cont_entry_t *)*pkt)->data;
+e4dc9a4c31fe10d1751c542702afc85be8a5c56a
+c6e3f13398123a008cd2ee28f93510b113a32791
+3d8b5a22d40435b4a7e58f06ae2cd3506b222898
 
-[Severity: Critical]
-Will this trigger a FORTIFY_SOURCE panic on QLA29XX adapters?
+so we'll need to find out a way to come up with interfaces that
+just do the right thing.
 
-The pointer data is unconditionally derived by casting to sts_cont_entry_t,
-which has a 60-byte data array. The compiler tracks this 60-byte bound,
-so when memcpy() copies up to 124 bytes later (from the 128-byte continuati=
-on
-entry), FORTIFY_SOURCE will detect a read buffer overflow and panic the ker=
-nel.
+> 
+> > On devices with integrity interval size > 512 bytes, ref tags are
+> > seeded incorrectly.
+> 
+> The bip seed is whatever the caller decides it should be. The integrity
+> interval size is irrelevant. As is the destination LBA.
+> 
+> > But REQ_OP_ZONE_APPEND operations don't have their ref tags remapped,
+> > so the ref tags using units of sectors will be stored to the device.
+> 
+> Then there's a problem with how we handle REQ_OP_ZONE_APPEND. For NVMe,
+> the PIREMAP flag should address this issue by remapping the written ref
+> tags based on their ultimate destination LBA.
 
-> +			data_sz =3D qla_sts_cont_data_size(ha);
-> =20
-> -			if (new_pkt->entry_type !=3D STATUS_CONT_TYPE) {
-> +			if (((sts_cont_entry_t *)*pkt)->entry_type !=3D
-> +			    STATUS_CONT_TYPE) {
-[ ... ]
-> @@ -906,28 +915,24 @@ qla27xx_copy_multiple_pkt(struct scsi_qla_host *vha=
-, void **pkt,
->  				continue;
->  			}
-> =20
-> -			new_pkt =3D (sts_cont_entry_t *)rsp_q->ring_ptr;
-> -			*pkt =3D new_pkt;
-> +			*pkt =3D rsp_q->ring_ptr;
-> +			data =3D ((sts_cont_entry_t *)*pkt)->data;
+PIREMAP expects the ref tag to be in logical block sized units.
 
-[Severity: Critical]
-Does this face the same FORTIFY_SOURCE bounds checking issue on the 60-byte
-data array as __qla_copy_purex_to_buffer() above?
+> Fundamentally, you should be able to set the bip seed for any READ or
+> WRITE bio to 42, regardless of logical block size, and have it work. If
+> it doesn't, then that's a bug.
+> 
+> The fact that the block layer happens to know the start LBA or ZSLBA
+> does not mean that callers above the block layer have access to the same
+> information. Changing the block layer's integrity handling semantics is
+> not the correct approach. Everything above the block layer depends on
+> the existing, format-agnostic, semantics.
 
-> +			data_sz =3D qla_sts_cont_data_size(ha);
-[ ... ]
-> @@ -1190,10 +1206,12 @@ qla27xx_copy_fpin_pkt(struct scsi_qla_host *vha, =
-void **pkt,
->  				continue;
->  			}
-> =20
-> -			new_pkt =3D (sts_cont_entry_t *)rsp_q->ring_ptr;
-> -			*pkt =3D new_pkt;
-> +			*pkt =3D rsp_q->ring_ptr;
-> +			data =3D ((sts_cont_entry_t *)*pkt)->data;
+We have 4 callers above the block layer, and all of them know that the
+see is the LBA.  For type 1 that is enforced by hardware, and all the
+Linux code is basically based around a type 1 model, which is emulate
+don type 2 PI and type 3 PI using the available means.
 
-[Severity: Critical]
-Does this face the same FORTIFY_SOURCE bounds checking issue on the 60-byte
-data array as above?
-
-> +			data_sz =3D qla_sts_cont_data_size(ha);
-[ ... ]
-> @@ -3682,7 +3701,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct r=
-sp_que *rsp, void *pkt)
->   * Extended sense data.
->   */
->  static void
-> -qla2x00_status_cont_entry(struct rsp_que *rsp, sts_cont_entry_t *pkt)
-> +qla2x00_status_cont_entry(struct rsp_que *rsp, void *pkt, u32 data_sz)
->  {
->  	uint8_t	sense_sz =3D 0;
->  	struct qla_hw_data *ha =3D rsp->hw;
-> @@ -3691,6 +3710,7 @@ qla2x00_status_cont_entry(struct rsp_que *rsp, sts_=
-cont_entry_t *pkt)
->  	struct scsi_cmnd *cp;
->  	uint32_t sense_len;
->  	uint8_t *sense_ptr;
-> +	u8 *data =3D ((sts_cont_entry_t *)pkt)->data;
-
-[Severity: Critical]
-The commit message mentions that qla2x00_status_cont_entry() was changed to
-accept void * so it can internally select the right structure based on adap=
-ter
-type. However, doesn't this hardcoded cast to sts_cont_entry_t * defeat that
-and restrict the pointer to a 60-byte array, causing the same FORTIFY_SOURCE
-panic when sense_sz is larger than 60 bytes?
-
-> =20
->  	if (!sp || !GET_CMD_SENSE_LEN(sp))
->  		return;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714095353.2894=
-60-1-njavali@marvell.com?part=3D25
