@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37B3C333440
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 18:00:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C135032ED54
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 18:07:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784052004; cv=none; b=TjIYmBw1FNLSHeckk1Mcq7WMLzscy00TnEWjU1y2DebkXCaUBdIxW96RDLetJ9CHfjz0vdn47qfikriXTGEyQh0IqYyarRPzVQ81zHbtJZnsTSpKuG6bmJEwGBKsYMSVEWV5dmI7dex8ujFBLJu+72kdINxGBmdcw+JeGtZ2lUE=
+	t=1784052454; cv=none; b=DfpwD9qXpWQ46CTRK4ru61i4PNGyXV6bZvzZTivo6zorQmZbFRWvkbzh5ogJrLlovKQNax5IXljvFw1lwgaktDKxt9HqT6iUiwLfOnd0hOWHQ8MkE+P8WSdHz7wett1tzlSEdODNGwBeZ2ZE/5DvyFN4Ln1zSg0cFe7OK2nyia4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784052004; c=relaxed/simple;
-	bh=8GzUIcTTUqSbDwH0zUtrVOtA9xPDHtxHNrFeOnZ4czI=;
+	s=arc-20240116; t=1784052454; c=relaxed/simple;
+	bh=pXGP1CxMwALf1X/pyduNPtJZQGf4XfNK1wTw65pWlD0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=t40l9/RKXVInCxKcyYetO+6QjKvpEnsmQhOCdNx0ToqX/ZVFLOo11ttA88gc2uALIv/UXozvJ0f/tarWgR2l0S9ngJCmxAHIOjhXISR5LGUiAqX7BwnyiihDOMw9bYU5bIVVOUPsPJTq2FOB2Zq/4dIqbSLmTCArrLI+TwkrxNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GKLhnNho; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=MdpUaYEJzIyvvAYNFkm73tbClxly5Vs2/+KQqmACtooKPhzzEMrH3oWIovG8teDvPPUdaEItlJwNa2xhUjDPdnrxHRGgtMXz8At5JZOki5Ns71A68Ky9qN/WxAxFpLOFuoghvctGoSd1khLBbVBiMVLYRvyAOsy96/Bs3xNDTmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R5QcztsT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GKLhnNho"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BBAC1F000E9;
-	Tue, 14 Jul 2026 17:59:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R5QcztsT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 357091F000E9;
+	Tue, 14 Jul 2026 18:07:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784052000;
-	bh=mKQBazXQsuNVqBsB16PfqbaagfzNT3tZJKQ37nEkvmA=;
+	s=k20260515; t=1784052453;
+	bh=aZ4m5FRZH8qcJ2WotPQOnUx616v7I8S8XLSTNWYYb5U=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GKLhnNhoFQvCYDNi+K6wwzEAyuGt3ZXaRQbec6IncJAdLDvlhprJJIEnekDxLOU2K
-	 cyZS7PvmaAK7ABvKVMCmkiiCfaHgC81hC9VdHRqiZnHZ/ttO0UONDdsCbuUzkAZeRw
-	 nLnE/LDubAIcW9GSVBWTcto6+dzH10Dgd6qrrsRl32uv8sbd39NU3lH3Ry6npJC0gX
-	 mfJ61DTDgAD8HWevVvl0EkVver2dpuQv4EsxhH7sLiOsVaqLBYU4DF/nqdS8hJwdhJ
-	 ZPPSi9NrgHidXNxarY4j0FTkvo7cQZH0h/uLHq4T/J67ZlwnNW3oRk+/z9qrNkAcgY
-	 koolXmmRq6B2A==
+	b=R5QcztsTeDHut28klFxMbSNm5XAfMWDbpM3dPhsPJLpPn8JbCC9MPpnqm4xkwtFKG
+	 hG61zHp4IE9S7qS9Mop39UVrWRy/yBvfE3RV9eIvxnK1y48S5jxFotF1svHa+ts/Hi
+	 Jmvdy9LhgiC0ts8vWooCkf4VN29SCfuAPKrdybokdskGeJX+6aaDEpnDp0RyOcBO/B
+	 Pj267q7bgmQlI6JP6QR3a++2f4EeYyrFH9F3Id0Dz9ixTUBcKlaWApdOqwAwjonfbX
+	 +BOPSWlp/Afk6HigOUpoFuI0FEeKLzPAF59ZF/+h57x9sZyEZzxDvfvqe27V31i8Kl
+	 f7NTsoJF3Wg4Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 51/56] scsi: qla2xxx: Initialize NVMe abort_work once
- at submission
+Subject: Re: [PATCH v4 52/56] scsi: qla2xxx: Hold qpair lock when sending
+ NVMe LS reject
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714095353.289460-52-njavali@marvell.com>
+In-Reply-To: <20260714095353.289460-53-njavali@marvell.com>
 References: <20260714095353.289460-1-njavali@marvell.com>
- <20260714095353.289460-52-njavali@marvell.com>
+ <20260714095353.289460-53-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 17:59:58 +0000
-Message-Id: <20260714175959.0BBAC1F000E9@smtp.kernel.org>
+Date: Tue, 14 Jul 2026 18:07:32 +0000
+Message-Id: <20260714180733.357091F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,125 +48,124 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
-New issues:
-- [High] Unbalanced kref_get_unless_zero() leaks command reference when sch=
-edule_work() returns false, causing an NVMe command stall.
-- [High] Unconditional INIT_WORK() in qla_nvme_post_cmd() corrupts the work=
-queue if a command is retried while an abort is pending.
-
 Pre-existing issues:
-- [Critical] Submission error paths clear priv->sp and directly free the SR=
-B without synchronization, causing NULL pointer dereference or use-after-fr=
-ee in concurrent aborts.
+- [High] Missing list_del() in qla_nvme_xmt_ls_rsp() error path leads to Us=
+e-After-Free list corruption
+- [High] Concurrent lockless modifications of fcport->unsol_ctx_head list c=
+ause list corruption
+- [High] Concurrent formatting of shared HBA-wide LS Reject payload buffer =
+causes data corruption
 --
 
---- Patch [51]: [PATCH v4 51/56] scsi: qla2xxx: Initialize NVMe abort_work =
-once at submission ---
-commit 1eba88ba9a82a1024765221adbcbb078aa9fe5ca
+--- Patch [52]: [PATCH v4 52/56] scsi: qla2xxx: Hold qpair lock when sendin=
+g NVMe LS reject ---
+commit ad95c4a49a1dcc181e2c5db29ae039a2ea5d99d4
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Initialize NVMe abort_work once at submission
+scsi: qla2xxx: Hold qpair lock when sending NVMe LS reject
 
-This commit moves the initialization of abort_work from the abort paths to
-command submission. This prevents work item corruption if multiple aborts
-are issued for the same command while a work item is already queued.
+This commit takes the hardware_lock (via qp_lock_ptr) in the unlocked calle=
+rs
+of qla_nvme_ls_reject_iocb(), preventing concurrent execution with normal I=
+/O
+submission on the base ring. It ensures the ring producer state is protecte=
+d=20
+from corruption leading to duplicated or dropped commands.
 
 > diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
 vme.c
-> index 0038b6274d444..3b2f255a5d7d4 100644
 > --- a/drivers/scsi/qla2xxx/qla_nvme.c
 > +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -463,7 +463,6 @@ static void qla_nvme_ls_abort(struct nvme_fc_local_po=
-rt *lport,
->  	}
->  	spin_unlock_irqrestore(&priv->cmd_lock, flags);
-> =20
-> -	INIT_WORK(&priv->abort_work, qla_nvme_abort_work);
->  	schedule_work(&priv->abort_work);
->  }
-
-[Severity: High]
-Does this change introduce a kref leak if schedule_work() returns false?
-
-With INIT_WORK() removed, if a concurrent abort is already pending,
-schedule_work() will return false. However, earlier in qla_nvme_ls_abort(),
-we unconditionally increment the command reference with
-kref_get_unless_zero().=20
-
-If schedule_work() fails because the work is already queued, the worker
-only executes once and drops a single reference, meaning the extra kref
-is permanently leaked and the NVMe command never completes.
-
-[ ... ]
-
-> @@ -545,7 +545,6 @@ static void qla_nvme_fcp_abort(struct nvme_fc_local_p=
+> @@ -440,7 +441,9 @@ static int qla_nvme_xmt_ls_rsp(struct nvme_fc_local_p=
 ort *lport,
->  	}
->  	spin_unlock_irqrestore(&priv->cmd_lock, flags);
-> =20
-> -	INIT_WORK(&priv->abort_work, qla_nvme_abort_work);
->  	schedule_work(&priv->abort_work);
->  }
+>  	a.vp_idx =3D vha->vp_idx;
+>  	a.nport_handle =3D uctx->nport_handle;
+>  	a.xchg_address =3D uctx->exchange_address;
+> +	spin_lock_irqsave(ha->base_qpair->qp_lock_ptr, flags);
+>  	qla_nvme_ls_reject_iocb(vha, ha->base_qpair, &a, true);
+> +	spin_unlock_irqrestore(ha->base_qpair->qp_lock_ptr, flags);
+>  	kfree(uctx);
 
 [Severity: High]
-Could this also lead to the same kref leak as in qla_nvme_ls_abort()
-if schedule_work() returns false?
+This is a pre-existing issue, but missing a list_del() in the
+qla_nvme_xmt_ls_rsp() error path can lead to a use-after-free list corrupti=
+on.
+
+When the transport layer attempts to send the response, if sending fails,
+the code jumps to the out: error path. It frees the uctx object via kfree()
+without unlinking uctx->elem from the fcport->unsol_ctx_head list.
+
+A subsequent unsolicited LS request will perform list_add_tail() on this li=
+st,
+writing to the freed memory. Should a list_del() be added here?
 
 [ ... ]
 
-> @@ -877,6 +876,7 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_por=
-t *lport,
+> @@ -1243,6 +1246,10 @@ static void qla_nvme_lsrjt_pt_iocb(struct scsi_qla=
+_host *vha,
+>  	}
+>  }
 > =20
->  	kref_init(&sp->cmd_kref);
->  	spin_lock_init(&priv->cmd_lock);
-> +	INIT_WORK(&priv->abort_work, qla_nvme_abort_work);
->  	sp->priv =3D priv;
->  	priv->sp =3D sp;
->  	sp->type =3D SRB_NVME_CMD;
+> +/*
+> + * Allocates from and advances the request ring, so the caller must hold
+> + * qp->qp_lock_ptr (the response-queue caller already holds it).
+> + */
+>  static int
+>  qla_nvme_ls_reject_iocb(struct scsi_qla_host *vha, struct qla_qpair *qp,
+>  			struct qla_nvme_lsrjt_pt_arg *a, bool is_xchg_terminate)
 
 [Severity: High]
-Does calling INIT_WORK() here corrupt the workqueue if a command is retried?
+This isn't a bug introduced by this patch, but doesn't
+qla_nvme_ls_reject_iocb() format the shared HBA-wide LS Reject payload buff=
+er
+without HBA-level synchronization?
 
-If qla2x00_start_nvme_mq() fails with -EBUSY later in qla_nvme_post_cmd(),
-the blk-mq layer will eventually retry the request, calling this function
-again with the same priv structure.
+When an invalid unsolicited NVMe-FC LS request is received,
+qla2xxx_process_purls_iocb() invokes qla_nvme_ls_reject_iocb(..., false).
+This formats the reject payload directly into vha->hw->lsrjt.c, a single
+HBA-wide buffer allocated at probe time.
 
-If a concurrent transport teardown triggered an abort during the initial
-failed attempt, priv->abort_work could be actively queued on the system
-workqueue. Unconditionally calling INIT_WORK() again here on the retried
-attempt would overwrite the list_head of an actively queued work_struct.
+Because qla2xxx_process_purls_iocb() is called holding only the per-queue-p=
+air
+lock, if multiple NVMe-FC requests arrive on different queue pairs
+simultaneously, multiple CPUs will concurrently overwrite the same lsrjt.c
+buffer without any HBA-level synchronization.
 
-[Severity: Critical]
-This is a pre-existing issue, but could this error path trigger a NULL
-pointer dereference or use-after-free during a concurrent abort?
+Could this result in the hardware doing a DMA from concurrently overwritten
+memory, transmitting corrupted or interleaved protocol data?
 
-If qla2x00_start_nvme_mq() fails, the error handling does:
+[ ... ]
 
-	rval =3D qla2x00_start_nvme_mq(sp);
-	if (rval !=3D QLA_SUCCESS) {
-		...
-		sp->priv =3D NULL;
-		priv->sp =3D NULL;
-		qla2xxx_rel_qpair_sp(sp->qpair, sp);
-	}
+> @@ -1311,7 +1319,9 @@ qla2xxx_process_purls_pkt(struct scsi_qla_host *vha=
+, struct purex_item *item)
+>  		a.vp_idx =3D vha->vp_idx;
+>  		a.nport_handle =3D uctx->nport_handle;
+>  		a.xchg_address =3D uctx->exchange_address;
+> +		spin_lock_irqsave(vha->hw->base_qpair->qp_lock_ptr, flags);
+>  		qla_nvme_ls_reject_iocb(vha, vha->hw->base_qpair, &a, true);
+> +		spin_unlock_irqrestore(vha->hw->base_qpair->qp_lock_ptr, flags);
+>  		list_del(&uctx->elem);
+>  		kfree(uctx);
+>  	}
 
-This runs without holding priv->cmd_lock and without checking cmd_kref.
-If a concurrent abort acquires the lock and kref just before priv->sp is
-cleared, it schedules qla_nvme_abort_work().
+[Severity: High]
+This is a pre-existing issue, but does removing elements from the
+fcport->unsol_ctx_head list without locks cause list corruption?
 
-The abort worker will then read priv->sp without locking:
+Elements are added to fcport->unsol_ctx_head via list_add_tail() in
+qla2xxx_process_purls_iocb() from the response queue processing context whi=
+le
+holding the queue pair lock.=20
 
-drivers/scsi/qla2xxx/qla_nvme.c:qla_nvme_abort_work() {
-	struct nvme_private *priv =3D container_of(work, ...);
-	srb_t *sp =3D priv->sp;
-	fc_port_t *fcport =3D sp->fcport;
-        ...
-}
+However, they are removed here via list_del() in qla2xxx_process_purls_pkt()
+entirely unlocked, which is now clearly outside the newly added qp_lock_ptr
+region.
 
-This means the worker might read a NULL priv->sp and dereference it, or
-use the SRB after it has been freed to the mempool by qla2xxx_rel_qpair_sp(=
-).
+The same unlocked list_del() also occurs in qla_nvme_release_lsrsp_cmd_kref=
+().
+Could these concurrent non-atomic operations corrupt the next and prev poin=
+ters?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714095353.2894=
-60-1-njavali@marvell.com?part=3D51
+60-1-njavali@marvell.com?part=3D52
