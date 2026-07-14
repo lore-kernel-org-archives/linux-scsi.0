@@ -1,141 +1,179 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A1F6374E7F
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 10:42:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 889ED379EFF
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 10:43:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784025758; cv=none; b=fjChT0Uhkm9p1EElIQUZPfV2tr6jIpZsR+aza0PzqhFavRiDxl6FuT5yYAXP40VGIpxlyVn3LryCJ4uK4Co/la7env9VUheoleWjThoz2kxTYG4b4br2E/YtS4Dly3P6yQTP9nJcT3n8CrQEv+b4qZyJl4VZb58Toz9BN6c7hpI=
+	t=1784025841; cv=none; b=lop/5/eIi9pPJvc0YIPH0XP8LZRhAfW/mVY9DQzoPUC5aasD6zj2t6JUTA2m0EbKbj77T5nmvnpgOo3TOBBJTys+kgrr9BFmTVcJYSKUVW0rrN9WN36JRXRKqDkY9BI1gLcJcOxC07xCcmaFUzIpxdyHSF3ZUt86Dmpj7olT59o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784025758; c=relaxed/simple;
-	bh=K/ps9oRHyg/vt+fKJcaRSRGynBPaasKS2Q3C1v5LM3I=;
+	s=arc-20240116; t=1784025841; c=relaxed/simple;
+	bh=oKe8arVsOSDs1GEkdUGFOj88bV8mRw7tzHdrdtY8pDs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=e//IWadfAkmQonHizdaHcN8tK6+Bl2vSiDEGGiuw3dDiUvEauJRq0QNCZa5axpfBr94TkVYtgBUwOwj579S5l2Q470Bm/1WC58Nc3XzhtKennuFoaVaCgzfRUMbZm/WsdcasxebgF3pww6hWoRMVV0fz6LE3Pfc0mRrCBM+ubJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d42xTXxJ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=OhJae6RIdjQ9Y3zrCTZwV6wzMjmaeJy2yb4VMFEIKrsiBip4CErAfylCePgx5cxli72EnYICvoKHkxHohZ23awwH0xTChEa7bPLWvoktum5YQ4vHoOSeSiwIabNKYzjTP+FDHrubUfP/Cwub5mi9h/T4lMqYae64v102GnlyjnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k++aqu3T; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d42xTXxJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 263351F000E9;
-	Tue, 14 Jul 2026 10:42:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k++aqu3T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 209991F000E9;
+	Tue, 14 Jul 2026 10:43:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784025757;
-	bh=e5B6EwpUUET4B2UQ3Lk5g+0S7X8CuAaCsWqQ5b4VhdY=;
+	s=k20260515; t=1784025835;
+	bh=cr7ATUlgm3BmIH67TiAsp//wHXyPnoesV/Ckxdieb5I=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=d42xTXxJu61cFzcpdLT7M1nSLE90uA57hBgSJdlLcbUknOB47/VzRVPqzkRPMHDnl
-	 /m1GNbm39LNCcCmRKWtyd7/N3e/vBhYbK+PJicN5dWjYyDmkFKa0kvHxYGgVEj1edh
-	 9Om9vBm4qpqgHkScZ++R4VkkHAAne6k7QkqdBVJI/NpBwULk3CVing6OUVL6J92oj9
-	 TUQ/7Sl10XM3+WHLpYN4ho1gYJagHu09FyZVsmt55Esr9TEhYLP2jXVZ8yaSzE1Y2l
-	 wyBsMMwS7Wh0bTs4OY4v6APUxpNdwF5oPZzljVjLo2ea6Nu/1cyS5QbaFoNJKN0iGx
-	 C3qaBzdAY2YIg==
+	b=k++aqu3TNLAc3zE95B+8W03WBnlfWH3E96aeCYqm5PM4K0whfUbEZXcy23vsDzVFp
+	 +B8x4zDCZ0XywoCGuCUPlveOFeLhsA4cLSvPIGrXAPhD7Gp38pmpMVpTW1SWS6nxSE
+	 9Vf9gyDwZYucGy54aX/7U+Q7GSuYNPKW+978xyBK2XyWerfCy2JS7XZlyXjZDZISXU
+	 ottvQysPTlAC3RLMlPICKbU7ry2sNyyt3U9mprfJLRySUC4+pdoefAH8thnf+tCshD
+	 7xmOtdA3A3FYvBLe5aC/gP+BySSiAZ5Y4fmwui3YVFZ9eVby2LM8VIzHspvRjw8vtt
+	 kQM6zol7ZATeQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 06/56] scsi: qla2xxx: Remove redundant VPD flash read
- in sysfs read path
+Subject: Re: [PATCH v4 05/56] scsi: qla2xxx: Add FC operational firmware
+ load for 29xx
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714095353.289460-7-njavali@marvell.com>
+In-Reply-To: <20260714095353.289460-6-njavali@marvell.com>
 References: <20260714095353.289460-1-njavali@marvell.com>
- <20260714095353.289460-7-njavali@marvell.com>
+ <20260714095353.289460-6-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 10:42:36 +0000
-Message-Id: <20260714104237.263351F000E9@smtp.kernel.org>
+Date: Tue, 14 Jul 2026 10:43:54 +0000
+Message-Id: <20260714104355.209991F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Unprotected hardware flash register accesses via `qla28xx_get_aux_=
-images()` before acquiring `optrom_mutex`.
-- [High] Concurrent accesses to fw_dump sysfs attributes can trigger a Use-=
-After-Free or NULL pointer dereference because resources are freed without =
-acquiring optrom_mutex.
+- [High] Missing `.start_scsi` function pointer in `qla29xx_isp_ops` leads =
+to NULL pointer dereference.
+- [Medium] Out-of-bounds read and missing minimum size check in `qla29xx_lo=
+ad_fw_template()`.
+- [Low] Wasteful use of `vmalloc()` for a small, short-lived 80-byte struct=
+ure (`struct fcop_header`).
 --
 
---- Patch [6]: [PATCH v4 06/56] scsi: qla2xxx: Remove redundant VPD flash r=
-ead in sysfs read path ---
-commit 62e5b966d9421643c341b9735e054bbf8a187205
+--- Patch [5]: [PATCH v4 05/56] scsi: qla2xxx: Add FC operational firmware =
+load for 29xx ---
+commit 9c9c2ed926e65df8d7c92e4c4efc603458f304c5
 Author: Manish Rangankar <mrangankar@marvell.com>
-scsi: qla2xxx: Remove redundant VPD flash read in sysfs read path
 
-This commit removes a redundant read_optrom() call in qla2x00_sysfs_read_vp=
-d()
-that executes without the optrom_mutex, preventing concurrent flash access
-issues.
+scsi: qla2xxx: Add FC operational firmware load for 29xx
 
-> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_a=
-ttr.c
-> index 6a05ce195aa05..800751ab562a1 100644
-> --- a/drivers/scsi/qla2xxx/qla_attr.c
-> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+This commit adds support for loading 29xx FC operational firmware from the
+filesystem. It implements the request_firmware and segment-load pattern
+used by earlier adapters and sets up the firmware dump template.
 
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index f5d230fc3642d..f6a8bcbb2a037 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
 [ ... ]
+> @@ -9128,6 +9131,539 @@ qla81xx_load_risc(scsi_qla_host_t *vha, uint32_t =
+*srisc_addr)
+[ ... ]
+> +static int
+> +qla29xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+> +{
+> +	int rval;
+> +	struct fcop_header *header;
+> +	uint32_t *dcode =3D NULL;
+> +	struct fw_blob *blob;
+> +	__be32 *fwcode, *array1_addr, *array3_addr;
+> +	uint templates;
+> +	uint32_t array_size, risc_attr =3D 0;
+> +	ulong i;
+> +	uint j;
+> +	ulong dlen, array3_offset;
+> +	size_t max_dwords;
+> +	struct qla_hw_data *ha =3D vha->hw;
+> +	struct fwdt *fwdt =3D ha->fwdt;
+> +
+> +	header =3D vmalloc(sizeof(*header));
 
-> @@ -580,7 +580,6 @@ qla2x00_sysfs_read_vpd(struct file *filp, struct kobj=
-ect *kobj,
->  	ha->isp_ops->read_optrom(vha, ha->vpd, faddr, ha->vpd_size);
->  	mutex_unlock(&ha->optrom_mutex);
+[Severity: Low]
+Is it necessary to use vmalloc() for this 80-byte fcop_header structure?
+Allocating such a small structure with vmalloc consumes a full page and TLB
+entries. Would it be better to allocate this on the stack or use kzalloc()=
+=20
+instead?
+
+> +	if (!header)
+> +		return QLA_FUNCTION_FAILED;
+[ ... ]
+> +static int
+> +qla29xx_load_fw_template(scsi_qla_host_t *vha)
+> +{
+[ ... ]
+> +	buf =3D qla29xx_read_optrom_data(vha, FLT_REG_FW_DUMP_TMPLT, 0,
+> +				       fw_dump_tmplt, 0,
+> +				       ha->fw_dump_tmplt_len);
+> +	if (!buf) {
+> +		ql_log(ql_log_info, vha, 0x0013,
+> +		       "Unable to read fw dump temp info.\n");
+> +		goto free_fw_dump;
+> +	}
+> +
+> +	ql_dump_buffer(ql_dbg_init, vha, 0x006b, fw_dump_tmplt,
+> +		       min_t(uint32_t, ha->fw_dump_tmplt_len, 1024));
+> +
+> +	for (j =3D 0; j < templates; j++, fwdt++) {
+> +		vfree(fwdt->template);
+> +		fwdt->template =3D NULL;
+> +		fwdt->length =3D 0;
+> +
+> +		template_size =3D le32_to_cpu(((__le32 *)fw_dump_tmplt)[2]);
+
+[Severity: Medium]
+Could this access out-of-bounds memory?
+
+This reads the third 32-bit word of the fw_dump_tmplt buffer. If the
+flash or firmware advertises a ha->fw_dump_tmplt_len that is smaller
+than 12 bytes, this will read past the end of the allocation. Should
+there be a minimum size check against fw_dump_tmplt_len before this
+access?
+
+> +
+> +		ql_dbg(ql_dbg_init, vha, 0x0161,
+> +		       "-> fwdt%u template array at %p (0x%x bytes)\n",
+> +		       j, fw_dump_tmplt, template_size);
+[ ... ]
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index c3eb941f71ad9..6560e58ad87c7 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+[ ... ]
+> @@ -2640,6 +2640,45 @@ static struct isp_operations qla27xx_isp_ops =3D {
+>  	.initialize_adapter	=3D qla2x00_initialize_adapter,
+>  };
 > =20
-> -	ha->isp_ops->read_optrom(vha, ha->vpd, faddr, ha->vpd_size);
+> +static struct isp_operations qla29xx_isp_ops =3D {
+> +	.pci_config		=3D qla25xx_pci_config,
+> +	.reset_chip		=3D qla24xx_reset_chip,
+[ ... ]
+> +	.get_flash_version	=3D qla24xx_get_flash_version,
+> +	.start_scsi_mq		=3D qla2xxx_dif_start_scsi_mq,
+> +	.abort_isp		=3D qla2x00_abort_isp,
 
 [Severity: High]
-This is a pre-existing issue, but does this code leave hardware flash regis=
-ter
-accesses unprotected earlier in qla2x00_sysfs_read_vpd()?
+Does this isp_operations struct need a .start_scsi callback?
 
-Looking at qla2x00_sysfs_read_vpd(), qla28xx_get_aux_images() is called bef=
-ore=20
-acquiring optrom_mutex:
+In qla2xxx_queuecommand(), if multiqueue is disabled via module parameters
+(ql2xmqsupport=3D0) or falls back because MSI-X allocation fails, the code
+bypasses the MQ path and invokes:
 
-	if (IS_QLA28XX(ha)) {
-		qla28xx_get_aux_images(vha, &active_regions);
-		...
-	}
+    rval =3D ha->isp_ops->start_scsi(sp);
 
-	mutex_lock(&ha->optrom_mutex);
+Since the .start_scsi pointer is omitted for 29xx, won't this result in a
+NULL pointer dereference?
 
-The qla28xx_get_aux_images() call chain reaches qla24xx_read_flash_data(),
-which directly manipulates ISP hardware flash registers. Without optrom_mut=
-ex
-protection, could this race with concurrent sysfs invocations or other flash
-operations and corrupt the hardware state?
-
->  skip:
->  	return memory_read_from_buffer(buf, count, &off, ha->vpd, ha->vpd_size);
->  }
-
-[Severity: High]
-This is also a pre-existing issue in the same file, but can concurrent acce=
-ss
-to fw_dump sysfs attributes trigger a use-after-free?
-
-If thread 1 reads the minidump via qla2x00_sysfs_read_fw_dump(), it acquires
-optrom_mutex and accesses ha->md_dump:
-
-qla2x00_sysfs_read_fw_dump()
-    mutex_lock(&ha->optrom_mutex);
-    ...
-    rval =3D memory_read_from_buffer(buf, count, &off, ha->md_dump, ...);
-    mutex_unlock(&ha->optrom_mutex);
-
-If thread 2 concurrently writes to the sysfs node via
-qla2x00_sysfs_write_fw_dump(), it can free ha->md_dump without acquiring
-optrom_mutex:
-
-qla2x00_sysfs_write_fw_dump()
-    ...
-    switch (dump_type) {
-    case 0:
-        ...
-        qla82xx_md_free(vha);
-
-Couldn't thread 1 end up accessing freed memory in memory_read_from_buffer()
-if qla82xx_md_free() is called concurrently by thread 2?
+> +	.iospace_config		=3D qla83xx_iospace_config,
+> +	.initialize_adapter	=3D qla2x00_initialize_adapter,
+> +};
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714095353.2894=
-60-1-njavali@marvell.com?part=3D6
+60-1-njavali@marvell.com?part=3D5
