@@ -1,142 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1F1049552D
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 15:18:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 350B2271456
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 15:22:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784042337; cv=none; b=b6BunsuCcTVpRG+dtmmumhXnfCY/TOQveMPhebtrY2aLSb6KAs8rhruQYvPkxdYabZAmtzLtRTSfLJauqjYf1NmIk6f/PPxs/CYKISjseTTynQpXYjWKUO/I3Ht5ZYbRcH0YI7tv5cDLR7VkBrrb9PscPjSsE3TM6FODzuY3YiQ=
+	t=1784042570; cv=none; b=NBdwTCtAOYWg/DzOxgFUmUjPXuKwlIpUQtLsejqL+3wX2+d6m+h60FoIKXnok5G+KU2tHUrpjZHHR0sfHl7H/GRTcODbVdzQrO6N2FIhCI/tCrKnyD/C1xbFwyn1aM1PcGAkd3p+5QFpKSPCPgAlcmSCriqMWwjfKc32dHth0Co=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784042337; c=relaxed/simple;
-	bh=bsjNnS0c6ecH1T40cB0KmNV9ac2/O+sOaTyqCQd+nLE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Op9wmppsBrpr2+TFBFllR/k4BB56wkYhehKxTmuMVfO9fBPSnkUzDR4huvl1McDX4qcaQlyF4CzuBFtbSC4g2/Oyp5HzTKW4AXGSosdPEDfQTHT4kyzFOYTxx3421ynwGptWtWTQzbgwxqv4B4u8WPcRtmgL/sIV62FuNbx6FMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pi8o5T2F; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784042570; c=relaxed/simple;
+	bh=MiZNs3K5dRllkjW5iOz2ZQ3thz2YRxLQomtAaKNKzGM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t1dC2UPRGnS8z6tR3UWXixcWRDYnrYUYtABzzbu6uazKtEGJsKQeSx2LzB3ilwm+SNiIneyqGxPhO9Vsn7cibrC/wnoPTzSyK4oSXiQdq+M7yVBd06ptlqWC9jDmmvPSyuu0Uq/IkBX0nozSnCHLV8Zrh/zbc5ezhsYQS/+Anj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DxjpDvw/; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pi8o5T2F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3343A1F000E9;
-	Tue, 14 Jul 2026 15:18:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784042336;
-	bh=hnskZ+L1sL1obpiDc1OUqzBhNWOmUCwUtQTL3DCwY54=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Pi8o5T2FQOEGzZ6ZPQU2mbtS5DAWOeLSSrxn79tCkxxvkOzQYQEwMMTY6a40s+jxz
-	 Thnh/BWLaz92FnRfcTn4XyM8mjsG1jYqHISMWmw5x2LmEchIJKcG5yNX4R9vqtmA4Q
-	 mlP27Q5I3z1e8ybVy980bqgs/gRuUGWthlCQsnHSYz0k8b/EjlnxwZqAoJHhi/WQCv
-	 rQ50ooKGDObp1zGSCxcAyX1dVPsvK/7qgYZQ9hAcVfzJ7RWghXGaSrFd5CLyOUD7EH
-	 br67hrFyGEwg7WNF3BqW3sfdSmiLkiyyB58ce36V2bFtyZYQx6g5P9NUF0nyBO9Ilo
-	 7a1v9XTydIv6g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 33/56] scsi: qla2xxx: Add abort command handling for
- 29xx series
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nilesh Javali" <njavali@marvell.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714095353.289460-34-njavali@marvell.com>
-References: <20260714095353.289460-1-njavali@marvell.com>
- <20260714095353.289460-34-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 15:18:55 +0000
-Message-Id: <20260714151856.3343A1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DxjpDvw/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784042568;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=zSmydwKOKw+iuaVJZHAYyikSta/hRg+7yhoWUJYhBkU=;
+	b=DxjpDvw/le0rVDhrjaJWADLONmsjNZk6FjiW9Wrw62ZHVZnHUtU3KfAzE2X9IzK8hzLiO6
+	0Z+irSdx9VkVU4yvLLRYyMgSZrKkmTZAVf4VLJFXLFh6OqgI3GGylqv10S+IC5M2BUV+C5
+	TacfCpjzPUHHECADTJCMPKAgFTMH5aQ=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-502-S6EkA1ByOQ-FCVWye7DB7A-1; Tue,
+ 14 Jul 2026 11:22:44 -0400
+X-MC-Unique: S6EkA1ByOQ-FCVWye7DB7A-1
+X-Mimecast-MFC-AGG-ID: S6EkA1ByOQ-FCVWye7DB7A_1784042562
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A6CBD1800598;
+	Tue, 14 Jul 2026 15:22:41 +0000 (UTC)
+Received: from jtaubepe-thinkpadx1carbongen12.ibmlowe.csb (unknown [10.17.17.152])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CED8118005AE;
+	Tue, 14 Jul 2026 15:22:39 +0000 (UTC)
+From: Jesse Taube <jtaubepe@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	John Meneghini <jmeneghi@redhat.com>,
+	Chris Leech <cleech@redhat.com>,
+	Jesse Taube <mr.bossman075@gmail.com>,
+	Jesse Taube <jtaubepe@redhat.com>
+Subject: [PATCH] scsi: qla2xxx: Fix flex array member not at end
+Date: Tue, 14 Jul 2026 11:22:38 -0400
+Message-ID: <20260714152238.541704-1-jtaubepe@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+In qla_edif_bsg.h: `struct fc_bsg_reply` and `struct fc_bsg_request`
+have flexible array members, thus they must be the last member of
+the parent structure. Contininging in the effort to add
+`-Wflex-array-member-not-at-end`, move the structs to the end of
+the parent structures, `struct qla_bsg_auth_els_reply` and
+`struct qla_bsg_auth_els_request `.
 
-Pre-existing issues:
-- [High] Deadlock risk in the abort path due to `GFP_KERNEL` allocation ins=
-ide SCSI error handler / NVMe abort workqueue.
-- [High] Time-Of-Check to Time-Of-Use (TOCTOU) race condition in the abort =
-path allows the firmware to abort an unrelated, newly queued command.
---
+Suggested-by: John Meneghini <jmeneghi@redhat.com>
+Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
+---
+ drivers/scsi/qla2xxx/qla_edif_bsg.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- Patch [33]: [PATCH v4 33/56] scsi: qla2xxx: Add abort command handling =
-for 29xx series ---
-commit 062493151f7c65c9841b286b24c4fdbc4ccf220d
-Author: Nilesh Javali <njavali@marvell.com>
-Subject: scsi: qla2xxx: Add abort command handling for 29xx series
+diff --git a/drivers/scsi/qla2xxx/qla_edif_bsg.h b/drivers/scsi/qla2xxx/qla_edif_bsg.h
+index 514c265ba86e..bcc35d149c1f 100644
+--- a/drivers/scsi/qla2xxx/qla_edif_bsg.h
++++ b/drivers/scsi/qla2xxx/qla_edif_bsg.h
+@@ -36,16 +36,16 @@ struct extra_auth_els {
+ } __packed;
+ 
+ struct qla_bsg_auth_els_request {
+-	struct fc_bsg_request r;
+ 	struct extra_auth_els e;
++	struct fc_bsg_request r;
+ };
+ 
+ struct qla_bsg_auth_els_reply {
+-	struct fc_bsg_reply r;
+ 	uint32_t rx_xchg_address;
+ 	uint8_t version;
+ 	uint8_t pad[VND_CMD_PAD_SIZE];
+ 	uint8_t reserved[VND_CMD_APP_RESERVED_SIZE];
++	struct fc_bsg_reply r;
+ };
+ 
+ struct app_id {
+-- 
+2.54.0
 
-This commit extends the abort-IOCB code path to support the 29xx extended
-abort_entry_24xx_ext structure alongside the existing abort_entry_24xx.
-
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
-x.c
-> index 9bef87862077e..0d7aa6fce0072 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -3356,28 +3356,42 @@ qla24xx_abort_command(srb_t *sp)
->  		return QLA_ERR_NOT_FOUND;
->  	}
-> =20
-> -	abt =3D dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &abt_dma);
-> -	if (abt =3D=3D NULL) {
-> +	abt_buf =3D dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &abt_dma);
-
-[Severity: High]
-This is a pre-existing issue, but does this allocation risk causing a
-deadlock? When an IO times out, the error handling path (such as
-qla2xxx_eh_abort or the NVMe qla_nvme_abort_work) calls
-qla24xx_abort_command().
-
-If the system is under memory pressure, using GFP_KERNEL allows the
-allocator to sleep and enter memory reclaim. If the reclaim process
-attempts to flush dirty pages to the block layer, and those IOs are
-routed to this same HBA, it creates a circular dependency where the
-block layer waits for the HBA to recover, but the HBA recovery thread is
-blocked here waiting for memory reclaim.
-
-Should this use GFP_ATOMIC or GFP_NOIO to avoid re-entering the storage
-stack?
-
-Also, this sleeping allocation seems to open a race window. Before this
-allocation, qla24xx_abort_command() releases the hardware queue lock:
-
-spin_lock_irqsave(qpair->qp_lock_ptr, flags);
-for (handle =3D 1; handle < req->num_outstanding_cmds; handle++) {
-    if (req->outstanding_cmds[handle] =3D=3D sp)
-        break;
-}
-spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
-
-During the unlocked, sleeping window in dma_pool_zalloc(), can the
-original command complete naturally, freeing up the handle? If a
-concurrent thread issuing a new IO allocates this same freed handle for
-an unrelated command, could the firmware end up aborting the wrong,
-newly queued command once we resume?
-
-> +	if (abt_buf =3D=3D NULL) {
->  		ql_log(ql_log_warn, vha, 0x108d,
->  		    "Failed to allocate abort IOCB.\n");
->  		return QLA_MEMORY_ALLOC_FAILED;
->  	}
-> +	abt =3D abt_buf;
-> =20
-> +	/*
-> +	 * abort_entry_24xx_ext overlays abort_entry_24xx through
-> +	 * req_que_no (offsets 0-17), and entry_status (offset 3) and
-> +	 * comp_status (offset 8) sit at identical offsets in both, so
-> +	 * the common header writes and the completion-status reads are
-> +	 * stride-agnostic and go through the 24xx view.  Only port_id
-> +	 * (24xx-only) and vp_index width / offset diverge per stride.
-> +	 */
->  	abt->entry_type =3D ABORT_IOCB_TYPE;
->  	abt->entry_count =3D 1;
->  	abt->handle =3D make_handle(req->id, abt->handle);
->  	abt->nport_handle =3D cpu_to_le16(fcport->loop_id);
->  	abt->handle_to_abort =3D make_handle(req->id, handle);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but if the handle was reassigned
-during the GFP_KERNEL allocation above, wouldn't we embed a stale handle
-into the abort payload here?
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714095353.2894=
-60-1-njavali@marvell.com?part=3D33
