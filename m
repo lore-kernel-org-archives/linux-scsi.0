@@ -1,71 +1,72 @@
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
+Received: from mail-qk1-f178.google.com (mail-qk1-f178.google.com [209.85.222.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A413D757EA
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 00:37:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1918116DC28
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 00:37:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783989475; cv=none; b=B4MzgGXL3WUEY8bqiEB1vpZJ0JK1nVh8wgANMLwD8JRnP1gEO5f2xPZ1OAg3isUmp7sBz6pGiyvXnQPEiExZXUEtnIArT/+0hiC0fHyLOOCdx04ZyH7UoKRdIpriqHfGuelh3HWDoStF3KzeN4DFUaSTB4qrYlNQ5ffh00o9E5M=
+	t=1783989475; cv=none; b=FqfOZ6NiGbWZy9RL9k2SJYrYEW6dq3D+TVpzykUmpMYgTWy/G9qrr71y5s+BLG10/nOFcouqUl/aiYjKrszHvoihogQcf4vqcH919g3rg46UVbnWtVS0wDXx2y3MVl1f//o6vk+1SHffzqVEaVj1VESBSIl/aXW/wBMs4ihl4+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1783989475; c=relaxed/simple;
-	bh=iVwlZjaP51yEBy1sqGFaRwCjzTeXD0crTc6cg/bbQm0=;
+	bh=q0+8YHlx1gmvq5HcrXIhCjJqaBHEwmV6akU73pqeJiw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=FSmzsfZFJttf4mwriQO02kg0UVnMsS+0Zk6VYpEwmgPN8tkFdJElwRXvUnoKTGPIze4j1ZMdrtYyZbNYh+7PC/BI6BVzjqbckg2h3H5J/8rpT4qFjiY7nigdkhW/Ys/tISTTjUetgxMZN+9idLcCjGZIoaBX6yVddv5w/LfN820=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZsCuojbe; arc=none smtp.client-ip=209.85.222.181
+	 MIME-Version:Content-Type; b=ZvM3SYZvY9m0JrOrYOUxpJsBUopceVKy5Yjfb8KMJIWFf27aUfTyJXwWhBa2D/2/g46PJFCKcdo1oSVzEqzDSG1b2NdlUpJtttqrqF7qf+jcwGK6xoY2TUMWBGmxX4aMYB3VBqPMJObQ/ahGGPEIokNeHvs4V74c0pgPdGwgxLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HW2oQN3O; arc=none smtp.client-ip=209.85.222.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZsCuojbe"
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-92e622cc874so227913085a.0
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 17:37:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HW2oQN3O"
+Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-92eafc94c9cso262854085a.0
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2026 17:37:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783989472; x=1784594272; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=skzatxhWpr2Kr45UUyZ20zV0qn+NJalaJc7pw0azF1I=;
-        b=ZsCuojbeVZwOKoW6pbw5dlWIxo2ZHAT2m8xrTgeDGAiMfBK891RygLtHHQsHUShQz8
-         GRjf0lylCJ0+Mo1GDVPz/7ceF6+Hzj6Mbx29Cg+gGwz5KtrFDZg2jy+3LqGBwO7/wIWQ
-         6LT1ug8J6nLntFguFdbM9bWj0UQBzUzdmwixJZg2Za0EMWbdvoTRXFZLDhBAxBl4DzjI
-         HIpPeBWf/ZaEtiKrxnI/9QzVOjQ98c/ERNSrAvvR8crlpEUy8NYjSTEzV3W3tDbfwx3/
-         PDz2pw+76H5R1ni5mdNQDwC7vxkBMCD/7oXyGqnYd7djMEgHMCYoCEWS0zNQXl9zHAaK
-         JNyQ==
+        d=gmail.com; s=20251104; t=1783989473; x=1784594273; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=r1iNrDsYdbcMIC1Em2SIhXtTzBM0b9+uKHP/dYMjZSw=;
+        b=HW2oQN3OFqC2sHGOaYsRmPpdJ6sl8HDWF99S9jbNuDYcx6BG/aXceyUaoyVRlUWB7I
+         53uZFTiceUTty9oLBN5Q01LNxRLM8RMMkt5iAdszUoHD4tua1NTt8La6+NvAAvGIKTLR
+         KwHiqOq1UDQ3i8mWCgl5fhaP2lU+fKdtQoKUgylL8LNaNnBomb6Mln+OC9wBoYI4/4Fp
+         MOdkRnINWzSwcukTIgpkhbu527vbGq1ciF9QAAMpQhOrFVg30nidq6H8EAvAiult9U+p
+         +76uRVjBSEZ2uujPpnpaQB3ShVJhmjo82R3XjECR2VQ5nA0B/znhKIOwZOAFEWPwWPlb
+         KAKg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783989472; x=1784594272;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=skzatxhWpr2Kr45UUyZ20zV0qn+NJalaJc7pw0azF1I=;
-        b=Odbz3mcQUF2SBBY6ByCvP0r9Y1J0slMmAvPFDiUGzjXxkxvyLvvedVP1LvhSiuv9oh
-         ytBmNomX5Pgo9DPEeNyAIg6TgkVacwuYW4Py8bQ2etPTr009nacj4T+FlA3gWRZKHr9v
-         9M4DT0G4A1VU6Gw0Y7B9l7k2hTiMeUTb36/oysSs1wVZtZQcYEHtfPdqsr0SESYTsFPi
-         3HFkQkscyz3H+VJFYQL1NfTo+5dODxi6d724j8ZYV/JiATwBkjUTqSNJJm9GIW0ZmbBD
-         BVCN7KPoYontiabZ74mCS2KeVaE+1rifzM6Fg1M2Qvwz2VuyWlkib8czmd+tL/pPoiyK
-         xMog==
-X-Gm-Message-State: AOJu0Yz3vIxqe0dlX6VdUqwSI0nZLS8oXeOTD8cA9IXLRdpgY7sgPsZe
-	v6HhQPweWR/E57xZqFL2SWbxoC6WpwRlSSdExj/+lt6e6DcxE+YtAv8/xkOXKMkIyzs=
-X-Gm-Gg: AfdE7cnXn930oh7xNJJZqnHyEC6/cFE2r7StbFzQ+m6jzLjQmDnGM4d71Bjckd4dlZy
-	jwWRJgRCg3NQTEPzzQbob1dqxwDskETC5EV+25vdfJvO+Xe+9f2R/IYq+1tgilKBZXjQ/wpnY5X
-	ASkrEQienMXWm9xK7vVqHBS9a+M3gZf3Ei8wEAoeRhlIb7ChF94u8xgKOL8AvpDy1WM4VnCPb1S
-	Q92XEsET8LCcQqpFFfHA+MTbf66by+M1SIoxqojQYOka/PSrznmftDdYc3RMvY96AA3KMWNgr4M
-	csViEpq9fBKCJB6LT9/vAIwd1rSSn3tb9p8/LDRFuYPF/SzLUgMGW6VzjmaSEhZa6Hm96jeRNUy
-	Ki9mNmZm4G4CGoUW9mXks79FgDDDnltmG4fw4RhoLm0KKu3XeIi8p8dNzB2nLw2xTv1aLU4yQLP
-	hwYvyQEMT9Kzia2SIPub0vmRrT6oA9qWE8bJ7c5Tu6M+R+oy8MEU05BRNCSG7tsVJsd/st1PMOP
-	FKYvY5vC4CFICznURPDmy0h4EkaJbv1
-X-Received: by 2002:a05:620a:870d:10b0:92a:e2a7:d55b with SMTP id af79cd13be357-93083d41d04mr102784585a.47.1783989471528;
-        Mon, 13 Jul 2026 17:37:51 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1783989473; x=1784594273;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=r1iNrDsYdbcMIC1Em2SIhXtTzBM0b9+uKHP/dYMjZSw=;
+        b=BLzXb5rZQ/fJDW1cDfdfoOWDIQ0YefdFT4ExueYgtqrJ7kaodaUo+p8m2a87sn4yk4
+         P52+3RMgV25F3zlsQNuOjC67xbobekDjjVmoKXTprGLwEZ7mavzygruUUWEbgxMiV0/b
+         adXxBd+oJomN4fUBAEIgPPrD+4nM+rjNv4nMXjzH7EiuYF2LpMr1NPBAtk6tL022ieQ7
+         YaQXntyh21t/3n1GHC9LDQieYltGFDFLHEepOoUeDtvPUcbSgyxu5kqEWldkXc7soHnW
+         jZ++vcflAEtPYhWLOs2NV64fKiLms08MZ49IAfYGt1amXRsOwi20T9P0GAlkwdviSVN2
+         wGZw==
+X-Gm-Message-State: AOJu0Yzt8Ge+K7HteOQAryADbWPs8VWmGJQSoXkPN3lvZlVjad4yMBK3
+	IpfYAIhBo/nvNXroz0vgtIhwkGjtUjuh4u1VOE4x/x/eoJX/wuqseGZGHjH1bCnBWRg=
+X-Gm-Gg: AfdE7ck2J3kSFSoljErPVkTUpGjdi+Vhkvs26pp9qZZJFdyRguDWJ33/Evj76QqQPxr
+	rfJwUUCig8qHszJQ/njhaW+btRR4jFNVVdd8NWiyANnEc00w9/pHyKzceQwssYuu1nX1qUPeoa5
+	e3hxZdWsTNtn/3nL9RMWd3xiaxagZU7TddQXW76Iv8tDapTBtAvem91y2yH5C4ttm3xGHHP7R6r
+	pxRbe/3ZECeKMPfBGXF8WYrlMMbOiTzEL2phA3F5Nmbs3v43lwO+D88+5RYq7PdHC1lKdXTYiU5
+	7zUtwIun5oyCeB/nLM0LghoYQ32OQTxgWlMdh54BUDG3L4xYjmAd7JzNI1Q8JnljusZSA/9x9vC
+	ktKmBJXILElVdWqYiYTyD/j0lIaowS1xHh9XUYQT3rf3lpZZjQ063xceJWx03aHS6ZBVlFGnQO8
+	QuCdv6O276V5+EAqz4V73K7USBN8JgOXOfl7K+Jzkm/yC+IW92dmegeZLaHppNahZ0qPgQQoP6a
+	+64EbMn7B6bovq9XBrR7EqSh4cQHGYv
+X-Received: by 2002:a05:620a:2b4a:b0:915:688b:aba with SMTP id af79cd13be357-93086a62b36mr32699685a.35.1783989473017;
+        Mon, 13 Jul 2026 17:37:53 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-92ee5d6c28bsm1289899185a.46.2026.07.13.17.37.50
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-92ee5d6c28bsm1289899185a.46.2026.07.13.17.37.52
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 13 Jul 2026 17:37:51 -0700 (PDT)
+        Mon, 13 Jul 2026 17:37:52 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v3 08/14] lpfc: Improve PLOGI retry handling for large SAN configurations
-Date: Mon, 13 Jul 2026 18:18:06 -0700
-Message-Id: <20260714011812.106753-9-justintee8345@gmail.com>
+Subject: [PATCH v3 09/14] lpfc: Send inhibited ABORT_WQE when PLOGI CQE SEQUENCE_TMO is received
+Date: Mon, 13 Jul 2026 18:18:07 -0700
+Message-Id: <20260714011812.106753-10-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260714011812.106753-1-justintee8345@gmail.com>
 References: <20260714011812.106753-1-justintee8345@gmail.com>
@@ -75,307 +76,332 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-In large SAN configurations with link perturbations, rediscovery of target
-ports is problematic due to PLOGI retry race conditions.
+It is unlikely that an BA_ACC will be received for a sent ABTS knowing
+that a previously sent PLOGI E_D_TOV timed out.
 
-This patch improves target rediscovery by ensuring PLOGI retries are
-serialized in unregistration and retry handler paths.
+By sending an ABORT_WQE with IA=1, the XRI_ABORTED CQE for the PLOGI CQE
+SEQUENCE_TIMEOUT with XB=1 will return immediately compared to waiting
+E_D_TOV for a BA_ACC.
+
+Add a new bool ia argument variable to lpfc_sli_issue_abort_iotag, to
+explicitly set the IA bit when filling out ABORT_WQE.  When the ia argument
+is false, we fall back to the old logic of implicitly setting the IA bit
+under previous conditions.  Setting the ia argument to true, is currently
+only used for PLOGI CQE LOCAL_REJECT/SEQUENCE_TIMEOUT.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c       | 62 +++++++++++++++++++--
- drivers/scsi/lpfc/lpfc_nportdisc.c | 58 ++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_sli.c       | 87 +++++++++++++++++-------------
- 3 files changed, 167 insertions(+), 40 deletions(-)
+ drivers/scsi/lpfc/lpfc_bsg.c       |  5 ++--
+ drivers/scsi/lpfc/lpfc_crtn.h      |  5 ++--
+ drivers/scsi/lpfc/lpfc_els.c       | 48 ++++++++++++++++++++++++++----
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  3 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  3 +-
+ drivers/scsi/lpfc/lpfc_nvme.c      |  2 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      |  2 +-
+ drivers/scsi/lpfc/lpfc_sli.c       | 17 ++++++-----
+ 8 files changed, 63 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index c95165905483..56f55f818cce 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2017-2024 Broadcom. All Rights Reserved. The term *
++ * Copyright (C) 2017-2026 Broadcom. All Rights Reserved. The term *
+  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
+  * Copyright (C) 2009-2015 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+@@ -5857,7 +5857,8 @@ lpfc_bsg_timeout(struct bsg_job *job)
+ 			}
+ 		}
+ 		if (list_empty(&completions))
+-			lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb, NULL);
++			lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb, false,
++						   NULL);
+ 		spin_unlock_irqrestore(&phba->hbalock, flags);
+ 		if (!list_empty(&completions)) {
+ 			lpfc_sli_cancel_iocbs(phba, &completions,
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 8a5b76bdea06..2ca5f0229ca1 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -402,8 +402,9 @@ int lpfc_sli_hbq_count(void);
+ int lpfc_sli_hbqbuf_add_hbqs(struct lpfc_hba *, uint32_t);
+ void lpfc_sli_hbqbuf_free_all(struct lpfc_hba *);
+ int lpfc_sli_hbq_size(void);
+-int lpfc_sli_issue_abort_iotag(struct lpfc_hba *, struct lpfc_sli_ring *,
+-			       struct lpfc_iocbq *, void *);
++int lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba,
++			       struct lpfc_sli_ring *pring,
++			       struct lpfc_iocbq *cmdiocb, bool ia, void *cmpl);
+ int lpfc_sli_sum_iocb(struct lpfc_vport *, uint16_t, uint64_t, lpfc_ctx_cmd);
+ int lpfc_sli_abort_iocb(struct lpfc_vport *vport, u16 tgt_id, u64 lun_id,
+ 			lpfc_ctx_cmd abort_cmd);
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 6720fd5ec523..16b10377a095 100644
+index 16b10377a095..11c36968a2be 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2159,6 +2159,8 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		goto out_freeiocb;
- 	}
- 
-+	clear_bit(NLP_PLOGI_SND, &ndlp->nlp_flag);
-+
- 	/* Since ndlp can be freed in the disc state machine, note if this node
- 	 * is being used during discovery.
- 	 */
-@@ -2329,17 +2331,43 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
- 	     test_bit(NLP_UNREG_INP, &ndlp->nlp_flag)) &&
- 	    ((ndlp->nlp_DID & Fabric_DID_MASK) != Fabric_DID_MASK) &&
- 	    !test_bit(FC_OFFLINE_MODE, &vport->fc_flag)) {
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
-+		lpfc_printf_vlog(vport, KERN_INFO,
-+				 LOG_ELS | LOG_NODE | LOG_DISCOVERY,
- 				 "4110 Issue PLOGI x%x deferred "
- 				 "on NPort x%x rpi x%x flg x%lx Data:"
- 				 " x%px\n",
- 				 ndlp->nlp_defer_did, ndlp->nlp_DID,
- 				 ndlp->nlp_rpi, ndlp->nlp_flag, ndlp);
- 
--		/* We can only defer 1st PLOGI */
--		if (ndlp->nlp_defer_did == NLP_EVT_NOTHING_PENDING)
-+		/* Don't defer a PLOGI that is already in that condition.
-+		 * Also set the nlp_last_elscmd to PLOGI to get the retry.
-+		 */
-+		if (ndlp->nlp_defer_did == NLP_EVT_NOTHING_PENDING) {
- 			ndlp->nlp_defer_did = did;
--		return 0;
-+			ndlp->nlp_last_elscmd = ELS_CMD_PLOGI;
-+		}
-+		return 1;
-+	}
-+
-+	if (test_bit(NLP_PLOGI_SND, &ndlp->nlp_flag)) {
-+		lpfc_printf_vlog(vport, KERN_INFO,
-+				 LOG_ELS | LOG_NODE | LOG_DISCOVERY,
-+				 "4113 Reject PLOGI issue, PLOGI in-flight "
-+				 "x%px, DID x%x nflag x%lx\n",
-+				 ndlp, ndlp->nlp_DID, ndlp->nlp_flag);
-+		return 1;
-+	}
-+
-+	if (ndlp->nlp_state > NLP_STE_PLOGI_ISSUE &&
-+	    ndlp->nlp_state <= NLP_STE_MAPPED_NODE) {
-+		lpfc_printf_vlog(vport, KERN_INFO,
-+				 LOG_ELS | LOG_NODE | LOG_DISCOVERY,
-+				 "4114 Reject PLOGI issue, Node in "
-+				 "unexpected state x%px, DID x%x nflag x%lx "
-+				 "in State x%x\n",
-+				 ndlp, ndlp->nlp_DID,
-+				 ndlp->nlp_flag, ndlp->nlp_state);
-+		return 1;
- 	}
- 
- 	cmdsize = (sizeof(uint32_t) + sizeof(struct serv_parm));
-@@ -2415,6 +2443,7 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
- 		return 1;
- 	}
- 
-+	set_bit(NLP_PLOGI_SND, &ndlp->nlp_flag);
- 	return 0;
- }
- 
-@@ -4614,6 +4643,31 @@ lpfc_els_retry_delay_handler(struct lpfc_nodelist *ndlp)
- 		lpfc_issue_els_flogi(vport, ndlp, retry);
- 		break;
- 	case ELS_CMD_PLOGI:
-+		/* The driver delayed a PLOGI via the nlp_delayfunc, but
-+		 * it's possible the PLOGI is already on a deferred retry.
-+		 * Catch this case and skip this delayed PLOGI. This prevents
-+		 * multiple PLOGIs in flight. The defer code flow cleans
-+		 * up.
-+		 */
-+		if ((test_bit(NLP_IGNR_REG_CMPL, &ndlp->nlp_flag) ||
-+		     test_bit(NLP_UNREG_INP, &ndlp->nlp_flag)) &&
-+		    ndlp->nlp_defer_did != NLP_EVT_NOTHING_PENDING &&
-+		    ((ndlp->nlp_DID & Fabric_DID_MASK) != Fabric_DID_MASK) &&
-+		    !test_bit(FC_OFFLINE_MODE, &vport->fc_flag)) {
-+			/* When UNREG_RPI completes we need to have the
-+			 * nlp_last_elscmd set.
-+			 */
-+			ndlp->nlp_last_elscmd = ELS_CMD_PLOGI;
-+			lpfc_printf_vlog(vport, KERN_INFO,
-+					 LOG_ELS | LOG_NODE | LOG_DISCOVERY,
-+					 "4112 Skip delayed PLOGI x%x deferred "
-+					 "on NPort x%x rpi x%x flg x%lx Data:"
-+					 " x%px\n",
-+					 ndlp->nlp_defer_did, ndlp->nlp_DID,
-+					 ndlp->nlp_rpi, ndlp->nlp_flag, ndlp);
-+			break;
-+		}
-+
- 		if (!lpfc_issue_els_plogi(vport, ndlp->nlp_DID, retry)) {
- 			ndlp->nlp_prev_state = ndlp->nlp_state;
- 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PLOGI_ISSUE);
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index f917a5bcfd02..0270ab7e602f 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -920,6 +920,64 @@ lpfc_rcv_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 				 ndlp->nlp_DID, ndlp->nlp_state,
- 				 ndlp->nlp_type, vport->fc_flag);
- 
-+		/* The driver wants to schedule a delayed PLOGI to recover
-+		 * the remote Nport.  However, there are two cases that
-+		 * stop this so that multiple PLOGI are not inflight to
-+		 * the same NPortID
-+		 *
-+		 * Do not schedule a delayed PLOGI if the deferred PLOGI
-+		 * code already set up a PLOGI retry after an UNREG_RPI
-+		 * mailbox completes.
-+		 */
-+		if (test_bit(NLP_UNREG_INP, &ndlp->nlp_flag) &&
-+		    ndlp->nlp_defer_did == ndlp->nlp_DID &&
-+		    ndlp->nlp_last_elscmd == ELS_CMD_PLOGI) {
-+			lpfc_printf_vlog(vport, KERN_INFO,
-+					 LOG_NODE | LOG_ELS | LOG_DISCOVERY,
-+					 "3206 No PLOGI delay, defer PLOGI "
-+					 "waiting on DID x%06x UNREG_RPI "
-+					 "nflag x%lx state x%x lastels x%x "
-+					 "defer_did x%x\n",
-+					 ndlp->nlp_DID, ndlp->nlp_flag,
-+					 ndlp->nlp_state, ndlp->nlp_last_elscmd,
-+					 ndlp->nlp_defer_did);
-+			goto out;
-+		}
-+
-+		/* A delayed PLOGI retry is not required if the ndlp's delay
-+		 * timer is running and the last command was PLOGI.
-+		 */
-+		if (test_bit(NLP_DELAY_TMO, &ndlp->nlp_flag) &&
-+		    ndlp->nlp_last_elscmd == ELS_CMD_PLOGI) {
-+			lpfc_printf_vlog(vport, KERN_INFO,
-+					 LOG_NODE | LOG_ELS | LOG_DISCOVERY,
-+					 "3207 No PLOGI delay, PLOGI_DELAY_TMO "
-+					 "active on DID x%06x "
-+					 "nflag x%lx state x%x lastels x%x "
-+					 "defer_did x%x\n",
-+					 ndlp->nlp_DID, ndlp->nlp_flag,
-+					 ndlp->nlp_state, ndlp->nlp_last_elscmd,
-+					 ndlp->nlp_defer_did);
-+			goto out;
-+		}
-+
-+		/* Do not schedule a PLOGI retry if the ndlp state is NPR
-+		 * and vport has received an RSCN
-+		 */
-+		if (ndlp->nlp_state == NLP_STE_NPR_NODE &&
-+		    test_bit(FC_RSCN_MODE, &vport->fc_flag)) {
-+			lpfc_printf_vlog(vport, KERN_INFO,
-+					 LOG_NODE | LOG_ELS | LOG_DISCOVERY,
-+					 "3939 No PLOGI delay, RSCN in "
-+					 "progress for NPR DID x%06x "
-+					 "nflag x%lx state x%x last_els x%x "
-+					 "defer_did x%06x\n",
-+					 ndlp->nlp_DID, ndlp->nlp_flag,
-+					 ndlp->nlp_state, ndlp->nlp_last_elscmd,
-+					 ndlp->nlp_defer_did);
-+			goto out;
-+		}
-+
- 		/* Special cases for rports that recover post LOGO. */
- 		if ((!(ndlp->nlp_type == NLP_FABRIC) &&
- 		     (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET) ||
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 10db07771ccf..54bc5d8984fc 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2914,7 +2914,19 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 			    ndlp->nlp_defer_did != NLP_EVT_NOTHING_PENDING) {
- 				clear_bit(NLP_UNREG_INP, &ndlp->nlp_flag);
- 				ndlp->nlp_defer_did = NLP_EVT_NOTHING_PENDING;
--				lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
-+
-+				if (!test_bit(NLP_DELAY_TMO, &ndlp->nlp_flag) &&
-+				    ndlp->nlp_last_elscmd == ELS_CMD_PLOGI) {
-+					rc = lpfc_issue_els_plogi(vport,
-+								  ndlp->nlp_DID,
-+								  0);
-+					if (!rc) {
-+						ndlp->nlp_prev_state =
-+							ndlp->nlp_state;
-+						lpfc_nlp_set_state(vport, ndlp,
-+							   NLP_STE_PLOGI_ISSUE);
-+					}
-+				}
- 			} else {
- 				clear_bit(NLP_UNREG_INP, &ndlp->nlp_flag);
+@@ -1556,7 +1556,7 @@ lpfc_els_abort_flogi(struct lpfc_hba *phba)
+ 					iocb->fabric_cmd_cmpl =
+ 						lpfc_ignore_els_cmpl;
+ 				lpfc_sli_issue_abort_iotag(phba, pring, iocb,
+-							   NULL);
++							   false, NULL);
  			}
-@@ -2967,52 +2979,55 @@ lpfc_sli4_unreg_rpi_cmpl_clr(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	bool unreg_inp;
- 
- 	ndlp = pmb->ctx_ndlp;
--	if (pmb->u.mb.mbxCommand == MBX_UNREG_LOGIN) {
-+	if (pmb->u.mb.mbxCommand == MBX_UNREG_LOGIN && ndlp) {
- 		if (phba->sli_rev == LPFC_SLI_REV4 &&
- 		    (bf_get(lpfc_sli_intf_if_type,
- 		     &phba->sli4_hba.sli_intf) >=
- 		     LPFC_SLI_INTF_IF_TYPE_2)) {
--			if (ndlp) {
--				lpfc_printf_vlog(
--					 vport, KERN_INFO,
-+			lpfc_printf_vlog(vport, KERN_INFO,
- 					 LOG_MBOX | LOG_SLI | LOG_NODE,
--					 "0010 UNREG_LOGIN vpi:x%x "
--					 "rpi:%x DID:%x defer x%x flg x%lx "
--					 "x%px\n",
-+					 "0010 UNREG_LOGIN vpi:x%x rpi:%x "
-+					 "DID:%x defer x%x flg x%lx x%px\n",
- 					 vport->vpi, ndlp->nlp_rpi,
- 					 ndlp->nlp_DID, ndlp->nlp_defer_did,
--					 ndlp->nlp_flag,
--					 ndlp);
-+					 ndlp->nlp_flag, ndlp);
- 
--				/* Cleanup the nlp_flag now that the UNREG RPI
--				 * has completed.
--				 */
--				unreg_inp = test_and_clear_bit(NLP_UNREG_INP,
--							       &ndlp->nlp_flag);
--				clear_bit(NLP_LOGO_ACC, &ndlp->nlp_flag);
-+			/* Cleanup the nlp_flag now that the UNREG RPI
-+			 * has completed.
-+			 */
-+			unreg_inp = test_and_clear_bit(NLP_UNREG_INP,
-+						       &ndlp->nlp_flag);
-+			clear_bit(NLP_LOGO_ACC, &ndlp->nlp_flag);
- 
--				/* Check to see if there are any deferred
--				 * events to process
--				 */
--				if (unreg_inp &&
--				    ndlp->nlp_defer_did !=
--				    NLP_EVT_NOTHING_PENDING) {
--					lpfc_printf_vlog(
--						vport, KERN_INFO,
--						LOG_MBOX | LOG_SLI | LOG_NODE,
--						"4111 UNREG cmpl deferred "
--						"clr x%x on "
--						"NPort x%x Data: x%x x%px\n",
--						ndlp->nlp_rpi, ndlp->nlp_DID,
--						ndlp->nlp_defer_did, ndlp);
--					ndlp->nlp_defer_did =
--						NLP_EVT_NOTHING_PENDING;
--					lpfc_issue_els_plogi(
--						vport, ndlp->nlp_DID, 0);
--				}
-+			/* Check to see if there are any deferred
-+			 * events to process
-+			 */
-+			if (unreg_inp &&
-+			    ndlp->nlp_defer_did != NLP_EVT_NOTHING_PENDING) {
-+				lpfc_printf_vlog(vport, KERN_INFO,
-+						 LOG_MBOX | LOG_SLI | LOG_NODE,
-+						 "4111 UNREG cmpl deferred "
-+						 "clr x%x on  NPort x%x "
-+						 "Data: x%x x%x x%px\n",
-+						 ndlp->nlp_rpi, ndlp->nlp_DID,
-+						 ndlp->nlp_defer_did,
-+						 ndlp->nlp_last_elscmd, ndlp);
-+				ndlp->nlp_defer_did = NLP_EVT_NOTHING_PENDING;
- 
--				lpfc_nlp_put(ndlp);
-+				if (!test_bit(NLP_DELAY_TMO, &ndlp->nlp_flag) &&
-+				    ndlp->nlp_last_elscmd == ELS_CMD_PLOGI) {
-+					if (lpfc_issue_els_plogi(vport,
-+								 ndlp->nlp_DID,
-+								 0))
-+						goto out;
-+
-+					ndlp->nlp_prev_state = ndlp->nlp_state;
-+					lpfc_nlp_set_state(vport, ndlp,
-+							   NLP_STE_PLOGI_ISSUE);
-+				}
- 			}
-+out:
-+			lpfc_nlp_put(ndlp);
  		}
  	}
+@@ -2129,7 +2129,7 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	struct lpfc_dmabuf *prsp;
+ 	bool disc;
+ 	struct serv_parm *sp = NULL;
+-	u32 ulp_status, ulp_word4, did, iotag;
++	u32 ulp_status, ulp_word4, did, iotag, word3;
+ 	bool release_node = false;
  
+ 	/* we pass cmdiocb to state machine which needs rspiocb as well */
+@@ -2141,9 +2141,11 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+ 		iotag = get_wqe_reqtag(cmdiocb);
++		word3 = rspiocb->wcqe_cmpl.word3;
+ 	} else {
+ 		irsp = &rspiocb->iocb;
+ 		iotag = irsp->ulpIoTag;
++		word3 = 0;
+ 	}
+ 
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
+@@ -2169,10 +2171,10 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	/* PLOGI completes to NPort <nlp_DID> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0102 PLOGI completes to NPort x%06x "
+-			 "IoTag x%x Data: x%x x%x x%x x%x x%x\n",
++			 "IoTag x%x Data: x%x x%x x%x x%x x%x x%x\n",
+ 			 ndlp->nlp_DID, iotag,
+ 			 ndlp->nlp_fc4_type,
+-			 ulp_status, ulp_word4,
++			 ulp_status, ulp_word4, word3,
+ 			 disc, vport->num_disc_nodes);
+ 
+ 	/* Check to see if link went down during discovery */
+@@ -4785,6 +4787,7 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	union lpfc_wqe128 *irsp = &rspiocb->wqe;
+ 	struct lpfc_nodelist *ndlp = cmdiocb->ndlp;
+ 	struct lpfc_dmabuf *pcmd = cmdiocb->cmd_dmabuf;
++	struct lpfc_sli_ring *pring;
+ 	uint32_t *elscmd;
+ 	struct ls_rjt stat;
+ 	int retry = 0, maxretry = lpfc_max_els_tries, delay = 0;
+@@ -4792,6 +4795,7 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	uint32_t cmd = 0;
+ 	uint32_t did;
+ 	int link_reset = 0, rc;
++	unsigned long iflags;
+ 	u32 ulp_status = get_job_ulpstatus(phba, rspiocb);
+ 	u32 ulp_word4 = get_job_word4(phba, rspiocb);
+ 	u8 rsn_code_exp = 0;
+@@ -4893,7 +4897,38 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				/* Reset the Link */
+ 				link_reset = 1;
+ 				break;
++			} else if (cmd == ELS_CMD_PLOGI) {
++
++				/* if invalid ndlp, do not retry */
++				if (unlikely(!ndlp)) {
++					retry = 0;
++					break;
++				}
++
++				lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++						 "0159 PLOGI Sequence TMO for "
++						 "ndlp x%px x%lx x%x x%x x%x "
++						 "x%x x%x %u x%x\n",
++						 ndlp, ndlp->nlp_flag,
++						 ndlp->nlp_DID, ndlp->nlp_type,
++						 ndlp->nlp_fc4_type,
++						 ndlp->nlp_rpi, ndlp->nlp_state,
++						 kref_read(&ndlp->kref),
++						 ndlp->fc4_xpt_flags);
++
++				/* Abort all outstanding ELS and auto-ABTS.  If
++				 * no response for E_D_TOV, then it is unlikely
++				 * auto-ABTS would receive a response too.  So,
++				 * inhibit the abort for faster XRI release.
++				 * However, still proceed with delayed retry.
++				 */
++				pring = lpfc_phba_elsring(phba);
++				spin_lock_irqsave(&phba->hbalock, iflags);
++				lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb,
++							   true, NULL);
++				spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 			}
++
+ 			retry = 1;
+ 			delay = 100;
+ 			break;
+@@ -9763,7 +9798,7 @@ lpfc_els_timeout_handler(struct lpfc_vport *vport)
+ 
+ 		spin_lock_irq(&phba->hbalock);
+ 		list_del_init(&piocb->dlist);
+-		lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
++		lpfc_sli_issue_abort_iotag(phba, pring, piocb, false, NULL);
+ 		spin_unlock_irq(&phba->hbalock);
+ 	}
+ 
+@@ -9881,7 +9916,8 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+ 		if (mbx_tmo_err || !(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
+ 			list_move_tail(&piocb->list, &cancel_list);
+ 		else
+-			lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
++			lpfc_sli_issue_abort_iotag(phba, pring, piocb, false,
++						   NULL);
+ 
+ 		spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 	}
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 6337dae4f1cd..6669932e77c8 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -5993,7 +5993,8 @@ lpfc_free_tx(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
+ 
+ 		if (ulp_command == CMD_ELS_REQUEST64_CR ||
+ 		    ulp_command == CMD_XMIT_ELS_RSP64_CX) {
+-			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
++			lpfc_sli_issue_abort_iotag(phba, pring, iocb, false,
++						   NULL);
+ 		}
+ 	}
+ 	spin_unlock_irq(&phba->hbalock);
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 0270ab7e602f..e7ade735a97c 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -269,7 +269,8 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
+ 	list_for_each_entry_safe(iocb, next_iocb, &abort_list, dlist) {
+ 		spin_lock_irq(&phba->hbalock);
+ 		list_del_init(&iocb->dlist);
+-		retval = lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
++		retval = lpfc_sli_issue_abort_iotag(phba, pring, iocb, false,
++						    NULL);
+ 		spin_unlock_irq(&phba->hbalock);
+ 
+ 		/* An abort that fails here is just cancelled when the driver is
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 71714ea390d9..45b5966d9e6b 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -743,7 +743,7 @@ __lpfc_nvme_ls_abort(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	spin_unlock(&pring->ring_lock);
+ 
+ 	if (foundit)
+-		lpfc_sli_issue_abort_iotag(phba, pring, wqe, NULL);
++		lpfc_sli_issue_abort_iotag(phba, pring, wqe, false, NULL);
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+ 	if (foundit)
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index f2cab134af7f..ce9d7de21590 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -5622,7 +5622,7 @@ lpfc_abort_handler(struct scsi_cmnd *cmnd)
+ 						      lpfc_sli_abort_fcp_cmpl);
+ 	} else {
+ 		pring = &phba->sli.sli3_ring[LPFC_FCP_RING];
+-		ret_val = lpfc_sli_issue_abort_iotag(phba, pring, iocb,
++		ret_val = lpfc_sli_issue_abort_iotag(phba, pring, iocb, false,
+ 						     lpfc_sli_abort_fcp_cmpl);
+ 	}
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 54bc5d8984fc..0a300efc9240 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4608,7 +4608,8 @@ lpfc_sli_abort_iocb_ring(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+ 	} else {
+ 		/* Issue ABTS for everything on the txcmplq */
+ 		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
+-			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
++			lpfc_sli_issue_abort_iotag(phba, pring, iocb, false,
++						   NULL);
+ 	}
+ 	spin_unlock_irq(plock);
+ 
+@@ -11998,7 +11999,7 @@ lpfc_sli_host_down(struct lpfc_vport *vport)
+ 				if (iocb->vport != vport)
+ 					continue;
+ 				lpfc_sli_issue_abort_iotag(phba, pring, iocb,
+-							   NULL);
++							   false, NULL);
+ 			}
+ 			pring->flag = prev_pring_flag;
+ 		}
+@@ -12026,7 +12027,7 @@ lpfc_sli_host_down(struct lpfc_vport *vport)
+ 				if (iocb->vport != vport)
+ 					continue;
+ 				lpfc_sli_issue_abort_iotag(phba, pring, iocb,
+-							   NULL);
++							   false, NULL);
+ 			}
+ 			pring->flag = prev_pring_flag;
+ 		}
+@@ -12443,6 +12444,7 @@ lpfc_ignore_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @cmdiocb: Pointer to driver command iocb object.
++ * @ia: Flag to explicitly or implicitly inhibit abort.
+  * @cmpl: completion function.
+  *
+  * This function issues an abort iocb for the provided command iocb. In case
+@@ -12455,7 +12457,7 @@ lpfc_ignore_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+  **/
+ int
+ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+-			   struct lpfc_iocbq *cmdiocb, void *cmpl)
++			   struct lpfc_iocbq *cmdiocb, bool ia, void *cmpl)
+ {
+ 	struct lpfc_vport *vport = cmdiocb->vport;
+ 	struct lpfc_iocbq *abtsiocbp;
+@@ -12464,7 +12466,6 @@ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	struct lpfc_nodelist *ndlp = NULL;
+ 	u32 ulp_command = get_job_cmnd(phba, cmdiocb);
+ 	u16 ulp_context, iotag;
+-	bool ia;
+ 
+ 	/*
+ 	 * There are certain command types we don't want to abort.  And we
+@@ -12514,7 +12515,7 @@ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	}
+ 
+ 	/* Just close the exchange under certain conditions. */
+-	if (test_bit(FC_UNLOADING, &vport->load_flag) ||
++	if (ia || test_bit(FC_UNLOADING, &vport->load_flag) ||
+ 	    phba->link_state < LPFC_LINK_UP ||
+ 	    (phba->sli_rev == LPFC_SLI_REV4 &&
+ 	     phba->sli4_hba.link_state.status == LPFC_FC_LA_TYPE_LINK_DOWN) ||
+@@ -12557,7 +12558,7 @@ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 
+ abort_iotag_exit:
+ 
+-	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_SLI,
+ 			 "0339 Abort IO XRI x%x, Original iotag x%x, "
+ 			 "abort tag x%x Cmdjob : x%px Abortjob : x%px "
+ 			 "retval x%x : IA %d cmd_cmpl %ps\n",
+@@ -12851,7 +12852,7 @@ lpfc_sli_abort_iocb(struct lpfc_vport *vport, u16 tgt_id, u64 lun_id,
+ 		} else if (phba->sli_rev == LPFC_SLI_REV4) {
+ 			pring = lpfc_sli4_calc_ring(phba, iocbq);
+ 		}
+-		ret_val = lpfc_sli_issue_abort_iotag(phba, pring, iocbq,
++		ret_val = lpfc_sli_issue_abort_iotag(phba, pring, iocbq, false,
+ 						     lpfc_sli_abort_fcp_cmpl);
+ 		spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 		if (ret_val != IOCB_SUCCESS)
 -- 
 2.38.0
 
