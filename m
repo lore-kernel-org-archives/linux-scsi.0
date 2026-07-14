@@ -1,154 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 726D844C669
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2026 19:27:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE37F44C649;
+	Tue, 14 Jul 2026 19:35:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784057268; cv=none; b=uVv1kxYxVjXafqh2AXEo1e9U/4HaLuENSc7YQdQkQSMl3mElmI115My6UeW1wflfY3TbU1rwxymQcQd0xlI0zZbaPmol9nKNzIk3hRU/ju0uxYpGiEdC+n0/N6XCAMP0qfML7vUsGHXbNynw2Z1ZJqhmj+LOrm+U+EJl/fwOAtY=
+	t=1784057713; cv=none; b=ZUEmZVPDfGwDmvQZhNiXT5OUaQ0e2VyhiBFhbEBkOzFJ+8s84RMwcmKT8v3qJIiKp5HYmgYsu+otEWCH135ESDS/zzd2YSkitvdYpexlPG8hZCumXL+i0aV3s0Rwzi56kkykeJ4P5z8wZHZqkV7ZEtEHIhQHIOqcBmDrLn1+Fwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784057268; c=relaxed/simple;
-	bh=KbsIFfJCc1y+LzJT/gEglSQMrHC+gXny4K8fMldWDcI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BSzW0ZmwRr9Hdc/5fjpS4frFr4At5eCaOpym1LsCk1qxaM1uwN6jGIB3e72HkGSD1KgGVHhGAR0ZlxGSE/hRGEJ92gwr3luzbRj7HHHbpfVFtIxHEXZtpBb538HdeAtlJFHYmAC8ukMNjQHcLdV7udyCcfsVGicV3fpRb0dVtKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BjSxxQwg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784057713; c=relaxed/simple;
+	bh=k6uxr+UunWeCr0jqc3uJLy4BoPjB01Cn7PPlmFpF9bQ=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=WW1KUWvd8iyw700xcQvqrM8o582jn6iEup9HEsR9bupK/b5lrfRBFYDGGWBCAEVsU3Faw2oQ4i9Da4Z/QzW1bMCUDTKGNA5NVFkE/hTWHcAlMO6F9bkbuzxnJTuxsPhUw5Cx3Q8rh+8Xgor0Q+NrNXZR2yyknnhCEXkMdQo37MU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=QuMdaAUm; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=lucqK6n8; arc=none smtp.client-ip=80.241.56.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BjSxxQwg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAAA11F000E9;
-	Tue, 14 Jul 2026 19:27:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784057267;
-	bh=CGt5B5BEMiGwzgF1dHW6t/B0XAgnmCAAm/fxTAoFc70=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BjSxxQwgAt6d45InInvktv64AG4SGDEg9lZQD5fyFS3OrQbWfHE8oPN+P0q/6bvvj
-	 0cfZQp/ou0SMjZ7jzXtxswHcM5990ehYE5btoVDc/Pj37AqNMaqYDMRS6mPHBQ0cO7
-	 ouy9cWliGAjVoUeTxh0FI4Zo3EkuFG6/dJQX+79cC4dY9YdNEJ+G3JhpTmoT3E+7DY
-	 wr0tQUyxnuUWkv+pCGkI1wE0lfhH0mnxwjPUvNWFfNEP2AAl0FQFYrKJvTWokIG/+5
-	 5nj6pk3AHoawwWKIJ7zBdWM/uXse8ZVS/FdW9Ova4bqSUIzGMzaAqDsr9AZGWAylLG
-	 7NKzckAWZjS8w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: qla2xxx: Fix flex array member not at end
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jesse Taube" <jtaubepe@redhat.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260714185621.610105-1-jtaubepe@redhat.com>
-References: <20260714185621.610105-1-jtaubepe@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 14 Jul 2026 19:27:46 +0000
-Message-Id: <20260714192746.EAAA11F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="QuMdaAUm";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="lucqK6n8"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
+	(No client certificate requested)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4h08f41257zMlGN;
+	Tue, 14 Jul 2026 21:35:08 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1784057708;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=k6uxr+UunWeCr0jqc3uJLy4BoPjB01Cn7PPlmFpF9bQ=;
+	b=QuMdaAUmzBQNS2NVKgfWWqTT7THLOeBAvDNUU+v/k26L7jVqNPyWAgwjLisRzYB8kFltiB
+	6yfXjdnENmfZ5qR/2jjl3ngZCY/pw65d20MopbgI2mh5qIfPCqk+B2TtKUBa6yqFa0HCdq
+	rdLd7Ye6DQFAsRxd+QGVf83/A6ZsXhzF6IYA0whTbP+2yvMAFMGioq/QzzAnpnWD34/Oon
+	R307E7+1eb/jGOJsTIJGw4MkpwmeJ+tYrNi+ICRyw91pvchm9pPdFspmF4KDV8m1TV3Cyo
+	UX6blVrjnIOCmNcQHaAyv65u4kKOqmTypE7oLyDblYVoo4nqA57K7wKRFEtZBA==
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1784057706;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=k6uxr+UunWeCr0jqc3uJLy4BoPjB01Cn7PPlmFpF9bQ=;
+	b=lucqK6n8CkEfQ2vEfaJphbDANeuwE56/Z++FuFpnf7NvxqqxEM8R75w+XFselNZruYeSyJ
+	2E++E1qBxf5JGQvP0er/p+FKtbJ6/Zfd0A62onSLk2QZNX6bfuQ68awTmvzoOf91NdKqKn
+	rmPopbtKyRAosGiZ5enfDTyZ0VcU/TVUwgKFe4LM1OEx3QDhYqh2+LbSErwQWPbctj0n9S
+	/M8PZ4YA1tvmLgQ4wNx3waZFxF2GfJY6NIiTj2Bo2gwmywYyKI6SUK1XHSZ6s8JSIfL+e7
+	MNqas209UnyFOokBUeKxFf8e81pZvBIEV8Qlh1uZGkc5mDxdO7Jhqd7K1FxUPQ==
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 14 Jul 2026 21:34:56 +0200
+Message-Id: <DJYJO745N6HZ.23EJ5DJ7I0BP5@mailbox.org>
+Cc: "Edward Cree" <ecree.xilinx@gmail.com>, "Andrew Lunn"
+ <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, "Eric
+ Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>, "Paolo
+ Abeni" <pabeni@redhat.com>, "Bjorn Helgaas" <bhelgaas@google.com>, "Justin
+ Tee" <justin.tee@broadcom.com>, "Paul Ely" <paul.ely@broadcom.com>, "James
+ E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>, "Juergen Gross" <jgross@suse.com>,
+ "Stefano Stabellini" <sstabellini@kernel.org>, "Oleksandr Tyshchenko"
+ <oleksandr_tyshchenko@epam.com>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun
+ Feng" <boqun@kernel.org>, "Gary Guo" <gary@garyguo.net>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
+ Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Daniel
+ Almeida" <daniel.almeida@collabora.com>, "Tamir Duberstein"
+ <tamird@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>,
+ =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, "Borislav Petkov"
+ <bp@alien8.de>, "Tony Luck" <tony.luck@intel.com>, "Danilo Krummrich"
+ <dakr@kernel.org>, <rust-for-linux@vger.kernel.org>,
+ <netdev@vger.kernel.org>, <linux-net-drivers@amd.com>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-scsi@vger.kernel.org>, <xen-devel@lists.xenproject.org>,
+ <linux-edac@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI: Replace pci_dev->is_busmaster with accessors
+From: "Maurice Hieronymus" <mhi@mailbox.org>
+To: "Lukas Wunner" <lukas@wunner.de>, "Maurice Hieronymus" <mhi@mailbox.org>
+References: <20260711-pci-dev-flags-v1-0-2fcf2811138c@mailbox.org>
+ <20260711-pci-dev-flags-v1-1-2fcf2811138c@mailbox.org>
+ <alOkgrK7Fm6opB4r@wunner.de>
+In-Reply-To: <alOkgrK7Fm6opB4r@wunner.de>
+X-MBO-RS-ID: 26cc25a0ec5af51ece5
+X-MBO-RS-META: nfsfy951dumk6mo6odtrggnyqgfwzm9r
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Sun Jul 12, 2026 at 4:28 PM CEST, Lukas Wunner wrote:
 
-New issues:
-- [Low] The commit message incorrectly claims that structs were moved to th=
-e end of the parent structures, while the code actually uses a union trick =
-to preserve the existing layout.
+> We already have the priv_flags member in struct pci_dev,
+> please use that instead of adding another one for the same purpose.
+>
+v2 moves the bit into priv_flags and exposes accessor functions
+for those drivers which needs to access the flags.
 
-Pre-existing issues:
-- [High] Heap out-of-bounds read due to missing request_len validation in B=
-SG handlers.
---
+Best,
 
---- Patch [1]: [PATCH v2] scsi: qla2xxx: Fix flex array member not at end -=
---
-commit 71cbbca6ae587defc94dd45238daf79e9aba8d13
-Author: Jesse Taube <jtaubepe@redhat.com>
-
-scsi: qla2xxx: Fix flex array member not at end
-
-This commit addresses the flex array member warning for struct fc_bsg_reply
-and struct fc_bsg_request in qla_edif_bsg.h. It updates the parent structs
-qla_bsg_auth_els_request and qla_bsg_auth_els_reply to wrap the flexible
-array structures within unions.
-
-> In qla_edif_bsg.h: struct fc_bsg_reply and struct fc_bsg_request
-> have flexible array members, thus they must be the last member of
-> the parent structure. Contininging in the effort to add
-> -Wflex-array-member-not-at-end, move the structs to the end of
-> the parent structures, struct qla_bsg_auth_els_reply and
-> struct qla_bsg_auth_els_request .
-
-[Severity: Low]
-This isn't a bug, but the commit message states the structs are moved to
-the end of the parent structures, while the code actually uses a union
-trick with an anonymous struct padding to preserve the existing binary
-layout. Could the message be updated to more accurately reflect the use of
-the union rather than a structural move?
-
-> diff --git a/drivers/scsi/qla2xxx/qla_edif_bsg.h b/drivers/scsi/qla2xxx/q=
-la_edif_bsg.h
-> index 514c265ba86e2..2b32a31856292 100644
-> --- a/drivers/scsi/qla2xxx/qla_edif_bsg.h
-> +++ b/drivers/scsi/qla2xxx/qla_edif_bsg.h
-> @@ -36,16 +36,26 @@ struct extra_auth_els {
->  } __packed;
-> =20
->  struct qla_bsg_auth_els_request {
-> -	struct fc_bsg_request r;
-> -	struct extra_auth_els e;
-> +	union {
-> +		struct fc_bsg_request r;
-> +		struct {
-> +			unsigned char __fc_bsg_request_sz[sizeof(struct fc_bsg_request)];
-> +			struct extra_auth_els e;
-> +		};
-> +	};
->  };
-
-[Severity: High]
-This is a pre-existing issue, but while looking at these structures, is
-there a missing bounds check on the request length when processing BSG
-messages?
-
-If a user issues an SG_IO ioctl to a BSG device with a minimal request_len
-of 4 bytes but specifies a command requiring more data, bsg-lib allocates
-exactly request_len bytes.
-
-The generic FC transport increments cmdlen but reads vendor_id without
-verifying the bounds:
-
-drivers/scsi/scsi_transport_fc.c:fc_bsg_host_dispatch() {
-    ...
-    case FC_BSG_HST_VENDOR:
-        cmdlen +=3D sizeof(struct fc_bsg_host_vendor);
-        if ((shost->hostt->vendor_id =3D=3D 0L) ||
-            (bsg_request->rqst_data.h_vendor.vendor_id !=3D
-             shost->hostt->vendor_id)) {
-    ...
-}
-
-The qla2xxx driver also unconditionally reads req->e.sub_cmd from this
-request structure at offset 20:
-
-drivers/scsi/qla2xxx/qla_edif.c:qla_bsg_check() {
-    ...
-    p =3D &req->e;
-
-    /* Get response */
-    if (p->sub_cmd =3D=3D PULL_ELS) {
-    ...
-}
-
-And unconditionally reads vendor_cmd[0] at offset 12:
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_process_vendor_specific() {
-    ...
-    ql_dbg(ql_dbg_edif, vha, 0x911b, "%s FC_BSG_HST_VENDOR cmd[0]=3D0x%x\n",
-        __func__, bsg_request->rqst_data.h_vendor.vendor_cmd[0]);
-    ...
-}
-
-Could this lead to a heap out-of-bounds read if request_len is too small?
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260714185621.6101=
-05-1-jtaubepe@redhat.com?part=3D1
+Maurice
