@@ -1,197 +1,135 @@
-Received: from mo4-p00-ob.smtp.rzone.de (mo4-p00-ob.smtp.rzone.de [85.215.255.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDAA7449EB8
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2026 12:15:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.23
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784117722; cv=pass; b=lx8yKQKmkvKzDhHqXNlarjs1phqdONJ7PCXdFdvVQTaEzAew2pESwxwUevOnQJ/AvpgYsKhT9RzX3/JtVcPNWchHKps9UOqGXUBOc78mLP76avXronDdoQhLMsiGpQmeAvR35im8E+dQbNzvvYuYLFVze7hZ9aEHGD0pCW04U7I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784117722; c=relaxed/simple;
-	bh=aOrVeHtXzsM1pRkqxNNddE3wD/FxMb2Yh1OYwAbAeQs=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=XvCF8EM60+JhvhydlZszl/Wpm752ArAb+wiCbniHogUdEIymXMEuTb2EXF6UL94sLhEMptckSH6HFJXlICVt3whe47dj5th/8H7iZqGMeqrdaIFyX6li9Zccy6nTLt292+9xJntCvRgP/t02nIx7t75/sBF0HP2X3Z6KItHaO8o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=sdGMsn5x; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=JDQOyGmN; arc=pass smtp.client-ip=85.215.255.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D7F93264DF
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2026 13:57:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784123824; cv=none; b=lvhGXKrNISxkKOOtMcCHq4yJpf2R4/yQYQHF5GVZLJXErpunkkSFGUAdzgU0eb87nsZV++h+/2nhunMC64dY5tHD9aIUOYT+V3gJgkidexLN6kbTiz+lBsMFbasIlbYzt4lA2orBIDlwAAffCnHmOAGDt02mRbz8cYaX2IZkbDg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784123824; c=relaxed/simple;
+	bh=fHfXfwEc0ghsiYFZBHpO96ExH/GyzOS5wPECh/RgVIY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XuKmxrGrZ0TQBxZIYw0niBcRcdpPRi7maMnIuo/g5u9/g1wUAodY51FZqfDq8d15218n9vHR2rGKt/ZFQXFI+bT2F7/2SyvO7xcD0UBRJEK4dS9YmQ0s1diA7z/wP3MBPQxh/dBIbQN0wjz1Y1P4XAJevh0uAsT0KfeR0BDGEvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=Ff9BqWfU; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="sdGMsn5x";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="JDQOyGmN"
-ARC-Seal: i=1; a=rsa-sha256; t=1784117530; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=a/C6r5DF3R+Y1Ks3iNwIJUapFpxCwF4w4LEQy7Id4OV73TFXevynSp+tpko9vnipk+
-    Wuz684JOYaB2PIzILyCEnWXXOU5K2AdsgiTYcXXdCy1ynDqaGR/fCoxHFSwPsgOhXydl
-    IzwQvmMB69B5Xn3ZcP0Eyz0zLuMT0Zsmro+mePA6K5fvLsG1AQ24acsbWQft+c0WpIYK
-    j5BLh993byIw0H6/8zufmJQOEsMAlS9fk0YjpSWIz64tHKIBLWmSZ3vXnMyrEYi2WeS1
-    44a6h/N2Odb8i84pSzMV/2T9XCY63Zp3e7R/p9vhtp9jzDnDmIEc3r7kqusgAXe90GBs
-    0S7g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1784117530;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=aOrVeHtXzsM1pRkqxNNddE3wD/FxMb2Yh1OYwAbAeQs=;
-    b=EDHUgpEisSGRdDMQi2oDId6oAmXsHlRVkPLExcEuB4MuYuAXmi+6+Jep/zsws2VHqj
-    kdQpwGv1xi1k75lELtCCZhlTTzJchBYWNuxiEXKNceUMzAh5QJCHG8++xs6KWm5pPRKs
-    r4xT7mPTnXuTpJ+F9AKdPUWxL4sU5VJZdpvc/zYeTPz7ASmb6f76s3eHj/y9jxZjHCjf
-    Pk3wyldM9tQqHa7Y7y6Y5cWOYHuVH+0D9Q+msFstoFF1SwvZUN6aUZaMhZkDhKTGPa9t
-    xCAQbuDwzOXs4HS/LI/CEJPBMcWGs8H0jh2bHduYjS6NvHA23g9R+VzPAmrA+YSDUlse
-    BMQA==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo00
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1784117530;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=aOrVeHtXzsM1pRkqxNNddE3wD/FxMb2Yh1OYwAbAeQs=;
-    b=sdGMsn5xkczACH78Z7fAcNGkGwI/KgPW1YgVGUJyA0OAZuG48mx3ds+5z5AkUGV95w
-    /wjnFrLpl5Nfh+2isLfNZHaBzHPwzr6UBtj8CFnWOoGUeZQOKbdMyGF5PNmAuQjJpqkA
-    5b+Dhi55WGeeWA//tYW6aGyLagIid5KxeGhanu3TdPhJVgOXGCQVt19YbUuCRVBHR+zX
-    iReyS7aLk9fYk7VrFClmu3tNGcE1qALJU3PMCP6LAuS18+ev3PcoPdfpZrWKn/BY9Ftf
-    E237ZX49KCvAC9QrcdmTXK+FvL1QhOy0DgNe9FM7MDS3WfsQOiAaqs0tAp7EEpjhPPTu
-    5i6A==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1784117530;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=aOrVeHtXzsM1pRkqxNNddE3wD/FxMb2Yh1OYwAbAeQs=;
-    b=JDQOyGmNwcfLVpvak6VZpFpjVubp/cOk7Ux5rnaBJTSodl/A/bKx/zdA4kmsnjyymS
-    FmT18xHC7dRuhqx3juCw==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZik"
-Received: from [10.176.237.62]
-    by smtp.strato.de (RZmta 55.5.6 AUTH)
-    with ESMTPSA id z4d38826FCCAOLg
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Wed, 15 Jul 2026 14:12:10 +0200 (CEST)
-Message-ID: <c3b5899213c76c62fa0c7f9dffdf56607c3ae1f0.camel@iokpp.de>
-Subject: Re: [PATCH v2] scsi: ufs: core: cancel RTC work in active-active
- suspend
-From: Bean Huo <beanhuo@iokpp.de>
-To: sashiko-reviews@lists.linux.dev, Guangshuo Li <lgs201920130244@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-Date: Wed, 15 Jul 2026 14:12:09 +0200
-In-Reply-To: <20260714174406.6FD471F00A3A@smtp.kernel.org>
-References: <20260714172726.1736967-1-lgs201920130244@gmail.com>
-	 <20260714174406.6FD471F00A3A@smtp.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="Ff9BqWfU"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-47640541585so2715208f8f.1
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2026 06:57:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1784123820; x=1784728620; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=13DZ1ti/XUipAhOOzOx37nwrN3CtQ4Vj0oi6u43J5uE=;
+        b=Ff9BqWfUyD94xR221QC1OnFimmefE2CEkatAt5z2SQy2Eg/eFgNNxBOs1b43b+vSdE
+         ikm7pQFTOJGkHv27wEXtpu/IoGsiGeQjM7L541KN6LeV4+YGYh/aG/bmro1Q9QXuZPP3
+         Tn5GOJYDuGQzL8xdkzrWfyxKQM1+fFlwxKws0tEP8WLVXlXYJKfDBhFhuTTR5KNXCCUb
+         UDQ2i9D/RklmMh9l3suvLnJ3nw/sdfxaR2sIfntTLMi9OjKOby9hS9WOHP9jlngzzmIq
+         cJr25HhRHu4JKpSeDCEMj3UYiSOZ32w2aUwrUPA6TLuH8x219YrM/FPu9/lQqQRKoAqt
+         oBZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784123820; x=1784728620;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=13DZ1ti/XUipAhOOzOx37nwrN3CtQ4Vj0oi6u43J5uE=;
+        b=UaKN400BkFP18PeiLWd+LTfxevlTxOKSEKzIQopAJ2PWsY5QuSMQqbxl7jYcH86fnz
+         L7Ncu9G2dKLWfwYJx/L3WmzynNwqSmBr8uOsva7OPMKTAzFBZ4Yd86L/kvEYjgzEkU5e
+         qGoCxcA3r461ZAld/bUSE8n78R2FjgrzrNEdbIJmkYMMsvWqWdKHsVWMf2rRSd6bSlWE
+         fv29wdxd3VciVruOSBbUzzpFyxJX7qd1pvFI7RNdPd1PH44l/bz0oLdeeK2kzYOAFNHt
+         RIkeMhaToTS5JFT7fnSPDbTGx6EggfgxCxfVEA2HaGdQOtE5BTVl1NUl05juVO+s9BAc
+         VdJw==
+X-Forwarded-Encrypted: i=1; AHgh+RpgJk2eUVO4lZJFyOLKZGb0nanljWK9avZrRAzNOqf1W6JSk4kHtJVYybktaCc1IILmcVkmfwd8HUii@vger.kernel.org
+X-Gm-Message-State: AOJu0YyzJ7TefMyXhEAwJwYLuvoKF1DstSZBmt8Yuj69m8BY16vYYRSm
+	SSHMAV8vHclMm2VS3d6HmqEMKBsgwUhjNBgZQvu1wbRil30yz51Y8OOOho3vn6eYgmA=
+X-Gm-Gg: AfdE7cn9W8/gFh9TgUxufF+RGZ+PQd/gCJok8dZxyzJqmt2q2gqZUBykfTS9AOLferQ
+	U6Pz218+0mAmMjvKRnl2Ac9q6LfiTwa12EhjiMx3RVqZ9wbjaN3j3RyjCsyElIx0xDT2zDd73jD
+	2OuHNLbLoAeWKQ6GmgFrCe066EwMxb9egT1FLjUvAMOGFJt7mAzA5WBViiAXDZq9ELcNEaa6Jq/
+	8RT65slrPrclEbZbjSP6exhx/CpPmCtcS6wNZQErLFHBXmwIXwlaJdcwgGeYvn7CUkT1En7w2dZ
+	IJeiwWxMrrW2HAihOLqKGw+4PndjuMBm9yyDMz13KKnbrcgaJYO1mLjAALi8QkLaodNubRp3P6a
+	trnJsPR+htF1Z0uC1SfPxCkFBw/O8JvO3F6FvPo39tmh6hGlObFH1RorGR9ZIf64ldM6at5ftqz
+	3cHq55qXPMPtmbb3+vyQLAMBo4pMUC75+PgBrqv9OPFkbPj3LOqeaD3SBoPdCHbSHlIq4/8wvh7
+	Xun2Gc0qikYEv8bg8J5gaDULMRSyV/UiVE=
+X-Received: by 2002:a05:6000:2911:b0:47e:5c6c:bdd5 with SMTP id ffacd0b85a97d-47f4fc998a1mr3336281f8f.6.1784123820192;
+        Wed, 15 Jul 2026 06:57:00 -0700 (PDT)
+Received: from lb03189.fkb.profitbricks.net ([212.227.34.98])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f4635a935sm16404864f8f.11.2026.07.15.06.56.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jul 2026 06:56:59 -0700 (PDT)
+From: Md Haris Iqbal <haris.iqbal@ionos.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Md Haris Iqbal <haris.iqbal@ionos.com>
+Subject: [PATCH] scsi: mpt3sas: don't post task management replies to io_uring poll queues
+Date: Wed, 15 Jul 2026 15:56:42 +0200
+Message-ID: <20260715135642.456578-1-haris.iqbal@ionos.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Tue, 2026-07-14 at 17:44 +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s)
-> to consider:
-> - [Medium] The `ufs_rtc_update_work` is permanently lost if
-> `__ufshcd_wl_suspend()` fails after cancelling it in the active-active su=
-spend
-> path, stopping periodic UFS RTC updates until the next successful
-> suspend/resume cycle.
-> --
->=20
-> --- Patch [1]: [PATCH v2] scsi: ufs: core: cancel RTC work in active-acti=
-ve
-> suspend ---
-> commit 9a4850975ce80edc6032f13153aa50eb19b4cc19
-> Author: Guangshuo Li <lgs201920130244@gmail.com>
->=20
-> scsi: ufs: core: cancel RTC work in active-active suspend
-> =C2=A0=C2=A0=C2=A0=20
-> This commit cancels the UFS RTC update work in the active-active suspend
-> path before calling the vendor suspend callback to prevent an SError.
->=20
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index d3044a3089b53..c3b105b2678e4 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -10269,6 +10269,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *=
-hba,
-> > enum ufs_pm_op pm_op)
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-req_link_state =3D=3D UIC_LINK_ACTIVE_STATE) {
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_disable_auto_bkops(hba);
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0flush_work(&hba->eeh_work);
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
->=20
-> [Severity: Medium]
-> If the active-active suspend path fails after this point, is the
-> ufs_rtc_update_work permanently lost?
->=20
-> When this jumps to the vops_suspend label, if ufshcd_vops_suspend() retur=
-ns
-> an error, the function branches to the error handling path:
->=20
-> __ufshcd_wl_suspend() {
-> =C2=A0=C2=A0=C2=A0 ...
-> vops_suspend:
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ret =3D ufshcd_vops_suspe=
-nd(hba, pm_op, POST_CHANGE);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (ret)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0goto set_link_active;
-> =C2=A0=C2=A0=C2=A0 ...
-> out:
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0...
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (ret) {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_update_evt_hist(hba, UFS_EVT_WL_SUSP_ERR, (u=
-32)ret);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0hba->clk_gating.is_suspended =3D false;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_release(hba);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0hba->pm_op_in_progress =
-=3D false;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return ret;
-> }
->=20
-> The error path doesn't appear to re-arm the canceled RTC update work befo=
-re
-> returning the error code. Does this mean periodic UFS RTC updates will st=
-ay
-> stopped until the next successful suspend and resume cycle?
+mpt3sas_scsih_issue_tm() posts a task management (TM) request to the
+reply queue given by @msix_task. For ABORT_TASK and the broadcast
+primitive QUERY_TASK/ABORT_TASK paths, @msix_task is the msix_io of the
+command being managed; for an io_uring polled (RWF_HIPRI) command that is
+an io_uring poll reply queue (index >= ioc->iopoll_q_start_index).
 
-This is not a real issue, for the following reasons:
+io_uring poll queues have no MSI-X interrupt registered and are drained
+only by mpt3sas_blk_mq_poll(), which the block layer calls to complete
+polled block I/O. A task management request is not a block layer request,
+so nothing polls on its behalf: the reply is posted to a queue that is
+never serviced during the wait, tm_cmds.done is never completed, and the
+TM times out even though the controller is healthy. The abort then
+escalates to a controller reset that was not needed.
 
-1\ The RTC work is not permanently lost. If suspend fails, the device stays=
- in
-the active state and the PM core will retry the suspend later (runtime PM
-retries once the device idles again; a failed system suspend is simply retr=
-ied
-on the next suspend attempt). The next successful suspend/resume cycle re-a=
-rms
-the work via the now unconditional schedule_delayed_work() in
-__ufshcd_wl_resume().
+Post TM replies to reply queue 0 whenever the selected reply queue is an
+io_uring poll queue; reply queue 0 is always interrupt-serviced. When
+poll queues are disabled, iopoll_q_start_index equals reply_queue_count,
+so the check is a no-op and behaviour is unchanged.
 
-2\ RTC updates being paused between a failed suspend and the next successfu=
-l
-cycle is harmless. The device only uses the RTC for internal housekeeping/a=
-ge
-estimation, and periodic updates are opt-in anyway: rtc_update_period defau=
-lts
-to 0 and must be enabled via sysfs.
+Reachable only when the driver is loaded with poll_queues > 0 and an
+io_uring polled workload issues I/O that later times out and is aborted.
 
-3\ This behavior is not introduced by this patch. The common suspend path h=
-as
-worked exactly the same way since commit b0bd84c39289 ("scsi: ufs: core: Fi=
-x
-SError in ufshcd_rtc_work() during UFS suspend"): it cancels the work befor=
-e the
-PRE_CHANGE vendor callback and does not re-arm it on the error paths either=
-. If
-anything, this could be a separate follow-up cleanup, but it should not hol=
-d
-this bug fix.
+Fixes: 432bc7caef4e ("scsi: mpt3sas: Add io_uring iopoll support")
+Signed-off-by: Md Haris Iqbal <haris.iqbal@ionos.com>
+---
+Found by code inspection while auditing the task-management reply path.
+Posting for review of the analysis.
+
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 12caffeed3a0..572ec1787e10 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3186,6 +3186,16 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 	int_to_scsilun(lun, (struct scsi_lun *)mpi_request->LUN);
+ 	mpt3sas_scsih_set_tm_flag(ioc, handle);
+ 	init_completion(&ioc->tm_cmds.done);
++	/*
++	 * A task management reply must be posted to an interrupt-serviced
++	 * reply queue. If the associated command was submitted on an io_uring
++	 * poll queue, that queue has no MSI-X interrupt and is drained only by
++	 * mpt3sas_blk_mq_poll(); a task management request is not a block layer
++	 * request, so nothing would process its reply and the command would
++	 * time out. Fall back to reply queue 0 in that case.
++	 */
++	if (msix_task >= ioc->iopoll_q_start_index)
++		msix_task = 0;
+ 	ioc->put_smid_hi_priority(ioc, smid, msix_task);
+ 	wait_for_completion_timeout(&ioc->tm_cmds.done, timeout*HZ);
+ 	if (!(ioc->tm_cmds.status & MPT3_CMD_COMPLETE)) {
+-- 
+2.43.0
 
