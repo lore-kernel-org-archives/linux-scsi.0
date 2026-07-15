@@ -1,128 +1,150 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC45037E5CB
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2026 09:00:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD03A3D9691
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2026 09:01:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784106018; cv=none; b=oaDj+usvRVonoDH/TfCVcjZ3DKXTg2xeMO2dN5OT03y6RtjozVySwoGe3+++QV0+qr+AH+LAeybaV066GcKOFX5C4wNWmKZmrcdLqTlbzq4SVJ0F1qkNtAbi9w0MHz82qnZsvjPSks4Sye+AN7g0PW6u5ZaIfyOVF2leI7H0Sls=
+	t=1784106071; cv=none; b=Yya5UQZhGDjXiiwOwk/ZrN4vDItxgJKd3LQOW5boumB0XF32nF7A1TTpQt7Avg8pznjC/HIOrl16wLhf2PW/w0bCT4RQh6WkZREG2mLbWT4SgILLNanE+OgtCP1KEf8tBWupD/RcAS1dYTfJEiqJbGz3QRednOSKrpU13qv7Pj8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784106018; c=relaxed/simple;
-	bh=uoG56waQ8o6608eV8pKV1LNLFO9CEqlPYOydoyvqvcI=;
+	s=arc-20240116; t=1784106071; c=relaxed/simple;
+	bh=j5hTIMx0n256/ziK5G6uaBJ80EenlZ1E4plEhSzfxq8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=C3eeIhl+uRVIyVI2+MkQEcZf+7Na8Tyj2UArmsfo+S/MKRoLJqEA23tu70wSPZkMP+1WA0ejcu9MyJbFwDBotAqXOo4RFhudW8wsQqvvxQvm0DToTqdu7lCwutmqsnCpYGo+XgIYBAqXyWs7PetGhFQdzPTMt5VobGwfE/y8cZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MSqRYOzh; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ivmzE1sffjFf8JyPY5iwQd/iqzOzbjMJFTj2NTgseSzjlc9idS1MoubNrFHgFhqM9RdiL/D+f6aVNk8kj0QmgDLrgGhfZaNKHPy/rf3rBrmGjJwXhKKCZxqCTRcupKVUjmzeMpwBNPYAMH37Mzwd6+X3TiNkoB/OcANtQ6x/jps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OUnC8xsI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MSqRYOzh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76FD11F000E9;
-	Wed, 15 Jul 2026 09:00:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OUnC8xsI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE3D51F000E9;
+	Wed, 15 Jul 2026 09:01:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784106015;
-	bh=z7tTZkeaxWo/++P3j/aNlCZPGPSjO5VezH08ZmTH5yM=;
+	s=k20260515; t=1784106067;
+	bh=n1dAe4F9eQ105YNi+IJDHYHwAhqhw7FGf/dHvUX1RD8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MSqRYOzhnCn9HIQnBTgQo/M8JoR83xr6UjgaO4bJpucZZccNUZbaKkJERq8bvawzX
-	 knj60ow9tfF45HSJLaXhb+hxpc3i5HYtluDSDxvQfoPAgCj3wRGHrzeMh//qugx6iY
-	 d6HQp93qnPFtuk1hC4YicpzHv4is6H2gkcxeP9eYt2qAlPB/RHLwqOk+2arVxKDaWU
-	 QdF5XMfp1frSigYLcduTP+bpi41dV5+zayuDajGTZwlD1QfdkG0P8W3WMMEschxHZe
-	 pPQp4eQ+0xgOJn3ebCuY3aQSmqTOYzEqY+lltOlBSkpC9ey9d0ENhv58Xp7A4tM36O
-	 uDKoY1lkhikAA==
+	b=OUnC8xsIkS5Rqhkife97rtvE25ekg8RTPu+fNhSWc3sfYfbM1GYAmJDx4BDsc3f11
+	 /xOYV96o2DcAq97AVqbQ2F+X4dGqdzmeXM8HXIQwK9pY2a1SK+9qscPMcSXbBm2Mzc
+	 zbluyUWCK/y3jmeijHcwaiklir7uRaNHSLKy31WnN22uPiTYUXhU6MXoHDls/yxP89
+	 9wlWLDxrtl49dsHm4cRp2iFyiyze/NCTdl1c2CBXyxSUuWWQkSeaik7VNx3AOchJau
+	 iBWyr46hAnTAdqfi7DlPGkp6lYYjaiLWhJjFHBy/VSHUlSDLbKMZZrdfgXg11UVw4j
+	 J/+aG9ReSECzA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: libfc: validate FCP response payload length
+Subject: Re: [PATCH v2 1/2] scsi: 3w-9xxx: bound firmware error strings
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Pengpeng Hou" <pengpeng@iscas.ac.cn>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260715084548.45278-1-pengpeng@iscas.ac.cn>
-References: <20260715084548.45278-1-pengpeng@iscas.ac.cn>
+In-Reply-To: <20260715084652.47248-2-pengpeng@iscas.ac.cn>
+References: <20260715084652.47248-1-pengpeng@iscas.ac.cn>
+ <20260715084652.47248-2-pengpeng@iscas.ac.cn>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 09:00:14 +0000
-Message-Id: <20260715090015.76FD11F000E9@smtp.kernel.org>
+Date: Wed, 15 Jul 2026 09:01:06 +0000
+Message-Id: <20260715090106.EE3D51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Processing of FCP_SNS_LEN_VAL and FCP_RESID_UNDER blindly assu=
-mes fsp->cmd is valid, leading to a NULL pointer dereference during malform=
-ed Task Management Function (TMF) responses.
+- [High] Incomplete Fix / Missing Sibling Driver Fix
+- [High] Use-After-Free / Locking Freed Memory on Device Removal
 --
 
---- Patch [1]: [PATCH] scsi: libfc: validate FCP response payload length ---
-commit 62a5c62c9541198f09e35c7317ed519450b54ee2
+--- Patch [1]: [PATCH v2 1/2] scsi: 3w-9xxx: bound firmware error strings -=
+--
+commit fea64e8649c4887fbfe30a91a57db19d90edb2d7
 Author: Pengpeng Hou <pengpeng@iscas.ac.cn>
 
-scsi: libfc: validate FCP response payload length
+scsi: 3w-9xxx: bound firmware error strings
 
-This commit adds bounds checking for FCP response payloads. It ensures
-that the response-info and sense lengths declared by the device do not
-exceed the current frame length, preventing out-of-bounds memory accesses.
+This commit replaces unbounded strlen() calls with strnlen() when parsing
+the firmware response header in the 3w-9xxx driver. It also adds a shared
+helper function to safely NUL-terminate the field before parsing.
 
-> diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-> index 5121272f28fd8..7e4c3c152f5d2 100644
-> --- a/drivers/scsi/libfc/fc_fcp.c
-> +++ b/drivers/scsi/libfc/fc_fcp.c
-
+> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+> index 9b93a2440af8f..b2462ee43008e 100644
+> --- a/drivers/scsi/3w-9xxx.c
+> +++ b/drivers/scsi/3w-9xxx.c
 [ ... ]
+> @@ -404,10 +422,9 @@ static void twa_aen_queue_event(TW_Device_Extension =
+*tw_dev, TW_Command_Apache_H
+>  	tw_dev->error_sequence_id++;
+> =20
+>  	/* Check for embedded error string */
+> -	error_str =3D &(header->err_specific_desc[strlen(header->err_specific_d=
+esc)+1]);
+> -
+> -	header->err_specific_desc[sizeof(header->err_specific_desc) - 1] =3D '\=
+0';
+> -	event->parameter_len =3D strlen(header->err_specific_desc);
+> +	error_str =3D twa_error_string(header);
+> +	event->parameter_len =3D strnlen(header->err_specific_desc,
+> +				       sizeof(header->err_specific_desc));
 
-> @@ -869,6 +872,8 @@ static void fc_fcp_resp(struct fc_fcp_pkt *fsp, struc=
-t fc_frame *fp)
->  			if (flags & FCP_SNS_LEN_VAL) {
->  				snsl =3D ntohl(rp_ex->fr_sns_len);
->  				if (snsl > SCSI_SENSE_BUFFERSIZE)
->  					snsl =3D SCSI_SENSE_BUFFERSIZE;
-> +				if (plen < sizeof(*fc_rp) + sizeof(*rp_ex) + respl + snsl)
-> +					goto len_err;
->  				memcpy(fsp->cmd->sense_buffer,
->  				       (char *)fc_rp_info + respl, snsl);
+[Severity: High]
+This isn't a bug introduced by this patch, but does the sibling driver 3w-s=
+as
+need a similar fix?
 
-[Severity: Critical]
-This is a pre-existing issue, but does this code lead to a null pointer
-dereference if a malformed Task Management Function response is received?
+Looking at twl_aen_queue_event() in drivers/scsi/3w-sas.c, it seems to use =
+the
+same unbounded strlen() before the array is explicitly NUL-terminated:
 
-When fc_eh_device_reset() allocates an fsp for a LUN reset, it leaves
-fsp->cmd as NULL and sets fsp->wait_for_comp =3D 1.
+drivers/scsi/3w-sas.c:twl_aen_queue_event() {
+    ...
+    error_str =3D &(header->err_specific_desc[strlen(header->err_specific_d=
+esc)+1]);
+    header->err_specific_desc[sizeof(header->err_specific_desc) - 1] =3D '\=
+0';
+    event->parameter_len =3D strlen(header->err_specific_desc);
+    memcpy(event->parameter_data, header->err_specific_desc,
+           event->parameter_len + 1 + strlen(error_str));
+    ...
+}
 
-If a target responds with a frame where FCP_SNS_LEN_VAL is set but
-FCP_RSP_LEN_VAL is clear, the early return for TMF completions is bypassed
-and execution falls through to process sense data.
+If the firmware response does not contain a NUL terminator, could this lead
+to an out-of-bounds read and a subsequent heap buffer overflow in the
+memcpy()?
 
-Because fsp->cmd is NULL in this path, will the memcpy() above crash when
-attempting to access fsp->cmd->sense_buffer?
+It looks like twl_fill_sense() in drivers/scsi/3w-sas.c also has the same
+pattern. Should these be updated as well?
 
->  			}
->  		}
->  		if (flags & (FCP_RESID_UNDER | FCP_RESID_OVER)) {
->  			if (plen < sizeof(*fc_rp) + sizeof(rp_ex->fr_resid))
->  				goto len_err;
->  			if (flags & FCP_RESID_UNDER) {
->  				fsp->scsi_resid =3D ntohl(rp_ex->fr_resid);
->  				/*
->  				 * The cmnd->underflow is the minimum number of
->  				 * bytes that must be transferred for this
->  				 * command.  Provided a sense condition is not
->  				 * present, make sure the actual amount
->  				 * transferred is at least the underflow value
->  				 * or fail.
->  				 */
->  				if (!(flags & FCP_SNS_LEN_VAL) &&
->  				    (fc_rp->fr_status =3D=3D 0) &&
->  				    (scsi_bufflen(fsp->cmd) -
->  				     fsp->scsi_resid) < fsp->cmd->underflow)
+>  	memcpy(event->parameter_data, header->err_specific_desc, event->paramet=
+er_len + (error_str[0] =3D=3D '\0' ? 0 : (1 + strlen(error_str))));
+>  	if (event->severity !=3D TW_AEN_SEVERITY_DEBUG)
 
-[Severity: Critical]
-This is a pre-existing issue, but similarly, if the response has
-FCP_RESID_UNDER set but FCP_RSP_LEN_VAL clear, will checking
-scsi_bufflen(fsp->cmd) and fsp->cmd->underflow also crash when fsp->cmd
-is NULL?
+[Severity: High]
+This is a pre-existing issue, but is there a use-after-free risk during
+device removal in this driver?
 
->  					goto err;
->  				expected_len -=3D fsp->scsi_resid;
+Looking at twa_remove() in drivers/scsi/3w-9xxx.c, it frees tw_dev without
+clearing the global twa_device_extension_list array or preventing existing
+ioctl operations:
+
+drivers/scsi/3w-9xxx.c:twa_remove() {
+    ...
+    scsi_host_put(tw_dev->host);
+    pci_disable_device(pdev);
+    twa_device_extension_count--;
+}
+
+If a user holds an open file descriptor to /dev/twa0 while the device is
+unbound, and then calls ioctl, twa_chrdev_ioctl() retrieves the freed
+pointer:
+
+drivers/scsi/3w-9xxx.c:twa_chrdev_ioctl() {
+    ...
+    TW_Device_Extension *tw_dev =3D twa_device_extension_list[iminor(inode)=
+];
+    ...
+    if (mutex_lock_interruptible(&tw_dev->ioctl_lock)) {
+    ...
+}
+
+Would this result in locking freed memory?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715084548.4527=
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715084652.4724=
 8-1-pengpeng@iscas.ac.cn?part=3D1
