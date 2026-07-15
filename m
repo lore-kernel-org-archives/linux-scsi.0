@@ -1,35 +1,42 @@
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6E6B3D1CA5;
-	Wed, 15 Jul 2026 08:46:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6DF83D8902;
+	Wed, 15 Jul 2026 08:58:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784105217; cv=none; b=YCvWlPDx7o5rziu0/8cz55g9a0rJ3YRnJ5lYpQFMa94o/PM8ERLnXgsx+tdSRPfaXHIh8gQbegfv+FiS1emXZdXjQKrW6vRzlEarGKU4/QwdPsxO2jnsWBMI02lCedjdZO7fEqA+Iudb6mk3wopR2gvjDKo9Q/YUR1BxDzlySfI=
+	t=1784105920; cv=none; b=thAMkHYlCXSkINL3ANr26MKcn093pU/pYcL8mtMir99rhe+ZKcZHW0NaxfuC8ptEImVdajiEh9vjkvXAdA7AQ0nPhV+/0ncfPy0stMreHRaWv/HuL+xzyrJ2KvcwuZTx217qTL5WzNZ9L2WVuLoZxK7aYV6FC68u7UWNabyAU5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784105217; c=relaxed/simple;
-	bh=9SzdnOwYA3YlA2tYEuzblU42E5wHGj+qmFzgUI/Z/LU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Sl7PvcOQvM7LJ3TdSGGYngSwPDTU5TQrXBzupYNiH8oZ8XaVs+4GQqiCxcTJ0cnG7hniFN+sX9KIuUuHss1VOR065gqU0qb/c0zLbsOEzM2oHD+vJ5w4nHOgz6EvQJFQbQLpuVqA71CS6XTAa6owtFR90DBY4OxarcPaxx/4F/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.245.140])
-	by APP-05 (Coremail) with SMTP id zQCowACXB+v8SFdqE4JHGA--.7917S3;
-	Wed, 15 Jul 2026 16:46:52 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: martin.petersen@oracle.com
-Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	James.Bottomley@HansenPartnership.com,
-	aradford@gmail.com,
+	s=arc-20240116; t=1784105920; c=relaxed/simple;
+	bh=k1p2jnrm7ellBF7Wq2WQsTOdN7VOjfArABSZ3k6aavE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DB4r3VobvftqJXLl40XGZTjXYGP/76+KfKfgF8TkfI0xEP5smSQOp79BroD2Xx22B1ASsfJeHTp5Kyi2qlurHZGSplka35Z8xY+M4yzrJ/2gsu72so4s55Tn2BszRz96WAONeWf56S9PzMtpkV+QtM4O+6HWODRdeCysoQ1Rgkk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D2AVips7; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D2AVips7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D34D1F000E9;
+	Wed, 15 Jul 2026 08:58:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784105916;
+	bh=lwzEkkjWNNJy6DFjUqqyHIBbNZHWbg2vlMPqGBlLa+w=;
+	h=From:To:Cc:Subject:Date;
+	b=D2AVips7vEX/AhAAey0BUmNBTbkbmymelkDr93xZw8ZHhxn9CDyBmvElW/SPqvk1a
+	 uC+IhI5LQeObBKCt9/9LP1AFcuI/1ryjfHuH/jkvVmzoJf1yTnTiw0MCs20bA53bzI
+	 w+iQBJCD6rpG9CrdgwLdEegcj4MhZocbL8dPdNsSYVh7hvi1o2z3GiBj6XOVa2Q1+b
+	 B6Oem6oZJQpMB5wQqKLzWDFtxyqQhGUVzWEu0eBX5WNGBNCyGifw3l7v/kzgyN9dVQ
+	 hBGRJEuQndlxQZKIW0iqloCJO2UabdzWmYve+ykaUl3xYliBw2EVIP5Kw/6kMjRKcx
+	 nJe0JhXxmk4Pg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/2] scsi: 3w-9xxx: bound firmware error strings
-Date: Wed, 15 Jul 2026 16:46:51 +0800
-Message-ID: <20260715084652.47248-2-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260715084652.47248-1-pengpeng@iscas.ac.cn>
-References: <20260715084652.47248-1-pengpeng@iscas.ac.cn>
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Igor Pylypiv <ipylypiv@google.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v4 0/2] fixup handling of timeouts with deferred QCs
+Date: Wed, 15 Jul 2026 17:58:22 +0900
+Message-ID: <20260715085824.854200-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,113 +44,50 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowACXB+v8SFdqE4JHGA--.7917S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxXF1fur13AF1xCF47CF45Wrg_yoWrXr4fpw
-	48Kas8ArW8J3WrAr93uw1UZF45Ca92ya9Yg34UXa4IvFWUGr90vF1Skr18uFyj9ryxAw4j
-	qrsYv39xuF1IyrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPj14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-	x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
-	e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
-	8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
-	jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_JF0_Jw
-	1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWU
-	JVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7V
-	AKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Xr0_Ar1lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfU8v38UUUU
-	U
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-The controller response header stores the description and optional firmware
-error string in its fixed 98-byte err_specific_desc field.
-twa_aen_queue_event() used strlen() to find the second string before
-forcing the final byte to NUL, while twa_fill_sense() used the same
-unbounded layout directly.
+This patch series fixes libata and libsas to correctly handles deferred
+queued commands in case of a timeout error, to avoid excessive delays in
+waking up the scsi EH task.
 
-If a response does not contain a terminator, strlen() can scan past
-the field.
-If the first string reaches the last field byte, adding one also forms a
-pointer past the array.
+Igor,
 
-Terminate the field before parsing it and use a shared helper that treats a
-full first string as having no optional second string. This keeps both AEN
-and sense reporting paths within the response field.
+My apologies for the churn, but please retest !
+Also, I added your Signed-off-by on patch 2 since half of it is yours.
 
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
----
- drivers/scsi/3w-9xxx.c | 31 ++++++++++++++++++++++++-------
- 1 file changed, 24 insertions(+), 7 deletions(-)
+Martin,
 
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index 9b93a2440af8..b2462ee43008 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -149,6 +149,24 @@ static int twa_scsiop_execute_scsi(TW_Device_Extension *tw_dev, int request_id,
- static void twa_scsiop_execute_scsi_complete(TW_Device_Extension *tw_dev, int request_id);
- static char *twa_string_lookup(twa_message_type *table, unsigned int aen_code);
- 
-+/*
-+ * The firmware field contains two NUL-terminated strings in one fixed-size
-+ * array.  Make the last byte a terminator before finding the optional second
-+ * string, and never form a pointer one byte past the array.
-+ */
-+static const char *twa_error_string(TW_Command_Apache_Header *header)
-+{
-+	size_t description_len;
-+
-+	header->err_specific_desc[sizeof(header->err_specific_desc) - 1] = '\0';
-+	description_len = strnlen(header->err_specific_desc,
-+				  sizeof(header->err_specific_desc));
-+	if (description_len == sizeof(header->err_specific_desc) - 1)
-+		return "";
-+
-+	return &header->err_specific_desc[description_len + 1];
-+}
-+
- /* Functions */
- 
- /* Show some statistics about the card */
-@@ -376,7 +394,7 @@ static void twa_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
- 	TW_Event *event;
- 	unsigned short aen;
- 	char host[16];
--	char *error_str;
-+	const char *error_str;
- 
- 	tw_dev->aen_count++;
- 
-@@ -404,10 +422,9 @@ static void twa_aen_queue_event(TW_Device_Extension *tw_dev, TW_Command_Apache_H
- 	tw_dev->error_sequence_id++;
- 
- 	/* Check for embedded error string */
--	error_str = &(header->err_specific_desc[strlen(header->err_specific_desc)+1]);
--
--	header->err_specific_desc[sizeof(header->err_specific_desc) - 1] = '\0';
--	event->parameter_len = strlen(header->err_specific_desc);
-+	error_str = twa_error_string(header);
-+	event->parameter_len = strnlen(header->err_specific_desc,
-+				       sizeof(header->err_specific_desc));
- 	memcpy(event->parameter_data, header->err_specific_desc, event->parameter_len + (error_str[0] == '\0' ? 0 : (1 + strlen(error_str))));
- 	if (event->severity != TW_AEN_SEVERITY_DEBUG)
- 		printk(KERN_WARNING "3w-9xxx:%s AEN: %s (0x%02X:0x%04X): %s:%s.\n",
-@@ -992,12 +1009,12 @@ static int twa_fill_sense(TW_Device_Extension *tw_dev, int request_id, int copy_
- 	TW_Command_Full *full_command_packet;
- 	unsigned short error;
- 	int retval = 1;
--	char *error_str;
-+	const char *error_str;
- 
- 	full_command_packet = tw_dev->command_packet_virt[request_id];
- 
- 	/* Check for embedded error string */
--	error_str = &(full_command_packet->header.err_specific_desc[strlen(full_command_packet->header.err_specific_desc) + 1]);
-+	error_str = twa_error_string(&full_command_packet->header);
- 
- 	/* Don't print error for Logical unit not supported during rollcall */
- 	error = le16_to_cpu(full_command_packet->header.status_block.error);
+Once reviewed, I or you can take both patches ?
+
+Changes from v3:
+ - Reimplement ata_scsi_requeue_deferred_qc() in patch 1 as
+   ata_eh_retry_deferred_qc() so that all requeue pathes use the same
+   function.
+
+Changes from v2:
+ - Modified patch 1 to avoid the problem reported by Sashiko that requeued
+   deferred QCs may be re-ssued immediately by the block layer, thus
+   potentially keeping the device busy. The modification now relies on
+   libata-EH to perform the requeue instead of immediately doing it from
+   the eh_timed_out operation.
+ - Modified patch 2 to use the new helper function defined in patch 1.
+
+Changes from v1:
+ - Modified patch 1 to ignore timed out deferred QCs in
+   ata_scsi_requeue_deferred_qc() to let ata_scsi_cmd_error_handler()
+   correctly handle this case.
+
+Damien Le Moal (2):
+  ata: libata-scsi: terminate deferred commands on time out
+  scsi: libsas: terminate deferred commands on time out
+
+ drivers/ata/libata-eh.c             | 38 ++++++++++++++++----
+ drivers/ata/libata-scsi.c           | 56 +++++++++++++++++------------
+ drivers/ata/libata.h                |  2 +-
+ drivers/scsi/libsas/sas_scsi_host.c | 17 +++++++++
+ include/linux/libata.h              |  3 ++
+ include/scsi/libsas.h               |  2 ++
+ 6 files changed, 88 insertions(+), 30 deletions(-)
+
 -- 
-2.43.0
+2.55.0
 
