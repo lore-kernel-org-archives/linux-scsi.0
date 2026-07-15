@@ -1,365 +1,382 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 595E3424D55;
-	Tue, 14 Jul 2026 19:37:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB15A2F7F14;
+	Wed, 15 Jul 2026 04:22:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784057848; cv=none; b=p6s1ZzwwagKPsvK9BXxFcPjjt4wavpHkXl1ebpq87fVCO4oeF1O+DMEYPPDESelxQxQhU9zGyluM3DZ7ZuI9/wzseIqsEfZpQAuzwDk1+KaMThz3DJ3q5reCF7VJO2iVxrXOCsux6Nfdw6UVG7AFV4xr+yTkaJrD91Z3wXca2gY=
+	t=1784089333; cv=none; b=TNToZjOq6GBCwV6yfsowzU5vVEb6r3GQXGaUnNrT6nTucHp7YQW+gIiya4+aEuU6cDGO0vkXxvV78RKcA9dOtcrZJfNnRMsrEAG7HG15TJMS47MJ+RUdEmxjuXacgIp7QKB3LxSfN7YoTNkQKNqtBU8uY4KvNwUOei3zfSeQVrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784057848; c=relaxed/simple;
-	bh=xBOoNzC2az2lrduUXWCw8GbXb6mhhjAQddgJX/fDBOw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=rbQU0KtH6In750uQLnRJtlppmaq+TJKeIfx5h3xASdcq9t3DhpoSbtVaiF9I3FCX78mMsmhJRbUFAiPKEXS8AcC4iwR+1XuHEiJoTKnJLdsy0tjzLodlK0RsPRx7BB7qBHsnKQyOOSDqyJs624z7twM92eM+qj0WgCpAahlHYFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=l38MNjwH; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=Rydzk/W0; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1784089333; c=relaxed/simple;
+	bh=yOkM685yJQdbKVpHEhMOVPwInqzc8Xw3E5+TywZRXT0=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=mBFy6gdBoZQZsR1qfHEUxu4RNDcahHojphSNHhywrnhaaQUmYqTq/HDDgKRCHO9E7pGe0XCkcZx7V1R+JBk1OW4+mtQcR4S2jFOImrg+j7bNw30fQ/q8VJVaYtZXHdEMPYhusPzStGYa8n/4zQaIDTlnL5e89B/7Z56Qhk6wXWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=XpZyJwo2; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="l38MNjwH";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="Rydzk/W0"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4h08hf0vzjzKvvW;
-	Tue, 14 Jul 2026 21:37:22 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1784057842;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=1ofGv+oKh8MyF1GowqA3GVjMzH+NCBy1xlrefUGXfXA=;
-	b=l38MNjwHNIXQw+IdCfCjpNmNOE6iwLP1EIQSJydvHsSB32t8oXLtohOvMheWXJQTDgWrTM
-	dhT/qSdJlimtS/fXtocrDdL09IimEYDwOekOe3FvJJK1myIDVjnxZdvuRjjUxsvIvIyxJJ
-	P8S/jQiP71t1McDfgTRE3se2r0kto8idFFK76R/sgB9YyTGKUJq+ysv3kIh8X2t09RPXNo
-	KNuPlIIeCtzq9b/aDO7kUD7hQQS1GsnovVnxmqmoqlYox8JcQt1DOQQ/riX+587IXyoZ9J
-	5sKnA69mo9SOQBejaH769bs0/2hXu5owEqaYTBr+DLStH5nj8fThuPJiEJIAwg==
-From: Maurice Hieronymus <mhi@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1784057839;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=1ofGv+oKh8MyF1GowqA3GVjMzH+NCBy1xlrefUGXfXA=;
-	b=Rydzk/W0Z4j2MguB5wokh/xcqWxhRbvqP43zwVBnsTqYdoI4IQ/Ip5O40KK40ahZ9B5AG6
-	VnQ+Pp2On89Y7tcKWSMns1mM1vp3gMYdKaxs75NfmSba7sBtLoryZJ9tnjB8XBC2aCeUxN
-	oxA96PKMpHCdTBi5HFfxu0jts/RMIcb9l6oRdtEfJNr0+ScV9YEuJV7siqyIjyWpFRtmam
-	Ltzo28IlG87hsEJLdUKLDqKk22uCwOGm0e1ZQOEdME5jpEYiNwyQSYcwTc6j8uh+KhInH1
-	VZL+/3uE/Mw4bPdXTt7T0tkjAYK2yPwvmHgxDXmd9LbMyMSk94YGudnC0BBcag==
-Date: Tue, 14 Jul 2026 21:37:07 +0200
-Subject: [PATCH v2] PCI: Move pci_dev->is_busmaster into priv_flags
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XpZyJwo2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1784089331; x=1815625331;
+  h=date:from:to:cc:subject:message-id;
+  bh=yOkM685yJQdbKVpHEhMOVPwInqzc8Xw3E5+TywZRXT0=;
+  b=XpZyJwo2PgFLGHYp0os1a5LzOtRAeSTRIqdne1QRp+lw+0ugGyfjal7J
+   BmkqbPDNGTqOn7K+Qrl+swtYw7C95kJIBGOVIcn9d4P7wTF4Ub9XAJQJr
+   e0BcmGv0SA7IWJDrPFchz5aKEo0Qfk7OBn8CHi+Lm+Egb+v1R6Cr8nPmO
+   RMIZjXvavQolBSK41v6/+KZ1jlRNo4TAIC3yNjctKGc4gMhhz6kJsnrX5
+   vIEGPDNqZLO3Sys686x35k1xvHp0XqPcFhjOh2OFFU7cfKu3CRbO84Akg
+   PcGfxA0xBoCEWsYtKhteiFCv0kRcWmHLbUnsYSTBL4ZDnvxgZZXWwUZpI
+   w==;
+X-CSE-ConnectionGUID: FP+XxV4CS+mINEwrI+UmOw==
+X-CSE-MsgGUID: cDBseSqFT763fLD4Veq72A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="84571732"
+X-IronPort-AV: E=Sophos;i="6.25,164,1779174000"; 
+   d="scan'208";a="84571732"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 21:22:10 -0700
+X-CSE-ConnectionGUID: hvNO03mgQV+d0iWYqg69PQ==
+X-CSE-MsgGUID: uN6TXpdmQpuBO0IRmGbeag==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,164,1779174000"; 
+   d="scan'208";a="252662372"
+Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
+  by fmviesa007.fm.intel.com with ESMTP; 14 Jul 2026 21:22:08 -0700
+Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wjr8H-00000000NHb-2tuv;
+	Wed, 15 Jul 2026 04:22:05 +0000
+Date: Wed, 15 Jul 2026 12:21:36 +0800
+From: kernel test robot <lkp@intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Memory Management List <linux-mm@kvack.org>,
+ linux-media@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Mark Brown <broonie@kernel.org>
+Subject: [linux-next:master] BUILD REGRESSION
+ cc2b5f627e8ccbae1188ef2d8be3e451d7f933a5
+Message-ID: <202607151249.N5niNXKX-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260714-pci-dev-flags-v2-1-a1d7dc441cf3@mailbox.org>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/3WNQQ6CMBBFr0JmbU2nGEVX3sOwoGUGxiAlLTYYw
- t0FXLt8yfvvzxApCEW4ZTMEShLF9yuYQwaurfqGlNQrg9HmrC+IanCiakqKu6qJiq11fGK+6hx
- h3QyBWKa99yh/HN/2SW7cIpvRShx9+OyHCTfvXzuh0sqwY1MgYl64+6uSzvrp6EMD5bIsXw96r
- fO+AAAA
-X-Change-ID: 20260711-pci-dev-flags-fbbcf4ff9031
-To: Edward Cree <ecree.xilinx@gmail.com>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, Justin Tee <justin.tee@broadcom.com>, 
- Paul Ely <paul.ely@broadcom.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Juergen Gross <jgross@suse.com>, 
- Stefano Stabellini <sstabellini@kernel.org>, 
- Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>, 
- Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
- Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Tamir Duberstein <tamird@kernel.org>, 
- Alexandre Courbot <acourbot@nvidia.com>, 
- =?utf-8?q?Onur_=C3=96zkan?= <work@onurozkan.dev>, 
- Borislav Petkov <bp@alien8.de>, Tony Luck <tony.luck@intel.com>
-Cc: Danilo Krummrich <dakr@kernel.org>, rust-for-linux@vger.kernel.org, 
- netdev@vger.kernel.org, linux-net-drivers@amd.com, 
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org, 
- linux-edac@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, 
- Maurice Hieronymus <mhi@mailbox.org>
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1784057829; l=10454;
- i=mhi@mailbox.org; s=20260525; h=from:subject:message-id;
- bh=xBOoNzC2az2lrduUXWCw8GbXb6mhhjAQddgJX/fDBOw=;
- b=4+prDaflj4wBbkWdcxfavA+uc+hzT/kyE5OcCNRPkK14v+dxy7EJjAGfiN7o8em2XEEKFXpfw
- tO93TG255CCC5aYokkkMhcUDOQcJUGHv+ot3z2MNFGJx4ql5IABb7od
-X-Developer-Key: i=mhi@mailbox.org; a=ed25519;
- pk=AHlEkGG3hpXZHntlEzF42Ip/LFyXWOgsNUvaHqAnV80=
-X-MBO-RS-ID: f796c9162f0b3641499
-X-MBO-RS-META: rbw1s4zsxsh9gxnsw3z5ahik7gopwsow
 
-`is_busmaster` is one bit of a ~60-bit C bitfield in `struct pci_dev`.
-Bits sharing a bitfield word must not be modified concurrently, but its
-writers take no common lock: `pci_set_master()` can run without the
-device lock (e.g. from runtime PM resume paths), `pci_disable_device()`
-clears the bit, and other bits in the same word are written from
-entirely different contexts, e.g. `broken_parity_status` from sysfs.
-Concurrent read-modify-write cycles of the shared word can then lose
-updates.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: cc2b5f627e8ccbae1188ef2d8be3e451d7f933a5  Add linux-next specific files for 20260714
 
-Move `is_busmaster` into the existing `priv_flags` bitmap, which is
-modified with atomic bitops. The bit definition stays private to
-drivers/pci; xen-pciback, lpfc and sfc access the flag through the new
-exported accessors `pci_dev_is_busmaster()` and
-`pci_dev_assign_busmaster()`.
+Error/Warning (recently discovered and may have been fixed):
 
-This also unblocks the Rust device enabling API rework [1], where a
-guard object calls `pci_disable_device()` from contexts that may run
-concurrently with `pci_set_master()`.
+    https://lore.kernel.org/oe-kbuild-all/202607150709.CagVDeyK-lkp@intel.com
 
-Link: https://lore.kernel.org/rust-for-linux/DJOEYVBS17MJ.1YD3TNGQBWHNK@kernel.org/ [1]
-Suggested-by: Danilo Krummrich <dakr@kernel.org>
-Suggested-by: Lukas Wunner <lukas@wunner.de>
-Cc: rust-for-linux@vger.kernel.org
-Signed-off-by: Maurice Hieronymus <mhi@mailbox.org>
----
-`struct pci_dev` keeps ~60 flags in one C bitfield. Bits sharing a
-word must not be modified concurrently, but several writers take no
-common lock: `pci_set_master()` writes `is_busmaster` and can run
-without the device lock (e.g. runtime PM resume paths),
-`pci_disable_device()` clears it, and `broken_parity_status_store()`
-writes the same word from sysfs at any time without any lock.
+    drivers/scsi/gvp11.c:444:51: warning: missing braces around initializer [-Wmissing-braces]
+    qcom_scm.c:(.text+0x41cc): undefined reference to `of_address_to_resource'
 
-Move `is_busmaster` into the existing `priv_flags` bitmap, which is
-modified with atomic bitops. The bit definition stays private to
-drivers/pci; the drivers that use the flag (xen-pciback, lpfc, sfc)
-access it through new exported accessor functions.
+Unverified Error/Warning (likely false positive, kindly check if interested):
 
-This is a prerequisite for the Rust device enabling API rework [1]:
-the guard object planned there calls `pci_disable_device()` from
-contexts that may run concurrently with `pci_set_master()`.
----
-Changes in v2:
-- Move the bit into the existing priv_flags bitmap instead of adding a
-  new public flags bitmap (Lukas). The bit definition stays private to
-  drivers/pci; outside users go through new exported accessors.
-- Drop the broken_parity_status conversion (Lukas).
-- Link to v1: https://lore.kernel.org/r/20260711-pci-dev-flags-v1-0-2fcf2811138c@mailbox.org
----
- drivers/net/ethernet/sfc/falcon/farch.c     |  2 +-
- drivers/net/ethernet/sfc/siena/farch.c      |  2 +-
- drivers/pci/pci-driver.c                    |  2 +-
- drivers/pci/pci.c                           | 33 ++++++++++++++++++++++++++---
- drivers/pci/pci.h                           |  1 +
- drivers/scsi/lpfc/lpfc_init.c               |  4 ++--
- drivers/xen/xen-pciback/conf_space_header.c |  4 ++--
- drivers/xen/xen-pciback/pciback_ops.c       |  4 ++--
- include/linux/pci.h                         |  3 ++-
- 9 files changed, 42 insertions(+), 13 deletions(-)
+    https://lore.kernel.org/oe-kbuild/202607150800.r5xDoCDS-lkp@intel.com
 
-diff --git a/drivers/net/ethernet/sfc/falcon/farch.c b/drivers/net/ethernet/sfc/falcon/farch.c
-index 23d507a3820d..c73db6081190 100644
---- a/drivers/net/ethernet/sfc/falcon/farch.c
-+++ b/drivers/net/ethernet/sfc/falcon/farch.c
-@@ -724,7 +724,7 @@ int ef4_farch_fini_dmaq(struct ef4_nic *efx)
- 	/* Do not attempt to write to the NIC during EEH recovery */
- 	if (efx->state != STATE_RECOVERY) {
- 		/* Only perform flush if DMA is enabled */
--		if (efx->pci_dev->is_busmaster) {
-+		if (pci_dev_is_busmaster(efx->pci_dev)) {
- 			efx->type->prepare_flush(efx);
- 			rc = ef4_farch_do_flush(efx);
- 			efx->type->finish_flush(efx);
-diff --git a/drivers/net/ethernet/sfc/siena/farch.c b/drivers/net/ethernet/sfc/siena/farch.c
-index 7613d7988894..815487b1b227 100644
---- a/drivers/net/ethernet/sfc/siena/farch.c
-+++ b/drivers/net/ethernet/sfc/siena/farch.c
-@@ -723,7 +723,7 @@ int efx_farch_fini_dmaq(struct efx_nic *efx)
- 	/* Do not attempt to write to the NIC during EEH recovery */
- 	if (efx->state != STATE_RECOVERY) {
- 		/* Only perform flush if DMA is enabled */
--		if (efx->pci_dev->is_busmaster) {
-+		if (pci_dev_is_busmaster(efx->pci_dev)) {
- 			efx->type->prepare_flush(efx);
- 			rc = efx_farch_do_flush(efx);
- 			efx->type->finish_flush(efx);
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index f36778e62ac1..f3b2255258df 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -649,7 +649,7 @@ static int pci_pm_reenable_device(struct pci_dev *pci_dev)
- 	 * if the device was busmaster before the suspend, make it busmaster
- 	 * again
- 	 */
--	if (pci_dev->is_busmaster)
-+	if (pci_dev_is_busmaster(pci_dev))
- 		pci_set_master(pci_dev);
- 
- 	return retval;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 77b17b13ee61..80c962811737 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2045,7 +2045,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 		pci_enable_bridge(bridge);
- 
- 	if (pci_is_enabled(dev)) {
--		if (!dev->is_busmaster)
-+		if (!pci_dev_is_busmaster(dev))
- 			pci_set_master(dev);
- 		return;
- 	}
-@@ -2205,7 +2205,7 @@ void pci_disable_device(struct pci_dev *dev)
- 
- 	do_pci_disable_device(dev);
- 
--	dev->is_busmaster = 0;
-+	pci_dev_assign_busmaster(dev, false);
- }
- EXPORT_SYMBOL(pci_disable_device);
- 
-@@ -4106,6 +4106,33 @@ void pci_unmap_iospace(struct resource *res)
- }
- EXPORT_SYMBOL(pci_unmap_iospace);
- 
-+/**
-+ * pci_dev_is_busmaster - Query the bus mastering bookkeeping flag
-+ * @pdev: the PCI device to query
-+ *
-+ * Returns: the current value of the bookkeeping flag; the PCI_COMMAND
-+ * register is not consulted.
-+ */
-+bool pci_dev_is_busmaster(const struct pci_dev *pdev)
-+{
-+	return test_bit(PCI_DEV_BUSMASTER, &pdev->priv_flags);
-+}
-+EXPORT_SYMBOL(pci_dev_is_busmaster);
-+
-+/**
-+ * pci_dev_assign_busmaster - Set the bus mastering bookkeeping flag
-+ * @pdev: the PCI device
-+ * @busmaster: new flag value
-+ *
-+ * Only updates the bookkeeping flag; the PCI_COMMAND register is left
-+ * untouched.
-+ */
-+void pci_dev_assign_busmaster(struct pci_dev *pdev, bool busmaster)
-+{
-+	assign_bit(PCI_DEV_BUSMASTER, &pdev->priv_flags, busmaster);
-+}
-+EXPORT_SYMBOL(pci_dev_assign_busmaster);
-+
- static void __pci_set_master(struct pci_dev *dev, bool enable)
- {
- 	u16 old_cmd, cmd;
-@@ -4120,7 +4147,7 @@ static void __pci_set_master(struct pci_dev *dev, bool enable)
- 			enable ? "enabling" : "disabling");
- 		pci_write_config_word(dev, PCI_COMMAND, cmd);
- 	}
--	dev->is_busmaster = enable;
-+	pci_dev_assign_busmaster(dev, enable);
- }
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4469e1a77f3c..faa4a676e62c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -773,6 +773,7 @@ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
- #define PCI_LINK_CHANGING 5
- #define PCI_LINK_LBMS_SEEN	6
- #define PCI_DEV_ALLOW_BINDING 7
-+#define PCI_DEV_BUSMASTER 8
- 
- static inline void pci_dev_assign_added(struct pci_dev *dev)
- {
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 82af59c913e9..657453e6d7d2 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -14398,7 +14398,7 @@ lpfc_io_slot_reset_s3(struct pci_dev *pdev)
- 
- 	pci_restore_state(pdev);
- 
--	if (pdev->is_busmaster)
-+	if (pci_dev_is_busmaster(pdev))
- 		pci_set_master(pdev);
- 
- 	spin_lock_irq(&phba->hbalock);
-@@ -15251,7 +15251,7 @@ lpfc_io_slot_reset_s4(struct pci_dev *pdev)
- 	 */
- 	pci_save_state(pdev);
- 
--	if (pdev->is_busmaster)
-+	if (pci_dev_is_busmaster(pdev))
- 		pci_set_master(pdev);
- 
- 	spin_lock_irq(&phba->hbalock);
-diff --git a/drivers/xen/xen-pciback/conf_space_header.c b/drivers/xen/xen-pciback/conf_space_header.c
-index 8b50cbcbdfe1..ecc9adba369c 100644
---- a/drivers/xen/xen-pciback/conf_space_header.c
-+++ b/drivers/xen/xen-pciback/conf_space_header.c
-@@ -81,10 +81,10 @@ static int command_write(struct pci_dev *dev, int offset, u16 value, void *data)
- 			dev_data->enable_intx = 0;
- 	}
- 
--	if (!dev->is_busmaster && is_master_cmd(value)) {
-+	if (!pci_dev_is_busmaster(dev) && is_master_cmd(value)) {
- 		dev_dbg(&dev->dev, "set bus master\n");
- 		pci_set_master(dev);
--	} else if (dev->is_busmaster && !is_master_cmd(value)) {
-+	} else if (pci_dev_is_busmaster(dev) && !is_master_cmd(value)) {
- 		dev_dbg(&dev->dev, "clear bus master\n");
- 		pci_clear_master(dev);
- 	}
-diff --git a/drivers/xen/xen-pciback/pciback_ops.c b/drivers/xen/xen-pciback/pciback_ops.c
-index bfc186bf05bc..01f4705421c9 100644
---- a/drivers/xen/xen-pciback/pciback_ops.c
-+++ b/drivers/xen/xen-pciback/pciback_ops.c
-@@ -125,14 +125,14 @@ void xen_pcibk_reset_device(struct pci_dev *dev)
- 		if (pci_is_enabled(dev))
- 			pci_disable_device(dev);
- 
--		dev->is_busmaster = 0;
-+		pci_dev_assign_busmaster(dev, false);
- 	} else {
- 		pci_read_config_word(dev, PCI_COMMAND, &cmd);
- 		if (cmd & (PCI_COMMAND_INVALIDATE)) {
- 			cmd &= ~(PCI_COMMAND_INVALIDATE);
- 			pci_write_config_word(dev, PCI_COMMAND, cmd);
- 
--			dev->is_busmaster = 0;
-+			pci_dev_assign_busmaster(dev, false);
- 		}
- 	}
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 64b308b6e61c..0542221ad996 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -461,7 +461,6 @@ struct pci_dev {
- 	unsigned int	pref_64_window:1;	/* Pref mem window is 64-bit */
- 	unsigned int	multifunction:1;	/* Multi-function device */
- 
--	unsigned int	is_busmaster:1;		/* Is busmaster */
- 	unsigned int	no_msi:1;		/* May not use MSI */
- 	unsigned int	block_cfg_access:1;	/* Config space access blocked */
- 	unsigned int	broken_parity_status:1;	/* Generates false positive parity */
-@@ -1446,6 +1445,8 @@ void pci_disable_device(struct pci_dev *dev);
- extern unsigned int pcibios_max_latency;
- void pci_set_master(struct pci_dev *dev);
- void pci_clear_master(struct pci_dev *dev);
-+bool pci_dev_is_busmaster(const struct pci_dev *pdev);
-+void pci_dev_assign_busmaster(struct pci_dev *pdev, bool busmaster);
- 
- int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
- int pci_set_cacheline_size(struct pci_dev *dev);
+    ERROR: modpost: "power_supply_reg_notifier" [drivers/usb/dwc3/dwc3.ko] undefined!
+    ERROR: modpost: "power_supply_unreg_notifier" [drivers/usb/dwc3/dwc3.ko] undefined!
+    arm-linux-gnueabi-ld: core.c:(.text+0x23c0): undefined reference to `power_supply_unreg_notifier'
+    core.c:(.text+0x1c60): undefined reference to `power_supply_unreg_notifier'
+    core.c:(.text+0x220c): undefined reference to `power_supply_reg_notifier'
+    drivers/media/i2c/imx678.c:1152 imx678_init_controls() error: buffer overflow 'min_hmax_4lane' 8 <= 64
+    drivers/media/i2c/imx678.c:905 imx678_write_common() error: buffer overflow 'link_freqs_reg_value' 8 <= 64
+    ld.lld: error: undefined symbol: power_supply_reg_notifier
+    ld.lld: error: undefined symbol: power_supply_unreg_notifier
 
----
-base-commit: a13c140cc289c0b7b3770bce5b3ad42ab35074aa
-change-id: 20260711-pci-dev-flags-fbbcf4ff9031
+Error/Warning ids grouped by kconfigs:
 
-Best regards,
--- 
-Maurice Hieronymus <mhi@mailbox.org>
+recent_errors
+|-- arm-randconfig-004-20260715
+|   |-- arm-linux-gnueabi-ld:core.c:(.text):undefined-reference-to-power_supply_unreg_notifier
+|   |-- core.c:(.text):undefined-reference-to-power_supply_reg_notifier
+|   `-- core.c:(.text):undefined-reference-to-power_supply_unreg_notifier
+|-- hexagon-randconfig-002-20260714
+|   |-- ld.lld:error:undefined-symbol:power_supply_reg_notifier
+|   `-- ld.lld:error:undefined-symbol:power_supply_unreg_notifier
+|-- loongarch-randconfig-r073-20260714
+|   |-- drivers-media-i2c-imx678.c-imx678_init_controls()-error:buffer-overflow-min_hmax_4lane
+|   `-- drivers-media-i2c-imx678.c-imx678_write_common()-error:buffer-overflow-link_freqs_reg_value
+|-- m68k-allmodconfig
+|   `-- drivers-scsi-gvp11.c:warning:missing-braces-around-initializer
+|-- m68k-defconfig
+|   `-- drivers-scsi-gvp11.c:warning:missing-braces-around-initializer
+|-- mips-randconfig-r072-20260715
+|   |-- ERROR:power_supply_reg_notifier-drivers-usb-dwc3-dwc3.ko-undefined
+|   `-- ERROR:power_supply_unreg_notifier-drivers-usb-dwc3-dwc3.ko-undefined
+`-- s390-randconfig-r062-20260714
+    `-- qcom_scm.c:(.text):undefined-reference-to-of_address_to_resource
 
+elapsed time: 764m
+
+configs tested: 262
+configs skipped: 7
+
+tested configs:
+alpha                             allnoconfig    gcc-16.1.0
+alpha                            allyesconfig    gcc-16.1.0
+alpha                               defconfig    gcc-16.1.0
+arc                              allmodconfig    clang-23
+arc                              allmodconfig    gcc-16.1.0
+arc                               allnoconfig    gcc-16.1.0
+arc                              allyesconfig    clang-23
+arc                              allyesconfig    gcc-16.1.0
+arc                                 defconfig    gcc-16.1.0
+arc                   randconfig-001-20260715    gcc-10.5.0
+arc                   randconfig-002-20260715    gcc-10.5.0
+arm                               allnoconfig    clang-17
+arm                               allnoconfig    gcc-16.1.0
+arm                              allyesconfig    clang-23
+arm                              allyesconfig    gcc-16.1.0
+arm                                 defconfig    clang-23
+arm                                 defconfig    gcc-16.1.0
+arm                   randconfig-003-20260715    gcc-10.5.0
+arm                   randconfig-004-20260715    gcc-10.5.0
+arm64                            allmodconfig    clang-23
+arm64                             allnoconfig    gcc-16.1.0
+arm64                               defconfig    gcc-16.1.0
+arm64                 randconfig-001-20260715    gcc-16.1.0
+arm64                 randconfig-001-20260715    gcc-9.5.0
+arm64                 randconfig-002-20260715    gcc-15.2.0
+arm64                 randconfig-002-20260715    gcc-16.1.0
+arm64                 randconfig-003-20260715    clang-23
+arm64                 randconfig-003-20260715    gcc-16.1.0
+arm64                 randconfig-004-20260715    gcc-11.5.0
+arm64                 randconfig-004-20260715    gcc-16.1.0
+csky                             allmodconfig    gcc-16.1.0
+csky                              allnoconfig    gcc-16.1.0
+csky                                defconfig    gcc-16.1.0
+csky                  randconfig-001-20260715    gcc-16.1.0
+csky                  randconfig-002-20260715    gcc-13.4.0
+csky                  randconfig-002-20260715    gcc-16.1.0
+hexagon                          allmodconfig    clang-23
+hexagon                          allmodconfig    gcc-16.1.0
+hexagon                           allnoconfig    clang-23
+hexagon                           allnoconfig    gcc-16.1.0
+hexagon                             defconfig    clang-23
+hexagon                             defconfig    gcc-16.1.0
+hexagon               randconfig-001-20260714    clang-20
+hexagon               randconfig-002-20260714    clang-23
+i386                             allmodconfig    clang-22
+i386                             allmodconfig    gcc-14
+i386                              allnoconfig    gcc-14
+i386                              allnoconfig    gcc-16.1.0
+i386                             allyesconfig    clang-22
+i386                             allyesconfig    gcc-14
+i386        buildonly-randconfig-001-20260715    clang-22
+i386        buildonly-randconfig-002-20260715    clang-22
+i386        buildonly-randconfig-002-20260715    gcc-14
+i386        buildonly-randconfig-003-20260715    clang-22
+i386        buildonly-randconfig-003-20260715    gcc-14
+i386        buildonly-randconfig-004-20260715    clang-22
+i386        buildonly-randconfig-004-20260715    gcc-14
+i386        buildonly-randconfig-005-20260715    clang-22
+i386        buildonly-randconfig-006-20260715    clang-22
+i386        buildonly-randconfig-006-20260715    gcc-14
+i386                                defconfig    clang-22
+i386                                defconfig    gcc-16.1.0
+i386                  randconfig-001-20260715    clang-22
+i386                  randconfig-001-20260715    gcc-14
+i386                  randconfig-002-20260715    clang-22
+i386                  randconfig-003-20260715    clang-22
+i386                  randconfig-003-20260715    gcc-12
+i386                  randconfig-004-20260715    clang-22
+i386                  randconfig-004-20260715    gcc-14
+i386                  randconfig-005-20260715    clang-22
+i386                  randconfig-006-20260715    clang-22
+i386                  randconfig-006-20260715    gcc-14
+i386                  randconfig-007-20260715    clang-22
+i386                  randconfig-007-20260715    gcc-14
+i386                  randconfig-011-20260715    clang-22
+i386                  randconfig-011-20260715    gcc-14
+i386                  randconfig-012-20260715    gcc-14
+i386                  randconfig-013-20260715    gcc-14
+i386                  randconfig-014-20260715    clang-22
+i386                  randconfig-014-20260715    gcc-14
+i386                  randconfig-015-20260715    clang-22
+i386                  randconfig-015-20260715    gcc-14
+i386                  randconfig-016-20260715    clang-22
+i386                  randconfig-016-20260715    gcc-14
+i386                  randconfig-017-20260715    gcc-14
+loongarch                        allmodconfig    clang-19
+loongarch                        allmodconfig    clang-23
+loongarch                         allnoconfig    clang-20
+loongarch                         allnoconfig    gcc-16.1.0
+loongarch                           defconfig    clang-23
+loongarch             randconfig-001-20260714    gcc-16.1.0
+loongarch             randconfig-001-20260715    gcc-16.1.0
+loongarch             randconfig-002-20260714    gcc-14.3.0
+loongarch             randconfig-002-20260715    gcc-16.1.0
+m68k                             allmodconfig    gcc-16.1.0
+m68k                              allnoconfig    gcc-16.1.0
+m68k                             allyesconfig    clang-23
+m68k                             allyesconfig    gcc-16.1.0
+m68k                                defconfig    clang-23
+m68k                                defconfig    gcc-16.1.0
+m68k                            mac_defconfig    gcc-16.1.0
+microblaze                        allnoconfig    gcc-16.1.0
+microblaze                       allyesconfig    gcc-16.1.0
+microblaze                          defconfig    clang-23
+microblaze                          defconfig    gcc-16.1.0
+mips                             allmodconfig    gcc-16.1.0
+mips                              allnoconfig    gcc-16.1.0
+mips                             allyesconfig    gcc-16.1.0
+mips                        bcm63xx_defconfig    clang-23
+nios2                            allmodconfig    clang-20
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    clang-23
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    clang-23
+nios2                               defconfig    gcc-11.5.0
+nios2                 randconfig-001-20260714    gcc-11.5.0
+nios2                 randconfig-001-20260715    gcc-16.1.0
+nios2                 randconfig-002-20260714    gcc-11.5.0
+nios2                 randconfig-002-20260715    gcc-16.1.0
+openrisc                         allmodconfig    clang-20
+openrisc                         allmodconfig    gcc-16.1.0
+openrisc                          allnoconfig    clang-23
+openrisc                          allnoconfig    gcc-16.1.0
+openrisc                            defconfig    gcc-16.1.0
+parisc                           allmodconfig    gcc-16.1.0
+parisc                            allnoconfig    clang-23
+parisc                            allnoconfig    gcc-16.1.0
+parisc                           allyesconfig    clang-17
+parisc                           allyesconfig    gcc-16.1.0
+parisc                              defconfig    gcc-16.1.0
+parisc                         randconfig-001    gcc-8.5.0
+parisc                randconfig-001-20260714    gcc-13.4.0
+parisc                randconfig-001-20260715    clang-23
+parisc                         randconfig-002    gcc-12.5.0
+parisc                randconfig-002-20260714    gcc-11.5.0
+parisc                randconfig-002-20260715    clang-23
+parisc64                            defconfig    clang-23
+parisc64                            defconfig    gcc-16.1.0
+powerpc                          allmodconfig    gcc-16.1.0
+powerpc                           allnoconfig    clang-23
+powerpc                           allnoconfig    gcc-16.1.0
+powerpc                        randconfig-001    gcc-10.5.0
+powerpc               randconfig-001-20260714    clang-17
+powerpc               randconfig-001-20260715    clang-23
+powerpc                        randconfig-002    gcc-8.5.0
+powerpc               randconfig-002-20260714    clang-17
+powerpc               randconfig-002-20260715    clang-23
+powerpc64                      randconfig-001    clang-17
+powerpc64             randconfig-001-20260714    clang-17
+powerpc64             randconfig-001-20260715    clang-23
+powerpc64                      randconfig-002    clang-23
+powerpc64             randconfig-002-20260714    clang-23
+powerpc64             randconfig-002-20260715    clang-23
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    clang-23
+riscv                             allnoconfig    gcc-16.1.0
+riscv                            allyesconfig    clang-23
+riscv                               defconfig    clang-23
+riscv                               defconfig    gcc-16.1.0
+riscv                 randconfig-001-20260715    clang-17
+riscv                 randconfig-001-20260715    gcc-15.2.0
+riscv                 randconfig-002-20260715    gcc-15.2.0
+s390                             allmodconfig    clang-17
+s390                             allmodconfig    clang-23
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-16.1.0
+s390                                defconfig    clang-18
+s390                                defconfig    gcc-16.1.0
+s390                  randconfig-001-20260715    gcc-12.5.0
+s390                  randconfig-001-20260715    gcc-15.2.0
+s390                  randconfig-002-20260715    clang-23
+s390                  randconfig-002-20260715    gcc-15.2.0
+sh                               allmodconfig    gcc-16.1.0
+sh                                allnoconfig    clang-23
+sh                                allnoconfig    gcc-16.1.0
+sh                               allyesconfig    clang-17
+sh                               allyesconfig    gcc-16.1.0
+sh                                  defconfig    gcc-14
+sh                                  defconfig    gcc-16.1.0
+sh                    randconfig-001-20260715    gcc-15.2.0
+sh                    randconfig-001-20260715    gcc-16.1.0
+sh                    randconfig-002-20260715    gcc-15.2.0
+sh                    randconfig-002-20260715    gcc-9.5.0
+sparc                             allnoconfig    clang-23
+sparc                             allnoconfig    gcc-16.1.0
+sparc                               defconfig    gcc-16.1.0
+sparc                 randconfig-001-20260715    gcc-16.1.0
+sparc                 randconfig-002-20260715    gcc-16.1.0
+sparc64                          allmodconfig    clang-20
+sparc64                             defconfig    clang-23
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260715    clang-23
+sparc64               randconfig-001-20260715    gcc-16.1.0
+sparc64               randconfig-002-20260715    clang-20
+sparc64               randconfig-002-20260715    gcc-16.1.0
+um                               allmodconfig    clang-17
+um                                allnoconfig    clang-17
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-14
+um                               allyesconfig    gcc-16.1.0
+um                                  defconfig    clang-23
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260715    clang-23
+um                    randconfig-001-20260715    gcc-16.1.0
+um                    randconfig-002-20260715    gcc-14
+um                    randconfig-002-20260715    gcc-16.1.0
+um                           x86_64_defconfig    clang-23
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-22
+x86_64                            allnoconfig    clang-22
+x86_64                            allnoconfig    clang-23
+x86_64                           allyesconfig    clang-22
+x86_64      buildonly-randconfig-001-20260715    clang-22
+x86_64      buildonly-randconfig-001-20260715    gcc-14
+x86_64      buildonly-randconfig-002-20260715    gcc-14
+x86_64      buildonly-randconfig-003-20260715    gcc-14
+x86_64      buildonly-randconfig-004-20260715    gcc-14
+x86_64      buildonly-randconfig-005-20260715    clang-22
+x86_64      buildonly-randconfig-005-20260715    gcc-14
+x86_64      buildonly-randconfig-006-20260715    gcc-14
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-22
+x86_64                randconfig-001-20260715    clang-22
+x86_64                randconfig-002-20260715    clang-22
+x86_64                randconfig-003-20260715    clang-22
+x86_64                randconfig-004-20260715    clang-22
+x86_64                randconfig-004-20260715    gcc-14
+x86_64                randconfig-005-20260715    clang-22
+x86_64                randconfig-006-20260715    clang-22
+x86_64                randconfig-006-20260715    gcc-14
+x86_64                randconfig-011-20260715    clang-22
+x86_64                randconfig-012-20260715    clang-22
+x86_64                randconfig-012-20260715    gcc-14
+x86_64                randconfig-013-20260715    clang-22
+x86_64                randconfig-014-20260715    clang-22
+x86_64                randconfig-015-20260715    clang-22
+x86_64                randconfig-016-20260715    clang-22
+x86_64                randconfig-071-20260715    gcc-14
+x86_64                randconfig-072-20260715    gcc-14
+x86_64                randconfig-073-20260715    gcc-14
+x86_64                randconfig-074-20260715    gcc-14
+x86_64                randconfig-075-20260715    gcc-14
+x86_64                randconfig-076-20260715    gcc-14
+x86_64                               rhel-9.4    clang-22
+x86_64                               rhel-9.4    gcc-14
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-22
+x86_64                          rhel-9.4-func    gcc-14
+x86_64                    rhel-9.4-kselftests    clang-22
+x86_64                    rhel-9.4-kselftests    gcc-14
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-22
+xtensa                            allnoconfig    clang-23
+xtensa                            allnoconfig    gcc-16.1.0
+xtensa                           allyesconfig    clang-20
+xtensa                           allyesconfig    gcc-16.1.0
+xtensa                randconfig-001-20260715    gcc-14.3.0
+xtensa                randconfig-001-20260715    gcc-16.1.0
+xtensa                randconfig-002-20260715    gcc-12.5.0
+xtensa                randconfig-002-20260715    gcc-16.1.0
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
