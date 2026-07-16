@@ -1,217 +1,376 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10C8141E6A5;
-	Thu, 16 Jul 2026 12:43:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784205812; cv=fail; b=f7e1r3rFx8NlJmnHw0tVud/UMNL4sXpUG5bMi2gOT6+31Vs4jVx7FC68iiTiKfG0J1VdeyZ3LMfuV6mgT9xg1cewkVPB/XIoI0hmTf9fJwPB0Zhq+HbHXGpEBoctVv6byCTcE33+PxICB5JnlKPZjziTsVWNBGMqYXCLee4uSE0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784205812; c=relaxed/simple;
-	bh=2i4gpw89CVVxP/7Dy5BWjZkHqvjt8TnExTXeqd1Bhc0=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=YjwX1EuSuA7r3QgpITZN+4SxF+BSSErt//v2aeWzOJ5da+77VjBBpWuk/5m0FpbZZucQ/4kUWyeNrm+3Lee9ECoig5rZisJoPlqSgsj71QBRdKcoH1uPv/Shmv0TL9YMzS86fAYX2CmfH9OfKCONIuHJua0oefFuX3Oy0aj6glM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Goelvpk/; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=PITdcW2K; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95F333FE65F
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2026 13:46:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784209592; cv=none; b=AP3No837hfIScWE3FVt4D0kh423HHTh2AiDiXMsGECd333XNN9+H0wf23PyuHIbAPdMY5qbvbykN7+GcxQwh5P3nyxV1wLs7u1Pt5kwgC+rJ9hMRrAISeebVGoRvjxCGMPkhy1TUmw22b0TVobe5vn+HQags0R+vey313fh0rm0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784209592; c=relaxed/simple;
+	bh=OeHc1Tm2mbq8Crsz/kuw/NXKNQeCHjyYO6vsG7zdQvo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hpdkPqGci96mM4clsVO2s2yf6VN6CLjyG71VuPpVAqjjkOlfPyIhSXlEvfGO6ygYIJZIzbma/pKUOJnwznqTPsKU5hHdI7q8EpTc5GLJcZqzvkQuQhpt2qkfY2XSPdhjvNMPAqIm1SBad5zCewyCp5Ol7AJqiHIKEa2cpylsjCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=dq97WEFO; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=hKidRiMh; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=dq97WEFO; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=hKidRiMh; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Goelvpk/";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="PITdcW2K"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66G9TYUx3106441;
-	Thu, 16 Jul 2026 12:43:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=itBysE+asgJyligtnSOrO6ryYUTWPh8i9DLnk7FJOKg=; b=
-	Goelvpk/NGtJjQWtr30VczJCe8zF39RihTRFPeKSER/YTilzUsEm7viczI8J7BjT
-	55ENs71eyaehpAbWSx+a9am7dv7dIS4lzZ9Ux64G85nIDiINa3/OGKAu3A6QXOCx
-	Fj4mXiwMnkahNIkjr0/DOWyiDRjbMPgiw/yK5kKlnYkpfw1rein4AOezutzWOVXK
-	1GC2xW3m7w/xangASl1a92fzKQ2jzx56ozxlMq6eV64p1QYS1iZ7R7WIbFY87lRi
-	DfJck3BokStUijbkyzEekwbFfRsUVS1b0H8TXiiI/s2QJUD7oPtPZ4UG0DZhSJZS
-	um4VqBefk3V3D/VyC8ihaA==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fbeedrkj5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 16 Jul 2026 12:43:13 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66GChDUj028224;
-	Thu, 16 Jul 2026 12:43:13 GMT
-Received: from bl0pr03cu003.outbound.protection.outlook.com (mail-eastusazon11012022.outbound.protection.outlook.com [52.101.53.22])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4fbc9g978d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 16 Jul 2026 12:43:12 +0000 (GMT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dn99PqsHfHgMqwu2YQyDxDPwizAlIR/VTXRJ/BfIPtIPGaa7XFNmdkpvMpae2KvinpacFP//HeF+3Oi5NG6cvrQ6Op5o+4qxeCvJCNQmprR3NrXNtpN7k8N1uhu79O2o2CMdbMJA4IsDjMFGw7XuRgenEkgN71Z8YPoGLUKDQ/y92L6Y79VsuiSMRPY/TIKXXfpnZyfCHFa4nu8D38ZYTDYCV1zWgwuotAJDShVIJRZ6NdRnUugPL0RNy4kJyiBb+lOo2/dDHZbP48qZNFW6jhyn+TI3SsOJALUKGn9TV0Q+jQh8Eh0uw41SW4juTtlk1cnvBI7dswKnxzjDSSSUZA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=itBysE+asgJyligtnSOrO6ryYUTWPh8i9DLnk7FJOKg=;
- b=O86ZeOp1q3YAouNwvmpeZhDTCNlgxLmAkiLQOqWJ0Y8dx3GV/Cm6uUwmegqjqPn0qJzasC4GcHWQzgVeMrJ2ZTY6K/fhqi9k+e5hH9XghUZJSGBl0b+PpswOKYGahDQviv3uKx2Mx6HjWpxOB4zcIDSm3CFDmppeiavB6qVNk6pBnRGaELFSI2e9SBJ7DE0bwbRvRlb44tZr7Lj6VCW2mKSvb3+kDbeNwonjBxTng8cQwArvbRZ09uE5/4S4PwMGepb/T/rnP1u0Xo0YhAqsx1RMXZJOGp3OWxQBvctFifm/1lx8QUyqcoTWkA6C+lfF2gwWv6doV6d0HBzm6GCHQQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=itBysE+asgJyligtnSOrO6ryYUTWPh8i9DLnk7FJOKg=;
- b=PITdcW2KDWfB7Y146Kjf3wj0z7zZSt31o9QKPwFxBIkEXQ1DfEr1qd7eBBF+Q6k/UMLKDcTRuj/WU75bYIAdqKUymr2feCB308qXhwIpgDOYv7CO2j02oKN16sMQdaUbBbn0u79iLCXHbooSYl0NWf7Dx657a6hc+SzLVA5fHhA=
-Received: from DM4PR10MB6229.namprd10.prod.outlook.com (2603:10b6:8:8c::12) by
- MN6PR10MB8070.namprd10.prod.outlook.com (2603:10b6:208:4fd::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.12; Thu, 16 Jul
- 2026 12:42:27 +0000
-Received: from DM4PR10MB6229.namprd10.prod.outlook.com
- ([fe80::867:63e7:13fa:fa7d]) by DM4PR10MB6229.namprd10.prod.outlook.com
- ([fe80::867:63e7:13fa:fa7d%6]) with mapi id 15.21.0202.018; Thu, 16 Jul 2026
- 12:42:27 +0000
-Message-ID: <39bca767-5d89-4b90-85df-7d7f0636b095@oracle.com>
-Date: Thu, 16 Jul 2026 13:42:22 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] scsi: libsas: fix HA resume deadlock and hisi_sas
- disk-wake race
-To: yangxingui <yangxingui@huawei.com>, yanaijie@huawei.com,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, liuyonglong@huawei.com, kangfenglong@huawei.com,
-        dlemoal@kernel.org
-References: <20260716081145.3950172-1-yangxingui@huawei.com>
- <160b8fcb-6020-4a97-a23c-3515bfa39e43@oracle.com>
- <1c228b61-4aa5-bbec-2590-ed15d81e45e5@huawei.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <1c228b61-4aa5-bbec-2590-ed15d81e45e5@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: FR5P281CA0033.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:f3::10) To DM4PR10MB6229.namprd10.prod.outlook.com
- (2603:10b6:8:8c::12)
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="dq97WEFO";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="hKidRiMh";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="dq97WEFO";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="hKidRiMh"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id CB1373DF3;
+	Thu, 16 Jul 2026 13:46:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1784209583; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=D0jJhCIYFNU8W3Q0K2i5x3VUoS6HEEiR76IAl2WEn8A=;
+	b=dq97WEFO874nR08ZnpdKtdssoWwNXn5zl9155JzxB4MGVTsz4czzg/MOVrmCaG6KUlKQnq
+	rmWmh7FpclShlegl9SjJoQadnhOUSzQLxpt0iJwPa+HRL4uutQbYIL5piHxksIz9WKTnlj
+	eiYZ6UjR5lXef2WzRYStkgaYsFO4mo0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1784209583;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=D0jJhCIYFNU8W3Q0K2i5x3VUoS6HEEiR76IAl2WEn8A=;
+	b=hKidRiMh9SzxmqxZI6+di48tiJrrdXgnb6nvOEwvkwZjs2OGX3p8aS1UBh8619fabQre6I
+	3Y8XCNhk8ZTaPACw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1784209583; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=D0jJhCIYFNU8W3Q0K2i5x3VUoS6HEEiR76IAl2WEn8A=;
+	b=dq97WEFO874nR08ZnpdKtdssoWwNXn5zl9155JzxB4MGVTsz4czzg/MOVrmCaG6KUlKQnq
+	rmWmh7FpclShlegl9SjJoQadnhOUSzQLxpt0iJwPa+HRL4uutQbYIL5piHxksIz9WKTnlj
+	eiYZ6UjR5lXef2WzRYStkgaYsFO4mo0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1784209583;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=D0jJhCIYFNU8W3Q0K2i5x3VUoS6HEEiR76IAl2WEn8A=;
+	b=hKidRiMh9SzxmqxZI6+di48tiJrrdXgnb6nvOEwvkwZjs2OGX3p8aS1UBh8619fabQre6I
+	3Y8XCNhk8ZTaPACw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B48EB779AD;
+	Thu, 16 Jul 2026 13:46:23 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id TtWjK6/gWGqoGAAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 16 Jul 2026 13:46:23 +0000
+Message-ID: <08bd0674-316d-4cb6-96f2-93b6f38a4ce4@suse.de>
+Date: Thu, 16 Jul 2026 15:46:23 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM4PR10MB6229:EE_|MN6PR10MB8070:EE_
-X-MS-Office365-Filtering-Correlation-Id: bffc9189-881d-4a4d-e6a4-08dee337b126
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|1800799024|366016|4143699003|10067099003|56012099006|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	GPAwevUnOwmRSxGsPVgxyqj8Ptb53nuviaZEXYcAgEDaHnmipNURsZHMmJQWwHZ26G1ZoqND30P7X5l97F6ZcXGoX1ZzkiPDVRWaFI6Ma1rWsyD5mkRdWsAixVZmdJpDZ6LVX5hXRc6J1ZOCIUSuK0l+GocfnENZtAVvdkfi3XREsURx71ykINScCfAP8Ak91hTb6rrcKp7dHBcCMe3ahPnCkgson7t7UazOq63xnvK9J60nLHbg9IFDBAU8M+4Ew+7HGt1+HgCrLz+OeV3emsNXfHZzz+B0f4ZN57zjtD1lFQh+sJiL5oRqLWm2hsDhT/vnd7UUqPG/klV/A/2AzRLKOYFSOlIVawil+EgYK78qy1CpD5Ye58resOMIqPzhptVP5i0FIRJtE0wZgZjb78iqmPuNvKSaUZlQyo+t4bu8oFET7kZeNsJTG50fvFkqr39Nle0aJUQrRoBHHAktTq04t7EpgVcwUQfh4uPjoHiYORF3P/QjeDSGI6kpZw/jD6Yr1Y5QV1zf9va7DG4iFKibxzYNma9wpBuyF4fqAhdyiZB8NEmreVf3EizuKLCXbzaVIm/xd/Hrnc5/pOBy6MmYQgJcqC7/4ojMesMQXzOzQSz8falOa1nma01sYQWMyKXgRjy6sxIXpoQpCsvwunCaS3NLP40kWpLIHrWrRQk=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB6229.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(1800799024)(366016)(4143699003)(10067099003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?VzZuRitJYzhjMm54cHlYc2U5VmE0RGYzSUwxQm5sY2tHQjFvSWd6RFpISXRx?=
- =?utf-8?B?bGptZ2ZHQVREaURUMEpSU1hYN2VvZ0RXaG53MUg4ZHlWNVlzN3gvclZhMjNX?=
- =?utf-8?B?WlhGNldDR0lmL1cyUGJDdGh2ZnJVT0MzL2lLNXViQVBhUENIY25FTUxIS29u?=
- =?utf-8?B?Mm00RS9hNzRwOHpEcEROWWZZY2lnR0FjRUdWb20rSmJxNUpDU3VyMXBOTE5B?=
- =?utf-8?B?cUFDanZZTkhyUm9jQnlnT0xjeThJekt2eFcrdldUZnBYSHNxWlZweFZ5cEFx?=
- =?utf-8?B?YnlBR1FPbzBId0F5R2cvOVltclhxUmZ2VWJZUDdoODhVTmNsMlR1eDRPWCtk?=
- =?utf-8?B?VVpieW0zZEV0anJUNnAyTm5FNyt1SWVURmNNYXI0anVzMmdnVnJUTi91S0oy?=
- =?utf-8?B?bnBLV1VlKzMwQkVFcTlGTW1IWFRKNGhlTGszQnAwR3N6S24wLzBnRUdhbnFa?=
- =?utf-8?B?ZDZpSXNVNStIYzVJVzdxellkeTRmMW9QRUIwNlhMR2tNRkx4QUdRTENuTmdD?=
- =?utf-8?B?Q1lnNkVKU3lUQnRHUTVNc2lHWWpVWitKc2sxOEZvOTZJRFZvRFkwZUtGd2VH?=
- =?utf-8?B?b3YwbGVLMEY2VUFpSVRwZnhFY242c1Yrb3lvcWNVMnArSlhvM2lNSmJsOWIr?=
- =?utf-8?B?NHBKa1B6SjBUbmpmSHIycFUzQ09rdlM5NGg2djFraWwzOFZUWDVKVCs3WDEr?=
- =?utf-8?B?QUY1SXJsRmNRaWxOaXZ0bk05blEvWndtSm1oVHNKVDlxbTEvckVNWnJoVHBx?=
- =?utf-8?B?bkhYU2FiZ1hYVEJZZ3dlNG1lUjlweUp4dkdLR2FydCtXMGZsemZWT0NFTVp6?=
- =?utf-8?B?b3pwL3VqZW1DN0lrc2ErYVhLTTBKRnJ4L2pJMENURXRqWUNCWU50MzdKdDBX?=
- =?utf-8?B?c3ZqUnc4UGtGLzBYTkttT2ZJOXR5TVdWUjczbkdVWS9TRGl6S2tvRW9VSDhj?=
- =?utf-8?B?d0Y4Qi9nYTZ5TGpHeDN3VXJGaEh1UXFicWxVSVA3MCtKNDZtNGpGNFlsVEw1?=
- =?utf-8?B?R3BXWXIyczV5bDBMaDlkR0ZTU3Q0Y0J0azl3eHNSM21zSUVQWlVNWVc3cGFI?=
- =?utf-8?B?dVVjdUJlRDFjZ1FwUGFyUGpZa1VyNTk1OWpMUkw0aEZNbDd0NUJ4cnFHV0Fi?=
- =?utf-8?B?WDlkNFB0a3B0dDBaeklnTTJ1dnQyUVNiZlpIREhSQkRJcnppVlExWWRKZzU0?=
- =?utf-8?B?eFRUQTV5SlZjMTZHT2tlNmwzQUV6OFZIOHdKL3VDQk5VVzhJOFlHbGpqUHFz?=
- =?utf-8?B?cFBSbjdkREtKNEdZc29hNGp1NEZuV05IZURlckNDWFI4VjdXRG84NW1hc0Vx?=
- =?utf-8?B?RFJKekQyZjNkUTE2T0V0SUJHeFI1bWROTCtWUnp5eFRHYzFqcEtZSHFZNW8z?=
- =?utf-8?B?bnF5bnpXMU10MSt4dW03S3VBSGJJcU92em15Z3VLMnRSbzhqdTZ2cFVwSVNG?=
- =?utf-8?B?RnpFSTk2c0c5YnZzVHNMaE1jWWcrbFR2ZXc2WDlUcERDL0JqYTFXdmtkRFk2?=
- =?utf-8?B?ZnBkZVZMZ3ByYWVDQVpDQ0tkQ01IY2xMZkY0SS8za1M5VGtnTkpOUmpLMjRw?=
- =?utf-8?B?VFpFQWVucEkzTXM3RXdzblVFTHkyeUowdnVwaWptc21tS0c2NnpGYnZCMDc5?=
- =?utf-8?B?OWEwRjI3bEF5NnpIN1d5Y0l5K0ZzYUlHVVFJaERFc09ueVlSOWR6dml5T0xi?=
- =?utf-8?B?ZGs5aWFoUjRPQ0RMMXgwMDRueGkxWVZVUWRFbytFcU9kRjFOMGphUnRFaDR4?=
- =?utf-8?B?NmNRL1B2bDl5azBwRmFRNkRLZCtEZlBLZjF6QncxZ0x2b0dMMEpQK1VweXUw?=
- =?utf-8?B?NFViYmJIWW5KZjJEMjR5eEhWL2tSTU1jZDFTVGI0amZZV2w2bFlXUUVGNG5X?=
- =?utf-8?B?eWtRbFRCNkdJdmJFQ0JzZFZqMEF6MllhVFBJOUZWV1l0SmNiV1JBek01emsr?=
- =?utf-8?B?Y3hEcGJEa2psdnFqTTlxNXhVRm1kUDhzZlI3Nk5EN1ZWZGtYTU9QQSt3ZWd0?=
- =?utf-8?B?cUcxZ1J6dDdOMnVERFJOODZ5ZEh1dS9wQytoU2dZZE5VUjJQZzRhK2pra1ZV?=
- =?utf-8?B?Mjc4bXJSWFVyd202YVpJcERmTWNvRWppQTg0Unp2eEhhSlc1d0JodlI2QXUz?=
- =?utf-8?B?clZmWERZYjU1ZW9VNFc3MERuZWJhUDFHclhLRCtmVVY0WlU2dlV5a2dmSmxB?=
- =?utf-8?B?RzBFZjA4c0JOT1ZSWWxabzdUT0VmNVU1Y09FZG81RTFlQlBrOVRPTkdkU1cx?=
- =?utf-8?B?dUdSM2xwaGI4aGwvbUFtS2s3dHBnNmczajNldHN6Unh6RG9SU1BRd1dtejVq?=
- =?utf-8?B?LzZYVk1EVWlMeXNCbmRTZlR3RGVWeVZ2VFVYMGNpM2hQeHBteTAxVllYUWdk?=
- =?utf-8?Q?fwEQbUCvp02hFTpE=3D?=
-X-Exchange-RoutingPolicyChecked:
-	UZjPp2H/QVdezQ/TiAarCq3lSfa5sPBlhBRKASpco+zN339lbQbuxNQLVmV2d2Za7sKgShifRB0U64rPb9YIhRm2Vni/5u2XjPft1VvtOBwZqdpEnYLfOa1unvGufgj5Qzrs/5UF152phOMPiG/hFQSyGiWlYI2zvQ9JgEhfLXOO4zLuzVT2WGTNIxNHHX1o3+WsBdDDf5YG/JA6rfjXY/Vqld54fvp9aqPY74imh+MPeksoY1BZCMEwJALnU+X3hJ6Z6n6ionMpBMlXz3obDF+1w0K7ZWtl7qrJloe753pv3onowvR3Bs6CGEyTtfoVUIDDGKCDB2erikKneGp3Jg==
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	PUD1LYZ3QxRZIO+hcrkSA34kEL6mLKb9+EcGlb+NaOyHHqbQOWflgiBbx468BFDUIS5zsWKbsTBKiv7ryQ0V+1ynYpXQUr2S3b1NrlFMih0qUtzEjlb9HJdrPCJgP37OjAQ1yzkvrvRbEr2hU7GwpRTiUtzH3IAtzwWdVCz+9g4jxBTyVdGrL4fLIiR3e3iXrxAujPAVAjMvuw3ZIoPP1W9LVbuMxjUVR0kk3GhrhDUpkpqa1R6ddjZqCZnY+sFt3I3UFNGs5gt8BKk4PUTvkSqxzS5ZPVPlQ/frJRkrRJwP0mxczESCaFW/oxEsZJvBxqCFVufxnKMd3AWas2hDYjZrJJlE2nmZ7T0NqHUOa3BlQrrvnBnGecZ9FzLZ8BVkPFf3vZgwG4wfTwBhG2DpbwFFaorIseWR4njDuAawPMESPtO1CUi9fcTSG2tcDU4ngwQtpbumZcgCmfmpzDcJMUP99WYWwmLkATZiLkb+n0IvdngNNShOj4IR51mbFvsu8SbiLG91x40ODRyQ5oZIaJlPQcv9hWwrT2NU74ja7HQGX4i5S9R3LFfPhk7UTs+zB/0k9AzH2PZZHAM0BG5Z2ohe+rOwc/VciCq6TbOs88Y=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bffc9189-881d-4a4d-e6a4-08dee337b126
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB6229.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jul 2026 12:42:27.0036
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: lOW5P4zOEVFFRQPJaN/EELmtVDX8Dnu7VjE/FeoB9eEugjY+sQIUerdOUuXI0oqntRAWYSkJhv6XvwXH5OrO9Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN6PR10MB8070
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-16_04,2026-07-15_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0
- mlxlogscore=999 lowpriorityscore=0 suspectscore=0 adultscore=0 phishscore=0
- malwarescore=0 mlxscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2606160000 definitions=main-2607160131
-X-Authority-Analysis: v=2.4 cv=d+bFDxjE c=1 sm=1 tr=0 ts=6a58d1e1 cx=c_pps
- a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=RAioF0-LDSMA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=RD47p0oAkeU5bO7t-o6f:22 a=i0EeH86SAAAA:8
- a=yPCof4ZbAAAA:8 a=8cudxr3IJKBV4PzA8-oA:9 a=QEXdDO2ut3YA:10 a=zgiPjhLxNE0A:10
- a=zZCYzV9kfG8A:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE2MDEzMSBTYWx0ZWRfX89UvbebWBaIP
- guIQ/io98s7prH79s8rq+OYH4MD4FjQk+byCkv2ahxJUuegmpxWFH9UIpWArgnwLPSAx8FfizDB
- vo8pGQ0MOncmjDEQ/er7ULzL0c8SeYTZKr+Bs3KlUfJnDGPDHI/4AeH0u42UatcNzHcrGw+DmKa
- rRS+aOTRz/BnCMey2kALlQIYYUmFgXCG+46nlOUrqxYASdYdc69omEmltsrMIWRF++BTBx7QRwC
- NuIpIeUSMZihELEK2+qJkbjv6pY25Zf0UL4R8tebtzWr8RZ/mhhHdp1LfbsfPdXfvLN97TfDWax
- +nEWiUf2HjDl0Lmg9ZyKDtCil60ICmWyEwRhSwOX9f1MKWArb7nKXzwaGawKxJeY5eEEkg/rj/f
- 9KSgXUi9OqMjlZnSISE0DGZxCIyiHgyFRcrHd/9Cv0NsM/x2RVDujMbd9p+2vZq2o1faRY78l7+
- 1ZTxeb408q+BOhHsqsA==
-X-Proofpoint-GUID: aPVUbHQeei97PY7MfzJbIldQzmKWZs-0
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE2MDEzMSBTYWx0ZWRfX4ivfSGZMC3zT
- MiBaJTggFTz49ZZcgXuXOWwNAUfBIqmUZaQ3fqukH6P4x4u5rx+st6wO8Rx+wYavU+4ptmpPvhr
- 2niJMGzuUkheMNVNidX0soNB1TFDCLETc6T74VPRQrUbkZeqwX8i
-X-Proofpoint-ORIG-GUID: aPVUbHQeei97PY7MfzJbIldQzmKWZs-0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 1/2] ata: libata-scsi: terminate deferred commands on
+ time out
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Igor Pylypiv <ipylypiv@google.com>, John Garry <john.g.garry@oracle.com>,
+ Jason Yan <yanaijie@huawei.com>
+References: <20260716083847.926102-1-dlemoal@kernel.org>
+ <20260716083847.926102-2-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260716083847.926102-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Level: 
+X-Spam-Score: -4.30
 
-On 16/07/2026 12:48, yangxingui wrote:
-
-+
-
->>> Fixes: fbefe22811c3140 ("scsi: libsas: Don't always drain event 
->>> workqueue for HA resume")
->>> Signed-off-by: Xingui Yang<yangxingui@huawei.com>
->>
->> Can this possibly be tested on another SCSI HBA which uses libsas? And 
->> using SATA disks.
+On 7/16/26 10:38 AM, Damien Le Moal wrote:
+> If a command timeout occurs while we have deferred non-NCQ commands
+> waiting to be issued, the SCSI EH task is not immediately woken up as the
+> waiting deferred commands are never issued nor completed, thus leaving
+> these commands to always be counted as "busy" for the SCSI host. This
+> results in the test "shost->host_failed != scsi_host_busy(shost))" in the
+> function scsi_error_handler() to always be true, keeping the SCSI EH task
+> sleeping. Eventually, when the deferred commands also time out, the SCSI
+> EH task is woken up and the timeout processing occurs.
 > 
-> Hi John,
-> Unfortunately I don't have access to isci or pm8001 hardware for 
-> testing. ^-^
+> Avoid this unnecessary SCSI EH task wake-up additional time by immediately
+> scheduling a retry of all waiting deferred QCs, using the eh_timed_out
+> SCSI host template operation. The function ata_scsi_eh_timed_out() is
+> introduced to implement this operation.
 > 
-> If anyone on the list has such hardware and could help verify, that 
-> would be much appreciated.
+> However, ata_scsi_eh_timed_out() cannot use the function
+> ata_scsi_requeue_deferred_qc() to force a retry of waiting deferred QCs,
+> because this function completes the waiting QCs using ata_scsi_qc_done(),
+> thus trigerring a requeue at the block layer, which itself may result in
+> an immediate reissuing of the QCs, thus keeping the device in a busy state
+> which prevents the SCSI EH task from waking up. To avoid this,
+> ata_scsi_requeue_deferred_qc() is reimplemented as
+> ata_eh_retry_deferred_qc() so that the retry of the waiting deferred QCs
+> is scheduled through libata EH with ata_qc_schedule_eh(), with the waiting
+> QCs flagged with ATA_QCFLAG_RETRY. Since ata_scsi_requeue_deferred_qc()
+> was already called only when EH was already scheduled or running, this new
+> scheduling of libata EH does not add overhead and guarantees that the
+> device is not kept in a busy state, allowing the SCSI EH task to run and
+> to execute libata EH. Once done, the deferred QCs retry is scheduled from
+> ata_eh_finish() calling ata_eh_qc_retry(). This new path requires a small
+> modification of __ata_eh_qc_complete() to avoid warnings due to the fact
+> that deferred QCs are not flagged as active (ATA_QCFLAG_ACTIVE is not set
+> as these QCs have not been issued yet).
+> 
+> Of note is that since ata_scsi_cmd_error_handler() already handles
+> directly deferred QCs that timed out, ata_eh_retry_deferred_qc() always
+> ignores a deferred QC that correspond to a timed out SCSI command.
+> 
+> Since ata_scsi_eh_timed_out() does not fully handle the timeout itself,
+> this function returns SCSI_EH_NOT_HANDLED to have scsi_timeout() continue
+> with the regular timeout handling, using scsi_abort_command() and
+> scsi_eh_scmd_add(), thus preventing the wkae-up delay for SCSI EH task.
+> 
+> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/ata/libata-eh.c   | 38 +++++++++++++++++++++-----
+>   drivers/ata/libata-scsi.c | 56 +++++++++++++++++++++++----------------
+>   drivers/ata/libata.h      |  2 +-
+>   include/linux/libata.h    |  2 ++
+>   4 files changed, 68 insertions(+), 30 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 29ec0f7fef4a..7943593d49c8 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -546,6 +546,27 @@ static void ata_eh_unload(struct ata_port *ap)
+>   	spin_unlock_irqrestore(ap->lock, flags);
+>   }
+>   
+> +void ata_eh_retry_deferred_qc(struct ata_port *ap,
+> +			      struct scsi_cmnd *timedout_scmd)
+> +{
+> +	struct ata_queued_cmd *qc;
+> +	struct ata_link *link;
+> +
+> +	lockdep_assert_held(ap->lock);
+> +
+> +	/* Trigger EH for retrying any deferred qc that has not timed out. */
+> +	ata_for_each_link(link, ap, PMP_FIRST) {
+> +		qc = link->deferred_qc;
+> +		if (!qc || qc->scsicmd == timedout_scmd)
+> +			continue;
+> +
+> +		link->deferred_qc = NULL;
+> +		cancel_work(&link->deferred_qc_work);
+> +		qc->flags |= ATA_QCFLAG_RETRY;
+> +		ata_qc_schedule_eh(qc);
+> +	}
+> +}
+> +
+>   /**
+>    *	ata_scsi_error - SCSI layer error handler callback
+>    *	@host: SCSI host on which error occurred
+> @@ -947,11 +968,8 @@ static void ata_eh_set_pending(struct ata_port *ap, bool fastdrain)
+>   
+>   	ap->pflags |= ATA_PFLAG_EH_PENDING;
+>   
+> -	/*
+> -	 * If we have a deferred qc, requeue it so that it is retried once EH
+> -	 * completes.
+> -	 */
+> -	ata_scsi_requeue_deferred_qc(ap);
+> +	/* If we have deferred QCs, tell EH to retry them. */
+> +	ata_eh_retry_deferred_qc(ap, NULL);
+>   
+>   	if (!fastdrain)
+>   		return;
+> @@ -1214,9 +1232,17 @@ static void __ata_eh_qc_complete(struct ata_queued_cmd *qc)
+>   	struct scsi_cmnd *scmd = qc->scsicmd;
+>   	unsigned long flags;
+>   
+> +
+> +	/*
+> +	 * If we are retrying a deferred QC after a timeout, it is not active
+> +	 * and all we need to do is to complete it directly.
+> +	 */
+>   	spin_lock_irqsave(ap->lock, flags);
+>   	qc->scsidone = ata_eh_scsidone;
+> -	__ata_qc_complete(qc);
+> +	if ((qc->flags & ATA_QCFLAG_RETRY) && !(qc->flags & ATA_QCFLAG_ACTIVE))
+> +		qc->complete_fn(qc);
+> +	else
+> +		__ata_qc_complete(qc);
 
-By checking the mailing lists you can see who has been hacking libsas or 
-drivers which use libsas in future.
+The original code did set a SCSI status, which I don't see here.
+ata_scsi_qc_complete() will try to generate a status code from
+the qc, which will be different from the original (DID_REQUEUE).
+Sholdn't we set 'DID_REQUEUE', too?
 
-For now:
+>   	WARN_ON(ata_tag_valid(qc->tag));
+>   	spin_unlock_irqrestore(ap->lock, flags);
+>   
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 5868526301a2..1870669b8e05 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1685,28 +1685,6 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
+>   	spin_unlock_irqrestore(ap->lock, flags);
+>   }
+>   
+> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
+> -{
+> -	struct ata_link *link;
+> -
+> -	lockdep_assert_held(ap->lock);
+> -
+> -	/*
+> -	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
+> -	 * do not try to be smart about what to do with this deferred command
+> -	 * and simply requeue it by completing it with DID_REQUEUE.
+> -	 */
+> -	ata_for_each_link(link, ap, PMP_FIRST) {
+> -		struct ata_queued_cmd *qc = link->deferred_qc;
+> -
+> -		if (qc) {
+> -			link->deferred_qc = NULL;
+> -			cancel_work(&link->deferred_qc_work);
+> -			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
+> -		}
+> -	}
+> -}
+> -
+>   static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
+>   {
+>   	struct ata_queued_cmd *qc = link->deferred_qc;
+> @@ -1723,13 +1701,45 @@ static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
+>   		return;
+>   
+>   	if (ata_port_eh_scheduled(ap)) {
+> -		ata_scsi_requeue_deferred_qc(ap);
+> +		ata_eh_retry_deferred_qc(ap, NULL);
+>   		return;
+>   	}
+>   	if (!ap->ops->qc_defer(qc))
+>   		queue_work(system_highpri_wq, &link->deferred_qc_work);
+>   }
+>   
+> +static void ata_scsi_retry_deferred_qc(struct ata_port *ap,
+> +				       struct scsi_cmnd *scmd)
+> +{
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(ap->lock, flags);
+> +	ata_eh_retry_deferred_qc(ap, scmd);
+> +	spin_unlock_irqrestore(ap->lock, flags);
+> +}
+> +
+> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *scmd)
+> +{
+> +	struct ata_port *ap = ata_shost_to_port(scmd->device->host);
+> +
+> +	/*
+> +	 * ata_scsi_cmd_error_handler() takes care of timed-out deferred queued
+> +	 * commands. However, if we had any other command time out and we have
+> +	 * deferred queued commands, we must let scsi_timeout() handle them
+> +	 * with scsi_eh_scmd_add() so that we do not unnecessarilly delay
+> +	 * starting the SCSI EH task. So schedule all deferred queued commands
+> +	 * for retry through EH.
+> +	 */
+> +	ata_scsi_retry_deferred_qc(ap, scmd);
+> +
+> +	/*
+> +	 * Let scsi_timeout() know that it must continue with handling the
+> +	 * timeout as we in fact did not do much here.
+> +	 */
+> +	return SCSI_EH_NOT_HANDLED;
+> +}
+> +EXPORT_SYMBOL_GPL(ata_scsi_eh_timed_out);
+> +
+>   static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+>   {
+>   	struct ata_link *link = qc->dev->link;
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index 700627596ce1..efaccebe93f5 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -180,7 +180,6 @@ enum scsi_qc_status __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+>   					struct ata_port *ap)
+>   	__must_hold(ap->lock);
+>   void ata_scsi_deferred_qc_work(struct work_struct *work);
+> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap);
+>   
+>   /* libata-eh.c */
+>   extern unsigned int ata_internal_cmd_timeout(struct ata_device *dev, u8 cmd);
+> @@ -198,6 +197,7 @@ extern void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
+>   			       unsigned int action);
+>   extern void ata_eh_done(struct ata_link *link, struct ata_device *dev,
+>   			unsigned int action);
+> +void ata_eh_retry_deferred_qc(struct ata_port *ap, struct scsi_cmnd *scmd);
+>   extern void ata_eh_autopsy(struct ata_port *ap);
+>   const char *ata_get_cmd_name(u8 command);
+>   extern void ata_eh_report(struct ata_port *ap);
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 30fdf673b887..51178acd68d7 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -1153,6 +1153,7 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
+>   #endif
+>   extern enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_Host *h,
+>   					     struct scsi_cmnd *cmd);
+> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *cmd);
+>   #if IS_REACHABLE(CONFIG_ATA)
+>   bool ata_scsi_dma_need_drain(struct request *rq);
+>   #else
+> @@ -1461,6 +1462,7 @@ extern const struct attribute_group *ata_common_sdev_groups[];
+>   	.ioctl			= ata_scsi_ioctl,		\
+>   	ATA_SCSI_COMPAT_IOCTL					\
+>   	.queuecommand		= ata_scsi_queuecmd,		\
+> +	.eh_timed_out		= ata_scsi_eh_timed_out,	\
+>   	.dma_need_drain		= ata_scsi_dma_need_drain,	\
+>   	.this_id		= ATA_SHT_THIS_ID,		\
+>   	.emulated		= ATA_SHT_EMULATED,		\
 
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+Otherwise looks okay.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
