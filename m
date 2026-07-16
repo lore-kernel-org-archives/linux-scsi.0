@@ -1,110 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D6E12F7F07
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2026 22:01:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06C0227587D
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2026 02:51:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784152904; cv=none; b=jSA6XBO2emBSKO3QdFoJDlZE1py/O15r0F5bzzH1iLa243HOmtZkc640+oUr9H6BtuSEALyiCfZgSJLgBOScciCwZ6DPbEz8yx959xPbDxXJK+ahaToc1DVW5VAHrlfOBl4+6SJNN/L+myBtzZEA6lhUtWVeqCBEWLDfaGN/TbE=
+	t=1784170312; cv=none; b=sFs4CByQNxKpPH5VsJ/ou6YClnv+kJc9W2VPSnGJMJ6HD4UJy3CU0QZL6bHWhjZ+MOFQqIhVFrK3eHdxXCKvUbwHDFCwQoVlIcQ32Wk8IVDyfnvSqgWjLD6xn8uB2q3I/gzG1RIWB31nFto7VznafPhlaGwwB2WenkPXRKA3d7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784152904; c=relaxed/simple;
-	bh=doygDGZWRT6AEK4qu0xKGOPjvZ4xv1osc/EX8uoI1E8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tyv3LYP4LCy6yJL90VZwZmsDDu9K4BEL0ZYA3COTICjOQ3FycFdFlLTXLmTDMvCaACAs53looQsAWTNau99lRKz3+WdwvX78d/GbTG6f8PlzkkwMET5am5OLHY93SZngZFm1ETtkVvJ/vC2s+94Y/2QkTsfr3LHTjbC9j82E30E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JBHKjHgq; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784170312; c=relaxed/simple;
+	bh=alJeeTHB7A8GEpExkSUYkHBHKeMWjTtaE27dZdg9TZ0=;
+	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
+	 Content-Type:References; b=h5GkYwmaXoPuiAFF2gr6v5FRLMvJtshM6iTFP+M/EtpLHJa6wl2zh8SXJyEQb9jcd1SD3kgXdyhKa3z6xcW9Xpldg7LMYLlHN7u7CqD8I3Hks+9sXk3iuT8Lxl90qNMlqnfO7GNjDu27eWhH2rL041cCEn/JH8eP1WE/LgLE9eI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=XkVIKtRn; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JBHKjHgq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 916F41F000E9;
-	Wed, 15 Jul 2026 22:01:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784152902;
-	bh=7s1ewHoJOliKtzlCSA5IvPFn7Fx28jsAOnsGA9jHuCc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JBHKjHgq6dVvKB9bgVVJcI4JjyEAQ3rMCbs8KTahSy8gZ5sdWCTMDPdzamQU7Ly/L
-	 vYxNBg/wJxssJlW94R49ORILWA7h9wwFULIiYij++haaqPGWaoxY8nTTQaVavglWBg
-	 8U4vaqNVGOY/SAl93f8+yI4WtAKrY274D7ReVkS1d8E/nkv5StCCXFuUL31ai/BiF5
-	 6IsCyGp1mkpJTWNYaJyDZ/rkVCzlUPiKjAKHJK4uVoRxu0/KUwul78QtNINjEkHErN
-	 xXCdlUcAgNxhf3UI09EaC0YMWye8IYCxTx5KRvzeGGC+YF4Rq6mTUiMGLHlwYKa746
-	 ejn44Tlk/aLrA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] ufs: rpmb: retry power-on UNIT ATTENTION on the
- RPMB WLUN
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jorge Ramirez-Ortiz" <jorge.ramirez@oss.qualcomm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260715214327.1933560-2-jorge.ramirez@oss.qualcomm.com>
-References: <20260715214327.1933560-1-jorge.ramirez@oss.qualcomm.com>
- <20260715214327.1933560-2-jorge.ramirez@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 15 Jul 2026 22:01:41 +0000
-Message-Id: <20260715220142.916F41F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="XkVIKtRn"
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260716025141epoutp011a50a4d1a794f85e1024a7af1bb01ad8~CpW_5aQ130874608746epoutp01Y
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2026 02:51:41 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260716025141epoutp011a50a4d1a794f85e1024a7af1bb01ad8~CpW_5aQ130874608746epoutp01Y
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1784170301;
+	bh=CTrAxUFhVtk9JM5cJE+p52NPXzFmUGmAmfja3jZ6GoU=;
+	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+	b=XkVIKtRnEkS0fudtaMFHqV1Rz+hr5HMxj1G13LdaDFsMldmYb9popym/3TdiIPldB
+	 M7P20CSSHiZxfaV0UgjBCb3meJALYz5jJujC8EKmQDUeiVPTpfTG6Mj9o0vwzX2RgT
+	 UGOCKoil25GraHYCNVGiSL+DwCJZFp3/kKtB+J28=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
+	20260716025141epcas2p2df0eb3c6e337d4f8838f40606b33d689~CpW_gik7w2085520855epcas2p2d;
+	Thu, 16 Jul 2026 02:51:41 +0000 (GMT)
+Received: from epcas2p3.samsung.com (unknown [182.195.38.204]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4h0yHJ6Wr9z6B9m9; Thu, 16 Jul
+	2026 02:51:40 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Subject: Re: [PATCH] scsi: ufs: Add support for the aggregated read query
+ opcode
+Reply-To: hyenc.jeong@samsung.com
+Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+To: Bart Van Assche <bvanassche@acm.org>,
+	"James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>
+CC: ALIM AKHTAR <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Jinyoung Choi <j-young.choi@samsung.com>,
+	Dukhyun Kwon <d_hyun.kwon@samsung.com>, Jeuk Kim <jeuk20.kim@samsung.com>,
+	Keoseong Park <keosung.park@samsung.com>, Jaemyung Lee
+	<jaemyung.lee@samsung.com>, Jieon Seol <jieon.seol@samsung.com>, Gyusun Lee
+	<gyusun.lee@samsung.com>, Yunjae Jo <yunjae00.jo@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <a0d5f2bc-c343-43c5-93c9-a7b58be13242@acm.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20260716025140epcms2p4f46c9c232d81ac1ffb9c2961ca758fde@epcms2p4>
+Date: Thu, 16 Jul 2026 11:51:40 +0900
+X-CMS-MailID: 20260716025140epcms2p4f46c9c232d81ac1ffb9c2961ca758fde
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+cpgsPolicy: CPGSC10-223,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260710053524epcms2p82121eba4240c37112fc5669430035442
+References: <a0d5f2bc-c343-43c5-93c9-a7b58be13242@acm.org>
+	<6d087f28-5795-4929-b5d3-3f78d9b9bc60@acm.org>
+	<20260710054556epcms2p68986e2af26f42e63c87ab8fde034e450@epcms2p6>
+	<20260713025227epcms2p41de509bb713eb7a6be2c945073be6b3a@epcms2p4>
+	<CGME20260710053524epcms2p82121eba4240c37112fc5669430035442@epcms2p4>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Medium] The code uses SCMD_FAILURE_ASC_ANY to retry any Unit Attention, =
-contradicting the documented intent.
-- [Low] The 'sshdr' variable is allocated and passed to scsi_execute_cmd bu=
-t is never used by the caller.
---
+On 7/13/26 09:55 PM, Bart Van Assche wrote:
+> On 7/12/26 7:52 PM, Hyeoncheol Jeong wrote:
+> > Would it be okay to keep utp_transfer_cmd_desc as is and give
+> > just the reserved tag a dedicated 4 KiB response descriptor?
+> > Regular tags and normal I/O would stay unchanged.
+>
+> That sounds better to me but how to implement the above proposal
+> without slowing down the hot path?
 
---- Patch [1]: [PATCH 1/2] ufs: rpmb: retry power-on UNIT ATTENTION on the =
-RPMB WLUN ---
-commit 7f3e584cbe66720f776d9dd47015f86621c3fdb8
-Author: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
+Hi Bart,
 
-ufs: rpmb: retry power-on UNIT ATTENTION on the RPMB WLUN
+Here's what I'm thinking. Keep utp_transfer_cmd_desc as is (512 B) and
+add a dedicated 4 KiB one just for the reserved tag:
 
-After a power cycle, the first command to the RPMB WLUN fails with a
-power-on UNIT ATTENTION. This patch asks the SCSI core to retry this
-condition so RPMB works immediately after boot.
+struct utp_devman_cmd_desc {
+	u8 command_upiu[ALIGNED_UPIU_SIZE];
+	u8 response_upiu[ALIGNED_DEVMAN_RSP_SIZE];      /* 4 KiB */
+	u8 prd_table[];
+};
+Allocated as a single instance, this keeps the extra cost to +(4 KiB - 512 B)
+per host without growing any per-tag structure.
 
-> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-> index ffad049872b9a..adbec80cf3811 100644
-> --- a/drivers/ufs/core/ufs-rpmb.c
-> +++ b/drivers/ufs/core/ufs-rpmb.c
-> @@ -40,6 +40,25 @@ struct ufs_rpmb_dev {
->  static int ufs_sec_submit(struct ufs_hba *hba, u16 spsp, void *buffer, s=
-ize_t len, bool send)
->  {
->  	struct scsi_device *sdev =3D hba->ufs_rpmb_wlun;
-> +	struct scsi_sense_hdr sshdr;
+This probably touches two spots on the hot path, though hopefully only
+slightly. First, ufshcd_init_lrb() would gain a reserved-tag check to
+pick the descriptor:
 
-[Severity: Low]
-Does this code need to allocate and pass sshdr?
+if (unlikely(blk_mq_is_reserved_rq(scsi_cmd_to_rq(cmd))))
+	p = hba->devman_ucd_base_addr;
+else
+	p = ... + (i - UFSHCD_NUM_RESERVED) * ufshcd_get_ucd_size(hba);
+Since the reserved tag is only ever used for device management, this
+branch is always false for normal I/O and should be well predicted.
 
-It appears that sshdr is passed to scsi_execute_cmd() via exec_args but the
-result is never read by the caller. Leaving .sshdr as NULL would avoid the
-unnecessary sense data normalization overhead in scsi_execute_cmd().
+The other is the pre-4.1 MCQ tag recovery, which would gain a check
+before the existing division:
 
-> +	/* Retry the power-on UNIT ATTENTION (ASC 0x29); the SCSI core does not=
-. */
-> +	struct scsi_failure failure_defs[] =3D {
-> +		{
-> +			.sense =3D UNIT_ATTENTION,
-> +			.asc =3D SCMD_FAILURE_ASC_ANY,
+if (addr == hba->devman_ucd_dma_addr)
+    return 0;       /* reserved tag */
+It just gets one extra compare, and on UFSHCI 4.1+ the CQE carries
+the tag directly, so that path isn't hit at all.
 
-[Severity: Medium]
-Will this retry ANY Unit Attention condition instead of just ASC 0x29?
+If the direction sounds reasonable, I'll prepare it as v2.
 
-The commit message and inline comment explicitly target the power-on
-UNIT ATTENTION (ASC 0x29), but using SCMD_FAILURE_ASC_ANY configures the SC=
-SI
-core to retry any Unit Attention condition up to 3 times. Could this mask
-other unexpected device state changes?
-
-> +			.ascq =3D SCMD_FAILURE_ASCQ_ANY,
-> +			.allowed =3D 3,
-> +			.result =3D SAM_STAT_CHECK_CONDITION,
-> +		},
-> +		{}
-> +	};
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260715214327.1933=
-560-1-jorge.ramirez@oss.qualcomm.com?part=3D1
+Thanks.
