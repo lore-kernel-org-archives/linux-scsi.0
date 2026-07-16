@@ -1,159 +1,106 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDEBB42465F
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2026 13:47:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 869BB3BFE50
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2026 13:50:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784209632; cv=none; b=E/Nfbww5u9YW1z3Y1pHtWeHMEqp6JPKkTjzwkHvKiqgqhbQkl//2+xX2ukDOHaadJdAeHKuwQMuU2XTI/l2ogttELzGwP8etjhnm/MJkaauVvELCFTiWDINOhaRsQpVGiJluePZYV2x3fwFh9t8Ocgy+J0yA9kBawrdZ96qAhNw=
+	t=1784209814; cv=none; b=ML0UIi9VWpThu+PAx562YD2qYpPDPcKfGPRRMBWr6DMheHeL/dXeX+0atmPDVagkLo+PPkodtfEaSH1Zfud5zdLKkT1E0UqHCqxzmTX05nLErY/5OT2P/cZ7j8KmJCCi4RudsJoIptU03zYLrw1d0Eu4E7yv8ol14DXuqAiqnhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784209632; c=relaxed/simple;
-	bh=0WtXjB6WwYolKe1XepFFEIP+h0W2NaY7L/pE4Ob2j1k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lNp8fxOngiMpO1g5XX3ZKauBHygGk7kQsDzk4pkUg2c/0NnVdadk3hc+kgLmJl3jtbluNvf0wRHkzAVbygH0yYN+KQlwCiK7kApuUa0hCmyVk3bHnY2cJRVXH0GMkdvBoL8x8dwS08GNQoQtjry9j9DrvKwRv7sv72keLDe8ly8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ZwPKquWA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=t9ShfoCB; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ZwPKquWA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=t9ShfoCB; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1784209814; c=relaxed/simple;
+	bh=LJxGu1vn90ST96aZbvIRyVL/x3H2tfmqZwYvDjzuR1c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PUGp8bqMpsii786zOCmin2lrRbMifOuelsox9s/oeFoOKlB+iREu/GQRACL39uwmI3dgOko38hrc8k8bkIfKEoW+KZTDiDDpeNpptm/PN2yo5rBz0Qy2nxHGB3S8YRsta9cP7I+ws/P6MeywnotggNvfhS/RXDKjujJjionsxjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=U6aWzhPi; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ZwPKquWA";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="t9ShfoCB";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ZwPKquWA";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="t9ShfoCB"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="U6aWzhPi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784209810;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lnu17VggMDCixOLGEi8Gq9H8XG41huN0NcOgMzjCJTA=;
+	b=U6aWzhPinpvff82hCQJsZV63Dc7e8Lb1e79GpcZhzBC64OV2BY92HI9jxIR+2u+eEv7ahx
+	oqoGEMDXUuvSXldrXFj1/+MaqkJcz/6E0lGJ1hdpCf4PUNOKzmdftjZ0EVXUqAWOUqAaD6
+	jZBjXt7QI9W1QeM26M2MiXLmvm79xL8=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-490-NqLtMDllPQmX3G8VQHXPUQ-1; Thu,
+ 16 Jul 2026 09:50:07 -0400
+X-MC-Unique: NqLtMDllPQmX3G8VQHXPUQ-1
+X-Mimecast-MFC-AGG-ID: NqLtMDllPQmX3G8VQHXPUQ_1784209805
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id D45223DF3;
-	Thu, 16 Jul 2026 13:47:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1784209627; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e01hDe7AeUVKeg6D9VB9uCJXyJQWuZecmSs/neZL6o8=;
-	b=ZwPKquWAZKZUP1nA5oLMOTX55w5YRMk1Br1TlJhpRnOvr8yTyfWWkH3h6MPjn6czJBsC6k
-	bCNBk9dqGRXgHF6rgDu5r2ICxGpqHBGZIuoOgHV6nkqOTvXndRNDD5n5oASrq+k8av8dSV
-	xGGuRwa7gb2Sw0sgfDw3Nk4wgi2xNdA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1784209627;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e01hDe7AeUVKeg6D9VB9uCJXyJQWuZecmSs/neZL6o8=;
-	b=t9ShfoCB/KS2mCcLMhHkrmb1BiFkIQk+uTRrh55EICkSf4wRU5In0SgEL7M1NuHow+nT6m
-	yJGL1heSc0JkJkAg==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1784209627; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e01hDe7AeUVKeg6D9VB9uCJXyJQWuZecmSs/neZL6o8=;
-	b=ZwPKquWAZKZUP1nA5oLMOTX55w5YRMk1Br1TlJhpRnOvr8yTyfWWkH3h6MPjn6czJBsC6k
-	bCNBk9dqGRXgHF6rgDu5r2ICxGpqHBGZIuoOgHV6nkqOTvXndRNDD5n5oASrq+k8av8dSV
-	xGGuRwa7gb2Sw0sgfDw3Nk4wgi2xNdA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1784209627;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e01hDe7AeUVKeg6D9VB9uCJXyJQWuZecmSs/neZL6o8=;
-	b=t9ShfoCB/KS2mCcLMhHkrmb1BiFkIQk+uTRrh55EICkSf4wRU5In0SgEL7M1NuHow+nT6m
-	yJGL1heSc0JkJkAg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id BD1A0779AD;
-	Thu, 16 Jul 2026 13:47:07 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 83rELdvgWGpaGQAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 16 Jul 2026 13:47:07 +0000
-Message-ID: <d47e2b74-9431-4552-afc5-2115f3244b4f@suse.de>
-Date: Thu, 16 Jul 2026 15:47:07 +0200
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9BB80180074B;
+	Thu, 16 Jul 2026 13:50:04 +0000 (UTC)
+Received: from rhel-developer-toolbox-latest (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with SMTP id BD1C642D;
+	Thu, 16 Jul 2026 13:50:02 +0000 (UTC)
+Date: Thu, 16 Jul 2026 06:50:01 -0700
+From: Chris Leech <cleech@redhat.com>
+To: HyeongJun An <sammiee5311@gmail.com>
+Cc: Mike Christie <michael.christie@oracle.com>, 
+	Lee Duncan <lduncan@suse.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: libiscsi_tcp: bound SCSI Response data segment
+ to the connection buffer
+Message-ID: <20260716-tinsel-detective-7953f0311400@redhat.com>
+References: <20260710050645.1194212-1-sammiee5311@gmail.com>
+ <20260716065848.1653431-1-sammiee5311@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/2] scsi: libsas: terminate deferred commands on time
- out
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Igor Pylypiv <ipylypiv@google.com>, John Garry <john.g.garry@oracle.com>,
- Jason Yan <yanaijie@huawei.com>
-References: <20260716083847.926102-1-dlemoal@kernel.org>
- <20260716083847.926102-3-dlemoal@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260716083847.926102-3-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
-X-Spam-Level: 
-X-Spam-Score: -4.30
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260716065848.1653431-1-sammiee5311@gmail.com>
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-On 7/16/26 10:38 AM, Damien Le Moal wrote:
-> If a command timeout occurs while we have a deferred non-NCQ command
-> waiting to be issued, the SCSI EH task is not immediately woken up as the
-> waiting deferred command is never issued nor completed, thus leaving this
-> command to always be counted as "busy" for the SCSI host. This results in
-> the test "shost->host_failed != scsi_host_busy(shost))" in the function
-> scsi_error_handler() to always be true, keeping the EH task sleeping.
-> Eventually, when the deferred command also times out, the SCSI EH task
-> is woken up and the timeout processing occurs.
+On Thu, Jul 16, 2026 at 03:58:48PM +0900, HyeongJun An wrote:
+> iscsi_tcp_hdr_dissect() receives the data segment of several PDU types
+> into the fixed-size conn->data buffer, which is allocated for
+> ISCSI_DEF_MAX_RECV_SEG_LEN (8192) bytes.  For the LOGIN_RSP, TEXT_RSP,
+> REJECT and ASYNC_EVENT opcodes the dissect path already rejects a PDU
+> whose DataSegmentLength exceeds that buffer.
 > 
-> Avoid this unnecessary additional SCSI EH trigger wait time with the same
-> method as implemented in libata-scsi, using the eh_timed_out SCSI host
-> template operation. The function sas_eh_timed_out() implements this
-> operation and executes the function ata_scsi_retry_deferred_qc()
-> for SATA devices.
+> The SCSI Command Response (ISCSI_OP_SCSI_CMD_RSP) path also copies its
+> data segment (sense/response data) into conn->data via
+> iscsi_tcp_data_recv_prep(), but it does so without the same check.  The
+> only upstream bound on in.datalen is conn->max_recv_dlength, the
+> initiator's advertised MaxRecvDataSegmentLength, which is commonly
+> negotiated well above 8192 (open-iscsi defaults to 262144).  A target
+> that returns a SCSI Response with a DataSegmentLength between 8193 and
+> max_recv_dlength therefore overflows the 8192-byte conn->data buffer.
 > 
-> Co-developed-by: Igor Pylypiv <ipylypiv@google.com>
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> Once the same bound applies, ISCSI_OP_SCSI_CMD_RSP is handled exactly
+> like those responses: bound the data segment, receive it into conn->data
+> when present, and otherwise complete the PDU with no data.  Fold the
+> opcode into that case group rather than duplicating the check.
+> 
+> Fixes: a081c13e39b5 ("[SCSI] iscsi_tcp: split module into lib and lld")
+> Suggested-by: Chris Leech <cleech@redhat.com>
+> Assisted-by: Claude:claude-opus-4-8
+> Signed-off-by: HyeongJun An <sammiee5311@gmail.com>
 > ---
->   drivers/ata/libata-scsi.c           |  4 ++--
->   drivers/scsi/libsas/sas_scsi_host.c | 15 +++++++++++++++
->   include/linux/libata.h              |  1 +
->   include/scsi/libsas.h               |  2 ++
->   4 files changed, 20 insertions(+), 2 deletions(-)
+> v2: Fold ISCSI_OP_SCSI_CMD_RSP into the LOGIN_RSP/TEXT_RSP/REJECT/
+>     ASYNC_EVENT case group instead of duplicating the bounds check, as
+>     suggested by Chris Leech.  The handling is identical: both bound the
+>     data segment to conn->data, receive it when present, and otherwise
+>     complete the PDU with no data (the latter via the LOGOUT_RSP
+>     fallthrough).  No functional change from v1.
 > 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+> v1: https://lore.kernel.org/all/20260710050645.1194212-1-sammiee5311@gmail.com/
+> 
+>  drivers/scsi/libiscsi_tcp.c | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
 
-Cheers,
+Acked-by: Chris Leech <cleech@redhat.com>
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
