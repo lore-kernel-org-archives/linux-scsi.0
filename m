@@ -1,76 +1,98 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from hall.aurel32.net (hall.aurel32.net [195.154.119.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3AE42475F7
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2026 18:02:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA23433F58E;
+	Thu, 16 Jul 2026 21:25:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.154.119.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784224980; cv=none; b=Ysn9L+hsOLpaY7iF1YJU88iR6nKigfZgcwcBIBJAWWZ/uB8MZRXCwi8jFSJYZzcayIgVFf29N35GgE5iIWXQ46E6Muly+mywLT/QngxmuMgteKPJw7pV1QVbJGegjs2HUa0XnfgfVCh5hx5FPbj9fgLO1G2+0RVahdWdMgTP4XE=
+	t=1784237166; cv=none; b=F97RRPd8Zv7pnL9fVkbY2drNV5tHTN5fLwY/2oa7IcZd83hRFddH2bzqhM9O8jt+JK5avdjH1R6PPQPwtACIZ6QzPc5Q4zcKPArowiWCURBwZH8/ml+1ITnWjAJMqxENOjvo4rzVcAmCQ9YpSjB6Hn2oxKhF1LUfwxoy2lZxV1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784224980; c=relaxed/simple;
-	bh=Z8W/U47CIk2DUkP7okDbJb2zdln9zGV3FO/BW93mLhs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PQKjtwbEmYUWyC2kJUWI13CISpEBGmF5X13l0ds5OxXYgcmoMCR4B/mHwnhKPjPwVLntDw3oqyOlB137HsAC9RuSJ3kX7OanxlVbTLd1iVWPKjU9s2VBfmrC8JIdPTfmibfOqwR59igiL1k+/a9Jw0dF78GZNGgfdQLRBbPjdRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=a+gIk9xU; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1784237166; c=relaxed/simple;
+	bh=vpChavushcCda47IzRnHUL4kGqDfmWWSTuzbXlV82Q0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QHHtQvp9CvYUSLhb/gvr3l9KHg3js3s4AeI1GvW0SDBbDJCA+w2A+Hquyb7kAyW4Oi81YBLJiIolwCMhshLueJv8v2fCi2Jay4/oE5vXo301bidr2Wv2m/Ve124aOgZ7j5RlxkGW+c9eSllTk0BZ0MomGVnCQnewRnCQe0DuIeI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net; spf=pass smtp.mailfrom=aurel32.net; dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b=kuZSNqin; arc=none smtp.client-ip=195.154.119.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aurel32.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="a+gIk9xU"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4h1LVq1frlzlffvQ;
-	Thu, 16 Jul 2026 18:02:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1784224977; x=1786816978; bh=Z8W/U47CIk2DUkP7okDbJb2z
-	dln9zGV3FO/BW93mLhs=; b=a+gIk9xUbG7Uvex2qGdVH0AVS1GvCrKL9bqZMRRg
-	dw74RjqC0KLy5s5+x93y8DHLzgWPE1eikq16gawkMUEOAQC/h+4ND9zMDLrTaogg
-	nZjsYVnNltdElANw5M2vNfq/+MbmDJi1UmXN5N0VnvhEr9OC650CJoB7Ixb8rj/O
-	Vb1OZ1/nw7JQIrdhR3EJZc8q6W2lo+QQJDkSPzB4DaJgHEkICfDwu36JQqAUx4Hn
-	mTEvRR7xF1U6n4rd8UKvZdkeEGvF+N6XZOleGLQJq1RtlIbHWziIaXYWI2rHY1Nx
-	bOTSKFq1wPABCOf/j5E4ZrKbzIH6a9k0XUH63GtHklTu2Q==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id a-OhdiZD0qgM; Thu, 16 Jul 2026 18:02:57 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4h1LVn4Rynzlh1VB;
-	Thu, 16 Jul 2026 18:02:57 +0000 (UTC)
-Message-ID: <b2c5aaa4-babc-4fc8-803a-1c8d75eebe59@acm.org>
-Date: Thu, 16 Jul 2026 11:02:56 -0700
+	dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b="kuZSNqin"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=aurel32.net
+	; s=202004.hall; h=In-Reply-To:Content-Type:MIME-Version:References:
+	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:From:Reply-To:
+	Subject:Content-ID:Content-Description:X-Debbugs-Cc;
+	bh=Y8FmT3HFXYrk7ENIeJmg/IEGhGheqHbxiOlmgGR4eeg=; b=kuZSNqinHgO/Dm3HClMp8Ov6IC
+	w6kFqOnw8//ls3jFHL+wGJf08JAxkBoYBOMHnAFRE9a8KkUREq0/m5PUNHBPC2eeL3Bo9g+JbeCSh
+	Iiflw9EBswXxu6mO9kaWyy03IlbR1FHOUrqxp2OnNWqos2Hoi1CqLMJXS+dx6snx66uWbBjoTStlv
+	aoD+DxwNC+fTvoNB3N9YxAFxBoyYMy7SDd4VrMR0gE4IvsuvpwJuP5vz2hFmmDp3QM70xDWYHjSJk
+	B/fBt+P/+wIj8ZcyxE/vnVu6sUY2A91PgFkfi09iZyBUBxqdc86WImYVjgS/Y9TAeevJLro9xQnFP
+	v9uWQnWQ==;
+Received: from authenticated user
+	by hall.aurel32.net with esmtpsa  (TLS1.3)  tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <aurelien@aurel32.net>)
+	id 1wkTaH-00000003G8E-06mV;
+	Thu, 16 Jul 2026 23:25:33 +0200
+Date: Thu, 16 Jul 2026 23:25:32 +0200
+From: Aurelien Jarno <aurelien@aurel32.net>
+To: Yixun Lan <dlan@kernel.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
+ driver
+Message-ID: <allMTB6R7eHf_UZO@aurel32.net>
+Mail-Followup-To: Yixun Lan <dlan@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
+ <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: Add support for the aggregated read query
- opcode
-To: hyenc.jeong@samsung.com
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <a0d5f2bc-c343-43c5-93c9-a7b58be13242@acm.org>
- <6d087f28-5795-4929-b5d3-3f78d9b9bc60@acm.org>
- <20260710054556epcms2p68986e2af26f42e63c87ab8fde034e450@epcms2p6>
- <20260713025227epcms2p41de509bb713eb7a6be2c945073be6b3a@epcms2p4>
- <CGME20260710053524epcms2p82121eba4240c37112fc5669430035442@epcms2p4>
- <20260716025140epcms2p4f46c9c232d81ac1ffb9c2961ca758fde@epcms2p4>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260716025140epcms2p4f46c9c232d81ac1ffb9c2961ca758fde@epcms2p4>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
+User-Agent: Mutt/2.2.13 (2024-03-09)
 
-On 7/15/26 7:51 PM, Hyeoncheol Jeong wrote:
-> If the direction sounds reasonable, I'll prepare it as v2.
+On 2026-07-02 02:31, Yixun Lan wrote:
+> SpacemiT K3 SoC consist of UFS (Universal Flash Storage) Host Controller
+> which has features compatible with JEDEC UFS 2.2, MIPI UniPro v1.61 and
+> M-PHY v3.0 standard.
+> 
+> Signed-off-by: Yixun Lan <dlan@kernel.org>
+> ---
+>  drivers/ufs/host/Kconfig        |  12 +
+>  drivers/ufs/host/Makefile       |   1 +
+>  drivers/ufs/host/ufs-spacemit.c | 931 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-spacemit.h |  90 ++++
+>  4 files changed, 1034 insertions(+)
 
-The above sounds reasonable to me.
+Tested-by: Aurelien Jarno <aurelien@aurel32.net>
 
-Thanks,
-
-Bart.
+-- 
+Aurelien Jarno                          GPG: 4096R/1DDD8C9B
+aurelien@aurel32.net                     http://aurel32.net
