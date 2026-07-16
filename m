@@ -1,40 +1,40 @@
 Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72CF527703;
-	Thu, 16 Jul 2026 06:46:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 179892EC54C;
+	Thu, 16 Jul 2026 06:50:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784184398; cv=none; b=aaL2oZaMEtfKRPdy2rJl0wJqGuNvNlLlnDOhgE79yMGpT2fh+zM7BjJUkodaEs3CH2LhbxKulUZ/FOAY9ejxHHUv9bpPYoAGwtFfxQy6oDHAFdv+6qS1NyLsmPm05K3e0tqMid6eTcvRG3D76elWcazUAB064e/f92dbWAyoOD0=
+	t=1784184660; cv=none; b=N6FvQmJsd5kQ0BRqU5aYAmotUJ5puCZNil3+y0jHAj/kgD8cGm1PyGAKkPLTdvJirebEazFahItPkB18hLk+o8k8GZGDg3XrbUMIBAtHYtGSZyF6uAgjvBYo1tUGyKB8/TtyKA01HZ6NkLGtxoER6mysHO011JlmoCgcVrxU4n4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784184398; c=relaxed/simple;
-	bh=zlqbaRS3QmX20cv5HOrGDaPsi+NtykQhI1Ie+rzDb6s=;
+	s=arc-20240116; t=1784184660; c=relaxed/simple;
+	bh=S8hyVMKcE9jlNELUFMHjl9BgI+Gy3lwQBr2YrWg1sao=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=TDE3z+ptpcw+6kOYBtMSMzQVFnTyt0bPA+lrWRpfLhUeCv3Tztk3bF9iw144SwvUbcZgBQjUcfn9lphGXzPg0bwREKd2Yya87gTeosUMRkO9172ExNrW1L15MFWS/9GTxU77mJmYU3vp1C+44AAe7RXLMsRkIcLxoQ1SuNSsoVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=Av4ejPlC; arc=none smtp.client-ip=113.46.200.219
+	 In-Reply-To:Content-Type; b=h2bkpyiYlRmpaXgn+vHKqTXT6m5iXRFymcxDPurrxvcvV7k4yW3zCSED9BXWR1dsQMqggRVqQQfwI1xgYV5l4+sga13pdpVi6BwSIStI9rOM/Gq9Oe1mXf/g52/CrWRaTSrVshtBB+XcdSrU6/nAnfK8GZuNubS2MPZhlMy//AE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=F/t2o0WJ; arc=none smtp.client-ip=113.46.200.219
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="Av4ejPlC"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="F/t2o0WJ"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=PVxsOJdVBv1QQ6cxedrmAEtHDaUl4CvuP2XVbSvFLZU=;
-	b=Av4ejPlCV/kLyTiKioYSg0ufpncegwCKRo6Bfzg23M5nDveWA5a1a/1sBwi57r15pinjjq1bx
-	oX5YuLA062YYtBCPoFtCftQBergkUce5fTcrjQShCSpxzfnEmt9AhUVjAxjBPCgUD1bod1dAkiv
-	FmdZsEjwyM7Ob5+Cob1pveY=
+	bh=AqV92uUB6U6BES4DaNd9YKwbJO4uKw/j7nCHuNlSQWs=;
+	b=F/t2o0WJgj+85WqypOyuXO546f/xe/Ag3GibGqotT5olh9lS2ufxhafnHMRAKutnNFpRhNxmM
+	lW60fRcLcy2FGW0FYb/7gnjo/rU0m7xrPwfnt9Og3O+XnR5u8cRcwc8Ff6xs8IS0VQhImTC2NMy
+	VTKy+07WKMxYoGxXdmiCQXQ=
 Received: from mail.maildlp.com (unknown [172.19.163.0])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4h13HK2rHLz1prMN;
-	Thu, 16 Jul 2026 14:37:01 +0800 (CST)
+	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4h13NZ3BpHz1prLc;
+	Thu, 16 Jul 2026 14:41:34 +0800 (CST)
 Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
-	by mail.maildlp.com (Postfix) with ESMTPS id 5145140561;
-	Thu, 16 Jul 2026 14:46:22 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 6055440561;
+	Thu, 16 Jul 2026 14:50:55 +0800 (CST)
 Received: from [10.67.120.108] (10.67.120.108) by
  kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Thu, 16 Jul 2026 14:46:21 +0800
-Message-ID: <309c7ded-2f18-65b2-a828-7057139a9c12@huawei.com>
-Date: Thu, 16 Jul 2026 14:46:21 +0800
+ 15.2.1544.36; Thu, 16 Jul 2026 14:50:54 +0800
+Message-ID: <dae144b6-52c6-205f-7720-374823b885d5@huawei.com>
+Date: Thu, 16 Jul 2026 14:50:54 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,58 +51,145 @@ To: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
 CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <kangfenglong@huawei.com>
 References: <20260702033211.1743313-1-yangxingui@huawei.com>
- <379091c9-3cd2-7599-baae-8c7f278e7ec3@huawei.com>
- <56d1c5d9-cb3f-4bef-a099-304ef0c49837@oracle.com>
- <e91cdddb-2323-904f-dc63-3d00597b5c8f@huawei.com>
- <de319ce0-ca42-46cf-87ea-98c93c73bc8e@oracle.com>
- <b1f12c52-ab0a-e146-6559-858eb5e581d6@huawei.com>
- <90dd58a1-598d-403a-a29a-266924d0f577@oracle.com>
+ <119e4b61-3671-4680-9738-3cfc679ee00a@oracle.com>
 From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <90dd58a1-598d-403a-a29a-266924d0f577@oracle.com>
+In-Reply-To: <119e4b61-3671-4680-9738-3cfc679ee00a@oracle.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: kwepemh100016.china.huawei.com (7.202.181.102) To
  kwepemj100018.china.huawei.com (7.202.194.12)
 
-Hi, John
 
-On 2026/7/15 16:25, John Garry wrote:
-> On 14/07/2026 13:06, yangxingui wrote:
->> There are five libsas consumers (callers of sas_register_ha): hisi_sas,
->> isci, pm8001, aic94xx, and mvsas. Only hisi_sas needs a driver-side
->> change, because it is the only driver that satisfies all three
->> conditions below simultaneously.
+
+On 2026/7/15 16:23, John Garry wrote:
+> On 02/07/2026 04:32, Xingui Yang wrote:
+>> Commit fbefe22811c3140 ("scsi: libsas: Don't always drain event workqueue
+>> for HA resume") introduced sas_resume_ha_no_sync() to avoid a 
+>> deadlock: the
+>> PHYE_RESUME_TIMEOUT handler, running on the HA event workqueue, calls
+>> sas_deform_port() -> sas_destruct_devices(), which removes SCSI 
+>> devices and
+>> waits for the host to become runtime-active. But the host cannot resume
+>> until sas_resume_ha() -> sas_drain_work() returns, and the drain is 
+>> blocked
+>> on that very handler.
+>>
+>> However skipping the drain reintroduces a race: hisi_sas returns from
+>> resume before all PHY UP work and libsas discovery work finish. The
+>> controller may then autosuspend while disks are still waking up. The 
+>> disks
+>> issue IO to a suspended controller, the IO fails, and the disks get
+>> disabled.
+>>
+>> Fix the deadlock at its source by moving the PHYE_RESUME_TIMEOUT
+>> notification to after sas_drain_work(). By then the host resume is 
+>> about to
+>> complete, so device removal through device_link no longer blocks on the
+>> resume and the cycle is broken.
+>>
+>> With the deadlock gone, restore sas_resume_ha() (the draining variant) in
+>> hisi_sas and remove sas_resume_ha_no_sync().
+>>
+>> Fixes: fbefe22811c3140 ("scsi: libsas: Don't always drain event 
+>> workqueue for HA resume")
+>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>> ---
+>>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  9 +-------
+>>   drivers/scsi/libsas/sas_init.c         | 32 ++++++++++++++------------
+>>   include/scsi/libsas.h                  |  1 -
+>>   3 files changed, 18 insertions(+), 24 deletions(-)
+>>
+>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c 
+>> b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+>> index 0687bdefcd63..c8673ae4e472 100644
+>> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+>> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+>> @@ -5263,14 +5263,7 @@ static int _resume_v3_hw(struct device *device)
+>>       }
+>>       phys_init_v3_hw(hisi_hba);
+>> -    /*
+>> -     * If a directly-attached disk is removed during suspend, a deadlock
+>> -     * may occur, as the PHYE_RESUME_TIMEOUT processing will require the
+>> -     * hisi_hba->device to be active, which can only happen when resume
+>> -     * completes. So don't wait for the HA event workqueue to drain upon
+>> -     * resume.
+>> -     */
+>> -    sas_resume_ha_no_sync(sha);
+>> +    sas_resume_ha(sha);
+>>       clear_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags);
+>>       dev_warn(dev, "end of resuming controller\n");
+>> diff --git a/drivers/scsi/libsas/sas_init.c 
+>> b/drivers/scsi/libsas/sas_init.c
+>> index 0bec236f0fb5..624850f1483d 100644
+>> --- a/drivers/scsi/libsas/sas_init.c
+>> +++ b/drivers/scsi/libsas/sas_init.c
+>> @@ -410,7 +410,7 @@ static void sas_resume_insert_broadcast_ha(struct 
+>> sas_ha_struct *ha)
+>>       }
+>>   }
+>> -static void _sas_resume_ha(struct sas_ha_struct *ha, bool drain)
+>> +static void _sas_resume_ha(struct sas_ha_struct *ha)
+>>   {
+>>       const unsigned long tmo = msecs_to_jiffies(25000);
+>>       int i;
+>> @@ -426,6 +426,21 @@ static void _sas_resume_ha(struct sas_ha_struct 
+>> *ha, bool drain)
+>>           dev_info(ha->dev, "waiting up to 25 seconds for %d phy%s to 
+>> resume\n",
+>>                i, i > 1 ? "s" : "");
+>>       wait_event_timeout(ha->eh_wait_q, phys_suspended(ha) == 0, tmo);
+>> +
+>> +    /* all phys are back up or timed out, turn on i/o so we can
 > 
-> I am saying that other drivers use sas_resume_ha() and you are changing 
-> the behavior of that function - how can you guarantee that you are not 
-> causing regression for that those other drivers?
+> That is obviously not the standard formatting for comments. And 
+> sentences begin with an upper case letter.
+> 
+>> +     * flush out disks that did not return
+> 
+> . to end a sentence.
+> 
+> Check punctuation in future.
 
-Good question. I didn't explain this in detail before. The reorder 
-changes one thing for isci and pm8001 (the
-only other drivers that call sas_resume_ha()): the PHYE_RESUME_TIMEOUT
-handler now runs asynchronously after resume returns, instead of being
-synchronized by sas_drain_work() within resume.
+The comment was pre-existing (from 303694eeee5e) and carried over
+without correction — apologies for that. I'll fix it in v3, along
+with the new comment added by this patch.
 
-This does not cause a regression because I/O to timed-out phys is
-already rejected before reaching hardware, regardless of ordering.
-During suspend, sas_suspend_devices() calls sas_notify_lldd_dev_gone()
-for each device, which sets dev->lldd_dev to NULL. So when
-scsi_unblock_requests re-enables I/O in resume:
-- isci: isci_lookup_device() returns NULL (lldd_dev is NULL) →
-isci_task_refuse(SAS_DEVICE_UNKNOWN) → mapped to DID_BAD_TARGET
-- pm8001: DEV_IS_GONE(pm8001_dev) is true (lldd_dev is NULL) →
-returns SAS_PHY_DOWN → mapped to DID_NO_CONNECT
-Both complete directly via scsi_done() — I/O never reaches hardware,
-and this is identical in the old and new ordering since lldd_dev_gone
-runs during suspend, before resume even begins.
+> 
+>> +     */
+>> +    scsi_unblock_requests(ha->shost);
+>> +    sas_drain_work(ha);
+>> +
+>> +    /* Send PHYE_RESUME_TIMEOUT after sas_drain_work(). The handler
+>> +     * calls sas_deform_port() -> sas_destruct_devices(), which removes
+>> +     * SCSI devices and, for LLDDs using device_link() PM sync, waits
+>> +     * for the host to be runtime-active. Sending it before the drain
+>> +     * would deadlock: the drain waits for the handler, the handler
+>> +     * waits for host resume, and host resume waits for the drain to
+>> +     * finish.
+>> +     */
+>>       for (i = 0; i < ha->num_phys; i++) {
+>>           struct asd_sas_phy *phy = ha->sas_phy[i];
+>> @@ -436,12 +451,6 @@ static void _sas_resume_ha(struct sas_ha_struct 
+>> *ha, bool drain)
+>>           }
+>>       }
+>> -    /* all phys are back up or timed out, turn on i/o so we can
+>> -     * flush out disks that did not return
+>> -     */
+>> -    scsi_unblock_requests(ha->shost);
+>> -    if (drain)
+>> -        sas_drain_work(ha);
+>>       clear_bit(SAS_HA_RESUMING, &ha->state);
+>>       sas_queue_deferred_work(ha);
+>> @@ -453,17 +462,10 @@ static void _sas_resume_ha(struct sas_ha_struct 
+>> *ha, bool drain)
+>>   void sas_resume_ha(struct sas_ha_struct *ha)
+> 
+> what is the purpose of this wrapper now?
 
-For healthy phys that did resume in time, I/O proceeds normally in
-both orderings — the earlier unblock just lets it start sooner.
-aic94xx and mvsas don't register any PM ops, so they never call
-sas_resume_ha() and are unaffected.
-
-I'll include this analysis in the v3 commit message.
+The wrapper is indeed redundant now. I'll fold _sas_resume_ha()
+directly into sas_resume_ha() and remove the static helper in v3.
+Will send v3 shortly.
 
 Thanks,
 Xingui
-
