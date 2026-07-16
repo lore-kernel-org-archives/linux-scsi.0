@@ -1,169 +1,188 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7AA73B7B76;
-	Thu, 16 Jul 2026 11:26:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 024EA41B8CC
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2026 11:37:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784201173; cv=none; b=kpikX/BSA3yjLtCkefnNYwjGQRc7ELZ03OS1gRyPRg53Yq5aIb12a8hP31PPKbwH52itxyR0ha0m/Fj67RpDmML4+Op6SwDhe5CrOQV6OlXkJV1Ni8EW/ru0hpvQO7myE4m27/Pp+5G5xC+tjda7QaYYv+CvAPz+qj5J7ChrpGw=
+	t=1784201852; cv=none; b=Ih1kt4kWYj1zFJ3qY/y3uDGrLDZ923d+3dV3AV5HWL4EQOd4nKAQjSGtQp997PqvnrODIUzoKZ0N39FeXTpB6Ox9YBSzwAspRj9IXJhKDvcx8/lnxwSRJBvYyYjk2ivQvVS3ng6EVKLcdZr7m3+wosdXg+SLajh/69RkG5z7N5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784201173; c=relaxed/simple;
-	bh=/GhGkyLafmYx78c2jEqekEn/fV3IkD/dorAiNQiIxU8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lRbqhyr1inA62Kv/B5x+ANwF53KMMdi3elD9WzwLY7Yh3DoNp+DmHHw0AaFRaClfJGZ+BmhvlXOnUOlDb3jyP3EL3o6+S43syI059hn6ZKdQKoAqytN+6fMrhC4sxzndtn5V93MiyscXRTRtKLk0xO6/KD/7QsgeIIcXbJPUO1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PYXD5i+t; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784201852; c=relaxed/simple;
+	bh=WNj3Cb83YaTSSnZ5GjuYXJxBIGHnstimI3/VrEkdEHY=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=UXeX1zOfT/D1HIZdXotqbzrnLArOq2SUoxT49hYrVv9HHBiMD91OFp2Z6L0a0pqsIb8ATtxGlhBe2XZpcKeC1uAbULnjYynaXywbSjPurdy+s/A/zqPtZ5X3wcLjNYnkmmF18mS7h7rK1mlI7tSL5QNdpGnFDfj8uCoY3IxdgtE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=h0djj8i3; arc=none smtp.client-ip=185.246.84.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PYXD5i+t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 254331F000E9;
-	Thu, 16 Jul 2026 11:26:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784201172;
-	bh=9GOFvBBwxehhAOz6zHVDn0FgramevHIDGhsthm6TZ8g=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=PYXD5i+tu3en/nLbfh+paZtlBMcn3UfFL9QtQuC94Ilriie7Q9q9sIOU0MnV2qqr1
-	 bgcUNUJKJxI8jWQj8Eock47d4PrkiKA6zVGGbf5mvz0wGG+6CddRgMmWC2CtF0Jxc3
-	 iwHV6SMInQ8wwjR0nfEGskz3k73msbbC/3gwYg/g7q1bCIXU9RkxpAMzKpoxfwQQ/O
-	 Q7z+buNwHhE2XT0eb7LZJZYJ01jOLY6Gcgt+S2L1FJRBdAkrTW1Hp5YDBZtXeE0vds
-	 3+jhjkvtb6rp4tHL+y0KVpdNbMAfPjoGsw4Ly5KPCN1PEqyyd70l3ZyiSOhFvA82ua
-	 nylTayFBq7A7A==
-Message-ID: <3541fa2a-b46b-4f25-8cbb-85c343286432@kernel.org>
-Date: Thu, 16 Jul 2026 20:26:09 +0900
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="h0djj8i3"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-02.galae.net (Postfix) with ESMTPS id E02671A1023
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2026 11:37:25 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id A4C1A602B8;
+	Thu, 16 Jul 2026 11:37:25 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id F352511BD1C1E;
+	Thu, 16 Jul 2026 13:37:18 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1784201844; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=hGAdanQ0EykvoHJUcc1Zu9YWEiMeLtBzES4GvUPbn3k=;
+	b=h0djj8i3FIxgRDW7iei4xWcMuZ5XtEPB6Ha2iMzl+zHEQAEIgRwsVY4gSti8PjQNCLYCqu
+	VkS62jOtE/BabaxJ0TyRFEZ5bniPsVJwHN8Qf3wzOywS72Car3VCQ8/VkadAEpdXkDDHxl
+	uUzQF8ASEoj94yvhNC0sZI+Nmy0t9kf2WnBY+tk8y2f6voaCft0jSRLkmMFx5yDgpusumh
+	ps+bEecz6/Ryh4Cj15bH+YUEOV37VQ1Ec99YkskVeeymOP8Nm1dqz7ykhKXoylUa9gS4GY
+	Vnjo4bWXml+H4u5AdvhRARYs8a1CogGx55pwjm0PkGDU6xjFPWiAdLAOb4pjfw==
+From: Gregory CLEMENT <gregory.clement@bootlin.com>
+To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
+ <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Neil
+ Armstrong <neil.armstrong@linaro.org>, =?utf-8?B?5a2Z6a2BIChLdWkgU3VuKQ==?=
+ <kui.sun@unisoc.com>, =?utf-8?Q?Andr=C3=A9?= Draszik
+ <andre.draszik@linaro.org>, Sebastian
+ Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PATCH] ufs: core: Revert "Delegate the interrupt service
+ routine to a threaded IRQ handler"
+In-Reply-To: <b70eb60a01f971bed68c42c5b555929db5f835df.1784135511.git.bvanassche@acm.org>
+References: <b70eb60a01f971bed68c42c5b555929db5f835df.1784135511.git.bvanassche@acm.org>
+Date: Thu, 16 Jul 2026 13:37:17 +0200
+Message-ID: <87se5j5fo2.fsf@BLaptop.bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/2] ata: libata-scsi: terminate deferred commands on
- time out
-To: Niklas Cassel <cassel@kernel.org>, sashiko-reviews@lists.linux.dev,
- sashiko-bot@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20260715085824.854200-1-dlemoal@kernel.org>
- <20260715085824.854200-2-dlemoal@kernel.org>
- <20260715092017.05CBF1F000E9@smtp.kernel.org>
- <19CECED4-8BC0-4028-914B-2EF1C55C729D@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <19CECED4-8BC0-4028-914B-2EF1C55C729D@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Last-TLS-Session-Version: TLSv1.3
 
-On 7/16/26 20:15, Niklas Cassel wrote:
-> On 15 July 2026 11:20:16 CEST, sashiko-bot@kernel.org wrote:
->> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
->> - [High] Deferred commands retried via `ata_eh_retry_deferred_qc` will be erroneously processed as ghost timeouts during SCSI EH, leading to lost retries or erroneous `DRIVER_TIMEOUT` failures for unissued commands, and `host_failed` underflows.
->> --
->>
->> --- Patch [1]: [PATCH v4 1/2] ata: libata-scsi: terminate deferred commands on time out ---
->> commit 40daf934a62cbe822fdf8ae16b1ee66e4ac23f37
->> Author: Damien Le Moal <dlemoal@kernel.org>
->>
->> ata: libata-scsi: terminate deferred commands on time out
->>
->> This patch introduces ata_scsi_eh_timed_out() to immediately schedule a retry
->> of all waiting deferred QCs using the eh_timed_out SCSI host template
->> operation. It implements ata_eh_retry_deferred_qc() to schedule the retry
->> through libata EH with ata_qc_schedule_eh() and flags waiting QCs with
->> ATA_QCFLAG_RETRY.
->>
->> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
->>
->>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
->>> index 05df7ea6954a9..5c56e1dd580b6 100644
->>> --- a/drivers/ata/libata-eh.c
->>> +++ b/drivers/ata/libata-eh.c
->>> @@ -546,6 +546,27 @@ static void ata_eh_unload(struct ata_port *ap)
->>>  	spin_unlock_irqrestore(ap->lock, flags);
->>>  }
->>>  
->>> +void ata_eh_retry_deferred_qc(struct ata_port *ap,
->>> +			      struct scsi_cmnd *timedout_scmd)
->>> +{
->>> +	struct ata_queued_cmd *qc;
->>> +	struct ata_link *link;
->>> +
->>> +	lockdep_assert_held(ap->lock);
->>> +
->>> +	/* Trigger EH for retrying any deferred qc that has not timed out. */
->>> +	ata_for_each_link(link, ap, PMP_FIRST) {
->>> +		qc = link->deferred_qc;
->>> +		if (!qc || qc->scsicmd == timedout_scmd)
->>> +			continue;
->>> +
->>> +		link->deferred_qc = NULL;
->>> +		cancel_work(&link->deferred_qc_work);
->>> +		qc->flags |= ATA_QCFLAG_RETRY;
->>
->> [Severity: High]
->> Does clearing link->deferred_qc here break the deferred QC lookup in
->> ata_scsi_cmd_error_handler()?
->>
->> When the SCSI EH thread runs ata_scsi_cmd_error_handler(), it attempts to
->> identify the deferred QC:
->>
->> drivers/ata/libata-eh.c:ata_scsi_cmd_error_handler() {
->>    ...
->>    if ((qc->flags & ATA_QCFLAG_ACTIVE) ||
->>        qc == qc->dev->link->deferred_qc)
->>        break;
->>    ...
->> }
->>
->> Because ATA_QCFLAG_ACTIVE is not set on deferred commands and we have already
->> cleared link->deferred_qc to NULL above, the condition fails. The loop
->> finishes without breaking and falls through to the ghost timeout branch:
->>
->> drivers/ata/libata-eh.c:ata_scsi_cmd_error_handler() {
->>    ...
->>    } else {
->>        /* Normal completion occurred after
->>         * SCSI timeout but before this point.
->>         * Successfully complete it.
->>         */
->>        scmd->retries = scmd->allowed;
->>        scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
->>    }
->> }
->>
->> Will this cause the retry budget for the deferred command to be artificially
->> exhausted, resulting in erroneous DRIVER_TIMEOUT failures for unissued
->> commands?
->>
->> Additionally, when libata EH later processes this same qc in ata_eh_finish()
->> and calls ata_eh_qc_retry(), it will execute __ata_eh_qc_complete() and call
->> scsi_eh_finish_cmd() a second time for the same command. Could this double
->> completion cause host_failed to underflow and corrupt the SCSI EH state
->> machine
-> 
-> I'm on vacation mode, so not thinking clearly,
-> but does Sashiko have a point here?
+Hello Bart,
 
-I missed this... And yes, I think Sashiko is making a good point here.
+> There have been multiple reports of performance regressions caused by
+> commit 3c7ac40d7322. Hence this revert.
+>
+> This patch reverts most of the following commits:
+> * 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service routine =
+to
+>   a threaded IRQ handler")
+> * 6475cfb81fc4 ("scsi: ufs: core: Avoid IRQ thread wakeup during active U=
+IC
+>   command")
+>
+> This patch preserves the following commits:
+> * 034d319c8899 ("scsi: ufs: core: Fix interrupt handling for MCQ Mode")
+> * eabcac808ca3 ("scsi: ufs: core: Fix IRQ lock inversion for the SCSI host
+>   lock")
+>
+> Neil, please check whether this patch series fixes the stalls that you
+> reported: [f2fs-dev] [PATCH 0/4] Reduce the time spent in interrupt conte=
+xt
+> (https://sourceforge.net/p/linux-f2fs/mailman/linux-f2fs-devel/thread/4b3=
+37c7f-2fbd-47b6-9c8c-587e7b5513f1%40kernel.org/#msg59345049).
+>
 
-> You modify __ata_eh_qc_complete(), so it will NOT call __ata_qc_complete()
-> if ((qc->flags & ATA_QCFLAG_RETRY) && !(qc->flags & ATA_QCFLAG_ACTIVE))
-> 
-> But __ata_eh_qc_complete() will still call scsi_eh_finish_cmd(). So it there a chance that 
-> scsi_eh_finish_cmd() will be called twice?
+This patch appears to be a good solution to fix the issue I reported
+with PREEMPT_TR enabled. I don't currently have the hardware available
+to test it, but as soon as I do, I will test this patch.
+Thanks,
 
-Yes. That function only moves the command to the tail of the done queue though.
-So calling it twice is completely harmless, hence why my testing did not reveal
-anything wrong. But indeed that is dirty and useless.
-
-> Do we perhaps need a QC flag anyway, so that an "aborted" deferred QC does not call scsi_eh_finish_cmd() in ata_scsi_cmd_error_handler()? (Such that the 
-> scsi_eh_finish_cmd() in __ata_eh_qc_complete() is the only one that will be called.)
-
-I will see what the simplest fix is. I do not really want to add another flag to
-special case the retry of deferred QCs. But it is already... So we need to do
-something.
-
-Oh well, I will send a v6 then.
+Gregory
 
 
+> Cc: Neil Armstrong <neil.armstrong@linaro.org>
+> Cc: =E5=AD=99=E9=AD=81 (Kui Sun) <kui.sun@unisoc.com>
+> Cc: Andr=C3=A9 Draszik <andre.draszik@linaro.org>
+> Cc: Gregory CLEMENT <gregory.clement@bootlin.com>
+> Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> Fixes: 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service rou=
+tine to a threaded IRQ handler")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/ufs/core/ufshcd.c | 39 +++------------------------------------
+>  1 file changed, 3 insertions(+), 36 deletions(-)
+>
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 79331c2bd38d..56c96a3b10e2 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -7356,7 +7356,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *h=
+ba, u32 intr_status)
+>  }
+>=20=20
+>  /**
+> - * ufshcd_threaded_intr - Threaded interrupt service routine
+> + * ufshcd_intr - Main interrupt service routine
+>   * @irq: irq number
+>   * @__hba: pointer to adapter instance
+>   *
+> @@ -7364,7 +7364,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *h=
+ba, u32 intr_status)
+>   *  IRQ_HANDLED - If interrupt is valid
+>   *  IRQ_NONE    - If invalid interrupt
+>   */
+> -static irqreturn_t ufshcd_threaded_intr(int irq, void *__hba)
+> +static irqreturn_t ufshcd_intr(int irq, void *__hba)
+>  {
+>  	u32 last_intr_status, intr_status, enabled_intr_status =3D 0;
+>  	irqreturn_t retval =3D IRQ_NONE;
+> @@ -7403,38 +7403,6 @@ static irqreturn_t ufshcd_threaded_intr(int irq, v=
+oid *__hba)
+>  	return retval;
+>  }
+>=20=20
+> -/**
+> - * ufshcd_intr - Main interrupt service routine
+> - * @irq: irq number
+> - * @__hba: pointer to adapter instance
+> - *
+> - * Return:
+> - *  IRQ_HANDLED     - If interrupt is valid
+> - *  IRQ_WAKE_THREAD - If handling is moved to threaded handled
+> - *  IRQ_NONE        - If invalid interrupt
+> - */
+> -static irqreturn_t ufshcd_intr(int irq, void *__hba)
+> -{
+> -	struct ufs_hba *hba =3D __hba;
+> -	u32 intr_status, enabled_intr_status;
+> -
+> -	/*
+> -	 * Handle interrupt in thread if MCQ or ESI is disabled,
+> -	 * and no active UIC command.
+> -	 */
+> -	if ((!hba->mcq_enabled || !hba->mcq_esi_enabled) &&
+> -	    !hba->active_uic_cmd)
+> -		return IRQ_WAKE_THREAD;
+> -
+> -	intr_status =3D ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+> -	enabled_intr_status =3D intr_status & ufshcd_readl(hba, REG_INTERRUPT_E=
+NABLE);
+> -
+> -	ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
+> -
+> -	/* Directly handle interrupts since MCQ ESI handlers does the hard job =
+*/
+> -	return ufshcd_sl_intr(hba, enabled_intr_status);
+> -}
+> -
+>  static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+>  {
+>  	int err =3D 0;
+> @@ -11233,8 +11201,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
+ *mmio_base, unsigned int irq)
+>  	ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>=20=20
+>  	/* IRQ registration */
+> -	err =3D devm_request_threaded_irq(dev, irq, ufshcd_intr, ufshcd_threade=
+d_intr,
+> -					IRQF_ONESHOT | IRQF_SHARED, UFSHCD, hba);
+> +	err =3D devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED, UFSHCD, hb=
+a);
+>  	if (err) {
+>  		dev_err(hba->dev, "request irq failed\n");
+>  		goto out_disable;
 
--- 
-Damien Le Moal
-Western Digital Research
+--=20
+Gr=C3=A9gory CLEMENT, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
