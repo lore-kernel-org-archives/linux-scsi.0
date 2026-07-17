@@ -1,163 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC81B37418C
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:38:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97521418A38
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:42:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784306340; cv=none; b=YOQdQSpLUE4p2jNHWEeFzlsEBeL0WZn9IMx9mJ6O/qVLMcm5N8a4/tRHAt39Eao35FtXUuXPmbpA6UqwIFZejna7OV17yxCJMnbKGRrUAEpxDi5blAuokw1XYiXQDOovGoL4m4inFxpHMIroN9txBEbnWpSg1gKdXKZsKcfd9U8=
+	t=1784306532; cv=none; b=d21U8bhPFChXH+FMW0QYS3XRpiAexfigqzgoXfrs91jPgYXrJcRWtfjImIZIsC9MVmnyL/Oyc8CVEKVXO/XkMDncg8j2iBsTEHJhLNciVUFH0dlH0CbnOfoXVddV06vuCwmilXgM1u0xGhMo5dqdBPmidyr+CSBJdjqIiElZzVY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784306340; c=relaxed/simple;
-	bh=0gsJoXvpSXCVsMBxVBnn1c8FX3RNeKTsnea/sVZ19p8=;
+	s=arc-20240116; t=1784306532; c=relaxed/simple;
+	bh=7tBDK4PnZ1mCWgJxhNirVtZZ9oRA0VVemod9kR8imq8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Q8Nmf4WkM+d9SJtxcGHKJr7zngLf4deJ6zdcTEawH0xu6kX32g5OhK8EC/BIfgBZY2lkfwflTQjdw6Bi2UOc8t7k5Z5UPJJYuLPtuNga6riyw2ZIOk1EhG+P7YQqElakVS05dgrtHk9LW8AyH2UBF9qBqomQp+Z5BbxwBjk4aVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Di8+4x+v; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=AzQYqsl9+6eCiIt/Lojiur914gd6E2u2dzalS2YnBmlFU7s+HZPJOkinF5lClBPYHn5JyIDc/IDEUkXMFuRX2U2BjP46hvIcaaScwOoofjaefjYglHF29guIN7BSNeP30gWhkMTWb8yLFwL46p29KR5+OsB5aVrEb0kiaNRQjkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WoWCsSqC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Di8+4x+v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 670D71F000E9;
-	Fri, 17 Jul 2026 16:38:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WoWCsSqC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 276A31F00A3A;
+	Fri, 17 Jul 2026 16:42:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784306338;
-	bh=5I/u7Oklu19yC+AG6iQqVNyJc+qZ4jjvMJoxr8h9DKw=;
+	s=k20260515; t=1784306531;
+	bh=9JdY6WCeO/8BsszJ/Yj8yFMIQZQbnwTfrW9g67+3dqc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Di8+4x+vkZ4VHli51pOLMGhJx1S69lsRjkoN/j9RrNdILObj5NGgibH6KSsS0jsL9
-	 Z/X1NuJG7fjSWx7DLV+nmXCFfcLXV1yVrYquuSP8mC4pDjpcbKDe+ycDKEsOBzqcXu
-	 D4FbaCE2J7peHbe+JddFu85/5ra/xbOG+459JUpBgvXaEjFdakf8lrRYu3FTCyNYDS
-	 lOC7irKWJ7DDrqyNFpKUc9c4lbLS1DzYAENyo/i+j+Bh3qZ1ZMYcs0wM0aYYtZlL/Z
-	 LiWKbWaG7Tj+NcBIPz5/DdrOFs98tokehe43DDW9SLel+y8cH1gpdlPgNZEydX6UE3
-	 HKeM3X60TbvvA==
+	b=WoWCsSqCpw8qI3dZVrrKtKxEhALmgYgclYALhMSWsnqQ3k7NGVrZ38FCF5OOylUNm
+	 vuyNzGg2O/qfmZaVDG7msFEYZlR1Oc5sk6Dd26hbh+QxxIXO7N7TuYtNJxxg98UNtR
+	 N9M7LY2psuU9UmO2nVexSglvGcO5MTzBSdIWje7evMExDMksZ2e79KkcJque57PvGD
+	 JcD4o7eYHNc0UXlHxM4ds36qHSzl00N1zBB8eI5pLMVVusMJLPaUkKHYIvcMqTavrF
+	 QNN1q+J2ilbVVIu5+gkyTE9KBUwig8xHdt5Nq+6QM2jRGi1m78pmQMKddyq0rJWncg
+	 //xXaz+X2Npeg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 39/56] scsi: qla2xxx: Adjust feature gating in BSG
- paths for 29xx support
+Subject: Re: [PATCH v5 33/56] scsi: qla2xxx: Add abort command handling for
+ 29xx series
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-40-njavali@marvell.com>
+In-Reply-To: <20260717152904.3155730-34-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-40-njavali@marvell.com>
+ <20260717152904.3155730-34-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 16:38:57 +0000
-Message-Id: <20260717163858.670D71F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 16:42:10 +0000
+Message-Id: <20260717164211.276A31F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] The `qla2x00_do_dport_diagnostics` BSG handler leaks up to 128 byt=
-es of uninitialized kernel heap memory to userspace.
-- [High] The D-port diagnostics function passes an unaligned inner struct f=
-ield to `dma_map_single()` and subsequently modifies it with `memset()` aft=
-er it has been mapped for `DMA_FROM_DEVICE`, violating DMA API rules and ri=
-sking memory corruption.
-- [High] The `qla2x00_update_fru_versions` BSG handler writes uninitialized=
- kernel stack memory to the adapter's persistent storage (NVRAM/flash) and =
-can cause a kernel panic when provided a malformed request.
+- [High] Race condition in asynchronous aborts (e.g., ELS DCMD timeouts) le=
+ads to a Use-After-Free of the original command SRB (`orig_sp`) and potenti=
+al memory corruption of newly allocated NVMe commands.
 --
 
---- Patch [39]: [PATCH v5 39/56] scsi: qla2xxx: Adjust feature gating in BS=
-G paths for 29xx support ---
-commit e379ff9d45844a3d1de7b4db9393d48209a2ed9c
-Author: Manish Rangankar <mrangankar@marvell.com>
+--- Patch [33]: [PATCH v5 33/56] scsi: qla2xxx: Add abort command handling =
+for 29xx series ---
+commit d0967e5f98d09c6d227bb75d1093a54e5b842954
+Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Adjust feature gating in BSG paths for 29xx support
+scsi: qla2xxx: Add abort command handling for 29xx series
 
-Extend qla2xxx BSG command handling to recognize QLA29xx adapters and
-align feature availability with hardware capabilities.
+Extend the abort-IOCB code path to support the 29xx extended
+abort_entry_24xx_ext structure alongside the existing
+abort_entry_24xx.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index 46eed5df7eefb..9ee56ccd52b01 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -2014,7 +2014,7 @@ static int qla2900_bsg_load_mpi(struct bsg_job *bsg=
-_job)
->  	bsg_job_done(bsg_job, bsg_reply->result,
->  		     bsg_reply->reply_payload_rcv_len);
-> =20
-> -	return rval;
-> +	return 0;
->  }
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does qla2x00_update_fru_vers=
-ions()
-in drivers/scsi/qla2xxx/qla_bsg.c have an out-of-bounds read?
-
-If a user provides a small payload but specifies a large count, the loop:
-
-while (count--) {
-    memcpy(sfp, &image->field_info, sizeof(image->field_info));
-
-will iterate over uninitialized trailing stack memory in the bsg array
-since there is no bounds check on count against the payload size.
-Could this leak kernel stack memory to hardware storage or cause a panic?
-
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
+r.c
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
 [ ... ]
-
-> @@ -2855,7 +2855,7 @@ qla2x00_do_dport_diagnostics(struct bsg_job *bsg_jo=
-b)
->  	struct qla_dport_diag *dd;
+> @@ -3973,7 +3973,14 @@ qla24xx_abort_iocb_entry(scsi_qla_host_t *vha, str=
+uct req_que *req,
+>  		return;
 > =20
->  	if (!IS_QLA83XX(vha->hw) && !IS_QLA27XX(vha->hw) &&
-> -	    !IS_QLA28XX(vha->hw))
-> +	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
->  		return -EPERM;
-> =20
->  	dd =3D kmalloc_obj(*dd);
+>  	abt =3D &sp->u.iocb_cmd;
+> -	abt->u.abt.comp_status =3D pkt->comp_status;
+> +	/*
+> +	 * abort_entry_24xx_ext overlays abort_entry_24xx through the
+> +	 * nport_handle/comp_status union at offset 8, so reading
+> +	 * comp_status is stride-agnostic and goes through the 24xx view.
+> +	 */
+> +	abt->u.abt.comp_status =3D
+> +	    ((struct abort_entry_24xx *)pkt)->comp_status;
+> +
+>  	orig_sp =3D sp->cmd_sp;
+>  	/* Need to pass original sp */
+>  	if (orig_sp)
 
 [Severity: High]
-This isn't a bug introduced by this patch, but by allowing QLA29xx adapters
-here, does qla2x00_do_dport_diagnostics() leak kernel heap memory?
+This is a pre-existing issue, but could this race condition cause a
+use-after-free on orig_sp?
 
-The dd buffer is allocated without zero-initialization. If a user provides
-a short request payload (e.g., 0 bytes), trailing fields like dd->options
-and the 62-byte unused array remain uninitialized.
+If an SRB_ELS_DCMD or SRB_LOGIN_CMD times out, it triggers an async abort.=
+=20
+Since wait is false, the timeout handler returns immediately without waitin=
+g=20
+for the abort to complete.
 
-When sg_copy_from_buffer() copies the full 128 bytes back to the user's
-reply payload, could this disclose uninitialized kernel heap memory?
+If the firmware completes the original command (e.g., with CS_ABORTED), the=
+=20
+driver processes the completion, calls the done() callback, and frees the S=
+RB=20
+back to srb_mempool.
 
-[ ... ]
+When the firmware later completes the ABT_IOCB, this code reads the now-fre=
+ed=20
+orig_sp:
 
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
-x.c
-> index cec308811d9eb..ce845afe3e16a 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -6566,7 +6566,7 @@ qla26xx_dport_diagnostics(scsi_qla_host_t *vha,
->  	dma_addr_t dd_dma;
-> =20
->  	if (!IS_QLA83XX(vha->hw) && !IS_QLA27XX(vha->hw) &&
-> -	    !IS_QLA28XX(vha->hw))
-> +	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
->  		return QLA_FUNCTION_FAILED;
-> =20
->  	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x119f,
+qla24xx_abort_iocb_entry() {
+    orig_sp =3D sp->cmd_sp;
+    if (orig_sp)
+        qla_nvme_abort_process_comp_status(pkt, orig_sp);
+}
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does exposing this to QLA29xx
-adapters risk memory corruption via DMA API violations in
-qla26xx_dport_diagnostics() in drivers/scsi/qla2xxx/qla_mbx.c?
+If that freed memory was reallocated for an active NVMe command,=20
+qla_nvme_abort_process_comp_status() dereferences it, and=20
+qla_wait_nvme_release_cmd_kref() drops the cmd_kref:
 
-The struct qla_dport_diag is packed, placing its buf array at an unaligned
-offset. When this is mapped:
+qla_wait_nvme_release_cmd_kref() {
+    if (!(ql2xabts_wait_nvme && QLA_ABTS_WAIT_ENABLED(orig_sp)))
+        return;
+    kref_put(&orig_sp->cmd_kref, orig_sp->put_fn);
+}
 
-dd_dma =3D dma_map_single(&vha->hw->pdev->dev, dd_buf, size, DMA_FROM_DEVIC=
-E);
-
-Mapping an unaligned address violates DMA rules. Furthermore, immediately
-after mapping, the memory is modified:
-
-memset(dd_buf, 0, size);
-
-Does writing to memory while mapped for DMA_FROM_DEVICE dirty the CPU cache,
-which could overwrite the hardware DMA results upon eviction?
+Wouldn't this prematurely free an unrelated active NVMe command and cause=20
+memory corruption?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D39
+730-1-njavali@marvell.com?part=3D33
