@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2648126FA4B
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:57:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05EE12949E0
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:59:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784307440; cv=none; b=iFI+Fts/x40kJfhGFUzBDQ7ZdpxBTtF4u5YJGItWhSaDF7W7VXpldSn/gM9RxhCpEiFSC2tmlc1qQmusYlXlRkLVe5UP7kM9j4bWQO4UfUwM4ELFABB05KbVUvXRSlQmqypF2asBTu2o/2zZS0M3AfdqAOAO1KN6aQpmYAhERMI=
+	t=1784307563; cv=none; b=eIU42Ac7jaG6aRm79YCIwpxZBQRSRjL7F0MOJK5RSThuvsjdeEcVNRLVwG9/JmJLM9l3jeLECsy6JRJjAIkNNnJWSPGLj0SNPoSb2+NmzMK3KOec/N8q7KEYuzEEpBzFTpgeqP2PdHCtFd43gxb6V9ia6Z1OIzHhFg8OMoVwk1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784307440; c=relaxed/simple;
-	bh=cT/K3Uhf4wiCaQ+YWOcTIbYSA0ymHwLWhPlDADVRFPU=;
+	s=arc-20240116; t=1784307563; c=relaxed/simple;
+	bh=vUIKKaF1KdZpqDItrEl84X2aKGBWj5H8/Fc4CYH8Np0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=S/5k0OlIlu8rfmd62syw1FnZXtVZu9f/61LEVLOYks1XzbFCW1aLl7QzHy8BLwtm6C2HSQlDPIBAzzTP6xZyhY/8BCpmsp4kYtoUA85UnAefFTfT4jgGJoMPjYSq2cdPtw1HvEKCpmoQKMERHRb9RnnuQ3TTe3AFhFyQI3Kclfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQYNcvmF; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=rr1hzmuk2icqyhOit6W7f/36JHgvGRnCub0DOlfErh+any/sbfXhAU4dPx7sigp+ivAFKxItFjyKifI8EGxyNG7+KZdBHlgy9Y2AsJsAUUTZHfp6hAF3mZpma7t8ymdchtCA3HF21vlwseaOQ8k+McxNAVXIZkV3VP1QHq+n5gc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QITKFWU1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQYNcvmF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E30AC1F000E9;
-	Fri, 17 Jul 2026 16:57:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QITKFWU1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61DC51F000E9;
+	Fri, 17 Jul 2026 16:59:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784307439;
-	bh=OcxjMQIarxEap4AGxfuepRl84K9JTl45Jekl2xeopWE=;
+	s=k20260515; t=1784307561;
+	bh=bcOCKGpDZcUly9kNT3kpdcm5KyKvo8r6j5yiDuXh0Dw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hQYNcvmFzaN8M76hdt/0F/EvTyR6dHhegh1AFIlwKdDj62vDc/xWrj6wlAsc2ELzl
-	 Gnd3EObB4Fm+H1IYNWqfCNyjjEvoZ3OpkxeIJfRzUXNBs2rxBt4w0M6AkAY5cdcuZF
-	 Te+fABGhh6XFGzxdNXk9cPz92hPfem2ur5kIn3uSnA4NO4Lh1hfwlI2pMUS1aXDyS9
-	 iDecZjNcbl5AelTNvEZxl+ntGWQ07yOkDYnQx+zhGwmT2UYgDOBR+YE4vrYffBNA79
-	 PNnKAfPAWH4/baEc7ym3abHhtLYQR0jEwOjE83Czj9hV/VFe/lc/a49sont9FfE3h/
-	 Jyubb7Psybtcw==
+	b=QITKFWU13Sx28POMllPSzQihVTNJcebZ4Wwg5HVJ/RIWRtJ7gCA+PrBorY1TLXPld
+	 uB6tdu03Uw/aHUHV5Yg/dUoELlxfBcvmXJelVcWBm73mWHFgYLDG6ev69i+Mw3D4Kf
+	 5g+TgOzLRYdE8IcAIrtOwwV5Lian2xOD04mJq0fIC6FZLz7FKu2qm8fk3DnwuEebx0
+	 6/D8s6Z0ga4dFyig5eIy4GURW/jdInrx+dgpYNNNGA/ecgh5RiC8FQdTr518ac9kV+
+	 KDLD6ZYEZhoC4IYYp2FH8Ydl9nHgOTr8KiWXM1m71LIZ/dKzKXod9H3SrGZBm8hAyr
+	 NrcX7XUrcrqIA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 54/56] scsi: qla2xxx: Fix BSG job leak on validate
- flash image error path
+Subject: Re: [PATCH v5 49/56] scsi: qla2xxx: Check entry_status in
+ qla24xx_modify_vp_config()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-55-njavali@marvell.com>
+In-Reply-To: <20260717152904.3155730-50-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-55-njavali@marvell.com>
+ <20260717152904.3155730-50-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 16:57:18 +0000
-Message-Id: <20260717165718.E30AC1F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 16:59:20 +0000
+Message-Id: <20260717165921.61DC51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,77 +49,67 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Pervasive slab out-of-bounds reads when accessing BSG vendor_cmd p=
-ayload due to missing request_len checks.
+- [High] This problem wasn't introduced by this patch, but if the mailbox c=
+ommand times out, the IOCB DMA memory is freed immediately while the hardwa=
+re may still write to it, leading to potential DMA-to-freed-memory corrupti=
+on.
 --
 
---- Patch [54]: [PATCH v5 54/56] scsi: qla2xxx: Fix BSG job leak on validat=
-e flash image error path ---
-commit f84362ea09312f70b70c60c0ecfaeb501ca572d1
+--- Patch [49]: [PATCH v5 49/56] scsi: qla2xxx: Check entry_status in qla24=
+xx_modify_vp_config() ---
+commit 3dcfe3a8a4d45934e8e20a4f3d032dc1de73fa0f
 Author: Nilesh Javali <njavali@marvell.com>
+Subject: scsi: qla2xxx: Check entry_status in qla24xx_modify_vp_config()
 
-scsi: qla2xxx: Fix BSG job leak on validate flash image error path
+The commit fixes the completion status check in qla24xx_modify_vp_config() =
+by
+correctly examining entry_status instead of testing comp_status twice. This
+prevents the driver from incorrectly initializing the virtual port when the
+firmware has rejected the IOCB.
 
-qla28xx_validate_flash_image() returns QLA_SUCCESS unconditionally, telling
-the FC BSG transport that the driver owns and will complete the request.
-However, bsg_job_done() was guarded by an error check, causing requests to
-dangle on error paths until timeout. This commit removes the error check
-to ensure the job is always completed.
-
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index 3bf3a7b96eb50..2f73c9af418d7 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -3848,9 +3848,8 @@ static int qla28xx_validate_flash_image(struct bsg_=
-job *bsg_job)
->  	bsg_reply->result =3D DID_OK << 16;
->  	bsg_reply->reply_payload_rcv_len =3D 0;
->  	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
-> -	if (!rval)
-> -		bsg_job_done(bsg_job, bsg_reply->result,
-> -			     bsg_reply->reply_payload_rcv_len);
-> +	bsg_job_done(bsg_job, bsg_reply->result,
-> +		     bsg_reply->reply_payload_rcv_len);
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
+x.c
+> index b32ca8ed274d6..59023492c5a98 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -4401,10 +4401,10 @@ qla24xx_modify_vp_config(scsi_qla_host_t *vha)
+>  	if (rval !=3D QLA_SUCCESS) {
+>  		ql_dbg(ql_dbg_mbx, vha, 0x10bd,
+>  		    "Failed to issue VP config IOCB (%x).\n", rval);
+> -	} else if (vpmod->comp_status !=3D 0) {
+> +	} else if (vpmod->entry_status !=3D 0) {
+>  		ql_dbg(ql_dbg_mbx, vha, 0x10be,
+>  		    "Failed to complete IOCB -- error status (%x).\n",
+> -		    vpmod->comp_status);
+> +		    vpmod->entry_status);
+>  		rval =3D QLA_FUNCTION_FAILED;
+>  	} else if (vpmod->comp_status !=3D cpu_to_le16(CS_COMPLETE)) {
+>  		ql_dbg(ql_dbg_mbx, vha, 0x10bf,
+[ ... ]
+>  		rval =3D QLA_FUNCTION_FAILED;
+>  	} else {
+>  		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10c0,
+>  		    "Done %s.\n", __func__);
+>  		fc_vport_set_state(vha->fc_vport, FC_VPORT_INITIALIZING);
+>  	}
+>  	dma_pool_free(ha->s_dma_pool, vpmod, vpmod_dma);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but there is a pervasive slab
-out-of-bounds read issue when accessing the BSG vendor_cmd payload due to
-missing request_len checks.
+This isn't a bug introduced by this patch, but if the mailbox command times
+out, could this lead to DMA-to-freed-memory corruption?
 
-Is it possible for a privileged user (with CAP_SYS_RAWIO) to issue a short
-BSG command with a small request_len (e.g. 4 or 8 bytes), causing the driver
-to read out-of-bounds slab memory?
+If qla2x00_issue_iocb() returns QLA_FUNCTION_TIMEOUT (which schedules an
+asynchronous ISP abort), qla24xx_modify_vp_config() immediately frees the
+vpmod DMA buffer back to s_dma_pool.
 
-For example, when this function calls qla28xx_do_validate_flash_image(),
-the command reads vendor_cmd[1] unconditionally:
+Since the hardware has not yet been reset, could it still complete the
+delayed command and perform a DMA write of the completion status to the
+vpmod_dma address?
 
-qla28xx_do_validate_flash_image() {
-    ...
-    img_idx =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
-    ...
-}
-
-Similarly, earlier in the BSG path, qla24xx_bsg_request() unconditionally
-reads vendor_cmd[0] before checking if the request length covers it:
-
-qla24xx_bsg_request() {
-    ...
-    if (bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_MANAGE_=
-HOST_PORT ||
-        bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_GET_HOS=
-T_STATS)
-    ...
-}
-
-Should the transport layer or the driver validate that the user's length is
-large enough before accessing these vendor command array elements to avoid
-a KASAN panic or executing arbitrary driver logic with uninitialized memory?
-
-> =20
->  	return QLA_SUCCESS;
->  }
+If the DMA pool has reused this memory for another command, could the delay=
+ed
+write corrupt the new structure?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D54
+730-1-njavali@marvell.com?part=3D49
