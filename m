@@ -1,120 +1,160 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 833C138239A
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 18:31:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E8393644AF
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 19:10:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784313120; cv=none; b=Zm+strzmpde3l50lws/ccsdxBrpHnPTRRGNjAtGsaihiMltG46yHIkQP/wiu5RnczXQ4P/XAEkKEgpKW2BGoDijmkVmUJYm1QjNYVzbk3rW581zuQSs15HprnyzwiWns0CpaZCMw37POLDJOTh/JJu55eQkbRVE88eTM1UBrbBw=
+	t=1784315441; cv=none; b=OuozvpQofvrnzhqB0rpBXPkrrvh0fPdrj1cLUr67pMg0Af8qFYBT6Lw4KU+FPPaJ250Q6VhAV9w2oc7o5kdApX3mwkbYCYgrH/h4dQpgkD3qAuKOdZqBA65dFVyqZLsiaxbK4isV+BFah71eqPwrh7awlzdjX4DVJpy/7qpIyZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784313120; c=relaxed/simple;
-	bh=XmK6M6v6aYpSlSqS/0roexI67RwoN1AFAgngc+VDwEk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QEYgR8m3NmQ/S4xRhvHrAgmCCIFHNgkwkfESjx+vA0arWtE7GhZaJ1auhf/J27OMknP9CRB2FTchvJqkVFmrErwaC71o+P1Rg9oxaG1URwH6L+K4+Lfml6VoJZwMfniHWgWpi9ZWRsJr6QYRsEZDkoW3BwAxewnGk9sL3FX8ig0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ei+aR6t8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784315441; c=relaxed/simple;
+	bh=528WnLx/ere1/7IWtgIPJzlwyOQMYlZVAa6XHHCk8Pc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DIbbCcdev6EzEFbSuBiHe0j4zzU52fc1SfuDoPuLajrGLOzBrhxmU1SztvWimqJ4B+vXo61EmQLUKW6xhAKGq+1yO9FpFgaPy1vgVLwdg9F0iGv20cGARGWY61oAqmRzLhbIpv0Pyc/hMubeSFJFSD2mQGQuTHaiYosuSQbQn2g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=artiphishell.com; spf=pass smtp.mailfrom=artiphishell.com; dkim=pass (2048-bit key) header.d=artiphishell.com header.i=@artiphishell.com header.b=GYHJswYz; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=artiphishell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=artiphishell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ei+aR6t8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 038991F000E9;
-	Fri, 17 Jul 2026 18:31:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784313119;
-	bh=xKgQNpc8tY4R5bG1448v1T/S2Kr96y/YK+Hkcv7AwJo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ei+aR6t8xrWspLL9L3MHwdmTSSZRuNXHEDOuyXdvMZKhSlV+n8TxRBYk4gRqJaZ6F
-	 7w7IpGsuJKQ24+ENcLDiOpSsK2pjcyb8ZmhsxRutvsg6RmJnT+Z99GZjgdripw7pD1
-	 D+Lt21IR74He2QddH5oc0cTl8xtS2S0qQs2USmfTz39zEv8EqOc6t8KBXHFcbcyqiU
-	 czPWXWIL9+gzenDql3LDpv5gnxA8BmYvtF7Yhuv34ln0A47Ak2ttiMsYzM9Q4kiN3Y
-	 6elXl+m4fURQ2w5f3FS9Nzqltd1ErZeDfZn0ms54LlSH7vCE0mu8aVtoY1jEM7ACfp
-	 026dXib6mPvaw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 32/56] scsi: qla2xxx: Enhance task management IOCB
- handling for 29xx series
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nilesh Javali" <njavali@marvell.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-33-njavali@marvell.com>
-References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-33-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 18:31:58 +0000
-Message-Id: <20260717183159.038991F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=artiphishell.com header.i=@artiphishell.com header.b="GYHJswYz"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2cf27856f9cso23331285ad.2
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 12:10:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=artiphishell.com; s=google; t=1784315439; x=1784920239; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Uj3MUcaBKuvy3eHSqwcQWrEx9seDEbNfawJQjAU6jZQ=;
+        b=GYHJswYzj/cQ4eAudhqxcYOrQo0lvAHHZzucz13riuYEiYRefQB7sUwdhmrC5PiRzF
+         U33V6e8jZpvLOBbVtu5BGsh8OQyvWt3fppNdyVOkMKNv1Nw3ETDu9VydZJLRJN8FAekp
+         kBgNg+9K9nEYOcIgo9jrJhcXaCKucW2qfjWleCUzNr02VmRxvIpVSpXwZzXwp/S5cZd5
+         cRHnMU6y5kBJuvu8r9J2TTw5Fx9lLOJ6YuhYg9XsKci6k0qQTS3sU+A2Vy8GdUtnYmpH
+         3YC1yKjuBs+mXxMAPTPULF1bkGmslkTqTtcR6qbnyUU33XHLWB7hDMUeb1lmVsV0WB93
+         I6gg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784315439; x=1784920239;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Uj3MUcaBKuvy3eHSqwcQWrEx9seDEbNfawJQjAU6jZQ=;
+        b=mQyjjaVgEYcRu71/Qk5hO71MdSBZN09mGzbL2bUibkWvQxnBpUqmxUQdVQFSFG6XGP
+         MAlXhCq0eFwYqWTGFAQNXOlWEqvKpqEm0mw9lp2NWN5lwVYAIj3Ks8Bb53FKHHcXLT9Z
+         OWdmYrbsx0T5WARSpNM5ghBuCGvCljuj7IpD9qRbHzVzbmQcm1jjBD0q6uxgZEIAR1OH
+         /x4qjRmGJBDGAWlw/JOt2S+uzMUzWxN9Y1yDM5ylcZ/00TP/v20jMM+V4VYJowo2LUpE
+         2b96nRiSOlyWSGNBrVOpp9GVNgWgsMZVs4U7AjB0CG5NDJ4ZPeAr/SSssbplBBPZMRZI
+         dPXg==
+X-Gm-Message-State: AOJu0YxQf8TF+s+EcWspMXYdo5kbNv1Q745E6iTKQna4G53+opuEp+QT
+	Ww0nBTejM0duwIV/ShbVmxAbGQCnC1kFyPGbVEdaKqlVGgKiLP3mL070s1rxUTv8amb6
+X-Gm-Gg: AfdE7cm8hYyY+EwBRDDJd8YJavHXvdhzimgnQzM5XB3LxyCT9OE6yGvz3k+5ItMQbzF
+	+Mk3FjJq+Iz7csc3eaF5810Z2rob0n9Sqp3RJlF3JiJ1D5WrSpAMQKZGZORhUcM3/2oCYeOnj3A
+	v15U2Z3fgcqulcon/rjPzZAeV9f5BIR85ozYLWbWzy4mMaxMkhzpscGbcWG/DDao6Xro0Utsoau
+	z+GJFzLpCaZO9CKSHPvw9G2DdfZ/OjlJmwL0pwWhamGYL7ccPF6T921gfeW3YHRSEKsAE7d1gMp
+	8woqbxVbIYN1DjJVnE8ZmqvrUU7g3c45uY/DUNBC1vHDhXc4NcgS7HaQgVgfn8UmyLMw41JLjU/
+	GiNzyBFbwbQxoz+T668jF1qOOZf6D59blpEvhdeOICG6YQ+QH7PZTBUK2b9h1bd5YEhK3
+X-Received: by 2002:a17:90b:2fc5:b0:38e:2c8f:a01a with SMTP id 98e67ed59e1d1-38e4b4119c7mr4058083a91.11.1784315438759;
+        Fri, 17 Jul 2026 12:10:38 -0700 (PDT)
+Received: from nixos ([2001:579:62a8:47:e2cb:6b8:ea21:46f2])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31429f9d439sm11721406eec.5.2026.07.17.12.10.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jul 2026 12:10:38 -0700 (PDT)
+From: Jay Vadayath <jay@artiphishell.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jay Vadayath <jay@artiphishell.com>
+Subject: [PATCH] scsi: sd: validate device-supplied mode sense lengths in cache_type_store
+Date: Fri, 17 Jul 2026 12:10:21 -0700
+Message-ID: <20260717191023.15011-1-jay@artiphishell.com>
+X-Mailer: git-send-email 2.51.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The async abort IOCB builder `qla24xx_abort_iocb()` uses the 64-by=
-te `struct abort_entry_24xx` layout unconditionally without adapting for QL=
-A29XX adapters, which require the 128-byte `struct abort_entry_24xx_ext` la=
-yout. In the 29xx extended layout, the `vp_index` field is at offset 18, wh=
-ereas in the 24xx layout it is at offset 51. Since the request slot is zero=
--initialized and the function writes to offset 51, the 29xx firmware will r=
-ead a `vp_index` of 0.
---
+A malicious/emulated USB mass storage device (or any SCSI target) can
+return a MODE SENSE(6/10) response whose header_length plus
+block_descriptor_length is >= the size of the on-stack 64-byte buffer.
 
---- Patch [32]: [PATCH v5 32/56] scsi: qla2xxx: Enhance task management IOC=
-B handling for 29xx series ---
-commit 64d0e684253fddc727ea9ea4498791ce4527162b
-Author: Nilesh Javali <njavali@marvell.com>
+cache_type_store() computed
+	buffer_data = buffer + data.header_length + data.block_descriptor_length
+and then dereferenced buffer_data[0] and buffer_data[2] without ever
+checking that this offset still lies within buffer[]. With a reported
+block_descriptor_length of 60 and a 4-byte MODE SENSE(6) header the
+offset becomes 64 (== sizeof(buffer)), so buffer_data[0]/buffer_data[2]
+read and write past the end of the stack buffer. The subsequent length
+computation could also underflow and let buffer_data + len run past the
+buffer when handed to scsi_mode_select().
 
-scsi: qla2xxx: Enhance task management IOCB handling for 29xx series
+KASAN report from an unprivileged user writing to the sysfs cache_type
+attribute of a device backed by a raw-gadget mass storage emulator:
 
-This commit updates the QLA2XXX task management IOCB builders to use the
-extended tsk_mgmt_entry_ext structure for QLA29XX adapters. By checking
-IS_QLA29XX(), it correctly shifts the vp_index field assignment to match
-the 128-byte stride layout expected by the 29xx series firmware.
+  BUG: KASAN: stack-out-of-bounds in cache_type_store+0x8ba/0x8f0
+  Read of size 1 at addr ffff888003097c72 by task poc/57
+  Call Trace:
+   dump_stack_lvl+0x53/0x70
+   print_report+0xce/0x610
+   kasan_report+0xce/0x100
+   cache_type_store+0x8ba/0x8f0
+   kernfs_fop_write_iter+0x384/0x4f0
+   vfs_write+0x5c7/0xe60
+   ksys_write+0xf7/0x1c0
+   do_syscall_64+0x61/0x480
+   entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
-ocb.c
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-[ ... ]
-> @@ -2736,26 +2736,39 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry =
-*tsk)
-[ ... ]
->  	tsk->control_flags =3D cpu_to_le32(flags);
-> -	tsk->port_id[0] =3D fcport->d_id.b.al_pa;
-> -	tsk->port_id[1] =3D fcport->d_id.b.area;
-> -	tsk->port_id[2] =3D fcport->d_id.b.domain;
-> -	tsk->vp_index =3D fcport->vha->vp_idx;
-> +	if (IS_QLA29XX(ha)) {
-> +		((struct tsk_mgmt_entry_ext *)pkt)->vp_index =3D
-> +		    cpu_to_le16(fcport->vha->vp_idx);
-> +	} else {
-> +		tsk->port_id[0] =3D fcport->d_id.b.al_pa;
-> +		tsk->port_id[1] =3D fcport->d_id.b.area;
-> +		tsk->port_id[2] =3D fcport->d_id.b.domain;
-> +		tsk->vp_index =3D fcport->vha->vp_idx;
-> +	}
+Reject responses whose mode page offset does not leave room for the
+three caching-mode-page bytes we touch, and bound the length by the
+space actually remaining in the buffer, mirroring the careful bounds
+checking already done in sd_read_cache_type().
 
-[Severity: High]
-Does this logic also need to be applied to the asynchronous abort path in
-qla24xx_abort_iocb() within the same file?
+This bug was discovered by Artiphishell's vTriage pipeline, which
+generated a userspace raw-gadget reproducer that reliably triggers the
+KASAN report on an unpatched kernel. The fix below was drafted with the
+Claude coding assistant; a userspace reproducer is available on
+request.
 
-Looking at qla24xx_abort_iocb(), it appears to still use the legacy 64-byte
-layout unconditionally:
+Assisted-by: Claude:claude-opus-4-7
+Signed-off-by: Jay Vadayath <jay@artiphishell.com>
 
-static void
-qla24xx_abort_iocb(srb_t *sp, struct abort_entry_24xx *abt_iocb)
-{
-    ...
-	abt_iocb->vp_index =3D vha->vp_idx;
-	abt_iocb->req_que_no =3D aio->u.abt.req_que_no;
-    ...
-}
+---
+ drivers/scsi/sd.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-Because the 29xx extended layout expects vp_index at offset 18 instead
-of offset 51, and the request slot is zero-initialized, won't the 29xx
-firmware read a vp_index of 0 here?
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -228,7 +228,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+ 	struct scsi_mode_data data;
+ 	struct scsi_sense_hdr sshdr;
+ 	static const char temp[] = "temporary ";
+-	int len, ret;
++	int len, offset, ret;
 
-Could this result in asynchronous I/O aborts on NPIV virtual ports being
-incorrectly routed through the physical port (VP 0) or rejected with
-errors like CS_PORT_UNAVAILABLE?
+ 	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
+ 		/* no cache control on RBC devices; theoretically they
+@@ -265,13 +265,22 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+ 		return count;
+ 	}
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D32
+ 	if (scsi_mode_sense(sdp, 0x08, 8, 0, buffer, sizeof(buffer), SD_TIMEOUT,
+ 			    sdkp->max_retries, &data, NULL))
+ 		return -EINVAL;
+-	len = min_t(size_t, sizeof(buffer), data.length - data.header_length -
+-		  data.block_descriptor_length);
+-	buffer_data = buffer + data.header_length +
+-		data.block_descriptor_length;
++
++	/*
++	 * The mode parameter header and block descriptor lengths are
++	 * supplied by the device and must not be trusted (e.g. a malicious
++	 * USB mass storage device).  Reject responses that would place the
++	 * caching mode page (of which we touch the first three bytes)
++	 * outside of the buffer to avoid an out-of-bounds access below.
++	 */
++	offset = data.header_length + data.block_descriptor_length;
++	if (offset + 3 > sizeof(buffer))
++		return -EINVAL;
++	len = min_t(size_t, sizeof(buffer) - offset, data.length - offset);
++	buffer_data = buffer + offset;
+ 	buffer_data[2] &= ~0x05;
+ 	buffer_data[2] |= wce << 2 | rcd;
+ 	sp = buffer_data[0] & 0x80 ? 1 : 0;
