@@ -1,188 +1,125 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B58F3344D92
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:55:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2648126FA4B
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:57:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784307321; cv=none; b=EyGEBZnTYuQYFK7wNrnS/oc+9vcqxPzyq5hKT2ZwshBASfmjD8nC6QSn1C9PYmfroayyBB6yC5Uukxe1CD2pTJtCbpkc1lyWe+eLL9oHNBWw28q5WVjOSrk0N+qq1T8A3Zi8QPbO530eUWdk8OZ0nNFK3oUvZhb7iHHVKo36A+c=
+	t=1784307440; cv=none; b=iFI+Fts/x40kJfhGFUzBDQ7ZdpxBTtF4u5YJGItWhSaDF7W7VXpldSn/gM9RxhCpEiFSC2tmlc1qQmusYlXlRkLVe5UP7kM9j4bWQO4UfUwM4ELFABB05KbVUvXRSlQmqypF2asBTu2o/2zZS0M3AfdqAOAO1KN6aQpmYAhERMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784307321; c=relaxed/simple;
-	bh=+TEqotFBmhEtmo9Ea7WLO7Ej7/eCJdizjuJtenvM1Cw=;
+	s=arc-20240116; t=1784307440; c=relaxed/simple;
+	bh=cT/K3Uhf4wiCaQ+YWOcTIbYSA0ymHwLWhPlDADVRFPU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sacIIO54pzKLXj92Idd18021I+eEUjkFXhABT9pW2wR5sSkoBQCh+EbnIfWXWa073sS+5TFuoxMUM/EgkB/+iLtSxorxW9Ife58LIz3UzQS+85MEaDFaLvWfI5IhPuCYWtK/F4h6UNkuQvKdsXqtz8Y/qcpGCA14I6t1/iMJE4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oWUsInc9; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=S/5k0OlIlu8rfmd62syw1FnZXtVZu9f/61LEVLOYks1XzbFCW1aLl7QzHy8BLwtm6C2HSQlDPIBAzzTP6xZyhY/8BCpmsp4kYtoUA85UnAefFTfT4jgGJoMPjYSq2cdPtw1HvEKCpmoQKMERHRb9RnnuQ3TTe3AFhFyQI3Kclfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQYNcvmF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oWUsInc9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72A2D1F000E9;
-	Fri, 17 Jul 2026 16:55:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQYNcvmF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E30AC1F000E9;
+	Fri, 17 Jul 2026 16:57:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784307320;
-	bh=0CcCJV10xLQanxjXcUhtkRY+6NemmCH4X22kBm2cUCY=;
+	s=k20260515; t=1784307439;
+	bh=OcxjMQIarxEap4AGxfuepRl84K9JTl45Jekl2xeopWE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=oWUsInc9bXX0AE7+QLKpHMZjR+tLiFN3uZ4AYNymHxVQKfVWraPOtktHglo3fVIej
-	 d3fa0RmLTx1VaQR16V+Sv9PPt5bC1Xin9KetlCPiIGwf+bq3KrLvjpXXlbdTsugawu
-	 RrGJDobXRiK75OglwSqBIJ4nR2hkhyjI9F8WMaQnfP8YCuFJwnTTACjrme+oMgKgDv
-	 rlzRx0cQIHbaURA8ZPP/9M1ttEiLqYlI2tqEWSKxywEL0nygJW2Egd+HeXf9Eodv5K
-	 u9sauFexue77SbDd7Lnh1ufM/bYTojvN1tSwFzn3SIZMLZASknt0taPzzGS8J773mZ
-	 NUSjqw1a2DSNA==
+	b=hQYNcvmFzaN8M76hdt/0F/EvTyR6dHhegh1AFIlwKdDj62vDc/xWrj6wlAsc2ELzl
+	 Gnd3EObB4Fm+H1IYNWqfCNyjjEvoZ3OpkxeIJfRzUXNBs2rxBt4w0M6AkAY5cdcuZF
+	 Te+fABGhh6XFGzxdNXk9cPz92hPfem2ur5kIn3uSnA4NO4Lh1hfwlI2pMUS1aXDyS9
+	 iDecZjNcbl5AelTNvEZxl+ntGWQ07yOkDYnQx+zhGwmT2UYgDOBR+YE4vrYffBNA79
+	 PNnKAfPAWH4/baEc7ym3abHhtLYQR0jEwOjE83Czj9hV/VFe/lc/a49sont9FfE3h/
+	 Jyubb7Psybtcw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 52/56] scsi: qla2xxx: Hold qpair lock when sending
- NVMe LS reject
+Subject: Re: [PATCH v5 54/56] scsi: qla2xxx: Fix BSG job leak on validate
+ flash image error path
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-53-njavali@marvell.com>
+In-Reply-To: <20260717152904.3155730-55-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-53-njavali@marvell.com>
+ <20260717152904.3155730-55-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 16:55:19 +0000
-Message-Id: <20260717165520.72A2D1F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 16:57:18 +0000
+Message-Id: <20260717165718.E30AC1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Missing `list_del()` on the error path in `qla_nvme_xmt_ls_rsp=
-()` leaves a freed object in `fcport->unsol_ctx_head`, causing use-after-fr=
-ee and list corruption.
-- [High] Concurrent, unlocked list operations on `fcport->unsol_ctx_head` l=
-ead to race conditions and list pointer corruption.
-- [High] Unconditional hardware doorbell writes in `qla_nvme_xmt_ls_rsp()` =
-when firmware is stopped.
-- [Medium] Concurrent handling of unsolicited NVMe Link Services on differe=
-nt response queues causes a data race on the globally shared reject DMA buf=
-fer (`vha->hw->lsrjt.c`).
+- [High] Pervasive slab out-of-bounds reads when accessing BSG vendor_cmd p=
+ayload due to missing request_len checks.
 --
 
---- Patch [52]: [PATCH v5 52/56] scsi: qla2xxx: Hold qpair lock when sendin=
-g NVMe LS reject ---
-commit 4dcde06839422633d8d12bf8b040c6155f279d01
+--- Patch [54]: [PATCH v5 54/56] scsi: qla2xxx: Fix BSG job leak on validat=
+e flash image error path ---
+commit f84362ea09312f70b70c60c0ecfaeb501ca572d1
 Author: Nilesh Javali <njavali@marvell.com>
-scsi: qla2xxx: Hold qpair lock when sending NVMe LS reject
 
-This patch adds queue pair lock protection around calls to
-qla_nvme_ls_reject_iocb() in unlocked purex work and xmt_ls_rsp contexts.
-This prevents concurrent accesses from corrupting the request ring
-producer state.
+scsi: qla2xxx: Fix BSG job leak on validate flash image error path
 
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
-vme.c
-> index 3b2f255a5d7d4..8dc6df6c2e1c5 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-[ ... ]
-> @@ -440,7 +441,9 @@ static int qla_nvme_xmt_ls_rsp(struct nvme_fc_local_p=
-ort *lport,
->  	a.vp_idx =3D vha->vp_idx;
->  	a.nport_handle =3D uctx->nport_handle;
->  	a.xchg_address =3D uctx->exchange_address;
-> +	spin_lock_irqsave(ha->base_qpair->qp_lock_ptr, flags);
->  	qla_nvme_ls_reject_iocb(vha, ha->base_qpair, &a, true);
-> +	spin_unlock_irqrestore(ha->base_qpair->qp_lock_ptr, flags);
->  	kfree(uctx);
+qla28xx_validate_flash_image() returns QLA_SUCCESS unconditionally, telling
+the FC BSG transport that the driver owns and will complete the request.
+However, bsg_job_done() was guarded by an error check, causing requests to
+dangle on error paths until timeout. This commit removes the error check
+to ensure the job is always completed.
 
-[Severity: Critical]
-This isn't a bug introduced by this patch, but does the error path in
-qla_nvme_xmt_ls_rsp() leave a freed object in the list?
-
-If we reach the out label (for instance, when !ha->flags.fw_started is true=
-),
-kfree(uctx) is called, but list_del(&uctx->elem) is omitted. Could this lead
-to a use-after-free if the fcport->unsol_ctx_head list is traversed later?
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index 3bf3a7b96eb50..2f73c9af418d7 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -3848,9 +3848,8 @@ static int qla28xx_validate_flash_image(struct bsg_=
+job *bsg_job)
+>  	bsg_reply->result =3D DID_OK << 16;
+>  	bsg_reply->reply_payload_rcv_len =3D 0;
+>  	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
+> -	if (!rval)
+> -		bsg_job_done(bsg_job, bsg_reply->result,
+> -			     bsg_reply->reply_payload_rcv_len);
+> +	bsg_job_done(bsg_job, bsg_reply->result,
+> +		     bsg_reply->reply_payload_rcv_len);
 
 [Severity: High]
-This is also a pre-existing issue, but does calling qla_nvme_ls_reject_iocb=
-()
-here unconditionally ring the hardware doorbell even when the firmware is
-stopped?
+This isn't a bug introduced by this patch, but there is a pervasive slab
+out-of-bounds read issue when accessing the BSG vendor_cmd payload due to
+missing request_len checks.
 
-Earlier in qla_nvme_xmt_ls_rsp(), if !ha->flags.fw_started is true, it jumps
-to the out label, which calls qla_nvme_ls_reject_iocb(). That helper alloca=
-tes
-an iocb and calls qla2x00_start_iocbs(), which writes to the hardware doorb=
-ell.
-Can this cause hardware faults on a stopped or resetting device?
+Is it possible for a privileged user (with CAP_SYS_RAWIO) to issue a short
+BSG command with a small request_len (e.g. 4 or 8 bytes), causing the driver
+to read out-of-bounds slab memory?
 
->  	return rval;
->  }
-[ ... ]
-> @@ -1243,6 +1246,10 @@ static void qla_nvme_lsrjt_pt_iocb(struct scsi_qla=
-_host *vha,
->  	}
->  }
+For example, when this function calls qla28xx_do_validate_flash_image(),
+the command reads vendor_cmd[1] unconditionally:
+
+qla28xx_do_validate_flash_image() {
+    ...
+    img_idx =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
+    ...
+}
+
+Similarly, earlier in the BSG path, qla24xx_bsg_request() unconditionally
+reads vendor_cmd[0] before checking if the request length covers it:
+
+qla24xx_bsg_request() {
+    ...
+    if (bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_MANAGE_=
+HOST_PORT ||
+        bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_GET_HOS=
+T_STATS)
+    ...
+}
+
+Should the transport layer or the driver validate that the user's length is
+large enough before accessing these vendor command array elements to avoid
+a KASAN panic or executing arbitrary driver logic with uninitialized memory?
+
 > =20
-> +/*
-> + * Allocates from and advances the request ring, so the caller must hold
-> + * qp->qp_lock_ptr (the response-queue caller already holds it).
-> + */
->  static int
->  qla_nvme_ls_reject_iocb(struct scsi_qla_host *vha, struct qla_qpair *qp,
-
-[Severity: Medium]
-This is a pre-existing issue, but can concurrent calls to
-qla_nvme_ls_reject_iocb() corrupt the shared reject buffer?
-
-When called with is_xchg_terminate as false from different response queues,
-the helper writes directly to the globally shared vha->hw->lsrjt.c buffer:
-
-qla_nvme_ls_reject_iocb() {
-    ...
-    if (!is_xchg_terminate) {
-        qla_nvme_fc_format_rjt((void *)vha->hw->lsrjt.c, a->opcode,
-                               a->reason, a->explanation, 0);
-        a->tx_addr =3D vha->hw->lsrjt.cdma;
-    ...
-}
-
-Since multiple response queues can process unsolicited link service packets
-concurrently while holding different queue-specific locks, can this lead to
-torn writes and corrupted payloads being sent to the hardware?
-
->  			struct qla_nvme_lsrjt_pt_arg *a, bool is_xchg_terminate)
-[ ... ]
-> @@ -1311,7 +1319,9 @@ qla2xxx_process_purls_pkt(struct scsi_qla_host *vha=
-, struct purex_item *item)
->  		a.vp_idx =3D vha->vp_idx;
->  		a.nport_handle =3D uctx->nport_handle;
->  		a.xchg_address =3D uctx->exchange_address;
-> +		spin_lock_irqsave(vha->hw->base_qpair->qp_lock_ptr, flags);
->  		qla_nvme_ls_reject_iocb(vha, vha->hw->base_qpair, &a, true);
-> +		spin_unlock_irqrestore(vha->hw->base_qpair->qp_lock_ptr, flags);
->  		list_del(&uctx->elem);
->  		kfree(uctx);
-
-[Severity: High]
-This is a pre-existing issue, but is the fcport->unsol_ctx_head list protec=
-ted
-against concurrent modifications?
-
-In qla2xxx_process_purls_pkt(), list_del(&uctx->elem) is called from a work=
-queue
-context without holding a lock:
-
-qla2xxx_process_purls_pkt() {
-    ...
-    list_del(&uctx->elem);
-    kfree(uctx);
-    ...
-}
-
-Elements are added to this list concurrently using list_add_tail() from the
-response queue context (like in qla2xxx_process_purls_iocb), and removed
-from other contexts (like qla_nvme_release_lsrsp_cmd_kref). Could this resu=
-lt
-in list pointer corruption?
-
->  	}
+>  	return QLA_SUCCESS;
 >  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D52
+730-1-njavali@marvell.com?part=3D54
