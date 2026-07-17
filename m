@@ -1,56 +1,56 @@
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+Received: from mx0a-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBF3B175A9F
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 15:31:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6678915278E
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 15:31:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784302297; cv=none; b=r4R1fXJ2c1/vt4cxuA8yzec/md3P3Mv1z6vwCW7uaPFB27Z4+lXPhFlnyrxlmpfd9uo/1l6siY1Pg3m/uqbTzk2vCvEmK9WoM5LjVQvT+v4QPCsZkxFYzbvNTCNhqSyiYl2YvDjMyzAZw3sc+TG4ote4OjzD4tYGlpciAwRRmx0=
+	t=1784302299; cv=none; b=LmsECh/yesxy56VzpfYQnGhnrmfo8LrZmGiPH6noP3XeMOwnVhPuqPk845WI6OpMyWAUrU9d1XLowfMC+c9e8MIapxW2JDBbaCVG4aSc9viFbAUsnDieTWiKjGj0hC2nqNOPGkbBD+HpWkDaAPQiuu7WZWzSlK0OX+0+WJkBDMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784302297; c=relaxed/simple;
-	bh=bth8I2vlzrUu5pK8kyAsedcGMv4TPY/iMgbiqbUl65c=;
+	s=arc-20240116; t=1784302299; c=relaxed/simple;
+	bh=QOE9Gp7fj/KR0l5SJIRNDBQnHEVo/D9Ij/c1/0lqGD0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nSkyjkot6BTaR/5sRbkTfuBisbv3fovuGy3LHV8h8XD+4E85CkOGelN+V7AvxT7P+xGzKXBDxRxuO5aLVbhaRUSCsUoQeMrkq9tV9HkqIavsyXVRRjeX+1gDZKqUeB7ElvrdM56ueQAZ32gkUHRYUqLq7I1g7casm+n3tHEefK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=OyzXGAol; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=pcVpupTdP7nhbcq5gzGCko9NoHJ+dEn97Jg8rkV4h69+jQKonPOo8g+izwuIGVgpXoRAl7geCQv86j1diYNRe8UiKcRGM1pxxcQkJSakyUFYraZbNqJPqzqBrRTjBHWexd1jIMEc8QKAE4d4lD5JcRRSa6aAWPEtfcD25W9GrNA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=HzN6ayXi; arc=none smtp.client-ip=67.231.148.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="OyzXGAol"
-Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66HE4VXd2774323;
-	Fri, 17 Jul 2026 08:31:33 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="HzN6ayXi"
+Received: from pps.filterd (m0431384.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66HE5YXV2729498;
+	Fri, 17 Jul 2026 08:31:35 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=c
-	E6ElIxdMYvwan2KbOePrnoPyWuboL7zOXzLZnV7jrE=; b=OyzXGAolexXsLiT0W
-	BZzbEtp6GR2vS5z1ksHa3XZAByZOgZUVX52H+KJCNUsOEkoFoOJupq0tUKc5/JBP
-	9AoUArln/xXPFgcn0rb7pOoGf5xq8YEinZiR+MQsiTIi9JdswJefHKgtZBVJMb0S
-	nyftbxP6TU2NQ08C+1zBVyq1X3IZsDrU8Ej3qCziZSLCn07scEftwbBg5DaxtT/c
-	MBaqlf8+MCFopXJk6KbOT2KRd+7ovaCPoslDDqaK1U20oHcdKFDP0KUExuSH1Yjy
-	aBzQ3smOYJ2ZoImvICU752dtcpspUpyigibbs0mSRJx+zGN7VjsEOWwfDO6hjOay
-	w3vRg==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=2
+	aZIDi2RtWKKpuVk7AiQ19r42l+Kn6frbrCBs/o+Cnk=; b=HzN6ayXiJZWziMhTT
+	RM5RyH12jewCn0u5c0dABpm1mIVuCjwLJ4NaWrfOxMLEIekZDLGqnkrYLpY4WJnZ
+	GpzinsKuXp6sqKHLbaLqjhkzoOVek5bj3x7ta22UinQlJx0VIb/EgS3W+FkB1IxR
+	IebMyD6X/ttnkom6ELK3Zfa8uyKWcip/16eWSvwkusOc4aoUyhd0MmCJE8jWhK5p
+	vmHV2aDIy5pI4Yp6p1b+UCyV0O72+er470CPw1YOBM+20hLc5blwNKWJqi+vDZF3
+	Zg5+ok0BiXtv+eufjxAAbnF0P1Azs9V3reXiYcoIPiRgWXVgkpEBaS5jjm7JSGi8
+	ZxqYg==
 Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4ffm6p0hj0-1
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4fewjwmj84-2
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 17 Jul 2026 08:31:32 -0700 (PDT)
+	Fri, 17 Jul 2026 08:31:34 -0700 (PDT)
 Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
  DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Fri, 17 Jul 2026 08:31:31 -0700
+ 15.2.1544.25; Fri, 17 Jul 2026 08:31:34 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
  (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Fri, 17 Jul 2026 08:31:31 -0700
+ Transport; Fri, 17 Jul 2026 08:31:34 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 9D7105B693D;
-	Fri, 17 Jul 2026 08:31:27 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id D334A5B693B;
+	Fri, 17 Jul 2026 08:31:31 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v5 50/56] scsi: qla2xxx: Hold vport reference in qla24xx_report_id_acquisition()
-Date: Fri, 17 Jul 2026 20:58:58 +0530
-Message-ID: <20260717152904.3155730-51-njavali@marvell.com>
+Subject: [PATCH v5 51/56] scsi: qla2xxx: Initialize NVMe abort_work once at submission
+Date: Fri, 17 Jul 2026 20:58:59 +0530
+Message-ID: <20260717152904.3155730-52-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260717152904.3155730-1-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
@@ -62,70 +62,90 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-GUID: wBrvegQEfiVhEHQ7LFDlLObDegMTgIcp
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE3MDE1OCBTYWx0ZWRfX4z1m3WYS9AHu
- EAU5JigTDZJsjBmzQVu/tdd555w9JuDm7N1/qAwuzCswByQ43HUbXjTtqsohs37Ix0x/pJanO+j
- nxJm5LxriQAUq36hq9lVOEKoVPFMud4=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE3MDE1OCBTYWx0ZWRfXyaYSAkYjeI0X
- WBV74aMzbc77oUGpJcQJT7D9FIZyuFjNKd8TMD1d1/0u1DLg4agFHl7uTkD5/tS7PiH0dYaBQ7f
- RlNf4Hbb9VLbeqJQuWv9XNup1fvX1Q7Qx+7uR+45r0qoZL07cdjQ0250CJK8RA/AYzMxvxOVPQf
- q1Xidvr62uI+9Mo6i1VnfgIPYOmGlw4X2CxrbbhmvVMEcoagSI8bYDuO631OYIJVVZYRlw8t4A3
- ZuU2fzrwoPGBZTLmWOspfbQiD6Jaxi8BrBdwaAQbvrbazO5J1fGHMf7OSkdhBQH0i+XiFoCC3xG
- yhQoexlWRUGZ88REqYW0sLnpqUVRyGA88M/ROzwpoMt0rl+PqtOeqeNhS+1OUx+zFzNQuaD/Tb3
- fL0T/NQpR8DbG/Fnw0Zfk/sSvAni7oW3Z/zyuk3sVvIDmM7B6pj1JEKCWTb315uiXJQmD+Uggnm
- oETCy9Xdb1IcdBzk4lQ==
-X-Authority-Analysis: v=2.4 cv=Wa88rUhX c=1 sm=1 tr=0 ts=6a5a4ad4 cx=c_pps
+X-Proofpoint-GUID: WQOyPJh3v3TqQbukyvG3Z08mCm77VHsG
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE3MDE1OCBTYWx0ZWRfX5e3ljV0J14Kn
+ Rf/jJk6RstLVOIM8RvfXqNjo3EKD5QM01LRvCGuK13zQ8gxSRymoYLDKg37cU8VzTOXkk5C4qDX
+ lwNaTgobIMm+B8l4V00BkfG8IuvLLYNGrzCMlSmu4TIBue+qSXeFGVar9FrMemFfx9QElO/j7uv
+ jlFjITJQLE5FH6LXY1gkyD4FsGODLt0mpGR03AJXEUsCZYgr21kNg/bUNYk9YRU1zhpeHmnXA+R
+ ewnm20ij2JIiuk63yPugiShd7yT21pyd3iK0/4+TlRbYgDdGsalxmbYb4NMG+i+ALqsiPht8j/y
+ t7tRdv4jkF4nwXEGHjm+Azw6nvJjf5ahsdxs5s8n23nQCKid7tcq/2ADPAIX0SBkpajb6ZXs9a2
+ sUaQn7u6C+slF1ehse9ejzme7apoJdP8IrUK8Rovrr89ZxpFuh6QgzcMQQJQzLgdAGGbEx819CL
+ /FKsmH8D9sjMW4tLpQA==
+X-Authority-Analysis: v=2.4 cv=Pa3PQChd c=1 sm=1 tr=0 ts=6a5a4ad6 cx=c_pps
  a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=qit2iCtTFQkLgVSMPQTB:22 a=VwQbUJbxAAAA:8 a=M5GUcnROAAAA:8
- a=YJRZzWe3zzYL1BDS6CoA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-ORIG-GUID: wBrvegQEfiVhEHQ7LFDlLObDegMTgIcp
+ a=TtqV-g6YmW1Jfm2GSLaY:22 a=VwQbUJbxAAAA:8 a=M5GUcnROAAAA:8
+ a=UkNwScZR6l31f2pjCNcA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-ORIG-GUID: WQOyPJh3v3TqQbukyvG3Z08mCm77VHsG
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE3MDE1OCBTYWx0ZWRfX7B03SQGOHQVl
+ mh5ZD4yb8mnJIFmpnV62nJHZ3BsVwGZoxgcZxJKVG2taaZwK7UDwHt0WJPtE8P/L203mIA8cJga
+ 2FQUiTrmQwKBGK+53lJlYX8DzoACpMA=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-17_04,2026-07-17_01,2025-10-01_01
 
-In the format 1 path, the virtual port is located on ha->vp_list while
-holding vport_slock, but the lock is dropped before vp is used:
-qla_update_host_map() is called and VP_IDX_ACQUIRED/REGISTER_FC4_NEEDED/
-REGISTER_FDMI_NEEDED are set on vp. No reference is taken across that
-window, so a concurrent qla24xx_deallocate_vp_id() can tear the vport
-down and free it, leading to a use-after-free.
+qla_nvme_fcp_abort() and qla_nvme_ls_abort() ran INIT_WORK() on
+priv->abort_work immediately before schedule_work(). INIT_WORK()
+reinitializes the work_struct, resetting its list head and clearing the
+pending bit. If an abort is issued more than once for the same command
+(for example, concurrent transport teardown and a timeout-driven abort),
+the second INIT_WORK() reinitializes a work item that is already queued,
+which can corrupt the workqueue list and lead to crashes or a looping
+worker.
 
-Take a vport reference (vref_count) under vport_slock when the matching
-vp is found, and drop it after the last use of vp. qla24xx_deallocate_vp_id()
-waits for vref_count to reach zero before unlinking and freeing the vport,
-so the pointer stays valid. This matches the reference idiom already used
-by the other ha->vp_list traversals.
+Initialize priv->abort_work once at command submission, next to the
+existing per-command spin_lock_init(&priv->cmd_lock), and leave only
+schedule_work() in the abort paths. schedule_work() already does nothing
+when the work item is still pending, so a repeated abort no longer
+disturbs an in-flight work item. The command is not returned to the
+transport until the final kref_put()/release callback runs after
+abort_work has completed, so the work item is idle before priv is
+reused and the single submission-time INIT_WORK() is safe.
 
-Fixes: 2c3dfe3f6ad8 ("[SCSI] qla2xxx: add support for NPIV")
+Fixes: e473b3074104 ("scsi: qla2xxx: Add FC-NVMe abort processing")
 Cc: stable@vger.kernel.org
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/qla2xxx/qla_nvme.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 59023492c5a9..ba4a4764de1f 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4267,6 +4267,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha, void *pkt)
- 			list_for_each_entry(vp, &ha->vp_list, list) {
- 				if (vp_idx == vp->vp_idx) {
- 					found = 1;
-+					atomic_inc(&vp->vref_count);
- 					break;
- 				}
- 			}
-@@ -4284,6 +4285,8 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha, void *pkt)
- 			set_bit(VP_IDX_ACQUIRED, &vp->vp_flags);
- 			set_bit(REGISTER_FC4_NEEDED, &vp->dpc_flags);
- 			set_bit(REGISTER_FDMI_NEEDED, &vp->dpc_flags);
-+
-+			atomic_dec(&vp->vref_count);
- 		}
- 		set_bit(VP_DPC_NEEDED, &vha->dpc_flags);
- 		qla2xxx_wake_dpc(vha);
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 0038b6274d44..3b2f255a5d7d 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -463,7 +463,6 @@ static void qla_nvme_ls_abort(struct nvme_fc_local_port *lport,
+ 	}
+ 	spin_unlock_irqrestore(&priv->cmd_lock, flags);
+ 
+-	INIT_WORK(&priv->abort_work, qla_nvme_abort_work);
+ 	schedule_work(&priv->abort_work);
+ }
+ 
+@@ -501,6 +500,7 @@ static int qla_nvme_ls_req(struct nvme_fc_local_port *lport,
+ 	priv->sp = sp;
+ 	kref_init(&sp->cmd_kref);
+ 	spin_lock_init(&priv->cmd_lock);
++	INIT_WORK(&priv->abort_work, qla_nvme_abort_work);
+ 	nvme = &sp->u.iocb_cmd;
+ 	priv->fd = fd;
+ 	nvme->u.nvme.desc = fd;
+@@ -545,7 +545,6 @@ static void qla_nvme_fcp_abort(struct nvme_fc_local_port *lport,
+ 	}
+ 	spin_unlock_irqrestore(&priv->cmd_lock, flags);
+ 
+-	INIT_WORK(&priv->abort_work, qla_nvme_abort_work);
+ 	schedule_work(&priv->abort_work);
+ }
+ 
+@@ -877,6 +876,7 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
+ 
+ 	kref_init(&sp->cmd_kref);
+ 	spin_lock_init(&priv->cmd_lock);
++	INIT_WORK(&priv->abort_work, qla_nvme_abort_work);
+ 	sp->priv = priv;
+ 	priv->sp = sp;
+ 	sp->type = SRB_NVME_CMD;
 -- 
 2.47.3
 
