@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E205F3D648F
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:20:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AAD53F4108
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:21:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784305248; cv=none; b=mATw3xss10iYKWQ81CC+57HBzhZe2d1kM3Jl327p2XE4le3q2epu68b8FyMwnR+QmMXKhj/QRn+dpxqC8gtARjdKJ3M76cu5PxVGMTP/U3/Jq61j7/wqjgUGidPd5lg5Fyu3us1v6bjXjkeS8Fy4cZSW8QELwj0Y0zxQ629nSwc=
+	t=1784305299; cv=none; b=DuY1Pm17h5kKR17MH/wlE5BFgBkVebbfp0ws4i4eAIBYid/6N6+4Xz7LQCo+X/oFDRp1t2++9NmAa/cf6Pb71JKzkcRQrjWFRk3WshJLIulP5QEIORyPlICyml9O7dz4WerlMSenpMs0rvp/ejINfcTgS7N7V1k27s1XlkbRBNQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784305248; c=relaxed/simple;
-	bh=TOp5wGjcX5OYT+0V2qqtrBfBfpJgpF3wSIvf8xm07lo=;
+	s=arc-20240116; t=1784305299; c=relaxed/simple;
+	bh=3vZQzZU5fxJbK18IxL3AIkigR+ebov6FDuFVHj8mnh8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lIOVbgqDvBnNjP6bafrNfXJS0cTLH973vcnr5v7S3GDw5/kV2HOfn3sN5bFJ2RPCXu0XUpKvMFWbzNhk0tnijmU3xg8FCzWCPywcHZXGhBSHgQcfMzlOO8WcMvJSsMzvr1H8PlLiS8+hTbEVkRbHuz7ZYi2ilxvaZ4tRwiY3tkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JQ3uYHI3; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=A284kdIGNuRfidNOP1FjikHumKMe81gqzwc0zohJho2zOrmtg1TDn2Wq1ZxHlcNqk3TZZgkLxTp43zVFio16ZyHlORBpPt2O7CwwyerPFLThaZHOAu9UhxIjPqI4Y8yp6a/K8Xjdg4UswsUxo0Udx6HUTischozguFY+AaRYi8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kKqQ4M2C; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JQ3uYHI3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D5381F00A3A;
-	Fri, 17 Jul 2026 16:20:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kKqQ4M2C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACF8C1F000E9;
+	Fri, 17 Jul 2026 16:21:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784305246;
-	bh=Mu6tizZFm7ntfP7GNXgggMA8K4bpNjlhrSS6zo0EXPw=;
+	s=k20260515; t=1784305297;
+	bh=pqbdo/d3DP0V7nNyO4Yx8D4JXsxatTNyLiJDVLYVxT4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JQ3uYHI34dAZIhqR6O2RfPrCNBy5D/YeouLJlkP76cGUj6fLCfKClfNBGPEdJgokQ
-	 lvcBR3AEyvp6QsKhKwDQIA1bP85cN9BcvzFIznCvDF6wXF8xYlYWSpqj/hQPBWCJYH
-	 H+Z7Wa2/0v9RJSNCXNCMunMwZtYw/6u55ab6xNEvlGuM3x96oVuDLovLexflpCwo7L
-	 MVBiUt9CbMlm9Qmu71A0ICZTnaaaFHRPpGvh/Ehy6PaO5TZ6x2tfNd06e5kIPv8Z9D
-	 BM+NfQlOQ7y/Oz2FOhaDNa0yjQg6yQfSXHq0FGfoASUbahJgQoq0TR7BeiSAiCheuI
-	 Pvn9rK6e8A84Q==
+	b=kKqQ4M2C9xpscoZwiJBYbGVKM2xF7J7QZB4OR4rqIcKQM+3EC9t3thTM6jbxYgS64
+	 BnCM9tLX6mbQVJzQrib3iz7CL+c8lx7+hY37vaELeiVRVDuiC1ElBcKWBM8RiT2G5T
+	 gLMolFfH1Gx0Rt6tl19lC6UPDi+ayDD8VOGOflWP4rTopyoyyKfw7j2fs6r2Un11G5
+	 IZmEN7GA71LwmFtKTUVix8EI50nun9jOKRTGdofIBI9KzHG/SDqSPkLgV+mVfDhCL6
+	 Wie4Z8hL7xJLFVfMkKKvzJRlWAwYemV/WrpfYgn3KVyWZxEYflg/KhBdeIMsLPzUeM
+	 /lX19plr30Q5w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 24/56] scsi: qla2xxx: Add support for QLA29XX in
- memory allocation
+Subject: Re: [PATCH v2 3/6] scsi: ufs: core: Validate connected lane counts
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nilesh Javali" <njavali@marvell.com>
+To: "Li Qiang" <liqiang01@kylinos.cn>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-25-njavali@marvell.com>
-References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-25-njavali@marvell.com>
+In-Reply-To: <20260717153914.26321-4-liqiang01@kylinos.cn>
+References: <cover.1784182493.git.liqiang01@kylinos.cn>
+ <20260717153914.26321-1-liqiang01@kylinos.cn>
+ <20260717153914.26321-4-liqiang01@kylinos.cn>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 16:20:46 +0000
-Message-Id: <20260717162046.9D5381F00A3A@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 16:21:37 +0000
+Message-Id: <20260717162137.ACF8C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,78 +49,70 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Unconditional calls to `dma_pool_free()` with conditionally alloca=
-ted (and potentially NULL) pointers cause a kernel panic during error recov=
-ery.
+- [High] Missing bounds check on untrusted `tx_lanes` value read from the d=
+evice in `ufshcd_disable_tx_lcc` could lead to an excessive loop and kernel=
+ hang.
 --
 
---- Patch [24]: [PATCH v5 24/56] scsi: qla2xxx: Add support for QLA29XX in =
-memory allocation ---
-commit d2e304ac1a70602773864240ceed6148180e105c
-Author: Nilesh Javali <njavali@marvell.com>
+--- Patch [3]: [PATCH v2 3/6] scsi: ufs: core: Validate connected lane coun=
+ts ---
+commit a03fd44c15e264d545e15508efe3bce7ec4082a8
+Author: Li Qiang <liqiang01@kylinos.cn>
 
-scsi: qla2xxx: Add support for QLA29XX in memory allocation
+scsi: ufs: core: Validate connected lane counts
 
-This patch enhances the qla2x00_mem_alloc function to include checks for
-QLA29XX adapters. This ensures proper handling of the new adapter series
-alongside existing QLA27XX and QLA28XX checks.
+This commit updates ufshcd_get_max_pwr_mode() to validate that RX and TX
+lane counts read from the device do not exceed UFS_MAX_LANES. It ensures
+these counts are bounded before they are propagated.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 5450c40259bf9..3be59179a0245 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-[ ... ]
-> @@ -4681,12 +4683,12 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_=
-t req_len, uint16_t rsp_len,
->  	}
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index d1b989abc9e2d..bbadddcd661a0 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -4729,7 +4729,9 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *=
+hba)
+>  	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
+>  			&pwr_info->lane_tx);
 > =20
->  fail_dif_bundl_dma_pool:
-> -	if (IS_QLA82XX(ha) || ql2xenabledif) {
-> +	if (IS_QLA82XX(ha) || IS_QLA29XX(ha) || ql2xenabledif) {
->  		dma_pool_destroy(ha->fcp_cmnd_dma_pool);
->  		ha->fcp_cmnd_dma_pool =3D NULL;
->  	}
->  fail_dl_dma_pool:
-> -	if (IS_QLA82XX(ha) || ql2xenabledif) {
-> +	if (IS_QLA82XX(ha) || IS_QLA29XX(ha) || ql2xenabledif) {
->  		dma_pool_destroy(ha->dl_dma_pool);
->  		ha->dl_dma_pool =3D NULL;
->  	}
+> -	if (!pwr_info->lane_rx || !pwr_info->lane_tx) {
+> +	if (!pwr_info->lane_rx || !pwr_info->lane_tx ||
+> +	    pwr_info->lane_rx > UFS_MAX_LANES ||
+> +	    pwr_info->lane_tx > UFS_MAX_LANES) {
+>  		dev_err(hba->dev, "%s: invalid connected lanes value. rx=3D%d, tx=3D%d=
+\n",
+>  				__func__,
+>  				pwr_info->lane_rx,
 
 [Severity: High]
-This is a pre-existing issue, but while reviewing the error cleanup paths h=
-ere,
-I noticed a potential issue slightly higher up in the same function.
+This isn't a bug introduced by this patch, but since we are adding bounds
+checking for PA_CONNECTEDTXDATALANES here, is it possible we need similar
+validation in ufshcd_disable_tx_lcc()?
 
-Could the unconditional calls to dma_pool_free() higher up in the cleanup
-sequence cause a kernel panic?
+When ufshcd_disable_tx_lcc() reads the connected TX lane count, it uses the
+value directly as a loop boundary:
 
-In drivers/scsi/qla2xxx/qla_os.c:qla2x00_mem_alloc(), several DMA pool
-allocations are conditional based on adapter capabilities. For example,
-ha->ex_init_cb and ha->sf_init_cb are allocated for CNA/newer adapters,
-ha->async_pd for non-FWI2, and ha->ms_iocb for non-2100/2200.
+drivers/ufs/core/ufshcd.c:ufshcd_disable_tx_lcc() {
+	...
+	if (!peer)
+		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
+			       &tx_lanes);
+	else
+		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
+				    &tx_lanes);
+	for (i =3D 0; i < tx_lanes; i++) {
+	...
+}
 
-If a subsequent memory allocation fails, the error recovery path jumps
-to labels that unconditionally call dma_pool_free():
+If a malicious endpoint or UniPro link error causes the read to return an
+abnormally large integer, the code could enter an unvalidated loop.
 
-fail_loop_id_map:
-	dma_pool_free(ha->s_dma_pool, ha->async_pd, ha->async_pd_dma);
-fail_async_pd:
-	dma_pool_free(ha->s_dma_pool, ha->sf_init_cb, ha->sf_init_cb_dma);
-fail_sf_init_cb:
-	dma_pool_free(ha->s_dma_pool, ha->ex_init_cb, ha->ex_init_cb_dma);
+If the endpoint continuously returns success to the synchronous
+ufshcd_dme_peer_set() commands inside the loop, could this force the kernel
+to execute an excessive number of slow hardware commands?
 
-And later:
-
-fail_free_ms_iocb:
-	dma_pool_free(ha->s_dma_pool, ha->ms_iocb, ha->ms_iocb_dma);
-
-If the pointers were never allocated, they remain NULL. Since
-dma_pool_free() does not safely handle NULL pointers in its fast path,
-calling it with a NULL pointer could trigger a kernel panic during error
-recovery. Should these calls be guarded with NULL checks to prevent
-crashing when handling an allocation failure?
+This might potentially block the probe or error handler thread and result
+in a kernel hang.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D24
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717153914.2632=
+1-1-liqiang01@kylinos.cn?part=3D3
