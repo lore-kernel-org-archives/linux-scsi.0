@@ -1,149 +1,121 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A3FEE54B
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:46:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A99B43F0A9
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:48:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784306768; cv=none; b=H2CV5W2wO7jG6q+s9p1ucpaOLMKpzL2D9z5TGW4LaUM28zfmQacU2/oari1zjxeGpsyH6DCIReYxZVf4sb1lflXMSWXEyaFViH3eiQ3vluVTunm4mHkvEff9gQh2l7WUEzV+6uFX3U/ZLC9ui+2vZZx6Vw4e042oIpI5UocktVQ=
+	t=1784306901; cv=none; b=A3tziMjcLu1t6QkZeAQL7PqJsTrgElrdrinHC6UljdE7usqUkMg74aDvhn3l79LvSgEeexXbJwb/o4YZjLVRarOzZqIU+TxZoqOwe2AONT64AYyPSfsa3oYg6Yz+J3KeogYRVHTcN35RYf1Ro0hw6CayNIy/cv/q5izI3aWWey0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784306768; c=relaxed/simple;
-	bh=euNt+vPmifzrLPDpepwd6geJuHnrRhH81nkKH5grb2s=;
+	s=arc-20240116; t=1784306901; c=relaxed/simple;
+	bh=XyesLw9Xsy4nI+YKBTBwOEKKlvho2wFx1j4PA2opHnE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=j6lZIr1NchCmHZ2qV9Crfp4xXGnEInCQkOekGnY60HCX8Uz6Mcsd+nhhCXvwebJ0ekmvggFekmymSvTUwEfQF1qEbI5zS35kn0lM/oDAFau+37fg4Demarl1x9o0DLUPVTj9dciPfK6uUh6vRQBEyssmenw+2i9oEG2bS5qabDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZiwcWsyR; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Woao9+kw6MZ64In90nC82Z+Tgbftucl0OTW78YHsk02vbBeewv4wZQKZhU/FYl66rWX2QZJiKz7oK6lJouUIo0uoETi3ypHTjMw9tMJeQ9jNMd1FIw6xju0fk/73hSknwUBgUlXdeU8KyZqmvvF+dy3531dCtFbBd9COsq5MMkM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c6FYJkKp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZiwcWsyR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C74E31F00A3D;
-	Fri, 17 Jul 2026 16:46:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c6FYJkKp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C32F1F000E9;
+	Fri, 17 Jul 2026 16:48:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784306767;
-	bh=DlNxNxzmQ6iQ/alL8H858DPwf5a2exMkPp3nyeOb9aU=;
+	s=k20260515; t=1784306900;
+	bh=bTB228bWdUQEvdrB/OznJLxcKR3gkmGVg8d44+m4zdw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZiwcWsyR5ttlCXv8gomrvHktVzBBoIXci6ujLAJZ+JjJL+yIdw+yA/pkiNjtwBEEO
-	 gDQKBFTr04NRuiyDpCIdMpdpvJ5qWGO1ORw4/p6o9QxJrgoFKA/jAoANfjykjGQWC+
-	 vqDzoWwG9Uk60g14ASu6Uarz72qKNWBqzu32SKUueUVdn8S0FLfHeNxAFn65lRNvmu
-	 WAjtX0Mz4vtwrG4UP84mNGNBZr6jmBq+4fCjLUyZL2SC04sFkRIj9nMdcRLGvE2hri
-	 oQVXKstqpuLZGZRkCTwsW+Ie8Uhcpv/otyaN5wrkfI49A1EYhj/V0Gr05DPNKOYGiL
-	 m0gRcc369hAaQ==
+	b=c6FYJkKp+1bkQA4UfOtxbd5xT0edihDErRf91Zsmfa7uO/aRtqrEOyKMr/u2tEugB
+	 CDSlqSe9BMxJ9S7uUVutCWUfa2JyPu1Jxyv8e7o3AaQkGDIDdBknigGPAe15Iq0qQX
+	 NkYzVMzzyax+Zho5K946j0XUVGMLkBxGYrTDK1wL6cmP2CxdcV/nsEojRqpz9yGamD
+	 8+QepWenW+CREWvlD9NoqtIAt2dHMzX/GonVLzV9EqAHEXOYe3s3ppPkQxj9A+4Ep/
+	 KJz9wDeNVLuviadMxmeOYCgtK1iNkGvmwZWWz9xtJtAK1VVWbk7FO8q78gl3P3GBeM
+	 8g2fvlgkF7FeA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 41/56] scsi: qla2xxx: Replace __le16 bitfields with
- scalar and accessors
+Subject: Re: [PATCH v5 35/56] scsi: qla2xxx: Update VP control IOCB handling
+ for 29xx series
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-42-njavali@marvell.com>
+In-Reply-To: <20260717152904.3155730-36-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-42-njavali@marvell.com>
+ <20260717152904.3155730-36-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 16:46:06 +0000
-Message-Id: <20260717164606.C74E31F00A3D@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 16:48:19 +0000
+Message-Id: <20260717164820.0C32F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [High] Incomplete fix: `struct vp_rpt_id_entry_24xx_ext` still contains `=
-__le16` bitfields, which causes endianness corruption on big-endian hosts.
-
 Pre-existing issues:
-- [High] Hardware-mapped target mode structures use `uint8_t` bitfields tha=
-t are improperly packed on big-endian architectures.
+- [High] The VP control IOCB builder `qla25xx_ctrlvp_iocb()` lacks a bounds=
+ check when calculating the index for `vce->vp_idx_map`, allowing an out-of=
+-bounds array write if `vp_index` is large (> 128), which corrupts adjacent=
+ IOCB payload fields.
 --
 
---- Patch [41]: [PATCH v5 41/56] scsi: qla2xxx: Replace __le16 bitfields wi=
-th scalar and accessors ---
-commit 0d741959136e452484c2d9e17866323337b3d108
+--- Patch [35]: [PATCH v5 35/56] scsi: qla2xxx: Update VP control IOCB hand=
+ling for 29xx series ---
+commit 38b9d8323d247867ce71b530d5556e360732b075
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Replace __le16 bitfields with scalar and accessors
+scsi: qla2xxx: Update VP control IOCB handling for 29xx series
 
-This commit replaces __le16 bitfields in the 29xx extended IOCB structures
-with a single __le16 scalar field and accessor functions. This change
-addresses endianness corruption on big-endian hosts caused by C bitfield
-packing order.
+This updates VP control IOCB command and response handling to support the
+29xx series adapters. It modifies helper functions to accept generic void
+pointers so they can handle both standard and extended VP control entry
+layouts interchangeably.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_fw29.h b/drivers/scsi/qla2xxx/qla_f=
-w29.h
-> index 600a40d8bd5ff..63bf350ddffc0 100644
-> --- a/drivers/scsi/qla2xxx/qla_fw29.h
-> +++ b/drivers/scsi/qla2xxx/qla_fw29.h
+> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
+ocb.c
+> --- a/drivers/scsi/qla2xxx/qla_iocb.c
+> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
 
 [ ... ]
 
-> @@ -563,9 +586,7 @@ struct abts_entry_24xx_ext {
->  	__le16	nport_handle;		/* type 0x54 only */
+> @@ -4074,22 +4074,31 @@ qla_nvme_ls(srb_t *sp, struct pt_ls4_request *cmd=
+_pkt)
+>  }
 > =20
->  	__le16	control_flags;		/* type 0x55 only */
-> -	__le16	vp_idx : 9;		/* VP index 9 bits */
-> -	__le16	reserved_1_sof : 3;
-> -	__le16	sof_type : 4;		/* sof_type is upper nibble */
-> +	__le16	vp_idx_sof;		/* bits [8:0]=3DVP index, [15:12]=3DSOF type */
-> =20
->  	__le32	rx_xch_addr;
-> =20
+>  static void
+> -qla25xx_ctrlvp_iocb(srb_t *sp, struct vp_ctrl_entry_24xx *vce)
+> +qla25xx_ctrlvp_iocb(srb_t *sp, void *pkt)
+>  {
+> +	/*
+> +	 * vp_ctrl_entry_24xx_ext is layout-identical to vp_ctrl_entry_24xx
+> +	 * for all fields touched here (entry_type, handle, entry_count,
+
+[ ... ]
+
+>  	/*
+>  	 * index map in firmware starts with 1; decrement index
+>  	 * this is ok as we never use index 0
+>  	 */
+>  	map =3D (sp->u.iocb_cmd.u.ctrlvp.vp_index - 1) / 8;
+>  	pos =3D (sp->u.iocb_cmd.u.ctrlvp.vp_index - 1) & 7;
+> +
+> +	vce->entry_type =3D VP_CTRL_IOCB_TYPE;
+> +	vce->handle =3D sp->handle;
+> +	vce->entry_count =3D 1;
+> +	vce->command =3D cpu_to_le16(sp->u.iocb_cmd.u.ctrlvp.cmd);
+> +	vce->vp_count =3D cpu_to_le16(1);
+>  	vce->vp_idx_map[map] |=3D 1 << pos;
 
 [Severity: High]
-Does this patch miss replacing the __le16 bitfields in the
-vp_rpt_id_entry_24xx_ext structure?
+This is a pre-existing issue, but does this code overflow the vp_idx_map
+array if vp_index exceeds 128?
 
-Looking at drivers/scsi/qla2xxx/qla_fw29.h:
+Looking at the struct definition for vp_ctrl_entry_24xx in qla_fw.h,=20
+vp_idx_map is a 16-byte array. If the firmware advertises support for more
+than 128 NPIV vports, the calculated map index in qla25xx_ctrlvp_iocb() cou=
+ld
+be up to 31.
 
-struct vp_rpt_id_entry_24xx_ext {
-        ...
-        __le16  vp_idx : 9;
-        __le16  vp_status : 7;
-        ...
-};
-
-When the firmware sends a 29xx extended VP Report ID IOCB,
-qla24xx_report_id_acquisition() extracts the port ID from the bitfield:
-
-drivers/scsi/qla2xxx/qla_mbx.c:qla24xx_report_id_acquisition() {
-        ...
-        vp_idx =3D rptid_entry_ext->vp_idx;
-        vp_status =3D rptid_entry_ext->vp_status;
-        ...
-}
-
-On big-endian architectures, C bitfield packing allocates from MSB to LSB.
-Could the vp_idx field map to the wrong bits of the 16-bit word, causing
-virtual port lookup to fail and breaking NPIV operations?
-
-[Severity: High]
-This is a pre-existing issue, but do the hardware-mapped target mode
-structures use uint8_t bitfields that are improperly packed on big-endian
-architectures?
-
-In drivers/scsi/qla2xxx/qla_target.h, both abts_recv_from_24xx and
-abts_resp_to_24xx define bitfields:
-
-struct abts_recv_from_24xx {
-        ...
-        uint8_t  reserved_3:4;
-        uint8_t  sof_type:4;
-        ...
-};
-
-On big-endian hosts, sof_type maps to bits 0-3 instead of bits 4-7.
-
-When qlt_24xx_send_abts_resp() assigns the response:
-
-drivers/scsi/qla2xxx/qla_target.c:qlt_24xx_send_abts_resp() {
-        ...
-        resp->sof_type =3D abts->sof_type;
-        ...
-}
-
-Will the hardware receive a corrupted byte where sof_type is encoded in the
-wrong nibble, breaking target mode ABTS task management responses?
+Could this out-of-bounds write corrupt the subsequent fields in the=20
+vp_ctrl_entry_24xx payload (like flags, id, and hopct) when an administrator
+configures a large number of vports?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D41
+730-1-njavali@marvell.com?part=3D35
