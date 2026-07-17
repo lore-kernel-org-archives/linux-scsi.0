@@ -1,95 +1,114 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A623633E348;
-	Fri, 17 Jul 2026 15:39:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAFA43112C1
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 15:42:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784302791; cv=none; b=DQDWIwgCzmVUBnipa5J7MQmEr74oUc00Ab/fMu5MtmkW2yeggDe8YdyNcPZH6kK+Q5LCHT4+jxCGik7iwphssLF3NYJlCamTuhdtwzdWDvWEhQ8SsAfKhZTPo2/6BHHK2nRr9j1L8U9NaesnpfFooBoIHS7TOxFVJrbZGhEd5BE=
+	t=1784302938; cv=none; b=XIdZDmHWGmHGkCVGsgX1QnokXbI6zHl1H9gBPxw1TkSejTIf4jnlvh8vCaFH9/8xThpgWViFCNejUf0qZ1Ayhp3FHfJCabFONqVUtBUmAWFxE++TDQisPU2rqw597KpQ//Efjv44hTOE9FPyH/JI9yrj03CaKAyo4CgZwzk/wIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784302791; c=relaxed/simple;
-	bh=Z6oh0Aq5J0HC92QSmxmgcuwDkCdEfj4l2FJAyi1z5Uw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=na8ZnpSnmbLKklTW2jjvO65hv8qvcZMXazpXsQsv9E3boYHx873STuFUcKAXsWaUkTc7WW3Zvv+APfRWx9nvljtxJD/0eHgu2oilAEq33G/hw+7eLCvdXJXGyq2ziPTHgUYsXRSL4Qv1tNG/8L1pC8uy7QXrDKFPLgny5x0vGmE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: b80c4c8481f511f1aa26b74ffac11d73-20260717
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:33fca415-e321-4e80-9423-80f37d191bf8,IP:10,
-	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:35
-X-CID-INFO: VERSION:1.3.12,REQID:33fca415-e321-4e80-9423-80f37d191bf8,IP:10,UR
-	L:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:35
-X-CID-META: VersionHash:e7bac3a,CLOUDID:ce9d4801fc87a208fe06f4bc3542b35d,BulkI
-	D:260717233941M7C6XWU3,BulkQuantity:0,Recheck:0,SF:10|66|78|81|82|102|127|
-	865|898|908|914,TC:nil,Content:0|15|50,EDM:5,IP:-2,URL:0,File:nil,RT:nil,B
-	ulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR
-	:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: b80c4c8481f511f1aa26b74ffac11d73-20260717
-X-User: liqiang01@kylinos.cn
-Received: from cvdaxia.localdomain [(36.148.177.170)] by mailgw.kylinos.cn
-	(envelope-from <liqiang01@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1100195280; Fri, 17 Jul 2026 23:39:37 +0800
-From: Li Qiang <liqiang01@kylinos.cn>
-To: linux-scsi@vger.kernel.org
-Cc: bvanassche@acm.org,
-	linux-kernel@vger.kernel.org,
-	alim.akhtar@samsung.com,
-	avri.altman@wdc.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	peter.wang@mediatek.com,
-	beanhuo@micron.com,
-	can.guo@oss.qualcomm.com,
-	adrian.hunter@intel.com,
-	tomas.winkler@intel.com
-Subject: [PATCH v2 6/6] scsi: ufs: debugfs: Reserve space for a string terminator
-Date: Fri, 17 Jul 2026 23:39:13 +0800
-Message-ID: <20260717153914.26321-7-liqiang01@kylinos.cn>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260717153914.26321-1-liqiang01@kylinos.cn>
-References: <cover.1784182493.git.liqiang01@kylinos.cn>
- <20260717153914.26321-1-liqiang01@kylinos.cn>
+	s=arc-20240116; t=1784302938; c=relaxed/simple;
+	bh=dhMAWoHFiIfVRnu8o8IusMietvU0E5N4tlkbKUJTtEs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=uUzlvpqSTrtNu8RHj1Q2/jRVN05DEJRt/kbb01Q6V8XQ9I/mYkXSVWW6Ejk/5B7BRNQsLjDVo0c1NR/M4Ro3WZAQ43pfgyIf1qeBfrBSGfkOjJ0yu6+j+vJa4HQa1cFZStbNgLRBhZle7zRyEVs+/jdFqVz2Ykqj851Iquv2Y14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JQkn2QEQ; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JQkn2QEQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23B491F000E9;
+	Fri, 17 Jul 2026 15:42:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784302937;
+	bh=THiN92YnU2BGUB+xGnTcPXGKmpM/x7uFgUXN01yQ7cI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=JQkn2QEQ/yS2DPrYeT1Pc+lezRi37Kpn0Eowl2qEKucirjAeUkhqxkPGPckbOH+Jv
+	 be27/AWGXnptg3nCX3Thlm6veUZiyW0Myi8+cdLHCFMRD8aSqy7YU42spzcedbRvA5
+	 r9zCLks/lhDHxqeeLLbT4CMxDwNBU/D9/Q6UuvEbm1EduIqNFLXDbAjGdC1zZr9sb+
+	 a6tpBVOMBYD+vom4ejTvBEqVCfqQMqbviMg57lvXSWqAu49XwMerKegaB0O69YIjIm
+	 RjFkfuiZLkfqDYUlFJrevNvYZhMQX/8z8xsOitDatJVExpKF6GVCdjySho149Sy+ZX
+	 AYRa6Oq/DRi7w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 10/56] scsi: qla2xxx: Add extended status
+ continuation and marker IOCBs
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nilesh Javali" <njavali@marvell.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260717152904.3155730-11-njavali@marvell.com>
+References: <20260717152904.3155730-1-njavali@marvell.com>
+ <20260717152904.3155730-11-njavali@marvell.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 17 Jul 2026 15:42:16 +0000
+Message-Id: <20260717154217.23B491F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-ufs_saved_err_write() copies user input into a zero-initialized stack
-buffer and passes it to kstrtoint(). A write that fills the entire
-buffer overwrites its only terminator.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] Commit Message and Implementation Mismatch
+- [Low] Architectural Inconsistency in Header Placement
+--
 
-Reject an input whose length leaves no room for the trailing NUL.
+--- Patch [10]: [PATCH v5 10/56] scsi: qla2xxx: Add extended status continu=
+ation and marker IOCBs ---
+commit 1df9414084849f00c05087b262dc690e15f3cf79
+Author: Anil Gurumurthy <agurumurthy@marvell.com>
 
-Fixes: 7340faae9474 ("scsi: ufs: core: Add debugfs attributes for triggering the UFS EH")
-Signed-off-by: Li Qiang <liqiang01@kylinos.cn>
----
- drivers/ufs/core/ufs-debugfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+scsi: qla2xxx: Add extended status continuation and marker IOCBs
 
-diff --git a/drivers/ufs/core/ufs-debugfs.c b/drivers/ufs/core/ufs-debugfs.c
-index e3dd81d6fe82..be527209540d 100644
---- a/drivers/ufs/core/ufs-debugfs.c
-+++ b/drivers/ufs/core/ufs-debugfs.c
-@@ -165,7 +165,7 @@ static ssize_t ufs_saved_err_write(struct file *file, const char __user *buf,
- 	char val_str[16] = { };
- 	int val, ret;
- 
--	if (count > sizeof(val_str))
-+	if (count >= sizeof(val_str))
- 		return -EINVAL;
- 	if (copy_from_user(val_str, buf, count))
- 		return -EFAULT;
--- 
-2.43.0
+This commit adds a 128-byte status continuation entry structure for 29xx
+firmware and includes the new qla_fw29.h header. The commit message also no=
+tes
+the addition of a marker IOCB.
 
+>     Add the 128-byte sts_cont_entry_ext_t and mrk_entry_ext_t
+>     structures required by 29xx firmware.
+
+[Severity: Medium]
+Is this commit message accurate for the provided code changes?
+
+The diff only introduces struct sts_cont_entry_ext without the _t typedef
+convention, and entirely omits the mrk_entry_ext_t marker entry structure.
+It appears the marker structure was added in an earlier patch under a
+different name.
+
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
+f.h
+> index 7423687578dc9..4de0de5cccc8d 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+
+[ ... ]
+
+> @@ -2360,6 +2361,15 @@ typedef struct {
+>  	uint8_t reserved_2[48];
+>  } mrk_entry_t;
+> =20
+> +/* 29xx definitions */
+> +struct sts_cont_entry_ext {
+
+[Severity: Low]
+Should this 128-byte IOCB definition be placed in qla_fw29.h instead of
+qla_def.h?
+
+The qla_fw29.h header was recently created specifically to hold new 128-byte
+IOCB definitions for 29xx and isolate them from earlier generations. Placing
+sts_cont_entry_ext in the generic header seems to bypass the dedicated
+firmware header.
+
+> +	uint8_t entry_type;		/* Entry type. */
+> +	uint8_t entry_count;		/* Entry count. */
+> +	uint8_t sys_define;		/* System defined. */
+> +	uint8_t entry_status;		/* Entry Status. */
+> +	uint8_t data[124];		/* data */
+> +};
+> +
+>  /*
+>   * ISP queue - Management Server entry structure definition.
+>   */
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
+730-1-njavali@marvell.com?part=3D10
