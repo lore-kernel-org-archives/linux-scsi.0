@@ -1,123 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A5CE370D49
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:03:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C6E3346E70
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:05:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784304209; cv=none; b=t3oLvyI/xbOsyORjm5++j1PE0Fq7Xdb3v0JmRk6sHXWSn0035g3VvSGyO/ZazYyAxVJKQxiJznzLKfBNQeeqmbJG7TBF4bHg3HWR7kaxCk2hSZTTPfkQAlL+whPDjVfIPOxnl/PD8V3Y94Y2ZJhU0QKkUZezDLdzZwotP5p4vJU=
+	t=1784304342; cv=none; b=eNm0TI2jJy7r8vbqKmsc/XbBnDB9zkQGW7S4scxVgjMAIdfUR58emVJF2P7w2FpyIPu+1/xvn52v/n+c8zW8SpyeLO6v3snGa1pSDqvFGbYGekJcCOF+Ycaw30iNeLQ2lCg7UCn/ZuhTbYRWzHT4wSj4140ImsvwLwDYUK91XfM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784304209; c=relaxed/simple;
-	bh=pWsw4+6y1mLHE9L3qy3TbRuLitRUT05arjvkIHe6+sI=;
+	s=arc-20240116; t=1784304342; c=relaxed/simple;
+	bh=nIWyrxl07xd+NIwVDWJzCbB2rv4Eqars7VVlEDrOhvY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=gwpiQofausNmWSnSC2SDmYTQblNzNiR41u5sPhHyjJ8hCsDgTd1yfAK5/rtog3fEKLG1fOlmUKnu6Bi1xDl6waEEDZHtyZBgCbg6m/jRHDt9gDJRJtPEFjdOW3+Sj2CRq+KeM1yZKg7yJcwFlcQSj5gtZaM2Pz67aAklsBlInZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YAlHApWg; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Xa7mkqo2dYxjbNZ9Oy2zPBfl+VkTZYnQeWp1wjEvITU+zM/L8tEHjP4xm9z9smJ4lh8PAH+Dxae456xRc1603pJxU6nJktDS/aUfNw+lPAsgML5n6BrGaasq6HeWR3mJRB2ewh+sn/TjD2OgKLvlWQBwwt/0kWYpeZUtr50aXGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HHCqqC3K; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YAlHApWg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E96761F000E9;
-	Fri, 17 Jul 2026 16:03:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HHCqqC3K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C2841F000E9;
+	Fri, 17 Jul 2026 16:05:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784304208;
-	bh=sTg7djzpYJFbj5oOcCIUTaL0P1YTRO3Bw574hpMHH0M=;
+	s=k20260515; t=1784304341;
+	bh=FiQIjq4ysi0fns2l1Sx9KPFZBk3RmVeWZvUh3zt2UNg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YAlHApWgt4614PVyJ0bYoV7RHRM5myfyx9vfbZfTI7g7LS30tGGmn65r8SeKKOhME
-	 YoRDg3WVFIk3qU1K+DzZgbOOwCIeKc3vJYlG2U1RBX3IXFkCIFKtMjdVtun+N4aNjY
-	 yGxtz0A0szyCI12a8oXw3eTpkTKLlKdEuv9mw2TPwsJaLwa9hKxi4d9u+cCWXmBRGM
-	 8tQUvJaS0kFKjNkwTH85zJ6Hq6b3utbCdxQe6tfUA3QSy4Oodw9uPIyYqHJODuhDgG
-	 NY+Ne5n1KoTkuek2qShWoXap1LU4TxyAs97Erbu+tH6AT+wmEDgnGf7IXS9UqC94Zx
-	 08af6Nxse6jDA==
+	b=HHCqqC3KB5f9jqXv1/CZsauVfGo0tiMKXyAfEnbi1Zk9oYeU1EqiIezSeGxrXHWOn
+	 9BmRXPf0VzsHDsI7ZXE41juk6ZwtQNd9bdq8+8H7jLy0U5ZqVYsjnl8B16In4tUkKr
+	 856Hb9NHdwZQ1/E002QxlsPhQk4PweN5Eks/4hQCRs8p27fWb8zJxtobex353DuIuw
+	 M5rI9EHpCD+iS4cWtWg1bnwDxXYI7JGs+EhpNs5HUUCO/luqoW6BFbdmexYB5CBoW2
+	 ppM1AyEqZoEtm3xqp1MBNhIh2zy+Sq0LKNCRzk/+EMS1z4NGGtHksaRe3MNjTIUmra
+	 2bQxsxSXkzKOQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 23/56] scsi: qla2xxx: Use ring-slot helpers in
- __qla2x00_alloc_iocbs
+Subject: Re: [PATCH v5 02/56] scsi: qla2xxx: Add flash read/write interface
+ for 29xx
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-24-njavali@marvell.com>
+In-Reply-To: <20260717152904.3155730-3-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-24-njavali@marvell.com>
+ <20260717152904.3155730-3-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 16:03:27 +0000
-Message-Id: <20260717160327.E96761F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 16:05:40 +0000
+Message-Id: <20260717160541.4C2841F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but the refactored c=
-ode retains a dangerous flaw: the driver uses the standard library `memset(=
-)` function to zero an IOCB slot that, for QLAFX00 adapters, resides in PCI=
- MMIO space. In `__qla2x00_alloc_iocbs()`, `qla_req_ring_slot()` retrieves =
-the ring slot pointer and assigns it to `pkt`. For QLAFX00 adapters, the re=
-quest ring is mapped directly into device memory (`req->ring =3D (void __fo=
-rce *)ha->iobase + ha->req_que_off;`), meaning `pkt` is an `__iomem` pointe=
-r. Calling `memset()` on MMIO memory can generate unaligned or byte-wise bu=
-s transactions. On strict-alignment architectures like ARM64 or SPARC, this=
- triggers a synchronous external abort (kernel oops) and crashes the system=
-. The subsequent `if (IS_QLAFX00(ha))` block correctly casts the fields bac=
-k to `__iomem` to use `wrt_reg_byte()` and `wrt_reg_dword()`, demonstrating=
- that the memory is indeed MMIO, but the unsafe `memset()` remains.
+- [High] Missing `isp_ops` hooks for 29xx flash read/write cause sysfs MMIO=
+ out-of-bounds crashes.
+- [High] Concurrent stateful flash read operations cause firmware state cor=
+ruption due to missing `optrom_mutex`.
 --
 
---- Patch [23]: [PATCH v5 23/56] scsi: qla2xxx: Use ring-slot helpers in __=
-qla2x00_alloc_iocbs ---
-commit 30045e77ead5341377665972b3b6c891e41c1958
-Author: Nilesh Javali <njavali@marvell.com>
+--- Patch [2]: [PATCH v5 02/56] scsi: qla2xxx: Add flash read/write interfa=
+ce for 29xx ---
+commit 3849a5ddec04d8b5a4e4730fd38a29a1014a62fa
+Author: Manish Rangankar <mrangankar@marvell.com>
 
-scsi: qla2xxx: Use ring-slot helpers in __qla2x00_alloc_iocbs
+scsi: qla2xxx: Add flash read/write interface for 29xx
 
-This commit refactors __qla2x00_alloc_iocbs to use qla_req_ring_slot()
-and qla_req_entry_size() helpers for ring pointer selection and entry
-size. It consolidates the branching logic for QLA29XX and standard
-adapters into a unified memset.
+The 29xx series uses a different flash access mechanism than earlier adapte=
+rs.
+This patch adds the mailbox wrappers and helpers needed for flash read and
+write operations so that the existing flash infrastructure can drive the new
+hardware.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
-ocb.c
-> index aab7905c0d6ca..1ca50fc200d65 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
+Link: https://lore.kernel.org/oe-kbuild-all/202607141520.k9T31Dpp-lkp@intel=
+.com/
 
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
 [ ... ]
-
-> @@ -2530,13 +2529,8 @@ __qla2x00_alloc_iocbs(struct qla_qpair *qpair, srb=
-_t *sp)
->  	 * layout-compatible once we return the pkt as request_t *.
->  	 */
->  	req->cnt -=3D req_cnt;
-> -	if (IS_QLA29XX(ha)) {
-> -		pkt =3D (request_t *)req->ring_ext_ptr;
-> -		memset(pkt, 0, REQUEST_ENTRY_SIZE_EXT);
-> -	} else {
-> -		pkt =3D req->ring_ptr;
-> -		memset(pkt, 0, REQUEST_ENTRY_SIZE);
-> -	}
-> +	pkt =3D qla_req_ring_slot(ha, req);
-> +	memset(pkt, 0, qla_req_entry_size(ha));
+> @@ -3237,6 +3237,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struc=
+t pci_device_id *id)
+>  		ha->flash_data_off =3D ~0;
+>  		ha->nvram_conf_off =3D ~0;
+>  		ha->nvram_data_off =3D ~0;
+> +		ha->flt_segment_length =3D QLA_SEGMENT_LENGTH;
+>  	}
 
 [Severity: High]
-This isn't a bug introduced by this patch, but could using the standard
-memset() here cause unaligned or byte-wise bus transactions on QLAFX00
-adapters?
+Are the isp_ops hooks for the 29xx flash read/write missing here?
 
-For QLAFX00, the request ring is mapped directly into device memory, meaning
-pkt points to __iomem. The subsequent if (IS_QLAFX00(ha)) block correctly
-casts the fields back to __iomem to use wrt_reg_byte() and wrt_reg_dword(),
-demonstrating that the memory is indeed MMIO.
+The newly introduced qla29xx_read_optrom_data() and=20
+qla29xx_write_optrom_data() functions appear to be left unassigned to the=20
+29xx operations table. If the legacy handlers (like qla25xx_read_optrom_dat=
+a)=20
+are still used by default, would reading or writing the optrom sysfs node=20
+attempt MMIO operations at iobase + ~0 and cause out-of-bounds PCIe memory=
+=20
+crashes, since flash_conf_off and flash_data_off are initialized to ~0?
 
-Could calling memset() directly on this MMIO pointer trigger a synchronous
-external abort or alignment fault on strict-alignment architectures like
-ARM64 or SPARC, since it is not using an I/O specific function like
-memset_io()?
+[ ... ]
+> diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_su=
+p.c
+> --- a/drivers/scsi/qla2xxx/qla_sup.c
+> +++ b/drivers/scsi/qla2xxx/qla_sup.c
+[ ... ]
+> +static void
+> +qla29xx_get_boot_version(scsi_qla_host_t *vha, void *mbuf)
+> +{
+> +	struct qla_hw_data *ha =3D vha->hw;
+> +	uint8_t *bcode =3D mbuf;
+> +	uint32_t pcids;
+> +	uint8_t code_type;
+> +
+> +	if (!qla29xx_read_optrom_data(vha, FLT_REG_BOOT_CODE, 0, mbuf, 0,
+> +				      QLA29XX_BOOT_PROBE_LEN)) {
 
->  	if (IS_QLAFX00(ha)) {
->  		wrt_reg_byte((u8 __force __iomem *)&pkt->entry_count, req_cnt);
->  		wrt_reg_dword((__le32 __force __iomem *)&pkt->handle, handle);
+[Severity: High]
+Is it safe to call qla29xx_read_optrom_data() here without holding=20
+ha->optrom_mutex?
+
+During an adapter reset, the background DPC thread can call=20
+qla2x00_initialize_adapter() which invokes ha->isp_ops->get_flash_version()=
+,=20
+leading to this code without acquiring the mutex.=20
+
+If a user is concurrently reading or writing the sysfs optrom file (which=20
+does hold the mutex but wouldn't block this background path), could the=20
+interleaved stateful mailbox commands (MBC_RD_WR_FLASH) violate the firmwar=
+e's=20
+flash state machine sequence and cause corruption?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D23
+730-1-njavali@marvell.com?part=3D2
