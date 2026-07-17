@@ -1,203 +1,208 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB0D436A34E
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:11:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3E1429CCA
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:13:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784304669; cv=none; b=TGROTjpSbDR1oJm+7E4qf159SzeFKrV1tbhsq0J7T44/QLHPZrHmZIj98XUWBakOa7/m5LZknlKWHZtfkFHswMhQkVFi4oV6DyuyiatQ0/quUxLR1fyfRo7uf3iwsFDkFb5gCDurC1Jediivv4y0XVxBdprhk4NE/0qwkNpuSVg=
+	t=1784304838; cv=none; b=SkPLrkqQJrmRabucqXYRCpaVXCOZlwHUjemxkYQbSmzhAUqgCOfQRd/KR0IntsDCgT/GIttrnqmhjvalrKA2QRRHx6VrnK9Owhw52jn5DpArTSVkjXM6ZHvgk2B/xUhAAeLaTGdLo0XXd0zMG1vq78+bBb6+/GSX8OGmERNsHn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784304669; c=relaxed/simple;
-	bh=KQzF2pSSkhcE3XK5MIoWeHAR8qAT9Y03agnGoo09eSU=;
+	s=arc-20240116; t=1784304838; c=relaxed/simple;
+	bh=JxuVE/g17PHw3jIVr7jkrhDV0KhbrLF144e59RAgWtE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mIntVWYPu4UefzeyurKZmf9SVXLZql2sP+EWTN7C2n91DdtodjYFAlaEYT9Ov5bKT21kS/PEv84d+kDS+kk/yAI//0ZHBFrQ5FKoOQwFHTNXdEanxA2Iwm7MRLP0+NI0XnTWmmqumPoqkBTGNrCMwRLqh4r6OPkUFNUqHmJpEU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TtfzJNcs; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=JjlA+SyVhqmWIJ6N6YV7YP4w+HGu/qSVy+Y47X95D38MQj85cx1Te8f6sI+98lkp5o98i5Y9oCaoaMXPIkthOlOChKQHAY7qMMIRHDV3uljo02ONM5LPGzRnqWmSgnLLMKOSeSJ0QJPq8ZeNBgQhFDWs6vPlixwi+/otehVLBAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oFfBVfHD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TtfzJNcs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A7AB1F000E9;
-	Fri, 17 Jul 2026 16:11:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oFfBVfHD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A69EC1F000E9;
+	Fri, 17 Jul 2026 16:13:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784304667;
-	bh=0dx1gp73NAu+toKMR56dzpS+lCGLZetxni9T4yIG4Ek=;
+	s=k20260515; t=1784304832;
+	bh=CkI3hHyX3f4WEZt5syq74VwYya+6IZP81FIHq9YoeVY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TtfzJNcs6twHrNSeUTE0jaH8O6CTURxEOOMcwB2Ivj9gNiVUTd2LR7Yz96g8xAuq3
-	 zGf1T4IwDwHn2oTwLqZjoq+xVHdVmkKx6DZQ/SM4EaTCTjWjEJ1vc5itFpE0htkjzq
-	 /OopXFwWfOE7PTZ5lfJsrNt16/2YZqmgoQ9CslNO9BDZJHccIdRmEQG5hkaVMvD9mP
-	 HwYSKVrH4CygKcIShhLSR18xzxaT9PRnLunJO8diGgvQVI4rS6XmTeF1QAFo9W7hE3
-	 cNIS9teJo610pItmQnxypDi/QiLtke9btazud7DzXIkTDA+EYM4gYPWGP0fp1bGKdA
-	 o6W5AA9WAygUA==
+	b=oFfBVfHDFH1L202NDj+QA+M467qqXFHlj/d6huCZgNo30wHn64hnM6yrWC8prDgB3
+	 zZFFM3ExqiiJ+pp+vXJRVUvcWDhldJ1F1Hom9/58KcQCKGMujbnp+iWXiFDyBomm/w
+	 qBMQwCLYEhQ8CMJj7NoPkeoLRBlyrfro4ypF04jjybPL+yNfiQ8rXnxFS36cNLaaOC
+	 y/KeuRF13N+sQHGMTN7cUvB7whKxG5lU+e6x5ot3FWSQwfroWDoUadiOho+i0/weeW
+	 +1Z1b9Ldx/6xnicLVQqPokdQlwPzCr6p9Kw/uxlrSCZ8+uDHm5iZlsd5O5Hi7UZg9Q
+	 gXGDAP8LLmNOg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 25/56] scsi: qla2xxx: Handle sts_cont_entry_ext_t for
- 29xx adapters
+Subject: Re: [PATCH v5 11/56] scsi: qla2xxx: Update IO path to use 128-byte
+ IOCBs for 29xx
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-26-njavali@marvell.com>
+In-Reply-To: <20260717152904.3155730-12-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-26-njavali@marvell.com>
+ <20260717152904.3155730-12-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 16:11:06 +0000
-Message-Id: <20260717161107.4A7AB1F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 16:13:52 +0000
+Message-Id: <20260717161352.A69EC1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-
-New issues:
-- [Critical] FORTIFY_SOURCE buffer overread panic in continuation IOCB proc=
-essing
-
-Pre-existing issues:
-- [High] Remote Denial of Service (Infinite Loop) via crafted payload colli=
-ding with RESPONSE_PROCESSED
-- [Medium] Missing read memory barrier after signature polling loop
+- [Critical] Non-IO path IOCB builders (Abort, Task Management, ELS, Login,=
+ Logout, PRLI) fail to use the extended 128-byte struct layouts on QLA29XX =
+adapters, corrupting extended IOCBs and breaking NPIV isolation.
+- [Critical] The ISR completion path fails to handle 29xx extended status I=
+OCBs, resulting in garbage values being read for SCSI status, sense lengths=
+, and NVMe ERSP data.
+- [High] Manual 64-byte ring pointer advancement in `qla27xx_copy_multiple_=
+pkt()` corrupts the response ring on QLA29XX adapters.
+- [High] Continuation IOCB payloads are severely truncated on QLA29XX adapt=
+ers due to hardcoded 60-byte copy limits.
+- [High] Continuation IOCBs in target mode are under-packed with DSDs on 29=
+xx hardware, leading to truncated data transfers.
 --
 
---- Patch [25]: [PATCH v5 25/56] scsi: qla2xxx: Handle sts_cont_entry_ext_t=
- for 29xx adapters ---
-commit 5af8ad3c722085f26948d73f06875dd765494eea
-Author: Nilesh Javali <njavali@marvell.com>
+--- Patch [11]: [PATCH v5 11/56] scsi: qla2xxx: Update IO path to use 128-b=
+yte IOCBs for 29xx ---
+commit 5e78bc810efc46ed3e8aed3841ea031f78694acf
+Author: Anil Gurumurthy <agurumurthy@marvell.com>
 
-scsi: qla2xxx: Handle sts_cont_entry_ext_t for 29xx adapters
+scsi: qla2xxx: Update IO path to use 128-byte IOCBs for 29xx
 
-This commit updates all status continuation IOCB processing paths to branch
-on adapter type and handle 128-byte response queue entries for QLA29XX
-hardware. It modifies several functions to use the correct data payload
-size and structure cast to prevent truncation.
+This commit updates the driver to support 128-byte extended IOCB
+structures for the IO submission, completion, and queue management paths
+on 29xx adapters. It introduces helpers for entry size selection and
+slot advancement, falling back to 64-byte IOCBs for earlier adapters.
 
-Closes: https://lore.kernel.org/oe-kbuild-all/202607142020.gqDaApes-lkp@int=
-el.com/
+Link: https://lore.kernel.org/oe-kbuild-all/202607141827.R9mpeMZx-lkp@intel=
+.com/
+
+> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
+ocb.c
+> index dbe3cd4e274c8..aab7905c0d6ca 100644
+> --- a/drivers/scsi/qla2xxx/qla_iocb.c
+> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
+
+[ ... ]
+
+[Severity: Critical]
+Does qla2x00_start_sp() properly dispatch non-IO paths for QLA29XX adapters?
+
+Currently, it seems to dispatch management commands (like Abort, Task
+Management, ELS, Login, Logout, PRLI) to legacy 64-byte builders like
+qla24xx_tm_iocb() and qla24xx_abort_iocb().
+
+If these builders cast the 128-byte slot to the legacy struct and write to
+the old offsets (e.g., vp_index written to offset 51 instead of 18 or 28),
+could this result in management commands being sent to the wrong virtual
+port (VP 0) and breaking NPIV isolation?
 
 > diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
 r.c
+> index c47c38e099ff8..e95fb0e59f387 100644
 > --- a/drivers/scsi/qla2xxx/qla_isr.c
 > +++ b/drivers/scsi/qla2xxx/qla_isr.c
 
 [ ... ]
 
-> @@ -271,10 +276,12 @@ int __qla_copy_purex_to_buffer(struct scsi_qla_host=
- *vha,
-> =20
->  	do {
->  		while ((total_bytes > 0) && (entry_count_remaining > 0)) {
-> -			new_pkt =3D (sts_cont_entry_t *)rsp_q->ring_ptr;
-> -			*pkt =3D new_pkt;
-> +			*pkt =3D rsp_q->ring_ptr;
-> +			data =3D ((sts_cont_entry_t *)*pkt)->data;
-> +			data_sz =3D qla_sts_cont_data_size(ha);
-
-[Severity: Critical]
-Can this cast trigger a FORTIFY_SOURCE panic?
-
-Looking at __qla_copy_purex_to_buffer() in drivers/scsi/qla2xxx/qla_isr.c,
-the pointer data is initialized by casting the packet to sts_cont_entry_t,
-which defines the data field as a statically known 60-byte array.
-
-On QLA29XX adapters, data_sz is set to 124 bytes. When the subsequent
-memcpy attempts to copy up to 124 bytes from this 60-byte pointer,
-FORTIFY_SOURCE will detect a field-spanning read using __builtin_object_size
-and panic the kernel with __read_overflow2.
-
-Does this need to cast to the extended struct for 29xx adapters before
-taking the address of the data field?
-
-> =20
-> -			if (new_pkt->entry_type !=3D STATUS_CONT_TYPE) {
-> +			if (((sts_cont_entry_t *)*pkt)->entry_type !=3D
-> +			    STATUS_CONT_TYPE) {
-
-[ ... ]
-
-> @@ -906,28 +915,24 @@ qla27xx_copy_multiple_pkt(struct scsi_qla_host *vha=
-, void **pkt,
->  				continue;
+> @@ -1212,13 +1200,7 @@ qla27xx_copy_fpin_pkt(struct scsi_qla_host *vha, v=
+oid **pkt,
+>  				break;
 >  			}
+> =20
+> -			rsp_q->ring_index++;
+> -			if (rsp_q->ring_index =3D=3D rsp_q->length) {
+> -				rsp_q->ring_index =3D 0;
+> -				rsp_q->ring_ptr =3D rsp_q->ring;
+> -			} else {
+> -				rsp_q->ring_ptr++;
+> -			}
+> +			qla_rsp_ring_advance(rsp_q);
+>  			no_bytes =3D (pending_bytes > sizeof(new_pkt->data)) ?
+>  			    sizeof(new_pkt->data) : pending_bytes;
 
 [Severity: High]
-This is a pre-existing issue, but could this loop spin infinitely?
+Does this logic truncate extended payloads on 29xx adapters?=20
 
-Looking at the context above this diff block in qla27xx_copy_multiple_pkt(),
-the driver waits for the firmware to populate the continuation IOCB by
-spinning until signature !=3D RESPONSE_PROCESSED.
+The advancement helper qla_rsp_ring_advance() steps by 128 bytes for extend=
+ed
+rings, but the copy size is still bounded by sizeof(new_pkt->data) which is=
+ 60
+bytes. Can this ignore the remaining data the 29xx firmware places in the
+extended slot?
 
-Since the signature field is at offset 60, it overlaps with the payload
-data written by the firmware. If a remote endpoint sends a crafted
-payload where the bytes at offset 60 happen to match the
-RESPONSE_PROCESSED constant, the driver will never see the signature
-change and will loop infinitely with interrupts disabled.
-
-Is there a safer way to poll for DMA completion without risking payload
-collisions?
-
-[Severity: Medium]
-This is a pre-existing issue, but is a read memory barrier missing here?
-
-After breaking out of the cpu_relax() polling loop, the code immediately
-reads the payload data from the ring buffer. On weakly-ordered
-architectures, the CPU can speculatively load the payload data before
-the signature validation completes.
-
-Does this need a dma_rmb() after the signature check to ensure the CPU
-processes the newly DMA'd packet instead of stale ring memory?
-
-> =20
-> -			new_pkt =3D (sts_cont_entry_t *)rsp_q->ring_ptr;
-> -			*pkt =3D new_pkt;
-> +			*pkt =3D rsp_q->ring_ptr;
-> +			data =3D ((sts_cont_entry_t *)*pkt)->data;
-> +			data_sz =3D qla_sts_cont_data_size(ha);
-
-[Severity: Critical]
-Can this cast also trigger a FORTIFY_SOURCE panic during memcpy?
-
-Similar to __qla_copy_purex_to_buffer(), casting to sts_cont_entry_t
-bounds the data pointer to 60 bytes, causing a panic when copying
-up to 124 bytes on QLA29XX hardware.
+Also, is there a similar issue in qla27xx_copy_multiple_pkt() where the man=
+ual
+rsp_q->ring_index advancement was left behind? Using the old 64-byte stride
+logic there could corrupt the response ring on QLA29XX adapters by misalign=
+ing
+the pointer.
 
 [ ... ]
 
-> @@ -1190,10 +1206,12 @@ qla27xx_copy_fpin_pkt(struct scsi_qla_host *vha, =
-void **pkt,
->  				continue;
->  			}
+> @@ -4003,13 +3980,7 @@ void qla24xx_process_response_queue(struct scsi_ql=
+a_host *vha,
+>  		pkt =3D (struct sts_entry_24xx *)rsp->ring_ptr;
+>  		cur_ring_index =3D rsp->ring_index;
 > =20
-> -			new_pkt =3D (sts_cont_entry_t *)rsp_q->ring_ptr;
-> -			*pkt =3D new_pkt;
-> +			*pkt =3D rsp_q->ring_ptr;
-> +			data =3D ((sts_cont_entry_t *)*pkt)->data;
-> +			data_sz =3D qla_sts_cont_data_size(ha);
+> -		rsp->ring_index++;
+> -		if (rsp->ring_index =3D=3D rsp->length) {
+> -			rsp->ring_index =3D 0;
+> -			rsp->ring_ptr =3D rsp->ring;
+> -		} else {
+> -			rsp->ring_ptr++;
+> -		}
+> +		qla_rsp_ring_advance(rsp);
+> =20
+>  		if (pkt->entry_status !=3D 0) {
+>  			if (qla2x00_error_entry(vha, rsp, (sts_entry_t *) pkt))
 
 [Severity: Critical]
-Does this copy path also suffer from the FORTIFY_SOURCE panic?
+Will reading completion entries through a hardcoded 64-byte structure like
+sts_entry_24xx cause problems on 29xx hardware?=20
 
-The same 60-byte array limitation applies here when qla27xx_copy_fpin_pkt()
-processes FPIN packets on QLA29XX adapters.
+If functions like qla2x00_status_entry() or qla24xx_nvme_iocb_entry()
+unconditionally cast the 128-byte response slot to the legacy 64-byte struc=
+t,
+wouldn't they read unrelated fields for the SCSI status, sense lengths, and
+NVMe ERSP data?
+
+> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla=
+_target.c
+> index e47da45e93a01..53a505df8da0a 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
 
 [ ... ]
 
-> @@ -3691,6 +3711,7 @@ qla2x00_status_cont_entry(struct rsp_que *rsp, sts_=
-cont_entry_t *pkt)
->  	struct scsi_cmnd *cp;
->  	uint32_t sense_len;
->  	uint8_t *sense_ptr;
-> +	u8 *data =3D ((sts_cont_entry_t *)pkt)->data;
+> @@ -2614,7 +2611,7 @@ static void qlt_load_cont_data_segments(struct qla_=
+tgt_prm *prm)
+>  		 * that.
+>  		 */
+> =20
+> -		memset(cont_pkt64, 0, sizeof(*cont_pkt64));
+> +		memset(cont_pkt64, 0, qla_req_entry_size(ha));
+> =20
+>  		cont_pkt64->entry_count =3D 1;
+>  		cont_pkt64->sys_define =3D 0;
 
-[Severity: Critical]
-Can this cast trigger a FORTIFY_SOURCE panic when copying sense data?
+[Severity: High]
+Does this loop pack enough DSDs for 29xx hardware?
 
-Looking at qla2x00_status_cont_entry() in drivers/scsi/qla2xxx/qla_isr.c,
-the data pointer is bounded to 60 bytes due to the sts_cont_entry_t cast.
+Looking slightly further down in qlt_load_cont_data_segments():
 
-When sense_sz exceeds 60 bytes on 29xx adapters, the subsequent memcpy
-at the end of this function will panic the kernel.
+		for (cnt =3D 0;
+		    cnt < QLA_TGT_DATASEGS_PER_CONT_24XX && prm->seg_cnt;
+		    cnt++, prm->seg_cnt--) {
+			append_dsd64(&cur_dsd, prm->sg);
+			prm->sg =3D sg_next(prm->sg);
+		}
 
-Does this need to branch on adapter type to extract the data pointer safely?
+If the loop strictly limits packing to QLA_TGT_DATASEGS_PER_CONT_24XX (5) D=
+SDs,
+will the 29xx firmware (which expects 10 DSDs per 128-byte slot) encounter
+zero-length DSDs mid-transfer and prematurely terminate target mode data
+transfers?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D25
+730-1-njavali@marvell.com?part=3D11
