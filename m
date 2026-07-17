@@ -1,144 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B684373BE9
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:49:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FC263ECBE2
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:53:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784306991; cv=none; b=jtcwldAkE7Wy0f+NRaG+WV8xlX1GE6KKQCAVH+02ogBejWS0KmkhncIY3D9+aUiKIzjLnbdsC8mt1y/HB5nKRRdi5lMfioeEUdIZU/Vjk1en51rfClcCu0AzPojSRUlpm4xAbGVtHANNtU2e71QZby5xF3z6bdRLr3Myqzpap6A=
+	t=1784307225; cv=none; b=PXVcVzTuc67NNutODd7jgv/J5XxDGfqRyon3Rye38wqP39NIFlHZmrkNO4hAjOcBpRrIfqiN1EgCc++sXyIcBpxIxcseMEFoxJEsz0MIuF4B1rLhR0rnKe/3Pr1WnswywOjfEVFRcL0zxe1kP7cXJMgdUpKO+gWX6epW0BvxyLA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784306991; c=relaxed/simple;
-	bh=I1mwCTYbpq5ChKWKu9xVxv1t7bSRH8vXkAW/mboTCjM=;
+	s=arc-20240116; t=1784307225; c=relaxed/simple;
+	bh=SGvgM84rUBmOptkrV/52pcQyZYuprei9RbmfLkjeEaY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=gHRDPWhI714A3CLV3uPN+4yF/pdHAthI8JRZyT1qhrDV6YhOgfPdd+BBE4w/fKu1suyuXl3dAAKk4368zdld17BwfIxUyp9wmgBhQYntcaM/4ifY1UUtF6L5Io1xh4Bd6jem7DyhH+1pDHfOT5zCAK5OpiwjXOfBBz3VprY+uUg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Utf29ulD; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=cBw5vcGN7Lpq9KGPpqwZK59klszU52M3No1yBUeplgF7zjkY6nu3ESE07M2Zu3S7r0nZyQH/6sbzN1G9YTb6T1dbbxidv8pkqLOJMYA4FoRzYePtbNJGsSBEA9sB/IxmqZcaSM5PuAqr/8LBKWi91Ua33FojTozIfv2jc/xcqTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kFYqyH35; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Utf29ulD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 741C31F000E9;
-	Fri, 17 Jul 2026 16:49:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kFYqyH35"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED5AF1F000E9;
+	Fri, 17 Jul 2026 16:53:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784306989;
-	bh=gCWe06j2SUsk6HXgZubom3fsdfAM4Ik9TQA9ZFSMijI=;
+	s=k20260515; t=1784307224;
+	bh=PP4nFE9T6DMCMNm3I1tncVx6rCFlOnEyrX/eKEri8bk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Utf29ulD5ip10utALRy8pOamRY9aKmlDAeQrhZCCxWUt7lOaZB6IFxZ50KbHzdc3x
-	 Bvlnn5x8opvUarmRK5LDWoWX/q0//PEfjiSbc5+srxZYXNw8H5GkGetCkjFHJx0LEa
-	 ISVFw91fdqNnty80LfT9iJg/LckdlJYo1jXmZvAD01v7JNpiWIfwzrOXyQFXKNpBjS
-	 C//7SqzNw4laPHustZ4RybeJ0Belr9Bf2n2tcy4CMD0sTuvBb/JEbYlxWUNf3aqonQ
-	 vwOcL0GMDYfV82n8CpOeupbj6PXd8q8x0YObqVeTBvSCYsJW4bn5Zson7RusdWplCM
-	 h/mtCNFFC13Lg==
+	b=kFYqyH358xK8OuHAfJYZkMfRLe9f4UzMLTvVv/JiLzp29yiamvbw8b/MBipbLUFeB
+	 Z5VFbqigRJRvMnlWu7gF1btX04AFPvfyalscvBYL+mmhGfvxrTSZnV8PyaGY9opLth
+	 qZh3imWHXqxkGMgzilqP1MbzYyco0W9ln4lXhxEDWeMuclo8/Od47ciXWbvWhQx7F9
+	 rW/4f1F+530M+HavrTmhVJvORsjoj150PETF7OrugvtBHlQ/6aULrBpZGr5MREcCwx
+	 0p9nMaGSTPbngAQWQrcl05XcMGsyLvdgeq8PUWZiAF41tTfUaPiwh2hBp3rJ7mpE/N
+	 ywbQrole/Ja5Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 34/56] scsi: qla2xxx: Enhance ABTS processing for
- 29xx series
+Subject: Re: [PATCH v5 48/56] scsi: qla2xxx: Bound VP index against VP_CTRL
+ IOCB bitmap size
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-35-njavali@marvell.com>
+In-Reply-To: <20260717152904.3155730-49-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-35-njavali@marvell.com>
+ <20260717152904.3155730-49-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 16:49:49 +0000
-Message-Id: <20260717164949.741C31F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 16:53:43 +0000
+Message-Id: <20260717165343.ED5AF1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [High] Usage of C bitfields in the hardware-defined DMA structure `struct=
- abts_entry_24xx_ext` breaks data layout on Big-Endian architectures.
-
 Pre-existing issues:
-- [Critical] The DMA buffer `rsp_pkt` can be freed while the hardware firmw=
-are is still actively processing it if the mailbox command times out.
+- [High] The patch prevents disabling virtual ports with an index > 128 but=
+ fails to prevent their creation. This creates an asymmetric lifecycle wher=
+e high-index vports can be successfully created but will silently fail to b=
+e disabled, permanently leaking firmware resources.
 --
 
---- Patch [34]: [PATCH v5 34/56] scsi: qla2xxx: Enhance ABTS processing for=
- 29xx series ---
-commit 64217fa79af8b429a3a92eb33321f697d422a0cf
+--- Patch [48]: [PATCH v5 48/56] scsi: qla2xxx: Bound VP index against VP_C=
+TRL IOCB bitmap size ---
+commit d14a096bfdf302413bad8d30ac696540d3cc6f7a
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Enhance ABTS processing for 29xx series
+scsi: qla2xxx: Bound VP index against VP_CTRL IOCB bitmap size
 
-This patch enhances ABTS processing for the 29xx series adapters by using
-extended ABTS entry structures to handle the larger 128-byte IOCB format.
-It introduces type-generic macros for logging and response construction
-to avoid code duplication, branching on IS_QLA29XX() for type handling.
+This commit adds bounds checking for vp_index when issuing VP_CTRL IOCBs
+to prevent out-of-bounds writes to the vp_idx_map array. It explicitly
+rejects commands for virtual ports with an index greater than 128.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
-r.c
-> index 6fbcbdd208c38..8367aa005d1b5 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -72,15 +72,89 @@ static inline void display_Laser_info(scsi_qla_host_t=
- *vha,
+> diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mi=
+d.c
+> --- a/drivers/scsi/qla2xxx/qla_mid.c
+> +++ b/drivers/scsi/qla2xxx/qla_mid.c
 [ ... ]
-> +#define QLA_LOG_ISSUE_ABTS_RSP(vha, rsp, dma, rval) do {		\
-[ ... ]
-> +	(rval) =3D qla2x00_issue_iocb((vha), (rsp), (dma), 0);		\
-> +	if (rval) {							\
-> +		ql_log(ql_log_warn, (vha), 0x028c,			\
-> +		    "%s: iocb failed to execute -> %x\n",		\
-> +		    __func__, (rval));					\
-> +	} else if ((rsp)->comp_status) {				\
-[ ... ]
-> @@ -140,60 +212,27 @@ qla24xx_process_abts(struct scsi_qla_host *vha, str=
-uct purex_item *pkt)
-[ ... ]
-> +	if (IS_QLA29XX(ha)) {
-> +		struct abts_entry_24xx_ext *rsp_ext =3D rsp_pkt;
-> +
-> +		QLA_BUILD_ABTS_BA_ACC(rsp_ext, abts_ext,
-> +		    abts_ext->sof_type, fctl);
+> @@ -987,6 +987,14 @@ int qla24xx_control_vp(scsi_qla_host_t *vha, int cmd)
+>  	if (vp_index =3D=3D 0 || vp_index >=3D ha->max_npiv_vports)
+>  		return QLA_PARAMETER_ERROR;
+> =20
+> +	/*
+> +	 * The VP_CTRL IOCB selects the target VP through a fixed 128-bit
+> +	 * (16-byte) vp_idx_map bitmap, so vp_index must fit within it even
+> +	 * if firmware advertises more NPIV vports.
+> +	 */
+> +	if (vp_index > sizeof_field(struct vp_ctrl_entry_24xx, vp_idx_map) * 8)
+> +		return QLA_PARAMETER_ERROR;
 
 [Severity: High]
-Does reading and writing the sof_type bitfield directly cause data corrupti=
-on
-on big-endian systems?
+This is a pre-existing issue, but by blocking control commands for virtual
+ports with an index over 128, does this create an asymmetric lifecycle that
+leaks firmware resources?
 
-Since struct abts_entry_24xx_ext defines sof_type as a C bitfield over an
-__le16 integer:
+If the firmware advertises ha->max_npiv_vports up to 255, creating a vport
+with an index > 128 can still succeed since qla24xx_vport_create() uses
+VP_CONFIG_IOCB, which has an 8-bit index capable of addressing up to 255.
 
-    __le16 vp_idx : 9;
-    __le16 reserved_1_sof : 3;
-    __le16 sof_type : 4;
+However, when deleting the vport, qla24xx_vport_delete() calls
+qla24xx_disable_vp(), which in turn calls qla24xx_control_vp() to send
+the disable command. With this new check, disabling the vport will fail
+and return QLA_PARAMETER_ERROR.
 
-Compilers on big-endian architectures will reverse the packing order of the
-bits. If the hardware expects fixed little-endian bit offsets for DMA
-reads/writes, wouldn't passing abts_ext->sof_type directly result in a
-mangled bit sequence?
+Looking at qla24xx_vport_delete(), it ignores the return value of
+qla24xx_disable_vp():
 
-> +		QLA_LOG_ISSUE_ABTS_RSP(vha, rsp_ext, dma, rval);
->  	} else {
-> -		ql_dbg(ql_dbg_init, vha, 0x028ea,
-> -		    "%s: done.\n", __func__);
-> +		struct abts_entry_24xx *abts_rsp =3D rsp_pkt;
-> +
-> +		QLA_BUILD_ABTS_BA_ACC(abts_rsp, abts,
-> +		    abts->sof_type & 0xf0, fctl);
-> +		QLA_LOG_ISSUE_ABTS_RSP(vha, abts_rsp, dma, rval);
->  	}
-> =20
->  	dma_free_coherent(&ha->pdev->dev, rsp_sz, rsp_pkt, dma);
->  }
+drivers/scsi/qla2xxx/qla_attr.c:qla24xx_vport_delete() {
+    ...
+    qla24xx_disable_vp(vha);
+    qla2x00_wait_for_sess_deletion(vha);
 
-[Severity: Critical]
-This is a pre-existing issue, but can this lead to kernel memory corruption
-if the mailbox command times out?
+    qla_nvme_delete(vha);
+    qla_enode_stop(vha);
+    qla_edb_stop(vha);
 
-In qla24xx_process_abts(), qla2x00_issue_iocb() executes a synchronous IOCB
-command (called via QLA_LOG_ISSUE_ABTS_RSP). If this command times out, it
-returns an error but the hardware reset is only scheduled asynchronously,
-meaning the hardware might still be actively processing.
+    vha->flags.delete_progress =3D 1;
+    ...
+}
 
-The function then unconditionally calls dma_free_coherent() on rsp_pkt. If
-the hardware is delayed and finishes processing the timed-out command later,
-could it DMA-write its completion status to this now-freed memory?
+Since the failure is ignored, the OS-side structures are destroyed and the
+vp_idx is freed for reuse, but the firmware port remains fully active and
+logged into the fabric. Reusing the ID later could then corrupt the firmware
+state machine.
+
+Should ha->max_npiv_vports be capped at 128 during initialization to
+prevent creating these unmanageable virtual ports in the first place?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D34
+730-1-njavali@marvell.com?part=3D48
