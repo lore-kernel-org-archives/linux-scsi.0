@@ -1,199 +1,243 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 079952F7EE4
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 17:08:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 771E42F7EE4
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 17:10:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784308114; cv=none; b=Co9JqKosaXi9DSuLSVy0hKL7k/TiS73pu7kTs5YxDJt4MPnZ8yfQT3Q/GPpVOoYdh/ILTqQwAyJ238UhAIHJLZocIfWDKRmi4TGOBbTmozg3XwuLLCka+yzQfIRl9lgzSoDao25JwbeiJSjiLmdltx/r5GUV+dtzqypVn4rCdkY=
+	t=1784308215; cv=none; b=m5yI4ExiePAJZbFv1SWNEH/28/aVBzzUtzVVATCqijnx8ZqNSb1HLkR2d1D/Lnosox/X/+22ab3E2CUMwdIOZ2EZNPBzK8cjnWkvdqGpNsBjEOeNU3NHXR266Wnp+8Xm4lfxQnQc8D2HGoIGCzMUGmkaaqJvhaRi5OYlhvxP3yM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784308114; c=relaxed/simple;
-	bh=FJKU2x4z6Frqzp6l5+9Rj2BLcdbOlz4l5oSm/w5gccU=;
+	s=arc-20240116; t=1784308215; c=relaxed/simple;
+	bh=TVcg1+cxsAHeJ62WHb50+LhSVS7qXtFkCEky7Dk2aes=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=o2vrwIYo7EL+4cQF6y5iO3B6v/8e7rvNRry6Rn+HKJINGl8wSFHbsLfVhDVvguyVDb449Wgk8spViDI46uJSiI6MUh7zW+8yg1IfBNK5QALgSFGzaaeoNMGxjNqkMlblwxW1ayorwSmCCBwAdQYxgEo4L6QGBlVm5+pT9hR9mPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DCas0aaz; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=sU7AzE105d7BQivYs8Vz/B6SCmxLItjcMAPIteGuTmljAtKWyh1q9FECBFdnvMsEFajoi0Kx+6WtensuYrUCWx3frSwVAp6zOK3feukqnmrnCLHyKssIOxMRxhL5ZMKRyNT/FOMaubsIdRjS1zNISNvybxz1s938ReWwFCThE7s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gnSLg9Y2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DCas0aaz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84E1D1F000E9;
-	Fri, 17 Jul 2026 17:08:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gnSLg9Y2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D8601F000E9;
+	Fri, 17 Jul 2026 17:10:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784308112;
-	bh=GTRQFB8QJL4Nwv8MvmWsZBm5Pae+iuLlHqHWG9GLLgs=;
+	s=k20260515; t=1784308214;
+	bh=TMCgXy3+HCBLo57BMZiTKoBEPYh23lDMmnrUJjGWRF0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DCas0aazQt8fDOi8Xxi6slap5pqQ+PpcgxQQ8fIuCW4mNr/1utsomnbo68iEDmFuB
-	 zaBUmjOyPFJrU7oLJkXZnM/toiIlxMGmN0Ood6Am9ZL5eX0aIA0txBMBHqWtWzEnl7
-	 zS3uOjk2LfnlsHLw8bnHMTA+F50VgzdmxztilNEnK815HCQMEwiczE2wlw464QqrVw
-	 74s/UnwJhQgNa0ZPgk7zaYoMhAazyJvdBEhTLfcLG2WgHHeUinX6dBtoERkgN4Iobp
-	 uMInBXM5Zplr2jPObjc5868bji7zhi+B3YBnVhplutTC9Gkvpi+jbVGBO4+56atTRm
-	 wykyY5ilySu+w==
+	b=gnSLg9Y2dns91mxdD5+FfIQq2hR9qAPK882+jwBvcGrC4qy5jFDrNAHKcs4dg/Pmz
+	 ilnUu65LG9URm7P3TUEFaSDg0/T97+aPufew70l3WmBYX0fRUiiReZdVEa+zE52oHc
+	 E/Pv9DaznGeoSCX7AE7H8jbLWMy6YZ4HJnCKVuEckCIHyJdZ7bgwal3oyrYARX8n0/
+	 b5a0B/DSsaCtWDuNI27FZOTaeYtSWSC9nnTZCC74OWWV/vK5sc7WEvgCUDWz9lvtPu
+	 RuCRNW36bUcO/V3lEHLXs05dhu6MLgt+DHktTgBvywyLdHdOiUAH3f8ZHhw0E3co0D
+	 Y64mIeFSd9oXw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 50/56] scsi: qla2xxx: Hold vport reference in
- qla24xx_report_id_acquisition()
+Subject: Re: [PATCH v5 53/56] scsi: qla2xxx: Zero dport diagnostics buffer
+ to avoid info leak
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-51-njavali@marvell.com>
+In-Reply-To: <20260717152904.3155730-54-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-51-njavali@marvell.com>
+ <20260717152904.3155730-54-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 17:08:32 +0000
-Message-Id: <20260717170832.84E1D1F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 17:10:13 +0000
+Message-Id: <20260717171014.3D8601F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Deferred Use-After-Free due to re-inserting a dying vport into the=
- global host_map B-tree.
-- [High] Data race and potential B-tree corruption due to missing locks in =
-qla_update_host_map.
-- [High] Use-After-Free during list traversal due to dropping locks inside =
-list_for_each_entry_safe.
-- [High] Forced Use-After-Free due to hardcoded timeout in vref_count polli=
-ng.
+- [Critical] Missing bounds checks on user-provided lengths cause severe st=
+ack and heap buffer overflows, as well as out-of-bounds DMA transfers.
+- [High] DMA API violation: modifying a buffer via memset() immediately aft=
+er mapping it for DMA.
+- [High] Uninitialized stack buffer leaks kernel stack memory to user space=
+ via BSG replies.
+- [High] Unlocked read-modify-write of `vha->dport_status` across process a=
+nd hardirq contexts leads to a data race.
+- [Medium] A struct field at an unaligned offset is mapped for DMA, resulti=
+ng in unsafe cache-line sharing with adjacent struct fields.
 --
 
---- Patch [50]: [PATCH v5 50/56] scsi: qla2xxx: Hold vport reference in qla=
-24xx_report_id_acquisition() ---
-commit 888c874111e5c34314eddd622176ba0ffd527654
+--- Patch [53]: [PATCH v5 53/56] scsi: qla2xxx: Zero dport diagnostics buff=
+er to avoid info leak ---
+commit d9e6712c9051d0111bc1221f583961121d35d896
 Author: Nilesh Javali <njavali@marvell.com>
+Subject: scsi: qla2xxx: Zero dport diagnostics buffer to avoid info leak
 
-scsi: qla2xxx: Hold vport reference in qla24xx_report_id_acquisition()
+This commit changes kmalloc_obj to kzalloc_obj in
+qla2x00_do_dport_diagnostics. This ensures the qla_dport_diag response
+buffer is fully zeroed, preventing uninitialized fields from being
+leaked to user space.
+
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index 9ee56ccd52b01..3bf3a7b96eb50 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -2858,7 +2858,7 @@ qla2x00_do_dport_diagnostics(struct bsg_job *bsg_jo=
+b)
+>  	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
+>  		return -EPERM;
+> =20
+> -	dd =3D kmalloc_obj(*dd);
+> +	dd =3D kzalloc_obj(*dd);
+
+[Severity: Medium]
+This isn't a bug introduced by this patch, but does mapping the buf field
+of this struct for DMA cause unsafe cache-line sharing?
+
+Looking at struct qla_dport_diag in qla_bsg.h, the __packed attribute
+places the buf array at an unaligned 2-byte offset:
+
+struct qla_dport_diag {
+        uint16_t options;
+        uint32_t buf[16];
+        uint8_t  unused[62];
+} __packed;
+
+This same unaligned buffer is then mapped for DMA:
+
+qla_mbx.c:qla26xx_dport_diagnostics() {
+    dd_dma =3D dma_map_single(&vha->hw->pdev->dev,
+        dd_buf, size, DMA_FROM_DEVICE);
+}
+
+Because the struct is packed, the mapped buf array shares a cache line
+with the preceding options field, which violates DMA mapping hardware
+cache alignment rules. Can this lead to data corruption on architectures
+with non-coherent DMA caches?
+
+>  	if (!dd) {
+>  		ql_log(ql_log_warn, vha, 0x70db,
+>  		    "Failed to allocate memory for dport.\n");
+
+[Severity: High]
+This is a pre-existing issue, but is it safe to modify a buffer with
+memset while it is actively mapped for DMA?
+
+In the underlying diagnostic functions called after this allocation, the
+CPU modifies the buffer via memset after mapping it:
+
+qla_mbx.c:qla26xx_dport_diagnostics() {
+    dd_dma =3D dma_map_single(&vha->hw->pdev->dev,
+        dd_buf, size, DMA_FROM_DEVICE);
+    if (dma_mapping_error(&vha->hw->pdev->dev, dd_dma)) {
+        ql_log(ql_log_warn, vha, 0x1194, "Failed to map dma buffer.\n");
+        return QLA_MEMORY_ALLOC_FAILED;
+    }
+
+    memset(dd_buf, 0, size);
+}
+
+A similar pattern exists in qla26xx_dport_diagnostics_v2(). Since the
+DMA API strictly prohibits the CPU from accessing or modifying a buffer
+while it is mapped for device access, could the CPU cache lines dirtied
+by memset be evicted during the DMA operation and overwrite the
+diagnostic test data written by the device?
+
+[Severity: Critical]
+This is a pre-existing issue, but does this code lack bounds checks on
+user-provided lengths, leading to buffer overflows?
+
+In several BSG handler paths, user-controlled lengths dictate memory
+operations without bounds checking:
+
+qla_bsg.c:qla2x00_read_i2c() {
+    rval =3D qla2x00_read_sfp(vha, sfp_dma, sfp,
+        i2c->device, i2c->offset, i2c->length, i2c->option);
    =20
-This patch adds vport reference counting inside
-qla24xx_report_id_acquisition() by incrementing vref_count when the matching
-vp is found under vport_slock. The reference is held during the virtual port
-updates to prevent a concurrent qla24xx_deallocate_vp_id() from tearing down
-and freeing the vport prematurely.
+    if (rval) {
+        ...
+    }
 
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
-x.c
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -4267,6 +4267,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,=
- void *pkt)
->  			list_for_each_entry(vp, &ha->vp_list, list) {
->  				if (vp_idx =3D=3D vp->vp_idx) {
->  					found =3D 1;
-> +					atomic_inc(&vp->vref_count);
->  					break;
->  				}
->  			}
-
-[ ... ]
-
-> @@ -4284,6 +4285,8 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,=
- void *pkt)
->  			set_bit(VP_IDX_ACQUIRED, &vp->vp_flags);
->  			set_bit(REGISTER_FC4_NEEDED, &vp->dpc_flags);
->  			set_bit(REGISTER_FDMI_NEEDED, &vp->dpc_flags);
-> +
-> +			atomic_dec(&vp->vref_count);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does dropping the lock before
-calling qla_update_host_map() risk corrupting the host_map B-tree?
-
-In qla24xx_report_id_acquisition(), vport_slock is unlocked right before
-the unlocked modification to the global B-tree:
-
-qla24xx_report_id_acquisition() {
-    ...
-    spin_unlock_irqrestore(&ha->vport_slock, flags);
-    if (!found)
-        return;
-    qla_update_host_map(vp, id);
-    ...
+    memcpy(i2c->buffer, sfp, i2c->length);
 }
 
-Inside qla_update_vp_map(), it calls btree_insert32():
+Here, the user-controlled i2c->length is passed directly to the firmware
+for DMA, potentially overflowing the 256-byte sfp allocation. It is then
+used in a memcpy to overflow the 256-byte bsg array on the stack.
 
-qla_update_vp_map() {
-    ...
-    rc =3D btree_insert32(&vha->hw->host_map, key, vha, GFP_ATOMIC);
-    ...
+Similarly, in qla2x00_write_i2c():
+
+qla_bsg.c:qla2x00_write_i2c() {
+    memcpy(sfp, i2c->buffer, i2c->length);
+    rval =3D qla2x00_write_sfp(vha, sfp_dma, sfp,
+        i2c->device, i2c->offset, i2c->length, i2c->option);
 }
 
-Since the Linux B-tree requires external synchronization and this path
-appears to lack a common lock, could concurrent modifications to ha->host_m=
-ap
-from other queues or teardown paths collide here?
+This causes an out-of-bounds memcpy from the stack into the 256-byte
+sfp heap chunk.
 
+Finally, in qla2x00_update_fru_versions():
 
-[Severity: High]
-This is also a pre-existing issue, but could this unconditional call to
-qla_update_host_map() re-insert a dying vport into the global B-tree?
-
-If qla24xx_vport_delete() initiates teardown concurrently, it calls
-qla24xx_disable_vp() which removes the vport from ha->host_map and clears
-vp->d_id.b24.
-
-When qla24xx_report_id_acquisition() pins the dying vport via vref_count
-(stalling the teardown), drops vport_slock, and calls qla_update_host_map()
-without verifying the teardown state, the vport is re-inserted back into
-the B-tree. Once vref_count reaches 0, the teardown thread frees the vport,
-but it would remain accessible in the B-tree, potentially causing a
-use-after-free for incoming traffic.
-
-
-[Severity: High]
-This is another pre-existing issue, but does the reliance on vref_count
-polling in qla24xx_deallocate_vp_id() still leave a use-after-free window?
-
-The commit message notes that qla24xx_deallocate_vp_id() waits for vref_cou=
-nt
-to reach zero. However, qla24xx_deallocate_vp_id() loops for up to 10 secon=
-ds
-and then forcefully unlinks the vport if it times out:
-
-qla_mid.c:qla24xx_deallocate_vp_id() {
-    if (!bailout) {
-        ql_log(ql_log_info, vha, 0xfffa,
-            "vha->vref_count=3D%u timeout\n", vha->vref_count.counter);
-        spin_lock_irqsave(&ha->vport_slock, flags);
-        list_del(&vha->list);
-        qla_update_vp_map(vha, RESET_VP_IDX);
-        spin_unlock_irqrestore(&ha->vport_slock, flags);
+qla_bsg.c:qla2x00_update_fru_versions() {
+    count =3D list->count;
+    while (count--) {
+        memcpy(sfp, &image->field_info, sizeof(image->field_info));
+        ...
+        image++;
     }
 }
 
-The caller, qla24xx_vport_delete(), then proceeds to unconditionally free t=
-he
-memory via scsi_host_put(vha->host). If a thread holding a reference was
-stalled and resumes after the timeout, could it access freed memory?
-
+An unbounded count dictates unbounded traversal of the image pointer
+beyond the stack buffer. Could these lead to out-of-bounds DMA transfers
+and severe memory corruption?
 
 [Severity: High]
-Lastly, this isn't a bug introduced by this patch, but are the other
-vp_list traversals safe when dropping the lock?
+This isn't a bug introduced by this patch, but does this code leak
+uninitialized stack memory to user space?
 
-Several functions iterate over ha->vp_list using list_for_each_entry_safe()
-while dropping the vport_slock inside the loop. For example:
+There are uninitialized stack buffers populated by BSG requests that
+are fully copied back to user space:
 
-qla_mid.c:qla2x00_do_dpc_all_vps() {
-    list_for_each_entry_safe(vp, tvp, &ha->vp_list, list) {
-        if (vp->vp_idx) {
-            atomic_inc(&vp->vref_count);
-            spin_unlock_irqrestore(&ha->vport_slock, flags);
-            ...
+qla_bsg.c:qla2x00_read_fru_status() {
+    uint8_t bsg[DMA_POOL_SIZE];
+    struct qla_status_reg *sr =3D (void *)bsg;
+    ...
+    sg_copy_to_buffer(bsg_job->request_payload.sg_list,
+        bsg_job->request_payload.sg_cnt, sr, sizeof(*sr));
+    ...
+    sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
+        bsg_job->reply_payload.sg_cnt, sr, sizeof(*sr));
 }
 
-Since list_for_each_entry_safe() caches the tvp pointer before the loop body
-executes, dropping the lock exposes the unreferenced tvp node to concurrent
-deletion. Could qla24xx_deallocate_vp_id() unlink and free tvp while the
-lock is dropped, leading to a use-after-free when advancing to the next
-iteration?
+A similar pattern exists in qla2x00_read_i2c(). If a user issues a BSG
+request with a small or zero payload size, the rest of the array remains
+uninitialized. Will the entire structure size then be copied back via
+sg_copy_from_buffer(), leaking kernel stack frames to user space?
 
->  		}
->  		set_bit(VP_DPC_NEEDED, &vha->dpc_flags);
->  		qla2xxx_wake_dpc(vha);
+[Severity: High]
+This is a pre-existing issue, but does this code have an unlocked data
+race on vha->dport_status?
+
+In process context:
+
+qla_bsg.c:qla2x00_do_dport_diagnostics_v2() {
+    if (options =3D=3D QLA_START_DPORT_TEST_V2 ||
+        options =3D=3D QLA_RESTART_DPORT_TEST_V2) {
+        dd->mbx1 =3D mcp->mb[0];
+        dd->mbx2 =3D mcp->mb[1];
+        vha->dport_status |=3D  DPORT_DIAG_IN_PROGRESS;
+    }
+}
+
+In hardirq context:
+
+qla_isr.c:qla2x00_async_event() {
+    ...
+    case MBA_DPORT_DIAGNOSTICS:
+        vha->dport_status &=3D ~DPORT_DIAG_IN_PROGRESS;
+}
+
+Both contexts modify the status field asynchronously without locks.
+If the async completion interrupt fires before or during the process
+context's bitwise OR operation, could the clear operation performed
+by the interrupt be overwritten, permanently sticking the flag in
+DPORT_DIAG_IN_PROGRESS?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D50
+730-1-njavali@marvell.com?part=3D53
