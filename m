@@ -1,186 +1,157 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 036E120010A
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:00:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47E3520010A
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 16:01:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784304030; cv=none; b=XO7mnTndnMdt/IoOvssqkJM5q4ctp5xVILVjLWbLCTMKKOvytM4jsXLRYFDlSuR6xKUc6uZn8qRvDvMMQMHBJWFyn4QGhzYUzXVIcjo8BHBNYbfwKn+zhcjbmmotX/vq4P4vbAU+JSu0CnrNVLOAbFBcRq3d7EjqfFGgEoBw2o0=
+	t=1784304082; cv=none; b=g7fViOGuKtF0p011jDQ5Y5V6Tzl7sovmBNcERnpLGDgDhIhfVCEEHHjbXldZXSWbYwDhAlE+VyuBsh9NDyaVcWAtpqs+w1WPxg6zsPwViRikFFkjidyJTiICVxWyvvv/PQYQ8mLPOAU8LeDqGVDdIGmVmYDTHQ1AgmyUDrdcA7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784304030; c=relaxed/simple;
-	bh=l2FFvV33BWYt7P4F7T4iVWbZBeTKdTem0vS0ZFd0juQ=;
+	s=arc-20240116; t=1784304082; c=relaxed/simple;
+	bh=rsF+Mm3vRQe/UWS/ab78qb6y4S4CaquS+if+QG7LbRw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BtWrBHy09AMRfWj9VCC2XTKWYUj5bV1q7RLOsEjjvdaEuljZoMFBMCr+m2yEjbhzN9r4GiGLd1+vTxfw/9siDQIgoqI1zO6ei5Ll1Wxl+n21/KEmVFMQLiOv1273UzoaQZ88MzjA6j9IeZSDFNDVLSACZosazGK7Senwk6LM33A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KD4I4353; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=J9TF7hlPJ6nTU+XDbs/e/YM101ZHS02zVpQoWMpdVWI6p8DMlymcAha5iCyUDdx2ejTGs1iJ1D5FpRd73KnCrSbXnkOkUUqtWPUNZiezTiSIvs54F7ZTm8f9azeYsi6kXZSpDQ8ZFXJdzFuOFDaW9iEq1cL+hdD2ZKAYeK/yS2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZmXKIUy4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KD4I4353"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C8F21F000E9;
-	Fri, 17 Jul 2026 16:00:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZmXKIUy4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B12D81F000E9;
+	Fri, 17 Jul 2026 16:01:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784304028;
-	bh=tONTAFyua5ThJH1eIhcgWY7npVGBXVoOOD+gfb/PH6I=;
+	s=k20260515; t=1784304080;
+	bh=B/5Um5i9RNJEnStIthuKiFDsiiKlXqUuztaGUsxf11Q=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KD4I4353DxOip1/6ofumk6QqsHQdQFDF1oWXi+4hjyd+MAWPdVFZUdZaCmoO/Uzv0
-	 9YjuLxXBW6/rm+y5w/eqwQF8GPAwNcHBgSshtdgiQX1Z5dbC8h4Om6tn4Ex07YtN4O
-	 m7PGieXPRsGBCEnhUYzCSSBYiTmeQfyITj3FHZeV7LOrE5CJj4Pm8zCHCVg7NoRJZ/
-	 BTr3+G46TRZaid8lklz5HhA14pdsgHm1eZjfU7aYhFfkv4YB46kUO/4VKi+UOgz7W2
-	 uozKnqpGdO2XPKfhTLQqvv50J08L0A3Z0QnwCBg0DU/fGCm6hTc5t3XAkH+TJ5X9v2
-	 VkQK+DIhKa4ww==
+	b=ZmXKIUy4w/RBayVwdFBm/YD40e2i9ZpesH0oO+YvK92AuqmbhhD3nhiSZxJP+RGFk
+	 SLf6w/aeJ9w28tsPaEbD1PylZBT2qcE008GHVFmrzNFnnSGdk+rwYoSvaPThGFwhjC
+	 sW11XJ9otp9O6jdPd7kLBUkUkgNoEWv9jm9AhNB6rD3PNMZ9+popSnilbTRFV7HD2L
+	 unjroPpMu48dw9+sskkdfVlJg1AvvVkxH4CmwdmXbsCd0tLyCQQSBuX9gEDJ65vfG8
+	 fvZ+TXZyHfkj9/px6Ivz0my091hn1Q+vLVtAt7BcnXMwrXC5jk/5Ml+a3QGW6G5D0V
+	 NpU3VVc3ORlXQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 16/56] scsi: qla2xxx: Enable get_adapter_id mailbox
- for 29xx
+Subject: Re: [PATCH v5 22/56] scsi: qla2xxx: Enable qla2x00_shutdown for
+ 29xx
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260717152904.3155730-17-njavali@marvell.com>
+In-Reply-To: <20260717152904.3155730-23-njavali@marvell.com>
 References: <20260717152904.3155730-1-njavali@marvell.com>
- <20260717152904.3155730-17-njavali@marvell.com>
+ <20260717152904.3155730-23-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 17 Jul 2026 16:00:28 +0000
-Message-Id: <20260717160028.7C8F21F000E9@smtp.kernel.org>
+Date: Fri, 17 Jul 2026 16:01:20 +0000
+Message-Id: <20260717160120.B12D81F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
-New issues:
-- [Medium] Missing QLA29XX support in BSG command handler prevents BBCR fea=
-ture access.
-
 Pre-existing issues:
-- [High] Uninitialized kernel stack memory leak to userspace in `qla27xx_ge=
-t_bbcr_data()`.
-- [High] Race condition due to unprotected read-modify-write on shared `vha=
-->hw->flags` bitfield.
+- [High] Dropping a spinlock inside list_for_each_entry_safe exposes the ca=
+ched next pointer to use-after-free.
+- [High] Lockless iteration over fcport list exposes it to concurrent modif=
+ications.
 --
 
---- Patch [16]: [PATCH v5 16/56] scsi: qla2xxx: Enable get_adapter_id mailb=
-ox for 29xx ---
-commit 6a9facae245c0e3d5c4d496991f281dbefb90de2
+--- Patch [22]: [PATCH v5 22/56] scsi: qla2xxx: Enable qla2x00_shutdown for=
+ 29xx ---
+commit 6046de798bc7fa0a80928785cf9ec35ed974164d
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Enable get_adapter_id mailbox for 29xx
+scsi: qla2xxx: Enable qla2x00_shutdown for 29xx
 
-This patch adds the IS_QLA29XX() check to qla2x00_get_adapter_id() alongside
-the existing 27xx/28xx logic. This allows 29xx adapters to read additional
-mailbox registers for buffer-to-buffer credits and SCM/EDC status.
+Enable qla2x00_shutdown for 29xx adapter by adding IS_QLA29XX check
+to the shutdown path that performs firmware abort cleanup.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
-x.c
-> index 52d70b61654c7..3fc08120fdf11 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -1772,7 +1772,7 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16=
-_t *id, uint8_t *al_pa,
->  		mcp->in_mb |=3D MBX_13|MBX_12|MBX_11|MBX_10;
->  	if (IS_FWI2_CAPABLE(vha->hw))
->  		mcp->in_mb |=3D MBX_19|MBX_18|MBX_17|MBX_16;
-> -	if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw))
-> +	if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw) || IS_QLA29XX(vha->hw))
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 146701445485f..5450c40259bf9 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -3840,7 +3840,7 @@ qla2x00_shutdown(struct pci_dev *pdev)
+>  		qla2x00_disable_eft_trace(vha);
+> =20
+>  	if (IS_QLA25XX(ha) ||  IS_QLA2031(ha) || IS_QLA27XX(ha) ||
+> -	    IS_QLA28XX(ha)) {
+> +	    IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
+>  		if (ha->flags.fw_started)
+>  			qla2x00_abort_isp_cleanup(vha);
 
 [Severity: High]
-This is a pre-existing issue, but does this function leak uninitialized ker=
-nel
-stack memory to userspace?
+This isn't a bug introduced by this patch, but it exposes 29xx adapters to a
+pre-existing use-after-free issue in qla2x00_abort_isp_cleanup().
 
-In qla2x00_get_adapter_id(), the mailbox command structure is allocated on
-the stack without initialization:
+Dropping the vport_slock inside list_for_each_entry_safe() exposes the cach=
+ed
+next pointer (tvp) to concurrent removal. If a concurrent vport removal (e.=
+g.,
+via sysfs /sys/class/fc_host/hostX/vport_delete) acquires vport_slock, remo=
+ves
+tvp from vp_list, and frees it, the loop will dereference a freed pointer w=
+hen
+resuming:
 
-	mbx_cmd_t mc;
-	mbx_cmd_t *mcp =3D &mc;
+drivers/scsi/qla2xxx/qla_init.c:qla2x00_abort_isp_cleanup() {
+    ...
+	spin_lock_irqsave(&ha->vport_slock, flags);
+	list_for_each_entry_safe(vp, tvp, &ha->vp_list, list) {
+		atomic_inc(&vp->vref_count);
+		spin_unlock_irqrestore(&ha->vport_slock, flags);
 
-If qla2x00_mailbox_command() fails early (e.g., due to timeout or reset),
-the mc.mb array isn't populated from the hardware registers. However, the
-function still unconditionally assigns the uninitialized stack data to the
-id pointer:
+		qla2x00_mark_all_devices_lost(vp);
 
-	/* Return data. */
-	*id =3D mcp->mb[1];
-
-When called from the BSG handler, this uninitialized data is saved to
-bbcr.mbx1 in the error path and then copied to userspace:
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla27xx_get_bbcr_data() {
-...
-	rval =3D qla2x00_get_adapter_id(vha, &loop_id, &al_pa, &area,
-...
-	if (rval !=3D QLA_SUCCESS) {
-		bbcr.status =3D QLA_ST_WWN_MN_FAIL;
-		bbcr.mbx1 =3D loop_id;
-		goto done;
+		spin_lock_irqsave(&ha->vport_slock, flags);
+		atomic_dec(&vp->vref_count);
 	}
-...
-done:
-	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-		bsg_job->reply_payload.sg_cnt, &bbcr, sizeof(bbcr));
-...
+    ...
 }
 
-Should mc be zero-initialized to prevent leaking stack data?
-
->  		mcp->in_mb |=3D MBX_15|MBX_21|MBX_22|MBX_23;
-> =20
->  	mcp->tov =3D MBX_TOV_SECONDS;
-
-[ ... ]
-
-> @@ -1827,7 +1827,7 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16=
-_t *id, uint8_t *al_pa,
->  			}
->  		}
-> =20
-> -		if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw)) {
-> +		if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw) || IS_QLA29XX(vha->hw))=
- {
-
-[Severity: Medium]
-Will this BBCR data actually be accessible for 29xx adapters from userspace?
-
-While this patch adds support for reading the BBCR and SCM/EDC data for 29xx
-adapters, the BSG command handler used to retrieve this data appears to lack
-the corresponding IS_QLA29XX() check:
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla27xx_get_bbcr_data() {
-...
-	if (!IS_QLA27XX(ha) && !IS_QLA28XX(ha))
-		return -EPERM;
-...
-}
-
-Does qla27xx_get_bbcr_data() also need to be updated to include 29xx adapte=
-rs
-so the feature is fully reachable?
-
->  			vha->bbcr =3D mcp->mb[15];
->  			if (mcp->mb[7] & SCM_EDC_ACC_RECEIVED) {
->  				ql_log(ql_log_info, vha, 0x11a4,
+Can this lead to a use-after-free when the lock is reacquired and the loop
+proceeds to tvp?
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does the following SCM logic
-have a race condition?
+This is also a pre-existing issue, but this patch additionally exposes 29xx
+adapters to a lockless list iteration bug in qla2x00_abort_isp_cleanup().
 
-Just below this log statement in the same block, there is an unprotected
-read-modify-write on a shared bitfield:
+The vp_fcports list is iterated without holding any locks, which can race w=
+ith
+concurrent modifications like device discovery or target login/logout events
+that modify vp_fcports under tgt.sess_lock.
 
-			if (mcp->mb[7] & SCM_RDF_ACC_RECEIVED) {
-				vha->hw->flags.scm_enabled =3D 1;
+For the primary host:
 
-The flags member is a volatile struct containing bitfields like
-scm_enabled:1, lip_ae:1, and n2n_ae:1. Because this modification occurs
-in process context without holding a hardware spinlock, it performs a
-non-atomic read-modify-write on the shared 32-bit word.
+drivers/scsi/qla2xxx/qla_init.c:qla2x00_abort_isp_cleanup() {
+    ...
+	/* Clear all async request states across all VPs. */
+	list_for_each_entry(fcport, &vha->vp_fcports, list) {
+		fcport->flags &=3D ~(FCF_LOGIN_NEEDED | FCF_ASYNC_SENT);
+		fcport->scan_state =3D 0;
+	}
+    ...
+}
 
-If an asynchronous hardware event fires during this operation, the ISR
-might set a bit like lip_ae =3D 1. The process context would then overwrite
-the change with stale data, silently dropping the ISR's modification.
+And for other vports where vport_slock is explicitly dropped before iterati=
+ng:
 
-Could this lead to dropped loop initialization events?
+drivers/scsi/qla2xxx/qla_init.c:qla2x00_abort_isp_cleanup() {
+    ...
+	list_for_each_entry_safe(vp, tvp, &ha->vp_list, list) {
+		atomic_inc(&vp->vref_count);
+		spin_unlock_irqrestore(&ha->vport_slock, flags);
+
+		list_for_each_entry(fcport, &vp->vp_fcports, list)
+			fcport->flags &=3D ~(FCF_LOGIN_NEEDED | FCF_ASYNC_SENT);
+    ...
+}
+
+Does this lockless iteration risk list corruption or use-after-free if the
+list is concurrently modified?
+
+>  	} else {
+>  		/* Stop currently executing firmware. */
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260717152904.3155=
-730-1-njavali@marvell.com?part=3D16
+730-1-njavali@marvell.com?part=3D22
