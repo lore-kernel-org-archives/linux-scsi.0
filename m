@@ -1,257 +1,176 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E8723A16AA
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 09:38:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.180.131
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784281126; cv=pass; b=YA0mt+cyieJfhqBDyWYk0l17ZeNx2NlP0a6Jv0sgFPwpFq3OnbA425dRz2vVQKj5OsGyqUwS3yFx5WycSjvgzzo22OSvaibXA/ybMZ+8HFrus3rtS4dF1a+gxoWEa7h6UYWB52TgUBWRMSrNhCM1fp9wjT2LYN0tMUawOPJ8z7A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784281126; c=relaxed/simple;
-	bh=gKgeA9w2lvXNBlVpC/vszCTY3PxeBizUQZBLIlohBF0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AExEbw1OK0ygH+aFSFJthqf5nfe9YfuTF14UsCbbsCINRkFpDJjivcEpE8nYE9MdqzOSD2X4qWoLFqTCU5nv0XYQ8rfROr8zV/eb+esHmoxsjJkV2lLX7bt7mR/y9WWhUGFjzi/YxzzrAgziQtqwVNznMZvQ47KrqAmboKnXVxQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FSkHj2RV; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=cUb6Cun/; arc=pass smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A63F43E8C44
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 10:00:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784282434; cv=none; b=P8GLv7DwSg4tieNh9mPwIVlrkyGUVbPBZJ67mdbyXGoAuC9N4Yh1B8gtRWmjr7zGrbwWeM000VJ8tMQuLD10AX3t1l3U1XcD9coFUNrvUqLVUd6TmaHRpCEhSeg1Jc0u6N++ahnWdwbJv2HNOHZE2DgJ/62sIDThCxofVfUcSCM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784282434; c=relaxed/simple;
+	bh=wqeOxIUmW/5rNTe7Q00XfnZ+4jLXJEKU4+fa0njPZgk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QLchS+AYwBpRR8byIz58DEo7JD6hf3i44gM+xhVaBaziksGhx6h0WgeaEWmC90zygCHYOqsgPFdZ6G3vUguw3zFl73h9qDvFNmKosnGIBle39BEnCzwkHBlYj1uU9jxf818e/4Hwb2aguLEfem8l/lUjR2ORwAJI1b1k+xGkMhs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=W9xctcQV; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FSkHj2RV";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="cUb6Cun/"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66H9LQiZ1461966
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 09:38:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Byke9lF7SSp42L4/+Y+WzY4ZS/QRpxLv4f6tPfcDO5Q=; b=FSkHj2RVHfNGNFyd
-	Tvxff00A7KexF3nP6J0PBeyrg+IIvYiduSLB2nZ11464CQK8gbTqV3IthCYJX76X
-	FQVq6IhdeHdS7IlSJFMq1DI9E/ytGMPOfqEMgLY36JNcsVns67IPLKQ7Ue8wTFuF
-	y3R3UCZ2NTHczYBRJuqPz9P4Z6Jpjt9WNBSBZlWFo52VsnsE1/Y9atJ6O/+1rAi2
-	sw/xQlZe0miL+pMuOxjBN7M/E7rSVw7YddpPYRiN24bvIJxnUhxSj3pMUzA5N1+g
-	DNhPoD6qVYblUiYyZhJR2L3GDcuefsLw0F3NcWo+TN6Dlzs6ZaE6jZa1WiLoOQRo
-	QRjtKQ==
-Received: from mail-yx1-f70.google.com (mail-yx1-f70.google.com [74.125.224.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ffhpfg21f-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 09:38:43 +0000 (GMT)
-Received: by mail-yx1-f70.google.com with SMTP id 956f58d0204a3-6681d22f70aso4477631d50.0
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 02:38:43 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784281123; cv=none;
-        d=google.com; s=arc-20260327;
-        b=r48hNqgJDGn6ODo+9+F7dZrpCfkNKbXcD2pElTKyPB3u+sTVmIGs/Aq8T4e1mLwyvn
-         xrPnXD3cBphPJANXnw+55GjpeUlalqEwDiElA8YpOj1B+FhMN0N1KOsHGqWx6r0lsJeV
-         9Heg6gK/h3XAnuBW2V1B1dCPgulhqIu58WULkeoCvBjCnBWL9g9KUmNNdY2WXqgM/0lO
-         eP456MO3vDGuQFGlJKnbPwKAVIUdDXu02o1y5o+zzL6qF8NtuUPKU0EUPOPlVUyvvE/T
-         e11iLKjQc7Dp6DsbEwEQXj0WFM7p3VRXd4d5kxxyYj61sOgNmGW+vA5E2V7IO8sj42Rp
-         Z2Qw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Byke9lF7SSp42L4/+Y+WzY4ZS/QRpxLv4f6tPfcDO5Q=;
-        fh=JTgGO2B0J1+IWj2HeEz2aKCRcrsKlk5mjJ761jAORGk=;
-        b=VTI7CQY8mfX/C7194nr5HpTz1SYl3b0YhoHKHKUsAqIE/w81FbOrLEZjiayJzhhB+1
-         GqC/lZSb78SVJNNmjNCd+RSgJowQ9I7+y1JO+xO3YZ08B3LkTONloWJZiYxk3MuUomuX
-         ZcSVIkrBdeYSCLfn5bVwXaxM8a9FPXXlcYYxHpS7qRBJuaM5lgXAmDOEO9FtUuseJ+uq
-         7/4wU7EatSUaSKd36UULJWPYJb67//8N1+djRyqPB0gj6vI4zNiOK8kyorDpEq0YN06g
-         V7isr8oBid2xApIwG5jc+hp7bWavFxSwKhkg8bA/pPytnBIPJqCzc8g8NGY26t0IL334
-         MWMQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="W9xctcQV"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-475417f010dso4029929f8f.2
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2026 03:00:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1784281123; x=1784885923; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=baylibre.com; s=google; t=1784282431; x=1784887231; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=Byke9lF7SSp42L4/+Y+WzY4ZS/QRpxLv4f6tPfcDO5Q=;
-        b=cUb6Cun/ssj6PiWGf0oax9hSYRaqFW0IOvaodmJpfa813y0BX13MDEvz8ycjWprisf
-         IpmS4a5UXUXunr3Cv+TMmZqewf5JYLW5upV0zajfnUEj9Bf4K+SJOzg+Y1lRqNe4Hy/C
-         XizFB6M+R5L7oP8rre4Yn15F2acsKvzUxt4aGx4vnnXHEhZtb+OnsliRVHgapPKoE6cb
-         CFZ+qOg1HbwSpnZnXGpt9CyOLxC91cGrR/Xlod1X11jHuOV0JAX92y18/B0f4xoK1076
-         sfs81++XDGnyeqEHUC/F6wFlv6pGR2P+wianReOioNegJVKXt4m9FSpGWbHt0JralSu7
-         QWdg==
+        bh=IyEIycUP0tCRfyw5Mgo3r7EgIuywkzFDlc2uwJwMEek=;
+        b=W9xctcQV17589VXOX4QiHt8hKfte7aFOfI7jLYpX6jjoWiZcskNY9zLMp673vV4FRn
+         K522ooQMKwTcr4SqKJzMDNoh9Eev6hbNRyImhOmBMqswhb1vAkG3mc/U+auJDI9lrX/3
+         DD17p4FN8WBe376ZVlFrWSJYIuiijFgQB+AUNZM76OFic6mRinZX22ftrGcxtRr/IR1y
+         1HEchMOjsvzQlWqm9pb+YUJawdwr26YuxnhBNwzVlsgyrE8ZmzecKU5keo1SxvKdlF3x
+         wJce56M2AUrJqv5c4/wtsuexfjRO2B5oLXPxm/csEoyDFtDgjqPY3vXsYSLIg/DCC7o8
+         KhpQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784281123; x=1784885923;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20251104; t=1784282431; x=1784887231;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Byke9lF7SSp42L4/+Y+WzY4ZS/QRpxLv4f6tPfcDO5Q=;
-        b=I7QU5K8fXDS4OChwAYQofcmaHVaN911FyTzQIZBm75JQcvhTU5CijfBt3UQX2zqVuc
-         VjrGY0sUD/RrWHIAIkoj85H59TeE/XGJspb4TjW/B13m6waBJNEgU2oTSQTWejN62BxH
-         +FmcTdM5oOGWo+ZVLKn3aKIUamTw8jFB7eACSEP1FZtC63IoecZ5oLoWBolm+JMaUL3U
-         r3X28G446S5RW3NXnh6E7bfUOR8hUvaSwdpWn/l/ls3JIIpVbeZd3Cx1MZJCtAPKYP4j
-         5NY7nIeGNmcFRku57//uwpHhZqxNr6gbH0Nan2YRP8ScdlReC0bSoCWBgCDEbU3gGv/F
-         yeuw==
-X-Forwarded-Encrypted: i=1; AHgh+RoDUiK3v32eBzvi0CsJL/9i6084p3zLUhmXNQtKSnut/LRTaQ6fmWEQES2mHdDqNocR3cxKxJFzmqYh@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxwmk388ZY0cPxd3EibWX6g6pDrsPraIjRGncnXGyZRnBMm2SNI
-	51UOffA+RVB7V++0RfkBInDEiod/gl80R0O/lmBphmCJNrX4UWgxec6lAAw5qebm9rWAKE1OTE5
-	OWITRjkUXIV3ArIh6U0KckxZEzilWmu5lqQU6tdgweHNxL+jyRulbptbUZYz2jyawDR/AwwFCur
-	sEi39R1zdM/nKJ6SJZzroMhHMTp75yfzH4VwLlXI4=
-X-Gm-Gg: AfdE7clErnxFgdY3OkJqyvV97CfdDm6nwZERGRyDKsxgfnATShr/Q66CHSkViWPDdJQ
-	pf0AhDwAQG1IaV27G4aBas5c4YCGIPYYdJA2qf/b9mkx1kXAJvp/jZ++q/xFma2RuEOSSJKMm7S
-	zTpfJ3aI6E4AeObFDwpmUgrkHNQkLpH+TBhItpAgkkcOWY9f+yO/AgWsg=
-X-Received: by 2002:a05:690e:13ce:b0:667:daee:17ee with SMTP id 956f58d0204a3-6683bb79a33mr442039d50.39.1784281122906;
-        Fri, 17 Jul 2026 02:38:42 -0700 (PDT)
-X-Received: by 2002:a05:690e:13ce:b0:667:daee:17ee with SMTP id
- 956f58d0204a3-6683bb79a33mr442029d50.39.1784281122363; Fri, 17 Jul 2026
- 02:38:42 -0700 (PDT)
+        bh=IyEIycUP0tCRfyw5Mgo3r7EgIuywkzFDlc2uwJwMEek=;
+        b=MHC8CDs55hTtzmOt4yq9ihblPURCKQKDjiPGb1m2fwBIxo0R3Yz5nfPP3rtDPPySAQ
+         eNl5Exh1oDjHlf0fDfmUnobdxJSr/thxojP/F65EqDCrqTIP+OgZtHYrrbbuTmO+MrLv
+         Bf5ftpWGzz9LXoZATIE81jarNR9xnFH06KfmYHn0fclhmCnOr+jj2VD81NK4IYLmsXog
+         qkRyLWoVb+e6dEsZbxuUNsxEcRVG58oexButhxIY3ds2jUO6F3PPoiLlprCw+X00Y3uw
+         N8Bl7sgt47fx4iUeK80RiC7AnNjpsk63IcIKqweyHfkCePXOxLUAg5nCAYHb9aELzbfW
+         TZ6w==
+X-Forwarded-Encrypted: i=1; AHgh+RqNCyKfxwLa0heZllLTbEvJA5QXdOyg6PVvL0nnuKzfRIUxuVwEWbrRMGDAqBTNvJt+QPN8gq96fbRJ@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyvi1ucSEm9DPirGAJ9M0dO0/Q9Ed5hL6YbTjkqPgUbQ2+CKUje
+	5cRMl0dVrxC/ApGX4aoTUHHuHljtthMHrWLY5euPv7DDByfp92N9gCx7fmVqqOvX8Hk=
+X-Gm-Gg: AfdE7cnGfDA0e+LG/zMRQVqt5bN7W8nDd4jPMjyAuGI97+24sGDjU6td/QoXVLqCA4Z
+	ggvlxW8NcQ22zNPr/dF6lwXqWPZ/pCJpFCGFmxS/OtLy9KeWiIxnaWrFxcQYCbSYhtDUZ7awdrT
+	a7jwCkQI4g68e5ieMpkiJ7DKAWVVlEdTPbQQ2zIICmAeeF64s3th+1sdGDVqXjk06fCvG+rg657
+	f/mfPd/EQcn4vNy2UA1b/wga2YKT/bDSH+Hde2j1kMVg2V62y5Edv/WlJcvanACj+9dQWEnEtog
+	z3hfnfAKZ8e+8rawl99g1FUcHTMlsfi2b6v0tfC0kyayTulKDd15W0z9fvReKX8pIXC+2haMX1e
+	SU4FZ0PiyhbGej8FFqgX0G6Pmt0zvYbsY4TBA8R4o0CTdVFGTjOp2mhj0p4oWqBuvgy4VkYrCnV
+	Dhg9OYJ7EtmhBtZhlxU9r8L+LjzytNT4sYHvbOMAcUySh03OOzL6hUYA8GbjRP26TyeZodVS0go
+	JSA
+X-Received: by 2002:a05:600d:10c:b0:495:409e:bc80 with SMTP id 5b1f17b1804b1-4954a51b852mr13356225e9.37.1784282430507;
+        Fri, 17 Jul 2026 03:00:30 -0700 (PDT)
+Received: from localhost (p200300f65f47db047d2d8b161e35ab77.dip0.t-ipconnect.de. [2003:f6:5f47:db04:7d2d:8b16:1e35:ab77])
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-4954a2e83ddsm32621095e9.10.2026.07.17.03.00.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jul 2026 03:00:29 -0700 (PDT)
+Date: Fri, 17 Jul 2026 12:00:27 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Adam Radford <aradford@gmail.com>, 
+	Adaptec OEM Raid Solutions <aacraid@microsemi.com>, Matthew Wilcox <willy@infradead.org>, 
+	Hannes Reinecke <hare@suse.com>, Finn Thain <fthain@linux-m68k.org>, 
+	Michael Schmitz <schmitzmic@gmail.com>, Ram Vegesna <ram.vegesna@broadcom.com>, 
+	Yihang Li <liyihang9@h-partners.com>, Don Brace <don.brace@microchip.com>, 
+	HighPoint Linux Team <linux@highpoint-tech.com>, Brian King <brking@us.ibm.com>, 
+	Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, 
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil <chandrakanth.patil@broadcom.com>, 
+	Jack Wang <jinpu.wang@cloud.ionos.com>, Junrui Luo <moonafterrain@outlook.com>, 
+	Kees Cook <kees@kernel.org>, Dave Jiang <dave.jiang@intel.com>, 
+	Giovanni Cabiddu <giovanni.cabiddu@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Lukas Wunner <lukas@wunner.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	Thomas Gleixner <tglx@kernel.org>, Duoming Zhou <duoming@zju.edu.cn>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, target-devel@vger.kernel.org, storagedev@microchip.com, 
+	megaraidlinux.pdl@broadcom.com, Markus Schneider-Pargmann <msp@baylibre.com>
+Subject: Re: [PATCH] scsi: Consistently define pci_device_ids using named
+ initializers
+Message-ID: <aln8-b9iFDzAPo6V@monoceros>
+References: <20260429101820.3059523-2-u.kleine-koenig@baylibre.com>
+ <aigySpryV0ptiBqr@monoceros>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260716083728.2226422-1-jorge.ramirez@oss.qualcomm.com> <20260716083728.2226422-3-jorge.ramirez@oss.qualcomm.com>
-In-Reply-To: <20260716083728.2226422-3-jorge.ramirez@oss.qualcomm.com>
-From: Jens Wiklander <jens.wiklander@oss.qualcomm.com>
-Date: Fri, 17 Jul 2026 11:38:31 +0200
-X-Gm-Features: AUfX_mxVDZM5kXu-CrAEkInMj0hjSBk8LzLzD_taXmZkxBvbyWjLlJY_ZY3mexE
-Message-ID: <CAGgiveXtErFjDgxN9reR7s705U3wnnH65c4Su06ZQz_7EYwzuA@mail.gmail.com>
-Subject: Re: [PATCH v1 2/2] ufs: rpmb: use a fixed-length RPMB dev_id
-To: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
-Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        beanhuo@micron.com, can.guo@oss.qualcomm.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        op-tee@lists.trustedfirmware.org, jenswi@kernel.org,
-        sumit.garg@oss.qualcomm.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="r37dgzn723qnryre"
+Content-Disposition: inline
+In-Reply-To: <aigySpryV0ptiBqr@monoceros>
+
+
+--r37dgzn723qnryre
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE3MDA5NiBTYWx0ZWRfX8P9Q4XLdOOYp
- f7yC18Fb4N2ivMffbVxLhPeykzXbXtku3GRPNq0t5KIb3vwyYdBTpeL9ayWWJ0NTsfG4lRWwmuI
- 6pVjaYZ58GMP3+R8lSUdxkEcTVZN51g2pzDf87lfn3A8ECUv+Hlu5hJmkABlwgVNmbURqtvOS+H
- sHkrhgjIV7qTVZYvkms+tJiWNTOgrAPtfmfMlJmTyGLjKIiKP6tm9cTV/fqySH0e8mwKJaODJTX
- u+nO0JYUNmFDSX0OhI4ouUYBoMAyDKjpOPuJp7+JegJlEDTYLDNumqtcADBRD8/LBbLzYKtvo46
- c65AZsavtSGQYsUQKrRlrm1L6xAIohqrfLKt3vleGpshWeWKtY/ieQ2J3gLDB4rlkbHrwJyw8qu
- uTe1XRyfNcTCysL3yMwt2cX6zQ18h2nMVpSfhO9y6Jje8ykB4hjfepGRF+rA3alVWfFiHSuQ/P8
- e+ewQNchVzCuJVwmyVg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE3MDA5NiBTYWx0ZWRfXyMR4yTfDVRKl
- vLhg3BFFAQSRBTo3e3l3dS4IBwOuXHcqb2bpG8iWRa3c5FGXTfxf0K5cxSCquv+QDGB8LnO6vDh
- TH1h3mNsTsI9OCWl962arzJUitRcvGQ=
-X-Authority-Analysis: v=2.4 cv=YeWNIQRf c=1 sm=1 tr=0 ts=6a59f823 cx=c_pps
- a=S/uc88zpIJVNbziUnJ6G4Q==:117 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
- a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=3WHJM1ZQz_JShphwDgj5:22 a=NEAV23lmAAAA:8 a=EUspDBNiAAAA:8
- a=xHNurQw6US8NauEldhQA:9 a=QEXdDO2ut3YA:10 a=nd2WpGr1bMy9NW-iytEl:22
-X-Proofpoint-GUID: 6Vvz32zAdw8ryaD4eRtKSOFg2Gbv2cfX
-X-Proofpoint-ORIG-GUID: 6Vvz32zAdw8ryaD4eRtKSOFg2Gbv2cfX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-17_02,2026-07-15_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 bulkscore=0 suspectscore=0 priorityscore=1501 clxscore=1011
- spamscore=0 lowpriorityscore=0 adultscore=0 phishscore=0 impostorscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607170096
+Subject: Re: [PATCH] scsi: Consistently define pci_device_ids using named
+ initializers
+MIME-Version: 1.0
 
-Hi Jorge,
+On Tue, Jun 09, 2026 at 05:34:40PM +0200, Uwe Kleine-K=F6nig (The Capable H=
+ub) wrote:
+> [Dropping Bradley Grove and Michael Reed from Cc: as their addresses
+> bounced]
+>=20
+> On Wed, Apr 29, 2026 at 12:18:20PM +0200, Uwe Kleine-K=F6nig (The Capable=
+ Hub) wrote:
+> > ... and PCI device helpers.
+> >=20
+> > The various struct pci_device_id arrays were initialized mostly by one
+> > of the PCI_DEVICE macros and then list expressions. The latter isn't
+> > easily readable if you're not into PCI. Using named initializers is more
+> > explicit and thus easier to parse.
+> >=20
+> > Also use PCI_DEVICE* helper macros to assign .vendor, .device,
+> > .subvendor and .subdevice where appropriate and skip explicit
+> > assignments of 0 (which the compiler takes care of).
+> >=20
+> > The secret plan is to make struct pci_device_id::driver_data an
+> > anonymous union (similar to
+> > https://lore.kernel.org/all/cover.1776579304.git.u.kleine-koenig@baylib=
+re.com/)
+> > and that requires named initializers. But it's also a nice cleanup on
+> > its own.
+> >=20
+> > This change doesn't introduce changes to the compiled pci_device_id
+> > arrays. Tested on x86 and arm64.
+> >=20
+> > Signed-off-by: Uwe Kleine-K=F6nig (The Capable Hub) <u.kleine-koenig@ba=
+ylibre.com>
+> > ---
+> > Hello,
+> >=20
+> > the mentioned follow-up quest allows to do
+> >=20
+> > 	-	{ PCI_VDEVICE(TTI, 0x3220), .driver_data =3D (kernel_ulong_t)&hptiop=
+_itl_ops },
+> > 	+	{ PCI_VDEVICE(TTI, 0x3220), .driver_data_ptr =3D &hptiop_itl_ops },
+> >=20
+> > which gets rid of a bunch of casts and so brings a little bit more type
+> > safety. This patch is a preparation for that.
+> >=20
+> > I assume a single patch for all of drivers/scsi is fine. If not I can
+> > split per driver.
+>=20
+> Is this patch still on someone's radar?
 
-On Thu, Jul 16, 2026 at 10:37=E2=80=AFAM Jorge Ramirez-Ortiz
-<jorge.ramirez@oss.qualcomm.com> wrote:
->
-> The RPMB authentication key is derived from the dev_id handed to the
-> RPMB subsystem. OP-TEE implements the eMMC RPMB flow, where the dev_id
-> is the eMMC CID, a fixed 16-byte value, and it derives the key on that
-> assumption.
->
-> The UFS RPMB id built here is "<device_id>-R<region>", which is variable
-> length and longer than 16 bytes. Passing it verbatim would tie the
-> derived key to a length OP-TEE does not expect and diverge from the
-> fixed-CID eMMC ABI, requiring OP-TEE to be taught about variable-length
-> UFS ids.
+Hmm, it seems it isn't? Who is the right person to prod?
 
-Yes, if it's possible, It's nice to avoid that.
+FTR: The patch still applies fine to next-20260716.
 
->
-> Hash the UFS id into a fixed 16-byte dev_id with blake2s instead. This
-> keeps the derived key stable and unique per region while matching the
-> eMMC CID layout OP-TEE relies on, so the key-derivation ABI stays
-> identical and no OP-TEE change is needed.
->
-> Signed-off-by: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
-> ---
->  drivers/ufs/core/ufs-rpmb.c | 19 +++++++++++++++++--
->  1 file changed, 17 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-> index d0c7ea7a36f4..b800871269bb 100644
-> --- a/drivers/ufs/core/ufs-rpmb.c
-> +++ b/drivers/ufs/core/ufs-rpmb.c
-> @@ -10,6 +10,7 @@
->   *     Can Guo <can.guo@oss.qualcomm.com>
->   */
->
-> +#include <crypto/blake2s.h>
->  #include <linux/module.h>
->  #include <linux/device.h>
->  #include <linux/kernel.h>
-> @@ -21,6 +22,7 @@
->  #include <linux/unaligned.h>
->  #include "ufshcd-priv.h"
->
-> +#define UFS_RPMB_ID_LEN                        16      /* Match eMMC CID=
- Length */
->  #define UFS_RPMB_SEC_PROTOCOL          0xEC    /* JEDEC UFS application =
-*/
->  #define UFS_RPMB_SEC_PROTOCOL_ID       0x01    /* JEDEC UFS RPMB protoco=
-l ID, CDB byte3 */
->
-> @@ -154,6 +156,7 @@ int ufs_rpmb_probe(struct ufs_hba *hba)
->  {
->         struct ufs_rpmb_dev *ufs_rpmb, *it, *tmp;
->         struct rpmb_dev *rdev;
-> +       char *dev_id =3D NULL;
->         char *cid =3D NULL;
->         int region;
->         u32 cap;
-> @@ -213,8 +216,17 @@ int ufs_rpmb_probe(struct ufs_hba *hba)
->                         goto err_out;
->                 }
->
-> -               descr.dev_id =3D cid;
-> -               descr.dev_id_len =3D strlen(cid);
-> +               dev_id =3D kzalloc(UFS_RPMB_ID_LEN, GFP_KERNEL);
-> +               if (!dev_id) {
-> +                       device_unregister(&ufs_rpmb->dev);
-> +                       ret =3D -ENOMEM;
-> +                       goto err_out;
-> +               }
-> +
-> +               blake2s(NULL, 0, cid, strlen(cid), dev_id, UFS_RPMB_ID_LE=
-N);
-> +
-> +               descr.dev_id =3D dev_id;
-> +               descr.dev_id_len =3D UFS_RPMB_ID_LEN;
+Best regards
+Uwe
 
-This change will break current users of this interface, if there are
-any. There are currently no upstream users in OP-TEE since you're
-adding that with https://github.com/OP-TEE/optee_os/pull/7881, but I
-suppose that's not the only use case.
+--r37dgzn723qnryre
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Cheers,
-Jens
+-----BEGIN PGP SIGNATURE-----
 
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmpZ/TkACgkQj4D7WH0S
+/k4xwQf/VnEmioC8FCW5Ncvp7+gyqhkHvcGCyU/nsGhIZWW5IoHPdkJAiAiQPBRB
+My/lY/RZxov08i89DVATsE25Ht1QLoTb7ACOfBzVd+X+Q6cCm/V1HsGrqGH7h5yz
+tEjqztO+uiLCsB6/CjjnEIkrogjuoP6wT/fP4eSBy4Bggnx/sOyFX+uo3Zgo4MHm
+JIBqSFu9qH+eeU4D+O8PxMl91zUsZ0S2/DbnnhfRmm3u3nWuQEhkGVuordux/EGC
+qckWm81ioee2Qu+8lN8KmBWB3Nv2EMoQ6R7gDWs+fr5pzMHHnKzH6vjDQGa9xq3T
+AvnzuB+KI/UCWcuR0medIUDxP2C/Gg==
+=1KpO
+-----END PGP SIGNATURE-----
 
->                 descr.capacity =3D cap;
->
->                 /* Register RPMB device */
-> @@ -228,6 +240,8 @@ int ufs_rpmb_probe(struct ufs_hba *hba)
->
->                 kfree(cid);
->                 cid =3D NULL;
-> +               kfree(dev_id);
-> +               dev_id =3D NULL;
->
->                 ufs_rpmb->rdev =3D rdev;
->                 ufs_rpmb->region_id =3D region;
-> @@ -240,6 +254,7 @@ int ufs_rpmb_probe(struct ufs_hba *hba)
->         return 0;
->  err_out:
->         kfree(cid);
-> +       kfree(dev_id);
->         list_for_each_entry_safe(it, tmp, &hba->rpmbs, node) {
->                 list_del(&it->node);
->                 device_unregister(&it->dev);
-> --
-> 2.54.0
->
+--r37dgzn723qnryre--
