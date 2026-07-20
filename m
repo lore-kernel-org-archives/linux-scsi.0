@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50A593C3F74;
-	Mon, 20 Jul 2026 07:36:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A5003C6A29;
+	Mon, 20 Jul 2026 07:40:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784533018; cv=none; b=DOV5E+cbHX+rzkLE7uTpU1ANacU5aUZpRgzsVame6/2O/ZJQGj2F2tChB/QVQ/5NEx44Dkcqn3yDVP0BxHDBf1VG0zM1Oe67hBgiraLLQThVZmeLkIMPBTrHCp/co2Gm9luk8xpeWBVG+AFaY+RFtAK/88nnr31t8eanmBozZwQ=
+	t=1784533231; cv=none; b=nFe6zt9VM/Pk9AuJb0wA4zriOHEpIgzj5w83Zu9R8gsoq1d4ehMt9yBUlDn4ngVh/MXSW1Bur1v5Nf5LQi6Ne6KK4tpalZRcWXsPA/eSijpCYcgbNbV/Ib7Drn/lDmMx4cvSBWxT13QvMGW4iRZgHYr7fKrVCPxe0db3Y9ztczA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784533018; c=relaxed/simple;
-	bh=pPnKZ4YclXiHwfh33fKCD8BSmy/eBQgbaEw1cZ67h/M=;
+	s=arc-20240116; t=1784533231; c=relaxed/simple;
+	bh=/TgedkZrQdA0C8VNe2Le2k0Ie5TJCjqKy5AsKkK9bIk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Mypt+4L7PoLJyKBAEkPwEBIsyHWBFDI+6x6TIsPCkhcK5QqvNMTzx8OvbG2EpK5ysOdLaaYEgCeB2gJYGikzDhdJ8rT3PKYwlRD8JhnlotnJIDy+dn5fK5rVDYLyQr+2KZM8GSAQkXl1659xknmLbMvEUyGD2kCpFtAerkWJ8XA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bf3L1fkx; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ae+hL4aRovRp9seLQJmh947Se3Ks7LLZ5ERLEhFLJve0pvVH6wT1+8jZp5x2FqgKm0U8Knzh9BsLfM5jypg36vq1IOgvMxKSt2BHyMsx9FPhRbT39PxSpyFtZocY/cSbzbX72bAQnXHmXN5GStrhL004ahRk88pwaSxsMgiMWso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n4IDqwlS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bf3L1fkx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 991C91F000E9;
-	Mon, 20 Jul 2026 07:36:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n4IDqwlS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 649FD1F000E9;
+	Mon, 20 Jul 2026 07:40:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784533016;
-	bh=UhWVtFaszsaZ7CVir3x7hFpdWPzAW78iP0KZPkwBaNg=;
+	s=k20260515; t=1784533228;
+	bh=iiRDLIaUDvPyOUfNQ5QPT0jzupS3tjgYKE+sN4pSdR8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bf3L1fkxT2V2BuIFjzhiQn3sXikVsIaciEa/JVTHeZWklvmpn/1o4OP6tl89NwQeG
-	 4hI90I5d5iFmHipMcAGhsuE1oXRyHwJsTlaQ67x5u9oll7gkEedgCbFF3pBYKIVBho
-	 DD0WWa2jFXGV5s4vJ5IbzH1spFj+KZynC5nJ8Qi68Xmz7KOpb3D//dvQuN4Qylh1/9
-	 TV75qMiADK80Qd66PJSydGtfQlaVDmPWgH2dtl0ezAxYqiaoOgH/gUxpPWDqWxQXje
-	 3K4oKggwt9l7Qw5b6ovVqXg18F4kfMhPFItKxEmDRdKSJ8C8U9gRYpZF97haHkEEsb
-	 JTIhnBolm6bpw==
+	b=n4IDqwlSP7HkDmWCVgp27niQOCk47vTCNPI/POdf2WPhk1eJuCBWOnVADjFpOdyn9
+	 cYm2DzUBCd6nGbFp1LdH876Wp7QGiqCFQ0C73irLQhScXzqzF2lXtUIRmElkk3AdiQ
+	 hci8q6sE5C+gqkvEA2TtL2kqv+dlwdlaMtBaR37qwdtBSa16LvXJG5LHDBA45D9aIo
+	 VOMlV9GbbiaNdZT2jya1QXP6w7ehYc8h3HeEKWNmZAefOiUopM+lrjCqeW7Rtp0zyK
+	 /TphPqiuYKbubi3lO+QrXGRidBLbWG7rckz6+lS+Dsu/7rjoVhZF+gysPgC4olissI
+	 ab7XwUCZNszUA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 2/2] scsi: libsas: terminate deferred commands on
- time out
+Subject: Re: [PATCH 1/1] fix memory leak during adapter release by
+ destroying gid_pn_req
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: cassel@kernel.org, dlemoal@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260720071450.1877625-3-dlemoal@kernel.org>
-References: <20260720071450.1877625-1-dlemoal@kernel.org>
- <20260720071450.1877625-3-dlemoal@kernel.org>
+To: "Nihar Panda" <niharp@linux.ibm.com>
+Cc: "Heiko Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>
+In-Reply-To: <20260720072736.3381816-2-niharp@linux.ibm.com>
+References: <20260720072736.3381816-1-niharp@linux.ibm.com>
+ <20260720072736.3381816-2-niharp@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 07:36:56 +0000
-Message-Id: <20260720073656.991C91F000E9@smtp.kernel.org>
+Date: Mon, 20 Jul 2026 07:40:26 +0000
+Message-Id: <20260720074027.649FD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,98 +50,75 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] A race condition between the SCSI timeout handler and ata_scsi=
-_requeue_deferred_qc(ap, NULL) causes timed-out deferred commands to be sil=
-ently completed as SUCCESS, leading to data corruption.
+- [High] The error path in `zfcp_adapter_enqueue()` calls `zfcp_erp_thread_=
+kill()` which unconditionally passes `adapter->erp_thread` to `kthread_stop=
+()`. If adapter initialization fails before the thread is created (e.g., du=
+ring `zfcp_allocate_low_mem_buffers()`), this results in a kernel panic bec=
+ause `kthread_stop()` does not handle NULL pointers.
 --
 
---- Patch [2]: [PATCH v6 2/2] scsi: libsas: terminate deferred commands on =
-time out ---
-commit e25a34ed23fb53d891efaea25a8a4f4ff07ee231
-Author: Damien Le Moal <dlemoal@kernel.org>
+--- Patch [1]: [PATCH 1/1] fix memory leak during adapter release by destro=
+ying gid_pn_req ---
+commit 5b4668bd066d14a43f77f6f0301f8c98cbb5069c
+Author: Benjamin Block <bblock@linux.ibm.com>
 
-scsi: libsas: terminate deferred commands on time out
+fix memory leak during adapter release by destroying gid_pn_req
 
-This patch implements the eh_timed_out SCSI host template operation for lib=
-sas.
-It avoids unnecessary SCSI EH trigger wait times for deferred non-NCQ comma=
-nds
-by utilizing ata_scsi_retry_deferred_qc() for SATA devices, mirroring the
-method used in libata-scsi.
+When releasing an adapter we don't free the mempool gid_pn_req that is
+allocated during the enqueue. This fixes the memory leak by destroying the
+mempool during the adapter's release.
 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index b02b4ca5c09e2..dfd7fc2c8cb66 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1762,8 +1762,7 @@ static void ata_scsi_schedule_deferred_qc(struct at=
-a_link *link)
->  		queue_work(system_highpri_wq, &link->deferred_qc_work);
->  }
-> =20
-> -static void ata_scsi_retry_deferred_qc(struct ata_port *ap,
-> -				       struct scsi_cmnd *scmd)
-> +void ata_scsi_retry_deferred_qc(struct ata_port *ap, struct scsi_cmnd *s=
-cmd)
+> diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
+> index 8ff7db7921b5a..fea573e00f9df 100644
+> --- a/drivers/s390/scsi/zfcp_aux.c
+> +++ b/drivers/s390/scsi/zfcp_aux.c
+> @@ -253,6 +253,7 @@ static int zfcp_allocate_low_mem_buffers(struct zfcp_=
+adapter *adapter)
+>  static void zfcp_free_low_mem_buffers(struct zfcp_adapter *adapter)
 >  {
->  	unsigned long flags;
-> =20
-> @@ -1771,6 +1770,7 @@ static void ata_scsi_retry_deferred_qc(struct ata_p=
-ort *ap,
->  	ata_scsi_requeue_deferred_qc(ap, scmd);
->  	spin_unlock_irqrestore(ap->lock, flags);
->  }
-> +EXPORT_SYMBOL_GPL(ata_scsi_retry_deferred_qc);
+>  	mempool_destroy(adapter->pool.erp_req);
+> +	mempool_destroy(adapter->pool.gid_pn_req);
 
-[Severity: Critical]
-This is a pre-existing issue, but does exporting and reusing
-ata_scsi_retry_deferred_qc() expose us further to a race condition with
-ata_scsi_requeue_deferred_qc()?
+[Severity: High]
+This is a pre-existing issue, but if memory allocation fails during adapter
+setup, could this lead to a kernel panic?
 
-If a deferred SATA command times out, the block layer marks its request as
-MQ_RQ_COMPLETE and enters scsi_timeout(). Concurrently, if EH is scheduled =
-for
-another command on the same port, ata_eh_set_pending() can call
-ata_scsi_requeue_deferred_qc(ap, NULL).
+In zfcp_adapter_enqueue(), if zfcp_allocate_low_mem_buffers() returns -ENOM=
+EM,
+the code jumps to the failed label and unconditionally calls
+zfcp_erp_thread_kill():
 
-When called with timedout_scmd =3D=3D NULL, this clears link->deferred_qc a=
-nd calls
-ata_scsi_qc_done():
-
-drivers/ata/libata-scsi.c:ata_scsi_requeue_deferred_qc() {
+drivers/s390/scsi/zfcp_aux.c:zfcp_adapter_enqueue() {
     ...
-    if (!timedout_scmd) {
-        ...
-        ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
-        continue;
-    }
+failed:
+    /* TODO: make this more fine-granular */
+    cancel_delayed_work_sync(&adapter->scan_work);
+    cancel_work_sync(&adapter->stat_work);
+    cancel_work_sync(&adapter->ns_up_work);
+    cancel_work_sync(&adapter->version_change_lost_work);
+    zfcp_destroy_adapter_work_queue(adapter);
+
+    zfcp_fc_wka_ports_force_offline(adapter->gs);
+    zfcp_scsi_adapter_unregister(adapter);
+
+    zfcp_erp_thread_kill(adapter);
     ...
 }
 
-ata_scsi_qc_done() zeroes qc->flags via ata_qc_free(), and calls scsi_done(=
-),
-which the block layer ignores due to the concurrent timeout. The timeout pa=
-th
-then adds the command to EH.
+However, if the thread was never created, adapter->erp_thread is NULL.
+zfcp_erp_thread_kill() unconditionally passes it to kthread_stop():
 
-When ata_scsi_cmd_error_handler() runs, it fails to find the QC because
-qc->flags is 0, assuming normal successful completion:
-
-drivers/ata/libata-eh.c:ata_scsi_cmd_error_handler() {
-    ...
-        } else {
-            /* Normal completion occurred after
-             * SCSI timeout but before this point.
-             * Successfully complete it.
-             */
-            scmd->retries =3D scmd->allowed;
-            scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-        }
-    ...
+drivers/s390/scsi/zfcp_erp.c:zfcp_erp_thread_kill() {
+    kthread_stop(adapter->erp_thread);
+    adapter->erp_thread =3D NULL;
 }
 
-Can this race cause timed-out deferred commands to be silently completed as
-SUCCESS, leading to silent data corruption?
+Since kthread_stop() does not handle NULL pointers, will this result in a
+NULL pointer dereference?
+
+>  	mempool_destroy(adapter->pool.scsi_req);
+>  	mempool_destroy(adapter->pool.scsi_abort);
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720071450.1877=
-625-1-dlemoal@kernel.org?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720072736.3381=
+816-2-niharp@linux.ibm.com?part=3D1
