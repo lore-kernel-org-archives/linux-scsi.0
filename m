@@ -1,45 +1,69 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDF463B71C2;
-	Mon, 20 Jul 2026 07:15:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52DF43BBFCE;
+	Mon, 20 Jul 2026 07:27:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784531706; cv=none; b=BJe18wW9sV/66f2UPpD5JXTEd1hgLThooztGu2djxsmCCw++8H3G6kNCe1URcQpz7tPVQcwjiuCMB4amL7gChMLzmO3xL7QqQhzsh7wY0jxv0kuMkXh41ibHLlwsoGEcDUQ3L6P9DQu64QUOFtRZ/t20smiCtSAt56+Mt2bi03I=
+	t=1784532478; cv=none; b=AjMRccKCNcUFxDxIz29LMJHzU6CcpKnZwX6DEmUOA3H9AztC8druje+zAHRsZSyrXtZ/Q8s0u/zqOccNASSfLs4fqd+b+sOA7eY+XDw1P0O5xJ7hrg5Cf0jOO7AaCWAMFvjG84A6DpjB8xvqS/oYGeP77v1zAR8HmcJw2+WP9GA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784531706; c=relaxed/simple;
-	bh=9BUpk15qLaEqgljyK7r6LiiLwaL+fn/w+l7ArgL2ug8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HCtSEHGHXveeBFhWr3JE56M8tXzRulfD4QXaQEGlX6JVOIfelkdZqiZvS2j+mI84mGKEejtVXIDTBemFhIFlQN1120z9R7TfPqK9vokoSUmezrFoFHr7YUZNYf7mMNx893jRMfWXEdyU0xcA7PcLKFitOJm9n7s75NSM7y6er+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b5F22iSk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784532478; c=relaxed/simple;
+	bh=qpQUfDd7NVAh+v8LhpGSOVPtuFPRXIZBqH7/itNvfto=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=g83B+llEhplZVQjbdXGimN0PK9eEX7SHN+ZXBk9l3Yi+J9+wbcS0UFE7c/czENRAjd0W5WQ+p0t7NVLnWRuaYZQswDpOi7V9WX21Batgu99sgMUlixx9oZwiL8UjaFFzbQ3kP3NtR12tsg9cG1StYdq/3+XhG35BG/tIRsFnUSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=mQQnJ76s; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b5F22iSk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB41A1F00A3A;
-	Mon, 20 Jul 2026 07:15:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784531704;
-	bh=XnZ44fXzchTURL82v3BAxbRhbVgIBwIKvte3R4h7aCo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=b5F22iSkycEsH7btk9txCaw8NJFWX7nt1GuoS+o2DU+oO5PM4dxksvDQ9WAaiwXI8
-	 fQpQEX4RiVBqeSoebL57Q+hH09V7y10cp8WIFHr1CICVza83YazFIIit6mryNO/HV+
-	 QpsharlXAHHbpLTy87vX/cmJl++A5XKdi7dCk6wZjhVK5IeJ6Itu9oQgPD7P8yedPd
-	 gIZyKSScYY/3Lp+HiuaYeb0KXe5tMgvm0+ZGDqwcIy4BruB2GFqq14g1JFuUDF28gp
-	 3bo5G90O/LirCGsGbo606d2b/Dzy8dSBFPOSPFI+m/CCM7lydHSKP9gRshIkVKB/iB
-	 MKgf8HExmi8rA==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Igor Pylypiv <ipylypiv@google.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v6 2/2] scsi: libsas: terminate deferred commands on time out
-Date: Mon, 20 Jul 2026 16:14:50 +0900
-Message-ID: <20260720071450.1877625-3-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260720071450.1877625-1-dlemoal@kernel.org>
-References: <20260720071450.1877625-1-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="mQQnJ76s"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66K6g0gc1368506;
+	Mon, 20 Jul 2026 07:27:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=cvpAM0GL/YI/ppYtRNAx+aCI2YjCzRCtRkR5L7W/c
+	iI=; b=mQQnJ76s4Ku4KhF2TBnMF3PVfq8na6ZLKsOwIX1/ziHhDCHD1XP/77LXu
+	Ly1nt3RIP2C8h/UfXzT5b/C06wuVblKkECS/nzVICUpJ3KWqsp/uvK9dqOQOUkCr
+	Zd8hV7kX2sKG/naVRfTFw1SATBPCalO5+2H+uQEqpdk9vw9CiUh3KdQKS6sxfv9C
+	mhiZ7MrfNGCA1KHvwNfbJSpVFy6eD6mwFB+Q+lgoRgc9fxjudm34AQgxuG2yBkI+
+	UzfKRNU+f5vdhNuCIq09qiV5vWa1Hkt9As3kJsbFfZcD0GwUUZCYezautOvymSV7
+	kFh5RxOVZFJw7pT7szQm32qFoa2tw==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fg78fx23p-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 20 Jul 2026 07:27:49 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66K7JbMZ017394;
+	Mon, 20 Jul 2026 07:27:48 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4fgmtjmj9r-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 20 Jul 2026 07:27:48 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66K7Rf5e15925620
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 20 Jul 2026 07:27:41 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 94C382004D;
+	Mon, 20 Jul 2026 07:27:41 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 6393020040;
+	Mon, 20 Jul 2026 07:27:41 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
+	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 20 Jul 2026 07:27:41 +0000 (GMT)
+From: Nihar Panda <niharp@linux.ibm.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+        Heiko Carstens <hca@linux.ibm.com>,
+        =?UTF-8?q?Vasily=20Gorbik=C2=A0?= <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        =?UTF-8?q?Christian=20Borntraeger=C2=A0?= <borntraeger@de.ibm.com>,
+        =?UTF-8?q?Nihar=20Panda=C2=A0?= <nihar.panda@ibm.com>
+Subject: [PATCH 0/1] zfcp bugfix for 7.2
+Date: Mon, 20 Jul 2026 09:27:35 +0200
+Message-ID: <20260720072736.3381816-1-niharp@linux.ibm.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,116 +71,43 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIwMDA3OCBTYWx0ZWRfX4AVucCB20f9q
+ vdSFqqZAQFhib03p6EuZrQFWxQXudS8wspxkyhHwQR7MSrAoFOW6j/s9GDdibZj8GdjZX6UP5D2
+ fWvIGARVROgiz4Su7MCdGvVPE91klFqUsrw4nMRbcW/tn/IDkmM6mqrwmIY4PnWCgyHHeuYwMWh
+ eEygv3QRAEHZ9rHvP8B27nsdODZihbN1QNE3epP0OZkUM94UFrB27ykEIMy1jWSV4KFVwVjPumv
+ D/dup5le1huZermbRVzGDE8gk6OAf8a1D6/goF+hgeI8tdSnnSvNADeZnXLLx6ZSo8NyoyFp4x1
+ ll1tQdOShu2rE8rKvzipF2KVU45em3UKr+2oIKlHnBGaPErHNsphmXPaKEUCspzs0EqhI8Nprzm
+ thYMZ8i2oKK+NxEje/TTyYs0fpuNwYAmWWOXXz6Em8nEkUrPe80d0NpZoLWk2fnKxyGDFUzcKcM
+ ZFcYWfPTJtsy6uj2EEQ==
+X-Proofpoint-GUID: pTtdvny1oSGs-Z6EAL9gRSgzOrdysKfK
+X-Authority-Analysis: v=2.4 cv=MelcfZ/f c=1 sm=1 tr=0 ts=6a5dcdf5 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=V8glGbnc2Ofi9Qvn3v5h:22 a=Z6Ue59XA6M_jgbqSVj4A:9
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIwMDA3OCBTYWx0ZWRfXxwW0S+xeMxBf
+ XGEPuQAUaRKsr7dplRC0zGYaeSccY80Zl1dOaFcCzNFYpXYeoRpak6fM9EpzkQhKs7DYLnIJDKG
+ hP8Gr/tHiLu+XMUIYnxru6v0/sIE2hk=
+X-Proofpoint-ORIG-GUID: pTtdvny1oSGs-Z6EAL9gRSgzOrdysKfK
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-20_01,2026-07-17_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0 spamscore=0
+ clxscore=1015 malwarescore=0 phishscore=0 adultscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607200078
 
-If a command timeout occurs while we have a deferred non-NCQ command
-waiting to be issued, the SCSI EH task is not immediately woken up as the
-waiting deferred command is never issued nor completed, thus leaving this
-command to always be counted as "busy" for the SCSI host. This results in
-the test "shost->host_failed != scsi_host_busy(shost))" in the function
-scsi_error_handler() to always be true, keeping the EH task sleeping.
-Eventually, when the deferred command also times out, the SCSI EH task
-is woken up and the timeout processing occurs.
+Hi Martin and James,
+we have a zfcp bugfix that address memory leak in zfcp.
+It would be great if this could be included in v7.2 release.
 
-Avoid this unnecessary additional SCSI EH trigger wait time with the same
-method as implemented in libata-scsi, using the eh_timed_out SCSI host
-template operation. The function sas_eh_timed_out() implements this
-operation and executes the function ata_scsi_retry_deferred_qc()
-for SATA devices.
+Benjamin Block (1):
+  fix memory leak during adapter release by destroying gid_pn_req
 
-Co-developed-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
----
- drivers/ata/libata-scsi.c           |  4 ++--
- drivers/scsi/libsas/sas_scsi_host.c | 15 +++++++++++++++
- include/linux/libata.h              |  1 +
- include/scsi/libsas.h               |  2 ++
- 4 files changed, 20 insertions(+), 2 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b02b4ca5c09e..dfd7fc2c8cb6 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1762,8 +1762,7 @@ static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
- 		queue_work(system_highpri_wq, &link->deferred_qc_work);
- }
- 
--static void ata_scsi_retry_deferred_qc(struct ata_port *ap,
--				       struct scsi_cmnd *scmd)
-+void ata_scsi_retry_deferred_qc(struct ata_port *ap, struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 
-@@ -1771,6 +1770,7 @@ static void ata_scsi_retry_deferred_qc(struct ata_port *ap,
- 	ata_scsi_requeue_deferred_qc(ap, scmd);
- 	spin_unlock_irqrestore(ap->lock, flags);
- }
-+EXPORT_SYMBOL_GPL(ata_scsi_retry_deferred_qc);
- 
- enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *scmd)
- {
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index c83282733ec4..9bc98a30d9f4 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -502,6 +502,21 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd)
- }
- EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
- 
-+/*
-+ * Handle deferred QCs in case of a command timeout.
-+ * See ata_scsi_eh_timed_out() for details.
-+ */
-+enum scsi_timeout_action sas_eh_timed_out(struct scsi_cmnd *cmd)
-+{
-+	struct domain_device *dev = cmd_to_domain_dev(cmd);
-+
-+	if (dev_is_sata(dev))
-+		ata_scsi_retry_deferred_qc(dev->sata_dev.ap, cmd);
-+
-+	return SCSI_EH_NOT_HANDLED;
-+}
-+EXPORT_SYMBOL_GPL(sas_eh_timed_out);
-+
- /* Try to reset a device */
- static int try_to_reset_cmd_device(struct scsi_cmnd *cmd)
- {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index e1227a2134d2..b8086cac2d04 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1154,6 +1154,7 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
- #endif
- extern enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_Host *h,
- 					     struct scsi_cmnd *cmd);
-+void ata_scsi_retry_deferred_qc(struct ata_port *ap, struct scsi_cmnd *scmd);
- enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *cmd);
- #if IS_REACHABLE(CONFIG_ATA)
- bool ata_scsi_dma_need_drain(struct request *rq);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 163f23c92b41..c7017ae76c61 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -705,6 +705,7 @@ void sas_task_abort(struct sas_task *);
- int sas_eh_abort_handler(struct scsi_cmnd *cmd);
- int sas_eh_device_reset_handler(struct scsi_cmnd *cmd);
- int sas_eh_target_reset_handler(struct scsi_cmnd *cmd);
-+enum scsi_timeout_action sas_eh_timed_out(struct scsi_cmnd *cmd);
- 
- extern void sas_target_destroy(struct scsi_target *);
- extern int sas_sdev_init(struct scsi_device *);
-@@ -743,6 +744,7 @@ void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
- 	.this_id			= -1,				\
- 	.eh_device_reset_handler	= sas_eh_device_reset_handler,	\
- 	.eh_target_reset_handler	= sas_eh_target_reset_handler,	\
-+	.eh_timed_out			= sas_eh_timed_out,		\
- 	.target_destroy			= sas_target_destroy,		\
- 	.ioctl				= sas_ioctl,			\
- 
 -- 
-2.55.0
+2.53.0
 
