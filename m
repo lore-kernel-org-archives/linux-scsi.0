@@ -1,113 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1C14266B46;
-	Mon, 20 Jul 2026 02:44:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5AB838D006;
+	Mon, 20 Jul 2026 03:24:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784515485; cv=none; b=oNkfc6EXTFOKyfiOk6/Hch+r0hhsvMPzn7HCBrCrNd3FbWz6O052Jed0QifZjpSEs8ncw2kUhundiNGMt25FGxJollYxJ2MX02gEViNmQtB43nIFTlRR+2Tq7+r647ojdQGD1V/p5PogUEV9wFeJNVQ/ye6LNM7SOlK8FKBQeFI=
+	t=1784517861; cv=none; b=j3Ky+Fe5jWM1CfCd/iwblVbea30UeQh0MhwJCutQL0ztVHe8KM3MlZSIT2PGW56Xpnebi6SHVLQDzOTJsScSFzqpFaQCn4s2izgdDZsJ7/S6jxZ59ny9ueJeA1bxQsSNz6R6AU0dYbJRfSXU/N/nQhS1WdtT/fDuwCbhUg0fu68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784515485; c=relaxed/simple;
-	bh=LFYGrvS2+Ugtv7QDXkc7EMHLIrh6ME9tUxxVmSqHDPI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IFwYJStCUnRX0mz/CzBAMHL0k7TeYDM6bLvqaXofICz+IVEfZoHRs2jeHnG34YP6pSoSU+RdpUP6PTWYSFSEf8EC0XJCrikH1v4Va9xg0Sfs3qUJKogrJU2qVRkGgD5gkxisnfANg+c1bIEy3DV0oz56vd53qliO2sW+ymrgq1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oKWlKx+K; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784517861; c=relaxed/simple;
+	bh=jWaWnUpsUlvcPTSBoaLwRehS4N8oQiZfhPMDreLdNfw=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=JjmVs5VEI1jVb1P9yD4/U6Q1o7wtRDizHk07ung+DcZcIoDn6u9s84KVNbUURNBF0T04MOs8wLah2NTwjI+mq19SCEjkG0QHJSnA+CX3bzlEMAzQeQabNGINfOQtYlwnp/upELEDiZPDgznJxDQCLoGBV6kfUu/Jiyj9bRjkEFs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Riz0jqNz; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oKWlKx+K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F80D1F000E9;
-	Mon, 20 Jul 2026 02:44:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784515484;
-	bh=FskehnLV2pKot38nX8CNAGMdJMVu09Cd+vu2rW5rI/8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=oKWlKx+K3d0/se9vRomqF/TuHxDAsac6Y4+QmnEJ5R5ep5s7oGCVBi9fOT680cY08
-	 NC50TZRceg7MblyzGWvrMUR8b2iwU64QQv8MFojgO4rY0Lv6WOMpfIA4LeKZmQ1hd8
-	 mpyBW8AoHaEtXYkKLPTCmTUQlxcKvppWwPksdMS79dQngrP8Hc4vTsyuI1MgzcC63j
-	 wLROYvpp17QiSvMnmuQRBqubC5bq1JnRD6kgqUrgd9isB6WKsBWPiHadcFnXR+CXYB
-	 w92VXrUJqUYK9l/JwTZSsHVsgRzeRDvY2TVrSl/E+1VNbE356Sma/JKJF+/ufYDXIv
-	 eYB1agvxijRSw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: ufs: dt-bindings: Add missing mcq reg for
- qcom,sa8255p-ufshc
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Shawn Guo" <shengchao.guo@oss.qualcomm.com>
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260720023552.2667237-1-shengchao.guo@oss.qualcomm.com>
-References: <20260720023552.2667237-1-shengchao.guo@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 02:44:43 +0000
-Message-Id: <20260720024444.5F80D1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Riz0jqNz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=lK
+	8HNOgQK+7+AseGMDmptHsfg+8r4+uvTA9Qyf3rwFU=; b=Riz0jqNzP/A14wFSfY
+	9zAQnslRS+aC4RRDKsyAzIu62wV/1mHmc6RFxLZnXEvaBFmQfmG4BFkuGTpsee99
+	D0C7WMV2XHP8RBIdNzKkk0sh5+6OHTUunO0xccRPGstv/9LVEzhj2wIOJURVQt6U
+	v6Mw+oFGFE81EluXpzitaXQ2s=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wAH9nK8lF1qF6ikKA--.13720S4;
+	Mon, 20 Jul 2026 11:23:45 +0800 (CST)
+From: Yang Xiuwei <yangxiuwei@kylinos.cn>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: rc@rexion.ai,
+	axboe@kernel.dk,
+	fujita.tomonori@lab.ntt.co.jp,
+	bvanassche@acm.org,
+	linux-scsi@vger.kernel.org,
+	io-uring@vger.kernel.org,
+	Yang Xiuwei <yangxiuwei@kylinos.cn>
+Subject: [PATCH 2/2] scsi: bsg: map io_uring user buffers with GFP_KERNEL
+Date: Mon, 20 Jul 2026 11:23:38 +0800
+Message-Id: <20260720032338.461681-3-yangxiuwei@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20260720032338.461681-1-yangxiuwei@kylinos.cn>
+References: <20260720032338.461681-1-yangxiuwei@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wAH9nK8lF1qF6ikKA--.13720S4
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCFWUXrWfJr4xAw4rGr15Jwb_yoW5Jw1fpF
+	W5t3ySvFW3Xr48urWkt398ZFWFyw4kC34xKF43W3yYyryDAr90v3W8AFy0qFyYyryvyFWv
+	gFn5KFn0yF1jywUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jxrcfUUUUU=
+Sender: yangxiuwei2025@163.com
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6QFH12pdlMG50AAA3z
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] The Device Tree schema update fails to enforce the presence of t=
-he newly documented `mcq` register space and `reg-names` property.
---
+IO_URING_F_NONBLOCK only needs BLK_MQ_REQ_NOWAIT for request
+allocation. Mapping the user buffer may sleep, so use GFP_KERNEL
+instead of GFP_NOWAIT.
 
---- Patch [1]: [PATCH v2] scsi: ufs: dt-bindings: Add missing mcq reg for q=
-com,sa8255p-ufshc ---
-commit 871a91874eb00f9814a93dfb44bc94d0b96e8791
-Author: Shawn Guo <shengchao.guo@oss.qualcomm.com>
+Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
+---
+ drivers/scsi/scsi_bsg.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
-scsi: ufs: dt-bindings: Add missing mcq reg for qcom,sa8255p-ufshc
+diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
+index c57ce01379de..f90d19fdbd8e 100644
+--- a/drivers/scsi/scsi_bsg.c
++++ b/drivers/scsi/scsi_bsg.c
+@@ -76,9 +76,8 @@ static enum rq_end_io_ret scsi_bsg_uring_cmd_done(struct request *req,
+ 
+ static int scsi_bsg_map_user_buffer(struct request *req,
+ 				    struct io_uring_cmd *ioucmd,
+-				    unsigned int issue_flags, gfp_t gfp_mask,
+-				    bool is_write, u64 buf_addr,
+-				    unsigned long buf_len)
++				    unsigned int issue_flags, bool is_write,
++				    u64 buf_addr, unsigned long buf_len)
+ {
+ 	struct iov_iter iter;
+ 	int ret;
+@@ -89,10 +88,10 @@ static int scsi_bsg_map_user_buffer(struct request *req,
+ 						&iter, ioucmd, issue_flags);
+ 		if (ret < 0)
+ 			return ret;
+-		ret = blk_rq_map_user_iov(req->q, req, NULL, &iter, gfp_mask);
++		ret = blk_rq_map_user_iov(req->q, req, NULL, &iter, GFP_KERNEL);
+ 	} else {
+ 		ret = blk_rq_map_user(req->q, req, NULL, uptr64(buf_addr),
+-				      buf_len, gfp_mask);
++				      buf_len, GFP_KERNEL);
+ 	}
+ 
+ 	return ret;
+@@ -107,7 +106,6 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
+ 	struct scsi_cmnd *scmd;
+ 	struct request *req;
+ 	blk_mq_req_flags_t blk_flags = 0;
+-	gfp_t gfp_mask = GFP_KERNEL;
+ 	/* Snapshot SQE fields used for validation and buffer mapping. */
+ 	u64 request = READ_ONCE(cmd->request);
+ 	u32 request_len = READ_ONCE(cmd->request_len);
+@@ -132,10 +130,8 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
+ 	if (cmd->dout_iovec_count > 0 || cmd->din_iovec_count > 0)
+ 		return -EOPNOTSUPP;
+ 
+-	if (issue_flags & IO_URING_F_NONBLOCK) {
++	if (issue_flags & IO_URING_F_NONBLOCK)
+ 		blk_flags = BLK_MQ_REQ_NOWAIT;
+-		gfp_mask = GFP_NOWAIT;
+-	}
+ 
+ 	req = scsi_alloc_request(q, dout_xfer_len ?
+ 				 REQ_OP_DRV_OUT : REQ_OP_DRV_IN, blk_flags);
+@@ -170,8 +166,7 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
+ 		unsigned long buf_len = is_write ? dout_xfer_len : din_xfer_len;
+ 
+ 		ret = scsi_bsg_map_user_buffer(req, ioucmd, issue_flags,
+-					       gfp_mask, is_write, buf_addr,
+-					       buf_len);
++					       is_write, buf_addr, buf_len);
+ 		if (ret)
+ 			goto out_free_req;
+ 		pdu->bio = req->bio;
+-- 
+2.25.1
 
-Qualcomm UFS controller found on SoCs SA8255P/SA8797P has a MCQ I/O
-address space. It should be defined in the bindings even though Linux
-driver currently doesn't utilize it. Fix the binding before it gets
-adopted by DTS.
-
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yam=
-l b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
-> index db165a235cb6d..66d73e9025d6b 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
-> @@ -18,7 +18,14 @@ properties:
->            - const: qcom,sa8255p-ufshc
-> =20
->    reg:
-> -    maxItems: 1
-> +    minItems: 1
-> +    maxItems: 2
-> +
-> +  reg-names:
-> +    minItems: 1
-> +    items:
-> +      - const: std
-> +      - const: mcq
-
-[Severity: Medium]
-Since the commit message indicates the MCQ I/O address space should be defi=
-ned
-before it gets adopted by DTS, should reg and reg-names strictly require tw=
-o=20
-items?
-
-Setting minItems to 1 for both properties allows device trees to pass
-schema validation with only a single register space.=20
-
-Additionally, should reg-names be added to the required list to enforce its
-presence?
-
-The examples section was also not updated and still demonstrates a single
-register space:
-
-        compatible =3D "qcom,sa8255p-ufshc";
-        reg =3D <0x01d84000 0x3000>;
-        interrupts =3D <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-
-Could this be updated to demonstrate the newly added mcq register and
-reg-names?
-
-> =20
->    interrupts:
->      maxItems: 1
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720023552.2667=
-237-1-shengchao.guo@oss.qualcomm.com?part=3D1
