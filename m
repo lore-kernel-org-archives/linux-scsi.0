@@ -1,29 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1C8A426EB3;
-	Mon, 20 Jul 2026 14:12:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77857427FBD;
+	Mon, 20 Jul 2026 14:12:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784556731; cv=none; b=VBB4pqv3Qv+hQ3tvCcGC9h8l2EiEKxKbZ9exny460LKHTJhkHTuUo/duVIXR0vMO7sDxrKgDrLJGWeoifa5sE54J4QbYc6lsVeo5AoPKRjNx1HnW0vnPiCQm9ZpqzdtXxU3/EAEFqJP3zGBJhTVm0ZpDCzAa75F5HNqYIa5UggY=
+	t=1784556734; cv=none; b=iYw6185W9efek7HIaZxSOMHuaAEZhG5ANqUOGp+lhAyT8TER//EXE5RYqPJ44pmaqVjwXNmqBqWK9TmDhJG5IqMd/9iHULVwEu5IguN62VOhSJeh5wEHot4EdJMRnaXk04XgmCuSBgtWIZ0OpyUzC5J/OX2HH/swAqG5XoPLOAs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784556731; c=relaxed/simple;
-	bh=Iv1ZzGl4nDQtZYyFQUhh6++u+LomotAUmN5LcBhRxMo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=aH+T50jzaifLoAmmbLiOaUwuLSY+T4Y4GDmwNJz7KmzwYUxt39mXKY/rYSZFiqPC1V490FKcSfzk0eMDFXkhjLV14xCENnluH54tPtg8hAsDx2cJ7xyuMm2LxX0vtBox+wuW/CgrHIO5D3rCr+dTKJzBq+ljWyP0LukvsqSk4F8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=BcD0C2Uh; arc=none smtp.client-ip=220.197.31.3
+	s=arc-20240116; t=1784556734; c=relaxed/simple;
+	bh=WbxGY50Ku1zh9Lld1IrD1p/ARRiklGi+UNXh7uJ52tU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=ZmhuA03TsKdJWcKFD/zA1KhjuWtKQVUFnscIV5xt1z3HR3AIkO8pOB5NiO4DpdosmpEhkG7u+c/x9NpJmDes6SaLutKXo5Sz9PTKQDhV2BEWvrFCqwmoouH+Z/0ov4zEHkhkDQp1Qd+cQhETzY/Hyg4ndELKacNdKZEomo2Sw4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=iEkuGX+g; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="BcD0C2Uh"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="iEkuGX+g"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version:
-	Content-Type; bh=PbGwBRW9wW2xSalNs+v2BcPcDxmJ1owbuxV0zExiqSc=;
-	b=BcD0C2UhXdLLne6R/C+wh/DRduOn2oOllSelS3pHSGBsQJ77ZlbIDCcmHv7ju/
-	51um22nlNO+Ff5R4CJKRjEx493YuArV2kwLINDR/vaxT6/8Sx5gaHlG7MmspYCQ1
-	ADjCB0sUtK6RLT+d3c1rUMbRSNatBNCU0fYEGbEME8iws=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=ww
+	3/iniGVo4aD31R6OEa75hQHppDnik/1A2aoz8O7Yc=; b=iEkuGX+geVnx/VJ04O
+	o66ydAr82RroxR7QFtZ5bdY7mv9Ec48daeGB/tflm4zBf0QQkv0DLalHV71LZ1pj
+	azKwBZmSdQH+ZaKh1v2Gh8K8g+tLUFPs617gaPsqwPBBYWNSKInjfH9UslwdQDka
+	fRZZ9P1vVWJKMJNCmE0xwXAOE=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgD3Xw9gLF5qWUvpIg--.12525S2;
-	Mon, 20 Jul 2026 22:10:40 +0800 (CST)
+	by gzsmtp3 (Coremail) with SMTP id PigvCgD3Xw9gLF5qWUvpIg--.12525S6;
+	Mon, 20 Jul 2026 22:10:44 +0800 (CST)
 From: "rom.wang" <r4o5m6e8o@163.com>
 To: mst@redhat.com,
 	jasowangio@gmail.com,
@@ -35,276 +36,489 @@ Cc: virtualization@lists.linux.dev,
 	kvm@vger.kernel.org,
 	qemu-devel@nongnu.org,
 	Yufeng Wang <wangyufeng@kylinos.cn>
-Subject: [RFC PATCH 0/4] virtio: SQ/CQ doorbell polling for vhost-scsi
-Date: Mon, 20 Jul 2026 22:10:36 +0800
-Message-Id: <20260720141040.181946-1-r4o5m6e8o@163.com>
+Subject: [RFC PATCH 4/4] virtio: add SQ/CQ polling mode support for vhost-scsi
+Date: Mon, 20 Jul 2026 22:10:40 +0800
+Message-Id: <20260720141040.181946-5-r4o5m6e8o@163.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260720141040.181946-1-r4o5m6e8o@163.com>
+References: <20260720141040.181946-1-r4o5m6e8o@163.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgD3Xw9gLF5qWUvpIg--.12525S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW3Jr1UWF18ZFW3XrW3JFWUArb_yoWfWFy8pF
-	W3G3y3Kr1xJF1UCF4kJF48Wry8Ww4kJa13GF1UG340gFn0vFyYyF98KF4rtFWUGrZ3C34U
-	XF1jqF1rCa1DA3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jUkucUUUUU=
-X-CM-SenderInfo: 3uurkzkwhy0qqrwthudrp/xtbC7wNVympeLGMvXAAA37
+X-CM-TRANSID:PigvCgD3Xw9gLF5qWUvpIg--.12525S6
+X-Coremail-Antispam: 1Uf129KBjvAXoWfGF45CFyrZFyfGFWrur1rZwb_yoW8AFyUGo
+	ZxKF1Iqr4DJw1UZrnI9r1xtFW5JF1vgF4UAr15u39xKay2y343KF95KanxAa4rAFyrtF18
+	GFyfW3yrJay0qFZ5n29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
+	AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjxU2LIDUUUUU
+X-CM-SenderInfo: 3uurkzkwhy0qqrwthudrp/xtbC8ARWy2peLGQf3AAA3W
 
 From: Yufeng Wang <wangyufeng@kylinos.cn>
 
-This RFC proposes a new virtio transport feature, VIRTIO_F_SQCQ_POLL,
-that eliminates VM exits on both submission and completion paths for
-vhost-scsi by using shared-memory doorbells and kernel polling
-threads, following the io_uring SQPOLL model.
+Implement the QEMU-side bridge layer for virtio SQ/CQ polling mode,
+which replaces interrupt-based virtio notifications with io_uring-style
+doorbell polling to eliminate VM exits in high-throughput scenarios.
 
-This is an early RFC to gather design feedback. The implementation is
-functional and has been tested on arm64 and x86_64. We are not
-requesting merge at this time.
+UAPI headers: sync VIRTIO_F_SQCQ_POLL (bit 42), PCI common config
+offsets (64-76), struct vring_sq/vring_cq, struct vhost_vring_sqcq_addr,
+and VHOST_SET_VRING_SQCQ_ADDR ioctl (0x27) from Linux kernel.
 
+VirtIO core: add sq/cq fields to VRing, with getter/setter functions.
 
-Problem
--------
+PCI transport: handle SQE/CQE register read/write in common config,
+gate SQ/CQ address forwarding on VIRTIO_F_SQCQ_POLL negotiation in
+Q_ENABLE handler.
 
-vhost-scsi uses MMIO writes (Guest -> Host) and MSI-X interrupts
-(Host -> Guest) for notification. Each notification involves a VM exit,
-which becomes a bottleneck at high IOPS:
+Vhost backend: add vhost_set_vring_sqcq_addr_op to VhostOps, implement
+kernel backend via VHOST_SET_VRING_SQCQ_ADDR ioctl.
 
-  - 4K random read, QD32, 8 jobs: 341K IOPS baseline
-  - With ~340K VM exits/second, the exit overhead dominates
+Vhost core: map SQ/CQ GPAs to HVAs in vhost_virtqueue_start() after
+VHOST_SET_VRING_ADDR, call the new ioctl before VHOST_SET_VRING_KICK;
+unmap in do_vhost_virtqueue_stop().
 
-Existing mitigations (vhost-net's tx polling, blk-mq iopoll) only
-address one direction or require the submitting task to poll. Neither
-eliminates VM exits on both paths simultaneously.
+vhost-scsi: advertise VIRTIO_F_SQCQ_POLL in kernel_feature_bits[].
 
-
-Solution
---------
-
-Introduce two cache-line-aligned doorbell structures, SQ (Submission
-Queue) and CQ (Completion Queue), placed alongside the standard split
-virtqueue:
-
-  - Guest writes sq->idx instead of MMIO kick; Host poll thread
-    detects the change and processes submissions.
-  - Host writes cq->idx instead of MSI-X interrupt; Guest poll
-    thread detects the change and invokes completion callbacks.
-
-A NEED_WAKEUP protocol (mirroring io_uring's SQ_NEED_WAKEUP) allows
-either side to sleep when idle, with the other side responsible for
-waking it via eventfd.
-
-Feature negotiation via VIRTIO_F_SQCQ_POLL (bit 42) ensures zero
-overhead when not negotiated — the driver falls back to traditional
-MMIO kick + MSI-X interrupt.
-
-
-Performance
------------
-
-Benchmark: fio, 4K random I/O
-
-Test configuration:
-
-  arm64:
-    CPU:   Kunpeng 920 (2.6GHz), 8 vCPUs
-    Disk:  NVMe INTEL SSDPED1K375GA (375GB)
-
-  x86_64:
-    CPU:   Intel Xeon E5-2680 v4 @ 2.40GHz, 8 vCPUs
-    Disk:  NVMe SAMSUNG MZ1LB960HAJQ-000MV (960GB)
-
-  Backend: vhost-scsi with TCM loopback to NVMe device
-  QEMU:    vhost-scsi-pci with VIRTIO_F_SQCQ_POLL negotiated
-
-arm64 results:
-
-  Test              Baseline     SQ/CQ Poll   Change
-  -----------       ----------   ----------   -------
-  randread QD1      22,427       28,289       +26%
-  randread QD32 NJ1 89,910       75,665       -16%
-  randread QD32 NJ4 186,763      379,549      +103%
-  randread QD32 NJ8 199,967      550,633      +175%
-  randwrite QD1     21,912       27,261       +24%
-  randwrite QD32 NJ1 85,349      81,389       -5%
-  randwrite QD32 NJ4 190,443     355,811      +87%
-  randwrite QD32 NJ8 196,552     566,640      +188%
-
-x86_64 results:
-
-  Test              Baseline     SQ/CQ Poll   Change
-  -----------       ----------   ----------   -------
-  randread QD1      8,263        9,552        +16%
-  randread QD32 NJ1 127,412      162,805      +28%
-  randread QD32 NJ4 303,208      375,056      +24%
-  randread QD32 NJ8 341,625      371,193      +9%
-  randwrite QD1     20,773       30,332       +46%
-  randwrite QD32 NJ1 133,316      159,207      +19%
-  randwrite QD32 NJ4 233,373      229,224      -2%
-  randwrite QD32 NJ8 231,442      231,676      +0%
-
-Multi-queue workloads (NJ4/NJ8) see significant improvement on arm64
-(87-188%) and moderate improvement on x86_64 (9-24%). Single-VQ
-high-queue-depth workloads show a minor regression on arm64 due to
-polling overhead vs. VM-exit savings trade-off, while x86_64 shows
-improvement across most configurations (16-46% for QD1, 19-28%
-for QD32-NJ1) due to lower per-VM-exit cost on x86.
-
-
-Why Not vDPA?
--------------
-
-vhost-vDPA already provides doorbell mmap and polling. A reasonable
-reviewer would ask: why not extend vhost-vDPA instead?
-
-Three reasons:
-
-1. No vdpa-scsi device exists. The vDPA framework
-   (drivers/vdpa/) currently has hardware devices for net (mlx5,
-   ifcvf, etc.) and software devices for net and blk (vdpa_sim).
-   There is no virtio-scsi vDPA device, hardware or software.
-   Building one means re-implementing vhost-scsi's TCM integration
-   (SCSI CDB processing, ALUA, persistent reservations) under the
-   vDPA device abstraction — 3-5x the work of extending vhost-scsi.
-
-2. vhost-scsi is a deployed interface. libvirt, QEMU, and
-   OpenStack have vhost-scsi configuration APIs and operational
-   tooling. Switching to vhost-vdpa requires a new backend, user
-   migration, and toolchain updates. SQ/CQ poll as a vhost-scsi
-   feature is fully backward-compatible — no existing deployments
-   break.
-
-3. The protocol is transport-agnostic. The SQ/CQ doorbell design
-   (struct vring_sq, struct vring_cq, NEED_WAKEUP handshake) is
-   orthogonal to vhost vs. vDPA. The same UAPI can be consumed by
-   vhost-scsi today and a future vdpa-scsi device. Implementing in
-   vhost-scsi first does not block future vDPA integration.
-
-We acknowledge that vDPA is the long-term direction for virtio
-backends. If this SQ/CQ poll protocol is accepted, it can be ported
-to the vDPA framework; a vdpa-scsi device is independent work.
-
-
-Patch Structure
----------------
-
-  Patch 1: UAPI definitions (virtio_config.h, virtio_ring.h,
-           virtio_pci.h) — shared interface for all components
-  Patch 2: vhost kernel support (vhost.c, vhost.h, scsi.c,
-           vhost.h UAPI, vhost_types.h UAPI) — Host poll thread
-  Patch 3: virtio guest driver (virtio_ring.c, virtio_sqcq_poll.c,
-           virtio_pci_modern.c, virtio.c, virtio_scsi.c) — Guest
-           poll thread and submission path
-  Patch 4: QEMU support (virtio-pci.c, vhost.c) — PCI config
-           forwarding and vhost ioctl bridge
-
-Patches 1-3 apply to the Linux kernel tree. Patch 4 applies to
-the QEMU tree separately.
-
-
-Spec Status
------------
-
-A virtio-spec format document has been prepared and will be submitted
-to the OASIS virtio TC as a proposal. This RFC stage seeks design
-feedback before initiating the formal spec process.
-
-
-Known Limitations (Future Work)
--------------------------------
-
-  - CPU hotplug: no notifier registered; poll thread may be
-    migrated when its CPU goes offline. Planned: kthread_park +
-    dynamic rebind.
-  - Live migration: no explicit stop/flush coordination during
-    migration. Planned: VHOST_BACKEND_F_SUSPEND/RESUME integration.
-  - SMAP overhead: Host uses get_user/put_user for doorbell access.
-    Future optimization: GUP + kmap to map pages into kernel space.
-  - Backpressure: no "slow down" signal from device to driver.
-    Future: CQ throttle flag or avail_event reuse.
-  - Packed ring: not supported; explicitly rejected at feature
-    negotiation. Future: add packed ring doorbell support.
-
-
-RFC Goals
----------
-
-  1. Validate the overall design direction (doorbell + polling
-     model, NEED_WAKEUP protocol)
-  2. Get feedback on the feature bit allocation (42) and UAPI
-     structure design
-  3. Understand whether vDPA concern is a blocker or can be
-     addressed with the transport-agnostic argument
-  4. Collect guidance on prioritizing future work items
-     (hotplug, migration, spec process)
-
-We welcome all feedback, especially on:
-  - Whether the NEED_WAKEUP protocol design is sound
-  - Whether the per-device Guest poll thread model (vs per-VQ)
-    is acceptable
-  - Whether feature bit 42 is appropriate or if a different
-    allocation is needed
-  - Any concerns about the SMAP overhead in the Host poll path
-
-
-How to Test
------------
-
-Patch usage:
-  Guest Kernel: apply patch 1 (UAPI) + patch 3 (guest driver)
-  Host Kernel:  apply patch 1 (UAPI) + patch 2 (vhost support)
-  QEMU:        apply patch 4 (vhost-scsi bridge)
-
-1. Set up vhost-scsi target on the host (see:
-   https://wiki.libvirt.org/Vhost-scsi_target.html#Host_Setup)
-   using targetcli to create a TCM loopback device, e.g.:
-   targetcli /backstores/loopback create dev=/dev/sda
-   targetcli /vhost create naa.5001405376e34400
-   targetcli /vhost/naa.5001405376e34400/lun create \
-     /backstores/loopback/dev,/dev/sda
-
-2. Boot VM with vhost-scsi using patched QEMU:
-   qemu-system-aarch64 ... \
-     -device vhost-scsi-pci,wwpn=naa.5001405376e34400
-
-3. Verify SQ/CQ poll mode is active on the host:
-   dmesg | grep "vhost-sqcq"
-   # Expected: "vhost-sqcq: vq[N] poll thread bound to cpuN"
-   # and 10s stats: "vhost-sqcq: vq[N] cq=... ema_lat=... interval=..."
-
-4. Verify feature negotiated in guest:
-   dmesg | grep "VIRTIO_F_SQCQ_POLL"
-   # Expected: "VIRTIO_F_SQCQ_POLL negotiated, starting poll thread"
-   # and 10s stats: "io_stats: cq=... avg_lat=... interval=..."
-
-5. Run fio benchmark (compare with unpatched QEMU/kernel baseline):
-   fio --name=randread --rw=randread --bs=4k --iodepth=32 \
-       --numjobs=4 --runtime=60 --time_based --direct=1 \
-       --filename=/dev/sda
-
-Test scripts (run-sqcq-compare.sh, compare-sqcq-results.sh) are
-available and will be sent as a follow-up to this RFC.
-
-
-Thank you for your time.
-
+Signed-off-by: Yufeng Wang <wangyufeng@kylinos.cn>
 ---
-Yufeng Wang (4):
-  common: add UAPI for SQ/CQ doorbell polling
-  vhost: host kernel support for SQ/CQ polling
-  virtio: guest driver support for SQ/CQ polling
-  qemu: add SQ/CQ polling mode support for vhost-scsi
+ hw/scsi/vhost-scsi.c                          |  4 ++
+ hw/virtio/vhost-backend.c                     |  7 +++
+ hw/virtio/vhost.c                             | 54 +++++++++++++++++++
+ hw/virtio/virtio-pci.c                        | 31 +++++++++++
+ hw/virtio/virtio.c                            | 18 +++++++
+ include/hw/virtio/vhost-backend.h             |  4 ++
+ include/hw/virtio/vhost.h                     |  6 +++
+ include/hw/virtio/virtio-pci.h                |  2 +
+ include/hw/virtio/virtio.h                    |  3 ++
+ include/standard-headers/linux/vhost_types.h  |  7 +++
+ .../standard-headers/linux/virtio_config.h    |  5 +-
+ include/standard-headers/linux/virtio_pci.h   |  4 ++
+ include/standard-headers/linux/virtio_ring.h  | 30 +++++++++++
+ linux-headers/linux/vhost.h                   |  4 ++
+ 14 files changed, 178 insertions(+), 1 deletion(-)
 
-Patch 1 (UAPI, 3 files): +41 -1
-Patch 2 (vhost, 5 files): +794 -20
-Patch 3 (virtio guest, 10 files): +840 -3
-Patch 4 (QEMU, 14 files): +179 -3
-
-Total: 32 files changed, 1854 insertions(+), 27 deletions(-)
-
+diff --git a/hw/scsi/vhost-scsi.c b/hw/scsi/vhost-scsi.c
+index 699863c..bb7f3e8 100644
+--- a/hw/scsi/vhost-scsi.c
++++ b/hw/scsi/vhost-scsi.c
+@@ -40,6 +40,7 @@ static const int kernel_feature_bits[] = {
+     VIRTIO_F_RING_RESET,
+     VIRTIO_F_IN_ORDER,
+     VIRTIO_F_NOTIFICATION_DATA,
++    VIRTIO_F_SQCQ_POLL,
+     VHOST_INVALID_FEATURE_BIT
+ };
+ 
+@@ -361,6 +362,9 @@ static const Property vhost_scsi_properties[] = {
+     DEFINE_PROP_BIT64("hotplug", VHostSCSICommon, host_features,
+                                                   VIRTIO_SCSI_F_HOTPLUG,
+                                                   false),
++    DEFINE_PROP_BIT64("sqcq_poll", VHostSCSICommon, host_features,
++                                                   VIRTIO_F_SQCQ_POLL,
++                                                   true),
+     DEFINE_PROP_BOOL("migratable", VHostSCSICommon, migratable, false),
+     DEFINE_PROP_BOOL("worker_per_virtqueue", VirtIOSCSICommon,
+                      conf.worker_per_virtqueue, false),
+diff --git a/hw/virtio/vhost-backend.c b/hw/virtio/vhost-backend.c
+index 4367db0..a71b30b 100644
+--- a/hw/virtio/vhost-backend.c
++++ b/hw/virtio/vhost-backend.c
+@@ -115,6 +115,12 @@ static int vhost_kernel_set_vring_addr(struct vhost_dev *dev,
+     return vhost_kernel_call(dev, VHOST_SET_VRING_ADDR, addr);
+ }
+ 
++static int vhost_kernel_set_vring_sqcq_addr(struct vhost_dev *dev,
++                                            struct vhost_vring_sqcq_addr *addr)
++{
++    return vhost_kernel_call(dev, VHOST_SET_VRING_SQCQ_ADDR, addr);
++}
++
+ static int vhost_kernel_set_vring_endian(struct vhost_dev *dev,
+                                          struct vhost_vring_state *ring)
+ {
+@@ -368,6 +374,7 @@ const VhostOps kernel_ops = {
+         .vhost_set_log_base = vhost_kernel_set_log_base,
+         .vhost_set_mem_table = vhost_kernel_set_mem_table,
+         .vhost_set_vring_addr = vhost_kernel_set_vring_addr,
++        .vhost_set_vring_sqcq_addr = vhost_kernel_set_vring_sqcq_addr,
+         .vhost_set_vring_endian = vhost_kernel_set_vring_endian,
+         .vhost_set_vring_num = vhost_kernel_set_vring_num,
+         .vhost_set_vring_base = vhost_kernel_set_vring_base,
+diff --git a/hw/virtio/vhost.c b/hw/virtio/vhost.c
+index 31e9704..8c82f98 100644
+--- a/hw/virtio/vhost.c
++++ b/hw/virtio/vhost.c
+@@ -22,6 +22,7 @@
+ #include "qemu/memfd.h"
+ #include "qemu/log.h"
+ #include "standard-headers/linux/vhost_types.h"
++#include "standard-headers/linux/virtio_ring.h"
+ #include "hw/virtio/virtio-bus.h"
+ #include "hw/mem/memory-device.h"
+ #include "migration/blocker.h"
+@@ -1337,6 +1338,49 @@ int vhost_virtqueue_start(struct vhost_dev *dev,
+         goto fail_alloc;
+     }
+ 
++    /* SQ/CQ polling: map and pass to vhost if feature negotiated */
++    vq->sq = NULL;
++    vq->cq = NULL;
++    vq->sq_phys = virtio_queue_get_sq_addr(vdev, idx);
++    vq->cq_phys = virtio_queue_get_cq_addr(vdev, idx);
++
++    if (vq->sq_phys && vq->cq_phys &&
++        dev->vhost_ops->vhost_set_vring_sqcq_addr &&
++        virtio_has_feature(vdev->guest_features, VIRTIO_F_SQCQ_POLL)) {
++        struct vhost_vring_sqcq_addr sqcq_addr;
++
++        l = sizeof(struct vring_sq);
++        vq->sq = vhost_memory_map(dev, vq->sq_phys, &l, false);
++        if (!vq->sq) {
++            r = -ENOMEM;
++            goto fail_alloc;
++        }
++        vq->sq_size = l;
++
++        l = sizeof(struct vring_cq);
++        vq->cq = vhost_memory_map(dev, vq->cq_phys, &l, false);
++        if (!vq->cq) {
++            r = -ENOMEM;
++            vhost_memory_unmap(dev, vq->sq, vq->sq_size, 0, 0);
++            goto fail_alloc;
++        }
++        vq->cq_size = l;
++
++        memset(&sqcq_addr, 0, sizeof(sqcq_addr));
++        sqcq_addr.index = vhost_vq_index;
++        sqcq_addr.sq_user_addr = (uint64_t)(unsigned long)vq->sq;
++        sqcq_addr.cq_user_addr = (uint64_t)(unsigned long)vq->cq;
++        r = dev->vhost_ops->vhost_set_vring_sqcq_addr(dev, &sqcq_addr);
++        if (r < 0) {
++            VHOST_OPS_DEBUG(r, "vhost_set_vring_sqcq_addr failed");
++            vhost_memory_unmap(dev, vq->cq, vq->cq_size, 0, 0);
++            vhost_memory_unmap(dev, vq->sq, vq->sq_size, 0, 0);
++            vq->sq = NULL;
++            vq->cq = NULL;
++            goto fail_alloc;
++        }
++    }
++
+     file.fd = event_notifier_get_fd(virtio_queue_get_host_notifier(vvq));
+     r = dev->vhost_ops->vhost_set_vring_kick(dev, &file);
+     if (r) {
+@@ -1425,6 +1469,16 @@ static int do_vhost_virtqueue_stop(struct vhost_dev *dev,
+                                                 vhost_vq_index);
+     }
+ 
++    /* Unmap SQ/CQ if mapped */
++    if (vq->sq) {
++        vhost_memory_unmap(dev, vq->sq, vq->sq_size, 0, 0);
++        vq->sq = NULL;
++    }
++    if (vq->cq) {
++        vhost_memory_unmap(dev, vq->cq, vq->cq_size, 0, 0);
++        vq->cq = NULL;
++    }
++
+     vhost_memory_unmap(dev, vq->used, virtio_queue_get_used_size(vdev, idx),
+                        1, virtio_queue_get_used_size(vdev, idx));
+     vhost_memory_unmap(dev, vq->avail, virtio_queue_get_avail_size(vdev, idx),
+diff --git a/hw/virtio/virtio-pci.c b/hw/virtio/virtio-pci.c
+index b273eb2..c88cba3 100644
+--- a/hw/virtio/virtio-pci.c
++++ b/hw/virtio/virtio-pci.c
+@@ -1623,6 +1623,18 @@ static uint64_t virtio_pci_common_read(void *opaque, hwaddr addr,
+     case VIRTIO_PCI_COMMON_Q_RESET:
+         val = proxy->vqs[vdev->queue_sel].reset;
+         break;
++    case VIRTIO_PCI_COMMON_SQE_LO:
++        val = proxy->vqs[vdev->queue_sel].sq[0];
++        break;
++    case VIRTIO_PCI_COMMON_SQE_HI:
++        val = proxy->vqs[vdev->queue_sel].sq[1];
++        break;
++    case VIRTIO_PCI_COMMON_CQE_LO:
++        val = proxy->vqs[vdev->queue_sel].cq[0];
++        break;
++    case VIRTIO_PCI_COMMON_CQE_HI:
++        val = proxy->vqs[vdev->queue_sel].cq[1];
++        break;
+     default:
+         val = 0;
+     }
+@@ -1727,6 +1739,13 @@ static void virtio_pci_common_write(void *opaque, hwaddr addr,
+                        proxy->vqs[vdev->queue_sel].avail[0],
+                        ((uint64_t)proxy->vqs[vdev->queue_sel].used[1]) << 32 |
+                        proxy->vqs[vdev->queue_sel].used[0]);
++            if (virtio_has_feature(vdev->guest_features, VIRTIO_F_SQCQ_POLL)) {
++                virtio_queue_set_sqcq(vdev, vdev->queue_sel,
++                    ((uint64_t)proxy->vqs[vdev->queue_sel].sq[1] << 32) |
++                    proxy->vqs[vdev->queue_sel].sq[0],
++                    ((uint64_t)proxy->vqs[vdev->queue_sel].cq[1] << 32) |
++                    proxy->vqs[vdev->queue_sel].cq[0]);
++            }
+             proxy->vqs[vdev->queue_sel].enabled = 1;
+             proxy->vqs[vdev->queue_sel].reset = 0;
+             virtio_queue_enable(vdev, vdev->queue_sel);
+@@ -1752,6 +1771,18 @@ static void virtio_pci_common_write(void *opaque, hwaddr addr,
+     case VIRTIO_PCI_COMMON_Q_USEDHI:
+         proxy->vqs[vdev->queue_sel].used[1] = val;
+         break;
++    case VIRTIO_PCI_COMMON_SQE_LO:
++        proxy->vqs[vdev->queue_sel].sq[0] = val;
++        break;
++    case VIRTIO_PCI_COMMON_SQE_HI:
++        proxy->vqs[vdev->queue_sel].sq[1] = val;
++        break;
++    case VIRTIO_PCI_COMMON_CQE_LO:
++        proxy->vqs[vdev->queue_sel].cq[0] = val;
++        break;
++    case VIRTIO_PCI_COMMON_CQE_HI:
++        proxy->vqs[vdev->queue_sel].cq[1] = val;
++        break;
+     case VIRTIO_PCI_COMMON_Q_RESET:
+         if (val == 1) {
+             proxy->vqs[vdev->queue_sel].reset = 1;
+diff --git a/hw/virtio/virtio.c b/hw/virtio/virtio.c
+index 3dc9423..42e39d9 100644
+--- a/hw/virtio/virtio.c
++++ b/hw/virtio/virtio.c
+@@ -111,6 +111,8 @@ typedef struct VRing
+     hwaddr desc;
+     hwaddr avail;
+     hwaddr used;
++    hwaddr sq;
++    hwaddr cq;
+     VRingMemoryRegionCaches *caches;
+ } VRing;
+ 
+@@ -2400,6 +2402,12 @@ void virtio_queue_set_rings(VirtIODevice *vdev, int n, hwaddr desc,
+     virtio_init_region_cache(vdev, n);
+ }
+ 
++void virtio_queue_set_sqcq(VirtIODevice *vdev, int n, hwaddr sq, hwaddr cq)
++{
++    vdev->vq[n].vring.sq = sq;
++    vdev->vq[n].vring.cq = cq;
++}
++
+ void virtio_queue_set_num(VirtIODevice *vdev, int n, int num)
+ {
+     /* Don't allow guest to flip queue between existent and
+@@ -3661,6 +3669,16 @@ hwaddr virtio_queue_get_used_addr(VirtIODevice *vdev, int n)
+     return vdev->vq[n].vring.used;
+ }
+ 
++hwaddr virtio_queue_get_sq_addr(VirtIODevice *vdev, int n)
++{
++    return vdev->vq[n].vring.sq;
++}
++
++hwaddr virtio_queue_get_cq_addr(VirtIODevice *vdev, int n)
++{
++    return vdev->vq[n].vring.cq;
++}
++
+ hwaddr virtio_queue_get_desc_size(VirtIODevice *vdev, int n)
+ {
+     return sizeof(VRingDesc) * vdev->vq[n].vring.num;
+diff --git a/include/hw/virtio/vhost-backend.h b/include/hw/virtio/vhost-backend.h
+index ff94fa1..911cd15 100644
+--- a/include/hw/virtio/vhost-backend.h
++++ b/include/hw/virtio/vhost-backend.h
+@@ -45,6 +45,7 @@ struct vhost_memory;
+ struct vhost_vring_file;
+ struct vhost_vring_state;
+ struct vhost_vring_addr;
++struct vhost_vring_sqcq_addr;
+ struct vhost_vring_worker;
+ struct vhost_worker_state;
+ struct vhost_scsi_target;
+@@ -71,6 +72,8 @@ typedef int (*vhost_set_mem_table_op)(struct vhost_dev *dev,
+                                       struct vhost_memory *mem);
+ typedef int (*vhost_set_vring_addr_op)(struct vhost_dev *dev,
+                                        struct vhost_vring_addr *addr);
++typedef int (*vhost_set_vring_sqcq_addr_op)(struct vhost_dev *dev,
++                                            struct vhost_vring_sqcq_addr *addr);
+ typedef int (*vhost_set_vring_endian_op)(struct vhost_dev *dev,
+                                          struct vhost_vring_state *ring);
+ typedef int (*vhost_set_vring_num_op)(struct vhost_dev *dev,
+@@ -178,6 +181,7 @@ typedef struct VhostOps {
+     vhost_set_log_base_op vhost_set_log_base;
+     vhost_set_mem_table_op vhost_set_mem_table;
+     vhost_set_vring_addr_op vhost_set_vring_addr;
++    vhost_set_vring_sqcq_addr_op vhost_set_vring_sqcq_addr;
+     vhost_set_vring_endian_op vhost_set_vring_endian;
+     vhost_set_vring_num_op vhost_set_vring_num;
+     vhost_set_vring_base_op vhost_set_vring_base;
+diff --git a/include/hw/virtio/vhost.h b/include/hw/virtio/vhost.h
+index 08bbb4d..65056a0 100644
+--- a/include/hw/virtio/vhost.h
++++ b/include/hw/virtio/vhost.h
+@@ -27,6 +27,8 @@ struct vhost_virtqueue {
+     void *desc;
+     void *avail;
+     void *used;
++    void *sq;           /* Mapped SQ doorbell */
++    void *cq;           /* Mapped CQ doorbell */
+     int num;
+     unsigned long long desc_phys;
+     unsigned desc_size;
+@@ -34,6 +36,10 @@ struct vhost_virtqueue {
+     unsigned avail_size;
+     unsigned long long used_phys;
+     unsigned used_size;
++    unsigned long long sq_phys;  /* GPA of SQ doorbell */
++    unsigned long long cq_phys;  /* GPA of CQ doorbell */
++    unsigned sq_size;   /* Size of mapped SQ region */
++    unsigned cq_size;   /* Size of mapped CQ region */
+     EventNotifier masked_notifier;
+     EventNotifier error_notifier;
+     EventNotifier masked_config_notifier;
+diff --git a/include/hw/virtio/virtio-pci.h b/include/hw/virtio/virtio-pci.h
+index 6397529..37103c7 100644
+--- a/include/hw/virtio/virtio-pci.h
++++ b/include/hw/virtio/virtio-pci.h
+@@ -122,6 +122,8 @@ typedef struct VirtIOPCIQueue {
+   uint32_t desc[2];
+   uint32_t avail[2];
+   uint32_t used[2];
++  uint32_t sq[2];
++  uint32_t cq[2];
+ } VirtIOPCIQueue;
+ 
+ struct VirtIOPCIProxy {
+diff --git a/include/hw/virtio/virtio.h b/include/hw/virtio/virtio.h
+index 27cd98d..29f21f4 100644
+--- a/include/hw/virtio/virtio.h
++++ b/include/hw/virtio/virtio.h
+@@ -361,6 +361,7 @@ int virtio_queue_get_max_num(VirtIODevice *vdev, int n);
+ int virtio_get_num_queues(VirtIODevice *vdev);
+ void virtio_queue_set_rings(VirtIODevice *vdev, int n, hwaddr desc,
+                             hwaddr avail, hwaddr used);
++void virtio_queue_set_sqcq(VirtIODevice *vdev, int n, hwaddr sq, hwaddr cq);
+ void virtio_queue_update_rings(VirtIODevice *vdev, int n);
+ void virtio_init_region_cache(VirtIODevice *vdev, int n);
+ void virtio_queue_set_align(VirtIODevice *vdev, int n, int align);
+@@ -408,6 +409,8 @@ bool virtio_queue_enabled_legacy(VirtIODevice *vdev, int n);
+ bool virtio_queue_enabled(VirtIODevice *vdev, int n);
+ hwaddr virtio_queue_get_avail_addr(VirtIODevice *vdev, int n);
+ hwaddr virtio_queue_get_used_addr(VirtIODevice *vdev, int n);
++hwaddr virtio_queue_get_sq_addr(VirtIODevice *vdev, int n);
++hwaddr virtio_queue_get_cq_addr(VirtIODevice *vdev, int n);
+ hwaddr virtio_queue_get_desc_size(VirtIODevice *vdev, int n);
+ hwaddr virtio_queue_get_avail_size(VirtIODevice *vdev, int n);
+ hwaddr virtio_queue_get_used_size(VirtIODevice *vdev, int n);
+diff --git a/include/standard-headers/linux/vhost_types.h b/include/standard-headers/linux/vhost_types.h
+index 79b53a9..ea96feb 100644
+--- a/include/standard-headers/linux/vhost_types.h
++++ b/include/standard-headers/linux/vhost_types.h
+@@ -151,6 +151,13 @@ struct vhost_scsi_target {
+ 	unsigned short reserved;
+ };
+ 
++/* SQ/CQ polling mode */
++struct vhost_vring_sqcq_addr {
++	unsigned int index;
++	__u64 sq_user_addr;   /* SQ doorbell HVA */
++	__u64 cq_user_addr;   /* CQ doorbell HVA */
++};
++
+ /* VHOST_VDPA specific definitions */
+ 
+ struct vhost_vdpa_config {
+diff --git a/include/standard-headers/linux/virtio_config.h b/include/standard-headers/linux/virtio_config.h
+index 45be0fa..d73938e 100644
+--- a/include/standard-headers/linux/virtio_config.h
++++ b/include/standard-headers/linux/virtio_config.h
+@@ -52,7 +52,7 @@
+  * rest are per-device feature bits.
+  */
+ #define VIRTIO_TRANSPORT_F_START	28
+-#define VIRTIO_TRANSPORT_F_END		42
++#define VIRTIO_TRANSPORT_F_END		43
+ 
+ #ifndef VIRTIO_CONFIG_NO_LEGACY
+ /* Do we get callbacks when the ring is completely used, even if we've
+@@ -118,4 +118,7 @@
+  */
+ #define VIRTIO_F_ADMIN_VQ		41
+ 
++/* SQ/CQ polling mode for io_uring-style doorbell polling */
++#define VIRTIO_F_SQCQ_POLL		42
++
+ #endif /* _LINUX_VIRTIO_CONFIG_H */
+diff --git a/include/standard-headers/linux/virtio_pci.h b/include/standard-headers/linux/virtio_pci.h
+index 4c82513..cc585b6 100644
+--- a/include/standard-headers/linux/virtio_pci.h
++++ b/include/standard-headers/linux/virtio_pci.h
+@@ -235,6 +235,10 @@ struct virtio_pci_cfg_cap {
+ #define VIRTIO_PCI_COMMON_Q_RESET	58
+ #define VIRTIO_PCI_COMMON_ADM_Q_IDX	60
+ #define VIRTIO_PCI_COMMON_ADM_Q_NUM	62
++#define VIRTIO_PCI_COMMON_SQE_LO	64
++#define VIRTIO_PCI_COMMON_SQE_HI	68
++#define VIRTIO_PCI_COMMON_CQE_LO	72
++#define VIRTIO_PCI_COMMON_CQE_HI	76
+ 
+ #endif /* VIRTIO_PCI_NO_MODERN */
+ 
+diff --git a/include/standard-headers/linux/virtio_ring.h b/include/standard-headers/linux/virtio_ring.h
+index 22f6eb8..520b758 100644
+--- a/include/standard-headers/linux/virtio_ring.h
++++ b/include/standard-headers/linux/virtio_ring.h
+@@ -245,4 +245,34 @@ struct vring_packed_desc {
+ 	uint16_t flags;
+ };
+ 
++/*
++ * struct vring_sq - Submission Queue doorbell for polling mode.
++ * Placed alongside the standard virtio split ring to enable
++ * kick-less notification from guest to host.
++ *
++ * @idx: Producer index (guest updates, corresponds to avail->idx)
++ * @sq_need_wakeup: device requests guest to kick when sleeping
++ * @reserved: Reserved for future use, pad to cache-line
++ */
++struct vring_sq {
++	__virtio64 idx;
++	uint8_t sq_need_wakeup;
++	uint8_t reserved[55];
++} __attribute__((aligned(128)));
++
++/*
++ * struct vring_cq - Completion Queue doorbell for polling mode.
++ * Placed alongside the standard virtio split ring to enable
++ * interrupt-less notification from host to guest.
++ *
++ * @idx: Producer index (device updates, corresponds to used->idx)
++ * @cq_need_wakeup: guest requests host to signal when sleeping
++ * @reserved: Reserved for future use, pad to cache-line
++ */
++struct vring_cq {
++	__virtio64 idx;
++	uint8_t cq_need_wakeup;
++	uint8_t reserved[55];
++} __attribute__((aligned(128)));
++
+ #endif /* _LINUX_VIRTIO_RING_H */
+diff --git a/linux-headers/linux/vhost.h b/linux-headers/linux/vhost.h
+index c57674a..746d71f 100644
+--- a/linux-headers/linux/vhost.h
++++ b/linux-headers/linux/vhost.h
+@@ -123,6 +123,10 @@
+ #define VHOST_SET_BACKEND_FEATURES _IOW(VHOST_VIRTIO, 0x25, __u64)
+ #define VHOST_GET_BACKEND_FEATURES _IOR(VHOST_VIRTIO, 0x26, __u64)
+ 
++/* Set SQ/CQ doorbell addresses for polling mode */
++#define VHOST_SET_VRING_SQCQ_ADDR _IOW(VHOST_VIRTIO, 0x27, \
++				struct vhost_vring_sqcq_addr)
++
+ /* VHOST_NET specific defines */
+ 
+ /* Attach virtio net ring to a raw socket, or tap device.
 -- 
 2.34.1
 
