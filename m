@@ -1,115 +1,113 @@
-Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 307D623ABBE;
-	Mon, 20 Jul 2026 02:37:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1C14266B46;
+	Mon, 20 Jul 2026 02:44:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784515046; cv=none; b=o8VE0VZW1+aJcUSUDbwCw/UMGlGLeKiIpllJdSyfZSDopvGVA20LYQJ95woy/lDvMMa3HT6VEgKU06Pc/H2SmSxAuq/t7M7CATdLi2jXdrdR1ix0xzRzqHNcM5VSwE6ikzG1w6ca9+oVWMdQEARx/VQuu8fnSuyRkuQBSOUMMy0=
+	t=1784515485; cv=none; b=oNkfc6EXTFOKyfiOk6/Hch+r0hhsvMPzn7HCBrCrNd3FbWz6O052Jed0QifZjpSEs8ncw2kUhundiNGMt25FGxJollYxJ2MX02gEViNmQtB43nIFTlRR+2Tq7+r647ojdQGD1V/p5PogUEV9wFeJNVQ/ye6LNM7SOlK8FKBQeFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784515046; c=relaxed/simple;
-	bh=I5+vPH4xw26UEaVBnniVHnNX3kFxqmEpB8FG1aAIqGk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=TfsHVmKtSCFcWwE6BOkoYx0vEWs5xjnri3L23Vj/S9GxnQ6JpGVAUx/94jD7qlo/63u7iRAZHgbrn6d8iWNJTxbLwRXr1cO5FKM/UCXl0pOvNg9Tl89roPPbVh7kLKizzHSsnoZ0hZ/b5tVjAxq0kggJNgq6284LKjeDNbkefLg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=PA7d0Shj; arc=none smtp.client-ip=113.46.200.223
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1784515485; c=relaxed/simple;
+	bh=LFYGrvS2+Ugtv7QDXkc7EMHLIrh6ME9tUxxVmSqHDPI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=IFwYJStCUnRX0mz/CzBAMHL0k7TeYDM6bLvqaXofICz+IVEfZoHRs2jeHnG34YP6pSoSU+RdpUP6PTWYSFSEf8EC0XJCrikH1v4Va9xg0Sfs3qUJKogrJU2qVRkGgD5gkxisnfANg+c1bIEy3DV0oz56vd53qliO2sW+ymrgq1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oKWlKx+K; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="PA7d0Shj"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=seTomVHGZbY0laxVvLQOlpfxX85OegHjloFlN6hEPeE=;
-	b=PA7d0ShjLxE9qy5pehkh+w33F9f1bnGmq/ru5dq/Z+ym7YztFHoIh/ANslLn5IJDtXHu2RMip
-	wTQWBIYln07JUsCi6xh5cEufXqN+eF7RNoTp+nfmCB0qTTD1cDVxcmgfjzOo2dTwdMp6g3sDPZ9
-	LnUSQECqlKbSjRW576/yEV8=
-Received: from mail.maildlp.com (unknown [172.19.163.200])
-	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4h3PZ05vbYzmV8f;
-	Mon, 20 Jul 2026 10:27:52 +0800 (CST)
-Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
-	by mail.maildlp.com (Postfix) with ESMTPS id 41EA440563;
-	Mon, 20 Jul 2026 10:37:14 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Mon, 20 Jul 2026 10:37:13 +0800
-Message-ID: <8426bc71-99c7-a2a2-7ac8-9a32f610a50e@huawei.com>
-Date: Mon, 20 Jul 2026 10:37:13 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oKWlKx+K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F80D1F000E9;
+	Mon, 20 Jul 2026 02:44:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784515484;
+	bh=FskehnLV2pKot38nX8CNAGMdJMVu09Cd+vu2rW5rI/8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=oKWlKx+K3d0/se9vRomqF/TuHxDAsac6Y4+QmnEJ5R5ep5s7oGCVBi9fOT680cY08
+	 NC50TZRceg7MblyzGWvrMUR8b2iwU64QQv8MFojgO4rY0Lv6WOMpfIA4LeKZmQ1hd8
+	 mpyBW8AoHaEtXYkKLPTCmTUQlxcKvppWwPksdMS79dQngrP8Hc4vTsyuI1MgzcC63j
+	 wLROYvpp17QiSvMnmuQRBqubC5bq1JnRD6kgqUrgd9isB6WKsBWPiHadcFnXR+CXYB
+	 w92VXrUJqUYK9l/JwTZSsHVsgRzeRDvY2TVrSl/E+1VNbE356Sma/JKJF+/ufYDXIv
+	 eYB1agvxijRSw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] scsi: ufs: dt-bindings: Add missing mcq reg for
+ qcom,sa8255p-ufshc
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Shawn Guo" <shengchao.guo@oss.qualcomm.com>
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260720023552.2667237-1-shengchao.guo@oss.qualcomm.com>
+References: <20260720023552.2667237-1-shengchao.guo@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 20 Jul 2026 02:44:43 +0000
+Message-Id: <20260720024444.5F80D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v2 0/2] scsi: support spinup notification for SAS SSP
- devices in Active_Wait/Idle_Wait state
-Content-Language: en-CA
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<john.g.garry@oracle.com>, <dlemoal@kernel.org>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <kangfenglong@huawei.com>
-References: <20260703022833.36847-1-yangxingui@huawei.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <20260703022833.36847-1-yangxingui@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepemh500008.china.huawei.com (7.202.181.139) To
- kwepemj100018.china.huawei.com (7.202.194.12)
 
-Kindly ping for review...
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] The Device Tree schema update fails to enforce the presence of t=
+he newly documented `mcq` register space and `reg-names` property.
+--
 
-On 2026/7/3 10:28, Xingui Yang wrote:
-> When a SAS HDD connected via SSP (Serial Attached SCSI Protocol) is powered
-> up with the RNOT (Ready Not Optimized) bit set, the device enters the
-> Active_Wait or Idle_Wait power state per the SAS protocol specification. In
-> this state, the device does not respond to standard SCSI START_STOP spinup
-> commands and instead returns NOT_READY with ASC/ASCQ = 0x04/0x11 ("Logical
-> unit not ready, notify (enable spinup) required").
-> 
-> Without handling this condition, the SCSI mid-layer will indefinitely retry
-> the command with ACTION_DELAYED_RETRY, resulting in the disk never spinning
-> up and becoming unusable. A typical manifestation is:
-> 
->    sd 4:0:9:0: [sde] Spinning up disk...
->    ...not responding...
->    sd 4:0:9:0: [sde] Sense Key : Not Ready
->    sd 4:0:9:0: [sde] Add. Sense: Logical unit not ready, notify (enable spinup) required
-> 
-> To resolve this, the SAS controller needs to send a NOTIFY(ENABLE SPINUP)
-> primitive to the target phy, which transitions the device out of the waiting
-> state and allows normal spinup to proceed.
-> 
-> This patch series addresses the issue:
-> 
-> Adds a new optional spinup_notify callback to struct scsi_host_template
-> in the SCSI mid-layer. When ASC/ASCQ = 0x04/0x11 is detected in
-> scsi_io_completion_action(), the callback is invoked before the mid-layer
-> falls through to ACTION_DELAYED_RETRY, giving the LLDD an opportunity to
-> perform controller-specific spinup notification.
-> 
-> Changes in v2 (addressing Sashiko AI review on v1):
-> - Add softirq context documentation to spinup_notify in scsi_host.h
-> - Defer sl_notify_ssp() to ordered workqueue, fixing msleep-in-
->    atomic bug, preventing RMW races on SL_CONTROL, and deduplicating
->    concurrent callbacks via queue_work()
-> 
-> Xingui Yang (2):
->    scsi: scsi_lib: add spinup_notify callback for ASC/ASCQ=0x04/0x11
->    scsi: hisi_sas: add spinup_notify callback to handle
->      Active_Wait/Idle_Wait SSP devices
-> 
->   drivers/scsi/hisi_sas/hisi_sas.h       |  2 ++
->   drivers/scsi/hisi_sas/hisi_sas_main.c  | 34 ++++++++++++++++++++++++++
->   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  1 +
->   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  1 +
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  1 +
->   drivers/scsi/scsi_lib.c                |  4 +++
->   include/scsi/scsi_host.h               | 12 +++++++++
->   7 files changed, 55 insertions(+)
-> 
+--- Patch [1]: [PATCH v2] scsi: ufs: dt-bindings: Add missing mcq reg for q=
+com,sa8255p-ufshc ---
+commit 871a91874eb00f9814a93dfb44bc94d0b96e8791
+Author: Shawn Guo <shengchao.guo@oss.qualcomm.com>
 
+scsi: ufs: dt-bindings: Add missing mcq reg for qcom,sa8255p-ufshc
 
-Thanks,
-Xingui
+Qualcomm UFS controller found on SoCs SA8255P/SA8797P has a MCQ I/O
+address space. It should be defined in the bindings even though Linux
+driver currently doesn't utilize it. Fix the binding before it gets
+adopted by DTS.
+
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yam=
+l b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
+> index db165a235cb6d..66d73e9025d6b 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
+> @@ -18,7 +18,14 @@ properties:
+>            - const: qcom,sa8255p-ufshc
+> =20
+>    reg:
+> -    maxItems: 1
+> +    minItems: 1
+> +    maxItems: 2
+> +
+> +  reg-names:
+> +    minItems: 1
+> +    items:
+> +      - const: std
+> +      - const: mcq
+
+[Severity: Medium]
+Since the commit message indicates the MCQ I/O address space should be defi=
+ned
+before it gets adopted by DTS, should reg and reg-names strictly require tw=
+o=20
+items?
+
+Setting minItems to 1 for both properties allows device trees to pass
+schema validation with only a single register space.=20
+
+Additionally, should reg-names be added to the required list to enforce its
+presence?
+
+The examples section was also not updated and still demonstrates a single
+register space:
+
+        compatible =3D "qcom,sa8255p-ufshc";
+        reg =3D <0x01d84000 0x3000>;
+        interrupts =3D <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+
+Could this be updated to demonstrate the newly added mcq register and
+reg-names?
+
+> =20
+>    interrupts:
+>      maxItems: 1
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720023552.2667=
+237-1-shengchao.guo@oss.qualcomm.com?part=3D1
