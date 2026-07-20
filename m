@@ -1,174 +1,161 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A99F03D45C1
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jul 2026 09:28:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A0B73D6CA4;
+	Mon, 20 Jul 2026 09:33:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784539707; cv=none; b=P2MxxgPF90QvbaNeTRY4k5RvDxKT8Vct97c2DwiIDDvZ3CNDNsA4jOLSykDAcV9ex4MgM+Sv/186DKtCDIaFDzoqFXZmHLHUKQI6DXrYjXXBpSPNhFfge/4lC2bn4w6oEUx3eYrtiIHjTxwWiU6IBjFtXUyUJzQiCtHC5ZQZQ1Q=
+	t=1784539985; cv=none; b=PmlevFxI8S7YRJRx1dlMTYwik1D/xZO6EXbYkKQKcVhATeUofQFwLIoa9zSZT0vYEBmovRoa+skgBK6eo3JjG7+LRaPlBaYauLHy6TBYs/0+MqqQUQd+YHprRGoHjh43/m6w+3GwtuuPt+9n8s/OFMnxRSF7mmgH5f9QI54SIgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784539707; c=relaxed/simple;
-	bh=ikx1LdDNvMWUfwe3BSna2NMt2ZRbdhmK0Vi+73R/NPM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tTsRJUN7Gd1MbjNjzXOm1Sb+dTrHInY4EQ1iBjnw2wK1pXC75F5FvA+fCxrybi6wn7XxM7hq7jPi2sV+Jz5af2tSHIsN9PgiQlcmCl9exU/CshMAUbx4KsThOjwjG4voCrADoCWT0KPkjrX2PoJEavAZrY6lMyIpvJqoSuj0Jyc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mWhLt+3N; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784539985; c=relaxed/simple;
+	bh=vsf/E3+jsCQFMwL3EKVcVKBhK4dFH51HgTt0oiVpb2I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rZNHBIehwp/JnyQNKH40OkxoGu5nUNjZa3etfkcOQ0NQi2JRXV7CX+zjraVh/Q2lYN8T9U0xFvoCB+mb5SK55NoBKVXXJnM62Um28GT/jK5gfrb/rQ170jjPm/3co1BCwRL/L1iTvSYIZghAY22D2P4tbQTFC6EvuZfthu5aSe8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XI6iGe0B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mWhLt+3N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C5D41F000E9;
-	Mon, 20 Jul 2026 09:28:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XI6iGe0B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3955E1F000E9;
+	Mon, 20 Jul 2026 09:33:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784539706;
-	bh=hvuD7AFH7GF28dXOYWo2GvHwzsUh73pHk6/GVj8GxVI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mWhLt+3N2EBDvgJpQIfb+MbL6JFo+DgcgIWNcJ77r+rBse/QN2+548WyeXy0OgeIy
-	 Unkp9tjx0lOekqSnLx4XANL8ZJloLooTUQkLbSVF5Mkzw54fS3KzL0N6SIytYp9Qr+
-	 zGvH0eTB7KNo0Bx/AxvvEUxHGXpcra0bUyMFloG58YSjj3Jd8+x6uI3mqhVlMsaZGJ
-	 AsIXPWRj4MyhF/VxQ/uNyst1uv+AtvOZ1o4Bl6qJRUPn6wKiv9QBK0UgAVG75J6LA4
-	 d87Vl+7Sgyfwp4QvQnvSAhgUl9biNWMrP83FgiX0K1OVYeGaVC7Be5yuAMsP/ZG9DY
-	 2dmJfIqE0l1Zg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] ufs: rpmb: use a fixed-length RPMB dev_id
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jorge Ramirez-Ortiz" <jorge.ramirez@oss.qualcomm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260720091614.544968-3-jorge.ramirez@oss.qualcomm.com>
-References: <20260720091614.544968-1-jorge.ramirez@oss.qualcomm.com>
- <20260720091614.544968-3-jorge.ramirez@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 20 Jul 2026 09:28:26 +0000
-Message-Id: <20260720092826.6C5D41F000E9@smtp.kernel.org>
+	s=k20260515; t=1784539984;
+	bh=ZfR2g/WngHonCyKcs/mZInuSpqMXOSxgggCegt3LK1A=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=XI6iGe0BYtGPn25QKY67E6hw5PrL4gPoAvtiUT6L1+2KkgutDMPGNAW+N0BG4Jdlx
+	 QHau7uR0BE143B56lkVMCXEPbN0+WpQcPEBX5HCMB1FnjRmXFfnb0UQ1IbBzk/HtpD
+	 FZVRDBAwUYJy3UD29oP1oDrlBsLNWA+Tn7LxolguDRONuh6qVC5/BV068+8G8lTpR/
+	 CA9oNCtHd/WxxKJoUN5lBuaKNvoenxvI+vznOGrfQV+kzutyVAwS2ND0x+Q54UfTLo
+	 lvaX1z6Q15IWmdaHyOg1SQT6UFHKCTAsJR/lEyN1V2LjKexoAj5c2u/qkyv+QmBCLQ
+	 0iiCs5rMUZWzw==
+Message-ID: <8a4b58ca-c172-429d-8de3-34f92f5d2264@kernel.org>
+Date: Mon, 20 Jul 2026 18:33:01 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 1/2] ata: libata-scsi: terminate deferred commands on
+ time out
+To: sashiko-reviews@lists.linux.dev
+Cc: cassel@kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20260720071450.1877625-1-dlemoal@kernel.org>
+ <20260720071450.1877625-2-dlemoal@kernel.org>
+ <20260720073106.E10121F000E9@smtp.kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260720073106.E10121F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On 7/20/26 16:31, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] A race condition between block layer timeout work and the SCSI EH thread causes deferred QCs to fail permanently, resulting in spurious I/O errors.
+> --
+> 
+> --- Patch [1]: [PATCH v6 1/2] ata: libata-scsi: terminate deferred commands on time out ---
+> commit 65621fb40c8a19c964f38c70891c67cb0a3f9251
+> Author: Damien Le Moal <dlemoal@kernel.org>
+> Subject: ata: libata-scsi: terminate deferred commands on time out
+> 
+> If a command timeout occurs while we have deferred non-NCQ commands
+> waiting to be issued, the SCSI EH task is not immediately woken up as the
+> waiting deferred commands are never issued nor completed. Avoid this
+> unnecessary SCSI EH task wake-up additional time by scheduling a retry of
+> all waiting deferred QCs, using the eh_timed_out SCSI host template
+> operation.
+> 
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 5868526301a2b..b02b4ca5c09e2 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+> 
+> [ ... ]
+> 
+>> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
+>> +void ata_scsi_requeue_deferred_qc(struct ata_port *ap,
+>> +				  struct scsi_cmnd *timedout_scmd)
+>>  {
+>> +	struct ata_queued_cmd *qc;
+>>  	struct ata_link *link;
+>>  
+>>  	lockdep_assert_held(ap->lock);
+>>  
+>>  	/*
+>> -	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
+>> -	 * do not try to be smart about what to do with this deferred command
+>> -	 * and simply requeue it by completing it with DID_REQUEUE.
+>> +	 * Trigger EH for any deferred qc, to either retry them or handle one
+>> +	 * that timed out.
+>>  	 */
+>>  	ata_for_each_link(link, ap, PMP_FIRST) {
+>> -		struct ata_queued_cmd *qc = link->deferred_qc;
+>> +		qc = link->deferred_qc;
+>> +		if (!qc)
+>> +			continue;
+>>  
+>> -		if (qc) {
+>> -			link->deferred_qc = NULL;
+>> -			cancel_work(&link->deferred_qc_work);
+>> +		link->deferred_qc = NULL;
+>> +		cancel_work(&link->deferred_qc_work);
+>> +
+>> +		if (!timedout_scmd) {
+>> +			/*
+>> +			 * We are retrying due to some error. Complete the
+>> +			 * request and ask for a requeue. In this case, since EH
+>> +			 * was scheduled already, the block layer attempting to
+>> +			 * re-issue the command immediately will not lead to the
+>> +			 * device being kept busy, thus allowing SCSI EH task to
+>> +			 * run.
+>> +			 */
+>>  			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
+>> +			continue;
+>>  		}
+>> +
+>> +		/*
+>> +		 * We are being called from scsi_timeout(). scsi_eh_scmd_add()
+>> +		 * will add the command to eh_work_q and it will be handled by
+>> +		 * ata_scsi_cmd_error_handler(). So here, we only need to
+>> +		 * indicate if we want a retry if the command did not timeout.
+>> +		 */
+>> +		if (qc->scsicmd != timedout_scmd)
+>> +			qc->flags |= ATA_QCFLAG_RETRY;
+>> +
+>> +		/*
+>> +		 * Schedule EH, but set EH pending on the port so that we do not
+>> +		 * reenter this function from ata_eh_set_pending() with
+>> +		 * timedout_scmd being NULL and erroneously retry deferred QCs
+>> +		 * that have timed out on other links.
+>> +		 */
+>> +		ap->pflags |= ATA_PFLAG_EH_PENDING;
+>> +		ata_qc_schedule_eh(qc);
+> 
+> [Severity: High]
+> Does this introduce a race condition between the block layer timeout work and
+> the SCSI EH thread that could cause deferred QCs to fail permanently with
+> spurious I/O errors?
+> 
+> When a command times out, ata_scsi_eh_timed_out() calls this and triggers
+> ata_qc_schedule_eh() on deferred QCs. This calls blk_abort_request(), which
+> schedules the block layer timeout_work asynchronously.
+> 
+> Meanwhile, the original timed-out command is added to eh_cmd_q and immediately
+> wakes up the SCSI EH thread. If the SCSI EH thread processes eh_cmd_q in
+> ata_scsi_cmd_error_handler() before the asynchronous timeout_work for the
+> deferred QCs runs, ata_scsi_cmd_error_handler() will miss the deferred QCs
+> since they aren't in eh_work_q yet:
 
-Pre-existing issues:
-- [High] Use-After-Free on device unbind due to devm_kzalloc used for struc=
-t embedding a device
-- [High] Circular dependency between parent and child devices prevents clea=
-nup and causes resource leak
-- [High] NULL pointer dereference in ufs_rpmb_remove if ufs_rpmb_probe bail=
-s out early
---
+Somehow, this patch seems to be working, but yet, in view of this comment, I do
+not see how the host busy counter is decremented for the deferred QCs. Something
+is missing. We somehow need to call scsi_complete() with a status that leads to
+the command disposition to fall to the default scsi_eh_scmd_add() so that we do
+not immediately retry the command, since that also does not work (previous
+version issue).
 
---- Patch [2]: [PATCH v2 2/2] ufs: rpmb: use a fixed-length RPMB dev_id ---
-commit 2720876781cfffc7b6138bf9c11da0d2249234f9
-Author: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
+Spending the weekend on this was a waste of time. Back to the drawing board on this.
 
-ufs: rpmb: use a fixed-length RPMB dev_id
-
-The RPMB authentication key is derived from the dev_id handed to the
-RPMB subsystem. This commit hashes the variable-length UFS id into a fixed
-16-byte dev_id using blake2b to match the eMMC CID layout OP-TEE relies on.
-
-> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-> index d0c7ea7a36f49..0d8399b6497a1 100644
-> --- a/drivers/ufs/core/ufs-rpmb.c
-> +++ b/drivers/ufs/core/ufs-rpmb.c
-
-[ ... ]
-
-> @@ -154,6 +156,7 @@ int ufs_rpmb_probe(struct ufs_hba *hba)
->  {
->  	struct ufs_rpmb_dev *ufs_rpmb, *it, *tmp;
->  	struct rpmb_dev *rdev;
-> +	char *dev_id =3D NULL;
->  	char *cid =3D NULL;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the early return in
-ufs_rpmb_probe() leave the rpmbs list head uninitialized?
-
-If the function returns early due to a missing device ID:
-
-drivers/ufs/core/ufs-rpmb.c:ufs_rpmb_probe() {
-    if (!hba->dev_info.device_id) {
-        dev_err(hba->dev, "UFS Device ID not available\n");
-        return -EINVAL;
-    }
-
-    INIT_LIST_HEAD(&hba->rpmbs);
-    ...
-}
-
-When ufs_rpmb_remove() is later called on driver unbind, list_empty()
-evaluates to false because hba->rpmbs is completely zeroed out rather than
-pointing to itself. This causes a NULL pointer dereference when traversing
-the list:
-
-drivers/ufs/core/ufs-rpmb.c:ufs_rpmb_remove() {
-    if (list_empty(&hba->rpmbs))
-        return;
-
-    list_for_each_entry_safe(ufs_rpmb, tmp, &hba->rpmbs, node) {
-    ...
-}
-
-[Severity: High]
-This is a pre-existing issue, but does using devm_kzalloc() for a structure
-that embeds a device cause a use-after-free on driver unbind?
-
-drivers/ufs/core/ufs-rpmb.c:ufs_rpmb_probe() {
-    ...
-    ufs_rpmb =3D devm_kzalloc(hba->dev, sizeof(*ufs_rpmb), GFP_KERNEL);
-    ...
-    device_register(&ufs_rpmb->dev);
-    ...
-}
-
-If a userspace process opens a sysfs file for this device, the device
-reference count is elevated. If the UFS driver is unbound at this point,
-devres will automatically free the ufs_rpmb structure.
-
-Later, when the sysfs file is closed, the device core drops the final
-reference and calls ufs_rpmb_device_release(), which accesses the
-already-freed memory:
-
-drivers/ufs/core/ufs-rpmb.c:ufs_rpmb_device_release() {
-    struct ufs_rpmb_dev *ufs_rpmb =3D dev_get_drvdata(dev);
-
-    rpmb_dev_unregister(ufs_rpmb->rdev);
-}
-
-Should ufs_rpmb be allocated with a standard kzalloc() and explicitly freed
-in the device release callback instead?
-
-[Severity: High]
-This is a pre-existing issue, but is there a circular dependency preventing
-the release callback from ever running?
-
-The child device (rdev) holds a reference to its parent (ufs_rpmb->dev).
-However, the child is only unregistered in the parent's release callback:
-
-drivers/ufs/core/ufs-rpmb.c:ufs_rpmb_device_release() {
-    struct ufs_rpmb_dev *ufs_rpmb =3D dev_get_drvdata(dev);
-
-    rpmb_dev_unregister(ufs_rpmb->rdev);
-}
-
-During driver unbind, only the parent device is unregistered:
-
-drivers/ufs/core/ufs-rpmb.c:ufs_rpmb_remove() {
-    ...
-    list_for_each_entry_safe(ufs_rpmb, tmp, &hba->rpmbs, node) {
-        ...
-        device_unregister(&ufs_rpmb->dev);
-    }
-}
-
-Because the child is left registered, it continues to hold a reference to
-the parent. As a result, the parent's reference count never reaches zero,
-ufs_rpmb_device_release() is never called, and the device structures are
-leaked.
-
-Should the child device be explicitly unregistered in ufs_rpmb_remove()
-before unregistering the parent?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260720091614.5449=
-68-1-jorge.ramirez@oss.qualcomm.com?part=3D2
+-- 
+Damien Le Moal
+Western Digital Research
