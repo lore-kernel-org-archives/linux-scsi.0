@@ -1,101 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D537C419304;
-	Mon, 20 Jul 2026 12:35:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6A4139B95D;
+	Mon, 20 Jul 2026 12:43:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784550909; cv=none; b=JciOSJR0GjggqyYOGRaAdHdEy8zIM1sS9j5dpqMXP7zhgVXcGcmulxU0bn4GnGPaL2xS/GyYBqj4qw90MBi9fdF0lM53p4/Z9fOMOAr0yHuGYEPfCRtKNkAhu6sf+nIrDxaFA0CpftLbcbveOcYeQ8oNYCJfplzKIIIKB/1C+iM=
+	t=1784551436; cv=none; b=Sj6LFUdxQCeDlXizspf5hSpdfl8U1R/eTj0JfMD8opSJIk5Io9alQh/Ria/OGSGL9NzSgL6eUWbswsi6pnTX5wXOhKsKnW/yOlslx0Gq63/LGKJyYOeOWmcUsGI4G+9cAKeTcn48MVuiTQWShp5A3Uqv2PzS1VgXBn/0V8IKG3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784550909; c=relaxed/simple;
-	bh=GmOq1MCKVpSESpAwyGcFeWIUVGHzHs55MNJ5RgVrEwY=;
+	s=arc-20240116; t=1784551436; c=relaxed/simple;
+	bh=BcSKg2GpGhjyTVVozQAWAb7EZUn36sjJBz6KpaseLTk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P/ed8hT7XDsglVUm5JOcxA024m/tuf6VO8aWHhPhyEOIvxknisAw9txdIkP0+tpZGMAa8lbzpDvQskxzdHEMVI5BDdT7x9PWhKjnXVo/JE/54qL7SiI0jyB9/vKWkEaO63VqG9s6pdyOiFZ8dCJp0QiXOPdVmz/OfNNJBv2yZ/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mPi5rUA0; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=K9q0Ral+JHsjQ51zL51Xkt0XvHeBWZLyh39sYVvgiwZ2gPG83mgSB1GOCEkp37FOGPs6uGXO1aiQSoToYthduKVs2F0PwSOMBG1CaOMMghscds+hg76fILr0zQgytxp2Pm+bitOYayNIb4d3K8uPyBgSeMNpNBSqP+r3inT4Bbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oUcfoo4I; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mPi5rUA0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D3DF1F00A3A;
-	Mon, 20 Jul 2026 12:35:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oUcfoo4I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4EA91F000E9;
+	Mon, 20 Jul 2026 12:43:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784550908;
-	bh=iKpWP8hoVh5cB7VCKfRlbJw7AuCrEYVuIfoP/u54i6Q=;
+	s=k20260515; t=1784551435;
+	bh=1c6LTL5Is7h8D95ocgbXWlW7FM4nVTO6iup7BWbySR4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mPi5rUA0YT/hFR+2Ub9ZxBJZiFeldqvmz0OHhbD7jC/w9lYjnVv36gevX92whq7o/
-	 sSk0ulb0Q9OcP2ixIy098Yz9a7C+GwS4uy5nJ4JaBxB+Z4+81RkeZlVJzkSwIYXLjv
-	 9qqOv2Q8LHgXyA49upmh1lg2gT3sUgqWjO+fBqqSkgEpGMlhK2kegLsrTtQQWl3S2j
-	 y0PdLOnW0W2Kz2sroXxTyQBGP/PwKud0C6wxuCl1LIrcdIlcj2v9RSJ0LwG3piIESW
-	 Voe5SqWMRZUtRKpFZKsdb8kKBbRcfX5TbBEiRrD785g45ANgAabJTYz9R5TS9Cjsp9
-	 0wuzPnHUhZq0g==
-Date: Mon, 20 Jul 2026 14:35:01 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Cc: krzk+dt@kernel.org, robh@kernel.org, andersson@kernel.org, 
-	alim.akhtar@samsung.com, bvanassche@acm.org, avri.altman@wdc.com, conor+dt@kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH V2] scsi: ufs: dt-bindings: Document the Maili UFS
- Controller
-Message-ID: <qzgxnt7pnybd5l3rgro67g5kkevctst4lnfn37jbe4hhnva2yo@azmngirwv26d>
-References: <20260719195833.136543-1-nitin.rawat@oss.qualcomm.com>
+	b=oUcfoo4Icd3uA53Ct4ZXYsqZQsaE057RK+n9XKwQWhRB+hfI6GFRjMc8L+U+z5tUq
+	 3KKP8uiWQhoA/yS7kogZzjr6+izJG3giyyIF0WkRSVdDowTa5ejo/0RPaXxjJNjceh
+	 xdwFW12MQrQXiyeC/dozu/ErLqsu9hfqjEAvR2wlH3WySiOmRq9hXRmgro8DnX8Jf0
+	 ygSdzdmIWdSqtYkSDcidG5waZghMUxQqxriWyl/v5sIg00jAM/BJhFx4YZFwRZh7hr
+	 cTFOouuznp3AFoSSkxVukQhRtyvYKzLld+neAWQtXredy3IwWyHjAe3dVIG2qtDG95
+	 G+ye2STy/aR5Q==
+Date: Mon, 20 Jul 2026 15:43:49 +0300
+From: Mike Rapoport <rppt@kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Brian King <brking@us.ibm.com>, Hannes Reinecke <hare@suse.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Wen Xiong <wenxiong@linux.ibm.com>, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, Hannes Reinecke <hare@kernel.org>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH v2 0/4] scsi: replace __get_free_pages() with kmalloc()
+Message-ID: <al4YBTQ-aUS9_DJJ@kernel.org>
+References: <20260704-b4-scsi-v2-0-7d2d21a810de@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260719195833.136543-1-nitin.rawat@oss.qualcomm.com>
+In-Reply-To: <20260704-b4-scsi-v2-0-7d2d21a810de@kernel.org>
 
-On Mon, Jul 20, 2026 at 01:28:33AM +0530, Nitin Rawat wrote:
-> Document the UFS Controller on Maili SoC.
+Gentle ping.
+
+On Sat, Jul 04, 2026 at 09:13:33AM +0300, Mike Rapoport (Microsoft) wrote:
+> This is a (small) part of larger work of replacing page allocator calls
+> with kmalloc.
 > 
-> Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-
-- Mani
-
-> ---
-> Change from v1:
-> 1. Addressed Krzysztof's comment to update 'qcom,maili-ufshc'
->    to the allOf condition required for MCQ targets.
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml | 3 +++
->  1 file changed, 3 insertions(+)
+> My initial intention a few month ago was to remove ugly casts [1], but then
+> willy pointed out that Linus objected to something like this [2] and it
+> looks like more than a decade old technical debt.
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-> index b441f0d26081..d03295806657 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-> @@ -18,6 +18,7 @@ select:
->            - qcom,eliza-ufshc
->            - qcom,hawi-ufshc
->            - qcom,kaanapali-ufshc
-> +          - qcom,maili-ufshc
->            - qcom,nord-ufshc
->            - qcom,sm8650-ufshc
->            - qcom,sm8750-ufshc
-> @@ -31,6 +32,7 @@ properties:
->            - qcom,eliza-ufshc
->            - qcom,hawi-ufshc
->            - qcom,kaanapali-ufshc
-> +          - qcom,maili-ufshc
->            - qcom,nord-ufshc
->            - qcom,sm8650-ufshc
->            - qcom,sm8750-ufshc
-> @@ -78,6 +80,7 @@ allOf:
->            contains:
->              enum:
->                - qcom,eliza-ufshc
-> +              - qcom,maili-ufshc
->                - qcom,nord-ufshc
->      then:
->        properties:
+> Largely, anything that doesn't need struct page (or a memdesc in the
+> future) should just use kmalloc() or kvmalloc() to allocate memory.
+> kmalloc() guarantees alignment, physical contiguity and working
+> virt_to_phys() and beside nicer API that returns void * on alloc and
+> doesn't require to know the allocation size on free, kmalloc() provides
+> better debugging capabilities than page allocator.
+> 
+> Another thing is that touching these allocation sites gives the reviewers
+> opportunity to see if a PAGE_SIZE buffer is actually needed or maybe
+> another size is appropriate.
+> 
+> For larger allocations that don't need physically contiguous memory
+> kvmalloc() can be a better option that __get_free_pages() because under
+> memory pressure it's is easier to allocate several order-0 pages than a
+> physically contiguous chunk with the same number of pages.
+> 
+> And last, but not least, removing needless calls to page allocator should
+> help with memdesc (aka project folio) conversion. There will be way less
+> places to audit to see if the user was actually using struct page.
+> 
+> Also in git:
+> https://git.kernel.org/pub/scm/linux/kernel/git/rppt/linux.git gfp-to-kmalloc/scsi
+> 
+> [1] https://lore.kernel.org/all/20251018093002.3660549-1-rppt@kernel.org/
+> [2] https://lore.kernel.org/all/CA+55aFwp4iy4rtX2gE2WjBGFL=NxMVnoFeHqYa2j1dYOMMGqxg@mail.gmail.com/ 
+> 
+> ---
+> v2 changes:
+> * replace GFP_ATOMIC with GFP_NOIO in ipr driver
+> 
+> v1: https://patch.msgid.link/20260630-b4-scsi-v1-0-494fb37ebe7b@kernel.org
+> 
+> ---
+> Mike Rapoport (Microsoft) (4):
+>       scsi: target: file: use kmalloc() to allocate temporary protection buffer
+>       scsi: proc: use kmalloc() in proc writers
+>       scsi: ipr: use kmalloc() to allocate IPR dump buffer memory
+>       scsi: sym53c8xx_2: replace __get_free_pages() with kmalloc()
+> 
+>  drivers/scsi/ipr.c                  | 4 ++--
+>  drivers/scsi/scsi_devinfo.c         | 5 +++--
+>  drivers/scsi/scsi_proc.c            | 9 +++++----
+>  drivers/scsi/sym53c8xx_2/sym_hipd.h | 4 ++--
+>  drivers/target/target_core_file.c   | 4 ++--
+>  5 files changed, 14 insertions(+), 12 deletions(-)
+> ---
+> base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+> change-id: 20260611-b4-scsi-d0b0eb4895f4
+> 
 > --
-> 2.34.1
+> Sincerely yours,
+> Mike.
 > 
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Sincerely yours,
+Mike.
