@@ -1,198 +1,182 @@
-Received: from mail-yx1-f48.google.com (mail-yx1-f48.google.com [74.125.224.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28FEA37F8C1
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Jul 2026 23:20:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784503222; cv=pass; b=RGpu5SHbs3hiRfFx8EYdKGKcmq3QjTL88JqbCYI5PHoHyezc77hHOhF97WM3bUvHC+Ozf/LyBema8RsdgdWWFeuWj6DrVjTiqsUPGg/KKeXvyq6wsZ7ZBi+/q0cYIxXrdcC9LNVma4WApCn7pJNse4117s2+fTLkLQVgGZ+gjYE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784503222; c=relaxed/simple;
-	bh=DWT7/MJowsj2WV+e/BvUBOitlHcs+O939V9MzG/T3iw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=t1OQL78HSqhnrOe8mzRDK48pxiKp3Pa/LBBfGnJarOtvNsiNZzAaNBvdRYwwGnMVv+qvRSFMrSN7G2W6FJzNX4oooCFlqb44mMipK5nzhGeuPxFYCBWJXc8PG//Isb1RW6tELwNONeAP1OPcilyA+xtzQWc1D/N/W+bF1evx+Fs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com; spf=pass smtp.mailfrom=tenstorrent.com; dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b=B6Qi70SU; arc=pass smtp.client-ip=74.125.224.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tenstorrent.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0F5D126BF7
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Jul 2026 01:38:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784511485; cv=none; b=VtVauJYq2cm4GwwtDBvckALgink0+u9imN+mo7+/CUWRY9JRbz3fL8PIVutOGYbdmcaQSp0Yh5OOax6AI7ILzNpHB3WDHVQ7FZhtzzaVG2x47O1uzCDeAvsjLIpWaRlQL2If4zvn5yass7tVAMovlrks9LeML7LIO2VCQNFQ334=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784511485; c=relaxed/simple;
+	bh=gAacO2mmcEYOP9wL99OjzZaY6nB3pByDN3ZyLSHDcCQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YS3PCiJzijJ38PBeKIR722i8mQpMnQnu6yd9tO1H2RYmzCVXFTEADLJMiEvsYNDTwGG1WMi6ryvZJTe8mMymmaO0OA+o2vsqPsxfHKLgBEWzhD+wMRqO08EcgMCN+TRM17MRTRYNQ9fdPLdXboTDiq0QLrYL8P0NlkX0Kl0um1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=epf1Rkgs; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b="B6Qi70SU"
-Received: by mail-yx1-f48.google.com with SMTP id 956f58d0204a3-664a09bc459so13468743d50.1
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Jul 2026 16:20:19 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784503219; cv=none;
-        d=google.com; s=arc-20260327;
-        b=ViLgFQA0X+/eeMhKdXiYAQ+B4CD7IdxtFoN5rKaQcs2SJecJrmC2OXysjhvn5SO4+o
-         Ge5DBmTUKkZkINrUwv4XrRxkJh4KvNfGiaRlPKWEmcD4OEFXO/dSZB0awlJd+EMMvip9
-         vQBo44rKXKeiCTOwpulkNQWRI7PdyOtXMtL/d0B2aS3D7Q2iBAUVlfPnhOM6Ahti3g67
-         99v7z0OcaBxUkKQLkOar5AgRAzhgBFkHGYIm9ip1NtuFCfea2COyvKkdHmc9+Y63yN8W
-         DFdWdFh8P+mI6Ivj1b9KZG6x579WP3elIr0o8CcOqDOsbpoP/Tx0IXepg5z2zzY3vB2S
-         ZokA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=UPqjPIJbJ4hSMkmX6fzNuKXuPBcJE4+S9+cyMi05hk4=;
-        fh=LFW2cxNzIyykZPmlTPKM7gcXMHZuCa+fqGh2sFnr/LI=;
-        b=nweB9g6jraq9ye1LOI/6PKrTQqPbbm/ZxcnziU0g1UUSSz05HnZy0Y93Uvrees8haT
-         43Q7KxqL0yVWLtj92HvhBk2wscgExsnPj49pbcoPZFmE5EU79eWEDnt06G8CawQzCp/k
-         MFxuCovf3jUuaLVfkc8Ga05hD9wXALVrTmCGqpAUxNFYfgWQ0Ex6FEo7xeMscCTynZlp
-         31r2MM+bN2AyuQuKgMKxrGXVul9sKanIFcMozsosbnl2C+6ds079JY5rODUAx7BiYjZx
-         gPhWvx80A4SanzFp2DRMs6KJaCXm94mRrlgnVBduOlhvqfyCOp7nUEc9lycRXFQm2Uyr
-         3nkg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tenstorrent.com; s=google; t=1784503219; x=1785108019; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=UPqjPIJbJ4hSMkmX6fzNuKXuPBcJE4+S9+cyMi05hk4=;
-        b=B6Qi70SUemhqvfqYHGv3PIEdkl5xy6wZSKEYEOcImb+l2KX0NqlpwlL4ZvRMuSSMF0
-         jLZ/h82+L5fvNx8RW2HeWI8DGzkjPpI6tdOQWY7n/DeLzy5ex9DaOFp3JhLzj5uFoFA2
-         lBOLaXDUNxgJLYdJxUkWiElh+D9QZ9d3i6uMn699QusxxYfo568MlWP36Y+yBm7ou6OM
-         IeepW7uxmZoDj0ENjw6EyzxlQJtPAt91IbgVCg/9cZ0kiXGxwcRgpd11uLkUCt5emZNA
-         vlO88bySJooJymm4eMOKF9IVHhIibwF7fBKEDq7vTAFfuX6qkvF10q/uUVeQtHmxmhns
-         YPFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784503219; x=1785108019;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=UPqjPIJbJ4hSMkmX6fzNuKXuPBcJE4+S9+cyMi05hk4=;
-        b=TOZJS8ho/Uy72Tk4au9xjPnUzF+i8E7RSboFHeK9YBr1Bf0Mtbvq8WvMYVo/rfUa9Y
-         +h147R4Xm3d9KMNxUm8BlZJ8KKylFrpoHIjdovLBtCgVzJHm5uYWpxtdQmAzPPldLJVY
-         F3+YzPmNF/Dmdpv6uMx1/CQYSE4sodSFfNBjR98sPdCfZsKCFksvHTlgVGP1SCrqocId
-         dWtXy6y+445kxgnkLH573iBod2J6PbVcJrFOQCbAz3WQIq45xEN56S2NRvcPw5Xp31sT
-         G0xr7pF5hqgNNPCTTXqXtqrQRN6HCx/pNkY0QM2E+niD5BNLYAoOCqcK86lCGTf4EWOb
-         OA9w==
-X-Forwarded-Encrypted: i=1; AHgh+Roxxdlr/bjhP5Y02jg/SlDv4VhVS2/6Xq6zR7il7i9P+fBOwAcTJZqwVOrpgg9u0BtgTQdmvTsT7lC7@vger.kernel.org
-X-Gm-Message-State: AOJu0YzrF+CJh4D63GrGJcOT3vxNKyf2WufT/W+8/vXBsj7BGUPBsLQH
-	iUT0bFbYvMotvc1et6GA/dd4UHNlYowQS7BhfpZl/P6DZhl9+73vWFXwNZtMstNMzkHA2IVVGvb
-	oug7Misp3b2VFVDceL+OCHlu2Cr6qyFz1gJ/VF2PHJQ==
-X-Gm-Gg: AfdE7cnlIo1a/3bFhrSgSr+qBHKvsEx8OU6iUTq4t6yvKNbRDQ7if/QMhzlTdYUSAT7
-	y0WIWO23tKqj/MEhLepRVzpRJpYD2YYRGdcMtHaUExNmKhdOtS9w6amHV2NTAPwHv5fvMZvnzi0
-	Kt6wsl8snklXaztPq/6uvjqFityKVjN56P39/ftSAbsqCmjDAMOtPwmP5VeSNAFcYqOa8NyUmUe
-	rdm8ESHhKGdfeDhwux9f2QTc93JSGCJmXdpw8OGArhS0PSXIRb4kqeaAiDHGjtxVp6+oGY/rags
-	Ja6x4LLcy9NFMbY/Tw5vahpJ598qm2U+Cp1R4PO1RAlCGwJ02NY=
-X-Received: by 2002:a05:690e:2504:10b0:667:c15b:dab6 with SMTP id
- 956f58d0204a3-6683be6aa35mr2695296d50.95.1784503219030; Sun, 19 Jul 2026
- 16:20:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="epf1Rkgs"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=YQPQOwerLERrj25A5pSqR/C7vg/4PN0ez+Twz0ltcXY=; b=epf1RkgsYs8DRm6PzuA7k93pEi
+	Otks5iDC5NPaHPd3VrCDbwAf++uEUASL6ZZ/cy5vm3+4fvjfM76e8WxEvhbwtggBDFmwLQn8BL9e1
+	+Ze0V0drc6k5ZALaezxKn+HMumyKasGCFiS6AlgDpTQ2msc49HseFH1yP2TwwQN8Bm6W0xvD4En5M
+	tVSTm2r+rCEx4YRy0RRpKujnGQv1uUnA+g5qlzI77x8byYrS0WqzLjugA7vDsZNkNwBUb90HfoguS
+	zhyQ94XDyyCYC5iGTtaFoPZWJKs7kGi8QvM0smRnSRiEkqv4jF9dHI4A2gwfSuMagy4raG9Va5I7i
+	9FxGBZBQ==;
+Received: from [50.53.43.113] (helo=bombadil.infradead.org)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wlcxE-00000005ckW-03T0;
+	Mon, 20 Jul 2026 01:38:00 +0000
+From: Randy Dunlap <rdunlap@infradead.org>
+To: linux-scsi@vger.kernel.org
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH] scsi: ufs: ufshcd.h: fix all kernel-doc warnings
+Date: Sun, 19 Jul 2026 18:37:59 -0700
+Message-ID: <20260720013759.2979593-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
- <wjbz5tp7vjrsjwjaiu3n7du5ksbrlsduuxhwg2wriyxshkrqd5@t3sdxr6ua2sg>
- <20260713123759-GKD106000@kernel.org> <CAEev2e-g3bZcohFf_7b5CaVyi0BeWi5uwLGj6MuhQXp16jiyEQ@mail.gmail.com>
- <20260713235742-GKE106000@kernel.org>
-In-Reply-To: <20260713235742-GKE106000@kernel.org>
-From: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-Date: Sun, 19 Jul 2026 18:20:08 -0500
-X-Gm-Features: AUfX_mxUPpHWs2hIHbiNCUZT8v6smWRhuvoQSN4l0SVoBHHrNzCPKAS_FyVfPXc
-Message-ID: <CAEev2e_hmQBrk3Vfv4WmeH+ex_gMwW_9mgNKaUjFaiCScxAqTQ@mail.gmail.com>
-Subject: Re: [PATCH 0/3] Add UFS Host driver support for SpacemiT K3 SoC
-To: Yixun Lan <dlan@kernel.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@sandisk.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Philipp Zabel <p.zabel@pengutronix.de>, 
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Alexandre Ghiti <alex@ghiti.fr>, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi Yixun,
+- use the correct name for a struct in kernel-doc
+- add kernel-doc for missing struct members or correct the name
 
-On Mon, Jul 13, 2026 at 6:57=E2=80=AFPM Yixun Lan <dlan@kernel.org> wrote:
->
-> Hi Anirudh,
->
-> On 09:56 Mon 13 Jul     , Anirudh Srinivasan wrote:
-> > Hi Yixun,
-> >
-> > On Mon, Jul 13, 2026 at 7:38=E2=80=AFAM Yixun Lan <dlan@kernel.org> wro=
-te:
-> > >
-> > > Hi Anirudh,
-> > >
-> > > On 22:40 Sun 12 Jul     , Anirudh Srinivasan wrote:
-> > > > Hi Yixun,
-> > > >
-> > > > On Thu, Jul 02, 2026 at 02:31:34AM +0000, Yixun Lan wrote:
-> > > > > This series try to add UFS support for SpacemiT K3 SoC, the contr=
-oller
-> > > > > components consists of System Bus Interface Unit, UFS Host Contro=
-ller
-> > > > > Interface, UFS Transport Protocol Layer, UFS Host Registers, Devi=
-ce
-> > > > > Management Entity (DME), Transport Layer, Network Layer, Data Lin=
-k
-> > > > > Layer, PHY Adapter Layer, and M-PHY Interface. A more detail func=
-tional
-> > > > > block diagram can be found in SpacemiT website, chapter 9.7.3 [1]
-> > > > >
-> > > > > Please note, in order to test this driver, the UFS clock driver[2=
-] here
-> > > > > should be applied first as a prerequisite patch.
-> > > > >
-> > > > > One known issue is that the device will occasionally raise BKOPS =
-interrupt
-> > > > > when doing some high load test, log from dmesg shows
-> > > > >
-> > > > > [  806.710763] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_excep=
-tion_event_handler: device raised urgent BKOPS exception for bkops status 1
-> > > > >
-> > > > > Link: https://spacemit.com/community/document/info?nodepath=3Dhar=
-dware/key_stone/k3/k3_docs/k3_usermanual/09_memory_storage.md&lang=3Den [1]
-> > > > > Link: https://lore.kernel.org/all/20260630-06-clk-ufs-support-v1-=
-0-cf7521d1d0fe@kernel.org/ [2]
-> > > > > Signed-off-by: Yixun Lan <dlan@kernel.org>
-> > > >
-> > > > I see this during probe on a k3-pico-itx. Does the UFS chip on boar=
-d
-> > > > have an RPMB block on it? Is this error of any concern.
-> > > >
-> > > It's probably true of having a RPMB block, but not used in K3 platfor=
-m, so can ignore
-> > >
-> > > > [    5.957864] ufshcd-spacemit c0e00000.ufshc: ufshcd_scsi_add_wlus=
-: BOOT WLUN not found
-> ..
-> > > > [    5.963319] bus_add_device: cannot add device 'ufs_rpmb0' to unr=
-egistered bus 'ufs_rpmb'
->
-> Just checked code under drivers/ufs/, and couldn't find where ufs_rpmb bu=
-s is registered,
-> so this kind of warning/error message is expected, or could UFS maintaine=
-r confirm this?
+Warning: ./include/ufs/ufshcd.h:201 Excess struct member 'task_tag'
+ description in 'ufshcd_lrb'
+Warning: ./include/ufs/ufshcd.h:220 expecting prototype for struct
+ ufs_query_resp. Prototype was for struct ufs_query_res instead
+Warning: ./include/ufs/ufshcd.h:577 struct member 'suspend_on_no_request'
+ not described in 'ufs_clk_scaling'
+Warning: ./include/ufs/ufshcd.h:1269 struct member 'nortt' not described
+ in 'ufs_hba'
+Warning: ./include/ufs/ufshcd.h:1269 struct member 'trigger_eh_attr' not
+ described in 'ufs_hba'
+Warning: ./include/ufs/ufshcd.h:1269 struct member 'timeout_attr' not
+ described in 'ufs_hba'
+Warning: ./include/ufs/ufshcd.h:1269 struct member 'lsdb_sup' not
+ described in 'ufs_hba'
+Warning: ./include/ufs/ufshcd.h:1269 struct member 'vcc_off_delay_us' not
+ described in 'ufs_hba'
+Warning: ./include/ufs/ufshcd.h:1269 Excess struct member 'desc_size'
+ description in 'ufs_hba'
+Warning: ./include/ufs/ufshcd.h:1269 Excess struct member 'res'
+ description in 'ufs_hba'
+Warning: ./include/ufs/ufshcd.h:1309 struct member 'sq_tail_slot' not
+ described in 'ufs_hw_queue'
+Warning: ./include/ufs/ufshcd.h:1309 Excess struct member 'sq_tp_slot'
+ description in 'ufs_hw_queue'
 
-Seems like both of these are bugs with the existing UFS/RPMB code in
-the kernel.  The dev_err("BOOT WLUN not found") print should probably
-be downgraded to a dev_warn. And like you mentiond above, the ufs_rpmb
-bus doesn't seem to be registered before the ufs device is probed.
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+---
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
 
->
-> > > > [    5.971155] ufshcd-spacemit c0e00000.ufshc: Failed to register U=
-FS RPMB device 0
-> > > >
-> > > Maybe disable CONFIG_RPMB to silent this? I've not tested this option=
- locally
-> >
-> > I'm testing on a distro defconfig, so it has this option enabled.
-> >
-> > Is there anything we can do in the driver to have it ignore the RPMB?
->
-> No, but why not disable CONFIG_RPMB in the first place
->
-> > If the error is a red-herring, we shouldn't be displaying it at all in
-> > the first place.
-> >
->
-> Either fix the code or just ignore it..
->
-> --
-> Yixun Lan (dlan)
+ include/ufs/ufshcd.h |   18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+--- linux-next-20260717.orig/include/ufs/ufshcd.h
++++ linux-next-20260717/include/ufs/ufshcd.h
+@@ -163,7 +163,6 @@ struct ufs_pm_lvl_states {
+  * @ucd_req_dma_addr: UPIU request dma address for debug
+  * @scsi_status: SCSI status of the command
+  * @command_type: SCSI, UFS, Query.
+- * @task_tag: Task tag of the command
+  * @lun: LUN of the command
+  * @intr_cmd: Interrupt command (doesn't participate in interrupt aggregation)
+  * @req_abort_skip: skip request abort task flag
+@@ -212,8 +211,7 @@ struct ufs_query_req {
+ };
+ 
+ /**
+- * struct ufs_query_resp - UPIU QUERY
+- * @response: device response code
++ * struct ufs_query_res - UPIU QUERY
+  * @upiu_res: query response data
+  */
+ struct ufs_query_res {
+@@ -555,6 +553,7 @@ struct ufs_clk_gating {
+  * @is_initialized: Indicates whether clock scaling is initialized or not
+  * @is_busy_started: tracks if busy period has started or not
+  * @is_suspended: tracks if devfreq is suspended or not
++ * @suspend_on_no_request: suspend clock scaling only when no request
+  */
+ struct ufs_clk_scaling {
+ 	struct workqueue_struct *workq;
+@@ -976,7 +975,7 @@ enum ufshcd_mcq_opr {
+  * @capabilities: UFS Controller Capabilities
+  * @mcq_capabilities: UFS Multi Circular Queue capabilities
+  * @nutrs: Transfer Request Queue depth supported by controller
+- * @nortt - Max outstanding RTTs supported by controller
++ * @nortt: Max outstanding RTTs supported by controller
+  * @nutmrs: Task Management Queue depth supported by controller
+  * @ufs_version: UFS Version to which controller complies
+  * @vops: pointer to variant specific operations
+@@ -1038,7 +1037,6 @@ enum ufshcd_mcq_opr {
+  *  device is known or not.
+  * @wb_mutex: used to serialize devfreq and sysfs write booster toggling
+  * @clk_scaling_lock: used to serialize device commands and clock scaling
+- * @desc_size: descriptor sizes reported by device
+  * @bsg_dev: struct device associated with the BSG queue
+  * @bsg_queue: BSG queue associated with the UFS controller
+  * @rpm_dev_flush_recheck_work: used to suspend from RPM (runtime power
+@@ -1053,16 +1051,19 @@ enum ufshcd_mcq_opr {
+  * @debugfs_ee_work: used to restore ee_ctrl_mask after a delay
+  * @debugfs_ee_rate_limit_ms: user configurable delay after which to restore
+  *	ee_ctrl_mask
++ * @trigger_eh_attr: fault attributes for the fault injection trigger EH
++ * @timeout_attr: fault attributes for the timeout fault injection trigger
+  * @luns_avail: number of regular and well known LUNs supported by the UFS
+  *	device
+  * @nr_hw_queues: number of hardware queues configured
+  * @nr_queues: number of Queues of different queue types
+  * @complete_put: whether or not to call ufshcd_rpm_put() from inside
+  *	ufshcd_resume_complete()
++ * @scsi_host_added: indicates that scsi_add_host() has been called
+  * @mcq_sup: is mcq supported by UFSHC
++ * @lsdb_sup: LSDBS capability
+  * @mcq_enabled: is mcq ready to accept requests
+  * @mcq_esi_enabled: is mcq ESI configured
+- * @res: array of resource info of MCQ registers
+  * @mcq_base: Multi circular queue registers base address
+  * @uhq: array of supported hardware queues
+  * @mcq_opr: MCQ operation and runtime registers
+@@ -1078,6 +1079,7 @@ enum ufshcd_mcq_opr {
+  *	field within the Host Controller's UECDME register. Bit[0] is a flag
+  *	indicating that the DME QoS Monitor has been reset by the host.
+  * @dme_qos_sysfs_handle: handle for 'dme_qos_notification' sysfs entry
++ * @vcc_off_delay_us: length of delay after VCC is powered off
+  * @rpmbs: list of OP-TEE RPMB devices (one per RPMB region)
+  * @host_preshoot_cap: a bitfield to indicate supported PreShoot dBs of host's TX lanes, cache of
+  *	host M-PHY TX_HS_PreShoot_Setting_Capability Attribute (ID 0x15)
+@@ -1284,7 +1286,7 @@ struct ufs_hba {
+  * @cqe_dma_addr: completion queue dma address
+  * @max_entries: max number of slots in this hardware queue
+  * @id: hardware queue ID
+- * @sq_tp_slot: current slot to which SQ tail pointer is pointing
++ * @sq_tail_slot: current slot to which SQ tail pointer is pointing
+  * @sq_lock: serialize submission queue access
+  * @cq_tail_slot: current slot to which CQ tail pointer is pointing
+  * @cq_head_slot: current slot to which CQ head pointer is pointing
+@@ -1508,6 +1510,8 @@ static inline void ufshcd_set_variant(st
+ /**
+  * ufshcd_get_variant - get variant specific data from the hba
+  * @hba: per adapter instance
++ *
++ * Returns: pointer to the hba's private data area
+  */
+ static inline void *ufshcd_get_variant(struct ufs_hba *hba)
+ {
