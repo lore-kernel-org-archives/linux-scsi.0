@@ -1,128 +1,147 @@
-Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17A292505AA;
-	Tue, 21 Jul 2026 13:33:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 173A343F4C0;
+	Tue, 21 Jul 2026 22:30:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784640814; cv=none; b=EeWhSKiNDwx1HXUMpJ8hHn/Ki9tdMF6fiDz7WBngfeToylJ68hCqCHksxAyam1OY8sP8rvrNiN3UfkeU4evof7g4cJvYBiKRo2B34t+JwCUJz0uXZ2xvYLELVvEUnHgRyGXONfUxwpSikNkWqpNS19D9JVRIbrykJjhnb35Mptc=
+	t=1784673050; cv=none; b=qY0eRNDFTdn9nt/tyup6cK0cSzZIk9pg02KKOo1BRAG5Ms+BMzp448Gm1OwxFuBMAinToR1tKFgGn76hcyKvMU1bwJ7YXFz7+kPmMXnIVo1yPQkaxwGtpNM7hDon4hVMTWxUMHGwTIHhAkbG6OkUUouSmd8etbq4RqAwZQQ+ewk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784640814; c=relaxed/simple;
-	bh=DR+L7n4Xf+A5V6ZVMtxzikHCSzPYGT2UsPxSPX3CHd4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=D9DOdwCIO2xA158SWV/L952woXIWDZgQhUqvPzyOmEptsTIrZIfymDMCCEifEIG58MR0wSWXDkyXVlbrpdYQ+fVyG77lvvYRQJAL4GMumr223fIGj3XFEcnO7MTe1qA81+AbKaAfmQBq6nLsfmmAC93/JVhPBkS9jlMrekpzwdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=o6EQi0Rb; arc=none smtp.client-ip=113.46.200.216
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1784673050; c=relaxed/simple;
+	bh=ATKi2XAXyV80dXc2EWq6ISvVM3/3F/VDwQXheYbZ9AQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=u1yyYxzy792bKXCTlExsQXK7nIIhllx9Q421f5qyscSMjmyHRIuv7Hj8FLLGpbKp+muRY0k/WZ50b3ElON9bPCW+OH1qpMvlPX/vOwGl+YdstNWbTKK80sZPcQPd4jo6Krj8w2Otf1NgOsvGFa/PjLnT/d93vpZNJ05V7VOaLH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DtGpsbMI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="o6EQi0Rb"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=raPCYR2N6e3oPXhADVO/PiTQ6pXOoNY81CcEkkgMVGA=;
-	b=o6EQi0RbpNuNJm5KuzaBk1qqVNmlHIFIfGNA7MslUd6pPK4kwp+5C1iELZr6+bpazow52//9r
-	uujy2tpeoIKiBPe6X60hH7E1F61s5kBdCG4gr6W7z6qzBbesY2q7WgzxDLEBrF2hCBGWVOcECTi
-	DTuQF5qID9MDd2jnReTivVc=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4h4J4l5bjqz1T4GB;
-	Tue, 21 Jul 2026 21:24:07 +0800 (CST)
-Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
-	by mail.maildlp.com (Postfix) with ESMTPS id 304F040579;
-	Tue, 21 Jul 2026 21:33:27 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Tue, 21 Jul 2026 21:33:26 +0800
-Message-ID: <7baf77e4-345b-3419-6562-f0e435227e5a@huawei.com>
-Date: Tue, 21 Jul 2026 21:33:25 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DtGpsbMI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B67EC1F000E9;
+	Tue, 21 Jul 2026 22:30:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784673048;
+	bh=n0ky1DYEFYEQIfECSmhtvkQAZsT3axmRZ/FY1Oisxv8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=DtGpsbMInwZaKFrcKnmjY3BR/jkGLaa8T4/I+Y3YLwngGGgLwovmu7FQmfRoZGLWe
+	 e8W2dMpmJzKf8v9Sc70V6XSymIY0MwmaNFEBGrREc5/nRZgDrM5EnYPEo5mf1qm+4u
+	 Jp/7MQAXMsznIY0loTrqvPzKCzw5y5gemX2eC8bggJj63uOB9swEu3zdTER2J3DJf2
+	 nJ6XK1iEFCi29f1gqQXhUONyPer9hWNZWIr2XN6+UgoLA6d/8v3kk5BMefYIwFAuKx
+	 4kEqhud2ywy9qxIY2rKn2GAyjrR7vD3TvvEm2INVadz63wd9dbvAUhjh515B3kWBqb
+	 yu1KbJPltS1Mg==
+Date: Tue, 21 Jul 2026 17:30:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gary Guo <gary@garyguo.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	GOTO Masanori <gotom@debian.or.jp>,
+	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+	Jens Taprogge <jens.taprogge@taprogge.org>,
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	Sashiko <sashiko-bot@kernel.org>
+Subject: Re: [PATCH v2 0/7] pci: fix UAF and TOCTOU related to dynamic ID
+Message-ID: <20260721223047.GA674520@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v2 2/2] scsi: hisi_sas: add spinup_notify callback to
- handle Active_Wait/Idle_Wait SSP devices
-Content-Language: en-CA
-To: John Garry <john.g.garry@oracle.com>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<dlemoal@kernel.org>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <kangfenglong@huawei.com>,
-	<hare@suse.com>
-References: <20260703022833.36847-1-yangxingui@huawei.com>
- <20260703022833.36847-3-yangxingui@huawei.com>
- <c9a91dd7-b158-4416-93bb-9ae1e1acb8a3@oracle.com>
- <55307987-d86b-f28c-7c39-0a6bafe182bb@huawei.com>
- <a2ecff55-aabd-48b4-a702-7e052646f22c@oracle.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <a2ecff55-aabd-48b4-a702-7e052646f22c@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepemh500005.china.huawei.com (7.202.181.135) To
- kwepemj100018.china.huawei.com (7.202.194.12)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260630-pci_id_fix-v2-0-b834a98c0af2@garyguo.net>
 
-
-
-On 2026/7/21 20:33, John Garry wrote:
-> On 21/07/2026 12:10, yangxingui wrote:
->>
->>
->> On 2026/7/20 17:47, John Garry wrote:
->>> +
->>>
->>>> +void hisi_sas_spinup_notify(struct scsi_device *sdev)
->>>> +{
->>>> +    struct domain_device *dev = sdev_to_domain_dev(sdev);
->>>> +    struct sas_ha_struct *sha;
->>>> +    struct hisi_hba *hisi_hba;
->>>> +    struct sas_phy *local_phy;
->>>> +    struct hisi_sas_phy *phy;
->>>> +
->>>> +    if (dev->parent && dev_is_expander(dev->parent->dev_type))
->>>> +        return;
->>>> +
->>>> +    sha = SHOST_TO_SAS_HA(sdev->host);
->>>> +    hisi_hba = sha->lldd_ha;
->>>> +
->>>> +    local_phy = sas_get_local_phy(dev);
->>>> +    phy = &hisi_hba->phy[local_phy->number];
->>>> +    if (phy->identify.target_port_protocols & SAS_PROTOCOL_SSP)
->>>> +        hisi_sas_notify_phy_event(phy, HISI_PHYE_SPINUP_NOTIFY);
->>>> +    sas_put_local_phy(local_phy);
->>>> +}
->>>> +EXPORT_SYMBOL_GPL(hisi_sas_spinup_notify);
->>> This could go in libsas
->>
->> Hi, John.
->> Are you suggesting that we add an event like 
->> `PHYE_NOTIFY_ENABLE_SPINUP` and a callback like 
->> `lldd_notify_enable_spinup` to libsas? If so, should libsas parse the 
->> sense data directly—for instance, by handling it within the 
->> `sas_ssp_task_response()` function?
+On Tue, Jun 30, 2026 at 12:09:00PM +0100, Gary Guo wrote:
+> While working on improving the Rust abstractions [1], Sashiko reported that
+> an existing UAF issue related to dynamic ID, which I find to be genuine.
+> When taking a look at the code I also find a TOCTOU issue where the
+> existence check of dynamic ID happens in a separate critical section as the
+> actual insertion. This series fix both issues.
 > 
-> Yeah, it would be something like that.
+> There are two exported functions "pci_match_id" and "pci_add_dynid" which I
+> have to tweak to implement this cleanly; I created separate "do_xxx"
+> functions to keep the existing APIs because they all have multiple users.
 > 
-> But the method to solve this issue is unclear.
+> There're a few existing users which stores their pci_device_id argument in
+> probe callback. This is a bad pattern because nothing except driver_data
+> inside pci_device_id is what they want. Actual ID information can be
+> retrieved from pci_dev instead. I've used the following coccinelle script
+> to find the cases where the argument is stored and converted them to stop
+> storing pci_device_id.
 > 
-> Back to the original issue: hisi_sas_spinup_notify_work() calls 
-> sl_notify_ssp, but sl_notify_ssp is called already in 
-> hisi_sas_phyup_work_common() - so why is it needed to be called again? 
-In fact, the trigger for this point sometimes fails to take effect.
+> @store@
+> identifier fn;
+> identifier id;
+> expression E;
+> parameter list[n] ps;
+> @@
+>   fn(ps, struct pci_device_id *id, ...)
+>   {
+>     ...
+> *   E = id
+>     ...
+>   }
+> 
+> @cast@
+> identifier fn;
+> identifier id;
+> parameter list[n] ps;
+> @@
+>   fn(ps, struct pci_device_id *id, ...)
+>   {
+>     ...
+> *   (void *)id
+>     ...
+>   }
+> 
+> @in_struct@
+> identifier s, fld;
+> @@
+>   struct s {
+>     ...
+> *   struct pci_device_id *fld;
+>     ...
+>   };
+> 
+> Link: https://lore.kernel.org/all/20260618-id_info-v1-0-96af1e559ef9@garyguo.net/ [1]
+> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.org/ [2]
+> 
+> ---
+> Changes in v2:
+> - Fix users which store pci_device_id.
+> - Clarify in probe documentation about the lifetime of pci_device_id
+>   parameter.
+> - Dynamic ID conflict check now ignores override_only. (Sashiko)
+> - Link to v1: https://patch.msgid.link/20260626-pci_id_fix-v1-0-a35c803f1b95@garyguo.net
+> 
+> ---
+> Gary Guo (7):
+>       ata: don't keep pci_device_id
+>       nsp32: don't keep pci_device_id
+>       ipack: tpci200: don't keep pci_device_id
+>       mlxsw: don't keep pci_device_id
+>       pci: make pci_match_one_device match on ID instead of device
+>       pci: fix dyn_id add TOCTOU
+>       pci: fix UAF when probe runs concurrent to dyn ID removal
 
-> If it is because hisi_sas_phyup_work_common() is only for 
-> direct-attached disks, and we need to call sl_notify_ssp for expander 
-> attached disks?
+Run "git log --oneline drivers/pci" and match style (capitalize "PCI:"
+and first word of subject).
 
-NOTIFY(SPIN UP) is primarily intended for direct-attached HDD wake-up 
-post-IDENTIFY exchange. Routing it to an Expander may conflict with SAS 
-topology constraints and could disrupt link-layer arbitration, 
-indicating that a conditional disable mechanism for cfg_notify_en in 
-non-direct topologies is advisable.
+At least in the PCI patch commit logs and comments, add "()" after
+function names.
 
-Thank,
-Xingui
-.
-
+s/id/ID/ throughout (it's currently inconsistent).
+s/pci/PCI/ throughout (ditto)
