@@ -1,33 +1,40 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout05.his.huawei.com (canpmsgout05.his.huawei.com [113.46.200.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7865140801E;
-	Tue, 21 Jul 2026 07:43:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E3343911CE;
+	Tue, 21 Jul 2026 08:41:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784619802; cv=none; b=uixg+AJdEbq+xENEEbiNOUNuUkSAr7P8bfRGhPW3PF9r+WKJH+QRl5wwpjnAF+cb1LHO8e3k9fNOBeVDylEN6nbWIZkRlCOf1twbTOSXNf8vlO1dHMevYlCMBxK2M1qdsm/hKKGYLrZUosP49Xp9KM0hrior1e1KSkgY14qDemI=
+	t=1784623272; cv=none; b=aFW7OJcKrMfXtqbXaQ3UXWpwnHSf336Hce///OjOpKCQIE7tX7E37ycoZLvxI15s6qf7QsD5xJZOrDJVGObIxxxYwHaD1ya0VugauK96erpXSiRk1chqZSfyWfrmJ+q72JeBUJVbXhADT+C04Y5W4eSIvmi8fFz4fyyiL/jXEpM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784619802; c=relaxed/simple;
-	bh=ir+4WfbiAzotiJ1Wjs3iSJw0sPivkg57hAu2GpqjZZE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=g5v7Q1P20Xh5Q7ZAtpqQqXSzjFRFWss2CIq5rsUe9HUnshS2AjjKNAh8HIfMiDbMVtVuO4y7xmyS5gp3wkfOa+MZrf0qHd++lOAh0v6PM2fWsU0cX36NkkR86I5H5L/I/wJp4TELMeNrK108JiMkB+N6gEgIRzkRAgU7DU+pajw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JR0x25fq; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784623272; c=relaxed/simple;
+	bh=HO3LRLEeraz7bT5e0nXdWnsg7JxNccxKpSstSX4l3HU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=R8WCHxyeqaXj/TVwxoRr3rEKPe6CyMRF+xH4zqA2HHicowiAnfCdRfPBz3UKsy17tUJ/5wK5p1/ZBpTaVqwXkKaz7BzQm0eOfWTh3hr2YUFpAOyV7cBUZKmH0IjM1rHyc0ADwHuklWMX5I+3zlU5sinx4fGwzy5fjC6VkAIq1VU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=d/93n50f; arc=none smtp.client-ip=113.46.200.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JR0x25fq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C7A61F000E9;
-	Tue, 21 Jul 2026 07:43:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784619800;
-	bh=h3tOXkeBPviC75Xzqug+FxcB9x6aF4pEU5Z+9yTVlIw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=JR0x25fqiXNTl0ZypZVjnoNkYtUeKuZMLUb/uQ2J1yzupBijUCFgmANQDLgTTdYWL
-	 CPpFIZakriC5r2qRE78MQ6w9d2qP0Hpxf0jprw1aR0QmiPibsAUMKDQFJ4JVqAtKTs
-	 wcnaM3c8YlHZRymCCArM2XjZaAYjA4xJBgpy3xCfhdTr23vR6cj1uJsbuSZ/8Mo//U
-	 Pe402ohhGtZKS1XGvfELfXzzOo3ItvWv04SCdnCbZmYq1xghR+Sg+pS5U1ZOpGbf+Q
-	 /KK0FIHbLSnMKqx9IyeQRcDrojL43QFYyPIgbEKSLaKdZpFtELSkPPoINsXSyyikaO
-	 OxHUi8TTNUQWg==
-Message-ID: <64eb7729-6f7f-4a05-a471-2406c5e3ccfb@kernel.org>
-Date: Tue, 21 Jul 2026 16:43:17 +0900
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="d/93n50f"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=BGAfLAi9KIIxXseKbKW5YgZPGgtaE2WBk+pXTzavU7o=;
+	b=d/93n50fZGPmfwq3HlTe+AgvvV/qbGPq8P5Tjsc0TfBq2mpScu11tDcs0Ose8abjUI6NDxL/k
+	tiPRmV/AWthu3PxyoMaK73j6uUV8NM4iTZPIKQ2AIV83bSJA5RNWdfRxml6XN3SM+eObXEbEi3f
+	0/kWt3TuEGbu8KdsEsz7EnM=
+Received: from mail.maildlp.com (unknown [172.19.163.104])
+	by canpmsgout05.his.huawei.com (SkyGuard) with ESMTPS id 4h49b56FfRz12LDF;
+	Tue, 21 Jul 2026 16:31:29 +0800 (CST)
+Received: from kwepemf100006.china.huawei.com (unknown [7.202.181.220])
+	by mail.maildlp.com (Postfix) with ESMTPS id 4BF754058C;
+	Tue, 21 Jul 2026 16:41:04 +0800 (CST)
+Received: from [10.174.176.240] (10.174.176.240) by
+ kwepemf100006.china.huawei.com (7.202.181.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Tue, 21 Jul 2026 16:41:03 +0800
+Message-ID: <a3cafc59-9773-4200-992d-368d4cc0f66b@huawei.com>
+Date: Tue, 21 Jul 2026 16:41:03 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,81 +42,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 1/2] ata: libata-scsi: terminate deferred commands on
- time out
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
-References: <20260721064027.2081195-1-dlemoal@kernel.org>
- <20260721064027.2081195-2-dlemoal@kernel.org>
- <20260721070030.8AC0F1F000E9@smtp.kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260721070030.8AC0F1F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2 0/2] scsi: sg: validate and clean up scatter_elem_sz
+ handling
+To: <bvanassche@acm.org>, <dgilbert@interlog.com>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<yukuai@kernel.org>, <hch@lst.de>, <axboe@kernel.dk>
+CC: <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>
+References: <20260709043234.2447340-1-yangerkun@huawei.com>
+From: yangerkun <yangerkun@huawei.com>
+In-Reply-To: <20260709043234.2447340-1-yangerkun@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemf100006.china.huawei.com (7.202.181.220)
 
-On 7/21/26 16:00, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> 
-> Pre-existing issues:
-> - [High] Missing call to ata_scsi_schedule_deferred_qc() in atapi_qc_complete() leads to starvation and timeouts of deferred commands.
-> --
-> 
-> --- Patch [1]: [PATCH v7 1/2] ata: libata-scsi: terminate deferred commands on time out ---
-> commit 3b26adffba8da435c70bdca03b617603f9f9ae76
-> Author: Damien Le Moal <dlemoal@kernel.org>
-> 
-> ata: libata-scsi: terminate deferred commands on time out
-> 
-> This commit avoids unnecessary SCSI EH task wake-ups by scheduling
-> a retry of all waiting deferred QCs using the new ata_scsi_eh_timed_out
-> operation. It also updates ata_scsi_requeue_deferred_qc to terminate
-> timed-out deferred commands directly and schedule libata EH to prevent
-> the block layer from re-issuing them immediately.
-> 
->> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->> index 5868526301a2b..c2f2f711fd987 100644
->> --- a/drivers/ata/libata-scsi.c
->> +++ b/drivers/ata/libata-scsi.c
-> 
-> [ ... ]
-> 
->> @@ -2936,7 +3014,15 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
->>  		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
->>  			qc->dev->sdev->locked = 0;
->>  
->> -		ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
->> +		if (cmd->result)
->> +			ata_scsi_qc_done(qc, false, 0);
->> +		else
->> +			ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
->> +		return;
->> +	}
->> +
->> +	if (cmd->result) {
->> +		ata_scsi_qc_done(qc, false, 0);
->>  		return;
->>  	}
->>  
-> 
-> [Severity: High]
-> This isn't a bug introduced by this patch, but should atapi_qc_complete()
-> be calling ata_scsi_schedule_deferred_qc(link) before returning?
-> 
-> Unlike ata_scsi_qc_complete() which kicks deferred commands,
-> atapi_qc_complete() misses this call on all of its exit paths, including
-> the ones modified here. If an ATAPI command is executing on a shared PATA
-> link and a concurrent command is issued to the other device, it gets
-> deferred by ata_std_qc_defer(). When the ATAPI command finishes, it
-> appears the deferred command will be trapped in link->deferred_qc and
-> never issued, eventually failing with DID_TIME_OUT and causing device hangs.
-> 
-> Could this function be missing a call to ata_scsi_schedule_deferred_qc()
-> to prevent starvation?
+gently ping for this series...
 
-Yes. Will send another patch for that.
+在 2026/7/9 12:32, Yang Erkun 写道:
+> v1->v2:
+> 1. Split into two patches, patch 1 is the minimal bugfix that adds
+> validation to the scatter_elem_sz module parameter; patch 2 does the
+> refactoring
+> 2. Rebased; no functional change versus v1.
+> 
+> v1:
+> https://patchwork.kernel.org/project/linux-scsi/patch/20260708063045.2008478-1-yangerkun@huawei.com/
+> 
+> Yang Erkun (2):
+>    scsi: sg: validate scatter_elem_sz module parameter
+>    scsi: sg: clean up scatter_elem_sz handling and module param
+>      permissions
+> 
+>   drivers/scsi/sg.c | 68 +++++++++++++++++++++++------------------------
+>   1 file changed, 34 insertions(+), 34 deletions(-)
+> 
 
--- 
-Damien Le Moal
-Western Digital Research
