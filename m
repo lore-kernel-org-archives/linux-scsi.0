@@ -1,88 +1,77 @@
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.81])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F56C40F74B;
-	Wed, 22 Jul 2026 13:13:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.81
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784726019; cv=pass; b=lhdru1Fl9gTIle0ZlqIRpL8t8Df7hUZCcm/Ico2PMHFu5dg3FIVs4s+M5khKeoR/j4XHo9xgvB0aF9CYMThLA3di/urjyRv1C1ijkKZ++UjczUv/24bXfQ8ZOhEqlAR5DThBWD0D1MxTCIS3EL/sMng9zqHUSITomL0sSKW9K2Q=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784726019; c=relaxed/simple;
-	bh=MDt5HUwFJEhaU7HQYiAoPqSXYNrIRegh74BGU8oMsUg=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCB7135F170
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 13:42:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784727769; cv=none; b=EcEmm7mgf/d91FYVVoxqwbxnMmCW8+8722CBW94dMSWhT8dBHp/MgfWq/lUiuSt5y8EPLyMWK+9k0iuZzYSsghTFBZNXPXPhHe0bp9oUkJtdSc4PGMZ3KGARGWINyHw8MJdmv7ernliQDywka1MQwBiWJUdDmIHF1c4hUvluF+A=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784727769; c=relaxed/simple;
+	bh=Lw0RyAcCRYE/5louh2Yi19/J0psnBLQjmOpK/tEtvYk=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=B/L2PrJmAvcfA9wL7+JwBLDu17UEoRimsdqh1jvviziDN8n4pKJy0qYuj4DSwVkIJn29jKeBZEGWqs+Oh7Cq3MNaec1BOq2fA2WaJJiE9LYFGqDIpVMV7d1rDe85EnRyijyH7IcxkwMf4889YgWmMn4I8d3p5nND7VDGtUnAFQA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=ObwvR50k; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=qZyqzibo; arc=pass smtp.client-ip=85.215.255.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	 Content-Type:MIME-Version; b=bS2g5bpuGcqEAwCA2BjfpCA38fBgM2X/Zdk72XmRtq1h4Celt7ioAg0zBp5c18jxmtw4VtBS9+6t0sbd6GRAolFqNHNJwD6E28bge6MgIxMwioc4Xz4+wYgttH/mILHwvex9gYgbYtt3WjF5Qu2PxobZu8SsRXUX3IY5erdqckc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=WfcMOgEU; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="ObwvR50k";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="qZyqzibo"
-ARC-Seal: i=1; a=rsa-sha256; t=1784723609; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=GJ31aMg8TzdQVzzHELn5izi/gewqlM5NhzYJ+NucKa+CCmBIkOHuK5y7JdQeV3rC0S
-    7IQ/KmO3PyG3OorAKSoFvij0u1BrbmvDqdCDEJ5H4kB9ClEP0U8V4C+/tb5ttEBODMDM
-    01ueVCQrjuG3/nkqCqlretRQOWfYyLaU50ajUwX1w+eKqW9xiuGsBP6NmMdSliVyHyV3
-    Lywdc4p45DkyFSGeOoEnV9QIhd+ETybal7yMIorpZMRdlcdlsn+u5X+/To9KXnBzaB/W
-    HoJpBTWcqNOy2YBCGEIJpQ1DkF+G+c5aoYMuChKOjdn8AlRZXshbIc/rgQ/ve03Zj54d
-    Kdig==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1784723609;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=MDt5HUwFJEhaU7HQYiAoPqSXYNrIRegh74BGU8oMsUg=;
-    b=ne+j73jCn+KSBgwOm8UIp72GVCKxKRfAPT4/uv9g0NpYzB13U0Cxw98uRAdczi1u+O
-    XMACMpM2lgS87MbE8YURq48ZMXjk9JtwuvbWLEiOatbf+8rAlCMDftfPgdAKfZHEikBJ
-    qeRCESeCfpVzBdIc3SApo3UYmqyuoo33dJBYHtBOmYO6FzR+OhG92WP07HA+XSsZRyCh
-    UVJRG9iot6zgIlxbvF1CCNo+ppT/fN3dA5WqU7FraRotEddUkS3YH9ewPwERNIxCj3Qz
-    R09OMntQBTiwDc7/H/dsEb27Eea0xXW6K6d3lDaaxr9IFv7OnOvOggtCePh8trvozxn1
-    IPLg==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1784723609;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=MDt5HUwFJEhaU7HQYiAoPqSXYNrIRegh74BGU8oMsUg=;
-    b=ObwvR50k+YAEzaD73KFeEena/UOmbZHqWYm+JXa9e9RypuMUft7RNpHA92EOEbzWR+
-    OpJHnidYUVoUB5i3Z6N7BZ+x4hUAVrSoES7xS3zx5hZldoo7VoziY3/dGj0y/pyYzgfV
-    G+D52VN0bIV27yGnxTtux+dM6Y3U/TuzWRtm3CB7x+ZPn53QowerPBtYunN9PseukaAa
-    llO+uAb5yEd1zxeV8TeAXtI29BucR7XPZKh8YWHSy0x5y+suKvuZmRetbot6u+wWCQz2
-    Z8QZLpejCrsxYD7LLNMFllZL+Z/i+keF9Cqg6B2OvZT6EnI2zdnD/2OqpXoNaiFVjkfb
-    T1Rw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1784723609;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=MDt5HUwFJEhaU7HQYiAoPqSXYNrIRegh74BGU8oMsUg=;
-    b=qZyqzibosXPRlOdKQZbSQdDIuLy6YbebUSdlbg+gViM/wzt1H7O8Th9HhxU8N42CUo
-    Lzu4mYf7YwbS0B31FHCQ==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZik"
-Received: from [10.176.237.62]
-    by smtp.strato.de (RZmta 55.5.6 AUTH)
-    with ESMTPSA id zeddc926MCXSGjL
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Wed, 22 Jul 2026 14:33:28 +0200 (CEST)
-Message-ID: <fd02332e6bd8630c8b3d7dd89e9f7502bb9d1166.camel@iokpp.de>
-Subject: Re: [PATCH v2 5/6] scsi: ufs: rpmb: Use unaligned accessors for
- RPMB frames
-From: Bean Huo <beanhuo@iokpp.de>
-To: Li Qiang <liqiang01@kylinos.cn>, linux-scsi@vger.kernel.org
-Cc: bvanassche@acm.org, linux-kernel@vger.kernel.org,
- alim.akhtar@samsung.com,  avri.altman@wdc.com,
- James.Bottomley@HansenPartnership.com,  martin.petersen@oracle.com,
- peter.wang@mediatek.com, beanhuo@micron.com,  can.guo@oss.qualcomm.com,
- adrian.hunter@intel.com, tomas.winkler@intel.com
-Date: Wed, 22 Jul 2026 14:33:27 +0200
-In-Reply-To: <20260717153914.26321-6-liqiang01@kylinos.cn>
-References: <cover.1784182493.git.liqiang01@kylinos.cn>
-	 <20260717153914.26321-1-liqiang01@kylinos.cn>
-	 <20260717153914.26321-6-liqiang01@kylinos.cn>
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="WfcMOgEU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1784727766;
+	bh=Lw0RyAcCRYE/5louh2Yi19/J0psnBLQjmOpK/tEtvYk=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=WfcMOgEUgfZqCnSTEAEpxRprqVgMSpD+f6mvTfuJuJO7Jrld/Uh5+heJexCsjei3G
+	 w3WGR2AWiUl2CXm+izQuiQCcGSAo4+WptMHJfUdWJppnZr3SS8fitefiByeThdYJ1L
+	 gnBSiv/niQCiTDj0wl1EBg0YR6ZmnhJ3nPmQ2NGo=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::8c71])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id A20D51C00A6;
+	Wed, 22 Jul 2026 09:42:46 -0400 (EDT)
+Message-ID: <e8f7c3614c15a86b335576074fec1768d95f3df4.camel@HansenPartnership.com>
+Subject: Re: How to fix problems with the sashiko review model
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: sashiko-reviews@lists.linux.dev, Chris Mason <clm@fb.com>, Roman
+ Gushchin	 <roman.gushchin@linux.dev>, linux-scsi@vger.kernel.org,
+ ksummit@lists.linux.dev
+Date: Wed, 22 Jul 2026 09:42:46 -0400
+In-Reply-To: <2026072224-moisture-gonad-409f@gregkh>
+References: <20260722041257.1557-1-pengpeng@iscas.ac.cn>
+	 <20260722042744.5C1B01F000E9@smtp.kernel.org>
+	 <dcadf40a07a616de931c484bbe68f4b3f1f83b80.camel@HansenPartnership.com>
+	 <2026072224-moisture-gonad-409f@gregkh>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNE
+ lecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn
+ 1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHU
+ RfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8
+ X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvd
+ HRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGw
+ MGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAml2ZBI
+ FCS3GUMIACgkQgUrkfCFIVNZKjQf/deRzlXZClKxTC/Ee2yEPqqS7mm/INUA49KdQQ5oIhSxkUBy0
+ 9J4qjMIo5F8ZFkFTqikBqeL35LKu7O7rn8WETfX8Bxvos3HUsl3jHo34DES4MUFIpoQPgtiLRGwLb
+ K0cVCAArR2u2qj4ABmTRrs1I1kvdjEw6gatOuXtEe/j5O2fvfzTq9GBr0Q3n2IAsFXi4hLlx6VPE8
+ tyWUZ8BWJKtih3JAeUiXFvASL3McV0rV9RnU0VbjEQEhSE7PMYhWpnDC9AyBb0lXJllQRvC3NSkUB
+ 8KVQgNNxRPss0WE/nBoZ4dFA42jTyzTz8lNylxZoAWV7WJb3QxVg4oCodRVrxxrQhSmFtZXMgQm90
+ dG9tbGV5IDxqZWpiQGtlcm5lbC5vcmc+iQFVBBMBCAA/AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeA
+ QIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mYBQkbNYS9AAoJEIFK5HwhSFTWBpwIAL5Bk3
+ 5FB34U6iHmDzzgdCbxLTs43T/YQyJpcGIvopBvnI/fDY8oSG6Df64/O6B+1R+A8TDp6ZG5ysUWnCC
+ 6GuIaEHemBYkitMPglR6+sGCMQY7O0mlsPvdssvKK1KI9Bno4VU6ogaF2qVzefSqg1Djmf/DcsxWP
+ rI/jdJ8FB5AYR2rjIdDFc+zRdAJuavo1/anyY2wgpFh/3R8IOYAEfWV9nGgYkf9+tA4EIn1sxE0I3
+ L5oW2N3mbyRrkzuBwO8ztMCwqEPk7moWzhokcZqMXiAIahaZdkashJC+s2X2RZSGCy+g+pvY5NN4B
+ BVG5XwLgVBqbHMTcxE0fbmPqz+q6O0LEphbWVzIEJvdHRvbWxleSA8amVqYkBoYW5zZW5wYXJ0bmV
+ yc2hpcC5jb20+iQFXBBMBCABBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmODZ5ACGwMFCRs1hL0F
+ CwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQgUrkfCFIVNZu0Af/TzvL2/NdgAcw9uN3x60H8
+ jc4QUq14VpxcFEFEMpcj1morkX/G93V+56HBBaXZj+yK8PhxIA/SIz+sU7C/0YvKuvzakP8ZX/7WJ
+ e32SOUtjfr/VTaqjIBzNj6OxLvZpmNbBw7s6DwhhNpHOWqJ/1ml+PtDRDV71IB58yVqQjp1xlNKVl
+ ZppcJ5908EJzsFnRIVjiQiDSKoppqB2BCibBbrWcln7CiWMyOC/cco6SIn6twH+f7+aivJ3xGcOE2
+ a9gBKF5rNi9TBoX9oyPmshv/TDmnohsVrH7AYXlGYfZTk15SWEiROh1QX8/uD9wl/gcIv5EDUpT/F
+ L2jzOsA5663bw==
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -90,35 +79,74 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-T24gRnJpLCAyMDI2LTA3LTE3IGF0IDIzOjM5ICswODAwLCBMaSBRaWFuZyB3cm90ZToKPiBSUE1C
-IGZyYW1lIGJ1ZmZlcnMgYXJlIHBhc3NlZCBhcyB1OCBwb2ludGVycyBhbmQgZG8gbm90IGhhdmUg
-YW4KPiAKPiBhbGlnbm1lbnQgZ3VhcmFudGVlLiBVc2UgdW5hbGlnbmVkIGFjY2Vzc29ycyBmb3Ig
-dGhlIHJlcV9yZXNwIGZpZWxkLgo+IAo+IFNpZ25lZC1vZmYtYnk6IExpIFFpYW5nIDxsaXFpYW5n
-MDFAa3lsaW5vcy5jbj4KPiAtLS0KPiDCoGRyaXZlcnMvdWZzL2NvcmUvdWZzLXJwbWIuYyB8IDQg
-KystLQo+IMKgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkK
-PiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy91ZnMvY29yZS91ZnMtcnBtYi5jIGIvZHJpdmVycy91
-ZnMvY29yZS91ZnMtcnBtYi5jCj4gaW5kZXggNDMxZjg1YjM2ODc2Li41M2Y2NmIyNzRhY2EgMTAw
-NjQ0Cj4gLS0tIGEvZHJpdmVycy91ZnMvY29yZS91ZnMtcnBtYi5jCj4gKysrIGIvZHJpdmVycy91
-ZnMvY29yZS91ZnMtcnBtYi5jCj4gQEAgLTczLDcgKzczLDcgQEAgc3RhdGljIGludCB1ZnNfcnBt
-Yl9yb3V0ZV9mcmFtZXMoc3RydWN0IGRldmljZSAqZGV2LCB1OAo+ICpyZXEsIHVuc2lnbmVkIGlu
-dCByZXFfbAo+IMKgwqDCoMKgwqDCoMKgwqBpZiAocmVxX2xlbiA8IHNpemVvZigqZnJtX291dCkp
-Cj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZXR1cm4gLUVJTlZBTDsKPiDCoAo+
-IC3CoMKgwqDCoMKgwqDCoHJlcV90eXBlID0gYmUxNl90b19jcHUoZnJtX291dC0+cmVxX3Jlc3Ap
-Owo+ICvCoMKgwqDCoMKgwqDCoHJlcV90eXBlID0gZ2V0X3VuYWxpZ25lZF9iZTE2KCZmcm1fb3V0
-LT5yZXFfcmVzcCk7Cj4gwqAKPiDCoMKgwqDCoMKgwqDCoMKgc3dpdGNoIChyZXFfdHlwZSkgewo+
-IMKgwqDCoMKgwqDCoMKgwqBjYXNlIFJQTUJfUFJPR1JBTV9LRVk6Cj4gQEAgLTExMSw3ICsxMTEs
-NyBAQCBzdGF0aWMgaW50IHVmc19ycG1iX3JvdXRlX2ZyYW1lcyhzdHJ1Y3QgZGV2aWNlICpkZXYs
-IHU4Cj4gKnJlcSwgdW5zaWduZWQgaW50IHJlcV9sCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqBzdHJ1Y3QgcnBtYl9mcmFtZSAqZnJtX3Jlc3AgPSAoc3RydWN0IHJwbWJfZnJhbWUg
-KilyZXNwOwo+IMKgCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBtZW1zZXQoZnJt
-X3Jlc3AsIDAsIHNpemVvZigqZnJtX3Jlc3ApKTsKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgZnJtX3Jlc3AtPnJlcV9yZXNwID0gY3B1X3RvX2JlMTYoUlBNQl9SRVNVTFRfUkVBRCk7
-Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHB1dF91bmFsaWduZWRfYmUxNihSUE1C
-X1JFU1VMVF9SRUFELCAmZnJtX3Jlc3AtPnJlcV9yZXNwKTsKPiDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoHJldCA9IHVmc19zZWNfc3VibWl0KGhiYSwgcHJvdG9jb2xfaWQsIHJlc3As
-IHJlc3BfbGVuLCB0cnVlKTsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGlmIChy
-ZXQpIHsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBk
-ZXZfZXJyKGRldiwgIlJlc3VsdCByZWFkIHJlcXVlc3QgZmFpbGVkIHdpdGgKPiByZXQ9JWRcbiIs
-IHJldCk7Cj4gLS0KCmNvbnNpZGVyIFNhc2hpa28ncyBzdWdnZXN0aW9uLCBpdCdzIGJldHRlciB0
-byBhZGQgX19wYWNrZWQgb24gc3RydWN0IHJwbWJfZnJhbWUKe30/CgoK
+On Wed, 2026-07-22 at 15:08 +0200, Greg KH wrote:
+> On Wed, Jul 22, 2026 at 07:58:48AM -0400, James Bottomley wrote:
+> > There doesn't seem to be a Sashiko list, so I added ksummit as the
+> > most likely one to catch attention.=C2=A0 We got this review in SCSI on
+> > this thread:
+> >=20
+> > https://lore.kernel.org/linux-scsi/20260722041257.1557-1-pengpeng@iscas=
+.ac.cn/
+> >=20
+> > But this part of the review
+> >=20
+> > On Wed, 2026-07-22 at 04:27 +0000, sashiko-bot@kernel.org=C2=A0wrote:
+> > [...]
+> > > > +
+> > > > +	reply_len =3D mpi_reply->MsgLength * 4;
+> > > > +	if (reply_len < event_offset || reply_len > ioc-
+> > > > >reply_sz)
+> > > > +		return false;
+> > > > +
+> > > > +	event_data_len =3D le16_to_cpu(mpi_reply-
+> > > > >EventDataLength) *
+> > > > 4;
+> > >=20
+> > > [Severity: High]
+> > > Is there a Time-of-Check to Time-of-Use window here since
+> > > mpi_reply is read directly from shared DMA memory?
+> > >=20
+> > > The validation function reads bounds from mpi_reply, but after
+> > > validation passes, mpt3sas_scsih_event_callback() re-reads fields
+> > > like EventDataLength and NumEntries directly from the same DMA-
+> > > backed memory.
+> > >=20
+> > > Could a malicious device mutate these fields in the window
+> > > between validation and use to bypass the checks introduced by
+> > > this patch?
+> >=20
+> > Is wrong.=C2=A0 Hardware may never be presumed to be malicious (well,
+> > except if it's virtual hardware provided by an untrusted host to a
+> > confidential guest, but that's a very small list of drivers or it's
+> > a USB or thunderbolt device designed to attack or exfiltrate data
+> > from an unattended system).=C2=A0 It may be buggy, but we never presume
+> > bugs until someone finds a device exhibiting the bug in the field
+> > (so we don't proactively fix them).
+> >=20
+> > The bigger part of this is that I was looking into how to fix this
+> > (which might interest a broader swathe of developers than just
+> > SCSI). I think the fault is in the review prompts:
+> >=20
+> > https://github.com/masoncl/review-prompts
+> >=20
+> > And what I need to do is to add an additional drivers.md file to
+> > kernel/subsystems explaining this?=C2=A0 If that's right I can send a
+> > pull request, but I thought I'd check here because the audience is
+> > much bigger than if it were to get discussed in the github PR.
+>=20
+> Please make this per-subsystem, as your description above doesn't
+> hold for all types of devices or busses.=C2=A0 See this thread where I
+> describe what we do for USB and asking for much the same type of
+> description for the virtio drivers:
+> =09
+> https://lore.kernel.org/all/2026072036-outburst-rebel-c71b@gregkh/
 
+Well, I noted that in my reply above.  The way I was thinking of
+implementing it was to add a general instruction file for drivers which
+would make hardware trusted for pretty much everything and then
+instruct the AI to consult driver specific files for overrides to this
+so we could add the additional threat checks to usb.md and virt.md
+
+Regards,
+
+James
