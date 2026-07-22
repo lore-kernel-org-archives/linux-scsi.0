@@ -1,114 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 169D04252BB
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 20:39:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3508356772
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 22:04:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784752779; cv=none; b=C3rBf4TTTFf+d+zbAUY38TndRKAa4ZKJLFIQc1mueeUT0Sp9H9hUsuY8tBF+thlWC3ZsIqPn/x2HAzr6iIO2z4LR8x0dj9rq3KhXJeOcIK+GadWqZ3i1CuCGcjKG/iz8xq5YOEMs41snmMrNkhqw1PFrSxkiy9QofuMBvG7JV48=
+	t=1784757870; cv=none; b=g4bMVqfsrAmQoKQAkL4/zG5A1cEyuU1zb/Cm/vjOs8QdzgqHn/TOIwYaSLPUnRgyp7tEFg+2njUoZG1F93F5lqdDp9PlXdIpxCFHiYvcK7QPHw98c2j6GB8f13gwH7Zdx2Pdsi1wN0WYL1OHCx98zXdPz5lEOGH/CA3xzTqXXi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784752779; c=relaxed/simple;
-	bh=Yt7CWrgBp09WePH0n42lzhNIJpb/ZnrOQ5c8kiOGnoo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BcUIQSNT7xAOCOioHeMmwPdOdXY32tifdShWvp6NJMhKf9aAXuXPviGVEdOBcwCUbsTRTHaJCKkcPvbN5kIEVNGAC9w50hkZmPSxE380p2tNFsnFtTksuKqvnlT7klyZEwXmYAOXFpwJSMkbXkobKAORnhL+fj9ntRMDmPSHh68=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=llZZrYcV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784757870; c=relaxed/simple;
+	bh=PbEnauf1mpilbPgMW1YMWBABRANAYVmWia6zPFam7tw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hHeXE1lDkrsK0p625MbciunHKH1NoBuqqQvjeFGVes7Rt5JPBHUGjqlJ3MHz1Syfblat6ioHM2Hcm9JQ/9rfVwmUWqJs6ewM3lZTzbHUCa/OOspsklzFqG+niZKWQ960j+BKzHy7N+BPv1t2RM4HHw98CXJSgJkdeoLL11MOzOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=SRuB7Q9K; arc=none smtp.client-ip=68.232.154.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="llZZrYcV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 787DA1F000E9;
-	Wed, 22 Jul 2026 20:39:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784752777;
-	bh=fxnhKATtPhKQnc67hMrHelripSLNlZCu/2NYDOZ5ogU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=llZZrYcVH6y0nPSUzPYcTB0IiNzFgXrEHtOA7yLrFS+dPY43sOiqPSHhFJkmiluOy
-	 mK1j+r+ebyyVbiRAL3cjfOJSMXghi6fmpP7H8dge6WwVK2WzUXC9LU+1absStZ86Kt
-	 jx+6BCK/aES5hdoRpjduJ3KyCPyBlA+Jzsb8ttLwd5XSrbF6BxeZ5+4RSFkIuUG5Cr
-	 MLnU7xkEanjqUa+FkWtRUNGX7HTWot925CH7Y8wjBAsRNZR6C7HGX+5V4RO8JiYWIC
-	 htblIqTs3tCWkHobuxyxnqfOzRIT/sumc3G8BUt2xlpP+d2KXwOXZ61fo6lgk1KMrO
-	 H2zcrq/w1Mhog==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: smartpqi: Fix AIO retry marker cleared by SCSI
- core between dispatches
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "David Strahan" <david.strahan@microchip.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260722202327.5242-3-david.strahan@microchip.com>
-References: <20260722202327.5242-1-david.strahan@microchip.com>
- <20260722202327.5242-3-david.strahan@microchip.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 22 Jul 2026 20:39:37 +0000
-Message-Id: <20260722203937.787DA1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="SRuB7Q9K"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1784757868; x=1816293868;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=PbEnauf1mpilbPgMW1YMWBABRANAYVmWia6zPFam7tw=;
+  b=SRuB7Q9KF57uxBLc6eV4/+PsHlXqouSdl0KZQnWf+BQTS8Hd8lILVz4e
+   QXElOZpJylSSZrNuqfRqKGLSQ7CLlV6FgYpy8CWi5XNzICYd0ccvqqdr4
+   8Enpj5rGcfNB3zl2sUbf/mxo7SKTv6WjbimCqLxX+gUiVuaOm+aqWfJcK
+   AIzNO6MhLZsZmL7lIgYEfnk9I2ix8qzBo60tTBMSyTKF15ETKpxKBDmwJ
+   jdHkBs4lLvAIgCmaR1z86TWqLsik+4FXlguNTaUNiU7OFKFXgJ/llMxgu
+   HtYXfHmHEs4MFSfIiCNghAhZQlG12qAAW8B4S038NDMP1sZU1qSiPYfr+
+   A==;
+X-CSE-ConnectionGUID: rldtCAE1Q6SETnRq9ZA8fw==
+X-CSE-MsgGUID: 6AZGU1dxS1CV+WBQIvuxow==
+X-IronPort-AV: E=Sophos;i="6.25,179,1779174000"; 
+   d="scan'208";a="60164974"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
+  by esa4.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jul 2026 15:04:27 -0700
+Received: from dks-rocky10u1-dev.pdev.net (10.10.85.11) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.58; Wed, 22 Jul 2026 15:04:27 -0700
+From: David Strahan <david.strahan@microchip.com>
+To: <linux-scsi@vger.kernel.org>
+CC: David Strahan <David.Strahan@microchip.com>
+Subject: [PATCH v1 0/4] smartpqi: fixes and updates for 2.1.42-011
+Date: Wed, 22 Jul 2026 17:03:57 -0500
+Message-ID: <20260722220401.6357-1-david.strahan@microchip.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: chn-vm-ex03.mchp-main.com (10.10.85.151) To
+ chn-vm-ex01.mchp-main.com (10.10.85.143)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The driver-private retry marker (`this_residual`) is leaked across=
- block layer tag reuses if a command completing with `DID_IMM_RETRY` is ter=
-minally completed by the SCSI midlayer. This permanently poisons the tag, d=
-isabling AIO bypass for future requests and causing the driver to erroneous=
-ly offline healthy physical drives on routine errors.
---
+From: David Strahan <David.Strahan@microchip.com>
 
---- Patch [1]: [PATCH] scsi: smartpqi: Fix AIO retry marker cleared by SCSI=
- core between dispatches ---
-commit b11e42cf8728d0b2c04d732af5bc5bfb1648bc25
-Author: David Strahan <David.Strahan@microchip.com>
+These patches are based on Martin Petersen's 7.2/scsi-queue tree
+https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+ 7.2/scsi-queue
 
-scsi: smartpqi: Fix AIO retry marker cleared by SCSI core between dispatches
+This patch series includes four patches, with two main functional changes:
 
-This patch registers a per-command initialization callback to prevent the
-SCSI core from clearing driver private data between dispatches. It allows an
-AIO retry marker (this_residual) to survive requeues, with the driver taking
-over the responsibility of clearing the marker on terminal completions.
+1. smartpqi-Fix-AIO-retry-marker-cleared-by-SCSI-core-between-dispatches
 
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpq=
-i/smartpqi_init.c
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
+   On recent Linux kernels the driver can enter a retry loop on the
+   AIO fast path when a request is retried, looping until timeout, and
+   a diagnostic path that takes a physical drive offline on AIO-bypass
+   failure is never entered.
 
-[ ... ]
+   Registers a per-command initialization callback with the SCSI core
+   so its presence causes the core to skip the per-dispatch clear of
+   the retry marker, letting it survive the requeue so the AIO-to-RAID
+   fallback proceeds as intended.
 
-> @@ -5958,6 +5964,17 @@ void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd)
->  	struct pqi_scsi_dev *device;
->  	struct completion *wait;
-> =20
-> +	/*
-> +	 * Clear the AIO-retry marker on final completion so the tag
-> +	 * starts clean on its next dispatch.  On DID_IMM_RETRY leave
-> +	 * it intact: pqi_aio_io_complete() sets DID_IMM_RETRY and
-> +	 * bumps the marker to steer the requeue onto the RAID path,
-> +	 * and pqi_process_raid_io_error() consumes the non-zero
-> +	 * marker to offline a misbehaving drive.
-> +	 */
-> +	if (host_byte(scmd->result) !=3D DID_IMM_RETRY)
-> +		pqi_cmd_priv(scmd)->this_residual =3D 0;
-> +
+2. smartpqi-add-support-for-CCISS_BIG_PASSTHRU-ioctl
 
-[Severity: High]
-Does this code risk leaking the this_residual marker across unrelated
-requests that reuse the same blk-mq tag?
+   Adds pqi_big_passthru_ioctl() to handle CCISS_BIG_PASSTHRU ioctl
+   requests. The existing passthru ioctl uses a 16-bit integer for the
+   I/O buffer size, limiting transfers to 64KB. The big passthru ioctl
+   uses BIG_IOCTL_Command_struct, which stores the buffer size as a
+   32-bit integer, allowing the larger transfers required by some
+   management utilities.
 
-If a command completing with DID_IMM_RETRY is terminally completed by the
-SCSI midlayer instead of being requeued (for instance, if
-scsi_cmd_runtime_exceeced(cmd) overrides the disposition to SUCCESS in
-scsi_lib.c:scsi_complete()), the driver-private command data will not be
-cleared here.
-
-Because this patch disables the SCSI core's per-dispatch zeroing via
-pqi_init_cmd_priv(), the stale this_residual > 0 marker would remain on
-the tag.
-
-If that poisoned tag is reused for a new request targeting a physical drive,
-and the new request encounters a routine SCSI error (like ILLEGAL_REQUEST),
-would pqi_process_raid_io_error() misinterpret the stale marker as a failed
-AIO retry and erroneously call pqi_take_device_offline() on a healthy
-physical drive?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722202327.5242=
--3-david.strahan@microchip.com?part=3D1
+The other two patches:
+3. smartpqi-add-new-pci-device-ids
+   Adds PCI IDs for new Hurray Data, ZTE, and Ramaxel controllers.
+   No functional changes.
+4. smartpqi-update-driver-version-to-2.1.42-011
+   Updates the driver version string.
+   No functional changes.
