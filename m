@@ -1,53 +1,53 @@
 Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9757C35E1BF
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 22:04:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533B6368D76
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 22:05:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784757895; cv=none; b=BORDRfZwpn5oqhdB3n8su9iJ2KUYhnmtah1nE3Go+ww4WI6jDuFTvx8ZWXf/kJy42dDQQC5DCbo88ZP6CITXmFKY9fab4G1J4TAq6xvD0mIkwVYK9GcSfDSYMN3Unq0RQtt11LQYGEwEHd/hB5odEHaN5yHmSURhGqjqRqvS9Iw=
+	t=1784757907; cv=none; b=rBIhCLSeOuRw/T3JzL9lveSxNpqDf1cxXov1NGqEOA9nf2s1sTEBP+Ytf/BSd/2HK6sQEHEhkdRghOGkZl/cW3IHgBM4TMw73ZR37ZT08KYWF4POTahzWIt64urpaQHAPyYHjjrgCfdr/iNz7RWwZe6PfVf8UCVlOYP11aGPjOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784757895; c=relaxed/simple;
-	bh=CGn35QUkO7j+leN4oEpe+p3dtbCKSxHhvyQplcJZV4o=;
+	s=arc-20240116; t=1784757907; c=relaxed/simple;
+	bh=pSUn61GRJTUeCDBMk7eOVLIlo5i4x6KKjbbf7UQUVJA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LqsiNkRglrY7KdGtoN6S+CH2fIDleRpjfTO2tYSiOcj8dMgJrAFA5Ka6e7JO9/LQ9pAb4R96JA81XGVFgpqxONjeobFrU3qdOPY+Hl2qOI8L9NS3U92KFjjPAnZob5YIrYGZ4ctDpFlfQ1shx0RsNHfTn6r8ddu9lvWD2XzZm70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=1aSiO3Ox; arc=none smtp.client-ip=68.232.154.123
+	 MIME-Version:Content-Type; b=ag49iZ17+ZKLPGQ34uX5j4daT6ohn3hvVjD82j/OdKbss4796C+ngQ7IOKEXVg31C5tPIX66HMrAVHnHasAjzvYl+64qd/yc+xbvyXmNunJBfTAs7DLjpsMnlr07a3OTQQCr2Oa8vIQ6rWg10xHfl611JB13eb9x89j3GVPouFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=VbiLoeUD; arc=none smtp.client-ip=68.232.154.123
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="1aSiO3Ox"
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="VbiLoeUD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1784757894; x=1816293894;
+  t=1784757906; x=1816293906;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=CGn35QUkO7j+leN4oEpe+p3dtbCKSxHhvyQplcJZV4o=;
-  b=1aSiO3OxDH/tHTyioUxoJEFvSZIgdR101sVRKOi9ObYTF6UPJ1YyN83H
-   DjaJg2J+fgqBSHESAHJckbf5DLoDBKWJUxrjpEQ2seu699BUB2s8uerog
-   VzuK1f/dwCFrMmz04BpZmfcB5wf1RmV6AGL2rQMhNcIO+Byxcq8cEgZ/+
-   5UiPqleZmFnNtHNPwgRigugc0D02yjR3I1VxnSGd8bW3orccFXYRCIrkN
-   sOLJuii4wHbkAFimagfbtpXWYtb2TcsuhLUVdYLdTZV2hGwEqH1bKeaa2
-   GtnYItlzbDRBDslH34fESz+F5jgAdrCpG895rjWu6K8DT1nzXWl3G8pbJ
-   Q==;
-X-CSE-ConnectionGUID: smAzN8DkSca0s08Up0sPKA==
-X-CSE-MsgGUID: 50v4hvDAQNCbcT/7vWFypA==
+  bh=pSUn61GRJTUeCDBMk7eOVLIlo5i4x6KKjbbf7UQUVJA=;
+  b=VbiLoeUDyFiBwRs6Pkd2kJ9BoBYOXR8dReFYAa51YNfkLWL4OshcJAwU
+   U3CgyvI31snPg9Tp9HPBDu823MNAJH4CjO3MDUBVW0Ll4DeLVgU65gGW9
+   R/VGPje6a/vkM2d+ufN94UmyS7/h8lkHfwmwhbaffNVkOk/rMVAifLJS8
+   HWoDcvhBZ83b6TYWkkdtV9y5Mzn9Y2YeQo9nd+7bu3kFyENnH60W8zuR8
+   50d/ApCUtIgGrBKonZx0gqFoxrds5Ojk08lphQ7gcxUhRboNBQP/ayM+O
+   rirUhW0Ng+M9x6wnKGvb2SZuYClvQKxCSjyrK0MnlslwVKVlBXuK5kwC4
+   w==;
+X-CSE-ConnectionGUID: aGf4D1ScQfaSxIFkn2WLGQ==
+X-CSE-MsgGUID: pnYD3k2qT6eh6VDuqhh9Aw==
 X-IronPort-AV: E=Sophos;i="6.25,179,1779174000"; 
-   d="scan'208";a="228175829"
+   d="scan'208";a="61343496"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jul 2026 15:04:54 -0700
+  by esa2.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jul 2026 15:05:06 -0700
 Received: from dks-rocky10u1-dev.pdev.net (10.10.85.11) by
  chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.58; Wed, 22 Jul 2026 15:04:53 -0700
+ 15.1.2507.58; Wed, 22 Jul 2026 15:05:05 -0700
 From: David Strahan <david.strahan@microchip.com>
 To: <linux-scsi@vger.kernel.org>
 CC: David Strahan <David.Strahan@microchip.com>, Mike McGowen
-	<mike.mcgowen@microchip.com>, Don Brace <don.brace@microchip.com>, "David
- Strahan" <david.strahan@microchip.com>
-Subject: [PATCH v1 1/4] smartpqi: Fix AIO retry marker cleared by SCSI core between dispatches.
-Date: Wed, 22 Jul 2026 17:03:58 -0500
-Message-ID: <20260722220401.6357-2-david.strahan@microchip.com>
+	<mike.mcgowen@microchip.com>, David Strahan <david.strahan@microchip.com>,
+	Don Brace <don.brace@microchip.com>
+Subject: [PATCH v1 2/4] smartpqi: add support for CCISS_BIG_PASSTHRU ioctl
+Date: Wed, 22 Jul 2026 17:03:59 -0500
+Message-ID: <20260722220401.6357-3-david.strahan@microchip.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260722220401.6357-1-david.strahan@microchip.com>
 References: <20260722220401.6357-1-david.strahan@microchip.com>
@@ -64,71 +64,202 @@ X-ClientProxiedBy: chn-vm-ex03.mchp-main.com (10.10.85.151) To
 
 From: David Strahan <David.Strahan@microchip.com>
 
-On recent Linux kernels the driver can enter a retry loop on the
-AIO fast path when a request is retried, looping until timeout.
-A diagnostic path that takes a physical drive offline on AIO-bypass
-failure is also never entered on affected kernels.
+smartpqi: add support for CCISS_BIG_PASSTHRU ioctl
 
-Register a per-command initialization callback with the SCSI
-core. Its presence causes the core to skip the per-dispatch
-clear, so the retry marker now survives across the requeue and
-the AIO-to-RAID fallback proceeds as intended. The driver takes
-over the marker's lifetime: it is zeroed at tag allocation,
-preserved across the retry requeue so the error path can act on
-it, and cleared on terminal completion so the tag starts clean on
-its next use.
+Add pqi_big_passthru_ioctl() to handle CCISS_BIG_PASSTHRU ioctl
+requests. The existing passthru ioctl uses a 16-bit integer for
+the I/O buffer size, limiting transfers to 64KB. The big passthru
+ioctl uses BIG_IOCTL_Command_struct which stores the buffer size as
+a 32-bit integer, allowing larger transfers required by some
+management utilities.
 
-Fixes: dce5c4afd035 ("scsi: core: Clear driver private data when retrying request")
+Add CCISS_BIG_PASSTHRU_SUPPORTED to uapi/linux/cciss_ioctl.h and
+return 0 from pqi_ioctl() to advertise driver support.
+Userspace tools can send this ioctl to probe whether the driver
+supports CCISS_BIG_PASSTHRU before issuing it.
+
+Co-developed-by: Mike McGowen <mike.mcgowen@microchip.com>
 Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
-Acked-by: Don Brace <don.brace@microchip.com>
 Signed-off-by: David Strahan <david.strahan@microchip.com>
+Acked-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ drivers/scsi/smartpqi/smartpqi_init.c | 144 ++++++++++++++++++++++++++
+ include/uapi/linux/cciss_ioctl.h      |   1 +
+ 2 files changed, 145 insertions(+)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 5ec583d..3a75b9f 100644
+index 3a75b9f..473f1c9 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -66,6 +66,12 @@ static struct pqi_cmd_priv *pqi_cmd_priv(struct scsi_cmnd *cmd)
- 	return scsi_cmd_priv(cmd);
+@@ -6935,6 +6935,144 @@ out:
+ 	return rc;
  }
  
-+static int pqi_init_cmd_priv(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
++static int pqi_big_passthru_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
 +{
-+	memset(pqi_cmd_priv(cmd), 0, sizeof(struct pqi_cmd_priv));
-+	return 0;
++	int rc;
++	char *kernel_buffer = NULL;
++	u16 iu_length;
++	size_t sense_data_length;
++	BIG_IOCTL_Command_struct iocommand;
++	struct pqi_raid_path_request request;
++	struct pqi_raid_error_info pqi_error_info;
++	struct ciss_error_info ciss_error_info;
++
++	if (pqi_ctrl_offline(ctrl_info))
++		return -ENXIO;
++	if (pqi_ofa_in_progress(ctrl_info) && pqi_ctrl_blocked(ctrl_info))
++		return -EBUSY;
++	if (!arg)
++		return -EINVAL;
++	if (!capable(CAP_SYS_RAWIO))
++		return -EPERM;
++	if (copy_from_user(&iocommand, arg, sizeof(iocommand)))
++		return -EFAULT;
++	if (iocommand.buf_size < 1 &&
++		iocommand.Request.Type.Direction != XFER_NONE)
++		return -EINVAL;
++	if (iocommand.Request.CDBLen > sizeof(request.cdb))
++		return -EINVAL;
++	if (iocommand.Request.Type.Type != TYPE_CMD)
++		return -EINVAL;
++
++	switch (iocommand.Request.Type.Direction) {
++	case XFER_NONE:
++	case XFER_WRITE:
++	case XFER_READ:
++	case XFER_READ | XFER_WRITE:
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	if (iocommand.buf_size > 0) {
++		kernel_buffer = kmalloc(iocommand.buf_size, GFP_KERNEL);
++		if (!kernel_buffer)
++			return -ENOMEM;
++		if (iocommand.Request.Type.Direction & XFER_WRITE) {
++			if (copy_from_user(kernel_buffer, iocommand.buf,
++				iocommand.buf_size)) {
++				rc = -EFAULT;
++				goto out;
++			}
++		} else {
++			memset(kernel_buffer, 0, iocommand.buf_size);
++		}
++	}
++
++	memset(&request, 0, sizeof(request));
++
++	request.header.iu_type = PQI_REQUEST_IU_RAID_PATH_IO;
++	iu_length = offsetof(struct pqi_raid_path_request, sg_descriptors) -
++		PQI_REQUEST_HEADER_LENGTH;
++	memcpy(request.lun_number, iocommand.LUN_info.LunAddrBytes, sizeof(request.lun_number));
++	memcpy(request.cdb, iocommand.Request.CDB, iocommand.Request.CDBLen);
++	request.additional_cdb_bytes_usage = SOP_ADDITIONAL_CDB_BYTES_0;
++
++	switch (iocommand.Request.Type.Direction) {
++	case XFER_NONE:
++		request.data_direction = SOP_NO_DIRECTION_FLAG;
++		break;
++	case XFER_WRITE:
++		request.data_direction = SOP_WRITE_FLAG;
++		break;
++	case XFER_READ:
++		request.data_direction = SOP_READ_FLAG;
++		break;
++	case XFER_READ | XFER_WRITE:
++		request.data_direction = SOP_BIDIRECTIONAL;
++		break;
++	}
++
++	request.task_attribute = SOP_TASK_ATTRIBUTE_SIMPLE;
++
++	if (iocommand.buf_size > 0) {
++		put_unaligned_le32(iocommand.buf_size, &request.buffer_length);
++
++		rc = pqi_map_single(ctrl_info->pci_dev,
++			&request.sg_descriptors[0], kernel_buffer,
++			iocommand.buf_size, DMA_BIDIRECTIONAL);
++		if (rc)
++			goto out;
++
++		iu_length += sizeof(request.sg_descriptors[0]);
++	}
++
++	put_unaligned_le16(iu_length, &request.header.iu_length);
++
++	if (ctrl_info->raid_iu_timeout_supported)
++		put_unaligned_le32(iocommand.Request.Timeout, &request.timeout);
++
++	rc = pqi_submit_raid_request_synchronous(ctrl_info, &request.header,
++		PQI_SYNC_FLAGS_INTERRUPTABLE, &pqi_error_info);
++
++	if (iocommand.buf_size > 0)
++		pqi_pci_unmap(ctrl_info->pci_dev, request.sg_descriptors, 1, DMA_BIDIRECTIONAL);
++
++	memset(&iocommand.error_info, 0, sizeof(iocommand.error_info));
++
++	if (rc == 0) {
++		pqi_error_info_to_ciss(&pqi_error_info, &ciss_error_info);
++		iocommand.error_info.ScsiStatus = ciss_error_info.scsi_status;
++		iocommand.error_info.CommandStatus = ciss_error_info.command_status;
++		sense_data_length = ciss_error_info.sense_data_length;
++		if (sense_data_length) {
++			if (sense_data_length > sizeof(iocommand.error_info.SenseInfo))
++				sense_data_length = sizeof(iocommand.error_info.SenseInfo);
++			memcpy(iocommand.error_info.SenseInfo,
++				pqi_error_info.data, sense_data_length);
++			iocommand.error_info.SenseLen = sense_data_length;
++		}
++	}
++
++	if (copy_to_user(arg, &iocommand, sizeof(iocommand))) {
++		rc = -EFAULT;
++		goto out;
++	}
++
++	if (rc == 0 && iocommand.buf_size > 0 &&
++		(iocommand.Request.Type.Direction & XFER_READ)) {
++		if (copy_to_user(iocommand.buf, kernel_buffer,
++			iocommand.buf_size)) {
++			rc = -EFAULT;
++		}
++	}
++
++out:
++	kfree(kernel_buffer);
++
++	return rc;
 +}
 +
- static void pqi_verify_structures(void);
- static void pqi_take_ctrl_offline(struct pqi_ctrl_info *ctrl_info,
- 	enum pqi_ctrl_shutdown_reason ctrl_shutdown_reason);
-@@ -5958,6 +5964,17 @@ void pqi_prep_for_scsi_done(struct scsi_cmnd *scmd)
- 	struct pqi_scsi_dev *device;
- 	struct completion *wait;
+ static int pqi_ioctl(struct scsi_device *sdev, unsigned int cmd,
+ 		     void __user *arg)
+ {
+@@ -6958,6 +7096,12 @@ static int pqi_ioctl(struct scsi_device *sdev, unsigned int cmd,
+ 	case CCISS_PASSTHRU:
+ 		rc = pqi_passthru_ioctl(ctrl_info, arg);
+ 		break;
++	case CCISS_BIG_PASSTHRU:
++		rc = pqi_big_passthru_ioctl(ctrl_info, arg);
++		break;
++	case CCISS_BIG_PASSTHRU_SUPPORTED:
++		rc = 0;
++		break;
+ 	default:
+ 		rc = -EINVAL;
+ 		break;
+diff --git a/include/uapi/linux/cciss_ioctl.h b/include/uapi/linux/cciss_ioctl.h
+index 5622301..8295f1b 100644
+--- a/include/uapi/linux/cciss_ioctl.h
++++ b/include/uapi/linux/cciss_ioctl.h
+@@ -85,5 +85,6 @@ typedef struct _LogvolInfo_struct{
+ #define CCISS_RESCANDISK   _IO(CCISS_IOC_MAGIC, 16)
+ #define CCISS_GETLUNINFO   _IOR(CCISS_IOC_MAGIC, 17, LogvolInfo_struct)
+ #define CCISS_BIG_PASSTHRU _IOWR(CCISS_IOC_MAGIC, 18, BIG_IOCTL_Command_struct)
++#define CCISS_BIG_PASSTHRU_SUPPORTED _IO(CCISS_IOC_MAGIC, 19)
  
-+	/*
-+	 * Clear the AIO-retry marker on final completion so the tag
-+	 * starts clean on its next dispatch.  On DID_IMM_RETRY leave
-+	 * it intact: pqi_aio_io_complete() sets DID_IMM_RETRY and
-+	 * bumps the marker to steer the requeue onto the RAID path,
-+	 * and pqi_process_raid_io_error() consumes the non-zero
-+	 * marker to offline a misbehaving drive.
-+	 */
-+	if (host_byte(scmd->result) != DID_IMM_RETRY)
-+		pqi_cmd_priv(scmd)->this_residual = 0;
-+
- 	if (!scmd->device) {
- 		set_host_byte(scmd, DID_NO_CONNECT);
- 		return;
-@@ -7612,6 +7629,7 @@ static const struct scsi_host_template pqi_driver_template = {
- 	.sdev_groups = pqi_sdev_groups,
- 	.shost_groups = pqi_shost_groups,
- 	.cmd_size = sizeof(struct pqi_cmd_priv),
-+	.init_cmd_priv = pqi_init_cmd_priv,
- };
- 
- static int pqi_register_scsi(struct pqi_ctrl_info *ctrl_info)
+ #endif /* _UAPICCISS_IOCTLH */
 -- 
 2.52.0
 
