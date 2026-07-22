@@ -1,219 +1,485 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51249472F6B;
-	Wed, 22 Jul 2026 08:47:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784710050; cv=fail; b=jskvw68Yh9fcPO5+FACv6D60ol3Try4NjUWP8IgGYXHSzvFB3uKMG/ouD7s/IWionEbnlpUnzSRxK8K6cJfa9qTKbyBWkUNDABvejp1m4fFFlhENAJWA2ad23M4PXzLugsgwzCAsLQHjQo4CR2OVckfmN2+unbb1RvrIChcdi30=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784710050; c=relaxed/simple;
-	bh=+vES7thtRMQQj8H3E+KqnI/2cR+6vG0Jb8Nynt2qt5A=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=h2sHh4/kN1aecz85i1xsFIngwrrVAxfXJEa/Yq1GNZpr9QglJW3wOkfYHVRg4buLrDL3tQ1An/UrpPmT6M6FzuWKB6QPBFmDRi8umcWxIz0B0EWImC0u2+YZhrYY2ZlviT7JOCs/rFPwwnbhuu7IAjnTGpJDEg8xivcoxQPig6Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=L1SIhbsu; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=N2Mp3DWp; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C598D48167F
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 08:48:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784710111; cv=none; b=buADDR3WJH5S6ZCBHyork4OWtSFE23nzy4WRmu0EWZyrfDD+SJGJ0mD5r03mlJXey5dqntqKCzR6ZHuyVsLx7p+wpAK4mry/N/WkBuNzuovbOqj7ZaV2E4vXMUPYqyOQmrGK+QgT9ucEpELQ0Jyc2KcDchucVSdlsY4XQ+Fu8OA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784710111; c=relaxed/simple;
+	bh=ZY52Ra13yBSKFcW/CxAD8SFppASFo9qJdz/j4vLciwk=;
+	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
+	 References; b=hg5GnpzxB8iIdE9h1nUTQaJTwKnw6gxMjxZP5hqSssgqnAMCEkNkVEKXzRgUS8kXyTo3KG7B84WIBf9R+1XHhac0GvtSKNr+cqWpa7Du8HRflbGsV1FueNT0b6ocpkjqiutyFOVFZ8jIbJ8S7puuajmq80Hj3uCN63Tj752uiP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=TFBBtNpI; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="L1SIhbsu";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="N2Mp3DWp"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66M4E0aa314268;
-	Wed, 22 Jul 2026 08:47:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=vdGbGssN24XTnRhUUcucXCCZiYRKcrdKahCIPPxmR8A=; b=
-	L1SIhbsu09ymZ++bxBeSKkRzDfcjo8FG9EDQpw/vtipIA+K2H6W5AOxMEmFS63jW
-	MDvi6tjjGwkjiCld2OFk6iBZOptHC1+0iUuSFfwJeK0HzCPc+Jh4Lv1NHow+7Z0v
-	QX703Y2fEuHQEqklGaNs+VLzq5DH3LqzacYekRTS9WMUutWGBWuPfRrIVzpXTuEf
-	/YhOqIbe19jJ/yisxXlzllCt4kimD8pWRDxcTUjXGKvGHlIK0UchkjBkX9IFrmsq
-	B516H6kmK9Me9Tx5UnsoyWdzBO48m/l1cQ+BqOeTBMqzK5OB82SP4r71OKf6H/R/
-	zO3JpUmICjgDnPrGwps/Nw==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fg1mv4u5s-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 22 Jul 2026 08:47:14 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66M8hWp3034613;
-	Wed, 22 Jul 2026 08:47:13 GMT
-Received: from sn4pr2101cu001.outbound.protection.outlook.com (mail-southcentralusazon11012010.outbound.protection.outlook.com [40.93.195.10])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4ffyxqqdav-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 22 Jul 2026 08:47:13 +0000 (GMT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fgTaIZ2A4g59/8xteCA2ZQ3fjJXmKTKkwiRTO22xUPqMwAoAGyKdGT0932zzQdh+lkQNEixRA3i9BXpwzWmfjNEelv3IOJ48l2fRzLmhE0Em2rocKJbE4fQq06tUU+I7XJWQJlfD/ElBga9ySp1Fo8uxxnGFu7EI7HTfSyf0KdZSdwLPJ5L+N0d4ET6WXwYWKleYM5yYxVdrMo61d/sfyeP2HXUUN4BvTSor7Iyn9zM+ilTTAa3PDTrKhORZ4EUA+eSaRXmo10zNw1WYzCASjG+XDqnyBJIduVc/345WotYQOpIupoaMZHtuY5wM2et+CEpIGN2C/r0fl4VwaBLKTA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vdGbGssN24XTnRhUUcucXCCZiYRKcrdKahCIPPxmR8A=;
- b=YxSeqM1/GaP3amECBxCZ3snZfdwCH/5KqDqkn4SzrKayQh5IROOlrEpFDg8gm95EIvHN7tFKx3omuaJweM5sytQKUesvzV77O7teptJ3JjBZF+en50ArpmUkmOcAVPPZiHzJQdxWlbymKXaOK1Tj9kt6c5p3qMMF/awzfELgKBzX3H+hsBYwCSrSBQtNA+izpnKvr1XnxrCT1zsvOFFgxN50vfG0MtO6Zgjqxo63xMJQS2cODD7rZUIujRERfk0i/yEFDn/UHCUurcAGtoYPajHGAu99aYqINdczPfoAkqNVXMthhHBUkDBddu7dR2ehyONgxETw+gSGV36y0iq9EA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vdGbGssN24XTnRhUUcucXCCZiYRKcrdKahCIPPxmR8A=;
- b=N2Mp3DWptkqb3KLWJRoZy4KCynMOWG6pehHnZcSrY/QHW3SW6T0Cy+uGrF+e2CgAfkd96tPldN2/03KbqcaOVkMrGUbepM19appByoXz5umhMuf8/GIAvjp1I3FVR+i+tHV0hkaB5mROdEP3Au8fuE5Sj/yeq9v/Wv3Kc/fXMRU=
-Received: from DM4PR10MB6229.namprd10.prod.outlook.com (2603:10b6:8:8c::12) by
- SJ5PPFACCDEE1A8.namprd10.prod.outlook.com (2603:10b6:a0f:fc02::7c3) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.10; Wed, 22 Jul
- 2026 08:47:09 +0000
-Received: from DM4PR10MB6229.namprd10.prod.outlook.com
- ([fe80::867:63e7:13fa:fa7d]) by DM4PR10MB6229.namprd10.prod.outlook.com
- ([fe80::867:63e7:13fa:fa7d%6]) with mapi id 15.21.0245.009; Wed, 22 Jul 2026
- 08:47:09 +0000
-Message-ID: <c5390973-6db4-4191-8330-dea5830da4f0@oracle.com>
-Date: Wed, 22 Jul 2026 09:47:05 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] scsi: hisi_sas: add spinup_notify callback to
- handle Active_Wait/Idle_Wait SSP devices
-To: yangxingui <yangxingui@huawei.com>, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com, dlemoal@kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, liuyonglong@huawei.com, kangfenglong@huawei.com,
-        hare@suse.com
-References: <20260703022833.36847-1-yangxingui@huawei.com>
- <20260703022833.36847-3-yangxingui@huawei.com>
- <c9a91dd7-b158-4416-93bb-9ae1e1acb8a3@oracle.com>
- <55307987-d86b-f28c-7c39-0a6bafe182bb@huawei.com>
- <a2ecff55-aabd-48b4-a702-7e052646f22c@oracle.com>
- <7baf77e4-345b-3419-6562-f0e435227e5a@huawei.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <7baf77e4-345b-3419-6562-f0e435227e5a@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: FR4P281CA0019.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:c9::16) To DM4PR10MB6229.namprd10.prod.outlook.com
- (2603:10b6:8:8c::12)
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="TFBBtNpI"
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260722084821epoutp01887671b2b10c217db355d0087a744a0e~EkGGkeC7m1918519185epoutp01Z
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 08:48:21 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260722084821epoutp01887671b2b10c217db355d0087a744a0e~EkGGkeC7m1918519185epoutp01Z
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1784710101;
+	bh=+7t7FLsSDzND2A6rIY1Fbi7mkzKtUdBYcR1WCdVwSOQ=;
+	h=Subject:Reply-To:From:To:CC:Date:References:From;
+	b=TFBBtNpIAwf8DoO1WO4C3KFb6yI+lzHRXWzl8IAIxpxBwTrJzuhRaH5kxy+d8ZePN
+	 jVvyWtXnVMAg2jKQf+kLm/hn1s2C1cT45UjyTXLLjiLT4WeJ8t5vlOkF35aDCO/MfG
+	 pKt51qwtHcvUoUN3ItN4hwaEZMIqiZ0RBgz7KKeo=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
+	20260722084820epcas2p1f6acc74377bb3a05fa8432f26c5291c0~EkGFcbulI0529005290epcas2p1F;
+	Wed, 22 Jul 2026 08:48:20 +0000 (GMT)
+Received: from epcas2p4.samsung.com (unknown [182.195.38.208]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4h4nw367J6z6B9mH; Wed, 22 Jul
+	2026 08:48:19 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM4PR10MB6229:EE_|SJ5PPFACCDEE1A8:EE_
-X-MS-Office365-Filtering-Correlation-Id: b5fdd4cb-eb7a-4e90-b8ca-08dee7cdd0e9
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|366016|376014|3023799007|10067099003|56012099006|4143699003|6133799003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	bC9rSXylaZKHTodQaIL2cD5SuolDLWd+4Ya4F3nlJLvLz/Vd6yL5jEinR6tv31GQ7q66cPnaDRMf3RWZF9DsedK5dLrRR6J3zVVDbW95Fvwsobfx60ZRvB2rG1EqblRScXwxDMkXN0ysiCZfzu8Gm8hempaySajuGQ3k5WwjvP+gobZN16BHda5LXo9oAevLLRJjiTgJY4rZXiozQ5o/cwUh/wDuUSHBOHO5JD3G2eIjPDN2hhqCnA9JfA2NX65BNuryncjDaCWqavJgbmLQdf+5HXnC1Kf+NGNBKarrPyOGeHd+tgDhON18kful8OghpuBF1/UGJu2wdC068NkybvV9kkk3cjdiH2qRlJY1ruh5blV9osUj7o+DuBAs+BZ8ooL8iFvkdxIh/H6qjXVB0oKHtzabVt3feZGbPDv/35vfY5DMZ0zTD8JDtOAqVhos8ck0aVKPd5Qa6QReGBsp3+LBDvYifNzHnw0PkW5RPywJlmfDATVz+WCwaD9bCLaC5MFrolhe2mF4OrgrNzEnJ9z3BjRfQn5qNgF7gXBLRA1OyD8zrlqPnBC8+WPy9rnoekQLS1fnlP6RpE9ADi49LvmLiCkvMqVIR9i0evjo7dtR26qrTkx7qa4vtUh0sFGCERIFS/Q5ENnR7ICy2Wumniw1N1vH7ZBNinbCWHVyFoY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB6229.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(366016)(376014)(3023799007)(10067099003)(56012099006)(4143699003)(6133799003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?VHFHWlZRcW8rRndNL3JtSDJGZDdQYUhpb3ZrWjVWY1J6YnkrcFVSK2cvVGsy?=
- =?utf-8?B?V3hGTkNVeWs0SWxLOW1SblFhdGxoYTEyVVJ4blRncWpuaW96ZTNFZS83U0hl?=
- =?utf-8?B?dElxRThvZEZyelF1elhjakR1Z0xKNE5ZbFU1TE1CbkV6NjhaWmVBNHorYVhX?=
- =?utf-8?B?ang2a0ZxUUZvem51RDBPNUNmWTN5Rkw3eU5wT29qNTVHWGM2eEZVNFZuSDM5?=
- =?utf-8?B?Sk5jU2tMdGN2YVBGZkVVU3o5QUUyU3Y5TGNnTGx5ZkdHMmdxT3RDR3NpQkhH?=
- =?utf-8?B?bDU2TEJ2dFE5cFRUbGNaYktMNUc5R2haa2JmMFZwSTF5R0ZMaGF5RXNPcS8r?=
- =?utf-8?B?SVFaaWp3aG5ORC9pQ2F4SU0vYVNPUkdHdFF2Nk96MzQ3UWY3VVZTT3l1NVVr?=
- =?utf-8?B?WTBXSTdwNjZuZ2p1VXFkUVZYbWFmM1k1V0Ivb2VCb05relBzN09QZStLMC9l?=
- =?utf-8?B?Q010UHM1VUUxamQ3Qk9GT0NnOTlDeFdDN1ZaN2o0YW0zR0djWEUyUVozYXl0?=
- =?utf-8?B?Y3ZwOHRzVkhiMTdaRlRMT2dZMmkybHV0S3VFNFdSSndMcVZoUndENm9UbzRU?=
- =?utf-8?B?eVRmQ0NuamVrVUxxT25YeTVYckpjZFR1cjJhcUc3aEpGYW1Wam1DcE5zQVlU?=
- =?utf-8?B?eGZMTUlaZXB4SUt2TG9HdGdlUjhvdnNuQ3dJT3VaU0o0OGRmeWpBOTFKUURO?=
- =?utf-8?B?MUloQ2E4RVgxUlZPUDU4Q0tsb2FuZXBuSEw1Zlc1cDBocWc4NlI5aUU0TWFp?=
- =?utf-8?B?K3ZFVVNHK2hJN0JZMEZNQUNwK1p5bDlhaDdXbjVKN1AxZ3RMUHNCcFBaUjlt?=
- =?utf-8?B?aUU1RXlJRWdtdG03clk0bitkVG4rWGI4ZjRzMmp5VExzYWx1RnQybUdSSHkr?=
- =?utf-8?B?L2NPdVlDdnRoTkNVTk4rNDdpbkFJNkV5K1ZvVVpPNDg1azczUEFTd1BOU1ZK?=
- =?utf-8?B?YUVCc2tScmZUcEV1cjdhNHhzK1JodVBKSmVFdXdqRFNtMzFTNTY5am9QVUlE?=
- =?utf-8?B?azR3VFBpN1pTYmk1QTJJelJUMUI0cktudHNiZDRmSlcrRTBMQnZDNm1xb25L?=
- =?utf-8?B?NWxBWlRwTFQ5aS94SWdMR2ZKcHdERFcwbWErY05yZ3Zkd1BkUzFYSEptN1o0?=
- =?utf-8?B?WGg3VU1jb3ExK3RtSUpWYXVFM0NKYTFVLzlURC8wWlhtbkFPcE1PZ25laGFU?=
- =?utf-8?B?Q1NScGUvL3cwOE1ialI0TEdvK09LNmMrQStOR0ZGRXhTdlNCQTFRT0kranNn?=
- =?utf-8?B?Q0NTdlhib0RwZDZjZlNySEZXRHFzSmFOWXJlTG94ZXZjbmpCeFp0WXoySm4x?=
- =?utf-8?B?Ty9oZFRsaWVrRlVTdUtxcUNBUEZib2M1aFVBZVlGWHVIN3lFc3pZQTliR2F2?=
- =?utf-8?B?WVlNejZMSTRMaDk4KzByRmtkV2lVVSt6TXRsWHhzK2pxdWV3L2d4SFg5bjVS?=
- =?utf-8?B?Q2dhMmNrcWZDZzdFSXphS1BHaStZSlNwM2JGZnhoTEpKOEhnN2R0UE1KMlc3?=
- =?utf-8?B?RlZzaU44OGEvR05adk1LOFFKT3hRTUY5U3FVQUtzRVU5dTlYT2Q1NmtBQlBC?=
- =?utf-8?B?ZEg2QStCR2tqcGxIanoxd21DTlJGbVA4ZTJNem1nWmI2QkQ4VllJMW9qWHlN?=
- =?utf-8?B?dkx5UTdwYnF1Uk0wK096NkZyNm9rbWQvTzY5bjhzdFpxdU9YWDdwSHF2OFZH?=
- =?utf-8?B?QzFTM2JIcVU1ZFNXcXBBbmU2blJGTEJiWEdMcmtyWWE1cmJqaGdhOVNYcVZ1?=
- =?utf-8?B?Tm5JVmdpREtIL3NIb3I0eFgxV05SdG4wWVJFY3E2KzdIcnVVb0J4WkROeGpR?=
- =?utf-8?B?L2tBNEtEY1pUb2lWenNBNXNJdmd3NEVjZDF5OWExU0RPWXVkY2JqZDV0djdI?=
- =?utf-8?B?bjRjUFNXY2xsM011RjJUTUhpaGozQ250YXZQWTdyQjE3ajhvVkxmS3dmOVRZ?=
- =?utf-8?B?Mm0zTDEvdVNSYUNFMmRxdm53d01zdXB6Q2JCd2d6TWVzdnRNWGRoL21OU0VY?=
- =?utf-8?B?Vnl6RFc3VFViWFhJdnlLZTVhMVdIdzNFeWZGZlhSTHlsM0I0eDdKbldNYUp5?=
- =?utf-8?B?TWJSeEJ2Y0JHcDFLb0Myc1hjQnBTRHQzWU9IV0oydWpnM1h3RGJmdkpuVUUz?=
- =?utf-8?B?enBKQzU3SEdWa3BVakZTQWNaNFRGbUJqaVkzdGFQSDJ1LzRjekp1QmpiTjZz?=
- =?utf-8?B?ZnU0cDRxWjF5NWhWSmR5ZjlzUVJ0Tmh6eGNKWDdIZnhIa2VVOENnZnFKeENy?=
- =?utf-8?B?cGlIOEthc2hOaWtncEh4dGk3aXRaS0RxallyeTZJQU9LczFDbjBmeUJVdHhU?=
- =?utf-8?B?VGpuano2K05HRlNlYm5rdG9wcnZ3dUFoVDhQOE85TnluV29XaEtRQT09?=
-X-Exchange-RoutingPolicyChecked:
-	fLILp2/ajqG7J/0UcW0wwpnSBHzFM6irXsgmY+t91CI2AhDew1RsgHS8sqNjR5xPaqVlfmVTjGiMYSVhgX4DcEtV2Opp82gyKyINYfE5pKApFEqt9BFymmLtVhiXycC8G8G3aYeYa96Vk2nalXe+HaJVFcya2dVNImy31p7KXIcPPjp3uVXPyLpZwiEjvyiD6rT3tmXF4R3MqSdnLyStAE2AJFo3KiC34WvLw2n4w6gomy7If9Sn276mvqtx/vYpwLZQdXx6e4oPZwSdx7rWAQ0hDZspUvmoHNrcWA49P8c7HvYgU5WK+drql5yU+Z4YDqLpE8Lg+0I+pQ2r4QyFYw==
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	CTcEsa3qKTr1uwGu+h2X3my2cZUQfqy0tQ38naXKpnXl5A3g5fdsIxkjZt6vyRXuLn6pk7aul/VWkd1FR1uRm3gZyqm91D3w3oPOrULQWvWPAjRjefctCAxLmdmS6TMX6giqUG+S4z0NhWEyffgSZE2MJ2df5texKD5i8t9M7kcPMAifStV5xa89Op6K3BwDXiXbEFAtRU3MvSNjbJshfy8srQb2nHsPHCKjZ+p0RsGhZS9qek3uNan66YqOdxkmvuuoZ44PR7kVycrbcZc136rhEizIZoGPgkdrO0VAarzI2xWS4liLYSKspg/9jFzJlM2TO0Iv3JRKkgg9B9Sokahp+m4GH/flNBUjDpFK4f/q4p419OWZB9pRg/gp6xKU6SRJwl9+OZVNLEo+FIMIAZIA1wvu6UHF1jWSrHI8e8cwjIAC0wj5kMHq95g/OhbajV83Z5KVYxcieGkIhJ7hZntitrNn7YdaY4B6vthrWKH4ZdJ9SUtAHZB9nKyyxGv0QEzarXJI+c3deyo69rq0blY+spI3iEbc1T/eLiaQbqDx3BPPOlqG7XrbMy1yxkpPmpjlN9hbZwZ0FEYeY9fayWmHxvt3spAS2M6jHPA4cYs=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b5fdd4cb-eb7a-4e90-b8ca-08dee7cdd0e9
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB6229.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jul 2026 08:47:09.5306
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ibpVH1e9hXaxrhzGOJm1g7XCD65/E7VmrDPR/7UykZi4TmuytSGhnYJ+Rkkk2MPEmvxGM6bMGnwX5D5NV013Bw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ5PPFACCDEE1A8
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-22_02,2026-07-21_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0
- lowpriorityscore=0 spamscore=0 suspectscore=0 mlxscore=0 malwarescore=0
- adultscore=0 bulkscore=0 mlxlogscore=999 phishscore=0 classifier=spam
- adjust=0 reason=mlx scancount=1 engine=8.19.0-2606160000
- definitions=main-2607220081
-X-Proofpoint-GUID: GLG_KVuVfqaPgvVkM2hPwKuIvQA842Ke
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIyMDA4MiBTYWx0ZWRfX3AV6aHleD5YZ
- p6RA6V6L1R7HdR7+z/M4uqdjE+adE9DrP+HpGDdAPX1P8ddA74q2emVgd0bFCAcC6f4hzuV6HxX
- 2VOQUbV9U56p4/mDCqeCY3YXp8WweDMMIWFAB76YxxsZwRo90eHq
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIyMDA4MiBTYWx0ZWRfX+Ae15WRdctmG
- S64WAl6G5Ca42lq8LzJpygm+qXLMH7ArKx1ZNkEwwtNxVLfd7ZKBLI77uKh/CLJk3FM12y7p4Ys
- v102c6UL/asvy3yvm7T5J/OrxYYbZN6Cpa5uLkpwlZVrvpArW5xTKtaBYSFVNJX3PL8uj7FVaSV
- ONp4Ym1TXpYlPICCaxK+yTGhTa+zOzBKhbIp2nukZAW+QI68BVp4knGO4EEKMHjxzLazqXCGQBH
- w9jcwbSK5lxYWczht3fXmdK9fdAa0hDuuUJYaJrkUVcSb/FnXKFbAX6X+I44ZKPFE5TM5Yx6BOj
- K6GfxJoMONcIHb/0dIC/zxkBW2Mc98ctpi8pZgM9b411q1NruqR1p6ogZgQl0UHhDe6NDTIcFdI
- lSfAaF0zzZ9/exL+E2XBuCCpwdtce2tRJhhGeKWgfGg+34Dd6s2NooAMvr+dnmCXDwFQ+Rkl24Q
- BuqWJUmtlHagFna2geG+clf1yyxWDxw8uz1h/BsE=
-X-Authority-Analysis: v=2.4 cv=ZpPd7d7G c=1 sm=1 tr=0 ts=6a608392 b=1 cx=c_pps
- a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=RAioF0-LDSMA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x4eqshVgHu-cdnggieHk:22 a=ul5ZcQ9YmKhfgT_5qlkA:9
- a=QEXdDO2ut3YA:10 a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22 cc=ntf
- awl=host:12114
-X-Proofpoint-ORIG-GUID: GLG_KVuVfqaPgvVkM2hPwKuIvQA842Ke
+Mime-Version: 1.0
+Subject: [PATCH v2] scsi: ufs: Add support for the aggregated read query
+ opcode
+Reply-To: hyenc.jeong@samsung.com
+Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+To: "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "bvanassche@acm.org" <bvanassche@acm.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC: ALIM AKHTAR <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Hyeoncheol Jeong <hyenc.jeong@samsung.com>,
+	Jinyoung Choi <j-young.choi@samsung.com>, Dukhyun Kwon
+	<d_hyun.kwon@samsung.com>, Jeuk Kim <jeuk20.kim@samsung.com>, Keoseong Park
+	<keosung.park@samsung.com>, Jaemyung Lee <jaemyung.lee@samsung.com>, Jieon
+	Seol <jieon.seol@samsung.com>, Gyusun Lee <gyusun.lee@samsung.com>, Yunjae
+	Jo <yunjae00.jo@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20260722084819epcms2p49c27fce999e821385f7b5d7ea5a02868@epcms2p4>
+Date: Wed, 22 Jul 2026 17:48:19 +0900
+X-CMS-MailID: 20260722084819epcms2p49c27fce999e821385f7b5d7ea5a02868
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+cpgsPolicy: CPGSC10-223,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260710053524epcms2p82121eba4240c37112fc5669430035442
+References: <CGME20260710053524epcms2p82121eba4240c37112fc5669430035442@epcms2p4>
 
-On 21/07/2026 14:33, yangxingui wrote:
->>
->> Yeah, it would be something like that.
->>
->> But the method to solve this issue is unclear.
->>
->> Back to the original issue: hisi_sas_spinup_notify_work() calls 
->> sl_notify_ssp, but sl_notify_ssp is called already in 
->> hisi_sas_phyup_work_common() - so why is it needed to be called again? 
-> In fact, the trigger for this point sometimes fails to take effect.
-> 
->> If it is because hisi_sas_phyup_work_common() is only for direct- 
->> attached disks, and we need to call sl_notify_ssp for expander 
->> attached disks?
-> 
-> NOTIFY(SPIN UP) is primarily intended for direct-attached HDD wake-up 
-> post-IDENTIFY exchange. Routing it to an Expander may conflict with SAS 
-> topology constraints and could disrupt link-layer arbitration, 
-> indicating that a conditional disable mechanism for cfg_notify_en in 
-> non-direct topologies is advisable.
+UFS 5.0 / JEDEC 220H introduces the AGGREGATED READ query opcode (0x9),
+which retrieves an aggregated data packet in a single query request. The
+packet may bundle multiple Descriptors, Attributes and Flags as
+group-headed groups, returned in the Data Segment of the QUERY RESPONSE
+UPIU.
 
-This problem which you are trying to solve is only for direct-attached 
-disks, right?
+Such a packet can be far larger than a single descriptor (up to 4 KiB
+vs the 255-byte descriptor limit), so its response UPIU buffer must be
+enlarged. Enlarging the shared utp_transfer_cmd_desc would waste ~4 KiB
+per tag, so add a dedicated utp_devman_cmd_desc with a 4 KiB response
+area (ALIGNED_DEVMAN_RSP_SIZE), allocated once for the reserved (device
+management) tag that aggregated read uses. Regular tags keep the
+512-byte descriptor in a pool of (nutrs - UFSHCD_NUM_RESERVED) entries,
+leaving normal I/O unchanged.
+
+ufshcd_init_lrb() and ufshcd_host_memory_configure() pick the devman
+descriptor for the reserved tag and index the pool at (tag -
+UFSHCD_NUM_RESERVED) otherwise. The pre-4.1 MCQ tag recovery adds one
+compare against the devman UCD address (UFSHCI 4.1+ carries the tag in
+the CQE), and the BSG raw-UPIU and device management paths learn the new
+opcode, sizing descriptors by QUERY_AGGREGATED_MAX_SIZE.
+
+Signed-off-by: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+---
+ drivers/ufs/core/ufs-mcq.c | 14 ++++--
+ drivers/ufs/core/ufs_bsg.c | 16 +++++--
+ drivers/ufs/core/ufshcd.c  | 95 ++++++++++++++++++++++++++++----------
+ include/ufs/ufs.h          |  2 +
+ include/ufs/ufshcd.h       | 13 ++++++
+ include/ufs/ufshci.h       | 11 +++++
+ 6 files changed, 118 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 13b60a2d06db..f35c6c18578d 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -296,14 +296,20 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba, struct cq_entry *cqe)
+ 	if (hba->ufs_version >= ufshci_version(4, 1))
+ 		return cqe->task_tag;
+ 
+-	/* sizeof(struct utp_transfer_cmd_desc) must be a multiple of 128 */
++	/* Both UCD types must be a multiple of 128 */
+ 	BUILD_BUG_ON(sizeof(struct utp_transfer_cmd_desc) & GENMASK(6, 0));
++	BUILD_BUG_ON(sizeof(struct utp_devman_cmd_desc) & GENMASK(6, 0));
+ 
+ 	/* Bits 63:7 UCD base address, 6:5 are reserved, 4:0 is SQ ID */
+-	addr = (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) -
+-		hba->ucdl_dma_addr;
++	addr = le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA;
+ 
+-	return div_u64(addr, ufshcd_get_ucd_size(hba));
++	/* The devman UCD is outside the pool; return its reserved tag. */
++	if (unlikely(addr == hba->devman_ucd_dma_addr))
++		return hba->dev_cmd.tag;
++
++	/* Pool entries follow the reserved tags. */
++	return div_u64(addr - hba->ucdl_dma_addr, ufshcd_get_ucd_size(hba)) +
++		UFSHCD_NUM_RESERVED;
+ }
+ 
+ static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
+diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
+index 58b506eac6dc..176fedd496af 100644
+--- a/drivers/ufs/core/ufs_bsg.c
++++ b/drivers/ufs/core/ufs_bsg.c
+@@ -14,14 +14,18 @@
+ #include "ufshcd-priv.h"
+ 
+ static int ufs_bsg_get_query_desc_size(struct ufs_hba *hba, int *desc_len,
+-				       struct utp_upiu_query *qr)
++				       struct utp_upiu_query *qr,
++				       enum query_opcode desc_op)
+ {
+ 	int desc_size = be16_to_cpu(qr->length);
+ 
+ 	if (desc_size <= 0)
+ 		return -EINVAL;
+ 
+-	*desc_len = min_t(int, QUERY_DESC_MAX_SIZE, desc_size);
++	if (desc_op == UPIU_QUERY_OPCODE_AGGREGATED_READ)
++		*desc_len = min_t(int, QUERY_AGGREGATED_MAX_SIZE, desc_size);
++	else
++		*desc_len = min_t(int, QUERY_DESC_MAX_SIZE, desc_size);
+ 
+ 	return 0;
+ }
+@@ -35,11 +39,12 @@ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
+ 	u8 *descp;
+ 
+ 	if (desc_op != UPIU_QUERY_OPCODE_WRITE_DESC &&
+-	    desc_op != UPIU_QUERY_OPCODE_READ_DESC)
++	    desc_op != UPIU_QUERY_OPCODE_READ_DESC &&
++	    desc_op != UPIU_QUERY_OPCODE_AGGREGATED_READ)
+ 		goto out;
+ 
+ 	qr = &bsg_request->upiu_req.qr;
+-	if (ufs_bsg_get_query_desc_size(hba, desc_len, qr)) {
++	if (ufs_bsg_get_query_desc_size(hba, desc_len, qr, desc_op)) {
+ 		dev_err(hba->dev, "Illegal desc size\n");
+ 		return -EINVAL;
+ 	}
+@@ -161,7 +166,8 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 					       buff, &desc_len, desc_op);
+ 		if (ret)
+ 			dev_err(hba->dev, "exe raw upiu: error code %d\n", ret);
+-		else if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len) {
++		else if ((desc_op == UPIU_QUERY_OPCODE_READ_DESC ||
++			  desc_op == UPIU_QUERY_OPCODE_AGGREGATED_READ) && desc_len) {
+ 			bsg_reply->reply_payload_rcv_len =
+ 				sg_copy_from_buffer(job->request_payload.sg_list,
+ 						    job->request_payload.sg_cnt,
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index d3044a3089b5..a6a9b86597b0 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2944,23 +2944,41 @@ static void ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct scsi_cmnd *cmd)
+ static void ufshcd_init_lrb(struct ufs_hba *hba, struct scsi_cmnd *cmd)
+ {
+ 	const int i = scsi_cmd_to_rq(cmd)->tag;
+-	struct utp_transfer_cmd_desc *cmd_descp =
+-		(void *)hba->ucdl_base_addr + i * ufshcd_get_ucd_size(hba);
+ 	struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
+-	dma_addr_t cmd_desc_element_addr =
+-		hba->ucdl_dma_addr + i * ufshcd_get_ucd_size(hba);
+ 	u16 response_offset = le16_to_cpu(utrdlp[i].response_upiu_offset);
+ 	u16 prdt_offset = le16_to_cpu(utrdlp[i].prd_table_offset);
+ 	struct ufshcd_lrb *lrb = scsi_cmd_priv(cmd);
++	u8 *command_upiu, *response_upiu, *prd_table;
++	dma_addr_t cmd_desc_element_addr;
++
++	/* The reserved tag uses a dedicated UCD outside the pool. */
++	if (unlikely(blk_mq_is_reserved_rq(scsi_cmd_to_rq(cmd)))) {
++		struct utp_devman_cmd_desc *cmd_descp = hba->devman_ucd_base_addr;
++
++		cmd_desc_element_addr = hba->devman_ucd_dma_addr;
++		command_upiu = cmd_descp->command_upiu;
++		response_upiu = cmd_descp->response_upiu;
++		prd_table = cmd_descp->prd_table;
++	} else {
++		int slot = i - UFSHCD_NUM_RESERVED;
++		struct utp_transfer_cmd_desc *cmd_descp =
++			(void *)hba->ucdl_base_addr + slot * ufshcd_get_ucd_size(hba);
++
++		cmd_desc_element_addr =
++			hba->ucdl_dma_addr + slot * ufshcd_get_ucd_size(hba);
++		command_upiu = cmd_descp->command_upiu;
++		response_upiu = cmd_descp->response_upiu;
++		prd_table = cmd_descp->prd_table;
++	}
+ 
+ 	lrb->utr_descriptor_ptr = utrdlp + i;
+ 	lrb->utrd_dma_addr =
+ 		hba->utrdl_dma_addr + i * sizeof(struct utp_transfer_req_desc);
+-	lrb->ucd_req_ptr = (struct utp_upiu_req *)cmd_descp->command_upiu;
++	lrb->ucd_req_ptr = (struct utp_upiu_req *)command_upiu;
+ 	lrb->ucd_req_dma_addr = cmd_desc_element_addr;
+-	lrb->ucd_rsp_ptr = (struct utp_upiu_rsp *)cmd_descp->response_upiu;
++	lrb->ucd_rsp_ptr = (struct utp_upiu_rsp *)response_upiu;
+ 	lrb->ucd_rsp_dma_addr = cmd_desc_element_addr + response_offset;
+-	lrb->ucd_prdt_ptr = (struct ufshcd_sg_entry *)cmd_descp->prd_table;
++	lrb->ucd_prdt_ptr = (struct ufshcd_sg_entry *)prd_table;
+ 	lrb->ucd_prdt_dma_addr = cmd_desc_element_addr + prdt_offset;
+ }
+ 
+@@ -3157,6 +3175,7 @@ static void ufshcd_setup_dev_cmd(struct ufs_hba *hba, struct scsi_cmnd *cmd,
+ 	__ufshcd_setup_cmd(hba, cmd, lun, tag);
+ 	lrbp->intr_cmd = true; /* No interrupt aggregation */
+ 	hba->dev_cmd.type = cmd_type;
++	hba->dev_cmd.tag = tag;
+ }
+ 
+ /*
+@@ -3998,8 +4017,8 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+ {
+ 	size_t utmrdl_size, utrdl_size, ucdl_size;
+ 
+-	/* Allocate memory for UTP command descriptors */
+-	ucdl_size = ufshcd_get_ucd_size(hba) * hba->nutrs;
++	/* The reserved tag uses the dedicated UCD below, not this pool. */
++	ucdl_size = ufshcd_get_ucd_size(hba) * (hba->nutrs - UFSHCD_NUM_RESERVED);
+ 	hba->ucdl_base_addr = dmam_alloc_coherent(hba->dev,
+ 						  ucdl_size,
+ 						  &hba->ucdl_dma_addr,
+@@ -4015,6 +4034,21 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
++	/* Dedicated UCD for the reserved tag; allocate once (survives MCQ re-init). */
++	if (!hba->devman_ucd_base_addr) {
++		hba->devman_ucd_base_addr =
++			dmam_alloc_coherent(hba->dev,
++					    ufshcd_get_devman_ucd_size(hba),
++					    &hba->devman_ucd_dma_addr,
++					    GFP_KERNEL);
++		if (!hba->devman_ucd_base_addr ||
++		    WARN_ON(hba->devman_ucd_dma_addr & (128 - 1))) {
++			dev_err(hba->dev,
++				"Devman Command Descriptor Memory allocation failed\n");
++			goto out;
++		}
++	}
++
+ 	/*
+ 	 * Allocate memory for UTP Transfer descriptors
+ 	 * UFSHCI requires 1KB alignment of UTRD
+@@ -4081,23 +4115,38 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 	dma_addr_t cmd_desc_element_addr;
+ 	u16 response_offset;
+ 	u16 prdt_offset;
++	u16 response_len;
+ 	int cmd_desc_size;
+ 	int i;
+ 
+ 	utrdlp = hba->utrdl_base_addr;
+ 
+-	response_offset =
+-		offsetof(struct utp_transfer_cmd_desc, response_upiu);
+-	prdt_offset =
+-		offsetof(struct utp_transfer_cmd_desc, prd_table);
+-
+ 	cmd_desc_size = ufshcd_get_ucd_size(hba);
+ 	cmd_desc_dma_addr = hba->ucdl_dma_addr;
+ 
+ 	for (i = 0; i < hba->nutrs; i++) {
++		/*
++		 * Reserved tags (low end) use the dedicated devman UCD with a
++		 * larger response area; other tags index the pool at i - RESERVED.
++		 */
++		if (i < UFSHCD_NUM_RESERVED) {
++			cmd_desc_element_addr = hba->devman_ucd_dma_addr;
++			response_offset = offsetof(struct utp_devman_cmd_desc,
++						   response_upiu);
++			prdt_offset = offsetof(struct utp_devman_cmd_desc,
++					       prd_table);
++			response_len = ALIGNED_DEVMAN_RSP_SIZE;
++		} else {
++			cmd_desc_element_addr = cmd_desc_dma_addr +
++				cmd_desc_size * (i - UFSHCD_NUM_RESERVED);
++			response_offset = offsetof(struct utp_transfer_cmd_desc,
++						   response_upiu);
++			prdt_offset = offsetof(struct utp_transfer_cmd_desc,
++					       prd_table);
++			response_len = ALIGNED_UPIU_SIZE;
++		}
++
+ 		/* Configure UTRD with command descriptor base address */
+-		cmd_desc_element_addr =
+-				(cmd_desc_dma_addr + (cmd_desc_size * i));
+ 		utrdlp[i].command_desc_base_addr =
+ 				cpu_to_le64(cmd_desc_element_addr);
+ 
+@@ -4108,14 +4157,14 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 			utrdlp[i].prd_table_offset =
+ 				cpu_to_le16(prdt_offset);
+ 			utrdlp[i].response_upiu_length =
+-				cpu_to_le16(ALIGNED_UPIU_SIZE);
++				cpu_to_le16(response_len);
+ 		} else {
+ 			utrdlp[i].response_upiu_offset =
+ 				cpu_to_le16(response_offset >> 2);
+ 			utrdlp[i].prd_table_offset =
+ 				cpu_to_le16(prdt_offset >> 2);
+ 			utrdlp[i].response_upiu_length =
+-				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
++				cpu_to_le16(response_len >> 2);
+ 		}
+ 	}
+ }
+@@ -7638,7 +7687,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 
+ 	/* just copy the upiu response as it is */
+ 	memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
+-	if (desc_buff && desc_op == UPIU_QUERY_OPCODE_READ_DESC) {
++	if (desc_buff && (desc_op == UPIU_QUERY_OPCODE_READ_DESC ||
++			  desc_op == UPIU_QUERY_OPCODE_AGGREGATED_READ)) {
+ 		u8 *descp = (u8 *)lrbp->ucd_rsp_ptr + sizeof(*rsp_upiu);
+ 		u16 resp_len = be16_to_cpu(lrbp->ucd_rsp_ptr->header
+ 					   .data_segment_length);
+@@ -7810,10 +7860,7 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *r
+ 		 * Message is 02h
+ 		 */
+ 		if (ehs_len == 2 && rsp_ehs) {
+-			/*
+-			 * ucd_rsp_ptr points to a buffer with a length of 512 bytes
+-			 * (ALIGNED_UPIU_SIZE = 512), and the EHS data just starts from byte32
+-			 */
++			/* EHS data starts from byte32 of the devman UCD response area. */
+ 			ehs_data = (u8 *)lrbp->ucd_rsp_ptr + EHS_OFFSET_IN_RESPONSE;
+ 			memcpy(rsp_ehs, ehs_data, ehs_len * 32);
+ 		}
+@@ -9239,7 +9286,7 @@ static void ufshcd_release_sdb_queue(struct ufs_hba *hba, int nutrs)
+ {
+ 	size_t ucdl_size, utrdl_size;
+ 
+-	ucdl_size = ufshcd_get_ucd_size(hba) * nutrs;
++	ucdl_size = ufshcd_get_ucd_size(hba) * (nutrs - UFSHCD_NUM_RESERVED);
+ 	dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
+ 			   hba->ucdl_dma_addr);
+ 
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index 0d48e137d66d..29f7202173a5 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -25,6 +25,7 @@ static_assert(sizeof(struct utp_upiu_query) == 20);
+ 
+ #define GENERAL_UPIU_REQUEST_SIZE (sizeof(struct utp_upiu_req))
+ #define QUERY_DESC_MAX_SIZE       255
++#define QUERY_AGGREGATED_MAX_SIZE 4096
+ #define QUERY_DESC_MIN_SIZE       2
+ #define QUERY_DESC_HDR_SIZE       2
+ #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
+@@ -464,6 +465,7 @@ enum query_opcode {
+ 	UPIU_QUERY_OPCODE_SET_FLAG	= 0x6,
+ 	UPIU_QUERY_OPCODE_CLEAR_FLAG	= 0x7,
+ 	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
++	UPIU_QUERY_OPCODE_AGGREGATED_READ = 0x9,
+ };
+ 
+ /* bRefClkFreq attribute values */
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 248d0a5bef40..f56eafe0f29f 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -237,11 +237,13 @@ struct ufs_query {
+  * @type: device management command type - Query, NOP OUT
+  * @lock: lock to allow one command at a time
+  * @query: Device management query information
++ * @tag: tag of the reserved request in use
+  */
+ struct ufs_dev_cmd {
+ 	enum dev_cmd_type type;
+ 	struct mutex lock;
+ 	struct ufs_query query;
++	int tag;
+ };
+ 
+ /**
+@@ -952,9 +954,13 @@ enum ufshcd_mcq_opr {
+  * @ucdl_base_addr: UFS Command Descriptor base address
+  * @utrdl_base_addr: UTP Transfer Request Descriptor base address
+  * @utmrdl_base_addr: UTP Task Management Descriptor base address
++ * @devman_ucd_base_addr: UFS Command Descriptor base address for the reserved
++ *	device management tag (has a larger response area)
+  * @ucdl_dma_addr: UFS Command Descriptor DMA address
+  * @utrdl_dma_addr: UTRDL DMA address
+  * @utmrdl_dma_addr: UTMRDL DMA address
++ * @devman_ucd_dma_addr: UFS Command Descriptor DMA address for the reserved
++ *	device management tag
+  * @host: Scsi_Host instance of the driver
+  * @dev: device handle
+  * @ufs_device_wlun: WLUN that controls the entire UFS device.
+@@ -1093,11 +1099,13 @@ struct ufs_hba {
+ 	struct utp_transfer_cmd_desc *ucdl_base_addr;
+ 	struct utp_transfer_req_desc *utrdl_base_addr;
+ 	struct utp_task_req_desc *utmrdl_base_addr;
++	struct utp_devman_cmd_desc *devman_ucd_base_addr;
+ 
+ 	/* DMA memory reference */
+ 	dma_addr_t ucdl_dma_addr;
+ 	dma_addr_t utrdl_dma_addr;
+ 	dma_addr_t utmrdl_dma_addr;
++	dma_addr_t devman_ucd_dma_addr;
+ 
+ 	struct Scsi_Host *host;
+ 	struct device *dev;
+@@ -1356,6 +1364,11 @@ static inline size_t ufshcd_get_ucd_size(const struct ufs_hba *hba)
+ 	return sizeof(struct utp_transfer_cmd_desc) + SG_ALL * ufshcd_sg_entry_size(hba);
+ }
+ 
++static inline size_t ufshcd_get_devman_ucd_size(const struct ufs_hba *hba)
++{
++	return sizeof(struct utp_devman_cmd_desc) + SG_ALL * ufshcd_sg_entry_size(hba);
++}
++
+ /* Returns true if clocks can be gated. Otherwise false */
+ static inline bool ufshcd_is_clkgating_allowed(struct ufs_hba *hba)
+ {
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 9f0fdd850e54..c4d563420152 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -18,6 +18,8 @@ enum {
+ 	TASK_REQ_UPIU_SIZE_DWORDS	= 8,
+ 	TASK_RSP_UPIU_SIZE_DWORDS	= 8,
+ 	ALIGNED_UPIU_SIZE		= 512,
++	/* Larger response area, only for the devman UCD */
++	ALIGNED_DEVMAN_RSP_SIZE		= 4096,
+ };
+ 
+ /* UFSHCI Registers */
+@@ -501,6 +503,15 @@ struct utp_transfer_cmd_desc {
+ 	u8 prd_table[];
+ };
+ 
++/* Dedicated UCD for the devman/reserved slot */
++struct utp_devman_cmd_desc {
++	u8 command_upiu[ALIGNED_UPIU_SIZE];
++	u8 response_upiu[ALIGNED_DEVMAN_RSP_SIZE];
++	u8 prd_table[];
++};
++
++static_assert(QUERY_AGGREGATED_MAX_SIZE <= ALIGNED_DEVMAN_RSP_SIZE);
++
+ /**
+  * struct request_desc_header - Descriptor Header common to both UTRD and UTMRD
+  */
+-- 
+2.25.1
