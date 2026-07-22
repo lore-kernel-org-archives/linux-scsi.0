@@ -1,184 +1,181 @@
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D51623C8AE;
-	Wed, 22 Jul 2026 04:13:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02FEE361651
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 04:27:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784693588; cv=none; b=dl+/a8joc7jZsrnEoZqeHYkaipStz9dTvYpX0bsUye5k496/fc6Tz2JidHmvckGEK1SfkZB4yPelI63qkt4Ivzes92RefcdEdN+nnZonNWBlaVHCw8J2PD13hCTvEXp0aStQ7zIruBTHqu8Bd87zzoNf5aciIcLTgaH4wI/2Ea4=
+	t=1784694468; cv=none; b=r0vJcaJ/mGbeHuWln1KQjfq4HpZWq3Q5AezWjagUiTRU6/F4/Xk6E4Tu4YD+CjIYZI98Hn5Kt72ld7wLH2waLTJj6oUKxN2zBExo2mov5Cxyxmhws1DbRNde3i0Dcm6s4/VpkNCFDNmCmV6oUabmeCJBLmQUst6JxrTUOX3Ko9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784693588; c=relaxed/simple;
-	bh=2SKuNksGOFjzc1qi5KsEgeNx83BAXbgrTys3kqAHnYI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LPmqN5uW4dpp1IIzRq8Q28okTVUeiyNX1kLy5J5HavKw0mPgvpIRFG/37nnZU4DJlhiDEQSRJG999M9ZRHP+tNLDfSoztTYeFdra84Y429UvJwS34eUJouGVvfVDzY58RxIWdLFw1qyMMgvLtljhEWE/NSwfhqWNp8rTg03GuXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.245.140])
-	by APP-05 (Coremail) with SMTP id zQCowAAHOEJJQ2BqJh+7AA--.33878S2;
-	Wed, 22 Jul 2026 12:12:58 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>
-Subject: [PATCH] scsi: mpt3sas: validate variable event array spans
-Date: Wed, 22 Jul 2026 12:12:57 +0800
-Message-ID: <20260722041257.1557-1-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1784694468; c=relaxed/simple;
+	bh=sPeLc2IQVmHXjpGNFcjFB2bm9OVrLHSaOZlxlttklOY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=kIyuln3r9o+avWjGOpzz94HF6EBDxZNWhxdE7osQFvZkDcQJE4Awhit/X8jletphgdsb7956sRaP/2Obp/pWfaNB4RZb++QZdpBRX1arSAs/JtWKOkIjaDTpXpUitLWIICnotEEuKqsPXPffYmkwnbi+HovkktcIMcUY7mVBBSA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bSnsNRe7; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bSnsNRe7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C1B01F000E9;
+	Wed, 22 Jul 2026 04:27:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784694464;
+	bh=4o86OBZzWDMKVOPPeEPn9aHnOju7sqHmK/4rzWCK/g4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bSnsNRe7dRaGBhBdq8ANRblxCJoTojajThytG4zIMpF4fOfHajO2zDDfFKZu42hS8
+	 5TCJ+3Oz6kZbsTIHM/MF+f9Nh//FjOH0Rx4sVHaPlnp8drHIojoUXfLJeKzTVHI3hK
+	 f52Koz0owjoyikVwqEdRMRlK6e9+1nkJj++LdL+lV3xveXmwZE7pXdJ/pUKWZir1QH
+	 ovd7ij5NFgp36X83AnyZtvipU1o0pc1ChWQVQqjL4v5bSJhk/dm98ZWwY3hUgQv0Kp
+	 zBOUHOAclHVu0nWy9eRgOyAoDkm4GM3Lauq2f04bdqMYkhOn+XEqXPRBeeFd7NLBN6
+	 7WRcajFZwpl9w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: mpt3sas: validate variable event array spans
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Pengpeng Hou" <pengpeng@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260722041257.1557-1-pengpeng@iscas.ac.cn>
+References: <20260722041257.1557-1-pengpeng@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 22 Jul 2026 04:27:43 +0000
+Message-Id: <20260722042744.5C1B01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAAHOEJJQ2BqJh+7AA--.33878S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxCry5JF47Jw15GF43Ar1UZFb_yoWrury5pr
-	W8Ga4YkrZxtFyIvw43G3s8Cr4ag395GryDKFy5tanxZry7GryxJa1xtrn0q3WYyF45Zr4x
-	tw4YqrZI9FZ8tFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
-	8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFV
-	Cjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWl
-	x4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r
-	4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
-	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x0JUL0edUUUUU=
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-SAS topology, PCIe topology and IR configuration events contain flexible
-arrays whose element counts are supplied by firmware. Their interrupt-time
-handlers use NumEntries or NumElements without first checking that the
-corresponding array fits in EventData.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-Validate only these three variable-array event types before dispatch. Check
-that MsgLength is within the allocated reply frame, that EventDataLength is
-within MsgLength, and that the counted array fits in EventData.
+New issues:
+- [High] TOCTOU vulnerability on shared DMA memory bypasses event validation
 
-Malformed events still follow the existing ACK path before they are
-dropped, so validation does not leave an acknowledged event pending in
-firmware. Other event types retain their existing behavior.
+Pre-existing issues:
+- [High] Missing bounds check for unhandled event types allows out-of-bound=
+s read
+- [High] Kernel panic in error path due to kfree() on a flexible array memb=
+er
+--
 
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 71 +++++++++++++++++++++++++++++++++++--
- 1 file changed, 69 insertions(+), 2 deletions(-)
+--- Patch [1]: [PATCH] scsi: mpt3sas: validate variable event array spans -=
+--
+commit 151ce14025a2487b9520990fe50767c45e6d12d5
+Author: Pengpeng Hou <pengpeng@iscas.ac.cn>
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 79052f2accbd..2a9ea81d1e2b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1333,6 +1333,65 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *ioc,
- 	ioc_info(ioc, "%s\n", desc);
- }
- 
-+static bool
-+_base_variable_event_data_valid(struct MPT3SAS_ADAPTER *ioc,
-+				Mpi2EventNotificationReply_t *mpi_reply)
-+{
-+	const size_t event_offset = offsetof(Mpi2EventNotificationReply_t,
-+					     EventData);
-+	const void *event_data = mpi_reply->EventData;
-+	size_t event_data_len;
-+	size_t reply_len;
-+	u16 event;
-+
-+	event = le16_to_cpu(mpi_reply->Event);
-+	switch (event) {
-+	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
-+	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
-+	case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST:
-+		break;
-+	default:
-+		return true;
-+	}
-+
-+	reply_len = mpi_reply->MsgLength * 4;
-+	if (reply_len < event_offset || reply_len > ioc->reply_sz)
-+		return false;
-+
-+	event_data_len = le16_to_cpu(mpi_reply->EventDataLength) * 4;
-+	if (event_data_len > reply_len - event_offset)
-+		return false;
-+
-+	switch (event) {
-+	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST: {
-+		const Mpi2EventDataSasTopologyChangeList_t *data = event_data;
-+		size_t fixed_len = offsetof(Mpi2EventDataSasTopologyChangeList_t,
-+					    PHY);
-+
-+		return event_data_len >= fixed_len &&
-+		       struct_size(data, PHY, data->NumEntries) <= event_data_len;
-+	}
-+	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST: {
-+		const Mpi26EventDataPCIeTopologyChangeList_t *data = event_data;
-+		size_t fixed_len = offsetof(Mpi26EventDataPCIeTopologyChangeList_t,
-+					    PortEntry);
-+
-+		return event_data_len >= fixed_len &&
-+		       struct_size(data, PortEntry, data->NumEntries) <= event_data_len;
-+	}
-+	case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST: {
-+		const Mpi2EventDataIrConfigChangeList_t *data = event_data;
-+		size_t fixed_len = offsetof(Mpi2EventDataIrConfigChangeList_t,
-+					    ConfigElement);
-+
-+		return event_data_len >= fixed_len &&
-+		       struct_size(data, ConfigElement, data->NumElements) <= event_data_len;
-+	}
-+	default:
-+		return true;
-+	}
-+}
-+
- /**
-  * _base_sas_log_info - verbose translation of firmware log info
-  * @ioc: per adapter object
-@@ -1482,8 +1541,9 @@ _base_async_event(struct MPT3SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
- {
- 	Mpi2EventNotificationReply_t *mpi_reply;
- 	Mpi2EventAckRequest_t *ack_request;
--	u16 smid;
- 	struct _event_ack_list *delayed_event_ack;
-+	bool event_data_valid;
-+	u16 smid;
- 
- 	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
- 	if (!mpi_reply)
-@@ -1491,7 +1551,12 @@ _base_async_event(struct MPT3SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
- 	if (mpi_reply->Function != MPI2_FUNCTION_EVENT_NOTIFICATION)
- 		return 1;
- 
--	_base_display_event_data(ioc, mpi_reply);
-+	event_data_valid = _base_variable_event_data_valid(ioc, mpi_reply);
-+	if (event_data_valid)
-+		_base_display_event_data(ioc, mpi_reply);
-+	else
-+		ioc_warn(ioc, "dropping malformed event 0x%04x\n",
-+			 le16_to_cpu(mpi_reply->Event));
- 
- 	if (!(mpi_reply->AckRequired & MPI2_EVENT_NOTIFICATION_ACK_REQUIRED))
- 		goto out;
-@@ -1521,6 +1586,8 @@ _base_async_event(struct MPT3SAS_ADAPTER *ioc, u8 msix_index, u32 reply)
- 	ioc->put_smid_default(ioc, smid);
- 
-  out:
-+	if (!event_data_valid)
-+		return 1;
- 
- 	/* scsih callback handler */
- 	mpt3sas_scsih_event_callback(ioc, msix_index, reply);
--- 
-2.50.1 (Apple Git-155)
+scsi: mpt3sas: validate variable event array spans
 
+This patch adds validation for SAS topology, PCIe topology, and IR configur=
+ation
+events to ensure variable arrays fit within EventData before dispatch.
+Malformed events are dropped after being acknowledged, while other event ty=
+pes
+retain their existing behavior.
+
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
+pt3sas_base.c
+> index 79052f2accbd3..2a9ea81d1e2b0 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+[ ... ]
+> @@ -1333,6 +1333,65 @@ _base_display_event_data(struct MPT3SAS_ADAPTER *i=
+oc,
+>  	ioc_info(ioc, "%s\n", desc);
+>  }
+> =20
+> +static bool
+> +_base_variable_event_data_valid(struct MPT3SAS_ADAPTER *ioc,
+> +				Mpi2EventNotificationReply_t *mpi_reply)
+> +{
+> +	const size_t event_offset =3D offsetof(Mpi2EventNotificationReply_t,
+> +					     EventData);
+> +	const void *event_data =3D mpi_reply->EventData;
+> +	size_t event_data_len;
+> +	size_t reply_len;
+> +	u16 event;
+> +
+> +	event =3D le16_to_cpu(mpi_reply->Event);
+> +	switch (event) {
+> +	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
+> +	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
+> +	case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST:
+> +		break;
+> +	default:
+> +		return true;
+> +	}
+
+[Severity: High]
+This is a pre-existing issue, but since we are adding validation here, does
+returning true early leave other event types vulnerable to out-of-bounds
+reads?
+
+When mpt3sas_scsih_event_callback() processes unhandled events, it uses the
+unvalidated EventDataLength to calculate the payload size:
+
+    sz =3D le16_to_cpu(mpi_reply->EventDataLength) * 4;
+    fw_event =3D alloc_fw_event_work(sz);
+    ...
+    memcpy(fw_event->event_data, mpi_reply->EventData, sz);
+
+Could a compromised device supply a large EventDataLength (e.g. 0xFFFF) for
+other events, causing memcpy() to read out-of-bounds from the ioc->reply
+DMA pool?
+
+> +
+> +	reply_len =3D mpi_reply->MsgLength * 4;
+> +	if (reply_len < event_offset || reply_len > ioc->reply_sz)
+> +		return false;
+> +
+> +	event_data_len =3D le16_to_cpu(mpi_reply->EventDataLength) * 4;
+
+[Severity: High]
+Is there a Time-of-Check to Time-of-Use window here since mpi_reply is read
+directly from shared DMA memory?
+
+The validation function reads bounds from mpi_reply, but after validation
+passes, mpt3sas_scsih_event_callback() re-reads fields like EventDataLength
+and NumEntries directly from the same DMA-backed memory.
+
+Could a malicious device mutate these fields in the window between validati=
+on
+and use to bypass the checks introduced by this patch?
+
+> +	if (event_data_len > reply_len - event_offset)
+> +		return false;
+> +
+> +	switch (event) {
+> +	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST: {
+[ ... ]
+> @@ -1521,6 +1586,8 @@ _base_async_event(struct MPT3SAS_ADAPTER *ioc, u8 m=
+six_index, u32 reply)
+>  	ioc->put_smid_default(ioc, smid);
+> =20
+>   out:
+> +	if (!event_data_valid)
+> +		return 1;
+> =20
+>  	/* scsih callback handler */
+>  	mpt3sas_scsih_event_callback(ioc, msix_index, reply);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but looking at
+mpt3sas_scsih_event_callback(), is it safe to call kfree() on a flexible
+array member in the error path?
+
+If kzalloc() fails for fw_event->retries, the error handler does:
+
+    ioc_err(ioc, "failure!\n");
+    kfree(fw_event->event_data);
+    fw_event_work_put(fw_event);
+    return 1;
+
+Since event_data is declared as a flexible array member at the end of
+struct fw_event_work, doesn't passing this interior pointer to kfree()
+trigger a kernel panic?  The subsequent fw_event_work_put() already
+frees the whole structure.
+
+> =20
+>  	/* ctl callback handler */
+>  	mpt3sas_ctl_event_callback(ioc, msix_index, reply);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722041257.1557=
+-1-pengpeng@iscas.ac.cn?part=3D1
