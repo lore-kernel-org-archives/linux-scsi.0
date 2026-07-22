@@ -1,137 +1,108 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.167])
+Received: from perceval.ideasonboard.com (perceval.ideasonboard.com [213.167.242.64])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D11E38B7C3;
-	Wed, 22 Jul 2026 12:05:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.167
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784721941; cv=pass; b=KAiidgS/2uM6Hi87YOwRvUGe6PXmVkNOEyV8VgikebDIPQXYQaUTrJSyoRuWB+gXOOFJn4Wzyljv9XNCnhgv/SXSTCvUUXc2YAduXRZ887qJ1CxVBk0PuwvMN8olCxtsYqRbQ1u0ZGl4fToMPAcBw4+0IDxjnWAlCh0YiLwSQ1I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784721941; c=relaxed/simple;
-	bh=dWvhnpuRbgx7dnx0GM5hsaiy8aoHpz67573QBttKddw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=qISShQORraqqJiuddrA4sum4FNs0te/sO7W6iyH3gLSg5Jeqr9jdX+uBEfexAEwuBeDTQMVLQIMKoOTSh0iqXtU6341IFCiIgRWuUN41f7FQs6tq3s3sL4HzA2+YDDQ2JOBUNbTd6X10Q4Ezw63NbksgDDdHDz2WEg3G/ZLRbXQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=bdRryqkV; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=VgkxJyg7; arc=pass smtp.client-ip=81.169.146.167
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77D9637EFF3;
+	Wed, 22 Jul 2026 12:11:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.167.242.64
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784722300; cv=none; b=GoRiKpc2/LwXnKyV7TDxH9E7b6yQ2LaaBfkpHuZxftKr99TspvgiiiTxUcFD6ey0ZUImCl7yJeIm9J5vADRQElkyzX1BwukJTxkD9wXqzeJAjqqXi5pVdjdemq/vl5C6SaG9KKyIkSs8q+CPJLn5VXr99F2lnfBMiIEIxMRZPDY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784722300; c=relaxed/simple;
+	bh=OZFiJfGH+tCL4cL71/l+DTDw+bpYVgYJt1tADyjISdI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EeffvexJGMYegDCrv1RbF0E6zdRVBAB1wiz2t7sFwKytKdzO0NED4TsoUDkOgQ8fvT4OsD2c/a/YWWAcWybOBs1/MQKYOtGn7bDR9wfnqRn24nSV4GfCGfy0/gt4WFJ2wBbszZLaslBh2HgYd5wOZTWUIXeOK/EvkaWmAmSKhMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideasonboard.com; spf=pass smtp.mailfrom=ideasonboard.com; dkim=pass (1024-bit key) header.d=ideasonboard.com header.i=@ideasonboard.com header.b=S6EB5i1W; arc=none smtp.client-ip=213.167.242.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideasonboard.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ideasonboard.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="bdRryqkV";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="VgkxJyg7"
-ARC-Seal: i=1; a=rsa-sha256; t=1784721877; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=BoLzV76oRECAGkr24w4JioDgoYX20dnOZArQk5AR4X9nazOjygFXHgaaqEyeyCF7dS
-    1i+XOAJLfMgWKWc3lf0p1J7/g9JZheXToLQaYEjkqvrz4Ww6iApfopjD2l7e9s2zze/R
-    c3okYONqsL6LeInBR748FSSqKQnzFlGrZ2ND7yZ3Cd0MtiKibx0VXyIt5Eclb12sER9k
-    iNRotfew/OIqcylJB76wsxvei0+Jmxseo8iqUI/zRMMezODJOBZ9NKK4o58Ze+hvgjDF
-    Ao6dN3kcOho17GDXWpmSg1xkxxP7Fp/nguegdVTqc8UE9LkJdIGqUfmMpuVfbJom3qNL
-    EA2w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1784721877;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=dWvhnpuRbgx7dnx0GM5hsaiy8aoHpz67573QBttKddw=;
-    b=cQSG6ssk4KGnIyqA/K1LQdQLEFLmmR02rgPZ8YS4JcZYQslPrpmjK5Pw4f5SfuR3fv
-    tiAoIYJDEPUhGeBd//FrjxHyORjdvm9QSadVAEhY6goAsOPWReANWW0DMV/wnbeUZpaM
-    1F21zw7a5JtiIFRDTHR7Z7Rs5gNEU6zZA+QmhbwXJm4YdiLhiupRkn0BbhbiBzbWxcny
-    shPkiT5csvezOCkgOsRSDo1yG8C16xH4EM997Lk2jDU4hxO3k0UioPbcRDNlqhRh8YC0
-    OBUNHaXEkV+wwR3WriwJi695oaql6nRc36ZQwI+ZJk4IDBYA36d9zlmoa6hJieYxqZi1
-    LfiQ==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1784721877;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=dWvhnpuRbgx7dnx0GM5hsaiy8aoHpz67573QBttKddw=;
-    b=bdRryqkVMdUzF6x/AJTna35oyiL6ooeJXvQA+cBKKgwhfOhQpMDyyjJtaV+LvQ8FyL
-    o0837Uw360UFZFNAwNXyzaAn/QynLZvEDy8Uoi0rLtWhQRVC8jeFHEl5NrgGaWpVNCLB
-    IgTZ8JF+4yjTAz8/9EUypVWbf72CEWNdpZz14znePXg7YFuI1yJEdKO7cDbjsj4cJOqP
-    8pfFCCpJra6zYOURClqKNJb25wkPBpHsomFkWZS3XY/fXGXEU5S51yKyroagkwPe1sdR
-    zoKdnFJMMph12zN16zjjvtmDhW4OtHsNk0DTA0Cv+WbexH6+kMYjbafMEKSsnQD+WDkt
-    1vkg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1784721877;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=dWvhnpuRbgx7dnx0GM5hsaiy8aoHpz67573QBttKddw=;
-    b=VgkxJyg7x/LL2EhQ5C+Dpgk95ZUbnF2QijoR/5ZS6F/Mk+GIgiioNVSkQVcXcTIF+k
-    kocqExpxLXimFtizmPCA==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZik"
-Received: from [10.176.237.62]
-    by smtp.strato.de (RZmta 55.5.6 AUTH)
-    with ESMTPSA id zeddc926MC4WGZo
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Wed, 22 Jul 2026 14:04:32 +0200 (CEST)
-Message-ID: <4cfee0a964332e0e7c1c6875ec5796360b4c22a5.camel@iokpp.de>
-Subject: Re: [PATCH v2 4/6] scsi: ufs: rpmb: Validate request frame length
- before parsing
-From: Bean Huo <beanhuo@iokpp.de>
-To: Li Qiang <liqiang01@kylinos.cn>, linux-scsi@vger.kernel.org
-Cc: bvanassche@acm.org, linux-kernel@vger.kernel.org,
- alim.akhtar@samsung.com,  avri.altman@wdc.com,
- James.Bottomley@HansenPartnership.com,  martin.petersen@oracle.com,
- peter.wang@mediatek.com, beanhuo@micron.com,  can.guo@oss.qualcomm.com,
- adrian.hunter@intel.com, tomas.winkler@intel.com
-Date: Wed, 22 Jul 2026 14:04:32 +0200
-In-Reply-To: <20260717153914.26321-5-liqiang01@kylinos.cn>
-References: <cover.1784182493.git.liqiang01@kylinos.cn>
-	 <20260717153914.26321-1-liqiang01@kylinos.cn>
-	 <20260717153914.26321-5-liqiang01@kylinos.cn>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (1024-bit key) header.d=ideasonboard.com header.i=@ideasonboard.com header.b="S6EB5i1W"
+Received: from killaraus.ideasonboard.com (2001-14ba-70f3-e800--a06.rev.dnainternet.fi [IPv6:2001:14ba:70f3:e800::a06])
+	by perceval.ideasonboard.com (Postfix) with ESMTPSA id 5757C447;
+	Wed, 22 Jul 2026 14:10:36 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ideasonboard.com;
+	s=mail; t=1784722236;
+	bh=OZFiJfGH+tCL4cL71/l+DTDw+bpYVgYJt1tADyjISdI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=S6EB5i1WUdaS+auWVNS9PuYRSJyqwxE2gwR8brupm7IjI0VYtfzJsPpY5zA8FlOdB
+	 i2zxCKM2jyGMXtFqZ4Wjdr1UNmTQVrRRvXSnu425vmnzy6HFgzJ+dT2R9qSzf8HLB+
+	 0E2BylewvudBmVD2gXs79dJjAAEByVBNxZ2ljiBY=
+Date: Wed, 22 Jul 2026 15:11:35 +0300
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: sashiko-reviews@lists.linux.dev, Chris Mason <clm@fb.com>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	linux-scsi@vger.kernel.org, ksummit@lists.linux.dev,
+	workflows@vger.kernel.org
+Subject: Re: How to fix problems with the sashiko review model
+Message-ID: <20260722121135.GB629472@killaraus.ideasonboard.com>
+References: <20260722041257.1557-1-pengpeng@iscas.ac.cn>
+ <20260722042744.5C1B01F000E9@smtp.kernel.org>
+ <dcadf40a07a616de931c484bbe68f4b3f1f83b80.camel@HansenPartnership.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <dcadf40a07a616de931c484bbe68f4b3f1f83b80.camel@HansenPartnership.com>
 
-On Fri, 2026-07-17 at 23:39 +0800, Li Qiang wrote:
-> The RPMB core only verifies that request and response buffers are
->=20
-> nonempty. This callback reads req_resp at the end of the first request
->=20
-> frame before validating the request length.
->=20
-> Require a complete frame before that access.
->=20
-> Fixes: b06b8c421485 ("scsi: ufs: core: Add OP-TEE based RPMB driver for U=
-FS
-> devices")
-> Signed-off-by: Li Qiang <liqiang01@kylinos.cn>
-> ---
-> =C2=A0drivers/ufs/core/ufs-rpmb.c | 4 ++++
-> =C2=A01 file changed, 4 insertions(+)
->=20
-> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-> index ffad049872b9..431f85b36876 100644
-> --- a/drivers/ufs/core/ufs-rpmb.c
-> +++ b/drivers/ufs/core/ufs-rpmb.c
-> @@ -69,6 +69,10 @@ static int ufs_rpmb_route_frames(struct device *dev, u=
-8
-> *req, unsigned int req_l
-> =C2=A0
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0hba =3D ufs_rpmb->hba;
-> =C2=A0
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/* req_resp is at the end of a=
-n RPMB frame. */
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (req_len < sizeof(*frm_out)=
-)
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0return -EINVAL;
-> +
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0req_type =3D be16_to_cpu(=
-frm_out->req_resp);
-> =C2=A0
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0switch (req_type) {
-> --
-> 2.43.0
+On Wed, Jul 22, 2026 at 07:58:48AM -0400, James Bottomley wrote:
+> There doesn't seem to be a Sashiko list, so I added ksummit as the most
+> likely one to catch attention.  We got this review in SCSI on this
+> thread:
 
-the two Sashiko findings are a separate story, this patch is ok to me.
+workflows@vger.kernel.org seems a good candidate for discussions about
+tooling. The mailing list was created to share workflows and tools
+between maintainers as far as I understand.
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+> https://lore.kernel.org/linux-scsi/20260722041257.1557-1-pengpeng@iscas.ac.cn/
+> 
+> But this part of the review
+> 
+> On Wed, 2026-07-22 at 04:27 +0000, sashiko-bot@kernel.org wrote:
+> [...]
+> > > +
+> > > +	reply_len = mpi_reply->MsgLength * 4;
+> > > +	if (reply_len < event_offset || reply_len > ioc->reply_sz)
+> > > +		return false;
+> > > +
+> > > +	event_data_len = le16_to_cpu(mpi_reply->EventDataLength) *
+> > > 4;
+> > 
+> > [Severity: High]
+> > Is there a Time-of-Check to Time-of-Use window here since mpi_reply
+> > is read directly from shared DMA memory?
+> > 
+> > The validation function reads bounds from mpi_reply, but after
+> > validation passes, mpt3sas_scsih_event_callback() re-reads fields
+> > like EventDataLength and NumEntries directly from the same DMA-backed
+> > memory.
+> > 
+> > Could a malicious device mutate these fields in the window between
+> > validation and use to bypass the checks introduced by this patch?
+> 
+> Is wrong.  Hardware may never be presumed to be malicious (well, except
+> if it's virtual hardware provided by an untrusted host to a
+> confidential guest, but that's a very small list of drivers or it's a
+> USB or thunderbolt device designed to attack or exfiltrate data from an
+> unattended system).  It may be buggy, but we never presume bugs until
+> someone finds a device exhibiting the bug in the field (so we don't
+> proactively fix them).
+> 
+> The bigger part of this is that I was looking into how to fix this
+> (which might interest a broader swathe of developers than just SCSI). 
+> I think the fault is in the review prompts:
+> 
+> https://github.com/masoncl/review-prompts
+> 
+> And what I need to do is to add an additional drivers.md file to
+> kernel/subsystems explaining this?  If that's right I can send a pull
+> request, but I thought I'd check here because the audience is much
+> bigger than if it were to get discussed in the github PR.
 
+-- 
+Regards,
+
+Laurent Pinchart
