@@ -1,81 +1,122 @@
-Received: from relay.hostedemail.com (smtprelay0015.hostedemail.com [216.40.44.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE52E43BDA0
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 15:38:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.15
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784734729; cv=none; b=ZaJROU+0CSnH+SskH1hjv93/n5OGGf/aYWa5ZWeRjMUJsRm0oDYVbI9+8H+Xp3YlqBh0IEw2EXoHgQN0C+zNjc7LMMe6FT22LmDoSwiWycEjVWw9FnaKLmYQsexo3wUEHPvwwtBUaiLgWKifgz93fTZ4MjgRnUJkBZAoQetC6Po=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784734729; c=relaxed/simple;
-	bh=KISgkJl+MCzGelmSNtGA0tEVHWBJ5lotjdmka1PaMmQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bNhm5oVpZ/79TPJ4bSWyecQci/srgJmsFuvHlXCwai8L0d0v0xhePq3FGHSrYMi/M3bnhw7DFBWcAvsjWWZiYkv8fElKUpUOZEW3ilzVDbM1BmDCNohjpLGsv5m7pAyQPT4Ne/vRYxmzmjdO19CYjajEhRol+3f+G00CbId0orw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
-Received: from omf14.hostedemail.com (lb01a-stub [10.200.18.249])
-	by unirelay09.hostedemail.com (Postfix) with ESMTP id 7253880211;
-	Wed, 22 Jul 2026 15:38:46 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf14.hostedemail.com (Postfix) with ESMTPA id 6B19432;
-	Wed, 22 Jul 2026 15:38:44 +0000 (UTC)
-Date: Wed, 22 Jul 2026 11:39:04 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH 
- <gregkh@linuxfoundation.org>, sashiko-reviews@lists.linux.dev, Chris Mason
- <clm@fb.com>, Roman Gushchin	 <roman.gushchin@linux.dev>,
- linux-scsi@vger.kernel.org, ksummit@lists.linux.dev
-Subject: Re: How to fix problems with the sashiko review model
-Message-ID: <20260722113904.38fa087b@gandalf.local.home>
-In-Reply-To: <96e5845db5e8e4f2d2253c2014b00d0db093ff21.camel@sipsolutions.net>
-References: <20260722041257.1557-1-pengpeng@iscas.ac.cn>
-	<20260722042744.5C1B01F000E9@smtp.kernel.org>
-	<dcadf40a07a616de931c484bbe68f4b3f1f83b80.camel@HansenPartnership.com>
-	<2026072224-moisture-gonad-409f@gregkh>
-	<e8f7c3614c15a86b335576074fec1768d95f3df4.camel@HansenPartnership.com>
-	<e30c8cebe5d0a6cfada18c633be0125774ef0c7f.camel@sipsolutions.net>
-	<5a2ce0b0eab27354d62450018f9843be83c72697.camel@HansenPartnership.com>
-	<96e5845db5e8e4f2d2253c2014b00d0db093ff21.camel@sipsolutions.net>
-X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E9D5347BAF
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 15:42:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.177
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784734937; cv=pass; b=jNyK9cJFjw2En7reVLV1u3tCCoD1uityO7AZtpzQj5w3/p/L1Ag0CeomSt/Fhbzwcm/IcMuEdff/GHwgapRQt839Qtim6rrRT9zjH1KCCTLSVHhdzSmuNLW9q/87dCidmM/RgH/gz1WdolBcReWy0ZzUFgwQsVYAAaJO/uciMgc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784734937; c=relaxed/simple;
+	bh=W3qDeXLetR0TsLy6YU/1B34IhqeSacUbQ8FGxwJODhs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=aGyi9DHeBih9Hwo+ucVWP8P42hk/28QKInU+A6lsmnL7EP2mQuKrshBmFjxHSiyDThCLVlm1X3nIuKLAzNE6pLLus8H0Ap4UH7YVauX2/ehGMl6aYrd634YOBoT7srNTMfQ5kubDjgUdYBkSyNRxUJsXPYP/xSYATlEo2NM4VX4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YBN5a70D; arc=pass smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YBN5a70D"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2cf4c37dbe6so5012735ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 08:42:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784734934; cv=none;
+        d=google.com; s=arc-20260327;
+        b=XrIY/yiqDMsjnBtPOStiTq3zXigqe4jq6z96WAPLBUF3E6km8JT4xNjWSSnDvNniIY
+         W67U7v/OGzYky1t8ncX+VL7JwpglCx15qVr4Z/iknp5r2WDf8mLymKdixBllcVYSs2vH
+         SnCYn7tblM79B8Ug9HDhZcD/DoMiRAF3s4rMcdryk9kMTaiegBAT5oLIpY+StCpoAjzV
+         8dKXqwAuuts/Am5S1v+3aodwcjRMT0Odi3OFPRvdvaMxka0ONFvC0VLALZyQqXArAMZ/
+         6onpHwxxpxOMjTymSgUtGxEyETvc88sq/DZgL5ArRLosPIXo+PN5VD2B+bM5ZC2T66RD
+         0OQw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=TTqYZMK9fGKKUMNkPtpKKlAD3TWJJcDsNL9MVJWEDng=;
+        fh=XwT3QI1GbFpybM06rHf+B1MmgORLvw7kzKLa/z6UYo4=;
+        b=Lwu8YklT61t8iuKFWWOP5Z6KV3Xsti25jM2uG6aQ3OxwGTkSsWzQEOx9MkD9CZgvYV
+         xzWPahz3yyHEApAbF8dHKeYlfTPEwNcmvIEvDXuLce8zbQqGJ2D5fqI/fPLzbvPYA6/G
+         m1dDAa+6Z7adWWah71em8FrkFnB9nIEqt6Cc+MPPeMZvBu4uVmnB9gs7sIKBQBOAoPZb
+         YHhc0w/dkBcWtZyUvSDidu61aKQgA2xAZUJ8g+4ZfhT6kUO+SOQn1m4ASoxs1lbWKBg4
+         sby6QtknB8HF5UJI10q+qK2bE1/FJednV6JgOlaEZwikVlJOdPgeJ0/N34CArSbTFwJ5
+         OqWQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784734934; x=1785339734; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=TTqYZMK9fGKKUMNkPtpKKlAD3TWJJcDsNL9MVJWEDng=;
+        b=YBN5a70DYN+rqz3hvYcSOe2EjSnZmgblM9Wa8zzxMtJq6E177b0OGfbhYk8rg3Z8Ed
+         lX5k7IIHFupy9vuPmIrT1FxGTuA2TwhSoXjGHFO79SKVvl9f1gaGD2/ApSidL0uvUcLj
+         gt55/aw65e0i8mFC8BXq6m5AS8pPi/bWCD8Z+GnfCss7J43LCfAQL39U9ewY9mHJMu++
+         QbhcWyUpfYZiofAw3SfZjP7u9b2IbVqgrB6AERnbTO3Nkn85PK+bYQAlhvNK9CUvzIT2
+         mIWdveALOEDOg0g2OQxnAiKQHZjca57X7TMN3ugF+ja+/vBFzS90d0RvLVaHYvBaplRv
+         Xizw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784734934; x=1785339734;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=TTqYZMK9fGKKUMNkPtpKKlAD3TWJJcDsNL9MVJWEDng=;
+        b=WPg8diCkeVoA7iaJcB4YvoeeygkDfz6eYaVYlCifyp7BL4aZQh/1w6dPSWQPrCcifu
+         VPm5aeGYZ7y8ZKrMHewlTQVEUF2nilpDNVWEO8UEowOT3eQoJ+Lrce9kg+xH8UDLYr7H
+         PmreA0ZTafzYeSmmXMwBEp1ITWFRZ91S7K4gp/yqQfvv28m70mkV1gM+/DXafA9jV6Oj
+         DzIOXernxI6zTbzt7kd1szoGg3TKc/9MIhjBp92NNal4pLeHHGbRS0g2EboHqdG3MuYG
+         mLwlFjbpqPUqrWe/bshfPmnP6bxk0qVAZbXLvzjsgLj1g0CKjZ7zBD/4GzqoWHMfGRgQ
+         IwYA==
+X-Forwarded-Encrypted: i=1; AHgh+RoiUuYf62x2e2klK57Lh1xM2Cp9QJeURC2gzlwXIQey3Q2etASViq7jOVru3ONrAzfITVeQZao0YYDQ@vger.kernel.org
+X-Gm-Message-State: AOJu0YxYgQnvZ7B0DQp5VpHILMZJB7vNDhd/gXR5Y0YetYPBNwCB1UUr
+	G2mn/OTBiG59vRjedocpd/CFTzGG1FpkIvyYD7/kfYPD0Nzbz2fS0Ot0vnF5Mzunxy22xm2bBMM
+	DLA/J7cKTz9c/x/zFdFcNH5mZqLUQink=
+X-Gm-Gg: AR+sD1233nyVpDvh2aTVmMxrwp8TYJyHUQoQK6vkRCP/+d2YbxiV49w5ti2Gnd56Asa
+	+gwaEpPuaNhA5WljWK49qUsBQ+tV0cJ9QWQ/OnGxbfaIFL9S+j82ImuFwbt2EH4DMe+p2w+0Z4c
+	A+zW+1iv/kz1Hrg2lNTC+XjJRFxQxWYZBIOExGDUJZdb/vQc0nQ9Dlr4tCZ1bmvNlRZEA4Qd4Uj
+	UzB+pNZNcXbhOyY3EE5W5DLAcUuI5wXwCSpcVnGrXub4Uyu/s/zKfaaGeRDLTdWisHeagMq8meS
+	Mt7v0I/F2kYAeyXipd1TDU6XoguJ/+frpKy2McpmUCuGQs1SjQ2AXNYx+CKNU+h/b6MyKyRNDVD
+	2EQ==
+X-Received: by 2002:a17:903:324d:b0:2ca:ecf6:9115 with SMTP id
+ d9443c01a7336-2cf802b7fcamr62975835ad.2.1784734933954; Wed, 22 Jul 2026
+ 08:42:13 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Rspamd-Server: rspamout01
-X-Rspamd-Queue-Id: 6B19432
-X-Stat-Signature: shz7ohbz3qb6555czgngxnptye9pyg5c
-X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX18zeszmkViJNf4SCj5aDvCQ59p+2uNrD8A=
-X-HE-Tag: 1784734724-189888
-X-HE-Meta: U2FsdGVkX1/MLTwQ9lgHj++8/oEQ3DAygXajcifG5JjWz9t+aABZFRvOKq5TBZ9Di7gEHiBaBiU1uJQC95QW7mLOxCzLU2Dnkau5+wBcT7f0gCReUNfWtr17D9qH1SITFsIHYIwNGIwpHq2WTKbzsOvsY7LIy+LTm8R0+DtPKGveU6Iu5Ie7Yz782XzG+55hrE9sSK+c6JEe/M7Qp/T/BlAHMMEu1rBwOL9vVzp4ufXCrUOEyUDAm1iTg8KQqWU0kTY/2T5awFjGtv2qlk+6fKX7lbQa4sGYlN0S//nl1wv5u9ZbLIWknpfSYw4XItczaY7YB9nZxWaFnl96ZfXwPrwMfKbs0vTiYSjzaNS2q0lU4lAtygWzu/v2e2jNiNn2
+References: <20260722041257.1557-1-pengpeng@iscas.ac.cn> <20260722042744.5C1B01F000E9@smtp.kernel.org>
+ <dcadf40a07a616de931c484bbe68f4b3f1f83b80.camel@HansenPartnership.com>
+ <2026072224-moisture-gonad-409f@gregkh> <f2eb5423-b5e8-4b8a-9d28-974dc0eef892@roeck-us.net>
+ <8cb7a4a8a13bb003daa1d1413517e104955772d3.camel@HansenPartnership.com>
+In-Reply-To: <8cb7a4a8a13bb003daa1d1413517e104955772d3.camel@HansenPartnership.com>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date: Wed, 22 Jul 2026 17:41:58 +0200
+X-Gm-Features: AUfX_mxNJUq41Ky7nzLh3VQVuQID0gIoN9NG7LbJh_SeLBjqg6uwGAOlwPy3vjM
+Message-ID: <CANiq72mwwG6M1=d-UW8CU=R+PoNzZii_mxZ_5=k5NehGP87mzQ@mail.gmail.com>
+Subject: Re: How to fix problems with the sashiko review model
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Guenter Roeck <linux@roeck-us.net>, Greg KH <gregkh@linuxfoundation.org>, 
+	sashiko-reviews@lists.linux.dev, Chris Mason <clm@fb.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, linux-scsi@vger.kernel.org, 
+	ksummit@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 22 Jul 2026 16:25:03 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+On Wed, Jul 22, 2026 at 5:29=E2=80=AFPM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> OK, now I'm confused.  I thought
+>
+> https://github.com/masoncl/review-prompts
+>
+> was the source of truth for this, but that project seems to have been
+> copied into sashiko rather than pulled in as a module.  If you want to
+> improve the review prompts do you now have to submit to both (which is
+> getting to be a bit wasteful)?
 
-> There's also a risk thing - if you erroneously get a report for SCSI (as
-> you did, IIUC) then you can opt out at that point and not worry about it
-> again.
-> 
-> If we erroneously _don't_ get a report for something that didn't speak
-> up because they're not on the list, didn't dare say anything, didn't pay
-> attention, etc. then nobody ever knows until someone starts exploiting
-> it?
+As far as I understand Mason's is being pulled from Sashiko's, so we
+submitted to Mason too.
 
-I agree with Johannes here. It's one thing to get an annoying report that
-says "You can be compromised by your hardware" when the hardware is
-trusted. I have the same issue with boot parameters. But I rather opt-in
-than have the case that I'm the odd one out where my hardware is not
-trustworthy, but I don't know I have to take action to have it checked.
+Maybe they also sync the other way around?
 
-That is, getting a false positive tells you that you need to take action to
-opt out (perhaps the report can say "if you trust the hardware go to <link>
-to opt out of this message). But it's much worse if we let security issues
-escape because the maintainer didn't opt-in. As there's nothing to tell the
-maintainer they need to opt-in to begin with.
-
--- Steve
+Cheers,
+Miguel
