@@ -1,261 +1,128 @@
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB85438033
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 20:23:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D060C43933E;
+	Wed, 22 Jul 2026 20:25:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784751822; cv=none; b=YeuMRWDbKo5qDkNRQPWP4HNdFryhx5Zb+/5L3snALKbQFtdNjBZlIwwWqFuq1gS7LAIV/yrBw3YX7cG0+QV1jFVA/uXOIUvX7raWiHpaNTHCFd5xoZhquRjEIhOeudZH2rWXpLIpUbhBuPL/OfoYxr48xVdmp3a5VWHCgRcDR1k=
+	t=1784751951; cv=none; b=jKmO090X6UBfUQK2C0iCsbrp9f6VjC0gy5ombEPfT0NoPDmhlmEvThU+Y4LPXh2tMMzwdrPR6AlMwGsDQuk5Tjk4+/76ekKcTZ1HSSDmrILAlfa0R8hO1GvJoe0/pizRRg5DZtuGIaarmUPo598ONYBMVMpff+VkhCgRpKvQ+XI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784751822; c=relaxed/simple;
-	bh=6FBzIc1FVcbv5b3Y+Vsx38EgHa3xfyWzqwuiqH4WvNs=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qIsM6zbZEtdQOWAZEe5+xc0LE0i4TYzwtL0M3Dxn/7gGH4V9M2ACThbnolB00msMGzkxmy0rvbFS6cwO9zkgoO6tfRM4D69+gnsJnvH1Wy22qOYoEH5Vke3Gf+3lLV4pq+988Cw3zxa04lXlS82CGfV6TxP6VH1kNCiPt6n5l94=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=D4FMd9G0; arc=none smtp.client-ip=68.232.154.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
+	s=arc-20240116; t=1784751951; c=relaxed/simple;
+	bh=79urgaqBei75EenLhvUZ0F2DLG/0QKpQ9L58tzCfTfw=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ttA/HCFHk7Zhh4ec4cQYRTjvdPvHxZIWjhGvHYyyDH2p+gb/088DKk9EYznIpXkD42bWJMqoZWsYUoCYVX4SxxWg0OOI67eCU++C/A0tf3Q+Ttk8Rf7kT7kNB5gzQcqrkyG7FQVAFOXWFbecQxvAHJznRHa8yncb5YacfAPaXtc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OdoQby1y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="D4FMd9G0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1784751820; x=1816287820;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=6FBzIc1FVcbv5b3Y+Vsx38EgHa3xfyWzqwuiqH4WvNs=;
-  b=D4FMd9G0SJlq9uaWY4roMsbrvvPJRPNuMYvpyvRl/6LBcfDo4hiGq6Vq
-   XUVwyz6d+eB6n7BDv9hAqotvmYEP3oVqb8QSfdnjoz0vcKRLnGztfivpK
-   JEHVdPQO2ddLKdMxwU0u7u9c6Aa9l6cv4xttmLfThv4S1nJkuae8TmlXm
-   RMe4/2UFAc1qq+AgzgM7HO1X+fAJC2EIzopDr3dElla7KIWtMW5kW5BGF
-   vfhLyvE1eZCmhTZPbB7tjEf6E+g4zb5FiKKRN86XCmJdgtUclceBYVfT2
-   zz9nmJ6lCAolVDzbsdBUTq+zbHhEs1ZOfp7V5KaVMlX47amauk/uzcU7m
-   w==;
-X-CSE-ConnectionGUID: bceh3xWkSOaMSyonqO5K2Q==
-X-CSE-MsgGUID: jUM0qGX8QrauvzxN0J0DQQ==
-X-IronPort-AV: E=Sophos;i="6.25,179,1779174000"; 
-   d="scan'208";a="60160551"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jul 2026 13:23:38 -0700
-Received: from dks-rocky10u1-dev.pdev.net (10.10.85.11) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.58; Wed, 22 Jul 2026 13:23:38 -0700
-From: David Strahan <david.strahan@microchip.com>
-To: <david.strahan@microchip.com>, <linux-scsi@vger.kernel.org>
-CC: <don.brace@microchip.com>
-Subject: [PATCH] scsi: smartpqi: add support for CCISS_BIG_PASSTHRU ioctl
-Date: Wed, 22 Jul 2026 15:23:25 -0500
-Message-ID: <20260722202327.5242-2-david.strahan@microchip.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260722202327.5242-1-david.strahan@microchip.com>
-References: <20260722202327.5242-1-david.strahan@microchip.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OdoQby1y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A11DE1F000E9;
+	Wed, 22 Jul 2026 20:25:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784751949;
+	bh=4nEAXoFntF8VgCkl8w1GI6aqAiYf84Td6tNogyTbW74=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=OdoQby1ymbwJnETnnxXBvIK0j3kWjZa7oaf/tjXlIV+NDaKgEThIu5HbLDolciZ7Q
+	 VfokpebCZeoXQAzl/4eaumJ9vgY0OLsMXmJRHkhTGGMRIvwIUFYooXt6LG7Y8ZgYdW
+	 RFH0SG/d4dhbY9iQmlsJbBsh/bU9Tp7zNYOg1umeGLXibaqyYPuS/NgOIjeRzHAEfM
+	 y647xCGucXXHkekFpWkS3Fvy2cIHcolHYOc3yfdk7gptrXpCbEkfkytIV9+e5J9CRY
+	 QmJ5BP9oQVF5PVBbXPfUFtub/B1MjEDdI0p7b0Qxlx4FvbMatyfDGIlbliKHl+11Wa
+	 U/mQ+WKGVKU0A==
+Date: Wed, 22 Jul 2026 22:25:44 +0200
+From: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Greg KH 
+ <gregkh@linuxfoundation.org>, sashiko-reviews@lists.linux.dev, Chris Mason
+  <clm@fb.com>, Roman Gushchin <roman.gushchin@linux.dev>,
+ linux-scsi@vger.kernel.org, ksummit@lists.linux.dev
+Subject: Re: How to fix problems with the sashiko review model
+Message-ID: <20260722222544.06a1dd1a@foz.lan>
+In-Reply-To: <a05e2ddea75895afdff63425d2fd47f90bdf65c8.camel@HansenPartnership.com>
+References: <20260722041257.1557-1-pengpeng@iscas.ac.cn>
+	<20260722042744.5C1B01F000E9@smtp.kernel.org>
+	<dcadf40a07a616de931c484bbe68f4b3f1f83b80.camel@HansenPartnership.com>
+	<2026072224-moisture-gonad-409f@gregkh>
+	<e8f7c3614c15a86b335576074fec1768d95f3df4.camel@HansenPartnership.com>
+	<e30c8cebe5d0a6cfada18c633be0125774ef0c7f.camel@sipsolutions.net>
+	<5a2ce0b0eab27354d62450018f9843be83c72697.camel@HansenPartnership.com>
+	<20260722170901.30bdae6a@localhost>
+	<a05e2ddea75895afdff63425d2fd47f90bdf65c8.camel@HansenPartnership.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: chn-vm-ex01.mchp-main.com (10.10.85.143) To
- chn-vm-ex01.mchp-main.com (10.10.85.143)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-From: David Strahan <David.Strahan@microchip.com>
+On Wed, 22 Jul 2026 11:24:38 -0400
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-Add pqi_big_passthru_ioctl() to handle CCISS_BIG_PASSTHRU ioctl
-requests. The existing passthru ioctl uses a 16-bit integer for
-the I/O buffer size, limiting transfers to 64KB. The big passthru
-ioctl uses BIG_IOCTL_Command_struct which stores the buffer size as
-a 32-bit integer, allowing larger transfers required by some
-management utilities.
+> On Wed, 2026-07-22 at 17:09 +0200, Mauro Carvalho Chehab wrote:
+> > On Wed, 22 Jul 2026 10:17:40 -0400
+> > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> >  =20
+> > > On Wed, 2026-07-22 at 16:00 +0200, Johannes Berg wrote: =20
+> > > > On Wed, 2026-07-22 at 09:42 -0400, James Bottomley wrote:=C2=A0  =20
+> > > > >=20
+> > > > > Well, I noted that in my reply above.=C2=A0 The way I was thinking
+> > > > > of implementing it was to add a general instruction file for
+> > > > > drivers which would make hardware trusted for pretty much
+> > > > > everything and then instruct the AI to consult driver specific
+> > > > > files for overrides to this so we could add the additional
+> > > > > threat checks to usb.md and virt.md=C2=A0  =20
+> > > >=20
+> > > > I guess it's a question which way around it should be - but I'll
+> > > > note that generally for wifi customers tend to not trust the
+> > > > "hardware" because it's mostly firmware, is generally buggy and
+> > > > can be attacked over the air too...
+> > > >=20
+> > > > Personally (with that background) I'd tend to lean towards saying
+> > > > the high-performance stuff that does want/need to trust the
+> > > > device should opt out, it's harder to get that wrong. If we
+> > > > generally opt out as you describe and then forgot to include
+> > > > something, we might have issues.=C2=A0  =20
+> > >=20
+> > > So this is just an efficiency thing.=C2=A0 There are 144 driver
+> > > subsystems, so if most of the want to trust the hardware it makes
+> > > more sense to have this as default but overriden by subsystems.=C2=A0
+> > > However, if most of the 144 don't trust their hardware then
+> > > absolutely, I agree, it should be per-subsystem opt in.=C2=A0 Part of
+> > > the reason for the post was to gauge this ... and so far I count
+> > > three opt outs. =20
+> >=20
+> > I don't trust hardware/firmware. They can be buggy.  =20
+>=20
+> Wait, buggy is different; we have potentially buggy in SCSI as well
+> (rather a lot of it, in fact).  However, we don't fix theoretical
+> hardware bugs, we require users to specify a device (which they could
+> add to the code as comments to keep sashiko quiet).
 
-Add CCISS_BIG_PASSTHRU_SUPPORTED to uapi/linux/cciss_ioctl.h and
-return 0 from pqi_ioctl() to advertise driver support.
-Userspace tools can send this ioctl to probe whether the driver
-supports CCISS_BIG_PASSTHRU before issuing it.
+That depends on the type of theoretical bug: for instance, if a value
+is used to calculate an offset into an array, it makes sense to have
+a check to avoid accessing data outside the array size. Also, if
+a value is used as a denominator, it makes sense to check if the value
+is not zero.
 
-Co-developed-by: Mike McGowen <mike.mcgowen@microchip.com>
-Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
-Signed-off-by: David Strahan <david.strahan@microchip.com>
-Acked-by: Don Brace <don.brace@microchip.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 144 ++++++++++++++++++++++++++
- include/uapi/linux/cciss_ioctl.h      |   1 +
- 2 files changed, 145 insertions(+)
+We do have such kind of checks on most media drivers - and there
+ended helping to avoid OOPSes due to problematic hardware. That's
+specially true on peripheral hardware like USB devices: they tend
+to have a lot of such bugs, up to the point that we can't really
+trust the device.
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 3a75b9f..473f1c9 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -6935,6 +6935,144 @@ out:
- 	return rc;
- }
- 
-+static int pqi_big_passthru_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
-+{
-+	int rc;
-+	char *kernel_buffer = NULL;
-+	u16 iu_length;
-+	size_t sense_data_length;
-+	BIG_IOCTL_Command_struct iocommand;
-+	struct pqi_raid_path_request request;
-+	struct pqi_raid_error_info pqi_error_info;
-+	struct ciss_error_info ciss_error_info;
-+
-+	if (pqi_ctrl_offline(ctrl_info))
-+		return -ENXIO;
-+	if (pqi_ofa_in_progress(ctrl_info) && pqi_ctrl_blocked(ctrl_info))
-+		return -EBUSY;
-+	if (!arg)
-+		return -EINVAL;
-+	if (!capable(CAP_SYS_RAWIO))
-+		return -EPERM;
-+	if (copy_from_user(&iocommand, arg, sizeof(iocommand)))
-+		return -EFAULT;
-+	if (iocommand.buf_size < 1 &&
-+		iocommand.Request.Type.Direction != XFER_NONE)
-+		return -EINVAL;
-+	if (iocommand.Request.CDBLen > sizeof(request.cdb))
-+		return -EINVAL;
-+	if (iocommand.Request.Type.Type != TYPE_CMD)
-+		return -EINVAL;
-+
-+	switch (iocommand.Request.Type.Direction) {
-+	case XFER_NONE:
-+	case XFER_WRITE:
-+	case XFER_READ:
-+	case XFER_READ | XFER_WRITE:
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	if (iocommand.buf_size > 0) {
-+		kernel_buffer = kmalloc(iocommand.buf_size, GFP_KERNEL);
-+		if (!kernel_buffer)
-+			return -ENOMEM;
-+		if (iocommand.Request.Type.Direction & XFER_WRITE) {
-+			if (copy_from_user(kernel_buffer, iocommand.buf,
-+				iocommand.buf_size)) {
-+				rc = -EFAULT;
-+				goto out;
-+			}
-+		} else {
-+			memset(kernel_buffer, 0, iocommand.buf_size);
-+		}
-+	}
-+
-+	memset(&request, 0, sizeof(request));
-+
-+	request.header.iu_type = PQI_REQUEST_IU_RAID_PATH_IO;
-+	iu_length = offsetof(struct pqi_raid_path_request, sg_descriptors) -
-+		PQI_REQUEST_HEADER_LENGTH;
-+	memcpy(request.lun_number, iocommand.LUN_info.LunAddrBytes, sizeof(request.lun_number));
-+	memcpy(request.cdb, iocommand.Request.CDB, iocommand.Request.CDBLen);
-+	request.additional_cdb_bytes_usage = SOP_ADDITIONAL_CDB_BYTES_0;
-+
-+	switch (iocommand.Request.Type.Direction) {
-+	case XFER_NONE:
-+		request.data_direction = SOP_NO_DIRECTION_FLAG;
-+		break;
-+	case XFER_WRITE:
-+		request.data_direction = SOP_WRITE_FLAG;
-+		break;
-+	case XFER_READ:
-+		request.data_direction = SOP_READ_FLAG;
-+		break;
-+	case XFER_READ | XFER_WRITE:
-+		request.data_direction = SOP_BIDIRECTIONAL;
-+		break;
-+	}
-+
-+	request.task_attribute = SOP_TASK_ATTRIBUTE_SIMPLE;
-+
-+	if (iocommand.buf_size > 0) {
-+		put_unaligned_le32(iocommand.buf_size, &request.buffer_length);
-+
-+		rc = pqi_map_single(ctrl_info->pci_dev,
-+			&request.sg_descriptors[0], kernel_buffer,
-+			iocommand.buf_size, DMA_BIDIRECTIONAL);
-+		if (rc)
-+			goto out;
-+
-+		iu_length += sizeof(request.sg_descriptors[0]);
-+	}
-+
-+	put_unaligned_le16(iu_length, &request.header.iu_length);
-+
-+	if (ctrl_info->raid_iu_timeout_supported)
-+		put_unaligned_le32(iocommand.Request.Timeout, &request.timeout);
-+
-+	rc = pqi_submit_raid_request_synchronous(ctrl_info, &request.header,
-+		PQI_SYNC_FLAGS_INTERRUPTABLE, &pqi_error_info);
-+
-+	if (iocommand.buf_size > 0)
-+		pqi_pci_unmap(ctrl_info->pci_dev, request.sg_descriptors, 1, DMA_BIDIRECTIONAL);
-+
-+	memset(&iocommand.error_info, 0, sizeof(iocommand.error_info));
-+
-+	if (rc == 0) {
-+		pqi_error_info_to_ciss(&pqi_error_info, &ciss_error_info);
-+		iocommand.error_info.ScsiStatus = ciss_error_info.scsi_status;
-+		iocommand.error_info.CommandStatus = ciss_error_info.command_status;
-+		sense_data_length = ciss_error_info.sense_data_length;
-+		if (sense_data_length) {
-+			if (sense_data_length > sizeof(iocommand.error_info.SenseInfo))
-+				sense_data_length = sizeof(iocommand.error_info.SenseInfo);
-+			memcpy(iocommand.error_info.SenseInfo,
-+				pqi_error_info.data, sense_data_length);
-+			iocommand.error_info.SenseLen = sense_data_length;
-+		}
-+	}
-+
-+	if (copy_to_user(arg, &iocommand, sizeof(iocommand))) {
-+		rc = -EFAULT;
-+		goto out;
-+	}
-+
-+	if (rc == 0 && iocommand.buf_size > 0 &&
-+		(iocommand.Request.Type.Direction & XFER_READ)) {
-+		if (copy_to_user(iocommand.buf, kernel_buffer,
-+			iocommand.buf_size)) {
-+			rc = -EFAULT;
-+		}
-+	}
-+
-+out:
-+	kfree(kernel_buffer);
-+
-+	return rc;
-+}
-+
- static int pqi_ioctl(struct scsi_device *sdev, unsigned int cmd,
- 		     void __user *arg)
- {
-@@ -6958,6 +7096,12 @@ static int pqi_ioctl(struct scsi_device *sdev, unsigned int cmd,
- 	case CCISS_PASSTHRU:
- 		rc = pqi_passthru_ioctl(ctrl_info, arg);
- 		break;
-+	case CCISS_BIG_PASSTHRU:
-+		rc = pqi_big_passthru_ioctl(ctrl_info, arg);
-+		break;
-+	case CCISS_BIG_PASSTHRU_SUPPORTED:
-+		rc = 0;
-+		break;
- 	default:
- 		rc = -EINVAL;
- 		break;
-diff --git a/include/uapi/linux/cciss_ioctl.h b/include/uapi/linux/cciss_ioctl.h
-index 5622301..8295f1b 100644
---- a/include/uapi/linux/cciss_ioctl.h
-+++ b/include/uapi/linux/cciss_ioctl.h
-@@ -85,5 +85,6 @@ typedef struct _LogvolInfo_struct{
- #define CCISS_RESCANDISK   _IO(CCISS_IOC_MAGIC, 16)
- #define CCISS_GETLUNINFO   _IOR(CCISS_IOC_MAGIC, 17, LogvolInfo_struct)
- #define CCISS_BIG_PASSTHRU _IOWR(CCISS_IOC_MAGIC, 18, BIG_IOCTL_Command_struct)
-+#define CCISS_BIG_PASSTHRU_SUPPORTED _IO(CCISS_IOC_MAGIC, 19)
- 
- #endif /* _UAPICCISS_IOCTLH */
--- 
-2.47.3
+So, I'd say that, instead of a global prompt saying to trust hardware,
+the best is to do it only on places where people are absolutely sure
+that the hardware is trusty enough.
 
+> The general tenor of my driver/ prompt would be that hardware may never
+> be assumed to be malicious but could be buggy.  In the event that the
+> fix is for buggy hardware, the submitter must state which hardware is
+> buggy and confirm they've tested the fix on the actual hardware.
+
+In practice, on most cases, it is hard to distinguish buggy from
+malicious. IMO, it is better to prevent cases that could be=20
+too dangerous, even if aren't there any confirmation that the
+issue happened on an actual hardware.
+
+Thanks,
+Mauro
