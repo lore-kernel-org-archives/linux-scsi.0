@@ -1,189 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6267A43B6EB
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 09:03:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BDDB3AEF3B;
+	Wed, 22 Jul 2026 09:11:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784711001; cv=none; b=M6ImyUOhnqnLetYGWCDpGISVtQ4F/MIH6sME83qoSs8B0dmLYhqszFGh+EwlBEk3b3Hw3CSiLeLN6j48mOXTdOfQceAcvj1zLgQ8ZyvdpVCpOggletsa8Gc7pdH15qUipt/KB8Nzu6ihjPsnp3HGL9vAMjJpYHc7pcpkhKV71ZY=
+	t=1784711477; cv=none; b=rm44gmocRIZ6wUfro9H4ExVrZpMdWRX0pkx7+vs3IuHkXiiis4Z5lby76v3zp/qGLVtSsOG0xUFxo14KRfMVRkxy5xkaMNxULFN8WWgsUzLAY++lCwHwrpZGKtmTSg9G9RzvFngbmtBDjC55BukbFLRRWfxQbCsHio3+DxI9EKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784711001; c=relaxed/simple;
-	bh=mkKp0F5DS09FZ+evtYgGLmieK6SHWt0ya8+M9MypTgA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=S4gcS32d3tUiGMuGRZdJUv6eYo+VdCo9AeRhWhAJ4WJFIZA4pvs+ZLyI55mK2S7Bjr1/vpaTpQwrjANySv+ptP6QUWnTRzaE63hUp0/Jifguxit42gqBlwXe0lJDl4BaTxCbvGSC7cy9LdJHA4e4ED7ZxU4IC2Uoi7k8jYzTP4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S+wWKUvd; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784711477; c=relaxed/simple;
+	bh=cUJ1jiWfulZa0peFWzzZswMOl2QBc+PMPOPbD677JEQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=jJkCwMBE/uu7ShsOCHE3Pi3/OdbR2tY6CE7YtfWGcFch72FEXJZoreP7qohr2veByrbOlAyWpqdjOjww/tFO8P2diFfVo3ssVASy+7y7MwsJkm77JQaIH+jY+BUpgZ7brIDnfxVN4krkwJWRRz+hfbHQqQAnELD9y18gGl6rloc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=c1J07+bH; arc=none smtp.client-ip=113.46.200.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S+wWKUvd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C1C11F00A3A;
-	Wed, 22 Jul 2026 09:03:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784711000;
-	bh=a5Ai8Ob2Pa3KSY70NRh+ac1CuYw/3fOjAdsvPGgO/5k=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=S+wWKUvdODI/QX9mSdRU04/1u4khq+colghKvtOp65wMD0tvWjon7rNAuGWItYWKb
-	 fFrKNYoG/wHw8O99rC6jbS2NN0kXDaSjGd9+i2P9+nw3TDqjsGpLEBKi5SIaGbVXb6
-	 ePNzcOXf8Vzj0aec4PFMshiAZwA1J0DjUTWnXTwpiVvYkPvsRSF69z/AmEvvlJKKFD
-	 Tn9KlV4ghI/hvqm+JGPWfgD4dANLfQnN+i+yZuAl730IllyydcNvNmg4YDLEKq81oO
-	 KSieJKfcoDnTOxCw9V5zcellTRDeUsSAs1X31cRs4Ngt2Xbj204H4DXp9aXsnfYPX0
-	 QrmvZLUhlH8eQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: ufs: Add support for the aggregated read query
- opcode
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hyeoncheol Jeong" <hyenc.jeong@samsung.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260722084819epcms2p49c27fce999e821385f7b5d7ea5a02868@epcms2p4>
-References: <CGME20260710053524epcms2p82121eba4240c37112fc5669430035442@epcms2p4>
- <20260722084819epcms2p49c27fce999e821385f7b5d7ea5a02868@epcms2p4>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 22 Jul 2026 09:03:19 +0000
-Message-Id: <20260722090319.8C1C11F00A3A@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="c1J07+bH"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=p8jN3RkQ6Ocq04knol7ppcsRhdm16AU4RtOPX9Fx1iQ=;
+	b=c1J07+bH3riyN9greurpydURSc7w6xz1VDsu3tUt9Q/Rc9AN1Wrt4tt1f7nll8gfGzUv/4yh5
+	okkmeoSJYgEhX5Ua3gQ+1mZX6x5ZKRhlqWoD2Sv07BY2gxNMm78a3xsbGIYRlcvnliFnsjRg86I
+	hpHzhR+D/tGFZBw3xdSHhrI=
+Received: from mail.maildlp.com (unknown [172.19.163.15])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4h4pCY56PSzmVWY;
+	Wed, 22 Jul 2026 17:01:45 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id 88EDE40578;
+	Wed, 22 Jul 2026 17:11:08 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Wed, 22 Jul 2026 17:11:07 +0800
+Message-ID: <d888a76c-7667-55f2-d047-b37412332ca7@huawei.com>
+Date: Wed, 22 Jul 2026 17:11:00 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v2 2/2] scsi: hisi_sas: add spinup_notify callback to
+ handle Active_Wait/Idle_Wait SSP devices
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<dlemoal@kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <kangfenglong@huawei.com>,
+	<hare@suse.com>
+References: <20260703022833.36847-1-yangxingui@huawei.com>
+ <20260703022833.36847-3-yangxingui@huawei.com>
+ <c9a91dd7-b158-4416-93bb-9ae1e1acb8a3@oracle.com>
+ <55307987-d86b-f28c-7c39-0a6bafe182bb@huawei.com>
+ <a2ecff55-aabd-48b4-a702-7e052646f22c@oracle.com>
+ <7baf77e4-345b-3419-6562-f0e435227e5a@huawei.com>
+ <c5390973-6db4-4191-8330-dea5830da4f0@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <c5390973-6db4-4191-8330-dea5830da4f0@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepemh100006.china.huawei.com (7.202.181.89) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The dedicated device management response buffer (ALIGNED_DEVMAN_RS=
-P_SIZE) is exactly 4096 bytes, failing to account for the 32-byte Query Res=
-ponse UPIU header. This leads to an out-of-bounds read into the adjacent PR=
-DT array during a maximum-sized aggregated read, leaking kernel physical me=
-mory addresses to userspace.
---
 
---- Patch [1]: [PATCH v2] scsi: ufs: Add support for the aggregated read qu=
-ery opcode ---
-commit b0be9d1800d5bb45da1d07516b525d85f757798b
-Author: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+Hi, John.
 
-scsi: ufs: Add support for the aggregated read query opcode
+On 2026/7/22 16:47, John Garry wrote:
+> On 21/07/2026 14:33, yangxingui wrote:
+>>>
+>>> Yeah, it would be something like that.
+>>>
+>>> But the method to solve this issue is unclear.
+>>>
+>>> Back to the original issue: hisi_sas_spinup_notify_work() calls 
+>>> sl_notify_ssp, but sl_notify_ssp is called already in 
+>>> hisi_sas_phyup_work_common() - so why is it needed to be called again? 
+>> In fact, the trigger for this point sometimes fails to take effect.
+>>
+>>> If it is because hisi_sas_phyup_work_common() is only for direct- 
+>>> attached disks, and we need to call sl_notify_ssp for expander 
+>>> attached disks?
+>>
+>> NOTIFY(SPIN UP) is primarily intended for direct-attached HDD wake-up 
+>> post-IDENTIFY exchange. Routing it to an Expander may conflict with 
+>> SAS topology constraints and could disrupt link-layer arbitration, 
+>> indicating that a conditional disable mechanism for cfg_notify_en in 
+>> non-direct topologies is advisable.
+> 
+> This problem which you are trying to solve is only for direct-attached 
+> disks, right?
 
-This commit introduces the AGGREGATED READ query opcode (0x9), returning an
-aggregated data packet in a single query request. It allocates a dedicated
-device management descriptor with a 4 KiB response area for the reserved tag
-to handle the larger responses.
+Yeah, I consulted the developer responsible for the Expander firmware, 
+the firmware proactively sends a "spin-up" primitive when a sas disk is 
+connected and specific conditions are met.
 
-> diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-> index 58b506eac6dc4..176fedd496afe 100644
-> --- a/drivers/ufs/core/ufs_bsg.c
-> +++ b/drivers/ufs/core/ufs_bsg.c
-> @@ -14,14 +14,18 @@
->  #include "ufshcd-priv.h"
-> =20
->  static int ufs_bsg_get_query_desc_size(struct ufs_hba *hba, int *desc_le=
-n,
-> -				       struct utp_upiu_query *qr)
-> +				       struct utp_upiu_query *qr,
-> +				       enum query_opcode desc_op)
->  {
->  	int desc_size =3D be16_to_cpu(qr->length);
-> =20
->  	if (desc_size <=3D 0)
->  		return -EINVAL;
-> =20
-> -	*desc_len =3D min_t(int, QUERY_DESC_MAX_SIZE, desc_size);
-> +	if (desc_op =3D=3D UPIU_QUERY_OPCODE_AGGREGATED_READ)
-> +		*desc_len =3D min_t(int, QUERY_AGGREGATED_MAX_SIZE, desc_size);
-> +	else
-> +		*desc_len =3D min_t(int, QUERY_DESC_MAX_SIZE, desc_size);
-> =20
->  	return 0;
->  }
+Based on the document below:
+https://www.t10.org/ftp/t10/document.02/02-360r1.pdf
 
-[Severity: High]
-Is QUERY_AGGREGATED_MAX_SIZE allowing userspace to request a buffer that is
-too large?
+"7.1.4 SAS primitives
+7.1.4.n SPINUP
+...
+Initiator devices and expander devices shall transmit SPINUPs while 
+attached to target devices (i.e., devices
+that report any target protocol support in their IDENTIFY address 
+frames). They shall transmit one SPINUP
+after power on when the enclosure is ready for initial target device 
+spin-up. After the initial SPINUP, they shall
+transmit SPINUP periodically.
+...
 
-If userspace requests a 4096-byte desc_size (QUERY_AGGREGATED_MAX_SIZE), it
-makes the subsequent response read up to 4096 bytes of payload data, which
-may not fit into the dedicated devman response array once the 32-byte
-UPIU header is included.
+SPINUP shall not be forwarded through expander devices."
 
-[ ... ]
+Thanks,
+Xingui
 
-> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-> index 9f0fdd850e54e..c4d563420152d 100644
-> --- a/include/ufs/ufshci.h
-> +++ b/include/ufs/ufshci.h
-> @@ -18,6 +18,8 @@ enum {
->  	TASK_REQ_UPIU_SIZE_DWORDS	=3D 8,
->  	TASK_RSP_UPIU_SIZE_DWORDS	=3D 8,
->  	ALIGNED_UPIU_SIZE		=3D 512,
-> +	/* Larger response area, only for the devman UCD */
-> +	ALIGNED_DEVMAN_RSP_SIZE		=3D 4096,
->  };
-> =20
->  /* UFSHCI Registers */
 
-[ ... ]
-
-> @@ -501,6 +503,15 @@ struct utp_transfer_cmd_desc {
->  	u8 prd_table[];
->  };
-> =20
-> +/* Dedicated UCD for the devman/reserved slot */
-> +struct utp_devman_cmd_desc {
-> +	u8 command_upiu[ALIGNED_UPIU_SIZE];
-> +	u8 response_upiu[ALIGNED_DEVMAN_RSP_SIZE];
-> +	u8 prd_table[];
-> +};
-> +
-> +static_assert(QUERY_AGGREGATED_MAX_SIZE <=3D ALIGNED_DEVMAN_RSP_SIZE);
-
-[Severity: High]
-Does ALIGNED_DEVMAN_RSP_SIZE need to be larger to safely accommodate the
-UPIU header?
-
-If the response data segment from the device is up to 4096 bytes
-(QUERY_AGGREGATED_MAX_SIZE), and it follows the 32-byte header, the total
-size needed here would be 4096 + 32 =3D 4128 bytes.
-
-Since response_upiu is exactly 4096 bytes, wouldn't a maximum-sized aggrega=
-ted
-read overflow past the array and into the adjacent prd_table?
-
-[ ... ]
-
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 79331c2bd38de..b30c314c75e6c 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-
-[ ... ]
-
-> @@ -7637,7 +7686,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_=
-hba *hba,
-> =20
->  	/* just copy the upiu response as it is */
->  	memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
-> -	if (desc_buff && desc_op =3D=3D UPIU_QUERY_OPCODE_READ_DESC) {
-> +	if (desc_buff && (desc_op =3D=3D UPIU_QUERY_OPCODE_READ_DESC ||
-> +			  desc_op =3D=3D UPIU_QUERY_OPCODE_AGGREGATED_READ)) {
->  		u8 *descp =3D (u8 *)lrbp->ucd_rsp_ptr + sizeof(*rsp_upiu);
->  		u16 resp_len =3D be16_to_cpu(lrbp->ucd_rsp_ptr->header
->  					   .data_segment_length);
-
-[Severity: High]
-Can the subsequent memcpy read past the end of the response_upiu array?
-
-If a userspace process issues a BSG query for AGGREGATED_READ and asks for
-up to 4096 bytes, and the device returns a data_segment_length of 4096,
-the descp pointer here is offset by sizeof(*rsp_upiu) (32 bytes).
-
-The code shortly after this in ufshcd_issue_devman_upiu_cmd() does:
-
-    if (*buff_len >=3D resp_len) {
-        memcpy(desc_buff, descp, resp_len);
-        ...
-
-Calling memcpy(desc_buff, descp, 4096) will read 4096 bytes starting from
-offset 32. Does this read past the end of the 4096-byte response_upiu array
-and leak physical DMA addresses from the adjacent prd_table into the BSG
-reply payload?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260722084819epcms=
-2p49c27fce999e821385f7b5d7ea5a02868@epcms2p4?part=3D1
