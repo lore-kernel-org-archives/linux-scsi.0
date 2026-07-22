@@ -1,74 +1,88 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.167])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 545FD4D90C0
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 11:58:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784721533; cv=none; b=alM2lBUVWLToMTT6k+W0FfeiG5EgeS+qcxjDudV3829AqLOdupaG0zW3GfsLrw0KaAony+1Tqfro7+B4tGnhhCrPwO8rNLR7PeUINPyuB52Wh9y1AUdVAYbaGk/P5ahwJCzynvRixFonISZAWZsx/3StEmfHwYdcILjrIH/5Z28=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784721533; c=relaxed/simple;
-	bh=BWYUY9Key7HPP5r4svsN8btVziZiGlu4ExBNuBFrNEI=;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D11E38B7C3;
+	Wed, 22 Jul 2026 12:05:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.167
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784721941; cv=pass; b=KAiidgS/2uM6Hi87YOwRvUGe6PXmVkNOEyV8VgikebDIPQXYQaUTrJSyoRuWB+gXOOFJn4Wzyljv9XNCnhgv/SXSTCvUUXc2YAduXRZ887qJ1CxVBk0PuwvMN8olCxtsYqRbQ1u0ZGl4fToMPAcBw4+0IDxjnWAlCh0YiLwSQ1I=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784721941; c=relaxed/simple;
+	bh=dWvhnpuRbgx7dnx0GM5hsaiy8aoHpz67573QBttKddw=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=juYUHsnuRJXz+uwLMx1zw5blAlliptKgi11NFpKpoKvtwRtfk2d6yZoLo06tpK61JkHwWjv4i4JZrnDlGuMyQe0CE2OBEjIJQ13G3TILbFSFW+ESItcqjOqK9gYyu1l/x/W/aDf7T03F8trGTDLkTnWSbW9/IKo//Xf0mL1r1uQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=Q79qWP9Z; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	 Content-Type:MIME-Version; b=qISShQORraqqJiuddrA4sum4FNs0te/sO7W6iyH3gLSg5Jeqr9jdX+uBEfexAEwuBeDTQMVLQIMKoOTSh0iqXtU6341IFCiIgRWuUN41f7FQs6tq3s3sL4HzA2+YDDQ2JOBUNbTd6X10Q4Ezw63NbksgDDdHDz2WEg3G/ZLRbXQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=bdRryqkV; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=VgkxJyg7; arc=pass smtp.client-ip=81.169.146.167
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Q79qWP9Z"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1784721529;
-	bh=BWYUY9Key7HPP5r4svsN8btVziZiGlu4ExBNuBFrNEI=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=Q79qWP9ZaNhXa9aXOOpeu3HFkNd4iLms/AND7r7NF2dwNtMA+FCX2rjx+fw/DEPWR
-	 woczLvV60aGNgPe0H51erKslbJXjAmUY4ifP5gf4do3bp/ZrYRPku3T8D9JBaqC4v7
-	 nxBYdA17RVfW1blucw5CdTD/fKDIsHCHuB8OY+mA=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::8c71])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519MLKEM768 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 314651C02BE;
-	Wed, 22 Jul 2026 07:58:49 -0400 (EDT)
-Message-ID: <dcadf40a07a616de931c484bbe68f4b3f1f83b80.camel@HansenPartnership.com>
-Subject: How to fix problems with the sashiko review model
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: sashiko-reviews@lists.linux.dev, Chris Mason <clm@fb.com>, Roman
- Gushchin	 <roman.gushchin@linux.dev>
-Cc: linux-scsi@vger.kernel.org, ksummit@lists.linux.dev
-Date: Wed, 22 Jul 2026 07:58:48 -0400
-In-Reply-To: <20260722042744.5C1B01F000E9@smtp.kernel.org>
-References: <20260722041257.1557-1-pengpeng@iscas.ac.cn>
-	 <20260722042744.5C1B01F000E9@smtp.kernel.org>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNE
- lecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn
- 1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHU
- RfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8
- X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvd
- HRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGw
- MGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAml2ZBI
- FCS3GUMIACgkQgUrkfCFIVNZKjQf/deRzlXZClKxTC/Ee2yEPqqS7mm/INUA49KdQQ5oIhSxkUBy0
- 9J4qjMIo5F8ZFkFTqikBqeL35LKu7O7rn8WETfX8Bxvos3HUsl3jHo34DES4MUFIpoQPgtiLRGwLb
- K0cVCAArR2u2qj4ABmTRrs1I1kvdjEw6gatOuXtEe/j5O2fvfzTq9GBr0Q3n2IAsFXi4hLlx6VPE8
- tyWUZ8BWJKtih3JAeUiXFvASL3McV0rV9RnU0VbjEQEhSE7PMYhWpnDC9AyBb0lXJllQRvC3NSkUB
- 8KVQgNNxRPss0WE/nBoZ4dFA42jTyzTz8lNylxZoAWV7WJb3QxVg4oCodRVrxxrQhSmFtZXMgQm90
- dG9tbGV5IDxqZWpiQGtlcm5lbC5vcmc+iQFVBBMBCAA/AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeA
- QIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mYBQkbNYS9AAoJEIFK5HwhSFTWBpwIAL5Bk3
- 5FB34U6iHmDzzgdCbxLTs43T/YQyJpcGIvopBvnI/fDY8oSG6Df64/O6B+1R+A8TDp6ZG5ysUWnCC
- 6GuIaEHemBYkitMPglR6+sGCMQY7O0mlsPvdssvKK1KI9Bno4VU6ogaF2qVzefSqg1Djmf/DcsxWP
- rI/jdJ8FB5AYR2rjIdDFc+zRdAJuavo1/anyY2wgpFh/3R8IOYAEfWV9nGgYkf9+tA4EIn1sxE0I3
- L5oW2N3mbyRrkzuBwO8ztMCwqEPk7moWzhokcZqMXiAIahaZdkashJC+s2X2RZSGCy+g+pvY5NN4B
- BVG5XwLgVBqbHMTcxE0fbmPqz+q6O0LEphbWVzIEJvdHRvbWxleSA8amVqYkBoYW5zZW5wYXJ0bmV
- yc2hpcC5jb20+iQFXBBMBCABBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmODZ5ACGwMFCRs1hL0F
- CwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQgUrkfCFIVNZu0Af/TzvL2/NdgAcw9uN3x60H8
- jc4QUq14VpxcFEFEMpcj1morkX/G93V+56HBBaXZj+yK8PhxIA/SIz+sU7C/0YvKuvzakP8ZX/7WJ
- e32SOUtjfr/VTaqjIBzNj6OxLvZpmNbBw7s6DwhhNpHOWqJ/1ml+PtDRDV71IB58yVqQjp1xlNKVl
- ZppcJ5908EJzsFnRIVjiQiDSKoppqB2BCibBbrWcln7CiWMyOC/cco6SIn6twH+f7+aivJ3xGcOE2
- a9gBKF5rNi9TBoX9oyPmshv/TDmnohsVrH7AYXlGYfZTk15SWEiROh1QX8/uD9wl/gcIv5EDUpT/F
- L2jzOsA5663bw==
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="bdRryqkV";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="VgkxJyg7"
+ARC-Seal: i=1; a=rsa-sha256; t=1784721877; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=BoLzV76oRECAGkr24w4JioDgoYX20dnOZArQk5AR4X9nazOjygFXHgaaqEyeyCF7dS
+    1i+XOAJLfMgWKWc3lf0p1J7/g9JZheXToLQaYEjkqvrz4Ww6iApfopjD2l7e9s2zze/R
+    c3okYONqsL6LeInBR748FSSqKQnzFlGrZ2ND7yZ3Cd0MtiKibx0VXyIt5Eclb12sER9k
+    iNRotfew/OIqcylJB76wsxvei0+Jmxseo8iqUI/zRMMezODJOBZ9NKK4o58Ze+hvgjDF
+    Ao6dN3kcOho17GDXWpmSg1xkxxP7Fp/nguegdVTqc8UE9LkJdIGqUfmMpuVfbJom3qNL
+    EA2w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1784721877;
+    s=strato-dkim-0002; d=strato.com;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=dWvhnpuRbgx7dnx0GM5hsaiy8aoHpz67573QBttKddw=;
+    b=cQSG6ssk4KGnIyqA/K1LQdQLEFLmmR02rgPZ8YS4JcZYQslPrpmjK5Pw4f5SfuR3fv
+    tiAoIYJDEPUhGeBd//FrjxHyORjdvm9QSadVAEhY6goAsOPWReANWW0DMV/wnbeUZpaM
+    1F21zw7a5JtiIFRDTHR7Z7Rs5gNEU6zZA+QmhbwXJm4YdiLhiupRkn0BbhbiBzbWxcny
+    shPkiT5csvezOCkgOsRSDo1yG8C16xH4EM997Lk2jDU4hxO3k0UioPbcRDNlqhRh8YC0
+    OBUNHaXEkV+wwR3WriwJi695oaql6nRc36ZQwI+ZJk4IDBYA36d9zlmoa6hJieYxqZi1
+    LfiQ==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo01
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1784721877;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=dWvhnpuRbgx7dnx0GM5hsaiy8aoHpz67573QBttKddw=;
+    b=bdRryqkVMdUzF6x/AJTna35oyiL6ooeJXvQA+cBKKgwhfOhQpMDyyjJtaV+LvQ8FyL
+    o0837Uw360UFZFNAwNXyzaAn/QynLZvEDy8Uoi0rLtWhQRVC8jeFHEl5NrgGaWpVNCLB
+    IgTZ8JF+4yjTAz8/9EUypVWbf72CEWNdpZz14znePXg7YFuI1yJEdKO7cDbjsj4cJOqP
+    8pfFCCpJra6zYOURClqKNJb25wkPBpHsomFkWZS3XY/fXGXEU5S51yKyroagkwPe1sdR
+    zoKdnFJMMph12zN16zjjvtmDhW4OtHsNk0DTA0Cv+WbexH6+kMYjbafMEKSsnQD+WDkt
+    1vkg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1784721877;
+    s=strato-dkim-0003; d=iokpp.de;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=dWvhnpuRbgx7dnx0GM5hsaiy8aoHpz67573QBttKddw=;
+    b=VgkxJyg7x/LL2EhQ5C+Dpgk95ZUbnF2QijoR/5ZS6F/Mk+GIgiioNVSkQVcXcTIF+k
+    kocqExpxLXimFtizmPCA==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZik"
+Received: from [10.176.237.62]
+    by smtp.strato.de (RZmta 55.5.6 AUTH)
+    with ESMTPSA id zeddc926MC4WGZo
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Wed, 22 Jul 2026 14:04:32 +0200 (CEST)
+Message-ID: <4cfee0a964332e0e7c1c6875ec5796360b4c22a5.camel@iokpp.de>
+Subject: Re: [PATCH v2 4/6] scsi: ufs: rpmb: Validate request frame length
+ before parsing
+From: Bean Huo <beanhuo@iokpp.de>
+To: Li Qiang <liqiang01@kylinos.cn>, linux-scsi@vger.kernel.org
+Cc: bvanassche@acm.org, linux-kernel@vger.kernel.org,
+ alim.akhtar@samsung.com,  avri.altman@wdc.com,
+ James.Bottomley@HansenPartnership.com,  martin.petersen@oracle.com,
+ peter.wang@mediatek.com, beanhuo@micron.com,  can.guo@oss.qualcomm.com,
+ adrian.hunter@intel.com, tomas.winkler@intel.com
+Date: Wed, 22 Jul 2026 14:04:32 +0200
+In-Reply-To: <20260717153914.26321-5-liqiang01@kylinos.cn>
+References: <cover.1784182493.git.liqiang01@kylinos.cn>
+	 <20260717153914.26321-1-liqiang01@kylinos.cn>
+	 <20260717153914.26321-5-liqiang01@kylinos.cn>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 
+User-Agent: Evolution 3.44.4-0ubuntu2.1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -76,56 +90,48 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-There doesn't seem to be a Sashiko list, so I added ksummit as the most
-likely one to catch attention.  We got this review in SCSI on this
-thread:
-
-https://lore.kernel.org/linux-scsi/20260722041257.1557-1-pengpeng@iscas.ac.=
-cn/
-
-But this part of the review
-
-On Wed, 2026-07-22 at 04:27 +0000, sashiko-bot@kernel.org wrote:
-[...]
-> > +
-> > +	reply_len =3D mpi_reply->MsgLength * 4;
-> > +	if (reply_len < event_offset || reply_len > ioc->reply_sz)
-> > +		return false;
-> > +
-> > +	event_data_len =3D le16_to_cpu(mpi_reply->EventDataLength) *
-> > 4;
+On Fri, 2026-07-17 at 23:39 +0800, Li Qiang wrote:
+> The RPMB core only verifies that request and response buffers are
 >=20
-> [Severity: High]
-> Is there a Time-of-Check to Time-of-Use window here since mpi_reply
-> is read directly from shared DMA memory?
+> nonempty. This callback reads req_resp at the end of the first request
 >=20
-> The validation function reads bounds from mpi_reply, but after
-> validation passes, mpt3sas_scsih_event_callback() re-reads fields
-> like EventDataLength and NumEntries directly from the same DMA-backed
-> memory.
+> frame before validating the request length.
 >=20
-> Could a malicious device mutate these fields in the window between
-> validation and use to bypass the checks introduced by this patch?
+> Require a complete frame before that access.
+>=20
+> Fixes: b06b8c421485 ("scsi: ufs: core: Add OP-TEE based RPMB driver for U=
+FS
+> devices")
+> Signed-off-by: Li Qiang <liqiang01@kylinos.cn>
+> ---
+> =C2=A0drivers/ufs/core/ufs-rpmb.c | 4 ++++
+> =C2=A01 file changed, 4 insertions(+)
+>=20
+> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
+> index ffad049872b9..431f85b36876 100644
+> --- a/drivers/ufs/core/ufs-rpmb.c
+> +++ b/drivers/ufs/core/ufs-rpmb.c
+> @@ -69,6 +69,10 @@ static int ufs_rpmb_route_frames(struct device *dev, u=
+8
+> *req, unsigned int req_l
+> =C2=A0
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0hba =3D ufs_rpmb->hba;
+> =C2=A0
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/* req_resp is at the end of a=
+n RPMB frame. */
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (req_len < sizeof(*frm_out)=
+)
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0return -EINVAL;
+> +
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0req_type =3D be16_to_cpu(=
+frm_out->req_resp);
+> =C2=A0
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0switch (req_type) {
+> --
+> 2.43.0
 
-Is wrong.  Hardware may never be presumed to be malicious (well, except
-if it's virtual hardware provided by an untrusted host to a
-confidential guest, but that's a very small list of drivers or it's a
-USB or thunderbolt device designed to attack or exfiltrate data from an
-unattended system).  It may be buggy, but we never presume bugs until
-someone finds a device exhibiting the bug in the field (so we don't
-proactively fix them).
+the two Sashiko findings are a separate story, this patch is ok to me.
 
-The bigger part of this is that I was looking into how to fix this
-(which might interest a broader swathe of developers than just SCSI).=20
-I think the fault is in the review prompts:
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
-https://github.com/masoncl/review-prompts
-
-And what I need to do is to add an additional drivers.md file to
-kernel/subsystems explaining this?  If that's right I can send a pull
-request, but I thought I'd check here because the audience is much
-bigger than if it were to get discussed in the github PR.
-
-Regards,
-
-James
