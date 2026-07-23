@@ -1,56 +1,56 @@
 Received: from mx0a-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F258F2C0294
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 05:06:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6653930DECC
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 05:06:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784783166; cv=none; b=WMfgiC1WB0E/jR3tEzMEXgeZErFB+194Ju3v4ZuO9K7il0Q8N2GJXQpkJvfHZ6JjP4IG9VPNjcI/AkUygoQsI7LxU2Ija7RPeMP/J8q0jJbalQGV5fp6+rnRQCLORzJySnTdkHE7lpJdvcWsWLxD7DMHVZ88d56dgLGsGgegjQw=
+	t=1784783170; cv=none; b=inn6TxCX/XQAdRRHJcZy37wHgDC0tS6gBJCLQEK5hn11tUZjex1QAJqvYM7Dln5jDuugIkoYyq1xjNKfLM72UG0g8vbnEyjnHT19ERB3myJWdBGfKq+uWwC7O0cVeTCEUh/OZuMSViZLObeRqbW2M+2bvjgqYj2yNwkugCaJZcY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784783166; c=relaxed/simple;
-	bh=Vvc6whlglxZaQDC3IGq/FP1Kogna7AnWmFq4uq6YDME=;
+	s=arc-20240116; t=1784783170; c=relaxed/simple;
+	bh=mdzrENDl/S/D7pY2QsbReWJQlQ6XldCu17knggGmcd4=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eEGNB+Tmn0SUg7y0/1Va+YItswCFqpBOK0uDr7S5H9ovvt9QGeCEkG/rv2dbxWyR6eSx+nMaU7ZlJcfVu5N3hLT1MHDghr4HUmE6y1IpYl9FLwVBsSvWVc7v+k8OtzzA5PwO+HBl/ge7iYvXSWYxPLbZW8MHM8OG0wrm4lfJ5d8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=PDsj95Si; arc=none smtp.client-ip=67.231.148.174
+	 MIME-Version:Content-Type; b=sW+SqLmA5IwwzK8XIVNVzPYK4qUXyld/6gdo+8BqXChyI3rIMWw1d5Ysdca+HuC6WPI8VSKN9StPcilOQk4LLlQONumfnwXsovQ/QsHdp6J5jQi8Ef5eB+35Ys8LcVfFx3xbnWSP4pRlvQbNY2ggV9HNj1Pr3VNh2o1MZAtEQSs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Ip2BR1My; arc=none smtp.client-ip=67.231.148.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="PDsj95Si"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Ip2BR1My"
 Received: from pps.filterd (m0431384.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66N4vxqY422561;
-	Wed, 22 Jul 2026 22:06:01 -0700
+	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66N4vxqA422564;
+	Wed, 22 Jul 2026 22:06:02 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=P
-	W+vrH+on5ap6QhcPyQ2myj2Sf89lXwREQhZYi57VIc=; b=PDsj95SioBkyMTHsI
-	hkPSSQ2njRmaVUrAsJR7gW4wDCZ2zp+BNyQIpfXANWgqaKvx0tR7ZCdvEk+1TLtp
-	UaWbzCGOp9uguqXQdnCX4DA6yBGVf4nMqNUnThKHURnDWbpQeMy9n7ODQb61a3tv
-	/xMQEI7boMt3LeA8As6CeX0ppc5A80WZ1gc89+jkoOYe2SA0796lBNuAEOYS8sdL
-	cocl4iptz+aH35/jveJV1S5/LgIBOlLQGHHEd1QEGSzqFPDbj5NJzwUxZszTV+wz
-	d1RZmZRcgUC/y+ZiyhT3NzuB7O70XejlrXP6EF15zxW8LvSPWC7BmnGhgcOsVNE3
-	PAw/Q==
-Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4fjjf8c8es-1
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=K
+	KtCHrbV1U4yznBZmuOn8XGMsLE/+7X+CvjxaB70Lp8=; b=Ip2BR1MyXI738rYWV
+	mOiL0CVhURV9GUjr479vLhq9eycDBcCNtq/rmSjq3yhzwwxTbp1AGwO52dFBAFvt
+	bDrHJa+BiFLmnwwB4+4t8pKUgdXBM9Abc4ZObblOjDONUnLcyhJr+n3tFXSlN09x
+	PA6P3i0ZKT4IXXDwuvHt4Hy/UGeOVmyy/aTAJV/l4AKameQVr313IkdRKlHGDoQb
+	ol8E1bOutMVHYglNSt8Q0uBtrClrQrbukNe/R8gu+mXse39JOqvpr12xTuTs0FRP
+	RTy5GPAocGVhpYDvXUqKzIotyMFXVwiC43zliJ6/gOthLfU3UYuZV5aLBpHsjPMr
+	2aeEg==
+Received: from dc5-exch05.marvell.com ([199.233.59.128])
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4fjjf8c8ew-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 Jul 2026 22:06:00 -0700 (PDT)
-Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
- DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
+	Wed, 22 Jul 2026 22:06:02 -0700 (PDT)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Wed, 22 Jul 2026 22:05:59 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
- (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Wed, 22 Jul 2026 22:05:59 -0700
+ 15.2.1544.25; Wed, 22 Jul 2026 22:06:02 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Wed, 22 Jul 2026 22:06:02 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id C4EA35C68E6;
-	Wed, 22 Jul 2026 22:05:56 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id A422E5C68E6;
+	Wed, 22 Jul 2026 22:05:59 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v6 31/56] scsi: qla2xxx: Add 29xx extended logio IOCB support
-Date: Thu, 23 Jul 2026 10:33:48 +0530
-Message-ID: <20260723050413.3897522-32-njavali@marvell.com>
+Subject: [PATCH v6 32/56] scsi: qla2xxx: Enhance task management IOCB handling for 29xx series
+Date: Thu, 23 Jul 2026 10:33:49 +0530
+Message-ID: <20260723050413.3897522-33-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260723050413.3897522-1-njavali@marvell.com>
 References: <20260723050413.3897522-1-njavali@marvell.com>
@@ -62,409 +62,171 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-GUID: B8Eu83A1OGMfwd95J3mmrkrBVtcOkbEh
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIzMDA0OSBTYWx0ZWRfXxoJwqSJIlete
- uvlwOpk9FmAIduLUV3MX69rfDuJhITPVpef02Gn9UIQU+gDyO1Xn4ag2ieUhjOmyoSCEgWTWIDf
- 3gZZkSP/5tdMQfUU89uDQBRt+F/pOmM=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIzMDA0OSBTYWx0ZWRfXxH3VVAHyOuPs
- MHNUKfbvOUOJ9ev6/VTB1jEsEFElzkcdoDf3ayN/z8fOxehfZzSSMuNArugJJnFvISch4Aq0+10
- EoVg3BvDRsOwQGL+tsEM9mdBcMaRzi0GfS8OeKlQfFK7B+TLrTKdZhRYIanw3RZL/cjL51yksjh
- ErNTzmLuIH75LeYfKQMJQBHmZketUUphW5gm1FkwdBI4XSJE3n3WKYIDAqGFpDp1+BRP2Uq7zwj
- /tQwzRZAPJjwk9MeF61GEL1S+QDrvqtMNViWzLVWtg2pWUDKEb7dL7pHEMP2KRMTmWTbzN5dGM2
- o+mujQ+/L462k7MWN6YN5Dt8e+kJmEg46oY/7Nv1uUh2FlbJC2Sz2uCXzZB9zgkhnd1L/Fq4t8b
- DKC5HXe/0eaFiywfuvUNBxVZqNxkG3iivtYPbYn/7HlmWCjYz7+XKX2HKvrdEU4H9AnkfdJYrGZ
- bPSWKYwKm2z8hSIiJiw==
-X-Authority-Analysis: v=2.4 cv=Rov16imK c=1 sm=1 tr=0 ts=6a61a138 cx=c_pps
- a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
+X-Proofpoint-GUID: P68iH56r1qtLOE9ENHQk2vbtaUk3D4CO
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIzMDA0OSBTYWx0ZWRfX5/ek8omwVkJa
+ yYFyib0OJZDy8daBohHtLNaFWniarwEJL4pgl83M0d1qUjFne2qle4nd8hyryzCmXuF9HvQSVgW
+ jxbD93KmQN0Dp3lgrrCSuus4ml+ZcgQ=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIzMDA0OSBTYWx0ZWRfX6Zdm4pzXDgjf
+ jotWf8Zm+Ai0mgHA/8mUSLR6pHU6sI8N/TuU79m+g27t/YuaMwp9kFdsUsCw6d+i/T8XpFu6yWD
+ VAz4JgNJCUS66U9Rj7Pu1nuDbhJrP1zxrhc67nVL348AKRQxa3F0KwFvXZGp3zVO61MpgrpUxuv
+ bKbamXYDUveZ++Wt8juTs8BiER3MDHmP4VYxxQ0K1CGkdXYB3wcJhkWimSVnrF1zmCoU3mmVS9+
+ 1ok7dBJ4o+8nMbfURr/NJkIyYz0z85W1KNX9hlWrkLXuEs4zwIxZBe07xsIz8KQqW4goSXEt0LX
+ Auuz2ZlrDtnzwWDUckhSg/NhmX25NV7BkC/6JSiOIcw/gNYOFhvEuako1zFwF+ajo5lKoSCyxHV
+ IbVS22RdGP/4E9zAiADnT1b0kiLx8B7Qw06uNmK9hZv4513aMIXn0uaymAWDiKhCr571kI1J5cT
+ cEOGgm61Of0Wk47ZEkw==
+X-Authority-Analysis: v=2.4 cv=Rov16imK c=1 sm=1 tr=0 ts=6a61a13a cx=c_pps
+ a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
  a=TtqV-g6YmW1Jfm2GSLaY:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=sRxA-cl792nyho4Z3XsA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-ORIG-GUID: B8Eu83A1OGMfwd95J3mmrkrBVtcOkbEh
+ a=GCX_fLWMEB1gCRu7i1AA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-ORIG-GUID: P68iH56r1qtLOE9ENHQk2vbtaUk3D4CO
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-23_02,2026-07-22_02,2025-10-01_01
 
-The 29xx series uses a wider IOCB stride (128 bytes vs 64 bytes).
-The logio_entry_24xx_ext layout extends logio_entry_24xx with a
-wider vp_index field (__le16 vs u8) while keeping all other
-read-side fields (comp_status, io_parameter[0..10], entry_status)
-at identical offsets and widths.
+Update qla24xx_tm_iocb() and __qla24xx_issue_tmf() to support the
+extended task management structure (tsk_mgmt_entry_ext) for 29xx
+adapters.
 
-Update the logio IOCB builder functions (qla24xx_login_iocb,
-qla24xx_logout_iocb, qla24xx_prli_iocb, qla24xx_prlo_iocb,
-qla24xx_adisc_iocb) to accept a void pointer and dispatch the
-vp_index write through IS_QLA29XX(), using an inline cast to the
-extended layout at the single write site.
+tsk_mgmt_entry_ext overlays tsk_mgmt_entry through control_flags
+(offsets 0-27 are byte-identical): entry_type, entry_count, handle,
+nport_handle, timeout, lun and control_flags sit at the same offsets
+and widths.  The layouts diverge only after that point:
 
-In the completion handler qla24xx_logio_entry(), accept a void
-pointer and read through a single logio_entry_24xx view since all
-accessed fields sit at the same offsets in both layouts.  Use the
-qla_req_entry_size() helper for the dump buffer size.
+  - the 24xx layout has port_id[3] + u8 vp_index;
+  - the ext layout has __le16 vp_index and no port_id.
 
-In qla24xx_login_fabric() and qla24xx_fabric_logout(), allocate
-through a void pointer from the DMA pool and dispatch vp_index
-via the same inline-cast pattern.
+Factor the common IOCB header writes through a single tsk_mgmt_entry *
+view and branch on IS_QLA29XX() only for the diverging port_id /
+vp_index assignments.  Change qla24xx_tm_iocb() to accept void *pkt
+to allow casting to either structure type.
 
-Add a BUILD_BUG_ON for logio_entry_24xx_ext to enforce the 128-byte
-size invariant at compile time.
+Add tsk_ext member to the tsk_mgmt_cmd union and a BUILD_BUG_ON size
+check for the 128-byte extended structure.
 
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_inline.h | 19 ++++++++++++++
- drivers/scsi/qla2xxx/qla_iocb.c   | 28 +++++++++++++--------
- drivers/scsi/qla2xxx/qla_isr.c    | 41 ++++++++++++++++++-------------
- drivers/scsi/qla2xxx/qla_mbx.c    | 27 +++++++++++---------
- drivers/scsi/qla2xxx/qla_os.c     |  1 +
- 5 files changed, 78 insertions(+), 38 deletions(-)
+ drivers/scsi/qla2xxx/qla_iocb.c | 31 ++++++++++++++++++++++---------
+ drivers/scsi/qla2xxx/qla_mbx.c  | 18 ++++++++++++++----
+ drivers/scsi/qla2xxx/qla_os.c   |  1 +
+ 3 files changed, 37 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 2ade5e852251..d6140a92251f 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -119,6 +119,25 @@ qla_sts_cont_data_size(struct qla_hw_data *ha)
- 		sizeof_field(sts_cont_entry_t, data);
- }
- 
-+/**
-+ * qla_logio_set_vp_index() - write vp_index into a login/logout IOCB.
-+ * @ha: HBA pointer
-+ * @pkt: logio IOCB (logio_entry_24xx or logio_entry_24xx_ext)
-+ * @vp_idx: virtual port index
-+ *
-+ * vp_index widens from u8 (logio_entry_24xx) to __le16
-+ * (logio_entry_24xx_ext) on 29xx; write the field at the right width.
-+ */
-+static inline void
-+qla_logio_set_vp_index(struct qla_hw_data *ha, void *pkt, u16 vp_idx)
-+{
-+	if (IS_QLA29XX(ha))
-+		((struct logio_entry_24xx_ext *)pkt)->vp_index =
-+			cpu_to_le16(vp_idx);
-+	else
-+		((struct logio_entry_24xx *)pkt)->vp_index = vp_idx;
-+}
-+
- static inline void
- qla2x00_poll(struct rsp_que *rsp)
- {
 diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index ab4f5f1ec73f..4dcacee61e77 100644
+index 4dcacee61e77..c21d7f418f47 100644
 --- a/drivers/scsi/qla2xxx/qla_iocb.c
 +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2564,8 +2564,9 @@ qla2x00_alloc_iocbs(struct scsi_qla_host *vha, srb_t *sp)
+@@ -2727,7 +2727,7 @@ qla2x00_adisc_iocb(srb_t *sp, struct mbx_entry *mbx)
  }
  
  static void
--qla24xx_prli_iocb(srb_t *sp, struct logio_entry_24xx *logio)
-+qla24xx_prli_iocb(srb_t *sp, void *pkt)
+-qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *tsk)
++qla24xx_tm_iocb(srb_t *sp, void *pkt)
  {
-+	struct logio_entry_24xx *logio = pkt;
- 	struct srb_iocb *lio = &sp->u.iocb_cmd;
+ 	uint32_t flags;
+ 	uint64_t lun;
+@@ -2736,26 +2736,39 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *tsk)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct srb_iocb *iocb = &sp->u.iocb_cmd;
+ 	struct req_que *req = sp->qpair->req;
++	struct tsk_mgmt_entry *tsk;
  
- 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
-@@ -2592,12 +2593,13 @@ qla24xx_prli_iocb(srb_t *sp, struct logio_entry_24xx *logio)
- 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
- 	logio->port_id[1] = sp->fcport->d_id.b.area;
- 	logio->port_id[2] = sp->fcport->d_id.b.domain;
--	logio->vp_index = sp->vha->vp_idx;
-+	qla_logio_set_vp_index(sp->vha->hw, pkt, sp->vha->vp_idx);
- }
+ 	flags = iocb->u.tmf.flags;
+ 	lun = iocb->u.tmf.lun;
  
- static void
--qla24xx_login_iocb(srb_t *sp, struct logio_entry_24xx *logio)
-+qla24xx_login_iocb(srb_t *sp, void *pkt)
- {
-+	struct logio_entry_24xx *logio = pkt;
- 	struct srb_iocb *lio = &sp->u.iocb_cmd;
- 
- 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
-@@ -2622,7 +2624,7 @@ qla24xx_login_iocb(srb_t *sp, struct logio_entry_24xx *logio)
- 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
- 	logio->port_id[1] = sp->fcport->d_id.b.area;
- 	logio->port_id[2] = sp->fcport->d_id.b.domain;
--	logio->vp_index = sp->vha->vp_idx;
-+	qla_logio_set_vp_index(sp->vha->hw, pkt, sp->vha->vp_idx);
- }
- 
- static void
-@@ -2650,9 +2652,11 @@ qla2x00_login_iocb(srb_t *sp, struct mbx_entry *mbx)
- }
- 
- static void
--qla24xx_logout_iocb(srb_t *sp, struct logio_entry_24xx *logio)
-+qla24xx_logout_iocb(srb_t *sp, void *pkt)
- {
-+	struct logio_entry_24xx *logio = pkt;
- 	u16 control_flags = LCF_COMMAND_LOGO;
-+
- 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
- 
- 	if (sp->fcport->explicit_logout) {
-@@ -2669,7 +2673,7 @@ qla24xx_logout_iocb(srb_t *sp, struct logio_entry_24xx *logio)
- 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
- 	logio->port_id[1] = sp->fcport->d_id.b.area;
- 	logio->port_id[2] = sp->fcport->d_id.b.domain;
--	logio->vp_index = sp->vha->vp_idx;
-+	qla_logio_set_vp_index(sp->vha->hw, pkt, sp->vha->vp_idx);
- }
- 
- static void
-@@ -2691,12 +2695,14 @@ qla2x00_logout_iocb(srb_t *sp, struct mbx_entry *mbx)
- }
- 
- static void
--qla24xx_adisc_iocb(srb_t *sp, struct logio_entry_24xx *logio)
-+qla24xx_adisc_iocb(srb_t *sp, void *pkt)
- {
-+	struct logio_entry_24xx *logio = pkt;
-+
- 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
- 	logio->control_flags = cpu_to_le16(LCF_COMMAND_ADISC);
- 	logio->nport_handle = cpu_to_le16(sp->fcport->loop_id);
--	logio->vp_index = sp->vha->vp_idx;
-+	qla_logio_set_vp_index(sp->vha->hw, pkt, sp->vha->vp_idx);
- }
- 
- static void
-@@ -4057,8 +4063,10 @@ qla25xx_ctrlvp_iocb(srb_t *sp, struct vp_ctrl_entry_24xx *vce)
- }
- 
- static void
--qla24xx_prlo_iocb(srb_t *sp, struct logio_entry_24xx *logio)
-+qla24xx_prlo_iocb(srb_t *sp, void *pkt)
- {
-+	struct logio_entry_24xx *logio = pkt;
-+
- 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
- 	logio->control_flags =
- 	    cpu_to_le16(LCF_COMMAND_PRLO|LCF_IMPL_PRLO);
-@@ -4067,7 +4075,7 @@ qla24xx_prlo_iocb(srb_t *sp, struct logio_entry_24xx *logio)
- 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
- 	logio->port_id[1] = sp->fcport->d_id.b.area;
- 	logio->port_id[2] = sp->fcport->d_id.b.domain;
--	logio->vp_index = sp->fcport->vha->vp_idx;
-+	qla_logio_set_vp_index(sp->vha->hw, pkt, sp->fcport->vha->vp_idx);
- }
- 
- static int qla_get_iocbs_resource(struct srb *sp)
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 14b774f25b97..855d6dbeedec 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2583,8 +2583,7 @@ qla24xx_els_ct_entry(scsi_qla_host_t *v, struct req_que *req,
- }
- 
- static void
--qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
--    struct logio_entry_24xx *logio)
-+qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req, void *pkt)
- {
- 	const char func[] = "LOGIO-IOCB";
- 	const char *type;
-@@ -2594,8 +2593,20 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
- 	uint16_t *data;
- 	uint32_t iop[2];
- 	int logit = 1;
-+	struct qla_hw_data *ha = vha->hw;
 +	/*
-+	 * logio_entry_24xx_ext overlays logio_entry_24xx through
-+	 * io_parameter[10]: comp_status, io_parameter[0..10] and
-+	 * entry_status are at identical offsets and types in both layouts
-+	 * (only vp_index width differs, and that field is write-only on
-+	 * the issue path).  So all reads in this completion handler are
-+	 * stride-agnostic and we read through a single struct
-+	 * logio_entry_24xx * view; the trailing reserved_2[64] of the
-+	 * extended layout is irrelevant here.
++	 * tsk_mgmt_entry_ext overlays tsk_mgmt_entry through control_flags
++	 * (offsets 0-27 are byte-identical), so the common header writes
++	 * go through one struct tsk_mgmt_entry * view.  The ext layout
++	 * has no port_id and uses a wider __le16 vp_index at a different
++	 * offset, so port_id / vp_index assignments diverge per stride.
 +	 */
-+	struct logio_entry_24xx *logio = pkt;
++	tsk = pkt;
+ 	tsk->entry_type = TSK_MGMT_IOCB_TYPE;
+ 	tsk->entry_count = 1;
+ 	tsk->handle = make_handle(req->id, tsk->handle);
+ 	tsk->nport_handle = cpu_to_le16(fcport->loop_id);
+ 	tsk->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
+ 	tsk->control_flags = cpu_to_le32(flags);
+-	tsk->port_id[0] = fcport->d_id.b.al_pa;
+-	tsk->port_id[1] = fcport->d_id.b.area;
+-	tsk->port_id[2] = fcport->d_id.b.domain;
+-	tsk->vp_index = fcport->vha->vp_idx;
++	if (IS_QLA29XX(ha)) {
++		((struct tsk_mgmt_entry_ext *)pkt)->vp_index =
++		    cpu_to_le16(fcport->vha->vp_idx);
++	} else {
++		tsk->port_id[0] = fcport->d_id.b.al_pa;
++		tsk->port_id[1] = fcport->d_id.b.area;
++		tsk->port_id[2] = fcport->d_id.b.domain;
++		tsk->vp_index = fcport->vha->vp_idx;
++	}
  
--	sp = qla2x00_get_sp_from_handle(vha, func, req, logio);
-+	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
- 	if (!sp)
- 		return;
- 
-@@ -2615,7 +2626,7 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		    fcport->d_id.b.area, fcport->d_id.b.al_pa,
- 		    logio->entry_status);
- 		ql_dump_buffer(ql_dbg_async + ql_dbg_buffer, vha, 0x504d,
--		    logio, sizeof(*logio));
-+		    pkt, qla_rsp_entry_size(ha));
- 
- 		goto logio_done;
+-	if (flags & (TCF_LUN_RESET | TCF_ABORT_TASK_SET|
+-	    TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA)) {
++	if (flags & (TCF_LUN_RESET | TCF_ABORT_TASK_SET |
++	    TCF_CLEAR_TASK_SET | TCF_CLEAR_ACA)) {
+ 		int_to_scsilun(lun, &tsk->lun);
+-		host_to_fcp_swap((uint8_t *)&tsk->lun,
+-			sizeof(tsk->lun));
++		host_to_fcp_swap((uint8_t *)&tsk->lun, sizeof(tsk->lun));
  	}
-@@ -2626,7 +2637,7 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		    type, sp->handle, fcport->d_id.b24, fcport->port_name,
- 		    le32_to_cpu(logio->io_parameter[0]));
+ }
  
--		vha->hw->exch_starvation = 0;
-+		ha->exch_starvation = 0;
- 		data[0] = MBS_COMMAND_COMPLETE;
- 
- 		if (sp->type == SRB_PRLI_CMD) {
-@@ -2665,6 +2676,7 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
- 
- 	iop[0] = le32_to_cpu(logio->io_parameter[0]);
- 	iop[1] = le32_to_cpu(logio->io_parameter[1]);
-+
- 	lio->u.logio.iop[0] = iop[0];
- 	lio->u.logio.iop[1] = iop[1];
- 	switch (iop[0]) {
-@@ -2689,14 +2701,14 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		data[0] = MBS_COMMAND_ERROR;
- 		break;
- 	case LSC_SCODE_NOXCB:
--		vha->hw->exch_starvation++;
--		if (vha->hw->exch_starvation > 5) {
-+		ha->exch_starvation++;
-+		if (ha->exch_starvation > 5) {
- 			ql_log(ql_log_warn, vha, 0xd046,
- 			    "Exchange starvation. Resetting RISC\n");
- 
--			vha->hw->exch_starvation = 0;
-+			ha->exch_starvation = 0;
- 
--			if (IS_P3P_TYPE(vha->hw))
-+			if (IS_P3P_TYPE(ha))
- 				set_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags);
- 			else
- 				set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
-@@ -2712,16 +2724,12 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		ql_log(ql_log_warn, sp->vha, 0x5037, "Async-%s failed: "
- 		       "handle=%x pid=%06x wwpn=%8phC comp_status=%x iop0=%x iop1=%x\n",
- 		       type, sp->handle, fcport->d_id.b24, fcport->port_name,
--		       le16_to_cpu(logio->comp_status),
--		       le32_to_cpu(logio->io_parameter[0]),
--		       le32_to_cpu(logio->io_parameter[1]));
-+		       le16_to_cpu(logio->comp_status), iop[0], iop[1]);
- 	else
- 		ql_dbg(ql_dbg_disc, sp->vha, 0x5037, "Async-%s failed: "
- 		       "handle=%x pid=%06x wwpn=%8phC comp_status=%x iop0=%x iop1=%x\n",
- 		       type, sp->handle, fcport->d_id.b24, fcport->port_name,
--		       le16_to_cpu(logio->comp_status),
--		       le32_to_cpu(logio->io_parameter[0]),
--		       le32_to_cpu(logio->io_parameter[1]));
-+		       le16_to_cpu(logio->comp_status), iop[0], iop[1]);
- 
- logio_done:
- 	sp->done(sp, 0);
-@@ -4119,8 +4127,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 			    (struct vp_rpt_id_entry_24xx *)pkt);
- 			break;
- 		case LOGINOUT_PORT_IOCB_TYPE:
--			qla24xx_logio_entry(vha, rsp->req,
--			    (struct logio_entry_24xx *)pkt);
-+			qla24xx_logio_entry(vha, rsp->req, pkt);
- 			break;
- 		case CT_IOCB_TYPE:
- 			qla24xx_els_ct_entry(vha, rsp->req, pkt, CT_IOCB_TYPE);
 diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index f9b326c02055..7dff227899a5 100644
+index 7dff227899a5..9bef87862077 100644
 --- a/drivers/scsi/qla2xxx/qla_mbx.c
 +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -2573,7 +2573,7 @@ qla24xx_login_fabric(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
-     uint8_t area, uint8_t al_pa, uint16_t *mb, uint8_t opt)
- {
- 	int		rval;
--
-+	void		*lg_buf;
- 	struct logio_entry_24xx *lg;
- 	dma_addr_t	lg_dma;
- 	uint32_t	iop[2];
-@@ -2588,12 +2588,13 @@ qla24xx_login_fabric(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
- 	else
- 		req = ha->req_q_map[0];
- 
--	lg = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &lg_dma);
--	if (lg == NULL) {
-+	lg_buf = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &lg_dma);
-+	if (!lg_buf) {
- 		ql_log(ql_log_warn, vha, 0x1062,
- 		    "Failed to allocate login IOCB.\n");
+@@ -3411,6 +3411,7 @@ qla24xx_abort_command(srb_t *sp)
+ struct tsk_mgmt_cmd {
+ 	union {
+ 		struct tsk_mgmt_entry tsk;
++		struct tsk_mgmt_entry_ext tsk_ext;
+ 		struct sts_entry_24xx sts;
+ 		struct sts_entry_24xx_ext sts_ext;
+ 	} p;
+@@ -3450,16 +3451,25 @@ __qla24xx_issue_tmf(char *name, uint32_t type, struct fc_port *fcport,
  		return QLA_MEMORY_ALLOC_FAILED;
  	}
-+	lg = lg_buf;
  
- 	lg->entry_type = LOGINOUT_PORT_IOCB_TYPE;
- 	lg->entry_count = 1;
-@@ -2607,8 +2608,9 @@ qla24xx_login_fabric(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
- 	lg->port_id[0] = al_pa;
- 	lg->port_id[1] = area;
- 	lg->port_id[2] = domain;
--	lg->vp_index = vha->vp_idx;
--	rval = qla2x00_issue_iocb_timeout(vha, lg, lg_dma, 0,
-+	qla_logio_set_vp_index(ha, lg, vha->vp_idx);
-+
-+	rval = qla2x00_issue_iocb_timeout(vha, lg_buf, lg_dma, 0,
- 	    (ha->r_a_tov / 10 * 2) + 2);
- 	if (rval != QLA_SUCCESS) {
- 		ql_dbg(ql_dbg_mbx, vha, 0x1063,
-@@ -2678,7 +2680,7 @@ qla24xx_login_fabric(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
- 						 */
- 	}
- 
--	dma_pool_free(ha->s_dma_pool, lg, lg_dma);
-+	dma_pool_free(ha->s_dma_pool, lg_buf, lg_dma);
- 
- 	return rval;
- }
-@@ -2849,6 +2851,7 @@ qla24xx_fabric_logout(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
-     uint8_t area, uint8_t al_pa)
- {
- 	int		rval;
-+	void		*lg_buf;
- 	struct logio_entry_24xx *lg;
- 	dma_addr_t	lg_dma;
- 	struct qla_hw_data *ha = vha->hw;
-@@ -2857,12 +2860,13 @@ qla24xx_fabric_logout(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
- 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x106d,
- 	    "Entered %s.\n", __func__);
- 
--	lg = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &lg_dma);
--	if (lg == NULL) {
-+	lg_buf = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &lg_dma);
-+	if (!lg_buf) {
- 		ql_log(ql_log_warn, vha, 0x106e,
- 		    "Failed to allocate logout IOCB.\n");
- 		return QLA_MEMORY_ALLOC_FAILED;
- 	}
-+	lg = lg_buf;
- 
- 	req = vha->req;
- 	lg->entry_type = LOGINOUT_PORT_IOCB_TYPE;
-@@ -2875,8 +2879,9 @@ qla24xx_fabric_logout(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
- 	lg->port_id[0] = al_pa;
- 	lg->port_id[1] = area;
- 	lg->port_id[2] = domain;
--	lg->vp_index = vha->vp_idx;
--	rval = qla2x00_issue_iocb_timeout(vha, lg, lg_dma, 0,
-+	qla_logio_set_vp_index(ha, lg, vha->vp_idx);
-+
-+	rval = qla2x00_issue_iocb_timeout(vha, lg_buf, lg_dma, 0,
- 	    (ha->r_a_tov / 10 * 2) + 2);
- 	if (rval != QLA_SUCCESS) {
- 		ql_dbg(ql_dbg_mbx, vha, 0x106f,
-@@ -2898,7 +2903,7 @@ qla24xx_fabric_logout(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
- 		    "Done %s.\n", __func__);
- 	}
- 
--	dma_pool_free(ha->s_dma_pool, lg, lg_dma);
-+	dma_pool_free(ha->s_dma_pool, lg_buf, lg_dma);
- 
- 	return rval;
- }
++	/*
++	 * tsk_mgmt_entry_ext overlays tsk_mgmt_entry through control_flags;
++	 * the common-header writes go through tsk->p.tsk and only port_id
++	 * (24xx-only) and vp_index width / offset diverge.
++	 */
+ 	tsk->p.tsk.entry_type = TSK_MGMT_IOCB_TYPE;
+ 	tsk->p.tsk.entry_count = 1;
+ 	tsk->p.tsk.handle = make_handle(req->id, tsk->p.tsk.handle);
+ 	tsk->p.tsk.nport_handle = cpu_to_le16(fcport->loop_id);
+ 	tsk->p.tsk.timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
+ 	tsk->p.tsk.control_flags = cpu_to_le32(type);
+-	tsk->p.tsk.port_id[0] = fcport->d_id.b.al_pa;
+-	tsk->p.tsk.port_id[1] = fcport->d_id.b.area;
+-	tsk->p.tsk.port_id[2] = fcport->d_id.b.domain;
+-	tsk->p.tsk.vp_index = fcport->vha->vp_idx;
++	if (IS_QLA29XX(ha)) {
++		tsk->p.tsk_ext.vp_index = cpu_to_le16(fcport->vha->vp_idx);
++	} else {
++		tsk->p.tsk.port_id[0] = fcport->d_id.b.al_pa;
++		tsk->p.tsk.port_id[1] = fcport->d_id.b.area;
++		tsk->p.tsk.port_id[2] = fcport->d_id.b.domain;
++		tsk->p.tsk.vp_index = fcport->vha->vp_idx;
++	}
+ 	if (type == TCF_LUN_RESET) {
+ 		int_to_scsilun(l, &tsk->p.tsk.lun);
+ 		host_to_fcp_swap((uint8_t *)&tsk->p.tsk.lun,
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 81f3731ee384..b0e89dfff2e8 100644
+index b0e89dfff2e8..6c951839507b 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -8392,6 +8392,7 @@ qla2x00_module_init(void)
- 	BUILD_BUG_ON(sizeof(struct init_cb_24xx) != 128);
- 	BUILD_BUG_ON(sizeof(struct init_cb_81xx) != 128);
- 	BUILD_BUG_ON(sizeof(struct logio_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct logio_entry_24xx_ext) != 128);
- 	BUILD_BUG_ON(sizeof(struct mbx_entry) != 64);
- 	BUILD_BUG_ON(sizeof(struct mid_init_cb_24xx) != 5252);
- 	BUILD_BUG_ON(sizeof(struct mrk_entry_24xx) != 64);
+@@ -8428,6 +8428,7 @@ qla2x00_module_init(void)
+ 	BUILD_BUG_ON(sizeof(struct sts_entry_24xx) != 64);
+ 	BUILD_BUG_ON(sizeof(struct sts_entry_24xx_ext) != 128);
+ 	BUILD_BUG_ON(sizeof(struct tsk_mgmt_entry) != 64);
++	BUILD_BUG_ON(sizeof(struct tsk_mgmt_entry_ext) != 128);
+ 	BUILD_BUG_ON(sizeof(struct tsk_mgmt_entry_fx00) != 64);
+ 	BUILD_BUG_ON(sizeof(struct verify_chip_entry_84xx) != 64);
+ 	BUILD_BUG_ON(sizeof(struct verify_chip_rsp_84xx) != 52);
 -- 
 2.47.3
 
