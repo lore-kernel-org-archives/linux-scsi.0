@@ -1,87 +1,87 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 909D346E018;
-	Thu, 23 Jul 2026 11:28:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4AD844AB6F;
+	Thu, 23 Jul 2026 11:30:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784806084; cv=fail; b=fg2qYxa6+XImJhGsAY5rlHDiA40hAVW2Wd5yGBe+HMzlsihMeAscW04Y/W2/1dsDoN+hQAiEaeD6TGJGjjK7C1RU0jsFBidQbP57qK8H3JXECmFRaReGjUCnYY5MwFAd3o6xT5jM2HbURsC6Sj2sC05bmwjdXXc7qDXsCTdC/5M=
+	t=1784806226; cv=fail; b=B2mm1t8DckiG+DWJc/+SLOQt5pa5KPQIBYGlrtDBllPE73W7Cm9SA6KfhRIckCPT/uZU1Ht8tI03x56rRWvJTHf5SQ+i/GubDaiq7AWERRmvi1mx9JnDyEQgvjWqqdMjXVXiiT7eZ/FrMlPE0A4vvNgF9tJ7QhrPYH6Em3RNyas=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784806084; c=relaxed/simple;
-	bh=Md4hVwgSpEcuAOq18mHsx61T714dWHNxOgSbP3OHSXk=;
+	s=arc-20240116; t=1784806226; c=relaxed/simple;
+	bh=Ea3/3rsr8Nr1vblF5FBVhFxuD986Oo+ZUxt7xA8GUE8=;
 	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=qP4s3pAAv62D0XdnzHQZ6H6N3nagZknCj5NQaTKojD8zKzKoywkD35MPIyIKie1Cat6hb2k1VXw6kDSXDhLonu2CEHZT9e3GKvb2gwclK4qjHdt4V2C0dRh58y84KxkdJ4XjeIeKe4iZK1VFI78dU/1NF2yCgLy61Kg2gEe4YMw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=czOV30lr; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=LFgCYvD/; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Type:MIME-Version; b=HtslQIN/T3mKIGgG7bpkyBgUJ9TGouBAutvnS1tLRVnZtLak5rtE247/r2epC5YYuIcU7S5amH/2fyOVvwtKr8TvdK05nJERZQFunlS5jkToqY56fDI1H0WrgZaFkQp4wEtzsV3AQA9ojaPI+nhseH9S5nBVRDzGAnfXU2PSGPk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=J7y1oTCP; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=H9dfb85P; arc=fail smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="czOV30lr";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="LFgCYvD/"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66MJtXoq3573774;
-	Thu, 23 Jul 2026 11:28:01 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="J7y1oTCP";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="H9dfb85P"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66MJtZuT3391774;
+	Thu, 23 Jul 2026 11:30:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=p+fNFg3B3xnTKZDEh+qb8gxt5M5QqE9qjzFsaGcUA0w=; b=
-	czOV30lr8JOiXvOsF6QU7Q1rGK7JqJjfPZOb1yWHO2hjfEaNHbzF8CvcuJxfbvU4
-	lD9aXHHpA+34dWm27++ogcANhiE9GHJVKD+8OApOn5xSVxyOJ4TFiIpq7uYsgzRb
-	49WwmHgnecqiHyRxtfAhXA06UIVWFEtSRjibzO16XcLtctpQWVkUBHPI/+YbRGqY
-	XRrhlQ6TjLKW3WcI550WNh2RyBX7htUhUhLhugx4LvIQnJW4vjBi6uvqBnVen/wk
-	hQrcxMhNnbkuj2JmsoB3bwyo9C9FGiH2GtTEogF+lcj5z1NGTHJe8FekbJmjklD3
-	fTL4vm6+/8U7UAObk5lvEA==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fg1sqptu5-1
+	corp-2025-04-25; bh=khCFtEzF9Jp+sj2vBNsalOKlWtPy3zkpIK3o9pSco7g=; b=
+	J7y1oTCP4MS++S9a/gFfElHIhiv0FFumxTXgguXqV366D+UQDIUoHwnLzotbH7bo
+	7iAkgEcP2wFmypUo6/6AD/lJIGVajEnDzUmCxrezpCOcxTkpzSen3mALP3Uv82/t
+	3IpqT/cXpRRSDzt9CFnRZXS7TG9WmyfyjgMZmnwuP6zG7snMQpS64oepqLwQh9G3
+	7ZahFhvrBi1Q+RCcXEqxgI8qFz/N8+KuviPxN9SYKbaPLW6W38/pd+JKgAyiUTeT
+	dT9/2sSjSX5G/36mKCz8zjDQwsui3TZzrOzuntlKvdwGiRBz1ho1TcvGa9GXzLn5
+	5WseA3knOrCUOmEtbzHfrA==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fg1tjxrmn-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 23 Jul 2026 11:28:01 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66NBNBbT021827;
-	Thu, 23 Jul 2026 11:28:00 GMT
-Received: from sn4pr0501cu005.outbound.protection.outlook.com (mail-southcentralusazon11011004.outbound.protection.outlook.com [40.93.194.4])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4ffyxeque7-1
+	Thu, 23 Jul 2026 11:30:23 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66NBSLis020173;
+	Thu, 23 Jul 2026 11:30:23 GMT
+Received: from ph0pr06cu001.outbound.protection.outlook.com (mail-westus3azon11011010.outbound.protection.outlook.com [40.107.208.10])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4fgts11tgv-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 23 Jul 2026 11:28:00 +0000 (GMT)
+	Thu, 23 Jul 2026 11:30:23 +0000 (GMT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=kw5ZjM2eRexaXrcS3wK8cVf/UKG5d5TkIJXPFlG/20dyfLwUH1QtHgR0cc5hGPdifxYwF6o+57k30RN9OjGN86ojZbuk4SUPsbzsjMWdtMKDqEM5WwensrLi15KgDgmtyDfO7r/dWtwrBlTm+A7NbycgSejkyNB5tFtj9b0eJkzbyXiBQKcYky+Urhu65y1+7soimFvYurzIkhZBk9qor9MDrAkt3+DIVonOgk8xCIoNPngBe2jSrMxbEzDue+qsoVkXDaPSPITzNbm6ppLm433pJmuWpSHpJUkv8AssvgSzS7f6EJy7vHBSh+q9nH6ZraANyznqjVEoBF/Y07BUqA==
+ b=TA8RInreQfGGQ2rTYEYU57lA9rG/Bkf6xtBJfSLhUE9vs5e1nN2DeJFHw/FxX3RmNhO+1AUT58m9Y7rnWVR/lIeKXedEwHgMrBUEuNlUADOYCgoPvcgfzTnrqxFUHgSX84qJHd8DQL3B0dYlCdqszYwBpsFUG29QxILBKydTe++H5WlvQvRFwW5lKsWke2wxuQP8ucnSSVS5iTzOlqfJc9Ay5+RoGo54sv3JfWcPBTYqKqpJvTFq26vW0ugYmxffJ1JiF1jpxoebOv7EVy54+K0z6g7j3X1sLD8blpyTo0GqHAct+LA8DMhe7XerQaDIlB1dI3YRzHT2hej5zM1N/g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=p+fNFg3B3xnTKZDEh+qb8gxt5M5QqE9qjzFsaGcUA0w=;
- b=Tm325kDMh2HyKrvZrNKuDX8q/qAFDx7uox1R/Xm8hAXmoLlix+Y+IyA/5qvp9IBcuPO67IBgVYiPL12j7JKbm4/ZAm/1EZsANf9fyoznBpFDdsVzZggeuD6LlgJLBALG3ZE+Cqi450cyTer8tHqTNYVORGN+WgjttOdK5A0kVpOojSdgu3STUz/UBR/FigefE/NMSfo4NOALZh8JtgdCMiDDTfY7vrJq6rF4Q65Rlrici3+WkPldAokJ4CwoHEdcuGGBQfF0SDfFTlQ9BKP4INI00IVtTIz53qAEdvLhQNx+s6EEq4ACAUM+5+0rtmkgerpmBnhszSZwEuAq+iBWTw==
+ bh=khCFtEzF9Jp+sj2vBNsalOKlWtPy3zkpIK3o9pSco7g=;
+ b=b9LpLPf/Rs2y2KF6wRHCX/ZPv3wXrI8zLy5VIIwezn7yEdATJcLaQUTbxb8F7ECw0JfvM6/XZJocR71LqVzjbgeJLefOkrdEdRariAoUSzlf8JvICkTJZJk3RtBSIsCEL89soOD+ertG50PGvJbjZeSGOAJmgGbYslvHr5TS8ysUsxliaOrMwaQcxJ5yeybL0d37mY5JNlMIlzk3rMIDmng0YrAsgXpr6cOa4EH/MYi2O7ozODl3PYzBUrnrSXfPl+f2uZKmolT/plikqtWgmsZiQU8IKRF9uB/sQ02gC27cU2HhTDvTJ6wcgm7jBi+NjDWK1IfqBNkFZrxZehMf+A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=p+fNFg3B3xnTKZDEh+qb8gxt5M5QqE9qjzFsaGcUA0w=;
- b=LFgCYvD/InP70QgjE9gJXWPRzXDY90UWuD9RA/gawrk7w5T53kC7S3n/r9qZFUJsKB7fGxSOj2psKmDYgTq9IMJzDqVcxOpMiUUtmklpBEo4FkpblF5LEU5qTHowqa76hMjVFgQZXTy+ZgMeQsTsRq7sQVcMw+tkkCF7j+nLQUU=
+ bh=khCFtEzF9Jp+sj2vBNsalOKlWtPy3zkpIK3o9pSco7g=;
+ b=H9dfb85PnrambyHUDt7YAbs6EUcRb1uGIvTLoSJwHY2H0eeXbFOo4lpRnHueTvzEyrjAq7wg2f13oLLRBp2ZY5rBjAxwvhZan5UjRuqwTbIIhxfrf33wROjHye+dxS8NnkqScyikmBj4cu+7n8IDnouWm3sD16ze3EIKe9FNvio=
 Received: from PH7PR10MB6228.namprd10.prod.outlook.com (2603:10b6:510:213::11)
  by CH9PR10MB997856.namprd10.prod.outlook.com (2603:10b6:610:345::24) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.245.11; Thu, 23 Jul
- 2026 11:27:55 +0000
+ 2026 11:30:18 +0000
 Received: from PH7PR10MB6228.namprd10.prod.outlook.com
  ([fe80::11a9:2dfe:4a4a:a58d]) by PH7PR10MB6228.namprd10.prod.outlook.com
  ([fe80::11a9:2dfe:4a4a:a58d%4]) with mapi id 15.21.0245.009; Thu, 23 Jul 2026
- 11:27:55 +0000
-Message-ID: <12619e95-6a8b-4925-8fc5-e12b14d88f11@oracle.com>
-Date: Thu, 23 Jul 2026 12:27:52 +0100
+ 11:30:18 +0000
+Message-ID: <1abe322f-4acd-44f2-bffa-d8bb4eaa8bb1@oracle.com>
+Date: Thu, 23 Jul 2026 12:30:14 +0100
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 25/28] scsi: sd: support multipath disk
+Subject: Re: [PATCH v4 27/28] scsi: sd: add mpath_numa_nodes dev attribute
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-scsi@vger.kernel.org
 References: <20260723093627.2327456-1-john.g.garry@oracle.com>
- <20260723093627.2327456-26-john.g.garry@oracle.com>
- <20260723104735.40A5C1F000E9@smtp.kernel.org>
+ <20260723093627.2327456-28-john.g.garry@oracle.com>
+ <20260723105230.5040E1F000E9@smtp.kernel.org>
 Content-Language: en-US
 From: John Garry <john.g.garry@oracle.com>
 Organization: Oracle Corporation
-In-Reply-To: <20260723104735.40A5C1F000E9@smtp.kernel.org>
+In-Reply-To: <20260723105230.5040E1F000E9@smtp.kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: FR3P281CA0080.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:1f::15) To PH7PR10MB6228.namprd10.prod.outlook.com
+X-ClientProxiedBy: LO4P123CA0104.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:191::19) To PH7PR10MB6228.namprd10.prod.outlook.com
  (2603:10b6:510:213::11)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -91,284 +91,168 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: PH7PR10MB6228:EE_|CH9PR10MB997856:EE_
-X-MS-Office365-Filtering-Correlation-Id: d4007a11-238e-49d0-1bc0-08dee8ad70f2
+X-MS-Office365-Filtering-Correlation-Id: 4daf0942-f99d-426c-1035-08dee8adc5be
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|366016|1800799024|376014|6133799003|56012099006|5023799004|4143699003|10067099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|23010399003|366016|1800799024|376014|6133799003|56012099006|4143699003|10067099003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	9PENfy+MyGtoL5GvXksyNPB9b2DSmdIaT5vyhMdml2U8iNlexk/lcagluOBh1xEp4qwdAfPf56rZE9jnxTOeC5wuO2pi8LjtTJ9TTgQqzYPcxquLc74Aw0JU/6T5t7cdyS/shWUcvVLEBII5Vy1RnWrQ7b4Fe+CHlnDAUC39JPBIBaM4sC+MSHDMr8Z/Aah8vZg1yxjo0HG425D+YkDwLAdEIWkhlKijKYvbkuO5WoS5dSfZWSAq0kC28GrkhNeE08Ruwi5aDtFsjv8EuD12i2rPRjXgCzGc3Ra6js813+FVZXpxF/D368eEAeCQnnWRRCkz0f/Eu8VI6l0NWep+yEk3Dtpy4IVz9E1fOuJnTOnHQEGRPpHjSYe8+unnj84U3CxzLE6+gw6n/OemKapwBQvZaLsgKhwmYyqa0ucSQcTKY5QoOhV3az0SxQPQFqA0pq/6xTywL1l/RN/ZYDwbuFI3xF9CpCMTAkGV11AipdDUDVR4OHaeGuGkSi0QfGoBgOFEgnbcT/m7+ImhrdQpdE30UTIzEj/Vu0HreW5uSgpMUJS60BYHAF729Mt8ZyChmEfMem/AwYe/OpHnD5q5o0mebNvsY8aEpmVHpttThhWbOIWQmk2eTlFUQjtpA0s6/WtRiiHBJUlaWvnWNepXo2ufyqGlnVmUMLAS23s4mJw=
+	lhl9Td0MuQSz/jag64eDlCvgdEzqNGXW2uoAWktNRq3Irgen5+b1kY7e25rzGTQlnnoGi9SH6caQI/8l/m0oEPOvAs2Me/og6TuJCIt/JiFLbDz3/FKvWNsXZbZxrlL87cbAeMwuYrDN501H/lMEcMO9OTt3rLVegJLGOqJktYu/rHsycYd1lIM+ScdflkvRy3H1ph3ZKcoiXyf2yzHtEL2qy13wtStTIvKxcX67kSHfm66L7u+ORP8CBlYk644UB9oy2gquLMZM4ITRDsi8cYf27FThP5PnsTlHz2MdmFwJv/i/wErQEOEl3X3zlXNTEwNqS8PI9zlzl3FPqrNvA9ML3Ir85X0/HR8y5j+CrlAJLE0XNc4FJAIDf0CAE+snDvvXBRFBlUC03D4KtJZ9gDDhF8HgX9OrHPsak8nn0KOMC8MYqYS8E7lFRzxkrpjrgJSpE3meP93LZni85G0fKMXKMzyGMfFmK25jcOLDGgkHdTQ3ZTQ91IwqOIpyJuc0b7D4iAwP6JeKr8r9IGlnLmHTWN0Jt7/DN0WqyDh42E2gHZ8hXMIBlLmqmM701UPTVYDUewRAXcYIEXHuJhzOEQd4HXiGdBHWfBH5osNl2VdDTPWgguWn2Ic65hDVC4xGtveI9OYGmmA+gf9T0fbbu+DyxQFbas5mDOYckwslOms=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR10MB6228.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(376014)(6133799003)(56012099006)(5023799004)(4143699003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR10MB6228.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(376014)(6133799003)(56012099006)(4143699003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?emJHMm9pSDVNMzlnZTh3UlViczVORXFiRmVDUlNSRkdMSVl6ckhEWGo5TkRp?=
- =?utf-8?B?Umk0dUJYRUcyZVFNbmw3d1RqTXdWMHJQSkd4RFBCcko3azFXZkVKOC9MM2N0?=
- =?utf-8?B?SEtRbUkrN3Y4Umk0d3FUNG96RExIOHgvV3RSOEJUN2pQTzZUUkRqWldIcUxR?=
- =?utf-8?B?TkVFTXBrT0dTR3F2aUd4Q0g4RU4ybnh3ZkxqczdHVlRHL2Z5cHg3RThjVk1s?=
- =?utf-8?B?Wkh5UXdRaXFQbmxvS2VURHRROFNPakRUZllyclRWYkJPZDFDNitoMFlQdktU?=
- =?utf-8?B?SHdiVklXVkQzQzRoWUpFZjYvK3JqWFp0WlBSVDk5bHN5MVFIUXZDdGVEZzEx?=
- =?utf-8?B?RCtNem5INzc5UGx6M3dSZFd4dlpaM0dCcWxSeGs2enJLZ3hFL0NvZmlFeDIr?=
- =?utf-8?B?L0R0d09SYW4yaW4yNXVpSWtYVTIvbnRPY3JNZGM0NDBQaVFYVFFtT3hIb1BI?=
- =?utf-8?B?QlV1RnhBekphUjNaTnZ5TWxGdk4zL1pRZWY5Y0dMTzdZMTkwemlUNlI3ZGpo?=
- =?utf-8?B?MEEyMEh6NllWblhqL25VcFpXM3ptWHl4UXVNalF0V2RReVFsekFSd0lTSVlQ?=
- =?utf-8?B?SkVYZjV6N3AwOG0rV2p2VXA3OS8vQUtCVVh3eis5MzBLZG5sczJYMWNpQlVt?=
- =?utf-8?B?N1JZNHZTdU5iVHBMQVNXamJoN0ZRWUVCSGFXZFNqODdUbERXT2c3OXVTVVZQ?=
- =?utf-8?B?KzlPWm9TTzNpS2pDNXBBeFA1REplM09Hd3NDRWM0RWpUNjI2bUs2czBORGFV?=
- =?utf-8?B?cXk0N1hoM0ZRd2VxM3QxQTI3d1hkU3hmK2ZLRVBuWUFZbEl4YjJuZTArRWt4?=
- =?utf-8?B?QmNFUVZlTWRVYStubmlkd2lWTnM2R25zVld6ZXdUVmhPTjN0Y3lqUi9IWHZU?=
- =?utf-8?B?eUtsWVk5L1Rxc0RwbFFxMUZPaTZHUmdEUG50eXJIbnRwWHk1aVNWbm94V25B?=
- =?utf-8?B?RlMrM09mbmM5ek03NWVab0poL2JsTEpicHVTSXJFVXZnTnJwKzZ6b0d2cXB5?=
- =?utf-8?B?Wm1GRGtKejl4V2o1UWYxdjBGT0RXcFk3cElycE1ZOFpjcTJNUFJ4M2NqUHNq?=
- =?utf-8?B?TnlBYU5jNmh5aFlLYVdSQ2Z3NEV3czJrSFgxMUN4dkZGc0g2TTFXcHRWWWZ0?=
- =?utf-8?B?a1RCSDBMbmpRK2lDamgrTHJ5RnBGMXg2RGtrZlFzNFpWa3h0cldsWXI5a1Yx?=
- =?utf-8?B?dk1qMTFWaWwvOTVLMXRRSGtQQ1htRzNXdGxSRlFla2dBbHo2ZXY1T1JEN012?=
- =?utf-8?B?UmRESlNZNjZkWTdwZTE3MlI1V1loR0RiRHdXalJVb1VIcGhSY09PdHlLMHI4?=
- =?utf-8?B?TW5yeUo1RmNMbHR2Zkp5akpRQy9CK0lFdVpoVjh3UENpNmJyY2hyOEtNbjgv?=
- =?utf-8?B?MzEzRVkwb295Z2FQeWRiOEE0WkVSRlJpQXMvdmlnbkEyNlhIVjNDTGk3MDJ1?=
- =?utf-8?B?aEJRR1oyc09aazBMTHRJVVN5Q2lPV3ZGR2pSWWxIZGlUaHdkcU5EZEZtOEt4?=
- =?utf-8?B?MVQweVc5eUoraW1tU1Y1d09BNndqR1RCdFoyZkpoZ3RleTVCYnFZVlI1Vitv?=
- =?utf-8?B?ejNxNy9BeFRNSjNaRC9uWEZiQUZuS2tCN0ZCRUlqOWtyRVBVWGFZQVpMUkJz?=
- =?utf-8?B?Z1ZvdnI2M05veG1BRlBIMUQ5ZjI3U0ZpMVRMOWhIbFE0dEg2ME5lZ0xjZFBB?=
- =?utf-8?B?MUJKUFdvNmtEaDBNL3NkMEk5NTVGMUlWRXdySTY3ckZQbEFUUWJ6V0NvdHo2?=
- =?utf-8?B?cFVoeURSWGpiNlNJVjluZkV2K1MxZDg1SHRwSDFuc1VsZzl3UTFCUlcxblIr?=
- =?utf-8?B?N3V0Y2phMnpqa3JtcWl1b2NWZ1NIMDQ0dnh1cTNsQlJwOWNMbVlIdzM0WkxM?=
- =?utf-8?B?Sk56aUZaSU55NUtERFVsQVpxZGFZc2lmcjdHQXJzUGh0VkVTYnRrTGFLMXVY?=
- =?utf-8?B?T04xWjJEOHBwemdvNjB2YW1ReFo2UHRuQkdqMEhvNTNjT2c0TlJTS002Nm1i?=
- =?utf-8?B?UE85SzdkZHpQMnlmZDk4Y0RTcmJxOFNMU0FSSFpzTG1oRzNXcDBISW83STZj?=
- =?utf-8?B?QkFoVFVva0RUUC81OXZwOXBaRkFFZ3JscGdIZFY4alhqcURna2JJK0NZWHJN?=
- =?utf-8?B?K2FWV0tGMkNKQkFESDVsdmkyclVDdVYwMjc5R0c0d0dmN1FRT2NDaHhNTlNJ?=
- =?utf-8?B?QzVBNEdlVE92V3czSFRjVWk4MmgzNUZqTHFBVkN1OXVERWMxQ1ZMVnZkNHpt?=
- =?utf-8?B?ZldoQnhjdDZvZVVXaHJOSHF2eXV4QS9BKzNrd1Mvejd5UDBUaHFxZHFCR2F2?=
- =?utf-8?B?YmlwNlMzNE81VTd1dmtITVoxU0RNc1N0emt5bHhSdnVNbS9IRnlWbWZOZHFD?=
- =?utf-8?Q?MzfMsv1DgC/TacW8=3D?=
+	=?utf-8?B?K3VEbWlSNzVXVithZHhvM0xkVXdLUXZIWXR5cjE3ZFpDUW0xTjVVTm5SOTBm?=
+ =?utf-8?B?dHpjdittRHlXUEk2cHNJOGpTaS9NYy84L0xQTkpJTW9BSURWSkhzWjFYQ2pG?=
+ =?utf-8?B?aWRPdkIxaFJUN21YbTRoRFRPQUhRZWlMclBLdlFHVmw4Um4zMlY2Z25GOFli?=
+ =?utf-8?B?THlaVjU0UjZzd0hnbmZNR2RSNW05a2hneUc3b215QW9aYTkzOXc3bzBQYndD?=
+ =?utf-8?B?Q0NWWWdYUFZXM3NrZGlqS1JrV1V3T1Jjb29iSmM5cHNudjViS29iaEdzeWJs?=
+ =?utf-8?B?R3VQRzRnWmxVdFJ5UkhQbCtRSmFNYk1aWkJabHBGSXFSNU1BV1JQOUJMK1ZE?=
+ =?utf-8?B?dXl6Sng5K1BXTlVZejc4NHlQUE1nR05XMlJRM1RlWTRSYUpTZnd1bVFxcEpL?=
+ =?utf-8?B?blREVC8xY3UrZEJ2V3NVQXVPRkN6Q2RqamtmTTQ5cUJRRjB1d0xkbHd5cmVY?=
+ =?utf-8?B?Vkt1dU1WSDJlaFhCajlFeGRqQVJKUjQ1M3pQdCtrdzJSWVlUYTBQVDZZZHVT?=
+ =?utf-8?B?eDBDZkRmMWRiNUJyWmplN2ZMSmxOREdaYVFEQW1yYjcveFBQRVp0TnNyS2U0?=
+ =?utf-8?B?VGF4ekNGYmZrYzYrdVhwZFBiNGgzN2NuVEE3UVpVV3VyVWFsQ0JjUUJ5RDBG?=
+ =?utf-8?B?bHlkUTJTS1hkK0sxcUFwQmprUXF2MzBsM2ViTjhsaTExQ0JnT082bHV1NWNy?=
+ =?utf-8?B?U2VlTFp1YjRQZmZLckdVQjBhOHRuamhJWWRYejNta3lqZ3pYVUpUMHlUMGMw?=
+ =?utf-8?B?UEJSekxMdlB2bUVwWlN2QzRhV21sejhITndQY1N5d0FaZDA3NFR4cmN1cWxL?=
+ =?utf-8?B?TXVrKzc4RWFnVEw2OUFlZFY0L2xsY3lqdGVrQmJIbThMS1I2S1JhNS95U3B5?=
+ =?utf-8?B?TnBFblBadDRFNU1qTnVEMDd5MmY2VHFZY0IwY1ByeDAxQ2lHb3RTaFFMQ3kv?=
+ =?utf-8?B?U2k2eWVNR2xTU2ZPalg5aGlDclRmcWxiZ01OVGtqQkR0SjF3bFZLcjByakNF?=
+ =?utf-8?B?TXdjMmVoYmhlbVVzT3d5U2pNU1AvajRXeGZwWXhTYkgyWjBUTk9mM28vM0V0?=
+ =?utf-8?B?bGVTQWhreTZOUkxOMzlHNWRSR2tTL2t2QUhQWExhZHkzS1c2U0kyVWs0OTVZ?=
+ =?utf-8?B?ZnY3dkp5MVZqK2liVVhGSGxFUHladk9LYXNCVFZwTEFFTkwybXV2czJqUjUy?=
+ =?utf-8?B?WUVJeFMwT2oxOVl0WDdPcUVub2ZjaGVUUlYzeXdGRCsxcVhsOCtSRi9hU1hE?=
+ =?utf-8?B?emFzQjRvcFJSUTA0V2JDOUd1VkU3WXZVVjY3UzVIUWViZ0JQTlR3UXFhTFI1?=
+ =?utf-8?B?OS84L0hmOVJsVWs3Ym13TC9XRzZwdTc3NitlRTJMNE5YSHVuNzhkdzNsY0o4?=
+ =?utf-8?B?TkdJS0pQWUdQT3hJS0p6UklzMjAxZEFsd3pQdjY2Tkx4eU9GMEdKbk1PU1pm?=
+ =?utf-8?B?YlAzS1R2dVY2cFkrZTFCYmtncThpVWdLZjdYeDdwZnZqcTk0VEU1azJNbkVz?=
+ =?utf-8?B?Qmw1MGlDS05rdTlhRDFlM3NGdWhuVlMxUDhxL0hQRngwWlZYS3VlalB4d054?=
+ =?utf-8?B?UmE4dVplRnZtNytLU1lUaTN4VUlDTGs2R0Z5enB1UE5ZVFV0bVNCb2ZlRXMy?=
+ =?utf-8?B?ZFlmSXMwUWFlTkNDZ2lka2E3UzJHZ3pTMXB4R01vTDhES3ExUkZ2MVpBUGVG?=
+ =?utf-8?B?dkpCay8yVmhCcElNd1lUczVlQmQ0a1E3Nkl0RDJUdUdqdW14bTB5dXBsMkdn?=
+ =?utf-8?B?Y2JLZm1udTZ5Qy9mbXVKSnR3djc5aVhhQ0pVTlhVMVkxNDNOYmh4cmhwUWMr?=
+ =?utf-8?B?SFpSekdpM3dKY284ZXlFMDk4QzlVMmJaRk5OV3pDMCtnVkF5QnBHZEtqQUV3?=
+ =?utf-8?B?cmFmbW1PaENVODZYT2JkQTlLenAzd00xVEJIZmtRSHJCbEk0ZkhjUE1FSkJB?=
+ =?utf-8?B?RTdNbjhmNkh3TkIxM2JvRUJEdllKZ2F2SUFQakx3U3JiTTVndGM1NitYWmU0?=
+ =?utf-8?B?WVZlNEVVSWVBbk15WFV2MUhxRlQxQkdURmlmY1pWSmZ2Z205U3RIeUo1dmtC?=
+ =?utf-8?B?Sk43d1RRaUlwRDNGUDByRTcwTngxMUd3SlUzazNBYU9BS0cvVGV4OTVETks1?=
+ =?utf-8?B?TzBPbm1mTTBUYlhoZ1BYZEFpYjZDM2hEUEd4QzU5VGhRMVpnUGhSZDRyMS93?=
+ =?utf-8?B?YTlPSTZFYlFIZ2M2WWo1azBnWVRtZTh0ZmhJVXlhWjNrMEFsK1NScGN5QWFx?=
+ =?utf-8?B?d1BSbjJhVDVCT1BnY0NxTGRJUThLQkYxQnNCdGZ1SmF3MGlvVm1YYmRUMkhz?=
+ =?utf-8?B?ZHJlaWdqaHVHVHNON0o2TnhNeVdIVmhzWnFHZ1RuQndwR3k5VXB3VTJJMVU4?=
+ =?utf-8?Q?PKKi+fZBm6v59KdU=3D?=
 X-Exchange-RoutingPolicyChecked:
-	sQpBm95TLnGNo8gXKAi15f2Kg5jv1U7NSHCRYeL7kuoGLuj7DhQ6GJcYCjuDG/atA+Gv7FtwVcKcU0jQr0oiAqEjKcVxfB7zwBJbMZlI8/XaMXrCHBY4FaAPMbnAsCKvrhjcGzDQX2uwNLm056gAKHMW3UhZThDBy9l30Vvuv5wlrJSHbNYVIuozJhgJVs5lqg4Cmh6tVujSChskPfFkOKnz0ZVrEw/3EU/9lQlocR3yE3mh+p+n/Ly+V754haj4m+47oEhTiH2+z+2rPTkTA0HTlxWTc6PD90Zh5Qe7WBFX43XKcFOv6Lt4i6QHKL/yIjWGIaDhGNJBKPnCdLfWFg==
+	jq5FJZWhkSg4UZifiXL9JBlD67UqlGkbsdV7Bk/upWrOGNXWQ+Yf9acM32+9dBr+v8bAEHzDWtr5e6CQ0Ix/L0xdir51+HH7HHJMAqPoPtyf/kfrjvZMSlKecHArc5CLgEwj/67aJRg9NkxW7vE93RSNC98+N4LMxwhcB0RWAbelvDMId6u/83+odTpMI9VQWcoa/ukF+un2vZrB/fDjqDSME4HSpuj3tz3Fvs4uwXdor4+SMsu2Z8VAwPSXfiRHazGq0ciZ5kXskuZtBisWMV0Q9wSTEaYtQ1M7uVbbQOJgiuNjHDesIUa8uU0MkjSohx0Ui5Ct+5I49FPDNPKoOA==
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	UobSnnl9yIXOlX5SN7INHsSSkapo36i88Dcpk54dM4RaBRt1l+oiY37WUk7nQ1B9eV7jnOnyT5W28fpDc2Ezatx4GP1kbzrL30uRJjdGfu9gXvYiK9WyKwrVR6dlFEbZUP1J6pL1W1DZFVoTcQgs+Zkh+eG8Yxy9EnRt9bvK68qBdzhl4KCtc2aXkwqb4iQUE+moQGekcGOO9S5QN3luH78mUXNfghwv/qg812eTqyQAUUWeiTdnN++A6lVhUII5h+ikQxmpqbFX3GZKfaCUTbgocSKke8CZ2/mWdN3oi09XeEFd2Eul900fcy8QlQiJy4KNSo/MDDJFppzMnwlg+WvzCmjlAjqEDA2KNzZ9/Xne5x+7I8ab6/qN/WcW+i3iBMtZsaL9WF1ZW/O2JyJLAEKm4ohRhMGx3h/Kvb8UQWDxWjVCFrtrBt0LVdxiYEwnQlwdK/S4BGT7JWCyKnl5pui41w6uKRrro54TYkgdbPCtI/kCNFsXzopav4RDAEToVEC1gOUUCy+e9Y8XX1c1Z+SYjkBFKkTwSYhst+OSG+SV1qmWhIsLmIJBxj4QNGdPqsQjkhkacFciJ0PUOx7sRznxBkXe97vthJ2qwrJyP9w=
+	UGWNhZMXY6xePgBrzre1GP1z12GkEc6OTgPYe8+bJdt8BojkdwsvSa5e8MIJaewSvn9YmAetV68bsTw7ZNZQUk1jfSlm2P3IxYG4IQW1+tBhPiW97NQyH0DHavTwbC482FCKSmI+p2fdWIYPRk7S2jlpUAJcE+quztSRmvapQdkLMu1x/OEZ1nGBXTfmEvjeWkVOr7rOWAFNZjDDqOkz42idvbwiCPdFki0LskNJWoMmpovGs1fav4mOTeRx5jzXL5jxMLJhX2KVS9kZJLe16z1VrUt6LUEnJEdx0fp/eRkWBAwTy3e0VVAZfY3T1mcQSbq0x3OLMv9Qyh7wWCDwr2hFdU2+mRBd+K02ykzvphe5ihxXIUKotcvuYmrr0d+a0n++STJkUQqtuE2wi7hHNhL5HvUZc86WqvfwN+6ctHAcyCUuwbKJcxziOmRvhrCNAD/yVBqlUxkEtX1zN/CegVTWxSemVeZyWulSLuNHsZFFMJ94dJ49PxqFXjOGCQCMXvkKQTsLS9Ejvwk00nK4KDMmwsiwFH+VXJ1pUKCkR1Lb1kkLr5vCnauXuRC3CQhWXIgIFVmXtpZt+UzVDhm+uUmnOBuN/e6nubeqSgR9Z40=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d4007a11-238e-49d0-1bc0-08dee8ad70f2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4daf0942-f99d-426c-1035-08dee8adc5be
 X-MS-Exchange-CrossTenant-AuthSource: PH7PR10MB6228.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2026 11:27:55.6413
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2026 11:30:18.0409
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 7NfjT0q+mle5gBAqo2Mr4mjHwGvW76fM3jLKzUWtCWdVVKug712uTqppZ9D5epT+2R4ST7r9HVH41yPp76m/1w==
+X-MS-Exchange-CrossTenant-UserPrincipalName: PnfG1uEjOeN4HPk71t+Zl2b8o7Jw2ZYdCEWvgvyvhKxPUfl9nkZz6xwtjLFOECxMx6X55d7ziwgW4CaV8KED2g==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH9PR10MB997856
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-23_03,2026-07-22_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999
- adultscore=0 mlxscore=0 phishscore=0 suspectscore=0 spamscore=0
- malwarescore=0 bulkscore=0 lowpriorityscore=0 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.19.0-2606160000 definitions=main-2607230112
-X-Proofpoint-ORIG-GUID: ahQJc82IlQF0S7VVdBMehOO8Gqm6vXq7
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIzMDExMyBTYWx0ZWRfX+acl8BlZzxBn
- spWpr3z6qYgaHbpLBZ4zYCd7luBC9YDrwgahL65BlqlWkcNYZElMgzPIx9b8aT/X7mvEq6XH5mu
- vHe0Lzy/t7e8s9bOOfZVuPCTzKiMoBw+r2WQQ9eWJOkACDaJK6NJ9ts7T9w9t5a/TWkUlfI+1m/
- Rve944rsyX0cmi0VhJXwBtOwn6r7UdMmet0k3sg+9q6xmRmJ6Cm3ACZIm/pOO/vonfC/PQZeXRA
- 44FsZpIN5qgDyvJ3LdVixKOeJetff3T7rjSKfM/y2w7XyjL7JytMqnTeklu7All0SB56dFYBsaH
- O4mRLQnU/rBI11HJhlGyxZdyAtxEgCosBX92vl5m9TSEMgnqT6dFkUDD46HJUJMGW6deCBMVG/1
- Xqll0boIDunETsYgqya4BA9YD3EUNhKHa6Ywkr9aLZasOM7UetUUAt4DhegX9Sg8dOEdltFGpxo
- B29AyBuYV+g8c5ZRp8A==
-X-Authority-Analysis: v=2.4 cv=auyCzyZV c=1 sm=1 tr=0 ts=6a61fac1 cx=c_pps
- a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0
+ mlxlogscore=999 spamscore=0 malwarescore=0 lowpriorityscore=0 adultscore=0
+ suspectscore=0 phishscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2606160000 definitions=main-2607230113
+X-Authority-Analysis: v=2.4 cv=TN51jVla c=1 sm=1 tr=0 ts=6a61fb4f cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
  a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
  a=RAioF0-LDSMA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x0eKOSpe3m1H3M0S9YoZ:22 a=VwQbUJbxAAAA:8
- a=9JAisoIBxrVVzb-2mlYA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: ahQJc82IlQF0S7VVdBMehOO8Gqm6vXq7
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIzMDExMyBTYWx0ZWRfX4iO1INVL5O14
- xkD6o3lHsfDWlLXC+tYU1B9l9N2zxBCPHnQJD1cnwpfw7ywFU2yoy5uc8Kwbbt1y6pubOcPyhGt
- xWJ6SKdZI0Kj0X+709jvEIsp88Ze0ap79NVR6FAxKlWT0S6Quu2R
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=RD47p0oAkeU5bO7t-o6f:22 a=VwQbUJbxAAAA:8
+ a=yPCof4ZbAAAA:8 a=k7hMHRduhtyvtRI4VcsA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: gedkbjRfj6tR8HW9dqhsHmYXlFDPIDjB
+X-Proofpoint-ORIG-GUID: gedkbjRfj6tR8HW9dqhsHmYXlFDPIDjB
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIzMDExMyBTYWx0ZWRfX0Bu2Mum5Zpck
+ 64W2UZm93HJUI2BJF0RXQPR3AURx9hYYtKDSOg/eMv0v2u4EgBsmOo2ewoJT6BViiYlsJX1bzLk
+ uyCBq+hg3HJLoNyECcmzkpuYWUXrhYE3RYsa5v921B8qCaz1slHs
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIzMDExMyBTYWx0ZWRfX/q6B/MFGEHG2
+ FbI2B8bSdaCxUF+K0m0QIse0mJWE58RoflYaxHXXV/nreyb4CragJEqxPTAyixx8CLtQ0PJcHcg
+ tHEjCZFeBLvmFKwws3B8aXvO5goYyBf5UCmBRoeYcIXSLR7qrfG/I7OC5p8vULImKbsZQFOXKLc
+ YZWoZT+EPaxT918pebYoW9beb6QW2XJ5u5jWyhS+aF25c5Z9m4Ze++wOPvl8Lh2z+L4vdJKVrwA
+ QZ2+7uvHPW0jhB5q0ekOEWDVZlDADGockkSZYHINzrCLGWY+SaGHe8mj3ZOSm0Fni9O80Hbdbjz
+ 89dxxgDDfhSfLvFkSzGC4GNUKYEpf79tLHHEQf/GtwTTy6Qc9GTg2Ql3cfpudhU1pbB9WV3IqRD
+ vuhmQXg1A7bjQ+QEP3P9gmSoxy2rgaG4YXUWfNuB8jTmT0cJ9Le/Q7cRNaIEftwnEcFY6ZPdw53
+ hsAfFExiCdbrPrrZZEQ==
 
-On 23/07/2026 11:47, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 6 potential issue(s) to consider:
-> 
-> New issues:
-> - [High] Unconditional sd_mpath_put_disk() in sd_mpath_remove() destroys the multipath disk structure while delayed removal is pending, causing a use-after-free.
-> - [High] Uncanceled delayed work accesses freed mpath_head after sd_mpath_fail_probe unconditionally deletes the device.
-> - [High] Concurrent execution of sd_mpath_remove_head and sd_mpath_probe creates a race condition that incorrectly deletes a newly allocated gendisk.
-> - [Medium] Missing put_device() in sd_probe() error path for sd_mpath_add_disk() failure leaks sdkp and its parent's reference.
-> - [Medium] Error paths in sd_mpath_probe() call kfree() on a device object after device_initialize(), leaking kobject internals.
-> 
-> Pre-existing issues:
-> - [High] If sd_large_pool_create() fails, sd_probe() jumps to out_free_index bypassing device unregistration and freeing active sysfs device memory (sdkp).
+On 23/07/2026 11:52, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] Reading the `mpath_numa_nodes` sysfs attribute before the device is fully initialized causes a guaranteed NULL pointer dereference on `mpath_device->mpath_head`.
 > --
 > 
-> --- Patch [25]: [PATCH v4 25/28] scsi: sd: support multipath disk ---
-> commit 7776d470d97b7568b27daa7f4e53e7184172c0bc
-> Author: John Garry <john.garry@linux.dev>
+> --- Patch [27]: [PATCH v4 27/28] scsi: sd: add mpath_numa_nodes dev attribute ---
+> commit cc5c94ceb8cbeeccd7a5678ef260c6bd21a0fd6b
+> Author: John Garry <john.g.garry@oracle.com>
 > 
-> scsi: sd: support multipath disk
-> 
-> This commit adds support to attach a multipath disk. It allocates a
-> gendisk per path and marks them as hidden while keeping a global list of
-> sd_mpath_disks for matching scsi_devices.
+> scsi: sd: add mpath_numa_nodes dev attribute
+>      
+> Add an attribute to show multipath NUMA node per-path (scsi_disk).
 > 
 >> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->> index 36c745cbb2619..d5a37b1b312c3 100644
+>> index f8c9096e6c43c..7255df6e3e971 100644
 >> --- a/drivers/scsi/sd.c
 >> +++ b/drivers/scsi/sd.c
->> @@ -4035,13 +4139,258 @@ static const struct attribute_group sd_mpath_disk_attr_group = {
-> [ ... ]
->> +static int sd_mpath_probe(struct scsi_disk *sdkp)
->> +{
-> [ ... ]
->> +	sd_mpath_disk->scsi_mpath_head = scsi_mpath_head;
->> +	device_initialize(&sd_mpath_disk->dev);
->> +	sd_mpath_disk->dev.class = &sd_mpath_disk_class;
-> [ ... ]
->> +	error = mpath_alloc_head_disk(mpath_head, &lim,
->> +				dev_to_node(dma_dev));
->> +	if (error)
->> +		goto out_free_disk;
-> [ ... ]
->> +out_free_disk:
->> +	kfree(sd_mpath_disk);
-> 
-> [Severity: Medium]
-> Is it safe to call kfree() directly on the device object here?
-> Since device_initialize() was already called on sd_mpath_disk->dev,
-> shouldn't we use put_device() to prevent leaking resources allocated by
-> the kobject core?
-
-will fix
-
-> 
-> [ ... ]
->> +static void sd_mpath_remove(struct scsi_disk *sdkp)
->> +{
-> [ ... ]
->> +	mutex_lock(&sd_mpath_disks_lock);
->> +	sd_mpath_disk->disk_count--;
->> +	if (!sd_mpath_disk->disk_count && mpath_can_remove_head(mpath_head)) {
->> +		list_del_init(&sd_mpath_disk->entry);
->> +		remove = true;
->> +	}
->> +	mutex_unlock(&sd_mpath_disks_lock);
->> +	mpath_remove_sysfs_link(mpath_device);
->> +	mpath_device->disk = NULL;
->> +
->> +	if (remove) {
->> +		device_del(&sd_mpath_disk->dev);
->> +		mpath_remove_disk(mpath_head);
->> +	}
->> +	sd_mpath_put_disk(sd_mpath_disk);
->> +}
-> 
-> [Severity: High]
-> Does this sequence risk a use-after-free if delayed removal is pending?
-> If mpath_can_remove_head() returns false, the object remains on the
-> global list and is not fully removed, but we unconditionally drop the
-> reference via sd_mpath_put_disk() at the end. This could free the object
-> while it is still globally accessible.
-
-not an issue
-
-> 
-> [ ... ]
->> +static void sd_mpath_remove_head(struct scsi_mpath_head *scsi_mpath_head)
->> +{
-> [ ... ]
->> +	list_del_init(&sd_mpath_disk->entry);
->> +	mutex_unlock(&sd_mpath_disks_lock);
->> +
->> +	device_del(&sd_mpath_disk->dev);
->> +	mpath_remove_disk(mpath_head);
->> +	sd_mpath_put_disk(sd_mpath_disk);
->> +}
-> 
-> [Severity: High]
-> Could dropping the mutex here race with a concurrent sd_mpath_probe()?
-> We drop sd_mpath_disks_lock before calling mpath_remove_disk(mpath_head).
-> If a new probe allocates a new disk and overwrites mpath_head->disk
-> in that window, mpath_remove_disk() might delete the newly allocated
-> gendisk instead of the old one being removed.
-
-will check
-
-> 
-> [ ... ]
->> +static void sd_mpath_fail_probe(struct scsi_disk *sdkp)
->> +{
-> [ ... ]
->> +	mutex_lock(&sd_mpath_disks_lock);
->> +	sd_mpath_disk->disk_count--;
->> +	if (!sd_mpath_disk->disk_count) {
->> +		list_del_init(&sd_mpath_disk->entry);
->> +		remove = true;
->> +	}
->> +	mutex_unlock(&sd_mpath_disks_lock);
->> +	mpath_device->disk = NULL;
->> +
->> +	if (remove) {
->> +		device_del(&sd_mpath_disk->dev);
->> +		mpath_remove_disk(mpath_head);
->> +	}
->> +	sd_mpath_put_disk(sd_mpath_disk);
->> +}
-> 
-> [Severity: High]
-> What happens if there is pending delayed work on mpath_head->remove_work
-> when we hit this error path? If a previous removal queued the work,
-> and a subsequent failed probe triggers this code, we delete and free the
-> head without canceling the delayed work. Will the workqueue then trigger
-> a use-after-free on the freed mpath_head?
-
-will check
-
-> 
-> [ ... ]
->> @@ -4158,11 +4515,18 @@ static int sd_probe(struct scsi_device *sdp)
->>   	sd_revalidate_disk(gd);
->>   	if (sdp->sector_size > PAGE_SIZE) {
->>   		if (sd_large_pool_create()) {
->> +			sd_mpath_fail_probe(sdkp);
->>   			error = -ENOMEM;
->>   			goto out_free_index;
->>   		}
->>   	}
-> 
-> [Severity: High]
-> This is a pre-existing issue,
-
-don't tell me pre-existing issues
-
-  but can this lead to a use-after-free in
-> sysfs? At this point, device_add() has already succeeded. Bypassing
-> device_del() or device_unregister() and jumping directly to
-> out_free_index (which frees sdkp) leaves the device linked in the sysfs
-> hierarchy.
-> 
-> [ ... ]
->> @@ -4184,6 +4549,19 @@ static int sd_probe(struct scsi_device *sdp)
->>   		goto out;
->>   	}
+>> @@ -4076,8 +4076,22 @@ static ssize_t sd_mpath_dev_show(struct device *dev,
+>>   }
+>>   static DEVICE_ATTR(mpath_dev, 0444, sd_mpath_dev_show, NULL);
 >>   
->> +	if (sdp->scsi_mpath_dev) {
->> +		error = sd_mpath_add_disk(sdkp);
->> +		if (error) {
->> +			sd_mpath_fail_probe(sdkp);
->> +			device_del(&sdkp->disk_dev);
->> +			del_gendisk(sdkp->disk);
+>> +static ssize_t sd_mpath_numa_nodes_show(struct device *dev,
+>> +		struct device_attribute *attr, char *buf)
+>> +{
+>> +	struct gendisk *gd = dev_to_disk(dev);
+>> +	struct scsi_disk *sdkp = gd->private_data;
+>> +	struct scsi_device *sdev = sdkp->device;
+>> +	struct scsi_mpath_device *scsi_mpath_dev = sdev->scsi_mpath_dev;
+>> +	struct mpath_device *mpath_device = &scsi_mpath_dev->mpath_device;
 >> +
->> +			put_disk(sdkp->disk);
->> +			if (sdp->sector_size > PAGE_SIZE)
->> +				sd_large_pool_destroy();
->> +			goto out;
->> +		}
->> +	}
+>> +	return mpath_numa_nodes_show(mpath_device, buf);
 > 
-> [Severity: Medium]
-> Are we leaking the scsi_disk structure and its parent reference here?
-> We call device_del(&sdkp->disk_dev), but we don't call put_device()
-> to drop the base reference acquired during device_initialize().
+> [Severity: High]
+> Does this code risk a NULL pointer dereference if the attribute is read early?
 > 
+> When sd_probe() calls device_add_disk(), it exposes the mpath_numa_nodes
+> sysfs attribute to userspace and fires a uevent. If userspace (like udev)
+> reads this file before sd_mpath_add_disk() runs, mpath_device->mpath_head
+> will still be NULL.
 
-not an issue as I think thAT del_gendisk handles it
+will fix elsewhere
+
+> 
+> When mpath_numa_nodes_show() receives this mpath_device, it passes the NULL
+> mpath_head to mpath_read_iopolicy(), which will dereference it:
+> 
+> lib/multipath.c:mpath_numa_nodes_show() {
+> 	struct mpath_head *mpath_head = mpath_device->mpath_head;
+> 	...
+> 	if (mpath_read_iopolicy(mpath_head) != MPATH_IOPOLICY_NUMA)
+> 		...
+> }
+> 
+> include/linux/multipath.h:mpath_read_iopolicy() {
+> 	return READ_ONCE(*mpath_head->iopolicy);
+> }
+> 
+> Should we check if mpath_device->mpath_head is valid before attempting to
+> dereference it?
+> 
+>> +}
+>> +static DEVICE_ATTR(mpath_numa_nodes, 0444, sd_mpath_numa_nodes_show, NULL);
+>> +
+>>   static struct attribute *sd_mpath_dev_attrs[] = {
+>>   	&dev_attr_mpath_dev.attr,
+>> +	&dev_attr_mpath_numa_nodes.attr,
+>>   	NULL
+>>   };
+> 
 
