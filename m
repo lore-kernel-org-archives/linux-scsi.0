@@ -1,135 +1,165 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 355B6415F3A
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 10:09:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1AD023393C
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 10:10:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784801371; cv=none; b=Tuwp5DH0abLg5GFp1tSgMU0S/qQujeMFpg9FK4Lfrjdhw5OI/A8tr6vewNhpQaHeTbLhZR75hgrVp/j8wPBkMOVUV/Apdz0vDszNzxb86quiUpTThMxtmKsfmbh2+JyZKljGbi3I6rNh9EbfvIDeN1uQHoj9PQaFWj3mDjiJML4=
+	t=1784801424; cv=none; b=puhGZZtdnwP7PtducTVZPaAxCvwejEh9YW8LH/pu2GUUq+NtNa4bkxucyK1DDXNu7i4vRlXZpH+1md76hhMCehsKW6FNVW6rfy2isKS2t8yLAr8JzY4C1amCafmgitypWmw02eCuk4bmlQIHFzEn1KwWi6Hztz9KMxpQNqcedUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784801371; c=relaxed/simple;
-	bh=bsiAddIHlmlP+9ymxrG8PBtXlaJ1zSEhkBJywr4GsCM=;
+	s=arc-20240116; t=1784801424; c=relaxed/simple;
+	bh=Tn157s6grPj+3u5cnLRJtGDoZcfFMcNkfNQp4uOh4pQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lTU8gOnvlPELazxsPUEx1AfQXaPk4d/eO9nWwEhlvF/j/gAusd0nOhccugupOs55dJCz7ZIt4FJobLB98rcPjLfXPhORj4UR18rOqed/E2eQjHFl9SCR6OCymj1E1hZBtNDYa2faUtmorNH/tNzDez2IpTeY+iuNk7pb5D0Vp5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ewhg7+tL; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ISGJbWbyLwEbuYGFTwpxoqfcLFSTy4wdxPKF/z/Y3rZSYWyszdArmL/lnGc7bq3q6G0fgCEqt40MHnbJFezX5TAymO9dJbVoxHxPgr00u0fwcXkvdZ+nBxSYzQGIm3qFpGAdCfQPzhCn1co2PGi1cGo5x1on4LoCd0l0c7Zt2So=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bqT1Km+n; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ewhg7+tL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A000D1F00A3A;
-	Thu, 23 Jul 2026 10:09:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bqT1Km+n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ADF91F000E9;
+	Thu, 23 Jul 2026 10:10:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784801369;
-	bh=4/cDP2RHEeqUDiwWo1rBNbH0C1zAi31czGVttV1PC+I=;
+	s=k20260515; t=1784801422;
+	bh=y/w70O2wvvnbWWuXApvXtuLhOXbVvFbz38DMqv8O1oQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ewhg7+tLhXCFRwb66YLB9u5bF97p45SrqIjSY5yKbO7llif0oSd5fcn7QDbWUU4f9
-	 xKPFQo2e1vpbyv0aE3I7sfPsJfMTx2uVFbwzEbyU0FOilsLxoTIoPIArCtqCnoBq2z
-	 DMFfGMarEV3tH3G7XzW8EYhjZgQcBJhuCNjYNjPP2Ph+BSFtW2gjI0VUdvS4tmrnmY
-	 W4OISC9rn+L5kSq91QjHu3CRqSzQNq0AZvujXtzaDp49lAA4zaFVLYv1qZftxzJfOZ
-	 /+CWkj7NlPussFKWszxtaaO2OUsl9bMYhwJJ5rvGW8fc/X5eBmVaOVnuxDJdS1qg6W
-	 8YZqiAP0mSbaw==
+	b=bqT1Km+nESsig2axZXpEtnBNw+iXYfGNayEwev2CL4U03DsFtyQwCtI1tT/6/YXsh
+	 Edjle875yWjFmdblKtO4d5hM7lKiyUFkl0dkqPTua9m2VEV+wywFZA6LN+oLUKp6np
+	 8tcm+g6MVAL22lTCfwvcoZhlQS/hl7hNydVxYZyCp7ohSGJkuXPwnmlRNk5FyttQRp
+	 YPWfhbw3qdggeZ95cAz4UfGE0MOyuE4EjEOuUOOnWDHOrd0EPWy8NrN9SGh9KiftMA
+	 KXhjoMbl2ax931nsxhoiRJQfl8R5zcNWq/rSL93v8NRlRsGxkm3P9Dfq54tUk6nqQX
+	 +uKgMP3SGw7Kg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 09/28] libmultipath: Add support for block device
- IOCTL
+Subject: Re: [PATCH v6 19/56] scsi: qla2xxx: Enable serdes, resource count
+ and FCE trace for 29xx
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "John Garry" <john.g.garry@oracle.com>
+To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723093627.2327456-10-john.g.garry@oracle.com>
-References: <20260723093627.2327456-1-john.g.garry@oracle.com>
- <20260723093627.2327456-10-john.g.garry@oracle.com>
+In-Reply-To: <20260723050413.3897522-20-njavali@marvell.com>
+References: <20260723050413.3897522-1-njavali@marvell.com>
+ <20260723050413.3897522-20-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 10:09:29 +0000
-Message-Id: <20260723100929.A000D1F00A3A@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 10:10:21 +0000
+Message-Id: <20260723101022.2ADF91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [Critical] Bypass of partition-based security restrictions for block ioct=
-ls by passing the underlying whole-disk block device (part0) to the lower d=
-river's ioctl.
-- [High] Holding the SRCU read lock around the underlying block device IOCT=
-L causes an ABBA deadlock if the IOCTL triggers or blocks on path removal.
+
+Pre-existing issues:
+- [High] The debugfs write handler `qla2x00_dfs_fce_write()` passes a NULL =
+pointer to `kstrtoul()`, guaranteeing a kernel crash upon successful parsin=
+g, and erroneously evaluates its error code as the parsed value.
+- [High] Dynamically enabling FCE trace via debugfs causes a 64KB out-of-bo=
+unds write during a firmware dump because the fw_dump buffer is not properl=
+y resized.
+- [High] Concurrent execution of a firmware dump and disabling the FCE trac=
+e via debugfs leads to a Use-After-Free of the FCE DMA buffer.
 --
 
---- Patch [9]: [PATCH v4 09/28] libmultipath: Add support for block device =
-IOCTL ---
-commit 8ca4b41fee0b6082cd169ad8577365e7f205461d
-Author: John Garry <john.garry@linux.dev>
-Subject: libmultipath: Add support for block device IOCTL
+--- Patch [19]: [PATCH v6 19/56] scsi: qla2xxx: Enable serdes, resource cou=
+nt and FCE trace for 29xx ---
+commit ce99a18d7438f0c23e7c18bd3dad0bfb7220456a
+Author: Nilesh Javali <njavali@marvell.com>
 
-This commit adds mpath_bdev_ioctl() as a multipath block device ioctl
-handler. It delegates the ioctls to the underlying path's block device
-operations.
+scsi: qla2xxx: Enable serdes, resource count and FCE trace for 29xx
+   =20
+The 29xx adapters share the diagnostic and management interfaces
+already supported on ISP27xx/28xx, but several family capability
+gates still omitted IS_QLA29XX(), leaving these paths unreachable
+on 29xx.
 
-> diff --git a/lib/multipath.c b/lib/multipath.c
-> index 0232f51f64742..fc8ba8fc501f1 100644
-> --- a/lib/multipath.c
-> +++ b/lib/multipath.c
+> diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_df=
+s.c
+> index 43970caca7b39..177d47e92e494 100644
+> --- a/drivers/scsi/qla2xxx/qla_dfs.c
+> +++ b/drivers/scsi/qla2xxx/qla_dfs.c
+> @@ -497,7 +497,7 @@ qla2x00_dfs_fce_write(struct file *file, const char _=
+_user *buffer,
+>  	unsigned long enable;
+> =20
+>  	if (!IS_QLA25XX(ha) && !IS_QLA81XX(ha) && !IS_QLA83XX(ha) &&
+> -	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha)) {
+> +	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha)) {
+>  		ql_dbg(ql_dbg_user, vha, 0xd034,
+>  		       "this adapter does not support FCE.");
+>  		return -EINVAL;
+
+[Severity: High]
+This is a pre-existing issue, but since this patch exposes the FCE debugfs
+node to 29xx adapters, does writing to this node cause a guaranteed kernel
+panic?
+
+Looking at qla2x00_dfs_fce_write() just below this check:
+
+    enable =3D kstrtoul(buf, 0, 0);
+
+Does passing 0 (NULL) as the third argument to kstrtoul() cause a NULL poin=
+ter
+dereference when the function attempts to write the successfully parsed val=
+ue?
+
+Additionally, since it assigns the return value (an error code) to enable
+rather than the parsed number, does writing an invalid string return a
+non-zero negative error code that evaluates to true, incorrectly enabling
+the trace without crashing?
+
+[Severity: High]
+This is another pre-existing issue exposed by enabling FCE trace via debugf=
+s,
+but does dynamically enabling this feature cause an out-of-bounds write
+during a firmware dump?
+
+When FCE is enabled dynamically, qla2x00_dfs_fce_write() calls
+qla2x00_alloc_fw_dump() to resize the dump buffer. However,
+qla2x00_alloc_fw_dump() returns early if the buffer is already allocated:
+
+drivers/scsi/qla2xxx/qla_init.c:qla2x00_alloc_fw_dump() {
+    if (ha->fw_dump) {
+        ql_dbg(ql_dbg_init, vha, 0x00bd,
+            "Firmware dump already allocated.\n");
+        return;
+    }
+    ...
+}
+
+During a firmware dump, qla25xx_copy_fce() appends the 64KB FCE buffer to
+the fw_dump buffer:
+
+drivers/scsi/qla2xxx/qla_dbg.c:qla25xx_copy_fce() {
+    ...
+    memcpy(iter_reg, ha->fce, ntohl(fcec->size));
+    ...
+}
+
+Does this blindly write 64KB past the end of the unresized firmware dump
+buffer?
+
+[Severity: High]
+This is also a pre-existing issue, but does disabling the FCE trace via this
+debugfs node race with firmware dumps, leading to a Use-After-Free?
+
+When disabling FCE, qla2x00_dfs_fce_write() calls qla2x00_free_fce_trace()
+which frees ha->fce using dma_free_coherent() while holding fce_mutex.
+
+Concurrently, if a firmware dump triggers (e.g., via a system error),
+the dump path accesses this same memory:
+
+drivers/scsi/qla2xxx/qla_dbg.c:qla25xx_copy_fce() {
+    ...
+    memcpy(iter_reg, ha->fce, ntohl(fcec->size));
+    ...
+}
+
+Since the dump path executes under hardware_lock but without holding
+fce_mutex, and the free path does not acquire hardware_lock, can the dump
+path observe a non-NULL pointer and access the memory after it has been
+freed?
 
 [ ... ]
 
-> @@ -478,11 +478,44 @@ static void mpath_bdev_release(struct gendisk *disk)
->  	mpath_put_head(mpath_head);
->  }
-> =20
-> +static int mpath_bdev_ioctl(struct block_device *bdev, blk_mode_t mode,
-> +		    unsigned int cmd, unsigned long arg)
-> +{
-> +	struct gendisk *disk =3D bdev->bd_disk;
-> +	struct mpath_head *mpath_head =3D mpath_gendisk_to_head(disk);
-> +	struct mpath_device *mpath_device;
-> +	int srcu_idx, err;
-> +
-> +	srcu_idx =3D srcu_read_lock(&mpath_head->srcu);
-> +	mpath_device =3D mpath_find_path(mpath_head);
-> +	if (!mpath_device) {
-> +		err =3D -EWOULDBLOCK;
-> +		goto out_unlock;
-> +	}
-> +
-> +	if (!mpath_device->disk->fops->ioctl) {
-> +		err =3D -EOPNOTSUPP;
-> +		goto out_unlock;
-> +	}
-> +
-> +	err =3D mpath_device->disk->fops->ioctl(
-> +			mpath_device->disk->part0, mode, cmd, arg);
-
-[Severity: Critical]
-Does passing part0 bypass partition-based security restrictions in the
-underlying driver?
-
-When an unprivileged user issues an ioctl on a multipath partition, this
-code delegates it but passes the whole-disk block device (part0) instead of
-the partition's block device.
-
-Underlying drivers, such as NVMe via nvme_ioctl(), rely on
-bdev_is_partition() to detect partition-level access and deny unprivileged
-passthrough commands. Since part0 is passed, bdev_is_partition() evaluates
-to false, tricking the lower driver into skipping containment checks.
-
-Could this allow unprivileged users with access to a multipath partition to
-execute passthrough commands on the entire underlying physical device?
-
-[Severity: High]
-Can holding the SRCU read lock across the underlying ioctl cause a deadlock?
-
-If the underlying ioctl initiates a path removal, such as a passthrough
-command that deletes an NVMe namespace or resets a controller, the teardown
-code path will synchronously wait for SRCU readers to exit via
-synchronize_srcu().
-
-Since the ioctl thread still holds the SRCU read lock while waiting for the
-command or removal to complete, synchronize_srcu() will block forever.
-
-> +out_unlock:
-> +	srcu_read_unlock(&mpath_head->srcu, srcu_idx);
-> +	return err;
-> +}
-
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723093627.2327=
-456-1-john.g.garry@oracle.com?part=3D9
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
+522-1-njavali@marvell.com?part=3D19
