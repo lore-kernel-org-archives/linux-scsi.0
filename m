@@ -1,44 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD9AA363096
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 17:29:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAA2039DBD7
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 18:07:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784827753; cv=none; b=IfWEvvmvkf04IjN+NMYn6bPRTwCHE0o5WrEyrsM+6ub/hwNke8V43EQ8RjDwjlgWSfE6i+r6J2WFb+rgbIrtRL5Qaf6KII4ywIG7X4WQcRFt/hIjGABrKm2JAMKkZd1+WzSNfMc13BO/2nAiIlwlySSZDQrR5ffysoTozBNzG8E=
+	t=1784830079; cv=none; b=rLW9hWAmYh4OTwiAi4RpQDgkEwcMkhIa7WhNnwiHrvjCW2RWCTRfpvUfEzL4wyQKW6HKnQejhZv+9HLeKkz4/g9WNNqaeOxn3/PdWQw5sPHTayE2O5ZDm23uKL+/0Zxi+cm2zYMPVW+n2hxRKukS1jQgRHmQL4bdA/BBvBJWXMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784827753; c=relaxed/simple;
-	bh=e/jmroGDKiu2xLWj9i4MAM+sjIrEUOkFxRbb09vxQq8=;
+	s=arc-20240116; t=1784830079; c=relaxed/simple;
+	bh=5sTUIiBmUAy/Meny6A6KZV81NDPnZjRiOJ7x6XvjrOQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Mf9r9TzyfysK7pvwcFySv+kSQIesLsqpTSfIMa82eMQgXvgkifM2f6VroZaJkMSzuCLgJSv28OH3+QtLuISsK5xyPWEof0nGun1ezoAnEDNWMbse1Y+bhG0zLsKo3oEMi7UwPKlm5kkrIjgigyeypeABHvrASo5tXXJTWQFFjR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jp4yKKem; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jp4yKKem"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 405DC1F000E9;
-	Thu, 23 Jul 2026 17:29:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784827751;
-	bh=SZmn0bmRVnxqz0HPXv3l+NX/swnX7fMvBcvN3rP/JF4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Jp4yKKemqiiNoUXqZaMUjnVkDfcGvP5PLZWzLkgRv40jh+H7dLUDNYPEjRw7TMj7E
-	 CZDBfoQti2pS+c8UnNijoQF8GJ1pzY+u3kmgFpSBIhN1H3o7nzpZHQ0yRSFFUDIOmM
-	 BMk4jUYU5QSO1H5G52aNbTAqcq7qsU50VdrkhVylNLbBag8oM3V4lAMXrUSjjwIy7O
-	 1jyNTfiew/w76rwbK4Y8j5mqjwfhpGFRvpONUSlvanunuvep+95A/ufP/YxKt3qgCu
-	 dUX/9tKmPyVGASWnTu4JfHHrTYw0hiv9aV6k/OOMn6LhKfG+/uIhTJGrNjvDTGzRT8
-	 2nF5o0XixT4TQ==
+	 Message-Id; b=W714bKmUn8eOCr4WPMxmbkUdXqlgSWfM0KBrDtrCcoX95RzFVG0pUMlDAaQ4VFUl9cFqJ+TFTGGBy9Ao37+O8jkNrnU9xcNpCYngKfFSTN2MKzNB2HgNO7tPhAr0E3TzeofnzVUHlnJqB0v2Q87M8PY1h6crVbOkycDSgLZ0I6E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EC8A1F00A3A;
+	Thu, 23 Jul 2026 18:07:58 +0000 (UTC)
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 41/56] scsi: qla2xxx: Replace __le16 bitfields with
- scalar and accessors
+Subject: Re: [PATCH v6 44/56] scsi: qla2xxx: Add 64G/128G port speed setting
+ support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723050413.3897522-42-njavali@marvell.com>
+In-Reply-To: <20260723050413.3897522-45-njavali@marvell.com>
 References: <20260723050413.3897522-1-njavali@marvell.com>
- <20260723050413.3897522-42-njavali@marvell.com>
+ <20260723050413.3897522-45-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 17:29:10 +0000
-Message-Id: <20260723172911.405DC1F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 18:07:54 +0000
+Message-Id: <20260723180758.5EC8A1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,88 +37,78 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Incomplete fix for endianness bug in 29xx extended IOCBs
+- [High] User-configured 128G port speed is silently lost upon HBA reset.
 
 Pre-existing issues:
-- [High] Target mode ABTS failures on big-endian due to bitfield packing
+- [High] Applying a user-configured port speed (<=3D 64G) in the Initializa=
+tion Control Block inadvertently wipes out other critical firmware flags.
 --
 
---- Patch [41]: [PATCH v6 41/56] scsi: qla2xxx: Replace __le16 bitfields wi=
-th scalar and accessors ---
-commit aa60e92d6d4c10c7735dd3bda849923fc8a00254
+--- Patch [44]: [PATCH v6 44/56] scsi: qla2xxx: Add 64G/128G port speed set=
+ting support ---
+commit 8d7fef6e4c3ea0599d570b41649eeea6750d4564
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Replace __le16 bitfields with scalar and accessors
+scsi: qla2xxx: Add 64G/128G port speed setting support
 
-C bitfield packing order is implementation-defined: GCC packs LSB-first
-on little-endian targets and MSB-first on big-endian targets.  The
-__le16 bitfield declarations for vp_index/sof_type in the 29xx extended
-IOCB structures produce incorrect bit positions on big-endian hosts,
-and Sparse cannot enforce endianness checks on bitfield members.
+This patch adds support for 64G and 128G port speeds by mapping sysfs input=
+s=20
+to the corresponding PORT_SPEED_* constants. It also updates the ring=20
+configuration to only set the data rate in the Initialization Control Block=
+=20
+(ICB) for speeds up to 64G to prevent overflow.
 
-> Replace the three sets of __le16 bitfields (in els_entry_24xx_ext,
-> els_sts_entry_24xx_ext, and abts_entry_24xx_ext) with a single __le16
-> scalar field and provide inline accessor functions that use proper
-> le16_to_cpu()/cpu_to_le16() with shift-and-mask operations.
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -4793,7 +4793,14 @@ qla24xx_config_rings(struct scsi_qla_host *vha)
+>  		ql_dbg(ql_dbg_init, vha, 0x00fd,
+>  		    "Speed set by user : %s Gbps \n",
+>  		    qla2x00_get_link_speed_str(ha, ha->set_data_rate));
+> -		icb->firmware_options_3 =3D cpu_to_le32(ha->set_data_rate << 13);
+> +		/*
+> +		 * The ICB data-rate field is 3 bits (bits 13-15); rates above
+> +		 * 64G do not fit and would overflow into bit 16 (75 ohm
+> +		 * termination select). Such rates are forced via MBC_DATA_RATE.
+> +		 */
+> +		if (ha->set_data_rate <=3D PORT_SPEED_64GB)
 
 [Severity: High]
-Does this fix also need to be applied to vp_rpt_id_entry_24xx_ext in
-drivers/scsi/qla2xxx/qla_fw29.h?
+Does this code silently drop the user-configured 128G port speed upon HBA
+reset?
 
-It appears vp_rpt_id_entry_24xx_ext still uses __le16 bitfields for
-vp_idx and vp_status:
+If a user sets the 128G port speed via sysfs, and later a normal operational
+reset (such as a LIP reset or driver re-initialization) triggers
+qla24xx_config_rings(), the 128G speed won't be set here since it's > 64G.
 
-	__le16	vp_idx : 9;		/* VP Index 9bits */
-	__le16	vp_status : 7;		/* VP Status 7bits */
+However, the driver doesn't seem to issue the MBC_DATA_RATE mailbox command
+during or after the reset sequence to restore the 128G setting.
 
-When these fields are extracted in qla24xx_report_id_acquisition(), they wi=
-ll
-be read incorrectly on big-endian architectures, causing VP ID reporting and
-initialization to fail for 29xx series adapters.
+Does the adapter fall back to auto-negotiation or the NVRAM default in this
+case?
 
-Could this have been missed from the earlier patch "scsi: qla2xxx: Add size
-check for extended VP report ID entry" in this series?
+> +			icb->firmware_options_3 =3D
+> +			    cpu_to_le32(ha->set_data_rate << 13);
 
-> Fixes: 4e0e5b8c80e8 ("scsi: qla2xxx: Add 128-byte IOCB definitions for 29=
-xx")
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> Reviewed-by: Hannes Reinecke <hare@kernel.org>
+[Severity: High]
+This is a pre-existing issue, but does this absolute assignment blindly
+overwrite the entire firmware_options_3 register instead of preserving
+previously configured bits?
 
-> diff --git a/drivers/scsi/qla2xxx/qla_fw29.h b/drivers/scsi/qla2xxx/qla_f=
-w29.h
-> index 600a40d8bd5ff..63bf350ddffc0 100644
-> --- a/drivers/scsi/qla2xxx/qla_fw29.h
-> +++ b/drivers/scsi/qla2xxx/qla_fw29.h
+When qla24xx_config_rings() applies a custom port speed (<=3D 64G), it over=
+writes
+flags like BIT_8 (N2N driver-initiated login) and BIT_0 (RIDA Format2) that
+were initialized earlier in qla24xx_nvram_config().
 
-[ ... ]
+Can this break N2N topology login and other features when a custom port spe=
+ed
+is used?
 
-> @@ -563,9 +586,7 @@ struct abts_entry_24xx_ext {
->  	__le16	nport_handle;		/* type 0x54 only */
+>  	}
 > =20
->  	__le16	control_flags;		/* type 0x55 only */
-> -	__le16	vp_idx : 9;		/* VP index 9 bits */
-> -	__le16	reserved_1_sof : 3;
-> -	__le16	sof_type : 4;		/* sof_type is upper nibble */
-> +	__le16	vp_idx_sof;		/* bits [8:0]=3DVP index, [15:12]=3DSOF type */
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the abts_recv_from_24xx
-structure in drivers/scsi/qla2xxx/qla_target.h suffer from a similar
-bitfield packing issue?
-
-Looking at abts_recv_from_24xx:
-
-	uint8_t  reserved_3:4;
-	uint8_t  sof_type:4;
-
-GCC packs the first bitfield in the most-significant bits on big-endian
-systems, moving sof_type to the least-significant bits. Since the hardware
-expects sof_type in the upper nibble, could this lead to malformed ABTS
-responses and target-mode functional failures?
-
-This appears to be a pre-existing issue dating back to commit 2d70c103fd2a0=
-6.
+>  	/* PCI posting */
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
-522-1-njavali@marvell.com?part=3D41
+522-1-njavali@marvell.com?part=3D44
