@@ -1,135 +1,168 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C42D381E88
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 20:05:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFB0E40DB23
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 20:16:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784837135; cv=none; b=XI/BEUndM4G3AMQh7MSj7VBGYCVLISPVep0nphf73CkQjwd9zufUnCxl/6MaYug1Wm6jtVjZef/8oy+THf6UttMAob2+dnXyJDMVPrjNc2B5wtVHL/ovMnxX5LF6+RtCbwCZwPOJSJVXP+TW9cdVQ8so9QGmWZP/zCy8MLBA1eQ=
+	t=1784837807; cv=none; b=mxnw343oTwl22l1JzTMLyqLNFogHOSq/vK73nsu33iQU60dzCY6Zp7rQlPhFHxbFqfxDaA6G+og+gTw8Y2RuRhx1Y9ab8o1tWQjeHfpJmgd4c966+DxScqRW9wusXk0ihJHwa78I1PxiMHDmd3RRxmKF4N7EpTad7Tm1MyUbfGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784837135; c=relaxed/simple;
-	bh=0Il4jFv8/TBk8vzfFx8gA+g1O/sWnIqpmOb++wTZGfM=;
+	s=arc-20240116; t=1784837807; c=relaxed/simple;
+	bh=c4MNdXD4sMCxWMJYnH+4c19dNwT27RqWQPPmXi5pUC0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fvzF2gsa+WaeDQVFDdWFCB5w89UPdoyie6IauwzfcbfQuPMtx0ctHqffeYBtT6IVVSZMRV9srhLnv5fGdPe6kvuYGHGXt+xSNx7ja2xUD2o+SoqNAn4zwX9WjBBVFIf90+M/Hlju9F0yi004fTsUtQUkDQVh0Q50Lme5g3QYRzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MB3n2f7i; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=BwLd+RHI0eZN+mqarbvFNuNkQgKcakT8BUpJBHPdV33Blb28LsjuBQ/mEN5DdPXukWq/rfx6Gy1Rnun1GteaqOkdv8kVD9BrPiT/uupHYRoMb0ZKWhZkDXhCP5GUVDVvWKLUMAs4nziy0jKzMenSRO1Rklurcl/7ovGMRddPjRE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Du0Hj4kc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MB3n2f7i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8DF81F000E9;
-	Thu, 23 Jul 2026 20:05:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Du0Hj4kc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6162E1F000E9;
+	Thu, 23 Jul 2026 20:16:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784837132;
-	bh=TY71AR4tcNYIvsnrs5hQxGxh9kpX1yfWt6AXoN6Qhdk=;
+	s=k20260515; t=1784837780;
+	bh=MjP424qfW+Oxfbf74K2b4HrhBzRviXH3rO5/JkQN3TU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MB3n2f7iv8NkIMc3Tw3nz2T06RMEs1CgO2bnR9sC6omp6Qp26tnM+/R9280oDa4cV
-	 rBtNBENXWCuxVK2RbSCKr1f5588WX8VlOdPheJP03A4J6ML30u5eUVoFLamrjWt934
-	 7BcEnAeS7j2t5en/lddhDX/1iIHILOnx5hqkoYj7+iu1G4L2KY4T7V2MfONoDv3T+F
-	 kvgeSGZfyr7WV7MkTsaCYLhllpXcHtXYp4tc3ItljkMTvGgza0qe02ITPQ8B14ykte
-	 bAHFyOi/7+B1LCYlzVULwVajq/WWM4eD4RhqC4Yot8GQ0s6WeC1vUpioG3+baKE/4f
-	 ri1g/w3Ixkk1g==
+	b=Du0Hj4kcI4YvjvKNypS6MjWKH/qyoRU7Zxine+a5hJTPXJDiLXIu7o99gL1IX8/Gu
+	 DV36s4QPfHDkJXINGTmG10cJW/eIaTc7MX8xHoX8CDn2u4fC0eguJPwiNUJbCStaEj
+	 xvZuTl9dVZXPTtwzOgIlvjsSWsAwnbmpNPxdVpMiWt/O5svxf6GgBgV/f3rrSoB+NL
+	 yy+rrAhzGIxRmUsGbdYZ0jh5kZ2zJD8bVvkmd4r4++P7mUc3++H9cLeJjWtLFgVym9
+	 agcVYyX1U7Vu1+4TguccU5xlIYT4+27iBhTiPM506OsDLX8fY5IYlDumx2Gui1OSyZ
+	 gTCV+zeRJhawQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 54/56] scsi: qla2xxx: Fix BSG job leak on validate
- flash image error path
+Subject: Re: [PATCH v6 55/56] scsi: qla2xxx: Bound image count in
+ qla2x00_update_fru_versions()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723050413.3897522-55-njavali@marvell.com>
+In-Reply-To: <20260723050413.3897522-56-njavali@marvell.com>
 References: <20260723050413.3897522-1-njavali@marvell.com>
- <20260723050413.3897522-55-njavali@marvell.com>
+ <20260723050413.3897522-56-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 20:05:32 +0000
-Message-Id: <20260723200532.C8DF81F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 20:16:19 +0000
+Message-Id: <20260723201620.6162E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Missing bounds check on `request_len` allows out-of-bounds heap re=
-ad when accessing the variable-length `vendor_cmd` array from user-supplied=
- BSG requests.
+- [High] Heap and stack buffer overflows due to unvalidated length in I2C B=
+SG handlers.
+- [Medium] Missing payload length check against user input in FRU update/re=
+ad/write functions.
+- [Medium] Uninitialized heap memory leak to device in SFP write operations.
 --
 
---- Patch [54]: [PATCH v6 54/56] scsi: qla2xxx: Fix BSG job leak on validat=
-e flash image error path ---
-commit 9de1723bd73d3b6f0fef869a49941dbe6b59c23b
+--- Patch [55]: [PATCH v6 55/56] scsi: qla2xxx: Bound image count in qla2x0=
+0_update_fru_versions() ---
+commit cda96c9f52838a031ce5bc0e9a6594ece5956c88
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Fix BSG job leak on validate flash image error path
+scsi: qla2xxx: Bound image count in qla2x00_update_fru_versions()
 
-qla28xx_validate_flash_image() returns QLA_SUCCESS (0) unconditionally,
-telling the FC BSG transport that the driver owns and will complete the
-request. But bsg_job_done() was guarded by "if (!rval)", so on the error
-path neither the driver nor the transport completes the job, leaking
-resources. This commit removes the guard and always calls bsg_job_done().
+This commit rejects BSG requests in qla2x00_update_fru_versions() where the=
+=20
+declared count does not fit in the 256-byte stack buffer. This prevents a=20
+stack out-of-bounds read that could be sent to the device.
 
 > diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
 g.c
-> index 4a9cf8da67a6b..76c57e574c220 100644
+> index 76c57e574c220..f9b693af8db10 100644
 > --- a/drivers/scsi/qla2xxx/qla_bsg.c
 > +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -3796,9 +3796,8 @@ static int qla28xx_validate_flash_image(struct bsg_=
-job *bsg_job)
->  	bsg_reply->result =3D DID_OK << 16;
->  	bsg_reply->reply_payload_rcv_len =3D 0;
->  	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
-> -	if (!rval)
-> -		bsg_job_done(bsg_job, bsg_reply->result,
-> -			     bsg_reply->reply_payload_rcv_len);
-> +	bsg_job_done(bsg_job, bsg_reply->result,
-> +		     bsg_reply->reply_payload_rcv_len);
+> @@ -1991,6 +1991,13 @@ qla2x00_update_fru_versions(struct bsg_job *bsg_jo=
+b)
+> =20
+>  	image =3D list->version;
+>  	count =3D list->count;
+> +
+> +	if (struct_size(list, version, count) > sizeof(bsg)) {
+> +		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =3D
+> +		    EXT_STATUS_INVALID_PARAM;
+> +		goto dealloc;
+> +	}
+> +
+
+[Severity: Medium]
+This is a pre-existing issue, but does this function also need to validate
+the actual request payload length?
+
+If a local user issues a request with a payload smaller than the required
+struct sizes, sg_copy_to_buffer() only copies the provided bytes, leaving
+the rest of the stack buffer bsg uninitialized:
+
+drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_update_fru_versions() {
+    ...
+    sg_copy_to_buffer(bsg_job->request_payload.sg_list,
+        bsg_job->request_payload.sg_cnt, list, sizeof(bsg));
+    ...
+}
+
+The code then reads from this uninitialized memory (e.g. image->field_info)
+and passes it to mailbox commands, leaking kernel stack memory to the
+hardware device.
+
+Can similar payload length validation issues occur in
+qla2x00_read_fru_status() and qla2x00_write_fru_status() where
+sg_copy_to_buffer() is also used?
+
+>  	while (count--) {
+>  		memcpy(sfp, &image->field_info, sizeof(image->field_info));
+
+[Severity: Medium]
+This isn't a bug introduced by this patch, but can this lead to an
+uninitialized heap memory leak?
+
+Earlier in qla2x00_update_fru_versions(), sfp is allocated via
+dma_pool_alloc() from a 256-byte pool without zeroing it. Only 36 bytes of
+user data are copied into sfp.
+
+If the user sets image->field_address.option to include BIT_0 and sets the
+first byte of field_info to 255, this length is overridden in
+qla2x00_write_sfp():
+
+drivers/scsi/qla2xxx/qla_mbx.c:qla2x00_write_sfp() {
+    ...
+    if (opt & BIT_0)
+        len =3D *sfp;
+    ...
+}
+
+Will the hardware then read 255 bytes from sfp, leaking 219 bytes of
+uninitialized kernel heap memory to the device?
+
+>  		rval =3D qla2x00_write_sfp(vha, sfp_dma, sfp,
+
+[ ... ]
 
 [Severity: High]
-This is a pre-existing issue, but does this BSG ioctl path allow an
-out-of-bounds heap read if userspace provides a maliciously small request_l=
-en?
+This is a pre-existing issue, but do the I2C BSG handlers have unbounded
+length checks leading to overflows?
 
-When a process with CAP_SYS_RAWIO issues a BSG ioctl specifying
-FC_BSG_HST_VENDOR with a small request_len (e.g., 4 bytes), the transport
-layer expands cmdlen but never re-validates job->request_len:
+In qla2x00_write_i2c(), an unbounded user-controlled i2c->length is used in
+a memcpy:
 
-drivers/scsi/scsi_transport_fc.c:fc_bsg_host_dispatch() {
+drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_write_i2c() {
     ...
-    cmdlen +=3D sizeof(struct fc_bsg_host_vendor);
-    if ((shost->hostt->vendor_id =3D=3D 0L) ||
-        (bsg_request->rqst_data.h_vendor.vendor_id !=3D
-         shost->hostt->vendor_id)) {
+    memcpy(sfp, i2c->buffer, i2c->length);
     ...
 }
 
-This leads to an immediate out-of-bounds read of vendor_id. Later in the
-qla2xxx driver, the handler unconditionally reads vendor_cmd[0] before
-verifying the message code:
+If i2c->length is set to a large value (up to 65535), can this overflow the
+256-byte heap allocation sfp and read out-of-bounds from the kernel stack?
 
-drivers/scsi/qla2xxx/qla_bsg.c:qla24xx_bsg_request() {
-    ...
-    if (bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D=20
-            QL_VND_MANAGE_HOST_PORT ||
-        bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D=20
-            QL_VND_GET_HOST_STATS)
-    ...
-}
+Similarly, in qla2x00_read_i2c(), does passing an unvalidated length to
+memcpy() overflow the 256-byte stack array:
 
-And specifically for the validate flash image command, it blindly reads
-vendor_cmd[1] without verifying the request buffer is large enough:
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla28xx_do_validate_flash_image() {
+drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_read_i2c() {
     ...
-    img_idx =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
+    memcpy(i2c->buffer, sfp, i2c->length);
     ...
 }
-
-Should there be a bounds check on request_len in fc_bsg_host_dispatch() or
-the driver to prevent this?
-
-> =20
->  	return QLA_SUCCESS;
->  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
-522-1-njavali@marvell.com?part=3D54
+522-1-njavali@marvell.com?part=3D55
