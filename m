@@ -1,283 +1,173 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from OS8PR02CU002.outbound.protection.outlook.com (mail-japanwestazon11022107.outbound.protection.outlook.com [40.107.75.107])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10D442BB13
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 01:08:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784768903; cv=none; b=gw+O5AHcdweEWXaH8YDqDtky3I+N2kaQ6c5WRlrfHpBMBTc1Xd/8OiVgNAmehEdxv0JFA1XpUCv6sstc0FSaBS3aZGUoSGgxT7vbFSS0qCf0Zt0iWm00KUYWILvuLupaKzlyHSZfZmLh0sNXfe5QG+Jbl8kN5g7n5g/kaC3FWC0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784768903; c=relaxed/simple;
-	bh=O9sI8XotX+eMBfTNK37clvFNy35w94cjp2PzD5JK5/M=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hgUzZ1yBt65zljxJJA1SAJHquiY1PXnLrxKFTlp2M8Nw5O3Y0CNwi0EyF+UN1Evxpzng4jkSAB6uxQjVrA8tpNupS7N//QMBe7J845SnLsH9SxBwLpKNmWess4gjBZB548B4VnEyGA/2tFX3ppvc0DxOPScUm360KvmXjj6bNwg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n7OlTR2s; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBFC521D3D2;
+	Thu, 23 Jul 2026 03:45:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.75.107
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784778334; cv=fail; b=nUUkX/BaihbQLmJvU7NNqxsH9cDO592kmQdAdkZZy+KS9yh4imGfE9ezdpkBz9mLtX+BnXG/NwwkA7t8unPNigy6lIpc4/YcCNAI4FqeOXVb5WJR7nUDgqgrUer9qbzwY3IoSziETelouagLTB0WoH7WC9nbiGDSxrQXwrRFXi4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784778334; c=relaxed/simple;
+	bh=GtUN/mVI/C2a86CiO6mSHZ7y6WaLq7+gIOWw+SPyUgI=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=s4w8/lgurIaEvpuHRAYD3eRQAsIxZqMuwDmdl9nOyDxdfJILkeXP2T2TD0R6SiKHhlb0iCiHTRub94BpnPoIMSReWA1IPVgX+/yomyXtlxHUpGeQMYMSwa2KQeTwGaLfu+5mlpfc/6E9HcMRrZ+E7NIDYBl+BUw9OXxThlP5iqo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=transsion.com; spf=pass smtp.mailfrom=transsion.com; dkim=pass (1024-bit key) header.d=transsion.com header.i=@transsion.com header.b=ZoQGRt2x; arc=fail smtp.client-ip=40.107.75.107
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=transsion.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=transsion.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n7OlTR2s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B75981F000E9;
-	Thu, 23 Jul 2026 01:08:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784768901;
-	bh=QzyXlmAejEu7aDhAMh3MUvglgjxkhYyQ+oBhsRdbwcY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=n7OlTR2sELgmrc60HfhaSn7Q3J7iELpcreHaxCxu/QvV0pXdmMBos9JB2uJqaRT/Z
-	 fanxfFIzedQ8Lx0Lp0chmbZ5InPcHSB78uFR7DdAe5Lhpc7KJG4n9oCkZYvh1IWtN2
-	 /Ifu2+C6VHS1WGAR4iR7IrD723RisKYhw5mPzJXdAwJeHXCKJFiG9DhaSvNpKLgika
-	 QGVAZWE8uKsvUGkreukSR0wypHh2+Tqu3VO8h6FGRyNWMvrHBLtlb4EKQm1D3LHbpP
-	 e3+srWT55aF6ReWNGYzfUAJj31PQZZQ2LBsQ518q4RaqmSBSjjmxwUu1o0fQS59M8E
-	 c99/T53Tlp9Eg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 30/33] ibmvfc: implement nvme-fc IO command
- submission callback
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723000149.969416-31-tyreld@linux.ibm.com>
-References: <20260723000149.969416-1-tyreld@linux.ibm.com>
- <20260723000149.969416-31-tyreld@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (1024-bit key) header.d=transsion.com header.i=@transsion.com header.b="ZoQGRt2x"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=SjmS/S5KJjJju79/GnnRgDHriUGFWQKPbMPxIMJVOCckvE+R6jI8JoodClG/dlzBYG5QvGNF2VcRrpcodWJcHoZ13wif8nE6qRx/CTnDdt3ikvzCrAX7UAHzgwzZfTi9lsRDPDvlTXeJyURqH77xskX7sEYjVstAIG/h+no1oZ0SLCRJypfZTPime71EUm0BOU5vjRsQL+/p0lb1ZZ6maOoHkwN7uFmm13bAG2a31IeRWWM0kmzmCImZJngursMhpjkQdv0vrwlE3/RYnfF7wPz6erbovSYfCYQrQClkyMm6f/qFOOqHTTYUuFLg1zruryYFr4VfE6rdtJt4zgmmZQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xiE1CRWR5SH23c446UAibqdnJrHraHMfG7IP5uU5aC0=;
+ b=gwLhsPH6FSwP6YOFSkAFIHavntdGFZwQLL3rJuEDHS1gJ2kIUx2OoR9yXv4wbSgF+KLd3mcHSSdxf4QemWmJgiajtFJYEZBGr5d6R+1bMinIUfLcZyhyxXsUsRpM3NUMCPWtxbtU2HjLewuLu1N9999DslGzOiLFfV6cr/pkzW8WQgKDLlde2S0+rEytdD7jYro0eVfCI9hXpsgpqyzm9gzC8Lz+ey4J/QubIUjBgGb3SiUtO/xi3vAETNuMMHeUp26pc6I0mOllPC2Rr6XwUGa5teY6Snryh8ZgWVr/BzZgs5qwL7ua+olpupM9Cn/UJijZwfHl7/OusqXHhCIgQA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=transsion.com; dmarc=pass action=none
+ header.from=transsion.com; dkim=pass header.d=transsion.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=transsion.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xiE1CRWR5SH23c446UAibqdnJrHraHMfG7IP5uU5aC0=;
+ b=ZoQGRt2x7N2XzbYC0f+/YpPT+dzip2raDXaWkRfS6M3ihS61jz5bMjRfvJ2RfdU3H0B12G6Flt0DOMN2OGauV2wg49XTLHm8X71lW2Y6u5i1ZkEJTH3/9DXDWWEWd7ezBjSSihfxGFLey0BrPpc0xzp9OpSYWWXsddZ8Rg1v/mc=
+Received: from SE3PR04MB8921.apcprd04.prod.outlook.com (2603:1096:101:2e8::6)
+ by SEZPR04MB9579.apcprd04.prod.outlook.com (2603:1096:101:33d::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.5; Thu, 23 Jul
+ 2026 03:45:30 +0000
+Received: from SE3PR04MB8921.apcprd04.prod.outlook.com
+ ([fe80::ebed:1dee:3932:9ba2]) by SE3PR04MB8921.apcprd04.prod.outlook.com
+ ([fe80::ebed:1dee:3932:9ba2%3]) with mapi id 15.21.0245.009; Thu, 23 Jul 2026
+ 03:45:30 +0000
+From: Ao Sun <ao.sun@transsion.com>
+To: "beanhuo@iokpp.de" <beanhuo@iokpp.de>, "alim.akhtar@samsung.com"
+	<alim.akhtar@samsung.com>, "avri.altman@sandisk.com"
+	<avri.altman@sandisk.com>, "bvanassche@acm.org" <bvanassche@acm.org>,
+	"James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "peter.wang@mediatek.com"
+	<peter.wang@mediatek.com>, "can.guo@oss.qualcomm.com"
+	<can.guo@oss.qualcomm.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hongyan Xia
+	<hongyan.xia@transsion.com>, Jiazi Li <jiazi.li@transsion.com>, Ao Sun
+	<ao.sun@transsion.com>
+Subject: [PATCH] scsi: ufs: core: Initialize hba->rpmbs list in ufshcd
+Thread-Topic: [PATCH] scsi: ufs: core: Initialize hba->rpmbs list in ufshcd
+Thread-Index: AQHdGlW1wo2hLp5Eqk2xHdUBYa2g3g==
+Date: Thu, 23 Jul 2026 03:45:30 +0000
+Message-ID: <20260723034440.217-1-ao.sun@transsion.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=transsion.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SE3PR04MB8921:EE_|SEZPR04MB9579:EE_
+x-ms-office365-filtering-correlation-id: 0af3d381-7242-4248-8e26-08dee86cd783
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|42112799006|366016|376014|7416014|23010399003|56012099006|10067099003|11063799006|18002099003|38070700021;
+x-microsoft-antispam-message-info:
+ qSIUkZgZVwJTEGERCtRcyNucQbY5LtrksmiexEnsX1CfsickNTTbKhxyR/61bd5UQkR7qeD7J85YMpsvhe4v2lKy9saYpPvx4CbBoyHWxeH2nVg6/ju8ZGArMtWY+h0uc+6NO5M2aJl0/M600lznDISjd4j7T6fy8Z9zxtRiAkKbJp/ZF+cOo+lEG5gPSpUggnVwZOQEQZzpx1cvW6YyFK1K7BoqG4lsNeYIWTkWMj1/RoQaujcotmsgLfbX3493duLW04XWX4+Xfbro6tTVIAVg3wBzr+B8AsUD76k3W9iomZl3U4ZIrFr1IsP6hNk9PftEa9NMUtBmKyfejNQjNZ6eIcYpuNMJlkkFbOI+gIQu1xv+7g9P4O4YEybdjxTclAQBmL3E3D85ttcT8aym55QbxjCt+cB8nPSqvV8dqgJAITlvYdL/+oKE2UzZpPQcfFus7MdiCXd+c+lc+vApxv4VIr0mjkULayMLo73fpw0Fd8cIma4Q8DV6yfL3KSeOZBt/YfGZZC7Ag3Azw0OSckJDO76y4eYwGagpgvJ7WgzJDFMYCtwQdPyee1gHT4+TpmfMx0mtaAUdnnYLtrpVcXdN4yx9sgkr1SAb9SZlo6cBNHFmX2DvLM9ZrHx+Eo1YsQuIev56OZ+kWeC9m/CFobxJThtkZ5o+n98X4Qe+M1t3KDT41m0/HkDJm5j+7tAKmRCvIk8E/F7X+vDaTCbn9Q==
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SE3PR04MB8921.apcprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(42112799006)(366016)(376014)(7416014)(23010399003)(56012099006)(10067099003)(11063799006)(18002099003)(38070700021);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?6hvSYugAKcCfKPFM00N4DScwqlfX4sSeJ7wDTfrCL3qkii9MrSH6SRojIc?=
+ =?iso-8859-1?Q?bpvfRodS21dJGc85W6luWbOoH1bAVj/CgcMwMNe+PoaTHMbPPI0os75hRH?=
+ =?iso-8859-1?Q?Xp1IwB6VWT3vmTiLtYJVgsEkahe8REsX54vEIY3g7njamClejQ28xl/oY5?=
+ =?iso-8859-1?Q?0H5j/q2EjJbDXzSKxGI3wvAHCwuuNOlE6FC3vRWG+zq6JZZ2yF3EFLQSBz?=
+ =?iso-8859-1?Q?JoL5CyoF5kliTMuvPIOQf7bhDDP+F6HxJi5SqQ6Qhi8QOT4cdosAvFJ+w9?=
+ =?iso-8859-1?Q?cSo57Muo9Q+bttaxVsg4BvbQTtQ2AAUn8u+mmS/yxpw6M4r8Q1KaIq6Yl0?=
+ =?iso-8859-1?Q?oo6LXGxpry9LBseiBrH0HMq3YKzlgoQuCmuJlmO5YO/xHoYLTTIGbQ7Wiv?=
+ =?iso-8859-1?Q?laiLLsNrty4F6AHHdEV3GgP1epqYKTaCUppuyZR5hCdcikZA/I5ajhsJLd?=
+ =?iso-8859-1?Q?uqlrYElqPrGHoehS0ovTvNCHIaPt/eh/bXFzBSqWX+N9eBxswcL/VGoglZ?=
+ =?iso-8859-1?Q?9Kc24wB/Pc4YVn6N9hLEkhcx4BIGKf7Kxq79SaSZk0qOWr90lR4HuKrFKP?=
+ =?iso-8859-1?Q?nd9Le4ATrCYmmUdPF0uAD+NuwL0RFMYMDvpEptEHNI18H/66t7dm0OgrcG?=
+ =?iso-8859-1?Q?C/WbayMZnSIfZTxPXiHGVJ5uW3nuQrcVSPLIvTIHMAilap3B4OXwyGQlhQ?=
+ =?iso-8859-1?Q?Qzk663s5Omp1SjKM9mk6Y+Y0M3LcP8Y1Oovt/DkgLG54B3WoRZHLW8o0/v?=
+ =?iso-8859-1?Q?153Pj6xCFzFNU7fD395LlFwIai0Hnce0AUA3oTBXROloukyzB49nA+8b2q?=
+ =?iso-8859-1?Q?0venSQ7VyfFmBjL/EgpmK1YM1T0HT5D9AYY4AWp8aJbQgkyJuHlDZ19Jdm?=
+ =?iso-8859-1?Q?eA1rVKvr8QQB6vMO5wusklSaoe85Lp2+UmNQe8+H9DahyGIrH4vGnYh9p3?=
+ =?iso-8859-1?Q?sEMYnfgbJTDuMcwmSycu7AVKXMp/Uk+0R2jauMlb9FC2GRHwhJREvZKnaL?=
+ =?iso-8859-1?Q?0+p4iyMBbSF6P7fka5j6dth7+fQfn/+D9kBqbMFLB8IkFIqTawzrBaDQOu?=
+ =?iso-8859-1?Q?Bw2nK6NyuO6+EKI+PDZt2pcca8xtBPunJnlO2V+bhVanF4m5R/Wmro90Vr?=
+ =?iso-8859-1?Q?MEy88Bn/CKKSZvnPTNaDE1g6EVWwFNoUK0OA+CaD8iNoaQX2ChNUU4t4Fo?=
+ =?iso-8859-1?Q?A7FMNdlbAG95+YX5xoEFkob8gm39AHxyUPxZJ1MQawH7SbVc5H50mKIxQx?=
+ =?iso-8859-1?Q?IJH0dGvG+np/CxxKtzXGnDwU/6t9JrKmefbd3JJLtcw3bK66Myfa2Ycxue?=
+ =?iso-8859-1?Q?qAvEwrSVtN2ocn3nd5GCaS4wKZgkXrIJ9MW8rStVLCMJiP5U0ReZwl2BUK?=
+ =?iso-8859-1?Q?8pWzblhMr+VhfRgEYrYYYfgt8Qf9JJVdFMDbqWrikcg/zb3RrPSMjWVO9k?=
+ =?iso-8859-1?Q?n2kWBY7JK8YNosOvngQT9hitBajRm2kZUjnTgZsyeDmJ0KHgrjUI+o2S5l?=
+ =?iso-8859-1?Q?PIHBcO1CYMoq7DUUFYivSHZCw9+noXzBJujvFo7fTaAxzO7dUuJYNzF81i?=
+ =?iso-8859-1?Q?+v7jpjjDEXC/o/MmH5KSafVkZjQG2oSN+zHe7kYsB0tZVF24B/rBUmhV2D?=
+ =?iso-8859-1?Q?miu7QGFZ2Z1aS78SmW/JM3iw4Kbzps8VCz08YQ5tdvi5DggfYKIG0ksvop?=
+ =?iso-8859-1?Q?+8Wig7b1eXTZ8QV+D33IcbpBqEvjZbzhu+OQGAaLqtp8rW3GIX3cuKF8aT?=
+ =?iso-8859-1?Q?1s7qgAW7OGQtXpXsZuodU8vsAb3KlAKAB9aBfCZHIfjxdIMDbXZL8xwqAd?=
+ =?iso-8859-1?Q?Q1EpZzWwbw=3D=3D?=
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 01:08:21 +0000
-Message-Id: <20260723010821.B75981F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-OriginatorOrg: transsion.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SE3PR04MB8921.apcprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0af3d381-7242-4248-8e26-08dee86cd783
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Jul 2026 03:45:30.2917
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 2e8503a6-2d01-4333-8e36-6ab7c8cd7ae2
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: vsXVwuzI6YxIzVxJnsvCibmu+vCij7LfcJDrNRKb0kTDwl3twGTcO7VbIRCRF5XKywHEhMMoyWzThjuT0rneMg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR04MB9579
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
-- [Critical] NVMe FCP requests are incorrectly processed as MAD requests in=
- error and purge paths, causing uninitialized pointer dereferences and sile=
-nt data corruption.
-- [Critical] Heap buffer overflow in scatterlist mapping due to mismatch be=
-tween driver-advertised maximum segments and the DMA pool block size.
-- [High] The driver passes uninitialized or stale NVMe Completion Queue Ent=
-ries (CQE) to the NVMe-FC transport when the adapter skips the ERSP DMA.
-- [High] `ibmvfc_nvme_fcp_io` propagates SCSI midlayer error codes directly=
- to the NVMe-FC core, causing NVMe I/O requests to permanently fail instead=
- of being retried.
-- [Medium] Truncating a 64-bit pointer to a 32-bit `cancel_key` risks colli=
-sions across multiple command queues.
---
-
---- Patch [30]: [PATCH v2 30/33] ibmvfc: implement nvme-fc IO command submi=
-ssion callback ---
-commit 6afa68277a7b61e829a727b116180c19195e096c
-Author: Tyrel Datwyler <tyreld@linux.ibm.com>
-
-ibmvfc: implement nvme-fc IO command submission callback
-
-This commit implements the NVMe-FC IO command submission callback for the
-ibmvfc driver. It adds helpers to initialize commands, map scatterlists,
-and submit the requests to the hardware queue.
-
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-nvme.c
-> index cf72f0682297b..d31e7e9ea7a9e 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
-[ ... ]
-> +static void ibmvfc_nvme_done(struct ibmvfc_event *evt)
-> +{
-> +	struct ibmvfc_cmd *vfc_cmd =3D &evt->xfer_iu->cmd;
-> +	struct nvmefc_fcp_req *fcp_req =3D evt->fcp_req;
-> +	struct nvme_fc_ersp_iu *ersp =3D (struct nvme_fc_ersp_iu *)fcp_req->rsp=
-addr;
-> +	struct nvme_completion *cqe =3D &ersp->cqe;
-> +	struct nvme_command *sqe =3D &((struct nvme_fc_cmd_iu *)fcp_req->cmdadd=
-r)->sqe;
-> +
-> +	ibmvfc_dbg(evt->vhost, "fc_done: (%x:%x)\n", be16_to_cpu(vfc_cmd->statu=
-s),
-> +		   be16_to_cpu(vfc_cmd->error));
-> +	ibmvfc_dbg(evt->vhost, "fc_done: cmdlen: %d, rsplen %d, payload_len %d\=
-n",
-> +		   fcp_req->cmdlen, fcp_req->rsplen, fcp_req->payload_length);
-> +
-> +	fcp_req->status =3D 0;
-> +	if (!vfc_cmd->status) {
-> +		fcp_req->rcv_rsplen =3D NVME_FC_SIZEOF_ZEROS_RSP;
-> +		fcp_req->transferred_length =3D fcp_req->payload_length;
-> +	} else if (be16_to_cpu(vfc_cmd->status) & IBMVFC_FC_NVME_STATUS) {
-> +		fcp_req->rcv_rsplen =3D sizeof(struct nvme_fc_ersp_iu);
-> +		fcp_req->transferred_length =3D be32_to_cpu(ersp->xfrd_len);
-> +		if (be16_to_cpu(vfc_cmd->error) & IBMVFC_NVMS_VALID_NODMA_CQE)
-> +			cqe->command_id =3D sqe->common.command_id;
-
-[Severity: High]
-Does this pass uninitialized or stale NVMe Completion Queue Entries (CQE) to
-the NVMe-FC transport?
-
-If the adapter skips the ERSP DMA (indicated by IBMVFC_NVMS_VALID_NODMA_CQE=
-),
-this forces the NVMe core to process the response buffer by setting
-fcp_req->rcv_rsplen =3D sizeof(struct nvme_fc_ersp_iu). Since the host memo=
-ry at
-fcp_req->rspaddr is recycled and not zeroed by the NVMe core, could this ca=
-use
-the NVMe core to process stale cqe->status and cqe->result data without
-verifying that IBMVFC_NVMS_VALID_ERSP was set?
-
-> +	} else {
-> +		fcp_req->rcv_rsplen =3D 0;
-> +		fcp_req->transferred_length =3D 0;
-> +		fcp_req->status =3D NVME_SC_INTERNAL;
-> +	}
-> +
-> +	fcp_req->done(fcp_req);
-> +	ibmvfc_free_event(evt);
-> +}
-> +
-> +static struct ibmvfc_cmd *ibmvfc_nvme_init_vfc_cmd(struct ibmvfc_event *=
-evt,
-> +						   struct nvme_fc_remote_port *rport,
-> +						   struct nvmefc_fcp_req *fcp_req)
-> +{
-> +	struct ibmvfc_target *tgt =3D rport->private;
-> +	struct ibmvfc_cmd *vfc_cmd =3D &evt->iu.cmd;
-> +
-> +	memset(vfc_cmd, 0, sizeof(*vfc_cmd));
-> +
-> +	vfc_cmd->resp.va =3D cpu_to_be64(fcp_req->rspdma);
-> +	vfc_cmd->resp.len =3D cpu_to_be32(fcp_req->rsplen);
-> +	vfc_cmd->frame_type =3D cpu_to_be32(IBMVFC_NVME_FCP_TYPE);
-> +	vfc_cmd->flags |=3D cpu_to_be16(IBMVFC_NVMEOF_PROTOCOL);
-> +	vfc_cmd->payload_len =3D cpu_to_be32(fcp_req->cmdlen);
-> +	vfc_cmd->resp_len =3D cpu_to_be32(fcp_req->rsplen);
-> +	vfc_cmd->cancel_key =3D cpu_to_be32((u64)evt);
-
-[Severity: Medium]
-Does truncating the 64-bit evt pointer to a 32-bit cancel_key risk collisio=
-ns?
-
-Since events are allocated from per-queue DMA pools, is it possible for two
-different event queues to be mapped at virtual memory addresses separated by
-exactly 4GB? This would make their lower 32 bits identical, risking duplica=
-te
-cancel keys across multiple command queues and potentially aborting the wro=
-ng
-command.
-
-> +	vfc_cmd->target_wwpn =3D cpu_to_be64(rport->port_name);
-> +	vfc_cmd->tgt_scsi_id =3D cpu_to_be64(rport->port_id);
-> +	vfc_cmd->assoc_id =3D cpu_to_be64(tgt->assoc_id);
-> +
-> +	memcpy(&vfc_cmd->v3nvme.iu, fcp_req->cmdaddr, fcp_req->cmdlen);
-> +
-> +	return vfc_cmd;
-> +}
-[ ... ]
-> +static int ibmvfc_nvme_map_sg_data(struct nvmefc_fcp_req *fcp_req,
-> +				    struct ibmvfc_event *evt,
-> +				    struct ibmvfc_cmd *vfc_cmd)
-> +{
-> +	struct srp_direct_buf *data =3D &vfc_cmd->ioba;
-> +	struct ibmvfc_host *vhost =3D evt->vhost;
-> +
-> +	if (!fcp_req->sg_cnt) {
-> +		vfc_cmd->flags |=3D cpu_to_be16(IBMVFC_NO_MEM_DESC);
-> +		return 0;
-> +	}
-> +
-> +	if (fcp_req->io_dir =3D=3D NVMEFC_FCP_WRITE)
-> +		vfc_cmd->flags |=3D cpu_to_be16(IBMVFC_WRITE);
-> +	else
-> +		vfc_cmd->flags |=3D cpu_to_be16(IBMVFC_READ);
-> +
-> +	if (fcp_req->sg_cnt =3D=3D 1) {
-> +		ibmvfc_nvme_map_sg_list(fcp_req, data);
-> +		return 0;
-> +	}
-> +
-> +	vfc_cmd->flags |=3D cpu_to_be16(IBMVFC_SCATTERLIST);
-> +
-> +	if (!evt->ext_list) {
-> +		evt->ext_list =3D dma_pool_alloc(vhost->sg_pool, GFP_ATOMIC,
-> +					       &evt->ext_list_token);
-
-[Severity: Critical]
-Can this overflow the DMA pool buffer?
-
-The vhost->sg_pool appears to hold a maximum of 128 items, but if the
-transport advertises support for up to 1024 scatterlist segments
-(.max_sgl_segments =3D 1024), ibmvfc_nvme_map_sg_list() will iterate up to =
-1024
-times. If fcp_req->sg_cnt exceeds 128, won't this write past the end of the
-allocated buffer and corrupt adjacent memory?
-
-> +
-> +		if (!evt->ext_list)
-> +			return -ENOMEM;
-> +	}
-> +
-> +	ibmvfc_nvme_map_sg_list(fcp_req, evt->ext_list);
-> +
-> +	data->va =3D cpu_to_be64(evt->ext_list_token);
-> +	data->len =3D cpu_to_be32(fcp_req->sg_cnt * sizeof(struct srp_direct_bu=
-f));
-> +	data->key =3D 0;
-> +	return 0;
-> +}
-> +
->  static int ibmvfc_nvme_fcp_io(struct nvme_fc_local_port *lport,
->  			      struct nvme_fc_remote_port *rport,
->  			      void *hw_queue_handle,
->  			      struct nvmefc_fcp_req *fcp_req)
->  {
-> -	return 0;
-> +	struct ibmvfc_host *vhost =3D lport->private;
-> +	struct ibmvfc_nvme_qhandle *qhandle =3D hw_queue_handle;
-> +	struct ibmvfc_cmd *vfc_cmd;
-> +	struct ibmvfc_event *evt;
-> +	int rc;
-> +
-> +	ibmvfc_dbg(vhost, "nvme_fcp_io\n");
-> +	evt =3D ibmvfc_get_event(qhandle->queue);
-> +	if (!evt)
-> +		return -EBUSY;
-> +
-> +	evt->hwq =3D qhandle->index;
-> +	ibmvfc_dbg(vhost, "vfc-nvme-mq-%d\n", evt->hwq);
-> +
-> +	ibmvfc_init_event(evt, ibmvfc_nvme_done, IBMVFC_CMD_FORMAT);
-> +	evt->fcp_req =3D fcp_req;
-> +	fcp_req->private =3D evt;
-> +
-> +	vfc_cmd =3D ibmvfc_nvme_init_vfc_cmd(evt, rport, fcp_req);
-> +
-> +	vfc_cmd->correlation =3D cpu_to_be64((u64)evt);
-> +
-> +	if (likely(!(rc =3D ibmvfc_nvme_map_sg_data(fcp_req, evt, vfc_cmd))))
-> +		return ibmvfc_send_event(evt, vhost, 0);
-
-[Severity: Critical]
-Could this lead to NVMe FCP requests being incorrectly processed as MAD
-requests in error paths?
-
-If ibmvfc_send_event() fails (e.g., due to a transport error) or if
-ibmvfc_fail_request() is called during a queue purge, does the driver assume
-that any event without a SCSI cmnd is a MAD request? Since NVMe FCP requests
-lack a cmnd, it appears they might fall into legacy branches where an
-uninitialized evt->_done is executed, or where mad_common.status (which
-overlaps with NVMe's payload_len) is written to instead of vfc_cmd->status,
-resulting in a crash or the request being completed as a false success.
-
-[Severity: High]
-Will this propagate SCSI midlayer error codes directly to the NVMe-FC core?
-
-If ibmvfc_send_event() detects a transient queue closure, it returns
-SCSI_MLQUEUE_HOST_BUSY. Since the NVMe-FC core expects standard Linux error
-codes (like -EBUSY) from the fcp_io callback, will returning this positive
-error code cause it to be translated to BLK_STS_IOERR, leading to spurious
-hard failures instead of retrying the I/O?
-
-> +
-> +	ibmvfc_free_event(evt);
-> +
-> +	return rc;
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723000149.9694=
-16-1-tyreld@linux.ibm.com?part=3D30
+From: Ao Sun <ao.sun@transsion.com>=0A=
+=0A=
+Initialize the hba->rpmbs list in ufshcd_alloc_host() to prevent NULL=0A=
+pointer dereference in the device teardown path if ufs_rpmb_probe()=0A=
+fails.=0A=
+=0A=
+Fixes: b06b8c421485 ("scsi: ufs: core: Add OP-TEE based RPMB driver for UFS=
+ devices")=0A=
+Signed-off-by: Jiazi Li <jiazi.li@transsion.com>=0A=
+Signed-off-by: Ao Sun <ao.sun@transsion.com>=0A=
+---=0A=
+ drivers/ufs/core/ufs-rpmb.c | 2 --=0A=
+ drivers/ufs/core/ufshcd.c   | 1 +=0A=
+ 2 files changed, 1 insertion(+), 2 deletions(-)=0A=
+=0A=
+diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c=0A=
+index ffad049872b9..62120dc2e9da 100644=0A=
+--- a/drivers/ufs/core/ufs-rpmb.c=0A=
++++ b/drivers/ufs/core/ufs-rpmb.c=0A=
+@@ -152,8 +152,6 @@ int ufs_rpmb_probe(struct ufs_hba *hba)=0A=
+ 		return -EINVAL;=0A=
+ 	}=0A=
+ =0A=
+-	INIT_LIST_HEAD(&hba->rpmbs);=0A=
+-=0A=
+ 	struct rpmb_descr descr =3D {=0A=
+ 		.type =3D RPMB_TYPE_UFS,=0A=
+ 		.route_frames =3D ufs_rpmb_route_frames,=0A=
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c=0A=
+index d3044a3089b5..60227069db06 100644=0A=
+--- a/drivers/ufs/core/ufshcd.c=0A=
++++ b/drivers/ufs/core/ufshcd.c=0A=
+@@ -10988,6 +10988,7 @@ int ufshcd_alloc_host(struct device *dev, struct uf=
+s_hba **hba_handle)=0A=
+ 	hba->nop_out_timeout =3D NOP_OUT_TIMEOUT;=0A=
+ 	ufshcd_set_sg_entry_size(hba, sizeof(struct ufshcd_sg_entry));=0A=
+ 	INIT_LIST_HEAD(&hba->clk_list_head);=0A=
++	INIT_LIST_HEAD(&hba->rpmbs);=0A=
+ 	spin_lock_init(&hba->outstanding_lock);=0A=
+ =0A=
+ 	*hba_handle =3D hba;=0A=
+-- =0A=
+2.34.1=0A=
+=0A=
