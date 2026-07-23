@@ -1,391 +1,244 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E467C476CCA
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 14:33:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C827E3B6BF3
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 14:37:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784817201; cv=none; b=LulnMggTkE7QaAqWdC4zN8MjZGLFpxRK/zhCu2pxGuo646+Z9ZBxx1r6aRfwJC8J7BxEnF/UWrFBCGE75COn2QTHh8tL43C9JbGa8gCcGNnNkhVYO4mxCtjDD/HMNs//+KeVZnvDo5ZghqqxDuPDoD5TeKaWDc3km3rsnj+BbZY=
+	t=1784817471; cv=none; b=dQQFuBvY5ZBcEpXpCfRmfcEtzddAExBXgifmWojD/vxEaR7IsRFTqrqIV7DTXlt8BJI4Zy/KC7WKWpwqE1TTUeP0RiZaclr9l0DX/HyLjvJa6J6lXJAKPunSa7yy2FfONiifQHjj7sBDMkj1vK11fvKqNcTiXJ35Zp+64VOvDr0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784817201; c=relaxed/simple;
-	bh=1iPgfPqtN65TNA94HJTPaKoTVAJOYO3sttLNiXqb08U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s26XC1XAx7raHVo2L0R7Pj+8rSpKUQJX9nDai0zKVaX4/0sOa0J+TRXTyOyFue3LqHgdXTSWEB6a1cusBMSdqae8+q8cq51wCUzv2uG1IeLMelV51bxb5yUZ/lqZRMNV5BXhWTO1DWB4qJNpbRYK+yPptA1zx0aefMhLx825Qk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=HOpKBEm/; arc=none smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HOpKBEm/"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2cede6375caso110765ad.0
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 07:33:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784817194; x=1785421994; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=vZI+OzvVPDlnkxQ1LYwHN0YJJPOPV9liKVQ0dUyj/Oc=;
-        b=HOpKBEm/xwp0+rY5MGEGrBjoQOHQ8CP0eSmecJD67RgVIJots30VKWmy+oPYwnF7qb
-         zYQ6oC7AZXyGhCJO3C/STDpxfxjEFu7fd6uge3Cdw8EPWBxmdRHlWuhXNRvjCg4brZ/k
-         POwfAVfXE3oUgw9u8dviFqfDJ0awh2BDOcrrdRlLge6WpRffwArTax32w+ASR0sYQlgs
-         VzE6+Ng7qY8YuW1ynbIKtvW1JJguq+WuuMvKV6LKZTa0Rr3mk4hd9MkWgviH7pCYt21I
-         a3Szd0RAEu7nwfVamnOeZEX99Cub+BYicTW1DHY6ZvKr8+tF8fLiWjjejMunn/Ff7mma
-         mjDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784817194; x=1785421994;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=vZI+OzvVPDlnkxQ1LYwHN0YJJPOPV9liKVQ0dUyj/Oc=;
-        b=aHNrjuYaNWcDrd9f1gdh3m8ABlkBcdiQiLLpA6ddBTriEG+tGKst4zt3iDsKufQ6PF
-         +JRFfUlQ11VpkmPiSAJD/wGumhsr4NDFRJ34leR2s0ldWBV5M4aWqaZz2Tyug3qlDY08
-         zf7qEt7/Cx6iA4fd/yrhTvZ5iveqIoIHLHjIqiHsnXAoTokRUxcJPyS2GR+OC4wx49J6
-         HMdGavfuJc9+fq6YnRwggUcg7BTLyM7ex560oeUCSC4OL1ixQr2/v0dap9Itk2/nl7RM
-         CXGdaAD2O8MrhchSitP0PsnExcvSzx94kMFttLD/r90CYtos60cgws6BI9l5x/6E4TF/
-         sS5Q==
-X-Forwarded-Encrypted: i=1; AHgh+Rr/DmUpxS0SM5kdU4lFnJ5AMsSfvb0IvpISu11LV8haI7jUZiZlO/xqnopeA4thhDLSQ6ER3Aw6KmcT@vger.kernel.org
-X-Gm-Message-State: AOJu0YzSbHGOaE9iF3u33gdwyapo0xP1DTto7i41y0t11g60kEUTisuJ
-	dityIy4Crt6hRHX4bq6Mbns5f2Vj2rtr0PTwL23ev1hdlNsjjTgWghh3G0UbdfITqg==
-X-Gm-Gg: AR+sD12Xf1xF7OJbDFAgslySerd/OioGXKI/cbQD+BaP3AJluE50IbAbeKp9EMTFbg6
-	3jFHweQwYs8XclneyZZyPEd0/o9xpydMsONnpAbWK+li7+8c3eWotwMhf4gbr9SgqJd5rqtSHdo
-	4cuNQ9wPk/iMVyp1tqhERNZr88d/HBGdMbM46PB7j/uIv/889I8e12ccOe4H2fWH6bqSJH89w25
-	9KP6+JWZJjNz4NQYpqNXPtA2nx2z87c1XkmTRCAZJhi8g+X+PSepdO9vVkpCRsuIfXmBWpvr3jo
-	RAnJTIYhiQ2adBHyoGsfk4TYW4FB72fEnNKd4SN7LvQJjWugqU0i2N7qVQcB6s71ZhhiJNrsxGJ
-	Afy2Z2pD/bFIIKkblL0T/tXonZh0aJkhtj9CfdAqvEplRR/LSQmx/gY8V4B/+VnV7mBz4i38Ak/
-	u9T1pMlJaEn6UGbJkl+4X8SOMTpcQP73qHXzDyq75xIVRK26tn
-X-Received: by 2002:a17:902:f60e:b0:2c1:ee6e:4e49 with SMTP id d9443c01a7336-2cfa53828bdmr2852265ad.26.1784817192680;
-        Thu, 23 Jul 2026 07:33:12 -0700 (PDT)
-Received: from google.com (249.65.83.34.bc.googleusercontent.com. [34.83.65.249])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbb8f1a9967sm2836789a12.25.2026.07.23.07.33.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 07:33:11 -0700 (PDT)
-Date: Thu, 23 Jul 2026 07:33:07 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH v7 1/2] ata: libata-scsi: terminate deferred commands on
- time out
-Message-ID: <amImI_xndJs48pJJ@google.com>
-References: <20260721064027.2081195-1-dlemoal@kernel.org>
- <20260721064027.2081195-2-dlemoal@kernel.org>
+	s=arc-20240116; t=1784817471; c=relaxed/simple;
+	bh=u45ROxEWLuefEaEe70wk0itgCGx0c0QT0ZlWiLGSuQA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=HMuCD3j38gMbAkR/Eqa6TyUA6jaa2QSrP963vfxqftiOxhRi6r4HPlXET+FJcOARHsakBxAxHvN4GoEhQuiJyW3iZtNCuZHRvtd9d7yCeRLK16SyPRF/xlWKS3O0G9fUI5JLr9OSc2+4ljIB1MhEeDVdBCRXVWrx2p2O+POecps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B8821F000E9;
+	Thu, 23 Jul 2026 14:37:46 +0000 (UTC)
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi_debug: add support to corrupt data and/or reftag
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Christoph Hellwig" <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260723142154.107268-1-hch@lst.de>
+References: <20260723142154.107268-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 23 Jul 2026 14:37:44 +0000
+Message-Id: <20260723143746.6B8821F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260721064027.2081195-2-dlemoal@kernel.org>
 
-On Tue, Jul 21, 2026 at 03:40:26PM +0900, Damien Le Moal wrote:
-> If a command times out while we have deferred non-NCQ commands waiting to
-> be issued, the SCSI EH task is not immediately woken up as the waiting
-> deferred commands are never issued nor completed, thus leaving the SCSI
-> host in a busy state (shost->host_failed != scsi_host_busy(shost)) which
-> prevents the SCSI EH task from being woken up. Eventually, when the
-> deferred commands also time out, the SCSI EH task is woken up and the
-> timeout processing occurs.
-> 
-> Avoid this unnecessary SCSI EH task wake-up additional time by scheduling
-> a retry of all waiting deferred QCs, using the eh_timed_out SCSI host
-> template operation. The function ata_scsi_eh_timed_out() is introduced to
-> implement this operation.
-> 
-> However, terminating deferred commands with DID_REQUEUE to force a retry
-> by calling the function ata_scsi_requeue_deferred_qc() may still keep the
-> SCSI host in a busy state because the block layer may immediately re-issue
-> these commands. The solution to this is to schedule libata EH for the
-> port which suffered the command timeout to prevent accepting any new
-> command. ata_scsi_requeue_deferred_qc() is modified to add a call to
-> ata_port_schedule_eh() for this purpose.
-> 
-> In addition to this change, ata_scsi_requeue_deferred_qc() is also
-> modified to take a new timedout_scmd scsi command argument which indicates
-> the SCSI command that timed out. With this additional argument,
-> ata_scsi_requeue_deferred_qc() can now also terminate with DID_TIME_OUT
-> any timed out deferred qc, which simplifies ata_scsi_cmd_error_handler().
-> In this case, ata_scsi_requeue_deferred_qc() returns SCSI_EH_DONE, with
-> this return value propagated back to the ata_scsi_eh_timed_out() operation
-> to indicate to scsi_timeout() that the timed out command was handled and
-> no further processing is needed.
-> 
-> For non-timed out deferred qc that need to be retried,
-> ata_scsi_requeue_deferred_qc() returns SCSI_EH_NOT_HANDLED, thus
-> indicating to scsi_timeout() that the timed out command needs to go
-> through the SCSI EH (and libata EH) processing by adding it to the EH work
-> queue with scsi_eh_scmd_add().
-> 
-> One side effect of these changes is that the function atapi_qc_complete()
-> needs to be modified to ensure that a deferred ATAPI command that needs
-> to be retried is completed with DID_REQUEUE instead of the default
-> SAM_STAT_GOOD status, and a command that timed out is completed with
-> DID_TIME_OUT instead of SAM_STAT_CHECK_CONDITION.
-> 
-> Fixes: 0ea84089dbf6 ("ata: libata-scsi: avoid Non-NCQ command starvation")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Thank you for your contribution! Sashiko AI review found 9 potential issue(=
+s) to consider:
+- [High] `map_state()` unintentionally overwrites the user-requested `num` =
+parameter, severely altering the number of corrupted blocks.
+- [High] Modifying sector data and PI without acquiring the required data l=
+ocks leads to data races.
+- [High] Writing to the `corrupt` debugfs file triggers a `BUG_ON` kernel p=
+anic if the module is loaded with `fake_rw=3D1`.
+- [High] NULL pointer dereference when modifying `ref_tag` if `sdebug_dix` =
+is not enabled.
+- [Medium] User buffer is leaked when parsing an invalid option in `sdebug_=
+corrupt_write`.
+- [Medium] `match_uint()` is incorrectly used for the signed `reftag_adjust=
+` parameter, preventing negative adjustments.
+- [Medium] Bit errors are incorrectly correlated across all sectors in a mu=
+lti-block request.
+- [Medium] Off-by-one check prevents corrupting the full capacity of the de=
+vice.
+- [Medium] Kernel log flooding and CPU spin via unbounded `pr_info()` calls.
+--
 
-Hi Damien,
+--- Patch [1]: [PATCH] scsi_debug: add support to corrupt data and/or refta=
+g ---
+commit 0839e34574724c1b365a8698f556ce1b2b9bb134
+Author: Christoph Hellwig <hch@lst.de>
 
-I left a comment regarding redundant incrementing of scsicmd->allowed.
-Other than that, the patch looks good!
+scsi_debug: add support to corrupt data and/or reftag
+   =20
+Add a new debugfs file to inject corruptions of the data and/or reftag.
+This will be used to detect that protection information and/or file
+system checksumming can detect random bit errors or misplaced writes.
 
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 4a95e6bae38b0..7d5b55b788f48 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
 
-Thanks,
-Igor
+[ ... ]
 
-> ---
->  drivers/ata/libata-eh.c   |  29 +++-------
->  drivers/ata/libata-scsi.c | 108 ++++++++++++++++++++++++++++++++++----
->  drivers/ata/libata.h      |   3 +-
->  include/linux/libata.h    |   2 +
->  4 files changed, 107 insertions(+), 35 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 05df7ea6954a..e01277ee1fa9 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -650,29 +650,12 @@ int ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
->  		set_host_byte(scmd, DID_OK);
->  
->  		ata_qc_for_each_raw(ap, qc, i) {
-> -			if (qc->scsicmd != scmd)
-> -				continue;
-> -			if ((qc->flags & ATA_QCFLAG_ACTIVE) ||
-> -			    qc == qc->dev->link->deferred_qc)
-> +			if (qc->scsicmd == scmd &&
-> +			    qc->flags & ATA_QCFLAG_ACTIVE)
->  				break;
->  		}
->  
-> -		if (i < ATA_MAX_QUEUE && qc == qc->dev->link->deferred_qc) {
-> -			/*
-> -			 * This is a deferred command that timed out while
-> -			 * waiting for the command queue to drain. Since the qc
-> -			 * is not active yet (deferred_qc is still set, so the
-> -			 * deferred qc work has not issued the command yet),
-> -			 * simply signal the timeout by finishing the SCSI
-> -			 * command and clear the deferred qc to prevent the
-> -			 * deferred qc work from issuing this qc.
-> -			 */
-> -			WARN_ON_ONCE(qc->flags & ATA_QCFLAG_ACTIVE);
-> -			qc->dev->link->deferred_qc = NULL;
-> -			cancel_work(&qc->dev->link->deferred_qc_work);
-> -			set_host_byte(scmd, DID_TIME_OUT);
-> -			scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-> -		} else if (i < ATA_MAX_QUEUE) {
-> +		if (i < ATA_MAX_QUEUE) {
->  			/* the scmd has an associated qc */
->  			if (!(qc->flags & ATA_QCFLAG_EH)) {
->  				/* which hasn't failed yet, timeout */
-> @@ -948,10 +931,10 @@ static void ata_eh_set_pending(struct ata_port *ap, bool fastdrain)
->  	ap->pflags |= ATA_PFLAG_EH_PENDING;
->  
->  	/*
-> -	 * If we have a deferred qc, requeue it so that it is retried once EH
-> -	 * completes.
-> +	 * If we have deferred QCs, requeue them so that the SCSI EH task can
-> +	 * run.
->  	 */
-> -	ata_scsi_requeue_deferred_qc(ap);
-> +	ata_scsi_requeue_deferred_qc(ap, NULL);
->  
->  	if (!fastdrain)
->  		return;
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 5868526301a2..c2f2f711fd98 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1685,26 +1685,75 @@ void ata_scsi_deferred_qc_work(struct work_struct *work)
->  	spin_unlock_irqrestore(ap->lock, flags);
->  }
->  
-> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap)
-> +enum scsi_timeout_action ata_scsi_requeue_deferred_qc(struct ata_port *ap,
-> +						struct scsi_cmnd *timedout_scmd)
->  {
-> +	enum scsi_timeout_action action = SCSI_EH_NOT_HANDLED;
-> +	struct ata_queued_cmd *qc;
->  	struct ata_link *link;
-> +	u32 host_byte;
->  
->  	lockdep_assert_held(ap->lock);
->  
->  	/*
-> -	 * If we have a deferred qc when a reset occurs or NCQ commands fail,
-> -	 * do not try to be smart about what to do with this deferred command
-> -	 * and simply requeue it by completing it with DID_REQUEUE.
-> +	 * If we have deferred QCs when a reset, a timeout or an NCQ command
-> +	 * fails, do not try to be smart about what to do with the deferred
-> +	 * commands and simply terminate them and let the SCSI layer decide
-> +	 * what to do.
->  	 */
->  	ata_for_each_link(link, ap, PMP_FIRST) {
-> -		struct ata_queued_cmd *qc = link->deferred_qc;
-> +		qc = link->deferred_qc;
-> +		if (!qc)
+> @@ -1168,6 +1169,94 @@ static const struct file_operations sdebug_error_f=
+ops =3D {
+> +static ssize_t sdebug_corrupt_write(struct file *file, const char __user=
+ *ubuf,
+> +		size_t count, loff_t *ppos)
+> +{
+
+[ ... ]
+
+> +	while ((p =3D strsep(&options, ",\n")) !=3D NULL) {
+> +		if (!*p)
 > +			continue;
-> +
-> +		/*
-> +		 * Clear the deferred QC so that the deferred work does not try
-> +		 * to issue it.
-> +		 */
-> +		link->deferred_qc = NULL;
-> +		cancel_work(&link->deferred_qc_work);
-> +
-> +		/*
-> +		 * We are going to complete some scsi command, either with
-> +		 * DID_TIME_OUT if the command timed out while waiting for being
-> +		 * issued, or with DID_REQUEUE if another command timed out or
-> +		 * we had a failed command. However, the block layer may re-issue
-> +		 * immediately these commands, keeping the scsi host busy and
-> +		 * thus preventing the SCSI EH task from running.
-> +		 * So schedule EH on the port to prevent accepting new commands
-> +		 * until everything is sorted out with the error or timeout that
-> +		 * got us here in the first place. Note that we set EH pending
-> +		 * on the port before calling ata_port_schedule_eh() so that we
-> +		 * do not reenter this function from ata_eh_set_pending() with
-> +		 * timedout_scmd being NULL and erroneously retry deferred QCs
-> +		 * that have timed out on other links.
-> +		 */
-> +		if (!ata_port_eh_scheduled(ap)) {
-> +			ap->pflags |= ATA_PFLAG_EH_PENDING;
-> +			ata_port_schedule_eh(ap);
+> +		switch (match_token(p, corrupt_tokens, args)) {
+
+[ ... ]
+
+> +		case Opt_reftag_adjust:
+> +			error =3D match_uint(args, &reftag_adjust);
+
+[Severity: Medium]
+Is match_uint() the correct function to parse this parameter?
+
+Since reftag_adjust is defined as an s32, match_uint() will reject negative
+adjustments, preventing users from simulating reference tag skew using
+negative values.
+
+> +			break;
+> +		default:
+> +			pr_warn("unknown parameter or missing value '%s'\n", p);
+> +			error =3D -EINVAL;
 > +		}
->  
-> -		if (qc) {
-> -			link->deferred_qc = NULL;
-> -			cancel_work(&link->deferred_qc_work);
-> -			ata_scsi_qc_done(qc, true, DID_REQUEUE << 16);
-> +		/*
-> +		 * If we are being called from scsi_timeout(), then we have a
-> +		 * non-NULL timedout_scmd. If the timed out command is for a
-> +		 * deferred qc, terminate it with DID_TIME_OUT and tell
-> +		 * scsi_timeout() that we are done. Otherwise, ask for a retry
-> +		 * with DID_REQUEUE and tell scsi_timeout() that we have not
-> +		 * handled the timeout so that the timed out command gets added
-> +		 * to the EH work queue with scsi_eh_scmd_add(), for later
-> +		 * handling with libata EH ata_scsi_cmd_error_handler().
-> +		 */
-> +		if (qc->scsicmd != timedout_scmd) {
-> +			qc->scsicmd->allowed++;
+> +		if (error)
+> +			return error;
 
-Incrementing scsicmd->allowed seems to be unnecessary. scsicmd->retries
-is not being incremented for DID_REQUEUE. 
+[Severity: Medium]
+Does this leak the buffer allocated by memdup_user_nul() earlier in
+sdebug_corrupt_write()?
 
-> +			host_byte = DID_REQUEUE;
-> +		} else {
-> +			host_byte = DID_TIME_OUT;
-> +			action = SCSI_EH_DONE;
->  		}
-> +		ata_scsi_qc_done(qc, true, host_byte << 16);
->  	}
-> +
-> +	return action;
+It looks like returning directly here bypasses the kfree(buf) cleanup path =
+at
+the end of the function when an invalid option is provided.
+
+> +	}
+
+[ ... ]
+
+> @@ -4862,6 +4951,68 @@ static int resp_write_tape(struct scsi_cmnd *scp, =
+struct sdebug_dev_info *devip)
+>  	return 0;
 >  }
->  
->  static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
-> @@ -1723,13 +1772,42 @@ static void ata_scsi_schedule_deferred_qc(struct ata_link *link)
->  		return;
->  
->  	if (ata_port_eh_scheduled(ap)) {
-> -		ata_scsi_requeue_deferred_qc(ap);
-> +		ata_scsi_requeue_deferred_qc(ap, NULL);
->  		return;
->  	}
->  	if (!ap->ops->qc_defer(qc))
->  		queue_work(system_highpri_wq, &link->deferred_qc_work);
->  }
->  
-> +static enum scsi_timeout_action
-> +ata_scsi_retry_deferred_qc(struct ata_port *ap, struct scsi_cmnd *scmd)
+> =20
+> +static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
+> +		u32 nr_bit_errors, s32 reftag_adjust)
 > +{
-> +	enum scsi_timeout_action action;
-> +	unsigned long flags;
+> +	struct sdeb_store_info *sip =3D devip2sip(devip, true);
+
+[Severity: High]
+Will this trigger a BUG_ON() panic if the module is loaded with fake_rw=3D1?
+
+Calling devip2sip() with the bug_if_fake_rw parameter set to true explicitly
+triggers an assertion when sdebug_fake_rw is enabled. This seems to allow a
+user writing to the debugfs file to crash the system.
+
+> +	bool meta_data_locked =3D false;
+> +	u8 *fsp =3D sip->storep;
+> +	u32 block, b, i;
+> +	int error =3D 0;
 > +
-> +	spin_lock_irqsave(ap->lock, flags);
-> +	action = ata_scsi_requeue_deferred_qc(ap, scmd);
-> +	spin_unlock_irqrestore(ap->lock, flags);
-> +
-> +	return action;
-> +}
-> +
-> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *scmd)
-> +{
-> +	struct ata_port *ap = ata_shost_to_port(scmd->device->host);
-> +
-> +	/*
-> +	 * ata_scsi_cmd_error_handler() takes care of timed-out deferred queued
-> +	 * commands. However, if we had any other command time out and we have
-> +	 * deferred QCs, we must let scsi_timeout() handle them with
-> +	 * scsi_eh_scmd_add() so that we do not unnecessarilly delay starting
-> +	 * the SCSI EH task. So requeue all deferred queued commands for retry
-> +	 * through libata EH.
-> +	 */
-> +	return ata_scsi_retry_deferred_qc(ap, scmd);
-> +}
-> +EXPORT_SYMBOL_GPL(ata_scsi_eh_timed_out);
-> +
->  static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
->  {
->  	struct ata_link *link = qc->dev->link;
-> @@ -2936,7 +3014,15 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
->  		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
->  			qc->dev->sdev->locked = 0;
->  
-> -		ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
-> +		if (cmd->result)
-> +			ata_scsi_qc_done(qc, false, 0);
-> +		else
-> +			ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
-> +		return;
+> +	if (sdebug_dev_is_zoned(devip) ||
+> +	    sdebug_dix ||
+> +	    scsi_debug_lbp())  {
+> +		sdeb_meta_write_lock(sip);
+> +		meta_data_locked =3D true;
 > +	}
 > +
-> +	if (cmd->result) {
-> +		ata_scsi_qc_done(qc, false, 0);
->  		return;
->  	}
->  
-> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-> index 700627596ce1..8dacc1daabf0 100644
-> --- a/drivers/ata/libata.h
-> +++ b/drivers/ata/libata.h
-> @@ -180,7 +180,8 @@ enum scsi_qc_status __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
->  					struct ata_port *ap)
->  	__must_hold(ap->lock);
->  void ata_scsi_deferred_qc_work(struct work_struct *work);
-> -void ata_scsi_requeue_deferred_qc(struct ata_port *ap);
-> +enum scsi_timeout_action ata_scsi_requeue_deferred_qc(struct ata_port *ap,
-> +						      struct scsi_cmnd *scmd);
->  
->  /* libata-eh.c */
->  extern unsigned int ata_internal_cmd_timeout(struct ata_device *dev, u8 cmd);
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 96e626d6a7ca..327da43d7496 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1153,6 +1153,7 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
->  #endif
->  extern enum scsi_qc_status ata_scsi_queuecmd(struct Scsi_Host *h,
->  					     struct scsi_cmnd *cmd);
-> +enum scsi_timeout_action ata_scsi_eh_timed_out(struct scsi_cmnd *cmd);
->  #if IS_REACHABLE(CONFIG_ATA)
->  bool ata_scsi_dma_need_drain(struct request *rq);
->  #else
-> @@ -1464,6 +1465,7 @@ extern const struct attribute_group *ata_common_sdev_groups[];
->  	.ioctl			= ata_scsi_ioctl,		\
->  	ATA_SCSI_COMPAT_IOCTL					\
->  	.queuecommand		= ata_scsi_queuecmd,		\
-> +	.eh_timed_out		= ata_scsi_eh_timed_out,	\
->  	.dma_need_drain		= ata_scsi_dma_need_drain,	\
->  	.this_id		= ATA_SHT_THIS_ID,		\
->  	.emulated		= ATA_SHT_EMULATED,		\
-> -- 
-> 2.55.0
-> 
+> +	if (num >=3D sdebug_capacity || lba > sdebug_capacity - num) {
+
+[Severity: Medium]
+Is this bounds check overly strict?
+
+Checking if num >=3D sdebug_capacity prevents operations that exactly span
+the entire capacity of the device when starting at LBA 0. Should this
+check be num > sdebug_capacity instead?
+
+> +		pr_err("logical blocks out of bounds: %llu:%u", lba, num);
+> +		error =3D -EINVAL;
+> +		goto out_unlock;
+> +	}
+> +
+> +	if (scsi_debug_lbp() && !map_state(sip, lba, &num)) {
+
+[Severity: High]
+Does map_state() unintentionally overwrite the requested block count?
+
+map_state() writes the size of the mapped extent into its third parameter.
+Since the user's requested block count is passed by reference here, this
+discards the user's value and could cause the operation to corrupt an
+unintended number of blocks, potentially up to the entire mapped extent.
+
+> +		pr_err("can't modify unmapped logical blocks: %llu:%u",
+> +			lba, num);
+> +		error =3D -EINVAL;
+> +		goto out_unlock;
+> +	}
+> +
+> +	for (b =3D 0; b < nr_bit_errors; b++) {
+> +		unsigned int bit;
+> +
+> +		bit =3D get_random_u32_below(sdebug_sector_size * BITS_PER_BYTE);
+> +
+> +		div_u64_rem(lba, sdebug_store_sectors, &block);
+> +		for (i =3D 0; i < num; i++) {
+> +			u8 *p =3D fsp + (block * sdebug_sector_size);
+> +
+> +			p[bit / BITS_PER_BYTE] ^=3D (1 << (bit % BITS_PER_BYTE));
+
+[Severity: High]
+Could this lead to data races when modifying sector data concurrently with
+standard block layer I/O?
+
+It appears corrupt_lbas() reads and modifies the data store without acquiri=
+ng
+the necessary sector data locks, such as sdeb_data_sector_lock().
+
+[Severity: Medium]
+Also, does the outer loop calculate a single bit offset that is then
+applied identically across all sectors in a multi-block request?
+
+It looks like the random bit offset is chosen once in the outer loop,
+causing the exact same bit to be flipped in every sector handled by the
+inner loop, rather than randomizing the error per sector.
+
+> +			pr_info("flipping bit %u in LBA %llu\n", bit, lba + i);
+
+[Severity: Medium]
+Could these unconditional pr_info() calls cause severe performance
+degradation or log flooding?
+
+They are placed directly inside nested loops bounded by user inputs, with
+no rate limiting.
+
+> +
+> +			if (++block >=3D sdebug_store_sectors)
+> +				block =3D 0;
+> +		}
+> +	}
+> +
+> +	if (reftag_adjust) {
+> +		for (i =3D 0; i < num; i++) {
+> +			struct t10_pi_tuple *sdt =3D dif_store(sip, lba + i);
+> +
+> +			be32_add_cpu(&sdt->ref_tag, reftag_adjust);
+
+[Severity: High]
+Could this lead to a NULL pointer dereference if the module is loaded
+with dif=3D1 but dix=3D0?
+
+The prerequisite check in sdebug_corrupt_write() validates that sdebug_dif
+is Type 1 or Type 2, but it fails to check if sdebug_dix is enabled. The
+backing array for protection information (sip->dif_storep) is only allocated
+if sdebug_dix is non-zero, so dif_store() might return an unallocated addre=
+ss
+that gets dereferenced here.
+
+> +			pr_info("adjusting reftag by %d sectors for LBA %llu\n",
+> +				reftag_adjust, lba + i);
+> +		}
+> +	}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723142154.1072=
+68-1-hch@lst.de?part=3D1
