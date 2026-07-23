@@ -1,32 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E502466AF7
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 14:39:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75A9D4D2EEC
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 15:08:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784817592; cv=none; b=XZsem+13ewo2+xuVJOG/XiZg5UKo+pX8zlf475d4an4LYlWlP1srKaCAI3aPGLc+h4lbE7X5mPskBGtBhG0oZAVKj91RuEDPB1fVjhTpwLfhFQzBAtanb6Wgq72ADDNZbpdw9mNR4cXN9XTum+S7GIMxcCGMokNOdkxogTkWrn0=
+	t=1784819318; cv=none; b=oDyP2ATgTRQpDshfdbnKDhhpoXtu3Awj5WumaRcMAIudyoUW9BRXlOwSiu0MlkRJ7e6lnAycI5GNq3p/lXih7nChWbcBSiidSolV53HScsgrATQwjd7fLBs56s4TJMeTbjeiWXbJVempWCMVOtMvHTi2AZ1/al3mOrfimApG+94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784817592; c=relaxed/simple;
-	bh=5bQFWLTbXAPhjpFX480Nl6G2jcZPN9nAbEJ8YmHF+z8=;
+	s=arc-20240116; t=1784819318; c=relaxed/simple;
+	bh=HMy9CIh+YNeWYky3hB0WlQG73hhDFY0u8LZsebxopUQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GbzP2ls76at2S6aVy9w3QM24o+d+Il1YpLEDNRY+/VT/dsHvHHTE7yytFntPdJ0YDhX4EiksMfREaxmvxthJDGfoAMGFWpwPCnVXCIwmOL8PySJUTrJ60neiROiwF+kqVsYUysVdBeybOxAzIanISUGW0biIYrh5575v5iox0hU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C17C41F00AC4;
-	Thu, 23 Jul 2026 14:39:45 +0000 (UTC)
+	 Message-Id; b=N5+u+uHGp21eR8EJtpqphhtlzPRrMqRZ4FuDlsXrTbninAwLI+tYCdvfJPPaRVbv+HS30dlH75c9CU6qx4UNocBMnQKxv+yGD4BONori77W5Ymyl1V1AYvxUHO2m5iWE4Rwq+pnBZ2lcHRqBzJAu986hadD64IYF6VchK+zFXnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OKaJ35yk; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OKaJ35yk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2A151F00A3A;
+	Thu, 23 Jul 2026 15:08:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784819317;
+	bh=fAdeCO/HLuAFpnrKjz96lYQ3Nw7QjNPmIXAeN7rjq9M=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=OKaJ35ykKZ1m49chWiR8WlqJbG/KvFLDdaX/OoewHZY5Mcr5oosHKn08wt8WhL3RS
+	 J4mJFaRJhSLRtGJiUlhYjF5CDzJaSe3pUw+QLVKPWmmynPhsIImkdEmuVtQrX078uv
+	 MrPoNhya19JNPUHmqB6jZhn0/EcAPkod2YN6PM3qQu3nU5SS+0PVkyi5UbJSMq0kNx
+	 zm6DgvYSdfp1YGeOWOydoOmGSCC1UXGfAYoM4fccTdQUBdYCbDvm2UiCmbb3ninBvL
+	 97nwJrORGBkM5zgxuzJk1+/2qDFnp5KFMwhyjN2A0W/9S3xmLxW1cSXlNfhEo5ohLA
+	 kEf0jcgRfEvRg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 30/56] scsi: qla2xxx: Add size check for ELS status
- entry layout on 29xx
+Subject: Re: [PATCH v6 32/56] scsi: qla2xxx: Enhance task management IOCB
+ handling for 29xx series
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723050413.3897522-31-njavali@marvell.com>
+In-Reply-To: <20260723050413.3897522-33-njavali@marvell.com>
 References: <20260723050413.3897522-1-njavali@marvell.com>
- <20260723050413.3897522-31-njavali@marvell.com>
+ <20260723050413.3897522-33-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 14:39:42 +0000
-Message-Id: <20260723143945.C17C41F00AC4@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 15:08:35 +0000
+Message-Id: <20260723150836.F2A151F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,87 +47,90 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Hardware-defined structures `els_sts_entry_24xx_ext`, `els_entry_2=
-4xx_ext`, `abts_entry_24xx_ext`, and `vp_rpt_id_entry_24xx_ext` use C bitfi=
-elds, which breaks memory layout on big-endian architectures.
-
-Pre-existing issues:
-- [High] Missing dma_rmb() after checking the response queue entry signatur=
-e, causing a data race against the hardware DMA.
+- [High] qla24xx_abort_iocb() and qla24xx_abort_command() fail to use the e=
+xtended 29xx layout (abort_entry_24xx_ext) for ABORT_IOCB_TYPE commands.
+- [High] qla_nvme_abort_set_option() writes to incorrect struct offsets for=
+ 29xx adapters.
 --
 
---- Patch [30]: [PATCH v6 30/56] scsi: qla2xxx: Add size check for ELS stat=
-us entry layout on 29xx ---
-commit 1f1ccbc0c325b75366f8fa3f7fd4fcf61ec13421
+--- Patch [32]: [PATCH v6 32/56] scsi: qla2xxx: Enhance task management IOC=
+B handling for 29xx series ---
+commit f1cddf95aa4847713d2ce2a2f2a175d85c061018
 Author: Nilesh Javali <njavali@marvell.com>
-scsi: qla2xxx: Add size check for ELS status entry layout on 29xx
+Subject: scsi: qla2xxx: Enhance task management IOCB handling for 29xx seri=
+es
 
-This commit adds a BUILD_BUG_ON check to validate that
-struct els_sts_entry_24xx_ext is 128 bytes, matching the 29xx firmware
-IOCB size. It also adds a docblock in qla24xx_els_ct_entry() detailing
-the memory layout overlay and improves log messages.
+This commit updates qla24xx_tm_iocb() and __qla24xx_issue_tmf() to support
+the extended task management structure for 29xx adapters. It introduces a
+common view for the IOCB header and branches on IS_QLA29XX() for diverging
+port_id and vp_index assignments.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_is=
-r.c
-> index 404dcb24b6887..14b774f25b97e 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -2359,6 +2359,22 @@ static void
->  qla24xx_els_ct_entry(scsi_qla_host_t *v, struct req_que *req,
->  		     void *pkt, int iocb_type)
->  {
-> +	/*
-> +	 * els_sts_entry_24xx_ext (29xx) overlays els_sts_entry_24xx for every
-> +	 * field touched in this completion handler: comp_status (offset 8),
-> +	 * total_byte_count (32), error_subcode_1 (36), error_subcode_2 (40),
-> +	 * d_id[]/s_id[] (24..29), control_flags (30) all sit at byte-identical
-> +	 * offsets in both layouts (only vp_index/sof_type at offset 14-15 are
-> +	 * bit-packed differently, and that field is write-only on the issue
-
-[Severity: High]
-Does defining C bitfields in the hardware structure els_sts_entry_24xx_ext
-break the memory layout on big-endian architectures?
-
-In drivers/scsi/qla2xxx/qla_fw29.h:els_sts_entry_24xx_ext:
-	__le16	vp_index : 9;		/* VP Index 9bits */
-	__le16	reserved_1_sof : 3;
-	__le16	sof_type : 4;
-
-Using __le16 with bitfields doesn't fix the endianness of the bitfields
-themselves. Because they are placed in an implementation-defined order
-(LSB-to-MSB on little-endian vs MSB-to-LSB on big-endian), hardware receives
-scrambled values on big-endian architectures.
-
-A similar issue appears in els_entry_24xx_ext. Can this lead to
-device failure when communicating with the 29xx firmware on big-endian
-systems like s390x or PowerPC?
-
+> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
+ocb.c
+> index 4dcacee61e77e..c21d7f418f471 100644
+> --- a/drivers/scsi/qla2xxx/qla_iocb.c
+> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
 [ ... ]
+> @@ -2736,26 +2736,39 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry =
+*tsk)
+>  	struct qla_hw_data *ha =3D vha->hw;
+>  	struct srb_iocb *iocb =3D &sp->u.iocb_cmd;
+>  	struct req_que *req =3D sp->qpair->req;
+> +	struct tsk_mgmt_entry *tsk;
+> =20
+>  	flags =3D iocb->u.tmf.flags;
+>  	lun =3D iocb->u.tmf.lun;
+> =20
+> +	/*
+> +	 * tsk_mgmt_entry_ext overlays tsk_mgmt_entry through control_flags
+> +	 * (offsets 0-27 are byte-identical), so the common header writes
+> +	 * go through one struct tsk_mgmt_entry * view.  The ext layout
+> +	 * has no port_id and uses a wider __le16 vp_index at a different
+> +	 * offset, so port_id / vp_index assignments diverge per stride.
+> +	 */
+> +	tsk =3D pkt;
+>  	tsk->entry_type =3D TSK_MGMT_IOCB_TYPE;
+>  	tsk->entry_count =3D 1;
+>  	tsk->handle =3D make_handle(req->id, tsk->handle);
+>  	tsk->nport_handle =3D cpu_to_le16(fcport->loop_id);
+>  	tsk->timeout =3D cpu_to_le16(ha->r_a_tov / 10 * 2);
+>  	tsk->control_flags =3D cpu_to_le32(flags);
+> -	tsk->port_id[0] =3D fcport->d_id.b.al_pa;
+> -	tsk->port_id[1] =3D fcport->d_id.b.area;
+> -	tsk->port_id[2] =3D fcport->d_id.b.domain;
+> -	tsk->vp_index =3D fcport->vha->vp_idx;
+> +	if (IS_QLA29XX(ha)) {
+> +		((struct tsk_mgmt_entry_ext *)pkt)->vp_index =3D
+> +		    cpu_to_le16(fcport->vha->vp_idx);
+> +	} else {
+> +		tsk->port_id[0] =3D fcport->d_id.b.al_pa;
+> +		tsk->port_id[1] =3D fcport->d_id.b.area;
+> +		tsk->port_id[2] =3D fcport->d_id.b.domain;
+> +		tsk->vp_index =3D fcport->vha->vp_idx;
+> +	}
 
 [Severity: High]
-This is a pre-existing issue, but is there a missing dma_rmb() after checki=
-ng
-the response queue entry signature in qla24xx_process_response_queue()?
+Does this same IS_QLA29XX check need to be applied to abort IOCB handling
+as well?
 
-In drivers/scsi/qla2xxx/qla_isr.c:qla24xx_process_response_queue():
-	while (rsp->ring_index !=3D rsp_in &&
-		       rsp->ring_ptr->signature !=3D RESPONSE_PROCESSED) {
-		pkt =3D (void *)rsp->ring_ptr;
-		cur_ring_index =3D rsp->ring_index;
+In qla24xx_abort_iocb() and qla24xx_abort_command(), for ABORT_IOCB_TYPE
+commands, vp_index is written at offset 51. Without an IS_QLA29XX check, it
+misses the required offset 18 for the extended 29xx layout
+(abort_entry_24xx_ext).
 
-		qla_rsp_ring_advance(rsp);
+When an asynchronous abort is issued on a 29xx adapter, this could result in
+29xx firmware reading a zeroed vp_index and an invalid port ID, potentially
+leading to abort failures and host resets.
 
-		if (((response_t *)pkt)->entry_status !=3D 0) {
+[Severity: High]
+Similarly, does qla_nvme_abort_set_option() need to be updated to write to
+the correct struct offsets for 29xx adapters?
 
-The loop condition reads the descriptor signature to check for completion,
-but accessing the payload (like entry_status) without executing dma_rmb()
-first can cause a data race against the hardware DMA.
-
-On weakly ordered architectures (e.g., ARM64, PowerPC), does this allow
-speculative out-of-order reads, leading to parsing stale descriptor data?
+It currently writes the retry count to offset 56 (drv.abts_rty_cnt) instead
+of the 29xx-expected offset 24. If NVMe command timeouts trigger this path,
+the aborts could miss their driver-specified retry counts and response
+timeouts on 29xx adapters, corrupting other fields in the 128-byte IOCB.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
-522-1-njavali@marvell.com?part=3D30
+522-1-njavali@marvell.com?part=3D32
