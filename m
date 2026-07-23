@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C54F1E7C23
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:17:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72EDE1D555
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:21:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784765853; cv=none; b=JWwRe945nJd4qY4RhWOl7GhdG7+LwFopck/ovoANpkPnGyuq2HStrxEHmDJfJZXOKaW2vJs/tK++43VBewSgZYEdD2Itux/6NQ3iEtiFd4G1P+pHCu+UzTwUPbtesRN5LNHAbz267el5ISwfQDF+4HUSU6o2qOyme8KNSYWq9xc=
+	t=1784766108; cv=none; b=XWCOVswOHhOFtrH5imFvYFj43zTcKySLWjbvViiNnsHvkp7nOtWiXhNU3XF9IHIDMsIS6nMjLmwJWD7O9ce5c/6lhbFtqIOJJOlMuN1h58ti1v+X4EhjxLMY1pcyNwWAOV0MF3V8ENkSu6tifNXo9hAsSlM8MyntIZTAiJrMJKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784765853; c=relaxed/simple;
-	bh=ZbMhiTpjouzyxdqSjb3D0UHLMtH1rcssZUySf6vO4jo=;
+	s=arc-20240116; t=1784766108; c=relaxed/simple;
+	bh=O8JavN8TPMpkJzdDPf7/kQUsUFgUo2SBNVAWgrk6cAk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MXukZq87BjnGj6XY0I8T/7775H6YVsC5eAv/Tum/mSax/1i74DtgIIHrK9KCZejlQxOB/WMeCSeZmkdl851bDRpqPSm4VIXyZxrPyusfhkOP2uOtlNCPrpkm5sLW/ohwaEa8UKLmunxJcReSela8MmSb0ICmUr1hdf4eUhV9gCE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iYS7k0Ze; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=enH+I2ccK3E7hrez7K2MyOCgiZRlv5oSNQ0F8QUsrbxGUVys8ySXd44g6DLuI+7VfVwsoyvgswmhKybVoiUEDo9VRijWMNsPXolUDOVsneAoQCSXgqQzqsaUeYHqEal+MicO64niedvtCAponqzvGW+Fvq+NC4o1TPAwOhNWZ48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UsKdzlBI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iYS7k0Ze"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D94291F000E9;
-	Thu, 23 Jul 2026 00:17:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UsKdzlBI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D7AD1F000E9;
+	Thu, 23 Jul 2026 00:21:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784765852;
-	bh=gpF2ZZY+WmozZ0tOzbAmgyrk4OnqLCKTiAfgkn1djjc=;
+	s=k20260515; t=1784766107;
+	bh=gNuBmOyxyJNHP9/M9cR78kncOwmCnFAQQ/dxyS/qOkQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iYS7k0ZeZW8GUcjJlWIgH7UHeh0IuoIY7rUYsvLngbcZxGBprNPJfLcY0sKCZ2dm9
-	 fwkvN7WZnkBiZXQYiSoF4mL5RKs3mi9NMhgtLhhurqF22E9qxDa8Y6s6qObkNZsUIN
-	 2JhGcbsm/QA/J33Quu2wYnGBRcE5Lr80RQ+WDaTMvTN3sWuPax4Izv9RyfCpXcU4yF
-	 kXUmvP2HpQIaRFlOKThB3bJObWahZVjOxzbq0rNXPQjMFq6JVktHalhD00EBiVNlTL
-	 66DbArpd+HCxEwvMeYg6h+B8q/gnxfqrYFroRP133cyLzeev3l/eYrsV4g3OQUDF47
-	 ru8Os/LM6/vaA==
+	b=UsKdzlBINDaI6MViXVo1l9Grkn49P/26J6/YBo1jimUwxXZsVpuPjsgaT9Cx959zF
+	 Ax5dpo75ijit93rTZlYymNoK7uWttLjSII+QpY7s6SOpkSTO1L2kfWbAZ/PxzKKnJx
+	 4+Ni1HglixbHGBp3taSjGsNm+NXiex7PDf6nBwTmUMi/+O8gbRq4cW/mkOXrQDXgRn
+	 fwEwmL+JeOlbTr93mSFq/A4y1l03uSa10X8Kdy+4mCnAuU0wrqUsZSDgoLNtkf1/K8
+	 vnA19PO/x5OwgIhWYfRF1Du1EpISPKjwFcIVnJr5D2TVKBmLEa+UYXC919wpC2kpsz
+	 LMNHx5pe4HNtw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 13/33] ibmvfc: add helper to check NVMe/FC support
- with active channels
+Subject: Re: [PATCH v2 08/33] ibmvfc: initialize NVMe channel configuration
+ during driver probe
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723000149.969416-14-tyreld@linux.ibm.com>
+In-Reply-To: <20260723000149.969416-9-tyreld@linux.ibm.com>
 References: <20260723000149.969416-1-tyreld@linux.ibm.com>
- <20260723000149.969416-14-tyreld@linux.ibm.com>
+ <20260723000149.969416-9-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 00:17:31 +0000
-Message-Id: <20260723001731.D94291F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 00:21:46 +0000
+Message-Id: <20260723002147.2D7AD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,49 +47,73 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] The patch introduces a new static function `ibmvfc_nvme_active` but=
- does not add any callers for it, resulting in a `-Wunused-function` compil=
-er warning.
+- [Medium] The `nvme_host_queues` module parameter (stored as `nr_nvme_hw_q=
+ueues`) is completely ignored when computing and configuring the maximum nu=
+mber of NVMe hardware queues.
 --
 
---- Patch [13]: [PATCH v2 13/33] ibmvfc: add helper to check NVMe/FC suppor=
-t with active channels ---
-commit b0d2f58cb79cae1f9014312c2de6b5f52ab4b38e
+--- Patch [8]: [PATCH v2 08/33] ibmvfc: initialize NVMe channel configurati=
+on during driver probe ---
+commit 99d71f6b2c78b8700e766c71f498b0d820a0931d
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-ibmvfc: add helper to check NVMe/FC support with active channels
+ibmvfc: initialize NVMe channel configuration during driver probe
 
-This commit adds a new helper function to check if NVMe over Fibre Channel
-is supported and whether it has active configured queues, aiming to bypass
-unnecessary NVMe target discovery when no queues are present.
+This commit initializes the host's NVMe channel-group state during driver
+probe. It sets up the NVMe channel list, desired and maximum queue counts,
+and enablement state to prepare the driver for subsequent NVMe queue
+allocation and IO submission.
 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> index 56f4fb200a69b..5b6570232df36 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -207,6 +207,12 @@ static int ibmvfc_check_caps(struct ibmvfc_host *vho=
-st, unsigned long cap_flags)
->  	return (host_caps & cap_flags) ? 1 : 0;
->  }
+> @@ -6347,7 +6347,8 @@ static int ibmvfc_probe(struct vio_dev *vdev, const=
+ struct vio_device_id *id)
+>  	struct device *dev =3D &vdev->dev;
+>  	int rc =3D -ENOMEM;
+>  	unsigned int online_cpus =3D num_online_cpus();
+> -	unsigned int max_scsi_queues =3D min((unsigned int)IBMVFC_MAX_SCSI_QUEU=
+ES, online_cpus);
+> +	unsigned int max_scsi_queues =3D min_t(unsigned int, IBMVFC_MAX_SCSI_QU=
+EUES, online_cpus);
+> +	unsigned int max_nvme_queues =3D min_t(unsigned int, IBMVFC_MAX_NVME_QU=
+EUES, online_cpus);
+
+[Severity: Medium]
+Is there a regression in configuration handling here by bypassing the
+nvme_host_queues module parameter?
+
+Unlike the SCSI equivalent which caps queues with min(max_scsi_queues,
+nr_scsi_hw_queues), max_nvme_queues is computed here without incorporating
+nr_nvme_hw_queues at all.
+
+[ ... ]
+
+> @@ -6381,6 +6383,10 @@ static int ibmvfc_probe(struct vio_dev *vdev, cons=
+t struct vio_device_id *id)
+>  	vhost->scsi_scrqs.protocol =3D IBMVFC_PROTO_SCSI;
+>  	vhost->using_channels =3D 0;
+>  	vhost->do_enquiry =3D 1;
+> +	vhost->nvme_enabled =3D mq_enabled ? nvme_enabled : 0;
+> +	vhost->nvme_scrqs.desired_queues =3D min(max_nvme_queues, nr_nvme_chann=
+els);
+> +	vhost->nvme_scrqs.max_queues =3D max_nvme_queues;
+
+[Severity: Medium]
+Does this assignment cause a regression for deployments trying to tune NVMe
+queue counts?
+
+Since max_nvme_queues does not incorporate nr_nvme_hw_queues, it seems the
+administrator's module parameter configuration is completely ignored when
+setting the maximum number of NVMe hardware queues.
+
+> +	vhost->nvme_scrqs.protocol =3D IBMVFC_PROTO_NVME;
+>  	vhost->scan_timeout =3D 0;
 > =20
-> +static int ibmvfc_nvme_active(struct ibmvfc_host *vhost)
-
-[Severity: Low]
-Is this new static function used anywhere in this patch?
-
-Adding a static function without any callers introduces a -Wunused-function
-compiler warning. This can break builds that have CONFIG_WERROR enabled and
-negatively impact bisectability. Should the usage of this helper be included
-in this commit, or perhaps dropped if it is no longer needed?
-
-> +{
-> +	return (ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NVMEOF) &&
-> +		vhost->nvme_scrqs.active_queues);
-> +}
-> +
->  static struct ibmvfc_fcp_cmd_iu *ibmvfc_get_fcp_iu(struct ibmvfc_host *v=
-host,
->  						   struct ibmvfc_cmd *vfc_cmd)
->  {
+>  	strcpy(vhost->partition_name, "UNKNOWN");
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723000149.9694=
-16-1-tyreld@linux.ibm.com?part=3D13
+16-1-tyreld@linux.ibm.com?part=3D8
