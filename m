@@ -1,203 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27730284B2F
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 19:49:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C42D381E88
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 20:05:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784836201; cv=none; b=jX3ta18BgewGahQEMKIGJBLdMGYpZjYBz8b9hBT0sW8vFhUatoZP+dHV7cfjetD02T+Nt3LiZxdZr6GCjB8XbOjy+Dra4idJjaSGYi2u9epm/o0qCn6rF19ifNSe16HQiibEwkrTmcIIUcdo3HfvbmjdDDxMGydUbTjytARECA8=
+	t=1784837135; cv=none; b=XI/BEUndM4G3AMQh7MSj7VBGYCVLISPVep0nphf73CkQjwd9zufUnCxl/6MaYug1Wm6jtVjZef/8oy+THf6UttMAob2+dnXyJDMVPrjNc2B5wtVHL/ovMnxX5LF6+RtCbwCZwPOJSJVXP+TW9cdVQ8so9QGmWZP/zCy8MLBA1eQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784836201; c=relaxed/simple;
-	bh=BmoiXXIdR00+s614w6rtToJRbWWkPCxWFkY9T5ukB4E=;
+	s=arc-20240116; t=1784837135; c=relaxed/simple;
+	bh=0Il4jFv8/TBk8vzfFx8gA+g1O/sWnIqpmOb++wTZGfM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=unoZGG++aGA75sji8/GmcKqUChIOXOezXlxnx+IIeRTHqMXLq0RxvITU6opwrNlHNkvsV8avqyOBAW0Cfm4NRequtq67mPAcg62GJ85KztILBrkpZI2firpQgcA/kZ5SAybTToLSwrEZFNxywBFuYRYNe+uR6s1aoAIxB/eM63Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c6+nr9Wv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=fvzF2gsa+WaeDQVFDdWFCB5w89UPdoyie6IauwzfcbfQuPMtx0ctHqffeYBtT6IVVSZMRV9srhLnv5fGdPe6kvuYGHGXt+xSNx7ja2xUD2o+SoqNAn4zwX9WjBBVFIf90+M/Hlju9F0yi004fTsUtQUkDQVh0Q50Lme5g3QYRzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MB3n2f7i; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c6+nr9Wv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E7B01F000E9;
-	Thu, 23 Jul 2026 19:49:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MB3n2f7i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8DF81F000E9;
+	Thu, 23 Jul 2026 20:05:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784836197;
-	bh=ImEr1LuhZYaDwDR08TdD6iliMj8QazrLspJMGlaQLu0=;
+	s=k20260515; t=1784837132;
+	bh=TY71AR4tcNYIvsnrs5hQxGxh9kpX1yfWt6AXoN6Qhdk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=c6+nr9Wvx2GaRPbzHp2cErpzteAzO+nnpgCjiLojvhgZrMxHP2lPenRT2ogrOv0LN
-	 KvXTHh4KSg2kDcBnDibKHP+PAGWO4CGdaVcX6YnSH1Xpw0UUt/rHJmfgUSNw6n4JiU
-	 MkrHq0QR4632yCFoaAVs8PRvL7/RXw/786ecDTq5YDor6/Pb//Q/QQ/iMKnLO1tXQr
-	 s1S8bayxsnkaumG4BJIc7fErFa8A7eW9mVlAC7mFby6+zvmcs1NQ1fgaXzX+sbSnyj
-	 9v/BGM93bc+xolPi36vYDdL0ihtmnDRf2PS10gEpYspTCnZS2deIRaVMtAyAQFi6QV
-	 i6q5kVbQDL5ug==
+	b=MB3n2f7iv8NkIMc3Tw3nz2T06RMEs1CgO2bnR9sC6omp6Qp26tnM+/R9280oDa4cV
+	 rBtNBENXWCuxVK2RbSCKr1f5588WX8VlOdPheJP03A4J6ML30u5eUVoFLamrjWt934
+	 7BcEnAeS7j2t5en/lddhDX/1iIHILOnx5hqkoYj7+iu1G4L2KY4T7V2MfONoDv3T+F
+	 kvgeSGZfyr7WV7MkTsaCYLhllpXcHtXYp4tc3ItljkMTvGgza0qe02ITPQ8B14ykte
+	 bAHFyOi/7+B1LCYlzVULwVajq/WWM4eD4RhqC4Yot8GQ0s6WeC1vUpioG3+baKE/4f
+	 ri1g/w3Ixkk1g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 53/56] scsi: qla2xxx: Zero dport diagnostics buffer
- to avoid info leak
+Subject: Re: [PATCH v6 54/56] scsi: qla2xxx: Fix BSG job leak on validate
+ flash image error path
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723050413.3897522-54-njavali@marvell.com>
+In-Reply-To: <20260723050413.3897522-55-njavali@marvell.com>
 References: <20260723050413.3897522-1-njavali@marvell.com>
- <20260723050413.3897522-54-njavali@marvell.com>
+ <20260723050413.3897522-55-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 19:49:57 +0000
-Message-Id: <20260723194957.9E7B01F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 20:05:32 +0000
+Message-Id: <20260723200532.C8DF81F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Multiple BSG handlers use uninitialized stack buffers for requ=
-est/reply structures, causing kernel memory leaks, arbitrary hardware write=
-s, and severe buffer overflows when users provide a short payload.
-- [High] Modifying a DMA buffer with memset() after it has been mapped for =
-DMA_FROM_DEVICE violates DMA ownership rules and causes cache coherency dat=
-a corruption.
-- [High] DMA mapping a misaligned buffer inside a __packed struct risks cac=
-he line sharing corruption and hardware DMA faults.
-- [Medium] Unvalidated reply_payload_rcv_len can trigger a kernel WARN_ON i=
-n the block layer.
+- [High] Missing bounds check on `request_len` allows out-of-bounds heap re=
+ad when accessing the variable-length `vendor_cmd` array from user-supplied=
+ BSG requests.
 --
 
---- Patch [53]: [PATCH v6 53/56] scsi: qla2xxx: Zero dport diagnostics buff=
-er to avoid info leak ---
-commit b2d4e000f67ba62a27fd752863bb10d9c1b2ea09
+--- Patch [54]: [PATCH v6 54/56] scsi: qla2xxx: Fix BSG job leak on validat=
+e flash image error path ---
+commit 9de1723bd73d3b6f0fef869a49941dbe6b59c23b
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Zero dport diagnostics buffer to avoid info leak
+scsi: qla2xxx: Fix BSG job leak on validate flash image error path
 
-This patch changes the allocation of the qla_dport_diag response buffer
-from kmalloc_obj() to kzalloc_obj() in qla2x00_do_dport_diagnostics().
-The change ensures the buffer is zero-initialized, preventing kernel heap
-contents from leaking to user space when copying the structure back.
+qla28xx_validate_flash_image() returns QLA_SUCCESS (0) unconditionally,
+telling the FC BSG transport that the driver owns and will complete the
+request. But bsg_job_done() was guarded by "if (!rval)", so on the error
+path neither the driver nor the transport completes the job, leaking
+resources. This commit removes the guard and always calls bsg_job_done().
 
 > diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
 g.c
-> index f9f9687316b58..4a9cf8da67a6b 100644
+> index 4a9cf8da67a6b..76c57e574c220 100644
 > --- a/drivers/scsi/qla2xxx/qla_bsg.c
 > +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -2806,7 +2806,7 @@ qla2x00_do_dport_diagnostics(struct bsg_job *bsg_jo=
-b)
->  	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
->  		return -EPERM;
+> @@ -3796,9 +3796,8 @@ static int qla28xx_validate_flash_image(struct bsg_=
+job *bsg_job)
+>  	bsg_reply->result =3D DID_OK << 16;
+>  	bsg_reply->reply_payload_rcv_len =3D 0;
+>  	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
+> -	if (!rval)
+> -		bsg_job_done(bsg_job, bsg_reply->result,
+> -			     bsg_reply->reply_payload_rcv_len);
+> +	bsg_job_done(bsg_job, bsg_reply->result,
+> +		     bsg_reply->reply_payload_rcv_len);
+
+[Severity: High]
+This is a pre-existing issue, but does this BSG ioctl path allow an
+out-of-bounds heap read if userspace provides a maliciously small request_l=
+en?
+
+When a process with CAP_SYS_RAWIO issues a BSG ioctl specifying
+FC_BSG_HST_VENDOR with a small request_len (e.g., 4 bytes), the transport
+layer expands cmdlen but never re-validates job->request_len:
+
+drivers/scsi/scsi_transport_fc.c:fc_bsg_host_dispatch() {
+    ...
+    cmdlen +=3D sizeof(struct fc_bsg_host_vendor);
+    if ((shost->hostt->vendor_id =3D=3D 0L) ||
+        (bsg_request->rqst_data.h_vendor.vendor_id !=3D
+         shost->hostt->vendor_id)) {
+    ...
+}
+
+This leads to an immediate out-of-bounds read of vendor_id. Later in the
+qla2xxx driver, the handler unconditionally reads vendor_cmd[0] before
+verifying the message code:
+
+drivers/scsi/qla2xxx/qla_bsg.c:qla24xx_bsg_request() {
+    ...
+    if (bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D=20
+            QL_VND_MANAGE_HOST_PORT ||
+        bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D=20
+            QL_VND_GET_HOST_STATS)
+    ...
+}
+
+And specifically for the validate flash image command, it blindly reads
+vendor_cmd[1] without verifying the request buffer is large enough:
+
+drivers/scsi/qla2xxx/qla_bsg.c:qla28xx_do_validate_flash_image() {
+    ...
+    img_idx =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
+    ...
+}
+
+Should there be a bounds check on request_len in fc_bsg_host_dispatch() or
+the driver to prevent this?
+
 > =20
-> -	dd =3D kmalloc_obj(*dd);
-> +	dd =3D kzalloc_obj(*dd);
-
-[Severity: High]
-This is a pre-existing issue, but are we risking cache line sharing
-corruption and hardware DMA faults by DMA mapping the misaligned buffer
-inside this structure?
-
-Looking at the structure definition:
-
-drivers/scsi/qla2xxx/qla_bsg.h:struct qla_dport_diag {
-	uint16_t options;
-	uint32_t buf[16];
-	uint8_t  unused[62];
-} __packed;
-
-Because the struct is __packed, the buf array is forced to an unaligned
-2-byte offset.
-
-When buf is subsequently mapped for DMA in qla26xx_dport_diagnostics():
-
-drivers/scsi/qla2xxx/qla_mbx.c:qla26xx_dport_diagnostics() {
-    ...
-	dd_dma =3D dma_map_single(&vha->hw->pdev->dev, dd_buf, size,
-				DMA_FROM_DEVICE);
-    ...
-}
-
-Could unmapping or syncing this misaligned buffer on non-coherent
-architectures invalidate the entire cache line, thereby corrupting the
-adjacent options and unused fields? Furthermore, could providing a 2-byte
-aligned address to the HBA cause hardware DMA faults?
-
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the memset() in the
-diagnostics functions violate DMA ownership rules?
-
-In qla26xx_dport_diagnostics():
-
-drivers/scsi/qla2xxx/qla_mbx.c:qla26xx_dport_diagnostics() {
-    ...
-	dd_dma =3D dma_map_single(&vha->hw->pdev->dev, dd_buf, size,
-				DMA_FROM_DEVICE);
-    ...
-	memset(dd_buf, 0, size);
-    ...
-}
-
-A similar pattern exists in qla26xx_dport_diagnostics_v2().
-
-The DMA API forbids the CPU from modifying a buffer while it is mapped for
-device DMA. On non-cache-coherent architectures, does the CPU write bring
-the cache line into the CPU cache and mark it as dirty, meaning that if it
-is evicted to RAM after the device completes its DMA writes, the CPU's
-zeroes might silently overwrite the device's diagnostic data?
-
-Since the allocation in qla2x00_do_dport_diagnostics() is now using
-kzalloc_obj(), is this memset() still necessary, or can it be removed?
-
-
-[Severity: Medium]
-This is a pre-existing issue, but does setting the reply length
-unconditionally risk triggering a block layer WARN_ON if the user provides
-a short payload?
-
-Later in qla2x00_do_dport_diagnostics():
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_do_dport_diagnostics() {
-    ...
-	bsg_reply->reply_payload_rcv_len =3D sizeof(*dd);
-    ...
-}
-
-If a user submits a BSG job with a reply payload smaller than sizeof(*dd),
-will reply_payload_rcv_len exceed the allocated response length, triggering
-a WARN_ON(job->reply_payload_rcv_len > rsp_len) in the block layer?
-
-
-[Severity: Critical]
-This is a pre-existing issue, but do other BSG handlers have similar
-uninitialized stack buffer vulnerabilities?
-
-Several handlers allocate structures on the stack without initializing them,
-and sg_copy_to_buffer() only populates the bytes provided by the user
-payload. If a user provides a short payload, variables might remain
-uninitialized stack garbage.
-
-For example, in qla2x00_write_i2c():
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_write_i2c() {
-    ...
-	memcpy(sfp, i2c->buffer, i2c->length);
-    ...
-}
-
-Could an uninitialized i2c->length cause an out-of-bounds read from the
-stack and an out-of-bounds write to the DMA pool allocation?
-
-Similar issues appear to exist in:
-- qla2x00_read_i2c() (memcpy overflowing the fixed-size stack array bsg)
-- qla2x00_update_fru_versions() (uninitialized list->count dictating loop
-  iterations)
-- qla2x00_read_fru_status() (uninitialized stack buffer copied to user spac=
-e)
-- qla_edif_app_start() (uninitialized pad and reserved fields copied to
-  user space)
-
-Could a user issuing a BSG job with a truncated request payload trigger
-these out-of-bounds accesses or memory leaks?
-
->  	if (!dd) {
->  		ql_log(ql_log_warn, vha, 0x70db,
->  		    "Failed to allocate memory for dport.\n");
+>  	return QLA_SUCCESS;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
-522-1-njavali@marvell.com?part=3D53
+522-1-njavali@marvell.com?part=3D54
