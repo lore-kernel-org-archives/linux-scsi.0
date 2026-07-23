@@ -1,114 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAA2039DBD7
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 18:07:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AB583A48E3
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 18:17:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784830079; cv=none; b=rLW9hWAmYh4OTwiAi4RpQDgkEwcMkhIa7WhNnwiHrvjCW2RWCTRfpvUfEzL4wyQKW6HKnQejhZv+9HLeKkz4/g9WNNqaeOxn3/PdWQw5sPHTayE2O5ZDm23uKL+/0Zxi+cm2zYMPVW+n2hxRKukS1jQgRHmQL4bdA/BBvBJWXMg=
+	t=1784830653; cv=none; b=r9AqmOMmbsLlURtOkJMMzvaWvUZFljopN7lnktsPhOErhn43+snHmyh1QwsJ+NYzuOETRIwmUkBfvJjMaQfcB8iKhAiM6YLzTw2qXOC+LPO9PsWpjRp1NIGajRCbR0VEpZV4bjHVWgaoV4Yvf9mEAwzftuuwRUVbxTCFi+elHGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784830079; c=relaxed/simple;
-	bh=5sTUIiBmUAy/Meny6A6KZV81NDPnZjRiOJ7x6XvjrOQ=;
+	s=arc-20240116; t=1784830653; c=relaxed/simple;
+	bh=rN8cho7RPquSnmQS1pp8jziW0rkTKXyfv+G2ax+BavA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=W714bKmUn8eOCr4WPMxmbkUdXqlgSWfM0KBrDtrCcoX95RzFVG0pUMlDAaQ4VFUl9cFqJ+TFTGGBy9Ao37+O8jkNrnU9xcNpCYngKfFSTN2MKzNB2HgNO7tPhAr0E3TzeofnzVUHlnJqB0v2Q87M8PY1h6crVbOkycDSgLZ0I6E=
+	 Message-Id; b=ErqGlEEvYXfwjOxwNkfnV+8pm/meXVutdA6GYcbMWE+v1eUlXqwn8dWtuVRDpboAco9Vb4emzrSWws9vxAsGz1t2MNF1RXqJiQGgQlX+d8sCqz2iK2xJ32jzTHNsCScq8AAW0ozLtmqCjbSGrUFLMAxpJ3u21zLm/FyU4Sm8Xjo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EC8A1F00A3A;
-	Thu, 23 Jul 2026 18:07:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08DA01F000E9;
+	Thu, 23 Jul 2026 18:17:28 +0000 (UTC)
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 44/56] scsi: qla2xxx: Add 64G/128G port speed setting
- support
+Subject: Re: [PATCH v6 45/56] scsi: qla2xxx: Fix 64G link speed reporting in
+ get_data_rate
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723050413.3897522-45-njavali@marvell.com>
+In-Reply-To: <20260723050413.3897522-46-njavali@marvell.com>
 References: <20260723050413.3897522-1-njavali@marvell.com>
- <20260723050413.3897522-45-njavali@marvell.com>
+ <20260723050413.3897522-46-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 18:07:54 +0000
-Message-Id: <20260723180758.5EC8A1F00A3A@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 18:17:27 +0000
+Message-Id: <20260723181729.08DA01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [High] User-configured 128G port speed is silently lost upon HBA reset.
-
-Pre-existing issues:
-- [High] Applying a user-configured port speed (<=3D 64G) in the Initializa=
-tion Control Block inadvertently wipes out other critical firmware flags.
+- [Low] Incomplete removal of the `0x7` legacy sentinel filter in `qla2x00_=
+set_data_rate()`, causing the success debug log to be skipped when setting =
+a 64G port speed.
 --
 
---- Patch [44]: [PATCH v6 44/56] scsi: qla2xxx: Add 64G/128G port speed set=
-ting support ---
-commit 8d7fef6e4c3ea0599d570b41649eeea6750d4564
+--- Patch [45]: [PATCH v6 45/56] scsi: qla2xxx: Fix 64G link speed reportin=
+g in get_data_rate ---
+commit 052c747978461ea82dcccd377a664fbb8431d087
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Add 64G/128G port speed setting support
+scsi: qla2xxx: Fix 64G link speed reporting in get_data_rate
 
-This patch adds support for 64G and 128G port speeds by mapping sysfs input=
-s=20
-to the corresponding PORT_SPEED_* constants. It also updates the ring=20
-configuration to only set the data rate in the Initialization Control Block=
-=20
-(ICB) for speeds up to 64G to prevent overflow.
+qla2x00_get_data_rate() skips updating ha->link_data_rate when the
+firmware returns mcp->mb[1] =3D=3D 0x7. This updates the check to allow
+0x07 on 64G-capable adapters while keeping the legacy filter for older ones.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
-nit.c
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -4793,7 +4793,14 @@ qla24xx_config_rings(struct scsi_qla_host *vha)
->  		ql_dbg(ql_dbg_init, vha, 0x00fd,
->  		    "Speed set by user : %s Gbps \n",
->  		    qla2x00_get_link_speed_str(ha, ha->set_data_rate));
-> -		icb->firmware_options_3 =3D cpu_to_le32(ha->set_data_rate << 13);
-> +		/*
-> +		 * The ICB data-rate field is 3 bits (bits 13-15); rates above
-> +		 * 64G do not fit and would overflow into bit 16 (75 ohm
-> +		 * termination select). Such rates are forced via MBC_DATA_RATE.
-> +		 */
-> +		if (ha->set_data_rate <=3D PORT_SPEED_64GB)
+Cc: stable@vger.kernel.org
 
-[Severity: High]
-Does this code silently drop the user-configured 128G port speed upon HBA
-reset?
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
+x.c
+> index ba822c196894b..b32ca8ed274d6 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -5785,10 +5785,11 @@ qla2x00_get_data_rate(scsi_qla_host_t *vha)
+>  		ql_dbg(ql_dbg_mbx, vha, 0x1107,
+>  		    "Failed=3D%x mb[0]=3D%x.\n", rval, mcp->mb[0]);
+>  	} else {
+> -		if (mcp->mb[1] !=3D 0x7)
+> +		if (mcp->mb[1] !=3D 0x7 || IS_QLA28XX(ha) || IS_QLA29XX(ha))
+>  			ha->link_data_rate =3D mcp->mb[1];
 
-If a user sets the 128G port speed via sysfs, and later a normal operational
-reset (such as a LIP reset or driver re-initialization) triggers
-qla24xx_config_rings(), the 128G speed won't be set here since it's > 64G.
+[Severity: Low]
+Since the legacy filter was updated here to allow 0x7 for 64G-capable
+adapters, should the same check be updated in qla2x00_set_data_rate()?
 
-However, the driver doesn't seem to issue the MBC_DATA_RATE mailbox command
-during or after the reset sequence to restore the 128G setting.
+It looks like qla2x00_set_data_rate() still retains the legacy check:
 
-Does the adapter fall back to auto-negotiation or the NVRAM default in this
-case?
+drivers/scsi/qla2xxx/qla_mbx.c:qla2x00_set_data_rate() {
+    ...
+	} else {
+		if (mcp->mb[1] !=3D 0x7)
+			ql_dbg(ql_dbg_mbx, vha, 0x1179,
+				"Speed set:0x%x\n", mcp->mb[1]);
+    ...
+}
 
-> +			icb->firmware_options_3 =3D
-> +			    cpu_to_le32(ha->set_data_rate << 13);
+Will this skip the success debug log when a 64G speed is successfully
+applied on a 64G-capable adapter?
 
-[Severity: High]
-This is a pre-existing issue, but does this absolute assignment blindly
-overwrite the entire firmware_options_3 register instead of preserving
-previously configured bits?
-
-When qla24xx_config_rings() applies a custom port speed (<=3D 64G), it over=
-writes
-flags like BIT_8 (N2N driver-initiated login) and BIT_0 (RIDA Format2) that
-were initialized earlier in qla24xx_nvram_config().
-
-Can this break N2N topology login and other features when a custom port spe=
-ed
-is used?
-
->  	}
-> =20
->  	/* PCI posting */
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
-522-1-njavali@marvell.com?part=3D44
+522-1-njavali@marvell.com?part=3D45
