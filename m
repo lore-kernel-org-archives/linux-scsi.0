@@ -1,116 +1,154 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E985F1D5ABA
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:30:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F5E01A6816
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:31:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784766622; cv=none; b=r93Nxde3X4mgvSGEq2RShUFC87hIE1rPi5EABGSV5eQpFBK8znPpcNYomAK5B8IvsgPEJNcNedYbjPrmrVmaf8tkoRs/VoYVRLYYDCBKAztyZANEs6YLM0Z8J/JF+Ct9dazD12HpK4tfGrYwYSqqNKDcZgAyZT4BVl4TfOSYghQ=
+	t=1784766693; cv=none; b=Eqa48nCV5FBf4gcK6IMvkFb8oaRS/J5P7EkelINu9VngibHOuUtB05HOJKunbfuiNIVcfzoE1U+bkU4oGBnxmXyoLZOShMO8C/HN9V7hhf7kd7nAm4oF2/qmR4M1ddeCcdTmsrxQXTSvk6Qlknq6XDb0i+oAYFo8Gg7ho18vf1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784766622; c=relaxed/simple;
-	bh=1Kz5hxqSy9A0KQPE+aJIK+enjCYLQRp1eTrXUSRIuzc=;
+	s=arc-20240116; t=1784766693; c=relaxed/simple;
+	bh=lzdU+EiNVKHf7khKI3/cyWXPssJtStI1N/Nd+AyhjBU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CZtesFH9EXAa8noAOkG8lUTgTwiA2A5ai8RmBwXP7id6vJwrx09/caVMxXUsEWt+WdgTUNy4Z/neW9f0djOszP7eC3gSAtrtrme0xJLeyS8IvB69f4TJS4zDuDZq7C/u0PPLYWStth7j8uJl9/VDdzaRyjAr9Lw2PsFTgeL2XKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TF4B5fsR; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=uOsndCpe7SvY4uMO4H5SxwajNG4Qj96R0DQQteDVw+LTYB9tiscJtdhLg0bJDHB3P4LVBredbqNW1umm6Evj5+RKL8sW33BpD3OsP8Iv3H7WV6peYj1W7rSSlyX//oFJkfmwFWf8pUldfJPwzCUIzzgByWXjxKz0Ry0mKT3nY3A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ANfCHMYz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TF4B5fsR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5714A1F000E9;
-	Thu, 23 Jul 2026 00:30:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ANfCHMYz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9E141F000E9;
+	Thu, 23 Jul 2026 00:31:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784766620;
-	bh=WwpZiBTsl7yWPyEoEzm4SB3gpDitveTQZKymZUx+wME=;
+	s=k20260515; t=1784766692;
+	bh=2uV1BmbU3fOB4cfC6gwZcgfmjql2bz1aNRR1Cwzw0Dc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TF4B5fsR87d3go/YNyyBZr7YyaE4eyb9Un46s1Y1SoVWlps55MOa4pTAQ38smKPBY
-	 r5wYvVAjyBpgaTLO47houo8GjcDy3ndw/ooT5bJvjUhtrO6NJlgqhMgGXcl/N65ITp
-	 NR2o/g+a3/dwGyxbJ0fYb+672hLK5pK0iHgK3aJ8jOjaQUfOnMlKC7WP26v5XzvYLo
-	 3zeN3Fp9OKPXwZysm+1T4r21sk4vykF+8+vXtYnIqph7reBVtl7lcaS/kv+TrBvAfg
-	 U21NW9F03vs8rcqWgYkAuRCDhI4WrgPZgl0gUyxLntFl4eNTyiJWbTq0nCSFrClD7Y
-	 BafsDDiP+vavA==
+	b=ANfCHMYzmg2zzIQ9YIVB18seK4PkngSdc49obs8nAdmaDflpj7RJuNtsxAExAc4BP
+	 sh1gi9DgP2vJVR1Ez2G73IHp+zIa9KhxYeufLe7JVhKtpRSSXEx3YG3OC2qAxM0Qli
+	 JqbE8IzH/iCNvpvvL2wpDmpU6oP7mQJimZznbk4wbZTrfJ8lY3MoB3Qnng+imVg1jC
+	 9jlyj1SyjaQ09+abYuiA/01jsEQoMIugt2KIrf6earEX80Ay+15jz24Z3zoX4Fgg1x
+	 Rb3hzr77zhNBTlOjtKy/LBKbiZwb0rLMSMBRSaOEs2w0Nt2U4d2o5g3VFbvaLHtvjb
+	 mh/RmMlIIY8yw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 03/33] ibmvfc: check for NULL evt in implicit LOGO
- and target delete path
+Subject: Re: [PATCH v2 15/33] ibmvfc: send NVMe target discovery MAD
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723000149.969416-4-tyreld@linux.ibm.com>
+In-Reply-To: <20260723000149.969416-16-tyreld@linux.ibm.com>
 References: <20260723000149.969416-1-tyreld@linux.ibm.com>
- <20260723000149.969416-4-tyreld@linux.ibm.com>
+ <20260723000149.969416-16-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 00:30:19 +0000
-Message-Id: <20260723003020.5714A1F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 00:31:31 +0000
+Message-Id: <20260723003131.E9E141F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The error path added for a NULL event attempts an invalid state tr=
-ansition to IBMVFC_TGT_ACTION_NONE, leaving the target stuck in IBMVFC_TGT_=
-ACTION_LOGOUT_RPORT and potentially causing an infinite host reset loop.
+- [High] Concurrent SCSI and NVMe target discovery requests race, causing D=
+MA data races and ignored discovery responses.
+- [High] NVMe targets are ignored by the host state machine and lifecycle l=
+oops, leading to memory leaks and uninitialized targets.
 --
 
---- Patch [3]: [PATCH v2 03/33] ibmvfc: check for NULL evt in implicit LOGO=
- and target delete path ---
-commit c8380c3ff6514fe4df58a3ad3f0363eddb03454e
+--- Patch [15]: [PATCH v2 15/33] ibmvfc: send NVMe target discovery MAD ---
+commit 64be8514770ed6154d989f0192b5c3cb746d46d2
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-ibmvfc: check for NULL evt in implicit LOGO and target delete path
+ibmvfc: send NVMe target discovery MAD
 
-Adds a check for a NULL event in the implicit LOGO and target delete path to
-prevent a null pointer dereference in ibmvfc_send_event. If the event is
-NULL, it escalates to resetting the host.
+This commit extends target discovery to send protocol-specific discover-tar=
+get
+MADs for NVMe/FC. It uses a protocol-aware discovery helper to build and su=
+bmit
+an NVMe discover-target request, processing the returned target count into =
+the
+NVMe channel group's discovery buffer.
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvf=
-c.c
-> index 72317d7840a53..59102dd1c7878 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -4406,6 +4406,14 @@ static void ibmvfc_tgt_implicit_logout_and_del(str=
-uct ibmvfc_target *tgt)
->  	evt =3D __ibmvfc_tgt_get_implicit_logout_evt(tgt,
->  						   ibmvfc_tgt_implicit_logout_and_del_done);
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> index a700e2554e692..1d2a88e9fe941 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+[ ... ]
+> @@ -5011,19 +5016,30 @@ static void ibmvfc_discover_targets_done(struct i=
+bmvfc_event *evt)
+>  {
+>  	struct ibmvfc_host *vhost =3D evt->vhost;
+>  	struct ibmvfc_discover_targets *rsp =3D &evt->xfer_iu->discover_targets;
+> +	struct ibmvfc_channels *channels;
+>  	u32 mad_status =3D be16_to_cpu(rsp->common.status);
+> +	u32 opcode =3D be32_to_cpu(rsp->common.opcode);
+>  	int level =3D IBMVFC_DEFAULT_LOG_LEVEL;
 > =20
-> +	if (!evt) {
-> +		vhost->discovery_threads--;
-> +		ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_NONE);
+> +	if (opcode =3D=3D IBMVFC_DISC_TARGETS)
+> +		channels =3D &vhost->scsi_scrqs;
+> +	else
+> +		channels =3D &vhost->nvme_scrqs;
+> +
+>  	switch (mad_status) {
+>  	case IBMVFC_MAD_SUCCESS:
+> -		ibmvfc_dbg(vhost, "Discover Targets succeeded\n");
+> -		vhost->scsi_scrqs.num_targets =3D min_t(u32, be32_to_cpu(rsp->num_writ=
+ten),
+> -						      max_targets);
+> +		ibmvfc_dbg(vhost, "Discover %s Targets succeeded\n",
+> +			   proto_type[channels->protocol]);
+> +		channels->num_targets =3D min_t(u32, be32_to_cpu(rsp->num_written),
+> +					      max_targets);
+> +		ibmvfc_dbg(vhost, "%d %s targets found\n", channels->num_targets,
+> +			   proto_type[channels->protocol]);
+>  		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_ALLOC_TGTS);
 
 [Severity: High]
-Will this state transition succeed? Looking at ibmvfc_set_tgt_action(),
-it appears that transitioning from IBMVFC_TGT_ACTION_LOGOUT_RPORT to
-IBMVFC_TGT_ACTION_NONE is silently rejected by the state machine:
+If SCSI and NVMe target discovery requests are sent concurrently, won't the
+first completion trigger ibmvfc_discover_targets_done() and immediately set
+the host action to IBMVFC_HOST_ACTION_ALLOC_TGTS?
 
-drivers/scsi/ibmvscsi/ibmvfc.c:ibmvfc_set_tgt_action() {
-	...
-	case IBMVFC_TGT_ACTION_LOGOUT_RPORT:
-		if (action =3D=3D IBMVFC_TGT_ACTION_LOGOUT_RPORT_WAIT ||
-		    action =3D=3D IBMVFC_TGT_ACTION_DEL_RPORT) {
-			tgt->action =3D action;
-			rc =3D 0;
-		}
-		break;
-	...
-}
+This state transition wakes the worker thread, which then calls
+ibmvfc_alloc_targets().
 
-Since this silently fails and leaves the target in
-IBMVFC_TGT_ACTION_LOGOUT_RPORT, does this cause ibmvfc_dev_logo_to_do()
-to continually return 1?
+Because ibmvfc_alloc_targets() unconditionally loops over both the nvme_scr=
+qs
+and scsi_scrqs discovery buffers to parse targets, could the worker thread
+read from a buffer while it is still being actively modified by the VIOS via
+DMA for the slower, in-flight protocol?
 
-If so, the discovery loop could get stuck infinitely retrying the logout
-and triggering continuous host resets. Should this error path transition
-to IBMVFC_TGT_ACTION_DEL_RPORT instead?
+Additionally, when the slower protocol finally completes, its transition to
+ALLOC_TGTS is ignored because the host is no longer in INIT_WAIT. Does this
+cause those discovered targets to be silently dropped?
 
-> +		kref_put(&tgt->kref, ibmvfc_release_tgt);
-> +		__ibmvfc_reset_host(vhost);
-> +		return;
-> +	}
-> +
->  	ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_LOGOUT_RPORT_WAIT);
->  	if (ibmvfc_send_event(evt, vhost, default_timeout)) {
->  		vhost->discovery_threads--;
+[Severity: High]
+When NVMe targets are successfully discovered here, they are eventually
+allocated and appended to vhost->nvme_scrqs.targets by ibmvfc_alloc_target(=
+).
+
+However, looking at the host state machine loops in ibmvfc_do_work()
+(specifically for IBMVFC_HOST_ACTION_TGT_INIT) and the teardown logic in
+ibmvfc_link_down():
+
+drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_do_work()
+    case IBMVFC_HOST_ACTION_TGT_INIT:
+        list_for_each_entry(tgt, &vhost->scsi_scrqs.targets, queue) {
+            if (tgt->action =3D=3D IBMVFC_TGT_ACTION_INIT) {
+                tgt->job_step(tgt);
+                break;
+            }
+        }
+
+These loops appear to only iterate over vhost->scsi_scrqs.targets.=20
+
+Will this cause the newly populated NVMe targets to be completely ignored
+for initialization?
+
+Does this also mean these NVMe target structures will leak during driver
+teardown, since ibmvfc_link_down() also only cleans up the scsi_scrqs list?
+
+>  		break;
+>  	case IBMVFC_MAD_FAILED:
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723000149.9694=
-16-1-tyreld@linux.ibm.com?part=3D3
+16-1-tyreld@linux.ibm.com?part=3D15
