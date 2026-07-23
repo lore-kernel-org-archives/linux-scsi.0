@@ -1,237 +1,159 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A3372494F0
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:35:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF5A1DF254
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:36:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784766902; cv=none; b=JFqy24JotvVQO509hb4FfZqH8rNZ3ryND9XjivLnLhQZck2Qfb9nq08h6dGgJqM6UOBDGbVFm9S859R/Wnx8oW/9TP3LP0EITJ8817uCA8ydJ/0XhpHrqQvtNIe2gZVAOLjqpdnlwaiIMgCTLsq1iX4/QQUSR1SWtL8gntAnAjQ=
+	t=1784766968; cv=none; b=pwO0sHQOPfjNUYDw0GNWGvHSYmsOko/nPqb7xtY/phtqEHGFvfdSxccNNPRK1jg6XhOyDUgdRmcV9QPkXMuSI8bH8IMC/r//nsnMtPA3+wneHlHmoABAkc4c5SDYjAirilQh2OsB175SuBT4vJu5Bfia5QMXgeRJTlgYymjbTW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784766902; c=relaxed/simple;
-	bh=W6mOxCamqkoYcACrUcFJfXdTOG2TqNjiJ67n4YtBiew=;
+	s=arc-20240116; t=1784766968; c=relaxed/simple;
+	bh=CtmC++0IWcb/5NCqJQVLwn4UdTTNfUWiCnXiQOKfS3E=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DzTriBllsWTJxjDnTIB/u6STQsqhmVYlu7t7D/EONDtBylH6MXM3PxINP49yA7M4AFRD0RfBgJjtXvgFdTkEC1BNednq+Up3FNf/df750DMTy/A53NB2SGxlIzBbz7m5YQfy0W4eAUsFwbRgytLSkxPBCD//Rr0ZfIcjGuHlueQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ncFIbBEB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=LxcHuQLz74zWwkE4BCKOI1T+yq8ULnpdlrxrWya3z7r84GTcthZemhXR3jUJDkc+h3Oy8rEh3iMADbKcxtMPeBd7s3sgrOrf5o2GRc9QfmyunbJ988hZTQKLB2NOgALejXwqCc7IbGVO67MVyUUDJyzR6LGQBw/8rNtLK86mZkM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MfX+EyKG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ncFIbBEB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D32951F000E9;
-	Thu, 23 Jul 2026 00:35:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MfX+EyKG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D7231F000E9;
+	Thu, 23 Jul 2026 00:36:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784766901;
-	bh=T3uw7lnMuG0wQNwvbcfGlvqdR++LCRZHXfVz4vzdT8o=;
+	s=k20260515; t=1784766966;
+	bh=acyXVHv2VgpeIoMIH/02FBRIeO7B+k0Loemp4c2EuG0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ncFIbBEBOOeuzeXj9ZvCryqJkVvmXC3CXALNLsWKEs+i5umUssdS3GLdaqqCgCxvw
-	 /1N+HYGw2Hwg3j0+26K16RLjkSTJ/RDNeJ4rT/ZvI890lhNXral3ohqYqqWzs+nY1Q
-	 DQB0zh9ZO/HwLldtee2W0aiW9Vo+x3WhAiWTHhZsHVmfMBqJN2Bu2fg4lPQumjFevz
-	 OFgR/UfgiXi2zXwFCym6hVh1Pr0gZeL5zbXte6Ye60qYNQSzuGsShfAT2HbkGAbjQB
-	 DolLQCGZH2WFh8d+ryf/b9fXsbNpsVAIaPfhuCqDD76Vum1fUX/DJEgzvwsZ8tke2h
-	 tenV6RGSKzKUw==
+	b=MfX+EyKG8wsvr8U8AX+mXjnG54jzvtn3e9MVSM/2aW99YTmf5LzqOtC/QOiwf+upP
+	 BMPz9109yU95Rsr335oV45nBY7b56Rxn5SZA4sffxYBXP6tK2EUkkm6gtqMiGrDD0p
+	 u2AEK4aKQXtiPYZ5lQBXuhWmxK13Qb9XtrFTeSkKVs/VI3kkEW9Ot24yk1ActKmX7M
+	 REvIrguGaosRztNEJ1XJVSk9QBIIibE2+1pBvmSdY+BdvZbLEVxKj14Qd1zMLdAaw4
+	 0S0Zp1P8n+hP18S5SjDx/4iQVvlOIRc/7sAtIpJQMFnevQy6uXsbKpvGMg2FB2qBJi
+	 rYWy5qWWtRLZA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 02/33] ibmvfc: flush rport_add_work_q during driver
- teardown
+Subject: Re: [PATCH v2 16/33] ibmvfc: add NVMe/FC Implicit Logout and Move
+ Login support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723000149.969416-3-tyreld@linux.ibm.com>
+In-Reply-To: <20260723000149.969416-17-tyreld@linux.ibm.com>
 References: <20260723000149.969416-1-tyreld@linux.ibm.com>
- <20260723000149.969416-3-tyreld@linux.ibm.com>
+ <20260723000149.969416-17-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 00:35:00 +0000
-Message-Id: <20260723003500.D32951F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 00:36:06 +0000
+Message-Id: <20260723003606.9D7231F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 New issues:
-- [High] The patch incorrectly assumes all events with `!evt->cmnd` are MAD=
- events, assigning an uninitialized `evt->_done` pointer to `evt->done` for=
- TMF events, causing a kernel panic or deadlock.
+- [High] The Move Login completion handler incorrectly schedules a SCSI-spe=
+cific Process Login (PRLI) for NVMe targets, breaking the target initializa=
+tion state machine.
 
 Pre-existing issues:
-- [High] The error path in `ibmvfc_probe()` lacks a `cancel_work_sync()` or=
- `flush_work()` for `vhost->rport_add_work_q`, leading to a workqueue leak =
-and a use-after-free.
-- [High] Target objects allocated from `vhost->tgt_pool` are improperly fre=
-ed using `kfree()` instead of `mempool_free()`, permanently depleting the m=
-empool's reserves.
-- [High] In `ibmvfc_cancel_all_mq()`, the return value of `ibmvfc_send_even=
-t()` is ignored. If sending fails with `H_CLOSED`, the event is freed inter=
-nally but the caller adds it to a wait list, causing a use-after-free and a=
-n indefinite hang.
+- [High] Event completion handlers modify shared host and target state with=
+out holding `host_lock`, causing data races with the worker thread.
 --
 
---- Patch [2]: [PATCH v2 02/33] ibmvfc: flush rport_add_work_q during drive=
-r teardown ---
-commit 17edf5c871930177f3e5dcc29059e768abdcd3dd
+--- Patch [16]: [PATCH v2 16/33] ibmvfc: add NVMe/FC Implicit Logout and Mo=
+ve Login support ---
+commit 3f8ab5b8122810e98caf8a4efbdac3e6f3574d85
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-    ibmvfc: flush rport_add_work_q during driver teardown
-   =20
-    INIT_WORK is called on rport_add_work_q during driver probe. When the
-    adapter is removed, ibmvfc_remove() stops the work thread and proceeds
-    to tear down the FC host, but any work item queued via schedule_work()
-    that raced the teardown could still be running or pending in the
-    system workqueue.
-   =20
-    Add a flush_work() call after kthread_stop() and before fc_remove_host()
-    to drain any outstanding rport add work before the FC host and its rpor=
-ts
-    are torn down.
+ibmvfc: add NVMe/FC Implicit Logout and Move Login support
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvf=
-c.c
-> index 0a5f73df8d7d2..72317d7840a53 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -6443,6 +6443,7 @@ static void ibmvfc_remove(struct vio_dev *vdev)
+This commit adds protocol-specific opcodes and debug logging for implicit
+logout and move login operations on NVMe/FC targets. It extends the existing
+target login and migration flows to distinguish between SCSI and NVMe target
+protocols.
+
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> index 1d2a88e9fe941..66fcff7ac834b 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> @@ -4318,7 +4318,7 @@ static void ibmvfc_tgt_implicit_logout_done(struct =
+ibmvfc_event *evt)
 > =20
->  	ibmvfc_wait_while_resetting(vhost);
->  	kthread_stop(vhost->work_thread);
-> +	flush_work(&vhost->rport_add_work_q);
->  	fc_remove_host(vhost->host);
->  	scsi_remove_host(vhost->host);
+>  	switch (status) {
+>  	case IBMVFC_MAD_SUCCESS:
+> -		tgt_dbg(tgt, "Implicit Logout succeeded\n");
+> +		tgt_dbg(tgt, "%s Implicit Logout succeeded\n", proto_type[tgt->protoco=
+l]);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does ibmvfc_probe() also nee=
-d=20
-a similar flush_work() or cancel_work_sync() in its error path?
+This is a pre-existing issue, but it appears that event completion handlers
+like ibmvfc_tgt_implicit_logout_done() and ibmvfc_tgt_move_login_done()
+modify shared host and target state without holding host_lock.
 
-If ibmvfc_probe() fails after starting the kthread and initializing the CRQ=
-=20
-(for example, if scsi_add_host() fails), it stops the kthread and frees the
-host memory:
+Can this cause data races with the worker thread?
 
-kill_kthread:
-	kthread_stop(vhost->work_thread);
-free_host_mem:
-	ibmvfc_free_mem(vhost);
-free_scsi_host:
-	scsi_host_put(shost);
+The handlers are invoked locklessly during CRQ draining:
 
-If the CRQ initialization has already received an interrupt, transitioned t=
-he
-host state, and scheduled rport_add_work_q on the system workqueue, wouldn't
-ibmvfc_rport_add_thread() execute after the vhost structure has been freed,
-causing a use-after-free?
+ibmvfc_drain_sub_crq() {
+    ...
+    spin_unlock_irqrestore(scrq->q_lock, flags);
+    list_for_each_entry_safe(evt, temp, &evt_doneq, queue_list) {
+        ...
+        evt->done(evt);
+    }
+}
+
+The evt->done() call executes ibmvfc_tgt_implicit_logout_done() which does:
+
+    vhost->discovery_threads--;
+    ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_NONE);
+
+If vhost->discovery_threads is decremented locklessly while the worker thre=
+ad
+(ibmvfc_do_work) increments it under host_lock, could we lose decrements?
+
+If we do, the count could artificially inflate and eventually hit the
+disc_threads limit, permanently aborting future target discovery and login
+operations.
 
 [ ... ]
-
-> @@ -1367,8 +1367,8 @@ static void ibmvfc_set_rport_dev_loss_tmo(struct fc=
-_rport *rport, u32 timeout)
->  static void ibmvfc_release_tgt(struct kref *kref)
->  {
->  	struct ibmvfc_target *tgt =3D container_of(kref, struct ibmvfc_target, =
-kref);
->  	kfree(tgt);
->  }
+> @@ -4486,7 +4491,8 @@ static void ibmvfc_tgt_move_login_done(struct ibmvf=
+c_event *evt)
+>  	ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_NONE);
+>  	switch (status) {
+>  	case IBMVFC_MAD_SUCCESS:
+> -		tgt_dbg(tgt, "Move Login succeeded for new scsi_id: %llX\n", tgt->new_=
+scsi_id);
+> +		tgt_dbg(tgt, "%s Move Login succeeded for new scsi_id: %llX\n",
+> +			proto_type[tgt->protocol], tgt->new_scsi_id);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does ibmvfc_release_tgt()
-permanently deplete the tgt_pool mempool reserves?
+Does this code inadvertently schedule a SCSI-specific process login for NVMe
+targets?
 
-Target structures are allocated from a mempool in ibmvfc_alloc_target():
+Just below this debug statement in ibmvfc_tgt_move_login_done(), a
+successful move login unconditionally initializes the target with
+ibmvfc_tgt_send_prli:
 
-	tgt =3D mempool_alloc(vhost->tgt_pool, GFP_NOIO);
+    case IBMVFC_MAD_SUCCESS:
+        ...
+        ibmvfc_init_tgt(tgt, ibmvfc_tgt_send_prli);
+        break;
 
-However, ibmvfc_release_tgt() frees them directly using kfree(). While the
-memory is returned to the slab allocator, bypassing mempool_free() means the
-mempool's internal reserve count is never replenished.
+However, ibmvfc_tgt_send_prli() hardcodes the SCSI FCP type and opcode
+without any fallback for NVMe targets:
 
-Could this permanently deplete the mempool's preallocated reserves and lead
-to allocation failures or device discovery hangs under memory pressure?
+    prli->common.opcode =3D cpu_to_be32(IBMVFC_PROCESS_LOGIN);
+    ...
+    prli->parms.type =3D IBMVFC_SCSI_FCP_TYPE;
 
-[ ... ]
+Since this patch adds support for distinguishing NVMe/FC targets during move
+login, will an NVMe target fail to complete the login sequence here when it
+receives an invalid SCSI-specific Process Login MAD?
 
-> @@ -1591,8 +1591,8 @@ static void ibmvfc_init_event(struct ibmvfc_event *=
-evt,
->  {
->  	evt->cmnd =3D NULL;
->  	evt->sync_iu =3D NULL;
->  	evt->eh_comp =3D NULL;
->  	evt->crq.format =3D format;
->  	if (format =3D=3D IBMVFC_CMD_FORMAT)
->  		evt->done =3D done;
->  	else {
->  		evt->_done =3D done;
-
-[ ... ]
-
-> @@ -1774,9 +1774,9 @@ static int ibmvfc_send_event(struct ibmvfc_event *e=
-vt,
->  		if (evt->cmnd) {
->  			evt->cmnd->result =3D DID_ERROR << 16;
->  			evt->done =3D ibmvfc_scsi_eh_done;
->  		} else {
->  			evt->xfer_iu->mad_common.status =3D cpu_to_be16(IBMVFC_MAD_CRQ_ERROR);
->  			evt->done =3D evt->_done;
->  		}
-> =20
->  		evt->done(evt);
-
-[Severity: High]
-Does this else branch in ibmvfc_send_event() correctly handle Task
-Management Function (TMF) events?
-
-TMF events use the IBMVFC_CMD_FORMAT format and have evt->cmnd =3D NULL.
-When ibmvfc_init_event() initializes a CMD format event, it explicitly leav=
-es
-evt->_done uninitialized.
-
-If ibmvfc_send_event() encounters an error sending a TMF event, it evaluates
-!evt->cmnd, enters the else branch, and assigns evt->done =3D evt->_done.
-
-Could this execute an uninitialized or stale callback?
-
-[ ... ]
-
-> @@ -2630,8 +2630,8 @@ static int ibmvfc_cancel_all_mq(struct scsi_device =
-*sdev, int type)
->  			}
->  			evt->sync_iu =3D &queues[i].cancel_rsp;
->  			ibmvfc_send_event(evt, vhost, default_timeout);
->  			list_add_tail(&evt->cancel, &cancelq);
->  		}
-> =20
->  		spin_unlock(queues[i].q_lock);
->  	}
->  	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-> =20
->  	if (list_empty(&cancelq)) {
->  		if (vhost->log_level > IBMVFC_DEFAULT_LOG_LEVEL)
->  			sdev_printk(KERN_INFO, sdev, "No events found to cancel\n");
->  		return 0;
->  	}
-> =20
->  	sdev_printk(KERN_INFO, sdev, "Cancelling outstanding commands.\n");
-> =20
->  	list_for_each_entry_safe(evt, temp, &cancelq, cancel) {
->  		wait_for_completion(&evt->comp);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does ibmvfc_cancel_all_mq()=
-=20
-hang indefinitely if ibmvfc_send_event() fails with H_CLOSED?
-
-If ibmvfc_send_event() returns H_CLOSED, it returns SCSI_MLQUEUE_HOST_BUSY=
-=20
-and frees the event via ibmvfc_free_event().
-
-However, ibmvfc_cancel_all_mq() ignores the return value of=20
-ibmvfc_send_event(). It unconditionally proceeds to call=20
-list_add_tail(&evt->cancel, &cancelq) on the now-freed event and=20
-subsequently loops over the cancelq list calling=20
-wait_for_completion(&evt->comp).=20
-
-Could this cause a use-after-free and an indefinite hang since the completi=
-on
-object resides in freed memory and will never be signaled?
+>  		tgt->ids.node_name =3D wwn_to_u64(rsp->service_parms.node_name);
+>  		tgt->ids.port_name =3D wwn_to_u64(rsp->service_parms.port_name);
+>  		tgt->scsi_id =3D tgt->new_scsi_id;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723000149.9694=
-16-1-tyreld@linux.ibm.com?part=3D2
+16-1-tyreld@linux.ibm.com?part=3D16
