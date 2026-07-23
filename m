@@ -1,113 +1,200 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D43521D555
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:53:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5882E2BB13
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:53:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784767985; cv=none; b=I1+b3e7aTN4kdtmE9qKzLRdg+NjOoCPV1a9oVkfJOoJ05WlTKo+YlWOTVxPOtaCE6D31w9hE7w+/BRurch0DYP0IRDZUP/rln1V5BJC11D9Ice/nhKmWA2lBRtO7S82x6FhpIqzJBIop+xz+gjQ0z3abORYH5cx9FzAaI8gpAec=
+	t=1784767996; cv=none; b=PTC2gJwxeNqObtnCGBYVCIn1r4qFnM1UoFIjkueOW2ZdnNwhmxI6gsOx3vMkasnmS1UDTSN3WiU5o59bRv3ClsUmNvQHcQHNaYWmGnesZNONLzstfZakeS9oup+RA+dNi3Zmz6c/mfdGHUEPvxt8nHt4WQx5HYNpUx8VjIzfSTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784767985; c=relaxed/simple;
-	bh=o2qmonYdPS3qFREQwF9ugKZCpjNE2C1PC3h4L8WLYy4=;
+	s=arc-20240116; t=1784767996; c=relaxed/simple;
+	bh=rJaVbe3UZiYhcTNJjM1os7utwCJdT5VCgsGgX5nxE4Q=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BzxEj0h1s926xY4JkTqYBmzMXa0XvUdCofDQrDpF9mQ4MgN1oOBH1uDwpjvoiWiCPGPCVoxCONdne7A1BHjN/XDdbhWrRKTRKAN4fg+myfKWyqIGbzSygu9COkwLa70HtjmRVgkN285/XLFBkycoTDIUMt460p+0JXBQJbRFdr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rj2gielj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=grlVV1Jmn2euWMQErvQThpbIDeDyGfZYDuk5xK2z9oQT3QYa18QgKWZqFjy1c7zIfV0zNNMnkGDo5pFIJ5Am9uStyW0GBZIstPlwfYeCMkchpv4S9sfqjNokzgxLj8i1CGy3bb0UuYLsavh1XOVbfjh/XfthAjAzJzFLAbPOdPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T1+3HSv1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rj2gielj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D4C91F000E9;
-	Thu, 23 Jul 2026 00:53:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T1+3HSv1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14FE91F000E9;
+	Thu, 23 Jul 2026 00:53:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784767984;
-	bh=P1KaWMqvLZbtsCz5XgxYDi+4QYb3ypJERYDXjLEDiks=;
+	s=k20260515; t=1784767995;
+	bh=ISV0xBAuWIUVMucKAPF/Csk6iZugt3zFN77YM9nWUYs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Rj2gieljFYDGlUlA+IwZ53htSOz+ynOS4qUXn4eQcC6wa9e8UAwZxa44q6f3Hd7NP
-	 6SF9YQ+IGMah8JYGv8d+WJgFuRLyU29SguPtqOqbE9VyvMclsJ0mC0miUOmQIvYGBW
-	 eBebe2+M6qZbNlOkDK7UQpx3JJUogpX3gyg9fBGn4O0b4iP6YDsx6Nl1uGjId+SaGQ
-	 XtgV3aiGoAo53DndEmzJHpklrSeuoka2POXTTNnMzuxay/QdKkTltcMRVFb9URd6bi
-	 5dV7+heJBhxOcdYHfDuzyEq6BzJMfyiLcsIVfsG4M+ASYXZ1klAzTEbVnx3N9fTdlE
-	 675CQW4lQ4haA==
+	b=T1+3HSv1yT7rKwr8tJvMpzxGkoIfXeuNq260W6MCtNL6S9DUUUJl8/To7bWoTXdQC
+	 6XdiBYfehZnTHpZQJksjNW2XwXNkEyWpYfI1fOEy2/CDkUNw2QKnrIWLXj4pBpTIq8
+	 B0LRrGs51WtFGpTP6QshS5tO5Q6oKqr/hl3gqe9vExtcuujwlDVffL/d7xriM//k3y
+	 Gb4J7kizUZg5uVWCcgESapSuZ8xTnph5h4UxFkI5oITKCoBdT9tRcuerBHlhEg27Bk
+	 H1THLopAOxoWX0dykwaxWr3E8OytgqmH4iT4n6cjgivEidutuuWwtS6LMtpBMM+Wo1
+	 xLLVO8wZ3e0OA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 22/33] ibmvfc: update state machine to process
- NVMe/FC targets
+Subject: Re: [PATCH v2 24/33] ibmvfc: register local nvme fc port after
+ fabric login
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723000149.969416-23-tyreld@linux.ibm.com>
+In-Reply-To: <20260723000149.969416-25-tyreld@linux.ibm.com>
 References: <20260723000149.969416-1-tyreld@linux.ibm.com>
- <20260723000149.969416-23-tyreld@linux.ibm.com>
+ <20260723000149.969416-25-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 00:53:03 +0000
-Message-Id: <20260723005304.5D4C91F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 00:53:14 +0000
+Message-Id: <20260723005315.14FE91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] The state machine loops were only partially updated for NVMe targe=
-ts, missing the terminal deletion loop in `ibmvfc_do_work` and the rport ad=
-dition loop in `ibmvfc_rport_add_thread`.
+- [Critical] Blocking operations (GFP_KERNEL allocations and wait_for_compl=
+etion) are executed from atomic context, causing a system panic.
+- [High] An unconditional `put_device()` on the `ibmvfc_nvme_unregister()` =
+failure path without clearing the local port pointer leads to double-puts a=
+nd use-after-free.
+- [High] The NVMe local port and device reference are not cleaned up during=
+ driver removal, leading to a resource leak and potential use-after-free.
+- [High] Re-initializing the host without an explicit adapter reset leaks t=
+he active `nvme_local_port` and overwrites its pointer with `NULL`, breakin=
+g NVMe functionality.
 --
 
---- Patch [22]: [PATCH v2 22/33] ibmvfc: update state machine to process NV=
-Me/FC targets ---
-commit caac2c6b6503f6fc5585805d7ed766e74dd3cfa7
+--- Patch [24]: [PATCH v2 24/33] ibmvfc: register local nvme fc port after =
+fabric login ---
+commit 4eb644adc42ffc19ca6cdbdf0f3e3185c26ee9b7
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-ibmvfc: update state machine to process NVMe/FC targets
+ibmvfc: register local nvme fc port after fabric login
 
-Update the host work loop and target state-machine helpers to process
-NVMe targets in addition to SCSI targets.
+This patch delays registering the local nvme fc port until after the fabric
+login completes, allowing the client port ID to be populated from the fabric
+login response.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index 1185d72a8a734..ff84ca0f9f45a 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-[ ... ]
-> @@ -5988,6 +6018,12 @@ static void ibmvfc_do_work(struct ibmvfc_host *vho=
-st)
->  				break;
->  			}
->  		}
-> +		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
-> +			if (tgt->action =3D=3D IBMVFC_TGT_ACTION_LOGOUT_RPORT) {
-> +				tgt->job_step(tgt);
-> +				break;
-> +			}
-> +		}
+> @@ -5210,6 +5210,8 @@ static void ibmvfc_fabric_login_nvme_done(struct ib=
+mvfc_event *evt)
 > =20
->  		if (ibmvfc_dev_logo_to_do(vhost)) {
->  			spin_unlock_irqrestore(vhost->host->host_lock, flags);
+>  	switch (mad_status) {
+>  	case IBMVFC_MAD_SUCCESS:
+> +		fc_host_port_id(vhost->host) =3D be64_to_cpu(rsp->nport_id);
+> +		ibmvfc_nvme_register(vhost);
+
+[Severity: Critical]
+Can this sequence safely execute under the host lock?
+
+The completion handler ibmvfc_fabric_login_nvme_done() is invoked via
+the ibmvfc_locked_done() wrapper, which acquires the vhost->host->host_lock
+spinlock and disables interrupts.
+
+However, ibmvfc_nvme_register() calls into nvme_fc_register_localport()
+which performs memory allocations using GFP_KERNEL. Could this lead to a
+scheduling while atomic regression?
 
 [Severity: High]
-Does this code introduce a regression by missing the equivalent terminal
-deletion loop for NVMe targets?
+What happens to the local port during a fabric link bounce?
 
-While this block handles IBMVFC_TGT_ACTION_LOGOUT_RPORT for nvme_scrqs.targ=
-ets,
-shortly after this in ibmvfc_do_work() there is a loop for SCSI terminal
-deletion (handling IBMVFC_TGT_ACTION_DEL_RPORT and
-IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) that doesn't appear to be updated to
-include vhost->nvme_scrqs.targets.
+If the link bounces, ibmvfc_link_down() deletes targets but doesn't appear
+to unregister the local port. When the adapter re-initializes and completes
+fabric login, this will unconditionally call ibmvfc_nvme_register() again.
 
-If that loop is omitted, won't NVMe targets marked for deletion remain in t=
-he
-list indefinitely, failing to cancel their timers and leaking the target me=
-mory?
+If nvme_fc_register_localport() detects the existing port and returns
+-EEXIST, its error path sets the portptr to NULL.
 
-Additionally, looking at ibmvfc_rport_add_thread(), it only iterates over
-vhost->scsi_scrqs.targets. Should NVMe targets that have tgt->add_rport =3D=
- 1
-also be processed there? If they are ignored by the worker thread, it appea=
-rs
-they will never be passed to ibmvfc_nvme_register_remoteport(), preventing =
-the
-NVMe targets from registering with the transport.
+Could this leak the original local port and prevent nvme from functioning
+until the driver is reloaded?
+
+>  		ibmvfc_dbg(vhost, "NVMe fabric login succeeded\n");
+>  		break;
+
+[ ... ]
+
+> @@ -5653,6 +5656,7 @@ static void ibmvfc_npiv_logout_done(struct ibmvfc_e=
+vent *evt)
+>  	case IBMVFC_MAD_SUCCESS:
+>  		if (list_empty(&vhost->crq.sent) &&
+>  		    vhost->action =3D=3D IBMVFC_HOST_ACTION_LOGO_WAIT) {
+> +			ibmvfc_nvme_unregister(vhost);
+
+[Severity: Critical]
+Is it safe to wait for completion here?
+
+Similar to the registration path, ibmvfc_npiv_logout_done() executes under
+the host_lock spinlock with interrupts disabled.
+
+ibmvfc_nvme_unregister() calls wait_for_completion() which sleeps. Can
+blocking here while holding the spinlock cause a scheduling while atomic
+regression?
+
+>  			ibmvfc_init_host(vhost);
+>  			return;
+>  		}
+
+[ ... ]
+
+> @@ -5931,6 +5935,7 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhos=
+t)
+>  		list_splice_init(&vhost->purge, &purge);
+>  		spin_unlock_irqrestore(vhost->host->host_lock, flags);
+>  		ibmvfc_complete_purge(&purge);
+> +		ibmvfc_nvme_unregister(vhost);
+
+[Severity: High]
+Should the driver removal path also unregister the nvme local port?
+
+During device unbind or module removal, ibmvfc_remove() tears down the
+adapter but doesn't seem to call ibmvfc_nvme_unregister().
+
+If the port remains registered with the nvme fc transport layer, its
+private pointer still points to the vhost structure. After vhost is freed,
+could subsequent transport accesses lead to a use-after-free, while also
+leaking the device reference acquired during registration?
+
+>  		rc =3D ibmvfc_reset_crq(vhost);
+> =20
+>  		spin_lock_irqsave(vhost->host->host_lock, flags);
+
+[ ... ]
+
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-nvme.c
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
+> @@ -165,9 +168,17 @@ void ibmvfc_nvme_unregister(struct ibmvfc_host *vhos=
+t)
+>  		return;
+> =20
+>  	if (vhost->nvme_local_port) {
+> +		ibmvfc_log(vhost, 2, "unregister_localport: host-traddr=3Dnn-0x%llx:pn=
+-0x%llx on portID:%x\n",
+> +			   vhost->nvme_local_port->node_name,
+> +			   vhost->nvme_local_port->port_name,
+> +			   vhost->nvme_local_port->port_id);
+>  		init_completion(&vhost->nvme_delete_done);
+>  		rc =3D nvme_fc_unregister_localport(vhost->nvme_local_port);
+> -		if (!rc)
+> +		if (!rc) {
+>  			wait_for_completion(&vhost->nvme_delete_done);
+> +		} else
+> +			dev_err(vhost->dev, "Failed to unregister NVMe fc localport (%d)\n", =
+rc);
+> +
+> +		put_device(vhost->dev);
+
+[Severity: High]
+If nvme_fc_unregister_localport() fails, vhost->nvme_local_port is not
+set to NULL, but put_device() is still called unconditionally.
+
+If ibmvfc_nvme_unregister() is called again later, such as during a
+subsequent adapter reset loop, will it attempt to unregister the same port
+and drop the device reference a second time? Could this sequence result
+in a use-after-free on the device structure?
+
+>  	}
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723000149.9694=
-16-1-tyreld@linux.ibm.com?part=3D22
+16-1-tyreld@linux.ibm.com?part=3D24
