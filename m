@@ -1,126 +1,153 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34B6C44C4EF;
-	Thu, 23 Jul 2026 19:29:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31B56308F3E
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 19:36:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784835001; cv=none; b=TFP8qnAXV78gwF1BD4jlEw5Kdx1czmHtQFQqgkGcyqaU3zrO9wI7KBmMJooq5zqTrRbBH6TOiJN7tKa+GbkgKgALEd1obC5pJdidU51Y29Au5U7mdJvz7PHHhsLmu5VhGWA4lePtysdQmOzPZ0UrrRphXbMJQAA8WDlc1sGImMY=
+	t=1784835395; cv=none; b=NxHwzFDZPhBHtJe/+XQsV0uP3UIDKWYFlGDv5VWj9fa1Po56uvJDlxit113hlunqgRate6Fd/agmgl2SCWSHObv55UwtVcauZSsrQ7biN0KQJfHjjv7eNxRE1ala3mmSVrb3+jFeS2bpxTvORrmZCR+/WZrxMfLa1uU/sP5GM8s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784835001; c=relaxed/simple;
-	bh=TwWA1xCcEzuUuBFTE0AMItQB+YBiuWATuf/SC44C6OA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=am88LIu0U9+7tz1JPKfAky6CoQGTwl5dN+hm51DsCr+xBIuGiUci0M4CF74Jr4nY8/qMQyO+PoRAuPeBwglAmtF//QfVOX75fLjAIsUgcfBBglV9FUfTiRMPr2KkeDCjqGj3LyKcB/a1ZbNQBH0J1Q+3zbeSY0Wgj+UoSe5sfCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HpztF2W+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784835395; c=relaxed/simple;
+	bh=S8QlmF9qg+RpsK4oRhIZWAfT3bDg9odF6qHz1hgM5E4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=GdP0SgR9jGTmuUvq94eOU7qzkhAGoL3WZWMBFa1znn81D6s0MED6M4rvAeOvmPbYBNW1nXu5iVqIEIxBDPZOsC+OeElZOFyyKHHWTHTE9DgLoQnzp7nqYGFrlDzg6/vF34uVctIOZul/xXuh+tQxhFK5hggXQ3Kbap7c2S+pGvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S3u/hz9A; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HpztF2W+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0B281F000E9;
-	Thu, 23 Jul 2026 19:29:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S3u/hz9A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79C1B1F000E9;
+	Thu, 23 Jul 2026 19:36:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784834998;
-	bh=y5iomjCyRfRp3uujqn1eS42YOTWw+ABmMrptepvIZ7Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=HpztF2W+jj+oPJBXBd5DBcqoA2Sm/XtLNAo7A3jLOwKkr8x9d2LlNJc5kOK87NXwV
-	 dPfvFf436Ag4QAWvE4hqB+0CIaIog+ggZsQ3mr/KoGuZeT7PauU3CUF+DKT/KQGiyw
-	 FLRRMPX6Juqw8TE9zKGvvEkK/N74UmZpHbG6YXAMajMDzSW4qR095hChwpIimswuz5
-	 FmKTpz2ndXcBDeMV9c1wUZAFhLPoXzpKXNHeFyf3bAsS8jduYzwuQq95Gtem2ReCoX
-	 4ZUVJbFHzbprLyxqinE64Imvapcq2pUpbKd09SDGjMeT0bBsnsCnQuBqAreyPWS7mS
-	 DJoSCkrUJGJnA==
-Date: Thu, 23 Jul 2026 14:29:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gary Guo <gary@garyguo.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	GOTO Masanori <gotom@debian.or.jp>,
-	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-	Jens Taprogge <jens.taprogge@taprogge.org>,
-	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	David Airlie <airlied@redhat.com>, linux-pci@vger.kernel.org,
-	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, Sashiko <sashiko-bot@kernel.org>
-Subject: Re: [PATCH v3 9/9] pci: fix UAF when probe runs concurrent to dyn ID
- removal
-Message-ID: <20260723192957.GA839273@bhelgaas>
-References: <20260706-pci_id_fix-v3-9-2d48fc025acc@garyguo.net>
- <20260721223500.GA690676@bhelgaas>
- <DK66ISTEVM5H.3K5O68CW1F8ZB@garyguo.net>
+	s=k20260515; t=1784835393;
+	bh=UoGZ+F6psbDT/sEUDigOy9sAy712208nTNs1ndkFwWg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=S3u/hz9Ah9yBs2qUyurE8agsLXcIR9dA694WFBaBxeQac4e09azKMZPtUkr7scg8X
+	 nhGqkjcV47aytxUrwo/n7YM84LjzkLovMXrftIBllV//2+DJNmyM61vz//4db85GvU
+	 c4PMaqRrpsQlImy0jN1oAUpSD0rDHqOZL8g+yKzqbb37pc9lTo6qilW9YY9S4MeuxA
+	 ygc+MZHGXKnoALSnqpbdsuhTNZYchmO0ora/E+MZK05Of31ak2KTMStxQ0ko8VXrGB
+	 eI2qtV7h8e5SXM+iYTOaDtp+bBDJcdYzRQD9NXIo55BSNkOqtC/2fzPYix+zBcWkaf
+	 X/KViDx3ZZ4nQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 52/56] scsi: qla2xxx: Hold qpair lock when sending
+ NVMe LS reject
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nilesh Javali" <njavali@marvell.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260723050413.3897522-53-njavali@marvell.com>
+References: <20260723050413.3897522-1-njavali@marvell.com>
+ <20260723050413.3897522-53-njavali@marvell.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 23 Jul 2026 19:36:33 +0000
+Message-Id: <20260723193633.79C1B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DK66ISTEVM5H.3K5O68CW1F8ZB@garyguo.net>
 
-On Thu, Jul 23, 2026 at 07:57:58PM +0100, Gary Guo wrote:
-> On Tue Jul 21, 2026 at 11:35 PM BST, Bjorn Helgaas wrote:
-> > On Mon, Jul 06, 2026 at 03:11:21PM +0100, Gary Guo wrote:
-> >> Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
-> >> as remove_id_store can free the node. Thus, make a copy in
-> >> pci_match_device. Also, clarify that the id parameter is only valid during
-> >> probe.
-> >> 
-> >> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> >> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.org/
-> >> Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
-> >> Signed-off-by: Gary Guo <gary@garyguo.net>
-> >> ---
-> >>  drivers/pci/pci-driver.c | 28 +++++++++++++++-------------
-> >>  include/linux/pci.h      |  1 +
-> >>  2 files changed, 16 insertions(+), 13 deletions(-)
-> >> 
-> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >> index 64b308b6e61c..92c17c116de6 100644
-> >> --- a/include/linux/pci.h
-> >> +++ b/include/linux/pci.h
-> >> @@ -979,6 +979,7 @@ struct module;
-> >>   *		function returns zero when the driver chooses to
-> >>   *		take "ownership" of the device or an error code
-> >>   *		(negative number) otherwise.
-> >> + *		The pci_device_id parameter is only valid during probe.
-> >
-> > The probe function takes a pointer to a struct pci_device_id, so I
-> > think the requirement is that the struct pci_device_id only *needs* to
-> > be valid during .probe(), right, i.e., the PCI core probe path makes
-> > its own copy of the ID and doesn't retain the pointer after .probe()
-> > returns, right?
-> >
-> > I assume the caller determines the struct pci_device_id lifetime, and
-> > it could be forever.
-> >
-> > Could say something like:
-> >
-> >   The pci_device_id parameter only needs to be valid during probe.
-> 
-> As a contract on function parameter, the caller needs to guarantee that it lives
-> at least as long as documented (i.e. during the whole probe) and the callee
-> cannot assume that it will be valid beyond what's guaranteed.
-> 
-> How about:
-> 
->     The pci_device_id parameter is only guaranteed to be valid during probe.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-That's ok with me.  My only niggle is that this documentation is that the
-*consumer* end, and of course the consumer, i.e., the PCI core probe path,
-can't guarantee anything about the parameters it receives.  But I guess
-your point is that the *caller* must guarantee that the parameter remains
-valid during probe.
+Pre-existing issues:
+- [Critical] This problem wasn't introduced by this patch, but the error pa=
+th of qla_nvme_xmt_ls_rsp() frees 'uctx' without removing it from the 'fcpo=
+rt->unsol_ctx_head' list, causing a Use-After-Free list corruption.
+- [Critical] This problem wasn't introduced by this patch, but concurrent l=
+ockless accesses to the doubly-linked list 'fcport->unsol_ctx_head' cause d=
+ata races and list corruption.
+--
 
-The only thing the consumer can guarantee is that it doesn't depend on the
-pci_device_id parameter after the probe returns.
+--- Patch [52]: [PATCH v6 52/56] scsi: qla2xxx: Hold qpair lock when sendin=
+g NVMe LS reject ---
+commit 26608c7972504e04bce429e36cbbdc786b32af3b
+Author: Nilesh Javali <njavali@marvell.com>
+
+scsi: qla2xxx: Hold qpair lock when sending NVMe LS reject
+
+This commit fixes an issue where qla_nvme_ls_reject_iocb() is called without
+holding the hardware lock in error paths and the DPC context. It takes
+the qp_lock_ptr lock around the two unlocked callers to prevent concurrent =
+I/O
+submission from corrupting the ring producer state.
+
+> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
+vme.c
+> index 3b2f255a5d7d4..8dc6df6c2e1c5 100644
+> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+> @@ -374,6 +374,7 @@ static int qla_nvme_xmt_ls_rsp(struct nvme_fc_local_p=
+ort *lport,
+>  	srb_t *sp;
+>  	int rval =3D QLA_FUNCTION_FAILED;
+>  	uint8_t cnt =3D 0;
+> +	unsigned long flags;
+> =20
+>  	if (!fcport || fcport->deleted)
+>  		goto out;
+
+[ ... ]
+
+> @@ -440,7 +441,9 @@ static int qla_nvme_xmt_ls_rsp(struct nvme_fc_local_p=
+ort *lport,
+>  	a.vp_idx =3D vha->vp_idx;
+>  	a.nport_handle =3D uctx->nport_handle;
+>  	a.xchg_address =3D uctx->exchange_address;
+> +	spin_lock_irqsave(ha->base_qpair->qp_lock_ptr, flags);
+>  	qla_nvme_ls_reject_iocb(vha, ha->base_qpair, &a, true);
+> +	spin_unlock_irqrestore(ha->base_qpair->qp_lock_ptr, flags);
+>  	kfree(uctx);
+
+[Severity: Critical]
+This isn't a bug introduced by this patch, but on the error path of
+qla_nvme_xmt_ls_rsp(), does freeing uctx without removing it from the
+fcport->unsol_ctx_head list leave a dangling pointer?
+
+When an unsolicited request arrives, uctx is allocated and added to the
+unsol_ctx_head list. If this error path is taken, kfree(uctx) runs but miss=
+es
+the list_del(&uctx->elem) step, which could corrupt the list and lead to a
+use-after-free when the next unsolicited request arrives and calls
+list_add_tail().
+
+>  	return rval;
+>  }
+
+[ ... ]
+
+> @@ -1299,6 +1306,7 @@ qla2xxx_process_purls_pkt(struct scsi_qla_host *vha=
+, struct purex_item *item)
+>  {
+>  	struct qla_nvme_unsol_ctx *uctx =3D item->purls_context;
+>  	struct qla_nvme_lsrjt_pt_arg a;
+> +	unsigned long flags;
+>  	int ret =3D 1;
+> =20
+>  #if (IS_ENABLED(CONFIG_NVME_FC))
+> @@ -1311,7 +1319,9 @@ qla2xxx_process_purls_pkt(struct scsi_qla_host *vha=
+, struct purex_item *item)
+>  		a.vp_idx =3D vha->vp_idx;
+>  		a.nport_handle =3D uctx->nport_handle;
+>  		a.xchg_address =3D uctx->exchange_address;
+> +		spin_lock_irqsave(vha->hw->base_qpair->qp_lock_ptr, flags);
+>  		qla_nvme_ls_reject_iocb(vha, vha->hw->base_qpair, &a, true);
+> +		spin_unlock_irqrestore(vha->hw->base_qpair->qp_lock_ptr, flags);
+>  		list_del(&uctx->elem);
+
+[Severity: Critical]
+This is a pre-existing issue, but is it safe to call list_del(&uctx->elem)
+locklessly here?
+
+It looks like list_add_tail() in qla2xxx_process_purls_iocb() modifies this
+shared fcport->unsol_ctx_head list, and list_del() is also called locklessl=
+y in
+qla_nvme_release_lsrsp_cmd_kref().
+
+Could concurrent unsolicited LS requests being processed by the DPC thread
+and workqueues race on this doubly-linked list, causing list corruption?
+
+>  		kfree(uctx);
+>  	}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
+522-1-njavali@marvell.com?part=3D52
