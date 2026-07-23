@@ -1,201 +1,251 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42DE437BE81;
-	Thu, 23 Jul 2026 16:52:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD559386576
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 16:56:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.42
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784825529; cv=fail; b=oxDFIlU1oSegRxGq70+ocRpenUZfV3B57fhz+wdcOzqe9tyOpIUHUnG5MeDVtpOLMB7kxlVVmAaxndqF3wwflbMM0qA983M0vZgLOshNXpk9S+YDZWxA50N7uZX2clAWC/rbk4CeglDVPE67DsmlBXEfFwl/dZY5ODZnp3QQ0LY=
+	t=1784825783; cv=pass; b=VJWLsinWQBbKbVdkhzbVztAZkz5jP3ac9v6dR98LHGivHuP+OhFNi9YAz5GNPrqkPcHpjhmStEIAHtahpCzp3pR52yRxnsybu6JygCbemqoh78Kie2COONg+IDjob42wmypXH1StTB1A8WJz2MXl28WVoYdW4J4VMhnsEHaLnxE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784825529; c=relaxed/simple;
-	bh=yOl56qNqR3PgHihcdJXBQbv9dlh1f7R79gb9bmjA1wA=;
-	h=Message-ID:Date:Subject:From:To:Cc:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=NwmBEw0VUjcTC++yyrJ4Dg4DP9f1CdzCuqwYVUvY/xG6PdsaQ5SN/7ISiC7xbna3SiIY3P10qDpfQUNT5lAqWygHVq+viCwtnj3VqgAWk+yn+knqd8/BKJeKPveSBc21P4mfaaq3a3xxbmErw73bPmzffURNjpb5Y9ouskWMAYM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=E+8FqMWw; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=wWikiRNi; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1784825783; c=relaxed/simple;
+	bh=Q44R/CsHLtE4MX3OvHihe2deX6qzDwOD99rSjxmgebM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=g23WXjisjDAiDJJMaXKlcrZTneMhO0jlY3N3Z3Zl5bivO5sFWrg3e7h3hajxcQOX9r6GdnjagY/XseCwyiq+AI4yz03ax1ndwDJ4NJTBxs5u781l/5AV6b1ffKrhpb/OXDzupFCTBJ0DanTAPh8Ntdfg0RSZqItCvPi057sKhFA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=PuS14m1B; arc=pass smtp.client-ip=209.85.210.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="E+8FqMWw";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="wWikiRNi"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66NFvP8k1205987;
-	Thu, 23 Jul 2026 16:52:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=3m0xLh2DJDgDxzKjrUvo5/hn+QzfyJo/wOkCaqor94w=; b=
-	E+8FqMWwI5VK53rTEOVwVLQH1hgNZDyvASSfOBmANwz6yrh4ViRKWO+vqHbAWUFh
-	pdKkMb5P5vTSDjimKp0v/JZhHuZeH7aEuQFtp7vX3UeS1nRbW5qTe+Arenk9UQKd
-	jUhVG6D12jr/a8ypJviARajOCZW+HN2gC5GaWCCYDNS3R+goPdQJwxud7gtUCak2
-	2lw8KF0cGKBfQVh/XoMztYYcXx4HAH1DrdUg+BIubfmuHNpznunZNShFZkGVbIvM
-	RvGWkMG3VR3jMLLulIziO6FPaTDZe/R7rNpLBP2metr7Rg/jUrgtQlLNKLWZOVjP
-	MPhla+lIYLZ7os6oifLLcg==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fg1mv77mg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 23 Jul 2026 16:52:07 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66NGm8I2027309;
-	Thu, 23 Jul 2026 16:52:06 GMT
-Received: from ph0pr06cu001.outbound.protection.outlook.com (mail-westus3azon11011010.outbound.protection.outlook.com [40.107.208.10])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4fgts1c9ja-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 23 Jul 2026 16:52:05 +0000 (GMT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=K4u1eCQdIj/XEvphsSVkHxMCzym0rg4bSCILTAUfC4dEtwSHe4fThwkUMsaVGXvs4/VkFqaGHddEKzot38saWqTjLy3aQ414Y0KceZkDbvZJzqOuARFck9NShEXdIeVIaFDcpX7cpMGZuPO2cmXF39UaWgeh3b54s6GEq5GlJ9Nj9IO34zYSGP68wCH1Eptgw+pk1HPpCN2Cni6m2fYycyNfO95jD/3bppsN0igwFJ20j4R9x/5Rkt/AA1v4X/WlrhjDPtrmSIro3tEkrH9iVIn6Q+tFW2vsNTyfiGqkKLJu88kT5SgsGfliGjp32o2W8pK+nLKXA77jnhtOJbZeXw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3m0xLh2DJDgDxzKjrUvo5/hn+QzfyJo/wOkCaqor94w=;
- b=G9EaZyj4BMnUvZGx04jFXr355QUSowJldQwMs6/tJNj1ot3U5vzy3TekTaNMdCXGnqns4hE9JzHuAvBwBMMGpAZF5xlAQNoaQVLLxmf1/Huq0WeQd49am1W+1Opd2RxE/My+5FfodM1zb8S8yW44l3Sc6d7tK3L7TVlBi141rS/WWnuTM1rWskOHcnHnV373fjyQpqBsQtzkMqz1J9+aJBAMc+KaTSIUynexvz9X9U6V/uLkZ3Hd7/N/MTg9gzA2W/IWJDsgMK7zQKqpk4qN2kE8TZW+BkMEiFXd0czv31sfm9cG3eM+22TV8dxsNMA+hkkw9tWmnGGNmnMW9I7FFw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="PuS14m1B"
+Received: by mail-ot1-f42.google.com with SMTP id 46e09a7af769-7e9b24c46caso54802a34.0
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 09:56:20 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784825780; cv=none;
+        d=google.com; s=arc-20260327;
+        b=ivZ8KUNFIAtnWAPyORZuGhEcCuz6d4zyXq7nyX+ExOOgTw+OrJffX87S3nBWBJroj+
+         YG/Qhdf55xwE8PkwuQzwCLEVVR70h13QiD5wH40Sa4JUxw5j7GM70KzgYH7EB6MhCxKy
+         bH/TUct+c5o9guF5gmSkuGmhc+Qf4vbs50324nulfdVN8qdv34V/NcMm22Cc5XYOI4j1
+         cvh5uBqqedc4bD2o27lwmpvw80wWzyljmRGWC3XUPQNETNnthcyoKR9mJXJRFalzLoU7
+         wecCnLvejxVHcMhP2vC3pOY0dm9bQNadxxQQnn/KxcF5G4Lt8MVQDZ8awU+Qg28Y8LXh
+         rMgg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=28h8Mo1J28/lSf6YGH/i0azpidOshn5ZKBa47Y0HxSg=;
+        fh=tpKzlfFBRqsZvyJRvHZ/3ALHTgoAFFA0f92Gj1EKQnk=;
+        b=ZVxeulf9MlVqsi9VqfOfLj4o0a84h0soVcC/PjVobaFfROsspiX55q5SiRD1Uz2f+D
+         Hd/q0nwRRyvVIFVe9CV6Sb2LAw1mnEyFjoJW9lyl3ppGvNKwaHJUJzKpfxc9VpB/Yzf7
+         3HqLBgbaym878RXuZ2y8nr2jjQWLfOmR5K7s3ne7FfLwdBGEFZJGIOzVtqOQQp4CRITa
+         c2ow8sfiHTB4ZJdaxUHpV6i9SRmG5WqBfK/SNsO+GPQBb7+tbIeGNJ8aC11ZmhYJruUq
+         P5dLYj52Wz/dGuUVpRxaTWvSa9Pqr0U7ZEQne4yNM0EfweoyuYAtRR/jZyzyK7Gy7kRR
+         uxpg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3m0xLh2DJDgDxzKjrUvo5/hn+QzfyJo/wOkCaqor94w=;
- b=wWikiRNix2+EYGPov+SsPNj8qCpg6ab1Sbswy2+T81cCYVnJ6eX8B61aXzBSb9y8s9MZzB06LxcC/52j9BFv4T8Db/ilAeTR5/zcWuT/HSGU/aHqpGxwz9a9eSgmkz+2i1HmFDfNRCR22Q4Kh34BZN7jZJeymcr/rJF2VXbgEK0=
-Received: from DM4PR10MB6229.namprd10.prod.outlook.com (2603:10b6:8:8c::12) by
- IA4PR10MB8373.namprd10.prod.outlook.com (2603:10b6:208:565::5) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.245.11; Thu, 23 Jul 2026 16:52:03 +0000
-Received: from DM4PR10MB6229.namprd10.prod.outlook.com
- ([fe80::867:63e7:13fa:fa7d]) by DM4PR10MB6229.namprd10.prod.outlook.com
- ([fe80::867:63e7:13fa:fa7d%6]) with mapi id 15.21.0245.010; Thu, 23 Jul 2026
- 16:52:02 +0000
-Message-ID: <4e3300c4-e56f-4226-b141-6c83ecc32fb0@oracle.com>
-Date: Thu, 23 Jul 2026 17:52:00 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 25/28] scsi: sd: support multipath disk
-From: John Garry <john.g.garry@oracle.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-References: <20260723093627.2327456-1-john.g.garry@oracle.com>
- <20260723093627.2327456-26-john.g.garry@oracle.com>
- <20260723104735.40A5C1F000E9@smtp.kernel.org>
- <12619e95-6a8b-4925-8fc5-e12b14d88f11@oracle.com>
-Content-Language: en-US
-Organization: Oracle Corporation
-In-Reply-To: <12619e95-6a8b-4925-8fc5-e12b14d88f11@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO2P123CA0097.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:139::12) To DM4PR10MB6229.namprd10.prod.outlook.com
- (2603:10b6:8:8c::12)
+        d=purestorage.com; s=google2022; t=1784825780; x=1785430580; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=28h8Mo1J28/lSf6YGH/i0azpidOshn5ZKBa47Y0HxSg=;
+        b=PuS14m1BaXDBNdhkOKRoltIfECMUDOvkSbh7d9e85XdoN6sGJjd37qaN7sQOzdKs6x
+         ZFX5NKVnMabpIGIybq3touIdTAWfidUTutjHqZQJ7WKkRRf/MIB3ZP3xbBkdFLNHv+rw
+         ko7/++3RhAR+q8IhM5+BG24d3f5r+hUM+mNkCzEVC/KeuYujqQxh5Bbzrn2rCRNP7vUQ
+         k6JNmLSKrQVnOz60hRgma7NlYkMTg12Qt05tDYyFhIEKW1nYhxGFeH+EuyvaFxis4Ujh
+         Yf/XsBJkc4BL0hbjQ274vb9Yg7Z93b1l5x3XmS2bpYkgGRtCAydPLIDgCmTu5NJMCOv2
+         Yo/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784825780; x=1785430580;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=28h8Mo1J28/lSf6YGH/i0azpidOshn5ZKBa47Y0HxSg=;
+        b=lz3U2GM1tplYei7atUjdcCZ4qInnPOStJ0+ehyExfLlh4S5/16nn+qxNZPSl82bX9Q
+         brUEiYdwDNgLW4V7MT3Pj2Fdnk5bPbAG8WRvc4FQuyqiIE3Lh113QGaU2BNHMSTP9zR/
+         +qpDh7fuhu0OBgQp4tqeBkVm5gSkcZygvh2EPLqJ5hg57mDGryLKcqUXFyPZVPvg1d93
+         kY+9fCL//ex1A7/en3xIdEI9fKLL3Y2KPsVPgW3r5E2Hne2kXdQ9DTpwo+PsR5kcQ4IT
+         JsVkCGyLtkAceofvig97ThLnh6Rb3uQ3+H4hVTuI3G+klJ+OiS6Zex7GJ+sHzfT+4ofN
+         UNoQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqdMTl3D4n4o3WzXPj/glxMFGh/1VW1cCxuLsnvNlbNYmr6uqWslUz4BrSOFCltoRZrqYtQWjmSvzMu@vger.kernel.org
+X-Gm-Message-State: AOJu0YzEv/JDbh866xO9+0FIAGWyBeqvFDBCBDDOubrga3y2RDYzvbEx
+	86krm05IhHxBWlPlJDBPmi86sJIL2nSJLcGqQkzQSZS6li/InDIvlji9HQYpR+h3SfhxpLwDksJ
+	YRlFPvPtlv+IAhFNBrk66qJvU4WKjN6KOa4F89YDUdw==
+X-Gm-Gg: AR+sD13HHH4rfS84Kk1uA02oHs8AEYoFzmyj2dKC14RZ3F4RHByfFjrjWhStjCMP7D7
+	YeM4j+mrUwebqs39Oa2yi8ASMb9vx/7dS/vB0eqVYejP9Jx2FX3GlGPXBhu3H4TAkdQCKTn3/od
+	Ry1ptvhkNempQgleAIvwpVTjt7Egpy6TSTQV6LXnjv2cH+doA/czBdmI1uUFyPlGRfELbWpgrMA
+	o2zQ1QHuILue6kPfIAZsEUoVBxP3GdzSuqVq+P5uHulFqybJaT9JDjHe+8ohEI=
+X-Received: by 2002:a05:6830:4acb:b0:7dc:cc41:bb85 with SMTP id
+ 46e09a7af769-7ee43a11b62mr2195579a34.0.1784825779594; Thu, 23 Jul 2026
+ 09:56:19 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM4PR10MB6229:EE_|IA4PR10MB8373:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2c8b6aa8-dc9d-4779-48c0-08dee8dab831
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|366016|1800799024|23010399003|6133799003|4143699003|56012099006|22082099003|18002099003|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	z2y7C1jBR3ogOeUJmx9ekkKJApzrkyASUM6YNDGAKUrken3LaEI4TldNk44mAOIG6HZwe6mBbaqsbwdIIQYkAgkibNO1X0QggONIWfjjcBpu8QnUfZmOE8vvu+c7x6qiwocc/ScFGBdyk67ZlsC9EOT5MTzp8vc+PXCpwOmiXj6Ma8vJWjo53dbh4TgzYxXlvDZIjC/lBMbgiVSkPagyldppQlTi4kUt3XK5OwVR42nl8/y2wx2dwU/5ho5t4yljHd+PoMZZLBMUKT7Zf0GO4ecWzVChqYU0/DKiL3Srj1d1btqjsgtDVtcZZPbvVtRY5of5pQuzXlN97IAJhqSv+Afai67ZXTx9fM8EMv49y/SxPCQLH8+vWzJ5iyo7QomcnzGetIbU8Uaon5myHFHzrdvTnGaDunY1LD0DA3rKffCBqbI/5RJ8hFh5oOnMcBSSFFYXo7Sd+wbuUQzcEZfHk+dPpW7DtZufpYFvV7I6sya5x5q0nQt7Xq9G70YhFSBNrKfUMxiFIRVQvVyNieBnLMVDQcT3bh/WxRt3GMsyrhRyOrN/5mZmMbCavOC+htqQgWcEHVdwgohU7foxEn0RXhwu/oK+4DAwVKZLiUgXc76qOpi5vZzkhpdl6PB1P1lpTD+vsVobUdk62SH6xws9ZcfsngKa4iKp5EqiX7JMN6M=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB6229.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(23010399003)(6133799003)(4143699003)(56012099006)(22082099003)(18002099003)(10067099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZGhZdkwrQjgyYVdycnhjVHg0RHpvQXhCeEM0OXlLeTVacVJVa1VTWi9yNFRr?=
- =?utf-8?B?cUR3aGhQMjlodXVwd3BuZ05EK2ZWQmYvYkVUR1Y4TXVhMnE3aWdwbkowWjR4?=
- =?utf-8?B?aDgxS3FDbUlveUFqUnhoY3pHN1dhRHltczB1TG11T0JqeWIxY1dONktWbURP?=
- =?utf-8?B?MDQ0TmFsQ0kxKy93YjNjbmlzMXRNZXllYmdhYk05Tm1CNGdMd1J0QUd0d2Jq?=
- =?utf-8?B?dEg5bzhabHlmSHowam9kbFNqT01CeHk1YUorZDVJaGNEQWdkTk5PRHNxM0VV?=
- =?utf-8?B?WGVGZk8vRUV4Ym50b3A4cGRGYlJ1SnRaYzZsYXM5UXljVUJBWTVtTDJDcGRV?=
- =?utf-8?B?WmdGMDh5ZldJNlBsUG91RCtRQ1FCMUZYdHNtMlZJbm00WW4yUGRFSDFEQUp4?=
- =?utf-8?B?cDJRQWw4TURiS2RoSHFHSzlUam9Cd1laK1ZuTXdnOVRoN2NxUUUzYzNQN0ls?=
- =?utf-8?B?YWt5Zm5URkN2QnJUY3c3SGh3MUlaOHcxL3RlQWZMUWMyaDNPUnJkLzEwaEtL?=
- =?utf-8?B?VFZDSk1PUC9iQ1Q4U2xjSEJYZzMyRHRlcVN5LyswY2x4UjFSdXoyUnVCencw?=
- =?utf-8?B?R0Q4dnRRTHlEVDN4S3RhcFNWU0lTTTZFY0NDeFdKU2hrR2JOTzczVnNBZElp?=
- =?utf-8?B?eXlIMzJMbHRyaEJ5LzR6ZkMvRlZnWmNrU3ZlUkFIMHJWRjZOVUtrNXExOVlE?=
- =?utf-8?B?MTJ3ZS9XMW9NOUQ3WUg3SXc2WnY4YVplck5hczNUYzEyaWMxeHlrUER1WGpJ?=
- =?utf-8?B?bEJIS0JQS1hZNTMyWTRZSmhFSzlYVTJhL3RpT3g4bndHUU5kOFlZWS8wWk5q?=
- =?utf-8?B?QWFTbXpGMGpMbTFNeVdNUXBzUWZJMjhvVUZOa215T09jUUdsL2ZjZ0tWZEx2?=
- =?utf-8?B?WnRLQmlaZmxNeWhPbW5zNVU2WjZtbWIvSWhPQld3WG9iaTVSR0xLc1V1cHQ0?=
- =?utf-8?B?aWxEaC9JcmpPNllvV1pmMkJGM2wvdmlzTlUxYUZJNUxQRjN1VVFRT3puc3E1?=
- =?utf-8?B?RVhNM1Bhd2plRmF6YzdGZUpzTndnZWQ2VDJnUGIyQVJJWmdKUlFqbm4wYnA2?=
- =?utf-8?B?dHdKUGtaaWdrMTRNRTQrMWlnN2FjcTd1RUs5eVpZRktZaS9pTG9DTG5DSlRt?=
- =?utf-8?B?TjNhVDRqM0t2UG9aZTljVU1HU1pDdVdqOHJYOFJnd0hqZUUwT0w3TVdYYzk1?=
- =?utf-8?B?V2h0QkFWTkJvaXZLNnA3cmxXT0pCR21rMWlITHFmS2VNRHJEUU42VWtveDl5?=
- =?utf-8?B?bTBXU2daS2JoNW5kUXU4dG1VU0Q3RDFEYlNuWXI1a091SDh5Vi9SZlpCRndG?=
- =?utf-8?B?Ui9iRnkyRWFlNWVRRU52a2ZJN3BXd1p2eVRPdkFBc3pPblVSalNyRzk3Q2xn?=
- =?utf-8?B?Y3hBclNLZi85ZGlIbVBmc3pWSEkvem9LNWN6cytKdzU0S01VbFRTQVBqT2Zw?=
- =?utf-8?B?RG1NV2JMSFQyZXhPZm85dTQ5cFlzYVRYRG16WVMxdFRaMkFjdE5kQkRKUDA1?=
- =?utf-8?B?c0QvcE1SamNTS3piZ0ZVKzZueVdXR1JaejFiNVU2b2NTZHpMOWVDanJFd05k?=
- =?utf-8?B?aE9VOU5JWWYrdW9vclRiaUdsV3E2NGlxVnQ4ZFJJM2ljTGc1MHVHalRCdGdF?=
- =?utf-8?B?dE9FdDVaS3ljQjc3OGtGNjB0bEgyTkNuWTlDSm9kcG9DRnZtUm5YeWFhN2hU?=
- =?utf-8?B?QStMdUtPeHVZNzB6UVRURUMrZXpnckFuYXZGZFVGNVNuSnVBSloySk9yTDJ2?=
- =?utf-8?B?b0xaT1JkS09sOXpQWEJraHErcE5mSk1YR2tOMmhzNU9RejJCOEM1UytqV2Nr?=
- =?utf-8?B?Y1FpeGg5L2dwQWljTVJ6NXpOaFhpalJyMS9landjM2tkUGh6RDBXNTMvRzdM?=
- =?utf-8?B?bVZyNmtqRGZVc2NyeGFCVG5GQzJSMHMzQ0JoekxyRVRmcndwQ1dqRlFMZkFZ?=
- =?utf-8?B?ZitLbWFrUG1kU29zRTFCRU5tNHM0WDhTUU9rV0Nrb0pVV1pGcTRLdHd0TkpB?=
- =?utf-8?B?Y0hCY1VCY0RwSkRZQXNNUGZvcHNUZXNWN3pwa2lNcXJVdUJvUmRaNlExaXlU?=
- =?utf-8?B?enQvZGgrM2ozSzFOVTVBTXpTTWpBYlBCMXpZbjh4VHoyM0dIZm91YVlIb2VW?=
- =?utf-8?B?V2d2ajhSaVJudGJDTWpWR2ZkZWR0d05QelU4ZTBlK1BGSzF4M0tLRDlFeGVY?=
- =?utf-8?B?YlhDSzl6Zk1zT3ptTkd0Z3AvVGQ3SWhlNjJTRE9hbjlRak1HQjJ0K3hoUWV2?=
- =?utf-8?B?MXJYb1BaaEVNRkEvc3BWOHQwcFVQdXRwYnJtaEN0eXJpb2xsNUFtbjFFaDdO?=
- =?utf-8?B?UVY3dVpZYTYvb3NyK2YxYTNMWTdLUFJhckozeEFrTUM1U0c1bGE3VjduR3p6?=
- =?utf-8?Q?oNAq80BspYlm25Mk=3D?=
-X-Exchange-RoutingPolicyChecked:
-	oAx8VO7wD2h1vlfR3e0q2oRGzyooLncUviVGxX9w2JLTpZJz2Yh8fclUFzpwqCFK5AUu7pMygA1F3cY3p2KhWOPip0cpNjcd/jJNLM0uBCKZDHPWrMX8fzggkQbf26HerbcJIPWQ1foNJBh14e2PuSSKgHWgNA705Yyl9fz1h1vZbx5u9t1eZV2ZcCvh021aQo0PoSjw8gRicpAvYv/e4EbWpOcOG+HUpJNXvaKhRCkvGXMXG2oEuBAaPPLPptSvQVtdFWd7WBcd+XmKMqk6753CqM4jj+2aOyfrhUmMpho3nZPpDkx9bdYfWpg9WwYHzrTYSMvR/FNgizFII2agWA==
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	0wY7fcn3s7/iTn3QHWF/YfuYOascJ04qgBF+59PwXyjm2dRogcjKQBvyeqnnsXtg0kVGpA//E+HE85Eo2VdOFszoPsWgNNAiCxRO9roOD0vUZe6vBlJAnWvVu19eeFUoY8KY/3Uda/5Ekkauq0zc4uYPBEG+02uynnO8kpRjVN7Mbnq4hfQ03A4rjQmQHWnSBHs9IM90/LHUTiBXg399z4EgDFpolk5qIH3y3u9LoPpRzDFBp/b9cEONn5DpW8l7Rc+XgSzi57elBrdfe8clRX9BXB7QKY+nvxwC/+mu74ehrIaeP73hAvzcp4Gna2752GDxIUYi/eGjPzF5970UGccipPJGcZMFmRipSlJ4NITQEKaNgBZ6xX8hyIDBazLTWBsg8feiUFMDss9Zq+reswKsCKpgxPkw8YGLFKCZjDOAYw3E4MQN5OzMN/xWR2HOwuktEiOG7sbDFTRg1Nhi9c4Ipfwq1XUFkKHX5Ce22zS6eJn3Jmk/hpyA9x1qHx9aqbvmHswfkR4orJSSKczV8hSQYlnOySZxff2UXezz/N4yUQe5e2A8j0+lX3zxV0dU0+EhcE1k+n+yKkcoSD1U3O4soPdLlbTET5Z7UkGGrLY=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2c8b6aa8-dc9d-4779-48c0-08dee8dab831
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB6229.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jul 2026 16:52:02.5149
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: We3ETkBAteRQfTmTUttQkByUvpGsB4Ou+gFBXIHrRt0p/vnpwvZtTeY8Kksrjnhx8MU3IbSf5WeVeQmfeGl4/w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA4PR10MB8373
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-23_04,2026-07-22_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0
- mlxlogscore=999 spamscore=0 malwarescore=0 lowpriorityscore=0 adultscore=0
- suspectscore=0 phishscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2606160000 definitions=main-2607230165
-X-Proofpoint-GUID: DNrRsBE0DdukXG1nAs68FVTCwLSjh4uS
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIzMDE2NSBTYWx0ZWRfX/+bEZYJ20mL1
- el6X9M7y9nAZuTjQkgRVsWn9NDL/VJSvvtnifwFWL9jzX/U9louUcGuEoQEvXRuQpXOIVHM9fut
- QpI67dZrfBRG2sjN18XixjIfPTP6g9vVPBB0ASH5+TXZuAiHrbdn
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIzMDE2NSBTYWx0ZWRfX6Bi187/qn23M
- KnGgcgaPIC9A8NS6DLlSJf3BPGQiFUpmslH+BXKkSsTvm+uI2jr48fPyAbhOqXvTVY8gz8A8Woo
- XCxfcfz/Zb5zdcexv0Mzgy/YQSgvQveN5Dk1lzyiKqvMxgeufzwkLA1ibLMTlldyKYYjgkF9RZI
- Py5FARugvWTuU6Yfx3HBvOMFjnJOdEdcw8xE38OrYJCWv5SiXeIBAt858flKMdqRHdKCu1nkEGV
- iD1NvgwQt0XfyBOMQry/3vga5sL1PB7z7bRiM5E9ZJqNHJUOVaJBdMMCQBn+DyvJm3CzrSNStJH
- jINRob2vdVySLEAzxBfs1+9NDTLFSeZPRizBbGzOoye4jTcmWxLHNya5a6ZbOn4d//8JKV5m/qr
- KNfvTlzBWCITEJU02b/9a+iC8r+M2lb+o0dHOgEF82N3W62px9EAnCJsDk2ObDaKx12nC8pZlQ/
- dorUglVKLO3YsPXY2lA==
-X-Authority-Analysis: v=2.4 cv=ZpPd7d7G c=1 sm=1 tr=0 ts=6a6246b7 cx=c_pps
- a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=RAioF0-LDSMA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x4eqshVgHu-cdnggieHk:22 a=nQQ82Z3LmMo0BOHCc-EA:9
- a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: DNrRsBE0DdukXG1nAs68FVTCwLSjh4uS
+References: <20260720032338.461681-1-yangxiuwei@kylinos.cn> <20260720032338.461681-2-yangxiuwei@kylinos.cn>
+In-Reply-To: <20260720032338.461681-2-yangxiuwei@kylinos.cn>
+From: Caleb Sander Mateos <csander@purestorage.com>
+Date: Thu, 23 Jul 2026 09:56:08 -0700
+X-Gm-Features: AUfX_mzT-mFN2jPlf5QOYlATlmjXYMbgaUCUircqzzNnT5cQ2uj1Cl2XHm3Grso
+Message-ID: <CADUfDZpAW261MhFJg434=4nZFMD7mV=LL7F-ZiAWPa7dYvGpcQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] scsi: bsg: fix TOCTOU in io_uring passthrough command setup
+To: Yang Xiuwei <yangxiuwei@kylinos.cn>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	rc@rexion.ai, axboe@kernel.dk, fujita.tomonori@lab.ntt.co.jp, 
+	bvanassche@acm.org, linux-scsi@vger.kernel.org, io-uring@vger.kernel.org, 
+	stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 23/07/2026 12:27, John Garry wrote:
->>
->> [Severity: High]
->> What happens if there is pending delayed work on mpath_head->remove_work
->> when we hit this error path? If a previous removal queued the work,
->> and a subsequent failed probe triggers this code, we delete and free the
->> head without canceling the delayed work. Will the workqueue then trigger
->> a use-after-free on the freed mpath_head?
-> 
-> will check
+On Sun, Jul 19, 2026 at 8:27=E2=80=AFPM Yang Xiuwei <yangxiuwei@kylinos.cn>=
+ wrote:
+>
+> From: Rahul Chandelkar <rc@rexion.ai>
+>
+> scsi_bsg_uring_cmd() reads bsg_uring_cmd fields from the shared mmap'd
+> SQE via io_uring_sqe128_cmd(). On the inline path the SQE is still
+> user-writable, so request_len can change between the bounds check and
+> copy_from_user(), overflowing scmd->cmnd.
+>
+> Snapshot request/request_len and the transfer fields used for buffer
+> mapping with READ_ONCE before validation and reuse. Pass the stable
+> map arguments into scsi_bsg_map_user_buffer() so it does not re-read
+> the SQE.
+>
+> Fixes: 7b6d3255e7f8 ("scsi: bsg: add io_uring passthrough handler")
+> Cc: stable@vger.kernel.org
+> Link: https://lore.kernel.org/r/20260527105931.3950913-1-rc@rexion.ai
+> Signed-off-by: Rahul Chandelkar <rc@rexion.ai>
+> Co-developed-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
+> Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
+> ---
+>  drivers/scsi/scsi_bsg.c | 40 ++++++++++++++++++++++++++--------------
+>  1 file changed, 26 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
+> index e80dec53174e..c57ce01379de 100644
+> --- a/drivers/scsi/scsi_bsg.c
+> +++ b/drivers/scsi/scsi_bsg.c
+> @@ -76,12 +76,10 @@ static enum rq_end_io_ret scsi_bsg_uring_cmd_done(str=
+uct request *req,
+>
+>  static int scsi_bsg_map_user_buffer(struct request *req,
+>                                     struct io_uring_cmd *ioucmd,
+> -                                   unsigned int issue_flags, gfp_t gfp_m=
+ask)
+> +                                   unsigned int issue_flags, gfp_t gfp_m=
+ask,
+> +                                   bool is_write, u64 buf_addr,
+> +                                   unsigned long buf_len)
+>  {
+> -       const struct bsg_uring_cmd *cmd =3D io_uring_sqe128_cmd(ioucmd->s=
+qe, struct bsg_uring_cmd);
+> -       bool is_write =3D cmd->dout_xfer_len > 0;
+> -       u64 buf_addr =3D is_write ? cmd->dout_xferp : cmd->din_xferp;
+> -       unsigned long buf_len =3D is_write ? cmd->dout_xfer_len : cmd->di=
+n_xfer_len;
+>         struct iov_iter iter;
+>         int ret;
+>
+> @@ -104,21 +102,29 @@ static int scsi_bsg_uring_cmd(struct request_queue =
+*q, struct io_uring_cmd *iouc
+>                                unsigned int issue_flags, bool open_for_wr=
+ite)
+>  {
+>         struct scsi_bsg_uring_cmd_pdu *pdu =3D scsi_bsg_uring_cmd_pdu(iou=
+cmd);
+> -       const struct bsg_uring_cmd *cmd =3D io_uring_sqe128_cmd(ioucmd->s=
+qe, struct bsg_uring_cmd);
+> +       const struct bsg_uring_cmd *cmd =3D
+> +               io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
+>         struct scsi_cmnd *scmd;
+>         struct request *req;
+>         blk_mq_req_flags_t blk_flags =3D 0;
+>         gfp_t gfp_mask =3D GFP_KERNEL;
+> +       /* Snapshot SQE fields used for validation and buffer mapping. */
+> +       u64 request =3D READ_ONCE(cmd->request);
+> +       u32 request_len =3D READ_ONCE(cmd->request_len);
+> +       u64 dout_xferp =3D READ_ONCE(cmd->dout_xferp);
+> +       u32 dout_xfer_len =3D READ_ONCE(cmd->dout_xfer_len);
+> +       u64 din_xferp =3D READ_ONCE(cmd->din_xferp);
+> +       u32 din_xfer_len =3D READ_ONCE(cmd->din_xfer_len);
+>         int ret;
+>
+>         if (cmd->protocol !=3D BSG_PROTOCOL_SCSI ||
+>             cmd->subprotocol !=3D BSG_SUB_PROTOCOL_SCSI_CMD)
+>                 return -EINVAL;
+>
+> -       if (!cmd->request || cmd->request_len =3D=3D 0)
+> +       if (!request || request_len =3D=3D 0)
+>                 return -EINVAL;
+>
+> -       if (cmd->dout_xfer_len && cmd->din_xfer_len) {
+> +       if (dout_xfer_len && din_xfer_len) {
+>                 pr_warn_once("BIDI support in bsg has been removed.\n");
+>                 return -EOPNOTSUPP;
+>         }
+> @@ -131,20 +137,20 @@ static int scsi_bsg_uring_cmd(struct request_queue =
+*q, struct io_uring_cmd *iouc
+>                 gfp_mask =3D GFP_NOWAIT;
+>         }
+>
+> -       req =3D scsi_alloc_request(q, cmd->dout_xfer_len ?
+> +       req =3D scsi_alloc_request(q, dout_xfer_len ?
+>                                  REQ_OP_DRV_OUT : REQ_OP_DRV_IN, blk_flag=
+s);
+>         if (IS_ERR(req))
+>                 return PTR_ERR(req);
+>
+>         scmd =3D blk_mq_rq_to_pdu(req);
+> -       if (cmd->request_len > sizeof(scmd->cmnd)) {
+> +       if (request_len > sizeof(scmd->cmnd)) {
+>                 ret =3D -EINVAL;
+>                 goto out_free_req;
+>         }
+> -       scmd->cmd_len =3D cmd->request_len;
+> +       scmd->cmd_len =3D request_len;
+>         scmd->allowed =3D SG_DEFAULT_RETRIES;
+>
+> -       if (copy_from_user(scmd->cmnd, uptr64(cmd->request), cmd->request=
+_len)) {
+> +       if (copy_from_user(scmd->cmnd, uptr64(request), request_len)) {
+>                 ret =3D -EFAULT;
+>                 goto out_free_req;
+>         }
+> @@ -158,8 +164,14 @@ static int scsi_bsg_uring_cmd(struct request_queue *=
+q, struct io_uring_cmd *iouc
+>         scmd->sense_len =3D cmd->max_response_len ?
+>                 min(cmd->max_response_len, SCSI_SENSE_BUFFERSIZE) : SCSI_=
+SENSE_BUFFERSIZE;
 
-In this case sd_mpath_remove_head() will report that it cannot find the 
-disk and bail out.
+cmd->max_response_len is passed through here, shouldn't it be accessed
+using READ_ONCE() too? Omitting READ_ONCE() only seems safe for values
+that are ignored (except for a possible check that they match a fixed
+value).
+
+Ditto for cmd->timeout_ms later in this function.
+
+Best,
+Caleb
+
+>
+> -       if (cmd->dout_xfer_len || cmd->din_xfer_len) {
+> -               ret =3D scsi_bsg_map_user_buffer(req, ioucmd, issue_flags=
+, gfp_mask);
+> +       if (dout_xfer_len || din_xfer_len) {
+> +               bool is_write =3D dout_xfer_len > 0;
+> +               u64 buf_addr =3D is_write ? dout_xferp : din_xferp;
+> +               unsigned long buf_len =3D is_write ? dout_xfer_len : din_=
+xfer_len;
+> +
+> +               ret =3D scsi_bsg_map_user_buffer(req, ioucmd, issue_flags=
+,
+> +                                              gfp_mask, is_write, buf_ad=
+dr,
+> +                                              buf_len);
+>                 if (ret)
+>                         goto out_free_req;
+>                 pdu->bio =3D req->bio;
+> --
+> 2.25.1
+>
+>
