@@ -1,168 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFB0E40DB23
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 20:16:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FC41421244
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 20:27:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784837807; cv=none; b=mxnw343oTwl22l1JzTMLyqLNFogHOSq/vK73nsu33iQU60dzCY6Zp7rQlPhFHxbFqfxDaA6G+og+gTw8Y2RuRhx1Y9ab8o1tWQjeHfpJmgd4c966+DxScqRW9wusXk0ihJHwa78I1PxiMHDmd3RRxmKF4N7EpTad7Tm1MyUbfGo=
+	t=1784838454; cv=none; b=jPRon6SRC9GTyxRw6lTJvAkbonp3o4TCzJ3hKXicm10ChS2fURRkgWbPp8GUUu8wxOfLPLV3sIvjZyXIsG74r8YIIxdi0Ucfi5KUPDOwl4KNiDvRmUTekC1kDIL4zAdRuhO8WGezpeg6eSWnk6xuutMOLD/5ujRmFNbAua+Ut8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784837807; c=relaxed/simple;
-	bh=c4MNdXD4sMCxWMJYnH+4c19dNwT27RqWQPPmXi5pUC0=;
+	s=arc-20240116; t=1784838454; c=relaxed/simple;
+	bh=Flyld6gLfZjzn8NMAZOGW2RFohdZiizg1edL53f1fKI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BwLd+RHI0eZN+mqarbvFNuNkQgKcakT8BUpJBHPdV33Blb28LsjuBQ/mEN5DdPXukWq/rfx6Gy1Rnun1GteaqOkdv8kVD9BrPiT/uupHYRoMb0ZKWhZkDXhCP5GUVDVvWKLUMAs4nziy0jKzMenSRO1Rklurcl/7ovGMRddPjRE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Du0Hj4kc; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=gSb/hjX9Vwt+ahX5V561YYWMCwYqZPZNba9ou8p2y+SlSFwSdgwC02nHt3yxsnIDkwCDFQNEVTcdx5yHqjejg5iQE7W83939I30HQhaIRwod/zc6qBz5jTd1adL+AKjOQc9LFu6LkiZIJ0SJCqO2BUXm7CZ4Jmk2etkcwi3nKU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CnsrKMek; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Du0Hj4kc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6162E1F000E9;
-	Thu, 23 Jul 2026 20:16:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CnsrKMek"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98E941F00A3A;
+	Thu, 23 Jul 2026 20:27:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784837780;
-	bh=MjP424qfW+Oxfbf74K2b4HrhBzRviXH3rO5/JkQN3TU=;
+	s=k20260515; t=1784838447;
+	bh=06rryQX1uBIMcf2HSu0SSlQi6HT0poG8gTNY4rwKkNM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Du0Hj4kcI4YvjvKNypS6MjWKH/qyoRU7Zxine+a5hJTPXJDiLXIu7o99gL1IX8/Gu
-	 DV36s4QPfHDkJXINGTmG10cJW/eIaTc7MX8xHoX8CDn2u4fC0eguJPwiNUJbCStaEj
-	 xvZuTl9dVZXPTtwzOgIlvjsSWsAwnbmpNPxdVpMiWt/O5svxf6GgBgV/f3rrSoB+NL
-	 yy+rrAhzGIxRmUsGbdYZ0jh5kZ2zJD8bVvkmd4r4++P7mUc3++H9cLeJjWtLFgVym9
-	 agcVYyX1U7Vu1+4TguccU5xlIYT4+27iBhTiPM506OsDLX8fY5IYlDumx2Gui1OSyZ
-	 gTCV+zeRJhawQ==
+	b=CnsrKMekRUBMmXF0eKNui1lGpaoi7DGkmDh8F9Df4jOuaKJk6KJGHGKPoFQz5gO/v
+	 MBObmWa9dr59GghiwESa8nimANCTTF0rijIW9OVd5E4+cEZT4gAdd/3sxEWBSOtc7f
+	 L/hdwEAVe1SMUkmYLQGZ1J7mQGggHs6sQkyWoXezcN9q7+7e96Ahgdhp6BTiowL7Wa
+	 fhOyYGoGoUt0JFONBMuHQB15vwKm7jnXLFYb6m5fP8rbGI9RXRx5ugUc/iHZINTWmb
+	 e1q5D6aFgR6artGMLYC9O++uACmklPek4VsJ/cbdWAn51w5iQJDbdx5Z6I8AWUy/DM
+	 V4ta5z439mRkw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 55/56] scsi: qla2xxx: Bound image count in
- qla2x00_update_fru_versions()
+Subject: Re: [PATCH v6 56/56] scsi: qla2xxx: Update version to
+ 12.00.00.2607b1
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723050413.3897522-56-njavali@marvell.com>
+In-Reply-To: <20260723050413.3897522-57-njavali@marvell.com>
 References: <20260723050413.3897522-1-njavali@marvell.com>
- <20260723050413.3897522-56-njavali@marvell.com>
+ <20260723050413.3897522-57-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 20:16:19 +0000
-Message-Id: <20260723201620.6162E1F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 20:27:27 +0000
+Message-Id: <20260723202727.98E941F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Heap and stack buffer overflows due to unvalidated length in I2C B=
-SG handlers.
-- [Medium] Missing payload length check against user input in FRU update/re=
-ad/write functions.
-- [Medium] Uninitialized heap memory leak to device in SFP write operations.
+- [High] The new driver version string has an odd length, causing an infini=
+te loop condition and out-of-bounds read in `qla82xx_set_driver_version`.
+- [Medium] The new `QLA_DRIVER_BETA_VER` and `QLA2XXX_VERSION` values excee=
+d the 8-bit limits assumed by the minidump and firmware dump metadata gener=
+ators, leading to corrupted version reporting.
 --
 
---- Patch [55]: [PATCH v6 55/56] scsi: qla2xxx: Bound image count in qla2x0=
-0_update_fru_versions() ---
-commit cda96c9f52838a031ce5bc0e9a6594ece5956c88
+--- Patch [56]: [PATCH v6 56/56] scsi: qla2xxx: Update version to 12.00.00.=
+2607b1 ---
+commit 7e58cb94f7bd9df990cb9116b395dd17502493c0
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Bound image count in qla2x00_update_fru_versions()
+scsi: qla2xxx: Update version to 12.00.00.2607b1
 
-This commit rejects BSG requests in qla2x00_update_fru_versions() where the=
-=20
-declared count does not fit in the 256-byte stack buffer. This prevents a=20
-stack out-of-bounds read that could be sent to the device.
+This commit updates the QLA2XXX driver version string and the corresponding
+major, minor, patch, and beta version macros.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index 76c57e574c220..f9b693af8db10 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -1991,6 +1991,13 @@ qla2x00_update_fru_versions(struct bsg_job *bsg_jo=
-b)
-> =20
->  	image =3D list->version;
->  	count =3D list->count;
-> +
-> +	if (struct_size(list, version, count) > sizeof(bsg)) {
-> +		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =3D
-> +		    EXT_STATUS_INVALID_PARAM;
-> +		goto dealloc;
-> +	}
-> +
-
-[Severity: Medium]
-This is a pre-existing issue, but does this function also need to validate
-the actual request payload length?
-
-If a local user issues a request with a payload smaller than the required
-struct sizes, sg_copy_to_buffer() only copies the provided bytes, leaving
-the rest of the stack buffer bsg uninitialized:
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_update_fru_versions() {
-    ...
-    sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-        bsg_job->request_payload.sg_cnt, list, sizeof(bsg));
-    ...
-}
-
-The code then reads from this uninitialized memory (e.g. image->field_info)
-and passes it to mailbox commands, leaking kernel stack memory to the
-hardware device.
-
-Can similar payload length validation issues occur in
-qla2x00_read_fru_status() and qla2x00_write_fru_status() where
-sg_copy_to_buffer() is also used?
-
->  	while (count--) {
->  		memcpy(sfp, &image->field_info, sizeof(image->field_info));
-
-[Severity: Medium]
-This isn't a bug introduced by this patch, but can this lead to an
-uninitialized heap memory leak?
-
-Earlier in qla2x00_update_fru_versions(), sfp is allocated via
-dma_pool_alloc() from a 256-byte pool without zeroing it. Only 36 bytes of
-user data are copied into sfp.
-
-If the user sets image->field_address.option to include BIT_0 and sets the
-first byte of field_info to 255, this length is overridden in
-qla2x00_write_sfp():
-
-drivers/scsi/qla2xxx/qla_mbx.c:qla2x00_write_sfp() {
-    ...
-    if (opt & BIT_0)
-        len =3D *sfp;
-    ...
-}
-
-Will the hardware then read 255 bytes from sfp, leaking 219 bytes of
-uninitialized kernel heap memory to the device?
-
->  		rval =3D qla2x00_write_sfp(vha, sfp_dma, sfp,
-
-[ ... ]
+> diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/ql=
+a_version.h
+> index 9564beafdab71..1c0b01d703509 100644
+> --- a/drivers/scsi/qla2xxx/qla_version.h
+> +++ b/drivers/scsi/qla2xxx/qla_version.h
+> @@ -6,9 +6,9 @@
+>  /*
+>   * Driver version
+>   */
+> -#define QLA2XXX_VERSION      "10.02.10.100-k"
+> +#define QLA2XXX_VERSION      "12.00.00.2607b1"
 
 [Severity: High]
-This is a pre-existing issue, but do the I2C BSG handlers have unbounded
-length checks leading to overflows?
+Does changing this version string to an odd length (15 bytes) cause a loop
+overrun and out-of-bounds read in qla82xx_set_driver_version()?
 
-In qla2x00_write_i2c(), an unbounded user-controlled i2c->length is used in
-a memcpy:
+Looking at drivers/scsi/qla2xxx/qla_mbx.c:qla82xx_set_driver_version():
 
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_write_i2c() {
-    ...
-    memcpy(sfp, i2c->buffer, i2c->length);
-    ...
-}
+	for (i =3D 4; i < 16 && len; i++, str++, len -=3D 2) {
+		mcp->mb[i] =3D le16_to_cpup(str);
+		mcp->out_mb |=3D 1<<i;
+	}
 
-If i2c->length is set to a large value (up to 65535), can this overflow the
-256-byte heap allocation sfp and read out-of-bounds from the kernel stack?
+Since len is initialized to the string length, an odd length causes len to =
+step
+from 1 to -1. The loop condition && len will remain true when it goes negat=
+ive,
+causing the loop to continue and read past the end of the string literal.
 
-Similarly, in qla2x00_read_i2c(), does passing an unvalidated length to
-memcpy() overflow the 256-byte stack array:
+> =20
+> -#define QLA_DRIVER_MAJOR_VER	10
+> -#define QLA_DRIVER_MINOR_VER	02
+> -#define QLA_DRIVER_PATCH_VER	10
+> -#define QLA_DRIVER_BETA_VER	100
+> +#define QLA_DRIVER_MAJOR_VER	12
+> +#define QLA_DRIVER_MINOR_VER	00
+> +#define QLA_DRIVER_PATCH_VER	00
+> +#define QLA_DRIVER_BETA_VER	2607
 
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_read_i2c() {
-    ...
-    memcpy(i2c->buffer, sfp, i2c->length);
-    ...
-}
+[Severity: Medium]
+Does this new beta version value exceed 8-bit limits and corrupt the driver
+version metadata in diagnostic dumps?
+
+In drivers/scsi/qla2xxx/qla_nx.c:qla82xx_md_collect(), the version componen=
+ts
+are packed into a 32-bit integer:
+
+	tmplt_hdr->driver_info[1] =3D (QLA_DRIVER_MAJOR_VER << 24) |
+	    (QLA_DRIVER_MINOR_VER << 16) | (QLA_DRIVER_PATCH_VER << 8) |
+	    QLA_DRIVER_BETA_VER;
+
+Since 2607 (0x0A2F) is larger than 8 bits, the bitwise OR will overflow and
+overwrite the patch version byte.
+
+Additionally, in drivers/scsi/qla2xxx/qla_tmpl.c:qla27xx_driver_info(), the
+%hhu format specifier is used to parse the string version:
+
+	WARN_ON_ONCE(sscanf(qla2x00_version_str,
+			    "%hhu.%hhu.%hhu.%hhu",
+			    v + 0, v + 1, v + 2, v + 3) !=3D 4);
+
+This will silently truncate the beta version 2607 to 47.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
-522-1-njavali@marvell.com?part=3D55
+522-1-njavali@marvell.com?part=3D56
