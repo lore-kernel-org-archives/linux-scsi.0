@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 001EA21FF30
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:39:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F3792931F4
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 00:42:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784767166; cv=none; b=bSiKY0QpDXJBIIWCHjopVLXQ35B094QrZi9n+ac4qZ3dTbYniU7YHnLt1seBsNQF/4ym3CIbk5MI78nD76fjJeM1GkIsep8ciCWsq/JmfLODQ/FzyfuSQVoiIORgeN2J0o/S74QpqP+Sz2XZ8C75sC94pH9TxxaTPUGFTNCe/6Y=
+	t=1784767371; cv=none; b=GikdhXJPqGoJq8w4TnpbKdsvIPsU0/uu0fmZ3kYC9QnqO+HnDFEYaKEim07RkFR5usrFhV52+p1SkNDaAGQueO4gL2aGuejYc5sY0Roo1yyuQlZxQe+/4nKlowB7o4UHSyv/4We0qN3OydY1LUtnMKUoah/BZcxN2ZPrSNPyYpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784767166; c=relaxed/simple;
-	bh=nNPYGGDR06+xa2DrASgEFFVrJy8EPJq5uBXJbvOeqxk=;
+	s=arc-20240116; t=1784767371; c=relaxed/simple;
+	bh=hxW5lPxYX3wbGes8rOwjdCCZLgr+uhQp6Ce89XzASu4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hY2QVN8P2vSg6dfixBfgovMAJFXRYq1Fb9lqrYpa4BNpyq4/34qj2jGxyTJlE6FMxlP7vLaKRwkSAsv4MYFwlU3qoklzppXhmPK+a5AZ/C2AoVwnqorT2xs83/9Ds7bYYbzJal/lTVGSJB3lsyxVX3ORd67pByJaLL3lV0dhE2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HQQgh3s1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=BBoZukXeGgT3F1uqO/oGUk+PZEl7itDp4WKHFPFatyIum5yIxAD0NAFSoYDopZ7MfhdT7zVe6naetf6+s/cWNa7QcEkvsgJY8gCwtFV9hETTMirvB+JOz5tk0rSo0h/sRUvIgH9mZS49fxyPlNnkcCWREl/X2w9w2vyhTgHEmz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bzw11oeM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HQQgh3s1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 637BC1F000E9;
-	Thu, 23 Jul 2026 00:39:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bzw11oeM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3DDF1F000E9;
+	Thu, 23 Jul 2026 00:42:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784767164;
-	bh=Gm4D2D0uZiGSAmybbgBfV3S1oe00tiTZ7XisN8GPAFQ=;
+	s=k20260515; t=1784767368;
+	bh=lXzYGKkXF+orYZlXEJUu4hbFJDke7JR78Iwp130zvtA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HQQgh3s1P6AmlxdPe3chQtox/qbbf1k2yK0S/Lh2vIuCB9tIAmxSEemg4pjAE0T7K
-	 bxhbMcQ6tJ/qeXD2jr5ul4CVc1IJq2N+2NFxCFOx7RFZ2wupUlV1Rk7/2LJbFK61xR
-	 +c0BCZmylDpnZgDJlkdAkejUCoiSMK2aiSMIEI7PuteZGtBYmOtVjWL9/7P0M2t6qh
-	 t3IFtzJIxHl4FfOIqPrso4jP16jChWTgZ5vyD3PZac7IsOs/bqzLZgl+0eXTcxOcgA
-	 xxkPKPh7BxEuYqUvy8wthRnVwoOebab8h6HEZVKsIJ0VvtRgnUQhBIc3SphhauiprZ
-	 Oed98kHBo5IZQ==
+	b=bzw11oeMb0xiWmvNzP7UyaA2y60X5o2s3VrMvmZDSirqL9MJyzONhiJHspeq8ftEY
+	 PxvtEqth7oMeB/e8tJqabDgeIko4OZFeHcK4sRJsnBloYuVL1X0FFzy9VpqrcdFprI
+	 19XI+nDBC2wyO2yH2T1OglOZ5NL2FxZW5h4JHN8cRt99gc9q9m/LKHsxd7LAfY9KQa
+	 jfKqf10kcBG2e+1ap80OJxVJULl6LukYcKC1Le+9gnjpVdFEPzBqm3nP/5/RDYe47q
+	 VNHfrK7QCb8+1K22bFSG2hDv0AIqWOk5tKOWfvCFUHJ/wQ/w3SATOP+Z+PnckFXhHw
+	 Ya96NO1QSFAtQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 18/33] ibmvfc: add NVMe/FC Process Login support
+Subject: Re: [PATCH v2 26/33] ibmvfc: extend ibmvfc_debug visibility to
+ ibmvfc-nvme.h
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723000149.969416-19-tyreld@linux.ibm.com>
+In-Reply-To: <20260723000149.969416-27-tyreld@linux.ibm.com>
 References: <20260723000149.969416-1-tyreld@linux.ibm.com>
- <20260723000149.969416-19-tyreld@linux.ibm.com>
+ <20260723000149.969416-27-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 00:39:23 +0000
-Message-Id: <20260723003924.637BC1F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 00:42:47 +0000
+Message-Id: <20260723004247.D3DDF1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,69 +47,48 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] Missing protocol validation in PRLI response handling allows pro=
-tocol mismatch between target and response.
+- [Low] The exported variable `ibmvfc_debug` is completely unused by the NV=
+Me support code.
 --
 
---- Patch [18]: [PATCH v2 18/33] ibmvfc: add NVMe/FC Process Login support =
----
-commit 6682b3a365a88d88e3d8b2117f28f9fba600bb88
+--- Patch [26]: [PATCH v2 26/33] ibmvfc: extend ibmvfc_debug visibility to =
+ibmvfc-nvme.h ---
+commit 35cd49c4c7f0c39e5adc622d14fb39bef0080a91
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-ibmvfc: add NVMe/FC Process Login support
+ibmvfc: extend ibmvfc_debug visibility to ibmvfc-nvme.h
 
-This commit extends the PRLI handling code in the ibmvfc driver to
-support NVMe/FC targets. It issues the NVMe process login MAD when the
-target protocol is NVMe/FC, sets the NVMe FC-4 type, and populates the
-service parameters, subsequently decoding them to assign the proper
-remote-port roles.
+This commit makes the ibmvfc_debug control variable global and declares it
+in ibmvfc-nvme.h. The stated intent is to allow NVMe protocol-specific code
+in ibmvfc-nvme.c to use the shared ibmvfc_dbg logging macro.
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-core.c
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-[ ... ]
-> @@ -4110,6 +4111,22 @@ static void ibmvfc_tgt_prli_done(struct ibmvfc_eve=
-nt *evt)
->  				ibmvfc_retry_tgt_init(tgt, ibmvfc_tgt_send_prli);
->  			else
->  				ibmvfc_del_tgt(tgt);
-> +		} else if (parms->type =3D=3D IBMVFC_NVME_FCP_TYPE) {
-> +			if (prli_rsp[index].logged_in) {
-> +				/* For FC-NVMe PRLI the Image Pair field is always set to zero (see =
-6.3.3) */
-> +				tgt->need_login =3D 0;
-> +				tgt->ids.roles =3D 0;
-> +				if (be32_to_cpu(parms->service_parms) & IBMVFC_PRLI_NVME_TARGET)
-> +					tgt->ids.roles |=3D FC_PORT_ROLE_NVME_TARGET;
-> +				if (be32_to_cpu(parms->service_parms) & IBMVFC_PRLI_NVME_INITIATOR)
-> +					tgt->ids.roles |=3D FC_PORT_ROLE_NVME_INITIATOR;
-> +				if (be32_to_cpu(parms->service_parms) & IBMVFC_PRLI_NVME_DISCOVERY)
-> +					tgt->ids.roles |=3D FC_PORT_ROLE_NVME_DISCOVERY;
-> +				tgt->add_rport =3D 1;
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-nvme.h b/drivers/scsi/ibmvscsi/=
+ibmvfc-nvme.h
+> index 0465e87198817..3aa2857887950 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-nvme.h
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-nvme.h
+> @@ -22,6 +22,8 @@
+>  #define IBMVFC_MAX_NVME_QUEUES	16
+>  #define IBMVFC_NVME_CHANNELS	8
+> =20
+> +extern unsigned int ibmvfc_debug;
 
-[Severity: Medium]
-Does this code allow a protocol mismatch if the target returns an unexpected
-FC-4 type in the PRLI response?
+[Severity: Low]
+Is this variable actually utilized by the NVMe support code?
 
-In ibmvfc_tgt_prli_done(), the response is evaluated purely based on
-parms->type without checking if it matches the expected tgt->protocol.
+The commit message indicates this export is so ibmvfc-nvme.c can use the
+ibmvfc_dbg macro. However, looking at drivers/scsi/ibmvscsi/ibmvfc-nvme.c,
+it appears to use ibmvfc_log instead and contains no references to
+ibmvfc_dbg, DBG_CMD, or ibmvfc_debug.
 
-If a target responds to a SCSI PRLI (where tgt->protocol is
-IBMVFC_PROTO_SCSI) with the NVMe type (IBMVFC_NVME_FCP_TYPE), would the
-driver branch into this NVMe handling block?
+Are there follow-up patches that add these debug calls, or is this export
+unnecessary?
 
-This appears to allow registering an FC remote port with the wrong transport
-roles if a buggy or malicious target returns a mismatched response type.
-
-> +			} else if (prli_rsp[index].retry)
-> +				ibmvfc_retry_tgt_init(tgt, ibmvfc_tgt_send_prli);
-> +			else
-> +				ibmvfc_del_tgt(tgt);
->  		} else
->  			ibmvfc_del_tgt(tgt);
->  		break;
+> +
+>  struct ibmvfc_host;
+>  struct ibmvfc_target;
+>
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723000149.9694=
-16-1-tyreld@linux.ibm.com?part=3D18
+16-1-tyreld@linux.ibm.com?part=3D26
