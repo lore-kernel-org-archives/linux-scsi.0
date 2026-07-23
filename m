@@ -1,231 +1,139 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ED73371D1F
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 17:05:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 979A637CD32
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 17:16:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784826356; cv=none; b=STAw7t9Jj5BU+YWD6iBXOpC34VA2SdPgUep266eVh8Zdq/5QJ1gU9ycUqcbB6oFIOXzdn2Ahui2fh78fr6jom/fIascB+Pyiaym7urJDwZdrih875kmHzOm0LSag3plWn4nYL5+tNhW+Nit2RNWNyepmZYAoMe1Y3OKxj7gONmA=
+	t=1784827005; cv=none; b=LkY196wdNh7GAXEff1xJkif0iQWszxPnSd+wceuP9s3Eb3sUZyERDGzUJhUmfpdUDok25ZEdCYME8VLguxEH1zXgd/HZBsvw44JWHvgyf3V1IXLcjTzXwgWWaDuO5c36iNrNNWBGEZkth6p6w3OGvIp/x6YLofWcPVOpHzaniJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784826356; c=relaxed/simple;
-	bh=iwbPWQw81lXzX9UP3T4IVtzPpmUa0QknFb35cWG3JUY=;
+	s=arc-20240116; t=1784827005; c=relaxed/simple;
+	bh=Z1oUmhNCufa8+DlH5c0sIMB9K875I9sMIBGUUNKGtZs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MR1kK1sci9RLxqEiaTeUrmvafYRueqkpsA2nSlnXWKLfXatVvN12aXWPJUxHTW9f/zKOu5FnI3KMIv6uohXCdCgG3AEhqjgWN5+0N6U3MDLVtGmrIIx7e6CBr5D7PfVVJSsaIvdMGswb2KtTfxwhlnA3p14PpsW+1DX4ekokPXY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N1ilHYjq; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=j/s4p3o17DT28eUZjHpbjTEPmC0lTgEFo1W5WwNxfMRwpwZz4crt1KrGTXUcWqzU/qUso+Lk7CyJoCBhFWU67Yr9Jm/8gS4aRcKNIp+6+U/YheGbUIcIXgwj9MuAtPGsieKPYCYB4DR/8Yj2eYIbcUK4ZqNw4GRqbwI+MU/CS8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R4DXdYUN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N1ilHYjq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1468A1F000E9;
-	Thu, 23 Jul 2026 17:05:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R4DXdYUN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E49C1F000E9;
+	Thu, 23 Jul 2026 17:16:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784826352;
-	bh=Hu+9TSbKsUvMJKYMMfp9uhr9sSImCzpaRRGvneHTX9s=;
+	s=k20260515; t=1784827004;
+	bh=u665RuM6Ulzj8x1VIcKkwM6eia4D4AlQGp/Vaku17A4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=N1ilHYjqA9y4JWVK5SaKBlN49paoWaXkQGTQYkKGQK4sm++T04+eODtGeTC7nTW6Y
-	 AIK/MkZprGQm8xtuIBjnvccLP891VFNlhJuAVQQhpJJ8xYKQPNev45eNkaoVRkSoHr
-	 GTEW+CpTgky6x5r2goH2O4kf4fLBWML669u1DK0IYT0TLHKfN+YAKMCex50SL9FkOe
-	 /GDfWxjZnSJAWWeVZf98g3ElN6U0rtLTWtWJEe5nq5gVhuQAG0sqgYclhXO4i5CM2N
-	 gV8K0/pb20fyScc6uOYQP6NTVXfWgbKURdjOUDdm7qYhdLJV1tYGEbPG5ubD+Di2FU
-	 dG0t2UMk6CPHg==
+	b=R4DXdYUNTIRE2jzWNt3kKPljt7csCjZE94SpTRSIVuvLDFuM2DmnVycc2yVlGFPof
+	 PPBBqG2PmnVvPb8WXhO3gE3pUX8+t66ovAQjNdlbdTz241LqhnmrWnHrj3tkUB8XgU
+	 3FGWgKKGpUdN6xW55Y9GCComPgS38BaYfCkzyW6Dt79HQzR6Ga6y2C1UVXB22BSDIR
+	 87hVRsRm6q9uwViDG8s5LvAKKFQOLtsFxWK5c9ocnNP/SS52xh/to4/ToF4cFNzeVm
+	 v9+Df+bRtCPFuyrqIIxNi4egDAhDn5Ple+zC/pcSJnbwpxzp3pgm7wFmVvRmMt1W+Z
+	 nxWmMcusPSfJw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 39/56] scsi: qla2xxx: Adjust feature gating in BSG
- paths for 29xx support
+Subject: Re: [PATCH v6 40/56] scsi: qla2xxx: Fix queue teardown NULL
+ dma_free and bitmap locking
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723050413.3897522-40-njavali@marvell.com>
+In-Reply-To: <20260723050413.3897522-41-njavali@marvell.com>
 References: <20260723050413.3897522-1-njavali@marvell.com>
- <20260723050413.3897522-40-njavali@marvell.com>
+ <20260723050413.3897522-41-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 17:05:49 +0000
-Message-Id: <20260723170552.1468A1F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 17:16:43 +0000
+Message-Id: <20260723171644.1E49C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Multiple vendor-specific BSG handlers copy user data into an unini=
-tialized stack buffer without validating the request payload length, leadin=
-g to uninitialized stack variable usage and information leaks.
-- [High] The `qla28xx_validate_flash_image` function fails to call `bsg_job=
-_done()` on error paths but still returns `QLA_SUCCESS` (0), bypassing comp=
-letion mechanisms and hanging the job.
-- [High] Information leak via uninitialized kernel heap memory in `qla2x00_=
-do_dport_diagnostics`.
-- [High] Unaligned DMA mapping of an interior struct member in `qla26xx_dpo=
-rt_diagnostics`.
+- [High] Severe resource and memory leak on queue teardown due to reliance =
+on a global flag and early returns on error.
 --
 
---- Patch [39]: [PATCH v6 39/56] scsi: qla2xxx: Adjust feature gating in BS=
-G paths for 29xx support ---
-commit c26fb874cafb5af2254e6979b56c1d91494f6044
-Author: Manish Rangankar <mrangankar@marvell.com>
+--- Patch [40]: [PATCH v6 40/56] scsi: qla2xxx: Fix queue teardown NULL dma=
+_free and bitmap locking ---
+commit 4a4916d52b2174b3c6221fdaca0059abdec4d678
+Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Adjust feature gating in BSG paths for 29xx support
+scsi: qla2xxx: Fix queue teardown NULL dma_free and bitmap locking
 
-Extend qla2xxx BSG command handling to recognize QLA29xx adapters and
-align feature availability with hardware capabilities. Allow QLA29xx in
-paths previously restricted to QLA27xx/28xx and restrict unsupported
-operations on QLA29xx.
+This commit addresses two bugs in the error paths of queue creation. It adds
+a NULL check before calling dma_free_coherent and ensures the same lock is=
+=20
+held when clearing queue map entries during teardown.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index 3187909759a07..f9f9687316b58 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -1962,7 +1962,7 @@ static int qla2900_bsg_load_mpi(struct bsg_job *bsg=
-_job)
->  	bsg_job_done(bsg_job, bsg_reply->result,
->  		     bsg_reply->reply_payload_rcv_len);
+> diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mi=
+d.c
+> index bb2521c052bf8..7072af5b42178 100644
+> --- a/drivers/scsi/qla2xxx/qla_mid.c
+> +++ b/drivers/scsi/qla2xxx/qla_mid.c
+> @@ -576,16 +576,17 @@ qla25xx_free_req_que(struct scsi_qla_host *vha, str=
+uct req_que *req)
+>  	uint16_t que_id =3D req->id;
+>  	size_t req_entry_size =3D qla_req_entry_size(ha);
 > =20
-> -	return rval;
-> +	return 0;
->  }
+> -	dma_free_coherent(&ha->pdev->dev,
+> -			  (req->length + 1) * req_entry_size,
+> -			  req->ring, req->dma);
+> +	if (req->ring)
+> +		dma_free_coherent(&ha->pdev->dev,
+> +				  (req->length + 1) * req_entry_size,
+> +				  req->ring, req->dma);
+>  	req->ring =3D NULL;
+>  	req->dma =3D 0;
+>  	if (que_id) {
+> +		mutex_lock(&ha->mq_lock);
+>  		ha->req_q_map[que_id] =3D NULL;
+> -		mutex_lock(&ha->vport_lock);
+>  		clear_bit(que_id, ha->req_qid_map);
+> -		mutex_unlock(&ha->vport_lock);
+> +		mutex_unlock(&ha->mq_lock);
+>  	}
+>  	kfree(req->outstanding_cmds);
+>  	kfree(req);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does qla2x00_update_fru_vers=
-ions
-in drivers/scsi/qla2xxx/qla_bsg.c read uninitialized stack values?
+This is a pre-existing issue, but I noticed a potential leak related to=20
+queue teardown.
 
-Multiple vendor-specific BSG handlers copy user data into an uninitialized
-stack buffer without validating the request payload length. For example, if
-the payload is short, the count variable can remain uninitialized:
+In drivers/scsi/qla2xxx/qla_mid.c:qla25xx_delete_req_que(), the driver reli=
+es
+on a global flag and returns early on error:
 
-qla2x00_update_fru_versions() {
-    ...
-    uint8_t bsg[DMA_POOL_SIZE];
-    struct qla_image_version_list *list =3D (void *)bsg;
-    ...
-    sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-        bsg_job->request_payload.sg_cnt, list, sizeof(bsg));
+if (req && vha->flags.qpairs_req_created) {
+        req->options |=3D BIT_0;
+        ret =3D qla25xx_init_req_que(vha, req);
+        if (ret !=3D QLA_SUCCESS)
+                return QLA_FUNCTION_FAILED;
 
-    image =3D list->version;
-    count =3D list->count;
-    ...
-    while (count--) {
-    ...
+        qla25xx_free_req_que(vha, req);
 }
 
-This could lead to out-of-bounds DMA and hardware writes driven by
-uninitialized stack data.
+If the queue was never initialized in hardware (for example, if=20
+qla2xxx_create_qpair() passes startqp=3Dfalse in target-only mode),=20
+qpairs_req_created is 0. This bypasses the call to qla25xx_free_req_que()=20
+entirely, silently leaking the memory and DMA rings.
 
-Similarly, in qla2x00_read_fru_status, uninitialized stack memory might be
-used as device parameters:
+Additionally, if hardware teardown fails and returns QLA_FUNCTION_FAILED,=20
+this propagates up to drivers/scsi/qla2xxx/qla_init.c:qla2xxx_delete_qpair(=
+):
 
-qla2x00_read_fru_status() {
-    ...
-    rval =3D qla2x00_read_sfp(vha, sfp_dma, sfp,
-        sr->field_address.device, sr->field_address.offset,
-        sizeof(sr->status_reg), sr->field_address.option);
-    ...
-}
+ret =3D qla25xx_delete_req_que(vha, qpair->req);
+if (ret !=3D QLA_SUCCESS)
+        goto fail;
 
-Can we validate the request payload length to prevent this regression?
+This aborts the remaining cleanup for the qpair, which abandons the respons=
+e=20
+queue and MSI-X handlers.
+
+Could this sequence leave the DMA mappings and IRQ vectors permanently=20
+orphaned on module unload?
 
 [ ... ]
-
-> @@ -2803,7 +2803,7 @@ qla2x00_do_dport_diagnostics(struct bsg_job *bsg_jo=
-b)
->  	struct qla_dport_diag *dd;
-> =20
->  	if (!IS_QLA83XX(vha->hw) && !IS_QLA27XX(vha->hw) &&
-> -	    !IS_QLA28XX(vha->hw))
-> +	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
->  		return -EPERM;
-> =20
->  	dd =3D kmalloc_obj(*dd);
-
-[Severity: High]
-This is a pre-existing issue, but does this allocation leak uninitialized
-kernel heap memory to user-space causing a regression?
-
-If a user issues the dport diagnostics BSG command with a truncated request
-payload, kmalloc_obj allocates memory without zeroing it. The unwritten
-struct fields and padding could then be copied to the user reply payload:
-
-qla2x00_do_dport_diagnostics() {
-    ...
-    if (rval =3D=3D QLA_SUCCESS) {
-        sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-            bsg_job->reply_payload.sg_cnt, dd, sizeof(*dd));
-    }
-    ...
-}
-
-Could this regression expose sensitive kernel heap contents?
-
-[Severity: High]
-This is also a pre-existing issue, but does this unaligned DMA mapping risk
-memory corruption?
-
-When the dport diagnostic BSG command is initiated,
-qla26xx_dport_diagnostics is called with the dd->buf member:
-
-qla2x00_do_dport_diagnostics() {
-    ...
-    rval =3D qla26xx_dport_diagnostics(
-        vha, dd->buf, sizeof(dd->buf), dd->options);
-    ...
-}
-
-Inside qla26xx_dport_diagnostics in drivers/scsi/qla2xxx/qla_mbx.c, this
-buffer is mapped for DMA:
-
-qla26xx_dport_diagnostics() {
-    ...
-    dd_dma =3D dma_map_single(&vha->hw->pdev->dev,
-        dd_buf, size, DMA_FROM_DEVICE);
-    ...
-}
-
-Since struct qla_dport_diag is packed, the buf member sits at a 2-byte
-offset. Mapping an unaligned struct member could violate DMA constraints,
-leading to silent memory corruption during cache flushes on architectures
-that are not cache-coherent, or hardware overwrite of adjacent fields.
-Can this regression be adjusted?
-
-[ ... ]
-
-> @@ -2929,8 +2929,13 @@ qla2x00_get_flash_image_status(struct bsg_job *bsg=
-_job)
->  	struct qla_active_regions regions =3D { };
->  	struct active_regions active_regions =3D { };
-> =20
-> -	qla27xx_get_active_image(vha, &active_regions);
-> -	regions.global_image =3D active_regions.global;
-> +	if (IS_QLA29XX(ha))
-> +		return -EPERM;
-> +
-> +	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
-> +		qla27xx_get_active_image(vha, &active_regions);
-> +		regions.global_image =3D active_regions.global;
-> +	}
-
-[Severity: High]
-This is a pre-existing issue, but does qla28xx_validate_flash_image in
-drivers/scsi/qla2xxx/qla_bsg.c skip completing the BSG job on error paths?
-
-If the internal validation fails and rval is non-zero, it bypasses the
-bsg_job_done call:
-
-qla28xx_validate_flash_image() {
-    ...
-    if (!rval)
-        bsg_job_done(bsg_job, bsg_reply->result,
-                     bsg_reply->reply_payload_rcv_len);
-
-    return QLA_SUCCESS;
-}
-
-Returning QLA_SUCCESS without completing the job causes the BSG block layer
-to wait indefinitely. Could this hang the user-space process and cause a
-denial of service regression?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
-522-1-njavali@marvell.com?part=3D39
+522-1-njavali@marvell.com?part=3D40
