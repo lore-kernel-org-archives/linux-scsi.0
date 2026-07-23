@@ -1,186 +1,115 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3528233938
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 07:47:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0430A30D41E
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 08:12:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784792856; cv=none; b=p1UU0OmSO9Pra8g1gsC+iweuJeUDqwt3HR3HS1WvOBK+DhmSZ7uPywEM/gotNH+KE3ZAM1Mp+MpTtQ2dvujTclZaIQG48mc8U021GSyAu3Q1y7q72NMJvG3iQTKRm7wwLhEsY+mHyFJFTgpHSIYV9Ss0z9pYKH/vm7NvPeT5ekI=
+	t=1784794355; cv=none; b=eBnPGpCiQId1L0DXxrSq8wwrerSRZGCIZwHSExCOZTl1puco0VJPD4BeHLqTQby3OPOUpykwq9HjkgzlVErj9OMIYjOgbpcoD07ZSx9FOFiLF4x3LEW9AjyUrEWL150qy6OEzrOiErjo8H51j5rF+vyeWpUYR815TT9Ec2bhqwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784792856; c=relaxed/simple;
-	bh=GDDizwXh09Qv81UVMsJEwZE5e6/RHAuCYgzrAyeXefw=;
-	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
-	 Content-Type:References; b=NB1NCgKTnB0vK15TuliWKHg6ed7fuqUn/b/y66F7wmToMrdzinJd6nvOu01bupvZx+JAYtSY0avPsGfzwPWKd1NWfoVkHm46Sq9+AQncUcmxHR4AlDGPlQy/1wLzSRp40RTg2ZkZVQvUWb/w5RhJsF5JLzwmucKgXf67LNNMJ80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=n09yYiya; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1784794355; c=relaxed/simple;
+	bh=FC2hDtl/dV3I33NTPtbR7udY/rZiXDYFq4s4FBbzPGs=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lJ6geOpdrvnfwTbIJ0g009u+Y20+9/Bm0qFpHJN+KHCplSjTcD5XOL6qcXvNs3IgQaz1W1xm5+FRxunRG/PXyBV4ureGiYrM/AvjUDF9Wq8hYwnI1+5kVI7NgL6aGYQn4DWfIJLVA+rApY4crulcolo38EOxDGAXrpLv3/2v6F0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AORoo0vg; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="n09yYiya"
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260723074726epoutp03d6ec44e76ebbf585ab797de92e3ea722~E26MmTO-D2749027490epoutp03G
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 07:47:26 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260723074726epoutp03d6ec44e76ebbf585ab797de92e3ea722~E26MmTO-D2749027490epoutp03G
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1784792846;
-	bh=xUhdjHYTDqk1gm9uAS8I6T7vW6ta4GdrhV+NmxfuMvM=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=n09yYiyaK9kbjXVQEjhHaQeqOFe3ujbW0+Z/PtTUn87Fz0VlLDOIePeBOvDyAq7Nl
-	 FEzi5eLYfdn09doC1XvpgClhTcV9O21A/B8hOivWxj7YjwBGufTWf03Toi9Xuk49He
-	 nilrZYabl9oYWs3W1d5AwUS2sM3ViwvWxi1c+g64=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
-	20260723074725epcas2p2c53632d213bfd0e526c26a823f7450ee~E26MPjYbb0373503735epcas2p25;
-	Thu, 23 Jul 2026 07:47:25 +0000 (GMT)
-Received: from epcas2p2.samsung.com (unknown [182.195.38.212]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4h5NWK2jgHz6B9m6; Thu, 23 Jul
-	2026 07:47:25 +0000 (GMT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AORoo0vg"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-49550ec592cso1175465e9.0
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 01:12:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784794352; x=1785399152; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=aW9v+GOaM69UrXh4AgU/G+ySvHEZ55OKVJScDmqNygA=;
+        b=AORoo0vgZ/Bn2cbcI2lq/rAbm21x6phY8/cGkejZCap7wFerMh+nxnq3qfd7n2u/Am
+         lfk//DR6dk1KmQ+Jofqv4DxzyUdG24iW6rm81TioTdg17+Unr9gRbLgrRiewQ4wzKOlk
+         dCgC79mAZyVmw+JZCdhZUMy/nCc/SXqglKuvQDrETUg6c/77CEMQfsV3e/aAs5A7lNAx
+         4N/FXEG/IProwYg3tRlQpIYca0j9SQmy0DY13i96HKs8tO1wtbzbLVkM0TuEOiKyFUeQ
+         dMnx3Xh7kBbCWTduWwVDLmIYhBoYoMtzlzOqgOt55NuvhQ2j5Cnk00IC4iRSh1/az2Wv
+         cqBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784794352; x=1785399152;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=aW9v+GOaM69UrXh4AgU/G+ySvHEZ55OKVJScDmqNygA=;
+        b=pdZ9HIS2IUkw+rRPtlefsAG5xIVxO5gY0AUSMkWlt0CzGGPpDEKQ+NS9lVZM4Z48UP
+         nMOlOpOffEoFZTTZUSAaLM27d9WueN8nIKz8elBc3J0txrv9rQsovMLgzR4qyYVLNXjY
+         P3TYjmCN3XikjS58LNYIEgjq/sjhTZJQ1Mzi4Q6c2XBJvHIUavdY7IEpjqalFI4MRuI1
+         ltl4bvmei1gjnuWdNlPm5qYBXir04c0mMUwGgfKJzNuVqAuZRb7WpdUROG3tHWD3VKJ2
+         bvwshWmk/0zqm9S5CF403YBYDPH8y8z090mJo92re5ZfCjlfAh+USSDp+lU1U2FIDkhp
+         bWgw==
+X-Forwarded-Encrypted: i=1; AHgh+RrR8sQISV16f1ri96/axhTIVickGrveW1Zw/xD27vkyI/tHkTMCI/SvEdDzWqzRY1V9jHQEvTbxoQwc@vger.kernel.org
+X-Gm-Message-State: AOJu0YwMZIwQckz3N6RYd/VdPMKNXdHfGYsR88hLJed3CYSvWh0pHf+m
+	EkQqrPxlW5CUR7h7UfB3PF3eILGH3ypTpmYyX2/f2Nw58DtR+aObbhhD
+X-Gm-Gg: AR+sD13yjsjlBksbxjagXbKEupJMYglVE+YgdTi2ezTn4OwnjJAFEhoiwb/ptqYgzJT
+	bWBYmbGxRikB758yrLxhVMSRHcbjL+NfDbox+WtrhoJyRZWe+wV45TdKd5FQxv4N+Pb7gdZPQ/A
+	tpNnTtB7N2vrJrApsm09GmMc8MlARmi8tK9W7YIHqQSgH1KgSfLuluOfS8gtSBKxdwx1UZDKUFo
+	DTTBDu843UQqKDRn0mhVFbHaJoS9mqRTClJsEJjw9QK2MI2AEbdokTXNpLfizKl663k6iSai22E
+	faitweC1ac/OJSBt5JPzjcQhJmsChLLF/fpwvn5krfI2rj5tZxPZlQqOFL1JeJqis9VwhrHgF8T
+	A6jfMB5eaU/SI1+6GdvFbdcPMXFBlIp7QlMil8F6HUnk3RPRxVw6os9rKNIN2a5Tz1/RaJ6uQPI
+	QbKvFRYU8UJzCXbQQ4sVAw3EX/T7NxM58yY0osK3g=
+X-Received: by 2002:a05:600c:26d3:b0:493:f478:4c71 with SMTP id 5b1f17b1804b1-49574593d20mr9993285e9.7.1784794352054;
+        Thu, 23 Jul 2026 01:12:32 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49571c4b664sm44359805e9.4.2026.07.23.01.12.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Jul 2026 01:12:31 -0700 (PDT)
+Date: Thu, 23 Jul 2026 09:12:29 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Bean Huo <beanhuo@iokpp.de>, Li Qiang <liqiang01@kylinos.cn>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ alim.akhtar@samsung.com, avri.altman@wdc.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ peter.wang@mediatek.com, beanhuo@micron.com, can.guo@oss.qualcomm.com,
+ adrian.hunter@intel.com, tomas.winkler@intel.com
+Subject: Re: [PATCH v2 5/6] scsi: ufs: rpmb: Use unaligned accessors for
+ RPMB frames
+Message-ID: <20260723091229.72bc2da8@pumpkin>
+In-Reply-To: <a74b5d01-feaf-47a1-ae40-09f737ad3a6a@acm.org>
+References: <cover.1784182493.git.liqiang01@kylinos.cn>
+	<20260717153914.26321-1-liqiang01@kylinos.cn>
+	<20260717153914.26321-6-liqiang01@kylinos.cn>
+	<fd02332e6bd8630c8b3d7dd89e9f7502bb9d1166.camel@iokpp.de>
+	<a74b5d01-feaf-47a1-ae40-09f737ad3a6a@acm.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: Re: [PATCH v2] scsi: ufs: Add support for the aggregated read query
- opcode
-Reply-To: hyenc.jeong@samsung.com
-Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
-From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
-To: Bart Van Assche <bvanassche@acm.org>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>
-CC: ALIM AKHTAR <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Jinyoung Choi <j-young.choi@samsung.com>,
-	Dukhyun Kwon <d_hyun.kwon@samsung.com>, Jeuk Kim <jeuk20.kim@samsung.com>,
-	Keoseong Park <keosung.park@samsung.com>, Jaemyung Lee
-	<jaemyung.lee@samsung.com>, Jieon Seol <jieon.seol@samsung.com>, Gyusun Lee
-	<gyusun.lee@samsung.com>, Yunjae Jo <yunjae00.jo@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <13d80afa-3d5c-405f-8845-6dccb048bd97@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20260723074724epcms2p16cc926dd07e3f932db8efb71d1e1268c@epcms2p1>
-Date: Thu, 23 Jul 2026 16:47:24 +0900
-X-CMS-MailID: 20260723074724epcms2p16cc926dd07e3f932db8efb71d1e1268c
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260710053524epcms2p82121eba4240c37112fc5669430035442
-References: <13d80afa-3d5c-405f-8845-6dccb048bd97@acm.org>
-	<20260722084819epcms2p49c27fce999e821385f7b5d7ea5a02868@epcms2p4>
-	<CGME20260710053524epcms2p82121eba4240c37112fc5669430035442@epcms2p1>
 
-Hi Bart,
+On Wed, 22 Jul 2026 06:54:16 -0700
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-Thanks a lot for the detailed review. I've addressed the comments and
-will send a v3. Replies inline below.
+> On 7/22/26 5:33 AM, Bean Huo wrote:
+> > consider Sashiko's suggestion, it's better to add __packed on struct rpmb_frame
+> > {}?  
+> 
+> Do not add __packed to an entire data structure. Only use it on
+> data structure members that need it.
 
-On 7/23/26 2:09 AM, Bart Van Assche wrote:
-> > -	/* sizeof(struct utp_transfer_cmd_desc) must be a multiple of 128 */
-> > +	/* Both UCD types must be a multiple of 128 */
->
-> "must be" -> "must have a size that is"
->
-> "128" -> "128 bytes"
+That depends...
+If the structure itself can be misaligned in memory then the structure
+needs to be packed.
+OTOH if there is (for example) a 32bit field on a 16bit boundary then
+just marking that field __packed will remove the pad.
+The compiler can then use two 16bit instructions to access the data
+rather than four 8bit ones.
 
-Done. Now the comment is:
-	/* Both UCD types must have a size that is a multiple of 128 bytes */
+	David
 
-> > -    *desc_len = min_t(int, QUERY_DESC_MAX_SIZE, desc_size);
-> > +    if (desc_op == UPIU_QUERY_OPCODE_AGGREGATED_READ)
-> > +        *desc_len = min_t(int, QUERY_AGGREGATED_MAX_SIZE, desc_size);
-> > +    else
-> > +        *desc_len = min_t(int, QUERY_DESC_MAX_SIZE, desc_size);
->
-> Please convert this patch into a series and add a patch before this
-> patch that changes the data types of desc_size and desc_len from 'int'
-> and 'int *' into unsigned types (u16 or unsigned int). The length field
-> is an unsigned 16-bits number according to the UFS standard. Hence, the
-> UFS driver should use an unsigned type for the UPIU query length.
->
-> This will allow to change "min_t(int, ...)" into "min(...)".
+> 
+> Thanks,
+> 
+> Bart.
+> 
 
-Done. v3 will be two-patch series:
-  [1/2] scsi: ufs: Use unsigned types for the BSG query descriptor length
-  [2/2] scsi: ufs: Add support for the aggregated read query opcode
-
-Patch 1 switches the descriptor length/buffer to u16/u8 and uses min()
-instead of min_t(int, ...).
-
-> Since 'desc_op' is only used derive the maximum query size, wouldn't it
-> be better to move the code that limits 'desc_len' into
-> ufs_bsg_request()? Then 'desc_op' won't have to be passed to
-> ufs_bsg_get_query_desc_size().
-
-Agreed. ufs_bsg_get_query_desc_size() was trivial, so I folded it into
-its only caller, ufs_bsg_alloc_desc_buffer(), where desc_op is already
-available.
-
-> > +    if (unlikely(blk_mq_is_reserved_rq(scsi_cmd_to_rq(cmd)))) {
-> [...]
-> > +    } else {
-> > +        int slot = i - UFSHCD_NUM_RESERVED;
-> [...]
->
-> The above code is based on the assumption that
-> !blk_mq_is_reserved_rq(rq) implies that i >= 1. Please add a
-> WARN_ON_ONCE() statement that makes this assumption explicit, e.g.
-> WARN_ON_ONCE(slot >= 0).
-
-Done, added WARN_ON_ONCE(slot < 0) in the non-reserved branch (the
-assumption is slot >= 0, so the WARN fires when it does not hold).
-
-> > +    int tag;
->
-> Shouldn't 'tag' have an unsigned type?
-
-Done. I made it a u8 in struct ufs_dev_cmd.
-
-> > +static inline size_t ufshcd_get_devman_ucd_size(const struct ufs_hba *hba)
-> > +{
-> > +    return sizeof(struct utp_devman_cmd_desc) + SG_ALL * ufshcd_sg_entry_size(hba);
-> > +}
->
-> Why SG_ALL? The data buffer for device management commands is allocated
-> with kmalloc() and hence is contiguous so a single segment descriptor
-> should be sufficient.
-
-This is the one comment I haven't applied yet, and I'd like to
-double-check with you before doing so.
-
-The aggregated read path indeed does not use the PRDT at all. But
-the reserved tag is also used by advanced RPMB. I understood that path
-builds a PRDT via ufshcd_sgl_to_prdt() from the BSG payload, whose sg_cnt
-can exceed one when the user buffer spans multiple segments. Keeping
-SG_ALL preserves the existing RPMB behaviour; I thought shrinking to a
-single segment could truncate multi-segment transfers.
-
-Did I miss something about how RPMB maps its payload here? If a single
-segment is in fact guaranteed, I'll drop the prd_table[] member and size
-it as:
-/* Dedicated UCD for the devman/reserved slot */
-struct utp_devman_cmd_desc {
-        u8 command_upiu[ALIGNED_UPIU_SIZE];
-        u8 response_upiu[ALIGNED_DEVMAN_RSP_SIZE];
-};
-
-static inline size_t ufshcd_get_devman_ucd_size(const struct ufs_hba *hba)
-{
-        return sizeof(struct utp_devman_cmd_desc);
-}
-
-Separately, I fixed the Sashiko-flagged OOB read in v3. I capped
-QUERY_AGGREGATED_MAX_SIZE (4096 -> 4064) so that the fixed 32-byte UPIU
-header plus a full data segment fits within the 4096-byte
-response_upiu[], and added a static_assert to prevent regression. 4064
-is still well above the ~3 KiB the spec allows in practice.
-
-Thanks.
