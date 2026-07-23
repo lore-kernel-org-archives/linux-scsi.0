@@ -1,156 +1,123 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3323F30C606
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 04:20:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66C5A3128A3;
+	Thu, 23 Jul 2026 04:21:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784780465; cv=none; b=p4GRn7wEc93Er/xfMoq1f3o7buRd0eI3j2QkijbbD7/Z+R93+tcac32Ui6LvZU2opKkdaoG241USMP7Cp9uAmhsaWYRwADVb7F6hRNsS9nfAu/eMKryy81UdzrOHkHbyy4zhj5SW9PtRxyKOaXWyPWeFMDUMwHFFFqO17XsDCI0=
+	t=1784780518; cv=none; b=GP3ePTuCSkAbRkPcSz8NCwnM9Xmf0Mqx6HUgrsC504bPG7JDc2alJKV29XZAMwap+AvU+HhwBxpCizK6cyGViWaLdGMCd6vIpYVEtOjyrOuhJiEqPXPq29yJvp+4lloS9TCrxw9QNiZdGYKPlzQS29uMVq2328Mt3nhYChC8m0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784780465; c=relaxed/simple;
-	bh=35mNg/AyD4v2flAtAyN0ZZj4wEBfAt3e83VUm//qg5w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WFrennV1eQATNCx7UIMe9sxlRGqW10nXTHVdwEwoBCOByJL7O+tBdFwMpiWNHU/mYeccqWKLT2UsQMSi5I3QHMBqo6PWsJJs1IC41W4TWcTR8uc1J0LnCTKCbG5PcteVx4ATL2cCvqSP/in+A+ULGBVfi74Ckowg88IwKyxoTUk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fvi4/RvY; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fvi4/RvY"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2cede6375caso55535ad.0
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Jul 2026 21:20:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1784780447; x=1785385247; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=h0IhZi1OKFPkcst+4yI24dUPIzJuM4pvOmvOBFDuDOw=;
-        b=fvi4/RvY3nNf8YGlD5NB3gdpoVgFY86KSbODehp++sw7kiI3ZkOGiIqcSFPt9n+2HW
-         bzKrJX+g4+FLeq4uSTieVVvcKDYRJFfxSFr+ZXzlEIUTnY/q6W5FrbQYU3QWMaYzGRLj
-         mkawGYSNxtSjH2eUXVdR8JDhedIBXBOkEtjk4a1ixk5AyW26WGneKTsIJ/HbqIo8lQz8
-         XqJGgSNJ+kAwt4S9SENIvocmERezD7pnne3+5TZSySpFSeuZZF6Sqx2UHBI6USqNkqCw
-         IEMDJSgGEw8u926ODqdvzJqdkcqbHIj42hg6SfjSnmueBwHbtk31AaA4zowsOLrQB1m1
-         Q55g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784780447; x=1785385247;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=h0IhZi1OKFPkcst+4yI24dUPIzJuM4pvOmvOBFDuDOw=;
-        b=FVeyMVszaE5UJPrf5mkGgL+Byqh5lEnjIUdSEGO/M8sp00iy+WaIIdyTAjn2mqA48r
-         XELIxJQFcJAL8lfHG78uBzmy6/fAXRyDUVhfAvHyOxxTA1p3sLVGJ2PHdXlBqCr+bgBy
-         o4Bomni/m1T2brdwwW2SL/7/p8AyP6JvNmp9kuC1cHCDqpleSuYq7P1bxd1cn88PFGld
-         v/5Yxnkw885FtEqzwhtteApmUkeME1MDOZDn8KvCoIY6t4k3N2oVrvrjqxvEhsbktD1w
-         jWa/UAD6WpfL5cZi16l+f/TJqBLYXBEQXHGVR/Yb9cJ+NpLGVYKkzzs5eByf1H1cEpm5
-         MAOQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrUQnc9h2DtIGX1mSqezqaH8DRKQAGC7GnJRjSWER5s01KjFtXb3XbtbiIg07S60c/IyGQIhX+opVqX@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBv9OrnqU9yeAewrqFM0P/r6Qz+fyqtyjYKiNlufRJ2LVoiAg3
-	dZhQQOj1SVnX7M82kdPcBogxL1ydD2s9/iDI5hxRrGTPe1mIrsYsZh9lG6E2Hq9KPQ==
-X-Gm-Gg: AR+sD13CRe/n7/mkpYNY95owRh/JJHeB1k3/vexZ2fns9qXVYZ9UojynS5W+ORSyZAm
-	M9F5ROfMA/vpoAfvCnrFmXtOY3Kk4DfjYT7uYRIFfXV2z3zIgt55nCBLiyd/Dhnim+BnVjzfVkr
-	jMhQBdp7zDL2oKaUtioQaKPCsVs5a9gnnZ4YdgRDnGaZ5eVsUdjaL8QupHSVOWwOAzaCynwfd6p
-	nAT1aVX173tuZxLSSGrnWe1zKU5m7uVjix9nE790LKqMUXQoOQISrhQHEyxahBbvAByNiPSopo1
-	1rhG5k3wYzL84rJBFeMVXaCWFqOuRBD1j4KTx/JGgPXHFfEx3xe7Noo2sc9m5hc+3JWdiwvNWIF
-	ColJwvsCBsewwuE0HnowGGPvodEKUXDXTHwFp8x37dH6ZuKhMO8nS48sSBFTRWxppBikUFQThgu
-	vU91jLzZw8RQfe6NUliDUMgpXLatRmACk8A3K/rw==
-X-Received: by 2002:a17:902:f60e:b0:2c1:ee6e:4e49 with SMTP id d9443c01a7336-2cfa53828bdmr1036105ad.26.1784780446559;
-        Wed, 22 Jul 2026 21:20:46 -0700 (PDT)
-Received: from google.com (249.65.83.34.bc.googleusercontent.com. [34.83.65.249])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84e17576a80sm2309404b3a.36.2026.07.22.21.20.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Jul 2026 21:20:45 -0700 (PDT)
-Date: Wed, 22 Jul 2026 21:20:41 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
+	s=arc-20240116; t=1784780518; c=relaxed/simple;
+	bh=X8aoDR71PG2kWt7CZNmFJYHGrmEwi4AcZfUVmYa/+Xk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iVrjVGSxg3cZFkMJwqlzFvTpMrZpT+NZk4cxks26TiOgT1+StDK0GEmZqTKPLm21bUfd/Qp/cI+Bqgq0FQIeeD9JCa7w68rAp/aTc36ZvQ+0chwagY5kILSMoB4VDm/Mg4E7wIOa933XOZEtRxP7iA0GKRRsespflkIz69tqYKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4h5Hww0m9TzYQtqZ;
+	Thu, 23 Jul 2026 12:20:48 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 3FE564058D;
+	Thu, 23 Jul 2026 12:21:18 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.50.85.155])
+	by APP1 (Coremail) with UTF8SMTPSA id cCh0CgCntnK8lmFqSTnpCA--.7917S4;
+	Thu, 23 Jul 2026 12:21:18 +0800 (CST)
+From: Zizhi Wo <wozizhi@huaweicloud.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	bvanassche@acm.org
+Cc: linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>
-Subject: Re: [PATCH v7 0/2] fixup handling of timeouts with deferred QCs
-Message-ID: <amGWmbJXLXGxrFso@google.com>
-References: <20260721064027.2081195-1-dlemoal@kernel.org>
+	yangerkun@huawei.com,
+	chengzhihao1@huawei.com,
+	yukuai@fygo.io,
+	wozizhi@huawei.com,
+	zhousiqi5@huawei.com
+Subject: [PATCH] scsi: core: do not block on tag allocation in scsi_eh_lock_door()
+Date: Thu, 23 Jul 2026 12:12:38 +0800
+Message-ID: <20260723041238.1584632-1-wozizhi@huaweicloud.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260721064027.2081195-1-dlemoal@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgCntnK8lmFqSTnpCA--.7917S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7AFWDurWktr4UJFW3WrWkXrb_yoW5Jr48pr
+	WDWa1qk398WF1093Wqq3sxuFyYvw47C347tF4xW34fAFZ8JFy0vFnrta4jqFWxuF97tF4D
+	Jr1qqFyDWw1UX3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvFb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0E
+	n4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I
+	0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWU
+	tVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcV
+	CY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAF
+	wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvj
+	xUF1v3UUUUU
+X-CM-SenderInfo: pzr2x6tkl6x35dzhxuhorxvhhfrp/
 
-On Tue, Jul 21, 2026 at 03:40:25PM +0900, Damien Le Moal wrote:
-> This patch series fixes libata and libsas to correctly handles deferred
-> queued commands in case of a timeout error, to avoid excessive delays in
-> waking up the scsi EH task.
-> 
-> Igor,
-> 
-> My apologies for the churn, but please retest!
+From: Zizhi Wo <wozizhi@huawei.com>
 
-Test results look good! Thank you for all the time and effort that you
-spent on this issue. I learned a lot!
+scsi_eh_lock_door() is called from scsi_restart_operations() while the host
+is still in the SHOST_RECOVERY state, i.e. before the host is switched back
+to SHOST_RUNNING and scsi_run_host_queues() restarts the queues. It
+allocates a request via scsi_alloc_request() with no flags, so
+blk_mq_get_tag() may block waiting for a free sched tag when all tags are
+already in use.
 
-Tested-by: Igor Pylypiv <ipylypiv@google.com>
+Those tags can be held by commands that were just requeued by
+scsi_eh_flush_done_q() during error handling. Such commands cannot be
+dispatched until the host leaves SHOST_RECOVERY and scsi_run_host_queues()
+is called - which only happens *after* scsi_eh_lock_door() returns.
 
-Best,
-Igor
+This forms a circular dependency:
 
-> Also, I added your Signed-off-by on patch 2 since half of it is yours.
-> 
-> Martin,
-> 
-> Once reviewed, I or you can take both patches ?
-> 
-> Changes from v6:
->  - In patch 1, go back to using direct command completion for retrying
->    deferred QCs, but adds libata EH trigger to avoid problems with the
->    block layer immediately re-issuing the retried commands. This same
->    method also allows directly handling timed out deferred QCs, which
->    simplifies libata EH.
-> 
-> Changes from v5:
->  - Reworked patch 1 to have deferred command retries all go through libata
->    EH to ensure that we do not run into issues with the block layer
->    immediately re-issuing retried deffered commands (which would create
->    again the problem we are trying to solve). This change necessitate the
->    introduction of a new QC flag and changes to the completion path for
->    commands to ATAPI devices.
-> 
-> Changes from v4:
->  - Simplified sas_eh_timed_out() code in patch 2
-> 
-> Changes from v3:
->  - Reimplement ata_scsi_requeue_deferred_qc() in patch 1 as
->    ata_eh_retry_deferred_qc() so that all requeue pathes use the same
->    function.
-> 
-> Changes from v2:
->  - Modified patch 1 to avoid the problem reported by Sashiko that requeued
->    deferred QCs may be re-ssued immediately by the block layer, thus
->    potentially keeping the device busy. The modification now relies on
->    libata-EH to perform the requeue instead of immediately doing it from
->    the eh_timed_out operation.
->  - Modified patch 2 to use the new helper function defined in patch 1.
-> 
-> Changes from v1:
->  - Modified patch 1 to ignore timed out deferred QCs in
->    ata_scsi_requeue_deferred_qc() to let ata_scsi_cmd_error_handler()
->    correctly handle this case.
-> 
-> Damien Le Moal (2):
->   ata: libata-scsi: terminate deferred commands on time out
->   scsi: libsas: terminate deferred commands on time out
-> 
->  drivers/ata/libata-eh.c             |  29 ++------
->  drivers/ata/libata-scsi.c           | 109 +++++++++++++++++++++++++---
->  drivers/ata/libata.h                |   3 +-
->  drivers/scsi/libsas/sas_scsi_host.c |  15 ++++
->  include/linux/libata.h              |   4 +
->  include/scsi/libsas.h               |   2 +
->  6 files changed, 127 insertions(+), 35 deletions(-)
-> 
-> -- 
-> 2.55.0
-> 
+  - scsi_eh_lock_door(), running in the SCSI error handler thread, waits
+    for a sched tag held by a requeued command;
+  - the requeued command cannot complete and release its sched tag until
+    the error handler thread leaves scsi_restart_operations() and restart
+    the queues.
+
+For devices with a single driver tag (e.g. USB storage) it is a guaranteed
+deadlock and I/O that can never be submitted. This problem has also been
+reproduced in our environment.
+
+Locking the door is a best-effort operation, and scsi_eh_lock_door()
+already returns silently when the request allocation fails. Pass
+BLK_MQ_REQ_NOWAIT to scsi_alloc_request() so the allocation fails instead
+of blocking when no tag is available. This breaks the circular dependency
+and allows the error handler to finish restarting the queues, after which
+the pending commands are dispatched normally.
+
+Signed-off-by: Zizhi Wo <wozizhi@huawei.com>
+---
+ drivers/scsi/scsi_error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 147127fb4db9..3d42fe7701b7 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2139,11 +2139,11 @@ static enum rq_end_io_ret eh_lock_door_done(struct request *req,
+ static void scsi_eh_lock_door(struct scsi_device *sdev)
+ {
+ 	struct scsi_cmnd *scmd;
+ 	struct request *req;
+ 
+-	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN, 0);
++	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN, BLK_MQ_REQ_NOWAIT);
+ 	if (IS_ERR(req))
+ 		return;
+ 	scmd = blk_mq_rq_to_pdu(req);
+ 
+ 	scmd->cmnd[0] = ALLOW_MEDIUM_REMOVAL;
+-- 
+2.52.0
+
