@@ -1,206 +1,168 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F0E63C13EE
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 12:47:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 800ED4CA29F
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 13:03:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784810875; cv=none; b=gxjUijXUUo3uzRYKjDB9E+M2PBaahsLgyfM53n/4BRREhwLdudB7hCm1XX1WsHq/JtoKpGfRsWKd0fXmdCdusBCvlD/Gz5eKjDwaj9DkhPQf3FxGPP7lu0QIJ8VsEuNvZB8WZ37Aio0tooF7bl+XNHBe4VCdZXXXyAhbvpBpCcM=
+	t=1784811815; cv=none; b=jxhC7A3b8PUeD4R5x6R+yWZOA5rgysV4Z3gX8S58iH3APiA+VwTs944lKQjbuwnMxaBUMBoDbznd3QkIbcl4TqX43Eoe2gPWCJdrshfBFvlLwzk8ZAi2CfNZ3opc9UV80Y+Apq+07dQgzmpYfeJGOWzr7zuXEX9pMfkwwopgHRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784810875; c=relaxed/simple;
-	bh=/OOWqM+/ChEU9d8362G66BOwQk9kGeX/ndon4wIIahQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kLewSluQ2d0EAYmuVzXG97+TWtUYWUrzglgjHDIbwbxC5hkDXlHSs5KzezbRpcstYOJmD7NnjXAZHY7fTPs557ic7elsyQniAocmS/CNV0EtODDvGv3PkywbuWJ1AKKdriTbiyJXy1y3CjDNawy4Gp8kFym6i0zcXdONU58V7TU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ZVFISBcO; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=f5EG9ZUY; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1784811815; c=relaxed/simple;
+	bh=o4I21Izv9BhqeNzRRuSgO3vorZoOkvzJ/7C19kIPh/I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=tvyqimotf6EvC9PTjAPcRkA9z1eELZy8n3wgoT4nqdw+hK+0jD5HkBifMwIO3EP+vQjCq4/HtNyYNxzXEegVX6il0F7/H5CCF/ZC7zUSKLuUYrwAR5YKNzNtmswDfkI06WIjKgEJrdDfmnyFHDk0M1taU6Y0GAYo/Zcd7Us6orY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=pX9MhGfn; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=aW8yvnf3; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ZVFISBcO";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="f5EG9ZUY"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66N8qWel467146
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 12:47:53 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="pX9MhGfn";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="aW8yvnf3"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66NCvXRE3954477
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 13:03:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=TxDUiGp8SHaAPcdouNgR23yANnHbyiCldl9
-	AoUt6zEI=; b=ZVFISBcOEB6VCAVDLMRI3ohYazPQ6fjJbMy69rfg1wQrpGaqIhg
-	HdAAofDt1I+GqKrtdCD1JhdfYfIuLkD0+VGqncoOyA0goQo/Aeb6wzi/1wWkwVBW
-	Zr7La5jnytK2WzMt2AvNruMd8ZLkQ2NfNn4D9e+yWtO2pa6+6nOmcS7KaQte6iuo
-	LavT4d40zp3zbJzGF7Jl5O3tVh9UZeAFb7yQnNdzN+dy3QaBT0I1v5T2bsglYGSX
-	cnWGCZY2/vbyfXMM8CHXwRjWWTnRclTTwCKD3xPB1ByukdVyiknWgC191UT2s92w
-	auaOI30HTBptaMfGOxhDsI7radPXLiLaZ9Q==
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fk28xv49b-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	uNSSLfxtoiUMkYrN0H0VYtMiS9IIkqhLoMRgaUQ/d9k=; b=pX9MhGfnt1WQ8PVN
+	JO+Zt0Mc/BbxqCMj8s8WwkqpJANa8ojXWaV+oMjOst4HkNViKzrtqkFXtANm4D/t
+	3wuXoScRh67SQ4GoMJciNrzMY3I7rRJ65cxjmF9498scJbeeoW9+fIvgVCeuOUGr
+	fzWyZVOsvngWKHOzjr4DqxcFd03SO4EPKPxkS6fibwGSWWs8XqnHdR7CVD5T2M8w
+	OXQfxdLIDwMR8qnDhsWjKLvOa1FDd8aePtEHMLyF55YZueDeeCh8++NMKd3zziKG
+	YIOcjw/MMhkzWAvJNREXAgQEfdR/gUFbD83Wv87CROEgfxLBuJCA0SyIurxM7HCx
+	Qr1h2w==
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com [209.85.160.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fke0ksf4j-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 12:47:53 +0000 (GMT)
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cb4cdf95b5aso1292300a12.1
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 05:47:53 -0700 (PDT)
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 13:03:23 +0000 (GMT)
+Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-51c069f73e4so1960951cf.1
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 06:03:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1784810873; x=1785415673; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TxDUiGp8SHaAPcdouNgR23yANnHbyiCldl9AoUt6zEI=;
-        b=f5EG9ZUYK418qxhxRUTWRuVWJ9J7Ajcg+bJMllyAQa4qwuh40vWYPZTqe4bT4b1Lu+
-         S0qEupmL+q+zsLRqGjp6vAtVft5EehUW6r6l9G4jv2t80sHjGyErt0hMkHuLMo/L3IHg
-         PuZkq5vJzcniMD0GmLppJx0pHVnAP5mR5OFnF9ZwuKLzOOmNnJJvNz3yLceVSpZZIswn
-         475yVuGv7hpfst9df87kAOHIJAPwBq1+26GnNiwy6NVSDXSDzeraDaDOVoiIJiD/j6Nj
-         nVpviwuH/QkwYm/gJIBFXgfXUKGUdd3A9zde0gyZi2t+dPvTVEim4o/EH/m8xXk+04JU
-         cKHg==
+        d=oss.qualcomm.com; s=google; t=1784811799; x=1785416599; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=uNSSLfxtoiUMkYrN0H0VYtMiS9IIkqhLoMRgaUQ/d9k=;
+        b=aW8yvnf3bR2CK+Cl+zKi+yaLSCFW9H585HG+kPH1KjwbCL7LxGsK9CwYCsBZkAdH33
+         pe17urlP5WGwfXWkXwsmpvT35DlGRk47pQllWzLbx1riE7tT1DDVtv/rqO0QGT1x2vfb
+         gOj8FL2yzDWYyH6LQQdJYPR0gByLpeN5319ACosej2RDqgi3M55Ej8DZ7jLFoh5VocEf
+         WZlVrWCW33CmVFBsYLKpkrCsEr85MZjATvvcWoCS/zxqxqV90JiOMX+CxMW6hDJYlq1k
+         vvqN6x2iSd/RpDQPoXPKaMDCTTYaUOnwGCLwkFsrXWNgK15MiEng1e8jMTW9EekgZIJY
+         6VaA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784810873; x=1785415673;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1784811799; x=1785416599;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=TxDUiGp8SHaAPcdouNgR23yANnHbyiCldl9AoUt6zEI=;
-        b=dM69/BWKEY2MjWUIgC8FuB6ULW4ISh4IFkyyIzCepf/Ss5g6JarW1UWEmWORqxoWPm
-         WzUEyTe3oV9QsW3MV46bQa2djU7VKXByxeBkY6xmSjIEh+iXNRh2fB0KnweuhnM1ZaKs
-         PMRCQFCRKNioBQMKqdQvgglKwc0b8XtAaJhn4Dv+uwq/APAjzdZORFDQ2XiReh9lFbHg
-         Lbgyco2AEGiodv6bjHK40j7+/2yUI8OdusP2D5NyGkhH7wDLYpZ+7jZv3QQ1zr6X3Yxq
-         rKr9v9riF2PDk2kXCg0SIm74apHTKHwQW/E3wt2yRH4bVblC6399UC+uRPGO+hs2koGr
-         /dAg==
-X-Forwarded-Encrypted: i=1; AHgh+RrotnUMuHPV+w02tGk329RIuFLne5+WtUd0eaw3co0gb655lB2aMr3I7f24zs0c5VsM8JPHmmCE7ghL@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy9M1BsKABsQn5FTF+nmpSJ8JG5zWoPN/PenjGGZSe0J7K9xIn6
-	IV3g3RgMc08E1mKJdFjXhCWn4SKBxVS/beI/kFNnRBgGppBeUz2L2leuXpk0y2jAhtxladYzh8H
-	wuD2KXMq91cCpIX08eqYa4cqSl36KbiljNeKlUeG2FV0UR5A6w8XyOOfBm0x9atEU
-X-Gm-Gg: AR+sD10z6QMl8aEQVmY8h8EsA3Y0p5YYX5DPjx6+ziepla/c0htk5LmRDkLbvB3gt0D
-	Q+kr+s4uemIObvNHx+XEXqmVe4T+Di9SfuN6FbW/+FClAIwFt0BmMRem6qoP615oi0Dip4aHZ4b
-	6l2LkXhDCB0PGxURzpOZHXX4Y9ryuz37tfo7jI+Rwiy9aprXNZYLkompJnckK7u+JQ5zTDmQ97Y
-	iqt3PKYrxTdHnCDCx5bWtSFYf6ijNiKd2oLQrgMOJ0TBH3RScg+XLEdx1TMvDILjjpJB4sG1A9R
-	YXq0HtdiHUQeSiF4qsA3yK8K6KumGhDXj4Qg+2lpRi4NjzOduwE7fR3hrBYH88nWRnj5umenaE7
-	jmYj2rAjOgdaA1DktpSMyAWKOmdXgQG6AitQfl+/76+q07qZHlQ==
-X-Received: by 2002:a05:6a20:7483:b0:3b2:8685:1473 with SMTP id adf61e73a8af0-3c44afb58c5mr3374569637.7.1784810872727;
-        Thu, 23 Jul 2026 05:47:52 -0700 (PDT)
-X-Received: by 2002:a05:6a20:7483:b0:3b2:8685:1473 with SMTP id adf61e73a8af0-3c44afb58c5mr3374545637.7.1784810872316;
-        Thu, 23 Jul 2026 05:47:52 -0700 (PDT)
-Received: from QCOM-IvKeorbwK5.na.qualcomm.com ([120.60.139.18])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147e1c9289sm20350504eec.29.2026.07.23.05.47.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 05:47:51 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-To: alim.akhtar@samsung.com, avri.altman@sandisk.com, bvanassche@acm.org,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-        Shawn Guo <shengchao.guo@oss.qualcomm.com>
-Subject: [PATCH] Revert "scsi: ufs: core: Remove unnecessary block I/O quiesce for clock scaling"
-Date: Thu, 23 Jul 2026 14:47:33 +0200
-Message-ID: <20260723124733.341789-1-manivannan.sadhasivam@oss.qualcomm.com>
-X-Mailer: git-send-email 2.43.0
+        bh=uNSSLfxtoiUMkYrN0H0VYtMiS9IIkqhLoMRgaUQ/d9k=;
+        b=naG4CFVKu+LAvxCylKirC8IN0gzSQWgGLsjfAayVfSLS38TJ7ohWT/Ma9IKP0+BA84
+         CWITJOWvfPeuHdYacXm7y0YBfZgAtClQLsc1I+ar5SEkb59gZOi4yeXAvHrVBCSdiiSR
+         LPCHzJyBM52O6lmhvPsdsQnysgrUkfLJRRkgKy1u7xkZiX6Z8QLwitJV2ZO1FIel8GbH
+         h4DnWNq58a+eoja/MXjyQ3tse2aB9374IqF2oxtHLMa9RhO8Enk0WDeWqFshv1RDR7Kx
+         qzuysJTZc8AuaFW2C7uaLyPcD7tqN8uJMicpnxR5HIu1eUUaC/gZVz3Spg4x0Dh2aTEZ
+         i8pQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqYu6utk8VBpJByqlgpLjqLPhD1YBZKvnyXG7fqapvkPyLrV8FreNZV1/y4Mi+xGvFqmMC9SDwuoNMP@vger.kernel.org
+X-Gm-Message-State: AOJu0YwKf2QUmcj6mPNAsebXNGG3faJvua0zq+f3+eyeTOxmvHj+Q62n
+	0JCmKWn5rIiOOswoesvlNN+5gVGaq3MA8oSW6VPmgh8DW0boagwVZKZ+8HvLMN+9QWmB/+jOhHG
+	bLZDG/qM6jzUAZAvQIhg1wHIv8p9ezVYr92ODTcQTgjeJqZgvXjQ3oBc3Bf1Ce6rJ
+X-Gm-Gg: AR+sD12VVmO0epY0/tskkdy1BdtlfW5tn9kMumU2WONsUMsEW8VbyDkZbJtJrd3F8s6
+	hKJCYCx3n5XTqPh00JYrxUZ6T7uiIMG2Cg+XH62ymwscUKVt/L72mh3oD7pvsoIS0N1xo9ZkLsC
+	6rnAednPuGp2fqi+zaDSsRTwRTIHCh+gb9/4EaL2kuRTGyj6YOS6DdSmH6oWxjfR0azSx07s5f/
+	Xs1mvvHg6GU/2q6fhII7pmP2/WeFS5zAIG+8sAVAxQGMd/O//Ui13YcaA0hgqxb7FEHAbFB4c3S
+	pV1IB8ufxnfyFLlzrEDZrJOziM8WUXQVFFkWZBbyzBZLiGCOjNFyveTmdUwh8FLdYLHq9d2yTNF
+	BQ1KzA++8BdVPBTqytlu7hwMz
+X-Received: by 2002:a05:622a:64f:b0:51c:83f1:bcd4 with SMTP id d75a77b69052e-5283db3bd2fmr22151561cf.0.1784811799012;
+        Thu, 23 Jul 2026 06:03:19 -0700 (PDT)
+X-Received: by 2002:a05:622a:64f:b0:51c:83f1:bcd4 with SMTP id d75a77b69052e-5283db3bd2fmr22150981cf.0.1784811798317;
+        Thu, 23 Jul 2026 06:03:18 -0700 (PDT)
+Received: from [192.168.120.193] ([178.235.128.140])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b2a9f48edcsm991679e87.73.2026.07.23.06.03.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Jul 2026 06:03:16 -0700 (PDT)
+Message-ID: <b23c6186-bc24-4312-b5eb-3a6c5f459b55@oss.qualcomm.com>
+Date: Thu, 23 Jul 2026 15:03:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: ETTGYRn5B_GhPZbM8QtgZxjpKbqP_DXP
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIzMDEyNiBTYWx0ZWRfX/f7CAbxs6M7m
- xpyINT5S27v/2LM9HUCq+I6zmGtBgSeTR1NGyBS/RQM0evPrP4ZG0id5w3Tu5edUkbAbEUR61U/
- ZTA3ji9GXhavpgd3tbqTyvOZvTZZnNw=
-X-Proofpoint-GUID: ETTGYRn5B_GhPZbM8QtgZxjpKbqP_DXP
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIzMDEyNiBTYWx0ZWRfX22m0j5jVfC9p
- GICfcVD5jFlzOza9lkBIlNdNpBcsXwSZ/AYsaOzi5oiWXYGVoOAaUSrdVdvFByXzdbgqlS7mAZA
- cLXp+5kAGzhTIRKYofPJwrt6ZQAuIDtm+izcCY9LsPEDTiBzbRxplFVvvOC5ESWqS1idMPN8qXb
- QdmmIJg3b8UKi9hov7K+I6TL4P+YwyGvoQ8o12OlSQjAalw58cPAG/NqMHTzOWdHllnCbAPKTm/
- H0oMNRo/r5QmO42z5rU0KLQuGdXhQXhBcu1pBcCQ27ItziWIpH6BWENbBs4zmS6vWl7k1Ycc9yO
- c4CFw0r2QxGapyl/Nhq9XeNBrCM1X/LVRsuVyMn8TNhpelMQsMyMk+tpM6Uo+3ma759NzUnw55D
- WvP18f7LtYjhPNninONFbWcGwIuh0vjlMUUuWBgH58gQf42A0jd2N1bNMMRTrbPKgREth1KTI0K
- EOEwi/zRgWoRef8eWYw==
-X-Authority-Analysis: v=2.4 cv=WNxPmHsR c=1 sm=1 tr=0 ts=6a620d79 cx=c_pps
- a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=fabVTapF7hbH8ecADQZKXA==:17
- a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=KsTwQG257LBwhBlho30A:9 a=3WC7DwWrALyhR5TkjVHa:22
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] Revert "scsi: ufs: core: Remove unnecessary block I/O
+ quiesce for clock scaling"
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+        alim.akhtar@samsung.com, avri.altman@sandisk.com, bvanassche@acm.org,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Shawn Guo <shengchao.guo@oss.qualcomm.com>
+References: <20260723124733.341789-1-manivannan.sadhasivam@oss.qualcomm.com>
+Content-Language: en-US
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20260723124733.341789-1-manivannan.sadhasivam@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: e_PybvpcaypYUH0IuGlR9lf8l0d9X2YM
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIzMDEyOSBTYWx0ZWRfX+KuLKzUqGZPs
+ XT/dum4qg96wVkgXMdQ+txdpyzenlOuHuITw3+AWLUisVbWZQmJghnVIcBljwHVoLjg/UeXcKrE
+ eEoWsqiZKlznryaXDIGfKbI4np0uiTI=
+X-Authority-Analysis: v=2.4 cv=S7DpBosP c=1 sm=1 tr=0 ts=6a62111b cx=c_pps
+ a=EVbN6Ke/fEF3bsl7X48z0g==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=vq3bXs1Fwz2bHWXBoJUA:9 a=QEXdDO2ut3YA:10
+ a=a_PwQJl-kcHnX1M80qC6:22
+X-Proofpoint-GUID: e_PybvpcaypYUH0IuGlR9lf8l0d9X2YM
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIzMDEyOSBTYWx0ZWRfX0pIsgMlwdn7G
+ uXpdnK57UryfDsrVFrwRdZn1raen1XQAb228V1kqYCL5XgA+fogkJ+H5hmpwR1546BQDZ2mlOE2
+ ARMccldCJJ2uJYpEcUlA1MtEfXgVkpP4un3PKPL+pvf0WiEqJ5iwu4qUPkZcqfNYRI+umh7lOvd
+ Q8hQCWFAn/7zplYH9dXzO8jEfpa5Ew2L1pU9VkxVd+sNxLliX3pKUCfLLqtNc7QTMUuNzYqfiD2
+ xUWJeyG9reaBZANs10BBj7vxPvz3shjaqnsH3bUsmCWphxoaSxYqs+bwnCQolzmbC6moQDW9tzb
+ /oUPFXBdCTId4aJ5ZiAqlBtzLZBtfewGnWloMCux1P3vPPbQsAb4oL/aXVZzk2eMKgRviWz7b24
+ hvIajyidYgNwfOl4tTT8ltLUn7FBeta6TywCdg3THICHauvrX8IXLmk1k/0QdKeGgOjAPOEp62j
+ 5nQ3e7yg69RU2SPeNIQ==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-23_03,2026-07-22_02,2025-10-01_01
+ definitions=2026-07-23_04,2026-07-22_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 bulkscore=0 priorityscore=1501 malwarescore=0 phishscore=0
- impostorscore=0 suspectscore=0 clxscore=1011 spamscore=0 lowpriorityscore=0
+ spamscore=0 lowpriorityscore=0 malwarescore=0 suspectscore=0 bulkscore=0
+ priorityscore=1501 adultscore=0 impostorscore=0 phishscore=0 clxscore=1015
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607230126
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607230129
 
-This reverts commit 85b2b966285498e1b551ac85f02c79cd06c0cff0.
+On 7/23/26 2:47 PM, Manivannan Sadhasivam wrote:
+> This reverts commit 85b2b966285498e1b551ac85f02c79cd06c0cff0.
+> 
+> Qcom UFS Host Controllers do not support scaling clocks when the traffic is
+> ongoing. But the offending commit removed the block I/O quiesce in the
+> clock scaling path, which causes below UFS failures during clock scaling:
+> 
+> ufshcd-qcom 1d84000.ufshc: ufshcd_check_errors: saved_err 0x80 saved_uic_err 0x0
+> ufshcd-qcom 1d84000.ufshc: ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0; saved_err = 0x80; saved_uic_err = 0x0; force_reset = 0
+> ufshcd-qcom 1d84000.ufshc: pwr ctrl cmd 0x2 with (MIBattribute 0x1571, mode 0x11) completion timeout
+> ufshcd-qcom 1d84000.ufshc: UFS Host state=3
+> ufshcd-qcom 1d84000.ufshc: 7 outstanding reqs, tasks=0x0
+> ufshcd-qcom 1d84000.ufshc: saved_err=0x80, saved_uic_err=0x0
+> ufshcd-qcom 1d84000.ufshc: Device power mode=1, UIC link state=1
+> ufshcd-qcom 1d84000.ufshc: PM in progress=0, sys. suspended=0
+> ufshcd-qcom 1d84000.ufshc: Auto BKOPS=0, Host self-block=0
+> ufshcd-qcom 1d84000.ufshc: Clk gate=1
+> ufshcd-qcom 1d84000.ufshc: last_hibern8_exit_tstamp at 196451913 us, hibern8_exit_cnt=20
+> ufshcd-qcom 1d84000.ufshc: error handling flags=0x0, req. abort count=0
+> ufshcd-qcom 1d84000.ufshc: hba->ufs_version=0x300, Host capabilities=0x1587031f, caps=0x124f
+> ufshcd-qcom 1d84000.ufshc: quirks=0x0, dev. quirks=0x310c4
+> ufshcd-qcom 1d84000.ufshc: UFS dev info: SAMSUNG  KLUDG4UHDB-B2D1  rev 0400
+> ufshcd-qcom 1d84000.ufshc: clk: core_clk, rate: 300000000
+> ufshcd-qcom 1d84000.ufshc: clk: core_clk_unipro, rate: 300000000
+> 
+> Hence, revert the commit to bring back UFS on all Qcom platforms.
+> 
+> Reported-by: Shawn Guo <shengchao.guo@oss.qualcomm.com>
+> Closes: https://lore.kernel.org/linux-scsi/al8YkXydXJQZrl_Y@QCOM-aGQu4IUr3Y
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
 
-Qcom UFS Host Controllers do not support scaling clocks when the traffic is
-ongoing. But the offending commit removed the block I/O quiesce in the
-clock scaling path, which causes below UFS failures during clock scaling:
+Tested-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com> # SC8280XP CRD
 
-ufshcd-qcom 1d84000.ufshc: ufshcd_check_errors: saved_err 0x80 saved_uic_err 0x0
-ufshcd-qcom 1d84000.ufshc: ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0; saved_err = 0x80; saved_uic_err = 0x0; force_reset = 0
-ufshcd-qcom 1d84000.ufshc: pwr ctrl cmd 0x2 with (MIBattribute 0x1571, mode 0x11) completion timeout
-ufshcd-qcom 1d84000.ufshc: UFS Host state=3
-ufshcd-qcom 1d84000.ufshc: 7 outstanding reqs, tasks=0x0
-ufshcd-qcom 1d84000.ufshc: saved_err=0x80, saved_uic_err=0x0
-ufshcd-qcom 1d84000.ufshc: Device power mode=1, UIC link state=1
-ufshcd-qcom 1d84000.ufshc: PM in progress=0, sys. suspended=0
-ufshcd-qcom 1d84000.ufshc: Auto BKOPS=0, Host self-block=0
-ufshcd-qcom 1d84000.ufshc: Clk gate=1
-ufshcd-qcom 1d84000.ufshc: last_hibern8_exit_tstamp at 196451913 us, hibern8_exit_cnt=20
-ufshcd-qcom 1d84000.ufshc: error handling flags=0x0, req. abort count=0
-ufshcd-qcom 1d84000.ufshc: hba->ufs_version=0x300, Host capabilities=0x1587031f, caps=0x124f
-ufshcd-qcom 1d84000.ufshc: quirks=0x0, dev. quirks=0x310c4
-ufshcd-qcom 1d84000.ufshc: UFS dev info: SAMSUNG  KLUDG4UHDB-B2D1  rev 0400
-ufshcd-qcom 1d84000.ufshc: clk: core_clk, rate: 300000000
-ufshcd-qcom 1d84000.ufshc: clk: core_clk_unipro, rate: 300000000
-
-Hence, revert the commit to bring back UFS on all Qcom platforms.
-
-Reported-by: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-Closes: https://lore.kernel.org/linux-scsi/al8YkXydXJQZrl_Y@QCOM-aGQu4IUr3Y
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/ufs/core/ufshcd.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 79331c2bd38d..1a5a851d43b2 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1445,7 +1445,7 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, u32 target_gear, bool scale_up
-  *
-  * Return: 0 upon success; -EBUSY upon timeout.
-  */
--static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
-+static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
- {
- 	int ret = 0;
- 	/*
-@@ -1453,13 +1453,16 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
- 	 * clock scaling is in progress
- 	 */
- 	mutex_lock(&hba->host->scan_mutex);
-+	blk_mq_quiesce_tagset(&hba->host->tag_set);
- 	mutex_lock(&hba->wb_mutex);
- 	down_write(&hba->clk_scaling_lock);
- 
--	if (!hba->clk_scaling.is_allowed) {
-+	if (!hba->clk_scaling.is_allowed ||
-+	    ufshcd_wait_for_pending_cmds(hba, timeout_us)) {
- 		ret = -EBUSY;
- 		up_write(&hba->clk_scaling_lock);
- 		mutex_unlock(&hba->wb_mutex);
-+		blk_mq_unquiesce_tagset(&hba->host->tag_set);
- 		mutex_unlock(&hba->host->scan_mutex);
- 		goto out;
- 	}
-@@ -1475,6 +1478,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
- {
- 	up_write(&hba->clk_scaling_lock);
- 	mutex_unlock(&hba->wb_mutex);
-+	blk_mq_unquiesce_tagset(&hba->host->tag_set);
- 	mutex_unlock(&hba->host->scan_mutex);
- 
- 	/* Enable Write Booster if current gear requires it else disable it */
-@@ -1502,7 +1506,7 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, unsigned long freq,
- 
- 	new_gear = ufshcd_vops_freq_to_gear_speed(hba, freq);
- 
--	ret = ufshcd_clock_scaling_prepare(hba);
-+	ret = ufshcd_clock_scaling_prepare(hba, 1 * USEC_PER_SEC);
- 	if (ret)
- 		return ret;
- 
--- 
-2.43.0
-
+Konrad
