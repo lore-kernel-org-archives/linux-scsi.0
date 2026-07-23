@@ -1,154 +1,135 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F9536B909
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 16:37:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3722F383323
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 16:47:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784824679; cv=none; b=VltZaTADeUzf1WujCOPbyW2+1GzEyb06q8wvWvNTNfN/kyema0c9JKD5WJWCE2VUBG6M9t0tr2l816AJ0d1YtM2xjxejzYcNXwIeDRI9QOHdyjSM1WxEK6oIENbtSQH7fJQUStqZwDNYJXLwf3bquCzrWOL7ITA0qxS2HqAfQH8=
+	t=1784825239; cv=none; b=E60KZNHz9q7Eu8ITkBen87n2RN9VVZAChvpyiR/ShE21xqsTNw+N3Y/pYt9gHx7LVclv0ceFWGTDSy/8Y5s6tNSv8T/qYSmtWQ2Otd4p6gmiQ7TPxChhyEuPSGnVF5m7PRXQiBP5FjaCtGwULbmcYLqMO/q/9fIluFC5pYy8MsI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784824679; c=relaxed/simple;
-	bh=DFd9dt5y9JGMgEV69pl90+yVQfFmUipOmqgcExQa2Sc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BJQlbA4U2yXgJjQDq5T4ldLTeiuPretr4RyadAdS9Slt4XizR7EkJOo3RhpaJoiNjq8Em5Gnjg8bHhausprtTfzp1mGV1G+qRKNTYjYlnqfK5y6tIlArbzXETLTqkdqnaw73UOMobNjJT69qLU6xRBWcDMcKiBsiLiwksqsWmVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GVikHgqb; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1784825239; c=relaxed/simple;
+	bh=8vMerEuvfBxaemHbIKhpZZltlJdAIRj71VHQWz+n9fs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=JpsVfKnAs+bID2n++cA6U6gEyeKkhnKBBjrxjdPAMUosKxc6XgZONnooZSgxVfTrL5+qGlbnesM0WKzAncmMBLWTh9bZy2NhMYVN06dFVMqA45icenVWWofF2fopgG8x2Xu0S3VUzAs6jq3bAeDB2CsrPlQBFoXVu0ueAjvtDjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ICxkt00U; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GVikHgqb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1784824675;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=PqJJwyPcyrJA489wBly1PHlAUlC9pJG9hGeVBDyySeo=;
-	b=GVikHgqbtcL8rS8O9QW7+/RILMgUMhkmJrkC65ZcYvKc5o9G2Ikm5a8+Mf9wA/HP+d2Hrm
-	Hu7Jz+sHhhpjG3iopl2fEQh3NDRaFqnGlM1/pR6sDiRKhgWkaJXdhVOHxzi6RbYU3SU4F+
-	+z27MF9AqMJMMR5O4nJV9LncGceG3sQ=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-280-4jqHKfLsMpiKJQfr8iMTOA-1; Thu,
- 23 Jul 2026 12:37:52 -0400
-X-MC-Unique: 4jqHKfLsMpiKJQfr8iMTOA-1
-X-Mimecast-MFC-AGG-ID: 4jqHKfLsMpiKJQfr8iMTOA_1784824671
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EA024180AA7D;
-	Thu, 23 Jul 2026 16:37:50 +0000 (UTC)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb (unknown [10.22.65.166])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BE3CB18002AE;
-	Thu, 23 Jul 2026 16:37:48 +0000 (UTC)
-From: Laurence Oberman <loberman@redhat.com>
-To: "K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>,
-	Dexuan Cui <decui@microsoft.com>,
-	Long Li <longli@microsoft.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Laurence Oberman <loberman@redhat.com>,
-	linux-hyperv@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: storvsc: Support manual scans for all Hyper-V targets
-Date: Thu, 23 Jul 2026 12:37:43 -0400
-Message-ID: <20260723163743.1274830-1-loberman@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ICxkt00U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B6E11F000E9;
+	Thu, 23 Jul 2026 16:47:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784825237;
+	bh=pMmguTeyZr4b7w1v6VpGcn0MeHFEUcrdiK3FviJFEfc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ICxkt00U4oCytAIYqJFat21sWwtx9IciYO5AvXJGNeMIjkLpvXGGsowhHyUPC43Dt
+	 89lLVOjM0YmzP6YQkBa6szy8G42uNjW8DJ+BEJ/r8PruuRYm3uz97aCG9S7RkKXOb7
+	 hJKBhVt1K7qPPREMP9vwjXfGBlVodNCGH1EJaQq+O4P5UDEuhrNWa4ksY5MKUJ3jB9
+	 WuAmqy8its2uk6N3T8wW9YdmxNoq/Kjvle8pkVXFgkwEs7YMFzAoo7efWiluWcZRcq
+	 JKQRFfS79+Vsl+0mwcxqfDk+b76XDEsBH/OWfuPjNqKwuFzVjh5W+oflCflvs3/3mx
+	 x6RxhaO85Swew==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 38/56] scsi: qla2xxx: Add LS4 pass-through IOCB
+ handling for 29xx series
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nilesh Javali" <njavali@marvell.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260723050413.3897522-39-njavali@marvell.com>
+References: <20260723050413.3897522-1-njavali@marvell.com>
+ <20260723050413.3897522-39-njavali@marvell.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 23 Jul 2026 16:47:13 +0000
+Message-Id: <20260723164717.8B6E11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-The Fibre Channel transport topology created by storvsc exposes only one
-dummy remote port per SCSI host. Its scsi_target_id is always zero.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-As a result, the FC transport user-scan path looks up the remote port using
-target ID 0. It cannot initiate a scan for Target 1 or higher. No SCSI
-command is therefore sent to Hyper-V when userspace explicitly requests a
-scan of one of these targets.
+New issues:
+- [High] The 29xx extended NVMe LS reject path truncates 9-bit virtual port=
+ indices (vp_idx >=3D 256) to 8 bits, potentially causing the reject IOCB t=
+o be sent on the wrong vport.
 
-storvsc itself supports up to STORVSC_FC_MAX_TARGETS and already passes
-scmnd->device->id to Hyper-V as vm_srb->target_id. Devices on Target 1 and
-higher work when initially discovered. They can also be rediscovered by a
-full host scan, such as the scan triggered after an FC port bounce.
+Pre-existing issues:
+- [High] The function qla_nvme_ls_reject_iocb() modifies the hardware reque=
+st queue and a shared DMA buffer without holding the required queue locks, =
+causing queue corruption.
+--
 
-Provide a storvsc-specific user_scan callback that uses the exported
-scsi_scan_target() interface. Iterate over the requested channel and target
-ranges so that wildcard and explicitly addressed scans retain the expected
-SCSI sysfs scan semantics.
+--- Patch [38]: [PATCH v6 38/56] scsi: qla2xxx: Add LS4 pass-through IOCB h=
+andling for 29xx series ---
+commit f75839a47ccdbe873640f70512142d6ebee38618
+Author: Manish Rangankar <mrangankar@marvell.com>
+Date:   Thu Jul 23 05:03:55 2026 +0000
 
-This bypasses the single-rport lookup in fc_user_scan() and allows
-userspace to explicitly scan any target supported by storvsc without
-requiring one synthetic fc_rport for every Hyper-V target.
+    scsi: qla2xxx: Add LS4 pass-through IOCB handling for 29xx series
+   =20
+    Extend the LS4 pass-through IOCB handling to support the 128-byte
+    pt_ls4_request_ext layout used by 29xx series adapters. The extension
+    grows inline DSD capacity from 2 to 5 entries.
 
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
----
+> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
+vme.c
+> index 8fa980db6ce4e..0038b6274d444 100644
+> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+> @@ -1197,37 +1197,57 @@ static void qla_nvme_fc_format_rjt(void *buf, u8 =
+ls_cmd, u8 reason,
 
-Changes in v2:
-- Replace the private, unexported scsi_scan_host_selected() helper with
-  the exported scsi_scan_target() interface.
-- Preserve wildcard channel and target scan behavior.
-- Verify that storvsc_eh_timed_out() does not use the FC error-handler
-  helpers; the reported missing-rport dereference is not present.
+[ ... ]
 
- drivers/scsi/storvsc_drv.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+> +	if (IS_QLA29XX(ha)) {
+> +		struct pt_ls4_request_ext *ext =3D lsrjt_iocb;
+> +
+> +		ext->vp_index =3D cpu_to_le16(a->vp_idx);
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 571ea549152b..58b6ae96d03f 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -520,6 +520,36 @@ static void storvsc_host_scan(struct work_struct *work)
- 	scsi_scan_host(host);
- }
- 
-+#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
-+static int storvsc_user_scan(struct Scsi_Host *host,
-+			     unsigned int channel,
-+			     unsigned int id,
-+			     u64 lun)
-+{
-+	unsigned int first_channel, last_channel;
-+	unsigned int first_id, end_id;
-+	unsigned int ch, target;
-+
-+	if ((channel != SCAN_WILD_CARD && channel > host->max_channel) ||
-+	    (id != SCAN_WILD_CARD && id >= host->max_id) ||
-+	    (lun != SCAN_WILD_CARD && lun >= host->max_lun))
-+		return -EINVAL;
-+
-+	first_channel = channel == SCAN_WILD_CARD ? 0 : channel;
-+	last_channel = channel == SCAN_WILD_CARD ? host->max_channel : channel;
-+	first_id = id == SCAN_WILD_CARD ? 0 : id;
-+	end_id = id == SCAN_WILD_CARD ? host->max_id : id + 1;
-+
-+	for (ch = first_channel; ch <= last_channel; ch++) {
-+		for (target = first_id; target < end_id; target++)
-+			scsi_scan_target(&host->shost_gendev, ch, target, lun,
-+					 SCSI_SCAN_MANUAL);
-+	}
-+
-+	return 0;
-+}
-+#endif
-+
- static void storvsc_remove_lun(struct work_struct *work)
- {
- 	struct storvsc_scan_work *wrk;
-@@ -2232,6 +2262,8 @@ static int __init storvsc_drv_init(void)
- 	fc_transport_template = fc_attach_transport(&fc_transport_functions);
- 	if (!fc_transport_template)
- 		return -ENODEV;
-+
-+	fc_transport_template->user_scan = storvsc_user_scan;
- #endif
- 
- 	ret = vmbus_driver_register(&storvsc_drv);
--- 
-2.55.0
+[Severity: High]
+Does this truncate 9-bit virtual port indices (vp_idx >=3D 256)?
 
+The struct pt_ls4_request_ext widens vp_index to a 16-bit integer, but the=
+=20
+intermediate struct qla_nvme_lsrjt_pt_arg still defines vp_idx as a u8.=20
+
+Assigning a->vp_idx to ext->vp_index will drop the highest bit for any index
+over 255. Will this cause the reject IOCB to be sent on the wrong vport if
+an initiator sends an invalid request to a high-numbered vport?
+
+> +		ext->tx_byte_count =3D cpu_to_le32(a->tx_byte_count);
+> +		ext->rx_byte_count =3D 0;
+
+[ ... ]
+
+>  static int
+>  qla_nvme_ls_reject_iocb(struct scsi_qla_host *vha, struct qla_qpair *qp,
+>  			struct qla_nvme_lsrjt_pt_arg *a, bool is_xchg_terminate)
+>  {
+> -	struct pt_ls4_request *lsrjt_iocb;
+> +	void *lsrjt_iocb;
+> =20
+>  	lsrjt_iocb =3D __qla2x00_alloc_iocbs(qp, NULL);
+
+[Severity: High]
+This is a pre-existing issue, but does calling __qla2x00_alloc_iocbs() here
+modify the hardware request queue safely?
+
+__qla2x00_alloc_iocbs() typically requires the hardware queue lock=20
+(qp_lock_ptr) to be held to safely manipulate ring buffer pointers.=20
+However, qla_nvme_ls_reject_iocb() is called from qla2xxx_process_purls_pkt=
+()
+in a workqueue context without holding the hardware_lock or qp_lock.
+
+Additionally, it can be called from qla24xx_process_nvme_ls4_unsol() in
+interrupt context holding hardware_lock, but not qp_lock. Can this concurre=
+nt
+lockless access cause queue corruption or garbled NVMe reject payloads?
+
+>  	if (!lsrjt_iocb) {
+>  		ql_log(ql_log_warn, vha, 0x210e,
+>  		       "qla2x00_alloc_iocbs failed.\n");
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723050413.3897=
+522-1-njavali@marvell.com?part=3D38
