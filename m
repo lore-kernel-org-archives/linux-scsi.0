@@ -1,106 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 485564322F1
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 10:05:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 355B6415F3A
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jul 2026 10:09:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784801116; cv=none; b=swWYr3nvhj8L7xPij8MNnjP0ohPzqVu6SW2drMOMFUhJKShgPRHghXbcuPc36SpixNrZxZ/E7qGrDeMIEgyB9yten9dhzpoDQ0kUkN36/Ak9iOIUNVUrPCN6//7dHGHbrFDMdTFve/tYjeuy6IadB0rI9pGe+BvQl90N9Ks6JGc=
+	t=1784801371; cv=none; b=Tuwp5DH0abLg5GFp1tSgMU0S/qQujeMFpg9FK4Lfrjdhw5OI/A8tr6vewNhpQaHeTbLhZR75hgrVp/j8wPBkMOVUV/Apdz0vDszNzxb86quiUpTThMxtmKsfmbh2+JyZKljGbi3I6rNh9EbfvIDeN1uQHoj9PQaFWj3mDjiJML4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784801116; c=relaxed/simple;
-	bh=WLjZEU+9/hkWS5UQUb0qABvyOoNip57R3KCu/sOL+3g=;
+	s=arc-20240116; t=1784801371; c=relaxed/simple;
+	bh=bsiAddIHlmlP+9ymxrG8PBtXlaJ1zSEhkBJywr4GsCM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Kg/9vIXaNIp8HANMuZsNPmNZtUeFWRiWteRn/jtJlp+/7RPTSgSxrFibhFJXlyNvejmePXfjxdFDYkd1CcSrgCgj8xTa8zKt6zHvonD4W5wwB8TuHphwESMbU2VCTwaJZ7Ref03GY5fK/BOf27W4uh8H4+TSQE0cCWf/8ZbyvkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KK28ZIsB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=lTU8gOnvlPELazxsPUEx1AfQXaPk4d/eO9nWwEhlvF/j/gAusd0nOhccugupOs55dJCz7ZIt4FJobLB98rcPjLfXPhORj4UR18rOqed/E2eQjHFl9SCR6OCymj1E1hZBtNDYa2faUtmorNH/tNzDez2IpTeY+iuNk7pb5D0Vp5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ewhg7+tL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KK28ZIsB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C08011F000E9;
-	Thu, 23 Jul 2026 10:05:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ewhg7+tL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A000D1F00A3A;
+	Thu, 23 Jul 2026 10:09:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784801115;
-	bh=hSHlHY+3FxXIv1mtc51j1V49vNf1EM8xyIUhHRhL4ws=;
+	s=k20260515; t=1784801369;
+	bh=4/cDP2RHEeqUDiwWo1rBNbH0C1zAi31czGVttV1PC+I=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KK28ZIsB+OX0iBI9w515DnwYOj4ociP9pHdTgTAdIjy0YdL5A1ixBFXwKtfYhVRFo
-	 GF6Dc+eZm/u/XezYax82TvZA0X1AReAhRgnGAWfyH8tmT8PfN2q8MMwUstFgns9rPS
-	 zHr7q3WKiFLGFalTG1JAhIelNw+qAad1+3AxioBz1W9vHDaVZ+5inc0Pg5pJmqRMtr
-	 f3KyoT/0KV5tcKzYqwR7Pd5fuMj7smIgFz5NdQZx5u+DpjDZyy6PKliQg82Fv/tg6s
-	 uyjzWr8XqaPw6iybPEbZee9eQ3oqqLzj2EKCnAGLDg+qasK2pcVBxQdsqOG0r/N3pj
-	 3sr3QkxuhCFVA==
+	b=ewhg7+tLhXCFRwb66YLB9u5bF97p45SrqIjSY5yKbO7llif0oSd5fcn7QDbWUU4f9
+	 xKPFQo2e1vpbyv0aE3I7sfPsJfMTx2uVFbwzEbyU0FOilsLxoTIoPIArCtqCnoBq2z
+	 DMFfGMarEV3tH3G7XzW8EYhjZgQcBJhuCNjYNjPP2Ph+BSFtW2gjI0VUdvS4tmrnmY
+	 W4OISC9rn+L5kSq91QjHu3CRqSzQNq0AZvujXtzaDp49lAA4zaFVLYv1qZftxzJfOZ
+	 /+CWkj7NlPussFKWszxtaaO2OUsl9bMYhwJJ5rvGW8fc/X5eBmVaOVnuxDJdS1qg6W
+	 8YZqiAP0mSbaw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 07/28] libmultipath: Add sysfs helpers
+Subject: Re: [PATCH v4 09/28] libmultipath: Add support for block device
+ IOCTL
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260723093627.2327456-8-john.g.garry@oracle.com>
+In-Reply-To: <20260723093627.2327456-10-john.g.garry@oracle.com>
 References: <20260723093627.2327456-1-john.g.garry@oracle.com>
- <20260723093627.2327456-8-john.g.garry@oracle.com>
+ <20260723093627.2327456-10-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 23 Jul 2026 10:05:14 +0000
-Message-Id: <20260723100514.C08011F000E9@smtp.kernel.org>
+Date: Thu, 23 Jul 2026 10:09:29 +0000
+Message-Id: <20260723100929.A000D1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Calling `kstrtouint()` with an `int *` argument causes a compiler =
-warning and leads to sign-extension overflow when parsed.
+- [Critical] Bypass of partition-based security restrictions for block ioct=
+ls by passing the underlying whole-disk block device (part0) to the lower d=
+river's ioctl.
+- [High] Holding the SRCU read lock around the underlying block device IOCT=
+L causes an ABBA deadlock if the IOCTL triggers or blocks on path removal.
 --
 
---- Patch [7]: [PATCH v4 07/28] libmultipath: Add sysfs helpers ---
-commit ebebf59df39aef065973319479be0a19b5308cb0
-Author: John Garry <john.g.garry@oracle.com>
+--- Patch [9]: [PATCH v4 09/28] libmultipath: Add support for block device =
+IOCTL ---
+commit 8ca4b41fee0b6082cd169ad8577365e7f205461d
+Author: John Garry <john.garry@linux.dev>
+Subject: libmultipath: Add support for block device IOCTL
 
-libmultipath: Add sysfs helpers
-   =20
-This adds helpers for driver sysfs code to get/set iopolicy, show device pa=
-ths
-per NUMA node, and manage multipath attribute groups.
+This commit adds mpath_bdev_ioctl() as a multipath block device ioctl
+handler. It delegates the ioctls to the underlying path's block device
+operations.
 
 > diff --git a/lib/multipath.c b/lib/multipath.c
-> new file mode 100644
-> index 0000000000000..3ff4f42a096c2
-> --- /dev/null
+> index 0232f51f64742..fc8ba8fc501f1 100644
+> --- a/lib/multipath.c
 > +++ b/lib/multipath.c
 
 [ ... ]
 
-> +ssize_t mpath_delayed_removal_secs_store(struct mpath_head *mpath_head,
-> +			const char *buf, size_t count)
+> @@ -478,11 +478,44 @@ static void mpath_bdev_release(struct gendisk *disk)
+>  	mpath_put_head(mpath_head);
+>  }
+> =20
+> +static int mpath_bdev_ioctl(struct block_device *bdev, blk_mode_t mode,
+> +		    unsigned int cmd, unsigned long arg)
 > +{
-> +	ssize_t ret;
-> +	int sec;
+> +	struct gendisk *disk =3D bdev->bd_disk;
+> +	struct mpath_head *mpath_head =3D mpath_gendisk_to_head(disk);
+> +	struct mpath_device *mpath_device;
+> +	int srcu_idx, err;
 > +
-> +	ret =3D kstrtouint(buf, 0, &sec);
+> +	srcu_idx =3D srcu_read_lock(&mpath_head->srcu);
+> +	mpath_device =3D mpath_find_path(mpath_head);
+> +	if (!mpath_device) {
+> +		err =3D -EWOULDBLOCK;
+> +		goto out_unlock;
+> +	}
+> +
+> +	if (!mpath_device->disk->fops->ioctl) {
+> +		err =3D -EOPNOTSUPP;
+> +		goto out_unlock;
+> +	}
+> +
+> +	err =3D mpath_device->disk->fops->ioctl(
+> +			mpath_device->disk->part0, mode, cmd, arg);
+
+[Severity: Critical]
+Does passing part0 bypass partition-based security restrictions in the
+underlying driver?
+
+When an unprivileged user issues an ioctl on a multipath partition, this
+code delegates it but passes the whole-disk block device (part0) instead of
+the partition's block device.
+
+Underlying drivers, such as NVMe via nvme_ioctl(), rely on
+bdev_is_partition() to detect partition-level access and deny unprivileged
+passthrough commands. Since part0 is passed, bdev_is_partition() evaluates
+to false, tricking the lower driver into skipping containment checks.
+
+Could this allow unprivileged users with access to a multipath partition to
+execute passthrough commands on the entire underlying physical device?
 
 [Severity: High]
-Does kstrtouint() properly handle being passed a pointer to a signed int?
-If a user writes a value >=3D 2147483648 to this sysfs attribute, could the
-parsed value be interpreted as negative?
+Can holding the SRCU read lock across the underlying ioctl cause a deadlock?
 
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	mutex_lock(&mpath_head->lock);
-> +	mpath_head->delayed_removal_secs =3D sec;
+If the underlying ioctl initiates a path removal, such as a passthrough
+command that deletes an NVMe namespace or resets a controller, the teardown
+code path will synchronously wait for SRCU readers to exit via
+synchronize_srcu().
 
-[Severity: High]
-If sec is evaluated as a negative number here, does this assignment
-sign-extend the value into the unsigned long delayed_removal_secs field?
+Since the ioctl thread still holds the SRCU read lock while waiting for the
+command or removal to complete, synchronize_srcu() will block forever.
 
-This could result in an extremely large 64-bit value, which might cause a
-permanent resource leak of the multipath disk structures when
-mod_delayed_work() delays the removal indefinitely.
-
-> +	if (sec)
-> +		set_bit(MPATH_HEAD_QUEUE_IF_NO_PATH, &mpath_head->flags);
-> +	else
-> +		clear_bit(MPATH_HEAD_QUEUE_IF_NO_PATH, &mpath_head->flags);
-> +	mutex_unlock(&mpath_head->lock);
+> +out_unlock:
+> +	srcu_read_unlock(&mpath_head->srcu, srcu_idx);
+> +	return err;
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723093627.2327=
-456-1-john.g.garry@oracle.com?part=3D7
+456-1-john.g.garry@oracle.com?part=3D9
