@@ -1,133 +1,114 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [52.187.6.220])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7EE4827B340;
-	Fri, 24 Jul 2026 03:02:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.187.6.220
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902951A9F87
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:08:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784862161; cv=none; b=TjKjy6hrUbFrAOT9RxKlpG3d3Rzjy1m94ghHdLjBgMaWiv0Wa/azd7f+ta2/EFeq869F7RqGD76AQPRip7QLOtye2bnqlD8RQlhKz5PQ8t0gdpKe3dVMQAhtV2qpuoMdZOqGEA8czIUPmd+yFUYMNnZd+ZLzxJ1/+BKE0MxSo78=
+	t=1784862499; cv=none; b=iU8z2LOW81JvftjNwiqHdPJBYs/QRv60Wwmgwi+zINNgfWDQq2aHz+NMyFve2BbmMtBEAOipZtL/YJrFgyOQvW2aj+4lofMTJRi9tCdBjXkzG+tU2rzy+UafYreKuzSZEDdwq+7WToGK9v36DmNAkEr9uIvvMYsIVxijt86pQTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784862161; c=relaxed/simple;
-	bh=iUGrkeEnU0zFKwmzl9YF9vPhtUddhfLS8bGTVEEShG0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Dg/j9kpXEWWxCqzo7x2TTqQmhTdr+xrzFi3O6GsRmm6i1sya8SaI34BjfpPTa+xUKsRsqtmOQrtxrBQnTQwEOS9dZCRz8mrGbdBf9Wgjs6TFxSYPv/N366RegL9gl/w/dhJXbLNyVmLJJYpKrN7M3LSFL5De/bRPW6xq+NxBF2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=52.187.6.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [10.98.66.117])
-	by mtasvr (Coremail) with SMTP id _____wBnUffG1WJqmxo1AA--.54595S3;
-	Fri, 24 Jul 2026 11:02:31 +0800 (CST)
-Received: from localhost.localdomain (unknown [10.98.66.117])
-	by mail-app2 (Coremail) with SMTP id zC_KCgDHFMnF1WJqiAspAw--.55174S2;
-	Fri, 24 Jul 2026 11:02:30 +0800 (CST)
-From: Fan Wu <fanwu01@zju.edu.cn>
-To: Don Brace <don.brace@microchip.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Kevin Barnett <Kevin.Barnett@pmcs.com>,
-	Webb Scales <webbnh@hp.com>,
-	storagedev@microchip.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Fan Wu <fanwu01@zju.edu.cn>
-Subject: [PATCH] scsi: hpsa: destroy resubmit workqueue after unregistering IRQs
-Date: Fri, 24 Jul 2026 03:01:34 +0000
-Message-Id: <20260724030134.16434-1-fanwu01@zju.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1784862499; c=relaxed/simple;
+	bh=Xm5p8uG5+9JjTiZkEQxC1X91synNajmwGnQS4RPWbug=;
+	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
+	 References; b=an7z1v2gGRzX6LnUr/g8uyyhGpktFXq89izE7+fA6M/VHRjCp5JmIpiiib0sB554yAFRA7MVr2aOe2LsOPu5Vdj2cp1dm0BIqD3PTy/PnCojk9MTiRyarz8CuhoaPLf7UB7EAHDoJID4/K0ziETJNWZpZDMW7oITCov+qOhYw9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=IsB5h6G/; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="IsB5h6G/"
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260724030814epoutp03b4b20e89ac3625d2036806e5a4e64e35~FGvtXOQkC2917729177epoutp03x
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:08:14 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260724030814epoutp03b4b20e89ac3625d2036806e5a4e64e35~FGvtXOQkC2917729177epoutp03x
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1784862494;
+	bh=DN+coMvw1TzVjuKBS2Wa/+SeTmtJpG9VdhZkGP+2R+0=;
+	h=Subject:Reply-To:From:To:CC:Date:References:From;
+	b=IsB5h6G/3FrcZgUf3a3O2EtuExT6md64HYzN6+MlkO59wKVj66FbdBAvMYkCRu9mb
+	 oK3s0JPJ50UrwEn6hr4QTkNDrv30hR6mRctQ59Xd1xslR5sHsMKY/gIf67/B5zd58S
+	 IPsllzgAkzytL5X2NDdUSOPYTZ+mI/5nBrbaspBY=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas2p4.samsung.com (KnoxPortal) with ESMTPS id
+	20260724030813epcas2p4bf32d70b94f08eb60741abf186b30b39~FGvs6OpG40840508405epcas2p4K;
+	Fri, 24 Jul 2026 03:08:13 +0000 (GMT)
+Received: from epcas2p4.samsung.com (unknown [182.195.38.210]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4h5tGj36Ppz6B9m6; Fri, 24 Jul
+	2026 03:08:13 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zC_KCgDHFMnF1WJqiAspAw--.55174S2
-X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
-X-CM-DELIVERINFO: =?B?VESbfQXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
-	sfncGSG+szpQCInt5Y8rbJUI0cbbfRGw8Fl34gGnb4IuD14LrozZrarVxuP5mZ1TiHqNH4
-	UJ3JeypcXgUz+YkVvlCp9E6mavGmQbzmcFsnzP86
-X-Coremail-Antispam: 1Uk129KBj93XoWxWw45GrWDAryrKFyrXF1kZwc_yoW5tFy8pr
-	Z8Aw15Cay0qF4UK39rZw1UXFy3uFs5JrWUCayxW3srAr98AryUua40kFWjqFyrWrWvyrWa
-	yFWDJas8XFWUAFgCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUU9lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
-	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
-	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
-	xVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
-	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s02
-	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
-	I_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
-	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj4
-	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8
-	JbIYCTnIWIevJa73UjIFyTuYvjxU7gAwDUUUU
+Mime-Version: 1.0
+Subject: [PATCH v3 0/2] scsi: ufs: Add support for the aggregated read query
+ opcode
+Reply-To: hyenc.jeong@samsung.com
+Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+To: "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "bvanassche@acm.org" <bvanassche@acm.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC: ALIM AKHTAR <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Hyeoncheol Jeong <hyenc.jeong@samsung.com>,
+	Jinyoung Choi <j-young.choi@samsung.com>, Dukhyun Kwon
+	<d_hyun.kwon@samsung.com>, Jeuk Kim <jeuk20.kim@samsung.com>, Keoseong Park
+	<keosung.park@samsung.com>, Jaemyung Lee <jaemyung.lee@samsung.com>, Jieon
+	Seol <jieon.seol@samsung.com>, Gyusun Lee <gyusun.lee@samsung.com>, Yunjae
+	Jo <yunjae00.jo@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20260724030812epcms2p4eb2c77cb4dcd5fd51ca9c3eaa5ea4bfa@epcms2p4>
+Date: Fri, 24 Jul 2026 12:08:12 +0900
+X-CMS-MailID: 20260724030812epcms2p4eb2c77cb4dcd5fd51ca9c3eaa5ea4bfa
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+cpgsPolicy: CPGSC10-223,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260724030812epcms2p4eb2c77cb4dcd5fd51ca9c3eaa5ea4bfa
+References: <CGME20260724030812epcms2p4eb2c77cb4dcd5fd51ca9c3eaa5ea4bfa@epcms2p4>
 
-An IOACCEL command that completes with a retryable error is retried from
-hard-IRQ context through hpsa_retry_cmd(), which calls INIT_WORK() on the
-command and queue_work_on(h->resubmit_wq).  Unlike the rescan, monitor and
-event delayed workers, which are cancelled and self-guarded by
-remove_in_progress before their workqueues are destroyed, resubmit_wq is
-armed from the interrupt completion path and has no such guard.
+UFS 5.0 / JEDEC 220H introduces the AGGREGATED READ query opcode (0x9),
+which retrieves an aggregated data packet bundling multiple Descriptors,
+Attributes and Flags in a single QUERY RESPONSE UPIU. Such a packet can be
+far larger than a single descriptor, so the reserved (device management)
+tag gets a dedicated UCD with an enlarged response area.
 
-hpsa_remove_one() destroys resubmit_wq, together with rescan_ctlr_wq and
-monitor_ctlr_wq, before calling __hpsa_shutdown(), where hpsa_free_irqs()
-unregisters the interrupt handler.  Between the workqueue destruction and
-hpsa_free_irqs() the handler can still fire and call queue_work_on() on
-resubmit_wq.  queue_work_on() refuses new work on a workqueue being torn
-down, dropping the retry with a WARN_ONCE; and once the structure has been
-freed through call_rcu(), a later queue_work_on() may dereference freed
-memory, a potential use-after-free.  The window is reachable because
-scsi_remove_host(), which runs between the two points, can itself generate
-I/O (SYNCHRONIZE CACHE, per the existing comment).
+Patch 1 is a preparatory cleanup that switches the BSG query descriptor
+length to unsigned types. Patch 2 adds the aggregated read support.
 
-Destroy resubmit_wq after __hpsa_shutdown() instead.  This restores the
-ordering from before commit 6636e7f455b3 ("hpsa: Use local workqueues
-instead of system workqueues"), which moved the
-destroy_workqueue(h->resubmit_wq) call in hpsa_remove_one() ahead of the
-controller shutdown; resubmit_wq was originally torn down after
-hpsa_shutdown(), as introduced by commit 080ef1cc7fdf ("hpsa: use
-workqueue to resubmit failed ioaccel commands").
+Changes since v2 (Bart Van Assche):
+- Split into a series; new patch 1 switches the BSG query length to
+  unsigned types and uses min() instead of min_t(int, ...).
+- Folded ufs_bsg_get_query_desc_size() into its only caller.
+- Shrank the devman UCD PRDT from SG_ALL to two entries.
+- Added WARN_ON_ONCE(slot < 0) in ufshcd_init_lrb().
+- Made struct ufs_dev_cmd.tag unsigned (u8).
+- Reworded the "multiple of 128" BUILD_BUG_ON comment.
+Also capped QUERY_AGGREGATED_MAX_SIZE (4096 -> 4064) plus a static_assert
+so the UPIU header and data segment fit the response area, fixing the OOB
+read flagged by Sashiko AI.
 
-Keeping resubmit_wq alive until after __hpsa_shutdown() is safe.
-Each retry stays associated with its SCSI request until the command is
-completed with scsi_done(); hpsa_remove_one() runs scsi_remove_host()
-first, which tears down each request queue and waits for outstanding
-requests, so it cannot return while retry work (including work that a
-later IOACCEL completion requeues) remains outstanding.  __hpsa_shutdown()
-then masks and frees the interrupts, and free_irq() waits for any handler
-still running on another CPU, so by the time destroy_workqueue() runs on
-resubmit_wq the completion path can no longer queue new work.
+v2: https://lore.kernel.org/linux-scsi/20260722084819epcms2p49c27fce999e821385f7b5d7ea5a02868@epcms2p4/
 
-This issue was found by an in-house static analysis tool.
+Hyeoncheol Jeong (2):
+  scsi: ufs: Use unsigned types for the BSG query descriptor length
+  scsi: ufs: Add support for the aggregated read query opcode
 
-Fixes: 6636e7f455b3 ("hpsa: Use local workqueues instead of system workqueues")
-Cc: stable@vger.kernel.org
-Assisted-by: Codex:gpt-5.6
-Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
----
- drivers/scsi/hpsa.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ufs/core/ufs-mcq.c | 14 ++++--
+ drivers/ufs/core/ufs_bsg.c | 38 +++++++--------
+ drivers/ufs/core/ufshcd.c  | 98 ++++++++++++++++++++++++++++----------
+ include/ufs/ufs.h          |  8 ++++
+ include/ufs/ufshcd.h       | 20 ++++++++
+ include/ufs/ufshci.h       | 18 +++++++
+ 6 files changed, 148 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3654b12c5d5a..8e039011aeaf 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -9057,7 +9057,6 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	cancel_delayed_work_sync(&h->rescan_ctlr_work);
- 	cancel_delayed_work_sync(&h->event_monitor_work);
- 	destroy_workqueue(h->rescan_ctlr_wq);
--	destroy_workqueue(h->resubmit_wq);
- 	destroy_workqueue(h->monitor_ctlr_wq);
- 
- 	hpsa_delete_sas_host(h);
-@@ -9073,6 +9072,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	/* includes hpsa_free_irqs - init_one 4 */
- 	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
- 	__hpsa_shutdown(pdev);
-+	destroy_workqueue(h->resubmit_wq);
- 
- 	hpsa_free_device_info(h);		/* scan */
- 
 -- 
-2.34.1
-
+2.25.1
