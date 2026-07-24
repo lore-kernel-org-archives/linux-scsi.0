@@ -1,105 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1D3C361977;
-	Fri, 24 Jul 2026 06:09:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C1CB25B0B3;
+	Fri, 24 Jul 2026 06:11:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784873366; cv=none; b=kAI01/DBswYHRwb1XZMx+lFmZHCrO5Ga4N/E7rtQaoWSC2QPwUILWJe82B5nrIeriOgsv1/WaBLK8KiIjKsMY5/e1HaKnd1JJQ/xglSlse67HJm8mLYx2CnDhETP7/qwIxogbVg08zPOQIpE8LhpnnsZ2uxm2UNTW57zr53u/jw=
+	t=1784873468; cv=none; b=sbJrmMkdfU1BAsFuLoR/ehoddXG0pM/a1FZffs2SRmcN/+NoK2N7R7Vki8K6E0CUoSxk8dPi+KYa4kVGd0Qx0xh1/DPLNBAcla8tXtUsurkN2eemrFh7TI1VvbeFH/tXui8uZ446s3pbHp8KrbNl3OcOVxft86O9jU3vyZr4aR8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784873366; c=relaxed/simple;
-	bh=1mrkXI2un90Y7sZOcpE+cVy+2kBZ9jv0EClH8wgu1Bo=;
+	s=arc-20240116; t=1784873468; c=relaxed/simple;
+	bh=OL6Tab8YsXsmGWLJ4jH1sUjnYfc6afC6OKSSnzXi0a0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hczukPDgLuTWNawKNmuqDlcrN3AxNR5d6b9WRciJYYZA2+pmAwJsL/jxzcotKmK6Vj70EZG63qc+X6Td4FEpQil8v0GkIu56P1VKGwxj6nJJCuCD9a3WTFShQ/ZCmPi7vuu5c+HQ1wCvHDGLbNgRHI4xmgKdwi+icumauTVnmng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RCkg8Zd5; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=c2RYrLO/+IOI6w0rIkDiRb6v76xOcQekjmgohlvFT+U3mZ0XR75kxzoxbgGGED2WEkSyAQ2YU0N8rd5vYaOzpbJ/mdU/DK8sSJyB953113QtIKkyiYLYijQBrgIOW56h0nR+buLb6xS17IvgmO9AgU5jh2yUtAe5Tj214RsrYJE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eayP+eVC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RCkg8Zd5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 128ED1F000E9;
-	Fri, 24 Jul 2026 06:09:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eayP+eVC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E3661F000E9;
+	Fri, 24 Jul 2026 06:11:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784873365;
-	bh=mbJ10/3gnhevM0ACld3+CAdnnwtDpxhjDkE7FQ7Pf+E=;
+	s=k20260515; t=1784873466;
+	bh=OL6Tab8YsXsmGWLJ4jH1sUjnYfc6afC6OKSSnzXi0a0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RCkg8Zd5FDTKbL3kApsa3J4J+QsEXmlUEBJSlRRHQuUyjrTfHvjx1mHX9Svb3f5U+
-	 8ziRNUFaPRfiZiyMzqNUFlK8LVdcWhj+ZAlzdbl9fZZzjvV26diOa6Tq0EUfHZF1Tu
-	 jgveD6FUlSeBOikCFTAYNIiFSmNeQ9bqsdlULwyxdJnlTIPSem1VIrvm2fXzYwR+Gb
-	 OhLGEc5EHLYNBYXzEJzuIK1OH/YokNo2QPmi/dLqQ4fai23njQ5GNKrrCDH7vK7W+L
-	 0PmIGy8R0AWKyCP0mWpcX3W+sjp55RLY4RpOAFwSy26LJCmSbH0HS4mJs8xY5hMc6s
-	 XAIVRTyRC77iA==
+	b=eayP+eVCH9gRAoW8r3CWQ/pA77qYaNwIqrY8vTVVnKjTmoSzzrWQ5DaiCZNdf6naK
+	 YCB1rMFbSOuiEV3mNJTkPpj4UTi5S6sjhpyhuYIuKSsRUNd0E+YMs8SX+9Fp7Hh0K7
+	 yPxVw/l6RSddTF7hZfCehaIqkV0jwvZStSz9Hs3l/ZtXdWoHp8GXv9NREkM43vF1Bg
+	 dL5ejGBUhnvCRdUlxWYHq/WKMWBiw4p/7xEzaSwlSSZQt2Nj/wYWGCoJJNnI/fiu/y
+	 vOsLdSYnOw+vx1rJeAqDeY6hYqf0HjF/HlsZ0TYE6Qf0Pj9Wt8R9sZ2E9v9//qj9Qk
+	 OkFb4Gaj2h8lg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/4] zfcp: trace return values of sysfs unit add store
+Subject: Re: [PATCH 2/4] zfcp: Trace plogi and prli within open port
+ response as payload
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nihar Panda" <niharp@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Heiko
- Carstens" <hca@linux.ibm.com>
-In-Reply-To: <20260724053934.2781087-4-niharp@linux.ibm.com>
+Cc: "Alexander Gordeev" <agordeev@linux.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, "Heiko
+ Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>
+In-Reply-To: <20260724053934.2781087-3-niharp@linux.ibm.com>
 References: <20260724053934.2781087-1-niharp@linux.ibm.com>
- <20260724053934.2781087-4-niharp@linux.ibm.com>
+ <20260724053934.2781087-3-niharp@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 24 Jul 2026 06:09:24 +0000
-Message-Id: <20260724060925.128ED1F000E9@smtp.kernel.org>
+Date: Fri, 24 Jul 2026 06:11:05 +0000
+Message-Id: <20260724061106.4E3661F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] Uninitialized kernel stack memory (`fcp_lun`) is written to a de=
-bug trace buffer when `kstrtoull` parsing fails, causing an information lea=
-k to userspace.
---
+> From: Steffen Maier <maier@linux.ibm.com>
+>=20
+> The FCP channel optionally returns the content of PLOGI and PRLI within
+> open port response. This information is needed to debug unexpected open
+> port responses. Pack both PLOGI and PRLI information back-to-back into a
+> PAYload trace record of type "fsf_els" within existing HBA trace record.
+>=20
+> The length of both parts, and thus also the offset of the second part,
+> are added to the corresponding HBA trace record. Be extra careful
+> regarding bounds checking.
+>=20
+> Since auto port scan in multi-initiator zoning environments can cause a
+> lot of failed open port responses and trace is enabled by default in the
+> HBA trace area, chose a trace level 4 above the default of 3 for the
+> corresponding PAYload trace record to contain PLOGI/PRLI data. This way,
+> [ ... ]
+> Reviewed-by: M Nikhil <nikh1092@linux.ibm.com>
+> Reviewed-by: Nihar Panda <niharp@linux.ibm.com>
+> Signed-off-by: Steffen Maier <maier@linux.ibm.com>
+> Co-developed-by: Chinmaya Kajagar <chinmayk@linux.ibm.com>
+> Signed-off-by: Chinmaya Kajagar <chinmayk@linux.ibm.com>
 
---- Patch [3]: [PATCH 3/4] zfcp: trace return values of sysfs unit add stor=
-e ---
-commit 2f001159c00d2d39b83745c171b53d3cb2468df3
-Author: Chinmaya Kajagar <chinmayk@linux.ibm.com>
-
-zfcp: trace return values of sysfs unit add store
-
-This commit adds tracing for unit_add sysfs attribute failures to help
-debug issues where the kernel cannot add a LUN. It adds a new trace record
-ZFCP_DBF_HBA_UAS and updates zfcp_sysfs_unit_add_store() to log these event=
-s.
-
-> diff --git a/drivers/s390/scsi/zfcp_sysfs.c b/drivers/s390/scsi/zfcp_sysf=
-s.c
-> index 42423549e511d..729c9664a48f8 100644
-> --- a/drivers/s390/scsi/zfcp_sysfs.c
-> +++ b/drivers/s390/scsi/zfcp_sysfs.c
-[ ... ]
-> @@ -442,17 +442,24 @@ static ssize_t zfcp_sysfs_unit_add_store(struct dev=
-ice *dev,
->  					 const char *buf, size_t count)
->  {
->  	struct zfcp_port *port =3D container_of(dev, struct zfcp_port, dev);
-> +	struct zfcp_adapter *adapter =3D port->adapter;
->  	u64 fcp_lun;
-> -	int retval;
-> +	int retval =3D -EINVAL;
-> =20
-> -	if (kstrtoull(buf, 0, (unsigned long long *) &fcp_lun))
-> -		return -EINVAL;
-> +	if (kstrtoull(buf, 0, (unsigned long long *)&fcp_lun)) {
-> +		zfcp_dbf_hba_uas("syuast1", 3, adapter, port->wwpn,
-> +				 fcp_lun, retval);
-
-[Severity: Medium]
-Does this code leak uninitialized kernel stack memory into the trace buffer?
-
-If kstrtoull() fails to parse the input, it returns an error and may not
-write to fcp_lun. The uninitialized fcp_lun variable is then immediately
-passed to zfcp_dbf_hba_uas(), which records it in the trace buffer that
-can be read from userspace.
-
-> +		return retval;
-> +	}
-> =20
->  	flush_work(&port->rport_work);
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260724053934.2781=
-087-1-niharp@linux.ibm.com?part=3D3
+087-1-niharp@linux.ibm.com?part=3D2
+
