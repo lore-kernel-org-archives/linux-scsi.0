@@ -1,106 +1,113 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07416376BE0;
-	Fri, 24 Jul 2026 21:18:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FCBC392803;
+	Fri, 24 Jul 2026 21:48:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784927894; cv=none; b=gPx/CJPqMUqb0MdiLB5wmvPXzcLh3maz52Lx9sYiofYh50cI+rxoyQvIrS6vI0xRH1KyComGSd++lslJPDgd9AwkFrx2BB7+eoWG6XLtiHiq2FoVi9e2ywM80oZWN00xAdBsIaN5AAps0X9q6dMINgV87WZF+de/flhB9Cxpgjw=
+	t=1784929717; cv=none; b=lmE59OT/cc2rq/lI2LdfzBtVYT4hzbls+hc/puzRBhJuGm5j3xEmP2kIvVItV5pC2Rbi4lxgGHbhKrDYEeTMrCN1eC8XOcA3xGjJrP+l+yZU9CCMN/DkacPClBgHbF7NqUdmEDbAb+4Nfiq1T1e5DIcnUFOO5ofjo7aK41epYhc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784927894; c=relaxed/simple;
-	bh=WlkQTU+6bYVN+0cBhxLtmU4F9kbCHxY6kvW0RXmkHtI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=u22E8urJCws5YfO1HIxdXz10DaLj/fpry1SFHJO1ODbQV+A2TJm0L5T5Z6jzyXS38QC/AcJCtZ8Fj64RcG82Rc8SW878UPBR8rMA52tYOM+dXgHVOTXbApvADl6yaTyzxLFBhdnITB8ZzLBdOdnA6zkysahWyHGiqOxrQZUXvuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sMHjdQ4s; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1784929717; c=relaxed/simple;
+	bh=GTdZSgSwBlfAlIxva5M6ZU/kD9VYoe26BBxVBJ5WdPE=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=f0dWPJXuJkkHlQ5NLOuD9Ax5Gho1OuqyiVb7t0nd5oWleu8UvKWZ0I9ZwliB4KZE49TmmB6QFpuZUZCvhsdQzWUJFHk39L78Jrb5jzWdYLl7N97uSjvi3jiv7Dfm4rIqq0HGBt3VlUk4FDbtEfdYIBkLNyeZ2WbbL7Xj7V2F1Co=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bhpTuvSZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sMHjdQ4s"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4h6LSN2985z1XM30g;
-	Fri, 24 Jul 2026 21:18:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1784927888; x=1787519889; bh=JtymtIx9LDfJbYLG4w+UOTgd
-	B/gHKgQjsvXBo6Arku0=; b=sMHjdQ4sBFdFO5bH3Xwvh9fCfYYZy86RyYY4yfWj
-	7mH+Pwf491mBryrK6opqi2wREqBBAr+PoWdGbiebLWqYKzN0cV1esbDVR4XAX7o4
-	3h+Af42kTtNJ8Cr6eV2eq6FVdO0djBxaajwSHsJ26UxsynrVgt95kneXZ1HjPKDN
-	2EGXnWMidhiCegoiMKfmYl6sAoDXRdYtxBYATr72IIotuokZkGzvCwbujlzwTNw2
-	0hK3TraRjg64d8MZwIFMvhZL7OA/zxygVrJLYk/Qq2pHd4ejsrXxBioCBlF/bkZ7
-	s/t65mhd5KKUlefhc6CIJM+BnOiNLTOiQ5y9bSguVcTgFQ==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id H8UmAWvmbvlb; Fri, 24 Jul 2026 21:18:08 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4h6LSG5xWSz1XM4Tn;
-	Fri, 24 Jul 2026 21:18:06 +0000 (UTC)
-Message-ID: <90a7222e-6779-485c-80d1-e4b814a9ac23@acm.org>
-Date: Fri, 24 Jul 2026 14:18:05 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bhpTuvSZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A6FC1F000E9;
+	Fri, 24 Jul 2026 21:48:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784929705;
+	bh=GTdZSgSwBlfAlIxva5M6ZU/kD9VYoe26BBxVBJ5WdPE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=bhpTuvSZWBV7iq9keKc8+pixk18qLEuyMz3ZTlqKcB81KF/CnyeLGI6JSyvHGt9tA
+	 E+SxQVBXcXsXsZgtn3HAr+6nPULrU5HRAYu13tTfnL5ffRJr3w0sXxS3y6FSy3SRlS
+	 Qe3XQkADPgbjY9nioQHCBPR4pvKP4dL5d3HxM/ORX/63JYStNE+wqJy61XHcdbEpWF
+	 xaZAuoqTpynwYjXBJP4BY73AhLP471MMWjcWFGi91teQEabAfmboMZJJ2AI9mVl919
+	 5Vj52Ap+SYxCLa6sCvz56w/tCisRBng0kD6I+yiTKpyHAoJV1VexiywmsHK9mBuUsB
+	 8QLvkwcrgPftA==
+Date: Fri, 24 Jul 2026 14:48:22 -0700
+From: Jakub Kicinski <kuba@kernel.org>
+To: Sang-Heon Jeon <ekffu200098@gmail.com>
+Cc: Julia.Lawall@inria.fr, Alex Deucher <alexander.deucher@amd.com>,
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>, Alexandre Belloni
+ <alexandre.belloni@bootlin.com>, Andrew Lunn <andrew@lunn.ch>, Andrew
+ Morton <akpm@linux-foundation.org>, Arkadiusz Kubalewski
+ <arkadiusz.kubalewski@intel.com>, Borislav Petkov <bp@alien8.de>, Christian
+ =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>, Daniel Lezcano
+ <daniel.lezcano@kernel.org>, David Airlie <airlied@gmail.com>, "David S.
+ Miller" <davem@davemloft.net>, Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+ Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Hans de Goede
+ <hansg@kernel.org>, Hans Verkuil <hverkuil@kernel.org>, Heikki Krogerus
+ <heikki.krogerus@linux.intel.com>, Herbert Xu
+ <herbert@gondor.apana.org.au>, Ilpo =?UTF-8?B?SsOkcnZpbmVu?=
+ <ilpo.jarvinen@linux.intel.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, Jani Nikula
+ <jani.nikula@linux.intel.com>, Jaroslav Kysela <perex@perex.cz>, Jason
+ Gunthorpe <jgg@ziepe.ca>, Jiri Pirko <jiri@resnulli.us>, "Joerg Roedel
+ (AMD)" <joro@8bytes.org>, Johan Hovold <johan@kernel.org>, Jonathan Cameron
+ <jic23@kernel.org>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+ Julian Anastasov <ja@ssi.bg>, Leon Romanovsky <leon@kernel.org>, Liam
+ Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>, Maarten
+ Lankhorst <maarten.lankhorst@linux.intel.com>, Mark Brown
+ <broonie@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Matthew Sakai <msakai@redhat.com>, Mauro Carvalho Chehab
+ <mchehab@kernel.org>, Maxime Ripard <mripard@kernel.org>, Michael Turquette
+ <mturquette@baylibre.com>, Mike Rapoport <rppt@kernel.org>, Miri Korenblit
+ <miriam.rachel.korenblit@intel.com>, Nicolas Palix <nicolas.palix@imag.fr>,
+ Pablo Neira Ayuso <pablo@netfilter.org>, Paolo Abeni <pabeni@redhat.com>,
+ Ping-Ke Shih <pkshih@realtek.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Sebastian Reichel <sre@kernel.org>,
+ Shuah Khan <shuah@kernel.org>, Simona Vetter <simona@ffwll.ch>, Simon
+ Horman <horms@verge.net.au>, Stephen Boyd <sboyd@kernel.org>, Steve French
+ <sfrench@samba.org>, Takashi Iwai <tiwai@suse.com>, Thomas Renninger
+ <trenn@suse.com>, Thomas Zimmermann <tzimmermann@suse.de>, Tony Luck
+ <tony.luck@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, Vadim
+ Fedorenko <vadim.fedorenko@linux.dev>, Vinod Koul <vkoul@kernel.org>, Will
+ Deacon <will@kernel.org>, Yazen Ghannam <Yazen.Ghannam@amd.com>,
+ cocci@inria.fr, amd-gfx@lists.freedesktop.org, dmaengine@vger.kernel.org,
+ dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org,
+ intel-gfx@lists.freedesktop.org, intel-wired-lan@lists.osuosl.org,
+ iommu@lists.linux.dev, linux-cifs@vger.kernel.org,
+ linux-clk@vger.kernel.org, linux-crypto@vger.kernel.org,
+ linux-edac@vger.kernel.org, linux-gpio@vger.kernel.org,
+ linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+ linux-mm@kvack.org, linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
+ linux-rtc@vger.kernel.org, linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org,
+ linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+ lvs-devel@vger.kernel.org, netdev@vger.kernel.org,
+ netfilter-devel@vger.kernel.org, nouveau@lists.freedesktop.org,
+ platform-driver-x86@vger.kernel.org
+Subject: Re: [PATCH 00/36] treewide: remove conditional returns with no
+ effect
+Message-ID: <20260724144822.6af8213f@kernel.org>
+In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
+References: <20260723184538.3888637-1-ekffu200098@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] scsi: core: pair EH runtime PM get and put
-To: Hongjie Fang <hongjiefang@asrmicro.com>,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- jgarzik@redhat.com, stern@rowland.harvard.edu
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260623074408.1639663-1-hongjiefang@asrmicro.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260623074408.1639663-1-hongjiefang@asrmicro.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
+On Fri, 24 Jul 2026 03:45:02 +0900 Sang-Heon Jeon wrote:
+> Patch 1 adds a Coccinelle script that matches the pattern, including
+> negation and constant-comparison variants. Where a local variable is
+> assigned right before the check, the assignment and the two returns
+> turn into a single return of the assigned expression.
 
-On 6/23/26 12:44 AM, Hongjie Fang wrote:
-> @@ -2383,12 +2384,16 @@ int scsi_error_handler(void *data)
->   		 * what we need to do to get it up and online again (if we can).
->   		 * If we fail, we end up taking the thing offline.
->   		 */
-> -		if (!shost->eh_noresume && scsi_autopm_get_host(shost) != 0) {
-> -			SCSI_LOG_ERROR_RECOVERY(1,
-> -				shost_printk(KERN_ERR, shost,
-> -					     "scsi_eh_%d: unable to autoresume\n",
-> -					     shost->host_no));
-> -			continue;
-> +		autopm_put = false;
-> +		if (!shost->eh_noresume) {
-> +			if (scsi_autopm_get_host(shost) != 0) {
-> +				SCSI_LOG_ERROR_RECOVERY(1,
-> +					shost_printk(KERN_ERR, shost,
-> +						     "scsi_eh_%d: unable to autoresume\n",
-> +						     shost->host_no));
-> +				continue;
-> +			}
-> +			autopm_put = true;
->   		}
->   
->   		if (shost->transportt->eh_strategy_handler)
-> @@ -2407,7 +2412,7 @@ int scsi_error_handler(void *data)
->   		 * which are still online.
->   		 */
->   		scsi_restart_operations(shost);
-> -		if (!shost->eh_noresume)
-> +		if (autopm_put)
->   			scsi_autopm_put_host(shost);
->   	}
->   	__set_current_state(TASK_RUNNING);
+Huh, I thought we already had such script. Various script children have
+been sending such "cleanups" in the past.
 
-Please capture the value of shost->eh_noresume in a local variable such 
-that concurrent changes of shost->eh_noresume can't break the above
-code.
+> Patches 2-36 are generated by the script, with hand fixes to restore
+> unexpectedly removed comments and to fix the formatting checkpatch.pl
+> complained about.
 
-Thanks,
-
-Bart.
+Please post patches 4,7,8,9 as a separate series. Since you only CCed
+netdev on subset of the series patchwork thinks there are patches
+missing and doesn't kick off any CI.
