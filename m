@@ -1,150 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com [209.85.210.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855FA33F590
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 15:28:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784906937; cv=none; b=R0AyzNyYcOfj0zHYGraV7fvVUP4IPT9R8dIVMs+hMPWB+dYm8+KrH1iF+k2xoab40T8v/62ydd1QMIp0U2FIrCoovP3G+1tjokxyvmwNIvKMDzVmAHCCgaMo3gZEXIrUlppjCVamChzTuB8m2Ab4BUne0ZMirkcFIxKBM+hpTMc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784906937; c=relaxed/simple;
-	bh=58jsv2lQpSjwxp7pjQn4g3rkwX0VqMm8aIkNVQX6o/g=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rmV2mZ9ohb3B4oeHNo8QHXCB7mi5xDlZsyYnH4ammie5icvHzbob8w7FQBfbOKwCZApuQ4lQ+qGUK4ssLBxNMJ1EFOsaqixKWzzXflcx2bOxlup4ZN17fJ06DGSA4DQPfVBMHGxoiMaL6jWv1Dg9a7QILfQlJiKCM5MNiglJVxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eNNxc3ov; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9413F3546FD
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 15:43:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784907836; cv=pass; b=kB0oRWOVW92nHEuH34CzhpQ7pwNA2ELGUoig0w28760eCP2gxL61XqY5QvP5zcc4UpW2kcUwOr7o1MTH/7hsVG++Sfy4IuHdA+rc8BfW3vBoqDP4qoh9ILdMBO4p4TfSc3XxMLLibH/nQ3e7sDAam7i9kU64vhd7P7L6Ps+uhYU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784907836; c=relaxed/simple;
+	bh=ILofpUWGWH9zp6AGMmvbmtrtheP7UpO/eX+BW6pBBWY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=rZ0rBf2m/D2lDSycqiaYAhFZSS1Lg00k2DBOWwlJfpjEcSTRMOVHq1HpGWAMz9sazlCn0bBWrksmDgqdTUEr0t0r8vbcKswdXCDrds86LgN0Aj14dhlRwuISn0vOkpSU0r644DMQuOba0aLhqa99EX0Vdvd5Fh2t3UfLu8QscUk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=fFeaWtiF; arc=pass smtp.client-ip=209.85.210.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eNNxc3ov"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F375F1F000E9;
-	Fri, 24 Jul 2026 15:28:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784906936;
-	bh=zUDwAhK5UC8uroV/rrueBC0Q3MYRVqxFUSsQ4PsM/RA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eNNxc3ovdsvbTzj7e5JutvecArfqVIy2ZhFPS98+tCfG08d42fbFQj4FdUtwznGiv
-	 xJFZNJ6Xs1OdeX3KJB7EcBNNUg7TVwACL2LzWoTRb8f0OWjxrAIshz8yj0wP0CT3gU
-	 Jt4NcLMv/7QDslsguinYVMu31EWCHmibOIx6twbv1B2Gt5vjtBX8ePUIOSxIhc1dTc
-	 ljPm9kzAVHjMuyM4gXyQgTYNCK5e2/aHcAdg8kF91nqYzR6vCmfAUZnYrmU6VaQj7W
-	 dx0rAWJPgw6FfaGBNF8oPRXKDBHDkbmWrYXULO7H7xgIL/Di4gWrFA/tSUmsyLQCt5
-	 RVSqaoqt/ZUgA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: core: validate VPD 0x83 descriptor bounds
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jiancheng Huang" <jchuang@seu.edu.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260724151331.1445730-1-jchuang@seu.edu.cn>
-References: <20260724151331.1445730-1-jchuang@seu.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 24 Jul 2026 15:28:55 +0000
-Message-Id: <20260724152855.F375F1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="fFeaWtiF"
+Received: by mail-ot1-f51.google.com with SMTP id 46e09a7af769-7e9f4ab2a6fso35786a34.0
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 08:43:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784907833; cv=none;
+        d=google.com; s=arc-20260327;
+        b=qVzgiZv0C6IC7vtfSpd5wQKQTRgZYnEGkAAqr8UF8eQPWNfyFON/+uhagMcecGJ49Y
+         h9KJuFpS94+BIrIaE/lrWhePJhg2AYD0wunJl597KXELDTrB/+n4u8F2KZP3XhEeFrq7
+         kFSXDLMphZadVuuAPyhM0dARgBGvbgOx0aTgebzqgdqewMBCKlRaOXREVNBUYm7Zj3Oe
+         yK9otMFF/8mWzlYqZTqjPoU0fubVQdyP1JOrzLSp/Xei1iDXs6It7iDhzKkrWQEVT8jH
+         qNu73FeQX57DbU1z3C+wfz0uWyByamNHqTMSuMAFgqrXgLQj/rxltTObhFYb3F9gjalx
+         10hg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=lvfkPaw63mygCj4Ez7HrV9WaH81ot3VV5r5WvjvtNbY=;
+        fh=sHa9XSqKTimznp88LlNQQ9sDJommdTyvofPkr7ytMCM=;
+        b=FQ/Dtm6ntaI6yTOcqZcMBaV1t2a3BevG9NZWn3NJnGAm2/nwiP+HoeLEUq1abuXouy
+         CMFb8YFpehyVfJXrFJzI3RDl/Kd+vDfEAICLer+w0vSqN+7o6EjelOFrMb0nr9RkoSUP
+         azju5izkRIXmsWxCmxffL5CjUTl9E82MsIkZWaaIbl3zVkpdQ/BaQklKalvw+hU0yRfw
+         c0VkU1u5GPoPihQrM/8cMXsi6sGSuKlkEh3s0pSjUKxLn5TjVtO5DaUWdhnhxmNYWjkt
+         zxtOc+kGGLTOqg/Pnt7HcCA3O0Y1JMngGTz/QyE2EdAH0tVNyGEsBqwHBkSZdbc6ZUi5
+         cwvA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1784907833; x=1785512633; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=lvfkPaw63mygCj4Ez7HrV9WaH81ot3VV5r5WvjvtNbY=;
+        b=fFeaWtiFUf+jNiky+HPe+Nc19K4llYdf9nya5WHaGrigiwx8Rkc/9r1vkuxGSNIkeE
+         MLMIvwOhMYf7R8hoGifZdoGfnKgnw4Me0GdwxO9/PfeBwSrfYy4mJg4lVsQ9MNaqpIjM
+         7o8AJrBIDiGzxyC8xaWxLsbCfwoP67TN1Vo+Twv0HIKGEThqPcy1ZcJXzF7LuUJb+WBA
+         BnuJQboKRbiEAirOm/C9LKohX4Fca+9zwl/xUGcl0Z1T39IFNRbH3hGedCnmM9LrILnr
+         zHgM94B/DbhEw+cVmgbpOCVN1+A+bQvy9Pi+8PPuCH8f7w/a6EBdtWog/7ZE/pGZi3Hm
+         iDRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784907833; x=1785512633;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=lvfkPaw63mygCj4Ez7HrV9WaH81ot3VV5r5WvjvtNbY=;
+        b=WmunoeK4Ht+gBRGo2EekLDP0aq+xyUbOaZW294uh5Ms579r2GkvCGfnintn9B0ebXo
+         dgSNEB/v90FWyBtWgWy2mR37Qk5SFHMCr0WNL12BE0tWShVd/NSk8oqqluQdlynsy3zT
+         jjVFTayCm+IefMhSK17Fat05bUQ5qwmNMgy9igQ2HLukaHHZBY8ztTOnpyBEvXpHRCj7
+         TCAmkEvOS00+ebPuDRm3lAfTwWZ6SE1BIp/LVr45dg5yOhX2/Uq2agmExZA+IjsVUQ23
+         LWyqNjFr5wv222s0k6LyQoM3+m50xvKQFBvtBVWJtwPY9YoDrUn/hD+8WXRM6Lrf4/fF
+         OTTg==
+X-Forwarded-Encrypted: i=1; AHgh+RqxCGDvlkWbsLkott1mKXhj4O5WVbaLoPjnqeaiicAh1AVQ84L9q52BhhVu7cqNVpkSX7/TON5sohvh@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyl6Vrm+Na+5IdQ6oXdUMtpWXai7WEvimDObctYlw3MB3Nin1NW
+	bOvlUPTsgkhrMH12kodiW6vRzrfGmlWv2+UgEPsa0HvYiDy4xjTciME+mrUi2V48QACc1xbQSqY
+	MKiMaXlow5/If7As+Sj/o2SzxlfEqeAK5yCcrZ2DI9g==
+X-Gm-Gg: AR+sD136cK56LkB3Ynfly/ewQDZxYC+JhgftQdDU2xqmZuiCRns8JcEAq7PCWDnnXtG
+	PxJpyErX342ayZVVrnnM+zR+THRNoznPdvIGOtG8HDBWix55oCesKtbl14G0CtKHsitv4Teo50F
+	DZTHOLtqQk4ZMLhAcnTEkHqm/kv++50sIVvXfw4m5BPy6nmtixMzQTWUlyHyec+/QdS5PKMXpBa
+	si+4fOk/NOi1ShERr9C0UjH5Pp7T5oLnhnhZO41nT2W/9ro81i48yr2RZXNKoE=
+X-Received: by 2002:a05:6830:61c9:b0:7e9:cdc6:b930 with SMTP id
+ 46e09a7af769-7ee57ae92afmr2130467a34.6.1784907833352; Fri, 24 Jul 2026
+ 08:43:53 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260720032338.461681-1-yangxiuwei@kylinos.cn>
+ <20260720032338.461681-2-yangxiuwei@kylinos.cn> <CADUfDZpAW261MhFJg434=4nZFMD7mV=LL7F-ZiAWPa7dYvGpcQ@mail.gmail.com>
+ <20260724004907.2742329-1-yangxiuwei@kylinos.cn> <CADUfDZpsTH7zU4gyVE11R9GxdadjbcrcGVX+btoEjRYS-tBiGQ@mail.gmail.com>
+ <20260724020240.2938587-1-yangxiuwei@kylinos.cn>
+In-Reply-To: <20260724020240.2938587-1-yangxiuwei@kylinos.cn>
+From: Caleb Sander Mateos <csander@purestorage.com>
+Date: Fri, 24 Jul 2026 08:43:42 -0700
+X-Gm-Features: AUfX_mxV-8Cou1n7v3Ks8R-DjIB_eyYje8GjN7815YyL2Gqfxab6vzNDmm4_9HM
+Message-ID: <CADUfDZp=pCYGY0TCnMxXPG3LR3Kwk3DB-Hq+EvHZshruX3pv5Q@mail.gmail.com>
+Subject: Re: [PATCH 1/2] scsi: bsg: fix TOCTOU in io_uring passthrough command setup
+To: Yang Xiuwei <yangxiuwei@kylinos.cn>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	rc@rexion.ai, axboe@kernel.dk, fujita.tomonori@lab.ntt.co.jp, 
+	bvanassche@acm.org, linux-scsi@vger.kernel.org, io-uring@vger.kernel.org, 
+	stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Thu, Jul 23, 2026 at 7:03=E2=80=AFPM Yang Xiuwei <yangxiuwei@kylinos.cn>=
+ wrote:
+>
+> Hi Caleb,
+>
+> On Thu, Jul 23, 2026 at 06:10:27PM -0700, Caleb Sander Mateos wrote:
+> > On Thu, Jul 23, 2026 at 5:50=E2=80=AFPM Yang Xiuwei <yangxiuwei@kylinos=
+.cn> wrote:
+> > >
+> > > max_response_len is similar here: we clamp with
+> > > min(..., SCSI_SENSE_BUFFERSIZE), so it cannot overflow the sense
+> > > buffer. Same idea for response.
+> >
+> > I don't think that's true. Without READ_ONCE(), the compiler can
+> > assume no other thread will concurrently write cmd->max_response_len
+> > (else it would be UB). So it's allowed to load it multiple times:
+> > cmd->max_response_len ? min(cmd->max_response_len, SCSI_SENSE_BUFFERSIZ=
+E)
+> >                       : SCSI_SENSE_BUFFERSIZE
+> > becomes
+> > cmd->max_response_len ? (cmd->max_response_len < SCSI_SENSE_BUFFERSIZE =
+?
+> >                          cmd->max_response_len : SCSI_SENSE_BUFFERSIZE)
+> >                       : SCSI_SENSE_BUFFERSIZE
+> > And if cmd->max_response_len changes between the second and third
+> > loads, this could definitely evaluate to a value greater than
+> > SCSI_SENSE_BUFFERSIZE.
+>
+> IIUC Kernel min() is __careful_cmp() -> __careful_cmp_once(), which does:
+>
+>   auto ux =3D (x); auto uy =3D (y);
+>   (ux < uy) ? ux : uy;
+>
+> so cmd->max_response_len is only loaded once inside min(). The outer
+> ?: may load it again for the condition, but the value coming out of
+> min() should still be <=3D SCSI_SENSE_BUFFERSIZE. Did I get that right?
 
-Pre-existing issues:
-- [High] Out-of-bounds read and descriptor parsing flaw in scsi_vpd_tpg_id(=
-).
-- [High] Out-of-bounds read and heap information leak in sd_get_unique_id().
---
+Without READ_ONCE(), there is no requirement that
+cmd->max_response_len only be loaded once. The compiler is allowed to
+assume the value won't be modified concurrently by another thread
+(that would be a data race, undefined behavior). So it's free to
+combine or separate the loads. If you want to ensure that the value
+read from cmd->max_response_len is consistent, READ_ONCE() is
+required.
 
---- Patch [1]: [PATCH v2] scsi: core: validate VPD 0x83 descriptor bounds -=
---
-commit 289135fc8a7b8af10f19120d2fe0f7e66ba6a211
-Author: Jiancheng Huang <jchuang@seu.edu.cn>
-
-scsi: core: validate VPD 0x83 descriptor bounds
-
-This patch fixes an out-of-bounds read in scsi_vpd_lun_id() by ensuring
-VPD page 0x83 descriptor headers and bodies fit within the retained page
-before accessing them. It rejects truncated pages and stops parsing if the
-declared length exceeds the remaining page buffer.
-
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index daeb3693fe559..5e0b84e2d5813 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-[ ... ]
-> @@ -3382,11 +3382,21 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, cha=
-r *id, size_t id_len)
->  		return -EINVAL;
->  	}
-> =20
-> +	if (vpd_pg83->len < 4) {
-> +		rcu_read_unlock();
-> +		return -EINVAL;
-> +	}
-> +
->  	memset(id, 0, id_len);
-> -	for (d =3D vpd_pg83->data + 4;
-> -	     d < vpd_pg83->data + vpd_pg83->len;
-> +	end =3D vpd_pg83->data + vpd_pg83->len;
-> +	for (d =3D vpd_pg83->data + 4; end - d >=3D 4;
->  	     d +=3D d[3] + 4) {
-> -		u8 prio =3D designator_prio(d);
-> +		u8 prio;
-> +
-> +		if (d[3] > end - d - 4)
-> +			break;
-> +
-> +		prio =3D designator_prio(d);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but it shares the exact same
-vulnerability as the one fixed here in scsi_vpd_lun_id(). Could the same
-issue occur in scsi_vpd_tpg_id() located in drivers/scsi/scsi_lib.c?
-
-If a device returns a truncated VPD page 0x83, the loop blindly uses d[3] as
-the descriptor length:
-
-drivers/scsi/scsi_lib.c:scsi_vpd_tpg_id() {
-	...
-	while (d < vpd_pg83->data + vpd_pg83->len) {
-		switch (d[1] & 0xf) {
-		...
-		d +=3D d[3] + 4;
-	}
-}
-
-If the page length is short (e.g., 5 bytes), the loop executes because d st=
-arts
-at offset 4. It will then read d[1] and d[3] from beyond the bounds of the
-declared VPD page. Should similar bounds checking be applied to
-scsi_vpd_tpg_id() to prevent an out-of-bounds read?
-
-[Severity: High]
-This is a pre-existing issue, but does sd_get_unique_id() in drivers/scsi/s=
-d.c
-also suffer from this missing bounds check?
-
-In sd_get_unique_id(), the loop executes without validating that the remain=
-ing
-bytes can hold a 4-byte descriptor header:
-
-drivers/scsi/sd.c:sd_get_unique_id() {
-	...
-	for (d =3D vpd->data + 4; d < vpd->data + vpd->len; d +=3D d[3] + 4) {
-		...
-		len =3D d[3];
-		if (len !=3D 8 && len !=3D 12 && len !=3D 16)
-			continue;
-		ret =3D len;
-		memcpy(id, d + 4, len);
-		...
-}
-
-It reads the descriptor length d[3] from out-of-bounds memory. If this
-uninitialized heap byte happens to be 8, 12, or 16, the function uses memcp=
-y to
-copy out-of-bounds kernel heap memory into the id buffer. Since this buffer=
- can
-be visible to userspace, could this result in a kernel heap information lea=
-k?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260724151331.1445=
-730-1-jchuang@seu.edu.cn?part=3D1
+Best,
+Caleb
