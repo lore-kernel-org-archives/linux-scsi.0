@@ -1,76 +1,76 @@
-Received: from mail-oo1-f98.google.com (mail-oo1-f98.google.com [209.85.161.98])
+Received: from mail-oa1-f98.google.com (mail-oa1-f98.google.com [209.85.160.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B32B421229
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 10:32:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5DFE421229
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 10:32:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784889163; cv=none; b=eaVCsolsQq02EpTk3xqfHFKRF7R9hiKzssv9g+OnmN7zmJq0R9mH4HAi9prB0owyXqy9pqaz6d/+pJuh1RUpqHWkIaaI4Q3lIlID/J89K+LpXxAFfywYqIGCID3W3sbE/z6xaxZwgzF3lUNXN+s5lT7ALQRNCaz+o9Vkh2/0514=
+	t=1784889166; cv=none; b=X69xHcM2LgRz1Gqnf/1swwhvrk1ELRDvX4+hDwy8xgT5NVui8T16c3b8kBx+Y4D9HEW7VTgnohFjiu10PhGl7N1UW/xiG6wEknk6NWl9V64moYs5/nzC8mGE1z5+Na9AAsJs5JtWO9iYROO7xkgqyPn6eLYA28m3VoKrVP9FSGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784889163; c=relaxed/simple;
-	bh=Auuvy03fEk/smktzUHXbSV3LiQi/SgfjHV4AxZMiK80=;
+	s=arc-20240116; t=1784889166; c=relaxed/simple;
+	bh=CUaFEBarsONZHGEWugNzumz46WJn9f7Fso9RFSk8+JU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N6cokh0I3jTPcISE5nviD0Gh8NYeLDWJDVd7eh7k2aH14ZuzZat/XNRD2S40oWMTtxuqCfVe2cuQiF1F4H67v0igF/RJ1UnigNSa91UtmtQNTs0/VVf++SQXHmZaBCji+acHJzRnfIjslG6xleAuDgEBKmUyuZ3M3zXXK7iT2EM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=AIckn4Zp; arc=none smtp.client-ip=209.85.161.98
+	 MIME-Version; b=a7o3mvCUYRJmo3nTK0MzEb+iKKmBR0tPu7Q5mGpCXZPJqlmbgGIpVPYuJl/MdMHWaiAwOQ0KKm2zW3ceZ0qR1m4Th07+Q8mHytsJuhzElSpnBKgbUL3gi5ujAliJCEtDa6rgO23R2DI35pBRcAI8qQmWa7t4tNuN4yHy2+M7fjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=L7XxOkyX; arc=none smtp.client-ip=209.85.160.98
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="AIckn4Zp"
-Received: by mail-oo1-f98.google.com with SMTP id 006d021491bc7-6a190528769so83955eaf.0
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:32:41 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="L7XxOkyX"
+Received: by mail-oa1-f98.google.com with SMTP id 586e51a60fabf-456395f4e7bso134519fac.0
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:32:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784889161; x=1785493961;
+        d=1e100.net; s=20251104; t=1784889163; x=1785493963;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=GtH5xYq2DxdcDESnx9DJzt+YE63P1nCpIdgUtrdL9ic=;
-        b=sw940dn8YZbyk+lgNX9t4m+uMKirxpQEesMJDJM7BSlczJuD3eU3vs2wAfAv7p/2E0
-         u9GKTKaUwc5Uyutg5TkKAs9X7E7qBue7U8dCDfQM81C7gOQ5IKo0pgKFHlAg40cNdmbk
-         TP7c2Si7PBXFw4la6OeCYJpjrE8FISqjhfZoW61VxJxLW9ljaGksHQXw9Ly2yffZRLlT
-         Ifq1SXBmSvphwa5GdxCfeQD7OEiNA10nXwxbilRB2ltdEsXrEIvcvu3x/zhTnE0OfCY1
-         UiUbENKCel/VGXjXMtA6KrwU3jIZRwJ3hVgkf7I9AaNOfdtOjxZYbuYc9HClwtlGjj/v
-         1wQQ==
-X-Gm-Message-State: AOJu0Yy7mWDxqDeQWXXW2gjdX4/ackxhIIc9KcaTr4TdKQbbFWD6stjY
-	o6eRS2Zvwhwrvgn3KHcq7q0D0YDrlipXlsHOyZDuJW5x9YJHjAUNqrGcTRBvskhZdOahbCrTP9t
-	NH13Zv4NzW/zvmN3zLqPMaLDn5LfhRSGKAGjsE0eBxfYIbCEtN6eUPoMNsl6p5JbIHnQT03bAHU
-	z3qFriOrFKPxi4wxlcv91lqwEDOFKolhNJMtIsGiHqUx/AY2dAUIo3cunHPTybyUEIRmfQUB0Kq
-	8NdSFbfFBPuk7L8
-X-Gm-Gg: AR+sD13YmrzhsZBEHSmd+pgRRQArJyMATGpIYL2o2j9ua8oL3pAQsqbR0Y0S9alyRfT
-	OHRzdqUANmD9qzSF2aYSUlqyEJw8kZIsadiBTHs/v5YLxh15nUp8MLp4N4eD7oHaNNptuVCSvFA
-	qyuToL3bwY0WdeOI5qJmJg2UBaJDEfqTJ5CRAicKb2pBaSmIZFe62VMZWkWXtFYn6cCoTbEGuPX
-	eGzD8R+37ONHfUqs29rKyDx5InYmeVUrMwRvbX66hjGvMnPrdcblnSaTtxiUuPjSg7yiQzbM5Vz
-	/wQ9xVZFWaDLBTj5Gbbo5GmseqyU1JmtihaRJzWLAIk3/NqaOPlsjeIZyf17bRv64wq40C29o0K
-	QnivSL1fX0JjjDKcPyKdtBpqOEMkADpoG6z9NL+vNq4aCnlBII6PEzcsOhtBoneXDLtOjm0SDNZ
-	xb/afUitqFBcM2avfbZo+e1jqPSj9mAkIQxJk=
-X-Received: by 2002:a05:6820:190c:b0:6aa:79bf:f03c with SMTP id 006d021491bc7-6aad4182473mr3230541eaf.48.1784889160706;
-        Fri, 24 Jul 2026 03:32:40 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-73.dlp.protect.broadcom.com. [144.49.247.73])
-        by smtp-relay.gmail.com with ESMTPS id 586e51a60fabf-45766e2846dsm455368fac.2.2026.07.24.03.32.39
+        bh=lc8tqu8jijpJ3Ygre1+Rc8PW1msJqWwFg8ycS1GXJrg=;
+        b=owIVQfbs+tj3+OeJksSkEn3NUM4kve56E8SsZqxPsqdMMc2/2UBi3Fj/ofNdY9UNrc
+         UhrZtElg+lE0kwT0LkpGC8ImY4rdJusw4nNt4HhZbdNNXlAUuL+IBYFqusdcGByoRSYE
+         8x4xRSl1vhkRz9XsYdEQJBs1es15JLTHyYi6hL4zhOm3wNVkKUrcheiIdqgvNakinqqo
+         OWmor3FNp0KDbFDT4FA9ypZJGLHFkVh2yRw+jwRr1efdrG7lxEbLVbJx0HVu/pwxvoP9
+         +g9F3AGPz506R3cvOB0dF3vQNgL2DhGVDqTT2uRVYx+0bY3JSDtcyggo8Ay+EVV12B2z
+         EwSw==
+X-Gm-Message-State: AOJu0YzzllUUelgskCO96F+7357unyb75H7Gldk5yyED1J/UW8hDZFuu
+	TEWLujkplm0W3mgfXF8r9ToZNKS06KQVF3LZR0bQUvpaJ8bPBGIgA5jIDj+9XEzZTWoMMAQwAq5
+	Qjdi1EPSnVVsWg+XdAOZQhKIuLxA/ZSk8c0BHGQmbTixIR8zwBQvVBAfYX7UjcdurjjpYe14Lv9
+	RCp5p5/f4zkbVjzC1bEy3j0SnnllHa/LdLTZUIn7l4fMaqGlqRSFLWYOnbotc+fQojIFtbNlaqq
+	nwoicy9+xIRnstg
+X-Gm-Gg: AR+sD12ivD1FPGvCa6akL6eZcKicryvFj089zrV3/iAneOdE4RLU1cGN7GMiApCQArA
+	WuAVdmWa3XVik8SH8kuarmMlo+uxbeU5igvKvdlIr4I/k0paeHS8euHFde8ACvUPuAi1fUrB9p9
+	Lqw/sbYOSRhsQuBC/F0FVAK1GXRnbO8RIYCmXK/V2pahEbH1V5PERkLcznadh9gUWGGQdk3bTj3
+	7wsgP4ODZQvMTrn3JTNfqU3X90QdOEZo5PAm7s0BtdPCNwFtd8mytlwjPBF2ClSA5GebuN/evDb
+	VOL1y5GbPiLWkOalfqFZeT7fVTTUUtQwFOXTYNa8ROrAGDWTrzNFPPFqm2GQpnmSAu0piCylZ4D
+	qH5FtAjYiTx+oZMLXXUk+6Uja85naI9IhIQDORUbt98Py4AFSFlVVRoe22uUKpSYdicXCDtuJE8
+	nQYVE+HacjPy1xO6UzGiD0fQlkatqHwUBmkag=
+X-Received: by 2002:a05:6871:c909:b0:456:5842:f33e with SMTP id 586e51a60fabf-457a103e0a1mr3916569fac.25.1784889163409;
+        Fri, 24 Jul 2026 03:32:43 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-22.dlp.protect.broadcom.com. [144.49.247.22])
+        by smtp-relay.gmail.com with ESMTPS id 586e51a60fabf-45767465a64sm582952fac.13.2026.07.24.03.32.42
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 24 Jul 2026 03:32:40 -0700 (PDT)
+        Fri, 24 Jul 2026 03:32:43 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cb11535e6a1so287647a12.0
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:32:39 -0700 (PDT)
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cb6cf425e86so399469a12.1
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:32:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1784889158; x=1785493958; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1784889161; x=1785493961; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=GtH5xYq2DxdcDESnx9DJzt+YE63P1nCpIdgUtrdL9ic=;
-        b=AIckn4ZpHAQVzgEY0TiTHer9f9jAMC/KP/mRDutTZiSBYUg0EP/W7tdkS/zF/3zqPi
-         Rg13wpmRL3BsqKj3FdXTIIRyHdpmuvouVyd+T5quJ8z0jcEKPHyBtH+j36xd8Yuk5o8S
-         DTlKhrU7o7HhKY97cCKbHMpHITS5mkweqTm0I=
-X-Received: by 2002:a05:6a20:d508:b0:3c0:9c19:65a3 with SMTP id adf61e73a8af0-3c44b2b6a31mr8087930637.75.1784889158306;
-        Fri, 24 Jul 2026 03:32:38 -0700 (PDT)
-X-Received: by 2002:a05:6a20:d508:b0:3c0:9c19:65a3 with SMTP id adf61e73a8af0-3c44b2b6a31mr8087897637.75.1784889157682;
-        Fri, 24 Jul 2026 03:32:37 -0700 (PDT)
+        bh=lc8tqu8jijpJ3Ygre1+Rc8PW1msJqWwFg8ycS1GXJrg=;
+        b=L7XxOkyXSQp7x0+FYjYArelb5BASuWhgFhaCMNbw6eVTdOcZWJnOOF7gO0/bhgz8ST
+         YLWrcHQY6Dvige0vmjpAJRH1vWsplMEJGgDaX02ax3YPlX/AJpUqaSifTKD1/Lf9B/Yn
+         HIrs1eGlf0zN8fL2fK8rmHiqIhxxgl4QpLsPw=
+X-Received: by 2002:a05:6a20:a11a:b0:3c0:9c19:65b3 with SMTP id adf61e73a8af0-3c44b2ae24bmr7636601637.75.1784889161104;
+        Fri, 24 Jul 2026 03:32:41 -0700 (PDT)
+X-Received: by 2002:a05:6a20:a11a:b0:3c0:9c19:65b3 with SMTP id adf61e73a8af0-3c44b2ae24bmr7636564637.75.1784889160588;
+        Fri, 24 Jul 2026 03:32:40 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147e1cf8fasm30233211eec.31.2026.07.24.03.32.35
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147e1cf8fasm30233211eec.31.2026.07.24.03.32.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Jul 2026 03:32:37 -0700 (PDT)
+        Fri, 24 Jul 2026 03:32:40 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -79,9 +79,9 @@ Cc: sathya.prakash@broadcom.com,
 	vishakhavc@google.com,
 	ipylypiv@google.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v3 02/10] mpi3mr: Update MPI Headers to revision 41
-Date: Fri, 24 Jul 2026 15:54:57 +0530
-Message-ID: <20260724102505.115136-3-ranjan.kumar@broadcom.com>
+Subject: [PATCH v3 03/10] mpi3mr: Add early timestamp synchronization after driver load
+Date: Fri, 24 Jul 2026 15:54:58 +0530
+Message-ID: <20260724102505.115136-4-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260724102505.115136-1-ranjan.kumar@broadcom.com>
 References: <20260724102505.115136-1-ranjan.kumar@broadcom.com>
@@ -94,262 +94,94 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Update MPI Headers to revision 41
+When the driver is loaded from initramfs, the controller timestamp may
+be initialized before the system clock has been synchronized. As a
+result, the controller can operate with a stale timestamp until the
+first periodic synchronization occurs.
+
+Currently, the first controller timestamp synchronization occurs only
+after the configured ts_update_interval expires (15 minutes by default).
+Add an early timestamp synchronization 60 seconds after driver load,
+followed by the existing periodic synchronization interval.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 77 +++++++++++++++++++++--
- drivers/scsi/mpi3mr/mpi/mpi30_image.h     |  7 ++-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       | 15 +++--
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h |  2 +-
- 4 files changed, 87 insertions(+), 14 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  3 +++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 25 +++++++++++++++++++------
+ 2 files changed, 22 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-index 33dd303c97bb..7cf16a5c15b7 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-@@ -72,6 +72,12 @@
- #define MPI3_SECURITY_PGAD_SLOT_GROUP_SHIFT		(8)
- #define MPI3_SECURITY_PGAD_SLOT_MASK                    (0x000000ff)
- #define MPI3_INSTANCE_PGAD_INSTANCE_MASK                (0x0000ffff)
-+#define MPI3_INSTANCE_PGAD_INSTANCE_SHIFT               (0)
-+#define MPI3_INTERFACE_PGAD_INTERFACE_MASK              (0x0000000f)
-+#define MPI3_INTERFACE_PGAD_INTERFACE_SHIFT             (0)
-+#define MPI3_INTERFACE_PGAD_INTERFACE_MPI               (0)
-+#define MPI3_INTERFACE_PGAD_INTERFACE_NVME_VD           (1)
-+#define MPI3_INTERFACE_PGAD_INTERFACE_NVME_PD           (2)
- struct mpi3_config_request {
- 	__le16             host_tag;
- 	u8                 ioc_use_only02;
-@@ -492,10 +498,31 @@ struct mpi3_man10_istwi_ctrlr_entry {
- };
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 39096004c60a..1f2f0951b560 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -125,6 +125,7 @@ extern atomic64_t event_counter;
+ #define MPI3MR_RESETTM_TIMEOUT			60
+ #define MPI3MR_RESET_HOST_IOWAIT_TIMEOUT	5
+ #define MPI3MR_TSUPDATE_INTERVAL		900
++#define MPI3MR_EARLY_TSUPDATE_SECONDS		60
+ #define MPI3MR_DEFAULT_SHUTDOWN_TIME		120
+ #define	MPI3MR_RAID_ERRREC_RESET_TIMEOUT	180
+ #define MPI3MR_PREPARE_FOR_RESET_TIMEOUT	180
+@@ -1118,6 +1119,7 @@ struct scmd_priv {
+  * @evtack_cmds_bitmap: Event Ack bitmap
+  * @delayed_evtack_cmds_list: Delayed event acknowledgment list
+  * @ts_update_counter: Timestamp update counter
++ * @early_ts_sync_done: Early (1 min) timestamp sync completed after load
+  * @ts_update_interval: Timestamp update interval
+  * @reset_in_progress: Reset in progress flag
+  * @unrecoverable: Controller unrecoverable flag
+@@ -1318,6 +1320,7 @@ struct mpi3mr_ioc {
+ 	struct list_head delayed_evtack_cmds_list;
  
- #define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_SPEED_MASK         (0x000c)
--#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_SPEED_100K         (0x0000)
--#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_SPEED_400K         (0x0004)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_SPEED_100_KHZ		(0x0000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_SPEED_400_KHZ		(0x0004)
- #define MPI3_MAN10_ISTWI_CTRLR_FLAGS_TARGET_ENABLED          (0x0002)
- #define MPI3_MAN10_ISTWI_CTRLR_FLAGS_INITIATOR_ENABLED         (0x0001)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I2C_GLITCH_FLTR_MASK	(0xc000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I2C_GLITCH_FLTR_SHIFT      (14)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I2C_GLITCH_FLTR_50_NS      (0x0000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I2C_GLITCH_FLTR_10_NS      (0x4000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I2C_GLITCH_FLTR_5_NS       (0x8000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I2C_GLITCH_FLTR_0_NS       (0xc000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_TYPE_MASK              (0x3000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_TYPE_SHIFT             (12)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_TYPE_I2C               (0x0000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_TYPE_I3C               (0x1000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_TYPE_AUTO              (0x2000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I3C_MAX_DATA_RATE_MASK     (0x0e00)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I3C_MAX_DATA_RATE_SHIFT    (9)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I3C_MAX_DATA_RATE_12_5_MHZ (0x0000)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I3C_MAX_DATA_RATE_8_MHZ    (0x0200)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I3C_MAX_DATA_RATE_6_MHZ    (0x0400)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I3C_MAX_DATA_RATE_4_MHZ    (0x0600)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_I3C_MAX_DATA_RATE_2_MHZ    (0x0800)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_SPEED_MASK             (0x000c)
-+#define MPI3_MAN10_ISTWI_CTRLR_FLAGS_BUS_SPEED_SHIFT            (0)
-+
- #ifndef MPI3_MAN10_ISTWI_CTRLR_MAX
- #define MPI3_MAN10_ISTWI_CTRLR_MAX          (1)
- #endif
-@@ -1027,6 +1054,16 @@ struct mpi3_io_unit_page5 {
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SWITCH_ATTACHED       (0x02)
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_DIRECT_AND_EXPANDER   (0x03)
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_DIRECT_AND_SWITCH     (0x03)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_HDD_SPINDOWN_MASK     (0xc000)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_HDD_SPINDOWN_NONE     (0x0000)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_HDD_SPINDOWN_ALL      (0x4000)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_HDD_SPINDOWN_FILTERED (0x8000)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_HDD_SPINDOWN_RESERVED (0xc000)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SYNC_CACHE_MASK       (0x3000)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SYNC_CACHE_ALL        (0x0000)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SYNC_CACHE_FILTERED   (0x1000)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SYNC_CACHE_NONE       (0x2000)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SYNC_CACHE_RESERVED   (0x3000)
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SATA_HDD_MASK         (0x0300)
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SATA_HDD_SHIFT        (8)
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SAS_HDD_MASK          (0x00c0)
-@@ -1069,7 +1106,8 @@ struct mpi3_io_unit_page8 {
- 	struct mpi3_config_page_header         header;
- 	u8                                 sb_mode;
- 	u8                                 sb_state;
--	__le16                             reserved0a;
-+	u8                                 flags;
-+	u8				   reserved0b;
- 	u8                                 num_slots;
- 	u8                                 slots_available;
- 	u8                                 current_key_encryption_algo;
-@@ -1088,6 +1126,8 @@ struct mpi3_io_unit_page8 {
- #define MPI3_IOUNIT8_SBSTATE_SVN_UPDATE_PENDING   (0x04)
- #define MPI3_IOUNIT8_SBSTATE_KEY_UPDATE_PENDING   (0x02)
- #define MPI3_IOUNIT8_SBSTATE_SECURE_BOOT_ENABLED  (0x01)
-+#define MPI3_IOUNIT8_FLAGS_FWQR_CAPABLE			(0x80)
-+#define MPI3_IOUNIT8_FLAGS_FWQR_SECURED			(0x40)
- #define MPI3_IOUNIT8_SBMODE_CURRENT_KEY_IOUNIT17	(0x10)
- #define MPI3_IOUNIT8_SBMODE_HARD_SECURE_RECERTIFIED	(0x08)
- struct mpi3_io_unit_page9 {
-@@ -1174,10 +1214,16 @@ struct mpi3_io_unit_page12 {
- #define MPI3_IOUNIT12_FLAGS_NUMPASSES_32           (0x00000200)
- #define MPI3_IOUNIT12_FLAGS_NUMPASSES_64           (0x00000300)
- #define MPI3_IOUNIT12_FLAGS_PASSPERIOD_MASK        (0x00000003)
-+#define MPI3_IOUNIT12_FLAGS_PASSPERIOD_SHIFT       (0)
- #define MPI3_IOUNIT12_FLAGS_PASSPERIOD_DISABLED    (0x00000000)
- #define MPI3_IOUNIT12_FLAGS_PASSPERIOD_500US       (0x00000001)
- #define MPI3_IOUNIT12_FLAGS_PASSPERIOD_1MS         (0x00000002)
- #define MPI3_IOUNIT12_FLAGS_PASSPERIOD_2MS         (0x00000003)
-+#define MPI3_IOUNIT12_FLAGS_INTERFACE_MASK         (0x0000000c)
-+#define MPI3_IOUNIT12_FLAGS_INTERFACE_SHIFT        (2)
-+#define MPI3_IOUNIT12_FLAGS_INTERFACE_MPI          (0x00000000)
-+#define MPI3_IOUNIT12_FLAGS_INTERFACE_NVME_VD      (0x00000004)
-+#define MPI3_IOUNIT12_FLAGS_INTERFACE_NVME_PD      (0x00000008)
- #ifndef MPI3_IOUNIT13_FUNC_MAX
- #define MPI3_IOUNIT13_FUNC_MAX                                     (1)
- #endif
-@@ -1238,6 +1284,7 @@ struct mpi3_io_unit_page15 {
- #define MPI3_IOUNIT15_PAGEVERSION                                   (0x00)
- #define MPI3_IOUNIT15_FLAGS_EPRINIT_INITREQUIRED                    (0x04)
- #define MPI3_IOUNIT15_FLAGS_EPRSUPPORT_MASK                         (0x03)
-+#define MPI3_IOUNIT15_FLAGS_EPRSUPPORT_SHIFT                        (0)
- #define MPI3_IOUNIT15_FLAGS_EPRSUPPORT_NOT_SUPPORTED                (0x00)
- #define MPI3_IOUNIT15_FLAGS_EPRSUPPORT_WITHOUT_POWER_BRAKE_GPIO     (0x01)
- #define MPI3_IOUNIT15_FLAGS_EPRSUPPORT_WITH_POWER_BRAKE_GPIO        (0x02)
-@@ -1255,6 +1302,9 @@ struct mpi3_io_unit_page17 {
- 	__le32                             current_key[];
- };
- #define MPI3_IOUNIT17_PAGEVERSION		(0x00)
-+#define MPI3_IOUNIT17_FLAGS_KEYROOT_MASK	(0x01)
-+#define MPI3_IOUNIT17_FLAGS_KEYROOT_HW		(0x00)
-+#define MPI3_IOUNIT17_FLAGS_KEYROOT_FW		(0x01)
- struct mpi3_io_unit_page18 {
- 	struct mpi3_config_page_header		header;
- 	u8					flags;
-@@ -1640,11 +1690,28 @@ struct mpi3_security_page3 {
- };
+ 	u16 ts_update_counter;
++	u8 early_ts_sync_done;
+ 	u16 ts_update_interval;
+ 	u8 reset_in_progress;
+ 	u8 unrecoverable;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 59241038f689..434b66f7b502 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2870,8 +2870,9 @@ static int mpi3mr_print_pkg_ver(struct mpi3mr_ioc *mrioc)
+  * @work: work struct
+  *
+  * Watch dog work periodically executed (1 second interval) to
+- * monitor firmware fault and to issue periodic timer sync to
+- * the firmware.
++ * monitor firmware fault and perform timestamp synchronization
++ * to firmware, with an early sync 1 minute after load followed
++ * by periodic updates at ts_update_interval seconds (default 15 minutes).
+  *
+  * Return: Nothing.
+  */
+@@ -2917,11 +2918,23 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
+ 	}
  
- #define MPI3_SECURITY3_PAGEVERSION               (0x00)
--#define MPI3_SECURITY3_FLAGS_TYPE_MASK           (0x0f)
-+#define MPI3_SECURITY3_FLAGS_TYPE_MASK           (0x1f)
- #define MPI3_SECURITY3_FLAGS_TYPE_SHIFT          (0)
- #define MPI3_SECURITY3_FLAGS_TYPE_NOT_VALID      (0)
- #define MPI3_SECURITY3_FLAGS_TYPE_MLDSA_PRIVATE  (1)
- #define MPI3_SECURITY3_FLAGS_TYPE_MLDSA_PUBLIC   (2)
-+union mpi3_security_digest {
-+	__le32                             dword[16];
-+	__le16                             word[32];
-+	u8                                 byte[64];
-+};
-+struct mpi3_security_page4 {
-+	struct mpi3_config_page_header         header;
-+	__le32                             reserved08[2];
-+	union mpi3_security_mac               mac;
-+	union mpi3_security_nonce             nonce;
-+	u8                                 num_digests;
-+	u8                                 hash_algorithm;
-+	__le16                             reserved92;
-+	__le32                             reserved94[3];
-+	union mpi3_security_digest		digest[];
-+};
-+#define MPI3_SECURITY4_PAGEVERSION               (0x00)
- struct mpi3_security_page10 {
- 	struct mpi3_config_page_header         header;
- 	__le32                             reserved08[2];
-@@ -2074,7 +2141,7 @@ struct mpi3_sas_phy3_phy_event_config {
- #define MPI3_SASPHY3_EVENT_CODE_LCCONN_TIME                 (0xd5)
- #define MPI3_SASPHY3_EVENT_CODE_SSP_TX_START_TRANSMIT       (0xd6)
- #define MPI3_SASPHY3_EVENT_CODE_SATA_TX_START               (0xd7)
--#define MPI3_SASPHY3_EVENT_CODE_SMP_TX_START_TRANSMT        (0xd8)
-+#define MPI3_SASPHY3_EVENT_CODE_SMP_TX_START_TRANSMIT       (0xd8)
- #define MPI3_SASPHY3_EVENT_CODE_TX_SMP_BREAK_CONN           (0xd9)
- #define MPI3_SASPHY3_EVENT_CODE_SSP_RX_START_RECEIVE        (0xda)
- #define MPI3_SASPHY3_EVENT_CODE_SATA_RX_START_RECEIVE       (0xdb)
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_image.h b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-index 62ddf094d46c..5fa09fa79358 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-@@ -18,7 +18,7 @@ struct mpi3_hash_exclusion_format {
- 	__le32                     size;
- };
+ 	if (!(mrioc->facts.ioc_capabilities &
+-		MPI3_IOCFACTS_CAPABILITY_NON_SUPERVISOR_IOC) &&
+-		(mrioc->ts_update_counter++ >= mrioc->ts_update_interval)) {
++		MPI3_IOCFACTS_CAPABILITY_NON_SUPERVISOR_IOC)) {
++		if (!mrioc->early_ts_sync_done) {
++			/*
++			 * Send time sync 1 min after load
++			 */
++			if (mrioc->ts_update_counter++ >=
++					MPI3MR_EARLY_TSUPDATE_SECONDS) {
++				mrioc->early_ts_sync_done = 1;
++				mrioc->ts_update_counter = 0;
++				mpi3mr_sync_timestamp(mrioc);
++			}
++		} else if (mrioc->ts_update_counter++ >=
++				mrioc->ts_update_interval) {
++			mrioc->ts_update_counter = 0;
++			mpi3mr_sync_timestamp(mrioc);
++		}
  
--#define MPI3_IMAGE_HASH_EXCUSION_NUM                           (4)
-+#define MPI3_IMAGE_HASH_EXCLUSION_NUM                           (4)
- struct mpi3_component_image_header {
- 	__le32                            signature0;
- 	__le32                            load_address;
-@@ -42,7 +42,7 @@ struct mpi3_component_image_header {
- 	union mpi3_version_union             rmc_interface_version;
- 	union mpi3_version_union             etp_interface_version;
- 	struct mpi3_comp_image_version        component_image_version;
--	struct mpi3_hash_exclusion_format     hash_exclusion[MPI3_IMAGE_HASH_EXCUSION_NUM];
-+	struct mpi3_hash_exclusion_format     hash_exclusion[MPI3_IMAGE_HASH_EXCLUSION_NUM];
- 	__le32                            next_image_header_offset;
- 	union mpi3_version_union             security_version;
- 	__le32                            reserved84[31];
-@@ -347,7 +347,8 @@ struct mpi3_encrypted_hash_entry {
- struct mpi3_encrypted_hash_data {
- 	u8                                  image_version;
- 	u8                                  num_hash;
--	__le16                              reserved02;
-+	u8                                  fw_num_hash;
-+	u8                                  reserved03;
- 	__le32                              reserved04;
- 	struct mpi3_encrypted_hash_entry        encrypted_hash_entry[MPI3_ENCRYPTED_HASH_ENTRY_MAX];
- };
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-index 68efa0d51345..aa42fba7f930 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-@@ -428,10 +428,10 @@ struct mpi3_event_data_sas_discovery {
- #define MPI3_EVENT_SAS_DISC_FLAGS_IN_PROGRESS                   (0x01)
- #define MPI3_EVENT_SAS_DISC_RC_STARTED                          (0x01)
- #define MPI3_EVENT_SAS_DISC_RC_COMPLETED                        (0x02)
--#define MPI3_SAS_DISC_STATUS_MAX_ENCLOSURES_EXCEED            (0x80000000)
--#define MPI3_SAS_DISC_STATUS_MAX_EXPANDERS_EXCEED             (0x40000000)
--#define MPI3_SAS_DISC_STATUS_MAX_DEVICES_EXCEED               (0x20000000)
--#define MPI3_SAS_DISC_STATUS_MAX_TOPO_PHYS_EXCEED             (0x10000000)
-+#define MPI3_SAS_DISC_STATUS_MAX_ENCLOSURES_EXCEEDED            (0x80000000)
-+#define MPI3_SAS_DISC_STATUS_MAX_EXPANDERS_EXCEEDED             (0x40000000)
-+#define MPI3_SAS_DISC_STATUS_MAX_DEVICES_EXCEEDED               (0x20000000)
-+#define MPI3_SAS_DISC_STATUS_MAX_TOPO_PHYS_EXCEEDED             (0x10000000)
- #define MPI3_SAS_DISC_STATUS_INVALID_CEI                      (0x00010000)
- #define MPI3_SAS_DISC_STATUS_FECEI_MISMATCH                   (0x00008000)
- #define MPI3_SAS_DISC_STATUS_MULTIPLE_DEVICES_IN_SLOT         (0x00004000)
-@@ -965,7 +965,7 @@ struct mpi3_ci_download_reply {
- 	u8                                 flags;
- 	u8                                 cache_dirty;
- 	u8                                 pending_count;
--	u8                                 reserved13;
-+	u8                                 additional_flags;
- };
+-		mrioc->ts_update_counter = 0;
+-		mpi3mr_sync_timestamp(mrioc);
+ 	}
  
- #define MPI3_CI_DOWNLOAD_FLAGS_DOWNLOAD_IN_PROGRESS                  (0x80)
-@@ -979,6 +979,11 @@ struct mpi3_ci_download_reply {
- #define MPI3_CI_DOWNLOAD_FLAGS_ACTIVATION_STATUS_ONLINE_PENDING      (0x04)
- #define MPI3_CI_DOWNLOAD_FLAGS_ACTIVATION_STATUS_OFFLINE_PENDING     (0x06)
- #define MPI3_CI_DOWNLOAD_FLAGS_COMPATIBLE                            (0x01)
-+#define MPI3_CI_DOWNLOAD_ADDITIONALFLAGS_REDUNDANCYRESTORATION_MASK       (0x03)
-+#define MPI3_CI_DOWNLOAD_ADDITIONALFLAGS_REDUNDANCYRESTORATION_SHIFT      (0)
-+#define MPI3_CI_DOWNLOAD_ADDITIONALFLAGS_REDUNDANCYRESTORATION_NONE       (0x00)
-+#define MPI3_CI_DOWNLOAD_ADDITIONALFLAGS_REDUNDANCYRESTORATION_PRIMARY    (0x01)
-+#define MPI3_CI_DOWNLOAD_ADDITIONALFLAGS_REDUNDANCYRESTORATION_SECONDARY  (0x02)
- struct mpi3_ci_upload_request {
- 	__le16                             host_tag;
- 	u8                                 ioc_use_only02;
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-index 290a1f5c2924..794ecc778945 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-@@ -18,7 +18,7 @@ union mpi3_version_union {
- 
- #define MPI3_VERSION_MAJOR                                              (3)
- #define MPI3_VERSION_MINOR                                              (0)
--#define MPI3_VERSION_UNIT                                               (39)
-+#define MPI3_VERSION_UNIT                                               (41)
- #define MPI3_VERSION_DEV                                                (0)
- #define MPI3_DEVHANDLE_INVALID                                          (0xffff)
- struct mpi3_sysif_oper_queue_indexes {
+ 	if ((mrioc->prepare_for_reset) &&
 -- 
 2.47.3
 
