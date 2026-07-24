@@ -1,76 +1,76 @@
-Received: from mail-vk1-f225.google.com (mail-vk1-f225.google.com [209.85.221.225])
+Received: from mail-yx1-f97.google.com (mail-yx1-f97.google.com [74.125.224.97])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFB3441F5EA
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 10:32:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D0AA420497
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 10:32:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784889174; cv=none; b=uwQoodfEc6WkIyTdOUpHmGdUKnKi56wVtGyd4U5hjK9lbfzZ5q3z39QMCvY1PeoITK9fWzGh5A///yNHqRNxOhXLH4IksPVbZpXe8Jwz8u+jQc31QhXumFR8I5NZfRWKNunE5sucmBSdHnY1rWfGCvAPemUDKtcQnFciOiP9Sfs=
+	t=1784889177; cv=none; b=KsrzlGurCVTCFsHWOhjRQvo+vKLzw9Ji3fe+pujtCtuarBhqGjg+CRC+7+oW4H1xE0U6o2JhpABX4zc2i4wfIYWuyNa+4awhSdb5sq71JATegZNjEzCH8dlbxzEEVz06yWpw0A+FjeC1XG5QakYr9IUHD3QTQkGEbei3eXvNLk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784889174; c=relaxed/simple;
-	bh=ZIOyzWHGEUL26LcHP59WuDHWqLhjBuFjcSKJ8ukZu8k=;
+	s=arc-20240116; t=1784889177; c=relaxed/simple;
+	bh=N7M/pO9czLM43IOKtpnzT6PmoHuiixGP7GyoNKlvPn4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=W2qDg+f0FHmDAJHF6GBb0NixdPOiT/BxFQ39ISBRQ4KXKTEAlXPi2Wf7oDOreLCeZUfYdTQ/ghc/TPABPOTJN4QzuFd78qnKKgtW5GOzdHfOyv+pFKsvi8YF6eVA4Zm1c7zmTUFyvbDp41FGqCW1LPoEcrjP6P5mgyE5z27K4IM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=ewqhWAsx; arc=none smtp.client-ip=209.85.221.225
+	 MIME-Version; b=svZnEt4ohgXs+ZIOlyt0bwTvrSou3GObKYXpjOJZoH4QaAHHmy2VZlshLmEdE2VV+ZfjJ9Drnp/EUhzzUnh3Wq4aLT3sY4hIJs8TF+vX+Se2cyLYyHZo4FENZgq+Le6Iz8FdXiSzEPvrPnDRLPLsAUbIxC1lz+LVuppjFpnmF1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Y7nJAapk; arc=none smtp.client-ip=74.125.224.97
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ewqhWAsx"
-Received: by mail-vk1-f225.google.com with SMTP id 71dfb90a1353d-5c276bfce7eso167404e0c.2
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:32:52 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Y7nJAapk"
+Received: by mail-yx1-f97.google.com with SMTP id 956f58d0204a3-664b05d408bso175408d50.1
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:32:56 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784889172; x=1785493972;
+        d=1e100.net; s=20251104; t=1784889175; x=1785493975;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=SxE4bB9WIZg+8s3gW5hXNjusGWrc8XT9kF+T1TIlAak=;
-        b=dBFJpIXUoGJ2ZvNGzPh0tT2j7nOf0EcY3akwq/U7QorUcDZifb7adlaEAgp8DZYQST
-         k1FhZ2WsRgJhtreKFGIxN4bnR5EnQOMhA2nQeXFPnBQ3np7KKcf9V547MSC9rwoY5WvG
-         xp8PJa60CznRhNryrLKMRzVNmMX6xkglMNeNC4/AhzGKGjz2ymGUgGYxYMRjKUTt4CMh
-         cb62hRuAmlfb8Vem7GdcMiroN2hafSmRhKrWcElqfuz3XLIFN/MFFngjHtYqwC1kbH1r
-         9G+gTZDfawjaipdzWE6arhmQFh+z5BdX8kE0N0cx11ooxpvZIdvbFA7E/Dv1cIAWSHEL
-         +9XA==
-X-Gm-Message-State: AOJu0YzcHdHrtVNR3AIZKkO1ZgXoibtrx2Wl7KqMRWVwrEXwGVShyAT9
-	ijAYhdwkmjH5vzjex5i3CrcgGmde/khvsHGqMp2IaR6zitO0amZO96xufJkgLidJGUEOSBa6o7o
-	2AN8L8DNJr9FQgjO9Bt+yhpI7qxp1ISJayT3qMJi6LF7vZg1hcISVXTqA8kyk2LHPk8/T0qEhHR
-	ovw8hpyMSh/K17682jDFiepFq2RYZcBkfQPTWiHONfgAeXwsbejzrU5qUjNowxLbeB8fNB3hKNd
-	3EIfFGn5nBLtjNZ
-X-Gm-Gg: AR+sD1333mAATpJHrQjzGHLgTr6IW0ff7eDjEQoS/9CXD7rqbM3zkXecJVcwgxjHZFA
-	sVjxEC0J6cV35lOPQbU6FFkF1Ylr78Bh/yYxYaT7fa3Wl83Fluo27221m7mvEBAG4+wCpC18VSP
-	hxQWLAaQ/5doQ3OKWtEx5WX9DEjbPwB+duUmkL8ty9zMalUElWuTp+6ZMHzhPnDGpikTryIIU1a
-	oCg0bbRMApKNrlXqnZH7IrhxaxU3cp9r2CCCp/7U12/ztpz8kmepvb9JlsguAxNlmiuVsddjxRX
-	mJrf8mxO42e7/E/n+CAdJatEqt7+m5F/AimZPUVRSR3uszEI9unu7BtYQ0hlNhbuyBOJDGDFUgx
-	P8hT8MUZw4+2P9UTTC/KA2wxTNJp9FOAQtazU6l7ABIyuI78MHHT1EiOqoG19S7H+WaUsQ5bki9
-	+cph11162UXQ6EKI36hANRUolWNzJBATjOMao=
-X-Received: by 2002:a05:6123:2eb:b0:5c1:47db:cfcb with SMTP id 71dfb90a1353d-5c2da022353mr3731784e0c.4.1784889171646;
-        Fri, 24 Jul 2026 03:32:51 -0700 (PDT)
+        bh=TtZ7CUtOPujMWrugvWV6ht61yJ+DtAprRFs3gzJqxqI=;
+        b=CJUG+VbS2kvv99Jo+QbMvKnbH1SLWZ1TqpVXu0nGR8aDi+50otyJsle9zCI6mpKTJv
+         ovzPTSXeERsFR04ZniDRG3PZ6wOEJwuyV6AO1iXkfbssJQ2VrGf+vyrjOfvyE4oZj5kk
+         v4f9rpU3tfyC/DRZ0Ksb97d+d1eL9cjjBtbH6yABwGWhF0U+Qcvh5fT72A9XYbWsAeD3
+         ol/a79xYVaE7S8wHI886r9TyqQCx62VTxazIoewXZnxmqiYrWRj9gOZyaSMtMzCawMoY
+         wkEJR0iJvOIvcfP7x8nJyBXcExklYHx4fJwgkDrbp3DnJpaBzTmX+i9ZNR/VjDMYy20y
+         v6fA==
+X-Gm-Message-State: AOJu0Yybx86axOAVWOyT+cb0b0pFkg8DbWNkJITBe8Y7W4Ewz9Kr7gK7
+	hjcMxfk3iluQv+AL/Vx2dfq1gs+3HayLbfaZwWrlZKN9lw64JpYFE1LNm3M56Hx1XShwHQB3RbW
+	ow+UV7UhQq/82tUUunw6e5aLLHLZW0PgTCWlzgGpzy2SFPRoWGVMqoqVCy6S8fQQ+vKOajSpEhV
+	r7g6vHfOYBreGwkE294k6jU5tLLO97yQTYfnyqxVxbF1w+biasJqYBbEB5V8jjh0PAFrAPXztYc
+	zJU8eNmwrqfvobr
+X-Gm-Gg: AR+sD114AUbQQwmxAn+oojElVFKQc6DNfFhuBsopOCcGbhOawrasKSg0Fe7AqSbotSV
+	v2+HXMVtzOl2VAXJHEEgnLgpaaxxOhmr5z1X/42L1e32FLsxKUCx9ABbKl8MNCS04ROTpwIj65J
+	PwHeITBRVqTXFBIuOikofCvBVncEBcCTmaxSTZJV1pkOXvvUTx5GNC3dWI8YHERlG8KpLIKsOh0
+	8GJLwwYh1c/0yCJkvGJXVy1MnZ53dMsOm9jVN5AJWPBlwVjOuJzX7+WqUjY9uN7t2P0oPPb09Op
+	wknkg5ZOb4FFXCqtL1C8LSw8O5FBl0B2NIy3troRO2m00G/pX3G3ipSqYNI8ISwqdxe2E1pSFve
+	XrvZrrkq8cbb6rlUP3wdYb8ruvT+StrTY9gKfQzuHT6aLkigdjr/h2mjioxz2tEDZNqkB9wR1SF
+	DQOikfMLfwmVPT9f9LGLwCA8mWE7aJLrQCDMU=
+X-Received: by 2002:a53:acd3:0:10b0:668:437b:5478 with SMTP id 956f58d0204a3-668a4c9845dmr1497655d50.41.1784889175070;
+        Fri, 24 Jul 2026 03:32:55 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-73.dlp.protect.broadcom.com. [144.49.247.73])
-        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5c2c65ad85asm952920e0c.7.2026.07.24.03.32.51
+        by smtp-relay.gmail.com with ESMTPS id 956f58d0204a3-66890547313sm534712d50.10.2026.07.24.03.32.54
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 24 Jul 2026 03:32:51 -0700 (PDT)
+        Fri, 24 Jul 2026 03:32:55 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cb711c88f2eso213887a12.2
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:32:51 -0700 (PDT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-c860544c077so642944a12.3
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:32:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1784889170; x=1785493970; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1784889174; x=1785493974; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=SxE4bB9WIZg+8s3gW5hXNjusGWrc8XT9kF+T1TIlAak=;
-        b=ewqhWAsxlboIuWQYUQf/JZK39XEYUJi4XmeNSYHsLrfH2ga0PYqvXnqXI/KkzJcUlX
-         MUxBZIqg2M8pyUQp6/jxjyM7iE3D0iE/f+PPojnwYFCM7t2bh785SJshgG6Oia+YfEA8
-         9TCfyk8xjmgsI4QxlCPKbtd05q4DlmihLCl9Q=
-X-Received: by 2002:a05:6a21:a04:b0:3c3:97fc:93e1 with SMTP id adf61e73a8af0-3c44afccc17mr7709645637.15.1784889170499;
-        Fri, 24 Jul 2026 03:32:50 -0700 (PDT)
-X-Received: by 2002:a05:6a21:a04:b0:3c3:97fc:93e1 with SMTP id adf61e73a8af0-3c44afccc17mr7709609637.15.1784889169947;
-        Fri, 24 Jul 2026 03:32:49 -0700 (PDT)
+        bh=TtZ7CUtOPujMWrugvWV6ht61yJ+DtAprRFs3gzJqxqI=;
+        b=Y7nJAapkHi7iKJ1Xz8UB67Ao2W6YhXFUFZOv3FWwZQEnJOSoSXm93nOn0SKkZw6iA0
+         rwrGT8Uvj/pZIv+mlcPw5sEUriVuW4oFIJzpNr26UIlrimsW3bTWpFdkmkCnTZtOL8My
+         wBrCR7xhvUtfvWrvhr/qKyI6YQs+Ic2N+VEP4=
+X-Received: by 2002:a05:6a21:a393:b0:3c3:7427:5ed8 with SMTP id adf61e73a8af0-3c44afb4fffmr7910583637.8.1784889173727;
+        Fri, 24 Jul 2026 03:32:53 -0700 (PDT)
+X-Received: by 2002:a05:6a21:a393:b0:3c3:7427:5ed8 with SMTP id adf61e73a8af0-3c44afb4fffmr7910534637.8.1784889173082;
+        Fri, 24 Jul 2026 03:32:53 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147e1cf8fasm30233211eec.31.2026.07.24.03.32.47
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147e1cf8fasm30233211eec.31.2026.07.24.03.32.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Jul 2026 03:32:49 -0700 (PDT)
+        Fri, 24 Jul 2026 03:32:52 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -80,9 +80,9 @@ Cc: sathya.prakash@broadcom.com,
 	ipylypiv@google.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	Sashiko <sashiko-bot@kernel.org>
-Subject: [PATCH v3 06/10] mpi3mr: Fix memory leak on operational queue creation failure
-Date: Fri, 24 Jul 2026 15:55:01 +0530
-Message-ID: <20260724102505.115136-7-ranjan.kumar@broadcom.com>
+Subject: [PATCH v3 07/10] mpi3mr: Fix firmware event reference leak during cleanup
+Date: Fri, 24 Jul 2026 15:55:02 +0530
+Message-ID: <20260724102505.115136-8-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260724102505.115136-1-ranjan.kumar@broadcom.com>
 References: <20260724102505.115136-1-ranjan.kumar@broadcom.com>
@@ -95,93 +95,187 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-When operational queue creation fails after one or more queues have
-been created, the error path frees the queue information arrays but
-does not release the DMA memory segments associated with the created
-queues, resulting in a memory leak. Fix this by ensuring that partially
-allocated segments are freed immediately if a queue fails to create.
+During firmware event cleanup, when an event is currently executing or
+pending at the SCSI mid-layer, the driver sets a discard flag and exits
+the cleanup routine early. This early exit skips the normal cancel path,
+resulting in the firmware event reference count not being decremented,
+leading to a reference leak.
 
-Furthermore, the error handling path leaves dangling pointers in
-mrioc->intr_info[*].op_reply_q. If a spurious interrupt fires on an IRQ
-vector associated with a downgraded or freed queue, it leads to a
-Use-After-Free or NULL pointer dereference. Resolve this by ensuring
-the corresponding intr_info pointer is cleared whenever a reply queue's
-memory segments are freed.
+Further analysis of the firmware event handling revealed and fixed
+additional concurrency issues:
 
-Finally, harden the error handling path by checking for NULL pointers
-before freeing segments, and reset the operational queue counts to zero
-on failure. This prevents a deferred kernel panic during driver cleanup
-if queue creation fails during a controller reset.
+1. TOCTOU Race: mpi3mr_cleanup_fwevt_list() read current_event
+   locklessly, allowing the worker thread to free it concurrently.
+   Fix this by safely acquiring the reference under fwevt_lock.
+
+2. Use-After-Free: mpi3mr_dequeue_fwevt() dropped the event reference
+   before returning it to the caller. Remove this drop and add a
+   balancing put to the end of mpi3mr_cancel_work() so the caller
+   retains the reference during cancellation.
+
+3. Soft Lockup/Deadlock: mpi3mr_fwevt_bh() temporarily dropped
+   fwevt_lock while moving an event from the list to current_event.
+   This race window allowed driver unload (rmmod) to intervene and
+   deadlock. Fix this by inlining the list deletion so the lock is
+   held continuously.
 
 Reported-by: Sashiko <sashiko-bot@kernel.org>
-Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@broadcom.com?part=6
-Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar@broadcom.com?part=6
+Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@broadcom.com?part=7
+Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar@broadcom.com?part=7
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 26 ++++++++++++++++++++++----
- 1 file changed, 22 insertions(+), 4 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 84 +++++++++++++++++++--------------
+ 1 file changed, 48 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 9f7cee26ebcd..370ad8568117 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2020,6 +2020,10 @@ static void mpi3mr_free_op_reply_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
- 	u16 j;
- 	int size;
- 	struct segments *segments;
-+	u16 midx = REPLY_QUEUE_IDX_TO_MSIX_IDX(q_idx, mrioc->op_reply_q_offset);
-+
-+	if (midx < mrioc->intr_info_count)
-+		mrioc->intr_info[midx].op_reply_q = NULL;
- 
- 	segments = mrioc->op_reply_qinfo[q_idx].q_segments;
- 	if (!segments)
-@@ -2504,7 +2508,7 @@ static int mpi3mr_create_op_req_q(struct mpi3mr_ioc *mrioc, u16 idx,
- static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
- {
- 	int retval = 0;
--	u16 num_queues = 0, i = 0, msix_count_op_q = 1;
-+	u16 num_queues = 0, i = 0, j  = 0, msix_count_op_q = 1;
- 	u32 ioc_status;
- 	enum mpi3mr_iocstate ioc_state;
- 
-@@ -2556,6 +2560,13 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
- 		}
- 	}
- 
-+	if (i < num_queues) {
-+		for (j = i; j < num_queues; j++) {
-+			mpi3mr_free_op_req_q_segments(mrioc, j);
-+			mpi3mr_free_op_reply_q_segments(mrioc, j);
-+		}
-+	}
-+
- 	if (i == 0) {
- 		/* Not even one queue is created successfully*/
- 		retval = -1;
-@@ -2577,11 +2588,18 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
- 
- 	return retval;
- out_failed:
--	kfree(mrioc->req_qinfo);
--	mrioc->req_qinfo = NULL;
--
-+	if (mrioc->req_qinfo) {
-+		for (j = 0; j < i; j++) {
-+			mpi3mr_free_op_req_q_segments(mrioc, j);
-+			mpi3mr_free_op_reply_q_segments(mrioc, j);
-+		}
-+		kfree(mrioc->req_qinfo);
-+		mrioc->req_qinfo = NULL;
-+	}
-+	mrioc->num_op_req_q = 0;
- 	kfree(mrioc->op_reply_qinfo);
- 	mrioc->op_reply_qinfo = NULL;
-+	mrioc->num_op_reply_q = 0;
- 
- 	return retval;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 39624fae9131..545570d490fa 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -282,32 +282,6 @@ void mpi3mr_hdb_trigger_data_event(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_fwevt_add_to_list(mrioc, fwevt);
  }
+ 
+-/**
+- * mpi3mr_fwevt_del_from_list - Delete firmware event from list
+- * @mrioc: Adapter instance reference
+- * @fwevt: Firmware event reference
+- *
+- * Delete the given firmware event from the firmware event list.
+- *
+- * Return: Nothing.
+- */
+-static void mpi3mr_fwevt_del_from_list(struct mpi3mr_ioc *mrioc,
+-	struct mpi3mr_fwevt *fwevt)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+-	if (!list_empty(&fwevt->list)) {
+-		list_del_init(&fwevt->list);
+-		/*
+-		 * Put fwevt reference count after
+-		 * removing it from fwevt_list
+-		 */
+-		mpi3mr_fwevt_put(fwevt);
+-	}
+-	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+-}
+-
+ /**
+  * mpi3mr_dequeue_fwevt - Dequeue firmware event from the list
+  * @mrioc: Adapter instance reference
+@@ -327,11 +301,7 @@ static struct mpi3mr_fwevt *mpi3mr_dequeue_fwevt(
+ 		fwevt = list_first_entry(&mrioc->fwevt_list,
+ 		    struct mpi3mr_fwevt, list);
+ 		list_del_init(&fwevt->list);
+-		/*
+-		 * Put fwevt reference count after
+-		 * removing it from fwevt_list
+-		 */
+-		mpi3mr_fwevt_put(fwevt);
++
+ 	}
+ 	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 
+@@ -365,6 +335,11 @@ static void mpi3mr_cancel_work(struct mpi3mr_fwevt *fwevt)
+ 		 */
+ 		mpi3mr_fwevt_put(fwevt);
+ 	}
++
++	/*
++	 * Drop the reference count that was acquired by the caller.
++	 */
++	mpi3mr_fwevt_put(fwevt);
+ }
+ 
+ /**
+@@ -379,16 +354,39 @@ static void mpi3mr_cancel_work(struct mpi3mr_fwevt *fwevt)
+ void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc)
+ {
+ 	struct mpi3mr_fwevt *fwevt = NULL;
++	unsigned long flags;
+ 
++	/*
++	 * Safely read current_event under lock to prevent TOCTOU race
++	 * with the firmware event worker thread.
++	 */
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+ 	if ((list_empty(&mrioc->fwevt_list) && !mrioc->current_event) ||
+-	    !mrioc->fwevt_worker_thread)
++	    !mrioc->fwevt_worker_thread) {
++		spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 		return;
++	}
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 
+ 	while ((fwevt = mpi3mr_dequeue_fwevt(mrioc)))
+ 		mpi3mr_cancel_work(fwevt);
+ 
+-	if (mrioc->current_event) {
+-		fwevt = mrioc->current_event;
++	/*
++	 * Safely read current_event under lock to prevent TOCTOU race
++	 * with the firmware event worker thread.
++	 */
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
++	fwevt = mrioc->current_event;
++	if (fwevt) {
++		/*
++		 * Take a reference to ensure the event is not freed by the
++		 * worker thread while we are evaluating or cancelling it.
++		 */
++		mpi3mr_fwevt_get(fwevt);
++	}
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
++
++	if (fwevt) {
+ 		/*
+ 		 * Don't call cancel_work_sync() API for the
+ 		 * fwevt work if the controller reset is
+@@ -399,6 +397,7 @@ void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc)
+ 		 */
+ 		if (current_work() == &fwevt->work || fwevt->pending_at_sml) {
+ 			fwevt->discard = 1;
++			mpi3mr_fwevt_put(fwevt);
+ 			return;
+ 		}
+ 
+@@ -2129,9 +2128,19 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 	u16 perst_id, handle, dev_info;
+ 	struct mpi3_device0_sas_sata_format *sasinf = NULL;
+ 	unsigned int timeout;
++	unsigned long flags;
+ 
+-	mpi3mr_fwevt_del_from_list(mrioc, fwevt);
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
++	if (!list_empty(&fwevt->list)) {
++		list_del_init(&fwevt->list);
++		/*
++		 * Put fwevt reference count after
++		 * removing it from fwevt_list
++		 */
++		mpi3mr_fwevt_put(fwevt);
++	}
+ 	mrioc->current_event = fwevt;
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 
+ 	if (mrioc->stop_drv_processing) {
+ 		dprint_event_bh(mrioc, "ignoring event(0x%02x) in the bottom half handler\n"
+@@ -2264,9 +2273,12 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 		mpi3mr_process_event_ack(mrioc, fwevt->event_id,
+ 		    fwevt->evt_ctx);
+ out:
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
++	mrioc->current_event = NULL;
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
++
+ 	/* Put fwevt reference count to neutralize kref_init increment */
+ 	mpi3mr_fwevt_put(fwevt);
+-	mrioc->current_event = NULL;
+ }
+ 
+ /**
 -- 
 2.47.3
 
