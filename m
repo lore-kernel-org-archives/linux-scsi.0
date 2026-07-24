@@ -1,182 +1,117 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E93473C80;
-	Fri, 24 Jul 2026 22:30:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF752476CEE;
+	Fri, 24 Jul 2026 23:35:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784932239; cv=none; b=Dd6Lt5K/sUukAzrbFbsoTvkPrcZshwwKWgEGoqITeDzR00NYv89IeEdlTBCim9n1yPSTQopTc22hfdkXcq0YsMRKIxZYZoU/iQYFWWMFTJnvROtvgM8WK55Wkt3wA0zSekrbzJU6HfZgXmkT3Ktr7Wu6JYFdksARx/2YQrMT0fM=
+	t=1784936112; cv=none; b=J0KWaa/Munz1//BCYW2eIjIIeNnd1whPFGcvXNYu//CpZtkf4/iPsAuY3kGvjEHlLpCWJsbZbYiD6sAP6agFEyde0Ue97aPr8n3idslwePjXgd6d3Lj2BE2Y/DY6BmGRdDhJswgTB1A9A3ZslJhCTB/2yfx9GLjbwksWwr5o2/4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784932239; c=relaxed/simple;
-	bh=Gmq7d7Jg9C0o7Jvo2rDo8fBZ5JsOa9IPQMlU3RrGn94=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=aHVY+p7FLIJgOk5W2+/OyFzkJ5k8706AHohV9lw/vJpHfME4e8zYjP07EX6my8KZfACUAeZBwtFD/7LamOsE6IuVsgoDG9VW3Qou5CGpajuJYnkFv92h8fr7TcKimd2CkM9GALU1PW5kvnfzeJCmepVLvxj6aeU3L1aEckHGZNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kg0rN4VN; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kg0rN4VN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B40B1F00A3A;
-	Fri, 24 Jul 2026 22:30:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784932236;
-	bh=GS14DZQhW66q/6Q+X41QrQ1/gqGz9PBB64fXYqWc4+A=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Kg0rN4VNZ6bV24H8SvNLXOhE+5jjor+DqTtJly6ByqD6Q0sM0vxfACb688tRlkE1q
-	 wjyKLglL9XwupGMR66ysdyTevHPvfSH+frGOISUTH4KavpyI0Lh/jPD+u7McPOXNmr
-	 cvRkSvmFUY2KGqROQSWSPngkxP/UbcDEzyMHHCWxHuDvS+ofDdvv6uC3OFDhFoxSsi
-	 mjfisqiO3UnipsNxl4hBMB2oOHn4243tNZpYLTGywhA86qUHF6rD9Jm97to+SU1ZwD
-	 zP7U+v/AqkntG2svYeCMp6iaxn+Tz4/MeoQWDbi+YyqcX/0VzDERrTXU6cl4ybbR03
-	 SnHpJDvqQGwGA==
-Date: Fri, 24 Jul 2026 17:30:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gary Guo <gary@garyguo.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	GOTO Masanori <gotom@debian.or.jp>,
-	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-	Jens Taprogge <jens.taprogge@taprogge.org>,
-	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	David Airlie <airlied@redhat.com>, linux-pci@vger.kernel.org,
-	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, Sashiko <sashiko-bot@kernel.org>
-Subject: Re: [PATCH v4 9/9] PCI: Fix UAF when probe runs concurrent to dyn ID
- removal
-Message-ID: <20260724223035.GA1068309@bhelgaas>
+	s=arc-20240116; t=1784936112; c=relaxed/simple;
+	bh=aYrgDhizOckPspQJ6t3G3K3Lc7NOOpJo78OVx01YiFQ=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=G/cSxaNLZ38oJ0X1nq0GPY0ElORcleiWqC7Akkm8pgkr2qB4x24Wfhj25KXuDl209nPlNLwTXL/IiP67u++BEachw61Hw9arR/4iQCsKPNLl3YZpLwOJuyc1XtIlbzlSCXdN6vhikgAv3oHAtpg6bAtc5HzcC/qwyzIeJuO+DGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79E171F00A3A;
+	Fri, 24 Jul 2026 23:35:11 +0000 (UTC)
+Received: by venus (Postfix, from userid 1000)
+	id 93CE9181F1C; Sat, 25 Jul 2026 01:35:08 +0200 (CEST)
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+To: Julia.Lawall@inria.fr, Alex Deucher <alexander.deucher@amd.com>, 
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Andrew Lunn <andrew@lunn.ch>, Andrew Morton <akpm@linux-foundation.org>, 
+ Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>, 
+ Borislav Petkov <bp@alien8.de>, 
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+ Daniel Lezcano <daniel.lezcano@kernel.org>, 
+ David Airlie <airlied@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+ Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Hans de Goede <hansg@kernel.org>, Hans Verkuil <hverkuil@kernel.org>, 
+ Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Jakub Kicinski <kuba@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ Jani Nikula <jani.nikula@linux.intel.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Jiri Pirko <jiri@resnulli.us>, 
+ "Joerg Roedel (AMD)" <joro@8bytes.org>, Johan Hovold <johan@kernel.org>, 
+ Jonathan Cameron <jic23@kernel.org>, 
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
+ Julian Anastasov <ja@ssi.bg>, Leon Romanovsky <leon@kernel.org>, 
+ Liam Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Mark Brown <broonie@kernel.org>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Matthew Sakai <msakai@redhat.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ Maxime Ripard <mripard@kernel.org>, 
+ Michael Turquette <mturquette@baylibre.com>, 
+ Mike Rapoport <rppt@kernel.org>, 
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
+ Nicolas Palix <nicolas.palix@imag.fr>, 
+ Pablo Neira Ayuso <pablo@netfilter.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Ping-Ke Shih <pkshih@realtek.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Sebastian Reichel <sre@kernel.org>, 
+ Shuah Khan <shuah@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
+ Simon Horman <horms@verge.net.au>, Stephen Boyd <sboyd@kernel.org>, 
+ Steve French <sfrench@samba.org>, Takashi Iwai <tiwai@suse.com>, 
+ Thomas Renninger <trenn@suse.com>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ Tony Luck <tony.luck@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, 
+ Vadim Fedorenko <vadim.fedorenko@linux.dev>, Vinod Koul <vkoul@kernel.org>, 
+ Will Deacon <will@kernel.org>, Yazen Ghannam <Yazen.Ghannam@amd.com>, 
+ Sang-Heon Jeon <ekffu200098@gmail.com>
+Cc: cocci@inria.fr, amd-gfx@lists.freedesktop.org, 
+ dmaengine@vger.kernel.org, dm-devel@lists.linux.dev, 
+ dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
+ intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev, 
+ linux-cifs@vger.kernel.org, linux-clk@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org, 
+ linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-media@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
+ linux-rdma@vger.kernel.org, linux-rtc@vger.kernel.org, 
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-wireless@vger.kernel.org, lvs-devel@vger.kernel.org, 
+ netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, 
+ nouveau@lists.freedesktop.org, platform-driver-x86@vger.kernel.org
+In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
+References: <20260723184538.3888637-1-ekffu200098@gmail.com>
+Subject: Re: (subset) [PATCH 00/36] treewide: remove conditional returns
+ with no effect
+Message-Id: <178493610858.699463.6794401814873674138.b4-ty@collabora.com>
+Date: Sat, 25 Jul 2026 01:35:08 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260723-pci_id_fix-v4-9-3580726844e1@garyguo.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On Thu, Jul 23, 2026 at 11:00:48PM +0100, Gary Guo wrote:
-> Dynamic IDs are only guaranteed to be valid when dynids.lock is held,
-> as remove_id_store() can free the node. Thus, make a copy in
-> pci_match_device(). Also, clarify that the id parameter is only valid
-> during probe.
-> 
-> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.org/
-> Fixes: 0994375e9614 ("PCI: add remove_id sysfs entry")
-> Reviewed-by: Danilo Krummrich <dakr@kernel.org>
-> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On Fri, 24 Jul 2026 03:45:02 +0900, Sang-Heon Jeon wrote:
+> While reading mm/memblock, I found a conditional return where both
+> branches return the same value:
+> 
+> 	err = do_something();
+> 	if (err)
+> 		return err;
+> 	return err;
+> 
+> [...]
 
-> ---
->  drivers/pci/pci-driver.c | 28 +++++++++++++++-------------
->  include/linux/pci.h      |  1 +
->  2 files changed, 16 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index ab3bb756ce89..e16aa59dd7ac 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -180,6 +180,7 @@ static const struct pci_device_id pci_device_id_any = {
->   * pci_match_device - See if a device matches a driver's list of IDs
->   * @drv: the PCI driver to match against
->   * @dev: the PCI device structure to match against
-> + * @id_copy: place to store copy of pci_device_id for dynamic ID
->   *
->   * Used by a driver to check whether a PCI device is in its list of
->   * supported devices or in the dynids list, which may have been augmented
-> @@ -187,9 +188,9 @@ static const struct pci_device_id pci_device_id_any = {
->   * structure or %NULL if there is no match.
->   */
->  static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
-> -						    struct pci_dev *dev)
-> +						    struct pci_dev *dev,
-> +						    struct pci_device_id *id_copy)
->  {
-> -	struct pci_dynid *dynid;
->  	const struct pci_device_id *found_id = NULL;
->  	struct pci_device_id dev_id;
->  	int ret;
-> @@ -201,17 +202,16 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
->  
->  	dev_id = pci_id_from_device(dev);
->  	/* Look at the dynamic ids first, before the static ones */
-> -	spin_lock(&drv->dynids.lock);
-> -	list_for_each_entry(dynid, &drv->dynids.list, node) {
-> -		if (pci_match_one_id(&dynid->id, &dev_id)) {
-> -			found_id = &dynid->id;
-> -			break;
-> +	scoped_guard(spinlock, &drv->dynids.lock) {
-> +		struct pci_dynid *dynid;
-> +
-> +		list_for_each_entry(dynid, &drv->dynids.list, node) {
-> +			if (pci_match_one_id(&dynid->id, &dev_id)) {
-> +				*id_copy = dynid->id;
-> +				return id_copy;
-> +			}
->  		}
->  	}
-> -	spin_unlock(&drv->dynids.lock);
-> -
-> -	if (found_id)
-> -		return found_id;
->  
->  	found_id = do_pci_match_id(drv->id_table, &dev_id, ret > 0);
->  	if (found_id)
-> @@ -467,12 +467,13 @@ void pci_probe_flush_workqueue(void)
->  static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
->  {
->  	const struct pci_device_id *id;
-> +	struct pci_device_id id_copy;
->  	int error = 0;
->  
->  	if (drv->probe) {
->  		error = -ENODEV;
->  
-> -		id = pci_match_device(drv, pci_dev);
-> +		id = pci_match_device(drv, pci_dev, &id_copy);
->  		if (id)
->  			error = pci_call_probe(drv, pci_dev, id);
->  	}
-> @@ -1560,12 +1561,13 @@ static int pci_bus_match(struct device *dev, const struct device_driver *drv)
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	struct pci_driver *pci_drv;
->  	const struct pci_device_id *found_id;
-> +	struct pci_device_id id_copy;
->  
->  	if (pci_dev_binding_disallowed(pci_dev))
->  		return 0;
->  
->  	pci_drv = (struct pci_driver *)to_pci_driver(drv);
-> -	found_id = pci_match_device(pci_drv, pci_dev);
-> +	found_id = pci_match_device(pci_drv, pci_dev, &id_copy);
->  	if (found_id)
->  		return 1;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 64b308b6e61c..92c17c116de6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -979,6 +979,7 @@ struct module;
->   *		function returns zero when the driver chooses to
->   *		take "ownership" of the device or an error code
->   *		(negative number) otherwise.
-> + *		The pci_device_id parameter is only valid during probe.
->   *		The probe function always gets called from process
->   *		context, so it can sleep.
->   * @remove:	The remove() function gets called whenever a device
-> 
-> -- 
-> 2.54.0
-> 
+Applied, thanks!
+
+[26/36] power: supply: pm8916_lbc: remove conditional return with no effect
+        commit: b7c8d46411317f135e7791c0eddc56691de63f07
+
+Best regards,
+-- 
+Sebastian Reichel <sebastian.reichel@collabora.com>
+
