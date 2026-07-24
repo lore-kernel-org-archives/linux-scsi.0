@@ -1,113 +1,109 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FCBC392803;
-	Fri, 24 Jul 2026 21:48:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43684368D71;
+	Fri, 24 Jul 2026 22:02:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784929717; cv=none; b=lmE59OT/cc2rq/lI2LdfzBtVYT4hzbls+hc/puzRBhJuGm5j3xEmP2kIvVItV5pC2Rbi4lxgGHbhKrDYEeTMrCN1eC8XOcA3xGjJrP+l+yZU9CCMN/DkacPClBgHbF7NqUdmEDbAb+4Nfiq1T1e5DIcnUFOO5ofjo7aK41epYhc=
+	t=1784930524; cv=none; b=Jq4WEc/dmce+t/0OUeWqDri681141MIV6gTUPqO4tboz+Z+E3W8lY0QA4J2FPi7o2bVU+9c0Y0/hme6Efb26mdUIyq5YbQWj7f49p+I0XghnhryUjWm2ID1LwoPrTGqiYjhzuPUKCGIXYCwmat0O1Bl4uyRtdcMJZJaAk9MlTFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784929717; c=relaxed/simple;
-	bh=GTdZSgSwBlfAlIxva5M6ZU/kD9VYoe26BBxVBJ5WdPE=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f0dWPJXuJkkHlQ5NLOuD9Ax5Gho1OuqyiVb7t0nd5oWleu8UvKWZ0I9ZwliB4KZE49TmmB6QFpuZUZCvhsdQzWUJFHk39L78Jrb5jzWdYLl7N97uSjvi3jiv7Dfm4rIqq0HGBt3VlUk4FDbtEfdYIBkLNyeZ2WbbL7Xj7V2F1Co=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bhpTuvSZ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784930524; c=relaxed/simple;
+	bh=ywah8ER0vLY+C1/cK6YU1x2kevhPGJj1cJWLrEnreFI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=eM4GMCOkF63vYPmiHDiAYOvqJM8dJcZA8L6A25TuthWVDZHY499+oJuOGwuBHfbHBY2on5PKQNzoAdH84Br7l7DSP0C7I0jux3YMLrIPkPwwGKVV44MoQDNCny/dSzgjekrNMK+R1JzRc/ZR65/Wk7KUzogmWxLz478lK1sWI9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BuwhY2zI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bhpTuvSZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A6FC1F000E9;
-	Fri, 24 Jul 2026 21:48:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BuwhY2zI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 731C51F000E9;
+	Fri, 24 Jul 2026 22:02:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784929705;
-	bh=GTdZSgSwBlfAlIxva5M6ZU/kD9VYoe26BBxVBJ5WdPE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=bhpTuvSZWBV7iq9keKc8+pixk18qLEuyMz3ZTlqKcB81KF/CnyeLGI6JSyvHGt9tA
-	 E+SxQVBXcXsXsZgtn3HAr+6nPULrU5HRAYu13tTfnL5ffRJr3w0sXxS3y6FSy3SRlS
-	 Qe3XQkADPgbjY9nioQHCBPR4pvKP4dL5d3HxM/ORX/63JYStNE+wqJy61XHcdbEpWF
-	 xaZAuoqTpynwYjXBJP4BY73AhLP471MMWjcWFGi91teQEabAfmboMZJJ2AI9mVl919
-	 5Vj52Ap+SYxCLa6sCvz56w/tCisRBng0kD6I+yiTKpyHAoJV1VexiywmsHK9mBuUsB
-	 8QLvkwcrgPftA==
-Date: Fri, 24 Jul 2026 14:48:22 -0700
-From: Jakub Kicinski <kuba@kernel.org>
-To: Sang-Heon Jeon <ekffu200098@gmail.com>
-Cc: Julia.Lawall@inria.fr, Alex Deucher <alexander.deucher@amd.com>,
- Alexander Shishkin <alexander.shishkin@linux.intel.com>, Alexandre Belloni
- <alexandre.belloni@bootlin.com>, Andrew Lunn <andrew@lunn.ch>, Andrew
- Morton <akpm@linux-foundation.org>, Arkadiusz Kubalewski
- <arkadiusz.kubalewski@intel.com>, Borislav Petkov <bp@alien8.de>, Christian
- =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>, Daniel Lezcano
- <daniel.lezcano@kernel.org>, David Airlie <airlied@gmail.com>, "David S.
- Miller" <davem@davemloft.net>, Dmitry Torokhov <dmitry.torokhov@gmail.com>,
- Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Hans de Goede
- <hansg@kernel.org>, Hans Verkuil <hverkuil@kernel.org>, Heikki Krogerus
- <heikki.krogerus@linux.intel.com>, Herbert Xu
- <herbert@gondor.apana.org.au>, Ilpo =?UTF-8?B?SsOkcnZpbmVu?=
- <ilpo.jarvinen@linux.intel.com>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, Jani Nikula
- <jani.nikula@linux.intel.com>, Jaroslav Kysela <perex@perex.cz>, Jason
- Gunthorpe <jgg@ziepe.ca>, Jiri Pirko <jiri@resnulli.us>, "Joerg Roedel
- (AMD)" <joro@8bytes.org>, Johan Hovold <johan@kernel.org>, Jonathan Cameron
- <jic23@kernel.org>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
- Julian Anastasov <ja@ssi.bg>, Leon Romanovsky <leon@kernel.org>, Liam
- Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>, Maarten
- Lankhorst <maarten.lankhorst@linux.intel.com>, Mark Brown
- <broonie@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>,
- Matthew Sakai <msakai@redhat.com>, Mauro Carvalho Chehab
- <mchehab@kernel.org>, Maxime Ripard <mripard@kernel.org>, Michael Turquette
- <mturquette@baylibre.com>, Mike Rapoport <rppt@kernel.org>, Miri Korenblit
- <miriam.rachel.korenblit@intel.com>, Nicolas Palix <nicolas.palix@imag.fr>,
- Pablo Neira Ayuso <pablo@netfilter.org>, Paolo Abeni <pabeni@redhat.com>,
- Ping-Ke Shih <pkshih@realtek.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Rodrigo Vivi <rodrigo.vivi@intel.com>, Sebastian Reichel <sre@kernel.org>,
- Shuah Khan <shuah@kernel.org>, Simona Vetter <simona@ffwll.ch>, Simon
- Horman <horms@verge.net.au>, Stephen Boyd <sboyd@kernel.org>, Steve French
- <sfrench@samba.org>, Takashi Iwai <tiwai@suse.com>, Thomas Renninger
- <trenn@suse.com>, Thomas Zimmermann <tzimmermann@suse.de>, Tony Luck
- <tony.luck@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, Vadim
- Fedorenko <vadim.fedorenko@linux.dev>, Vinod Koul <vkoul@kernel.org>, Will
- Deacon <will@kernel.org>, Yazen Ghannam <Yazen.Ghannam@amd.com>,
- cocci@inria.fr, amd-gfx@lists.freedesktop.org, dmaengine@vger.kernel.org,
- dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org,
- intel-gfx@lists.freedesktop.org, intel-wired-lan@lists.osuosl.org,
- iommu@lists.linux.dev, linux-cifs@vger.kernel.org,
- linux-clk@vger.kernel.org, linux-crypto@vger.kernel.org,
- linux-edac@vger.kernel.org, linux-gpio@vger.kernel.org,
- linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
- linux-mm@kvack.org, linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
- linux-rtc@vger.kernel.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org,
- linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
- lvs-devel@vger.kernel.org, netdev@vger.kernel.org,
- netfilter-devel@vger.kernel.org, nouveau@lists.freedesktop.org,
- platform-driver-x86@vger.kernel.org
-Subject: Re: [PATCH 00/36] treewide: remove conditional returns with no
- effect
-Message-ID: <20260724144822.6af8213f@kernel.org>
-In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
-References: <20260723184538.3888637-1-ekffu200098@gmail.com>
+	s=k20260515; t=1784930522;
+	bh=19neDo4MQirpVjO0C6b65qm1NaBdKqFZ57sG6uJUNus=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BuwhY2zIWODQmYcPMT8oZOiyLSlKJbI820rZB1d/2wT4fAkJJorHMu/eyqO/iyPj1
+	 hHAsbFIaCB5vrAHyMcYDcCfh0BlD0LFh/X3rO0arC25oGm6G5lJRqp96oKxm305oGc
+	 QKsNESB+n7uEQ2Qn300X1fR9do4Iw7MdhgtiZ3LCc5bZz7pq0qAKctcdknUBzU9bhN
+	 Lg4vlz9VC+1Lzqr+vcL9KDA+Jl7wG8C7ACpxV6wGYO0EIao/alKqbmy2GKw5eC51Ei
+	 SxgSpTlqeG+H9EMDOGoIsuH/oL0CIk+S0fa1mZ/pjG6kvAcDJ/CGaXM9un1LFRTTmi
+	 FfXzeEX1S9d3w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 3/9] ipack: tpci200: don't store pci_device_id
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Gary Guo" <gary@garyguo.net>
+Cc: dri-devel@lists.freedesktop.org, dlemoal@kernel.org, linux-pci@vger.kernel.org, cassel@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260723-pci_id_fix-v4-3-3580726844e1@garyguo.net>
+References: <20260723-pci_id_fix-v4-0-3580726844e1@garyguo.net>
+ <20260723-pci_id_fix-v4-3-3580726844e1@garyguo.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 24 Jul 2026 22:02:02 +0000
+Message-Id: <20260724220202.731C51F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 
-On Fri, 24 Jul 2026 03:45:02 +0900 Sang-Heon Jeon wrote:
-> Patch 1 adds a Coccinelle script that matches the pattern, including
-> negation and constant-comparison variants. Where a local variable is
-> assigned right before the check, the assignment and the two returns
-> turn into a single return of the assigned expression.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Huh, I thought we already had such script. Various script children have
-been sending such "cleanups" in the past.
+Pre-existing issues:
+- [High] MMIO configuration registers are mapped and accessed before callin=
+g pci_enable_device(), which can lead to dropped writes or master aborts.
+--
 
-> Patches 2-36 are generated by the script, with hand fixes to restore
-> unexpectedly removed comments and to fix the formatting checkpatch.pl
-> complained about.
+--- Patch [3]: [PATCH v4 3/9] ipack: tpci200: don't store pci_device_id ---
+commit eed0a798b7390c20259769af7ca3dfe410d112f0
+Author: Gary Guo <gary@garyguo.net>
+Subject: ipack: tpci200: don't store pci_device_id
 
-Please post patches 4,7,8,9 as a separate series. Since you only CCed
-netdev on subset of the series patchwork thinks there are patches
-missing and doesn't kick off any CI.
+This commit removes the stored pci_device_id from the tpci200_infos structu=
+re.
+Since dynamic IDs are not guaranteed to outlive the probe function, and the
+stored ID is unused, removing it prevents potential issues.
+
+> diff --git a/drivers/ipack/carriers/tpci200.c b/drivers/ipack/carriers/tp=
+ci200.c
+> index 05dcb6675cd66..1cf51f7632932 100644
+> --- a/drivers/ipack/carriers/tpci200.c
+> +++ b/drivers/ipack/carriers/tpci200.c
+> @@ -562,7 +562,6 @@ static int tpci200_pci_probe(struct pci_dev *pdev,
+> =20
+>  	/* Save struct pci_dev pointer */
+>  	tpci200->info->pdev =3D pdev;
+> -	tpci200->info->id_table =3D (struct pci_device_id *)id;
+> =20
+>  	/* register the device and initialize it */
+>  	ret =3D tpci200_install(tpci200);
+
+[Severity: High]
+This is a pre-existing issue, but I noticed that MMIO configuration registe=
+rs
+are mapped and accessed before pci_enable_device() is called.
+
+Earlier in tpci200_pci_probe(), the driver maps the configuration memory bar
+and immediately accesses the registers to configure byte swapping:
+
+    reg32 =3D ioread32(tpci200->info->cfg_regs + LAS1_DESC);
+    reg32 |=3D 1 << LAS_BIT_BIGENDIAN;
+    iowrite32(reg32, tpci200->info->cfg_regs + LAS1_DESC);
+
+However, pci_enable_device() doesn't seem to be called until later in the
+probe sequence, when tpci200_install() eventually calls tpci200_register():
+
+    if (pci_enable_device(tpci200->info->pdev) < 0)
+        return -ENODEV;
+
+Since the memory enable bit in the PCI command register is not guaranteed to
+be set by the firmware before probe, accessing MMIO regions before
+pci_enable_device() can result in reads returning 0xFFFFFFFF and writes bei=
+ng
+dropped. On some architectures, this might even trigger a system-crashing
+PCI master abort.
+
+Should pci_enable_device() be called earlier in tpci200_pci_probe() before
+any MMIO access occurs?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260723-pci_id_fix=
+-v4-0-3580726844e1@garyguo.net?part=3D3
