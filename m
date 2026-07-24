@@ -1,46 +1,47 @@
 Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7745136F8EF
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:10:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB012EA732
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:12:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784862640; cv=none; b=cQ4s352L30NWQ5PBPXu3yq2+6ExRoN0WGug14EhgHf5bX6iFq0sMk+p29We7cnqJ3KfgUq45k+ZF1XAaezNU93Bj59cy/wjr4unlrWmDh1SBBl1UyO/NR4uVJMTuDCskIutVGn9qeHykvCn/P7Jmon0Fo1g4eKgw3q+Js3l2tvM=
+	t=1784862741; cv=none; b=GUitBEivyeeXQinA0BCcwMi33yFF7PXliLPjEgsqcy30i363HuA+2aU1pPt0/xN8sD3YdK7367w8p/VMLJyJj8BhsfvAHhLrEFVWZ0lIsvFag7+wAPfWi6cq1l19UsDaikp4mPchnhOwSR4eg9uWDQ/3wHIaEdQbUF53e9lSm9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784862640; c=relaxed/simple;
-	bh=nOzdidjXQV0uz1EFMYu1dWklnHb4gWft3rugDHKnOjU=;
+	s=arc-20240116; t=1784862741; c=relaxed/simple;
+	bh=ckIvn/zS7gshiBNHluUbSRZIpaYcvOUgJmNGoltg7bE=;
 	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
-	 Content-Type:References; b=hUF3uQgJFfzOrw8cBkmPSl+QVeXHt28flBLoeypockTyR24pvsz6YVnJFrchfR3te7R3YmxLKmYGTCK6CCeuNzz/CBCUGNxy0Sv064t5kd72kaDgyJpwVbboS5jIAFwuGOcYUhncNFcnEF9DjXb8hz0b+FUBGFaLyfLVFVAMfE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=XH2+m++M; arc=none smtp.client-ip=203.254.224.33
+	 Content-Type:References; b=f1GTT8KN9gnFSAH5Z8eW2mhpHxQjfYyMeEXuLgamdXr8V2OBqPjg1LDuti8htvS/V6ij4J2874roxSaZ3tuIFI7UQHbTo49AsirZXpatTwIP2kmHF23oeEnLG+o2ptrRZUbuzsBbjdcJ9fw5wzu1NQMVAX07s89anK1H0Ybgnkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=mIZc3M/A; arc=none smtp.client-ip=203.254.224.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="XH2+m++M"
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260724031036epoutp037a6ae562461698f9c46bea4acb801f02~FGxxkgsxE3076930769epoutp036
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:10:36 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260724031036epoutp037a6ae562461698f9c46bea4acb801f02~FGxxkgsxE3076930769epoutp036
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mIZc3M/A"
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260724031217epoutp033a6b024226b705da7394ae277675d70f~FGzPr1Bzi0051000510epoutp03e
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 03:12:17 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260724031217epoutp033a6b024226b705da7394ae277675d70f~FGzPr1Bzi0051000510epoutp03e
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1784862636;
-	bh=tojf8rj2bem989rr1WHdMeD6Sk/iktrZUYltKHtYFcM=;
+	s=mail20170921; t=1784862737;
+	bh=CAgsliIdmRcX5nvwLjnoiudZw/vwu+ManXd/73jQE48=;
 	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=XH2+m++MlVny4b/2teIGS7CR4QmynxaSfXJJEll9CMjMu8pSYaeLJ/TF42rTaQLmk
-	 okcWtFsUhoB2/Xn8AR1ZhbSv2KiVAmOGVU7yh9Jvk/A30cc9sKOpmnT6NvRWtdG1fZ
-	 s2Ms7BhwUMDa8nLd4tMvLbmJVfYX08sweCA2QbKQ=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	b=mIZc3M/A+4XbIhBEEtS/MXMp2eB824kLkMdFN3YtpjDP2/NM/PNQwkO/skSRXqgLu
+	 53G8PzbD60BMKttEGBPzgHoBG466ZNPk+OraqnydgS9FRPFbmzDdLfFHxX5Wub2Cdc
+	 cM1IAuq7kQPZKjGOe/7bX18w2kGrQn1qdTDnJp+M=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
 	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
-	20260724031035epcas2p27d8a3d9c0bd144ac23f2826c2880b29a~FGxxMW4Mw3106531065epcas2p2x;
-	Fri, 24 Jul 2026 03:10:35 +0000 (GMT)
-Received: from epcas2p1.samsung.com (unknown [182.195.38.203]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4h5tKR3Ngpz6B9m7; Fri, 24 Jul
-	2026 03:10:35 +0000 (GMT)
+	20260724031216epcas2p2973e8364504ac8fdafd7c22b03ba536c~FGzPECHj90970909709epcas2p2U;
+	Fri, 24 Jul 2026 03:12:16 +0000 (GMT)
+Received: from epcas2p1.samsung.com (unknown [182.195.38.199]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4h5tMN122Vz6B9m6; Fri, 24 Jul
+	2026 03:12:16 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Subject: [PATCH v3 1/2] scsi: ufs: Use unsigned types for the BSG query
+Subject: [PATCH v3 2/2] scsi: ufs: Add support for the aggregated read query
+ opcode
 Reply-To: hyenc.jeong@samsung.com
 Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
 From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
@@ -63,9 +64,9 @@ X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20260724031034epcms2p14226b8d04342b36525abd33aa33d3815@epcms2p1>
-Date: Fri, 24 Jul 2026 12:10:34 +0900
-X-CMS-MailID: 20260724031034epcms2p14226b8d04342b36525abd33aa33d3815
+Message-ID: <20260724031215epcms2p4d3f734cacf21104ef1396e893edd141d@epcms2p4>
+Date: Fri, 24 Jul 2026 12:12:15 +0900
+X-CMS-MailID: 20260724031215epcms2p4d3f734cacf21104ef1396e893edd141d
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
@@ -74,86 +75,419 @@ cpgsPolicy: CPGSC10-223,Y
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20260724030812epcms2p4eb2c77cb4dcd5fd51ca9c3eaa5ea4bfa
 References: <20260724030812epcms2p4eb2c77cb4dcd5fd51ca9c3eaa5ea4bfa@epcms2p4>
-	<CGME20260724030812epcms2p4eb2c77cb4dcd5fd51ca9c3eaa5ea4bfa@epcms2p1>
+	<CGME20260724030812epcms2p4eb2c77cb4dcd5fd51ca9c3eaa5ea4bfa@epcms2p4>
 
-The UPIU query length field is an unsigned 16-bit value per the UFS
-standard, but ufs_bsg carried it around in signed int. Switch the
-descriptor length and buffer pointer to u16/u8, fold the trivial
-ufs_bsg_get_query_desc_size() helper into its only caller, and replace
-min_t(int, ...) with min(). No functional change intended.
+UFS 5.0 / JEDEC 220H introduces the AGGREGATED READ query opcode (0x9),
+which retrieves an aggregated data packet in a single query request. The
+packet may bundle multiple Descriptors, Attributes and Flags as
+group-headed groups, returned in the Data Segment of the QUERY RESPONSE
+UPIU.
+
+Such a packet can be far larger than a single descriptor (up to a few
+KiB vs the 255-byte descriptor limit), so its response UPIU buffer must
+be enlarged. Enlarging the shared utp_transfer_cmd_desc would waste that
+extra space per tag, so add a dedicated utp_devman_cmd_desc with a 4 KiB
+response area (ALIGNED_DEVMAN_RSP_SIZE), allocated once for the reserved
+(device management) tag that aggregated read uses. Regular tags keep the
+512-byte descriptor in a pool of (nutrs - UFSHCD_NUM_RESERVED) entries,
+leaving normal I/O unchanged.
+
+ufshcd_init_lrb() and ufshcd_host_memory_configure() pick the devman
+descriptor for the reserved tag and index the pool at (tag -
+UFSHCD_NUM_RESERVED) otherwise. The pre-4.1 MCQ tag recovery adds one
+compare against the devman UCD address and returns the reserved tag
+(UFSHCI 4.1+ carries the tag in the CQE), and the BSG raw-UPIU and device
+management paths learn the new opcode, sizing descriptors by
+QUERY_AGGREGATED_MAX_SIZE.
 
 Signed-off-by: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
 ---
- drivers/ufs/core/ufs_bsg.c | 29 +++++++++++------------------
- 1 file changed, 11 insertions(+), 18 deletions(-)
+ drivers/ufs/core/ufs-mcq.c | 14 ++++--
+ drivers/ufs/core/ufs_bsg.c | 11 +++--
+ drivers/ufs/core/ufshcd.c  | 98 ++++++++++++++++++++++++++++----------
+ include/ufs/ufs.h          |  6 +++
+ include/ufs/ufshcd.h       | 20 ++++++++
+ include/ufs/ufshci.h       | 12 +++++
+ 6 files changed, 130 insertions(+), 31 deletions(-)
 
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 13b60a2d06db..8106d55f4041 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -296,14 +296,20 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba, struct cq_entry *cqe)
+ 	if (hba->ufs_version >= ufshci_version(4, 1))
+ 		return cqe->task_tag;
+
+-	/* sizeof(struct utp_transfer_cmd_desc) must be a multiple of 128 */
++	/* Both UCD types must have a size that is a multiple of 128 bytes */
+ 	BUILD_BUG_ON(sizeof(struct utp_transfer_cmd_desc) & GENMASK(6, 0));
++	BUILD_BUG_ON(sizeof(struct utp_devman_cmd_desc) & GENMASK(6, 0));
+
+ 	/* Bits 63:7 UCD base address, 6:5 are reserved, 4:0 is SQ ID */
+-	addr = (le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA) -
+-		hba->ucdl_dma_addr;
++	addr = le64_to_cpu(cqe->command_desc_base_addr) & CQE_UCD_BA;
+
+-	return div_u64(addr, ufshcd_get_ucd_size(hba));
++	/* The devman UCD is outside the pool; return its reserved tag. */
++	if (unlikely(addr == hba->devman_ucd_dma_addr))
++		return hba->dev_cmd.tag;
++
++	/* Pool entries follow the reserved tags. */
++	return div_u64(addr - hba->ucdl_dma_addr, ufshcd_get_ucd_size(hba)) +
++		UFSHCD_NUM_RESERVED;
+ }
+
+ static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
 diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index 58b506eac6dc..b300d9156fac 100644
+index b300d9156fac..a4cc2082d0e7 100644
 --- a/drivers/ufs/core/ufs_bsg.c
 +++ b/drivers/ufs/core/ufs_bsg.c
-@@ -13,21 +13,8 @@
- #include <ufs/ufshcd.h>
- #include "ufshcd-priv.h"
- 
--static int ufs_bsg_get_query_desc_size(struct ufs_hba *hba, int *desc_len,
--				       struct utp_upiu_query *qr)
--{
--	int desc_size = be16_to_cpu(qr->length);
--
--	if (desc_size <= 0)
--		return -EINVAL;
--
--	*desc_len = min_t(int, QUERY_DESC_MAX_SIZE, desc_size);
--
--	return 0;
--}
--
- static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
--				     uint8_t **desc_buff, int *desc_len,
-+				     u8 **desc_buff, u16 *desc_len,
- 				     enum query_opcode desc_op)
+@@ -19,10 +19,12 @@ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
  {
  	struct ufs_bsg_request *bsg_request = job->request;
-@@ -39,11 +26,14 @@ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
+ 	struct utp_upiu_query *qr;
++	u16 max_desc_len;
+ 	u8 *descp;
+
+ 	if (desc_op != UPIU_QUERY_OPCODE_WRITE_DESC &&
+-	    desc_op != UPIU_QUERY_OPCODE_READ_DESC)
++	    desc_op != UPIU_QUERY_OPCODE_READ_DESC &&
++	    desc_op != UPIU_QUERY_OPCODE_AGGREGATED_READ)
  		goto out;
- 
+
  	qr = &bsg_request->upiu_req.qr;
--	if (ufs_bsg_get_query_desc_size(hba, desc_len, qr)) {
-+	*desc_len = be16_to_cpu(qr->length);
-+	if (*desc_len == 0) {
- 		dev_err(hba->dev, "Illegal desc size\n");
+@@ -32,7 +34,9 @@ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
  		return -EINVAL;
  	}
- 
-+	*desc_len = min(*desc_len, (u16)QUERY_DESC_MAX_SIZE);
-+
+
+-	*desc_len = min(*desc_len, (u16)QUERY_DESC_MAX_SIZE);
++	max_desc_len = desc_op == UPIU_QUERY_OPCODE_AGGREGATED_READ ?
++		       QUERY_AGGREGATED_MAX_SIZE : QUERY_DESC_MAX_SIZE;
++	*desc_len = min(*desc_len, max_desc_len);
+
  	if (*desc_len > job->request_payload.payload_len) {
  		dev_err(hba->dev, "Illegal desc size\n");
- 		return -EINVAL;
-@@ -136,8 +126,9 @@ static int ufs_bsg_request(struct bsg_job *job)
- 	struct ufs_hba *hba = shost_priv(dev_to_shost(job->dev->parent));
- 	struct uic_command uc = {};
- 	int msgcode;
--	uint8_t *buff = NULL;
--	int desc_len = 0;
-+	u8 *buff = NULL;
-+	u16 desc_len = 0;
-+	int buff_len;
- 	enum query_opcode desc_op = UPIU_QUERY_OPCODE_NOP;
- 	int ret;
- 	bool rpmb = false;
-@@ -156,9 +147,11 @@ static int ufs_bsg_request(struct bsg_job *job)
- 		fallthrough;
- 	case UPIU_TRANSACTION_NOP_OUT:
- 	case UPIU_TRANSACTION_TASK_REQ:
-+		buff_len = desc_len;
- 		ret = ufshcd_exec_raw_upiu_cmd(hba, &bsg_request->upiu_req,
- 					       &bsg_reply->upiu_rsp, msgcode,
--					       buff, &desc_len, desc_op);
-+					       buff, &buff_len, desc_op);
-+		desc_len = buff_len;
+@@ -154,7 +158,8 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 		desc_len = buff_len;
  		if (ret)
  			dev_err(hba->dev, "exe raw upiu: error code %d\n", ret);
- 		else if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len) {
--- 
+-		else if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len) {
++		else if ((desc_op == UPIU_QUERY_OPCODE_READ_DESC ||
++			  desc_op == UPIU_QUERY_OPCODE_AGGREGATED_READ) && desc_len) {
+ 			bsg_reply->reply_payload_rcv_len =
+ 				sg_copy_from_buffer(job->request_payload.sg_list,
+ 						    job->request_payload.sg_cnt,
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index d3044a3089b5..8aa76d69eb9f 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2944,23 +2944,44 @@ static void ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct scsi_cmnd *cmd)
+ static void ufshcd_init_lrb(struct ufs_hba *hba, struct scsi_cmnd *cmd)
+ {
+ 	const int i = scsi_cmd_to_rq(cmd)->tag;
+-	struct utp_transfer_cmd_desc *cmd_descp =
+-		(void *)hba->ucdl_base_addr + i * ufshcd_get_ucd_size(hba);
+ 	struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
+-	dma_addr_t cmd_desc_element_addr =
+-		hba->ucdl_dma_addr + i * ufshcd_get_ucd_size(hba);
+ 	u16 response_offset = le16_to_cpu(utrdlp[i].response_upiu_offset);
+ 	u16 prdt_offset = le16_to_cpu(utrdlp[i].prd_table_offset);
+ 	struct ufshcd_lrb *lrb = scsi_cmd_priv(cmd);
++	u8 *command_upiu, *response_upiu, *prd_table;
++	dma_addr_t cmd_desc_element_addr;
++
++	/* The reserved tag uses a dedicated UCD outside the pool. */
++	if (unlikely(blk_mq_is_reserved_rq(scsi_cmd_to_rq(cmd)))) {
++		struct utp_devman_cmd_desc *cmd_descp = hba->devman_ucd_base_addr;
++
++		cmd_desc_element_addr = hba->devman_ucd_dma_addr;
++		command_upiu = cmd_descp->command_upiu;
++		response_upiu = cmd_descp->response_upiu;
++		prd_table = cmd_descp->prd_table;
++	} else {
++		int slot = i - UFSHCD_NUM_RESERVED;
++		struct utp_transfer_cmd_desc *cmd_descp;
++
++		/* Non-reserved tags start at UFSHCD_NUM_RESERVED, so slot >= 0. */
++		WARN_ON_ONCE(slot < 0);
++		cmd_descp = (void *)hba->ucdl_base_addr + slot * ufshcd_get_ucd_size(hba);
++
++		cmd_desc_element_addr =
++			hba->ucdl_dma_addr + slot * ufshcd_get_ucd_size(hba);
++		command_upiu = cmd_descp->command_upiu;
++		response_upiu = cmd_descp->response_upiu;
++		prd_table = cmd_descp->prd_table;
++	}
+
+ 	lrb->utr_descriptor_ptr = utrdlp + i;
+ 	lrb->utrd_dma_addr =
+ 		hba->utrdl_dma_addr + i * sizeof(struct utp_transfer_req_desc);
+-	lrb->ucd_req_ptr = (struct utp_upiu_req *)cmd_descp->command_upiu;
++	lrb->ucd_req_ptr = (struct utp_upiu_req *)command_upiu;
+ 	lrb->ucd_req_dma_addr = cmd_desc_element_addr;
+-	lrb->ucd_rsp_ptr = (struct utp_upiu_rsp *)cmd_descp->response_upiu;
++	lrb->ucd_rsp_ptr = (struct utp_upiu_rsp *)response_upiu;
+ 	lrb->ucd_rsp_dma_addr = cmd_desc_element_addr + response_offset;
+-	lrb->ucd_prdt_ptr = (struct ufshcd_sg_entry *)cmd_descp->prd_table;
++	lrb->ucd_prdt_ptr = (struct ufshcd_sg_entry *)prd_table;
+ 	lrb->ucd_prdt_dma_addr = cmd_desc_element_addr + prdt_offset;
+ }
+
+@@ -3157,6 +3178,7 @@ static void ufshcd_setup_dev_cmd(struct ufs_hba *hba, struct scsi_cmnd *cmd,
+ 	__ufshcd_setup_cmd(hba, cmd, lun, tag);
+ 	lrbp->intr_cmd = true; /* No interrupt aggregation */
+ 	hba->dev_cmd.type = cmd_type;
++	hba->dev_cmd.tag = tag;
+ }
+
+ /*
+@@ -3998,8 +4020,8 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+ {
+ 	size_t utmrdl_size, utrdl_size, ucdl_size;
+
+-	/* Allocate memory for UTP command descriptors */
+-	ucdl_size = ufshcd_get_ucd_size(hba) * hba->nutrs;
++	/* The reserved tag uses the dedicated UCD below, not this pool. */
++	ucdl_size = ufshcd_get_ucd_size(hba) * (hba->nutrs - UFSHCD_NUM_RESERVED);
+ 	hba->ucdl_base_addr = dmam_alloc_coherent(hba->dev,
+ 						  ucdl_size,
+ 						  &hba->ucdl_dma_addr,
+@@ -4015,6 +4037,21 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+
++	/* Dedicated UCD for the reserved tag; allocate once (survives MCQ re-init). */
++	if (!hba->devman_ucd_base_addr) {
++		hba->devman_ucd_base_addr =
++			dmam_alloc_coherent(hba->dev,
++					    ufshcd_get_devman_ucd_size(hba),
++					    &hba->devman_ucd_dma_addr,
++					    GFP_KERNEL);
++		if (!hba->devman_ucd_base_addr ||
++		    WARN_ON(hba->devman_ucd_dma_addr & (128 - 1))) {
++			dev_err(hba->dev,
++				"Devman Command Descriptor Memory allocation failed\n");
++			goto out;
++		}
++	}
++
+ 	/*
+ 	 * Allocate memory for UTP Transfer descriptors
+ 	 * UFSHCI requires 1KB alignment of UTRD
+@@ -4081,23 +4118,38 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 	dma_addr_t cmd_desc_element_addr;
+ 	u16 response_offset;
+ 	u16 prdt_offset;
++	u16 response_len;
+ 	int cmd_desc_size;
+ 	int i;
+
+ 	utrdlp = hba->utrdl_base_addr;
+
+-	response_offset =
+-		offsetof(struct utp_transfer_cmd_desc, response_upiu);
+-	prdt_offset =
+-		offsetof(struct utp_transfer_cmd_desc, prd_table);
+-
+ 	cmd_desc_size = ufshcd_get_ucd_size(hba);
+ 	cmd_desc_dma_addr = hba->ucdl_dma_addr;
+
+ 	for (i = 0; i < hba->nutrs; i++) {
++		/*
++		 * Reserved tags (low end) use the dedicated devman UCD with a
++		 * larger response area; other tags index the pool at i - RESERVED.
++		 */
++		if (i < UFSHCD_NUM_RESERVED) {
++			cmd_desc_element_addr = hba->devman_ucd_dma_addr;
++			response_offset = offsetof(struct utp_devman_cmd_desc,
++						   response_upiu);
++			prdt_offset = offsetof(struct utp_devman_cmd_desc,
++					       prd_table);
++			response_len = ALIGNED_DEVMAN_RSP_SIZE;
++		} else {
++			cmd_desc_element_addr = cmd_desc_dma_addr +
++				cmd_desc_size * (i - UFSHCD_NUM_RESERVED);
++			response_offset = offsetof(struct utp_transfer_cmd_desc,
++						   response_upiu);
++			prdt_offset = offsetof(struct utp_transfer_cmd_desc,
++					       prd_table);
++			response_len = ALIGNED_UPIU_SIZE;
++		}
++
+ 		/* Configure UTRD with command descriptor base address */
+-		cmd_desc_element_addr =
+-				(cmd_desc_dma_addr + (cmd_desc_size * i));
+ 		utrdlp[i].command_desc_base_addr =
+ 				cpu_to_le64(cmd_desc_element_addr);
+
+@@ -4108,14 +4160,14 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 			utrdlp[i].prd_table_offset =
+ 				cpu_to_le16(prdt_offset);
+ 			utrdlp[i].response_upiu_length =
+-				cpu_to_le16(ALIGNED_UPIU_SIZE);
++				cpu_to_le16(response_len);
+ 		} else {
+ 			utrdlp[i].response_upiu_offset =
+ 				cpu_to_le16(response_offset >> 2);
+ 			utrdlp[i].prd_table_offset =
+ 				cpu_to_le16(prdt_offset >> 2);
+ 			utrdlp[i].response_upiu_length =
+-				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
++				cpu_to_le16(response_len >> 2);
+ 		}
+ 	}
+ }
+@@ -7638,7 +7690,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+
+ 	/* just copy the upiu response as it is */
+ 	memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
+-	if (desc_buff && desc_op == UPIU_QUERY_OPCODE_READ_DESC) {
++	if (desc_buff && (desc_op == UPIU_QUERY_OPCODE_READ_DESC ||
++			  desc_op == UPIU_QUERY_OPCODE_AGGREGATED_READ)) {
+ 		u8 *descp = (u8 *)lrbp->ucd_rsp_ptr + sizeof(*rsp_upiu);
+ 		u16 resp_len = be16_to_cpu(lrbp->ucd_rsp_ptr->header
+ 					   .data_segment_length);
+@@ -7810,10 +7863,7 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *r
+ 		 * Message is 02h
+ 		 */
+ 		if (ehs_len == 2 && rsp_ehs) {
+-			/*
+-			 * ucd_rsp_ptr points to a buffer with a length of 512 bytes
+-			 * (ALIGNED_UPIU_SIZE = 512), and the EHS data just starts from byte32
+-			 */
++			/* EHS data starts from byte32 of the devman UCD response area. */
+ 			ehs_data = (u8 *)lrbp->ucd_rsp_ptr + EHS_OFFSET_IN_RESPONSE;
+ 			memcpy(rsp_ehs, ehs_data, ehs_len * 32);
+ 		}
+@@ -9239,7 +9289,7 @@ static void ufshcd_release_sdb_queue(struct ufs_hba *hba, int nutrs)
+ {
+ 	size_t ucdl_size, utrdl_size;
+
+-	ucdl_size = ufshcd_get_ucd_size(hba) * nutrs;
++	ucdl_size = ufshcd_get_ucd_size(hba) * (nutrs - UFSHCD_NUM_RESERVED);
+ 	dmam_free_coherent(hba->dev, ucdl_size, hba->ucdl_base_addr,
+ 			   hba->ucdl_dma_addr);
+
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index 0d48e137d66d..afbb32654fab 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -25,6 +25,11 @@ static_assert(sizeof(struct utp_upiu_query) == 20);
+
+ #define GENERAL_UPIU_REQUEST_SIZE (sizeof(struct utp_upiu_req))
+ #define QUERY_DESC_MAX_SIZE       255
++/*
++ * Max aggregated read data segment: the devman response area
++ * (ALIGNED_DEVMAN_RSP_SIZE) minus the fixed UPIU header it follows.
++ */
++#define QUERY_AGGREGATED_MAX_SIZE (4096 - GENERAL_UPIU_REQUEST_SIZE)
+ #define QUERY_DESC_MIN_SIZE       2
+ #define QUERY_DESC_HDR_SIZE       2
+ #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
+@@ -464,6 +469,7 @@ enum query_opcode {
+ 	UPIU_QUERY_OPCODE_SET_FLAG	= 0x6,
+ 	UPIU_QUERY_OPCODE_CLEAR_FLAG	= 0x7,
+ 	UPIU_QUERY_OPCODE_TOGGLE_FLAG	= 0x8,
++	UPIU_QUERY_OPCODE_AGGREGATED_READ = 0x9,
+ };
+
+ /* bRefClkFreq attribute values */
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 248d0a5bef40..6007c9eeb43f 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -237,11 +237,13 @@ struct ufs_query {
+  * @type: device management command type - Query, NOP OUT
+  * @lock: lock to allow one command at a time
+  * @query: Device management query information
++ * @tag: tag of the reserved request in use
+  */
+ struct ufs_dev_cmd {
+ 	enum dev_cmd_type type;
+ 	struct mutex lock;
+ 	struct ufs_query query;
++	u8 tag;
+ };
+
+ /**
+@@ -952,9 +954,13 @@ enum ufshcd_mcq_opr {
+  * @ucdl_base_addr: UFS Command Descriptor base address
+  * @utrdl_base_addr: UTP Transfer Request Descriptor base address
+  * @utmrdl_base_addr: UTP Task Management Descriptor base address
++ * @devman_ucd_base_addr: UFS Command Descriptor base address for the reserved
++ *	device management tag (has a larger response area)
+  * @ucdl_dma_addr: UFS Command Descriptor DMA address
+  * @utrdl_dma_addr: UTRDL DMA address
+  * @utmrdl_dma_addr: UTMRDL DMA address
++ * @devman_ucd_dma_addr: UFS Command Descriptor DMA address for the reserved
++ *	device management tag
+  * @host: Scsi_Host instance of the driver
+  * @dev: device handle
+  * @ufs_device_wlun: WLUN that controls the entire UFS device.
+@@ -1093,11 +1099,13 @@ struct ufs_hba {
+ 	struct utp_transfer_cmd_desc *ucdl_base_addr;
+ 	struct utp_transfer_req_desc *utrdl_base_addr;
+ 	struct utp_task_req_desc *utmrdl_base_addr;
++	struct utp_devman_cmd_desc *devman_ucd_base_addr;
+
+ 	/* DMA memory reference */
+ 	dma_addr_t ucdl_dma_addr;
+ 	dma_addr_t utrdl_dma_addr;
+ 	dma_addr_t utmrdl_dma_addr;
++	dma_addr_t devman_ucd_dma_addr;
+
+ 	struct Scsi_Host *host;
+ 	struct device *dev;
+@@ -1356,6 +1364,18 @@ static inline size_t ufshcd_get_ucd_size(const struct ufs_hba *hba)
+ 	return sizeof(struct utp_transfer_cmd_desc) + SG_ALL * ufshcd_sg_entry_size(hba);
+ }
+
++/*
++ * Two entries should be enough for the largest devman PRDT transfer (4 KiB),
++ * like advanced RPMB.
++ */
++#define UFSHCD_DEVMAN_SG_ENTRIES	2
++
++static inline size_t ufshcd_get_devman_ucd_size(const struct ufs_hba *hba)
++{
++	return sizeof(struct utp_devman_cmd_desc) +
++		UFSHCD_DEVMAN_SG_ENTRIES * ufshcd_sg_entry_size(hba);
++}
++
+ /* Returns true if clocks can be gated. Otherwise false */
+ static inline bool ufshcd_is_clkgating_allowed(struct ufs_hba *hba)
+ {
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 9f0fdd850e54..c3537bb544ae 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -18,6 +18,8 @@ enum {
+ 	TASK_REQ_UPIU_SIZE_DWORDS	= 8,
+ 	TASK_RSP_UPIU_SIZE_DWORDS	= 8,
+ 	ALIGNED_UPIU_SIZE		= 512,
++	/* Larger response area, only for the devman UCD */
++	ALIGNED_DEVMAN_RSP_SIZE		= 4096,
+ };
+
+ /* UFSHCI Registers */
+@@ -501,6 +503,16 @@ struct utp_transfer_cmd_desc {
+ 	u8 prd_table[];
+ };
+
++/* Dedicated UCD for the devman/reserved slot */
++struct utp_devman_cmd_desc {
++	u8 command_upiu[ALIGNED_UPIU_SIZE];
++	u8 response_upiu[ALIGNED_DEVMAN_RSP_SIZE];
++	u8 prd_table[];
++};
++
++static_assert(sizeof(struct utp_upiu_req) + QUERY_AGGREGATED_MAX_SIZE <=
++	      ALIGNED_DEVMAN_RSP_SIZE);
++
+ /**
+  * struct request_desc_header - Descriptor Header common to both UTRD and UTMRD
+  */
+--
 2.25.1
+
