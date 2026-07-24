@@ -1,146 +1,193 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66F3F3CB544
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 10:51:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E238427FA8
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 10:58:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784890268; cv=none; b=buE10j375Mer6avewksQ+QmyiKC2f2xSFxK127GPrDQFmfk+o12xOj9CiWOSai1dBkrDzyKe9DP6na0WNG3PRUZGOU3yCy4x/NRkAjRJubJd5jcwBi4dlZd8jxEhjEwcs90aekC+kK8vdJTssrmqQ+P8qQNG2aAf0+fwYrtIDAY=
+	t=1784890737; cv=none; b=c6Xe5p7tlY+Jb2Ypl/tj8QWHeb563NOIHDnYrYhbn5kOBKnWJCzqJIRwzfWcAKxad1iyHwrZHqZWt8BWmTLSOodfovNFcNVjzhf84jr3xmhcOgGIMuuYUtnfLEF7e28HsTFqUYsG9gUQ9dPYkJ/ldcqaXeOiLC99QCj6mCIbSxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784890268; c=relaxed/simple;
-	bh=dhz/gpblTmEfodGkanlon+8iLh/K4HBn1b7Pd45/5sQ=;
+	s=arc-20240116; t=1784890737; c=relaxed/simple;
+	bh=w1aRs7AlKRdx4MrNZlw/FfpiHy0rnHcDs3C8SMPC8eI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=flcfflefooxzZlkQyhmTKzm4KE6X7sgx1p56eDS2dz9u73qA5TR9lyzU1+m/PxBbtYSjmEein7+9lBCsZU5V3FubNgN3Pb19Ai7cVtrL/AlCI7wBs3xIeiKpEXGN83CJngy+B3+kwoWIh0mE2Rb9Hv/ZhPal4FweMlrJ2PxyGgo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MDdoxVjr; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=dWUiFPyU1iTE4XZZeJ6UbFZxGBy9yumwtUpLHdXfJnbF4S7wWWNg4Wz8ggUIH9mIZQGUhL0yUZmfmKUbBr2zu7sLHIEi9pMOdGpN42AFiOYu+iWLkNHaVFVYfTTiBjsaMCSg/5PkS9l5T5N5OdLjx9PhPfIHKqf/z2E+bTFLAmw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nxdTbF/z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MDdoxVjr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D37551F000E9;
-	Fri, 24 Jul 2026 10:51:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nxdTbF/z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F5051F01570;
+	Fri, 24 Jul 2026 10:58:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784890267;
-	bh=NtjMPwEnQW70bGlD4TqrG5T0deytCGQSs3jtQ5fZ69s=;
+	s=k20260515; t=1784890736;
+	bh=ecGok2bXeftmAEPbj6vvT9ZwvOOjUIHvoRTE0/6WwmI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MDdoxVjrmU869Suo+SvlP+Nox3B/1BbSnbTJIpy9Hat6VnbVuXDoWr5J5JA6KVIeV
-	 DnxYfJg5cEyy9y4Gbv0JIcTAAVtQe6aLM4GRApI/GoZGds+KGzbaXEyQAicF+kJhXJ
-	 S9krQVPf134LXs/8WG5H8/9IBo5cFH15DtA9z8pVBEe0wo2B9o0Ud4CY8gortMZvuS
-	 BvIKUm9KsHzFdanB/HETgOouqF2Ox0u6tAI3W55LNTGlxclYMh55nEo8sMMHBwApvM
-	 5CTOdC/06aBVwzZHfiI3r+v+bx0uxswC2anXTUt6MK0Kx9Xvo2gLoMRoTPRQ6ixMZe
-	 CyeJlaa64Begg==
+	b=nxdTbF/z1iycmFKqf1QRT1sYbqCWHdGq3y2TeWEVNWPuP/6pZu6+1zTS/p50c4G/j
+	 Ph7pRQrkyA+CB32uUeP37nAJ7U7I8NvJGlLSC3xljirVoT2RbNj93LCGP/tnvtOv1c
+	 ngWHLqBUZleOcejk19s2d+Y9yTzDx8hxQ2xdhWMWfzUEoOJkQFnN43UXGlUgBJ/vlk
+	 g2ufZXrYAxBmsVOWyN8rwsiPGfvoZ72AmHdSnHe2kNp40W1V//+Jid31ZNOpcGxgld
+	 fOzoHgRcVvI1VTEyclMt6dV4c1nkfdsZsaooCo5Vtr0gjogZlLgZacFIBHrTrRB9/Z
+	 Z/0g0XiWfMN6g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 06/10] mpi3mr: Fix memory leak on operational queue
- creation failure
+Subject: Re: [PATCH v3 08/10] mpi3mr: Fix SAS port allocation and
+ registration error handling
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260724102505.115136-7-ranjan.kumar@broadcom.com>
+In-Reply-To: <20260724102505.115136-9-ranjan.kumar@broadcom.com>
 References: <20260724102505.115136-1-ranjan.kumar@broadcom.com>
- <20260724102505.115136-7-ranjan.kumar@broadcom.com>
+ <20260724102505.115136-9-ranjan.kumar@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 24 Jul 2026 10:51:06 +0000
-Message-Id: <20260724105106.D37551F000E9@smtp.kernel.org>
+Date: Fri, 24 Jul 2026 10:58:55 +0000
+Message-Id: <20260724105856.0F5051F01570@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Race condition in interrupt pointer clearing causes Use-After-Free=
- and TOCTOU NULL pointer dereferences.
-- [High] Permanent DMA memory leak of `q_segment_list` when `kzalloc_objs` =
-fails during queue allocation.
+- [Critical] Calling `sas_port_delete()` when `sas_rphy_add()` fails causes=
+ a fatal `device_del()` on an un-added device.
+- [High] The target device structure retains a dangling pointer to a freed =
+`rphy` and a stale `pend_sas_rphy_add` flag if `sas_rphy_add()` fails.
+- [High] Failure to clear `mr_sas_phy->phy_belongs_to_port` on error paths =
+causes phys to be permanently orphaned.
 --
 
---- Patch [6]: [PATCH v3 06/10] mpi3mr: Fix memory leak on operational queu=
-e creation failure ---
-commit 30cab2ccb258127e2dd2cf1a6d7a0d940a8b72fa
+--- Patch [8]: [PATCH v3 08/10] mpi3mr: Fix SAS port allocation and registr=
+ation error handling ---
+commit 196b5015246a90c5d75f6d4437141992643236da
 Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-mpi3mr: Fix memory leak on operational queue creation failure
-
-When operational queue creation fails after one or more queues have
-been created, the error path frees the queue information arrays but
-does not release the DMA memory segments associated with the created
-queues, resulting in a memory leak. Fix this by ensuring that partially
-allocated segments are freed immediately if a queue fails to create.
+mpi3mr: Fix SAS port allocation and registration error handling
+   =20
+During SAS port creation, the driver does not verify successful port
+allocation before attempting registration, which can lead to a NULL
+pointer dereference. Additionally, if registration fails, the allocated
+port is not freed, resulting in a memory leak.
 
 Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@=
-broadcom.com?part=3D6
+broadcom.com?part=3D8
 Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar=
-@broadcom.com?part=3D6
+@broadcom.com?part=3D8
 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
-_fw.c
-> index 9f7cee26ebcd3..370ad85681171 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> @@ -2020,6 +2020,10 @@ static void mpi3mr_free_op_reply_q_segments(struct=
- mpi3mr_ioc *mrioc, u16 q_idx)
->  	u16 j;
->  	int size;
->  	struct segments *segments;
-> +	u16 midx =3D REPLY_QUEUE_IDX_TO_MSIX_IDX(q_idx, mrioc->op_reply_q_offse=
-t);
-> +
-> +	if (midx < mrioc->intr_info_count)
-> +		mrioc->intr_info[midx].op_reply_q =3D NULL;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but can this clear the pointer
-while an interrupt is actively accessing it?
-
-Since we clear mrioc->intr_info[midx].op_reply_q without disabling the
-IRQ or calling synchronize_irq(), a hardware interrupt firing concurrently
-could access the queue locklessly.
-
-For example, in drivers/scsi/mpi3mr/mpi3mr_fw.c:mpi3mr_isr_poll():
-
-    if (!atomic_read(&intr_info->op_reply_q->pend_ios))
-        break;
-
-The pointer is evaluated unconditionally and could be set to NULL
-concurrently before being read again.
-
-Similarly, in mpi3mr_isr_primary():
-
-    if (intr_info->op_reply_q)
-        num_op_reply =3D mpi3mr_process_op_reply_q(mrioc,
-            intr_info->op_reply_q);
-
-There is a race window where op_reply_q can be set to NULL after the
-check, resulting in processing a queue whose segments are actively
-being freed.
-
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr=
+/mpi3mr_transport.c
+> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+[ ... ]
+> @@ -1450,10 +1456,22 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_ad=
+d(struct mpi3mr_ioc *mrioc,
+>  	mr_sas_port->port =3D port;
+>  	if (mr_sas_port->remote_identify.device_type =3D=3D SAS_END_DEVICE) {
+>  		rphy =3D sas_end_device_alloc(port);
+> +		if (!rphy) {
+> +			ioc_err(mrioc, "failure at %s:%d/%s() (sas_end_device_alloc)!\n",
+> +			    __FILE__, __LINE__, __func__);
+> +			sas_port_delete(port);
+> +			goto out_fail;
+> +		}
+>  		tgtdev->dev_spec.sas_sata_inf.rphy =3D rphy;
+>  	} else {
+>  		rphy =3D sas_expander_alloc(port,
+>  		    mr_sas_port->remote_identify.device_type);
+> +		if (!rphy) {
+> +			ioc_err(mrioc, "failure at %s:%d/%s() (sas_expander_alloc)!\n",
+> +			    __FILE__, __LINE__, __func__);
+> +			sas_port_delete(port);
+> +			goto out_fail;
+> +		}
+>  	}
+>  	rphy->identify =3D mr_sas_port->remote_identify;
 > =20
->  	segments =3D mrioc->op_reply_qinfo[q_idx].q_segments;
->  	if (!segments)
->  		return;
+> @@ -1463,6 +1481,8 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(=
+struct mpi3mr_ioc *mrioc,
+>  	if ((sas_rphy_add(rphy))) {
+>  		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+>  		    __FILE__, __LINE__, __func__);
+> +		sas_port_delete(port);
+> +		goto out_fail;
+
+[Severity: Critical]
+This is a pre-existing issue, but does calling sas_port_delete() here cause=
+ a
+fatal device_del() on an un-added device?
+
+When sas_rphy_add() fails, it will have already internally set port->rphy =
+=3D rphy
+before failing during device_add(). Because port->rphy is set,
+sas_port_delete() invokes sas_rphy_delete(), which explicitly calls
+sas_rphy_remove() and device_del(dev) on the rphy.
+
+Calling device_del() on a device that was never successfully added via
+device_add() violates the kobject API and can trigger a panic. Should we
+call sas_rphy_unlink(rphy) and sas_rphy_free(rphy) before
+sas_port_delete(port) instead?
 
 [Severity: High]
-This is a pre-existing issue, but could this early return bypass the
-cleanup for q_segment_list?
+This isn't a bug introduced by this patch, but could this error path leave
+dangling pointers in the tgtdev structure?
 
-In mpi3mr_alloc_op_reply_q_segments(), if the kzalloc_objs() call for
-q_segments fails, it returns without cleaning up the successfully allocated
-q_segment_list:
+Before calling sas_rphy_add(), the rphy pointer is cached in the target
+device structure:
 
-    op_reply_q->q_segments =3D kzalloc_objs(struct segments,
-                                          op_reply_q->num_segments);
-    if (!op_reply_q->q_segments)
-        return -ENOMEM;
+mpi3mr_transport.c:mpi3mr_sas_port_add() {
+    ...
+    if (mr_sas_port->remote_identify.device_type =3D=3D SAS_END_DEVICE) {
+        ...
+        tgtdev->dev_spec.sas_sata_inf.rphy =3D rphy;
+    }
+    ...
+}
 
-Because q_segments is NULL in this failure path, the cleanup function
-mpi3mr_free_op_reply_q_segments() returns early here, bypassing the
-dma_free_coherent() cleanup for q_segment_list. This could cause a
-permanent DMA memory leak of q_segment_list.
+If we jump to out_fail when sas_rphy_add() fails, we clean up the rphy
+indirectly via sas_port_delete(), but tgtdev->dev_spec.sas_sata_inf.rphy
+still points to the freed memory, and pend_sas_rphy_add remains set to 1.
 
-Does this same vulnerability exist in mpi3mr_alloc_op_req_q_segments()
-and mpi3mr_free_op_req_q_segments() where similar early returns occur?
+Could a future allocation reuse this memory and cause functions like
+__mpi3mr_get_tgtdev_by_addr_and_rphy() to incorrectly match the corrupted
+state?
+
+>  	}
+>  	if (mr_sas_port->remote_identify.device_type =3D=3D SAS_END_DEVICE) {
+>  		tgtdev->dev_spec.sas_sata_inf.pend_sas_rphy_add =3D 0;
+> @@ -1498,6 +1518,9 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(=
+struct mpi3mr_ioc *mrioc,
+>  	return mr_sas_port;
+> =20
+>   out_fail:
+> +	if (tgtdev)
+> +		mpi3mr_tgtdev_put(tgtdev);
+> +
+>  	list_for_each_entry_safe(mr_sas_phy, next, &mr_sas_port->phy_list,
+>  	    port_siblings)
+>  		list_del(&mr_sas_phy->port_siblings);
+
+[Severity: High]
+This is a pre-existing issue, but might this error path fail to clear the
+phy_belongs_to_port flag, causing phys to be permanently orphaned?
+
+During port addition, mr_sas_phy->phy_belongs_to_port is set to 1 for all
+elements in mr_sas_port->phy_list. When we reach out_fail, we remove the
+PHYs from the sibling list:
+
+mpi3mr_transport.c:mpi3mr_sas_port_add() {
+    ...
+ out_fail:
+    ...
+    list_for_each_entry_safe(mr_sas_phy, next, &mr_sas_port->phy_list,
+        port_siblings)
+        list_del(&mr_sas_phy->port_siblings);
+    ...
+}
+
+Because the underlying mr_sas_phy structures persist in mr_sas_node->phy[],
+failing to reset the flag means they will permanently claim to belong to a
+port. Will future attempts to add these PHYs fail as a result?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260724102505.1151=
-36-1-ranjan.kumar@broadcom.com?part=3D6
+36-1-ranjan.kumar@broadcom.com?part=3D8
