@@ -1,135 +1,210 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B81A3F1AB4
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 10:44:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09882427F8F
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 10:50:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784889890; cv=none; b=urEaurO/L0cMIHpZ10oKHMpuSNUawozwnQ7H4yuNKzVW+rEjPi9o9/qxhlvrO+lq75SxWaU2HIAoTjtmzQrPXhhk3aEwcv6kLAGPJFj5pSI9bvokLWnMhqZ7ojzYB42gPiRDgcyFVNwA/znMyXPQVQZe15JNtvRLAsHOBqB7ymM=
+	t=1784890205; cv=none; b=T5wwMCdJjhZNoFnq9L1JPpwtreeZUUHJv3CBY2aZ6IVetANvbT2LgXloCZv8IFdoJP88u+02V+E6CmiIaUk1nCAF9CunWyVj7MUDCVK7BpvU6rw56slRm3sU7KePYenhEeExoAHTs3i0JSyjF/32Ae18g4yclkAT9QxVHisA+Jo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784889890; c=relaxed/simple;
-	bh=/Zx6GiRpy4gJDMmE20/lmoYuXOdl5jRLuetavSW9bo0=;
+	s=arc-20240116; t=1784890205; c=relaxed/simple;
+	bh=ursqdOkwh14daS9c8qf8+TWM3p1v007J7q+K78LUIUE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NLJghJliTavNlBbGfNAiphpOt95veL5r7vdEmTATFwtNbeK4HP7KcqanAEm1lv5Sw+EzXZGpDBVsSsbJm7vYQ1QjLSNJmTplmDIwO6K/wOBNZIPUmdcsOCXEaXgO1sZfe/6XiIY6lC31bbb6BIs4SP93QXPWVC/TozU6WUqp1dQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OeQUPXSd; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ZjHodeW7ihmxU5cQSKtJu5tRWePt/IF5bqA33uvklkASBpvAclbMM4lZYs+WdAUA41SuaN2JhgRxLevBNmDNBV9Fpu+RhMb8wa4GRjOS8ap3Ccvt62qaxngxPpcvJrcJ778mORwz0usxYWDwNHzyTSUjPd+QGv01szX7vQALU7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kg4qv8vI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OeQUPXSd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D646D1F000E9;
-	Fri, 24 Jul 2026 10:44:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kg4qv8vI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F135F1F000E9;
+	Fri, 24 Jul 2026 10:50:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784889889;
-	bh=06Gip00aXbjqTa/Eh3KoKrhYdb8uGrJ+3XrQnZjGx9I=;
+	s=k20260515; t=1784890201;
+	bh=oE5Lci6lUgtW12U4Gqnhe2goYGc2aJhYp6KzLpLgJn8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OeQUPXSd1UZjimqfb1CZUEteGkgpSh3rvY3a2RHKEvZtPx8fcyZk2RRtA0Y9PW6Y6
-	 jQ13Bq6FU8pmhOm3dTlHg9IIJmzcftX2YBOKDs3P81kbw0A0dxwOk6Y3tuHuc6rhzr
-	 1gq64EdKR6If0POKG7b0i7el+b7ggnOtEi+GHgImRSKQF4vf1saLzhWpfqqaU50Fpk
-	 CmMaPGfeOY05tPxRyqYj9O1NOuoJaaFuvPeO23PsZGSdBTjA3y879iINW2aIHlvZrA
-	 x2MujjK8sj/ffvk6Or6gTJLPPzFJpShTnAf2qVx8hs6IJWQXuEm16aGnYsGOE1FV0W
-	 T0KLfCR5GZ5RA==
+	b=Kg4qv8vIBzadZZc9ZXNFNAMEQcHLYyx1AX4a7s0Sv27PJIP8eGMEbrnOPNfdtN2nQ
+	 WGmfzoKwfd65sD5yzAx73M2FHggehD5NcETg57Bpl6vtbZ5C8Yy4aUy2hoQLRXtBi4
+	 LkzeCZ91voOhRrbdDE+eeLnrQbwCxpDEoViyaH23mglBLkcwIjJi2Jw2aM5y8LMiTy
+	 Jt/yv23+DTevHJuWSeVhE938E0reeh1gOW36OqpLxIFbtu86NpERSLAUSQ5sB/1xZe
+	 /MPr3oHDOALmTos3e6Q3aXM4VKdt7GH5MEyfyM82MMfzUvGVeQSsydoayH622RkR8q
+	 Btar4j7AIqg0g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 04/10] mpi3mr: Fix NVMe page size caching for
- non-operational devices
+Subject: Re: [PATCH v3 05/10] mpi3mr: Fix performance regression caused by
+ extended IRQ poll sleep
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260724102505.115136-5-ranjan.kumar@broadcom.com>
+In-Reply-To: <20260724102505.115136-6-ranjan.kumar@broadcom.com>
 References: <20260724102505.115136-1-ranjan.kumar@broadcom.com>
- <20260724102505.115136-5-ranjan.kumar@broadcom.com>
+ <20260724102505.115136-6-ranjan.kumar@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 24 Jul 2026 10:44:48 +0000
-Message-Id: <20260724104448.D646D1F000E9@smtp.kernel.org>
+Date: Fri, 24 Jul 2026 10:50:00 +0000
+Message-Id: <20260724105000.F135F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-- [Medium] Double-write of `reset_to` and `abort_to` timeouts introduces a =
-race condition where concurrent readers may observe a reduced default timeo=
-ut.
-- [Medium] The bounds check for `page_size` accepts invalid NVMe page size =
-shifts (1 to 11), which causes management IOCTL validation to fail before r=
-eaching the firmware.
+- [Critical] Leaked invalid `reply_dma` address allows arbitrary hardware D=
+MA memory corruption.
+- [High] Double-decrement of the `op_reply_q->in_use` lock breaks queue mut=
+ual exclusion.
+- [High] Improper use of `continue` inside the TOCTOU fallback skips critic=
+al DMA memory barriers and batch consumer index updates.
+- [High] Breaking out of the processing loop on an invalid `request_queue_i=
+d` without advancing the consumer index causes an unrecoverable infinite po=
+lling loop and CPU lockup.
+- [High] Reclaiming the queue lock after a TOCTOU race without reloading lo=
+cal indices causes data corruption via double-processing of descriptors.
 --
 
---- Patch [4]: [PATCH v3 04/10] mpi3mr: Fix NVMe page size caching for non-=
-operational devices ---
-commit b27f8d86d47076feb2c7ac1adf8a15a3291cf854
+--- Patch [5]: [PATCH v3 05/10] mpi3mr: Fix performance regression caused b=
+y extended IRQ poll sleep ---
+commit 166312d7a3fc2817bfd92d0a670bc3744b27cc2e
 Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-mpi3mr: Fix NVMe page size caching for non-operational devices
+mpi3mr: Fix performance regression caused by extended IRQ poll sleep
 
-This commit populates the NVMe page size attribute for devices in an error
-state so management IOCTLs can reach the firmware. It adds bounds checking
-for page_size and initializes reset_to and abort_to with default values.
+This patch restores the IRQ poll sleep range to 2-20 us to recover lost
+throughput on unaffected kernels. It also introduces missing dma_rmb()
+barriers, bounds checking for request_queue_id, TOCTOU race fixes, and
+replaces a panic() with a safe log in the reply queue processing logic.
 
-Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@=
-broadcom.com?part=3D4
-Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar=
-@broadcom.com?part=3D4
+Link: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@br=
+oadcom.com?part=3D5
+Link: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar@b=
+roadcom.com?part=3D5
 
+[ ... ]
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
+_fw.c
+> index 434b66f7b502d..9f7cee26ebcd3 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+[ ... ]
+> @@ -565,14 +578,33 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mr=
+ioc,
+>  	if ((le16_to_cpu(reply_desc->reply_flags) &
+>  	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) !=3D exp_phase) {
+>  		atomic_dec(&op_reply_q->in_use);
+> +		/* Check for a TOCTOU race condition */
+> +		dma_rmb();
+> +		if ((le16_to_cpu(reply_desc->reply_flags) &
+> +		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) =3D=3D exp_phase) {
+> +			if (atomic_add_unless(&op_reply_q->in_use, 1, 1))
+> +				goto process_desc;
+
+[Severity: High]
+If we reclaim the lock here and jump to process_desc, won't we use the local
+exp_phase and reply_ci variables?
+
+If another thread already processed this descriptor and updated the global
+op_reply_q->ci and op_reply_q->ephase, could we end up double-processing
+the same descriptor because our local indices weren't reloaded?
+
+> +		}
+>  		return 0;
+>  	}
+> +process_desc:
+> +	/*
+> +	 * Ensure that the descriptor payload is read only after
+> +	 * the phase bit check is complete.
+> +	 */
+> +	dma_rmb();
+> =20
+>  	do {
+>  		if (mrioc->unrecoverable || mrioc->io_admin_reset_sync)
+>  			break;
+> =20
+>  		req_q_idx =3D le16_to_cpu(reply_desc->request_queue_id) - 1;
+> +
+> +		if (unlikely(req_q_idx >=3D mrioc->num_op_req_q)) {
+> +			ioc_err(mrioc, "Invalid request queue id %d\n", req_q_idx + 1);
+> +			break;
+
+[Severity: High]
+If we break out of the loop here, we don't advance the consumer index
+(reply_ci) or decrement op_reply_q->pend_ios.
+
+In mpi3mr_isr_poll(), if pend_ios remains > 0 and num_op_reply is 0,
+could this cause an unrecoverable infinite polling loop?
+
+> +		}
+> +
+>  		op_req_q =3D &mrioc->req_qinfo[req_q_idx];
+> =20
+>  		WRITE_ONCE(op_req_q->ci, le16_to_cpu(reply_desc->request_queue_ci));
+> @@ -592,8 +624,23 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mri=
+oc,
+>  		reply_desc =3D mpi3mr_get_reply_desc(op_reply_q, reply_ci);
+> =20
+>  		if ((le16_to_cpu(reply_desc->reply_flags) &
+> -		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) !=3D exp_phase)
+> +		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) !=3D exp_phase) {
+> +			atomic_dec(&op_reply_q->in_use);
+> +			/* Check for a TOCTOU race condition */
+> +			dma_rmb();
+> +			if ((le16_to_cpu(reply_desc->reply_flags) &
+> +			    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) =3D=3D exp_phase) {
+> +				/* Descriptor arrived, try to reclaim ownership */
+> +				if (atomic_add_unless(&op_reply_q->in_use, 1, 1))
+> +					continue;
+
+[Severity: High]
+If we successfully reclaim ownership and use continue to jump back to the
+start of the loop, doesn't this bypass the trailing dma_rmb() and the
+threshold_comps exact-match check at the end of the loop?
+
+Could missing the exact-match threshold check prevent the consumer index
+from being batched to the hardware, potentially stalling IO?
+
+> +			}
+>  			break;
+
+[Severity: High]
+If the phase bit check fails here and we break out of the loop, we have
+already called atomic_dec(&op_reply_q->in_use) above.
+
+Since the function cleanup block at the end also unconditionally executes
+atomic_dec(&op_reply_q->in_use), will this result in a double-decrement
+that drops the lock value below zero and breaks queue mutual exclusion?
+
+> +		}
+[ ... ]
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
 _os.c
-> index d2a20f2721dbf..7b86152922bad 100644
+> index 7b86152922bad..39624fae9131f 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -1354,12 +1354,16 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_io=
-c *mrioc,
->  		tgtdev->dev_spec.pcie_inf.capb =3D
->  		    le32_to_cpu(pcieinf->capabilities);
->  		tgtdev->dev_spec.pcie_inf.mdts =3D MPI3MR_DEFAULT_MDTS;
-> -		/* 2^12 =3D 4096 */
-> -		tgtdev->dev_spec.pcie_inf.pgsz =3D 12;
-> +		tgtdev->dev_spec.pcie_inf.reset_to =3D MPI3MR_INTADMCMD_TIMEOUT;
-> +		tgtdev->dev_spec.pcie_inf.abort_to =3D MPI3MR_INTADMCMD_TIMEOUT;
+> @@ -3426,8 +3426,7 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc=
+ *mrioc,
+>  		scsi_reply =3D mpi3mr_get_reply_virt_addr(mrioc,
+>  		    *reply_dma);
+>  		if (!scsi_reply) {
+> -			panic("%s: scsi_reply is NULL, this shouldn't happen\n",
+> -			    mrioc->name);
+> +			ioc_err(mrioc, "scsi_reply is NULL, invalid reply_frame_address\n");
+>  			goto out;
 
-[Severity: Medium]
-Can a concurrent reader observe the intermediate default timeout values her=
-e?
+[Severity: Critical]
+When mpi3mr_get_reply_virt_addr() returns NULL, we log an error and jump
+to the 'out' label, but *reply_dma remains populated with the unvalidated
+address.
 
-If a Task Management Request (via mpi3mr_issue_tm()) executes concurrently
-with a DevStatusChange event processed by mpi3mr_devinfochg_evt_bh(), it mi=
-ght
-read these prematurely shortened 60-second timeouts.
+In the caller mpi3mr_process_op_reply_q(), we have:
 
-Since mpi3mr_update_tgtdev() modifies tgtdev without holding tgtdev_lock, t=
-he
-reader can observe this intermediate value before it is overwritten with the
-final firmware-provided timeout a few lines further down. This could cause
-the command to time out early and trigger an unintended full controller res=
-et.
+    mpi3mr_process_op_reply_desc(mrioc, reply_desc, &reply_dma, reply_qidx);
+    if (reply_dma)
+        mpi3mr_repost_reply_buf(mrioc, reply_dma);
 
-> +		/* Validate firmware page size to prevent undefined shift behavior */
-> +		if (pcieinf->page_size > 0 && pcieinf->page_size < 31)
-> +			tgtdev->dev_spec.pcie_inf.pgsz =3D pcieinf->page_size;
+Does this mean we will unknowingly repost this unvalidated DMA address back
+to the hardware, allowing arbitrary hardware DMA memory corruption?
 
-[Severity: Medium]
-Does this bounds check accept values that are logically invalid for NVMe
-memory page sizes?
-
-If the firmware provides corrupted device page0 data with a page_size betwe=
-en
-1 and 11, this condition incorrectly accepts it.
-
-Later, when an application issues an IOCTL, the PRP builder in mpi3mr_app.c
-evaluates dev_pgsz =3D 1 << pgsz to a small value (e.g., 2 to 2048 bytes). =
-This
-fails size constraints and rejects the IOCTL before it reaches the firmware,
-returning incorrect errors to userspace.
-
-> +		else
-> +			tgtdev->dev_spec.pcie_inf.pgsz =3D 12; /* Default to 4096 (2^12) */
->  		if (dev_pg0->access_status =3D=3D MPI3_DEVICE0_ASTATUS_NO_ERRORS) {
->  			tgtdev->dev_spec.pcie_inf.mdts =3D
->  			    le32_to_cpu(pcieinf->maximum_data_transfer_size);
-> -			tgtdev->dev_spec.pcie_inf.pgsz =3D pcieinf->page_size;
->  			tgtdev->dev_spec.pcie_inf.reset_to =3D
->  			    max_t(u8, pcieinf->controller_reset_to,
->  			     MPI3MR_INTADMCMD_TIMEOUT);
+>  		}
+>  		host_tag =3D le16_to_cpu(scsi_reply->host_tag);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260724102505.1151=
-36-1-ranjan.kumar@broadcom.com?part=3D4
+36-1-ranjan.kumar@broadcom.com?part=3D5
