@@ -1,57 +1,57 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26512768EA;
-	Fri, 24 Jul 2026 05:40:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFCCD768EA;
+	Fri, 24 Jul 2026 05:40:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784871603; cv=none; b=u3x48Ozu1DEJT78A8YHrEl9Jm8YKzt7hkjtQmpjIcFhB3VdAA+SftU4deqWQ7XXbHYJd/ypa7iz5gHbLp9KgKewzM+Kym7WKlzIzayuRYkIMP2n7BTzoM+w9h9+LgjnPscqogF2kuz9Vzz4tgkHJhHhyFDt6qrLMTst0sE7bxwk=
+	t=1784871611; cv=none; b=payBSdkiNdH3rS8IStw3ptQgUJX13ZHYtgz+YGiubYyRXDyCehce1FKHQRRaJjMCa85SV8L74MSLpdusBQNFQWuxDqIgaYncE7AwiQj6g6ibB4HREWWfkos1snVwEDHJHjRkm+MhJa5EA3iQrmBDrh7mGMYTX78nt5rvphsUZyE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784871603; c=relaxed/simple;
-	bh=cX8xCzWw719TCTxA5JGiC1GsjNZaKtOlQzPAQT8oa4c=;
+	s=arc-20240116; t=1784871611; c=relaxed/simple;
+	bh=C2ogADD7a30fMA4fZOUNicMxPiQSKkcWZ2jdJ6drJ88=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TZkpF3uLu8lDzq+T0fitMd4pv7NwjJ9SfU1uZkEh4mBRLOUKnr6EpiL3oZ8f0GAKmfC+3vJPmhDoToQkU5duRTgqLvkFVgPyosUD8ZnICwuFVtCUKkFmvxuYdwHUfJYwxFOYliiO4zAxykMcDNUpUPHjC6xPZXXLa0xsdYQdbyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=JTd4rJ16; arc=none smtp.client-ip=148.163.158.5
+	 MIME-Version; b=gQnTe4TJcCqmb/Uf3KpOk67AT+dCUp5ptG6DorTUvWH1/eFyga8fa5k/BsTmnoEBfPSSUmSrSn9V1ZNbXzQEuHJAQjxLfggCnomVc14Ch+pK7Qu5zMc6G5Tqc6+PvZwaIUMHBIIyttwtqvsYcJwdXxl2caIlfCYcUjF+ELBOKRM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=joAylmnq; arc=none smtp.client-ip=148.163.156.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="JTd4rJ16"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66O5C5Dm798515;
-	Fri, 24 Jul 2026 05:40:00 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="joAylmnq"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66O5BcLE903436;
+	Fri, 24 Jul 2026 05:40:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=N3iT6+s1UvHHi0mG9
-	Lzyeh0fmDHjqD7OTI7Sc74mU1E=; b=JTd4rJ1684cheI4GBICWJdWjM4c9fskkP
-	1r0h0hTYRuCfKfOSI956m5ylItJTcLMOEOk/8//Om/jO5vbuRJSUFP9vFLjP7RcS
-	d8h/39zKpUlSurzzFQs4h7oiNiEC2OS8syiRZrABCRdTAQTywG3CRxIxngVgZ1LF
-	7dUtmAlqE+hNobfMR+fKoD1uV6MCMMxGQ1qHOyTbQY6m5EUHKj4UAfch8wmBexrH
-	1v/+pzJQgbDAx8DApeVutWRmyXFfRpTg+6nU+NZvJk6M4f/3H280s5LdrMGwWKIH
-	b5W5XZA0nsSryPQ+FmGp9gsrr1BJOl2egTEkdgtiY3Yplz5gB4xIA==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fg78gjh0d-1
+	:mime-version:references:subject:to; s=pp1; bh=jndN4pGsTb1NJGEsk
+	eFPs7Ys/TVJ4c3Q27r58wxpMNg=; b=joAylmnqul0vhvIjQSnaR97fu/H38WFFb
+	7KgVBXDN3JOKjkpT/FmOhoEAfjVc0/lraiGWq9l1RZHPwELVoyMLk0HIdl2XSISq
+	Ubt85JSqZZebq3hHCkgNl5FFApacuAJWFQa8aNE3KyEoeN4VlFnsgZxSRoNphj9s
+	tT24mfywbwHw+gYHfamGVMF5bdginz8hY6PRIPC+dQytDRdvxRtbgireColYNHXU
+	9SdnrYuZ93B1u+K52ffLWB+hWkKXeNizSYHQ1VydEtIlRmdu+YpluLe8w6Ej7+Lf
+	FLf8xSNPFhvu4Wh6pgl+uVVRYCmh69GuY6EOc1B8L2pl81N+HhN2w==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fg7abu8dc-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Jul 2026 05:39:59 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66O5YeF9031985;
-	Fri, 24 Jul 2026 05:39:58 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4fgpgyqb1w-1
+	Fri, 24 Jul 2026 05:40:06 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66O5YnE3000984;
+	Fri, 24 Jul 2026 05:40:05 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4fgktqfs8s-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Jul 2026 05:39:58 +0000 (GMT)
+	Fri, 24 Jul 2026 05:40:05 +0000 (GMT)
 Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66O5drSW44040584
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66O5dxYn9896278
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 24 Jul 2026 05:39:53 GMT
+	Fri, 24 Jul 2026 05:39:59 GMT
 Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5F81D201AB;
-	Fri, 24 Jul 2026 05:39:53 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id AC27D201AA;
+	Fri, 24 Jul 2026 05:39:59 +0000 (GMT)
 Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 37CCD201A9;
-	Fri, 24 Jul 2026 05:39:53 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 8500D201A9;
+	Fri, 24 Jul 2026 05:39:59 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
 	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 24 Jul 2026 05:39:50 +0000 (GMT)
+	Fri, 24 Jul 2026 05:39:59 +0000 (GMT)
 From: Nihar Panda <niharp@linux.ibm.com>
 To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
@@ -61,9 +61,9 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
         Alexander Gordeev <agordeev@linux.ibm.com>,
         =?UTF-8?q?Christian=20Borntraeger=C2=A0?= <borntraeger@de.ibm.com>,
         =?UTF-8?q?Nihar=20Panda=C2=A0?= <nihar.panda@ibm.com>
-Subject: [PATCH 1/4] zfcp: Enhance fsf status read buffer tracing
-Date: Fri, 24 Jul 2026 07:39:31 +0200
-Message-ID: <20260724053934.2781087-2-niharp@linux.ibm.com>
+Subject: [PATCH 2/4] zfcp: Trace plogi and prli within open port response as payload
+Date: Fri, 24 Jul 2026 07:39:32 +0200
+Message-ID: <20260724053934.2781087-3-niharp@linux.ibm.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260724053934.2781087-1-niharp@linux.ibm.com>
 References: <20260724053934.2781087-1-niharp@linux.ibm.com>
@@ -75,154 +75,189 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI0MDA0NSBTYWx0ZWRfX0waz9uf7TpZN
- 505PI26YcW1/i4Qpb4l3Rf4oxyAJWw/cBVbh9a8xIgIhRSKo3iCaa2AVQzZRkOwrsoXfx25837/
- tzF+cARt0uEkuxWYWTV9K5DHkUNzE0HNeAlyA+QY/mabbo3qGYantZfmseMK/rQ7xIh1b7t4WTI
- FnxJBYas5HzV5SL3oZ6iLxkBlMY9PRXwKGjq/pfkZvKnj8G5bBSlumjXGV92tUmDJmnouxBsswo
- /tf2isbNmlgc1AJzVxUq2JgaxBTZMKGigDPkE2iKmkzQyDLnGgkwpTH5kWlk7u9ycoorU54+esU
- MlpsFptW3HMTuPxLLIy2Ml/8KclbJSnIqKiMLGJxnDFQyjwdhRhcx4+NroIl+wgk6rFRntODbrk
- sugEYZ18ZS+nd1PJ1fbO3d3rxuVGqJFjh3mkR5I2YTA88cH68f4vSnLiGOqVqRSu4ZqypBkzg2h
- 2C0U+AkgaVlDdubK6jQ==
-X-Proofpoint-GUID: r3fKY9GWliiyCV9FcvcudR5uoMxZ9LJg
-X-Authority-Analysis: v=2.4 cv=MelcfZ/f c=1 sm=1 tr=0 ts=6a62faaf cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI0MDA0NSBTYWx0ZWRfX1Cz3ncdykWZA
+ dx0SbF0p6UX+py6enET5PG2v41woFeDG/lDbO1F6/e8nfBvU/weZmkRO6iVg+KMbctoN9+qp53i
+ ybeXj1bupWyO9katsG1mDqRqYbss7ZoabzN1IvbE3A4qEHNZp3OcmTqsHkbUOToNsq7Mz+zQC+U
+ c/DSOhZt23EEF9S5Obru3wIwQ3GUILWKBA6DnaEfiRqFRQOxl2+8SIuzumCN6vBtpt9nGL52EfE
+ 7LnyImXA4i0nxfqZg8XkcYgNbTaDMHLdCoj2bBbd0l0lk1OPLQsUAqjGjr1VBKDEiwXxx9LSZ5k
+ w4TZa2z00dDXeD2oD2NYtmNEsGQztwnITMEi/kIHbo8y3D3aaHgP/VG+EMtrv2DQGSI2ket2qA0
+ e1dhcG1KP/gTn1602tk9VXd2/uZHKqOAdTE37KzXaQyuIelqad+o4AoaWS4Tucq9RShe8+aCHqG
+ 9jrEwU59dGodL38Ulpw==
+X-Authority-Analysis: v=2.4 cv=F7ZnsKhN c=1 sm=1 tr=0 ts=6a62fab6 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
  a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8 a=Re67frvFl_FtP7PscwYA:9
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI0MDA0NSBTYWx0ZWRfXxAEnFfuiDtbR
- xSm1Mvz4ldNaZP131HGWwFPm1oAlArLc8y7rmRq77+m5bEHkcynD6/zyZznYnP9zbV6ZOddKWVj
- H+s3rYszE+1KUmYFKXBBL/Pk+hXv43c=
-X-Proofpoint-ORIG-GUID: r3fKY9GWliiyCV9FcvcudR5uoMxZ9LJg
+ a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8 a=lq_hjbAu-zlZwPCF-G8A:9
+X-Proofpoint-ORIG-GUID: GByFbkTK4Vrh2UnXObKHDplyAuPfe298
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI0MDA0NSBTYWx0ZWRfX1x+xej5d+8Zx
+ MmIf+ElOCF0oRHUG8ITmQciv6ICZjV3pQ7pcn0lrdjicSTmW2/1RVejI0APBAaCszmmGtOTmpS7
+ IsQ/tiRWkYTpnjx3xcpZO3A/4ZNfazU=
+X-Proofpoint-GUID: GByFbkTK4Vrh2UnXObKHDplyAuPfe298
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-24_01,2026-07-22_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0 spamscore=0
- clxscore=1015 malwarescore=0 phishscore=0 adultscore=0 suspectscore=0
+ spamscore=0 phishscore=0 bulkscore=0 clxscore=1015 priorityscore=1501
+ impostorscore=0 lowpriorityscore=0 suspectscore=0 malwarescore=0 adultscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607240045
 
-From: Chinmaya Kajagar <chinmayk@linux.ibm.com>
+From: Steffen Maier <maier@linux.ibm.com>
 
-SRB trace records are logged through hba trace event zfcp_dbf_hba_fsf_uss.
-Presently, this trace event has few missing fields in fsf status read buffer
-trace records. To fully trace incoming fsf status read buffer (SRB), the
-remaining fields are needed to be added to zfcp_dbf_hba_uss structure.
+The FCP channel optionally returns the content of PLOGI and PRLI within
+open port response. This information is needed to debug unexpected open
+port responses. Pack both PLOGI and PRLI information back-to-back into a
+PAYload trace record of type "fsf_els" within existing HBA trace record.
 
-Append all the remaining SRB fields to the existing unsolicited status trace
-records.
+The length of both parts, and thus also the offset of the second part,
+are added to the corresponding HBA trace record. Be extra careful
+regarding bounds checking.
 
-Extend driver to get 3 bytes source id s_id value from fsf status read
-buffer's existing reserved field res3.
+Since auto port scan in multi-initiator zoning environments can cause a
+lot of failed open port responses and trace is enabled by default in the
+HBA trace area, chose a trace level 4 above the default of 3 for the
+corresponding PAYload trace record to contain PLOGI/PRLI data. This way,
+it avoids flooding the PAY area by default.
 
-To display this change, we also change the external tool `zfcpdbf` in the
-s390-tools package.
+In the spirit of commit 35f040df97fa ("zfcp: retain trace level for SCSI
+and HBA FSF response records"), pass the level here. For this, introduce
+an additional argument 'level' for zfcp_dbf_pl_write().
 
-zfcpdbf tool trace example for HBA area after changes:
+zfcpdbf tool partial trace example with PLOGI/PRLI log info after changes:
 
-Timestamp      : 2025-08-22-05:52:04:171750
-Area           : HBA
-Subarea        : 00
-Level          : 2
-Exception      : -
-CPU ID         : 0003
-Caller         : 0x0000021e278c07c8
-Record ID      : 2
-Tag            : fssrh_4
-Description    : fssrh_4 HBA, FSF unsolicited status
-Request ID     : 0x0000000000004bfc
-Request status : 0x00000000
-FSF cmnd       : 0x00006305
-FSF sequence no: 0x00000000
-SRB stat type  : 0x00000002
-SRB stat sub   : 0x00000000
-SRB D_ID       : 0x00fffffd
-SRB LUN        : 0x0000000000000000
-SRB q-design.  : 0x0000000000000000
-SRB length     : 0x0000004c
-SRB res1       : 00000000
-SRB res2       : 00
-SRB class      : 0x00000000
-SRB res3       : 00
-SRB S_ID       : 0x0033c048
-SRB res4       : 00000000 00000000 00000000 00000000
-                 00000000
-SRB pay length : 12
-Payload time   : 2025-08-22-05:52:04:171743
-SRB info       : 6104000c 0033c024 0033c02e
+PLOGI length   : 116
+PRLI length    : 20
+Payload time   : 2026-01-29-06:19:15:626629
+PLOGI/PRLIinfo : 02000000 00000000 80000800 000a0002
+                 00000000 2002000e 1115c62f 2001000e
+                 1115c62f 00000000 00000000 00000000
+                 00000000 80000000 00000000 00000000
+                 00000000 80000000 00000000 000a0000
+                 00010000 00000000 00000000 00000000
+                 00000000 00000000 00000000 00000000
+                 00000000 02100014 08002100 00000000
+                 00000000 00000112
 
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Reviewed-by: M Nikhil <nikh1092@linux.ibm.com>
+Reviewed-by: Nihar Panda <niharp@linux.ibm.com>
+Signed-off-by: Steffen Maier <maier@linux.ibm.com>
+Co-developed-by: Chinmaya Kajagar <chinmayk@linux.ibm.com>
 Signed-off-by: Chinmaya Kajagar <chinmayk@linux.ibm.com>
 ---
- drivers/s390/scsi/zfcp_dbf.c |  7 +++++++
- drivers/s390/scsi/zfcp_dbf.h | 14 ++++++++++++++
- drivers/s390/scsi/zfcp_fsf.h |  4 +++-
- 3 files changed, 24 insertions(+), 1 deletion(-)
+ drivers/s390/scsi/zfcp_dbf.c | 37 ++++++++++++++++++++++++++++++------
+ drivers/s390/scsi/zfcp_dbf.h |  4 +++-
+ 2 files changed, 34 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-index 71f625926ae1..89b859176b8b 100644
+index 89b859176b8b..4217b74baa38 100644
 --- a/drivers/s390/scsi/zfcp_dbf.c
 +++ b/drivers/s390/scsi/zfcp_dbf.c
-@@ -220,6 +220,13 @@ void zfcp_dbf_hba_fsf_uss(char *tag, struct zfcp_fsf_req *req)
- 	rec->u.uss.lun = srb->fcp_lun;
- 	memcpy(&rec->u.uss.queue_designator, &srb->queue_designator,
- 	       sizeof(rec->u.uss.queue_designator));
-+	rec->u.uss.length = srb->length;
-+	rec->u.uss.res1 = srb->res1;
-+	rec->u.uss.res2 = srb->res2;
-+	rec->u.uss.class = srb->class;
-+	rec->u.uss.res3 = srb->res3;
-+	rec->u.uss.s_id = ntoh24(srb->s_id);
-+	memcpy(&rec->u.uss.res4, &srb->res4, sizeof(rec->u.uss.res4));
+@@ -4,7 +4,7 @@
+  *
+  * Debug traces for zfcp.
+  *
+- * Copyright IBM Corp. 2002, 2023
++ * Copyright IBM Corp. 2002, 2026
+  */
  
- 	/* status read buffer payload length */
- 	rec->pl_len = (!srb->length) ? 0 : srb->length -
+ #define pr_fmt(fmt) "zfcp: " fmt
+@@ -35,13 +35,18 @@ static inline unsigned int zfcp_dbf_plen(unsigned int offset)
+ 	return sizeof(struct zfcp_dbf_pay) + offset - ZFCP_DBF_PAY_MAX_REC;
+ }
+ 
++#define ZFCP_DBF_PAY_LEVEL 1
++
+ static inline
+ void zfcp_dbf_pl_write(struct zfcp_dbf *dbf, void *data, u16 length, char *area,
+-		       u64 req_id)
++		       u64 req_id, int level)
+ {
+ 	struct zfcp_dbf_pay *pl = &dbf->pay_buf;
+ 	u16 offset = 0, rec_length;
+ 
++	if (unlikely(!debug_level_enabled(dbf->pay, level)))
++		return;
++
+ 	spin_lock(&dbf->pay_lock);
+ 	memset(pl, 0, sizeof(*pl));
+ 	pl->fsf_req_id = req_id;
+@@ -51,7 +56,7 @@ void zfcp_dbf_pl_write(struct zfcp_dbf *dbf, void *data, u16 length, char *area,
+ 		rec_length = min((u16) ZFCP_DBF_PAY_MAX_REC,
+ 				 (u16) (length - offset));
+ 		memcpy(pl->data, data + offset, rec_length);
+-		debug_event(dbf->pay, 1, pl, zfcp_dbf_plen(rec_length));
++		debug_event(dbf->pay, level, pl, zfcp_dbf_plen(rec_length));
+ 
+ 		offset += rec_length;
+ 		pl->counter++;
+@@ -96,7 +101,27 @@ void zfcp_dbf_hba_fsf_res(char *tag, int level, struct zfcp_fsf_req *req)
+ 
+ 	rec->pl_len = q_head->log_length;
+ 	zfcp_dbf_pl_write(dbf, (char *)q_pref + q_head->log_start,
+-			  rec->pl_len, "fsf_res", req->req_id);
++			  rec->pl_len, "fsf_res", req->req_id,
++			  ZFCP_DBF_PAY_LEVEL);
++
++	if (q_head->fsf_command == FSF_QTCB_OPEN_PORT_WITH_DID) {
++		struct fsf_qtcb_bottom_support *q_bott =
++			&req->qtcb->bottom.support;
++		u32 plogi_len = 0, prli_len = 0;
++
++		if (q_bott->els1_length) {
++			rec->u.res.plogi_len = q_bott->els1_length;
++			plogi_len = min_t(u32, q_bott->els1_length,
++					  sizeof(q_bott->els));
++		}
++		if (q_bott->els2_length) {
++			rec->u.res.prli_len = q_bott->els2_length;
++			prli_len = min_t(u32, q_bott->els2_length,
++					 sizeof(q_bott->els) - plogi_len);
++		}
++		zfcp_dbf_pl_write(dbf, q_bott->els, plogi_len + prli_len,
++				  "fsf_els", req->req_id, 4);
++	}
+ 
+ 	debug_event(dbf->hba, level, rec, sizeof(*rec));
+ 	spin_unlock_irqrestore(&dbf->hba_lock, flags);
+@@ -234,7 +259,7 @@ void zfcp_dbf_hba_fsf_uss(char *tag, struct zfcp_fsf_req *req)
+ 
+ 	if (rec->pl_len)
+ 		zfcp_dbf_pl_write(dbf, srb->payload.data, rec->pl_len,
+-				  "fsf_uss", req->req_id);
++				  "fsf_uss", req->req_id, ZFCP_DBF_PAY_LEVEL);
+ log:
+ 	debug_event(dbf->hba, level, rec, sizeof(*rec));
+ 	spin_unlock_irqrestore(&dbf->hba_lock, flags);
+@@ -739,7 +764,7 @@ void zfcp_dbf_scsi_common(char *tag, int level, struct scsi_device *sdev,
+ 				min_t(u16, max_t(u16, rec->pl_len,
+ 						 ZFCP_DBF_PAY_MAX_REC),
+ 				      FSF_FCP_RSP_SIZE),
+-				"fcp_riu", fsf->req_id);
++				"fcp_riu", fsf->req_id, ZFCP_DBF_PAY_LEVEL);
+ 	}
+ 
+ 	debug_event(dbf->scsi, level, rec, sizeof(*rec));
 diff --git a/drivers/s390/scsi/zfcp_dbf.h b/drivers/s390/scsi/zfcp_dbf.h
-index 4d1435c573bc..44ebad8c761c 100644
+index 44ebad8c761c..c84f076440a8 100644
 --- a/drivers/s390/scsi/zfcp_dbf.h
 +++ b/drivers/s390/scsi/zfcp_dbf.h
-@@ -149,6 +149,13 @@ struct zfcp_dbf_hba_res {
-  * @d_id: destination ID
-  * @lun: logical unit number
-  * @queue_designator: queue designator
-+ * @length: buffer length
-+ * @res1: reserved field 1
-+ * @res2: reserved field 2
-+ * @class: class of service
-+ * @res3: reserved field 3
-+ * @s_id: source ID
-+ * @res4: reserved field 4
+@@ -3,7 +3,7 @@
+  * zfcp device driver
+  * debug feature declarations
+  *
+- * Copyright IBM Corp. 2008, 2020
++ * Copyright IBM Corp. 2008, 2026
   */
- struct zfcp_dbf_hba_uss {
- 	u32 status_type;
-@@ -156,6 +163,13 @@ struct zfcp_dbf_hba_uss {
- 	u32 d_id;
- 	u64 lun;
- 	u64 queue_designator;
-+	u32 length;
-+	u32 res1;
-+	u8 res2;
-+	u32 class;
-+	u8 res3;
-+	u32 s_id;
-+	u8 res4[20];
+ 
+ #ifndef ZFCP_DBF_H
+@@ -140,6 +140,8 @@ struct zfcp_dbf_hba_res {
+ 	u8  fsf_status_qual[FSF_STATUS_QUALIFIER_SIZE];
+ 	u32 port_handle;
+ 	u32 lun_handle;
++	u32 plogi_len;
++	u32 prli_len;
  } __packed;
  
  /**
-diff --git a/drivers/s390/scsi/zfcp_fsf.h b/drivers/s390/scsi/zfcp_fsf.h
-index 5e6b601af980..4b92e85ec71d 100644
---- a/drivers/s390/scsi/zfcp_fsf.h
-+++ b/drivers/s390/scsi/zfcp_fsf.h
-@@ -246,7 +246,9 @@ struct fsf_status_read_buffer {
- 	u8 d_id[3];
- 	u32 class;
- 	u64 fcp_lun;
--	u8  res3[24];
-+	u8 res3;
-+	u8 s_id[3];
-+	u8 res4[20];
- 	union {
- 		u8  data[FSF_STATUS_READ_PAYLOAD_SIZE];
- 		u32 word[FSF_STATUS_READ_PAYLOAD_SIZE/sizeof(u32)];
 -- 
 2.53.0
 
