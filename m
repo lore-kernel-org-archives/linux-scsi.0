@@ -1,152 +1,118 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f100.google.com (mail-pj1-f100.google.com [209.85.216.100])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3682638A72F
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 11:02:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 910AC27603A
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 11:24:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784890949; cv=none; b=Q4agdCS6wPn+LBzXtskkQ3WuHaVq84IUvlHN1NogEZbcrnTi1B4e+B0hmlzXifWM83RvRLaOmbIarG9Jlf8bzOzGzmCwUb/88x04DzwWTpuXtPMNBDlEVue1xLjZgc+bXb7gi4xrYRIG643B3Y+XxkcM/G7z0Fltg/1THWnwhOk=
+	t=1784892298; cv=none; b=jj02ZvVlIcWdBvaDwMd+QZunNjsVJ7d+ie2gonPrCtAth00FaJvXEn+Aau4XEw1q7PyXKZOemsPoqzgA1WHSbU0jEZjghDbwVq2ckSTnl5myNpOlgCS4XKgD6Fro7bOKDar/9MMvgjZl14QGZ80YRhyCVoLyFatksH1+VMPR7Sw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784890949; c=relaxed/simple;
-	bh=s2RjNEDlIiPfTfmvw4wP3n8xhm/3Ieq2te1BLZSGi5A=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Q70JyHWhhbjSJIOfvTaFBlDDTruO9MrVHAUWR6rpNbker02y1cN2lm5hNa/RRFCYjBvo9Wrxsr9nDQF5uLI2dSyYNSM7awj3Kja51AEJ1hvWsHoknSGQLjgbuYa5Wdhg7wb3JlZXZlm/rgwp1Md0GhjiL5r0sI/MfBGpRUDs8OU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DQLSaiJU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784892298; c=relaxed/simple;
+	bh=89mAF8/HfeAAy+lChXI+4an13kHGsbwUAGqjWo6/H4Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=df/VfyuuEmj99ripeJE+HDc6z+xyQWin04tKxI6+LN6zdbqTnnHh7OXBCXMQ4w8aMqYBxc93GB2dBAF6Q1jXKeMg3C8g6omkVaEHF+xEuuvjxF32BIyq8fKbkOrZi3f7bX5GF6GpHk9B8yNKGmkt9T+ur0m0gc/t1yHl4kh1AU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=aXn2mDzY; arc=none smtp.client-ip=209.85.216.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DQLSaiJU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E344D1F01830;
-	Fri, 24 Jul 2026 11:02:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784890946;
-	bh=kiB6AgXjx/LVQ6+Aus3D4mUJzUk7fywQ4QUEBVTy/k8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DQLSaiJUHqhsXYTubT0EJdYg63UsTC/M3qmfdUoEUL+GuWpty/af7T6PKBj5bQBWo
-	 OM34DJ18SWMx16S9EPC0l9TBYWi7aRdZ0bdjAaof0ju2viyRJA3bd39esTWj13Wd1X
-	 Mgl1r6B7LOFEKKUQIQP2OdtyHhGq3RSKYfvpjWeeiVdUMfxMZUbhrt/0I6Sk63IsjF
-	 cnmRbflpsb23kG7p52roZYaSd/rfybplqmX7vw8vpaiKBk/F+Rh6geSX2nD+zjOMHv
-	 o1HdqDz+cR15zx8STtEqkZmFFCZziM4zya94a+DM/frd00XeF5X80TMP5yiCwJkBQ3
-	 43so7ZdiX7K3w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 07/10] mpi3mr: Fix firmware event reference leak
- during cleanup
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260724102505.115136-8-ranjan.kumar@broadcom.com>
-References: <20260724102505.115136-1-ranjan.kumar@broadcom.com>
- <20260724102505.115136-8-ranjan.kumar@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 24 Jul 2026 11:02:25 +0000
-Message-Id: <20260724110225.E344D1F01830@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aXn2mDzY"
+Received: by mail-pj1-f100.google.com with SMTP id 98e67ed59e1d1-38d489b6b71so267615a91.0
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 04:24:56 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784892295; x=1785497095;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=RAVVheM0VSMw8aV/g8IP8EtUIBudHx/KgxzKrj5G/Qk=;
+        b=PdFQaou87JjAkEdyqJnqeR+aYvmeUUzz/jNp+q5LvbdWIZVbS9f8N4/GamsxOFapn7
+         F3Whr4iH6Y/WFu6nkDHWulXFspFLAuxMRISI6hgw0cNibPlaGN2YAWNYEwsepc2kv+Lv
+         SHyUBAgZvMSYoOQCQ533V4Dn1qHv22iRNuSav8/qRG7F1QeIfcWpMt0bQZtN0+jGRfCt
+         cwCFu4iFcNd5f5xr4CLKUguLATehMUmqkQJBNku2pW7c2Cj61DQ71CVclZINOrmVmVFP
+         JQoTFWsQVEUiROYx6sN3FxIUVmtlVBdOsrfTJUdMjg0sRFgqYPN93SMT2b/Y31KT3EC9
+         cQMA==
+X-Gm-Message-State: AOJu0YxNHN5L/37rKUza2so9x69PFXoSTMl5Wh0SPEFJcZaaLNiXrgz0
+	IyY6olOFcGLph8Jq0fIpoXQyxkGAUZEcY5mblp0UFESDf35mKCMz/5KPUvaKiWBPaprU7pYGtMJ
+	DZQF3V/n75EiBB63KoeNNbOHv2mLp5kcfKQF0KN9QvP5EbImPxiILzc6dXNz7lnUpwkuXD20QMl
+	OOBRDLvTgQzguXVH2eg/AmBM4mfT9MiZEJ3iVkmtkVguwCgFyjLYuAMKa1Vnyv6wRovo+2UcYbB
+	j1COy15/mR+pAsD7eti2pOu
+X-Gm-Gg: AR+sD10TgISWbHNIUoG3V5VzSuWen0S1ruhm+aXuL5jjAp9iZ7OqeLazeEPOLHImBu0
+	gUdTblDmlC+OwS6nkhRUWaHLZg8cUun7dS91/Bn6lNq8z0RCygks6ikHUw64YZSUB/iojzKkifO
+	I6XM913lYNcEfN3mhN5GJIcq1Qc/OWlTkOGIPDqMyyf4tL45E6gcC641vLuM2E09YbQDXla+46f
+	kqXW51So06NOIFxx+jX89JBeKEw+58ahiRS7SJuOjOPSpKTlrs2m1dhx+bRumdshsrkcSwXH96b
+	c6/OIeQFXOcOsDOQgq+wNSNLNl/eqevPHbasZlN+MOdI3HBJh3wsj3W9wCX8WyHlvd2qTog87Bl
+	fhV6ixbrH3gNkYyJtxNwWIZMSqnufaTfgnmFMdc8rqRMMvg7b9kj6fVkYKdrZVapxnqRKwwrOg3
+	BuwJyTdcpjMPD5S21MFsvbvZMPS4lpjl7LBf86mv9GY+o=
+X-Received: by 2002:a17:90b:2d83:b0:38e:7f1b:f01 with SMTP id 98e67ed59e1d1-38ec666521amr7049200a91.36.1784892295040;
+        Fri, 24 Jul 2026 04:24:55 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-73.dlp.protect.broadcom.com. [144.49.247.73])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-38f109a5a94sm103513a91.5.2026.07.24.04.24.54
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 24 Jul 2026 04:24:55 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cab048cdb3eso489516a12.0
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Jul 2026 04:24:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1784892293; x=1785497093; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=RAVVheM0VSMw8aV/g8IP8EtUIBudHx/KgxzKrj5G/Qk=;
+        b=aXn2mDzYDAGofztvLFTuuJb6UyZJTwWz8HrdNVoBL1pAOGJE0rqa5B9Ke0ZLa4nNGo
+         SPpKZrk3nxBReesqLFL52icjDSf6C+2JKMF8+ErmaezkOnvSLhxmJhIBI4TQtOVTcfDI
+         thR+pLgXD7V7wol8hnM/bBc8hf6a4W0SpMPVg=
+X-Received: by 2002:a05:6a21:7309:b0:3b4:8ba9:4d8e with SMTP id adf61e73a8af0-3c44b00c842mr7875366637.23.1784892293106;
+        Fri, 24 Jul 2026 04:24:53 -0700 (PDT)
+X-Received: by 2002:a05:6a21:7309:b0:3b4:8ba9:4d8e with SMTP id adf61e73a8af0-3c44b00c842mr7875334637.23.1784892292590;
+        Fri, 24 Jul 2026 04:24:52 -0700 (PDT)
+Received: from dhcp-10-123-98-253.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3149198adabsm19312457eec.8.2026.07.24.04.24.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jul 2026 04:24:51 -0700 (PDT)
+From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	vishakhavc@google.com,
+	ipylypiv@google.com,
+	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Subject: [PATCH] mpi3mr: Fix potential deadlock in mpi3mr_fault_uevent_emit
+Date: Fri, 24 Jul 2026 22:16:30 +0530
+Message-ID: <20260724164630.924288-1-chandrakanth.patil@broadcom.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Change GFP_KERNEL to GFP_NOIO in mpi3mr_fault_uevent_emit() to avoid
+a potential deadlock during memory reclaim when the controller is in
+a fault state and cannot process I/O.
 
-Pre-existing issues:
-- [High] A Time-of-Check to Time-of-Use (TOCTOU) race on `fwevt->pending_at=
-_sml` leads to an ABBA deadlock between the SCSI Error Handler (EH) thread =
-and the firmware event worker thread.
-- [High] Bypassing `cancel_work_sync()` during suspend leads to a fatal ker=
-nel crash when the uncancelled worker thread accesses unmapped PCI memory.
---
+Fixes: ec54b348f274 ("scsi: mpi3mr: Record and report controller firmware faults")
+Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- Patch [7]: [PATCH v3 07/10] mpi3mr: Fix firmware event reference leak d=
-uring cleanup ---
-commit a2fc36963f11ee80eb780471cf03043bba280bae
-Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 31b19ed1528e..e772874ea77c 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1289,7 +1289,7 @@ static void mpi3mr_fault_uevent_emit(struct mpi3mr_ioc *mrioc)
+ 	struct kobj_uevent_env *env;
+ 	int ret;
+ 
+-	env = kzalloc_obj(*env);
++	env = kzalloc_obj(*env, GFP_NOIO);
+ 	if (!env)
+ 		return;
+ 
+-- 
+2.52.0
 
-mpi3mr: Fix firmware event reference leak during cleanup
-
-During firmware event cleanup, when an event is currently executing or
-pending at the SCSI mid-layer, the driver sets a discard flag and exits
-the cleanup routine early. This early exit skips the normal cancel path,
-resulting in the firmware event reference count not being decremented,
-leading to a reference leak.
-
-Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@=
-broadcom.com?part=3D7
-Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar=
-@broadcom.com?part=3D7
-
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
-_os.c
-> index 39624fae9131f..545570d490fac 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-[ ... ]
-> @@ -379,16 +354,39 @@ static void mpi3mr_cancel_work(struct mpi3mr_fwevt =
-*fwevt)
->  void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc)
->  {
-[ ... ]
-> +	if (fwevt) {
->  		/*
->  		 * Don't call cancel_work_sync() API for the
->  		 * fwevt work if the controller reset is
->  		 * get called as part of processing the
->  		 * same fwevt work (or) when worker thread is
->  		 * waiting for device add/remove APIs to complete.
->  		 * Otherwise we will see deadlock.
->  		 */
->  		if (current_work() =3D=3D &fwevt->work || fwevt->pending_at_sml) {
->  			fwevt->discard =3D 1;
-> +			mpi3mr_fwevt_put(fwevt);
->  			return;
->  		}
-
-[Severity: High]
-This isn't a bug introduced by this patch, but could this lockless read of
-pending_at_sml lead to an ABBA deadlock?
-
-If the EH thread reads fwevt->pending_at_sml locklessly and sees false, it
-proceeds to call cancel_work_sync() and blocks on the worker thread.
-Concurrently, the worker thread sets mrioc->current_event->pending_at_sml =
-=3D 1
-locklessly in mpi3mr_report_tgtdev_to_host() and calls into the SCSI mid-la=
-yer:
-
-	mrioc->current_event->pending_at_sml =3D 1;
-	scsi_scan_target(&mrioc->shost->shost_gendev, ...);
-
-If the SCSI queue is stopped by the EH thread, these SCSI commands will blo=
-ck
-indefinitely, causing the worker thread to wait for the EH thread, while the
-EH thread waits for the worker thread.
-
-[Severity: High]
-This is a pre-existing issue and was not introduced by the patch under revi=
-ew,
-but does skipping cancel_work_sync() here risk a fatal crash during suspend?
-
-During system suspend, mpi3mr_suspend() calls mpi3mr_cleanup_fwevt_list(). =
-If
-this returns early without waiting for the worker thread, mpi3mr_suspend()
-proceeds to mpi3mr_cleanup_resources(), unmapping PCI memory.
-
-When the worker thread later unblocks, it returns to mpi3mr_fwevt_bh(), ski=
-ps
-the stop_drv_processing check (having passed it earlier), and attempts to
-access unmapped PCI memory:
-
-evt_ack:
-	if (fwevt->send_ack)
-		mpi3mr_process_event_ack(mrioc, fwevt->event_id,
-		    fwevt->evt_ctx);
-
-Could this cause a kernel panic when mpi3mr_process_event_ack() tries to use
-the now-unmapped mrioc->sysif_regs?
-
-> =20
->  		mpi3mr_cancel_work(fwevt);
->  	}
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260724102505.1151=
-36-1-ranjan.kumar@broadcom.com?part=3D7
