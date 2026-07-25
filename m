@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B96E9377EC7;
-	Sat, 25 Jul 2026 09:18:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C08DF39022B;
+	Sat, 25 Jul 2026 09:20:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784971111; cv=none; b=ABKsOXnq52/LHdErnyyKKFQeZ5tNzxpykyIG7S0wbcSWg+zk8+kuV6mflceieUv2HwVv1Y1Jhep+HhWj4IoBu9n2kyCb/JBJ0SwJG6aqKU/oCZduczuMuAxqn9SxgKztwXSGvPBOdgRo2l/b4u4MdrE2NnGZbDj6VRf8fbvqfhY=
+	t=1784971218; cv=none; b=WAXHViKkYKy05ON732omnjJGuRxLPGfE94HkEZrHvtAT4kRgsmcy9QwIST4crk2AQNrWgT6xOdlr3FTBNdlZ1FCCOcgexH+806W/Ql/oj3X2mPxgrs9fAbe1SDtFg7qa2+PbiF6mA+cGNmqSCPxtaRAbHdk7xZwdl0Rk58n+M0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784971111; c=relaxed/simple;
-	bh=RTxYTtd2iXidLxcPEMQBMPqrg80ANTF5jeEnGP6zcSI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lT0S7fsk2u26uNeSJ5jVOjzkip8cT86SdnKsMDp9Br217g7RpLESSMChO/iC3kZifD2KzeAUfCg2zs4+urGeKG+RXXsj2qxfP2DM+7+sFgr5b+UBUUv0A+cbSP1zz6hPBGmNzMRfrqKSbLZYE0Lzt8mm+acNASwlyqCAJntI/tk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RBoBT3pQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784971218; c=relaxed/simple;
+	bh=CmJc5HWp7XIa9ZI3sswR5uenFjiapcxJLiuvdQ5Gxmc=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NGWnWI29BPSg/dmE/gU+VdKUbxldGIFMVXiqGZSWm792a1nqsUAXoGCRLHq/XpUPXU9k0JP+EKlPx9Bey39mG4fqBXfywTi8+O0oQrioGWjYa73UivPRKMcZKp64f2N/MBQdVaBVXUE9N7A6psMcA5ZbojHNxxWOmZ+1OPwNfzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=at+O6F6t; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RBoBT3pQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6F3D1F000E9;
-	Sat, 25 Jul 2026 09:18:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="at+O6F6t"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 558F11F000E9;
+	Sat, 25 Jul 2026 09:20:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784971108;
-	bh=zXZsG0yYtOm3DPrrBAksWmNTNjdQy47MFZdmr+uh6nA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RBoBT3pQC4HZDzXPYlv465ebdNWya3PFbBQO0BhRZBjPKeigSZtYC0wpYvRvwni/T
-	 TK9LZikpL2GY9InqD5sYoaTZvU1aQqqVRtD64lHIHsEXhCQoO4/uuhXjL5yto5wkNo
-	 mjelapnSn6P5754X0AkEbKludJ6AMNo8qjK4tWp/IAi+18YfhZ5Tkxo9LqOA4z/W0q
-	 f5aDXFcz4tiw07HH4quNHafTvUzFtYrO3H+NFeWsD3962JCWj7ORjqctL1EeMYGcnN
-	 Eu9R0rj3jIb/p26ZaYcpoJ0+jXlF7VzPqxN3YZA5RfRl6RTnjb/mSZu0NtRRjSJ9q2
-	 8rd0iYUj6Rnmw==
-Date: Sat, 25 Jul 2026 09:18:24 +0000
+	s=k20260515; t=1784971216;
+	bh=aaDUVqB32MI4QmsAjMF9hCDK2Ml6G6nBK4sVDZs312o=;
+	h=Date:From:To:Subject:References:In-Reply-To;
+	b=at+O6F6thh9JDAut+fw+N+7gfFvcjo1gZfqTqaWsQKfxd1v2ADwP2aYaRHlwpFW0f
+	 Us4TytXumHMPea1ylzdlpEiZTHYgoyJ4pAxUQXXbtwBRw4cAnIOl/DmdA3nvgKTCqV
+	 0QYXo6RvXWQSMKZoiMsAR/2umZj39aCRlJhLfRRIa3nR+Ul5rZ1wePWSaptBm1hDxu
+	 /MgRsjjKCCdkLr8Ws9BT3vkLJ3zLg8A9AHpyV1/fDeuobJvzWv0pv6URJ10tJgJqBI
+	 O8Pd3zHczfvXtiAA8Y0xyII1givDObJuu8hTdKyTeMEbKdD8tjeQ+gdibIWn5nTrrA
+	 7jNmJ6o8Ntkpg==
+Date: Sat, 25 Jul 2026 09:20:13 +0000
 From: Yixun Lan <dlan@kernel.org>
-To: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+To: Alim Akhtar <alim.akhtar@samsung.com>,
 	Avri Altman <avri.altman@sandisk.com>,
 	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
@@ -44,10 +43,10 @@ Cc: Alim Akhtar <alim.akhtar@samsung.com>,
 	linux-kernel@vger.kernel.org
 Subject: Re: [PATCH 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
  driver
-Message-ID: <20260725091824-GKA77545@kernel.org>
+Message-ID: <20260725092013-GKB77545@kernel.org>
 References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
  <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
- <7x3b4sttnc4oxkuvxmpkihfi76lkapjcigo7khgcgfytvol7w2@v5ykuyrk2z3m>
+ <allMTB6R7eHf_UZO@aurel32.net>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -56,12 +55,12 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <7x3b4sttnc4oxkuvxmpkihfi76lkapjcigo7khgcgfytvol7w2@v5ykuyrk2z3m>
+In-Reply-To: <allMTB6R7eHf_UZO@aurel32.net>
 
-Hi Anirudh,
+Hi Aurelien,
 
-On 15:16 Sun 12 Jul     , Anirudh Srinivasan wrote:
-> On Thu, Jul 02, 2026 at 02:31:36AM +0000, Yixun Lan wrote:
+On 23:25 Thu 16 Jul     , Aurelien Jarno wrote:
+> On 2026-07-02 02:31, Yixun Lan wrote:
 > > SpacemiT K3 SoC consist of UFS (Universal Flash Storage) Host Controller
 > > which has features compatible with JEDEC UFS 2.2, MIPI UniPro v1.61 and
 > > M-PHY v3.0 standard.
@@ -73,27 +72,11 @@ On 15:16 Sun 12 Jul     , Anirudh Srinivasan wrote:
 > >  drivers/ufs/host/ufs-spacemit.c | 931 ++++++++++++++++++++++++++++++++++++++++
 > >  drivers/ufs/host/ufs-spacemit.h |  90 ++++
 > >  4 files changed, 1034 insertions(+)
-> > 
-> > diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
-> > index ff170c0b6da0..4f53b7f7688f 100644
-> > --- a/drivers/ufs/host/Kconfig
-> > +++ b/drivers/ufs/host/Kconfig
-> > @@ -132,6 +132,18 @@ config SCSI_UFS_VARIABLE_SG_ENTRY_SIZE
-> >  	bool
-> >  	default y if SCSI_UFS_EXYNOS && SCSI_UFS_CRYPTO
-> >  
-> > +config SCSI_UFS_SPACEMIT
-> > +	tristate "SpacemiT UFS controller driver"
-> > +	depends on SCSI_UFSHCD_PLATFORM && ARCH_SPACEMIT
 > 
-> Can you add SCSI_UFSHCD_PLATFORM and SCSI_UFS_SPACEMIT as modules to
-> riscv defconfig (or just add the former and add a default y if
-> ARCH_SPACEMIT in this Kconfig entry). This will let defconfig kernels
-> to boot with persistant rootfs on these devices.
+> Tested-by: Aurelien Jarno <aurelien@aurel32.net>
 > 
-Ok, will consider adding one entry to riscv defconfig, but this should be
-handled in another separate patch, for making it as module or built-in driver,
-I'm incline to choose latter one, but would be glad to hear different opinion
+
+Thanks for testing, but FYI, I'm not adding your T-B due to massive changes in V2..
 
 -- 
 Yixun Lan (dlan)
