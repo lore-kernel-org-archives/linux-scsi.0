@@ -1,109 +1,157 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEDDE33C192;
-	Sat, 25 Jul 2026 03:25:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F7724908CA
+	for <linux-scsi@vger.kernel.org>; Sat, 25 Jul 2026 08:49:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784949921; cv=none; b=Qsoyo7PLUQQKb+ndRyUgZexm7DWp9wzUBbEe4s1Y1r2uhAEff4230RhXqI9HLR7kYbNJsZZ72cvi6+bRwKxyAO6jgYrm+s/Or5dFsrkPZnTEds6vjGGiR6EWyZ0r+AXsv4GUltjeoecRbSVzM/R7odxgZy9Rf3Ql0CBbO2uSS2g=
+	t=1784969396; cv=none; b=AfMpO3HMFvZWnPS3Adym3Gg5UuyTPOQq0VS6exAmz7Lfg5ghNwNhWN59zX+wESSDCi0lLp5GUbZPVYHTK50nd6zSqe7ANB6Kxh7X4HAMLi1f3OhWxe3NBjFJlbo1L2rcnXgGjDdS/tG7jbL5wgJuVTLEwtX4b8e6qz0KJ1OmVCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784949921; c=relaxed/simple;
-	bh=ySt/Lp6Ys83W1xqSPfcXVIOAjTr2e+nreazIrDi536g=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XSf6nuv+EhQ8y+dkmE1pDbzIihVnLuB6XjUaM2DstCCqdP0fT040s3v5vrVUZytw3R15jDpsHbi7bX0jTGOprRK9S8auZVBauOskH5SpN/R+L2865WTuqSyp9mRFQMHzcQ8nUJ5oQovl43IYRjsWkve9EGIwI0syRaZAUuP864M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=dr+Py+H9; arc=none smtp.client-ip=220.197.31.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1784969396; c=relaxed/simple;
+	bh=5wbCDtZrp3iGrV7cvqBSX5L1cMn6ozL59j7qNmbBlFo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pBy7UAjAF+u/lC5ciNpspHWFzmRPOBKTh4uc2WiZTyBg7TCnF+5z+gufam19ahsE/ca97A/xxQ8DgZ2TOItaGet8B/17p0yfRfI1y/FD7GmiXdelWARDrrwuhWBvEdYCVwCoHvfhZuUziFMcEHiXsjKBlF430G9ROfNFdDcEUBQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=ucIkn7pr; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="dr+Py+H9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version:
-	Content-Type; bh=xEr91LuUOtQnvQ3IhQUaRuOwqOhTKwoFNBzLDV7oJDs=;
-	b=dr+Py+H9Iwsfq+0tOMCIHI1x4X5JnOnvmAgp68t0b7ya4XqkM98OSxkdGpKO8E
-	JBLjVpwIxLZiY5H8s9yByPZDChap2sQZ3SgFaXqsiN1ZtEXBJqwRSolGL33BTaqd
-	C+LlxJBZNK5FMEw2EkdgKixz4x+aUvvsmWAG0m+4fT9AM=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wCHpeBbLGRqfkhsLw--.33591S2;
-	Sat, 25 Jul 2026 11:24:12 +0800 (CST)
-From: Yang Xiuwei <yangxiuwei@kylinos.cn>
-To: csander@purestorage.com
-Cc: James.Bottomley@hansenpartnership.com,
-	martin.petersen@oracle.com,
-	rc@rexion.ai,
-	axboe@kernel.dk,
-	fujita.tomonori@lab.ntt.co.jp,
-	bvanassche@acm.org,
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="ucIkn7pr"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2cf452def93so18642965ad.1
+        for <linux-scsi@vger.kernel.org>; Sat, 25 Jul 2026 01:49:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1784969392; x=1785574192; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=hVrFE1uT0BINsDxyA59hgmjG595lAs1SmBDuzg2mqOY=;
+        b=ucIkn7prAAphz5VvOCHw4BKchC8tQzIwlfgt6tl5Ze6rb/f/5QSfx0VcNM9osj8816
+         HwtK67Lh/C5rh7WI+E7cVs3DosbI8gRBIgTS/Hg0NVj4MiAos9SO0IDCb64vZjxShxg0
+         aQnHQu1bXZd3mQ8JsU1hcgAuQSKjkfO3Zon9UDfcnnoRf+hDomh1TvtzyiPtIjhaIJXA
+         Yzq/vqCXLDonFudxkBJDhC41JQzfu4VzRctLvY0r3oKfHRJBPTb+CDRB4MNSs6v/6WYP
+         a0F0TnUkB9Xq/Ogv2F2iUFjyl+5xS+aV+2CFQKW047v1VvwGNcWwqiV3xls1m+k6mmiO
+         Qcrw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784969392; x=1785574192;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=hVrFE1uT0BINsDxyA59hgmjG595lAs1SmBDuzg2mqOY=;
+        b=YGZIn7yjArtVOVwLLDfIL2qSstcl1LIjU/BzjPXFpR6DWnu/89JZG9ZHQSXroVxTrt
+         0BiBwBo6cB04utNeo2S4P4wt0X3q1y51yRkXbKz0+s8RB53tNYIbwK3J0QyxlL6268M4
+         SKjcY0iu2EDwVpRE90heBPBMS6ntGgQTm4K4iJ1i3Qw4vMrkCk3OErdVIFYkouRGmZOY
+         EXQ3+Xoy2wADML05WA6ULlNL6fLhAtA6NunPAHPWDsbn4MOXDghu32pBsGQdzVbOPyPY
+         6K86dU5HlhyEgJtEdp0GWXGNuSQrxF2r9sTfdHQPjX37CRo+NAfk5ZsWfUDSO3TONC/o
+         ziWg==
+X-Forwarded-Encrypted: i=1; AHgh+RqjxgYpoH7yFHYbUUuFLxWMV/+sj6vuILBMZGfd5qGxr4SJmXZdKO+94F6xEC+0ukGoz3o+0qH3V/O8@vger.kernel.org
+X-Gm-Message-State: AOJu0YwWHLqgd+EKemgG/RaM0ZOa6PezSdDbivPJ3lJim63brJXHggDD
+	nAgQVJdDWWEeTugOZ1V4bXaW2fpivbIyZyXU0IQ82ah7PtJlk08RqfoNwA3d3Qq107Y=
+X-Gm-Gg: AR+sD12T6jtcA6/6oOaNpQs78meg72wkhs50A3gXXrU/YY+4wCISHBgvvljdqUuZdFz
+	IVI87Owja6fYkJGvID8lW4eNeXD2vn76wjCUPx4J5/8Ky1jqqcG0AkgBxVaGHCJPqHh+B/b/ra4
+	JvFVOEGJC8yNcU6eU1apm+8NdfyjSJWCZI8SpICyGN/Ww/v8siB7L0UyHfcNLJlMCh7A7d18qxO
+	VyoDxySy38PvkE3JC0GAizU53RcUKCjLSaNxkeQwQOYOHatj9CB9N2uR37FX+oEV6b0NONOhGAQ
+	Isa9HNKwc85nYbN/0qWt1m2jz5+ZAn9FYJlcRRyzLGUWnk4KucyBE6T1IpSsWkac/pbpZdlzXXQ
+	ZbQVWYbHga4KYsPq+UlL+ljrK/Rk4mBiUmVbOcZhXhrBbq5zhymmJBzqYd9p7NaqNIKQmgXQwxp
+	jjN9BdCBtOPmGmyTc7QDr8566P
+X-Received: by 2002:a17:902:e549:b0:2c9:d8c5:d55d with SMTP id d9443c01a7336-2cfdf41daa3mr13200785ad.16.1784969392582;
+        Sat, 25 Jul 2026 01:49:52 -0700 (PDT)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:27f4:9b8e:6315:1280])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cfde5e2b8esm7168165ad.31.2026.07.25.01.49.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 25 Jul 2026 01:49:52 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: martin.petersen@oracle.com,
+	michael.christie@oracle.com,
+	himanshu.madhani@oracle.com
+Cc: ddiss@suse.de,
 	linux-scsi@vger.kernel.org,
-	io-uring@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yehyeong Lee <yhlee@isslab.korea.ac.kr>,
 	stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] scsi: bsg: fix TOCTOU in io_uring passthrough command setup
-Date: Sat, 25 Jul 2026 11:24:11 +0800
-Message-Id: <20260725032411.2786820-1-yangxiuwei@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <CADUfDZp=pCYGY0TCnMxXPG3LR3Kwk3DB-Hq+EvHZshruX3pv5Q@mail.gmail.com>
-References: <20260720032338.461681-1-yangxiuwei@kylinos.cn> <20260720032338.461681-2-yangxiuwei@kylinos.cn> <CADUfDZpAW261MhFJg434=4nZFMD7mV=LL7F-ZiAWPa7dYvGpcQ@mail.gmail.com> <20260724004907.2742329-1-yangxiuwei@kylinos.cn> <CADUfDZpsTH7zU4gyVE11R9GxdadjbcrcGVX+btoEjRYS-tBiGQ@mail.gmail.com> <20260724020240.2938587-1-yangxiuwei@kylinos.cn> <CADUfDZp=pCYGY0TCnMxXPG3LR3Kwk3DB-Hq+EvHZshruX3pv5Q@mail.gmail.com>
+Subject: [PATCH] scsi: target: Fix NULL se_tpg dereference in target_complete()
+Date: Sat, 25 Jul 2026 17:49:39 +0900
+Message-ID: <20260725084939.694403-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCHpeBbLGRqfkhsLw--.33591S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7CF4DJr15CFy8Gw1UCr1xZrb_yoW8Zw1kpF
-	Wjq3WFgr4kZF47ArsFy3W8Za1FyF1aq343Wrs0qF17ArWDur1fCw1v93W0vFW3Zr4kK34r
-	Zw4UGw1DA3W7X3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRcAw-UUUUU=
-Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6RzVZmpkLFz1hQAA3I
 
-Hi Caleb,
+Commit a47fa41381a0 ("scsi: target: Fix NULL dereference on XCOPY
+completion") guarded target_complete() against a NULL se_tpg_wwn, which the
+EXTENDED COPY worker hits because its global xcopy_pt_tpg carries no
+se_tpg_wwn.  target_complete() dereferences
+cmd->se_sess->se_tpg->se_tpg_wwn; that fix handled the innermost pointer.
 
-On Fri, Jul 24, 2026 at 08:43:42AM -0700, Caleb Sander Mateos wrote:
-> On Thu, Jul 23, 2026 at 7:03 PM Yang Xiuwei <yangxiuwei@kylinos.cn> wrote:
-> >
-> > Hi Caleb,
-> >
-> > On Thu, Jul 23, 2026 at 06:10:27PM -0700, Caleb Sander Mateos wrote:
-> > > On Thu, Jul 23, 2026 at 5:50 PM Yang Xiuwei <yangxiuwei@kylinos.cn> wrote:
-> > > >
-> > > > max_response_len is similar here: we clamp with
-> > > > min(..., SCSI_SENSE_BUFFERSIZE), so it cannot overflow the sense
-> > > > buffer. Same idea for response.
-> > >
-> > > I don't think that's true. Without READ_ONCE(), the compiler can
-> > > assume no other thread will concurrently write cmd->max_response_len
-> > > (else it would be UB). So it's allowed to load it multiple times:
-> > > cmd->max_response_len ? min(cmd->max_response_len, SCSI_SENSE_BUFFERSIZE)
-> > >                       : SCSI_SENSE_BUFFERSIZE
-> > > becomes
-> > > cmd->max_response_len ? (cmd->max_response_len < SCSI_SENSE_BUFFERSIZE ?
-> > >                          cmd->max_response_len : SCSI_SENSE_BUFFERSIZE)
-> > >                       : SCSI_SENSE_BUFFERSIZE
-> > > And if cmd->max_response_len changes between the second and third
-> > > loads, this could definitely evaluate to a value greater than
-> > > SCSI_SENSE_BUFFERSIZE.
-> >
-> > IIUC Kernel min() is __careful_cmp() -> __careful_cmp_once(), which does:
-> >
-> >   auto ux = (x); auto uy = (y);
-> >   (ux < uy) ? ux : uy;
-> >
-> > so cmd->max_response_len is only loaded once inside min(). The outer
-> > ?: may load it again for the condition, but the value coming out of
-> > min() should still be <= SCSI_SENSE_BUFFERSIZE. Did I get that right?
->
-> Without READ_ONCE(), there is no requirement that
-> cmd->max_response_len only be loaded once. The compiler is allowed to
-> assume the value won't be modified concurrently by another thread
-> (that would be a data race, undefined behavior). So it's free to
-> combine or separate the loads. If you want to ensure that the value
-> read from cmd->max_response_len is consistent, READ_ONCE() is
-> required.
+The same statement can fault one level earlier: se_sess->se_tpg itself may
+be NULL.  After a session is deregistered, transport_deregister_session()
+clears se_sess->se_tpg, yet the isert receive path can still submit and
+complete a command that references that session, so the backend completion
+runs target_complete() with se_tpg == NULL and dereferences it:
 
-Right —  I'll add READ_ONCE() for max_response_len in the next revision.
+  Oops: general protection fault, probably for non-canonical address ...
+  KASAN: null-ptr-deref in range [0x0000000000000080-0x0000000000000087]
+  Workqueue: ib-comp-wq ib_cq_poll_work
+  RIP: 0010:target_complete_cmd_with_sense.part.0+0x17d/0xc90
+  Call Trace:
+   fd_execute_rw
+   __target_execute_cmd
+   iscsit_execute_cmd
+   iscsit_sequence_cmd
+   isert_recv_done
+   __ib_process_cq
+   ib_cq_poll_work
 
-Thanks,
-Yang Xiuwei
+The exact window in which an isert completion outlives the session
+deregistration has not been pinned down; the guard defends the dereference
+regardless of how the command reaches this point.
+
+Load se_tpg first and fall back to a NULL wwn when it is absent.  The
+existing "if (!wwn)" path already queues the completion on cmd->cpuid,
+so no new branch is needed; this extends that guard by one pointer.
+
+target_submit() reads the same chain (se_sess->se_tpg->se_tpg_tfo) and is
+exposed to the identical NULL.  That path has not been reproduced here and
+is left for a separate change.
+
+Reproduced with soft-RoCE (rdma_rxe) and KASAN under iSCSI connection
+churn; no kernel-side test hooks were needed.
+
+Fixes: 39ae3edda325 ("scsi: target: core: Make completion affinity configurable")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+Tested on 7.2.0-rc4 with soft-RoCE (rdma_rxe) + KASAN under iSCSI/iSER
+connection churn.  Without this patch the target crashes in 2 of 3 runs;
+with it, 10 consecutive runs are clean and complete the full workload
+(160 of 160 cycles, matching the unpatched baseline).
+
+To confirm that the guard - and not an incidental timing change - is what
+prevents the crash, a build carrying an additional print inside the new
+NULL branch was run 10 more times: a NULL se_tpg was observed 13 times
+across 7 of those runs and was handled every time, with no oops and no
+change in I/O counts.
+
+ drivers/target/target_core_transport.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index fad03a15c969..ee5781d89433 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -904,7 +904,8 @@ static bool target_cmd_interrupted(struct se_cmd *cmd)
+ 
+ static void target_complete(struct se_cmd *cmd, int success)
+ {
+-	struct se_wwn *wwn = cmd->se_sess->se_tpg->se_tpg_wwn;
++	struct se_portal_group *se_tpg = cmd->se_sess->se_tpg;
++	struct se_wwn *wwn = se_tpg ? se_tpg->se_tpg_wwn : NULL;
+ 	struct se_dev_attrib *da;
+ 	u8 compl_type;
+ 	int cpu;
+
+base-commit: 248951ddc14de84de3910f9b13f51491a8cd91df
+-- 
+2.43.0
 
