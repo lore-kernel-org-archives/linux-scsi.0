@@ -1,156 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B29633C7DEB;
-	Sat, 25 Jul 2026 10:38:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA312331203;
+	Sat, 25 Jul 2026 10:46:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784975905; cv=none; b=qjwIf1cCQLGBUfAfDVUegTn7yMyESKeDXtCLPxoYH6FMJJk7xf6IQHCaoh40Y25S3qkeo7Rxx9i4DZLy3Q7q819TdYYd35C8zwIfgx/gaHbMCY7e077Ts00YiySUlhMn308DfEd190IpJatSOkVbKWGAojpidzw4RJjflZbr1gE=
+	t=1784976368; cv=none; b=Fywg3X/n/qYKcuMWYEHAO/H34KFlI64xBgybZeGbF5RjCfz/QGZN6Q071SAT5IqHqhQDCOlqmKt8I+RNSCHSpdl9+FRchzftRHoLls61hglKG1dBN2S4xOiOe4dTxxrxaU0JgCLqcp4Gq/WklYbUip/hzpMx7FDw2C6s5ZW2U24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784975905; c=relaxed/simple;
-	bh=bY2iEgNhAvmc0X5rKqbN7IO2QlL9qkSoLgBi54rJSC0=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ZtePUqOKPtb4JGhw4bazLCvWzoehsvaFOL2H8IOELglAh5YBf1eXvEBxx/QJuspa35J2YPF86GhwLlISig6AyJ3U/3Ur922glvQcffktfWfcX66p5MRfmSopKCru9wYb1/R5wha3Jg49A1nak+cze9EQEU5jk50SWHFf8Z7hEL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jL1P/COP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784976368; c=relaxed/simple;
+	bh=106UL/W7Dj6aqguFZRIdDZpsJ+Dkqd6Q8qJCpuyq0m4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ZJAzUFYSIq9kKjO838NZuXe4Gh4qB1HbzFUBJ2aC07Aca5kXSKANk2npbpnRUtuWmEWCjnXW+GFc1hXhn2sIndPs470h5dTg2sjhG6MewVwyrtSTMzytrLnrCR27KS1oVYkaMEyFvDxusuVxh9hOaaundD2IOFAgls0MG0OqzHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bcl5RdTa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jL1P/COP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 613F01F00ACA;
-	Sat, 25 Jul 2026 10:38:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bcl5RdTa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AA851F000E9;
+	Sat, 25 Jul 2026 10:46:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784975904;
-	bh=rstlMCAiPYrx09YZLd1JARG4dL/ZfJ5fVNMBMfXd5d4=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=jL1P/COPGxYlfs1LxHFlx+AfbvXUrQzFJA6cdfAGGirngnE/LNNTeIPEgJ81rWhfI
-	 nlgq8G1ekuTDJ2In07GgRNWaDjCnnFUFnRgsqL4/gkGQKolwRq1z+sc0vKSVW1sko8
-	 OsgnIJN35FWMh0akZ5UOc2wgsDNz/Aff36PLVawttTseOtGrsBbOUf/ipWX4iwHcWJ
-	 d3lzWodIWQ57nNsY11VOk7vbfKyEwjt4lgUFfMn6MFEGIE8j/957L/CnPSNC+r/B4j
-	 BabJw738zqsuaUOU/3l4mY/7z4hJ7Gwb3zBd0wqgGrX5dczfYkOJ5f61/rdmXSnjtr
-	 LK/VxJ0oHiaCg==
-From: Yixun Lan <dlan@kernel.org>
-Date: Sat, 25 Jul 2026 10:37:46 +0000
-Subject: [PATCH v2 3/3] riscv: dts: spacemit: k3: Add UFS support
+	s=k20260515; t=1784976367;
+	bh=ZokpYVcEpWT2zVB9KzxJKWSwH3/C3FPOW2IXcy9DbzQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Bcl5RdTaMs+NAk59zBNQgB8L5LOZaxaky0N/MNistu8rZJs42mcMiGmqpKTWvIhxG
+	 nbLiyAgbwRlqt4MjcOCyNdIQLSIgSUWb2l6QH5bvPm6C8qLvCno224canNTat/pU+C
+	 SfuYrMeTm4xEYQf97TqYvs2Vz1Sh2Aglm10mrboU0z4kVBBPq9XiLWmk/NkVXeDgvm
+	 At2x0K7BYMb8mUoyY4N4opPEB1Pwcu4yciX/+H9USjnFr6I5Ib4+62+KsT+D7jseb6
+	 Ihu7aWheEcqplSW4ygdOuDVIfk2CnTmzY0RBiQEUipqTwiRd7meL9GGzAZWK3IRJFG
+	 CwBHn2ptEKWKw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 1/3] scsi: ufs: spacemit: dt-bindings: Add UFS
+ controller for K3 SoC
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yixun Lan" <dlan@kernel.org>
+Cc: conor+dt@kernel.org, robh@kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260725-08-k3-ufs-support-v2-1-45036a2a2418@kernel.org>
+References: <20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org>
+ <20260725-08-k3-ufs-support-v2-1-45036a2a2418@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 25 Jul 2026 10:46:06 +0000
+Message-Id: <20260725104607.0AA851F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260725-08-k3-ufs-support-v2-3-45036a2a2418@kernel.org>
-References: <20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org>
-In-Reply-To: <20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org>
-To: Alim Akhtar <alim.akhtar@samsung.com>, 
- Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Philipp Zabel <p.zabel@pengutronix.de>, Paul Walmsley <pjw@kernel.org>, 
- Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
- Alexandre Ghiti <alex@ghiti.fr>
-Cc: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, 
- Aurelien Jarno <aurelien@aurel32.net>, 
- Jennifer Berringer <jberring@redhat.com>, linux-scsi@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-riscv@lists.infradead.org, 
- spacemit@lists.linux.dev, linux-kernel@vger.kernel.org, 
- Yixun Lan <dlan@kernel.org>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2344; i=dlan@kernel.org;
- h=from:subject:message-id; bh=bY2iEgNhAvmc0X5rKqbN7IO2QlL9qkSoLgBi54rJSC0=;
- b=kA0DAAoBMarqR1lNu+0ByyZiAGpkkgijNKSKJGUZOZZ+ONs41lkSb3rEFypBTJNrBtxNjyJcI
- IkCrwQAAQoAmRYhBLW6uMnDG3EVZwIj3DGq6kdZTbvtBQJqZJIIGxSAAAAAAAQADm1hbnUyLDIu
- NSsxLjEyLDIsMl8UgAAAAAAuAChpc3N1ZXItZnByQG5vdGF0aW9ucy5vcGVucGdwLmZpZnRoaG9
- yc2VtYW4ubmV0QjVCQUI4QzlDMzFCNzExNTY3MDIyM0RDMzFBQUVBNDc1OTREQkJFRAAKCRAxqu
- pHWU277f5jEACepGQHgq1MAEV2DsG+sjV3bS30pzCfyQA34FHe/z16k01Ke4KZdgHxt4txpEPzZ
- ZRNiaSRBdlF9PSk7z+32wnAIp0IFi8HFc8DUmqQmkxEqQDOGrtwFsqy2Fka9SQdpaQusQdDNGfc
- 6lWxkoG2d9GrRn7N4EiE0W8mMnoInRVPUHWXS5Lpy4YJTt9sOtS6N4+tI9YX2UEMS9sA9KZrIAA
- AGL28dQAweD08CwhRxu4WtgFM0H6VCXsm1U+PSbaW4syJeN5hR6xgVsjWSGrlnbcOMvhNAqO6QP
- /PZ7VUnXfgE1H7/kWveVrGSBY34naIkFKR5I9/urvF6lDr4EbXoG0PE4BHKdTDVTUTz/PRd5HRQ
- UHF2urCgZ7AsALWYLeYFDyS3OXiouBl5yrgmXYjSoB00x56zBy8wBFKSzI61TJl87jHv8dt+K3d
- Wz/Mk+ngNq6AeWU9KTzaKLwACYIaBKSfIh59iO+Rmr/UzL6v7nSBFgdlXze06Op4zaurpfuz0/W
- Mo7aQij2ZNVfOBxnfCr2yqWUWJjnNUPImn1YCKBTiLwRQluAQLbjYiyPGGVU8juECLlR26Dx/Wd
- abAcHMpDuGvrkRB8QyKXHq78n91eHX6zl4bTaQ+rCsp27RsDYrvmsqF6mlkVfsQuO11eXInBxLW
- MXehB9vP5B5gd/rpjowug==
-X-Developer-Key: i=dlan@kernel.org; a=openpgp;
- fpr=50B03A1A5CBCD33576EF8CD7920C0DBCAABEFD55
 
-Add UFS Host Controller support for SpacemiT K3 SoC, and enable
-it both on Pico-ITX and CoM260-IFX boards.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Low] The DT binding example incorrectly formats the deprecated `freq-tab=
+le-hz` property as a flat array, causing a schema validation failure.
+- [Low] The `compatible` property is omitted from the `required` list in th=
+e binding schema.
+--
 
-Signed-off-by: Yixun Lan <dlan@kernel.org>
----
- arch/riscv/boot/dts/spacemit/k3-com260.dtsi  |  4 ++++
- arch/riscv/boot/dts/spacemit/k3-pico-itx.dts |  4 ++++
- arch/riscv/boot/dts/spacemit/k3.dtsi         | 27 +++++++++++++++++++++++++++
- 3 files changed, 35 insertions(+)
+--- Patch [1]: [PATCH v2 1/3] scsi: ufs: spacemit: dt-bindings: Add UFS con=
+troller for K3 SoC ---
+commit b7ba054d14f9257aed59f8435e45924091cd034f
+Author: Yixun Lan <dlan@kernel.org>
 
-diff --git a/arch/riscv/boot/dts/spacemit/k3-com260.dtsi b/arch/riscv/boot/dts/spacemit/k3-com260.dtsi
-index a38d7b738258..a68a55c8e73d 100644
---- a/arch/riscv/boot/dts/spacemit/k3-com260.dtsi
-+++ b/arch/riscv/boot/dts/spacemit/k3-com260.dtsi
-@@ -188,3 +188,7 @@ &uart0 {
- 	pinctrl-0 = <&uart0_0_cfg>;
- 	status = "okay";
- };
-+
-+&ufshc {
-+	status = "okay";
-+};
-diff --git a/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts b/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
-index b89c1521e664..eab8c430f2d1 100644
---- a/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
-+++ b/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
-@@ -206,6 +206,10 @@ &uart0 {
- 	status = "okay";
- };
- 
-+&ufshc {
-+	status = "okay";
-+};
-+
- &usb2_host {
- 	#address-cells = <1>;
- 	#size-cells = <0>;
-diff --git a/arch/riscv/boot/dts/spacemit/k3.dtsi b/arch/riscv/boot/dts/spacemit/k3.dtsi
-index 19fc9b49668e..a287bb55d13f 100644
---- a/arch/riscv/boot/dts/spacemit/k3.dtsi
-+++ b/arch/riscv/boot/dts/spacemit/k3.dtsi
-@@ -469,6 +469,33 @@ usb2_phy: phy@c0a20000 {
- 			status = "disabled";
- 		};
- 
-+		ufshc: ufshc@c0e00000 {
-+			compatible = "spacemit,k3-ufshc";
-+			reg = <0x0 0xc0e00000 0x0 0x40000>;
-+			clocks = <&syscon_apmu CLK_APMU_UFS_ACLK>,
-+				 <&syscon_apmu CLK_APMU_UFS_REFCLK>;
-+			clock-names = "aclk", "ref_clk";
-+			resets = <&syscon_apmu RESET_APMU_UFS_ACLK>;
-+			interrupts = <135 IRQ_TYPE_LEVEL_HIGH>;
-+			lanes-per-direction = <2>;
-+			operating-points-v2 = <&ufs_opp_table>;
-+			status = "disabled";
-+
-+			ufs_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				opp-1 {
-+					opp-hz = /bits/ 64 <491520000>,
-+						 /bits/ 64 <19200000>;
-+				};
-+
-+				opp-2 {
-+					opp-hz = /bits/ 64 <491520000>,
-+						 /bits/ 64 <192000000>;
-+				};
-+			};
-+		};
-+
- 		eth0: ethernet@cac80000 {
- 			compatible = "spacemit,k3-dwmac", "snps,dwmac-5.40a";
- 			reg = <0x0 0xcac80000 0x0 0x2000>;
+scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
 
--- 
-2.54.0
+This commit documents the device tree bindings for the UFS (Universal Flash
+Storage) Host Controller found on the SpacemiT K3 SoC.
 
+> diff --git a/Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.yaml=
+ b/Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.yaml
+> new file mode 100644
+> index 0000000000000..45cd7837c3f76
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.yaml
+
+[ ... ]
+
+> +required:
+> +  - reg
+> +  - clocks
+> +  - clock-names
+> +  - resets
+
+[Severity: Low]
+Is the compatible property missing from this list? Standard schema guidelin=
+es
+generally require leaf device bindings to explicitly include compatible in
+their required array to properly enforce its presence during node validatio=
+n.
+
+> +
+> +allOf:
+> +  - $ref: ufs-common.yaml
+
+[ ... ]
+
+> +    ufs@c0e00000 {
+> +        compatible =3D "spacemit,k3-ufshc";
+> +        reg =3D <0xc0e00000 0x40000>;
+> +        clocks =3D <&syscon_apmu CLK_APMU_UFS_ACLK>,
+> +        <&syscon_apmu CLK_APMU_UFS_REFCLK>;
+> +        clock-names =3D "aclk", "ref_clk";
+> +        resets =3D <&syscon_apmu RESET_APMU_UFS_ACLK>;
+> +        interrupts =3D <135 IRQ_TYPE_LEVEL_HIGH>;
+> +        freq-table-hz =3D <491520000 491520000 19200000 19200000>;
+
+[Severity: Low]
+Will this fail schema validation?
+
+The ufs-common.yaml schema defines freq-table-hz as an array of arrays, so
+this flat array might need to be formatted as tuples, for example:
+<491520000 491520000>, <19200000 19200000>;
+
+Also, freq-table-hz is explicitly marked as deprecated in the common schema
+and replaced by operating-points-v2. Does this new binding need to use a
+deprecated property in its example?
+
+> +        lanes-per-direction =3D <2>;
+> +    };
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260725-08-k3-ufs-=
+support-v2-0-45036a2a2418@kernel.org?part=3D1
