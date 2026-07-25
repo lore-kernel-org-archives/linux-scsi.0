@@ -1,125 +1,99 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B838E2BD0B
-	for <linux-scsi@vger.kernel.org>; Sat, 25 Jul 2026 09:05:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B96E9377EC7;
+	Sat, 25 Jul 2026 09:18:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784970325; cv=none; b=S81Filuanoq6ucnHV1sP8KNO7bikNHDyPkA0ShFRojClr+8wRgBKB58Ay/Fds0S39rJN+rkkUdc6i0JdwmqWJo/xc/VaYKMwU0+Y3ujlA1W0BlXlrD4ZK8hfEldmNXhCH6CZukMUBLvW6TOktKQgj6lRapt+1iz0+jXMAPmB2gY=
+	t=1784971111; cv=none; b=ABKsOXnq52/LHdErnyyKKFQeZ5tNzxpykyIG7S0wbcSWg+zk8+kuV6mflceieUv2HwVv1Y1Jhep+HhWj4IoBu9n2kyCb/JBJ0SwJG6aqKU/oCZduczuMuAxqn9SxgKztwXSGvPBOdgRo2l/b4u4MdrE2NnGZbDj6VRf8fbvqfhY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784970325; c=relaxed/simple;
-	bh=/29itB43A7t1GOGKR58qNVokZfI9wNIQK+ssl7COI6c=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ATehBjREQ2QB6OJ87IK7x1gh8pd6yCjTFMfNXelCd+3n7PRFn8EtJ4uDIeaExq11Z/fOv2xPBSB/m0Zr0t1c9rbFcus2DSqarpHS3MZvXvcRuzwfcJl0Wo/My9QHZmt0Zj4lfXxv8Pwr0PyRnCo+BNDEO17DhAM7BmDJxs4SZT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mBlICrjp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784971111; c=relaxed/simple;
+	bh=RTxYTtd2iXidLxcPEMQBMPqrg80ANTF5jeEnGP6zcSI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lT0S7fsk2u26uNeSJ5jVOjzkip8cT86SdnKsMDp9Br217g7RpLESSMChO/iC3kZifD2KzeAUfCg2zs4+urGeKG+RXXsj2qxfP2DM+7+sFgr5b+UBUUv0A+cbSP1zz6hPBGmNzMRfrqKSbLZYE0Lzt8mm+acNASwlyqCAJntI/tk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RBoBT3pQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mBlICrjp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4254C1F000E9;
-	Sat, 25 Jul 2026 09:05:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RBoBT3pQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6F3D1F000E9;
+	Sat, 25 Jul 2026 09:18:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784970324;
-	bh=zWi+q81yLVcDqu5LeKY+TLPyF2iFLnazZsDDrsodiek=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mBlICrjpzdK9d0l6/uv6+9CD3aw+H4R2q/PPsOXP7sTIq86vZO4W9DGRmX40zfR2K
-	 pKuNE0zFZ7dCImZ35fatbNmJJVnORQChhNQu541RXABdY51udwMCeg+TVso/lSoJwX
-	 opLeadNR7NiP14NZl3WlPsusPaIeTttiicUO8Ggr0blOcQCcBEaVxfNGTnizuVJHyD
-	 +J3en3Ovle0DgnpjAXqkwRjxKsED+n9RZcV7hnVpdWIyRq+2fnK1xuSFXx0OnniiQ7
-	 +oWPQ+5Ri2CbcU3M/AOPNJ8uf1CxKYiu4PRJx8cCONqJO6OaSi9AL++rKmTxc75dvx
-	 XMW/2o2wfcY+A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: Fix NULL se_tpg dereference in
- target_complete()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260725084939.694403-1-yhlee@isslab.korea.ac.kr>
-References: <20260725084939.694403-1-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 25 Jul 2026 09:05:23 +0000
-Message-Id: <20260725090524.4254C1F000E9@smtp.kernel.org>
+	s=k20260515; t=1784971108;
+	bh=zXZsG0yYtOm3DPrrBAksWmNTNjdQy47MFZdmr+uh6nA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=RBoBT3pQC4HZDzXPYlv465ebdNWya3PFbBQO0BhRZBjPKeigSZtYC0wpYvRvwni/T
+	 TK9LZikpL2GY9InqD5sYoaTZvU1aQqqVRtD64lHIHsEXhCQoO4/uuhXjL5yto5wkNo
+	 mjelapnSn6P5754X0AkEbKludJ6AMNo8qjK4tWp/IAi+18YfhZ5Tkxo9LqOA4z/W0q
+	 f5aDXFcz4tiw07HH4quNHafTvUzFtYrO3H+NFeWsD3962JCWj7ORjqctL1EeMYGcnN
+	 Eu9R0rj3jIb/p26ZaYcpoJ0+jXlF7VzPqxN3YZA5RfRl6RTnjb/mSZu0NtRRjSJ9q2
+	 8rd0iYUj6Rnmw==
+Date: Sat, 25 Jul 2026 09:18:24 +0000
+From: Yixun Lan <dlan@kernel.org>
+To: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
+ driver
+Message-ID: <20260725091824-GKA77545@kernel.org>
+References: <20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org>
+ <20260702-08-k3-ufs-support-v1-2-1a64a3ab128f@kernel.org>
+ <7x3b4sttnc4oxkuvxmpkihfi76lkapjcigo7khgcgfytvol7w2@v5ykuyrk2z3m>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <7x3b4sttnc4oxkuvxmpkihfi76lkapjcigo7khgcgfytvol7w2@v5ykuyrk2z3m>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Hi Anirudh,
 
-New issues:
-- [Medium] Missing `READ_ONCE()` on lockless read of `cmd->se_sess->se_tpg`=
- allows compiler TOCTOU race.
+On 15:16 Sun 12 Jul     , Anirudh Srinivasan wrote:
+> On Thu, Jul 02, 2026 at 02:31:36AM +0000, Yixun Lan wrote:
+> > SpacemiT K3 SoC consist of UFS (Universal Flash Storage) Host Controller
+> > which has features compatible with JEDEC UFS 2.2, MIPI UniPro v1.61 and
+> > M-PHY v3.0 standard.
+> > 
+> > Signed-off-by: Yixun Lan <dlan@kernel.org>
+> > ---
+> >  drivers/ufs/host/Kconfig        |  12 +
+> >  drivers/ufs/host/Makefile       |   1 +
+> >  drivers/ufs/host/ufs-spacemit.c | 931 ++++++++++++++++++++++++++++++++++++++++
+> >  drivers/ufs/host/ufs-spacemit.h |  90 ++++
+> >  4 files changed, 1034 insertions(+)
+> > 
+> > diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
+> > index ff170c0b6da0..4f53b7f7688f 100644
+> > --- a/drivers/ufs/host/Kconfig
+> > +++ b/drivers/ufs/host/Kconfig
+> > @@ -132,6 +132,18 @@ config SCSI_UFS_VARIABLE_SG_ENTRY_SIZE
+> >  	bool
+> >  	default y if SCSI_UFS_EXYNOS && SCSI_UFS_CRYPTO
+> >  
+> > +config SCSI_UFS_SPACEMIT
+> > +	tristate "SpacemiT UFS controller driver"
+> > +	depends on SCSI_UFSHCD_PLATFORM && ARCH_SPACEMIT
+> 
+> Can you add SCSI_UFSHCD_PLATFORM and SCSI_UFS_SPACEMIT as modules to
+> riscv defconfig (or just add the former and add a default y if
+> ARCH_SPACEMIT in this Kconfig entry). This will let defconfig kernels
+> to boot with persistant rootfs on these devices.
+> 
+Ok, will consider adding one entry to riscv defconfig, but this should be
+handled in another separate patch, for making it as module or built-in driver,
+I'm incline to choose latter one, but would be glad to hear different opinion
 
-Pre-existing issues:
-- [Critical] Incomplete fix leaves identical NULL dereferences and intentio=
-nal BUG_ON() crashes unhandled in the submission and PR paths, allowing rem=
-ote Denial of Service.
---
-
---- Patch [1]: [PATCH] scsi: target: Fix NULL se_tpg dereference in target_=
-complete() ---
-commit ffc7efb612d242d91429fd1154920a3b7603d316
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-
-scsi: target: Fix NULL se_tpg dereference in target_complete()
-
-Commit a47fa41381a0 guarded target_complete() against a NULL se_tpg_wwn.
-This patch adds an additional check to prevent a NULL pointer dereference
-when se_sess->se_tpg itself is NULL after a session is deregistered.
-
-> target_submit() reads the same chain (se_sess->se_tpg->se_tpg_tfo) and is
-> exposed to the identical NULL.  That path has not been reproduced here and
-> is left for a separate change.
-
-[Severity: Critical]
-This is a pre-existing issue, but does deferring these fixes leave the
-kernel exposed to crashes from remote initiators?
-
-If an initiator sends a SCSI command or TMR concurrently with session
-teardown, the RX path could hit the same race.
-
-For example, could this trigger the BUG_ON() in target_init_cmd() if
-transport_deregister_session() clears se_tpg concurrently?
-
-drivers/target/target_core_transport.c:target_init_cmd() {
-    ...
-    se_tpg =3D se_sess->se_tpg;
-    BUG_ON(!se_tpg);
-    ...
-}
-
-Could it also crash during TMR submission?
-
-drivers/target/target_core_transport.c:target_submit_tmr() {
-    ...
-    se_tpg =3D se_sess->se_tpg;
-    BUG_ON(!se_tpg);
-    ...
-}
-
-Would it be safer to handle all se_tpg teardown races in a single patch?
-
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/targ=
-et_core_transport.c
-> index fad03a15c969e..ee5781d894339 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -904,7 +904,8 @@ static bool target_cmd_interrupted(struct se_cmd *cmd)
-> =20
->  static void target_complete(struct se_cmd *cmd, int success)
->  {
-> -	struct se_wwn *wwn =3D cmd->se_sess->se_tpg->se_tpg_wwn;
-> +	struct se_portal_group *se_tpg =3D cmd->se_sess->se_tpg;
-> +	struct se_wwn *wwn =3D se_tpg ? se_tpg->se_tpg_wwn : NULL;
-
-[Severity: Medium]
-Is a READ_ONCE() needed here when reading cmd->se_sess->se_tpg?
-
-Since transport_deregister_session() can concurrently set se_sess->se_tpg to
-NULL locklessly, could the compiler refetch the pointer after the NULL check
-and still cause a NULL pointer dereference?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260725084939.6944=
-03-1-yhlee@isslab.korea.ac.kr?part=3D1
+-- 
+Yixun Lan (dlan)
