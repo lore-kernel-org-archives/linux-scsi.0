@@ -1,142 +1,136 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from ixit.cz (ixit.cz [185.100.197.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0596D33C194
-	for <linux-scsi@vger.kernel.org>; Sun, 26 Jul 2026 02:40:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7465E277CAD;
+	Sun, 26 Jul 2026 13:44:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.100.197.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785033660; cv=none; b=rMD+dDUkouZJf/W7VMuZaRNBJP+9eo6+lQXvT3uaQ5z+UQASahXP/7ETpPihvJ0iWO/4nbWHvhBGD35H4CUBDOSgAgFvS++IzuhVFlIok232OQLlLm496nuQ0X6yTZPvlTL0BrUbZweoTULSmaykXqaoe9c5lgPeot1Qz3E8RKg=
+	t=1785073500; cv=none; b=GiV0yxvedYeXatPgnvci4YIbLx6HLlUvsYXH6cFYRfMb9NXj3Fo/YQpIZbdtEt8auCx2Zng2Myi9aLXzdMd4aBfb1UetuK/CA+AYeRQdU17OL3kgj/kkBH90hDgV8FiIAf/F/D7oIiMGDfks7GipArM9oWvjFO/FZMufi7Xue9Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785033660; c=relaxed/simple;
-	bh=bGinmj9HAQbqbkT1zowrN8spDu+gNaURRFhkOFq316M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JdZx1yD9rbyH+BnoOj9Bs4utLYyeieEuMvU0/u4oiLJOKLxH+22MRLpTLkaWzzcpwgfRj1hAN50+mq6K7hEYGZxMDPnlOVMdjkOV+d3tbqv6ivkO+ejX8Y/f7yIL+VZqOf9v9mD0Yp23uR31HfxzyBQCiQrK2uwhUyMyXz9cwjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FlwFWeZy; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=BwFGL7s/; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1785073500; c=relaxed/simple;
+	bh=MJkiyN2RuTghiQSyBlnS6MIFTBmzOxcsWXiXWc09Ffc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=EkaoVig/j/bEqc4aYls5Q+SIFylTGw0Z3I09ijr24LFTCtyhxHZl3Q3uHIvhCDLEciVxpRcI5znSaidRHjEIomWZL1rfkfl83riJgzQBZOCBwRepMjUE8mtBL+SS9+1FzBX6tUKLkDcXTCFAY0qXuyaYcQUtLKvSoNgrtvDeSyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ixit.cz; spf=pass smtp.mailfrom=ixit.cz; dkim=pass (1024-bit key) header.d=ixit.cz header.i=@ixit.cz header.b=rjHuXKgD; arc=none smtp.client-ip=185.100.197.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ixit.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ixit.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FlwFWeZy";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="BwFGL7s/"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66PMvGGs3386138
-	for <linux-scsi@vger.kernel.org>; Sun, 26 Jul 2026 02:40:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=bGinmj9HAQbqbkT1zowrN8sp
-	Du+gNaURRFhkOFq316M=; b=FlwFWeZyqVbWsgQ0MDWwMvTsQWwX1ci4DWJvRyjW
-	vJOGxzRp2fIBsl0v4XUZGH0OTQ7TtoBMWkc7voEOZzjGnvwWbxWP1+PRFtlBB+fI
-	EVNmVLn9xLQPbgz4eYLeV/iKaOUd0WtOz442JpAlRhjm8dH5gWDLc+aNFrU8uftk
-	xGFKcAn2GORJoJMLYhcGKPgNRI30kYS6uM2aTHdDWcbOHsrGHjHNB65tSKIOVZwY
-	bUCQtnwVdRTqvPg/wY/lpn2ZotVcxjawUb9pmFdMOXt7ZPRTWErKJSOLdrM1eiL+
-	CQnSWVzEdzqCxRg/NYRHTJdNg9YsQjm8FbZZhVPz7T6Rqg==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fmm57284w-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Sun, 26 Jul 2026 02:40:57 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38e7131849bso1958086a91.1
-        for <linux-scsi@vger.kernel.org>; Sat, 25 Jul 2026 19:40:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785033657; x=1785638457; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=bGinmj9HAQbqbkT1zowrN8spDu+gNaURRFhkOFq316M=;
-        b=BwFGL7s/xlTh0FkHyMzo5KuhmvjOosqi38/zFAt0MSOv5B9zW+tpGFK1lRWf72JXk9
-         6sz1AVY8ZGiODw+QEX2LcWo8sQ5Xb50MmyZYcuVJnAbBszfGdv82GKkoUM1FXpeGmMjd
-         U19HAzttVj5HjEDPRV9Sm97P5GvwlhRZXwS14lVAVqG7E+mTDY1C/LvSl7/J17HFBU6Q
-         G2KREfCRepcB8wDKLjYMC5WSwPyPYH5hpNFpg2lr5BjzQBlICti2lc49O7eAqW5GmdqM
-         jtz/o1XZ+d2X596CHdpblx1U6ID49GN/6/a1QGNVBeRPJxdg2v4ynB8R52bqk/Z0hEPP
-         xtGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785033657; x=1785638457;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=bGinmj9HAQbqbkT1zowrN8spDu+gNaURRFhkOFq316M=;
-        b=M5fNM2EY53/uOkZpMn7lKULNFvy80Fma82KNLylZHBhbMDo6pxL1A01iR6MYVof8H6
-         Fsn7LwOwPESg+uXBKB43csk1WrogDOORsDj0S6pyqpx6DNGLEQIGrGSXQ76WWbXKExqV
-         YrPKuKJK4iAWqeqGPaf5qdPfPHmRbt5hdjjh5LHdOWeH5C68vN5DyTTLxqJBO9xetapN
-         3XS+B+o6Rax82CC/kPGv9ETukN8LWC3JJtVdnqly+VrQ6OaKnYfrhHYjEC1oNR1YBJJ1
-         HEZq3eHOxqpF+h5dDV9P3IBVW2ciOF/iCbiY1Za9pfL+uw8VPunqRywydY3UqLeMqJPK
-         JxNQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoCIuuYj5ijk5DVjP15DWAz3r/kGxbsffOfvDPoBw0RzQHPPuIpkIyz5Wc8iXTUja+WV+ZKx1eFkj3X@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx6mmRQgVCK23OSJzfM97rJvLg42bpcsHidgcoqNn6DRqL/6coS
-	KeHbpFAMfKCJ38qrq1U7EL+zlcLlNxltRJZcNJBTtzT4fTXvD/UPm00qe1Kon3Bvqe48TZVcEN0
-	nq7XPhCKo+11I4hi+xZDi43nQYtWqO+ElM8wVB7oPXE+cnodviAQoMyQBVMmSjEdv
-X-Gm-Gg: AR+sD10Lk9oNzgV8eQuydNUgQyB9gvfBNJSh+DEhPvCoQgcSMirvU9hcyUnyO29JcY3
-	iisAfgatlEaruUDZYq/y5CAEQEDG2fChtPiYDYzh7BZje+/F1dqymzl7vDc9m54oUDVAdJVI6ga
-	y+IO5Khv7X1gCCvYTLDcywIZAKbrhI2C6OEpCWdgEnhFcM+xxDhk6k4BMiQlbuNs0/qskFQT4Ut
-	vyFmKuDNPqNxLAnFIFloigHnmGR40mpOQlZOTWRJtP5Wvx/7S7YVPBK8pPtmSPB+FpIEiV+VOad
-	RVWbDOAtUsw4mTd4mKsFNPffkrH84fFCftFOHyKJYJ24zIy6YugEfT0wjRm1YdBCYg0IEf9XkcN
-	+SEXH+U1a2HBE+elwHcJuMSqz3kDcIcpcEos5TIXoo+w=
-X-Received: by 2002:a17:90b:1dcf:b0:38e:4482:ab14 with SMTP id 98e67ed59e1d1-38f29605bf2mr3868342a91.32.1785033656316;
-        Sat, 25 Jul 2026 19:40:56 -0700 (PDT)
-X-Received: by 2002:a17:90b:1dcf:b0:38e:4482:ab14 with SMTP id 98e67ed59e1d1-38f29605bf2mr3868326a91.32.1785033655891;
-        Sat, 25 Jul 2026 19:40:55 -0700 (PDT)
-Received: from QCOM-aGQu4IUr3Y (i-global052.qualcomm.com. [199.106.103.52])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-314bc59cfb4sm15374676eec.26.2026.07.25.19.40.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 25 Jul 2026 19:40:55 -0700 (PDT)
-Date: Sun, 26 Jul 2026 10:40:50 +0800
-From: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-        alim.akhtar@samsung.com, avri.altman@sandisk.com,
-        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH] Revert "scsi: ufs: core: Remove unnecessary block I/O
- quiesce for clock scaling"
-Message-ID: <amVzsmnZxze5PZIT@QCOM-aGQu4IUr3Y>
-References: <20260723124733.341789-1-manivannan.sadhasivam@oss.qualcomm.com>
- <a1d56354-a556-4e47-875e-e6a079fd4938@acm.org>
+	dkim=pass (1024-bit key) header.d=ixit.cz header.i=@ixit.cz header.b="rjHuXKgD"
+Received: from [192.168.1.182] (ip-62-24-73-79.bb.vodafone.cz [62.24.73.79])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by ixit.cz (Postfix) with ESMTPSA id B31A953401E1;
+	Sun, 26 Jul 2026 15:44:42 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ixit.cz; s=dkim;
+	t=1785073483;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=T8eLtWVDgo/n2YCkN2LypHicUa3L9zQwJ5oKXehKzIg=;
+	b=rjHuXKgD77bRdAxTksLDP1o2bxNXzTV/KxcQITvT2mWuvvYHNEpDolV1+mPJR/p8vxYUVv
+	R5/SIDIs1byA0/P4oBdBy5lB1c+cgEGaWuACcg0zDnsxFBlHy5m61FzCWJAHP1mcVdSBxn
+	555wHILohBZiBJNM2dPcmB4IvDt3P2s=
+Message-ID: <46fe144b-0602-4097-9791-6b206407c3ca@ixit.cz>
+Date: Sun, 26 Jul 2026 15:44:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a1d56354-a556-4e47-875e-e6a079fd4938@acm.org>
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI2MDAyMSBTYWx0ZWRfXyojuqckuX3qW
- iIeFmwsc9S2cp/yNMqkGod2Q5rGbg83Uqlgwo7z+/TPPoAWga0xOGnslgGp8OL7V+DRnlP91PR9
- /XOjq41IRxckoDDkefJ1M97Vx92pMQw=
-X-Proofpoint-GUID: fA4aD5GUqYBOhvnjYmA3rRvtT0iegYH2
-X-Authority-Analysis: v=2.4 cv=FOErAeos c=1 sm=1 tr=0 ts=6a6573b9 cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=b9+bayejhc3NMeqCNyeLQQ==:17
- a=kj9zAlcOel0A:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=s4jt7IWuD85VgkVn8k8A:9 a=CjuIK1q_8ugA:10
- a=uKXjsCUrEbL0IQVhDsJ9:22
-X-Proofpoint-ORIG-GUID: fA4aD5GUqYBOhvnjYmA3rRvtT0iegYH2
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI2MDAyMSBTYWx0ZWRfX8RiXpaQqpIkc
- SD4ktpG1QFcCWyXh32ojorH1BU+I7QtA65KIkb/PGgKzn8c6nZTSMA4o6ESzwfNxvR5kTe8u4UL
- 0fHI0qqiwvOyU+ZRFzHR9jx/e5T2C2/9VKEjCjtEY6S9JPJBBEzMhA0yP25e49f9VFR7NZza1kr
- kSGxE683kJC+zHDKy8lNKB6aGEBmNnPiIizsbxBeEzq+CbdXH1EDziRdRwCzjIZF8KjMorYxVYU
- H7QAip9AswFIcJZ3s/AQ4bT2ikZA/xd1rb4mx3Y8mtGbnq3pCie7p7V0ccr/WzeWDrTJAVNTqeb
- Csp24QKLE2Ujjl8KgyNvPmt1EnopPWMrRJq/v63wfzCEvyu7nRHURhnExTPpN1JHj0p7Gbwdt8O
- R9Bs6davd+U4DNwQR7vrCIe4y7//ygAuYv9GGmOvKMtybvkoks4xGW0aTy0+oF1S7iBEU8YynbC
- z7jQUKygkWRWI1UQ5jg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-25_07,2026-07-24_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 lowpriorityscore=0 bulkscore=0 phishscore=0
- adultscore=0 priorityscore=1501 spamscore=0 impostorscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607260021
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] Revert "scsi: ufs: core: Remove unnecessary block I/O
+ quiesce for clock scaling"
+To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+ alim.akhtar@samsung.com, avri.altman@sandisk.com, bvanassche@acm.org,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ Shawn Guo <shengchao.guo@oss.qualcomm.com>
+References: <20260723124733.341789-1-manivannan.sadhasivam@oss.qualcomm.com>
+Content-Language: en-US
+From: David Heidelberg <david@ixit.cz>
+Autocrypt: addr=david@ixit.cz; keydata=
+ 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
+In-Reply-To: <20260723124733.341789-1-manivannan.sadhasivam@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jul 24, 2026 at 07:19:34AM -0700, Bart Van Assche wrote:
-> On 7/23/26 5:47 AM, Manivannan Sadhasivam wrote:
-> > Reported-by: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-> > Closes: https://lore.kernel.org/linux-scsi/al8YkXydXJQZrl_Y@QCOM-aGQu4IUr3Y
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> Has it been considered to add a Fixes: tag to guarantee that this patch
-> gets backported to stable kernels?
-
-I'm not sure I follow. The offending commit hasn't even landed on
-mainline.
-
-Shawn
+On 23/07/2026 14:47, Manivannan Sadhasivam wrote:
+> This reverts commit 85b2b966285498e1b551ac85f02c79cd06c0cff0.
+> 
+> Qcom UFS Host Controllers do not support scaling clocks when the traffic is
+> ongoing. But the offending commit removed the block I/O quiesce in the
+> clock scaling path, which causes below UFS failures during clock scaling:
+> 
+> ufshcd-qcom 1d84000.ufshc: ufshcd_check_errors: saved_err 0x80 saved_uic_err 0x0
+> ufshcd-qcom 1d84000.ufshc: ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0; saved_err = 0x80; saved_uic_err = 0x0; force_reset = 0
+> ufshcd-qcom 1d84000.ufshc: pwr ctrl cmd 0x2 with (MIBattribute 0x1571, mode 0x11) completion timeout
+> ufshcd-qcom 1d84000.ufshc: UFS Host state=3
+> ufshcd-qcom 1d84000.ufshc: 7 outstanding reqs, tasks=0x0
+> ufshcd-qcom 1d84000.ufshc: saved_err=0x80, saved_uic_err=0x0
+> ufshcd-qcom 1d84000.ufshc: Device power mode=1, UIC link state=1
+> ufshcd-qcom 1d84000.ufshc: PM in progress=0, sys. suspended=0
+> ufshcd-qcom 1d84000.ufshc: Auto BKOPS=0, Host self-block=0
+> ufshcd-qcom 1d84000.ufshc: Clk gate=1
+> ufshcd-qcom 1d84000.ufshc: last_hibern8_exit_tstamp at 196451913 us, hibern8_exit_cnt=20
+> ufshcd-qcom 1d84000.ufshc: error handling flags=0x0, req. abort count=0
+> ufshcd-qcom 1d84000.ufshc: hba->ufs_version=0x300, Host capabilities=0x1587031f, caps=0x124f
+> ufshcd-qcom 1d84000.ufshc: quirks=0x0, dev. quirks=0x310c4
+> ufshcd-qcom 1d84000.ufshc: UFS dev info: SAMSUNG  KLUDG4UHDB-B2D1  rev 0400
+> ufshcd-qcom 1d84000.ufshc: clk: core_clk, rate: 300000000
+> ufshcd-qcom 1d84000.ufshc: clk: core_clk_unipro, rate: 300000000
+> 
+> Hence, revert the commit to bring back UFS on all Qcom platforms.
+> 
+> Reported-by: Shawn Guo <shengchao.guo@oss.qualcomm.com>
+> Closes: https://lore.kernel.org/linux-scsi/al8YkXydXJQZrl_Y@QCOM-aGQu4IUr3Y
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 10 +++++++---
+>   1 file changed, 7 insertions(+), 3 deletions(-)
+> 
+Tested-by: David Heidelberg <david@ixit.cz>  # sdm845 (Pixel 3, multiple phones)
