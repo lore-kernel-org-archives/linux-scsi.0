@@ -1,136 +1,141 @@
-Received: from ixit.cz (ixit.cz [185.100.197.86])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7465E277CAD;
-	Sun, 26 Jul 2026 13:44:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.100.197.86
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74ADC37D10E
+	for <linux-scsi@vger.kernel.org>; Sun, 26 Jul 2026 14:59:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785073500; cv=none; b=GiV0yxvedYeXatPgnvci4YIbLx6HLlUvsYXH6cFYRfMb9NXj3Fo/YQpIZbdtEt8auCx2Zng2Myi9aLXzdMd4aBfb1UetuK/CA+AYeRQdU17OL3kgj/kkBH90hDgV8FiIAf/F/D7oIiMGDfks7GipArM9oWvjFO/FZMufi7Xue9Y=
+	t=1785077990; cv=none; b=OlcBNWgeIIz3vMzYaM/4sz3dmVk+9XWKElI2dGgbGSUP5fqo5laT6NmzvW61XmWwTShdoxHVFQv4rKzb7Kr3xOTVCcbIJ4I5LQN5rOo5/CL5jSp9qu08YTFBsS7aaIKj8Rg8YdQTwrOcdySSkEAsd36LNpnYQnZFXOoGPCbbyGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785073500; c=relaxed/simple;
-	bh=MJkiyN2RuTghiQSyBlnS6MIFTBmzOxcsWXiXWc09Ffc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EkaoVig/j/bEqc4aYls5Q+SIFylTGw0Z3I09ijr24LFTCtyhxHZl3Q3uHIvhCDLEciVxpRcI5znSaidRHjEIomWZL1rfkfl83riJgzQBZOCBwRepMjUE8mtBL+SS9+1FzBX6tUKLkDcXTCFAY0qXuyaYcQUtLKvSoNgrtvDeSyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ixit.cz; spf=pass smtp.mailfrom=ixit.cz; dkim=pass (1024-bit key) header.d=ixit.cz header.i=@ixit.cz header.b=rjHuXKgD; arc=none smtp.client-ip=185.100.197.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ixit.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ixit.cz
+	s=arc-20240116; t=1785077990; c=relaxed/simple;
+	bh=Z81Et9KQCb4svrySw3fAoBZgNyI7CjfEO+k/cqzuXbs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=gsajuuRSlj7m9jLKXpSQMiH1bJXtGtBUpEgDADLY6RueDyGYbCSCW4fgF7Ce91OmLT5tdnuuU8q+/2eH8e/VpWPdDrjMHGovMIg+6Fys9H+hdUd5Jm+OnPO66PDA+MRg/7PRgXiWyloJ74saQvdjBr1HRdGkebcRZAuPG8bwMUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=qWkDcwVY; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ixit.cz header.i=@ixit.cz header.b="rjHuXKgD"
-Received: from [192.168.1.182] (ip-62-24-73-79.bb.vodafone.cz [62.24.73.79])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by ixit.cz (Postfix) with ESMTPSA id B31A953401E1;
-	Sun, 26 Jul 2026 15:44:42 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ixit.cz; s=dkim;
-	t=1785073483;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=T8eLtWVDgo/n2YCkN2LypHicUa3L9zQwJ5oKXehKzIg=;
-	b=rjHuXKgD77bRdAxTksLDP1o2bxNXzTV/KxcQITvT2mWuvvYHNEpDolV1+mPJR/p8vxYUVv
-	R5/SIDIs1byA0/P4oBdBy5lB1c+cgEGaWuACcg0zDnsxFBlHy5m61FzCWJAHP1mcVdSBxn
-	555wHILohBZiBJNM2dPcmB4IvDt3P2s=
-Message-ID: <46fe144b-0602-4097-9791-6b206407c3ca@ixit.cz>
-Date: Sun, 26 Jul 2026 15:44:41 +0200
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="qWkDcwVY"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-84874b52eabso2586389b3a.0
+        for <linux-scsi@vger.kernel.org>; Sun, 26 Jul 2026 07:59:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1785077988; x=1785682788; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=FGDMCesZy1ft/61eesd79fseURXoeAeKC+nY8ZObiXg=;
+        b=qWkDcwVYxTebIGWv7nPVUF4tEebuW+FWpoS46jnG+vEkA+r8UaSUjEXf+OKVaumf8U
+         Up4L7YaeaCUXmHsUVIMlznxxykDArAUPbzdmcacr7fgOO5cLrEicjol1aZNKOyxz8J2W
+         Fpm9+1zx1KN//2aTt+5clTBjwmkidGrnX92xei5jOhZ3K98y+DCmMr3+dzj98/lXHyaP
+         k9XWT66Y3S//4LdUKiUEh/Js/rcs5hbO7nqzHbgmt6RNjKQ/YLpUhE8wd7/HCR1vogBW
+         eLLaeh4UhDiKK9dy5dED7IqTgeuvqQeab2m3aqkkuyzVnxHR2bu4JR2gjwidteR70M8B
+         b5aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785077988; x=1785682788;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=FGDMCesZy1ft/61eesd79fseURXoeAeKC+nY8ZObiXg=;
+        b=m9oJ5+qTehCbiq8k4s4yIpwgmg3kvdYeQTLNyH/3tzQcPH/2lzSIShfKKbyF6kf6m6
+         3w4KuPcjwPbddM2fMNa28tDDHUlmkJulD2F12D16cmStnChtZlt41ay+owT7j2RSTvbj
+         qhlcgg1l3AxfP5WwW+iGoxkjmZcoBehW2Ydm99n186E+Ey1EEuM7QsLk03Hm+bDgqRqW
+         6y2diNcQ/3bL/8UrPtoQJXpvyTle6qt5NHgyT8bS17o0+7GRcBUMKwDmEhWksMLfafhN
+         wCV/M5I24DkbHArJ4r2g6Wo8ghtIOp5t+WPuymewjx9qSEKCx1PB0nC/vCSOMJWOIePw
+         hqjw==
+X-Forwarded-Encrypted: i=1; AHgh+Rq/nfUQYwyXUUybl1p//Iq/4gblZyrZv1cDhSGOClYwL/8D8LC5Fv0bDbvQ+43/g7Cij7F2tlbqmho0@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0Nsxu9zdB3c2EdhtU/Fc5rIC1jZV9w+/1yBLEO1VO6rlOO2J1
+	CKcIA2C0nlzoYTKzJBAo7WVu3j8fF07xcVqfkTHhTFpUmnT5kD4c+7KOT85h3hAyAGc=
+X-Gm-Gg: AR+sD13C3dJsTZaQMt6q8E9b1OzucAajBCrz2b/LhnJsFIuo8NixoA6ZmsWCIotWH6G
+	0FIzlw+Ulld+BBzfZYQIAKqvlBWwJ7nLycIBZKh2GkhpL49WrU0vg1XKOPf7wVlii/aedJhmNb3
+	kbhCIHH4ZFhU/Jcqgm7TcHMWZUqhLuP/4td4bBMN76vFzZj4A4SeWIXjK6+KEdVwmS1Jp38noAD
+	AqlAwHHWF6FjNlfvEXfxG5L4d272PGggiBidHYyUbIHytp7xRwhufVBuB+GPSPleGSdjVOxtn8V
+	YWMOLJktcv95jW7FbfrWSAg1ROXefwGT6uRomgGRBiH/50Rx8D2DaZiJG9HyqqcFMYO8c0wTJ0G
+	fqctoz13V1E2eCWcJ7WhHpUv/FyDMeem5DRxnyTJ9KYwhjP1r/hz/Rd3DgexGdVNE7B+mJTskbc
+	XXu5BC0G/b6ByBqDEhGbbXo5NJ
+X-Received: by 2002:a05:6a00:6c95:b0:84a:2ec8:fac1 with SMTP id d2e1a72fcca58-84e595d8845mr4345226b3a.72.1785077987788;
+        Sun, 26 Jul 2026 07:59:47 -0700 (PDT)
+Received: from localhost.localdomain ([2406:5900:1044:110c:be9c:ea6b:29a7:6c78])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84e5341d68asm1894803b3a.46.2026.07.26.07.59.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Jul 2026 07:59:46 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: michael.christie@oracle.com
+Cc: martin.petersen@oracle.com,
+	ddiss@suse.de,
+	target-devel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: Re: [PATCH v2] scsi: target: Fix NULL se_tpg dereference in target_complete()
+Date: Sun, 26 Jul 2026 23:59:34 +0900
+Message-ID: <20260726145934.933618-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <79ceea04-7fe3-48b2-91bc-48b208f10229@oracle.com>
+References: <79ceea04-7fe3-48b2-91bc-48b208f10229@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] Revert "scsi: ufs: core: Remove unnecessary block I/O
- quiesce for clock scaling"
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
- alim.akhtar@samsung.com, avri.altman@sandisk.com, bvanassche@acm.org,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- Shawn Guo <shengchao.guo@oss.qualcomm.com>
-References: <20260723124733.341789-1-manivannan.sadhasivam@oss.qualcomm.com>
-Content-Language: en-US
-From: David Heidelberg <david@ixit.cz>
-Autocrypt: addr=david@ixit.cz; keydata=
- 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
-In-Reply-To: <20260723124733.341789-1-manivannan.sadhasivam@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 23/07/2026 14:47, Manivannan Sadhasivam wrote:
-> This reverts commit 85b2b966285498e1b551ac85f02c79cd06c0cff0.
-> 
-> Qcom UFS Host Controllers do not support scaling clocks when the traffic is
-> ongoing. But the offending commit removed the block I/O quiesce in the
-> clock scaling path, which causes below UFS failures during clock scaling:
-> 
-> ufshcd-qcom 1d84000.ufshc: ufshcd_check_errors: saved_err 0x80 saved_uic_err 0x0
-> ufshcd-qcom 1d84000.ufshc: ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0; saved_err = 0x80; saved_uic_err = 0x0; force_reset = 0
-> ufshcd-qcom 1d84000.ufshc: pwr ctrl cmd 0x2 with (MIBattribute 0x1571, mode 0x11) completion timeout
-> ufshcd-qcom 1d84000.ufshc: UFS Host state=3
-> ufshcd-qcom 1d84000.ufshc: 7 outstanding reqs, tasks=0x0
-> ufshcd-qcom 1d84000.ufshc: saved_err=0x80, saved_uic_err=0x0
-> ufshcd-qcom 1d84000.ufshc: Device power mode=1, UIC link state=1
-> ufshcd-qcom 1d84000.ufshc: PM in progress=0, sys. suspended=0
-> ufshcd-qcom 1d84000.ufshc: Auto BKOPS=0, Host self-block=0
-> ufshcd-qcom 1d84000.ufshc: Clk gate=1
-> ufshcd-qcom 1d84000.ufshc: last_hibern8_exit_tstamp at 196451913 us, hibern8_exit_cnt=20
-> ufshcd-qcom 1d84000.ufshc: error handling flags=0x0, req. abort count=0
-> ufshcd-qcom 1d84000.ufshc: hba->ufs_version=0x300, Host capabilities=0x1587031f, caps=0x124f
-> ufshcd-qcom 1d84000.ufshc: quirks=0x0, dev. quirks=0x310c4
-> ufshcd-qcom 1d84000.ufshc: UFS dev info: SAMSUNG  KLUDG4UHDB-B2D1  rev 0400
-> ufshcd-qcom 1d84000.ufshc: clk: core_clk, rate: 300000000
-> ufshcd-qcom 1d84000.ufshc: clk: core_clk_unipro, rate: 300000000
-> 
-> Hence, revert the commit to bring back UFS on all Qcom platforms.
-> 
-> Reported-by: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-> Closes: https://lore.kernel.org/linux-scsi/al8YkXydXJQZrl_Y@QCOM-aGQu4IUr3Y
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 10 +++++++---
->   1 file changed, 7 insertions(+), 3 deletions(-)
-> 
-Tested-by: David Heidelberg <david@ixit.cz>  # sdm845 (Pixel 3, multiple phones)
+On 7/26/26 5:44 AM, Mike Christie wrote:
+> I think we need to figure out how we got into this situation because we
+> can't free the session while it's still in use.
+
+You were right to ask.  The session is not being freed - it has not
+finished being set up, and this patch is aimed at the wrong place.  I am
+withdrawing it.
+
+I instrumented transport_deregister_session() and
+__transport_register_session() with a silent ring keyed on the
+se_session pointer, and printed only from the cold NULL branch.  In a
+login-churn workload that build recorded nine hits, and every one says
+the same thing: the se_session had never passed
+transport_deregister_session(); it had a matching
+__transport_register_session() record; ktime_get_ns() taken at the read,
+before any printk, is earlier than the timestamp taken at the top of
+__transport_register_session() in every case; and conn->conn_state was
+TARG_CONN_STATE_LOGGED_IN every time.
+
+The window is in login, not teardown.  isert_put_login_tx() posts the
+full-feature receive buffers and then sends the final Login Response;
+iscsi_post_login_handler(), which calls __transport_register_session(),
+only runs after that.  An initiator that sends a command as soon as it
+sees the Login Response gets it received and completed against a session
+whose se_tpg is still NULL.  The command reaches the backend because
+transport_lookup_cmd_lun() does not need se_tpg on the mapped-LUN path -
+it uses se_sess->se_node_acl, which iscsit sets much earlier in
+iscsi_target_locate_portal().
+
+iscsit's own RX thread is not exposed to this: it waits on
+conn->rx_login_comp, which is completed at the end of
+iscsi_post_login_handler(), after registration.  isert takes its PDUs
+from the completion queue instead, and isert_recv_done() has no
+connection-state check.
+
+So the commit message on this patch is wrong.  It describes a
+deregistration window that none of the nine observations involved.  I
+described a mechanism I had not measured, and I will not do that again.
+
+Guarding target_complete() is also the wrong shape.  In the same window
+transport_lookup_cmd_lun() dereferences se_sess->se_tpg on the
+virtual-LUN-0 fallback, so a command arriving before registration for an
+unmapped LUN would fault there instead.
+
+I have posted the isert fix to linux-rdma:
+
+  Message-ID: <20260726144213.933544-1-yhlee@isslab.korea.ac.kr>
+  https://lore.kernel.org/linux-rdma/20260726144213.933544-1-yhlee@isslab.korea.ac.kr/
+
+It moves the isert_post_recvm() call into isert_get_rx_pdu(), which
+iscsi_target_rx_thread() invokes after the same rx_login_comp wait, so
+the buffers only become available once the session is registered.
+Unpatched 9 of 10 runs oops, patched 0 of 10, run alternately in a
+single session under KASAN with soft-RoCE.
+
+Please drop this patch.
+
+Best regards,
