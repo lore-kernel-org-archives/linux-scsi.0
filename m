@@ -1,133 +1,187 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B26FE3BFE26;
-	Mon, 27 Jul 2026 10:33:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785148382; cv=none; b=DHiqMTMrIfwjiwPQhj/QC+UHkkRa3++bOoIim44vEliMl7dchaJYiegWjel2hkmQbS1lL7BdunRNlZ2qWx6n3pAOmgWgrlgYntFhwUWRK4IH9FhXaDv/XkJ0MxboIaWfcI5Uzoau2ZsOjmlnh3ZUlC9S77l/v6ngTxenkowM8I4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785148382; c=relaxed/simple;
-	bh=3rkWHCIHYmqZn+lYrDqEAw4wvfUbCAnM6+Foxr6N654=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HvTmkfgHCmf1LJUyB6NVIqrbyp7G8wmk28yLwpiTSbRJqkCia2MyQlm0dYsCJehx3CxXijCBh8ZdvndeJQOlarRhmwIEg2md1Uov2DLyvAlhtK4Crobz/FN2RTiMhvv+LfIJqKF0EGVeZVhsJ5Hn7bcY4FlyPcvOvjQ9Ai/JJRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R2PHzS68; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AB3C3F8EDB
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 11:08:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.172
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785150531; cv=pass; b=Wvx8OsdsZ6rSlcf0E18r19+IixX2imh92cHRmMb8PJ/ZRjhUvRx3KztDx66wJWvjvafnTzznh0v9WCjhHNRfxLzQKk8JyhjTQKT1GxsJknZUFBXAzEH7zIdCdRGqIFmF47xQoGamjEEr8Mp/1rai+ZQHmOiC+Xq9TAomcAvQJxg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785150531; c=relaxed/simple;
+	bh=pV1TDUaa2YAV2kxJY3x35Y0FQXGiZRc6WWYevwzWDGg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=FborLY8Cw5H9vEg5FDxY0K5eWltd4Yq0nGCwmkPMv1jT4DnOBmLCNBo387tn/ozCwfUThrlLpKZbiOfUHLTIiyBPw6P8r/5RiRGVVPQv3Tk/0+gTVt5HVXxlQ+XBs176vTqZ9N+Inb4ZbjXYfm069xEQI+GHtVi2Shd5zzXsydw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=M3mRoCn4; arc=pass smtp.client-ip=209.85.128.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R2PHzS68"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EBC61F000E9;
-	Mon, 27 Jul 2026 10:32:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785148380;
-	bh=vLR/oacCYSK1ZUz7IzVlj5PG6byYKm/ye0HVShOP8mE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=R2PHzS68IrGeWx2lft+8/SiOo29pmHsTGuluEQoVLee1JLZwZFttZGYEE8j+ApuN8
-	 DkwdJ5+sR5HFZuAE2EAxzQQQeuqNik3fDvcUZp9lwt8ANo3fr8yjgY7byogZZR5EQC
-	 nfblZ2uxl7BHSUCIdPxEAkDTO/wYMJ7JqX6297RSehYDsodj4H7ebqZGtXb+zZWesK
-	 YjFks3QNNKDTSVcp6tAhby3I0SIsKDStAgqEM2Vmp7540Z2IJdlcK5fgE0IVv3TzYT
-	 QR+Q8hNYvgaiIffYtKyf1vySqKQWfDqyLimvbp4M6aaBsLI3k37Ou7twr4PhW6Bx2+
-	 t9KIwXBBvSPGg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 3/3] soc: qcom: ubwc: Get HBB from SMEM
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Konrad Dybcio" <konradybcio@kernel.org>
-Cc: conor+dt@kernel.org, robh@kernel.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260727-topic-smem_dramc-v5-3-66188b3e338d@oss.qualcomm.com>
-References: <20260727-topic-smem_dramc-v5-0-66188b3e338d@oss.qualcomm.com>
- <20260727-topic-smem_dramc-v5-3-66188b3e338d@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 10:32:58 +0000
-Message-Id: <20260727103259.8EBC61F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M3mRoCn4"
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-81e86df8987so29997077b3.3
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 04:08:46 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785150525; cv=none;
+        d=google.com; s=arc-20260327;
+        b=WSrlpx6+TWL+wefdzfYE18aSzAxyK4ayMRY01nkbTw0Xjz8Aluv5FSfhWRf6GLnOz2
+         0hxob8+hPZhJ0PohB/chE1AeF0UNwxrgQw4+sYrwu68joW2+tBV5GZXenZBA3hWXwasI
+         yLOAVh5ETH4+0ha90a19O/GrxmeFwn7+Hmp6kj4PHQ7F22GvX2pS8QC0sgXDC7dlpWl/
+         bkmevlf+ukuU4OfmkfAjrGIuPgrgT/kgC+mx0+VIYzvMeIN92f/gvF/LrGrMP1EbphJ4
+         psVkkCewvk+RZTTmemd5Z+CRqzwfETjBoBjcy1G4SU4MUypdYvyWzDe5PA8+0bOKgqAu
+         Jtjg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=pV1TDUaa2YAV2kxJY3x35Y0FQXGiZRc6WWYevwzWDGg=;
+        fh=5SBbwpBtaP4bHV/6FqqLRDigvto8wUYRdYqymY+NMHo=;
+        b=SGptNOuAgmpC9MSnjhH6HTphgHTKCwUFfg0jgIMDYMnUOJHNzNkPDHqhPbRUN2HgH5
+         tiFty404lpx6NxaJVXJVea+WnXGmWtTNK9JU8xP1JA0+zACyeEUKwC6jtZp0ZUeHECf1
+         afxZOy+ueNCYhjS95mOE13/GeSbbCd0WCI69KxfjF942YtirGTCvRqSGTjyy+sn3lubm
+         QmWuyGnaKfWWvNh39OnTFkN1DamFT//hJmZUVT11sDmbD7h9sU1wIkOwEowl4FNqDGSs
+         a5/VKYIiFFi/pV8F860SgxZaS50g+y06zV9ivQKBQ44qfugR37blzTojr6YAKQe6pkkF
+         wi4A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785150525; x=1785755325; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=pV1TDUaa2YAV2kxJY3x35Y0FQXGiZRc6WWYevwzWDGg=;
+        b=M3mRoCn4tl8RPjfQixKwIWWGSOwAsLGhmh+pOW5tV4opu6k/FIUqHgtBSUi/lYWXNo
+         K98eF+P/A41j+K8iwFXw6liU49SqTYrvvms0nmGWFjNMcapwdxy/m16HBI26xKOSiPvw
+         bHpYUNToOx9zQJmLUksPduoTCqqE2dSxgHeSldgGIbLqv2CWqoDhAou0N3efVhSwmwfM
+         VQbpCmhybFLItirVtnzw4TnneJchaVYJVzYdQrFlaDO4vxp9qnK66elczaAbAPUjs+C1
+         1bvSmITqLw2KhR3gNZaWHhZGr+7ZSQD962od3gweFtTkzKTtbvFjOOIGdEoRbtgOHS17
+         oVMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785150525; x=1785755325;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=pV1TDUaa2YAV2kxJY3x35Y0FQXGiZRc6WWYevwzWDGg=;
+        b=AjyQlvb+Ras+tjbhwjl+w2o5aGSI6nF+a8IW4jZvLQX5HiYKWkMAyZjGxM7yZO9JRR
+         PKiXYqRRxmGc54qyb2hwhRNuito7oGntMSocx5Dpq6HBJm6NS+XwKvtAz4E2ibu6DgTJ
+         6EnCz7OBP+ysPLYdKtPheFjNXz7hjOvk4NnuMVOBmgBhq75vNyw9LFGbPkt2u+bnaeqM
+         HToq7zzTix343Z1rmBcmQTZhTPf2c+SOM71h8Je7LbnWTNFnYlNsnyLZJMriTV1rwa6i
+         znHOpqg3w+WWlTDXNCuGGO3Bpx3a/PSZUbCYo/UuV4Mav2Mdb0EQG53ESbcezXjzlYVK
+         P0KA==
+X-Forwarded-Encrypted: i=1; AHgh+RodTszAT6opVeoHia4TdVEqk1xeIO500XSSHFcZk2K4aKV0aQwdVwXhu4txU8WnUbikXJ295zraTglx@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz1JEmilpJ7U7taZXA8qu/9UuqiRrG3sJ/YXt3vAe182593ofZ0
+	WzssNK9u/CJzNTh/k9S++jdjhtwSKum2SDGmVkGeb1M36fWa78pKsSRdgnyrs3itYGjh+4a1DAU
+	ID8aC+txcVVxgTHadzy0TVkc2nQUjAmw=
+X-Gm-Gg: AR+sD13EorJm8L50jIf4ba1TMyT5FsyKmxVw1ptNZxovWlBHfcRNU1qHatQk7Z9QFoj
+	uVIF7eGf4YEW/sypX8Jcl7sIspa0VRHb4UVpr0cb+1xmyTcsc7/cLb7rbkEscvd5JuROPq9XCNS
+	Kt0FclcwpXED+loE3yZBpMdPmEEHLUWDQxb6P1/eHG8dSp+VJMt6lfWeV8XrUE1+DbRKvIZS3C2
+	k5w0MvY9hV0Wz2N8goxWBj0Ve72jeZPn8zAjSR+5FeNX3I8+fgWWrPOBlI=
+X-Received: by 2002:a05:690c:3747:b0:809:86c6:ee18 with SMTP id
+ 00721157ae682-81f69e3978bmr27868337b3.37.1785150525277; Mon, 27 Jul 2026
+ 04:08:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260723184538.3888637-1-ekffu200098@gmail.com>
+ <20260724144822.6af8213f@kernel.org> <0ee1ef4aa7daa908bf28397ccc639c89b6aabd9c@intel.com>
+In-Reply-To: <0ee1ef4aa7daa908bf28397ccc639c89b6aabd9c@intel.com>
+From: Sang-Heon Jeon <ekffu200098@gmail.com>
+Date: Mon, 27 Jul 2026 20:08:33 +0900
+X-Gm-Features: AUfX_mzhfgKW48GB4CRuyNKliFu1x1EH8aDGDqYePXeE0rGOBX3Wid5IOU1hKpc
+Message-ID: <CABFDxMFMOAZ_3kYxEGCutnGt1OSSmgvmwx-=M1RxGc3VGKORYQ@mail.gmail.com>
+Subject: Re: [PATCH 00/36] treewide: remove conditional returns with no effect
+To: Jani Nikula <jani.nikula@linux.intel.com>
+Cc: Jakub Kicinski <kuba@kernel.org>, Julia.Lawall@inria.fr, 
+	Alex Deucher <alexander.deucher@amd.com>, 
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
+	Alexandre Belloni <alexandre.belloni@bootlin.com>, Andrew Lunn <andrew@lunn.ch>, 
+	Andrew Morton <akpm@linux-foundation.org>, 
+	Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>, Borislav Petkov <bp@alien8.de>, 
+	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+	Daniel Lezcano <daniel.lezcano@kernel.org>, David Airlie <airlied@gmail.com>, 
+	"David S. Miller" <davem@davemloft.net>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+	Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Hans de Goede <hansg@kernel.org>, 
+	Hans Verkuil <hverkuil@kernel.org>, Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+	Herbert Xu <herbert@gondor.apana.org.au>, 
+	=?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Jaroslav Kysela <perex@perex.cz>, 
+	Jason Gunthorpe <jgg@ziepe.ca>, Jiri Pirko <jiri@resnulli.us>, "Joerg Roedel (AMD)" <joro@8bytes.org>, 
+	Johan Hovold <johan@kernel.org>, Jonathan Cameron <jic23@kernel.org>, 
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Julian Anastasov <ja@ssi.bg>, 
+	Leon Romanovsky <leon@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Mark Brown <broonie@kernel.org>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Matthew Sakai <msakai@redhat.com>, 
+	Mauro Carvalho Chehab <mchehab@kernel.org>, Maxime Ripard <mripard@kernel.org>, 
+	Michael Turquette <mturquette@baylibre.com>, Mike Rapoport <rppt@kernel.org>, 
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>, Nicolas Palix <nicolas.palix@imag.fr>, 
+	Pablo Neira Ayuso <pablo@netfilter.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Ping-Ke Shih <pkshih@realtek.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Sebastian Reichel <sre@kernel.org>, Shuah Khan <shuah@kernel.org>, 
+	Simona Vetter <simona@ffwll.ch>, Simon Horman <horms@verge.net.au>, Stephen Boyd <sboyd@kernel.org>, 
+	Steve French <sfrench@samba.org>, Takashi Iwai <tiwai@suse.com>, Thomas Renninger <trenn@suse.com>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, Tony Luck <tony.luck@intel.com>, 
+	Tvrtko Ursulin <tursulin@ursulin.net>, Vadim Fedorenko <vadim.fedorenko@linux.dev>, 
+	Vinod Koul <vkoul@kernel.org>, Will Deacon <will@kernel.org>, 
+	Yazen Ghannam <Yazen.Ghannam@amd.com>, cocci@inria.fr, amd-gfx@lists.freedesktop.org, 
+	dmaengine@vger.kernel.org, dm-devel@lists.linux.dev, 
+	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
+	intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev, 
+	linux-cifs@vger.kernel.org, linux-clk@vger.kernel.org, 
+	linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org, 
+	linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-media@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
+	linux-rdma@vger.kernel.org, linux-rtc@vger.kernel.org, 
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, lvs-devel@vger.kernel.org, 
+	netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, 
+	nouveau@lists.freedesktop.org, platform-driver-x86@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] The Kconfig option `QCOM_UBWC_CONFIG` lacks a dependency on `QCOM_=
-SMEM`, leading to linker errors when `QCOM_SMEM` is disabled or built as a =
-module.
-- [High] Unconditional probe deferral if SMEM is absent or fails to probe, =
-breaking device initialization (such as display and GPU).
---
+Hello,
 
---- Patch [3]: [PATCH v5 3/3] soc: qcom: ubwc: Get HBB from SMEM ---
-commit 20edaba770542f67d21a0b4400573bdcc45e195f
-Author: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+On Mon, Jul 27, 2026 at 5:30=E2=80=AFPM Jani Nikula <jani.nikula@linux.inte=
+l.com> wrote:
+>
+> On Fri, 24 Jul 2026, Jakub Kicinski <kuba@kernel.org> wrote:
+> > On Fri, 24 Jul 2026 03:45:02 +0900 Sang-Heon Jeon wrote:
+> >> Patch 1 adds a Coccinelle script that matches the pattern, including
+> >> negation and constant-comparison variants. Where a local variable is
+> >> assigned right before the check, the assignment and the two returns
+> >> turn into a single return of the assigned expression.
+> >
+> > Huh, I thought we already had such script. Various script children have
+> > been sending such "cleanups" in the past.
+>
+> We did, and it was removed, I believe in 1a617a8475e8 ("coccinelle:
+> misc: remove "complex return code" warnings"), because people just don't
+> want this constant churn.
+>
+> It's perfectly fine to have the error case and happy day scenario
+> separated.
 
-soc: qcom: ubwc: Get HBB from SMEM
+Thanks for sharing the history.
 
-This patch attempts to retrieve Highest Bank Bit (HBB) data from SMEM to
-ensure correct DRAM configuration settings are applied. It updates the
-UBWC configuration retrieval logic to first check for SMEM availability
-and dynamically populate the HBB value if present.
+I checked the mailing list. The removed script looks similar to the
+new one, but it is different. The removed script reported a
+conditional return followed by an explicit return 0, where the error
+case and happy day scenario are separated as you mentioned, and Johan
+also complained about this 10 years ago.
 
-> diff --git a/drivers/soc/qcom/ubwc_config.c b/drivers/soc/qcom/ubwc_confi=
-g.c
-> index 0209a02c390f0..23901a4c51f73 100644
-> --- a/drivers/soc/qcom/ubwc_config.c
-> +++ b/drivers/soc/qcom/ubwc_config.c
-[ ... ]
-> @@ -168,9 +169,25 @@ static const struct of_device_id qcom_ubwc_configs[]=
- __maybe_unused =3D {
->  	{ }
->  };
-> =20
-> +static struct qcom_ubwc_cfg_data *cfg;
-> +static DEFINE_MUTEX(cfg_mutex);
-> +/**
-> + * qcom_ubwc_config_get_data() - Retrieve UBWC data for the platform.
-> + *
-> + * Return: Pointer to valid struct qcom_ubwc_cfg_data on success, negati=
-ve
-> + * errno on failure. Note that this may return EPROBE_DEFER.
-> + */
->  const struct qcom_ubwc_cfg_data *qcom_ubwc_config_get_data(void)
->  {
->  	const struct qcom_ubwc_cfg_data *data;
-> +	int hbb;
-> +
-> +	guard(mutex)(&cfg_mutex);
-> +	if (cfg)
-> +		return cfg;
-> +
-> +	if (!qcom_smem_is_available())
-> +		return ERR_PTR(-EPROBE_DEFER);
+But the new script only reports when both branches return the same
+variable, not the explicit 0. So, I think the new script is close to
+the restricted version that Julia mentioned 10 years ago, and it
+should be acceptable.
 
-[Severity: High]
-If SMEM is absent on a platform or fails to probe (for example, if the
-bootloader didn't initialize it and sets __smem to ERR_PTR(-ENODEV)),
-qcom_smem_is_available() will always return false.
+>
+> BR,
+> Jani.
+>
+>
+> --
+> Jani Nikula, Intel
 
-Will this cause dependent drivers to endlessly defer probe, completely
-bypassing the valid static fallback data in qcom_ubwc_configs?
-
-[Severity: High]
-Since this patch introduces calls to qcom_smem_is_available() and
-qcom_smem_dram_get_hbb(), which lack static inline stubs for the
-!CONFIG_QCOM_SMEM case, could this cause a build failure?
-
-For example, if a kernel is built with CONFIG_DRM_MSM=3Dy (which selects
-QCOM_UBWC_CONFIG) and CONFIG_QCOM_SMEM=3Dm (or =3Dn), will this result in
-undefined reference errors during the vmlinux linking phase because
-QCOM_UBWC_CONFIG lacks a dependency on QCOM_SMEM in drivers/soc/qcom/Kconfi=
-g?
-
-> =20
->  	data =3D of_machine_get_match_data(qcom_ubwc_configs);
->  	if (!data) {
-> @@ -178,9 +195,30 @@ const struct qcom_ubwc_cfg_data *qcom_ubwc_config_ge=
-t_data(void)
->  		return ERR_PTR(-EINVAL);
->  	}
-> =20
-> -	return data;
-> +	hbb =3D qcom_smem_dram_get_hbb();
-> +	if (hbb =3D=3D -ENODATA) {
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727-topic-smem=
-_dramc-v5-0-66188b3e338d@oss.qualcomm.com?part=3D3
+Best Regards,
+Sang-Heon Jeon
