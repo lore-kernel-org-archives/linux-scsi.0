@@ -1,141 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C25E8635D
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 06:05:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F017242A82;
+	Mon, 27 Jul 2026 07:34:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785132325; cv=none; b=pyFNo1XuEKKjs3vyEcbjq6s84v/38XcQPdnnU0C5ipAs1X7JiKv1Zxzmi1AU1BuiXbzMOikvvlbBlsvawtegJry5fl1fljKX0ZwC2sP5mDAbgScL92VGSsnw874Cj4BFw3USZVoIdvEj0+hv9hqKafRJD4VKkIParRF1IvwNOkw=
+	t=1785137695; cv=none; b=IvclLu3NW4JJjO0qy61NPWuIOGvLpHWnu8KnIJ4HynhXxvCjKSIAxgjctgwfJvnYxzXyubCX/GvT3xrbS8SNPtim05dlFO5WRTe927rhIxIXOTnR651cKu6uwbEzIn/EEbMHpohoDl2GdT5UR5MC2DA1QgZbAoSuDUSQrceVlUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785132325; c=relaxed/simple;
-	bh=6TMhjLp0pArAKb5TQF0Kc817l12SBr5Mpj9P4RwTu7o=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZCfqc3CkfhzYJBmTfdGmgLOUTqjHdtVfns/AfF9NlpWjVizjeq1bYKDXQXgrY6ZqTg6MYblGndEKx7B+6TheH4ktQjTVVXVnIJYpVhbWr+Yujw52VgYySx4phPD5rvJYa6L329oRL4Eu6qW2IMGT1EnQ7O0aLClrmnEPoVWjq+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cb4SijOa; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cb4SijOa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9E5B1F000E9;
-	Mon, 27 Jul 2026 06:05:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785132324;
-	bh=8F8Cv8VJnKWBx7SEBOPk3oIda3Vsti+v6y+ujLCfQtk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Cb4SijOa1cW+d0WCchTXaA2cAQj+/8arhER1S2Thg+d5ph30fKUMddaIb+R3dr71U
-	 vs0UfKRac+faHTB/uzgLMSiktaBoO2My9v40SvOGW4+onEglyuiB3BT/F0/e9QdG9I
-	 ayOgOexTjz+ddUPYBGUaILfDBHhfuTCdSq7esk+e0f28zghEtrxnMYq7BzHllYkq9B
-	 DeOC5bshabBgd1qMDQ2adr+snA7DoTmikzi5Ot/z0HJ/4ciAfawDdxtE5Utb7fXRdx
-	 a+2zw8VVM6elKq5qJZ6ZK0CfN52hQ+647JnlVlbPOP/bQzLPInGyMObzdb1g/0j9jN
-	 dlz/V/BaCcOJw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: core: pair EH runtime PM get and put
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hongjie Fang" <hongjiefang@asrmicro.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260727055615.2287217-1-hongjiefang@asrmicro.com>
-References: <20260727055615.2287217-1-hongjiefang@asrmicro.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 06:05:23 +0000
-Message-Id: <20260727060523.E9E5B1F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1785137695; c=relaxed/simple;
+	bh=HCtBSGVp5MKeWLbLlTVEqO6iyMtQrZkLtTD108SPBR8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ZMq16G7MIyprmPnX81BKh+5apFD2gY6KfFBp0QBYcFkNd72bD7LnDYnYaQpK7FXkOv8ILYgi9Q7SBnMEyuUyi8lUAMJd3SkBRqQyB4yuROWxDzTnXSnixJZ0KdL75QnVgUdIAvAF6395l5jbTKGRbf+21RhPccIkcDHTilzUQb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: a2241c04898d11f1aa26b74ffac11d73-20260727
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:18dce990-af35-485a-bae8-30d7127116ce,IP:0,U
+	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:25
+X-CID-META: VersionHash:e7bac3a,CLOUDID:c029aa3a90ece931ac087231fdf0bfa7,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:102|136|850|865|898,TC:nil,Content:0|15|
+	50,EDM:5,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,
+	OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: a2241c04898d11f1aa26b74ffac11d73-20260727
+X-User: chenchangcheng@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <chenchangcheng@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 852732050; Mon, 27 Jul 2026 15:34:42 +0800
+From: Chen Changcheng <chenchangcheng@kylinos.cn>
+To: kartilak@cisco.com,
+	nmusini@cisco.com,
+	sebaddel@cisco.com,
+	ames.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	ccc194101@163.com,
+	Chen Changcheng <chenchangcheng@kylinos.cn>
+Subject: [PATCH] scsi: snic: Fix scsi host leak on workqueue allocation failure
+Date: Mon, 27 Jul 2026 15:34:38 +0800
+Message-Id: <20260727073438.209673-1-chenchangcheng@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+In snic_add_host(), if scsi_add_host() succeeds but
+alloc_ordered_workqueue() fails, the function returns -ENOMEM
+with shost->work_q left as NULL. The caller's error path then
+calls snic_del_host(), which returns early when !shost->work_q
+without calling scsi_remove_host(). The Scsi_Host remains
+registered in sysfs as a zombie device even after the probe
+has failed. This causes:
 
-Pre-existing issues:
-- [High] Lockless modification of the `eh_noresume` bitfield causes a read-=
-modify-write data race that can silently corrupt adjacent critical bitfield=
-s.
-- [High] If `scsi_autopm_get_host()` persistently fails, the SCSI EH kthrea=
-d enters a 100% CPU uninterruptible infinite loop.
---
+ - The leaked host remains visible in /sys/class/scsi_host/
+   after probe failure, with state "running".
+ - Subsequent SCSI host numbering is permanently shifted
+   (the leaked host ID from ida_alloc() is never reclaimed).
+ - Memory leak: the Scsi_Host allocation can never be freed
+   because device_add() took a reference that can only be
+   released by device_del() inside scsi_remove_host().
 
---- Patch [1]: [PATCH v2] scsi: core: pair EH runtime PM get and put ---
-commit 78d8d003e96d61ac7f551e9faf3bb914d7c82cad
-Author: Hongjie Fang <hongjiefang@asrmicro.com>
+Fix by adding scsi_remove_host() in the workqueue allocation
+failure path inside snic_add_host(), undoing the successful
+scsi_add_host() before returning the error. This is cleaner
+than modifying snic_del_host() because snic_del_host() is
+called from a shared error label that also serves paths where
+snic_add_host() was never invoked.
 
-scsi: core: pair EH runtime PM get and put
+Reproducer (requires no real SNIC hardware):
+ - Build CONFIG_SCSI_SNIC=y (built-in)
+ - Add snic.test_mode=1 snic.inject_wq_fail=1 to kernel cmdline
+ - Boot with a PCI device matching the snic driver (e.g. QEMU
+   edu device, PCI ID 0x1234:0x11e8, temporarily added to the
+   driver's PCI ID table)
 
-This commit fixes a race condition where a power-management error path alte=
-rs
-shost->eh_noresume while the SCSI EH thread is running. It ensures that
-runtime PM get and put operations in the error handler are correctly paired
-by snapshotting shost->eh_noresume per iteration.
+Before the fix:
+  # /sys/class/scsi_host/ contains a zombie host0:
+  $ cat /sys/class/scsi_host/host0/proc_name
+  snic_scsi
+  $ cat /sys/class/scsi_host/host0/state
+  running
+  # ata_piix gets host1, host2 (host0 stuck):
+  scsi host1: ata_piix
+  scsi host2: ata_piix
 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 984ddcb4786d6..d4c53e6657625 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -2213,7 +2214,8 @@ int scsi_error_handler(void *data)
->  		 * what we need to do to get it up and online again (if we can).
->  		 * If we fail, we end up taking the thing offline.
->  		 */
-> -		if (!shost->eh_noresume && scsi_autopm_get_host(shost) !=3D 0) {
-> +		eh_noresume =3D shost->eh_noresume;
+After the fix:
+  # host0 is properly freed and reused by ata_piix:
+  scsi host0: ata_piix
+  scsi host1: ata_piix
+  # No zombie host in /sys/class/scsi_host/
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does the lockless modificati=
-on
-of the eh_noresume bitfield elsewhere cause a read-modify-write data race
-that can silently corrupt adjacent bitfields?
+Signed-off-by: Chen Changcheng <chenchangcheng@kylinos.cn>
+---
+ drivers/scsi/snic/snic_main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-For instance, eh_noresume is defined as a bitfield sharing a machine word
-with other critical flags:
+diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+index 82953e6a0915..cd638b4a4d7b 100644
+--- a/drivers/scsi/snic/snic_main.c
++++ b/drivers/scsi/snic/snic_main.c
+@@ -305,6 +305,7 @@ snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
+ 	if (!shost->work_q) {
+ 		SNIC_HOST_ERR(shost, "Failed to Create ScsiHost wq.\n");
+ 
++		scsi_remove_host(shost);
+ 		ret = -ENOMEM;
+ 	}
+ 
+-- 
+2.25.1
 
-include/scsi/scsi_host.h:struct Scsi_Host {
-    ...
-    unsigned host_self_blocked:1;
-    unsigned reverse_ordering:1;
-    unsigned tmf_in_progress:1;
-    unsigned async_scan:1;
-    unsigned eh_noresume:1;
-    ...
-}
-
-When ufshcd_set_dev_pwr_mode() locklessly modifies hba->host->eh_noresume =
-=3D 1
-after dropping host_lock, could concurrent modifications to other bitfields
-in the same word (like host_self_blocked during scsi_block_requests()) cause
-lost state updates due to non-atomic read-modify-write operations?
-
-> +		if (!eh_noresume && scsi_autopm_get_host(shost) !=3D 0) {
->  			SCSI_LOG_ERROR_RECOVERY(1,
->  				shost_printk(KERN_ERR, shost,
->  					     "scsi_eh_%d: unable to autoresume\n",
->  					     shost->host_no));
->  			continue;
-
-[Severity: High]
-This is a pre-existing issue, but if scsi_autopm_get_host() persistently
-fails, does this continue statement cause the SCSI EH kthread to enter an
-uninterruptible infinite loop?
-
-If scsi_autopm_get_host() fails (e.g. -ENODEV due to dead hardware) and the
-code skips scsi_unjam_host() by executing continue, shost->host_failed
-remains non-zero. The loop restarts and checks its wait condition:
-
-drivers/scsi/scsi_error.c:scsi_error_handler() {
-    ...
-    if ((shost->host_failed =3D=3D 0 && shost->host_eh_scheduled =3D=3D 0) =
-||
-        shost->host_failed !=3D atomic_read(&shost->host_busy)) {
-        ...
-        schedule();
-        continue;
-    }
-    ...
-}
-
-Because host_failed is not 0 and host_failed =3D=3D host_busy, this conditi=
-on
-evaluates to false, skipping schedule(). Will the thread then immediately
-retry scsi_autopm_get_host(), fail again, and spin a CPU core infinitely
-without yielding?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727055615.2287=
-217-1-hongjiefang@asrmicro.com?part=3D1
