@@ -1,145 +1,128 @@
-Received: from hall.aurel32.net (hall.aurel32.net [195.154.119.183])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCE4E3815E8;
-	Mon, 27 Jul 2026 15:24:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.154.119.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFBBC38F934
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 15:25:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785165893; cv=none; b=RN5PLACqZdVbtQaKlRE4PvOxzZ9gUH9U01POcGLcZljUav6ACLei3W9cGFKFVnFj5QHJMP1+9sakqrXNxPquShzOr/Ey9/2gn4bkUfbVf9+2vi203hUNMon8XS/IffLRmaxqc4cdMNBzZ/tzn7nX9Wc6e2j6rKH8HCGaCKg02Mg=
+	t=1785165960; cv=none; b=MxW5BW60OfGFQflC4L0XJ4qmyGhkC7/RPojZgbUYxetQl9y+eGH51sbH4KyAR+Me86uYB94C2dFrI7DquhzAFclarYiG0aW7iUGdFpfXncH+1+OZ5vajDSXKv8DsBhiP6DWYEOx15GnhViSX3h7GpwR8RIkBpFK+OP2CvoJmM+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785165893; c=relaxed/simple;
-	bh=FJpOlBy2S/XoBZDiGh6c9vnD4PM+zA7zeXI+r4BVUPQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Oc/renG/CgiPfj0Px/cuqOTFxMxi9ApIO/PalNd3q123dVibNVfjsg5N61LHUfgbUrr3O0+DVqJOnHwYLwOV/5ajzUC/n92vHv+OiQfaOh5BwAbHgEyx7MJd3FDbkoWug7M4phtS9n0M2gZGFqw18c4nk94HK2FOgrPOHpEC7Bw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net; spf=pass smtp.mailfrom=aurel32.net; dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b=ddq2pVYQ; arc=none smtp.client-ip=195.154.119.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aurel32.net
+	s=arc-20240116; t=1785165960; c=relaxed/simple;
+	bh=YLzPNPnKWog4nETqHerjuK8B/G/zRcZr0cISQ3io1Oo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=D8CPpK//iySmUKBobyQwETKc5RlatsWJbuRVbt15/I56fHranOPzXXqwS3W3NjulGDFSlKs1HmW63MLYAzuYLvytk/MfGjl5H9i5b1CFnm/QN41uGVZvYxAd79n6Yj5UvE7GqjDip/SGpq8szxzrMC+cJsv/3xXBTS4HDMfrljM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AoOQxyWq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b="ddq2pVYQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=aurel32.net
-	; s=202004.hall; h=In-Reply-To:Content-Type:MIME-Version:References:
-	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:From:Reply-To:
-	Subject:Content-ID:Content-Description:X-Debbugs-Cc;
-	bh=93gQyKs/Loc50T0J0Ycz+Bfql8No0r2Sptp8WTz9pkU=; b=ddq2pVYQC9FeOWffCFBQ5sGKJX
-	T5kZnOZDOP04yCpIfBjoYeGAV1f9C6QYWwdonbdvcds1Q6ADdHgABKrbJ+S+trTG8Tp+vhkTo1ErT
-	TPLx9Gn95sBGPJYc5z5rxeE8W7CkAo1VMt56BH3/kBqkvWthkdnHW6kJI5QmiaZgnsS6cLsnP4eAO
-	UcU3GLz1GxaC1WlxaJxdrnx0IedePVJIXr2qxbcF5QZP77rYwIGB7Vn7Ybdi2FWpEdTR/erJ5ADhd
-	Xh+RyDt1lTpCqZK5Q/vmFLlxUoTMilOvNoeTNYHrpgtu+w+12/RyCa8rUiOFb/TV+Ui1XyWcWHsgP
-	9flGjf0Q==;
-Received: from authenticated user
-	by hall.aurel32.net with esmtpsa  (TLS1.3)  tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <aurelien@aurel32.net>)
-	id 1woMpm-0000000HTK4-3XKG;
-	Mon, 27 Jul 2026 17:01:38 +0200
-Date: Mon, 27 Jul 2026 17:01:34 +0200
-From: Aurelien Jarno <aurelien@aurel32.net>
-To: Yixun Lan <dlan@kernel.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Jennifer Berringer <jberring@redhat.com>,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] Add UFS Host driver support for SpacemiT K3 SoC
-Message-ID: <amdyzkFplQqJvMl1@aurel32.net>
-Mail-Followup-To: Yixun Lan <dlan@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Jennifer Berringer <jberring@redhat.com>,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-References: <20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AoOQxyWq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3565D1F000E9;
+	Mon, 27 Jul 2026 15:25:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785165958;
+	bh=bW25N40bBL+n4TI3y9gcsUg824fZibS7qYRFLc3piQU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=AoOQxyWqvg+ElY0xA/PKBBvxQ/Qp9dwGp2DCsYsa+wknzc5gXXZJugtmjONp+HauY
+	 /WJ01yyGjYu1tKuCnBBNp6HNICFFIYK1OpH0cb3GY9+K4TKyuxA2TQzkEEMjldhptX
+	 731VKeACo/oGimQhraFVhyvk4pcaBZud/UGLlddzSzAe2QeRVJMrR9mfyBxFN+obnF
+	 LW16MIFH711p5VQJWAeWbo2+IGfSpUoPo2fCp5f4CZgNIqTgNQ7ZJNfDXHtJRc+RfK
+	 F+MWTZogjJJnvOioasBu1YcAC5DhOXZOzEYl2smNS83hK/dW+L+PFdH9QVie2spndr
+	 u6yXPo9K2YgKA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 20/27] scsi-multipath: add
+ scsi_mpath_{start,end}_request()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "John Garry" <john.g.garry@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260727144234.3802948-21-john.g.garry@oracle.com>
+References: <20260727144234.3802948-1-john.g.garry@oracle.com>
+ <20260727144234.3802948-21-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 27 Jul 2026 15:25:57 +0000
+Message-Id: <20260727152558.3565D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org>
-User-Agent: Mutt/2.2.13 (2024-03-09)
 
-On 2026-07-25 10:37, Yixun Lan wrote:
-> This series try to add UFS support for SpacemiT K3 SoC, the controller
-> components consists of System Bus Interface Unit, UFS Host Controller
-> Interface, UFS Transport Protocol Layer, UFS Host Registers, Device
-> Management Entity (DME), Transport Layer, Network Layer, Data Link
-> Layer, PHY Adapter Layer, and M-PHY Interface. A more detail functional
-> block diagram can be found in SpacemiT website, chapter 9.7.3 [1]
-> 
-> Please note, in order to test this driver, the UFS clock driver[2] here
-> should be applied first as a prerequisite patch.
-> 
-> One known issue is that the device will occasionally raise BKOPS interrupt
-> when doing some high load test, log from dmesg shows
-> 
-> [  806.710763] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1
-> 
-> Link: https://spacemit.com/community/document/info?nodepath=hardware/key_stone/k3/k3_docs/k3_usermanual/09_memory_storage.md&lang=en [1]
-> Link: https://lore.kernel.org/all/20260630-06-clk-ufs-support-v1-0-cf7521d1d0fe@kernel.org/ [2]
-> Signed-off-by: Yixun Lan <dlan@kernel.org>
-> ---
-> Changes in v2:
-> - fix missing interrupts property
-> - move ufs node to k3-com260.dtsi
-> - convert freq-table-hz to operating-points-v2
-> - rework reset_control, fix header and drop global variable
-> - drop dump_host_regs() debug interface
-> - converge and refactor dme_set() operations
-> - massive reduce of busy delay() loops
-> - drop vendor specific hce_enable_notify(), fallback to default
-> - drop unused member from struct ufs_spacemit_host
-> - add COMPILE_TEST support to Kconfig
-> - comment style fix
-> - Link to v1: https://patch.msgid.link/20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org
-> 
-> ---
-> Yixun Lan (3):
->       scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
->       scsi: ufs: spacemit: k3: Add UFS Host Controller driver
->       riscv: dts: spacemit: k3: Add UFS support
-> 
->  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml |  56 ++
->  arch/riscv/boot/dts/spacemit/k3-com260.dtsi        |   4 +
->  arch/riscv/boot/dts/spacemit/k3-pico-itx.dts       |   4 +
->  arch/riscv/boot/dts/spacemit/k3.dtsi               |  27 +
->  drivers/ufs/host/Kconfig                           |  12 +
->  drivers/ufs/host/Makefile                          |   1 +
->  drivers/ufs/host/ufs-spacemit.c                    | 686 +++++++++++++++++++++
->  drivers/ufs/host/ufs-spacemit.h                    |  79 +++
->  8 files changed, 869 insertions(+)
-> ---
-> base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
-> change-id: 20260605-08-k3-ufs-support-c8b308e415e2
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Critical] Synchronous dispatch errors and request cancellations bypass `=
+scsi_mpath_end_request()`, permanently leaking resources and causing NULL p=
+ointer dereferences on recycled tags.
+- [Critical] The dummy implementation of `scsi_mpath_end_request()` skips `=
+blk_update_request()`, silently dropping bio completions if CONFIG_SCSI_MUL=
+TIPATH is disabled.
+--
 
-Thanks for this new version. Patches 2 and 3 are:
+--- Patch [20]: [PATCH v5 20/27] scsi-multipath: add scsi_mpath_{start,end}=
+_request() ---
+commit 375ed243ce77c97b0b6e6eb569248a68ab42aec6
+Author: John Garry <john.garry@linux.dev>
+scsi-multipath: add scsi_mpath_{start,end}_request()
 
-Tested-by: Aurelien Jarno <aurelien@aurel32.net>
+This commit introduces scsi_mpath_start_request() and scsi_mpath_end_reques=
+t()
+to update private multipath request data. It also adds mpath_nr_active to
+Scsi_Host to support queue depth multipath iopolicies.
 
-Regards
-Aurelien 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 6a2d7dbfbe8c3..36e5c5543754f 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -669,7 +669,10 @@ static bool scsi_end_request(struct request *req, bl=
+k_status_t error,
+>  	struct scsi_device *sdev =3D cmd->device;
+>  	struct request_queue *q =3D sdev->request_queue;
+> =20
+> -	if (blk_update_request(req, error, bytes))
+> +	if (is_mpath_request(req)) {
+> +		if (scsi_mpath_end_request(req, error, bytes))
+> +			return true;
+> +	} else if (blk_update_request(req, error, bytes))
+>  		return true;
 
--- 
-Aurelien Jarno                          GPG: 4096R/1DDD8C9B
-aurelien@aurel32.net                     http://aurel32.net
+[Severity: Critical]
+If CONFIG_SCSI_MULTIPATH is disabled, the dummy stub for
+scsi_mpath_end_request() unconditionally returns false.
+
+If a request has REQ_MPATH set (which aliases REQ_DRV and can be set by
+other subsystems like Device Mapper), won't the else if branch be completely
+skipped?
+
+Could this result in blk_update_request() never being called, leaking bios
+and hanging the submitting task waiting for completion?
+
+> [ ... ]
+> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+> index d79e1b7b90051..eae5864ce5826 100644
+> --- a/drivers/scsi/scsi_multipath.c
+> +++ b/drivers/scsi/scsi_multipath.c
+> [ ... ]
+> +bool scsi_mpath_end_request(struct request *req, blk_status_t error,
+> +				unsigned int nr_bytes)
+> +{
+> +	struct scsi_cmnd *scmd =3D blk_mq_rq_to_pdu(req);
+> +	struct scsi_device *sdev =3D scmd->device;
+> +	struct block_device *bi_bdev =3D NULL;
+> +
+> +	if (scmd->flags & SCMD_MPATH_IO_STATS) {
+> +		struct bio *clone =3D req->bio, *master =3D clone->bi_private;
+> +
+> +		bi_bdev =3D master->bi_bdev;
+> +	}
+
+[Severity: Critical]
+If a request is requeued, SCMD_MPATH_IO_STATS and SCMD_MPATH_CNT_ACTIVE are
+preserved by SCMD_PRESERVED_FLAGS. If the request later fails an early state
+check in scsi_queue_rq() (e.g., the device goes offline), blk-mq ends it
+directly via blk_mq_end_request(), bypassing scsi_end_request().
+
+When the tag is reused for a dataless request, scsi_mpath_start_request()
+returns early without clearing the flags. Will this cause
+scsi_mpath_end_request() to read the leaked SCMD_MPATH_IO_STATS flag and
+dereference req->bio which is NULL?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727144234.3802=
+948-1-john.g.garry@oracle.com?part=3D20
