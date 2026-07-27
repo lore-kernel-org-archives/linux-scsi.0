@@ -1,107 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A8041D204
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 15:05:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B92541B8D5
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 15:06:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785164747; cv=none; b=tx40gmtFRXqHkwP3T0YToAE8RxcFeWtul3nYysyA9/jLmnyveMPSuMuyN/kazZaRGVD3fsMRHJdtFKFo8/0ec9lUDN9FwAKqPe2Zd0ipqzNHN4Wdsd/RIKz6I9F/KtI7fci/no6FoJceugsJ6qteMzLgQ5KIFY5QE23GMv8gWk0=
+	t=1785164783; cv=none; b=bpSW+MoOm36ZRbGt/tkFWWioPUCtGY3eyQeJn31B16lkksp/claX0l0iP6KPRXWNNOrL3JyqrTp5CdGLQRPHg2QTqhp9Jc/avwGRGb1Z3f2gXUFJsUIr4GesGLycl8iq4c8XQyWK5C9r1ORHJoaAXd2cjx80V3IgQHMtWMXdKlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785164747; c=relaxed/simple;
-	bh=PEp+Db860LNOCluIBNTIPnP7La5Ohbq0rOVr2rqHhKY=;
+	s=arc-20240116; t=1785164783; c=relaxed/simple;
+	bh=4zsHqWN4MQeLBJIZMveOxy/dinaXGqOcei3/uQmnjpQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZLwj3j1BGB69DGMVY5wmhTUBbZFx1mJB+O4nWB1dWY60UKSB6kT6Yx6rRBmiTVN0ExketMx6AFel02PCVVy68uIejYXpWw1O8xc4IZxKz2JCnlq/sM6fnjXu2c0PoMHpi8VsNWuQks6wjkIre4VY+v0OXD1Xwlu/YDNLSYRARM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K25nvr1O; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=TPHkgSN9PCxyxAxCtYpby3Wsu2Da7b1WAEJCV8aWREcYiNK79h3RNBwkiZQZIbZcZZJfKxeaPSFlSlB2FSI7PYfE9EKGa8iJpFqTJ14TVxQzMliLQ9e9UlKiG8Ow6qKgp7gTzGtoxkgwb9WdK8zL4jBMqLls6mbyVxRV5xXNmbM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a0At8zkm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K25nvr1O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A990C1F000E9;
-	Mon, 27 Jul 2026 15:05:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a0At8zkm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8457A1F000E9;
+	Mon, 27 Jul 2026 15:06:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785164745;
-	bh=SLm6+6n7ykYU2PajoGISDMmQLeIdLz2e3dy776BWEb8=;
+	s=k20260515; t=1785164781;
+	bh=k/aKp6a3tc8pTvz/KDt2ZYI+kSSjRuqUcHX+m4oMPZo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=K25nvr1OjJoEl7Ni2si3JJMop8KsChddsn6blhwwjNYd1Tz8EY1fsLXuK2x2DsJKS
-	 Cp+qekY5BiXhLqEvfrv8/Ng0sN3Od9jkRBkwaRPc+YrXPMhI6CM0NGBfgPx8TBwR0J
-	 dMaTCUgIQ3zxG4p+4FU+OYiS4ikKO0ZiqXz1gYPl/skeWBYQ9hSmJmH0a3lbli+yHr
-	 bYEn72G8/hLXrFBgOoY4NKVsJ8hr77f88Misx05yP8UhxRblRR2fTdXWI3wNGSScMI
-	 /DKx0PPekwjB6h5le1+ZJzM/hS7ZZUHjmUCjP6btpOFTWsvFmTTgvTtqabGbsXBSf5
-	 SnKGnJZx7djHw==
+	b=a0At8zkm/iJZXobqFHrt4X3sDv37n7/I7HQg+5n6Gz8LEnVFs7qtAEqlBaw54uDB8
+	 tZIxj1bibI12QKovwfKGfz+k2sfIcO2XoIEdZAYk4MShuIR/K/sn0XEWCaahtaFxF1
+	 H+aQBTf9NdbHTCjPbTYGE6b6XESeCXzWpuLA7GTQTWjV3gd3L2+FsXH23Tyukqec9g
+	 944ogBrDHe1j9mguH4PCH0aiwms/KLWYE89WAA5sva5tutMOhCNyd+4k2lGBX3HjTx
+	 yt8fQmgsPJcURC3W6Yr2YBKSPEGtaJ3EYjoZuDOgGsp8kEj6+esFJ4vy2F9WIs/lWQ
+	 +n3MCcntQm4GA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 01/27] libmultipath: Add initial framework
+Subject: Re: [PATCH v5 14/27] scsi-multipath: support iopolicy
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260727144234.3802948-2-john.g.garry@oracle.com>
+In-Reply-To: <20260727144234.3802948-15-john.g.garry@oracle.com>
 References: <20260727144234.3802948-1-john.g.garry@oracle.com>
- <20260727144234.3802948-2-john.g.garry@oracle.com>
+ <20260727144234.3802948-15-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 15:05:45 +0000
-Message-Id: <20260727150545.A990C1F000E9@smtp.kernel.org>
+Date: Mon, 27 Jul 2026 15:06:21 +0000
+Message-Id: <20260727150621.8457A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] The static workqueue `mpath_wq` is allocated but never used to queu=
-e work.
-- [Low] Missing `#include <linux/wait_bit.h>` in `lib/multipath.c` causes a=
- build issue.
+- [High] Missing `cancel_work_sync()` for `requeue_work` in the device rele=
+ase path leads to a Use-After-Free.
 --
 
---- Patch [1]: [PATCH v5 01/27] libmultipath: Add initial framework ---
-commit 10e613ef081274ac617a43c354384f9ddc32f1f5
+--- Patch [14]: [PATCH v5 14/27] scsi-multipath: support iopolicy ---
+commit fea581175f41f33e0cbfa8e1c00312d8a25daa1c
 Author: John Garry <john.g.garry@oracle.com>
 
-libmultipath: Add initial framework
+scsi-multipath: support iopolicy
+   =20
+Add support to set the multipath iopolicy. The iopolicy member is per
+scsi_mpath_head structure. A module param is added so that the default
+iopolicy may be set.
 
-Add initial framework for libmultipath to support path management, path
-selection, and failover handling.
-
-> diff --git a/lib/multipath.c b/lib/multipath.c
-> new file mode 100644
-> index 0000000000000..9cc398d266adf
-> --- /dev/null
-> +++ b/lib/multipath.c
+> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+> index 1866f282c15cc..1b955e19a6814 100644
+> --- a/drivers/scsi/scsi_multipath.c
+> +++ b/drivers/scsi/scsi_multipath.c
 [ ... ]
-> +void mpath_put_head(struct mpath_head *mpath_head)
+> @@ -97,8 +114,36 @@ static ssize_t scsi_mpath_device_vpd_id_show(struct d=
+evice *dev,
+>  }
+>  static DEVICE_ATTR(vpd_id, S_IRUGO, scsi_mpath_device_vpd_id_show, NULL);
+> =20
+> +static ssize_t scsi_mpath_device_iopolicy_store(struct device *dev,
+> +		struct device_attribute *attr, const char *buf, size_t count)
 > +{
-> +	refcount_t *refcount =3D &mpath_head->refcount;
+> +	struct scsi_mpath_head *scsi_mpath_head =3D
+> +		container_of(dev, struct scsi_mpath_head, dev);
+> +	struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
 > +
-> +	if (refcount_dec_and_test(&mpath_head->refcount))
-> +		wake_up_var(refcount);
+> +	if (!mpath_iopolicy_store(&scsi_mpath_head->iopolicy, buf))
+> +		return -EINVAL;
+> +
+> +	mpath_clear_paths(mpath_head);
+> +	mpath_schedule_requeue_work(mpath_head);
 
-[Severity: Low]
-Does this code build without including <linux/wait_bit.h>?
+[Severity: High]
+Does this code introduce a use-after-free risk during device teardown?
 
-It appears that the wake_up_var() macro used here, and the wait_var_event()
-macro used in mpath_head_uninit(), are defined in <linux/wait_bit.h>.
-This header does not seem to be included directly or implicitly through
-<linux/multipath.h> or <linux/module.h>.
+If a user writes to the iopolicy sysfs attribute here, mpath_schedule_reque=
+ue_work()
+is called, which schedules mpath_head->requeue_work asynchronously.=20
 
-> +}
-> +EXPORT_SYMBOL_GPL(mpath_put_head);
-[ ... ]
-> +static int __init mpath_init(void)
-> +{
-> +	mpath_wq =3D alloc_workqueue("mpath-wq",
-> +			WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS, 0);
+If the SCSI device is subsequently unbound or removed before this work comp=
+letes,
+scsi_mpath_head_release() frees the scsi_mpath_head structure. It doesn't a=
+ppear
+to call cancel_work_sync() to ensure the scheduled work is stopped before f=
+reeing.
 
-[Severity: Low]
-Is it necessary to allocate this workqueue here?
+When the workqueue eventually executes mpath_requeue_work(), could it deref=
+erence
+the freed mpath_head memory when accessing requeue_lock?
 
-It looks like the static variable mpath_wq is allocated and initialized, but
-no work is ever actually queued to it. Could this allocation be removed
-until it is needed?
+lib/multipath.c:mpath_requeue_work() {
+    ...
+    spin_lock_irq(&mpath_head->requeue_lock);
+    ...
+}
 
-> +	if (!mpath_wq)
-> +		return -ENOMEM;
-> +	return 0;
+> +	return count;
 > +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727144234.3802=
-948-1-john.g.garry@oracle.com?part=3D1
+948-1-john.g.garry@oracle.com?part=3D14
