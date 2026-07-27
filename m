@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63F43309EE7
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 15:04:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A8041D204
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 15:05:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785164645; cv=none; b=AMvL2zzS4IGzUW1T2f2tFjyiGz20wY8Bd7QjqgFEoYLTdP3y2CP9Q/YgFB/nvkf5iBkC57rKvViRpFcGsHd57pssm1rN4+uZz0gFAmsmYrGtIdZNEYJdfO2XvZzIe5aJsZjD3XDJuk9SUMOxYcqAw29fUSSlLRUa7W9HJrA2ABQ=
+	t=1785164747; cv=none; b=tx40gmtFRXqHkwP3T0YToAE8RxcFeWtul3nYysyA9/jLmnyveMPSuMuyN/kazZaRGVD3fsMRHJdtFKFo8/0ec9lUDN9FwAKqPe2Zd0ipqzNHN4Wdsd/RIKz6I9F/KtI7fci/no6FoJceugsJ6qteMzLgQ5KIFY5QE23GMv8gWk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785164645; c=relaxed/simple;
-	bh=XA21IdtUfmLuYv0UMpd23ZueZQS3wK89hy7DWcX4lJ8=;
+	s=arc-20240116; t=1785164747; c=relaxed/simple;
+	bh=PEp+Db860LNOCluIBNTIPnP7La5Ohbq0rOVr2rqHhKY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=k7xLGtN/3aURXNuX0jWcfY9cBR54HkyeBwA3z4NDdEu7Gyg8ZRXrWDkPR/e6EL/BIXhppVe8QewwaiN/fX/Bj8sIZ72ZSVwhoGTfLS/lJPQVCH6y/0Hu5kuL+BdRi8Ad4zrQ2hm7hwgmxjTCwOusPI7jZLT+I8r884KQ2P69PvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=du9kYnqd; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ZLwj3j1BGB69DGMVY5wmhTUBbZFx1mJB+O4nWB1dWY60UKSB6kT6Yx6rRBmiTVN0ExketMx6AFel02PCVVy68uIejYXpWw1O8xc4IZxKz2JCnlq/sM6fnjXu2c0PoMHpi8VsNWuQks6wjkIre4VY+v0OXD1Xwlu/YDNLSYRARM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K25nvr1O; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="du9kYnqd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42C261F000E9;
-	Mon, 27 Jul 2026 15:04:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K25nvr1O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A990C1F000E9;
+	Mon, 27 Jul 2026 15:05:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785164644;
-	bh=VmqwSVj1MAanX5DeyV/QRlk1jm3ounZkv+6WIKsu788=;
+	s=k20260515; t=1785164745;
+	bh=SLm6+6n7ykYU2PajoGISDMmQLeIdLz2e3dy776BWEb8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=du9kYnqdlbG0v0LF87lXaQkxhv5jEVJuqrqEUvEIomn+B2xqGHIDoBymgW5MdedCR
-	 OnbhLQrmX8b6XDKKWwHVy9y6xpGQ0OU6kBdy8HB/qQ66sOA+SYDuDxS+akcsFQoUV5
-	 5TV7Ai0tPPFSM7VjxVjiFzuzd5S+oqe01KY037SUU42qXwpVpYTmNM0dT9cZqg2ZcV
-	 XuYNDr87BCN92SZkdL7KmqzwTl/ic+jm1Q1dNcPnJxILXwB7cbzOVNt1kZxIBK7o1h
-	 Ep/LhoYr7Tr+DVRak+9/VuUGkC1/Sqg6t5fPTQCtv0QdY7pFn2Rr7VkvwiOAVW58N3
-	 0ajsf/gaWus5A==
+	b=K25nvr1OjJoEl7Ni2si3JJMop8KsChddsn6blhwwjNYd1Tz8EY1fsLXuK2x2DsJKS
+	 Cp+qekY5BiXhLqEvfrv8/Ng0sN3Od9jkRBkwaRPc+YrXPMhI6CM0NGBfgPx8TBwR0J
+	 dMaTCUgIQ3zxG4p+4FU+OYiS4ikKO0ZiqXz1gYPl/skeWBYQ9hSmJmH0a3lbli+yHr
+	 bYEn72G8/hLXrFBgOoY4NKVsJ8hr77f88Misx05yP8UhxRblRR2fTdXWI3wNGSScMI
+	 /DKx0PPekwjB6h5le1+ZJzM/hS7ZZUHjmUCjP6btpOFTWsvFmTTgvTtqabGbsXBSf5
+	 SnKGnJZx7djHw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 02/27] libmultipath: Add basic gendisk support
+Subject: Re: [PATCH v5 01/27] libmultipath: Add initial framework
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260727144234.3802948-3-john.g.garry@oracle.com>
+In-Reply-To: <20260727144234.3802948-2-john.g.garry@oracle.com>
 References: <20260727144234.3802948-1-john.g.garry@oracle.com>
- <20260727144234.3802948-3-john.g.garry@oracle.com>
+ <20260727144234.3802948-2-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 27 Jul 2026 15:04:02 +0000
-Message-Id: <20260727150403.42C261F000E9@smtp.kernel.org>
+Date: Mon, 27 Jul 2026 15:05:45 +0000
+Message-Id: <20260727150545.A990C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,121 +46,62 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] mpath_alloc_head_disk() leaves mpath_head->disk as an ERR_PTR on f=
-ailure, leading to a kernel panic during cleanup in mpath_put_disk().
-- [High] The allocated multipath disk unconditionally uses mpath_ops, which=
- lacks a .submit_bio implementation, causing device_add_disk to fail and re=
-ndering the device incapable of processing I/O.
+- [Low] The static workqueue `mpath_wq` is allocated but never used to queu=
+e work.
+- [Low] Missing `#include <linux/wait_bit.h>` in `lib/multipath.c` causes a=
+ build issue.
 --
 
---- Patch [2]: [PATCH v5 02/27] libmultipath: Add basic gendisk support ---
-commit 15c7ca249b473955f186aec1f0490e8ccef64672
+--- Patch [1]: [PATCH v5 01/27] libmultipath: Add initial framework ---
+commit 10e613ef081274ac617a43c354384f9ddc32f1f5
 Author: John Garry <john.g.garry@oracle.com>
 
-libmultipath: Add basic gendisk support
-   =20
-Add support to allocate and free a multipath gendisk.
+libmultipath: Add initial framework
+
+Add initial framework for libmultipath to support path management, path
+selection, and failover handling.
 
 > diff --git a/lib/multipath.c b/lib/multipath.c
-> index 9cc398d266adf..d2e334259f3c1 100644
-> --- a/lib/multipath.c
+> new file mode 100644
+> index 0000000000000..9cc398d266adf
+> --- /dev/null
 > +++ b/lib/multipath.c
-
 [ ... ]
-
-> @@ -35,6 +35,104 @@ void mpath_head_uninit(struct mpath_head *mpath_head)
->  }
->  EXPORT_SYMBOL_GPL(mpath_head_uninit);
-> =20
-> +static int mpath_bdev_open(struct gendisk *disk, blk_mode_t mode)
+> +void mpath_put_head(struct mpath_head *mpath_head)
 > +{
-> +	struct mpath_head *mpath_head =3D disk->private_data;
+> +	refcount_t *refcount =3D &mpath_head->refcount;
 > +
-> +	return mpath_get_head(mpath_head);
+> +	if (refcount_dec_and_test(&mpath_head->refcount))
+> +		wake_up_var(refcount);
+
+[Severity: Low]
+Does this code build without including <linux/wait_bit.h>?
+
+It appears that the wake_up_var() macro used here, and the wait_var_event()
+macro used in mpath_head_uninit(), are defined in <linux/wait_bit.h>.
+This header does not seem to be included directly or implicitly through
+<linux/multipath.h> or <linux/module.h>.
+
 > +}
-> +
-> +static void mpath_bdev_release(struct gendisk *disk)
-> +{
-> +	struct mpath_head *mpath_head =3D disk->private_data;
-> +
-> +	mpath_put_head(mpath_head);
-> +}
-> +
-> +const struct block_device_operations mpath_ops =3D {
-> +	.owner          =3D THIS_MODULE,
-> +	.open		=3D mpath_bdev_open,
-> +	.release	=3D mpath_bdev_release,
-> +};
-
-[Severity: High]
-Does this block device operations struct need a .submit_bio callback?
-
-Since device_add_disk() in the block layer strictly enforces that bio-based
-disks provide a .submit_bio callback, won't device_add_disk() unconditional=
-ly
-return -EINVAL when mpath_device_set_live() is called?
-
-Also, the helper is_mpath_disk() strictly requires disk->fops =3D=3D &mpath=
-_ops,
-which prevents drivers from dynamically overriding the operations struct to
-provide their own .submit_bio implementation.
-
-> +EXPORT_SYMBOL_GPL(mpath_ops);
-
+> +EXPORT_SYMBOL_GPL(mpath_put_head);
 [ ... ]
-
-> +void mpath_put_disk(struct mpath_head *mpath_head)
+> +static int __init mpath_init(void)
 > +{
-> +	if (!mpath_head->disk)
-> +		return;
-> +
-> +	/* make sure all pending bios are cleaned up */
-> +	flush_work(&mpath_head->partition_scan_work);
-> +	put_disk(mpath_head->disk);
-> +	mpath_head->disk =3D NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(mpath_put_disk);
-> +
-> +int mpath_alloc_head_disk(struct mpath_head *mpath_head,
-> +			struct queue_limits *lim, int numa_node)
-> +{
-> +	if (!mpath_head->disk_groups || !mpath_head->parent ||
-> +	    mpath_head->disk)
-> +		return -EINVAL;
-> +
-> +	mpath_head->disk =3D blk_alloc_disk(lim, numa_node);
-> +	if (IS_ERR(mpath_head->disk))
-> +		return PTR_ERR(mpath_head->disk);
+> +	mpath_wq =3D alloc_workqueue("mpath-wq",
+> +			WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS, 0);
 
-[Severity: High]
-If blk_alloc_disk() fails and returns an ERR_PTR, it is assigned to
-mpath_head->disk. Does this cause a crash during cleanup?
+[Severity: Low]
+Is it necessary to allocate this workqueue here?
 
-If the caller handles this failure by tearing down the object via
-mpath_put_disk():
+It looks like the static variable mpath_wq is allocated and initialized, but
+no work is ever actually queued to it. Could this allocation be removed
+until it is needed?
 
-void mpath_put_disk(struct mpath_head *mpath_head)
-{
-	if (!mpath_head->disk)
-		return;
-	...
-	put_disk(mpath_head->disk);
-}
-
-The (!mpath_head->disk) check will evaluate to false for an ERR_PTR,
-allowing the error pointer to be passed to put_disk(), which will dereferen=
-ce
-it. Should mpath_head->disk be cleared to NULL before returning the error?
-
-> +
-> +	mpath_head->disk->private_data =3D mpath_head;
-> +	mpath_head->disk->fops =3D &mpath_ops;
-> +
-> +	set_bit(GD_SUPPRESS_PART_SCAN, &mpath_head->disk->state);
-> +
+> +	if (!mpath_wq)
+> +		return -ENOMEM;
 > +	return 0;
 > +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727144234.3802=
-948-1-john.g.garry@oracle.com?part=3D2
+948-1-john.g.garry@oracle.com?part=3D1
