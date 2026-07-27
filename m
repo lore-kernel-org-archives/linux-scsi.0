@@ -1,87 +1,116 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 820DF363C6F
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 02:45:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9643542F6;
+	Mon, 27 Jul 2026 05:56:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785120310; cv=none; b=KBV1EOIm8S4qQGUmHAAzakCNG+7R2r8/UByKPgEzpX/1V40RqogMy9fAlM524OX9fgeFlgJ6//15zQmE5LcGbpV5gD/fwmZOQQO+T2uBCPwnTw1G9JLQKwmG1/aETOqmYWUjE/93Z/Ew4egzHKTBfNCgI1Wgh4y3mscrAa5y0Io=
+	t=1785131810; cv=none; b=X23zb4430KJIAQPkzoBF3aWLwM3OEaFJiQKS8BiPH1amZB2fVk5ZY9pmwmEKqxDJNENoMKuMjjnTwlATyP6qvlu4FAGrj9n4zgOHlslBlFE8JwAeA1Sv1N30XvNeHJ2fWANm7wE5bFGv3gx7SwwkmMsAdBtF27EcdKP6RmgT+JE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785120310; c=relaxed/simple;
-	bh=fID5X1Rlt0gJdWicRbYWAwRqvT0svu8PSHmpBC4hhJQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rT8qgtHGMm8iONhExTczqhJ3ozc9gCAc+chHZJGqZ366imjR622jBK3TJtUuZDd9mWoZud5/ck+qOuJA3xDFfKVwgsSMu1JRBL2M9secD0x7Hta5hGIJWZgGX6/eFqrUVA/QsXEj3nIzyZYhBRXOB5Ugvod6hRYWpKq7jgvPU5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=kWKyxZGG; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="kWKyxZGG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version:
-	Content-Type; bh=fID5X1Rlt0gJdWicRbYWAwRqvT0svu8PSHmpBC4hhJQ=;
-	b=kWKyxZGGXMLF2Ljjb602gZ6Yt7bBnRPfXCV9HA749Vl6L0NzGhb+vE5/S5NHnq
-	K0qYZQHNwYaPL1Foe+l38p/u7m7wmB7ts7lOvNH1HSeX2ni04c0cypUTjqaVvL6o
-	xEK9OBq7kmsv33LN3dYXh+OkiKol5uPeNKS/HVqLOiGYg=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wDX3RccxmZqpLJ2Lw--.60073S2;
-	Mon, 27 Jul 2026 10:44:45 +0800 (CST)
-From: Yang Xiuwei <yangxiuwei@kylinos.cn>
-To: sashiko-bot@kernel.org
-Cc: linux-scsi@vger.kernel.org,
-	sashiko-reviews@lists.linux.dev
-Subject: Re: [PATCH v2 2/2] scsi: bsg: map io_uring user buffers with GFP_KERNEL
-Date: Mon, 27 Jul 2026 10:44:44 +0800
-Message-Id: <20260727024444.1917979-1-yangxiuwei@kylinos.cn>
+	s=arc-20240116; t=1785131810; c=relaxed/simple;
+	bh=eWqjJ6vKGhigSplWbBoZH6Gn6KG4CblorKSXW6fTfO4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uv6gbxstYh/giVz9StR8Me358+6Pg7lEi58Z1N5EIqETiGfYf/wHANLR0+L6Zy6bKNijeT9MXn5nLc6JYfzuu0OcBNyMwO+bIIIaWCWLohMT63Xy/oW+UDC2xvcJLbnMYzhRp851ogbGIH9G13/i+xCQYYxKX0im6zVH4WEYgC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
+Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
+	by spam.asrmicro.com with ESMTPS id 66R5uCbG027034
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=FAIL);
+	Mon, 27 Jul 2026 13:56:12 +0800 (GMT-8)
+	(envelope-from hongjiefang@asrmicro.com)
+Received: from localhost (10.1.170.248) by exch02.asrmicro.com (10.1.24.122)
+ with Microsoft SMTP Server (TLS) id 15.0.1497.48; Mon, 27 Jul 2026 13:56:15
+ +0800
+From: Hongjie Fang <hongjiefang@asrmicro.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <jgarzik@redhat.com>, <stern@rowland.harvard.edu>,
+        <bvanassche@acm.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2] scsi: core: pair EH runtime PM get and put
+Date: Mon, 27 Jul 2026 13:56:15 +0800
+Message-ID: <20260727055615.2287217-1-hongjiefang@asrmicro.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260727015542.D929B1F000E9@smtp.kernel.org>
-References: <20260727015542.D929B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDX3RccxmZqpLJ2Lw--.60073S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7uFykKry3tw4xXr45XFyfCrg_yoW8Gw1DpF
-	s5K3Z7GFWUGF1SqF9rWFsrWr10kw4xAa45GF4rXr45Zrn8Xw1Ikr4agFW09FW5Zw1fCFWj
-	qF40gF97Ar1UAa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRVWlPUUUUU=
-Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbCwR3sfWpmxh0tCQAA3+
+Content-Type: text/plain
+X-ClientProxiedBy: sh-exch01.asrmicro.com (10.1.24.97) To exch02.asrmicro.com
+ (10.1.24.122)
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:spam.asrmicro.com 66R5uCbG027034
 
-On Mon, Jul 27, 2026 at 01:55:42AM +0000, sashiko-bot wrote:
-> [Severity: High]
-> This is a pre-existing issue, but does using GFP_KERNEL here cause a tag
-> exhaustion deadlock?
->
-> Prior to this call, scsi_alloc_request() consumes a hardware tag. If
-> GFP_KERNEL enters direct reclaim and needs to write dirty pages back to the
-> same block device, the filesystem will attempt to allocate another tag.
->
-> If all tags are currently held by blocked BSG tasks, won't the system deadlock?
+shost->eh_noresume is currently consulted twice in one error handling
+iteration: once before scsi_autopm_get_host() and once again before
+scsi_autopm_put_host().
 
-This is not introduced by this patch.
+That is racy when a PM-triggered error path flips shost->eh_noresume while
+the SCSI EH thread is still running.
 
-> [Severity: High]
-> Does removing the GFP_NOWAIT fallback for the non-blocking io_uring issue
-> path introduce a permanent task_work deadlock?
->
-> If a user submits more than 256 IORING_OP_URING_CMD operations in a single
-> batch, the bio allocations will exhaust the fs_bio_set mempool. By passing
-> GFP_KERNEL to blk_rq_map_user_iov(), mempool_alloc() will put the submitter
-> thread to sleep waiting for a bio to be freed.
->
-> Since these bios are freed when their completions run via task_work
-> (scsi_bsg_uring_task_cb), which must be executed by the very submitter thread
-> now permanently blocked in mempool_alloc(), does this create an unresolvable
-> circular dependency?
+The problem flow looks like this:
+PM path
+  ufshcd_set_dev_pwr_mode()
+    shost->eh_noresume = 1
+    ufshcd_execute_start_stop  <-- trigger EH
+    ...
+    shost->eh_noresume = 0
 
-No. A large submit batch alone does not force mempool wait, and fs_bio_set
-is shared — progress does not depend only on this task's task_work. This
-matches the nvme io_uring passthrough path.
+EH path
+  scsi_error_handler()
+    if (!shost->eh_noresume)
+      scsi_autopm_get_host()  <-- skipped
+    ...
+    if (!shost->eh_noresume)
+       scsi_autopm_put_host()  <-- executed later
 
-Thanks,
-Yang Xiuwei
+In that case one EH iteration can skip autoresume on entry and still drop
+a runtime PM reference on exit. That leaves an unmatched runtime PM put
+and can trigger a runtime PM usage count underflow.
+
+Fix this by snapshotting shost->eh_noresume once per EH iteration and
+using that snapshot for both runtime PM get and put decisions.
+
+Fixes: ae0751ffc77e ("[SCSI] add flag to skip the runtime PM calls on the host")
+Signed-off-by: Hongjie Fang <hongjiefang@asrmicro.com>
+---
+ drivers/scsi/scsi_error.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 147127fb4db9..a216f56044d9 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2342,6 +2342,7 @@ static void scsi_unjam_host(struct Scsi_Host *shost)
+ int scsi_error_handler(void *data)
+ {
+ 	struct Scsi_Host *shost = data;
++	bool eh_noresume;
+ 
+ 	/*
+ 	 * We use TASK_INTERRUPTIBLE so that the thread is not
+@@ -2383,7 +2384,8 @@ int scsi_error_handler(void *data)
+ 		 * what we need to do to get it up and online again (if we can).
+ 		 * If we fail, we end up taking the thing offline.
+ 		 */
+-		if (!shost->eh_noresume && scsi_autopm_get_host(shost) != 0) {
++		eh_noresume = shost->eh_noresume;
++		if (!eh_noresume && scsi_autopm_get_host(shost) != 0) {
+ 			SCSI_LOG_ERROR_RECOVERY(1,
+ 				shost_printk(KERN_ERR, shost,
+ 					     "scsi_eh_%d: unable to autoresume\n",
+@@ -2407,7 +2409,7 @@ int scsi_error_handler(void *data)
+ 		 * which are still online.
+ 		 */
+ 		scsi_restart_operations(shost);
+-		if (!shost->eh_noresume)
++		if (!eh_noresume)
+ 			scsi_autopm_put_host(shost);
+ 	}
+ 	__set_current_state(TASK_RUNNING);
+-- 
+2.25.1
 
