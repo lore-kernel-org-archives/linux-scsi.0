@@ -1,122 +1,167 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F017242A82;
-	Mon, 27 Jul 2026 07:34:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CCE4346AC3
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Jul 2026 07:48:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785137695; cv=none; b=IvclLu3NW4JJjO0qy61NPWuIOGvLpHWnu8KnIJ4HynhXxvCjKSIAxgjctgwfJvnYxzXyubCX/GvT3xrbS8SNPtim05dlFO5WRTe927rhIxIXOTnR651cKu6uwbEzIn/EEbMHpohoDl2GdT5UR5MC2DA1QgZbAoSuDUSQrceVlUU=
+	t=1785138516; cv=none; b=Rit6Lq1WbBRIWtgr2ORqBRZiicrnWAu357u238NtnWWZFLxs7WigfaoyNggio8WoR7zVpeFjnDB4IPMIuYSa051RDq0Two0tW9lcvH9xQiYCPb2NWpcQqOuYrg3Yd6f705wJoXWt/phP68YnNB5nxchBhIBiHAWZr3ftvRuNdAE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785137695; c=relaxed/simple;
-	bh=HCtBSGVp5MKeWLbLlTVEqO6iyMtQrZkLtTD108SPBR8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ZMq16G7MIyprmPnX81BKh+5apFD2gY6KfFBp0QBYcFkNd72bD7LnDYnYaQpK7FXkOv8ILYgi9Q7SBnMEyuUyi8lUAMJd3SkBRqQyB4yuROWxDzTnXSnixJZ0KdL75QnVgUdIAvAF6395l5jbTKGRbf+21RhPccIkcDHTilzUQb8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: a2241c04898d11f1aa26b74ffac11d73-20260727
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:18dce990-af35-485a-bae8-30d7127116ce,IP:0,U
-	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:25
-X-CID-META: VersionHash:e7bac3a,CLOUDID:c029aa3a90ece931ac087231fdf0bfa7,BulkI
-	D:nil,BulkQuantity:0,Recheck:0,SF:102|136|850|865|898,TC:nil,Content:0|15|
-	50,EDM:5,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,
-	OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: a2241c04898d11f1aa26b74ffac11d73-20260727
-X-User: chenchangcheng@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <chenchangcheng@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 852732050; Mon, 27 Jul 2026 15:34:42 +0800
-From: Chen Changcheng <chenchangcheng@kylinos.cn>
-To: kartilak@cisco.com,
-	nmusini@cisco.com,
-	sebaddel@cisco.com,
-	ames.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	ccc194101@163.com,
-	Chen Changcheng <chenchangcheng@kylinos.cn>
-Subject: [PATCH] scsi: snic: Fix scsi host leak on workqueue allocation failure
-Date: Mon, 27 Jul 2026 15:34:38 +0800
-Message-Id: <20260727073438.209673-1-chenchangcheng@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1785138516; c=relaxed/simple;
+	bh=TtQD77Xaj+2CML2a/P2W6gtupKxifzSuZIeUbgh65Mo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Qr6SKgbpWUVAVCohRTkZjqQv2mC9Mo982fZBMAIRz2mQStdWK5vEB4yaoJcGD7r/0YFK+UnUzXpBGF1m/6tbWu+VWM+BTfEl+cOB64kYHZ5qL8P2aT4cwq9JS1vwgFAJmcztrZ7govKcrQFAJwuDCDGS7JVDvJ4IYrLwW241Srw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IWvoWhms; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IWvoWhms"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F29C1F000E9;
+	Mon, 27 Jul 2026 07:48:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785138515;
+	bh=ec7B69RHcauGy1bStYYmqiZoctwq7GXt49T4lN4OhU0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=IWvoWhms1/UqmNM9pdFI7mdCUJTgUHtCpUGc0EvvxQuTB31m3InG3Ooak5uqFnCHj
+	 ++OkjY/7tGpdDd8BKlDWH5Dy5eP/QoNHEJEhmGcivcA9kxVugTwaEPrxFY7fCBvB2A
+	 q3RLPDRMb/iqYcs5BCESXeTK4ehcK4l/QwSO7IDmxrm/RSz5sPPtJffAhGtHe4IeZf
+	 ZMkh0PtOFOpR4wysdwGeKwplzNbA1vwkIVR5b4kNg7OTFoOMVQB5THLvlx/fRIbwMt
+	 kcxEcJ3+igc0sJIvoPn4+mL1FZC+9GdJB+M0/s+cTTAklOFhT7lrupsfS8pXJEqSeR
+	 uoZlWIcdmWWfQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: snic: Fix scsi host leak on workqueue allocation
+ failure
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chen Changcheng" <chenchangcheng@kylinos.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260727073438.209673-1-chenchangcheng@kylinos.cn>
+References: <20260727073438.209673-1-chenchangcheng@kylinos.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 27 Jul 2026 07:48:34 +0000
+Message-Id: <20260727074835.5F29C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-In snic_add_host(), if scsi_add_host() succeeds but
-alloc_ordered_workqueue() fails, the function returns -ENOMEM
-with shost->work_q left as NULL. The caller's error path then
-calls snic_del_host(), which returns early when !shost->work_q
-without calling scsi_remove_host(). The Scsi_Host remains
-registered in sysfs as a zombie device even after the probe
-has failed. This causes:
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
- - The leaked host remains visible in /sys/class/scsi_host/
-   after probe failure, with state "running".
- - Subsequent SCSI host numbering is permanently shifted
-   (the leaked host ID from ida_alloc() is never reclaimed).
- - Memory leak: the Scsi_Host allocation can never be freed
-   because device_add() took a reference that can only be
-   released by device_del() inside scsi_remove_host().
+Pre-existing issues:
+- [High] Hardware resources are torn down before removing the SCSI host on =
+the `snic_probe()` error path, leading to race condition and use-after-free.
+- [High] Missing `list_del(&snic->list)` on the `snic_probe()` error path l=
+eaves a dangling pointer in the global `snic_glob->snic_list`, causing memo=
+ry corruption.
+- [High] Missing `cancel_work_sync(&snic->link_work)` on the `snic_probe()`=
+ error path allows asynchronously queued work to dereference a freed `snic`=
+ object.
+--
 
-Fix by adding scsi_remove_host() in the workqueue allocation
-failure path inside snic_add_host(), undoing the successful
-scsi_add_host() before returning the error. This is cleaner
-than modifying snic_del_host() because snic_del_host() is
-called from a shared error label that also serves paths where
-snic_add_host() was never invoked.
+--- Patch [1]: [PATCH] scsi: snic: Fix scsi host leak on workqueue allocati=
+on failure ---
+commit 862e6c3dc0ab1bdd6e8457040994057a804388df
+Author: Chen Changcheng <chenchangcheng@kylinos.cn>
 
-Reproducer (requires no real SNIC hardware):
- - Build CONFIG_SCSI_SNIC=y (built-in)
- - Add snic.test_mode=1 snic.inject_wq_fail=1 to kernel cmdline
- - Boot with a PCI device matching the snic driver (e.g. QEMU
-   edu device, PCI ID 0x1234:0x11e8, temporarily added to the
-   driver's PCI ID table)
+scsi: snic: Fix scsi host leak on workqueue allocation failure
 
-Before the fix:
-  # /sys/class/scsi_host/ contains a zombie host0:
-  $ cat /sys/class/scsi_host/host0/proc_name
-  snic_scsi
-  $ cat /sys/class/scsi_host/host0/state
-  running
-  # ata_piix gets host1, host2 (host0 stuck):
-  scsi host1: ata_piix
-  scsi host2: ata_piix
+This commit fixes a memory leak where a failed workqueue allocation in
+snic_add_host() leaves the Scsi_Host registered in sysfs as a zombie
+device. It undoes the successful scsi_add_host() by calling
+scsi_remove_host() on the error path before returning.
 
-After the fix:
-  # host0 is properly freed and reused by ata_piix:
-  scsi host0: ata_piix
-  scsi host1: ata_piix
-  # No zombie host in /sys/class/scsi_host/
+> --- a/drivers/scsi/snic/snic_main.c
+> +++ b/drivers/scsi/snic/snic_main.c
+> @@ -305,6 +305,7 @@ snic_add_host(struct Scsi_Host *shost, struct pci_dev=
+ *pdev)
+>  	if (!shost->work_q) {
+>  		SNIC_HOST_ERR(shost, "Failed to Create ScsiHost wq.\n");
+> =20
+> +		scsi_remove_host(shost);
+>  		ret =3D -ENOMEM;
+>  	}
 
-Signed-off-by: Chen Changcheng <chenchangcheng@kylinos.cn>
----
- drivers/scsi/snic/snic_main.c | 1 +
- 1 file changed, 1 insertion(+)
+[Severity: High]
+This is a pre-existing issue, but does this error path in snic_probe()
+create a race condition?
 
-diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-index 82953e6a0915..cd638b4a4d7b 100644
---- a/drivers/scsi/snic/snic_main.c
-+++ b/drivers/scsi/snic/snic_main.c
-@@ -305,6 +305,7 @@ snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
- 	if (!shost->work_q) {
- 		SNIC_HOST_ERR(shost, "Failed to Create ScsiHost wq.\n");
- 
-+		scsi_remove_host(shost);
- 		ret = -ENOMEM;
- 	}
- 
--- 
-2.25.1
+If snic_disc_start() fails, the driver jumps to err_get_conf:
 
+drivers/scsi/snic/snic_main.c:snic_probe() {
+    ...
+err_get_conf:
+        snic_free_all_untagged_reqs(snic);
+        for (i =3D 0; i < snic->intr_count; i++)
+                svnic_intr_mask(&snic->intr[i]);
+        snic_free_intr(snic);
+err_req_intr:
+        svnic_dev_disable(snic->vdev);
+    ...
+        snic_del_host(snic->shost);
+}
+
+The host is already fully registered via snic_add_host() and the state
+is SNIC_ONLINE. The hardware and interrupts are torn down, but
+snic_del_host() is delayed until the end. Could a concurrent sysfs scan
+or SCSI error handler queue commands to the disabled hardware during
+this window?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does the err_free_snic
+error path in snic_probe() leave a dangling pointer?
+
+The snic structure is added to the global list during probe:
+
+drivers/scsi/snic/snic_main.c:snic_probe() {
+    ...
+        spin_lock_irqsave(&snic_glob->snic_list_lock, flags);
+        list_add_tail(&snic->list, &snic_glob->snic_list);
+        spin_unlock_irqrestore(&snic_glob->snic_list_lock, flags);
+    ...
+}
+
+If a subsequent step like snic_add_host() fails, the snic structure is
+freed via scsi_host_put():
+
+drivers/scsi/snic/snic_main.c:snic_probe() {
+    ...
+err_free_snic:
+        snic_stats_debugfs_remove(snic);
+        scsi_host_put(shost);
+}
+
+Will the lack of list_del(&snic->list) before freeing cause memory
+corruption on subsequent device probes when list_add_tail() accesses
+the freed structure?
+
+[Severity: High]
+This is a pre-existing issue, but can the snic_probe() error path
+result in a use-after-free from asynchronously queued work?
+
+Interrupts are requested and unmasked before configuring IO:
+
+drivers/scsi/snic/snic_main.c:snic_probe() {
+    ...
+        for (i =3D 0; i < snic->intr_count; i++)
+                svnic_intr_unmask(&snic->intr[i]);
+    ...
+}
+
+A link event could trigger snic_handle_link_event(), which queues
+snic->link_work. If a subsequent probe step fails, the err_free_snic
+path masks interrupts and frees the snic structure:
+
+drivers/scsi/snic/snic_main.c:snic_probe() {
+    ...
+err_free_snic:
+        snic_stats_debugfs_remove(snic);
+        scsi_host_put(shost);
+}
+
+Because the error path does not call cancel_work_sync(&snic->link_work)
+or flush the workqueue, could the pending work item execute later and
+dereference the freed snic object?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260727073438.2096=
+73-1-chenchangcheng@kylinos.cn?part=3D1
