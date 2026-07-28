@@ -1,106 +1,119 @@
-Received: from mail-qv1-f47.google.com (mail-qv1-f47.google.com [209.85.219.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93AFA200110
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 15:16:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5BED377555;
+	Tue, 28 Jul 2026 16:24:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785251773; cv=none; b=qeIlKFE4+eYJwlBKwcvknCsLd/SaZwienhD7+Q+aF5hEYUlZKjQVCbIvB02nhSXncjp3uhfWEpLLujCaGeUnJ/JiYNKIrNUxKnVCtW25J00nFPUSEIPqaXBzJ3dunj37fE/ZMlMPHdx8g1wipqikXUaVxRaqmJz+SIWv1FtQB/Y=
+	t=1785255878; cv=none; b=ILL+O56L8ai0ClpheL2po3YfYdSSeZb7kt8i2aX04UDjqRif1BzcOrA5x6CQ9c5BLcXR3KDuf4IDZdCnTKw4ijDnS1Lc1UjS3lCM8QesfKlfODSdw46uCIOtaS/vgityyreRVqfSydFfBCv0KK2oZm9rAr6GVyh7BXMwLnQHMxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785251773; c=relaxed/simple;
-	bh=zmFAmQ6VQsIyCjNwoHnY56NlKQh20ciOmxKzN945hNM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W8L0zmrn/8IM7PExMaBlDz15bwQGP4dvZ6ZPGaCp8sj/nnnrLtJcEEXMJNYDnwOhJGjOX4xAl2A1tbUvDjHZFSNad2ABjl/qNqwNivptXHVXCj/qQAQHPXZU1CxcMYzbrLUlq9sNtW+vZPbsotNGj6REu3MeAygJsi+rn6IDyKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu; spf=fail smtp.mailfrom=g.harvard.edu; dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b=ilXiG47Y; arc=none smtp.client-ip=209.85.219.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=g.harvard.edu
+	s=arc-20240116; t=1785255878; c=relaxed/simple;
+	bh=vWMKSzzpBTfatsYmHFgZj4EoC9MVBYwvfVkGM/cJjIo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Dq9YqDhWBHw3zpiHujSZQPw4DzXPOhbFsP0dVsmuvGi60syO761ruBYLs+/bCnRh7cJbjV3IoPFHBtFcXDn1cbSKPZl6fUFGnJCUg+k+tDnGH5njklb+sOCimU4PYWGfR05kdSWEgyrVoqtXUHHeisSq6U6FevJpYEnq+u8s7xc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZDl/Eg/5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b="ilXiG47Y"
-Received: by mail-qv1-f47.google.com with SMTP id 6a1803df08f44-8efcef23d21so29985196d6.2
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 08:16:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rowland.harvard.edu; s=google; t=1785251770; x=1785856570; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=DNDsfCWu6nY/yb2/320WsNlh3QCHH2R7ZqSKweQdW/Q=;
-        b=ilXiG47Y/3rD/4ioYzImHrSLNjLELyw4r/drgM8LOgS5L8t4/U1flpiSYpq0wNTZ0l
-         ZJK1W1K0pVHOv20rUKWp/HhncaWJZReehLjiQXSS/bVPhhptgGXCp9Ud6ADT3LJb12oy
-         +P/+0OOCwCEPBMgQgzdHjs3rxoXZw4LIfvyIwLZ7kTo6Bnt3xhKSFLLt/hcdqVZBSevQ
-         ofUWr/sjM6u2ilmu55OefEnGP72oxALKBEsq99EJY9ukHF2CFmyQF84dJKYT33DQ1Sun
-         /JKX9yjir5TGaBiFQoMDfavG7S6LlcF0tfzW7+OvpGJ+2SUDIUN2/MJ/M7A1/smJ56Mv
-         4URw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785251770; x=1785856570;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=DNDsfCWu6nY/yb2/320WsNlh3QCHH2R7ZqSKweQdW/Q=;
-        b=XNr4nBP7iNAASw8NeJ7eRxQtpxMykO2kdsZplk76oVgwa6Ccm1ivYuhOhWEnUoEeV5
-         c0Mwx7AzQdscCSaFSg/bcmtoTgLEi9qGMjO7rua+WxbTQrM8xl7ry7oGAqQC1VzJQh/n
-         oyP5oxii1YZ8bokVNiZm9QbOYYE7rg5BeY0nXJs5tkK/z7rI4bcwNXfY7BcsDQBhgKba
-         rnzh5YP/ZteKnms5vMco7TmMn2AvQw/9Z8omKs5MWlGVYxZp+HIjaCIyoO4VWfwzlhHi
-         B0E4EfTg7u8Dird+Vc1RXOnQhr63SjfwF54Isjhc2SPj6ttNyncMAyHig4Og36L9nHoF
-         ob1A==
-X-Forwarded-Encrypted: i=1; AHgh+Ro9K6j+D4Oytnibe3s32Zc7z4JeIIrMef58j4SHnVV70/lOrRG9OHvv2sQcT2ysV80AISlyAPwZjrkv@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy630kG/qTUJ+e2AGuK/nPCsrUmJb9Pf964RlCAecovDLwCLPVH
-	YsSXeEdBS28R9I/WrADXULg8mKwKGAVLFGMr1u7L5QQK7t49kXj+HrCCPjNmsMnO5g==
-X-Gm-Gg: AR+sD10cO8QAe56sqQGUjbWtHog3eJArfs+c7hzH3cSTUkgDjfpx3yG5YcEoWoPpa4V
-	y5rsc4+Kcp0ZU7o1sIZmxnDMk7QipoEJ626TlSfPrQ+5aKJufy+LEJ0oKGLMLsceQSngoNOoWGn
-	JnG2bqkoHLJXIGZRQpd71yRjF25gTioP8td639fzQ8G4JJL0K0JeYajzafS5hBK+cf50IRZkDbr
-	d2oK933zdb591uypBLGYB+s53IwRpo4uTDfmdbiFUqY2XzKVZyq56+Jswj1i5yqjSkZCKoi03VO
-	RP7NUTBC4PvZzhgU+58WPMq1RKl92i/JTHggj/UJdvTMhHQzNGMGxMy9YOKeD/4y5CEqxu5xiAZ
-	4kfZwKzlWy/zqYjWCSgWSouBxS65ISWezX4TZ5SZa9otkSROQl+Y6ZW7yqPANiX2w6SfO7Vi+Se
-	UNua8=
-X-Received: by 2002:a05:6214:3d9c:b0:8f0:3b2c:a9c8 with SMTP id 6a1803df08f44-90816f7f1b1mr29721296d6.12.1785251770329;
-        Tue, 28 Jul 2026 08:16:10 -0700 (PDT)
-Received: from rowland.harvard.edu ([2601:19b:d01:d210::883a])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9081dc8396csm1305126d6.18.2026.07.28.08.16.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jul 2026 08:16:09 -0700 (PDT)
-Date: Tue, 28 Jul 2026 11:16:07 -0400
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Fang =?utf-8?B?SG9uZ2ppZSjmlrnmtKrmnbAp?= <hongjiefang@asrmicro.com>
-Cc: "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-	"jgarzik@redhat.com" <jgarzik@redhat.com>,
-	"bvanassche@acm.org" <bvanassche@acm.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] scsi: core: pair EH runtime PM get and put
-Message-ID: <4d8cc771-6dd9-4221-97a4-fc4339e4745c@rowland.harvard.edu>
-References: <20260727055615.2287217-1-hongjiefang@asrmicro.com>
- <a432da46-7b3e-46a8-8c6d-1269d51b44b8@rowland.harvard.edu>
- <f66bc8e5bf88459083e36fa508a7f4f7@exch02.asrmicro.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZDl/Eg/5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E87A1F000E9;
+	Tue, 28 Jul 2026 16:24:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785255874;
+	bh=3fXCTqKDFPeeZSKzhi12ENj/QYFjEH9zdFLqJrbhbl0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=ZDl/Eg/5GYecAKoOepubuSjKK4tQcE2cGvzc6/PoNqMpaF64vYbLgx0hO6rO7EpAO
+	 CR1aeoc0PB9OiKpERm5of50mGf1K7fQRIrPM9+T2vqShuHZR3UKwpz9T6+KFtMivrE
+	 ZmPFWDDEKKF6AcVc+7DYIvAVXdKvJMqtCbW7W1dcBP5gvHAQ03jgr9GNVDKqUfjX4z
+	 CJHbEk3YrTKyBtHGzK5MzBc6M9WzEGs4DNRcZZsXFlKK2MH26/KoDMbrwOLia7ka3a
+	 R8zoj080ZIGAm5/xkJel9vNoQ4KasX5uHhXTPskf4j9HDYePFt6Qn8ATd20RJ9BJXs
+	 Dnw/YrDPq4taw==
+Date: Tue, 28 Jul 2026 11:24:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gary Guo <gary@garyguo.net>, David Airlie <airlied@redhat.com>,
+	Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+	Jens Taprogge <jens.taprogge@taprogge.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	GOTO Masanori <gotom@debian.or.jp>,
+	YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Zhenzhong Duan <zhenzhong.duan@gmail.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	linux-pci@vger.kernel.org, driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	industrypack-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH v4 7/9] PCI: Make pci_match_one_device() match on ID
+ instead of device
+Message-ID: <20260728162432.GA1322140@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f66bc8e5bf88459083e36fa508a7f4f7@exch02.asrmicro.com>
+In-Reply-To: <DK7N9IZPWPIT.2AKSZR5CU1H9L@garyguo.net>
 
-On Tue, Jul 28, 2026 at 02:22:29AM +0000, Fang Hongjie(方洪杰) wrote:
-> Thanks Alan.
-> I agree that a plain local variable is not enough for a compiler-level
-> snapshot.
-> There is one extra detail here: shost->eh_noresume is currently a
-> bitfield:
->         unsigned eh_noresume:1;
-> so READ_ONCE(shost->eh_noresume) cannot be used directly because
-> READ_ONCE() takes the address of its argument.
+[cc->to: Dave, Vaibhav, Jens, Greg, GOTO, YOKOTA: possible acks?
+series: https://lore.kernel.org/all/20260723-pci_id_fix-v4-0-3580726844e1@garyguo.net]
+
+On Sat, Jul 25, 2026 at 01:17:50PM +0100, Gary Guo wrote:
+> On Fri Jul 24, 2026 at 11:29 PM BST, Bjorn Helgaas wrote:
+> > On Thu, Jul 23, 2026 at 11:00:46PM +0100, Gary Guo wrote:
+> >> PCI dynamic ID needs to match IDs against a new ID to see if it already
+> >> exists. Existing APIs can only match IDs against devices, causing the
+> >> dynamic ID insertion code to create a temporary device only for matching
+> >> purpose. Rename pci_match_one_device() to pci_match_one_id() so it can be
+> >> used for this purpose instead; add a pci_id_from_device() helper to make it
+> >> easy to convert users.
+> >
+> > s/causing the ... code to create/so the ... code creates/
+> > s/purpose/purposes/
+> >
+> >> Similarly, convert pci_match_id() to do_pci_match_id(). But keep the
+> >> existing API because there are many users.
+> >> 
+> >> Reviewed-by: Danilo Krummrich <dakr@kernel.org>
+> >> Signed-off-by: Gary Guo <gary@garyguo.net>
+> >
+> > Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >
+> > What's the merge strategy?  If these all need to be merged
+> > together, feel free to include the PCI patches whereever you merge
+> > the series.
 > 
-> My plan for v3 is to first make eh_noresume a regular bool, then use
-> READ_ONCE() in scsi_error_handler() to snapshot it once per EH iteration.
-> I will also use WRITE_ONCE() for the writer that changes eh_noresume while
-> SCSI EH may observe it.
+> I think the series should be merged together, as I consider the
+> driver changes included in this series being "fixing the users".
 > 
-> Does this approach look reasonable to you?
+> The series should probably be taken via the PCI tree. I suppose one
+> can also argue that the lifetime issue with device IDs isn't unique
+> to PCI bus so this can also be considered driver-core material, but
+> given that Greg has already taken the USB fixes via the USB tree the
+> only unfixed bus left is PCI.
+> 
+> So unless Danilo thinks otherwise I'd suggest the series be taken as
+> a whole via PCI.
 
-That should be fine.
+I'm happy to take via PCI.  It would be great to have acks/reviewed-by
+from the non-PCI maintainers:
 
-Alan Stern
+  David Airlie <airlied@redhat.com> (agp)
+
+  Vaibhav Gupta <vaibhavgupta40@gmail.com> (tpci200)
+  Jens Taprogge <jens.taprogge@taprogge.org> (tpci200)
+  Greg Kroah-Hartman <gregkh@linuxfoundation.org> (tpci200)
+
+  GOTO Masanori <gotom@debian.or.jp> (nsp32)
+  YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp> (nsp32)
