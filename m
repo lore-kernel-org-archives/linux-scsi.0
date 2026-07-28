@@ -1,122 +1,160 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6666D15A86D;
-	Tue, 28 Jul 2026 05:26:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EB39369980
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 05:30:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785216379; cv=none; b=XZJAKpXV7Hp3NUFZ+wyAUq8PWNj98jyIXdSgaz4LK7cMvPA3H5wtZHX2WhRbYcvKv+GACzbr9SU+Rm+dF75idqqZ+2Ut3dcIUg6zBij8Mdt2T+fslhno9NIxrJ+AcL7KE7hSG9CWhguB0LM9PjHzbT/88CnjuQTIsYrl46Md5Y8=
+	t=1785216602; cv=none; b=tWfZGfAQ2TnsD9wXH0GZ76R6D9mBuveFcp2UtP/gtxRCL49WE0V/6sCfhpxiJMVwGGa+y0Hhzdvtsq+70Tvj/XcMBzcPZksgc7Za6Y9rq5me90ozELc6+KzTfBctkPez1pa0oHiLfpkxvP5c+5lYOxfhfr/agn8BAWfUpSMVFwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785216379; c=relaxed/simple;
-	bh=fcy3qiTj0m/4ag+ZXIGkp27Vf/DBHho1As6+hIDsvMA=;
+	s=arc-20240116; t=1785216602; c=relaxed/simple;
+	bh=XzbvBbBLi/Hph1DuexD+G/BbJmQLgcHNn1JkNo4OLGM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nwIGcEQJT58Cvb5b5qf94w1QEtamqFb43GaRE5X3eZQ8Kt/2rVMS4RvDCyXrqD9tHFCmlk9iF9JD1+CKCLyjDIdFAW9iIKerP9HnyB8novSD7Fkvp5CFAXZT6dm1R60R8m0nHijETCwdmVg3FgpmcMsJ+GH08D8FJqKtLbzazkA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hl5PId55; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=FvCh61UqL7df0PNwyRpmPcVuoM6I+jUQ2Np7xWqewJr9dOW1SPh8R458f00u2Ej81rReSmrXAqkQwHdUjuOs/STJwUvXQjeHj9+noN/O2bL7bkcD6axjW0sihu4tAACLA5MdSf8uVSdG7okYwA/fmZxMXWBGuIJoex4qIxHb4FU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fVPQBdO5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hl5PId55"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A56401F00A3D;
-	Tue, 28 Jul 2026 05:26:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fVPQBdO5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08FDE1F00A3D;
+	Tue, 28 Jul 2026 05:30:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785216378;
-	bh=Pv6TM2na1QHCCjwj2PPL7L8+fe5xx26epeC4GVEQB20=;
+	s=k20260515; t=1785216601;
+	bh=pQY00IJs+7vkHF9XGx96KEjOCtv0dmdZ+25CYPDRlek=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hl5PId55P/nAORs/Er+0esEnsLrOCtiOkgxxIb1vtLat14tMg87gH8jMbBt5S27T4
-	 Pf/jGe3MjFqkiXVHTsWiuM/OSJK2yjj3aKYQ7XFc1z6mAl0HcLQpoDW0wlI2VtrVIE
-	 OaNlBKnLT8FxXo2BOs0FPGMmj/bMelR/0x/bnI9NkwqijH8jFkjt2l2FssMealmmit
-	 S8s2KV7nxnBJlWNT+dtCosh4RaUcu5zO6q41dO4h8ej3aje5YLAfANwg1YlH9G62pT
-	 3vz/QaFrYWTF+szQIzWkPPA8PaYSQqos+sID9MD07hP7OuP49Z7UJmtQME+DmQCTWA
-	 KDXuXrAXWG3cg==
+	b=fVPQBdO5WahLnXAwgBiGjrvXTo6rlRuvWe/QABzxYubEX9/043aG3UBmEOktgBi4m
+	 +kcC+bZSnfKh5KuxNeckslNS31FCwcZEIrdej3bxIw6wRHYuxyEGV4d33MXqu9tocd
+	 seUVQXnIg1va8REsBMeoVcerRqIZWcsU6CLVc71RCFESPlSeCwqPGyoQS6JwKfyV14
+	 d5ETFJIcwadEWaMrV/EIjA6uN6+U3BZljuiMQis8jDn2+reOnrl3HHzlZZoUNcmcCD
+	 9Bk6wVyqEzSpjwl4tA5o39lLXlTGt33lDmgp3ZpYDOsPaF6p0zPYuj2YvxAtoeNNEJ
+	 F+eW5Ts7Ij8cg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/3] zfcp: Enhance fsf status read buffer tracing
+Subject: Re: [PATCH] ufs: host: qcom: Enable MCQ support for sa8255p
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nihar Panda" <niharp@linux.ibm.com>
-Cc: "Vasily Gorbik" <gor@linux.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, "Heiko
- Carstens" <hca@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>
-In-Reply-To: <20260728044857.2532646-2-niharp@linux.ibm.com>
-References: <20260728044857.2532646-1-niharp@linux.ibm.com>
- <20260728044857.2532646-2-niharp@linux.ibm.com>
+To: "Shawn Guo" <shengchao.guo@oss.qualcomm.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260728051104.675088-1-shengchao.guo@oss.qualcomm.com>
+References: <20260728051104.675088-1-shengchao.guo@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 05:26:17 +0000
-Message-Id: <20260728052617.A56401F00A3D@smtp.kernel.org>
+Date: Tue, 28 Jul 2026 05:30:00 +0000
+Message-Id: <20260728053001.08FDE1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] An integer underflow or missing upper-bounds check when calculatin=
-g the payload length from an untrusted hardware response allows a massive o=
-ut-of-bounds read, potentially leaking sensitive kernel memory into the deb=
-ug trace ring buffer or causing a kernel panic.
+- [High] Calling `platform_device_msi_free_irqs_all()` during device remova=
+l before `devres` frees the IRQ actions leads to a leak of `struct irqactio=
+n`.
+- [High] Missing cleanup of MSI IRQs on the probe error path leads to a mem=
+ory leak and a devres WARN_ON_ONCE.
+- [High] MCQ ESI configuration is permanently lost across device resets and=
+ suspends because `ufs_qcom_config_esi` skips register programming if `host=
+->esi_enabled` is already true.
+- [High] The use of a static local variable `is_boot` in `ufs_qcom_fw_manag=
+ed_device_reset` causes incorrect reset behavior if multiple UFS host insta=
+nces exist or if the module is reloaded.
 --
 
---- Patch [1]: [PATCH v2 1/3] zfcp: Enhance fsf status read buffer tracing =
----
-commit bb1109132aa94648a078f3011317837aeee0a3b8
-Author: Chinmaya Kajagar <chinmayk@linux.ibm.com>
+--- Patch [1]: [PATCH] ufs: host: qcom: Enable MCQ support for sa8255p ---
+commit 7cb2953fc60985aba4ef6bffc3f9dc05ef977551
+Author: Shawn Guo <shengchao.guo@oss.qualcomm.com>
 
-zfcp: Enhance fsf status read buffer tracing
+ufs: host: qcom: Enable MCQ support for sa8255p
+   =20
+The sa8255p vops (fw-managed variant) was missing the MCQ hooks, causing
+the driver to silently fall back to SDB mode even when MCQ resource is
+available. Wire up the same MCQ ops used by the standard qcom vops,
+so that MCQ mode works on sa8255p.
 
-This commit enhances FSF status read buffer (SRB) tracing by adding missing
-fields to the zfcp_dbf_hba_uss structure. It appends the remaining SRB fiel=
-ds
-to the unsolicited status trace records and extends the driver to get the
-source ID from a reserved field.
-
-> diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-> index 71f625926ae19..89b859176b8bd 100644
-> --- a/drivers/s390/scsi/zfcp_dbf.c
-> +++ b/drivers/s390/scsi/zfcp_dbf.c
-> @@ -220,6 +220,13 @@ void zfcp_dbf_hba_fsf_uss(char *tag, struct zfcp_fsf=
-_req *req)
->  	rec->u.uss.lun =3D srb->fcp_lun;
->  	memcpy(&rec->u.uss.queue_designator, &srb->queue_designator,
->  	       sizeof(rec->u.uss.queue_designator));
-> +	rec->u.uss.length =3D srb->length;
-> +	rec->u.uss.res1 =3D srb->res1;
-> +	rec->u.uss.res2 =3D srb->res2;
-> +	rec->u.uss.class =3D srb->class;
-> +	rec->u.uss.res3 =3D srb->res3;
-> +	rec->u.uss.s_id =3D ntoh24(srb->s_id);
-> +	memcpy(&rec->u.uss.res4, &srb->res4, sizeof(rec->u.uss.res4));
-> =20
->  	/* status read buffer payload length */
->  	rec->pl_len =3D (!srb->length) ? 0 : srb->length -
->  			offsetof(struct fsf_status_read_buffer, payload);
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 0500320545c43..d2acbbe647cb4 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -2950,6 +2950,11 @@ static const struct ufs_hba_variant_ops ufs_hba_qc=
+om_sa8255p_vops =3D {
+>  	.resume                 =3D ufs_qcom_fw_managed_resume,
+>  	.dbg_register_dump      =3D ufs_qcom_dump_dbg_regs,
+>  	.device_reset           =3D ufs_qcom_fw_managed_device_reset,
 
 [Severity: High]
-This is a pre-existing issue, but can this length calculation underflow if =
-the
-hardware returns an srb->length smaller than the payload offset?
+This is a pre-existing issue, but does sharing a static variable across all
+controller instances cause problems here?
 
-If srb->length is non-zero but smaller than offsetof(struct
-fsf_status_read_buffer, payload) (which is around 64 bytes), rec->pl_len
-will underflow and result in a massive unsigned integer.
+In ufs_qcom_fw_managed_device_reset(), a static local variable is used to
+track the first cold boot:
 
-If that happens, zfcp_dbf_pl_write() could read out-of-bounds past the
-single-page allocation boundary, potentially leaking adjacent kernel memory
-into the debug trace or causing a page fault panic.
-
-Does this same missing bounds check also exist in zfcp_dbf_san_in_els()?
-
-drivers/s390/scsi/zfcp_dbf.c:zfcp_dbf_san_in_els() {
-    ...
-    length =3D (u16)(srb->length -
-            offsetof(struct fsf_status_read_buffer, payload));
-    sg_init_one(&sg, srb->payload.data, length);
-    zfcp_dbf_san(tag, dbf, "san_els", &sg, ZFCP_DBF_SAN_ELS, length, ...);
+ufs_qcom_fw_managed_device_reset() {
+    static bool is_boot =3D true;
     ...
 }
 
-It appears this location also subtracts the offset without checking for
-underflow or a zero length, meaning sg_init_one() and zfcp_dbf_san() could
-process an extremely large underflowed length.
+If there are multiple firmware-managed UFS controllers, or if the driver is
+unbound and re-bound, won't subsequent initializations see is_boot as false
+and trigger an unwanted device reset during their cold boot?
+
+> +	.mcq_config_resource	=3D ufs_qcom_mcq_config_resource,
+> +	.get_hba_mac		=3D ufs_qcom_get_hba_mac,
+> +	.op_runtime_config	=3D ufs_qcom_op_runtime_config,
+> +	.get_outstanding_cqs	=3D ufs_qcom_get_outstanding_cqs,
+> +	.config_esi		=3D ufs_qcom_config_esi,
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does the early return in
+ufs_qcom_config_esi() prevent ESI configuration from being restored after a
+suspend or reset?
+
+ufs_qcom_config_esi() has this check:
+
+    if (host->esi_enabled)
+        return 0;
+
+When the device undergoes a reset or suspend, the controller's power is
+toggled, clearing hardware registers like REG_UFS_CFG3. During resume, when
+ufshcd_reset_and_restore() calls ufshcd_config_mcq(), which then calls
+ufs_qcom_config_esi(), host->esi_enabled will still be true.
+
+Will this skip reprogramming the hardware registers and leave ESI interrupts
+broken?
+
+[Severity: High]
+This is also a pre-existing issue, but is there a memory leak if probe fails
+after allocating MSIs?
+
+ufs_qcom_config_esi() allocates MSI vectors via
+platform_device_msi_init_and_alloc_irqs(). This API relies on devres to
+release domain data but explicitly requires the caller to free the allocated
+IRQs before the devres unwind phase.
+
+If ufshcd_init() encounters an error later (for example, link startup fails)
+and returns an error, the core and variant exit hooks don't call
+platform_device_msi_free_irqs_all().
+
+Will the devres teardown find the MSI xarray non-empty, triggering a
+WARN_ON_ONCE(!xa_empty(&md->__macq)) and leaking resources?
+
+[Severity: High]
+Another pre-existing issue related to this: does driver unbind leak the
+irqaction structures?
+
+ufs_qcom_config_esi() uses devm_request_irq() to bind IRQ actions to devres.
+
+During driver unbind, ufs_qcom_remove() manually calls
+platform_device_msi_free_irqs_all(), which destroys the MSI descriptors and
+IRQ mappings.
+
+When devres unwinds after remove() returns, devm_irq_release() calls
+free_irq(). Since the IRQ mapping was already destroyed, won't free_irq()
+fail to find the descriptor and return early, leaking the irqaction?
+
+>  };
+> =20
+>  /**
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728044857.2532=
-646-1-niharp@linux.ibm.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728051104.6750=
+88-1-shengchao.guo@oss.qualcomm.com?part=3D1
