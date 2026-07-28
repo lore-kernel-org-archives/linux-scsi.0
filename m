@@ -1,47 +1,46 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2925330274D
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 09:22:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B17941C2F8
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 09:24:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785230536; cv=none; b=EDjsiG6WvFaqvVlgXYnLoo9laGj+0V7wlHoO7mTdtVE3B8xXevaKMLhqGojokGRZnTilnX+LcRu7hPok2Apn4sqC2zJaWPqRndPgoJ6HZYFqbBl7l4BGB+GXOtSWiKs6RBCEy5llQCydTpzQatjFS3TDw+RGtZCB4rbSfqe61Hc=
+	t=1785230685; cv=none; b=Yqxrn2ztTaauUvg2sP6AqhvoE0hFbEVVMGbeEDYY6b+rQRevASoW3WSHVhi7KHofWPDNiDus+/0jKcL7kgd4P3Was3Um5zUs+vEvplX3A9bjNsOfgGYvggi+vmf0RTQv65gO34teiR45pwRw5nnfwcDDBSkzpuNhCzPEMwFmCXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785230536; c=relaxed/simple;
-	bh=fa7Furz+NUn5YlwvTWuiQnOVN+xr2fVDNw7kLnyROjs=;
-	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
-	 References; b=aptUz2u7jpMDPaTBgHXD/HqZpQ2/jBsVkQWG+BWjfldn4D5uqaxQxBHxF4FpjpZURUppd1OJjOoPJ2yajcNUpnOZ+LkLfxYj4i05NSvcPaUzXbtniQEgihqz0T/TY6j4IdcxaSyCjM9vux4QdxNcsShPwxlODddQqAjZKi6sc+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=EktJyiY/; arc=none smtp.client-ip=203.254.224.33
+	s=arc-20240116; t=1785230685; c=relaxed/simple;
+	bh=+63ZTf5M1RWcI1MVFzXqsKmGZhLzdmggi77HDIgYxhU=;
+	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
+	 Content-Type:References; b=KgcQhJPU+shUOvrOBgwf0PtsTrJObSG7nJ9n6jhraNCj8Fn7ayV3k1tvNFWD952SVkKIBdP8lNpnFU348X5+wb194OGWbS0Z3q/xt8Hu8ehWlvPqjXpm6U11pjhhw0deX7KYekW3pSH41dgXhIU0IK7ZSdHxJg3VuTAW47rLFw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=cVSPpH2P; arc=none smtp.client-ip=203.254.224.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="EktJyiY/"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="cVSPpH2P"
 Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260728092210epoutp03651010fa537300409f36945e094a59cf~GabWDIK-K1746817468epoutp03u
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 09:22:10 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260728092210epoutp03651010fa537300409f36945e094a59cf~GabWDIK-K1746817468epoutp03u
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260728092435epoutp045dafbc87cc4f4fbbd3e88032db45949a~GaddaMM_03111831118epoutp04V
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 09:24:35 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260728092435epoutp045dafbc87cc4f4fbbd3e88032db45949a~GaddaMM_03111831118epoutp04V
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1785230530;
-	bh=ZQOT7wjfiVtLhX2So/i2X+PX/8yq13CBF/occNKt5ok=;
-	h=Subject:Reply-To:From:To:CC:Date:References:From;
-	b=EktJyiY/ebZ7whKJsqoX+f6V90sDvgpOV7/iiT6KQZehHzEx2sHAymZvjixgJjhCz
-	 u/lWtskhPv15DPLyy436kbUBNhMcpDsB+5dn+om/sSA0O1iV/kL7sB6WSEyn6wKARm
-	 qui1QilfymU3SPRnIHq96H+GvNSWUyQ6RYmf2CZI=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	s=mail20170921; t=1785230675;
+	bh=grBLpAzGku0vMSw72dRbQsUXhDTj3gNbLndtcsf8qnI=;
+	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+	b=cVSPpH2PAq3WJMkc2v2fRtudp5QBscJlX5bZud/AHjSHT569EFmY3OiiWEWvlZoiS
+	 6InOh5J+e11CMHfckV87ZrPBkBftHq9ll2Q7C1eCRPZel4eJvIQh7x01o7u9l/IjvP
+	 WBPrtDJGIyU3BJQMH4a+IuINIoykcgfyCrsiEjkg=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
 	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
-	20260728092210epcas2p3de7586a0911b4d41fc2edfc1e3fa8b57~GabVodpWU2241222412epcas2p3N;
-	Tue, 28 Jul 2026 09:22:10 +0000 (GMT)
-Received: from epcas2p4.samsung.com (unknown [182.195.38.210]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4h8VNK640dz6B9m5; Tue, 28 Jul
-	2026 09:22:09 +0000 (GMT)
+	20260728092435epcas2p309bad6673e8653055eb8f5bba0cf9f1e~Gadc9J6yq1969619696epcas2p3Z;
+	Tue, 28 Jul 2026 09:24:35 +0000 (GMT)
+Received: from epcas2p1.samsung.com (unknown [182.195.38.199]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4h8VR71gH9z3hhTC; Tue, 28 Jul
+	2026 09:24:35 +0000 (GMT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Subject: [PATCH v4 0/2] scsi: ufs: Add support for the aggregated read query
- opcode
+Subject: [PATCH v4 1/2] scsi: ufs: Use unsigned types for the BSG query
 Reply-To: hyenc.jeong@samsung.com
 Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
 From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
@@ -58,14 +57,15 @@ CC: ALIM AKHTAR <alim.akhtar@samsung.com>, "linux-kernel@vger.kernel.org"
 	Jo <yunjae00.jo@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
+In-Reply-To: <20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0@epcms2p8>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0@epcms2p8>
-Date: Tue, 28 Jul 2026 18:22:08 +0900
-X-CMS-MailID: 20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0
+Message-ID: <20260728092434epcms2p56b013ab7a2df90d3df9186322de54340@epcms2p5>
+Date: Tue, 28 Jul 2026 18:24:34 +0900
+X-CMS-MailID: 20260728092434epcms2p56b013ab7a2df90d3df9186322de54340
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
@@ -73,37 +73,88 @@ CMS-TYPE: 102P
 cpgsPolicy: CPGSC10-223,Y
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0
-References: <CGME20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0@epcms2p8>
+References: <20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0@epcms2p8>
+	<CGME20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0@epcms2p5>
 
-UFS 5.0 / JEDEC 220H introduces the AGGREGATED READ query opcode (0x9),
-which retrieves an aggregated data packet bundling multiple Descriptors,
-Attributes and Flags in a single QUERY RESPONSE UPIU. Such a packet can be
-far larger than a single descriptor, so the reserved (device management)
-tag gets a dedicated UCD with an enlarged response area.
+The UPIU query length field is an unsigned 16-bit value per the UFS
+standard, but ufs_bsg carried it around in signed int. Switch the
+descriptor length and buffer pointer to u16/u8, fold the trivial
+ufs_bsg_get_query_desc_size() helper into its only caller, and replace
+min_t(int, ...) with min(). No functional change intended.
 
-Patch 1 is a preparatory cleanup that switches the BSG query descriptor
-length to unsigned types. Patch 2 adds the aggregated read support.
+Signed-off-by: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+---
+ drivers/ufs/core/ufs_bsg.c | 29 +++++++++++------------------
+ 1 file changed, 11 insertions(+), 18 deletions(-)
 
-Changes since v3:
-- Patch 1: drop the (u16) cast in min() (Bart Van Assche).
-- Patch 2: reject Advanced RPMB BSG requests with more than
-  UFSHCD_DEVMAN_SG_ENTRIES scatter-gather segments before dma_map_sg()
-  (Sashiko AI / Bart Van Assche).
-
-v3: https://lore.kernel.org/linux-scsi/20260724030812epcms2p4eb2c77cb4dcd5fd51ca9c3eaa5ea4bfa@epcms2p4/
-v2: https://lore.kernel.org/linux-scsi/20260722084819epcms2p49c27fce999e821385f7b5d7ea5a02868@epcms2p4/
-
-Hyeoncheol Jeong (2):
-  scsi: ufs: Use unsigned types for the BSG query descriptor length
-  scsi: ufs: Add support for the aggregated read query opcode
-
- drivers/ufs/core/ufs-mcq.c | 14 ++++--
- drivers/ufs/core/ufs_bsg.c | 49 +++++++++++--------
- drivers/ufs/core/ufshcd.c  | 98 ++++++++++++++++++++++++++++----------
- include/ufs/ufs.h          |  6 +++
- include/ufs/ufshcd.h       | 20 ++++++++
- include/ufs/ufshci.h       | 12 +++++
- 6 files changed, 151 insertions(+), 48 deletions(-)
-
---
+diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
+index 58b506eac6dc..089cf81de275 100644
+--- a/drivers/ufs/core/ufs_bsg.c
++++ b/drivers/ufs/core/ufs_bsg.c
+@@ -13,21 +13,8 @@
+ #include <ufs/ufshcd.h>
+ #include "ufshcd-priv.h"
+ 
+-static int ufs_bsg_get_query_desc_size(struct ufs_hba *hba, int *desc_len,
+-				       struct utp_upiu_query *qr)
+-{
+-	int desc_size = be16_to_cpu(qr->length);
+-
+-	if (desc_size <= 0)
+-		return -EINVAL;
+-
+-	*desc_len = min_t(int, QUERY_DESC_MAX_SIZE, desc_size);
+-
+-	return 0;
+-}
+-
+ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
+-				     uint8_t **desc_buff, int *desc_len,
++				     u8 **desc_buff, u16 *desc_len,
+ 				     enum query_opcode desc_op)
+ {
+ 	struct ufs_bsg_request *bsg_request = job->request;
+@@ -39,11 +26,14 @@ static int ufs_bsg_alloc_desc_buffer(struct ufs_hba *hba, struct bsg_job *job,
+ 		goto out;
+ 
+ 	qr = &bsg_request->upiu_req.qr;
+-	if (ufs_bsg_get_query_desc_size(hba, desc_len, qr)) {
++	*desc_len = be16_to_cpu(qr->length);
++	if (*desc_len == 0) {
+ 		dev_err(hba->dev, "Illegal desc size\n");
+ 		return -EINVAL;
+ 	}
+ 
++	*desc_len = min(*desc_len, QUERY_DESC_MAX_SIZE);
++
+ 	if (*desc_len > job->request_payload.payload_len) {
+ 		dev_err(hba->dev, "Illegal desc size\n");
+ 		return -EINVAL;
+@@ -136,8 +126,9 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 	struct ufs_hba *hba = shost_priv(dev_to_shost(job->dev->parent));
+ 	struct uic_command uc = {};
+ 	int msgcode;
+-	uint8_t *buff = NULL;
+-	int desc_len = 0;
++	u8 *buff = NULL;
++	u16 desc_len = 0;
++	int buff_len;
+ 	enum query_opcode desc_op = UPIU_QUERY_OPCODE_NOP;
+ 	int ret;
+ 	bool rpmb = false;
+@@ -156,9 +147,11 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 		fallthrough;
+ 	case UPIU_TRANSACTION_NOP_OUT:
+ 	case UPIU_TRANSACTION_TASK_REQ:
++		buff_len = desc_len;
+ 		ret = ufshcd_exec_raw_upiu_cmd(hba, &bsg_request->upiu_req,
+ 					       &bsg_reply->upiu_rsp, msgcode,
+-					       buff, &desc_len, desc_op);
++					       buff, &buff_len, desc_op);
++		desc_len = buff_len;
+ 		if (ret)
+ 			dev_err(hba->dev, "exe raw upiu: error code %d\n", ret);
+ 		else if (desc_op == UPIU_QUERY_OPCODE_READ_DESC && desc_len) {
+-- 
 2.25.1
+
