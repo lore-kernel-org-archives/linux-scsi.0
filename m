@@ -1,160 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EB39369980
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 05:30:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A386741B8C6
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 09:07:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785216602; cv=none; b=tWfZGfAQ2TnsD9wXH0GZ76R6D9mBuveFcp2UtP/gtxRCL49WE0V/6sCfhpxiJMVwGGa+y0Hhzdvtsq+70Tvj/XcMBzcPZksgc7Za6Y9rq5me90ozELc6+KzTfBctkPez1pa0oHiLfpkxvP5c+5lYOxfhfr/agn8BAWfUpSMVFwU=
+	t=1785229658; cv=none; b=FGhUQpS7wx4SJ6uq7mJUG7/VbqfoQuZYnm0IEB3zypy90fjr2tr9fD1UWcEINhvl72rqw1Fzq3vlixvFUYemGutoE6VzFhORSFoweKXWF+hQ2VKEGxSO0VRC9XVtL/Acx0hShJnXP7lX6FsaP27ddz2kXFntQTNdy57FEF0F4yw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785216602; c=relaxed/simple;
-	bh=XzbvBbBLi/Hph1DuexD+G/BbJmQLgcHNn1JkNo4OLGM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FvCh61UqL7df0PNwyRpmPcVuoM6I+jUQ2Np7xWqewJr9dOW1SPh8R458f00u2Ej81rReSmrXAqkQwHdUjuOs/STJwUvXQjeHj9+noN/O2bL7bkcD6axjW0sihu4tAACLA5MdSf8uVSdG7okYwA/fmZxMXWBGuIJoex4qIxHb4FU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fVPQBdO5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785229658; c=relaxed/simple;
+	bh=gzFuI69uujonhQXU9S3/3frU9PVGvgP6/6xRuDPognc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fefVj32GmbDwg2hxi0fy1wOeRp2EaFkVaMLJhFlqkcmVrveR77iaq3RLegqQPGi6opRVjfa0M47HU6JijF+luI7K4vxPfU+2WiYUI55mx9lqa/xfuUL4BkCuFAjGl3IYBDIEOQ5Gn1a+oySBQlpT9vZ5Xc11+4UmXIAV29seg0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=VCUMC0fa; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HBSXIcrK; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fVPQBdO5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08FDE1F00A3D;
-	Tue, 28 Jul 2026 05:30:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785216601;
-	bh=pQY00IJs+7vkHF9XGx96KEjOCtv0dmdZ+25CYPDRlek=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fVPQBdO5WahLnXAwgBiGjrvXTo6rlRuvWe/QABzxYubEX9/043aG3UBmEOktgBi4m
-	 +kcC+bZSnfKh5KuxNeckslNS31FCwcZEIrdej3bxIw6wRHYuxyEGV4d33MXqu9tocd
-	 seUVQXnIg1va8REsBMeoVcerRqIZWcsU6CLVc71RCFESPlSeCwqPGyoQS6JwKfyV14
-	 d5ETFJIcwadEWaMrV/EIjA6uN6+U3BZljuiMQis8jDn2+reOnrl3HHzlZZoUNcmcCD
-	 9Bk6wVyqEzSpjwl4tA5o39lLXlTGt33lDmgp3ZpYDOsPaF6p0zPYuj2YvxAtoeNNEJ
-	 F+eW5Ts7Ij8cg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ufs: host: qcom: Enable MCQ support for sa8255p
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Shawn Guo" <shengchao.guo@oss.qualcomm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260728051104.675088-1-shengchao.guo@oss.qualcomm.com>
-References: <20260728051104.675088-1-shengchao.guo@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 28 Jul 2026 05:30:00 +0000
-Message-Id: <20260728053001.08FDE1F00A3D@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="VCUMC0fa";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HBSXIcrK"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66S82LR12359345
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 09:07:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=3XBfJ0VIe7d3CW2b3aaHLYhN
+	RbU6Zxt5n+5p55yiR6o=; b=VCUMC0fav47XM1+ro6PBEWmoC5NgZ4hsVeB2bkT5
+	zETwu9F5jC2f1LksxClQ0h0esWmWYovCpDvPrUXQZEmddHllRqEaFwcBSw9IgPUw
+	ly63EecQRKt+6tEbWAkH8nKo01ieuwT0kj6pGPSet++hO4oN23NZymfQFAzak+71
+	qnOQBFQ+9plTkjELtw4kQ9xh3MujSobN269PavnjbbWRLU0iyf63DXD2V5g5jOBk
+	TaNbEYDfiryNXxkl2hkLUd+JoCWbci63l0UMf8u4KhrcQpn6DTzGjkHkrtTo58lH
+	2ugTtLHEwKmXyWwHNsA8Vi/cLwN7P8fPyYdqaA6aDJJkgg==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fpn3y147h-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 09:07:35 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2cf1c86963bso8513335ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 02:07:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1785229655; x=1785834455; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=3XBfJ0VIe7d3CW2b3aaHLYhNRbU6Zxt5n+5p55yiR6o=;
+        b=HBSXIcrKPpK2w8TD+NXcTmO43MnfWT67XbdfxvKKP80CiAY12VrC+xpkIFtok6b5Or
+         32tawXypq7McVaubQsF4/4YQJ1h+DF6TOEtTg4BsQrt13aAYo0lscHLQRvZQRLnXB4ix
+         AQbNBL2LbjJTExViOXtGB59WkSEjyF8RdX3+prJRij62KdBRH8IIH8qxDnLVuT3gWDwn
+         Q+ajc4iI9+cfufhdAgp1oe7nKhmX40i0gSNyqDet8Zg4aXRAQZt0JJR5cXnyucCtviep
+         sU6Ninfnvj0h/wdkDP9NAOSgi6/A7WmorJRUnCmnne1hZZVr8xNmR8dTACVt/VI2jCef
+         UdKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785229655; x=1785834455;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=3XBfJ0VIe7d3CW2b3aaHLYhNRbU6Zxt5n+5p55yiR6o=;
+        b=mTBGEa7mc+Zon/p3HgtQxVtV4G6DUCuW+4rGZRpodYz2Sx3VjiER2XdkOqnlG/w/uC
+         OdXTl3pyuLxoSFGc0ZyWOnGHbuG+orAlkNBoCJHCutleOq72GwpCVwm0F9ZVfDVy1tHP
+         /iYKEsLupR4A0PYeKLmk84PBe+W4PsXizpe/EWcUBMOfmUj2vYxlN8i/ZBPSjX5YK9GY
+         CYvI6VWW/3jKNWoTl88K519UJEA86wHZM43x29yrdrDcJf3oSFK/++euDkZD2XO6eQ+k
+         n6czGMcPjG+MsgMkxrrwk5XtzNzR++9vozK8LW3pd6wiXvjSq8EeeHBaySryxGdV5I6I
+         rj4A==
+X-Forwarded-Encrypted: i=1; AHgh+Rr3iDcZivJLxTLuXj8d8Dr1RAziqD2tcFH/y5GZXlQyT3ncQWFVVbQTnNXi9YaqAQhJukQaJFsQHHI7@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw/8zV7FJZTUpMYlNowGPLr8SoGCFH21gbIcvofMYe1vtjpPInK
+	PrejjZB3zmMQngUFKiMx/6l/1gNXBrM6R0NaEnILMeI7Z7M4p0X3snjV4JtU3xQbQOktkHlDmZ7
+	KakNE8MOCSNdoslCwGB5XDp3fpMku7J3fiA93IV5L1rh8imVa64njtSO3IelLawMUA8jjW5yGse
+	w=
+X-Gm-Gg: AR+sD113Wk0piIBFxx1aJleZe2K/ymZdhflVVJ/HBQgOr+YbkaMka3RxASc2BgN0zmS
+	vKfuQF+5zxBwo9InhiDhe93DMoPlWsoeSaAzMVTFHnKWIJrs481hD/li1qaRm0Hh7w+byymQHqn
+	8kha47vC9Sc1MJvgAVlpqVVm796jPTqFcY2xqKsDRlFvas5Q5fxIq9B3Ar13EpWSMd57igka3h7
+	RhDZFZnUUoJUMyg7YIdSartu4IrxDzUiSrrvSV+6X7ov3MWM8GTi3/qHvN33gexYX9tPEDRdibX
+	+CWBgTwlnjwfAgdlvvpuNaCU/SAXEHUjKTqx7l1ox592rq3OdBPuU+JF7pgvUfQ5QzVJA6xe8gb
+	8FHyGJ8V+kdBIG7Q7b5ruTd02G4LZ34px3TBu91fZt0M=
+X-Received: by 2002:a17:902:d98d:b0:2c0:d94f:50c7 with SMTP id d9443c01a7336-2d015c93c70mr19323655ad.7.1785229654624;
+        Tue, 28 Jul 2026 02:07:34 -0700 (PDT)
+X-Received: by 2002:a17:902:d98d:b0:2c0:d94f:50c7 with SMTP id d9443c01a7336-2d015c93c70mr19323145ad.7.1785229654174;
+        Tue, 28 Jul 2026 02:07:34 -0700 (PDT)
+Received: from QCOM-aGQu4IUr3Y (i-global052.qualcomm.com. [199.106.103.52])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cfde59b451sm49238145ad.13.2026.07.28.02.07.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jul 2026 02:07:33 -0700 (PDT)
+Date: Tue, 28 Jul 2026 17:07:27 +0800
+From: Shawn Guo <shengchao.guo@oss.qualcomm.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@sandisk.com>,
+        Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>,
+        Anjana Hari <anjana.hari@oss.qualcomm.com>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: ufs: dt-bindings: Add missing mcq reg for
+ qcom,sa8255p-ufshc
+Message-ID: <amhxT25_uwzYGr95@QCOM-aGQu4IUr3Y>
+References: <20260720023552.2667237-1-shengchao.guo@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260720023552.2667237-1-shengchao.guo@oss.qualcomm.com>
+X-Authority-Analysis: v=2.4 cv=fbidDUQF c=1 sm=1 tr=0 ts=6a687157 cx=c_pps
+ a=cmESyDAEBpBGqyK7t0alAg==:117 a=b9+bayejhc3NMeqCNyeLQQ==:17
+ a=kj9zAlcOel0A:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=TuQ8DdaCxrWks6CsyAEA:9 a=CjuIK1q_8ugA:10
+ a=1OuFwYUASf3TG4hYMiVC:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI4MDA3OCBTYWx0ZWRfXzD74D7b7tGDm
+ LP5/0SxHBsuM6kPoj6OFbcDWZC29tG/UackzKW85Znp11dbiDvqoh/kSFwAq0VRDkmGl45fVdG9
+ Ko4UC6OurPE3KkMtxLLmqoLL3H8oQGg=
+X-Proofpoint-ORIG-GUID: EVuUEuiHaoE0uphpn5bhN4BhGGUzae3v
+X-Proofpoint-GUID: EVuUEuiHaoE0uphpn5bhN4BhGGUzae3v
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI4MDA3OCBTYWx0ZWRfX2YTdmE9J6UyR
+ xgAVFw+Y41F8vLSXpKI29/XBtz+0jeBYtQMDQWmOBfJdzYLSwlC3Xj9QzCQZ+A8WVR7irJ+0UHn
+ IzbNqvPmgP+BVal14CL45I4rw0u9V79oDQ3DnPAedkmNzt8HfgA/IbbBSGbt2I0VlUVJhm8vWnp
+ aUJOIapazE95apWyBcmPYjSvktg2Jtr65DacW+wUzTtLTKdf1tXZrlUaUx7D28O2zCaphi3DvsS
+ VXgtP/X/CSycvBz6/AzqBqIFGPppt4/MALvmWVIuNlzwKi7lXJ93dd9mtuxtq5r55Fd8bcmWxEs
+ n3Cufkr3zU2iMy3edYSce66er8L08DfVCXz+WlAqID1xqwNYn/2vMo29ZfTArq+eMDaaWTLGWug
+ 8yhy1G7xCnKNIKOBaLekbkuizLJ/ru2BLbN0GuYceH0QdPGPOMhj9TSLHQ8zqOyq5s13RRMwkZk
+ //JbCd83N9WxgY1E8tQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-28_02,2026-07-27_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 bulkscore=0 suspectscore=0 clxscore=1015 impostorscore=0
+ phishscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607280078
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+On Mon, Jul 20, 2026 at 10:35:52AM +0800, Shawn Guo wrote:
+> Qualcomm UFS controller found on SoCs SA8255P/SA8797P has a MCQ I/O
+> address space. It should be defined in the bindings even though Linux
+> driver currently doesn't utilize it. Fix the binding before it gets
+> adopted by DTS.
+> 
+> Fixes: e2725ed2a7fb ("scsi: ufs: dt-bindings: Document bindings for SA8255P UFS Host Controller")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Shawn Guo <shengchao.guo@oss.qualcomm.com>
 
-Pre-existing issues:
-- [High] Calling `platform_device_msi_free_irqs_all()` during device remova=
-l before `devres` frees the IRQ actions leads to a leak of `struct irqactio=
-n`.
-- [High] Missing cleanup of MSI IRQs on the probe error path leads to a mem=
-ory leak and a devres WARN_ON_ONCE.
-- [High] MCQ ESI configuration is permanently lost across device resets and=
- suspends because `ufs_qcom_config_esi` skips register programming if `host=
-->esi_enabled` is already true.
-- [High] The use of a static local variable `is_boot` in `ufs_qcom_fw_manag=
-ed_device_reset` causes incorrect reset behavior if multiple UFS host insta=
-nces exist or if the module is reloaded.
---
+Hi Martin,
 
---- Patch [1]: [PATCH] ufs: host: qcom: Enable MCQ support for sa8255p ---
-commit 7cb2953fc60985aba4ef6bffc3f9dc05ef977551
-Author: Shawn Guo <shengchao.guo@oss.qualcomm.com>
+I don't mean to rush you. But I do wonder whether you are fine to accept
+it as a fix for 7.2 release. Thank you!
 
-ufs: host: qcom: Enable MCQ support for sa8255p
-   =20
-The sa8255p vops (fw-managed variant) was missing the MCQ hooks, causing
-the driver to silently fall back to SDB mode even when MCQ resource is
-available. Wire up the same MCQ ops used by the standard qcom vops,
-so that MCQ mode works on sa8255p.
-
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 0500320545c43..d2acbbe647cb4 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -2950,6 +2950,11 @@ static const struct ufs_hba_variant_ops ufs_hba_qc=
-om_sa8255p_vops =3D {
->  	.resume                 =3D ufs_qcom_fw_managed_resume,
->  	.dbg_register_dump      =3D ufs_qcom_dump_dbg_regs,
->  	.device_reset           =3D ufs_qcom_fw_managed_device_reset,
-
-[Severity: High]
-This is a pre-existing issue, but does sharing a static variable across all
-controller instances cause problems here?
-
-In ufs_qcom_fw_managed_device_reset(), a static local variable is used to
-track the first cold boot:
-
-ufs_qcom_fw_managed_device_reset() {
-    static bool is_boot =3D true;
-    ...
-}
-
-If there are multiple firmware-managed UFS controllers, or if the driver is
-unbound and re-bound, won't subsequent initializations see is_boot as false
-and trigger an unwanted device reset during their cold boot?
-
-> +	.mcq_config_resource	=3D ufs_qcom_mcq_config_resource,
-> +	.get_hba_mac		=3D ufs_qcom_get_hba_mac,
-> +	.op_runtime_config	=3D ufs_qcom_op_runtime_config,
-> +	.get_outstanding_cqs	=3D ufs_qcom_get_outstanding_cqs,
-> +	.config_esi		=3D ufs_qcom_config_esi,
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the early return in
-ufs_qcom_config_esi() prevent ESI configuration from being restored after a
-suspend or reset?
-
-ufs_qcom_config_esi() has this check:
-
-    if (host->esi_enabled)
-        return 0;
-
-When the device undergoes a reset or suspend, the controller's power is
-toggled, clearing hardware registers like REG_UFS_CFG3. During resume, when
-ufshcd_reset_and_restore() calls ufshcd_config_mcq(), which then calls
-ufs_qcom_config_esi(), host->esi_enabled will still be true.
-
-Will this skip reprogramming the hardware registers and leave ESI interrupts
-broken?
-
-[Severity: High]
-This is also a pre-existing issue, but is there a memory leak if probe fails
-after allocating MSIs?
-
-ufs_qcom_config_esi() allocates MSI vectors via
-platform_device_msi_init_and_alloc_irqs(). This API relies on devres to
-release domain data but explicitly requires the caller to free the allocated
-IRQs before the devres unwind phase.
-
-If ufshcd_init() encounters an error later (for example, link startup fails)
-and returns an error, the core and variant exit hooks don't call
-platform_device_msi_free_irqs_all().
-
-Will the devres teardown find the MSI xarray non-empty, triggering a
-WARN_ON_ONCE(!xa_empty(&md->__macq)) and leaking resources?
-
-[Severity: High]
-Another pre-existing issue related to this: does driver unbind leak the
-irqaction structures?
-
-ufs_qcom_config_esi() uses devm_request_irq() to bind IRQ actions to devres.
-
-During driver unbind, ufs_qcom_remove() manually calls
-platform_device_msi_free_irqs_all(), which destroys the MSI descriptors and
-IRQ mappings.
-
-When devres unwinds after remove() returns, devm_irq_release() calls
-free_irq(). Since the IRQ mapping was already destroyed, won't free_irq()
-fail to find the descriptor and return early, leaking the irqaction?
-
->  };
-> =20
->  /**
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260728051104.6750=
-88-1-shengchao.guo@oss.qualcomm.com?part=3D1
+Shawn
