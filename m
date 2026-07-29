@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413EA2DA749
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 15:45:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 375CB45C70F
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 16:12:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785339950; cv=none; b=ME3XWUHAgCCc4tDU5PNNJAW9Hs2sL8qd+MNCwl20cy7plmtQM1QpKWY/Qk46J5KlBC70rYB933GM8Yh0d9rNv3X6SLHETQ2a8Crbo59OpJpgPClWyCkJaeD0kJJeWV5PdIDUrpOJWfJETmMyMVQRu5UU/A4RYwuiQbmP/B9nXEk=
+	t=1785341565; cv=none; b=ELRWbQKBMb36pmPmAcelIqRm/Qpbp/GSDNSJ8cEIR5Drr8Xc0sZuIJFQtupi4jvP4WMw+F4FIDqV6URW6c+fKZWdRTIwCjfZQ5EQ5n8uzdGjRaQgHx3uOrGlEMybi3AVCMxK/MIyHxntVaAqSoQ/a7nzJnpy1pd/RDfZwjcPaBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785339950; c=relaxed/simple;
-	bh=9DHlYczCq3ChOivLv3xab9DoAfehUkiDVYdk5PcAIvk=;
+	s=arc-20240116; t=1785341565; c=relaxed/simple;
+	bh=OpH4Sq8zPzovpw7yviDnGRKCzvm32+RIJdhcgrVkwd4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=f/ey9dHcam8NSSfR8fPr/lz6YMu/TKE+LJuuUCMfn3nCWYVu9LYaE7QqkNDKsuTJ5yA42N7E29CK7upHBR446eFmH7kvb+pWLf41Q6MDDyPE21c5F3lSohqD1HxXIz4lRgVshL+wnFy4lzXef9NvPAkUIJmowixxd4tb24P/WL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cSGVWhk2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=BrIjELxzvCigJB/h158Fj2tM2QC1l5OQadQc8iBKAVRp1N3b8W5GT0wpL3hVGfih/8XjhnjFefUHJFIcF+RtEz3wY3x8on3QTT9122DCM6KBIBywIrbgarDrZAurhW840lWSjSHdxw7H/dXRKyH2wHLpd4bBekDnz589DjlDFJA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CtnGIhMs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cSGVWhk2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3F8B1F000E9;
-	Wed, 29 Jul 2026 15:45:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CtnGIhMs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C918D1F00A3A;
+	Wed, 29 Jul 2026 16:12:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785339948;
-	bh=LPWRUbKnsVGljW6CqSguKfZJpa6CLp2exL2KGypjWoM=;
+	s=k20260515; t=1785341564;
+	bh=PrjQs2yI3wDaigk6IIAi53vfPAXnGDFVmo5CFCmgDwU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cSGVWhk2Mi5E7Itr13LY/+OzKT7NVtxCRSd1WkXPTEX5Ode1BZq3SyPIZJlFDGiK2
-	 c7yKGEs1fSRx8Uk/jU5F1JwlIglPHGYiz3RocrTU/uC+rIeLNkjdgVdMreBpflspaz
-	 ZlNu4q41lAIb1T62e0iSyB9q215Bx5wtAJ+Nit0Sl+yX2epwvsH2ln3ziG5PrX9BgK
-	 2wetmDTFf8dZUFc6cHcU/R2plwRXNk6q5oY3rKkmiJfqId3J1NW1LerNISxea82utD
-	 0ol4bkpNIa7KMk4qD6v0MduDE9glstUv5u14VuxUQ7CGtIUpiSr+omay4MtfqVyhp4
-	 NYGsD04/Oo2LA==
+	b=CtnGIhMsbOuu3TnUfPCraCrG4971XD+Th7ViS78kZUHrIyoGkjrWvrMK3c1P3QY2C
+	 NjKRPDUI2F5WqEpPiOf6WKT4NR7/Q4pNoz3AQQHyPYbF1Gh1uLBlimdZzQTH8vh5XY
+	 EwIN2vJHx/uPIusc6JBK17lN4FbiNJNxmwfi/efHqwiYdsMok/nOMsvGkGLlT6sWlT
+	 D/Fn0vI8NAkR79+gXVEXZdbMWXpqYW6zfUOb3IL+uVu4VQrdXIfTiyF1bX9kf2leql
+	 jKLKUlN4oDOGFo6HFMvA3L+3yq7gvYqQYLKWeTrYUSORAVVWaz6D+/hfW9HExx9Mhf
+	 lpt8K4LDt/J1w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 5/5] scsi: lpfc: Replace strlcat() with sysfs_emit_at()
- in the sysfs show functions
+Subject: Re: [PATCH v6 20/27] scsi-multipath: add
+ scsi_mpath_{start,end}_request()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ian Bridges" <icb@fastmail.org>
+To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260729144617.1388646-6-icb@fastmail.org>
-References: <20260729144617.1388646-1-icb@fastmail.org>
- <20260729144617.1388646-6-icb@fastmail.org>
+In-Reply-To: <20260729105107.255712-21-john.g.garry@oracle.com>
+References: <20260729105107.255712-1-john.g.garry@oracle.com>
+ <20260729105107.255712-21-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 15:45:48 +0000
-Message-Id: <20260729154548.A3F8B1F000E9@smtp.kernel.org>
+Date: Wed, 29 Jul 2026 16:12:43 +0000
+Message-Id: <20260729161243.C918D1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,85 +47,79 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Use-after-free of `nrport` because it is dereferenced outside of i=
-ts protecting lock.
+- [High] Permanent leak of mpath_nr_active counter and master block device =
+in-flight IO stats when a requeued multipath request fails with a hard erro=
+r.
 --
 
---- Patch [5]: [PATCH 5/5] scsi: lpfc: Replace strlcat() with sysfs_emit_at=
-() in the sysfs show functions ---
-commit b85263748e0a979a8db2d3fc65264e450144763e
-Author: Ian Bridges <icb@fastmail.org>
-scsi: lpfc: Replace strlcat() with sysfs_emit_at() in the sysfs show functi=
-ons
+--- Patch [20]: [PATCH v6 20/27] scsi-multipath: add scsi_mpath_{start,end}=
+_request() ---
+commit 1a27bdf4453d197f11533d04e7997e7873652eb4
+Author: John Garry <john.garry@linux.dev>
 
-This commit replaces strlcat() with sysfs_emit_at() in several lpfc sysfs
-show functions. It also removes the intermediate tmp buffers and per-fragme=
-nt
-overflow checks.
+scsi-multipath: add scsi_mpath_{start,end}_request()
 
-Link: https://github.com/KSPP/linux/issues/370 [1]
+Add scsi_mpath_{start,end}_request() to handle updating private multipath
+request data, like nvme_mpath_{start,end}_request().
 
-> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-> --- a/drivers/scsi/lpfc/lpfc_attr.c
-> +++ b/drivers/scsi/lpfc/lpfc_attr.c
+New member Scsi_Host.mpath_nr_active is added. This is required for queue
+depth multipath iopolicy.
 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 6a2d7dbfbe8c3..ce9a2c7fbe707 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
 [ ... ]
-
-> @@ -702,77 +647,55 @@ lpfc_nvme_info_show(struct device *dev, struct devi=
-ce_attribute *attr,
->  		}
+> @@ -1917,6 +1920,9 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_=
+ctx *hctx,
+>  	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+>  	cmd->submitter =3D SUBMITTED_BY_BLOCK_LAYER;
 > =20
->  		/* Tab in to show lport ownership. */
-> -		if (strlcat(buf, "NVME RPORT       ", PAGE_SIZE) >=3D PAGE_SIZE)
-> -			goto unlock_buf_done;
-> -		if (phba->brd_no >=3D 10) {
-> -			if (strlcat(buf, " ", PAGE_SIZE) >=3D PAGE_SIZE)
-> -				goto unlock_buf_done;
-> -		}
-> +		len +=3D sysfs_emit_at(buf, len, "NVME RPORT       ");
-> +		if (phba->brd_no >=3D 10)
-> +			len +=3D sysfs_emit_at(buf, len, " ");
-> =20
-> -		scnprintf(tmp, sizeof(tmp), "WWPN x%llx ",
-> -			  nrport->port_name);
-> -		if (strlcat(buf, tmp, PAGE_SIZE) >=3D PAGE_SIZE)
-> -			goto unlock_buf_done;
-> +		len +=3D sysfs_emit_at(buf, len, "WWPN x%llx ",
-> +				     nrport->port_name);
+> +	if (sdev->scsi_mpath_dev && is_mpath_request(req))
+> +		scsi_mpath_start_request(req);
+> +
+>  	blk_mq_start_request(req);
+>  	if (blk_mq_is_reserved_rq(req)) {
+>  		reason =3D shost->hostt->queue_reserved_command(shost, cmd);
 
 [Severity: High]
-This is a pre-existing issue, but could this result in a use-after-free of =
-the
-nrport pointer?
+Can this permanently leak the mpath_nr_active counter and master block devi=
+ce
+in-flight IO stats when a requeued multipath request fails with a hard erro=
+r?
 
-Looking at lpfc_nvme_info_show() in drivers/scsi/lpfc/lpfc_attr.c, the nrpo=
-rt
-pointer is fetched from rport->remoteport under ndlp->lock. However, the lo=
-ck
-is released right before nrport is dereferenced to access fields like
-port_state, port_name, node_name, and port_id.
+When a multipath request is dispatched, scsi_mpath_start_request() incremen=
+ts
+mpath_nr_active and sets SCMD_MPATH_CNT_ACTIVE. If the dispatch then fails
+with BLK_STS_RESOURCE (e.g. due to a full queue), the request is requeued a=
+nd
+the multipath flags are preserved by SCMD_PRESERVED_FLAGS.
 
-If lpfc_nvme_unregister_port() runs concurrently (such as during a connecti=
-on
-reset or hot-unplug), it explicitly does not hold fc_nodes_list_lock when
-retrieving rport->remoteport and calling nvme_fc_unregister_remoteport().
+On a subsequent retry, if the device has transitioned to an offline state
+(which is common during path failure), the early state check in
+scsi_queue_rq() returns an error before scsi_mpath_start_request() is
+reached:
 
-Does anything prevent the remote port from being unregistered and freed by =
-the
-NVMe FC transport while this sysfs file is being read, potentially leaving
-nrport as a dangling pointer here?
+	if (unlikely(sdev->sdev_state !=3D SDEV_RUNNING)) {
+		ret =3D scsi_device_state_check(sdev, req);
+		if (ret !=3D BLK_STS_OK)
+			goto out_put_budget;
+	}
 
-> -		scnprintf(tmp, sizeof(tmp), "WWNN x%llx ",
-> -			  nrport->node_name);
-> -		if (strlcat(buf, tmp, PAGE_SIZE) >=3D PAGE_SIZE)
-> -			goto unlock_buf_done;
-> +		len +=3D sysfs_emit_at(buf, len, "WWNN x%llx ",
-> +				     nrport->node_name);
+Returning an error here causes the block layer to directly complete the
+request, bypassing the driver's normal scsi_end_request() completion path.
+The block layer will eventually call the scsi_cleanup_rq() hook, which mere=
+ly
+zeroes cmd->flags:
 
-[ ... ]
+	cmd->flags =3D 0;
+
+but fails to decrement mpath_nr_active or call bdev_end_io_acct().
+
+Would this leave the queue-depth multipath I/O policy perceiving an
+artificially inflated load on the controller, permanently degrading load
+balancing?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729144617.1388=
-646-1-icb@fastmail.org?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729105107.2557=
+12-1-john.g.garry@oracle.com?part=3D20
