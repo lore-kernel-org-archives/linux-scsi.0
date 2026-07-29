@@ -1,350 +1,199 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D096E2DCF74
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 05:07:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785301657; cv=none; b=bZshLxqS4P81o5hB+oLDGiAMmc3GLD/FMhRXZmLXFe/A9JVMvpfsVFdm6sWdZFLBcGDk6DaVx5xVbmQSRCnI36hG36N9dwaStXoAC+h3xuFedA6Rmuf9qBrKYJGoSmIyJKv55ScFr3Jjw+/0q3uMUM5JB85gb24+VxZN+QOzqJE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785301657; c=relaxed/simple;
-	bh=ZfB4n3w74e+5HN71qiwvQPeiWQFnKwH2mvvABopEsHk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tCFg0qNSU8zNuiOu08VfFxiQ5ebZEntoC7Xp3PvSsqX4u6uaTKpWUDn0MoZ9iofsuFsOwIhoz9T8Jtk1EcFB88C/81lUzSdPxIrZLZPRRv0z6rxQjhCd20VGde1csj4pd0RFQaH1vk6yuQb7GpsswN/PgJJ5nGfwDuvrRxvsGkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=V+WnmADx; arc=none smtp.client-ip=209.85.216.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2DD5441612;
+	Wed, 29 Jul 2026 09:21:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785316920; cv=fail; b=Wpk3LNsXKHnxAj0pRlnhNgFqlrq+QInKDwnNPv0H4MmPqyJtJkudPqLPHxbXWmveQHpFeo9MxZnun5fHFvkTho8LAY9r417FstTymGM8h+gyF7jCf7zPRrOWlPHZYDqJxezPbsYMsO4itdXhF0PdbX29lmJEowzhYh0BuPKYW2U=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785316920; c=relaxed/simple;
+	bh=OIbb5HYfp+Mtisc2YntmZWGg8f/jKy9d2QawDzr3Ft8=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=GrxRObpX10lORVDrC06HjKfL20eEhXz/RnALyNEuHq5kS1NXk17UrKyOXcwklPCiBdTZQGYXeDtFUykxbozPMLCcqKcjsK/yJJp7OoZAV1OSOs5pLlp9udR/6DVSXw9H4/A9M8r54sGL5PcGLqqrVjZxtNCIvQi67J7oB0qUneM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=oJF2BWZk; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=XKeR/9CD; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="V+WnmADx"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-38ec1402b05so399995a91.2
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Jul 2026 22:07:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oJF2BWZk";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="XKeR/9CD"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66SItYKJ1094325;
+	Wed, 29 Jul 2026 09:21:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=M+z76SNXE2ANJkZzIQ5jYJBXZhCQfINMEtguqkp60hA=; b=
+	oJF2BWZk/QfAbyw+9vleD8dmMCmi9BP5Jjkz7nmtEGdTk4RUZHsmvwdvrF6kXHln
+	96IeDYTbz+n/vjdEjj89eFvbwxwlnA3Yoz3PDIY7gx4JjXeEdG09lkWx/rYSKSH9
+	x8+nU8RzPiKeLXBnxHZ/UQMMaHUuaZYskPWrpAlKKkEYFTQNpAIL3KK4MfZrjQlJ
+	gygD3MTOq/OguwVSagQMTS+npFS2G7uMUxqWi1+asJgdxGbgoYvONz2BE9fPT5Ef
+	3xYcZTjyXAMgYSHIiFkI7asmt8tF/65Bc3sQgnFtNiopSJASVCt8eNTKam5E9/O7
+	Q2IIuXg/bWU4GQtTcZ27/Q==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fmqym5ftw-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 29 Jul 2026 09:21:30 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66T9KbhQ029359;
+	Wed, 29 Jul 2026 09:21:30 GMT
+Received: from bl2pr02cu003.outbound.protection.outlook.com (mail-eastusazon11011051.outbound.protection.outlook.com [52.101.52.51])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fnh6qqngf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 29 Jul 2026 09:21:30 +0000 (GMT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=GwP4aL0Dp1NYZxt7D4taMyNcDgNwzwG4gDMBDIBLLhJbiXiXMTLDxahgOHNGO4RMSFEPFLzT0FxXtm7uRXxWx5nUvEp/qHf9qazZWP+LKobHSCBcWYXPTUbjp/VTrJdCDBxgmDf0/1xKJLzvk+qEpJvf+KHCvhfFKO4LJlCJzW8CCc/MdMxVlNSfnP4vl3KUvBQH+w05ISDZoOLZj8nTgxMrSDMawe97mvm8Ep+jkEu9EaVeb2WQ09EoQ6DydQc1WMjMhm2GukTFM7uyj7YDjkninILIA4L2G0syw9AczQn0hcGb5QZjufycs4HDZMO1lZhjLa/53+dqf0MxIxHq/w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=M+z76SNXE2ANJkZzIQ5jYJBXZhCQfINMEtguqkp60hA=;
+ b=bX+XYPmXXxjlnR2ocqFMi1WzQ4o2wNo2ryo4FpBGjq8DLKhTAtPflifRcekM8j2d5FZ2bGPPx+EaEfNXsW3aBexp4W9CeTs6UF2r9L3PXfYTFGqG9csnczZbCjoLcF4i4SNkRQLnj7dsl0eY+7Chax4BDtwjLIakfPA4IyT4reO6yj2TvWfRv4nYWEUOGL39+tcXuIbgO8qFwqClw4+cpCF11oBZ8S5NjwsQo9lL/aoxc1URixvqa0p1jKZK3H4HXVXmYwLh4L76kHOxxjheSvnQV/c4ySFsOIs5idwefUVtVO3YBH/kPAmz1RjnDECMFnySLtx+3M6qpNtZr8JWrg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1785301654; x=1785906454; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=d4yblqAd0xSRNZZHzOoXjhNEV9GdfBie/LOgStT5lG8=;
-        b=V+WnmADxpqQPyAhBu2qW3gZEgwcGcoXqbGtnUqyc+rxaDygIu0LLwHSwFSTbYJZbJQ
-         NbFUeTz2bmHod7VmD6ftu5cw0MSR+whX0JnO7flxfRqYBi7cLlPaaLlEwGc17aW491Ke
-         W15E0R6qXyUbardTgsNfEZ/39yPN5VnnUj3fE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785301654; x=1785906454;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=d4yblqAd0xSRNZZHzOoXjhNEV9GdfBie/LOgStT5lG8=;
-        b=mXOgAFScp7SDNwIlwa7p8dAGEBs3bqObZVHZzADtag0psRvvedMp6QvWaD1/O+wDFr
-         McDCoQlG4+0PQyT0yjmHmk04V7r+6Qucd0HzyVLA2bSf9jpPJ3bqJc7WGgE+DTIFXITc
-         N/dxm8GVxLL3WafeaRF4cYUMNn/BciwzhHyFkkSMLlswwBM42GpHmFqTIUcHZSPE7u0Z
-         EN8CDbQ9iJdC664ultsXU3bvv2Yc9pd3JD16c2LXYro7xFqkTnrZNP4nDfGjFHGe6dDf
-         FbVUDs/eEHjrHSiB8J/aaDFa/N4N3bCFt+gIHtSYHbu9NjZr142+mwaYSd48d8K8u76G
-         Vt+A==
-X-Forwarded-Encrypted: i=1; AHgh+RqAggOTsrXkKRJiVDUYMun6y3POah4C7c9lnYW5RhiNCCjmrYwRHTu+EoYC4n31WIxKcE2+SEScj1xd@vger.kernel.org
-X-Gm-Message-State: AOJu0YygYlb1SoiPwqVRtLSy3ThrhJifJ5+LG/MAd1FT+ckcgWp6uMWy
-	vh/M6cUAaxVbEX021L0JrkkF0xwD1WdFKY07+GDJhipR/7R+D6BIOFaIEeLTAxs10g==
-X-Gm-Gg: AR+sD10GhiqJOH8mG6XDucgZOpy8YMMV+AwFl8ycu5qChteeF3Tn6KsOkRG35s2g12Y
-	AxaewyXpSF/fSEkIuqsBddUHHSbqILtJSs91jSGjlArITPamPQdLLZ2kBc5A5eeaMXddG+qRo0o
-	qPjFaYGsGq8+ujkburQh2unNSMz4+OvE8nRm/BKvG5yiVwRmhgrfbLS/q0p1GIhfsyQXR/+asrY
-	QN/UyW+Di0cOx698S5vj0LSjJtmTch0DSqAb5/3K3roowbQ+n1GCTXvw03SfNjJM8ht5WgXtEhO
-	v64og+4LYqxhVnqfaOqn1ha96voisQ0aEMFcjnDNvNjVF6nMoIpijyadFbL9jK+Z2MNvcrxPlQW
-	VXyeDAXB/6VIK11kNYt2laesKWUYlQpHS6fOXX7RTOA8GybBSeVddCcdJtJB5uroz7nWTLDKUjm
-	0vRMmWXk3gudqq6sJFH4rWdErNwBdH4FuV3T6wr94HfJlLlLuxjGNpmP8VbE//Rd6v/jPJ7A0p2
-	FpbtcmRwRKiGwqUQl5KilvrPLlf
-X-Received: by 2002:a17:90b:58f0:b0:38e:6a44:671b with SMTP id 98e67ed59e1d1-38f6a29f784mr5404464a91.0.1785301653929;
-        Tue, 28 Jul 2026 22:07:33 -0700 (PDT)
-Received: from google.com ([2a00:79e0:2031:6:65c1:52a3:f6d3:37dc])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f642bfc71sm2128670a91.11.2026.07.28.22.07.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jul 2026 22:07:32 -0700 (PDT)
-Date: Wed, 29 Jul 2026 14:07:29 +0900
-From: Sergey Senozhatsky <senozhatsky@chromium.org>
-To: Oliver Neukum <oneukum@suse.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, 
-	linux-kernel@vger.kernel.org, Tomasz Figa <tfiga@chromium.org>, 
-	Sergey Senozhatsky <senozhatsky@chromium.org>
-Subject: Re: [usb-storage] [RFC PATCH] usb: storage: uas: limit consecutive
- device resets in error handling
-Message-ID: <ammKVTDFMbbhcmBl@google.com>
-References: <20260701040335.810297-1-senozhatsky@chromium.org>
- <e2599d9b-5dd9-47db-8339-f1aa825a11d6@suse.com>
- <akXJuqvHLUpcjXIv@google.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=M+z76SNXE2ANJkZzIQ5jYJBXZhCQfINMEtguqkp60hA=;
+ b=XKeR/9CDj5BBkSjuXMYSk593eQdAdIEyeCba7hyCvfgolUhtZp6Ns6/ta8DGCUecSghS/MPyMpGvOEaMPu7p3MEKXTAjOL1+1udehMtpP28+tOhWAoXxWMZBKvGP2+f4p6jQjrCnvpin0/tTdMhmxgvkX90mSPxObKQAyIl2+K4=
+Received: from DM4PR10MB6229.namprd10.prod.outlook.com (2603:10b6:8:8c::12) by
+ MN2PR10MB4319.namprd10.prod.outlook.com (2603:10b6:208:1d0::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.13; Wed, 29 Jul
+ 2026 09:21:27 +0000
+Received: from DM4PR10MB6229.namprd10.prod.outlook.com
+ ([fe80::867:63e7:13fa:fa7d]) by DM4PR10MB6229.namprd10.prod.outlook.com
+ ([fe80::867:63e7:13fa:fa7d%6]) with mapi id 15.21.0270.009; Wed, 29 Jul 2026
+ 09:21:27 +0000
+Message-ID: <df3b932e-9b45-4e1c-bb2d-94c17147cd3c@oracle.com>
+Date: Wed, 29 Jul 2026 10:21:23 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 00/27] Native SCSI Multipath support
+To: martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+        hare@suse.com
+Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+        snitzer@kernel.org, bmarzins@redhat.com, dm-devel@lists.linux.dev,
+        linux-kernel@vger.kernel.org, nilay@linux.ibm.com,
+        john.garry@linux.dev, hch@lst.de, kbusch@kernel.org, sagi@grimberg.me
+References: <20260727144234.3802948-1-john.g.garry@oracle.com>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20260727144234.3802948-1-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0232.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:1a6::21) To DM4PR10MB6229.namprd10.prod.outlook.com
+ (2603:10b6:8:8c::12)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <akXJuqvHLUpcjXIv@google.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM4PR10MB6229:EE_|MN2PR10MB4319:EE_
+X-MS-Office365-Filtering-Correlation-Id: 39d926aa-c591-4ae3-ffe1-08deed52c482
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|23010399003|56012099006|10067099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	KgS4ThRxCkS7v89ttRf5hEtTIm6EvxwX7WpWPH1u9XTT9S1XyWdIHHugeQBIIss/aYNpaQ89J4t37lhJy48dzEza/1bTcyk2CmIQS+sucUPL8upFf3g1VWE3PTPM2d3JW9n5QIHxqFSTCkat/b79oBqpUaTY4lgZN6tkOmP8kHDGzK2ek8EeMZ6buWRhazpPlOpVNRaJgzaWSTgKO/J3kjB5IXJJohj83Gt1lhGhcFgH8wtxMRArcY9XxOw0m429tOubBHLnce4UXHu3Y++CiAMWYAzRBZ4i4RPZeA2vHYfqFZjTN8F0b1qje7kSYDsMY0DEbuX0Z+zQqhM5m3xYqw7+TxtNWySuepBicXvDPV6wpzWVh42Yx3ZyNIwyRFQh/1BwwLiEDyDndlM+hQhVk8eOSFZWWxvXKHo3jJUMsAO+An5kQx1g6V+gB6qoSs3F0Y57Ur4RepEggzZXIWroEsz7+IQqpQjaav9hPpwWi0TpEO3buMIkGOAVXrfgLFBFA1aFLj6vjvbZOqcGc34bR6/JvM5ZPjwGJwQ9f7BLQECNc8EWU00ndpQ51UIekC2Kvh5ieRnAwDWBmE0U9Acu8KRAZ+oBGg5n07TxYZVv0Iw=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB6229.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(23010399003)(56012099006)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WTZaTGF0bW5oL1IzT0VoRnB3UU1vZFhDSmdUN0xobjR2YlJIV3NvL0xIOTN3?=
+ =?utf-8?B?eE95S1c1NWd2QWt1VTdNZnlvSGZHYjhvSU1mYnlKam1vOTNyMW5iVUdGZ2J6?=
+ =?utf-8?B?SXc0MFlFaWJwZllWMWRGQkQ0d21SelQ5RGUycUt6dEJGcmNIcytsbXROanE0?=
+ =?utf-8?B?UXFvRXFsYzFhbFJGbnFMclM0RmRRUFBzSWI3bXZhblhZQWhnRVJvVC9wSjdX?=
+ =?utf-8?B?TkNTNEdVaC9HRWZsVzUzWkdRNTcvcXFMUUJ0M2NCUXdvQTNya3UvYkYwVXRl?=
+ =?utf-8?B?NmhEajB2ZmN4REJITzJNVUhOZVkzYzI1UFlKRU5UNWtTNmRTMElDSWdHemdC?=
+ =?utf-8?B?RXI5cmE4QnoyUXQyS29XdE53MHVuaThKQjFUV2lOMkY2MUxDZ05oMS8xSUNz?=
+ =?utf-8?B?K21XUENabzcyWjdENDVaY1k5WkVMTElNZkMvWDNrVERzMVFVU1ZEeTZucGVp?=
+ =?utf-8?B?clFBcGNXODhOTlRsZysvcDdXZHlzWERPWll1cnJKTDVCN2xtUjR5cFBYQklL?=
+ =?utf-8?B?V2grMWlsZStBYnV1bDVFSkpkb0d1TTc0YVRBekpJNXJPdlZERkJ0T09zTlhv?=
+ =?utf-8?B?VHFyQVlnL0lUWEp3dzFERnZzWE9WQVo1NytKS0ZHbjlrWkkzMkZSZTd4enM2?=
+ =?utf-8?B?aVRGYTVIbENWUE41V2NXZDAvdzhNai91SlYvWnhEa1FpY2JZSUhFWC9XRm9i?=
+ =?utf-8?B?bjFTSStuUEVQdUhIcmlwN09XZFArak4zV3dOK3dUa2wyZGNpYW5JQkFNandT?=
+ =?utf-8?B?STV0clZ3SHV5dTZCVUhvREM4S3hVN285WXJaektzTVF3WXVlZ0p6eUFyZjZJ?=
+ =?utf-8?B?SGRoVXYrbnZTdlcreGtldDJFSGp4ay8wMEdTaUIrMGRJeUQ5QnhnQ2hKazZT?=
+ =?utf-8?B?UFpKYmFzUDUxanFvaks3UC9XZW5qTmYrOEpxVm42SHlDUFNmUkZNOERDQXF5?=
+ =?utf-8?B?djEwWVlEc1BtdUZFWDhhSjBIU3U4ZWdrMFlMbUJCeWtFR2ZOVHFtZlY2dDM3?=
+ =?utf-8?B?bmhYQ3Q5N2k1bW15a2ZKamQxMEM3K1A2T3Q3cGd5R2wrdEdadDc4cEkxUDZD?=
+ =?utf-8?B?eEdINGJrYmc3QjF0U1h3d2V3Q3k2V0tTZFd3OVIvcHZQQW1uZU5XU1NOZlQy?=
+ =?utf-8?B?K0F6TVZtODVNUHFGM0tQbGhCeDlPMWVrTmlkN3Y3Q1JrMzVaZzJCcWIyNXM3?=
+ =?utf-8?B?SzJFWm4vZW5PWHcvQm9hYWJvOXNBSEtHNHJOT2RjL3ArdE9XODhpU0w3RHdB?=
+ =?utf-8?B?aEIySmQ0MG5QL2E2eTh0dGNRYU43ZDAzRUpsalpXQ1dSU2VWdTNSUU0rd3pq?=
+ =?utf-8?B?RVVLNGpiekkxMDFmWWtSdnJIanZjdFVnZW1jL1U2WXNueDUrSWtKSm85UG15?=
+ =?utf-8?B?b09kSXlETkxGczExajNHZ29Jc2lCVjVxdVAxampNYllNV1VRaTBxODBOdUZt?=
+ =?utf-8?B?cllqYlMyajQ4cTUrU3JGNjNHWnFWa3BSRDIyVjJBdTZFaDZJWXBQd2Y4MVNj?=
+ =?utf-8?B?NUE5aCtvcDVHYUFjRXFoUkJ1dE53TTRqak5aSFBXdnFoRzdxUStCMkJCVlpt?=
+ =?utf-8?B?dHBtdnBWWW8xUmdjdGNsZjZVNHNnNExyZjZNcjBzRVYvME05OHIwZzNtQ0hl?=
+ =?utf-8?B?VmtqRzVQZCsxL0lqbzNOUGdpYVJFSDNxaFUvc0NpbFFhbkVEdGFrNXVVV0g2?=
+ =?utf-8?B?U1FneExab0NnZ09kbVE0bkFFbVorVityVkRNUm1uWFZkQjhlMU1FTnNtYjJs?=
+ =?utf-8?B?TVdoZlg5dkZlTitGbnRHQytjdkN2cWMrRjdESHYzWXgySGwvU3E4Um90RDgv?=
+ =?utf-8?B?Z1U1TWoxOUpzb25BSmlKLzNYblRnRFY2OTFEUGQ5S1BwYUN3aEExOVp5UC9q?=
+ =?utf-8?B?K0xsVFUrVmhvSzVmSDdUNEU2WmJEaTI4YlFBR2pMRTdLSjNzV0t2MDJta0xk?=
+ =?utf-8?B?Ym1OMm1qSlV1c3NYVzJQckRBTEJJUGdBdzBIbmZHdG96SDNkS1BMckN5ZGNP?=
+ =?utf-8?B?SmJkM2Mzays3Z0JxUVdCbU5lRmdJMEVVVUZjaC9xZHFaZm4reUFoZlpWUWJo?=
+ =?utf-8?B?SHRlMGp6Q3k3bTFzL0hGL3N1TmgzcHZMRDVDM1NRaEZyRGNadmtFbjJ4UUVF?=
+ =?utf-8?B?emVlV3AwUDgrUG1zODByWlpDSmQ2RjFjeEtUKzBzT20wNkFnUzMrM2ZVTUh4?=
+ =?utf-8?B?S0xrU0JOTjB2ZnIxcjN4L0pxMWkwaHdGR0VGOXRTSU0rdHpMUUsvdFp3YVBR?=
+ =?utf-8?B?L09SblRmbHRwOUZUVG1ObWxjTU95dUZJZGdXck9iYVVuVDFIa3hHNlJQRWFK?=
+ =?utf-8?B?YjNDZWhINlJLV3NQQ2toRkFQWmtnOEJaSExxTEo4aDZ1SUUza24rZz09?=
+X-Exchange-RoutingPolicyChecked:
+	ngPtI2hh2kGqEq4LY+nPuZ7jBXIq/S3HzXOsL4LLHNExXJE69htJNO/eyfCDUQ1IB5iJphQppRw+WlJRWJQMlm901qEkmw2HkKBFRuVTolkEo9LJmDIuL8u48u7YjpXLgMCJud5n1lH2kUaG9I0LwoqmH26P8j83cyRsbAmqgdvH/3f9389fpM/TPa1HQj+4heJ8QHld4mhBhkzCP+tSw0wPHDBinwNQkuzDsAPEXpyuAn2ZL7l8BLfpfp0MsWKFKi4ZzNMjABU+36nuH0Q7toVgor9Nhl9s0eKUs44LK8JXC5Cs6rG42rU1KYz6MtXnyRo1jEqH+pai35ztKGdiQg==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	DxeM/t022D2QlrRKR0yCCxV+fgdA9/28AJR6ObLoTGuM7hoDv3Kl26qCSSs0NM+spoEHuxuzGkD4XOxPp10VdeJ8LHMi2+eIK3YsDKWTKBrqUuD7MKHa7JjlxPH5sRn58u9/rsfV1+/RU1JJIkqlBdoaKNkMRiNfCY2s9QEJIgBlFD06wIMFky2cAdlJ6enLGuze3Iyu5y5r6ue6CGRRNmNQZ7e2JaIQz6xwf4uniX2KPFYLq1hTNnXtHe4gHFPabHvVg2bQ8t2ZTHFlS0YJac47119QK/xx9CE1RMWiyY3rCURTlLimoIEQWZDLk7CSMB5U3QiCnw16qYGxApyccEedBAktpfjSofotH1+nzeIWmRlj7J9v+zlXhdPd2mmSn/tdtiR6tt1iwu+hms3yMX+ZBPxx7zVaoi+RENiH6ByPSL639W39iqFSX9yKYTPSPZaE9ILS0hf0K/l/Um3FLovg2CTSBlIlMgucOJmsyan0odeql1JGSupJXQ3pz83+uk/X1UBR/8yFqtMKWdzwKxNSt+fYBMfjKeCcH5k2dSj294mQSWns4unpn7XG4izcytsrCZh6X5yKH5dFLi3xhqaC0bA6JJCaDAjNz2N9So4=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 39d926aa-c591-4ae3-ffe1-08deed52c482
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB6229.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jul 2026 09:21:27.6374
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bh44Zai5Aki63jyshevwCkEiNTAvObEStejdL2/uctZJMzTg8v5g4UIwnut5U0qegVpjp+iJUsBOABA97oWayw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR10MB4319
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-29_03,2026-07-28_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 lowpriorityscore=0 spamscore=0
+ bulkscore=0 suspectscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2606160000 definitions=main-2607290076
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDA3NiBTYWx0ZWRfXxXBy7Fo2eojS
+ M27+uukJq0n++KxpHQbPbPbLmtCKcVQGQf6cYJS7SlRyLjNcEgCgA8pVWDFn4MUeF7tUU1wIuGF
+ HTo/1lFGtwOp9rfTkCvXWWMx0WTFSOWK0bniDNw8M3o+h6HWjfBG
+X-Proofpoint-ORIG-GUID: ScAka3DRhIGZ9OADxbkS39Q1Gm-_EFgO
+X-Proofpoint-GUID: ScAka3DRhIGZ9OADxbkS39Q1Gm-_EFgO
+X-Authority-Analysis: v=2.4 cv=UOrt2ify c=1 sm=1 tr=0 ts=6a69c61a b=1 cx=c_pps
+ a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=RAioF0-LDSMA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=3I1J8UUJPc9JN9BFgKH3:22 a=c92rfblmAAAA:8
+ a=yPCof4ZbAAAA:8 a=qhJA9r4x7ZXfWcY-Yz8A:9 a=QEXdDO2ut3YA:10 a=VxAk22fqlfwA:10
+ a=GvGzcOZaWPEFPQC_NcjD:22 a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22
+ cc=ntf awl=host:12106
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDA3NiBTYWx0ZWRfX9UJ5GnbOnZsp
+ oJ0iQzPltOXVyKvbqs0ASmIklxKMzdB0Jz5qQkHdYDP4rdVGSXiHlmZ3uC9vGITARwynLRu8M1j
+ oZjxwgSaUthKsKQYg2lsmfaZinLmq5jQdZ0wRJ+lA0StPIZ8LO80XL8p8Hvjsgq3GjtEK+3wlo2
+ e9+ytNGByx3KQFnBMlWy0at+tvH1eHnTtErt2jy/HPkrWARLsTLi1t6u1edh93dNklsJPg6nRDr
+ iUkWYzTwZm8O6/lydbihlaez5wBwu3tD1vBZlN9SKZKVT1zKX41lX/pc9OSjShiQg0jCYtbrDpb
+ ZlPcoxmX55+b+31TSAVYx6KRr68/cmOJSSpofFGR9fvkXiVmoEa9e3VNlIunBOXAlrKdAZn8aKH
+ AKNJ8+FjeDNEgIdrniyDOo51E3/YQj4Ck31jJ4RupZa/tYwjZkEYEz3PnX13vaYSg7t9ZEPJRO0
+ 9rElxtHSGqbrkVQZouIP/b4wrwPplSIijKlx3Kkw=
 
-On (26/07/02 11:25), Sergey Senozhatsky wrote:
-> On (26/07/01 10:28), Oliver Neukum wrote:
-> > On 01.07.26 06:03, Sergey Senozhatsky wrote:
-> > > When a UAS storage device experiences persistent wire or hardware IO
-> > > failures, commands time out and the SCSI error handler thread invokes
-> > > uas_eh_device_reset_handler().  If usb_reset_device() succeeds at the
-> > > USB hub level but the underlying drive remains unresponsive, the reset
-> > 
-> > What exactly do you mean by unresponsive? Usbcore must at least
-> > reassign the configuration (and the device address).
-> 
-> I might be using a wrong term, sorry about that, what we see is that
-> USB reports successful resets, but the device still cannot handle
-> data writes, requests stall.
-> 
-> [..]
-> > > Introduce a runtime-configurable module parameter 'reset_limit' (default
-> > > 3) and track consecutive resets in devinfo->reset_cnt.  When a productive
-> > > block layer command completes successfully (SUBMITTED_BY_BLOCK_LAYER),
-> > > reset the counter to zero.  If consecutive resets exceed reset_limit,
-> > > abort the loop by completing pending commands with DID_NO_CONNECT and
-> > > returning FAILED.  This allows SCSI EH to offline the unresponsive
-> > > device.
-> > 
-> > Let us take a step back. What is the issue here? The device goes
-> > into error handling. That is not a problem as such. A method
-> > designed to remedy an error condition has not been effective but seems
-> > to succeed.
-> > That must not happen. So what do we do? It seems to me like we
-> > ought to add a test for the effectiveness of the reset.
-> > At first glance it looks like UAS should do a TEST UNIT READY
-> > on its own after a reset.
-> > Or are we looking at a command that reliably crashes the device and
-> > is reissued by an upper layer? In that case either we need
-> > a quirk or the SCSI layer ought to deduce that it is using commands
-> > it shouldn't use.
-> > 
-> > Can we have more information about the scenario that triggered
-> > the desire for this patch?
-> 
-> Unfortunately, I cannot add a lot of info, as I don't posses (nor
-> have access to) the device in question.  The user is on 6.6 LTS
-> kernel (UAS code wise there doesn't seem to be that much of a
-> difference compared to mainline).  I suppose the misbehaving UAS
-> device is:
-> 
-> <6>[ 11.902842] usb 2-1.3: New USB device found, idVendor=2109, idProduct=0715, bcdDevice= 2.63
-> <6>[ 11.902968] usb 2-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=(Serial: 6)
-> <6>[ 11.902994] usb 2-1.3: Product: SSK USB3.2 SSD Flash Drive
-> <6>[ 11.903041] usb 2-1.3: Manufacturer: SSK Corporation
-> <6>[ 11.903066] usb 2-1.3: SerialNumber: (Serial: 11)
-> <6>[ 11.909223] scsi host0: uas
-> <5>[ 11.919288] scsi 0:0:0:0: Direct-Access SSK Port able SSD 256 X082 PQ: 0 ANSI: 6
-> <5>[ 11.928062] sd 0:0:0:0: [sda] 500118192 512-byte logical blocks: (256 GB/238 GiB)
-> <5>[ 11.928336] sd 0:0:0:0: [sda] Write Protect is off
-> <7>[ 11.928377] sd 0:0:0:0: [sda] Mode Sense: 2f 00 00 00
-> <5>[ 11.929521] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> <6>[ 11.956480] sd 0:0:0:0: [sda] Preferred minimum I/O size 4096 bytes
-> <4>[ 11.956515] sd 0:0:0:0: [sda] Optimal transfer size 33553920 bytes not a multiple of preferred minimum block size (4096 bytes)
-> 
-> And then all I have is dmesg (ramoops).
-> 
-> (don't get confused by "rq: tag=.. op=..." lines, they are from  our downstream
-> blk-mq stall watchdog)
-> 
-> Cut and paste from the first time UAS reports an error:
+Note that sashiko is giving lots of review comments, but only linux-scsi 
+gets notifications:
 
+https://sashiko.dev/#/patchset/20260727144234.3802948-1-john.g.garry@oracle.com?part=5
 
-Oliver, what should be the way forward here?
-
-
-> <6>[ 704.586138] sd 0:0:0:0: [sda] tag#5 uas_eh_abort_handler 0 uas-tag 6 inflight: CMD OUT
-> <6>[ 704.586217] sd 0:0:0:0: [sda] tag#5 CDB: Write(10) 2a 00 00 d3 94 08 00 04 00 00
-> <6>[ 704.687269] sd 0:0:0:0: [sda] tag#4 uas_eh_abort_handler 0 uas-tag 4 inflight: CMD OUT
-> <6>[ 704.687356] sd 0:0:0:0: [sda] tag#4 CDB: Write(10) 2a 00 00 d3 8c 08 00 04 00 00
-> <6>[ 704.693877] sd 0:0:0:0: [sda] tag#3 uas_eh_abort_handler 0 uas-tag 3 inflight: CMD OUT
-> <6>[ 704.693947] sd 0:0:0:0: [sda] tag#3 CDB: Write(10) 2a 00 00 d3 88 08 00 04 00 00
-> <6>[ 704.700914] sd 0:0:0:0: [sda] tag#2 uas_eh_abort_handler 0 uas-tag 2 inflight: CMD OUT
-> <6>[ 704.700963] sd 0:0:0:0: [sda] tag#2 CDB: Write(10) 2a 00 00 d3 84 08 00 04 00 00
-> <6>[ 704.707981] sd 0:0:0:0: [sda] tag#1 uas_eh_abort_handler 0 uas-tag 1 inflight: CMD OUT
-> <6>[ 704.708053] sd 0:0:0:0: [sda] tag#1 CDB: Write(10) 2a 00 00 d3 80 08 00 04 00 00
-> <6>[ 704.714947] sd 0:0:0:0: [sda] tag#0 uas_eh_abort_handler 0 uas-tag 5 inflight: CMD OUT
-> <6>[ 704.715019] sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 00 d3 90 08 00 04 00 00
-> <6>[ 704.730668] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 704.797633] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 704.817713] scsi host0: uas_eh_device_reset_handler success
-> <6>[ 735.309699] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 735.310945] sd 0:0:0:0: [sda] tag#2 uas_zap_pending 0 uas-tag 1 inflight: CMD
-> <6>[ 735.311018] sd 0:0:0:0: [sda] tag#2 CDB: Write(10) 2a 00 00 d3 94 08 00 04 00 00
-> <6>[ 735.311057] sd 0:0:0:0: [sda] tag#3 uas_zap_pending 0 uas-tag 2 inflight: CMD
-> <6>[ 735.311122] sd 0:0:0:0: [sda] tag#3 CDB: Write(10) 2a 00 00 d3 8c 08 00 04 00 00
-> <6>[ 735.311188] sd 0:0:0:0: [sda] tag#4 uas_zap_pending 0 uas-tag 3 inflight: CMD
-> <6>[ 735.311224] sd 0:0:0:0: [sda] tag#4 CDB: Write(10) 2a 00 00 d3 88 08 00 04 00 00
-> <6>[ 735.311289] sd 0:0:0:0: [sda] tag#0 uas_zap_pending 0 uas-tag 4 inflight: CMD
-> <6>[ 735.311354] sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 00 d3 84 08 00 04 00 00
-> <6>[ 735.311390] sd 0:0:0:0: [sda] tag#1 uas_zap_pending 0 uas-tag 5 inflight: CMD
-> <6>[ 735.311455] sd 0:0:0:0: [sda] tag#1 CDB: Write(10) 2a 00 00 d3 80 08 00 04 00 00
-> <6>[ 735.311521] sd 0:0:0:0: [sda] tag#5 uas_zap_pending 0 uas-tag 6 inflight: CMD
-> <6>[ 735.311558] sd 0:0:0:0: [sda] tag#5 CDB: Write(10) 2a 00 00 d3 90 08 00 04 00 00
-> <6>[ 735.377751] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 735.398693] scsi host0: uas_eh_device_reset_handler success
-> <4>[ 750.651133] rq: tag=0 hctx=0 op=WRITE sector=13860872 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651205] rq: tag=1 hctx=0 op=WRITE sector=13865992 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651263] rq: tag=2 hctx=0 op=WRITE sector=13863944 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651320] rq: tag=3 hctx=0 op=WRITE sector=13862920 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651379] rq: tag=4 hctx=0 op=WRITE sector=13861896 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651437] rq: tag=5 hctx=0 op=WRITE sector=13864968 len=524288 age=76536 ms pid=11900 comm=image_burner state=D
-> <4>[ 750.651494] blk: queue stall on sda: 6 inflight, 6 stalled (threshold 60000 ms)
-> <6>[ 765.511365] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 765.512640] sd 0:0:0:0: [sda] tag#4 uas_zap_pending 0 uas-tag 1 inflight: CMD
-> <6>[ 765.512689] sd 0:0:0:0: [sda] tag#4 CDB: Write(10) 2a 00 00 d3 84 08 00 04 00 00
-> <6>[ 765.512737] sd 0:0:0:0: [sda] tag#0 uas_zap_pending 0 uas-tag 2 inflight: CMD
-> <6>[ 765.512762] sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 00 d3 80 08 00 04 00 00
-> <6>[ 765.512808] sd 0:0:0:0: [sda] tag#1 uas_zap_pending 0 uas-tag 3 inflight: CMD
-> <6>[ 765.512855] sd 0:0:0:0: [sda] tag#1 CDB: Write(10) 2a 00 00 d3 94 08 00 04 00 00
-> <6>[ 765.512880] sd 0:0:0:0: [sda] tag#2 uas_zap_pending 0 uas-tag 4 inflight: CMD
-> <6>[ 765.512927] sd 0:0:0:0: [sda] tag#2 CDB: Write(10) 2a 00 00 d3 8c 08 00 04 00 00
-> <6>[ 765.512974] sd 0:0:0:0: [sda] tag#3 uas_zap_pending 0 uas-tag 5 inflight: CMD
-> <6>[ 765.513000] sd 0:0:0:0: [sda] tag#3 CDB: Write(10) 2a 00 00 d3 88 08 00 04 00 00
-> <6>[ 765.513047] sd 0:0:0:0: [sda] tag#5 uas_zap_pending 0 uas-tag 6 inflight: CMD
-> <6>[ 765.513094] sd 0:0:0:0: [sda] tag#5 CDB: Write(10) 2a 00 00 d3 90 08 00 04 00 00
-> <6>[ 765.577456] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 765.597265] scsi host0: uas_eh_device_reset_handler success
-> <6>[ 795.719449] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 795.720700] sd 0:0:0:0: [sda] tag#4 uas_zap_pending 0 uas-tag 1 inflight: CMD
-> <6>[ 795.720752] sd 0:0:0:0: [sda] tag#4 CDB: Write(10) 2a 00 00 d3 80 08 00 04 00 00
-> <6>[ 795.720778] sd 0:0:0:0: [sda] tag#0 uas_zap_pending 0 uas-tag 2 inflight: CMD
-> <6>[ 795.720826] sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 00 d3 94 08 00 04 00 00
-> <6>[ 795.720872] sd 0:0:0:0: [sda] tag#1 uas_zap_pending 0 uas-tag 3 inflight: CMD
-> <6>[ 795.720897] sd 0:0:0:0: [sda] tag#1 CDB: Write(10) 2a 00 00 d3 8c 08 00 04 00 00
-> <6>[ 795.720944] sd 0:0:0:0: [sda] tag#2 uas_zap_pending 0 uas-tag 4 inflight: CMD
-> <6>[ 795.720990] sd 0:0:0:0: [sda] tag#2 CDB: Write(10) 2a 00 00 d3 88 08 00 04 00 00
-> <6>[ 795.721016] sd 0:0:0:0: [sda] tag#3 uas_zap_pending 0 uas-tag 5 inflight: CMD
-> <6>[ 795.721062] sd 0:0:0:0: [sda] tag#3 CDB: Write(10) 2a 00 00 d3 84 08 00 04 00 00
-> <6>[ 795.721109] sd 0:0:0:0: [sda] tag#5 uas_zap_pending 0 uas-tag 6 inflight: CMD
-> <6>[ 795.721135] sd 0:0:0:0: [sda] tag#5 CDB: Write(10) 2a 00 00 d3 90 08 00 04 00 00
-> <6>[ 796.007591] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 796.027767] scsi host0: uas_eh_device_reset_handler success
-> <4>[ 812.091136] rq: tag=0 hctx=0 op=WRITE sector=13863944 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091194] rq: tag=1 hctx=0 op=WRITE sector=13862920 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091242] rq: tag=2 hctx=0 op=WRITE sector=13861896 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091289] rq: tag=3 hctx=0 op=WRITE sector=13860872 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091335] rq: tag=4 hctx=0 op=WRITE sector=13865992 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091381] rq: tag=5 hctx=0 op=WRITE sector=13864968 len=524288 age=137976 ms pid=11900 comm=image_burner state=D
-> <4>[ 812.091428] blk: queue stall on sda: 6 inflight, 6 stalled (threshold 60000 ms)
-> <6>[ 826.435375] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 826.436559] sd 0:0:0:0: [sda] tag#4 uas_zap_pending 0 uas-tag 1 inflight: CMD
-> <6>[ 826.436619] sd 0:0:0:0: [sda] tag#4 CDB: Write(10) 2a 00 00 d3 94 08 00 04 00 00
-> <6>[ 826.436679] sd 0:0:0:0: [sda] tag#0 uas_zap_pending 0 uas-tag 2 inflight: CMD
-> <6>[ 826.436710] sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 00 d3 8c 08 00 04 00 00
-> <6>[ 826.436758] sd 0:0:0:0: [sda] tag#1 uas_zap_pending 0 uas-tag 3 inflight: CMD
-> <6>[ 826.436807] sd 0:0:0:0: [sda] tag#1 CDB: Write(10) 2a 00 00 d3 88 08 00 04 00 00
-> <6>[ 826.436834] sd 0:0:0:0: [sda] tag#2 uas_zap_pending 0 uas-tag 4 inflight: CMD
-> <6>[ 826.436884] sd 0:0:0:0: [sda] tag#2 CDB: Write(10) 2a 00 00 d3 84 08 00 04 00 00
-> <6>[ 826.436933] sd 0:0:0:0: [sda] tag#3 uas_zap_pending 0 uas-tag 5 inflight: CMD
-> <6>[ 826.436960] sd 0:0:0:0: [sda] tag#3 CDB: Write(10) 2a 00 00 d3 80 08 00 04 00 00
-> <6>[ 826.437008] sd 0:0:0:0: [sda] tag#5 uas_zap_pending 0 uas-tag 6 inflight: CMD
-> <6>[ 826.437056] sd 0:0:0:0: [sda] tag#5 CDB: Write(10) 2a 00 00 d3 90 08 00 04 00 00
-> <6>[ 826.502749] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 826.521493] scsi host0: uas_eh_device_reset_handler success
-> <6>[ 856.652469] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 856.653458] sd 0:0:0:0: [sda] tag#2 uas_zap_pending 0 uas-tag 1 inflight: CMD
-> <6>[ 856.653535] sd 0:0:0:0: [sda] tag#2 CDB: Write(10) 2a 00 00 d3 8c 08 00 04 00 00
-> <6>[ 856.653574] sd 0:0:0:0: [sda] tag#3 uas_zap_pending 0 uas-tag 2 inflight: CMD
-> <6>[ 856.653640] sd 0:0:0:0: [sda] tag#3 CDB: Write(10) 2a 00 00 d3 88 08 00 04 00 00
-> <6>[ 856.653706] sd 0:0:0:0: [sda] tag#4 uas_zap_pending 0 uas-tag 3 inflight: CMD
-> <6>[ 856.653741] sd 0:0:0:0: [sda] tag#4 CDB: Write(10) 2a 00 00 d3 84 08 00 04 00 00
-> <6>[ 856.653804] sd 0:0:0:0: [sda] tag#0 uas_zap_pending 0 uas-tag 4 inflight: CMD
-> <6>[ 856.653867] sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 00 d3 80 08 00 04 00 00
-> <6>[ 856.653902] sd 0:0:0:0: [sda] tag#1 uas_zap_pending 0 uas-tag 5 inflight: CMD
-> <6>[ 856.653965] sd 0:0:0:0: [sda] tag#1 CDB: Write(10) 2a 00 00 d3 94 08 00 04 00 00
-> <6>[ 856.654029] sd 0:0:0:0: [sda] tag#5 uas_zap_pending 0 uas-tag 6 inflight: CMD
-> <6>[ 856.654064] sd 0:0:0:0: [sda] tag#5 CDB: Write(10) 2a 00 00 d3 90 08 00 04 00 00
-> <6>[ 856.718609] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 856.738743] scsi host0: uas_eh_device_reset_handler success
-> <3>[ 856.738939] sd 0:0:0:0: [sda] tag#0 timing out command, waited 180s
-> <6>[ 856.738999] sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=DID_RESET driverbyte=DRIVER_OK cmd_age=182s
-> <6>[ 856.739056] sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 00 d3 80 08 00 04 00 00
-> <3>[ 856.739119] I/O error, dev sda, sector 13860872 op 0x1:(WRITE) flags 0x4800 phys_seg 128 prio class 2
-> <3>[ 856.739155] Buffer I/O error on dev sda, logical block 1732609, lost async page write
-> <3>[ 856.739219] Buffer I/O error on dev sda, logical block 1732610, lost async page write
-> <3>[ 856.739272] Buffer I/O error on dev sda, logical block 1732611, lost async page write
-> <3>[ 856.739323] Buffer I/O error on dev sda, logical block 1732612, lost async page write
-> <3>[ 856.739354] Buffer I/O error on dev sda, logical block 1732613, lost async page write
-> <3>[ 856.739410] Buffer I/O error on dev sda, logical block 1732614, lost async page write
-> <3>[ 856.739466] Buffer I/O error on dev sda, logical block 1732615, lost async page write
-> <3>[ 856.739522] Buffer I/O error on dev sda, logical block 1732616, lost async page write
-> <3>[ 856.739553] Buffer I/O error on dev sda, logical block 1732617, lost async page write
-> <3>[ 856.739607] Buffer I/O error on dev sda, logical block 1732618, lost async page write
-> <3>[ 856.739764] sd 0:0:0:0: [sda] tag#1 timing out command, waited 180s
-> <6>[ 856.739796] sd 0:0:0:0: [sda] tag#1 FAILED Result: hostbyte=DID_RESET driverbyte=DRIVER_OK cmd_age=182s
-> <6>[ 856.739852] sd 0:0:0:0: [sda] tag#1 CDB: Write(10) 2a 00 00 d3 94 08 00 04 00 00
-> <3>[ 856.739907] I/O error, dev sda, sector 13865992 op 0x1:(WRITE) flags 0x4800 phys_seg 128 prio class 2
-> <3>[ 856.740068] sd 0:0:0:0: [sda] tag#2 timing out command, waited 180s
-> <6>[ 856.740099] sd 0:0:0:0: [sda] tag#2 FAILED Result: hostbyte=DID_RESET driverbyte=DRIVER_OK cmd_age=182s
-> <6>[ 856.740154] sd 0:0:0:0: [sda] tag#2 CDB: Write(10) 2a 00 00 d3 8c 08 00 04 00 00
-> <3>[ 856.740200] I/O error, dev sda, sector 13863944 op 0x1:(WRITE) flags 0x4800 phys_seg 128 prio class 2
-> <3>[ 856.740310] sd 0:0:0:0: [sda] tag#3 timing out command, waited 180s
-> <6>[ 856.740338] sd 0:0:0:0: [sda] tag#3 FAILED Result: hostbyte=DID_RESET driverbyte=DRIVER_OK cmd_age=182s
-> <6>[ 856.740385] sd 0:0:0:0: [sda] tag#3 CDB: Write(10) 2a 00 00 d3 88 08 00 04 00 00
-> <3>[ 856.740431] I/O error, dev sda, sector 13862920 op 0x1:(WRITE) flags 0x4800 phys_seg 128 prio class 2
-> <3>[ 856.740532] sd 0:0:0:0: [sda] tag#4 timing out command, waited 180s
-> <6>[ 856.740558] sd 0:0:0:0: [sda] tag#4 FAILED Result: hostbyte=DID_RESET driverbyte=DRIVER_OK cmd_age=182s
-> <6>[ 856.740603] sd 0:0:0:0: [sda] tag#4 CDB: Write(10) 2a 00 00 d3 84 08 00 04 00 00
-> <3>[ 856.740649] I/O error, dev sda, sector 13861896 op 0x1:(WRITE) flags 0x4800 phys_seg 128 prio class 2
-> <3>[ 856.740750] sd 0:0:0:0: [sda] tag#5 timing out command, waited 180s
-> <6>[ 856.740775] sd 0:0:0:0: [sda] tag#5 FAILED Result: hostbyte=DID_RESET driverbyte=DRIVER_OK cmd_age=182s
-> <6>[ 856.740821] sd 0:0:0:0: [sda] tag#5 CDB: Write(10) 2a 00 00 d3 90 08 00 04 00 00
-> <3>[ 856.740867] I/O error, dev sda, sector 13864968 op 0x1:(WRITE) flags 0x4800 phys_seg 128 prio class 2
-> <6>[ 886.862169] sd 0:0:0:0: [sda] tag#4 uas_eh_abort_handler 0 uas-tag 1 inflight: CMD
-> <6>[ 886.862204] sd 0:0:0:0: [sda] tag#4 CDB: Write(10) 2a 00 00 d3 98 08 00 04 00 00
-> <6>[ 886.862256] sd 0:0:0:0: [sda] tag#0 uas_eh_abort_handler 0 uas-tag 2 inflight: CMD OUT
-> <6>[ 886.862303] sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 00 d3 9c 08 00 04 00 00
-> <6>[ 886.872436] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 886.936568] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 886.954990] scsi host0: uas_eh_device_reset_handler success
-> <6>[ 917.070222] sd 0:0:0:0: [sda] tag#3 uas_eh_abort_handler 0 uas-tag 3 inflight: CMD IN
-> <6>[ 917.070318] sd 0:0:0:0: [sda] tag#3 CDB: Read(10) 28 00 00 00 00 00 00 00 20 00
-> <6>[ 917.079434] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 917.079994] sd 0:0:0:0: [sda] tag#1 uas_zap_pending 0 uas-tag 1 inflight: CMD
-> <6>[ 917.080046] sd 0:0:0:0: [sda] tag#1 CDB: Write(10) 2a 00 00 d3 98 08 00 04 00 00
-> <6>[ 917.080072] sd 0:0:0:0: [sda] tag#2 uas_zap_pending 0 uas-tag 2 inflight: CMD
-> <6>[ 917.080118] sd 0:0:0:0: [sda] tag#2 CDB: Write(10) 2a 00 00 d3 9c 08 00 04 00 00
-> <6>[ 917.145714] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 917.164988] scsi host0: uas_eh_device_reset_handler success
-> <6>[ 917.165155] sd 0:0:0:0: [sda] tag#3 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=30s
-> <6>[ 917.165210] sd 0:0:0:0: [sda] tag#3 CDB: Read(10) 28 00 00 00 00 00 00 00 20 00
-> <3>[ 917.165239] I/O error, dev sda, sector 0 op 0x0:(READ) flags 0x80700 phys_seg 4 prio class 3
-> <4>[ 934.971114] rq: tag=0 hctx=0 op=WRITE sector=13867016 len=524288 age=78231 ms pid=11900 comm=image_burner state=D
-> <4>[ 934.971169] rq: tag=1 hctx=0 op=WRITE sector=13868040 len=524288 age=78230 ms pid=11900 comm=image_burner state=D
-> <4>[ 934.971217] blk: queue stall on sda: 3 inflight, 2 stalled (threshold 60000 ms)
-> <6>[ 947.276222] sd 0:0:0:0: [sda] tag#3 uas_eh_abort_handler 0 uas-tag 3 inflight: CMD IN
-> <6>[ 947.276282] sd 0:0:0:0: [sda] tag#3 CDB: Read(10) 28 00 00 00 00 00 00 00 08 00
-> <6>[ 947.280489] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 947.281255] sd 0:0:0:0: [sda] tag#0 uas_zap_pending 0 uas-tag 1 inflight: CMD
-> <6>[ 947.281309] sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 00 d3 98 08 00 04 00 00
-> <6>[ 947.281391] sd 0:0:0:0: [sda] tag#1 uas_zap_pending 0 uas-tag 2 inflight: CMD
-> <6>[ 947.281468] sd 0:0:0:0: [sda] tag#1 CDB: Write(10) 2a 00 00 d3 9c 08 00 04 00 00
-> <6>[ 947.346666] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 947.365031] scsi host0: uas_eh_device_reset_handler success
-> <6>[ 977.479406] scsi host0: uas_eh_device_reset_handler start
-> <6>[ 977.479963] sd 0:0:0:0: [sda] tag#2 uas_zap_pending 0 uas-tag 1 inflight: CMD
-> <6>[ 977.480015] sd 0:0:0:0: [sda] tag#2 CDB: Write(10) 2a 00 00 d3 98 08 00 04 00 00
-> <6>[ 977.480042] sd 0:0:0:0: [sda] tag#3 uas_zap_pending 0 uas-tag 2 inflight: CMD
-> <6>[ 977.480089] sd 0:0:0:0: [sda] tag#3 CDB: Write(10) 2a 00 00 d3 9c 08 00 04 00 00
-> <6>[ 977.480137] sd 0:0:0:0: [sda] tag#4 uas_zap_pending 0 uas-tag 3 inflight: CMD
-> <6>[ 977.480166] sd 0:0:0:0: [sda] tag#4 CDB: Read(10) 28 00 00 00 00 00 00 00 08 00
-> <6>[ 977.545653] usb 2-1.3: reset SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
-> <6>[ 977.565338] scsi host0: uas_eh_device_reset_handler success
-> <3>[ 984.123394] INFO: task image_burner:11900 blocked for more than 122 seconds.
-> <3>[ 984.123449] Tainted: G S U 6.6.135-09364-g548ca84e71c6 #1
-> <3>[ 984.123501] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> <6>[ 984.123517] task:image_burner state:D stack:0 pid:11900 ppid:11893 flags:0x00004002
-> <6>[ 984.123577] Call Trace:
-> <6>[ 984.123603] <TASK>
-> <6>[ 984.123659] __schedule+0x5e8/0x14c0
-> <6>[ 984.123688] ? free_unref_page_list+0x25d/0x290
-> <6>[ 984.123715] ? lru_gen_update_size+0x1e3/0x220
-> <6>[ 984.123763] schedule+0x5e/0xa0
-> <6>[ 984.123788] io_schedule+0x47/0x70
-> <6>[ 984.123814] folio_wait_bit_common+0x18a/0x270
-> <6>[ 984.123863] ? __pfx_wake_page_function+0x10/0x10
-> <6>[ 984.123889] folio_wait_writeback+0x35/0x90
-> <6>[ 984.123937] __filemap_fdatawait_range+0x162/0x190
-> <6>[ 984.123965] file_write_and_wait_range+0xa3/0x120
-> <6>[ 984.124013] blkdev_fsync+0x39/0x60
-> <6>[ 984.124040] __x64_sys_fdatasync+0x4c/0x90
-> <6>[ 984.124067] do_syscall_64+0x6b/0xa0
+There's a mix between useful comments and not useful comments. More 
+often not useful after dealing with earlier useful comments.
