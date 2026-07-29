@@ -1,176 +1,121 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADF3C48CD6A
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 15:18:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D531D4DB566;
+	Wed, 29 Jul 2026 15:24:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785338339; cv=none; b=oz83N9woKD8mP1z+nL/1ddmwgOCjE54Ktm6mo2YTWQs6XtItCpG10WEy++3rG32ofX9vTY7nVoNjymwUFlwkpdXW3xKeW32sPGaNgb4zBLx/d+P4gwukb5c3M2oYsoJgNAild7EfYVIO4C46KM0QGOWKJWGQYPde/phCK1A22MY=
+	t=1785338669; cv=none; b=o4AQoRJs/0UFRWX4Cp/hponBY0eTq+c1Kmx/anhDbIgys50oPTAy+LRgMHNmA6F6EFujfATQdJlGDMcfWtAxZx6TRyvIhanvOJlq6cXoC4iyyd14PRlAN8t+Q5KyjsuYM+mRCGtJ0gs/UwXirryJO64rQI4yWz4Cq+QtGwv/DQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785338339; c=relaxed/simple;
-	bh=3ow+z/6wWglw+4fKnAnBMtsKFn8RcF3l466MOWhj7Xc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=pC13wDzZzKhpUcYPFJB/iSboWA636HNJc4XcaHf4gMbXLPI+eehwD3MZbyjUgMd9KhTg0BUwsxYbtM74ra6/IQD4H3UvYuT2UdxlARovWswhAOayXsvQxZrFrRw+oadgs+6/ISl9oZHR8gKybnFS/m/SA5zPrBmAJlZKoBToS5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=bJMD31RO; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1785338669; c=relaxed/simple;
+	bh=xtu6tbx7k/1QIDKsCEMlZOY8VbKOvJ2YxulcDkoOEUk=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=CvMG2HmkMNn7o8k2P/JeKiWgbfIcXSccUYbB5aDXJtYs5nS7n6pb3wVudKf2I9+yB9wKGXaaYF3SHbUROJg7QfTvzwdJ+i73ffRp0nJOeAZ1Czy/uXwfx2Z/eMZ519StzgTvj2p9l3qZrYkNXgD2o7KhA+8I6nKSEVUp/pb+ovY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=qFQKpxf6; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bJMD31RO"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66TDTP4f3322474;
-	Wed, 29 Jul 2026 15:18:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2025-04-25; bh=EZuVMkwmCddOuoyh
-	9wFheRl7enhYQzcSqGw7Mo44OBo=; b=bJMD31ROeV2YuF78JFT6U+zXiDOHysK3
-	5SDERbOt4PANMhqnFUYRainbj7JgOJvHQxeUkJdlvLR75qIJujS5JhQhjFecPPcU
-	lq/nWeakT06F/CEzvkC82nObQnmrjY29S31N290pfNT5mLZVvsZ1Pt4scHLF2btL
-	PPDkS3aOMxuXDn1Ja7E2TWd8Ram6Fw7qtYUT7TrhB82uOta2gVOBWGYkjx5y/z9T
-	iq8smUpq4+Jh3gTXutvwPQP7d9Oki+e0ijNWwG1TXNst+zmSWzMr4FSZ8MUUHHcM
-	3f3aLBHqX2h+37PxF/oASwo4ImEnLMr/exAYPrVQbSRHbWDHbv/liA==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fmr0165vx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 29 Jul 2026 15:18:51 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66TFFIsT026999;
-	Wed, 29 Jul 2026 15:18:51 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4fqjwu2h9m-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 29 Jul 2026 15:18:51 +0000 (GMT)
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 66TFIosV040651;
-	Wed, 29 Jul 2026 15:18:50 GMT
-Received: from labops-common-sca-01.us.oracle.com (labops-common-sca-01.us.oracle.com [10.132.26.161])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4fqjwu2h61-1;
-	Wed, 29 Jul 2026 15:18:50 +0000 (GMT)
-From: Dai Ngo <dai.ngo@oracle.com>
-To: james.smart@broadcom.com, dick.kennedy@broadcom.com
-Cc: linux-scsi@vger.kernel.org, dai.ngo@oracle.com
-Subject: [PATCH 1/1] scsi: lpfc: Clear rport association before unregistering it
-Date: Wed, 29 Jul 2026 08:18:33 -0700
-Message-ID: <20260729151836.568056-1-dai.ngo@oracle.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="qFQKpxf6"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66TFHgFL402486;
+	Wed, 29 Jul 2026 15:24:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=7Y851Sl6c1317PScn03Hr9nj2cJhPD
+	VUt3qis4OFyxM=; b=qFQKpxf6VfzENcxKvq7yxuNFy/pR5LpgEr7+e1yX3HV366
+	NuxNOjzWDpuOntSdqagNUuXWRwNO+n5ZWjIZSm8y1TgPqn90lCCfJH75dcBA41LE
+	e+Eho6UZmwh9XSpB2cDUH0ckaFh3ZWtNr78Yn2rA4uavniBFtBV4MbUco8mwSjak
+	iASFn7CSXWM7Q1b3Wgm9nnVdghVVcmS/vL3agCvr+1ezZUgFSO79Fhmanuhtuimn
+	3yh34pSPC5mr+TDtrG44p0YsnwpyFG/jzW72GRPVqiiGgFjt7VBPNY7kOQscxrXR
+	/5gkWk6gPLEyiiJ4xoNhaAfQXc7mIfJaDUE9A7Yg==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fmuwd2meu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 29 Jul 2026 15:24:19 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66TFBc3h001559;
+	Wed, 29 Jul 2026 15:24:19 GMT
+Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4fn8fk79bm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 29 Jul 2026 15:24:19 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
+	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66TFOHkZ28443348
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 29 Jul 2026 15:24:17 GMT
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C9E7058056;
+	Wed, 29 Jul 2026 15:24:17 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A1C6358052;
+	Wed, 29 Jul 2026 15:24:17 +0000 (GMT)
+Received: from d (unknown [9.16.41.19])
+	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTPS;
+	Wed, 29 Jul 2026 15:24:17 +0000 (GMT)
+From: Dave Marquardt <davemarq@linux.ibm.com>
+To: Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org, brking@linux.ibm.com
+Subject: Re: [PATCH v2 10/33] ibmvfc: add logic for protocol specific fabric
+ logins
+In-Reply-To: <20260723000149.969416-11-tyreld@linux.ibm.com> (Tyrel Datwyler's
+	message of "Wed, 22 Jul 2026 17:01:26 -0700")
+References: <20260723000149.969416-1-tyreld@linux.ibm.com>
+	<20260723000149.969416-11-tyreld@linux.ibm.com>
+Date: Wed, 29 Jul 2026 10:24:17 -0500
+Message-ID: <87cxw5vmxq.fsf@linux.ibm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: x3igD5_si39orQ0-ATocC7y2UIbFWhO7
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDEyMyBTYWx0ZWRfX6NF9i1sjrNIy
+ thC2ir3wU+3uh7gsXzw4qvn/unsTZ3boYxpxmMrr0oEOf/p1Z0KXJZ4ZpEaUWQyY5odnmqzUwTN
+ nRKQ3+jn0ATsqwXqDFJ2x21cBRCg4zs=
+X-Authority-Analysis: v=2.4 cv=E/z9Y6dl c=1 sm=1 tr=0 ts=6a6a1b23 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8 a=ypPWuq4yIia8aLVxQa0A:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDEyMyBTYWx0ZWRfX512gsMEHG/Qj
+ NszMyvM1ArMfFA/RtETbKgY+/o/ssdt0Kg9wpQUHthQX80gx5HjZb6NC0Wp2tvWJ9UcTgdIHsfj
+ GHX840H+tlDonSUaqHgTJKEfC5m6w6xreBWhY38z6sHWEsPFv95ZoddMtZQfj3ZHLC0wFp83gk8
+ CPHzDvUAvE+NwkViZiqvXaMuzgOPaO+sr3Upy2fN1NpgTosE2lo0Qa14OjFJTmfpV4tAF8x6csJ
+ JaZJkfhdM2z9IUY9umqNM8Dez/pACpkJveQhZ+o3SRPwcpWCprcybqGvhUMnWx9cjbeHutt6qaI
+ 0CGIFzgOISsHcYI9JihlH6mdG+arVJFZ/QLfvFx3bXsR/bLLcuVdX0v2+8gCS5e9gfbYNZfXTxy
+ 5A2YDruP5ptlovzMZA/kczrDBaQ4758f1J4/TXdGCKrC/YORPwVVnxOaaN4MIwBv4dHkNxj/5Pg
+ 3SPATdUz1e4XroOKu7A==
+X-Proofpoint-GUID: x3igD5_si39orQ0-ATocC7y2UIbFWhO7
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-29_06,2026-07-29_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0
- mlxlogscore=999 spamscore=0 adultscore=0 malwarescore=0 lowpriorityscore=0
- phishscore=0 suspectscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2606160000 definitions=main-2607290123
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDEyMyBTYWx0ZWRfX9E7Qu2b8i7Ys
- o7n9hVPM8uFUP3xWRy3Zl1BRNApBPMLZ04itfID+0V3n4dJlcQ7OwUjj0XWL8wXJt4uH/T/AvTX
- Mbg3Sfv+XjA7xM/Hg01Pb9effTHBmM3F2KCAf5s50tOdTqwXLa7w
-X-Proofpoint-GUID: -_ZYXdTwUAE7iuLyk3GLCbHD29YdjGM9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDEyMyBTYWx0ZWRfX8WJ1vIPNucw5
- EJ9nobyL71RY8Vnh2uZRAgxnjgd49vyR3/9TfKgazTIhq4NE0fSx35i/TZKtP+5WwWjAY0S9bw9
- zRIdv1KehgZmnsSuE3YC1z7BQTOtkHNJ/AB4WSQtKRZ9rRM81mXgIVNh7zZphm5x90NpVVVEvL/
- uNv3YqdLz9Wr4cLIpBVVX4dW+09aJWIIhRjoZQ1KR4y2KAXsZwO+nNCPE75m+RUJi1/Yx7zA9g2
- 9Jc28Gjkj9r3zwj/4aekKRDG08JvUvYf1tVvsXlCTqhyWUchE39+uNCC3ULYZ+msa7zGkeij9NY
- tp/AdmC0TI3aMfNdyPJ7HQqzA40HOkUEQrF+V4mrxygLFvAj5Dp78JsJeFAcZM0WB1ReVLMS57r
- cAOwsbJFMCBUxQ1bBGyft0PF/28jiBt0OqYWffsN31pbl5Y6GkA4IV+fvGQ6MNxC391uln+tpZh
- dlEw78VzvyjMSc6j04g==
-X-Authority-Analysis: v=2.4 cv=KL1qylFo c=1 sm=1 tr=0 ts=6a6a19db b=1 cx=c_pps
- a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x0eKOSpe3m1H3M0S9YoZ:22 a=yPCof4ZbAAAA:8
- a=Kl3EdFICxbgDYbn0s98A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=WmVTiCyuxqgg3mnwYu6p:22
-X-Proofpoint-ORIG-GUID: -_ZYXdTwUAE7iuLyk3GLCbHD29YdjGM9
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 priorityscore=1501 spamscore=0 clxscore=1015 phishscore=0
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 impostorscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607290123
 
-System crashed when a Fibre Channel cable is removed from an
-Emulex/Broadcom lpfc HBA.
+Tyrel Datwyler <tyreld@linux.ibm.com> writes:
 
-The crash occurs after the lpfc Link Down event, after dm-multipath
-fails paths, and when the FC remote ports time out and are removed.
+> @@ -1530,8 +1538,14 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+>  	login_info->max_cmds = cpu_to_be32(max_cmds);
+>  	login_info->capabilities = cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN);
+>  
+> -	if (vhost->mq_enabled || vhost->using_channels)
+> +	if (vhost->mq_enabled || vhost->using_channels) {
+>  		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
+> +		if (vhost->nvme_enabled) {
+> +			login_info->capabilities |= cpu_to_be64(IBMVFC_YES_NVMEOF);
+> +			login_info->capabilities |= cpu_to_be64(IBMVFC_YES_SCSI);
+> +			login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_WWPN_ALL);
+> +		}
+> +	}
 
-[ 3214.903257] lpfc 0000:c1:00.0: 0:1305 Link Down Event x2 received Data: x2 x20 x200110 x0
-[ 3225.070299] sd 19:0:5:254: rejecting I/O to offline device
-[ 3225.070330] I/O error, dev sdm, sector 532480 op 0x0:(READ) flags 0x4200 phys_seg 16 prio class 2
-[ 3225.070355] device-mapper: multipath: 252:10: Failing path 8:192.
-...
-[ 3245.037613]  rport-19:0-1: blocked FC remote port time out: removing rport
-[ 3245.037651]  rport-19:0-0: blocked FC remote port time out: removing rport
-[ 3245.549614]  rport-19:0-3: blocked FC remote port time out: removing rport
-[ 3245.549632]  rport-19:0-2: blocked FC remote port time out: removing rport
-[ 3245.550290] Oops: general protection fault, probably for non-canonical address 0x400d7115d1923c7a: 0000 [#1] PREEMPT SMP NOPTI
-[ 3245.550309] CPU: 6 UID: 0 PID: 355 Comm: kworker/6:1 Kdump: loaded Not tainted 6.12.0-203.76.7.5.el9uek.x86_64 #2
-[ 3245.550338] Workqueue: fc_wq_19 fc_rport_final_delete [scsi_transport_fc]
-[ 3245.550360] RIP: 0010:lpfc_dev_loss_tmo_callbk+0x58/0x48d [lpfc]
+Should setting IBMVFC_YES_SCSI be conditioned on vhost->nvme_enabled?
 
-Call trace:
-
-lpfc_dev_loss_tmo_callbk+0x58/0x48d [lpfc]
-fc_rport_final_delete+0xeb/0x1b0 [scsi_transport_fc]
-process_one_work+0x174/0x31a
-worker_thread+0x191/0x300
-kthread+0xcf/0x100
-ret_from_fork+0x31/0x50
-ret_from_fork_asm+0x1a/0x30
-
-The crash happened at this statement in lpfc_dev_loss_tmo_callbk():
-
-phba  = vport->phba;
-
-and vport has an invalid address, 0x400d7115d1923c7a.
-
-The crash happened because rport->dd_data->pnode still pointed to an
-ndlp, but that ndlp was no longer valid. If ndlp->vport is
-0x400d7115d1923c7a, that is much more consistent with a stale/reused
-ndlp object than with a valid node whose vport was separately freed. The
-node pointer itself can still be canonical because it points into memory
-that used to be an lpfc_nodelist; its contents are what became invalid.
-
-This patch fixes the problem by detaching the node from the SCSI
-remote port before calling fc_remote_port_delete(). Clear rdata->pnode,
-ndlp->rport, and the SCSI transport registration flag while holding
-ndlp->lock.
-
-This prevents stale rport-to-node references and keeps the node’s
-transport state consistent during remote-port teardown.
-
-Assisted-by: Codex:gpt-5
-Signed-off-by: Dai Ngo <dai.ngo@oracle.com>
----
- drivers/scsi/lpfc/lpfc_hbadisc.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index ecc9d6bcda32..f0329bb89e9a 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -4564,6 +4564,8 @@ lpfc_unregister_remote_port(struct lpfc_nodelist *ndlp)
- {
- 	struct fc_rport *rport = ndlp->rport;
- 	struct lpfc_vport *vport = ndlp->vport;
-+	struct lpfc_rport_data *rdata;
-+	unsigned long iflags;
- 
- 	if (vport->cfg_enable_fc4_type == LPFC_ENABLE_NVME)
- 		return;
-@@ -4578,6 +4580,14 @@ lpfc_unregister_remote_port(struct lpfc_nodelist *ndlp)
- 			 ndlp->nlp_DID, rport, ndlp->fc4_xpt_flags,
- 			 kref_read(&ndlp->kref));
- 
-+	rdata = rport->dd_data;
-+	spin_lock_irqsave(&ndlp->lock, iflags);
-+	if (rdata && rdata->pnode == ndlp)
-+		rdata->pnode = NULL;
-+	ndlp->rport = NULL;
-+	ndlp->fc4_xpt_flags &= ~SCSI_XPT_REGD;
-+	spin_unlock_irqrestore(&ndlp->lock, iflags);
-+
- 	fc_remote_port_delete(rport);
- 	lpfc_nlp_put(ndlp);
- }
--- 
-2.47.3
-
+-Dave
