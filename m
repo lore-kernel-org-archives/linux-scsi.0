@@ -1,938 +1,290 @@
-Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD3B44D2ECC;
-	Wed, 29 Jul 2026 14:48:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785336505; cv=none; b=cqKFc2N15C67AdtFMj7pYyXra0hNqByjGpee/v916w9js2ZSNfd7ZUekdtj+HW0fpdcZjojHSkI+i3QKecPQXNTGPFl2qY2YkT6xqapA/l+dkwcQnSi6D90yIF9j97ktqz5ZtldOmZa3U1x9YE8919UiBg3BPbOi4EbG7OEuFGQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785336505; c=relaxed/simple;
-	bh=xLanNwlby7ApZwqrmT8Gx524VL75pS2+vIL6wKgL3rk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WJoeXNz3giOEEGL0vDe1Ygdq7Np88LarPkUc4Cur4Zgc9g0qcTPO+0kIKlzbtnS0x2eIV2sMtYkE7x8MKvLoRb1Bz/xhkwnvmFD9YNVYRco/7H+67DWowWOnCIfVouZ92pHHqBSQN/FG4KLc2XwauSN3mSSQKEwe38l+e7up11E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fastmail.org; spf=pass smtp.mailfrom=fastmail.org; dkim=pass (2048-bit key) header.d=fastmail.org header.i=@fastmail.org header.b=cjASi6mP; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=fj6zWE+Y; arc=none smtp.client-ip=103.168.172.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fastmail.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fastmail.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8F9E3E7633;
+	Wed, 29 Jul 2026 14:51:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785336718; cv=fail; b=JSn9r7Xd02HcAVnpdf0I7d73Sy1+oUXc83PwZYqszVSeo5HJaSO6KsjoSypH9MIRSPbF45oOBqQcD2glqNFyM2kIx0qQ7mwUmQ8/wfP87UYATV8MlpbTnwj15XjEPp6AC9LD/CEdKjC1eu8JMgN2NrehMBmwfy5nABnpqr9/fTQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785336718; c=relaxed/simple;
+	bh=kxxZhtSWP5xHM1nx1dClX6/GIkbKFutkkM/iQwt69Dk=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=cwdGj/ljOEYG0GK9OYJeGvTx4KMBz6GE8lrgt5alFjENPviRWWE9ckNEdjuZsYxAFNEHghFCsxevXfyYqSf5XANoaGWt0VzlMPy0BaDeV/U8n+Oj4rsMvLKsnFoabMh8yuauQvt53hX8BCF62bBbbhQ6o/lX5oOr2+8PrhoT8Ro=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=RPnwlNF1; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=KVFN8nhf; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fastmail.org header.i=@fastmail.org header.b="cjASi6mP";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="fj6zWE+Y"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfout.phl.internal (Postfix) with ESMTP id 08440EC0455;
-	Wed, 29 Jul 2026 10:48:22 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-04.internal (MEProxy); Wed, 29 Jul 2026 10:48:22 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.org; h=
-	cc:cc:content-transfer-encoding:content-type:date:date:from:from
-	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=fm2; t=1785336502; x=
-	1785422902; bh=myP4sKyD78EExUNmIKw5zozrdspuNEDwyMYDkHU0N4w=; b=c
-	jASi6mPQ0WL2vj652fzfM9ZRouwUqrHtVyI2QNIUIAby/pApkexVj2/Q00rxi/Lp
-	4gVt95rA0WOQsDu8mhi7vKiUmhsJfBZPPL4M94FLWJogPGB3Bi5uR2hdQsdGgFZx
-	uUmGWoZePjoaFYSp4r4ZakCDdcQPfE6cDCKgnEkJ8dMbxSaJ+viDMWCJHPcZTBR4
-	bIdwIT5DiMDz5uQW4JR3EmuDiJw8RZxon1brLLAiotw6IgOUOIYccz37diiFBovU
-	jEEsLDh/AVY2omSIGTjq2NCr691M2vtiNzmu/irp7YW2SZd1Z8fzTl6tV5OG1z1F
-	UjBz3wmQYOlZHdEn/gq+g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:date:date:feedback-id:feedback-id:from:from
-	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to:x-me-proxy:x-me-sender
-	:x-me-sender:x-sasl-enc; s=fm2; t=1785336502; x=1785422902; bh=m
-	yP4sKyD78EExUNmIKw5zozrdspuNEDwyMYDkHU0N4w=; b=fj6zWE+YAYsvXRPkC
-	xWN5Cm9AiUSc5fnGNdWyULOUYj92fJ4grpbScL+JU8X4dIVMoRy3WYibnDt7SxEd
-	/Mv1BXGSvJX7mXtWVX2X/KdGXnw+THDt1J5khG/gMC0rzctEQ/oR4YW7xBOKImYD
-	fv/t8MFZ+yXYB2zy93r+OzyE0Fk3al5mtuQiCznQ2nw1ZDYsOAc+8lrrHcK2qVN5
-	3+ALENbV8Zp6fzimoNPi3gNPuPRptLfV/nCG0dRf/ZmTTPvy1KNa6LEHlRHPb1Gr
-	dOiYHcnPPBH0iIV5MnwpIJ1HFsgQ5VoT4bgbrk0voPQRnFO0iMICyZ9iQyM4rsE6
-	N48eA==
-X-ME-Sender: <xms:tRJqar9nKYSc80Gsd1ng6yEvmU515Y4gs0bwMC7rU8OeaX-UFUioqg>
-    <xme:tRJqaoJ8jNAkE9g5koD2PUGJfrW2Xvnp4tjokZ3F2FrptzGOiVgLL6IJlrzr-hoAs
-    aVZTa4r8kGGQAddH5fO0QDFdR7yrzs0-MStA5o3gZO3opIpz6-yVIj2>
-X-ME-Received: <xmr:tRJqapvLjFC-FX4qJuvUMyE71Q46JHTall1bKAjib_NQtKf17_8nHqhG_Eo>
-X-ME-Proxy-Cause: dmFkZTGdY+pN5mJnrgzNuvwmdIN4d0cDYSqljSTh2mUqdNx2KQRv8woOMZK16LHlSFcnbf
-    jOSIBa0vThOogUDaEi+5ez1Xl0OPjIQRcIXIsJWxjizs3VRsx+PMpxZuahU5w78vSQBw9i
-    3Lv5FqTUEpvJuokOw4iodBXccwzCLD4ZRijkOuGu1eENavOMhOVEQWqkDazNBk+um3UHA0
-    J0NJPsou1iaRJ99lubBEIYzbve8QntDkpnxLlpvGY6S3eTIHghDIL3qydp/Iq0L3TgMM6o
-    wqVqUx7M0KkZx0A+/5vyaVdxo+XeHtuOzcm4iYQ4h8b0QjyG7+mUvKbduYdqPutScAbJdb
-    SEadwpcnUbScdNX9KLLzn4d859xn/qmjtBhghe2w/ASoba5CbB5e6tU5dE/4TeGnuETJy5
-    FQskjqAeztVtB2ntuHJiT0m7urTBqWSMkUxknjQ91u3IWRQ5CZzmaN7ZsMR+UJ2Rkz5g/r
-    Hfa8uENZJNzEsLHjqO7mLTFdW3zoVSKbgaEbl8JpR5s1zvdT7qKSbYun6urlP4QBMhx2oC
-    nxHVK3m2w2GVzcKA9x1+lqwpVoe1djmiB2f5DlNav/CXAZT2hZlUD3hauAt/2D6WpISQX6
-    drpPiFPZHXkV0D6xjNZAOMxeZZX6oag+sxmZgX2uEKRVLDX4uSX87eumKPJA
-X-ME-Proxy: <xmx:tRJqavDZj18WfhEJowAM2k3q66uNAxeDNRjXQtVM7jvbJGksHLccEw>
-    <xmx:tRJqahOk82qFBegixo9XAI5tKHnOrfGRK2KIam3IKGAIfVqL5lX9KQ>
-    <xmx:tRJqanDvHlvyB7UsVfcXNEedvIqaWJxBChVk7U38cvC9ytALyCp96A>
-    <xmx:tRJqaq5qqM5kUFu_msYhpGlDUbWmK_oYLeKvE1CzP0_7MXGUnPKzDQ>
-    <xmx:thJqar4fnB5TdARMNw162enEIhbYTR9FbBMQLl-t1Oae3e9VJu08yBBx>
-Feedback-ID: ib53e4b78:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 29 Jul 2026 10:48:21 -0400 (EDT)
-From: Ian Bridges <icb@fastmail.org>
-To: Justin Tee <justin.tee@broadcom.com>,
-	Paul Ely <paul.ely@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org,
-	Kees Cook <kees@kernel.org>,
-	Ian Bridges <icb@fastmail.org>
-Subject: [PATCH 5/5] scsi: lpfc: Replace strlcat() with sysfs_emit_at() in the sysfs show functions
-Date: Wed, 29 Jul 2026 09:46:17 -0500
-Message-ID: <20260729144617.1388646-6-icb@fastmail.org>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260729144617.1388646-1-icb@fastmail.org>
-References: <20260729144617.1388646-1-icb@fastmail.org>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RPnwlNF1";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="KVFN8nhf"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66TDTJJW3035319;
+	Wed, 29 Jul 2026 14:51:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=pZpSG6MSS+vnyzxnbE0xV8VSjTRKEbKwyTmK98VXZS8=; b=
+	RPnwlNF1r0CswsmFqsvAzz0DSHalmmoZI4rFXbRne0c6+A6q5VM7n3o/t3SKe2aH
+	fRk+RIqR/ftwtaXViqNUMd7AsNTV17p7yJZNMaXoHHJWz5fwpVqT2ANSFYjbSCgN
+	VjJWR7Gyaec4DhPBv2PJzIzRCjQQuqkuIlpyzgmoJk2eo7S3mJTHZFor4L0qD8AE
+	gkBPA4fcD3rGZ1mh3hUqOXre9WcfEQSTx5hQn3Y8xA2bf4MQc7Bs0qOIuB0bXaQ1
+	gEPU/nsDZtR5hufudwVJdDUyRsQieNrpYUFbDzEDZMXMrbMq7ut2rUtV+CBpOP3p
+	w6pMNcoR17bYL9XjCIdJhw==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fmr5np262-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 29 Jul 2026 14:51:51 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66TEjFmK024843;
+	Wed, 29 Jul 2026 14:51:50 GMT
+Received: from dm1pr04cu001.outbound.protection.outlook.com (mail-centralusazon11010002.outbound.protection.outlook.com [52.101.61.2])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4fnhem14cs-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 29 Jul 2026 14:51:50 +0000 (GMT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=mv+cq1lOYdCJOfxn1IrseOhGiLKWX07pCLt9xj3vhr/AE7eFhkxST83kvQta7qpyE+C8bwVnI1B/AX0IrfwGoWUOK7usxcJx4EUbc91vF7PEakdss709xOCSPNdutINKqRZ5a/lndZAfJtBpTtfaGKAkest/zHIULC5dyGLO6K2nQWnODfzqzvsKxQMDs3HCJPvaQnVDnCjZwZa2j0EHRKAV7Pfh9mVzdU2viUyzOUWcnReWqg2/QIwI9bKGoVrnJU8z2f/f+OTbCMKzyiELJj1ODBKradQwExX5D48a5ZFemxsDfS903MHOohBrQuMQ/BvS2+YXVnP3UTSfAfZt+w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pZpSG6MSS+vnyzxnbE0xV8VSjTRKEbKwyTmK98VXZS8=;
+ b=VgMzG6IVbwK6MRGhtlaoZ/n5p094OdWFlXXJSXNXNm+vaqk1MBCCHVjjrJKdT5wLZirpWV5YeK9YWDJAkKfcb5inEGm1z3fs11X+1Xs1CifdcN8c3JCmXwl+z5UxcgzBbJGTRbKCHMBrvedmuTG51L7WQHynF15EZsLy6n80D6Z79SGS6hAuyOQRSNm6UojQea5dpKw5sjHxeNLsDrXjyFWV2QWmooImQoccV310abr4NoMTL0F4yUzSLZ6jphfQcn6aVzLxyt+i8x90crRsWAn2azJvcMzcyTLMBtLlckhskLHmKwHf6OE6m+WJ009ffaCFGCMpmRG0hY7VpeGVww==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pZpSG6MSS+vnyzxnbE0xV8VSjTRKEbKwyTmK98VXZS8=;
+ b=KVFN8nhf83vcbe/U1Oo4hpIig888Go0jGP4e336y7LglPF+P3PpxfDkWTWRbCSbnMVNqrEJos1ykHUOXilxga/B/1PFg8wtzklH8f6URMSCABeERweJU+aQ1yiLY7nrzObD1OgLmhFekYi+1G87LgmVX1ptFsXjEMKA0tpsUW9Q=
+Received: from DM4PR10MB6229.namprd10.prod.outlook.com (2603:10b6:8:8c::12) by
+ CH3PR10MB6833.namprd10.prod.outlook.com (2603:10b6:610:150::8) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.270.12; Wed, 29 Jul 2026 14:51:44 +0000
+Received: from DM4PR10MB6229.namprd10.prod.outlook.com
+ ([fe80::867:63e7:13fa:fa7d]) by DM4PR10MB6229.namprd10.prod.outlook.com
+ ([fe80::867:63e7:13fa:fa7d%6]) with mapi id 15.21.0270.009; Wed, 29 Jul 2026
+ 14:51:44 +0000
+Message-ID: <fcb7a590-0a00-4662-89d2-58f6a03d221c@oracle.com>
+Date: Wed, 29 Jul 2026 15:51:41 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 16/27] scsi-multipath: clear path when device is
+ blocked
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+References: <20260729105107.255712-1-john.g.garry@oracle.com>
+ <20260729105107.255712-17-john.g.garry@oracle.com>
+ <20260729144230.4BDF21F00A3A@smtp.kernel.org>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20260729144230.4BDF21F00A3A@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR3P281CA0115.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:a3::10) To DM4PR10MB6229.namprd10.prod.outlook.com
+ (2603:10b6:8:8c::12)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM4PR10MB6229:EE_|CH3PR10MB6833:EE_
+X-MS-Office365-Filtering-Correlation-Id: 787bcd50-e406-488d-f99b-08deed80e873
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|366016|1800799024|23010399003|6133799003|56012099006|4143699003|22082099003|18002099003|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	I04gVaeF6jrM8435u45Y8Kx+hu5M/3+q7xGAfBqGVdnAbOVgicKu2u8n9xRBTt4nbXBpuQeXBSFem1p9jMQkcfclJZ4K3dqkOXBS5kRQeioSupF5CsNetSmXDOtxc095lFFrwhVFpVNQaGfqX4UxtSCjxcB1zDTdN3fvRK6Pug4/Kf2l7HjEaUmKaKJGs1gbHzj9xa/hiMYIa2HKIN2hIhyfoPY3DF8jQ/goGVerkucK14X24eQ4hnLN5uC2PSZ3iPF6nazgHHefhYJ8cLgW0YFBuypGaxTf0eT2fdh7G67MCpM1wMWXhmHTQhWOj4sAvSEBvyqTzDVgWDuJX07u5beBbvMiemUc/UZoPs5fagrm9hfL15K+axQtWQz26fXSAaGasE9oRwqfxsGoo/YQ/JaCaEuMsC7I9OgD2V98qj2g+mMbJYADekHKk3J3phRZvMfMCkn7sOlR4Skbo8dnMLaGuZ70Y3lifvPdVRdFUF103jU/OMBzrqtjRyBTfQvskaGLqcFOu+1h7Tz83mr5uwi9YEXhLnUnS+BS1jCGmKo+39Z/L2TEI+oq+u+dxatFMJS6weqvzFHBASywlMsWT/m+fDwr5gNVV5qUOTTsysaJgtNlj7Bno3rcAv8IszrqUUMoO7kv2JbTmaGFAdxWhixysKufkD7+XISFkMXNc8A=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB6229.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(23010399003)(6133799003)(56012099006)(4143699003)(22082099003)(18002099003)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?RE5OMHdEaDN6ZDBmRFMxR2JrRm5aQmRNYWhIQ2FRU2JuR0lTMUNPUDFnR0FE?=
+ =?utf-8?B?M1I2VlByYVpMOXRFekMrQnhkdmlzMzAwRmkyRFFMam5Zd2RMb1IvaHFORGJS?=
+ =?utf-8?B?dC80RFR4MXZPMnIwUEpST3Ntb0c1NWpIS1N0QXNlN1Y5ejlxaWlxTkNYZlFQ?=
+ =?utf-8?B?VG9XSVVKU2ppZm4rMjdFdWVNRnVGRjJYYUhPZnB6SFFMaWtqakoybkl0U0Uw?=
+ =?utf-8?B?dm9oTldEdmtBRC9YZWdvTlZ6SDlsam5XWUJuTkpwa08wa1dDM2lDVkRXTXZE?=
+ =?utf-8?B?aGJoQllQcmZ6aldTcEdlelBRcktWREF3bnEwMXJZSERBbkdpZ1JWVk1kdEZl?=
+ =?utf-8?B?WEZBM2FwZmQvWVVNVnJDRFFPYzE0TngraGhVRVlwWFg2ZjhCcDZUbXE3VE1a?=
+ =?utf-8?B?MHJPTUpSc3ducFdvOHlieGlZUEhmV2N0ZG4rZmF4OVlodkRMT3RvSXRKV3FK?=
+ =?utf-8?B?TTBTNGFUTWNWd1ZSM1RNZUdjN2duSTdkQnNHWWc3djVadUM5Y3p3RW5BWXpq?=
+ =?utf-8?B?WmxYVmNUVGhjNVFjeWFTdXpQQ2VwcVNBZTBIbjl4eThvUkRxSFZRNG5ueVZ0?=
+ =?utf-8?B?a292bGJucVg0MlFkS2FlSU42RWJocVcwUTBtMkl2Nm8xdWVLUkUxRm5ONEo5?=
+ =?utf-8?B?Y1A3QXBocEszWEVwcmE0OEMzQWlvZC8wclBjU3hzRFY2ZldiUDVvV1kvOUhY?=
+ =?utf-8?B?ZDAveUhyVDF4Ui95Q0hpSHVQQ0t4NjlPTzlzd0pzc0wwK1lLdXZCTWt1cGVZ?=
+ =?utf-8?B?TjZXM1dDNEt4eHUydTRsZWdyWlI5SWFRZXlUc01NVnNwYTdxTFhzMy9qTGEy?=
+ =?utf-8?B?QlJwZzh1blRJMUZpVitkeEpiVHVDNlZKYzZ1MDYrQnR3MEJtWXRWY0x1eG03?=
+ =?utf-8?B?aTdsaDlNZkNYRExaR2kvYlZ6bXRkaDBLVzZHQk1QNXIzQjV1TGJsWlo1OFNR?=
+ =?utf-8?B?cndoeG0vL0t2VWVMeHIzN2JYM0xkNW9nK2QrOVR2ck1iZmNGQWhJZjRLcTl4?=
+ =?utf-8?B?RHgyU1lyc2RpWTRTT2xTUTlPaGRCQjlLT3VGSGg1UUpqc2d1QWREMGdwblZm?=
+ =?utf-8?B?eDRkUnNwTDNteFpRSm9KcWNoMnVlM1p4VXF2WHFWRzdpZVlZbGRRb0pFTHJy?=
+ =?utf-8?B?R2xmY1ZGTXhndnBpVnozck5PS1d4K3RXNWxUb2N1emtoS2VFeGpXeGtWR3E2?=
+ =?utf-8?B?bjFJYVk5bFhrWmlzNDc4aU8xZW1ldXZlWW5JbkZSNUtDSmQ2WXhTL0xHMzN1?=
+ =?utf-8?B?OXp5ODRQaHVybkxMZmdrOWdBTjM2T2I2TXF1Z2FXSWRaaDQ2MTBRbjh0Qk11?=
+ =?utf-8?B?TE9MZ2VKdVlnUUdxMisxZ3ptV2xOUXRNaXVjbElYSkhqWWoyTERHcGRxbXp5?=
+ =?utf-8?B?TnpOcjN0UnpnbTVoZ0ZPRVptWnFYN3NJclpjRUo4KytWbzhkM0JBR05saUNj?=
+ =?utf-8?B?eTlaUk5hTmlUcGtsUzJYTUI1NUJ3bXhoNXN4TW8vaVhwNm5DakwvSklvbm5k?=
+ =?utf-8?B?ejJDQ1g5TnhEcVhmZzFNeHo0UkNMR0lvVDNFZ01MMFJmcXYyRENqL1I0Zkw5?=
+ =?utf-8?B?VUhiN1lvdk9qemh3TzRvK0dxNmYyc1gyRHlKNGU1VXRuOWtXLythVnNRbkxr?=
+ =?utf-8?B?Qi9GckFON0lPUFVmM3ZUL1dZcGVzK2krSnVDaXdQOEFDeTQrS0xyUjNnc3FL?=
+ =?utf-8?B?UDVDK0cyR1hocE1SZDVjVG11TW1XdXVneURjVERPaitYTEVxS3pvT09OSnQx?=
+ =?utf-8?B?UFpIb3lVeUpPUUZ2Wmw2Z29BOHhIMXlBOEpuR3I1YTVvMjNVS09MTjB0RGlw?=
+ =?utf-8?B?ekVNU243Q2FWMHcyZVMyc2NSR2c3NzgrdE9NOXovQkt6Unh3RlhNSWdlR2Q3?=
+ =?utf-8?B?SHE3L1BGeGxYeFlpVXd0OHVuZGpJRlRkWUpIZWxETUxZc01EL1I5UktraEti?=
+ =?utf-8?B?SWNzNkhFeTdLdWxZN1dCQmt4aC9UeVBON29wNFcvOWMvOVRiSWloZzlZWlhW?=
+ =?utf-8?B?L01sS2ZpcU1uOEZHaUExTVFkaVpXUy9tVWl5REUzRWxLdGlIMTArdjR0Z1ZL?=
+ =?utf-8?B?VGlkUW5iRlpXbUlBMHRSaExDdFdhd3hxSzc5RHZ6cVZmcjZEWUpoaVJBWThV?=
+ =?utf-8?B?NlRyQ25NejVhVlFvUkU0SjNzWDJZVEI2SjJlckl4dWtIRHA4WVpTYndOMGt0?=
+ =?utf-8?B?RUpqU3RqZHR6aEEzWVBaK205a3RxcUIwM1VQNzdnTHRyUHp6Qlh2S0lhekRM?=
+ =?utf-8?B?emhUTkpUV2JVL2dYdkc1TUhhRkxqZTVVbDZZZkJsM0pQMUl4TXAweTJqazQ3?=
+ =?utf-8?B?OFh4ZS9mK29LamFkRmt4VXZScGNhUC9IenZYUHc3ZkVlWVBpalE5cjN4ZFQ0?=
+ =?utf-8?Q?ZPRkVvQQOWwuGv8M=3D?=
+X-Exchange-RoutingPolicyChecked:
+	kqYwdN7vWRfb/u9D8fZkEOMsMglvk5mt/EjRV/E6SskBSajEZFf7q2hRfPlKUx26/emwVIXVjo07AYjmmN7UEV1IIpjjKEI0SRXapMZe57dgfcsbhsSN5sel0fMJWjT0gOZ+pRQaXF6w/zU/p1hyezwP4ODt57Kb3pj8pGwrX1ylaRTDulve9oz7VWgduxh6h+ceOeutmV03Ch8hozglzpalkGdQesgtHiT8mvWc/54DFHFPkNWfOMB2WLJRteYB612zy7xqmrrgfGjyElBXXnTjqRUafzYfLkQnAhejaBnv3djZL3D0t6fTHC3NH+XxnFpJn3QvYVTIf4nd87z3cw==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	jNfpHJqHnO2E2DA0Prs+88Kl/+4eZehJsXTCH5OIZ5Ead2d9uSfb0n2DClwOvh+zS9idHb82aoFz3HWT7WQbnecNsyfiR5O/VJF+2u0/n1kwwbaSCGwtWvvAtdzV3MCtnEYz8DsSqx5gbUwyJgyYhMobmopfUNKUSx2GDdWxamqTVIbqiY+WET+GKYPRyukhGDnhRoiz9Uxj9WRygG3irXwtPRspHiiaFtmqTs35Be1GSgZlesscKUKa0xTl4i8qHGzzknFHuXPHEXokF/DPx2ZhV1fGubTSlNp7XchWoSrxQZK+GDElhm5rdSoD+D2LQlhMijOfK1wkqSDV/620HAqInC6pmJu0Ihg2ez6YKjn0xM6Nu7/WbApbb2QtxnUIG+feCYO7tZvfE8UOl4XJNYW8RR5ynysIepzGh1AEgUUKH/o2YreNzofwEahyXYt+AjXiHhwyB8jhBzrBPTtT4h6Hr76hTkNvZLBle4qyhF/2pwV80JFAjJjNzl5jZww0HC6/IM/Gs/Efy+Z1elgIFHq7/GIUqviuCTAWY0qcdocQaYhuPD9l0ytJNxpjAC5Ch21Puw4PGsrq5YS+DzK+rTSQpstgV5rDcPEGAxGKFCE=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 787bcd50-e406-488d-f99b-08deed80e873
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB6229.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jul 2026 14:51:44.7424
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: n/AuShqZCp+V0EBcEQkwFibiFlZH50n3W12TLoYFBS4KlPphaeFK6yTLcBTGEAdfLRWfxwAPKtW4yAeh4sAf+A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR10MB6833
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-29_06,2026-07-28_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0
+ mlxscore=0 bulkscore=0 lowpriorityscore=0 suspectscore=0 mlxlogscore=999
+ spamscore=0 adultscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2606160000 definitions=main-2607290120
+X-Authority-Analysis: v=2.4 cv=OPsXGyaB c=1 sm=1 tr=0 ts=6a6a1388 cx=c_pps
+ a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=RAioF0-LDSMA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=o5oIOnhZENCTenyL_yNV:22 a=VwQbUJbxAAAA:8
+ a=NxYuY2e8b2wDofff27sA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: n13dUXKepeWbm5tuCuwtz1DdKvoMgzYG
+X-Proofpoint-GUID: n13dUXKepeWbm5tuCuwtz1DdKvoMgzYG
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDEyMCBTYWx0ZWRfX4eFLIzPvigEC
+ bbdG26HWS+k9H94EbNxKA3GrC87k6sju7sEZeXweUrpqPYWmo0j/KF1fQAtte7txkkXoB3RDH7T
+ amhkAXlqFzO1EfTYxB4u9N8UzmDFwM5Qj88DqSYEuUWGhWv60xpn
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDEyMCBTYWx0ZWRfX29eXUW9KFZBz
+ ZMDjyNxUfII/RI0UGr9wo5jSv45N0DeUQMf5ZNcJVkjWj+993wInQOKSPjBBXiD3j04X0US4S3J
+ Obx14kWe56KE3SCrIE0+Qt7Lh5zbvbp9LeF/GyGxCLk0V8CKebTwwq9hwM6PrGGighmy5CDja5t
+ Vrv+6PjJ1zw/lw0vHVnYXkLtl1726yqUX+RUAXpJqtcRqYIvnHA5RyuONihCFUwdnQpZKjVzQiu
+ QY7zSMD4eHt86ekBGtqdTs/8mGvbE4KV1/HdeoeoqnPJr1WM9PVLpfjRFTFCAC/qe9PTC/PEESq
+ SbQXOwNDjfL2hCSx8VF4apQ2O1uLWxGHBFaivNqvTPvENBPObRmj29etG87qoIv4vDCvUYwmvDn
+ 5M60FTkaBdyDYo29/fpIlxnn50ls3Ep5oMbx64FpGGjYwFmG8PCu8ibDizlrZdb17ANtgIGqYDA
+ XkJH/uImHwKN/DqaBvQ==
 
-In preparation for removing the strlcat() API[1], replace its uses in
-lpfc_cmf_info_show(), lpfc_nvme_info_show() and lpfc_scsi_stat_show().
+On 29/07/2026 15:42, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] Unprotected, lockless access to `sdev->scsi_mpath_dev` in `scsi_device_block()` causes NULL pointer dereferences and Use-After-Free (UAF) bugs when racing with device initialization or teardown.
+> --
+> 
 
-The three functions build sysfs attribute output, and sysfs_emit_at()
-is the designated helper for that. The single write paths become
-sysfs_emit(), the offset zero form of the same helper. Each
-intermediate tmp buffer and its per fragment overflow check become
-unnecessary. Once the page is full, sysfs_emit_at() writes nothing
-more, so dropping the early exits does not change the produced
-bytes. Each loop that appends keeps one exit, so a full page stops
-the iteration. In lpfc_nvme_info_show() the exit also releases the
-fc_nodes_list_lock as it did before. The unlock_buf_done label loses
-its last user and is removed.
+Same as v5, there should be not races
 
-The old code capped every fragment at LPFC_MAX_INFO_TMP_LEN or
-LPFC_MAX_SCSI_INFO_TMP_LEN bytes before appending it. The replacement
-formats each fragment directly into the page, so a fragment longer
-than its old tmp buffer is no longer truncated when the page has room
-for it. Both macros lose their last user and are removed.
-
-The running length that sysfs_emit_at() maintains equals the length
-that the removed strnlen() calls computed, so the "Could be more
-info" overflow markers keep their trigger condition.
-
-Link: https://github.com/KSPP/linux/issues/370 [1]
-Signed-off-by: Ian Bridges <icb@fastmail.org>
----
-The differential harness compared 60000 randomized cases, including
-remote port lists that overflow the page and exercise the overflow
-markers, and found byte identical output and return values
-everywhere. The fragment cap removal described in the changelog
-produces no byte difference in these three functions because the
-fixed field widths keep every fragment below the old caps. The
-starting strnlen() preserves the append semantics of the replaced
-strlcat() instead of assuming an empty page. The KUnit corpus
-confirmed the same as compiled kernel code, including the page
-overflow marker path and both the target and initiator branches of
-lpfc_nvme_info_show().
-
-Notes on the removed per append overflow checks. The checks were
-added by commit afff0d2321ea ("scsi: lpfc: Add Buffer overflow
-check, when nvme_info larger than PAGE_SIZE") to stop a real
-overflow. The snprintf() size arithmetic used before that commit
-could go negative. sysfs_emit_at() removes that failure class by
-construction. The offset is validated, every write is bounded
-internally, and the accumulated length cannot exceed PAGE_SIZE - 1.
-The 6314 truncation message added by the same commit keeps its
-trigger condition.
-
-Commit 79080d349f7f ("scsi: lpfc: correct rcu unlock issue in
-lpfc_nvme_info_show") made the exits inside the remote port loop
-release the lock, fixing a leak. The kept loop exit preserves that
-property. A full page stops the iteration and releases the
-fc_nodes_list_lock as before. The exit checks once per port instead
-of after every append, so on the boundary the lock is held for at
-most one port's worth of writeless appends longer than before.
-
-A userspace timing comparison of the old and new function bodies,
-extracted verbatim from the two trees, measured the conversion 1.5
-to 1.8 times faster wherever the page does not overflow. The
-strlcat() rescans dominate the old cost. Without the loop exits the
-overflow path grew linearly with the remote port count while
-holding the fc_nodes_list_lock. With them it stays flat and faster
-than the old code in every measured case. Each remaining writeless
-append after a full page costs about 170 nanoseconds, bounded by
-the fragment count at a few microseconds per overflowed read.
-
- drivers/scsi/lpfc/lpfc_attr.c | 555 ++++++++++++++--------------------
- drivers/scsi/lpfc/lpfc_scsi.h |   3 -
- 2 files changed, 230 insertions(+), 328 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index f4e8164b94ab..bb5c84f0b787 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -57,7 +57,6 @@
- #define LPFC_MIN_DEVLOSS_TMO	1
- #define LPFC_MAX_DEVLOSS_TMO	255
- 
--#define LPFC_MAX_INFO_TMP_LEN	100
- #define LPFC_INFO_MORE_STR	"\nCould be more info...\n"
- /*
-  * Write key size should be multiple of 4. If write key is changed
-@@ -126,133 +125,121 @@ lpfc_cmf_info_show(struct device *dev, struct device_attribute *attr,
- 	int  len = 0;
- 	int cpu;
- 	u64 rcv, total;
--	char tmp[LPFC_MAX_INFO_TMP_LEN] = {0};
- 
- 	if (phba->cgn_i)
- 		cp = (struct lpfc_cgn_info *)phba->cgn_i->virt;
- 
--	scnprintf(tmp, sizeof(tmp),
--		  "Congestion Mgmt Info: E2Eattr %d Ver %d "
--		  "CMF %d cnt %d\n",
--		  phba->sli4_hba.pc_sli4_params.mi_cap,
--		  cp ? cp->cgn_info_version : 0,
--		  phba->sli4_hba.pc_sli4_params.cmf, phba->cmf_timer_cnt);
--
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+	len = strnlen(buf, PAGE_SIZE);
-+	len += sysfs_emit_at(buf, len,
-+			     "Congestion Mgmt Info: E2Eattr %d Ver %d CMF %d cnt %d\n",
-+			     phba->sli4_hba.pc_sli4_params.mi_cap,
-+			     cp ? cp->cgn_info_version : 0,
-+			     phba->sli4_hba.pc_sli4_params.cmf,
-+			     phba->cmf_timer_cnt);
- 
- 	if (!phba->sli4_hba.pc_sli4_params.cmf)
- 		goto buffer_done;
- 
- 	switch (phba->cgn_init_reg_signal) {
- 	case EDC_CG_SIG_WARN_ONLY:
--		scnprintf(tmp, sizeof(tmp),
--			  "Register: Init:  Signal:WARN  ");
-+		len += sysfs_emit_at(buf, len,
-+				     "Register: Init:  Signal:WARN  ");
- 		break;
- 	case EDC_CG_SIG_WARN_ALARM:
--		scnprintf(tmp, sizeof(tmp),
--			  "Register: Init:  Signal:WARN|ALARM  ");
-+		len += sysfs_emit_at(buf, len,
-+				     "Register: Init:  Signal:WARN|ALARM  ");
- 		break;
- 	default:
--		scnprintf(tmp, sizeof(tmp),
--			  "Register: Init:  Signal:NONE  ");
-+		len += sysfs_emit_at(buf, len,
-+				     "Register: Init:  Signal:NONE  ");
- 		break;
- 	}
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
- 
- 	switch (phba->cgn_init_reg_fpin) {
- 	case LPFC_CGN_FPIN_WARN:
--		scnprintf(tmp, sizeof(tmp),
--			  "FPIN:WARN\n");
-+		len += sysfs_emit_at(buf, len, "FPIN:WARN\n");
- 		break;
- 	case LPFC_CGN_FPIN_ALARM:
--		scnprintf(tmp, sizeof(tmp),
--			  "FPIN:ALARM\n");
-+		len += sysfs_emit_at(buf, len, "FPIN:ALARM\n");
- 		break;
- 	case LPFC_CGN_FPIN_BOTH:
--		scnprintf(tmp, sizeof(tmp),
--			  "FPIN:WARN|ALARM\n");
-+		len += sysfs_emit_at(buf, len, "FPIN:WARN|ALARM\n");
- 		break;
- 	default:
--		scnprintf(tmp, sizeof(tmp),
--			  "FPIN:NONE\n");
-+		len += sysfs_emit_at(buf, len, "FPIN:NONE\n");
- 		break;
- 	}
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
- 
- 	switch (phba->cgn_reg_signal) {
- 	case EDC_CG_SIG_WARN_ONLY:
--		scnprintf(tmp, sizeof(tmp),
--			  "       Current:  Signal:WARN  ");
-+		len += sysfs_emit_at(buf, len,
-+				     "       Current:  Signal:WARN  ");
- 		break;
- 	case EDC_CG_SIG_WARN_ALARM:
--		scnprintf(tmp, sizeof(tmp),
--			  "       Current:  Signal:WARN|ALARM  ");
-+		len += sysfs_emit_at(buf, len,
-+				     "       Current:  Signal:WARN|ALARM  ");
- 		break;
- 	default:
--		scnprintf(tmp, sizeof(tmp),
--			  "       Current:  Signal:NONE  ");
-+		len += sysfs_emit_at(buf, len,
-+				     "       Current:  Signal:NONE  ");
- 		break;
- 	}
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
- 
- 	switch (phba->cgn_reg_fpin) {
- 	case LPFC_CGN_FPIN_WARN:
--		scnprintf(tmp, sizeof(tmp),
--			  "FPIN:WARN  ACQEcnt:%d\n", phba->cgn_acqe_cnt);
-+		len += sysfs_emit_at(buf, len,
-+				     "FPIN:WARN  ACQEcnt:%d\n",
-+				     phba->cgn_acqe_cnt);
- 		break;
- 	case LPFC_CGN_FPIN_ALARM:
--		scnprintf(tmp, sizeof(tmp),
--			  "FPIN:ALARM  ACQEcnt:%d\n", phba->cgn_acqe_cnt);
-+		len += sysfs_emit_at(buf, len,
-+				     "FPIN:ALARM  ACQEcnt:%d\n",
-+				     phba->cgn_acqe_cnt);
- 		break;
- 	case LPFC_CGN_FPIN_BOTH:
--		scnprintf(tmp, sizeof(tmp),
--			  "FPIN:WARN|ALARM  ACQEcnt:%d\n", phba->cgn_acqe_cnt);
-+		len += sysfs_emit_at(buf, len,
-+				     "FPIN:WARN|ALARM  ACQEcnt:%d\n",
-+				     phba->cgn_acqe_cnt);
- 		break;
- 	default:
--		scnprintf(tmp, sizeof(tmp),
--			  "FPIN:NONE  ACQEcnt:%d\n", phba->cgn_acqe_cnt);
-+		len += sysfs_emit_at(buf, len,
-+				     "FPIN:NONE  ACQEcnt:%d\n",
-+				     phba->cgn_acqe_cnt);
- 		break;
- 	}
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
- 
- 	if (phba->cmf_active_mode != phba->cgn_p.cgn_param_mode) {
- 		switch (phba->cmf_active_mode) {
- 		case LPFC_CFG_OFF:
--			scnprintf(tmp, sizeof(tmp), "Active: Mode:Off\n");
-+			len += sysfs_emit_at(buf, len, "Active: Mode:Off\n");
- 			break;
- 		case LPFC_CFG_MANAGED:
--			scnprintf(tmp, sizeof(tmp), "Active: Mode:Managed\n");
-+			len += sysfs_emit_at(buf, len,
-+					     "Active: Mode:Managed\n");
- 			break;
- 		case LPFC_CFG_MONITOR:
--			scnprintf(tmp, sizeof(tmp), "Active: Mode:Monitor\n");
-+			len += sysfs_emit_at(buf, len,
-+					     "Active: Mode:Monitor\n");
- 			break;
- 		default:
--			scnprintf(tmp, sizeof(tmp), "Active: Mode:Unknown\n");
-+			len += sysfs_emit_at(buf, len,
-+					     "Active: Mode:Unknown\n");
- 		}
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
- 	}
- 
- 	switch (phba->cgn_p.cgn_param_mode) {
- 	case LPFC_CFG_OFF:
--		scnprintf(tmp, sizeof(tmp), "Config: Mode:Off  ");
-+		len += sysfs_emit_at(buf, len, "Config: Mode:Off  ");
- 		break;
- 	case LPFC_CFG_MANAGED:
--		scnprintf(tmp, sizeof(tmp), "Config: Mode:Managed ");
-+		len += sysfs_emit_at(buf, len, "Config: Mode:Managed ");
- 		break;
- 	case LPFC_CFG_MONITOR:
--		scnprintf(tmp, sizeof(tmp), "Config: Mode:Monitor ");
-+		len += sysfs_emit_at(buf, len, "Config: Mode:Monitor ");
- 		break;
- 	default:
--		scnprintf(tmp, sizeof(tmp), "Config: Mode:Unknown ");
-+		len += sysfs_emit_at(buf, len, "Config: Mode:Unknown ");
- 	}
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
- 
- 	total = 0;
- 	rcv = 0;
-@@ -262,24 +249,18 @@ lpfc_cmf_info_show(struct device *dev, struct device_attribute *attr,
- 		rcv += atomic64_read(&cgs->rcv_bytes);
- 	}
- 
--	scnprintf(tmp, sizeof(tmp),
--		  "IObusy:%d Info:%d Bytes: Rcv:x%llx Total:x%llx\n",
--		  atomic_read(&phba->cmf_busy),
--		  phba->cmf_active_info, rcv, total);
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+	len += sysfs_emit_at(buf, len,
-+			     "IObusy:%d Info:%d Bytes: Rcv:x%llx Total:x%llx\n",
-+			     atomic_read(&phba->cmf_busy),
-+			     phba->cmf_active_info, rcv, total);
- 
--	scnprintf(tmp, sizeof(tmp),
--		  "Port_speed:%d  Link_byte_cnt:%ld  "
--		  "Max_byte_per_interval:%ld\n",
--		  lpfc_sli_port_speed_get(phba),
--		  (unsigned long)phba->cmf_link_byte_count,
--		  (unsigned long)phba->cmf_max_bytes_per_interval);
--	strlcat(buf, tmp, PAGE_SIZE);
-+	len += sysfs_emit_at(buf, len,
-+			     "Port_speed:%d  Link_byte_cnt:%ld  Max_byte_per_interval:%ld\n",
-+			     lpfc_sli_port_speed_get(phba),
-+			     (unsigned long)phba->cmf_link_byte_count,
-+			     (unsigned long)phba->cmf_max_bytes_per_interval);
- 
- buffer_done:
--	len = strnlen(buf, PAGE_SIZE);
--
- 	if (unlikely(len >= (PAGE_SIZE - 1))) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
- 				"6312 Catching potential buffer "
-@@ -480,17 +461,19 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 	char *statep;
- 	int i;
- 	int len = 0;
--	char tmp[LPFC_MAX_INFO_TMP_LEN] = {0};
- 
- 	if (!(vport->cfg_enable_fc4_type & LPFC_ENABLE_NVME)) {
--		len = scnprintf(buf, PAGE_SIZE, "NVME Disabled\n");
-+		len = sysfs_emit(buf, "NVME Disabled\n");
- 		return len;
- 	}
-+
-+	len = strnlen(buf, PAGE_SIZE);
-+
- 	if (phba->nvmet_support) {
- 		if (!phba->targetport) {
--			len = scnprintf(buf, PAGE_SIZE,
--					"NVME Target: x%llx is not allocated\n",
--					wwn_to_u64(vport->fc_portname.u.wwn));
-+			len = sysfs_emit(buf,
-+					 "NVME Target: x%llx is not allocated\n",
-+					 wwn_to_u64(vport->fc_portname.u.wwn));
- 			return len;
- 		}
- 		/* Port state is only one of two values for now. */
-@@ -498,167 +481,131 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 			statep = "REGISTERED";
- 		else
- 			statep = "INIT";
--		scnprintf(tmp, sizeof(tmp),
--			  "NVME Target Enabled  State %s\n",
--			  statep);
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--
--		scnprintf(tmp, sizeof(tmp),
--			  "%s%d WWPN x%llx WWNN x%llx DID x%06x\n",
--			  "NVME Target: lpfc",
--			  phba->brd_no,
--			  wwn_to_u64(vport->fc_portname.u.wwn),
--			  wwn_to_u64(vport->fc_nodename.u.wwn),
--			  phba->targetport->port_id);
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--
--		if (strlcat(buf, "\nNVME Target: Statistics\n", PAGE_SIZE)
--		    >= PAGE_SIZE)
--			goto buffer_done;
-+		len += sysfs_emit_at(buf, len,
-+				     "NVME Target Enabled  State %s\n",
-+				     statep);
-+
-+		len += sysfs_emit_at(buf, len,
-+				     "%s%d WWPN x%llx WWNN x%llx DID x%06x\n",
-+				     "NVME Target: lpfc",
-+				     phba->brd_no,
-+				     wwn_to_u64(vport->fc_portname.u.wwn),
-+				     wwn_to_u64(vport->fc_nodename.u.wwn),
-+				     phba->targetport->port_id);
-+
-+		len += sysfs_emit_at(buf, len, "\nNVME Target: Statistics\n");
- 
- 		tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
--		scnprintf(tmp, sizeof(tmp),
--			  "LS: Rcv %08x Drop %08x Abort %08x\n",
--			  atomic_read(&tgtp->rcv_ls_req_in),
--			  atomic_read(&tgtp->rcv_ls_req_drop),
--			  atomic_read(&tgtp->xmt_ls_abort));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
-+		len += sysfs_emit_at(buf, len,
-+				     "LS: Rcv %08x Drop %08x Abort %08x\n",
-+				     atomic_read(&tgtp->rcv_ls_req_in),
-+				     atomic_read(&tgtp->rcv_ls_req_drop),
-+				     atomic_read(&tgtp->xmt_ls_abort));
- 
- 		if (atomic_read(&tgtp->rcv_ls_req_in) !=
- 		    atomic_read(&tgtp->rcv_ls_req_out)) {
--			scnprintf(tmp, sizeof(tmp),
--				  "Rcv LS: in %08x != out %08x\n",
--				  atomic_read(&tgtp->rcv_ls_req_in),
--				  atomic_read(&tgtp->rcv_ls_req_out));
--			if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--				goto buffer_done;
-+			len += sysfs_emit_at(buf, len,
-+					     "Rcv LS: in %08x != out %08x\n",
-+					     atomic_read(&tgtp->rcv_ls_req_in),
-+					     atomic_read(&tgtp->rcv_ls_req_out));
- 		}
- 
--		scnprintf(tmp, sizeof(tmp),
--			  "LS: Xmt %08x Drop %08x Cmpl %08x\n",
--			  atomic_read(&tgtp->xmt_ls_rsp),
--			  atomic_read(&tgtp->xmt_ls_drop),
--			  atomic_read(&tgtp->xmt_ls_rsp_cmpl));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--
--		scnprintf(tmp, sizeof(tmp),
--			  "LS: RSP Abort %08x xb %08x Err %08x\n",
--			  atomic_read(&tgtp->xmt_ls_rsp_aborted),
--			  atomic_read(&tgtp->xmt_ls_rsp_xb_set),
--			  atomic_read(&tgtp->xmt_ls_rsp_error));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--
--		scnprintf(tmp, sizeof(tmp),
--			  "FCP: Rcv %08x Defer %08x Release %08x "
--			  "Drop %08x\n",
--			  atomic_read(&tgtp->rcv_fcp_cmd_in),
--			  atomic_read(&tgtp->rcv_fcp_cmd_defer),
--			  atomic_read(&tgtp->xmt_fcp_release),
--			  atomic_read(&tgtp->rcv_fcp_cmd_drop));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
-+		len += sysfs_emit_at(buf, len,
-+				     "LS: Xmt %08x Drop %08x Cmpl %08x\n",
-+				     atomic_read(&tgtp->xmt_ls_rsp),
-+				     atomic_read(&tgtp->xmt_ls_drop),
-+				     atomic_read(&tgtp->xmt_ls_rsp_cmpl));
-+
-+		len += sysfs_emit_at(buf, len,
-+				     "LS: RSP Abort %08x xb %08x Err %08x\n",
-+				     atomic_read(&tgtp->xmt_ls_rsp_aborted),
-+				     atomic_read(&tgtp->xmt_ls_rsp_xb_set),
-+				     atomic_read(&tgtp->xmt_ls_rsp_error));
-+
-+		len += sysfs_emit_at(buf, len,
-+				     "FCP: Rcv %08x Defer %08x Release %08x Drop %08x\n",
-+				     atomic_read(&tgtp->rcv_fcp_cmd_in),
-+				     atomic_read(&tgtp->rcv_fcp_cmd_defer),
-+				     atomic_read(&tgtp->xmt_fcp_release),
-+				     atomic_read(&tgtp->rcv_fcp_cmd_drop));
- 
- 		if (atomic_read(&tgtp->rcv_fcp_cmd_in) !=
- 		    atomic_read(&tgtp->rcv_fcp_cmd_out)) {
--			scnprintf(tmp, sizeof(tmp),
--				  "Rcv FCP: in %08x != out %08x\n",
--				  atomic_read(&tgtp->rcv_fcp_cmd_in),
--				  atomic_read(&tgtp->rcv_fcp_cmd_out));
--			if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--				goto buffer_done;
-+			len += sysfs_emit_at(buf, len,
-+					     "Rcv FCP: in %08x != out %08x\n",
-+					     atomic_read(&tgtp->rcv_fcp_cmd_in),
-+					     atomic_read(&tgtp->rcv_fcp_cmd_out));
- 		}
- 
--		scnprintf(tmp, sizeof(tmp),
--			  "FCP Rsp: RD %08x rsp %08x WR %08x rsp %08x "
--			  "drop %08x\n",
--			  atomic_read(&tgtp->xmt_fcp_read),
--			  atomic_read(&tgtp->xmt_fcp_read_rsp),
--			  atomic_read(&tgtp->xmt_fcp_write),
--			  atomic_read(&tgtp->xmt_fcp_rsp),
--			  atomic_read(&tgtp->xmt_fcp_drop));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--
--		scnprintf(tmp, sizeof(tmp),
--			  "FCP Rsp Cmpl: %08x err %08x drop %08x\n",
--			  atomic_read(&tgtp->xmt_fcp_rsp_cmpl),
--			  atomic_read(&tgtp->xmt_fcp_rsp_error),
--			  atomic_read(&tgtp->xmt_fcp_rsp_drop));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--
--		scnprintf(tmp, sizeof(tmp),
--			  "FCP Rsp Abort: %08x xb %08x xricqe  %08x\n",
--			  atomic_read(&tgtp->xmt_fcp_rsp_aborted),
--			  atomic_read(&tgtp->xmt_fcp_rsp_xb_set),
--			  atomic_read(&tgtp->xmt_fcp_xri_abort_cqe));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--
--		scnprintf(tmp, sizeof(tmp),
--			  "ABORT: Xmt %08x Cmpl %08x\n",
--			  atomic_read(&tgtp->xmt_fcp_abort),
--			  atomic_read(&tgtp->xmt_fcp_abort_cmpl));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--
--		scnprintf(tmp, sizeof(tmp),
--			  "ABORT: Sol %08x  Usol %08x Err %08x Cmpl %08x\n",
--			  atomic_read(&tgtp->xmt_abort_sol),
--			  atomic_read(&tgtp->xmt_abort_unsol),
--			  atomic_read(&tgtp->xmt_abort_rsp),
--			  atomic_read(&tgtp->xmt_abort_rsp_error));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--
--		scnprintf(tmp, sizeof(tmp),
--			  "DELAY: ctx %08x  fod %08x wqfull %08x\n",
--			  atomic_read(&tgtp->defer_ctx),
--			  atomic_read(&tgtp->defer_fod),
--			  atomic_read(&tgtp->defer_wqfull));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
-+		len += sysfs_emit_at(buf, len,
-+				     "FCP Rsp: RD %08x rsp %08x WR %08x rsp %08x drop %08x\n",
-+				     atomic_read(&tgtp->xmt_fcp_read),
-+				     atomic_read(&tgtp->xmt_fcp_read_rsp),
-+				     atomic_read(&tgtp->xmt_fcp_write),
-+				     atomic_read(&tgtp->xmt_fcp_rsp),
-+				     atomic_read(&tgtp->xmt_fcp_drop));
-+
-+		len += sysfs_emit_at(buf, len,
-+				     "FCP Rsp Cmpl: %08x err %08x drop %08x\n",
-+				     atomic_read(&tgtp->xmt_fcp_rsp_cmpl),
-+				     atomic_read(&tgtp->xmt_fcp_rsp_error),
-+				     atomic_read(&tgtp->xmt_fcp_rsp_drop));
-+
-+		len += sysfs_emit_at(buf, len,
-+				     "FCP Rsp Abort: %08x xb %08x xricqe  %08x\n",
-+				     atomic_read(&tgtp->xmt_fcp_rsp_aborted),
-+				     atomic_read(&tgtp->xmt_fcp_rsp_xb_set),
-+				     atomic_read(&tgtp->xmt_fcp_xri_abort_cqe));
-+
-+		len += sysfs_emit_at(buf, len,
-+				     "ABORT: Xmt %08x Cmpl %08x\n",
-+				     atomic_read(&tgtp->xmt_fcp_abort),
-+				     atomic_read(&tgtp->xmt_fcp_abort_cmpl));
-+
-+		len += sysfs_emit_at(buf, len,
-+				     "ABORT: Sol %08x  Usol %08x Err %08x Cmpl %08x\n",
-+				     atomic_read(&tgtp->xmt_abort_sol),
-+				     atomic_read(&tgtp->xmt_abort_unsol),
-+				     atomic_read(&tgtp->xmt_abort_rsp),
-+				     atomic_read(&tgtp->xmt_abort_rsp_error));
-+
-+		len += sysfs_emit_at(buf, len,
-+				     "DELAY: ctx %08x  fod %08x wqfull %08x\n",
-+				     atomic_read(&tgtp->defer_ctx),
-+				     atomic_read(&tgtp->defer_fod),
-+				     atomic_read(&tgtp->defer_wqfull));
- 
- 		/* Calculate outstanding IOs */
- 		tot = atomic_read(&tgtp->rcv_fcp_cmd_drop);
- 		tot += atomic_read(&tgtp->xmt_fcp_release);
- 		tot = atomic_read(&tgtp->rcv_fcp_cmd_in) - tot;
- 
--		scnprintf(tmp, sizeof(tmp),
--			  "IO_CTX: %08x  WAIT: cur %08x tot %08x\n"
--			  "CTX Outstanding %08llx\n\n",
--			  phba->sli4_hba.nvmet_xri_cnt,
--			  phba->sli4_hba.nvmet_io_wait_cnt,
--			  phba->sli4_hba.nvmet_io_wait_total,
--			  tot);
--		strlcat(buf, tmp, PAGE_SIZE);
-+		len += sysfs_emit_at(buf, len,
-+				     "IO_CTX: %08x  WAIT: cur %08x tot %08x\n"
-+				     "CTX Outstanding %08llx\n\n",
-+				     phba->sli4_hba.nvmet_xri_cnt,
-+				     phba->sli4_hba.nvmet_io_wait_cnt,
-+				     phba->sli4_hba.nvmet_io_wait_total,
-+				     tot);
- 		goto buffer_done;
- 	}
- 
- 	localport = vport->localport;
- 	if (!localport) {
--		len = scnprintf(buf, PAGE_SIZE,
--				"NVME Initiator x%llx is not allocated\n",
--				wwn_to_u64(vport->fc_portname.u.wwn));
-+		len = sysfs_emit(buf,
-+				 "NVME Initiator x%llx is not allocated\n",
-+				 wwn_to_u64(vport->fc_portname.u.wwn));
- 		return len;
- 	}
- 	lport = (struct lpfc_nvme_lport *)localport->private;
--	if (strlcat(buf, "\nNVME Initiator Enabled\n", PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+	len += sysfs_emit_at(buf, len, "\nNVME Initiator Enabled\n");
- 
--	scnprintf(tmp, sizeof(tmp),
--		  "XRI Dist lpfc%d Total %d IO %d ELS %d\n",
--		  phba->brd_no,
--		  phba->sli4_hba.max_cfg_param.max_xri,
--		  phba->sli4_hba.io_xri_max,
--		  lpfc_sli4_get_els_iocb_cnt(phba));
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+	len += sysfs_emit_at(buf, len,
-+			     "XRI Dist lpfc%d Total %d IO %d ELS %d\n",
-+			     phba->brd_no,
-+			     phba->sli4_hba.max_cfg_param.max_xri,
-+			     phba->sli4_hba.io_xri_max,
-+			     lpfc_sli4_get_els_iocb_cnt(phba));
- 
- 	/* Port state is only one of two values for now. */
- 	if (localport->port_id)
-@@ -666,15 +613,13 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 	else
- 		statep = "UNKNOWN ";
- 
--	scnprintf(tmp, sizeof(tmp),
--		  "%s%d WWPN x%llx WWNN x%llx DID x%06x %s\n",
--		  "NVME LPORT lpfc",
--		  phba->brd_no,
--		  wwn_to_u64(vport->fc_portname.u.wwn),
--		  wwn_to_u64(vport->fc_nodename.u.wwn),
--		  localport->port_id, statep);
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+	len += sysfs_emit_at(buf, len,
-+			     "%s%d WWPN x%llx WWNN x%llx DID x%06x %s\n",
-+			     "NVME LPORT lpfc",
-+			     phba->brd_no,
-+			     wwn_to_u64(vport->fc_portname.u.wwn),
-+			     wwn_to_u64(vport->fc_nodename.u.wwn),
-+			     localport->port_id, statep);
- 
- 	spin_lock_irqsave(&vport->fc_nodes_list_lock, iflags);
- 
-@@ -702,77 +647,55 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 		}
- 
- 		/* Tab in to show lport ownership. */
--		if (strlcat(buf, "NVME RPORT       ", PAGE_SIZE) >= PAGE_SIZE)
--			goto unlock_buf_done;
--		if (phba->brd_no >= 10) {
--			if (strlcat(buf, " ", PAGE_SIZE) >= PAGE_SIZE)
--				goto unlock_buf_done;
--		}
-+		len += sysfs_emit_at(buf, len, "NVME RPORT       ");
-+		if (phba->brd_no >= 10)
-+			len += sysfs_emit_at(buf, len, " ");
- 
--		scnprintf(tmp, sizeof(tmp), "WWPN x%llx ",
--			  nrport->port_name);
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto unlock_buf_done;
-+		len += sysfs_emit_at(buf, len, "WWPN x%llx ",
-+				     nrport->port_name);
- 
--		scnprintf(tmp, sizeof(tmp), "WWNN x%llx ",
--			  nrport->node_name);
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto unlock_buf_done;
-+		len += sysfs_emit_at(buf, len, "WWNN x%llx ",
-+				     nrport->node_name);
- 
--		scnprintf(tmp, sizeof(tmp), "DID x%06x ",
--			  nrport->port_id);
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto unlock_buf_done;
-+		len += sysfs_emit_at(buf, len, "DID x%06x ",
-+				     nrport->port_id);
- 
- 		/* An NVME rport can have multiple roles. */
--		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR) {
--			if (strlcat(buf, "INITIATOR ", PAGE_SIZE) >= PAGE_SIZE)
--				goto unlock_buf_done;
--		}
--		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET) {
--			if (strlcat(buf, "TARGET ", PAGE_SIZE) >= PAGE_SIZE)
--				goto unlock_buf_done;
--		}
--		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY) {
--			if (strlcat(buf, "DISCSRVC ", PAGE_SIZE) >= PAGE_SIZE)
--				goto unlock_buf_done;
--		}
-+		if (nrport->port_role & FC_PORT_ROLE_NVME_INITIATOR)
-+			len += sysfs_emit_at(buf, len, "INITIATOR ");
-+		if (nrport->port_role & FC_PORT_ROLE_NVME_TARGET)
-+			len += sysfs_emit_at(buf, len, "TARGET ");
-+		if (nrport->port_role & FC_PORT_ROLE_NVME_DISCOVERY)
-+			len += sysfs_emit_at(buf, len, "DISCSRVC ");
- 		if (nrport->port_role & ~(FC_PORT_ROLE_NVME_INITIATOR |
- 					  FC_PORT_ROLE_NVME_TARGET |
--					  FC_PORT_ROLE_NVME_DISCOVERY)) {
--			scnprintf(tmp, sizeof(tmp), "UNKNOWN ROLE x%x",
--				  nrport->port_role);
--			if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--				goto unlock_buf_done;
--		}
-+					  FC_PORT_ROLE_NVME_DISCOVERY))
-+			len += sysfs_emit_at(buf, len, "UNKNOWN ROLE x%x",
-+					     nrport->port_role);
-+
-+		len += sysfs_emit_at(buf, len, "%s\n", statep);
- 
--		scnprintf(tmp, sizeof(tmp), "%s\n", statep);
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto unlock_buf_done;
-+		if (len >= PAGE_SIZE - 1)
-+			break;
- 	}
- 	spin_unlock_irqrestore(&vport->fc_nodes_list_lock, iflags);
- 
- 	if (!lport)
- 		goto buffer_done;
- 
--	if (strlcat(buf, "\nNVME Statistics\n", PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+	len += sysfs_emit_at(buf, len, "\nNVME Statistics\n");
- 
--	scnprintf(tmp, sizeof(tmp),
--		  "LS: Xmt %010x Cmpl %010x Abort %08x\n",
--		  atomic_read(&lport->fc4NvmeLsRequests),
--		  atomic_read(&lport->fc4NvmeLsCmpls),
--		  atomic_read(&lport->xmt_ls_abort));
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+	len += sysfs_emit_at(buf, len,
-+			     "LS: Xmt %010x Cmpl %010x Abort %08x\n",
-+			     atomic_read(&lport->fc4NvmeLsRequests),
-+			     atomic_read(&lport->fc4NvmeLsCmpls),
-+			     atomic_read(&lport->xmt_ls_abort));
- 
--	scnprintf(tmp, sizeof(tmp),
--		  "LS XMIT: Err %08x  CMPL: xb %08x Err %08x\n",
--		  atomic_read(&lport->xmt_ls_err),
--		  atomic_read(&lport->cmpl_ls_xb),
--		  atomic_read(&lport->cmpl_ls_err));
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
-+	len += sysfs_emit_at(buf, len,
-+			     "LS XMIT: Err %08x  CMPL: xb %08x Err %08x\n",
-+			     atomic_read(&lport->xmt_ls_err),
-+			     atomic_read(&lport->cmpl_ls_xb),
-+			     atomic_read(&lport->cmpl_ls_err));
- 
- 	totin = 0;
- 	totout = 0;
-@@ -785,40 +708,25 @@ lpfc_nvme_info_show(struct device *dev, struct device_attribute *attr,
- 		data3 = cstat->control_requests;
- 		totout += (data1 + data2 + data3);
- 	}
--	scnprintf(tmp, sizeof(tmp),
--		  "Total FCP Cmpl %016llx Issue %016llx "
--		  "OutIO %016llx\n",
--		  totin, totout, totout - totin);
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
--
--	scnprintf(tmp, sizeof(tmp),
--		  "\tabort %08x noxri %08x nondlp %08x qdepth %08x "
--		  "wqerr %08x err %08x\n",
--		  atomic_read(&lport->xmt_fcp_abort),
--		  atomic_read(&lport->xmt_fcp_noxri),
--		  atomic_read(&lport->xmt_fcp_bad_ndlp),
--		  atomic_read(&lport->xmt_fcp_qdepth),
--		  atomic_read(&lport->xmt_fcp_wqerr),
--		  atomic_read(&lport->xmt_fcp_err));
--	if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--		goto buffer_done;
--
--	scnprintf(tmp, sizeof(tmp),
--		  "FCP CMPL: xb %08x Err %08x\n",
--		  atomic_read(&lport->cmpl_fcp_xb),
--		  atomic_read(&lport->cmpl_fcp_err));
--	strlcat(buf, tmp, PAGE_SIZE);
--
--	/* host_lock is already unlocked. */
--	goto buffer_done;
--
-- unlock_buf_done:
--	spin_unlock_irqrestore(&vport->fc_nodes_list_lock, iflags);
-+	len += sysfs_emit_at(buf, len,
-+			     "Total FCP Cmpl %016llx Issue %016llx OutIO %016llx\n",
-+			     totin, totout, totout - totin);
-+
-+	len += sysfs_emit_at(buf, len,
-+			     "\tabort %08x noxri %08x nondlp %08x qdepth %08x wqerr %08x err %08x\n",
-+			     atomic_read(&lport->xmt_fcp_abort),
-+			     atomic_read(&lport->xmt_fcp_noxri),
-+			     atomic_read(&lport->xmt_fcp_bad_ndlp),
-+			     atomic_read(&lport->xmt_fcp_qdepth),
-+			     atomic_read(&lport->xmt_fcp_wqerr),
-+			     atomic_read(&lport->xmt_fcp_err));
-+
-+	len += sysfs_emit_at(buf, len,
-+			     "FCP CMPL: xb %08x Err %08x\n",
-+			     atomic_read(&lport->cmpl_fcp_xb),
-+			     atomic_read(&lport->cmpl_fcp_err));
- 
-  buffer_done:
--	len = strnlen(buf, PAGE_SIZE);
--
- 	if (unlikely(len >= (PAGE_SIZE - 1))) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_NVME,
- 				"6314 Catching potential buffer "
-@@ -844,13 +752,12 @@ lpfc_scsi_stat_show(struct device *dev, struct device_attribute *attr,
- 	u64 data1, data2, data3;
- 	u64 tot, totin, totout;
- 	int i;
--	char tmp[LPFC_MAX_SCSI_INFO_TMP_LEN] = {0};
- 
- 	if (!(vport->cfg_enable_fc4_type & LPFC_ENABLE_FCP) ||
- 	    (phba->sli_rev != LPFC_SLI_REV4))
- 		return 0;
- 
--	scnprintf(buf, PAGE_SIZE, "SCSI HDWQ Statistics\n");
-+	len = sysfs_emit(buf, "SCSI HDWQ Statistics\n");
- 
- 	totin = 0;
- 	totout = 0;
-@@ -863,22 +770,20 @@ lpfc_scsi_stat_show(struct device *dev, struct device_attribute *attr,
- 		data3 = cstat->control_requests;
- 		totout += (data1 + data2 + data3);
- 
--		scnprintf(tmp, sizeof(tmp), "HDWQ (%d): Rd %016llx Wr %016llx "
--			  "IO %016llx ", i, data1, data2, data3);
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
-+		len += sysfs_emit_at(buf, len,
-+				     "HDWQ (%d): Rd %016llx Wr %016llx IO %016llx ",
-+				     i, data1, data2, data3);
- 
--		scnprintf(tmp, sizeof(tmp), "Cmpl %016llx OutIO %016llx\n",
--			  tot, ((data1 + data2 + data3) - tot));
--		if (strlcat(buf, tmp, PAGE_SIZE) >= PAGE_SIZE)
--			goto buffer_done;
--	}
--	scnprintf(tmp, sizeof(tmp), "Total FCP Cmpl %016llx Issue %016llx "
--		  "OutIO %016llx\n", totin, totout, totout - totin);
--	strlcat(buf, tmp, PAGE_SIZE);
-+		len += sysfs_emit_at(buf, len,
-+				     "Cmpl %016llx OutIO %016llx\n",
-+				     tot, ((data1 + data2 + data3) - tot));
- 
--buffer_done:
--	len = strnlen(buf, PAGE_SIZE);
-+		if (len >= PAGE_SIZE - 1)
-+			break;
-+	}
-+	len += sysfs_emit_at(buf, len,
-+			     "Total FCP Cmpl %016llx Issue %016llx OutIO %016llx\n",
-+			     totin, totout, totout - totin);
- 
- 	return len;
- }
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.h b/drivers/scsi/lpfc/lpfc_scsi.h
-index a05d203e4777..3e0937cf3ff3 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.h
-+++ b/drivers/scsi/lpfc/lpfc_scsi.h
-@@ -158,6 +158,3 @@ struct fcp_cmnd32 {
- 
- #define TXRDY_PAYLOAD_LEN	12
- 
--/* For sysfs/debugfs tmp string max len */
--#define LPFC_MAX_SCSI_INFO_TMP_LEN	79
--
--- 
-2.47.3
+> --- Patch [16]: [PATCH v6 16/27] scsi-multipath: clear path when device is blocked ---
+> commit 8f07d9f873129f9ecc9b8d3d02fee5bce667c745
+> Author: John Garry <john.garry@linux.dev>
+> 
+> scsi-multipath: clear path when device is blocked
+> 
+> Add scsi_mpath_dev_clear_path() to clear a device path when it becomes
+> blocked.
+> 
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index daeb3693fe559..a1ec11050090c 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+> 
+> [ ... ]
+> 
+>> @@ -3008,6 +3009,8 @@ static void scsi_device_block(struct scsi_device *sdev, void *data)
+>>   		scsi_stop_queue(sdev);
+>>   
+>>   	mutex_unlock(&sdev->state_mutex);
+>> +	if ((err == 0) && sdev->scsi_mpath_dev)
+>> +		scsi_mpath_dev_clear_path(sdev->scsi_mpath_dev);
+> 
+> [Severity: High]
+> Is it safe to access sdev->scsi_mpath_dev without holding state_mutex?
+> 
+> When scsi_alloc_sdev() adds a new device to shost->__devices, it becomes
+> globally visible. Then scsi_mpath_dev_alloc() sets sdev->scsi_mpath_dev but
+> leaves scsi_mpath_head as NULL while issuing SCSI VPD queries.
+> 
+> If a concurrent error on the bus triggers scsi_device_block(), it could
+> read the partially initialized sdev->scsi_mpath_dev here outside of any locks.
+> 
+> Additionally, if scsi_mpath_dev_alloc() encounters an error and frees
+> sdev->scsi_mpath_dev, could reading it here cause a use-after-free?
+> 
+> During teardown, if __scsi_remove_device() is called concurrently with
+> scsi_device_block(), the teardown thread might set scsi_mpath_head to NULL.
+> Can this lead to a NULL pointer dereference when evaluating
+> scsi_mpath_dev_clear_path()?
+> 
+>>   
+>>   	WARN_ONCE(err, "%s: failed to block %s in state %d\n",
+>>   		  __func__, dev_name(&sdev->sdev_gendev), state);
+> 
+> [ ... ]
+> 
+>> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+>> index 0d439cac6447a..b23cd6f12c602 100644
+>> --- a/drivers/scsi/scsi_multipath.c
+>> +++ b/drivers/scsi/scsi_multipath.c
+> 
+> [ ... ]
+> 
+>> @@ -238,6 +238,16 @@ static int scsi_multipath_sdev_init(struct scsi_device *sdev)
+>>   	return 0;
+>>   }
+>>   
+>> +void scsi_mpath_dev_clear_path(struct scsi_mpath_device *scsi_mpath_dev)
+>> +{
+>> +       struct mpath_device *mpath_device = &scsi_mpath_dev->mpath_device;
+>> +       struct scsi_mpath_head *scsi_mpath_head = scsi_mpath_dev->scsi_mpath_head;
+>> +       struct mpath_head *mpath_head = &scsi_mpath_head->mpath_head;
+> 
+> [Severity: High]
+> Does this code dereference a NULL pointer if it races with initialization or
+> teardown?
+> 
+> If scsi_mpath_head is NULL due to the races mentioned above, deriving
+> mpath_head from it will calculate an invalid pointer.
+> 
+>> +
+>> +       if (mpath_clear_current_path(mpath_device))
+> 
+> [Severity: High]
+> Could calling mpath_clear_current_path() with a partially initialized
+> mpath_device lead to a NULL pointer dereference?
+> 
+> If mpath_device->mpath_head is NULL, it will trigger an immediate dereference
+> in the multipath code:
+> 
+> lib/multipath.c:mpath_clear_current_path() {
+>      ...
+> 	struct mpath_head *mpath_head = mpath_device->mpath_head;
+>      ...
+> 		if (mpath_device ==
+> 			rcu_access_pointer(mpath_head->current_path[node])) {
+>      ...
+> }
+> 
+>> +               mpath_synchronize(mpath_head);
+>> +}
+> 
 
