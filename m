@@ -1,230 +1,237 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5943443AA7
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 11:57:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A20F747FAFC
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 12:08:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785326226; cv=none; b=dzMsQoc3Km83+uYtQyWzsjGe5K45bhH4hsZlYq4FiTm4RxmdITWxBaWkASur4SWPX1OiBStsZtEEuAd0jHgYZJnHms9UQGRBcZ9gVQMtrgYjwwg/5EfYaBjAT2I4TrjCCZfCIfrGDHHROZVHVaGmnu00E+NSRdkx4lDVus+98GM=
+	t=1785326895; cv=none; b=YuktTymGJsQthuJbq/XYAG7gyum09/1WxO3xNP6kJVeHzav30qy68vNEfW4CTyQi0ZuWVTJf7OtgfXQb1vx0/QtsRWfhCTcufDhr3eUucDDIKkstwWaQ+oWoCLzw8Jv/q6ZpotpgzRBdLxEua5EKN84osj+qXJQ/okM7bbv4u90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785326226; c=relaxed/simple;
-	bh=XHoVHQt79VIEVcecYyCickY2X8ycrpt7rbg3bzELPhM=;
+	s=arc-20240116; t=1785326895; c=relaxed/simple;
+	bh=GebGhFXs/Vr6+O1rQeJazgaMG7+DPkEsguLf55dphls=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=t4csWSkoKemFNCKNAo5V57SmH06yRpkSOJfYRXpe3Nz9EIBqJzrAhVex3I9S39N2mhpu5ta4owMo2JzNLU6N+SmmlGkuSHQVn8701KizUlWybNzqJyjwpejb9OaHr8Izv0oeSZ/ZvA8XUAANqVVnro+Rl2lTMAM0H4NUBd8lHv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LZMeqLoT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=o6I2uLZsZVypndUU0RC9FXP0yd3Srzy/LbulxEcGONjWw/s7SemDA+8HOwItpaOwqANc4tHm4GtGXm9rLjUTkiLlrJ9orn9rSRx+aFza7ZXWks/5Jfxbyh9MRmEfSt9oajleXF+DQZK8Eb19+X0wRr6Q13uq8aMGmMTGcqmqvh8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e2MYgatO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LZMeqLoT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31F781F000E9;
-	Wed, 29 Jul 2026 11:57:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e2MYgatO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 555561F000E9;
+	Wed, 29 Jul 2026 12:08:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785326224;
-	bh=k46PI3eo8wfO39AmbT3dMlc97jqU8TuLORjLZWIcti4=;
+	s=k20260515; t=1785326892;
+	bh=tj+nQRhtVruLhC2medwWTzNtkP5hk3Z6jmYIG5gWyBQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LZMeqLoTe7MAclJ4uD77nKVjEc4yzBr6hRPOtvqrGZl+lSo7V0NDOAtnbFVPtOysg
-	 Z5mTCFDV8SOqvLENfpHonioGT4Xc0l+Kh4f+aHjB8Po+2raioXpDj4PULNW8AyKIea
-	 ISKQcLm9c0pQXbbihjcfN0CkOV1uBxCI5AFBM9fQkMv7GL8YwVAjoqD46jnr9QfSYS
-	 DGFKJbZvPPzRdLPAHTP4Dhj3A3RCUkP0F1VSoJxisI/c/06AGVrnGRk03ArdrYSVF7
-	 l+MIIxSGemCIqLG/YMiQ783o8B3w70kg9EGjK43zh9Xw9FD1h/AplcqGyRUmesWERT
-	 n8mSdPtxoAWVg==
+	b=e2MYgatOkqCpzyhpqNO9TSoBYRPTD1O7wKkx4Oon1VHAikpyhDCpQakzwpVDO6YWg
+	 dcZrdDApbGbzwW66WyzEXEPeJoVp3BkGqIwQ9Bn6qiYdEl8I1npUkKN1qhmLckWaLV
+	 CvKQgJaJRWClBHQLg7rYmfcY9TMNijMklIQWeil9BKnHQvBbMuhVcWWskw41UJrQqb
+	 uP5njp9K5z0fNPXsal+OqtNb0SwP9mcy1/y3pgDzZdTwlUYdWDwHAKYAyHSje8jPp8
+	 vmzjsr70snDp4vQrBVusg51Hcmq4HV0Gsvkhcoq8wUsKKtspGSv4YG1Qu/VK49wiFS
+	 LIFWypWYF8jyA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 05/27] libmultipath: Add support for mpath_device
- management
+Subject: Re: [PATCH v6 06/27] libmultipath: Add delayed removal support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260729105107.255712-6-john.g.garry@oracle.com>
+In-Reply-To: <20260729105107.255712-7-john.g.garry@oracle.com>
 References: <20260729105107.255712-1-john.g.garry@oracle.com>
- <20260729105107.255712-6-john.g.garry@oracle.com>
+ <20260729105107.255712-7-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 11:57:03 +0000
-Message-Id: <20260729115704.31F781F000E9@smtp.kernel.org>
+Date: Wed, 29 Jul 2026 12:08:11 +0000
+Message-Id: <20260729120812.555561F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 6 potential issue(=
 s) to consider:
-- [High] RCU Use-After-Free Vulnerability in mpath_delete_device()
-- [High] NULL Pointer Dereference in sysfs link management
-- [High] Race condition causing sysfs link leak and dangling kobject refere=
-nces
-- [Medium] TOCTOU race in mpath_remove_sysfs_link
+- [High] mpath_remove_head_work() unconditionally removes the multipath hea=
+d without verifying if paths have been concurrently added, leading to destr=
+uction of an active device.
+- [High] Missing cancellation of remove_work during multipath head teardown=
+ leads to a use-after-free when the delayed work expires.
+- [High] mpath_head->drv_module is never initialized, leading to silent fai=
+lures or crashes on module unload.
+- [High] Disabling delayed removal via sysfs leaves queued I/Os stuck indef=
+initely.
+- [Medium] Module reference count leak when mpath_can_remove_head() is call=
+ed multiple times.
+- [Medium] Large delayed removal values cause immediate removal instead of =
+a long delay.
 --
 
---- Patch [5]: [PATCH v6 05/27] libmultipath: Add support for mpath_device =
-management ---
-commit a32651ca51a97ca7e06ffd62321d0190b9e9cfa0
-Author: John Garry <john.g.garry@oracle.com>
+--- Patch [6]: [PATCH v6 06/27] libmultipath: Add delayed removal support -=
+--
+commit 87d6b13fc148098f06b11013c5f12523eb0d477f
+Author: John Garry <john.garry@linux.dev>
 
-libmultipath: Add support for mpath_device management
-   =20
-Add support to add or remove a mpath_device as a path.
-   =20
-NVMe has almost like-for-like equivalents here:
-- nvme_mpath_clear_current_path() -> mpath_clear_current_path()
-- nvme_mpath_add_sysfs_link() -> mpath_add_sysfs_link()
-- nvme_mpath_remove_sysfs_link() -> mpath_remove_sysfs_link()
-- nvme_mpath_revalidate_paths() -> mpath_revalidate_paths()
+libmultipath: Add delayed removal support
 
-The functionality in mpath_clear_paths() and mpath_synchronize() have the
-same pattern which is frequently used in the NVMe code.
+Add support for delayed removal, same as exists for NVMe, to keep the
+multipath disk and cdev present for intermittent periods of no available
+path.
 
 > diff --git a/lib/multipath.c b/lib/multipath.c
-> index 93b82eea7d38b..6b8f6e846987a 100644
+> index 6b8f6e846987a..fada92bf9754c 100644
 > --- a/lib/multipath.c
 > +++ b/lib/multipath.c
-
-[ ... ]
-
-> @@ -51,6 +51,87 @@ void mpath_synchronize(struct mpath_head *mpath_head)
->  }
->  EXPORT_SYMBOL_GPL(mpath_synchronize);
+> @@ -66,6 +66,9 @@ int mpath_add_device(struct mpath_device *mpath_device,=
+ struct gendisk *disk,
+>  	list_add_tail_rcu(&mpath_device->siblings, &mpath_head->dev_list);
+>  	mutex_unlock(&mpath_head->lock);
 > =20
-
-[ ... ]
-
-> +bool mpath_delete_device(struct mpath_device *mpath_device)
-> +{
-> +	bool empty;
+> +	if (cancel_delayed_work(&mpath_head->remove_work))
+> +		module_put(mpath_head->drv_module);
 > +
-> +	mutex_lock(&mpath_device->mpath_head->lock);
-> +	list_del_rcu(&mpath_device->siblings);
-> +	empty =3D list_empty(&mpath_device->mpath_head->dev_list);
-> +	mutex_unlock(&mpath_device->mpath_head->lock);
-> +
-> +	mpath_synchronize(mpath_device->mpath_head);
+>  	return 0;
+>  }
 
 [Severity: High]
-Does this sequence safely handle RCU readers accessing current_path?
+Can this race with the removal work?
 
-Because mpath_delete_device() removes the device from dev_list and
-immediately calls mpath_synchronize() without clearing it from
-mpath_head->current_path, the RCU-protected current_path array may still
-hold a pointer to the device. Lockless readers can then dereference the
-freed device.
-
-If callers attempt to clear current_path before calling
-mpath_delete_device(), couldn't the pointer be repopulated from dev_list
-by concurrent readers during the race window? If cleared after, the
-synchronization has already passed, providing no protection against
-use-after-free.
-
-> +
-> +	return empty;
-> +}
-> +EXPORT_SYMBOL_GPL(mpath_delete_device);
+If the delayed work is already executing, cancel_delayed_work() returns
+false, but mpath_add_device() still returns success. Meanwhile, could
+mpath_remove_head_work() execute without taking mpath_head->lock or
+verifying if the device list is empty, unintentionally destroying the
+multipath head while the driver believes a new path was successfully
+added?
 
 [ ... ]
 
-> @@ -489,6 +572,77 @@ void mpath_device_set_live(struct mpath_device *mpat=
+> @@ -481,6 +493,39 @@ static void mpath_requeue_work(struct work_struct *w=
+ork)
+>  	}
+>  }
+> =20
+> +bool mpath_can_remove_head(struct mpath_head *mpath_head)
+> +{
+> +	unsigned long delay;
+> +	bool remove =3D false;
+> +
+> +	mutex_lock(&mpath_head->lock);
+> +	/*
+> +	 * Ensure that no one could remove this module while the head
+> +	 * remove work is pending.
+> +	 */
+> +	if (mpath_head_queue_if_no_path(mpath_head) &&
+> +	    !check_mul_overflow(mpath_head->delayed_removal_secs, HZ, &delay) &&
+
+[Severity: Medium]
+What happens if a user configures a very large delayed removal value?
+
+If check_mul_overflow() detects an overflow (e.g., on 32-bit systems where
+a large sysfs input overflows unsigned long), it fails the condition and
+falls through to the else block, setting remove =3D true. Does this cause an
+immediate teardown instead of clamping the delay to a maximum value?
+
+> +	    try_module_get(mpath_head->drv_module)) {
+> +		mod_delayed_work(mpath_wq, &mpath_head->remove_work, delay);
+
+[Severity: Medium]
+Could this lead to a module reference leak?
+
+If mod_delayed_work() returns true (meaning the work was already pending
+and its timer was just modified), it doesn't queue a new work item.
+Since try_module_get() was called unconditionally beforehand, and the
+work callback only drops one module reference, do subsequent calls to
+mpath_can_remove_head() leak a module reference permanently?
+
+> +	} else {
+> +		remove =3D true;
+> +	}
+> +
+> +	mutex_unlock(&mpath_head->lock);
+> +	return remove;
+> +}
+
+[ ... ]
+
+> @@ -529,6 +574,9 @@ int mpath_alloc_head_disk(struct mpath_head *mpath_he=
+ad,
+>  	mpath_head->disk->private_data =3D mpath_head;
+>  	mpath_head->disk->fops =3D &mpath_ops;
+> =20
+> +	INIT_DELAYED_WORK(&mpath_head->remove_work, mpath_remove_head_work);
+> +	mpath_head->delayed_removal_secs =3D 0;
+> +
+
+[Severity: High]
+Is drv_module properly initialized anywhere?
+
+It seems drv_module is added to struct mpath_head but never assigned in
+mpath_alloc_head_disk() or elsewhere in this patch. If it defaults to
+NULL, try_module_get(NULL) succeeds but pins no module. Could this allow
+the driver to unload while the delayed work is still pending, leading to
+a kernel panic when the timer fires?
+
+[Severity: High]
+Is the remove_work guaranteed to be cancelled during object teardown?
+
+The standard teardown sequence calls mpath_put_disk() and
+mpath_head_uninit(). If cancel_delayed_work_sync(&mpath_head->remove_work)
+is omitted during teardown, could the timer remain active on the
+workqueue and execute on the freed mpath_head structure later?
+
+>  	set_bit(GD_SUPPRESS_PART_SCAN, &mpath_head->disk->state);
+> =20
+>  	return 0;
+
+[ ... ]
+
+> @@ -572,6 +620,47 @@ void mpath_device_set_live(struct mpath_device *mpat=
 h_device)
 >  }
 >  EXPORT_SYMBOL_GPL(mpath_device_set_live);
 > =20
-> +void mpath_add_sysfs_link(struct mpath_head *mpath_head)
+> +ssize_t mpath_delayed_removal_secs_show(struct mpath_head *mpath_head,
+> +					char *buf)
 > +{
-> +	struct device *target;
-> +	struct device *source;
-> +	int rc, srcu_idx;
-> +	struct kobject *mpath_gd_kobj;
-> +	struct mpath_device *mpath_device;
+> +	int ret;
+> +
+> +	mutex_lock(&mpath_head->lock);
+> +	ret =3D sysfs_emit(buf, "%u\n", mpath_head->delayed_removal_secs);
+> +	mutex_unlock(&mpath_head->lock);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(mpath_delayed_removal_secs_show);
+> +
+> +ssize_t mpath_delayed_removal_secs_store(struct mpath_head *mpath_head,
+> +			const char *buf, size_t count)
+> +{
+> +	unsigned int sec;
+> +	ssize_t ret;
+> +
+> +	ret =3D kstrtouint(buf, 0, &sec);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	mutex_lock(&mpath_head->lock);
+> +	mpath_head->delayed_removal_secs =3D sec;
+> +	if (sec)
+> +		set_bit(MPATH_HEAD_QUEUE_IF_NO_PATH, &mpath_head->flags);
+> +	else
+> +		clear_bit(MPATH_HEAD_QUEUE_IF_NO_PATH, &mpath_head->flags);
+> +	mutex_unlock(&mpath_head->lock);
 > +
 > +	/*
-> +	 * Ensure head disk node is already added otherwise we may get invalid
-> +	 * kobj for head disk node
+> +	 * Ensure that update to MPATH_HEAD_QUEUE_IF_NO_PATH is seen
+> +	 * by its reader.
 > +	 */
-> +	if (!test_bit(GD_ADDED, &mpath_head->disk->state))
-> +		return;
-
-[Severity: High]
-Is it possible for mpath_head->disk to be NULL here?
-
-When a multi-path head disk is removed, mpath_put_disk() is called, which
-sets mpath_head->disk =3D NULL. If a path subsequently goes live,
-mpath_add_sysfs_link() appears to dereference it without checking for NULL.
-
-Could this cause a deterministic oops when path teardown outlives the head,
-such as during an abrupt controller removal?
-
+> +	mpath_synchronize(mpath_head);
 > +
-> +	mpath_gd_kobj =3D &disk_to_dev(mpath_head->disk)->kobj;
-> +	srcu_idx =3D srcu_read_lock(&mpath_head->srcu);
-> +
-> +	list_for_each_entry_srcu(mpath_device, &mpath_head->dev_list, siblings,
-> +				 srcu_read_lock_held(&mpath_head->srcu)) {
-> +		if (!test_bit(GD_ADDED, &mpath_device->disk->state))
-> +			continue;
-> +
-> +		if (test_and_set_bit(MPATH_DEVICE_SYSFS_ATTR_LINK,
-> +					&mpath_device->flags))
-> +			continue;
-> +
-> +		target =3D disk_to_dev(mpath_device->disk);
-> +		source =3D disk_to_dev(mpath_head->disk);
-> +		/*
-> +		 * Create sysfs link from head gendisk kobject @kobj to the
-> +		 * ns path gendisk kobject @target->kobj.
-> +		 */
-
-[Severity: High]
-Could this re-create a sysfs link for a device that is in the middle of
-being deleted?
-
-During path removal, mpath_remove_sysfs_link() clears the
-MPATH_DEVICE_SYSFS_ATTR_LINK bit before mpath_delete_device() removes
-the device from the RCU dev_list.
-
-If a different path concurrently goes live, mpath_add_sysfs_link() iterates
-over dev_list, observes the cleared bit on the dying device, and might
-mistakenly re-create the sysfs link. When the dying device is finally
-removed and freed, the re-created sysfs link is permanently leaked and
-points to a freed block device kobject.
-
-> +		rc =3D sysfs_add_link_to_group(mpath_gd_kobj, "multipath",
-> +				&target->kobj, dev_name(target));
-
-[ ... ]
-
-> +void mpath_remove_sysfs_link(struct mpath_device *mpath_device)
-> +{
-> +	struct device *target;
-> +	struct kobject *mpath_gd_kobj;
-> +	struct mpath_head *mpath_head =3D mpath_device->mpath_head;
-> +
-> +	if (!test_bit(MPATH_DEVICE_SYSFS_ATTR_LINK, &mpath_device->flags))
-> +		return;
-> +
-> +	target =3D disk_to_dev(mpath_device->disk);
-> +	mpath_gd_kobj =3D &disk_to_dev(mpath_head->disk)->kobj;
-
-[Severity: High]
-Does mpath_head->disk need to be checked for NULL before dereferencing it
-here?
-
-Similar to mpath_add_sysfs_link(), if underlying paths are detached after
-mpath_put_disk() sets mpath_head->disk =3D NULL, this will cause a NULL
-pointer dereference during teardown.
-
-> +
-> +	sysfs_remove_link_from_group(mpath_gd_kobj, "multipath",
-> +			dev_name(target));
-> +
-> +	clear_bit(MPATH_DEVICE_SYSFS_ATTR_LINK, &mpath_device->flags);
-
-[Severity: Medium]
-Is there a race condition between test_bit() at the start of this function
-and clear_bit() here?
-
-A concurrent execution for the same device could pass the test_bit() check
-and issue duplicate removals to the sysfs core. Should this diverging
-non-atomic pattern be replaced with test_and_clear_bit() to match the safe
-pattern used in mpath_add_sysfs_link()?
-
+> +	return count;
 > +}
+
+[Severity: High]
+If a user disables delayed removal by setting delayed_removal_secs to 0 via
+sysfs while paths are missing, how do pending I/Os get handled?
+
+We clear the flag and call mpath_synchronize(), but shouldn't we also
+call mpath_schedule_requeue_work() here to flush and fail the I/Os that
+are already parked in mpath_head->requeue_list?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729105107.2557=
-12-1-john.g.garry@oracle.com?part=3D5
+12-1-john.g.garry@oracle.com?part=3D6
