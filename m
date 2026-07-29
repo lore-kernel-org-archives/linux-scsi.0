@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07736480348
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 12:28:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 219D247D954
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 12:39:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785328102; cv=none; b=T3QIUXwroLVZH5VtuHw9JH5ElqHMOHPCfu+fo+L277g9ujLTfCGF9sfuXJ69SJLc38IaRiZzgw0gE0OhkkP7+hsggC1AH+m76HqIt+Of4crOac/vbM6jnUVaameV9WD17EHPvbVTi/jg4JMfMgmzYH9YnYyQNGLNlX1UBmVnM14=
+	t=1785328801; cv=none; b=oE6I/MJkZot27ikBiaFiH/YxmfjOyCDVk6oHpD8m7QxoLWrPwuY7GW3lll5R5BBkmOKFlAxzRv2muLNOI2jfLKywQTPUVe2JIPIzDqnKIKy1BH1Rs2XLOJEoP6EfCybbwHw+zJOPiZMLUIOWaBspEs2aO29SqdKZE6XTJh+35pU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785328102; c=relaxed/simple;
-	bh=HudjLt24K5uAIhlNqnNNVnlT4vwC1lzgOwIGCCdNBUQ=;
+	s=arc-20240116; t=1785328801; c=relaxed/simple;
+	bh=lULNTLpUMEgDvNuZS/hBqyhIJ5O0Z65kgOXejNslLGc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UxC6MlBw6k0rcX2Vm2Zd/vOjRaCwTiNGtEPMOYK2vA88Vj7tYm/tIFNRM39oZuPGJwfJVbfHq38ULuVDW84QbL3vRO1YDk4eLy5hWRu6ZiiChQTxfiT8LU7f+9/cht53W3utatKX48BQb4I+rSi5HDUQZ71N5uKG79NUwOjbPoo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gb22TBlP; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=FOvZd3AEHrShB071yBBkcI3puRoSmBqw0xwbfA14AtUq6QF/WiTgVqk6cgJq9VbLkYSsSGvApIUeKHfzqqLKpOd6kXWwCk4gsQyX6/TN3Ec5DIH/+QygPGbGPRCaZNQtUWvAmbGhTQXvcs9pDxKPoFsyaHKwI1s6I1KxfV5P23Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N7ieK9GW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gb22TBlP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 874581F00A3A;
-	Wed, 29 Jul 2026 12:28:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N7ieK9GW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D95981F000E9;
+	Wed, 29 Jul 2026 12:39:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785328088;
-	bh=ObHqXcD4Bssto4VWDA3UlLTI4gXFSExPBBYYhIY6mXU=;
+	s=k20260515; t=1785328792;
+	bh=H/mEitDW0DXrsgZSZn0IJvvqrxsS64WOZBCrTj3tets=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Gb22TBlPFqvUyWnz0INgD5mc4HzYK5wE+uCC2pJZuCoSCiIXnKdDWGEwJyTkMgMrE
-	 Y8U9BaJ9qhhCIEEBkrAyA1TyqlyeXQaUlRxgrU5YYI0GROffV3HeaTjImwFCFLKSWT
-	 KqBsIQqXpdQfJGOlDMzOjV6twZsvAZmfmgvScaI6IxHBsDTns+9J2XaKswxwqnTCqG
-	 AqTlvWXHQ8bNV37oQ9OxKrW3n+ss9DUI+nTjhvVzX5tBYvTd1z6zDiZJAlBtO+fbAA
-	 oGSWGdF7OeClHSnidR3ggMqfn3ru2LX8PfSdY7mH0saLGwZWLuF3woSzx+uKgybvip
-	 SaBoqkvKzc/8Q==
+	b=N7ieK9GW4o77Gf3G5Sfe5k7JfhEuDazuoBoZ603Ceeazbnc3zAt1r+CxDJP1DkqZi
+	 OAyA4PoqrbF9eh5YZpLzU+BWLHtZRDS334LFkipszBlf9NkXOid6duXRhyAumVPwRw
+	 iyz5M42+pweuCnOtvA/LPQcOkh1o9DvumpsHyLVHrqm3a+2htr8rsneAaZAzHYgYpP
+	 cp3ujgslHfAC3pLkR7b4BvhCSM6Z7BbeSsqMYr0xRBQK6e9e0Ikn43tP9fEFvRaBh7
+	 M9+52/O57u6BA1yjdG/kVUnU2plyHemgBSXxeKiWYZYnZ45BYEOPgEgioKBH00lMQF
+	 9GrFu1QXOAaGA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 07/27] libmultipath: Add sysfs helpers
+Subject: Re: [PATCH v6 08/27] libmultipath: Add support for block device
+ IOCTL
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260729105107.255712-8-john.g.garry@oracle.com>
+In-Reply-To: <20260729105107.255712-9-john.g.garry@oracle.com>
 References: <20260729105107.255712-1-john.g.garry@oracle.com>
- <20260729105107.255712-8-john.g.garry@oracle.com>
+ <20260729105107.255712-9-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 12:28:08 +0000
-Message-Id: <20260729122808.874581F00A3A@smtp.kernel.org>
+Date: Wed, 29 Jul 2026 12:39:51 +0000
+Message-Id: <20260729123951.D95981F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,85 +47,87 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The sysfs store helper `mpath_iopolicy_store` updates the `iopolic=
-y` locklessly and without invalidating cached paths, creating a TOCTOU race=
- on concurrent writes and leaving the system operating on stale paths.
-- [Medium] Inconsistent evaluation of `iopolicy` in `__mpath_find_path` due=
- to reading the state inside the device loop.
+- [High] Deadlock in `mpath_bdev_ioctl` due to holding `srcu_read_lock` whi=
+le forwarding ioctls that can trigger synchronous path removal.
+- [High] Bypass of underlying partition-specific IOCTL security policies be=
+cause `mpath_bdev_ioctl` unconditionally passes `part0`.
 --
 
---- Patch [7]: [PATCH v6 07/27] libmultipath: Add sysfs helpers ---
-commit ceaf280cc3938326ee64a5bab20fde5b9a603a83
-Author: John Garry <john.g.garry@oracle.com>
+--- Patch [8]: [PATCH v6 08/27] libmultipath: Add support for block device =
+IOCTL ---
+commit d2e45114ccfb93fccdccc60ed75e05084f9b9173
+Author: John Garry <john.garry@linux.dev>
 
-libmultipath: Add sysfs helpers
+libmultipath: Add support for block device IOCTL
 
-This commit adds helper functions for driver sysfs code to get/set the
-iopolicy, show device paths per NUMA node, and manage multipath attribute
-groups.
+Add mpath_bdev_ioctl() as a multipath block device IOCTL handler. This
+handler calls into the mpath_device bdev fops handler.
 
 > diff --git a/lib/multipath.c b/lib/multipath.c
-> index fada92bf9754c..58eb9be5bebbe 100644
+> index 58eb9be5bebbe..f1758d1e60a60 100644
 > --- a/lib/multipath.c
 > +++ b/lib/multipath.c
-
-[ ... ]
-
-> @@ -620,6 +620,100 @@ void mpath_device_set_live(struct mpath_device *mpa=
-th_device)
-
-[ ... ]
-
-> +static void mpath_iopolicy_update(enum mpath_iopolicy_e *iopolicy,
-> +		int new)
+> @@ -454,11 +454,53 @@ static void mpath_bdev_release(struct gendisk *disk)
+>  	mpath_put_head(mpath_head);
+>  }
+> =20
+> +static int mpath_bdev_ioctl(struct block_device *bdev, blk_mode_t mode,
+> +		    unsigned int cmd, unsigned long arg)
 > +{
-> +	int old =3D READ_ONCE(*iopolicy);
+> +	struct gendisk *disk =3D bdev->bd_disk;
+> +	struct mpath_head *mpath_head =3D mpath_gendisk_to_head(disk);
+> +	struct mpath_device *mpath_device;
+> +	int srcu_idx, err;
 > +
-> +	if (old =3D=3D new)
-> +		return;
+> +	/*
+> +	 * This check is duplicated from sd_ioctl() as we don't pass the
+> +	 * partition bdev to fops->ioctl. That is not yet possible as the
+> +	 * per-path disk is hidden and, as such, does not have partitions
+> +	 * scanned.
+> +	 */
+> +	if (bdev_is_partition(bdev) && !capable(CAP_SYS_RAWIO))
+> +		return -ENOIOCTLCMD;
 > +
-> +	WRITE_ONCE(*iopolicy, new);
+> +	srcu_idx =3D srcu_read_lock(&mpath_head->srcu);
+> +	mpath_device =3D mpath_find_path(mpath_head);
+> +	if (!mpath_device) {
+> +		err =3D -EWOULDBLOCK;
+> +		goto out_unlock;
+> +	}
+> +
+> +	if (!mpath_device->disk->fops->ioctl) {
+> +		err =3D -ENOTTY;
+> +		goto out_unlock;
+> +	}
+> +
+> +	err =3D mpath_device->disk->fops->ioctl(
+> +			mpath_device->disk->part0, mode, cmd, arg);
 
 [Severity: High]
-Since kernfs does not serialize store callbacks, can this lockless
-read-compare-update sequence lead to TOCTOU races on concurrent writes?
+Does unconditionally passing part0 bypass partition-specific IOCTL security
+policies in the underlying driver?
 
-If multiple threads execute this simultaneously, could they both read the
-same old state, overwrite it, and emit inconsistent logs?
+By passing the whole-disk block device (mpath_device->disk->part0),
+bdev_is_partition() will evaluate to false in the underlying driver. For
+drivers like NVMe, this strips the partition context and could bypass
+requirements like CAP_SYS_ADMIN for passthrough commands on partitions,
+allowing a user with only CAP_SYS_RAWIO to execute whole-disk commands.
 
-Additionally, does this policy update need a way to invalidate the cached
-paths? Because this helper only updates the policy and has no reference to
-mpath_head, it doesn't invalidate mpath_head->current_path.
+[Severity: High]
+Can holding the SRCU read lock across the underlying ioctl cause a deadlock?
 
-Will the new policy continue using the stale path cached by the old policy?
+If the underlying ioctl triggers a controller reset or device removal, the
+teardown path could eventually wait on synchronize_srcu() for this exact
+srcu instance. Since the ioctl is waiting for the operation to complete
+while holding srcu_read_lock(), synchronize_srcu() would block forever.
 
-> +
-> +	pr_info("iopolicy changed from %s to %s\n",
-> +		mpath_iopolicy_names[old],
-> +		mpath_iopolicy_names[new]);
+> +out_unlock:
+> +	srcu_read_unlock(&mpath_head->srcu, srcu_idx);
+> +	return err;
 > +}
 
-[Severity: Medium]
-Does introducing this concurrent sysfs update expose a TOCTOU race in
-__mpath_find_path()?
-
-If __mpath_find_path() iterates over devices and reads the IO policy on each
-iteration via mpath_read_iopolicy(mpath_head):
-
-	if (mpath_device->numa_node !=3D NUMA_NO_NODE &&
-	    (mpath_read_iopolicy(mpath_head) =3D=3D
-		MPATH_IOPOLICY_NUMA))
-		distance =3D node_distance(node,
-				mpath_device->numa_node);
-	else
-		distance =3D LOCAL_DISTANCE;
-
-Could a concurrent change here transition the policy mid-loop, causing the
-function to mix incompatible node_distance metrics with LOCAL_DISTANCE and
-potentially corrupting the minimum-finding logic?
-
-Should the policy be read exactly once before the loop?
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729105107.2557=
-12-1-john.g.garry@oracle.com?part=3D7
+12-1-john.g.garry@oracle.com?part=3D8
