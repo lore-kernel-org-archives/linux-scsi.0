@@ -1,127 +1,123 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDE9E3AFCE5
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 15:09:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7FAD27732
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 15:14:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785337798; cv=none; b=ijCkxFp7wvaoUY0UCGnulLKdJNRaH1/qdLi4YczjidWDsQSB3gvZyFct5BnCZTX6cthc4gh1oFtub3vLrWmN21WqC5K1I1cFSOWGZOm88FA03OtJGpY9uff8jS3NPQISX+mCTPcZav0OGbA0sq/1mw6HFS79xhrjdSnLY4lofC8=
+	t=1785338044; cv=none; b=AxqA+IUBMZyY4b0pgWoivmYDVHXKWUmhgtQrKFmnXCQfOXVUqnqJWHj3IGabDhNwCXClCLVHer1kJMR4nBfYRNoW9V9/EmGyd6JVbvz8Yp/PkaFYBGkPNXhJPwPhCBUbjJ7yFFh8HMEIc1xld5kliNu+l5/C+qOkQn1+yaXJZWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785337798; c=relaxed/simple;
-	bh=9LgMT+DHBH4XIQ3UAssn/tNui9lejH3BMZfjYFecitg=;
+	s=arc-20240116; t=1785338044; c=relaxed/simple;
+	bh=zKy7AdZ1SO9cOGWB2lza0Lrzz6FFcHA7UC4CCQ0MM1Y=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Viyq4CHw1Hs9J5HJ/3QIbW4ZOB1pFSJpcCTJ/OmRLFTw88oA5WAsggdcIQDye9lNvVzz+FfClXQHJLBYX3euBZI0mjkxB4m6m5VZKFOM5seJjimhvMAYhdUML9CuG26Rs0OkvGCKv5OAlz0CqoMJq/kOfppR9PUcrJ51E3S8O60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LqoNC+5D; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Qg0dqnX9zHzgN6mgDbjXMyHFTrEAulZ9CIEEAYy94RO+zaifSezf8sPliuellZj7vOw4QQycvLbIXERD8DDyl6BDA4p/FfGJ2VNElHSYN3Z/tv509UR5JA6AYqV7uRYN8tAH7agIfZlm8SoI4+ZzEoprruYJ23sd8pPaZIjjUw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ojjrl1WY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LqoNC+5D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6602A1F000E9;
-	Wed, 29 Jul 2026 15:09:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ojjrl1WY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C1F01F000E9;
+	Wed, 29 Jul 2026 15:14:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785337796;
-	bh=JSlLOJ/NyE9EPe/XjDSuHqwngbCFbcLtctvlzE682r8=;
+	s=k20260515; t=1785338043;
+	bh=1FljH+bEjjiwVzP5rQLsUtc8xfnSY5QxcBmjQtX0TXA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LqoNC+5Dt4qM5IckR6FtjS9Z/2Sa5piU/FnlV/Jv+f5vTUWXfuOGFlNT/6rYFsRal
-	 TmqoC3daYcIqzdhE2aWXgAucCWUt0IbIU3VpJ3743gLisuP11pLiC392PXlsh/UT5n
-	 PaoMVuJyz01AqrQuEHTbvkDYQ/oMIMcpM5baAhCrV2+usoI4YNrDYequens7hV0jbz
-	 u9VFjC5pqZJT/HMdQfBlmVTsUmO1eKRRYcZIskj2XMPt2HNbVTxfE10PoOtM6dcQhM
-	 tJIEdf19Yy8PmkAeXQkIyyt8uAlVruYF5c4pQOmoSz4AbO3951BKFfdclxrDkaFpDc
-	 9kC4weFO1sPlg==
+	b=ojjrl1WYivQVfJsiKgMpClSdtIB1YAumM9y/J1Emxw24TbugHV0pm++8VtvqZ0St6
+	 oEhfFZsFD6TQM3gXZsfhicXycr0yMQHSH7Zr/EYkRpwwcJxzrLG4IE8GcMIkkZbkyG
+	 Dn+C6VChwg3M1H2FE7XZsCQFO5ONoCBTyMol94cdNNPY831SercGa+VtBAvdZS8en8
+	 7ff4QYn0rX0/vWbC0UMqTiOC3bqc9+oCE1En6Ot06ObzT9f6w3BhsaaD5mkOQ1SLru
+	 h4YCEpcI2dognjDhcR0VQxydG8YFqSH67xGTc7AmmD5XBE5byULNFkmD13i0LUb7zb
+	 MPv0Fup5RxEEg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/5] scsi: lpfc: Replace strlcat() with scnprintf() in
- lpfc_vport_symbolic_node_name()
+Subject: Re: [PATCH v6 18/27] scsi-multipath: failover handling
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ian Bridges" <icb@fastmail.org>
+To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260729144617.1388646-3-icb@fastmail.org>
-References: <20260729144617.1388646-1-icb@fastmail.org>
- <20260729144617.1388646-3-icb@fastmail.org>
+In-Reply-To: <20260729105107.255712-19-john.g.garry@oracle.com>
+References: <20260729105107.255712-1-john.g.garry@oracle.com>
+ <20260729105107.255712-19-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jul 2026 15:09:55 +0000
-Message-Id: <20260729150956.6602A1F000E9@smtp.kernel.org>
+Date: Wed, 29 Jul 2026 15:14:02 +0000
+Message-Id: <20260729151403.2C1F01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Pre-existing out-of-bounds read and stack buffer overflow in `lpfc=
-_decode_firmware_rev` due to partial array initialization and missing null-=
-termination.
+- [High] List corruption and use-after-free occur due to `bio_list_add_clon=
+e()` failing to nullify `master_bio->bi_next`.
+- [High] A use-after-free crash occurs because `cancel_work_sync()` is miss=
+ing during `mpath_head` teardown.
 --
 
---- Patch [2]: [PATCH 2/5] scsi: lpfc: Replace strlcat() with scnprintf() i=
-n lpfc_vport_symbolic_node_name() ---
-commit ccac320efc7231c941f0ae4e81fa116ae23ad75e
-Author: Ian Bridges <icb@fastmail.org>
+--- Patch [18]: [PATCH v6 18/27] scsi-multipath: failover handling ---
+commit d3d46b0330ddb0dc22577a7546f9765b9e1a4651
+Author: John Garry <john.garry@linux.dev>
 
-scsi: lpfc: Replace strlcat() with scnprintf() in lpfc_vport_symbolic_node_=
-name()
+scsi-multipath: failover handling
+   =20
+For a scsi command which suffers failover, requeue the master bio of each
+bio attached to its request.
 
-This commit replaces strlcat() API uses with a single scnprintf() in
-lpfc_vport_symbolic_node_name(). The replacement formats all fragments
-directly into the destination buffer, avoiding intermediate truncation.
-
-Link: https://github.com/KSPP/linux/issues/370 [1]
-
-> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-> index c7853e7fe0719..0734ab3be3e30 100644
-> --- a/drivers/scsi/lpfc/lpfc_ct.c
-> +++ b/drivers/scsi/lpfc/lpfc_ct.c
-> @@ -1823,34 +1823,15 @@ lpfc_vport_symbolic_node_name(struct lpfc_vport *=
-vport, char *symbol,
->  	size_t size)
->  {
->  	char fwrev[FW_REV_STR_SIZE] =3D {0};
-> -	char tmp[MAXHOSTNAMELEN] =3D {0};
-> -
-> -	memset(symbol, 0, size);
-> -
-> -	scnprintf(tmp, sizeof(tmp), "Emulex %s", vport->phba->ModelName);
-> -	if (strlcat(symbol, tmp, size) >=3D size)
-> -		goto buffer_done;
-> =20
->  	lpfc_decode_firmware_rev(vport->phba, fwrev, 0);
+> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+> index 12750621a7fc0..6ced89576368c 100644
+> --- a/drivers/scsi/scsi_multipath.c
+> +++ b/drivers/scsi/scsi_multipath.c
+> @@ -256,10 +256,49 @@ void scsi_mpath_dev_clear_path(struct scsi_mpath_de=
+vice *scsi_mpath_dev)
+[ ... ]
+> +static inline void bio_list_add_clone(struct bio_list *bl,
+> +				struct bio *clone)
+> +{
+> +	struct bio *master_bio =3D clone->bi_private;
+> +
+> +	if (bl->tail)
+> +		bl->tail->bi_next =3D master_bio;
+> +	else
+> +		bl->head =3D master_bio;
+> +	bl->tail =3D master_bio;
+> +	bio_put(clone);
+> +}
 
 [Severity: High]
-This is a pre-existing issue, but can lpfc_decode_firmware_rev() cause a
-stack buffer overflow when called from other paths with flag =3D 1?
+Will this leave the newly appended list element improperly terminated?
 
-Looking at lpfc_decode_firmware_rev() in drivers/scsi/lpfc/lpfc_ct.c, the
-stack array str is only partially initialized:
+This custom insertion into requeue_list appears to omit the standard
+master_bio->bi_next =3D NULL assignment for the new list tail.
 
-drivers/scsi/lpfc/lpfc_ct.c:lpfc_decode_firmware_rev() {
-        uint32_t *ptr, str[4];
-        ...
-                for (i =3D 0; i < 3; i++)
-                        str[i] =3D be32_to_cpu(*ptr++);
-
-                if (c =3D=3D 0) {
-                        if (flag)
-                                sprintf(fwrevision, "%d.%d%d (%s)",
-                                        b1, b2, b3, (char *)str);
-                        else
-...
-}
-
-Only 3 elements (12 bytes) of the 4-element str array are initialized.
-
-If the firmware name does not contain any spaces to be converted to null
-bytes in the first 12 bytes, won't sprintf() read past str[2] into
-uninitialized stack memory?
-
-Since this reads until a null byte is encountered, couldn't this overflow
-the caller's fwrevision destination buffer?
-
-This appears reachable when triggered via sysfs where untrusted device
-firmware might provide maliciously crafted data.
+If master_bio->bi_next happens to contain a stale pointer when it is added
+here, could iterating the list later result in memory corruption or memory
+being accessed after it has been freed?
 
 [ ... ]
+> +static void scsi_mpath_clone_end_io(struct bio *clone)
+> +{
+> +	struct bio *master_bio =3D clone->bi_private;
+> +
+> +	if (clone->bi_status && blk_path_error(clone->bi_status)) {
+[ ... ]
+> +		spin_lock_irqsave(&mpath_head->requeue_lock, flags);
+> +		bio_list_add_clone(&mpath_head->requeue_list, clone);
+> +		spin_unlock_irqrestore(&mpath_head->requeue_lock, flags);
+> +
+> +		mpath_schedule_requeue_work(mpath_head);
+
+[Severity: High]
+Is it possible for the scheduled requeue work item to run after the
+mpath_head structure has been torn down?
+
+If a device hot-unplug overlaps with I/O path errors, requeue_work is
+scheduled here.
+
+When teardown proceeds to remove the device and drops the last reference,
+it appears scsi_mpath_head_release() frees the scsi_mpath_head structure
+without calling cancel_work_sync() first.
+
+Could this sequence lead to a delayed kworker executing on deallocated
+memory?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729144617.1388=
-646-1-icb@fastmail.org?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729105107.2557=
+12-1-john.g.garry@oracle.com?part=3D18
