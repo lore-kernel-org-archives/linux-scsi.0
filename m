@@ -1,64 +1,65 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92181389E13;
-	Wed, 29 Jul 2026 02:57:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD48D38C42A
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 02:58:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785293868; cv=none; b=PiJoj7dCYwN+DFmsSSTpnBUBBxI290nYtVOJDFc8o4h60u8HJAZuOout12J17JsKu6084rGqaSBpVkTBjJ43daCXmHrZa43BIoyCTi852f3/hHbILcw2YnuJl6ee0xL2vcHHqt+Uu5luU24UfBnCE/oy7LK4qMRBzHstZSLzHZ4=
+	t=1785293881; cv=none; b=a0HAZDITGxf59B26XjuW9M9OOv1sef7TJeJ618txiAfPDZyM+xRiItCXEmlzBpPZWW2si9xu/O0TXH2xi2iJyrVamWMFml8DWwPiCqXhtUJAtt8Vsf+1A5kdMs44uk8T87gPAJuTQAf9sfKV5x2eIIRepChdoeEX2knhquUJBmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785293868; c=relaxed/simple;
-	bh=LEPxcvO6Ahod9ma5ms0CoqoPZoJ85X9ztqyPcogRQjg=;
+	s=arc-20240116; t=1785293881; c=relaxed/simple;
+	bh=90GhoptoxPDKRc71zaenYWyYDRcxlxLMdvI9H5zgbts=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GYv6sxfHS52cVP8gvTTP3Vgx3KpvQOXG+nsG6ohNiuH8+8A6YROgYRWvPg3cvCLAWnWK16cE99lk9U6xMMyieTZiIk4WO3M0JqEdTM47PhfzbZtlJ7WJj0VO1Ir9in4/ddzABJzcocyIoCDbJ0h78vci5FqYjeTA4ldHPz+JXdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=LJgPLdxK; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=bMTRSxaKADZXXQGzKYPj2dAUh76lDQ2Akhbuy4aGc1VRw3S0cBYENKSWm+rjdWeEfMDznnAVTeMlxWSpatK2dfFVwpoQoqoinfcoaIl7kvUP9HSjS6339qATxlB/7gmw4eF2bnTFUWkJ9EkjGfoeITbyUjVBHmMGeFWU1JXjmdk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=SYff+djz; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LJgPLdxK"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66SItX6Q1074582;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SYff+djz"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66SItZtU1279355;
 	Wed, 29 Jul 2026 02:56:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=PDyCty7zxNAK4tDIQs9F8rFJT4C/BQM3rjj346dw6KQ=; b=
-	LJgPLdxKeViIPDwGojNmKyPuiYb1+Wf3w2vhgCB2bvLPugGr7GLaAhM8LrbGIBHd
-	pcb5AvmcBSKxRoH4goIk+ClJEYp9ZLGPznaMqJDKZWwHx2y3SW5egx1LGauNr7W2
-	Mhxiulv3PuS6eFp9wuovJREy4HipXaEmaySdtlGjWB5DXDzOo65pJLaRy6KUu1jC
-	c5b/YitbenzVOwCt4ubsqpd0I6KeaM3v6TxNBF8HR/4hDB8OOrWMDjzLx3wVROX8
-	wRtzKprFebz3VkINhbJz4nrdjgYR/2z+GWymGk1aItdx0jUI3gyVKHH8MbCaOdDV
-	ePjoBdzAb58WUJSFDIiw4g==
+	corp-2025-04-25; bh=2oJxUIQRGSjrTcumOXkPNEExUUUVuOzNl1uXEOsXG/I=; b=
+	SYff+djz8pz8eJgccUZ0m4vVmFsx8W8XFJXzlBIbczL60U0q9+uhjLkUtLPut7NK
+	Sbt66DsAr0i6v4hTdyPloJC523HE13wx9h3fwy7LMdOpBWefxfs15GazNSchSNB6
+	6F0oFxWr6AViTfgbK+UFnKoxsS6dSf8hwYZl6eFIyHRYbgeXKrBjo/016MtnstHO
+	nfX00HqcUDdsoRS/ESrfdaiBrNYTG3rLDAXSRub4qH/Ws5OV2cf/vV364V7g0za6
+	1NXc+QPxW0/gtkPJtiExYPXp2Y3jYydqB9bZDOdz4mJZt+EaatcQAkSXD67F1IHN
+	R59CXDdpwoRJOKNMzdXg/A==
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fmqyq548m-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fmr3pn6pa-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Wed, 29 Jul 2026 02:56:24 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66T2oY53034636;
-	Wed, 29 Jul 2026 02:56:24 GMT
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66T2oXmI034508;
+	Wed, 29 Jul 2026 02:56:23 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fnh6ddkqr-1
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fnh6ddkqf-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 29 Jul 2026 02:56:24 +0000 (GMT)
+	Wed, 29 Jul 2026 02:56:23 +0000 (GMT)
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 66T2uMA1006812;
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 66T2uM9v006812;
 	Wed, 29 Jul 2026 02:56:23 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4fnh6ddkq0-4;
-	Wed, 29 Jul 2026 02:56:23 +0000 (GMT)
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4fnh6ddkq0-2;
+	Wed, 29 Jul 2026 02:56:22 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: kensanya@163.com
+To: Bart Van Assche <bvanassche@acm.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        TanZheng <tanzheng@kylinos.cn>
-Subject: Re: [PATCH] scsi: target: iblock: Fix wrong PR ops NULL check for PREEMPT/RELEASE
-Date: Tue, 28 Jul 2026 22:56:11 -0400
-Message-ID: <178529373851.132455.17343492235216423628.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, Neil Armstrong <neil.armstrong@linaro.org>,
+        =?UTF-8?q?=E5=AD=99=E9=AD=81=20=28Kui=20Sun=29?= <kui.sun@unisoc.com>,
+        =?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
+        Gregory CLEMENT <gregory.clement@bootlin.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PATCH] ufs: core: Revert "Delegate the interrupt service routine to a threaded IRQ handler"
+Date: Tue, 28 Jul 2026 22:56:09 -0400
+Message-ID: <178529373864.132455.16028860310368534434.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260724075850.280699-1-kensanya@163.com>
-References: <20260724075850.280699-1-kensanya@163.com>
+In-Reply-To: <b70eb60a01f971bed68c42c5b555929db5f835df.1784135511.git.bvanassche@acm.org>
+References: <b70eb60a01f971bed68c42c5b555929db5f835df.1784135511.git.bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,44 +72,46 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-29_01,2026-07-28_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0
- adultscore=0 spamscore=0 suspectscore=0 mlxlogscore=550 malwarescore=0
+ adultscore=0 spamscore=0 suspectscore=0 mlxlogscore=726 malwarescore=0
  phishscore=0 lowpriorityscore=0 bulkscore=0 classifier=spam adjust=0
  reason=mlx scancount=1 engine=8.19.0-2606160000 definitions=main-2607290021
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDAyMSBTYWx0ZWRfX5RgUcUKBsmaR
- wQQ6nKCuP//zxOffeLfk74YqnOEMXzWoULDdo+hkRAL8ybnsicbJeTcs/WH/7zuwFdcYXpSwa0Z
- F4qrEU0S2ObWIzmqJLLs6viZzBEN1mfdJTZ3BnHkYX0QDWs8ru96UfErPl68M4dHOu84twIWqc3
- 6GrTfEYD7VAiAuOKlpiZVg3gmLFiwkli9Mqqv3ulhn1J2+Ym11N0zQeHa6Yu3k51/BscnvfvTaP
- KiRSaGu1uyHGw9GrHyCiH4Jqck7rGqQYbrtLdBhTLl095dTLmr5/761WQocrJBcDvKnCTORxYi3
- 0NFiN+v93PeKWT6oWNN7UcauIIEr3/M8F2fipivh07aDGgPeN7/fkRlhvPHr8y96v1/R7DWKAns
- hO/iz9MZ0zg4mBSRKUzKwPTpd4LZSZpKezhFbFtzx5OGQzf26TVJoOPJEs1501+gd7SGRoYfxAW
- SgYR0sPo+C8W0LHyeS3126NMOq45fVp6d2kxAE1E=
-X-Proofpoint-GUID: HuJnV0z_FuMKpTJETC66buWvg4O4eAL_
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDAyMSBTYWx0ZWRfXxW7hm3MTSMq8
- EaYUh9eafnGFwPBvXHcoo+3qibjKNGPH7aHOqm1iBCPE95ThGPkP9n97eOyynOGo61rpTaf8Qok
- I8lLWY2ICCGQyZ1nLQcg3vSlG+hJPrZ+kszvD8EcY9F4ghMkHA0z
-X-Authority-Analysis: v=2.4 cv=X/1i7mTe c=1 sm=1 tr=0 ts=6a696bd9 b=1 cx=c_pps
+X-Proofpoint-GUID: BOMgp7j9KcEDxmDR1OEUgzkcB7uph0HN
+X-Proofpoint-ORIG-GUID: BOMgp7j9KcEDxmDR1OEUgzkcB7uph0HN
+X-Authority-Analysis: v=2.4 cv=RKWD2Yi+ c=1 sm=1 tr=0 ts=6a696bd8 b=1 cx=c_pps
  a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x4eqshVgHu-cdnggieHk:22 a=VwQbUJbxAAAA:8
- a=Byx-y9mGAAAA:8 a=gzltEgot3mvQ9GfFOcAA:9 a=QEXdDO2ut3YA:10
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=EIcjfB9IiI4px24ztqRk:22 a=VwQbUJbxAAAA:8
+ a=i5nAqfrxqf76BDmyPzkA:9 a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10
  a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22 cc=ntf awl=host:13517
-X-Proofpoint-ORIG-GUID: HuJnV0z_FuMKpTJETC66buWvg4O4eAL_
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDAyMSBTYWx0ZWRfX5A9IDwpyd/6C
+ 8U/N1z9PC54dy2SY3/dv/jaOUGdQ5J4i77KS+Lf1uNEuER+5nxIRwAdL8VKWNKD3xYdpzin5vQ9
+ 7gNQAxb2imaSUYhJoZkFr+M61ou7eI+Rh+gX4+7ojmpeveAeuULvUKKKqirYcpdRo475O56O1GO
+ H5ksndBUdG1nP0rBerLKXsIAj5vDGrSxon7FTZ4kHw11NgPumdibtR65PO4yaVVfbXImc9Drvnx
+ YpGNs5OdezWoPVAafuaLOHu5ZRTDbGJpg40G5GA7m59A8hgHN63kgqPna1Xkpaqc7tGpULlaNeP
+ 7x8DwvwkCj93VXylKtL/NsdpiH1TaVotPS8I74JF4erYJLlmQ4wibO7BoA9ns3rxQ1XbiQhtD/0
+ IMRElqy2UnmD1Jofz1GhfRgbbvPDGQF0uwrU7mKhcc8PWuTq50GFTUlWqfLhr3PhCHSS28vXHR1
+ cMA5GAGC38xyJ6DzAISAJrWlM3edgWeKra6onFzA=
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDAyMSBTYWx0ZWRfX8dRuXC7k4jk3
+ qXEOU1VriPF4MHD8ZYzLuNEuXTK7X3nonkPwwWR7zp6d1CZyeM/scyt/8iG6uty++XNt4tGumJu
+ yuF36HWbK2AoQK7jg5l84znkFtB4tKXVjOGKcUmJ+4Opluv2HSra
 
-On Fri, 24 Jul 2026 15:58:50 +0800, kensanya@163.com wrote:
+On Wed, 15 Jul 2026 10:12:28 -0700, Bart Van Assche wrote:
 
-> In the iblock_execute_pr_out function, PRO_PREEMPT, PRO_PREEMPT_AND_ABORT
-> and PRO_RELEASE all perform callback capability checks through
-> ops->pr_clear. The error check allows unimplemented hooks to pass through
-> the gate, resulting  dereferencing a NULL function pointer.
+> There have been multiple reports of performance regressions caused by
+> commit 3c7ac40d7322. Hence this revert.
 > 
-> Check whether the hooks that need to be called are supported.
+> This patch reverts most of the following commits:
+> * 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service routine to
+>   a threaded IRQ handler")
+> * 6475cfb81fc4 ("scsi: ufs: core: Avoid IRQ thread wakeup during active UIC
+>   command")
 > 
 > [...]
 
 Applied to 7.2/scsi-fixes, thanks!
 
-[1/1] scsi: target: iblock: Fix wrong PR ops NULL check for PREEMPT/RELEASE
-      https://git.kernel.org/mkp/scsi/c/9c33222bd387
+[1/1] ufs: core: Revert "Delegate the interrupt service routine to a threaded IRQ handler"
+      https://git.kernel.org/mkp/scsi/c/8a309036f557
 
 -- 
 Martin K. Petersen
