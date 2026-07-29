@@ -1,222 +1,280 @@
-Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AD9518DB35
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 14:08:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 998EF47ECDF;
+	Wed, 29 Jul 2026 14:11:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785334141; cv=pass; b=I5zYfeEaROK015Iv1D7cWkMycv6hremAjF5AtMUNnAj6me9SSw8obJxU/kE34CrAYqbBZieKR9tZP/eID7q4K2F2OIdNkD7ytxZpnaD5/NQ7gOuLGCuQj3ZWhaj74BIfA4Pc+ct5vY/L46vl4cchfJ9prkqbVUNY+GSrWGvJTm4=
+	t=1785334318; cv=fail; b=sUMiuECYkcNd3rN5NgZa/zGvl3LpMhDuckVHT30McBqU03ho/ugUO1oZAmg7la0QSbaKAYD4QyHKN0mfKq/wrBUpAcw2adC3dCYUF4a3FvUaqh2a1gQBgWgD2Ah0mAImuYCcgGLWaIwqKSuhs6jhbJB0cUDw8AWl9aoCCiT3ZzA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785334141; c=relaxed/simple;
-	bh=C9xtxbuUwTl2/4FiNCbCnz92H6bjM6ISYPijuuaBP7M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ftpE6DSIS4COq+hvWNY+xX372YB7EiISlJiA2HW7eUmxLx5lXpz0y7oqljSCQVy/rU/EX7s+H/oo1gJwWZftJ3uGfH33+vQxK4kQFR6IVDX/nDlIELbT9xQzlqYT3rfMMG7nYs943HsfFNPXFMjSdEIyQXSMqp7Zq2ZD0GrM8pc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jjpXqR0Y; arc=pass smtp.client-ip=209.85.128.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785334318; c=relaxed/simple;
+	bh=ALjah2qWqmawuPnbEI2Tz5fFivAwu+lbWkSxls1Gzrw=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=c31LvVpHn/ZEu1Wl+cuxVLvlFqLeyA/hbBMOH04X5H6s5lLN0qA/RHzkoMYCCPgCTgVfp1Ckiuk5i4/aCksfI/Gou6zFtmhQ8x6c0qzazVw0LyHX3Q/Hk73PK4ep5Pyzm/uDmLLrjWmJ7Sn8EMn3zEuphkhEJ+pIAq9ZCp8sKBA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=BqnNTvGv; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=YBX1ELxZ; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jjpXqR0Y"
-Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-8143daf89c7so10823947b3.1
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 07:08:57 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785334136; cv=none;
-        d=google.com; s=arc-20260327;
-        b=I8Uh54bzfBQ/uxEZ1EiwIj5WXPpB2IAoDMOXP0Wn+6TdPC9M+Ya3SPIUmMFbOuookd
-         o/xPrU+t5FtKMJVKX4aqcelYinExGZ2TINOrVLTkpkUNEuzY+sLMLIqiYsoeVVtfRmm8
-         R/VS8qjo3G09EE/wIyzBbTmSt+t5ilL9WVTZRA1UEE1mtDiIHtHsbfgenE8Zf91vdWir
-         GAzkVQ0eOrRRhYBj8aBlQV2oCfEREdMWDznZvcTrsbdbDmu7xelbnvKqOFjLO7/u9qa9
-         huXwyXHId1I5Jctjz0GYvIplbWwrpDYA2cyCR6/y48AQLRN12RwwtLWj/4TBkWHgd/F/
-         d6SQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=ILQW7wTx7MCavtjYKz64KhhUuc2hqgjwomjCvbjS/JA=;
-        fh=AcTm01PINQ8d96pvd8eXHe5u/9aPXvLvzzdcUnoXEdE=;
-        b=YhVTrXsfmNXc8JJMEJysCsbaSx03zdT4QJd7GLTcmRfhp4SJ8aX7OmhXGDI+8M8Kx6
-         uGSSoDClcxB4mNc5zgqUQUX3dKYDPb5CMBpFfG+yYxOOnWPtnjuYcrMAvAL+j49O8Spc
-         Oq3UATmyLTXiRuL1rbTB1tDhrtxxDuiDot7sJcSHkIBoV+4Xi8SeYIyRvql5mqopgjA4
-         ez4f3BbTJeKT9F7HsjGlCn3DkrxJAUtmWIBkHAUQU8tK8MFoucvPKlqpPtfNmTKbayxC
-         iJGgI6K+Fxu8ow11a9r62l9R5Ssz8pMWuB3y0lT9COFYZ+nkzVgyHOBr5jVGytgNYqkp
-         OVAA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BqnNTvGv";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="YBX1ELxZ"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66TDTRP13322801;
+	Wed, 29 Jul 2026 14:11:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=ib8UAkVzcq2w82KnLlmm5jV2E01Orig4sUdf13bMRSw=; b=
+	BqnNTvGv5rUQrHewDWjbtLkgw15eaR5+KQbQvXxJduBII9DeZkGAA6CfVh0ulbYa
+	ESQhJymOeQKIyoe5QA9UolyPjnodWMNfLUW/GFJHftJFSGqazOyV9PY6yjNhUZb8
+	+ZYPQvQ0jJBVN5RMeBGEtPGO+O55qEf1IInX4E1fwN2eApZCMkNimWUBOyChYg7U
+	X2wkt1Hq+/sZU0W/m+ASB/97vlN+QMCOOyLgK5wydbrzqI3g49XLnSkV/xxaiGsA
+	PKb98VY9Dz+J7to4cUKJDTJ8gbi+xZAON6pNyc5tCWw8XqRBaJPoZXszYDEwX0yG
+	0JexjkXtpP2XYvzcx1KR8w==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fmr0161ry-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 29 Jul 2026 14:11:55 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66TEAgb0010587;
+	Wed, 29 Jul 2026 14:11:54 GMT
+Received: from ch5pr02cu005.outbound.protection.outlook.com (mail-northcentralusazon11012052.outbound.protection.outlook.com [40.107.200.52])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fnh6e1253-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 29 Jul 2026 14:11:54 +0000 (GMT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wKDvmEyL+8dE2OCO5V8fbRSXLq7R7o0LSx0DSHuXQz3Cq61bt2tgOnUvNupUZNySMIrP4VsibIw2f6Izl3wjIR8pQzQ7eu+i7GhQlxQd+HXUCjvZ91m7SscC6rlUg0RTGxNq2ieuWU7oPXmGLhxvHvkD+9orJEvThPGMct7flJWK57zCWwj164B+jQ4bXEPPKpRcOgkQZNzmst8aBATEiq7khi5uqWnUFZrL1JremQk+lHW8+ptqyFws3FXZe0iP829PzTQHNrg2EgxHyJVfEb5nU4CN35LVwd6CCNR4PD/p+AFwZkzVCrf5EfDXm3n6iHUoTh3BvANvwaJaDlcNbA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ib8UAkVzcq2w82KnLlmm5jV2E01Orig4sUdf13bMRSw=;
+ b=DGCX3m8HXJ2h+cEZXgpeQwJKPP4xxIxJQRfQHIAF1Fa8q/tDOJlXXp4nekKPHKZkjwmKxktHsYk4ssx9Hhv6wMPEw2aIlbQQTrICgMk4bgArTKZ5d/HFdX+H12qsIBdZ1yOiZZxMPqZ8RQhGI4tNeYA+JFQOHdoijX+KY65Q1s5F+hbHCRXwyXkKMbfiHofyWgfCo0nvTIPxDv65kuJKECILXkWbllAF94M5CJXnCvuu5GIx46/Vh6uE/SJTYOXGHJthigQvMxpWM681Q3WZ3Z3b6hOHP68JxWeq6N9emJ9nfLTw9Vj4ZZKpkGVLTsFOn5LufrAMw4bZJ/4r2PX9kQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785334136; x=1785938936; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ILQW7wTx7MCavtjYKz64KhhUuc2hqgjwomjCvbjS/JA=;
-        b=jjpXqR0YFf6ekhWMsG4jve3XQGUZMPCvLbVCKpbrL9Aw5uxkbvKrZP+89Q9vwa5xpW
-         QL+kEpUErsvgomW2e88CJwqZHNz7sLXne1mrM778ANvcvtRCqov4JuQsZqD0caudPRPL
-         nGVENNSpLFCIzZe5oQMXm3M4JvetsH2GCuTJXNgYyulRq0EZOHg9uCgvkMUFEnfEbI4a
-         8oEYPjfjas+byx4RqOqqAnK3DUIiZETPwMDZO7uVAezcKSecI7cZIK2/WrASqnirreDG
-         8+92KUEWgzYHgLn1I28HwQK+LE4CsJe01F8E0huUbjs/fS70Jqlh0J+3jBnivc67zM9V
-         cv4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785334136; x=1785938936;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ILQW7wTx7MCavtjYKz64KhhUuc2hqgjwomjCvbjS/JA=;
-        b=j5Y2iZ34dcckfdiY/3JfC+dYcKbLJkxiSlJ5B0Yq1+DijgsaJVuqXRev+qsv6YQfVW
-         oo1o2kaXvDvTpwJa5Hq8zAFr0/XtpI6lHmMHVBjQvxOU14VXvoxA7mr+vtS8YXgRGEnd
-         /pKj7lnEREVdIyjYGcXpDmLVbBpoJfXdRfTsXbk+FWqgMXEVMJQwaCNgdM/D2pGJCaJq
-         ZD5bdHKRyMQe877yRkJd1pUpziFdfI1WfxBkMG6vLUkpbH+WP6dtot+MSz7bOniVADDV
-         87IJRq6QuFRbuVfe2/ervPgqUPURRKimljjJIg2tU3DEFUbztdKYciKLp5mXHCXRtDwL
-         1a+w==
-X-Forwarded-Encrypted: i=1; AHgh+RrwLAP0mS48go6EosSw9OdAHGa0mo6uxx7T4eltlpctqitNej+4cO5PTt+vkdkaGKN38YajBSxaTbF1@vger.kernel.org
-X-Gm-Message-State: AOJu0YzhfxRQgQ09/yuC3YBXV5c9X0+bMA2Y/lN1yfUOJbb6D5aW6t4K
-	QDXeHmSrVopb9Wzy0lurx5x1p+BUKQTSzht+Irtu59OIbDVWKaU0YUsjtg1TevYV3BhI/rFZquZ
-	9ymHP/Uz7L5ruJeDf9dOK8Wt+4JMrVSM=
-X-Gm-Gg: AR+sD138RnOF79vcu3xIKVKjK8MFGTA3GQsbyv+Xn1Z/jbsx9Brg4CN9uFIs7QcJHFt
-	jMzGHyRKbA0FmyNTLQUprnoDLJIfLxbEEJffnouyCDTqR8DRW1npJxUNcVjPTvAx8sFuoOKBFLB
-	z06u/nSGHBF7hWsgkSOy7N6ketq1bQdMFoiHO3ufp1n4TRQrol+e5XmLcvo04xkJwgHFJq/pCYm
-	3E8MFkqenyU1YOO0PAur+9U+Yh+tocZ/v4vcyAX7uMz6GYxX6qg6865ZEVbl7tH18PSHuUBKMI4
-	1YGs1gYfOk78QD/aq1QsqKJE8X8pdNetr39/sSf+UhaXOmcg2kV/kQ==
-X-Received: by 2002:a05:690c:f0a:b0:80c:85e5:8741 with SMTP id
- 00721157ae682-81f993df989mr36253797b3.63.1785334134768; Wed, 29 Jul 2026
- 07:08:54 -0700 (PDT)
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ib8UAkVzcq2w82KnLlmm5jV2E01Orig4sUdf13bMRSw=;
+ b=YBX1ELxZ7ECLrmD0ZoTlhL6UREOadNyIGcBinqhbNY6eZgv4MtXNoGwlzoMjvCrhJ1Y/7iTlxAY0zVg5fpvfaz8ZsKStJ95a3EgMW+RSk2b3jLr+uE1s8LCeJ9ok2Q5GepDjjratHqEYsxnsORVy0tqu0AMN23pLHJVY37+cIiY=
+Received: from DM4PR10MB6229.namprd10.prod.outlook.com (2603:10b6:8:8c::12) by
+ DM6PR10MB4266.namprd10.prod.outlook.com (2603:10b6:5:210::22) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.270.12; Wed, 29 Jul 2026 14:11:51 +0000
+Received: from DM4PR10MB6229.namprd10.prod.outlook.com
+ ([fe80::867:63e7:13fa:fa7d]) by DM4PR10MB6229.namprd10.prod.outlook.com
+ ([fe80::867:63e7:13fa:fa7d%6]) with mapi id 15.21.0270.009; Wed, 29 Jul 2026
+ 14:11:51 +0000
+Message-ID: <fe2e44a5-a77f-49fd-9ae7-21370f14b22b@oracle.com>
+Date: Wed, 29 Jul 2026 15:11:48 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 14/27] scsi-multipath: support iopolicy
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+References: <20260729105107.255712-1-john.g.garry@oracle.com>
+ <20260729105107.255712-15-john.g.garry@oracle.com>
+ <20260729140733.162A61F00A3D@smtp.kernel.org>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20260729140733.162A61F00A3D@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0366.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:18e::11) To DM4PR10MB6229.namprd10.prod.outlook.com
+ (2603:10b6:8:8c::12)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260716230411.2767394-1-tarunsahu@google.com>
- <20260716230411.2767394-5-tarunsahu@google.com> <20260717025913.067B41F000E9@smtp.kernel.org>
-In-Reply-To: <20260717025913.067B41F000E9@smtp.kernel.org>
-From: David Jeffery <dhjeffery@gmail.com>
-Date: Wed, 29 Jul 2026 10:08:43 -0400
-X-Gm-Features: AUfX_my5xPWn2PPlT7ZWQqD-dmkDU18YDfPkQgQ3vbI39xQlspjH-YQORqbG6Us
-Message-ID: <CANghDUUFrGN3CiJmRhQS0jtDwNnoWbKv490E=UxDXGgKsy6m7A@mail.gmail.com>
-Subject: Re: [PATCH v19 4/7] driver core: do not always lock parent in shutdown
-To: sashiko-reviews@lists.linux.dev
-Cc: Tarun Sahu <tarunsahu@google.com>, linux-pci@vger.kernel.org, 
-	linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM4PR10MB6229:EE_|DM6PR10MB4266:EE_
+X-MS-Office365-Filtering-Correlation-Id: 470ee0c8-4187-4af6-81a7-08deed7b55a3
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|366016|1800799024|23010399003|6133799003|18002099003|22082099003|56012099006|4143699003|10067099003;
+X-Microsoft-Antispam-Message-Info:
+	Ukj2j/YqbioZlx18Ljq4FbWg2TWcjmGh3hojWqUVKlErFu7SIYQDgesVmzcDDtEhR2PqfdNkVJ6IcDSKRK2WF66MpIL+YKFHuIvDEAgJosZt8Mf1c01y72ZSTEaQQFek1dmY8kLeYws5KAbmChOYA+aFgq1ul8kJzFjTtqOCEgTmJMBZFTDX0bUoXf2NUCoo5yNeQ/i1YCARWI/YU2TJrum3Le6jyJ3ktB0OBNC4TBCul301Rmhfc3CJS0VpHcqXhJkgJdn/dEMSJiVUu7b8B60NcqXtXRmlpb9zxD072pSSlRKnpYV4h2Ka4GCutVhZqI1EPJYGKln3MJ7REbvlGbjkrKNiK2CGazPytHaj1jvk7yPtlVPlKiAcx60DYe4rs3/GYPnX+gvFrduDWZY36kk3d8VJgRhTcylc9vsbk+ObiaAsU62EynIttEwBiXwHvBiquNxP/BaIAErfsHmEn6bSnluP1eNQCbVxa//XjMlyICbf/SLVCL/zhImU7YCkV2wsjrkYmLe9KgHit8QXf7bmEt916NWpjVvUOmg0aagnuZI2+ab1ExMMG/xJdmaCioBPEpjEmlVLz4CjNuxjKPX+/zX+Ld73qjww7lwRyFccKKr3/32crqS+YfXTARMNSDho15X3dxpGLkS37mfQSW9rLQJ/Ha0SPJju6dZhNm4=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB6229.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(23010399003)(6133799003)(18002099003)(22082099003)(56012099006)(4143699003)(10067099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?SUNiajBsSExtT0NUWnY4RHQwTnVZV3pMaWhBTHlNMkhxcG81UXBiODhmbVhw?=
+ =?utf-8?B?cXVQVndva0FkUFhjUjFVTmVlTVBOVXhUTUlDZXJDOGZkS1NoUzd1amZwSE9o?=
+ =?utf-8?B?VVliMllzd1ZRalc0R1Fsa25VZVIzaFdML0dOekgwcm9aVFUrajMrS2pSYzFj?=
+ =?utf-8?B?T0VOU2R5UFh6emt3c3AzNDl4ZnhSNTdNcW4xK2Z2cEtlZWs4ekJ2TzFNbFM4?=
+ =?utf-8?B?OS9WcTljSkR2UzkrK3JycVlmWTRSeVFoM0phWTA4Qms2NnlEOFZXNVordmpl?=
+ =?utf-8?B?TkI4MTZwU0k4SmZrUERlQzNPMm9LNGI1Yi9vYnNMSFN1SEg1S3gvR2dYQXRZ?=
+ =?utf-8?B?akpEbk1DZURpRlJnWnRKc0d1U0FabFFteC9uQWlBeEhFZFJYMGpMUmlvZkNJ?=
+ =?utf-8?B?Vmt5Q0kvUkk1QTZobEZWNTZiUlZla2VhclVmeFlGeWxXb2JIVEJKTXZCS0ZE?=
+ =?utf-8?B?ajJNN0ZSSndRM2hjNjdDRjl4RzVEVjFhTjIwWGJDcTVaa1dzNGNYMnN0RnNv?=
+ =?utf-8?B?RHJOeFpWZnFPamZvWU1vM25CcG1zUnFaWG91V3JXanc4MEY4dWo0bVp2cVMw?=
+ =?utf-8?B?TDdFSDAwUlRGTlhQaDI4N1ZOWEV0dlFCZlFYOWVMUU9lUnM4cE5WRE56RnVp?=
+ =?utf-8?B?VVZlR3lDYkVScTZnN3V1dEdHNEkrMDlUd3J0ZjFVQjd5UTFPRGJxemhFOEdv?=
+ =?utf-8?B?Y0FwUzVFM0MwQ2pOM1VMOXBWTzFZbkFpNWxKOEVKZW1UZk5Vc21jeXNkbHRt?=
+ =?utf-8?B?UTJndk9iM2hyZlRUKzNpR1ZEck54cnVEVDR4Qm1JcCtvTEdGZm96MGVOTGJY?=
+ =?utf-8?B?R1N1czdXckVZTXFrT0J2Q204TGJZc3MwSkRRNk1ybjMwbzNBSVlsYmhkOE9i?=
+ =?utf-8?B?djVBdVVLMjVHbEpZVHo4TFV5VnV5WEdCaVI5TWtFbVI0TGFNSDBkOThzL0sz?=
+ =?utf-8?B?SlJMYURDMGI4ZHZYVFYxbjhjWUZ5VkUwWUlxNkxGRUorRHVnb0ZOV0tMb2Nn?=
+ =?utf-8?B?SWdjOURkQ3Q4bld4bDg4NmVBZkdBZzUxd1dmcXZNVjRCUUNFVE50eXkzTzlj?=
+ =?utf-8?B?UGpYL2ErYURKMUNkOUErS0J0SjhXZWZOcjZ2UWRMWWtmZk9XcURRSDVGY3Zh?=
+ =?utf-8?B?a2MycWpHYnE3WkRVTWcyY2dxeWJDemRLU2ZQbVRxZTNKb25CM1A0cDRQeGFG?=
+ =?utf-8?B?VFlRcDFPemtGQlhSVWdDbHZGREVKK3ZTeENaUDUwR1kwc3cxVG81MHRITDZU?=
+ =?utf-8?B?c3ZaR3RNenB1d29hUFRSKzhXd0tLRUNKelJib1U3L1kyMklPNDM3QTluZHZx?=
+ =?utf-8?B?cGN4cmhvK0xEdFlBN204a0VLSWFvYllLc2JNbHNXTVJKY3lUUTdrRTR3RTRO?=
+ =?utf-8?B?d2VONzlpTDNkZTdLWXJoNldON3FiY1RyMzZyNGhMNW5JT2xuaEprVUdETWdP?=
+ =?utf-8?B?VDVIRHBmNkVId2tWdW8xeEZsb3VOVk82V0Yvc2J5S3RvZGFEMk44eVYyZTNn?=
+ =?utf-8?B?b0w4UVZkaE9wVVRXRzR2NzdaTjIvOGcvVDRXbnRDWjExVlFjeERtc2ZFOWxi?=
+ =?utf-8?B?RkRNWnpWUENtWFkwN2JERUltR21mb2lkczJheTlXS1M2NitIbUo1ZDRwWDgr?=
+ =?utf-8?B?ZWNpVkFzSzRMOG93UmEwYUFlYi9ETm5aazMvVnRPenFCRzZpM0owUkROc0pH?=
+ =?utf-8?B?UWRvWmZja1JLM0ZMUk94MFczTGpBek5hRlU1eVBCWE8zUDRlZ0NGUXdING1Z?=
+ =?utf-8?B?OUFRbm9XNkRCcUJCdTdjT2VOWll4UDk2UjNTRVd4RkxlQmZrQTcwUVhlM3dW?=
+ =?utf-8?B?YjdPQUVQU1ovZ01JNzRDWVVMMnhaMjFXYndad1g3SnkzL1FlSldLbUVtaFdv?=
+ =?utf-8?B?cmZJME13Tm1MaHh3SGtGZ3EvWjcyMUtWYUowRFRISHg3ZE1EdmpsZ1MvTjJh?=
+ =?utf-8?B?MG42T2x2Z3FYREQ3YkJTUVMza1JZR2owcm42TW9ydGIveGhncFFwemdlZHda?=
+ =?utf-8?B?aFp4UkRIb1lWWUFrUVhMRlgxbDc5K3NUdUtLdCtBQlJUeG5yUmRLQnE0MlRG?=
+ =?utf-8?B?UW90b2k3TFlrK0VnSUR5OTVjdnJWelRwR0pCbEY2WHFPU3JTeVBGSDRvOVl3?=
+ =?utf-8?B?Nm45MzJDWGkyYllmRXMwTjVTdEVBK3NYbklCWmN3bWdsVFhTdTB2bVpScVRX?=
+ =?utf-8?B?MEFFZUE0U1pNNkFFeVFmYVFLMWxGRmlPUTF4QUFnSjBsdi9ja0hEeTByTzly?=
+ =?utf-8?B?YVoyNEFhOHFWRGhrMDh6VVRRY0R0V3Rkd3lRaG5xQ28zczd6NnVNM2R5UEhi?=
+ =?utf-8?B?b0JhWHliVFNkSDNnYi9Bd2E5QVhaU0h2M1hTZXNXN2w0dHZ2THZnV2w5Nk5D?=
+ =?utf-8?Q?KNQX58FwLutcLG1c=3D?=
+X-Exchange-RoutingPolicyChecked:
+	CphkLIX2y2nWDV3VRgEewoGaRTMdAel0QOm9Lnmt+DHacg2irRsU+npnKEDbNaWogOVeaTeXAFvDDkQkFs7jQiXEUBvQegchvBGKV+h+lfhmRthinCELRv1F9D0jE4eKnsjczZAUAi24IunFlRgZzM/WW1uJhCAzOEQIJtHxYa1U/iv/ckgnHkOYHUW3K7ixMDLJweuRnv0qJgY+O5h91cZUygIwV0elwc7uQCiWVCo7t6vBqyrTl7o6C8uhVcDqF/gXRhmaHOwK+/XTqcvw7gsAD0V4ilxvjWDb2F3AeW/BMxl0ti43F3j0c7HX7MOtWdU8XjgJrlnFrFyCfjIMlg==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	2ajyGW7jyDU4+GiArEaIkWKZFnOlFPw/mY2nW9U9qrAQAqxTHVk+2TFli3/cpdNcw533syRhVBcvGOF9EwKI28rTDecznD7pRGWpaJyKgUvcCbHEk6xAUAzEO+B0wwOaplhHayHHex1RPcb9v+PZam8JUDKIBUaNO9ydTYgxzC8pY4H5OUYHh2lVydz/C9mCI7N3XDBS647/AucaHR9+jv1xYTNTua9XSEqhnVitzSCGlB84C+HMuaZuc6kBcKqwJMeHipnXV8djwT37Zdd+kRu+WE2wMTEwwPqjNUTKaq88t4RhT9pDzq758u2PxpE2LJjrUQgRKnKoOIdkxKY8IU9Cbyt0wmh3D7y6nC+yDrSjutUMwgqSC7nV6wue8TVzDkhaExYAt69sE2r+sFNj8KHVY0ICfNtjrrlIGJOQ0ouBJhlfdLUdGL0UX6TDW/T5S2Acjo+1UqWJv20V2eRtnsIUavj0EMrgIXOnancqV3UBu6VRpXySOt8v8wVFOlLExupnA6AbeRh1KGNaRj8kdQ1yzVUrgOldv4DYUH6bkQ/DqBm/Jb8C2WRabegd3dwtYbCpyxVVoh7WGS1vSEMRbWgjiilmRIEGj+/fhVp2szs=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 470ee0c8-4187-4af6-81a7-08deed7b55a3
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB6229.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jul 2026 14:11:50.9309
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: T5OuCLW8fsN6cgL7pf3FXov7mqZEl0/sv8wdstoy3NhxE9Ni8G42OPz3l7U9WtFYol9CUCcIvWV6dAiPYZZnkw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB4266
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-29_05,2026-07-28_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0
+ adultscore=0 spamscore=0 suspectscore=0 mlxlogscore=999 malwarescore=0
+ phishscore=0 lowpriorityscore=0 bulkscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2606160000 definitions=main-2607290116
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDExNiBTYWx0ZWRfX7yQT9hfncQ00
+ HzptzvAAGApjKgJif0SmSpNlu9MHh+8kSahD7fDjTolsM98TQWXFjF8SNOVD7bDKvTLTtrZFNNi
+ 3GyzH3CnmBv/daG7jEWLfJvCRyoDPBySCwuSpHvm2s+voyizt+nq
+X-Proofpoint-GUID: RVVxJpCe-SMNDutO6e9NHyxkcm6CVfC3
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDExNiBTYWx0ZWRfX0v+E17WyhpSm
+ aBruldn9z3h1xWUCo5Wo/aWsp2ScFyoIfQdn7z/VYdx2XofKW5/qLvoMveBurfrz/u/DfiyoU4Y
+ DAz/y2xeX75bNThhrn2fnE7cwNxsx7MENuONZ+Yu21tND9SBhXEww++hPAdIyHH9QkaoioDzCzH
+ g+lkgwPfMgcu/dA76luUrSW+NFdPiwcGfVZkvWeUi2cIt/oDWNS7uehozsmYmx8OgwxV2Evcgow
+ WvTlZ7Hh7qr0UwxVbPQOngYTDOc4b00sWV0AWcmPiRCVk319FUyooPvHXIV7HU7wzUQacj85VLm
+ +hyosmP0WYGxCZZPvMHNxcGNMN0/K6k3r7ZsgSuexJbb2g2F/5Koph9odR1S4sAxsO8JMmW3Oll
+ tqMFJ60VCuRjH/SMPQ748ESPg+LzwiC/zUL31QzU1XuI6s98WEnYbQYtOcJmYMVf1QHoRudeTed
+ U/9aEkUFgu4fNQDOphiXcauGuNb2qwCLUV0Y4SV0=
+X-Authority-Analysis: v=2.4 cv=KL1qylFo c=1 sm=1 tr=0 ts=6a6a0a2b b=1 cx=c_pps
+ a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=RAioF0-LDSMA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=x0eKOSpe3m1H3M0S9YoZ:22 a=VwQbUJbxAAAA:8
+ a=yPCof4ZbAAAA:8 a=LEZjX5lkH713GuRjnFsA:9 a=QEXdDO2ut3YA:10
+ a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22 cc=ntf awl=host:13517
+X-Proofpoint-ORIG-GUID: RVVxJpCe-SMNDutO6e9NHyxkcm6CVfC3
 
-On Thu, Jul 16, 2026 at 10:59=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
->
-> Thank you for your contribution! Sashiko AI review found 2 potential issu=
-e(s) to consider:
->
-> New issues:
-> - [High] Unprotected read of dev->parent introduces a Use-After-Free race=
- with device_move() during reference acquisition.
->
-> Pre-existing issues:
-> - [High] Dropping and re-acquiring device_lock(dev) allows dev->parent to=
- change, resulting in locking an obsolete parent.
-
-We could add additional locking around device_move to exclude moves
-during these times to quiet both the AI tool's concerns. However, both
-these concerns are already not possible in reality. The only user of
-need_parent_lock in the kernel which will use this code path is usb
-devices, and none of the rare devices which use device_move will move
-a usb device which has need_parent_lock set. Thus, there is no actual
-device_move which can cause these conditions the AI tool complains
-about.
-
-The AI tool is finding a non-existent issue by applying a very
-specific special state as a general condition. If really wanted, I
-could add a patch which locks out moves during these times as a form
-of future-proofing, but from my view of the code all it would be doing
-is creating additional code and complexity to the driver core while
-currently fixing nothing.
-
+On 29/07/2026 15:07, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> - [Critical] The struct mpath_head_template 'smpdt' is entirely empty, lacking implementations for logically required callbacks, leading to NULL pointer dereferences.
+> - [Low] Missing READ_ONCE() when reading the global `iopolicy` variable, leading to a data race.
 > --
->
-> --- Patch [4]: [PATCH v19 4/7] driver core: do not always lock parent in =
-shutdown ---
-> commit 6be56e5bea0fe214a5199c9f806c49e62e60127f
-> Author: David Jeffery <djeffery@redhat.com>
->
-> driver core: do not always lock parent in shutdown
->
-> This patch modifies the device shutdown process to only lock a parent dev=
-ice
-> if it is strictly needed, rather than unconditionally. It also defers
-> acquiring a reference to the parent device until the point where the pare=
-nt
-> needs to be locked.
->
-> > diff --git a/drivers/base/core.c b/drivers/base/core.c
-> > index 82a7af1f3ba2e..31f95e86856e0 100644
-> > --- a/drivers/base/core.c
-> > +++ b/drivers/base/core.c
->
+> 
+> --- Patch [14]: [PATCH v6 14/27] scsi-multipath: support iopolicy ---
+> commit f1795dc3e5eb8bb57ed7783aab4a6563ae5c3b62
+> Author: John Garry <john.g.garry@oracle.com>
+> 
+> scsi-multipath: support iopolicy
+> 
+> Add support to set the multipath iopolicy. The iopolicy member is per
+> scsi_mpath_head structure, and a module param is added so that the default
+> iopolicy may be set.
+> 
+>> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+>> index 1ec7bf1835de0..593f94aac70e9 100644
+>> --- a/drivers/scsi/scsi_multipath.c
+>> +++ b/drivers/scsi/scsi_multipath.c
+>> @@ -61,6 +61,23 @@ static const struct kernel_param_ops multipath_param_ops = {
+>>   module_param_cb(multipath, &multipath_param_ops, &scsi_multipath, 0444);
+>>   MODULE_PARM_DESC(multipath, "turn on native multipath support, options: on, off, always");
+>>   
+>> +static enum mpath_iopolicy_e iopolicy = MPATH_IOPOLICY_NUMA;
+>> +
+>> +static int scsi_mpath_set_iopolicy_param(const char *val, const struct kernel_param *kp)
+>> +{
+>> +	return mpath_set_iopolicy(val, &iopolicy);
+>> +}
+>> +
+>> +static int scsi_mpath_get_iopolicy_param(char *buf, const struct kernel_param *kp)
+>> +{
+>> +	return mpath_get_iopolicy(buf, iopolicy);
+> 
+> [Severity: Low]
+> Is a READ_ONCE() missing here when reading the global iopolicy variable?
+> 
+> mpath_set_iopolicy() updates the variable using WRITE_ONCE(). Concurrent
+> reads here could lead to a data race and trigger KCSAN warnings.
+> 
+>> +}
+>> +
+>> +module_param_call(multipath_iopolicy, scsi_mpath_set_iopolicy_param,
+>> +		scsi_mpath_get_iopolicy_param, &iopolicy, 0644);
+>> +MODULE_PARM_DESC(multipath_iopolicy,
+>> +	"Default multipath I/O policy; 'numa' (default), 'round-robin' or 'queue-depth'");
+>> +
+> 
 > [ ... ]
->
-> > @@ -4925,12 +4921,32 @@ static void shutdown_one_device(struct device *=
-dev)
-> >  static void shutdown_one_device(struct device *dev)
-> >  {
-> > +     struct device *parent;
-> > +
-> > +     device_lock(dev);
-> > +
-> > +     /* use parent lock if needed to avoid race with probe/release */
-> > +     if (dev->bus && dev->bus->need_parent_lock && dev->p && !dev->p->=
-dead &&
-> > +         (parent =3D get_device(dev->parent))) {
->
-> [Severity: High]
-> Does moving the parent reference acquisition out of the list_lock critica=
-l
-> section introduce a race condition where the parent could be freed?
->
-> In device_shutdown(), get_device(dev->parent) was previously called while
-> holding devices_kset->list_lock. Now that it is evaluated locklessly in
-> shutdown_one_device():
->
-> CPU1
-> shutdown_one_device()
->     evaluates dev->parent, but is preempted before get_device() is called
->
-> CPU2
-> device_move()
->     changes dev->parent and calls put_device(old_parent)
->     dropping the last reference and freeing the memory
->
-> When CPU1 resumes, could it pass the freed pointer into get_device() and
-> dereference it?
->
-> > +             /* the parent lock needs to be acquired first, so re-lock=
- */
-> > +             device_unlock(dev);
-> > +
-> > +             device_lock(parent);
-> > +             device_lock(dev);
-> > +
-> > +             __shutdown_one_device(dev);
->
-> [Severity: High]
-> This is a pre-existing issue, but does dropping and re-acquiring the devi=
-ce
-> lock here allow the topology to change?
->
-> If a concurrent device_move() reparents the device while device_lock(dev)
-> is dropped, it appears we might lock the obsolete parent. When we re-lock
-> dev and call __shutdown_one_device(), we haven't verified that dev->paren=
-t
-> still matches the locked parent.
->
-> Could this defeat the need_parent_lock synchronization and allow a
-> concurrent probe or release on the new parent to race with the shutdown?
->
-> > +             device_unlock(dev);
-> >               device_unlock(parent);
-> > +             put_device(parent);
-> > +     } else {
-> > +             __shutdown_one_device(dev);
-> > +             device_unlock(dev);
-> > +     }
-> >
-> >       put_device(dev);
-> >  }
->
-> --
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260716230411.27=
-67394-1-tarunsahu@google.com?part=3D4
->
+> 
+>> @@ -204,6 +254,8 @@ static struct scsi_mpath_head *scsi_mpath_alloc_head(char *vpd_id)
+>>   	if (mpath_head_init(&scsi_mpath_head->mpath_head))
+>>   		goto out_free;
+>>   	scsi_mpath_head->mpath_head.mpdt = &smpdt;
+> 
+> [Severity: Critical]
+> Since the scsi_mpath_head is initialized with smpdt here, and smpdt appears
+> to be an empty template, could this lead to NULL pointer dereferences in the
+> core multipath library?
+> 
+
+It is filled in later. And that is not even related to this patch.
+
+> drivers/scsi/scsi_multipath.c:
+> static struct mpath_head_template smpdt = {
+> };
+> 
+> The core code unconditionally dereferences these callbacks. For example, during
+> path validation:
+> 
+> lib/multipath.c:mpath_path_is_disabled() {
+>      ...
+>      return mpath_head->mpdt->is_disabled(mpath_device);
+> }
+> 
+>> +	scsi_mpath_head->iopolicy = iopolicy;
+> 
+> [Severity: Low]
+> Would it be better to also use READ_ONCE() here when reading the global
+> iopolicy variable during initialization?
+
+This won't make a difference, as iopolicy is only written once at module 
+init time.
+
+> 
+>> +	scsi_mpath_head->mpath_head.iopolicy = &scsi_mpath_head->iopolicy;
+>>   
+>>   	strscpy(scsi_mpath_head->vpd_id, vpd_id,
+>>   		SCSI_MPATH_DEVICE_ID_LEN);
+> 
+
