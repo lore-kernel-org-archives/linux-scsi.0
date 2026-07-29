@@ -1,64 +1,63 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55B7F38B158;
-	Wed, 29 Jul 2026 02:55:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF1F396D38;
+	Wed, 29 Jul 2026 02:55:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785293735; cv=none; b=ScwzJwDWclFG2yB8Cs/ErviEuV0dYt3cHlRYIKJXieNCs658z13/FGhRB0PtkzyZyZPmQE67tvhD+EOja2qmWAGZpFLxjym0JgBaQGuaF55pD5kN3uIEH3WFRmQ6Hmvla8QZSN/aLXLT17W+KUlhGyXlX0ZVsnWgeKFDQIdTBBg=
+	t=1785293738; cv=none; b=hNb1KusX/P+oSdGaRzDQIyyLpiDagzYz1J0RqYJf9J+KWg+8nZoWNf+XtzOtvZNptgujoGUhmCwJ48OtC7JQbM8Es/nZm4sJ5qglttRk+191Gdm6rW7zSPyEV8KgEeO904kiB/sfMkGiuMvyWXBarzoeoL5SnCso2FoOfzPkwpM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785293735; c=relaxed/simple;
-	bh=73mMcVQDsLn/lOkrzEeV1LRdCA9zREFvfwV2u8PvQcU=;
+	s=arc-20240116; t=1785293738; c=relaxed/simple;
+	bh=qoUrKcKxay5OyFXhx2vGmf9vwNZhvNnIs5C+ot3zxIU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CldCPqct/2xMYeyASKOwW3MZLSpNUrWB4tx2Aro/Xpz7KAnRIdNHkmhI84bjY2m7V4j9P4aT3Axcvvb2z0J8pVwPDA0nvnxY/FMD2fOkXnHFxCy9napDFyX/wo2Tlb8PYAvZzMI8ej+ekgynvKgMQ1/ptbEGW6bui/Km+3rqUAQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Y5PlLKvL; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=cELELouE7VqELfiLPWNuLlGnksUO1RGg2ZvcXJhOrShhXQMewsCGqhTK/SRO3oeNM+2sECF2MsDE3RiIIylTVKQaAFtHfnsrYTTerWZNDPe1uVh4Wq7fXJAhMsVsvkG/or++mi7tYTd3BgfOyl8YIU/GJS5gYk4xNyUi5ggkLUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=gy3jfk4/; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Y5PlLKvL"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66SItWOA1074550;
-	Wed, 29 Jul 2026 02:55:13 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gy3jfk4/"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66SItYuZ1122259;
+	Wed, 29 Jul 2026 02:55:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=ttRUh5nIaeIp2rvd9XCooqqac775ABZb/37BEj85wic=; b=
-	Y5PlLKvLWfXFYI1s+HJHjrXjZuoNrsZXJDHhIDZexLApVc00F1rLnFCOdAGsrckM
-	znPsR+qYRj4WK6iUnUs2i373ZnHdNXRYNA4eoOQSoO9eqGNBbO4ngJ9ISm/wQ5Xq
-	PF9lCy/AyrnOBNbzipynSgxO7+dqbkEjB3Hni/cI0dNGVg0OguieOvzWPU7oL1ij
-	OzYPEvupp+Xt0jk/j6O50Dzs9QkLZ28telmahEc/u3GQa5pl1xz7RVY1smcolyZl
-	dQfVA3XS6UlcJ9wo9ZwMolnpc7noDuVX9mYYlMDsoLI5JW3CrMGah9fh77gZ/XvF
-	k181QXzfSLHp225ZfCWk3Q==
+	corp-2025-04-25; bh=qN0YCKc+7qB7/7KidrtFUlXGoCGoZC9xob17VxT50KA=; b=
+	gy3jfk4/NeNEodvshIIS/CpXulNKrIBkwZovnMI0VzXtw5d4hrzMloxepRJSS5eu
+	zDAK5o5+ZUWKOfAAx0UXqF7fczlNQGV5l2vWui2Z2xnipSK6jAirHJqINJg8jg5i
+	Kit6iNWKQ7CBanhQFt9xPn7Dv0JX6o82Ig2Mspi8eeoQIlt8MpuzkeAZaX/m3D8P
+	1VEjho80A8z56xyjExyruPgN4naA/E8kmMSFq18XYkNQFRWyKbIguPugwzupwe0F
+	C8XeWJaxQb3izCZn1GE5MHftDJrKu9CpWrqa/cZCUahYbl1GLPoqzOnVlQMU0LjZ
+	1ZnbXb6PIz1Ri8UDOEcuwQ==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fmqyq5477-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fmr5xw7gc-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 29 Jul 2026 02:55:13 +0000 (GMT)
+	Wed, 29 Jul 2026 02:55:17 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66T2o65H001634;
-	Wed, 29 Jul 2026 02:55:12 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 66T2o6Km001436;
+	Wed, 29 Jul 2026 02:55:17 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4fnh87p0kv-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4fnh87p0p2-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 29 Jul 2026 02:55:12 +0000 (GMT)
+	Wed, 29 Jul 2026 02:55:17 +0000 (GMT)
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 66T2t8jR012133;
-	Wed, 29 Jul 2026 02:55:11 GMT
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 66T2t8jX012133;
+	Wed, 29 Jul 2026 02:55:16 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4fnh87p0jb-4;
-	Wed, 29 Jul 2026 02:55:11 +0000 (GMT)
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4fnh87p0jb-7;
+	Wed, 29 Jul 2026 02:55:16 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
-        mani@kernel.org, Can Guo <can.guo@oss.qualcomm.com>
+To: James.Bottomley@HansenPartnership.com, Yihang Li <liyihang9@huawei.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        linux-kernel@vger.kernel.org, Avri Altman <avri.altman@sandisk.com>
-Subject: Re: [PATCH v2] scsi: ufs: core: Avoid possible memory reclaim deadlock in TX EQTR context
-Date: Tue, 28 Jul 2026 22:54:58 -0400
-Message-ID: <178508193499.4027291.4053528994945733332.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, liyihang9@h-partners.com, liuyonglong@huawei.com,
+        prime.zeng@hisilicon.com
+Subject: Re: [PATCH] MAINTAINERS: Update HiSilicon hisi_sas driver maintainer to Xingui Yang
+Date: Tue, 28 Jul 2026 22:55:01 -0400
+Message-ID: <178508193493.4027291.7324626207020209146.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260618140941.902000-1-can.guo@oss.qualcomm.com>
-References: <20260618140941.902000-1-can.guo@oss.qualcomm.com>
+In-Reply-To: <20260616032051.1268608-1-liyihang9@huawei.com>
+References: <20260616032051.1268608-1-liyihang9@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,48 +70,39 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-29_01,2026-07-28_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0
- lowpriorityscore=0 mlxscore=0 suspectscore=0 adultscore=0 mlxlogscore=876
+ lowpriorityscore=0 mlxscore=0 suspectscore=0 adultscore=0 mlxlogscore=537
  bulkscore=0 phishscore=0 spamscore=0 malwarescore=0 classifier=spam adjust=0
  reason=mlx scancount=1 engine=8.19.0-2606160000 definitions=main-2607290021
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDAyMSBTYWx0ZWRfXz959B5EHxWnd
- AkoSOEmx3ZrAd1zG5UxLrfnOXGw+c3x6O1LmKQzFe68POG5x0y4a8p7J+AD4T5nw95k+LpXiY3A
- UQz7C41pqC/ezT0o2DfwbCUDpM7YpD+nDDU9c119UX5Ilx/cHFCcOJ8J1R3BxP4O/rJaEuqf3GC
- s4jfQKxihsWifcZfF9rKF7nQmFABkrHKg24TplDNifg3Jug8/A4rVqLJqS6SYcaoujqx79nHs8z
- RBL6gNieENxwp3ZJVNHq2pMrt/8MXRGXGXaAq/EyKgJRjPhbvXSIMd042oeNL0kjTDe8jZlbTLV
- TlKRiu5l0jWY9LJn/SPoe6ZzSQflnn4oprcpBWOv3lj+v2NwY2M77BLryjMOAfxCqkHH2OoW+fo
- d+Ybky+3GSQkpCuerumGtgYh/83jLtRBXte7IYcuF4HxLqUdXsMACKmjbKhU3TZkFA6JHlxH/Wq
- eIbCJgifCRKw0jI2qgg==
-X-Proofpoint-GUID: 5A68H_O6VhYXyzXGZik3AvRrp_11cYPU
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDAyMSBTYWx0ZWRfXzH6o0z6bl+Gf
- n54m3vKjWlYI1AGX46e3aMxNFgtDsp3UrORA9uhZbJHxUTAd1VVzA1Z6esHF40I4osiIgnRUb/w
- NankJwQtfk5WQJj0g0BQCPIWNRKXiY3PftHfoReaAthcFNFfUiqv
-X-Authority-Analysis: v=2.4 cv=X/1i7mTe c=1 sm=1 tr=0 ts=6a696b91 cx=c_pps
+X-Proofpoint-ORIG-GUID: NPbpz1_TvJ30HaxLzZ2B6LvhLMYDZbzX
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDAyMSBTYWx0ZWRfX6sLTaCRDGd+5
+ n8L5aB/2enMQp6MMr44WeW9kzLGeVkvtxuMyiJLxlvT2n/p1o2n13fYWzJdNeT+EXH164WWrZIV
+ 8LZNx3MuDzzEk5u7ZkI3AI9e/5kGi27lBvNsmzPlFAkpctGYMQ4/pOzEYNHHGYRO8P3K5ZQYtV6
+ c02MayOfk3JY3S1twe5MXkvNyzo64Ddhs3Go37eHwrN65SulydNSFg12cBbGpcQ+seAIrx8qC7Y
+ zAoyhqiPNHYcDimAV5AKlF8ThZTBQ2TcrVDga7C92iElua+02u/sTcfDvt6vcIiF7Nr4GrtZL2w
+ kQskJNsFRBAEiRMDp39PJdaGoU6YARci3gdmva88/O7eZMiU1QlP9RRS23ksbIZCwEy/Wn0uvu1
+ 0U+ht4J/Y7H9i9CRPw45e3fDZkLlLyhOqnxaj2jGFm68CVxbMjzc0ihcVQ/oIBEdhLUST6IZqDo
+ MfSHk/eV9lNwY/MXeuw==
+X-Proofpoint-GUID: NPbpz1_TvJ30HaxLzZ2B6LvhLMYDZbzX
+X-Authority-Analysis: v=2.4 cv=A6Jc+aWG c=1 sm=1 tr=0 ts=6a696b95 cx=c_pps
  a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x4eqshVgHu-cdnggieHk:22 a=VwQbUJbxAAAA:8
- a=AwNr2LastR9-7KJSE-EA:9 a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10
-X-Proofpoint-ORIG-GUID: 5A68H_O6VhYXyzXGZik3AvRrp_11cYPU
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=RD47p0oAkeU5bO7t-o6f:22 a=VwQbUJbxAAAA:8
+ a=B8jG436Dnn5JbpuQ7LwA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDAyMSBTYWx0ZWRfXzGg5wkjI5R93
+ Q/i7NVUzdhhkE648b09SHkakXYnplxiNuyCDe24gTR8XdB36VJW7VmuiAJ80EvLAT4+9FkTczyz
+ bi1z/7jBc0GZDdQneIPXSO11mFCQMEdXpb0de7bCl9qi1+PMTJoR
 
-On Thu, 18 Jun 2026 07:09:29 -0700, Can Guo wrote:
+On Tue, 16 Jun 2026 11:20:51 +0800, Yihang Li wrote:
 
-> TX EQTR may run while devfreq gear scaling has quiesced the UFS tagset. In
-> that context, functions ufshcd_tx_eqtr(), __ufshcd_tx_eqtr() and
-> ufs_qcom_get_rx_fom() allocate memory with GFP_KERNEL. If direct reclaim
-> is triggered, reclaim/writeback can depend on I/O to UFS device. Because
-> the queue is quiesced, this can cause deadlock.
+> Replace myself with Xingui Yang who is very familiar with the HiSilicon
+> hisi_sas drivers.
 > 
-> Use memalloc_noio_save/restore() in ufshcd_tx_eqtr() to cover all
-> allocations in the TX EQTR call tree, including:
-> - params->eqtr_record in ufshcd_tx_eqtr()
-> - eqtr_data in __ufshcd_tx_eqtr()
-> - params in ufs_qcom_get_rx_fom()
 > 
-> [...]
 
 Applied to 7.3/scsi-queue, thanks!
 
-[1/1] scsi: ufs: core: Avoid possible memory reclaim deadlock in TX EQTR context
-      https://git.kernel.org/mkp/scsi/c/760fc6f0e25a
+[1/1] MAINTAINERS: Update HiSilicon hisi_sas driver maintainer to Xingui Yang
+      https://git.kernel.org/mkp/scsi/c/53b056ef7f7c
 
 -- 
 Martin K. Petersen
