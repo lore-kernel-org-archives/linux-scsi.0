@@ -1,73 +1,73 @@
 Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B687D4DB54D;
-	Wed, 29 Jul 2026 14:48:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 937AF433AD;
+	Wed, 29 Jul 2026 14:48:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785336485; cv=none; b=bJX51iTWsjhtMFElyHyJYg1wtVDqo7Si37DpVdgWxZdJjUbcSKZqVrZa3iVR6n2HsYpWPRkxujULtUft5Ia2FpBN8vGthlleDLMoYFDcY5UeUrh9f/YMD84qsbVHDlWxkbvLdTivlNDJppxD4rfS7Jo8uGuQDHy8Ae6fZiR+SE4=
+	t=1785336496; cv=none; b=PdgGBo/d0e0US9o4ttzNZbDwP91WXQpU3LdhYZ4jhXkvQje3MWSHYf2DXzPKZOVdP3OOVq4jC3gsVixzXMHHllc+L5zfIpS94BDWvYlLC09savJdtvtHQ5jBmUeEEAVAnZYjEuCLIRiQ+N2qGjLZRGgs0FHdM1MYGl4KDmhA20k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785336485; c=relaxed/simple;
-	bh=0gEUJ40CfYtfNlgTkiVkcl89Qp3XAtA0wUJ95QuyLew=;
+	s=arc-20240116; t=1785336496; c=relaxed/simple;
+	bh=5KQs6lVgx7nHnAl6zlwM7WqNXnj8hl1UH/WZAKjAySw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OZ2rtNXa6i5l0/CNXbsmb2h5z1KjjK9Qfah27xQ5wwMH3UoWLfVBZsDK66VfzE0Sw5YBvdnhoh4i7m7Xg2waicc3S1Y5hLlaHG92bgOtVH8BBENsY42htKZ8VqUQn0MqqIwu0RkA9+e1CF7kYexlI22xXjTcOS0HiwVxaLJLpKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fastmail.org; spf=pass smtp.mailfrom=fastmail.org; dkim=pass (2048-bit key) header.d=fastmail.org header.i=@fastmail.org header.b=JWMlryZa; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Ux4zFOwp; arc=none smtp.client-ip=103.168.172.147
+	 MIME-Version; b=orxoeie70JD3r2cJB6B6h5eqpQ8JmNBAryhH0/WUxRkRRMyi+ZuveReFq7yNfZVZJ+s1AWNrnivBQJEeDYgNG/omO5N8T4WWVtJm9obZPOC6L9eb4fJVZ88aPgKOfbmTQ5OvSJWv/i3NzpEqLFbJyCT+jCnvzSq1u4g3EKhKVBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fastmail.org; spf=pass smtp.mailfrom=fastmail.org; dkim=pass (2048-bit key) header.d=fastmail.org header.i=@fastmail.org header.b=vPoMIDSo; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=myxWvwUb; arc=none smtp.client-ip=103.168.172.147
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fastmail.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fastmail.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fastmail.org header.i=@fastmail.org header.b="JWMlryZa";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Ux4zFOwp"
-Received: from phl-compute-11.internal (phl-compute-11.internal [10.202.2.51])
-	by mailfout.phl.internal (Postfix) with ESMTP id BCD90EC01F6;
-	Wed, 29 Jul 2026 10:48:02 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-11.internal (MEProxy); Wed, 29 Jul 2026 10:48:02 -0400
+	dkim=pass (2048-bit key) header.d=fastmail.org header.i=@fastmail.org header.b="vPoMIDSo";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="myxWvwUb"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfout.phl.internal (Postfix) with ESMTP id A65E2EC0087;
+	Wed, 29 Jul 2026 10:48:13 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-02.internal (MEProxy); Wed, 29 Jul 2026 10:48:13 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.org; h=
 	cc:cc:content-transfer-encoding:content-type:date:date:from:from
 	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=fm2; t=1785336482; x=
-	1785422882; bh=sb3YMUtQGr9m55xGL3W4Zf4+yxKgBq4/qdt3iz2BD24=; b=J
-	WMlryZabgi/HmorpjfRK3zwXC40IT2hVoA1ZEJRLdZUaegnqn44bIDP1qE4hLbaN
-	Dyf1niAnvSSrnvrLZ+fEeENGKiIKtK83L5H1Q+mqW2JZtRWmTjmrvy8VkYNc7++M
-	Ogl9w/1DQpb0ciidkBWNqWvMfPzw9gMolYAnpwtpSjmb+WxsfPWbGxuF3eRxTHRi
-	/S0JH8c4z7CRGg3vtat+LY3t7CcokV1JnXNr1hvaGYJq1GKkmkaLrAJg0IkmEdYc
-	lGIavtb1g4Zd+3Q7UHY5ifE1+LfYrylRJYK4UU+CpCGf0NRMa6PzJjM1mZXxR2yz
-	rQCCCAOy5qx02/94oY8sA==
+	:reply-to:subject:subject:to:to; s=fm2; t=1785336493; x=
+	1785422893; bh=DVp5cApcg9CHrgZH3g5czh0ZFy8hODO/GysuHs6vWvw=; b=v
+	PoMIDSo4jPge5QyIC3j6g95+PPIg/0GEwqu1I7iGMw32J5vICvq1sRSWFbP1iKe3
+	PMIxWFsnNAHKbxlzr+KyGZ9sMw2715u6OvF7uMCDm1pp/b9lFTxn/r8R0dj86ZqA
+	YfCsbJc6jbCi+0GegxebtgnbUw+JchDCFjyBU5KxbGYjTskrFp0iBAXDCIvd9gwr
+	NFbitt0VqmXfk4Sqi0rTzmXK9u6XWBZxCZgACsZpnHDXZn7+itvr2/BIIzlUKc7M
+	NzvwrTykVe+ceghgdte03S3t+JbPXIKSfLfngEHHUzZ21x6+PVTShvJO8qwsRfb7
+	GnITh84YBwrf0P50FO16w==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:date:date:feedback-id:feedback-id:from:from
 	:in-reply-to:in-reply-to:message-id:mime-version:references
 	:reply-to:subject:subject:to:to:x-me-proxy:x-me-sender
-	:x-me-sender:x-sasl-enc; s=fm2; t=1785336482; x=1785422882; bh=s
-	b3YMUtQGr9m55xGL3W4Zf4+yxKgBq4/qdt3iz2BD24=; b=Ux4zFOwpgJyAdRXPc
-	zAi/zHK602hi6xMvzdAgwoWy8R2lYBg8m+DBM+kDd8VgGHEr/LJKoQc0n6wIuX3A
-	RKR98ZB6l98pOjK2PYv7c9Gp4D42weLdBWGwwAsYLSvBDVnS2IBlCd2MHx8wDrpb
-	uMFGlpNFmxaMWeFpmTPs9hRVR24JbGmr3p8dqlZWb/Ce03K2MqQUtNTZXLZjDbCi
-	MDZJ5mN8Xsk0N33e+q7ncwOi6K19mSOj02lnEXCJg9OLn6DwpzCBPTEmriEJyLNP
-	YhYdzaT8j+LnPvaZm5LPvoyxG4UZgPm9/y7ybIIDecmLD2yOYKPSpwXCZXqGy9RC
-	1BG3Q==
-X-ME-Sender: <xms:ohJqavofRIvRVPgFHRfg1vxPjqHK4imeAvAeW10Wf90vd6bDEZeZ3A>
-    <xme:ohJqarM1O5ALln93hc-2hLcfymxWfqdfeHsl91ckymzA7DZNUDX_TLy-KOf6AiSWv
-    A6nBAUz9ja_h6PrccAICSKXZm8Vrvi6ryv35TG0aXUs77YLepaw7Y-5>
-X-ME-Received: <xmr:ohJqaiiWRM7ZNDlzBtNbvqtOSQ0NtBQS8NjKq4tGv5QtdWdwxeg-Wjgs1rU>
-X-ME-Proxy-Cause: dmFkZTFtOhiOm3KpBvhcLw7jxoOG3HPPAUbOj+HUD2PIj3WkQZgMngYb/zHlwyToc4DWSw
-    In6hKjq9SNB4QDuYbq5c+VFSI75N7Y33EPntpUZT9vAlj97S0QPkDGmpkNX4383F6z7N+v
-    35K6lqxCG84bAKSoIgP9F+RZwJI/7Xg81XtZHC4BUeK3UThInNrzAITOkV8wZlNNItW6qn
-    HoksfxlFjexBeFuvZ73FeeUnbV3bRMtdx+0JymzTCMS+2ySF/PBbrNIiKPlUcDK1PzogUO
-    fi+usYI3+NEaup+stegP0FG6DcNEWF479JdqzuAxqxwGCLx4P7GhoogjBVwDqzZxXwz8TF
-    L/PJbJqpczoyKTMTH9RSMJsu1a0rF7eCE63YfilcHC/EC0AOBELR3lE+s3ZvViT16GYgjH
-    HOVkFPls4u0M6U6Bea2dj2Iwh6lZoxczhm96+hIypDZu2itY47/mIpC1Oy/v4CaV0190jP
-    3bt+BT6wUGzWsyKqEu6OnILJqswFq3zG2fPxbPDKDGB8RTOBE+q4kuMoNQFH4omSnWAoRs
-    H4HEtQGg6Ju04v3KOhGODvtDIKE2dcqNt/b2NEAy2ULsqi7YPm8e62nHICwdupNGZDzUlQ
-    aK/H5Be9nnj+vmGfIb8Ry92HUkbA8M88uF99vVSnMQyBhraJQmZzFvpIpEiQ
-X-ME-Proxy: <xmx:ohJqausXogJgv0AxLMpIHVpuc-b-LNosFDMiWHsfX-oMkpBUKjW5Qw>
-    <xmx:ohJqamhSmse5UGRFHZYuwbyyXaEfnPqeJCakGDJM1DgEO90sziSCzA>
-    <xmx:ohJqakZevCZyTN8HZVea5OUDGe9HgWNK6yrO5YwmewRRJdFxaFvZFQ>
-    <xmx:ohJqalZ_cTDwHERrXkoBDyxROp_bTlPQNu-tvuQo-L24tFU6M_0jrw>
-    <xmx:ohJqapbDSbM81ncK5ZUrhRTmBPIZW2xQ_hYfAVi8LMTSnlXlSVIHcVfR>
+	:x-me-sender:x-sasl-enc; s=fm2; t=1785336493; x=1785422893; bh=D
+	Vp5cApcg9CHrgZH3g5czh0ZFy8hODO/GysuHs6vWvw=; b=myxWvwUbU45TM8Tmu
+	4GBKiW+beMRibtfdCXD++qPLJLwpdx5m3jVuotZDv7S/K1dUTbXSuDsV+hxqWPUe
+	uT5rzQNIhW09LJi9oY81WTDHDCYohDKAuOHnNKd/bfnWj0F6HW5DSiiVLyMb33MA
+	BxBw5QvtbOBYyEFFHEHhRhxHxxEmorwmEkZoeboLbm1HfMAwCdf5wAu9uvtM0hel
+	hm/llj0cg4QodoAmTNaIYiMmQbP1Y4iy42Crv9V/M9jJ2qYqx115zvBFX0ASI+KV
+	hTdVuasJCHFroxbp9XqBbYygNQBsD/BYm8yCoEWCbiOMSCjRxiLg/p3Uo3RGD2kc
+	3N/2A==
+X-ME-Sender: <xms:rRJqahgZfi6U1fZYUzBLpvALQRLi2Qbeyn6ufDcUd6HparFtUBZHdA>
+    <xme:rRJqamf1_RkT7-89AljXLCH9098pY4RQ8pQgcCxKeK70zB7ca-fOFkhSOeUpdJ--9
+    lyXZ2TuUyrhT6NnPwAIf81r91oe6qzTsXpiClLvI82yUYDJoFhxZCE>
+X-ME-Received: <xmr:rRJqahwDl5Hj06ppoobv1UlqLcZ7JA9QaSd2BuPXF0vWC87oXL6EuV11fpo>
+X-ME-Proxy-Cause: dmFkZTE5wi+MJyxorOdh+JrXF7qz5KRVreYk35RR2Kg6L8Et7FGxNH+4pMHnx93nafKHyg
+    mv2tR7lAEbIoRz1AaZsSvvlPQKJK7bt33Sz3Aow9iVuGPdr4i9KQQtJnM4PD+2PoSaNouj
+    65yuTZA7PqrcryfwhUlBNGkxFv/vYmJ+B8BoPCKGKAejbleK+5nBVPZAoNLs8FcOCFrg6A
+    r5QKWS+pYvCbxGzqyJjj5ybN05UdgNV57Oa2ThEkCzTW9P9tRm25QrASBpOKsEs92hpXn1
+    Vq7jFlXxxKOMHt692f9GUyIun7LeiMce8N6zKO3+Nmo5qUk0E5elX2yTQ8fFB7zbZyJnr+
+    rmIdW0kO6RzzoiPIcpPbdMDCv3SP07YOpPpRLJBjJQIS5zmn9CMfueCqLJLgzSN1BmoOEq
+    DiVRBcTrAoD+VGoH9/bOVSO9voP4xik5ruHvhpGnF8YylFTQ6uRtH4ltYj2i3PWbnFoIO1
+    wAcUzBOgxHUlkyS3YlbPdNfvmhuEg+79gMYKFwh0KwaB85ahxJvAQNNd/HBpHDeYZmv5a9
+    8khy/vYsiCrP9RTz73v0eomewNjDY2E61IwMcLTwLNHOzOWLah5n9gR9PrQxy3Y7Vnchhe
+    ihga8UdBB7p31qoVw22UqkbYF/s4miuARg7tgN25e2gQ0ub0N6N7DvzVQm6w
+X-ME-Proxy: <xmx:rRJqat1hs0e1qmXYaqBVWiIYp2tptY0B5bL8G3WYV1SSx7C7W6DGag>
+    <xmx:rRJqavxxrwLD-MHGPAnnu5CJpVVvD3lu6KBD5wLgtvdAb_aJcJXPpw>
+    <xmx:rRJqaqXx4JGoN4eZEY2qFVXXVDJ8hZKQy4trCQFcey7v1hsqnWuAHg>
+    <xmx:rRJqaj_5GmzhM9po3DbjiB8dfieZlL30s9DK4G1kF8BuPieIGmzBvg>
+    <xmx:rRJqalqqKPFISwcNIPBJy8SXsnC1y1CqX54SlKY91UwUXGGTHBuonR3q>
 Feedback-ID: ib53e4b78:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 29 Jul 2026 10:48:02 -0400 (EDT)
+ 29 Jul 2026 10:48:12 -0400 (EDT)
 From: Ian Bridges <icb@fastmail.org>
 To: Justin Tee <justin.tee@broadcom.com>,
 	Paul Ely <paul.ely@broadcom.com>,
@@ -78,9 +78,9 @@ Cc: linux-scsi@vger.kernel.org,
 	linux-hardening@vger.kernel.org,
 	Kees Cook <kees@kernel.org>,
 	Ian Bridges <icb@fastmail.org>
-Subject: [PATCH 3/5] scsi: lpfc: Replace strlcat() with seq_buf in lpfc_rx_monitor_report()
-Date: Wed, 29 Jul 2026 09:46:15 -0500
-Message-ID: <20260729144617.1388646-4-icb@fastmail.org>
+Subject: [PATCH 4/5] scsi: lpfc: Replace strlcat() with seq_buf in the debugfs dump helpers
+Date: Wed, 29 Jul 2026 09:46:16 -0500
+Message-ID: <20260729144617.1388646-5-icb@fastmail.org>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260729144617.1388646-1-icb@fastmail.org>
 References: <20260729144617.1388646-1-icb@fastmail.org>
@@ -92,111 +92,362 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In preparation for removing the strlcat() API[1], replace its use in
-lpfc_rx_monitor_report().
+In preparation for removing the strlcat() API[1], replace its uses in
+lpfc_debugfs_multixripools_data(), lpfc_debugfs_scsistat_data() and
+lpfc_debugfs_hdwqstat_data().
 
-The function accumulates one line per ring entry, which is what
-seq_buf is for. seq_buf tracks the write position, so the per entry
-strlen() rescans of the destination are gone. Each record is still
-formatted into the tmp buffer. seq_buf_puts() appends it only when
-it fits whole, so the output keeps ending at the last complete
-record. The loop still stops on overflow without consuming the
-current entry, and the returned count and the ring head keep their
-old meaning. The produced bytes are unchanged.
+Each helper accumulates a variable number of lines into the debugfs
+buffer, which is what seq_buf is for. The intermediate tmp buffers and
+the per fragment overflow checks become unnecessary. Once a seq_buf
+overflows, later writes to it do nothing, so dropping the early exits
+does not change the produced bytes. Each loop that appends keeps one
+seq_buf_has_overflowed() exit, so a full buffer stops the iteration.
+
+lpfc_debugfs_multixripools_data() and lpfc_debugfs_hdwqstat_data()
+append to whatever the buffer already holds, so their seq_buf is
+anchored at the current end of the string. All three helpers keep
+returning strnlen() because seq_buf_used() reports the full buffer
+size after an overflow.
 
 Link: https://github.com/KSPP/linux/issues/370 [1]
 Signed-off-by: Ian Bridges <icb@fastmail.org>
 ---
-seq_buf_puts() accepts a record under exactly the same condition as
-the replaced length check, so truncation keeps ending the output at
-the last complete record and a partial record can never reach the
-buffer. The differential harness compared 50000 randomized rings
-and buffer sizes, including buffers that overflow mid ring, and
-found byte identical output, entry counts and ring heads
-everywhere. The KUnit corpus reproduced the overflow case with a
-populated ring as compiled kernel code and confirmed the same.
+The differential harness compared 90000 randomized cases, including
+full range counter values, prefilled buffers for the two anchored
+helpers and undersized buffers, and found byte identical output and
+return values everywhere. The KUnit corpus confirmed the same as
+compiled kernel code.
 
- drivers/scsi/lpfc/lpfc_sli.c | 43 ++++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 19 deletions(-)
+Notes on the loop exits. Each loop checks seq_buf_has_overflowed()
+once per iteration because every iteration makes several appends.
+seq_buf itself writes nothing after an overflow, so the exits change
+no bytes, which the harness verified. A userspace timing comparison
+of the old and new function bodies, extracted verbatim from the two
+trees, measured the conversion 1.2 to 2 times faster than the old
+code at every queue and CPU count up to the driver maximums, with or
+without the exits. The strlcat() rescans dominate the old cost. The
+exits bound the remaining iteration work once the buffer is full.
+That is measurable only for lpfc_debugfs_hdwqstat_data() at maximum
+queue and CPU counts, where the per CPU walk is the largest loop.
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 62a30a92b792..cfa4371169f1 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -25,6 +25,7 @@
- #include <linux/pci.h>
+ drivers/scsi/lpfc/lpfc_debugfs.c | 202 +++++++++++++------------------
+ 1 file changed, 87 insertions(+), 115 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 052023fc1733..30e3cc050aaa 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -27,6 +27,7 @@
+ #include <linux/idr.h>
  #include <linux/interrupt.h>
- #include <linux/delay.h>
+ #include <linux/kthread.h>
 +#include <linux/seq_buf.h>
  #include <linux/slab.h>
- #include <linux/lockdep.h>
- #include <linux/dmi.h>
-@@ -8109,17 +8110,18 @@ u32 lpfc_rx_monitor_report(struct lpfc_hba *phba,
- 	u32 cnt = 0;
- 	char tmp[DBG_LOG_STR_SZ] = {0};
- 	bool log_to_kmsg = (!buf || !buf_len) ? true : false;
+ #include <linux/pci.h>
+ #include <linux/spinlock.h>
+@@ -462,7 +463,8 @@ lpfc_debugfs_multixripools_data(struct lpfc_hba *phba, char *buf, int size)
+ 	struct lpfc_pvt_pool *pvt_pool;
+ 	struct lpfc_pbl_pool *pbl_pool;
+ 	u32 txcmplq_cnt;
+-	char tmp[LPFC_DEBUG_OUT_LINE_SZ] = {0};
++	size_t used;
 +	struct seq_buf s;
  
- 	if (!log_to_kmsg) {
- 		/* clear the buffer to be sure */
- 		memset(buf, 0, buf_len);
- 
--		scnprintf(buf, buf_len, "\t%-16s%-16s%-16s%-16s%-8s%-8s%-8s"
--					"%-8s%-8s%-8s%-16s\n",
--					"MaxBPI", "Tot_Data_CMF",
--					"Tot_Data_Cmd", "Tot_Data_Cmpl",
--					"Lat(us)", "Avg_IO", "Max_IO", "Bsy",
--					"IO_cnt", "Info", "BWutil(ms)");
-+		seq_buf_init(&s, buf, buf_len);
-+		seq_buf_printf(&s, "\t%-16s%-16s%-16s%-16s%-8s%-8s%-8s%-8s%-8s%-8s%-16s\n",
-+			       "MaxBPI", "Tot_Data_CMF",
-+			       "Tot_Data_Cmd", "Tot_Data_Cmpl",
-+			       "Lat(us)", "Avg_IO", "Max_IO", "Bsy",
-+			       "IO_cnt", "Info", "BWutil(ms)");
+ 	if (phba->sli_rev != LPFC_SLI_REV4)
+ 		return 0;
+@@ -475,6 +477,9 @@ lpfc_debugfs_multixripools_data(struct lpfc_hba *phba, char *buf, int size)
+ 		return i;
  	}
  
- 	/* Needs to be _irq because record is called from timer interrupt
-@@ -8131,24 +8133,27 @@ u32 lpfc_rx_monitor_report(struct lpfc_hba *phba,
++	used = strnlen(buf, size);
++	seq_buf_init(&s, buf + used, size - used);
++
+ 	/*
+ 	 * Pbl: Current number of free XRIs in public pool
+ 	 * Pvt: Current number of free XRIs in private pool
+@@ -484,10 +489,8 @@ lpfc_debugfs_multixripools_data(struct lpfc_hba *phba, char *buf, int size)
+ 	 * pbl_empty: Incremented by 1 when all pbl_pool are empty during
+ 	 *            IO submission
+ 	 */
+-	scnprintf(tmp, sizeof(tmp),
+-		  "HWQ:  Pbl  Pvt Busy  HWM |  pvt_empty  pbl_empty ");
+-	if (strlcat(buf, tmp, size) >= size)
+-		return strnlen(buf, size);
++	seq_buf_printf(&s,
++		       "HWQ:  Pbl  Pvt Busy  HWM |  pvt_empty  pbl_empty ");
  
- 		/* Read out this entry's data. */
- 		if (!log_to_kmsg) {
--			/* If !log_to_kmsg, then store to buf. */
-+			/*
-+			 * Drop a record whole if it does not fit, without
-+			 * consuming its ring entry.
-+			 */
- 			scnprintf(tmp, sizeof(tmp),
--				  "%03d:\t%-16llu%-16llu%-16llu%-16llu%-8llu"
--				  "%-8llu%-8llu%-8u%-8u%-8u%u(%u)\n",
--				  *head_idx, entry->max_bytes_per_interval,
--				  entry->cmf_bytes, entry->total_bytes,
--				  entry->rcv_bytes, entry->avg_io_latency,
--				  entry->avg_io_size, entry->max_read_cnt,
-+				  "%03d:\t%-16llu%-16llu%-16llu%-16llu%-8llu%-8llu%-8llu%-8u%-8u%-8u%u(%u)\n",
-+				  *head_idx,
-+				  entry->max_bytes_per_interval,
-+				  entry->cmf_bytes,
-+				  entry->total_bytes,
-+				  entry->rcv_bytes,
-+				  entry->avg_io_latency,
-+				  entry->avg_io_size,
-+				  entry->max_read_cnt,
- 				  entry->cmf_busy, entry->io_cnt,
--				  entry->cmf_info, entry->timer_utilization,
-+				  entry->cmf_info,
-+				  entry->timer_utilization,
- 				  entry->timer_interval);
+ #ifdef LPFC_MXP_STAT
+ 	/*
+@@ -501,25 +504,17 @@ lpfc_debugfs_multixripools_data(struct lpfc_hba *phba, char *buf, int size)
+ 	 * othPbl_hit: Incremented by 1 if successfully get a batch of XRI from
+ 	 *             other pbl_pool
+ 	 */
+-	scnprintf(tmp, sizeof(tmp),
+-		  "MAXH  above_lmt  below_lmt locPbl_hit othPbl_hit");
+-	if (strlcat(buf, tmp, size) >= size)
+-		return strnlen(buf, size);
++	seq_buf_printf(&s, "MAXH  above_lmt  below_lmt locPbl_hit othPbl_hit");
  
--			/* Check for buffer overflow */
--			if ((strlen(buf) + strlen(tmp)) >= buf_len)
-+			if (seq_buf_puts(&s, tmp) < 0)
- 				break;
+ 	/*
+ 	 * sPbl: snapshot of Pbl 15 sec after stat gets cleared
+ 	 * sPvt: snapshot of Pvt 15 sec after stat gets cleared
+ 	 * sBusy: snapshot of Busy 15 sec after stat gets cleared
+ 	 */
+-	scnprintf(tmp, sizeof(tmp),
+-		  " | sPbl sPvt sBusy");
+-	if (strlcat(buf, tmp, size) >= size)
+-		return strnlen(buf, size);
++	seq_buf_printf(&s, " | sPbl sPvt sBusy");
+ #endif
+ 
+-	scnprintf(tmp, sizeof(tmp), "\n");
+-	if (strlcat(buf, tmp, size) >= size)
+-		return strnlen(buf, size);
++	seq_buf_printf(&s, "\n");
+ 
+ 	hwq_count = phba->cfg_hdw_queue;
+ 	for (i = 0; i < hwq_count; i++) {
+@@ -531,36 +526,32 @@ lpfc_debugfs_multixripools_data(struct lpfc_hba *phba, char *buf, int size)
+ 		pvt_pool = &multixri_pool->pvt_pool;
+ 		txcmplq_cnt = qp->io_wq->pring->txcmplq_cnt;
+ 
+-		scnprintf(tmp, sizeof(tmp),
+-			  "%03d: %4d %4d %4d %4d | %10d %10d ",
+-			  i, pbl_pool->count, pvt_pool->count,
+-			  txcmplq_cnt, pvt_pool->high_watermark,
+-			  qp->empty_io_bufs, multixri_pool->pbl_empty_count);
+-		if (strlcat(buf, tmp, size) >= size)
+-			break;
++		seq_buf_printf(&s,
++			       "%03d: %4d %4d %4d %4d | %10d %10d ",
++			       i, pbl_pool->count, pvt_pool->count,
++			       txcmplq_cnt, pvt_pool->high_watermark,
++			       qp->empty_io_bufs,
++			       multixri_pool->pbl_empty_count);
+ 
+ #ifdef LPFC_MXP_STAT
+-		scnprintf(tmp, sizeof(tmp),
+-			  "%4d %10d %10d %10d %10d",
+-			  multixri_pool->stat_max_hwm,
+-			  multixri_pool->above_limit_count,
+-			  multixri_pool->below_limit_count,
+-			  multixri_pool->local_pbl_hit_count,
+-			  multixri_pool->other_pbl_hit_count);
+-		if (strlcat(buf, tmp, size) >= size)
+-			break;
 -
--			/* Append entry's data to buffer */
--			strlcat(buf, tmp, buf_len);
- 		} else {
- 			lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
- 					"4410 %02u: MBPI %llu Xmit %llu "
+-		scnprintf(tmp, sizeof(tmp),
+-			  " | %4d %4d %5d",
+-			  multixri_pool->stat_pbl_count,
+-			  multixri_pool->stat_pvt_count,
+-			  multixri_pool->stat_busy_count);
+-		if (strlcat(buf, tmp, size) >= size)
+-			break;
++		seq_buf_printf(&s,
++			       "%4d %10d %10d %10d %10d",
++			       multixri_pool->stat_max_hwm,
++			       multixri_pool->above_limit_count,
++			       multixri_pool->below_limit_count,
++			       multixri_pool->local_pbl_hit_count,
++			       multixri_pool->other_pbl_hit_count);
++
++		seq_buf_printf(&s,
++			       " | %4d %4d %5d",
++			       multixri_pool->stat_pbl_count,
++			       multixri_pool->stat_pvt_count,
++			       multixri_pool->stat_busy_count);
+ #endif
+ 
+-		scnprintf(tmp, sizeof(tmp), "\n");
+-		if (strlcat(buf, tmp, size) >= size)
++		seq_buf_printf(&s, "\n");
++
++		if (seq_buf_has_overflowed(&s))
+ 			break;
+ 	}
+ 	return strnlen(buf, size);
+@@ -1261,13 +1252,14 @@ lpfc_debugfs_scsistat_data(struct lpfc_vport *vport, char *buf, int size)
+ 	u64 data1, data2, data3;
+ 	u64 tot, totin, totout;
+ 	int i;
+-	char tmp[LPFC_MAX_SCSI_INFO_TMP_LEN] = {0};
++	struct seq_buf s;
+ 
+ 	if (!(vport->cfg_enable_fc4_type & LPFC_ENABLE_FCP) ||
+ 	    (phba->sli_rev != LPFC_SLI_REV4))
+ 		return 0;
+ 
+-	scnprintf(buf, size, "SCSI HDWQ Statistics\n");
++	seq_buf_init(&s, buf, size);
++	seq_buf_printf(&s, "SCSI HDWQ Statistics\n");
+ 
+ 	totin = 0;
+ 	totout = 0;
+@@ -1280,21 +1272,18 @@ lpfc_debugfs_scsistat_data(struct lpfc_vport *vport, char *buf, int size)
+ 		data3 = cstat->control_requests;
+ 		totout += (data1 + data2 + data3);
+ 
+-		scnprintf(tmp, sizeof(tmp), "HDWQ (%d): Rd %016llx Wr %016llx "
+-			  "IO %016llx ", i, data1, data2, data3);
+-		if (strlcat(buf, tmp, size) >= size)
+-			goto buffer_done;
++		seq_buf_printf(&s, "HDWQ (%d): Rd %016llx Wr %016llx IO %016llx ",
++			       i, data1, data2, data3);
++
++		seq_buf_printf(&s, "Cmpl %016llx OutIO %016llx\n",
++			       tot, ((data1 + data2 + data3) - tot));
+ 
+-		scnprintf(tmp, sizeof(tmp), "Cmpl %016llx OutIO %016llx\n",
+-			  tot, ((data1 + data2 + data3) - tot));
+-		if (strlcat(buf, tmp, size) >= size)
+-			goto buffer_done;
++		if (seq_buf_has_overflowed(&s))
++			break;
+ 	}
+-	scnprintf(tmp, sizeof(tmp), "Total FCP Cmpl %016llx Issue %016llx "
+-		  "OutIO %016llx\n", totin, totout, totout - totin);
+-	strlcat(buf, tmp, size);
++	seq_buf_printf(&s, "Total FCP Cmpl %016llx Issue %016llx OutIO %016llx\n",
++		       totin, totout, totout - totin);
+ 
+-buffer_done:
+ 	len = strnlen(buf, size);
+ 
+ 	return len;
+@@ -1704,28 +1693,23 @@ lpfc_debugfs_hdwqstat_data(struct lpfc_vport *vport, char *buf, int size)
+ 	uint32_t tot_xmt;
+ 	uint32_t tot_rcv;
+ 	uint32_t tot_cmpl;
+-	char tmp[LPFC_MAX_SCSI_INFO_TMP_LEN] = {0};
++	size_t used = strnlen(buf, size);
++	struct seq_buf s;
+ 
+-	scnprintf(tmp, sizeof(tmp), "HDWQ Stats:\n\n");
+-	if (strlcat(buf, tmp, size) >= size)
+-		goto buffer_done;
++	seq_buf_init(&s, buf + used, size - used);
+ 
+-	scnprintf(tmp, sizeof(tmp), "(NVME Accounting: %s) ",
+-		  (phba->hdwqstat_on &
+-		  (LPFC_CHECK_NVME_IO | LPFC_CHECK_NVMET_IO) ?
+-		  "Enabled" : "Disabled"));
+-	if (strlcat(buf, tmp, size) >= size)
+-		goto buffer_done;
++	seq_buf_printf(&s, "HDWQ Stats:\n\n");
+ 
+-	scnprintf(tmp, sizeof(tmp), "(SCSI Accounting: %s) ",
+-		  (phba->hdwqstat_on & LPFC_CHECK_SCSI_IO ?
+-		  "Enabled" : "Disabled"));
+-	if (strlcat(buf, tmp, size) >= size)
+-		goto buffer_done;
++	seq_buf_printf(&s, "(NVME Accounting: %s) ",
++		       (phba->hdwqstat_on &
++		       (LPFC_CHECK_NVME_IO | LPFC_CHECK_NVMET_IO) ?
++		       "Enabled" : "Disabled"));
+ 
+-	scnprintf(tmp, sizeof(tmp), "\n\n");
+-	if (strlcat(buf, tmp, size) >= size)
+-		goto buffer_done;
++	seq_buf_printf(&s, "(SCSI Accounting: %s) ",
++		       (phba->hdwqstat_on & LPFC_CHECK_SCSI_IO ?
++		       "Enabled" : "Disabled"));
++
++	seq_buf_printf(&s, "\n\n");
+ 
+ 	for (i = 0; i < phba->cfg_hdw_queue; i++) {
+ 		tot_rcv = 0;
+@@ -1744,62 +1728,50 @@ lpfc_debugfs_hdwqstat_data(struct lpfc_vport *vport, char *buf, int size)
+ 			    !c_stat->rcv_io)
+ 				continue;
+ 
+-			if (!tot_xmt && !tot_cmpl && !tot_rcv) {
+-				/* Print HDWQ string only the first time */
+-				scnprintf(tmp, sizeof(tmp), "[HDWQ %d]:\t", i);
+-				if (strlcat(buf, tmp, size) >= size)
+-					goto buffer_done;
+-			}
++			/* Print HDWQ string only the first time */
++			if (!tot_xmt && !tot_cmpl && !tot_rcv)
++				seq_buf_printf(&s, "[HDWQ %d]:\t", i);
+ 
+ 			tot_xmt += c_stat->xmt_io;
+ 			tot_cmpl += c_stat->cmpl_io;
+ 			if (phba->nvmet_support)
+ 				tot_rcv += c_stat->rcv_io;
+ 
+-			scnprintf(tmp, sizeof(tmp), "| [CPU %d]: ", j);
+-			if (strlcat(buf, tmp, size) >= size)
+-				goto buffer_done;
+-
+-			if (phba->nvmet_support) {
+-				scnprintf(tmp, sizeof(tmp),
+-					  "XMT 0x%x CMPL 0x%x RCV 0x%x |",
+-					  c_stat->xmt_io, c_stat->cmpl_io,
+-					  c_stat->rcv_io);
+-				if (strlcat(buf, tmp, size) >= size)
+-					goto buffer_done;
+-			} else {
+-				scnprintf(tmp, sizeof(tmp),
+-					  "XMT 0x%x CMPL 0x%x |",
+-					  c_stat->xmt_io, c_stat->cmpl_io);
+-				if (strlcat(buf, tmp, size) >= size)
+-					goto buffer_done;
+-			}
++			seq_buf_printf(&s, "| [CPU %d]: ", j);
++
++			if (phba->nvmet_support)
++				seq_buf_printf(&s,
++					       "XMT 0x%x CMPL 0x%x RCV 0x%x |",
++					       c_stat->xmt_io, c_stat->cmpl_io,
++					       c_stat->rcv_io);
++			else
++				seq_buf_printf(&s,
++					       "XMT 0x%x CMPL 0x%x |",
++					       c_stat->xmt_io, c_stat->cmpl_io);
++
++			if (seq_buf_has_overflowed(&s))
++				break;
+ 		}
+ 
++		if (seq_buf_has_overflowed(&s))
++			break;
++
+ 		/* Check if nothing to display */
+ 		if (!tot_xmt && !tot_cmpl && !tot_rcv)
+ 			continue;
+ 
+-		scnprintf(tmp, sizeof(tmp), "\t->\t[HDWQ Total: ");
+-		if (strlcat(buf, tmp, size) >= size)
+-			goto buffer_done;
++		seq_buf_printf(&s, "\t->\t[HDWQ Total: ");
+ 
+-		if (phba->nvmet_support) {
+-			scnprintf(tmp, sizeof(tmp),
+-				  "XMT 0x%x CMPL 0x%x RCV 0x%x]\n\n",
+-				  tot_xmt, tot_cmpl, tot_rcv);
+-			if (strlcat(buf, tmp, size) >= size)
+-				goto buffer_done;
+-		} else {
+-			scnprintf(tmp, sizeof(tmp),
+-				  "XMT 0x%x CMPL 0x%x]\n\n",
+-				  tot_xmt, tot_cmpl);
+-			if (strlcat(buf, tmp, size) >= size)
+-				goto buffer_done;
+-		}
++		if (phba->nvmet_support)
++			seq_buf_printf(&s,
++				       "XMT 0x%x CMPL 0x%x RCV 0x%x]\n\n",
++				       tot_xmt, tot_cmpl, tot_rcv);
++		else
++			seq_buf_printf(&s,
++				       "XMT 0x%x CMPL 0x%x]\n\n",
++				       tot_xmt, tot_cmpl);
+ 	}
+ 
+-buffer_done:
+ 	len = strnlen(buf, size);
+ 	return len;
+ }
 -- 
 2.47.3
 
