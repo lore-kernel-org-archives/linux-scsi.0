@@ -1,174 +1,120 @@
-Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A20E47141F;
-	Wed, 29 Jul 2026 11:16:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10B45472F64
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Jul 2026 11:20:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785323809; cv=none; b=gWrjMsXxOSX9+PoalnCOso177X/2BYHq8l9CNWVD5viYAbnpiLsEg++scjga3uv7YbV4xDZBGulunFQRWihD6aAGza0yay5KbWCm+kXc0+MLyPm+XIsGXkc0Y/i8Y1cS/towC+OshruOA20ddRtv2HhrAe0uHERzjlhwvBW5ZLI=
+	t=1785324005; cv=none; b=sZB9nNLGMfWkZwpg/07pespBxuaLz+yw3TtyGSM04s73Vq40+xOEF94JyzI8ozbzXAUJ4/NqbZ/OIwm8awfn4yL2h/7jHdmOTU/eX2E5pNZ44DkFVlbfrZbsps4t8YxXFOFIZqstOe9b0FA0/ezxa/+tO2/yHNzXhn/g0rj05uw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785323809; c=relaxed/simple;
-	bh=jn18Jl58KzSrNmR8IKTGDLJrTCyPCBd20J6IWrRz1AU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=XlB/bLUMam4xoMMinizJJEawyR5HG9pZYYbdH+rapzhJFvtlKiYljqMyl6od3bB2D1w9vDYJGtlZF5yQBVVDSMtaiU07qk6rsYc1EEYezCrLr4dCGyaTyVCg08KTEpNq4k2Mt3zEzsoAR6ynzdHo6wePOkVuzVxngeAurplGzuk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
-Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
-	by spam.asrmicro.com with ESMTPS id 66TBG9W5041773
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=FAIL);
-	Wed, 29 Jul 2026 19:16:09 +0800 (GMT-8)
-	(envelope-from hongjiefang@asrmicro.com)
-Received: from localhost (10.1.170.248) by exch02.asrmicro.com (10.1.24.122)
- with Microsoft SMTP Server (TLS) id 15.0.1497.48; Wed, 29 Jul 2026 19:16:14
- +0800
-From: Hongjie Fang <hongjiefang@asrmicro.com>
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <stern@rowland.harvard.edu>,
-        <peter.wang@mediatek.com>, <bvanassche@acm.org>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3] scsi: core: pair EH runtime PM get and put
-Date: Wed, 29 Jul 2026 19:16:14 +0800
-Message-ID: <20260729111614.2407559-1-hongjiefang@asrmicro.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1785324005; c=relaxed/simple;
+	bh=jqYTBrqRve3UQVk/u9J8gxAitTrcAYe6MjGEV57YgCI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=hzwp0l668DlZ4ktF2i+b1+J1dPbbk/SaRxafca4u1XkFHq4/a9UN8xlknb0n8gwEhCmYvjDT+RCNzSmcx+YZS4J7gaX3AEJ+3cDd/7KiWUIZOwD2Ru/WxMC6Hos3dn1Q13UmQ5Zyv6MATE4ekN0aJanL7/Qg2r//Hg6tyJuQEwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FAX+duKc; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FAX+duKc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD36B1F00A3D;
+	Wed, 29 Jul 2026 11:20:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785324003;
+	bh=1qtW5zubg37Y0G/Nl9Na+VTod/29TlLxtWcIsOdUIMg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=FAX+duKc7SCWDgwn2fNR2f0yWDob7z+fjri/0qNLwjBkWiJ+3IraISM9KCJK6NHRd
+	 M5JmNzGLAVKCas6a2n7xUi3tGOXUL1pjQ68To8mUS7eHYzXxt12Ic82iqron/qyytK
+	 LtejPrss0jmq6zbAjUC51sR4WVAcg7sMBmGm3JL8oog7yZawm8Vfadda+RKkuFxiAV
+	 R3yU7eAw1HtUcWo9UKFtI7IALTfll8bbt/GRy62PsHS6uZnLCfo0bEsFOSSJmLxIdX
+	 a+965a17vUMHWo6VEHV4FjkxA5IUrlKQ9/F/naGCPOTOTJz2+dhbvvXGxsj/gR4W0+
+	 kQS4yLGNEMuAw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 02/27] libmultipath: Add basic gendisk support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "John Garry" <john.g.garry@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260729105107.255712-3-john.g.garry@oracle.com>
+References: <20260729105107.255712-1-john.g.garry@oracle.com>
+ <20260729105107.255712-3-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 29 Jul 2026 11:20:03 +0000
+Message-Id: <20260729112003.AD36B1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: sh-exch01.asrmicro.com (10.1.24.97) To exch02.asrmicro.com
- (10.1.24.122)
-X-DNSRBL: 
-X-SPAM-SOURCE-CHECK: pass
-X-MAIL:spam.asrmicro.com 66TBG9W5041773
 
-shost->eh_noresume is currently consulted twice in one error handling
-iteration: once before scsi_autopm_get_host() and once again before
-scsi_autopm_put_host().
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] The block_device_operations struct `mpath_ops` lacks the mandatory=
+ `submit_bio` callback, causing `device_add_disk()` to unconditionally fail=
+ and preventing the multipath disk from functioning.
+- [High] Re-using `gendisk` after `device_add_disk()` failure violates the =
+driver model and causes kobject corruption.
+- [High] `mpath_head_uninit()` synchronously blocks on open file descriptor=
+s, causing device removal to hang indefinitely if userspace holds the devic=
+e open.
+--
 
-That is racy when a PM-triggered error path flips shost->eh_noresume while
-the SCSI EH thread is still running.
+--- Patch [2]: [PATCH v6 02/27] libmultipath: Add basic gendisk support ---
+commit 0995e161443bbd8d5024681ae6aeaebc37bafd47
+Author: John Garry <john.g.garry@oracle.com>
 
-The problem flow looks like this:
-PM path
-  ufshcd_set_dev_pwr_mode()
-    shost->eh_noresume = 1
-    ufshcd_execute_start_stop  <-- trigger EH
-    ...
-    shost->eh_noresume = 0
+libmultipath: Add basic gendisk support
 
-EH path
-  scsi_error_handler()
-    if (!shost->eh_noresume)
-      scsi_autopm_get_host()  <-- skipped
-    ...
-    if (!shost->eh_noresume)
-       scsi_autopm_put_host()  <-- executed later
+This commit adds support to allocate and free a multipath gendisk.
+It introduces struct mpath_head_template as a method for drivers to
+provide custom multipath functionality.
 
-In that case one EH iteration can skip autoresume on entry and still drop
-a runtime PM reference on exit. That leaves an unmatched runtime PM put
-and can trigger a runtime PM usage count underflow.
+> diff --git a/lib/multipath.c b/lib/multipath.c
+> --- a/lib/multipath.c
+> +++ b/lib/multipath.c
+[ ... ]
+> @@ -36,6 +36,107 @@ void mpath_head_uninit(struct mpath_head *mpath_head)
+[ ... ]
+> +const struct block_device_operations mpath_ops =3D {
+> +	.owner          =3D THIS_MODULE,
 
-Fix this by making eh_noresume a regular bool so it can be accessed with
-READ_ONCE() and WRITE_ONCE(). Snapshot it once per EH iteration and use
-that snapshot for both runtime PM get and put decisions.
+[Severity: High]
+Does setting the owner to THIS_MODULE (libmultipath) rather than the caller
+module (such as nvme_core) introduce a regression where the caller module c=
+an
+be unloaded while the disk is held open by userspace? If the caller's module
+exit calls mpath_head_uninit(), could it hang indefinitely in an
+uninterruptible wait on the refcount, permanently deadlocking module_mutex?
 
-Fixes: ae0751ffc77e ("[SCSI] add flag to skip the runtime PM calls on the host")
-Signed-off-by: Hongjie Fang <hongjiefang@asrmicro.com>
----
+> +	.open		=3D mpath_bdev_open,
+> +	.release	=3D mpath_bdev_release,
+> +};
 
-v3:
-- Use READ_ONCE() and WRITE_ONCE() for eh_noresume.
-- Make eh_noresume a regular bool since READ_ONCE() cannot be used on
-  bitfields.
+[Severity: High]
+Is this regression missing a submit_bio callback in mpath_ops? For bio-based
+queues, the block layer's __add_disk() mandates that disk->fops->submit_bio
+is present. If it is absent, device_add_disk() unconditionally aborts and
+returns -EINVAL, which prevents the multipath block device from registering.
 
-v2:
-- Snapshot the shost->eh_noresume once per EH iteration.
+[ ... ]
+> +void mpath_device_set_live(struct mpath_device *mpath_device)
+> +{
+[ ... ]
+> +	if (!test_and_set_bit(MPATH_HEAD_DISK_LIVE, &mpath_head->flags)) {
+> +		dev_set_drvdata(disk_to_dev(mpath_head->disk), mpath_head);
+> +		ret =3D device_add_disk(mpath_head->parent, mpath_head->disk,
+> +				mpath_head->disk_groups);
+> +		if (ret) {
+> +			clear_bit(MPATH_HEAD_DISK_LIVE, &mpath_head->flags);
+> +			return;
+> +		}
 
- drivers/scsi/scsi_error.c | 6 ++++--
- drivers/ufs/core/ufshcd.c | 4 ++--
- include/scsi/scsi_host.h  | 6 +++---
- 3 files changed, 9 insertions(+), 7 deletions(-)
+[Severity: High]
+If device_add_disk() fails, clearing the live flag without freeing the
+disk leaves the object intact. When this function is called again for anoth=
+er
+path, won't it retry device_add_disk() on the exact same gendisk object?
+Because the driver model forbids calling device_add() more than once on the
+same device object and requires dropping the device upon failure, could this
+regression result in kobject BUGs or memory corruption?
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 147127fb4db9..72515fa6daf7 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -2342,6 +2342,7 @@ static void scsi_unjam_host(struct Scsi_Host *shost)
- int scsi_error_handler(void *data)
- {
- 	struct Scsi_Host *shost = data;
-+	bool eh_noresume;
- 
- 	/*
- 	 * We use TASK_INTERRUPTIBLE so that the thread is not
-@@ -2383,7 +2384,8 @@ int scsi_error_handler(void *data)
- 		 * what we need to do to get it up and online again (if we can).
- 		 * If we fail, we end up taking the thing offline.
- 		 */
--		if (!shost->eh_noresume && scsi_autopm_get_host(shost) != 0) {
-+		eh_noresume = READ_ONCE(shost->eh_noresume);
-+		if (!eh_noresume && scsi_autopm_get_host(shost) != 0) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
- 				shost_printk(KERN_ERR, shost,
- 					     "scsi_eh_%d: unable to autoresume\n",
-@@ -2407,7 +2409,7 @@ int scsi_error_handler(void *data)
- 		 * which are still online.
- 		 */
- 		scsi_restart_operations(shost);
--		if (!shost->eh_noresume)
-+		if (!eh_noresume)
- 			scsi_autopm_put_host(shost);
- 	}
- 	__set_current_state(TASK_RUNNING);
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c3f08957d179..9e2ae37340c9 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9995,7 +9995,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 	 * we are functional while we are here, skip host resume in error
- 	 * handling context.
- 	 */
--	hba->host->eh_noresume = 1;
-+	WRITE_ONCE(hba->host->eh_noresume, 1);
- 
- 	/*
- 	 * Current function would be generally called from the power management
-@@ -10017,7 +10017,7 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
- 	}
- 
- 	scsi_device_put(sdp);
--	hba->host->eh_noresume = 0;
-+	WRITE_ONCE(hba->host->eh_noresume, 0);
- 	return ret;
- }
- 
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 7e2011830ba4..857f955f08cf 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -664,6 +664,9 @@ struct Scsi_Host {
- 	/* Asynchronous scan in progress */
- 	bool async_scan __guarded_by(&scan_mutex);
- 
-+	/* Don't resume host in EH */
-+	bool eh_noresume;
-+
- 	unsigned active_mode:2;
- 
- 	/*
-@@ -682,9 +685,6 @@ struct Scsi_Host {
- 	/* Task mgmt function in progress */
- 	unsigned tmf_in_progress:1;
- 
--	/* Don't resume host in EH */
--	unsigned eh_noresume:1;
--
- 	/* The controller does not support WRITE SAME */
- 	unsigned no_write_same:1;
- 
--- 
-2.25.1
-
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260729105107.2557=
+12-1-john.g.garry@oracle.com?part=3D2
