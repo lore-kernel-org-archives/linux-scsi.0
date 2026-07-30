@@ -1,103 +1,151 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2817846EF9B
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:01:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 321B026982C
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:01:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785452462; cv=none; b=lpchM5u6RykvZ88klX1ZePcZyPGZGW38uZd7KYZgrhCTsvoJoBqgLSQzFX4IE4ZPmBp/n73+4NPS8iwnJ/Td4BK547q9CmKJYeg3Jk2zuN2XdeSPaA/EdNjTQukidLFxiDJSd4B2pSr2fDH6AhBA9BZWcNZbx8nOYS4c+jyCRn0=
+	t=1785452514; cv=none; b=o00AZTJAmoAsH01zBEKGFICBCSdxzjVld1zXR9mZ719WBNU9qlSmbZnl11HvWChjlywXZyiaAO9AJt6VLA8rUifz2/1z9juGZiWa0fg+7HmQdzUgisT5BOoy07KQtvQmtmT+01w2vAVd7UU4mekPutSjCwfGGVqCUFi32F3SKrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785452462; c=relaxed/simple;
-	bh=e7Ytl07sHblZ4dCSIO0Lc/BPMzbBf0rRI9vm2pHSwjY=;
+	s=arc-20240116; t=1785452514; c=relaxed/simple;
+	bh=IZ3nYiD7gN/fxUlZpX/12smWXD1zQSVOT5pne1iD144=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WmqTViWE5SPJVVtuuTZNBYyGynxdsGp8QPc9TmW+PvG9nb+MoETUbcOjJyYZEhhucvoXCyJ2dosY6ibcPUlvWegQqG8fKStO1IiDS51LTDB03U6Kkd01Hsx2emSAWwnkhCPcQ7aMWDOCKL4lC/L4m6zDtgkNNb1cgjaXbsKAgK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XeL3ap3Y; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=EKBxcJZCJxvbIb+7MxPIH3Msn6Z0CZ+lN1Mjb2gwI2SsYHloE8BZiQXpVzUnm/hPSw0FIvL5Jdi/XNaQdRMxXVInR/P4AmEvvSWQBp8PXenH/L837dJvhAHvdwNmoT7T5O57EOE+qvnE+hno5mCkThQ+NaGA3oOJ25v2Wg1a454=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iT5AjmG5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XeL3ap3Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A00E31F000E9;
-	Thu, 30 Jul 2026 23:01:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iT5AjmG5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A97A1F00A3A;
+	Thu, 30 Jul 2026 23:01:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785452460;
-	bh=ibLTmJ7mV4F3nb6mUO+WMQegedxndoYrPcJiscFzNVs=;
+	s=k20260515; t=1785452511;
+	bh=lEy48qWpbQuaKCkbDLdTCQU0augB4HQgXsTMWfQ7vHg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XeL3ap3YbhLmCqP+iCjvETBacT/nr45lorthat9Wj2LoIDTmL+14wJX9r9afvQpPc
-	 4Qnuv6MCaLf+mZxTbMi8z5pjzKYocTI2CqO2KAya6AxyGyvAk9NUWdnmVexfIFieYY
-	 D0v4fReB8GqQkVHJcM9Uq6JgkIesfw+FIln6VMTbgOg4RBzcMcKqZXybbaysG1HQ6z
-	 9M/7xGWxVdMjyuv+Sg7iEHY9JT3rcl+61jes8ZuiV5xs7NMSMHFS7C3Y1W7adHR2zs
-	 unmPFFTZHx9xTPqTyFj+wxx1hnu/lUXWBTmuOw0oFqrGW/KII32eaUUbW9MYjvheBN
-	 biWFzTqwB1SdQ==
+	b=iT5AjmG57d0s0Tc+TGqryBT34SsCyKRVnvB5Xr1QZzY2+cbqfTTPZhQxagJbY4B72
+	 Yr6fvfSY+tXLBk+dE8u59JwDAFHOIo0cYJQTFdjZ60/mOMVU61SzuarbJXYfdRrXTK
+	 HV9/HJGI6RH4rIUVTZbTZrUrIQ/5bvNwiXkZSlXSS2Q6SooDZGOch7ugXjloLoODLs
+	 qYpMChyJbrG6v0IxFW42CY0xwuywrwzC6255XUg+B88k7rk/bJEFwDRtf+CjlGI9fE
+	 yjF3EVEzoYX+RDqCATZL3lysGAj2TqfVyrxF8wO1Yf0lTaKxEVtRIFNzdd9jt3V37m
+	 sLTzk/zv2vEcQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 19/57] scsi: bnx2fc: Enable lock context analysis
+Subject: Re: [PATCH v3 02/57] scsi: scsi_debug: Prepare for enabling lock
+ context analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <8916cb8f189b235cf7873378617575c922463dd3.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <02c833ea2e87c7fd3f2a8490f302cfa7383647a4.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <8916cb8f189b235cf7873378617575c922463dd3.1785451174.git.bvanassche@acm.org>
+ <02c833ea2e87c7fd3f2a8490f302cfa7383647a4.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:01:00 +0000
-Message-Id: <20260730230100.A00E31F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 23:01:51 +0000
+Message-Id: <20260730230151.9A97A1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Unconditional evaluation of nested pointer chain in `__assume_ctx_=
-lock()` causes a potential fatal NULL pointer dereference for standard SCSI=
- commands.
+
+New issues:
+- [Medium] The `__context_unsafe(conditional locking)` annotation was appli=
+ed to `resp_write_same` but missed on `resp_read_dt0` and `resp_write_dt0`,=
+ which use identical conditional locking logic.
+
+Pre-existing issues:
+- [High] The function `resp_write_same()` leaks a write lock on the data lo=
+ck (`sip->macc_data_lck`) when `fetch_to_dev_buffer()` fails.
+- [High] AB-BA deadlock between `sip->macc_meta_lck` and `sip->macc_data_lc=
+k` due to inconsistent lock acquisition order.
 --
 
---- Patch [19]: [PATCH v3 19/57] scsi: bnx2fc: Enable lock context analysis=
- ---
-commit 914539bc4256a83053d649d7450d8f075fb16ba8
+--- Patch [2]: [PATCH v3 02/57] scsi: scsi_debug: Prepare for enabling lock=
+ context analysis ---
+commit ad9c0fb7632790d874892a1d6261443b39766d7d
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: bnx2fc: Enable lock context analysis
-   =20
-This patch enables context lock analysis by documenting locking requirements
-and informing the compiler about lock aliases. It updates functions with
-__must_hold() and __assume_ctx_lock() to track context around target locks.
-It also standardizes an argument name in bnx2fc_process_seq_cleanup_compl().
+scsi: scsi_debug: Prepare for enabling lock context analysis
 
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2f=
-c_hwi.c
-> index a5ecb87d5b2d7..a3670c48900ba 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> @@ -880,6 +880,9 @@ void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt=
-, u16 wqe,
->  		return;
->  	}
+Suppress lock context analysis for the functions that perform conditional
+locking to prevent that the Clang thread-safety analyzer complains about
+these functions. Remove incorrect __acquire() and __release() annotations.
+
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 4a08f0cfae08d..cb6663e24c225 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+
+[ ... ]
+
+> @@ -5193,6 +5185,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
 > =20
-> +	/* Tell the compiler that there is an alias for tgt->tgt_lock. */
-> +	__assume_ctx_lock(&io_req->cb_arg->aborted_io_req->tgt->tgt_lock);
+>  static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+>  			   u32 ei_lba, bool unmap, bool ndob)
+> +	__context_unsafe(conditional locking)
+>  {
+>  	struct scsi_device *sdp =3D scp->device;
+>  	struct sdebug_dev_info *devip =3D (struct sdebug_dev_info *)sdp->hostda=
+ta;
+
+[Severity: Medium]
+Should drivers/scsi/scsi_debug.c:resp_read_dt0() and resp_write_dt0() also
+get this annotation?
+
+They appear to use the same conditional locking pattern with
+meta_data_locked, conditionally acquiring sip->macc_meta_lck.
 
 [Severity: High]
-Does this unconditionally evaluate io_req->cb_arg?
+This is a pre-existing issue, but does drivers/scsi/scsi_debug.c:resp_write=
+_same()
+leak the sip->macc_data_lck write lock when fetch_to_dev_buffer() fails?
 
-For standard SCSI commands, io_req->cb_arg is NULL.
+If fetch_to_dev_buffer() returns -1, the code jumps to the out label:
 
-Since the kernel is compiled with -fno-delete-null-pointer-checks, computing
-the address of tgt_lock requires evaluating the intermediate pointers.
+	sdeb_data_write_lock(sip);
+	if (ndob) {
+		memset(fs1p, 0, lb_size);
+		ret =3D 0;
+	} else
+		ret =3D fetch_to_dev_buffer(scp, fs1p, lb_size);
 
-This means the compiler is highly likely to emit a memory load rather than
-optimizing away the dead read, since it treats address 0 as valid.
+	if (-1 =3D=3D ret) {
+		ret =3D DID_ERROR << 16;
+		goto out;
+	}
 
-Could this lead to a fatal NULL pointer dereference on every standard IO
-completion processed by bnx2fc_process_cq_compl()?
+But the out label only unlocks sip->macc_meta_lck and skips
+sdeb_data_write_unlock():
 
-It appears this annotation might belong solely inside the BNX2FC_SEQ_CLEANUP
-case where cb_arg is known to be valid.
+out:
+	if (meta_data_locked)
+		sdeb_meta_write_unlock(sip);
+	return ret;
 
-> +
->  	/* Timestamp IO completion time */
->  	cmd_type =3D io_req->cmd_type;
->
+[Severity: High]
+This is also a pre-existing issue, but could drivers/scsi/scsi_debug.c:resp=
+_write_same()
+cause a lock ordering deadlock with resp_comp_write()?
+
+In resp_write_same(), the meta lock is acquired first, followed by the
+data lock:
+
+	if (sdebug_dev_is_zoned(devip) || scsi_debug_lbp()) {
+		sdeb_meta_write_lock(sip);
+		meta_data_locked =3D true;
+	}
+...
+	sdeb_data_write_lock(sip);
+
+However, in resp_comp_write(), the acquisition order is reversed:
+
+	sdeb_data_write_lock(sip);
+	sdeb_meta_write_lock(sip);
+
+Could this lead to a deadlock if a compare and write command and a write sa=
+me
+command are processed concurrently on the same store?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D19
+t.bvanassche@acm.org?part=3D2
