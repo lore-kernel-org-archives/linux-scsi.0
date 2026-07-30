@@ -1,179 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B63F37E5D9
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:25:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17946477291
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:27:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785453949; cv=none; b=L4ZwFAPXcN/iXXdT9mgnb1flH1JtsoYIUEl9nQD4pKCG6+pjfvQYppnut6jaZTX4DHKTVpnNAEj2yoiYp4efdnHuSzgVtRc0nUzgPhTQihtCkK56+TjPIQ6m6iTJ4gojTPOSGWI1v3EsMsFaixDjEHnu1WOYP0yEVLJI4ryG2ZA=
+	t=1785454030; cv=none; b=ujZdDSvC9HU6mUPkbeQOTEXCrRxi9J14996h5THz6UDg0GdiYA6cK7pjLsf7xAwlUngHgX+ZV8VMf8HSgzpAdsAsQgowrJAlgjAhTo617mJg80UeimodwzZ6onm6yNsaKYzrF7Szm5zibbURqA0jBITLhIj1aCBD1qUrkNGgSIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785453949; c=relaxed/simple;
-	bh=2u3x8Cid3ROKDppkNYR4nCbw3GEbTzGcmaRZPRj1WAA=;
+	s=arc-20240116; t=1785454030; c=relaxed/simple;
+	bh=84gTmNT+4qWm603YTKZ7qHbdjMWfKLjOlCFmBLziASo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=iqO3GkBpD3kP2OQjSmwvriN1HJd11S0Z5gIZ0GhYf04S9u9LX5JaCbJ1hqsZs/mEdy6JaLET2NA+s/BaZwGRo+Q55FSf8UrJGnCeUYz51jvA3IEunYYgXX44BzMZT6JuNf+7hsEIMd/oGunLYbc11XVxCG8eos1jV3R4xiUOWJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N4lJzRwv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=G+9fYfBDh9DrdhF4O4KvOzavRsreQOggciXDPCOXUZT8USqeKWi/kZISM6uLhTbt1VJxpMvJb4C/+Vcvp7TFDByffxlK0t017qeBAnpMAQwBbd6tyEgZu2sQt5wH/dO/skl4uge/YMaHv9lWViLBfjx2PNJT7W3yudOxv3SiXiw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZpVunyYT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N4lJzRwv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A235F1F000E9;
-	Thu, 30 Jul 2026 23:25:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZpVunyYT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC5951F000E9;
+	Thu, 30 Jul 2026 23:27:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785453947;
-	bh=RvHwcQ6wrdUg6wXpmCBTGKV+z1AZww8NAqGR0/g0ig4=;
+	s=k20260515; t=1785454023;
+	bh=jpndgTwopHIeuk9m64oEwniCf0UVMik3llSJrs1hygg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=N4lJzRwvSt5q2SLqWOq3eZLdXCGeRa51BdBXRXgLTHFm/jH35fDmPyk2P2KHCGE3y
-	 21tetIklrjfRWqkn/PuiVttk276zIU5n4MNKWM7uX6z6eJzFV5QEXq8nMpyOyy9Wvv
-	 P6VybULOW5lZpgC1TD6qsTrBD5FOFy+aqjRaTaGiTzz+dynxkgX9pMHINx/rcX65qr
-	 fXPOftiW0PAraOPQHYM6b5O4hF+1SECubbarrVaLP1nPpDvgZJIW9wGsehA1Ghra/t
-	 dwy259E1mpHdcfj4Vtiou0f0380CpKs23fGFewm+ldPVXJ9i5A0RcocnBhFtZiVVol
-	 g8nUtaTyc0+lA==
+	b=ZpVunyYT1jr2Z/cj8QOHSHXXmqaUOz3koxAuYmroRW7LgAFEBPvVJu2bPc+YiLJlw
+	 JcTKQpCM2zAAy45JeKzuUyTn8u1WZ+tUO/01y0J/Bg0MuSDJh4VvkxJFZ8sk0f0J1j
+	 hwPBvAkmGhfvV5CdIvoSdUFA8Ig+mrlqB7as42OpZCen5yQa3TGst5plX8hVa39+YP
+	 JDVHnZHuP1T4r0M45IrzCetPVfiCOQcUI0CbDUPh0bAj+O2kegIg+8fdIC9SYGjN9b
+	 FUAKeKJ9BxwKeFsSrW0UtFToN+QCxQ7++g+++ev7+1bC66VX5G0+jv9g90kJk1Rk/n
+	 Ni2zpKJEhijww==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 49/57] scsi: qla4xxx: Enable lock context analysis
+Subject: Re: [PATCH v3 30/57] scsi: ibmvscsi_tgt: Enable lock context
+ analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <16b4a91a5061399166a31ab2a79368da09ba0089.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <d617580106d7de41548cbbae6d98ce6985b5461b.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <16b4a91a5061399166a31ab2a79368da09ba0089.1785451174.git.bvanassche@acm.org>
+ <d617580106d7de41548cbbae6d98ce6985b5461b.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:25:47 +0000
-Message-Id: <20260730232547.A235F1F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 23:27:03 +0000
+Message-Id: <20260730232703.AC5951F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
+New issues:
+- [Low] Incomplete implementation of `__must_hold` locking annotations.
+
 Pre-existing issues:
-- [High] The return value of the hardware semaphore lock acquisition qla4_8=
-2xx_crb_win_lock() is completely ignored, leading to unprotected concurrent=
- modification of the CRB window.
-- [High] A potentially 16-minute long busy-wait loop in qla4_82xx_crb_win_l=
-ock() runs with local IRQs disabled, leading to a hard lockup panic.
-- [High] The driver fails to check for timeout errors when acquiring hardwa=
-re semaphore locks via qla4_82xx_rom_lock() and qla4_82xx_idc_lock().
-- [High] The hardware window register is modified, but the protective hardw=
-are lock is dropped before performing I/O against the window, opening a TOC=
-TOU race condition.
+- [High] Race condition during queue teardown leading to interrupt storm an=
+d `h_free_crq` collision.
 --
 
---- Patch [49]: [PATCH v3 49/57] scsi: qla4xxx: Enable lock context analysi=
-s ---
-commit f4615e07e950d925c6341ed2210c4fa827b136dc
+--- Patch [30]: [PATCH v3 30/57] scsi: ibmvscsi_tgt: Enable lock context an=
+alysis ---
+commit 3c00251f51d9e551b9d5359138425cfc65cd2cef
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: qla4xxx: Enable lock context analysis
-   =20
-This commit annotates the functions that perform conditional locking
-with __no_context_analysis.
+scsi: ibmvscsi_tgt: Enable lock context analysis
 
-> diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-> --- a/drivers/scsi/qla4xxx/ql4_nx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_nx.c
-> @@ -406,6 +406,7 @@ void qla4_82xx_crb_win_unlock(struct scsi_qla_host *h=
-a)
-> =20
->  void
->  qla4_82xx_wr_32(struct scsi_qla_host *ha, ulong off, u32 data)
-> +	__context_unsafe(conditional locking)
+This commit enables lock context analysis for the ibmvscsi_tgt driver. It
+documents locking requirements by adding the __must_hold() annotation to
+several functions.
+
+> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmv=
+scsi_tgt/ibmvscsi_tgt.c
+> index 61f6828007654..8e532a195bf95 100644
+> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+> @@ -251,6 +251,7 @@ static void ibmvscsis_delete_client_info(struct scsi_=
+info *vscsi,
+>   *	Process level, interrupt lock is held
+>   */
+>  static long ibmvscsis_free_command_q(struct scsi_info *vscsi)
+> +	__must_hold(&vscsi->intr_lock)
 >  {
->  	unsigned long flags =3D 0;
->  	int rv;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but while reviewing the locking
-in this function, I noticed that the return value of qla4_82xx_crb_win_lock=
-()
-is completely ignored:
+This is a pre-existing issue, but could this sequence lead to an interrupt
+storm or hypervisor faults due to concurrent CRQ access?
 
-	write_lock_irqsave(&ha->hw_lock, flags);
-	qla4_82xx_crb_win_lock(ha);
-	qla4_82xx_pci_set_crbwindow_2M(ha, &off);
+Looking at ibmvscsis_free_command_q(), it disables hardware interrupts and
+then drops the lock:
 
-If another PCI function holds the hardware semaphore and the lock request
-times out, qla4_82xx_crb_win_lock() returns -1. Does unconditionally
-proceeding to reprogram the shared hardware CRB window defeat the mutual
-exclusion mechanism and lead to uncoordinated window switching and hardware
-state corruption?
+    vio_disable_interrupts(vscsi->dma_dev);
+    // ...
+    spin_unlock_bh(&vscsi->intr_lock);
+    rc =3D ibmvscsis_unregister_command_q(vscsi);
+    spin_lock_bh(&vscsi->intr_lock);
 
-[Severity: High]
-This is also a pre-existing issue on this same path, but is there a risk
-of a hard lockup panic here?
+If a pending ibmvscsis_handle_crq() tasklet on another CPU acquires the lock
+while it is dropped, it evaluates TARGET_STOP(vscsi) as true and
+unconditionally re-enables interrupts:
 
-The write_lock_irqsave() call disables local interrupts just prior to enter=
-ing
-qla4_82xx_crb_win_lock(). Inside the lock acquisition routine, a spinloop
-bounded by CRB_WIN_LOCK_TIMEOUT (100,000,000 iterations) calls udelay(10):
+    if (TARGET_STOP(vscsi)) {
+        vio_enable_interrupts(vscsi->dma_dev);
+        // ...
+        spin_unlock_bh(&vscsi->intr_lock);
+        return;
+    }
 
-drivers/scsi/qla4xxx/ql4_nx.c:qla4_82xx_crb_win_lock() {
-	...
-		if (timeout >=3D CRB_WIN_LOCK_TIMEOUT)
-			return -1;
+Would this cause ibmvscsis_unregister_command_q() to execute concurrently
+with hardware interrupts actively firing?
 
-		timeout++;
-		udelay(10);
-	...
-}
+[Severity: Low]
+Are there other functions that explicitly require the interrupt lock but
+were missed by this commit?
 
-If the hardware is unresponsive or highly contended, this massive spin loop
-could run with IRQs disabled for up to 1,000 seconds. Will this invariably
-trigger the kernel's hard lockup detector (NMI watchdog) and crash the syst=
-em?
+The commit message claims to "Document locking requirements with
+__must_hold()", but several other functions in this file contain explicit
+comments stating they must be called with the lock held, yet lack the
+__must_hold() annotation.
 
-> @@ -429,6 +430,7 @@ qla4_82xx_wr_32(struct scsi_qla_host *ha, ulong off, =
-u32 data)
->  }
-> =20
->  uint32_t qla4_82xx_rd_32(struct scsi_qla_host *ha, ulong off)
-> +	__context_unsafe(conditional locking)
->  {
->  	unsigned long flags =3D 0;
->  	int rv;
+For example, ibmvscsis_establish_new_q():
 
-[Severity: High]
-This isn't a bug introduced by this patch, but while looking at the locking
-primitives in this file, I noticed other places where hardware lock timeouts
-are ignored.
+    /*
+     * Must be called with interrupt lock held.
+     */
+    static long ibmvscsis_establish_new_q(struct scsi_info *vscsi)
 
-For example, in qla4_82xx_pinit_from_rom():
+And ibmvscsis_post_disconnect():
 
-	/* Halt all the indiviual PEGs and other blocks of the ISP */
-	qla4_82xx_rom_lock(ha);
+    /*
+     * PRECONDITION:
+     * interrupt lock is held
+     */
+    static void ibmvscsis_post_disconnect(struct scsi_info *vscsi,
+                                          uint new_state, uint flag_bits)
 
-	/* disable all I2Q */
-	qla4_82xx_wr_32(ha, QLA82XX_CRB_I2Q + 0x10, 0x0);
+Could these also be updated to ensure complete static analysis coverage?
 
-And similarly in qla4_82xx_isp_reset():
-
-	qla4_82xx_idc_lock(ha);
-	dev_state =3D qla4_82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
-
-If the lock is legitimately held by another host or PCI function and times
-out, does blindly proceeding to execute hardware halt and reset operations
-risk severe hardware state corruption?
-
-[Severity: High]
-This is another pre-existing issue in the same file's lock handling, but
-is there a TOCTOU race condition when the hardware lock is temporarily drop=
-ped?
-
-In qla4_82xx_pci_mem_read_direct() and qla4_82xx_pci_mem_write_direct(),
-the protective hardware lock is dropped before performing I/O:
-
-	addr =3D qla4_8xxx_pci_base_offsetfset(ha, start);
-	if (!addr) {
-		write_unlock_irqrestore(&ha->hw_lock, flags);
-		mem_base =3D pci_resource_start(ha->pdev, 0);
-
-While the lock is dropped, could another thread concurrently acquire
-ha->hw_lock and reprogram the hardware window to a completely different
-address? When the original thread re-acquires the lock and proceeds to
-execute the I/O using the PCI pointer, will the hardware device forward
-the access to the newly modified window, resulting in corrupted read/writes?
+>  	int bytes;
+>  	u32 flags_under_lock;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D49
+t.bvanassche@acm.org?part=3D30
