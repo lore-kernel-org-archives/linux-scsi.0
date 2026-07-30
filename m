@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 876423B27FA;
-	Thu, 30 Jul 2026 09:59:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1CCE3F86F0;
+	Thu, 30 Jul 2026 10:07:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785405600; cv=none; b=aOCf1PWB1087fNss4NNFIleGQMUCNBfyFM4lJ/tC2iQ5usxQfwGAGTGQaEQvtkFRlwpNNPasUO1iyZ0zF7BmWRTTjICGu8FzPsud7DZCw9smGvkzoLTRSIziL64O+L4s89Nmok0WjJiZf61hvlwRv0om83msB5kZgS13gtoaL4c=
+	t=1785406073; cv=none; b=uPWDTYSMvXpzYAnarRbxm330N1fyFNmjnPsrooIOpfA60Y2zn7SBEJkHrSXYkdCz9qlaH7mu0cT8RSk0wAQgAkTPGe/aqFRoLc1pmxLbdrD0F7cwS5kWbMdj7CMFvPsR4/reSVd2ByKNF1aUzKmaEOU96mHr601IJGz4aDGmxK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785405600; c=relaxed/simple;
-	bh=tchxTTvBcdO02dGHnWnKG4MhRfWMWJsiYVUkgq7JxyA=;
+	s=arc-20240116; t=1785406073; c=relaxed/simple;
+	bh=zC2D5XcmFDI2jFeGKaTBpwDTFYjycIQ6TtoyR/9A2H8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eP0HoORISUrdDFV58WxfBMA0euztUNOOJhAKZiuxXXNMBueoy5Ihtg6U9PVDf3nDaILdJfXqMjHM6Mo5X1Nvg+WKLwkSpr/+nOFc2okIQr1CDUljv5NM/paCAINoGtykg//7AQOYIYtM3TPOjSo5Dd0ZSFqK2ChRzw2mw0NKBhg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=igOVAejB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Y+0EEK9NK9tj2wW5vl8mbfSdeWCk9HBHjSLpCJ57ivDfDj4yM4NkKfIouEo7BjBntl/jTVR48zGBscYBCMer2dBRfAfcXlHLtyuSSB+3hc38tmeHJ3kSPPxxttY9eLAKOWIsKvEEK69BsD8gsrpix0B188LFUgV44R7NaeKnxWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ltXV8Add; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="igOVAejB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88ED01F000E9;
-	Thu, 30 Jul 2026 09:59:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ltXV8Add"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB3F01F00A3D;
+	Thu, 30 Jul 2026 10:07:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785405599;
-	bh=WK2tHPEkzBY2stLBdpC+fE4u48BNObxZFm8c/FNCDFM=;
+	s=k20260515; t=1785406067;
+	bh=+DdtGIGw5KisOkEqv6VLLhJyKxudfBrpLNeEuZR/x+8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=igOVAejB/OUbAzCHWVWjSSqRus6Ju7IUtE0GOUwaAXfEOBAabcicXh7NLGDU2x00I
-	 SJ2E05ZfPDyWBkLmGRnRQqY1a/nHsyV7KwSc3/ybfX9jS95PdtUe7rJW0nEiPWll8Y
-	 HoSYa7ZJTZ7DVC3kNOrFOoMx6fA0YSrc4jLJpyi7dXYhuXKkEqUR8HbOS1mwkEjMeU
-	 +aHSayHpWmqzezIl/nE2vRcaZEm6klGlvRdWwfOaRg/U5FO04EFWz4SmbFqUh5ff/h
-	 idphYHK140k5YpheYQM8rWZMSI1uiiXrRn4ytm2ENCtSjXjV62baPwPb9IycRi+ACi
-	 64diCu6dIJA+g==
+	b=ltXV8AddneWCj10H+yXmyOp1Ivd5uAPjM1XJSmyc/nozeWSTTjRqplIDONq7Z+00a
+	 guSMm8lizOkqxz4hZzYqtA8w54K5BzHeOMjTXCZ8cJRXCaAvvHFQCyqNG40DnLBCQB
+	 Wq58QIHE6JHlHrMnAFNyXesvlkww2S2iS5QzB+fqRauFZVoWv+BX8vc6KzD0JO6YU3
+	 9aEpRyd1NvUr+b01xnDRgHmwKgRyzMPLeOekgpZVEjIiJ+HyxAhAHV/EI4B6HFSSna
+	 Tz3d0ChQ1DNAzipP9UUgBaxVKFSHJwXHUIeK39Yl+/9Y69xu4cxb3wuhWoH1cAZnJG
+	 GBzAZQEa2hhLQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 03/26] dt-bindings: ufs: mediatek,ufs: Add mt8196
- variant
+Subject: Re: [PATCH v10 08/26] scsi: ufs: mediatek: Rework init function
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Louis-Alexis Eyraud" <louisalexis.eyraud@collabora.com>
-Cc: devicetree@vger.kernel.org, linux-phy@lists.infradead.org, conor+dt@kernel.org, neil.armstrong@linaro.org, robh@kernel.org, vkoul@kernel.org, olteanv@gmail.com, linux-scsi@vger.kernel.org
-In-Reply-To: <20260730-mt8196-ufs-v10-3-bc5ecef202dc@collabora.com>
+Cc: neil.armstrong@linaro.org, devicetree@vger.kernel.org, vkoul@kernel.org, conor+dt@kernel.org, olteanv@gmail.com, robh@kernel.org, linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260730-mt8196-ufs-v10-8-bc5ecef202dc@collabora.com>
 References: <20260730-mt8196-ufs-v10-0-bc5ecef202dc@collabora.com>
- <20260730-mt8196-ufs-v10-3-bc5ecef202dc@collabora.com>
+ <20260730-mt8196-ufs-v10-8-bc5ecef202dc@collabora.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 09:59:58 +0000
-Message-Id: <20260730095958.88ED01F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 10:07:46 +0000
+Message-Id: <20260730100746.AB3F01F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,69 +46,133 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] A typo in the `mediatek,mt8192-ufshci` conditional block uses `c=
-locks-names` instead of `clock-names`, bypassing array length validation.
-- [Low] The binding omits a supply property for the `AVDD09_UFS_1` pin, tyi=
-ng it to `AVDD09_UFS`, which violates the principle that Device Tree descri=
-bes the SoC hardware rather than a specific board's power routing.
+
+Pre-existing issues:
+- [High] The return value of `ufs_mtk_mphy_power_on()` is ignored during ho=
+st initialization.
+- [High] Use-After-Free risk due to saving a released device pointer in `ho=
+st->phy_dev`.
 --
 
---- Patch [3]: [PATCH v10 03/26] dt-bindings: ufs: mediatek,ufs: Add mt8196=
- variant ---
-commit e0eeeaec009272d40ddbc2fee8902782c15e776c
+--- Patch [8]: [PATCH v10 08/26] scsi: ufs: mediatek: Rework init function =
+---
+commit 5d79268ac1559dd4c6c615601ae1b9838e4b77bc
 Author: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
-dt-bindings: ufs: mediatek,ufs: Add mt8196 variant
+scsi: ufs: mediatek: Rework init function
 
-The MT8196 SoC's UFS controller uses a different set of supplies, making it
-incompatible with MT8195. This commit adds a compatible string for mt8196
-and updates the binding. It also notes that the AVDD09_UFS and AVDD09_UFS_1
-pins are commoned together on the referenced board.
+This commit reworks the initialization function for the MediaTek UFS driver.
+It removes unnecessary error prints for memory allocation failures and remo=
+ves
+redundant device tree matching. It also simplifies the error handling path
+by removing unnecessary goto statements and returning directly on success.
 
-> While it does have a AVDD09_UFS_1 pin in addition to the AVDD09_UFS pin,
-> it appears that these two pins are commoned together, as the board
-> schematic I have access to uses the same supply for both, and the
-> downstream driver does not distinguish between the two supplies either.
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
+tek.c
+> index f6859cd0b1d4d..50e7701d7943b 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+[ ... ]
+> @@ -1356,11 +1334,10 @@ static int ufs_mtk_init(struct ufs_hba *hba)
+> =20
+>  	ufs_mtk_get_hw_ip_version(hba);
+> =20
+> -	goto out;
+> +	return 0;
+> =20
+>  out_variant_clear:
+>  	ufshcd_set_variant(hba, NULL);
+> -out:
+>  	return err;
+>  }
 
-[Severity: Low]
-Does omitting a separate supply property for the AVDD09_UFS_1 pin violate t=
-he
-principle that Device Tree bindings should describe the SoC hardware rather
-than a specific board's power routing?
+[Severity: High]
+This isn't a bug introduced by this patch, but does this code ignore the
+return value of ufs_mtk_mphy_power_on() earlier in ufs_mtk_init()?
 
-If a future board design supplies the AVDD09_UFS and AVDD09_UFS_1 pins from
-separate voltage regulators, the current binding wouldn't be able to accura=
-tely
-describe that hardware.
+Looking at ufs_mtk_init():
 
-While reviewing the file touched by this patch, I noticed a regression in t=
-he
-conditional block for the mt8192-ufshci compatible string:
+	err =3D ufs_mtk_get_supplies(host);
+	if (err)
+		goto out_variant_clear;
 
-Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml:allOf
->   - if:
->       properties:
->         compatible:
->           contains:
->             const: mediatek,mt8192-ufshci
->     then:
->       properties:
->         clocks:
->           minItems: 3
->           maxItems: 3
->         clocks-names:
->           minItems: 3
->           maxItems: 3
+	/*
+	 * ufshcd_vops_init() is invoked after
+	 * ufshcd_setup_clock(true) in ufshcd_hba_init() thus
+	 * phy clock setup is skipped.
+	 *
+	 * Enable phy clocks specifically here.
+	 */
+	ufs_mtk_mphy_power_on(hba, true);
 
-[Severity: Medium]
-Is the "clocks-names" property a typo here? It seems like this should be
-"clock-names".
+	if (ufs_mtk_is_rtff_mtcmos(hba)) {
 
-Because of the typo, the length of the clock-names array is not properly
-constrained for mt8192-ufshci. An invalid device tree with 3 clocks but a
-mismatched number of clock-names could silently pass dt_binding_check valid=
-ation.
+If ufs_mtk_mphy_power_on() fails (e.g. regulator_enable fails in
+ufs_mtk_09v_on), the driver will proceed as if the PHY powered on
+successfully.  Should this check the return value and handle the error?
+
+[ ... ]
+> @@ -2402,6 +2379,18 @@ static const struct ufs_hba_variant_ops ufs_hba_mt=
+k_vops =3D {
+>  	.config_scsi_dev     =3D ufs_mtk_config_scsi_dev,
+>  };
+> =20
+> +static const struct ufs_mtk_soc_data mt8183_data =3D {
+> +	.has_avdd09 =3D true,
+> +};
+> +
+> +static const struct of_device_id ufs_mtk_of_match[] =3D {
+> +	{ .compatible =3D "mediatek,mt8183-ufshci", .data =3D &mt8183_data },
+> +	{ .compatible =3D "mediatek,mt8192-ufshci" },
+> +	{ .compatible =3D "mediatek,mt8195-ufshci" },
+> +	{},
+> +};
+> +MODULE_DEVICE_TABLE(of, ufs_mtk_of_match);
+> +
+>  /**
+>   * ufs_mtk_probe - probe routine of the driver
+>   * @pdev: pointer to Platform device handle
+
+[Severity: High]
+This is a pre-existing issue, but is there a use-after-free risk in
+ufs_mtk_probe() when saving the released device pointer?
+
+Looking at ufs_mtk_probe():
+
+	if (phy_node) {
+		phy_pdev =3D of_find_device_by_node(phy_node);
+		if (!phy_pdev)
+			goto skip_phy;
+		phy_dev =3D &phy_pdev->dev;
+
+		...
+		put_device(phy_dev);
+	}
+	...
+skip_phy:
+	err =3D ufshcd_pltfrm_init(pdev, &ufs_hba_mtk_vops);
+	...
+	if (phy_node && phy_dev) {
+		host =3D ufshcd_get_variant(hba);
+		host->phy_dev =3D phy_dev;
+	}
+
+of_find_device_by_node() acquires a reference to the phy device. This
+reference is unconditionally dropped via put_device(phy_dev), but the
+unreferenced pointer is then stored in host->phy_dev.
+
+If the phy device is removed or unbound and the memory is freed, the UFS
+driver continues to dereference it during runtime PM operations:
+
+drivers/ufs/host/ufs-mediatek.c:ufs_mtk_runtime_suspend() {
+    ...
+	if (host->phy_dev)
+		pm_runtime_put_sync(host->phy_dev);
+    ...
+}
+
+Should the reference be held until the UFS host device is unbound?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730-mt8196-ufs=
--v10-0-bc5ecef202dc@collabora.com?part=3D3
+-v10-0-bc5ecef202dc@collabora.com?part=3D8
