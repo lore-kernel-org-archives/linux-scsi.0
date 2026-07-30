@@ -1,58 +1,56 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 314F43D3012
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:48:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89F3F3D3012
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:48:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785451706; cv=none; b=p3BtfCOsDxXGmUkFNFRLpqWw/FYcWXpYch2UYS2Cg1VCpQAUwe9wYFJICQ56jpqECo/4OGF+XgK9KCuk5ISh43Ieaju6okUt7A8ITKEHpo2bk6xM/zdbx2ejJGnRAZOzD/alp52YeCBJyn3PfAnHIChnhcv7ehh+c9+eC9zMdKk=
+	t=1785451710; cv=none; b=RyQJn24B1nuJ82cROLg3HGPB7o9PNWaxi22WNNfUKwV8lvAnl12Guj8MiGsNIwfwBumWmvDJav3Shqszcq/oaZ6jpbmW4lX8+oKUIVhVLZkNNSoN0qbt/luOkSE8uDoXHMJxlgflKyjhASAbEJeilyOr6Py5WGJA9wayOA0a4+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785451706; c=relaxed/simple;
-	bh=NyAM3STxT0XBr/vOMCjiAWre6k9oQjeVL1U+3kPfLKU=;
+	s=arc-20240116; t=1785451710; c=relaxed/simple;
+	bh=Py8B7pgbsc78k5u7xDPJtQv0S/NWya0oUOpqU4foMSQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=julm78IPG3PvcgqW+M/bCi2X+1nGEJaK0g5aT9XyTqv+Am+EUOZlDpBLPXsCCU0ShofkKD/RgSOZvwgtgOiMXB25bPhLXAuds7GjaANdHZprU9FWkiKxqpHIqRQpYE6BJ1//Y82IMD8iJEKvRz2bapZUnoEi8Hwdh/OyXwA/utQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JOk+kgfb; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=n4g1aJFB1pLDhk6cd7JG2fR4CXh9RMI4Ww+tFCzoSvaYrKFLVAbmuwp2XAKuzgz+y63b7MRPLOaTCu/3GOru5s7qhciqToYgWpWxOGdAwP81E5LcvW4zo883CTOVDEqIYshOG5OKPWwfgVcUWep5xjX77myAnwAdIOtGSpBXCf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=IkvMIvNe; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JOk+kgfb"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="IkvMIvNe"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hB49g6BqBz1XM6Jk;
-	Thu, 30 Jul 2026 22:48:23 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hB49n27RJz1XM6Jk;
+	Thu, 30 Jul 2026 22:48:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1785451686; x=1788043687; bh=V4CTO
-	lIYp1WHmqaL6yBAzssghJLcc2+Q7+j3K8qwAto=; b=JOk+kgfbGy2yXZ3mJkJDo
-	I+RGtYd8DDL7oPqmE09jRV9FGR9O2k2mji81uHxQS2yAKU+VVBaX8AfkDuIt64C3
-	MMHEtGZ6EDQUbJ0s8v9FytfCEBUmMvN6HV2fnjtGm6NbindTBl+9iI20Sy2uRDMX
-	bwwxnoBJcQqpjqTAK5z0wJ4tg05iYhcoClz6BeT4AJJmzPDd74daEn9AkayJr/G/
-	T2+WBk97oqlD9Fvh3QhzBPsHNnwzZ7ergpHGL7mAFM5GsoK0fYmZiMZMhcIpmVcz
-	17elbngpDZpjpdIqMBTu0MVXdlAIursJ2zwio1i+U7TaDpVwBX8sNFZbiNyc24+j
-	A==
+	:received:received; s=mr01; t=1785451703; x=1788043704; bh=jdECi
+	w1od5+aoOByry6eYk2d/EsYwFbOORYLsrt0yz0=; b=IkvMIvNechAsvP8/fBEfJ
+	wbF/xxRQrIC3xaROsDre+hGwUsDpPHTCpr+x70e3Zsru4UNP7xUqwn1uN4DLwOEL
+	ewzkLeKVocFDRPpmanqp+96jGlSxgUYdCGdjhAa6z8ZrFJZjIT3lOXdjWZ4vLLP7
+	E1fYYFfJkrerOJhzyCPXKcBLPEBxmUDWy5mFy4OyMPKKjDhYomdd2uhyKs1nwmCE
+	UgkY2WcHbN2aF2/C69JWDKN4UmuOOyBlQbiICjIxKf43oxCUXak9TdLTgUwBalJY
+	wTV3loOjkVOq6WD41bxjJrvvUrlA/UqpkBWlGjcZKG9iHYX7wo8whGlatdsZuQkN
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ebDbKCDpNfKJ; Thu, 30 Jul 2026 22:48:06 +0000 (UTC)
+ id OJQb9aq0g0OX; Thu, 30 Jul 2026 22:48:23 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hB49J29Vyz1XM30k;
-	Thu, 30 Jul 2026 22:48:04 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hB49d6yydz1XM30r;
+	Thu, 30 Jul 2026 22:48:21 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Marco Elver <elver@google.com>,
 	linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
+	Hannes Reinecke <hare@suse.de>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v3 26/57] scsi: fnic: Enable lock context analysis
-Date: Thu, 30 Jul 2026 15:45:09 -0700
-Message-ID: <d10f7eaef0e297d1b78d1ba484b05686e185d8c7.1785451174.git.bvanassche@acm.org>
+Subject: [PATCH v3 34/57] scsi: libfc: Enable lock context analysis
+Date: Thu, 30 Jul 2026 15:45:17 -0700
+Message-ID: <3c7650cbbecbaf615e264bf7c21e7eb101b818dd.1785451174.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.55.0.508.g3f0d502094-goog
 In-Reply-To: <cover.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
@@ -64,531 +62,157 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Document locking requirements with __must_hold(). Suppress complaints
-about conditional locking in fnic_device_reset() with __acquire() and
-__release().
+Document locking requirements with __must_hold().
 
-Acked-by: Karan Tilak Kumar <kartilak@cisco.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/fnic/Makefile    |  3 ++
- drivers/scsi/fnic/fdls_disc.c | 52 +++++++++++++++++++++++++++++++++--
- drivers/scsi/fnic/fip.c       |  2 ++
- drivers/scsi/fnic/fnic_fcs.c  |  6 ++++
- drivers/scsi/fnic/fnic_scsi.c |  4 +++
- 5 files changed, 65 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/Makefile  | 2 ++
+ drivers/scsi/libfc/fc_disc.c | 6 +++++-
+ drivers/scsi/libfc/fc_exch.c | 6 ++++++
+ drivers/scsi/libfc/fc_fcp.c  | 4 ++++
+ 4 files changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/fnic/Makefile b/drivers/scsi/fnic/Makefile
-index 48c5e0cb8ca6..22a463380dee 100644
---- a/drivers/scsi/fnic/Makefile
-+++ b/drivers/scsi/fnic/Makefile
-@@ -1,4 +1,7 @@
+diff --git a/drivers/scsi/libfc/Makefile b/drivers/scsi/libfc/Makefile
+index 65396f86c307..b265cf2a84a2 100644
+--- a/drivers/scsi/libfc/Makefile
++++ b/drivers/scsi/libfc/Makefile
+@@ -1,6 +1,8 @@
  # SPDX-License-Identifier: GPL-2.0
-+
+ # $Id: Makefile
+=20
 +CONTEXT_ANALYSIS :=3D y
 +
- obj-$(CONFIG_FCOE_FNIC) +=3D fnic.o
+ obj-$(CONFIG_LIBFC) +=3D libfc.o
 =20
- fnic-y	:=3D \
-diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.=
-c
-index 8cb40466872f..e64fe1097e37 100644
---- a/drivers/scsi/fnic/fdls_disc.c
-+++ b/drivers/scsi/fnic/fdls_disc.c
-@@ -417,6 +417,7 @@ static void fdls_reset_oxid_pool(struct fnic_iport_s =
-*iport)
- }
+ libfc-objs :=3D \
+diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+index 7792724d5b97..862516dcd324 100644
+--- a/drivers/scsi/libfc/fc_disc.c
++++ b/drivers/scsi/libfc/fc_disc.c
+@@ -37,7 +37,7 @@
+ #define FC_DISC_RETRY_LIMIT	3	/* max retries */
+ #define FC_DISC_RETRY_DELAY	500UL	/* (msecs) delay */
 =20
- void fnic_del_fabric_timer_sync(struct fnic *fnic)
-+	__must_hold(&fnic->fnic_lock)
- {
- 	fnic->iport.fabric.del_timer_inprogress =3D 1;
- 	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-@@ -425,8 +426,8 @@ void fnic_del_fabric_timer_sync(struct fnic *fnic)
- 	fnic->iport.fabric.del_timer_inprogress =3D 0;
- }
-=20
--void fnic_del_tport_timer_sync(struct fnic *fnic,
--						struct fnic_tport_s *tport)
-+void fnic_del_tport_timer_sync(struct fnic *fnic, struct fnic_tport_s *t=
-port)
-+	__must_hold(&fnic->fnic_lock)
- {
- 	tport->del_timer_inprogress =3D 1;
- 	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-@@ -437,6 +438,7 @@ void fnic_del_tport_timer_sync(struct fnic *fnic,
-=20
- static void
- fdls_start_fabric_timer(struct fnic_iport_s *iport, int timeout)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	u64 fabric_tov;
- 	struct fnic *fnic =3D iport->fnic;
-@@ -462,6 +464,7 @@ fdls_start_fabric_timer(struct fnic_iport_s *iport, i=
-nt timeout)
- static void
- fdls_start_tport_timer(struct fnic_iport_s *iport,
- 					   struct fnic_tport_s *tport, int timeout)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	u64 fabric_tov;
- 	struct fnic *fnic =3D iport->fnic;
-@@ -717,6 +720,7 @@ int fdls_send_ls_req_abts(struct fnic_iport_s *iport,
- void
- fdls_send_tport_abts(struct fnic_iport_s *iport,
- 					 struct fnic_tport_s *tport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	uint8_t s_id[3];
-@@ -760,7 +764,9 @@ fdls_send_tport_abts(struct fnic_iport_s *iport,
- 	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout =
-*/
- 	fdls_start_tport_timer(iport, tport, 2 * iport->e_d_tov);
- }
-+
- static void fdls_send_fabric_abts(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	uint8_t s_id[3];
-@@ -932,6 +938,7 @@ static void fdls_send_fdmi_abts(struct fnic_iport_s *=
-iport)
- }
-=20
- static void fdls_send_fabric_flogi(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_flogi *pflogi;
-@@ -992,6 +999,7 @@ static void fdls_send_fabric_flogi(struct fnic_iport_=
-s *iport)
- }
-=20
- static void fdls_send_fabric_plogi(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_flogi *pplogi;
-@@ -1084,6 +1092,7 @@ static void fdls_send_fdmi_plogi(struct fnic_iport_=
-s *iport)
- }
-=20
- static void fdls_send_rpn_id(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_rpn_id *prpn_id;
-@@ -1143,6 +1152,7 @@ static void fdls_send_rpn_id(struct fnic_iport_s *i=
-port)
- }
-=20
- static void fdls_send_scr(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_scr *pscr;
-@@ -1198,6 +1208,7 @@ static void fdls_send_scr(struct fnic_iport_s *ipor=
-t)
- }
-=20
- static void fdls_send_gpn_ft(struct fnic_iport_s *iport, int fdls_state)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_gpn_ft *pgpn_ft;
-@@ -1257,6 +1268,7 @@ static void fdls_send_gpn_ft(struct fnic_iport_s *i=
-port, int fdls_state)
-=20
- static void
- fdls_send_tgt_adisc(struct fnic_iport_s *iport, struct fnic_tport_s *tpo=
-rt)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_els_adisc *padisc;
-@@ -1322,6 +1334,7 @@ fdls_send_tgt_adisc(struct fnic_iport_s *iport, str=
-uct fnic_tport_s *tport)
- }
-=20
- bool fdls_delete_tport(struct fnic_iport_s *iport, struct fnic_tport_s *=
-tport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic_tport_event_s *tport_del_evt;
- 	struct fnic *fnic =3D iport->fnic;
-@@ -1387,6 +1400,7 @@ bool fdls_delete_tport(struct fnic_iport_s *iport, =
-struct fnic_tport_s *tport)
-=20
- static void
- fdls_send_tgt_plogi(struct fnic_iport_s *iport, struct fnic_tport_s *tpo=
-rt)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_flogi *pplogi;
-@@ -1455,6 +1469,7 @@ fnic_fc_plogi_rsp_rdf(struct fnic_iport_s *iport,
- }
-=20
- static void fdls_send_register_fc4_types(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_rft_id *prft_id;
-@@ -1522,6 +1537,7 @@ static void fdls_send_register_fc4_types(struct fni=
-c_iport_s *iport)
- }
-=20
- static void fdls_send_register_fc4_features(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_rff_id *prff_id;
-@@ -1581,6 +1597,7 @@ static void fdls_send_register_fc4_features(struct =
-fnic_iport_s *iport)
-=20
- static void
- fdls_send_tgt_prli(struct fnic_iport_s *iport, struct fnic_tport_s *tpor=
-t)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *frame;
- 	struct fc_std_els_prli *pprli;
-@@ -1662,6 +1679,7 @@ fdls_send_tgt_prli(struct fnic_iport_s *iport, stru=
-ct fnic_tport_s *tport)
-  * Currently this assumes to be called with fnic lock held.
+-static void fc_disc_gpn_ft_req(struct fc_disc *);
++static void fc_disc_gpn_ft_req(struct fc_disc *disc) __must_hold(&disc->=
+disc_mutex);
+ static void fc_disc_gpn_ft_resp(struct fc_seq *, struct fc_frame *, void=
+ *);
+ static void fc_disc_done(struct fc_disc *, enum fc_disc_event);
+ static void fc_disc_timeout(struct work_struct *);
+@@ -200,6 +200,7 @@ static void fc_disc_recv_req(struct fc_lport *lport, =
+struct fc_frame *fp)
+  * @disc: The discovery object to be restarted
   */
- void fdls_send_fabric_logo(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
+ static void fc_disc_restart(struct fc_disc *disc)
++	__must_hold(&disc->disc_mutex)
  {
- 	uint8_t *frame;
- 	struct fc_std_logo *plogo;
-@@ -1761,6 +1779,7 @@ void fdls_tgt_logout(struct fnic_iport_s *iport, st=
-ruct fnic_tport_s *tport)
- }
+ 	lockdep_assert_held(&disc->disc_mutex);
 =20
- static void fdls_tgt_discovery_start(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic_tport_s *tport, *next;
- 	u32 old_link_down_cnt =3D iport->fnic->link_down_cnt;
-@@ -1811,6 +1830,7 @@ static void fdls_tgt_discovery_start(struct fnic_ip=
-ort_s *iport)
-  * pointing to it will be freed later
+@@ -250,6 +251,7 @@ static void fc_disc_start(void (*disc_callback)(struc=
+t fc_lport *,
+  * @event: The discovery completion status
   */
- static void fdls_target_restart_nexus(struct fnic_tport_s *tport)
-+	__must_hold(&((struct fnic_iport_s *)tport->iport)->fnic->fnic_lock)
+ static void fc_disc_done(struct fc_disc *disc, enum fc_disc_event event)
++	__must_hold(&disc->disc_mutex)
  {
- 	struct fnic_iport_s *iport =3D tport->iport;
- 	struct fnic_tport_s *new_tport =3D NULL;
-@@ -2617,6 +2637,7 @@ static void fdls_tport_timer_callback(struct timer_=
-list *t)
- }
+ 	struct fc_lport *lport =3D fc_disc_lport(disc);
+ 	struct fc_rport_priv *rdata;
+@@ -294,6 +296,7 @@ static void fc_disc_done(struct fc_disc *disc, enum f=
+c_disc_event event)
+  * @fp:	  The error code encoded as a frame pointer
+  */
+ static void fc_disc_error(struct fc_disc *disc, struct fc_frame *fp)
++	__must_hold(&disc->disc_mutex)
+ {
+ 	struct fc_lport *lport =3D fc_disc_lport(disc);
+ 	unsigned long delay =3D 0;
+@@ -374,6 +377,7 @@ static void fc_disc_gpn_ft_req(struct fc_disc *disc)
+  * Goes through the list of IDs and names resulting from a request.
+  */
+ static int fc_disc_gpn_ft_parse(struct fc_disc *disc, void *buf, size_t =
+len)
++	__must_hold(&disc->disc_mutex)
+ {
+ 	struct fc_lport *lport;
+ 	struct fc_gpn_ft_resp *np;
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 9183a0e9568a..9057a95d8612 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -811,6 +811,7 @@ static void fc_exch_timeout(struct work_struct *work)
+  */
+ static struct fc_exch *fc_exch_em_alloc(struct fc_lport *lport,
+ 					struct fc_exch_mgr *mp)
++	__context_unsafe(conditionally acquires &_res->ex_lock)
+ {
+ 	struct fc_exch *ep;
+ 	unsigned int cpu;
+@@ -904,6 +905,7 @@ static struct fc_exch *fc_exch_em_alloc(struct fc_lpo=
+rt *lport,
+  */
+ static struct fc_exch *fc_exch_alloc(struct fc_lport *lport,
+ 				     struct fc_frame *fp)
++	__context_unsafe(conditionally acquires &_res->ex_lock)
+ {
+ 	struct fc_exch_mgr_anchor *ema;
+ 	struct fc_exch *ep;
+@@ -996,6 +998,8 @@ static struct fc_exch *fc_exch_resp(struct fc_lport *=
+lport,
 =20
- static void fnic_fdls_start_flogi(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	iport->fabric.retry_counter =3D 0;
- 	fdls_send_fabric_flogi(iport);
-@@ -2625,6 +2646,7 @@ static void fnic_fdls_start_flogi(struct fnic_iport=
-_s *iport)
- }
+ 	ep =3D fc_exch_alloc(lport, fp);
+ 	if (ep) {
++		/* Acquired by fc_exch_alloc(). */
++		__acquire(&ep->ex_lock);
+ 		ep->class =3D fc_frame_class(fp);
 =20
- static void fnic_fdls_start_plogi(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	iport->fabric.retry_counter =3D 0;
- 	fdls_send_fabric_plogi(iport);
-@@ -2643,6 +2665,7 @@ static void fnic_fdls_start_plogi(struct fnic_iport=
-_s *iport)
- static void
- fdls_process_tgt_adisc_rsp(struct fnic_iport_s *iport,
- 			   struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint32_t tgt_fcid;
- 	struct fnic_tport_s *tport;
-@@ -2733,6 +2756,7 @@ fdls_process_tgt_adisc_rsp(struct fnic_iport_s *ipo=
-rt,
- static void
- fdls_process_tgt_plogi_rsp(struct fnic_iport_s *iport,
- 			   struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint32_t tgt_fcid;
- 	struct fnic_tport_s *tport;
-@@ -2767,6 +2791,8 @@ fdls_process_tgt_plogi_rsp(struct fnic_iport_s *ipo=
-rt,
- 	if (tport->state !=3D FDLS_TGT_STATE_PLOGI) {
- 		FNIC_FCS_DBG(KERN_INFO, fnic,
- 			     "PLOGI rsp recvd in wrong state. Drop the frame and restart nexu=
-s");
-+		/* Tell the compiler that tport->iport =3D=3D iport. */
-+		__assume_ctx_lock(&((struct fnic_iport_s *)tport->iport)->fnic->fnic_l=
-ock);
- 		fdls_target_restart_nexus(tport);
- 		return;
- 	}
-@@ -2854,9 +2880,11 @@ fdls_process_tgt_plogi_rsp(struct fnic_iport_s *ip=
+ 		/*
+@@ -2191,6 +2195,8 @@ struct fc_seq *fc_exch_seq_send(struct fc_lport *lp=
 ort,
- 	fdls_set_tport_state(tport, FDLS_TGT_STATE_PRLI);
- 	fdls_send_tgt_prli(iport, tport);
- }
-+
- static void
- fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
- 			  struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint32_t tgt_fcid;
- 	struct fnic_tport_s *tport;
-@@ -2893,6 +2921,8 @@ fdls_process_tgt_prli_rsp(struct fnic_iport_s *ipor=
-t,
- 	if (tport->state !=3D FDLS_TGT_STATE_PRLI) {
- 		FNIC_FCS_DBG(KERN_INFO, fnic,
- 			     "PRLI rsp recvd in wrong state. Drop frame. Restarting nexus");
-+		/* Tell the compiler that tport->iport =3D=3D iport. */
-+		__assume_ctx_lock(&((struct fnic_iport_s *)tport->iport)->fnic->fnic_l=
-ock);
- 		fdls_target_restart_nexus(tport);
- 		return;
+ 		fc_frame_free(fp);
+ 		return NULL;
  	}
-@@ -3025,6 +3055,7 @@ fdls_process_tgt_prli_rsp(struct fnic_iport_s *ipor=
-t,
- static void
- fdls_process_rff_id_rsp(struct fnic_iport_s *iport,
- 			struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic *fnic =3D iport->fnic;
- 	struct fnic_fdls_fabric_s *fdls =3D &iport->fabric;
-@@ -3098,6 +3129,7 @@ fdls_process_rff_id_rsp(struct fnic_iport_s *iport,
- static void
- fdls_process_rft_id_rsp(struct fnic_iport_s *iport,
- 			struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic_fdls_fabric_s *fdls =3D &iport->fabric;
- 	struct fc_std_rft_id *rft_rsp =3D (struct fc_std_rft_id *) fchdr;
-@@ -3173,6 +3205,7 @@ fdls_process_rft_id_rsp(struct fnic_iport_s *iport,
- static void
- fdls_process_rpn_id_rsp(struct fnic_iport_s *iport,
- 			struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic_fdls_fabric_s *fdls =3D &iport->fabric;
- 	struct fc_std_rpn_id *rpn_rsp =3D (struct fc_std_rpn_id *) fchdr;
-@@ -3243,6 +3276,7 @@ fdls_process_rpn_id_rsp(struct fnic_iport_s *iport,
- static void
- fdls_process_scr_rsp(struct fnic_iport_s *iport,
- 		     struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic_fdls_fabric_s *fdls =3D &iport->fabric;
- 	struct fc_std_scr *scr_rsp =3D (struct fc_std_scr *) fchdr;
-@@ -3315,6 +3349,7 @@ fdls_process_scr_rsp(struct fnic_iport_s *iport,
- static void
- fdls_process_gpn_ft_tgt_list(struct fnic_iport_s *iport,
- 			     struct fc_frame_header *fchdr, int len)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fc_gpn_ft_rsp_iu *gpn_ft_tgt;
- 	struct fnic_tport_s *tport, *next;
-@@ -3413,6 +3448,7 @@ fdls_process_gpn_ft_tgt_list(struct fnic_iport_s *i=
-port,
- static void
- fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport,
- 			struct fc_frame_header *fchdr, int len)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic_fdls_fabric_s *fdls =3D &iport->fabric;
- 	struct fc_std_gpn_ft *gpn_ft_rsp =3D (struct fc_std_gpn_ft *) fchdr;
-@@ -3549,6 +3585,7 @@ fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport,
- static void
- fdls_process_fabric_logo_rsp(struct fnic_iport_s *iport,
- 			     struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fc_std_flogi *flogo_rsp =3D (struct fc_std_flogi *) fchdr;
- 	struct fnic_fdls_fabric_s *fdls =3D &iport->fabric;
-@@ -3602,6 +3639,7 @@ fdls_process_fabric_logo_rsp(struct fnic_iport_s *i=
-port,
- static void
- fdls_process_flogi_rsp(struct fnic_iport_s *iport,
- 		       struct fc_frame_header *fchdr, void *rx_frame)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic_fdls_fabric_s *fabric =3D &iport->fabric;
- 	struct fc_std_flogi *flogi_rsp =3D (struct fc_std_flogi *) fchdr;
-@@ -3741,6 +3779,7 @@ fdls_process_flogi_rsp(struct fnic_iport_s *iport,
- static void
- fdls_process_fabric_plogi_rsp(struct fnic_iport_s *iport,
- 			      struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fc_std_flogi *plogi_rsp =3D (struct fc_std_flogi *) fchdr;
- 	struct fc_std_els_rjt_rsp *els_rjt =3D (struct fc_std_els_rjt_rsp *) fc=
-hdr;
-@@ -4002,6 +4041,7 @@ static void fdls_process_fdmi_abts_rsp(struct fnic_=
-iport_s *iport,
- static void
- fdls_process_fabric_abts_rsp(struct fnic_iport_s *iport,
- 			     struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint32_t s_id;
- 	struct fc_std_abts_ba_acc *ba_acc =3D (struct fc_std_abts_ba_acc *)fchd=
-r;
-@@ -4359,6 +4399,7 @@ fdls_process_els_req(struct fnic_iport_s *iport, st=
-ruct fc_frame_header *fchdr,
- static void
- fdls_process_tgt_abts_rsp(struct fnic_iport_s *iport,
- 			  struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint32_t s_id;
- 	struct fnic_tport_s *tport;
-@@ -4548,6 +4589,7 @@ fdls_process_plogi_req(struct fnic_iport_s *iport,
-=20
- static void
- fdls_process_logo_req(struct fnic_iport_s *iport, struct fc_frame_header=
- *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fc_std_logo *logo =3D (struct fc_std_logo *)fchdr;
- 	uint32_t nport_id;
-@@ -4588,6 +4630,8 @@ fdls_process_logo_req(struct fnic_iport_s *iport, s=
-truct fc_frame_header *fchdr)
- 		FNIC_FCS_DBG(KERN_ERR, fnic,
- 					 "tport fcid 0x%x: Canceling disc timer\n",
- 					 tport->fcid);
-+		/* Tell the compiler that tport->iport =3D=3D iport. */
-+		__assume_ctx_lock(&((struct fnic_iport_s *)tport->iport)->fnic->fnic_l=
-ock);
- 		fnic_del_tport_timer_sync(fnic, tport);
- 		tport->timer_pending =3D 0;
- 	}
-@@ -4625,6 +4669,7 @@ fdls_process_logo_req(struct fnic_iport_s *iport, s=
-truct fc_frame_header *fchdr)
-=20
- static void
- fdls_process_rscn(struct fnic_iport_s *iport, struct fc_frame_header *fc=
-hdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fc_std_rscn *rscn;
- 	struct fc_els_rscn_page *rscn_port =3D NULL;
-@@ -4758,6 +4803,7 @@ fdls_process_rscn(struct fnic_iport_s *iport, struc=
-t fc_frame_header *fchdr)
- }
-=20
- void fnic_fdls_disc_start(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic *fnic =3D iport->fnic;
-=20
-@@ -5102,6 +5148,7 @@ fnic_fdls_validate_and_get_frame_type(struct fnic_i=
-port_s *iport,
-=20
- void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
- 						  int len, int fchdr_offset)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fc_frame_header *fchdr;
- 	uint32_t s_id =3D 0;
-@@ -5223,6 +5270,7 @@ void fnic_fdls_disc_init(struct fnic_iport_s *iport=
-)
- }
-=20
- void fnic_fdls_link_down(struct fnic_iport_s *iport)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic_tport_s *tport, *next;
- 	struct fnic *fnic =3D iport->fnic;
-diff --git a/drivers/scsi/fnic/fip.c b/drivers/scsi/fnic/fip.c
-index 21d08a710f0d..6bca0dd89ee1 100644
---- a/drivers/scsi/fnic/fip.c
-+++ b/drivers/scsi/fnic/fip.c
-@@ -602,6 +602,7 @@ void fnic_common_fip_cleanup(struct fnic *fnic)
-  * and clean up and restart the vlan discovery.
++	/* Acquired by fc_exch_alloc(). */
++	__acquire(&ep->ex_lock);
+ 	ep->esb_stat |=3D ESB_ST_SEQ_INIT;
+ 	fh =3D fc_frame_header_get(fp);
+ 	fc_exch_set_addr(ep, ntoh24(fh->fh_s_id), ntoh24(fh->fh_d_id));
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index a5139e43ca4c..9ba31a8a5250 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -207,6 +207,7 @@ static void fc_fcp_pkt_destroy(struct fc_seq *seq, vo=
+id *fsp)
+  * needed.
   */
- void fnic_fcoe_process_cvl(struct fnic *fnic, struct fip_header *fiph)
-+	__must_hold(&fnic->fnic_lock)
+ static inline int fc_fcp_lock_pkt(struct fc_fcp_pkt *fsp)
++	__cond_acquires(0, &fsp->scsi_pkt_lock)
  {
- 	struct fnic_iport_s *iport =3D &fnic->iport;
- 	struct fip_cvl *cvl_msg =3D (struct fip_cvl *)fiph;
-@@ -678,6 +679,7 @@ void fnic_fcoe_process_cvl(struct fnic *fnic, struct =
-fip_header *fiph)
-  * @frame: Received ethernet frame
+ 	spin_lock_bh(&fsp->scsi_pkt_lock);
+ 	if (fsp->state & FC_SRB_COMPL) {
+@@ -224,6 +225,7 @@ static inline int fc_fcp_lock_pkt(struct fc_fcp_pkt *=
+fsp)
+  * @fsp: The FCP packet to be unlocked and decremented
   */
- int fdls_fip_recv_frame(struct fnic *fnic, void *frame)
-+	__must_hold(&fnic->fnic_lock)
+ static inline void fc_fcp_unlock_pkt(struct fc_fcp_pkt *fsp)
++	__releases(&fsp->scsi_pkt_lock)
  {
- 	struct ethhdr *eth =3D (struct ethhdr *)frame;
- 	struct fip_header *fiph;
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index b00672ef8b00..d1d860275b60 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -944,6 +944,7 @@ void fnic_free_wq_buf(struct vnic_wq *wq, struct vnic=
-_wq_buf *buf)
- void
- fnic_fdls_add_tport(struct fnic_iport_s *iport, struct fnic_tport_s *tpo=
-rt,
- 					unsigned long flags)
-+	__must_hold(&iport->fnic->fnic_lock)
+ 	spin_unlock_bh(&fsp->scsi_pkt_lock);
+ 	fc_fcp_pkt_release(fsp);
+@@ -1242,6 +1244,7 @@ static void fc_fcp_error(struct fc_fcp_pkt *fsp, st=
+ruct fc_frame *fp)
+  * Called to send an abort and then wait for abort completion
+  */
+ static int fc_fcp_pkt_abort(struct fc_fcp_pkt *fsp)
++	__must_hold(&fsp->scsi_pkt_lock)
  {
- 	struct fnic *fnic =3D iport->fnic;
- 	struct fc_rport *rport;
-@@ -983,6 +984,7 @@ fnic_fdls_add_tport(struct fnic_iport_s *iport, struc=
-t fnic_tport_s *tport,
- void
- fnic_fdls_remove_tport(struct fnic_iport_s *iport,
- 					   struct fnic_tport_s *tport, unsigned long flags)
-+	__must_hold(&iport->fnic->fnic_lock)
+ 	int rc =3D FAILED;
+ 	unsigned long ticks_left;
+@@ -1950,6 +1953,7 @@ EXPORT_SYMBOL(fc_queuecommand);
+  * The fcp packet lock must be held when calling.
+  */
+ static void fc_io_compl(struct fc_fcp_pkt *fsp)
++	__must_hold(&fsp->scsi_pkt_lock)
  {
- 	struct fnic *fnic =3D iport->fnic;
- 	struct rport_dd_data_s *rdd_data;
-@@ -1032,6 +1034,8 @@ void fnic_delete_fcp_tports(struct fnic *fnic)
- 	unsigned long flags;
-=20
- 	spin_lock_irqsave(&fnic->fnic_lock, flags);
-+	/* Tell the compiler that fnic->iport.fnic =3D=3D fnic. */
-+	__assume_ctx_lock(&fnic->iport.fnic->fnic_lock);
- 	list_for_each_entry_safe(tport, next, &fnic->iport.tport_list, links) {
- 		FNIC_FCS_DBG(KERN_INFO, fnic,
- 					 "removing fcp rport fcid: 0x%x", tport->fcid);
-@@ -1059,6 +1063,8 @@ void fnic_tport_event_handler(struct work_struct *w=
-ork)
- 	struct fnic_tport_s *tport;
-=20
- 	spin_lock_irqsave(&fnic->fnic_lock, flags);
-+	/* Tell the compiler that fnic->iport.fnic =3D=3D fnic. */
-+	__assume_ctx_lock(&fnic->iport.fnic->fnic_lock);
- 	list_for_each_entry_safe(cur_evt, next, &fnic->tport_event_list, links)=
- {
- 		tport =3D cur_evt->arg1;
- 		switch (cur_evt->event) {
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.=
-c
-index 9607684bc610..afd6bf03b02d 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -2641,6 +2641,8 @@ int fnic_device_reset(struct scsi_cmnd *sc)
- 		 * allocated by mid layer.
- 		 */
- 		mutex_lock(&fnic->sgreset_mutex);
-+		/* Fake __release() to keep the lock context analyzer happy. */
-+		__release(&fnic->sgreset_mutex);
- 		mqtag =3D fnic->fnic_max_tag_id;
- 		new_sc =3D 1;
- 	}  else {
-@@ -2826,6 +2828,8 @@ int fnic_device_reset(struct scsi_cmnd *sc)
-=20
- 	if (new_sc) {
- 		fnic->sgreset_sc =3D NULL;
-+		/* Fake __acquire() to keep the lock context analyzer happy. */
-+		__acquire(&fnic->sgreset_mutex);
- 		mutex_unlock(&fnic->sgreset_mutex);
- 	}
-=20
+ 	struct fc_fcp_internal *si;
+ 	struct scsi_cmnd *sc_cmd;
