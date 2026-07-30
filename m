@@ -1,142 +1,107 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6BAE03911AF;
-	Thu, 30 Jul 2026 22:24:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E4323911AF
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:31:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785450286; cv=none; b=A+62wYvhY67Wj/4E6Mo083+CFHAoYsnaIs7la9lzELwuk3Lqkh8pl/9HkJFeuFlJsEyr74+KswqeqFSfX0aF0PJrr8SO3SKDimFYj4n8qrxiGa9ae9nZiEw2n28DG0HrpQ+NImEQZV91SQIv5mFJpC3AJ78mUhhwccA7Dwj+QsY=
+	t=1785450707; cv=none; b=Zlg7TJ1D875qZAyKQzqgW0wNwHrUxbXU0/xBj0VHVSIQ4AnUgk4/TIWKCEe+mRoGk9eTOGqqFiJRAtKQ3BucMbhrv45LFKKrH2ieuofa4Z58ol5KP701R6xyALFos28HA3sGq/qBngZYTO0E+Xirb+EFxoLIE/qmJ0qaJNfvYOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785450286; c=relaxed/simple;
-	bh=BnYeYCvIYpGQ3W9fmruMxznkg+lLVKqa7Ow2sXgmc+E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gEmYn+4Woxo34H+FM3UqqiAi5asR0e5UmHKpMi0eSWUyf5t2uzkQLR88Xq9QkwlBCkBGWOfhw+S9hYX0eKVk/NDkxDW2bx6QI0LGZzF4rH9nDehZu1TVsdAUzp/3pUsQI2yexqexGp3u6Lr5noxbnKoFx4440qveBdpLm4IDlnM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=mzGXwP2/; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1785450707; c=relaxed/simple;
+	bh=ORt3zsmR4no2vhvSyjiTQsOa7Q0wCrn/yruJ1guQpeU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=O0nO7f7qqOMXcJL+LoCyDa+iI/InELcRtvKgEMpYbnA2pNLbf/0jSv0Ci8+bm/Af3vhn78gy8/hj8/7E2XIUbRs+p6upGBESBHf+H2i2IY7kJ/xALZlLZMfmu1RW6Si/uJdfipt+WzzucNYhs0JpVq2yEWBIJdInw5kjGkiWPZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i1K6AIt2; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="mzGXwP2/"
-Received: by linux.microsoft.com (Postfix, from userid 1216)
-	id B2AD920B7166; Thu, 30 Jul 2026 15:24:25 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com B2AD920B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1785450265;
-	bh=pqRfRnByDDrmG9mYWVTH89ngmj87IUFru7WB45pYJ1c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mzGXwP2/EJNYI5Ns1Yn4bfz1dd3LMSi6jLBf7Ri3GjUlwhBYmOchzbs7DYJ8ENh+C
-	 xS2vqJJZwCJGVWwaESGDAbPn2tpt8gE9T7Mc3AWT3/axxnicmibv35KVO0AP0fx672
-	 TdaPLOQsvytqTSam/TnsmcH0+QcsBodB7ib2Rg98=
-Date: Thu, 30 Jul 2026 18:24:25 -0400
-From: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
-To: mhklinux@outlook.com
-Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
-	decui@microsoft.com, longli@microsoft.com, tglx@kernel.org,
-	mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
-	hpa@zytor.com, daniel.lezcano@kernel.org,
-	ssengar@linux.microsoft.com, maarten.lankhorst@linux.intel.com,
-	mripard@kernel.org, tzimmermann@suse.de, airlied@gmail.com,
-	simona@ffwll.ch, andrew+netdev@lunn.ch, davem@davemloft.net,
-	edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	sgarzare@redhat.com, horms@kernel.org, x86@kernel.org,
-	linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
-	linux-scsi@vger.kernel.org, virtualization@lists.linux.dev
-Subject: Re: [RESEND PATCH 0/6] Remove support for Windows Server 2012/2012R2
- & Win8/Win8.1 versions of Hyper-V
-Message-ID: <amvPGQcEqgzWe+yn@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
-References: <20260730201123.1767-1-mhklinux@outlook.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i1K6AIt2"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-47f752b3423so149825f8f.3
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 15:31:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785450703; x=1786055503; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=PlKOnAY10vVaTbHY589tMDEBcYBV0lZutRarK9tzuxA=;
+        b=i1K6AIt2oGQK1C/1ULu/lCC2bOkU94JwP7UtXA+NAjdK/PRRW5NekSZXbLT3eWsh7H
+         Js42zXn2inUbJdyAv9d0M+QC3zHbp9YX4DeOhg0KWFkWS+/UpSjai0Yu/Krc2RRqLHbv
+         9rjPaErrRTuWC8cEBGa0q9NHYFM4MaATtlCyyuegv+s01pcr4U2j39eVnRSl32THE1Yc
+         675gabmzwMKIDSvWFGd345fJ/WB/pvNtIOQH0shU6jF/8LRJd+Rr2z2vtfxmuXWeKycj
+         enSf7zp5AeGLgAh/9hvAOcj/4Ip4YdtAinxh0M5Y0Cm69wEyUUCl9QF0jGGOlMu7zQrg
+         bvbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785450703; x=1786055503;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=PlKOnAY10vVaTbHY589tMDEBcYBV0lZutRarK9tzuxA=;
+        b=YYFAsx3vCJkCZ+zCHgECsmAbX+fg9bmeCm9nsszKOauiYcHH5tfA3cv298JyVOMKD8
+         bVM2O14fJ8Xb5G8j+yt6Aqbs3GVD0f/xZdFwGsBmt0vyEIocY2tgA5/Nlv4FAKfvqLM4
+         hwt47FYjHGJkZdM5yxt4v1JZfchfiwSC172MVI1nTuNncpTQJSWieojarmYzJ9C+BdMp
+         Tr3QJZU7pWGa4P2b7nzMsviER49VuINwr+NjaifFUABpPwwvTuns+lnYZuXDfRC/gBhj
+         4iZAfdgOP2GU6mSX6WQexKenBEg7R85mHmxZEjMUuHanW5+ZuhkOuwXu1PXgqdvjUBFT
+         xBqw==
+X-Forwarded-Encrypted: i=1; AHgh+Rox1siXWAqH74Zebj2+2y/xWcM/aTU7RsICp/ZvY/rsjVFLewvM/JnSQFSEZrdhdRYA+2ReZ/KUCbif@vger.kernel.org
+X-Gm-Message-State: AOJu0YyePlsT+D4N10flBhRiOg4yHpJrc8alIEvZPxKbIuwDHztTn160
+	+C3FKu1UeRNBTuLHdc8jsUnmUcVFUKQaf+GJCzfKhi3cGpihjQJWwPAB
+X-Gm-Gg: AR+sD11IYjE697uNTf3FhLsZP++h/I2dr+twpblo9G61SMyGB7GQ5uUf2VhwTDDqhSs
+	VCFjbECyqZnxAx7qXxrhoxSYQtwYmSsj03UKPu81tOLHmXTfGkA02pXp53adx3vbxnH1lk9rdNG
+	D7RCKfCDB0xIjCCLuvD4f6vsCNFXgLhnl2uiCD6Zr6/1cWfjYAR0pw3a7bFJoecAw2+wrtGmca9
+	rIdPwhifUCzaMERNXMBaNc5tT5Mjgg/MTERrlZQnjOOqXb1JkUcR+RHpfZSF7gVFcTcIB9UoiOY
+	cGLwP9HpeXlXutLO4uRvJp8OprX+rtvpq7JpdHEo7ZtZZp9Laj/o22G9KoARmUPxd3rEMJAmsXc
+	+v+FcxnHuJieMGt8Ar4S/CNOpXeLmh9UVJGIK7X/MG4FwYAgs3uTJ+mVBIDu2ITCmIlvn7LgWhN
+	ZjoJzaXW6bPomm2g27PIEuYEGVSKKWxhxQwOOZkdNb1uwxx5dg2jaFaduUS88=
+X-Received: by 2002:a05:600c:1f90:b0:497:fecd:5b00 with SMTP id 5b1f17b1804b1-49800e74e48mr58540825e9.9.1785450703407;
+        Thu, 30 Jul 2026 15:31:43 -0700 (PDT)
+Received: from localhost ([5.83.201.220])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49800f1a7f7sm110882175e9.5.2026.07.30.15.31.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Jul 2026 15:31:42 -0700 (PDT)
+From: Colin Ian King <colin.i.king@gmail.com>
+To: Tyrel Datwyler <tyreld@linux.ibm.com>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Christophe Leroy <chleroy@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Cc: kernel-janitors@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH][next] scsi: ibmvfc: Fix spelling mistake "Deleteing" -> "Deleting"
+Date: Thu, 30 Jul 2026 23:29:51 +0100
+Message-ID: <20260730222951.352872-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260730201123.1767-1-mhklinux@outlook.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jul 30, 2026 at 01:11:17PM -0700, Michael Kelley wrote:
-> Linux code for running as a Hyper-V guest includes special cases for
-> running on Hyper-V in WS2012/2012R2 and Windows 8/8.1. These versions
-> were initially released 14 years ago, and official support ended in 2023
-> (unless a customer has contracted for extended security updates). Given
-> the release of subsequent versions with improved functionality, there's
-> no need to continue to support the latest Linux kernels on these versions
-> of Hyper-V. If someone is running Linux on one of these older Hyper-V
-> versions and doesn't want to upgrade, they can continue to do so as
-> presumably they don't want upgrade the Linux version either.
-> 
-> Simplify Linux code by removing special cases for running on these
-> old versions of Hyper-V. This includes removing the negotiation of the
-> VMBus protocol versions for WS2012/Win8, and the special case code based
-> on those VMBus protocol versions. Changes are in the core VMBus code and
-> several drivers for synthetic VMBus devices.
-> 
-> Some VMBus drivers have device-specific protocols with the Hyper-V host.
-> Further simplify the code by removing the use of protocol versions that
-> are specific to WS2012/Win8 and earlier.
-> 
-> Finally, the WS2012/Win8 versions of Hyper-V were the last to use
-> messages to deliver synthetic timer interrupts. Starting in WS2016/Win10,
-> stimer interrupts are delivered to their own assigned interrupt vector
-> (called "Direct Mode"). So remove the code for handling timer interrupts
-> delivered as messages. This removal has a broader benefit in removing
-> a key blocker to disentangling VMBus code (which handles the messages)
-> and stimer code, as they should be independent of each other. The
-> final disentangling will come as a follow-on patch set.
-> 
-> Testing:
-> * VM on local Hyper-V on up-to-date Windows 11
-> * Added temp debug code to suppress Direct Mode enumeration. Fallback
->   to LAPIC timer worked as expected (x86/x64 only)
-> * Azure VM DC16eds v6: TDX CoCo VM with HvLite paravisor
-> * Azure VM DC16ads v6: SEV-SNP VM with an older paravisor
-> * Azure VM D16alds_v7: normal AMD x86 VM with HvLite paravisor
-> * Azure VM D16plds v6: normal ARM64 VM with MSFT Cobalt processor
-> * Not tested running in VTL2
-> 
-> There's no specific urgency to removing the special case code for
-> WS2012/Win8, so if the broader Linux kernel community surfaces
-> a reason why this clean-up should not be done now, we can wait.
-> But I think we want to eventually stop carrying around this extra
-> baggage, and based on discussions with the Hyper-V team within
-> Microsoft, we're past the point that it has any value.
+There is a spelling mistake in a tgt_dbg message. Fix it.
 
-I do feel that this is a nice cleanup overall, however do we really want
-things to break silently if someone does attempt running the latest
-kernel on older hosts? or do we want to include (at the very least) a
-warning message that indicates that things might be broken (and or
-that we don't make any guarantees of future support)?
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> Michael Kelley (6):
->   Drivers: hv: Remove support for WS2012/2012R2 & Win8/8.1 version of
->     Hyper-V
->   hv_sock: Remove check for old Hyper-V hosts
->   hv_netvsc: Remove GPADL teardown special case for old Hyper-V hosts
->   drm_hyperv: Remove support for synth video protocol of old Hyper-V
->     hosts
->   scsi: storvsc: Remove support for storvsc protocol of old Hyper-V
->     hosts
->   clocksource: hyper-v: Remove support for stimer interrupts in message
->     mode
-> 
->  arch/x86/hyperv/hv_init.c                 |  17 +--
->  arch/x86/kernel/cpu/mshyperv.c            |   4 +-
->  drivers/clocksource/hyperv_timer.c        | 150 +++-------------------
->  drivers/gpu/drm/hyperv/hyperv_drm_proto.c |  33 ++---
->  drivers/hv/channel_mgmt.c                 |   4 -
->  drivers/hv/connection.c                   |   8 +-
->  drivers/hv/hv.c                           |   4 -
->  drivers/hv/hv_balloon.c                   |  36 +++---
->  drivers/hv/hv_snapshot.c                  |   5 -
->  drivers/hv/vmbus_drv.c                    |  10 +-
->  drivers/net/hyperv/netvsc.c               |  20 +--
->  drivers/scsi/storvsc_drv.c                |  53 ++------
->  include/clocksource/hyperv_timer.h        |   6 -
->  include/linux/hyperv.h                    |   5 +-
->  net/vmw_vsock/hyperv_transport.c          |   3 -
->  15 files changed, 76 insertions(+), 282 deletions(-)
-> 
-> -- 
-> 2.25.1
-> 
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+index dfa231b6cc47..93b9f699c2e5 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+@@ -6141,7 +6141,7 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
+ 
+ 		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
+ 			if (tgt->action == IBMVFC_TGT_ACTION_DEL_RPORT) {
+-				tgt_dbg(tgt, "Deleteing NVMe rport\n");
++				tgt_dbg(tgt, "Deleting NVMe rport\n");
+ 				nvme_rport = tgt->nvme_remote_port;
+ 				list_del(&tgt->queue);
+ 				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DELETED_RPORT);
+-- 
+2.53.0
+
