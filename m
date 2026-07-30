@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E50F472F82
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:15:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA24E40D57B
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:15:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785453315; cv=none; b=ggkWHatNGe84E3gI13fiT0LuY6Grv3xwQNlN6/h6VLiaWFTMoc0lcmQaL43JhUc4tXtWW/sCc7+BSXmEXyPBp1s66WL42iU54SuchdSIwrBW7ysx5fJsKGHpoDQ6m31zrOyNSyLThTcbO00M6o4SfWXx2RykyXAztIG0IaQGeNI=
+	t=1785453315; cv=none; b=rw0bsWIlQcWGyt5LAPru4U4SOsp2xT4DxHcbyfaKh2vFc1MyXGzM1EJJ8B4QE6pG2XPo4rUfMu4uvMzEelM8ZGllulOWV+LalY4U8X9fmQS8iMDe6B8ytBDhewp8VT/svtaRjUjujhelqe7Y3BeTs76GwWQ7vvfBkQPX/2ntjh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785453315; c=relaxed/simple;
-	bh=CfO+gP6Qg87Okl0P73+dJU8ip2WSxfJUtGCa/MRTLZs=;
+	bh=OUz9hvkS/pM9/HHM5ICb600QoSnRjTDJigR+YWfGLig=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Cmd0xTj+pc1y+WfUlWp4739hinxFVrQ+b9rfO0hNmWjSR736rdZuevaXd/m9T7R9Y3zG+V3G4rGoXqaonNFw44bkVOac2TwCFRklzowGcJoEgN06E5mtn4YUjJeRZZ7Wa30fnFFx9h9Us7hAxtJ13ep+1WjCM7AR0RIKcWovfIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lxaDgW6x; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=OJ6UQTUqo0o+aixXJ7RfQGXxqk2+CtQVemAb90r67KmS9Ifjs3n2HZMAiS25jnVPdyMjhqdLwEgVWJ/uAfMQylGCAJgMM3HHBjkWFCl4pRWkfwRIH7Zp0A94tnCxYq3QXqH+0sJDglAFXAo0EatdUSUPhG5aT0DYSGKEgl9Z+fA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uboa1pfc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lxaDgW6x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9490A1F000E9;
-	Thu, 30 Jul 2026 23:15:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uboa1pfc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51B1E1F00A3A;
+	Thu, 30 Jul 2026 23:15:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785453313;
-	bh=hjFWmJb65VspSZaqz6Mtp8r2W8YUbHd7PTe0vE2ToL0=;
+	s=k20260515; t=1785453314;
+	bh=UTh/asuXOyXVCWZeuIqUDkqU05QBPmVBAFIMG6qkeHw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lxaDgW6xaDQwb/6NUTYN/Yfnd9X1MD/0JpH2l5iSZjWCK2+1W1C1PTK+Img2uYZ0E
-	 SKLC//ynpjwHymYCvWORUJH32pgqJ832brsA6LLF2z5yVyQzEnT6HrmKlc4wCol1ad
-	 8TnOIoujpd5ymGLqBrGwyxhviHU15w+Sw9qXNvDy4ziq86PfYbUu3ouUjWxgKK55iW
-	 3+Ya0LcEffl+1iRydYlZ1/x+OBzzHTZ0dZqowyZF4KTQx5f91c3lJFH3jAovYEajkm
-	 fOR096SfTPY9dhcSdWBXfmDFWv9Cv3LvVtKqqEjqUfMDszy8AROTFSuKWQunbQ0SQm
-	 F5C0lPAFTMwvw==
+	b=Uboa1pfcQIqrn++f8hqk0AuAmGm5u5BVPsJQGLOHpmtzB1PSA3sWK+1rj2wh8kUMA
+	 ZMcw66RjdT5wsg1ffM8py82xNrMZWTY5cofmajLIivkA4F1m4EsYJIDvwA+3/7Dr3/
+	 UacRHCSyw3wIGLooycoFj6kK1yWH0U9Q5bDLJiukL7UHNi8yomLNfQU7r5MaHXPUya
+	 k7rFtGCKGdrbqUkMnA7Br98MDcW3uWt1tIXTgbY5J6ErMC929AolJPWA1oQTBiAXMU
+	 vFrcVN7n9JLIISb4VPgdMfDBaOnvZNb+aVS6hG651GaQEM+18YLiYKPhkmsP1WzLmV
+	 zPRtZc82MRCMQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 40/57] scsi: megaraid: Enable lock context analysis
+Subject: Re: [PATCH v3 31/57] scsi: ipr: Prepare for enabling lock context
+ analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <78e04b1886820daa15ab84e1b322cc19eaa36cca.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <513b03ea01a06dc5eafdc31663497614eed3624e.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <78e04b1886820daa15ab84e1b322cc19eaa36cca.1785451174.git.bvanassche@acm.org>
+ <513b03ea01a06dc5eafdc31663497614eed3624e.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Thu, 30 Jul 2026 23:15:13 +0000
-Message-Id: <20260730231513.9490A1F000E9@smtp.kernel.org>
+Message-Id: <20260730231514.51B1E1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,63 +47,63 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] Incorrect `__must_hold` annotations hide lockless execution path=
-s for `reset_mutex` and defeat lock context analysis.
+
+Pre-existing issues:
+- [High] Command timers are cancelled asynchronously during adapter removal=
+, which can lead to a use-after-free if the timer callback executes concurr=
+ently while the underlying memory is freed.
 --
 
---- Patch [40]: [PATCH v3 40/57] scsi: megaraid: Enable lock context analys=
-is ---
-commit 40d3b019568a4b229e7033f10c3257b3f094d748
+--- Patch [31]: [PATCH v3 31/57] scsi: ipr: Prepare for enabling lock conte=
+xt analysis ---
+commit 2f00fc44ee9f9f3037991b9e96f4f40f0505e35f
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: megaraid: Enable lock context analysis
+scsi: ipr: Prepare for enabling lock context analysis
 
-This commit enables lock context analysis for the megaraid driver by
-setting CONTEXT_ANALYSIS to y in the Makefile.
+Document locking requirements with __must_hold().
 
-> diff --git a/drivers/scsi/megaraid/Makefile b/drivers/scsi/megaraid/Makef=
-ile
-> index 12177e4cae653..9a6976a4dc22b 100644
-> --- a/drivers/scsi/megaraid/Makefile
-> +++ b/drivers/scsi/megaraid/Makefile
-> @@ -1,4 +1,7 @@
->  # SPDX-License-Identifier: GPL-2.0
-> +
-> +CONTEXT_ANALYSIS :=3D y
-> +
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index d207e5e81afe0..51092834876cb 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -1016,6 +1016,7 @@ static void ipr_init_ioadl(struct ipr_cmnd *ipr_cmd=
+, dma_addr_t dma_addr,
+>  static void ipr_send_blocking_cmd(struct ipr_cmnd *ipr_cmd,
+>  				  void (*timeout_func) (struct timer_list *),
+>  				  u32 timeout)
+> +	__must_hold(ipr_cmd->ioa_cfg->host->host_lock)
+>  {
+>  	struct ipr_ioa_cfg *ioa_cfg =3D ipr_cmd->ioa_cfg;
 
-[Severity: Medium]
-Will enabling context analysis here be effective given the current
-annotations on the driver's lifecycle functions?
+[Severity: High]
+This is a pre-existing issue, but can the asynchronous timer cancellation
+during adapter removal lead to a use-after-free?
 
-The megasas_resume() function is annotated as holding the lock:
+In drivers/scsi/ipr.c:ipr_fail_all_ops(), pending command timers are cancel=
+led
+using timer_delete():
 
-drivers/scsi/megaraid/megaraid_sas_base.c:
-    static int __maybe_unused
-    megasas_resume(struct device *dev)
-        __must_hold(&((struct megasas_instance *)dev_get_drvdata(dev))->res=
-et_mutex)
+drivers/scsi/ipr.c:ipr_fail_all_ops() {
+    ...
+    timer_delete(&ipr_cmd->timer);
+    ...
+}
 
-However, the PM core invokes this resume callback without holding
-reset_mutex.
+Since this is non-synchronous, if a timer callback like ipr_timeout() is
+already running on another CPU, it will spin waiting for the lock:
 
-Similarly, during driver probe, megasas_init_adapter_mfi() and
-megasas_init_adapter_fusion() are called via the init_adapter function
-pointer without reset_mutex held, but they are also annotated as
-requiring it:
+ioa_cfg->host->host_lock
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c:
-    static u32
-    megasas_init_adapter_fusion(struct megasas_instance *instance)
-        __must_hold(&instance->reset_mutex)
+Meanwhile, the removal path in __ipr_remove() initiates the bringdown and
+eventually calls ipr_free_all_resources(). This frees the command blocks via
+dma_pool_free() in ipr_free_cmd_blks().
 
-Could these __must_hold annotations suppress valid static analysis
-warnings for these execution paths, defeating the lock context analysis
-being enabled here?
+When the delayed timer callback finally acquires the lock, could it
+dereference the freed ipr_cmd and ioa_cfg structures?
 
->  obj-$(CONFIG_MEGARAID_MM)	+=3D megaraid_mm.o
 [ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D40
+t.bvanassche@acm.org?part=3D31
