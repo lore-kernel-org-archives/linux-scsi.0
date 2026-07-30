@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A109471402
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:15:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E50F472F82
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:15:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785453304; cv=none; b=LlH4VhsO7qnbBmXGTztvsqWdcDrpSwYV4KdPaAavWNl4hWQugW+2mFf8nBtVP73YbYaELAGMYFa3kEH+MMgn+frDHr8yVE17lS/zODVM4F2PQmLC7CabuTYvc6ZYRILNMXuWuhx7Hvogcm5aT7csrin4Kbx3gpor/tjMalGZD78=
+	t=1785453315; cv=none; b=ggkWHatNGe84E3gI13fiT0LuY6Grv3xwQNlN6/h6VLiaWFTMoc0lcmQaL43JhUc4tXtWW/sCc7+BSXmEXyPBp1s66WL42iU54SuchdSIwrBW7ysx5fJsKGHpoDQ6m31zrOyNSyLThTcbO00M6o4SfWXx2RykyXAztIG0IaQGeNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785453304; c=relaxed/simple;
-	bh=gqI2EphiOdXCd84+tL9INPJgEEm9FxB1aVNW7l5Gb3A=;
+	s=arc-20240116; t=1785453315; c=relaxed/simple;
+	bh=CfO+gP6Qg87Okl0P73+dJU8ip2WSxfJUtGCa/MRTLZs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uc4UVJQaLAlHSs6ag58csIwDcWpuSteOtPYKwH8ptoqUurNlXm6MQjiB4BXqb8Ve7lbi/Xo/zHG9lIzyJ/2guJnvYH929b+EwZ9f8K09qzipCxhoxgCeX+Dz4+8+SD+/jL+QO0KKAGpMbAzuW6wTpgPQ6FHdC55y6/iz258iQd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e8eJGbdT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Cmd0xTj+pc1y+WfUlWp4739hinxFVrQ+b9rfO0hNmWjSR736rdZuevaXd/m9T7R9Y3zG+V3G4rGoXqaonNFw44bkVOac2TwCFRklzowGcJoEgN06E5mtn4YUjJeRZZ7Wa30fnFFx9h9Us7hAxtJ13ep+1WjCM7AR0RIKcWovfIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lxaDgW6x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e8eJGbdT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E07251F00A3A;
-	Thu, 30 Jul 2026 23:15:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lxaDgW6x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9490A1F000E9;
+	Thu, 30 Jul 2026 23:15:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785453303;
-	bh=HYA24B0AGkZpQVEOBlXp6PR6nZoF3uhAwnErnKeZFzo=;
+	s=k20260515; t=1785453313;
+	bh=hjFWmJb65VspSZaqz6Mtp8r2W8YUbHd7PTe0vE2ToL0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=e8eJGbdTEUJhwJI+aF2K3jNJQqakvaPTA95FrH6Ovy9aq6XWypGS0DXaSQ+g1fS06
-	 QQTJiwJ7QV9Ovu+t/9a9kDDa2g3nal+UPkBdoW66+gMubPVbikpEGr7WqiD7NP+j5b
-	 hEHMyCeXo5PTJZLkwJtpKXN/QH3IE2B1358n0sSvPLE3RFhT3s3IiKGODi6M88+HUg
-	 JuX0v0MzdGCQfUBL6Pi4ZRXyF3mwtLiMIGupC8Q5AJbBDYp8HSIMbbhBYlKJT5j5Ga
-	 fpR1PbfPPh0NvXP1s/8oA8hMf7gpNV5NPpNHpZxr6v7DCILtfw+DQGaFqfH+UB1HZQ
-	 BYAXMhj7+SqlQ==
+	b=lxaDgW6xaDQwb/6NUTYN/Yfnd9X1MD/0JpH2l5iSZjWCK2+1W1C1PTK+Img2uYZ0E
+	 SKLC//ynpjwHymYCvWORUJH32pgqJ832brsA6LLF2z5yVyQzEnT6HrmKlc4wCol1ad
+	 8TnOIoujpd5ymGLqBrGwyxhviHU15w+Sw9qXNvDy4ziq86PfYbUu3ouUjWxgKK55iW
+	 3+Ya0LcEffl+1iRydYlZ1/x+OBzzHTZ0dZqowyZF4KTQx5f91c3lJFH3jAovYEajkm
+	 fOR096SfTPY9dhcSdWBXfmDFWv9Cv3LvVtKqqEjqUfMDszy8AROTFSuKWQunbQ0SQm
+	 F5C0lPAFTMwvw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 39/57] scsi: megaraid_sas: Prepare for enabling lock
- context analysis
+Subject: Re: [PATCH v3 40/57] scsi: megaraid: Enable lock context analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <5b1efea947bc2923e205d7c920b15b356fc4eeff.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <78e04b1886820daa15ab84e1b322cc19eaa36cca.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <5b1efea947bc2923e205d7c920b15b356fc4eeff.1785451174.git.bvanassche@acm.org>
+ <78e04b1886820daa15ab84e1b322cc19eaa36cca.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:15:02 +0000
-Message-Id: <20260730231502.E07251F00A3A@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 23:15:13 +0000
+Message-Id: <20260730231513.9490A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,96 +46,63 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] Incorrect `__must_hold` annotations misrepresent API contracts a=
-nd mask missing lock acquisitions
+- [Medium] Incorrect `__must_hold` annotations hide lockless execution path=
+s for `reset_mutex` and defeat lock context analysis.
 --
 
---- Patch [39]: [PATCH v3 39/57] scsi: megaraid_sas: Prepare for enabling l=
-ock context analysis ---
-commit e0b92da41c18eebd6dc6b3dd8f685d565a0c3f5f
+--- Patch [40]: [PATCH v3 40/57] scsi: megaraid: Enable lock context analys=
+is ---
+commit 40d3b019568a4b229e7033f10c3257b3f094d748
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: megaraid_sas: Prepare for enabling lock context analysis
-   =20
-This commit prepares the megaraid_sas driver for lock context analysis
-by documenting locking requirements with __must_hold().
+scsi: megaraid: Enable lock context analysis
 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid=
-/megaraid_sas.h
-> index 8ee2bfe475715..67713173793a3 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -2696,15 +2696,18 @@ __le16 get_updated_dev_handle(struct megasas_inst=
-ance *instance,
->  			      struct MR_DRV_RAID_MAP_ALL *drv_map);
->  void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *map,
->  	struct LD_LOAD_BALANCE_INFO *lbInfo);
-> -int megasas_get_ctrl_info(struct megasas_instance *instance);
-> +int megasas_get_ctrl_info(struct megasas_instance *instance)
-> +	__must_hold(&instance->reset_mutex);
+This commit enables lock context analysis for the megaraid driver by
+setting CONTEXT_ANALYSIS to y in the Makefile.
+
+> diff --git a/drivers/scsi/megaraid/Makefile b/drivers/scsi/megaraid/Makef=
+ile
+> index 12177e4cae653..9a6976a4dc22b 100644
+> --- a/drivers/scsi/megaraid/Makefile
+> +++ b/drivers/scsi/megaraid/Makefile
+> @@ -1,4 +1,7 @@
+>  # SPDX-License-Identifier: GPL-2.0
+> +
+> +CONTEXT_ANALYSIS :=3D y
+> +
 
 [Severity: Medium]
-Is this annotation accurate for all callers?
+Will enabling context analysis here be effective given the current
+annotations on the driver's lifecycle functions?
 
-megasas_get_ctrl_info() is called by un-annotated and unprotected paths=20
-like megasas_init_fw(). Adding __must_hold() here implies the caller is=20
-responsible for holding the lock, but the caller doesn't currently acquire=
-=20
-it. Will this cause false positive warnings when lock context analysis is=20
-enabled?
+The megasas_resume() function is annotated as holding the lock:
 
+drivers/scsi/megaraid/megaraid_sas_base.c:
+    static int __maybe_unused
+    megasas_resume(struct device *dev)
+        __must_hold(&((struct megasas_instance *)dev_get_drvdata(dev))->res=
+et_mutex)
+
+However, the PM core invokes this resume callback without holding
+reset_mutex.
+
+Similarly, during driver probe, megasas_init_adapter_mfi() and
+megasas_init_adapter_fusion() are called via the init_adapter function
+pointer without reset_mutex held, but they are also annotated as
+requiring it:
+
+drivers/scsi/megaraid/megaraid_sas_fusion.c:
+    static u32
+    megasas_init_adapter_fusion(struct megasas_instance *instance)
+        __must_hold(&instance->reset_mutex)
+
+Could these __must_hold annotations suppress valid static analysis
+warnings for these execution paths, defeating the lock context analysis
+being enabled here?
+
+>  obj-$(CONFIG_MEGARAID_MM)	+=3D megaraid_mm.o
 [ ... ]
-
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
-araid/megaraid_sas_base.c
-> index ecd365d78ae3c..ccefe5841a17b 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-[ ... ]
-> @@ -7789,6 +7796,7 @@ megasas_suspend(struct device *dev)
->   */
->  static int __maybe_unused
->  megasas_resume(struct device *dev)
-> +	__must_hold(&((struct megasas_instance *)dev_get_drvdata(dev))->reset_m=
-utex)
->  {
->  	int rval;
->  	struct Scsi_Host *host;
-
-[Severity: Medium]
-Does the generic PM core actually hold this driver-private mutex when
-invoking the resume callback?
-
-Since megasas_resume() is used as a device power management callback, its
-callers outside the driver do not know about or hold reset_mutex. Will
-this annotation lead to static analysis errors on the PM core invocation
-path?
-
-[ ... ]
-
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/m=
-egaraid/megaraid_sas_fusion.c
-> index 056cbe50e19ed..a55094a31c829 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -1792,6 +1792,7 @@ static inline void megasas_free_ioc_init_cmd(struct=
- megasas_instance *instance)
->   */
->  static u32
->  megasas_init_adapter_fusion(struct megasas_instance *instance)
-> +	__must_hold(&instance->reset_mutex)
->  {
->  	struct fusion_context *fusion;
->  	u32 scratch_pad_1;
-
-[Severity: Medium]
-Will this annotation trigger analysis errors during adapter initialization?
-
-megasas_init_adapter_fusion() is invoked via the init_adapter function
-pointer in megasas_init_fw(). The caller does not appear to hold reset_mutex
-before invoking the pointer. Should the lock acquisition be added to the=20
-callers, or is this annotation overly strict here?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D39
+t.bvanassche@acm.org?part=3D40
