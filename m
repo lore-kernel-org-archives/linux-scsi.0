@@ -1,77 +1,77 @@
-Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
+Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com [209.85.210.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 128AD39150A
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 19:05:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.161.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9F08489860
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 19:10:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.49
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785438319; cv=pass; b=LB1EqMxJ39niW8ij6pr3FNnRl7AhlPaf6mDbhNMlD19uAAuxL4hdRxbJHfQy0xOGvXOI3aTyin3Ke4Y+0IQH/tts2Last4D2YQ5/AtboeKKkcX8KHu8EzB+fAEbat7Uwm7ulmcgQXlmpVVgdvysU1hYy7TppP0S955cv8LR+Fnk=
+	t=1785438639; cv=pass; b=k1adsIVE3XH+1/+fYYrMMrnpSex6qMt3TsTC51X9roO+dFHjmdn2vJQgvrwK+6kfuiQD3RtrOZ2SPhtyyA1QbjIqJY2RlO1F6NOGMLvsdoYBZcqpNDSW5Ti6EvCPL1M6J/9WS4U+QSWsOnpK40cp1/TykSqw8fWvZn110QWRTeM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785438319; c=relaxed/simple;
-	bh=eFGBeo5M2vVMTKElI8g7E5j0dohkvXYTaUI3ayfq44Y=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=vCuJxc+V8XAXQadNs6H1q+jNajAiNvFD7oiOFI1uRQFSN+cEckdWbsekiGIGMsP+jn9+NdTaelg/MWXiC+EGmsks1v/ZIu/cmd+mY/6DiP8gDzBS1+WdJunUcgPb1xAxLhtRsTFiJn/fMQ5oRFDB1Yrwx2CxZdDAInD4tIxIcA4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cT2AWmQF; arc=pass smtp.client-ip=209.85.161.49
+	s=arc-20240116; t=1785438639; c=relaxed/simple;
+	bh=cpX2cGo5BB1sTYGQcfhrk+kS8DvRxOF3Vcr/SSqm2iQ=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=MSGyi4y2Esq8mqGWPdtXPNiUBKxurPSVvrbygOk9qdJOd9mghLZEuVvfHyqI/cMgxp2wTHBAbtFBBFE5Hi/8KufrpRQXTuBVoC3DiDp4Dl9PmYSpdByYMrKuzR+91Y5+tkjJAzYt+R8Y8M3aJGeLi/Q+r2Ot7/+eLuurqqLCwA4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XBl+jsZP; arc=pass smtp.client-ip=209.85.210.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cT2AWmQF"
-Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-6aaf3f54dbeso25106eaf.2
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 12:05:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785438316; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XBl+jsZP"
+Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-7e9ecb1e13cso225684a34.3
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 12:10:33 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785438631; cv=none;
         d=google.com; s=arc-20260327;
-        b=ZCqndV8hXFghfCl9kEzd30/Cz0AmSHXYx7Frc/IXpZCHYISicRUvPIhnW4Xi/wKqh+
-         uJc5/oK2qtE2OK0iI2BnSgyGbQ+QGbE+RpTtkKyYkDgA+X3uaHYZMgjuk45s6SOxQeRZ
-         4/wRJTKWxEDoiZ7VNH+uc+VWl8ThMC8b8TYgxEL4xojhygWveeb3XZXOHQLjp+uGuqnt
-         jd1ztRuz9Yfdu+efnLtpWRZPX0Jc2HONqbnEHCJvtw3NsXQ+gNZt+crvqNz/iPk2rklP
-         guzsDQd7VV8U6p02x3HC66nSEPt5Pki/6/rYQHKT23wt6CQg8dC5el/huWY8RVnPP/Tu
-         TAcQ==
+        b=owUfgHDg4iYvmNhCac0DXgvdoKRLUk4aqqkKyf1blJ6h49n2sqZiX59YZtwT46fuu6
+         sKqZVy6kagGceeXvRkvIvNchH6yowb5GKP6VR4+it5HI/lDzztVIALN5LI2H5MFvt6VO
+         fOqccT2n3DMbJ8rkJJCWfmcaqF0RPNQmMwLY2Mv2dW8MQRjT/eEMdA1M+daYQKSXJucQ
+         r4RE9l+Cs1BeFWy//eH+d3XxQxFjt343XBV3ksziV5QGe399j6v/EfX/Q3/GoCipGhz/
+         JnjxtdMyudnhMEdHLjzSu1FfqZ/D89cEqlCe+9qTQ7t/OdXMrlvSJ4KKmPXhcbJn/QhX
+         nqJg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=zLUFh7EQPPgKFUnL61rEuCvVzIwhZDs8xuSk2qqo2HA=;
-        fh=4DxivVpieTU2rsW8prpAmnuUhukoEC7l7zFMkMa8QfI=;
-        b=iBxn1SzUeYzrAAMjuvUZNpoj2UJ72gjz8GPStoeSN/IV1flwR1v3VJBvzOfFXcLHiI
-         xrFMO8cEVLECWZnz+bEyPd+FMx8zghpuKhD9BzaMb/zRozAlEy81MVUi7J0g/Q/Pwf6u
-         S6Ceg5aRwAr/5jgVW4iWUGY2BJE89iCoWxt4FoGHIvls/W292K+FF9wN4HW+UjWmK9pL
-         /ieK6cjX4PQyqPiNNf5N/UCK/XFtJef+GS4clXemKWRJX6xd7lKKS3x8/B64OPuimMJb
-         yj0wcol4B9l79upUKAd6AwTmeeYjT6YGSGFTkYjJeC6ZF59ZUTMSm80ACrMPrdX1qAgy
-         iAeQ==;
+        bh=2BVyhfZCPqKgiEmGL2MW4WJuIelMevXbQqNLi/dC+6Q=;
+        fh=nC+J7H8ufIPcrx8kgZKmP2fLs/6/KRVshtcNKt+wvSs=;
+        b=p5X79waQlts3QuZnB8eHYyFQrkRAqcP2HTvUawud2W1s19TDXR7ywaXOD2NnHGaeJZ
+         cy1cToiiTQTBvIIlZhjvFXWRbfVReflvcspOe/x0id+4VLnUYaPD3CL2mlNyc3J+cT8Z
+         +/uDJsizX28SqoCj1vw0CbPVZzO9+GCjwaUlRT7Bqvd/HGuu2vdpuPPgjiSevOksYq1E
+         q7FRr/Wp+Uwtx9iWMc4cipnGsev6vtCha8BqwHYAiwU+EYYRuLZGFAKIH/hPgZPBaW/1
+         hCP62e/5D05bcrA1z7xmh7kVR15EgDYSNgkOMuLnI9sbfKld5UKPlmc8fQh2EIXecpIU
+         49BA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785438316; x=1786043116; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785438631; x=1786043431; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:mime-version:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=zLUFh7EQPPgKFUnL61rEuCvVzIwhZDs8xuSk2qqo2HA=;
-        b=cT2AWmQF04V+RLDvjgc9Mh6uv0KvQ2yyLaxUvw09+9BWYJeNbY4Cy8WnJ1bXNl3Ouv
-         MlfRCjHT3dOutGluSLOIzyp81oGvmiQcgiZk5uLSogkC1vfEyDwaXh65oHc4RrCzLsaX
-         vMU9lcyzcwVPt3Ru7Cl1PQbjVdpFLPLDZVo3ULB/7kssSCmUfM6M6xogbHcwVrCwgVK+
-         LpRYf1pVcHOFhjuXDuAVm7xyCdu5uGUmyyfsL2bdaghCm+UAVfg/aX0kcUT6CbeWfGMp
-         jFZ6DH+S2Fv19oJ48VofcpxBlNZqOioH9zy8FM7kiFXE/gL41V1o398NMSmPlyz2AYIW
-         OqfA==
+        bh=2BVyhfZCPqKgiEmGL2MW4WJuIelMevXbQqNLi/dC+6Q=;
+        b=XBl+jsZPLYNBEM+9mkJGiUF0Op+is3ZIRu/FOGIbm3UwCAztXHK9mE1QHwY8xKzdGP
+         0qKms0QY8Wv3QBTbC7gn1iInnSSXwjYgp7xDXuvlFb+G/JX0p729O+A0s7SnRIBj2Pj7
+         4w/CmTl3XfSJbG6Qc9VFMgJokmkn6Wi11djctKJTwS5wKeZj3Av2yn7dQDQjXn9wnE8p
+         k7muABv5XfPX9RGrhjkSemE+KVIMNIiLmeDiQFUOaCHVi1irlzY05kZB3ghSzyqOwAk3
+         Xs/kxyx5SH79Z2AJPZu9137woMf6x6o70nqlPvDJSYZTePkND2PB34QmIQ5AWBJJzMjF
+         fk3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785438316; x=1786043116;
+        d=1e100.net; s=20251104; t=1785438631; x=1786043431;
         h=content-type:cc:to:subject:message-id:date:from:mime-version
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to:content-type;
-        bh=zLUFh7EQPPgKFUnL61rEuCvVzIwhZDs8xuSk2qqo2HA=;
-        b=lTRMQhoAq/k5QThD8eb7+L2whhfnjZw2pHhN9cfIBsClQ/lwa+QVrCFpvWD5yF9Z2B
-         GN1lY7qZ6TU7fCTca05N2NRUD6qxRsROm08zQHshhWaBKZnqASLw7qVTw+/vJX8fTnYm
-         v7ATnqdZupjEA4ovM4Zhv42ihUMjO1zMJdmIQlZGQOn1PminbZXsw6dAHVaySvr0+P73
-         MrjuCk+hq7TYSjKQl4bKr/9L9bzxkvogbTFocdA3aDvHozciBZACDgAoWlkeWtkBpiD9
-         ScCZ+wvlVNdKHJjSme/2IkwOyrsExHw9gWnsIHJaJYoIFpGdOkdY4Bko2AkaWDEsDIXF
-         GwQQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoZiEgJbz7DPix9C0pmBSw8yxo07RsI7qrOjyrSVC1yVHNT57FoCSHLMOZMjIi3absLdkv0Ool0jszA@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywd8qrL/vnMq1T6iIyDdsfK0Wil5VhesH1paJlP9G3ChV2A0VTi
-	Dc82/HFi0VEvdJXjCrmLJWaD70oXDUHFFd2xXJrcaoNkDaV5vHIEo/preOt91mYsxpuxcJR56rR
-	RmuTQinokaxmDijlwmWOf8BBgAFwKc60=
-X-Gm-Gg: AR+sD11Vu2+XLmKQg9gDv4UIKVVv982qpQXwbASLewmS9SGhg6Vaa29+7ZTDgM5W9Mi
-	Vo0w+Y37UNTS4/p0frF3zMYSM7TcZWEKa8eeC01hxVVZZdieRZ4SeK7yscESIhJOUEsNwu3hqUC
-	dZXN3mzzYrj7Rc8pvjMo0kYb94LpYdqkJdRHHM1wGZBuLcjIHQgR7HS/xnLdQaE6Je+B2D5q/WX
-	ovTNxfdVypbJ7zJ/MSCAi5P114CGnQPx2/lTRyZ0lWsbzXlrv4UIwYy9mT613aWrrfVAaskLFHH
-	eCunTvIlo+M9Aq6cmmPGIU3uncaIX5FMEcXuV98Ax+uocw==
-X-Received: by 2002:a05:6820:809:b0:6ac:b5df:ec84 with SMTP id
- 006d021491bc7-6acbc114e96mr2329830eaf.71.1785438315748; Thu, 30 Jul 2026
- 12:05:15 -0700 (PDT)
+        bh=2BVyhfZCPqKgiEmGL2MW4WJuIelMevXbQqNLi/dC+6Q=;
+        b=Z/s8VGTUK+d64mWhimH0ek6NJvP/7o8wYlNQ73ES1e6lhfum0EKVMBhdNxaz0Kex7z
+         sRRuzokem829hYRbCzXrZ8LVfjRe25VE/o02h/Jbmgo3CswRcwgwFd5FWejbMhkGonPD
+         dguK+DwCQATYisYAF326eBdgxT/ElgHRZYkyT/F7SMOWm2PouknquKkxOAj9ia04/5CT
+         51ilOsIr1Y0csnE3lwKfI7IjADGB6GQ+97DzR1ekUBh6XUBe0+j5W+2FpqnChXn/yViM
+         KsNj2UJ0cyOoowRPqQ5JIzQF/IDh4yp8SHOUgr4yr/EYF36d05pS6wB5dPuyImfzR8UX
+         trew==
+X-Forwarded-Encrypted: i=1; AHgh+RqSieBPZa8VMaHaVcSIxyYJ3RAeZ5OsZNNNM814hDsMXWYRMDOEWbRqe0x4Qt+KHLoThf05GSJXBQsq@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyg0ne8OyNtU2HuS5T2gNYBeL0p/D87wTNs0XKH7x1KXR4I9d2A
+	C9swWTN8/p+YtFxp1pgVEEe9P8r+ki+KwQuouo5ilYF0bV8jEb5DV/SbzfeiGj2gG6SHc+fjpZg
+	8+d7VqeYD/ugc1ZhwF//6R5KMvJqkHIE=
+X-Gm-Gg: AR+sD11OGNMuLHZyrhT+pz9cwZ8dHwNkPbMl4bCIPwUItu6jvCJbERwaLto1eceldmw
+	gwFhsPYA9pvute+QeLeSqhUYIlqQqaFKC0nzIK4pJcuN0SBtcfGVaoQ+svDGEJ0xbij/90Dk5aJ
+	8xcyW9AdROIvHFVPy5sWpo8I+EPntHX46uK8kJWEngP8BoCCEcNm5XSVcaAs3Ph3zi7kllGXzI9
+	VPn7pd/mPMw9OUDaP/LnYn7Q4WdCr/7Ydl3SY8qke7XZBe2mcw+hKXMqh2XxK+eFfyi34EDjBBZ
+	Wc6nvtj0Xuzo3cx+vZvsOzK/JCO9QIW1uSAVsVfxYwVFTw==
+X-Received: by 2002:a05:6820:f00f:b0:6ac:9729:6710 with SMTP id
+ 006d021491bc7-6acbbdab240mr2546801eaf.18.1785438631450; Thu, 30 Jul 2026
+ 12:10:31 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -79,378 +79,240 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 From: =?UTF-8?B?0JjQu9GM0Y8g0KXQvtC80Y/QutC+0LI=?= <khomyakovilya@gmail.com>
-Date: Thu, 30 Jul 2026 22:05:04 +0300
-X-Gm-Features: AUfX_mwLzVlOULCBZpVHvz_aZSNCd2ykvQvK4cJH4zmtg9y0FtsVjdAqJCZqCuA
-Message-ID: <CABrBgxezQ=e0EOZ8L908wQbmKfJhgtL8CRL2c0py36Q1OSza9A@mail.gmail.com>
-Subject: [BUG] scsi: mpi3mr: logical SAS link rate is exported as physical negotiated_linkrate
+Date: Thu, 30 Jul 2026 22:10:20 +0300
+X-Gm-Features: AUfX_mwFqsuyMDaIPrXy21LzRigR91qocCZZqGaXY7gNeuWsUAhLY73tmw-45dw
+Message-ID: <CABrBgxcLx4Pr1LP2c95E0SvwWTH+gcrrEhRyvCYtj7KM9Z=1cw@mail.gmail.com>
+Subject: [BUG][UBSAN] scsi: mpi3mr: 32-bit shift and ffs() are used with a u64
+ SAS PHY mask
 To: mpi3mr-linuxdrv.pdl@broadcom.com
 Cc: sathya.prakash@broadcom.com, kashyap.desai@broadcom.com, 
 	sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com, 
 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary="0000000000009463620657d8c0dd"
+Content-Type: multipart/mixed; boundary="000000000000658d440657d8d3ab"
 
---0000000000009463620657d8c0dd
+--000000000000658d440657d8d3ab
 Content-Type: text/plain; charset="UTF-8"
 
-Hello.
+Hello,
 
-I would like to report an incorrect SAS PHY link-rate value exported by
-the mpi3mr driver through the Linux SAS transport class.
+I would like to report a reproducible undefined shift in the mpi3mr SAS
+transport code when an expander has PHY identifiers greater than 31.
 
 Test configuration
 ------------------
 
-Controller under test:
   Broadcom eHBA 9600-16e
   ASIC: SAS4016 B0
-  PCI address: 0000:32:00.0
   Driver: mpi3mr 8.17.1.0.0
   Firmware: 8.17.1.0-00000-00001
   Mode: Perf-IT SAS Only
 
-Reference controller:
-  Broadcom 9500
-  ASIC: SAS3816 A0
-  PCI address: 0000:ca:00.0
-  Driver: mpt3sas 57.00.00.00
-  Firmware: 38.00.00.00
+The attached Microchip expander has 46 PHYs.
 
-Both controllers are connected to the same Microchip SXP 42x24G
-expander.
+Observed UBSAN report
+---------------------
 
-Observed result
----------------
+The driver reports:
 
-For the same local expander PHYs:
+  host_add: ... phys(39)
+  expander_add: ... phys(46)
 
-PHY    mpt3sas sysfs    mpi3mr sysfs    expander-side EOM
-17       22.5 Gbit/s      1.5 Gbit/s       22.5 Gbit/s
-18       12.0 Gbit/s      1.5 Gbit/s       12.0 Gbit/s
-19       12.0 Gbit/s      1.5 Gbit/s       12.0 Gbit/s
-24       22.5 Gbit/s      1.5 Gbit/s       22.5 Gbit/s
-25       22.5 Gbit/s      1.5 Gbit/s       22.5 Gbit/s
-26       22.5 Gbit/s      1.5 Gbit/s       22.5 Gbit/s
-27       22.5 Gbit/s      1.5 Gbit/s       22.5 Gbit/s
-28       12.0 Gbit/s      1.5 Gbit/s       12.0 Gbit/s
+During topology discovery UBSAN reports:
 
-The value is read from:
+  UBSAN: shift-out-of-bounds in mpi3mr_transport.c:1095:31
+  Workqueue: mpi3mr0_fwevt_wrkr
+  mpi3mr_sas_port_add
+  mpi3mr_update_links
+  mpi3mr_report_tgtdev_to_sas_transport
 
-  /sys/class/sas_phy/phy-*/negotiated_linkrate
+Relevant source pattern
+-----------------------
 
-The mpt3sas value agrees with the independent physical-rate
-measurement on the expander side.
+struct mpi3mr_sas_port contains:
 
-Source-code analysis
---------------------
+  u64 phy_mask;
 
-The MPI3 negotiated_link_rate byte contains:
+but the mask is modified using expressions equivalent to:
 
-  bits 7:4 - logical negotiated rate
-  bits 3:0 - physical negotiated rate
+  phy_mask |= 1 << phy_id;
+  phy_mask &= ~(1 << phy_id);
 
-mpi3mr populates sas_phy->negotiated_linkrate using:
+The literal 1 has type signed int, so the shift is performed in a
+32-bit signed type before assignment to u64. PHY identifiers greater
+than or equal to 31 can therefore invoke undefined behavior.
 
-  MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK
-  MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT
+The code also uses:
 
-mpt3sas populates the equivalent SAS transport field using the
-physical low nibble:
+  lowest_phy = ffs(phy_mask) - 1;
 
-  MPI2_SAS_NEG_LINK_RATE_MASK_PHYSICAL
+ffs() takes an int and therefore discards the upper 32 bits of the u64
+mask. A port containing only PHY identifiers above 31 can produce an
+incorrect lowest_phy value.
 
-Linux sas_phy->negotiated_linkrate describes a physical PHY, so it
-appears that mpi3mr should use the MPI3 physical low nibble in all
-initial-discovery, refresh and link-update paths.
+Expected correction
+-------------------
+
+The mask operation should use a 64-bit value, for example BIT_ULL(),
+with a bounds check for the PHY identifier.
+
+The lowest set bit should be obtained using a 64-bit operation such as
+__ffs64(), with explicit handling of an empty mask.
 
 Impact
 ------
 
-The incorrect value causes false 1.5 Gbit/s downshift reports in sysfs,
-sasutils, monitoring and hardware-validation software, while the
-physical links continue operating at 12 or 22.5 Gbit/s.
+This can affect:
 
-Please confirm whether this is a driver defect and whether the physical
-low nibble should be used for sas_phy->negotiated_linkrate.
+  - PHY membership in a SAS wide port;
+  - add/remove handling for PHY identifiers above 31;
+  - lowest-PHY selection;
+  - topology refresh and hotplug;
+  - behavior after controller or link reset.
 
-Example with two 9500 and 9600 controllers connected to one expander:
-sg_map -x -i
-/dev/sg0  8 0 0 0  0  /dev/sda  ATA       Samsung SSD 860   4B6Q
-/dev/sg1  16 0 0 0  13  Adaptec   Smart Adapter     8.23
-/dev/sg2  16 2 0 0  12  Adaptec   1100-8e           8.23
-/dev/sg3  15 0 0 0  0  /dev/sdb  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg4  15 0 1 0  0  /dev/sdc  HGST      HUH721212AL4204   C3F0
-/dev/sg5  15 0 2 0  0  /dev/sdd  HGST      HUH721212AL4204   C3F0
-/dev/sg6  15 0 3 0  0  /dev/sde  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg7  15 0 4 0  0  /dev/sdf  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg8  15 0 5 0  0  /dev/sdg  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg9  15 0 6 0  0  /dev/sdh  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg10  15 0 7 0  0  /dev/sdi HGST     HUH721212AL4204   C3D0
-/dev/sg11  15 0 8 0  13          SXP 42x24G        RevB  (from 9500)
-/dev/sg12  0 0 0 0  0  /dev/sdj  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg13  0 0 1 0  0  /dev/sdk  HGST      HUH721212AL4204   C3F0
-/dev/sg14  0 0 2 0  0  /dev/sdl  HGST      HUH721212AL4204   C3F0
-/dev/sg15  0 0 3 0  0  /dev/sdm  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg16  0 0 4 0  0  /dev/sdn  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg17  0 0 5 0  0  /dev/sdo  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg18  0 0 6 0  0  /dev/sdp  SAMSUNG   MZILG3T8HCLS/A07  GXG3
-/dev/sg19  0 0 7 0  0  /dev/sdq  HGST      HUH721212AL4204   C3D0
-/dev/sg20  0 0 8 0  13           SXP 42x24G        RevB (from 9600)
+Please confirm whether this is a known issue. I can test a proposed
+patch on the same 46-PHY expander.
 
-From 9600-16e:
-./microchip_page84_probe_v3.py phys --device /dev/sg20
-SXP PM8xxx local PHYs for /dev/sg20
-PHY  Link   Negotiated              Invalid         Disp     LossSync
-      Reset
-------------------------------------------------------------------------------------------
-  0  UP     22.5 Gbit                     0            0            3
-          0
-  1  UP     22.5 Gbit                     0            0            3
-          0
-  2  UP     22.5 Gbit                     0            0            3
-          0
-  3  UP     22.5 Gbit                     0            0            3
-          0
-  4  DOWN   Unknown                0            0            0            0
-  5  DOWN   Unknown                0            0            0            0
-  6  DOWN   Unknown                0            0            0            0
-  7  DOWN   Unknown                0            0            0            0
-  8  DOWN   Unknown                0            0            0            0
-  9  DOWN   Unknown                0            0            0            0
- 10  DOWN   Unknown               0            0            0            0
- 11  DOWN   Unknown               0            0            0            0
- 12  UP     12.0 Gbit                   827          767       4            0
- 13  UP     12.0 Gbit                    22           22         4            0
- 14  UP     12.0 Gbit                  1930         1883     5            0
- 15  UP     12.0 Gbit                   386          386       5            0
- 16  DOWN   Unknown               0            0            0            0
- 17  UP     1.5 Gbit                      0            0            0
-          0
- 18  UP     1.5 Gbit                      0            0            0
-          0
- 19  UP     1.5 Gbit                      0            0            0
-          0
- 20  DOWN   Unknown               0            0            0            0
- 21  DOWN   Unknown               0            0            0            0
- 22  DOWN   Unknown               0            0            0            0
- 23  DOWN   Unknown               0            0            0            0
- 24  UP     1.5 Gbit                    325          324        1            0
- 25  UP     1.5 Gbit                      0            0            0
-          0
- 26  UP     1.5 Gbit                      0            0            0
-          0
- 27  UP     1.5 Gbit                      0            0            0
-          0
- 28  UP     1.5 Gbit                      0            0            0
-          0
- 29  DOWN   Unknown               0            0            0            0
- 30  DOWN   Unknown               0            0            0            0
- 31  DOWN   Unknown               0            0            0            0
- 32  DOWN   Phy disabled         0            0            0            0
- 33  DOWN   Phy disabled         0            0            0            0
- 34  DOWN   Phy disabled         0            0            0            0
- 35  DOWN   Phy disabled         0            0            0            0
- 36  DOWN   Phy disabled         0            0            0            0
- 37  DOWN   Phy disabled         0            0            0            0
- 38  DOWN   Phy disabled         0            0            0            0
- 39  DOWN   Phy disabled         0            0            0            0
- 40  DOWN   Phy disabled         0            0            0            0
- 41  DOWN   Phy disabled         0            0            0            0
-.
-From 9500-16e
-./microchip_page84_probe_v3.py phys --device /dev/sg11
-SXP PM8xxx local PHYs for /dev/sg11
-PHY  Link   Negotiated              Invalid         Disp     LossSync
-      Reset
-------------------------------------------------------------------------------------------
-  0  UP     22.5 Gbit                     0            0            3
-          0
-  1  UP     22.5 Gbit                     0            0            3
-          0
-  2  UP     22.5 Gbit                     0            0            3
-          0
-  3  UP     22.5 Gbit                     0            0            3
-          0
-  4  DOWN   Unknown                0            0            0            0
-  5  DOWN   Unknown                0            0            0            0
-  6  DOWN   Unknown                0            0            0            0
-  7  DOWN   Unknown                0            0            0            0
-  8  DOWN   Unknown                0            0            0            0
-  9  DOWN   Unknown                0            0            0            0
- 10  DOWN   Unknown               0            0            0            0
- 11  DOWN   Unknown               0            0            0            0
- 12  UP     12.0 Gbit                   827          767       4            0
- 13  UP     12.0 Gbit                    22           22         4            0
- 14  UP     12.0 Gbit                  1930         1883     5            0
- 15  UP     12.0 Gbit                   386          386       5            0
- 16  DOWN   Unknown                0            0            0            0
- 17  UP     22.5 Gbit                     0            0            0
-          0
- 18  UP     12.0 Gbit                     0            0            0
-          0
- 19  UP     12.0 Gbit                     0            0            0
-          0
- 20  DOWN   Unknown                0            0            0            0
- 21  DOWN   Unknown                0            0            0            0
- 22  DOWN   Unknown                0            0            0            0
- 23  DOWN   Unknown                0            0            0            0
- 24  UP     12.0 Gbit                   325          324        1            0
- 25  UP     12.0 Gbit                     0            0            0
-          0
- 26  UP     12.0 Gbit                     0            0            0
-          0
- 27  UP     12.0 Gbit                     0            0            0
-          0
- 28  UP     12.0 Gbit                     0            0            0
-          0
- 29  DOWN   Unknown                0            0            0            0
- 30  DOWN   Unknown                0            0            0            0
- 31  DOWN   Unknown                0            0            0            0
- 32  DOWN   Phy disabled          0            0            0            0
- 33  DOWN   Phy disabled          0            0            0            0
- 34  DOWN   Phy disabled          0            0            0            0
- 35  DOWN   Phy disabled          0            0            0            0
- 36  DOWN   Phy disabled          0            0            0            0
- 37  DOWN   Phy disabled          0            0            0            0
- 38  DOWN   Phy disabled          0            0            0            0
- 39  DOWN   Phy disabled          0            0            0            0
- 40  DOWN   Phy disabled          0            0            0            0
- 41  DOWN   Phy disabled          0            0            0            0
-
+Example.
+Driver messages during boot (UBSAN text)
+[   23.287438] Loading mpi3mr version 8.17.1.0.0
+[   23.287877] mpi3mr 0000:32:00.0: PCI device is: mpi3mr0
+[   23.287885] mpi3mr0: host protection capabilities enabled  DIF1 DIF2 DIF3
+[   23.288281] mpi3mr0: iomem(0x000022ffffe00000),
+mapped(0x000000009882f41c), size(16384)
+[   23.288289] mpi3mr0: number of MSI-X vectors found in capabilities:128
+[   23.288295] mpi3mr0: ioc_status(0x00000001),
+ioc_config(0x00470001), ioc_info(0x00000000ff000000) at the bringup
+[   23.288300] mpi3mr0: ready timeout: 510 seconds
+[   23.288304] mpi3mr0: controller is in ready state during detection
+[   23.288308] mpi3mr0: issuing message unit reset (MUR) to bring to reset state
+[   23.288311] mpi3mr0: issuing message unit reset(MUR)
+[   23.396057] mpi3mr0: ioc_status/ioc_config after successful message
+unit reset is (0x00000010)/(0x00470000)
+[   23.396102] mpi3mr0: bringing controller to ready state
+[   24.436128] mpi3mr0: successfully transitioned to ready state
+[   24.436687] mpi3mr0: ioc_num(0), max_op_req_queues (127),
+max_op_reply_queues(127), max_requests(8192), max_msix_vectors(128)
+[   24.436696] mpi3mr0: max_device_handles(1374),
+min_device_handles(1), max_perst_ids(2048)
+[   24.436700] mpi3mr0: sge_modifier_mask(0x80),
+sge_modifier_value(0x80), sge_modifier_shift(0x18)
+[   24.436704] mpi3mr0: dma_mask(63),
+initial_port_enable_status(0x20), max_data_len (8388608)
+[   24.436709] mpi3mr0: diag_trace_size(32KB), diag_fw_size(256KB),
+diag_drvr_size(0KB)
+[   24.436714] mpi3mr0: max_dev_per_throttle_group(0),
+max_throttle_groups(0), io_throttle_data_len(0KiB),
+io_throttle_high(0MiB), io_throttle_low(0MiB)
+[   24.436728] mpi3mr0: changing DMA mask from 0xFFFFFFFFFFFFFFFF to
+0x7FFFFFFFFFFFFFFF
+[   24.436797] mpi3mr0: running in Enhanced HBA Personality
+[   24.436801] mpi3mr0: firmware version(8.17.1.0-00000-00001)
+[   24.436809] mpi3mr0: Protocol=(Initiator), Capabilities=()
+[   24.477142] mpi3mr0: reply buf pool(0x000000003884b1f3):
+depth(8224), frame_size(128), pool_size(1028 kB),
+reply_dma(0xff000000)
+[   24.477150] mpi3mr0: reply_free_q pool(0x00000000525cd9ca):
+depth(8225), frame_size(8), pool_size(64 kB), reply_dma(0xfefe0000)
+[   24.477153] mpi3mr0: sense_buf pool(0x000000003b3652c5):
+depth(2730), frame_size(256), pool_size(682 kB), sense_dma(0xfef00000)
+[   24.477156] mpi3mr0: sense_buf_q pool(0x000000009f325940):
+depth(2731), frame_size(8), pool_size(21 kB), sense_dma(0xfedf8000)
+[   24.479434] mpi3mr0: firmware package version(8.17.1.0.00000-00002)
+[   24.479552] mpi3mr0: MSI-X vectors supported: 128, no of cores: 112,
+[   24.479553] mpi3mr0: MSI-x vectors requested: 113 poll_queues 0
+[   24.490668] mpi3mr0: trying to create 112 operational queue pairs
+[   24.490678] mpi3mr0: allocating operational queues through segmented queues
+[   24.545288] mpi3mr0: successfully created 112 operational queue
+pairs(default/polled) queue = (112/0)
+[   24.545888] mpi3mr0: driver diag buffer level = minidump.
+[   24.546126] mpi3mr0: driver diag buffer of size 516KB posted successfully
+[   24.546131] mpi3mr0: controller initialization completed successfully
+[   24.549355] mpi3mr0: scan started, issuing port enable
+[   24.554160] mpi3mr0: hba_port entry: 0000000055e172b5, port: 0 is
+added to hba_port list
+[   24.554757] UBSAN: array-index-out-of-bounds in mpi3mr_transport.c:3180:32
+[   24.554787] Workqueue: mpi3mr0_fwevt_wrkr mpi3mr_fwevt_worker [mpi3mr]
+[   24.554868]  mpi3mr_sas_host_add+0x88b/0x8c0 [mpi3mr]
+[   24.554908]  mpi3mr_fwevt_worker+0xd68/0x1440 [mpi3mr]
+[   24.555305] UBSAN: array-index-out-of-bounds in mpi3mr_transport.c:3200:38
+[   24.555326] Workqueue: mpi3mr0_fwevt_wrkr mpi3mr_fwevt_worker [mpi3mr]
+[   24.555371]  mpi3mr_sas_host_add+0x89f/0x8c0 [mpi3mr]
+[   24.555397]  mpi3mr_fwevt_worker+0xd68/0x1440 [mpi3mr]
+[   24.559698] mpi3mr0: hba_port entry: 000000001c5af7ef, port: 8 is
+added to hba_port list
+[   24.561124] mpi3mr0: port enable is successfully completed
+[   24.563737] mpi3mr0: hba_port entry: 000000001d363a53, port: 255 is
+added to hba_port list
+[   24.569591] mpi3mr0: host_add: handle(0x053f),
+sas_addr(0x500062b220ee9500), phys(39)
+[   24.570316] mpi3mr0: expander_add: handle(0x0001), parent(0x053f),
+sas_addr(0x500e004aabcd337f), phys(46)
+[   24.571125]  expander-0:0: mpi3mr_sas_port_add: added:
+handle(0x0001), sas_address(0x500e004aabcd337f)
+[   24.602087] UBSAN: array-index-out-of-bounds in mpi3mr_transport.c:3078:32
+[   24.602118] Workqueue: mpi3mr0_fwevt_wrkr mpi3mr_fwevt_worker [mpi3mr]
+[   24.602179]  mpi3mr_sas_host_refresh+0x35a/0x3e0 [mpi3mr]
+[   24.602206]  mpi3mr_report_tgtdev_to_sas_transport+0x69/0x3e0 [mpi3mr]
+[   24.602228]  mpi3mr_report_tgtdev_to_host.isra.0+0x1dc/0x250 [mpi3mr]
+[   24.602246]  mpi3mr_fwevt_worker+0x7b2/0x1440 [mpi3mr]
+[   24.602366] UBSAN: array-index-out-of-bounds in mpi3mr_transport.c:3083:32
+[   24.602389] Workqueue: mpi3mr0_fwevt_wrkr mpi3mr_fwevt_worker [mpi3mr]
+[   24.602430]  mpi3mr_sas_host_refresh+0x3b9/0x3e0 [mpi3mr]
+[   24.602448]  mpi3mr_report_tgtdev_to_sas_transport+0x69/0x3e0 [mpi3mr]
+[   24.602468]  mpi3mr_report_tgtdev_to_host.isra.0+0x1dc/0x250 [mpi3mr]
+[   24.602485]  mpi3mr_fwevt_worker+0x7b2/0x1440 [mpi3mr]
+[   24.602593] UBSAN: array-index-out-of-bounds in mpi3mr_transport.c:3087:38
+[   24.602611] Workqueue: mpi3mr0_fwevt_wrkr mpi3mr_fwevt_worker [mpi3mr]
+[   24.602649]  mpi3mr_sas_host_refresh+0x3a0/0x3e0 [mpi3mr]
+[   24.602668]  mpi3mr_report_tgtdev_to_sas_transport+0x69/0x3e0 [mpi3mr]
+[   24.602687]  mpi3mr_report_tgtdev_to_host.isra.0+0x1dc/0x250 [mpi3mr]
+[   24.602705]  mpi3mr_fwevt_worker+0x7b2/0x1440 [mpi3mr]
+[   24.602812] UBSAN: array-index-out-of-bounds in mpi3mr_transport.c:3105:21
+[   24.602827] Workqueue: mpi3mr0_fwevt_wrkr mpi3mr_fwevt_worker [mpi3mr]
+[   24.602865]  mpi3mr_sas_host_refresh+0x37a/0x3e0 [mpi3mr]
+[   24.602883]  mpi3mr_report_tgtdev_to_sas_transport+0x69/0x3e0 [mpi3mr]
+[   24.602902]  mpi3mr_report_tgtdev_to_host.isra.0+0x1dc/0x250 [mpi3mr]
+[   24.602918]  mpi3mr_fwevt_worker+0x7b2/0x1440 [mpi3mr]
+[   24.610155]  end_device-0:0:0: mpi3mr_sas_port_add: added:
+handle(0x0002), sas_address(0x5002538073479162)
+[   24.616418]  end_device-0:0:1: mpi3mr_sas_port_add: added:
+handle(0x0003), sas_address(0x5000cca2708a13c1)
+[   24.623135]  end_device-0:0:2: mpi3mr_sas_port_add: added:
+handle(0x0004), sas_address(0x5000cca2530eb471)
+[   24.630940]  end_device-0:0:3: mpi3mr_sas_port_add: added:
+handle(0x0005), sas_address(0x5002538073479292)
+[   24.638042]  end_device-0:0:4: mpi3mr_sas_port_add: added:
+handle(0x0006), sas_address(0x5002538073479072)
+[   24.645612]  end_device-0:0:5: mpi3mr_sas_port_add: added:
+handle(0x0007), sas_address(0x5002538073479012)
+[   24.652827]  end_device-0:0:6: mpi3mr_sas_port_add: added:
+handle(0x0008), sas_address(0x500253807347d062)
+[   24.658932]  end_device-0:0:7: mpi3mr_sas_port_add: added:
+handle(0x0009), sas_address(0x5000cca2530ca4cd)
+[   24.661187] UBSAN: shift-out-of-bounds in mpi3mr_transport.c:1095:31
+[   24.661197] Workqueue: mpi3mr0_fwevt_wrkr mpi3mr_fwevt_worker [mpi3mr]
+[   24.661220]  mpi3mr_sas_port_add.cold+0x4c/0x64 [mpi3mr]
+[   24.661227]  ? mpi3mr_set_identify+0x8a/0x200 [mpi3mr]
+[   24.661234]  ? mpi3mr_update_links+0x143/0x240 [mpi3mr]
+[   24.661241]  mpi3mr_report_tgtdev_to_sas_transport+0x1c7/0x3e0 [mpi3mr]
+[   24.661247]  mpi3mr_report_tgtdev_to_host.isra.0+0x1dc/0x250 [mpi3mr]
+[   24.661252]  mpi3mr_fwevt_worker+0x7b2/0x1440 [mpi3mr]
+[   24.668188]  end_device-0:0:8: mpi3mr_sas_port_add: added:
+handle(0x000a), sas_address(0x500e004aabcd337e)
 
 Regards,
 
 Ilya Khomyakov
 khomyakovilya@gmail.com
 
---0000000000009463620657d8c0dd
-Content-Type: application/octet-stream; 
-	name="0001-scsi-mpi3mr-report-the-physical-SAS-PHY-link-rate.patch"
-Content-Disposition: attachment; 
-	filename="0001-scsi-mpi3mr-report-the-physical-SAS-PHY-link-rate.patch"
-Content-Transfer-Encoding: base64
-Content-ID: <f_ms7uri9r0>
-X-Attachment-Id: f_ms7uri9r0
-
-RnJvbSA1YTIzN2MyMmQzMDMzZjlmM2U4YmUwZmM5Zjk4NGJkMzM3MTRkNzQxIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBJbHlhIEtob215YWtvdiBraG9teWFrb3ZpbHlhQGdtYWlsLmNv
-bQpEYXRlOiBUaHUsIDMwIEp1bCAyMDI2IDE1OjQwOjQ5ICswMDAwClN1YmplY3Q6IFtQQVRDSCAx
-LzJdIHNjc2k6IG1waTNtcjogcmVwb3J0IHRoZSBwaHlzaWNhbCBTQVMgUEhZIGxpbmsgcmF0ZQoK
-TVBJMyBwYWNrcyB0aGUgbG9naWNhbCBjb25uZWN0aW9uIHJhdGUgaW50byBiaXRzIDc6NCBhbmQg
-dGhlIHBoeXNpY2FsClNlckRlcyByYXRlIGludG8gYml0cyAzOjAgb2YgbmVnb3RpYXRlZF9saW5r
-X3JhdGUuICBUaGUgU0FTIHRyYW5zcG9ydApzYXNfcGh5IG9iamVjdCByZXByZXNlbnRzIGEgcGh5
-c2ljYWwgUEhZLCBidXQgbXBpM21yIGN1cnJlbnRseSBleHBvcnRzCnRoZSBsb2dpY2FsIGZpZWxk
-LgoKVGhpcyBjYW4gZXhwb3NlIDEuNSBHYml0L3MgdGhyb3VnaCBzeXNmcyBmb3IgbGlua3MgcGh5
-c2ljYWxseSBydW5uaW5nIGF0CjEyIG9yIDIyLjUgR2JpdC9zLiAgQSBzaWRlLWJ5LXNpZGUgdGVz
-dCB0aHJvdWdoIHRoZSBzYW1lIE1pY3JvY2hpcCBTWFAKMjRHIGV4cGFuZGVyIHNob3dlZCBtcHQz
-c2FzIHJlcG9ydGluZyB0aGUgcGh5c2ljYWwgcmF0ZSB3aGlsZSBtcGkzbXIKcmVwb3J0ZWQgdGhl
-IGxvZ2ljYWwgcmF0ZS4KClVzZSB0aGUgcGh5c2ljYWwgZmllbGQgY29uc2lzdGVudGx5IGluIHRo
-ZSBQSFkgYWRkLCByZWZyZXNoLCBsaW5rLXVwZGF0ZQphbmQgdGFyZ2V0LXJlcG9ydGluZyBwYXRo
-cy4gIFRoaXMgbWF0Y2hlcyB0aGUgbXB0M3NhcyBtYXBwaW5nIGZvcgpzYXNfcGh5LT5uZWdvdGlh
-dGVkX2xpbmtyYXRlLgotLS0KIGRyaXZlcnMvc2NzaS9tcGkzbXIvbXBpM21yX3RyYW5zcG9ydC5j
-IHwgNTQgKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAzMSBpbnNl
-cnRpb25zKCspLCAyMyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbXBp
-M21yL21waTNtcl90cmFuc3BvcnQuYyBiL2RyaXZlcnMvc2NzaS9tcGkzbXIvbXBpM21yX3RyYW5z
-cG9ydC5jCmluZGV4IDM5NDYyNDkuLmFlNGY1ZDYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9t
-cGkzbXIvbXBpM21yX3RyYW5zcG9ydC5jCisrKyBiL2RyaXZlcnMvc2NzaS9tcGkzbXIvbXBpM21y
-X3RyYW5zcG9ydC5jCkBAIC01ODQsNiArNTg0LDIzIEBAIHN0YXRpYyBlbnVtIHNhc19saW5rcmF0
-ZSBtcGkzbXJfY29udmVydF9waHlfbGlua19yYXRlKHU4IGxpbmtfcmF0ZSkKIAlyZXR1cm4gcmM7
-CiB9CiAKKy8qKgorICogbXBpM21yX2dldF9zYXNfcGh5X2xpbmtfcmF0ZSAtIGV4dHJhY3QgdGhl
-IHBoeXNpY2FsIFNBUyBQSFkgcmF0ZQorICogQG5lZ290aWF0ZWRfbGlua19yYXRlOiBwYWNrZWQg
-TVBJMyBsb2dpY2FsIGFuZCBwaHlzaWNhbCBsaW5rLXJhdGUgYnl0ZQorICoKKyAqIE1QSTMgc3Rv
-cmVzIHRoZSBsb2dpY2FsIGNvbm5lY3Rpb24gcmF0ZSBpbiBiaXRzIDc6NCBhbmQgdGhlIHBoeXNp
-Y2FsCisgKiBTZXJEZXMgcmF0ZSBpbiBiaXRzIDM6MC4gTGludXggc2FzX3BoeSBvYmplY3RzIGRl
-c2NyaWJlIHBoeXNpY2FsIFBIWXMsCisgKiBzbyBldmVyeSBTQVMgdHJhbnNwb3J0IG5lZ290aWF0
-ZWQtbGluayB1cGRhdGUgbXVzdCB1c2UgdGhlIGxvdyBuaWJibGUuCisgKgorICogUmV0dXJuOiBN
-UEkzIHBoeXNpY2FsIG5lZ290aWF0ZWQgbGluay1yYXRlIGNvZGUuCisgKi8KK3N0YXRpYyB1OCBt
-cGkzbXJfZ2V0X3Nhc19waHlfbGlua19yYXRlKHU4IG5lZ290aWF0ZWRfbGlua19yYXRlKQorewor
-CXJldHVybiAobmVnb3RpYXRlZF9saW5rX3JhdGUgJgorCQlNUEkzX1NBU19ORUdfTElOS19SQVRF
-X1BIWVNJQ0FMX01BU0spID4+CisJCU1QSTNfU0FTX05FR19MSU5LX1JBVEVfUEhZU0lDQUxfU0hJ
-RlQ7Cit9CisKIC8qKgogICogbXBpM21yX3NldF9pZGVudGlmeSAtIHNldCBpZGVudGlmeSBmb3Ig
-cGh5cyBhbmQgZW5kIGRldmljZXMKICAqIEBtcmlvYzogQWRhcHRlciBpbnN0YW5jZSByZWZlcmVu
-Y2UKQEAgLTEzNTMsOSArMTM3MCw3IEBAIHN0YXRpYyBpbnQgbXBpM21yX2FkZF9ob3N0X3BoeShz
-dHJ1Y3QgbXBpM21yX2lvYyAqbXJpb2MsCiAJCSAgICAmbXJfc2FzX3BoeS0+cmVtb3RlX2lkZW50
-aWZ5KTsKIAlwaHktPmlkZW50aWZ5LnBoeV9pZGVudGlmaWVyID0gbXJfc2FzX3BoeS0+cGh5X2lk
-OwogCXBoeS0+bmVnb3RpYXRlZF9saW5rcmF0ZSA9IG1waTNtcl9jb252ZXJ0X3BoeV9saW5rX3Jh
-dGUoCi0JICAgIChwaHlfcGcwLm5lZ290aWF0ZWRfbGlua19yYXRlICYKLQkgICAgTVBJM19TQVNf
-TkVHX0xJTktfUkFURV9MT0dJQ0FMX01BU0spID4+Ci0JICAgIE1QSTNfU0FTX05FR19MSU5LX1JB
-VEVfTE9HSUNBTF9TSElGVCk7CisJICAgIG1waTNtcl9nZXRfc2FzX3BoeV9saW5rX3JhdGUocGh5
-X3BnMC5uZWdvdGlhdGVkX2xpbmtfcmF0ZSkpOwogCXBoeS0+bWluaW11bV9saW5rcmF0ZV9odyA9
-IG1waTNtcl9jb252ZXJ0X3BoeV9saW5rX3JhdGUoCiAJICAgIHBoeV9wZzAuaHdfbGlua19yYXRl
-ICYgTVBJM19TQVNfSFdSQVRFX01JTl9SQVRFX01BU0spOwogCXBoeS0+bWF4aW11bV9saW5rcmF0
-ZV9odyA9IG1waTNtcl9jb252ZXJ0X3BoeV9saW5rX3JhdGUoCkBAIC0xNDI0LDkgKzE0MzksNyBA
-QCBzdGF0aWMgaW50IG1waTNtcl9hZGRfZXhwYW5kZXJfcGh5KHN0cnVjdCBtcGkzbXJfaW9jICpt
-cmlvYywKIAkJICAgICZtcl9zYXNfcGh5LT5yZW1vdGVfaWRlbnRpZnkpOwogCXBoeS0+aWRlbnRp
-ZnkucGh5X2lkZW50aWZpZXIgPSBtcl9zYXNfcGh5LT5waHlfaWQ7CiAJcGh5LT5uZWdvdGlhdGVk
-X2xpbmtyYXRlID0gbXBpM21yX2NvbnZlcnRfcGh5X2xpbmtfcmF0ZSgKLQkgICAgKGV4cGFuZGVy
-X3BnMS5uZWdvdGlhdGVkX2xpbmtfcmF0ZSAmCi0JICAgIE1QSTNfU0FTX05FR19MSU5LX1JBVEVf
-TE9HSUNBTF9NQVNLKSA+PgotCSAgICBNUEkzX1NBU19ORUdfTElOS19SQVRFX0xPR0lDQUxfU0hJ
-RlQpOworCSAgICBtcGkzbXJfZ2V0X3Nhc19waHlfbGlua19yYXRlKGV4cGFuZGVyX3BnMS5uZWdv
-dGlhdGVkX2xpbmtfcmF0ZSkpOwogCXBoeS0+bWluaW11bV9saW5rcmF0ZV9odyA9IG1waTNtcl9j
-b252ZXJ0X3BoeV9saW5rX3JhdGUoCiAJICAgIGV4cGFuZGVyX3BnMS5od19saW5rX3JhdGUgJiBN
-UEkzX1NBU19IV1JBVEVfTUlOX1JBVEVfTUFTSyk7CiAJcGh5LT5tYXhpbXVtX2xpbmtyYXRlX2h3
-ID0gbXBpM21yX2NvbnZlcnRfcGh5X2xpbmtfcmF0ZSgKQEAgLTIxOTksMTEgKzIyMTIsOSBAQCBt
-cGkzbXJfdHJhbnNwb3J0X3BoeV9zcGVlZChzdHJ1Y3Qgc2FzX3BoeSAqcGh5LCBzdHJ1Y3Qgc2Fz
-X3BoeV9saW5rcmF0ZXMgKnJhdGVzKQogCQkgICAgTVBJM19TQVNfUFJBVEVfTUlOX1JBVEVfTUFT
-Syk7CiAJCXBoeS0+bWF4aW11bV9saW5rcmF0ZSA9IG1waTNtcl9jb252ZXJ0X3BoeV9saW5rX3Jh
-dGUoCiAJCSAgICBwaHlfcGcwLnByb2dyYW1tZWRfbGlua19yYXRlID4+IDQpOwotCQlwaHktPm5l
-Z290aWF0ZWRfbGlua3JhdGUgPQotCQkJbXBpM21yX2NvbnZlcnRfcGh5X2xpbmtfcmF0ZSgKLQkJ
-CSAgICAocGh5X3BnMC5uZWdvdGlhdGVkX2xpbmtfcmF0ZSAmCi0JCQkgICAgTVBJM19TQVNfTkVH
-X0xJTktfUkFURV9MT0dJQ0FMX01BU0spCi0JCQkgICAgPj4gTVBJM19TQVNfTkVHX0xJTktfUkFU
-RV9MT0dJQ0FMX1NISUZUKTsKKwkJcGh5LT5uZWdvdGlhdGVkX2xpbmtyYXRlID0gbXBpM21yX2Nv
-bnZlcnRfcGh5X2xpbmtfcmF0ZSgKKwkJCW1waTNtcl9nZXRfc2FzX3BoeV9saW5rX3JhdGUoCisJ
-CQkgICAgcGh5X3BnMC5uZWdvdGlhdGVkX2xpbmtfcmF0ZSkpOwogCX0KIAogb3V0OgpAQCAtMjgz
-Nyw5ICsyODQ4LDggQEAgaW50IG1waTNtcl9leHBhbmRlcl9hZGQoc3RydWN0IG1waTNtcl9pb2Mg
-Km1yaW9jLCB1MTYgaGFuZGxlKQogCQkJCSAgICBleHBhbmRlcl9wZzEuYXR0YWNoZWRfZGV2X2hh
-bmRsZSk7CiAJCQkJaWYgKHRlbXBfaGFuZGxlICE9IGhhbmRsZSkKIAkJCQkJY29udGludWU7Ci0J
-CQkJbGlua19yYXRlID0gKGV4cGFuZGVyX3BnMS5uZWdvdGlhdGVkX2xpbmtfcmF0ZSAmCi0JCQkJ
-ICAgIE1QSTNfU0FTX05FR19MSU5LX1JBVEVfTE9HSUNBTF9NQVNLKSA+PgotCQkJCSAgICBNUEkz
-X1NBU19ORUdfTElOS19SQVRFX0xPR0lDQUxfU0hJRlQ7CisJCQkJbGlua19yYXRlID0gbXBpM21y
-X2dldF9zYXNfcGh5X2xpbmtfcmF0ZSgKKwkJCQkgICAgZXhwYW5kZXJfcGcxLm5lZ290aWF0ZWRf
-bGlua19yYXRlKTsKIAkJCQlpZiAobGlua19yYXRlIDwgTVBJM19TQVNfTkVHX0xJTktfUkFURV8x
-XzUpCiAJCQkJICAgIGxpbmtfcmF0ZSA9IE1QSTNfU0FTX05FR19MSU5LX1JBVEVfMV81OwogCQkJ
-CW1waTNtcl91cGRhdGVfbGlua3MobXJpb2MsIHNhc19hZGRyZXNzX3BhcmVudCwKQEAgLTMwODYs
-OCArMzA5Niw4IEBAIHZvaWQgbXBpM21yX3Nhc19ob3N0X3JlZnJlc2goc3RydWN0IG1waTNtcl9p
-b2MgKm1yaW9jKQogCQkgICAgKE1QSTNfU0FTSU9VTklUMF9QSFlGTEFHU19IT1NUX1BIWSB8CiAJ
-CSAgICAgTVBJM19TQVNJT1VOSVQwX1BIWUZMQUdTX1ZJUlRVQUxfUEhZKSkKIAkJCWNvbnRpbnVl
-OwotCQlsaW5rX3JhdGUgPQotCQkgICAgc2FzX2lvX3VuaXRfcGcwLT5waHlfZGF0YVtpXS5uZWdv
-dGlhdGVkX2xpbmtfcmF0ZSA+PiA0OworCQlsaW5rX3JhdGUgPSBtcGkzbXJfZ2V0X3Nhc19waHlf
-bGlua19yYXRlKAorCQkgICAgc2FzX2lvX3VuaXRfcGcwLT5waHlfZGF0YVtpXS5uZWdvdGlhdGVk
-X2xpbmtfcmF0ZSk7CiAJCWlmICghbXJpb2MtPnNhc19oYmEuaGFuZGxlKQogCQkJbXJpb2MtPnNh
-c19oYmEuaGFuZGxlID0gbGUxNl90b19jcHUoc2FzX2lvX3VuaXRfcGcwLT4KIAkJCSAgICBwaHlf
-ZGF0YVtpXS5jb250cm9sbGVyX2Rldl9oYW5kbGUpOwpAQCAtMzI2NCw3ICszMjc0LDcgQEAgb3V0
-OgogfQogCiAvKioKLSAqIG1waTNtcl9nZXRfc2FzX25lZ290aWF0ZWRfbG9naWNhbF9saW5rcmF0
-ZSAtIGdldCBsaW5rcmF0ZQorICogbXBpM21yX2dldF9zYXNfbmVnb3RpYXRlZF9waHlzX2xpbmty
-YXRlIC0gZ2V0IHBoeXNpY2FsIGxpbmsgcmF0ZQogICogQG1yaW9jOiBBZGFwdGVyIGluc3RhbmNl
-IHJlZmVyZW5jZQogICogQHRndGRldjogVGFyZ2V0IGRldmljZQogICoKQEAgLTMyNzMsOSArMzI4
-Myw5IEBAIG91dDoKICAqIHZhbHVlIGlzIG5vdCBhdmFpbGFibGUgb3IgaW52YWxpZCwgaXQgZmFs
-bHMgYmFjayB0byByZWFkaW5nIGZyb20KICAqIHNhcyBwaHkgcGFnZTAgb3IgZXhwYW5kZXIgcGh5
-IHBhZ2UxLgogICoKLSAqIFJldHVybjogbG9naWNhbCBsaW5rIHJhdGUuCisgKiBSZXR1cm46IHBo
-eXNpY2FsIGxpbmsgcmF0ZS4KICAqLwotc3RhdGljIHU4IG1waTNtcl9nZXRfc2FzX25lZ290aWF0
-ZWRfbG9naWNhbF9saW5rcmF0ZShzdHJ1Y3QgbXBpM21yX2lvYyAqbXJpb2MsCitzdGF0aWMgdTgg
-bXBpM21yX2dldF9zYXNfbmVnb3RpYXRlZF9waHlzX2xpbmtyYXRlKHN0cnVjdCBtcGkzbXJfaW9j
-ICptcmlvYywKIAlzdHJ1Y3QgbXBpM21yX3RndF9kZXYgKnRndGRldikKIHsKIAl1OCBsaW5rX3Jh
-dGUgPSBNUEkzX1NBU19ORUdfTElOS19SQVRFXzFfNSwgcGh5X251bWJlcjsKQEAgLTMzMjgsOSAr
-MzMzOCw3IEBAIHN0YXRpYyB1OCBtcGkzbXJfZ2V0X3Nhc19uZWdvdGlhdGVkX2xvZ2ljYWxfbGlu
-a3JhdGUoc3RydWN0IG1waTNtcl9pb2MgKm1yaW9jLAogCWxpbmtfcmF0ZSA9IHBoeV9wZzAubmVn
-b3RpYXRlZF9saW5rX3JhdGU7CiAKIG91dDoKLQlyZXR1cm4gKChsaW5rX3JhdGUgJgotCQlNUEkz
-X1NBU19ORUdfTElOS19SQVRFX0xPR0lDQUxfTUFTSykgPj4KLQkJTVBJM19TQVNfTkVHX0xJTktf
-UkFURV9MT0dJQ0FMX1NISUZUKTsKKwlyZXR1cm4gbXBpM21yX2dldF9zYXNfcGh5X2xpbmtfcmF0
-ZShsaW5rX3JhdGUpOwogfQogCiAvKioKQEAgLTMzODEsNyArMzM4OSw3IEBAIGludCBtcGkzbXJf
-cmVwb3J0X3RndGRldl90b19zYXNfdHJhbnNwb3J0KHN0cnVjdCBtcGkzbXJfaW9jICptcmlvYywK
-IAl9CiAJdGd0ZGV2LT5kZXZfc3BlYy5zYXNfc2F0YV9pbmYuaGJhX3BvcnQgPSBoYmFfcG9ydDsK
-IAotCWxpbmtfcmF0ZSA9IG1waTNtcl9nZXRfc2FzX25lZ290aWF0ZWRfbG9naWNhbF9saW5rcmF0
-ZShtcmlvYywgdGd0ZGV2KTsKKwlsaW5rX3JhdGUgPSBtcGkzbXJfZ2V0X3Nhc19uZWdvdGlhdGVk
-X3BoeXNfbGlua3JhdGUobXJpb2MsIHRndGRldik7CiAKIAlpZiAobGlua19yYXRlIDwgTVBJM19T
-QVNfTkVHX0xJTktfUkFURV8xXzUpCiAJCWxpbmtfcmF0ZSA9IE1QSTNfU0FTX05FR19MSU5LX1JB
-VEVfMV81OwotLSAKMi40Ny4zCgo=
---0000000000009463620657d8c0dd
+--000000000000658d440657d8d3ab
 Content-Type: text/markdown; charset="UTF-8"; 
 	name="mpi3mr_link_rate_and_ub_full_report_en.md"
 Content-Disposition: attachment; 
 	filename="mpi3mr_link_rate_and_ub_full_report_en.md"
 Content-Transfer-Encoding: base64
-Content-ID: <f_ms7v3woi1>
-X-Attachment-Id: f_ms7v3woi1
+Content-ID: <f_ms7w0kjc0>
+X-Attachment-Id: f_ms7w0kjc0
 
 IyBUZWNobmljYWwgcmVwb3J0OiBpbmNvcnJlY3QgU0FTIFBIWSBsaW5rLXJhdGUgcmVwb3J0aW5n
 IGFuZCB1bmRlZmluZWQgYmVoYXZpb3IgaW4gYG1waTNtcmAKCiMjIDEuIFN1bW1hcnkKClR3byBp
@@ -798,4 +660,155 @@ LzQ2LVBIWSB0b3BvbG9neS4gVGhlIFVCU0FOIGFycmF5LWJvdW5kIHdhcm5pbmdzIGNhbGwgZm9y
 IGEgYmFja3BvcnRlZCBmbGV4aWJsZS1hcnJheSBjb252ZXJzaW9uIGFuZCBzdHJpY3QgQ29uZmln
 IFBhZ2Ugc2l6ZSB2YWxpZGF0aW9uLCBidXQgb24gdGhlaXIgb3duIHRoZXkgZG8gbm90IHlldCBw
 cm92ZSBhIHJlYWwgb3ZlcnJ1biBvZiB0aGUgYWxsb2NhdGlvbi4K
---0000000000009463620657d8c0dd--
+--000000000000658d440657d8d3ab
+Content-Type: application/octet-stream; 
+	name="0002-scsi-mpi3mr-make-SAS-port-PHY-masks-64-bit-safe.patch"
+Content-Disposition: attachment; 
+	filename="0002-scsi-mpi3mr-make-SAS-port-PHY-masks-64-bit-safe.patch"
+Content-Transfer-Encoding: base64
+Content-ID: <f_ms7w0u0c1>
+X-Attachment-Id: f_ms7w0u0c1
+
+RnJvbSBmYTIxM2NmNzEyMDFhZmM4YzI5OGYwYWEyZDcyOGFkMTg3Y2M2MmM3IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBJbHlhIEtob215YWtvdiBraG9teWFrb3ZpbHlhQGdtYWlsLmNv
+bQpEYXRlOiBUaHUsIDMwIEp1bCAyMDI2IDE1OjM5OjA1ICswMDAwClN1YmplY3Q6IFtQQVRDSCAy
+LzNdIHNjc2k6IG1waTNtcjogbWFrZSBTQVMgcG9ydCBQSFkgbWFza3MgNjQtYml0IHNhZmUKClNB
+UyBwb3J0IG1lbWJlcnNoaXAgaXMgc3RvcmVkIGluIGEgdTY0LCBidXQgbXBpM21yIGZvcm1zIGJp
+dHMgd2l0aCB0aGUKc2lnbmVkLWludCBleHByZXNzaW9uIDEgPDwgcGh5X2lkIGFuZCBsb2NhdGVz
+IHRoZSBmaXJzdCBiaXQgd2l0aCBmZnMoKSwKd2hpY2ggYWxzbyBhY2NlcHRzIG9ubHkgaW50LgoK
+VGhlIHNoaWZ0IGlzIHVuZGVmaW5lZCBmb3IgUEhZIGlkZW50aWZpZXJzIDMxIGFuZCBhYm92ZSwg
+YW5kIGZmcygpCmRpc2NhcmRzIHRoZSB1cHBlciAzMiBiaXRzLiAgVUJTQU4gcmVwb3J0cyB0aGUg
+c2hpZnQgaW4KbXBpM21yX3Nhc19wb3J0X2FkZCgpIHdoZW4gYSA0Ni1QSFkgZXhwYW5kZXIgZXhw
+b3NlcyBhIGRldmljZSB0aHJvdWdoIFBIWQo0My4KClVzZSBCSVRfVUxMKCksIHJlamVjdCBpZGVu
+dGlmaWVycyBvdXRzaWRlIHRoZSA2NC1iaXQgbWFzaywgdXNlIF9fZmZzNjQoKQpmb3Igbm9uLWVt
+cHR5IG1hc2tzLCBhbmQgaGFuZGxlIGFuIGVtcHR5IHBvcnQgZXhwbGljaXRseS4gIEFsc28gcmVz
+dG9yZQpsb3dlc3RfcGh5IHdoZW4gdGhlIGZpcnN0IFBIWSBpcyBhZGRlZCBiYWNrIHRvIGFuIGVt
+cHR5IHBvcnQuCi0tLQogbXBpM21yX3RyYW5zcG9ydC5jIHwgNTIgKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKystLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDQzIGluc2VydGlv
+bnMoKyksIDkgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvbXBpM21yX3RyYW5zcG9ydC5jIGIv
+bXBpM21yX3RyYW5zcG9ydC5jCmluZGV4IDI0YmExNDMuLjc4YjU0ZDkgMTAwNzU1Ci0tLSBhL21w
+aTNtcl90cmFuc3BvcnQuYworKysgYi9tcGkzbXJfdHJhbnNwb3J0LmMKQEAgLTYwMSw2ICs2MDEs
+MzYgQEAgc3RhdGljIHU4IG1waTNtcl9nZXRfc2FzX3BoeV9saW5rX3JhdGUodTggbmVnb3RpYXRl
+ZF9saW5rX3JhdGUpCiAJCU1QSTNfU0FTX05FR19MSU5LX1JBVEVfUEhZU0lDQUxfU0hJRlQ7CiB9
+CiAKKy8qKgorICogbXBpM21yX3Nhc19waHlfYml0IC0gYnVpbGQgYSB3aWR0aC1jb3JyZWN0IFNB
+UyBQSFkgbWVtYmVyc2hpcCBiaXQKKyAqIEBwaHlfaWQ6IGZpcm13YXJlIFBIWSBpZGVudGlmaWVy
+CisgKgorICogU0FTIHBvcnQgbWVtYmVyc2hpcCBpcyBzdG9yZWQgaW4gYSA2NC1iaXQgbWFzay4g
+U3RhcnQgdGhlIHNoaWZ0IHdpdGggYQorICogNjQtYml0IHZhbHVlIGFuZCByZWplY3QgaWRlbnRp
+ZmllcnMgb3V0c2lkZSB0aGUgcmVwcmVzZW50YWJsZSByYW5nZSBzbworICogUEhZIGlkZW50aWZp
+ZXJzIDMxIHRocm91Z2ggNjMgY2Fubm90IHRyaWdnZXIgc2lnbmVkLWludCBzaGlmdCB1bmRlZmlu
+ZWQKKyAqIGJlaGF2aW9yLgorICoKKyAqIFJldHVybjogNjQtYml0IG1hc2sgYml0LCBvciB6ZXJv
+IGZvciBhbiBvdXQtb2YtcmFuZ2UgUEhZIGlkZW50aWZpZXIuCisgKi8KK3N0YXRpYyB1NjQgbXBp
+M21yX3Nhc19waHlfYml0KHVuc2lnbmVkIGludCBwaHlfaWQpCit7CisJaWYgKFdBUk5fT05fT05D
+RShwaHlfaWQgPj0gQklUU19QRVJfVFlQRSh1NjQpKSkKKwkJcmV0dXJuIDA7CisKKwlyZXR1cm4g
+QklUX1VMTChwaHlfaWQpOworfQorCisvKioKKyAqIG1waTNtcl9zYXNfcG9ydF9sb3dlc3RfcGh5
+IC0gZmluZCB0aGUgbG93ZXN0IFBIWSBpbiBhIHBvcnQgbWFzaworICogQHBoeV9tYXNrOiA2NC1i
+aXQgU0FTIHBvcnQgbWVtYmVyc2hpcCBtYXNrCisgKgorICogUmV0dXJuOiBsb3dlc3QgUEhZIGlk
+ZW50aWZpZXIsIG9yIC0xIHdoZW4gdGhlIHBvcnQgbWFzayBpcyBlbXB0eS4KKyAqLworc3RhdGlj
+IGludCBtcGkzbXJfc2FzX3BvcnRfbG93ZXN0X3BoeSh1NjQgcGh5X21hc2spCit7CisJcmV0dXJu
+IHBoeV9tYXNrID8gX19mZnM2NChwaHlfbWFzaykgOiAtMTsKK30KKwogLyoqCiAgKiBtcGkzbXJf
+c2V0X2lkZW50aWZ5IC0gc2V0IGlkZW50aWZ5IGZvciBwaHlzIGFuZCBlbmQgZGV2aWNlcwogICog
+QG1yaW9jOiBBZGFwdGVyIGluc3RhbmNlIHJlZmVyZW5jZQpAQCAtODk2LDkgKzkyNiwxMCBAQCBz
+dGF0aWMgdm9pZCBtcGkzbXJfZGVsZXRlX3Nhc19waHkoc3RydWN0IG1waTNtcl9pb2MgKm1yaW9j
+LAogCiAJbGlzdF9kZWwoJm1yX3Nhc19waHktPnBvcnRfc2libGluZ3MpOwogCW1yX3Nhc19wb3J0
+LT5udW1fcGh5cy0tOwotCW1yX3Nhc19wb3J0LT5waHlfbWFzayAmPSB+KDEgPDwgbXJfc2FzX3Bo
+eS0+cGh5X2lkKTsKKwltcl9zYXNfcG9ydC0+cGh5X21hc2sgJj0gfm1waTNtcl9zYXNfcGh5X2Jp
+dChtcl9zYXNfcGh5LT5waHlfaWQpOwogCWlmIChtcl9zYXNfcG9ydC0+bG93ZXN0X3BoeSA9PSBt
+cl9zYXNfcGh5LT5waHlfaWQpCi0JCW1yX3Nhc19wb3J0LT5sb3dlc3RfcGh5ID0gZmZzKG1yX3Nh
+c19wb3J0LT5waHlfbWFzaykgLSAxOworCQltcl9zYXNfcG9ydC0+bG93ZXN0X3BoeSA9CisJCQlt
+cGkzbXJfc2FzX3BvcnRfbG93ZXN0X3BoeShtcl9zYXNfcG9ydC0+cGh5X21hc2spOwogCXNhc19w
+b3J0X2RlbGV0ZV9waHkobXJfc2FzX3BvcnQtPnBvcnQsIG1yX3Nhc19waHktPnBoeSk7CiAJbXJf
+c2FzX3BoeS0+cGh5X2JlbG9uZ3NfdG9fcG9ydCA9IDA7CiB9CkBAIC05MjMsOSArOTU0LDExIEBA
+IHN0YXRpYyB2b2lkIG1waTNtcl9hZGRfc2FzX3BoeShzdHJ1Y3QgbXBpM21yX2lvYyAqbXJpb2Ms
+CiAKIAlsaXN0X2FkZF90YWlsKCZtcl9zYXNfcGh5LT5wb3J0X3NpYmxpbmdzLCAmbXJfc2FzX3Bv
+cnQtPnBoeV9saXN0KTsKIAltcl9zYXNfcG9ydC0+bnVtX3BoeXMrKzsKLQltcl9zYXNfcG9ydC0+
+cGh5X21hc2sgfD0gKDEgPDwgbXJfc2FzX3BoeS0+cGh5X2lkKTsKLQlpZiAobXJfc2FzX3BoeS0+
+cGh5X2lkIDwgbXJfc2FzX3BvcnQtPmxvd2VzdF9waHkpCi0JCW1yX3Nhc19wb3J0LT5sb3dlc3Rf
+cGh5ID0gZmZzKG1yX3Nhc19wb3J0LT5waHlfbWFzaykgLSAxOworCW1yX3Nhc19wb3J0LT5waHlf
+bWFzayB8PSBtcGkzbXJfc2FzX3BoeV9iaXQobXJfc2FzX3BoeS0+cGh5X2lkKTsKKwlpZiAobXJf
+c2FzX3BvcnQtPmxvd2VzdF9waHkgPCAwIHx8CisJICAgIG1yX3Nhc19waHktPnBoeV9pZCA8IG1y
+X3Nhc19wb3J0LT5sb3dlc3RfcGh5KQorCQltcl9zYXNfcG9ydC0+bG93ZXN0X3BoeSA9CisJCQlt
+cGkzbXJfc2FzX3BvcnRfbG93ZXN0X3BoeShtcl9zYXNfcG9ydC0+cGh5X21hc2spOwogCXNhc19w
+b3J0X2FkZF9waHkobXJfc2FzX3BvcnQtPnBvcnQsIG1yX3Nhc19waHktPnBoeSk7CiAJbXJfc2Fz
+X3BoeS0+cGh5X2JlbG9uZ3NfdG9fcG9ydCA9IDE7CiB9CkBAIC0xMTA5LDcgKzExNDIsNyBAQCBz
+dGF0aWMgc3RydWN0IG1waTNtcl9zYXNfcG9ydCAqIG1waTNtcl9zYXNfcG9ydF9hZGQoc3RydWN0
+IG1waTNtcl9pb2MgKm1yaW9jLAogCQlsaXN0X2FkZF90YWlsKCZtcl9zYXNfbm9kZS0+cGh5W2ld
+LnBvcnRfc2libGluZ3MsCiAJCSAgICAmbXJfc2FzX3BvcnQtPnBoeV9saXN0KTsKIAkJbXJfc2Fz
+X3BvcnQtPm51bV9waHlzKys7Ci0JCW1yX3Nhc19wb3J0LT5waHlfbWFzayB8PSAoMSA8PCBpKTsK
+KwkJbXJfc2FzX3BvcnQtPnBoeV9tYXNrIHw9IG1waTNtcl9zYXNfcGh5X2JpdChpKTsKIAl9CiAK
+IAlpZiAoIW1yX3Nhc19wb3J0LT5udW1fcGh5cykgewpAQCAtMTExOCw3ICsxMTUxLDggQEAgc3Rh
+dGljIHN0cnVjdCBtcGkzbXJfc2FzX3BvcnQgKiBtcGkzbXJfc2FzX3BvcnRfYWRkKHN0cnVjdCBt
+cGkzbXJfaW9jICptcmlvYywKIAkJZ290byBvdXRfZmFpbDsKIAl9CiAKLQltcl9zYXNfcG9ydC0+
+bG93ZXN0X3BoeSA9IGZmcyhtcl9zYXNfcG9ydC0+cGh5X21hc2spIC0gMTsKKwltcl9zYXNfcG9y
+dC0+bG93ZXN0X3BoeSA9CisJCW1waTNtcl9zYXNfcG9ydF9sb3dlc3RfcGh5KG1yX3Nhc19wb3J0
+LT5waHlfbWFzayk7CiAKIAlpZiAobXJfc2FzX3BvcnQtPnJlbW90ZV9pZGVudGlmeS5kZXZpY2Vf
+dHlwZSA9PSBTQVNfRU5EX0RFVklDRSkgewogCQl0Z3RkZXYgPSBtcGkzbXJfZ2V0X3RndGRldl9i
+eV9hZGRyKG1yaW9jLApAQCAtMjUyNiw3ICsyNTYwLDcgQEAgbXBpM21yX3JlZnJlc2hfc2FzX3Bv
+cnRzKHN0cnVjdCBtcGkzbXJfaW9jICptcmlvYykKIAkJZm91bmQgPSAwOwogCQlmb3IgKGogPSAw
+OyBqIDwgaG9zdF9wb3J0X2NvdW50OyBqKyspIHsKIAkJCWlmIChoX3BvcnRbal0uaGFuZGxlID09
+IGF0dGFjaGVkX2hhbmRsZSkgewotCQkJCWhfcG9ydFtqXS5waHlfbWFzayB8PSAoMSA8PCBpKTsK
+KwkJCQloX3BvcnRbal0ucGh5X21hc2sgfD0gbXBpM21yX3Nhc19waHlfYml0KGkpOwogCQkJCWZv
+dW5kID0gMTsKIAkJCQlicmVhazsKIAkJCX0KQEAgLTI1NTMsNyArMjU4Nyw3IEBAIG1waTNtcl9y
+ZWZyZXNoX3Nhc19wb3J0cyhzdHJ1Y3QgbXBpM21yX2lvYyAqbXJpb2MpCiAJCXBvcnRfaWR4ID0g
+aG9zdF9wb3J0X2NvdW50OwogCQloX3BvcnRbcG9ydF9pZHhdLnNhc19hZGRyZXNzID0gbGU2NF90
+b19jcHUoc2FzaW5mLT5zYXNfYWRkcmVzcyk7CiAJCWhfcG9ydFtwb3J0X2lkeF0uaGFuZGxlID0g
+YXR0YWNoZWRfaGFuZGxlOwotCQloX3BvcnRbcG9ydF9pZHhdLnBoeV9tYXNrID0gKDEgPDwgaSk7
+CisJCWhfcG9ydFtwb3J0X2lkeF0ucGh5X21hc2sgPSBtcGkzbXJfc2FzX3BoeV9iaXQoaSk7CiAJ
+CWhfcG9ydFtwb3J0X2lkeF0uaW91bml0X3BvcnRfaWQgPSBzYXNfaW9fdW5pdF9wZzAtPnBoeV9k
+YXRhW2ldLmlvX3VuaXRfcG9ydDsKIAkJaF9wb3J0W3BvcnRfaWR4XS5sb3dlc3RfcGh5ID0gc2Fz
+aW5mLT5waHlfbnVtOwogCQloX3BvcnRbcG9ydF9pZHhdLnVzZWQgPSAwOwotLSAKMi40Ny4zCgo=
+--000000000000658d440657d8d3ab
+Content-Type: application/octet-stream; 
+	name="0003-scsi-mpi3mr-use-flexible-arrays-for-SAS-IO-Unit-PHY-.patch"
+Content-Disposition: attachment; 
+	filename="0003-scsi-mpi3mr-use-flexible-arrays-for-SAS-IO-Unit-PHY-.patch"
+Content-Transfer-Encoding: base64
+Content-ID: <f_ms7w0u0j2>
+X-Attachment-Id: f_ms7w0u0j2
+
+RnJvbSA0ODg5OTQwNmE0MmQ0YTE0NjdlZWRhZWQxYzZkYTBjNWRjODI5N2U1IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBJbHlhIEtob215YWtvdiBraG9teWFrb3ZpbHlhQGdtYWlsLmNv
+bQpEYXRlOiBUaHUsIDMwIEp1bCAyMDI2IDE1OjM5OjA1ICswMDAwClN1YmplY3Q6IFtQQVRDSCAz
+LzNdIHNjc2k6IG1waTNtcjogdXNlIGZsZXhpYmxlIGFycmF5cyBmb3IgU0FTIElPIFVuaXQgUEhZ
+CiBkYXRhCgpUaGUgU0FTIElPIFVuaXQgcGFnZXMgYXJlIHZhcmlhYmxlLWxlbmd0aCBmaXJtd2Fy
+ZSBwYWdlcywgYnV0IHRoZSB2ZW5kb3IKTVBJMyBoZWFkZXIgZGVjbGFyZXMgZWFjaCB0cmFpbGlu
+ZyBQSFktZGF0YSBmaWVsZCBhcyBhIG9uZS1lbGVtZW50IGFycmF5LgpUaGUgZHJpdmVyIGFsbG9j
+YXRlcyBzcGFjZSBmb3IgbnVtX3BoeXMgZW50cmllcyBhbmQgaW5kZXhlcyBiZXlvbmQKbWVtYmVy
+IHplcm8sIHNvIFVCU0FOIHJlcG9ydHMgYXJyYXktaW5kZXgtb3V0LW9mLWJvdW5kcyBldmVuIHdo
+ZW4gdGhlCmFsbG9jYXRpb24gaXRzZWxmIGlzIGxhcmdlIGVub3VnaC4KCkRlc2NyaWJlIHRoZSB2
+YXJpYWJsZS1sZW5ndGggdGFpbHMgd2l0aCBDIGZsZXhpYmxlLWFycmF5IG1lbWJlcnMuICBUaGUK
+bWFpbmxpbmUgTVBJMyBoZWFkZXIgYWxyZWFkeSB1c2VzIHRoaXMgcmVwcmVzZW50YXRpb247IHRo
+aXMgY2hhbmdlIGlzIGEKdmVuZG9yLWRyaXZlciBiYWNrcG9ydCBvbmx5LgotLS0KIG1waS9tcGkz
+MF9jbmZnLmggfCAxMCArKy0tLS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCsp
+LCA4IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL21waS9tcGkzMF9jbmZnLmggYi9tcGkvbXBp
+MzBfY25mZy5oCmluZGV4IDUwYmJiMDkuLjAzNjc1MmIgMTAwNzU1Ci0tLSBhL21waS9tcGkzMF9j
+bmZnLmgKKysrIGIvbXBpL21waTMwX2NuZmcuaApAQCAtMTc4NCwxNiArMTc4NCwxMyBAQCBzdHJ1
+Y3QgbXBpM19zYXNfaW9fdW5pdDBfcGh5X2RhdGEgewogCV9fbGUzMiAgICAgICAgICAgICBkaXNj
+b3Zlcnlfc3RhdHVzOwogCV9fbGUzMiAgICAgICAgICAgICByZXNlcnZlZDEwOwogfTsKLSNpZm5k
+ZWYgTVBJM19TQVNfSU9fVU5JVDBfUEhZX01BWAotI2RlZmluZSBNUEkzX1NBU19JT19VTklUMF9Q
+SFlfTUFYICAgICAgICAgICAoMSkKLSNlbmRpZgogc3RydWN0IG1waTNfc2FzX2lvX3VuaXRfcGFn
+ZTAgewogCXN0cnVjdCBtcGkzX2NvbmZpZ19wYWdlX2hlYWRlciAgICAgICAgIGhlYWRlcjsKIAlf
+X2xlMzIgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJlc2VydmVkMDg7CiAJdTggICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICBudW1fcGh5czsKIAl1OCAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgIGluaXRfc3RhdHVzOwogCV9fbGUxNiAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgcmVzZXJ2ZWQwZTsKLQlzdHJ1Y3QgbXBpM19zYXNfaW9fdW5pdDBfcGh5X2RhdGEg
+ICAgICBwaHlfZGF0YVtNUEkzX1NBU19JT19VTklUMF9QSFlfTUFYXTsKKwlzdHJ1Y3QgbXBpM19z
+YXNfaW9fdW5pdDBfcGh5X2RhdGEgICAgICBwaHlfZGF0YVtdOwogfTsKICNkZWZpbmUgTVBJM19T
+QVNJT1VOSVQwX1BBR0VWRVJTSU9OICAgICAgICAgICAgICAgICAgICAgICAgICAoMHgwMCkKICNk
+ZWZpbmUgTVBJM19TQVNJT1VOSVQwX0lOSVRTVEFUVVNfTk9fRVJST1JTICAgICAgICAgICAgICAg
+ICAoMHgwMCkKQEAgLTE4MjQsOSArMTgyMSw2IEBAIHN0cnVjdCBtcGkzX3Nhc19pb191bml0MV9w
+aHlfZGF0YSB7CiAJX19sZTE2ICAgICAgICAgICAgIG1heF90YXJnZXRfcG9ydF9jb25uZWN0X3Rp
+bWU7CiAJX19sZTMyICAgICAgICAgICAgIHJlc2VydmVkMDg7CiB9OwotI2lmbmRlZiBNUEkzX1NB
+U19JT19VTklUMV9QSFlfTUFYCi0jZGVmaW5lIE1QSTNfU0FTX0lPX1VOSVQxX1BIWV9NQVggICAg
+ICAgICAgICgxKQotI2VuZGlmCiBzdHJ1Y3QgbXBpM19zYXNfaW9fdW5pdF9wYWdlMSB7CiAJc3Ry
+dWN0IG1waTNfY29uZmlnX3BhZ2VfaGVhZGVyICAgICAgICAgaGVhZGVyOwogCV9fbGUxNiAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgY29udHJvbF9mbGFnczsKQEAgLTE4MzYsNyArMTgzMCw3
+IEBAIHN0cnVjdCBtcGkzX3Nhc19pb191bml0X3BhZ2UxIHsKIAl1OCAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgIG51bV9waHlzOwogCXU4ICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgc2F0YV9tYXhfcV9kZXB0aDsKIAlfX2xlMTYgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIHJlc2VydmVkMTI7Ci0Jc3RydWN0IG1waTNfc2FzX2lvX3VuaXQxX3BoeV9kYXRhICAgICAg
+cGh5X2RhdGFbTVBJM19TQVNfSU9fVU5JVDFfUEhZX01BWF07CisJc3RydWN0IG1waTNfc2FzX2lv
+X3VuaXQxX3BoeV9kYXRhICAgICAgcGh5X2RhdGFbXTsKIH07CiAjZGVmaW5lIE1QSTNfU0FTSU9V
+TklUMV9QQUdFVkVSU0lPTiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICgweDAwKQog
+I2RlZmluZSBNUEkzX1NBU0lPVU5JVDFfQ09OVFJPTF9DT05UUk9MTEVSX0RFVklDRV9TRUxGX1RF
+U1QgICAgICAgICAoMHg4MDAwKQotLSAKMi40Ny4zCgo=
+--000000000000658d440657d8d3ab--
