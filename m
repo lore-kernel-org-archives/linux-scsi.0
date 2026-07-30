@@ -1,107 +1,87 @@
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AD3E43A7FF
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 16:00:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA69044D014;
+	Thu, 30 Jul 2026 18:12:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785427239; cv=none; b=a7oFLEGTe6iy9NK50ufjDp7Q9CZr45awoGT0iUGEBf6FgsCyARCPlcwCT/XSXtOwQqkrhYca1mYiiT5XXhoWQAYDTA3iHT07VR5+EwIqFvEufrD26r4GRwApxDwMTSxaVZnS1P7Aujm2Rvup8dveIqOK7YKERtMC+/yxE8pTxjc=
+	t=1785435146; cv=none; b=tBAJnR+V9/NSyQZgCxCyNq5uMPho5jPJ7gBnbNfCqx3Bs8Wh+B+la/UAh3zG+jzI9mLbcodu5TjdYADAsY0fbGO6h+c9mAISMICXVI7bsTh7e+HjVn20ED9NiOoZbaQ5qqg9rvIiGQCTqrv0AOzomdgYMYWpDaTCt6/BvNqeMrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785427239; c=relaxed/simple;
-	bh=S7jTX1FBmooG8fKZttfHvmIV2w/DywDPji7ueOAatSA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VE2H7hjcjXbr/q27vCF6wZyf6CiXAVFTRvMeps6sk63u+z1Ux5Nf6vGks7vX8xbdqEtIichMECNX26nB0jLa75O3hpC30tDBU69BA10XcZVb/fi4BfsKLvwKNNXdkRPKjZjrzu33+5gz7mWzBPvK+33zKVNwucZzPGN310YM1fM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Mf1Dunpn; arc=none smtp.client-ip=67.231.156.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
+	s=arc-20240116; t=1785435146; c=relaxed/simple;
+	bh=VqIBzMlq6g/GF90hWklXyVwZdMG3V9O90Aa4LNPkUKs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RsW86uA6Cf4HdH7iw/pIYlVP6OcvIpsiD7WtKw7Wr0iR9BzkXlLTIZhi9BOgH9KZU8Weka4SoI6kvhWPNo6f8K05rF0Vn4VOKhVL3S+hxE6WP1Q4Wk/gMvo6HxbfzGQALBIOXh/lS7Qk66QiVddJ92tO9GlgsItb3Tg0ENWik7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1ln0goUR; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Mf1Dunpn"
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66UFV1HI1299575;
-	Thu, 30 Jul 2026 09:00:34 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=f
-	+AO2dOBVZ5LUBoa2Lzndw6+nB72kMPEgIcmf4iuWik=; b=Mf1Dunpn96LFAxM9A
-	GP0PDYYguTL2rko+nOSU9/OvjM/J8Nf1Nia36L0Vf1C5dMUtkPTfi2pUxQMOWl57
-	DkaKW7bG/q5TrD1SCP6Cz3+y/2xJoNxFm++mDg66Vldl0ptA9DBdpjFKPJeF8dce
-	hO0E+hpH3/q57F22XVGa01HJ2VoRsmgRlR3XiPvyP2yNVdOmoet/RmGfljwkL6PP
-	phdUDF21rIZzHuIoyWWu6IOExyxGK53MXvF39afhOd0triJ2vqvMxu8rtZ1fHFWl
-	c43l0NS7my5u0OZmCjfGvf2gRBheJM2rRbT1zJPXYNZGXTX6l934m36p5VAQgaTD
-	wdqFw==
-Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4fq0f08cgr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 30 Jul 2026 09:00:34 -0700 (PDT)
-Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
- DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Thu, 30 Jul 2026 09:00:34 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
- (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Thu, 30 Jul 2026 09:00:33 -0700
-Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 8A26C3F704A;
-	Thu, 30 Jul 2026 09:00:31 -0700 (PDT)
-From: Nilesh Javali <njavali@marvell.com>
-To: <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
-        <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
-        <hare@suse.com>
-Subject: [PATCH 33/33] scsi: qla2xxx: Update version to 12.00.00.2607b2
-Date: Thu, 30 Jul 2026 21:28:38 +0530
-Message-ID: <20260730155838.2119230-34-njavali@marvell.com>
-X-Mailer: git-send-email 2.23.1
-In-Reply-To: <20260730155838.2119230-1-njavali@marvell.com>
-References: <20260730155838.2119230-1-njavali@marvell.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1ln0goUR"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4h9y2w55M1z1XM30r;
+	Thu, 30 Jul 2026 18:12:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1785435123; x=1788027124; bh=VgOPnCn0QfsKXXm/BbAFOkYo
+	OJ9TBZV9wxb2GZjzcNg=; b=1ln0goURqEoiSjiIrBXgTptQuPHYZruBVoPtrczb
+	ZXpDmWZoJbXH8576L/wwRx+ljaV+RkY5ygEK5WCCqeyjTueglCrQYVP0TS2tvOto
+	qgv/TgZMz/AqTyOh/KAmTq63UC/lQxHfeGot8pqqpKyq697MrjZTLmoiIFIc2xpI
+	0U9ico5jqQjyhv4LnciJVJ18xjnsRxbmzz/f07cYtOXS94aIuDKnviXctbqB3EWu
+	vJppC7aF5KpKKjw2vbICg0TaDKlEsS3q6s3lOOeem8/0KSy40/VMiOOKHeP1rSPk
+	i4i4pyprTkk6ox84sWkjZk+6LQt+X/QfrljlFtzIniJY9g==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ikeQ2MZlq-9C; Thu, 30 Jul 2026 18:12:03 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4h9y2n2Ftzz1XM4TB;
+	Thu, 30 Jul 2026 18:12:00 +0000 (UTC)
+Message-ID: <2b168ec3-a5c5-43c0-88fd-048ac80bfbe9@acm.org>
+Date: Thu, 30 Jul 2026 11:12:00 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: jDGZG-W1tIHknun8xctSJJAoi0jPPAL6
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMwMDEyMSBTYWx0ZWRfX8J/qGlyHQhDN
- 3mw72GHHJfA6clD31caLEFCJbsu6HAzI/e6F7qKfnHh5Dz5bI+178xrOcrKb9aVwDyDD1aDgiZp
- qkY6d/37w3VcG4+QVE5M7vxhYNZKT4ErRxRndu7d9qDwbccIEJb0no2/oCu7qNLxwnhW+wK6Gw2
- nTnVA79s0p9dd+6AeaQUemelX5d/Kg59jr9WFNWBExrIfXiwfRHugp37YbTRYuPRiWT1nT3lYdB
- QcWhuMPf9WstaMZPsGLjEgfKxLGBVdUa4FQtAuVNNL+46bq3cFhELWHVgsgydmlWJ9WWTWtpaB0
- MX283fineQSqEdRACo9HxZ2jbjFc/i7t4RJ9J069nOq8UEJJDqxJTFgqvT26ACqymPps5nSnMxv
- Ac/j1dnHql8sY+uWHltY8laR1NOqjZIveSoXo7g2ZyCHuwUWCjHyXMTGFw3RGMHFEVN1LWHLn28
- RCiWwS+0Js9seE4RScQ==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMwMDEyMSBTYWx0ZWRfX07wWBdClwzgN
- hKHr3m7UJHYSxTrW0dOv4P7oRRpFO2gSCIPkxMC8OPjlWw3HLZ/KffTPZvb4lnhMytCOsSPXuZs
- fwfirfWUrDtxEbYxsmdPgkOuKhGmkcY=
-X-Authority-Analysis: v=2.4 cv=NOLlPU6g c=1 sm=1 tr=0 ts=6a6b7522 cx=c_pps
- a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
- a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=ATVFy8JbdY1Zzb2G2p4A:9
- a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-GUID: jDGZG-W1tIHknun8xctSJJAoi0jPPAL6
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-30_04,2026-07-30_01,2025-10-01_01
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: core: do not block on tag allocation in
+ scsi_eh_lock_door()
+To: Zizhi Wo <wozizhi@huaweicloud.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ yangerkun@huawei.com, chengzhihao1@huawei.com, yukuai@fygo.io,
+ wozizhi@huawei.com, zhousiqi5@huawei.com
+References: <20260723041238.1584632-1-wozizhi@huaweicloud.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260723041238.1584632-1-wozizhi@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 7/22/26 9:12 PM, Zizhi Wo wrote:
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 147127fb4db9..3d42fe7701b7 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -2139,11 +2139,11 @@ static enum rq_end_io_ret eh_lock_door_done(struct request *req,
+>   static void scsi_eh_lock_door(struct scsi_device *sdev)
+>   {
+>   	struct scsi_cmnd *scmd;
+>   	struct request *req;
+>   
+> -	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN, 0);
+> +	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN, BLK_MQ_REQ_NOWAIT);
+>   	if (IS_ERR(req))
+>   		return;
+>   	scmd = blk_mq_rq_to_pdu(req);
+>   
+>   	scmd->cmnd[0] = ALLOW_MEDIUM_REMOVAL;
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 1c0b01d70350..ef9dc88221c9 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -6,7 +6,7 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "12.00.00.2607b1"
-+#define QLA2XXX_VERSION      "12.00.00.2607b2"
- 
- #define QLA_DRIVER_MAJOR_VER	12
- #define QLA_DRIVER_MINOR_VER	00
--- 
-2.47.3
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
