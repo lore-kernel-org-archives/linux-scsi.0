@@ -1,179 +1,301 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B443812C2
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 08:40:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451083D3CF7;
+	Thu, 30 Jul 2026 09:49:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785400809; cv=none; b=EnIZO0k76Cd7XDE5zSI+DmEbNO7FAUU1k4Q9O8aR38X9nWsrVZqy9Q+cBuaqbdRtKZSeLgu2aFkUxMBPE6SrhrRiXoxRYEARRS/c7cmZvUK9MdOjQZ1rspaxN1B+nGROGXNsxWjgHhOvbXIZTUHME6XDF5SamMnG+JnccrFXtLg=
+	t=1785405000; cv=none; b=tD7bcwfiPQT52gqoizGIdKGOypM9R04U1pSHhPO+bDrtNU5e9+zoDd10JBsK4FO9f+JB/4sVVNlLRnTrw9orCzyJnZPewiZBzKanI2CrqUYhA+AbezXm/xEkMOpMQuTCRzi1iZB98kgexAhKDw4Svb66Df7rCj2SKTq9tcIlJt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785400809; c=relaxed/simple;
-	bh=EOb3MXzuVe1ekLX0TPfCFbCC0o83uvQKb6O+ejisBuQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GIQuE4Tk75LEKoNNJvLlb7Aa+3H7zgCzJdv2SfWuwmiQVsSQAq1E11j+YBWN8Qiwa/fE8+VJUrio3x8ovYNTdqITzT8H3OmlpJccrEuQ9OUo5diIFoVuEpD49iL+rwPjE9pwLtl/HA4PMGDBh2oqrNadSmUS0yVpxaSxe5od0vU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fePRiapS; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785405000; c=relaxed/simple;
+	bh=Qeh1WKHIh+2u2UQFSEXAeYQ1CXGJIUxvSH4rFmbGKKA=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=NxqpZy+UnJgwTXEd177jcjJpZyrGzoD3YHI7qtbHiMPil8hNw6h3FDHWYN+NOIA4DyXgcOPS0iGKX8vvn2o7b+iaZzcL1IkI+JQFAaUiTiz6uZTvzw5Y99DvrO2+BE5vjbnYEy+Y9DbMji0ey9hPYvVD8NCUzuQjfjaE4HnIgvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=TW5e0YgZ; arc=none smtp.client-ip=148.251.105.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fePRiapS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2B081F000E9;
-	Thu, 30 Jul 2026 08:40:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785400805;
-	bh=iknwwgFvxRtdqCt06okT5+63sSGE7kbzTg/xr7ivaW4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fePRiapSmsiY9DmmIoYk5TzOe8LpOj3GSS5Rwuy9Nzx9KmPM/pYAURWtjtgnWeyoA
-	 hIDWlsA/it1ol+NI93fl1B2Ku1NblQaYz/w+jhsD/lSR87qGPfFOmHJJ94FS66khbF
-	 WUCYgVypSXQK9nmY786hst7Rtk4xgwi7vVpR7XP5uTnYyoXAKVoCn3Wj11otI55/7B
-	 wTtXO63yLGVlEEfoqcyLFF54w1oVNfLLpb375EO+PNOPpDt6ISjpI1e/vXKzLwFGUm
-	 vH3ApH84vXjG/xLs5RiC7YjyK5a5NOUwrrLlnvbp5s3RZLRmVOIzmW5qgHU7+qLt5H
-	 tbMWPoTNtlxww==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: Fix NULL deref when clearing alua_lu_gp
- twice
-Reply-To: sashiko-reviews@lists.linux.dev
-To: kensanya@163.com
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260730082458.663015-1-kensanya@163.com>
-References: <20260730082458.663015-1-kensanya@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 08:40:05 +0000
-Message-Id: <20260730084005.A2B081F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="TW5e0YgZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1785404995;
+	bh=Qeh1WKHIh+2u2UQFSEXAeYQ1CXGJIUxvSH4rFmbGKKA=;
+	h=From:Subject:Date:To:Cc:From;
+	b=TW5e0YgZVNZcctfyxXnokpLsIvH4L5gTp+BCdg50GaFR0gU4RwUYHCIwOm+h0j9Mq
+	 zY9Tz4iZZz2LBSDNlbo8XVA/GD8/apGRZNfYa8lw3vnZ/lOxORXMVgQDQ/JRKnV9va
+	 INmWrDU3eOfa5TqUXmBSvHdpryCOZ7ztyj3Z9ziY57BMriQWVL97gB2li636P+QJAi
+	 HJTJixEZTKN3mr2nR3mRkktIYdIlxFHqGWeUHmrnZ0Rw2nCJ/nTfwMu2xxU2peXav0
+	 Xf0CVj93jkkq447okNCyHconSXWYSpVu0XvLE0cp2vofmn065+W2H6Eq6T673+dxF/
+	 5PpiekXVQWlfQ==
+Received: from yukiji.home (unknown [100.64.0.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: laeyraud)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id C6B2217E051A;
+	Thu, 30 Jul 2026 11:49:53 +0200 (CEST)
+From: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
+Subject: [PATCH v10 00/26] MediaTek UFS Cleanup and MT8196 Enablement
+Date: Thu, 30 Jul 2026 11:48:56 +0200
+Message-Id: <20260730-mt8196-ufs-v10-0-bc5ecef202dc@collabora.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/23Qy27CQAwF0F9Bs+5UnvcMq/5H1cU8nBIJCE1CR
+ IX495qgigTN0pbOtXWvbMC+xYFtN1fW49QObXekQcDbhuVdPH4jbwstmARpBAjND6MXwfJzM/C
+ MWacQg0OjGIFTj017mdM+vx5zjz9nCh0fS5bigDx3h0M7bjdHvIycci04Gdgd7Nph7Prf+ZtJz
+ KJ2dxIcuAimZExepew/crffx9T18Z3C56hJLrldcUk8K6e80lmjizWuFlyqFVfEoQGddHTBNE2
+ N6yeXwq+4Jl4KZheVDaXIGjf/3IKANTfEdZDCCOOof1HjdsHlujpLHF0GMMkCyGp17snlS3WOe
+ DKNDOCyLdHVuH9yBevrnrhJgDFLpYSuVheWfH093Dl5pxoXvYJXfrvd/gBTwJuw0gIAAA==
+X-Change-ID: 20251014-mt8196-ufs-cec4b9a97e53
+To: Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+ Peter Wang <peter.wang@mediatek.com>, 
+ Chaotian Jing <chaotian.jing@mediatek.com>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
+ Stanley Jhu <chu.stanley@gmail.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>, 
+ Mark Brown <broonie@kernel.org>
+Cc: kernel@collabora.com, linux-arm-kernel@lists.infradead.org, 
+ linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, 
+ Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
+ Conor Dooley <conor.dooley@microchip.com>, 
+ Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785404993; l=10750;
+ i=louisalexis.eyraud@collabora.com; s=20250113; h=from:subject:message-id;
+ bh=Qeh1WKHIh+2u2UQFSEXAeYQ1CXGJIUxvSH4rFmbGKKA=;
+ b=jLoWaFVV5t3srKMzP+uDIxSR5Nb5LBpj40rbNPu/CjHq+J7geuRgYafAltEuQO/frzxt0qqll
+ wY57EFAEyfAAvYzglA1sBMCTeeKCWBJJbfeaS7La5tiVAVIOumFkeYs
+X-Developer-Key: i=louisalexis.eyraud@collabora.com; a=ed25519;
+ pk=CHFBDB2Kqh4EHc6JIqFn69GhxJJAzc0Zr4e8QxtumuM=
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+This series is a continuation of Nicolas Frattaroli's series, that does
+major cleanups in the Mediatek UFS driver code and dt-bindings
+and adds the support for the MT8196 SoC and its variants (MT8894 SoC).
+This new revision of the series takes into account the remaining peer
+reviews and issues reports for v9.
 
-Pre-existing issues:
-- [High] An off-by-one error in the input length validation allows a stack =
-buffer overread and out-of-bounds write if `count` is exactly equal to the =
-buffer size.
-- [High] Dropping a spinlock inside a `list_for_each_entry_safe` loop in AL=
-UA release functions exposes the loop to list poisoning and Use-After-Free =
-crashes.
-- [High] TOCTOU race in ALUA group ID assignment corrupts lists, and the er=
-ror path frees an active configfs item, causing a double-free.
---
+First, it fixes several build and check issues: kernel test report build
+report [1], patch per patch compilation, dtbs_check warnings.
 
---- Patch [1]: [PATCH] scsi: target: Fix NULL deref when clearing alua_lu_g=
-p twice ---
-commit 1601e8bb13acc929ed9af1ae24358c7f9e46e6aa
-Author: TanZheng <tanzheng@kylinos.cn>
+Second, regarding the opened issues in v9 on the dt-bindings patches
+2 ("dt-bindings: ufs: mediatek,ufs: Complete the binding") and 3
+("dt-bindings: ufs: mediatek,ufs: Add mt8196 variant") [2],
+this revision has two major changes to address them:
+1) It renames all the clock names starting with ufs_ prefix and the one
+that was named "ufs". No driver changes is needed for those because
+they are not explicitely used by their names. The ufs_sel and ufs_fde
+clocks in the driver were not renamed because they are not present 
+in the dt-bindings (not anymore for the ufs_sel).
+The devicetree patches for MT8195 SoC dtsi and the Mediatek Genio
+1200-EVK and Radxa NIO-12L boards were also added to match the changes
+made by series.
+2) It drops the addition of all crypto and ufs_sel clocks, as it seems the
+most likely and best solution to [2] after investigating on them and
+what they are used for ([3]).
 
-scsi: target: Fix NULL deref when clearing alua_lu_gp twice
+The Reviewed-by and Acked-by trailers, got by the patches 2 and 3 in
+previous series revisions, were dropped so these changes can be reviewed again. 
 
-This patch fixes a kernel panic caused by a NULL pointer dereference
-when a device's ALUA LU group association is cleared multiple times. It
-adds an early return to prevent passing a NULL lu_gp_new to
-__core_alua_attach_lu_gp_mem.
+This new revision is based on linux-next kernel tree (tag:
+next-20260729) and has been tested on Mediatek Genio 5100 Pro board
+(that integrates a MT8894 SoC).
 
-Link: https://sashiko.dev/#/patchset/20260730031917.72750-1-kensanya@163.co=
-m?part=3D1
+[1]: https://lore.kernel.org/linux-mediatek/202603081809.R9OrrITa-lkp@intel.com/
+[2]: https://lore.kernel.org/linux-mediatek/20260306163305.GA2680515-robh@kernel.org/
+[3]: https://lore.kernel.org/linux-mediatek/8b013876c591f80ec4af86d69bf2f38f9ac481ad.camel@collabora.com/
 
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/targe=
-t_core_configfs.c
-> index 860e840461778..a9c3ab54022e1 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -2058,6 +2058,12 @@ static ssize_t target_core_store_alua_lu_gp(
->  		__core_alua_drop_lu_gp_mem(lu_gp_mem, lu_gp);
->  		move =3D 1;
->  	}
-> +
-> +	if (!lu_gp_new) {
-> +		spin_unlock(&lu_gp_mem->lu_gp_mem_lock);
-> +		return count;
-> +	}
-> +
->  	/*
->  	 * Associate lu_gp_mem with lu_gp_new.
->  	 */
+Original Nicolas Frattaroli's cover letter:
 
-While reviewing this change, I noticed a few pre-existing issues in this
-function and related ALUA code:
+In this series, the existing MediaTek UFS binding is expanded and
+completed to correctly describe not just the existing compatibles, but
+also to introduce a new compatible in the from of the MT8196 SoC.
 
-drivers/target/target_core_configfs.c:target_core_store_alua_lu_gp() {
-...
-    if (count > LU_GROUP_NAME_BUF) {
-        pr_err("ALUA LU Group Alias too large!\n");
-        return -EINVAL;
-    }
-    memset(buf, 0, LU_GROUP_NAME_BUF);
-    memcpy(buf, page, count);
-...
+The resets, which until now were completely absent from both the UFS
+host controller binding and the UFS PHY binding, are introduced to both.
+This also means the driver's undocumented and, in mainline, unused reset
+logic is reworked. In particular, the PHY reset is no longer a reset of
+the host controller node, but of the PHY node.
 
-[Severity: High]
-This is a pre-existing issue, but does this off-by-one check allow a
-stack buffer overflow?
+This means the host controller can reset the PHY through the common PHY
+framework.
 
-If count is exactly LU_GROUP_NAME_BUF, memcpy will fill the entire
-buffer, leaving no space for a null terminator. Later calls to
-strstrip(buf) or strim(buf) would run off the end of the stack buffer.
+The resets remain optional.
 
-Could this happen when an administrator writes exactly 256 bytes without
-a null terminator? The same pattern appears in
-drivers/target/target_core_alua.c:core_alua_store_tg_pt_gp_info() where
-TG_PT_GROUP_NAME_BUF is used.
+Additionally, a massive number of driver cleanups are introduced. These
+were prompted by me inspecting the driver more closely as I was
+adjusting it to correspond to the binding.
 
-[ ... ]
+The driver still implements vendor properties that are undocumented in
+the binding. I did not touch most of those, as I neither want to
+convince the bindings maintainers that they are needed without knowing
+precisely what they're for, nor do I want to argue with the driver
+authors when removing them.
 
-drivers/target/target_core_alua.c:core_alua_free_lu_gp() {
-...
-    spin_lock(&lu_gp->lu_gp_lock);
-    list_for_each_entry_safe(lu_gp_mem, lu_gp_mem_tmp,
-                &lu_gp->lu_gp_mem_list, lu_gp_mem_list) {
-...
-        spin_unlock(&lu_gp->lu_gp_lock);
-...
+Due to the "Marie Kondo with a chainsaw" nature of the driver cleanup
+patches, I humbly request that reviewers do not comment on displeasing
+code they see in the context portion of a patch before they've read the
+whole patch series, as that displeasing code may in fact be reworked in
+a subsequent patch of this series. Please keep comments focused on the
+changed lines of the diff; I know there's more that can be done, but it
+doesn't necessarily need to be part of this series.
 
-[Severity: High]
-This is a pre-existing issue, but does dropping the spinlock inside
-list_for_each_entry_safe expose the loop to list poisoning and a
-use-after-free?
+Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+---
+Changes in v10:
+- Rebased onto next-20260729 and fix conflicts
+- Added Signed-off-by for all patches 
+- Patch 2: 
+  - Removed "ufs" prefix from clock names
+  - Renamed "ufs" clock to "main"
+  - Removed all crypto clock additions
+  - Aligned example to patch changes
+  - Reworded commit message to drop crypto clocks references
+    and add clock names renaming
+  - Dropped Reviewed-by/Acked-by trailers due to changes
+- Patch 3:
+  - Removed all ufs_sel clock additions
+  - Aligned example to patch changes
+  - Reworded commit message to drop ufs_sel clocks references
+  - Dropped Reviewed-by/Acked-by trailers due to changes
+- Fixed build failure on patch 9 due to ufs_mtk_of_match symbol being
+  declared in the ufs-mediatek.c file after use.
+- Moved ufs_mtk_of_match symbol at original place in patch 8
+- Fixed build failure reported by Kernel Test Robot on patch 19 by
+  fixing the incorrect FIELD_MODIFY val argument and using GENMASK
+  for MTK_UFS_VER_PREFIX_M definition
+- Added patch 24, 25, 26 devicetree patches for MT8195 SoC, Mediatek
+  Genio 1200-EVK and Radxa NIO-12L boards to match the dt-bindings
+  changes introduced by this series
+- Added reviewed-by tag for patch 21
+- Link to v9: https://lore.kernel.org/r/20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com
 
-Since the _safe variant only protects against the deletion of the
-current element, dropping the lock could allow a concurrent thread
-handling device teardown to remove and free the next element. When the
-lock is reacquired and the loop continues, wouldn't it dereference the
-freed next pointer?
+Changes in v9:
+- Eliminate build failure in "Remove undocumented downstream reset
+  cruft", including the of_node_put of the reset node that wasn't caught
+- Pointlessly rename per-instance hibernate timer backup member to
+  "ahit"
+- Link to v8: https://lore.kernel.org/r/20260304-mt8196-ufs-v8-0-5b0eac23314f@collabora.com
 
-The exact same pattern seems to exist in core_alua_free_tg_pt_gp() for
-LUN list iteration.
+Changes in v8:
+- Split "Rework probe function" into two, turn the reset removal into
+  its own patch and squash the PHY changes into the common PHY framework
+  patch.
+- Leave "device reset done" logging print at INFO level
+- Remove redundant falsy check for reg_vcore in "Don't acquire
+  dvfsrc-vcore twice".
+- Change ufs_mtk_wait_idle_state to early-exit on all non-HIB states,
+  and poll for VS_HCE_BASE instead.
+- Link to v7: https://lore.kernel.org/r/20260216-mt8196-ufs-v7-0-b5f2907c6da7@collabora.com
 
-[ ... ]
+Changes in v7:
+- Rebase onto next-20260205, which drops "scsi: ufs: mediatek: Switch to
+  newer PM ops helpers" as Arnd sent an equivalent patch that also fixes
+  the PM-less build failure.
+- Link to v6: https://lore.kernel.org/r/20260124-mt8196-ufs-v6-0-e7c005b60028@collabora.com
 
-drivers/target/target_core_alua.c:core_alua_set_lu_gp_id() {
-...
-    if (lu_gp->lu_gp_valid_id) {
-        return -EINVAL;
-    }
+Changes in v6:
+- Reword "Rework probe function" commit to better justify the changes
+  being made.
+- Drop "Add vendor prefix to clk-scale-up-vcore-min"
+- Add patch to remove clk-scale-up-vcore-min entirely, describing the
+  process for bringing it back (in a different form) in the commit
+  message.
+- Link to v5: https://lore.kernel.org/r/20260108-mt8196-ufs-v5-0-49215157ec41@collabora.com
 
-    spin_lock(&lu_gps_lock);
-    if (alua_lu_gps_count =3D=3D 0x0000ffff) {
-        spin_unlock(&lu_gps_lock);
-        kmem_cache_free(t10_alua_lu_gp_cache, lu_gp);
-        return -ENOSPC;
-    }
-...
+Changes in v5:
+- Drop "scsi: ufs: mediatek: Make scale_us in setup_clk_gating const" as
+  someone else already got a patch in for this into next.
+- Make mtk_init_boost_crypt void
+- Don't disable/enable misc regulators during suspend/resume, but enable
+  them once when acquiring with a devm helper.
+- Link to v4: https://lore.kernel.org/r/20251218-mt8196-ufs-v4-0-ddec7a369dd2@collabora.com
 
-[Severity: High]
-This is a pre-existing issue, but does this create a race condition that
-corrupts the list, along with an illegal free?
+Changes in v4:
+- bindings: Redo the supply situation, as the avdd pins don't describe
+  the vcc(q2) card supplies.
+- bindings: format clock in mt8196 example more tersely.
+- phy: use devm_reset_control_get_optional_exclusive directly
+- driver: get and enable/disable the aforementioned avdd supplies.
+- Link to v3: https://lore.kernel.org/r/20251023-mt8196-ufs-v3-0-0f04b4a795ff@collabora.com
 
-The lu_gp_valid_id check happens outside the spinlock. Could concurrent
-sysfs writes both pass this check, serialize on the lock, and then call
-list_add_tail on the same node, corrupting the list?
+Changes in v3:
+- Split mediatek,ufs bindings change into two patches, one for
+  completing the existing binding, one for the MT8196
+- Add over a dozen driver cleanup patches
+- Add explicit support for the MT8196 compatible to the driver
+- Note: next-20251023, on which I based this, currently has a broken
+  build due to an unrelated OPP core change that was merged with no
+  build testing. I can't use next-20251022 either, as that lacks the
+  recent mediatek UFS changes. It is what it is.
+- Link to v2: https://lore.kernel.org/r/20251016-mt8196-ufs-v2-0-c373834c4e7a@collabora.com
 
-Additionally, if the global count limit is reached, kmem_cache_free is
-called directly on lu_gp. Since lu_gp embeds a configfs item that configfs
-still references, does this bypass configfs lifecycle rules and result in
-a double-free when the directory is removed?
+Changes in v2:
+- Reorder define in mtk_sip_svc.h
+- Use bulk reset APIs in UFS host driver
+- Link to v1: https://lore.kernel.org/r/20251014-mt8196-ufs-v1-0-195dceb83bc8@collabora.com
 
-The same pattern exists in core_alua_set_tg_pt_gp_id().
+---
+Louis-Alexis Eyraud (3):
+      arm64: dts: mediatek: mt8195: Align ufshci node to dt-bindings changes
+      arm64: dts: mediatek: mt8395-genio-1200-evk-ufs: Complete UFS power supplies
+      arm64: dts: mediatek: mt8395-radxa-nio-12l: Complete UFS power supplies
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730082458.6630=
-15-1-kensanya@163.com?part=3D1
+Nicolas Frattaroli (23):
+      dt-bindings: phy: Add mediatek,mt8196-ufsphy variant
+      dt-bindings: ufs: mediatek,ufs: Complete the binding
+      dt-bindings: ufs: mediatek,ufs: Add mt8196 variant
+      scsi: ufs: mediatek: Move MTK_SIP_UFS_CONTROL to mtk_sip_svc.h
+      phy: mediatek: ufs: Add support for resets
+      scsi: ufs: mediatek: Rework resets
+      scsi: ufs: mediatek: Rework 0.9V regulator
+      scsi: ufs: mediatek: Rework init function
+      scsi: ufs: mediatek: Rework the crypt-boost stuff
+      scsi: ufs: mediatek: Handle misc host voltage regulators
+      scsi: ufs: mediatek: Remove undocumented downstream reset cruft
+      scsi: ufs: mediatek: Remove vendor kernel quirks cruft
+      scsi: ufs: mediatek: Use the common PHY framework
+      scsi: ufs: mediatek: Remove mediatek,ufs-broken-rtc property
+      scsi: ufs: mediatek: Rework _ufs_mtk_clk_scale error paths
+      scsi: ufs: mediatek: Clean up logging prints
+      scsi: ufs: mediatek: Rework ufs_mtk_wait_idle_state
+      scsi: ufs: mediatek: Don't acquire dvfsrc-vcore twice
+      scsi: ufs: mediatek: Rework hardware version reading
+      scsi: ufs: mediatek: Back up idle timer in per-instance struct
+      scsi: ufs: mediatek: Remove ret local from link_startup_notify
+      scsi: ufs: mediatek: Remove undocumented "clk-scale-up-vcore-min"
+      scsi: ufs: mediatek: Add MT8196 compatible, update copyright
+
+ .../devicetree/bindings/phy/mediatek,ufs-phy.yaml  |  16 +
+ .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 160 +++-
+ arch/arm64/boot/dts/mediatek/mt8195.dtsi           |  21 +-
+ .../dts/mediatek/mt8395-genio-1200-evk-ufs.dts     |   3 +
+ .../boot/dts/mediatek/mt8395-radxa-nio-12l.dts     |   3 +
+ drivers/phy/mediatek/phy-mtk-ufs.c                 |  71 ++
+ drivers/ufs/host/ufs-mediatek-sip.h                |   9 -
+ drivers/ufs/host/ufs-mediatek.c                    | 951 +++++++++------------
+ drivers/ufs/host/ufs-mediatek.h                    |  17 +-
+ include/linux/soc/mediatek/mtk_sip_svc.h           |   3 +
+ 10 files changed, 649 insertions(+), 605 deletions(-)
+---
+base-commit: 02dddaea43fc5132b95a7a9184f53f276d13e4aa
+change-id: 20251014-mt8196-ufs-cec4b9a97e53
+
+Best regards,
+-- 
+Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
+
