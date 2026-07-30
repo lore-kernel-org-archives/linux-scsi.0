@@ -1,65 +1,65 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24A043C197E
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 20:11:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A433CB540
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 20:11:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785442310; cv=none; b=V/pAkoWB6715oMNMiwFvkFVu9FUzbwxKxjq008UGQFWNnlEcmHpmt7IlDohUNgvQ70z+xOtlgwbJEjgWoeSFbjJJOVII7guOqrjYSI8fiht+Ridnu9lmbGSfZxW9QC8dK58IWsq2zRzsxIbR84AT8fAFBixa59BI5WCgi6+cqco=
+	t=1785442315; cv=none; b=kp1nlq/4nva2kRcK27p07gSRr/wMj8ei5EQPZpMhfP0MoRiospcjToVnJXCTrgUDuLOuq2UG59DOr7ty5NGhQpdU+kTCkuDyZCx8BTW5znKBJRcfFVoPtQ3nnWpsMJ3+jL0xvuk3GBldqMtnqYENJfqCr1J4MlfHofEQBNiw270=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785442310; c=relaxed/simple;
-	bh=82dBttW5BbKeJKJs/OF80tfwpM2MddI/t/zJLyO/za8=;
+	s=arc-20240116; t=1785442315; c=relaxed/simple;
+	bh=ZdvgeoWh2TerW5rE/vqKIpMlNmv0bCF+vIbf9z8+9Y8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LAVXqlQIH0d0fi3Fv+smyEBHWEQwnM4M8zBXy9Lj35ZK6f1xe9AZFcfwZJCq1J1MiJuMFtvTVnxp44TD7XI492Wg/+x3gQ6j6vwG/n0tR96rUBWX7yRqzWzMpFWnCh6k3jMkQhgAgHyAgF5zrUHS+8SPg7HEjd0C12VBfk0ynqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HkLoGcDB; arc=none smtp.client-ip=209.85.210.177
+	 MIME-Version; b=q/Txh/wPVjHp15srhyoSt/c1qqrY8z4Qbr7h8Xv/XEzi/CWs+4xmQl1/x54BXTaPfVCxfVS0Y505uCGRZd4dq7lvUxVn27aukDj65msrl6BRMXyOzRkqZ4lXuMquJlmc9hSaENfvsqt9XZbZJkeFtzIcrVCqzrfG7bz5GRYmwfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FLvLbPlT; arc=none smtp.client-ip=209.85.210.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HkLoGcDB"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-84e507b079dso249283b3a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 13:11:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FLvLbPlT"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-84e0688b859so201465b3a.0
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 13:11:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785442299; x=1786047099; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785442306; x=1786047106; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:reply-to:references
          :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=1cRzxCLmJh01GBR+ktuxuJ/o0iMR1lZqgXW5wBf6dg0=;
-        b=HkLoGcDB3WBibfwJOqTSPhktaOR12tYrn1Z2YDjlIijtIW0jt/y84TTd58TwPijLB+
-         su9HlquHfO6asdTGrNx6RH1XttqGkuWS4CVnYGMh3bnUB05Td0l/0sdQnJXCkaWl1yCc
-         SDd9D08//3ifMA2WRmm/p3MOQb+kLLDCQcQe5hwpDor0zCtwL2yd4I84GYPLMpem4kuF
-         HKOwvVo2Ig21oxAwDDGOaWOW6f8sFMco0vOERzbo/HhcwK+6RIW/EXwkrGXj4/v7+SON
-         ZNb9Iq+WCDHIVknVzZNrQdnTdfmT4y2eSU5YdBjiJjeN+KNtKNmhIK3jmQfF8mYxEXo1
-         5sjw==
+        bh=W7nssRnI5PbZKyunLFrMTG5kzkBNYctSVirvyP8FTcY=;
+        b=FLvLbPlTZGHeA6IkbXCPJhDPieVDpLmcH2m7gQubPq6BMmoTK/RqhrPaZB7QzafEnf
+         3EPIYSnCXuxvlgtjh813EyHxw8dos2Q/2+nzLBnt5T0oiJ8aMcSaovp2xyl/ZvySGsKX
+         BFmGPbCgh/tZf7uFYmBpR8SFFQ2st78hX/T63X2d23JzVAxTyT/DK0Jpgjhuj+riyDTu
+         9Pdyv3n9iGsPaxKyis0NVhHMuS6ccShpWeu/EGqlKILAsWycedraVQBPikHc7zno+V9m
+         wxiHDRu2rb+feGZI3mSX2icOMVa3yAXfTHgyL3ZjiEwifhOYOCkDuzWLe/Y9h/nJZLaT
+         4c/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785442299; x=1786047099;
+        d=1e100.net; s=20251104; t=1785442306; x=1786047106;
         h=content-transfer-encoding:mime-version:reply-to:references
          :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=1cRzxCLmJh01GBR+ktuxuJ/o0iMR1lZqgXW5wBf6dg0=;
-        b=RDfUN9ropNM8sYZ2fG1tmVnDxZl26SBxcmYiL4NTKySpph7Pt4Ra7twOY5Fvk5vOs1
-         j06NiqVM62UvVjs0NmN2KOsqCR9/5ERGMtotoI1C3xkgLPScei07DdCN2lcHA+p1eUDb
-         7bxoWgcFMKsLWIQB9zYxg+2VOGyojvnvB48I0SKUTHGyS8xTYOFT7+HHe1CfZFG+VdOb
-         lz60RkMMXLi4eG78rOTSlN5R5YPOm/Cb6gxoRzV7Xi+/AzVuhZPctbKS80QIoS0KEFH1
-         Q5vYgzeIOLuMDUKtL0giH++8sHFulB9nK7MCKQwRhUnOWBeQrlusb5tYd/7UbaM+fLMa
-         Zx0A==
-X-Forwarded-Encrypted: i=1; AHgh+Rqi9YJ8mPB+a3PwoxNFYW3TUEry5bzR9z7OmdVU4CfHFGZM1xbTjRHvfmjoq/mtlVVAnSOyDMy5hM3Y@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyzm1YqaFxqmJf3FkiCmSWAEntFCEYwFg4qCrXob62J18VKQqTN
-	L5Ou7DfqzpHawNe9EHcWHinEKc+N9Vcyu1axcbMdKZCLL0AEQb74f9V2
-X-Gm-Gg: AR+sD13xe8jJPf841oBW9t5Gg2xfiWGMkSBFJ3zcr1d3nGQMwJx4x0efHiEzZx4Vb66
-	u7sQ/iKh22Wqi4N4EVb0qVio+OwIL6ewTELl9fLSjetdWWmebgwV1mtWdnGZ2NCkwgK5+aeVQjV
-	u5Hnu/WSfXq1JEo1igU0+41ve3SKOtPLaoGaCBO1H81IUSVInshuUMy0y/C+YlDn8X+RSD86PfW
-	l8BToBDDaE/2h7F5RaBfChkSHanjjj3zLt2h6VxMbj3chibBbGs1HevULEbBnMc2lvi4207gDK1
-	JiyyyPgP5a8U+w8nbqzZQ7IX7McDxmV2+UnjJf6NC8Xu7uOf0rYECNeuhgKUoelAqSm1DagSgpQ
-	zmQrGtoIfPl0FZ3S+IopU2SkxHKDmtyGiXHdXEC17i+FxbmVGc97en7zdwYC2VSkQlyNXa5Rh55
-	QkIgmgNIAcjQbcUzZptwDT3Q3zjkuIDUMK3xs5fB0s4TWN/2hVDINBewnYyMbyXGQaPWUAyLQMp
-	CKsC1cTOkKTDU4uDVvlI8yXXeFAWTSCUcV/naMpjM8=
-X-Received: by 2002:aa7:88c7:0:b0:848:760e:eb76 with SMTP id d2e1a72fcca58-84ebc432c34mr3475574b3a.61.1785442298760;
-        Thu, 30 Jul 2026 13:11:38 -0700 (PDT)
+        bh=W7nssRnI5PbZKyunLFrMTG5kzkBNYctSVirvyP8FTcY=;
+        b=dqmE7l8NdMnAdhy5Z3EenDFHJmcdpex70UKBH7L5Ce8RcKiqeIyUJ9QDJir+lI6cpB
+         IcgmikqALhmHGN6MsJu1/3690KolLmjhEjy/NZ/+nDGg0fzgxDVrZ4TYQTkimAW53AXE
+         aGW5mgxvnr5FucMbc3ZDNBL51K1NuvJVqK0wvrxP3A1rpQZ5Zc8wsHjH6CqGZGK+F4V7
+         jMUHUBv4EOjrrWJlEzv6YAELwBVghRxOHAw3LMDUAhDyhzxz7/nCl2x6c2udon7eHGSW
+         Wq63znsG/Pl1QOz03EYSLeIP58xlqsOWUIogztureRZlqj1p4RtUy9sCpikXwuFip4dG
+         657Q==
+X-Forwarded-Encrypted: i=1; AHgh+Rog/7uNQZaey8TtHHY5/7z0738soetmd9+Z/6HnUCNIWxN3/s3dujTI4frF+bplizMx40PXeLl90gdN@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw2B55wTS9ZY0doDjKS//UdHgcz3WDuGLofLkczgI4K7CU1L9Kq
+	yau/HCL2Ng5Mt4AVSMhHcDX/9Hvrwfryb9vMopXLIjTQKe8QeLWaxgxs
+X-Gm-Gg: AR+sD12lN8q9X1+ug73XdI4dpfUygCt7gCQZxZt2u0Ta/ZVwuSCmhOlbCaD9tRpTTOj
+	zaTxRDgKcDzUvlL9se7sEv+HyJQibOPmOlyLF6QXRuay/NbM9kSyrV4tBVr6/B+/c/I7pZLC6O1
+	FC8A5i1aIPBURdUC0q0P3Cdl/fjUaPHJMc/v3XXgcypZ7a0YonBqeejl+AJXsDd9IRB+pbOMed8
+	yos8DSS2nVpEsdk8tsvhkmMHVLYmGKiOGcX0sjOh/vJvOnlqKdBCBDJvFcbOhqzuQpGYZkcEDPz
+	O1nuwoKj/ctZQ8aNsv3h/TweSZ4eUig4uYV41RPntaUAh/ihan5dU4So7XCFr5S4OWTr5td3/PJ
+	qpEyao1SdVGbCeQ9bWN/uFjR1CdIMxq8cZESWXh6buQJgm/UvvvEtTagzoKECSXJEZLdUACXzfp
+	JmEsA3ZooZz+fAjZhsYmEki17cMadlq/e5t8HK+BSo5ozRrVsQQhCEu7xdxLykuBePBMhH5K9xx
+	whOkp1OxqHfzUulhLueAeUA9OFwui5TzsuWWL/2lx4=
+X-Received: by 2002:a05:6a00:1741:b0:848:5b1e:aec2 with SMTP id d2e1a72fcca58-84ebc3e39b5mr3714867b3a.54.1785442305476;
+        Thu, 30 Jul 2026 13:11:45 -0700 (PDT)
 Received: from localhost.localdomain (c-174-165-208-10.hsd1.wa.comcast.net. [174.165.208.10])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84ea0055325sm3689108b3a.15.2026.07.30.13.11.35
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84ea0055325sm3689108b3a.15.2026.07.30.13.11.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 13:11:37 -0700 (PDT)
+        Thu, 30 Jul 2026 13:11:44 -0700 (PDT)
 From: Michael Kelley <mhkelley58@gmail.com>
 X-Google-Original-From: Michael Kelley <mhklinux@outlook.com>
 To: kys@microsoft.com,
@@ -95,9 +95,9 @@ Cc: x86@kernel.org,
 	netdev@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	virtualization@lists.linux.dev
-Subject: [RESEND PATCH net-next 2/6] hv_sock: Remove check for old Hyper-V hosts
-Date: Thu, 30 Jul 2026 13:11:19 -0700
-Message-Id: <20260730201123.1767-3-mhklinux@outlook.com>
+Subject: [RESEND PATCH 5/6] scsi: storvsc: Remove support for storvsc protocol of old Hyper-V hosts
+Date: Thu, 30 Jul 2026 13:11:22 -0700
+Message-Id: <20260730201123.1767-6-mhklinux@outlook.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260730201123.1767-1-mhklinux@outlook.com>
 References: <20260730201123.1767-1-mhklinux@outlook.com>
@@ -111,29 +111,114 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
 With the overall removal of Linux support for running on Hyper-V
-hosts earlier than WS2016 and Windows 10, the check for such versions
-during hv_sock initialization is no longer necessary. Remove the
-check.
+hosts earlier than WS2016 and Windows 10, it's no longer necessary
+to support older storvsc protocols. Remove the support and associated
+special case code. However, support for the protocol for Windows
+Server 2012R2 and Win8.1 (protocol version 6.0) is *not* removed
+because it is activiely used by HvLite in the paravisor for Azure VMs.
 
 Signed-off-by: Michael Kelley <mhklinux@outlook.com>
 ---
- net/vmw_vsock/hyperv_transport.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/storvsc_drv.c | 53 +++++++-------------------------------
+ 1 file changed, 10 insertions(+), 43 deletions(-)
 
-diff --git a/net/vmw_vsock/hyperv_transport.c b/net/vmw_vsock/hyperv_transport.c
-index 5405c2680dec..855b15971c35 100644
---- a/net/vmw_vsock/hyperv_transport.c
-+++ b/net/vmw_vsock/hyperv_transport.c
-@@ -961,9 +961,6 @@ static int __init hvs_init(void)
- {
- 	int ret;
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 571ea549152b..095fce47c5f1 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -47,9 +47,15 @@
+  * V1 RC < 2008/1/31: 1.0
+  * V1 RC > 2008/1/31:  2.0
+  * Win7: 4.2
+- * Win8: 5.1
+- * Win8.1: 6.0
+- * Win10: 6.2
++ * Win8/WS2012: 5.1
++ * Win8.1/WS2012R2: 6.0 (also for HvLite paravisor in Azure)
++ * Win10/WS2016: 6.2
++ *
++ * Protocol versions earlier than Win8.1 are no longer supported since
++ * Win8.1/WS2012R2 and earlier hosts are no longer supported by Linux.
++ * But protocol version 6.0 is retained since it is used by the HvLite
++ * paravisor in Azure. The #define's for the earlier versions remain
++ * for the historical record.
+  */
  
--	if (vmbus_proto_version < VERSION_WIN10)
--		return -ENODEV;
+ #define VMSTOR_PROTO_VERSION(MAJOR_, MINOR_)	((((MAJOR_) & 0xff) << 8) | \
+@@ -218,7 +224,6 @@ struct vmscsi_request {
+ static const int protocol_version[] = {
+ 		VMSTOR_PROTO_VERSION_WIN10,
+ 		VMSTOR_PROTO_VERSION_WIN8_1,
+-		VMSTOR_PROTO_VERSION_WIN8,
+ };
+ 
+ 
+@@ -1601,13 +1606,12 @@ static int storvsc_sdev_configure(struct scsi_device *sdevice,
+ 	sdevice->no_write_same = 1;
+ 
+ 	/*
+-	 * If the host is WIN8 or WIN8 R2, claim conformance to SPC-3
++	 * If the host is WIN8 R2, claim conformance to SPC-3
+ 	 * if the device is a MSFT virtual device.  If the host is
+ 	 * WIN10 or newer, allow write_same.
+ 	 */
+ 	if (!strncmp(sdevice->vendor, "Msft", 4)) {
+ 		switch (vmstor_proto_version) {
+-		case VMSTOR_PROTO_VERSION_WIN8:
+ 		case VMSTOR_PROTO_VERSION_WIN8_1:
+ 			sdevice->scsi_level = SCSI_SPC_3;
+ 			break;
+@@ -1703,28 +1707,6 @@ static enum scsi_timeout_action storvsc_eh_timed_out(struct scsi_cmnd *scmnd)
+ 	return SCSI_EH_RESET_TIMER;
+ }
+ 
+-static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
+-{
+-	bool allowed = true;
+-	u8 scsi_op = scmnd->cmnd[0];
 -
- 	ret = vmbus_driver_register(&hvs_drv);
- 	if (ret != 0)
- 		return ret;
+-	switch (scsi_op) {
+-	/* the host does not handle WRITE_SAME, log accident usage */
+-	case WRITE_SAME:
+-	/*
+-	 * smartd sends this command and the host does not handle
+-	 * this. So, don't send it.
+-	 */
+-	case SET_WINDOW:
+-		set_host_byte(scmnd, DID_ERROR);
+-		allowed = false;
+-		break;
+-	default:
+-		break;
+-	}
+-	return allowed;
+-}
+-
+ static enum scsi_qc_status storvsc_queuecommand(struct Scsi_Host *host,
+ 						struct scsi_cmnd *scmnd)
+ {
+@@ -1738,21 +1720,6 @@ static enum scsi_qc_status storvsc_queuecommand(struct Scsi_Host *host,
+ 	u32 payload_sz;
+ 	u32 length;
+ 
+-	if (vmstor_proto_version <= VMSTOR_PROTO_VERSION_WIN8) {
+-		/*
+-		 * On legacy hosts filter unimplemented commands.
+-		 * Future hosts are expected to correctly handle
+-		 * unsupported commands. Furthermore, it is
+-		 * possible that some of the currently
+-		 * unsupported commands maybe supported in
+-		 * future versions of the host.
+-		 */
+-		if (!storvsc_scsi_cmd_ok(scmnd)) {
+-			scsi_done(scmnd);
+-			return 0;
+-		}
+-	}
+-
+ 	/* Setup the cmd request */
+ 	cmd_request->cmd = scmnd;
+ 
 -- 
 2.25.1
 
