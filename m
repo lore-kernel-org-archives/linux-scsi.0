@@ -1,136 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 869B83E5A0B
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:11:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A109471402
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:15:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785453111; cv=none; b=eSixa9Q8MQpQGifNXK7OYP2qY0db7yopxNVItVvumQFkzbpf2SbuXuZePZtcBMKyrqeEpExl9zaVA0rRuoASccFsOQxULf/o2zc1Mk5WEAHYOovANawsi5yAhJTaDKb+m3ZbJAIN0kk6z31t5O1+ViReMl/W7nqHDQtkRfFTRxo=
+	t=1785453304; cv=none; b=LlH4VhsO7qnbBmXGTztvsqWdcDrpSwYV4KdPaAavWNl4hWQugW+2mFf8nBtVP73YbYaELAGMYFa3kEH+MMgn+frDHr8yVE17lS/zODVM4F2PQmLC7CabuTYvc6ZYRILNMXuWuhx7Hvogcm5aT7csrin4Kbx3gpor/tjMalGZD78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785453111; c=relaxed/simple;
-	bh=bCcpDqgBqZUEClDpYVpBD7vBrOCkBTvZshWl9Q5Bzmk=;
+	s=arc-20240116; t=1785453304; c=relaxed/simple;
+	bh=gqI2EphiOdXCd84+tL9INPJgEEm9FxB1aVNW7l5Gb3A=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=JVOIHohY8SjrgyRI+nhOj+jr0Mgi6X77i6G0VDagjoqRMolObYWJq4P0JnWviXKoC1ndmysLsQr4D+3QyjtPz3/LpSryF1tDaCSMQIUDSqa24F3DchFuCSLNoIRXWWPuGKOxYlfcZ+8+NPttdMmeQ5JD5SSEWsTz31Vtrhm76g4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XsNRJV/j; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=uc4UVJQaLAlHSs6ag58csIwDcWpuSteOtPYKwH8ptoqUurNlXm6MQjiB4BXqb8Ve7lbi/Xo/zHG9lIzyJ/2guJnvYH929b+EwZ9f8K09qzipCxhoxgCeX+Dz4+8+SD+/jL+QO0KKAGpMbAzuW6wTpgPQ6FHdC55y6/iz258iQd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e8eJGbdT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XsNRJV/j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 078F01F000E9;
-	Thu, 30 Jul 2026 23:11:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e8eJGbdT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E07251F00A3A;
+	Thu, 30 Jul 2026 23:15:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785453109;
-	bh=+6e7+3xpEEBIlsUwtvwj3x2bkdRr5fPGuI9FRQRsKfc=;
+	s=k20260515; t=1785453303;
+	bh=HYA24B0AGkZpQVEOBlXp6PR6nZoF3uhAwnErnKeZFzo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XsNRJV/jw0WN7x8Qk+kc/DERYGIKaIdt6echQVwxAJ8q5k+dIaDMBYYNuCF/AFCi2
-	 2bpydeYFyRArwJwvswkF1vXY8il4IJ76E6QnuE3cZNToGYhkWmFrusKSAhSgv2VytJ
-	 UIj30OuS/HrvxWnLt0+JHqocXnkTXLMQRNUlE0YXwvTReHHAECNr+GWEHNcx84o0Qh
-	 NlNNrIM3z1mjAaVLiglauw3iAEZEOu96kiQXxNwDj4EGB2ycUxYtm65zLv86rWX3PT
-	 ygHGB/o+9NInSLdopiFx1QQmOG4GRRVvvXQXDLk32Rm32G9CsItE0HGI7p13op2/6Z
-	 Qo6dYKK+SIXJQ==
+	b=e8eJGbdTEUJhwJI+aF2K3jNJQqakvaPTA95FrH6Ovy9aq6XWypGS0DXaSQ+g1fS06
+	 QQTJiwJ7QV9Ovu+t/9a9kDDa2g3nal+UPkBdoW66+gMubPVbikpEGr7WqiD7NP+j5b
+	 hEHMyCeXo5PTJZLkwJtpKXN/QH3IE2B1358n0sSvPLE3RFhT3s3IiKGODi6M88+HUg
+	 JuX0v0MzdGCQfUBL6Pi4ZRXyF3mwtLiMIGupC8Q5AJbBDYp8HSIMbbhBYlKJT5j5Ga
+	 fpR1PbfPPh0NvXP1s/8oA8hMf7gpNV5NPpNHpZxr6v7DCILtfw+DQGaFqfH+UB1HZQ
+	 BYAXMhj7+SqlQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 26/57] scsi: fnic: Enable lock context analysis
+Subject: Re: [PATCH v3 39/57] scsi: megaraid_sas: Prepare for enabling lock
+ context analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <d10f7eaef0e297d1b78d1ba484b05686e185d8c7.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <5b1efea947bc2923e205d7c920b15b356fc4eeff.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <d10f7eaef0e297d1b78d1ba484b05686e185d8c7.1785451174.git.bvanassche@acm.org>
+ <5b1efea947bc2923e205d7c920b15b356fc4eeff.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:11:48 +0000
-Message-Id: <20260730231149.078F01F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 23:15:02 +0000
+Message-Id: <20260730231502.E07251F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] IRQ state corruption due to mixed use of shared and local variable=
-s for spinlock IRQ flags.
-- [High] Use-After-Free when iterating over tport lists with list_for_each_=
-entry_safe() and dropping the lock.
+- [Medium] Incorrect `__must_hold` annotations misrepresent API contracts a=
+nd mask missing lock acquisitions
 --
 
---- Patch [26]: [PATCH v3 26/57] scsi: fnic: Enable lock context analysis -=
---
-commit b5089a03ad2ecce02a0412b046877b7375670d2d
+--- Patch [39]: [PATCH v3 39/57] scsi: megaraid_sas: Prepare for enabling l=
+ock context analysis ---
+commit e0b92da41c18eebd6dc6b3dd8f685d565a0c3f5f
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: fnic: Enable lock context analysis
+scsi: megaraid_sas: Prepare for enabling lock context analysis
+   =20
+This commit prepares the megaraid_sas driver for lock context analysis
+by documenting locking requirements with __must_hold().
 
-This commit documents locking requirements across the fnic driver by adding
-__must_hold(), __acquire(), and __release() annotations. This allows static
-analysis tools to verify that spinlocks and mutexes are held in the required
-contexts, suppressing false positives.
+> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid=
+/megaraid_sas.h
+> index 8ee2bfe475715..67713173793a3 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas.h
+> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> @@ -2696,15 +2696,18 @@ __le16 get_updated_dev_handle(struct megasas_inst=
+ance *instance,
+>  			      struct MR_DRV_RAID_MAP_ALL *drv_map);
+>  void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *map,
+>  	struct LD_LOAD_BALANCE_INFO *lbInfo);
+> -int megasas_get_ctrl_info(struct megasas_instance *instance);
+> +int megasas_get_ctrl_info(struct megasas_instance *instance)
+> +	__must_hold(&instance->reset_mutex);
 
-> diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-> --- a/drivers/scsi/fnic/fdls_disc.c
-> +++ b/drivers/scsi/fnic/fdls_disc.c
-> @@ -425,8 +426,8 @@ void fnic_del_fabric_timer_sync(struct fnic *fnic)
->  	fnic->iport.fabric.del_timer_inprogress =3D 0;
->  }
-> =20
-> -void fnic_del_tport_timer_sync(struct fnic *fnic,
-> -						struct fnic_tport_s *tport)
-> +void fnic_del_tport_timer_sync(struct fnic *fnic, struct fnic_tport_s *t=
-port)
-> +	__must_hold(&fnic->fnic_lock)
->  {
->  	tport->del_timer_inprogress =3D 1;
->  	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+[Severity: Medium]
+Is this annotation accurate for all callers?
 
-[Severity: High]
-This is a pre-existing issue, but does this pattern risk corrupting the IRQ
-state?
-
-Functions like fdls_tport_timer_callback() and fnic_tport_event_handler()
-acquire the lock using a local stack variable:
-
-    spin_lock_irqsave(&fnic->fnic_lock, flags);
-
-If they subsequently call down into fnic_del_tport_timer_sync() (which drops
-the lock using the shared fnic->lock_flags), it restores a stale IRQ state
-belonging to a completely different thread, since the local acquisition nev=
-er
-updated the shared fnic->lock_flags. Could this erroneously enable or
-disable IRQs prematurely?
+megasas_get_ctrl_info() is called by un-annotated and unprotected paths=20
+like megasas_init_fw(). Adding __must_hold() here implies the caller is=20
+responsible for holding the lock, but the caller doesn't currently acquire=
+=20
+it. Will this cause false positive warnings when lock context analysis is=20
+enabled?
 
 [ ... ]
 
-> @@ -1322,6 +1334,7 @@ fdls_send_tgt_adisc(struct fnic_iport_s *iport, str=
-uct fnic_tport_s *tport)
->  }
-> =20
->  bool fdls_delete_tport(struct fnic_iport_s *iport, struct fnic_tport_s *=
-tport)
-> +	__must_hold(&iport->fnic->fnic_lock)
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
+araid/megaraid_sas_base.c
+> index ecd365d78ae3c..ccefe5841a17b 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+[ ... ]
+> @@ -7789,6 +7796,7 @@ megasas_suspend(struct device *dev)
+>   */
+>  static int __maybe_unused
+>  megasas_resume(struct device *dev)
+> +	__must_hold(&((struct megasas_instance *)dev_get_drvdata(dev))->reset_m=
+utex)
 >  {
->  	struct fnic_tport_event_s *tport_del_evt;
->  	struct fnic *fnic =3D iport->fnic;
+>  	int rval;
+>  	struct Scsi_Host *host;
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does dropping the lock in th=
-is
-function expose the driver to a Use-After-Free during list iteration?
+[Severity: Medium]
+Does the generic PM core actually hold this driver-private mutex when
+invoking the resume callback?
 
-Functions such as fdls_process_gpn_ft_tgt_list() iterate over the
-iport->tport_list using list_for_each_entry_safe(tport, next, ...):
+Since megasas_resume() is used as a device power management callback, its
+callers outside the driver do not know about or hold reset_mutex. Will
+this annotation lead to static analysis errors on the PM core invocation
+path?
 
-    list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
-        ...
-        fdls_delete_tport(iport, tport);
-    }
+[ ... ]
 
-Inside fdls_delete_tport(), the fnic_lock is temporarily dropped to call
-functions like fnic_rport_exch_reset(). While the lock is dropped, a
-concurrent thread (like an incoming ELS frame reject or a workqueue event)
-can acquire the lock and free the exact tport pointed to by the cached
-next pointer. When the original loop reacquires the lock and proceeds to
-the next iteration, wouldn't it dereference the freed next pointer?
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/m=
+egaraid/megaraid_sas_fusion.c
+> index 056cbe50e19ed..a55094a31c829 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -1792,6 +1792,7 @@ static inline void megasas_free_ioc_init_cmd(struct=
+ megasas_instance *instance)
+>   */
+>  static u32
+>  megasas_init_adapter_fusion(struct megasas_instance *instance)
+> +	__must_hold(&instance->reset_mutex)
+>  {
+>  	struct fusion_context *fusion;
+>  	u32 scratch_pad_1;
+
+[Severity: Medium]
+Will this annotation trigger analysis errors during adapter initialization?
+
+megasas_init_adapter_fusion() is invoked via the init_adapter function
+pointer in megasas_init_fw(). The caller does not appear to hold reset_mutex
+before invoking the pointer. Should the lock acquisition be added to the=20
+callers, or is this annotation overly strict here?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D26
+t.bvanassche@acm.org?part=3D39
