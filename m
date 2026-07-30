@@ -1,41 +1,41 @@
 Received: from sender4-pp-o94.zoho.com (sender4-pp-o94.zoho.com [136.143.188.94])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44D1A2D6E6C;
-	Thu, 30 Jul 2026 18:52:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1424845DF6B;
+	Thu, 30 Jul 2026 18:53:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.94
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785437544; cv=pass; b=rkpuam7+ZGLCvYlVUvtP/8GBZCEcVbHbksDJoXQzzI3oPqPmfuVAw/3WidoEe0iFfHKrr6HGy5UIoxc+qBRb+u75GmmnmgXBg8E/e3OyKHWtIvNubwDvvSgi9F3JT5TucE3lH50hrg6rcj/hR9dyRAUIRyNvt1O5p87wzmph+rE=
+	t=1785437596; cv=pass; b=uao6lolqHArHw2BOCVi1m59pGx35+yEbwH+PY4B8kHE2xjotqDqgxO+ljmeBHWwUWsT13IxcOEaaj+uEH+Rn8HV7u4mhz8gDQMvaq2qYyWMhTKmXXb6KzBS/jqAV0jCR/5z1wT9PYg258/BNQUMZPX5cLlaQ7BFuGmI+ftKyHaM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785437544; c=relaxed/simple;
-	bh=KfTvCFeyoH8ZpMacqlexoWalkZVCdM+husxlFpb5Bio=;
+	s=arc-20240116; t=1785437596; c=relaxed/simple;
+	bh=CGvopS6JOUbal9KDon1u//lgErfi67LyWPVx922B7AY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=B812KQG3SpJu4eubjSZHeZBDKzP7oRclhCHXb42qoC9SUXcA2VFyuQovdP2gojTX+gZrFXEJyTWB9d4GoLhOiKoY9idFSFMSrnaxiWrPY27NQtA1ViuD2HfQLi6J5Udh+kqn+2IX2kPPPsvbVkNoen1/MZerxhtvESK6gzGt4QY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com; spf=pass smtp.mailfrom=zohomail.com; dkim=pass (1024-bit key) header.d=zohomail.com header.i=mhklkml@zohomail.com header.b=OY2/adTN; arc=pass smtp.client-ip=136.143.188.94
+	 MIME-Version; b=ge2dgsg3O7x5It9OWK+OBWG1mFGAkCthJxNMIKw55It2nYnP6xqCgIAy57G5FED4Ap7O8LSGwLFBxAHre0TkcZpRZ6ljbP3tbasUPwE5E+y4683S1sezWb/zsyeYZ6HY1lNlxyClNOjaTn1TX4AGdcb4Ju6k/5q+hjlFnYtqFtQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com; spf=pass smtp.mailfrom=zohomail.com; dkim=pass (1024-bit key) header.d=zohomail.com header.i=mhklkml@zohomail.com header.b=em2PmNGC; arc=pass smtp.client-ip=136.143.188.94
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=zohomail.com header.i=mhklkml@zohomail.com header.b="OY2/adTN"
-ARC-Seal: i=1; a=rsa-sha256; t=1785437363; cv=none; 
+	dkim=pass (1024-bit key) header.d=zohomail.com header.i=mhklkml@zohomail.com header.b="em2PmNGC"
+ARC-Seal: i=1; a=rsa-sha256; t=1785437366; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=VwkuRCLGn4JoYcP/eXNsmW8n5GLPY1aEM27lHgk4on8pCmCudSsrgVWys944gO5yaW5B3CuKLQh0Ga5mnhTQBTU6QJektTipQSn4fdGX7UUvPgQmBPlZCjSavrIh2ZuGVA9pbJsCc8jw5f4eZ7kNm82G4uEaXk95ueZuyREXhJM=
+	b=PjO5kBFHiiYlmV/0S9Q0Pvpzp80391vSvE9eGtIdntCWHArkReht9GDAWPGslATNz+Rd0RMnX7+blzpgro1Z59NSLF8yEGNBOYbJKYomQ0PVdgqjbZZpOeIAfy3XWe/F9mJy8NRutFDEBTPxOtBSofRE4SWBrCa2zd2s523M0Mw=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1785437363; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Reply-To:Reply-To:Subject:Subject:To:To:Message-Id; 
-	bh=WBi2dOJBNiM8vX6Ab5Q3yfRpu8YMYERM9mtRb50AB3w=; 
-	b=exAyQL5qHhPFRDJfw8CVzxe3F5LZyKt0Pfnay/9obI0qFFzgs30zgdPmrWR9wn+NFD2jM9/pzfyqDXhaRtAmPvgMqYxDaiowFmpfMKq/7KnEwjcTxezALIsrC/ray1KwiRJFW0jH6jzukPS1/M1vAgVvjlIotewoE697GiMFtJM=
+	t=1785437366; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Reply-To:Reply-To:Subject:Subject:To:To:Message-Id; 
+	bh=D1iXUduacavCGEitAokduVy/I/jHKpVpXbrJUfFhNic=; 
+	b=Bun8hTzaGLb1hAt5StLryPIFcojWkz1/OSw55K0I09ecx8wtGVuHFwdgPXowa7nZVztOARuJqJH89gopWbjUXLCqmuvRx2AuLbW9Qs5/blj8SynIrxRLTf5lTpKsLouAiIzs0gTlwnkW29WYCV6iozkZNIzZboyUmO6inxr5op8=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=zohomail.com;
 	spf=pass  smtp.mailfrom=mhklkml@zohomail.com;
 	dmarc=pass header.from=<mhklkml@zohomail.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1785437363;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1785437365;
 	s=zm2022; d=zohomail.com; i=mhklkml@zohomail.com;
 	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-Id:Message-Id:In-Reply-To:Reply-To:Reply-To:MIME-Version:Content-Transfer-Encoding:Feedback-ID;
-	bh=WBi2dOJBNiM8vX6Ab5Q3yfRpu8YMYERM9mtRb50AB3w=;
-	b=OY2/adTNZLserOR0+Q85pg3KW8dmqEulM+LtvtkYezvPnol+3WgYGoWOvUo3b15F
-	bRSYfUp1aSUPyJTgdqDpmKFK27gmkmLsbncRINKoDK34ZUvyKODFo0iA8JiETw6tXNW
-	ryZ2nigSVu67mSdcz9b/RQzMoODdWWjXsUURoL4o=
-Received: by mx.zohomail.com with SMTPS id 1785437360554666.8373290285896;
-	Thu, 30 Jul 2026 11:49:20 -0700 (PDT)
+	bh=D1iXUduacavCGEitAokduVy/I/jHKpVpXbrJUfFhNic=;
+	b=em2PmNGCVeRXz6c3ALwQFn54CwNw+wDME/pKV0ZG00eNZ9KyCtRQSL7OHQDfkHBZ
+	X2WONVshJsmkT1FAtZlYy/p+tCdTietbFtBCz5ajfuy3bPihD9hNL8lmo4NZzBICJjD
+	ovyYF71mlViKFsaaY9YkoUR86NiXJSBTm+Qe4bb0=
+Received: by mx.zohomail.com with SMTPS id 1785437363012321.6515457198867;
+	Thu, 30 Jul 2026 11:49:23 -0700 (PDT)
 From: Michael Kelley <mhklkml@zohomail.com>
 To: kys@microsoft.com,
 	haiyangz@microsoft.com,
@@ -70,9 +70,9 @@ Cc: x86@kernel.org,
 	netdev@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	virtualization@lists.linux.dev
-Subject: [PATCH 3/6] hv_netvsc: Remove GPADL teardown special case for old Hyper-V hosts
-Date: Thu, 30 Jul 2026 11:48:43 -0700
-Message-Id: <20260730184846.3165-4-mhklkml@zohomail.com>
+Subject: [PATCH 4/6] drm_hyperv: Remove support for synth video protocol of old Hyper-V hosts
+Date: Thu, 30 Jul 2026 11:48:44 -0700
+Message-Id: <20260730184846.3165-5-mhklkml@zohomail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260730184846.3165-1-mhklkml@zohomail.com>
 References: <20260730184846.3165-1-mhklkml@zohomail.com>
@@ -84,61 +84,79 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Feedback-ID: zu080112274f702548114b3d9a6136176c0000b5befae3f3fa12c655b6e9591e7d8b72945cb6de96a13c5e1b:ZohoMail
+Feedback-ID: zu0801122792ec40954e1386a7e9e812fb0000c67bd15f9101f62001a8617fd5a1bc3895c5d728d00dade6db:ZohoMail
 X-Zoho-CM-AccountID: 0c88436b239415d28725328898ceccb9ce2ba3b61598c1c37bcb2109e0248174
 X-ZohoMailClient: External
 
 From: Michael Kelley <mhklinux@outlook.com>
 
 With the overall removal of Linux support for running on Hyper-V
-hosts earlier than WS2016 and Windows 10, the special case handling of
-GPADL teardown is no longer necessary. Remove it.
+hosts earlier than WS2016 and Windows 10, it's no longer necessary
+to support older synthetic video protocols. Remove the support.
 
 Signed-off-by: Michael Kelley <mhklinux@outlook.com>
 ---
- drivers/net/hyperv/netvsc.c | 20 +++-----------------
- 1 file changed, 3 insertions(+), 17 deletions(-)
+ drivers/gpu/drm/hyperv/hyperv_drm_proto.c | 33 +++++++----------------
+ 1 file changed, 10 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
-index 4d319c50955e..4295b96b4312 100644
---- a/drivers/net/hyperv/netvsc.c
-+++ b/drivers/net/hyperv/netvsc.c
-@@ -695,17 +695,8 @@ void netvsc_device_remove(struct hv_device *device)
- 		= rtnl_dereference(net_device_ctx->nvdev);
- 	int i;
+diff --git a/drivers/gpu/drm/hyperv/hyperv_drm_proto.c b/drivers/gpu/drm/hyperv/hyperv_drm_proto.c
+index f0ef627b4898..cea1ea2595cd 100644
+--- a/drivers/gpu/drm/hyperv/hyperv_drm_proto.c
++++ b/drivers/gpu/drm/hyperv/hyperv_drm_proto.c
+@@ -17,7 +17,7 @@
+ #define SYNTHVID_VER_GET_MAJOR(ver) (ver & 0x0000ffff)
+ #define SYNTHVID_VER_GET_MINOR(ver) ((ver & 0xffff0000) >> 16)
  
--	/*
--	 * Revoke receive buffer. If host is pre-Win2016 then tear down
--	 * receive buffer GPADL. Do the same for send buffer.
--	 */
- 	netvsc_revoke_recv_buf(device, net_device, ndev);
--	if (vmbus_proto_version < VERSION_WIN10)
--		netvsc_teardown_recv_gpadl(device, net_device, ndev);
--
- 	netvsc_revoke_send_buf(device, net_device, ndev);
--	if (vmbus_proto_version < VERSION_WIN10)
--		netvsc_teardown_send_gpadl(device, net_device, ndev);
+-/* Support for VERSION_WIN7 is removed. #define is retained for reference. */
++/* Support for WIN7 and WIN8 is removed. #define's retained for reference. */
+ #define SYNTHVID_VERSION_WIN7 SYNTHVID_VERSION(3, 0)
+ #define SYNTHVID_VERSION_WIN8 SYNTHVID_VERSION(3, 2)
+ #define SYNTHVID_VERSION_WIN10 SYNTHVID_VERSION(3, 5)
+@@ -557,23 +557,12 @@ int hv_drm_connect_vsp(struct hv_device *hdev)
+ 		return ret;
+ 	}
  
- 	RCU_INIT_POINTER(net_device_ctx->nvdev, NULL);
- 
-@@ -733,14 +724,9 @@ void netvsc_device_remove(struct hv_device *device)
- 	/* Now, we can close the channel safely */
- 	vmbus_close(device->channel);
- 
--	/*
--	 * If host is Win2016 or higher then we do the GPADL tear down
--	 * here after VMBus is closed.
--	*/
--	if (vmbus_proto_version >= VERSION_WIN10) {
--		netvsc_teardown_recv_gpadl(device, net_device, ndev);
--		netvsc_teardown_send_gpadl(device, net_device, ndev);
+-	/* Negotiate the protocol version with host */
+-	switch (vmbus_proto_version) {
+-	case VERSION_WIN10:
+-	case VERSION_WIN10_V5:
+-		ret = hv_drm_negotiate_version(hdev, SYNTHVID_VERSION_WIN10);
+-		if (!ret)
+-			break;
+-		fallthrough;
+-	case VERSION_WIN8:
+-	case VERSION_WIN8_1:
+-		ret = hv_drm_negotiate_version(hdev, SYNTHVID_VERSION_WIN8);
+-		break;
+-	default:
+-		ret = hv_drm_negotiate_version(hdev, SYNTHVID_VERSION_WIN10);
+-		break;
 -	}
-+	/* Must do the GPADL teardown after channel is closed */
-+	netvsc_teardown_recv_gpadl(device, net_device, ndev);
-+	netvsc_teardown_send_gpadl(device, net_device, ndev);
+-
++	/*
++	 * Negotiate the protocol version with host. Since support for hosts
++	 * older than WIN10 has been removed from Linux, only negotiate the
++	 * WIN10 version.
++	 */
++	ret = hv_drm_negotiate_version(hdev, SYNTHVID_VERSION_WIN10);
+ 	if (ret) {
+ 		drm_err(dev, "Synthetic video device version not accepted %d\n", ret);
+ 		goto error;
+@@ -581,11 +570,9 @@ int hv_drm_connect_vsp(struct hv_device *hdev)
  
- 	/* Release all resources */
- 	free_netvsc_device_rcu(net_device);
+ 	hv->screen_depth = SYNTHVID_DEPTH_WIN8;
+ 
+-	if (hv_drm_version_ge(hv->synthvid_version, SYNTHVID_VERSION_WIN10)) {
+-		ret = hv_drm_get_supported_resolution(hdev);
+-		if (ret)
+-			drm_err(dev, "Failed to get supported resolution from host, use default\n");
+-	}
++	ret = hv_drm_get_supported_resolution(hdev);
++	if (ret)
++		drm_err(dev, "Failed to get supported resolution from host, use default\n");
+ 
+ 	if (!hv->screen_width_max) {
+ 		hv->screen_width_max = SYNTHVID_WIDTH_WIN8;
 -- 
 2.25.1
 
