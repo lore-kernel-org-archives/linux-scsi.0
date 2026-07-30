@@ -1,169 +1,229 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73D333E173B;
-	Thu, 30 Jul 2026 23:06:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9EE53A83BF
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:09:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785452819; cv=none; b=Cn04xoD0xRYSeetJMQrX58pxccrZsASbNWQ3cK0aTyzcMZ7jCs7KAJA87PlmY5pV3/luN4ViIs9S1z/h16pqzDwkXJEsUz9zpm058A7p9dcQGAZm7pN0zbGK5ayzj+4g4c9+oJKaOvFWjpwYCupaiyoEcOcyljRW0WZwpSJWbDk=
+	t=1785452973; cv=none; b=ixONqEU9JGfqcxfBJ9N6FK/IhceRFVMZoUraUHDPEQp9YqIsHLke9d+Gd7TZzRo8YyE7wNpjy/LxtoJPE+23RasX5OcnV+s49jQuKbinvEogis9Yv7/7Xo72ad1qOkQn4CP4yeNMheh7dCvDXvJNap0ypXUCA7rQllfubzvrfKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785452819; c=relaxed/simple;
-	bh=USJXkE+4lF9CyDSKvJwHxuGhLizfXKxML+vOLHKJQaQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pikg1q9tB3kT15yo479do6ElC7NJ/m4sT1/cnfx/ILSahIYx/lQOq7660veBe/NUSKAa+hFFX6C0N2MJf5PvPC9Myl9/EWStCDOAFNOdzoZheZjUBslNgaoFB/kLEd/P6N6YR0haYrYmFtqK71d0dvyX9pKvUF4esrzWUB/cHmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=rVqT0KpP; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1785452973; c=relaxed/simple;
+	bh=UFoSd9QAPNfILa3zTu6TSnfJmgPnlr6ffm4SL73BuPg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=EUqNKMiOMF7yy4gOFPUQzrd91oufgpbdkj1ZYbveZZbidTLcIRkW5Aa0DpxasrPcoVWvN23Fgq7OfaTkM7sZzYStVdzG7s82NjBs38w77xAhWhRPjGrmxJc/Us5fUyUjS0aiu+53/+liXbw+RU7JUHmb0XYYrYqb7khyoTXQkVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Colfaw+2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="rVqT0KpP"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66UJlhTO3942107;
-	Thu, 30 Jul 2026 23:06:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=VsiG3e
-	968sHRnByhHa3WpRf5SZmewhahB2UA5sUBOz4=; b=rVqT0KpPMgicBNeYNB4Lbe
-	fEBXg6VbIEov9TVTlCww8E1TX43Olhla7aR+Lsw5vVXItBcWCSO2DWejDJC/sHBt
-	bePDevO2o35hvh/knDDd2cw5Po9ZVi/qfB526IzI/2VTcND6CiAiLjoAFcbcJCbr
-	N8T5/a+x1hFOOXv7iYh2Wa7D3Rc8NxL+wjIVpw+wqLoTi7Gb/qWfKPaI787/N0UE
-	Z2EpCdtYk6RKwEhcfs1KVvLk/LeRMFdzaJw/xm9fI+vc2cHIEnxEKob2UTsW6Tg8
-	Xz674E4GTB03HFkCn7KFWY2f0gciw4popgApxjcpE29ZZmZJP4CRSfwB4LCYsoGg
-	==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fmuw7t9uc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 30 Jul 2026 23:06:51 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66UMugDY016115;
-	Thu, 30 Jul 2026 23:06:50 GMT
-Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4fn8fkdj1c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 30 Jul 2026 23:06:49 +0000 (GMT)
-Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
-	by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66UN6mC120972052
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 30 Jul 2026 23:06:48 GMT
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id A4D0D58066;
-	Thu, 30 Jul 2026 23:06:48 +0000 (GMT)
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0EA3358065;
-	Thu, 30 Jul 2026 23:06:48 +0000 (GMT)
-Received: from [9.61.73.28] (unknown [9.61.73.28])
-	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 30 Jul 2026 23:06:47 +0000 (GMT)
-Message-ID: <16875239-c114-4c3c-a967-91bedeecf523@linux.ibm.com>
-Date: Thu, 30 Jul 2026 16:06:47 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Colfaw+2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8AAE1F000E9;
+	Thu, 30 Jul 2026 23:09:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785452971;
+	bh=jUZWuAYf4jHlteCFuwmvgwLk7HOI29DSgzaBw/daD+w=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Colfaw+27nLUbWGfl9xBYaKea5nT3VFVHyEY4xSBwXXxKeBaZiF97r6MhLc0Jpaw5
+	 v2sEwGmR193CVkQQuxKsOncOR2O2SS9zFn21ZtXt4msZOESQEfBsFpLoCWOEC2nR5G
+	 nfK2tDfmsRfCvFbr84h2latno++wORKXYwWpjjjGlc2Cr91dGFNj3kyb8KDGeoaHr0
+	 iiss339wkdx8MpUEuOt3HZxZuq/jwCehhvZvj8pqEawYltwcz/asFa6IOnwosmso1w
+	 6DzzAJayOyiMy9g9EJTMsY5eWP2IzId8wjJKTVd6WzAv2g7GicbzwD64SOGPH0Hfou
+	 odEEu4KYct8tQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 38/57] scsi: lpfc: Prepare for enabling lock context
+ analysis
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Bart Van Assche" <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <d7f69e9511ca5b79b64f48b1e54fb417db4d294f.1785451174.git.bvanassche@acm.org>
+References: <cover.1785451174.git.bvanassche@acm.org>
+ <d7f69e9511ca5b79b64f48b1e54fb417db4d294f.1785451174.git.bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 30 Jul 2026 23:09:31 +0000
+Message-Id: <20260730230931.A8AAE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 25/33] ibmvfc: process NVMe/FC rports in work thread
-To: Nathan Chancellor <nathan@kernel.org>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org, brking@linux.ibm.com,
-        davemarq@linux.ibm.com
-References: <20260723000149.969416-1-tyreld@linux.ibm.com>
- <20260723000149.969416-26-tyreld@linux.ibm.com>
- <20260730065226.GA1879117@ax162>
-Content-Language: en-US
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-In-Reply-To: <20260730065226.GA1879117@ax162>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: GjIFRJEUrmd7LyPt4uaoEaTLrL1FiMH3
-X-Proofpoint-ORIG-GUID: GjIFRJEUrmd7LyPt4uaoEaTLrL1FiMH3
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMwMDE2MyBTYWx0ZWRfX9Zb9CqdqtzS6
- WNyZp+MqHcshAeT2dyiBG7GJJtjvN4ykRVlKi8qNgos7sCKBZVynD2g+VTEnNd/ww/m75lmQIan
- ubFsnT8aMm1v1yklpRIIgluienJAcFNQxJX/LmTqs55RNaJnfow6sMcnp/iEt59ZmAl0vlajF6m
- ZjpuDCZuXLSEtOWq161kDgLAldE+ImV98qhjxHPCJEIitgmGxjXtzgc8I9oEdqaMTYjZron1ib8
- Fazpc8AGT2buDNu4qeXGF/C4o0FllOvVFVPWsZPvHkWq4glwNaJRJrb6qw9SMDcR2J8X5D2fe9w
- 7+ddnmK6jTdSxaxaEyaQm+WNU/pf5vVVRmzQEfXcrd+faBQLDnev82TihO0Y5Qux0U78R/Nvkky
- iJ2NjPrLm0w7IegjBW6X0+Lu7RvBVZvAE9kmD29efskjaL5SCXYo2K2Kbx+9mgNPkao34/DfXXW
- 9zMQZkkXAW1ds0FqIaA==
-X-Authority-Analysis: v=2.4 cv=SKFykuvH c=1 sm=1 tr=0 ts=6a6bd90b cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VwQbUJbxAAAA:8
- a=rqqzB6QmINZeZLXxEfgA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMwMDE2MyBTYWx0ZWRfX4omleGVZ2094
- Gv0m24mqvqoZbqCUr38u7aZWLfhQ+IRQuZI+lsBu2Np0nGTufrS1rw0ucMldW0Ugf+3lQsmCksH
- WFfuaymmCgCeLSCtq2gzyOy6yUraz/U=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-30_06,2026-07-30_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 malwarescore=0 clxscore=1011 adultscore=0
- lowpriorityscore=0 bulkscore=0 impostorscore=0 phishscore=0 spamscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607300163
 
-On 7/29/26 11:52 PM, Nathan Chancellor wrote:
-> Hi Tyrel,
-> 
-> On Wed, Jul 22, 2026 at 05:01:41PM -0700, Tyrel Datwyler wrote:
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> index 81d9229bf388..ffb579816e84 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> @@ -6073,6 +6119,30 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
->>  			}
->>  		}
->>  
->> +		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
->> +			if (tgt->action == IBMVFC_TGT_ACTION_DEL_RPORT) {
->> +				tgt_dbg(tgt, "Deleteing NVMe rport\n");
->> +				nvme_rport = tgt->nvme_remote_port;
->> +				list_del(&tgt->queue);
->> +				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DELETED_RPORT);
->> +				spin_unlock_irqrestore(vhost->host->host_lock, flags);
->> +				if (nvme_rport)
->> +					ibmvfc_nvme_unregister_remoteport(tgt);
->> +				timer_delete_sync(&tgt->timer);
->> +				kref_put(&tgt->kref, ibmvfc_release_tgt);
->> +				return;
->> +			} else if (rport && tgt->action == IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
->> +				tgt_dbg(tgt, "Deleting NVMe rport with outstanding I/O\n");
->> +				nvme_rport = tgt->nvme_remote_port;
->> +				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_LOGOUT_DELETED_RPORT);
->> +				tgt->init_retries = 0;
->> +				spin_unlock_irqrestore(vhost->host->host_lock, flags);
->> +				if (nvme_rport)
->> +					ibmvfc_nvme_unregister_remoteport(tgt);
->> +				return;
->> +			}
->> +		}
->> +
->>  		if (vhost->state == IBMVFC_INITIALIZING) {
->>  			if (vhost->action == IBMVFC_HOST_ACTION_TGT_DEL_FAILED) {
->>  				if (vhost->reinit) {
-> 
-> There is a warning from clang after this change landed in -next as
-> commit 696d1cc2aaa2 ("scsi: ibmvfc: process NVMe/FC rports in work
-> thread"), breaking the build when -Werror is enabled:
-> 
->   drivers/scsi/ibmvscsi/ibmvfc-core.c:6154:15: error: variable 'rport' is uninitialized when used here [-Werror,-Wuninitialized]
->    6154 |                         } else if (rport && tgt->action == IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
->         |                                    ^~~~~
-> 
-> Sashiko appears to point this out as well:
-> 
->   https://lore.kernel.org/20260723005006.C7EE21F00A3A@smtp.kernel.org/
-> 
-> But I am not sure that its suggestion to use nvme_rport is correct given
-> the context of this code, hence just the report from my end.
-> 
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-I've already arrived at the conculsion that I will have to spin a v3 of this
-series based on a few of the issues raised. Thanks for the heads up on the clang
-warning.
+Pre-existing issues:
+- [High] An AB-BA lock inversion exists between `lpfc_cmd->buf_lock` and `p=
+hba->hbalock`, which can cause a hard deadlock.
+- [High] Race condition in timer callback `lpfc_els_timeout_handler` leadin=
+g to use-after-free on module unload.
+- [High] List corruption due to missing lock protection for SLI ring lists =
+in `lpfc_els_abort` and `lpfc_els_flush_cmd`.
+- [High] Concurrent FCP abort requests will hang for the full timeout durat=
+ion due to unshared wait queues.
+--
 
--Tyrel
+--- Patch [38]: [PATCH v3 38/57] scsi: lpfc: Prepare for enabling lock cont=
+ext analysis ---
+commit 7e811dc5ed08a4e45843970fc90d7859310944e2
+Author: Bart Van Assche <bvanassche@acm.org>
 
+scsi: lpfc: Prepare for enabling lock context analysis
+
+Annotate the functions that perform conditional locking with
+__context_unsafe().
+
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+> index 52fc5058976d9..45e7f147b1636 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
+> @@ -9597,6 +9597,7 @@ lpfc_els_timeout(struct timer_list *t)
+>   **/
+>  void
+>  lpfc_els_timeout_handler(struct lpfc_vport *vport)
+> +	__context_unsafe(conditional locking)
+>  {
+>  	struct lpfc_hba  *phba =3D vport->phba;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is there a race condition
+here during module unload?=20
+
+Looking at the bottom of lpfc_els_timeout_handler(), the code checks for=20
+FC_UNLOADING before calling mod_timer():
+
+    if (!test_bit(FC_UNLOADING, &phba->pport->load_flag))
+        mod_timer(&vport->els_tmofunc, ...);
+
+If the teardown thread sets the FC_UNLOADING flag immediately after this
+check is evaluated, the callback will re-arm the timer. Even if
+timer_delete_sync() is used during teardown, the callback re-arms the timer
+before exiting, which can cause the timer to fire on freed memory and lead
+to a use-after-free crash.
+
+> @@ -9719,6 +9720,7 @@ lpfc_els_timeout_handler(struct lpfc_vport *vport)
+>   **/
+>  void
+>  lpfc_els_flush_cmd(struct lpfc_vport *vport)
+> +	__context_unsafe(conditional locking)
+>  {
+>  	LIST_HEAD(abort_list);
+
+[Severity: High]
+This is a pre-existing issue, but can list corruption occur here during ELS
+command flushes?=20
+
+In lpfc_els_flush_cmd(), this code moves piocb->list from txcmplq to
+cancel_list:
+
+    spin_lock_irqsave(&phba->hbalock, iflags);
+    list_del_init(&piocb->dlist);
+    if (mbx_tmo_err || !(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
+        list_move_tail(&piocb->list, &cancel_list);
+
+For SLI4, is holding only hbalock sufficient, or does it also require=20
+pring->ring_lock to safely modify the txcmplq, preventing kernel panics=20
+during linked list traversal?
+
+> diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_=
+nportdisc.c
+> index 9c449055a55e6..79e5e876c879e 100644
+> --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+> @@ -220,6 +220,7 @@ lpfc_check_elscmpl_iocb(struct lpfc_hba *phba, struct=
+ lpfc_iocbq *cmdiocb,
+>   */
+>  void
+>  lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
+> +	__context_unsafe(conditional locking)
+>  {
+>  	LIST_HEAD(abort_list);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this list modification
+lack lock protection?=20
+
+In lpfc_els_abort(), list_del_init() modifies the active txcmplq without
+holding any locks:
+
+    if (retval && test_bit(FC_UNLOADING, &phba->pport->load_flag)) {
+        list_del_init(&iocb->list);
+        list_add_tail(&iocb->list, &drv_cmpl_list);
+    }
+
+Could this lead to list corruption during error recovery scenarios?
+
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+> index f2cab134af7f1..6c3fd3c33c535 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -5520,6 +5520,7 @@ void lpfc_vmid_vport_cleanup(struct lpfc_vport *vpo=
+rt)
+>   **/
+>  static int
+>  lpfc_abort_handler(struct scsi_cmnd *cmnd)
+> +	__context_unsafe(conditional locking)
+>  {
+>  	struct Scsi_Host  *shost =3D cmnd->device->host;
+
+[Severity: High]
+This is a pre-existing issue, but does this locking order create an AB-BA
+deadlock?=20
+
+In lpfc_abort_handler(), lpfc_cmd->buf_lock is acquired followed by=20
+phba->hbalock:
+
+    spin_lock_irqsave(&lpfc_cmd->buf_lock, flags);
+    spin_lock(&phba->hbalock);
+
+In lpfc_sli_abort_taskmgmt(), the thread acquires phba->hbalock first,=20
+iterates over commands, and attempts to acquire lpfc_cmd->buf_lock. Could=20
+concurrent SCSI aborts and device resets freeze storage operations?
+
+[Severity: High]
+This is also a pre-existing issue, but can concurrent FCP abort requests
+hang here?
+
+In lpfc_abort_handler(), if a second thread attempts to abort the same=20
+command, it detects LPFC_DRIVER_ABORTED and jumps to wait_for_cmpl:
+
+wait_for_cmpl:
+    wait_event_timeout(waitq, (lpfc_cmd->pCmd !=3D cmnd),
+                       secs_to_jiffies(2*vport->cfg_devloss_tmo));
+
+It then sleeps on its private, on-stack waitq. Because the completion=20
+handler only knows about the first thread's wait queue, won't the second=20
+thread block unconditionally for the full duration of the timeout?
+
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index 62a30a92b7927..c76d62e8907c1 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+
+[ ... ]
+
+> @@ -12871,6 +12872,7 @@ lpfc_sli_abort_iocb(struct lpfc_vport *vport, u16=
+ tgt_id, u64 lun_id,
+>  int
+>  lpfc_sli_abort_taskmgmt(struct lpfc_vport *vport, struct lpfc_sli_ring *=
+pring,
+>  			uint16_t tgt_id, uint64_t lun_id, lpfc_ctx_cmd cmd)
+> +	__context_unsafe(conditional locking)
+>  {
+>  	struct lpfc_hba *phba =3D vport->phba;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but as mentioned above, does this
+lock ordering conflict with lpfc_abort_handler()?=20
+
+In lpfc_sli_abort_taskmgmt(), phba->hbalock is acquired before
+lpfc_cmd->buf_lock:
+
+    spin_lock_irqsave(&phba->hbalock, iflags);
+    ...
+    lpfc_cmd =3D container_of(iocbq, struct lpfc_io_buf, cur_iocbq);
+    spin_lock(&lpfc_cmd->buf_lock);
+
+This is the reverse of the order in lpfc_abort_handler(). Can this lead to=
+=20
+a hard deadlock during concurrent I/O timeouts?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
+t.bvanassche@acm.org?part=3D38
