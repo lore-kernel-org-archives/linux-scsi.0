@@ -1,183 +1,142 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 227CD1DDFE;
-	Thu, 30 Jul 2026 21:28:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6BAE03911AF;
+	Thu, 30 Jul 2026 22:24:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785446939; cv=none; b=VkHhG3MFrW+ZVAGAIAkDYeWwxCyP4fQSugWhKnzDMiQSpa2QI+EOcRFABeTmBSbvDK+3XKMkYPKYr69dn3OPeyByx2hGEAZUhVXvE9B0uUwfWBTJgY+R1OPPU6n8yghV+KJKsFE5yC/C24p16z0Zt3NGq4D5Yq05HOF0bBMvZ+w=
+	t=1785450286; cv=none; b=A+62wYvhY67Wj/4E6Mo083+CFHAoYsnaIs7la9lzELwuk3Lqkh8pl/9HkJFeuFlJsEyr74+KswqeqFSfX0aF0PJrr8SO3SKDimFYj4n8qrxiGa9ae9nZiEw2n28DG0HrpQ+NImEQZV91SQIv5mFJpC3AJ78mUhhwccA7Dwj+QsY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785446939; c=relaxed/simple;
-	bh=JeUYxjDB9UHwZMzScnk4MywKc+h6A0dZbPfoU+g7IYM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jGo13+zmpsXEs46pIldYCebrDfIIp3qVdhijny+yy5ZwK3YL8no/4MxP5vSP3/+Il9+RxgkS38js8Dd3W4F+BOIQu7WMIylLqYGXuZ0nlyUytD1LCWcDdJcNSgxrRClFxTJQ0yDUVkm8d62uHJPENbnFPgzZ8yIF+trFlwtWSgM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=y9cCSoGe; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1785450286; c=relaxed/simple;
+	bh=BnYeYCvIYpGQ3W9fmruMxznkg+lLVKqa7Ow2sXgmc+E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gEmYn+4Woxo34H+FM3UqqiAi5asR0e5UmHKpMi0eSWUyf5t2uzkQLR88Xq9QkwlBCkBGWOfhw+S9hYX0eKVk/NDkxDW2bx6QI0LGZzF4rH9nDehZu1TVsdAUzp/3pUsQI2yexqexGp3u6Lr5noxbnKoFx4440qveBdpLm4IDlnM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=mzGXwP2/; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="y9cCSoGe"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hB2Q13np3zlfpPB;
-	Thu, 30 Jul 2026 21:28:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1785446930; x=1788038931; bh=E+Wy+ys8T2YGZYU3pJ2uSk73
-	N2E6peVZ2dFlyj+MAlU=; b=y9cCSoGegUOcUo0HM9riyEiyZkWXAVm+kWcewRsV
-	rb8wOB5M0jSAKO6dfDMf+RHp7h2XHHnwH9ONTXloihdbJLIqslNHVOU3l15Ai8wg
-	VuS9REf/sNlQAGfCTo7zR4JiyaTf+gd9k71CKTjlCEzMN6eIJJ7YC0MCIt37GPm+
-	jRrxtZxkFw+YIJTC/8Mm9rZYSIzzWdEyjlB44nhviGc5e4e0dpNhY4oTfZQhZ6yA
-	A0yiaLPX7U8Oaxxq0O+FnoW/lTmhPeRJASTD4O6YWeriIPxEKaFGXKNZEz221n6t
-	mfGli7WId9TGZ5P/MNh5Pdc2BQYn+MHDmyGoZuUOLxzsxg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 7SrJBq3XEcWs; Thu, 30 Jul 2026 21:28:50 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hB2Pr2951zlfvpx;
-	Thu, 30 Jul 2026 21:28:48 +0000 (UTC)
-Message-ID: <86ee4f27-7303-43c4-b772-b735b85c0229@acm.org>
-Date: Thu, 30 Jul 2026 14:28:47 -0700
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="mzGXwP2/"
+Received: by linux.microsoft.com (Postfix, from userid 1216)
+	id B2AD920B7166; Thu, 30 Jul 2026 15:24:25 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com B2AD920B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1785450265;
+	bh=pqRfRnByDDrmG9mYWVTH89ngmj87IUFru7WB45pYJ1c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mzGXwP2/EJNYI5Ns1Yn4bfz1dd3LMSi6jLBf7Ri3GjUlwhBYmOchzbs7DYJ8ENh+C
+	 xS2vqJJZwCJGVWwaESGDAbPn2tpt8gE9T7Mc3AWT3/axxnicmibv35KVO0AP0fx672
+	 TdaPLOQsvytqTSam/TnsmcH0+QcsBodB7ib2Rg98=
+Date: Thu, 30 Jul 2026 18:24:25 -0400
+From: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+To: mhklinux@outlook.com
+Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+	decui@microsoft.com, longli@microsoft.com, tglx@kernel.org,
+	mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
+	hpa@zytor.com, daniel.lezcano@kernel.org,
+	ssengar@linux.microsoft.com, maarten.lankhorst@linux.intel.com,
+	mripard@kernel.org, tzimmermann@suse.de, airlied@gmail.com,
+	simona@ffwll.ch, andrew+netdev@lunn.ch, davem@davemloft.net,
+	edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	sgarzare@redhat.com, horms@kernel.org, x86@kernel.org,
+	linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org, virtualization@lists.linux.dev
+Subject: Re: [RESEND PATCH 0/6] Remove support for Windows Server 2012/2012R2
+ & Win8/Win8.1 versions of Hyper-V
+Message-ID: <amvPGQcEqgzWe+yn@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <20260730201123.1767-1-mhklinux@outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 25/33] ibmvfc: process NVMe/FC rports in work thread
-To: Nathan Chancellor <nathan@kernel.org>,
- Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, brking@linux.ibm.com, davemarq@linux.ibm.com
-References: <20260723000149.969416-1-tyreld@linux.ibm.com>
- <20260723000149.969416-26-tyreld@linux.ibm.com>
- <20260730065226.GA1879117@ax162>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260730065226.GA1879117@ax162>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260730201123.1767-1-mhklinux@outlook.com>
 
-On 7/29/26 11:52 PM, Nathan Chancellor wrote:
-> Hi Tyrel,
+On Thu, Jul 30, 2026 at 01:11:17PM -0700, Michael Kelley wrote:
+> Linux code for running as a Hyper-V guest includes special cases for
+> running on Hyper-V in WS2012/2012R2 and Windows 8/8.1. These versions
+> were initially released 14 years ago, and official support ended in 2023
+> (unless a customer has contracted for extended security updates). Given
+> the release of subsequent versions with improved functionality, there's
+> no need to continue to support the latest Linux kernels on these versions
+> of Hyper-V. If someone is running Linux on one of these older Hyper-V
+> versions and doesn't want to upgrade, they can continue to do so as
+> presumably they don't want upgrade the Linux version either.
 > 
-> On Wed, Jul 22, 2026 at 05:01:41PM -0700, Tyrel Datwyler wrote:
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> index 81d9229bf388..ffb579816e84 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> @@ -6073,6 +6119,30 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
->>   			}
->>   		}
->>   
->> +		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
->> +			if (tgt->action == IBMVFC_TGT_ACTION_DEL_RPORT) {
->> +				tgt_dbg(tgt, "Deleteing NVMe rport\n");
->> +				nvme_rport = tgt->nvme_remote_port;
->> +				list_del(&tgt->queue);
->> +				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DELETED_RPORT);
->> +				spin_unlock_irqrestore(vhost->host->host_lock, flags);
->> +				if (nvme_rport)
->> +					ibmvfc_nvme_unregister_remoteport(tgt);
->> +				timer_delete_sync(&tgt->timer);
->> +				kref_put(&tgt->kref, ibmvfc_release_tgt);
->> +				return;
->> +			} else if (rport && tgt->action == IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
->> +				tgt_dbg(tgt, "Deleting NVMe rport with outstanding I/O\n");
->> +				nvme_rport = tgt->nvme_remote_port;
->> +				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_LOGOUT_DELETED_RPORT);
->> +				tgt->init_retries = 0;
->> +				spin_unlock_irqrestore(vhost->host->host_lock, flags);
->> +				if (nvme_rport)
->> +					ibmvfc_nvme_unregister_remoteport(tgt);
->> +				return;
->> +			}
->> +		}
->> +
->>   		if (vhost->state == IBMVFC_INITIALIZING) {
->>   			if (vhost->action == IBMVFC_HOST_ACTION_TGT_DEL_FAILED) {
->>   				if (vhost->reinit) {
+> Simplify Linux code by removing special cases for running on these
+> old versions of Hyper-V. This includes removing the negotiation of the
+> VMBus protocol versions for WS2012/Win8, and the special case code based
+> on those VMBus protocol versions. Changes are in the core VMBus code and
+> several drivers for synthetic VMBus devices.
 > 
-> There is a warning from clang after this change landed in -next as
-> commit 696d1cc2aaa2 ("scsi: ibmvfc: process NVMe/FC rports in work
-> thread"), breaking the build when -Werror is enabled:
+> Some VMBus drivers have device-specific protocols with the Hyper-V host.
+> Further simplify the code by removing the use of protocol versions that
+> are specific to WS2012/Win8 and earlier.
 > 
->    drivers/scsi/ibmvscsi/ibmvfc-core.c:6154:15: error: variable 'rport' is uninitialized when used here [-Werror,-Wuninitialized]
->     6154 |                         } else if (rport && tgt->action == IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
->          |                                    ^~~~~
+> Finally, the WS2012/Win8 versions of Hyper-V were the last to use
+> messages to deliver synthetic timer interrupts. Starting in WS2016/Win10,
+> stimer interrupts are delivered to their own assigned interrupt vector
+> (called "Direct Mode"). So remove the code for handling timer interrupts
+> delivered as messages. This removal has a broader benefit in removing
+> a key blocker to disentangling VMBus code (which handles the messages)
+> and stimer code, as they should be independent of each other. The
+> final disentangling will come as a follow-on patch set.
 > 
-> Sashiko appears to point this out as well:
+> Testing:
+> * VM on local Hyper-V on up-to-date Windows 11
+> * Added temp debug code to suppress Direct Mode enumeration. Fallback
+>   to LAPIC timer worked as expected (x86/x64 only)
+> * Azure VM DC16eds v6: TDX CoCo VM with HvLite paravisor
+> * Azure VM DC16ads v6: SEV-SNP VM with an older paravisor
+> * Azure VM D16alds_v7: normal AMD x86 VM with HvLite paravisor
+> * Azure VM D16plds v6: normal ARM64 VM with MSFT Cobalt processor
+> * Not tested running in VTL2
 > 
->    https://lore.kernel.org/20260723005006.C7EE21F00A3A@smtp.kernel.org/
+> There's no specific urgency to removing the special case code for
+> WS2012/Win8, so if the broader Linux kernel community surfaces
+> a reason why this clean-up should not be done now, we can wait.
+> But I think we want to eventually stop carrying around this extra
+> baggage, and based on discussions with the Hyper-V team within
+> Microsoft, we're past the point that it has any value.
+
+I do feel that this is a nice cleanup overall, however do we really want
+things to break silently if someone does attempt running the latest
+kernel on older hosts? or do we want to include (at the very least) a
+warning message that indicates that things might be broken (and or
+that we don't make any guarantees of future support)?
+
 > 
-> But I am not sure that its suggestion to use nvme_rport is correct given
-> the context of this code, hence just the report from my end.
-
-I think that advice is wrong because nvme_rport has not yet been set if
-the "else" statement is reached. How about the change below?
-
-Thanks,
-
-Bart.
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c 
-b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index dfa231b6cc47..9e752978dad8 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -5984,8 +5984,6 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
-  {
-  	struct ibmvfc_target *tgt;
-  	unsigned long flags;
--	struct fc_rport *rport;
--	struct nvme_fc_remote_port *nvme_rport;
-  	LIST_HEAD(purge);
-  	int rc;
-
-@@ -6103,6 +6101,8 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
-
-  		list_for_each_entry(tgt, &vhost->scsi_scrqs.targets, queue) {
-  			if (tgt->action == IBMVFC_TGT_ACTION_DEL_RPORT) {
-+				struct fc_rport *rport;
-+
-  				tgt_dbg(tgt, "Deleting rport\n");
-  				rport = tgt->rport;
-  				tgt->rport = NULL;
-@@ -6115,6 +6115,8 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
-  				kref_put(&tgt->kref, ibmvfc_release_tgt);
-  				return;
-  			} else if (tgt->action == IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
-+				struct fc_rport *rport;
-+
-  				tgt_dbg(tgt, "Deleting rport with I/O outstanding\n");
-  				rport = tgt->rport;
-  				tgt->rport = NULL;
-@@ -6141,6 +6143,8 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
-
-  		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
-  			if (tgt->action == IBMVFC_TGT_ACTION_DEL_RPORT) {
-+				struct nvme_fc_remote_port *nvme_rport;
-+
-  				tgt_dbg(tgt, "Deleteing NVMe rport\n");
-  				nvme_rport = tgt->nvme_remote_port;
-  				list_del(&tgt->queue);
-@@ -6151,7 +6155,9 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
-  				timer_delete_sync(&tgt->timer);
-  				kref_put(&tgt->kref, ibmvfc_release_tgt);
-  				return;
--			} else if (rport && tgt->action == 
-IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
-+			} else if (tgt->action == IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
-+				struct nvme_fc_remote_port *nvme_rport;
-+
-  				tgt_dbg(tgt, "Deleting NVMe rport with outstanding I/O\n");
-  				nvme_rport = tgt->nvme_remote_port;
-  				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_LOGOUT_DELETED_RPORT);
-
+> Michael Kelley (6):
+>   Drivers: hv: Remove support for WS2012/2012R2 & Win8/8.1 version of
+>     Hyper-V
+>   hv_sock: Remove check for old Hyper-V hosts
+>   hv_netvsc: Remove GPADL teardown special case for old Hyper-V hosts
+>   drm_hyperv: Remove support for synth video protocol of old Hyper-V
+>     hosts
+>   scsi: storvsc: Remove support for storvsc protocol of old Hyper-V
+>     hosts
+>   clocksource: hyper-v: Remove support for stimer interrupts in message
+>     mode
+> 
+>  arch/x86/hyperv/hv_init.c                 |  17 +--
+>  arch/x86/kernel/cpu/mshyperv.c            |   4 +-
+>  drivers/clocksource/hyperv_timer.c        | 150 +++-------------------
+>  drivers/gpu/drm/hyperv/hyperv_drm_proto.c |  33 ++---
+>  drivers/hv/channel_mgmt.c                 |   4 -
+>  drivers/hv/connection.c                   |   8 +-
+>  drivers/hv/hv.c                           |   4 -
+>  drivers/hv/hv_balloon.c                   |  36 +++---
+>  drivers/hv/hv_snapshot.c                  |   5 -
+>  drivers/hv/vmbus_drv.c                    |  10 +-
+>  drivers/net/hyperv/netvsc.c               |  20 +--
+>  drivers/scsi/storvsc_drv.c                |  53 ++------
+>  include/clocksource/hyperv_timer.h        |   6 -
+>  include/linux/hyperv.h                    |   5 +-
+>  net/vmw_vsock/hyperv_transport.c          |   3 -
+>  15 files changed, 76 insertions(+), 282 deletions(-)
+> 
+> -- 
+> 2.25.1
+> 
