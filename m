@@ -1,125 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67E9B37E5D9
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:19:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2757637E5D9
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:19:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785453558; cv=none; b=DQWmziV1usfqycCUECOqyjcwXDRLNKIlofehz+Ksrji3F3R5/diedEwY7JNrEoTRpd2FoJg+xEkUyU4q+eD++gJIrMmhNWyuDF1ZMhB7O7UDwuKFO535MOU4j2GkgvuVWmQyCwhGtkoG4J03RCQfoGQ3fDuZJ2mR5ivkMJnwcAY=
+	t=1785453564; cv=none; b=KUWgXVbO5XHHlWd0VDQEPiEQFX2IYOwPk0CeN7FXANkxXmukO72PBwChF/s/LCivQKFzNvGbsWJfNxmwjPIz0SuMkFtxVe1QgTcbzFMgyz3CPQajw1K2TY5sjnp2rG23ja149auOefzDd4D2GtoOIR3L7YVBM/FLQsf9rNcq2mM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785453558; c=relaxed/simple;
-	bh=X28w2d6Hz6ReJpvfxyUIpmdp/YlP0tyn5dVONZgR918=;
+	s=arc-20240116; t=1785453564; c=relaxed/simple;
+	bh=m9TDK/vHF6mMMjtPB8rNhL4Yt0bA5xPg0GqS3AG+E30=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tg1psVq85QdEd0uBSDOS3fEMwVbnpE0kBqm1pF7YBj/4j3PVf69guoZM+8wbrth0p2eOKkHWRHBXiOVBPTPCBmpGtX1ESVovLTr7ALmdWq8Ua1keXxWkyUOqCCRXr53j04YtqGJImGglPE4kQmChxcy1rmCMJd1lt4b2K+Uvm7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JxWICf5I; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=RgwBZKD90A3Gq1pE4oC3zTb344OZqVaywdr4K8cI/zTPxIRqYzliE5V+mNqXN8N4kmvjJF/7J9dClIUHvA9QaL9bfQUY3n+nGPNkfcQFkdOb/tL4O8iilwsC7v3RJk6RUzov1U3wjYnRydSffKYoncNJhoWAXKGQs8kRl30AeEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h5dblHXq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JxWICf5I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEF5C1F000E9;
-	Thu, 30 Jul 2026 23:19:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h5dblHXq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AB751F000E9;
+	Thu, 30 Jul 2026 23:19:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785453557;
-	bh=0gcTBOnB0yBLxoBSeZYNATZNTUyNdplMCbk7vwE0ASs=;
+	s=k20260515; t=1785453562;
+	bh=RPpf4GPRPJkBL0EwoGzozzoYM+ZenIOVCM8Psle/InQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JxWICf5IjC5E9y1E9XtUo5l2zccHDRgWqnUb13xX1AfdMxPQeovBEjIOHy9MYmRqb
-	 5IDpQfZqTTXdd0U0PaKyBb4wlyRLEQQ8V34MbUKPWnSZ1ekh5nfqyIbHpjh0NOJiQG
-	 ox/UTIbMS6UOuoUzffdPtILoH/aFrmifOn49GTbWaDcuQIjB4CbxxQn8UaBKstPY+K
-	 UyybgRpB5K+ZzcxGMcHTQmzes9EXC2cSek7ntYxe7VGw8q4PrW/O75NfOU9/uSx7C1
-	 L3+q83s1cyl/dhaWDsK5MYXJVtLkbbzZ5u/v7oG37TUVa3K1EiNYVMUMwX6BtKNOuz
-	 v/jiltmUt7glg==
+	b=h5dblHXqWu2W+O/pppzDumQqiO83EjGmKx/wiiSFnqdu+Hb5mPAFRUbC32y6k/HDA
+	 QXLLPn9oVzqx9dUsZeBbjxiMAl5o85rh6fMAwirAf6OWv5C59TKuaqN84W2nRvtutR
+	 YJRKSD2Y0S6sRxMN0uEf4Kly9ehsOmDUEI9tGuxY2BZukamFEjhaEJZM6+T9mVDLiV
+	 4+H5T4zayT8gY/3Og3q2voZP856xZE/bwVEljl41j00dnbvE8FVTplxk9ceHmyprgp
+	 aqPWfG70+7bgf8h00xJJflX29M2EUAQ2ewS66Tf1UTtnpPBBNPqyhHHXAu3Hb8IT/k
+	 m4RX00+TCQHQg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 34/57] scsi: libfc: Enable lock context analysis
+Subject: Re: [PATCH v3 47/57] scsi: qla1280: Prepare for enabling lock
+ context analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <3c7650cbbecbaf615e264bf7c21e7eb101b818dd.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <2b371d3536092dce61084c62923c9a4908598049.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <3c7650cbbecbaf615e264bf7c21e7eb101b818dd.1785451174.git.bvanassche@acm.org>
+ <2b371d3536092dce61084c62923c9a4908598049.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:19:16 +0000
-Message-Id: <20260730231916.DEF5C1F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 23:19:22 +0000
+Message-Id: <20260730231922.9AB751F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Low] Incomplete lock context annotations for intermediate and explicitly=
- locked functions, triggering static analysis warnings.
+
+New issues:
+- [Medium] Incomplete `__must_hold` annotations on intermediate functions c=
+alling `qla1280_mailbox_command`.
+
+Pre-existing issues:
+- [High] Lost wakeups and stack pointer leak in `qla1280_poll()`.
 --
 
---- Patch [34]: [PATCH v3 34/57] scsi: libfc: Enable lock context analysis =
----
-commit 713891d004459388a5a60d9452963a9f124605ff
+--- Patch [47]: [PATCH v3 47/57] scsi: qla1280: Prepare for enabling lock c=
+ontext analysis ---
+commit 1c9b404ec1f5e106acf48d1ff8e578d2279ecab4
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: libfc: Enable lock context analysis
-
+scsi: qla1280: Prepare for enabling lock context analysis
+   =20
 Document locking requirements with __must_hold().
 
-> diff --git a/drivers/scsi/libfc/Makefile b/drivers/scsi/libfc/Makefile
-> --- a/drivers/scsi/libfc/Makefile
-> +++ b/drivers/scsi/libfc/Makefile
-> @@ -1,6 +1,8 @@
->  # SPDX-License-Identifier: GPL-2.0
->  # $Id: Makefile
-> =20
-> +CONTEXT_ANALYSIS :=3D y
-> +
+> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+> index cdd6fe002c324..ebc878068684b 100644
+> --- a/drivers/scsi/qla1280.c
+> +++ b/drivers/scsi/qla1280.c
 
-[Severity: Low]
-Does enabling context analysis here trigger compiler warnings for other
-functions that are missing annotations?
+[ ... ]
 
-For example, shouldn't fc_disc_stop_rports() and fc_exch_done_locked() be
-annotated? They both explicitly require locks but appear to be missing the
-__must_hold() annotations:
+> @@ -2413,6 +2425,7 @@ qla1280_nv_write(struct scsi_qla_host *ha, uint16_t=
+ data)
+>   */
+>  static int
+>  qla1280_mailbox_command(struct scsi_qla_host *ha, uint8_t mr, uint16_t *=
+mb)
+> +	__must_hold(ha->host->host_lock)
+>  {
 
-drivers/scsi/libfc/fc_disc.c:fc_disc_stop_rports() {
+[Severity: Medium]
+Will static analysis tools emit false-positive lock context warnings for ot=
+her
+functions that call qla1280_mailbox_command() but lack the __must_hold()
+annotation?
+
+For example, intermediate functions like qla1280_set_target_parameters(),
+qla1280_chip_diag(), qla1280_start_firmware(), qla1280_init_rings(), and
+qla1280_nvram_config() call qla1280_mailbox_command() while the lock is
+already held, but they are missing the annotation added to other callers
+in this patch.
+
+[ ... ]
+
+> @@ -2538,6 +2551,7 @@ qla1280_poll(struct scsi_qla_host *ha)
+
+[Severity: High]
+This is a pre-existing issue, but does qla1280_poll() leak completed
+SCSI commands on its stack-allocated done_q?
+
+Looking at the qla1280_poll() implementation nearby, it allocates a local
+list:
+
+qla1280_poll(struct scsi_qla_host *ha)
+{
+    LIST_HEAD(done_q);
     ...
-    lockdep_assert_held(&disc->disc_mutex);
-    ...
+    if (data & RISC_INT)
+        qla1280_isr(ha, &done_q);
+
+    if (!list_empty(&done_q))
+        qla1280_done(ha);
 }
 
-[ ... ]
+If qla1280_isr() populates this local done_q with completed commands, they
+appear to be ignored when qla1280_done() is called, because qla1280_done()
+only processes ha->done_q. When qla1280_poll() returns, the stack frame is
+destroyed, permanently leaking these commands and leaving their list node
+pointers aimed at invalid stack memory.
 
-> diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-> --- a/drivers/scsi/libfc/fc_disc.c
-> +++ b/drivers/scsi/libfc/fc_disc.c
-> @@ -200,6 +200,7 @@ static void fc_disc_recv_req(struct fc_lport *lport, =
-struct fc_frame *fp)
->   * @disc: The discovery object to be restarted
 >   */
->  static void fc_disc_restart(struct fc_disc *disc)
-> +	__must_hold(&disc->disc_mutex)
+>  static int
+>  qla1280_bus_reset(struct scsi_qla_host *ha, int bus)
+> +	__must_hold(ha->host->host_lock)
 >  {
-
-[Severity: Low]
-Does fc_disc_recv_rscn_req() also need the __must_hold() annotation?
-
-It calls this newly annotated fc_disc_restart() function, so without its own
-annotation, could it break the analysis chain for its callers?
-
-[ ... ]
-
-> diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-> --- a/drivers/scsi/libfc/fc_fcp.c
-> +++ b/drivers/scsi/libfc/fc_fcp.c
-> @@ -1950,6 +1953,7 @@ EXPORT_SYMBOL(fc_queuecommand);
->   * The fcp packet lock must be held when calling.
->   */
->  static void fc_io_compl(struct fc_fcp_pkt *fsp)
-> +	__must_hold(&fsp->scsi_pkt_lock)
->  {
-
-[Severity: Low]
-Does fc_fcp_complete_locked() also need to be annotated?
-
-It calls fc_io_compl(), so lacking a __must_hold() annotation might cause a
-context imbalance warning during analysis.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D34
+t.bvanassche@acm.org?part=3D47
