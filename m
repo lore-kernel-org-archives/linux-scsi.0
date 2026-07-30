@@ -1,107 +1,119 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E4323911AF
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:31:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E983E3A254D
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:37:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785450707; cv=none; b=Zlg7TJ1D875qZAyKQzqgW0wNwHrUxbXU0/xBj0VHVSIQ4AnUgk4/TIWKCEe+mRoGk9eTOGqqFiJRAtKQ3BucMbhrv45LFKKrH2ieuofa4Z58ol5KP701R6xyALFos28HA3sGq/qBngZYTO0E+Xirb+EFxoLIE/qmJ0qaJNfvYOI=
+	t=1785451079; cv=none; b=jyqOLGi0MUE+F9Z9AUcwvdV7VGUfqtPFT7OORF2FNxAniIZFZRNHTd/V5zN95gHVmAHzDfpzx9LGFhFhDhlZWaKgcqTH1inAre4XFYcAuoIGZeJQkY/s4e3oV97sv10cJfWrn1iNnVx6ZgRPxjJu+AAiblLn+JSAxcuv/oZv9do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785450707; c=relaxed/simple;
-	bh=ORt3zsmR4no2vhvSyjiTQsOa7Q0wCrn/yruJ1guQpeU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=O0nO7f7qqOMXcJL+LoCyDa+iI/InELcRtvKgEMpYbnA2pNLbf/0jSv0Ci8+bm/Af3vhn78gy8/hj8/7E2XIUbRs+p6upGBESBHf+H2i2IY7kJ/xALZlLZMfmu1RW6Si/uJdfipt+WzzucNYhs0JpVq2yEWBIJdInw5kjGkiWPZg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i1K6AIt2; arc=none smtp.client-ip=209.85.221.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785451079; c=relaxed/simple;
+	bh=fg5WVeHAiTk0gRnR1QePiFsnB4CtUWbLlB8VFOG+Ink=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=c2nRLIKPAHnxsElnfs9fDHuKOhOxRCMVZzx+MYPlIzojAJQbrnC1hPl64MmFw8UCiOO7O/uJ7R6QIDOydCDnS8xcaUy++OJ+qR7EPmz3AjjdPmN6a7e+UooF73jHXhwJAiSWIc6ve+w+5wzwK72PjcWy9rZCKeK6oufhvGnX1TI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F8iSmcmn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i1K6AIt2"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-47f752b3423so149825f8f.3
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 15:31:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785450703; x=1786055503; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PlKOnAY10vVaTbHY589tMDEBcYBV0lZutRarK9tzuxA=;
-        b=i1K6AIt2oGQK1C/1ULu/lCC2bOkU94JwP7UtXA+NAjdK/PRRW5NekSZXbLT3eWsh7H
-         Js42zXn2inUbJdyAv9d0M+QC3zHbp9YX4DeOhg0KWFkWS+/UpSjai0Yu/Krc2RRqLHbv
-         9rjPaErrRTuWC8cEBGa0q9NHYFM4MaATtlCyyuegv+s01pcr4U2j39eVnRSl32THE1Yc
-         675gabmzwMKIDSvWFGd345fJ/WB/pvNtIOQH0shU6jF/8LRJd+Rr2z2vtfxmuXWeKycj
-         enSf7zp5AeGLgAh/9hvAOcj/4Ip4YdtAinxh0M5Y0Cm69wEyUUCl9QF0jGGOlMu7zQrg
-         bvbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785450703; x=1786055503;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=PlKOnAY10vVaTbHY589tMDEBcYBV0lZutRarK9tzuxA=;
-        b=YYFAsx3vCJkCZ+zCHgECsmAbX+fg9bmeCm9nsszKOauiYcHH5tfA3cv298JyVOMKD8
-         bVM2O14fJ8Xb5G8j+yt6Aqbs3GVD0f/xZdFwGsBmt0vyEIocY2tgA5/Nlv4FAKfvqLM4
-         hwt47FYjHGJkZdM5yxt4v1JZfchfiwSC172MVI1nTuNncpTQJSWieojarmYzJ9C+BdMp
-         Tr3QJZU7pWGa4P2b7nzMsviER49VuINwr+NjaifFUABpPwwvTuns+lnYZuXDfRC/gBhj
-         4iZAfdgOP2GU6mSX6WQexKenBEg7R85mHmxZEjMUuHanW5+ZuhkOuwXu1PXgqdvjUBFT
-         xBqw==
-X-Forwarded-Encrypted: i=1; AHgh+Rox1siXWAqH74Zebj2+2y/xWcM/aTU7RsICp/ZvY/rsjVFLewvM/JnSQFSEZrdhdRYA+2ReZ/KUCbif@vger.kernel.org
-X-Gm-Message-State: AOJu0YyePlsT+D4N10flBhRiOg4yHpJrc8alIEvZPxKbIuwDHztTn160
-	+C3FKu1UeRNBTuLHdc8jsUnmUcVFUKQaf+GJCzfKhi3cGpihjQJWwPAB
-X-Gm-Gg: AR+sD11IYjE697uNTf3FhLsZP++h/I2dr+twpblo9G61SMyGB7GQ5uUf2VhwTDDqhSs
-	VCFjbECyqZnxAx7qXxrhoxSYQtwYmSsj03UKPu81tOLHmXTfGkA02pXp53adx3vbxnH1lk9rdNG
-	D7RCKfCDB0xIjCCLuvD4f6vsCNFXgLhnl2uiCD6Zr6/1cWfjYAR0pw3a7bFJoecAw2+wrtGmca9
-	rIdPwhifUCzaMERNXMBaNc5tT5Mjgg/MTERrlZQnjOOqXb1JkUcR+RHpfZSF7gVFcTcIB9UoiOY
-	cGLwP9HpeXlXutLO4uRvJp8OprX+rtvpq7JpdHEo7ZtZZp9Laj/o22G9KoARmUPxd3rEMJAmsXc
-	+v+FcxnHuJieMGt8Ar4S/CNOpXeLmh9UVJGIK7X/MG4FwYAgs3uTJ+mVBIDu2ITCmIlvn7LgWhN
-	ZjoJzaXW6bPomm2g27PIEuYEGVSKKWxhxQwOOZkdNb1uwxx5dg2jaFaduUS88=
-X-Received: by 2002:a05:600c:1f90:b0:497:fecd:5b00 with SMTP id 5b1f17b1804b1-49800e74e48mr58540825e9.9.1785450703407;
-        Thu, 30 Jul 2026 15:31:43 -0700 (PDT)
-Received: from localhost ([5.83.201.220])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49800f1a7f7sm110882175e9.5.2026.07.30.15.31.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 15:31:42 -0700 (PDT)
-From: Colin Ian King <colin.i.king@gmail.com>
-To: Tyrel Datwyler <tyreld@linux.ibm.com>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <chleroy@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Cc: kernel-janitors@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH][next] scsi: ibmvfc: Fix spelling mistake "Deleteing" -> "Deleting"
-Date: Thu, 30 Jul 2026 23:29:51 +0100
-Message-ID: <20260730222951.352872-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F8iSmcmn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D6571F000E9;
+	Thu, 30 Jul 2026 22:37:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785451077;
+	bh=k84PrMpxYhSPN2fCXMnX23hrrgqS3sVjqV+Su3PME8U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=F8iSmcmndkK0osPBjaQ+lZ1PvD8S5/dXiMehiEWOU/1mQdsvSP6C4moUXDE0bgEWM
+	 NdbGgC7VdwPhRPEbZa8gkcqgjaoejpORv3XuKmS7cDwFy2aO4AUQGvp2aJtc6oJmG/
+	 SSFrHXQaYWXmG+Yz9E80IdiIu50Vgjfna/MRFo3j0goH74wnZuMW5z4ibrJ0xGIMbw
+	 YBz4iZIj0NNdO7Itq2tnV8ZzjY9QhD1OWhoiBi2pNaxeksQBKTm1S8V9U1tgBoUzMq
+	 24JxiX9cSYhwFY1RIy6fU8NxS/k2T5VwMjBhog9+M3C9/K8Ghz7N+t6q/1QJP4KWEN
+	 RlszhCpNdVtyQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH][next] scsi: ibmvfc: Fix spelling mistake "Deleteing" ->
+ "Deleting"
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Colin Ian King" <colin.i.king@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260730222951.352872-1-colin.i.king@gmail.com>
+References: <20260730222951.352872-1-colin.i.king@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 30 Jul 2026 22:37:56 +0000
+Message-Id: <20260730223757.4D6571F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
 
-There is a spelling mistake in a tgt_dbg message. Fix it.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
----
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Pre-existing issues:
+- [High] Uninitialized stack variable `rport` is evaluated in the NVMe targ=
+et deletion loop, leading to indeterminate execution behavior and skipped t=
+arget logout/deletion.
+--
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index dfa231b6cc47..93b9f699c2e5 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -6141,7 +6141,7 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
- 
- 		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
- 			if (tgt->action == IBMVFC_TGT_ACTION_DEL_RPORT) {
--				tgt_dbg(tgt, "Deleteing NVMe rport\n");
-+				tgt_dbg(tgt, "Deleting NVMe rport\n");
- 				nvme_rport = tgt->nvme_remote_port;
- 				list_del(&tgt->queue);
- 				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DELETED_RPORT);
--- 
-2.53.0
+--- Patch [1]: [PATCH][next] scsi: ibmvfc: Fix spelling mistake "Deleteing"=
+ -> "Deleting" ---
+commit 815533f3bf155a641d39add28605656b69fb9ce0
+Author: Colin Ian King <colin.i.king@gmail.com>
 
+scsi: ibmvfc: Fix spelling mistake "Deleteing" -> "Deleting"
+
+This commit fixes a spelling mistake in a tgt_dbg message during NVMe rport
+deletion.
+
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+
+[ ... ]
+
+> @@ -6141,7 +6141,7 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhos=
+t)
+> =20
+>  		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
+>  			if (tgt->action =3D=3D IBMVFC_TGT_ACTION_DEL_RPORT) {
+> -				tgt_dbg(tgt, "Deleteing NVMe rport\n");
+> +				tgt_dbg(tgt, "Deleting NVMe rport\n");
+>  				nvme_rport =3D tgt->nvme_remote_port;
+>  				list_del(&tgt->queue);
+>  				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DELETED_RPORT);
+>  				spin_unlock_irqrestore(vhost->host->host_lock, flags);
+>  				if (nvme_rport)
+>  					ibmvfc_nvme_unregister_remoteport(tgt);
+>  				timer_delete_sync(&tgt->timer);
+>  				kref_put(&tgt->kref, ibmvfc_release_tgt);
+>  				return;
+>  			} else if (rport && tgt->action =3D=3D IBMVFC_TGT_ACTION_DEL_AND_LOGO=
+UT_RPORT) {
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is it possible that rport is
+uninitialized when evaluated here?
+
+Looking at ibmvfc_do_work(), rport is declared as a stack variable:
+
+static void ibmvfc_do_work(struct ibmvfc_host *vhost)
+{
+    ...
+    struct fc_rport *rport;
+    ...
+
+If no SCSI targets match the deletion criteria in the earlier loop during
+IBMVFC_HOST_ACTION_TGT_DEL, rport appears to remain completely uninitialize=
+d.
+
+When the code later reaches the NVMe loop shown above and encounters a targ=
+et
+with IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT, it evaluates rport in the
+condition.
+
+Could this uninitialized memory evaluation cause the target deletion to be
+silently skipped if it evaluates to 0, leaving the NVMe target in the
+IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT state forever?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730222951.3528=
+72-1-colin.i.king@gmail.com?part=3D1
