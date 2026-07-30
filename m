@@ -1,59 +1,56 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F1C03D5221
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:48:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F7D93D5221
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:48:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785451737; cv=none; b=WT14ZjAQxqIrFbRPzoeWyIbT6hyQnWA0ifA5lKekMpQRSfkZ7Wp7+eyyjWcsm8Nc5ZaQSqoozLUfjE1k2NR0YxGNuQVP/dwyc2W6EhbdPotFK+Qeu/4TaBLIiD6VP5UsW+aM6R0Pi+KEOnW7/xHvHNGFlKNmKiYcUSrz4dZNOdg=
+	t=1785451740; cv=none; b=BphxHY0O7DNeU4eQnaXduF8QbGuK++6xFWxUcoQguA+7Xsh52+jgUm+CvhM3smPCKML0Wm2GXBrPWU5oLJMl9xLIj0cLYchXNIyVmcyf0JNi5XMHrkuY3gRYkiyXoB6tMz7vz4TjSQIcZv/hNGWKd2en6hgeX0+95+fa98TW5+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785451737; c=relaxed/simple;
-	bh=rJ4tvIgM50dJNYJUZOv6Jbfn5W/lTP9ETjSf/0zN2TM=;
+	s=arc-20240116; t=1785451740; c=relaxed/simple;
+	bh=fM4fHKwqxJhupdRe86heCo1MOwIgHOhZzNGqe8nAlRE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mk18rRgzUME53qMreRd3qMDtBNeOr3nV4ocEtEliWo0+d048GIpaisz8ywboCkCn8vzS+fJuBVHaWlycOoHKCEd1pY57e7MDSMn2N2mZKId6BzFIDjWgKRglWgjnoVjBxFccbOhh/1Pe/PbTdbRQG7LxjUICZmYfbZUG5Bl4NU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=BCkIL41N; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=r/fclsGbj0RlePA1WN2sd3d6epiicmzWBBygcsALiP3tTZSV+COIPSs74BN9Fy/oebjzP96xU+VGZkZDEKu4SkqZB+CxnpytwI+KrfVwJaZBH0a5bbR31T5EW6Xxwof36KAXKyAlCd1zmkZ1pOSEgoljfyezOGLo8apq1qnLf/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Z84Zx1zj; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="BCkIL41N"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Z84Zx1zj"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hB4BH6XlLz1XM30r;
-	Thu, 30 Jul 2026 22:48:55 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hB4BL62lLz1XM30r;
+	Thu, 30 Jul 2026 22:48:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1785451729; x=1788043730; bh=JzvvY
-	7sWq0sW394ARjYdYXMhHd0O8NqLKu+32rkVuiU=; b=BCkIL41N2+MQ73anUsliD
-	F1g8yeziuHFQKf7go5rWv3fusNo5CiZcyX89HFruYGxOsk4vN9TkcZHIGQMg0mKT
-	5JwJQSbW1iBRf/j0wURwNRWzSiFfay5fJ0XBBbSmCMQFf10KRsMTpuU2P/ZbfIdU
-	LBDilvgVsNwXgKnQ6AxtzoE6PtQjdGlpeZb+loU5L3gUWBWvreBoHBiRDmLu0ilw
-	wsJl1PBisq74NWa/RLQQiB2SB0QYQ7QJEoEhvhufNgD+tMPVaGRNcBygOvSm+eAG
-	IPFBNm9yShUuaaxC3JUkVUevejsUNkuHfnxoTvJxUqZAvm2HAfMC/tgwyVO1lnFW
-	A==
+	:received:received; s=mr01; t=1785451735; x=1788043736; bh=bROog
+	bwI4aqna1hD89FFMT3m7p2dBr65vrQAbgzA3Pg=; b=Z84Zx1zjxa3cj8VTYs220
+	G+yc5jnGeESGA2vaZHi6kS1ZnttXZW251H3F5JjOcE1/OEOnV5REnYGlM+HygezN
+	yDmpAinpFqyaViigOiT+wVlCCpjnzzdJ9scTiykFon+q4cn5dElZjuwEgLK4kGV2
+	Q/GrFRmKTV5DKmfP05sWktW9/r2gwYQkrBNpoPnq1oAj5WX7jOX/uBTaCpAI4F6f
+	LH2HKrNQNeOSR1yuRpa7xM6CWDCLuY5aNKhVhoYM4gLKrFDNxR1TeqVW8WeWSgqx
+	+yoHlcZmqk06SubbXNLEsWmS+heLtT4ifF1EDaBX0NM1YzKdcTp30uSxRXEOQ0SD
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id DRcrlcmf5Abm; Thu, 30 Jul 2026 22:48:49 +0000 (UTC)
+ id nRv2p-KGuLQR; Thu, 30 Jul 2026 22:48:55 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hB4B73v0Dz1XM30k;
-	Thu, 30 Jul 2026 22:48:47 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hB4BF2zV8z1XM6Jk;
+	Thu, 30 Jul 2026 22:48:53 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Marco Elver <elver@google.com>,
 	linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	John Garry <john.g.garry@oracle.com>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 42/57] scsi: mvsas: Enable lock context analysis
-Date: Thu, 30 Jul 2026 15:45:25 -0700
-Message-ID: <5e65b2732191612e2dc82258c1b3c25831ec958f.1785451174.git.bvanassche@acm.org>
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH v3 44/57] scsi: pm8001: Enable lock context analysis
+Date: Thu, 30 Jul 2026 15:45:27 -0700
+Message-ID: <6371196646d5f6222a6d8e55de2a351aa9caf967.1785451174.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.55.0.508.g3f0d502094-goog
 In-Reply-To: <cover.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
@@ -65,91 +62,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Document locking requirements with __must_hold(). Annotate functions
-that perform conditional locking with __no_context_analysis.
+Document locking requirements with __must_hold().
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/mvsas/Makefile | 2 ++
- drivers/scsi/mvsas/mv_sas.c | 7 +++++++
- 2 files changed, 9 insertions(+)
+ drivers/scsi/pm8001/Makefile     | 1 +
+ drivers/scsi/pm8001/pm80xx_hwi.c | 2 ++
+ 2 files changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/mvsas/Makefile b/drivers/scsi/mvsas/Makefile
-index 75849258e898..7f45cca38127 100644
---- a/drivers/scsi/mvsas/Makefile
-+++ b/drivers/scsi/mvsas/Makefile
-@@ -7,6 +7,8 @@
- # Copyright 2009-2011 Marvell. <yuxiangl@marvell.com>
+diff --git a/drivers/scsi/pm8001/Makefile b/drivers/scsi/pm8001/Makefile
+index bbb51b7312f1..b236359810fe 100644
+--- a/drivers/scsi/pm8001/Makefile
++++ b/drivers/scsi/pm8001/Makefile
+@@ -4,6 +4,7 @@
  #
+ # Copyright (C) 2008-2009  USI Co., Ltd.
 =20
 +CONTEXT_ANALYSIS :=3D y
-+
- ccflags-$(CONFIG_SCSI_MVSAS_DEBUG) :=3D -DMV_DEBUG
 =20
- obj-$(CONFIG_SCSI_MVSAS) +=3D mvsas.o
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 359226e80eae..f63e0dc1abd2 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1055,6 +1055,7 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i=
-, int get_st)
- }
+ obj-$(CONFIG_SCSI_PM8001) +=3D pm80xx.o
 =20
- static void mvs_port_notify_formed(struct asd_sas_phy *sas_phy, int lock=
-)
-+	__context_unsafe(conditional locking)
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
+x_hwi.c
+index 7a348f0194bd..ff6fdb761a70 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -2294,6 +2294,7 @@ static void mpi_ssp_event(struct pm8001_hba_info *p=
+m8001_ha, void *piomb)
+ static void
+ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
+ 		struct outbound_queue_table *circularQ, void *piomb)
++	__must_hold(&circularQ->oq_lock)
  {
- 	struct sas_ha_struct *sas_ha =3D sas_phy->ha;
- 	struct mvs_info *mvi =3D NULL; int i =3D 0, hi;
-@@ -1153,6 +1154,7 @@ static void mvs_free_dev(struct mvs_device *mvi_dev=
-)
- }
-=20
- static int mvs_dev_found_notify(struct domain_device *dev, int lock)
-+	__context_unsafe(conditional locking)
+ 	struct sas_task *t;
+ 	struct pm8001_ccb_info *ccb;
+@@ -3858,6 +3859,7 @@ static int ssp_coalesced_comp_resp(struct pm8001_hb=
+a_info *pm8001_ha,
+  */
+ static void process_one_iomb(struct pm8001_hba_info *pm8001_ha,
+ 		struct outbound_queue_table *circularQ, void *piomb)
++	__must_hold(&circularQ->oq_lock)
  {
- 	unsigned long flags =3D 0;
- 	int res =3D 0;
-@@ -1517,6 +1519,7 @@ static int mvs_slot_err(struct mvs_info *mvi, struc=
-t sas_task *task,
- }
-=20
- int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
-+	__must_hold(&mvi->lock)
- {
- 	u32 slot_idx =3D rx_desc & RXQ_SLOT_MASK;
- 	struct mvs_slot_info *slot =3D &mvi->slot_info[slot_idx];
-@@ -1644,6 +1647,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_=
-desc, u32 flags)
-=20
- void mvs_do_release_task(struct mvs_info *mvi,
- 		int phy_no, struct domain_device *dev)
-+	__must_hold(&mvi->lock)
- {
- 	u32 slot_idx;
- 	struct mvs_phy *phy;
-@@ -1677,6 +1681,7 @@ void mvs_do_release_task(struct mvs_info *mvi,
-=20
- void mvs_release_task(struct mvs_info *mvi,
- 		      struct domain_device *dev)
-+	__must_hold(&mvi->lock)
- {
- 	int i, phyno[WIDE_PORT_MAX_PHY], num;
- 	num =3D mvs_find_dev_phyno(dev, phyno);
-@@ -1769,6 +1774,7 @@ static void mvs_sig_time_out(struct timer_list *t)
- }
-=20
- void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
-+	__must_hold(&mvi->lock)
- {
- 	u32 tmp;
- 	struct mvs_phy *phy =3D &mvi->phy[phy_no];
-@@ -1862,6 +1868,7 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no,=
- u32 events)
- }
-=20
- int mvs_int_rx(struct mvs_info *mvi, bool self_clear)
-+	__must_hold(&mvi->lock)
- {
- 	u32 rx_prod_idx, rx_desc;
- 	bool attn =3D false;
+ 	__le32 pHeader =3D *(__le32 *)piomb;
+ 	u32 opc =3D (u32)((le32_to_cpu(pHeader)) & 0xFFF);
