@@ -1,127 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from outbound.baidu.com (mx16.baidu.com [111.202.115.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18C4B38BF9A
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 03:41:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D6E21B905;
+	Thu, 30 Jul 2026 03:53:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=111.202.115.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785382879; cv=none; b=aO3EmqDH0yqJENE/Hcu1Awu5LKikEvWMgB3Vjx0Vu5smQJbbgkycHvUxDB9ZgBVmzrEnOhCd9xCjRhc14UGxfdzyfAKCUDwsLqSO5H2/1Ns8aiU5Go9Yb2nyVXMPP3+bWDmsML133st1kZ5yrisS8sGpQl/BQf2X9cnT0KVwWco=
+	t=1785383593; cv=none; b=m93ketXqwL04ry+y8PPTGc0vgj5XQXfv/WvJpTxSekt0z7IVSalr7iGhXMUKl7lwXoUfZvuGPf4/Ug2iwl5pT1x2j8EiAQeXMHYPYq8VocxFe19XcDwP1sm9r4PzfZdxIprlRHaPhYtJKh+3aRmkGALaqI6Th9ysrKcEmctksS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785382879; c=relaxed/simple;
-	bh=4oEWvswD1SPYJ82Ja6lJUgiEJiBHXQz1O7mwuqhP6yw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uLudT6TmHrF2vv5QFts1TBjp08vxXMApX6RaYt5NeKPyuFGGnIdCeZkk5JVAScKvxRL9PcpYtrVUnyURloKRrSK0HFK44S7HAgNP5FB59k2oOs7d2rvTum1vSYhFu9Thqq+e4meUbDQhyyop0f5LQ1F6OF7Utz7waUlA1AUlblE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mnxL2CI6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785383593; c=relaxed/simple;
+	bh=RLZ6zKZw5mwAKScLmy5admfnsoSWI3anVJ5hFG9sHvo=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=M/lSObssDQUhn5jN1GDN7B/AhUwy+z1mQsIlieRaHqwbpcZHaE6y2ufBq9KSN64Asw5QmjtZ4HKkIcVMC2+k3itGWkPcjYG8FHd1Vjt5lFpIGjEFQ1SzxlqBpKvF4JNxpbyHd/As8iqeZmTf5pZCVhTQfNWKyobhJq1ARrdGIcM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com; spf=pass smtp.mailfrom=baidu.com; dkim=pass (2048-bit key) header.d=baidu.com header.i=@baidu.com header.b=eY4Oj2H0; arc=none smtp.client-ip=111.202.115.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baidu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mnxL2CI6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D5841F000E9;
-	Thu, 30 Jul 2026 03:41:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785382877;
-	bh=Leu892mAKvn2Z0tpTpB9LBc8i46cMxQMrAdCGvg6DSw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mnxL2CI6dCL+LYu78dXkVxLBPlyGH8eEqb38CRAnMFRdB720gMLC/e1WqiPO5fx1Q
-	 hoDgWwTVfLWX8ZKWWDU3EONCPlnoJt8/p8LR/YvRQWdSp4rQ94WVSN0m/M5wro6N3e
-	 KCz3JPj/DF8Y6L4PMfmDY4+RkrZTkeY4VyDhZXh+Ja19N/nP71GBNEzLOjR72ad55A
-	 cC/2Pt+L82geGEqvZIA5GD/uQ5t41IEpUh9kV25W6uFHJpXlQTOjmMJWh7Ir536vRg
-	 0czN1nrrKL6UAnigFz5tqZVVz+N7nHVEmZP6hKaoD3GiHQga1nNUpg3cpalPlZdhSr
-	 zH0h9iT8q3NGw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: Fix stack out-of-bounds in ALUA lu_gp and
- tg_pt_gp store
-Reply-To: sashiko-reviews@lists.linux.dev
-To: kensanya@163.com
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260730031917.72750-1-kensanya@163.com>
-References: <20260730031917.72750-1-kensanya@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 03:41:17 +0000
-Message-Id: <20260730034117.8D5841F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=baidu.com header.i=@baidu.com header.b="eY4Oj2H0"
+X-MD-Sfrom: lirongqing@baidu.com
+X-MD-SrcIP: 172.31.50.48
+From: "Li,Rongqing" <lirongqing@baidu.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Sreekanth Reddy
+	<sreekanth.reddy@broadcom.com>, Suganath Prabu Subramani
+	<suganath-prabu.subramani@broadcom.com>, Ranjan Kumar
+	<ranjan.kumar@broadcom.com>, "James E . J . Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
+	<martin.petersen@oracle.com>, "MPT-FusionLinux.pdl@broadcom.com"
+	<MPT-FusionLinux.pdl@broadcom.com>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: =?gb2312?B?tPC4tDogW1BBVENIXSBzY3NpOiBtcHQzc2FzOiBmaXggaW52YWxpZCBrZnJl?=
+ =?gb2312?Q?e_of_embedded_event=5Fdata_in_event_callback?=
+Thread-Topic: [PATCH] scsi: mpt3sas: fix invalid kfree of embedded event_data
+ in event callback
+Thread-Index: AQHdDQ3qhcMnoM/vokyTlO75m80Lm7aFkvJw
+Date: Thu, 30 Jul 2026 03:50:50 +0000
+Message-ID: <5a93a696e52a4ae9b660abc51b7aef65@baidu.com>
+References: <20260706060840.2287-1-lirongqing@baidu.com>
+In-Reply-To: <20260706060840.2287-1-lirongqing@baidu.com>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=baidu.com;
+	s=selector1; t=1785383454;
+	bh=RLZ6zKZw5mwAKScLmy5admfnsoSWI3anVJ5hFG9sHvo=;
+	h=From:To:Subject:Date:Message-ID:Content-Type;
+	b=eY4Oj2H0/LxwxXoM9RFQxM6oWTJweMWUHl3TC4NYQENp9VhGI6fJI5r0FDBTrInJn
+	 orIQqBCn1Rd3OvIkoYbjchxJBWiNZY4eCBHdfg2G6iQnBFVdHL4C8eHZxhkcVvDatA
+	 l0IwWA5r7oWZYCuVd1h8bztX/P+KC9VS3wt5zA5sjrWhYOAijNqkbV0ohMp1N9A7gD
+	 BcgayEhfsESo584lPZZU1EB/6y/tYekTaqMK483+nyX3+/Fq8I8TRCCGmzzbvqHz3G
+	 blTcMJVaJdVuQX0s01dGAtkhrWnKew5qQWaYQK4eG5fcWesul+3uk/lgHjGDy+u5+N
+	 aMB4qo3rlDiZQ==
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-
-Pre-existing issues:
-- [High] Writing "NULL" to a device's alua_lu_gp configfs file when the cur=
-rent group is NULL triggers a guaranteed NULL pointer dereference.
---
-
---- Patch [1]: [PATCH] scsi: target: Fix stack out-of-bounds in ALUA lu_gp =
-and tg_pt_gp store ---
-commit 57ed25faa0822b84299ce2ade4007a8dc2229f88
-Author: TanZheng <tanzheng@kylinos.cn>
-
-scsi: target: Fix stack out-of-bounds in ALUA lu_gp and tg_pt_gp store
-
-Both alua_lu_gp and alua_tg_pt_gp allow a write of exactly
-LU/TG_PT_GROUP_NAME_BUF bytes into a same-sized stack buffer. This commit
-enlarges the local buffers by one byte so a full-sized write remains
-NUL-terminated when passed to strstrip().
-
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/targe=
-t_core_configfs.c
-> index 2b19a956007b7..0e50987e6dbee 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -2518,7 +2518,7 @@ static ssize_t target_dev_alua_lu_gp_store(struct c=
-onfig_item *item,
->  	struct se_hba *hba =3D dev->se_hba;
->  	struct t10_alua_lu_gp *lu_gp =3D NULL, *lu_gp_new =3D NULL;
->  	struct t10_alua_lu_gp_member *lu_gp_mem;
-> -	unsigned char buf[LU_GROUP_NAME_BUF] =3D { };
-> +	unsigned char buf[LU_GROUP_NAME_BUF + 1] =3D { };
->  	int move =3D 0;
-> =20
->  	lu_gp_mem =3D dev->dev_alua_lu_gp_mem;
-
-[Severity: High]
-This is a pre-existing issue, but I noticed a potential NULL pointer
-dereference further down in target_dev_alua_lu_gp_store().
-
-If a user writes "NULL" to the alua_lu_gp attribute when the current LU gro=
-up
-is already NULL (e.g., by writing "NULL" twice), the early return block ins=
-ide
-if (lu_gp) is bypassed:
-
-drivers/target/target_core_configfs.c:target_dev_alua_lu_gp_store() {
-    ...
-	lu_gp =3D lu_gp_mem->lu_gp;
-	if (lu_gp) {
-        ...
-		if (!lu_gp_new) {
-            ...
-			return count;
-		}
-        ...
-	}
-	/*
-	 * Associate lu_gp_mem with lu_gp_new.
-	 */
-	__core_alua_attach_lu_gp_mem(lu_gp_mem, lu_gp_new);
-    ...
-}
-
-This causes the function to fall through to __core_alua_attach_lu_gp_mem()
-with lu_gp_new =3D=3D NULL, where it is unconditionally dereferenced during=
- lock
-acquisition:
-
-drivers/target/target_core_alua.c:__core_alua_attach_lu_gp_mem() {
-    ...
-	spin_lock(&lu_gp->lu_gp_lock);
-    ...
-}
-
-Should there be a check to return early if both lu_gp and lu_gp_new are NUL=
-L?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730031917.7275=
-0-1-kensanya@163.com?part=3D1
+DQoNCj4gDQo+IEZyb206IExpIFJvbmdRaW5nIDxsaXJvbmdxaW5nQGJhaWR1LmNvbT4NCj4gDQo+
+IGZ3X2V2ZW50LT5ldmVudF9kYXRhIGlzIGEgZmxleGlibGUgYXJyYXkgbWVtYmVyIGVtYmVkZGVk
+IHdpdGhpbiB0aGUNCj4gZndfZXZlbnRfd29yayBzdHJ1Y3R1cmUgKGFsbG9jYXRlZCBhcyBhIHNp
+bmdsZSBremFsbG9jKS4gQ2FsbGluZw0KPiBrZnJlZShmd19ldmVudC0+ZXZlbnRfZGF0YSkgb24g
+aXQgaXMgaW52YWxpZCBhbmQgY2FuIGNvcnJ1cHQgdGhlIGhlYXAsIHNpbmNlIGl0DQo+IGlzIG5v
+dCBhIHNlcGFyYXRlbHkgYWxsb2NhdGVkIHBvaW50ZXIuDQo+IA0KPiBUaGUgc3Vic2VxdWVudCBm
+d19ldmVudF93b3JrX3B1dCgpIHdpbGwgZGVjcmVtZW50IHRoZSByZWZjb3VudCB0byB6ZXJvDQo+
+IGFuZCBjYWxsIGZ3X2V2ZW50X3dvcmtfZnJlZSgpLCB3aGljaCBmcmVlcyB0aGUgZW50aXJlIGZ3
+X2V2ZW50X3dvcmsNCj4gc3RydWN0dXJlIChpbmNsdWRpbmcgdGhlIGVtYmVkZGVkIGV2ZW50X2Rh
+dGEpLiBUaGUgZXh0cmEga2ZyZWUoKSBpcyB0aGVyZWZvcmUNCj4gYm90aCB3cm9uZyBhbmQgcmVk
+dW5kYW50Lg0KPiANCj4gUmVtb3ZlIHRoZSBlcnJvbmVvdXMga2ZyZWUoZndfZXZlbnQtPmV2ZW50
+X2RhdGEpIGNhbGwgaW4gdGhlDQo+IE1QSTJfRVZFTlRfU0FTX1RPUE9MT0dZX0NIQU5HRV9MSVNU
+IGVycm9yIHBhdGguIFRoZSBQQ0lFIHRvcG9sb2d5DQo+IGNoYW5nZSBsaXN0IGhhbmRsZXIgYWxy
+ZWFkeSBoYW5kbGVzIHRoaXMgY29ycmVjdGx5IHdpdGhvdXQgdGhlIGV4dHJhIGtmcmVlLg0KPiAN
+Cj4gRml4ZXM6IGFkNTk1NzE5MzEwNzJlNmYgKCJzY3NpOiBtcHQzc2FzOiBBZGQgZmlybXdhcmUg
+ZXZlbnQgcmVxdWV1ZQ0KPiBzdXBwb3J0IGZvciBidXN5IGRldmljZXMiKQ0KPiBTaWduZWQtb2Zm
+LWJ5OiBMaSBSb25nUWluZyA8bGlyb25ncWluZ0BiYWlkdS5jb20+DQoNClBpbmcNCg0KW0xpLFJv
+bmdxaW5nXSANCg0KDQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3Np
+aC5jIHwgMSAtDQo+ICAxIGZpbGUgY2hhbmdlZCwgMSBkZWxldGlvbigtKQ0KPiANCj4gZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYw0KPiBiL2RyaXZlcnMv
+c2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYw0KPiBpbmRleCAxMmNhZmZlLi5jYTAxYTQ5IDEw
+MDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvbXB0M3Nhcy9tcHQzc2FzX3Njc2loLmMNCj4gKysr
+IGIvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jDQo+IEBAIC0xMjI2Nyw3ICsx
+MjI2Nyw2IEBAIG1wdDNzYXNfc2NzaWhfZXZlbnRfY2FsbGJhY2soc3RydWN0DQo+IE1QVDNTQVNf
+QURBUFRFUiAqaW9jLCB1OCBtc2l4X2luZGV4LA0KPiAgCQlpZiAoIWZ3X2V2ZW50LT5yZXRyaWVz
+KSB7DQo+IA0KPiAgCQkJaW9jX2Vycihpb2MsICJmYWlsdXJlIGF0ICVzOiVkLyVzKCkhXG4iLCAg
+X19GSUxFX18sIF9fTElORV9fLA0KPiBfX2Z1bmNfXyk7DQo+IC0JCQlrZnJlZShmd19ldmVudC0+
+ZXZlbnRfZGF0YSk7DQo+ICAJCQlmd19ldmVudF93b3JrX3B1dChmd19ldmVudCk7DQo+ICAJCQly
+ZXR1cm4gMTsNCj4gIAkJfQ0KPiAtLQ0KPiAyLjkuNA0KDQo=
