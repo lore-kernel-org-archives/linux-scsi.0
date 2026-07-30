@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07E4D3FFF94;
-	Thu, 30 Jul 2026 10:53:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDE3D410D32;
+	Thu, 30 Jul 2026 11:13:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785408822; cv=none; b=dbBIC9yaMgaahLepyCUWTTWDIq3hL1kg+5bmyWdZlLUIMCAVMaxOlTv4ZOhigzTWFl4KlLlhI/m/nxD/EMzTeLT25VJrTDkfUubuyG13GvV3zKbSMd1AOYj0RlNODbQ9ghmKB5Nq8vdBz2Eat+KjP2/wTLwcg05/FYk6pYcOMuY=
+	t=1785410009; cv=none; b=EGx+O/pR+ey/KxpuTNz7JhWswtwbbimzah9e+h0bhQYj3CsWbsU7h7GCmWC337tIve+m2sIS9j4FQiUaSbbbAPjHt7hTdWwq6Cd5YeBHGuyvq053poi/mHKpfWA1q4Jfb7HGV1vu/iTVKcqv5lGNkXRycovQWPfCk8fpAPi8il4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785408822; c=relaxed/simple;
-	bh=ovsIbtH7x7vPLzVIVcr438UeWKzVRzdNiVzAfMZW+Io=;
+	s=arc-20240116; t=1785410009; c=relaxed/simple;
+	bh=6cxibO1OAUR7Y0Nyaqf/c9Eu5zMlvus+uTTntTeH8ns=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sktoQRAZJVoij4ASEP774+r4lfjecbhd4V2KjRe5oTd58O9EilsNVzNCi1oMOANeQT6AHRnqSlgR39DfFMZ4cCq4wlkJBWO7rUPXADkXLbxP3wSF5TfqrX3f8TDlv6bBcRx2gKob0vC8op2LW+sNwa2ilMsy/axK8Wkt1QrOT1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jq4NcSy3; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jRfQBqXLFnGvVA+pP8A56mjk9on1jqbpD26VhpghkSctPmRnQSnTuq8E2CfB/am87Cye3bxsiZFykGR1swHNKjjQvwvnZX2EwFD4cPYLhzVPolrehFgf1iHJqv7xfFjO9atkwhhh5YsZRPV7IaKkoagJArKGzd3bV1/g0j+bahU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BwcJc3lZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jq4NcSy3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D80FA1F000E9;
-	Thu, 30 Jul 2026 10:53:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BwcJc3lZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2D051F00A3A;
+	Thu, 30 Jul 2026 11:13:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785408820;
-	bh=pJDOR8Kv5HZvweVN+eeDRb3EHC5i492sV6j2rZCPFfc=;
+	s=k20260515; t=1785410007;
+	bh=aPOvsIc3guHZFzSxfhOwyQI1XWMCxa87Cbpi6kj7XmM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jq4NcSy3EVrqGW+u3uFp9qXCqxsDwk+mi4hS/o8Nzq8mmFwTnE8KULoN9SRKl8vLN
-	 jcJpck0h91CykH3LiAva5XpPGQP8yibLHNP3nGJbsyS0WJcJraCRcQ8D2DuH8hcw75
-	 AHpwUNb1DZrBdG7p6sZcwbFGfzL/s4EYYaVI/Xr8G1I5WFF13lGJsQNZoZ09zQv7ju
-	 d0T1BnhjtrU/ebz+Eso+lpfVl4hwV3rNMvU77Ez+7i2wZ6Q+2024MxfEPwVkZazmaY
-	 cVLrxGIvakoBE9QEMLSBbUjR/mj4W+1KTbFazzSzcnyEiBhE2WmYtUZiWDK+l5NCGO
-	 eK2uH4i+NPFqQ==
+	b=BwcJc3lZpkKPGfehX0CFhcOgvguoxoFTa16dBhoxoL7Dl2P7lQHefdj8uoVVWH5Fy
+	 wFkpADZi2g6tKBEHZXuH+iCHwWua134rdzsvQ+8PVQffhaRHg5AfjEpMeBv/IJfObf
+	 QyQrMfUrfzbqEQjsi5/3VxC0XXef9ELjP/wiDORxcc79kbPg65p9bBOod9IVLK4r6p
+	 R1up+B1rHkEmcOXEF1BboxmImzVE6BaIhJa9q93RgiGovtHnZKPIobM6JH1U2H/ux/
+	 kAAp34jvwYTymCQSGayluVGeRZu0Ss+7htBPd/5xvGEDVPv2xY4ohN7cZXmP5fNNg+
+	 dxVYKFpaG+6ZQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 20/26] scsi: ufs: mediatek: Back up idle timer in
- per-instance struct
+Subject: Re: [PATCH v10 24/26] arm64: dts: mediatek: mt8195: Align ufshci
+ node to dt-bindings changes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Louis-Alexis Eyraud" <louisalexis.eyraud@collabora.com>
-Cc: conor+dt@kernel.org, linux-phy@lists.infradead.org, vkoul@kernel.org, neil.armstrong@linaro.org, olteanv@gmail.com, robh@kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
-In-Reply-To: <20260730-mt8196-ufs-v10-20-bc5ecef202dc@collabora.com>
+Cc: olteanv@gmail.com, robh@kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org, linux-scsi@vger.kernel.org, neil.armstrong@linaro.org, linux-phy@lists.infradead.org, vkoul@kernel.org
+In-Reply-To: <20260730-mt8196-ufs-v10-24-bc5ecef202dc@collabora.com>
 References: <20260730-mt8196-ufs-v10-0-bc5ecef202dc@collabora.com>
- <20260730-mt8196-ufs-v10-20-bc5ecef202dc@collabora.com>
+ <20260730-mt8196-ufs-v10-24-bc5ecef202dc@collabora.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 10:53:39 +0000
-Message-Id: <20260730105339.D80FA1F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 11:13:26 +0000
+Message-Id: <20260730111326.E2D051F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,74 +47,84 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Skipped POST_CHANGE notification on power change failure leads to =
-permanent loss of auto-hibernate configuration, disabling Auto-Hibern8.
+- [High] Removing the `freq-table-hz` property without adding an `operating=
+-points-v2` table causes the UFS core platform driver to skip parsing and e=
+nabling all hardware clocks, resulting in a controller initialization failu=
+re.
 --
 
---- Patch [20]: [PATCH v10 20/26] scsi: ufs: mediatek: Back up idle timer i=
-n per-instance struct ---
-commit 31da80f38058b251310b08adf616cded137a1bcd
-Author: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+--- Patch [24]: [PATCH v10 24/26] arm64: dts: mediatek: mt8195: Align ufshc=
+i node to dt-bindings changes ---
+commit eac3ed6e6791c53424e4e025e4dfd47b68309eb7
+Author: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
 
-scsi: ufs: mediatek: Back up idle timer in per-instance struct
+arm64: dts: mediatek: mt8195: Align ufshci node to dt-bindings changes
 
-This commit moves the backup of the auto-hibernate idle timer from a
-static local variable to a per-instance host struct member. This ensures
-correct behavior when multiple instances of the driver are loaded.
+This commit updates the MT8195 UFS host controller dt bindings by adding
+new required clocks and removing the deprecated freq-table-hz property.
+It states that converting to an OPP table is not needed since the values
+were all zero.
 
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-> index c784ecb30e74e..115056927223f 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
-> @@ -1400,27 +1400,24 @@ static int ufs_mtk_pwr_change_notify(struct ufs_h=
-ba *hba,
->  				enum ufs_notify_change_status stage,
->  				struct ufs_pa_layer_attr *dev_req_params)
->  {
-> -	int ret =3D 0;
-> -	static u32 reg;
-> +	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
-> =20
->  	switch (stage) {
->  	case PRE_CHANGE:
->  		if (ufshcd_is_auto_hibern8_supported(hba)) {
-> -			reg =3D ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
-> +			host->ahit =3D ufshcd_readl(
-> +				hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> diff --git a/arch/arm64/boot/dts/mediatek/mt8195.dtsi b/arch/arm64/boot/d=
+ts/mediatek/mt8195.dtsi
+> --- a/arch/arm64/boot/dts/mediatek/mt8195.dtsi
+> +++ b/arch/arm64/boot/dts/mediatek/mt8195.dtsi
+[ ... ]
+> @@ -1481,15 +1480,15 @@ ufshci: ufshci@11270000 {
+>  				 <&infracfg_ao CLK_INFRA_AO_UNIPRO_TICK>,
+>  				 <&infracfg_ao CLK_INFRA_AO_UFS_MP_SAP_B>,
+>  				 <&infracfg_ao CLK_INFRA_AO_UFS_TX_SYMBOL>,
+> -				 <&infracfg_ao CLK_INFRA_AO_PERI_UFS_MEM_SUB>;
+> -			clock-names =3D "ufs", "ufs_aes", "ufs_tick",
+> -					"unipro_sysclk", "unipro_tick",
+> -					"unipro_mp_bclk", "ufs_tx_symbol",
+> -					"ufs_mem_sub";
+> -			freq-table-hz =3D <0 0>, <0 0>, <0 0>,
+> -					<0 0>, <0 0>, <0 0>,
+> -					<0 0>, <0 0>;
+> -
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does this sequence permanent=
-ly
-disable Auto-Hibern8 if a power change fails?
+Does removing this property introduce a regression in the UFS controller
+initialization?
 
-If a DME power mode change fails, the UFS core in ufshcd_change_power_mode()
-skips the POST_CHANGE notification:
+Looking at ufshcd_parse_clock_info() in drivers/ufs/host/ufshcd-pltfrm.c,
+the driver skips parsing the clock properties entirely if freq-table-hz is
+missing:
 
-drivers/ufs/core/ufshcd.c:ufshcd_change_power_mode() {
+drivers/ufs/host/ufshcd-pltfrm.c:ufshcd_parse_clock_info() {
     ...
-    ret =3D ufshcd_dme_change_power_mode(hba, pwr_mode);
-    if (!ret)
-        ufshcd_vops_pwr_change_notify(hba, POST_CHANGE, pwr_mode);
+	sz =3D of_property_count_u32_elems(np, "freq-table-hz");
+	if (sz <=3D 0) {
+		dev_info(dev, "freq-table-hz property not specified\n");
+		goto out;
+	}
     ...
 }
 
-Because POST_CHANGE is skipped, the hardware register remains at 0 (since
-it was disabled right below by ufs_mtk_auto_hibern8_disable).
+Since an operating-points-v2 node is also absent, the alternative parser
+ufshcd_parse_operating_points() will also return early. This leaves
+hba->clk_list_head empty.
 
-On the next power mode change attempt, PRE_CHANGE will run again and read t=
-he
-current register value (0) into host->ahit, overwriting the valid backup.
-When POST_CHANGE eventually succeeds, it will write 0 back to the register,
-leaving Auto-Hibern8 permanently disabled until a reset or suspend/resume.
+If the list is empty, ufshcd_init_clocks() and ufshcd_setup_clocks()
+will silently return without turning on any hardware clocks.=20
 
->  			ufs_mtk_auto_hibern8_disable(hba);
->  		}
+Could this cause a probe failure or a system crash (SError) when the driver
+later attempts to access unclocked UFS MMIO registers?
 
-[ ... ]
+> +				 <&infracfg_ao CLK_INFRA_AO_PERI_UFS_MEM_SUB>,
+> +				 <&topckgen CLK_TOP_UFS_RX_SYMBOL>,
+> +				 <&topckgen CLK_TOP_UFS_RX_SYMBOL1>;
+> +			clock-names =3D "main", "aes", "tick", "unipro_sysclk",
+> +				      "unipro_tick", "unipro_mp_bclk",
+> +				      "tx_symbol", "mem_sub", "rx_symbol0",
+> +				      "rx_symbol1";
+> +			interrupts =3D <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH 0>;
+> +			phys =3D <&ufsphy>;
+>  			mediatek,ufs-disable-mcq;
+>  			status =3D "disabled";
+>  		};
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730-mt8196-ufs=
--v10-0-bc5ecef202dc@collabora.com?part=3D20
+-v10-0-bc5ecef202dc@collabora.com?part=3D24
