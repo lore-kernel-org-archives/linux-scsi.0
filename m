@@ -1,124 +1,127 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60299368D40;
-	Thu, 30 Jul 2026 03:19:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18C4B38BF9A
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 03:41:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785381584; cv=none; b=EGvM0emoLSi2D0ruHtrsUhT+V1/8lfk7mxaakK//77h4izaDotj9Ub3BSzbvI3cVFSvvSO21MqhhZSMfxz3GDjWN816YI4DNJtPZpo/sLSmZPaWqvdYwjmjy8qYVocz+uYnfpztzYr0DiIXtcOI1bEzVKkysvxcwRzZiUs1Eiqo=
+	t=1785382879; cv=none; b=aO3EmqDH0yqJENE/Hcu1Awu5LKikEvWMgB3Vjx0Vu5smQJbbgkycHvUxDB9ZgBVmzrEnOhCd9xCjRhc14UGxfdzyfAKCUDwsLqSO5H2/1Ns8aiU5Go9Yb2nyVXMPP3+bWDmsML133st1kZ5yrisS8sGpQl/BQf2X9cnT0KVwWco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785381584; c=relaxed/simple;
-	bh=jo7aQSRnqbsxdk1MwZiP0YQB1Ld+o85C/X534OcFph0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b1ssNUbxzkRebfLbt1LIju7DFFkW0UWqxZZpAAVjNkIN6x2+BuDQpvWNBJcZ/LpcUU8M7bnaEij1T3QGwp4c2ntpgUiVOsxRF6sGTyZIQMYYBv1RzhqoUhoYTYxS/RcQATGTNmDcTzM2Una4n9Ya0CuDAfmQUS/1ZOCWRFRlPuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=PN9ZOdbk; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1785382879; c=relaxed/simple;
+	bh=4oEWvswD1SPYJ82Ja6lJUgiEJiBHXQz1O7mwuqhP6yw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=uLudT6TmHrF2vv5QFts1TBjp08vxXMApX6RaYt5NeKPyuFGGnIdCeZkk5JVAScKvxRL9PcpYtrVUnyURloKRrSK0HFK44S7HAgNP5FB59k2oOs7d2rvTum1vSYhFu9Thqq+e4meUbDQhyyop0f5LQ1F6OF7Utz7waUlA1AUlblE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mnxL2CI6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="PN9ZOdbk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=D+
-	gklbUHWhnbM5bmsK8S+h7yVFICuoizJ53thTmyNLI=; b=PN9ZOdbkHf6MFGUFta
-	m+NyFAEOegOPWd8blMMHjrr8Ts1xYQLBsnjbFAJtv44PGCG8gZD56SauG6ohJ/lH
-	0/ZDgIeBTgkFz1jqk3pi8nfX5k+/LU2lGj6bRSKEMH2/P56/GWM0ELprtBlB1ApS
-	4EL76L7EybCfaqQEyTophvp30=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wCXJy25wmpqQd4JLA--.184S2;
-	Thu, 30 Jul 2026 11:19:25 +0800 (CST)
-From: kensanya@163.com
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	TanZheng <tanzheng@kylinos.cn>
-Subject: [PATCH] scsi: target: Fix stack out-of-bounds in ALUA lu_gp and tg_pt_gp store
-Date: Thu, 30 Jul 2026 11:19:17 +0800
-Message-Id: <20260730031917.72750-1-kensanya@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mnxL2CI6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D5841F000E9;
+	Thu, 30 Jul 2026 03:41:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785382877;
+	bh=Leu892mAKvn2Z0tpTpB9LBc8i46cMxQMrAdCGvg6DSw=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=mnxL2CI6dCL+LYu78dXkVxLBPlyGH8eEqb38CRAnMFRdB720gMLC/e1WqiPO5fx1Q
+	 hoDgWwTVfLWX8ZKWWDU3EONCPlnoJt8/p8LR/YvRQWdSp4rQ94WVSN0m/M5wro6N3e
+	 KCz3JPj/DF8Y6L4PMfmDY4+RkrZTkeY4VyDhZXh+Ja19N/nP71GBNEzLOjR72ad55A
+	 cC/2Pt+L82geGEqvZIA5GD/uQ5t41IEpUh9kV25W6uFHJpXlQTOjmMJWh7Ir536vRg
+	 0czN1nrrKL6UAnigFz5tqZVVz+N7nHVEmZP6hKaoD3GiHQga1nNUpg3cpalPlZdhSr
+	 zH0h9iT8q3NGw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: target: Fix stack out-of-bounds in ALUA lu_gp and
+ tg_pt_gp store
+Reply-To: sashiko-reviews@lists.linux.dev
+To: kensanya@163.com
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260730031917.72750-1-kensanya@163.com>
+References: <20260730031917.72750-1-kensanya@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 30 Jul 2026 03:41:17 +0000
+Message-Id: <20260730034117.8D5841F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCXJy25wmpqQd4JLA--.184S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGr4xurWUXw1xJFy3XFWDArb_yoW5Cry3pF
-	Wjg34rJFWkWFZ0qay8J3W2gFyDZws8tFy5Ca4xta4ruw4YyrWUtanrA3y2gFn8JFs5Gry2
-	9a95Aw18tFZ7XaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UDEfrUUUUU=
-X-CM-SenderInfo: 5nhq2txq1dqiywtou0bp/xtbC6R0V8Gpqwr1f6QAA3Y
 
-From: TanZheng <tanzheng@kylinos.cn>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+
+Pre-existing issues:
+- [High] Writing "NULL" to a device's alua_lu_gp configfs file when the cur=
+rent group is NULL triggers a guaranteed NULL pointer dereference.
+--
+
+--- Patch [1]: [PATCH] scsi: target: Fix stack out-of-bounds in ALUA lu_gp =
+and tg_pt_gp store ---
+commit 57ed25faa0822b84299ce2ade4007a8dc2229f88
+Author: TanZheng <tanzheng@kylinos.cn>
+
+scsi: target: Fix stack out-of-bounds in ALUA lu_gp and tg_pt_gp store
 
 Both alua_lu_gp and alua_tg_pt_gp allow a write of exactly
-LU/TG_PT_GROUP_NAME_BUF bytes into a same-sized stack buffer,
-then pass it to strstrip() without a trailing NUL. A full-sized
-write causes strlen() to read past the end of the array (visible
-under KASAN as stack-out-of-bounds).
+LU/TG_PT_GROUP_NAME_BUF bytes into a same-sized stack buffer. This commit
+enlarges the local buffers by one byte so a full-sized write remains
+NUL-terminated when passed to strstrip().
 
-Enlarge the local buffers by one byte so a full-sized write
-remains NUL-terminated.
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/targe=
+t_core_configfs.c
+> index 2b19a956007b7..0e50987e6dbee 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -2518,7 +2518,7 @@ static ssize_t target_dev_alua_lu_gp_store(struct c=
+onfig_item *item,
+>  	struct se_hba *hba =3D dev->se_hba;
+>  	struct t10_alua_lu_gp *lu_gp =3D NULL, *lu_gp_new =3D NULL;
+>  	struct t10_alua_lu_gp_member *lu_gp_mem;
+> -	unsigned char buf[LU_GROUP_NAME_BUF] =3D { };
+> +	unsigned char buf[LU_GROUP_NAME_BUF + 1] =3D { };
+>  	int move =3D 0;
+> =20
+>  	lu_gp_mem =3D dev->dev_alua_lu_gp_mem;
 
-Signed-off-by: TanZheng <tanzheng@kylinos.cn>
----
-Reproduction (before the fix)
+[Severity: High]
+This is a pre-existing issue, but I noticed a potential NULL pointer
+dereference further down in target_dev_alua_lu_gp_store().
 
-modules + configfs
-modprobe configfs target_core_mod target_core_rd iscsi_target_mod
-mount -t configfs none /sys/kernel/config 2>/dev/null || true
-CORE=/sys/kernel/config/target/core
-ISCSI=/sys/kernel/config/target/iscsi
+If a user writes "NULL" to the alua_lu_gp attribute when the current LU gro=
+up
+is already NULL (e.g., by writing "NULL" twice), the early return block ins=
+ide
+if (lu_gp) is bypassed:
 
-# --- case A: alua_lu_gp (core device) ---
-mkdir -p $CORE/rd_mcp_0/ram1
-echo "rd_pages=16" > $CORE/rd_mcp_0/ram1/control
-echo 1 > $CORE/rd_mcp_0/ram1/enable
-python3 -c 'open("'"$CORE"'/rd_mcp_0/ram1/alua_lu_gp","wb").write(b"\xff"*256)'
+drivers/target/target_core_configfs.c:target_dev_alua_lu_gp_store() {
+    ...
+	lu_gp =3D lu_gp_mem->lu_gp;
+	if (lu_gp) {
+        ...
+		if (!lu_gp_new) {
+            ...
+			return count;
+		}
+        ...
+	}
+	/*
+	 * Associate lu_gp_mem with lu_gp_new.
+	 */
+	__core_alua_attach_lu_gp_mem(lu_gp_mem, lu_gp_new);
+    ...
+}
 
-# --- case B: alua_tg_pt_gp (fabric LUN) ---
-IQN=iqn.2024-01.local:kasan-alua
-mkdir -p $ISCSI/$IQN/tpgt_1/lun/lun_0
-ln -sf $CORE/rd_mcp_0/ram1 $ISCSI/$IQN/tpgt_1/lun/lun_0/ram1
-echo 1 > $ISCSI/$IQN/tpgt_1/enable
-python3 -c 'open("'"$ISCSI"'/'"$IQN"'/tpgt_1/lun/lun_0/alua_tg_pt_gp","wb").write(b"\xff"*256)'
+This causes the function to fall through to __core_alua_attach_lu_gp_mem()
+with lu_gp_new =3D=3D NULL, where it is unconditionally dereferenced during=
+ lock
+acquisition:
 
- drivers/target/target_core_alua.c     | 3 +--
- drivers/target/target_core_configfs.c | 2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+drivers/target/target_core_alua.c:__core_alua_attach_lu_gp_mem() {
+    ...
+	spin_lock(&lu_gp->lu_gp_lock);
+    ...
+}
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 10250aca5a81..60259417013b 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -1904,7 +1904,7 @@ ssize_t core_alua_store_tg_pt_gp_info(
- 	 */
- 	struct se_device *dev = rcu_dereference_raw(lun->lun_se_dev);
- 	struct t10_alua_tg_pt_gp *tg_pt_gp = NULL, *tg_pt_gp_new = NULL;
--	unsigned char buf[TG_PT_GROUP_NAME_BUF];
-+	unsigned char buf[TG_PT_GROUP_NAME_BUF + 1] = { };
- 	int move = 0;
- 
- 	if (dev->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_ALUA ||
-@@ -1915,7 +1915,6 @@ ssize_t core_alua_store_tg_pt_gp_info(
- 		pr_err("ALUA Target Port Group alias too large!\n");
- 		return -EINVAL;
- 	}
--	memset(buf, 0, TG_PT_GROUP_NAME_BUF);
- 	memcpy(buf, page, count);
- 	/*
- 	 * Any ALUA target port group alias besides "NULL" means we will be
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 2b19a956007b..0e50987e6dbe 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -2518,7 +2518,7 @@ static ssize_t target_dev_alua_lu_gp_store(struct config_item *item,
- 	struct se_hba *hba = dev->se_hba;
- 	struct t10_alua_lu_gp *lu_gp = NULL, *lu_gp_new = NULL;
- 	struct t10_alua_lu_gp_member *lu_gp_mem;
--	unsigned char buf[LU_GROUP_NAME_BUF] = { };
-+	unsigned char buf[LU_GROUP_NAME_BUF + 1] = { };
- 	int move = 0;
- 
- 	lu_gp_mem = dev->dev_alua_lu_gp_mem;
--- 
-2.25.1
+Should there be a check to return early if both lu_gp and lu_gp_new are NUL=
+L?
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730031917.7275=
+0-1-kensanya@163.com?part=3D1
