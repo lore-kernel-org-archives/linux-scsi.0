@@ -1,186 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1456C4749D8
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:18:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84CBD20468E
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:19:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785453540; cv=none; b=oocoPy6dLM7hLch+uK5O0F07C5Ie1wTBTTcC6weU+z5hyhWegO+VAF0dqcafaiyocB755qL0PJ9rYZN/UbE7OFkNKuuYS6pjydeBc0yLGoTaKAXUtUMTfRDUdLZLxG5hW/9FIDINXQJMFr9TkTJiwm4AMQGeqZNZ8i7csC/JfBY=
+	t=1785453551; cv=none; b=Ge65rFVOQG0TlRntQDE6H/iUL2ErdSrGHNfdIH8gaoitT9He5uNp9l9CPHir94XoqiKb/yH0K12g023wZsAri7Zh0lG+mvHf9WiBILm6utnJxie3sCfWo/a5dCOwtihTS13YlKhyb1u7q0hC+/NncxWXMpjHNyWIcwQ8tfqYnBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785453540; c=relaxed/simple;
-	bh=FHizFKt4OkBh8ThmgOovO9Z0EPk19cuhiaQX2vHyDWI=;
+	s=arc-20240116; t=1785453551; c=relaxed/simple;
+	bh=4beciaDJDnQQ4FfAquYYgz/15Yu/QNiuaqouwCEHi2c=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UHkVxgcAYkklNV6Ku1hGccPhr1TsD+RNs/DjT+7eQ5r5OR3mocrVlfT7DHzRjetJt59zHTKP62+7tGbOfE4zQTmlxxUehUPtZ9Bu+fK3XTiyVqlxH8xnNT8Nsw4wQFA6KqBuMBW03I7idR23yBxBcJwOfuwzePpwV27lQsEio7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fKHJRZWc; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ijj51oZ1slK3qVvQzKnC6jqhndkGR2nuEfwntgJ0d6suozcVGttnCB4gjy1E8RxXpUCfbEPP9TJDZHbaQFQW1lbP1aba5WxOmSpapspkwm6kUBb1dT4PZG5p5Q5JUrK+27Abxv9XsW8QVepDJECAytY7xlLa+znqgb6uskbyZvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LJ427wcr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fKHJRZWc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DD101F000E9;
-	Thu, 30 Jul 2026 23:18:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LJ427wcr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BA9B1F000E9;
+	Thu, 30 Jul 2026 23:19:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785453538;
-	bh=52ppbHBp2WF2rGWobr9ymuWhfxQLDP/6uy/vT/mhWSI=;
+	s=k20260515; t=1785453550;
+	bh=qP5uKKUWA0o7A3Yrlmsxn13eqkdvk+6bR3KUxMUtDW4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fKHJRZWciJaDsBztuplDYWXp1Tpicq0ebBCYtJU8MkhgFWwY3Y51Q1meaW6h8YdBg
-	 SCaR2X12Bt5JS/rKOISm3Zjivyvbw9jaBbsFSnaTE9VMBedhRBTRkSuN1b1mneMI3C
-	 EU7nDtz45iKHpp2AMVvExKBJ+z5j/IVYeJmGnjMbT6BEa+p58t5425mxSWNf6doTz8
-	 sLhlal52Lsf+cA8uJ9ot+VsW74xTrANwbQirpEFaZvFmvz5oiYR+hGFPInjIpY7qmg
-	 yR2MCjeSKzArd83O9fV5Mo08MwgKShwI34nvvTkFCRIyUZwrw85Lp42odtCIkZOiIg
-	 JFlbMWGhx8GsA==
+	b=LJ427wcrIq/m38lRtYCfLpb3n7bEOf7tHLz1F8HRkS/fwXtakhfacwXwu8W/XjETX
+	 SPwUdCV1CfLNWjuxROdS2Rexg6MhgjxWc6nb9YFufpjAO4X/WXhJpILCKP3Uam+3w5
+	 3l1E6Xicmk6fH6vFx0Y8XAm4n5O+PkzoVlgxIdeQEqwDf9CjEDE1pENqugAQFdAFmR
+	 2PDyT/ZU7eOx7M76gnLpo7oLq/HoS6FMbVWpipKWGKrSGtNWJMDRFavpYPIOPXdF+T
+	 qLG03mzB2lF4K+938GpyGCyohbM0qouaRSYbifVpXrYWpEXSvLMb2uvB0w6U/Y66Ee
+	 pt1Jmh2CiCB+w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 10/57] scsi: aha152x: Prepare for enabling lock
- context analysis
+Subject: Re: [PATCH v3 50/57] scsi: ufs: Enable lock context analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <f721bb8e817434bf1449bcdba0f305e3f69fd9d4.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <8d2008e5812018e4dfee27faf492f2cc4cf1dd10.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <f721bb8e817434bf1449bcdba0f305e3f69fd9d4.1785451174.git.bvanassche@acm.org>
+ <8d2008e5812018e4dfee27faf492f2cc4cf1dd10.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:18:58 +0000
-Message-Id: <20260730231858.8DD101F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 23:19:09 +0000
+Message-Id: <20260730231909.8BA9B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Preexisting list corruption vulnerability due to unlocked accesses=
- to DISCONNECTED_SC.
-- [High] Possible NULL pointer dereference in SCSI phase handlers if CURREN=
-T_SC is NULL due to unexpected target behavior.
-- [High] Calling INIT_WORK dynamically in an interrupt handler for a global=
- work_struct corrupts the workqueue.
-- [High] The global `aha152x_host_list` is modified and traversed concurren=
-tly without any locking.
-- [High] The driver fails to cancel the global workqueue during device rele=
-ase or module unload.
+- [High] ufshcd_wait_for_pending_cmds() uses io_schedule_timeout() without =
+setting current->state, causing a busy loop instead of sleeping.
 --
 
---- Patch [10]: [PATCH v3 10/57] scsi: aha152x: Prepare for enabling lock c=
-ontext analysis ---
-commit 4e1483c06dfed36c67b1da76d5119c68317479aa
+--- Patch [50]: [PATCH v3 50/57] scsi: ufs: Enable lock context analysis ---
+commit 8185dd4bd8104528b9c4d31b079a63ef3f632638
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: aha152x: Prepare for enabling lock context analysis
+scsi: ufs: Enable lock context analysis
 
-Annotate is_complete() with __context_unsafe() because it performs
-conditional locking.
+This commit annotates functions that modify the state of a synchronization
+object to enable lock context analysis. It also removes struct semaphore
+annotations because lock context annotations are not supported for
+semaphores.
 
-> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-> index e3ccb6bb62c00..c16dcb9274eb8 100644
-> --- a/drivers/scsi/aha152x.c
-> +++ b/drivers/scsi/aha152x.c
-> @@ -2319,6 +2319,7 @@ static void rsti_run(struct Scsi_Host *shpnt)
->   *
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index f85582287d14d..22a5f8e9af913 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -1353,6 +1353,8 @@ static int ufshcd_wait_for_pending_cmds(struct ufs_=
+hba *hba,
+
+[Severity: High]
+This is a pre-existing issue, but does ufshcd_wait_for_pending_cmds()
+busy loop here instead of sleeping?
+
+Looking at ufshcd_wait_for_pending_cmds(), it calls io_schedule_timeout()
+without first setting the task state to TASK_UNINTERRUPTIBLE:
+
+drivers/ufs/core/ufshcd.c:ufshcd_wait_for_pending_cmds() {
+	...
+	do {
+		tm_doorbell =3D ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+		tr_pending =3D ufshcd_pending_cmds(hba);
+		if (!tm_doorbell && !tr_pending) {
+			timeout =3D false;
+			break;
+		} else if (do_last_check) {
+			break;
+		}
+
+		io_schedule_timeout(msecs_to_jiffies(20));
+		if (ktime_to_us(ktime_sub(ktime_get(), start)) >
+		    wait_timeout_us) {
+	...
+}
+
+Because the task state remains TASK_RUNNING, does the underlying
+schedule_timeout() function return immediately without yielding the CPU?=20
+
+Could this cause severe performance degradation by hogging 100% of a CPU
+core and aggressively polling MMIO registers for up to 1 second during
+operations like UFS hardware clock scaling?
+
+>   * On failure, all acquired locks are released and the tagset is unquies=
+ced.
 >   */
->  static void is_complete(struct Scsi_Host *shpnt)
-> +	__context_unsafe(conditional locking)
+>  int ufshcd_pause_command_processing(struct ufs_hba *hba, u64 timeout_us)
+> +	__cond_acquires(0, &hba->host->scan_mutex)
+> +	__cond_acquires(0, &hba->clk_scaling_lock)
 >  {
->  	int dataphase;
->  	unsigned long flags;
-
-[Severity: High]
-This is a pre-existing issue, but is there a risk of list corruption when
-accessing DISCONNECTED_SC?
-
-In is_complete(), the host lock is dropped before calling phase handlers
-such as busfree_run():
-
-	DO_UNLOCK(flags);
-	...
-	if(states[STATE].run)
-		states[STATE].run(shpnt);
-
-Then busfree_run() mutates the list without holding the QLOCK:
-
-	append_SC(&DISCONNECTED_SC, CURRENT_SC);
-
-Concurrently, SCSI error handler callbacks like aha152x_abort() modify the
-exact same list while holding the lock:
-
-	disconnected =3D issued && remove_SC(&DISCONNECTED_SC, SCpnt);
-
-Can this concurrent modification lead to list corruption?
-
-[Severity: High]
-This is a pre-existing issue, but could there be a NULL pointer dereference
-if a target behaves unexpectedly?
-
-In is_complete(), the state machine transitions to phases like status or cmd
-based on hardware bus signals via update_state():
-
-	switch(GETPORT(SCSISIG) & P_MASK) {
-	case P_MSGI:    STATE=3Dmsgi;    break;
-	...
-
-This occurs without verifying if a command is currently active. The state
-handlers then unconditionally dereference CURRENT_SC:
-
-status_run():
-	aha152x_priv(CURRENT_SC)->status =3D GETPORT(SCSIDAT);
-
-cmd_init():
-	if (aha152x_priv(CURRENT_SC)->sent_command) {
-
-If the hardware reports a phase while no command is active, would this crash
-the kernel?
-
-[Severity: High]
-This is a pre-existing issue, but does dynamically initializing the global
-work item in the interrupt handler corrupt the workqueue?
-
-The interrupt handler intr() calls INIT_WORK() before schedule_work():
-
-	INIT_WORK(&aha152x_tq, run);
-	schedule_work(&aha152x_tq);
-
-Since aha152x_tq is a global variable, if a second SCSI host adapter
-triggers an interrupt while the work is already queued by the first adapter,
-would INIT_WORK() overwrite the list pointers of the pending work?
-
-[Severity: High]
-This is a pre-existing issue, but is it safe to traverse and modify the
-global aha152x_host_list locklessly?
-
-Nodes are added and removed from the list locklessly:
-
-aha152x_probe_one():
-	list_add_tail(&HOSTDATA(shpnt)->host_list, &aha152x_host_list);
-
-aha152x_release():
-	list_del(&HOSTDATA(shpnt)->host_list);
-
-Concurrently, the workqueue callback run() iterates over the list locklessl=
-y:
-
-	list_for_each_entry(hd, &aha152x_host_list, host_list) {
-
-If aha152x_release() removes a host while the workqueue thread is traversing
-the list, could this lead to following invalid pointers and a use-after-fre=
-e?
-
-[Severity: High]
-This is a pre-existing issue, but could pending work items execute after
-the module is unloaded or devices are freed?
-
-Neither aha152x_release() nor aha152x_exit() appears to cancel the global
-workqueue:
-
-aha152x_release():
-	void aha152x_release(struct Scsi_Host *shpnt)
-
-aha152x_exit():
-	static void __exit aha152x_exit(void)
-
-If an interrupt schedules the work and the module is immediately unloaded,
-will the kernel attempt to execute run() after the module's code segment
-has been unmapped?
+>  	int ret =3D 0;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D10
+t.bvanassche@acm.org?part=3D50
