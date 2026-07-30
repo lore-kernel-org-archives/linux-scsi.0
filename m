@@ -1,194 +1,186 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 592A84766B8
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:18:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1456C4749D8
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:18:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785453492; cv=none; b=kYZDN3KlUqUfy/PoqVRLbZVgoEDLxb6oIEBVoxHjQZFy2cywJ3vSBVEmtmAUgG7uNFhmIVx0vGxX+/xgxBTtQtaWcblbj7G93MbhfGU832t/8xaNvtamszHCBSmsa4OGXtJhruWd5kVN7TDTxl1nzwf95ajp3YtXbGlSUEADRNo=
+	t=1785453540; cv=none; b=oocoPy6dLM7hLch+uK5O0F07C5Ie1wTBTTcC6weU+z5hyhWegO+VAF0dqcafaiyocB755qL0PJ9rYZN/UbE7OFkNKuuYS6pjydeBc0yLGoTaKAXUtUMTfRDUdLZLxG5hW/9FIDINXQJMFr9TkTJiwm4AMQGeqZNZ8i7csC/JfBY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785453492; c=relaxed/simple;
-	bh=1SrNqXwHXmpY+vIdjG6t5GLiTnk/LuExmOW0yPZOev4=;
+	s=arc-20240116; t=1785453540; c=relaxed/simple;
+	bh=FHizFKt4OkBh8ThmgOovO9Z0EPk19cuhiaQX2vHyDWI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VJtdMCo8WHglTM+MTkEkiO3u82vUdNRVFWSkzwwQKb/eIA/XsoRgpJXgctROP5aBlExZzECamBHFH1Az0M57xlcuFA1K4v5k5s3ABu6cQviW4cQQ5eErupnlVYXtCz4zXnKCR5KRuhYaIQoAP+oTxLYJmxuXo0f4xiaB5JQ1GQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M13bI/oS; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=UHkVxgcAYkklNV6Ku1hGccPhr1TsD+RNs/DjT+7eQ5r5OR3mocrVlfT7DHzRjetJt59zHTKP62+7tGbOfE4zQTmlxxUehUPtZ9Bu+fK3XTiyVqlxH8xnNT8Nsw4wQFA6KqBuMBW03I7idR23yBxBcJwOfuwzePpwV27lQsEio7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fKHJRZWc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M13bI/oS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A9191F000E9;
-	Thu, 30 Jul 2026 23:18:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fKHJRZWc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DD101F000E9;
+	Thu, 30 Jul 2026 23:18:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785453487;
-	bh=vs0tVYryvWjPq2v+F1G2yW7oR6+dSk2s4HJW9WHCLsI=;
+	s=k20260515; t=1785453538;
+	bh=52ppbHBp2WF2rGWobr9ymuWhfxQLDP/6uy/vT/mhWSI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=M13bI/oSujx3mcCA66BbYCOAOJGS8ZGILXqduXKlDJwN5EtOyOUao2VsxWsMg3wue
-	 jd6NYt9xtHEy3jFbF31Za1fDDVbmIQhdb8p0erw7RipgG8WdP0h4GBLSX3MHaBfSc+
-	 61b4m5P7bwTmOjRaBElEY1zORHzvS3QLsgiCWUb1T5CK3wgZoUzJmgjhfPPsUa1iuX
-	 7eYeiFOCezwjF1nfGhXXQRrey3MIdpd9zEYLW9WW8QbH9vfC2ZhNy1Wo0dXu3SXO2F
-	 kctRFDQN5D7OrN0Q7XwqEXzxmiaE73ZJ0YOCFaMNPctu8EOjTRKRiVokrRd6aa1eJ6
-	 6LSzxDdRtPIVw==
+	b=fKHJRZWciJaDsBztuplDYWXp1Tpicq0ebBCYtJU8MkhgFWwY3Y51Q1meaW6h8YdBg
+	 SCaR2X12Bt5JS/rKOISm3Zjivyvbw9jaBbsFSnaTE9VMBedhRBTRkSuN1b1mneMI3C
+	 EU7nDtz45iKHpp2AMVvExKBJ+z5j/IVYeJmGnjMbT6BEa+p58t5425mxSWNf6doTz8
+	 sLhlal52Lsf+cA8uJ9ot+VsW74xTrANwbQirpEFaZvFmvz5oiYR+hGFPInjIpY7qmg
+	 yR2MCjeSKzArd83O9fV5Mo08MwgKShwI34nvvTkFCRIyUZwrw85Lp42odtCIkZOiIg
+	 JFlbMWGhx8GsA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 42/57] scsi: mvsas: Enable lock context analysis
+Subject: Re: [PATCH v3 10/57] scsi: aha152x: Prepare for enabling lock
+ context analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <5e65b2732191612e2dc82258c1b3c25831ec958f.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <f721bb8e817434bf1449bcdba0f305e3f69fd9d4.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <5e65b2732191612e2dc82258c1b3c25831ec958f.1785451174.git.bvanassche@acm.org>
+ <f721bb8e817434bf1449bcdba0f305e3f69fd9d4.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:18:07 +0000
-Message-Id: <20260730231807.8A9191F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 23:18:58 +0000
+Message-Id: <20260730231858.8DD101F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Dropping the spinlock inside a `list_for_each_entry_safe` loop=
- in `mvs_do_release_task` allows list modification, causing an infinite loo=
-p.
-- [Critical] Dropping the spinlock inside `mvs_int_rx` allows concurrent ex=
-ecution, causing double-completion of tasks and potential Use-After-Free.
-- [High] The function `mvs_port_notify_deformed` fails to acquire `mvi->loc=
-k` and was missed by the new locking annotations, causing a lock imbalance.
-- [High] Using a global PHY index instead of a local PHY index to write to =
-hardware registers in `mvs_port_notify_formed`.
+- [High] Preexisting list corruption vulnerability due to unlocked accesses=
+ to DISCONNECTED_SC.
+- [High] Possible NULL pointer dereference in SCSI phase handlers if CURREN=
+T_SC is NULL due to unexpected target behavior.
+- [High] Calling INIT_WORK dynamically in an interrupt handler for a global=
+ work_struct corrupts the workqueue.
+- [High] The global `aha152x_host_list` is modified and traversed concurren=
+tly without any locking.
+- [High] The driver fails to cancel the global workqueue during device rele=
+ase or module unload.
 --
 
---- Patch [42]: [PATCH v3 42/57] scsi: mvsas: Enable lock context analysis =
----
-commit c111f35a79c7e4e1741700306a7a9dfd2b59f919
+--- Patch [10]: [PATCH v3 10/57] scsi: aha152x: Prepare for enabling lock c=
+ontext analysis ---
+commit 4e1483c06dfed36c67b1da76d5119c68317479aa
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: mvsas: Enable lock context analysis
+scsi: aha152x: Prepare for enabling lock context analysis
 
-Document locking requirements with __must_hold(). Annotate functions
-that perform conditional locking with __no_context_analysis.
+Annotate is_complete() with __context_unsafe() because it performs
+conditional locking.
 
-> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-> index 359226e80eae8..f63e0dc1abd23 100644
-> --- a/drivers/scsi/mvsas/mv_sas.c
-> +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -1055,6 +1055,7 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i=
-, int get_st)
->  }
-> =20
->  static void mvs_port_notify_formed(struct asd_sas_phy *sas_phy, int lock)
+> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+> index e3ccb6bb62c00..c16dcb9274eb8 100644
+> --- a/drivers/scsi/aha152x.c
+> +++ b/drivers/scsi/aha152x.c
+> @@ -2319,6 +2319,7 @@ static void rsti_run(struct Scsi_Host *shpnt)
+>   *
+>   */
+>  static void is_complete(struct Scsi_Host *shpnt)
 > +	__context_unsafe(conditional locking)
 >  {
->  	struct sas_ha_struct *sas_ha =3D sas_phy->ha;
->  	struct mvs_info *mvi =3D NULL; int i =3D 0, hi;
+>  	int dataphase;
+>  	unsigned long flags;
 
 [Severity: High]
-This is a pre-existing issue, but does mvs_port_notify_formed() write to the
-wrong hardware offset when multiple HBAs are present?
+This is a pre-existing issue, but is there a risk of list corruption when
+accessing DISCONNECTED_SC?
 
-It uses the global index i instead of the local PHY index sas_phy->id:
+In is_complete(), the host lock is dropped before calling phase handlers
+such as busfree_run():
 
-drivers/scsi/mvsas/mv_sas.c:mvs_port_notify_formed() {
-    ...
-    if (phy->att_dev_info & PORT_SSP_TRGT_MASK) {
-        MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_PHY_STAT);
-        MVS_CHIP_DISP->write_port_cfg_data(mvi, i, 0x04);
-    }
-    ...
-}
+	DO_UNLOCK(flags);
+	...
+	if(states[STATE].run)
+		states[STATE].run(shpnt);
 
-When the global index is greater than or equal to mvi->chip->n_phy, could
-passing it to write_port_cfg_addr() cause out-of-bounds memory-mapped IO
-writes?
+Then busfree_run() mutates the list without holding the QLOCK:
 
-[ ... ]
+	append_SC(&DISCONNECTED_SC, CURRENT_SC);
 
-> @@ -1644,6 +1647,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_=
-desc, u32 flags)
-> =20
->  void mvs_do_release_task(struct mvs_info *mvi,
->  		int phy_no, struct domain_device *dev)
-> +	__must_hold(&mvi->lock)
->  {
->  	u32 slot_idx;
->  	struct mvs_phy *phy;
+Concurrently, SCSI error handler callbacks like aha152x_abort() modify the
+exact same list while holding the lock:
 
-[Severity: Critical]
-This is a pre-existing issue, but is it safe to use list_for_each_entry_saf=
-e()
-here if the lock is dropped inside mvs_slot_complete()?
+	disconnected =3D issued && remove_SC(&DISCONNECTED_SC, SCpnt);
 
-mvs_do_release_task() loops over the port list:
-
-drivers/scsi/mvsas/mv_sas.c:mvs_do_release_task() {
-    ...
-    list_for_each_entry_safe(slot, slot2, &port->list, entry) {
-        ...
-        mvs_slot_complete(mvi, slot_idx, 1);
-    }
-    ...
-}
-
-When mvs_slot_complete() temporarily releases mvi->lock, a concurrent
-interrupt could complete the cached next element (slot2) and remove it from
-the list.=20
-
-Would this leave slot2->entry.next pointing to itself, causing
-mvs_do_release_task() to spin forever in an infinite loop when it resumes?
+Can this concurrent modification lead to list corruption?
 
 [Severity: High]
-Also a pre-existing issue, but with the new __must_hold annotation here, wh=
-at
-happens when this is called from mvs_port_notify_deformed()?
+This is a pre-existing issue, but could there be a NULL pointer dereference
+if a target behaves unexpectedly?
 
-mvs_port_notify_deformed() ignores its lock parameter and directly calls
-mvs_do_release_task() without holding mvi->lock:
+In is_complete(), the state machine transitions to phases like status or cmd
+based on hardware bus signals via update_state():
 
-drivers/scsi/mvsas/mv_sas.c:mvs_port_notify_deformed() {
-    ...
-    list_for_each_entry(dev, &port->dev_list, dev_list_node)
-        mvs_do_release_task(phy->mvi, phy_no, dev);
-    ...
-}
+	switch(GETPORT(SCSISIG) & P_MASK) {
+	case P_MSGI:    STATE=3Dmsgi;    break;
+	...
 
-Will this cause a lock imbalance when the downstream mvs_slot_complete()
-call unconditionally executes spin_unlock(&mvi->lock)?
+This occurs without verifying if a command is currently active. The state
+handlers then unconditionally dereference CURRENT_SC:
 
-[ ... ]
+status_run():
+	aha152x_priv(CURRENT_SC)->status =3D GETPORT(SCSIDAT);
 
-> @@ -1862,6 +1868,7 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no,=
- u32 events)
->  }
-> =20
->  int mvs_int_rx(struct mvs_info *mvi, bool self_clear)
-> +	__must_hold(&mvi->lock)
->  {
->  	u32 rx_prod_idx, rx_desc;
->  	bool attn =3D false;
+cmd_init():
+	if (aha152x_priv(CURRENT_SC)->sent_command) {
 
-[Severity: Critical]
-This is a pre-existing issue, but does dropping the lock inside mvs_int_rx()
-expose mvi->rx_cons to concurrent modification?
+If the hardware reports a phase while no command is active, would this crash
+the kernel?
 
-mvs_int_rx() loops while evaluating the shared mvi->rx_cons:
+[Severity: High]
+This is a pre-existing issue, but does dynamically initializing the global
+work item in the interrupt handler corrupt the workqueue?
 
-drivers/scsi/mvsas/mv_sas.c:mvs_int_rx() {
-    ...
-    while (mvi->rx_cons !=3D rx_prod_idx) {
-        ...
-        if (likely(rx_desc & RXQ_DONE))
-            mvs_slot_complete(mvi, rx_desc, 0);
-        ...
-    }
-    ...
-}
+The interrupt handler intr() calls INIT_WORK() before schedule_work():
 
-Inside the loop, mvs_slot_complete() drops mvi->lock. If a concurrent
-interrupt on another CPU acquires the lock, processes the ring, and frees
-the tasks, could the first CPU wake up, read old descriptors based on the
-updated mvi->rx_cons, and erroneously complete new reused tasks?
+	INIT_WORK(&aha152x_tq, run);
+	schedule_work(&aha152x_tq);
+
+Since aha152x_tq is a global variable, if a second SCSI host adapter
+triggers an interrupt while the work is already queued by the first adapter,
+would INIT_WORK() overwrite the list pointers of the pending work?
+
+[Severity: High]
+This is a pre-existing issue, but is it safe to traverse and modify the
+global aha152x_host_list locklessly?
+
+Nodes are added and removed from the list locklessly:
+
+aha152x_probe_one():
+	list_add_tail(&HOSTDATA(shpnt)->host_list, &aha152x_host_list);
+
+aha152x_release():
+	list_del(&HOSTDATA(shpnt)->host_list);
+
+Concurrently, the workqueue callback run() iterates over the list locklessl=
+y:
+
+	list_for_each_entry(hd, &aha152x_host_list, host_list) {
+
+If aha152x_release() removes a host while the workqueue thread is traversing
+the list, could this lead to following invalid pointers and a use-after-fre=
+e?
+
+[Severity: High]
+This is a pre-existing issue, but could pending work items execute after
+the module is unloaded or devices are freed?
+
+Neither aha152x_release() nor aha152x_exit() appears to cancel the global
+workqueue:
+
+aha152x_release():
+	void aha152x_release(struct Scsi_Host *shpnt)
+
+aha152x_exit():
+	static void __exit aha152x_exit(void)
+
+If an interrupt schedules the work and the module is immediately unloaded,
+will the kernel attempt to execute run() after the module's code segment
+has been unmapped?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D42
+t.bvanassche@acm.org?part=3D10
