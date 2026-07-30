@@ -1,199 +1,227 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D83C43C3F45
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:04:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08DE6404BD5
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:06:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785452689; cv=none; b=UY0PEC3L5IhMSpyB1BTdtgIwaKkDdmgu6W6E7ulm3OCis9jEugzwjsmnEd+OM0f4zyYnkIVH5UuR3i0GFXenie5WXEN3wZjSqp4M1DxELtinPSAsfAY7+MUlZZJjQx+mpoRmt7b1iqwuFDgvxvPm4ZuTrKSq+vWWpNejNc4R/Vg=
+	t=1785452805; cv=none; b=rNLTshR6PJGdpizx9x/xzl9ufBchcLgpbEhIjGEvEmpzDdUnmi7i1XxoZRf1+6aA1UJ8Lyu114zO9DUWHibTJpnpox1ZiG1wkt3Ftdi8z/RrFtCZO46xdPxCeu33qF6cELSolgq+dTM4mOU5St2GDo8ZVI6YQOH0Ew8gUMJsDOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785452689; c=relaxed/simple;
-	bh=w+j05vDgoX44vTF3pXDk1wOJl/c81WXD2vAY0oGpI2s=;
+	s=arc-20240116; t=1785452805; c=relaxed/simple;
+	bh=87M0I1GhZNbLdCNvxfW2V7wcyiSQrwE5yS1Z72u2b04=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GKS2xfBzlCg2x5m1XlcDdrvfWtHVq/wn5CSLyGSWm8TBXPecDbg55hwd8SX7j9KjJBNTeK6uMHZKfSdTsiiqywtVp81Ejgs98uKLdkqY2LXKm7FEDBjvM+IxC1khXDiQv/usLbjIaV3G4w3sBhq2+2D5k5sfdud3a+o2NL/37y0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AoG+vDjW; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=PAYnhbvyT3Er4N66SW2SB7eLBF8uhxUpK9WV79zSHJVIMl0oP5nqMVBaIRJsJw6GI//LBEMZqvQZW2DXUAULUI+kHxAWHk0HG8eS/0wPhJOdCyseYo0fc28aH62tJFAr3MII53WiiBu494shAQdzPHBOtTfCtPop7k3rWljL5fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VBNcddU9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AoG+vDjW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37F391F000E9;
-	Thu, 30 Jul 2026 23:04:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VBNcddU9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DC131F000E9;
+	Thu, 30 Jul 2026 23:06:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785452687;
-	bh=i6BYfiXCJK8iSchUmPT2RlL7H/x0c9bTjyPwP9PYKIw=;
+	s=k20260515; t=1785452803;
+	bh=iFeD0shR4xRXY3P5OXmgEi1HhDvTbU7HvFd9saQ0pws=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AoG+vDjWqb5wNrP4soMi3ATuAmljawlnRAHXWAgLqK6tRoBofBP1FtaYyZehwYfi0
-	 YKrP3O/60OjE3Ti+dZNGizhmGFJxO2xRvz9a8+jECpUq1HHT1LMnk7vM2nkhXR69T3
-	 nRbhBAwxSh+S2QS9J85M7hXi3PP4hj3WkyLZOkMPHHoQ7CoMAisLe/WWYdswKb54yZ
-	 Eg7etfVALx3cU9Txm8BW5BGGbJYQvOZEC82C30zWMSiftJYL1Tgq4WUlLxlVQOtpNa
-	 guyPhwSf/aliEBSv9cJ2LUx15MtauMU0sA5GE3hye8bVgDDPrYdXrXz9pqs0e8gl1J
-	 y84vnHaudAW1w==
+	b=VBNcddU9IEjT7vFQa7zGrxhKbSo4Y5ooiwNd67/tHEqSgIXB2kmuebgWtyJigUazR
+	 GELVLJ4wFpuPdizHnlqoK3IpgztCmXECEygEUhIYgIe1J5FIR6PrTnhrPsG5a7nuKo
+	 9QshYcWTjrF2FybZHAw5ClS/6GbBYHwxbI3U2uaa5Tec+5OeTM04wyW1OqhBtRLB4F
+	 kcZU21OhgeizdnSTv7ss7VXeC8iICFPWEMHJVzt3dq6HW+H9WIEddU6ZUHmMv+mNtX
+	 6qMX+thn/2+AIs/pJYKiCrJ2VHKIGOWaMmLzwZDey8TvEJGbmIDfhgHTCpa7QsShtO
+	 SgpGUGDEr+3ZQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 08/57] scsi: aacraid: Prepare for enabling lock
+Subject: Re: [PATCH v3 06/57] scsi: BusLogic: Prepare for enabling lock
  context analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <e6fae05fcb62f58bbab103354b0e0fe5138bb30d.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <045a86725b6f568d4f070c036d40d0352d25424a.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <e6fae05fcb62f58bbab103354b0e0fe5138bb30d.1785451174.git.bvanassche@acm.org>
+ <045a86725b6f568d4f070c036d40d0352d25424a.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:04:46 +0000
-Message-Id: <20260730230447.37F391F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 23:06:42 +0000
+Message-Id: <20260730230643.2DC131F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
 
+New issues:
+- [Medium] The lock expressions used in the new `__must_hold` annotations d=
+o not syntactically match the lock variables used inside the functions and =
+their callers, causing false positive context imbalance warnings in static =
+analyzers.
+- [Low] The patch misses several other functions in the driver that explici=
+tly require the host lock, leaving the lock context annotations incomplete.
+
 Pre-existing issues:
-- [Critical] Data race on `fibptr->flags` in `aac_hba_send` and `aac_fib_se=
-nd` can lead to lost flags set by the interrupt handler.
-- [High] Permanent leak of `dev->management_fib_count` on early error paths=
- in `aac_fib_send` and `aac_hba_send`.
-- [High] Dangling pointer in `dev->sync_fib_list` when `wait_for_completion=
-_interruptible` is interrupted by a signal.
-- [High] The `_aac_reset_adapter()` function can sleep while holding a spin=
-lock (`host->host_lock`) and with interrupts disabled.
+- [High] `spin_unlock_irq()` unconditionally enables interrupts in contexts=
+ where they must be preserved (e.g., inside `spin_lock_irqsave()` regions a=
+nd hard IRQ handlers).
+- [High] A failure in DMA mapping triggers a kernel panic via `BUG_ON()` ra=
+ther than gracefully failing the command.
+- [High] Missing memory barrier (`wmb()`) between CCB and Action Code write=
+s in `blogic_write_outbox`.
 --
 
---- Patch [8]: [PATCH v3 08/57] scsi: aacraid: Prepare for enabling lock co=
-ntext analysis ---
-commit b24c9703822591fc27fa76398a50df3f082577ac
+--- Patch [6]: [PATCH v3 06/57] scsi: BusLogic: Prepare for enabling lock c=
+ontext analysis ---
+commit 927e16987713b901aca16b28f9b8a4d54db270de
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: aacraid: Prepare for enabling lock context analysis
+scsi: BusLogic: Prepare for enabling lock context analysis
 
-Document the aac_send_reset_adapter() locking requirements with
-__must_hold(). Annotate functions that perform conditional locking with
-__no_context_analysis.
+This commit prepares the BusLogic SCSI driver for lock context analysis.
+It adds the __must_hold() macro to document locking requirements for
+blogic_qcmd_lck() and blogic_resetadapter().
 
-> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsu=
-p.c
-> index c4485629f7923..fb4d78233c6d7 100644
-> --- a/drivers/scsi/aacraid/commsup.c
-> +++ b/drivers/scsi/aacraid/commsup.c
-> @@ -475,6 +475,7 @@ int aac_queue_get(struct aac_dev * dev, u32 * index, =
-u32 qid, struct hw_fib * hw
->  int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
->  		int priority, int wait, int reply, fib_callback callback,
->  		void *callback_data)
-> +	__context_unsafe(conditional locking)
+> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+> index f2a6ed710c770..dafec8b24e586 100644
+> --- a/drivers/scsi/BusLogic.c
+> +++ b/drivers/scsi/BusLogic.c
+> @@ -2878,6 +2878,7 @@ static int blogic_hostreset(struct scsi_cmnd *SCpnt)
+>  */
+> =20
+>  static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
+> +	__must_hold(command->device->host->host_lock)
 >  {
 
+[Severity: Medium]
+Will this annotation cause false positive context imbalance warnings in sta=
+tic
+analyzers like Sparse?
+
+The annotation requires command->device->host->host_lock, but the function
+body internally unlocks and locks shost->host_lock:
+
+	spin_unlock_irq(shost->host_lock);
+	blogic_delay(1);
+	spin_lock_irq(shost->host_lock);
+
+Since Sparse evaluates lock context expressions syntactically, will this
+structural mismatch trigger the exact warnings this patch intends to preven=
+t?
+
 [Severity: High]
-This isn't a bug introduced by this patch, but does an interrupted wait lea=
-ve a
-dangling pointer in dev->sync_fib_list?
+This isn't a bug introduced by this patch, but doesn't spin_unlock_irq()
+unconditionally enable interrupts in contexts where they must be preserved?
 
-In aac_fib_send(), if dev->sync_mode is enabled and wait is non-zero, fibptr
-is appended to dev->sync_fib_list. The code then waits:
+Looking at blogic_qcmd_lck() in drivers/scsi/BusLogic.c:
 
-    if (wait_for_completion_interruptible(&fibptr->event_wait)) {
-        fibptr->flags &=3D ~FIB_CONTEXT_FLAG_WAIT;
-        return -EFAULT;
-    }
+	spin_unlock_irq(shost->host_lock);
+	blogic_delay(1);
+	spin_lock_irq(shost->host_lock);
 
-If interrupted by a signal, it returns -EFAULT without removing fibptr from
-dev->sync_fib_list. The caller will free the FIB, adding it to the free list
-while it remains on sync_fib_list. Will this lead to a use-after-free when
-dev->sync_fib_list is later processed?
+Since blogic_qcmd_lck() is called from inside a region protected by
+spin_lock_irqsave() via DEF_SCSI_QCMD, does this break the caller's IRQ sta=
+te
+by forcefully enabling interrupts?
+
+[Severity: High]
+This is a pre-existing issue, but does a DMA mapping failure here trigger a
+kernel panic instead of gracefully failing the command?
+
+drivers/scsi/BusLogic.c:blogic_qcmd_lck() {
+    ...
+	count =3D scsi_dma_map(command);
+	BUG_ON(count < 0);
+    ...
+}
+
+Under high memory pressure or extreme fragmentation, could scsi_dma_map()
+return a negative error code and cause a Denial of Service?
+
+>  	void (*comp_cb)(struct scsi_cmnd *) =3D scsi_done;
+>  	struct blogic_adapter *adapter =3D
 
 [ ... ]
 
-> @@ -698,6 +699,7 @@ int aac_fib_send(u16 command, struct fib *fibptr, uns=
-igned long size,
-> =20
->  int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
->  		void *callback_data)
-> +	__context_unsafe(conditional locking)
->  {
+> diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
+> index 24697a5bedc8b..c152b93fb6ddb 100644
+> --- a/drivers/scsi/BusLogic.h
+> +++ b/drivers/scsi/BusLogic.h
+> @@ -1279,7 +1279,8 @@ static int blogic_sdev_configure(struct scsi_device=
+ *,
+>  				 struct queue_limits *lim);
+>  static void blogic_qcompleted_ccb(struct blogic_ccb *);
+>  static irqreturn_t blogic_inthandler(int, void *);
+> -static int blogic_resetadapter(struct blogic_adapter *, bool hard_reset);
+> +static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard=
+_reset)
+> +	__must_hold(adapter->scsi_host->host_lock);
+
+[Severity: Medium]
+Will this syntactic mismatch also cause warnings with static analyzers?
+
+The caller blogic_hostreset() acquires shost->host_lock:
+
+	spin_lock_irq(shost->host_lock);
+	blogic_inc_count(&stats->adapter_reset_req);
+	rc =3D blogic_resetadapter(adapter, false);
+	spin_unlock_irq(shost->host_lock);
+
+But the annotation requires adapter->scsi_host->host_lock.  Could this
+mismatch lead to analysis noise?
+
+[Severity: Low]
+Are there other functions in this driver that explicitly require the host
+lock but missed this annotation?
+
+Functions like blogic_alloc_ccb() and blogic_write_outbox() have header
+comments explicitly stating "The Host Adapter's Lock should already have be=
+en
+acquired by the caller":
+
+static struct blogic_ccb *blogic_alloc_ccb(struct blogic_adapter *adapter)
+
+static bool blogic_write_outbox(struct blogic_adapter *adapter,
+		enum blogic_action action, struct blogic_ccb *ccb)
+
+Would adding __must_hold() to these functions complete the static analysis
+coverage?
 
 [Severity: High]
-This isn't a bug introduced by this patch, but is it possible that
-dev->management_fib_count leaks on early error paths?
+This isn't a bug introduced by this patch, but does blogic_resetadapter()
+forcefully enable hardware interrupts inside a hardirq context?
 
-In aac_hba_send(), when wait is 1, dev->management_fib_count is incremented.
-If aac_adapter_deliver() succeeds, but the PCI device goes offline:
+The interrupt handler blogic_inthandler() calls blogic_resetadapter() on
+errors. Inside blogic_resetadapter():
 
-    if (wait) {
-        spin_unlock_irqrestore(&fibptr->event_lock, flags);
+	spin_unlock_irq(adapter->scsi_host->host_lock);
+	blogic_delay(2);
+	spin_lock_irq(adapter->scsi_host->host_lock);
 
-        if (unlikely(aac_pci_offline(dev)))
-            return -EFAULT;
-
-The function returns -EFAULT directly without decrementing the management c=
-ount.
-Because fibptr->done is not set to 2, the interrupt handler will also not
-decrement it. A similar leak appears to occur in aac_fib_send().
-
-Will this eventually exhaust the AAC_NUM_MGT_FIB pool and cause future
-management commands to fail with -EBUSY?
-
-[Severity: Critical]
-This isn't a bug introduced by this patch, but does the lockless update of
-fibptr->flags risk losing flags set by the interrupt handler?
-
-In aac_hba_send(), after the command is submitted via aac_adapter_deliver():
-
-    if (wait) {
-        ...
-        fibptr->flags |=3D FIB_CONTEXT_FLAG_WAIT;
-        if (wait_for_completion_interruptible(&fibptr->event_wait))
-            fibptr->done =3D 2;
-        fibptr->flags &=3D ~(FIB_CONTEXT_FLAG_WAIT);
-
-These bitwise operations are not atomic. Concurrently, the adapter can
-complete the command and trigger the interrupt handler aac_intr_normal(),
-which locklessly sets flags:
-
-    if (isFastResponse)
-        fib->flags |=3D FIB_CONTEXT_FLAG_FASTRESP;
-
-Can the read-modify-write in aac_hba_send() overwrite and lose the
-FIB_CONTEXT_FLAG_FASTRESP flag, causing the completion path to misinterpret
-the response?
-
-[ ... ]
-
-> @@ -1466,6 +1468,7 @@ static void aac_schedule_bus_scan(struct aac_dev *a=
-ac)
->  }
-> =20
->  static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_=
-type)
-> +	__context_unsafe(conditional locking)
->  {
+Since this drops the lock using spin_unlock_irq() and busy-waits for 2
+seconds, can this lead to hard IRQ re-entrancy, stack overflows, or potenti=
+al
+deadlocks?
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does _aac_reset_adapter() sl=
-eep
-while holding a spinlock?
+This is a pre-existing issue, but is there a missing memory barrier in
+blogic_write_outbox()?
 
-aac_reset_adapter() acquires host->host_lock (a spinlock) and calls
-_aac_reset_adapter(). Inside _aac_reset_adapter(), the lock is conditionally
-dropped (setting jafo =3D 1) only if aac->thread is not NULL and the current
-thread is not the command thread.
+drivers/scsi/BusLogic.c:blogic_write_outbox() {
+    ...
+		next_outbox->ccb =3D ccb->dma_handle;
+		next_outbox->action =3D action;
+		blogic_execmbox(adapter);
+    ...
+}
 
-If aac->thread is NULL, or if called by the command thread itself, jafo
-remains 0 and the spinlock is never unlocked. The function then proceeds to
-call blocking functions like schedule() and ssleep():
+Because these assignments to memory polled by DMA are not protected by a
+compiler or memory barrier, can a weakly-ordered CPU reorder the stores to
+next_outbox->ccb and next_outbox->action?
 
-    if (is_response_expected || fib->flags & FIB_CONTEXT_FLAG_WAIT) {
-        ...
-        schedule();
-        retval =3D 0;
-    }
+If the Host Adapter asynchronously polls and observes the new action code
+before the CCB address is fully committed to memory, could this cause the
+hardware to execute invalid or stale CCB addresses?
 
-    /* Give some extra time for ioctls to complete. */
-    if (retval =3D=3D 0)
-        ssleep(2);
-
-Could this lead to a deadlock since the spinlock is held with interrupts
-disabled?
+>  static void blogic_msg(enum blogic_msglevel, char *, struct blogic_adapt=
+er *, ...);
+>  static int __init blogic_setup(char *);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D8
+t.bvanassche@acm.org?part=3D6
