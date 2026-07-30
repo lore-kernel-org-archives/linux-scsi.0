@@ -1,56 +1,57 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89F3F3D3012
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:48:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BCDB5464C
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:48:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785451710; cv=none; b=RyQJn24B1nuJ82cROLg3HGPB7o9PNWaxi22WNNfUKwV8lvAnl12Guj8MiGsNIwfwBumWmvDJav3Shqszcq/oaZ6jpbmW4lX8+oKUIVhVLZkNNSoN0qbt/luOkSE8uDoXHMJxlgflKyjhASAbEJeilyOr6Py5WGJA9wayOA0a4+g=
+	t=1785451714; cv=none; b=ofUJcSZ7yyGFxB4OVt5ABtCajaShK+2MydDwYMUTWvAnhC+sxJ924gNFBIvjYK2lBAQyuDYgsKeqipXtOKNwdC+foU3UXTZGELW6+iVxLDGDgrqDfZX5LGGOkcAqqgCEvh7dn26zfInmbmgXrBkqGFdTvaCT0VMlfJQ80+7ZiW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785451710; c=relaxed/simple;
-	bh=Py8B7pgbsc78k5u7xDPJtQv0S/NWya0oUOpqU4foMSQ=;
+	s=arc-20240116; t=1785451714; c=relaxed/simple;
+	bh=342vbo+jSWIuvus37ymB6JWKPsI1lGe4DPDO3gcGr4U=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=n4g1aJFB1pLDhk6cd7JG2fR4CXh9RMI4Ww+tFCzoSvaYrKFLVAbmuwp2XAKuzgz+y63b7MRPLOaTCu/3GOru5s7qhciqToYgWpWxOGdAwP81E5LcvW4zo883CTOVDEqIYshOG5OKPWwfgVcUWep5xjX77myAnwAdIOtGSpBXCf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=IkvMIvNe; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=gyzmc7UEbt6JDL6uZvMly7jd/PAu8Jaje+/st1EM5ltbsXvNZsOg4BwCB+6M113dpa1N5+B8cPnJSiEFsH261oAFw4Mft96wsfy4zWWSxyE6IH9q6/AW4sXx/zJhYT809ptyl3MyA7wxICsQ7qVyhNeA2hbimbg7rnDrSutWHW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2Mu/7nzu; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="IkvMIvNe"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2Mu/7nzu"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hB49n27RJz1XM6Jk;
-	Thu, 30 Jul 2026 22:48:29 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hB49r6sVgz1XM6Jm;
+	Thu, 30 Jul 2026 22:48:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1785451703; x=1788043704; bh=jdECi
-	w1od5+aoOByry6eYk2d/EsYwFbOORYLsrt0yz0=; b=IkvMIvNechAsvP8/fBEfJ
-	wbF/xxRQrIC3xaROsDre+hGwUsDpPHTCpr+x70e3Zsru4UNP7xUqwn1uN4DLwOEL
-	ewzkLeKVocFDRPpmanqp+96jGlSxgUYdCGdjhAa6z8ZrFJZjIT3lOXdjWZ4vLLP7
-	E1fYYFfJkrerOJhzyCPXKcBLPEBxmUDWy5mFy4OyMPKKjDhYomdd2uhyKs1nwmCE
-	UgkY2WcHbN2aF2/C69JWDKN4UmuOOyBlQbiICjIxKf43oxCUXak9TdLTgUwBalJY
-	wTV3loOjkVOq6WD41bxjJrvvUrlA/UqpkBWlGjcZKG9iHYX7wo8whGlatdsZuQkN
-	Q==
+	:received:received; s=mr01; t=1785451709; x=1788043710; bh=03fq5
+	As8Qpku8FY12z+wW/QDg5KsqYGNC+LpLlFZhEE=; b=2Mu/7nzukck3HBmdTtjEd
+	5ZNCkygcf5jFd4aGQhjTrqN1vbc14NikjMONnux/qeecNXVg0vztZwL+CEot2nRp
+	orXwGx5UBTx0rmI8X/uB7vyM/ORSzuLxgWwmdxKZcsgp6dGye8AWVNtNnPB/Kosl
+	WTrqt2uVFW7TXJ/medIt/B+xOt3v40B3GMNffBn1YhqDdc9qI1eiNMa8wBv7pDdt
+	bC1YRtF9/VRWwRK4/F31H33FsnoVQ63hTZUKtEFJ/UKrJCyOwKULS8R8WvCBzqHO
+	1NclOVvYCJdSXbsCYYOLMUbeybZViuxLVbECsol1TQe9wm0UJfFpGIg4tvENvy/c
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id OJQb9aq0g0OX; Thu, 30 Jul 2026 22:48:23 +0000 (UTC)
+ id ciUfIUQ9qA9w; Thu, 30 Jul 2026 22:48:29 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hB49d6yydz1XM30r;
-	Thu, 30 Jul 2026 22:48:21 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hB49m171Fz1XM4TB;
+	Thu, 30 Jul 2026 22:48:27 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Marco Elver <elver@google.com>,
 	linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Hannes Reinecke <hare@suse.de>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v3 34/57] scsi: libfc: Enable lock context analysis
-Date: Thu, 30 Jul 2026 15:45:17 -0700
-Message-ID: <3c7650cbbecbaf615e264bf7c21e7eb101b818dd.1785451174.git.bvanassche@acm.org>
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Kees Cook <kees@kernel.org>
+Subject: [PATCH v3 36/57] scsi: libsas: Prepare for enabling lock context analysis
+Date: Thu, 30 Jul 2026 15:45:19 -0700
+Message-ID: <6be350770193c35ae122f164d54086eb37cd4b50.1785451174.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.55.0.508.g3f0d502094-goog
 In-Reply-To: <cover.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
@@ -62,157 +63,25 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Document locking requirements with __must_hold().
+Since Clang requires that lock context annotations only refer to
+variables that are visible, modify a __must_hold() annotation.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/libfc/Makefile  | 2 ++
- drivers/scsi/libfc/fc_disc.c | 6 +++++-
- drivers/scsi/libfc/fc_exch.c | 6 ++++++
- drivers/scsi/libfc/fc_fcp.c  | 4 ++++
- 4 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/scsi/libsas/sas_ata.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/Makefile b/drivers/scsi/libfc/Makefile
-index 65396f86c307..b265cf2a84a2 100644
---- a/drivers/scsi/libfc/Makefile
-+++ b/drivers/scsi/libfc/Makefile
-@@ -1,6 +1,8 @@
- # SPDX-License-Identifier: GPL-2.0
- # $Id: Makefile
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.=
+c
+index 61368e55bf86..2340790c9f6b 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -153,7 +153,7 @@ static void sas_ata_task_done(struct sas_task *task)
+ }
 =20
-+CONTEXT_ANALYSIS :=3D y
-+
- obj-$(CONFIG_LIBFC) +=3D libfc.o
-=20
- libfc-objs :=3D \
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 7792724d5b97..862516dcd324 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -37,7 +37,7 @@
- #define FC_DISC_RETRY_LIMIT	3	/* max retries */
- #define FC_DISC_RETRY_DELAY	500UL	/* (msecs) delay */
-=20
--static void fc_disc_gpn_ft_req(struct fc_disc *);
-+static void fc_disc_gpn_ft_req(struct fc_disc *disc) __must_hold(&disc->=
-disc_mutex);
- static void fc_disc_gpn_ft_resp(struct fc_seq *, struct fc_frame *, void=
- *);
- static void fc_disc_done(struct fc_disc *, enum fc_disc_event);
- static void fc_disc_timeout(struct work_struct *);
-@@ -200,6 +200,7 @@ static void fc_disc_recv_req(struct fc_lport *lport, =
-struct fc_frame *fp)
-  * @disc: The discovery object to be restarted
-  */
- static void fc_disc_restart(struct fc_disc *disc)
-+	__must_hold(&disc->disc_mutex)
+ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+-	__must_hold(ap->lock)
++	__must_hold(qc->ap->lock)
  {
- 	lockdep_assert_held(&disc->disc_mutex);
-=20
-@@ -250,6 +251,7 @@ static void fc_disc_start(void (*disc_callback)(struc=
-t fc_lport *,
-  * @event: The discovery completion status
-  */
- static void fc_disc_done(struct fc_disc *disc, enum fc_disc_event event)
-+	__must_hold(&disc->disc_mutex)
- {
- 	struct fc_lport *lport =3D fc_disc_lport(disc);
- 	struct fc_rport_priv *rdata;
-@@ -294,6 +296,7 @@ static void fc_disc_done(struct fc_disc *disc, enum f=
-c_disc_event event)
-  * @fp:	  The error code encoded as a frame pointer
-  */
- static void fc_disc_error(struct fc_disc *disc, struct fc_frame *fp)
-+	__must_hold(&disc->disc_mutex)
- {
- 	struct fc_lport *lport =3D fc_disc_lport(disc);
- 	unsigned long delay =3D 0;
-@@ -374,6 +377,7 @@ static void fc_disc_gpn_ft_req(struct fc_disc *disc)
-  * Goes through the list of IDs and names resulting from a request.
-  */
- static int fc_disc_gpn_ft_parse(struct fc_disc *disc, void *buf, size_t =
-len)
-+	__must_hold(&disc->disc_mutex)
- {
- 	struct fc_lport *lport;
- 	struct fc_gpn_ft_resp *np;
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 9183a0e9568a..9057a95d8612 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -811,6 +811,7 @@ static void fc_exch_timeout(struct work_struct *work)
-  */
- static struct fc_exch *fc_exch_em_alloc(struct fc_lport *lport,
- 					struct fc_exch_mgr *mp)
-+	__context_unsafe(conditionally acquires &_res->ex_lock)
- {
- 	struct fc_exch *ep;
- 	unsigned int cpu;
-@@ -904,6 +905,7 @@ static struct fc_exch *fc_exch_em_alloc(struct fc_lpo=
-rt *lport,
-  */
- static struct fc_exch *fc_exch_alloc(struct fc_lport *lport,
- 				     struct fc_frame *fp)
-+	__context_unsafe(conditionally acquires &_res->ex_lock)
- {
- 	struct fc_exch_mgr_anchor *ema;
- 	struct fc_exch *ep;
-@@ -996,6 +998,8 @@ static struct fc_exch *fc_exch_resp(struct fc_lport *=
-lport,
-=20
- 	ep =3D fc_exch_alloc(lport, fp);
- 	if (ep) {
-+		/* Acquired by fc_exch_alloc(). */
-+		__acquire(&ep->ex_lock);
- 		ep->class =3D fc_frame_class(fp);
-=20
- 		/*
-@@ -2191,6 +2195,8 @@ struct fc_seq *fc_exch_seq_send(struct fc_lport *lp=
-ort,
- 		fc_frame_free(fp);
- 		return NULL;
- 	}
-+	/* Acquired by fc_exch_alloc(). */
-+	__acquire(&ep->ex_lock);
- 	ep->esb_stat |=3D ESB_ST_SEQ_INIT;
- 	fh =3D fc_frame_header_get(fp);
- 	fc_exch_set_addr(ep, ntoh24(fh->fh_s_id), ntoh24(fh->fh_d_id));
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index a5139e43ca4c..9ba31a8a5250 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -207,6 +207,7 @@ static void fc_fcp_pkt_destroy(struct fc_seq *seq, vo=
-id *fsp)
-  * needed.
-  */
- static inline int fc_fcp_lock_pkt(struct fc_fcp_pkt *fsp)
-+	__cond_acquires(0, &fsp->scsi_pkt_lock)
- {
- 	spin_lock_bh(&fsp->scsi_pkt_lock);
- 	if (fsp->state & FC_SRB_COMPL) {
-@@ -224,6 +225,7 @@ static inline int fc_fcp_lock_pkt(struct fc_fcp_pkt *=
-fsp)
-  * @fsp: The FCP packet to be unlocked and decremented
-  */
- static inline void fc_fcp_unlock_pkt(struct fc_fcp_pkt *fsp)
-+	__releases(&fsp->scsi_pkt_lock)
- {
- 	spin_unlock_bh(&fsp->scsi_pkt_lock);
- 	fc_fcp_pkt_release(fsp);
-@@ -1242,6 +1244,7 @@ static void fc_fcp_error(struct fc_fcp_pkt *fsp, st=
-ruct fc_frame *fp)
-  * Called to send an abort and then wait for abort completion
-  */
- static int fc_fcp_pkt_abort(struct fc_fcp_pkt *fsp)
-+	__must_hold(&fsp->scsi_pkt_lock)
- {
- 	int rc =3D FAILED;
- 	unsigned long ticks_left;
-@@ -1950,6 +1953,7 @@ EXPORT_SYMBOL(fc_queuecommand);
-  * The fcp packet lock must be held when calling.
-  */
- static void fc_io_compl(struct fc_fcp_pkt *fsp)
-+	__must_hold(&fsp->scsi_pkt_lock)
- {
- 	struct fc_fcp_internal *si;
- 	struct scsi_cmnd *sc_cmd;
+ 	struct sas_task *task;
+ 	struct scatterlist *sg;
