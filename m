@@ -1,313 +1,138 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDDD43B19CF
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 22:49:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09DCD2E7BD3;
+	Thu, 30 Jul 2026 22:54:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785451799; cv=none; b=NQlR2rkI0ynoAHAWT3sDe21anwHNsEOzmD7yOoJ+EBQeplBVdBL/V8rlbocQ2h1yb/MASlWy13dGM8l5egUj7i4Rs2jMOL9WEs33S3SC0gSPHPVSO2xivxlHqoQfuJwTgBewLFAYVLl0Gj/Juq2eg69J3FtbrgiXYs9CL998EFo=
+	t=1785452098; cv=none; b=elfP78a6PAF/zok8kwfapdZJXf79otvzxrVGg1eyN3ZBa0E7cEOUCQGfmdkOe8nXaBpFrrCFo/E1FHZ7rvuGXhG9zDClJNAVPr9uQHZeS+skQ0JXInKr4WiohBavd1bchLnH/J+Q1TJq88srVKrL8d+Le+2vruiT3h077Oiw1no=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785451799; c=relaxed/simple;
-	bh=G/xlEX9aNnWzM2fzM2LkiDvXchCHe9AWaaMu1zZOuU4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=H+AWaFaewV5Q9/xSg8zM2cGvVPwapXVj1gTTHl3E0/7DhVfPQYbVIUIo6Txd6P/r9ehVCfrakF04tf0MMsotGqEc64h6SbFWZylFDDIzdxisdPL9JsnIUESr11HX1rUDwsTlupcr9GGa+ZEGCxOmogNzDWhDlgVqqT6PxT/70Bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=C8g8Hl8j; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1785452098; c=relaxed/simple;
+	bh=f5ylZexfnkXT4FerqB1sM59gHCLySnSm51G0J5WUzfA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=avkJFhRmCC9djFN9CDrJJTM3J5puLIj+mci+nOSjjglRi/RCLxoRUb20D6jkZHITnkdFaHGeTLOlWvL/q9l9aiNkMZ5IaHz47FvbdANXiUll3nnkRkoVAt+2GG4zwzdQFhN7zD1qLX1vSCRSRi6LnXiLlVifZBJqI8ae2v6QX+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=H2m+8LQb; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="C8g8Hl8j"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hB4CT4TLHz1XM30k;
-	Thu, 30 Jul 2026 22:49:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1785451776; x=1788043777; bh=Fr7Fn
-	qBKT1hIK1OS+CKWe4ap+2pN5X9QfMcNqiq5GpM=; b=C8g8Hl8jYxPzRJPSjlGVg
-	5OZWTHn7Le6onpAWQgCs0kTJOXM18FAWOx7NxhRZvdSphSJ9nxm+DScj3UsMhDG0
-	D8+HKg9YiafqpmHOGiNnwy4AmydNL0pg1dSgIqH7to2W1+39zK2FaEnhklHdXymF
-	bla3RyKymwSroovfyii113U/jyWWXTd4s0MvY9pxmaRn0Sn/e3X1NK+nPTLs9j7/
-	XkenywOa1lWLWVNtNHDoPqrAyoREPKMyhkOnJ4MZd/3jkotbddo8bj9J6pzLFCW9
-	qDOh95gKcXZmxCW9M5rFFWq6i1e2+juUM92e8D2Xs17NoouTEuuCWSKyveDuzzGc
-	A==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id nPXS-fepnOID; Thu, 30 Jul 2026 22:49:36 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hB4Bz6jsVz1XM6Jm;
-	Thu, 30 Jul 2026 22:49:31 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Marco Elver <elver@google.com>,
-	linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Jianzhou Zhao <luckd0g@163.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: [PATCH v3 57/57] scsi: core: Protect host state changes with the host lock
-Date: Thu, 30 Jul 2026 15:45:40 -0700
-Message-ID: <36a92f43e2f8132f517248b98de4ba26a670f249.1785451174.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.55.0.508.g3f0d502094-goog
-In-Reply-To: <cover.1785451174.git.bvanassche@acm.org>
-References: <cover.1785451174.git.bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="H2m+8LQb"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66UJmVFw2081860;
+	Thu, 30 Jul 2026 22:54:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=zGnH5h
+	X5bNR1M5EEd5b9XJmSA2y7Zxwj+Dstt66u1eQ=; b=H2m+8LQbizzMC/fZeG2uhJ
+	md9yuc9hJKb9ng6c3OtyUQ3RPWASgN9xW+ihWkQSqXQcVL6PsfJA5rfcveSyQVWJ
+	FYUTyzCbdkYoPrNmvDNq5K0ifvWZxGmMp1jpljr7gLZQmmvDKgE/6uo/V98ilc4t
+	OjcjT+bjVzJUn8F/+OGp6qpbaXa6M2QzNPxssRvaak5bA5j7UjyXMi8MMOZpTpZF
+	GDILWKrEOBRZl81cRIpPdwIOGOswRrir/MUH9y+5ia/8Q5QWLu4vRV7Fm8t7GLqX
+	LiyPXfo6x02jfFskBqFBQNnnNS1ybujOchnTWmxzCtFUtpYQI5LKFVaj1SRWG3Jg
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fmuyct6th-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 Jul 2026 22:54:41 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66UMfLjv006956;
+	Thu, 30 Jul 2026 22:54:40 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4fn8yhndfq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 Jul 2026 22:54:40 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66UMsdo115729250
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 30 Jul 2026 22:54:40 GMT
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id CE2DA58056;
+	Thu, 30 Jul 2026 22:54:39 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id F1F1E58052;
+	Thu, 30 Jul 2026 22:54:38 +0000 (GMT)
+Received: from [9.61.73.28] (unknown [9.61.73.28])
+	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 30 Jul 2026 22:54:38 +0000 (GMT)
+Message-ID: <75acb590-7bb3-479d-888a-b4e7d6a3aa41@linux.ibm.com>
+Date: Thu, 30 Jul 2026 15:54:34 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH][next] scsi: ibmvfc: Fix spelling mistake "Deleteing" ->
+ "Deleting"
+To: Colin Ian King <colin.i.king@gmail.com>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <chleroy@kernel.org>,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260730222951.352872-1-colin.i.king@gmail.com>
+Content-Language: en-US
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+In-Reply-To: <20260730222951.352872-1-colin.i.king@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-ORIG-GUID: _Z3hVZbTYoG3su98RmwO8AYjURRlLnEO
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMwMDE2MyBTYWx0ZWRfX8lvnKvqWULxG
+ ObE/NvLWGvCuCJiXhUmLJO4/P63B0V3xxVsOaeG2XEIi4TQGLsb5MysbGLijmUrXNgoPIctBj67
+ Y8tJ2bXwDKU590Xy9V7jpluFjhVqI58k9UvtD/HqkUFKnYGisTJe4MQYlU68l/U6C9ARa2pgt+2
+ si0HxpGc40z+pNdOEdhXB3HOORDsUiHBJ9L7dUtsz1nD2pHWOb2bf5t/uDyU1jEjIa2mUUIqJiX
+ GrqVqyaiISAuWwCjEB6U+kb1OfPV2TZ1DkjYMw2N3VbZ6UoVPbWjH6AZlqvqH1QSsaBoaiTKG3m
+ txL0hQMZajgUskzy9RbLUabpg/Ct4TXv+durS3EvyLyJLDs1MnP9ntTePb3tVh7JNg1Vk9AK6Zl
+ W6C9LvNwpxQpdXfkKwltzcLvh32sPNHWyASr0/70zhKsFQ6vDmCtJ3+dX/LnTrQ2Cdk9cci9qe+
+ 6cbLStkr1JbeJTUPMTA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMwMDE2MyBTYWx0ZWRfXwWrQkI2fwfIJ
+ PGHr9cd9oJNMrazhCTmFMBdJIPOpw8/SmaT3K2g6xBc5sGtZauRkaeWeG9GKaeH8U4nzHbXxw8d
+ /f7Ufm/mxp/IaVr30BefGhnHdhocfXU=
+X-Authority-Analysis: v=2.4 cv=AZeB2XXG c=1 sm=1 tr=0 ts=6a6bd632 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=pGLkceISAAAA:8
+ a=pdSM-NVmPh03PByMKzIA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: nci1EEkgEFiP9mTlgqezP6e0B16QFWAn
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-30_06,2026-07-30_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 priorityscore=1501 phishscore=0 adultscore=0 impostorscore=0
+ clxscore=1011 malwarescore=0 suspectscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607300163
 
-Some but not all SCSI host state changes are protected with the SCSI
-host lock. Annotate the SCSI host state with __guarded_by(host_lock),
-protect all SCSI host state changes with the SCSI host lock and use
-READ_ONCE() for all SCSI host state reads. This patch prevents that
-KCSAN complains about data races when accessing the SCSI host state.
+On 7/30/26 3:29 PM, Colin Ian King wrote:
+> There is a spelling mistake in a tgt_dbg message. Fix it.
 
-Reported-by: Jianzhou Zhao <luckd0g@163.com>
-Closes: https://lore.kernel.org/all/36d59d0e.6db0.19cdbeee01b.Coremail.lu=
-ckd0g@163.com/
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/hosts.c                      | 13 ++++++++-----
- drivers/scsi/megaraid/megaraid_sas_base.c |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  2 +-
- drivers/scsi/qla4xxx/ql4_os.c             |  6 ++----
- drivers/scsi/scsi_lib.c                   |  3 +--
- drivers/scsi/scsi_sysfs.c                 |  7 ++++---
- include/scsi/scsi_host.h                  | 23 ++++++++++++++++-------
- 7 files changed, 33 insertions(+), 23 deletions(-)
+I'm going to have to resubmit the series that introduced this that is currently
+in staging. I'll fix it up on the resubmit.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index d512080268af..2b9fd76fb435 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -276,7 +276,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, s=
-truct device *dev,
- 	if (error)
- 		goto out_disable_runtime_pm;
-=20
--	scsi_host_set_state(shost, SHOST_RUNNING);
-+	scoped_guard(spinlock_irq, shost->host_lock)
-+		scsi_host_set_state(shost, SHOST_RUNNING);
- 	get_device(shost->shost_gendev.parent);
-=20
- 	device_enable_async_suspend(&shost->shost_dev);
-@@ -350,6 +351,7 @@ EXPORT_SYMBOL(scsi_add_host_with_dma);
- static void scsi_host_dev_release(struct device *dev)
- {
- 	struct Scsi_Host *shost =3D dev_to_shost(dev);
-+	enum scsi_host_state host_state =3D scsi_get_host_state(shost);
- 	struct device *parent =3D dev->parent;
-=20
- 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
-@@ -362,7 +364,7 @@ static void scsi_host_dev_release(struct device *dev)
- 	if (shost->work_q)
- 		destroy_workqueue(shost->work_q);
-=20
--	if (shost->shost_state =3D=3D SHOST_CREATED) {
-+	if (host_state =3D=3D SHOST_CREATED) {
- 		/*
- 		 * Free the shost_dev device name and remove the proc host dir
- 		 * here if scsi_host_{alloc,put}() have been called but neither
-@@ -378,7 +380,7 @@ static void scsi_host_dev_release(struct device *dev)
-=20
- 	ida_free(&host_index_ida, shost->host_no);
-=20
--	if (shost->shost_state !=3D SHOST_CREATED)
-+	if (host_state !=3D SHOST_CREATED)
- 		put_device(parent);
- 	kfree(shost);
- }
-@@ -412,7 +414,8 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_h=
-ost_template *sht, int priv
-=20
- 	shost->host_lock =3D &shost->default_lock;
- 	spin_lock_init(shost->host_lock);
--	shost->shost_state =3D SHOST_CREATED;
-+	scoped_guard(spinlock_init, shost->host_lock)
-+		shost->shost_state =3D SHOST_CREATED;
- 	INIT_LIST_HEAD(&shost->__devices);
- 	INIT_LIST_HEAD(&shost->__targets);
- 	INIT_LIST_HEAD(&shost->eh_abort_list);
-@@ -598,7 +601,7 @@ EXPORT_SYMBOL(scsi_host_lookup);
-  **/
- struct Scsi_Host *scsi_host_get(struct Scsi_Host *shost)
- {
--	if ((shost->shost_state =3D=3D SHOST_DEL) ||
-+	if (scsi_get_host_state(shost) =3D=3D SHOST_DEL ||
- 		!get_device(&shost->shost_gendev))
- 		return NULL;
- 	return shost;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
-araid/megaraid_sas_base.c
-index ccefe5841a17..97a81a86db82 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3075,7 +3075,7 @@ static int megasas_reset_bus_host(struct scsi_cmnd =
-*scmd)
-=20
- 	scmd_printk(KERN_INFO, scmd,
- 		"SCSI host state: %d  SCSI host busy: %d  FW outstanding: %d\n",
--		scmd->device->host->shost_state,
-+		scsi_get_host_state(scmd->device->host),
- 		scsi_host_busy(scmd->device->host),
- 		atomic_read(&instance->fw_outstanding));
- 	/*
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
-mpt3sas_scsih.c
-index dea78688cc9b..0e12009a87f6 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5472,7 +5472,7 @@ static enum scsi_qc_status scsih_qcmd(struct Scsi_H=
-ost *shost,
- 	 * Avoid error handling escallation when device is disconnected
- 	 */
- 	if (handle =3D=3D MPT3SAS_INVALID_DEVICE_HANDLE || sas_device_priv_data=
-->block) {
--		if (scmd->device->host->shost_state =3D=3D SHOST_RECOVERY &&
-+		if (scsi_get_host_state(scmd->device->host) =3D=3D SHOST_RECOVERY &&
- 		    scmd->cmnd[0] =3D=3D TEST_UNIT_READY) {
- 			scsi_build_sense(scmd, 0, UNIT_ATTENTION, 0x29, 0x07);
- 			scsi_done(scmd);
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.=
-c
-index d598ab4126f8..c9d9fc7c81fb 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -9411,11 +9411,9 @@ static int qla4xxx_eh_target_reset(struct scsi_cmn=
-d *cmd)
-  * This routine finds that if reset host is called in EH
-  * scenario or from some application like sg_reset
-  **/
--static int qla4xxx_is_eh_active(struct Scsi_Host *shost)
-+static bool qla4xxx_is_eh_active(struct Scsi_Host *shost)
- {
--	if (shost->shost_state =3D=3D SHOST_RECOVERY)
--		return 1;
--	return 0;
-+	return scsi_get_host_state(shost) =3D=3D SHOST_RECOVERY;
- }
-=20
- /**
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 22e2e3223440..bd592abf1f39 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1661,10 +1661,9 @@ static enum scsi_qc_status scsi_dispatch_cmd(struc=
-t scsi_cmnd *cmd)
- 		goto done;
- 	}
-=20
--	if (unlikely(host->shost_state =3D=3D SHOST_DEL)) {
-+	if (scsi_get_host_state(host) =3D=3D SHOST_DEL) {
- 		cmd->result =3D (DID_NO_CONNECT << 16);
- 		goto done;
--
- 	}
-=20
- 	trace_scsi_dispatch_cmd_start(cmd);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index dfc3559e7e04..9480432f650b 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -214,8 +214,9 @@ store_shost_state(struct device *dev, struct device_a=
-ttribute *attr,
- 	if (!state)
- 		return -EINVAL;
-=20
--	if (scsi_host_set_state(shost, state))
--		return -EINVAL;
-+	scoped_guard(spinlock_irq, shost->host_lock)
-+		if (scsi_host_set_state(shost, state))
-+			return -EINVAL;
- 	return count;
- }
-=20
-@@ -223,7 +224,7 @@ static ssize_t
- show_shost_state(struct device *dev, struct device_attribute *attr, char=
- *buf)
- {
- 	struct Scsi_Host *shost =3D class_to_shost(dev);
--	const char *name =3D scsi_host_state_name(shost->shost_state);
-+	const char *name =3D scsi_host_state_name(scsi_get_host_state(shost));
-=20
- 	if (!name)
- 		return -EINVAL;
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 2bbe7cb0060b..993628019916 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -729,7 +729,7 @@ struct Scsi_Host {
- 	unsigned int  irq;
- =09
-=20
--	enum scsi_host_state shost_state;
-+	enum scsi_host_state shost_state __guarded_by(host_lock);
-=20
- 	/* ldm bits */
- 	struct device		shost_gendev, shost_dev;
-@@ -787,11 +787,18 @@ static inline struct Scsi_Host *dev_to_shost(struct=
- device *dev)
- 	return container_of(dev, struct Scsi_Host, shost_gendev);
- }
-=20
-+static inline enum scsi_host_state scsi_get_host_state(struct Scsi_Host =
-*shost)
-+{
-+	return context_unsafe(READ_ONCE(shost->shost_state));
-+}
-+
- static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
- {
--	return shost->shost_state =3D=3D SHOST_RECOVERY ||
--		shost->shost_state =3D=3D SHOST_CANCEL_RECOVERY ||
--		shost->shost_state =3D=3D SHOST_DEL_RECOVERY ||
-+	enum scsi_host_state state =3D scsi_get_host_state(shost);
-+
-+	return state =3D=3D SHOST_RECOVERY ||
-+		state =3D=3D SHOST_CANCEL_RECOVERY ||
-+		state =3D=3D SHOST_DEL_RECOVERY ||
- 		shost->tmf_in_progress;
- }
-=20
-@@ -837,8 +844,9 @@ static inline struct device *scsi_get_device(struct S=
-csi_Host *shost)
-  **/
- static inline int scsi_host_scan_allowed(struct Scsi_Host *shost)
- {
--	return shost->shost_state =3D=3D SHOST_RUNNING ||
--	       shost->shost_state =3D=3D SHOST_RECOVERY;
-+	enum scsi_host_state state =3D scsi_get_host_state(shost);
-+
-+	return state =3D=3D SHOST_RUNNING || state =3D=3D SHOST_RECOVERY;
- }
-=20
- extern void scsi_unblock_requests(struct Scsi_Host *);
-@@ -942,6 +950,7 @@ static inline unsigned char scsi_host_get_guard(struc=
-t Scsi_Host *shost)
- 	return shost->prot_guard_type;
- }
-=20
--extern int scsi_host_set_state(struct Scsi_Host *, enum scsi_host_state)=
-;
-+int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state st=
-ate)
-+	__must_hold(shost->host_lock);
-=20
- #endif /* _SCSI_SCSI_HOST_H */
+-Tyrel
+
+> 
+> Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+> ---
+>  drivers/scsi/ibmvscsi/ibmvfc-core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> index dfa231b6cc47..93b9f699c2e5 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> @@ -6141,7 +6141,7 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
+>  
+>  		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
+>  			if (tgt->action == IBMVFC_TGT_ACTION_DEL_RPORT) {
+> -				tgt_dbg(tgt, "Deleteing NVMe rport\n");
+> +				tgt_dbg(tgt, "Deleting NVMe rport\n");
+>  				nvme_rport = tgt->nvme_remote_port;
+>  				list_del(&tgt->queue);
+>  				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DELETED_RPORT);
+
