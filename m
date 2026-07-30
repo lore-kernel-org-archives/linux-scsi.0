@@ -1,114 +1,194 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 051C54766A3
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:17:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 592A84766B8
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:18:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785453480; cv=none; b=lF+IjNcXWA7z5rmSwnb37IkNOJhVZn18AayPDgz7TVM4qYS43witNrmkXFVb4Yzc24LvJFtERAYpmktCWhQi8s9DevvoJxWYf398UYKCCyJjtaEoYWIpySXu8c19v7jmwJERyrBYyv9Vl2e1vAn/bcUE7j8QGGHGDnjYX2bfS1Y=
+	t=1785453492; cv=none; b=kYZDN3KlUqUfy/PoqVRLbZVgoEDLxb6oIEBVoxHjQZFy2cywJ3vSBVEmtmAUgG7uNFhmIVx0vGxX+/xgxBTtQtaWcblbj7G93MbhfGU832t/8xaNvtamszHCBSmsa4OGXtJhruWd5kVN7TDTxl1nzwf95ajp3YtXbGlSUEADRNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785453480; c=relaxed/simple;
-	bh=l/7z+FZ5kg45JVlM6JNWk4Oy+Bl675nXEMoWNjkysOs=;
+	s=arc-20240116; t=1785453492; c=relaxed/simple;
+	bh=1SrNqXwHXmpY+vIdjG6t5GLiTnk/LuExmOW0yPZOev4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=h9N0rOnkuE+cISqOInxddnQZp3GrUjnvby9bC/QgjI/rS7pnT0d3cRwnB0aSzBhM/AIRnwmxtJSahbl97EfYf+Vlr4R+XH98chPXiYjmxKaiVJq5yET862BIvFXkacAo8fJS2vHvgaNPLx9yaEzESdzjb+FhUHdzEYioAoS8Fy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZXoQMrJo; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=VJtdMCo8WHglTM+MTkEkiO3u82vUdNRVFWSkzwwQKb/eIA/XsoRgpJXgctROP5aBlExZzECamBHFH1Az0M57xlcuFA1K4v5k5s3ABu6cQviW4cQQ5eErupnlVYXtCz4zXnKCR5KRuhYaIQoAP+oTxLYJmxuXo0f4xiaB5JQ1GQw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M13bI/oS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZXoQMrJo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EF051F000E9;
-	Thu, 30 Jul 2026 23:17:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M13bI/oS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A9191F000E9;
+	Thu, 30 Jul 2026 23:18:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785453476;
-	bh=jZpiyS44DhyyLPDZvF1zHeiRMKFtfJsTbujNkFDmw6U=;
+	s=k20260515; t=1785453487;
+	bh=vs0tVYryvWjPq2v+F1G2yW7oR6+dSk2s4HJW9WHCLsI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZXoQMrJoK2TfX9hstEiW9NdHOqO0aqMWuz7Q7dHkIYVptrLdQ443S0phWxONOSxlT
-	 C8FDvuJ5Lopk623rt6KUoAjuLodhn70X0/m9Ft2/ant7bgCz4kFn/SVLJrVMbsE8zL
-	 13YZ2CiUHvtzQZI2VKM1Dq0ep+uaDr2rMsfvBd6xwlFQbttNwhcg9MQvoOkx5+qjkp
-	 ZKUdj8BjaHXpMy0ndoLzw8utR89nSvWsydQlQisysV6V1YOaBJeTEtN3dARJ7RMvXf
-	 TEY9brLLuwCJKa8ld+7v964qggUhbPMEkV6lkFKSQx0PzXfsxXOFLHrPLEsoLkn6jE
-	 w6DxI9FnLuuDQ==
+	b=M13bI/oSujx3mcCA66BbYCOAOJGS8ZGILXqduXKlDJwN5EtOyOUao2VsxWsMg3wue
+	 jd6NYt9xtHEy3jFbF31Za1fDDVbmIQhdb8p0erw7RipgG8WdP0h4GBLSX3MHaBfSc+
+	 61b4m5P7bwTmOjRaBElEY1zORHzvS3QLsgiCWUb1T5CK3wgZoUzJmgjhfPPsUa1iuX
+	 7eYeiFOCezwjF1nfGhXXQRrey3MIdpd9zEYLW9WW8QbH9vfC2ZhNy1Wo0dXu3SXO2F
+	 kctRFDQN5D7OrN0Q7XwqEXzxmiaE73ZJ0YOCFaMNPctu8EOjTRKRiVokrRd6aa1eJ6
+	 6LSzxDdRtPIVw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 46/57] scsi: qedi: Enable lock context analysis
+Subject: Re: [PATCH v3 42/57] scsi: mvsas: Enable lock context analysis
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <43ff011280be3c01537e6f696cbe721d6ff24a53.1785451174.git.bvanassche@acm.org>
+In-Reply-To: <5e65b2732191612e2dc82258c1b3c25831ec958f.1785451174.git.bvanassche@acm.org>
 References: <cover.1785451174.git.bvanassche@acm.org>
- <43ff011280be3c01537e6f696cbe721d6ff24a53.1785451174.git.bvanassche@acm.org>
+ <5e65b2732191612e2dc82258c1b3c25831ec958f.1785451174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:17:56 +0000
-Message-Id: <20260730231756.9EF051F000E9@smtp.kernel.org>
+Date: Thu, 30 Jul 2026 23:18:07 +0000
+Message-Id: <20260730231807.8A9191F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Deadlock vulnerability due to acquiring `session->back_lock` witho=
-ut disabling softirqs in CQE processing paths.
+- [Critical] Dropping the spinlock inside a `list_for_each_entry_safe` loop=
+ in `mvs_do_release_task` allows list modification, causing an infinite loo=
+p.
+- [Critical] Dropping the spinlock inside `mvs_int_rx` allows concurrent ex=
+ecution, causing double-completion of tasks and potential Use-After-Free.
+- [High] The function `mvs_port_notify_deformed` fails to acquire `mvi->loc=
+k` and was missed by the new locking annotations, causing a lock imbalance.
+- [High] Using a global PHY index instead of a local PHY index to write to =
+hardware registers in `mvs_port_notify_formed`.
 --
 
---- Patch [46]: [PATCH v3 46/57] scsi: qedi: Enable lock context analysis -=
---
-commit c592a3970ebc316b3aad74beecefeffd2a24b31b
+--- Patch [42]: [PATCH v3 42/57] scsi: mvsas: Enable lock context analysis =
+---
+commit c111f35a79c7e4e1741700306a7a9dfd2b59f919
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: qedi: Enable lock context analysis
+scsi: mvsas: Enable lock context analysis
 
-Annotate qedi_cleanup_all_io() with __no_context_analysis since it
-performs conditional locking.
+Document locking requirements with __must_hold(). Annotate functions
+that perform conditional locking with __no_context_analysis.
+
+> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+> index 359226e80eae8..f63e0dc1abd23 100644
+> --- a/drivers/scsi/mvsas/mv_sas.c
+> +++ b/drivers/scsi/mvsas/mv_sas.c
+> @@ -1055,6 +1055,7 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i=
+, int get_st)
+>  }
+> =20
+>  static void mvs_port_notify_formed(struct asd_sas_phy *sas_phy, int lock)
+> +	__context_unsafe(conditional locking)
+>  {
+>  	struct sas_ha_struct *sas_ha =3D sas_phy->ha;
+>  	struct mvs_info *mvi =3D NULL; int i =3D 0, hi;
+
+[Severity: High]
+This is a pre-existing issue, but does mvs_port_notify_formed() write to the
+wrong hardware offset when multiple HBAs are present?
+
+It uses the global index i instead of the local PHY index sas_phy->id:
+
+drivers/scsi/mvsas/mv_sas.c:mvs_port_notify_formed() {
+    ...
+    if (phy->att_dev_info & PORT_SSP_TRGT_MASK) {
+        MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_PHY_STAT);
+        MVS_CHIP_DISP->write_port_cfg_data(mvi, i, 0x04);
+    }
+    ...
+}
+
+When the global index is greater than or equal to mvi->chip->n_phy, could
+passing it to write_port_cfg_addr() cause out-of-bounds memory-mapped IO
+writes?
 
 [ ... ]
 
-> diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-> index 854efa4f61d87..e162061ca49c9 100644
-> --- a/drivers/scsi/qedi/qedi_fw.c
-> +++ b/drivers/scsi/qedi/qedi_fw.c
-> @@ -1134,6 +1134,7 @@ int qedi_send_iscsi_logout(struct qedi_conn *qedi_c=
-onn,
+> @@ -1644,6 +1647,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_=
+desc, u32 flags)
 > =20
->  int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_co=
-nn,
->  			struct iscsi_task *task, bool in_recovery)
-> +	__context_unsafe(conditional locking)
+>  void mvs_do_release_task(struct mvs_info *mvi,
+>  		int phy_no, struct domain_device *dev)
+> +	__must_hold(&mvi->lock)
 >  {
->  	int rval;
->  	struct iscsi_task *ctask;
+>  	u32 slot_idx;
+>  	struct mvs_phy *phy;
+
+[Severity: Critical]
+This is a pre-existing issue, but is it safe to use list_for_each_entry_saf=
+e()
+here if the lock is dropped inside mvs_slot_complete()?
+
+mvs_do_release_task() loops over the port list:
+
+drivers/scsi/mvsas/mv_sas.c:mvs_do_release_task() {
+    ...
+    list_for_each_entry_safe(slot, slot2, &port->list, entry) {
+        ...
+        mvs_slot_complete(mvi, slot_idx, 1);
+    }
+    ...
+}
+
+When mvs_slot_complete() temporarily releases mvi->lock, a concurrent
+interrupt could complete the cached next element (slot2) and remove it from
+the list.=20
+
+Would this leave slot2->entry.next pointing to itself, causing
+mvs_do_release_task() to spin forever in an infinite loop when it resumes?
 
 [Severity: High]
-This is a pre-existing issue, but could the locking elsewhere in this file
-lead to a deadlock?
+Also a pre-existing issue, but with the new __must_hold annotation here, wh=
+at
+happens when this is called from mvs_port_notify_deformed()?
 
-Looking at qedi_process_tmf_resp() (and similar response handlers like
-qedi_process_text_resp(), qedi_process_logout_resp(), and
-qedi_process_login_resp()), they acquire session->back_lock without
-disabling softirqs:
+mvs_port_notify_deformed() ignores its lock parameter and directly calls
+mvs_do_release_task() without holding mvi->lock:
 
-qedi_process_tmf_resp()
-    spin_lock(&session->back_lock);
+drivers/scsi/mvsas/mv_sas.c:mvs_port_notify_deformed() {
+    ...
+    list_for_each_entry(dev, &port->dev_list, dev_list_node)
+        mvs_do_release_task(phy->mvi, phy_no, dev);
+    ...
+}
 
-These handlers execute asynchronously in a kernel thread
-(qedi_percpu_io_thread) with softirqs enabled.
+Will this cause a lock imbalance when the downstream mvs_slot_complete()
+call unconditionally executes spin_unlock(&mvi->lock)?
 
-If a timer interrupt fires on the same CPU while this lock is held, the
-libiscsi transport timer (iscsi_check_transport_timeouts) could preempt
-the thread in TIMER_SOFTIRQ context.
+[ ... ]
 
-If that timer logic attempts to send a ping (iscsi_send_nopout()) and
-fails due to an allocation failure or full queue, its cleanup path calls
-iscsi_put_task().
+> @@ -1862,6 +1868,7 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no,=
+ u32 events)
+>  }
+> =20
+>  int mvs_int_rx(struct mvs_info *mvi, bool self_clear)
+> +	__must_hold(&mvi->lock)
+>  {
+>  	u32 rx_prod_idx, rx_desc;
+>  	bool attn =3D false;
 
-iscsi_put_task() unconditionally attempts to acquire the lock using
-spin_lock_bh(&session->back_lock).
+[Severity: Critical]
+This is a pre-existing issue, but does dropping the lock inside mvs_int_rx()
+expose mvi->rx_cons to concurrent modification?
 
-Would this cause a softirq-preemption deadlock where the timer spins forever
-waiting for the preempted thread to release session->back_lock? Should these
-CQE processing paths use spin_lock_bh() instead?
+mvs_int_rx() loops while evaluating the shared mvi->rx_cons:
+
+drivers/scsi/mvsas/mv_sas.c:mvs_int_rx() {
+    ...
+    while (mvi->rx_cons !=3D rx_prod_idx) {
+        ...
+        if (likely(rx_desc & RXQ_DONE))
+            mvs_slot_complete(mvi, rx_desc, 0);
+        ...
+    }
+    ...
+}
+
+Inside the loop, mvs_slot_complete() drops mvi->lock. If a concurrent
+interrupt on another CPU acquires the lock, processes the ring, and frees
+the tasks, could the first CPU wake up, read old descriptors based on the
+updated mvi->rx_cons, and erroneously complete new reused tasks?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D46
+t.bvanassche@acm.org?part=3D42
