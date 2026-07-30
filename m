@@ -1,119 +1,179 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 323743B6BF7;
-	Thu, 30 Jul 2026 08:25:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65B443812C2
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 08:40:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785399942; cv=none; b=JsvEXPtlhzU9iDXC93I3igbyeymjuWRw4aatKrF3+KSCaOFsxprKRlJH4+hpGzNtS/sDLpGC8IzzrIN9ALXOeolJr7D1RcQ9bMbjcPX02n6KLtBritUwnrJGTohGo00G/TAPhTkQ9d97gnc1RkFnvK80gGDzPuZyS2bYsU4MUpg=
+	t=1785400809; cv=none; b=EnIZO0k76Cd7XDE5zSI+DmEbNO7FAUU1k4Q9O8aR38X9nWsrVZqy9Q+cBuaqbdRtKZSeLgu2aFkUxMBPE6SrhrRiXoxRYEARRS/c7cmZvUK9MdOjQZ1rspaxN1B+nGROGXNsxWjgHhOvbXIZTUHME6XDF5SamMnG+JnccrFXtLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785399942; c=relaxed/simple;
-	bh=FE71ITZwYkcaT+9iaqVL+Bbcra0EkDJuhwAQyzdxypg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=UMBBDBsH71MeLWIw+FRk2j3Tv/YHnaL3He5kopibspERKaQTw+qTiBnFeHh9975qIri4Bj7DaNYaktm/bBQz6ipINFHV/AN0BLr4Np5NhK1KuA534kunt8QWEy9AYr8G//X5/VOLoteCnLPy+rcllpz8GeOqS2rJEzbZhwVCrQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=U2Nf/qKG; arc=none smtp.client-ip=220.197.31.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1785400809; c=relaxed/simple;
+	bh=EOb3MXzuVe1ekLX0TPfCFbCC0o83uvQKb6O+ejisBuQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=GIQuE4Tk75LEKoNNJvLlb7Aa+3H7zgCzJdv2SfWuwmiQVsSQAq1E11j+YBWN8Qiwa/fE8+VJUrio3x8ovYNTdqITzT8H3OmlpJccrEuQ9OUo5diIFoVuEpD49iL+rwPjE9pwLtl/HA4PMGDBh2oqrNadSmUS0yVpxaSxe5od0vU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fePRiapS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="U2Nf/qKG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=jT
-	2sfFZkTOJ7LIV04JP2J2S+oQxl4QILYuaiiHThMZA=; b=U2Nf/qKGCuOx923pcD
-	g6pFMyZuFBP/wOVFzzsHJs/VuGWlLorVW6E3mibDXDShsMHRp3kAA7imi17b+r/p
-	1qRqP4Tpfrl4P8YLmZ7OEMvj+J/ezZgCJt2vYkksWCku+jUwiZS24aZ0n2+ZpeA4
-	eQls0dAIBb684GwcUWuM1UyX4=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wA33thjCmtq6UMzMw--.44879S2;
-	Thu, 30 Jul 2026 16:25:09 +0800 (CST)
-From: kensanya@163.com
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	TanZheng <tanzheng@kylinos.cn>,
-	sashiko-bot <sashiko-bot@kernel.org>
-Subject: [PATCH] scsi: target: Fix NULL deref when clearing alua_lu_gp twice
-Date: Thu, 30 Jul 2026 16:24:58 +0800
-Message-Id: <20260730082458.663015-1-kensanya@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fePRiapS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2B081F000E9;
+	Thu, 30 Jul 2026 08:40:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785400805;
+	bh=iknwwgFvxRtdqCt06okT5+63sSGE7kbzTg/xr7ivaW4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=fePRiapSmsiY9DmmIoYk5TzOe8LpOj3GSS5Rwuy9Nzx9KmPM/pYAURWtjtgnWeyoA
+	 hIDWlsA/it1ol+NI93fl1B2Ku1NblQaYz/w+jhsD/lSR87qGPfFOmHJJ94FS66khbF
+	 WUCYgVypSXQK9nmY786hst7Rtk4xgwi7vVpR7XP5uTnYyoXAKVoCn3Wj11otI55/7B
+	 wTtXO63yLGVlEEfoqcyLFF54w1oVNfLLpb375EO+PNOPpDt6ISjpI1e/vXKzLwFGUm
+	 vH3ApH84vXjG/xLs5RiC7YjyK5a5NOUwrrLlnvbp5s3RZLRmVOIzmW5qgHU7+qLt5H
+	 tbMWPoTNtlxww==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: target: Fix NULL deref when clearing alua_lu_gp
+ twice
+Reply-To: sashiko-reviews@lists.linux.dev
+To: kensanya@163.com
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260730082458.663015-1-kensanya@163.com>
+References: <20260730082458.663015-1-kensanya@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 30 Jul 2026 08:40:05 +0000
+Message-Id: <20260730084005.A2B081F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wA33thjCmtq6UMzMw--.44879S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxArW3uryDWw48Zr4kGr4UArb_yoW5uF1kpr
-	42yr1kCF4vqFWUta1UWay2grnrtws7CF1UJF97Gw1rua15J34Yyr98u3y2qr1DJFs8Xry7
-	Gr4qv3WkKrnFvaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jOPEfUUUUU=
-X-CM-SenderInfo: 5nhq2txq1dqiywtou0bp/xtbCwgYR7GprCmZCdQAA3j
 
-From: TanZheng <tanzheng@kylinos.cn>
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-Writing "NULL" to the alua_lu_gp configuration file attribute will
-clear the LU group association of the device. This early return
-path is only executed when lu_gp has been set. If the device has
-been unassociated (for example, after the second write of "NULL"),
-the storage operation will jump to  __core_alua_attach_lu_gp_mem(),
-at which point lu_gp_new is NULL and a kernel crash occurs when
-obtaining spin_lock(&lu_gp->lu_gp_lock).
+Pre-existing issues:
+- [High] An off-by-one error in the input length validation allows a stack =
+buffer overread and out-of-bounds write if `count` is exactly equal to the =
+buffer size.
+- [High] Dropping a spinlock inside a `list_for_each_entry_safe` loop in AL=
+UA release functions exposes the loop to list poisoning and Use-After-Free =
+crashes.
+- [High] TOCTOU race in ALUA group ID assignment corrupts lists, and the er=
+ror path frees an active configfs item, causing a double-free.
+--
 
-Crash information is as follows:
-[  850.069209][ T2984] BUG: kernel NULL pointer dereference, address: 0000000000000010
-[  850.070015][ T2984] #PF: supervisor write access in kernel mode
-[  850.070654][ T2984] #PF: error_code(0x0002) - not-present page
-[  850.071284][ T2984] PGD 14d4c2067 P4D 0
-[  850.071715][ T2984] Oops: Oops: 0002 [#1] SMP KASAN NOPTI
+--- Patch [1]: [PATCH] scsi: target: Fix NULL deref when clearing alua_lu_g=
+p twice ---
+commit 1601e8bb13acc929ed9af1ae24358c7f9e46e6aa
+Author: TanZheng <tanzheng@kylinos.cn>
+
+scsi: target: Fix NULL deref when clearing alua_lu_gp twice
+
+This patch fixes a kernel panic caused by a NULL pointer dereference
+when a device's ALUA LU group association is cleared multiple times. It
+adds an early return to prevent passing a NULL lu_gp_new to
+__core_alua_attach_lu_gp_mem.
+
+Link: https://sashiko.dev/#/patchset/20260730031917.72750-1-kensanya@163.co=
+m?part=3D1
+
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/targe=
+t_core_configfs.c
+> index 860e840461778..a9c3ab54022e1 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -2058,6 +2058,12 @@ static ssize_t target_core_store_alua_lu_gp(
+>  		__core_alua_drop_lu_gp_mem(lu_gp_mem, lu_gp);
+>  		move =3D 1;
+>  	}
+> +
+> +	if (!lu_gp_new) {
+> +		spin_unlock(&lu_gp_mem->lu_gp_mem_lock);
+> +		return count;
+> +	}
+> +
+>  	/*
+>  	 * Associate lu_gp_mem with lu_gp_new.
+>  	 */
+
+While reviewing this change, I noticed a few pre-existing issues in this
+function and related ALUA code:
+
+drivers/target/target_core_configfs.c:target_core_store_alua_lu_gp() {
 ...
-[  850.077945][ T2984] RSP: 0018:ff1100010a0877f8 EFLAGS: 00010297
-[  850.078578][ T2984] RAX: 0000000000000000 RBX: 0000000000000010 RCX: ffffffff86b17884
-[  850.079402][ T2984] RDX: 0000000000000001 RSI: 0000000000000004 RDI: ff1100010a087818
-[  850.080237][ T2984] RBP: 1fe2200021410eff R08: 0000000000000001 R09: ffe21c0021410f03
-[  850.081065][ T2984] R10: 0000000000000003 R11: 6e696c6261736944 R12: ff11000113c16788
-[  850.081897][ T2984] R13: ff11000113c16780 R14: 0000000000000010 R15: 0000000000000000
-[  850.082721][ T2984] FS:  00007fc9a84d6740(0000) GS:ff11000388fe1000(0000) knlGS:0000000000000000
-[  850.083649][ T2984] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  850.084342][ T2984] CR2: 0000000000000010 CR3: 0000000154a24004 CR4: 0000000000773ef0
-[  850.085172][ T2984] PKRU: 55555554
-[  850.085546][ T2984] Call Trace:
-[  850.085897][ T2984]  <TASK>
-[  850.086208][ T2984]  ? __pfx__raw_spin_lock+0x10/0x10
-[  850.086755][ T2984]  ? configfs_write_iter+0x362/0x550
-[  850.087309][ T2984]  ? _raw_spin_lock+0x84/0xe0
-[  850.087807][ T2984]  ? __pfx__raw_spin_lock+0x10/0x10
-[  850.088345][ T2984]  __core_alua_attach_lu_gp_mem+0x29/0x1f0 [target_core_mod]
-[  850.089162][ T2984]  target_dev_alua_lu_gp_store+0x1a8/0x520 [target_core_mod]
-[  850.089975][ T2984]  ? __pfx_target_dev_alua_lu_gp_store+0x10/0x10 [target_core_mod]
+    if (count > LU_GROUP_NAME_BUF) {
+        pr_err("ALUA LU Group Alias too large!\n");
+        return -EINVAL;
+    }
+    memset(buf, 0, LU_GROUP_NAME_BUF);
+    memcpy(buf, page, count);
 ...
 
-When both the current group and the requested group are NULL,
-an early return occurs.
+[Severity: High]
+This is a pre-existing issue, but does this off-by-one check allow a
+stack buffer overflow?
 
-Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
-Reported-by: sashiko-bot <sashiko-bot@kernel.org>
-Link: https://sashiko.dev/#/patchset/20260730031917.72750-1-kensanya@163.com?part=1
-Signed-off-by: TanZheng <tanzheng@kylinos.cn>
----
- drivers/target/target_core_configfs.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+If count is exactly LU_GROUP_NAME_BUF, memcpy will fill the entire
+buffer, leaving no space for a null terminator. Later calls to
+strstrip(buf) or strim(buf) would run off the end of the stack buffer.
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 0e50987e6dbe..292730f98db4 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -2572,6 +2572,12 @@ static ssize_t target_dev_alua_lu_gp_store(struct config_item *item,
- 		__core_alua_drop_lu_gp_mem(lu_gp_mem, lu_gp);
- 		move = 1;
- 	}
-+
-+	if (!lu_gp_new) {
-+		spin_unlock(&lu_gp_mem->lu_gp_mem_lock);
-+		return count;
-+	}
-+
- 	/*
- 	 * Associate lu_gp_mem with lu_gp_new.
- 	 */
--- 
-2.25.1
+Could this happen when an administrator writes exactly 256 bytes without
+a null terminator? The same pattern appears in
+drivers/target/target_core_alua.c:core_alua_store_tg_pt_gp_info() where
+TG_PT_GROUP_NAME_BUF is used.
 
+[ ... ]
+
+drivers/target/target_core_alua.c:core_alua_free_lu_gp() {
+...
+    spin_lock(&lu_gp->lu_gp_lock);
+    list_for_each_entry_safe(lu_gp_mem, lu_gp_mem_tmp,
+                &lu_gp->lu_gp_mem_list, lu_gp_mem_list) {
+...
+        spin_unlock(&lu_gp->lu_gp_lock);
+...
+
+[Severity: High]
+This is a pre-existing issue, but does dropping the spinlock inside
+list_for_each_entry_safe expose the loop to list poisoning and a
+use-after-free?
+
+Since the _safe variant only protects against the deletion of the
+current element, dropping the lock could allow a concurrent thread
+handling device teardown to remove and free the next element. When the
+lock is reacquired and the loop continues, wouldn't it dereference the
+freed next pointer?
+
+The exact same pattern seems to exist in core_alua_free_tg_pt_gp() for
+LUN list iteration.
+
+[ ... ]
+
+drivers/target/target_core_alua.c:core_alua_set_lu_gp_id() {
+...
+    if (lu_gp->lu_gp_valid_id) {
+        return -EINVAL;
+    }
+
+    spin_lock(&lu_gps_lock);
+    if (alua_lu_gps_count =3D=3D 0x0000ffff) {
+        spin_unlock(&lu_gps_lock);
+        kmem_cache_free(t10_alua_lu_gp_cache, lu_gp);
+        return -ENOSPC;
+    }
+...
+
+[Severity: High]
+This is a pre-existing issue, but does this create a race condition that
+corrupts the list, along with an illegal free?
+
+The lu_gp_valid_id check happens outside the spinlock. Could concurrent
+sysfs writes both pass this check, serialize on the lock, and then call
+list_add_tail on the same node, corrupting the list?
+
+Additionally, if the global count limit is reached, kmem_cache_free is
+called directly on lu_gp. Since lu_gp embeds a configfs item that configfs
+still references, does this bypass configfs lifecycle rules and result in
+a double-free when the directory is removed?
+
+The same pattern exists in core_alua_set_tg_pt_gp_id().
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730082458.6630=
+15-1-kensanya@163.com?part=3D1
