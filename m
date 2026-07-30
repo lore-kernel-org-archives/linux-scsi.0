@@ -1,102 +1,182 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E802468C2C
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jul 2026 23:27:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 559383A9DB9;
+	Thu, 30 Jul 2026 23:28:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785454078; cv=none; b=D7Rx1L2VCy5s1EvMWpOQfH4xkWR9WY/QsSz4UZHVff1kP6Cq1IBvz6zwJM9rPMlQ229iUnvXofZfb1E/dVwLA4jlRBXEBK9cg444Sry//IlUbbUnbHtSBEulFjXoZ5H3lOzwEzmhelRLvl0T4UNjZnExuhgHdjIWGfz0ZTQSazc=
+	t=1785454084; cv=none; b=Ju2VS6tPmq4jZO//m+nlVlGGm7CBohLbiGr/AbtOsd4ubjYz9U4a9SYikVChC/UgaBkXGWJhPxRnnWgoRpF1+Ao/vjieiBr1zzfMOE5UFjCx0fMKjtb2E4VYT6ZooWmM7adIJOgny+k6H4gwYFL48/UMGeZu6GpNYaCpgxfrwXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785454078; c=relaxed/simple;
-	bh=lo9fQF+d/sxNHHqvjy9GPMF1hvKefe4oYZEat4gcthM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=L/2gUef1wOaZSZNVqevvqQgOb0+4oOlY/7ajsZoDsnvBb8y2+31oDdUCFWUR/MH5r+YV0wXHflJdQE9NI1R4nhk/XLRNFH/u4C/qqHXJufLI2e5bZ9YJexq4aaRy6Rp6m699tU8piJhJo74ISKJnItnjuTiy/Zc0yrHv0Lvkd18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hWgfBtEW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785454084; c=relaxed/simple;
+	bh=9I3PK4mCan59rOFkoJnY/JtwETqGaZNzExqWJqjlbmQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QNMZJPEtaQvuNLd84ui2Vyi9sirD8j4eWz4OlZ+rz/bOk3jt66S0JxIfNzq7gxiFFX/tPstBldDzlnu5p/HexW7l5ugk5naSANv+aDr41/6sAafYT7F+aCg9XZbV+3oiBS6h8ykOT9+q0iMuzIAMNJcbehE2TLzRYv0pUuAHE+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=cD2t23rG; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hWgfBtEW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C35DD1F000E9;
-	Thu, 30 Jul 2026 23:27:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785454075;
-	bh=DIFEuJc5/3NyHDGHqnzT4pCkGN3E1yVaypH6HZoo2SQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hWgfBtEWbYO44ZHCw2CTd+8h129jzX9xRORTrK8475MEh4Ub5xos5QULmk+Uy5TuN
-	 tMfXP3qIA0vsxFzKpa6gIAmHinG8cvDvELrnBggNNwbb1W1Rb7K/b1izKuJYB44kTU
-	 CX8lXf6elRnGcsQMJlBO434A5gT52D7Jd6YI4yWin/HNJncxUbmje5fiRbHId1mpAs
-	 ilUuz7kzxKx9dYZsbBzhF9FI0uhoBcntNC7lYvVd8GdoF6c+mjflheSoRfJ1kZnsAe
-	 w/4kvHj97BURWSVaciSzPnxRPQaEozQHRX80CzPWPoP4OcAvrCmsSedOs9ZIXtYxUA
-	 gbU4yKVVs/aMQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 54/57] scsi: sym53c8xx_2: Enable lock context
- analysis
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bart Van Assche" <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <8edf4f7f4d8de5bacbcb89ebfd2fdea74a60f7f8.1785451174.git.bvanassche@acm.org>
-References: <cover.1785451174.git.bvanassche@acm.org>
- <8edf4f7f4d8de5bacbcb89ebfd2fdea74a60f7f8.1785451174.git.bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 30 Jul 2026 23:27:55 +0000
-Message-Id: <20260730232755.C35DD1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="cD2t23rG"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66UNHe6q117992;
+	Thu, 30 Jul 2026 23:27:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=OfkKlM
+	MM8oJLbZihosEtrpQ1IaN+jIeRBx39f/HKrss=; b=cD2t23rGukGSpV/AbTPRkB
+	2t8mllJcszxjYdvOs6litUDLbB5YFvDl7tM+BwxA1PPFh/d2uMeQKS8tJ+wiVV7j
+	gwQ6IsSq80YnyNmTfx0QKUJwqaiJXQ+H/YBmB6lyPIWyv7dYZU1vYkg1309gW+RA
+	jo/DZ5nbZqC9mm7avljeaxr3shUs7Uf8DEWLKFXuEAyTQPbaHhtzw3rvGIMNC5K7
+	EC16rPoYrobuirk9ocuEu4pWr+Ner03r5s7UfEqorAJcBKr1XTbBSXP6qRVxulbD
+	w2dz9O28rz9vMqerAq3THoap9zwZMNBrrkqtzvoaqFxEoh27cwkebbZDziE/vtTA
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4fmv0p1d7v-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 Jul 2026 23:27:49 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 66UNQWGp028175;
+	Thu, 30 Jul 2026 23:27:48 GMT
+Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4fn7uwdqx3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 Jul 2026 23:27:48 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
+	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 66UNRlMa10093210
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 30 Jul 2026 23:27:47 GMT
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4CEE358056;
+	Thu, 30 Jul 2026 23:27:47 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 900A658052;
+	Thu, 30 Jul 2026 23:27:46 +0000 (GMT)
+Received: from [9.61.73.28] (unknown [9.61.73.28])
+	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 30 Jul 2026 23:27:46 +0000 (GMT)
+Message-ID: <6ccbe8c5-beb6-483f-bfa4-c2d3819ad5f2@linux.ibm.com>
+Date: Thu, 30 Jul 2026 16:27:46 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 25/33] ibmvfc: process NVMe/FC rports in work thread
+To: Bart Van Assche <bvanassche@acm.org>,
+        Nathan Chancellor <nathan@kernel.org>
+Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org, brking@linux.ibm.com,
+        davemarq@linux.ibm.com
+References: <20260723000149.969416-1-tyreld@linux.ibm.com>
+ <20260723000149.969416-26-tyreld@linux.ibm.com>
+ <20260730065226.GA1879117@ax162>
+ <86ee4f27-7303-43c4-b772-b735b85c0229@acm.org>
+Content-Language: en-US
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+In-Reply-To: <86ee4f27-7303-43c4-b772-b735b85c0229@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMwMDE2NiBTYWx0ZWRfX7XYndK/1j2v5
+ 9KoYoyh1m/cbTFSdVR/aQ5U0qDDpQ4avuGfbQ3IC9Xn2XyCX2qWxlN92fq7WIhiC7iI0Od+dnNV
+ GY1Dyxbhlrlqp02hw9+pMsgnAXKss6Y=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMwMDE2NiBTYWx0ZWRfX3qQPWQJIDfbp
+ sjxjGu7EHTPuBQ0raHoPKFZB4FkdjNiwmdZ557dP+EYN51qdNNyDyE4ziZcSSlKF9QZ2exI67jQ
+ iYY+ckmm4wEFR4o2b5LW7WvPnu544QwKHAQC5B8DzKH6mkdtzgGze52aZhqnS3WUpgQV0FgHXLf
+ xH4TMozMFJwZ7Ity/oB7jiITDJ+pha0fHS6YUjjPNlRXvzA62ckrvuE2KkO1ns13SxCGIPiGfOn
+ +mQpQbtQwnpiYBcOyzqaWk0CINsEpqenSlWZDszGWkaKvjGNm/+XcMWhFVVXbjtxXR+U+BMIdzm
+ SMTN/LdJwCRRkAf3jEXrML5uVqcbulNuHZoYystHZ0dRogwPw1XbF9w6OrLpFjubS6+FYYCgbsj
+ dYaegR93gD9jFMrDAOtsiXuLzxQK9OmQDq0kTwGmcPsSCutmX+QXSOTqLC/5L18BdHpk9Qj8Pxc
+ GQHut7/1vcPHPCNox3Q==
+X-Authority-Analysis: v=2.4 cv=b5WCJNGx c=1 sm=1 tr=0 ts=6a6bddf5 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8
+ a=reDaP5zPGsiZX54FuSEA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: iOzL0pz9vNx_bh2wxmciA65gtgzUf8it
+X-Proofpoint-ORIG-GUID: iOzL0pz9vNx_bh2wxmciA65gtgzUf8it
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-30_07,2026-07-30_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 spamscore=0 adultscore=0 malwarescore=0 impostorscore=0
+ bulkscore=0 phishscore=0 suspectscore=0 clxscore=1011 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607300166
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Unconditional NULL pointer dereference (Undefined Behavior) in bnx=
-2fc_process_cq_compl due to __assume_ctx_lock on uninitialized cb_arg point=
-er.
---
+On 7/30/26 2:28 PM, Bart Van Assche wrote:
+> On 7/29/26 11:52 PM, Nathan Chancellor wrote:
+>> Hi Tyrel,
+>>
+>> On Wed, Jul 22, 2026 at 05:01:41PM -0700, Tyrel Datwyler wrote:
+>>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/
+>>> ibmvfc-core.c
+>>> index 81d9229bf388..ffb579816e84 100644
+>>> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>>> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>>> @@ -6073,6 +6119,30 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
+>>>               }
+>>>           }
+>>>   +        list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
+>>> +            if (tgt->action == IBMVFC_TGT_ACTION_DEL_RPORT) {
+>>> +                tgt_dbg(tgt, "Deleteing NVMe rport\n");
+>>> +                nvme_rport = tgt->nvme_remote_port;
+>>> +                list_del(&tgt->queue);
+>>> +                ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DELETED_RPORT);
+>>> +                spin_unlock_irqrestore(vhost->host->host_lock, flags);
+>>> +                if (nvme_rport)
+>>> +                    ibmvfc_nvme_unregister_remoteport(tgt);
+>>> +                timer_delete_sync(&tgt->timer);
+>>> +                kref_put(&tgt->kref, ibmvfc_release_tgt);
+>>> +                return;
+>>> +            } else if (rport && tgt->action ==
+>>> IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
+>>> +                tgt_dbg(tgt, "Deleting NVMe rport with outstanding I/O\n");
+>>> +                nvme_rport = tgt->nvme_remote_port;
+>>> +                ibmvfc_set_tgt_action(tgt,
+>>> IBMVFC_TGT_ACTION_LOGOUT_DELETED_RPORT);
+>>> +                tgt->init_retries = 0;
+>>> +                spin_unlock_irqrestore(vhost->host->host_lock, flags);
+>>> +                if (nvme_rport)
+>>> +                    ibmvfc_nvme_unregister_remoteport(tgt);
+>>> +                return;
+>>> +            }
+>>> +        }
+>>> +
+>>>           if (vhost->state == IBMVFC_INITIALIZING) {
+>>>               if (vhost->action == IBMVFC_HOST_ACTION_TGT_DEL_FAILED) {
+>>>                   if (vhost->reinit) {
+>>
+>> There is a warning from clang after this change landed in -next as
+>> commit 696d1cc2aaa2 ("scsi: ibmvfc: process NVMe/FC rports in work
+>> thread"), breaking the build when -Werror is enabled:
+>>
+>>    drivers/scsi/ibmvscsi/ibmvfc-core.c:6154:15: error: variable 'rport' is
+>> uninitialized when used here [-Werror,-Wuninitialized]
+>>     6154 |                         } else if (rport && tgt->action ==
+>> IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
+>>          |                                    ^~~~~
+>>
+>> Sashiko appears to point this out as well:
+>>
+>>    https://lore.kernel.org/20260723005006.C7EE21F00A3A@smtp.kernel.org/
+>>
+>> But I am not sure that its suggestion to use nvme_rport is correct given
+>> the context of this code, hence just the report from my end.
+> 
+> I think that advice is wrong because nvme_rport has not yet been set if
+> the "else" statement is reached. How about the change below?
+> 
+> Thanks,
+> 
+> Bart.
+> 
+First off rport is an fc_port in this context not an nvme_rport (whoops), and
+second we don't need to check for its existence at all here as we will get it
+from the tgt in the else body and check it there. That check got copied out of
+the add target code where we check if a target we are adding has suddenly moved
+to being deleted.
 
---- Patch [54]: [PATCH v3 54/57] scsi: sym53c8xx_2: Enable lock context ana=
-lysis ---
-commit 914539bc4256a83053d649d7450d8f075fb16ba8
-Author: Bart Van Assche <bvanassche@acm.org>
-
-scsi: bnx2fc: Enable lock context analysis
-
-This commit adds lock context analysis to the bnx2fc driver. It documents
-locking requirements using __must_hold() and informs the compiler about
-aliases for synchronization objects with __assume_ctx_lock().
-
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2f=
-c_hwi.c
-> index a5ecb87d5b2d7..a3670c48900ba 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> @@ -880,6 +880,9 @@ void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt=
-, u16 wqe,
->  		return;
->  	}
-> =20
-> +	/* Tell the compiler that there is an alias for tgt->tgt_lock. */
-> +	__assume_ctx_lock(&io_req->cb_arg->aborted_io_req->tgt->tgt_lock);
-
-[Severity: High]
-Does this code trigger a NULL pointer dereference for standard SCSI
-completions?
-
-Looking at bnx2fc_process_cq_compl(), io_req->cb_arg is only allocated for =
-ELS
-or sequence cleanup commands. For standard FCoE SCSI completions
-(BNX2FC_SCSI_CMD), io_req->cb_arg is NULL.
-
-Since __assume_ctx_lock evaluates its argument to a pointer, evaluating this
-nested pointer chain requires fetching the aborted_io_req pointer from the
-memory addressed by cb_arg. Because cb_arg is NULL, this forces an invalid
-memory read.
-
-Can this be unconditionally reached on every SCSI completion, causing a hard
-crash or triggering UndefinedBehaviorSanitizer warnings during normal I/O?
-
-> +
->  	/* Timestamp IO completion time */
->  	cmd_type =3D io_req->cmd_type;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785451174.gi=
-t.bvanassche@acm.org?part=3D54
+-Tyrel
