@@ -1,110 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C29C377AA7;
-	Fri, 31 Jul 2026 20:12:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A43D237DAD5;
+	Fri, 31 Jul 2026 20:12:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785528731; cv=none; b=OpZbuSfaFPXipErN26z2rinnSE2pKKV/zlW+2x0JrLf4Q7qmlEvrDoodbvRu3KhdXaX29nFA5TGrB6GCqafcfjrzW88YvRSqT9VVKupcEpfwXL8fI7mVm2PSzWDlO9Xq8+w9gV9rQNz+L/Dscdy7L5xzjNk5yO6Kn6XS0paOmQc=
+	t=1785528731; cv=none; b=WJhvBp4iwKRA+aBng2OsLPz2p3pXPLHWcLyK3WnhYk2D16lAsO8gC976VuaLLMcqNkFMQAOtKUn8iTF7B827oMfOarJD03AhdR17IJGTYGmYE3thyD1sgHDuOk7uyv6iU2A7sU3/po92yBwvi+Xq7hXg3u0m0QyUwwvW17uHKmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785528731; c=relaxed/simple;
-	bh=Vo5k4SZJPu0c5kG1Rz06ghvzCkV+zWupokB5JZhLLcw=;
+	bh=YjZT6YoSR6OQoqIAM5GNSEGQmHFxSo0tYoQohnu1WKE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Npad7xLfwMhd5sUag/+0W9vE2qFgWuONYKzAz+kjEN3AgOq6cki/IRsVhXLf4jinbaqBU3EDUA0D4raG0EaQGq1DmccKujRC2UI29ULqQOA9lICUPT4z3/pHzerM1eWnwIu7dbivcB36mLnl6+ry+kEDFwaKDk4yDhDQPERt5Nw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lkjq4uTd; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=pJil1Awzq85qlrmcC+EvvL4yy28B/YZFgMhuV3yvOspjBzh9gdsZbLPzg6F/TaIf4Oh/DUb3yZcGE/IMTMxsnxDhlCCZ5EqJZ4pAiVfLmKpv9A54zIkvv3F9UmSR8WJT8XM4Tn3xRh+3b0d/EAyGKYsPl4gAxfB1dnz5+8EMOx4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k5byKkIk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lkjq4uTd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AF121F00ACA;
-	Fri, 31 Jul 2026 20:12:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k5byKkIk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3653C1F00AC4;
+	Fri, 31 Jul 2026 20:12:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785528729;
-	bh=Vo5k4SZJPu0c5kG1Rz06ghvzCkV+zWupokB5JZhLLcw=;
+	s=k20260515; t=1785528730;
+	bh=gOsd1WK/jYVoH+aRTsIWYKLjrnNYrDBxquT/JXt33EI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Lkjq4uTditw7rnxEAFgzjIexEjqQFpGUi5SzfJmHPRXemF7nAkR1QB1PrU/9Qv8OW
-	 FifChjXFdjgAGOI/V5iDpRpjZL48s/bY+ogKEG6IjHy1E6cvFHPB8fGZHgrYzQa/Pk
-	 ndU0OnKlt83hlfw9k/+n3zcXbO5HrheeGZpPVUGs+nCug8gYjrMvSy0dlMAlLjqhRQ
-	 wjfxFe83hN6sbLII6YGW/4cYxrIpP0eQjOvT+QRb0C0ekODwh/Wdbd8q+hwoFIGYm1
-	 5CpBz4fNV23PKoMtMKa5DnoN+GXAQBpv85mwqYSHMhpYs64yi837yJ4jvhCRAZO6M6
-	 I3oRyn8WT4gzA==
+	b=k5byKkIkYSnlauNrsElbL5UMPvlC9RLaYPySz4V6ctzTLqGM4FiDz2ybltzK6TGT9
+	 KQP46jTlfzR0SrTOypB1/UmBl6dzGSxGQ9e7IvntRzp1XRfdMRTOwa5kcG6AO43PCB
+	 S0zr2pr35+NIOm4VL3KAJ6tMbKvQElDZou6PuLS9bqY01cNikbAD7eURHmR2UXXmGM
+	 4cGmHwHsJ+HDv8idK3+cyAswdaLH8MHrckLsg70j5Hc0dQZu2mSoBspfPtR8WTaJIU
+	 BdL/3HgJPr4IacSI7q5HJav6jWvrxCftoLKIXmJq1adA3KLJZsswtIwxZvnI6rG+tF
+	 qwv6ImQ7cU5AQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [RESEND PATCH 1/6] Drivers: hv: Remove support for
- WS2012/2012R2 & Win8/8.1 version of Hyper-V
+Subject: Re: [RESEND PATCH net-next 3/6] hv_netvsc: Remove GPADL teardown
+ special case for old Hyper-V hosts
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Michael Kelley" <mhkelley58@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260730201123.1767-2-mhklinux@outlook.com>
+Cc: linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260730201123.1767-4-mhklinux@outlook.com>
 References: <20260730201123.1767-1-mhklinux@outlook.com>
- <20260730201123.1767-2-mhklinux@outlook.com>
+ <20260730201123.1767-4-mhklinux@outlook.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Fri, 31 Jul 2026 20:12:09 +0000
-Message-Id: <20260731201209.6AF121F00ACA@smtp.kernel.org>
+Message-Id: <20260731201210.3653C1F00AC4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] Removing the VMBus protocol version check in `vmbus_initiate_unl=
-oad` exposes a 100-second delay during kernel panics if the crash occurs wh=
-ile VMBus is connecting.
-- [Low] The removal of version fallback logic leaves unreachable dead code =
-in `version_resp()` and renders the `next_version` field functionally obsol=
-ete.
+
+Pre-existing issues:
+- [High] If GPADL teardown fails, the receive/send buffers are mistakenly r=
+eturned to the kernel allocator via vfree() instead of being intentionally =
+leaked, creating a guest memory corruption vulnerability (DMA-after-free).
 --
 
---- Patch [1]: [RESEND PATCH 1/6] Drivers: hv: Remove support for WS2012/20=
-12R2 & Win8/8.1 version of Hyper-V ---
-Note: The format of this review report has been altered to avoid quoting the
-original patch code directly due to recitation restrictions. Instead of inl=
-ine
-comments, the findings are presented as a free-form summary below.
-
-commit 4b263fe58a4438fc239eb817b339fbf77aa1ea23
+--- Patch [3]: [RESEND PATCH net-next 3/6] hv_netvsc: Remove GPADL teardown=
+ special case for old Hyper-V hosts ---
+commit eeed9aa2167381d7fb4f1e329217b52e4689eb18
 Author: Michael Kelley <mhkelley58@gmail.com>
 
-Drivers: hv: Remove support for WS2012/2012R2 & Win8/8.1 version of Hyper-V
+hv_netvsc: Remove GPADL teardown special case for old Hyper-V hosts
+   =20
+With the overall removal of Linux support for running on Hyper-V
+hosts earlier than WS2016 and Windows 10, the special case handling of
+GPADL teardown is no longer necessary. Remove it.
 
-This commit removes the legacy VMBus protocol negotiation and special cases
-for Windows Server 2012/2012R2 and Windows 8/8.1, as these older versions of
-Hyper-V are no longer officially supported. The balloon and snapshot drivers
-are also updated to drop related version fallbacks.
+> diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
+> index 4d319c50955ed..4295b96b43127 100644
+> --- a/drivers/net/hyperv/netvsc.c
+> +++ b/drivers/net/hyperv/netvsc.c
 
-[Severity: Low]
-In drivers/hv/hv_balloon.c, the patch removes the version fallback logic but
-appears to leave behind unreachable code in version_resp(). Since
-balloon_probe() now initializes dm_device.next_version to 0, if the host
-rejects the version, the check for (dm->next_version =3D=3D 0) in version_r=
-esp()
-will always evaluate to true.=20
+[ ... ]
 
-Does this unconditionally jump to the version_error label, making the
-subsequent code that prepares and sends a fallback request completely
-unreachable?
+> @@ -733,14 +724,9 @@ void netvsc_device_remove(struct hv_device *device)
+>  	/* Now, we can close the channel safely */
+>  	vmbus_close(device->channel);
+> =20
+> -	/*
+> -	 * If host is Win2016 or higher then we do the GPADL tear down
+> -	 * here after VMBus is closed.
+> -	*/
+> -	if (vmbus_proto_version >=3D VERSION_WIN10) {
+> -		netvsc_teardown_recv_gpadl(device, net_device, ndev);
+> -		netvsc_teardown_send_gpadl(device, net_device, ndev);
+> -	}
+> +	/* Must do the GPADL teardown after channel is closed */
+> +	netvsc_teardown_recv_gpadl(device, net_device, ndev);
+> +	netvsc_teardown_send_gpadl(device, net_device, ndev);
+> =20
+>  	/* Release all resources */
+>  	free_netvsc_device_rcu(net_device);
 
-Additionally, does this change render the next_version field in struct
-hv_dynmem_device functionally obsolete, since it is now only ever assigned =
-0?
+[Severity: High]
+This is a pre-existing issue, but I noticed a potential DMA-after-free
+related to these teardown functions.
 
-[Severity: Medium]
-In drivers/hv/channel_mgmt.c, the removal of the VMBus protocol version che=
-ck
-in vmbus_initiate_unload() seems to expose a potential issue during kernel
-panics.
+If vmbus_teardown_gpadl() fails inside netvsc_teardown_recv_gpadl() (or the
+send equivalent), the code attempts to intentionally leak the buffer rather
+than bugchk:
 
-Previously, the check for vmbus_proto_version < VERSION_WIN8_1 would shield
-unnegotiated connections (where vmbus_proto_version is still 0) from enteri=
-ng
-the unload wait loop. If a kernel panic occurs while vmbus_connect() is
-executing, and the state is CONNECTING or CONNECTED but VMBus isn't fully
-initialized, does removing this check expose the panic path to a 100-second
-spin-loop delay?
+drivers/net/hyperv/netvsc.c:netvsc_teardown_recv_gpadl() {
+    ...
+    ret =3D vmbus_teardown_gpadl(device->channel,
+                               &net_device->recv_buf_gpadl_handle);
+    if (ret !=3D 0) {
+        netdev_err(ndev, "unable to teardown receive buffer's gpadl\n");
+        return;
+    }
+}
 
-Could this delay cause hardware watchdogs to reset the system before kexec
-or kdump can successfully collect a crash dump?
+However, because net_device->recv_buf isn't set to NULL on this error path,
+execution continues to free_netvsc_device_rcu() just below, which ends up
+unconditionally freeing it:
+
+drivers/net/hyperv/netvsc.c:free_netvsc_device() {
+    ...
+    if (!nvdev->recv_buf_gpadl_handle.decrypted)
+        vfree(nvdev->recv_buf);
+    ...
+}
+
+Since the GPADL teardown failed, does the host still have this memory mapped
+when it gets returned to the kernel allocator via vfree(), leading to
+potential guest memory corruption if the host writes to it?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730201123.1767=
--1-mhklinux@outlook.com?part=3D1
+-1-mhklinux@outlook.com?part=3D3
