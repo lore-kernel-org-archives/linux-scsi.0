@@ -1,55 +1,55 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F85437C911
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Jul 2026 21:53:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55713330307
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Jul 2026 21:53:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785534787; cv=none; b=SY2qBprRqkyPUZ/vf8vy+BsC6e28o24pAv3OwfeoNZSmgWUvE1DDpLKf7qIfk4q9YzZ+Cm/Rafn8bdlTAhmRceL78xNAo71vr508bPaLdP2iRzBCZpLk1ggXFF9t+nACetlKZJObCdI9OU1h9SZOnMgzIUJ/3eRhR+ojoVtsyEM=
+	t=1785534793; cv=none; b=OewNig0GjJi4sxdp0E1BW/P67lJIcMoRhV6gw+uwvg1pYf1aCKv29WT2KhCwXJTC9fOWe6hFvP51In256c9xYAupkKFD5WH0rLZ80YdZuHngOQLZa8DahInVxyRBfhYbCKYGbaKLKgEjQQ/MKUQsuL4yD4YZTNOxJtI3pTCI28s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785534787; c=relaxed/simple;
-	bh=rjSvNstV+g5rr8ipz3jqzaPOs7kXHwkYONm1JfaQ+8U=;
+	s=arc-20240116; t=1785534793; c=relaxed/simple;
+	bh=hAwBmDjVio3brGCPC2rLlCv3/VZAtvtTyusu8+6Dfoc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RlXl6j54ohaULRs/EIgiQMnP5jaNVPI4dMyz7fL4HhMP6J2eOfVBdITaM4+ho6yTYj7s4D73+4xzvLU6pC0k8Ak0Bz71XS+6KEBzbBZcDYK4q+Tb/0gzJZYuKlpICcHj1eX0Qx2u8ytt9xMmd5cwwRn6wbwpyu+Nn/GGj9Px/q0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dBU1Fi0H; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=PfDY8S3AZ7aTfNzg+x1dSo4CDRQzj/cEdH7YprUh6wTQmG5rH3+eREXODvdG4Nt0VS+szMK8GiX6SmxVk5RTe9LjMf3Yx1xgEUjWIZhBtH5RHfEuoHKoGoq02MRVpnVWpsKJoHn/HM4G78/URqNDM9FdOAdwwJLLhoUEgqKMLRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=f8o6rRPK; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dBU1Fi0H"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="f8o6rRPK"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hBfvP4gMtzlfvq7;
-	Fri, 31 Jul 2026 21:53:05 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hBfvW5ylKzlfvq2;
+	Fri, 31 Jul 2026 21:53:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1785534782; x=1788126783; bh=kxSRk
-	Hd9sNVNF9OS5lAm/Lu/BFEBRlgDHdM2SbItl4c=; b=dBU1Fi0H7OoQ0pTtfVvED
-	JeMrUVCngWkigz8dRJqB1xNG0g/7TuPkoIh/iJKYuuQSMgxD7De9HThPpUiZWoTl
-	RhNFBcoHdFdi6DrFDE4BPbzaV3RElnTnhz4LyWjgV5yRKF5+1Niq/QeugMJSInLJ
-	tcYo+nn4FUl3+aZz+BQSuiUQ8/Tj0HFgDfxzm9p+LcjaJkHAYcutZTftpvRrjI32
-	BBlC0QfWq0xg2sF7D5Ha7ivkP3UE+3cxYNtnk+JMSnbhVeDNTGhZA58uT7Z44nbG
-	+PdLAzfsjcqkgSofu0ndENQcMD3zwPfg3YhKMgdlV1FDxX0UV/mLHWvcfrPgUy3d
-	Q==
+	:received:received; s=mr01; t=1785534788; x=1788126789; bh=DlHQo
+	ymSOWSbcBs0Nc1Q6H61t824/g96El4RSLTbR4Q=; b=f8o6rRPKhsNRV7gonDM1h
+	DIX/u1WvIh+Jkzcxqg+04TJvUxGkiKRAVQ+ued3wVuIYf1MntL38oEy9p7UGJFhe
+	f+dBtK5Cv9MRLKaJrIaKD+ZkNPE0BtrQ6fnCgxwplK0alQneJuk/Mh7EXdTEdxft
+	8ovXaQx9NyLgV40KSYfiST2G15l4u0Pl+hVMAsss2gR1IoWUYHZixl5c2A47nYDF
+	eBFMdaTlGKKRNl0KQ3EaPxx5GA5tIjHOPn8VjlImXminnLYuvJ6R9VbYvvN2wc+D
+	pyaA43q3GkSAO+koTf/TbCVEqOYNEjOfL63BSLu3KBu+r2nTuMjYIYBnf39+4uNp
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id If-l1P2LsmZ7; Fri, 31 Jul 2026 21:53:02 +0000 (UTC)
+ id H_sRapTr7nMY; Fri, 31 Jul 2026 21:53:08 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hBfvF30Mlzlfvq2;
-	Fri, 31 Jul 2026 21:52:57 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hBfvR19xYzlfpMK;
+	Fri, 31 Jul 2026 21:53:06 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Marco Elver <elver@google.com>,
 	linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v4 4/6] scsi: core: Add lock context annotations
-Date: Fri, 31 Jul 2026 14:52:09 -0700
-Message-ID: <0a289ca5cf0c22588e4ae193acabd1cdfef672f3.1785534721.git.bvanassche@acm.org>
+Subject: [PATCH v4 6/6] scsi: core: Enable lock context analysis
+Date: Fri, 31 Jul 2026 14:52:11 -0700
+Message-ID: <377b28286cab215eea4e6f0f35ba5a9c4eff3455.1785534722.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.55.0.508.g3f0d502094-goog
 In-Reply-To: <68f3346cab2be570839350831f82b6c9233832ed.1785534721.git.bvanassche@acm.org>
 References: <68f3346cab2be570839350831f82b6c9233832ed.1785534721.git.bvanassche@acm.org>
@@ -61,59 +61,60 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Document which functions expect that shost->scan_mutex is held.
+Enable lock context analysis for those SCSI core files that build
+without triggering any compiler warnings.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_scan.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/Makefile                | 22 ++++++++++++++++++++++
+ drivers/scsi/device_handler/Makefile |  3 +++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index d7e0e9393194..3b82e80e807a 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1195,6 +1195,7 @@ static int scsi_probe_and_add_lun(struct Scsi_Host =
-*shost,
- 				  struct scsi_device **sdevp,
- 				  enum scsi_scan_mode rescan,
- 				  void *hostdata)
-+	__must_hold(&shost->scan_mutex)
- {
- 	struct scsi_device *sdev;
- 	unsigned char *result;
-@@ -1352,6 +1353,7 @@ static void scsi_sequential_lun_scan(struct Scsi_Ho=
-st *shost,
- 				     struct scsi_target *starget,
- 				     blist_flags_t bflags, int scsi_level,
- 				     enum scsi_scan_mode rescan)
-+	__must_hold(&shost->scan_mutex)
- {
- 	uint max_dev_lun;
- 	u64 sparse_lun, lun;
-@@ -1444,6 +1446,7 @@ static void scsi_sequential_lun_scan(struct Scsi_Ho=
-st *shost,
- static int scsi_report_lun_scan(struct Scsi_Host *shost,
- 			struct scsi_target *starget, blist_flags_t bflags,
- 			enum scsi_scan_mode rescan)
-+	__must_hold(&shost->scan_mutex)
- {
- 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
- 	unsigned int length;
-@@ -1769,6 +1772,7 @@ EXPORT_SYMBOL(scsi_rescan_device);
- static void __scsi_scan_target(struct Scsi_Host *shost, struct device *p=
-arent,
- 			       unsigned int channel, unsigned int id, u64 lun,
- 			       enum scsi_scan_mode rescan)
-+	__must_hold(&shost->scan_mutex)
- {
- 	blist_flags_t bflags =3D 0;
- 	int res;
-@@ -1866,6 +1870,7 @@ EXPORT_SYMBOL(scsi_scan_target);
- static void scsi_scan_channel(struct Scsi_Host *shost, unsigned int chan=
-nel,
- 			      unsigned int id, u64 lun,
- 			      enum scsi_scan_mode rescan)
-+	__must_hold(&shost->scan_mutex)
- {
- 	uint order_id;
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 842c254bb226..69ea80819f3b 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -14,6 +14,28 @@
+ # satisfy certain initialization assumptions in the SCSI layer.
+ # *!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!
 =20
++CONTEXT_ANALYSIS_constants.o :=3D y
++CONTEXT_ANALYSIS_scsi.o :=3D y
++CONTEXT_ANALYSIS_scsicam.o :=3D y
++CONTEXT_ANALYSIS_common.o :=3D y
++CONTEXT_ANALYSIS_devinfo.o :=3D y
++CONTEXT_ANALYSIS_dh.o :=3D y
++CONTEXT_ANALYSIS_ioctl.o :=3D y
++CONTEXT_ANALYSIS_lib.o :=3D y
++CONTEXT_ANALYSIS_lib_dma.o :=3D y
++CONTEXT_ANALYSIS_error.o :=3D y
++CONTEXT_ANALYSIS_logging.o :=3D y
++CONTEXT_ANALYSIS_netlink.o :=3D y
++CONTEXT_ANALYSIS_pm.o :=3D y
++CONTEXT_ANALYSIS_scan.o :=3D y
++CONTEXT_ANALYSIS_sysfs.o :=3D y
++CONTEXT_ANALYSIS_trace.o :=3D y
++CONTEXT_ANALYSIS_sd.o :=3D y
++CONTEXT_ANALYSIS_sd_dif.o :=3D y
++CONTEXT_ANALYSIS_sd_zbc.o :=3D y
++CONTEXT_ANALYSIS_sr.o :=3D y
++CONTEXT_ANALYSIS_sr_ioctl.o :=3D y
++CONTEXT_ANALYSIS_proc.o :=3D y
+=20
+ CFLAGS_aha152x.o =3D   -DAHA152X_STAT -DAUTOCONF
+=20
+diff --git a/drivers/scsi/device_handler/Makefile b/drivers/scsi/device_h=
+andler/Makefile
+index 0a603aefd2bb..5aa282a63e24 100644
+--- a/drivers/scsi/device_handler/Makefile
++++ b/drivers/scsi/device_handler/Makefile
+@@ -2,6 +2,9 @@
+ #
+ # SCSI Device Handler
+ #
++
++CONTEXT_ANALYSIS :=3D y
++
+ obj-$(CONFIG_SCSI_DH_RDAC)	+=3D scsi_dh_rdac.o
+ obj-$(CONFIG_SCSI_DH_HP_SW)	+=3D scsi_dh_hp_sw.o
+ obj-$(CONFIG_SCSI_DH_EMC)	+=3D scsi_dh_emc.o
