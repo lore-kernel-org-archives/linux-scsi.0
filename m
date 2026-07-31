@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05EC83546F0;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C29C377AA7;
 	Fri, 31 Jul 2026 20:12:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785528730; cv=none; b=cG1Oy3v2r7GWOjtRblrEOljZpYyTrrvudL4kZSnepSpwKhOrYIcEMjxThLBs2FCH29O/cTnsgQ3KQedLikSiYZwtGfALuQYNLLu+nTtgeoD/VEHqVSUpm/ZA5HPvARBlwVKixeI++ndARQ93hPocaUvFChIprZLYK+09dtzRB/M=
+	t=1785528731; cv=none; b=OpZbuSfaFPXipErN26z2rinnSE2pKKV/zlW+2x0JrLf4Q7qmlEvrDoodbvRu3KhdXaX29nFA5TGrB6GCqafcfjrzW88YvRSqT9VVKupcEpfwXL8fI7mVm2PSzWDlO9Xq8+w9gV9rQNz+L/Dscdy7L5xzjNk5yO6Kn6XS0paOmQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785528730; c=relaxed/simple;
-	bh=h8tvHwIIwbLUuYMmK8n2ro2JdfKzDcQo/XNIBX3+sLI=;
+	s=arc-20240116; t=1785528731; c=relaxed/simple;
+	bh=Vo5k4SZJPu0c5kG1Rz06ghvzCkV+zWupokB5JZhLLcw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UdoJ710zJanBKDqbWpm7QZL/bPMlziBJBh0dvCnrp1j0qPhgL8+REFYGn9/eefl+/XaQpsY6S3Bp/3ceY2bUqTzf1sSLWAIHDutcmYtD3XNBxnBvu1W6va3qSXXMDtJzGeYUDht9eu2U1E8Ft5tEaYWrjDMPtnVHaCDXrmqDREs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IP1cFUOC; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Npad7xLfwMhd5sUag/+0W9vE2qFgWuONYKzAz+kjEN3AgOq6cki/IRsVhXLf4jinbaqBU3EDUA0D4raG0EaQGq1DmccKujRC2UI29ULqQOA9lICUPT4z3/pHzerM1eWnwIu7dbivcB36mLnl6+ry+kEDFwaKDk4yDhDQPERt5Nw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lkjq4uTd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IP1cFUOC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A02A01F00AC4;
-	Fri, 31 Jul 2026 20:12:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lkjq4uTd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AF121F00ACA;
+	Fri, 31 Jul 2026 20:12:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785528728;
-	bh=2eQgVJkPT8NVfMQWvpqrdCU2+xR7t2iMDAP115Cfn1k=;
+	s=k20260515; t=1785528729;
+	bh=Vo5k4SZJPu0c5kG1Rz06ghvzCkV+zWupokB5JZhLLcw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IP1cFUOC80MU72nHW3cA/OPgkmBsZjsbfwq3xuHvgckagliihvJZDkPJ9V99j1Ddh
-	 IVAjKQ7UNB/C6E3pXJx6IuRf30N32LADV0OUl6CKC6iEz+32zWIdshYFdVFwosZxkS
-	 proK1rBNupCVSXb/y8MKBM5ww2ayOY0DxzOaOm4hYcDhjma8sfk1a+e1GRy21WrigJ
-	 5Vbr8BQNPbHNKstHKQdu+78hWwIQqQMifPPmg5xHb4CfK8HmJRWl3XPKdzakJTGB3d
-	 d6Q99bPYUGZa9ppp9UgvobWC6jv+4kOn/+/SRIGnPcw4zg0xsq8z1iLoB5vY0wDedQ
-	 /Nwo3XmLaWecA==
+	b=Lkjq4uTditw7rnxEAFgzjIexEjqQFpGUi5SzfJmHPRXemF7nAkR1QB1PrU/9Qv8OW
+	 FifChjXFdjgAGOI/V5iDpRpjZL48s/bY+ogKEG6IjHy1E6cvFHPB8fGZHgrYzQa/Pk
+	 ndU0OnKlt83hlfw9k/+n3zcXbO5HrheeGZpPVUGs+nCug8gYjrMvSy0dlMAlLjqhRQ
+	 wjfxFe83hN6sbLII6YGW/4cYxrIpP0eQjOvT+QRb0C0ekODwh/Wdbd8q+hwoFIGYm1
+	 5CpBz4fNV23PKoMtMKa5DnoN+GXAQBpv85mwqYSHMhpYs64yi837yJ4jvhCRAZO6M6
+	 I3oRyn8WT4gzA==
 From: sashiko-bot@kernel.org
-Subject: Re: [RESEND PATCH 4/6] drm_hyperv: Remove support for synth video
- protocol of old Hyper-V hosts
+Subject: Re: [RESEND PATCH 1/6] Drivers: hv: Remove support for
+ WS2012/2012R2 & Win8/8.1 version of Hyper-V
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Michael Kelley" <mhkelley58@gmail.com>
-Cc: linux-hyperv@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260730201123.1767-5-mhklinux@outlook.com>
+Cc: linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260730201123.1767-2-mhklinux@outlook.com>
 References: <20260730201123.1767-1-mhklinux@outlook.com>
- <20260730201123.1767-5-mhklinux@outlook.com>
+ <20260730201123.1767-2-mhklinux@outlook.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 31 Jul 2026 20:12:08 +0000
-Message-Id: <20260731201208.A02A01F00AC4@smtp.kernel.org>
+Date: Fri, 31 Jul 2026 20:12:09 +0000
+Message-Id: <20260731201209.6AF121F00ACA@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,79 +47,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [Low] The static inline function `hv_drm_version_ge()` and the `synthvid_=
-version` field in `struct hv_drm_device` are left behind as dead code.
-
-Pre-existing issues:
-- [High] Timeout of VMBus resolution request leaves the channel open, allow=
-ing delayed responses to corrupt memory and desynchronize wait completions.
+- [Medium] Removing the VMBus protocol version check in `vmbus_initiate_unl=
+oad` exposes a 100-second delay during kernel panics if the crash occurs wh=
+ile VMBus is connecting.
+- [Low] The removal of version fallback logic leaves unreachable dead code =
+in `version_resp()` and renders the `next_version` field functionally obsol=
+ete.
 --
 
---- Patch [4]: [RESEND PATCH 4/6] drm_hyperv: Remove support for synth vide=
-o protocol of old Hyper-V hosts ---
-commit 942daa19258c15938630a14160717e1dd6e0fbc1
+--- Patch [1]: [RESEND PATCH 1/6] Drivers: hv: Remove support for WS2012/20=
+12R2 & Win8/8.1 version of Hyper-V ---
+Note: The format of this review report has been altered to avoid quoting the
+original patch code directly due to recitation restrictions. Instead of inl=
+ine
+comments, the findings are presented as a free-form summary below.
+
+commit 4b263fe58a4438fc239eb817b339fbf77aa1ea23
 Author: Michael Kelley <mhkelley58@gmail.com>
 
-drm_hyperv: Remove support for synth video protocol of old Hyper-V hosts
+Drivers: hv: Remove support for WS2012/2012R2 & Win8/8.1 version of Hyper-V
 
-This commit removes support for older synthetic video protocols, as running
-Linux on Hyper-V hosts earlier than WS2016 and Windows 10 is no longer
-supported. It simplifies the protocol version negotiation to only request
-the WIN10 version.
-
-> diff --git a/drivers/gpu/drm/hyperv/hyperv_drm_proto.c b/drivers/gpu/drm/=
-hyperv/hyperv_drm_proto.c
-> index f0ef627b4898a..cea1ea2595cd6 100644
-> --- a/drivers/gpu/drm/hyperv/hyperv_drm_proto.c
-> +++ b/drivers/gpu/drm/hyperv/hyperv_drm_proto.c
-
-[ ... ]
-
-> @@ -581,11 +570,9 @@ int hv_drm_connect_vsp(struct hv_device *hdev)
-> =20
->  	hv->screen_depth =3D SYNTHVID_DEPTH_WIN8;
-> =20
-> -	if (hv_drm_version_ge(hv->synthvid_version, SYNTHVID_VERSION_WIN10)) {
-> -		ret =3D hv_drm_get_supported_resolution(hdev);
-> -		if (ret)
-> -			drm_err(dev, "Failed to get supported resolution from host, use defau=
-lt\n");
-> -	}
-> +	ret =3D hv_drm_get_supported_resolution(hdev);
+This commit removes the legacy VMBus protocol negotiation and special cases
+for Windows Server 2012/2012R2 and Windows 8/8.1, as these older versions of
+Hyper-V are no longer officially supported. The balloon and snapshot drivers
+are also updated to drop related version fallbacks.
 
 [Severity: Low]
-Since the only caller to hv_drm_version_ge() and the only reader of=20
-hv->synthvid_version are removed by this patch, should both the static=20
-inline function in hyperv_drm_proto.c and the struct field in=20
-hyperv_drm.h be removed as well to avoid leaving dead code behind?
+In drivers/hv/hv_balloon.c, the patch removes the version fallback logic but
+appears to leave behind unreachable code in version_resp(). Since
+balloon_probe() now initializes dm_device.next_version to 0, if the host
+rejects the version, the check for (dm->next_version =3D=3D 0) in version_r=
+esp()
+will always evaluate to true.=20
 
-> +	if (ret)
-> +		drm_err(dev, "Failed to get supported resolution from host, use defaul=
-t\n");
+Does this unconditionally jump to the version_error label, making the
+subsequent code that prepares and sends a fallback request completely
+unreachable?
 
-[Severity: High]
-This is a pre-existing issue, but I wanted to ask about the error
-handling here.
+Additionally, does this change render the next_version field in struct
+hv_dynmem_device functionally obsolete, since it is now only ever assigned =
+0?
 
-If hv_drm_get_supported_resolution() times out waiting for a response,
-the code logs an error but execution continues without closing the
-channel or returning an error.
+[Severity: Medium]
+In drivers/hv/channel_mgmt.c, the removal of the VMBus protocol version che=
+ck
+in vmbus_initiate_unload() seems to expose a potential issue during kernel
+panics.
 
-If the host sends a delayed response later, wouldn't it trigger
-hv_drm_receive_sub() and asynchronously overwrite hv->init_buf while
-subsequent requests are actively building a new request in that shared
-memory? It looks like this might also spuriously trigger complete(&hv->wait)
-and desynchronize the state.
+Previously, the check for vmbus_proto_version < VERSION_WIN8_1 would shield
+unnegotiated connections (where vmbus_proto_version is still 0) from enteri=
+ng
+the unload wait loop. If a kernel panic occurs while vmbus_connect() is
+executing, and the state is CONNECTING or CONNECTED but VMBus isn't fully
+initialized, does removing this check expose the panic path to a 100-second
+spin-loop delay?
 
-Could this timeout be handled by returning an error or resetting the
-channel to prevent data corruption?
-
-> =20
->  	if (!hv->screen_width_max) {
->  		hv->screen_width_max =3D SYNTHVID_WIDTH_WIN8;
+Could this delay cause hardware watchdogs to reset the system before kexec
+or kdump can successfully collect a crash dump?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260730201123.1767=
--1-mhklinux@outlook.com?part=3D4
+-1-mhklinux@outlook.com?part=3D1
