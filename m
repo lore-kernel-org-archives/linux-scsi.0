@@ -1,142 +1,128 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26191330652;
-	Fri, 31 Jul 2026 21:52:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6335538239E
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Jul 2026 21:52:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785534761; cv=none; b=U12NBNtUgLiN7hkWcRoOlaEsL98hBM5a28A98oCuoe03/XRrAD7x8z4ZNOYY+cGXF4VktvqYytXewnZ+Wwxl0GO07027w8sW/S7NBdZ0qrXyg7hY9E8xr9PLJq+2TN+zr8iv4YqQt3N1HiAfAHxTL77l+0SLu5g0SOmco1OifLw=
+	t=1785534764; cv=none; b=CWvg7A0D8B1c0Dzj9Z1qwLGexuTpM28C0hyY23FUaz1/JL7E9SBm5cWtVsP6E8H6RyGf+47vwUA1tNedCVISwJK0YJhlpFIii4m3u5R62WCmpMuP6tB0Zi26/x6vSkgA1e7iu70GuNPbUOWqDT2fER+GBJsBdXQUsjNps3rEnQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785534761; c=relaxed/simple;
-	bh=KmYDoaG4A48TfWLPr9n3qq3A7tpoeNcbyOaCXiKLn20=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KtHrYQxkyBh0shZGxldGj6/eci73mR6fIuwkh7LtfW+V84jMDH/94gIGNDU20ZwVTfRsb2FoQf9jX2DFVSqtnJk9PzEv5gTiW5X+c+pvy1oEfDfCx54bqZwIpC5Ntcakfs+b4azv/B/SSzSiplrXbKXAN+RKIlU865f1JKHkm5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=Vm1lg9Mk; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	s=arc-20240116; t=1785534764; c=relaxed/simple;
+	bh=4gppN+HeYH3qp3qDUQAcfZvdXmfVE+P/YvSkDQueVO4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EAqlHApTfFLupBSDnTZYohexjo+cSpRZ42B5hkSqxO4CveLVGiNa4qy0Rt9MYhTB3Qd+3o5ZPe4ALWlgSPF4BQgiV5LG/qBUVFUGQsYkFTeuRQTj6IxWHxUrjicMkgHF/qXkCyPlkwIqNFiOPEL+dQvs43OWz0tj4cfud79eGpE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=h3tN463s; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="Vm1lg9Mk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1785533714;
-	bh=KmYDoaG4A48TfWLPr9n3qq3A7tpoeNcbyOaCXiKLn20=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Vm1lg9Mk2gWjfHXA6TdM9KqldSsQahQ6dA3KCd8/gcnBd25tgsCSAIE3F+XpwL2yy
-	 QP5WLb1vHm/F/ni5+2Pkg6+3mfB5eiXcsUTOZUuGyy5ck0HnBax+C5BEdMIBnEH8u8
-	 HI7fC6e1SKd7nz7kbb711azQ8AYD6FpWFauelXrQ=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="h3tN463s"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hBftx5mmYzlfpMK;
+	Fri, 31 Jul 2026 21:52:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1785534759; x=1788126760; bh=8OezYVp0XB1SKFdz+PeqhBMnQUhXFNEh84r
+	j49XjYco=; b=h3tN463sbsaXVybwa13lpn9Ojcsnm+LneQ4HvkaqWTDMiEHDItm
+	0wrLmHozUTvrUgar/yCj44TE4zrtVsYlDH6vSpG+WOgLdHOSNM5uAyVkM4T5Og+U
+	SVjyJNz1ljsgOEPcF83set0M3OC0BJ8IV4VPvbwWqU3KqB+TLEpIuy587DIq/30T
+	MnF38bPfRG+knQhNr49stRYTWpSSqptK52A8rsHYF2PnLcM4AfwrG8QDv5UDW/Xi
+	Sa417Ous9GejcP29Lg36y9CigC7viB4jeUtFFzN4w6zMZtXPo+zjH4uN+CywYNGg
+	M5DIk0uON6N36lDc/t60fX4ub+nTjkSBpVw==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 60ka0SC9uF3R; Fri, 31 Jul 2026 21:52:39 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 9FC2EBD752;
-	Fri, 31 Jul 2026 21:35:14 +0000 (UTC)
-Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 5FB905FBAF;
-	Fri, 31 Jul 2026 22:35:14 +0100 (BST)
-From: Phil Pemberton <philpem@philpem.me.uk>
-To: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Phil Pemberton <philpem@philpem.me.uk>
-Subject: [PATCH v8 1/6] ata: libata-scsi: add atapi_max_lun module parameter
-Date: Fri, 31 Jul 2026 22:34:58 +0100
-Message-ID: <20260731213503.2379771-2-philpem@philpem.me.uk>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260731213503.2379771-1-philpem@philpem.me.uk>
-References: <20260731213503.2379771-1-philpem@philpem.me.uk>
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hBftt15HMzlfvq2;
+	Fri, 31 Jul 2026 21:52:37 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Marco Elver <elver@google.com>,
+	linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v4 0/6] Enable lock context analysis in the SCSI core and UFS driver
+Date: Fri, 31 Jul 2026 14:52:05 -0700
+Message-ID: <cover.1785534655.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.55.0.508.g3f0d502094-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 
-Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
-so the SCSI layer never scans past LUN 0.  This blocks support for
-the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
-COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
-Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
+Hi Martin,
 
-Introduce a libata module parameter, atapi_max_lun, that controls the
-upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
-current behaviour exactly: out-of-the-box only LUN 0 is scanned.
-Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling, covering
-LUN values 0..7).
+This patch series enables lock context analysis for the SCSI core and the=
+ UFS
+driver. The advantages are as follows:
+ - The compiler (only Clang) verifies whether the lock and unlock calls m=
+atch
+   what has been declared via __must_hold(), __acquires() or __releases()=
+.
+   This is useful for catching locking bugs in error paths.
+ - Support for __guarded_by() is enabled. If a member variable is annotat=
+ed
+   with __guarded_by(lock), the compiler will issue a warning if that mem=
+ber
+   variable is accessed without holding 'lock'.
 
-Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
-device must both be on the SCSI device list (or carry the appropriate
-quirk) and run on a host whose atapi_max_lun has been raised before
-any extra LUNs are scanned.
+Additionally, a patch is included that suppresses KCSAN complaints about =
+SCSI
+host state changes.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
----
- drivers/ata/libata-core.c | 5 +++++
- drivers/ata/libata-scsi.c | 2 +-
- drivers/ata/libata.h      | 1 +
- include/linux/libata.h    | 1 +
- 4 files changed, 8 insertions(+), 1 deletion(-)
+More information about lock context analysis is available in the cover le=
+tter of
+[PATCH v5 00/36] Compiler-Based Context- and Locking-Analysis
+(https://lore.kernel.org/lkml/20251219154418.3592607-1-elver@google.com/)=
+.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d893c916df0b..15ee44cf5bf2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -122,6 +122,11 @@ int atapi_passthru16 = 1;
- module_param(atapi_passthru16, int, 0444);
- MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
- 
-+int atapi_max_lun = 1;
-+module_param(atapi_max_lun, int, 0444);
-+MODULE_PARM_DESC(atapi_max_lun,
-+	"Number of LUNs to scan on ATAPI devices flagged BLIST_FORCELUN (1 [default] = LUN 0 only, 8 = all SCSI-2 LUNs 0..7)");
-+
- int libata_fua = 0;
- module_param_named(fua, libata_fua, int, 0444);
- MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 1d225ee9eb86..04c96f3fd865 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -5154,7 +5154,7 @@ int ata_scsi_add_hosts(struct ata_host *host, const struct scsi_host_template *s
- 		shost->transportt = &ata_scsi_transportt;
- 		shost->unique_id = ap->print_id;
- 		shost->max_id = 16;
--		shost->max_lun = 1;
-+		shost->max_lun = clamp(atapi_max_lun, 1, ATAPI_MAX_LUN);
- 		shost->max_channel = 1;
- 		shost->max_cmd_len = 32;
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 39494ab206a2..7ee3bf1a4789 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -33,6 +33,7 @@ enum {
- #define ATA_PORT_TYPE_NAME	"ata_port"
- 
- extern int atapi_passthru16;
-+extern int atapi_max_lun;
- extern int libata_fua;
- extern int libata_noacpi;
- extern int libata_allow_tpm;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 18edb36c29fc..25e4b671adfb 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -180,6 +180,7 @@ enum {
- 	ATA_SHORT_PAUSE		= 16,
- 
- 	ATAPI_MAX_DRAIN		= 16 << 10,
-+	ATAPI_MAX_LUN		= 8,	/* SCSI-2 cap (LUN values 0..7) */
- 
- 	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
- 
--- 
-2.43.0
+Please consider this patch series for the next merge window.
+
+Thanks,
+
+Bart.
+
+Changes compared to v3:
+ - Left out all changes except those for the SCSI core and the UFS driver=
+.
+
+Changes compared to v2:
+ - Added patch "scsi: core: Pass the SCSI host pointer directly".
+ - Corrected several annotations that had missing or extra ampersands (&)=
+.
+ - Reduced the number of __assume_ctx_lock() statements.
+
+Changes compared to v1:
+ - Split patch "Enable lock context analysis" into one patch per driver.
+
+Bart Van Assche (6):
+  ufs: core: Set task state before io_schedule_timeout()
+  ufs: core: Enable lock context analysis
+  scsi: core: Pass the SCSI host pointer directly
+  scsi: core: Add lock context annotations
+  scsi: core: Protect host state changes with the host lock
+  scsi: core: Enable lock context analysis
+
+ drivers/scsi/Makefile                     | 22 ++++++++++
+ drivers/scsi/device_handler/Makefile      |  3 ++
+ drivers/scsi/hosts.c                      | 16 ++++---
+ drivers/scsi/megaraid/megaraid_sas_base.c |  2 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  2 +-
+ drivers/scsi/qla4xxx/ql4_os.c             |  6 +--
+ drivers/scsi/scsi_lib.c                   |  3 +-
+ drivers/scsi/scsi_scan.c                  | 52 ++++++++++++++---------
+ drivers/scsi/scsi_sysfs.c                 |  7 +--
+ drivers/ufs/core/Makefile                 |  2 +
+ drivers/ufs/core/ufs-debugfs.c            |  8 +++-
+ drivers/ufs/core/ufshcd.c                 | 15 +++++++
+ drivers/ufs/host/Makefile                 |  2 +
+ include/scsi/scsi_host.h                  | 23 +++++++---
+ 15 files changed, 116 insertions(+), 49 deletions(-)
 
