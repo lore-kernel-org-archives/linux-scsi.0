@@ -1,85 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 184E33C2782;
-	Fri, 31 Jul 2026 08:28:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785486540; cv=none; b=JELsuyKH9Y32zrDBCyhFvg8Mim96x+OXYd1D/CH8WE408zKQri2I2nZQHDvT/Iy5Nx2B8AFP06xUHQMnUWLHMe2NAX7cEo4M0iC/wEcRT4z7/2jtVk6oncczbsBS0uOBa2u0xkbwHHRVDe5mmKp9CwPbqjUPKvfvsEpzpbxAV8k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785486540; c=relaxed/simple;
-	bh=uhnemfUJTcLe/+hR7xR2wNNCDkBngfdKbleD8QygFkQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dupCl3K1hBb7wGMrDcOgDfaKSqJPeDhTqtL+zcxqkk9E5ff6Py879xBdUZVmDlncbxG/X5gWGXBsb485pyViZBQQb1hA1ME6/r7QXlOPWvJ9AGGSF+Nh+uImvWSPLOnVVqMYhQmurjSmWYcP5Pq1IYnO6JGMwuW7+Ha4JkWnUBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZuPFaCL9; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF2353AFCF1;
+	Fri, 31 Jul 2026 12:47:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785502041; cv=pass; b=k3EFE3lcLsVmI1EGC4nYofp1SyHR2qCoyECZXan+r6AhcnSRYNrr2o+CdjQUNeZuODocwSlg7r/SiJg7KeBPR+995wk0GFi1t6AR30r8SdQobuHdNjHWXJDuK26lMw0qWhbGqM625e24dc0qBfDDXuyHhsC2Ql11J19CxM9iVRI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785502041; c=relaxed/simple;
+	bh=qeYDLVJO6z9LXain17/mTHxd8Oy2iz9/kyAW2nqshBE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=RRk5KRmgswpFucCuSpKidpM1MagB9oJPYbXOFhbCpwCtoSIXB8vH64GqcpWIsJ5Ni5PEemIYlk7Dzuwp1+ANt5eH6ftDmb+DxRGhuMZYJTWHr2U2lqS7MUef0VsKusYPK0U1h8Uqiq4qbnR0x7hRY7FTd7axtLwahLdC15vsvPM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=louisalexis.eyraud@collabora.com header.b=cFa/Iwnb; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZuPFaCL9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF3EE1F000E9;
-	Fri, 31 Jul 2026 08:28:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785486538;
-	bh=RW5kVziQTvjwkaw1oQsd8tnJ2xMtqtixoMGra8Klios=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZuPFaCL9b7sQa5RwzaGkHA3yu+ywn9HIYZ+JoGm8T4pfCYXJay4OVqX3cVT004HPL
-	 GeLIcVt4vlua8WLztiEeOiWnSv/HKW1j4dgSWUIG+egyqYBINVnoGj1wMouAvWAgBU
-	 lVN3SsRdFZRHPIqam7TjSx/p2ANomVgMyHE4KTiXVkh/ZlTEfJmFzvhjh6lY+9nTCM
-	 A9HUIU0cOR12gdhODdym06G14yHHP7doPVRAnZ/f+wQiGb3KfVf/vzWu9AJ251tsYc
-	 dlUGbX8xcHj74YtGN+WNvVJURdConBDeEW5PB3F06vQd2+7lK4iFWhDuZ0k71HVY7S
-	 UMdGlZK9XZ8fw==
-Date: Fri, 31 Jul 2026 10:28:55 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
-Cc: Chunfeng Yun <chunfeng.yun@mediatek.com>, 
-	Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Peter Wang <peter.wang@mediatek.com>, 
-	Chaotian Jing <chaotian.jing@mediatek.com>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Stanley Jhu <chu.stanley@gmail.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Philipp Zabel <p.zabel@pengutronix.de>, 
-	Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, kernel@collabora.com, 
-	linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
-	linux-phy@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Subject: Re: [PATCH v10 24/26] arm64: dts: mediatek: mt8195: Align ufshci
- node to dt-bindings changes
-Message-ID: <20260731-curious-unnatural-octopus-cef3e9@quoll>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=louisalexis.eyraud@collabora.com header.b="cFa/Iwnb"
+ARC-Seal: i=1; a=rsa-sha256; t=1785502007; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=OeH5Dy/FYVuYCKeZD7ETFLym30115pEeQHUK8EFerm9DGeQ17QG6HLRwLQqPxqj32SPgKoZjuEemD17T+fT8YwMt4uLYGB/RFRjCt5DZdV9ZfiXxsKXoyhw6XqMkH/TBjml+F3pqDCWKbcTxYU/99tFhYOpOMwsXa/suuQPa3iQ=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1785502007; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=qeYDLVJO6z9LXain17/mTHxd8Oy2iz9/kyAW2nqshBE=; 
+	b=Ewia+hWSrcN8nuTb2/KWmsMrseOsS8uwlr/2pd4T1kd8bKpYrGL5QVZVPWTz3pNEvtRYNlBu/fzbDDuc18v8Z6+COCd+SvtydRNkOSHUPwzOsx1gGdnzqsSAJ3yNVyIDGLK7zTJn2LbWX6Up3sHTsb0dpmx9yIoRwz1CdRG450U=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=louisalexis.eyraud@collabora.com;
+	dmarc=pass header.from=<louisalexis.eyraud@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1785502007;
+	s=zohomail; d=collabora.com; i=louisalexis.eyraud@collabora.com;
+	h=Message-ID:Subject:Subject:From:From:To:To:Cc:Cc:Date:Date:In-Reply-To:Content-Type:Content-Transfer-Encoding:MIME-Version:Message-Id:Reply-To;
+	bh=qeYDLVJO6z9LXain17/mTHxd8Oy2iz9/kyAW2nqshBE=;
+	b=cFa/IwnbXsJs2SNpbXMcCYy/c9CCBJ5GGG7KgygXugBTT+QfT+3K3tPs/6FtIeNh
+	rJ+d15WgPKIbO11Gw7GCMP9ONxaJ6bDwYiaMN+Ulp4rwcqH/yvAGLT9Y0Vdb6t+Gy5q
+	1ZWqSl/sP13YAKfJkrrMuJLZ/3dfszRocuxjggbY=
+Received: by mx.zohomail.com with SMTPS id 178550200445654.5554775503316;
+	Fri, 31 Jul 2026 05:46:44 -0700 (PDT)
+Message-ID: <86c8b2ba77f109b77f93b74b13dc1fa995b7d4f7.camel@collabora.com>
+Subject: Re: [PATCH v10 03/26] dt-bindings: ufs: mediatek,ufs: Add mt8196
+ variant
+From: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
+  Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski	 <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Matthias Brugger	 <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno	 <angelogioacchino.delregno@collabora.com>,
+ Peter Wang <peter.wang@mediatek.com>,  Chaotian Jing
+ <chaotian.jing@mediatek.com>, Alim Akhtar <alim.akhtar@samsung.com>, Avri
+ Altman	 <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>,
+ Stanley Jhu	 <chu.stanley@gmail.com>, "James E.J. Bottomley"	
+ <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"	
+ <martin.petersen@oracle.com>, Philipp Zabel <p.zabel@pengutronix.de>, Liam
+ Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
+ kernel@collabora.com, 	linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org, 	linux-phy@lists.infradead.org,
+ devicetree@vger.kernel.org, 	linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, Nicolas Frattaroli	
+ <nicolas.frattaroli@collabora.com>
+Date: Fri, 31 Jul 2026 14:46:36 +0200
+In-Reply-To: <20260731-fanatic-zealous-inchworm-ddfe0b@quoll>
 References: <20260730-mt8196-ufs-v10-0-bc5ecef202dc@collabora.com>
- <20260730-mt8196-ufs-v10-24-bc5ecef202dc@collabora.com>
+	 <20260730-mt8196-ufs-v10-3-bc5ecef202dc@collabora.com>
+	 <20260731-fanatic-zealous-inchworm-ddfe0b@quoll>
+Organization: Collabora Ltd
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260730-mt8196-ufs-v10-24-bc5ecef202dc@collabora.com>
+X-ZohoMailClient: External
 
-On Thu, Jul 30, 2026 at 11:49:20AM +0200, Louis-Alexis Eyraud wrote:
-> The MT8195 UFS host controller dt bindings now describe several extra
-> required clocks that were previously missing from clock description
-> and deprecates the freq-table-hz property use in favour of
-> operating-points-v2 instead.
-> 
-> Currently, the ufshci node declares the freq-table-hz property but all
-> values contained in the array are zero, thus converting it to an OPP
-> table is not needed.
-> 
-> So, add in ufshci node the rx_symbol clocks in clock list and remove
-> freq-table-hz property.
-> Also reorder properties in node.
-> 
-> Signed-off-by: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
-> ---
->  arch/arm64/boot/dts/mediatek/mt8195.dtsi | 21 ++++++++++-----------
->  1 file changed, 10 insertions(+), 11 deletions(-)
+Hi Krzysztof,
 
-DTS must not be combined with patchset targetting SCSI/UFS, because UFS
-folks were grabbing entire thread. Please follow the same rules as when
-submitting to USB, serial etc.
+On Fri, 2026-07-31 at 10:27 +0200, Krzysztof Kozlowski wrote:
+> On Thu, Jul 30, 2026 at 11:48:59AM +0200, Louis-Alexis Eyraud wrote:
+> > =C2=A0
+> > =C2=A0examples:
+> > =C2=A0=C2=A0 - |
+> > @@ -177,3 +192,33 @@ examples:
+> > =C2=A0
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 mediatek,ufs-disable-m=
+cq;
+> > =C2=A0=C2=A0=C2=A0=C2=A0 };
+> > +=C2=A0 - |
+> > +=C2=A0=C2=A0=C2=A0 #include <dt-bindings/reset/mediatek,mt8196-resets.=
+h>
+> > +=C2=A0=C2=A0=C2=A0 #include <dt-bindings/interrupt-controller/arm-gic.=
+h>
+> > +
+> > +=C2=A0=C2=A0=C2=A0 ufshci@16810000 {
+>=20
+> You already added second example. That's enough.
+>=20
+I'll drop it.
+
+> Sashiko reports are valid.
+>=20
+the reports are indeed right about the missing supply description for
+AVDD09_UFS_1 pin.
+
+The MT8196 and MT88894 SoC datasheets do confirm they are different
+supplies, so I'll add its description and also its handling in the
+driver (in an additional patch) in the next revision.
+
+I'll fix the typo (present since v3) as well.
 
 Best regards,
-Krzysztof
+Louis-Alexis
 
+
+> Best regards,
+> Krzysztof
+>=20
