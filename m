@@ -1,246 +1,164 @@
-Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com [209.85.128.175])
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E8093955C0
-	for <linux-scsi@vger.kernel.org>; Sat,  1 Aug 2026 03:13:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.175
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785554030; cv=pass; b=TKZQK9ZEWbDywv42aqWk6WX3bgtkeJN89Elgm7u04Y5G0/Rq8F+wbpdWzOxi+Xt8tYNX7iV4w/pit5utzSG2agpd+PRxo1IZpEYMzbblw1f1HL2jod5y4nBeim74oXjnmqtsSemv9yAUU6EibVUdjOG6MVKJRVCzPCrQQpzxKXM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785554030; c=relaxed/simple;
-	bh=95QCJbuFW0DJ4I2GQ9WngTVOHrimeZjlLTACZfyrPGs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=U0bBq7LA+DtjUf5eTZfH0teNNFi5JxflzhO2FpbQK9QmFXYQpcwqHaVNqs4PFJVVq/7LJ+qMw061oUCfEsRe2ISGN6nTJxoV8V/Xu5D++zNcMkeDnausDj7zIRJG6lGSruBHrWcL1Pr9QX5MPzYRNF2ahtf06xl8lfCeQFk3hyU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=debian.or.jp; spf=pass smtp.mailfrom=gmail.com; arc=pass smtp.client-ip=209.85.128.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=debian.or.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-7dbcb505578so15477087b3.3
-        for <linux-scsi@vger.kernel.org>; Fri, 31 Jul 2026 20:13:48 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785554027; cv=none;
-        d=google.com; s=arc-20260327;
-        b=MZQcnVlV7U9nZEDJOSJBJzleTlDYlwdYbDssCP8BwIjl8oyLF2gE+aIeLyotH6manD
-         4g1GBrstfkx1XehIPbyFXIrgRWKXgOFrpR9qMULitqODxiqJiJPBF9Xv77PX12fS8wMG
-         q2cPEApHl/opN3smTdlqVIQLrbJ6EU8EFLculWikkqHx4BFNRSMKREvsfb8QTz7RqDsw
-         iKBEQoH9yYVCYW6UaN332Uk0vHdMjxhodL381cYofLdBPGUht3dMdsJq6fzkJoTT0oLv
-         5vGTiBKWtfXEhaU0lfnRpiJIcv8sNnwKNxmTF4kvTPYXrYlnCcRFNv7P51NcbWqydka7
-         VruA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=SeAZ9LnHsy3/NLwDMK5sclw7WS1BzURw2kr/GeL6nEM=;
-        fh=zhmHRkzMRp5hsYMxMRQaY5DPhKBrq/764ze2iai/V+M=;
-        b=RNv3WWzUvzNprVCa9G1R0K+3qc2SntUr4RGhol4qRZVuaSv8T7CiFuyqUo8V20aiUn
-         trVdsTfaFcD7Iaj7xiUYQBNWECtO6bjSio14R7MLMmpM0AF8b+Dvejg4eHdiOHO23rsE
-         F1jyC1QhpNLDnfKPQWkcu3ptZ1JxVyxceBiUzyAtJf7kFcqDaIFFesexpZt7LiMeTrUO
-         z/ibDrh+aQ9aR6ogtuKDgLdnXej7qGrN1ZPaAvdg2qMn0eZveldM3vJcx8+xDPe01yCl
-         xvFGfKdOiUtrC0rbPXGXuIPGKHQMky1Xp/wILc9LOcAWljN83IfGscH7xL41kK0JwCFU
-         6Diw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4B222BEC43
+	for <linux-scsi@vger.kernel.org>; Sat,  1 Aug 2026 13:36:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785591416; cv=none; b=mXejbtFXH4nL5H8enY2JssDXKQSt45ZhZ9sTqgnlQHdodYsNQshuXlBydRuYs6Hv6n+4H7WdHhqk2hJkO5ygRmZCBSUGVNqIjO41mDRr/9/UDK0qietb1YY57WsEHBTwoiIn1FBA6LZkCX5CmM6ca2po9awdTJQgJTPL9istRCE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785591416; c=relaxed/simple;
+	bh=eB58HO5QK1YXyRAqhrYWSTOZcsExz4TPhNofK2YkZlA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rGutuvTtrAO3WppI9jSLLKNs1hX03xvz+A+eFtRO2A4xL+JwjOurlTF5ygHytL6qQC+1apJ6yTbxUz7BuclqEXGu+C5h0EMCdT7A7QZ5le4/iV+1d2YFu7KKnKf+mLEeHrqPVx8ABoL5+DcSklHq6XEL9qT7PKIeQA7uLnvxhHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=wMxxRSrU; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="wMxxRSrU"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2cee9b74ee1so15103795ad.3
+        for <linux-scsi@vger.kernel.org>; Sat, 01 Aug 2026 06:36:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1785591412; x=1786196212; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=upVI1OEGifNaxUYsdgzmCaYduKWqMNtXXmGmafq6qHQ=;
+        b=wMxxRSrUV7i7niuhtw9GVWWaeqf5XQ8zbkIc2ivrl4RbUVa671eIaZyHSaO40vxlAx
+         N5SMJo0jRYishPWAyA7oj1VFys0Q8DNTO4dIJAK0yyDRTIhehVMqx6nRI+RIiA8gZfL3
+         4TMm5BOwRQlir45Hy/XbEQFHYRvUus5ciYZHHd4sedFO7P3J6oLmnjDENEk32Krucdgd
+         n9TW9RMnc+VYSAaP9ozKlEnG4e1aZXpO6rMNxciphRQ3JPBT6fqjv7IAgpiVGBwm+N4v
+         A5OvWwGspOOpinWCguBgsSwJcLf095tss6w1kb4rsxqGiYoZQQwypsEQgVdtdJDfBCdN
+         Y4iQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785554027; x=1786158827;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=SeAZ9LnHsy3/NLwDMK5sclw7WS1BzURw2kr/GeL6nEM=;
-        b=DcxqVk4Eqgoswqq9LDnn63BA7F67QyQIaD2/6eOK5ILJgNLaPGGVeTV1S/i90NcauN
-         JLWoxy0GrIt+BN5OkQhkvFxv7/wGecCkx60TwUPxbaIFshLg6+XhVF0B691bnbfUDakt
-         KkVIe0LF2bo749RhSltRqNY2O8L0uPyDpQxWokkSEn1mypEBwGrckU6oHVbL1urkty5U
-         sX7FGXZoMseK2OOJuNCo9wNNWIYzl2q0qyIfBSGiLDD5C9925dClt2LE1yjm0mYCv9WV
-         YpsKUtS1fGERWqT5bsw+ppEgRbLMKrm085iLnoEPusZgvSUwqt92YXUO/4tqngdLHQSi
-         SiQQ==
-X-Forwarded-Encrypted: i=1; AHgh+Ro9fgopNUH9RZMl77q18tfQbQPjALKw2LzLZdIXjS/4HRXlhIauoA4LbHuh+uIzkqSurHG0a0JUtNlx@vger.kernel.org
-X-Gm-Message-State: AOJu0YwIn+rrjHbA4ZoAjb8JpMB81WEAdYH+/BKlPsAUZJSycD0sgT4E
-	12grlU6cYUqZyGP7f4aU8zZBamZQh5VIytO/rEtcJ81Ka45+/3chaGWTEHvKIe1fGfRA6cAidUc
-	axfs4eDnJQ6QvYmv3LmozsIRT0dODq6A=
-X-Gm-Gg: AR+sD10aBz32XIZfLLBqiz/dUW243X1Ey+poU8D8PvyyaLPPRqBBHZgvpdGkCIRhgoI
-	vYj+OMZR/NTvyuBOOWEzsbpmhyy+xc0jqtp/q/9j8UM4G4oOXy6lMqwGDy79E+NTUv7JM3E6x27
-	TgmRO3Kl7xY2utNfjLnYrDr+TmPYuxz/iRD5ZfJStrY+eh/HelR5YCkAL7b0RHTYN9AfHPUrWym
-	9NJEytxTNRvaKLefeYnlxF+3wBFnq8W7/n8KTzq3D8bJi+TH7+1ZQvjOuJk8xcsfxSRABmwP+rY
-	bkNW+ezEly4sQ8Pjsb+7Ayj9vx5xZxQWrb3rWOmq9lRR3aIumhnJKvjd34DEirQvyl9z4prvD8W
-	HiA==
-X-Received: by 2002:a05:690c:278a:b0:81c:b865:2231 with SMTP id
- 00721157ae682-81fd4bf88ecmr32651387b3.33.1785554025363; Fri, 31 Jul 2026
- 20:13:45 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1785591412; x=1786196212;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=upVI1OEGifNaxUYsdgzmCaYduKWqMNtXXmGmafq6qHQ=;
+        b=j5ylJqhFnqhM2n1FhH7G6KLyE2EbL4P/vKIniu27jKgNjtgAtw48D8vUGwU8095xBu
+         BavyE9h8+K6jB7Qotk7+3FenKOaTuoIcO7Pfevj1W2UHL/F9sb0erzczDHQwH95wmx6K
+         ngyx8m5oGxF/ViRfgvtJtUG6EQT/gUdiYKmrSgmsqz8FNzIzTjULd6a5x7QoApL8nrKv
+         jSrPvB8diUu+/+fRI07+p/reouvxtoHeG73CN1Y5CkaML36UGOyUU/xCv8SxFbGU5xYZ
+         FN9O2F/g4Zn0gwd7JxUT+3ebB3ZU/WYp6SEqcqjIIurSCQnQT3gEgtlWZCVeZcZjmU39
+         gxDg==
+X-Forwarded-Encrypted: i=1; AHgh+RqOd9+1Qk30LkCvP0oGcfLEZBF6cdzzv6tyO81udbZCVU9iqpP8N3QXW4G0/Q8fYCxPDvw9XAtufRhx@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywxm7itg2+pHyEDG51u0KFDI/iWCiQJFLy1fq5qPw0gfaO5QB53
+	EATLGzpKt/hugR82FYJNmVCAhB76i2C/YGiGlqNE5fvyGHx5LRM4yO2Y/EsfAx1SEgM=
+X-Gm-Gg: AR+sD10Ka6IpVd1z09UPxF2ylp6eeo6Kc8XdFrS0rd7axX+cnSkawkAeYw8u2aqDMAj
+	4LqvV5FlPfWdxJyDOdw13x6fFr9YQlWKjHc9h3aKQ/SzX4RUYOP3IGCe/mSpJITR60dA0Cx18EC
+	VOK/cmWLLEw40EJFelibFM9GbrcQM5w7b/B33y8tPshGodcteAZjTfD59dqCs4JvhnHhHughozX
+	AW8e9nK9yV0+tnThgQx2eNnTYG5mpSyKo2MEpvJvhITP1VkDnG3YXS3Ipo1xsDCp28z4sWy1u9B
+	xh+lQiTpfK+k+o8MfFPOWgq42l4LR4ESGY/+/zFYhrEKt/n2qsoPWwOwi8M/NZwvUA2L58PFLUM
+	D3A0B9lQL3Z3CdyU9yJR8C2Lg75YGpvsHBVD4cNGx3C7adVpUBywdzkw/n2VfAcO6tjqIJJsRS6
+	zFfIXAhWkMGsGv3/g9xr21BGSY17ffF6y+sK9eYk1u17Ha7LEDHNVHICxI7jGKUlKoVFXNZbBtl
+	iw/Ss45YuEcPqEGcokaBA==
+X-Received: by 2002:a05:6a21:6e92:b0:3c0:f772:8128 with SMTP id adf61e73a8af0-3c92a889548mr3898837637.54.1785591411530;
+        Sat, 01 Aug 2026 06:36:51 -0700 (PDT)
+Received: from localhost.localdomain ([2406:5900:1044:110c:c329:7b28:fe02:5dc8])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbe39ea9c50sm1697375a12.27.2026.08.01.06.36.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 01 Aug 2026 06:36:51 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: lduncan@suse.com,
+	cleech@redhat.com,
+	michael.christie@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yehyeong Lee <yhlee@isslab.korea.ac.kr>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: libiscsi_tcp: check the data direction of a Data-In PDU
+Date: Sat,  1 Aug 2026 22:36:35 +0900
+Message-ID: <20260801133635.1986706-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260723-pci_id_fix-v4-0-3580726844e1@garyguo.net> <20260728162538.GA1325438@bhelgaas>
-In-Reply-To: <20260728162538.GA1325438@bhelgaas>
-From: Masanori Goto <gotom@debian.or.jp>
-Date: Sat, 1 Aug 2026 12:13:18 +0900
-X-Gm-Features: AUfX_mz7siEIuZSDLGecSdNp4xhgCzEOOClyi0oT7r0lmGspOzwc1eUhhS3W20M
-Message-ID: <CALZLnaEmm5Zi=30n4i7ioX9ii4KMAePnZTAhAcNScSZFSNB7UA@mail.gmail.com>
-Subject: Re: [PATCH v4 0/9] PCI: Fix UAF and TOCTOU related to dynamic ID
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Gary Guo <gary@garyguo.net>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Zhenzhong Duan <zhenzhong.duan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
-	Niklas Cassel <cassel@kernel.org>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Vaibhav Gupta <vaibhavgupta40@gmail.com>, 
-	Jens Taprogge <jens.taprogge@taprogge.org>, Ido Schimmel <idosch@nvidia.com>, 
-	Petr Machata <petrm@nvidia.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, David Airlie <airlied@redhat.com>, 
-	linux-pci@vger.kernel.org, driver-core@lists.linux.dev, 
-	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, industrypack-devel@lists.sourceforge.net, 
-	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	Sashiko <sashiko-bot@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-I'm a "nsp32 folk", which patch version should I take a look at?
+The Data-In branch of iscsi_tcp_hdr_dissect() resolves the ITT to a task
+and copies the PDU's data segment into that command's scatterlist without
+asking whether the command was reading. iscsi_tcp_r2t_rsp() in the same
+file does ask, and rejects an R2T for a command that is not DMA_TO_DEVICE.
 
-Best regards,
-Masanori
+A target that answers a WRITE command's ITT with a Data-In therefore has
+the initiator write target-supplied bytes into the pages that write was
+about to send. Those are the caller's own pinned pages for an O_DIRECT
+write, and page cache pages for a buffered one.
 
+Observed against a test target that emits one 512-byte Data-In naming a
+128 KB write's ITT, after the R2T for that write. With O_DIRECT the
+caller's buffer ends up holding 512 bytes of the target's data while
+pwrite() returns 131072. Buffered is quieter: pwrite() and fsync() both
+succeed, nothing is logged, and reading those blocks back returns the
+target's bytes out of the page cache without a command going on the wire.
 
-2026=E5=B9=B47=E6=9C=8829=E6=97=A5(=E6=B0=B4) 1:27 Bjorn Helgaas <helgaas@k=
-ernel.org>:
->
-> On Thu, Jul 23, 2026 at 11:00:39PM +0100, Gary Guo wrote:
-> > While working on improving the Rust abstractions [1], Sashiko reported =
-that
-> > an existing UAF issue related to dynamic ID, which I find to be genuine=
-.
-> > When taking a look at the code I also find a TOCTOU issue where the
-> > existence check of dynamic ID happens in a separate critical section as=
- the
-> > actual insertion. This series fix both issues.
-> >
-> > There are two exported functions pci_match_id() and pci_add_dynid() whi=
-ch I
-> > have to tweak to implement this cleanly; I created separate "do_xxx"
-> > functions to keep the existing APIs because they all have multiple user=
-s.
-> >
-> > There're a few existing users which stores their pci_device_id argument=
- in
-> > probe callback. This is a bad pattern because nothing except driver_dat=
-a
-> > inside pci_device_id is what they want; actual ID information can be
-> > retrieved from pci_dev instead.
-> >
-> > There are two users that performs pointer arithmetic on the pci_device_=
-id;
-> > these are also problematic with dynamic ID and driver_override, so fix =
-them
-> > as well.
-> >
-> > I've used the following coccinelle script to flag all cases where the
-> > pci_device_id is used other than reading its fields.
-> >
-> > @usage@
-> > identifier fn, id;
-> > position p;
-> > @@
-> >   fn(..., struct pci_device_id *id, ...)
-> >   {
-> >     ...
-> >     id@p
-> >     ...
-> >   }
-> >
-> > // Due to cocci isomorphism this needs to be explicit
-> > @bad@
-> > identifier fn, id;
-> > type T;
-> > position usage.p;
-> > @@
-> >   fn(..., struct pci_device_id *id, ...)
-> >   {
-> >     ...
-> >     (T*)id@p
-> >     ...
-> >   }
-> >
-> > // Good use cases
-> > @good@
-> > identifier fn, id, fld;
-> > expression E;
-> > position usage.p;
-> > @@
-> >   fn(..., struct pci_device_id *id, ...)
-> >   {
-> >     ...
-> > (
-> >     id@p->fld
-> > |
-> >     E(..., id@p, ...)
-> > |
-> > // Redundant checks, but ignore
-> >     !id@p
-> > |
-> > // Redundant checks, but ignore
-> >     id ? ... : ...
-> > )
-> >     ...
-> >   }
-> >
-> > @script:python depends on usage && (bad || !good)@
-> > p << usage.p;
-> > @@
-> > coccilib.report.print_report(p[0], "suspicious use of pci_device_id")
-> >
-> > Link: https://lore.kernel.org/all/20260618-id_info-v1-0-96af1e559ef9@ga=
-ryguo.net/ [1]
-> > Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kern=
-el.org/ [2]
-> >
-> > ---
-> > Changes in v4:
-> > - Code and commit message style fixes (Bjorn)
-> > - Link to v3: https://patch.msgid.link/20260706-pci_id_fix-v3-0-2d48fc0=
-25acc@garyguo.net
-> >
-> > Changes in v3:
-> > - Fix users which uses pci_device_id for pointer arithmetic. (Sashiko)
-> > - Convert to scoped_guard. (Danilo)
-> > - For static IDs, still give out static pointers and avoid making a cop=
-y.
-> > - Link to v2: https://patch.msgid.link/20260630-pci_id_fix-v2-0-b834a98=
-c0af2@garyguo.net
-> >
-> > Changes in v2:
-> > - Fix users which store pci_device_id.
-> > - Clarify in probe documentation about the lifetime of pci_device_id
-> >   parameter.
-> > - Dynamic ID conflict check now ignores override_only. (Sashiko)
-> > - Link to v1: https://patch.msgid.link/20260626-pci_id_fix-v1-0-a35c803=
-f1b95@garyguo.net
-> >
-> > ---
-> > Gary Guo (9):
-> >       ata: ata_generic: don't store pci_device_id
-> >       scsi: nsp32: don't store pci_device_id
-> >       ipack: tpci200: don't store pci_device_id
-> >       mlxsw: pci: don't store pci_device_id
-> >       agp/via: Don't rely on address of pci_device_id
-> >       agp/amd-k7: Don't rely on address of pci_device_id
-> >       PCI: Make pci_match_one_device() match on ID instead of device
-> >       PCI: Fix dyn_id add TOCTOU
-> >       PCI: Fix UAF when probe runs concurrent to dyn ID removal
-> >
-> >  drivers/ata/ata_generic.c                 |   6 +-
-> >  drivers/char/agp/amd-k7-agp.c             |  26 +--
-> >  drivers/char/agp/via-agp.c                | 308 +++++++---------------=
---------
-> >  drivers/ipack/carriers/tpci200.c          |   1 -
-> >  drivers/ipack/carriers/tpci200.h          |   1 -
-> >  drivers/net/ethernet/mellanox/mlxsw/pci.c |  11 +-
-> >  drivers/pci/pci-driver.c                  | 194 ++++++++++---------
-> >  drivers/pci/pci.h                         |  43 +++--
-> >  drivers/pci/search.c                      |   8 +-
-> >  drivers/scsi/nsp32.c                      |   8 +-
-> >  drivers/scsi/nsp32.h                      |   8 +-
-> >  include/linux/pci.h                       |   1 +
-> >  12 files changed, 237 insertions(+), 378 deletions(-)
->
-> I put this on pci/enumeration and plan it for v7.3, hopefully with
-> acks from the AGP, tpci200, and nsp32 folks.
+Check the direction before using the scatterlist, the way the R2T path
+already does.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+Reproduced on v7.2-rc5 with the in-tree initiator over TCP against tgt 1.0.97
+on loopback, HeaderDigest and DataDigest both None, InitialR2T=Yes,
+ImmediateData=Yes, FirstBurstLength=65536, MaxXmitDataSegmentLength=8192.
+
+A 128 KB O_DIRECT write goes out as 8192 bytes of immediate data, one R2T for
+the remaining 122880 at offset 8192, and 15 Data-Out PDUs.  The test target
+inserts one Data-In after that R2T: ITT of the write, DataSN 1, buffer offset
+8192, 512 bytes, no S bit.  Its payload is a repeating 16-byte marker so the
+extent can be measured exactly.
+
+  arm                 caller's buffer after pwrite()      target backing store
+  no injection        marker 0, non-0x5a 0 of 131072      0x5a 8192 of 8192
+  injection           marker 32 at offset 8192,           marker 32,
+                      non-0x5a 512 of 131072              0x5a 7680 of 8192
+  injection, patched  marker 0, non-0x5a 0 of 131072      marker 0
+
+pwrite() returns 131072 in the first two rows.  With the patch the PDU is
+rejected with ISCSI_ERR_PROTO, the same return the R2T path uses for the same
+kind of violation, and the write fails.  Two runs per arm; a 4 KB write and
+the 128 KB write both still complete normally on the patched kernel.
+
+The same injection against a buffered write of the same size:
+
+  arm                 read back after fsync()          target backing store
+  no injection        marker 0, non-0x5a 0 of 131072   0x5a 131072 of 131072
+  injection           marker 32 at offset 8192,        marker 32, 0x5a 130560
+                      non-0x5a 512 of 131072
+  injection, patched  marker 0                         nothing written
+
+pwrite() and fsync() both return success in the first two rows and nothing is
+logged.  The read back uses a descriptor opened before the write and puts no
+command on the wire -- bracketing it with a 512-byte O_DIRECT read at a fixed
+LBA shows nothing in between on the target side -- so those bytes come out of
+the page cache.  With the patch fsync() fails with EIO and the write does not
+land.  Injecting at offset 126976 instead of 8192 behaves the same.
+
+Eight runs of the injected arm at offset 8192 and six at 126976.  The read
+back was corrupt in every one.
+
+ drivers/scsi/libiscsi_tcp.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index e90805ba868f..0283c4444cd0 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -480,6 +480,9 @@ static int iscsi_tcp_data_in(struct iscsi_conn *conn, struct iscsi_task *task)
+ 	int datasn = be32_to_cpu(rhdr->datasn);
+ 	unsigned total_in_length = task->sc->sdb.length;
+ 
++	if (task->sc->sc_data_direction != DMA_FROM_DEVICE)
++		return ISCSI_ERR_PROTO;
++
+ 	/*
+ 	 * lib iscsi will update this in the completion handling if there
+ 	 * is status.
+-- 
+2.43.0
+
