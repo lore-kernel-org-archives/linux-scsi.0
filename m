@@ -1,120 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5847A30674B
-	for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2026 01:54:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42329244667;
+	Mon,  3 Aug 2026 02:05:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.218
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785722059; cv=none; b=sRvWZ5gxO85Y3P2Mx8FFoqY5UyEFmt+qXAXcyrqyt3hTmlKusfnhxaSCguhxXj9ruuOU/2W0/eK13PGgISsCTLzqeBVtmT4u5fmQMpdGRWO0CjSsD9K3Qwqn1ET/QpJw31q+3O3PMkwgOGfBweD+5ZG07+rybnCQULV+iUwSyZg=
+	t=1785722743; cv=none; b=XWSpnWupaWrK0uMI6sR4SHA1SQlfpEHNkMA6/PQQKo05np1J1520BRMwAK0gG1hZna695Z7w9Z78MMqR/83cNIOPT8+eXmWv1L5z4PloQkACbZqzUh9+T9p3POwr9MwjOWA9nKBJ9oRvTIRrc6uOOf3mJ2eGV8dNJTQHmgjAg/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785722059; c=relaxed/simple;
-	bh=O1jbA8z4nZcUxdhXdspKTTol/XPg9SHfUb1RhBvovLY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BtVYILbYvU+IeYITGzBEjc5AEuUOJq3MyjATFCR9MX0B4YSAIS0JtwmESTnvD6rqcUj7o8bLpCxfOMaQWUZXw7pCVXXpUHFS6AZ1IdLpAJHQ7tOtwy2SCXZfqXX40qcUqHTb0rX4e9NpX8+lo+NOvOIDg5pkiW6hY0MM8d2aSC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gazHSx5n; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785722743; c=relaxed/simple;
+	bh=xlhAxrm4hWoFSUVCBPkRNPEtuRwBlo4dXpDZdfM9BUA=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Tol8rwx+Is+QZuGeD1LoV54VizzGLVEqXDrI6JPAJKKhosIhFvCbhvoBKRzta2lcBTYqBcQSvkCw2Hv8jTHfIpmu4LUeSKul+Ob1rgZvFf7ZHxwZjcaZmG/0+k9yGlhVQQ2GG6BkI0R3M8Hu9/4eHwHsbyJ5Fgys+QV5U6VKfD8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=krMx8+f5; arc=none smtp.client-ip=113.46.200.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gazHSx5n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C18F71F000E9;
-	Mon,  3 Aug 2026 01:54:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785722058;
-	bh=3TQT2C8j//1895KS/WlWxM0t7/3H2gZ+ZMmReKgL7rE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gazHSx5nKT/7e2STRzmkja5/xarOrhfrIzyrrpriC+NEMHloXDn9h761ReMc+B4mr
-	 BWy5FgiHAkiQPFGB5DeuB+aNiKPabrPP5ArSQSW3m7TuFcfBpvkI1YJX7vdhKwXQRc
-	 Rdy+msoE6uBSVTyoiWjefb9boQUiOSFhLlnkLzUGiOi8RZ1X+LqB9CRuBT7CEcDiEU
-	 JtzjeP2w24wkSbGWUsq3+r6E5nmLRWw+MqTTxwzOvfp7atHxQnIZUJ64SkSqf4lsfw
-	 MO3zsUHmiDfv2OspztvgaPNaQwlF7Ml3qULIHTbHL/0QEqrQ4MAi+1pLTmGiZQusRt
-	 Bk8rIuWXXdbIA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1] scsi: be2iscsi: Fix MSI-X IRQ cleanup
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yuho Choi" <dbgh9129@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260803014224.614347-1-dbgh9129@gmail.com>
-References: <20260803014224.614347-1-dbgh9129@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 01:54:17 +0000
-Message-Id: <20260803015417.C18F71F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="krMx8+f5"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=bgxqG+epbVaXtjY7d1bTjADbYNCTt/oo5fDIbqJDCzM=;
+	b=krMx8+f5J2sp9CpsiuBAUCrhE2hs/PKURSnndeFhTYBDbDlrkCUAup+HccgYcJnqzDnXDrEag
+	XbYIgFmow5v/+yrWP7ivJ7OKT+LS3qX5ExL5mg8gSAq6TiXvQc0o+Oqu7PYvIf280CHyab2XxKs
+	3WAychC15LpwIiXCikxzdaY=
+Received: from mail.maildlp.com (unknown [172.19.162.140])
+	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4hD0C05vs9zpT1Y;
+	Mon,  3 Aug 2026 09:56:12 +0800 (CST)
+Received: from kwepemp100006.china.huawei.com (unknown [7.202.195.87])
+	by mail.maildlp.com (Postfix) with ESMTPS id 6CCA720333;
+	Mon,  3 Aug 2026 10:05:38 +0800 (CST)
+Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
+ kwepemp100006.china.huawei.com (7.202.195.87) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Mon, 3 Aug 2026 10:05:38 +0800
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Mon, 3 Aug 2026 10:05:37 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+Subject: [PATCH v3 2/2] scsi: hisi_sas: Add lldd_notify_enable_spinup callback for SAS devices
+Date: Mon, 3 Aug 2026 10:05:36 +0800
+Message-ID: <20260803020536.546544-3-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260803020536.546544-1-yangxingui@huawei.com>
+References: <20260803020536.546544-1-yangxingui@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemp500015.china.huawei.com (7.202.195.9)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+Register the lldd_notify_enable_spinup callback. The callback sends a
+NOTIFY(ENABLE SPINUP) primitive via sl_notify_ssp() to trigger media spinup
+on SAS devices in Active_Wait or Idle_Wait state.
 
-Pre-existing issues:
-- [High] The logic handling the return value of `pci_alloc_irq_vectors_affi=
-nity` in `be2iscsi_enable_msix` is completely inverted, leading to severe r=
-esource underutilization on success and guaranteed out-of-bounds array acce=
-sses on failure.
---
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
---- Patch [1]: [PATCH v1] scsi: be2iscsi: Fix MSI-X IRQ cleanup ---
-commit 7ef06019dd8a33e5e182606a30c7033f3e41b3de
-Author: Yuho Choi <dbgh9129@gmail.com>
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 944ce19ae2fc..a726d6680386 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -2081,6 +2081,16 @@ static int hisi_sas_write_gpio(struct sas_ha_struct *sha, u8 reg_type,
+ 				reg_index, reg_count, write_data);
+ }
+ 
++static void hisi_sas_notify_enable_spinup(struct asd_sas_phy *phy)
++{
++	struct hisi_sas_phy *hisi_phy =
++		container_of(phy, struct hisi_sas_phy, sas_phy);
++	struct hisi_hba *hisi_hba = hisi_phy->hisi_hba;
++
++	hisi_hba->hw->sl_notify_ssp(hisi_hba, phy->id);
++	dev_info(hisi_hba->dev, "phy%d notify enable spinup\n", phy->id);
++}
++
+ static void hisi_sas_phy_disconnected(struct hisi_sas_phy *phy)
+ {
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+@@ -2180,6 +2190,7 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
+ 	.lldd_write_gpio	= hisi_sas_write_gpio,
+ 	.lldd_tmf_aborted	= hisi_sas_tmf_aborted,
+ 	.lldd_abort_timeout	= hisi_sas_internal_abort_timeout,
++	.lldd_notify_enable_spinup = hisi_sas_notify_enable_spinup,
+ };
+ 
+ void hisi_sas_init_mem(struct hisi_hba *hisi_hba)
+-- 
+2.43.0
 
-scsi: be2iscsi: Fix MSI-X IRQ cleanup
-   =20
-This patch fixes the MSI-X IRQ cleanup path in beiscsi_init_irqs(). When
-unwinding an allocation failure, it uses the correct index to release the
-same vectors that were registered.
-
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_m=
-ain.c
-> index fd18d4d3d219b..9833ab06b299a 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -878,7 +878,7 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
->  	return 0;
->  free_msix_irqs:
->  	for (j =3D i - 1; j >=3D 0; j--) {
-> -		free_irq(pci_irq_vector(pcidev, i), &phwi_context->be_eq[j]);
-> +		free_irq(pci_irq_vector(pcidev, j), &phwi_context->be_eq[j]);
->  		kfree(phba->msi_name[j]);
->  	}
->  	return ret;
-
-[Severity: High]
-This is a pre-existing issue, but while reviewing the MSI-X initialization =
-in
-this driver, I noticed what appears to be inverted error handling logic in
-be2iscsi_enable_msix():
-
-drivers/scsi/be2iscsi/be_main.c:be2iscsi_enable_msix() {
-    ...
-		if (pci_alloc_irq_vectors_affinity(phba->pcidev, 2, nvec,
-				PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &desc) < 0) {
-			phba->num_cpus =3D nvec - 1;
-			return;
-		}
-	}
-
-	phba->num_cpus =3D 1;
-    ...
-}
-
-Does this code set phba->num_cpus to a high value on allocation failure, and
-limit it to 1 on success?
-
-If pci_alloc_irq_vectors_affinity() fails, phba->num_cpus is set to nvec - =
-1,
-where nvec can be up to 2048. Subsequent functions iterate up to this value:
-
-drivers/scsi/be2iscsi/be_main.c:beiscsi_create_eqs() {
-    ...
-	for (i =3D 0; i < (phba->num_cpus + eq_for_mcc); i++) {
-		eq =3D &phwi_context->be_eq[i].q;
-    ...
-}
-
-Because the be_eq array in struct hwi_context_memory is strictly bounded by
-MAX_CPUS (64), can this out-of-bounds access corrupt memory if the MSI-X
-allocation fails?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803014224.6143=
-47-1-dbgh9129@gmail.com?part=3D1
