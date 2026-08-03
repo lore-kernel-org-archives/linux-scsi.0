@@ -1,140 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAF8826F2BE
-	for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2026 02:36:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 459072494F0
+	for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2026 04:17:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785724572; cv=none; b=tGx53GA8arSVwBaSGg79CvFbLwqR6FwFVKDA2c00Z/lANF6+AYuJ1IIbxOs+qLbdzT+ipdEdt7x4O4uSsiUICca/GQhx5sut5t4QzexiphJmVJBYbb1VWi0OpVHXoHjqg9v0CUZiBi/qVI5C9A88hrIZV2UWqL2q8uRBR5ZI5r4=
+	t=1785730646; cv=none; b=hgtwD3UBmfOOzgqtOJczqP2KlMsloynKTHccCenxwJ15YGQ5xUYVjXnhT8kbbtFgavL0cJyfrCKFII3VYzNeww8XyR2GE9al8/Bj7knb6FjqIXoDxl6XYbhSynyCokP+AGbMM62pVjOQyuZOkvWUXXi3zm9djwPxXO6XrYVBEnA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785724572; c=relaxed/simple;
-	bh=HO/QF1VWMl7ILTt93hQdVyuPjl3ZUg4b9XinUJZTG4U=;
+	s=arc-20240116; t=1785730646; c=relaxed/simple;
+	bh=k3dHSOoaFFASz/ex9ZO2H0w4jTLqLDVj7cxZL5Fffuk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eGuwTiXlNYszlqbZZZXuwU7VbABsu6d6KlfCSO4MnvfN48qxxg3YK+5s+gjjr/YpKX/cqqjs/DHItbb8Dga7lOgZhyXx8yyrab0+788nQvirHhv7AIjBgCetYFvXxKCJn3KU1vilrkOz/5R6b/OySbydwSbeMZMIZEBNJtIrzTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HcbeDdv0; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=V6J71ryDnhryv4RzNC71NJ6yna+R6ndmIe2FkFZq1a9gzJ3zSICbSLpIYwBVgCwWU7UaJTtVwBifzZa2UuW3P17+JwanR16JA1IYOl8c1pH6MoREvV40alCrgKxstllX8aRagT6RaJpTcbt/nRInf9yyGOfQFIhCbDpGiHa0xhw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WqUvsk5L; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HcbeDdv0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 340F01F000E9;
-	Mon,  3 Aug 2026 02:36:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WqUvsk5L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A81B71F000E9;
+	Mon,  3 Aug 2026 04:17:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785724570;
-	bh=sub0B+60l2Trw2EORQlzXU8M3u1IkIFY0ryU4S1JfTM=;
+	s=k20260515; t=1785730644;
+	bh=lo6wFVqh+bCgH75Rq4QrOrEKKNAdzwI2nAh4Abt5fng=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HcbeDdv0UWeRdYaoGXVCNcOY8R/OUphLUMy/RCKAhUTKr7ow6BL3c/b8iy8Rr97I5
-	 j1O6NVQvY6nmkNek8eB+Q27jZcvsJ8zE0Ys4Y+ZvZxlIezbFrpvcf38SvYnJ6V0iZk
-	 uctatsZVFHxUMNWM9sVt9/8SCCCMuCzBlNah26POZWjg3wNvyIVzRIMQWS495SWEWw
-	 /F1q9O9K+ZDHcDTA9G5n8uRKxDoiPeGRj10Dv6TFAQu3Gzb5PP4QdoNKpXZcfx8DBP
-	 5dpSaj/W94NROwwlgpQuq20Q/RyDr2jcILxoIb22F2jmOVyEsULxjaWdWlMo7yvzJg
-	 zzT6vQ+ElGLvA==
+	b=WqUvsk5Lwu/WzVOAI7OlAwdHoTK68DGuvFzhYTWAKZHBksqc6LL7m/8JUgG/ka72/
+	 S4WdK7JFc/Bs5NLIYbmHyk1OfDQRtoFVN8SLmwY3VihykYUHRxKBrmCBeC2afC4RmD
+	 zdcEHi+fjheizCKhWKxguDrb9SqVwsUk4p2mHn4xTgOWw4gJinf6zJ/jWZyvWQK6uA
+	 1nreLPE4QCTlNQ2oebl6LlUDtdPYZ65ZhgT9xSK13YEDv1kQp5V1eQRa0zXGIgcOq/
+	 KMga8NS10/PqsrpvDwhLeCkNr3d1d94IpuWvINu5jAcGtHrKKEBwLkJ2OkIuZh4sDO
+	 Fl8+LgGxPujSQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/2] scsi: hisi_sas: Add lldd_notify_enable_spinup
- callback for SAS devices
+Subject: Re: [PATCH v3 1/2] scsi: libsas: Add PHYE_NOTIFY_ENABLE_SPINUP phy
+ event for ASC/ASCQ=0x04/0x11
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Xingui Yang" <yangxingui@huawei.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260803020536.546544-3-yangxingui@huawei.com>
+In-Reply-To: <20260803020536.546544-2-yangxingui@huawei.com>
 References: <20260803020536.546544-1-yangxingui@huawei.com>
- <20260803020536.546544-3-yangxingui@huawei.com>
+ <20260803020536.546544-2-yangxingui@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 03 Aug 2026 02:36:09 +0000
-Message-Id: <20260803023610.340F01F000E9@smtp.kernel.org>
+Date: Mon, 03 Aug 2026 04:17:24 +0000
+Message-Id: <20260803041724.A81B71F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [High] Missing check for controller reset state before accessing hardware=
- registers in the `hisi_sas_notify_enable_spinup` callback.
-
 Pre-existing issues:
-- [High] Race condition on SL_CONTROL register read-modify-write (RMW) oper=
-ations between process and interrupt contexts without locking.
+- [Critical] This problem wasn't introduced by this patch, but it is a crit=
+ical vulnerability. In `sas_ssp_task_response()`, the `min_t` macro incorre=
+ctly casts `be32_to_cpu(iu->sense_data_len)` to a signed `int`. If a malici=
+ous or malfunctioning SAS device sends a very large `sense_data_len` (e.g.,=
+ 0xFFFFFFFF), the cast to `int` results in a negative value (e.g., -1). `mi=
+n_t` evaluates to this negative number, which is stored in `tstat->buf_vali=
+d_size`. When passed to `memcpy()`, the negative size is implicitly cast to=
+ `size_t`, becoming `SIZE_MAX`. This causes a massive heap buffer overflow =
+when copying from `iu->sense_data`.
 --
 
---- Patch [2]: [PATCH v3 2/2] scsi: hisi_sas: Add lldd_notify_enable_spinup=
- callback for SAS devices ---
-commit 1a996ce0b10b1f8ffbc88dbdf06f98375a589a5c
+--- Patch [1]: [PATCH v3 1/2] scsi: libsas: Add PHYE_NOTIFY_ENABLE_SPINUP p=
+hy event for ASC/ASCQ=3D0x04/0x11 ---
+commit 04d93ab7400ada2fff2a532b87fdf708e22b793a
 Author: Xingui Yang <yangxingui@huawei.com>
 
-scsi: hisi_sas: Add lldd_notify_enable_spinup callback for SAS devices
-   =20
-This commit registers the lldd_notify_enable_spinup callback for hisi_sas.
-The callback sends a NOTIFY(ENABLE SPINUP) primitive to trigger media spinup
-on SAS devices in Active_Wait or Idle_Wait state.
+scsi: libsas: Add PHYE_NOTIFY_ENABLE_SPINUP phy event for ASC/ASCQ=3D0x04/0=
+x11
 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sa=
-s/hisi_sas_main.c
-> index 944ce19ae2fc1..a726d66803865 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -2081,6 +2081,16 @@ static int hisi_sas_write_gpio(struct sas_ha_struc=
-t *sha, u8 reg_type,
->  				reg_index, reg_count, write_data);
->  }
+This patch adds a new PHY event to handle ASC/ASCQ 0x04/0x11 for SAS devices
+requiring a NOTIFY(ENABLE SPINUP) primitive. It introduces sense detection =
+in
+the common task response path and an optional LLDD callback.
+
+> diff --git a/drivers/scsi/libsas/sas_task.c b/drivers/scsi/libsas/sas_tas=
+k.c
+> index e9d291007817b..d1eb6ce90626e 100644
+> --- a/drivers/scsi/libsas/sas_task.c
+> +++ b/drivers/scsi/libsas/sas_task.c
+> @@ -29,6 +29,8 @@ void sas_ssp_task_response(struct device *dev, struct s=
+as_task *task,
+>  			      be32_to_cpu(iu->sense_data_len));
+>  		memcpy(tstat->buf, iu->sense_data, tstat->buf_valid_size);
+
+[Severity: Critical]
+This is a pre-existing issue, but does this min_t() cast to signed int expo=
+se
+the kernel to a heap buffer overflow?
+
+If a malicious or malfunctioning SAS device returns an SSP response IU with=
+ a
+very large sense_data_len (e.g., 0xFFFFFFFF), casting it to 'int' results i=
+n a
+negative value.
+
+This negative value would be stored in tstat->buf_valid_size, and when pass=
+ed
+to memcpy(), it is implicitly cast to size_t, becoming SIZE_MAX.
+
 > =20
-> +static void hisi_sas_notify_enable_spinup(struct asd_sas_phy *phy)
-> +{
-> +	struct hisi_sas_phy *hisi_phy =3D
-> +		container_of(phy, struct hisi_sas_phy, sas_phy);
-> +	struct hisi_hba *hisi_hba =3D hisi_phy->hisi_hba;
+> +		sas_ssp_task_spinup_notify(task, iu);
 > +
-> +	hisi_hba->hw->sl_notify_ssp(hisi_hba, phy->id);
-
-[Severity: High]
-Should this code check the controller reset state before accessing the
-hardware registers?
-
-If a controller reset is triggered concurrently (e.g., via PCIe FLR) and
-sets HISI_SAS_RESETTING_BIT, calling sl_notify_ssp() performs MMIO writes
-while the hardware is resetting. This could trigger a Synchronous External
-Abort (SEA) and kernel panic on ARM platforms.
-
-Other callbacks like hisi_sas_phy_bcast() use
-test_bit(HISI_SAS_RESETTING_BIT, &hisi_hba->flags) to prevent this. Would
-it be appropriate to add a similar check here?
-
-
-[Severity: High]
-This is a pre-existing issue, but does calling sl_notify_ssp() here
-expose an unprotected read-modify-write race on the SL_CONTROL register?
-
-The hardware-specific callback sl_notify_ssp_v3_hw() runs in process
-context and modifies the register:
-
-drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:sl_notify_ssp_v3_hw() {
-    ...
-    sl_control =3D hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
-    sl_control |=3D SL_CONTROL_NOTIFY_EN_MSK;
-    hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-}
-
-However, when a PHY goes down, phy_down_v3_hw() modifies the same register
-in hardirq context:
-
-drivers/scsi/hisi_sas/hisi_sas_v3_hw.c:phy_down_v3_hw() {
-    ...
-    sl_ctrl =3D hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
-    hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL,
-                         sl_ctrl&(~SL_CTA_MSK));
-}
-
-If the hardirq preempts the process-context worker exactly between the read
-and write in sl_notify_ssp_v3_hw(), the worker will subsequently write back
-its stale read value, undoing the interrupt's modification. Can this corrupt
-the PHY state machine?
-
-> +	dev_info(hisi_hba->dev, "phy%d notify enable spinup\n", phy->id);
-> +}
-> +
-
-[ ... ]
+>  		if (iu->status !=3D SAM_STAT_CHECK_CONDITION)
+>  			dev_warn(dev, "dev %016llx sent sense data, but stat(0x%x) is not CHE=
+CK CONDITION\n",
+>  				 SAS_ADDR(task->dev->sas_addr), iu->status);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803020536.5465=
-44-1-yangxingui@huawei.com?part=3D2
+44-1-yangxingui@huawei.com?part=3D1
