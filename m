@@ -1,108 +1,120 @@
-Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C7212F8EB0
-	for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2026 01:42:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5847A30674B
+	for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2026 01:54:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785721356; cv=none; b=GxF3NMLpwk/OSFiGF2d8ZIQdCNXaldfSoq9LEbfS73GmIMXHP4Gs1WFguE93cmxiAPjaxthHuWUwCj2dTeQDVfDL0FP/Ct26DZZyMu8TLrVzRKs+0Jj7ncUpT6DmljPUXR44LZOg8sNdqPQJPMcXDTlWxyUpdd2k123ufAYaEbk=
+	t=1785722059; cv=none; b=sRvWZ5gxO85Y3P2Mx8FFoqY5UyEFmt+qXAXcyrqyt3hTmlKusfnhxaSCguhxXj9ruuOU/2W0/eK13PGgISsCTLzqeBVtmT4u5fmQMpdGRWO0CjSsD9K3Qwqn1ET/QpJw31q+3O3PMkwgOGfBweD+5ZG07+rybnCQULV+iUwSyZg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785721356; c=relaxed/simple;
-	bh=S01THjx3GU4adJn0CGfQrT4Wr8H1w2uxdmBziA3XZE4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Eso1OLp9jA11g/uRyWGqGmpPZScYQblt4NsDLZuVA9nSXIpD7f+h6STfzo6Eer9+LnjT/qIvT2oRRfDKxeuO6PSPq7hLJUbeEQTsoB2PewsYK9y8Xk1nczgwFK9665/0qGrRCJioUZ9G0QZ6DqeuOSou4muN2Hb1zkQwZrYAWdg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZpGt1sOc; arc=none smtp.client-ip=209.85.219.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785722059; c=relaxed/simple;
+	bh=O1jbA8z4nZcUxdhXdspKTTol/XPg9SHfUb1RhBvovLY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=BtVYILbYvU+IeYITGzBEjc5AEuUOJq3MyjATFCR9MX0B4YSAIS0JtwmESTnvD6rqcUj7o8bLpCxfOMaQWUZXw7pCVXXpUHFS6AZ1IdLpAJHQ7tOtwy2SCXZfqXX40qcUqHTb0rX4e9NpX8+lo+NOvOIDg5pkiW6hY0MM8d2aSC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gazHSx5n; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZpGt1sOc"
-Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-8f1e274ccb9so14540326d6.2
-        for <linux-scsi@vger.kernel.org>; Sun, 02 Aug 2026 18:42:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785721354; x=1786326154; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=DawTbNdk1LZcBXCoupSLgXbzUs4SU4vadYzb1030Krs=;
-        b=ZpGt1sOcEloIGzua3GT9grqvpPKpdOaiI9wB6VlmiyCOIgjn04HhnM9toTVaYn6Qg/
-         LKqKLkhsqff2ublpF7+Ibspwky3OlQPjlrNjcDt8Pn3lW+cwRPQoTmFxD4x+HdtMJ3gg
-         1+BphU7jJKH5om67dvSl8ErJ58tlMulXWeHstfnDtetDKGR/lPcqdy5NYfOBPDdolUDg
-         grBjtA6TqhGTGStUaWHBhULBFh0mhti7edWSbYzJ82dSas6masm++hsbbu6Ngc2NBYdZ
-         eBYDHYDcxv1x5YVOcUJHqfXE/A9/YqOH6s83vVJ2A2B7euW+V1mMVD1EMRwyz4/Z6SWP
-         wsOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785721354; x=1786326154;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=DawTbNdk1LZcBXCoupSLgXbzUs4SU4vadYzb1030Krs=;
-        b=Q+FndIpDHVBGP5T9vGUzxa99dmkSaO/soo6aV9NNGN173HJD2HATipb22ZtOUwZsQQ
-         kRALE2vUoP3RwnHUG+gtuPN2659ic3eQSzdL3I4NjIV0yiZvndqtGzgZYv6FFFspzcSq
-         o0QBhoYDvhhB4MSAQza7BhWoP3Fxe5aXkRSslHjwPb49IiMdFuIrREnyqqYuOHmIN7pB
-         r3QmuV0rtj+fRraO8gAy6+K4W/0Cy8mS51Zp5YSxop1tJi4PwP6zhqxpG5eYkdC77LjC
-         SdpV3aWHveg8LBx8Qgez3bzwhomUyfejSVXRyR4Jd9ta/CvVCgKu6gqRnN/iW8nXJVA7
-         xhUQ==
-X-Gm-Message-State: AOJu0YxDFL8eUbYeVnl3IuBsypmNMAzdrOrw8gE6uAXuzI1GV+yuKuE1
-	EyQSkz4uQS1oEsElUfBr/POaR/jpsrDvK48n3WaRGiOzJg4E1yBeHKCG
-X-Gm-Gg: AR+sD10ZXfMRBNrUxhgib69kAsxBRzpXsnmO1PgvqG2e1mfpcKPW73BMkVA9AdYL/wd
-	oS8niTtSNn9RnDk9UZW7o/PLNMDH7+MyvmYqfZavhTkw/8J0G1IfuMMBAnQLCfe5giQ1+n3G4rN
-	/9zZOZigGD8pqD0hrR8ONAHTb5dSD2zGdDA6WLRI+T5qYvEsYqfBdq6pRWH7egzcz1p0YRBu92Y
-	LJCQ7pJxD2CpByMwxDqgmVkqH26yoATa4PaJ9hSJrn41YfBYXyo1/vNUeZJLLjkhMMFUGhnLlTk
-	slAPelLK7kE/yKte0Cesr122Qg5QpKZM1OTJJ79HU9Q4kKoksQPmrTLYz8uXnaaYRxT45FuKP9Z
-	RbUx/JeFFYiilkZxymX2H8jkEU+mWmLko5x2/1Ae2UsUT+vliTbhvKFyAJE4vX1tPNgfNCqbBYz
-	4wAQvnzOrLFXrG4ELzsTZLsKsVB36dElFFrcMJDf+yxscJ5ObzbCXcKi8HWnsbGzZH1ltXU786B
-	xZZCzsHXp8hEne4VlMltLEoj373NwhsPZqWxEMYgNQwMyS32+FTm82KFaZo2Z0=
-X-Received: by 2002:a05:6214:449f:b0:8f3:e97:59b8 with SMTP id 6a1803df08f44-908496af620mr181485536d6.29.1785721353981;
-        Sun, 02 Aug 2026 18:42:33 -0700 (PDT)
-Received: from i4-gl-tmk5904.ad.psu.edu ([130.203.156.186])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-908435eab41sm64167096d6.34.2026.08.02.18.42.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 02 Aug 2026 18:42:32 -0700 (PDT)
-From: Yuho Choi <dbgh9129@gmail.com>
-To: ketan.mukadam@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Yuho Choi <dbgh9129@gmail.com>
-Subject: [PATCH v1] scsi: be2iscsi: Fix MSI-X IRQ cleanup
-Date: Sun,  2 Aug 2026 21:42:24 -0400
-Message-ID: <20260803014224.614347-1-dbgh9129@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gazHSx5n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C18F71F000E9;
+	Mon,  3 Aug 2026 01:54:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785722058;
+	bh=3TQT2C8j//1895KS/WlWxM0t7/3H2gZ+ZMmReKgL7rE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=gazHSx5nKT/7e2STRzmkja5/xarOrhfrIzyrrpriC+NEMHloXDn9h761ReMc+B4mr
+	 BWy5FgiHAkiQPFGB5DeuB+aNiKPabrPP5ArSQSW3m7TuFcfBpvkI1YJX7vdhKwXQRc
+	 Rdy+msoE6uBSVTyoiWjefb9boQUiOSFhLlnkLzUGiOi8RZ1X+LqB9CRuBT7CEcDiEU
+	 JtzjeP2w24wkSbGWUsq3+r6E5nmLRWw+MqTTxwzOvfp7atHxQnIZUJ64SkSqf4lsfw
+	 MO3zsUHmiDfv2OspztvgaPNaQwlF7Ml3qULIHTbHL/0QEqrQ4MAi+1pLTmGiZQusRt
+	 Bk8rIuWXXdbIA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v1] scsi: be2iscsi: Fix MSI-X IRQ cleanup
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yuho Choi" <dbgh9129@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260803014224.614347-1-dbgh9129@gmail.com>
+References: <20260803014224.614347-1-dbgh9129@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 03 Aug 2026 01:54:17 +0000
+Message-Id: <20260803015417.C18F71F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-beiscsi_init_irqs() uses j to walk previously registered MSI-X vectors
-when unwinding an allocation or request_irq() failure, but passes i to
-pci_irq_vector(). Consequently, each free_irq() targets the failing
-vector instead of the vector associated with be_eq[j].
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Use j to release the same vector that was registered. This ensures all
-successfully requested IRQs are freed before initialization failure tears
-down the HBA.
+Pre-existing issues:
+- [High] The logic handling the return value of `pci_alloc_irq_vectors_affi=
+nity` in `be2iscsi_enable_msix` is completely inverted, leading to severe r=
+esource underutilization on success and guaranteed out-of-bounds array acce=
+sses on failure.
+--
 
-Fixes: 831488669a33 ("scsi: be2iscsi: switch to pci_alloc_irq_vectors")
-Signed-off-by: Yuho Choi <dbgh9129@gmail.com>
----
- drivers/scsi/be2iscsi/be_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--- Patch [1]: [PATCH v1] scsi: be2iscsi: Fix MSI-X IRQ cleanup ---
+commit 7ef06019dd8a33e5e182606a30c7033f3e41b3de
+Author: Yuho Choi <dbgh9129@gmail.com>
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index fd18d4d3d219..9833ab06b299 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -878,7 +878,7 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
- 	return 0;
- free_msix_irqs:
- 	for (j = i - 1; j >= 0; j--) {
--		free_irq(pci_irq_vector(pcidev, i), &phwi_context->be_eq[j]);
-+		free_irq(pci_irq_vector(pcidev, j), &phwi_context->be_eq[j]);
- 		kfree(phba->msi_name[j]);
- 	}
- 	return ret;
--- 
-2.43.0
+scsi: be2iscsi: Fix MSI-X IRQ cleanup
+   =20
+This patch fixes the MSI-X IRQ cleanup path in beiscsi_init_irqs(). When
+unwinding an allocation failure, it uses the correct index to release the
+same vectors that were registered.
 
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_m=
+ain.c
+> index fd18d4d3d219b..9833ab06b299a 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -878,7 +878,7 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+>  	return 0;
+>  free_msix_irqs:
+>  	for (j =3D i - 1; j >=3D 0; j--) {
+> -		free_irq(pci_irq_vector(pcidev, i), &phwi_context->be_eq[j]);
+> +		free_irq(pci_irq_vector(pcidev, j), &phwi_context->be_eq[j]);
+>  		kfree(phba->msi_name[j]);
+>  	}
+>  	return ret;
+
+[Severity: High]
+This is a pre-existing issue, but while reviewing the MSI-X initialization =
+in
+this driver, I noticed what appears to be inverted error handling logic in
+be2iscsi_enable_msix():
+
+drivers/scsi/be2iscsi/be_main.c:be2iscsi_enable_msix() {
+    ...
+		if (pci_alloc_irq_vectors_affinity(phba->pcidev, 2, nvec,
+				PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &desc) < 0) {
+			phba->num_cpus =3D nvec - 1;
+			return;
+		}
+	}
+
+	phba->num_cpus =3D 1;
+    ...
+}
+
+Does this code set phba->num_cpus to a high value on allocation failure, and
+limit it to 1 on success?
+
+If pci_alloc_irq_vectors_affinity() fails, phba->num_cpus is set to nvec - =
+1,
+where nvec can be up to 2048. Subsequent functions iterate up to this value:
+
+drivers/scsi/be2iscsi/be_main.c:beiscsi_create_eqs() {
+    ...
+	for (i =3D 0; i < (phba->num_cpus + eq_for_mcc); i++) {
+		eq =3D &phwi_context->be_eq[i].q;
+    ...
+}
+
+Because the be_eq array in struct hwi_context_memory is strictly bounded by
+MAX_CPUS (64), can this out-of-bounds access corrupt memory if the MSI-X
+allocation fails?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260803014224.6143=
+47-1-dbgh9129@gmail.com?part=3D1
