@@ -1,34 +1,47 @@
-Received: from zg8tmja2lje4os43os4xodqa.icoremail.net (zg8tmja2lje4os43os4xodqa.icoremail.net [206.189.79.184])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B99BD330D24;
-	Mon,  3 Aug 2026 08:04:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.79.184
+Received: from smtpbgsg1.qq.com (smtpbgsg1.qq.com [54.254.200.92])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DF3035E1A4;
+	Mon,  3 Aug 2026 09:54:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785744295; cv=none; b=rWgLDVsZu0GZRL3r5r/LXbzhpe1JNgcp3bkHi9KpKLOJH0omnRViHesA4T4DxXEHTCCicIhy8XbFDa0F+cLyFH7PxrUdDDlrEpRIvcuHQg3/+lFVjJxv3I9kZBYSwJNAWbYAILPFfD/w6zbV2u4/0KzGsCEhS1Dv/arOsg2jfY0=
+	t=1785750864; cv=none; b=gPIg6KaYMHIATpv3/mFJz3BnG4f1gEH/8KFddM1dXIcERcqiXON2TzUhWBwT+h1JO7DYJMzbgykXGRetVLABLKbkO9ota3qTK+7BGKwYUaQroamUJYE5bR0qvM6lETaIA/kH1NGCXYCs0w5rIaIoa+xL3rdFdICk/3OFdi7xc+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785744295; c=relaxed/simple;
-	bh=JOtKXZh8X20eSMS9RrUJ7ribFUWH68ckq8nsYl4FrdQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AEUJxQhhwJA9fChi0ECDCXAdBZ3xrn1yo4WhBC0nwOdZNB6hqSsI9yqpMkDoRAoLIOExuNdi0vnlZWwKjreBoaNhGc+JT7hPOEddPW5jHWrwJdlpj6TFQd+O86TvSSSHQBZocv6Et3PkTTD0iGfUD5DKMF5gYdD6sKvYIOS4jU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=206.189.79.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [10.98.66.117])
-	by mtasvr (Coremail) with SMTP id _____wBH9D2ZS3BqGB5eAA--.2692S3;
-	Mon, 03 Aug 2026 16:04:41 +0800 (CST)
-Received: from localhost.localdomain (unknown [10.98.66.117])
-	by mail-app4 (Coremail) with SMTP id zi_KCgC36jGYS3BqBqbYAg--.3139S2;
-	Mon, 03 Aug 2026 16:04:40 +0800 (CST)
-From: Fan Wu <fanwu01@zju.edu.cn>
-To: linux-scsi@vger.kernel.org
-Cc: fischer@norbit.de,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
+	s=arc-20240116; t=1785750864; c=relaxed/simple;
+	bh=coWnFrdWDjH8Z3c76M7MSFy62PKcrltWv82fndpKiwI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eT7/9u0JIDPL38f07qYEcOVEz3gPjDl8ogQOaQykyRJnnNdelXgxtqzKqXdv1ALx1EiFUUgjKDyS3+gLhNpSBzWD6lMZtYusqld/VV1fYa8TGJp8Xbkagvv+JAsAT27ATWWye/QAMWmxuSQAdFj2ZMQqKFEpH0Pmmoe/1qd7XOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=dT1E9c3Y; arc=none smtp.client-ip=54.254.200.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="dT1E9c3Y"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1785750827;
+	bh=GZ03EPD2RMxylnn/CLUGqP3Rrch6Nxym4GqmJgtyISM=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=dT1E9c3YHR+flT1/5LtG1ts6ZpnMKGFfFL3i7mlJFRqHbj/3dxC0s8z69KoMfcYr/
+	 nkfOiyA5p6SXNLawsoQ/wbhIe1aMdARjVFu+mf6ECeLFaAlopxR2QcOCdGLgz82eeA
+	 mt7gaBypFrEKPIoXMV7lO2Y97xNga0wag+GzQN1I=
+X-QQ-mid: esmtpsz17t1785750811t09786653
+X-QQ-Originating-IP: 5HavgVDtO0+rs5FAeoIMkgzfENetjggfcZuX6GK066I=
+Received: from PEN202512010004 ( [113.57.152.160])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Mon, 03 Aug 2026 17:53:29 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 3872845753252988733
+EX-QQ-RecipientCnt: 6
+From: raoxu <raoxu@uniontech.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Fan Wu <fanwu01@zju.edu.cn>
-Subject: [PATCH] scsi: aha152x: fix use-after-free of the bottom-half work
-Date: Mon,  3 Aug 2026 08:03:45 +0000
-Message-Id: <20260803080345.467914-1-fanwu01@zju.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	raoxu@uniontech.com,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: scsi_debug: negate wrapped memcmp() result
+Date: Mon,  3 Aug 2026 17:53:28 +0800
+Message-ID: <E5AD42E9C0E18633+20260803095328.3445311-1-raoxu@uniontech.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,132 +49,59 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zi_KCgC36jGYS3BqBqbYAg--.3139S2
-X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
-X-CM-DELIVERINFO: =?B?E2XOHAXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
-	sfnXz+g1OQfMo27QHy5TwQyZy3Yle9Q/p35LEXj5/uDnknE2X+H5LoCAJcmH6LOrbvSjUM
-	ZolN+k0mktfrWwmfDPM=
-X-Coremail-Antispam: 1Uk129KBj93XoWxWw43JryxCw17Xry3Zr1kZwc_yoW5tF1rpF
-	ZIg342kF48tF4093y3JF45ur1SkF1kG34DG3s5CwsIyr1rt3WUtFnrCFWUZay5GrWkua13
-	CFW3tr17ur48AFcCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUU9Gb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r106r15M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
-	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
-	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
-	xVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
-	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s02
-	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
-	I_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
-	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj4
-	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8
-	JrUvcSsGvfC2KfnxnUUI43ZEXa7IU8rHUDUUUUU==
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6b-0
+X-QQ-XMAILINFO: N7k3iE00JiuZHsnbAtOTggDZHr/qEd6L+PbsROeznRKaF9haUZqEiI33
+	Rxz3hJ7hr3OmdUzQlOe0J79nAzLA3JaHFjmXvVwTiAN7Fj2jAxrdYYnwwdE6ya9lkwrzYiJ
+	6ZknnlLoQz7RcVMWlUmLi6noOhZwa0eIWWV63WfhYz3xGuBNeIZc6J2FHBSIF160DnyE1Ep
+	vXZqWDcvnEb08Et/R0AmTQVsfOYij6IitpddOy8qgbwY0WC9mx4FYLNbNz0gyLn8ATzO/Ai
+	kKs5IS+Vh6eX2TykNGxVdsMKMRPYzpRkSxfzNfvEmHVm0oPBeb52FqvMpml8H0Fpl10Z5rO
+	p8CahUf66G9hdNwktKced+nD4SHxOFVr1rwIq8A9AHmCxUWsMOt1L9SbTWqKRj1/FFMNMEC
+	Rt+xHQxis4rlXLMgUMPUKVFcOTsI6j4wc6FNoQllJh7WBsah5dyumktT3faX4d7WS8YA2dg
+	6x9+poQk+fi76b79EWq8e971W2977JHLLw1cq/9FEdJcsgadCfoFGIIs27/mxGpfLaON9Ad
+	ZUDxBirfHgLHy8v30OZKiX54Wk30rrwcyYfjisJI8ETSep7eoX4GJy6JI7pIk4ANCEqcTKh
+	9XAxRAUStMrRD73LqlTLINMgDXqsnXPyyBhdeNCCzJHJwtJ+GMxgw0Pj+igP1Rdus3QHPjb
+	5IKRWmti/K2JfwpkmcVpQaTM+2mKN5D5G0XB9etWRdRy46fkwzPWDGci0kQrz+cz4hgmlzR
+	KUmeRjPLSGHnNSvJjMHv75xgPHOKL5OX5M4iro46h32MrzBjTA/t6X3YPHF2VAIpDczwjwU
+	uEIBCJ1Ounuhp6NRO8zl8v5CAGbg0VoWppZUi7P2BafrJaHAzG3pFec4GHReEtZLE2iIuFK
+	JpwM2DcUaQ3a2Vwqfm5j5PVVps2XhKa3+SL7H4gYV6gcmFrVZcKeCSSJtEH/V+M/D8lEv8i
+	unCSa7B0I26/fGT4JNrRIz5Sy/dlgaqkpb3YpIYWHOKxsYSGRKT9BbANlroLl27Mok2s5Vs
+	EWNck2urL4OFiGajjcOeZAA2W73soyY+oqfLgk4mtAPtaS8lS6
+X-QQ-XMRINFO: MSVp+SPm3vtSI1QTLgDHQqIV1w2oNKDqfg==
+X-QQ-RECHKSPAM: 0
 
-The interrupt handler schedules a module-global work_struct that neither
-aha152x_release() nor the scsi_add_host() failure path cancels before
-freeing the host, so a worker armed by a just-returned interrupt can run
-after the host is freed.  Because the worker is shared across hosts,
-draining it on one host's release cannot stop another host's interrupt
-handler from re-arming it.
+From: Xu Rao <raoxu@uniontech.com>
 
-Make the work_struct per-host, initialize it once at probe, and cancel it
-from both free paths.  Each host's interrupt handler then arms only its own
-work, so cancel_work_sync() is sufficient to drain it before the host is
-freed.
+comp_write_worker() returns true when the compared data matches.
+memcmp() returns zero for equal data and non-zero for different data, so
+its result must be negated before it is stored in a bool.
 
-This issue was found by an in-house static analysis tool.
+The first segment already uses !memcmp(), but the wrapped segment uses
+memcmp() directly, reversing the match result. Use !memcmp() there as
+well.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Fixes: 38d5c8336e60 ("scsi_debug: add Report supported opcodes+tmfs; Compare and write")
 Cc: stable@vger.kernel.org
-Assisted-by: Codex:gpt-5.6
-Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
+Signed-off-by: Xu Rao <raoxu@uniontech.com>
 ---
- drivers/scsi/aha152x.c | 21 +++++++++++----------
- 1 file changed, 11 insertions(+), 10 deletions(-)
+ drivers/scsi/scsi_debug.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index e3ccb6b..1616ea7 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -509,6 +509,9 @@ struct aha152x_hostdata {
- 	struct pnp_dev *pnpdev;
- #endif
- 	struct list_head host_list;
-+
-+	struct work_struct work;
-+		/* per-host bottom-half worker */
- };
- 
- 
-@@ -635,6 +638,7 @@ static struct {
- 
- /* setup & interrupt */
- static irqreturn_t intr(int irq, void *dev_id);
-+static void run(struct work_struct *work);
- static void reset_ports(struct Scsi_Host *shpnt);
- static void aha152x_error(struct Scsi_Host *shpnt, char *msg);
- static void done(struct Scsi_Host *shpnt, unsigned char status_byte,
-@@ -759,6 +763,7 @@ struct Scsi_Host *aha152x_probe_one(struct aha152x_setup *setup)
- 	}
- 
- 	spin_lock_init(&QLOCK);
-+	INIT_WORK(&HOSTDATA(shpnt)->work, run);
- 	RECONNECT   = setup->reconnect;
- 	SYNCHRONOUS = setup->synchronous;
- 	PARITY      = setup->parity;
-@@ -856,6 +861,7 @@ struct Scsi_Host *aha152x_probe_one(struct aha152x_setup *setup)
- 	return shpnt;
- 
- out_host_put:
-+	cancel_work_sync(&HOSTDATA(shpnt)->work);
- 	list_del(&HOSTDATA(shpnt)->host_list);
- 	scsi_host_put(shpnt);
- 
-@@ -870,6 +876,7 @@ void aha152x_release(struct Scsi_Host *shpnt)
- 	scsi_remove_host(shpnt);
- 	if (shpnt->irq)
- 		free_irq(shpnt->irq, shpnt);
-+	cancel_work_sync(&HOSTDATA(shpnt)->work);
- 
- #if !defined(AHA152X_PCMCIA)
- 	if (shpnt->io_port)
-@@ -1314,21 +1321,16 @@ static void done(struct Scsi_Host *shpnt, unsigned char status_byte,
- 		printk(KERN_ERR "aha152x: done() called outside of command\n");
- }
- 
--static struct work_struct aha152x_tq;
--
- /*
-  * Run service completions on the card with interrupts enabled.
-  *
-  */
- static void run(struct work_struct *work)
- {
--	struct aha152x_hostdata *hd;
-+	struct aha152x_hostdata *hd = container_of(work, struct aha152x_hostdata, work);
-+	struct Scsi_Host *shost = container_of((void *)hd, struct Scsi_Host, hostdata);
- 
--	list_for_each_entry(hd, &aha152x_host_list, host_list) {
--		struct Scsi_Host *shost = container_of((void *)hd, struct Scsi_Host, hostdata);
--
--		is_complete(shost);
--	}
-+	is_complete(shost);
- }
- 
- /*
-@@ -1371,8 +1373,7 @@ static irqreturn_t intr(int irqno, void *dev_id)
- 		HOSTDATA(shpnt)->service=1;
- 
- 		/* Poke the BH handler */
--		INIT_WORK(&aha152x_tq, run);
--		schedule_work(&aha152x_tq);
-+		schedule_work(&HOSTDATA(shpnt)->work);
- 	}
- 	DO_UNLOCK(flags);
- 
--- 
-2.34.1
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 9d1c9c41d0f9..a5911482fc44 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4310,8 +4310,8 @@ static bool comp_write_worker(struct sdeb_store_info *sip, u64 lba, u32 num,
+ 	if (!res)
+ 		return res;
+ 	if (rest)
+-		res = memcmp(fsp, arr + ((num - rest) * lb_size),
+-			     rest * lb_size);
++		res = !memcmp(fsp, arr + ((num - rest) * lb_size),
++			      rest * lb_size);
+ 	if (!res)
+ 		return res;
+ 	if (compare_only)
+--
+2.50.1
 
