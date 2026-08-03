@@ -1,183 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53CC72AD37
-	for <linux-scsi@vger.kernel.org>; Sun,  2 Aug 2026 23:16:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C7212F8EB0
+	for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2026 01:42:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785712568; cv=none; b=mRLhK7q4yGf3hcmIbLr+T554oOuJNZITqv7TcbBn7UWQV2BlC8pxbnsN4UWhuq/KJG94/0EsyTBQuaDyteE+pyKIDPhExFX4OK03ws15VETB7et2poJdnBhM5pqNySbjySIgdqJu9gImvlXD4PDIS1ULlRetlwq8FsIA9sy+fls=
+	t=1785721356; cv=none; b=GxF3NMLpwk/OSFiGF2d8ZIQdCNXaldfSoq9LEbfS73GmIMXHP4Gs1WFguE93cmxiAPjaxthHuWUwCj2dTeQDVfDL0FP/Ct26DZZyMu8TLrVzRKs+0Jj7ncUpT6DmljPUXR44LZOg8sNdqPQJPMcXDTlWxyUpdd2k123ufAYaEbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785712568; c=relaxed/simple;
-	bh=gZ1J/+3G/pKh/wKEjA2dMaEb0/zRrGyT4f7RgsZll6w=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kpFCYoBYTa+OrlkNdneW4epHYtgBEWqW8RsKnj3Dc6IzpsB7qGl79kDmG9GvAKBB6ScWHAFGAWbmDvBDzmPKBtmCiMJf7c2Un+ximJvSYWIIaIUs3rK7leXz/f9qisc8ofu19H8UlNZ0mhodHxmF8dm1ULyTwv62yigEzLEh0M8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j+nrY2p0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785721356; c=relaxed/simple;
+	bh=S01THjx3GU4adJn0CGfQrT4Wr8H1w2uxdmBziA3XZE4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Eso1OLp9jA11g/uRyWGqGmpPZScYQblt4NsDLZuVA9nSXIpD7f+h6STfzo6Eer9+LnjT/qIvT2oRRfDKxeuO6PSPq7hLJUbeEQTsoB2PewsYK9y8Xk1nczgwFK9665/0qGrRCJioUZ9G0QZ6DqeuOSou4muN2Hb1zkQwZrYAWdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZpGt1sOc; arc=none smtp.client-ip=209.85.219.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j+nrY2p0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B89011F000E9;
-	Sun,  2 Aug 2026 23:16:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785712566;
-	bh=Ga4jW7fbgmfXCmkoQVjrvSVmUTBzF6zemM+i60hRWME=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=j+nrY2p0bZL23A6kAc4f7546c5OV98xs8tnQ7SPekdGVC/esYQmjklQEVpI+epNuB
-	 G8bE4/92OUu1Myt5EdSE0kesIix6Olbh2U/EoqUAmjGfT9n/xPdjO29TKpu6tWNGWP
-	 OcKoEyGqctaAGOyu5rLz06jZaqjTQ0416Se5ioCriatsMcYrvjNE6CZrdBTi7H/FFJ
-	 acIFXW0l8jYA4wEw+cMtT90c2o0p/RFbcr9rxVf7pxV8xAhRHX3ca2uYYcmetuXlLZ
-	 t+b5m4oiPUdwto8waAieSN+a0TcUj/9wIbi3E/kkgR423fyRz8azRNPwDQu48ejnx4
-	 +C9/672eBEwVA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1] scsi: qla2xxx: Cancel qpair work before freeing
- queues
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yuho Choi" <dbgh9129@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260802230039.586918-1-dbgh9129@gmail.com>
-References: <20260802230039.586918-1-dbgh9129@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 02 Aug 2026 23:16:06 +0000
-Message-Id: <20260802231606.B89011F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZpGt1sOc"
+Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-8f1e274ccb9so14540326d6.2
+        for <linux-scsi@vger.kernel.org>; Sun, 02 Aug 2026 18:42:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785721354; x=1786326154; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=DawTbNdk1LZcBXCoupSLgXbzUs4SU4vadYzb1030Krs=;
+        b=ZpGt1sOcEloIGzua3GT9grqvpPKpdOaiI9wB6VlmiyCOIgjn04HhnM9toTVaYn6Qg/
+         LKqKLkhsqff2ublpF7+Ibspwky3OlQPjlrNjcDt8Pn3lW+cwRPQoTmFxD4x+HdtMJ3gg
+         1+BphU7jJKH5om67dvSl8ErJ58tlMulXWeHstfnDtetDKGR/lPcqdy5NYfOBPDdolUDg
+         grBjtA6TqhGTGStUaWHBhULBFh0mhti7edWSbYzJ82dSas6masm++hsbbu6Ngc2NBYdZ
+         eBYDHYDcxv1x5YVOcUJHqfXE/A9/YqOH6s83vVJ2A2B7euW+V1mMVD1EMRwyz4/Z6SWP
+         wsOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785721354; x=1786326154;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=DawTbNdk1LZcBXCoupSLgXbzUs4SU4vadYzb1030Krs=;
+        b=Q+FndIpDHVBGP5T9vGUzxa99dmkSaO/soo6aV9NNGN173HJD2HATipb22ZtOUwZsQQ
+         kRALE2vUoP3RwnHUG+gtuPN2659ic3eQSzdL3I4NjIV0yiZvndqtGzgZYv6FFFspzcSq
+         o0QBhoYDvhhB4MSAQza7BhWoP3Fxe5aXkRSslHjwPb49IiMdFuIrREnyqqYuOHmIN7pB
+         r3QmuV0rtj+fRraO8gAy6+K4W/0Cy8mS51Zp5YSxop1tJi4PwP6zhqxpG5eYkdC77LjC
+         SdpV3aWHveg8LBx8Qgez3bzwhomUyfejSVXRyR4Jd9ta/CvVCgKu6gqRnN/iW8nXJVA7
+         xhUQ==
+X-Gm-Message-State: AOJu0YxDFL8eUbYeVnl3IuBsypmNMAzdrOrw8gE6uAXuzI1GV+yuKuE1
+	EyQSkz4uQS1oEsElUfBr/POaR/jpsrDvK48n3WaRGiOzJg4E1yBeHKCG
+X-Gm-Gg: AR+sD10ZXfMRBNrUxhgib69kAsxBRzpXsnmO1PgvqG2e1mfpcKPW73BMkVA9AdYL/wd
+	oS8niTtSNn9RnDk9UZW7o/PLNMDH7+MyvmYqfZavhTkw/8J0G1IfuMMBAnQLCfe5giQ1+n3G4rN
+	/9zZOZigGD8pqD0hrR8ONAHTb5dSD2zGdDA6WLRI+T5qYvEsYqfBdq6pRWH7egzcz1p0YRBu92Y
+	LJCQ7pJxD2CpByMwxDqgmVkqH26yoATa4PaJ9hSJrn41YfBYXyo1/vNUeZJLLjkhMMFUGhnLlTk
+	slAPelLK7kE/yKte0Cesr122Qg5QpKZM1OTJJ79HU9Q4kKoksQPmrTLYz8uXnaaYRxT45FuKP9Z
+	RbUx/JeFFYiilkZxymX2H8jkEU+mWmLko5x2/1Ae2UsUT+vliTbhvKFyAJE4vX1tPNgfNCqbBYz
+	4wAQvnzOrLFXrG4ELzsTZLsKsVB36dElFFrcMJDf+yxscJ5ObzbCXcKi8HWnsbGzZH1ltXU786B
+	xZZCzsHXp8hEne4VlMltLEoj373NwhsPZqWxEMYgNQwMyS32+FTm82KFaZo2Z0=
+X-Received: by 2002:a05:6214:449f:b0:8f3:e97:59b8 with SMTP id 6a1803df08f44-908496af620mr181485536d6.29.1785721353981;
+        Sun, 02 Aug 2026 18:42:33 -0700 (PDT)
+Received: from i4-gl-tmk5904.ad.psu.edu ([130.203.156.186])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-908435eab41sm64167096d6.34.2026.08.02.18.42.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 02 Aug 2026 18:42:32 -0700 (PDT)
+From: Yuho Choi <dbgh9129@gmail.com>
+To: ketan.mukadam@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yuho Choi <dbgh9129@gmail.com>
+Subject: [PATCH v1] scsi: be2iscsi: Fix MSI-X IRQ cleanup
+Date: Sun,  2 Aug 2026 21:42:24 -0400
+Message-ID: <20260803014224.614347-1-dbgh9129@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+beiscsi_init_irqs() uses j to walk previously registered MSI-X vectors
+when unwinding an allocation or request_irq() failure, but passes i to
+pci_irq_vector(). Consequently, each free_irq() targets the failing
+vector instead of the vector associated with be_eq[j].
 
-New issues:
-- [High] The patch adds `cancel_work_sync(&qpair->q_work)` before unregiste=
-ring the MSI-X interrupt, leaving a race window where the active interrupt =
-handler can re-queue the work, leading to a Use-After-Free when the queue p=
-air is subsequently freed.
+Use j to release the same vector that was registered. This ensures all
+successfully requested IRQs are freed before initialization failure tears
+down the HBA.
 
-Pre-existing issues:
-- [High] If deleting the request or response queue fails, `qla2xxx_delete_q=
-pair()` bails out early, leaking the queue pair's software resources.
-- [High] `request_irq()` is called before `INIT_WORK(&qpair->q_work, qla_do=
-_work)`, allowing an early interrupt to enqueue a zero-allocated (uninitial=
-ized) `work_struct`.
-- [High] Software memory and DMA rings for queues are permanently leaked wh=
-en `qpairs_req_created` is false.
---
+Fixes: 831488669a33 ("scsi: be2iscsi: switch to pci_alloc_irq_vectors")
+Signed-off-by: Yuho Choi <dbgh9129@gmail.com>
+---
+ drivers/scsi/be2iscsi/be_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- Patch [1]: [PATCH v1] scsi: qla2xxx: Cancel qpair work before freeing q=
-ueues ---
-commit 6aefba2c9206876be8f5e675b0612f13ef6a77b5
-Author: Yuho Choi <dbgh9129@gmail.com>
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index fd18d4d3d219..9833ab06b299 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -878,7 +878,7 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 	return 0;
+ free_msix_irqs:
+ 	for (j = i - 1; j >= 0; j--) {
+-		free_irq(pci_irq_vector(pcidev, i), &phwi_context->be_eq[j]);
++		free_irq(pci_irq_vector(pcidev, j), &phwi_context->be_eq[j]);
+ 		kfree(phba->msi_name[j]);
+ 	}
+ 	return ret;
+-- 
+2.43.0
 
-scsi: qla2xxx: Cancel qpair work before freeing queues
-
-This commit fixes an issue where the qpair response interrupt handler could
-queue work with a deleted qpair context. It does this by marking the qpair
-for deletion and cancelling its work earlier in the teardown and error path=
-s.
-
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
-nit.c
-> index e746c9274cded..d5cd33e84720e 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-[ ... ]
-> @@ -10028,6 +10034,8 @@ int qla2xxx_delete_qpair(struct scsi_qla_host *vh=
-a, struct qla_qpair *qpair)
->  	struct qla_hw_data *ha =3D qpair->hw;
-> =20
->  	qpair->delete_in_progress =3D 1;
-> +	if (qpair->hw->wq)
-> +		cancel_work_sync(&qpair->q_work);
-
-[Severity: High]
-Does this leave a window where an interrupt can re-queue the work before the
-interrupt is unregistered?
-
-Because qla2xxx_msix_rsp_q() unconditionally queues the work without checki=
-ng
-delete_in_progress:
-
-drivers/scsi/qla2xxx/qla_isr.c:qla2xxx_msix_rsp_q() {
-    ...
-    queue_work(ha->wq, &qpair->q_work);
-    return IRQ_HANDLED;
-}
-
-And the interrupt isn't unregistered until later in the teardown when
-qla25xx_delete_rsp_que() calls free_irq(), could a late interrupt fire right
-after cancel_work_sync() and re-queue the work, leading to a use-after-free
-when the qpair is eventually freed?
-
-> =20
->  	qla_free_buf_pool(qpair);
-> =20
->  	ret =3D qla25xx_delete_req_que(vha, qpair->req);
->  	if (ret !=3D QLA_SUCCESS)
->  		goto fail;
-
-[Severity: High]
-This is a pre-existing issue, but could this early bailout leak the queue
-pair's software resources?
-
-If qla25xx_delete_req_que() times out or fails (e.g., due to unresponsive
-hardware) and returns QLA_FUNCTION_FAILED, it takes the goto fail path and
-returns early. Will this skip freeing the remaining DMA buffers, kernel
-structures, and MSI-X vectors that are typically cleaned up unconditionally
-at the bottom of qla2xxx_delete_qpair()?
-
-
-I also noticed a few pre-existing issues in related code:
-
-drivers/scsi/qla2xxx/qla_mid.c:qla25xx_create_rsp_que() {
-    ...
-	ret =3D qla25xx_request_irq(ha, qpair, qpair->msix);
-	if (ret)
-		goto que_failed;
-
-	if (startqp) {
-    ...
-}
-
-[Severity: High]
-This isn't a bug introduced by this patch, but can an early interrupt
-trigger a panic here?
-
-Since the interrupt is enabled by request_irq() before INIT_WORK() initiali=
-zes
-qpair->q_work at the end of the function, could an interrupt fire immediate=
-ly
-and cause the handler to enqueue a zero-allocated (uninitialized) work_stru=
-ct,
-leading to a NULL pointer dereference in the workqueue worker thread?
-
-
-drivers/scsi/qla2xxx/qla_mid.c:qla25xx_delete_req_que() {
-	...
-	if (req && vha->flags.qpairs_req_created) {
-		req->options |=3D BIT_0;
-		ret =3D qla25xx_init_req_que(vha, req);
-		if (ret !=3D QLA_SUCCESS)
-			return QLA_FUNCTION_FAILED;
-
-		qla25xx_free_req_que(vha, req);
-	}
-
-	return ret;
-}
-
-[Severity: High]
-This is a pre-existing issue, but does this function permanently leak memory
-when qpairs_req_created is false?
-
-If a queue pair is created with startqp=3Dfalse, the rings are allocated but
-vha->flags.qpairs_req_created remains unset. During teardown, this function
-evaluates the flag to false, returns QLA_SUCCESS early, and completely skips
-qla25xx_free_req_que(). Will this leak the DMA rings (req->ring) and queue
-structures upon driver unbind?
-
-The same pattern also exists in qla25xx_delete_rsp_que() when
-qpairs_rsp_created is false.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260802230039.5869=
-18-1-dbgh9129@gmail.com?part=3D1
