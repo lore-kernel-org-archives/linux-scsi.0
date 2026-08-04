@@ -1,131 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8124305691
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 21:50:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D95F3A1A23
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 21:52:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785880209; cv=none; b=tzSPy+sEkS4PGNo13B73OQU+TDCXIHIKRY03NJcyQJMqXvQGQYkF2R9zknMsN9G9TEDEPSQpMVGa/MF2j7Fg9RbAHvZoL1HeqnVPI5+6GBhUWMZRX9ZXDtyEuPrnKnJARPDuKeV8HCe4dwq31rSgHx+F3fFL7tL8TZCGdRDwHGs=
+	t=1785880346; cv=none; b=Y1IKx3oWiij7ttB7SB5zfsBjk8/Jkc/g6SFJXO/RRW1Hy+RScWF0cQPbzBb7Vywx2xfloRRCrikqkrsgOu7l84AwaF9l6vfjqDUQxY70Vax867r6rZpXfwuyVXgR6L5h+vybZTmxvon9VWdf11XuWWD8k4KKsbglpiCHp7Ucx6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785880209; c=relaxed/simple;
-	bh=3X8t0fTieamARQiSPg8tpNSrMW09+S+cbI0vjDceBhY=;
+	s=arc-20240116; t=1785880346; c=relaxed/simple;
+	bh=Nlviqz3sjNjTddmKWLCznbQzvVWzTowfAGJuJlDMrv4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jv6dmm6J/ZT4xCiJC1oXXMiHwgoZIoY78loog0P99lKhPPSLlbr5GNF6gplJTKt/KVP9GYLjsrN/c2X4MA5DMt0u+U6jlL+YAhc+O/QD72SiHqHlE5oYgWVZgzOEH4Volt+909bY5o43tDGkbh1kfunl30T6cIn5QgEkzoZqZAI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QQVSyl17; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=rPPmmTXrj1I365EY3rG6tg5vzWFsPk+6noHzRYFtqBW7oTuywj+rxeLjPwt2MRso74x6vzCOwBWU3f3F9pDj8+fqPh+jK+CCU3T69wlW/2WZkAedfdwZ6ZnGlvgk71Vz9huUO4KNqNpYWvovKuzUkpgaG0jRzrddjky0DLxWLrY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nm3vYPgr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QQVSyl17"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F1381F000E9;
-	Tue,  4 Aug 2026 21:50:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nm3vYPgr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D31921F000E9;
+	Tue,  4 Aug 2026 21:52:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785880208;
-	bh=pwgdBZh9XMrxK11uxstMwni4hKuWF52YF8TgSKOczC8=;
+	s=k20260515; t=1785880345;
+	bh=2IGr6RibtGUJUzQaxNSP07MDF20iprowsxuUTJ79ofE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QQVSyl17KV0T3x8//wdox9+J/HoFqiz6p2VBJQH8bwT3yQ260nEwHzRlmAZC9KpHQ
-	 3XKh+KMKgxDGnJpR5jdm/FUmJyMeD+E6jRsjvBYoToahSzSHC1YZksn9GTVUtvmY8X
-	 /Bbctu5lEbR2U0yMx6q+LMKHAtwzWH5HMKJN13CeML1VG/CVOD54JH/aCMMK9OZAv+
-	 8i+JHhcraTBfBgZ8rzhZ7evBy8mjG4EyVbj5akVXPvnBYmtyeJOPSToVZ9MDcJHBLW
-	 wmJMY4PnvH6OjWUa+tt21P1LA7uaaPfDbfQVevtYI5OXjgOSLyecJLLPEU+iN36Iq4
-	 FBlA89adkqInA==
+	b=nm3vYPgrkepVEHqrngxf6pvX8+3JeossD+lDjhSlg8WVdsWQGC9riOmaJ1xAahkWy
+	 NorpR2lWis5onAX2CMS3B0hQZrCqjB+d3RWWMsBByrjUfZcaA8WKTeqj9mc5tjjHS3
+	 rICcPkx2l35CI50ZPd1e789M1D3+8EkF5pv2R0lWKLZ5Frx6Lfe9FD/IcOxzISDK3F
+	 N7MZ6wch+1iaaA25Qf8nM7nKPkZM2yxBvjAN2v4Em/Q+j5rT1+0BsGI/Q0LPE8J8FY
+	 tdLNQLBq/bjS6E6I80Qhm5sxgDcQTqm3c98P5M30oy8HRni9aAorTB2S/4/RCZzTFk
+	 zqHfHYEetZDtQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: use kref_get_unless_zero() in
- core_get_se_deve_from_rtpi()
+Subject: Re: [PATCH] scsi: target: tcm_fc: use kref_get_unless_zero() in
+ ft_sess_get()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yifei Gao" <gyf161023@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260804213726.3411698-1-gyf161023@gmail.com>
-References: <20260804213726.3411698-1-gyf161023@gmail.com>
+In-Reply-To: <20260804213703.3411166-1-gyf161023@gmail.com>
+References: <20260804213703.3411166-1-gyf161023@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 04 Aug 2026 21:50:07 +0000
-Message-Id: <20260804215008.2F1381F000E9@smtp.kernel.org>
+Date: Tue, 04 Aug 2026 21:52:24 +0000
+Message-Id: <20260804215224.D31921F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] The patch addresses a kref revival race in `core_get_se_deve_from_=
-rtpi()`, but identically flawed `kref_get()` patterns remain in `__core_scs=
-i3_do_alloc_registration()` and `core_scsi3_check_aptpl_registration()`.
-- [High] Fetching `tfc_sess` under RCU using a plain `kref_get()` in `ft_se=
-ss_get()` can revive a 0-refcount object, leading to a double free.
+- [High] Use-after-free in ft_sess_delete_all() due to unsafe RCU list iter=
+ation while blocking
 --
 
---- Patch [1]: [PATCH] scsi: target: use kref_get_unless_zero() in core_get=
-_se_deve_from_rtpi() ---
-commit 1ccb09531fbaa5b4a4d4c2e984295bc9d5b45e8e
+--- Patch [1]: [PATCH] scsi: target: tcm_fc: use kref_get_unless_zero() in =
+ft_sess_get() ---
+commit 7c29402c5a3237eba08c6ba5beba9b0842deb5e7
 Author: Yifei Gao <gyf161023@gmail.com>
 
-scsi: target: use kref_get_unless_zero() in core_get_se_deve_from_rtpi()
+scsi: target: tcm_fc: use kref_get_unless_zero() in ft_sess_get()
 
-This commit fixes a use-after-free vulnerability in core_get_se_deve_from_r=
-tpi().
-It replaces a plain kref_get() with kref_get_unless_zero() when acquiring a
-reference to se_dev_entry under RCU. This prevents the revival of a 0-refco=
-unt
-object during a concurrent teardown.
+ft_sess_get() walks the RCU-protected session hash under rcu_read_lock()
+and takes a plain kref_get() on a matching session. Session teardown does
+hlist_del_rcu() and then drops ft_lport_lock before the final
+ft_sess_put() -> kfree_rcu(). A reader that is preempted between the
+port_id comparison and the kref_get() can therefore revive a session whose
+refcount has already dropped to zero and is pending free, leading to a
+use-after-free and a double target_remove_session().
 
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_=
-core_device.c
-> index 9db2201aa553f..bff97c6efffbe 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -220,7 +220,8 @@ struct se_dev_entry *core_get_se_deve_from_rtpi(
->  		if (lun->lun_tpg->tpg_rtpi !=3D rtpi)
->  			continue;
-> =20
-> -		kref_get(&deve->pr_kref);
-> +		if (!kref_get_unless_zero(&deve->pr_kref))
-> +			continue;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but since this addresses a kref=
-=20
-revival race, could the same flaw exist in other places doing lockless RCU
-lookups of se_dev_entry?
-
-For example, drivers/target/target_core_pr.c:__core_scsi3_do_alloc_registra=
-tion()
-does:
-
-		kref_get(&pr_reg->pr_reg_deve->pr_kref);
-		rcu_read_unlock();
-
-And similarly in drivers/target/target_core_pr.c:core_scsi3_check_aptpl_reg=
-istration():
-
-			kref_get(&pr_reg->pr_reg_deve->pr_kref);
-			rcu_read_unlock();
-
-If a concurrent disable path unhashes the entry and drops its final referen=
-ce,
-could a delayed reader executing the plain kref_get() resurrect the dying
-object and cause a use-after-free when the disable path proceeds to free it
-via call_rcu()?
+> diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc=
+_sess.c
+> index 797be06ab71b8..1bc7d2dcbea36 100644
+> --- a/drivers/target/tcm_fc/tfc_sess.c
+> +++ b/drivers/target/tcm_fc/tfc_sess.c
+> @@ -172,7 +172,8 @@ static struct ft_sess *ft_sess_get(struct fc_lport *l=
+port, u32 port_id)
+>  	head =3D &tport->hash[ft_sess_hash(port_id)];
+>  	hlist_for_each_entry_rcu(sess, head, hash) {
+>  		if (sess->port_id =3D=3D port_id) {
+> -			kref_get(&sess->kref);
+> +			if (!kref_get_unless_zero(&sess->kref))
+> +				break;
+>  			rcu_read_unlock();
+>  			TFC_SESS_DBG(lport, "port_id %x found %p\n",
+>  				     port_id, sess);
 
 [Severity: High]
-This is another pre-existing issue, but while looking at plain kref_get()
-usage under RCU, could a similar double-free issue occur in
-drivers/target/tcm_fc/tfc_sess.c:ft_sess_get()?
+This isn't a bug introduced by this patch, but while reviewing the use of
+RCU list iteration in this file, I noticed a pre-existing issue in
+ft_sess_delete_all().
 
-			kref_get(&sess->kref);
-			rcu_read_unlock();
+During port teardown, the code iterates over the session hash table:
 
-If a teardown path (like handling a PRLO) calls ft_sess_delete() to unhash
-the session and drops the final reference concurrently, could a reader
-executing this plain kref_get() resurrect the session?
+drivers/target/tcm_fc/tfc_sess.c:ft_sess_delete_all() {
+    ...
+		hlist_for_each_entry_rcu(sess, head, hash) {
+			ft_sess_unhash(sess);
+			ft_close_sess(sess);	/* release from table */
+		}
+    ...
+}
 
-When the reader later drops its reference, would this lead to=20
-target_remove_session() and kfree_rcu() executing a second time?
+The iteration uses hlist_for_each_entry_rcu(), but ft_close_sess() calls
+target_wait_for_sess_cmds() which blocks, and then drops the final table
+reference triggering kfree_rcu(sess).
 
->  		rcu_read_unlock();
-> =20
->  		return deve;
+Because the thread sleeps, an RCU grace period can easily expire before the
+loop macro evaluates the next element (sess->hash.next), resulting in a read
+of freed memory.
+
+Does this loop need to use a safe iterator that doesn't rely on RCU
+while blocking, or restart the iteration after closing a session?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260804213726.3411=
-698-1-gyf161023@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260804213703.3411=
+166-1-gyf161023@gmail.com?part=3D1
