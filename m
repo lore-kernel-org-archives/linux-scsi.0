@@ -1,73 +1,75 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F37240C5AE
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 21:37:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38D9D480965
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 21:37:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785879433; cv=none; b=p/XVhwl/FPLZ+1w/M7IBELB7AQr8Wan8usNbDiNKm0UGppcvQ3eUD8HeFVnub2vmq/YuoOd7lOOZ0eeqqCs2LzJIti4V83KhRpToj+8a0jr/XX0D2N5wou4EAgy/kKU84fPQrRa9VBQN/OdqwApL7Tg0hUCJaiZMqKAPnnAX5zI=
+	t=1785879456; cv=none; b=S5fYUoYr/tiORwwotN2EQz5zb0cm5w3EfsRztWaklvMm2T2j7Yj0R+XyqE38YXHXV+SZp+521Cpnd9i1XgoT4zVpJFupeAqhn6xYD6aqpO9judwb60sbmbpyGE9eY8eOra9c453Gy+BhtcjiEOw+U2D5I5TInTd4XzwOwx7h0Kw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785879433; c=relaxed/simple;
-	bh=EojRtJx11W5xlguZUK4s5OiYfzm/jUFXVb7sX9hq9PE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dMpHt5QgDOZMZIxoh2bPeXnZE0JBOb+C/67ca3pE3LNhBreTxtgaTUvpfn7RPv1rDgYys2D47fJXqxlH8yqxCypwPAxDLaEcJgDGEeddhIT6MPgCbIvRcrYTCL/CAy4F05LqnHGpW7pqhJKm3nWINwxLv1ZSOTkR7UJc7ZO75WE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rtFC8i+i; arc=none smtp.client-ip=209.85.214.174
+	s=arc-20240116; t=1785879456; c=relaxed/simple;
+	bh=hK4xPGY2IK3gul7IpcA8bnueNq7919WPVp+ViX9mklk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lrhSkduu1Mf493JurmihYKlXfzw3ukG6YTdlf5KxANV/iHklLVjLRC2fdB4lSQb1X1fCVfjaqqjo5DZmiGB9OeSKjWTPuRmRT+cOscXWAblD0a+Czm3UX6ocl3IyoJqhiD7KrIxEtx3OXZ1MnQ1KfEXH0psy6xd0NeuXkWYA0ts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FP//a1VQ; arc=none smtp.client-ip=209.85.215.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rtFC8i+i"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2cace91f112so4394365ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2026 14:37:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FP//a1VQ"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-c981c2c37cbso192222a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2026 14:37:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785879432; x=1786484232; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785879454; x=1786484254; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=i+wiL1g37iz3L+Oh1WFh/qb02WbdA5XTOtdYfs+Nou8=;
-        b=rtFC8i+imWIcK/Bf3jTHIti4mE5qdwFjcIgyZaxH2OYWK98I5Mup2NvVA41LNAAYDD
-         a2+deYmWeeDDS550BwmcgrZ/s/pLMLyOzoiy4bW+9fH5HGR1rxgsitFAqYx/sE65EZ+3
-         y4gBu2fugFC2HxNs2WA4m3m4uIPIwo1DKRbezpUNBaUKpqsd5slGkPYxhemz28cgsZJr
-         evN4QRW+lIEfN8KRMy4AeDC69AsaF4BKdqc/7Hy7kXFb4Mlq6Cq8kyyEICyL2BpzF7C0
-         5oke3Z4LZxm/Pgzf6xOgipsdZjeGELcE5niCNljwoO3QAEh/rqhNe3pG/Bfq8KdXsgGG
-         4M0Q==
+        bh=JOJcT04MAKZ1R+76HgJ67upFnuCPH8VuW68e8b3zSd4=;
+        b=FP//a1VQLkR01akOee+BfgGu0DLtvpJ5nNcfey3y5ZbeaaSQmH/RcmX75DbfFPVLLD
+         MxxtgvvP/p3HaiO5uMRQjjyhYR03yEiiTL0usmgEINsjoXZRd5RQFFuXQaHgL6tLh4wr
+         Teg2XwXLvw3G0QWREJX+g7Zbubbquuf8uXkgYC5EiG1zmuV/k5oZBIELlD8aA1/AUId+
+         oXfG59JQAWxIcwosJ64/n9Vso7VU+C6t5o7C2Heg/RvwO3WdqYVtzIdAHF41DkJiiK+I
+         Dj+CPgXbzxo1P44btva8E6+01oDoG2LtpQxTUNESUnJJ5TTfFvjiWJZORGW7Tt9N3ewE
+         /SwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785879432; x=1786484232;
+        d=1e100.net; s=20251104; t=1785879454; x=1786484254;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=i+wiL1g37iz3L+Oh1WFh/qb02WbdA5XTOtdYfs+Nou8=;
-        b=WZk3sTHTnEndDcHFm8JACtb4hHO/aLKGrng9WFwMKq0re7zeeES+EDvCkaLrDGwqbJ
-         FCzHVe8g9+2TC7fhWRpoPtfFqxnsBhdd9uDWOofL+pTKLNbjflDF0n9iYpUNsodiPcE1
-         DJXj48s+DbGUGcuMu6vHF//nzNjvlyAGu5jRWAi443/pxw6BnAoMUGZ7Q1WTY9fMeaR5
-         1rYn7LZPdGN/HLwXfiebA+fCP6rRRPu6315hNw4K4Uq5egA+g5hYFVoz0Z9p4sGieX/Q
-         TYqIz3XplOujJXwUKPpkAmkqQdmxSmJl2zhhm1BxnAgBJuv6v/lj2FQ+R/vKqFUsoaia
-         OX1A==
-X-Forwarded-Encrypted: i=1; AHgh+RqkQxZM2YsNqxphzA4nE9QBBJtpWDpBmI/388e9lnyhSqh+YlJSDp1nsUATtqGlfWBdefUaMiOS5UzV@vger.kernel.org
-X-Gm-Message-State: AOJu0YxjLr2OQob2Tq3D1J3kcFxvv7NBJCRrrA6fPB0PPAETcztZu8mn
-	VMtIt/Qk1Ys2soGfU49afVVkAwzdSOTySjIWfZOllzfLB+UWn/AfrmcV
-X-Gm-Gg: AR+sD10b/hWZUYo/XZ3k4nHI2En6rqXVyF/+BJS4P6foSdISRFEp9KcJW+e7eMPnzkj
-	HiVuII50ZR2Gc8Y1P7g8GXZ9PknuoQnWoCtQa30TEYJKDDG233pymDjgh7LyrBuHuVmAPs2ujSc
-	cxvMuMRu1q0jQiACwDXI8dX2H0KfEwoZF5SgqtB1C8lvSql4dThsk7K3A8XdAn0W5Sdc1ZHCyQk
-	czS8SKCndAy0UoFnHmevL/DRiQQB1vWRq9JWFuDKfDw2iFJIPiw6ZOg++0Q8YB4dLUj/YPvebj/
-	qmeI3wzlK121WSA7kZjlU4wo8uAd/G+Q3BbFOkuzBw7QPqd+cotCXBFR/CqFDfLdVARCPEu7LIo
-	1BER9I9WUT6lcscWsCFu1lH5FqXBIpUZdHnBDtu8eSOEI0/+aGR1SAZDwx09deZB0RWAWyuwP1F
-	X5xyAEIgp9z3ftmJkVp7DTu01nnQA4lqIfudpTCKtO47nePu0Z5Mu3gCDZXom2R/LEbV/ZwGLE4
-	n3IS3ibu5cTs2TyEhzgtmadHxBdkuH9eCsp+IDVQR0=
-X-Received: by 2002:a05:6a21:329c:b0:3c3:8315:80b7 with SMTP id adf61e73a8af0-3cb85e9757amr1738601637.9.1785879431707;
-        Tue, 04 Aug 2026 14:37:11 -0700 (PDT)
+        bh=JOJcT04MAKZ1R+76HgJ67upFnuCPH8VuW68e8b3zSd4=;
+        b=gcqYHxkBhhT2gn8H9BmjheDwEOPDZA75vlLlmEMIUnGqTZu260qw/ADzTQv4H9wno+
+         SdSd5HzLP+GQmAEYzDp2dTnND89cvtNM7qHNpbgbEq3o/wOiCV0ezYwNo2G0qqZKYPrY
+         c9P+B6Foq/rm/Wsi//w9JGsw6nTFEuv0Dphvx0ldzir2Xe8bI6nHCPZm5Vw0yUGxvlIE
+         6yXDUJQrkYAWOqmy+S3L+NhBWqXRDyvTpTvPTBPIG9dO+M5lqPQVBHhpM1cMjieliazP
+         CJqzBPcDOm2ewFkQaVSvPhnc8hXcuxJduAtSmP2za0+9RemtbZXlJAYKO4y82nSGrr9y
+         z2QQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrzuQvbNOzADcAVxLA1UTXvMQwMpx22pWF60W5VYt4eAlv0fOBHv6FyNorXs7OfxxVNFDRfty9yTU9C@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx33yexgt5f/LehHYN+h178TOY/5er4byUilwiyJY/MjYFk71pM
+	lesj7m2N8yx1yiE2R48FqvHP4LhB3XJjmQONTaTvzDihw3sXkTzRlgq6qvJDPmy2
+X-Gm-Gg: AR+sD11PuM6KwJe2haVIlpjMXQ0wD0BnYLu7CZRrrYDS6CgzGp76y/Mq3n8npslfdso
+	9wQR164EOSUraE2JzqK1QAU0V4SYPIVXvLimtKr7TdqnJs68v34ltWNkecSHxngdKb2zxapsl5M
+	OFwsaUVBysts6EM8gvj5lp8oCpDouFz6yTMbMsJ2CnK6vZ3rLohsPi54cbRVrDYYdaRooWsxhy/
+	VZWyC8eNLy7Pu524qrRGmIbva5axZ95rQzHEtjiBg+xQEEVvOvQZEhYVLDFZnDu9Mq+xaxlN7Ey
+	ccvTs+56joPHsmriw5bj1sy5qdv/7+q2yfiPMwwdh/uDctnC9OYCTijVxavE0h0IMMmKaIL1Jht
+	75QOWcnOLWjzpW2ZlQZw+cGXnAc0QDU2HUt5NuTSUEXnV14YJGvZrYfSMEEeyOC07olp/l3xhTH
+	H3nhgmKTSPLdTzN95QAaKFANhV6W3ndKSaKk5IbGfIsonsSMSfl8mtjlglxdz3U/lP+TiS04CL+
+	hTF58PAbedyr2TRJ+2gOEJAQngNXBsMtkDTYdXnTJc=
+X-Received: by 2002:a05:6a21:3392:b0:3c3:9595:57ef with SMTP id adf61e73a8af0-3cb85ffd1cemr1992015637.31.1785879454517;
+        Tue, 04 Aug 2026 14:37:34 -0700 (PDT)
 Received: from LAPTOP-DPAKMOI4.it.purdue.edu (pal-210-106-74.itap.purdue.edu. [128.210.106.74])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fca8df89asm13408224c88.9.2026.08.04.14.37.10
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158673a9e4sm9532563eec.18.2026.08.04.14.37.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Aug 2026 14:37:11 -0700 (PDT)
+        Tue, 04 Aug 2026 14:37:34 -0700 (PDT)
 From: Yifei Gao <gyf161023@gmail.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org
-Cc: Mike Christie <michael.christie@oracle.com>,
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>,
+	Hannes Reinecke <hare@suse.de>,
+	Mike Christie <michael.christie@oracle.com>,
 	linux-kernel@vger.kernel.org,
 	Yifei Gao <gyf161023@gmail.com>,
 	stable@vger.kernel.org
-Subject: [PATCH] scsi: target: tcm_fc: use kref_get_unless_zero() in ft_sess_get()
-Date: Tue,  4 Aug 2026 21:37:02 +0000
-Message-ID: <20260804213703.3411166-1-gyf161023@gmail.com>
+Subject: [PATCH] scsi: target: use kref_get_unless_zero() in core_get_se_deve_from_rtpi()
+Date: Tue,  4 Aug 2026 21:37:25 +0000
+Message-ID: <20260804213726.3411698-1-gyf161023@gmail.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -77,40 +79,40 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ft_sess_get() walks the RCU-protected session hash under rcu_read_lock()
-and takes a plain kref_get() on a matching session. Session teardown does
-hlist_del_rcu() and then drops ft_lport_lock before the final
-ft_sess_put() -> kfree_rcu(). A reader that is preempted between the
-port_id comparison and the kref_get() can therefore revive a session whose
-refcount has already dropped to zero and is pending free, leading to a
-use-after-free and a double target_remove_session().
+core_get_se_deve_from_rtpi() iterates nacl->lun_entry_hlist under
+rcu_read_lock() and takes a plain kref_get() on deve->pr_kref for the
+matching entry. The disable path, core_disable_device_list_for_node(),
+unhashes the entry, drops the final reference, waits for pr_comp and
+frees it via call_rcu() while holding lun_entry_mutex, which the reader
+does not hold. A reader racing that path can revive the kref after it has
+reached zero, defeating the pr_comp completion barrier and leading to a
+use-after-free.
 
-Use kref_get_unless_zero() and treat a zero refcount as "not found",
-matching the standard pattern for RCU lookups that race with kref-based
-teardown.
+Use kref_get_unless_zero() and skip entries whose refcount has already
+dropped to zero.
 
-Fixes: 3699d92a4d7b ("[SCSI] tcm_fc: Adding FC_FC4 provider (tcm_fc) for FCoE target (TCM - target core) support")
+Fixes: 29a05deebf6c ("target: Convert se_node_acl->device_list[] to RCU hlist")
 Cc: stable@vger.kernel.org
 Assisted-by: Claude:claude-opus-4-8
 Signed-off-by: Yifei Gao <gyf161023@gmail.com>
 ---
- drivers/target/tcm_fc/tfc_sess.c | 3 ++-
+ drivers/target/target_core_device.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index 797be06ab71b..1bc7d2dcbea3 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -172,7 +172,8 @@ static struct ft_sess *ft_sess_get(struct fc_lport *lport, u32 port_id)
- 	head = &tport->hash[ft_sess_hash(port_id)];
- 	hlist_for_each_entry_rcu(sess, head, hash) {
- 		if (sess->port_id == port_id) {
--			kref_get(&sess->kref);
-+			if (!kref_get_unless_zero(&sess->kref))
-+				break;
- 			rcu_read_unlock();
- 			TFC_SESS_DBG(lport, "port_id %x found %p\n",
- 				     port_id, sess);
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 9db2201aa553..bff97c6efffb 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -220,7 +220,8 @@ struct se_dev_entry *core_get_se_deve_from_rtpi(
+ 		if (lun->lun_tpg->tpg_rtpi != rtpi)
+ 			continue;
+ 
+-		kref_get(&deve->pr_kref);
++		if (!kref_get_unless_zero(&deve->pr_kref))
++			continue;
+ 		rcu_read_unlock();
+ 
+ 		return deve;
 -- 
 2.43.0
 
