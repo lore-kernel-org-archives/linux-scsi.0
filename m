@@ -1,74 +1,78 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B9F546A5F8
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 14:00:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B52313E92BD
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 14:28:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785852025; cv=none; b=sFL8lGEBczV3ULCjn4m5rW5Jrf5dXLI8MmhldoovfBV3487EB/MajLkxu2bXk/SNKRI+G1JqGgQ+nv7bJ8zgS4Tt5apJVTEOMJPCRbtYbfmoMh2laFRVWxclpZoqCX6Yi0irgA7xEIO5dCSYYi99MxUJaUsy5LnkOJXxbn32tQQ=
+	t=1785853722; cv=none; b=XD97rk2KGGGmcebcv+dihC43gbdCi24mxORTqUm1UJXCGL2pmlYNxjZwLBMGEbWwPzCWNIOycDP6nnlxGlUghRuqakFjQ5ToLUFuhVdpCQEa0O8dr87y+sS43g91cJouGwYPTLUQT8uH0PWesKSL9ElAljNSte/LuTiERM+0vg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785852025; c=relaxed/simple;
-	bh=Zzf4GBcaHRkdwdNLecVrXUEDo085F5X2K1Y6OucS1Rg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=agi84OFtiJV9Fy03x/4iI/Av/Y2fzEJ6m1B76Tidx+O1/F47gY3VizvEp4Twl10iuecuJsoY4Kp6shNRM8TDIaneTol8xExHn3aLeNn5qPvMOxkbP/BDh7NaOBhmO6adYpEin6WUELJjtxp2LHuFA2+FiPLrllFfB+8d4YCPynY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XoAXK58+; arc=none smtp.client-ip=209.85.128.43
+	s=arc-20240116; t=1785853722; c=relaxed/simple;
+	bh=bsWjYObHJsXoFHI/HjZRmVWuqy426x5I9O0ER1ILobI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=l4uaVIcjaRPyWYrwgROMxqlLSiidA7WdmVgeDXANGy7Ek+D2Qi50P2sjU1WbXQVuSSArakWBocW11yyjU2xGvs18JXQ1Wlinbd18ukQ4bsTaBpgozXvKoSNAIWwsYL85/YZQfWLOztfjxTaOoLUDVzhRctUb4zpxLZENWcbqVOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=p0LkBHId; arc=none smtp.client-ip=209.85.167.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XoAXK58+"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-495635a85d2so29956125e9.0
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2026 07:00:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p0LkBHId"
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-5aec6360133so4177678e87.1
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2026 07:28:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785852022; x=1786456822; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785853705; x=1786458505; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=iRhJ2aYZNtm2kCJIVYQl1pK7YdCm7CzHtYjyN2QbDAU=;
-        b=XoAXK58+RgcsWpBeJqjTJLXX331987BJAL/AsbXT1CrmwqxtcFEPrVFWb2ggQVAupA
-         gKpi3aBqK1Ghvi52xgOowUJI0JCGEJ92L2lUmcmZcrMT2kmaqZGYxx1PEAQPXpUvN8Yx
-         OdDdnI0aMuKuc23VuM8Ofyiyar1WpdZr9v7qlBpRscBItxf3yxE8hsRgZjwItRQiePpo
-         0RPb0pZh9sUSPrShaP1zXLtr+LL1Bm6wgIexEaWJKDvoFPFz28wrrsP4oFJuHxDUyJ7I
-         5AYPeMT687+PbdDl86vV1Q0X5mAO6eYOasAVlH1PET1L26QdS8mytQuGdlazInXXai2X
-         vXxA==
+        bh=gll1NPiGFUih/ZjZ/8FSJN48lAj1cn9L2KE3KQ17M6w=;
+        b=p0LkBHId3vFPAzTlntEaxN4wpJUJZkp26FCCzOXdm62kPt1DuvwgWsMDdLkU2T5mpp
+         iaUcEB2EJGUGXyQ3K3A2eW+tLnnqGGj7v2FJMl6ZKawHDgyQrTUU+J9PWM9vd43VQesC
+         Sks9ZAgAQTU4z6lcM6WNcpPYJCx4E5agrbA447fA0hJzDmPVAjY7aagDIF6HN9bLemg8
+         ibKSmG9DFB+fFCE0VeUBgwygpfPa7FuzTbBApqmYP1gDXcEfUq6C7kKHB1Jgww/FgChQ
+         krCnGZAa5qsy7xBkkEsxqb7gqKwLscVwSAZJRctoqITlDWYApYds+9ngwgKL63Rkd0Tt
+         vZUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785852022; x=1786456822;
+        d=1e100.net; s=20251104; t=1785853705; x=1786458505;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=iRhJ2aYZNtm2kCJIVYQl1pK7YdCm7CzHtYjyN2QbDAU=;
-        b=tBUWp9V+V6FLdmfuapCLe9QQCDDuyn/u6QNDOA/DmkUZh54FNi8/aMGmR9619Na2Dk
-         Yd9M3oB8cMOBPqCLzR2EmBuDKJEglIT5OwG+YYfaSHrMHklrV4ZcHN8vyc62bqVn9Xd9
-         A5sFKhghNOq85ArFFGsuIVxcBjpHoouHeJUUvn22VnjKsXQnq1dE4Lj5E0cqOxY2oAPG
-         79y+PH0KpnGVXAw77ANzhB4YfXaRKHhBhnHbHooOUFEewbSIsRbITOwXBaOSTrcI4uzl
-         nIr4pzJf7ku5I5g8k3Z4AiCn2uP1vHMx5rvFfBrnOZWiw6Uaz7YLUPnAyPpjULydao3q
-         16ow==
-X-Gm-Message-State: AOJu0Yxs2XvL41lbUFUZj21YAH5nFBiCa5V+MLGjJNTq9jhISbss5Zv2
-	fG6ElBO9ANhlEALGWFnsigrnw/RcSznHTkXo7eLX7jiVPBCnQZ69ySo3HEqSAY5pgwFcXw==
-X-Gm-Gg: AR+sD10PYzDziPkrLb7iHvrqCnxUWm282tbaeUZ72xO96dhuB2pkEZ0YH0nhVrtzJOM
-	MpjEVhtumh5//S8ChMRHUWFq4Q0PBvG2GXeFsznNTi1kNoPm+67wFg5P1pX9Fp0B7r8rxqw44Jr
-	nTsdJPdnypYxe/F4szSZ6P6OuJ7x97jykiBY8AoSjrd9nL1rZLkwjr7AFcb35JSyFeq9bM/Ovqe
-	cEPMJkw5RYQcVtQWrJjfxUShi4tVpAZWBS3tq7ZmOF93Co+aYmuslpwcDhIqEx743dfjA0zQAAP
-	Vbx8IDYaCBImFkCWA/ej3QQcrFC5fK1ttDsJnjxDEo9BJOZtkl13Lu5QayfB8wbIqYc0jHvNnwu
-	0Iw8kj4eAg04s9zj0Fo2oBuWYcq9injGhDHqRWOwi3HyKExWljBRxoeM7yuqc9haY4Ddhy+94ZF
-	Ikn5B0FcSJ+QjnkhRMN1qZ33hd6/hrz915cWqb2l7fWq8D7whaYbA0dGJx8ThbdIQuU7Vu/1Hzn
-	GSEDA==
-X-Received: by 2002:a05:600c:1d0a:b0:495:5dcc:52b4 with SMTP id 5b1f17b1804b1-4994d9ef0b5mr21226785e9.3.1785852021154;
-        Tue, 04 Aug 2026 07:00:21 -0700 (PDT)
+        bh=gll1NPiGFUih/ZjZ/8FSJN48lAj1cn9L2KE3KQ17M6w=;
+        b=sTowc3p1lP3vIHLfyTtFy7LqSZWZk45r2fmfX0AsWsqPBjZPCTayiVeMoVl76ywlfp
+         gozd5vKYPmNbqupmIL9btZ8ip2G5//iyeMXoDISAQaj6Nv0lQoIyEdrMsCS6LAnaCKcB
+         DDQ5mJULvqvAUgbXO6pMjPQS84zZppRCeGYXnyaR7DMwpKGFcoM3vn2w8r9DXdlKX48A
+         US2TmQ+EH5TvC5t89whIAN7MQuE0tJKaHQsDKW/d8MbNJ47ELQvVqFsWFAoP39KW7DnP
+         poYgc+f8BPMbXHi1XOSyoGSzb4mytkVQjEnl1qynaytTUoG1LtjZq2KOfzNOFHsxJ6cb
+         M6+Q==
+X-Forwarded-Encrypted: i=1; AHgh+Rorqq7JswOl596g61soVFsDgrUtmDnHHMA/fZgakJUMeb23HWf1PYgjclbR9B/Z4nOd/rMn6U4RRvjm@vger.kernel.org
+X-Gm-Message-State: AOJu0YxgKs7Ndg24TAgROaYIOMab7aYs0ll6oXa0ZoQ5rJfWl+/PXIYA
+	U6zy7jzh2lGm40bG7wzjlmrOnlX+68FhRFB37tCkiN2f+CVK8jk6ggMc
+X-Gm-Gg: AR+sD10mscCsrgA/qoMFhrvKEpS/YjZPmsyuw1CIt0LBTmz7hsGO+OjDxKk8XywfjhB
+	Qoi0TUDY0C7qiAl5F4rjEhy5eT+zGiOFr6TbD888rD3181qwZB1RI1HwAK+I3iSoXP5KPAReSHv
+	gy/B/sYK1FzcejEbJ381IKaG9fOik827DWyOGxKe5ur9K6mNUIsgLqGDerCrEDeA3m7vfi5ImkL
+	xU+XApqjrhtXEvADpk/af2wJxirMyiNZ/oO5N7nwPUkdgKhCH5+wfQbtQ4DQzYOYpZtUP6hN6JT
+	9EIXfwG6Gv18bTlzc2DdEtWFmp+p7IC6L0Sg71k94gdDjX9IwXeeGPuHXxbrqt81sY0jziZCQfq
+	edshqAjV8Da4APf+YYOOl5se3T2Ggo50V3Hj0pY0yD/3ekm0S6Ju555E2BB31V4qWKtpc8us6Yg
+	AtjxSfQgurSZubBaZFFy6mEVOVskCBWsTmI3f8aodLewB33tGl5gGa54K2N5oBJEM5VKlKHTvNO
+	DCFrprCs8l+7l9X
+X-Received: by 2002:a05:6512:3e03:b0:5b2:f437:2a88 with SMTP id 2adb3069b0e04-5b2f4372c35mr139220e87.36.1785853704781;
+        Tue, 04 Aug 2026 07:28:24 -0700 (PDT)
 Received: from NB-9797.corp.yadro.com ([89.207.88.244])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47fd41d0064sm42848941f8f.5.2026.08.04.07.00.19
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b2e245c435sm2647990e87.82.2026.08.04.07.28.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Aug 2026 07:00:20 -0700 (PDT)
+        Tue, 04 Aug 2026 07:28:24 -0700 (PDT)
 From: Ilya Khomyakov <khomyakovilya@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
 	Kashyap Desai <kashyap.desai@broadcom.com>,
 	Sumit Saxena <sumit.saxena@broadcom.com>,
 	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	regressions@lists.linux.dev,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	Ilya Khomyakov <khomyakovilya@gmail.com>
-Subject: [PATCH] scsi: mpi3mr: make SAS port PHY masks 64-bit safe
-Date: Tue,  4 Aug 2026 17:00:04 +0300
-Message-ID: <20260804140004.4004-1-khomyakovilya@gmail.com>
+Subject: [PATCH] scsi: mpi3mr: use DevicePage0 link rate only for direct-attached targets
+Date: Tue,  4 Aug 2026 17:28:00 +0300
+Message-ID: <20260804142800.4326-1-khomyakovilya@gmail.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -78,161 +82,135 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This patch fixes 64-bit PHY-mask handling in the Broadcom MPI3 Storage
-Controller driver under drivers/scsi/mpi3mr/.
+This patch fixes a regression in the Broadcom MPI3 Storage Controller
+driver under drivers/scsi/mpi3mr/.
 
-struct mpi3mr_sas_port stores phy_mask as u64, but several paths
-construct the mask with the signed-int expression 1 << phy_id or 1 << i.
-The shift is evaluated as int before the result is converted to u64.
+Commit c273c14b0294 ("scsi: mpi3mr: Use negotiated link rate from
+DevicePage0") changed mpi3mr to prefer the cached DevicePage0 rate.
 
-The operation therefore has undefined behavior when the PHY identifier
-reaches the sign bit or width of int. The same code uses ffs() to find the
-lowest set bit, but ffs() accepts int and truncates bits 32 through 63.
+DevicePage0 stores negotiated_link_rate as one standalone MPI3 SAS
+link-rate code, while SAS PHY Page 0 and SAS Expander Page 1 store logical
+and physical rates as two nibbles of one packed byte.
 
-The issue was reproduced with UBSAN during SAS port creation:
+mpi3mr_get_sas_negotiated_logical_linkrate() currently sends both formats
+through the same high-nibble extraction at its common exit. A valid
+DevicePage0 value of 0x0b or 0x0c is therefore converted to zero. The later
+minimum-rate safeguard then publishes the value as 1.5 Gbit/s.
 
-  UBSAN: shift-out-of-bounds in mpi3mr_transport.c
-  Workqueue: mpi3mr0_fwevt_wrkr mpi3mr_fwevt_worker
-  mpi3mr_sas_port_add
-  mpi3mr_update_links
-  mpi3mr_report_tgtdev_to_sas_transport
+For example:
 
-The reproduced topology contains a controller host node with 39 PHYs and
-an expander with 46 PHYs. Such a topology is sufficient to exercise PHY
-identifiers above 31 during normal discovery.
+  DevicePage0 value:            0x0b
+  packed-field extraction:      (0x0b & 0xf0) >> 4 = 0x00
+  minimum-rate substitution:    0x00 -> 0x08
+  Linux SAS transport result:   1.5 Gbit/s
 
-Add a helper that validates the firmware PHY identifier and constructs the
-mask bit with BIT_ULL(). Add a separate helper that handles an empty mask
-and otherwise finds the lowest bit with __ffs64(). Use the helpers in the
-PHY add and remove paths, initial port construction, and reset-refresh port
-grouping. Also initialize lowest_phy when the first PHY is dynamically
-added to an empty port.
+There is also a topology distinction. The caller uses the returned value to
+update the parent sas_phy. In an expander topology with the HBA-to-expander
+link limited to 12 Gbit/s, DevicePage0 reported 0x0b for every tested
+target, while Expander Page 1 reported 0xcc for several disk-facing PHYs
+that were operating at 22.5 Gbit/s. The cached target value therefore
+cannot unconditionally replace the local parent expander PHY value.
 
-The patch was tested in an out-of-tree mpi3mr 8.17.1.0.0 build. The driver
-successfully discovered a 39-PHY host node and a 46-PHY expander, created
-expander PHY objects through PHY 45, and completed device discovery without
-a shift-out-of-bounds or other UBSAN report.
+The original failure was reproduced on an eHBA 9600 controller with a
+SAS4016 IOC and a 46-PHY Microchip expander. Before the fix, a target with
+DevicePage0 negotiated_link_rate 0x0b could remain visible in sysfs as
+1.5 Gbit/s when a replayed topology event contained current=0x0b and
+previous=0x0b and therefore skipped the Linux-side update.
 
-The boot test directly exercised initial high-PHY port construction. The
-same helpers are used in the add, remove, and reset-refresh paths to remove
-the identical 32-bit operations from those paths as well.
+Validate the standalone DevicePage0 code and use it directly only for a
+directly attached target. For an expander-attached target, retain the
+existing Expander Page 1 path because it describes the local parent
+expander PHY being updated. Retain the SAS PHY Page 0 fallback when a
+directly attached cached value is invalid.
+
+The topology-aware variant was tested in an out-of-tree mpi3mr 8.17.1.0.
+build. After boot, Linux reported:
+
+  PHY 18: 12.0 Gbit/s
+  PHY 19: 12.0 Gbit/s
+  PHY 24: 22.5 Gbit/s
+  PHY 25: 22.5 Gbit/s
+  PHY 26: 22.5 Gbit/s
+  PHY 27: 22.5 Gbit/s
+  PHY 28: 12.0 Gbit/s
+  PHY 30: 22.5 Gbit/s
+
+No tested PHY was incorrectly reported as 1.5 Gbit/s, and the 22.5 Gbit/s
+disk-facing rates were preserved even though DevicePage0 contained 0x0b.
+
+Fixes: c273c14b0294 ("scsi: mpi3mr: Use negotiated link rate from DevicePage0")
 Signed-off-by: Ilya Khomyakov <khomyakovilya@gmail.com>
 
 ---
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 58 ++++++++++++++++++++++----
- 1 file changed, 49 insertions(+), 9 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 46 ++++++++++++++++++++++----
+ 1 file changed, 39 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index 240f67a..d6492dd 100644
+index 240f67a..740fccc 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -11,6 +11,42 @@
- 
- #include "mpi3mr.h"
+@@ -587,6 +587,30 @@ static enum sas_linkrate mpi3mr_convert_phy_link_rate(u8 link_rate)
+ 	return rc;
+ }
  
 +/**
-+ * mpi3mr_sas_phy_bit - build a bit for a firmware PHY identifier
-+ * @phy_id: Firmware PHY identifier to represent in a 64-bit port mask
++ * mpi3mr_sas_link_rate_valid - validate a standalone SAS link-rate code
++ * @link_rate: MPI3 standalone SAS negotiated link-rate code
 + *
-+ * The port mask is a u64, so every shift must be performed in a 64-bit
-+ * unsigned type. Reject identifiers that cannot be represented before the
-+ * shift to avoid undefined behavior.
++ * DevicePage0 stores one plain negotiated link-rate code. Accept only
++ * negotiated data rates supported by the SAS transport conversion code;
++ * reserved or transitional values must use the existing PHY-page path.
 + *
-+ * Return: BIT_ULL(@phy_id) for a representable identifier, otherwise zero.
++ * Return: true for a supported negotiated data rate, false otherwise.
 + */
-+static u64 mpi3mr_sas_phy_bit(u8 phy_id)
++static bool mpi3mr_sas_link_rate_valid(u8 link_rate)
 +{
-+	if (WARN_ON_ONCE(phy_id >= sizeof(u64) * 8))
-+		return 0;
-+
-+	return BIT_ULL(phy_id);
-+}
-+
-+/**
-+ * mpi3mr_sas_port_lowest_phy - find the lowest PHY in a port mask
-+ * @phy_mask: 64-bit bitmap of PHY identifiers assigned to the port
-+ *
-+ * Use a 64-bit find-first-set operation so PHY identifiers 32 through 63
-+ * are not truncated to int. Keep -1 as the empty-mask sentinel used by the
-+ * surrounding port bookkeeping.
-+ *
-+ * Return: lowest set PHY identifier, or -1 when the mask is empty.
-+ */
-+static int mpi3mr_sas_port_lowest_phy(u64 phy_mask)
-+{
-+	if (!phy_mask)
-+		return -1;
-+
-+	return __ffs64(phy_mask);
++	switch (link_rate) {
++	case MPI3_SAS_NEG_LINK_RATE_1_5:
++	case MPI3_SAS_NEG_LINK_RATE_3_0:
++	case MPI3_SAS_NEG_LINK_RATE_6_0:
++	case MPI3_SAS_NEG_LINK_RATE_12_0:
++	case MPI3_SAS_NEG_LINK_RATE_22_5:
++		return true;
++	default:
++		return false;
++	}
 +}
 +
  /**
-  * mpi3mr_post_transport_req - Issue transport requests and wait
+  * mpi3mr_delete_sas_phy - Remove a single phy from port
   * @mrioc: Adapter instance reference
-@@ -610,10 +646,11 @@ static void mpi3mr_delete_sas_phy(struct mpi3mr_ioc *mrioc,
- 	mr_sas_port->num_phys--;
+@@ -2292,18 +2316,26 @@ void mpi3mr_expander_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
+ static u8 mpi3mr_get_sas_negotiated_logical_linkrate(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_tgt_dev *tgtdev)
+ {
+-	u8 link_rate = MPI3_SAS_NEG_LINK_RATE_1_5, phy_number;
++	u8 cached_link_rate, link_rate = MPI3_SAS_NEG_LINK_RATE_1_5;
++	u8 phy_number;
+ 	struct mpi3_sas_expander_page1 expander_pg1;
+ 	struct mpi3_sas_phy_page0 phy_pg0;
+ 	u32 phynum_handle;
+ 	u16 ioc_status;
  
- 	if (host_node) {
--		mr_sas_port->phy_mask &= ~(1 << mr_sas_phy->phy_id);
-+		mr_sas_port->phy_mask &= ~mpi3mr_sas_phy_bit(mr_sas_phy->phy_id);
+-	/* First, try to use link rate from DevicePage0 (populated by firmware) */
+-	if (tgtdev->dev_spec.sas_sata_inf.negotiated_link_rate >=
+-	    MPI3_SAS_NEG_LINK_RATE_1_5) {
+-		link_rate = tgtdev->dev_spec.sas_sata_inf.negotiated_link_rate;
+-		goto out;
+-	}
++	cached_link_rate =
++		tgtdev->dev_spec.sas_sata_inf.negotiated_link_rate;
++
++	/*
++	 * For a directly attached target, DevicePage0 and the parent host PHY
++	 * describe the same link, so the standalone cached code can be used
++	 * without packed-field decoding. For an expander-attached target, the
++	 * caller updates the parent expander PHY and DevicePage0 can differ from
++	 * that local segment; retain the Expander Page 1 read in that case.
++	 */
++	if ((tgtdev->devpg0_flag & MPI3_DEVICE0_FLAGS_ATT_METHOD_DIR_ATTACHED) &&
++	    mpi3mr_sas_link_rate_valid(cached_link_rate))
++		return cached_link_rate;
  
- 		if (mr_sas_port->lowest_phy == mr_sas_phy->phy_id)
--			mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
-+			mr_sas_port->lowest_phy =
-+				mpi3mr_sas_port_lowest_phy(mr_sas_port->phy_mask);
- 	}
- 	sas_port_delete_phy(mr_sas_port->port, mr_sas_phy->phy);
- 	mr_sas_phy->phy_belongs_to_port = 0;
-@@ -641,10 +678,12 @@ static void mpi3mr_add_sas_phy(struct mpi3mr_ioc *mrioc,
- 	list_add_tail(&mr_sas_phy->port_siblings, &mr_sas_port->phy_list);
- 	mr_sas_port->num_phys++;
- 	if (host_node) {
--		mr_sas_port->phy_mask |= (1 << mr_sas_phy->phy_id);
-+		mr_sas_port->phy_mask |= mpi3mr_sas_phy_bit(mr_sas_phy->phy_id);
- 
--		if (mr_sas_phy->phy_id < mr_sas_port->lowest_phy)
--			mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
-+		if (mr_sas_port->lowest_phy < 0 ||
-+		    mr_sas_phy->phy_id < mr_sas_port->lowest_phy)
-+			mr_sas_port->lowest_phy =
-+				mpi3mr_sas_port_lowest_phy(mr_sas_port->phy_mask);
- 	}
- 	sas_port_add_phy(mr_sas_port->port, mr_sas_phy->phy);
- 	mr_sas_phy->phy_belongs_to_port = 1;
-@@ -1396,7 +1435,7 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 		    &mr_sas_port->phy_list);
- 		mr_sas_port->num_phys++;
- 		if (mr_sas_node->host_node)
--			mr_sas_port->phy_mask |= (1 << i);
-+			mr_sas_port->phy_mask |= mpi3mr_sas_phy_bit(i);
- 	}
- 
- 	if (!mr_sas_port->num_phys) {
-@@ -1406,7 +1445,8 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 	}
- 
- 	if (mr_sas_node->host_node)
--		mr_sas_port->lowest_phy = ffs(mr_sas_port->phy_mask) - 1;
-+		mr_sas_port->lowest_phy =
-+			mpi3mr_sas_port_lowest_phy(mr_sas_port->phy_mask);
- 
- 	if (mr_sas_port->remote_identify.device_type == SAS_END_DEVICE) {
- 		tgtdev = mpi3mr_get_tgtdev_by_addr(mrioc,
-@@ -1738,7 +1778,7 @@ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
- 		found = 0;
- 		for (j = 0; j < host_port_count; j++) {
- 			if (h_port[j].handle == attached_handle) {
--				h_port[j].phy_mask |= (1 << i);
-+				h_port[j].phy_mask |= mpi3mr_sas_phy_bit(i);
- 				found = 1;
- 				break;
- 			}
-@@ -1765,7 +1805,7 @@ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
- 		port_idx = host_port_count;
- 		h_port[port_idx].sas_address = le64_to_cpu(sasinf->sas_address);
- 		h_port[port_idx].handle = attached_handle;
--		h_port[port_idx].phy_mask = (1 << i);
-+		h_port[port_idx].phy_mask = mpi3mr_sas_phy_bit(i);
- 		h_port[port_idx].iounit_port_id = sas_io_unit_pg0->phy_data[i].io_unit_port;
- 		h_port[port_idx].lowest_phy = sasinf->phy_num;
- 		h_port[port_idx].used = 0;
+ 	/* Fallback to reading from phy pages if DevicePage0 value not available */
+ 	phy_number = tgtdev->dev_spec.sas_sata_inf.phy_id;
