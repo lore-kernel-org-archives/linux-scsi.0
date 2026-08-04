@@ -1,76 +1,115 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BA0E2F361B
-	for <linux-scsi@vger.kernel.org>; Mon,  3 Aug 2026 17:15:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1744A4252BE
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 04:06:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785777327; cv=none; b=l2P/qx5b1DFZCPgRBbgw2ssKAiYGhw4nCrNtNwA5BPgOlO20okoHe04D0R0w7Ib+O3l6EZkJS1yaj6jwgjOrTMhUIpqNMgec9JyztRWWr7UWI050RufkGEg2V0U3Kbnxa3ZSvU7awHHph/aBzpCIvfOxJdK52KSUcds2r4sWOcc=
+	t=1785816365; cv=none; b=lQUGlhIlSdbWU97qJS1JTdaLa5Mrx6npPqxfC5uX4+2gvlWd5dPYlFYjpx8yhtVx475BHNbm/I5e/Y1tV6Upj8FQsaxwe/tcbO27IuwEkUYNL/kyDP2HSDdWxJaetNG5pLn/IIMx/34LPnRzvgcVJc+q0/8MeUGczAxpegdmxOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785777327; c=relaxed/simple;
-	bh=oVwCaCS85tzn+hIYzp5dWroFZj5TtohhO7SZMKZoIy0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JnQUnvFuLWeufu40Y7i4Xn60HYA2CpoK1NChQVrC6Z/CIPT7q/3vQgcSQFr+VZUnRalnBFqv0NGOFW3X0FpX4I7ggRMLbc+avwyiQPAWu1k3Hy0EtSjYUYX4kbqZdj6g3clWkot4FLJ+Cvyf95siYtYsHtIhC31YdzdpJTOPM0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=KK0AfReN; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1785816365; c=relaxed/simple;
+	bh=C/t+MNPkgIeqigfQL1VMUIFlW20W0dhjFFTJArsSgVA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eb7yQpUhz8GEzCyRIw2Fh9dDECdf7V4Wn/K6hzY4QeevR6XoLDwuaClZ9bKUflmCMyIxlSSpb2co0NvCdQ4YeyeNiqixMw+PjRiDesYarBTjp+wEszxQbRmSqSa4NMv4ceHB4u23uPH4+8uUvJuc1cIhI0zmJR0uWS05zju61is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=0di/cOe4; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="KK0AfReN"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hDNbd6B32zlfvq4;
-	Mon,  3 Aug 2026 17:15:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1785777323; x=1788369324; bh=4HixOPdquqI7vVekdD1ehvOi
-	rOFX/emhJUanq8YWxj4=; b=KK0AfReNozIb/hZEjdSP2z5EzQjA1biEc0nHUETp
-	Ed7WGIAJQ2+4pbYchOgwh+0E3UrExDEWMHabiHxGKVY4CkbptSfJL+7442c/72VK
-	xaXJcUdTlfeWxU0uGwtgULIYQYfu7C/ihKzfskXkgq+6E1LyDvNxquwzHIZlVQOM
-	aMr8Ojsxqt9uH3IFYr+AZ8slQkYOYjGRFPhciM2ZLDKom7sp2a7bId+HUbM8+HPQ
-	na5L4jOzY91vL0XCqLTBw7Np0Is/D0dxIsZkPF53xOby8dggscyLyrM7lHvagc4j
-	sCAMShi1wGxdhMymzeKxpFtC0PeGKOl14KxT9U5qkvQLyg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id cvFiy4LUq-S4; Mon,  3 Aug 2026 17:15:23 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hDNbZ3589zlfvpM;
-	Mon,  3 Aug 2026 17:15:22 +0000 (UTC)
-Message-ID: <95d6fa9b-bddc-46c9-92d1-830347a432ac@acm.org>
-Date: Mon, 3 Aug 2026 10:15:21 -0700
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="0di/cOe4"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2cf27856f9cso41268435ad.2
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Aug 2026 21:06:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1785816362; x=1786421162; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=z/0c7SzZ4UnapvEswuZB9Xo99f46VsnKuWKwL1MGsJs=;
+        b=0di/cOe4aiEbQSMsuE9jyPsG/BU9FZ9ZTlyznMVJSoy2JUeoVBro4cmEg7dlKiHYh1
+         tX+l0pA79VLXz5z/K9N+bmJFuzEKJOC6c2O90BpKdsn5LxIQCZc+cemKVYhJUyx+icKw
+         qsD1YLHfssBF/r04uMj3HmweECxhFnTOaYVd5Qi/vEisSkWhx3ccymA+Vw9Nfg8fpv1T
+         K+LLgJ+FQMxD/QehZYTBO2f4SqTZNAv4TUdlAUC/7hpvcKbFxmlxT2IpAX4/LV97sb3O
+         XUGuaaMmJ3cd2olRQfXPLsdCVPvOgo6gBYXcyaCDh5PmpPK3cumrBKrbFatZIDo/AbB4
+         bE7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785816362; x=1786421162;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=z/0c7SzZ4UnapvEswuZB9Xo99f46VsnKuWKwL1MGsJs=;
+        b=om96tErynnFBgQ2+K3vKEkQbRpNMJzi8eQFgH5rgcGaVPJ+jYG5KL4LvSzstB+Cpc6
+         zSIluHNFfFGZ5nYF/KiPY0QYazthhtvPudb8FQ5S7EHHx7MEsw4seWUa548Nj1KZRCrI
+         leIGw5E43SK1ZilQwqWS1+zkyl6x7n0kMdFnXGt7vf59eQDfrEva1PwxQZig4qMVYsU9
+         qRejjywslSj1WGhg1hMqeGw9VanMowF+3szB2XfImCW6cMeSAPYxMV+lOEXq6yKs3l65
+         eUm827YLtbGxkuOiQ0yPjEP2V25Nd7chZ9/NewJHGDIgFiU7hjOaJlvk8fOvbUHUnx7I
+         ucvA==
+X-Forwarded-Encrypted: i=1; AHgh+RqZmAllhc8Vu45kRyis+o5iqd6M5k7WCRNBpqX/Pji2QE0263WOpgRbgbnQSKt/D957BvInK0K1W2v+@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzkc0vG6gQiXq2TA8FYPKRd5qU2G14Lnj2Vws8tTQDGdayPhc4J
+	FGrrpCC9psAQhZAMdFl6hzQXiHuOrW3PZNXstdu4cHFmK3g1Gm7tzSENMV4OP15Fi/fFNtTFU1X
+	/V09u28s=
+X-Gm-Gg: AR+sD10IPHkCdUY1o7Gw5M0cKcdPyxxQh/gmPlY4HhsAfwcGrajN3o5wGc/EzTyapjn
+	ybCu5bNYwwvomV84Bgh7W/3dlZD9TlJadtzx9syVtobWY46NZstfVIwuSw1inoUGbAQuaaQbLhw
+	fBsLxLpx9XdzDS3tNy3a8K90GPedc3SW5t/xq45781cWMloq0+/qCJIgo+eqxEpxuFJAbub+axA
+	rG76OojyIMyaqzBr3Rc8rae90wEf9e0afIrUuB8JnNXW5HhZKg+mvjxRv1rpjNLt/rLFkJsI/lB
+	9DpOpJB//goCwf91pKSyrVR+aVHkkHGa98GWqV09gHgthnirc+jp1hCubho4amrcIQz41+nygBw
+	B2IJ3NSfy+dZwctme3GxAL2bvPbMXF7E42vOAVTyoyr2xtUYMB20bEJYWLFW0HeL9FyyftjrW4z
+	VV42Q+vjsDAn3bJmj6Bfc5jbS1rmwaDbO2UCS9qfHsi/z/Q8UdYIrTAbtyS9lqZIc8GYzL
+X-Received: by 2002:a17:902:f54f:b0:2c9:fbde:ab66 with SMTP id d9443c01a7336-2d052490e46mr116264085ad.37.1785816362050;
+        Mon, 03 Aug 2026 21:06:02 -0700 (PDT)
+Received: from yhlee-960QFG.. ([125.131.91.97])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d04b11f9a9sm46075465ad.57.2026.08.03.21.05.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Aug 2026 21:06:01 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: lduncan@suse.com,
+	cleech@redhat.com,
+	michael.christie@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v2 0/3] scsi: libiscsi: validate task lookups driven by target-supplied ITTs
+Date: Tue,  4 Aug 2026 13:05:43 +0900
+Message-ID: <20260804040546.2264137-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 3/6] scsi: core: Pass the SCSI host pointer directly
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Marco Elver <elver@google.com>, linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <68f3346cab2be570839350831f82b6c9233832ed.1785534721.git.bvanassche@acm.org>
- <0f417deef926f1574c555ec44fb2036e997a727c.1785534721.git.bvanassche@acm.org>
- <98049e01-09ac-43cb-aa5e-593bd5fb25c0@oracle.com>
- <58b7c76f-6893-44e1-bf0c-e9cbf080a073@acm.org>
- <69d7dd4a-2c0d-4e1b-984c-732af4e7efb9@oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <69d7dd4a-2c0d-4e1b-984c-732af4e7efb9@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 8/3/26 9:30 AM, John Garry wrote:
-> ok, I get it, but it's better to mention the reason briefly, like 
-> "context analysis requires checking on passed argument when using 
-> preferred annotation form"
+v1 was a single patch for the Reject path. The Sashiko review of it
+pointed at two more places where a target-supplied ITT reaches a task
+without being checked, and both are now in the series.
 
-I will do this :-)
+1/3 bounds the index from below. A transport that implements
+parse_pdu_itt can produce a negative one; be2iscsi does, and forwards an
+unsolicited NOP-In from the hardware with the target's ITT intact. I
+have no be2iscsi hardware, so this one is argued from source.
 
-Bart.
+2/3 is v1 unchanged: the ITT reflected in a Reject PDU.
+
+3/3 is the same defect at the lookup that five management responses
+share. An unsolicited NOP-In naming an unused index dereferences a NULL
+task->conn; a Text Response with the same ITT crashes a little later in
+iscsi_complete_task().
+
+Measured on 7.2-rc5 with KASAN over a proxy that injects one PDU. Five
+attack shapes oops or warn unpatched and none of them do with the
+series. Normal I/O, an abort TMF, a rejected NOP-Out ping, a userspace
+nop sent over netlink and an iscsid-driven session are unchanged.
+
+v1: 20260803104149.2114414-1-yhlee@isslab.korea.ac.kr
+
+Yehyeong Lee (3):
+  scsi: libiscsi: reject a negative task index from parse_pdu_itt
+  scsi: libiscsi: validate the ITT reflected in a Reject PDU
+  scsi: libiscsi: validate the task named by a management response
+
+ drivers/scsi/libiscsi.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+-- 
+2.43.0
+
