@@ -1,200 +1,123 @@
-Received: from mail-m3296.qiye.163.com (mail-m3296.qiye.163.com [220.197.32.96])
+Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AA843B0AC6
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 09:25:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.96
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FE643368BF;
+	Tue,  4 Aug 2026 09:30:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785835514; cv=none; b=Y4K2r/9Z964uKD/KMSUqDVkRAy/BsXWi+v9mZ3TFebhxwlCTtOVMcgB3awrolGTOLubAI9DdgmOUAxIJEkCjsTnu/bhfCnbq+03LpwLPEJnvLnEZNSRmQeDJ8q2iMbAMBdSWuKCJCDVZ+USPuqajUVHo9tP/gmHHW6rqJeZ0L7Q=
+	t=1785835828; cv=none; b=XR82CSiDNw5pROKzsS92ePjJux04zztUM+XY99a07/s1JINOEu7uVgPP7zjg8Qf9+9ZxEA3bTA5bA8/J0HlOto+Ks0DM7mZN/doYa/Ze1wz5e4D7MSe4055CTZs/nVBJSyYFsfErUdZ9zHMbT/9wp1KvfRgpjolvs7SWawJSmw8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785835514; c=relaxed/simple;
-	bh=82ZP/0gRdhUYjbQTSypKlqx8jlqmzepVE8UZz2dOPH0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=NGspz8K+JR+rFK1Qoe046QBV/xO/3rzBjvN4w/CUDSUi2xwfHJ/rJGRxuPu8vP7PoIqlbGNCFAKdxvnMFbqNfEcq36B182q9s3MIKBuQ9tJ0gNqshQgok87lzy1zzanZ4MFmOebsMYv5VQHyc97xK0z2pjDXeDbxocQSy+vWey4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com; spf=pass smtp.mailfrom=leap-io-kernel.com; dkim=pass (2048-bit key) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.b=M5rsx35n; arc=none smtp.client-ip=220.197.32.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leap-io-kernel.com
+	s=arc-20240116; t=1785835828; c=relaxed/simple;
+	bh=akRk/5pny04vkRlrfX6HMHoih595bIl1rthGSuyplTo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=YZAWxCZbN5h+jTYHnFw6seq6eu2N+duirYCRYe+R5gs62HF5p1iwln+ebN9TOyBCuzZr3u35yTObcm8nsMJ1Z/FuxhUMqX9RlQhfxrfYg7twtMG8r+spcw+AaS9i5vlqeIX3KqJdtm1P5nuH18JsN1qeHWJlwfDc964LLeeRri0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=jLabr0O5; arc=none smtp.client-ip=113.46.200.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.b="M5rsx35n"
-Received: from localhost.localdomain (unknown [222.130.22.242])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 48b1dbe74;
-	Tue, 4 Aug 2026 15:02:31 +0800 (GMT+08:00)
-From: Dongdong Hao <doubled@leap-io-kernel.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: dlemoal@kernel.org,
-	hare@kernel.org,
-	hare@suse.de,
-	doubled@leap-io-kernel.com,
-	yjzhang@leap-io-kernel.com,
-	kezijie@leap-io-kernel.com,
-	jzzhang@leap-io-kernel.com,
-	baikefan@leap-io-kernel.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v5 2/2] scsi: leapraid: Add driver documentation
-Date: Tue,  4 Aug 2026 15:02:26 +0800
-Message-Id: <6dc9239844dc00cd053ea0649cc9fe05cad1d98a.1785823793.git.doubled@leap-io-kernel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <cover.1785823793.git.doubled@leap-io-kernel.com>
-References: <cover.1785823793.git.doubled@leap-io-kernel.com>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="jLabr0O5"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=GozzaqgeAEsUCAtP3RjHcv6kLBS5aPKfrn+RLSoHpso=;
+	b=jLabr0O5eq2iZElb3/VgDhDEpivBLho40ZLNZ56huo15s13m9/beIclHP8571Ndg1zi+W29xJ
+	s9q3IKsrOxvFDj9H4T1bAt9CoHwXce2DipmU3eXh5AgaiWa7g173eXLqPYz4caU4rTzw5SHrGEd
+	059zDE1xA6/wHCjlcHtZ414=
+Received: from mail.maildlp.com (unknown [172.19.163.104])
+	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4hDp1R59ktz1prQc;
+	Tue,  4 Aug 2026 17:20:43 +0800 (CST)
+Received: from kwepemp100005.china.huawei.com (unknown [7.202.195.33])
+	by mail.maildlp.com (Postfix) with ESMTPS id 62CD14058C;
+	Tue,  4 Aug 2026 17:30:16 +0800 (CST)
+Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
+ kwepemp100005.china.huawei.com (7.202.195.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 17:30:16 +0800
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 4 Aug 2026 17:30:15 +0800
+Message-ID: <28879664-7e0f-60d5-caf7-60a1e2442d77@huawei.com>
+Date: Tue, 4 Aug 2026 17:30:15 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v3 0/2] scsi: libsas: Support spinup notification for SAS
+ devices
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <kangfenglong@huawei.com>
+References: <20260803020536.546544-1-yangxingui@huawei.com>
+ <e34a40de-474c-4a3c-8013-726d473bc79c@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <e34a40de-474c-4a3c-8013-726d473bc79c@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9fcb94c26203aekunme796edef9bcdc9
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaSUofVkxDHh4YGkgYS0pJGVYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkhLVUlJVUlPSVlXWRYaDxIVHRRZQVlPS0hVSk
-	tJT09PSFVKS0tVSkJLS1kG
-DKIM-Signature: a=rsa-sha256;
-	b=M5rsx35n/cQTyXLOOaifxMTI9msPK93ygG4V7mqlTQB5FFnG0Ezty5If0xIWgP9uDPomRFd0uuM8Zu2d82GhDuk4tigKyWuYnxu6mTpYT1MCMsWYAV/E/WDZW0NNGh2/3ixTp+Bhd35Jd8Zp9ZEv1BMGD0YSCUjd1Maa0g0D8OAr5ujck2ewiMaBpDDwVEqML2CVLhF2GFr7mffIZsnnec+fhdIU4cx6W+8LklrjhcjM3FeRFQ78+QEpDs2mAqnVFerGghxUa53cHPAj8LemCPcgp+KncNYrJW/h1W40PIoJwfm3wHEadEn/ygFj7e6Z65eSWQz38TfAaw+goREe4Q==; c=relaxed/relaxed; s=default; d=leap-io-kernel.com; v=1;
-	bh=6kpouXimNpD1VTkhBYuHe0dzSs2OhKKLzGZo5L1hVnw=;
-	h=date:mime-version:subject:message-id:from;
+X-ClientProxiedBy: kwepemh100018.china.huawei.com (7.202.181.105) To
+ kwepemp500015.china.huawei.com (7.202.195.9)
 
-This patch adds the necessary documentation for the LeapRAID SCSI driver
-to the kernel's documentation tree.
+Hi John
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
-Signed-off-by: Dongdong Hao <doubled@leap-io-kernel.com>
----
- Documentation/scsi/index.rst    |   1 +
- Documentation/scsi/leapraid.rst | 110 ++++++++++++++++++++++++++++++++
- 2 files changed, 111 insertions(+)
- create mode 100644 Documentation/scsi/leapraid.rst
+On 2026/8/4 15:35, John Garry wrote:
+> On 03/08/2026 03:05, Xingui Yang wrote:
+>> When a SAS device is in the Active_Wait or Idle_Wait power state, it
+>> returns NOT_READY with ASC/ASCQ = 0x04/0x11 (notify (enable spinup)
+>> required), indicating that a NOTIFY(ENABLE SPINUP) primitive is needed to
+>> trigger media spinup.
+>>
+>> Without handling this condition, the SCSI mid-layer will indefinitely 
+>> retry
+>> the command with ACTION_DELAYED_RETRY, resulting in the disk never 
+>> spinning
+>> up and becoming unusable. A typical manifestation is:
+>>
+>>    sd 4:0:9:0: [sde] Spinning up disk...
+>>    ...not responding...
+>>    sd 4:0:9:0: [sde] Sense Key : Not Ready
+>>    sd 4:0:9:0: [sde] Add. Sense: Logical unit not ready, notify 
+>> (enable spinup) required
+>>
+>> To resolve this, the SAS controller needs to send a NOTIFY(ENABLE SPINUP)
+>> primitive to the target phy, which transitions the device out of the
+>> waiting state and allows normal spinup to proceed.
+>>
+> 
+> How would other SAS HBAs which use libsas handle this scenario? Since 
+> they have FW, would the FW automatically issue this NOTIFY(ENABLE SPINUP)?
+> 
+> I just wonder why hisi_sas seems to be only driver which would need this.
 
-diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index f15a0f348ae4..52970f0159ca 100644
---- a/Documentation/scsi/index.rst
-+++ b/Documentation/scsi/index.rst
-@@ -56,6 +56,7 @@ SCSI host adapter drivers
-    g_NCR5380
-    hpsa
-    hptiop
-+   leapraid
-    libsas
-    lpfc
-    megaraid
-diff --git a/Documentation/scsi/leapraid.rst b/Documentation/scsi/leapraid.rst
-new file mode 100644
-index 000000000000..99930ce2b8d0
---- /dev/null
-+++ b/Documentation/scsi/leapraid.rst
-@@ -0,0 +1,110 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+=========================
-+LeapRAID Driver for Linux
-+=========================
-+
-+Introduction
-+============
-+
-+LeapRAID is a storage RAID controller driver developed by LeapIO Tech Inc. The
-+controller targets enterprise storage, cloud infrastructure, high performance
-+computing (HPC), and AI workloads.
-+
-+It provides high-performance storage virtualization over PCI Express Gen4
-+and supports both SAS and SATA HDDs and SSDs. It offers both Host Bus Adapter
-+and RAID modes to meet diverse deployment requirements.
-+
-+Supported devices
-+=================
-+
-+- LeapHBA-8200C
-+
-+Features
-+========
-+- PCIe Gen4 x8 host interface
-+- Support for SAS and SATA devices
-+- RAID levels: 0, 1, 10, 5, 50, 6, 60
-+- Advanced error handling and end-to-end data integrity
-+
-+LeapRAID specific host attributes
-+=================================
-+
-+::
-+
-+   /sys/class/scsi_host/host*/fw_queue_depth
-+   /sys/class/scsi_host/host*/host_sas_address
-+   /sys/class/scsi_host/host*/board_name
-+
-+The host "fw_queue_depth" read-only attribute shows the firmware queue
-+depth of the host.
-+
-+The host "host_sas_address" read-only attribute shows the SAS address
-+of the host.
-+
-+The host "board_name" read-only attribute shows the board name reported
-+by manufacturing page 0.
-+
-+LeapRAID specific disk attributes
-+=================================
-+
-+::
-+
-+   /sys/class/scsi_disk/host:bus:target:lun/device/sas_device_handle
-+   /sys/class/scsi_disk/host:bus:target:lun/device/ncq_cmd_prio_enable
-+
-+The read-only attribute "sas_device_handle" represents the disk's device
-+handle, which is a unique identifier maintained by the firmware.
-+
-+This attribute "ncq_cmd_prio_enable" controls NCQ command priority. A value
-+of 0 disables NCQ priority handling for RT-priority I/O. Writing 1 enables
-+NCQ priority handling when the device reports support for the feature through
-+VPD page 0x89. Unsupported devices keep the effective state at 0.
-+
-+LeapRAID module parameters
-+==========================
-+
-+The following module parameters can be configured at driver load time to
-+control driver behavior and tuning options.
-+
-+1. open_pcie_trace
-+------------------
-+
-+This parameter controls whether PCIe transaction tracing is enabled in the
-+driver. When set to 1, PCIe trace collection is enabled by default, allowing
-+detailed tracing of PCIe operations for debugging and performance analysis.
-+Setting it to 0 disables the trace functionality to reduce overhead in
-+production environments.
-+
-+2. enable_mp
-+------------
-+
-+This parameter enables or disables multipath support for target devices.
-+When set to 1, multipath functionality is enabled (default), allowing
-+multiple paths to be established. Setting it to 0 disables multipath
-+handling.
-+
-+3. max_msix_vectors
-+-------------------
-+
-+This parameter sets the upper limit on the number of MSI-X interrupt
-+vectors that the driver will request during initialization. The default
-+value of -1 allows the driver to use all available vectors as provided
-+by the device. Setting a positive integer restricts the number of vectors.
-+
-+4. poll_queues
-+--------------
-+
-+This parameter specifies the number of I/O queues to be used when operating
-+in io_uring poll mode. The default value is 0.
-+
-+File Location
-+=============
-+The driver source is located at:
-+
-+``drivers/scsi/leapraid/``
-+
-+.. note::
-+
-+   This document is intended for kernel developers and system
-+   integrators who need to build, test, and deploy the LeapRAID driver.
--- 
-2.25.1
+Thanks for the question. This affects only SAS HDDs. I checked pm8001, 
+isci, and aic94xx — all handle NOTIFY(ENABLE SPINUP) at the driver level:
 
+- pm8001: sends once at phy-up, then mdelay(200) — comment: "delay a 
+moment to wait disk to spinup" — before notifying libsas.
+
+- isci: enables hardware periodic insertion during link idle (ENABLE bit 
+in notify_enable_spinup_control), cleared at phy stop.
+
+- aic94xx: enables microcode periodic insertion during link idle 
+(NOTIFY_TIMER_TIMEOUT = 500ms interval), stops at phy down.
+
+hisi_sas also calls sl_notify_ssp() at phy-up, but the NOTIFY_EN bit is 
+held for only 1ms — msleep(1) between setting and clearing — before 
+immediately notifying libsas.
+
+The root cause appears to be that 1ms is insufficient compared to 
+pm8001's 200ms. An alternative to hisi_sas would be to simply increase 
+the hold time in sl_notify_ssp() to match pm8001's approach, keeping the 
+fix within hisi_sas.
+
+Would you prefer this simpler approach, or do you still see value in the 
+libsas-level sense detection and callback from hisi_sas? ^-^
+
+
+Thanks,
+Xingui Yang
