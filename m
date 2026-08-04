@@ -1,236 +1,160 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C93852931CD
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 15:32:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1477043D4FD
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 15:37:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785857525; cv=none; b=LV9PBQds8T7YLl6X/DWxzAFTmg2dvABv8PLOJS+Z1viSyAzkOP+SVqaRGP1gv/UCCNpSll4VyTPjbpNMAO7eODJ9zv2jCZcQ+b7FV/2b20a3p8eouYWfDQlVdjsr7GeBidVDSR8HmntTZDLrefnydP67MfBk7y2//NYjyILdI5I=
+	t=1785857854; cv=none; b=Uexryx55WODi4ztc46uQYlQGqg3HsxEY/y/gIYUoGlkE125Lu5PT2WKceq30O9QVX6z/o19Xpdcsrrf19SWhHSxkeTnV9/Y6q2FYISGr/L1L2oAPoBgx6LLC8/bzGehKpmV8kaqdsxsozyr6XfmrwoYF5la3ZKlXo9/eIY+0z0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785857525; c=relaxed/simple;
-	bh=jpTt0NOt1sWYF4Oduqlz4B6fVcMnE0O/yecHEc0IwJo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZqvKNKanIxAm+kLoeTgVZ6ETOksdWz8i/ywSNhcs3qBIwuyzxJ1ccWRdRH+q1ROUIO5nfVGiJcu31xvByNNP9+QIcPnnYMaLn9gDpoxKjscwDIeCwtHTx7DJE/JGckgTROPlLpwOZGpSMv6DYVEO0nyRHfRO+p/GLClkB4lFCxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SWkvjpqq; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785857854; c=relaxed/simple;
+	bh=gjrVDFzMFPA76v231W8P+9Ba4GP9F9+nK7yh6nwf4vc=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Z+Q6v1JOcO0W65p2+GAiI3+QntpnJhSnBoMBEcuqeLSKDaYTSKpwmZ6leVpYmq8FT4K0tAIumhRVKA1bJqGWAXf5wYjYhrzzsrxK05/MyAQyDMMxqslj9MM5q42oLUSYMEvnuHV+Gw5Xhde8JldZo6vXvIWr0g3Poen02Hcxixw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ikjjrtWP; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=NyBHoxnQ; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SWkvjpqq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CD251F000E9;
-	Tue,  4 Aug 2026 15:32:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785857523;
-	bh=ByTfuI/V7sv9qHOsSML7wcFm7Ibrp3O9nfgJ2Q1gloE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SWkvjpqq8MwNe5yoKBSya9FZW2aSoXfVQPDDq67GnSC/f3m6cz6V3aYC0YMuwwqUn
-	 Xr9pVBihFoOM/D2tcOzBcVhJqnaWzW5Rqzy43aB3UYXN2DBZpSwgMCIchDeAAV6LFw
-	 LFqHHqMfxwN6kGGycv+75b+RFDIvEVNTm5hZYSt/gph9PpGaYzQ5f3KjFYfaMR5IFC
-	 lCgH1rntZfzh2F9cmYaN8YiZf5UugZPP5bmRYOj4EGqFy5I6P50svAHImKIffPHhIq
-	 9vc2rrtfOalX9hGp3opCHjzeYUeiFainC3x5KeECOJNWTWrK/1OOXfvRS43pPshryY
-	 CgOpdDYndU51Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] firmware: xilinx: ufs: move PHY/SRAM ready polling into
- the firmware backend
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Michal Simek" <michal.simek@amd.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <eaeaaea8ed76069943e0706a0917139ff6569929.1785855749.git.michal.simek@amd.com>
-References: <eaeaaea8ed76069943e0706a0917139ff6569929.1785855749.git.michal.simek@amd.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ikjjrtWP";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="NyBHoxnQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1785857848;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=gjrVDFzMFPA76v231W8P+9Ba4GP9F9+nK7yh6nwf4vc=;
+	b=ikjjrtWPEMzvLjOvQbhlxM1/5Pv4LCOYd6aid+G7UebGMM0IcN6Muq+rSeMV+mSqkYjMZd
+	nheo+IMy2nEZFkw/h7gqo4VU6ZXNqBKnlpv2O1n6speiHG8TrI3wPS5+oMtRaa2meHDxnQ
+	V3dBImigWxGeekgOEH3Bwm8Y6ymyO58=
+Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
+ [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-570-blM8r5nHNZ6-7Gq9KUPDZQ-1; Tue, 04 Aug 2026 11:37:27 -0400
+X-MC-Unique: blM8r5nHNZ6-7Gq9KUPDZQ-1
+X-Mimecast-MFC-AGG-ID: blM8r5nHNZ6-7Gq9KUPDZQ_1785857846
+Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-904c1d588bbso570066d6.0
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2026 08:37:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1785857846; x=1786462646; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=gjrVDFzMFPA76v231W8P+9Ba4GP9F9+nK7yh6nwf4vc=;
+        b=NyBHoxnQLVBXdsrEfxFuhEvstVIY8cALF0xh+RvV7k9v4JHb2gMIX1L6L5qqTyfFjA
+         hZwo1yrgfqR0CC5aLdrs0ClRTmHrg6XcbURVBICq2/uIq6PyC2eVP/BSrtHG6+zavLUL
+         8or77g9GwfalnpA4IWpMLWkulrBajjXJWRxOiwoIuJW2Nut/mHyWm6dwPkw9Zz0lJ4VJ
+         e9LouISz0oM4PxFvAiC+RNRi81QozDYfyzc8C+JxQUDBd3CWxA/j8xEQyiXa7f0wBNg2
+         T6PmdlVgQ5ynv63G9Y3iwXEyZC8sSuns+255HfxfEiZ2mZExROlSiqWC3HM3Ftt8JS+n
+         zzPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785857846; x=1786462646;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=gjrVDFzMFPA76v231W8P+9Ba4GP9F9+nK7yh6nwf4vc=;
+        b=X+zS+Lhslk36+y0zLZ1Zw69IIY+B629fnb+IWuXXohbH5TDtbbkHblmtrbEMfwxjtN
+         6wNQA0zC4bS2Uz5c/Tj+jRFZEK1y4xb3iUxENGJN0FiG1Gllb8/FHi35SAOYBqRBxIhJ
+         mZDVH9wa4NuS1VLIzZ/epk5cOgj0dvAXukCsRhH35zztmSslNh1zyI3WIn6C3O1K+iPB
+         XHTvK6gAwoDGj4ufRdsX1Ad44b88VmO8Mur0EMMQDRYvbWipCdoi+f/ezmmK2r9vgdEi
+         ZHaqDaqy6DTwHuB8lu8QP10UEgB8GWw0sOyNSZEAFLUH/oe2sSCcypGqiDVrMQXpPagx
+         BYjQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpL74aqegjfHeX+x4NCCKx5HEoB76CrJFe6rN2HuLecum3R423Wfp7OsVFc2WkJ+gBdvIpbFV8ucvMR@vger.kernel.org
+X-Gm-Message-State: AOJu0YwhYuF4j6mbR1jzaC4tXNYL4UyYKX3tl45qBpSiyZwVisq0jjhD
+	zFnLxHUyn+VBVHN4+fiIVbV8DAO0KWkNKGQrXCRFmLclU/F0If7JlPpC4hJQ3tbJKKu5kyJz5np
+	aV061vYfFNxvYXG0Uuf/WzA88SKEZV7/S0jNU4j1CbhvaxMyMakUQ3r3jkRlBhTU=
+X-Gm-Gg: AR+sD10Uv+5yeSNiXUBKb0s0+YNoSWsCqHMZZ0o7kSOSV3wHUAXj1Gj0E4E6d+y/Mr4
+	JRP6H6ZcnvmanpjxfUA9veATlyGu/JTF2o/PupuLYeyi18C8RZplyNX6JoMS3lWAYG2f15vzLwJ
+	zYvSOR5/lg0eXanKC3a8TVo6hsZWm5o9zpD71eg4Kzb2UG6BCliGTgZvBNapSF8fqKylJquUhCb
+	qhUZujPW22i77CLLifuZ/vnfanv4U4CU+6iF90Z9rUtPRvzl+tblZySgFJKnULmkUnWE7tjc1Ox
+	twaopj8C9XOeS3a/904VshEpiakBAM1kgFy8N8fhpv8AR486UDLB4BF95jJXdi23H/js7B+o1+u
+	73OMRQhwG8ZwCqxJaPT0FAgZarFlPrEFXc41t
+X-Received: by 2002:a05:6214:493:b0:8fd:b96d:195b with SMTP id 6a1803df08f44-90872c2b7cbmr80415896d6.15.1785857846385;
+        Tue, 04 Aug 2026 08:37:26 -0700 (PDT)
+X-Received: by 2002:a05:6214:493:b0:8fd:b96d:195b with SMTP id 6a1803df08f44-90872c2b7cbmr80415046d6.15.1785857845790;
+        Tue, 04 Aug 2026 08:37:25 -0700 (PDT)
+Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:dbb1:97f1:a6e6:766b])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-908800cb9basm3648296d6.45.2026.08.04.08.37.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Aug 2026 08:37:25 -0700 (PDT)
+Message-ID: <fa5e8dd1591ada95ac3e7e371852d9d68cd33cd8.camel@redhat.com>
+Subject: Re: [PATCH] scsi: storvsc: Support manual scans for all Hyper-V
+ targets
+From: Laurence Oberman <loberman@redhat.com>
+To: kernel test robot <lkp@intel.com>, "K. Y. Srinivasan"
+ <kys@microsoft.com>,  Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu
+ <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>, Long Li	
+ <longli@microsoft.com>
+Cc: oe-kbuild-all@lists.linux.dev, "James E.J. Bottomley"
+	 <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
+	 <martin.petersen@oracle.com>, linux-hyperv@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 04 Aug 2026 11:37:24 -0400
+In-Reply-To: <202608032058.OkCwuEDu-lkp@intel.com>
+References: <20260723151458.872265-1-loberman@redhat.com>
+	 <202608032058.OkCwuEDu-lkp@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 04 Aug 2026 15:32:02 +0000
-Message-Id: <20260804153203.5CD251F000E9@smtp.kernel.org>
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Medium] The patch makes per-read primitives static and un-exports them, =
-contradicting the commit message claim that they stay exported.
-- [Medium] The refactoring regresses error handling by grouping lower-level=
- firmware transport failures under hardware-specific timeout error messages.
---
+On Mon, 2026-08-03 at 20:45 +0800, kernel test robot wrote:
+> Hi Laurence,
+>=20
+> kernel test robot noticed the following build errors:
+>=20
+> [auto build test ERROR on jejb-scsi/for-next]
+> [also build test ERROR on mkp-scsi/for-next linus/master v7.2-rc6
+> next-20260731]
+> [If your patch is applied to the wrong git tree, kindly drop us a
+> note.
+> And when submitting patch, we suggest to use '--base' as documented
+> in
+> https://git-scm.com/docs/git-format-patch#_base_tree_information]
+>=20
+> url:=C2=A0=C2=A0=C2=A0
+> https://github.com/intel-lab-lkp/linux/commits/Laurence-Oberman/scsi-stor=
+vsc-Support-manual-scans-for-all-Hyper-V-targets/20260803-141419
+> base:=C2=A0=C2=A0
+> https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git=C2=A0for-
+> next
+> patch link:=C2=A0=C2=A0=C2=A0
+> https://lore.kernel.org/r/20260723151458.872265-1-loberman%40redhat.com
+> patch subject: [PATCH] scsi: storvsc: Support manual scans for all
+> Hyper-V targets
+> config: i386-allmodconfig
+> (https://download.01.org/0day-ci/archive/20260803/202608032058.OkCwuE
+> Du-lkp@intel.com/config)
+> compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+> reproduce (this is a W=3D1 build):
+> (https://download.01.org/0day-ci/archive/20260803/202608032058.OkCwuE
+> Du-lkp@intel.com/reproduce)
+>=20
+> If you fix the issue in a separate patch/commit (i.e. not just a new
+> version of
+> the same patch/commit), kindly add following tags
+> > Reported-by: kernel test robot <lkp@intel.com>
+> > Closes:
+> > https://lore.kernel.org/oe-kbuild-all/202608032058.OkCwuEDu-lkp@intel.c=
+om/
+>=20
+> All errors (new ones prefixed by >>, old ones prefixed by <<):
+>=20
+> > > ERROR: modpost: "scsi_scan_host_selected"
+> > > [drivers/scsi/hv_storvsc.ko] undefined!
+>=20
+> --
+> 0-DAY CI Kernel Test Service
+> https://github.com/intel/lkp-tests/wiki
+>=20
+>=20
+> Thanks for the report. This build failure was against v1 and was
+> fixed in v2 by replacing the unexported scsi_scan_host_selected()
+> helper with the exported scsi_scan_target() interface.
 
---- Patch [1]: [PATCH] firmware: xilinx: ufs: move PHY/SRAM ready polling i=
-nto the firmware backend ---
-commit e824b853b832156de7cffafd5b473161a8e6545d
-Author: Michal Simek <michal.simek@amd.com>
-
-firmware: xilinx: ufs: move PHY/SRAM ready polling into the firmware backend
-
-This commit moves the open-coded do/while polling loops for UFS PHY and SRA=
-M=20
-initialization into coarse blocking helpers in the firmware driver. It=20
-introduces zynqmp_pm_wait_mphy_tx_rx_config_ready() and=20
-zynqmp_pm_wait_sram_init_done() to keep the UFS controller backend-agnostic.
-
-> Introduce coarse blocking helpers, zynqmp_pm_wait_mphy_tx_rx_config_ready=
-()
-> and zynqmp_pm_wait_sram_init_done(), that take a caller-supplied timeout
-> budget and contain the poll loop. The loop is EEMI-specific (legacy
-> firmware only exposes the per-read status primitive) so it lives in the
-> firmware driver, keeping the UFS driver backend-agnostic: a future
-> backend can offload the wait to the platform in a single call without
-> touching the controller driver again. The existing per-read primitives st=
-ay
-> exported, so the current EEMI interface is unchanged.
-
-[Severity: Medium]
-The commit message indicates that "The existing per-read primitives stay
-exported, so the current EEMI interface is unchanged." However, the code
-modifications below make these functions static and remove their prototypes.
-Is it intentional to un-export these primitives, contrary to the commit
-message?
-
-> diff --git a/drivers/firmware/xilinx/zynqmp-ufs.c b/drivers/firmware/xili=
-nx/zynqmp-ufs.c
-> index 85da8a822f3a5..81ccf61a037ce 100644
-> --- a/drivers/firmware/xilinx/zynqmp-ufs.c
-> +++ b/drivers/firmware/xilinx/zynqmp-ufs.c
-
-[ ... ]
-
-> @@ -33,7 +34,7 @@
->   *
->   * Return:	Returns 0 on success or error value on failure.
->   */
-> -int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready)
-> +static int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready)
->  {
->  	u32 regval;
->  	int ret;
-> @@ -53,7 +54,6 @@ int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready)
-> =20
->  	return ret;
->  }
-> -EXPORT_SYMBOL_GPL(zynqmp_pm_is_mphy_tx_rx_config_ready);
-
-[ ... ]
-
-> @@ -61,7 +61,7 @@ EXPORT_SYMBOL_GPL(zynqmp_pm_is_mphy_tx_rx_config_ready);
->   *
->   * Return:	Returns 0 on success or error value on failure.
->   */
-> -int zynqmp_pm_is_sram_init_done(bool *is_done)
-> +static int zynqmp_pm_is_sram_init_done(bool *is_done)
->  {
->  	u32 regval;
->  	int ret;
-> @@ -81,7 +81,69 @@ int zynqmp_pm_is_sram_init_done(bool *is_done)
-> =20
->  	return ret;
->  }
-> -EXPORT_SYMBOL_GPL(zynqmp_pm_is_sram_init_done);
-
-[ ... ]
-
-> diff --git a/drivers/ufs/host/ufs-amd-versal2.c b/drivers/ufs/host/ufs-am=
-d-versal2.c
-> index 2154d62868171..dff0c2c954865 100644
-> --- a/drivers/ufs/host/ufs-amd-versal2.c
-> +++ b/drivers/ufs/host/ufs-amd-versal2.c
-
-[ ... ]
-
-> @@ -235,23 +233,15 @@ static int ufs_versal2_phy_init(struct ufs_hba *hba)
->  		{ UIC_ARG_MIB(VS_MPHYCFGUPDT), 1, DME_LOCAL }
->  	};
-> =20
-> -	/* Wait for Tx/Rx config_rdy */
-> -	time_left =3D TIMEOUT_MICROSEC;
-> -	do {
-> -		time_left--;
-> -		ret =3D zynqmp_pm_is_mphy_tx_rx_config_ready(&is_ready);
-> -		if (ret)
-> -			return ret;
-> -
-> -		if (!is_ready)
-> -			break;
-> -
-> -		usleep_range(1, 5);
-> -	} while (time_left);
-> -
-> -	if (!time_left) {
-> +	/*
-> +	 * Wait for Tx/Rx config_rdy. The poll loop lives in the firmware
-> +	 * backend (EEMI today, SCMI in future) so this driver stays
-> +	 * backend-agnostic; the timeout budget stays here with the consumer.
-> +	 */
-> +	ret =3D zynqmp_pm_wait_mphy_tx_rx_config_ready(TIMEOUT_MICROSEC);
-> +	if (ret) {
->  		dev_err(hba->dev, "Tx/Rx configuration signal busy.\n");
-> -		return -ETIMEDOUT;
-> +		return ret;
->  	}
-
-[Severity: Medium]
-Will this change result in misleading error logs if a firmware transport
-error occurs?
-
-In the original code, if zynqmp_pm_is_mphy_tx_rx_config_ready() failed with=
- a
-transport error like -EIO, the function returned silently. The
-"Tx/Rx configuration signal busy" error was only logged when the timeout
-actually expired.
-
-With this update, if zynqmp_pm_wait_mphy_tx_rx_config_ready() returns -EIO,
-it seems we will incorrectly log "Tx/Rx configuration signal busy." instead
-of propagating the transport failure silently.
-
->  	ret =3D ufshcd_dwc_dme_set_attrs(hba, rmmi_attrs, ARRAY_SIZE(rmmi_attrs=
-));
-> @@ -264,23 +254,11 @@ static int ufs_versal2_phy_init(struct ufs_hba *hba)
->  		return ret;
->  	}
-> =20
-> -	/* Wait for SRAM init done */
-> -	time_left =3D TIMEOUT_MICROSEC;
-> -	do {
-> -		time_left--;
-> -		ret =3D zynqmp_pm_is_sram_init_done(&is_ready);
-> -		if (ret)
-> -			return ret;
-> -
-> -		if (is_ready)
-> -			break;
-> -
-> -		usleep_range(1, 5);
-> -	} while (time_left);
-> -
-> -	if (!time_left) {
-> +	/* Wait for SRAM init done (poll handled by the firmware backend). */
-> +	ret =3D zynqmp_pm_wait_sram_init_done(TIMEOUT_MICROSEC);
-> +	if (ret) {
->  		dev_err(hba->dev, "SRAM initialization failed.\n");
-> -		return -ETIMEDOUT;
-> +		return ret;
->  	}
-
-[Severity: Medium]
-Similarly, if zynqmp_pm_wait_sram_init_done() returns a generic firmware
-transport error, will it now misleadingly print "SRAM initialization failed=
-."
-rather than bubbling up the underlying error?
-
-[ ... ]
-
-> diff --git a/include/linux/firmware/xlnx-zynqmp-ufs.h b/include/linux/fir=
-mware/xlnx-zynqmp-ufs.h
-> index d3538dd5822a5..00383dd835f24 100644
-> --- a/include/linux/firmware/xlnx-zynqmp-ufs.h
-> +++ b/include/linux/firmware/xlnx-zynqmp-ufs.h
-> @@ -9,17 +9,17 @@
->  #define __FIRMWARE_XLNX_ZYNQMP_UFS_H__
-> =20
->  #if IS_REACHABLE(CONFIG_ZYNQMP_FIRMWARE)
-> -int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready);
-> -int zynqmp_pm_is_sram_init_done(bool *is_done);
-
-[Severity: Medium]
-Is it intentional to remove these prototypes from the public header, despite
-the commit message mentioning that the per-read primitives stay exported?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/eaeaaea8ed76069943e=
-0706a0917139ff6569929.1785855749.git.michal.simek@amd.com?part=3D1
