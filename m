@@ -1,141 +1,117 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C0F3F39FB
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 14:29:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5845A3AD527
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Aug 2026 14:39:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785853784; cv=none; b=Tf9A1uk3tXLo5H5AOu3hyd/Z7gjVwvJJyQx2eoe0MigNtWVT/bc6H870m09pzn5EEF/89+JyNpmX29ivmX5Ljw4tIGvGKQI6UvgmS2BdY21QZLOz6puaW1scTl/AmYnZkUumjg2wkQBWDnnL4oW4pAiSYEAaGxTODOgvonuOY9A=
+	t=1785854349; cv=none; b=GMVWvAM7Cut2VbFj7EHRT7nWLPIQBVj9mImS/LMucQIolz2mejwt7s/OouhL8NYXbjj2QffzLAMrEYL+ZXqy3+umM9x4G+n5FnDpIZba1dF65UCgx8uoPuABBy0xXBpPzEyT5jRi8oVBukg84JGMaWH7Xgl0p55j85zU04XNafU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785853784; c=relaxed/simple;
-	bh=zwJDS5M7XSOayNbUeGw1KSlciFCw5PkPyvSmQWis6hU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LgQWNloCRpIuPa3NyDJDt9BOyOiLszgXZ8V/i5Q19AbTKbFnsVEOYrzYfV+XPmt/0EcUguYjqThfaNbCw/pGq4N58f5nwmafCXiScd/O8ckMYcLzKToX1J1523ZRylIBKl6IBr3G6wrycf/2pV1LTXKWQAKBqS+4EbRHCGsftXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G5Z+toO8; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785854349; c=relaxed/simple;
+	bh=VyZ/J3k/uAe5+L4QV5upPclMLRpFN2CF/7zqxLckDLY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=C+gVqMrusKh0WqKl2CrukpJThRpPZXiPy3qp0b2nUIajd/dOXnVutTi6ZzHCCeZAYczXvMt8+ouPxx9M/84dPgXo7BCuBdlhN331XFpg4BINeqcCxOByct3vRAmmlYGdgMq2IXGopdwksUe849+gGADXSupUu/LlXPinvXYJH4g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G9UMaTsn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G5Z+toO8"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5b011edaf7dso4551614e87.2
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2026 07:29:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785853762; x=1786458562; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=GDaBxGiFHqp5j125thlzpnjgXp8EFo5LBnP6F1rvvfM=;
-        b=G5Z+toO8dbtFYNriGcx+E4jP6CQKpyKGO32JVG4JqCZamhxRtAAElH+x0LZik0UAX/
-         OTDm1w/1v7jUK1Gc/B3LczLU5NWGaUupdLLgGLO/RLsYPzs07ON0dYW1ch98gzQ1UKJS
-         /3VOvOxkorvg5ZCh5jwRjZGirVbu8MFIGG6HZX16UKBeqRSzeM38eObMF+IzPDvxRanM
-         aUuBTk2xVhYM1KFEM140R9pSOHNvAe6rPQs65n3ddPbxOy1HQeRDA16MKYlAcKP3Gpq8
-         4fCj9G089TPjVYXd2jKRuSd8LV9ctbB6dRpq3GXlFDCJrUSRU5UHpSc/QFt9ASTnZo2a
-         OHJA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785853762; x=1786458562;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=GDaBxGiFHqp5j125thlzpnjgXp8EFo5LBnP6F1rvvfM=;
-        b=BBBjU11dxU67QAjG2cxOGWJ+NO9WT3HP4uVN9ZXYH8MLatymot/387cRlBOMnXkW1Z
-         H4tB3DR8+r6c9wYLIaXcmXZ4OmcEAXAGXkwWfAKV2GNGPNfc6OKUMWw3TAGX9UQYCshv
-         NR292Gf9zyy/f+tk4obpAOqMAZ1mvbTcwTH3HIR6ZiAzC1v+Wl5vfJP5B/fEcviH8ATB
-         7Vc1Bpjmwj9gOkvhDxfbiU72LvGayUe3GSUx5wyNqdqc8kxIVNnjmrv32E/pryLeSaKp
-         iDLdksIl+DC3GuwsR0+yjbY5n87LbigX3Yb6Vm0aUCfoTEvRIgUJLAMiOaA9Nwhkbezz
-         SteA==
-X-Forwarded-Encrypted: i=1; AHgh+RoKKWmgVlg7ghXL1Sh44z/X4w0z0lwgy9NJbFCPo8vzcAKfJLgKtFouwoc83Dg2l3slI6kPmCQbWEoL@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy51SFgctnHdHrf/LbzWfEN8dwIeqVnNJtrWKBUSqUsMVWRxXeY
-	p8/7Z3L3dBXYO5zLKtqKgHjj+gAD1Iiw4MF1gLQc7g2oqOEyhlRIYpj3
-X-Gm-Gg: AR+sD11ETY4QVAx3Bbg8jlVKEoY1mh2BmKei2IpK7npcQvw2shMsynlYdna0gkOcDbn
-	3qWiaU3A8eSHcHhNMX9h3dkBIgxnXbuymRiS2KGDNaVacDy5cuOb8d0QRxU8UutQZWIFHVSczpM
-	8XcoKRblucMcNfPVGx86v2zsgDQxWjBBGJmREXWJ6Vzjb/vfZgqJ/SoWxLzdZ9o2bJ3R0ZRRjoD
-	Q1gDXBRf9kj238Q6YFzKymbOL9fV5krkqrqW2KEaG310cwMOzlqtLi57n7erEycNsmpvbYDF6eG
-	M4bu9/QJdBJRxKcYZue9Hd0goBwQxHOXvZTxnT5x7n+iDBRd2WiAo5/maNh5l6pEHfZmEMIscNk
-	4VUA/wsuxG+frlo7nb49Hlexvhdo8A5vsCyJ0/z/F6Nyom2B9gouWolM+s/o1yWEFzE7TND/3Aw
-	pLkyOExpjD4tixe/FvMjTi3QbANf8FWz4jMfAiOgGc+0jHXSJHJmN85MEgETqFT2I7pYqMflTxk
-	TD9Dw==
-X-Received: by 2002:ac2:4856:0:b0:5b2:9599:b5f1 with SMTP id 2adb3069b0e04-5b2e4f6d57cmr1883681e87.42.1785853762238;
-        Tue, 04 Aug 2026 07:29:22 -0700 (PDT)
-Received: from NB-9797.corp.yadro.com ([89.207.88.244])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b2e245c0ccsm2703630e87.80.2026.08.04.07.29.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Aug 2026 07:29:21 -0700 (PDT)
-From: Ilya Khomyakov <khomyakovilya@gmail.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ilya Khomyakov <khomyakovilya@gmail.com>
-Subject: [PATCH] scsi: mpi3mr: keep DevicePage0 SAS/SATA log on one line
-Date: Tue,  4 Aug 2026 17:29:01 +0300
-Message-ID: <20260804142901.4406-1-khomyakovilya@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G9UMaTsn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B3AA1F00A3A;
+	Tue,  4 Aug 2026 14:39:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785854347;
+	bh=PlIfXBcoOBL1CPCE6FTR2+8v+6v0HsXA5pZGRzqvNqc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=G9UMaTsnVoL5/cbxC/1vrboktMhljmHNGrQsTHG71jzIbyIoA2A19TJ1MrvBA6WEv
+	 xSPEnV/ntQDyOBGXIFKfOKfBoRgREIQPTnP38MLXsZh4g7lwAPUVqTGo3BMaSJpAXD
+	 T8IcvJNpts9wSDIsvLKJJZv6svenWFZ8FSlveNkFUpoCWvZ5m9+hEQnGlSiM+tfYa7
+	 9HFjMz4+GFDy1runZjqutcCvkU4wNrKu0TrCXOLtnzjX7a35J3rwTA6EonSxyhhH0l
+	 tFwMZgdoqhW2ZRVDqb3a/FvsNDau4eKQJxj/XOFg7c5i2tQWllHARMjFu7zdelqkg6
+	 r1UGbnClRrZxw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: mpi3mr: make SAS port PHY masks 64-bit safe
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ilya Khomyakov" <khomyakovilya@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260804140004.4004-1-khomyakovilya@gmail.com>
+References: <20260804140004.4004-1-khomyakovilya@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 04 Aug 2026 14:39:07 +0000
+Message-Id: <20260804143907.9B3AA1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The DevicePage0 SAS/SATA diagnostic message contains an embedded newline
-inside a single ioc_info() format string.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-The first record receives the normal mpi3mr prefix, while the continuation
-starts directly with device_info. Consequently, common filtered captures
-such as
+Pre-existing issues:
+- [High] Incorrect bit iteration over a `u64` variable using `for_each_set_=
+bit` in `mpi3mr_update_mr_sas_port`.
+- [High] Out-of-bounds heap write in `mpi3mr_refresh_sas_ports` when a cont=
+roller firmware reports more than 64 unique PHY connections.
+--
 
-  dmesg | grep -i mpi3mr
+--- Patch [1]: [PATCH] scsi: mpi3mr: make SAS port PHY masks 64-bit safe ---
+commit f7b3b6c83f03cd4dace1e13e5700d80724e506b0
+Author: Ilya Khomyakov <khomyakovilya@gmail.com>
 
-retain only the first part of the message and omit device_info, phy_num,
-attached_phy_id, and negotiated_link_rate. These fields are useful when
-diagnosing SAS discovery and negotiated link-rate problems.
+    scsi: mpi3mr: make SAS port PHY masks 64-bit safe
+   =20
+    This patch fixes 64-bit PHY-mask handling in the Broadcom MPI3 Storage
+    Controller driver under drivers/scsi/mpi3mr/.
 
-Before the change, a filtered capture stopped after:
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr=
+/mpi3mr_transport.c
+> index 240f67a8e2e3b..d6492dddf7352 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
 
-  mpi3mr0: device_pg0: sas_sata:
-  sas_address(0x5000cca2708a13c2),flags(0x0000),
+[ ... ]
 
-Remove the embedded newline and retain only the final newline so the entire
-message is emitted as one prefixed kernel log record. Also add the missing
-spaces after commas in the format string.
+> @@ -1765,7 +1805,7 @@ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
+>  		port_idx =3D host_port_count;
+>  		h_port[port_idx].sas_address =3D le64_to_cpu(sasinf->sas_address);
+>  		h_port[port_idx].handle =3D attached_handle;
+> -		h_port[port_idx].phy_mask =3D (1 << i);
+> +		h_port[port_idx].phy_mask =3D mpi3mr_sas_phy_bit(i);
 
-After the change, the same device is reported in one record as:
+[Severity: High]
+This isn't a bug introduced by this patch, but can the h_port array overflow
+when iterating over the PHYs in mpi3mr_refresh_sas_ports()?
 
-  mpi3mr0: device_pg0: sas_sata: sas_address(0x5000cca2708a13c2),
-  flags(0x0000), device_info(0x0101), phy_num(18),
-  attached_phy_id(1), negotiated_link_rate(0x0b)
+The array is allocated earlier in the function with a fixed size of 64:
 
-The wrapping above is only for the changelog. The kernel emits the actual
-message on one line.
+	h_port =3D kzalloc_objs(struct host_port, 64);
 
-The change was tested with an out-of-tree mpi3mr 8.17.1.0.4 build. All nine
-DevicePage0 SAS/SATA records retained every field in the output of
-`dmesg | grep -i mpi3mr`.
+Since the loop iterates up to mrioc->sas_hba.num_phys times (which is an
+8-bit integer allowing up to 255), and host_port_count is incremented for
+each unique attached handle without bounds checking, will this write out of
+bounds if the firmware reports more than 64 unique PHY connections?
 
-This is a diagnostic-output-only change. It does not modify discovery, I/O,
-or link-management behavior.
+[Severity: High]
+This is also a pre-existing issue, but since we are making PHY masks 64-bit
+safe, is the bit iteration over the u64 mask in mpi3mr_update_mr_sas_port()
+working correctly on 32-bit big-endian architectures?
 
-Signed-off-by: Ilya Khomyakov <khomyakovilya@gmail.com>
+mpi3mr_update_mr_sas_port() uses for_each_set_bit with a cast to ulong *:
 
----
- drivers/scsi/mpi3mr/mpi3mr_os.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+	u64 phys_to_be_added, phys_to_be_removed;
+	...
+	for_each_set_bit(i, (ulong *) &phys_to_be_added, BITS_PER_TYPE(u64)) {
+		mr_sas_phy =3D &mrioc->sas_hba.phy[i];
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -1290,8 +1290,9 @@ mpi3mr_debug_dump_devpg0(struct mpi3mr_ioc *mrioc, struct mpi3_device_page0 *dev
- 		struct mpi3_device0_sas_sata_format *sasinf =
- 		    &dev_pg0->device_specific.sas_sata_format;
- 		ioc_info(mrioc,
--		    "device_pg0: sas_sata: sas_address(0x%016llx),flags(0x%04x),\n"
--		    "device_info(0x%04x), phy_num(%d), attached_phy_id(%d),negotiated_link_rate(0x%02x)\n",
-+		    "device_pg0: sas_sata: sas_address(0x%016llx), flags(0x%04x), "
-+		    "device_info(0x%04x), phy_num(%d), attached_phy_id(%d), "
-+		    "negotiated_link_rate(0x%02x)\n",
- 		    le64_to_cpu(sasinf->sas_address),
- 		    le16_to_cpu(sasinf->flags),
- 		    le16_to_cpu(sasinf->device_info), sasinf->phy_num,
+By casting a local u64 pointer to unsigned long * on 32-bit big-endian
+systems, won't the bit halves be swapped? This could result in out-of-bounds
+array accesses on mrioc->sas_hba.phy[i] and incorrect topology changes since
+bits 0-31 become 32-63 and vice versa.
+
+>  		h_port[port_idx].iounit_port_id =3D sas_io_unit_pg0->phy_data[i].io_un=
+it_port;
+>  		h_port[port_idx].lowest_phy =3D sasinf->phy_num;
+>  		h_port[port_idx].used =3D 0;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260804140004.4004=
+-1-khomyakovilya@gmail.com?part=3D1
