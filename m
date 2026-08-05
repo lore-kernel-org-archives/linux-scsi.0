@@ -1,166 +1,154 @@
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DD253DD532
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 06:54:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46B453E3DA8
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 07:25:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785912850; cv=none; b=b2L4T7fpX0Cd+epWAtwo3emEQ7X/FJH2AAEOJYmS7oiix3DS6A0A94NP4YI7RRCEg9uJd5HH7eppi39BuaIyRk8eTIXBOpp+K//vUX1HQ+1wmKH6fEgmCti4u7bqsO8QG43Wi3YALK9tRyqv8OzxcPk1t768+3z3SRKgVmdBygg=
+	t=1785914723; cv=none; b=LPUO0lpf4E2MvlFXAQpbuHy/SZxkn2aG/dY6EIAmkoh+/HinBoo3bOkIsBkRmgLMRLrnr9q4lkyOE0zhV40rO1xQTChNlpwZQBEykNaX8N42U6OemwmTYMBx1soaVbTYIktqW40qGnLrnvPZ+dTBbXTh4VE/m9cv5pFarfxRkKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785912850; c=relaxed/simple;
-	bh=HqgE/iW+eE/eiPaxSt8xbys7nNXqvy8TA9ls2Ynusyg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L7thUmZ9whOKPNIN5CaZq1T0HKNp+fpAmAGjengl2odQFOhEyJEz1ShAm96rBNOK4PRU5QzRVGkE9dk6L8+wMZTHY2VNUr1yYdG6qvl3qsySmOqE9vqcrRGE0IhVxZRySxg0uNEbXbAcPfK02mobrtcqTjUhmfemCwTvkkC8yJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VMRWuyKJ; arc=none smtp.client-ip=209.85.216.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785914723; c=relaxed/simple;
+	bh=G8JXc3R4nR9vcWh1ltSLvpwRyKldY/oZ5Nu5ZlcAesc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Vwdbdl0rhN2V0zGZd9x2reEuMLNyA0PMk+ijkeezoa5JbETPY6e6cBy53SocS/Ai9nAYMZr7tF4ggfyheoyzbW1qLt1duWoLt+q/rZFA7hYSsTEbeANaqXEVZGJUB/vObd998xTb4HVyjfpZUcD4eB4C3B12QLgfYKnyeEH0ksw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NuCzR1t/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VMRWuyKJ"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-38dfe7eb825so525772a91.0
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Aug 2026 23:54:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785912838; x=1786517638; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1hVVe+2SEo04ryaB7GG9pOTNlQvAC9QD/BxdsX78cJA=;
-        b=VMRWuyKJNCny3SCr5e7qviCaSpHTIlQrbC8cpJ1Eb9WQB0gAkLP+jPI2gRU+oeBR9S
-         j+Yv2n1adAzvAxajivOyDp02W5VpkxQYiiR5whghefli8AS98e9Y3dmd8ogdpeTUgJHe
-         CSkvqqY0oMPf9oPw0v0+Pmjcb6jlzDqpYp+5/oWyp9MR6mlybw3+FE0ggciiQlsNV2j6
-         6sL4DWOa6burtskTr46wZ3erRkieRLN6inz0YI6jH5o3vTmQgsivr2ThkEFwhLevKhgu
-         mWJQX50YX+IJd6CSAiQrP2vuHja5xAQF8f3Ice+oMJAGYgkl1FDguAoOi6s478sGLpiV
-         LkxQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785912838; x=1786517638;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=1hVVe+2SEo04ryaB7GG9pOTNlQvAC9QD/BxdsX78cJA=;
-        b=fNbFl8SaU+sV8RTg/dqY4dTtQsh/9u6ExikemOb+P+0MDd/XY7F3So40sXQI9raYFV
-         k3Oh698i88HlDCL3pN5Wuhe+j5+knQR2SwuvWrdOg1m+SwOeLmwLqwpPW/Z7PYj0ejhb
-         JGjvVqN8xzRtYSTdGdFPmZTD0wSWDPEq+sDOav8SqVLTo/LZz5/jPFAVfz4ksb7Gf9Ie
-         kI9TSSLe3CZz5D/bMuuIndqkPXV5ULjWcjqcetxqa0tzkM3XnuzL5h/ATciVuc9oWw/s
-         nVeM+zVzvxD11Ed2E1sy36BQqfPVhe7+IsION3DPM/f7tDSW+bg11RlRV34JFye7fvAR
-         JvEg==
-X-Forwarded-Encrypted: i=1; AHgh+RocspbzEzIBBoFHusc+K0tn8rNoy8FO9H4UkdAfhOE3yj4ToGpCUoMxxPF5CTVzzdIoZkQnqJmA4d+i@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyf4xwh8qwxEyqvubLdaRachcoT1Lq980ubOgm6CeupWTf2L0xy
-	ZQtcinHAHcZX2KS+P9k31PS7aHEjKauJ9rKBgEEAMRiYxSxLUpRj+Yk7z5rRO+FSi0U=
-X-Gm-Gg: AR+sD10cT3UolL9blP9ICqCgLFelPPc+DVyzk0h4n6iozHGjFyAehrtUaRfXtIqB8hl
-	gHNyZz+s6nMxdzcmLN1pPlFLTRylxbXo5IK5DaTCIJ9e4O0xvgKe+VclOCgyiXD7TXKyNMvuC/f
-	B+SkHLcoplU6+TCZtruKT2cUHz3rmnUp/4m6eRnXXDuIMr85nZ59Y7ilz4zogiN3g2bqXu8a9F0
-	YtkwPDNiHuhVc5PkX2jmkIBXQn6MULcUCt34NazmZ3OU8mUBVXVdsu2d5K/6jx8LNNw65ef1/oU
-	TILyIO7mE3iW0UPx2wMTAAeuS9xY0TBC43eh+Ko3LhTuBvakUO/tWPuAhl824PyqmnYn3XNXBid
-	cmLYWQxvfm1ZkIOQGYBFdOkiMcSwGbmeSAdeY1JjFVcHl5KN/pealAx2gaTuU37qXR/vq1RKb1e
-	4BP80WwaddkQ/OWQlXakMF4CBPbVoH0vJV+p5kL8bqG2nnTK9rr2RsfZU8ViHOz7aBa9Bikr8i6
-	8d84bormN4vV0rSJzgMLwQ=
-X-Received: by 2002:a17:90b:3d81:b0:380:f85c:94b4 with SMTP id 98e67ed59e1d1-3903c543020mr4931768a91.7.1785912838292;
-        Tue, 04 Aug 2026 23:53:58 -0700 (PDT)
-Received: from localhost.localdomain ([118.112.74.185])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38fee06b438sm3604910a91.16.2026.08.04.23.53.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Aug 2026 23:53:57 -0700 (PDT)
-From: Jiayuan Liang <ljykernel@gmail.com>
-To: lduncan@suse.com,
-	cleech@redhat.com,
-	michael.christie@oracle.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jiayuan Liang <ljykernel@gmail.com>
-Subject: [PATCH] scsi: iscsi_tcp: Fix null-pointer dereference in iscsi_sw_tcp_conn_restore_callbacks
-Date: Wed,  5 Aug 2026 14:53:26 +0800
-Message-ID: <20260805065326.1952-1-ljykernel@gmail.com>
-X-Mailer: git-send-email 2.47.0.windows.2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NuCzR1t/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0612F1F000E9;
+	Wed,  5 Aug 2026 07:25:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785914721;
+	bh=u2r7V1O7cdZOn4r+0Jq5Tztd+TsVzflpZDqHSVxTsMw=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=NuCzR1t/HmgmQG858sc/D2ru9md9nZFpTobFkTwQKz0Zb4qU4mq9SZF7bkFij4X6v
+	 LTZBOCtXugp1YK/F8ubjOsV1oF2/HHAEDMQhQqMShb1OQKszTzq9K6nzNa1B+0nEwc
+	 m5uot8KdZDNTnq1jDpm7f1Bfghj79xeq9ohBmbTXdUybu0LN/a+QbJ48iAF7kkwIW/
+	 QV7SgaABQrOdSwkuZzXn4nHwRYf/msX5d9OQDVXB1jnJB9G3BQde/NxO0+6hJ5K8tp
+	 bR4oT0b1l8anaYFepDiTQvaw9iHWHPBml0suTH8Mxv8Fpsbe3yZiN3Tykg3e/ayMr9
+	 GIUhiu6xADspQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: iscsi_tcp: Fix null-pointer dereference in
+ iscsi_sw_tcp_conn_restore_callbacks
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jiayuan Liang" <ljykernel@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260805065326.1952-1-ljykernel@gmail.com>
+References: <20260805065326.1952-1-ljykernel@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 05 Aug 2026 07:25:20 +0000
+Message-Id: <20260805072521.0612F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-A null-pointer dereference can occur in
-iscsi_sw_tcp_conn_restore_callbacks() due to a race condition
-leading to concurrent/re-entrant invocations of
-iscsi_sw_tcp_release_conn().
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Specifically, the re-entrancy can be triggered under the
-following scenario:
+New issues:
+- [High] The newly added NULL pointer check introduces a Time-Of-Check to T=
+ime-Of-Use (TOCTOU) vulnerability that fails to completely prevent the NULL=
+ pointer dereference.
 
-1. The iSCSI client initiates a logout, actively stopping the
-   connection via:
-   iscsi_if_stop_conn()
-     -> iscsi_stop_conn(..., STOP_CONN_TERM)
-          -> cancel_work_sync(&conn->cleanup_work)
-          -> iscsi_sw_tcp_release_conn()
+Pre-existing issues:
+- [Critical] The patch fails to address the root cause of the race conditio=
+n, leaving a severe double free / file refcount underflow and use-after-fre=
+e vulnerability.
+--
 
-2. Simultaneously, a server disconnect triggers a heartbeat
-   timeout on the client side, executing the timeout path:
-   iscsi_check_transport_timeouts()
-     -> iscsi_conn_failure()
-          -> iscsi_conn_error_event()
-               -> queue_work(..., &conn->cleanup_work)
+--- Patch [1]: [PATCH] scsi: iscsi_tcp: Fix null-pointer dereference in isc=
+si_sw_tcp_conn_restore_callbacks ---
+commit a6e54310fce25391e4b63d84129f6076f40ca758
+Author: Jiayuan Liang <ljykernel@gmail.com>
 
-   This schedules iscsi_cleanup_conn_work_fn(), which calls:
-   iscsi_cleanup_conn_work_fn()
-     -> iscsi_stop_conn(..., STOP_CONN_RECOVER)
-          -> iscsi_sw_tcp_release_conn()
+scsi: iscsi_tcp: Fix null-pointer dereference in iscsi_sw_tcp_conn_restore_=
+callbacks
 
-If these two paths execute concurrently, iscsi_sw_tcp_release_conn()
-is re-entered. Since the first invocation releases the socket and
-sets tcp_sw_conn->sock to NULL, the subsequent re-entrant
-invocation in iscsi_sw_tcp_conn_restore_callbacks() attempts to
-dereference the NULL pointer at `tcp_sw_conn->sock->sk`, resulting
-in a kernel panic (Oops):
+The commit message states this fixes a null pointer dereference in
+iscsi_sw_tcp_conn_restore_callbacks caused by a race condition leading to
+concurrent invocations of iscsi_sw_tcp_release_conn. The patch adds a null
+check for the socket pointer before accessing its internal fields.
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
-Oops: 0000 [#1] SMP PTI
-Workqueue: iscsi_conn_cleanup iscsi_cleanup_conn_work_fn [scsi_transport_iscsi]
-RIP: 0010:iscsi_sw_tcp_release_conn+0x54/0x110 [iscsi_tcp]
-Call Trace:
- iscsi_sw_tcp_conn_stop+0x5d/0x80 [iscsi_tcp]
- iscsi_stop_conn+0x66/0xc0 [scsi_transport_iscsi]
- iscsi_cleanup_conn_work_fn+0x6e/0xb0 [scsi_transport_iscsi]
- process_one_work+0x1a7/0x360
- worker_thread+0x30/0x390
- kthread+0x10a/0x120
- ret_from_fork+0x35/0x40
+> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+> index 9260b1c9b0e05..0eabb8b59f46d 100644
+> --- a/drivers/scsi/iscsi_tcp.c
+> +++ b/drivers/scsi/iscsi_tcp.c
+> @@ -265,8 +265,12 @@ iscsi_sw_tcp_conn_restore_callbacks(struct iscsi_con=
+n *conn)
+>  {
+>  	struct iscsi_tcp_conn *tcp_conn =3D conn->dd_data;
+>  	struct iscsi_sw_tcp_conn *tcp_sw_conn =3D tcp_conn->dd_data;
+> -	struct sock *sk =3D tcp_sw_conn->sock->sk;
+> +	struct sock *sk;
+> =20
+> +	if (!tcp_sw_conn->sock)
+> +		return;
+> +
+> +	sk =3D tcp_sw_conn->sock->sk;
 
-Fix this by adding a NULL check for `tcp_sw_conn->sock` in
-iscsi_sw_tcp_conn_restore_callbacks() before attempting to access
-the socket's internal fields.
+[Severity: High]
+Does this new check fully prevent the null pointer dereference?
 
-Signed-off-by: Jiayuan Liang <ljykernel@gmail.com>
----
- drivers/scsi/iscsi_tcp.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+Because the check and the subsequent read are lockless and not protected
+by READ_ONCE(), the compiler could fetch the tcp_sw_conn->sock pointer
+twice.=20
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 9260b1c9b0e0..0eabb8b59f46 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -265,8 +265,12 @@ iscsi_sw_tcp_conn_restore_callbacks(struct iscsi_conn *conn)
- {
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
--	struct sock *sk = tcp_sw_conn->sock->sk;
-+	struct sock *sk;
- 
-+	if (!tcp_sw_conn->sock)
-+		return;
-+
-+	sk = tcp_sw_conn->sock->sk;
- 	/* restore socket callbacks, see also: iscsi_sw_tcp_conn_set_callbacks() */
- 	write_lock_bh(&sk->sk_callback_lock);
- 	sk->sk_user_data    = NULL;
-@@ -277,6 +281,7 @@ iscsi_sw_tcp_conn_restore_callbacks(struct iscsi_conn *conn)
- 	write_unlock_bh(&sk->sk_callback_lock);
- }
- 
-+
- /**
-  * iscsi_sw_tcp_xmit_segment - transmit segment
-  * @tcp_conn: the iSCSI TCP connection
--- 
-2.43.0
+If another thread sets tcp_sw_conn->sock to null under sock_lock right after
+the check, could the second fetch result in dereferencing null here?
 
+[Severity: Critical]
+This is a pre-existing issue, but does this patch fully address the root
+cause of the race condition?
+
+If two threads concurrently execute iscsi_sw_tcp_release_conn, they both
+read tcp_sw_conn->sock into a local variable:
+
+iscsi_sw_tcp_release_conn() {
+	...
+	struct socket *sock =3D tcp_sw_conn->sock;
+
+	if (!sock)
+		return;
+	...
+
+Since both threads can read the non-null pointer before either thread takes
+the sock_lock to set it to null, both will bypass this check.
+
+Later in the same function, both threads will call:
+
+	...
+	mutex_lock(&tcp_sw_conn->sock_lock);
+	tcp_sw_conn->sock =3D NULL;
+	mutex_unlock(&tcp_sw_conn->sock_lock);
+	sockfd_put(sock);
+}
+
+Will this cause a double free of the socket file refcount, since both
+concurrent threads call sockfd_put on the same locally cached sock pointer?
+
+Similarly, in iscsi_sw_tcp_conn_stop, both threads might use the locally
+cached sock pointer after it has already been released by the first thread:
+
+iscsi_sw_tcp_conn_stop() {
+	...
+	struct socket *sock =3D tcp_sw_conn->sock;
+
+	if (!sock)
+		return;
+
+	sock->sk->sk_err =3D EIO;
+	...
+
+If one thread finishes iscsi_sw_tcp_release_conn first, will the second
+thread dereference a freed socket here?
+
+>  	/* restore socket callbacks, see also: iscsi_sw_tcp_conn_set_callbacks(=
+) */
+>  	write_lock_bh(&sk->sk_callback_lock);
+>  	sk->sk_user_data    =3D NULL;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260805065326.1952=
+-1-ljykernel@gmail.com?part=3D1
