@@ -1,73 +1,76 @@
-Received: from mail-pg1-f227.google.com (mail-pg1-f227.google.com [209.85.215.227])
+Received: from mail-pj1-f98.google.com (mail-pj1-f98.google.com [209.85.216.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9BDD430310
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:14:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 414CA432BE3
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:14:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785928452; cv=none; b=upXPCOXuTcc8oD3Hchj6WJXtMu8Jf+PLmWuQq6Kl9aDrW/SP6aWVkwttfMJmhJBBsCJeNSJCug6SY4Gb+1nJ8DXp/j3zLuhEr/dgGtDL5QVtzqY0qtvPzeeG23e1T4sw1HWHGPx1k5ALg+lziH+vZrlyiAWMT8Jg/PGIUChSK+U=
+	t=1785928455; cv=none; b=W7VLvfhEksHfpRSzCJaF+oDGrLyg0lpHlpK99h2+C/Fjuh/11d+AvUDW+6R4Bssjs8fxkBUFC0brnICAYY7wDRW8O1cLq7tSSivqECGO9U17moBsgq8vdoyonbuOHkGvupKxO8liXmEh2UhcKheZJddcrmnqZ0fitacYD9UaGc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785928452; c=relaxed/simple;
-	bh=W13x2h+Pc+Xpx+vCcdzj1HkS/TOjlN3jv23geKzbr0s=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GdwwqeOaQ+CRE7Wmfr7aGJlmBWyQirDF4Llwvp+hn45qdukoGu3ZdsMcsoq/jElXUhYFIeTMUe2ZyPr+k6b/D8RG1bW7tgUqImoXQSePpKEhyPIJMwz8UXooopuIYC3gBG/Odo3dIATuYuePwVHwtGMa17skh9bCZpcFT6/oo0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=RGd7Umgr; arc=none smtp.client-ip=209.85.215.227
+	s=arc-20240116; t=1785928455; c=relaxed/simple;
+	bh=KN+ul6i3x9eKvBQzJJ7j2q9bd7SXEnRF9RHlgoJTIFc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=JQPVWfE+BSQMM0/B2Ht2Gl3OIFXkcx1bwvSQ3OVUB48ijrCkm29gBBzjQkI3GVyXv9IC3ME6JVfhIHLtYUJQbZw991nLcVM0Vok1j+gTJrEVw0jkgwH0FRvS8QZjw6vAqCIP7XH269WG7YKMhzSWmRHUgYrJBxHq8TbanC1s670=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Uxq3sSQ6; arc=none smtp.client-ip=209.85.216.98
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RGd7Umgr"
-Received: by mail-pg1-f227.google.com with SMTP id 41be03b00d2f7-c9e0b89e228so483232a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:10 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Uxq3sSQ6"
+Received: by mail-pj1-f98.google.com with SMTP id 98e67ed59e1d1-38d489b6b71so809306a91.0
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785928450; x=1786533250;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=eb5w2KqbkLcA7sQNHivZyyYvOroVrUlNMLhZXmSrAig=;
-        b=KMVGBZGLjgOerSporrjWTtY9izBQycxF7vk4MgLWqrVGI63n+d3Dx3C+2Tmq57Pw9L
-         EymTN5OeQXo91rOUqFCB4hdh6jhTZ9h9o+ZFo2KzZJFGlexGLMbka6gOsKOEnKEH1tMg
-         AmK+HkokyP5/UZHJxsFY83BFbnjpGG9J16wXlLnT1x9MsuECWsFko9ui06FbpSMhlfKG
-         8N5aVezMhSM0PdjZUZVk7LqAZsGgjCVLWYn8mx1L59OQ9Z404c7vuaBz1GfQ1fcStVxU
-         LJyOydbxi3mDw6z27Ok2jLIhRIXKJPn84CXDRJVqS/r53Nce4QgYqU52s94U1me5F4Cs
-         u2QQ==
-X-Gm-Message-State: AOJu0YyrrO9czNSruA+nTJb2oDnUGWhRKPRCflWl/n3s0/N9BkcowggW
-	Ugmw8T5LAADbMt35Rxev4y3Gau/yfsaFXYeqN94fjKAvSU43SD5mEhvSCNXT0KB1vwnlGVRVKN+
-	oduxOnNqpQQxw8WSUVXBw0I/dg2FjfqFEcm1dhnRlk7VPWpXVsBRKAWDB++cAcQX6xm4E3DOH6X
-	Ld7muxEOX1nER2QVWqm5X17fHJKamnyuvVUMpbiCPOKBc2J1Ph1YiBQIutLFckgh9V8EwBQ6crf
-	e7gVKJF4q5b2ohN
-X-Gm-Gg: AR+sD10bJDcRZssJL7pvTujkuS9qhoigtAX+JtHOeMib4y1Dj1KheL2tFuXC4XB/YAe
-	wrsVWVG+/ksiZYRLQxuve/GXzG5CXD6tbjLviwNSqjPQp6jBkfF6nXnqp2lCkx78YEKwNa+eRws
-	3xXSYK4Tk/dOo08B/ocUAIv/NvdiM4qgZL0f+fpnTx2O2p1n4mIU0vFw+RivcEODL0T9dzzGQey
-	4Lk3emzzzXZEqFPjGgEIx1uu9uFRQo8LUuE6GHStxcWdjtzMTPGTRbq/R+MeIKjzD1GD6BTVx9S
-	8Jo+JW9nN4WnmhIjYql7lB4mv4hBdkaANwXm2Tk2aC8Ur3yZZlFzZyQEWijDAarpQqPr5/SxBnh
-	Z92U9xlKoHWzojq1Ch/T14fgd5N2T95MmSsWlUfX1N7vVChz54Db+2pWcSyzq3O0iM0dKDdvelT
-	pmkK8mLMlO34D3x2CYFHe/sDGF70k+R/aw6JY=
-X-Received: by 2002:a05:6a20:3d02:b0:3c3:8d4c:6673 with SMTP id adf61e73a8af0-3cb85fabfffmr6951593637.37.1785928449569;
-        Wed, 05 Aug 2026 04:14:09 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1785928453; x=1786533253;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=xUUzcIobmhtLoLj0b/LsrMCBLXsMLqFua2DUeD+nzr0=;
+        b=TfyZKE/ZAZ4S7vQKi9GF45Dw3HglbukFxJdpY3N4Z19qL7D3tI9pl3fFb948b3K8gc
+         v2rwfFUSNDJp+mFXtc5vpsBtzxD3ItQfBlLv9DldS1NkR95Dvn6jnlTl3PVp7g0iCJPv
+         wya3pzD7wpWQYQ1AVKS97Lf+qEFWA3fi2cjbbP47XuEMHH7UzKBGw2eA7lNZW8z57KoC
+         mGBi/n5+rsb4TQx1AWZinJlvR1pd/GzIYYfPivquLl+PBqauB+6fPxQIfh1XgqOd2eOH
+         RCTlkJGxiz/J2+F5mffwI7y/EMwDVBpau86/T2y8jRghI0X3O06SiwIg9U++grOGGb4/
+         H5cA==
+X-Gm-Message-State: AOJu0YxV1k90ImssewKhwUaz1HFxsbw85RzKwgYrjBB8iwPd+nOSk+F+
+	2SxQDHNjt2Nmqg8aTCVLKw94HvQm5aq6vUSsf5qP0RWoRUjcUMlVeopzo53rtQ/VMz2B4f0SPJ0
+	zTy9JGHEOZCGg5G0iUvxqyR0yBiWSK7NizK4n/ZIvzvaq0uXraq5buquGfk6jh85MsoPY6J98SZ
+	f2eyD1vfazLmel8VxVNbOjIH+BAYzak2FSdYScu08zyKgZD0U7V5zmhuEXCMLXDUrgT70QZMD81
+	B45h8Rgw5kASr/T
+X-Gm-Gg: AR+sD12i3l3uK8zm5lW9o4/t5OaVstSnsd7WYL2CvOhyQIMPxWdm9CWkGL2Yl4BtE3m
+	eh4iOh7zy/+/q3OSv/8zvknog6WrgvPVDQtxg4P2Z5VjSiAr11NN4FQy/Mc5FvUrQ8XI9hUYX+x
+	Up92Gj3x2UcEY2nMfUZDRTCzaC0KzkcdH3kkIwjywewwVA3vQ0dVeaNNvXpYv++YoQOGun5wnGS
+	com7SA2tClsROp4s+pyHxaP8ASUacQnJRreidwojDDtK4Vf3150J8WvJ3F8lO8LXRbOGzrOf4ij
+	lXg7bWVZ92TE8wmbf5P9heAGDir5D8E7w6JmWiomOu4RtnodZoJhYlW9OjBpB1rEOVsi7Eoo6mD
+	9biFgomlUDuoQwBUMo+J+cn9hrwJjtsNSZvnekjvzCZyiP/AcUfIuSjlNXf6f4IRVIy0cVnNNVB
+	SachoXsyiCQPigSR4CBFUjMXpJsoPoiROSQsA=
+X-Received: by 2002:a17:90b:528c:b0:380:9f17:6df3 with SMTP id 98e67ed59e1d1-3903c5448dcmr6435948a91.4.1785928453410;
+        Wed, 05 Aug 2026 04:14:13 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-22.dlp.protect.broadcom.com. [144.49.247.22])
-        by smtp-relay.gmail.com with ESMTPS id 41be03b00d2f7-cbe707f678dsm697133a12.4.2026.08.05.04.14.09
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-390392b0042sm784736a91.7.2026.08.05.04.14.12
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 05 Aug 2026 04:14:09 -0700 (PDT)
+        Wed, 05 Aug 2026 04:14:13 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c96b4f58ddcso763426a12.3
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:08 -0700 (PDT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cab048cdb3eso1255931a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785928448; x=1786533248; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=eb5w2KqbkLcA7sQNHivZyyYvOroVrUlNMLhZXmSrAig=;
-        b=RGd7UmgrbcGB3QVhc9GvIH4l77YcMTk7xMX8cY1OH2x6tdRVupi7jkh5e7ARCNvNTQ
-         kNiYL5RvstgK6MLb9kwvwU0UZXKtVGCJ20KMSyVCeaPFTZU6O2GbUb5k6uIOIq38wCWd
-         +AwH3d5MPCqqWPyfq6TlfSWr8Z4y5OYRvItps=
-X-Received: by 2002:a05:6a20:7fa3:b0:3bf:a489:1483 with SMTP id adf61e73a8af0-3cb85fac015mr6358189637.33.1785928447891;
-        Wed, 05 Aug 2026 04:14:07 -0700 (PDT)
-X-Received: by 2002:a05:6a20:7fa3:b0:3bf:a489:1483 with SMTP id adf61e73a8af0-3cb85fac015mr6358109637.33.1785928447276;
-        Wed, 05 Aug 2026 04:14:07 -0700 (PDT)
+        d=broadcom.com; s=google; t=1785928452; x=1786533252; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=xUUzcIobmhtLoLj0b/LsrMCBLXsMLqFua2DUeD+nzr0=;
+        b=Uxq3sSQ6PxUv1TIee66btPhXqiM/kaDVJCCCIUGK/CZXsF3aB9/9370JdUP7hHBTHA
+         HPLc1xNGnKngoNK4oHJuT2JlyvJz1ry1IVsIMxqvR49F1wbRl1QqwK9p5U47X+0+JpfZ
+         Le+k0ioHRrZKiuj7RNpseG/DMezfSTIZhyYw8=
+X-Received: by 2002:a05:6300:220a:b0:3c3:7cfe:b32a with SMTP id adf61e73a8af0-3cb85ea6fb0mr7645722637.27.1785928451589;
+        Wed, 05 Aug 2026 04:14:11 -0700 (PDT)
+X-Received: by 2002:a05:6300:220a:b0:3c3:7cfe:b32a with SMTP id adf61e73a8af0-3cb85ea6fb0mr7645640637.27.1785928451003;
+        Wed, 05 Aug 2026 04:14:11 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158673b7f4sm16740227eec.17.2026.08.05.04.14.04
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158673b7f4sm16740227eec.17.2026.08.05.04.14.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Aug 2026 04:14:06 -0700 (PDT)
+        Wed, 05 Aug 2026 04:14:10 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -75,11 +78,14 @@ Cc: sathya.prakash@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	vishakhavc@google.com,
 	ipylypiv@google.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v4 00/10] mpi3mr: Few Enhancements and minor fixes
-Date: Wed,  5 Aug 2026 16:36:24 +0530
-Message-ID: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	Sashiko <sashiko-bot@kernel.org>
+Subject: [PATCH v4 01/10] mpi3mr: Skip device shutdown during unload per controller configuration
+Date: Wed,  5 Aug 2026 16:36:25 +0530
+Message-ID: <20260805110634.346670-2-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
+References: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -89,81 +95,221 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Few Enhancements and minor fixes of mpi3mr driver.
+The controller may be configured through Driver Page 1 to suppress
+device shutdown requests during driver unload. Cache this setting and
+skip the device shutdown request during IOC shutdown when unloading
+the driver.
 
-Changes since v3:
-- Patch 1: Guarded the firmware buffer loop against a bad decrement size.
-- Patch 4: Made reset_to/abort_to a single write, tightened pgsz bounds.
-- Patch 5: Fixed a reply_dma leak, a double-decrement, and a stalled index.
-- Patch 6: Added synchronize_irq() on queue teardown, fixed a segment leak.
-- Patch 7: Closed an ABBA deadlock between the EH/reset thread and worker.
-- Patch 8: Fixed a fatal device_del() bug and the same deadlock as patch 7.
+Additionally, ensure the driver_pg1 fields are properly converted
+from little-endian to CPU endianness using le32_to_cpu() and le16_to_cpu()
+before evaluating the shutdown disable flag and allocating diag buffers.
+This prevents failures and massive memory allocation errors on big-endian
+architectures.
 
-Changes since v2:
-- Patch 1: Added missing endianness conversions (le16_to_cpu()) for
-  buffer size fields in mpi3mr_alloc_diag_bufs() to prevent large memory
-  allocations on big-endian architectures.
-- Patch 5: Hardened reply queue processing by adding bounds checking for
-  request_queue_id, fixed a TOCTOU race with a double-check pattern
-  (using dma_rmb and atomic_add_unless), and replaced a direct panic()
-  with a safe ioc_err() log for malformed DMA reply addresses.
-- Patch 6: Fixed potential NULL pointer dereferences and Use-After-Free
-  during spurious interrupts by properly clearing intr_info[*].op_reply_q
-  when reply queue segments are freed.
-- Patch 7: Resolved multiple concurrency issues around firmware event
-  cleanup: fixed TOCTOU races by safely handling current_event under the
-  fwevt_lock, fixed a Use-After-Free by delaying the release of event
-  references until after cancellation, and prevented deadlocks during
-  module unload.
-- Patch 8: Removed an explicit sas_rphy_free() to fix a double-free
-  vulnerability on the sas_rphy_add() error path, as sas_port_delete()
-  implicitly handles the cleanup.
+Also harden the diagnostic buffer allocation retry loops against
+invalid firmware-provided decrement sizes. The trace buffer loop
+already guarded against a zero or oversized decrement size (infinite
+loop or unsigned underflow). The firmware buffer loop had the same
+gap and now carries the same guard.
 
-Changes since v1:
-- Fixed test robot build warning.
-- Patch 1: Added le32_to_cpu() conversion for driver_pg1.flags to prevent
-  incorrect logic on big-endian architectures.
-- Patch 4: Added bounds checking for firmware-provided NVMe page size to
-  prevent undefined shift behavior and potential divide-by-zero panics.
-- Patch 5: Added missing dma_rmb() memory barriers in reply queue
-  processing loops to prevent weakly ordered architectures from
-  processing stale data.
-- Patch 6: Hardened operational queue error handling to prevent
-  NULL pointer dereferences and deferred kernel panics
-  during driver cleanup.
-- Patch 7: Fixed a TOCTOU Use-After-Free race condition and reference leak
-  during firmware event cleanup by safely acquiring the event reference
-  under a spinlock.
-- Patch 8: Added missing NULL pointer checks for rphy allocations and
-  handled sas_rphy_add() failures to prevent NULL pointer dereferences
-  and resource leaks.
-- Patch 9: Added return value check for mpi3mr_add_host_phy() to prevent
-  a NULL pointer dereference during device addition events.
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@broadcom.com?part=1
+Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar@broadcom.com?part=1
+Closes: https://sashiko.dev/#/patchset/20260724102505.115136-1-ranjan.kumar@broadcom.com?part=1
+Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr.h     |  3 +++
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 44 ++++++++++++++++++++------------
+ drivers/scsi/mpi3mr/mpi3mr_fw.c  | 35 ++++++++++++++++++-------
+ drivers/scsi/mpi3mr/mpi3mr_os.c  |  2 ++
+ 4 files changed, 58 insertions(+), 26 deletions(-)
 
-Ranjan Kumar (10):
-  mpi3mr: Skip device shutdown during unload per controller
-    configuration
-  mpi3mr: Update MPI Headers to revision 41
-  mpi3mr: Add early timestamp synchronization after driver load
-  mpi3mr: Fix NVMe page size caching for non-operational devices
-  mpi3mr: Fix performance regression caused by extended IRQ poll sleep
-  mpi3mr: Fix memory leak on operational queue creation failure
-  mpi3mr: Fix firmware event reference leak during cleanup
-  mpi3mr: Fix SAS port allocation and registration error handling
-  mpi3mr: Fix SAS PHY cleanup in host addition error paths
-  mpi3mr: Driver version update to 8.18.0.8.50
-
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      |  77 ++++++++-
- drivers/scsi/mpi3mr/mpi/mpi30_image.h     |   7 +-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |  15 +-
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   2 +-
- drivers/scsi/mpi3mr/mpi3mr.h              |  13 +-
- drivers/scsi/mpi3mr/mpi3mr_app.c          |  44 +++--
- drivers/scsi/mpi3mr/mpi3mr_fw.c           | 193 +++++++++++++++++-----
- drivers/scsi/mpi3mr/mpi3mr_os.c           | 173 ++++++++++++-------
- drivers/scsi/mpi3mr/mpi3mr_transport.c    | 103 ++++++++++--
- 9 files changed, 479 insertions(+), 148 deletions(-)
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index c25525fe0671..39096004c60a 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -1410,6 +1410,9 @@ struct mpi3mr_ioc {
+ 	struct dma_pool *trace_buf_pool;
+ 	struct segments *trace_buf;
+ 	u8 invalid_io_comp;
++	bool is_unload;
++	bool skip_dev_shutdown_on_unload;
++
+ 
+ };
+ 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 1353a8ff9c85..fca5357a515d 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -141,25 +141,27 @@ void mpi3mr_alloc_diag_bufs(struct mpi3mr_ioc *mrioc)
+ 		trace_min_size = fw_min_size = MPI3MR_DEFAULT_HDB_MIN_SZ;
+ 
+ 	} else {
+-		trace_size = driver_pg1.host_diag_trace_max_size * 1024;
+-		trace_dec_size = driver_pg1.host_diag_trace_decrement_size
++		trace_size = le16_to_cpu(driver_pg1.host_diag_trace_max_size) * 1024;
++		trace_dec_size = le16_to_cpu(driver_pg1.host_diag_trace_decrement_size)
+ 			 * 1024;
+-		trace_min_size = driver_pg1.host_diag_trace_min_size * 1024;
+-		fw_size = driver_pg1.host_diag_fw_max_size * 1024;
+-		fw_dec_size = driver_pg1.host_diag_fw_decrement_size * 1024;
+-		fw_min_size = driver_pg1.host_diag_fw_min_size * 1024;
++		trace_min_size = le16_to_cpu(driver_pg1.host_diag_trace_min_size) * 1024;
++		fw_size = le16_to_cpu(driver_pg1.host_diag_fw_max_size) * 1024;
++		fw_dec_size = le16_to_cpu(driver_pg1.host_diag_fw_decrement_size) * 1024;
++		fw_min_size = le16_to_cpu(driver_pg1.host_diag_fw_min_size) * 1024;
+ 		dprint_init(mrioc,
+ 		    "%s:trace diag buffer sizes read from driver\n"
+ 		    "page1: maximum size = %dKB, decrement size = %dKB\n"
+-		    ", minimum size = %dKB\n", __func__, driver_pg1.host_diag_trace_max_size,
+-		    driver_pg1.host_diag_trace_decrement_size,
+-		    driver_pg1.host_diag_trace_min_size);
++		    ", minimum size = %dKB\n", __func__,
++		    le16_to_cpu(driver_pg1.host_diag_trace_max_size),
++		    le16_to_cpu(driver_pg1.host_diag_trace_decrement_size),
++		    le16_to_cpu(driver_pg1.host_diag_trace_min_size));
+ 		dprint_init(mrioc,
+ 		    "%s:firmware diag buffer sizes read from driver\n"
+ 		    "page1: maximum size = %dKB, decrement size = %dKB\n"
+-		    ", minimum size = %dKB\n", __func__, driver_pg1.host_diag_fw_max_size,
+-		    driver_pg1.host_diag_fw_decrement_size,
+-		    driver_pg1.host_diag_fw_min_size);
++		    ", minimum size = %dKB\n", __func__,
++		    le16_to_cpu(driver_pg1.host_diag_fw_max_size),
++		    le16_to_cpu(driver_pg1.host_diag_fw_decrement_size),
++		    le16_to_cpu(driver_pg1.host_diag_fw_min_size));
+ 		if ((trace_size == 0) && (fw_size == 0))
+ 			return;
+ 	}
+@@ -179,6 +181,12 @@ void mpi3mr_alloc_diag_bufs(struct mpi3mr_ioc *mrioc)
+ 		    mpi3mr_alloc_trace_buffer(mrioc, trace_size)) {
+ 
+ 			retry = true;
++
++			if (!trace_dec_size || trace_dec_size > trace_size) {
++				retry = false;
++				goto retry_fw;
++			}
++
+ 			trace_size -= trace_dec_size;
+ 			dprint_init(mrioc, "trace diag buffer allocation failed\n"
+ 			"retrying smaller size %dKB\n", trace_size / 1024);
+@@ -211,11 +219,13 @@ void mpi3mr_alloc_diag_bufs(struct mpi3mr_ioc *mrioc)
+ 			diag_buffer->size = fw_size;
+ 		} else {
+ 			retry = true;
+-			fw_size -= fw_dec_size;
+-			dprint_init(mrioc, "%s:trace diag buffer allocation failed,\n"
+-					"retrying smaller size %dKB\n",
+-					__func__, fw_size / 1024);
+-			goto retry_fw;
++			if (fw_dec_size && fw_dec_size <= fw_size) {
++				fw_size -= fw_dec_size;
++				dprint_init(mrioc, "%s:trace diag buffer allocation failed,\n"
++						"retrying smaller size %dKB\n",
++						__func__, fw_size / 1024);
++				goto retry_fw;
++			}
+ 		}
+ 	}
+ }
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 31b19ed1528e..59241038f689 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -4107,26 +4107,35 @@ static int mpi3mr_repost_diag_bufs(struct mpi3mr_ioc *mrioc)
+ }
+ 
+ /**
+- * mpi3mr_read_tsu_interval - Update time stamp interval
++ * mpi3mr_read_driver_page1 - Read Driver Page 1 parameters
+  * @mrioc: Adapter instance reference
+  *
+- * Update time stamp interval if its defined in driver page 1,
+- * otherwise use default value.
++ * Reads and caches Driver Page 1 parameters such as
++ * timestamp update interval and driver behavior flags.
+  *
+  * Return: Nothing
+  */
+ static void
+-mpi3mr_read_tsu_interval(struct mpi3mr_ioc *mrioc)
++mpi3mr_read_driver_page1(struct mpi3mr_ioc *mrioc)
+ {
+ 	struct mpi3_driver_page1 driver_pg1;
+ 	u16 pg_sz = sizeof(driver_pg1);
+ 	int retval = 0;
+ 
+ 	mrioc->ts_update_interval = MPI3MR_TSUPDATE_INTERVAL;
++	mrioc->skip_dev_shutdown_on_unload = 0;
+ 
+ 	retval = mpi3mr_cfg_get_driver_pg1(mrioc, &driver_pg1, pg_sz);
+-	if (!retval && driver_pg1.time_stamp_update)
++
++	if (retval)
++		return;
++
++	if (driver_pg1.time_stamp_update)
+ 		mrioc->ts_update_interval = (driver_pg1.time_stamp_update * 60);
++
++	mrioc->skip_dev_shutdown_on_unload =
++		(le32_to_cpu(driver_pg1.flags) &
++		 MPI3_DRIVER1_FLAGS_DEVICE_SHUTDOWN_ON_UNLOAD_DISABLE) ? 1 : 0;
+ }
+ 
+ /**
+@@ -4432,7 +4441,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		goto out_failed_noretry;
+ 	}
+ 
+-	mpi3mr_read_tsu_interval(mrioc);
++	mpi3mr_read_driver_page1(mrioc);
+ 	mpi3mr_print_ioc_info(mrioc);
+ 
+ 	dprint_init(mrioc, "allocating host diag buffers\n");
+@@ -4604,7 +4613,7 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
+ 		goto out_failed_noretry;
+ 	}
+ 
+-	mpi3mr_read_tsu_interval(mrioc);
++	mpi3mr_read_driver_page1(mrioc);
+ 	mpi3mr_print_ioc_info(mrioc);
+ 
+ 	if (is_resume) {
+@@ -5089,8 +5098,16 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
+ 		return;
+ 	}
+ 
+-	shutdown_action = MPI3_SYSIF_IOC_CONFIG_SHUTDOWN_NORMAL |
+-	    MPI3_SYSIF_IOC_CONFIG_DEVICE_SHUTDOWN_SEND_REQ;
++	shutdown_action = MPI3_SYSIF_IOC_CONFIG_SHUTDOWN_NORMAL;
++
++	if (!(mrioc->is_unload && mrioc->skip_dev_shutdown_on_unload))
++		shutdown_action |=
++			MPI3_SYSIF_IOC_CONFIG_DEVICE_SHUTDOWN_SEND_REQ;
++	else
++		ioc_info(mrioc,
++		    "The shutdown request is issued without the device shutdown bit set\n"
++		    "as indicated by the controller configuration\n");
++
+ 	ioc_config = readl(&mrioc->sysif_regs->ioc_configuration);
+ 	ioc_config |= shutdown_action;
+ 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 402d1f35d214..d2a20f2721db 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -5665,6 +5665,8 @@ static void mpi3mr_remove(struct pci_dev *pdev)
+ 		return;
+ 
+ 	mrioc = shost_priv(shost);
++	mrioc->is_unload = true;
++
+ 	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
+ 		ssleep(1);
+ 
 -- 
 2.47.3
 
