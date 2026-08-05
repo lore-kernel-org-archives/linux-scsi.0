@@ -1,76 +1,76 @@
-Received: from mail-pj1-f99.google.com (mail-pj1-f99.google.com [209.85.216.99])
+Received: from mail-vk1-f226.google.com (mail-vk1-f226.google.com [209.85.221.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC2CC4314AE
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:14:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 284DE431495
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:14:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785928470; cv=none; b=cALz0bOnuMH9m2QfZUDMdVTA2C0JdOtJrHmm7V0g4yGgLMrP35fkLull5ePI/StxNOahVJvap9mINdN5W/5/lisX7CxLLRnBrxL+2t66Qg6/2w2wkn4wwb5gHw88L4WjvL8IJKWG1ZNhq5rfxLT9F9kbVzX0RoIrE9wF5k/Z9M8=
+	t=1785928474; cv=none; b=Mz1ky3/p6oDHGeEQKOynThtk6ENGksu0FnfBklp/y9CNPM6dvehfxE10DZ9rwrGchgICpOqMfxDJ4PCn/qgU0JPIhHq1pfTdrQtktIRIY4bBu7Ur3iD+vhTb2yUHEz8jA/O5Cpz5Pu8BOcWiAPBHUIGSeuW6TbAp1HOIwANkLu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785928470; c=relaxed/simple;
-	bh=yC45xs2GKPojCVnbGXVenfKiaVOWf5JNz7YTsX8XC1M=;
+	s=arc-20240116; t=1785928474; c=relaxed/simple;
+	bh=K5EEivKsI0N65oqkRjYgmUjYgs4yp8uPMTep17M23DY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=evbUCgwA4Vvn1Ygt/TwKz9rCDlaHUAo36NXPMNBZWyndZN1gY/MG/PP21P87B5fx99xf+Jt1kjbUIAUH1wMotitEXA88lzBVi+Rx7R2QB90m2OPwNn496m7ligyMg9Gs5uNGoaxQXCMbLvCXAhI4lD9YQu35ByUsMRSZCSKFbEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=FJuQz1qO; arc=none smtp.client-ip=209.85.216.99
+	 MIME-Version; b=bdzLvfxuf9epT4NltDwaSD+Gugu5wfp5lfCIlfRbgiOnDWtQaeJTLDc0oGVtye0J306Iun4VoyFmmQQT7JAOTa4fMxb3YjIgYgBkD9LVsqFMVqN+q8E7RgkOpsS0e2NIBqasFHtELzjwTLvvcJEcQijXaCFt8PK5TCl2V1RD4yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=N4SYJhij; arc=none smtp.client-ip=209.85.221.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="FJuQz1qO"
-Received: by mail-pj1-f99.google.com with SMTP id 98e67ed59e1d1-38dcbade417so661701a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:28 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="N4SYJhij"
+Received: by mail-vk1-f226.google.com with SMTP id 71dfb90a1353d-5bfa4c51c2aso254349e0c.0
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785928468; x=1786533268;
+        d=1e100.net; s=20251104; t=1785928472; x=1786533272;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ThfBF1H8cB/CTsva5VCXoR1f/Qt1tCliQHBOivaqZks=;
-        b=aFysX6CukMAHdF7CawIhqReb/uaa4ORetRSIXwmQTn/rCOrazH7kSCCh9dMF2vmc7O
-         +HJX49CRxXVZIhTnxWkk8s++SaibKpV6dlpoklsazFIFT90wHwV4rvTib6mL0nagDdvf
-         jjoaRMJk4IgenRkXU4TNbbmE4BZRKlcwdyKeKbFTCZhyApoNdYf/3Bxsl1aAW/8Ea4II
-         dZ1fJnNnqfzD2XpoGxjDjRApQaB+fB/21knkvd+IEMpjZegWQ6VWGIYF1dEnoc3Y401X
-         81fDdmitGVA9lap+LWcZ0mCOggoUcs52wuzTGwRKYT0FyAnqIIcQA4QESE6xKpDRhdlH
-         pxjg==
-X-Gm-Message-State: AOJu0Yxrhyer4D6GkpqNh8zlBHk05Vh6eX0peLjI2X0qCR4cUWwFtlzz
-	2AqLc5TXwSDXsS2m2EnD2m0+yAa66ebs3JSM38MBHh38ha4sgP1r+x9bBKLPDUTlJN7EJCUhQCQ
-	PoG+tOtS1cVgj1VUFjuQwRAopozJrzL5HIzzI288l1sVNVqWASUY1IUyiXBrYOyHP3I2bUyg/lM
-	w/FTO4uV27Qry/Pto1CADPU5wDFF6Do3GDpzS+4YyJsS+NcwVUGadUeoxhb6jLJ6LS/BNro8yyQ
-	4P42ilI8bZyWacb
-X-Gm-Gg: AR+sD13+xA67no3YO/KjZuc0f77JAVt2+RYR843wBf1rEXPmlx4z+pySuDfkc646Zfg
-	/sJ+ocLnXFBR2TGHDYxa9aaQglMb5hUW2OCRpEoJBE21iqjeDzaRJMJdMDzwxEkJ0/1wgeGvTd6
-	7pjusbPJJB9NoYJvfTtZNmP4PGbaFol7tLA48P58VkMhL4x6MyKefCtX9VtbIUqGu+2Ks0AOtrs
-	FTyj6h0AK3Uszyodq+E4jYAsiTwYmOeVwTZWBCPWhKEwS/kxuK/tAigh0NHE/RxjD0ZtCR88J1u
-	F78ct4815/d3bwvn9x8r0i/TVo/UZLWD/UyYWJN3n55gr0rVV65X7MzXukr5SG4O8e1IotLhwmH
-	lhmL8jXshDjyq5VRfWnAfi8lZ7cUJUJFvzbb8GgA5WPKx0FVsHDtWnrC/GFkX2y/Tybs1hfZ8nK
-	B60WQzaN5HHa8hwmlMX7G8grIPUBBnnCNJUf4=
-X-Received: by 2002:a17:90b:4d8c:b0:381:6c5:3f63 with SMTP id 98e67ed59e1d1-3903c544f17mr5106888a91.6.1785928467886;
-        Wed, 05 Aug 2026 04:14:27 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-22.dlp.protect.broadcom.com. [144.49.247.22])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-38febce7bc6sm1102355a91.0.2026.08.05.04.14.27
+        bh=ZyoHhF0lwkExjLQP23UtLF2uu0TuvfRDobB1gf48q+Y=;
+        b=p2U9EY3nonKlboq1eb72o24d/zXHrw1LjIaV4s+4pYYvNAvyMpaOpPxmdBTlIJAv91
+         tCHHNHkAiq1nWr3QdVnQtilz1k0AHe3OSXV/TEejLUGLRWjG7Yj5N7mCD34aMvSwqxt7
+         LAICgM/uAtalggXmNxZ1IReGv/gsQcsdi5H0lujMiY/R/YGiBLZwI2OV4UxgUzXqF85g
+         gdU6EaGF5DL9fJj6kU/+sxCp/PeIyxNZpbD+LPBDF6qvbbOYsEGr/LbC6SBpLvJMdw1M
+         saHN/yWa4+LwJQkR3XzUne/8pGNiVbZppIGxbrGbQF4RMm58A2fbaVrQEfmoUYGxbR47
+         ENKA==
+X-Gm-Message-State: AOJu0YwaIEjBNX43pJP6j7KZNviC+mWEZgZpKYIEVUlF5qXmLE9jzD5a
+	p3d+DMsQlqyMwYbuY/H2mJNmxSStp3/hy31uBnaRrKmjK2OC+keEJRe7nmGSJP898NLhBbZ12uT
+	u+LbeAeJnQ3bs/xDJU1gTbj39atMcpNVNlXW07Bq++DidlUQk+LyK8jKghp7eamqqgHzHex6fqd
+	RsfI8Lm1smO/b1s09VWUcRDA7tlwJGuz7jGqrrMvlhh++JR3HOfMSIv6z15tlnHk5GO6vMHd77j
+	QV1Vzc0tvWPoCjh
+X-Gm-Gg: AR+sD132G3n0zGjHqJEg8HbMyDVQSIVbek2wfY38B7fgq7NI6/bnedD5styCEjJSslQ
+	4RRp1u5fT1b7bqf+ufR558ZBdfa8kwZtHyVlYywVuQLjuWp6LYoAMXhTfBpPtKKLiws+rGEn+LW
+	D8Nt65sWN1qRmZX+KDbTGYK2WhvovWNVqytYVpBcdjMOqT8NcJVskYuZ617hzZWBeIgVHgEE2ob
+	qDuHHQDCFQnuv6SBtUpqaLNdpBalRNwbka3/xpBcuIalPTgMCcO+10UcoI1RN1xewAxohk0PzL4
+	dpPC2NIYOKv22hF8/ESMEJUERYqHEqb3wPU0ZSkljLk275Im2kYoQGfweAojOQO9JvJUMFKopng
+	pXJe5lbA+hdPzpDdwGGl4YdlFS6YrfMCnPfIj6ikJd9jo9PzNMEViO/r/1WiUh7HQB1nROGj9UL
+	3B0xv1kz50hElp0Pwt8SFUgRL1Yi11cbCQP3g=
+X-Received: by 2002:a05:6122:d15:b0:5c2:b001:db5b with SMTP id 71dfb90a1353d-5c3d910bacbmr746435e0c.6.1785928471670;
+        Wed, 05 Aug 2026 04:14:31 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-27.dlp.protect.broadcom.com. [144.49.247.27])
+        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5c3d06f1cf6sm555578e0c.5.2026.08.05.04.14.30
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 05 Aug 2026 04:14:27 -0700 (PDT)
+        Wed, 05 Aug 2026 04:14:31 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cb7d6ba548eso996010a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:27 -0700 (PDT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-38ce7fabf76so1447350a91.2
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785928466; x=1786533266; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1785928470; x=1786533270; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ThfBF1H8cB/CTsva5VCXoR1f/Qt1tCliQHBOivaqZks=;
-        b=FJuQz1qOu470ot47y2fdxogORZJzsCGC4RBS+3LWvMpEn8DUu3YZE8QUmuo/pVmIDz
-         xzSS7LFSZRDXv2ZeOzswpwHAZEaoDr63uFCC0zAITuHFlEzw1bMcuGCObn3QKSvMo44b
-         ccgFIbyqdXFbpa3sGQd7FtDXPC/SWj9aLMt70=
-X-Received: by 2002:a05:6300:220a:b0:3c3:7cfe:b32a with SMTP id adf61e73a8af0-3cb85ea6fb0mr7647426637.27.1785928466000;
-        Wed, 05 Aug 2026 04:14:26 -0700 (PDT)
-X-Received: by 2002:a05:6300:220a:b0:3c3:7cfe:b32a with SMTP id adf61e73a8af0-3cb85ea6fb0mr7647340637.27.1785928465438;
-        Wed, 05 Aug 2026 04:14:25 -0700 (PDT)
+        bh=ZyoHhF0lwkExjLQP23UtLF2uu0TuvfRDobB1gf48q+Y=;
+        b=N4SYJhijj3WFVHinnRoj+681rNhbJsVKfIKIa/o/bPR/oi3COKdbKtSXeEDlilY7dP
+         RF58J0joG0HTR/IgsaQCOjfE1TRBrqDXtjZLGIzVGkjnpASd8HwDJMCGEbGDC7fWgwA4
+         EqZN1ZhPmLuma4l1afhX96bDi4USvDXx4l7tY=
+X-Received: by 2002:a17:90b:4b84:b0:38e:8021:2ea9 with SMTP id 98e67ed59e1d1-3903c5f6482mr5465293a91.19.1785928469720;
+        Wed, 05 Aug 2026 04:14:29 -0700 (PDT)
+X-Received: by 2002:a17:90b:4b84:b0:38e:8021:2ea9 with SMTP id 98e67ed59e1d1-3903c5f6482mr5465236a91.19.1785928469117;
+        Wed, 05 Aug 2026 04:14:29 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158673b7f4sm16740227eec.17.2026.08.05.04.14.22
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158673b7f4sm16740227eec.17.2026.08.05.04.14.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Aug 2026 04:14:24 -0700 (PDT)
+        Wed, 05 Aug 2026 04:14:28 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -80,9 +80,9 @@ Cc: sathya.prakash@broadcom.com,
 	ipylypiv@google.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	Sashiko <sashiko-bot@kernel.org>
-Subject: [PATCH v4 05/10] mpi3mr: Fix performance regression caused by extended IRQ poll sleep
-Date: Wed,  5 Aug 2026 16:36:29 +0530
-Message-ID: <20260805110634.346670-6-ranjan.kumar@broadcom.com>
+Subject: [PATCH v4 06/10] mpi3mr: Fix memory leak on operational queue creation failure
+Date: Wed,  5 Aug 2026 16:36:30 +0530
+Message-ID: <20260805110634.346670-7-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
 References: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
@@ -95,206 +95,229 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Commit 24d7071d9645 ("scsi: mpi3mr: A performance fix") increased the
-threaded IRQ poll sleep range from 2-20 us to 20-21 us to work around a
-timer slack issue.
+When operational queue creation fails after one or more queues have
+been created, the error path frees the queue information arrays but
+does not release the DMA memory segments associated with the created
+queues, resulting in a memory leak. Fix this by ensuring that partially
+allocated segments are freed immediately if a queue fails to create.
 
-On kernels unaffected by the timer slack issue, the longer sleep interval
-reduces reply queue processing efficiency and causes an approximately 7%
-throughput regression on NVMe direct-attached RAID10 configurations.
+Additionally, resolve the following issues in the queue segment
+free/alloc paths:
 
-Restore the IRQ poll sleep base to 2 us (widening the usleep_range() upper
-bound to 10x the base instead of a fixed +1 us) to recover the lost
-throughput, and skip the sleep entirely once pend_ios reaches 0 so the
-poll loop exits immediately at the tail of a completion burst.
+1. Clear mrioc->intr_info[].op_reply_q with WRITE_ONCE() and follow it
+   with synchronize_irq() before freeing segments, and have the ISR
+   paths read it once via READ_ONCE() into a local, to close a race
+   where the ISR could use the pointer while it is being freed.
 
-Additionally, resolve the following issues in the reply queue processing
-and polling logic:
-
-1. Add missing dma_rmb() memory barriers in the admin and operational
-   reply queue processing loops. This ensures that the descriptor
-   payload is only read after the phase bit check is complete, preventing
-   weakly ordered architectures from speculatively processing stale data.
-
-2. Add bounds checking for `request_queue_id` in
-   mpi3mr_process_op_reply_q(). An out-of-range id is now logged and the
-   descriptor is retired (consumer index advanced, phase toggled on
-   wraparound, pend_ios/threshold accounted) rather than aborting the
-   loop in place, which previously left the same corrupted descriptor
-   at the head of the ring forever and stalled polling indefinitely.
-
-3. Recheck for a late-arriving descriptor via dma_rmb() while still
-   holding op_reply_q->in_use, instead of releasing it and reclaiming
-   it afterward, which could race and reprocess a descriptor with
-   stale indices or double-decrement in_use.
-
-4. Replace a direct panic() call with a safe ioc_err() log and abort in
-   mpi3mr_process_op_reply_desc() when mpi3mr_get_reply_virt_addr()
-   returns NULL. This prevents a single malformed DMA reply address from
-   crashing the entire host OS. The reply_dma output parameter is also
-   cleared before returning, since it was already populated with the
-   unvalidated address before the NULL check. Leaving it set would make
-   the caller repost that unvalidated address back to the hardware.
-
-Note: The unbounded busy-wait loop (usleep_range) in mpi3mr_isr_poll()
-flagged by automated review is intentionally retained. This short sleep
-polling mechanism is critical for batching completions and achieving the
-target throughput on high-performance NVMe configurations.
+2. Free q_segment_list before checking q_segments in both free
+   functions, since a kzalloc_objs() failure on q_segments left
+   q_segment_list leaked via the early return.
 
 Reported-by: Sashiko <sashiko-bot@kernel.org>
-Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@broadcom.com?part=5
-Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar@broadcom.com?part=5
-Closes: https://sashiko.dev/#/patchset/20260724102505.115136-1-ranjan.kumar@broadcom.com?part=5
+Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@broadcom.com?part=6
+Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar@broadcom.com?part=6
+Closes: https://sashiko.dev/#/patchset/20260724102505.115136-1-ranjan.kumar@broadcom.com?part=6
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  2 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 52 ++++++++++++++++++++++++++++++---
- drivers/scsi/mpi3mr/mpi3mr_os.c |  8 +++--
- 3 files changed, 55 insertions(+), 7 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 83 ++++++++++++++++++++++++---------
+ 1 file changed, 60 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 6128b30112e2..4d19a9460d38 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -179,7 +179,7 @@ extern atomic64_t event_counter;
- #define MPI3MR_DEFAULT_SDEV_QD	32
- 
- /* Definitions for Threaded IRQ poll*/
--#define MPI3MR_IRQ_POLL_SLEEP			20
-+#define MPI3MR_IRQ_POLL_SLEEP			2
- #define MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT		8
- 
- /* Definitions for the controller security status*/
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 434b66f7b502..e6050b41e15a 100644
+index e6050b41e15a..5a780eb7fd43 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -473,6 +473,12 @@ int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
- 		return 0;
- 	}
+@@ -698,6 +698,7 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
+ {
+ 	struct mpi3mr_intr_info *intr_info = privdata;
+ 	struct mpi3mr_ioc *mrioc;
++	struct op_reply_qinfo *op_reply_q;
+ 	u16 midx;
+ 	u32 num_admin_replies = 0, num_op_reply = 0;
  
-+	/*
-+	 * Ensure that the descriptor payload is read only after
-+	 * the phase bit check is complete.
-+	 */
-+	dma_rmb();
+@@ -713,9 +714,9 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
+ 
+ 	if (!midx)
+ 		num_admin_replies = mpi3mr_process_admin_reply_q(mrioc);
+-	if (intr_info->op_reply_q)
+-		num_op_reply = mpi3mr_process_op_reply_q(mrioc,
+-		    intr_info->op_reply_q);
++	op_reply_q = READ_ONCE(intr_info->op_reply_q);
++	if (op_reply_q)
++		num_op_reply = mpi3mr_process_op_reply_q(mrioc, op_reply_q);
+ 
+ 	if (num_admin_replies || num_op_reply)
+ 		return IRQ_HANDLED;
+@@ -728,6 +729,7 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
+ static irqreturn_t mpi3mr_isr(int irq, void *privdata)
+ {
+ 	struct mpi3mr_intr_info *intr_info = privdata;
++	struct op_reply_qinfo *op_reply_q;
+ 	int ret;
+ 
+ 	if (!intr_info)
+@@ -740,11 +742,12 @@ static irqreturn_t mpi3mr_isr(int irq, void *privdata)
+ 	 * If more IOs are expected, schedule IRQ polling thread.
+ 	 * Otherwise exit from ISR.
+ 	 */
+-	if ((threaded_isr_poll == false) || !intr_info->op_reply_q)
++	op_reply_q = READ_ONCE(intr_info->op_reply_q);
++	if ((threaded_isr_poll == false) || !op_reply_q)
+ 		return ret;
+ 
+-	if (!intr_info->op_reply_q->enable_irq_poll ||
+-	    !atomic_read(&intr_info->op_reply_q->pend_ios))
++	if (!op_reply_q->enable_irq_poll ||
++	    !atomic_read(&op_reply_q->pend_ios))
+ 		return ret;
+ 
+ 	disable_irq_nosync(intr_info->os_irq);
+@@ -766,10 +769,15 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
+ {
+ 	struct mpi3mr_intr_info *intr_info = privdata;
+ 	struct mpi3mr_ioc *mrioc;
++	struct op_reply_qinfo *op_reply_q;
+ 	u16 midx;
+ 	u32 num_op_reply = 0;
+ 
+-	if (!intr_info || !intr_info->op_reply_q)
++	if (!intr_info)
++		return IRQ_NONE;
 +
- 	do {
- 		if (mrioc->unrecoverable || mrioc->io_admin_reset_sync)
++	op_reply_q = READ_ONCE(intr_info->op_reply_q);
++	if (!op_reply_q)
+ 		return IRQ_NONE;
+ 
+ 	mrioc = intr_info->mrioc;
+@@ -780,20 +788,23 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
+ 		if (!mrioc->intr_enabled || mrioc->unrecoverable)
  			break;
-@@ -493,6 +499,13 @@ int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc)
- 		if ((le16_to_cpu(reply_desc->reply_flags) &
- 		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
- 			break;
-+
-+		/*
-+		 * Ensure that the descriptor payload is read only after
-+		 * the phase bit check is complete.
-+		 */
-+		dma_rmb();
-+
- 		if (threshold_comps == MPI3MR_THRESHOLD_REPLY_COUNT) {
- 			writel(admin_reply_ci,
- 			    &mrioc->sysif_regs->admin_reply_queue_ci);
-@@ -564,15 +577,33 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 	reply_desc = mpi3mr_get_reply_desc(op_reply_q, reply_ci);
- 	if ((le16_to_cpu(reply_desc->reply_flags) &
- 	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase) {
-+		/* Recheck under in_use before releasing, to avoid a reclaim race */
-+		dma_rmb();
-+		if ((le16_to_cpu(reply_desc->reply_flags) &
-+		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) == exp_phase)
-+			goto process_desc;
- 		atomic_dec(&op_reply_q->in_use);
- 		return 0;
- 	}
-+process_desc:
-+	/*
-+	 * Ensure that the descriptor payload is read only after
-+	 * the phase bit check is complete.
-+	 */
-+	dma_rmb();
  
- 	do {
- 		if (mrioc->unrecoverable || mrioc->io_admin_reset_sync)
- 			break;
- 
- 		req_q_idx = le16_to_cpu(reply_desc->request_queue_id) - 1;
-+
-+		if (unlikely(req_q_idx >= mrioc->num_op_req_q)) {
-+			ioc_err(mrioc, "Invalid request queue id %d, skipping reply\n",
-+			    req_q_idx + 1);
-+			goto next_reply;
-+		}
-+
- 		op_req_q = &mrioc->req_qinfo[req_q_idx];
- 
- 		WRITE_ONCE(op_req_q->ci, le16_to_cpu(reply_desc->request_queue_ci));
-@@ -581,6 +612,7 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 
- 		if (reply_dma)
- 			mpi3mr_repost_reply_buf(mrioc, reply_dma);
-+next_reply:
- 		num_op_reply++;
- 		threshold_comps++;
- 
-@@ -592,8 +624,19 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
- 		reply_desc = mpi3mr_get_reply_desc(op_reply_q, reply_ci);
- 
- 		if ((le16_to_cpu(reply_desc->reply_flags) &
--		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase)
-+		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) != exp_phase) {
-+			dma_rmb();
-+			if ((le16_to_cpu(reply_desc->reply_flags) &
-+			    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) == exp_phase)
-+				goto reply_ready;
- 			break;
-+		}
-+reply_ready:
-+		/*
-+		 * Ensure that the descriptor payload is read only after
-+		 * the phase bit check is complete.
-+		 */
-+		dma_rmb();
- #ifndef CONFIG_PREEMPT_RT
- 		/*
- 		 * Exit completion loop to avoid CPU lockup
-@@ -743,11 +786,12 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
- 			num_op_reply +=
- 			    mpi3mr_process_op_reply_q(mrioc,
- 				intr_info->op_reply_q);
-+		if (!atomic_read(&intr_info->op_reply_q->pend_ios))
++		op_reply_q = READ_ONCE(intr_info->op_reply_q);
++		if (!op_reply_q)
 +			break;
++
+ 		if (!midx)
+ 			mpi3mr_process_admin_reply_q(mrioc);
+-		if (intr_info->op_reply_q)
+-			num_op_reply +=
+-			    mpi3mr_process_op_reply_q(mrioc,
+-				intr_info->op_reply_q);
+-		if (!atomic_read(&intr_info->op_reply_q->pend_ios))
++		num_op_reply +=
++		    mpi3mr_process_op_reply_q(mrioc, op_reply_q);
++		if (!atomic_read(&op_reply_q->pend_ios))
+ 			break;
  
--		usleep_range(MPI3MR_IRQ_POLL_SLEEP, MPI3MR_IRQ_POLL_SLEEP + 1);
-+		usleep_range(MPI3MR_IRQ_POLL_SLEEP, 10 * MPI3MR_IRQ_POLL_SLEEP);
+ 		usleep_range(MPI3MR_IRQ_POLL_SLEEP, 10 * MPI3MR_IRQ_POLL_SLEEP);
  
--	} while (atomic_read(&intr_info->op_reply_q->pend_ios) &&
--	    (num_op_reply < mrioc->max_host_ios));
-+	} while (num_op_reply < mrioc->max_host_ios);
+ 	} while (num_op_reply < mrioc->max_host_ios);
  
- 	intr_info->op_reply_q->enable_irq_poll = false;
+-	intr_info->op_reply_q->enable_irq_poll = false;
++	if (op_reply_q)
++		op_reply_q->enable_irq_poll = false;
  	enable_irq(intr_info->os_irq);
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 88b1d6360dac..23a6a5e3df5f 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3430,8 +3430,12 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
- 		scsi_reply = mpi3mr_get_reply_virt_addr(mrioc,
- 		    *reply_dma);
- 		if (!scsi_reply) {
--			panic("%s: scsi_reply is NULL, this shouldn't happen\n",
--			    mrioc->name);
-+			ioc_err(mrioc, "scsi_reply is NULL, invalid reply_frame_address\n");
-+			/*
-+			 * Do not let the caller repost an address that
-+			 * failed virt-addr lookup back to the hardware.
-+			 */
-+			*reply_dma = 0;
- 			goto out;
+ 
+ 	return IRQ_HANDLED;
+@@ -1973,10 +1984,6 @@ static void mpi3mr_free_op_req_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
+ 	int size;
+ 	struct segments *segments;
+ 
+-	segments = mrioc->req_qinfo[q_idx].q_segments;
+-	if (!segments)
+-		return;
+-
+ 	if (mrioc->enable_segqueue) {
+ 		size = MPI3MR_OP_REQ_Q_SEG_SIZE;
+ 		if (mrioc->req_qinfo[q_idx].q_segment_list) {
+@@ -1990,6 +1997,10 @@ static void mpi3mr_free_op_req_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
+ 		size = mrioc->req_qinfo[q_idx].segment_qd *
+ 		    mrioc->facts.op_req_sz;
+ 
++	segments = mrioc->req_qinfo[q_idx].q_segments;
++	if (!segments)
++		return;
++
+ 	for (j = 0; j < mrioc->req_qinfo[q_idx].num_segments; j++) {
+ 		if (!segments[j].segment)
+ 			continue;
+@@ -2016,10 +2027,17 @@ static void mpi3mr_free_op_reply_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
+ 	u16 j;
+ 	int size;
+ 	struct segments *segments;
++	u16 midx = REPLY_QUEUE_IDX_TO_MSIX_IDX(q_idx, mrioc->op_reply_q_offset);
+ 
+-	segments = mrioc->op_reply_qinfo[q_idx].q_segments;
+-	if (!segments)
+-		return;
++	/*
++	 * Stop the ISR/poll thread from picking up this queue before its
++	 * segments are freed below, and wait for any in-flight handler
++	 * that already has the old pointer to finish using it.
++	 */
++	if (midx < mrioc->intr_info_count) {
++		WRITE_ONCE(mrioc->intr_info[midx].op_reply_q, NULL);
++		synchronize_irq(pci_irq_vector(mrioc->pdev, midx));
++	}
+ 
+ 	if (mrioc->enable_segqueue) {
+ 		size = MPI3MR_OP_REP_Q_SEG_SIZE;
+@@ -2034,6 +2052,10 @@ static void mpi3mr_free_op_reply_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
+ 		size = mrioc->op_reply_qinfo[q_idx].segment_qd *
+ 		    mrioc->op_reply_desc_sz;
+ 
++	segments = mrioc->op_reply_qinfo[q_idx].q_segments;
++	if (!segments)
++		return;
++
+ 	for (j = 0; j < mrioc->op_reply_qinfo[q_idx].num_segments; j++) {
+ 		if (!segments[j].segment)
+ 			continue;
+@@ -2500,7 +2522,7 @@ static int mpi3mr_create_op_req_q(struct mpi3mr_ioc *mrioc, u16 idx,
+ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
+ {
+ 	int retval = 0;
+-	u16 num_queues = 0, i = 0, msix_count_op_q = 1;
++	u16 num_queues = 0, i = 0, j = 0, msix_count_op_q = 1;
+ 	u32 ioc_status;
+ 	enum mpi3mr_iocstate ioc_state;
+ 
+@@ -2552,6 +2574,13 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
  		}
- 		host_tag = le16_to_cpu(scsi_reply->host_tag);
+ 	}
+ 
++	if (i < num_queues) {
++		for (j = i; j < num_queues; j++) {
++			mpi3mr_free_op_req_q_segments(mrioc, j);
++			mpi3mr_free_op_reply_q_segments(mrioc, j);
++		}
++	}
++
+ 	if (i == 0) {
+ 		/* Not even one queue is created successfully*/
+ 		retval = -1;
+@@ -2573,11 +2602,19 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
+ 
+ 	return retval;
+ out_failed:
+-	kfree(mrioc->req_qinfo);
+-	mrioc->req_qinfo = NULL;
++	if (mrioc->req_qinfo) {
++		for (j = 0; j < i; j++) {
++			mpi3mr_free_op_req_q_segments(mrioc, j);
++			mpi3mr_free_op_reply_q_segments(mrioc, j);
++		}
++		kfree(mrioc->req_qinfo);
++		mrioc->req_qinfo = NULL;
++	}
++	mrioc->num_op_req_q = 0;
+ 
+ 	kfree(mrioc->op_reply_qinfo);
+ 	mrioc->op_reply_qinfo = NULL;
++	mrioc->num_op_reply_q = 0;
+ 
+ 	return retval;
+ }
 -- 
 2.47.3
 
