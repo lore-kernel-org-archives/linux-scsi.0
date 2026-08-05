@@ -1,76 +1,76 @@
-Received: from mail-vk1-f226.google.com (mail-vk1-f226.google.com [209.85.221.226])
+Received: from mail-pj1-f99.google.com (mail-pj1-f99.google.com [209.85.216.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 284DE431495
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:14:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57BD84314BA
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:14:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785928474; cv=none; b=Mz1ky3/p6oDHGeEQKOynThtk6ENGksu0FnfBklp/y9CNPM6dvehfxE10DZ9rwrGchgICpOqMfxDJ4PCn/qgU0JPIhHq1pfTdrQtktIRIY4bBu7Ur3iD+vhTb2yUHEz8jA/O5Cpz5Pu8BOcWiAPBHUIGSeuW6TbAp1HOIwANkLu4=
+	t=1785928478; cv=none; b=d1pblI8t0VRtVJO4r6ry1jRfXFIWmnH3yCWPXWtnFxZIelO5MaafOxkLjQ9JQK2vxRlTVxufl4f+DdG/qwff7nbhZN/zvN6Lc9LX3aNWMxnvt1zRyZp7OVhLoW5KjcJBaPBXXW+CgyOc/gICfKrwxDUQwNWRj7gd5hf60e5I1cE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785928474; c=relaxed/simple;
-	bh=K5EEivKsI0N65oqkRjYgmUjYgs4yp8uPMTep17M23DY=;
+	s=arc-20240116; t=1785928478; c=relaxed/simple;
+	bh=z0R0X8zKEgdc7RvkZR2wPQpqsCFXzbnPvbMcsiD65X0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bdzLvfxuf9epT4NltDwaSD+Gugu5wfp5lfCIlfRbgiOnDWtQaeJTLDc0oGVtye0J306Iun4VoyFmmQQT7JAOTa4fMxb3YjIgYgBkD9LVsqFMVqN+q8E7RgkOpsS0e2NIBqasFHtELzjwTLvvcJEcQijXaCFt8PK5TCl2V1RD4yc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=N4SYJhij; arc=none smtp.client-ip=209.85.221.226
+	 MIME-Version; b=L6Ai1VB3jUUyc1K81TLMCa838qg8UJYCWpgeqH3Z65mwcdrPFwe0AxTgIreU9GJD5NMJMfP+xhEjGvA8UWKAs8QcZQRzsCemPP+WjJwjmj50lCJxdvLiYsFg4aMeXaSGDf2oB0HeibPXMDz5GiqQoAvl5ofH7W2v20KWf+EzqnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=QfIHfxvO; arc=none smtp.client-ip=209.85.216.99
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="N4SYJhij"
-Received: by mail-vk1-f226.google.com with SMTP id 71dfb90a1353d-5bfa4c51c2aso254349e0c.0
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:32 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QfIHfxvO"
+Received: by mail-pj1-f99.google.com with SMTP id 98e67ed59e1d1-38e69bdb0fcso833442a91.1
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785928472; x=1786533272;
+        d=1e100.net; s=20251104; t=1785928476; x=1786533276;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ZyoHhF0lwkExjLQP23UtLF2uu0TuvfRDobB1gf48q+Y=;
-        b=p2U9EY3nonKlboq1eb72o24d/zXHrw1LjIaV4s+4pYYvNAvyMpaOpPxmdBTlIJAv91
-         tCHHNHkAiq1nWr3QdVnQtilz1k0AHe3OSXV/TEejLUGLRWjG7Yj5N7mCD34aMvSwqxt7
-         LAICgM/uAtalggXmNxZ1IReGv/gsQcsdi5H0lujMiY/R/YGiBLZwI2OV4UxgUzXqF85g
-         gdU6EaGF5DL9fJj6kU/+sxCp/PeIyxNZpbD+LPBDF6qvbbOYsEGr/LbC6SBpLvJMdw1M
-         saHN/yWa4+LwJQkR3XzUne/8pGNiVbZppIGxbrGbQF4RMm58A2fbaVrQEfmoUYGxbR47
-         ENKA==
-X-Gm-Message-State: AOJu0YwaIEjBNX43pJP6j7KZNviC+mWEZgZpKYIEVUlF5qXmLE9jzD5a
-	p3d+DMsQlqyMwYbuY/H2mJNmxSStp3/hy31uBnaRrKmjK2OC+keEJRe7nmGSJP898NLhBbZ12uT
-	u+LbeAeJnQ3bs/xDJU1gTbj39atMcpNVNlXW07Bq++DidlUQk+LyK8jKghp7eamqqgHzHex6fqd
-	RsfI8Lm1smO/b1s09VWUcRDA7tlwJGuz7jGqrrMvlhh++JR3HOfMSIv6z15tlnHk5GO6vMHd77j
-	QV1Vzc0tvWPoCjh
-X-Gm-Gg: AR+sD132G3n0zGjHqJEg8HbMyDVQSIVbek2wfY38B7fgq7NI6/bnedD5styCEjJSslQ
-	4RRp1u5fT1b7bqf+ufR558ZBdfa8kwZtHyVlYywVuQLjuWp6LYoAMXhTfBpPtKKLiws+rGEn+LW
-	D8Nt65sWN1qRmZX+KDbTGYK2WhvovWNVqytYVpBcdjMOqT8NcJVskYuZ617hzZWBeIgVHgEE2ob
-	qDuHHQDCFQnuv6SBtUpqaLNdpBalRNwbka3/xpBcuIalPTgMCcO+10UcoI1RN1xewAxohk0PzL4
-	dpPC2NIYOKv22hF8/ESMEJUERYqHEqb3wPU0ZSkljLk275Im2kYoQGfweAojOQO9JvJUMFKopng
-	pXJe5lbA+hdPzpDdwGGl4YdlFS6YrfMCnPfIj6ikJd9jo9PzNMEViO/r/1WiUh7HQB1nROGj9UL
-	3B0xv1kz50hElp0Pwt8SFUgRL1Yi11cbCQP3g=
-X-Received: by 2002:a05:6122:d15:b0:5c2:b001:db5b with SMTP id 71dfb90a1353d-5c3d910bacbmr746435e0c.6.1785928471670;
-        Wed, 05 Aug 2026 04:14:31 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-27.dlp.protect.broadcom.com. [144.49.247.27])
-        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5c3d06f1cf6sm555578e0c.5.2026.08.05.04.14.30
+        bh=+GjVeqDouJOYLxkSYiBbdHqtCuIm/QcQGZm/JT5U4II=;
+        b=D5jPJkrRCgyXDQbuoICEP0BzY7a6+hmccDgKtYkmYX26ECkHM/KDdxm6YbqL2tIhYI
+         rI40xslWUZtmWBiG0oUwWdYir43sUrWSLN4HusrWJ0g51od/FOcZIRTFxGPBVTs4+oZK
+         PvWJ4Pa8jWOqXMPUZOycfBnYhw9TQeVvl135AfiWOjgl4DkB/dkFJF/u+WPe9vUtesrD
+         bmcY+bWE9rH9eLcB/4HpT0NfLB+l+I3W9hVc94m+elPa2lGj7+pkUIFOSaxSb0kAMG85
+         scAzuCTMzI8Bx4TJ2BpTrdRbGTxjKkrfsysZW9AzVF+5Vw55Gx+SJsrxYsRssWzSNmpu
+         hpRg==
+X-Gm-Message-State: AOJu0Yy2bVMxjLtgOzfbMmQ4rxesnF/K11U8i8aB/pb/Sth4jBLGK35w
+	n5hHp+JC7zZY9XxN1DQV5yDfuFDhRfTXJVwcVEkGO9vOBw42XmJBkMbqRgI063MGwmoF09V4Vlp
+	cvvTNOFLMumuzAKuxnVWiAqETRXr5xCCGHlmH7iSG/LsCCpZQvdjFcpbABVdwYOeRr22SqpIdBj
+	4UXplHYdM4rSMnJkwbtMqaKHwJ1q3iR8sn5Br6gu+09IpGEHdKwkDAaFiVANr3hfpTa1JdIHZBL
+	aVERPGcBSb7Zd+y
+X-Gm-Gg: AR+sD12vmi9W5q9SX6L2A+pzp+K7eSqgj4Fa6W2Jv7NI3p3LOgcgsAoifdP9ZRt6gsP
+	1GuFgcJ8u+JmjSqeKZ42ei0U2RbOAF0iH4YrE7XLSOMywJGi3cy2S+z5Nw4gmIBWOXZV8Cnk4fZ
+	wVqa7WY4pgb6rDOJIDXaZPofjF+XTWrGIWkv8h8eUA2yF/RA486oP0aMYNWDb1uxk4/yE/pkEIS
+	kBDQfjIVqHm/VRaCb2PG9kO9C3B5xlUKuBfvTzO5InS0dSCZTHwBsSLrItBBDxHAVzQ35ORl12l
+	tHwytosaPpRisDr+ZvYxWVYD6HPUBwZlDmErFP40unYY0eRntVg3dYJH+NYwCmvmVNnYuwEMq72
+	gVUJjLLu7m7x0za66GIwMtuWcPhVddPiO3bU7fzmwYgy4v4c3gD7DXxzcAWk7B32sczGQFusYjy
+	AiojRApVuIUKyNA5SVA5wV9Rhqecv5sNExQMo=
+X-Received: by 2002:a17:90b:48c9:b0:38e:97f0:aa4b with SMTP id 98e67ed59e1d1-3903c58f06fmr5982659a91.13.1785928475569;
+        Wed, 05 Aug 2026 04:14:35 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39038ffd111sm824962a91.0.2026.08.05.04.14.35
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 05 Aug 2026 04:14:31 -0700 (PDT)
+        Wed, 05 Aug 2026 04:14:35 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-38ce7fabf76so1447350a91.2
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:30 -0700 (PDT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cb11535e6a1so761419a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785928470; x=1786533270; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1785928474; x=1786533274; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ZyoHhF0lwkExjLQP23UtLF2uu0TuvfRDobB1gf48q+Y=;
-        b=N4SYJhijj3WFVHinnRoj+681rNhbJsVKfIKIa/o/bPR/oi3COKdbKtSXeEDlilY7dP
-         RF58J0joG0HTR/IgsaQCOjfE1TRBrqDXtjZLGIzVGkjnpASd8HwDJMCGEbGDC7fWgwA4
-         EqZN1ZhPmLuma4l1afhX96bDi4USvDXx4l7tY=
-X-Received: by 2002:a17:90b:4b84:b0:38e:8021:2ea9 with SMTP id 98e67ed59e1d1-3903c5f6482mr5465293a91.19.1785928469720;
-        Wed, 05 Aug 2026 04:14:29 -0700 (PDT)
-X-Received: by 2002:a17:90b:4b84:b0:38e:8021:2ea9 with SMTP id 98e67ed59e1d1-3903c5f6482mr5465236a91.19.1785928469117;
-        Wed, 05 Aug 2026 04:14:29 -0700 (PDT)
+        bh=+GjVeqDouJOYLxkSYiBbdHqtCuIm/QcQGZm/JT5U4II=;
+        b=QfIHfxvO3EboxdfRYMLQFtJc28X+n8tw/dCCiS+hsl/982tiRZYE7W+RnldM/60v2T
+         634Bt7xAZ5Obio4i+uc5+DBz8TJDXWJrSLzEu5SEIy5uC+OOdWRFSWtzDKCMLIctqcdQ
+         azkC8QleLwnp01rZPETfoEG6vBsZ9JgTWx3NE=
+X-Received: by 2002:a05:6a20:ce4d:b0:3c6:3c5b:f2e3 with SMTP id adf61e73a8af0-3cb8607680fmr7283236637.33.1785928473502;
+        Wed, 05 Aug 2026 04:14:33 -0700 (PDT)
+X-Received: by 2002:a05:6a20:ce4d:b0:3c6:3c5b:f2e3 with SMTP id adf61e73a8af0-3cb8607680fmr7283139637.33.1785928472825;
+        Wed, 05 Aug 2026 04:14:32 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158673b7f4sm16740227eec.17.2026.08.05.04.14.25
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158673b7f4sm16740227eec.17.2026.08.05.04.14.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Aug 2026 04:14:28 -0700 (PDT)
+        Wed, 05 Aug 2026 04:14:32 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -80,9 +80,9 @@ Cc: sathya.prakash@broadcom.com,
 	ipylypiv@google.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	Sashiko <sashiko-bot@kernel.org>
-Subject: [PATCH v4 06/10] mpi3mr: Fix memory leak on operational queue creation failure
-Date: Wed,  5 Aug 2026 16:36:30 +0530
-Message-ID: <20260805110634.346670-7-ranjan.kumar@broadcom.com>
+Subject: [PATCH v4 07/10] mpi3mr: Fix firmware event reference leak during cleanup
+Date: Wed,  5 Aug 2026 16:36:31 +0530
+Message-ID: <20260805110634.346670-8-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
 References: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
@@ -95,228 +95,373 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-When operational queue creation fails after one or more queues have
-been created, the error path frees the queue information arrays but
-does not release the DMA memory segments associated with the created
-queues, resulting in a memory leak. Fix this by ensuring that partially
-allocated segments are freed immediately if a queue fails to create.
+During firmware event cleanup, when an event is currently executing or
+pending at the SCSI mid-layer, the driver sets a discard flag and exits
+the cleanup routine early. This early exit skips the normal cancel path,
+resulting in the firmware event reference count not being decremented,
+leading to a reference leak.
 
-Additionally, resolve the following issues in the queue segment
-free/alloc paths:
+Additionally, resolve the following concurrency issues in the firmware
+event handling paths:
 
-1. Clear mrioc->intr_info[].op_reply_q with WRITE_ONCE() and follow it
-   with synchronize_irq() before freeing segments, and have the ISR
-   paths read it once via READ_ONCE() into a local, to close a race
-   where the ISR could use the pointer while it is being freed.
-
-2. Free q_segment_list before checking q_segments in both free
-   functions, since a kzalloc_objs() failure on q_segments left
-   q_segment_list leaked via the early return.
+1. mpi3mr_cleanup_fwevt_list() read current_event locklessly. It is
+   now acquired under fwevt_lock.
+2. mpi3mr_dequeue_fwevt() dropped the reference before returning it,
+   risking a use-after-free. The drop is now moved into
+   mpi3mr_cancel_work().
+3. mpi3mr_fwevt_bh() dropped fwevt_lock mid-move, racing with unload.
+   The move is now inlined under one continuous lock hold.
+4. pending_at_sml was read/written without a lock, risking an ABBA
+   deadlock. It is now protected by fwevt_lock throughout.
+5. mpi3mr_suspend() could unmap PCI resources before the event
+   worker finished. It now flushes the workqueue first.
+6. mpi3mr_report_tgtdev_to_host() and mpi3mr_remove_tgtdev_from_host()
+   could still set pending_at_sml and block in the SCSI mid-layer
+   after a stop or reset had already begun, deadlocking against the
+   thread waiting on that flag. Both now bail out beforehand once
+   stop_drv_processing or reset_in_progress is set.
 
 Reported-by: Sashiko <sashiko-bot@kernel.org>
-Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@broadcom.com?part=6
-Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar@broadcom.com?part=6
-Closes: https://sashiko.dev/#/patchset/20260724102505.115136-1-ranjan.kumar@broadcom.com?part=6
+Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@broadcom.com?part=7
+Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar@broadcom.com?part=7
+Closes: https://sashiko.dev/#/patchset/20260724102505.115136-1-ranjan.kumar@broadcom.com?part=7
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 83 ++++++++++++++++++++++++---------
- 1 file changed, 60 insertions(+), 23 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c        | 139 +++++++++++++++++--------
+ drivers/scsi/mpi3mr/mpi3mr_transport.c |  20 +++-
+ 2 files changed, 109 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index e6050b41e15a..5a780eb7fd43 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -698,6 +698,7 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
- {
- 	struct mpi3mr_intr_info *intr_info = privdata;
- 	struct mpi3mr_ioc *mrioc;
-+	struct op_reply_qinfo *op_reply_q;
- 	u16 midx;
- 	u32 num_admin_replies = 0, num_op_reply = 0;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 23a6a5e3df5f..a34ea7e05690 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -282,32 +282,6 @@ void mpi3mr_hdb_trigger_data_event(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_fwevt_add_to_list(mrioc, fwevt);
+ }
  
-@@ -713,9 +714,9 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
- 
- 	if (!midx)
- 		num_admin_replies = mpi3mr_process_admin_reply_q(mrioc);
--	if (intr_info->op_reply_q)
--		num_op_reply = mpi3mr_process_op_reply_q(mrioc,
--		    intr_info->op_reply_q);
-+	op_reply_q = READ_ONCE(intr_info->op_reply_q);
-+	if (op_reply_q)
-+		num_op_reply = mpi3mr_process_op_reply_q(mrioc, op_reply_q);
- 
- 	if (num_admin_replies || num_op_reply)
- 		return IRQ_HANDLED;
-@@ -728,6 +729,7 @@ static irqreturn_t mpi3mr_isr_primary(int irq, void *privdata)
- static irqreturn_t mpi3mr_isr(int irq, void *privdata)
- {
- 	struct mpi3mr_intr_info *intr_info = privdata;
-+	struct op_reply_qinfo *op_reply_q;
- 	int ret;
- 
- 	if (!intr_info)
-@@ -740,11 +742,12 @@ static irqreturn_t mpi3mr_isr(int irq, void *privdata)
- 	 * If more IOs are expected, schedule IRQ polling thread.
- 	 * Otherwise exit from ISR.
- 	 */
--	if ((threaded_isr_poll == false) || !intr_info->op_reply_q)
-+	op_reply_q = READ_ONCE(intr_info->op_reply_q);
-+	if ((threaded_isr_poll == false) || !op_reply_q)
- 		return ret;
- 
--	if (!intr_info->op_reply_q->enable_irq_poll ||
--	    !atomic_read(&intr_info->op_reply_q->pend_ios))
-+	if (!op_reply_q->enable_irq_poll ||
-+	    !atomic_read(&op_reply_q->pend_ios))
- 		return ret;
- 
- 	disable_irq_nosync(intr_info->os_irq);
-@@ -766,10 +769,15 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
- {
- 	struct mpi3mr_intr_info *intr_info = privdata;
- 	struct mpi3mr_ioc *mrioc;
-+	struct op_reply_qinfo *op_reply_q;
- 	u16 midx;
- 	u32 num_op_reply = 0;
- 
--	if (!intr_info || !intr_info->op_reply_q)
-+	if (!intr_info)
-+		return IRQ_NONE;
-+
-+	op_reply_q = READ_ONCE(intr_info->op_reply_q);
-+	if (!op_reply_q)
- 		return IRQ_NONE;
- 
- 	mrioc = intr_info->mrioc;
-@@ -780,20 +788,23 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
- 		if (!mrioc->intr_enabled || mrioc->unrecoverable)
- 			break;
- 
-+		op_reply_q = READ_ONCE(intr_info->op_reply_q);
-+		if (!op_reply_q)
-+			break;
-+
- 		if (!midx)
- 			mpi3mr_process_admin_reply_q(mrioc);
--		if (intr_info->op_reply_q)
--			num_op_reply +=
--			    mpi3mr_process_op_reply_q(mrioc,
--				intr_info->op_reply_q);
--		if (!atomic_read(&intr_info->op_reply_q->pend_ios))
-+		num_op_reply +=
-+		    mpi3mr_process_op_reply_q(mrioc, op_reply_q);
-+		if (!atomic_read(&op_reply_q->pend_ios))
- 			break;
- 
- 		usleep_range(MPI3MR_IRQ_POLL_SLEEP, 10 * MPI3MR_IRQ_POLL_SLEEP);
- 
- 	} while (num_op_reply < mrioc->max_host_ios);
- 
--	intr_info->op_reply_q->enable_irq_poll = false;
-+	if (op_reply_q)
-+		op_reply_q->enable_irq_poll = false;
- 	enable_irq(intr_info->os_irq);
- 
- 	return IRQ_HANDLED;
-@@ -1973,10 +1984,6 @@ static void mpi3mr_free_op_req_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
- 	int size;
- 	struct segments *segments;
- 
--	segments = mrioc->req_qinfo[q_idx].q_segments;
--	if (!segments)
--		return;
+-/**
+- * mpi3mr_fwevt_del_from_list - Delete firmware event from list
+- * @mrioc: Adapter instance reference
+- * @fwevt: Firmware event reference
+- *
+- * Delete the given firmware event from the firmware event list.
+- *
+- * Return: Nothing.
+- */
+-static void mpi3mr_fwevt_del_from_list(struct mpi3mr_ioc *mrioc,
+-	struct mpi3mr_fwevt *fwevt)
+-{
+-	unsigned long flags;
 -
- 	if (mrioc->enable_segqueue) {
- 		size = MPI3MR_OP_REQ_Q_SEG_SIZE;
- 		if (mrioc->req_qinfo[q_idx].q_segment_list) {
-@@ -1990,6 +1997,10 @@ static void mpi3mr_free_op_req_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
- 		size = mrioc->req_qinfo[q_idx].segment_qd *
- 		    mrioc->facts.op_req_sz;
- 
-+	segments = mrioc->req_qinfo[q_idx].q_segments;
-+	if (!segments)
-+		return;
+-	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+-	if (!list_empty(&fwevt->list)) {
+-		list_del_init(&fwevt->list);
+-		/*
+-		 * Put fwevt reference count after
+-		 * removing it from fwevt_list
+-		 */
+-		mpi3mr_fwevt_put(fwevt);
+-	}
+-	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+-}
+-
+ /**
+  * mpi3mr_dequeue_fwevt - Dequeue firmware event from the list
+  * @mrioc: Adapter instance reference
+@@ -327,11 +301,7 @@ static struct mpi3mr_fwevt *mpi3mr_dequeue_fwevt(
+ 		fwevt = list_first_entry(&mrioc->fwevt_list,
+ 		    struct mpi3mr_fwevt, list);
+ 		list_del_init(&fwevt->list);
+-		/*
+-		 * Put fwevt reference count after
+-		 * removing it from fwevt_list
+-		 */
+-		mpi3mr_fwevt_put(fwevt);
 +
- 	for (j = 0; j < mrioc->req_qinfo[q_idx].num_segments; j++) {
- 		if (!segments[j].segment)
- 			continue;
-@@ -2016,10 +2027,17 @@ static void mpi3mr_free_op_reply_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
- 	u16 j;
- 	int size;
- 	struct segments *segments;
-+	u16 midx = REPLY_QUEUE_IDX_TO_MSIX_IDX(q_idx, mrioc->op_reply_q_offset);
+ 	}
+ 	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
  
--	segments = mrioc->op_reply_qinfo[q_idx].q_segments;
--	if (!segments)
--		return;
+@@ -365,6 +335,11 @@ static void mpi3mr_cancel_work(struct mpi3mr_fwevt *fwevt)
+ 		 */
+ 		mpi3mr_fwevt_put(fwevt);
+ 	}
++
 +	/*
-+	 * Stop the ISR/poll thread from picking up this queue before its
-+	 * segments are freed below, and wait for any in-flight handler
-+	 * that already has the old pointer to finish using it.
++	 * Drop the reference count that was acquired by the caller.
 +	 */
-+	if (midx < mrioc->intr_info_count) {
-+		WRITE_ONCE(mrioc->intr_info[midx].op_reply_q, NULL);
-+		synchronize_irq(pci_irq_vector(mrioc->pdev, midx));
++	mpi3mr_fwevt_put(fwevt);
+ }
+ 
+ /**
+@@ -379,17 +354,44 @@ static void mpi3mr_cancel_work(struct mpi3mr_fwevt *fwevt)
+ void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc)
+ {
+ 	struct mpi3mr_fwevt *fwevt = NULL;
++	unsigned long flags;
+ 
++	/*
++	 * Safely read current_event under lock to prevent TOCTOU race
++	 * with the firmware event worker thread.
++	 */
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+ 	if ((list_empty(&mrioc->fwevt_list) && !mrioc->current_event) ||
+-	    !mrioc->fwevt_worker_thread)
++	    !mrioc->fwevt_worker_thread) {
++		spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 		return;
 +	}
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
  
- 	if (mrioc->enable_segqueue) {
- 		size = MPI3MR_OP_REP_Q_SEG_SIZE;
-@@ -2034,6 +2052,10 @@ static void mpi3mr_free_op_reply_q_segments(struct mpi3mr_ioc *mrioc, u16 q_idx)
- 		size = mrioc->op_reply_qinfo[q_idx].segment_qd *
- 		    mrioc->op_reply_desc_sz;
+ 	while ((fwevt = mpi3mr_dequeue_fwevt(mrioc)))
+ 		mpi3mr_cancel_work(fwevt);
  
-+	segments = mrioc->op_reply_qinfo[q_idx].q_segments;
-+	if (!segments)
-+		return;
+-	if (mrioc->current_event) {
+-		fwevt = mrioc->current_event;
++	/*
++	 * Safely read current_event under lock to prevent TOCTOU race
++	 * with the firmware event worker thread.
++	 */
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
++	fwevt = mrioc->current_event;
++	if (fwevt) {
++		/*
++		 * Take a reference to ensure the event is not freed by the
++		 * worker thread while we are evaluating or cancelling it.
++		 */
++		mpi3mr_fwevt_get(fwevt);
++	}
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
 +
- 	for (j = 0; j < mrioc->op_reply_qinfo[q_idx].num_segments; j++) {
- 		if (!segments[j].segment)
- 			continue;
-@@ -2500,7 +2522,7 @@ static int mpi3mr_create_op_req_q(struct mpi3mr_ioc *mrioc, u16 idx,
- static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
++	if (fwevt) {
++		bool pending_at_sml;
++
+ 		/*
++		 * Read pending_at_sml under lock to avoid a stale value.
++		 *
+ 		 * Don't call cancel_work_sync() API for the
+ 		 * fwevt work if the controller reset is
+ 		 * get called as part of processing the
+@@ -397,8 +399,13 @@ void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc)
+ 		 * waiting for device add/remove APIs to complete.
+ 		 * Otherwise we will see deadlock.
+ 		 */
+-		if (current_work() == &fwevt->work || fwevt->pending_at_sml) {
++		spin_lock_irqsave(&mrioc->fwevt_lock, flags);
++		pending_at_sml = fwevt->pending_at_sml;
++		spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
++
++		if (current_work() == &fwevt->work || pending_at_sml) {
+ 			fwevt->discard = 1;
++			mpi3mr_fwevt_put(fwevt);
+ 			return;
+ 		}
+ 
+@@ -912,6 +919,8 @@ void mpi3mr_remove_tgtdev_from_host(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_tgt_dev *tgtdev)
+ {
+ 	struct mpi3mr_stgt_priv_data *tgt_priv;
++	unsigned long flags;
++	bool discard = false;
+ 
+ 	ioc_info(mrioc, "%s :Removing handle(0x%04x), wwid(0x%016llx)\n",
+ 	    __func__, tgtdev->dev_handle, (unsigned long long)tgtdev->wwid);
+@@ -924,17 +933,27 @@ void mpi3mr_remove_tgtdev_from_host(struct mpi3mr_ioc *mrioc,
+ 	if (!mrioc->sas_transport_enabled || (tgtdev->dev_type !=
+ 	    MPI3_DEVICE_DEVFORM_SAS_SATA) || tgtdev->non_stl) {
+ 		if (tgtdev->starget) {
++			spin_lock_irqsave(&mrioc->fwevt_lock, flags);
++			if (mrioc->stop_drv_processing ||
++			    mrioc->reset_in_progress) {
++				spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
++				return;
++			}
+ 			if (mrioc->current_event)
+ 				mrioc->current_event->pending_at_sml = 1;
++			spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 			scsi_remove_target(&tgtdev->starget->dev);
+ 			tgtdev->host_exposed = 0;
++			spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+ 			if (mrioc->current_event) {
+ 				mrioc->current_event->pending_at_sml = 0;
+-				if (mrioc->current_event->discard) {
+-					mpi3mr_print_device_event_notice(mrioc,
+-					    false);
+-					return;
+-				}
++				discard = mrioc->current_event->discard;
++			}
++			spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
++			if (discard) {
++				mpi3mr_print_device_event_notice(mrioc,
++				    false);
++				return;
+ 			}
+ 		}
+ 	} else
+@@ -962,6 +981,8 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
  {
  	int retval = 0;
--	u16 num_queues = 0, i = 0, msix_count_op_q = 1;
-+	u16 num_queues = 0, i = 0, j = 0, msix_count_op_q = 1;
- 	u32 ioc_status;
- 	enum mpi3mr_iocstate ioc_state;
+ 	struct mpi3mr_tgt_dev *tgtdev;
++	unsigned long flags;
++	bool discard = false;
  
-@@ -2552,6 +2574,13 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
+ 	if (mrioc->reset_in_progress || mrioc->pci_err_recovery)
+ 		return -1;
+@@ -978,19 +999,29 @@ static int mpi3mr_report_tgtdev_to_host(struct mpi3mr_ioc *mrioc,
+ 	if (!mrioc->sas_transport_enabled || (tgtdev->dev_type !=
+ 	    MPI3_DEVICE_DEVFORM_SAS_SATA) || tgtdev->non_stl){
+ 		tgtdev->host_exposed = 1;
++		spin_lock_irqsave(&mrioc->fwevt_lock, flags);
++		if (mrioc->stop_drv_processing || mrioc->reset_in_progress) {
++			spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
++			tgtdev->host_exposed = 0;
++			goto out;
++		}
+ 		if (mrioc->current_event)
+ 			mrioc->current_event->pending_at_sml = 1;
++		spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 		scsi_scan_target(&mrioc->shost->shost_gendev,
+ 		    mrioc->scsi_device_channel, tgtdev->perst_id,
+ 		    SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
+ 		if (!tgtdev->starget)
+ 			tgtdev->host_exposed = 0;
++		spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+ 		if (mrioc->current_event) {
+ 			mrioc->current_event->pending_at_sml = 0;
+-			if (mrioc->current_event->discard) {
+-				mpi3mr_print_device_event_notice(mrioc, true);
+-				goto out;
+-			}
++			discard = mrioc->current_event->discard;
++		}
++		spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
++		if (discard) {
++			mpi3mr_print_device_event_notice(mrioc, true);
++			goto out;
  		}
- 	}
+ 		dprint_event_bh(mrioc,
+ 		    "exposed target device with handle(0x%04x), perst_id(%d)\n",
+@@ -2133,9 +2164,19 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 	u16 perst_id, handle, dev_info;
+ 	struct mpi3_device0_sas_sata_format *sasinf = NULL;
+ 	unsigned int timeout;
++	unsigned long flags;
  
-+	if (i < num_queues) {
-+		for (j = i; j < num_queues; j++) {
-+			mpi3mr_free_op_req_q_segments(mrioc, j);
-+			mpi3mr_free_op_reply_q_segments(mrioc, j);
-+		}
+-	mpi3mr_fwevt_del_from_list(mrioc, fwevt);
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
++	if (!list_empty(&fwevt->list)) {
++		list_del_init(&fwevt->list);
++		/*
++		 * Put fwevt reference count after
++		 * removing it from fwevt_list
++		 */
++		mpi3mr_fwevt_put(fwevt);
 +	}
+ 	mrioc->current_event = fwevt;
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 
+ 	if (mrioc->stop_drv_processing) {
+ 		dprint_event_bh(mrioc, "ignoring event(0x%02x) in the bottom half handler\n"
+@@ -2268,9 +2309,12 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 		mpi3mr_process_event_ack(mrioc, fwevt->event_id,
+ 		    fwevt->evt_ctx);
+ out:
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
++	mrioc->current_event = NULL;
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
 +
- 	if (i == 0) {
- 		/* Not even one queue is created successfully*/
- 		retval = -1;
-@@ -2573,11 +2602,19 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
+ 	/* Put fwevt reference count to neutralize kref_init increment */
+ 	mpi3mr_fwevt_put(fwevt);
+-	mrioc->current_event = NULL;
+ }
  
- 	return retval;
- out_failed:
--	kfree(mrioc->req_qinfo);
--	mrioc->req_qinfo = NULL;
-+	if (mrioc->req_qinfo) {
-+		for (j = 0; j < i; j++) {
-+			mpi3mr_free_op_req_q_segments(mrioc, j);
-+			mpi3mr_free_op_reply_q_segments(mrioc, j);
-+		}
-+		kfree(mrioc->req_qinfo);
-+		mrioc->req_qinfo = NULL;
-+	}
-+	mrioc->num_op_req_q = 0;
+ /**
+@@ -5811,6 +5855,9 @@ mpi3mr_suspend(struct device *dev)
+ 		ssleep(1);
+ 	mrioc->stop_drv_processing = 1;
+ 	mpi3mr_cleanup_fwevt_list(mrioc);
++	/* Flush any pending discarded event before unmapping PCI resources below. */
++	if (mrioc->fwevt_worker_thread)
++		flush_workqueue(mrioc->fwevt_worker_thread);
+ 	scsi_block_requests(shost);
+ 	mpi3mr_stop_watchdog(mrioc);
+ 	mpi3mr_cleanup_ioc(mrioc);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index 240f67a8e2e3..b309cfdf6687 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -1330,6 +1330,7 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_sas_phy *mr_sas_phy, *next;
+ 	struct mpi3mr_sas_port *mr_sas_port;
+ 	unsigned long flags;
++	bool discard = false;
+ 	struct mpi3mr_sas_node *mr_sas_node;
+ 	struct sas_rphy *rphy;
+ 	struct mpi3mr_tgt_dev *tgtdev = NULL;
+@@ -1457,8 +1458,10 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
+ 	}
+ 	rphy->identify = mr_sas_port->remote_identify;
  
- 	kfree(mrioc->op_reply_qinfo);
- 	mrioc->op_reply_qinfo = NULL;
-+	mrioc->num_op_reply_q = 0;
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+ 	if (mrioc->current_event)
+ 		mrioc->current_event->pending_at_sml = 1;
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
  
- 	return retval;
+ 	if ((sas_rphy_add(rphy))) {
+ 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+@@ -1480,11 +1483,14 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
+ 	list_add_tail(&mr_sas_port->port_list, &mr_sas_node->sas_port_list);
+ 	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
+ 
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+ 	if (mrioc->current_event) {
+ 		mrioc->current_event->pending_at_sml = 0;
+-		if (mrioc->current_event->discard)
+-			mpi3mr_print_device_event_notice(mrioc, true);
++		discard = mrioc->current_event->discard;
+ 	}
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
++	if (discard)
++		mpi3mr_print_device_event_notice(mrioc, true);
+ 
+ 	/* fill in report manufacture */
+ 	if (mr_sas_port->remote_identify.device_type ==
+@@ -1522,6 +1528,7 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
+ {
+ 	int i;
+ 	unsigned long flags;
++	bool discard = false;
+ 	struct mpi3mr_sas_port *mr_sas_port, *next;
+ 	struct mpi3mr_sas_node *mr_sas_node;
+ 	u8 found = 0;
+@@ -1578,8 +1585,10 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
+ 
+ 	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
+ 
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+ 	if (mrioc->current_event)
+ 		mrioc->current_event->pending_at_sml = 1;
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 
+ 	list_for_each_entry_safe(mr_sas_phy, next_phy,
+ 	    &mr_sas_port->phy_list, port_siblings) {
+@@ -1601,11 +1610,14 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
+ 	ioc_info(mrioc, "%s: removed sas_address(0x%016llx)\n",
+ 	    __func__, (unsigned long long)sas_address);
+ 
++	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+ 	if (mrioc->current_event) {
+ 		mrioc->current_event->pending_at_sml = 0;
+-		if (mrioc->current_event->discard)
+-			mpi3mr_print_device_event_notice(mrioc, false);
++		discard = mrioc->current_event->discard;
+ 	}
++	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
++	if (discard)
++		mpi3mr_print_device_event_notice(mrioc, false);
+ 
+ 	kfree(mr_sas_port);
  }
 -- 
 2.47.3
