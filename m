@@ -1,87 +1,135 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D813EDE43
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 21:47:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3F643E51C6
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 22:00:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785966464; cv=none; b=c96sVwpbkskTrqmM5QdpzbGSJub6wdqIWyVSLlXFfsl+drlMuCf5Il1llThmVYRO68DlwYxvoyTesxSalKBl45M1UBDiw9FDq+HSF65adNh67iDkHkO4y+zkg588/kPR3tQuqL8imxJ2O5dfNHZkCbf1nZBJrH8mHQMb6l/Itw8=
+	t=1785967224; cv=none; b=fiFPGdprA7KZE5DKjzoacnD06bP343xip4DFQjKD4bHarrQWOpNjEAKXTbHO3klfJqSartUlnGUnfOlC031Pole1TtS1e4E+E97HCHvlmRbIAlcKq7NnHEfu0rbOisMEublPRNUJMKPReW/YLDNnL8BI+Mc3yk+EIZxURIYaHh4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785966464; c=relaxed/simple;
-	bh=fRitetQA5te/TVG8EU2+t1i2KCXGTq3G51zyH3f0l1E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MiOFZGSqSn7569p3X0dDjo4HIKViMoIb6ZRWIbv0eI1p9UuV2R9gTUbqOCUvL5nAjHTVJJgdUgu6a5dQ0aVDnBUZapU0hP/yKh8PCOI3/HUPrQM9S/WYUkcDmgZpReZvnkvmfs3WVeVXVmaTPxkkRitjvJtHfGTDAgjhgYbsnzA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=aoCjKYPa; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1785967224; c=relaxed/simple;
+	bh=kF/BML60dFHEEjg+xMGShvWVecTNsXA1Gg/Mt7n0eH4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=DAg/5PPfcp7+g2CXQbyufUbP6Tngby/o/INoBzJHcSYN8HrQx3klNvjjDLHWf+NC8ccNKf2p+LqKBuj/tE+9yud5GyyWA+rI9mrU87lgtHQmgrxkPlRWsP+QzwFF0qXleOEP8EMa73Rptnhhs00A7UKJ62e78tfC2kWqYw4T8Zs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UfCsQp5Q; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="aoCjKYPa"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hFkXt31Ldz1XM4TB;
-	Wed,  5 Aug 2026 21:47:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1785966458; x=1788558459; bh=4yw2kr+jghfGXpj2hzJQ/PcH
-	Iq3DU/5YqBzwmZTpA/U=; b=aoCjKYPavmyYi+BvuRXbm9SrydeXGDOOxOb4d+jW
-	KacqhOSN7Rt+L0rd//81Sv+1YKyNC9Jwhzz8ZdBv2/UQScsZAPbafE5mUs1q2PF0
-	cVjaX6yxTykSGIf0cqOEcM1kSdv1sCdkJIur0/3Buf3XgD2lbIPCpld+fxvsuP8Q
-	if1n2jdfpTHTxrnZ6redOWLe95ynoxEKO3g40ie+xuukpdStl3f0PChBnqkAKRD5
-	/v7ZNDaQefz/P0ASxBU/mqKhItMiOA94q3Jj5gmx+LIaNkqfupi29+ScSekNedbG
-	Noe7kN8BYKugVhxuOrDYmbCb/3OfaaQg1VN2+7yhzh90kA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id mwX5jurRZmap; Wed,  5 Aug 2026 21:47:38 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hFkXm2rCmz1XM30n;
-	Wed,  5 Aug 2026 21:47:35 +0000 (UTC)
-Message-ID: <559552b3-1336-4fbd-b0cb-6a96ae57b3c3@acm.org>
-Date: Wed, 5 Aug 2026 14:47:34 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UfCsQp5Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7012C1F000E9;
+	Wed,  5 Aug 2026 22:00:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785967223;
+	bh=d2k4k5UA2TXYQUghcrAfKN+5a3bABD3ticElpQgveG8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=UfCsQp5Qva83hdQzDiGnlrJUYwcdepYvmykp+nR/6C2kUeh+5KHopfk++SjWH6e/k
+	 Ktyn6q9gCOuMqKZA28YcecM4run/AvobpAufBiho6moUH++jNoXfO/6ly/mPvl00mq
+	 r9VCzm0prbP0DUs74hgNHaCiug74vM1vEQg2ykGqyummPl0wTeRThOZklFloInsCVk
+	 19NaUBxU3IcSwrCQo99wBKfTVrfStnlHqpPQWmOPCP7BQnu8diMlQqRufAWdCtZyWy
+	 TqLtSFvC3SbazVovATSBHxmXRah0ypyvUHJ6aG2l31P+4Iqu2ULkd9tmeb9AFYRC2Z
+	 JtDpGg7QMIAnw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 4/6] scsi: core: Add lock context annotations
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Bart Van Assche" <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <da0d5e522eb10312076580371ee41e1d28f7ac18.1785965531.git.bvanassche@acm.org>
+References: <cover.1785965531.git.bvanassche@acm.org>
+ <da0d5e522eb10312076580371ee41e1d28f7ac18.1785965531.git.bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 05 Aug 2026 22:00:23 +0000
+Message-Id: <20260805220023.7012C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH] scsi: core: Drop Scsi_Host.default_lock
-To: John Garry <john.g.garry@oracle.com>,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, hch@lst.de, John Garry
- <john.garry@linux.dev>, Arnd Bergmann <arnd@arndb.de>
-References: <20260804113436.2373404-1-john.g.garry@oracle.com>
- <efff8e1d-0eb9-47eb-ba20-6bdbeeea15e1@acm.org>
- <7ab3dca8-83f3-4ec7-8bb4-e9c3508a5c59@oracle.com>
- <9a4ed570-5b19-44ca-9d22-41ab37d21014@acm.org>
- <18de6750-7668-4855-b24d-515760a31032@oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <18de6750-7668-4855-b24d-515760a31032@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 8/5/26 6:45 AM, John Garry wrote:
-> I do have to question why we maintain support on modern kernels for such 
-> obsolete HW. The maintenance burden is not zero, as we see here ...
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-(+Arnd)
+New issues:
+- [Low] Incomplete implementation of lock context annotations.
 
-Agreed. From
-https://lore.kernel.org/all/20241204102904.1863796-15-arnd@kernel.org/:
-"ARM: mark RiscPC as deprecated [ ... ] Since there is little hope of
-this being maintainable much longer, plan to remove it in early 2025
-while it is still expected to mostly work."
+Pre-existing issues:
+- [High] Integer overflow in `scsi_report_lun_scan` leading to infinite loo=
+p or out-of-bounds read.
+--
 
-Arnd, is removal of Acorn RiscPC still planned? That platform relies on
-several SCSI drivers. API changes for the SCSI core, although rare,
-would be easier if we wouldn't have to support the Acorn RiscPC anymore.
+--- Patch [4]: [PATCH v5 4/6] scsi: core: Add lock context annotations ---
+commit f676281064957e5d166348bcd6e0996c11afa242
+Author: Bart Van Assche <bvanassche@acm.org>
 
-Thanks,
+scsi: core: Add lock context annotations
 
-Bart.
+This commit adds lock context annotations to document which functions expect
+shost->scan_mutex to be held.
+
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index d7e0e93931947..3b82e80e807a7 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+[ ... ]
+> @@ -1444,6 +1446,7 @@ static void scsi_sequential_lun_scan(struct Scsi_Ho=
+st *shost,
+>  static int scsi_report_lun_scan(struct Scsi_Host *shost,
+>  			struct scsi_target *starget, blist_flags_t bflags,
+>  			enum scsi_scan_mode rescan)
+> +	__must_hold(&shost->scan_mutex)
+>  {
+
+[Severity: High]
+This is a pre-existing issue, but while looking at scsi_report_lun_scan()
+there appears to be an integer overflow condition when handling untrusted
+device input.
+
+If a malicious device returns 0xFFFFFFFF as the length in a REPORT LUNS
+response, the addition with sizeof(struct scsi_lun) can cause an overflow:
+
+	if (get_unaligned_be32(lun_data->scsi_lun) +
+	    sizeof(struct scsi_lun) > length) {
+		length =3D get_unaligned_be32(lun_data->scsi_lun) +
+			 sizeof(struct scsi_lun);
+		kfree(lun_data);
+		goto retry;
+	}
+
+On 64-bit platforms, size_t promotion causes the addition to evaluate to
+0x100000007, which is greater than length. When this is assigned back to the
+32-bit length variable, it truncates to 7. This causes the code to realloca=
+te
+a 7-byte buffer and retry indefinitely, leading to a deadlock on scan_mutex.
+
+On 32-bit platforms, the addition wraps to 7, skipping the reallocation
+entirely. The length variable stays 0xFFFFFFFF, which results in a massive
+num_luns count and eventually an out-of-bounds read past the buffer.
+
+Could we add a bounds check to ensure the reported length doesn't overflow
+before we attempt to reallocate?
+
+[ ... ]
+
+[Severity: Low]
+Are there other functions that should be included in this update? Looking
+through the SCSI core code, there are a few other static and internal helpe=
+rs
+that rely on scan_mutex being held, such as scsi_sysfs_add_devices() in
+scsi_scan.c:
+
+static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
+{
+    ...
+}
+
+and __scsi_remove_device() in scsi_sysfs.c:
+
+void __scsi_remove_device(struct scsi_device *sdev)
+{
+    ...
+}
+
+Would it be useful to add the __must_hold annotation to these functions as
+well so static analysis tools can catch missing locks across the subsystem?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1785965531.gi=
+t.bvanassche@acm.org?part=3D4
