@@ -1,154 +1,194 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1075F42E8E9
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:33:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 473FD42D753
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:38:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785929604; cv=none; b=nqPwzGJhPQvHiFFL5Ek9aolxuf3OAozs50jk8vx9inCHZjfncfTv07GEG/0q6aE4BpuE3fvzfgXlV7GRWDztLj1jwkECpIrwxhw4M2d48db87L3oVxBke6xV0k+7351LP1vYl2s95HD8E5iELuC7i0nUQ5UzO1o8Hy7WsfYup0w=
+	t=1785929925; cv=none; b=lFASk+xLU7T93Wk9JGzGW7xE5Dl1Vwo4bq2kRouM2RhlrcvwIJuimJ29kbGw3EvuxmDGvwAuB3kneDZGrGA9TECYu/GGRIkfYOGcFaEW1mQl+1pSvyzECB7Xx/uJ3uZMZAtTKrqyUM3OwHlb16yO/g1RO++tYn08wWGqvgQDGeU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785929604; c=relaxed/simple;
-	bh=RTb/Fxjp+QCUw/ob8NWbzofgM4EkQbkWV8CvO8WK4UM=;
+	s=arc-20240116; t=1785929925; c=relaxed/simple;
+	bh=uXgMYaw63rA1DDFtuCeG31RiNZsum9PZNgbQxvq6sTA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ltHtcdtX8sY7y7v1X3RfWsPihE0Fr5qMFaFhuflYxh85V64TOgaIHYXmv4j2a9p00psjqT102LBntiRTayyxHgnAxLOQg899RWZVfPeWLx6npwaf8RCJ/YNBkPeAZRFuYMyyvU2UwLh7QVxMku2/Jxff8BEoMO1kGEtsYb/g2ZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IHWwBpi1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=J6ZBAQHq+CAfINMOO9pLHRTWLd3GHsGsJmQFJShOoHx/BStY4KRUET51Xzd1QhPDw0qzwvjrALGwDV9Du+ZBp1RtuHyVLHVx6iLeQDLIILqBoBh0+6iTzLh+riiMAxM6aqwQufXDEJQQSoCM6DAy6i8bSbN4SmA6veyE9u19TT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MhxCBRtx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IHWwBpi1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 993BA1F000E9;
-	Wed,  5 Aug 2026 11:33:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MhxCBRtx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02E441F000E9;
+	Wed,  5 Aug 2026 11:38:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785929602;
-	bh=HBlPMbDcisUoAA7PemRdr2pSPS7r6GCAu/i9Cw5w2L4=;
+	s=k20260515; t=1785929924;
+	bh=v48gNeN1iikNDc5VJlaxtdIq7oQkq1oU6VqNBMrT0n0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IHWwBpi1Tv433Mj1Tipn5cwsRjssOzPgtZ/Bi/DDowZ1CMLXrytkdA1EISpNJLO9t
-	 IUgaokPzarzOPpHeGXm2mvwu38d7FW1gsnOXfWMEXwOguXONWfZLOIkz2/KP6a5x/+
-	 Ui4g4t8Nzl+/13Wa+ZQVOgHKvNQv1uhod5/5cr5PhSbvU0+lJ7xSN8LdQJImg4nWPX
-	 iiWThnB5ZW3ho7grO9aMfr7NroZKBO+3wGHAyeW7aJpQNg9A1vpXdzawCeq5WM7LGW
-	 d6xes39z0QuxE5D0o0LpBPW30nczTbWrbFx3doY7jt61TYVoq19jtZvmSsEeV5vpJh
-	 OLxaYLi8l82Eg==
+	b=MhxCBRtxc0bWp+IKdmRgUlkZEe/QOWAMdncQsYfo5SogtYBLDw50t1HJAt+2p82OP
+	 SIHKVt/Zi+ybz2lstFF3Q07Z9hutNji1tWhPDmB0b9Asui/baWbenWYzeswq72GXVu
+	 SQl5x429oeVMErGNH+E+M0cMFlV/S1QxNCQxxCyunOwBbzKkqPC3q8qhh8dZHdFv25
+	 e7BSV96yXZvqPeaWFCmq+xXPrYzEP4J8H2Z4Rn+vcfnu5TF7WYVAvwTg6HrMmqWT/9
+	 gWotrJDepoj11y+5Hst16fExHqrHt5fMpKxt1u1bq4T2c0eK0oX/N2ESjCpmOIfMkp
+	 suLo9sWHOeTdA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 01/10] mpi3mr: Skip device shutdown during unload per
- controller configuration
+Subject: Re: [PATCH v4 07/10] mpi3mr: Fix firmware event reference leak
+ during cleanup
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260805110634.346670-2-ranjan.kumar@broadcom.com>
+In-Reply-To: <20260805110634.346670-8-ranjan.kumar@broadcom.com>
 References: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
- <20260805110634.346670-2-ranjan.kumar@broadcom.com>
+ <20260805110634.346670-8-ranjan.kumar@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 05 Aug 2026 11:33:22 +0000
-Message-Id: <20260805113322.993BA1F000E9@smtp.kernel.org>
+Date: Wed, 05 Aug 2026 11:38:43 +0000
+Message-Id: <20260805113844.02E441F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] The driver rounds down the trace buffer size internally when alloc=
-ating segmented buffer entries, but passes the original unrounded size to t=
-he firmware, which can cause the firmware to read past the end of the segme=
-nt list and DMA write to arbitrary physical memory.
-- [Medium] A trace buffer size smaller than 4KB results in a 0-byte DMA all=
-ocation, triggering a WARN_ON_ONCE within the kernel DMA API.
+- [High] Race condition / TOCTOU when accessing fwevt_worker_thread can cau=
+se a NULL pointer dereference.
+- [High] Incomplete deadlock fix in SAS transport path allows ABBA deadlock=
+ with SCSI mid-layer.
+- [Medium] Memory leak of firmware event when workqueue is not available.
 --
 
---- Patch [1]: [PATCH v4 01/10] mpi3mr: Skip device shutdown during unload =
-per controller configuration ---
-commit 9ac255a070f5df8da5fb46e54b2787eacb0b7c7c
+--- Patch [7]: [PATCH v4 07/10] mpi3mr: Fix firmware event reference leak d=
+uring cleanup ---
+commit 02873552fdbb7ea8056e6479b78735dc33631a59
 Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-mpi3mr: Skip device shutdown during unload per controller configuration
+mpi3mr: Fix firmware event reference leak during cleanup
 
-This commit caches Driver Page 1 settings to suppress device shutdown durin=
-g=20
-driver unload. It adds endianness conversions for the diagnostic buffer siz=
-es
-read from Driver Page 1 and hardens the allocation retry loops against inva=
-lid
-decrement sizes provided by the firmware.
+This patch fixes a reference leak during firmware event cleanup when an eve=
+nt
+is currently executing or pending at the SCSI mid-layer. It also resolves
+multiple concurrency and deadlock issues in the firmware event handling pat=
+hs.
 
 Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@=
-broadcom.com?part=3D1
+broadcom.com?part=3D7
 Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar=
-@broadcom.com?part=3D1
+@broadcom.com?part=3D7
 Closes: https://sashiko.dev/#/patchset/20260724102505.115136-1-ranjan.kumar=
-@broadcom.com?part=3D1
+@broadcom.com?part=3D7
 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3m=
-r_app.c
-> index 1353a8ff9c85d..fca5357a515d1 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-[ ... ]
-> @@ -179,6 +181,12 @@ void mpi3mr_alloc_diag_bufs(struct mpi3mr_ioc *mrioc)
->  		    mpi3mr_alloc_trace_buffer(mrioc, trace_size)) {
-> =20
->  			retry =3D true;
-> +
-> +			if (!trace_dec_size || trace_dec_size > trace_size) {
-> +				retry =3D false;
-> +				goto retry_fw;
-> +			}
-> +
->  			trace_size -=3D trace_dec_size;
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
+_os.c
+> index 23a6a5e3df5f4..a34ea7e056900 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> @@ -282,32 +282,6 @@ void mpi3mr_hdb_trigger_data_event(struct mpi3mr_ioc=
+ *mrioc,
+>  	mpi3mr_fwevt_add_to_list(mrioc, fwevt);
+>  }
 
 [Severity: High]
-This is a pre-existing issue, but does this lead to firmware reading
-out-of-bounds and potentially corrupting physical memory?
+This is a pre-existing issue, but can the lockless check in
+mpi3mr_fwevt_add_to_list() cause a race condition leading to a NULL pointer
+dereference?
 
-The driver rounds down the trace buffer size internally when allocating
-segmented buffer entries in mpi3mr_alloc_trace_buffer():
+If mpi3mr_fwevt_add_to_list() checks mrioc->fwevt_worker_thread locklessly:
 
-    seg_count =3D (trace_size) / MPI3MR_PAGE_SIZE_4K;
-    trace_size =3D seg_count * MPI3MR_PAGE_SIZE_4K;
+	if (!mrioc->fwevt_worker_thread)
+		return;
 
-However, it does not update the caller's trace_size. Thus, the original
-unrounded trace_size is stored in mpi3mr_alloc_diag_bufs():
+And concurrently, during driver shutdown or unload, the workqueue pointer is
+set to NULL while holding fwevt_lock:
 
-    diag_buffer->size =3D trace_size;
+	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+	wq =3D mrioc->fwevt_worker_thread;
+	mrioc->fwevt_worker_thread =3D NULL;
+	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
 
-When posting the buffer to firmware in mpi3mr_issue_diag_buf_post():
-
-    diag_buf_post_req.length =3D le32_to_cpu(diag_buffer->size);
-
-The firmware calculates the required number of segments using the unrounded
-size (e.g., ceil(5120/4096) =3D 2), but only 1 segment was allocated (size 8
-bytes for the segment list). The firmware will read past the end of the
-segment list (16 bytes), leading to an out-of-bounds DMA read. It will then
-use the arbitrary out-of-bounds value as a physical address to DMA-write
-trace data, leading to memory corruption.
+Could mpi3mr_fwevt_add_to_list() pass the lockless check, then block on
+fwevt_lock, and after acquiring the lock, unconditionally pass the now-NULL
+mrioc->fwevt_worker_thread to queue_work()?
 
 [Severity: Medium]
-This is a pre-existing issue, but can this retry loop cause a 0-byte DMA
-allocation warning?
+This is also a pre-existing issue, but does the early return in
+mpi3mr_fwevt_add_to_list() leak the firmware event?
 
-If the firmware-provided host_diag_trace_max_size (or the size after retry
-decrements) is less than 4KB, trace_size will be less than 4096. When passed
-to mpi3mr_alloc_trace_buffer(), it calculates seg_count =3D trace_size / 40=
-96
-which evaluates to 0.
+	if (!mrioc->fwevt_worker_thread)
+		return;
 
-This results in a 0-byte allocation in mpi3mr_alloc_trace_buffer():
+Since mpi3mr_alloc_fwevt() initializes the reference count to 1, if the wor=
+ker
+thread is already gone and we take this early return, do we need to call
+mpi3mr_fwevt_put() to prevent leaking the allocated firmware event?
 
-    diag_buffer_list =3D dma_alloc_coherent(&mrioc->pdev->dev,
-                                          sizeof(u64) * seg_count,
-                                          &diag_buffer_list_dma, GFP_KERNEL=
-);
+> -/**
+> - * mpi3mr_fwevt_del_from_list - Delete firmware event from list
+> - * @mrioc: Adapter instance reference
+> - * @fwevt: Firmware event reference
 
-Calling the DMA API with a 0 size triggers a WARN_ON_ONCE(!size) splat in
-dma_alloc_attrs(), which can crash systems with panic_on_warn enabled.
+[ ... ]
 
->  			dprint_init(mrioc, "trace diag buffer allocation failed\n"
->  			"retrying smaller size %dKB\n", trace_size / 1024);
->  			goto retry_trace;
->  		} else
->  			diag_buffer->size =3D trace_size;
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr=
+/mpi3mr_transport.c
+> index 240f67a8e2e3b..b309cfdf66873 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+
+[ ... ]
+
+> @@ -1457,8 +1458,10 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add=
+(struct mpi3mr_ioc *mrioc,
+>  	}
+>  	rphy->identify =3D mr_sas_port->remote_identify;
+> =20
+> +	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+>  	if (mrioc->current_event)
+>  		mrioc->current_event->pending_at_sml =3D 1;
+> +	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+> =20
+>  	if ((sas_rphy_add(rphy))) {
+>  		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+
+[Severity: High]
+This is a pre-existing issue, but does this code allow an ABBA deadlock with
+the SCSI mid-layer?
+
+Unlike mpi3mr_report_tgtdev_to_host(), this function does not check
+mrioc->reset_in_progress or mrioc->stop_drv_processing before setting
+pending_at_sml =3D 1 and calling sas_rphy_add().
+
+If a controller reset initiates, it waits for the event worker via
+cancel_work_sync(). If the worker thread is here and calls sas_rphy_add(),
+the SML commands might receive SCSI_MLQUEUE_HOST_BUSY from
+mpi3mr_queuecommand() because the reset is active.
+
+Since SML will retry infinitely while the reset is underway, does this cause
+the event worker thread to deadlock against the thread waiting for the reset
+to complete?
+
+[ ... ]
+
+> @@ -1578,8 +1585,10 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_i=
+oc *mrioc, u64 sas_address,
+> =20
+>  	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
+> =20
+> +	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+>  	if (mrioc->current_event)
+>  		mrioc->current_event->pending_at_sml =3D 1;
+> +	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+> =20
+>  	list_for_each_entry_safe(mr_sas_phy, next_phy,
+>  	    &mr_sas_port->phy_list, port_siblings) {
+
+[Severity: High]
+This is a pre-existing issue, but this appears to be susceptible to the same
+deadlock with the SCSI mid-layer.
+
+If a reset is in progress, setting pending_at_sml =3D 1 without a bailout
+check can cause the worker thread to hang if the SML commands retry
+infinitely due to the active reset. Should this have the same bailout check
+as mpi3mr_remove_tgtdev_from_host()?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260805110634.3466=
-70-1-ranjan.kumar@broadcom.com?part=3D1
+70-1-ranjan.kumar@broadcom.com?part=3D7
