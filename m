@@ -1,154 +1,169 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f227.google.com (mail-pg1-f227.google.com [209.85.215.227])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46B453E3DA8
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 07:25:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9BDD430310
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:14:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785914723; cv=none; b=LPUO0lpf4E2MvlFXAQpbuHy/SZxkn2aG/dY6EIAmkoh+/HinBoo3bOkIsBkRmgLMRLrnr9q4lkyOE0zhV40rO1xQTChNlpwZQBEykNaX8N42U6OemwmTYMBx1soaVbTYIktqW40qGnLrnvPZ+dTBbXTh4VE/m9cv5pFarfxRkKU=
+	t=1785928452; cv=none; b=upXPCOXuTcc8oD3Hchj6WJXtMu8Jf+PLmWuQq6Kl9aDrW/SP6aWVkwttfMJmhJBBsCJeNSJCug6SY4Gb+1nJ8DXp/j3zLuhEr/dgGtDL5QVtzqY0qtvPzeeG23e1T4sw1HWHGPx1k5ALg+lziH+vZrlyiAWMT8Jg/PGIUChSK+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785914723; c=relaxed/simple;
-	bh=G8JXc3R4nR9vcWh1ltSLvpwRyKldY/oZ5Nu5ZlcAesc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Vwdbdl0rhN2V0zGZd9x2reEuMLNyA0PMk+ijkeezoa5JbETPY6e6cBy53SocS/Ai9nAYMZr7tF4ggfyheoyzbW1qLt1duWoLt+q/rZFA7hYSsTEbeANaqXEVZGJUB/vObd998xTb4HVyjfpZUcD4eB4C3B12QLgfYKnyeEH0ksw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NuCzR1t/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785928452; c=relaxed/simple;
+	bh=W13x2h+Pc+Xpx+vCcdzj1HkS/TOjlN3jv23geKzbr0s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GdwwqeOaQ+CRE7Wmfr7aGJlmBWyQirDF4Llwvp+hn45qdukoGu3ZdsMcsoq/jElXUhYFIeTMUe2ZyPr+k6b/D8RG1bW7tgUqImoXQSePpKEhyPIJMwz8UXooopuIYC3gBG/Odo3dIATuYuePwVHwtGMa17skh9bCZpcFT6/oo0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=RGd7Umgr; arc=none smtp.client-ip=209.85.215.227
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NuCzR1t/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0612F1F000E9;
-	Wed,  5 Aug 2026 07:25:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785914721;
-	bh=u2r7V1O7cdZOn4r+0Jq5Tztd+TsVzflpZDqHSVxTsMw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NuCzR1t/HmgmQG858sc/D2ru9md9nZFpTobFkTwQKz0Zb4qU4mq9SZF7bkFij4X6v
-	 LTZBOCtXugp1YK/F8ubjOsV1oF2/HHAEDMQhQqMShb1OQKszTzq9K6nzNa1B+0nEwc
-	 m5uot8KdZDNTnq1jDpm7f1Bfghj79xeq9ohBmbTXdUybu0LN/a+QbJ48iAF7kkwIW/
-	 QV7SgaABQrOdSwkuZzXn4nHwRYf/msX5d9OQDVXB1jnJB9G3BQde/NxO0+6hJ5K8tp
-	 bR4oT0b1l8anaYFepDiTQvaw9iHWHPBml0suTH8Mxv8Fpsbe3yZiN3Tykg3e/ayMr9
-	 GIUhiu6xADspQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: iscsi_tcp: Fix null-pointer dereference in
- iscsi_sw_tcp_conn_restore_callbacks
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jiayuan Liang" <ljykernel@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260805065326.1952-1-ljykernel@gmail.com>
-References: <20260805065326.1952-1-ljykernel@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 05 Aug 2026 07:25:20 +0000
-Message-Id: <20260805072521.0612F1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RGd7Umgr"
+Received: by mail-pg1-f227.google.com with SMTP id 41be03b00d2f7-c9e0b89e228so483232a12.1
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785928450; x=1786533250;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=eb5w2KqbkLcA7sQNHivZyyYvOroVrUlNMLhZXmSrAig=;
+        b=KMVGBZGLjgOerSporrjWTtY9izBQycxF7vk4MgLWqrVGI63n+d3Dx3C+2Tmq57Pw9L
+         EymTN5OeQXo91rOUqFCB4hdh6jhTZ9h9o+ZFo2KzZJFGlexGLMbka6gOsKOEnKEH1tMg
+         AmK+HkokyP5/UZHJxsFY83BFbnjpGG9J16wXlLnT1x9MsuECWsFko9ui06FbpSMhlfKG
+         8N5aVezMhSM0PdjZUZVk7LqAZsGgjCVLWYn8mx1L59OQ9Z404c7vuaBz1GfQ1fcStVxU
+         LJyOydbxi3mDw6z27Ok2jLIhRIXKJPn84CXDRJVqS/r53Nce4QgYqU52s94U1me5F4Cs
+         u2QQ==
+X-Gm-Message-State: AOJu0YyrrO9czNSruA+nTJb2oDnUGWhRKPRCflWl/n3s0/N9BkcowggW
+	Ugmw8T5LAADbMt35Rxev4y3Gau/yfsaFXYeqN94fjKAvSU43SD5mEhvSCNXT0KB1vwnlGVRVKN+
+	oduxOnNqpQQxw8WSUVXBw0I/dg2FjfqFEcm1dhnRlk7VPWpXVsBRKAWDB++cAcQX6xm4E3DOH6X
+	Ld7muxEOX1nER2QVWqm5X17fHJKamnyuvVUMpbiCPOKBc2J1Ph1YiBQIutLFckgh9V8EwBQ6crf
+	e7gVKJF4q5b2ohN
+X-Gm-Gg: AR+sD10bJDcRZssJL7pvTujkuS9qhoigtAX+JtHOeMib4y1Dj1KheL2tFuXC4XB/YAe
+	wrsVWVG+/ksiZYRLQxuve/GXzG5CXD6tbjLviwNSqjPQp6jBkfF6nXnqp2lCkx78YEKwNa+eRws
+	3xXSYK4Tk/dOo08B/ocUAIv/NvdiM4qgZL0f+fpnTx2O2p1n4mIU0vFw+RivcEODL0T9dzzGQey
+	4Lk3emzzzXZEqFPjGgEIx1uu9uFRQo8LUuE6GHStxcWdjtzMTPGTRbq/R+MeIKjzD1GD6BTVx9S
+	8Jo+JW9nN4WnmhIjYql7lB4mv4hBdkaANwXm2Tk2aC8Ur3yZZlFzZyQEWijDAarpQqPr5/SxBnh
+	Z92U9xlKoHWzojq1Ch/T14fgd5N2T95MmSsWlUfX1N7vVChz54Db+2pWcSyzq3O0iM0dKDdvelT
+	pmkK8mLMlO34D3x2CYFHe/sDGF70k+R/aw6JY=
+X-Received: by 2002:a05:6a20:3d02:b0:3c3:8d4c:6673 with SMTP id adf61e73a8af0-3cb85fabfffmr6951593637.37.1785928449569;
+        Wed, 05 Aug 2026 04:14:09 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-22.dlp.protect.broadcom.com. [144.49.247.22])
+        by smtp-relay.gmail.com with ESMTPS id 41be03b00d2f7-cbe707f678dsm697133a12.4.2026.08.05.04.14.09
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 05 Aug 2026 04:14:09 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c96b4f58ddcso763426a12.3
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Aug 2026 04:14:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1785928448; x=1786533248; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=eb5w2KqbkLcA7sQNHivZyyYvOroVrUlNMLhZXmSrAig=;
+        b=RGd7UmgrbcGB3QVhc9GvIH4l77YcMTk7xMX8cY1OH2x6tdRVupi7jkh5e7ARCNvNTQ
+         kNiYL5RvstgK6MLb9kwvwU0UZXKtVGCJ20KMSyVCeaPFTZU6O2GbUb5k6uIOIq38wCWd
+         +AwH3d5MPCqqWPyfq6TlfSWr8Z4y5OYRvItps=
+X-Received: by 2002:a05:6a20:7fa3:b0:3bf:a489:1483 with SMTP id adf61e73a8af0-3cb85fac015mr6358189637.33.1785928447891;
+        Wed, 05 Aug 2026 04:14:07 -0700 (PDT)
+X-Received: by 2002:a05:6a20:7fa3:b0:3bf:a489:1483 with SMTP id adf61e73a8af0-3cb85fac015mr6358109637.33.1785928447276;
+        Wed, 05 Aug 2026 04:14:07 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158673b7f4sm16740227eec.17.2026.08.05.04.14.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Aug 2026 04:14:06 -0700 (PDT)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: sathya.prakash@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	vishakhavc@google.com,
+	ipylypiv@google.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v4 00/10] mpi3mr: Few Enhancements and minor fixes
+Date: Wed,  5 Aug 2026 16:36:24 +0530
+Message-ID: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Few Enhancements and minor fixes of mpi3mr driver.
 
-New issues:
-- [High] The newly added NULL pointer check introduces a Time-Of-Check to T=
-ime-Of-Use (TOCTOU) vulnerability that fails to completely prevent the NULL=
- pointer dereference.
+Changes since v3:
+- Patch 1: Guarded the firmware buffer loop against a bad decrement size.
+- Patch 4: Made reset_to/abort_to a single write, tightened pgsz bounds.
+- Patch 5: Fixed a reply_dma leak, a double-decrement, and a stalled index.
+- Patch 6: Added synchronize_irq() on queue teardown, fixed a segment leak.
+- Patch 7: Closed an ABBA deadlock between the EH/reset thread and worker.
+- Patch 8: Fixed a fatal device_del() bug and the same deadlock as patch 7.
 
-Pre-existing issues:
-- [Critical] The patch fails to address the root cause of the race conditio=
-n, leaving a severe double free / file refcount underflow and use-after-fre=
-e vulnerability.
---
+Changes since v2:
+- Patch 1: Added missing endianness conversions (le16_to_cpu()) for
+  buffer size fields in mpi3mr_alloc_diag_bufs() to prevent large memory
+  allocations on big-endian architectures.
+- Patch 5: Hardened reply queue processing by adding bounds checking for
+  request_queue_id, fixed a TOCTOU race with a double-check pattern
+  (using dma_rmb and atomic_add_unless), and replaced a direct panic()
+  with a safe ioc_err() log for malformed DMA reply addresses.
+- Patch 6: Fixed potential NULL pointer dereferences and Use-After-Free
+  during spurious interrupts by properly clearing intr_info[*].op_reply_q
+  when reply queue segments are freed.
+- Patch 7: Resolved multiple concurrency issues around firmware event
+  cleanup: fixed TOCTOU races by safely handling current_event under the
+  fwevt_lock, fixed a Use-After-Free by delaying the release of event
+  references until after cancellation, and prevented deadlocks during
+  module unload.
+- Patch 8: Removed an explicit sas_rphy_free() to fix a double-free
+  vulnerability on the sas_rphy_add() error path, as sas_port_delete()
+  implicitly handles the cleanup.
 
---- Patch [1]: [PATCH] scsi: iscsi_tcp: Fix null-pointer dereference in isc=
-si_sw_tcp_conn_restore_callbacks ---
-commit a6e54310fce25391e4b63d84129f6076f40ca758
-Author: Jiayuan Liang <ljykernel@gmail.com>
+Changes since v1:
+- Fixed test robot build warning.
+- Patch 1: Added le32_to_cpu() conversion for driver_pg1.flags to prevent
+  incorrect logic on big-endian architectures.
+- Patch 4: Added bounds checking for firmware-provided NVMe page size to
+  prevent undefined shift behavior and potential divide-by-zero panics.
+- Patch 5: Added missing dma_rmb() memory barriers in reply queue
+  processing loops to prevent weakly ordered architectures from
+  processing stale data.
+- Patch 6: Hardened operational queue error handling to prevent
+  NULL pointer dereferences and deferred kernel panics
+  during driver cleanup.
+- Patch 7: Fixed a TOCTOU Use-After-Free race condition and reference leak
+  during firmware event cleanup by safely acquiring the event reference
+  under a spinlock.
+- Patch 8: Added missing NULL pointer checks for rphy allocations and
+  handled sas_rphy_add() failures to prevent NULL pointer dereferences
+  and resource leaks.
+- Patch 9: Added return value check for mpi3mr_add_host_phy() to prevent
+  a NULL pointer dereference during device addition events.
 
-scsi: iscsi_tcp: Fix null-pointer dereference in iscsi_sw_tcp_conn_restore_=
-callbacks
+Ranjan Kumar (10):
+  mpi3mr: Skip device shutdown during unload per controller
+    configuration
+  mpi3mr: Update MPI Headers to revision 41
+  mpi3mr: Add early timestamp synchronization after driver load
+  mpi3mr: Fix NVMe page size caching for non-operational devices
+  mpi3mr: Fix performance regression caused by extended IRQ poll sleep
+  mpi3mr: Fix memory leak on operational queue creation failure
+  mpi3mr: Fix firmware event reference leak during cleanup
+  mpi3mr: Fix SAS port allocation and registration error handling
+  mpi3mr: Fix SAS PHY cleanup in host addition error paths
+  mpi3mr: Driver version update to 8.18.0.8.50
 
-The commit message states this fixes a null pointer dereference in
-iscsi_sw_tcp_conn_restore_callbacks caused by a race condition leading to
-concurrent invocations of iscsi_sw_tcp_release_conn. The patch adds a null
-check for the socket pointer before accessing its internal fields.
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      |  77 ++++++++-
+ drivers/scsi/mpi3mr/mpi/mpi30_image.h     |   7 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |  15 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   2 +-
+ drivers/scsi/mpi3mr/mpi3mr.h              |  13 +-
+ drivers/scsi/mpi3mr/mpi3mr_app.c          |  44 +++--
+ drivers/scsi/mpi3mr/mpi3mr_fw.c           | 193 +++++++++++++++++-----
+ drivers/scsi/mpi3mr/mpi3mr_os.c           | 173 ++++++++++++-------
+ drivers/scsi/mpi3mr/mpi3mr_transport.c    | 103 ++++++++++--
+ 9 files changed, 479 insertions(+), 148 deletions(-)
 
-> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> index 9260b1c9b0e05..0eabb8b59f46d 100644
-> --- a/drivers/scsi/iscsi_tcp.c
-> +++ b/drivers/scsi/iscsi_tcp.c
-> @@ -265,8 +265,12 @@ iscsi_sw_tcp_conn_restore_callbacks(struct iscsi_con=
-n *conn)
->  {
->  	struct iscsi_tcp_conn *tcp_conn =3D conn->dd_data;
->  	struct iscsi_sw_tcp_conn *tcp_sw_conn =3D tcp_conn->dd_data;
-> -	struct sock *sk =3D tcp_sw_conn->sock->sk;
-> +	struct sock *sk;
-> =20
-> +	if (!tcp_sw_conn->sock)
-> +		return;
-> +
-> +	sk =3D tcp_sw_conn->sock->sk;
+-- 
+2.47.3
 
-[Severity: High]
-Does this new check fully prevent the null pointer dereference?
-
-Because the check and the subsequent read are lockless and not protected
-by READ_ONCE(), the compiler could fetch the tcp_sw_conn->sock pointer
-twice.=20
-
-If another thread sets tcp_sw_conn->sock to null under sock_lock right after
-the check, could the second fetch result in dereferencing null here?
-
-[Severity: Critical]
-This is a pre-existing issue, but does this patch fully address the root
-cause of the race condition?
-
-If two threads concurrently execute iscsi_sw_tcp_release_conn, they both
-read tcp_sw_conn->sock into a local variable:
-
-iscsi_sw_tcp_release_conn() {
-	...
-	struct socket *sock =3D tcp_sw_conn->sock;
-
-	if (!sock)
-		return;
-	...
-
-Since both threads can read the non-null pointer before either thread takes
-the sock_lock to set it to null, both will bypass this check.
-
-Later in the same function, both threads will call:
-
-	...
-	mutex_lock(&tcp_sw_conn->sock_lock);
-	tcp_sw_conn->sock =3D NULL;
-	mutex_unlock(&tcp_sw_conn->sock_lock);
-	sockfd_put(sock);
-}
-
-Will this cause a double free of the socket file refcount, since both
-concurrent threads call sockfd_put on the same locally cached sock pointer?
-
-Similarly, in iscsi_sw_tcp_conn_stop, both threads might use the locally
-cached sock pointer after it has already been released by the first thread:
-
-iscsi_sw_tcp_conn_stop() {
-	...
-	struct socket *sock =3D tcp_sw_conn->sock;
-
-	if (!sock)
-		return;
-
-	sock->sk->sk_err =3D EIO;
-	...
-
-If one thread finishes iscsi_sw_tcp_release_conn first, will the second
-thread dereference a freed socket here?
-
->  	/* restore socket callbacks, see also: iscsi_sw_tcp_conn_set_callbacks(=
-) */
->  	write_lock_bh(&sk->sk_callback_lock);
->  	sk->sk_user_data    =3D NULL;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260805065326.1952=
--1-ljykernel@gmail.com?part=3D1
