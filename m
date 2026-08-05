@@ -1,164 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0DEB42E8E9
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:40:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA1FB41B8C7
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Aug 2026 11:40:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785930030; cv=none; b=En73TRDLDGrmUwu8qYGueabCLZX77HJB5odSdByfw6mJQKf19DbkZQPgirEoOSXUKVrBbgRSwp+c+8QKa4JJspo+eIznfrk5bo1iZXRyEMRrc2Cb7x+BytY1TYLqtjvEpmd5z6snsIX5GtEoIs3lvVnXOWfJByZprONAjzGGy70=
+	t=1785930031; cv=none; b=PM2zVI9OlUNyQS9rj8dayT4iTxDN0HdHS2WYQJL6yR1Vnjlxx+NOQyz3saKvmN9ZWnz//GUlrdNdr8WQlHr8nNwWhXy7dSGPz0e8M1/oeBWua90nw1ZLHitAAsSKXi4g/Gnk9W4FjmlHWLRvIxHuLDJvdQClG2Zb7njckLaFaZk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785930030; c=relaxed/simple;
-	bh=p739HKICrpzPz5mTDh5NMTmdoHhy5rqexe8ZvHABhsc=;
+	s=arc-20240116; t=1785930031; c=relaxed/simple;
+	bh=J2Nsu6UMmMQMofVz6jbISFu7iNqamSw7hAeSC+Waa6I=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cCDS4skyW83pm0t6zNoo3DWfeFmU2IdGPWVaPpkIsBoLh2UA+f96pZRF9S5mCgUpV/Fc4BXmCL08rdFgV4DM630ZbuuBAtlpqT3znfNBkuuATX0MR2sG1G4e6s2wamvLHpY5td+Bdkis8DRsbchUs+1n0kEWZvqmivzAg50T228=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YNYKQs1/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=RXjDVS5WY8e8mtrTrnVzbIB/UpVRieZf5LwhFK2tGjMqizLsDv6R1t5yx51/H2/d2e7bZtNYHDOBHpadc0K/7sizElIKfdVDczRNUUa1cPuhEXBd2qlDW458dLjotfqKWoNijVc+gsUzEuAPZddZoqhUpmJ+zIqpXCrj+0G5r1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGT8mAjV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YNYKQs1/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B0111F00A3D;
-	Wed,  5 Aug 2026 11:40:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGT8mAjV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A25AD1F00A3E;
+	Wed,  5 Aug 2026 11:40:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785930028;
-	bh=kLJzhPsqZyuXECoXRgIy3WOJX6GPaOgrTTyPkyArufY=;
+	s=k20260515; t=1785930029;
+	bh=P+L8dKHfqrxvI5kQSEK+hNmkTmZneDbrzb5AYToARfA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YNYKQs1/5kbS5yUF0McAKeMMqF2A0KmuJU3+c63ogtd8fOgIOItkTIi/j8GlsQ/Rc
-	 PISsxM1azfIx4yRnq12P8aQ/+pWk+haHLKK2IN4oNX0Y67kYxVZH/54+nCHqK/f7uY
-	 +7vSjxStWmHchbSgYV7MtBHpcbF62SpsOQPPvGOvm7qQAnj4O/TW+rql3u07J81aq9
-	 M3w27Iq9WPWZDzYbzrz3+A8g62tMDRx4B44IUuf8gSQ2sMzbMI7d088ie0O5PqfR5y
-	 /DcXb8nmBOgC1lsnQd46lPGDvAklhH2vnVouqWMA0TG3bcoyPPQGU3kvpVXN66qMwt
-	 F9LoNZOrXdOtg==
+	b=HGT8mAjVrrqMkrhL69SZ86Qu10qzPoYQa68aYqYzedHc2G9sFoEGfwCN5b+0zMcuz
+	 R5zqcvtoCFAONPI2AJjLcCl7kBc6zcbmz32UyYUPXEjaM0jKet1S2XJNVrNgTFpCKd
+	 T3XPrBUQCX+hX2BmEpj5jRf+lhFq80b6ZUNWs4zSdUsa8Ls9B4j9iDKt/M2RJGv1TR
+	 YIV++PMMhrDCXM+ybNlbaVuHLoeOzOwfH1SXAjFZzTAnEd/HmPQ5aWvzM33nJ/rheg
+	 l7bj6CJNY5+VjsWdyCPmpciJzww7bxJ4KbDrTLIn/QNMheUNRsYzOCVPmbUCsHYSIy
+	 IOsGP5h8azhjA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 06/10] mpi3mr: Fix memory leak on operational queue
- creation failure
+Subject: Re: [PATCH v4 08/10] mpi3mr: Fix SAS port allocation and
+ registration error handling
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260805110634.346670-7-ranjan.kumar@broadcom.com>
+In-Reply-To: <20260805110634.346670-9-ranjan.kumar@broadcom.com>
 References: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
- <20260805110634.346670-7-ranjan.kumar@broadcom.com>
+ <20260805110634.346670-9-ranjan.kumar@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 05 Aug 2026 11:40:27 +0000
-Message-Id: <20260805114028.3B0111F00A3D@smtp.kernel.org>
+Date: Wed, 05 Aug 2026 11:40:28 +0000
+Message-Id: <20260805114029.A25AD1F00A3E@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The threaded IRQ handler `mpi3mr_isr_poll` may exit early without =
-re-enabling the IRQ, leaving the interrupt line permanently disabled.
-- [High] Polling paths pass a potentially NULL `op_reply_q` pointer to `mpi=
-3mr_process_op_reply_q`, leading to a kernel panic.
+- [Critical] Skipping `sas_port_delete` and `sas_port_delete_phy` during a =
+controller reset causes permanent memory leaks of SAS transport objects and=
+ triggers a kernel `BUG()` on subsequent device discovery.
 --
 
---- Patch [6]: [PATCH v4 06/10] mpi3mr: Fix memory leak on operational queu=
-e creation failure ---
-commit 3a3eabe2f05c3500da7a32007ea4df206d106e35
+--- Patch [8]: [PATCH v4 08/10] mpi3mr: Fix SAS port allocation and registr=
+ation error handling ---
+commit 2a61369a5f802bef404aa18e7c7a2583f37c4fc7
 Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-mpi3mr: Fix memory leak on operational queue creation failure
+mpi3mr: Fix SAS port allocation and registration error handling
 
-When operational queue creation fails, the error path frees queue informati=
-on
-arrays but does not release DMA memory segments. This patch ensures partial=
-ly
-allocated segments are freed immediately. It also attempts to resolve races
-in the queue segment free/alloc paths by clearing the queue pointer before
-freeing.
+This commit adds NULL checks after SAS port and rphy allocations to prevent
+NULL pointer dereferences. It cleans up memory and state if registration
+fails, resolving memory leaks and dangling pointers. Finally, it prevents
+deadlocks in the SCSI mid-layer by checking for resets or driver stops.
 
-Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kumar@=
-broadcom.com?part=3D6
-Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kumar=
-@broadcom.com?part=3D6
-Closes: https://sashiko.dev/#/patchset/20260724102505.115136-1-ranjan.kumar=
-@broadcom.com?part=3D6
-
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
-_fw.c
-> index e469507045dd6..880c07bdc9738 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr=
+/mpi3mr_transport.c
+> index b309cfdf66873..db9cb0b03b9ff 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
 [ ... ]
+> @@ -1600,12 +1644,12 @@ static void mpi3mr_sas_port_remove(struct mpi3mr_=
+ioc *mrioc, u64 sas_address,
+>  			    mr_sas_port->remote_identify.sas_address,
+>  			    mr_sas_phy->phy_id);
+>  		mr_sas_phy->phy_belongs_to_port =3D 0;
+> -		if (!mrioc->stop_drv_processing)
+> +		if (!mrioc->stop_drv_processing && !mrioc->reset_in_progress)
+>  			sas_port_delete_phy(mr_sas_port->port,
+>  			    mr_sas_phy->phy);
+>  		list_del(&mr_sas_phy->port_siblings);
+>  	}
+> -	if (!mrioc->stop_drv_processing)
+> +	if (!mrioc->stop_drv_processing && !mrioc->reset_in_progress)
+>  		sas_port_delete(mr_sas_port->port);
 
-> @@ -767,10 +770,15 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *p=
-rivdata)
->  {
->  	struct mpi3mr_intr_info *intr_info =3D privdata;
->  	struct mpi3mr_ioc *mrioc;
-> +	struct op_reply_qinfo *op_reply_q;
->  	u16 midx;
->  	u32 num_op_reply =3D 0;
-> =20
-> -	if (!intr_info || !intr_info->op_reply_q)
-> +	if (!intr_info)
-> +		return IRQ_NONE;
-> +
-> +	op_reply_q =3D READ_ONCE(intr_info->op_reply_q);
-> +	if (!op_reply_q)
->  		return IRQ_NONE;
+[Severity: Critical]
+Does skipping sas_port_delete() and sas_port_delete_phy() during a reset ca=
+use
+a memory leak and a kernel BUG() during rediscovery?
 
-[Severity: High]
-Does returning early here leave the interrupt permanently masked?
+Because mr_sas_port is unconditionally freed at the end of
+mpi3mr_sas_port_remove(), the transport objects (sas_port and sas_rphy) are
+leaked when their delete functions are bypassed.
 
-If a concurrent queue deletion (e.g., from a reset) sets op_reply_q to NULL
-right after mpi3mr_isr() reads it as non-NULL, the hardirq handler will
-disable the IRQ and schedule this threaded handler:
+Additionally, the sas_phy remains linked to the leaked port's phy_list. When
+the reset completes and the device comes back online, mpi3mr_sas_port_add()
+will create a new port and call sas_port_add_phy() on the same sas_phy.
 
-mpi3mr_isr()
-   disable_irq_nosync(intr_info->os_irq);
-   return IRQ_WAKE_THREAD;
-
-When mpi3mr_isr_poll() runs, it will read op_reply_q as NULL and return
-IRQ_NONE without calling enable_irq(intr_info->os_irq). Future IOs on the
-operational queue associated with this vector would hang.
-
-> =20
->  	mrioc =3D intr_info->mrioc;
-
-[ ... ]
-
-> @@ -2021,10 +2032,17 @@ static void mpi3mr_free_op_reply_q_segments(struc=
-t mpi3mr_ioc *mrioc, u16 q_idx)
->  	u16 j;
->  	int size;
->  	struct segments *segments;
-> +	u16 midx =3D REPLY_QUEUE_IDX_TO_MSIX_IDX(q_idx, mrioc->op_reply_q_offse=
-t);
-> =20
-> -	segments =3D mrioc->op_reply_qinfo[q_idx].q_segments;
-> -	if (!segments)
-> -		return;
-> +	/*
-> +	 * Stop the ISR/poll thread from picking up this queue before its
-> +	 * segments are freed below, and wait for any in-flight handler
-> +	 * that already has the old pointer to finish using it.
-> +	 */
-> +	if (midx < mrioc->intr_info_count) {
-> +		WRITE_ONCE(mrioc->intr_info[midx].op_reply_q, NULL);
-> +		synchronize_irq(pci_irq_vector(mrioc->pdev, midx));
-> +	}
-> =20
->  	if (mrioc->enable_segqueue) {
-
-[Severity: High]
-Could clearing op_reply_q to NULL here cause a NULL pointer dereference
-in polling paths?
-
-Polling paths read the op_reply_q pointer from the intr_info array and pass
-it to mpi3mr_process_op_reply_q() without a NULL check:
-
-mpi3mr_op_request_post()
-    mpi3mr_process_op_reply_q(mrioc, mrioc->intr_info[midx].op_reply_q);
-
-mpi3mr_poll_pend_io_completions()
-    mpi3mr_process_op_reply_q(mrioc, mrioc->intr_info[i].op_reply_q);
-
-If a concurrent controller reset frees the queues and sets this pointer
-to NULL, mpi3mr_process_op_reply_q() will immediately dereference it.
+The SAS transport layer detects the phy is already linked to another port a=
+nd
+intentionally triggers a BUG().
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260805110634.3466=
-70-1-ranjan.kumar@broadcom.com?part=3D6
+70-1-ranjan.kumar@broadcom.com?part=3D8
