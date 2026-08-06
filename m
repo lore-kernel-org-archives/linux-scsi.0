@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 863D73EDE4F
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 20:57:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 900B92D7DC8
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 20:59:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786049846; cv=none; b=Sk94yfFx+fxlAC5qc3+vKMjmfPSNK3+OXVRWXuHohwPVtbkRU7IaUGRVsYpIwMLloWl/q7RhOaHPEv0PCt5tgeF1nwpjGe/Ao+bYnc3pD6rROaCti6mEOV9LMJoEZ/M0VqkihGrN0gTGJ8Yn8XeY0O2EqEOwbrWn5icXiGlWWC4=
+	t=1786049999; cv=none; b=Tz4LuuHYrsNW1kmuLJiTcUMxzNSBDHkziBC7pMsXaI7sW2wRC2JqgkuNoBxTuLFpkk5j8dJIpGk6VyseoHz5oOF3X2W2LrSbFHfdGR7XutyI5iwiAuAuj0FgkK7wLV1lD6TTJS7A0rH3RW5FWbqRK69p232lXkTwoayVht+yj8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786049846; c=relaxed/simple;
-	bh=BfW2dULK7SGPxX/NSLs+rZN/iQERM3TPXnxgJOYF6JI=;
+	s=arc-20240116; t=1786049999; c=relaxed/simple;
+	bh=jQHswJ8H4F59d8OIDvRrd8n52bUYHjrVAw9ClW0zxdk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IUhp+TC47Vlt1bkXFZH3CE1lxL8mYFh6L5Ix/kKDp7rPpBvz55i+M3jK3u/5pJkoJV2kwcIUTDgy0nl/cHi6uN65ETyLUWDjB0juKvmYEKjnY6OHWQiW7Eg/KpAtkFr6MDhhqEYXVAEk83wCcjkDa/NbqKI2RKL0hE1VZxJULqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fXjyTeAq; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ida3rpdJfzxiDZLA9BiXTG9VB65PsrNsVm/l7BRH1cDXiLgBxvS2IcUTsMpjq05uQjxPNeQhbbXrbm5gApM+/elzhhhF50+LGEPa3CXj5yJ6tNrFYKz1/RTcGOluKtSzAmOEdAQrxdJPc7G30VoBVPeIOSpvv8W47UEWuYhT78o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RcoclFkx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fXjyTeAq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B8711F000E9;
-	Thu,  6 Aug 2026 20:57:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RcoclFkx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5566D1F000E9;
+	Thu,  6 Aug 2026 20:59:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786049840;
-	bh=zffjmIh0HO5lqniMF0L1oX1QtDjDx05OPEV32MNkBHY=;
+	s=k20260515; t=1786049998;
+	bh=E4OxpMMw7DUQPKPKNsbUPIrFYRDZpBUV65LjwuT0WwQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fXjyTeAqPLdOT0MoKUcHU82o7b3rzc7cztp30Ry60ctCzEHD4zZgtfc4SpQdqXfLB
-	 ulJAaFeJUhiGBJ0TopDDDpRZPHQd5cket+IsFVOmraSeBONtF3u52QO/ufBb8vEela
-	 G3tfHONJnygzLDcqQcyMa9Aydae6fIznJsEfc1OKGWxryzYvCy5j9r+OPtquLmydf4
-	 J/nhQUXbo0chhQGbwhPwhIz4kcONMtSNrjWuJAObxRpjHGpHfsiPiJxYdahwBex3LR
-	 U3en7C1vgsflsC9vbn34Bw5U2K/w/sjo3Z8P79lCf3c+M4g+ZEwEYNQZYBN9JBkYs1
-	 ShJLemgP68Teg==
+	b=RcoclFkx7MrKgjtNvioOBsxRvdHEiDBpT+panrGlH2+zTPMU3M5Vpkl+AZkPyVTNt
+	 UQp64/x92O3qn/tJ8PKZwrRsfryD/7fD3q4SjzjjwH2qnKQFi5LJDElf28Iml+E9nK
+	 eRn5clU8fJ92O9y1+bJARvT8aUtllD3JF7tWMrkaT6G7kNyYmkCsPikKB6M8SMuEvK
+	 qg73ZuJNvsOm3pS3Ht8sdWFFkkd6HmoYda8N+H5Lxfam0SmRU8Wchf1e2Pf7g3k5tA
+	 EXjdh5Ysa0tx3VQkME7N5yiUNPjR2kfn2IXGmflw4udtylZCoG/0ezuKV4hnPcFW80
+	 NhuXk+5sPYycw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 5/5] scsi: elx: efct: destroy the mailbox pools when
- setup fails
+Subject: Re: [PATCH v2 1/5] scsi: elx: efct: check the HW state before
+ allocating an HIO
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ali Ahmet Memis" <ali@iusegentoo.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260806202205.345326-6-ali@iusegentoo.com>
+In-Reply-To: <20260806202205.345326-2-ali@iusegentoo.com>
 References: <20260806192345.328621-1-ali@iusegentoo.com>
- <20260806202205.345326-6-ali@iusegentoo.com>
+ <20260806202205.345326-2-ali@iusegentoo.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 20:57:19 +0000
-Message-Id: <20260806205720.3B8711F000E9@smtp.kernel.org>
+Date: Thu, 06 Aug 2026 20:59:57 +0000
+Message-Id: <20260806205958.5566D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,54 +49,47 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] The global list `efct_devices` is modified and accessed concurrent=
-ly without any locking, causing list corruption and use-after-free races.
+- [High] Pre-existing resource leak of `hio` (Hardware I/O object) in `efct=
+_hw_bls_send()` when WQE formatting fails.
 --
 
---- Patch [5]: [PATCH v2 5/5] scsi: elx: efct: destroy the mailbox pools wh=
-en setup fails ---
-commit 250c50655b4add3b10d0ee9bad5b35495210fdcb
+--- Patch [1]: [PATCH v2 1/5] scsi: elx: efct: check the HW state before al=
+locating an HIO ---
+commit dc19c507aa2788a2b5120f2a9e8e09430d14b440
 Author: Ali Ahmet Memis <ali@iusegentoo.com>
 
-scsi: elx: efct: destroy the mailbox pools when setup fails
+scsi: elx: efct: check the HW state before allocating an HIO
 
-This commit prevents memory leaks by destroying mailbox mempools in=20
-the error paths of efct_hw_setup() before returning.
+efct_els_hw_srrs_send() takes an HIO from the pool and only then looks at
+hw->state, returning without giving it back when the HW is not active. This
+commit fixes the issue by moving the state check before allocating the HIO.
 
-> mempool_destroy() for these two runs only in efct_hw_teardown(), which is
-> not reached here. efct_hw_setup() is called from
-> efct_device_interrupts_required(), and when it fails efct_pci_probe()
-> unwinds through efct_device_free(), freeing the struct efct that held the
-> only pointers to the pools.
+> Check the state first, the way efct_hw_bls_send() already does.
 
 [Severity: High]
-This is a pre-existing issue, but since the probe error path unwinds throug=
-h=20
-efct_device_free(), does this code safely handle concurrent accesses to the=
-=20
-global device list?
+This is a pre-existing issue, but while efct_hw_bls_send() correctly checks
+the state first, does it still have a resource leak when WQE formatting fai=
+ls?
 
-Looking at efct_device_alloc() in drivers/scsi/elx/efct/efct_driver.c, the=
-=20
-device is added to the global efct_devices list without locking:
+In efct_hw_bls_send(), an HIO is allocated via efct_hw_io_alloc(). If the
+subsequent call to sli_xmit_bls_rsp64_wqe() fails, it returns -EIO directly
+without releasing hio back to the free list:
 
-    list_add_tail(&efct->list_entry, &efct_devices);
+drivers/scsi/elx/efct/efct_hw.c:efct_hw_bls_send() {
+...
+	hio =3D efct_hw_io_alloc(hw);
+...
+	if (sli_xmit_bls_rsp64_wqe(&hw->sli, hio->wqe.wqebuf,
+				   &bls, bls_params)) {
+		efc_log_err(hw->os, "XMIT_BLS_RSP64 WQE error\n");
+		return -EIO;
+	}
+...
+}
 
-When unwinding through efct_device_free(), it is removed and immediately fr=
-eed:
-
-    list_del(&efct->list_entry);
-    kfree(efct);
-
-Meanwhile, userspace configfs operations can trigger efct_find_wwpn() in=20
-drivers/scsi/elx/efct/efct_lio.c, which traverses this same list locklessly:
-
-    list_for_each_entry(efct, &efct_devices, list_entry) {
-
-Could concurrent probe/remove operations and configfs reads race here,=20
-causing list_for_each_entry() to hit corrupted list pointers or trigger=20
-a use-after-free on the released efct object?
+Should this call efct_hw_io_free(hw, hio) before returning -EIO? Once the
+pool is exhausted, efct_hw_io_alloc() will permanently fail.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806192345.3286=
-21-1-ali@iusegentoo.com?part=3D5
+21-1-ali@iusegentoo.com?part=3D1
