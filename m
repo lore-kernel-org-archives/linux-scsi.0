@@ -1,48 +1,48 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 608AD379979
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 16:58:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DB5E341ABB;
+	Thu,  6 Aug 2026 17:15:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786035515; cv=none; b=MwUpdqnSdd0b5taY/hBS9UgkBAIpujf2J/6KCuKEE12s2Mqj1w4kVbJ3FRvNDNzYieByaupVBk52i9aFnyTnwtHooFv6EbaIPl6ReBAzuXpsYiV41be81i/VpP6VXGz8gur7xKLgBaZIQj+kEh6hwQM02ciQd4oiamlujfrk0jI=
+	t=1786036536; cv=none; b=tXdIR6HoAvX9RQVmNBc8PY/Imyxaui2SbnCvFZ7EF7f/mRCSjiNHWLXJSRvT7kYdskBREwA0psSAkZSC4PLX2KHfTpwEsO0jlFyBIO6CqVJnx/6pCdUPHJ0/Q7NFAJ1iUZ/tI6IxjxncUP0BDsqvLD+EvU3N0cf9XYWvaiqdNPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786035515; c=relaxed/simple;
-	bh=3lsORWD9mUNDK1cAe5I5yG3ym5CGH7p7lWfwglo3hfE=;
+	s=arc-20240116; t=1786036536; c=relaxed/simple;
+	bh=znK2/4lOEkttR/ynwvj8ugpg+t3k+UoZj77xbbcF6Rc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J9VtW+xgyYXCBmE0A85fW89pHgOmeoIt9hpKScpqUdlRi7lht+t29NiL1PXn0pjvcsGxuKS+O5bsMx/PxWFf1ZhcH4u6lKDJh3ZmTnqpsFDrn/brVRV97FtZPZI6v8AuZ/1k+qxf50bIL6sZAFHxkuGds8wotOaZKA3Y+IM9DNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=NzLdVy3n; arc=none smtp.client-ip=199.89.1.16
+	 In-Reply-To:Content-Type; b=PCd4bFEDv0Kwkhfm++hyvDTjr9JHa0ZVix07ePd5OUz0/PHFm2aHt5jLqZB+RFcmNzsGDUDPuybEHlXomHgrzJap0AKOZkJ3hfUwsBjrBlkb/j6ZXMszoPzbJl6Mx509BtLDMZ7LPQUe7C0AlVyVAK3dDnsAxC9xDL/8Nqtp37Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fWfd1pY8; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="NzLdVy3n"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fWfd1pY8"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGD4n6FhpzlfvqS;
-	Thu,  6 Aug 2026 16:58:33 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hGDSQ5ZWJz1XM6JY;
+	Thu,  6 Aug 2026 17:15:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1786035511; x=1788627512; bh=LnyEKRSgRG1qdOm5gaE26fxC
-	9sifTAehohNQ8NovuKE=; b=NzLdVy3ndrBA+MJTeJXrm1Hjfhi4I6N1KstRD0sv
-	s/0sfcLbbva+sLC7gU1V7khRdi166T9D+tjFlt5bbIc0Px8b0gTP7zM5pmCisLWC
-	U/ucq7tZBBHntL0EjTRnuj2PFTOCOJv7sQuJVplOv+sKb/GncXHkM+eVKCGLaBcK
-	uWyZnweSxBrKmRDv1HgUnwstM1T7eLd7Y4n2g7MG5YI6XCPnS6Eq5Ru1zcJ503sw
-	nAMuFHw7u9bNE8idLrpa9+Srb6PAH65HAVCqzBeSLJbR/1z/paVOuw3rsZpjyx4/
-	Bi7feqr0pspFbwlDNC/VuYH8wH0nHAgxyHmL29RpE2L6Nw==
+	 s=mr01; t=1786036529; x=1788628530; bh=oZXhusvsNiVTw2LNWdGhAncH
+	7EziQoLQLzjFcfA1dQk=; b=fWfd1pY8EngREmKrsn1S8hNEj7f0sqM7rlcwqbUk
+	Grko2xpUnW/70erJE/bEDvBjLhZV81wgTuWUyPjvAx1h5f5roRtsMCAllwG1Ol+8
+	/ZTQ142f+jOnBM88ZLCYthJLY6Yupea0wr6pZp5+GMDiGlfif6xz9YiVqdlQ6QOB
+	wM+Wf9hEBJzzfolsv8WfK5/I1OIHZO7nuE4d5Q+Ut2oUZ97hDVIETpVTIq7NZH1e
+	rJij7FW+iu+cRjT4Z3juRluW+YAfZ9CJVmMXM9H4yVUAvZz861nKdtW2s1vsdX8n
+	XZdg3xAS6j5VwgUP6NC02L3/WPwlqI+4j6YwFFEonqWKDw==
 X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id j--a92rB8pvi; Thu,  6 Aug 2026 16:58:31 +0000 (UTC)
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id fKxYKzoNdV_x; Thu,  6 Aug 2026 17:15:29 +0000 (UTC)
 Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGD4k0vQqzlfwHS;
-	Thu,  6 Aug 2026 16:58:29 +0000 (UTC)
-Message-ID: <9af725d2-b2c6-4389-bf1a-abc565407ecd@acm.org>
-Date: Thu, 6 Aug 2026 09:58:28 -0700
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hGDSG5l6bz1XM31H;
+	Thu,  6 Aug 2026 17:15:26 +0000 (UTC)
+Message-ID: <9d9092bc-6bf0-4afb-9d1a-5ee16c9c501e@acm.org>
+Date: Thu, 6 Aug 2026 10:15:25 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,37 +50,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 6/6] scsi: core: Enable lock context analysis
+Subject: Re: [PATCH v2] scsi: core: Drop Scsi_Host.default_lock
 To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Marco Elver <elver@google.com>, linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <cover.1785965531.git.bvanassche@acm.org>
- <9b8e6e601725f0a6b8ac1b9609426734f4ed502d.1785965531.git.bvanassche@acm.org>
- <11c74ca7-f952-47ca-8dc7-24b688efb7cf@oracle.com>
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-usb@vger.kernel.org,
+ John Garry <john.garry@linux.dev>
+References: <20260806113958.3127942-1-john.g.garry@oracle.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <11c74ca7-f952-47ca-8dc7-24b688efb7cf@oracle.com>
+In-Reply-To: <20260806113958.3127942-1-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 8/6/26 2:16 AM, John Garry wrote:
-> On 05/08/2026 22:36, Bart Van Assche wrote:
->> Enable lock context analysis for those SCSI core files that build
->> without triggering any compiler warnings.
-> 
-> Do you mean context analysis compiler warnings?
+On 8/6/26 4:39 AM, John Garry wrote:
+ > Getting the address of embedded host_lock structure just requires adding
+ > a fixed offset value to the shost pointer. However, getting the value of
+ > the host_lock pointer requires loading from a fixed offset to the shost
+ > pointer. The latter should be very slightly slower, which is relevant as
+ > this lock is used a lot throughout the core code and drivers.
 
-Yes, that's what I meant.
+Hmm ... SCSI drivers for which performance matters shouldn't use the 
+SCSI host lock in their hot path.
 
-> If so, are there files which do trigger context analysis compiler
-> warnings?
-Yes, multiple. All code changes and lock context annotations added by
-this patch series are necessary to make all SCSI drivers build without
-triggering lock context analysis compiler warnings:
-"[PATCH v3 00/57] Enable lock context analysis for the SCSI subsystem"
-(https://lore.kernel.org/linux-scsi/cover.1785451174.git.bvanassche@acm.org/)
+ > @Bart, Can you kindly build test this? s390 and sh were causing some 
+build
+ > issues for me. Thanks
 
-Thanks,
+This patch passes my build tests, but an update for the references to
+default_lock in the Documentation/ directory is missing.
 
-Bart.
+Otherwise this patch looks good to me. So with or without the
+Documentation/ update, feel free to add:
+
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
