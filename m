@@ -1,33 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F0DC1A6814;
-	Thu,  6 Aug 2026 16:30:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75D7C3624C2;
+	Thu,  6 Aug 2026 16:36:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786033839; cv=none; b=Xot+f/3N/IYraCvsipJ+1o72q1idUscGPFfN7xgs4WVVqWvsoASva/CONEgi6281V9pTyE0Yxv4cFcCVtQ7v0acY/xlXz/jMGE4qaPHNSQZCYkg/otKR8h2mWPzz1RTzuBlr7Sf0N2NwXqARNT8XIXT4CgwEOCjm5I01N1YqC44=
+	t=1786034205; cv=none; b=tpGLpzM+x6vFCjWu+SH+351RDrCohPdkSD30h3rLcKk22SWguIef/mhV9etZuk5jI+p0KADoURWmDXEMNANmP02T/EtNI70dkFx8cBbk3kuk7h3e8+J9AIGEsfE72g+PnLgICm7ltMGjVfKSVBJ24hAqXMQG25fJJHBWPMUfoqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786033839; c=relaxed/simple;
-	bh=APATeCcIeGDguQSdzxOjS3PWeB2DXRBJvUcZuBpk4es=;
+	s=arc-20240116; t=1786034205; c=relaxed/simple;
+	bh=swJm/Dw/JOvxaAnk7CNqyN4lTnj2yTaK3u5nw5/9WVU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=C245RwwYL+F+fe2Vadm4xptqX3Eh5yOEX95COGmVNhk1FSwRzrH/g3VTiyrEQiRo7KJurX2FVwUodbwgADyfICbjOyAYPfbU5XjekaaItvOwD01U+tQBIpeIKS2cS2YglBOTlrsMU8XcNfBSH8kV+y9IL0Q5B1zOnwn6AXmpE4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQk45cNz; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=Piu7UM7+2UdTW7c0pNtQWj89TZE2rvWYLRFphPvZNzWwfJWt8VNI6p9qmle6hsR18LQ7Q+kho2EPSeo5YRbJH84T2TpL8D7EF/Cz5CDAlas1b+xnIijWQSWOjrCO3fv5kphQdZcKB52Xecl4xrFIPY8eGmhcgjKW0KE2muo99Jc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Y9hJ26Zt; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQk45cNz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E651C1F000E9;
-	Thu,  6 Aug 2026 16:30:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786033838;
-	bh=5N643OcZ6TKjcgSUXv0mk+FEk5LRIN0olw3gyMmc8Ow=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=nQk45cNzbKYZ+bNorwbh3f0Q7tR7Z3+HV5CIQ3MQDGfI4LAP2RUlFD9jGgIkkBFLS
-	 syPZ+NKhtOd/jVqIjQQJ1rOeMRrF/vSeOrIll1V3sPCoxuVLnx4NNbJGd4dFy63Tth
-	 oUx2iStVPA1S/NEyxFaI1HviKL8aEqLkiA1depBAp9Oly8jFut1bHTFcKKtcCkCqLX
-	 LtK8ElpNlzi0pJDm87Uuwi4ioI61DjdflBnBZJJtP+/VTp9hjw8aDu5DPUdmaaHxKX
-	 o6TGURv5D+v37GYyRvMMEMkuB1BHsjJZ2aTblxb4O7NtJL5q2whlGBt3cE8FbckVLf
-	 dHcFy1qHNUdYw==
-Message-ID: <9bd395e3-5df4-4e13-886f-b1afeeb5d4a2@kernel.org>
-Date: Thu, 6 Aug 2026 09:30:34 -0700
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Y9hJ26Zt"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGCbb6cqJzlfwgF;
+	Thu,  6 Aug 2026 16:36:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1786034201; x=1788626202; bh=XFUrwPZaTMTFBb54CQcM2q7f
+	/BkecJBgoDXEJ6mySYg=; b=Y9hJ26ZtRKR1gTczwh8IM8X7cib41SzFwmWhOjjG
+	UYxYP9X2jqXGNZs2zpzVcqxmf/XeEtAqvdPU+m9Kx0ZNbnBJsZBOsj4k0l9L5Qff
+	Odtl8iXnqa+dwSkTcDNloHO3D5dtXG1XXPH39yewB6PvDfG7guM6av0ySt6wPxdb
+	PPfZNl8OAAZuaUezHnvW32yJ8LGc7KH3i0Yu0o+uQcOOam7SusfDsiXhsPNo0heh
+	uo5suAU/o59isuzzFNQdHU2e+ALc8c0g1+Bfz6yMigRKBda3c5TlpevItOBOq+3U
+	LWuXMZnvknCqQKjqC+5/ITGINZfqBcp9jz/j6ThA/79zMg==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id FEfK0LDoJjkz; Thu,  6 Aug 2026 16:36:41 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGCbW4QHwzlfpLt;
+	Thu,  6 Aug 2026 16:36:39 +0000 (UTC)
+Message-ID: <7506e54b-8c5d-48e1-8d1b-59bab17cb4fc@acm.org>
+Date: Thu, 6 Aug 2026 09:36:38 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,45 +50,35 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: core: Drop Scsi_Host.default_lock
-To: John Garry <john.g.garry@oracle.com>,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org,
- linux-s390@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-usb@vger.kernel.org, John Garry <john.garry@linux.dev>
-References: <20260806113958.3127942-1-john.g.garry@oracle.com>
-From: Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH 0/2] scsi: zfcp: Enable CONTEXT_ANALYSIS
+To: Heiko Carstens <hca@linux.ibm.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Nihar Panda <niharp@linux.ibm.com>
+Cc: linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20260806134759.2122369-1-hca@linux.ibm.com>
 Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20260806113958.3127942-1-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260806134759.2122369-1-hca@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 2026/08/06 4:39, John Garry wrote:
-> From: John Garry <john.garry@linux.dev>
+On 8/6/26 6:47 AM, Heiko Carstens wrote:
+> Enable CONTEXT_ANALYSYS for the zfcp driver.
 > 
-> Back in the 2.6.xx days, it was possible to for low-level drivers to set
-
-s/to for/for
-
-> the shost lock pointer. That is why there is a default lock and a pointer
-> to the shost lock.
+> Static code checking for acquiring and releasing locks used to be done
+> with sparse. That was removed with [1] and replaced with a clang based
+> approach [2]. The new approach requires that each subsystem needs to be
+> explicitly enabled for checking.
 > 
-> However, support for this has long been removed, so drop
-> Scsi_Host.default_lock and make Scsi_Host.host_lock as the actual lock.
-> 
-> Getting the address of embedded host_lock structure just requires adding
-> a fixed offset value to the shost pointer. However, getting the value of
-> the host_lock pointer requires loading from a fixed offset to the shost
-> pointer. The latter should be very slightly slower, which is relevant as
-> this lock is used a lot throughout the core code and drivers.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-For the ata bits,
+> Do that for drivers/s390/scsi. Add a __must_hold() attribute to
+> zfcp_qdio_sbal_get() to address the only valid warning. Then enable
+> CONTEXT_ANALYSIS, similar to other patches for drivers/s390 I'm currently
+> working on.
 
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
+These two patches could have been combined into a single patch. Anyway,
+both patches look good to me.
 
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+
+Bart.
