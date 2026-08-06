@@ -1,111 +1,247 @@
-Received: from sender-of-o57.zoho.eu (sender-of-o57.zoho.eu [136.143.169.57])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 314273EC6B5;
-	Thu,  6 Aug 2026 20:23:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.57
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786047835; cv=pass; b=bD4w5egK93YAwiy2Pwahpv0SKUOUAfRfs/wONa5BUyKlWq+sQWhFrmBrM4VgaPiBGRSPJKqWTDjeIBdSdqbKh91qI7s67JJGuCQIByBJPr51ieWEZ6ZoH9hctP2sr1aOMcVMAcsu6Ho0pBd5ruPojv+CFUJszvyTYkhWCfp3Oc0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786047835; c=relaxed/simple;
-	bh=mbBlgjmVN5cUBifkjEgEyu0GUSFJxXbX0rZg7Nb6EF8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=vAZxMikj2WK/LSZ8RWkYBzIbEb4FHp1Jsw8rJxUPMd+ARQ9Q7OCj4s33Ag+9QHcwap5+yI5tFqZklsHWu9RlMOQ2S4UEzJHjpC1JfAeAM/C7UnTpQzAbulUtZBUZ8sTaqqDFaUZa7GxnHIT0OP5BkqxhXw7lF3X3qu3DprRCQlQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=iusegentoo.com; spf=pass smtp.mailfrom=iusegentoo.com; dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b=NXNeZJTJ; arc=pass smtp.client-ip=136.143.169.57
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=iusegentoo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iusegentoo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EA1348F85B
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 20:38:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786048694; cv=none; b=D5HbDfQTUNkSWNeaHyl7sb0erF1MBgvKNEJTnYfQVvDj+AzIg0RMhk1Z9YbmhySm0TQjLcka9vV0EQSpmcTKkazO9hqzUQbU//tB7pBTWdMdQJoFyGjDlxDY7nFWWGz6lR/1RChXkNsCFc0Lzy66Jwu6Uehj9hOSht9j/qEhJdY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786048694; c=relaxed/simple;
+	bh=lgDMAjhesqYIGKofv1Vd9l8WLC5T7f2LmBH1egJTZjg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ROQShDnmU4CL7qnC1XdeLWKPPKbbpYQOh7T4mujBNkXOVfHp4oMYFrhpIg5pHB96bpMSJCLQU1FmCapRPhsn4Yancv6RuY42Sr66OUEp/mPSYSIoo4MO+wB32yauvh5crsQHtODv+GewpWRJRT/cxKezPZujBk29YlStpunq1Wg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FklXSXgy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b="NXNeZJTJ"
-ARC-Seal: i=1; a=rsa-sha256; t=1786047822; cv=none; 
-	d=zohomail.eu; s=zohoarc; 
-	b=BmyrcAGGlYYHM7NXeI7bwxRCVZS2NDr5miLmbS3ZtkRnBfsWCm0ECCXQs1wWkMg0c5Zb7jwpEAUS85+qFAzEMZV8d5brb4ruRLwcfxUREAw8FZhO1UsuknS4yjBufjrsT//lMFw2fxw37BN+cZEbthDlUacbCoZnGPmtU9KfW7k=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1786047822; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=4sPAix17R1RQ+ZPo4cVzETgK7IB/8stOZkQGjf8f7t8=; 
-	b=AckbvBNtnpMEevSrbA30n4sGQYxZvhR60Ncpb55U0r+xa9BeWQTWdwVezioMfOuzi7+2SDv0z12O/vImlYPGkZktGqqoAJbMmw7LM8XH2USVzeTfDI+a5cyLFrvgitb9n9TwF8d2EtFueXJmxXDUDDAD3BhCuV3FWXIhD/NjxEQ=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-	dkim=pass  header.i=iusegentoo.com;
-	spf=pass  smtp.mailfrom=ali@iusegentoo.com;
-	dmarc=pass header.from=<ali@iusegentoo.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1786047822;
-	s=zmail; d=iusegentoo.com; i=ali@iusegentoo.com;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=4sPAix17R1RQ+ZPo4cVzETgK7IB/8stOZkQGjf8f7t8=;
-	b=NXNeZJTJx3e4+IHimTz4WSCHNTyty8wUeUlo8OQqqWheVKh3Wj09cHEIcZhFNZs2
-	9qP4pF086ebf/n+Cc7YzEQiR4TWtfCwr3xl9FBdttSATITWkCcSnOAJDKIAIJNhVoKI
-	KxLbIa0QvaG2JgliTZiOidGnw3ZqAuZ93Loe4x8w=
-Received: by mx.zoho.eu with SMTPS id 1786047819355837.1434305723302;
-	Thu, 6 Aug 2026 22:23:39 +0200 (CEST)
-From: Ali Ahmet Memis <ali@iusegentoo.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	Ram Vegesna <ram.vegesna@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 4/5] scsi: elx: efct: free the RQ buffers already allocated when one fails
-Date: Thu,  6 Aug 2026 20:22:04 +0000
-Message-ID: <20260806202205.345326-5-ali@iusegentoo.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260806192345.328621-1-ali@iusegentoo.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FklXSXgy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BF171F000E9;
+	Thu,  6 Aug 2026 20:38:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786048691;
+	bh=LjdQdVLFzjpV0NEgvhMsxNxfZ+W/7OEE+aCCmZ9nyRs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=FklXSXgydLepqdOM/anWsnvTCw+8TaB6Cpi1Jzo5WDF//JgW4h2s+6yaPo4Kxuuxe
+	 o3Vh6zv0mD3rNgrydskChe6RT57+9m6Tq2Sl0QdRSjbbuhog2RpWHV4bRyd6xnlOnx
+	 4BKi5ONPlXyA4h3+vBMUCNIn02IEfcAP1UsCiJggfwB3kE7Lq0jsZ+Ltwe6VzuIl+D
+	 VjkLfEw5aZVo7UZ7HODDkz/XZ2++tk4ilENmi1kcVgcLlyixuztV7RCeszbGrQ0H0r
+	 jGCTu7BBCW/WyIt8v7emZAv+KxFFHfK/uDsUSIfAz31O8NYRt+rptJhcq6Rpd0YmC5
+	 ufqd6sB2kcwIw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 4/5] scsi: elx: efct: free the RQ buffers already
+ allocated when one fails
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ali Ahmet Memis" <ali@iusegentoo.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260806202205.345326-5-ali@iusegentoo.com>
 References: <20260806192345.328621-1-ali@iusegentoo.com>
+ <20260806202205.345326-5-ali@iusegentoo.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 06 Aug 2026 20:38:10 +0000
+Message-Id: <20260806203811.2BF171F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-ZohoMailClient: External
+
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+s) to consider:
+
+Pre-existing issues:
+- [High] Extensive memory and DMA buffer leaks on device probe and initiali=
+zation error paths.
+- [High] Double-free and use-after-free vulnerability on the error path of =
+efct_hw_new_rq_set().
+- [High] Unsafe teardown of stats_timer leading to Use-After-Free and timer=
+ wheel corruption.
+- [High] Invalid use of `timer_setup()` within the timer callback.
+- [High] Error path in efct_hw_setup_io() leaks successfully allocated hw->=
+io[i] inner objects.
+--
+
+--- Patch [4]: [PATCH v2 4/5] scsi: elx: efct: free the RQ buffers already =
+allocated when one fails ---
+commit be8b053b462b939279de3cc82f2caf1d37ac0767
+Author: Ali Ahmet Memis <ali@iusegentoo.com>
+
+scsi: elx: efct: free the RQ buffers already allocated when one fails
 
 efct_hw_rx_buffer_alloc() allocates an array of descriptors and then a
 coherent DMA buffer for each entry. When one of those allocations fails it
 frees the array and returns NULL, leaving every buffer allocated before it
-mapped:
+mapped. This commit uses efct_hw_rx_buffer_free() for the entries that
+were filled in to fix the leak.
 
-	if (!prq->dma.virt) {
-		efc_log_err(hw->os, "DMA allocation failed\n");
-		kfree(rq_buf);
-		return NULL;
+> diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct=
+_hw.c
+> index db68516e80750..d645ce256b8aa 100644
+> --- a/drivers/scsi/elx/efct/efct_hw.c
+> +++ b/drivers/scsi/elx/efct/efct_hw.c
+> @@ -1170,6 +1170,10 @@ efct_get_wwpn(struct efct_hw *hw)
+>  	return get_unaligned_be64(p);
+>  }
+> =20
+> +static void
+> +efct_hw_rx_buffer_free(struct efct_hw *hw, struct efc_hw_rq_buffer *rq_b=
+uf,
+> +		       u32 count);
+> +
+>  static struct efc_hw_rq_buffer *
+>  efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqindex, u32 count,
+>  			u32 size)
+> @@ -1196,7 +1200,7 @@ efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqi=
+ndex, u32 count,
+>  						   GFP_KERNEL);
+>  		if (!prq->dma.virt) {
+>  			efc_log_err(hw->os, "DMA allocation failed\n");
+> -			kfree(rq_buf);
+> +			efct_hw_rx_buffer_free(hw, rq_buf, i);
+>  			return NULL;
+>  		}
+>  	}
+
+[Severity: High]
+This is a pre-existing issue, but does this error path still leak memory?
+
+In efct_hw_rx_allocate():
+
+	if (!rq->hdr_buf) {
+		efc_log_err(efct, "rx_buffer_alloc hdr_buf failed\n");
+		rc =3D -EIO;
+		break;
 	}
 
-The caller only sees NULL and the array that held the addresses is gone,
-so nothing can free them afterwards. efct_hw_rx_free() cannot help either,
-it walks rq->hdr_buf and rq->payload_buf, which are only assigned once this
-function succeeds.
+If efct_hw_rx_buffer_alloc() fails for any queue index, it breaks the loop
+and returns -EIO, but it appears to leak all hdr_buf and payload_buf DMA
+buffer arrays that were successfully allocated in previous iterations.
 
-Use efct_hw_rx_buffer_free() for the entries that were filled in.
+Furthermore, in efct_hw_init():
 
-Fixes: 580c0255e4ef ("scsi: elx: efct: RQ buffer, memory pool allocation and deallocation APIs")
-Signed-off-by: Ali Ahmet Memis <ali@iusegentoo.com>
----
- drivers/scsi/elx/efct/efct_hw.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+	rc =3D efct_hw_rx_allocate(hw);
+	if (rc) {
+		efc_log_err(hw->os, "rx_allocate failed\n");
+		return rc;
+	}
 
-diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
-index db68516e8075..d645ce256b8a 100644
---- a/drivers/scsi/elx/efct/efct_hw.c
-+++ b/drivers/scsi/elx/efct/efct_hw.c
-@@ -1170,6 +1170,10 @@ efct_get_wwpn(struct efct_hw *hw)
- 	return get_unaligned_be64(p);
- }
- 
-+static void
-+efct_hw_rx_buffer_free(struct efct_hw *hw, struct efc_hw_rq_buffer *rq_buf,
-+		       u32 count);
-+
- static struct efc_hw_rq_buffer *
- efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqindex, u32 count,
- 			u32 size)
-@@ -1196,7 +1200,7 @@ efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqindex, u32 count,
- 						   GFP_KERNEL);
- 		if (!prq->dma.virt) {
- 			efc_log_err(hw->os, "DMA allocation failed\n");
--			kfree(rq_buf);
-+			efct_hw_rx_buffer_free(hw, rq_buf, i);
- 			return NULL;
- 		}
- 	}
--- 
-2.55.0
+It returns early on nested allocation failures without cleaning up its own
+previous local allocations.
 
+Finally, in efct_xport_initialize():
+
+	rc =3D efct_hw_init(&efct->hw);
+	if (rc) {
+		efc_log_err(efct, "efct_hw_init failure\n");
+		goto out;
+	}
+
+It jumps directly to out: on efct_hw_init() failure, skipping the hw_init_o=
+ut:
+label where efct_hw_teardown() is called. This seems to leak hardware
+resources initialized during efct_hw_setup() and efct_hw_init() when the pr=
+obe
+fails.
+
+
+[Severity: High]
+This is a pre-existing issue, but can this error path lead to a double-free?
+
+In efct_hw_new_rq_set():
+
+	list_add_tail(&rqs[i]->list_entry, &cqs[i]->q_list);
+	size =3D sizeof(struct efc_hw_sequence *) * rqs[i]->entry_count;
+	rqs[i]->rq_tracker =3D kzalloc(size, GFP_KERNEL);
+	if (!rqs[i]->rq_tracker)
+		goto error;
+
+If kzalloc() fails, it jumps to the error label:
+
+error:
+	for (i =3D 0; i < num_rq_pairs; i++) {
+		if (rqs[i]) {
+			kfree(rqs[i]->rq_tracker);
+			kfree(rqs[i]);
+		}
+	}
+
+This frees rqs[i] but does not remove it from the cqs[i]->q_list. The funct=
+ion
+then returns -EIO, triggering efct_hw_queue_teardown(hw), which calls
+efct_hw_del_rq():
+
+	list_del(&rq->list_entry);
+	hw =3D rq->cq->eq->hw;
+	hw->hw_rq[rq->instance] =3D NULL;
+	kfree(rq);
+
+The teardown iterates over the list, dereferences the already freed rq obje=
+ct,
+calls list_del() on it, and then calls kfree(rq) again. Does this double-fr=
+ee
+the object and corrupt the list?
+
+
+[Severity: High]
+This is a pre-existing issue, but is the teardown of stats_timer safe here?
+
+In efct_xport_detach():
+
+	if (timer_pending(&xport->stats_timer))
+		timer_delete(&xport->stats_timer);
+
+If the timer callback efct_xport_stats_timer_cb() is actively running on
+another CPU, timer_pending() might return false. Even if timer_delete()
+is called, it does not wait for the concurrent callback to finish.
+
+This could allow efct_xport_detach() to proceed and eventually free the xpo=
+rt
+object while the timer callback is still executing. The callback would then
+access the freed xport memory and call mod_timer(), inserting a freed timer
+structure back into the kernel's active timer wheel. Should this
+unconditionally use timer_delete_sync() without the timer_pending() check?
+
+
+[Severity: High]
+This is a pre-existing issue, but is it correct to call timer_setup() here?
+
+In efct_xport_config_stats_timer():
+
+	timer_setup(&xport->stats_timer,
+		    &efct_xport_stats_timer_cb, 0);
+	mod_timer(&xport->stats_timer,
+		  jiffies + msecs_to_jiffies(timeout));
+
+This function is called both for initial setup and from within the timer
+callback itself (efct_xport_stats_timer_cb()) to re-arm the timer.
+
+Calling timer_setup() on a timer that is actively being processed by the ti=
+mer
+subsystem resets the structure, clearing list pointers and lock-related fie=
+lds.
+Does this destroy the active timer structure and lead to kernel state
+corruption?
+
+
+[Severity: High]
+This is a pre-existing issue, but does this error path leak the inner IO
+objects?
+
+In efct_hw_setup_io():
+
+	hw->wqe_buffs =3D kzalloc((hw->config.n_io * hw->sli.wqe_size),
+				GFP_KERNEL);
+	if (!hw->wqe_buffs) {
+		kfree(hw->io);
+		return -ENOMEM;
+	}
+
+If the allocation for hw->wqe_buffs fails, the code frees the outer hw->io
+array and returns -ENOMEM. However, it appears to completely skip the loop =
+in
+the error block that frees the individual hw->io[i] objects allocated prior=
+ to
+this, which would permanently leak them.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806192345.3286=
+21-1-ali@iusegentoo.com?part=3D4
