@@ -1,106 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DBC9382F15;
-	Thu,  6 Aug 2026 04:39:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D4671D9663;
+	Thu,  6 Aug 2026 05:48:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785991151; cv=none; b=H3Sd20WqXiPqmaYsvnVtVtth5ARgzLbzIvxnTLNxGheOpWt85kz0bPrSxzG9sg465iObjj3TiDKXM3tSzLOaZoUZi1Fkd0mJvQ9NP4h2UQ/rTlh6jbJQLaNt/2wiRZYrSabNNVTA/RzLrU5LvRTNmsODt7WwioR8WtEkB1FZFjU=
+	t=1785995335; cv=none; b=IBY+HzBOP3qb/4SSUf2Urm9/9x/4A9173w8LpgLcucF8Np2a5MTTTkuzyMGvigELBhk7dcVFDi6DHsJszG8TvkTiZDW+VQUTYZznpBkLAHFeD+Ecg2N9ZlMlmNgW3ZIJ6+x8VEDZ6miUsvv/MhCS+74yJsaepRCRizRqkj7nU+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785991151; c=relaxed/simple;
-	bh=DbWC5oTvQzH86ZVRTJAAZy7ZxiNZbfKbHnsmXFcfD88=;
-	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
-	 Message-Id:Subject; b=kCnsZgxtK9rynrnWVt074oGzZU0L+qXzbhK4zoyYWOVylhkRC+PzVM4B8feBqgKbiwv21kGiysrBwAGW6Az2gS8wJeQZu79LGDkH0Rz8010z6xibNWQh2e0vrYcp2xurz2PeoZBYbxjgMmqVHmwQxON1TK+YNpNd4oAR0RrqZ5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ELIcMt+i; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785995335; c=relaxed/simple;
+	bh=eR4P+V9jnFW3OGh2xSOpQLhxNr4KUzaSDuzW7l2ksBY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=OBZpBMbHOCdkBFhLBfRHCsL+x91TvnC3Bg9vEmjThuzw64UL3mkk57nsqsU0Cv4TzZ6nRAEd/4TT67Qk2H5IRPEWfD/ShNSekJeQOiRwPzjFITKnYPRc//OH/Fv9BNRcljLQM4xhvXOtqFwF/vWQppfQ+LTtDqFHOla3fRCAnak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=YszmQctY; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ELIcMt+i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1E041F000E9;
-	Thu,  6 Aug 2026 04:39:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785991150;
-	bh=85i0AXt6sCXn1q2thPdJFckEuCv/5TVwacAUp/k4SQk=;
-	h=Date:From:Cc:To:In-Reply-To:References:Subject;
-	b=ELIcMt+iX8oyqWp+t39x854MB2hi65pUKoR+arELehyykuMEkum1EfaSUFjYebixB
-	 RN8ohC0Bhi2umkm/8xFyXWEZfD707UaguyTpqM7OKfM5FayVRasqI2bevwcYHDS/MM
-	 dQ14jur+wDUDlcxYhkSnCeINh+Y1buspDbPQ9Pd040NzH1U0yVeOzgKC2IkT+W3/v8
-	 HWMuzO1/Uir63zS6C5qgd6FhA9kzFsG3Jk3M4utXPLouK1wR/yOleXRW+LA7oAmt7L
-	 gNB5qf9x2yFbtGTR++WQuYECHYyE+CoBfhuAIU4BCRoAHHiUTUJcdzTvnTsm3ToqhG
-	 aPVz2LYdUmTNA==
-Date: Wed, 05 Aug 2026 23:39:09 -0500
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="YszmQctY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=CP
+	aaxY7dcgaMnSa3hBTvaMHgHF/iEN3FHumqoLd+74g=; b=YszmQctYcNFUv/tzvC
+	XFrGSVJQcqvPDpJCzKs1hZsz03cAChK6BcWy93Sz3q3FpgAeWw1JT3gPx5ia32P9
+	9BTdo5U0nC4rAwwiHblFXjm1Y7DSXI3fNANMdK7ieIjEWmmwOmvlempOwXnEenlI
+	Sk3C6lH/6jtYA9N4E6Vh/2Wk0=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wA3rhgoIHRqVXB8OA--.9908S2;
+	Thu, 06 Aug 2026 13:48:24 +0800 (CST)
+From: ghuicao@163.com
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	Dmitry Bogdanov <d.bogdanov@yadro.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	Kees Cook <kees@kernel.org>,
+	Cao Guanghui <caoguanghui@kylinos.cn>
+Subject: [PATCH] scsi: target: iscsi: Reject Extended CDB AHS when CDB size exceeds AHS length
+Date: Thu,  6 Aug 2026 13:48:20 +0800
+Message-Id: <20260806054820.75950-1-ghuicao@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Alexandre Ghiti <alex@ghiti.fr>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, 
- linux-scsi@vger.kernel.org, Avri Altman <avri.altman@sandisk.com>, 
- spacemit@lists.linux.dev, Palmer Dabbelt <palmer@dabbelt.com>, 
- linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org, 
- Paul Walmsley <pjw@kernel.org>, Aurelien Jarno <aurelien@aurel32.net>, 
- Albert Ou <aou@eecs.berkeley.edu>, Bart Van Assche <bvanassche@acm.org>, 
- Alim Akhtar <alim.akhtar@samsung.com>, 
- Jennifer Berringer <jberring@redhat.com>, devicetree@vger.kernel.org, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- Philipp Zabel <p.zabel@pengutronix.de>
-To: Yixun Lan <dlan@kernel.org>
-In-Reply-To: <20260806-08-k3-ufs-support-v3-1-037fb322acdb@kernel.org>
-References: <20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org>
- <20260806-08-k3-ufs-support-v3-1-037fb322acdb@kernel.org>
-Message-Id: <178599114910.179339.15914924366340132471.robh@kernel.org>
-Subject: Re: [PATCH v3 1/3] scsi: ufs: spacemit: dt-bindings: Add UFS
- controller for K3 SoC
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wA3rhgoIHRqVXB8OA--.9908S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGFy8JrykWw4kuF1rXr1DKFg_yoW5Xw1xpF
+	4qgw10yrZYg3yxCwnxAa1YqryYqan5GFyjka43K34DuwnxJFyIgFyYga4agay5Jan2gFy3
+	Kan0vFyrGr4UGw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U_3k_UUUUU=
+X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC4AnJXGp0ICksyQAA3O
 
+From: Cao Guanghui <caoguanghui@kylinos.cn>
 
-On Thu, 06 Aug 2026 02:56:18 +0000, Yixun Lan wrote:
-> Document the compatible for UFS (Universal Flash Storage) Host Controller
-> which found in SpacemiT K3 SoC chip. Its features are listed below:
-> 
-> - Compliant with MIPI UniPro v1.61 specification.
-> - Compliant with M-PHY v3.0 specification.
-> - Compliant with UFS HCI v2.1 specification.
-> - Supports up to 2 Tx and 2 Rx lanes, up to HS-GEAR3 5.8 Gbps per lane.
-> - Supports standard low-power hibernate to reduce power consumption.
-> 
-> Signed-off-by: Yixun Lan <dlan@kernel.org>
-> ---
->  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml | 56 ++++++++++++++++++++++
->  1 file changed, 56 insertions(+)
-> 
+In iscsit_setup_scsi_cmd(), the Extended CDB AHS path allocates the CDB
+buffer using only the iSCSI AHS-declared length. The buffer is then
+handed to target_cmd_init_cdb(), which re-derives the CDB length from
+the SCSI opcode via scsi_command_size(). For a VARIABLE_LENGTH_CMD
+(0x7f) the size is cdb[7] + 8, where both cdb[0] and cdb[7] come
+verbatim from the initiator-controlled hdr->cdb. The AHS-declared length
+and the opcode-declared length are never cross-checked.
 
-My bot found errors running 'make dt_binding_check' on your patch:
+An initiator can thus advertise a minimal AHS (ahslength = 1, which
+passes the !ahslength and ahslength > hlength*4 - 3 checks added by
+commit 2f3835771dff ("scsi: target: iscsi: reject invalid size Extended
+CDB AHS") while setting cdb[0]=0x7f and cdb[7]=252. This yields a
+16-byte kmalloc but scsi_command_size() returns 260, so
+target_cmd_init_cdb() reads 260 bytes from a 16-byte heap object, a heap
+out-of-bounds read. The leaked bytes are later parsed as the CDB and can
+be indirectly observed by the initiator through sense data and
+responses.
 
-yamllint warnings/errors:
+commit 2f3835771dff ("scsi: target: iscsi: reject invalid size Extended
+CDB AHS") fixed the zero-length ahslength overflows and the AHS-buffer
+overread, but did not cover the orthogonal "allocation size vs.
+opcode-declared size" path. Reject the command when the opcode-declared
+CDB size exceeds the AHS-provided length, before the kmalloc.
 
-dtschema/dtc warnings/errors:
-Lexical error: Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.example.dts:31.36-55 Unexpected 'CLK_APMU_UFS_REFCLK'
-FATAL ERROR: Syntax error parsing input tree
-make[2]: *** [scripts/Makefile.dtbs:140: Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.example.dtb] Error 1
-make[2]: *** Waiting for unfinished jobs....
-make[1]: *** [/builds/robherring/dt-review-ci/linux/Makefile:1669: dt_binding_check] Error 2
-make: *** [Makefile:248: __sub-make] Error 2
+Fixes: 8f1f7d297bce ("scsi: target: iscsi: Add support for extended CDB AHS")
+Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
+---
+ drivers/target/iscsi/iscsi_target.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.kernel.org/project/devicetree/patch/20260806-08-k3-ufs-support-v3-1-037fb322acdb@kernel.org
-
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 62ada3a52210..e3e9254df960 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -1124,6 +1124,19 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+ 
+ 		cdb_length = ahslength - 1 + ISCSI_CDB_SIZE;
+ 
++		/*
++		 * The CDB buffer is later re-parsed by scsi_command_size() based
++		 * on its opcode, which may claim a length larger than the AHS
++		 * provided. Reject such a mismatch before allocating to avoid
++		 * an out-of-bounds read of the CDB buffer in target_cmd_init_cdb().
++		 */
++		if (scsi_command_size(hdr->cdb) > cdb_length) {
++			pr_err("Extended CDB AHS: SCSI command size %u exceeds AHS-provided CDB length %u, protocol error.\n",
++			       scsi_command_size(hdr->cdb), cdb_length);
++			return iscsit_add_reject_cmd(cmd,
++				ISCSI_REASON_PROTOCOL_ERROR, buf);
++		}
++
+ 		cdb = kmalloc(cdb_length, GFP_KERNEL);
+ 		if (cdb == NULL)
+ 			return iscsit_add_reject_cmd(cmd,
+-- 
+2.34.1
 
