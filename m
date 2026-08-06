@@ -1,41 +1,41 @@
 Received: from sender-of-o57.zoho.eu (sender-of-o57.zoho.eu [136.143.169.57])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 291E73DA7C8;
-	Thu,  6 Aug 2026 21:07:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 802D740759D;
+	Thu,  6 Aug 2026 21:07:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.57
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786050432; cv=pass; b=HAeFtANtR/eNpsZ/qNVjQKrMRJaTwPDfOtMygutG02EQavcCn6sfSTpv7B6My2XfXTEidE1sVwL39Kbi3c625NDIl/8cQlGK+idVC3GWjOg5OU3KFQZAbRnxFY3RPDhJ8QV5WnEMis1PX/WBKMpTD8SxXrTyase39y4JmGjviU4=
+	t=1786050432; cv=pass; b=eqCkd7SGHUZJrEtkE6W75RCV/i6dQRN1fr7w3LQKgTQWCGrxVQ9RF5E/9ECZAUXHlJMEC9s07MbxDXbQzYZQQ86BB8galbniHA59p5CjXopv3OgHXDodkB8PMW7X8g0QLdcSbKlNmGubeUWf5zO25leNCwoagBQXu2DRaOs0rRA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1786050432; c=relaxed/simple;
-	bh=8f06+zsj7520UiSjeBQZhCl23RqfsDPKxx5pTXd2XoE=;
+	bh=iMtKZ68a+ubbhwo0q4OKtISspanP36uJpzOhDWZ0tnE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VEob2q+kdZ40h8tac6W5LzmB06UJVEN7jM3NaQp+RDLTPnye0FSCb+Gs6Wpvj+smrAHjoAgtBA8apdAEAJQ32FRgJkumN0NXMYMb76h63XnoSBy7jSpwJOWpb3dsdOTFxvIPeKV9iJDI1chrt/r6LYMLADthc2lTohWIHlBPNns=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=iusegentoo.com; spf=pass smtp.mailfrom=iusegentoo.com; dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b=lmtj+xl/; arc=pass smtp.client-ip=136.143.169.57
+	 MIME-Version; b=JGMboPqcGo4Z3ouVC05oVqtl2mF/pR8p5d8oK43w6pz4axqGu+Q3TP0h1XatWfqEzpqlw6oCs9V7sdVrAsfn0V5uzaNVj09Z2rVFJHyNS4qE9+JepMqw/0txKQxqIhgjTstN/1QcClTpv0fgD3QpLsXvFT1VY7+QmYoqfIPWj9U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=iusegentoo.com; spf=pass smtp.mailfrom=iusegentoo.com; dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b=jZegdbSQ; arc=pass smtp.client-ip=136.143.169.57
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=iusegentoo.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iusegentoo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b="lmtj+xl/"
-ARC-Seal: i=1; a=rsa-sha256; t=1786050422; cv=none; 
+	dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b="jZegdbSQ"
+ARC-Seal: i=1; a=rsa-sha256; t=1786050423; cv=none; 
 	d=zohomail.eu; s=zohoarc; 
-	b=g5LFWZejkNqScZ+6phOaBb2eEYrrDaVdhL180B587xDtZ3U5od2wUPWReH6qLh66gtSvMIjr1G1+PcxcGtUct0FHLu1/4KycCX+o6gG8HkxGUufip4we4mXJtxmTN2R/SE1LV9HC6REzzcWogGWg8d5xfZjy1FWwXnj9MAuxtj0=
+	b=kr6rl66nBfI/k2e3JZOaIRmfEkDLJbCLBcy/0FG+eqYtcsOG17AeSeP3fyGSSNyYSFSWIduJqqRLB9lxt6N8rD059W2DbPN7K7ayqJ+kq4cTfiou44QpGHDhG//SX7Hfl/I1LV0fPwaCPUmVSOsgZFeeOR4VZNh9ZtY9qec+NKI=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1786050422; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=w7TQA3l+8+ahbtxiMgtKqEuaerlZ9HqD8/3KqW/iB6g=; 
-	b=HsdA5jXv97dNQqLDa95WhUwsUGLx3wuMX3htqDkD/LzAwhM1mIv715V3XO7vmA57vAUuBhSFEPwpe+Sv5jfoTMd+FHU5zrmJdSY7rfMWN8bU9AI0WPvlZNlfF/p1z/KtnwMbEZH3ED7+fGlDag/916XWOJJKX+qNol01QuxwGhc=
+	t=1786050423; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=vE0KwVzJzVTLYOOEFhJrNRLlcegrQcNMrNQJEwIiqwY=; 
+	b=AhWBdKl7usOu+2hApDcuKqlGQ68f9UUzRj8C86ErilYyhk2q+4+/7yp+UFAJsD7w8YyWXAIqxwSgsM0mnWsG8u4J8B2UCvd+UX+5g5BTdEkNAfzJx+5g2ihLc1RU1AHYXVXbv5CTg7r2jB0Tg6pIe4PZTZ+LhXNinWQFocF57+w=
 ARC-Authentication-Results: i=1; mx.zohomail.eu;
 	dkim=pass  header.i=iusegentoo.com;
 	spf=pass  smtp.mailfrom=ali@iusegentoo.com;
 	dmarc=pass header.from=<ali@iusegentoo.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1786050422;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1786050423;
 	s=zmail; d=iusegentoo.com; i=ali@iusegentoo.com;
 	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=w7TQA3l+8+ahbtxiMgtKqEuaerlZ9HqD8/3KqW/iB6g=;
-	b=lmtj+xl/d69J/iDp1xK2jwwpbegq8mG2b682Ct0WgMIj71ztQNxYp+8KtrmjWrTw
-	2cDVzIp086KB013wdL578FiunXM3eNzbR3pdUqG9f7Pl9WVxGzbZqp6vfGd/PMRcRi6
-	uFPtZXB1OsfUe0G9roNzBx8NfxJOzSI+znSxdnV0=
-Received: by mx.zoho.eu with SMTPS id 1786050420868376.48577423499034;
-	Thu, 6 Aug 2026 23:07:00 +0200 (CEST)
+	bh=vE0KwVzJzVTLYOOEFhJrNRLlcegrQcNMrNQJEwIiqwY=;
+	b=jZegdbSQgQ2RbASWjy7ldfx+z79Jbow7KXRiid5IZnGhhJEtmw+V6bJZPAEn8O3o
+	ICB+afpD+EDkyH7vKR5DJbqwLjYq0lMTzGl/6L4m9vYZgVo73Y9pJHs4CyQFYL8EowX
+	r1U+/ztMmSuEQywOn+A6ScfzITPbArhN0eGzzieQ=
+Received: by mx.zoho.eu with SMTPS id 1786050421801147.4987671240699;
+	Thu, 6 Aug 2026 23:07:01 +0200 (CEST)
 From: Ali Ahmet Memis <ali@iusegentoo.com>
 To: Ram Vegesna <ram.vegesna@broadcom.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -43,9 +43,9 @@ To: Ram Vegesna <ram.vegesna@broadcom.com>,
 Cc: linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 1/2] scsi: elx: efct: free the RQ buffers already allocated when one fails
-Date: Thu,  6 Aug 2026 21:06:26 +0000
-Message-ID: <20260806210631.357456-2-ali@iusegentoo.com>
+Subject: [PATCH v3 2/2] scsi: elx: efct: destroy the mailbox pools when setup fails
+Date: Thu,  6 Aug 2026 21:06:27 +0000
+Message-ID: <20260806210631.357456-3-ali@iusegentoo.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260806210631.357456-1-ali@iusegentoo.com>
 References: <20260806210631.357456-1-ali@iusegentoo.com>
@@ -58,56 +58,102 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-ZohoMailClient: External
 
-efct_hw_rx_buffer_alloc() allocates an array of descriptors and then a
-coherent DMA buffer for each entry. When one of those allocations fails it
-frees the array and returns NULL, leaving every buffer allocated before it
-mapped:
+efct_hw_setup() creates two mempools and then calls sli_setup(). Its error
+paths return without destroying what it already created:
 
-	if (!prq->dma.virt) {
-		efc_log_err(hw->os, "DMA allocation failed\n");
-		kfree(rq_buf);
-		return NULL;
-	}
+	hw->cmd_ctx_pool = mempool_create_kmalloc_pool(...);
+	if (!hw->cmd_ctx_pool)
+		return -EIO;
 
-The caller only sees NULL and the array that held the addresses is gone,
-so nothing can free them afterwards. efct_hw_rx_free() cannot help either,
-it walks rq->hdr_buf and rq->payload_buf, which are only assigned once this
-function succeeds.
+	hw->mbox_rqst_pool = mempool_create_kmalloc_pool(...);
+	if (!hw->mbox_rqst_pool)
+		return -EIO;
+	...
+	if (sli_setup(&hw->sli, hw->os, pdev, ((struct efct *)os)->reg))
+		return -EIO;
 
-Use efct_hw_rx_buffer_free() for the entries that were filled in. It
-unmaps those buffers and frees the array, and it is defined below
-efct_hw_rx_buffer_alloc(), so add a forward declaration.
+mempool_destroy() for these two runs only in efct_hw_teardown(), which is
+not reached here. efct_hw_setup() is called from
+efct_device_interrupts_required() and from efct_xport_attach(). On the
+probe path it is the first of those that runs, and when it fails
+efct_pci_probe() unwinds through efct_device_free(), freeing the struct
+efct that held the only pointers to the pools.
 
-Fixes: 580c0255e4ef ("scsi: elx: efct: RQ buffer, memory pool allocation and deallocation APIs")
+Destroy them on the way out, and clear hw_setup_called, which the function
+sets before the first allocation, so that a later call does not take the
+early return and hand the caller a half configured hw.
+
+Reproduced by binding the driver to a PCI device that is not an SLI-4
+adapter, so sli_setup() fails, and repeating the probe 61 times. Before,
+with CONFIG_DEBUG_KMEMLEAK:
+
+  unreferenced object 0xffff888008449680 (size 96):
+    comm "init", pid 1
+    backtrace:
+      __kmalloc_cache_node_noprof+0x3b9/0x430
+      mempool_create_node_noprof+0x78/0xe0
+      efct_hw_setup+0x1db/0xb50
+      efct_pci_probe+0x3cb/0x6dd
+      local_pci_probe+0xd4/0x170
+
+1566 objects in total, every one of them from efct_hw_setup(). After the
+change the same run reports none, and the probe still fails the same way.
+
+Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
 Signed-off-by: Ali Ahmet Memis <ali@iusegentoo.com>
 ---
- drivers/scsi/elx/efct/efct_hw.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/elx/efct/efct_hw.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
-index b79c6a7ea791..cc600220168a 100644
+index cc600220168a..20f4821078aa 100644
 --- a/drivers/scsi/elx/efct/efct_hw.c
 +++ b/drivers/scsi/elx/efct/efct_hw.c
-@@ -1170,6 +1170,10 @@ efct_get_wwpn(struct efct_hw *hw)
- 	return get_unaligned_be64(p);
+@@ -256,7 +256,7 @@ efct_hw_setup(struct efct_hw *hw, void *os, struct pci_dev *pdev)
+ 					sizeof(struct efct_command_ctx));
+ 	if (!hw->cmd_ctx_pool) {
+ 		efc_log_err(hw->os, "failed to allocate mailbox buffer pool\n");
+-		return -EIO;
++		goto not_setup;
+ 	}
+ 
+ 	/* Create mailbox request ctx pool for library callback */
+@@ -264,7 +264,7 @@ efct_hw_setup(struct efct_hw *hw, void *os, struct pci_dev *pdev)
+ 					sizeof(struct efct_mbox_rqst_ctx));
+ 	if (!hw->mbox_rqst_pool) {
+ 		efc_log_err(hw->os, "failed to allocate mbox request pool\n");
+-		return -EIO;
++		goto free_cmd_ctx_pool;
+ 	}
+ 
+ 	spin_lock_init(&hw->io_lock);
+@@ -277,7 +277,7 @@ efct_hw_setup(struct efct_hw *hw, void *os, struct pci_dev *pdev)
+ 	hw->config.speed = SLI4_LINK_SPEED_AUTO_16_8_4;
+ 	if (sli_setup(&hw->sli, hw->os, pdev, ((struct efct *)os)->reg)) {
+ 		efc_log_err(hw->os, "SLI setup failed\n");
+-		return -EIO;
++		goto free_mbox_rqst_pool;
+ 	}
+ 
+ 	efct_hw_link_event_init(hw);
+@@ -313,6 +313,17 @@ efct_hw_setup(struct efct_hw *hw, void *os, struct pci_dev *pdev)
+ 	(void)efct_hw_read_max_dump_size(hw);
+ 
+ 	return 0;
++
++free_mbox_rqst_pool:
++	mempool_destroy(hw->mbox_rqst_pool);
++	hw->mbox_rqst_pool = NULL;
++free_cmd_ctx_pool:
++	mempool_destroy(hw->cmd_ctx_pool);
++	hw->cmd_ctx_pool = NULL;
++not_setup:
++	hw->hw_setup_called = false;
++
++	return -EIO;
  }
  
-+static void
-+efct_hw_rx_buffer_free(struct efct_hw *hw, struct efc_hw_rq_buffer *rq_buf,
-+		       u32 count);
-+
- static struct efc_hw_rq_buffer *
- efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqindex, u32 count,
- 			u32 size)
-@@ -1196,7 +1200,7 @@ efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqindex, u32 count,
- 						   GFP_KERNEL);
- 		if (!prq->dma.virt) {
- 			efc_log_err(hw->os, "DMA allocation failed\n");
--			kfree(rq_buf);
-+			efct_hw_rx_buffer_free(hw, rq_buf, i);
- 			return NULL;
- 		}
- 	}
+ static void
 -- 
 2.55.0
 
