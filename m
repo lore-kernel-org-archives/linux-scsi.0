@@ -1,126 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A9E43264D5
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 15:38:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 759873B4E8F
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 15:45:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786030710; cv=none; b=kMD6A/THxtrR65FmaDaajW3qWzHQWDgrbH06VbRtil2ND5x3AMVdfz9TIIO5vtWTdh2v+D6HLGSWh/Srlyt6oTkNBLwSyvAxsqLTBFz5C9kjRv8Qv1xLSOBn8GYDtL6+bTsWPo5isv9UXGoy18VDKWHyZ3AhfiZdIZrJBq3lyn0=
+	t=1786031110; cv=none; b=mFPyw94jxUsd0Ef/f1+9LN64WhXaW3f0TQC1+4iYwy4+/BmGG++lgAnITsQ/mH1jXzPWvIHFTz1zhh9loCHpak4m4pQ4WAI+OdPcsJJy8EdrUZjDy9SgDYUAfBTcsjN0cXUwBymy1/mVGu3aX6XxR1tpECa2eQ0d97Tf5nBYvag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786030710; c=relaxed/simple;
-	bh=DrExcZL+ttFdxJC4LxV1pvEeQ0TuVdivmYbWHTfGtpE=;
+	s=arc-20240116; t=1786031110; c=relaxed/simple;
+	bh=wzziDTQ2F2paI2mYmoWTvI6/dlp7VOsMO9QuD2QXOnE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ALYLJVItpqvbwN+laeZZUeqdb5ZonDkXPxz3xOoq8UWAIphCEJXD9PZfkcMqHVQ83YbSB0Uwp5sWR6V7DWnUIo/4eFk4pDOdgGuzwUMmtSvoc0zUfs/CTyU4H+rsSoSyX9/CgVAaG1GtSW9ca4e6QvnREosoftAT0OoLwBuaqFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HXdEU8RA; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=OG/3PHzQ5FV4mu1EmLA407QgxY1mNMcXvtz9uNi7Oj7fc3APnGEv44kfDhA70B+kq4byGJ0evLkB/LbUhTRIuHhXzpAc0LYdaq7uesdp2Yq8ysc0sNEKgpd74flIxt8nLbam/R6oPNUI1wKc8JkH3rPp8End+bnVX7NLCtNUgTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QcCDKo1g; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HXdEU8RA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B281B1F000E9;
-	Thu,  6 Aug 2026 15:38:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QcCDKo1g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2E711F000E9;
+	Thu,  6 Aug 2026 15:45:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786030708;
-	bh=XSFVzE1lOJ6xFOAjxndSuUcOyRhuRtekTkujuuHRFfY=;
+	s=k20260515; t=1786031109;
+	bh=EjWMnOpQddUQkCU/UEhzPfRZtD6m8Wvy74fe9yI5IYQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HXdEU8RAZY/JZp1DxkcZPYextlooK/w7GKAQNsoc10gePW29s7XVBocFKHWha5/VF
-	 5MAChYkdBoBSvdIw6H7wc6jT3T3OclfYAQD9nSGiH4nd8hchQQMK+0PdF7bXYuonoI
-	 naa138euq1A58QwgjBZ5H4T96OsVxQKjgylsYRRiOUZEDuWEkTOqDVdzAzRySAf9hK
-	 NqzqmoJ9QcloXU12bLv5SDz2brUTJgIb496LX6Iqs93MfP2DEjLm4+yyU0hlt9eFPc
-	 Zn2hzabS35oU+j1JlGaAz+byNA7cFO0d5YtmU6YbwjAXKDUCqt68/RTOg+i3IB/mou
-	 DNanWstUJ9MrA==
+	b=QcCDKo1gLAvjSU2JWi97iWGhR1t4LP7B2oygC2KSnGR8M9PtcS29NNnXAk5jTfgR7
+	 AdVIb74M5uzHOT0Wm7l+LrcjAXoKe/2y7kJ5YvFer5J1XRDff8h/WI+wdK47Ct6VmQ
+	 y9YOUh2dk2tJFJIvGfvu8KRuxtl4NuMycEUAzu+jvgV3d0JN0wEEnhXONjczrr74j0
+	 x0HZnoVEKjnPmybY2Pa8l5Wqv1GyIy5aJ9N1FHkIRsJQfmmVwlbhZ0i7toUJ3A6bqj
+	 Ev1P6U/AyPlOcoXp0BbgxOX7WFtlHoY54uGOkO0M+ny94UwgTt/pdaPXVh32iNnuKJ
+	 M+pF1An9ZRiZw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 4/7] scsi: ibmvfc: allocate asynchronous sub-queue
+Subject: Re: [PATCH v5 2/7] scsi: ibmvfc: Add NOOP command support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260806-ibmvfc-fpin-support-v5-4-13fd6f8a8f8b@linux.ibm.com>
+In-Reply-To: <20260806-ibmvfc-fpin-support-v5-2-13fd6f8a8f8b@linux.ibm.com>
 References: <20260806-ibmvfc-fpin-support-v5-0-13fd6f8a8f8b@linux.ibm.com>
- <20260806-ibmvfc-fpin-support-v5-4-13fd6f8a8f8b@linux.ibm.com>
+ <20260806-ibmvfc-fpin-support-v5-2-13fd6f8a8f8b@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 15:38:28 +0000
-Message-Id: <20260806153828.B281B1F000E9@smtp.kernel.org>
+Date: Thu, 06 Aug 2026 15:45:08 +0000
+Message-Id: <20260806154508.D2E711F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Missing Setup and Registration (Dead Code / Incomplete Implementat=
-ion)
-- [High] Erroneous Per-Protocol Allocation of Asynchronous Sub-Queue
-- [Medium] Inefficient Resource Allocation for Async Sub-Queue
+
+Pre-existing issues:
+- [Critical] Dereferencing the unvalidated, hardware-provided pointer `evt`=
+ to access `evt->queue` before validating the pointer itself, which can lea=
+d to out-of-bounds access, kernel panic, or arbitrary memory write.
 --
 
---- Patch [4]: [PATCH v5 4/7] scsi: ibmvfc: allocate asynchronous sub-queue=
- ---
-commit 7efcd61f3c0261f3a8cbf890ed40ef64412880a3
+--- Patch [2]: [PATCH v5 2/7] scsi: ibmvfc: Add NOOP command support ---
+commit 62ab2a186e05dc64b296e88c19571f798767a9fa
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ibmvfc: allocate asynchronous sub-queue
+scsi: ibmvfc: Add NOOP command support
 
-This patch allocates and initializes the asynchronous sub-queue required for
-receiving full and extended FPIN events from VIOS.
-
-> Update ibmvfc_channel_setup() to pass async_subq_handle to VIOS during
-> channel setup, and ibmvfc_channel_setup_done() to store the VIOS cookie
-> for the async sub-queue.
-
-The commit message states that ibmvfc_channel_setup() and
-ibmvfc_channel_setup_done() are updated, but those modifications are missing
-from the actual patch code.
+Adds support for VFC_NOOP messages from VIOS to enable keep-alive
+functionality between the client and server. Defines the VFC_NOOP CRQ format
+and handles it in the main and sub-CRQ handlers.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
+> index 2829f4e4b5636..04a405b0860fa 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -6796,6 +6796,17 @@ static int ibmvfc_alloc_channels(struct ibmvfc_hos=
-t *vhost,
->  	if (!channels->scrqs)
->  		return -ENOMEM;
-> =20
-> +	channels->async_scrq =3D kzalloc_obj(*channels->async_scrq, GFP_KERNEL);
-
-[Severity: High]
-Is async_scrq placed in the correct structure?
-
-It appears async_scrq is added to struct ibmvfc_channels, which exists
-per protocol (vhost->scsi_scrqs and vhost->nvme_scrqs). Because this alloca=
-tion
-path is executed once per protocol, does this result in allocating an async
-queue for each protocol instead of a single async queue per host, which the
-VIOS channel setup expects?
-
-> +	if (!channels->async_scrq) {
-> +		rc =3D -ENOMEM;
-> +		goto free_scrqs;
-> +	}
-> +
-> +	rc =3D ibmvfc_alloc_queue(vhost, channels->async_scrq,
-> +				IBMVFC_SUB_CRQ_FMT);
-
-[Severity: High]
-Are we missing the hypervisor registration and setup steps for this queue?
-
-Without the updates to ibmvfc_channel_setup() and ibmvfc_channel_setup_done=
-()
-mentioned in the commit message, the async queue is allocated but never
-registered with the hypervisor via h_reg_sub_crq() or communicated to the V=
-IOS,
-leaving it non-functional.
-
-[Severity: Medium]
-Does this queue need a full event pool allocation?
-
-Calling ibmvfc_alloc_queue() with IBMVFC_SUB_CRQ_FMT sets queue->total_depth
-to a non-zero value, which allocates a large command event pool and associa=
-ted
-DMA memory. Since this async queue is intended solely for receiving unsolic=
-ited
-events, could we avoid allocating an unused outbound event pool?
 
 [ ... ]
 
+> @@ -4212,7 +4222,15 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *=
+crq, struct ibmvfc_host *vhost
+>  	case IBMVFC_CRQ_XPORT_EVENT:
+>  		return;
+>  	default:
+> -		dev_err(vhost->dev, "Got and invalid message type 0x%02x\n", crq->vali=
+d);
+> +		dev_err(vhost->dev, "Got an invalid message type 0x%02x\n", crq->valid=
+);
+> +		return;
+> +	}
+> +
+> +	if (crq->format =3D=3D IBMVFC_NOOP)
+> +		return;
+> +
+> +	if (unlikely(!evt)) {
+> +		dev_err(vhost->dev, "Received null event\n");
+>  		return;
+>  	}
+> =20
+
+[Severity: Critical]
+This is a pre-existing issue, but does this code dereference the
+hardware-provided pointer before validating it?
+
+Looking at ibmvfc_handle_scrq() in drivers/scsi/ibmvscsi/ibmvfc-core.c, evt=
+ is
+cast directly from the untrusted crq->ioba field provided by the hypervisor:
+
+    struct ibmvfc_event *evt =3D (struct ibmvfc_event *)be64_to_cpu(crq->io=
+ba);
+
+Although the patch adds a check for a NULL evt, it then proceeds directly t=
+o:
+
+    if (unlikely(!ibmvfc_valid_event(&evt->queue->evt_pool, evt))) {
+        ...
+    }
+
+If the hypervisor sends a corrupted or malicious non-NULL ioba value, won't
+accessing evt->queue here cause an out-of-bounds access or kernel panic bef=
+ore
+the pointer is actually validated by ibmvfc_valid_event()?
+
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806-ibmvfc-fpi=
-n-support-v5-0-13fd6f8a8f8b@linux.ibm.com?part=3D4
+n-support-v5-0-13fd6f8a8f8b@linux.ibm.com?part=3D2
