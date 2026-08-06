@@ -1,74 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2610B1DE8BF;
-	Thu,  6 Aug 2026 03:10:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8F3F339386;
+	Thu,  6 Aug 2026 03:12:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785985823; cv=none; b=ldjz1KMB4AOzG/0PWjaKQFP3XsMXV4FeNCh+2NIoiM4zvERb8h5XQaVuuCDpYMwemi2LIi97wkOMNqHWKteHKEtbwAZNmsIG+O4qOxCXg/svxWy8vzrq+QYTigScSeZMbcHOJaEghwfsfp+mAJyv4KhCp7uvZYpnxHp/PYDR8H8=
+	t=1785985981; cv=none; b=Fuoeo4CyMujWRChsd7FfRHb81dYwRWj8gy6usmN84a0Cj7aXZ26JEvvyQNK+fnMP3fszRBNzxdUTQ+0gj0nN8ddw8PynWuTZSO0ylnjuWMjuTqWa9FD6ribBUibV5LJ2gPuJrWi96GbfQ9JBFTE7gqiWHXzokKwnF2Tq15j+nos=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785985823; c=relaxed/simple;
-	bh=78fM8o0eQ9v74NxSVDnRgUVAxwusRmHGPPGwFbDidrU=;
+	s=arc-20240116; t=1785985981; c=relaxed/simple;
+	bh=uRqUYKe3CaKtrulB6twHExRdf1/JDJSf7M3O+KRp8bw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=h3fNfhpY/uK1Mk3nnJXpiIdjdbQi50pfvPcO07l7bw2EeK6HISGuxUJv9Qk+LKBniKYJaasBafaYbE442q4NuXJ8Pyj4KWKzfGFnJ6vkeC81gI3pn3fHam1GI2FHmQQ03noQ1V2UxoB4roFWGmtXAshHXvOYLCeoL91qoY/v7T0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jcnusuxv; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=hvXEKqlNroFsWfL7fBnzZ+j4t/7xJSzH9WgqysqiUuJ7VxfArHJSF2butVLoyiZOorC+Oyey3zW/tPwZPEnFsWYfhqRzYH7K5KZIPww3vq6nmEQQAIcTd5pH5JZF2RXhCy27syx/M+bt/bLxG4kfj+N4+e9nbRNTDCOmXKSAZ58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JJ91bZx4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jcnusuxv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75DDF1F000E9;
-	Thu,  6 Aug 2026 03:10:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JJ91bZx4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01EF91F000E9;
+	Thu,  6 Aug 2026 03:12:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785985821;
-	bh=KCpUbMG/WEWePO1ZTE2T9wN4A6JKKxRzVQem+ZWe3f8=;
+	s=k20260515; t=1785985979;
+	bh=usgIrmbCsM95d284eA2JBn9yLxogCNh6rPtWzi6fYsQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jcnusuxvIPzuCadswfvrEYj9H2r6dBi1abLkqor+RxrFLx2H+JkvAaU2MsDKgihhC
-	 KZe7mAZ3sU3uejmypUSqCTZlWCBxDGQSqWS6aO8LSAakG+e0rMJL9k7eHe46qGryit
-	 odL/HVwEqsqxejKvhV9j9ayy74hv87InIEw4kZq9d0Ca34dLGleJNZOvsPX5tG4THc
-	 cgvlAff7NrJPHJyviwIrYmq5utZmL4p+fRXYbEPWjyQskQ2vlua/xVux4s2+YBZEad
-	 7uDXLREAusTVux1/E+/mVoVQPMQ+bA4U3a3GVcLcpMaUu0f/OqeHYuakbbRscuvkny
-	 2jMU2zTj5lGXQ==
+	b=JJ91bZx4firDa0OJsXOg8up2fI2R3qQ5YqGnH90zJPUYuiMRc0sNx++xl14uARGOA
+	 0BA2XC/OsV7vvuhQQZbalE3GuFj8qpXfTLZgHqx27JeKVKpptx6XGlWeWL2iUvGlJk
+	 sY+IlXrggNe62lFENE+X5ClYlo1gu/MPzx4ZKwr440ZIXmQ1EOkXnDgO1uCHypxw8r
+	 533NYB562SqUYL2HTA09Y1/EYbfgQY2rvryTh44sRy7FIqECNWGLCMWpi9CjmI0piM
+	 dCES/u4YeVf9CIretfSDzXCMgEHcdk/v0a0jtRuuzQvLi6BuGYZAl/fVXGQKEJ8E//
+	 GkMLsN/Eu2djw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
- driver
+Subject: Re: [PATCH v3 3/3] riscv: dts: spacemit: k3: Add UFS support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yixun Lan" <dlan@kernel.org>
-Cc: linux-scsi@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260806-08-k3-ufs-support-v3-2-037fb322acdb@kernel.org>
+Cc: conor+dt@kernel.org, linux-scsi@vger.kernel.org, robh@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260806-08-k3-ufs-support-v3-3-037fb322acdb@kernel.org>
 References: <20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org>
- <20260806-08-k3-ufs-support-v3-2-037fb322acdb@kernel.org>
+ <20260806-08-k3-ufs-support-v3-3-037fb322acdb@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 03:10:20 +0000
-Message-Id: <20260806031021.75DDF1F000E9@smtp.kernel.org>
+Date: Thu, 06 Aug 2026 03:12:57 +0000
+Message-Id: <20260806031259.01EF91F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-- [High] Vendor M-PHY TX attributes are only configured for TX Lane 0, negl=
-ecting Lane 1 in a 2-lane setup.
-- [High] Hardcoded dual-lane check in `ufs_spacemit_check_hibern8` will fai=
-l and timeout on 1-lane UFS devices.
-- [High] The UFS hardware reset pulse width is too short, violating the JED=
-EC UFS specification.
-- [Medium] Misleading macro names and comments for device reset contradict =
-hardware behavior.
-- [Medium] Silently ignoring DME configuration errors.
-- [Low] Usage of `of_match_ptr` causes build warnings when `CONFIG_OF` is d=
-isabled.
+- [High] Failure to enter HIBERN8 state is ignored before forcibly powering=
+ down the M-PHY.
+- [High] Missing DME attributes configuration for TX lane 1 and inconsisten=
+t MIB selector usage.
+- [Medium] The retrieved connected TX lanes value is silently discarded.
+- [Low] Redundant and ineffective call to `ufshcd_vops_phy_initialization`.
+- [Low] The device tree references an undefined clock macro `CLK_APMU_UFS_R=
+EFCLK`, which causes a Device Tree compilation failure.
 --
 
---- Patch [2]: [PATCH v3 2/3] scsi: ufs: spacemit: k3: Add UFS Host Control=
-ler driver ---
-commit a6bb8f511d306cddb9d21e41123fafdbcd63a6c9
+--- Patch [3]: [PATCH v3 3/3] riscv: dts: spacemit: k3: Add UFS support ---
+commit 7b2ecae3ba0ff920d65fce0475cce3fc5045f08d
 Author: Yixun Lan <dlan@kernel.org>
-Subject: scsi: ufs: spacemit: k3: Add UFS Host Controller driver
+Subject: riscv: dts: spacemit: k3: Add UFS support
 
-SpacemiT K3 SoC consist of UFS (Universal Flash Storage) Host Controller
-which has features compatible with JEDEC UFS 2.2, MIPI UniPro v1.61 and
-M-PHY v3.0 standard.
+Add UFS Host Controller support for SpacemiT K3 SoC, and enable
+it both on Pico-ITX and CoM260-IFX boards.
+
+> diff --git a/arch/riscv/boot/dts/spacemit/k3.dtsi b/arch/riscv/boot/dts/s=
+pacemit/k3.dtsi
+> index 19fc9b49668ed..cee1569608ea2 100644
+> --- a/arch/riscv/boot/dts/spacemit/k3.dtsi
+> +++ b/arch/riscv/boot/dts/spacemit/k3.dtsi
+> @@ -469,6 +469,28 @@ usb2_phy: phy@c0a20000 {
+>  			status =3D "disabled";
+>  		};
+> =20
+> +		ufshc: ufshc@c0e00000 {
+> +			compatible =3D "spacemit,k3-ufshc";
+> +			reg =3D <0x0 0xc0e00000 0x0 0x40000>;
+> +			clocks =3D <&syscon_apmu CLK_APMU_UFS_ACLK>,
+> +				 <&syscon_apmu CLK_APMU_UFS_REFCLK>;
+
+[Severity: Low]
+Does this reference an undefined clock macro?
+
+The device tree references CLK_APMU_UFS_REFCLK, but this macro appears to be
+undefined. Will this cause a compilation failure when building the device t=
+ree?
+
+[ ... ]
 
 > diff --git a/drivers/ufs/host/ufs-spacemit.c b/drivers/ufs/host/ufs-space=
 mit.c
@@ -76,63 +94,19 @@ mit.c
 > index 0000000000000..94942ea27fb7d
 > --- /dev/null
 > +++ b/drivers/ufs/host/ufs-spacemit.c
-
-[ ... ]
-
-> +/* PHY register magic values */
-> +#define MPHY_PU_ALL			0x87f
-> +#define MPHY_PU_WITH_HB8_RESET		0xb7f
-> +#define MPHY_DEVICE_RESET_DEASSERT	0x101
-> +#define MPHY_DEVICE_RESET_ASSERT	0x001
-
-[Severity: Medium]
-Is this macro name misleading? Looking at ufs_spacemit_device_reset(), it
-uses 0x000 to assert the reset and 0x101 to de-assert it. This means 0x001
-actually disables the reference clock while keeping the reset de-asserted.
-
-[ ... ]
-
-> +static int ufs_spacemit_check_hibern8(struct ufs_hba *hba)
-> +{
-> +	u32 tx_fsm_val_0 =3D 0;
-> +	u32 tx_fsm_val_1 =3D 0;
-> +	int retries =3D DIV_ROUND_UP(HBRN8_POLL_TOUT_MS * 1000, 100);
-> +	int err =3D 0;
-> +
-> +	do {
-> +		err =3D ufshcd_dme_get(hba,
-> +				     UIC_ARG_MIB_SEL(MPHY_TX_FSM_STATE,
-> +						     UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),
-> +				     &tx_fsm_val_0);
-> +		if (err)
-> +			break;
-> +
-> +		err =3D ufshcd_dme_get(hba,
-> +				     UIC_ARG_MIB_SEL(MPHY_TX_FSM_STATE,
-> +						     UIC_ARG_MPHY_TX_GEN_SEL_INDEX(1)),
-> +				     &tx_fsm_val_1);
-> +		if (err || (tx_fsm_val_0 =3D=3D TX_FSM_HIBERN8 &&
-> +			    tx_fsm_val_1 =3D=3D TX_FSM_HIBERN8))
-> +			break;
-
-[Severity: High]
-Will this hardcoded dual-lane check timeout on single-lane UFS devices?
-
-If a 1-lane memory chip is connected, Lane 1 is inactive. Querying its state
-will either return a DME error or read a non-Hibern8 state, causing the loop
-to timeout after 100ms and break power management.
-
-Could this check be updated to use the dynamically negotiated lane count fr=
-om
-dev_req_params to know how many lanes to poll?
+> @@ -0,0 +1,687 @@
 
 [ ... ]
 
 > +static int ufs_spacemit_uniprov1p6_init(struct ufs_hba *hba)
 > +{
 > +	static const struct ufshcd_dme_attr_val setup_attrs[] =3D {
-> +		{ UIC_ARG_MIB(0x1552), 0x4f }, /* PA_TXHSG1SYNCLENGTH */
+
 [ ... ]
+
+> +		/* TX HB8_TIME CAP */
+> +		{ UIC_ARG_MIB_SEL(0x000F, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x64 },
+> +		{ UIC_ARG_MIB_SEL(0x000F, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(1)), 0x64 },
 > +		/* RX HB8_TIME CAP */
 > +		{ UIC_ARG_MIB_SEL(0x0092, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)), 0x64 },
 > +		{ UIC_ARG_MIB_SEL(0x0092, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(1)), 0x64 },
@@ -140,11 +114,12 @@ dev_req_params to know how many lanes to poll?
 > +		{ UIC_ARG_MIB_SEL(0x00CD, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),  0x5 },
 
 [Severity: High]
-Should this TX equalization be applied to Lane 1 as well?
+Are we missing the TX EQ 3DB configuration for lane 1 here?
 
-The host controller is configured for 2 lanes, but this setup attribute only
-targets UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0). Omitting tuning parameters for the
-second lane could cause asymmetric lane configurations or link instability.
+The device tree specifies lanes-per-direction =3D <2>, but this DME attribu=
+te
+is only configured for TX lane 0. Could this leave lane 1 with undefined or
+default parameters and prevent successful 2-lane initialization?
 
 [ ... ]
 
@@ -157,49 +132,29 @@ second lane could cause asymmetric lane configurations or link instability.
 > +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x17 },
 
 [Severity: High]
-Does attribute 0xe8 need to be programmed for both lanes?
+Is the DME configuration for TX lane 1 missing?
 
-Similar to the TX equalization setup, this only programs Lane 0 despite the
-driver specifying dual-lane support.
+Similar to ufs_spacemit_uniprov1p6_init(), attribute 0xe8 is explicitly
+targeting only lane 0. Does lane 1 also need to be configured for 2-lane mo=
+de?
 
-[ ... ]
-
-> +static int ufs_spacemit_apply_dev_quirks(struct ufs_hba *hba)
-> +{
-> +	static const struct ufshcd_dme_attr_val setup_attrs[] =3D {
-[ ... ]
+> +		{ UIC_ARG_MIB(DL_AFC0REQTIMEOUTVAL), UFS_DL_AFC0REQTIMEOUTVAL_MAX },
 > +	};
+> +	u32 tx_lanes;
+> +	int err;
 > +
-> +	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME)
-> +		ufs_spacemit_quirk_host_pa_saveconfigtime(hba);
+> +	err =3D ufs_spacemit_dme_set(hba, setup_attrs, ARRAY_SIZE(setup_attrs));
+> +	if (err < 0)
+> +		return err;
 > +
-> +	if (hba->dev_info.wmanufacturerid =3D=3D UFS_VENDOR_WDC)
-> +		hba->dev_quirks |=3D UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE;
-> +
-> +	ufs_spacemit_dme_set(hba, setup_attrs, ARRAY_SIZE(setup_attrs));
+> +	return ufs_spacemit_get_connected_tx_lanes(hba, &tx_lanes);
 
 [Severity: Medium]
-Is it safe to ignore the return values of these DME configuration functions?
+Is the retrieved tx_lanes value meant to be used?
 
-If ufs_spacemit_quirk_host_pa_saveconfigtime() or ufs_spacemit_dme_set()
-fail, the errors are not propagated. Could this allow initialization to pro=
-ceed
-with an incorrectly configured M-PHY?
-
-[ ... ]
-
-> +static int ufs_spacemit_device_reset(struct ufs_hba *hba)
-> +{
-> +	/* Stop device ref_clk & asserted ufs device reset */
-> +	ufshcd_writel(hba, 0x000, UFS_PHY_MNG_BASE + UFS_DEVICE_IO_CTRL);
-> +	usleep_range(10, 15);
-
-[Severity: High]
-Is this reset pulse width long enough?
-
-The JEDEC UFS specification mandates that the host must maintain the RST_n
-signal low for a minimum of 1 ms. A 10 to 15 microsecond delay might cause
-the memory chip to fail to reset properly.
+The value of tx_lanes is populated by ufs_spacemit_get_connected_tx_lanes()
+but is then silently discarded when returning. Should this value be verified
+against the configuration?
 
 [ ... ]
 
@@ -215,16 +170,8 @@ dme cmd)
 > +		{ UIC_ARG_MIB(0xdd), 0xd7 },
 > +		{ UIC_ARG_MIB(0xe8), 0x57 },
 > +		{ UIC_ARG_MIB(0xe8), 0xd7 },
-
-[Severity: High]
-Are these attributes defaulting to Lane 0?
-
-Using UIC_ARG_MIB() defaults to Lane 0. If these need to be applied to Lane=
- 1
-as well during post-Hibern8 configuration, they are currently missing.
-
-[ ... ]
-
+> +	};
+> +
 > +	if (cmd =3D=3D UIC_CMD_DME_HIBER_ENTER) {
 > +		ufs_spacemit_check_hibern8(hba);
 > +
@@ -232,42 +179,51 @@ as well during post-Hibern8 configuration, they are currently missing.
 > +
 > +		/* Power down M-PHY */
 > +		ufshcd_writel(hba, 0x0, UFS_PHY_MNG_BASE + UFS_MPHY_PU_CTRL);
-> +
-> +		/* Keep reference clock enabled, assert device reset */
-> +		ufshcd_writel(hba, MPHY_DEVICE_RESET_ASSERT,
-> +			      UFS_PHY_MNG_BASE + UFS_DEVICE_IO_CTRL);
 
-[Severity: Medium]
-Does this operation contradict its comment?
+[Severity: High]
+Should we check the return value of ufs_spacemit_check_hibern8(hba) before
+powering down the M-PHY?
 
-The code writes MPHY_DEVICE_RESET_ASSERT (0x001), which disables the refere=
-nce
-clock but keeps the reset de-asserted. The comment says "Keep reference clo=
-ck
-enabled, assert device reset", which is the exact opposite.
-
-While keeping reset de-asserted is the correct action for Hibern8 (asserting
-reset would destroy the device's state), the comment and macro name suggest
-incorrect hardware behavior.
+If the HIBERN8 check times out and returns -ETIMEDOUT, the error is ignored
+and the driver unconditionally powers down the PHY. Can this cause a bus lo=
+ckup
+or hardware error if the M-PHY isn't actually in the HIBERN8 state?
 
 [ ... ]
 
-> +static struct platform_driver ufs_spacemit_pltform =3D {
-> +	.probe	=3D ufs_spacemit_probe,
-> +	.remove	=3D ufs_spacemit_remove,
-> +	.driver	=3D {
-> +		.name	=3D "ufshcd-spacemit",
-> +		.of_match_table =3D of_match_ptr(ufs_spacemit_of_match),
-> +	},
-> +};
+> +static int ufs_spacemit_init(struct ufs_hba *hba)
+> +{
+> +	int err =3D 0;
+> +	struct device *dev =3D hba->dev;
+> +	struct ufs_spacemit_host *host;
+> +	struct reset_control *rst;
+> +
+> +	host =3D devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+> +	if (!host)
+> +		return -ENOMEM;
+> +
+> +	rst =3D devm_reset_control_get_exclusive_deasserted(dev, NULL);
+> +	if (IS_ERR(rst))
+> +		return dev_err_probe(dev, PTR_ERR(rst), "Failed to get reset control\n=
+");
+> +
+> +	host->hba =3D hba;
+> +	ufshcd_set_variant(hba, host);
+> +	ufs_spacemit_advertise_quirks(hba);
+> +
+> +	err =3D ufshcd_vops_phy_initialization(host->hba);
+> +	return err;
+> +}
 
 [Severity: Low]
-Does the use of of_match_ptr() here cause a compiler warning?
+Is this call to ufshcd_vops_phy_initialization() effective?
 
-Because ufs_spacemit_of_match is defined unconditionally, building with
-CONFIG_OF disabled will evaluate of_match_ptr() to NULL, leaving the array
-unused and triggering a -Wunused-variable warning.
+ufs_hba_spacemit_vops does not define the phy_initialization callback, so
+the wrapper function will silently return 0. Does this need to be called he=
+re,
+or is it redundant since the real PHY initialization occurs in
+ufs_spacemit_link_startup_pre_change()?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806-08-k3-ufs-=
-support-v3-0-037fb322acdb@kernel.org?part=3D2
+support-v3-0-037fb322acdb@kernel.org?part=3D3
