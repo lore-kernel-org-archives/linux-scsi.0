@@ -1,252 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sender-of-o57.zoho.eu (sender-of-o57.zoho.eu [136.143.169.57])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A40E490BE3
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 20:00:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786046432; cv=none; b=kY9qkfTgKVnnnWCjXHSmoCQvD/LO8ZFFItDP8DaTuhTJjRhxv74F11gxPzlf26PNLezBQP/L94y1dustraIbW9ZH3Yrg8ywRyLkR2ohtmcVcFbpEjpRAerO+gJsc4rEpPQTHXEXnDcfqjefUK+I67tzFw44QDGM0Fj+3Z52PR/M=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786046432; c=relaxed/simple;
-	bh=h01RCljVwtcA3xEhORvD7ZW3+xyKdP46qRIua/iRAzY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Ea4tc5fIuWknCKLnes6VJFGNFT22xq5XrEWsziaI/oQ/KaTkP7I8lJpy3kULyFr7fSw+woPUsmWWa5zOg2G4Q9vJA7Ugz58YWObe9KdWsC94y6M9TOr+3+j68I8dZGznnjHkYyPpIIJ1VoJLTNPRYB2JlDp1IC17R7aZilj6GZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e4y6LK0m; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26EF93DD87B;
+	Thu,  6 Aug 2026 20:22:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.57
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786047748; cv=pass; b=LKX48dF7T/FoGLmDdwfMkC3o8/QZ6810kihmr9WqjsfiEglSufsc6dUuE8djr2GXvXLMPFvifCeTuL8+ci4bw9uzzkj3+8FVNlaFAF8tYh1ihIGsWG+4uqFHICTO0PWkCoHE53Gq9mQkApX058O4aWNkASXSdo2HSor3+JPlIBQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786047748; c=relaxed/simple;
+	bh=7F5acONEP8oUUtb5oy4Z5K8fvlQzzati+v3JqPZ7QZY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=G6zkgvA2vjqDU5OdOJX6i5xhGaJij3asOwix5hqmSOX/UZEq9kHl/pCovpbAV9OBuOW5KvsBZ0hesL3Nj/UDuOH/rP6gysRjAozHbgy0pF+T1oHyKNolWZOmISit5qkOhZaRHvbMYzQ1Ef6lB+if+VEpnX09paOKnhKSaw61zdU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=iusegentoo.com; spf=pass smtp.mailfrom=iusegentoo.com; dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b=Jdn+J29h; arc=pass smtp.client-ip=136.143.169.57
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=iusegentoo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iusegentoo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e4y6LK0m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE6751F000E9;
-	Thu,  6 Aug 2026 20:00:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786046431;
-	bh=3b1oI94fIN47e7OiqHx3Yioi6nnc44OKgjKI8hiQNOU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=e4y6LK0m6I5+AS+06XI5O/BvB08aTNoF2IGFoR1VToA+rp3bGipKxSTJTmht82/tT
-	 ZxIBT6PLAwDJ8IcctQOoFKYBxD64xkdohUegGQQqSYPLx74cC05UEXE4fGykUXkffP
-	 PqaqePMZGjoXX6SZXhWYxaj88CT3Anp8vMr6A4LrELoedkg6VVzBgF4u+NnhADCoEU
-	 J6TUJ7Q4qw2bcFVliBtOlfYLGG6sn0plnWfct4PqcoVFiep84zaey9VAuPcndrh7sq
-	 j5t7hlkPKJBaVoqcvhT99Zq6Z5FLiiwZw7X8Tw5JOZbryZfQ5VRGAy2pzldz8O2sf9
-	 fVXp6Y4EtX7rw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/5] scsi: elx: efct: free the RQ buffers already
- allocated when one fails
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ali Ahmet Memis" <ali@iusegentoo.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260806192345.328621-5-ali@iusegentoo.com>
+	dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b="Jdn+J29h"
+ARC-Seal: i=1; a=rsa-sha256; t=1786047738; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=B+W6cq2RwTT3fcvcRgm0LmtgcZwoNKfMV4Ew6TO9F+DDRGu6CihVe3G4X4dMdrTwUbD+7pKSVCqy3WAQnxU1LknROKEiEkcJOBLKImFUvhLxx67+3lPMkW0y89fwU42KmiBSspM0hBZAfAoc1vypz5PhWYCmrTViFB99l4l1Uwc=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1786047738; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=vcxR3eOLacgLmqT+8EIBN01ziK3zbpNqDJt8nUmNyiI=; 
+	b=dX0EYx/GBN2kbDbFPcUGmunlge3iISo9XCxXDFFU8PfmfrYI1A2yT+RdmlbBqA6Y0+ykpOowjfj15Q+YBiMryfRHJcnVAbHwV7dmrzrE0gUiDmzznfh7yBY1R1z5iVGuX3KGNHBF/BP0Aw8S+mOauMzKL5YsZF0jejiW0MANP+Y=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	dkim=pass  header.i=iusegentoo.com;
+	spf=pass  smtp.mailfrom=ali@iusegentoo.com;
+	dmarc=pass header.from=<ali@iusegentoo.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1786047738;
+	s=zmail; d=iusegentoo.com; i=ali@iusegentoo.com;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=vcxR3eOLacgLmqT+8EIBN01ziK3zbpNqDJt8nUmNyiI=;
+	b=Jdn+J29hsZi5J5Em4wB21WzkdbBhffHkb1JapAPSYIwZmxC9T1Bl/8unLz3llgzS
+	V62BwxHSY+2lFxfIouF1tDDjb14AcP7E0/7VCR49PiDN4D+B3E51ZkzAFqqlZvzJaPe
+	scorEpMO3Qldrc6ytgHxdShB5MzI2BqATp0HFiag=
+Received: by mx.zoho.eu with SMTPS id 1786047735908909.7313663210379;
+	Thu, 6 Aug 2026 22:22:15 +0200 (CEST)
+From: Ali Ahmet Memis <ali@iusegentoo.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	Ram Vegesna <ram.vegesna@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/5] scsi: elx: efct: fix resources stranded on failure paths
+Date: Thu,  6 Aug 2026 20:22:00 +0000
+Message-ID: <20260806202205.345326-1-ali@iusegentoo.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260806192345.328621-1-ali@iusegentoo.com>
 References: <20260806192345.328621-1-ali@iusegentoo.com>
- <20260806192345.328621-5-ali@iusegentoo.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 20:00:30 +0000
-Message-Id: <20260806200030.EE6751F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+Five places in efct take a resource and then return an error without
+giving it back. Three of them lose an entry from a fixed size pool, which
+stops the driver working once the pool is empty rather than growing
+memory; the other two are ordinary leaks.
 
-Pre-existing issues:
-- [High] Missing resource teardown in initialization error paths leads to m=
-assive memory and resource leaks.
-- [High] Unconditional call to `dma_free_coherent` on an unallocated memory=
- region causes undefined behavior/kernel panic.
-- [High] Unprotected concurrent access to the global `efct_devices` list.
-- [High] Use-after-free of `efct` object when PCI device is removed while L=
-IO configfs retains a reference.
-- [High] Missing `timer_delete_sync` and dangerous re-initialization of `st=
-ats_timer` leads to concurrent UAF.
---
+  1  efct_els_hw_srrs_send() checks hw->state after taking an HIO
+  2  the WQE builders in efct_els_hw_srrs_send() and efct_hw_bls_send()
+  3  the WQE builder in efct_hw_send_frame(), which loses a request tag
+  4  efct_hw_rx_buffer_alloc() drops the coherent buffers it mapped
+  5  efct_hw_setup() leaves its two mempools behind
 
---- Patch [4]: [PATCH 4/5] scsi: elx: efct: free the RQ buffers already all=
-ocated when one fails ---
-commit cebc7192c16ac8492a77188ae439ad0352527068
-Author: Ali Ahmet Memis <ali@iusegentoo.com>
-Date:   Thu Aug 6 19:23:44 2026 +0000
+Changes in v2:
+- Patch 5: the first error path, the one taken when the cmd_ctx_pool
+  allocation fails, returned without clearing hw_setup_called while the
+  two paths below it cleared it. The commit message described the
+  behaviour the other two paths had, so it claimed more than the patch
+  did. All three now clear it. Pointed out by the Sashiko review of v1.
+- No other change, patches 1 to 4 are as sent.
 
-scsi: elx: efct: free the RQ buffers already allocated when one fails
+Patch 5 is the one I could exercise. Binding the driver to a PCI device
+that is not an SLI-4 adapter makes sli_setup() fail after the mempools
+have been created, and efct_pci_probe() then frees the struct efct that
+held the only pointers to them. Repeating that probe 61 times under
+CONFIG_DEBUG_KMEMLEAK:
 
-efct_hw_rx_buffer_alloc() allocates an array of descriptors and then a
-coherent DMA buffer for each entry. When one of those allocations fails it
-frees the array and returns NULL, leaving every buffer allocated before it
-mapped. Use efct_hw_rx_buffer_free() for the entries that were filled in.
+  before   1566 unreferenced objects, every one from efct_hw_setup()
+  after    none, and the probe still fails the same way
 
-> diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct=
-_hw.c
-> index db68516e80750..d645ce256b8aa 100644
-> --- a/drivers/scsi/elx/efct/efct_hw.c
-> +++ b/drivers/scsi/elx/efct/efct_hw.c
-> @@ -1170,6 +1170,10 @@ efct_get_wwpn(struct efct_hw *hw)
->  	return get_unaligned_be64(p);
->  }
-> =20
-> +static void
-> +efct_hw_rx_buffer_free(struct efct_hw *hw, struct efc_hw_rq_buffer *rq_b=
-uf,
-> +		       u32 count);
-> +
->  static struct efc_hw_rq_buffer *
->  efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqindex, u32 count,
->  			u32 size)
-> @@ -1196,7 +1200,7 @@ efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqi=
-ndex, u32 count,
->  						   GFP_KERNEL);
->  		if (!prq->dma.virt) {
->  			efc_log_err(hw->os, "DMA allocation failed\n");
-> -			kfree(rq_buf);
-> +			efct_hw_rx_buffer_free(hw, rq_buf, i);
->  			return NULL;
->  		}
->  	}
+The same run against the v2 patch reports none as well.
 
-[Severity: High]
-This is a pre-existing issue, but missing resource teardown in initializati=
-on
-error paths leads to massive memory and resource leaks.
+Patches 1 to 4 are reasoned from the code. They need a real Emulex SLI-4
+adapter, and for 1 to 3 a live FC link as well, which I do not have. Each
+patch builds on its own.
 
-In efct_hw_rx_allocate(), if efct_hw_rx_buffer_alloc() succeeds for
-rq->hdr_buf but fails for rq->payload_buf, it breaks the loop and returns
--EIO without freeing the just-allocated hdr_buf or any previous queues:
+I deliberately left the efct_hw_wq_write() failure paths alone.
+efct_hw_wq_write() appends to wq->pending_list and drains from the head,
+so it can return an error while this request is still linked there.
+Releasing the HIO or the request tag at that point would leave a later
+completion looking at something that has been handed back, which needs
+more than a free on the error path.
 
-drivers/scsi/elx/efct/efct_hw.c:efct_hw_rx_allocate() {
-    ...
-    if (!rq->payload_buf) {
-        efc_log_err(efct, "rx_buffer_alloc fb_buf failed\n");
-        rc =3D -EIO;
-        break;
-    }
-    ...
-}
+Also not addressed here: efct_xport_attach() and efct_xport_initialize()
+return without efct_hw_teardown() on some paths, and efcport_init() leaves
+its first two pools behind when the third allocation fails. Those cross
+two modules and I would rather send them separately once this is settled.
 
-This error propagates up through efct_hw_init() and efct_xport_initialize(),
-both of which return the error and explicitly bypass efct_hw_teardown():
+v1: https://lore.kernel.org/all/20260806192345.328621-1-ali@iusegentoo.com/
 
-drivers/scsi/elx/efct/efct_xport.c:efct_xport_initialize() {
-    ...
-    rc =3D efct_hw_init(&efct->hw);
-    if (rc) {
-        efc_log_err(efct, "efct_hw_init failure\n");
-        goto out;
-    }
-    ...
-}
+Ali Ahmet Memis (5):
+  scsi: elx: efct: check the HW state before allocating an HIO
+  scsi: elx: efct: free the HIO when the WQE cannot be built
+  scsi: elx: efct: free the request tag when the send frame WQE fails
+  scsi: elx: efct: free the RQ buffers already allocated when one fails
+  scsi: elx: efct: destroy the mailbox pools when setup fails
 
-Since this patch attempts to fix exactly this type of leak in the callee but
-leaves the caller completely unprotected, does this need a similar fix to
-prevent identical leaked resources?
+ drivers/scsi/elx/efct/efct_hw.c | 74 +++++++++++++++++++++------------
+ 1 file changed, 47 insertions(+), 27 deletions(-)
 
-[Severity: High]
-This is a pre-existing issue, but does this unconditional call to
-dma_free_coherent() on an unallocated memory region cause undefined behavior
-or a kernel panic?
 
-efct_hw_teardown() unconditionally calls dma_free_coherent() on hw->rnode_m=
-em:
+base-commit: 0d839570765118029aa8bf4a95444c6a11aacf85
+-- 
+2.55.0
 
-drivers/scsi/elx/efct/efct_hw.c:efct_hw_teardown() {
-    ...
-    dma_free_coherent(&efct->pci->dev,
-              hw->rnode_mem.size, hw->rnode_mem.virt,
-              hw->rnode_mem.phys);
-    ...
-}
-
-Since rnode_mem is never allocated anywhere in the driver, it remains
-0-initialized, meaning virt is NULL and size is 0. Calling dma_free_coheren=
-t()
-with a NULL virtual address is an API violation that can crash or WARN on
-architectures that do not check for it.
-
-[Severity: High]
-This is a pre-existing issue, but is there unprotected concurrent access to
-the global efct_devices list?
-
-The driver adds and removes devices from the global efct_devices list in
-efct_device_alloc() without using any locks:
-
-drivers/scsi/elx/efct/efct_driver.c:efct_device_alloc() {
-    ...
-    list_add_tail(&efct->list_entry, &efct_devices);
-    ...
-}
-
-Concurrently, efct_find_wwpn() (triggered by LIO configfs operations)
-iterates over this list using list_for_each_entry() without any locking:
-
-drivers/scsi/elx/efct/efct_lio.c:efct_find_wwpn() {
-    ...
-    list_for_each_entry(efct, &efct_devices, list_entry) {
-    ...
-}
-
-Can this lead to linked list corruption, infinite loops, or use-after-free
-if a privileged administrator configures LIO targets concurrently with hotp=
-lug
-or sysfs unbind events?
-
-[Severity: High]
-This is a pre-existing issue, but is there a use-after-free of the efct obj=
-ect
-when the PCI device is removed while LIO configfs retains a reference?
-
-efct_lio_make_nport() assigns a raw efct pointer to the LIO target without
-taking a reference count on the device:
-
-drivers/scsi/elx/efct/efct_lio.c:efct_lio_make_nport() {
-    ...
-    lio_nport->efct =3D efct;
-    ...
-}
-
-If the PCI device is unbound or removed, efct_pci_remove() completely destr=
-oys
-the device and frees the efct structure:
-
-drivers/scsi/elx/efct/efct_driver.c:efct_pci_remove() {
-    ...
-    efct_device_free(efct);
-    ...
-}
-
-Could subsequent LIO teardown or target I/O dereference the freed efct memo=
-ry
-if configurable LIO targets survive the unloading of the underlying hardware
-device?
-
-[Severity: High]
-This is a pre-existing issue, but does the missing timer_delete_sync() and
-dangerous re-initialization of stats_timer lead to a concurrent
-use-after-free?
-
-During device detachment, efct_xport_detach() uses the asynchronous
-timer_delete():
-
-drivers/scsi/elx/efct/efct_xport.c:efct_xport_detach() {
-    ...
-    if (timer_pending(&xport->stats_timer))
-        timer_delete(&xport->stats_timer);
-    ...
-}
-
-If the timer callback efct_xport_stats_timer_cb() is running concurrently, =
-the
-driver will free the xport memory immediately after. The callback then
-executes efct_xport_config_stats_timer(), which calls timer_setup() and
-mod_timer() on the just-freed xport->stats_timer:
-
-drivers/scsi/elx/efct/efct_xport.c:efct_xport_config_stats_timer() {
-    ...
-    timer_setup(&xport->stats_timer, &efct_xport_stats_timer_cb, 0);
-    mod_timer(&xport->stats_timer, jiffies + msecs_to_jiffies(timeout));
-    ...
-}
-
-Can this cause timer list corruption and a kernel panic via use-after-free =
-if
-a driver unload races with the periodic 3-second stats timer?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806192345.3286=
-21-1-ali@iusegentoo.com?part=3D4
