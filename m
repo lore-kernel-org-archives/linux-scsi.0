@@ -1,224 +1,176 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1709C490BFC
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 20:41:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98F253DDAFE
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 20:52:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786048889; cv=none; b=P/txiYV7B8kKsPSdTEskzii/UPmKhE2uOpvAi9XYKLM0jnIYpTjgw6SosgNUpqv4gTn23Jvai7kzQJbmH2fI+wTF3a/lwdLaxEXcpgYXPsUgA+NXROfPgIZwAOjUsz6umHx5/Wp89XHlpeb7/fOgPDU0w49wiFu+e7FGU0UnKnQ=
+	t=1786049574; cv=none; b=d+Dn6as/uhk9Vrqa9xPF1PiE8KZbkEqF5l3m/1yMHSKJjc3H6X5s2AOb6AWuNhXHECc87wl0ENdrGyiyMo5ySvow92hvtjEQGj0D+AvcFvUXVKytmP8DCaAozJQjGBNYCvO/gkZd66mL+eam9P7CrBesFBb4MHf8qQNmlPgE6I8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786048889; c=relaxed/simple;
-	bh=sHFThvGIQ1GzCESQkzHLMceYrHuQQA/6jOHKvkMAqxY=;
+	s=arc-20240116; t=1786049574; c=relaxed/simple;
+	bh=n/wIy2nxnMqzYLnpNq8JK9g48YIjTJqWNz0JmJ97P8g=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eIE/XIzz4A0+LDeuUPwcJPtkGCScVD3Yo5RZX0DE8phIL43+04n7Bzn/ZRUCgarZZYGkCSXOKzX7GF4/7sRlhbDWjOTGxUOjENGza8CSrlm0vGi/23RD69opsP/tHsxuuJGKfxiMkzhR33kfnH9Ai2WBIASSP1kQ3o13jdewJWQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n9sFzKHY; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=W14kwnnMLLhA0ScAN8XcsJqcG8oAlWGHpGNOrY+wrUpQeBGI21p7MeX+5Csh9P/5cNn2r19KznqANfQ3E6QwgRIf/8jErbTbaB6gZcljlvzMpwKJWG+k7NkzZNTwYvTUtTPlGQtzohU8Kh81UK8w6n68bP9g2LYl4CyFzDuqqic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O2dorQO8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n9sFzKHY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2EF21F000E9;
-	Thu,  6 Aug 2026 20:41:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O2dorQO8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 560CE1F000E9;
+	Thu,  6 Aug 2026 20:52:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786048887;
-	bh=kMFQcKaL/a2SDMkchUWp0AJoStiv4Fsu4Fpu4/VlZ90=;
+	s=k20260515; t=1786049573;
+	bh=+2GJvPExFJ/4U/ahgLG3ud8wRYZ4xphAOoEXA0YrnyA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=n9sFzKHYv+sMZaiXHoIj9nsW5UEu8eW2x8AzjG1UlWJkFytSFgwYNMzvkcaEtSDqr
-	 U34/YoViYCIdT+6kkh+ZlXaqtlLMQWOLKyEJKqpHIdXMzYBG0LzSa8QAyrxcyhyLpg
-	 nk441h1nYWJR7t4tp7cq3pOes6u7C2mw8cVt63WSB4W8BZUVCJOb4BUQ3+Vkp+5+Rw
-	 jXsUA15OQYikRjfJR3TWvvNg3n9jv38Y0X16l4kzWA9SE7bMlqgWFs8NWRHMVGtSRa
-	 9rez5t2IuCapiD2zTNwDlM6G06tyyPBohppFnvP5GL+2rW1PakOYvKDhGViRAlGVlI
-	 OkEM+wqoMYPvA==
+	b=O2dorQO8UTKTvb7rXy7osA8D6DtBRHBV4zPLa2E2E7AyKfLFOTmAXWMEBy3DUWt01
+	 Y0kY5kRJjDih4CJE+wb2yXJ2fyS9AjSa32SmhEkW/ROAqJSj98G+Saj1oj1oeJZe4b
+	 Y5epRRRoDV/uSDo1G5C9crqs5ml09xKBYX4I1xUg/rGeEOReopLtB+vepRZoeZclqZ
+	 pKcWCD1n8tRsq0yKTDr/+8sMVbQlWXqSMVqKLqSX51t4N7wWSmIVwVLniEV6uy0P18
+	 poQTeSFOUIUfZLxGybAmVP/JTmS5QMVID4ZV+gDQg/rXDUUROtQognakbleIIheNt1
+	 1HWWETxUyvEQQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/5] scsi: elx: efct: free the request tag when the
- send frame WQE fails
+Subject: Re: [PATCH v2 2/5] scsi: elx: efct: free the HIO when the WQE
+ cannot be built
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ali Ahmet Memis" <ali@iusegentoo.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260806202205.345326-4-ali@iusegentoo.com>
+In-Reply-To: <20260806202205.345326-3-ali@iusegentoo.com>
 References: <20260806192345.328621-1-ali@iusegentoo.com>
- <20260806202205.345326-4-ali@iusegentoo.com>
+ <20260806202205.345326-3-ali@iusegentoo.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 20:41:27 +0000
-Message-Id: <20260806204127.B2EF21F000E9@smtp.kernel.org>
+Date: Thu, 06 Aug 2026 20:52:52 +0000
+Message-Id: <20260806205253.560CE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [Medium] The patch adds cleanup code to a mathematically unreachable erro=
-r path, completely failing to address the actual root cause of the reqtag e=
-xhaustion.
-
 Pre-existing issues:
-- [Critical] Unconditional freeing of a reused sequence buffer (`seq`) lead=
-s to a catastrophic Use-After-Free, Double-Free, and hardware DMA corruptio=
-n when sending a task set full/busy response.
-- [High] Guaranteed NULL pointer dereference when sending a task set full/b=
-usy response.
-- [High] `efct_hw_reqtag_free()` detects a double-free but incorrectly proc=
-eeds to corrupt the freelist.
-- [High] `efct_hw_init()` fails to handle `efct_hw_io_alloc()` failure, lea=
-ding to a NULL pointer dereference.
+- [High] The Hardware I/O context (hio) is leaked on every successful compl=
+etion of ELS, CT, and BLS commands.
 --
 
---- Patch [3]: [PATCH v2 3/5] scsi: elx: efct: free the request tag when th=
-e send frame WQE fails ---
-commit 415b71fb97ba10c30ffb204dfd40acdb37bb24d1
+--- Patch [2]: [PATCH v2 2/5] scsi: elx: efct: free the HIO when the WQE ca=
+nnot be built ---
+commit d739587d3893fac37f827b9d5a082304c53cf476
 Author: Ali Ahmet Memis <ali@iusegentoo.com>
+Date:   Thu Aug 6 20:22:02 2026 +0000
 
-scsi: elx: efct: free the request tag when the send frame WQE fails
+    scsi: elx: efct: free the HIO when the WQE cannot be built
+   =20
+    efct_els_hw_srrs_send() and efct_hw_bls_send() allocate an HIO, ask sli4
+    to build a WQE into it, and give up when that fails without putting the
+    HIO back:
 
-efct_hw_send_frame() takes a request tag from the pool and then builds the
-WQE. When sli_send_frame_wqe() fails it returns without giving the tag
-back.
+[ ... ]
 
 > diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct=
 _hw.c
-> index 6cc48fa3e656a..db68516e80750 100644
+> index 15c37ff1d52e4..6cc48fa3e656a 100644
 > --- a/drivers/scsi/elx/efct/efct_hw.c
 > +++ b/drivers/scsi/elx/efct/efct_hw.c
-> @@ -3009,6 +3009,7 @@ efct_hw_send_frame(struct efct_hw *hw, struct fc_fr=
-ame_header *hdr,
->  				ctx->wqcb->instance_index);
->  	if (rc) {
->  		efc_log_err(hw->os, "sli_send_frame_wqe failed: %d\n", rc);
-> +		efct_hw_reqtag_free(hw, ctx->wqcb);
+> @@ -2609,6 +2609,7 @@ efct_hw_bls_send(struct efct *efct, u32 type, struc=
+t sli_bls_params *bls_params,
+>  	if (sli_xmit_bls_rsp64_wqe(&hw->sli, hio->wqe.wqebuf,
+>  				   &bls, bls_params)) {
+>  		efc_log_err(hw->os, "XMIT_BLS_RSP64 WQE error\n");
+> +		efct_hw_io_free(hw, hio);
 >  		return -EIO;
 >  	}
+> =20
 
-[Severity: Medium]
-Does this error path actually ever execute?
+[Severity: High]
+This is a pre-existing issue, but does this code also leak the hio on the
+success path?
 
-Looking at sli_send_frame_wqe(), it appears to unconditionally return 0:
+Looking at the completion callback for BLS commands, efct_bls_send_rjt_cb()
+receives the hio but completely ignores it:
 
-libefc_sli/sli4.c:sli_send_frame_wqe() {
-    ...
+drivers/scsi/elx/efct/efct_scsi.c:efct_bls_send_rjt_cb() {
+    struct efct_io *io =3D app;
+
+    efct_scsi_io_free(io);
     return 0;
 }
 
-Since sli_send_frame_wqe() always returns 0, this error handling block seems
-unreachable. Is there a different root cause for the reqtag exhaustion?
+Because the generic hardware completion handler efct_hw_wq_process_io() doe=
+sn't
+free the hio either, doesn't this result in the hio being leaked on every
+successful completion?
 
+If the pool of hardware IO contexts exhausts, won't efct_hw_io_alloc() fail=
+ for
+all subsequent requests, breaking Fibre Channel discovery, ELS, and BLS
+operations?
 
-While reviewing this change, I also noticed a few other areas in the driver
-that might need attention.
+> @@ -2820,24 +2821,27 @@ efct_els_hw_srrs_send(struct efc *efc, struct efc=
+_disc_io *io)
+>  		rc =3D -EIO;
+>  	}
+> =20
+> -	if (rc =3D=3D 0) {
+> -		hio->xbusy =3D true;
+> +	if (rc) {
+> +		efct_hw_io_free(hw, hio);
+> +		return rc;
+> +	}
 
-[Severity: Critical]
-This isn't a bug introduced by this patch, but does efct_dispatch_frame()
-unconditionally free a reused sequence buffer, causing a use-after-free?
+[Severity: High]
+This is a pre-existing issue, but does this function suffer from the same l=
+eak
+on the success path?
 
-When efct_scsi_io_alloc() fails, the driver sends a task set full/busy
-response via efct_sframe_common_send(). It allocates the async transmission
-context directly inside the incoming sequence's DMA buffer:
+The ELS completion callback receives the hio but also ignores it:
 
-efct_unsol.c:efct_sframe_common_send() {
-    ctx =3D (void *)(heap_virt_base + heap_offset);
-    ...
-    ctx->seq =3D seq;
-}
+drivers/scsi/elx/efct/efct_hw.c:efct_els_ssrs_send_cb() {
+    struct efc_disc_io *io =3D arg;
 
-However, efct_dispatch_frame() ignores the return value of
-efct_dispatch_fcp_cmd() and unconditionally frees the sequence:
-
-efct_unsol.c:efct_dispatch_frame() {
-    kref_put(&node->ref, node->release);
-    efct_hw_sequence_free(&efct->hw, seq);
+    efc_disc_io_complete(io, length, status, ext_status);
     return 0;
 }
 
-When transmission completes, efct_sframe_common_send_cb() double-frees the
-sequence:
+Should the completion callbacks be responsible for calling efct_hw_io_free(=
+), or
+should that be handled by the generic caller?
 
-efct_unsol.c:efct_sframe_common_send_cb() {
-    /* Free sequence */
-    efct_hw_sequence_free(hw, ctx->seq);
-}
-
-Could this cause memory corruption and hardware DMA issues if the buffer is
-returned to the hardware receive ring before the async send completes?
-
-
-[Severity: High]
-This is a pre-existing issue, but does sending a task set full/busy response
-result in a NULL pointer dereference?
-
-In efct_sframe_common_send(), the context is zeroed out, leaving wqebuf as
-NULL:
-
-efct_unsol.c:efct_sframe_common_send() {
-    memset(ctx, 0, sizeof(*ctx));
-    ...
-}
-
-This uninitialized context is passed to efct_hw_send_frame(), which passes
-the NULL wqe->wqebuf to sli_send_frame_wqe():
-
-efct_hw.c:efct_hw_send_frame() {
-    rc =3D sli_send_frame_wqe(&hw->sli, wqe->wqebuf, ...);
-}
-
-sli_send_frame_wqe() immediately calls memset() on this NULL buffer:
-
-libefc_sli/sli4.c:sli_send_frame_wqe() {
-    memset(buf, 0, sli->wqe_size);
-}
-
-Will this guarantee a kernel panic when triggered?
-
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does efct_hw_reqtag_free()
-corrupt the freelist if it detects a double-free?
-
-If a tag is already freed, the function logs an error but doesn't return
-early:
-
-efct_hw.c:efct_hw_reqtag_free() {
-    if (!wqcb->callback)
-        efc_log_err(hw->os, "WQCB is already freed\n");
-
-    spin_lock_irqsave(&reqtag_pool->lock, flags);
-    wqcb->callback =3D NULL;
-    ...
-    INIT_LIST_HEAD(&wqcb->list_entry);
-    list_add(&wqcb->list_entry, &hw->wq_reqtag_pool->freelist);
-    spin_unlock_irqrestore(&reqtag_pool->lock, flags);
-}
-
-If the tag is already in the freelist, doesn't continuing with
-INIT_LIST_HEAD() and list_add() completely corrupt the list pointers?
-
-
-[Severity: High]
-This is a pre-existing issue, but does an allocation failure in
-efct_hw_init() lead to a NULL pointer dereference later?
-
-If efct_hw_io_alloc() fails, it logs an error but returns success:
-
-efct_hw.c:efct_hw_init() {
-    hw->hw_wq[0]->send_frame_io =3D efct_hw_io_alloc(hw);
-    if (!hw->hw_wq[0]->send_frame_io)
-        efc_log_err(hw->os, "alloc for send_frame_io failed\n");
-
-    /* Initialize send frame sequence id */
-    atomic_set(&hw->send_frame_seq_id, 0);
-
-    return 0;
-}
-
-Later, efct_hw_send_frame() unconditionally dereferences it:
-
-efct_hw.c:efct_hw_send_frame() {
-    xri =3D wq->send_frame_io->indicator;
-}
-
-Should efct_hw_init() return an error code instead of 0 when this
-allocation fails?
+> -		/*
+> -		 * Add IO to active io wqe list before submitting, in case the
+> -		 * wcqe processing preempts this thread.
+> -		 */
+> -		hio->wq->use_count++;
+> -		rc =3D efct_hw_wq_write(hio->wq, &hio->wqe);
+> -		if (rc >=3D 0) {
+> -			/* non-negative return is success */
+> -			rc =3D 0;
+> -		} else {
+> -			/* failed to write wqe, remove from active wqe list */
+> -			efc_log_err(hw->os,
+> -				    "sli_queue_write failed: %d\n", rc);
+> -			hio->xbusy =3D false;
+> -		}
+> +	hio->xbusy =3D true;
+> +
+> +	/*
+> +	 * Add IO to active io wqe list before submitting, in case the
+> +	 * wcqe processing preempts this thread.
+> +	 */
+> +	hio->wq->use_count++;
+> +	rc =3D efct_hw_wq_write(hio->wq, &hio->wqe);
+> +	if (rc >=3D 0) {
+> +		/* non-negative return is success */
+> +		rc =3D 0;
+> +	} else {
+> +		/* failed to write wqe, remove from active wqe list */
+> +		efc_log_err(hw->os,
+> +			    "sli_queue_write failed: %d\n", rc);
+> +		hio->xbusy =3D false;
+>  	}
+> =20
+>  	return rc;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806192345.3286=
-21-1-ali@iusegentoo.com?part=3D3
+21-1-ali@iusegentoo.com?part=3D2
