@@ -1,156 +1,76 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 611463909A2
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 06:53:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B4443AD537;
+	Thu,  6 Aug 2026 07:05:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785999201; cv=none; b=KixfhWfRIWeWZBIwiO2y3EKuL0b9aaZwNFG/pt4KkMKTmqp+RrE02ZhM+DLj0MAUOy7E+g62h/gWQpQDW+e7gb4qYTrTGbwZXi9x+C6/bjYXI73u1r1xBEH58xmwyMGSZ4rYlGxxsg0Vyfwk5v5OTq785y4v9CVy86hegu+VzPc=
+	t=1785999916; cv=none; b=scYnRvZClfIZMEBxsyM9iV/YsoRuy6s/8wWs7B9AzjgfRy5kiD2jK6lp2sEoVwz/SjQUV1/lj4rgzaNmJKGhZpmKS2BizUMtsivwBUisETYldHmGq3c0jeg2qF4hO15zYNa/T2yo64Y3PrX5NtY980u67FzEFqvY5zx4qivo9hE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785999201; c=relaxed/simple;
-	bh=USBg4QW2BWEra48054158xF0+/X/wOPgiJbSiKmpNyQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=r6sy3Hz9ehT/+QWNiMrnlKy+3RfgWzRTyGpB5Ezuip/BLIBLLu+ZKik3zsWWq4mKv1qnvmvy379FjaNAzPXCcIHKyggddn+mEYhpnQPhkV1Qse/6CkgdhjXp5xv5d+7pNPa03eI2c2YdwoiPTWOAcH1iUwU43b/tfujGSxeWVhU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=QudBCZnU; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1785999916; c=relaxed/simple;
+	bh=Ioco7OVue3aRIdqHRF+bq60y2AgXB0GTbcuCzV7Dkfo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fexhu05AhGRtX6arm3NEd2F7vYf5oNzFwoQhgIthS6o5Q2b2hFcbCa1ZMXEWIQv56ij5L7BrBe3k4C7HX4r7EOGJQ/x6Nby+cWpBmpWi0hK3YjRptCLeFMeATs0y0g/H+V7kFz5jijZ+xqGm8hw94/45mB0I1DdUf6cdLN+VzuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XQ0SIge7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="QudBCZnU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=42
-	k59IWHZj4Gk53TFlXayEgT+4jqQ5aFWzKhR10GFFQ=; b=QudBCZnUOPNvNWwlPu
-	yO/nq3i7kAOYC9fVjn/t6Fq/J+elXYCh6fgiZ7V4U7ZvIqW+nVcW125uEM/xGVEO
-	j58tx+RnEbtcGi/h44gRXZYdKE3Q0J7MFdbv13KWSl8V5YDkPPDun/BHrIHFzy0q
-	X5Ll3MY2JtoF88XbQjUWQjUrk=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wCHo8dHL3RqroDSOA--.36133S2;
-	Thu, 06 Aug 2026 14:52:55 +0800 (CST)
-From: ghuicao@163.com
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Cao Guanghui <caoguanghui@kylinos.cn>
-Subject: [PATCH v2] scsi: target: iscsi: Reject CDB size exceeding available buffer in iscsit_setup_scsi_cmd
-Date: Thu,  6 Aug 2026 14:52:52 +0800
-Message-Id: <20260806065252.91800-1-ghuicao@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260806054820.75950-1-ghuicao@163.com>
-References: <20260806054820.75950-1-ghuicao@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XQ0SIge7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB13E1F000E9;
+	Thu,  6 Aug 2026 07:05:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785999915;
+	bh=StZpRC4UdL40+r01FvxYkBdHfrGKIGU+ZlSJfqgqV44=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=XQ0SIge7vmOKhfMTQ96S4l4/xyFk1qsdoMOXSAYiBjGbADyJjhz/K/ZPF3JJYVKQy
+	 6q0ZEcavV2qg1wQMF5DSYV4wjqg2wPPk+CuSRy5bC3ySdrY5XYxLddtw7vvDtjU4ht
+	 7d5VXADLioMlWkrxw+clOsGJvZz0RNxBI7Ls/fGhluA/QGvu5Y1wWKyuZS8EYhM4IM
+	 8TVno8yEs0qaGhPEODm/ycDVEKbV0v5ciaD05FQyveIoZhLjYRvErgW2WOUk3RPxBC
+	 a+Brh2v6FFzMG8Lp9v1zpJAs6MofEhon1+tuxI4gjtBcOcHdi+mHbIrxpo1t4RFb3S
+	 y5OJOEQFFh7+A==
+Date: Thu, 6 Aug 2026 09:05:10 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Yixun Lan <dlan@kernel.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Philipp Zabel <p.zabel@pengutronix.de>, 
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, 
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, Aurelien Jarno <aurelien@aurel32.net>, 
+	Jennifer Berringer <jberring@redhat.com>, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] scsi: ufs: spacemit: dt-bindings: Add UFS
+ controller for K3 SoC
+Message-ID: <20260806-prudent-vole-from-valhalla-3eae39@quoll>
+References: <20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org>
+ <20260806-08-k3-ufs-support-v3-1-037fb322acdb@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCHo8dHL3RqroDSOA--.36133S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxCF43Aw43Wr45Aw17Xry8AFb_yoWruF47pF
-	4Ygw1IkrZ3Z3yxtwsxAayYvryYvrsaka4qkFy3K3yUCwnxGFy0gFyFga43WayUJFn2gry5
-	Kws0va48GF4UXw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U9zV8UUUUU=
-X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC3wiVKGp0L0gvsgAA3O
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260806-08-k3-ufs-support-v3-1-037fb322acdb@kernel.org>
 
-From: Cao Guanghui <caoguanghui@kylinos.cn>
+On Thu, Aug 06, 2026 at 02:56:18AM +0000, Yixun Lan wrote:
+> Document the compatible for UFS (Universal Flash Storage) Host Controller
+> which found in SpacemiT K3 SoC chip. Its features are listed below:
+> 
+> - Compliant with MIPI UniPro v1.61 specification.
+> - Compliant with M-PHY v3.0 specification.
+> - Compliant with UFS HCI v2.1 specification.
+> - Supports up to 2 Tx and 2 Rx lanes, up to HS-GEAR3 5.8 Gbps per lane.
+> - Supports standard low-power hibernate to reduce power consumption.
+> 
+> Signed-off-by: Yixun Lan <dlan@kernel.org>
+> ---
 
-In iscsit_setup_scsi_cmd(), the CDB is later re-parsed by
-scsi_command_size() based on its SCSI opcode. For a VARIABLE_LENGTH_CMD
-(0x7f) the returned size is cdb[7] + 8, where both cdb[0] and cdb[7]
-come verbatim from the initiator-controlled PDU. The amount of CDB data
-actually available is never cross-checked against this opcode-declared
-length before the CDB is handed to target_cmd_init_cdb(), which does:
+You keep having the same failure for every version, no? Never responded to it...
 
-  memcpy(cmd->t_task_cdb, cdb, scsi_command_size(cdb));
+I'll drop from Patchwork.
 
-An initiator can set cdb[0]=0x7f and cdb[7]=252 so that
-scsi_command_size() returns 260, while the available CDB space is only
-16 bytes (the basic header, when no Extended CDB AHS is present) or the
-AHS-provided length. target_cmd_init_cdb() then reads up to 244 bytes
-past the end of the CDB buffer, a heap out-of-bounds read. The leaked
-bytes are later parsed as the CDB and can be indirectly observed by the
-initiator through sense data and responses.
-
-Reject the command when the opcode-declared CDB size exceeds the
-available CDB space, before the CDB is passed on:
-
-- Without an Extended CDB AHS the CDB is limited to ISCSI_CDB_SIZE (16)
-  bytes in the basic header, so reject when scsi_command_size() >
-  ISCSI_CDB_SIZE.
-- With an Extended CDB AHS the buffer is allocated from the AHS-declared
-  length, so reject when scsi_command_size() > cdb_length.
-
-commit 2f3835771dff ("scsi: target: iscsi: reject invalid size Extended
-CDB AHS") fixed the zero-length ahslength overflows and the AHS-buffer
-overread, but did not cover the orthogonal "available CDB space vs.
-opcode-declared size" path.
-
-Fixes: 8f1f7d297bce ("scsi: target: iscsi: Add support for extended CDB AHS")
-Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
----
-Hi Martin,
-
-Thanks for the review (via Sashiko). You are right that the original patch
-only covered the Extended CDB AHS path and missed the standard command
-path without an AHS, where the same out-of-bounds read is reachable. v2
-adds the same bounds check for hdr->hlength == 0 and switches the two
-paths to if/else for clarity.
-
-v2:
-  - Add the bounds check for the standard path without an AHS
-    (hdr->hlength == 0) as well, fixing the same out-of-bounds read
-    that was previously only covered for the Extended CDB AHS path.
-  - Use if/else to make the two (mutually exclusive) paths explicit.
-
- drivers/target/iscsi/iscsi_target.c | 31 +++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 62ada3a52210..56f8fd461192 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1100,7 +1100,22 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
- 
- 	cdb = hdr->cdb;
- 
--	if (hdr->hlength) {
-+	if (!hdr->hlength) {
-+		/*
-+		 * Without an Extended CDB AHS the CDB is limited to the 16
-+		 * bytes in the basic header. The CDB is later re-parsed by
-+		 * scsi_command_size() based on its opcode, which may claim a
-+		 * larger length (e.g. VARIABLE_LENGTH_CMD with cdb[7]=252).
-+		 * Reject such a mismatch before handing the CDB to
-+		 * target_cmd_init_cdb() to avoid an out-of-bounds read.
-+		 */
-+		if (scsi_command_size(hdr->cdb) > ISCSI_CDB_SIZE) {
-+			pr_err("SCSI command size %u exceeds CDB size %u, protocol error.\n",
-+			       scsi_command_size(hdr->cdb), ISCSI_CDB_SIZE);
-+			return iscsit_add_reject_cmd(cmd,
-+				ISCSI_REASON_PROTOCOL_ERROR, buf);
-+		}
-+	} else {
- 		ecdb_ahdr = (struct iscsi_ecdb_ahdr *) (hdr + 1);
- 		if (ecdb_ahdr->ahstype != ISCSI_AHSTYPE_CDB) {
- 			pr_err("Additional Header Segment type %d not supported!\n",
-@@ -1124,6 +1139,20 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
- 
- 		cdb_length = ahslength - 1 + ISCSI_CDB_SIZE;
- 
-+		/*
-+		 * The CDB buffer is later re-parsed by scsi_command_size()
-+		 * based on its opcode, which may claim a length larger than
-+		 * the AHS provided. Reject such a mismatch before allocating
-+		 * to avoid an out-of-bounds read of the CDB buffer in
-+		 * target_cmd_init_cdb().
-+		 */
-+		if (scsi_command_size(hdr->cdb) > cdb_length) {
-+			pr_err("Extended CDB AHS: SCSI command size %u exceeds AHS-provided CDB length %u, protocol error.\n",
-+			       scsi_command_size(hdr->cdb), cdb_length);
-+			return iscsit_add_reject_cmd(cmd,
-+				ISCSI_REASON_PROTOCOL_ERROR, buf);
-+		}
-+
- 		cdb = kmalloc(cdb_length, GFP_KERNEL);
- 		if (cdb == NULL)
- 			return iscsit_add_reject_cmd(cmd,
--- 
-2.34.1
+Best regards,
+Krzysztof
 
