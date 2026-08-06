@@ -1,341 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from hall.aurel32.net (hall.aurel32.net [195.154.119.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 476413E1205;
-	Thu,  6 Aug 2026 15:17:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D677438AC9A;
+	Thu,  6 Aug 2026 15:24:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.154.119.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786029461; cv=none; b=FBPnpemHzYLKyxbvNipIDOgytKyVHAAB0I7SGtmBRN7weeR0YfnWpOno+lvY4ocHIFkAgLgkBXbCqYhsIcwAH404QwPEiMvkxdO2zLj8XjX0GpO2aZkzKzmc8WRJ2KL9CF9pez547pdpD9KVDu54oNC2muLAtlgNI+kvZ/yuSZc=
+	t=1786029893; cv=none; b=PmWAR9vdad2oagR6D15bChgXpgkveNEJ39I2FmxpeQ0T8R+Pq7f5DGoALw2kraeNMPu832ThYx4tqouG77Up7F6mrDqCEq/KB3VUsMoqhUpxXXCNiPJoTFzBQC+ORKIxaMS5gmEhfqBQgCgayYtq1pUUo/eLQQE/hmxEDB2+iok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786029461; c=relaxed/simple;
-	bh=GCpp8loI/qph9CLzy+fFISXczkAT4Cpt7iOweu2NwRs=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=fNRI1MkAcn/RSDaCqW3LZ2+0jM7i1aZM+hZmY2jme6mRORBXwZ+YN5ws5EC7t0YUpaV2Z3C0XyfLh0MhD4Bh9WelejYL4bMtV9gAuZAqL+5FP9ifKFHV1DqlZas5FdsFcRb3zHCfo3irdOx5KZOZQ5IwQrg7N3NAEkSlyXAIsJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=owik93Tl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1786029893; c=relaxed/simple;
+	bh=qQUuYVx6hsSyhXMIU9tqBc+sCVlVhS0D4yzrS0ULgqc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uMz3wLjPzSyNzuzgoGyE14sulRbvwvBr4i/5kaJq7H+MKHfjj0lmUCoItZNrJRWQJAfXS5lOsw+shKdY8RCZbM16mEYsLWEmHURA93DTT6+2k+LruO+M8cP6Cz8JTsWSigCDOugQRWdmzuUcO9GmOf54YXOXg9IGEiqFxBa0HfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net; spf=pass smtp.mailfrom=aurel32.net; dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b=vChC1Qx3; arc=none smtp.client-ip=195.154.119.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aurel32.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="owik93Tl"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F09F7C2BCFF;
-	Thu,  6 Aug 2026 15:17:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1786029461;
-	bh=GCpp8loI/qph9CLzy+fFISXczkAT4Cpt7iOweu2NwRs=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=owik93Tl/AuuoOAu7IwY03tiIwMmvPPnxNCflN5phhQb/fqdOordsRorZlF3hydna
-	 FsyMGw12BV5iQb5p6bp/AUH68jc51pMGDMI01yjaLUX0RN4kQdVfOy9qv9KUyGXQW7
-	 Z9FkfJ6g/2raZjg0eeP2gQakVvN8EGFqv4m6AEaXPX1EPXsSzajGyJT89VOy5M4IIC
-	 afDD5rBhMRVxm08akknqnD+InLrAE1NxTBr7zqK/kOpf4AhAqOlx6iAN2RBMXjJtfv
-	 U3nL1i6d9BELzvnOZztuB7WkBrnPR6XSobwJ8W3UqLfR0AumtrwmoasQ6QsCja7GoJ
-	 hAPyauke1uVUA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC760C56207;
-	Thu,  6 Aug 2026 15:17:40 +0000 (UTC)
-From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Date: Thu, 06 Aug 2026 10:17:36 -0500
-Subject: [PATCH v5 6/7] scsi: ibmvfc: register and use asynchronous
- sub-queue for events
+	dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b="vChC1Qx3"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=aurel32.net
+	; s=202004.hall; h=In-Reply-To:Content-Type:MIME-Version:References:
+	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:From:Reply-To:
+	Subject:Content-ID:Content-Description:X-Debbugs-Cc;
+	bh=pPGzVx4G8LgdTlTv/38zHzZ7a/0MlpsoUhuTgEmW0mg=; b=vChC1Qx3zD1SwVeyMLXj3b+S5k
+	Cdp9Tvj39YQvk+8zDhirk7TWV9D9T9r8H9eXfqe0iCPPAXCNe7bdjO01wc1JcwRe8CvEpEdVWub8z
+	ozsQFUGM0QWudAONkt+k9nLAI130zyEHGvdhFol3c+gOSC0V0L2rHncmCejQTUzeXIOVt+MEYHqiy
+	e7gLCSlnRJB0druBTAQE36yvuCISqkIMygDriiaUV2kknYvPFb3A2qAxrrxBC+4k6AxP3R27dtnJf
+	8WuPEwdT8DCeBIZB6l2g182RM7aVAZmAOQPC6M3GNxS+elQSNNrfylg5FKGIOkXksfTaGd80hB6+B
+	aK7QQMUA==;
+Received: from authenticated user
+	by hall.aurel32.net with esmtpsa  (TLS1.3)  tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <aurelien@aurel32.net>)
+	id 1wrzR2-0000000Deyk-1X5z;
+	Thu, 06 Aug 2026 16:51:04 +0200
+Date: Thu, 6 Aug 2026 16:51:03 +0200
+From: Aurelien Jarno <aurelien@aurel32.net>
+To: Yixun Lan <dlan@kernel.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
+	Jennifer Berringer <jberring@redhat.com>,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/3] Add UFS Host driver support for SpacemiT K3 SoC
+Message-ID: <anSfVzGI3SMzKOOd@aurel32.net>
+Mail-Followup-To: Yixun Lan <dlan@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
+	Jennifer Berringer <jberring@redhat.com>,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+References: <20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260806-ibmvfc-fpin-support-v5-6-13fd6f8a8f8b@linux.ibm.com>
-References: <20260806-ibmvfc-fpin-support-v5-0-13fd6f8a8f8b@linux.ibm.com>
-In-Reply-To: <20260806-ibmvfc-fpin-support-v5-0-13fd6f8a8f8b@linux.ibm.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Madhavan Srinivasan <maddy@linux.ibm.com>, 
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
- Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.ibm.com>, 
- Greg Joyce <gjoyce@linux.ibm.com>, Kyle Mahlkuch <kmahlkuc@linux.ibm.com>, 
- Dave Marquardt <davemarq@linux.ibm.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1786029459; l=8719;
- i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=fCuKuW0pL10CRvqISUmrayWRJcBYtnsRj+Nrw2rw9WU=;
- b=k94URTV124LThEM0RS/RNjfDe4FWM2nzMWsLX2DIvpeoYWrfmVQfHL8xo9oDdODdqLcv3cSME
- +HSlYdxXjkeDNP0K0XKjSRwKWJsdnHPCGBnHzLDhtzulZkz793mDc4e
-X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
- pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
-X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
- auth_id=689
-X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
-Reply-To: davemarq@linux.ibm.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org>
+User-Agent: Mutt/2.4.1 (2026-07-04)
 
-From: Dave Marquardt <davemarq@linux.ibm.com>
+On 2026-08-06 02:56, Yixun Lan wrote:
+> This series try to add UFS support for SpacemiT K3 SoC, the controller
+> components consists of System Bus Interface Unit, UFS Host Controller
+> Interface, UFS Transport Protocol Layer, UFS Host Registers, Device
+> Management Entity (DME), Transport Layer, Network Layer, Data Link
+> Layer, PHY Adapter Layer, and M-PHY Interface. A more detail functional
+> block diagram can be found in SpacemiT website, chapter 9.7.3 [1]
+> 
+> Please note, in order to test this driver, the UFS clock driver[2] here
+> should be applied first as a prerequisite patch.
+> 
+> One known issue is that the device will occasionally raise BKOPS interrupt
+> when doing some high load test, log from dmesg shows
+> 
+> [  806.710763] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1
+> 
+> Link: https://spacemit.com/community/document/info?nodepath=hardware/key_stone/k3/k3_docs/k3_usermanual/09_memory_storage.md&lang=en [1]
+> Link: https://lore.kernel.org/all/20260630-06-clk-ufs-support-v1-0-cf7521d1d0fe@kernel.org/ [2]
+> Signed-off-by: Yixun Lan <dlan@kernel.org>
+> ---
+> Changes in v3:
+> - fix dt-binding warning reported-by sashiko
+> - fix low freq in opp-2 table
+> - fix err checking in check_hibern8()
+> - propagate err code in link_startup_notify()
+> - update documents for event_notify()
+> - Link to v2: https://patch.msgid.link/20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org
+> 
+> Changes in v2:
+> - fix missing interrupts property
+> - move ufs node to k3-com260.dtsi
+> - convert freq-table-hz to operating-points-v2
+> - rework reset_control, fix header and drop global variable
+> - drop dump_host_regs() debug interface
+> - converge and refactor dme_set() operations
+> - massive reduce of busy delay() loops
+> - drop vendor specific hce_enable_notify(), fallback to default
+> - drop unused member from struct ufs_spacemit_host
+> - add COMPILE_TEST support to Kconfig
+> - comment style fix
+> - Link to v1: https://patch.msgid.link/20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org
+> 
+> ---
+> Yixun Lan (3):
+>       scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
+>       scsi: ufs: spacemit: k3: Add UFS Host Controller driver
+>       riscv: dts: spacemit: k3: Add UFS support
+> 
+>  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml |  56 ++
+>  arch/riscv/boot/dts/spacemit/k3-com260.dtsi        |   4 +
+>  arch/riscv/boot/dts/spacemit/k3-pico-itx.dts       |   4 +
+>  arch/riscv/boot/dts/spacemit/k3.dtsi               |  22 +
+>  drivers/ufs/host/Kconfig                           |  12 +
+>  drivers/ufs/host/Makefile                          |   1 +
+>  drivers/ufs/host/ufs-spacemit.c                    | 687 +++++++++++++++++++++
+>  drivers/ufs/host/ufs-spacemit.h                    |  79 +++
+>  8 files changed, 865 insertions(+)
+> ---
+> base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+> change-id: 20260605-08-k3-ufs-support-c8b308e415e2
+> 
 
-Complete async sub-queue integration by setting up interrupt handling,
-registering the queue as a channel, and enabling its use during NPIV
-login.
+Thanks for this new version, and no worries about not adding the 
+previous Tested-by tags. I have also tested this version, so patches 2 
+and 3 are:
 
-Add ibmvfc_interrupt_async_subq() interrupt handler and
-ibmvfc_drain_async_subq() to process events from the async sub-queue.
-Refactor ibmvfc_register_channel() into ibmvfc_register_channel_common()
-to support both regular sub-CRQs and the async sub-queue with different
-interrupt handlers.
+Tested-by: Aurelien Jarno <aurelien@aurel32.net>
 
-Update ibmvfc_set_login_info() to set IBMVFC_CAN_USE_CHANNELS,
-IBMVFC_YES_SCSI, IBMVFC_USE_ASYNC_SUBQ, and IBMVFC_CAN_HANDLE_FPIN
-capability bits when channels are enabled, informing VIOS that the client
-supports async sub-queue and FPIN handling.
-
-Register async_scrq during channel initialization and unregister during
-cleanup.
----
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 146 ++++++++++++++++++++++++++++++------
- 1 file changed, 124 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 230bf2be6531..c002226f4617 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -1568,9 +1568,11 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
- 
- 	if (vhost->mq_enabled || vhost->using_channels) {
- 		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
-+		login_info->capabilities |= cpu_to_be64(IBMVFC_USE_ASYNC_SUBQ);
-+		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_HANDLE_FPIN);
-+		login_info->capabilities |= cpu_to_be64(IBMVFC_YES_SCSI);
- 		if (vhost->nvme_enabled) {
- 			login_info->capabilities |= cpu_to_be64(IBMVFC_YES_NVMEOF);
--			login_info->capabilities |= cpu_to_be64(IBMVFC_YES_SCSI);
- 			login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_WWPN_ALL);
- 		}
- 	}
-@@ -4321,6 +4323,52 @@ static struct ibmvfc_crq *ibmvfc_next_scrq(struct ibmvfc_queue *scrq)
- 	return crq;
- }
- 
-+static void ibmvfc_drain_async_subq(struct ibmvfc_queue *scrq)
-+{
-+	struct ibmvfc_host *vhost = scrq->vhost;
-+	struct ibmvfc_crq *crq;
-+	unsigned long flags;
-+	int done = 0;
-+
-+	spin_lock_irqsave(vhost->host->host_lock, flags);
-+	spin_lock(scrq->q_lock);
-+	while (!done) {
-+		while ((crq = ibmvfc_next_scrq(scrq)) != NULL) {
-+			ibmvfc_handle_async(crq, scrq->vhost, true);
-+			crq->valid = 0;
-+			wmb();	/* complete write */
-+		}
-+
-+		ibmvfc_toggle_scrq_irq(scrq, 1);
-+		crq = ibmvfc_next_scrq(scrq);
-+		if (crq != NULL) {
-+			ibmvfc_toggle_scrq_irq(scrq, 0);
-+			ibmvfc_handle_async(crq, scrq->vhost, true);
-+			crq->valid = 0;
-+			wmb();	/* complete write */
-+		} else
-+			done = 1;
-+	}
-+	spin_unlock(scrq->q_lock);
-+	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+}
-+
-+/**
-+ * ibmvfc_interrupt_asyncq - Handle an async event from the adapter
-+ * @irq:           interrupt request
-+ * @scrq_instance: async subq
-+ *
-+ **/
-+static irqreturn_t ibmvfc_interrupt_async_subq(int irq, void *scrq_instance)
-+{
-+	struct ibmvfc_queue *scrq = (struct ibmvfc_queue *)scrq_instance;
-+
-+	ibmvfc_toggle_scrq_irq(scrq, 0);
-+	ibmvfc_drain_async_subq(scrq);
-+
-+	return IRQ_HANDLED;
-+}
-+
- static void ibmvfc_drain_sub_crq(struct ibmvfc_queue *scrq)
- {
- 	struct ibmvfc_crq *crq;
-@@ -6666,14 +6714,29 @@ static int ibmvfc_init_crq(struct ibmvfc_host *vhost)
- 	return retrc;
- }
- 
--static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
--				   struct ibmvfc_channels *channels,
--				   int index)
-+/**
-+ * ibmvfc_register_channel_common - Register a sub-CRQ with the hypervisor
-+ * @vhost:	ibmvfc host struct
-+ * @channels:	ibmvfc channels struct
-+ * @scrq:	sub-CRQ to register
-+ * @index:	channel index (negative for async)
-+ * @irq:	interrupt handler for the sub-CRQ
-+ *
-+ * Return value:
-+ *	0 on success / non-zero on failure
-+ **/
-+static int ibmvfc_register_channel_common(struct ibmvfc_host *vhost,
-+					  struct ibmvfc_channels *channels,
-+					  struct ibmvfc_queue *scrq,
-+					  int index,
-+					  irq_handler_t irq)
- {
- 	struct device *dev = vhost->dev;
- 	struct vio_dev *vdev = to_vio_dev(dev);
--	struct ibmvfc_queue *scrq = &channels->scrqs[index];
-+	long hcall_rc;
- 	int rc = -ENOMEM;
-+	const char *name_suffix;
-+	bool is_async = (index < 0);
- 
- 	ENTER;
- 
-@@ -6692,20 +6755,19 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
- 
- 	if (!scrq->irq) {
- 		rc = -EINVAL;
--		dev_err(dev, "Error mapping sub-crq[%d] irq\n", index);
-+		if (is_async)
-+			dev_err(dev, "Error mapping sub-crq[%s] irq\n", "async");
-+		else
-+			dev_err(dev, "Error mapping sub-crq[%d] irq\n", index);
- 		goto irq_failed;
- 	}
- 
- 	switch (channels->protocol) {
- 	case IBMVFC_PROTO_SCSI:
--		snprintf(scrq->name, sizeof(scrq->name), "ibmvfc-%x-scsi%d",
--			 vdev->unit_address, index);
--		scrq->handler = ibmvfc_interrupt_mq;
-+		name_suffix = "scsi";
- 		break;
- 	case IBMVFC_PROTO_NVME:
--		snprintf(scrq->name, sizeof(scrq->name), "ibmvfc-%x-nvmf%d",
--			 vdev->unit_address, index);
--		scrq->handler = ibmvfc_interrupt_mq;
-+		name_suffix = "nvmf";
- 		break;
- 	default:
- 		dev_err(dev, "Unknown channel protocol (%d)\n",
-@@ -6713,35 +6775,63 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
- 		goto irq_failed;
- 	}
- 
-+	if (is_async) {
-+		snprintf(scrq->name, sizeof(scrq->name), "ibmvfc-%x-%s%s",
-+			 vdev->unit_address, name_suffix, "async");
-+		scrq->handler = irq;
-+	} else {
-+		snprintf(scrq->name, sizeof(scrq->name), "ibmvfc-%x-%s%d",
-+			 vdev->unit_address, name_suffix, index);
-+		scrq->handler = irq ? irq : ibmvfc_interrupt_mq;
-+		scrq->hwq_id = index;
-+	}
-+
- 	rc = request_irq(scrq->irq, scrq->handler, 0, scrq->name, scrq);
- 
- 	if (rc) {
--		dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
-+		if (is_async)
-+			dev_err(dev, "Couldn't register sub-crq[%s] irq\n", "async");
-+		else
-+			dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
- 		irq_dispose_mapping(scrq->irq);
- 		goto irq_failed;
- 	}
- 
--	scrq->hwq_id = index;
--
- 	LEAVE;
- 	return 0;
- 
- irq_failed:
- 	do {
--		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
--	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
-+		hcall_rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
-+	} while (hcall_rc == H_BUSY || H_IS_LONG_BUSY(hcall_rc));
- reg_failed:
- 	LEAVE;
- 	return rc;
- }
- 
-+static int ibmvfc_register_channel_async(struct ibmvfc_host *vhost,
-+					   struct ibmvfc_channels *channels,
-+					   struct ibmvfc_queue *scrq,
-+					   irq_handler_t irq)
-+{
-+	return ibmvfc_register_channel_common(vhost, channels, scrq, -1, irq);
-+}
-+
-+static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
-+				   struct ibmvfc_channels *channels,
-+				   int index)
-+{
-+	struct ibmvfc_queue *scrq = &channels->scrqs[index];
-+
-+	return ibmvfc_register_channel_common(vhost, channels, scrq, index, NULL);
-+}
-+
- static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
- 				      struct ibmvfc_channels *channels,
--				      int index)
-+				      struct ibmvfc_queue *scrq)
- {
- 	struct device *dev = vhost->dev;
- 	struct vio_dev *vdev = to_vio_dev(dev);
--	struct ibmvfc_queue *scrq = &channels->scrqs[index];
- 	long rc;
- 
- 	ENTER;
-@@ -6756,7 +6846,7 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
- 	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
- 
- 	if (rc)
--		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
-+		dev_err(dev, "Failed to free sub-crq[%s]: rc=%ld\n", scrq->name, rc);
- 
- 	/* Clean out the queue */
- 	memset(scrq->msgs.crq, 0, PAGE_SIZE);
-@@ -6774,10 +6864,21 @@ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
- 	if (!vhost->mq_enabled || !channels->scrqs)
- 		return;
- 
-+	if (ibmvfc_register_channel_async(vhost, channels,
-+					  channels->async_scrq,
-+					  ibmvfc_interrupt_async_subq)) {
-+		vhost->do_enquiry = 0;
-+		return;
-+	}
-+
- 	for (i = 0; i < channels->max_queues; i++) {
- 		if (ibmvfc_register_channel(vhost, channels, i)) {
- 			for (j = i; j > 0; j--)
--				ibmvfc_deregister_channel(vhost, channels, j - 1);
-+				ibmvfc_deregister_channel(
-+					vhost, channels, &channels->scrqs[j - 1]);
-+			ibmvfc_deregister_channel(vhost, channels,
-+							channels->async_scrq);
-+
- 			vhost->do_enquiry = 0;
- 			return;
- 		}
-@@ -6796,7 +6897,8 @@ static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *vhost,
- 		return;
- 
- 	for (i = 0; i < channels->max_queues; i++)
--		ibmvfc_deregister_channel(vhost, channels, i);
-+		ibmvfc_deregister_channel(vhost, channels, &channels->scrqs[i]);
-+	ibmvfc_deregister_channel(vhost, channels, channels->async_scrq);
- 
- 	LEAVE;
- }
+Regards
+Aurelien
 
 -- 
-2.55.0
-
-
+Aurelien Jarno                          GPG: 4096R/1DDD8C9B
+aurelien@aurel32.net                     http://aurel32.net
