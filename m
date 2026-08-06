@@ -1,64 +1,123 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63D374C8FEC
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 19:06:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC3294C77D1;
+	Thu,  6 Aug 2026 19:07:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786043209; cv=none; b=gvvG3AyNUeHI50a+6mp15leR4rcgWa86q4+yUgqVjVvRdnaJnq7ESIQUCyePpNgN23D26G7YXKxBhlhlnFkPaRZIg4bjVywQTH426Csox2gC00zDDpm25HN6Mna/z7yAiopqVHZ8UYCHI5qXxcRfI5GE3ARmmLTZIih4mdyO4iE=
+	t=1786043241; cv=none; b=XA7yYFuFFFAEYu+M0Hx8Op5xzSjBE853LviW5VeC6mOdihp8C5/MkwcD4iGoZJDTYzhg1X08+eibzaJrd2b1lxxvYLrKpn8SNzHBsszDAXZE88ougZ8Uiw5GlrjAMDegtnknNtNSlAOQq/+Ht0AyCNKjYseQiijCorVYbUvVkdc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786043209; c=relaxed/simple;
-	bh=FbMfXU/xBgWG2Yj60grkrP62LVkD9CRxC8/t7pZ8g4o=;
+	s=arc-20240116; t=1786043241; c=relaxed/simple;
+	bh=WXcm2Yb5I04oLe14dcXdrEPwOR8hGoCD+QeGAqYfYQw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HltQFVtQ6/TpxOuh0lE4w757i83bRl1+OAYShUfd9cDus50JQ3clarbyNdKSBt2cqn5dhJm12JSKleRj/mBkjr7Fb7l7/qAMnnuu1dBRz8X70lCZ8irN5AuaEWQy0Xm6WdGBzf5JX3eBZAbG8nTnh5qQO1j8FcrwY0UIjGvf40Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=NZ1ctacm; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=AEHc1hF25SowMbEOHH1pCtzo+9NhhXR8eZdjexjXEJITmo4nkfXlmFAGt1iIzc8D9d8ucOiSMcc8J+ZsgNaH6p36PVOAfJwd1Bn33oFKpmet3FB1qRxL7dTgXvVPFzmpP7Ah/od8cky199kShTwnh3+V41NlwUo//i2daPkIZe0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=nA1aUYEN; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NZ1ctacm"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 676Fu2DR3283362;
-	Thu, 6 Aug 2026 19:06:29 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nA1aUYEN"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 676Ftr4v4168306;
+	Thu, 6 Aug 2026 19:06:26 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=xwBcVxIn5vJLMmYuA92mkooT8bkCdRYLHDFHoDk5Co4=; b=
-	NZ1ctacmBYGMALMXkAWtR87ncB2F1DaJKR1sskc2mB4XAKTz/L6DZJ/+R3/pZ2NX
-	K6Q5g3NCCUjUa4XsCA2yOG+RnITSbRkbwvg1Yvg9LZX54sTLCDzw2CABJvk7vw0r
-	MqdoyhAUW8kZY5wS4ZPT7gwljz50ZMJ3aOc2wMEDYyZxbaTO/oJ1rU9GpRayIHop
-	Jsm9cqDtnheXo+U6zseOoRSqT6bwbj3iukrBGvEMcOJo2885kZCDqtrPCmk4318u
-	p84S/7ELWatPf6Z2JV4odPTEMCRbw7Jkun2Y1NeY/et1TUY1eItSaxyNMivHQKvW
-	9e63GyLXkH0TFLvP9HamsA==
+	corp-2025-04-25; bh=85JNUC8SyfLYyGobZYpdZmxyQGF0qjVqbjDUd/Wkets=; b=
+	nA1aUYENomsR9p7hfDkQr6KalTZrWQW8NET0IkudX6kxW006ofYrtz87Qku7QfJU
+	1lbtfpVmJ42Q3AQE1tcbOw0dHj5dJSylYxq+m2+YcyLW9melEp/Zo40HFGHB54iG
+	OcTwtR+niQLcarL+4OWP5kUShgYJOMrLwxEqqSkY7Lj2zjgD/sgtw+C5rg7PDGAH
+	Gv3g1ppfRFvZh8DYeUX2gV+upEZO5qZ40tc03kMw1uUKshv2LOqjagJ3HbvFdCxa
+	5hBpF9vOLZ/60dXew31tSvX4uLcqli6uolj+khGTMmHGGzK/4pK/rJL+YY5xBUHb
+	pPRuZrwRVaPtUZ7W/V2+uA==
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fs8p9e9qy-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fs8ugpqtf-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 06 Aug 2026 19:06:29 +0000 (GMT)
+	Thu, 06 Aug 2026 19:06:26 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 676J0cEk024696;
-	Thu, 6 Aug 2026 19:06:28 GMT
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 676J0b6k024663;
+	Thu, 6 Aug 2026 19:06:25 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fs78w56gk-1
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fs78w56e3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 06 Aug 2026 19:06:28 +0000 (GMT)
+	Thu, 06 Aug 2026 19:06:25 +0000 (GMT)
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 676J6Lgn011247;
-	Thu, 6 Aug 2026 19:06:27 GMT
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 676J6LgY011247;
+	Thu, 6 Aug 2026 19:06:24 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4fs78w56b9-10;
-	Thu, 06 Aug 2026 19:06:27 +0000 (GMT)
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4fs78w56b9-3;
+	Thu, 06 Aug 2026 19:06:24 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+To: Julia.Lawall@inria.fr, Alex Deucher <alexander.deucher@amd.com>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>,
+        Borislav Petkov <bp@alien8.de>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Daniel Lezcano <daniel.lezcano@kernel.org>,
+        David Airlie <airlied@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Hans de Goede <hansg@kernel.org>, Hans Verkuil <hverkuil@kernel.org>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Jakub Kicinski <kuba@kernel.org>,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@sandisk.com>
-Subject: Re: [PATCH] scsi: ufs: ufshcd.h: fix all kernel-doc warnings
-Date: Thu,  6 Aug 2026 15:06:15 -0400
-Message-ID: <178589207050.336697.8137292136805471417.b4-ty@oracle.com>
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Jaroslav Kysela <perex@perex.cz>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Jiri Pirko <jiri@resnulli.us>, "Joerg Roedel (AMD)" <joro@8bytes.org>,
+        Johan Hovold <johan@kernel.org>, Jonathan Cameron <jic23@kernel.org>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Julian Anastasov <ja@ssi.bg>, Leon Romanovsky <leon@kernel.org>,
+        Liam Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Mark Brown <broonie@kernel.org>, Matthew Sakai <msakai@redhat.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Maxime Ripard <mripard@kernel.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Mike Rapoport <rppt@kernel.org>,
+        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+        Nicolas Palix <nicolas.palix@imag.fr>,
+        Pablo Neira Ayuso <pablo@netfilter.org>,
+        Paolo Abeni <pabeni@redhat.com>, Ping-Ke Shih <pkshih@realtek.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Sebastian Reichel <sre@kernel.org>, Shuah Khan <shuah@kernel.org>,
+        Simona Vetter <simona@ffwll.ch>, Simon Horman <horms@verge.net.au>,
+        Stephen Boyd <sboyd@kernel.org>, Steve French <sfrench@samba.org>,
+        Takashi Iwai <tiwai@suse.com>, Thomas Renninger <trenn@suse.com>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        Tony Luck <tony.luck@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>,
+        Vadim Fedorenko <vadim.fedorenko@linux.dev>,
+        Vinod Koul <vkoul@kernel.org>, Will Deacon <will@kernel.org>,
+        Yazen Ghannam <Yazen.Ghannam@amd.com>,
+        Sang-Heon Jeon <ekffu200098@gmail.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, cocci@inria.fr,
+        amd-gfx@lists.freedesktop.org, dmaengine@vger.kernel.org,
+        dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org,
+        intel-gfx@lists.freedesktop.org, intel-wired-lan@lists.osuosl.org,
+        iommu@lists.linux.dev, linux-cifs@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-mm@kvack.org, linux-pm@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-rtc@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-sound@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, lvs-devel@vger.kernel.org,
+        netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        nouveau@lists.freedesktop.org, platform-driver-x86@vger.kernel.org
+Subject: Re: (subset) [PATCH 00/36] treewide: remove conditional returns with no effect
+Date: Thu,  6 Aug 2026 15:06:08 -0400
+Message-ID: <178589207129.336697.9870225893827541543.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260720013759.2979593-1-rdunlap@infradead.org>
-References: <20260720013759.2979593-1-rdunlap@infradead.org>
+In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
+References: <20260723184538.3888637-1-ekffu200098@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,64 +131,44 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  definitions=2026-08-06_02,2026-08-06_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
  spamscore=0 malwarescore=0 bulkscore=0 lowpriorityscore=0 mlxscore=0
- phishscore=0 mlxlogscore=999 suspectscore=0 classifier=spam adjust=0
+ phishscore=0 mlxlogscore=672 suspectscore=0 classifier=spam adjust=0
  reason=mlx scancount=1 engine=8.19.0-2606160000 definitions=main-2608060149
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA2MDE0OSBTYWx0ZWRfX038ke34bxd05
- yBm4sepHUox+6PSZoAXSCDpHHcdkk9tIfHqpgw53DPJBhwLY4xeJBl8zm9x9QoSHF/ZZzJt0Atp
- /ZTQQs3n7/FilVSP8aY0fep7XO2PdDTY+A2cbm1nHG5b6kGHw6nr
-X-Authority-Analysis: v=2.4 cv=EPU2FVZC c=1 sm=1 tr=0 ts=6a74db35 b=1 cx=c_pps
+X-Proofpoint-ORIG-GUID: XGMDaQGIFMb57T6Q2yvPQTQQt2debxfq
+X-Authority-Analysis: v=2.4 cv=XqnK/1F9 c=1 sm=1 tr=0 ts=6a74db32 b=1 cx=c_pps
  a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
  a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=EIcjfB9IiI4px24ztqRk:22 a=VwQbUJbxAAAA:8
- a=ofeJa6bYm3wA49rNNkoA:9 a=QEXdDO2ut3YA:10 a=5yU3S35YU4bGjq-dph-N:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=BqU2WV_vvsyTyxaotp0D:22 a=VwQbUJbxAAAA:8
+ a=Br-j9HdbvUlrMjNZj6IA:9 a=QEXdDO2ut3YA:10 a=5yU3S35YU4bGjq-dph-N:22
  a=Bho9c0fBagfJEIQBS7DQ:22 cc=ntf awl=host:13510
-X-Proofpoint-GUID: 2iwBW1JsS4sBXp7DLvRNPV0S4omXd07r
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA2MDE0OSBTYWx0ZWRfX6USZFJ8akhso
- oaxd1a+D1m75c2XD9OEhDNervB12zkICrcccNawA0D6ORSp1bdQoM1OA+K6U12nPGhh/p4EnW0b
- 3X8hzuNnZWqTk/nF21u4gNQ80PDMXTsjGzv3bcaVm+AV8Ysb3el5vBeDDiScB/VUFIr7xe+71SW
- xuL8jl0lFtymRJNIMqiICrCVNCz7nyr3ipRsU3Ye7RzLBsGoVca6WkiZsiH5L7xoeTukQqgkdTW
- vY1hVhEowfNCKUDqz5frdGQsy/cYJ48nqRbUD1g8Y8YkvPLDBH1GdTtKl07jW0bN7nMnV2Rc11g
- nCSg45IF7ixe0cTNJDLBzl8cWvtcUXA0BSb05TlsmaBf0H5siHP4ZS+zKJiXhjMSRNmW53ZByJU
- ZjKwekT2W92ESnbmTa4E/QrpgNsS2M0xCDl41hSxtJwx9J3iOigCtfZE/G6VOYDv376oAfIRXck
- BpM2D2qqU+wr1gTUK8RNI8+T+9DMITYj275jwt5I=
-X-Proofpoint-ORIG-GUID: 2iwBW1JsS4sBXp7DLvRNPV0S4omXd07r
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA2MDE0OSBTYWx0ZWRfX6uIK9jT+2Jev
+ rYS5Xc6Wjv9hMYRtyD0NY9wioUhY1o9ts8S44XrOIykROIC2fMM+q3H5rjkub44bNgkLDQ3tnSe
+ fkx9LiuU0Ioed9eVzRB8PP2qYuZIVaHGDH9Vr333gSb2ZgsHD92v
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA2MDE0OSBTYWx0ZWRfX43FUiflrVixJ
+ FNgAKsr+fsfl0ktZltC3fvW6MVFcRQRy/oySHj8nQQDMOHwfS94QLWHrXArK3j62D1c6aNzQrnl
+ 2DtOuGbPQocnjuSCI1ny1WWYx/7jkkjlcfyl+lp7TEesEfkx307+KuCZo0OgIxbIwfa72MWD4em
+ tn6/hMd/QXx6zH3wP5OlhrMzlp2qKgIxJlelAMfUWIkruyj4hnvKzGUkqPoF4QRZ71As9I8pV2j
+ DMm/cMIaHufC6lXcsuKfUk0yiqWTx1Zr8LtQAR498eW34hEj3pAMHucta0+1CKmEnv9EN7lkU/M
+ FG7jgW8yHOjl2TgueMJFzovO4heKYSqjW47oC3CHVujyZPMUqifsWdUKFoxdhd+EKhXdCEJL9b0
+ LGCES5HP/CdGIqj2UaaWymZGJVFVJ4RBD/aEk7/710HO5x59Z+gVx3LZGgty2YUYCbgJE7oGTWH
+ QPXliDM2eYx5QgvaSSBlrfWn/1V9lBD33lbCDCaI=
+X-Proofpoint-GUID: XGMDaQGIFMb57T6Q2yvPQTQQt2debxfq
 
-On Sun, 19 Jul 2026 18:37:59 -0700, Randy Dunlap wrote:
+On Fri, 24 Jul 2026 03:45:02 +0900, Sang-Heon Jeon wrote:
 
-> - use the correct name for a struct in kernel-doc
-> - add kernel-doc for missing struct members or correct the name
+> While reading mm/memblock, I found a conditional return where both
+> branches return the same value:
 > 
-> Warning: ./include/ufs/ufshcd.h:201 Excess struct member 'task_tag'
->  description in 'ufshcd_lrb'
-> Warning: ./include/ufs/ufshcd.h:220 expecting prototype for struct
->  ufs_query_resp. Prototype was for struct ufs_query_res instead
-> Warning: ./include/ufs/ufshcd.h:577 struct member 'suspend_on_no_request'
->  not described in 'ufs_clk_scaling'
-> Warning: ./include/ufs/ufshcd.h:1269 struct member 'nortt' not described
->  in 'ufs_hba'
-> Warning: ./include/ufs/ufshcd.h:1269 struct member 'trigger_eh_attr' not
->  described in 'ufs_hba'
-> Warning: ./include/ufs/ufshcd.h:1269 struct member 'timeout_attr' not
->  described in 'ufs_hba'
-> Warning: ./include/ufs/ufshcd.h:1269 struct member 'lsdb_sup' not
->  described in 'ufs_hba'
-> Warning: ./include/ufs/ufshcd.h:1269 struct member 'vcc_off_delay_us' not
->  described in 'ufs_hba'
-> Warning: ./include/ufs/ufshcd.h:1269 Excess struct member 'desc_size'
->  description in 'ufs_hba'
-> Warning: ./include/ufs/ufshcd.h:1269 Excess struct member 'res'
->  description in 'ufs_hba'
-> Warning: ./include/ufs/ufshcd.h:1309 struct member 'sq_tail_slot' not
->  described in 'ufs_hw_queue'
-> Warning: ./include/ufs/ufshcd.h:1309 Excess struct member 'sq_tp_slot'
->  description in 'ufs_hw_queue'
+> 	err = do_something();
+> 	if (err)
+> 		return err;
+> 	return err;
 > 
 > [...]
 
 Applied to 7.3/scsi-queue, thanks!
 
-[1/1] scsi: ufs: ufshcd.h: fix all kernel-doc warnings
-      https://git.kernel.org/mkp/scsi/c/98575b9ffc3a
+[30/36] scsi: mpt3sas: remove conditional return with no effect
+        https://git.kernel.org/mkp/scsi/c/c79f9bf2d87f
 
 -- 
 Martin K. Petersen
