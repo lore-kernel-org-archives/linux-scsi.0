@@ -1,123 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7AB72AEF5
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 06:00:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42E7B392C2C;
+	Thu,  6 Aug 2026 06:07:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785996055; cv=none; b=D2/zPAuWitjTpvbmr+CcHCZCNbrdNUb067bwtLS34LyhqEto6XLHetT9DaHLCvNKDbrqyK0Lpk7W70pP21CvUq4P2yJ4XG7jjtLoyh+W8Jo9BDTvX/nmq6X45F1+H0ITKD0YInV//rhKrc7orSGL6/j0RM+LZvbc8ySz7oQpBd4=
+	t=1785996440; cv=none; b=JQz8OYQMz3wM6we7DgRASQK5Jw7Oz7HmExZhytkR0Nqf48rcxpLb4vd3qIKQRZAoAlKmoYOAQ6QTLkfugu7AX1m4AuLO7sbB2oha3F+bgC5cJp5IEH9mW49viOlFXncv+75PzuuOc03MCUXdyqKzAp5fho9lXvCDJyN4anJrCYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785996055; c=relaxed/simple;
-	bh=ZmAn4xYqmNrLccJTQHqX+hPnUdFDOeAMeWIBAZV4sIM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NgEewIOzXS5hWKvIQb5KkqHCf+d4CraDBu1ZmJVbtHe3y0EI8JJVAUQufqOtKncWEckR/AjR1oVZK5uhtZfAAY0O/OTYg4/7SRoPk12/XpA1YJfQ81jJCkZQTiaj5urYHrp0JGL2RyTxb9Lhz9CCk/U1B5ZvEGWL1xxBddZr30w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JdjiahcR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785996440; c=relaxed/simple;
+	bh=hyPQtiHro7wxbRPeXTXPYqRSLQbn+uE3ClaCeaHtJVs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qua7OzKHZGWYj9YgFfVS7BOs99kN8sn8a5tdud2HeANrX2vxglQ5HuJRwGU9ZcrsAhUTZ84xn+tfNY1fUjK96CSbP0hT2WaKoDBN2+E0ikbvltB9TaUwdtfYwhv28dHH+YI+33wMw/zENIRNGsClGHtwoKocmKBqbqhzrUzvCLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=WElJtQBL; arc=none smtp.client-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JdjiahcR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 419661F000E9;
-	Thu,  6 Aug 2026 06:00:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785996053;
-	bh=lq7LpVyhC9G0fgq+QMdhatomUhgzmmK6zyRYeCesCHs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JdjiahcRPz4J+DjACbDMIKaWuqeVT49s2otCG/wxKytno/aPpO6JLHO2J+saR2t4u
-	 898wdt2w+W+f4VkrsV7lTZ4vWmIcmP1PMPmqfROVeqEA18haWHyqsVpSBYLl7baa7z
-	 FTWJOrhp7UqxdmU2kkoKk9UuJ5nrne7S0UbFYqjD5mXNWnmIGORDJ8Ek7oypr98Dwv
-	 qfVWt43XTrcj5vkW3eI5itNC0Bf6SQUtEpBJybFLDouJS1L+8yb5zDGdvl8dFTJGUK
-	 nvei64xvPHVP1lNIWNBuLXzgrmDgvo6goE7L3n9SqTUPxCZA8SSfy7toF2uX2xootw
-	 iqLLgK7CV5iEg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: iscsi: Reject Extended CDB AHS when CDB
- size exceeds AHS length
-Reply-To: sashiko-reviews@lists.linux.dev
-To: ghuicao@163.com
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260806054820.75950-1-ghuicao@163.com>
-References: <20260806054820.75950-1-ghuicao@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 06:00:52 +0000
-Message-Id: <20260806060053.419661F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="WElJtQBL"
+Received: from LAPTOP-99KJFSET (unknown [36.153.54.46])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 48fb94a39;
+	Thu, 6 Aug 2026 14:07:11 +0800 (GMT+08:00)
+From: Hongyan Xu <getshell@seu.edu.cn>
+To: Hannes Reinecke <hare@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	jianhao.xu@seu.edu.cn,
+	Hongyan Xu <getshell@seu.edu.cn>
+Subject: [PATCH] scsi: myrb: quiesce the SCSI host before controller teardown
+Date: Thu,  6 Aug 2026 14:06:58 +0800
+Message-ID: <20260806060659.1852-1-getshell@seu.edu.cn>
+X-Mailer: git-send-email 2.50.1.windows.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9fd5aec11603a1kunm3e92b3632893b2
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCTU1DVhodHhlOGUMdSEJISlYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlITVVKTkhVTk9VT01ZV1kWGg8SFR0UWUFZT0tIVUpLSEpPSE
+	xVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=WElJtQBLEE5tROFTnnmLCg3zCvFHBs53a+T0SWpHsG226lHeIIYKzgBJqQwARPks/SxapFWs3U71NTKSMveo1+psYegbWs7WGvN/or+G6ScxB6UegMC2XOHzHOQWLJTd5wl5nKY3toa82lrqBRgtSAAxtw9vUJCyv3MZlcanPIk=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=wjjPyxuElG9dN2jTOZKl+YpGlEq6FiIH3VlGJADeS44=;
+	h=date:mime-version:subject:message-id:from;
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+myrb_remove() tears down the controller resources and drops the host
+reference without first removing the SCSI host. The registered host can
+therefore continue to dispatch queuecommand callbacks that use the
+controller MMIO mappings and DMA pools after teardown. The monitor work is
+also canceled only after the MMIO mappings have been released.
 
-Pre-existing issues:
-- [High] The patch addresses the heap out-of-bounds read for Extended CDB A=
-HS commands (`hdr->hlength > 0`), but fails to implement a similar bounds c=
-heck when the command has no AHS (`hdr->hlength =3D=3D 0`), leaving the exa=
-ct same vulnerability open for standard iSCSI commands.
---
+Remove the SCSI host before issuing the final controller command. Then stop
+the monitor and destroy its pools before unmapping the hardware and
+dropping the host reference.
 
---- Patch [1]: [PATCH] scsi: target: iscsi: Reject Extended CDB AHS when CD=
-B size exceeds AHS length ---
-commit 5a3d59b1c504777c7edf6a6c77fbad41b0da5d11
-Author: Cao Guanghui <caoguanghui@kylinos.cn>
+Fixes: 081ff398c56c ("scsi: myrb: Add Mylex RAID controller (block interface)")
+Cc: stable@vger.kernel.org
+Signed-off-by: Hongyan Xu <getshell@seu.edu.cn>
+---
+ drivers/scsi/myrb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-scsi: target: iscsi: Reject Extended CDB AHS when CDB size exceeds AHS leng=
-th
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index 3678b66310ed..adb2fadf9146 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -3496,9 +3496,10 @@ static void myrb_remove(struct pci_dev *pdev)
+ 	struct myrb_hba *cb = pci_get_drvdata(pdev);
+ 
+ 	shost_printk(KERN_NOTICE, cb->host, "Flushing Cache...");
++	scsi_remove_host(cb->host);
+ 	myrb_exec_type3(cb, MYRB_CMD_FLUSH, 0);
+-	myrb_cleanup(cb);
+ 	myrb_destroy_mempools(cb);
++	myrb_cleanup(cb);
+ }
+ 
+ 
+-- 
+2.50.1.windows.1
 
-This commit adds a check to reject iSCSI commands when the SCSI opcode-decl=
-ared
-size exceeds the AHS-provided length. This prevents an out-of-bounds read
-during Extended CDB AHS parsing in target_cmd_init_cdb().
-
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/i=
-scsi_target.c
-> index 62ada3a52210e..e3e9254df9602 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -1124,6 +1124,19 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn=
-, struct iscsit_cmd *cmd,
-> =20
->  		cdb_length =3D ahslength - 1 + ISCSI_CDB_SIZE;
-> =20
-> +		/*
-> +		 * The CDB buffer is later re-parsed by scsi_command_size() based
-> +		 * on its opcode, which may claim a length larger than the AHS
-> +		 * provided. Reject such a mismatch before allocating to avoid
-> +		 * an out-of-bounds read of the CDB buffer in target_cmd_init_cdb().
-> +		 */
-> +		if (scsi_command_size(hdr->cdb) > cdb_length) {
-> +			pr_err("Extended CDB AHS: SCSI command size %u exceeds AHS-provided C=
-DB length %u, protocol error.\n",
-> +			       scsi_command_size(hdr->cdb), cdb_length);
-> +			return iscsit_add_reject_cmd(cmd,
-> +				ISCSI_REASON_PROTOCOL_ERROR, buf);
-> +		}
-> +
-
-[Severity: High]
-This is a pre-existing issue, but does the same out-of-bounds read occur wh=
-en
-an initiator sends a command without an AHS (hdr->hlength =3D=3D 0)?
-
-If an initiator sends an iSCSI command PDU without an AHS and sets the CDB =
-to a
-VARIABLE_LENGTH_CMD (cdb[0] =3D 0x7F) with an additional length of 252
-(cdb[7] =3D 252), the newly added bounds check is bypassed because it is in=
-side
-the if (hdr->hlength) block.
-
-In this case, iscsit_setup_scsi_cmd() will pass the raw 16-byte hdr->cdb
-pointer directly to target_cmd_init_cdb(). The target_cmd_init_cdb() functi=
-on
-will then call scsi_command_size(cdb) (which evaluates to 260) and read 244
-bytes past the end of the cdb array (and 228 bytes past the end of the buf
-allocation).
-
-Could a similar bounds check be added for the standard path without AHS,
-verifying that scsi_command_size(hdr->cdb) <=3D ISCSI_CDB_SIZE?
-
->  		cdb =3D kmalloc(cdb_length, GFP_KERNEL);
->  		if (cdb =3D=3D NULL)
->  			return iscsit_add_reject_cmd(cmd,
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806054820.7595=
-0-1-ghuicao@163.com?part=3D1
