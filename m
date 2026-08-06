@@ -1,178 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA7EC3D955E
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 06:20:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 611463909A2
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 06:53:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785997212; cv=none; b=aJu2j0qw2lTubxi1tNP3fJCX9X7GG8yRhYKgKwI+Do8dLrsNihhy46bVduxwCGPvfp+JFg9Caf0g0rTaJeJiKYnE0LsOERkEkOxYT9CtmUfVDI+sBC299mm8E0N71y4fD44/knhfILtpX737NNi80s5yb4AI6jjEnJeYZe5Db34=
+	t=1785999201; cv=none; b=KixfhWfRIWeWZBIwiO2y3EKuL0b9aaZwNFG/pt4KkMKTmqp+RrE02ZhM+DLj0MAUOy7E+g62h/gWQpQDW+e7gb4qYTrTGbwZXi9x+C6/bjYXI73u1r1xBEH58xmwyMGSZ4rYlGxxsg0Vyfwk5v5OTq785y4v9CVy86hegu+VzPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785997212; c=relaxed/simple;
-	bh=aAI7UoOdnPnFdHY/doCh0Xaefa4Q6Q3I+AYoS3rW+C4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=c2kfaHmwi9ZxaV3hCIcgWDcLSvwDIaftNqw0h6t/T/JNMX/CC1emrWlZbb2rq/Py2FtpFkrZ5vh4vu3/sNwwnag+hJvAHZVXFm0iZk1lMEwKGtnTJyAjsLzC/CoQaPrhG7zn8n1qu/CJXHllbLDFJdtUD7v3tMYcFFSGyBfOOuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V4xs8AHp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785999201; c=relaxed/simple;
+	bh=USBg4QW2BWEra48054158xF0+/X/wOPgiJbSiKmpNyQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=r6sy3Hz9ehT/+QWNiMrnlKy+3RfgWzRTyGpB5Ezuip/BLIBLLu+ZKik3zsWWq4mKv1qnvmvy379FjaNAzPXCcIHKyggddn+mEYhpnQPhkV1Qse/6CkgdhjXp5xv5d+7pNPa03eI2c2YdwoiPTWOAcH1iUwU43b/tfujGSxeWVhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=QudBCZnU; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V4xs8AHp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C5E41F000E9;
-	Thu,  6 Aug 2026 06:20:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785997210;
-	bh=SZhNa+jMLG25kNgNOklgei68uteiTnFExS1U6/zQL9s=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=V4xs8AHp9KOmkhus0gx9TlfElA93IfixzLoFBAKHJJbdWmL7rbr6w3cKVpoeCeGtv
-	 5397XCs358xJZ8XqnhQNIozx0wsLSjN+atLeDlSQ4ASLhdbxgeQm2t/45cgdQyShQ3
-	 DEEaj+pLXz2J9zzKZseDGflSoQp+k1rlUSgjXBFaM9RjNMND6wKlYc3PVroth3zLaz
-	 UKvZppCoTToOi8hs8n26utqEuAFFh7NH9VPk7hGNKLtt4i1Gpu8JqIZ4fxYym88Rrf
-	 XfPTd2+uVit5PfVpZytYPUVYfdzTSI8o/HUQa3isYm8hixSoSTuZSoWbyN51WJpssG
-	 Cg4qQDY8WMVLw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: myrb: quiesce the SCSI host before controller
- teardown
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hongyan Xu" <getshell@seu.edu.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260806060659.1852-1-getshell@seu.edu.cn>
-References: <20260806060659.1852-1-getshell@seu.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 06:20:09 +0000
-Message-Id: <20260806062010.4C5E41F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="QudBCZnU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=42
+	k59IWHZj4Gk53TFlXayEgT+4jqQ5aFWzKhR10GFFQ=; b=QudBCZnUOPNvNWwlPu
+	yO/nq3i7kAOYC9fVjn/t6Fq/J+elXYCh6fgiZ7V4U7ZvIqW+nVcW125uEM/xGVEO
+	j58tx+RnEbtcGi/h44gRXZYdKE3Q0J7MFdbv13KWSl8V5YDkPPDun/BHrIHFzy0q
+	X5Ll3MY2JtoF88XbQjUWQjUrk=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wCHo8dHL3RqroDSOA--.36133S2;
+	Thu, 06 Aug 2026 14:52:55 +0800 (CST)
+From: ghuicao@163.com
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Cao Guanghui <caoguanghui@kylinos.cn>
+Subject: [PATCH v2] scsi: target: iscsi: Reject CDB size exceeding available buffer in iscsit_setup_scsi_cmd
+Date: Thu,  6 Aug 2026 14:52:52 +0800
+Message-Id: <20260806065252.91800-1-ghuicao@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20260806054820.75950-1-ghuicao@163.com>
+References: <20260806054820.75950-1-ghuicao@163.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wCHo8dHL3RqroDSOA--.36133S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCF43Aw43Wr45Aw17Xry8AFb_yoWruF47pF
+	4Ygw1IkrZ3Z3yxtwsxAayYvryYvrsaka4qkFy3K3yUCwnxGFy0gFyFga43WayUJFn2gry5
+	Kws0va48GF4UXw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U9zV8UUUUU=
+X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC3wiVKGp0L0gvsgAA3O
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+From: Cao Guanghui <caoguanghui@kylinos.cn>
 
-Pre-existing issues:
-- [High] Incorrect teardown sequence in `myrb_cleanup()` causes use-after-f=
-ree and page fault panics.
-- [High] Data race and waitqueue corruption due to concurrent accesses to `=
-cb->mcmd_blk` without locking.
-- [High] Hardware command execution uses an unbounded `wait_for_completion(=
-)`, allowing unprivileged denial of service on hardware failure.
---
+In iscsit_setup_scsi_cmd(), the CDB is later re-parsed by
+scsi_command_size() based on its SCSI opcode. For a VARIABLE_LENGTH_CMD
+(0x7f) the returned size is cdb[7] + 8, where both cdb[0] and cdb[7]
+come verbatim from the initiator-controlled PDU. The amount of CDB data
+actually available is never cross-checked against this opcode-declared
+length before the CDB is handed to target_cmd_init_cdb(), which does:
 
---- Patch [1]: [PATCH] scsi: myrb: quiesce the SCSI host before controller =
-teardown ---
-commit f8a31e3f5c2db4d7eb1518b32495ee728296ad52
-Author: Hongyan Xu <getshell@seu.edu.cn>
+  memcpy(cmd->t_task_cdb, cdb, scsi_command_size(cdb));
 
-scsi: myrb: quiesce the SCSI host before controller teardown
+An initiator can set cdb[0]=0x7f and cdb[7]=252 so that
+scsi_command_size() returns 260, while the available CDB space is only
+16 bytes (the basic header, when no Extended CDB AHS is present) or the
+AHS-provided length. target_cmd_init_cdb() then reads up to 244 bytes
+past the end of the CDB buffer, a heap out-of-bounds read. The leaked
+bytes are later parsed as the CDB and can be indirectly observed by the
+initiator through sense data and responses.
 
-This commit addresses teardown issues in the myrb driver by removing the
-SCSI host before releasing controller resources. It stops the monitor and
-destroys pools before unmapping hardware and dropping the host reference
-to ensure callbacks do not run after teardown.
+Reject the command when the opcode-declared CDB size exceeds the
+available CDB space, before the CDB is passed on:
 
-> diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-> index 3678b66310ed0..adb2fadf9146e 100644
-> --- a/drivers/scsi/myrb.c
-> +++ b/drivers/scsi/myrb.c
-> @@ -3496,9 +3496,10 @@ static void myrb_remove(struct pci_dev *pdev)
->  	struct myrb_hba *cb =3D pci_get_drvdata(pdev);
-> =20
->  	shost_printk(KERN_NOTICE, cb->host, "Flushing Cache...");
-> +	scsi_remove_host(cb->host);
->  	myrb_exec_type3(cb, MYRB_CMD_FLUSH, 0);
+- Without an Extended CDB AHS the CDB is limited to ISCSI_CDB_SIZE (16)
+  bytes in the basic header, so reject when scsi_command_size() >
+  ISCSI_CDB_SIZE.
+- With an Extended CDB AHS the buffer is allocated from the AHS-declared
+  length, so reject when scsi_command_size() > cdb_length.
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does hardware command execut=
-ion
-use an unbounded wait_for_completion()?
+commit 2f3835771dff ("scsi: target: iscsi: reject invalid size Extended
+CDB AHS") fixed the zero-length ahslength overflows and the AHS-buffer
+overread, but did not cover the orthogonal "available CDB space vs.
+opcode-declared size" path.
 
-In drivers/scsi/myrb.c:myrb_exec_cmd() (called by myrb_exec_type3()):
+Fixes: 8f1f7d297bce ("scsi: target: iscsi: Add support for extended CDB AHS")
+Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
+---
+Hi Martin,
 
-	spin_lock_irqsave(&cb->queue_lock, flags);
-	cb->qcmd(cb, cmd_blk);
-	spin_unlock_irqrestore(&cb->queue_lock, flags);
+Thanks for the review (via Sashiko). You are right that the original patch
+only covered the Extended CDB AHS path and missed the standard command
+path without an AHS, where the same out-of-bounds read is reachable. v2
+adds the same bounds check for hdr->hlength == 0 and switches the two
+paths to if/else for clarity.
 
-	wait_for_completion(&cmpl);
-	return cmd_blk->status;
+v2:
+  - Add the bounds check for the standard path without an AHS
+    (hdr->hlength == 0) as well, fixing the same out-of-bounds read
+    that was previously only covered for the Extended CDB AHS path.
+  - Use if/else to make the two (mutually exclusive) paths explicit.
 
-myrb_exec_cmd() submits a command to the controller and blocks indefinitely
-waiting for a hardware interrupt. There is no timeout or fallback wake
-condition.
+ drivers/target/iscsi/iscsi_target.c | 31 +++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-If the controller firmware crashes, drops an interrupt, or the device is
-abruptly removed, the completion is never signaled. Since unprivileged local
-users can trigger hardware commands through world-readable sysfs attributes
-(like reading rebuild), could this allow them to intentionally hang a
-kernel task if they can induce or encounter a hardware error state?
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 62ada3a52210..56f8fd461192 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -1100,7 +1100,22 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+ 
+ 	cdb = hdr->cdb;
+ 
+-	if (hdr->hlength) {
++	if (!hdr->hlength) {
++		/*
++		 * Without an Extended CDB AHS the CDB is limited to the 16
++		 * bytes in the basic header. The CDB is later re-parsed by
++		 * scsi_command_size() based on its opcode, which may claim a
++		 * larger length (e.g. VARIABLE_LENGTH_CMD with cdb[7]=252).
++		 * Reject such a mismatch before handing the CDB to
++		 * target_cmd_init_cdb() to avoid an out-of-bounds read.
++		 */
++		if (scsi_command_size(hdr->cdb) > ISCSI_CDB_SIZE) {
++			pr_err("SCSI command size %u exceeds CDB size %u, protocol error.\n",
++			       scsi_command_size(hdr->cdb), ISCSI_CDB_SIZE);
++			return iscsit_add_reject_cmd(cmd,
++				ISCSI_REASON_PROTOCOL_ERROR, buf);
++		}
++	} else {
+ 		ecdb_ahdr = (struct iscsi_ecdb_ahdr *) (hdr + 1);
+ 		if (ecdb_ahdr->ahstype != ISCSI_AHSTYPE_CDB) {
+ 			pr_err("Additional Header Segment type %d not supported!\n",
+@@ -1124,6 +1139,20 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+ 
+ 		cdb_length = ahslength - 1 + ISCSI_CDB_SIZE;
+ 
++		/*
++		 * The CDB buffer is later re-parsed by scsi_command_size()
++		 * based on its opcode, which may claim a length larger than
++		 * the AHS provided. Reject such a mismatch before allocating
++		 * to avoid an out-of-bounds read of the CDB buffer in
++		 * target_cmd_init_cdb().
++		 */
++		if (scsi_command_size(hdr->cdb) > cdb_length) {
++			pr_err("Extended CDB AHS: SCSI command size %u exceeds AHS-provided CDB length %u, protocol error.\n",
++			       scsi_command_size(hdr->cdb), cdb_length);
++			return iscsit_add_reject_cmd(cmd,
++				ISCSI_REASON_PROTOCOL_ERROR, buf);
++		}
++
+ 		cdb = kmalloc(cdb_length, GFP_KERNEL);
+ 		if (cdb == NULL)
+ 			return iscsit_add_reject_cmd(cmd,
+-- 
+2.34.1
 
-> -	myrb_cleanup(cb);
->  	myrb_destroy_mempools(cb);
-
-[Severity: High]
-This is a pre-existing issue, but does myrb_get_rbld_progress() have a data
-race on cb->mcmd_blk?
-
-In drivers/scsi/myrb.c:myrb_get_rbld_progress():
-
-	struct myrb_cmdblk *cmd_blk =3D &cb->mcmd_blk;
-	union myrb_cmd_mbox *mbox =3D &cmd_blk->mbox;
-...
-	myrb_reset_cmd(cmd_blk);
-	mbox->type3.id =3D MYRB_MCMD_TAG;
-	mbox->type3.opcode =3D MYRB_CMD_GET_REBUILD_PROGRESS;
-	mbox->type3.addr =3D rbld_addr;
-	status =3D myrb_exec_cmd(cb, cmd_blk);
-
-myrb_get_rbld_progress() accesses and resets the shared cb->mcmd_blk and its
-waitqueue completion without any serialization.
-
-myrb_reset_cmd(cmd_blk) re-initializes cmd_blk->completion. If an
-unprivileged user concurrently reads the rebuild sysfs attribute while the
-background monitor work myrb_update_rbld_progress() is running, both will
-modify cb->mcmd_blk at the same time.
-
-One thread could re-initialize the completion while the other is blocked in
-wait_for_completion(), corrupting the waitqueue list.
-
-Could this corrupt the waitqueue list and lead to deadlocks or kernel crash=
-es?
-
-> +	myrb_cleanup(cb);
->  }
-
-[Severity: High]
-This is a pre-existing issue, but I noticed an incorrect teardown sequence =
-in
-myrb_cleanup() that could lead to a use-after-free and page fault panics.
-
-In drivers/scsi/myrb.c:myrb_cleanup():
-
-	/* Free the memory mailbox, status, and related structures */
-	myrb_unmap(cb);
-
-	if (cb->mmio_base) {
-		if (cb->disable_intr)
-			cb->disable_intr(cb->io_base);
-		iounmap(cb->mmio_base);
-	}
-	if (cb->irq)
-		free_irq(cb->irq, cb);
-
-The teardown logic frees DMA memory (cb->first_stat_mbox and
-cb->first_cmd_mbox via myrb_unmap) and unmaps the MMIO base before freeing
-the shared IRQ line.
-
-If an interrupt fires on the shared IRQ line during this window, the
-interrupt handler (e.g., DAC960_LA_intr_handler) accesses the freed DMA
-memory and the unmapped MMIO base without knowing they have been released:
-
-drivers/scsi/myrb.c:DAC960_LA_intr_handler():
-
-	DAC960_LA_ack_intr(base);
-	next_stat_mbox =3D cb->next_stat_mbox;
-	while (next_stat_mbox->valid) {
-
-Could this cause a kernel panic if the shared IRQ fires before free_irq() is
-called?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806060659.1852=
--1-getshell@seu.edu.cn?part=3D1
