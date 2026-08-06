@@ -1,156 +1,126 @@
-Received: from hall.aurel32.net (hall.aurel32.net [195.154.119.183])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D677438AC9A;
-	Thu,  6 Aug 2026 15:24:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.154.119.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F763C8C43
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 15:32:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786029893; cv=none; b=PmWAR9vdad2oagR6D15bChgXpgkveNEJ39I2FmxpeQ0T8R+Pq7f5DGoALw2kraeNMPu832ThYx4tqouG77Up7F6mrDqCEq/KB3VUsMoqhUpxXXCNiPJoTFzBQC+ORKIxaMS5gmEhfqBQgCgayYtq1pUUo/eLQQE/hmxEDB2+iok=
+	t=1786030333; cv=none; b=gDjuFcVyHFFz6rSsOsspdqw0GGwB12ATP03kpDiDYgf7BfPDLS1CsbXa6gJqJKPbUXl74qpXQBPeQvz8kxJQFJDPXNX4kxZ+RA76/TSmTg0vnG2HDbssLbcsTmw1GuN98DfwkKEIblrR553N2IqFL+qfz9ME9EgeClWFtvW2A2o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786029893; c=relaxed/simple;
-	bh=qQUuYVx6hsSyhXMIU9tqBc+sCVlVhS0D4yzrS0ULgqc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uMz3wLjPzSyNzuzgoGyE14sulRbvwvBr4i/5kaJq7H+MKHfjj0lmUCoItZNrJRWQJAfXS5lOsw+shKdY8RCZbM16mEYsLWEmHURA93DTT6+2k+LruO+M8cP6Cz8JTsWSigCDOugQRWdmzuUcO9GmOf54YXOXg9IGEiqFxBa0HfA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net; spf=pass smtp.mailfrom=aurel32.net; dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b=vChC1Qx3; arc=none smtp.client-ip=195.154.119.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aurel32.net
+	s=arc-20240116; t=1786030333; c=relaxed/simple;
+	bh=aL8hU8qFHTc97niOlnJW4nKE//nn21jwP/CMixIRvyY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=tDj4NS2bAqg4Q5HegBGrJLpvURbeSfVwFVYk1HlyRupMuKGZb81nnfAlY52qR1LWXvyFaZhECZCTp48wafGHeSd24YqLPyC7/z9PWsf+oCUFu29E2XC9yu8r4DZ9aEXt2Sign/wrVyeTM+5vLfF0TFKQi1stlGqJLeX2uFG7l9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UB27Z7Fn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=aurel32.net header.i=@aurel32.net header.b="vChC1Qx3"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=aurel32.net
-	; s=202004.hall; h=In-Reply-To:Content-Type:MIME-Version:References:
-	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:From:Reply-To:
-	Subject:Content-ID:Content-Description:X-Debbugs-Cc;
-	bh=pPGzVx4G8LgdTlTv/38zHzZ7a/0MlpsoUhuTgEmW0mg=; b=vChC1Qx3zD1SwVeyMLXj3b+S5k
-	Cdp9Tvj39YQvk+8zDhirk7TWV9D9T9r8H9eXfqe0iCPPAXCNe7bdjO01wc1JcwRe8CvEpEdVWub8z
-	ozsQFUGM0QWudAONkt+k9nLAI130zyEHGvdhFol3c+gOSC0V0L2rHncmCejQTUzeXIOVt+MEYHqiy
-	e7gLCSlnRJB0druBTAQE36yvuCISqkIMygDriiaUV2kknYvPFb3A2qAxrrxBC+4k6AxP3R27dtnJf
-	8WuPEwdT8DCeBIZB6l2g182RM7aVAZmAOQPC6M3GNxS+elQSNNrfylg5FKGIOkXksfTaGd80hB6+B
-	aK7QQMUA==;
-Received: from authenticated user
-	by hall.aurel32.net with esmtpsa  (TLS1.3)  tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <aurelien@aurel32.net>)
-	id 1wrzR2-0000000Deyk-1X5z;
-	Thu, 06 Aug 2026 16:51:04 +0200
-Date: Thu, 6 Aug 2026 16:51:03 +0200
-From: Aurelien Jarno <aurelien@aurel32.net>
-To: Yixun Lan <dlan@kernel.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Jennifer Berringer <jberring@redhat.com>,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/3] Add UFS Host driver support for SpacemiT K3 SoC
-Message-ID: <anSfVzGI3SMzKOOd@aurel32.net>
-Mail-Followup-To: Yixun Lan <dlan@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Jennifer Berringer <jberring@redhat.com>,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-References: <20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UB27Z7Fn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43A701F000E9;
+	Thu,  6 Aug 2026 15:32:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786030332;
+	bh=f5+JwVPUm6r/V8HHTp3/m/3zPeuVIbw0sPaZ7UkTLHk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=UB27Z7FnpbmGEwhq6K8UzTSPZ+9AGlWEl5qG8jt1WuZvvAmACDOUsxZmKjEdBEiu4
+	 N8/i4TuCozJ5HiupmQrp3iua/leq41m1blNh1fR6oVgfJSQj1LSAVHCsimE4h4nzU5
+	 sY3DpQBwpGx4RIXOiVlBNf8FaCsUq4VKz/hWFWcsZCZ3FqEHhjctZUiT00Z+Wq1qww
+	 D0G+tJDVP94o988d5tAawsOqBiSgcBPgh+mCm4kh9huiInU5P4XKKK00ZuCHomq1mP
+	 SKuSpKnjh5GkhleB1QKfDJxT28oxgt7rJ/aUmUB2jTr4+Keron+fvEzCENCVcsbk56
+	 qDF/HmJa/0w3Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 3/7] scsi: ibmvfc: define asynchronous sub-queue
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Dave Marquardt" <davemarq@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260806-ibmvfc-fpin-support-v5-3-13fd6f8a8f8b@linux.ibm.com>
+References: <20260806-ibmvfc-fpin-support-v5-0-13fd6f8a8f8b@linux.ibm.com>
+ <20260806-ibmvfc-fpin-support-v5-3-13fd6f8a8f8b@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 06 Aug 2026 15:32:11 +0000
+Message-Id: <20260806153212.43A701F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org>
-User-Agent: Mutt/2.4.1 (2026-07-04)
 
-On 2026-08-06 02:56, Yixun Lan wrote:
-> This series try to add UFS support for SpacemiT K3 SoC, the controller
-> components consists of System Bus Interface Unit, UFS Host Controller
-> Interface, UFS Transport Protocol Layer, UFS Host Registers, Device
-> Management Entity (DME), Transport Layer, Network Layer, Data Link
-> Layer, PHY Adapter Layer, and M-PHY Interface. A more detail functional
-> block diagram can be found in SpacemiT website, chapter 9.7.3 [1]
-> 
-> Please note, in order to test this driver, the UFS clock driver[2] here
-> should be applied first as a prerequisite patch.
-> 
-> One known issue is that the device will occasionally raise BKOPS interrupt
-> when doing some high load test, log from dmesg shows
-> 
-> [  806.710763] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1
-> 
-> Link: https://spacemit.com/community/document/info?nodepath=hardware/key_stone/k3/k3_docs/k3_usermanual/09_memory_storage.md&lang=en [1]
-> Link: https://lore.kernel.org/all/20260630-06-clk-ufs-support-v1-0-cf7521d1d0fe@kernel.org/ [2]
-> Signed-off-by: Yixun Lan <dlan@kernel.org>
-> ---
-> Changes in v3:
-> - fix dt-binding warning reported-by sashiko
-> - fix low freq in opp-2 table
-> - fix err checking in check_hibern8()
-> - propagate err code in link_startup_notify()
-> - update documents for event_notify()
-> - Link to v2: https://patch.msgid.link/20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org
-> 
-> Changes in v2:
-> - fix missing interrupts property
-> - move ufs node to k3-com260.dtsi
-> - convert freq-table-hz to operating-points-v2
-> - rework reset_control, fix header and drop global variable
-> - drop dump_host_regs() debug interface
-> - converge and refactor dme_set() operations
-> - massive reduce of busy delay() loops
-> - drop vendor specific hce_enable_notify(), fallback to default
-> - drop unused member from struct ufs_spacemit_host
-> - add COMPILE_TEST support to Kconfig
-> - comment style fix
-> - Link to v1: https://patch.msgid.link/20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org
-> 
-> ---
-> Yixun Lan (3):
->       scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
->       scsi: ufs: spacemit: k3: Add UFS Host Controller driver
->       riscv: dts: spacemit: k3: Add UFS support
-> 
->  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml |  56 ++
->  arch/riscv/boot/dts/spacemit/k3-com260.dtsi        |   4 +
->  arch/riscv/boot/dts/spacemit/k3-pico-itx.dts       |   4 +
->  arch/riscv/boot/dts/spacemit/k3.dtsi               |  22 +
->  drivers/ufs/host/Kconfig                           |  12 +
->  drivers/ufs/host/Makefile                          |   1 +
->  drivers/ufs/host/ufs-spacemit.c                    | 687 +++++++++++++++++++++
->  drivers/ufs/host/ufs-spacemit.h                    |  79 +++
->  8 files changed, 865 insertions(+)
-> ---
-> base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
-> change-id: 20260605-08-k3-ufs-support-c8b308e415e2
-> 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] The patch is heavily flawed due to a botched rebase or split: it=
+ introduces dead, duplicate structures and an unused pointer, while the com=
+mit message describes changes that are completely absent from the diff.
+--
 
-Thanks for this new version, and no worries about not adding the 
-previous Tested-by tags. I have also tested this version, so patches 2 
-and 3 are:
+--- Patch [3]: [PATCH v5 3/7] scsi: ibmvfc: define asynchronous sub-queue -=
+--
+commit 3e3cb1faf7e598eb3299f36518825168d60237a2
+Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-Tested-by: Aurelien Jarno <aurelien@aurel32.net>
+scsi: ibmvfc: define asynchronous sub-queue
 
-Regards
-Aurelien
+This commit defines data structures for asynchronous sub-queue support requ=
+ired
+for full and extended FPIN functionality.
 
--- 
-Aurelien Jarno                          GPG: 4096R/1DDD8C9B
-aurelien@aurel32.net                     http://aurel32.net
+> Update ibmvfc_channel_setup structure to include async_subq_handle field
+> and reduce IBMVFC_MAX_CHANNELS from 502 to 501 to accommodate the async
+> sub-queue. Add async_scrq pointer to ibmvfc_channels structure.
+>=20
+> Add capability flags IBMVFC_USE_ASYNC_SUBQ and IBMVFC_SUPPORT_ASYNC_SUBQ
+> for negotiating async sub-queue support with VIOS during login.
+
+[Severity: Medium]
+Are the changes described in these paragraphs of the commit message missing
+from this patch? The updates to ibmvfc_channel_setup, the reduction of
+IBMVFC_MAX_CHANNELS, and the new capability flags do not appear in the
+diff below.
+
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvf=
+c.h
+> index e8ca0d30f483f..3711be4b6748c 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+> @@ -791,6 +791,25 @@ struct ibmvfc_async_work {
+>  	struct work_struct async_work_s;
+>  };
+> =20
+> +struct ibmvfc_async_subq {
+> +	volatile u8 valid;
+> +#define IBMVFC_ASYNC_ID_IS_ASSOC_ID	0x01
+> +#define IBMVFC_FC_EEH			0x04
+> +#define IBMVFC_FC_FW_UPDATE		0x08
+> +#define IBMVFC_FC_FW_DUMP		0x10
+> +	u8 flags;
+
+[Severity: Medium]
+Is this new ibmvfc_async_subq structure actually needed, or could this be an
+accidental duplicate from a rebase?
+
+It appears to be functionally identical to the pre-existing
+ibmvfc_async_sub_crq defined earlier in the same file:
+
+struct ibmvfc_async_sub_crq {
+	volatile u8 valid;
+	u8 flags;
+#define IBMVFC_ASYNC_ID_IS_ASSOC_ID	0x01
+	u8 link_state;
+	u8 fpin_status;
+	...
+
+This newly added structure doesn't appear to be used anywhere.
+
+[ ... ]
+
+> @@ -935,6 +954,7 @@ struct ibmvfc_queue {
+> =20
+>  struct ibmvfc_channels {
+>  	struct ibmvfc_queue *scrqs;
+> +	struct ibmvfc_queue *async_scrq;
+
+[Severity: Medium]
+Is this async_scrq pointer intended to be used? It is added to
+ibmvfc_channels here but appears completely unused.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806-ibmvfc-fpi=
+n-support-v5-0-13fd6f8a8f8b@linux.ibm.com?part=3D3
