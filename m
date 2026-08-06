@@ -1,222 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3816847D451
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 15:34:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A9E43264D5
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 15:38:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786030496; cv=none; b=BwhXDlgusq8IP5Loud84NSwa7YagAumcSZQ6ZGl/NGvi4WV+INfn3flEgyDbS+8hkBSCW2AEpoVxZxyDhfevGxy2HLkLPFzR6LNew/D2Mzhc3zbBmzejNkQUwVEO4yRlI+9R2OkShZQ8pg88tElwqQAM4ZrEz73uPoKbKYlXxx0=
+	t=1786030710; cv=none; b=kMD6A/THxtrR65FmaDaajW3qWzHQWDgrbH06VbRtil2ND5x3AMVdfz9TIIO5vtWTdh2v+D6HLGSWh/Srlyt6oTkNBLwSyvAxsqLTBFz5C9kjRv8Qv1xLSOBn8GYDtL6+bTsWPo5isv9UXGoy18VDKWHyZ3AhfiZdIZrJBq3lyn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786030496; c=relaxed/simple;
-	bh=ZQAFRtWYmR3JTuX3Gj4sNOg4gKHcC86hpxLX+YndgF0=;
+	s=arc-20240116; t=1786030710; c=relaxed/simple;
+	bh=DrExcZL+ttFdxJC4LxV1pvEeQ0TuVdivmYbWHTfGtpE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=LrA977h+L7Z1p3P5FCzosPv/XayQdw+BxlQwGx8deHi1NB0gX76DHaQoQbxF4lhEM+87i4JGrHvegJL8l/Tbw8TvDaXeHY2hZKyNFmsLba6nBDqyYx7IoKnMz5JDgt94LZUgOTj1adW79NVusKye16/7+S5CWe15tVImGpAvYY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J5PnbdVr; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ALYLJVItpqvbwN+laeZZUeqdb5ZonDkXPxz3xOoq8UWAIphCEJXD9PZfkcMqHVQ83YbSB0Uwp5sWR6V7DWnUIo/4eFk4pDOdgGuzwUMmtSvoc0zUfs/CTyU4H+rsSoSyX9/CgVAaG1GtSW9ca4e6QvnREosoftAT0OoLwBuaqFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HXdEU8RA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J5PnbdVr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98FC31F000E9;
-	Thu,  6 Aug 2026 15:34:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HXdEU8RA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B281B1F000E9;
+	Thu,  6 Aug 2026 15:38:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786030495;
-	bh=iUsNa0fHZqZ3O51B456cy2ZWWn1CXUUkis5sT8o2Ig0=;
+	s=k20260515; t=1786030708;
+	bh=XSFVzE1lOJ6xFOAjxndSuUcOyRhuRtekTkujuuHRFfY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=J5PnbdVrvd8HZKVPcnHTQpuA0ln4V6XiVKCwm5FRT4u0AL7DJvjwZOKStqbljL72+
-	 PXjLBaX0IpaZMHUyFlVcAetCozWIxorNPG7qeKpVZJ8VYwBrMb+lfDZG3ORHQ8eV6I
-	 Hjr1mohpslOF1elbZvS8khiq0ZpXo/GivMAavASH4+etavQFShxw7Tyu2uvBfNvgtw
-	 5cKxKzgjdto8wpmlI/++/ic9Nht3tzo/Jr6jIFlLKJDF6Uub9Id1mHzHHKdQyauL1+
-	 7DwO7e1KZLV0mq6Q4UE2AgYKjWtwNGQQj/uelaLwxm/+4OqQor6QzVmtFEr7mJxmP4
-	 u+bulyPhNKW9w==
+	b=HXdEU8RAZY/JZp1DxkcZPYextlooK/w7GKAQNsoc10gePW29s7XVBocFKHWha5/VF
+	 5MAChYkdBoBSvdIw6H7wc6jT3T3OclfYAQD9nSGiH4nd8hchQQMK+0PdF7bXYuonoI
+	 naa138euq1A58QwgjBZ5H4T96OsVxQKjgylsYRRiOUZEDuWEkTOqDVdzAzRySAf9hK
+	 NqzqmoJ9QcloXU12bLv5SDz2brUTJgIb496LX6Iqs93MfP2DEjLm4+yyU0hlt9eFPc
+	 Zn2hzabS35oU+j1JlGaAz+byNA7cFO0d5YtmU6YbwjAXKDUCqt68/RTOg+i3IB/mou
+	 DNanWstUJ9MrA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 5/7] scsi: ibmvfc: extend async event handlers to
- handle async sub queue events
+Subject: Re: [PATCH v5 4/7] scsi: ibmvfc: allocate asynchronous sub-queue
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260806-ibmvfc-fpin-support-v5-5-13fd6f8a8f8b@linux.ibm.com>
+In-Reply-To: <20260806-ibmvfc-fpin-support-v5-4-13fd6f8a8f8b@linux.ibm.com>
 References: <20260806-ibmvfc-fpin-support-v5-0-13fd6f8a8f8b@linux.ibm.com>
- <20260806-ibmvfc-fpin-support-v5-5-13fd6f8a8f8b@linux.ibm.com>
+ <20260806-ibmvfc-fpin-support-v5-4-13fd6f8a8f8b@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 06 Aug 2026 15:34:54 +0000
-Message-Id: <20260806153454.98FC31F000E9@smtp.kernel.org>
+Date: Thu, 06 Aug 2026 15:38:28 +0000
+Message-Id: <20260806153828.B281B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [Critical] Dereferencing a `void *` pointer causes a fatal compilation er=
-ror.
-- [High] Double-clearing of the hardware ring buffer's `valid` flag introdu=
-ces a race condition that drops events.
-- [High] Target matching for sub-queue events is broken due to unconditiona=
-lly treating the identifier union as `node_name`.
-- [Medium] Sub-queue FPIN descriptors are generated with an invalid event t=
-ype (0), causing telemetry loss.
-- [Medium] KUnit tests compare mismatched FPIN port congestion statistic fi=
-elds.
-- [Low] Use of `rmb()` to order memory reads before a subsequent memory wri=
-te violates generic memory barrier semantics.
+- [High] Missing Setup and Registration (Dead Code / Incomplete Implementat=
+ion)
+- [High] Erroneous Per-Protocol Allocation of Asynchronous Sub-Queue
+- [Medium] Inefficient Resource Allocation for Async Sub-Queue
 --
 
---- Patch [5]: [PATCH v5 5/7] scsi: ibmvfc: extend async event handlers to =
-handle async sub queue events ---
-commit 91821c3532cfc1d2567a96c877a77e93654a286a
+--- Patch [4]: [PATCH v5 4/7] scsi: ibmvfc: allocate asynchronous sub-queue=
+ ---
+commit 7efcd61f3c0261f3a8cbf890ed40ef64412880a3
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ibmvfc: extend async event handlers to handle async sub queue events
+scsi: ibmvfc: allocate asynchronous sub-queue
 
-This commit refactors async event handling to support traditional async
-CRQs and new asynchronous sub-queue CRQs. It introduces a new is_subq flag,
-extracts target information according to the event source, and updates KUnit
-tests for the new interface.
+This patch allocates and initializes the asynchronous sub-queue required for
+receiving full and extended FPIN events from VIOS.
+
+> Update ibmvfc_channel_setup() to pass async_subq_handle to VIOS during
+> channel setup, and ibmvfc_channel_setup_done() to store the VIOS cookie
+> for the async sub-queue.
+
+The commit message states that ibmvfc_channel_setup() and
+ibmvfc_channel_setup_done() are updated, but those modifications are missing
+from the actual patch code.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index c8efe17223c9e..97856a609bde4 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-[ ... ]
-> +static struct fc_els_fpin *
-> +ibmvfc_full_fpin_to_desc(struct ibmvfc_async_subq *ibmvfc_fpin)
-> +{
-> +	return ibmvfc_common_fpin_to_desc(ibmvfc_fpin->fpin_status, ibmvfc_fpin=
-->wwpn,
-> +					  cpu_to_be16(0), cpu_to_be16(0),
-
-[Severity: Medium]
-Is hardcoding the event type to 0 intended here?
-
-Unlike ibmvfc_basic_fpin_to_desc() which maps the status to a valid Fibre
-Channel event type (like FPIN_CONGN_DEVICE_SPEC), passing 0 results in an
-invalid event type.
-
-Could this cause downstream generic handlers to drop the telemetry metrics?
-
-[ ... ]
->  static void ibmvfc_process_async_work(struct work_struct *work)
->  {
-[ ... ]
-> +	is_subq =3D aw->is_subq;
-> +	if (is_subq) {
-> +		subq =3D &aw->crq.subq;
-> +		scsi_id =3D 0;
-> +		wwpn =3D subq->wwpn;
-> +		node_name =3D subq->id.node_name;
-
-[Severity: High]
-Does this misinterpret the identifier for NVMe devices?
-
-The ibmvfc_async_subq structure uses a union for the ID. If the
-IBMVFC_ASYNC_ID_IS_ASSOC_ID flag is set, this unconditionally extracts it as
-node_name.
-
-This means an assoc_id would be incorrectly compared against
-tgt->ids.node_name during the ibmvfc_find_target() lookup, causing valid
-sub-queue events to be ignored.
-
-[ ... ]
-> -VISIBLE_IF_KUNIT void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
-> -					  struct ibmvfc_host *vhost)
-> +VISIBLE_IF_KUNIT void ibmvfc_handle_async(void *crq,
-> +					  struct ibmvfc_host *vhost,
-> +					  bool is_subq)
->  {
-
-[Severity: Critical]
-Does this cause a compilation error?
-
-The signature of ibmvfc_handle_async() was changed so that crq is now a
-void pointer. While the list_for_each_entry() loop for scsi_scrqs was
-updated to use the new scsi_id, wwpn, and node_name local variables, the
-identical loop for nvme_scrqs was not updated:
-
-ibmvfc_handle_async() {
-    ...
-    list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
-        if (!crq->scsi_id && !crq->wwpn && !crq->node_name)
-            break;
-    ...
-}
-
-Because crq is now void *, direct member access is invalid in C and will
-break the build.
-
-[ ... ]
->  	default:
-> -		dev_err(vhost->dev, "Unknown async event received: %lld\n", crq->event=
-);
-> +		dev_err(vhost->dev, "Unknown async event received: %llu\n", event);
->  		break;
->  	}
-> +
-> +	rmb();
-
-[Severity: Low]
-Does this barrier provide the correct guarantees?
-
-The rmb() only ensures prior loads complete before subsequent loads.
-To ensure that prior loads complete before the subsequent valid =3D 0 store,
-shouldn't this be a full mb()?
-
-> +	if (is_subq)
-> +		subq->valid =3D 0;
-> +	else
-> +		async_crq->valid =3D 0;
-> +	wmb();
->  }
-
-[Severity: High]
-Will clearing the valid flag here and again in the caller permanently drop
-new events?
-
-Once the valid flag is cleared here, the hardware is free to reuse this slot
-and write a new event (setting valid to 0x80). However, ibmvfc_tasklet()
-(the caller) redundantly executes async->valid =3D 0 upon return from this
-function:
-
-ibmvfc_tasklet() {
-    ...
-    while ((async =3D ibmvfc_next_async_crq(vhost)) !=3D NULL) {
-        ibmvfc_handle_async(async, vhost, false);
-        async->valid =3D 0;
-        wmb();
-    }
-    ...
-}
-
-If a new event was written by the hardware in this tiny race window, the
-second clear in ibmvfc_tasklet() will overwrite the 0x80 with 0, permanently
-dropping the new event.
-
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
-/ibmvfc_kunit.c
-> index 64a517a74af8e..a3e3e3471c5ef 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-> @@ -45,7 +45,7 @@ static void ibmvfc_async_fpin_test(struct kunit *test)
->  	fc_host =3D shost_to_fc_host(vhost->host);
+> @@ -6796,6 +6796,17 @@ static int ibmvfc_alloc_channels(struct ibmvfc_hos=
+t *vhost,
+>  	if (!channels->scrqs)
+>  		return -ENOMEM;
 > =20
->  	pre[IBMVFC_AE_FPIN_LINK_CONGESTED] =3D READ_ONCE(fc_host->fpin_stats.cn=
-_device_specific);
-> -	pre[IBMVFC_AE_FPIN_PORT_CONGESTED] =3D READ_ONCE(tgt->rport->fpin_stats=
-.cn);
-> +	pre[IBMVFC_AE_FPIN_PORT_CONGESTED] =3D READ_ONCE(tgt->rport->fpin_stats=
-.cn_device_specific);
->  	pre[IBMVFC_AE_FPIN_PORT_CLEARED] =3D READ_ONCE(tgt->rport->fpin_stats.c=
-n_clear);
+> +	channels->async_scrq =3D kzalloc_obj(*channels->async_scrq, GFP_KERNEL);
+
+[Severity: High]
+Is async_scrq placed in the correct structure?
+
+It appears async_scrq is added to struct ibmvfc_channels, which exists
+per protocol (vhost->scsi_scrqs and vhost->nvme_scrqs). Because this alloca=
+tion
+path is executed once per protocol, does this result in allocating an async
+queue for each protocol instead of a single async queue per host, which the
+VIOS channel setup expects?
+
+> +	if (!channels->async_scrq) {
+> +		rc =3D -ENOMEM;
+> +		goto free_scrqs;
+> +	}
+> +
+> +	rc =3D ibmvfc_alloc_queue(vhost, channels->async_scrq,
+> +				IBMVFC_SUB_CRQ_FMT);
+
+[Severity: High]
+Are we missing the hypervisor registration and setup steps for this queue?
+
+Without the updates to ibmvfc_channel_setup() and ibmvfc_channel_setup_done=
+()
+mentioned in the commit message, the async queue is allocated but never
+registered with the hypervisor via h_reg_sub_crq() or communicated to the V=
+IOS,
+leaving it non-functional.
 
 [Severity: Medium]
-Are we comparing mismatched fields in this test?
+Does this queue need a full event pool allocation?
 
-The initialization of pre[IBMVFC_AE_FPIN_PORT_CONGESTED] was correctly
-updated to capture cn_device_specific, but the corresponding post-event read
-(and the second bad-path test initialization) still captures cn.
+Calling ibmvfc_alloc_queue() with IBMVFC_SUB_CRQ_FMT sets queue->total_depth
+to a non-zero value, which allocates a large command event pool and associa=
+ted
+DMA memory. Since this async queue is intended solely for receiving unsolic=
+ited
+events, could we avoid allocating an unused outbound event pool?
 
-This mismatch leads to assertions comparing cn_device_specific against cn.
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260806-ibmvfc-fpi=
-n-support-v5-0-13fd6f8a8f8b@linux.ibm.com?part=3D5
+n-support-v5-0-13fd6f8a8f8b@linux.ibm.com?part=3D4
