@@ -1,118 +1,118 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F242947D448
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 17:19:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFDA0394EB7
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Aug 2026 19:06:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786036765; cv=none; b=EbrUg1m0r3v60yPLwwMVf4p7GBf2BEWluOuA+jjsBHXYMjGW/wZJ6UyBM+tEYFvsNPhM0P/S1SCj3MhdxmB8JbKaGMx5V9fuV9vApMA5LdVRS72UAOIC7BtlvrQiJVI4RgSdTeYFmmKhzARjWVToELUjYKklNbDfZPQYktWLMu4=
+	t=1786043186; cv=none; b=bcCNaLvT7McLmNAu3fb0FHy67I/t30em3+alip0tNdgXPF59VluY2oSH+pR6xP9uQovlmG7YeUtlCaVuhtE/8DhiapWAo6MukfqW557GylyIjbkS595ZXkfM68fBKnk900tSlaeNRYJdDi3mAX3EeRpj4IaBBiq4+bg+rRwMg9Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786036765; c=relaxed/simple;
-	bh=Vn3avY5vzHrpF0yJtH0KD2oG6DNhP5a/rrBLXZ+75Pk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TyKj6Z9EXy+NKE+3DwqOh1S/QDgXjUiQxYtNds+2wNT7D1uiOrVM80MRGrnWaOvfZoUUvYaJgd9drAsbx2xPdp4laDJI+4cKZLxHZXHQBRkILqj7xbjitkfsAZXhO8fIkUrNVv3rRJBscqOvuiMQBjgtiVAbggdSM90a7MWb1cw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DKUlZeDL; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1786043186; c=relaxed/simple;
+	bh=wrnU1yvuo6Y1BWUiF8itKKc+W5g0SD+i4qUFfAHKan8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=dJLiffW0aqkfr9oTr6iik0mvlZk8xxMFAZrvXM4WJSVD0LKt04s+1+79Y3cVXkG4dCPSf6uWYWScp5LC6cPXDtMKjV97QhNet96NACjoVEu56sEpUxR7faPbHqnPlwpD4RWrNvW7nCm40SnwSkQM+0T3rPIu+Fuft5qNFDdCtGc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=keP8Suwl; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DKUlZeDL"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hGDXq3HKyz1XM6JY;
-	Thu,  6 Aug 2026 17:19:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1786036754; x=1788628755; bh=Vn3avY5vzHrpF0yJtH0KD2oG
-	6DNhP5a/rrBLXZ+75Pk=; b=DKUlZeDLevQDmYmHRzXcj/FlCdVa6HZXLyrkpcy5
-	Wvf4WC0cKZbIVyW9T9cHQ0+h9+OkXbpgyKNWs4eoPX0QBSezhQaCnza812I67lp8
-	C1KkKj7Q9/Ep1mgY00EPye7UAmdM3B9gQ1QJEIixsjSqRGAFju57nhwhoZWBA2mV
-	UiZYaPHZrEc/5PWje2sPUaGakrIDUIT5WDICIz1aF8lfz5ON7D05UlT340uvM304
-	tYz0HWBm/BLh8BAdfNFOjgWa+adY4LKgL++mV+F49Y1uMzS7xxj0iM5wxCA39BkF
-	bu4KOYgq+XdKqt1Xy2Bz+N5vX+gABUMvbErhj72sKhn0tw==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ZIKw-byvmp3m; Thu,  6 Aug 2026 17:19:14 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hGDXX6Vpcz1XM31H;
-	Thu,  6 Aug 2026 17:19:08 +0000 (UTC)
-Message-ID: <b861a237-eb60-45a9-b932-1bdaa29abc46@acm.org>
-Date: Thu, 6 Aug 2026 10:19:07 -0700
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="keP8Suwl"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 676Ftorj3074693;
+	Thu, 6 Aug 2026 19:06:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=VEzSeoGfpZEM0R1wv2Wrb93kRiVmXEjzOXYSxd5vAzk=; b=
+	keP8SuwlOV22vg7+UKbw9aYlN/d/szb/Wke2eGC12HZmK1K8VLiGL17NBnmnBxri
+	nOBjO7a312LEs1EUnB47989ec/cYVow+3usBS0kcBUGW/wLqEMT8RSQJTvVAqIJg
+	OADuuBccQLenFFHFK2OxPBj2hQl/vS44cBE1l7z8jPU5h1dSZN4MuYG/2vFE8oUF
+	0X+Bhfe8lue7lAd4KMfnikHCSTLbNysh3mNbn9DWASGXh1djK3IlKRXstoRaCYIp
+	exTfauwFaalWVJ/IF1DrFGnignqJv6qpVNQ5oIwi8joP+tdDtQz3SZsIUXudy0QP
+	D+i3VFFx1iMpspRUU3Q+4w==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fs8e56kt6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 06 Aug 2026 19:06:22 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 676J0cYp024709;
+	Thu, 6 Aug 2026 19:06:22 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4fs78w56by-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 06 Aug 2026 19:06:22 +0000 (GMT)
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 676J6LgW011247;
+	Thu, 6 Aug 2026 19:06:21 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4fs78w56b9-2;
+	Thu, 06 Aug 2026 19:06:21 +0000 (GMT)
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org, David Strahan <david.strahan@microchip.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        David Strahan <David.Strahan@microchip.com>
+Subject: Re: [PATCH v1 0/4] smartpqi: fixes and updates for 2.1.42-011
+Date: Thu,  6 Aug 2026 15:06:07 -0400
+Message-ID: <178589207059.336697.14044367611229567227.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260722220401.6357-1-david.strahan@microchip.com>
+References: <20260722220401.6357-1-david.strahan@microchip.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 5/6] scsi: core: Protect host state changes with the
- host lock
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Marco Elver <elver@google.com>, linux-scsi@vger.kernel.org,
- Jianzhou Zhao <luckd0g@163.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- Ranjan Kumar <ranjan.kumar@broadcom.com>, Nilesh Javali
- <njavali@marvell.com>, Manish Rangankar <mrangankar@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com
-References: <cover.1785965531.git.bvanassche@acm.org>
- <d5b40794ca80ed83888a83847c293349e7f1de43.1785965531.git.bvanassche@acm.org>
- <6d4a31c0-308d-4f4e-9708-11a559137ee3@oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <6d4a31c0-308d-4f4e-9708-11a559137ee3@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-06_02,2026-08-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
+ spamscore=0 malwarescore=0 bulkscore=0 lowpriorityscore=0 mlxscore=0
+ phishscore=0 mlxlogscore=972 suspectscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2606160000 definitions=main-2608060149
+X-Proofpoint-ORIG-GUID: Vl2eQPWB8ZSfI0SshxkVLvsQV3bOVIea
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA2MDE0OSBTYWx0ZWRfXy1HfU6CCDO+o
+ yQODTWPeopL2+GLE0I5L4Q43uyzGovfXHw4Su7apZM32l+L3XnlK4UGg2mdRkbhJNLiT5EGSPbU
+ U6uUub2t/2G2W6PAiIeLXlzStueYsBpI5VUxUGmEISp9kJDeGlY1
+X-Proofpoint-GUID: Vl2eQPWB8ZSfI0SshxkVLvsQV3bOVIea
+X-Authority-Analysis: v=2.4 cv=M/t97Sws c=1 sm=1 tr=0 ts=6a74db2e b=1 cx=c_pps
+ a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=3I1J8UUJPc9JN9BFgKH3:22 a=VwQbUJbxAAAA:8
+ a=btsfxEtQ8LFeGGKtxScA:9 a=QEXdDO2ut3YA:10 a=5yU3S35YU4bGjq-dph-N:22
+ a=Bho9c0fBagfJEIQBS7DQ:22 cc=ntf awl=host:13510
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA2MDE0OSBTYWx0ZWRfX2lnrLxo//2QT
+ LJW6NxZMs9lIN3sudMGrfdxC/Yhr3crSMon8K2BPj2tE0FN5YGcWE3xSxkbI0bqqonqAg2+knfo
+ Rebx0p4yT/VLLlr0BIboSBIPHUp1hqcT4BEJT9C/7tTuqaqoOx11bEBrgz87fC10bIKND/iFgnb
+ +qXjislZbHyNBgVgdgUxWIdPUdE4d77vep733Tj1BuDTA9OvY0pcUAM1JquAJHcRxYs7JiXY+Q2
+ ZPIbbfb/QS2o90N+3YcQWseK/4NaMp8ufyTGF3IpJU86uQSAGVNYA9upq0R45DKRRAqWjWzj4d+
+ ySSK7b4wSm2A9zQW6heDtsrqihg0FdSRq8Dl8CmdH7zjNBxt/ioAjznoATGkpmGDDdmS3+xQjSI
+ 3XaLSs3pnGJgj2LwIpsZDtJU+xH/hd/h0RXEkyAkjS+6fq+hXpEb3IzwxMVP0OIbIeejdofv5Jl
+ RUAX3Vavr1Pl95JXpiS5+AKQjVnp4S/aWUi5F3CI=
 
-On 8/6/26 2:13 AM, John Garry wrote:
-> On 05/08/2026 22:36, Bart Van Assche wrote:
->> @@ -785,11 +785,18 @@ static inline struct Scsi_Host=20
->> *dev_to_shost(struct device *dev)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return container_of(dev, struct S=
-csi_Host, shost_gendev);
->> =C2=A0=C2=A0 }
->> +static inline enum scsi_host_state scsi_get_host_state(struct=20
->> Scsi_Host *shost)
->> +{
->> +=C2=A0=C2=A0=C2=A0 return context_unsafe(READ_ONCE(shost->shost_state=
-));
->=20
-> I am wondering if it may be better to protect reading this with the=20
-> spinlock as well. We could lose the READ_ONCE and WRITE_ONCE. And we=20
-> would be more symmetrical with the set function.
->=20
-> I really don't feel strongly about this, though.
+On Wed, 22 Jul 2026 17:03:57 -0500, David Strahan wrote:
 
-I slightly prefer READ_ONCE() because READ_ONCE() makes it clear that a
-race condition is triggered. Protecting the host state read with a
-spinlock is misleading in my opinion because it suppresses data race
-reports while the host state can change as soon as the spinlock has
-been unlocked.
+> These patches are based on Martin Petersen's 7.2/scsi-queue tree
+> https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+>  7.2/scsi-queue
+> 
+> This patch series includes four patches, with two main functional changes:
+> 
+> 1. smartpqi-Fix-AIO-retry-marker-cleared-by-SCSI-core-between-dispatches
+> 
+> [...]
 
->> +int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state=
-=20
->> state)
->> +=C2=A0=C2=A0=C2=A0 __must_hold(shost->host_lock);
->=20
-> How come we have this in the prototype and not the actual function itse=
-lf?
+Applied to 7.3/scsi-queue, thanks!
 
-Adding __must_hold() to the function declaration is sufficient. Adding
-__must_hold() to the function definition is optional if it has already=20
-been added to the function definition.
+[1/4] smartpqi: Fix AIO retry marker cleared by SCSI core between dispatches.
+      https://git.kernel.org/mkp/scsi/c/225548863f0a
+[2/4] smartpqi: add support for CCISS_BIG_PASSTHRU ioctl
+      https://git.kernel.org/mkp/scsi/c/c64b2ab2ff51
+[3/4] smartpqi: add new pci device-ids
+      https://git.kernel.org/mkp/scsi/c/1a220e6e87a3
+[4/4] smartpqi: update version to 2.1.42-011
+      https://git.kernel.org/mkp/scsi/c/913337c48e6a
 
-Thanks,
-
-Bart.
+-- 
+Martin K. Petersen
