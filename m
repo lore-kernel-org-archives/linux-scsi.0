@@ -1,73 +1,106 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 542AF282F20;
-	Thu,  6 Aug 2026 03:38:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DBC9382F15;
+	Thu,  6 Aug 2026 04:39:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785987510; cv=none; b=AEtg4XAcrHNtVRxti7rj+/Y7W5tc4LpKhBakNPtwa/f40jcJJvJBfpbXKe9asR58aK+D2U7Aifw9PilMTbZ2W1YuYWaQToYGKblWCpmkN3fd9I1/dQEgchfJiCcEuLXydI1bfYRBMpMmt6VF8oDwEvAmCphEgjcu/YUNFu+pLY8=
+	t=1785991151; cv=none; b=H3Sd20WqXiPqmaYsvnVtVtth5ARgzLbzIvxnTLNxGheOpWt85kz0bPrSxzG9sg465iObjj3TiDKXM3tSzLOaZoUZi1Fkd0mJvQ9NP4h2UQ/rTlh6jbJQLaNt/2wiRZYrSabNNVTA/RzLrU5LvRTNmsODt7WwioR8WtEkB1FZFjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785987510; c=relaxed/simple;
-	bh=CZD2fLYy+JZvIuw8RaJ0fPRTTeYol11buYqkI4IjKJg=;
-	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U3fgtqauz1kY5btJpfaKom9d/zJvJaoh9GJacPnq0sFcfqXmXqUxTgmhFLlQEAWC3EMmzzmEuK2IrEufE6m8gxWmAJ48HaPPlt1zQwMFBZeAI6yBrnmJjb+55V4kcRaFxtAO7vRu+x8Sp3LLQ3fk6Rtv79unG65HrXdHk8elJSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BILbr089; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785991151; c=relaxed/simple;
+	bh=DbWC5oTvQzH86ZVRTJAAZy7ZxiNZbfKbHnsmXFcfD88=;
+	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
+	 Message-Id:Subject; b=kCnsZgxtK9rynrnWVt074oGzZU0L+qXzbhK4zoyYWOVylhkRC+PzVM4B8feBqgKbiwv21kGiysrBwAGW6Az2gS8wJeQZu79LGDkH0Rz8010z6xibNWQh2e0vrYcp2xurz2PeoZBYbxjgMmqVHmwQxON1TK+YNpNd4oAR0RrqZ5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ELIcMt+i; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BILbr089"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DA7C1F000E9;
-	Thu,  6 Aug 2026 03:38:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ELIcMt+i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1E041F000E9;
+	Thu,  6 Aug 2026 04:39:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785987509;
-	bh=cBoiD3UwaMAXmdjVDF6b0NCkZrKukBc8VfE7Nh4Nz90=;
-	h=Date:From:To:Subject:References:In-Reply-To;
-	b=BILbr089B5EelOBerH9RbPZsF2cxqaqtCd7PtO5dxK1mB+stj0NPBSU5R8X+LPEFd
-	 qiGrI27/h1CMYO3U9mzUPUOlv9Wk97yAxSj+9DlUPSuiegBQCWHZUvPooXxZuC+82i
-	 wViulUCK8e1r24tNn86mSzZcS14/o15wmTpBuavMeCQQiTOgBlPcmE98/YqESk19HA
-	 VZDcnuUEDqvadEsCe+7SH7+nxqzUtEx3tpv1wAp1LCMinM1QEbOxJxyEMWMN9M8HND
-	 jyLuWoqxQXLFmuX5MH2pxa40+ErmQgim+aAzQqRJ3YoGlEkBIokXsQnCoT8qEyTNhy
-	 17wKT6Fn6E1Dw==
-Date: Thu, 6 Aug 2026 03:38:26 +0000
-From: Yixun Lan <dlan@kernel.org>
-To: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Jennifer Berringer <jberring@redhat.com>,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] Add UFS Host driver support for SpacemiT K3 SoC
-Message-ID: <20260806033826-GKM76518@kernel.org>
-References: <20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org>
- <amdyzkFplQqJvMl1@aurel32.net>
+	s=k20260515; t=1785991150;
+	bh=85i0AXt6sCXn1q2thPdJFckEuCv/5TVwacAUp/k4SQk=;
+	h=Date:From:Cc:To:In-Reply-To:References:Subject;
+	b=ELIcMt+iX8oyqWp+t39x854MB2hi65pUKoR+arELehyykuMEkum1EfaSUFjYebixB
+	 RN8ohC0Bhi2umkm/8xFyXWEZfD707UaguyTpqM7OKfM5FayVRasqI2bevwcYHDS/MM
+	 dQ14jur+wDUDlcxYhkSnCeINh+Y1buspDbPQ9Pd040NzH1U0yVeOzgKC2IkT+W3/v8
+	 HWMuzO1/Uir63zS6C5qgd6FhA9kzFsG3Jk3M4utXPLouK1wR/yOleXRW+LA7oAmt7L
+	 gNB5qf9x2yFbtGTR++WQuYECHYyE+CoBfhuAIU4BCRoAHHiUTUJcdzTvnTsm3ToqhG
+	 aPVz2LYdUmTNA==
+Date: Wed, 05 Aug 2026 23:39:09 -0500
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <amdyzkFplQqJvMl1@aurel32.net>
+From: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Alexandre Ghiti <alex@ghiti.fr>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, 
+ linux-scsi@vger.kernel.org, Avri Altman <avri.altman@sandisk.com>, 
+ spacemit@lists.linux.dev, Palmer Dabbelt <palmer@dabbelt.com>, 
+ linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ Paul Walmsley <pjw@kernel.org>, Aurelien Jarno <aurelien@aurel32.net>, 
+ Albert Ou <aou@eecs.berkeley.edu>, Bart Van Assche <bvanassche@acm.org>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, 
+ Jennifer Berringer <jberring@redhat.com>, devicetree@vger.kernel.org, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ Philipp Zabel <p.zabel@pengutronix.de>
+To: Yixun Lan <dlan@kernel.org>
+In-Reply-To: <20260806-08-k3-ufs-support-v3-1-037fb322acdb@kernel.org>
+References: <20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org>
+ <20260806-08-k3-ufs-support-v3-1-037fb322acdb@kernel.org>
+Message-Id: <178599114910.179339.15914924366340132471.robh@kernel.org>
+Subject: Re: [PATCH v3 1/3] scsi: ufs: spacemit: dt-bindings: Add UFS
+ controller for K3 SoC
 
-Hi Aurelien,
 
-On 17:01 Mon 27 Jul     , Aurelien Jarno wrote:
-> > change-id: 20260605-08-k3-ufs-support-c8b308e415e2
+On Thu, 06 Aug 2026 02:56:18 +0000, Yixun Lan wrote:
+> Document the compatible for UFS (Universal Flash Storage) Host Controller
+> which found in SpacemiT K3 SoC chip. Its features are listed below:
 > 
-> Thanks for this new version. Patches 2 and 3 are:
+> - Compliant with MIPI UniPro v1.61 specification.
+> - Compliant with M-PHY v3.0 specification.
+> - Compliant with UFS HCI v2.1 specification.
+> - Supports up to 2 Tx and 2 Rx lanes, up to HS-GEAR3 5.8 Gbps per lane.
+> - Supports standard low-power hibernate to reduce power consumption.
 > 
-> Tested-by: Aurelien Jarno <aurelien@aurel32.net>
+> Signed-off-by: Yixun Lan <dlan@kernel.org>
+> ---
+>  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml | 56 ++++++++++++++++++++++
+>  1 file changed, 56 insertions(+)
 > 
-I forgot to update v3 with your Tested-by tags, but the notable
-changes were the error checking added, which should be safe..
 
--- 
-Yixun Lan (dlan)
+My bot found errors running 'make dt_binding_check' on your patch:
+
+yamllint warnings/errors:
+
+dtschema/dtc warnings/errors:
+Lexical error: Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.example.dts:31.36-55 Unexpected 'CLK_APMU_UFS_REFCLK'
+FATAL ERROR: Syntax error parsing input tree
+make[2]: *** [scripts/Makefile.dtbs:140: Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.example.dtb] Error 1
+make[2]: *** Waiting for unfinished jobs....
+make[1]: *** [/builds/robherring/dt-review-ci/linux/Makefile:1669: dt_binding_check] Error 2
+make: *** [Makefile:248: __sub-make] Error 2
+
+doc reference errors (make refcheckdocs):
+
+See https://patchwork.kernel.org/project/devicetree/patch/20260806-08-k3-ufs-support-v3-1-037fb322acdb@kernel.org
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
+
