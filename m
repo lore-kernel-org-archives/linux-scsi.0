@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13C6C343D63;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13DB6377015;
 	Thu,  6 Aug 2026 15:17:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786029461; cv=none; b=ggQrB7O8f505yuuVuRius45Wgq6CYA2QCrW0kfc5tGoXY5N1PQiYMdRUD4YuJB6SVf92TfBcge7QvY/pqG/WgDorEHKiOzThVN4mjyGuSRuXMzC8HVhX9X+Tg1f+4xKe7pB/Z/sgW5NwcKzZZ8Fi/m0dcHelFYBM6kpzCVh52kY=
+	t=1786029461; cv=none; b=cj8AuHxfnXKNTkJh+PawQFTkfgUEazrVpXlQlRIhRKcepdJSOSgNwptCX+Ok6XYhhfgQr5QOQKX0c+Q7n0YBGe/Xd9iPBoVK5G1PBpjaCvDVBdaWm4PnkFDL9SoErfkE4haA5HV3us1rnJfm5YQM7q8rZI0BimZSPW6bvNKKBJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1786029461; c=relaxed/simple;
-	bh=FsXcpIYOs0w8fAtVAyJEkoHOmC2YdXOKAfol/LybEx4=;
+	bh=NpORjKnGGwSWjo96rY491mQ4DCuXGuJzwqjHxSwNKB0=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=SY9+QWqyl46QW1Cx5NlasTjgaEzNTKOODQYmPSq22KQISYp4T9bP39P8DJ5VV5Pb33ID4Qug8oJ/8TSTcLZLiBHcblypH4AzO1QPWOBtRL+yXWyoi1X0es+lssbZRkf6SdtUan2FIYX3wY5tLwyRMasxNS4FZPSx9ICi2wnMJYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R/V09KsR; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=avaoelKBJqmX6yob2X7PBntkR/ygqvuY0FFsXEcpMplc1bWRXUEXehj4WQcRUA6lkCBNPK3OHwLZJH4CSLmBa404RX6bnMFXg3FyIsr58Z8uuPuKnICmqoaXczynacUOU+LYH4a00JUPLNFrJ/lF/A5xNk8v9wJXdRTrb4RCQ40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=STKdnQNm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R/V09KsR"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id CAB74C2BCFD;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="STKdnQNm"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BD6AAC2BCF7;
 	Thu,  6 Aug 2026 15:17:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1786029460;
-	bh=FsXcpIYOs0w8fAtVAyJEkoHOmC2YdXOKAfol/LybEx4=;
+	bh=NpORjKnGGwSWjo96rY491mQ4DCuXGuJzwqjHxSwNKB0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=R/V09KsR0hIvHyqnuqMxONvRlNEZJ5EBfBf1SzMZc2Ga4CJAuGnHfFma4NQZ9wJTK
-	 ZvHMCZATA2AfO50gJOug80ShzqQ/ab3ekNo4tI7Mte+hXdG5AuR6/Y8K1M2Y4QhGwQ
-	 C29sN3uUXT1T/n73gnF7jXbumAK/ocsucqDU7aw/vPJGUac75Q6lbMl0D195okGd1h
-	 LKIzgLl6W3/UsvgNXE2CedGNsoWlNLa597JK9reoMdCZ0yLJeU3UPO2c2jJeyiFvRq
-	 40Q49Smskvv6M4LgPfHKRyXOcBpiMm3lSOL6YvaXbg9vGRnw98weJA2684VLofWOte
-	 j+YS+DX2OzcuA==
+	b=STKdnQNmPVMeb64FDz98TcSXhTcT5hjpa7BYjytrdcCihGselS5M2B/WukUeCkMRO
+	 3QvdV8jl2FoNZctVu3jxSLAeEL+ysIf287SVxd/oR6oatmNQuVQuO7FUQgW51lHPRp
+	 q8VU6IRf6k0qgU06AerKfAH+otcVVb9ALdcFey+teZNgNmK5S8hxzIyPimFSXX4Twe
+	 t30SRxyu8ZPJs93WfeYKc8A26smzgPDH5tp2Zp81QeYIPlve2RlSrplTCoE/FY0ryR
+	 OGZQKFKZ0n72vsBeusaBzarqE+2dpN/s+7BKxHvj2KBwPzu5nereivkPAMIIWig3JC
+	 mOuT48tyBUDRQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B64D0C5AC80;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3579C56205;
 	Thu,  6 Aug 2026 15:17:40 +0000 (UTC)
 From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Date: Thu, 06 Aug 2026 10:17:34 -0500
-Subject: [PATCH v5 4/7] scsi: ibmvfc: allocate asynchronous sub-queue
+Date: Thu, 06 Aug 2026 10:17:33 -0500
+Subject: [PATCH v5 3/7] scsi: ibmvfc: define asynchronous sub-queue
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260806-ibmvfc-fpin-support-v5-4-13fd6f8a8f8b@linux.ibm.com>
+Message-Id: <20260806-ibmvfc-fpin-support-v5-3-13fd6f8a8f8b@linux.ibm.com>
 References: <20260806-ibmvfc-fpin-support-v5-0-13fd6f8a8f8b@linux.ibm.com>
 In-Reply-To: <20260806-ibmvfc-fpin-support-v5-0-13fd6f8a8f8b@linux.ibm.com>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
@@ -54,11 +54,11 @@ Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
  Greg Joyce <gjoyce@linux.ibm.com>, Kyle Mahlkuch <kmahlkuc@linux.ibm.com>, 
  Dave Marquardt <davemarq@linux.ibm.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1786029459; l=2503;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1786029459; l=1853;
  i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=5RuNy3ewl5Y+dwhrMNnUroVom0cpBS0889/aQRw9BCM=;
- b=O2TVx4DtdVUFoCtw1cVhQdxnL8xx6AGWr6s5zDZUbvq19acN6cJSzKuNbQzSLuTtAcwdDLCSQ
- ncLWojrmHDUBgFyMBkBTwTcp6dFmxIAiJQAtDQF0f+mn74t6mkEqtMk
+ bh=w68m3zR1aKLFee7eqfMuZfkcraWrl8VL7pHlxbyiDug=;
+ b=EShFeXOjm+MksZFb+wLG8x+m98Oq4fE/ypTeNJ/BB3QEVRM7POCIFoZ+E9bbOccrcGTPt72m6
+ E6Gce7LJwVsD5NMz1jJ608Nei+4iLjUMakiALFxXZImLIa5DPrId85B
 X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
  pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
 X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
@@ -68,88 +68,63 @@ Reply-To: davemarq@linux.ibm.com
 
 From: Dave Marquardt <davemarq@linux.ibm.com>
 
-Allocate and initialize the asynchronous sub-queue required for receiving
-full and extended FPIN events from VIOS.
+Define data structures for asynchronous sub-queue support required for
+full and extended FPIN functionality.
 
-Modify ibmvfc_alloc_channels() to allocate async_scrq using
-ibmvfc_alloc_queue() with IBMVFC_SUB_CRQ_FMT format. Update error
-handling to properly clean up async_scrq on allocation failures.
+Add ibmvfc_async_subq structure to represent async events received via
+the sub-queue, including FPIN status, link state, event type, and WWPN
+information.
 
-Update ibmvfc_channel_setup() to pass async_subq_handle to VIOS during
-channel setup, and ibmvfc_channel_setup_done() to store the VIOS cookie
-for the async sub-queue.
+Update ibmvfc_channel_setup structure to include async_subq_handle field
+and reduce IBMVFC_MAX_CHANNELS from 502 to 501 to accommodate the async
+sub-queue. Add async_scrq pointer to ibmvfc_channels structure.
 
-Modify ibmvfc_release_channels() to free async_scrq resources during
-cleanup.
+Add capability flags IBMVFC_USE_ASYNC_SUBQ and IBMVFC_SUPPORT_ASYNC_SUBQ
+for negotiating async sub-queue support with VIOS during login.
 
 Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.h | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index aec953f29e55..06898a407d07 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -6726,6 +6726,17 @@ static int ibmvfc_alloc_channels(struct ibmvfc_host *vhost,
- 	if (!channels->scrqs)
- 		return -ENOMEM;
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index e8ca0d30f483..3711be4b6748 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -791,6 +791,25 @@ struct ibmvfc_async_work {
+ 	struct work_struct async_work_s;
+ };
  
-+	channels->async_scrq = kzalloc_obj(*channels->async_scrq, GFP_KERNEL);
-+	if (!channels->async_scrq) {
-+		rc = -ENOMEM;
-+		goto free_scrqs;
-+	}
++struct ibmvfc_async_subq {
++	volatile u8 valid;
++#define IBMVFC_ASYNC_ID_IS_ASSOC_ID	0x01
++#define IBMVFC_FC_EEH			0x04
++#define IBMVFC_FC_FW_UPDATE		0x08
++#define IBMVFC_FC_FW_DUMP		0x10
++	u8 flags;
++	u8 link_state;
++	u8 fpin_status;
++	__be16 event;
++	__be16 pad;
++	volatile __be64 wwpn;
++	volatile __be64 nport_id;
++	union {
++		__be64 node_name;
++		__be64 assoc_id;
++	} id;
++} __packed __aligned(8);
 +
-+	rc = ibmvfc_alloc_queue(vhost, channels->async_scrq,
-+				IBMVFC_SUB_CRQ_FMT);
-+	if (rc)
-+		goto free_async;
-+
- 	for (i = 0; i < channels->max_queues; i++) {
- 		scrq = &channels->scrqs[i];
- 		rc = ibmvfc_alloc_queue(vhost, scrq, IBMVFC_SUB_CRQ_FMT);
-@@ -6734,13 +6745,21 @@ static int ibmvfc_alloc_channels(struct ibmvfc_host *vhost,
- 				scrq = &channels->scrqs[j - 1];
- 				ibmvfc_free_queue(vhost, scrq);
- 			}
--			kfree(channels->scrqs);
--			channels->scrqs = NULL;
-+			ibmvfc_free_queue(vhost, channels->async_scrq);
- 			channels->active_queues = 0;
--			return rc;
-+			goto free_async;
- 		}
- 	}
+ union ibmvfc_iu {
+ 	struct ibmvfc_mad_common mad_common;
+ 	struct ibmvfc_npiv_login_mad npiv_login;
+@@ -935,6 +954,7 @@ struct ibmvfc_queue {
  
-+	return rc;
-+
-+free_async:
-+	kfree(channels->async_scrq);
-+	channels->async_scrq = NULL;
-+free_scrqs:
-+	kfree(channels->scrqs);
-+	channels->scrqs = NULL;
-+
- 	return rc;
- }
- 
-@@ -6782,8 +6801,15 @@ static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
- 
- 		kfree(channels->scrqs);
- 		channels->scrqs = NULL;
-+
- 		channels->active_queues = 0;
- 	}
-+
-+	if (channels->async_scrq) {
-+		ibmvfc_free_queue(vhost, channels->async_scrq);
-+		kfree(channels->async_scrq);
-+		channels->async_scrq = NULL;
-+	}
- }
- 
- static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
+ struct ibmvfc_channels {
+ 	struct ibmvfc_queue *scrqs;
++	struct ibmvfc_queue *async_scrq;
+ 	enum ibmvfc_protocol protocol;
+ 	unsigned int active_queues;
+ 	unsigned int desired_queues;
 
 -- 
 2.55.0
