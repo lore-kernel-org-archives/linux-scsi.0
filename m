@@ -1,167 +1,109 @@
-Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lr2-f11.google.com (mail-lr2-f11.google.com [74.125.230.75])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF25813B58C;
-	Fri,  7 Aug 2026 08:35:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9891C3CB544
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 09:19:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.75
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786091745; cv=none; b=vGY94DWOJh/G2ZmEQEpASbWJ+TEPo5UyZhjW8UXzsxXPO1LCpsUP/zLRLHTD4DcRlUbogmMkAnhJ16Hcdhjpd6bu484uniljyQv8ApLZHKwjXOaQLrDMCfA/L4yr7fWQ05hyQN+RRB+FUcJDnVqs+lhQr2YSCD+BDM877OIfUYQ=
+	t=1786094344; cv=none; b=EBvEwQQxWTHyjHO7RBz1CpDscvyfSDmhFZBZaoTofNKf1shLViT+4WwwOooM2iNhN9vjaSHNeqA+Yz3n6093SNQ+qhC75ow2p42v9HYeeWW5peFbBCGc6/UJ3O0v9tOc9aKTUs5XAuutJ4GniJEx6LVRyi135Wn1UoVKANBjLkE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786091745; c=relaxed/simple;
-	bh=Kp4j4mA1m6ZfOD7LYco6dC3ISG/csgSjh2mzlP8Wwfk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=CDe57kEvNppywYOAdJNQouPhkEf3Xrmw1wgfvtsTBoQhsCMrPi2GoBKg5Rkeh/9xyNTlSUYHbvshP5bieTCuRgEg306xyDFYDiy069wgETxQDBplaI1kcXF+fTriaBPnOCUzxTVmowrNOLtQ4TMTqmB0ona3qmT4MlWjuHSxQwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=It1+9tt+; arc=none smtp.client-ip=113.46.200.216
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1786094344; c=relaxed/simple;
+	bh=t9Lm5Q/A2wiqcLU589YGQrHAVCaBgRmTAHdTIxzVTzc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Pd3Ts+gcGWPZIPNLh8YRegAl/zyqaIPFeqaRwH3EyI649PSnLagu0Z/0yR77o9mcW8smUYEAVIPOvwck4EOoEgsNp8qUehtkTF58d0+Pz2mbj/xIQqhxbAiWEHKGRpsz5dtBrz7FG7JwhtAGjvKhXrnU7JGmvI8nkTQjLZlJS/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LbuD67Xz; arc=none smtp.client-ip=74.125.230.75
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="It1+9tt+"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=EQwjjYXis5wziawmfGZhOOkc579mWyPJoann0Y3BzK8=;
-	b=It1+9tt+lpZf5wrHUq0rpasF1oEEKSq/Jsl2/CTaxVDd28Hd8veIUFQlA1yR9dH5HzxhoZ5+i
-	IvGYcIyhQC2zVLL175X7bSmLJJEscvPXTtsBU0dmVgPLf5ktltDU5o7Qn14++a56WYIJUhVIuFN
-	qzGbjv/7adfsUKNQ1wb94SU=
-Received: from mail.maildlp.com (unknown [172.19.163.104])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4hGcfk4Lk2z1T4Jg;
-	Fri,  7 Aug 2026 16:25:50 +0800 (CST)
-Received: from kwepemp200007.china.huawei.com (unknown [7.202.195.46])
-	by mail.maildlp.com (Postfix) with ESMTPS id D01704057F;
-	Fri,  7 Aug 2026 16:35:33 +0800 (CST)
-Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
- kwepemp200007.china.huawei.com (7.202.195.46) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 7 Aug 2026 16:35:33 +0800
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 7 Aug 2026 16:35:33 +0800
-Message-ID: <af713624-fc5a-c4cd-2737-7f52bd0d163e@huawei.com>
-Date: Fri, 7 Aug 2026 16:35:32 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LbuD67Xz"
+Received: by mail-lr2-f11.google.com with SMTP id 38308e7fff4ca-39c6d9f787eso16392551fa.0
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Aug 2026 02:19:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786094341; x=1786699141; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=q0p3f/CYZv3LvBsxpZaJPm4mZZTrcQzfNJYPhxpBa2M=;
+        b=LbuD67Xz2dtODUggoQdbKvZ32eh/yTmqcHhMExHS1QJ/09GbBd8NNGS1GWBjyn4Ogy
+         fMEVCFZdT5JamO8eiNjsyM8HgGWJ75k0uwtHK1lNMeT/k0GnSbRxAnaAFwgkMAIRxQVz
+         t7cq5zt2rM8aXbc9hJhW+1mUXZYld2HSaVJS+ja8CJPAf+KXedplFnTFf1YscCTpilZ0
+         QyzPwWl8H9dUxYYSrAg6olFmz5mynyDcTvNNATxfzSwYF0AwOaa8X5Mhj7oA8OUlcpYZ
+         v6YKBWxqbjgcBi6jesMnfYequHjKhnH1IoyyeDsdyGUAdvBkkUnfZwJ0hPJbD7f2b7Yi
+         J0fA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786094341; x=1786699141;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=q0p3f/CYZv3LvBsxpZaJPm4mZZTrcQzfNJYPhxpBa2M=;
+        b=J/O42KhLp4KyI3PovJYz9eGQ89Rtu8ZT0UpIvGWfSlVbX7iVV0B3RlLPi8tbyZn3e6
+         wQbs5Px9LBFtCEXB6OC2Jm8wqfheaHnqqUqukOhCWyRasqT5+69f1rA2bt6WlF1bQG6g
+         cJSAlaGeL5W2kzV35DTNLZImBVJ872wq49HWDWzVYzNE23qjVgC5QV28USP1e27gDbPR
+         4dFwkec32Cjx6W0FsBPjipdg2f8uc7FrB+zyPtl3NEPXbsnybtTDCmn6fCF6yjMgDvEk
+         PQXIxPRbuXP2PXzvYfILDAFtfDjnouuMNC76XlGCgFFK9qZCg+r3O/GycAYmf7Ql+gCg
+         J/9Q==
+X-Forwarded-Encrypted: i=1; AHgh+RoFcmE3Lq34xns+cm905LGtO4erE3vFkPJJ6p0+wWpT7JoWNHmMK1uqG2icNlVUuLckVXgn2YYai6P8@vger.kernel.org
+X-Gm-Message-State: AOJu0YyvSb490czZ0D85im/ze9QFhqUg8fugabvrwzubvmqEw+bND1cM
+	jsQQPLtFKzE64N4BZdOg/a1+jtiqoIP6X0LKoN/FwdGsP3PRPxfEu2Gl
+X-Gm-Gg: AR+sD12l1TWUabL4Ti9LTw0c0AYkklCBTuLtVam0MyNgh90omo73/Fi9xlezhBoNwzK
+	1NYVz9E4vIEqtnRzLICc3TgCRFp90ZDWz0IleNltvLb+SH1gbqAs0jipDo0+D+GBTUfGWB6C9NZ
+	emoaytUoQbHta8zxeqobGWthWCRK6zwrDohVqllWHyOXM00m2P+ZNIYe2g+SXiTvfb1vrXyXfUn
+	cEjdV0cvR9tt2Jh4D24Laz/hcMUbW5xqG8oN+5/BfchCtRPrvklUZ0XBJGHXRe5swJW6SpCneui
+	qx1zaK4+hWsoBOr3hKCyktDMVMag/P5e/7Sz4Q8ok4t5N6EYgKup2HpnohB3GVPCBPhf8Ou0hDW
+	6au5w9XxRI2ZheXNucc9VvGWYftI9SKsCu6v1+yypny2noSd1dMlh7SM3bRav37vZjpwQWJXe8S
+	mPfgISiy62ZASSHiq+aV+cSuluP2jJndxm5YFXHMUA9hxBraNE8L1ewbqOM3E3MC4FWmsz6OraN
+	6x1bQ==
+X-Received: by 2002:a05:651c:210d:b0:39f:b1f9:327b with SMTP id 38308e7fff4ca-39fd68db3damr7183621fa.31.1786094340316;
+        Fri, 07 Aug 2026 02:19:00 -0700 (PDT)
+Received: from localhost.localdomain ([78.40.184.2])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-39fddd52594sm2370361fa.25.2026.08.07.02.18.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Aug 2026 02:18:59 -0700 (PDT)
+From: Roman Demidov <roman.demidov.nn@gmail.com>
+To: Satish Kharat <satishkh@cisco.com>
+Cc: Roman Demidov <roman.demidov.nn@gmail.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH] scsi: fnic: Fix invalid comparison for error
+Date: Fri,  7 Aug 2026 12:18:50 +0300
+Message-ID: <20260807091852.13151-1-roman.demidov.nn@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v9 0/2] libsas: rediscover improvements for
- linkrate/sas_addr changes
-Content-Language: en-CA
-To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>
-References: <20260624063230.3264029-1-yangxingui@huawei.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <20260624063230.3264029-1-yangxingui@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepemh100017.china.huawei.com (7.202.181.103) To
- kwepemp500015.china.huawei.com (7.202.195.9)
+Content-Transfer-Encoding: 8bit
 
-Hi, John
+The current comparison err != ERR_ECMDUNKNOWN is useless because err < 0
+and ERR_ECMDUNKNOWN == 5. The logic is that if the CMD_CAPABILITY
+command was executed, there is no need to respond to unknown errors.
+Therefore, the sign of the number in the comparison must be changed.
 
-Kindly ping for review...
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-On 2026/6/24 14:32, Xingui Yang wrote:
-> When a device attached to an expander phy experiences a linkrate change
-> (e.g., due to cable reconnection or negotiation), the current code in
-> sas_rediscover_dev() treats it as "broadcast flutter" and takes no action
-> if the SAS address and device type remain unchanged.
-> 
-> This series is based on John Garry's suggestion [1] to check the linkrate
-> and mark the device as gone and rediscover when flutter occurs, replacing
-> the previous v2 patch series that used lldd callbacks.
-> 
-> The previous v2 approach added lldd_dev_info_update callback which John
-> commented as "seem fragile and too specialized" [2]. This series adopts
-> a simpler approach that directly checks linkrate/sas_addr changes in
-> sas_rediscover_dev() and triggers rediscovery using libsas's standard
-> async discovery pattern.
-> 
-> This aligns with Jason Yan's earlier work [3] which was verified to
-> solve the linkrate change issue.
-> 
-> Additionally, per the discussion in v3 [4], the existing replace code
-> path also suffers from the same sysfs duplication issue:
-> sas_unregister_devs_sas_addr() only marks the device as gone, but the
-> actual sysfs cleanup happens later in sas_destruct_devices(). Calling
-> sas_discover_new() immediately after unregister causes sysfs_warn_dup()
-> errors. This series also optimizes the replace path to use the async
-> pattern, ensuring proper ordering for both flutter and replace cases.
-> 
-> Changes from v8:
-> - In sas_dev_is_flutter(), call sas_ex_phy_discover() before
->    sas_ex_to_dev() to ensure PHY state is always updated and to avoid
->    use-after-free since the child device pointer is obtained after the
->    sleeping SMP request completes, eliminating the need for kref
-> - Addressed Sashiko AI review [5][6] feedback on PHY discovery bypass
->    and TOCTOU concerns
-> 
-> Changes from v7:
-> Addressed issues identified by Sashiko AI review [5][6]:
-> - In sas_dev_is_flutter(), reorder sas_addr check before linkrate check
->    to ensure address restoration is not skipped when both change
->    simultaneously, preventing device leak
-> - In sas_ex_to_dev(), add defensive NULL check for ex_dev to guard
->    against callers passing a NULL device
-> 
-> Not addressed (pre-existing subsystem design):
-> - sas_find_dev_by_rphy() returns unreferenced pointer: subsystem-wide
->    pattern used by 10+ call sites, should be a separate patch
-> - ex_phy->port TOCTOU: discovery path is serialized by disco_mutex,
->    no race occurs in practice
-> 
-> Changes from v6:
-> - Add comment for restoring phy->attached_sas_addr to child_dev->sas_addr
-> - Optimize the conditional structure in sas_dev_is_flutter()
-> 
-> Changes from v5:
-> - In sas_addr change handling, restore phy->attached_sas_addr to
->    child_dev->sas_addr before returning false, ensuring
->    sas_unregister_devs_sas_addr() can properly match the device via
->    sas_phy_match_dev_addr() for correct device unregistration
-> 
-> Changes from v4:
-> - Rename sas_rediscover_phy to sas_rediscover_ex_phy for consistency
->    with expander phy symbol naming convention
-> - Rename sas_is_flutter to sas_dev_is_flutter per John's suggestion
-> - Check return value of sas_ex_phy_discover() for errors
-> - Factor out child_dev checks to improve code clarity
-> 
-> Changes from v3:
-> - Also optimize the replace code path to use async discovery pattern
-> - Introduce sas_is_flutter() and sas_rediscover_phy() helpers
->    to encapsulate the flutter handling logic and avoid function bloat
-> - Fix replace code path sysfs duplication issue
-> 
-> Changes from v2:
-> - Drop lldd_dev_info_update callback approach per John Garry's suggestion
-> - Drop hisi_sas specific changes (no longer needed without callback)
-> - Use libsas's async discovery pattern for rediscovery
-> - Add sas_addr change detection alongside linkrate change
-> 
-> Changes from v1:
-> - Split into three patches
-> 
-> [1] https://lore.kernel.org/linux-scsi/c4e4c99f-a13c-4e28-8650-48be1f96d7cf@oracle.com/
-> [2] https://lore.kernel.org/linux-scsi/28bd9d5b-f597-0aae-5340-bd951b2083aa@huawei.com/
-> [3] https://lore.kernel.org/linux-scsi/20190130082412.9357-6-yanaijie@huawei.com/
-> [4] https://lore.kernel.org/linux-scsi/b99cd59f-b986-432e-aaf1-3b757e1c4c34@oracle.com/
-> [5] https://lore.kernel.org/linux-scsi/20260611062530.3B6651F00898@smtp.kernel.org/
-> [6] https://lore.kernel.org/linux-scsi/20260611062833.357031F00893@smtp.kernel.org/
-> 
-> 
-> Xingui Yang (2):
->    scsi: libsas: refactor sas_ex_to_ata() using new helper
->      sas_ex_to_dev()
->    scsi: libsas: Add linkrate and sas_addr change detection in rediscover
-> 
->   drivers/scsi/libsas/sas_expander.c | 102 +++++++++++++++++++++++------
->   drivers/scsi/libsas/sas_internal.h |   1 +
->   2 files changed, 84 insertions(+), 19 deletions(-)
-> 
+Signed-off-by: Roman Demidov <roman.demidov.nn@gmail.com>
+---
+ drivers/scsi/fnic/vnic_dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
+index 991c86eb5aff..0e5ae0540d85 100644
+--- a/drivers/scsi/fnic/vnic_dev.c
++++ b/drivers/scsi/fnic/vnic_dev.c
+@@ -381,7 +381,7 @@ static int vnic_dev_cmd2(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd,
+ 		if (result->color == color) {
+ 			if (result->error) {
+ 				err = -(int) result->error;
+-				if (err != ERR_ECMDUNKNOWN ||
++				if (err != -ERR_ECMDUNKNOWN ||
+ 						cmd != CMD_CAPABILITY)
+ 					pr_err("%s:Error %d devcmd %d\n",
+ 						pci_name(vdev->pdev),
+-- 
+2.53.0
+
