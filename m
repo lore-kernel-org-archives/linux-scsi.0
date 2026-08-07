@@ -1,56 +1,69 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 871AF2F30
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 22:50:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DCC22F30
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 22:51:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786143049; cv=none; b=sI5kmT9rYrca+TdOJbLYxr9+uKTrwcqMkSBix5Odp7aboaPn3KsBYkRgI8j2Nwm6tzDYJsYFo29v1hmmGvis7Nt+xgmCr7/uXWmlda4HAp5XsouFCf0RW4FDvIqc9nQ0fZB8SpRH+ltUjptztA7WuAeNVAU43+45frRmocJAsQ4=
+	t=1786143069; cv=none; b=tLP7mTI6SBcMk9J5y2R3oGF3mH/I/uXlN6rB91Hrzkk+3V7S9oxU7zfpjJ6QLIzjB6yupE4xldMNfqN2OkRPKhm9PzgyDl++RK9sahZu32+i/ZFg2ymPVTb+wzrA3Y4Y5X8rlfKvpc2xdYTljFpoJEh01l9JFb2l+9EpYluIyvQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786143049; c=relaxed/simple;
-	bh=UDSdCE74/4o2r53YjZHtwTSER3+QgK3pX7D+Pwl7jP0=;
+	s=arc-20240116; t=1786143069; c=relaxed/simple;
+	bh=rqfivzqrnSoJiye6O0ZgyIZDnb9oNZAAsqDmIp2MhDU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lzQD5yGoyiAJ/Y0z+eIIwvboOUdCb01umlukcHyhqwxMAndliQ6ZOuM15R3wuh0PDOmdtHBzfS+5X2DSDXzurl7n6u2ULwvItswIWm9isGFb0D3BTUCkwM+c5ymlO9EIOBFxslI8atdbC3zO8+tBekbf+8YeBmcI04Ca3PsY3ZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=IeBju6xX; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=k8VAch8NmOxBc4uOrazL/CSJ6QT/NbBq/gUO6eQW4nCaPBIbgu042Yn1WDq5bc0rJUHVXjjSdL0JJvpLpWneusccP/RslHCH/Ro48hsa9fNrWELkqS0s3u1gyS/legXS718OZhjmt8ReLIVyk4PUZb8GcVmAo+6Gldg8jXroraE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=P0cXUCvf; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="IeBju6xX"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="P0cXUCvf"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGzrm27cmzlfvq0;
-	Fri,  7 Aug 2026 22:50:48 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGzs75wW0zlfvq0;
+	Fri,  7 Aug 2026 22:51:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1786143044; x=1788735045; bh=872pa
-	CzLk2r8OVfYOGWh081zQdr6Ud+CL7/5F7uGo0U=; b=IeBju6xXHOgpA1gKH9T3I
-	QusdT0kPzLvdergSRmOrEDG+C9/e+gmNF7Yah7jLL8Mv5KxhqIymF9lwhQcFjaBw
-	QOvOf5Yfw4Xjalvfjh7zkQb1lKyTDJNs/oTR66mT4yrcb+Yw1OjUC3Gl72gLNNNF
-	Tf8LbdayLoTuiPjx67oF4kirknqhQqEb3MyNeQXugeCOuKx6ia+5vIBv2slFVe3A
-	xX6ayy/kBl7so647nRnw0nDkRsP61KMhOwlT3LmuXSCzNoYO9ICew0AAUC6I1Ivn
-	pI8mCuMN5UzdYe01D6OTAG0J84D7qjVE7ou2YGbjckf8b6NTALvswyF0n2XoVGe+
-	A==
+	:received:received; s=mr01; t=1786143041; x=1788735042; bh=FCIdb
+	TFT693BBLBxBfYTgmojAo7iqXboI224QuOlz6o=; b=P0cXUCvfoS7jEn0x1EasC
+	KIvDpg2Ov27l+I2KDhMk2pkahBLJ8fkruaciaSIqkl48FJ/vEDaoxGN3Fx58OXFo
+	VdCqcaevoDHrlfOvN+3XBKL1L1a1vrcHd/HdTvGYkD5PgCNRDIh1pWDa6i9lDBv9
+	nSEwSvcUjTh/Gs5G0b6+Ez57Qhb2/pHCvEYW+lt4Tnd2ihlbqIEzBDW2Cg8/TiTp
+	Qjgh6nVhked75jDzViWYeIFdnB4702jOdDnf6uf7subRkFXOYaGakC2LQwMKht8J
+	0f26JlNABDfuA5VADytOUi22P6B1/2sX42FFjJ/2xWD+viAzKY2fY7c1luxbhv5z
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Zr9nBtPExFTy; Fri,  7 Aug 2026 22:50:44 +0000 (UTC)
+ id EJ02s7qQujuB; Fri,  7 Aug 2026 22:50:41 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGzrg2Cr2zlfwgW;
-	Fri,  7 Aug 2026 22:50:43 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGzrW74BWzlfpM6;
+	Fri,  7 Aug 2026 22:50:35 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: John Garry <john.g.garry@oracle.com>,
 	Marco Elver <elver@google.com>,
 	linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v7 6/6] scsi: core: Enable context analysis
-Date: Fri,  7 Aug 2026 15:49:51 -0700
-Message-ID: <2576d2f7e3530b721b5050ac6d25c413037d7e7e.1786142946.git.bvanassche@acm.org>
+	Jianzhou Zhao <luckd0g@163.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Dongdong Hao <doubled@leap-io-kernel.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Manish Rangankar <mrangankar@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: [PATCH v7 5/6] scsi: core: Protect host state changes with the host lock
+Date: Fri,  7 Aug 2026 15:49:50 -0700
+Message-ID: <681e4a5260c182feb5fc1d96f0d43c62c21dc6c9.1786142946.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.55.0.679.g6767b8d81c-goog
 In-Reply-To: <cover.1786142946.git.bvanassche@acm.org>
 References: <cover.1786142946.git.bvanassche@acm.org>
@@ -62,60 +75,321 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Enable context analysis for those SCSI core files that build without
-triggering any context analysis warnings.
+Some but not all SCSI host state changes are protected with the SCSI
+host lock. Annotate the SCSI host state with __guarded_by(host_lock)
+and protect all SCSI host state changes with the SCSI host lock. This
+patch prevents that KCSAN complains about data races when accessing the
+SCSI host state.
 
+Reported-by: Jianzhou Zhao <luckd0g@163.com>
+Closes: https://lore.kernel.org/all/36d59d0e.6db0.19cdbeee01b.Coremail.lu=
+ckd0g@163.com/
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/Makefile                | 22 ++++++++++++++++++++++
- drivers/scsi/device_handler/Makefile |  3 +++
- 2 files changed, 25 insertions(+)
+ drivers/scsi/hosts.c                      | 19 ++++++++++--------
+ drivers/scsi/leapraid/leapraid_func.c     |  2 +-
+ drivers/scsi/leapraid/leapraid_os.c       |  2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c |  2 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  2 +-
+ drivers/scsi/qla4xxx/ql4_os.c             |  6 ++----
+ drivers/scsi/scsi_lib.c                   |  3 +--
+ drivers/scsi/scsi_sysfs.c                 |  7 ++++---
+ include/scsi/scsi_host.h                  | 24 ++++++++++++++++-------
+ 10 files changed, 40 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 098f35219e7d..72eb395ccf1d 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -14,6 +14,28 @@
- # satisfy certain initialization assumptions in the SCSI layer.
- # *!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index d512080268af..9610dd7aa85f 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -73,8 +73,9 @@ static struct class shost_class =3D {
+  *	transition is illegal.
+  **/
+ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state st=
+ate)
++	__must_hold(shost->host_lock)
+ {
+-	enum scsi_host_state oldstate =3D shost->shost_state;
++	enum scsi_host_state oldstate =3D READ_ONCE(shost->shost_state);
 =20
-+CONTEXT_ANALYSIS_constants.o :=3D y
-+CONTEXT_ANALYSIS_scsi.o :=3D y
-+CONTEXT_ANALYSIS_scsi_common.o :=3D y
-+CONTEXT_ANALYSIS_scsi_devinfo.o :=3D y
-+CONTEXT_ANALYSIS_scsi_dh.o :=3D y
-+CONTEXT_ANALYSIS_scsi_error.o :=3D y
-+CONTEXT_ANALYSIS_scsi_ioctl.o :=3D y
-+CONTEXT_ANALYSIS_scsi_lib.o :=3D y
-+CONTEXT_ANALYSIS_scsi_lib_dma.o :=3D y
-+CONTEXT_ANALYSIS_scsi_logging.o :=3D y
-+CONTEXT_ANALYSIS_scsi_netlink.o :=3D y
-+CONTEXT_ANALYSIS_scsi_pm.o :=3D y
-+CONTEXT_ANALYSIS_scsi_proc.o :=3D y
-+CONTEXT_ANALYSIS_scsi_scan.o :=3D y
-+CONTEXT_ANALYSIS_scsi_sysfs.o :=3D y
-+CONTEXT_ANALYSIS_scsi_trace.o :=3D y
-+CONTEXT_ANALYSIS_scsicam.o :=3D y
-+CONTEXT_ANALYSIS_sd.o :=3D y
-+CONTEXT_ANALYSIS_sd_dif.o :=3D y
-+CONTEXT_ANALYSIS_sd_zbc.o :=3D y
-+CONTEXT_ANALYSIS_sr.o :=3D y
-+CONTEXT_ANALYSIS_sr_ioctl.o :=3D y
+ 	if (state =3D=3D oldstate)
+ 		return 0;
+@@ -145,7 +146,7 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum=
+ scsi_host_state state)
+ 		}
+ 		break;
+ 	}
+-	shost->shost_state =3D state;
++	WRITE_ONCE(shost->shost_state, state);
+ 	return 0;
 =20
- CFLAGS_aha152x.o =3D   -DAHA152X_STAT -DAUTOCONF
+  illegal:
+@@ -276,7 +277,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, s=
+truct device *dev,
+ 	if (error)
+ 		goto out_disable_runtime_pm;
 =20
-diff --git a/drivers/scsi/device_handler/Makefile b/drivers/scsi/device_h=
-andler/Makefile
-index 0a603aefd2bb..5aa282a63e24 100644
---- a/drivers/scsi/device_handler/Makefile
-+++ b/drivers/scsi/device_handler/Makefile
-@@ -2,6 +2,9 @@
- #
- # SCSI Device Handler
- #
+-	scsi_host_set_state(shost, SHOST_RUNNING);
++	scoped_guard(spinlock_irq, shost->host_lock)
++		scsi_host_set_state(shost, SHOST_RUNNING);
+ 	get_device(shost->shost_gendev.parent);
+=20
+ 	device_enable_async_suspend(&shost->shost_dev);
+@@ -350,6 +352,7 @@ EXPORT_SYMBOL(scsi_add_host_with_dma);
+ static void scsi_host_dev_release(struct device *dev)
+ {
+ 	struct Scsi_Host *shost =3D dev_to_shost(dev);
++	enum scsi_host_state state =3D scsi_get_host_state(shost);
+ 	struct device *parent =3D dev->parent;
+=20
+ 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
+@@ -362,7 +365,7 @@ static void scsi_host_dev_release(struct device *dev)
+ 	if (shost->work_q)
+ 		destroy_workqueue(shost->work_q);
+=20
+-	if (shost->shost_state =3D=3D SHOST_CREATED) {
++	if (state =3D=3D SHOST_CREATED) {
+ 		/*
+ 		 * Free the shost_dev device name and remove the proc host dir
+ 		 * here if scsi_host_{alloc,put}() have been called but neither
+@@ -378,7 +381,7 @@ static void scsi_host_dev_release(struct device *dev)
+=20
+ 	ida_free(&host_index_ida, shost->host_no);
+=20
+-	if (shost->shost_state !=3D SHOST_CREATED)
++	if (state !=3D SHOST_CREATED)
+ 		put_device(parent);
+ 	kfree(shost);
+ }
+@@ -411,8 +414,8 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_h=
+ost_template *sht, int priv
+ 		return NULL;
+=20
+ 	shost->host_lock =3D &shost->default_lock;
+-	spin_lock_init(shost->host_lock);
+-	shost->shost_state =3D SHOST_CREATED;
++	scoped_guard(spinlock_init, shost->host_lock)
++		shost->shost_state =3D SHOST_CREATED;
+ 	INIT_LIST_HEAD(&shost->__devices);
+ 	INIT_LIST_HEAD(&shost->__targets);
+ 	INIT_LIST_HEAD(&shost->eh_abort_list);
+@@ -598,7 +601,7 @@ EXPORT_SYMBOL(scsi_host_lookup);
+  **/
+ struct Scsi_Host *scsi_host_get(struct Scsi_Host *shost)
+ {
+-	if ((shost->shost_state =3D=3D SHOST_DEL) ||
++	if (scsi_get_host_state(shost) =3D=3D SHOST_DEL ||
+ 		!get_device(&shost->shost_gendev))
+ 		return NULL;
+ 	return shost;
+diff --git a/drivers/scsi/leapraid/leapraid_func.c b/drivers/scsi/leaprai=
+d/leapraid_func.c
+index 3e1aeceab994..089d0810bd13 100644
+--- a/drivers/scsi/leapraid/leapraid_func.c
++++ b/drivers/scsi/leapraid/leapraid_func.c
+@@ -37,7 +37,7 @@ static noinline bool leapraid_shost_in_recovery(struct =
+Scsi_Host *shost)
+ {
+ 	enum scsi_host_state state;
+=20
+-	state =3D READ_ONCE(shost->shost_state);
++	state =3D scsi_get_host_state(shost);
+ 	return state =3D=3D SHOST_RECOVERY ||
+ 	       state =3D=3D SHOST_CANCEL_RECOVERY ||
+ 	       state =3D=3D SHOST_DEL_RECOVERY ||
+diff --git a/drivers/scsi/leapraid/leapraid_os.c b/drivers/scsi/leapraid/=
+leapraid_os.c
+index 2f3d4ac7490c..a8e1c9f33896 100644
+--- a/drivers/scsi/leapraid/leapraid_os.c
++++ b/drivers/scsi/leapraid/leapraid_os.c
+@@ -808,7 +808,7 @@ static bool leapraid_should_queuecommand(struct leapr=
+aid_adapter *adapter,
+ 		goto no_connect;
+=20
+ 	if (sdev_priv->block &&
+-	    scmd->device->host->shost_state =3D=3D SHOST_RECOVERY &&
++	    scsi_get_host_state(scmd->device->host) =3D=3D SHOST_RECOVERY &&
+ 	    scmd->cmnd[0] =3D=3D TEST_UNIT_READY) {
+ 		scsi_build_sense(scmd, 0, UNIT_ATTENTION,
+ 				 LEAPRAID_SCSI_ASC_POWER_ON_RESET,
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
+araid/megaraid_sas_base.c
+index ecd365d78ae3..f0152b043e18 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3072,7 +3072,7 @@ static int megasas_reset_bus_host(struct scsi_cmnd =
+*scmd)
+=20
+ 	scmd_printk(KERN_INFO, scmd,
+ 		"SCSI host state: %d  SCSI host busy: %d  FW outstanding: %d\n",
+-		scmd->device->host->shost_state,
++		scsi_get_host_state(scmd->device->host),
+ 		scsi_host_busy(scmd->device->host),
+ 		atomic_read(&instance->fw_outstanding));
+ 	/*
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
+_os.c
+index 402d1f35d214..f80a21ec161b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -5172,7 +5172,7 @@ static enum scsi_qc_status mpi3mr_qcmd(struct Scsi_=
+Host *shost,
+=20
+ 	/* Avoid error handling escalation when device is removed or blocked */
+=20
+-	if (scmd->device->host->shost_state =3D=3D SHOST_RECOVERY &&
++	if (scsi_get_host_state(scmd->device->host) =3D=3D SHOST_RECOVERY &&
+ 		scmd->cmnd[0] =3D=3D TEST_UNIT_READY &&
+ 		(stgt_priv_data->dev_removed || (dev_handle =3D=3D MPI3MR_INVALID_DEV_=
+HANDLE))) {
+ 		scsi_build_sense(scmd, 0, UNIT_ATTENTION, 0x29, 0x07);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
+mpt3sas_scsih.c
+index dea78688cc9b..0e12009a87f6 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -5472,7 +5472,7 @@ static enum scsi_qc_status scsih_qcmd(struct Scsi_H=
+ost *shost,
+ 	 * Avoid error handling escallation when device is disconnected
+ 	 */
+ 	if (handle =3D=3D MPT3SAS_INVALID_DEVICE_HANDLE || sas_device_priv_data=
+->block) {
+-		if (scmd->device->host->shost_state =3D=3D SHOST_RECOVERY &&
++		if (scsi_get_host_state(scmd->device->host) =3D=3D SHOST_RECOVERY &&
+ 		    scmd->cmnd[0] =3D=3D TEST_UNIT_READY) {
+ 			scsi_build_sense(scmd, 0, UNIT_ATTENTION, 0x29, 0x07);
+ 			scsi_done(scmd);
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.=
+c
+index d598ab4126f8..c9d9fc7c81fb 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -9411,11 +9411,9 @@ static int qla4xxx_eh_target_reset(struct scsi_cmn=
+d *cmd)
+  * This routine finds that if reset host is called in EH
+  * scenario or from some application like sg_reset
+  **/
+-static int qla4xxx_is_eh_active(struct Scsi_Host *shost)
++static bool qla4xxx_is_eh_active(struct Scsi_Host *shost)
+ {
+-	if (shost->shost_state =3D=3D SHOST_RECOVERY)
+-		return 1;
+-	return 0;
++	return scsi_get_host_state(shost) =3D=3D SHOST_RECOVERY;
+ }
+=20
+ /**
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 686cef2406b3..2e07b686090f 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1663,10 +1663,9 @@ static enum scsi_qc_status scsi_dispatch_cmd(struc=
+t scsi_cmnd *cmd)
+ 		goto done;
+ 	}
+=20
+-	if (unlikely(host->shost_state =3D=3D SHOST_DEL)) {
++	if (unlikely(scsi_get_host_state(host) =3D=3D SHOST_DEL)) {
+ 		cmd->result =3D (DID_NO_CONNECT << 16);
+ 		goto done;
+-
+ 	}
+=20
+ 	trace_scsi_dispatch_cmd_start(cmd);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index dfc3559e7e04..9480432f650b 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -214,8 +214,9 @@ store_shost_state(struct device *dev, struct device_a=
+ttribute *attr,
+ 	if (!state)
+ 		return -EINVAL;
+=20
+-	if (scsi_host_set_state(shost, state))
+-		return -EINVAL;
++	scoped_guard(spinlock_irq, shost->host_lock)
++		if (scsi_host_set_state(shost, state))
++			return -EINVAL;
+ 	return count;
+ }
+=20
+@@ -223,7 +224,7 @@ static ssize_t
+ show_shost_state(struct device *dev, struct device_attribute *attr, char=
+ *buf)
+ {
+ 	struct Scsi_Host *shost =3D class_to_shost(dev);
+-	const char *name =3D scsi_host_state_name(shost->shost_state);
++	const char *name =3D scsi_host_state_name(scsi_get_host_state(shost));
+=20
+ 	if (!name)
+ 		return -EINVAL;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 7e2011830ba4..c9754771bf29 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -2,6 +2,7 @@
+ #ifndef _SCSI_SCSI_HOST_H
+ #define _SCSI_SCSI_HOST_H
+=20
++#include <linux/cleanup.h>
+ #include <linux/device.h>
+ #include <linux/list.h>
+ #include <linux/types.h>
+@@ -727,7 +728,7 @@ struct Scsi_Host {
+ 	unsigned int  irq;
+ =09
+=20
+-	enum scsi_host_state shost_state;
++	enum scsi_host_state shost_state __guarded_by(host_lock);
+=20
+ 	/* ldm bits */
+ 	struct device		shost_gendev, shost_dev;
+@@ -785,11 +786,18 @@ static inline struct Scsi_Host *dev_to_shost(struct=
+ device *dev)
+ 	return container_of(dev, struct Scsi_Host, shost_gendev);
+ }
+=20
++static inline enum scsi_host_state scsi_get_host_state(struct Scsi_Host =
+*shost)
++{
++	return context_unsafe(READ_ONCE(shost->shost_state));
++}
 +
-+CONTEXT_ANALYSIS :=3D y
+ static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
+ {
+-	return shost->shost_state =3D=3D SHOST_RECOVERY ||
+-		shost->shost_state =3D=3D SHOST_CANCEL_RECOVERY ||
+-		shost->shost_state =3D=3D SHOST_DEL_RECOVERY ||
++	enum scsi_host_state state =3D scsi_get_host_state(shost);
 +
- obj-$(CONFIG_SCSI_DH_RDAC)	+=3D scsi_dh_rdac.o
- obj-$(CONFIG_SCSI_DH_HP_SW)	+=3D scsi_dh_hp_sw.o
- obj-$(CONFIG_SCSI_DH_EMC)	+=3D scsi_dh_emc.o
++	return state =3D=3D SHOST_RECOVERY ||
++		state =3D=3D SHOST_CANCEL_RECOVERY ||
++		state =3D=3D SHOST_DEL_RECOVERY ||
+ 		shost->tmf_in_progress;
+ }
+=20
+@@ -835,8 +843,9 @@ static inline struct device *scsi_get_device(struct S=
+csi_Host *shost)
+  **/
+ static inline int scsi_host_scan_allowed(struct Scsi_Host *shost)
+ {
+-	return shost->shost_state =3D=3D SHOST_RUNNING ||
+-	       shost->shost_state =3D=3D SHOST_RECOVERY;
++	enum scsi_host_state state =3D scsi_get_host_state(shost);
++
++	return state =3D=3D SHOST_RUNNING || state =3D=3D SHOST_RECOVERY;
+ }
+=20
+ extern void scsi_unblock_requests(struct Scsi_Host *);
+@@ -940,6 +949,7 @@ static inline unsigned char scsi_host_get_guard(struc=
+t Scsi_Host *shost)
+ 	return shost->prot_guard_type;
+ }
+=20
+-extern int scsi_host_set_state(struct Scsi_Host *, enum scsi_host_state)=
+;
++int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state st=
+ate)
++	__must_hold(shost->host_lock);
+=20
+ #endif /* _SCSI_SCSI_HOST_H */
