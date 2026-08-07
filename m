@@ -1,71 +1,147 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71482385D82
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 22:48:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15D3B2F30
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 22:50:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786142930; cv=none; b=d2jUyiSJGReUiLm9EehS2sdIZ3GGp8cLlYR5hFxaOywMvz+1Hi1BwuVQ8qSZfS1vlrITsRlz0vvuKUaRGbnO3/+Qso2uAyDAMBAV42wgq5KWFv3wgOJHiZnRcrpfchbAorvBcce3jjev33Zle4Gvv9azIZ3LRTxX4HInImSwRs0=
+	t=1786143018; cv=none; b=dQiy5eYRdCCK3cKSwu9AMI7bvlrwJr27X2GLjvLsdreXnV4S9fSrFd54+kvYo+LZU55RT1sUZcN0q1A6gv5enYxW4zvb/iJ1BYZ1rvSQTkqLzggwFvq9Ftzkn8aT2Vkp8OA35wORSX2t0hdMS/eYI8kljiktvDy9dVnEDt8/qRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786142930; c=relaxed/simple;
-	bh=iOSBP7UqhXkMFUUGhDGlGOBM8KVtfuDUik2R8N5ty5M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=k2QLfEd+G/wndILuluu9JsATO/vRn1VWayqrmIhIJ+R/3AIczphLjKFEyzo8LCH6j/tmEsUS9GiUNXLpHm18JQCwP4biNDj2M9MG1ZwJEXJ6XXVGj61Au0kQ+LBPaXCrKuRH+VyYD2lA0/3ULrNA9gxS0rK31FVipigoUKwJn6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1UcxH71E; arc=none smtp.client-ip=199.89.1.16
+	s=arc-20240116; t=1786143018; c=relaxed/simple;
+	bh=gnZK5J0uE8gYv1Vzh9IT0ycsodbjfKEh5PnkOpxpDTc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=corEeqma9YD60m+IYJBQ4jbPBeVJtPqq+4OtEvRufIRiXTjI1INQuRGcMP4kftpYu7kPdqivpgQZOYdQtkpOyz8TdC72CiTc7eYYGggq45NI5OU6lRbHjlsFe/sLvRgIiKSgkS6qX96VKy7duxKvwsjLYK9bv8QXaCMf5QXu1bk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2V1BvOsn; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1UcxH71E"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2V1BvOsn"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGzpS6wPwzlfvq8;
-	Fri,  7 Aug 2026 22:48:48 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGzr847z9zlfwgW;
+	Fri,  7 Aug 2026 22:50:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1786142927; x=1788734928; bh=iOSBP7UqhXkMFUUGhDGlGOBM
-	8KVtfuDUik2R8N5ty5M=; b=1UcxH71EG0G4xKIliiPFjz+YT5ebGSFwAR6qCbn3
-	jdUX67xUpXkW3BFZl5wLPvSiPOmSCgN7QaaUAue41RspgnHAur/ecsUi0GbKZEvX
-	QjzRfm347WZcMMeBpD9LA+pa5LxoN/jeJnxGed/eSOdLdiMjwZij9IcggbZCWnLh
-	V2WNI7AnLEnjfPhWnD5TZEjAydYGt8KhBVxbyxxy+z8VGFfFho5TRaKIXU+c3GFn
-	VoZFKvhOAhoDBm7x0VxsuyIJqFm6FJbMr2yr0I6wMmJ81ytt8+CheteFsX22Ibgh
-	GcqVVmxHniX+2TvjrXW7Hs/bEXE5m/05lx59XRCJpJO5Mg==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1786143012; x=1788735013; bh=F4J5tZ2Pn1o4T+PISjmC3nCCXCujZy8x/bP
+	eQSlR/fc=; b=2V1BvOsnPeGThLCV5yg6BaEwiIyWycHr+UFAJds8IDRs+RQ2CWv
+	wOzRwDicl1mk3JbW7g7y8sZ9m+AZNy7/i1Mgno8pS/l7aNAzluzgawOih0VZ7Ha+
+	pUAM8Q9dRKOetfJ6xHhbNGiWuuvMdb3ZACruGFDquzzEB/49XgqPMdCk82DZtT1Y
+	RB+0HdFKqOEoW5Itr8cHWo0Ce+T7oFao7iBct8Ug0gkOG2xRgyU1wv+2FheLcGOZ
+	ofi2lpXCappQWzWMTj/75UPIRIg/kDlAqBeQoheiiQbwpmg748/f0xj+dSrkyKRV
+	AlOoCCiyE4EorvZxI/qK2Hcnhbybx4Hr8/g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id JPsDedoqU-rv; Fri,  7 Aug 2026 22:48:47 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
+ id b2NpXR4zregd; Fri,  7 Aug 2026 22:50:12 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGzpQ17mJzlfvq0;
-	Fri,  7 Aug 2026 22:48:45 +0000 (UTC)
-Message-ID: <62c8f377-1a95-40d0-9fc5-2f8238c612d1@acm.org>
-Date: Fri, 7 Aug 2026 15:48:44 -0700
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGzr35Fzyzlfvq0;
+	Fri,  7 Aug 2026 22:50:11 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: John Garry <john.g.garry@oracle.com>,
+	Marco Elver <elver@google.com>,
+	linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v7 0/6] Enable context analysis in the SCSI core and UFS driver
+Date: Fri,  7 Aug 2026 15:49:45 -0700
+Message-ID: <cover.1786142946.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.55.0.679.g6767b8d81c-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 0/6] Enable context analysis in the SCSI core and UFS
- driver
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: John Garry <john.g.garry@oracle.com>, Marco Elver <elver@google.com>,
- linux-scsi@vger.kernel.org
-References: <cover.1786140825.git.bvanassche@acm.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <cover.1786140825.git.bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 8/7/26 3:44 PM, Bart Van Assche wrote:
-> [ ... ]
+Hi Martin,
 
-Please ignore this version - there are two versions of patch 2 in this
-series.
+This patch series enables context analysis for the SCSI core and the UFS
+driver. The advantages are as follows:
+ - The compiler (only Clang) verifies whether the lock and unlock calls m=
+atch
+   what has been declared via __must_hold(), __acquires() or __releases()=
+.
+   This is useful for catching locking bugs in error paths.
+ - Support for __guarded_by() is enabled. If a member variable is annotat=
+ed
+   with __guarded_by(lock), the compiler will issue a warning if that mem=
+ber
+   variable is accessed without holding 'lock'.
+
+Additionally, a patch is included that suppresses KCSAN complaints about =
+SCSI
+host state changes.
+
+More information about lock context analysis is available in the cover le=
+tter of
+[PATCH v5 00/36] Compiler-Based Context- and Locking-Analysis
+(https://lore.kernel.org/lkml/20251219154418.3592607-1-elver@google.com/)=
+.
+
+Please consider this patch series for the next merge window.
+
+Thanks,
 
 Bart.
+
+Changes compared to v6:
+ - Left out duplicate patch 2/6.
+
+Changes compared to v5:
+ - In patch 5/6, add __must_hold() to both the definition and the declara=
+tion of
+   scsi_host_set_state(). Use locking in scsi_get_host_state() instead of
+   READ_ONCE(). Add #include <linux/cleanup.h>. Rename host_state into st=
+ate.
+ - In patch 6/6, refer to context analysis instead of compiler warnings.
+ - Include changes for the leapraid driver.
+ - Added several Reviewed-by tags.
+
+Changes compared to v4:
+ - Added Reviewed-by tags to the UFS patches.
+ - Made the title and the description of patch 3/6 more detailed.
+
+Changes compared to v3:
+ - Left out all changes except those for the SCSI core and the UFS driver=
+.
+
+Changes compared to v2:
+ - Added patch "scsi: core: Pass the SCSI host pointer directly".
+ - Corrected several annotations that had missing or extra ampersands (&)=
+.
+ - Reduced the number of __assume_ctx_lock() statements.
+
+Changes compared to v1:
+ - Split patch "Enable lock context analysis" into one patch per driver.
+
+Bart Van Assche (6):
+  ufs: core: Set task state before io_schedule_timeout()
+  ufs: core: Enable context analysis
+  scsi: core: Pass the SCSI host pointer directly to scanning functions
+  scsi: core: Add lock context annotations
+  scsi: core: Protect host state changes with the host lock
+  scsi: core: Enable context analysis
+
+ drivers/scsi/Makefile                     | 22 ++++++++++
+ drivers/scsi/device_handler/Makefile      |  3 ++
+ drivers/scsi/hosts.c                      | 19 +++++----
+ drivers/scsi/leapraid/leapraid_func.c     |  2 +-
+ drivers/scsi/leapraid/leapraid_os.c       |  2 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c |  2 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  2 +-
+ drivers/scsi/qla4xxx/ql4_os.c             |  6 +--
+ drivers/scsi/scsi_lib.c                   |  3 +-
+ drivers/scsi/scsi_scan.c                  | 52 ++++++++++++++---------
+ drivers/scsi/scsi_sysfs.c                 |  7 +--
+ drivers/ufs/core/Makefile                 |  2 +
+ drivers/ufs/core/ufs-debugfs.c            |  8 +++-
+ drivers/ufs/core/ufshcd.c                 | 15 +++++++
+ drivers/ufs/host/Makefile                 |  2 +
+ include/scsi/scsi_host.h                  | 24 ++++++++---
+ 17 files changed, 121 insertions(+), 52 deletions(-)
+
