@@ -1,74 +1,71 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 180C9397958;
-	Fri,  7 Aug 2026 15:34:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E80D3A3E7A;
+	Fri,  7 Aug 2026 15:37:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786116859; cv=none; b=FOaicftNp2Q4khz5oOkkjYzX1f+3QrOSa/k8Nbam+dNWNvlq6+qbv+TW6orgidLFUUOS2/FPurmB3KgI+p+7z/o0/5/umyvKD5tDu0JzF2w2mjxCxmxStRWSC9Zdr2z2jB6uPIKJzyDhldw7C8w8rKFQbgJcd5f4/r1TLvoJTZ8=
+	t=1786117026; cv=none; b=l47fQbB0Y1IHrv6r9JrYXHMAem6Erls2S/l5HIzJXm0dAIXTn0u7tPXJrQU+f//5KTjOkYD9kVaY1FnmazCsnPTb2oUkrQTYCv53ye6x3gBdX1NoQwo9cpQJxWMspUMhVuE9p9smD1XgXaHWrKUiOQinGM7McTvcc4AMfLgJ9jQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786116859; c=relaxed/simple;
-	bh=o6criyFXz5XNJXKePGEh6FY3/c1PQF3YBAZ6SGKj1gw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FGPTRhAlGhOkz8DQzkrL3Wl+XqBwMHkaIFuzEwOFe+6dnO1breVpmS2RWSwn6ecL754WEreavq7srnawnfneN3Qi7vsaQLahxfkAuD7cZZecGjEn3umtlnPetOcnPwuyFn+FiAkos3Xm92xhJSubeXaONKurWqrVLZvsD3+F9Gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Ff93ZCqK; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1786117026; c=relaxed/simple;
+	bh=S6JuEmQUf12G5ngteZsAufLsDHpk40ICp5zGF5st+ko=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 MIME-Version:Content-Type; b=Yb/fhunBpSn6OPOYJWHKLCIaCx9B9NwvYGcwiqbgWDPIo78YKrZln8/g4LcyQg/Jje0ulYpN8J1sbHwt/5KGeseWjpeqHTekt0Q/OgatqjvL6s6O2nf6KCkQK1U2AGcFQSNTC5WverJumc/kVRn2wWKKfSBxp5Il9/l7e1Qbzw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=feimK17c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Ff93ZCqK"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGp953PhPzlfpLt;
-	Fri,  7 Aug 2026 15:34:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1786116853; x=1788708854; bh=hZ3qF3FjrIBLYa4HiSl8Imx6
-	G+Rc9bHPb9+hoVsyquA=; b=Ff93ZCqKuPGA7uuAp+45nitP0TlB6Z11nztoGrZ4
-	SUaPCpq2qzpwyoUTI7d8DpUxPTwK5t9jVpeNHCq0CEzuQdSGytbIkPuJVcm4DuNJ
-	eEjWHwAOdWFVKiC7c88Im+YCUB6ajM8rn6LxvXUfFLHBtS+G5jASQ91JYsJU7KiB
-	icgVfh0aLIVFgYXoy6SqioZV/iiGaywsB3zW6K0hU+kokqdKGetALNCfluAuSq6R
-	7kFib24TExMOxbsHTpGPaktrRznj7a6LzeUQmOalW+G24Z91LdNqRzRHBFqrsTY/
-	2APdNsMnTfXCkQubTt9MFAxlyy1wzCfKK+wbn/b6d2XfUg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id G78Nacv49Vz1; Fri,  7 Aug 2026 15:34:13 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGp8y5ZBLzlfwgT;
-	Fri,  7 Aug 2026 15:34:10 +0000 (UTC)
-Message-ID: <cf1f02ad-3706-4e90-9f17-94a873be0bef@acm.org>
-Date: Fri, 7 Aug 2026 08:34:09 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="feimK17c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D81D41F00A3A;
+	Fri,  7 Aug 2026 15:37:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786117025;
+	bh=Er3hjE5BWHxsgKUqgopr5rjqRH3g4/3LW36d4wK9zaw=;
+	h=To:Cc:Subject:From:In-Reply-To:References:Date;
+	b=feimK17cJF/RRBhdUcSCLM0BPcvzHJKX+jdP9a88RunoOpzbhK0t5T3NrUPIbA9Y+
+	 WdxT3xwghsvcHx8dihWHTiygxRvTbbgW67wcdgLs3LUcWt8roX3flvZHCtPqr0eeam
+	 A2pSdKJZRTBZA0dRyaXKDJGKnS6aNd9Gf+qV1jHl4P/5ZURjtqn4HMKTFx0DKUH8EV
+	 zmK5znBnwqd+vcRTOWRlInyBRnEHLZdsCBUN/0Y0agwyzJRs2ELYh9Qm12lSlaSWa6
+	 LVrTo0lEDl+70kz/jtr8VsmMu1JQIHFvPkOj6tKpe92REJmndBKlZK96hOpV/UmorU
+	 pZRyWERY41tjA==
+To: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+Cc: "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,  "martin.petersen@oracle.com"
+ <martin.petersen@oracle.com>,  "bvanassche@acm.org" <bvanassche@acm.org>,
+  "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,  ALIM AKHTAR
+ <alim.akhtar@samsung.com>,  "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>,  Jinyoung Choi <j-young.choi@samsung.com>,
+  Dukhyun Kwon <d_hyun.kwon@samsung.com>,  Jeuk Kim
+ <jeuk20.kim@samsung.com>,  Keoseong Park <keosung.park@samsung.com>,
+  Jaemyung Lee <jaemyung.lee@samsung.com>,  Jieon Seol
+ <jieon.seol@samsung.com>,  Gyusun Lee <gyusun.lee@samsung.com>,  Yunjae Jo
+ <yunjae00.jo@samsung.com>
+Subject: Re: [PATCH v4 0/2] scsi: ufs: Add support for the aggregated read
+ query opcode
+From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
+In-Reply-To: <20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0@epcms2p8>
+	(Hyeoncheol Jeong's message of "Tue, 28 Jul 2026 18:22:08 +0900")
+Message-ID: <yq1mruy2b9k.fsf@mail.kernel.org>
+References: <CGME20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0@epcms2p8>
+	<20260728092208epcms2p881b17276fb41c006a4229c1d073b4ad0@epcms2p8>
+Date: Fri, 07 Aug 2026 11:37:03 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5] scsi: fill in DMA padding bytes in scsi_alloc_sgtables
-To: Petr Vaganov <p.vaganov@ideco.ru>, stable@vger.kernel.org,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jens Axboe <axboe@kernel.dk>, Tejun Heo <htejun@gmail.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- lvc-project@linuxtesting.org
-References: <20260628185229.37957-1-p.vaganov@ideco.ru>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260628185229.37957-1-p.vaganov@ideco.ru>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-On 6/28/26 11:52 AM, Petr Vaganov wrote:
-> Extend last_sg->length by pad_len first, then use sg_zero_buffer() to
-> zero those pad_len bytes.  sg_zero_buffer() uses sg_miter internally,
-> which correctly handles sg entries spanning multiple pages and padding
-> that crosses a page boundary.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Hyeoncheol,
+
+> UFS 5.0 / JEDEC 220H introduces the AGGREGATED READ query opcode
+> (0x9), which retrieves an aggregated data packet bundling multiple
+> Descriptors, Attributes and Flags in a single QUERY RESPONSE UPIU.
+> Such a packet can be far larger than a single descriptor, so the
+> reserved (device management) tag gets a dedicated UCD with an enlarged
+> response area.
+
+Applied to 7.3/scsi-staging, thanks!
+
+-- 
+Martin K. Petersen
