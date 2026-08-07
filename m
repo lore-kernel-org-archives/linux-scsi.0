@@ -1,144 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 226A3314B9A
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 05:50:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27035446C1E
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 06:07:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786081858; cv=none; b=b4+0fLQKt96eQlYjklQnHujcCowdXlJ6AdLEbzH67RK62ufMYsF4v8+5z7fn083Ubeywj7i+mQfgkwohqON83g202sLi/nEP366OFLeHiLJmI9OEwll57DKWr66uoyKo5Bl5CAIMEfQtcqEYmwG80VPOFWoOsiE24SLYc19Jxw0=
+	t=1786082870; cv=none; b=NseUSLMzLV7puRcqpzu4ifqS2eTEzYO2bjGnULi1toPerP//ZIrZb+r1ajlP2Lu/Tc5ODP8xK6AKWII+1uPeu9NseTbVczlEVdHCzb0uzMag489dz8BYvxCmZp7fO82lY+CJkBCNaKrHuthOCwWSdGy//nd3r3ZvL0UWkqgTV0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786081858; c=relaxed/simple;
-	bh=CTQP0kgdR0I2/+kmokVmx3I4/IDOT6/ZH2SPuGC9uYw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jCEtirle6QUJWwmqQE2TLjsGjNkxwyiWxfNHJuirt91MemNpJt3RuiqiwFXNnxK4WkRIDm3v5pre0qj+cnLNMZsaOHJQk0/EJsqDSET4ey+OLbGcvOJPoc72kpuYyXCJOHSTau+4y/d34omMS5cf0raOuHaYMnzY0eNwEvmpOtw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T7Aw7OBS; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786082870; c=relaxed/simple;
+	bh=8nK3zk0LJnwP8Kr6V61I0Wwu+5q7KeBflm9aUfHvG3g=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TbnD+6hh+0CLc0QfZ5I3PVcjxiH3Se3QQVhMTXRblNVRqW70UCU+nl+U7/EikEHHZr24OPcivG+5jUFxLQY6ljhqaGgeduBqjz13y5GjsbQ7Yl+2aYF+J8iKfmEtI/jHghA/AY+RXnIwy/RRzGc62/foN4WSiBKFxM4xfQdqGbc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k/x95HHT; arc=none smtp.client-ip=209.85.160.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T7Aw7OBS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F05F1F000E9;
-	Fri,  7 Aug 2026 05:50:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786081856;
-	bh=+MSOD/A4wS+afgJyC+nLP/kIYv0XjGeQhcSdW9ZVUI8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=T7Aw7OBSQJTmz9Tv8XlpN5Iu43uVUe+ac/pT359utS8UR2XWnpsCijMv8Q70oTXRk
-	 pFEojDCORzgdfQ07ZGJZxLZDz+lGzRcLFfkfEBJyfWNDiJCUwyFlqP8SsMc/yoTGd8
-	 sWY6HkyQ8k6HHlkSvFSU2EbL2B/a5KzJccbjBMOE4I5icRW10V9BK7z5ftTRSXKJae
-	 M84/P+uFKRbnKyJLab2p+91L3rUKTlbUFjR24ul1iH6EypbeDThvgAqqQjro+Pxi/Q
-	 t5/jofVWmpcv305pl9qRcMi+oTqPsG+ZAZTXjO6U67qEH2zOSjsch0BWLbNIXEe6Bh
-	 D/sBixIwgHAMA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: arcmsr: fix NULL deref on dma_alloc_coherent()
- failure in arcmsr_alloc_xor_buffer()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ivy Lopez" <skunkolee@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260807052543.62545-1-skunkolee@gmail.com>
-References: <20260807052543.62545-1-skunkolee@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 07 Aug 2026 05:50:56 +0000
-Message-Id: <20260807055056.9F05F1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k/x95HHT"
+Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-51c0cea8883so14772501cf.1
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Aug 2026 23:07:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786082868; x=1786687668; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=HQf34kglk1Yh8CWS1BUF21oEZ3LoRTy5y/WvEz9+4IA=;
+        b=k/x95HHThjboC8AVoHcl28lLtjXggobDvkBbhqJ1QMp4h9jPg/F1ajjjWrSkztfZOW
+         wd68q55nVYQywtFejKuhfc1rnZxPqWd+XdTJqb2wRGv2n9gdN3YMXKXeJwal1TGLvpfV
+         D6rqT8QVJ6JvFAO4iNR4BzuVezhe6rqEzajAEr1Ml6oQ1HrOgOXFV4AHlZdYcu3NAXg5
+         6z2Aku2fSeCafhLvTXiDHE2olj/pPSlZpPcAq2TxfbMNPB2hzQHzfeEG2ni/4UuCeCpp
+         IwbX75gV9NiktKX+4rQbi6dS+1qv7WKFLv+B8IYLiaeqf6apZ2D7Ce0D0rVu7yxUR4Jz
+         sV1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786082868; x=1786687668;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=HQf34kglk1Yh8CWS1BUF21oEZ3LoRTy5y/WvEz9+4IA=;
+        b=ogRXg5BAqryc7STeRnMJ3NaBil4JQWax1acu2Q1tcEr8Wxg2UpnDKsVG1qheD5ZWZ5
+         NMWWn61px2g8Gk51vo827Z9W7YGd+PBNm7kynqwnC0ytg/jae9R+tvsw0CJ1TWLEbTM9
+         3zfllDqH+UTm9T3Jxq6I0ZexBd2/TqQgS12XoYmDpXsyWHzCkMBt5rjMCiMdp1y86FsW
+         fhsZMY+SeZwZUJMGYq9IYb9wQ2zrnk7SUzUTCsrAsqWNpNCjduO+t8dGM3pUUx1XvHDp
+         KCgKeybOyn/IIiwnuTQj8m142c7ezgRYb862zsrw+80rv2vLABEmIKo+oSrTIOefxlmu
+         wPmA==
+X-Forwarded-Encrypted: i=1; AHgh+RqJws9C4icEaufx1M3CNAt8m5OyHOaO02ObcjnYroVExcPURXcuCPMrnfSLXqv0XhAcsjiR6uRqP/+d@vger.kernel.org
+X-Gm-Message-State: AOJu0YzQswtWSpU6sXUarcOgVgedRbz7nSFZcpZeSBZZ57Y6t7OFxdCT
+	hP13B1gCDV/iPmx//wFOz7wzO/cGDA8dylSshXyi6KNmzBD2CRiam9GO
+X-Gm-Gg: AR+sD12lYR2ndQJooj2Zc78EvyQg4T8lDN7DpkcC1yfpO3P5faHUknXKVgLy+b5ApRF
+	GVH0gU4uBDb0cUjdaVfOodrLwsxfxIwHELAQi32dOe63asH4lINPoDeKjsD+2hVCLVjulYdL3f+
+	27+Dm56KEbVBjjP7Uo8l8oAn0Zv0lQrtjPyMkMvW/1n+3lEs1YnYa/iuSDU8TRhCNwV8xLdxupG
+	pdZv0c3uauyo0stKbNArejy2JVpT31vFJRN1d8h6syEvKwh9twMjN5xPtiq/jWNHgCaI+nWGD+E
+	6LJSWaF1htDYG6Dl/+m0URNdXCtWUl+/INKSmfkI1nyfYi9LCX4/lEGWXCFWnOs6vLL+BTp1V96
+	yHTg6KrEZ1oW728QW7jtf7iCR7M2SX5sms8bNKlLimGl/qAynTo1pS1MTxMaTJ1+V2XM2tjN5/O
+	jdPf6J/sev+hYlO0GhyatMjC3rqcowC3VDprAvikPmERHklK1wZRiWadho8uzvT2IthiQs5IpaF
+	mrDDwt5ygcvhzoE7A==
+X-Received: by 2002:a05:622a:4d86:b0:51c:b91a:33f9 with SMTP id d75a77b69052e-52cfb00255dmr137405711cf.13.1786082868001;
+        Thu, 06 Aug 2026 23:07:48 -0700 (PDT)
+Received: from i4-l-hqh5357-03.ad.psu.edu ([130.203.139.71])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-908a92ff8d1sm1985816d6.25.2026.08.06.23.07.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Aug 2026 23:07:47 -0700 (PDT)
+From: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Shuangpeng Bai <shuangpeng.kernel@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] usb: gadget: f_tcm: keep port count until LUN teardown completes
+Date: Fri,  7 Aug 2026 02:07:33 -0400
+Message-ID: <20260807060733.3186624-1-shuangpeng.kernel@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+tcm_usbg_drop_nexus() permits session removal once tpg_port_count
+reaches zero. However, usbg_port_unlink() currently decrements that
+count from the fabric_pre_unlink() callback, before core_dev_del_lun()
+waits for active se_lun references to drain.
 
-New issues:
-- [Medium] The commit message contains a false claim about secondary NULL p=
-ointer dereferences, leading to dead code logic (`acb->xor_mega =3D 0;`).
+If removal of the last LUN races a nexus removal, the latter can observe
+a zero port count and call target_remove_session(). This frees
+sess_cmd_map while an in-flight struct usbg_cmd, including its work item,
+can still be accessed.
 
-Pre-existing issues:
-- [High] Pre-existing massive memory leak of the main CCB pool and IO queue=
-s on `arcmsr_alloc_xor_buffer()` failure.
---
+Overlapping the last-LUN unlink with nexus removal reproduces this
+lifetime violation as a DEBUG_OBJECTS "free active" warning for
+usbg_cmd_work, followed by a target-core BUG/Oops.
 
---- Patch [1]: [PATCH] scsi: arcmsr: fix NULL deref on dma_alloc_coherent()=
- failure in arcmsr_alloc_xor_buffer() ---
-commit afa04c2998e47d9ff0b55725d2cfb10245105508
-Author: Ivy Lopez <skunkolee@gmail.com>
+The generic target-core unlink path has no callback after
+core_dev_del_lun() completes. Add an optional fabric_post_unlink()
+callback and use it for the f_tcm port count. The count now remains
+nonzero until core_dev_del_lun() has finished draining active LUN
+references, preventing nexus removal from freeing the session during
+command completion.
 
-scsi: arcmsr: fix NULL deref on dma_alloc_coherent() failure in arcmsr_allo=
-c_xor_buffer()
+Fixes: c52661d60f63 ("usb-gadget: Initial merge of target module for UASP + BOT")
+Cc: stable@vger.kernel.org
+Signed-off-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
+---
+ drivers/target/target_core_fabric_configfs.c | 8 ++++++++
+ drivers/usb/gadget/function/f_tcm.c          | 2 +-
+ include/target/target_core_fabric.h          | 2 ++
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
-This patch checks the return value of dma_alloc_coherent() in
-arcmsr_alloc_xor_buffer() to prevent a NULL pointer dereference. On failure,
-it resets acb->xor_mega to 0 and returns -ENOMEM to fail gracefully.
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 166dbf4c4061..ab8f81650710 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -690,6 +690,14 @@ static void target_fabric_port_unlink(
+ 	}
+ 
+ 	core_dev_del_lun(se_tpg, lun);
++
++	if (tf->tf_ops->fabric_post_unlink) {
++		/*
++		 * Allow fabrics to release state that must remain valid until
++		 * core_dev_del_lun() has drained all active LUN references.
++		 */
++		tf->tf_ops->fabric_post_unlink(se_tpg, lun);
++	}
+ }
+ 
+ static void target_fabric_port_release(struct config_item *item)
+diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
+index b3fa5a17fd2d..98414e7611c0 100644
+--- a/drivers/usb/gadget/function/f_tcm.c
++++ b/drivers/usb/gadget/function/f_tcm.c
+@@ -2024,7 +2024,7 @@ static const struct target_core_fabric_ops usbg_ops = {
+ 	.fabric_enable_tpg		= usbg_enable_tpg,
+ 	.fabric_drop_tpg		= usbg_drop_tpg,
+ 	.fabric_post_link		= usbg_port_link,
+-	.fabric_pre_unlink		= usbg_port_unlink,
++	.fabric_post_unlink		= usbg_port_unlink,
+ 	.fabric_init_nodeacl		= usbg_init_nodeacl,
+ 
+ 	.tfc_wwn_attrs			= usbg_wwn_attrs,
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index e9039e73d058..390ace5bb252 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -95,6 +95,8 @@ struct target_core_fabric_ops {
+ 				struct se_lun *);
+ 	void (*fabric_pre_unlink)(struct se_portal_group *,
+ 				struct se_lun *);
++	void (*fabric_post_unlink)(struct se_portal_group *se_tpg,
++				   struct se_lun *lun);
+ 	struct se_tpg_np *(*fabric_make_np)(struct se_portal_group *,
+ 				struct config_group *, const char *);
+ 	void (*fabric_drop_np)(struct se_tpg_np *);
+-- 
+2.43.0
 
-> Additionally, acb->xor_mega is set unconditionally before the
-> allocation attempt, based only on firmware status bits. If the
-> allocation fails, acb->xor_mega remains nonzero, so the later
-> cleanup path in arcmsr_free_ccb_pool() and the message-config code
-> in arcmsr_iop_confirm() will still enter their "if (acb->xor_mega)"
-> branches and dereference the never-set acb->xorVirt/acb->xorPhys,
-> a second NULL pointer dereference on the allocation failure path.
-
-[Severity: Medium]
-Is this analysis of the failure path accurate?
-
-If this allocation fails, arcmsr_alloc_ccb_pool() propagates the -ENOMEM
-up to arcmsr_probe(). In arcmsr_probe(), an error from arcmsr_alloc_ccb_poo=
-l()
-triggers a jump to the unmap_pci_region label, which completely bypasses the
-free_ccb_pool label.
-
-Because of this bypass, arcmsr_free_ccb_pool() and arcmsr_iop_confirm()
-are never reached on this failure path, meaning those secondary NULL pointer
-dereferences are structurally impossible.
-
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcms=
-r_hba.c
-> index 8aa948f06cacf..40407b2818396 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-> @@ -771,6 +771,12 @@ static int arcmsr_alloc_xor_buffer(struct AdapterCon=
-trolBlock *acb)
->  		(sizeof(struct XorHandle) * acb->xor_mega);
->  	dma_coherent =3D dma_alloc_coherent(&pdev->dev, acb->init2cfg_size,
->  		&dma_coherent_handle, GFP_KERNEL);
-> +	if (!dma_coherent) {
-> +		pr_info("arcmsr%d: alloc init2cfg buffer failed\n",
-> +			acb->host->host_no);
-> +		acb->xor_mega =3D 0;
-
-[Severity: Medium]
-Since arcmsr_probe() jumps to unmap_pci_region and skips arcmsr_free_ccb_po=
-ol()
-on failure, is this assignment dead logic? The cleanup path where this flag
-would matter cannot be reached on this error path.
-
-> +		return -ENOMEM;
-
-[Severity: High]
-This is a pre-existing issue, but does returning here cause a massive DMA
-memory leak?
-
-When this returns -ENOMEM, the caller arcmsr_alloc_ccb_pool() propagates
-the error to arcmsr_probe() without cleaning up the earlier massive DMA
-allocation for acb->dma_coherent (the CCB pool).
-
-arcmsr_probe() then jumps directly to unmap_pci_region:
-
-arcmsr_probe() {
-    ...
-    error =3D arcmsr_alloc_ccb_pool(acb);
-    if(error){
-        goto unmap_pci_region;
-    }
-    ...
-}
-
-This bypasses the free_ccb_pool label entirely, so arcmsr_free_ccb_pool()
-is never called, leaking up to 12MB of DMA coherent memory.
-
-> +	}
->  	acb->xorVirt =3D dma_coherent;
->  	acb->xorPhys =3D dma_coherent_handle;
->  	pXorPhys =3D (struct Xor_sg *)((unsigned long)dma_coherent +
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260807052543.6254=
-5-1-skunkolee@gmail.com?part=3D1
