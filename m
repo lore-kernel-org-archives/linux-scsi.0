@@ -1,56 +1,66 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5EF2F30
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 22:50:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB2B13B2FD0
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 22:50:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786143041; cv=none; b=SEeQ6qQLqP9V5TsTy0ZeBHmrJcZBMkJ1RE1IMQtUJZAObNY7ZhB6Qx5et7E2of4DThK4NLElnFDUcQRBSyOyaFib0GppwT5Tz6+t1Qt2ft5qf+U2EC8ntnZjDYNLLl9CLus1DJhyjZq68vcTaGdqNtOLe1gOfkNZ/rfUw7xSKHQ=
+	t=1786143045; cv=none; b=aoYfcVQV5bEOW3gSCNKndfcjd37/JCUHauo7SxLdkizxTV6LVE4wsO93LvWB5IVVhhfSptBuPEiAoAQrjoxNOmSrxR5Ac+ajTlYWs3gbUBu2x6c6oDLcJsgCWCoWUH6yGI7atzZrLl5yh2AeQfkL1/xLV38zlOvLO27shGCch8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786143041; c=relaxed/simple;
-	bh=B9vocPd5b4Xc+l+ocX2QLnKNO8LrAH9eva6Hd1M4SSc=;
+	s=arc-20240116; t=1786143045; c=relaxed/simple;
+	bh=ooyljqBjUoffNPNA6uCALOkGWfGsBfd+6DyRRHYoKt8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rMIO7BivBmBK48WtZUJ2Otr4s9G8eeuxEVDQ9nHLEC69WXscFb6LQWMomTvHoLXoWP6Z8J7t/KoY+4WnV+0tzASR9Tjhl6M9eyefB50eTXsXVJxyKhzx4T2+b/MGdgo1dbES2Pzpp4ZloBlYFIYk+gGoLEmYfYtdQtnWK1L4Apk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=W7G7ngrn; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=Daw3ROabQ9FVXoC5fP9VJkRnnz63ADeOCk1MroA6tVu4M3hG5lRoNUWQb/SIPKi37wsF8QiO/VYIrXyBy/21KKUoxSX/I7hnRkFxcehgDY3fHgWnXBMaGCb/bfZ6i2yaEnQfFCJSc81MUceyomOmWQHzFsjal6h6FO7CYKzvrSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=IVYl9Yv6; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="W7G7ngrn"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="IVYl9Yv6"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGzrb60XszlfpMD;
-	Fri,  7 Aug 2026 22:50:39 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGzrg2xCQzlfpMD;
+	Fri,  7 Aug 2026 22:50:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1786143032; x=1788735033; bh=rGZWg
-	6vCm0gF3Xm5bx8GXf84+p/bi99kPYS6M9QyRRk=; b=W7G7ngrnzqB9L33iQGV2y
-	8MWanZ7JlhaVx9J/gcwLuF/Pg5awT1A2c9yZbJoK3yWXeQfnJktgXu9AnPMJUexE
-	b3/i8bPLEu2wEIH4XcFyvTwSO3To+uH1jorWnqVlZmZ66FrLRgahcVDERwRKJt6X
-	NxUkjAhoQ6qWlkH5xcxPZG8GuKQQJ7wTijYrgwwZpGaCgygZWlZNizXB6tK2No5R
-	1jbJ36sch05FL+X4mtjNhIRVKgP6ac+4gCSay4j08TldbypaV9gMlAl+gZ9lbhcu
-	4IJcPLcuGUkRhH0mhAymo35uxxrdP6ZcW/qmd6psIPXHCAMyfkApFIEVuYmO4PFG
-	A==
+	:received:received; s=mr01; t=1786143030; x=1788735031; bh=P8ctn
+	CQo/l5xYwc2IFyaJPpRepHZNAFBcumHocN1jS8=; b=IVYl9Yv68kR3fVDDkqiSd
+	zwPUkBnISZE5PJh+GxW1CEwe3ew/gNxf0cSy+3XvgZdJButrv5iri8GMQoUgUqNN
+	LaHc5Q53G6K8ee8aJgRsPDI3EmbqkopZ0aKvVvK/O+hyLXW4ZfImPWDWe3fjuo2s
+	R4lL7e9c1Q6dinmQLaYH+J+xcnURV7HYnCxPxfxumwKfMRURvakALUmm/JuYypcq
+	jxhMe6n6IBRdv4Sywrzxcc+czCO9hHHn7AuDCe5Ld57LMhSJW43PplAc1M4GrR46
+	gKlcpuVQA+elke6PExRswRCazCjyxbZEnmZwqFtXB8OPb3AEdDGFRuOkGQm5PPBM
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ixaDCWoPqJNK; Fri,  7 Aug 2026 22:50:32 +0000 (UTC)
+ id xhV8Lt73k1h9; Fri,  7 Aug 2026 22:50:30 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGzrR1SgBzlfwgW;
-	Fri,  7 Aug 2026 22:50:30 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGzrL3Dq0zlfvq8;
+	Fri,  7 Aug 2026 22:50:26 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: John Garry <john.g.garry@oracle.com>,
 	Marco Elver <elver@google.com>,
 	linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v7 3/6] scsi: core: Pass the SCSI host pointer directly to scanning functions
-Date: Fri,  7 Aug 2026 15:49:48 -0700
-Message-ID: <49d2fc5fae5cb5dca2536818155581c73f39c883.1786142946.git.bvanassche@acm.org>
+	Peter Wang <peter.wang@mediatek.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Can Guo <can.guo@oss.qualcomm.com>,
+	Bean Huo <beanhuo@micron.com>,
+	Li Qiang <liqiang01@kylinos.cn>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Hyeoncheol Jeong <hyenc.jeong@samsung.com>,
+	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
+	Ajay Neeli <ajay.neeli@amd.com>
+Subject: [PATCH v7 2/6] ufs: core: Enable context analysis
+Date: Fri,  7 Aug 2026 15:49:47 -0700
+Message-ID: <3c975386a5bcb939f8a2a0d47fd621f234321a9e.1786142946.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.55.0.679.g6767b8d81c-goog
 In-Reply-To: <cover.1786142946.git.bvanassche@acm.org>
 References: <cover.1786142946.git.bvanassche@acm.org>
@@ -62,227 +72,145 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-In the functions scsi_probe_and_add_lun(), scsi_sequential_lun_scan(),
-scsi_report_lun_scan() and __scsi_scan_target() the SCSI host pointer is
-derived from the SCSI target pointer. Pass the SCSI host pointer
-directly.
+Annotate functions that modify the state of a synchronization object.
+Remove the struct semaphore annotations because lock context annotations
+are not supported for semaphores.
 
-This patch prepares for enabling context analysis. With this patch applie=
-d,
-context annotations can refer to the SCSI host pointer directly, e.g.
-__must_hold(&shost->scan_mutex). Without this patch, the following
-annotation would have to be used:
-	__must_hold(&dev_to_shost(starget->dev.parent)->scan_mutex)
-Additionally, in code that locks shost->scan_mutex, the following would
-have to be added to help the compiler understand that shost =3D=3D
-dev_to_shost(starget->dev.parent):
-	__assume_ctx_lock(&dev_to_shost(starget->dev.parent)->scan_mutex);
-__assume_ctx_lock() statements should be avoided if there is a good
-alternative. Hence this patch. No functionality has been changed.
-
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_scan.c | 47 ++++++++++++++++++++++------------------
- 1 file changed, 26 insertions(+), 21 deletions(-)
+ drivers/ufs/core/Makefile      |  2 ++
+ drivers/ufs/core/ufs-debugfs.c |  8 ++++++--
+ drivers/ufs/core/ufshcd.c      | 14 ++++++++++++++
+ drivers/ufs/host/Makefile      |  2 ++
+ 4 files changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index e27da038603a..d7e0e9393194 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1169,6 +1169,7 @@ static unsigned char *scsi_inq_str(unsigned char *b=
-uf, unsigned char *inq,
+diff --git a/drivers/ufs/core/Makefile b/drivers/ufs/core/Makefile
+index ce7d16d2cf35..67ab9ffbdf5d 100644
+--- a/drivers/ufs/core/Makefile
++++ b/drivers/ufs/core/Makefile
+@@ -1,5 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
 =20
- /**
-  * scsi_probe_and_add_lun - probe a LUN, if a LUN is found add it
-+ * @shost:      SCSI host pointer
-  * @starget:	pointer to target device structure
-  * @lun:	LUN of target device
-  * @bflagsp:	store bflags here if not NULL
-@@ -1188,7 +1189,8 @@ static unsigned char *scsi_inq_str(unsigned char *b=
-uf, unsigned char *inq,
-  *         attached at the LUN
-  *   - SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initia=
-lized
-  **/
--static int scsi_probe_and_add_lun(struct scsi_target *starget,
-+static int scsi_probe_and_add_lun(struct Scsi_Host *shost,
-+				  struct scsi_target *starget,
- 				  u64 lun, blist_flags_t *bflagsp,
- 				  struct scsi_device **sdevp,
- 				  enum scsi_scan_mode rescan,
-@@ -1198,7 +1200,6 @@ static int scsi_probe_and_add_lun(struct scsi_targe=
-t *starget,
- 	unsigned char *result;
- 	blist_flags_t bflags;
- 	int res =3D SCSI_SCAN_NO_RESPONSE, result_len =3D 256;
--	struct Scsi_Host *shost =3D dev_to_shost(starget->dev.parent);
++CONTEXT_ANALYSIS :=3D y
++
+ obj-$(CONFIG_SCSI_UFSHCD)		+=3D ufshcd-core.o
+ ufshcd-core-y				+=3D ufshcd.o ufs-sysfs.o ufs-mcq.o ufs-txeq.o
+ ufshcd-core-$(CONFIG_RPMB)		+=3D ufs-rpmb.o
+diff --git a/drivers/ufs/core/ufs-debugfs.c b/drivers/ufs/core/ufs-debugf=
+s.c
+index be527209540d..ed1de70e2ec1 100644
+--- a/drivers/ufs/core/ufs-debugfs.c
++++ b/drivers/ufs/core/ufs-debugfs.c
+@@ -65,8 +65,10 @@ static int ee_usr_mask_get(void *data, u64 *val)
+ 	return 0;
+ }
 =20
++token_context_lock(ufs_debugfs);
++
+ static int ufs_debugfs_get_user_access(struct ufs_hba *hba)
+-__acquires(&hba->host_sem)
++	__cond_acquires(0, ufs_debugfs)
+ {
+ 	down(&hba->host_sem);
+ 	if (!ufshcd_is_user_access_allowed(hba)) {
+@@ -74,14 +76,16 @@ __acquires(&hba->host_sem)
+ 		return -EBUSY;
+ 	}
+ 	ufshcd_rpm_get_sync(hba);
++	__acquire(ufs_debugfs);
+ 	return 0;
+ }
+=20
+ static void ufs_debugfs_put_user_access(struct ufs_hba *hba)
+-__releases(&hba->host_sem)
++	__releases(ufs_debugfs)
+ {
+ 	ufshcd_rpm_put_sync(hba);
+ 	up(&hba->host_sem);
++	__release(ufs_debugfs);
+ }
+=20
+ static int ee_usr_mask_set(void *data, u64 val)
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 2c5d8e0e696e..67745d2796d0 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1354,6 +1354,8 @@ static int ufshcd_wait_for_pending_cmds(struct ufs_=
+hba *hba,
+  * On failure, all acquired locks are released and the tagset is unquies=
+ced.
+  */
+ int ufshcd_pause_command_processing(struct ufs_hba *hba, u64 timeout_us)
++	__cond_acquires(0, &hba->host->scan_mutex)
++	__cond_acquires(0, &hba->clk_scaling_lock)
+ {
+ 	int ret =3D 0;
+=20
+@@ -1378,6 +1380,8 @@ int ufshcd_pause_command_processing(struct ufs_hba =
+*hba, u64 timeout_us)
+  * This function resumes command submissions.
+  */
+ void ufshcd_resume_command_processing(struct ufs_hba *hba)
++	__releases(&hba->clk_scaling_lock)
++	__releases(&hba->host->scan_mutex)
+ {
+ 	up_write(&hba->clk_scaling_lock);
+ 	blk_mq_unquiesce_tagset(&hba->host->tag_set);
+@@ -1447,6 +1451,9 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, u=
+32 target_gear, bool scale_up
+  * Return: 0 upon success; -EBUSY upon timeout.
+  */
+ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout=
+_us)
++	__cond_acquires(0, &hba->host->scan_mutex)
++	__cond_acquires(0, &hba->wb_mutex)
++	__cond_acquires(0, &hba->clk_scaling_lock)
+ {
+ 	int ret =3D 0;
  	/*
- 	 * The rescan flag is used as an optimization, the first scan of a
-@@ -1334,6 +1335,7 @@ static int scsi_probe_and_add_lun(struct scsi_targe=
-t *starget,
-=20
- /**
-  * scsi_sequential_lun_scan - sequentially scan a SCSI target
-+ * @shost:      SCSI host pointer
-  * @starget:	pointer to target structure to scan
-  * @bflags:	black/white list flag for LUN 0
-  * @scsi_level: Which version of the standard does this device adhere to
-@@ -1346,13 +1348,13 @@ static int scsi_probe_and_add_lun(struct scsi_tar=
-get *starget,
-  *
-  *     Modifies sdevscan->lun.
-  **/
--static void scsi_sequential_lun_scan(struct scsi_target *starget,
-+static void scsi_sequential_lun_scan(struct Scsi_Host *shost,
-+				     struct scsi_target *starget,
- 				     blist_flags_t bflags, int scsi_level,
- 				     enum scsi_scan_mode rescan)
- {
- 	uint max_dev_lun;
- 	u64 sparse_lun, lun;
--	struct Scsi_Host *shost =3D dev_to_shost(starget->dev.parent);
-=20
- 	SCSI_LOG_SCAN_BUS(3, starget_printk(KERN_INFO, starget,
- 		"scsi scan: Sequential scan\n"));
-@@ -1412,14 +1414,15 @@ static void scsi_sequential_lun_scan(struct scsi_=
-target *starget,
- 	 * sparse_lun.
- 	 */
- 	for (lun =3D 1; lun < max_dev_lun; ++lun)
--		if ((scsi_probe_and_add_lun(starget, lun, NULL, NULL, rescan,
--					    NULL) !=3D SCSI_SCAN_LUN_PRESENT) &&
-+		if (scsi_probe_and_add_lun(shost, starget, lun, NULL, NULL,
-+				rescan, NULL) !=3D SCSI_SCAN_LUN_PRESENT &&
- 		    !sparse_lun)
- 			return;
+@@ -1476,6 +1483,9 @@ static int ufshcd_clock_scaling_prepare(struct ufs_=
+hba *hba, u64 timeout_us)
  }
 =20
- /**
-  * scsi_report_lun_scan - Scan using SCSI REPORT LUN results
-+ * @shost: SCSI host pointer
-  * @starget: which target
-  * @bflags: Zero or a mix of BLIST_NOLUN, BLIST_REPORTLUN2, or BLIST_NOR=
-EPORTLUN
-  * @rescan: nonzero if we can skip code only needed on first scan
-@@ -1438,8 +1441,9 @@ static void scsi_sequential_lun_scan(struct scsi_ta=
-rget *starget,
-  *     0: scan completed (or no memory, so further scanning is futile)
-  *     1: could not scan with REPORT LUN
-  **/
--static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags=
-_t bflags,
--				enum scsi_scan_mode rescan)
-+static int scsi_report_lun_scan(struct Scsi_Host *shost,
-+			struct scsi_target *starget, blist_flags_t bflags,
-+			enum scsi_scan_mode rescan)
+ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
++	__releases(&hba->clk_scaling_lock)
++	__releases(&hba->wb_mutex)
++	__releases(&hba->host->scan_mutex)
  {
- 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
- 	unsigned int length;
-@@ -1448,7 +1452,6 @@ static int scsi_report_lun_scan(struct scsi_target =
-*starget, blist_flags_t bflag
- 	int result;
- 	struct scsi_lun *lunp, *lun_data;
- 	struct scsi_device *sdev;
--	struct Scsi_Host *shost =3D dev_to_shost(&starget->dev);
- 	struct scsi_failure failure_defs[] =3D {
- 		{
- 			.sense =3D UNIT_ATTENTION,
-@@ -1594,7 +1597,7 @@ static int scsi_report_lun_scan(struct scsi_target =
-*starget, blist_flags_t bflag
- 		} else {
- 			int res;
-=20
--			res =3D scsi_probe_and_add_lun(starget,
-+			res =3D scsi_probe_and_add_lun(shost, starget,
- 				lun, NULL, NULL, rescan, NULL);
- 			if (res =3D=3D SCSI_SCAN_NO_RESPONSE) {
- 				/*
-@@ -1641,7 +1644,7 @@ struct scsi_device *__scsi_add_device(struct Scsi_H=
-ost *shost, uint channel,
- 		scsi_complete_async_scans();
-=20
- 	if (scsi_host_scan_allowed(shost) && scsi_autopm_get_host(shost) =3D=3D=
- 0) {
--		scsi_probe_and_add_lun(starget, lun, NULL, &sdev,
-+		scsi_probe_and_add_lun(shost, starget, lun, NULL, &sdev,
- 				       SCSI_SCAN_RESCAN, hostdata);
- 		scsi_autopm_put_host(shost);
- 	}
-@@ -1763,10 +1766,10 @@ int scsi_rescan_device(struct scsi_device *sdev)
- }
- EXPORT_SYMBOL(scsi_rescan_device);
-=20
--static void __scsi_scan_target(struct device *parent, unsigned int chann=
-el,
--		unsigned int id, u64 lun, enum scsi_scan_mode rescan)
-+static void __scsi_scan_target(struct Scsi_Host *shost, struct device *p=
-arent,
-+			       unsigned int channel, unsigned int id, u64 lun,
-+			       enum scsi_scan_mode rescan)
- {
--	struct Scsi_Host *shost =3D dev_to_shost(parent);
- 	blist_flags_t bflags =3D 0;
- 	int res;
- 	struct scsi_target *starget;
-@@ -1786,7 +1789,8 @@ static void __scsi_scan_target(struct device *paren=
-t, unsigned int channel,
- 		/*
- 		 * Scan for a specific host/chan/id/lun.
- 		 */
--		scsi_probe_and_add_lun(starget, lun, NULL, NULL, rescan, NULL);
-+		scsi_probe_and_add_lun(shost, starget, lun, NULL, NULL, rescan,
-+				       NULL);
- 		goto out_reap;
- 	}
-=20
-@@ -1794,14 +1798,15 @@ static void __scsi_scan_target(struct device *par=
-ent, unsigned int channel,
- 	 * Scan LUN 0, if there is some response, scan further. Ideally, we
- 	 * would not configure LUN 0 until all LUNs are scanned.
- 	 */
--	res =3D scsi_probe_and_add_lun(starget, 0, &bflags, NULL, rescan, NULL)=
-;
-+	res =3D scsi_probe_and_add_lun(shost, starget, 0, &bflags, NULL, rescan=
-,
-+				     NULL);
- 	if (res =3D=3D SCSI_SCAN_LUN_PRESENT || res =3D=3D SCSI_SCAN_TARGET_PRE=
-SENT) {
--		if (scsi_report_lun_scan(starget, bflags, rescan) !=3D 0)
-+		if (scsi_report_lun_scan(shost, starget, bflags, rescan) !=3D 0)
- 			/*
- 			 * The REPORT LUN did not scan the target,
- 			 * do a sequential scan.
- 			 */
--			scsi_sequential_lun_scan(starget, bflags,
-+			scsi_sequential_lun_scan(shost, starget, bflags,
- 						 starget->scsi_level, rescan);
- 	}
-=20
-@@ -1851,7 +1856,7 @@ void scsi_scan_target(struct device *parent, unsign=
-ed int channel,
- 		scsi_complete_async_scans();
-=20
- 	if (scsi_host_scan_allowed(shost) && scsi_autopm_get_host(shost) =3D=3D=
- 0) {
--		__scsi_scan_target(parent, channel, id, lun, rescan);
-+		__scsi_scan_target(shost, parent, channel, id, lun, rescan);
- 		scsi_autopm_put_host(shost);
- 	}
- 	mutex_unlock(&shost->scan_mutex);
-@@ -1882,11 +1887,11 @@ static void scsi_scan_channel(struct Scsi_Host *s=
-host, unsigned int channel,
- 				order_id =3D shost->max_id - id - 1;
- 			else
- 				order_id =3D id;
--			__scsi_scan_target(&shost->shost_gendev, channel,
-+			__scsi_scan_target(shost, &shost->shost_gendev, channel,
- 					order_id, lun, rescan);
- 		}
- 	else
--		__scsi_scan_target(&shost->shost_gendev, channel,
-+		__scsi_scan_target(shost, &shost->shost_gendev, channel,
- 				id, lun, rescan);
+ 	up_write(&hba->clk_scaling_lock);
+ 	mutex_unlock(&hba->wb_mutex);
+@@ -3305,6 +3315,8 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, stru=
+ct ufshcd_lrb *lrbp)
  }
 =20
+ static void ufshcd_dev_man_lock(struct ufs_hba *hba)
++	__acquires(&hba->dev_cmd.lock)
++	__acquires_shared(&hba->clk_scaling_lock)
+ {
+ 	ufshcd_hold(hba);
+ 	mutex_lock(&hba->dev_cmd.lock);
+@@ -3312,6 +3324,8 @@ static void ufshcd_dev_man_lock(struct ufs_hba *hba=
+)
+ }
+=20
+ static void ufshcd_dev_man_unlock(struct ufs_hba *hba)
++	__releases_shared(&hba->clk_scaling_lock)
++	__releases(&hba->dev_cmd.lock)
+ {
+ 	up_read(&hba->clk_scaling_lock);
+ 	mutex_unlock(&hba->dev_cmd.lock);
+diff --git a/drivers/ufs/host/Makefile b/drivers/ufs/host/Makefile
+index 65d8bb23ab7b..7d8db67eb23c 100644
+--- a/drivers/ufs/host/Makefile
++++ b/drivers/ufs/host/Makefile
+@@ -1,5 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+=20
++CONTEXT_ANALYSIS :=3D y
++
+ obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) +=3D tc-dwc-g210-pci.o ufshcd-dwc.o tc=
+-dwc-g210.o
+ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) +=3D tc-dwc-g210-pltfrm.o ufshcd-=
+dwc.o tc-dwc-g210.o
+ obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) +=3D cdns-pltfrm.o
