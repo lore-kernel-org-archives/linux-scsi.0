@@ -1,95 +1,115 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42598381EB7;
-	Fri,  7 Aug 2026 09:35:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2E7D3E7BCA
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 09:47:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786095307; cv=none; b=LQQm23wDVUrz6F1V7RrOr87L+TFcVVVvv2eGThs/DOXpNywCeJPjzrLWpU0yEGcHvHLztVjap+5N3VDEx4vFPwH14H7jkEsejg1Cm6opDiUhrAimnOISx1eqw3L8T5Bn3JYCtGTYTPDytrdr70WgTXpDilsQky3eYmBUjGhFjFM=
+	t=1786096074; cv=none; b=Dn4U4nPmmhqJ/4ktDv7NGeT14rDi4JrmqrGx1z78O6R3E50IlT0Etj2rmZt9Dm6K98fVb3lsj+66LmhU/7mIrjGJRnATCFZUZoQgjv2PuzNzOvwBgjRd0jYcLshP6KbCoyzJI032arWnXgx2ntXUE1BTBWy8Ip7kGsPuSPmMwjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786095307; c=relaxed/simple;
-	bh=Xwza8ovlQN/EP5UPMzcF8eourSrUyME9cv6QMtCs81I=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nRpBPxan9gd1HTccMLZazm5igxKk2XIbTH/zwqoPR9NyeRtAaGwyVqRmetwx3Objnv6sPmW/rI/miZR1m/hINaJZUjv79dcnyukPic7C4Do6KhP8YvRol0mfYNGOPnQ/7K0VwemWBEGHrJuVnrszQGcm2EOD3j1Gbjw7XQHZX/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=QWugRti0; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1786096074; c=relaxed/simple;
+	bh=8zvivn3Z/v6AK5lByeAZaSgcJReRzX4VuvNfhpeBcKo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=gyciVw2TyzoWeDaI0KC2WrLGDYBEqyxEG/Z2e0yDeDBJL/Enehq9v7bC0D+BSTLb6D4pRUEQ7dj70tN/EsimeG5/Vy1S2mn6uBeaCaSCGTiAj6WtkCrLbhowqxhIlVQtQ0L1lpMoxTlbQ7wfMWpC+w88TmpiqRApC9pjifFZeRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RtEPFEOC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="QWugRti0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=RO
-	TyfXL+qLotyyjrjww4M4VQ2AoJ/fmuk7EvKDqVgFk=; b=QWugRti0AgqxGSTp4p
-	bNHRGlgoiJbiDm7/lO3mGfndTncBprtuCbkjT2hjrZ1AE0f4PtyIkxeJ8PFha6Dm
-	di4afbykfO56EAE2zdzpAcAge1kHpvHUbt5/LSWS09D5NTahCQyT3iLWPvXmgMgp
-	nJALUntH74144v44VWFF0/1LU=
-Received: from localhost.localdomain (unknown [])
-	by gzsmtp5 (Coremail) with SMTP id QCgvCgDHUCCnpnVq5rxTLA--.581S2;
-	Fri, 07 Aug 2026 17:34:31 +0800 (CST)
-From: ghuicao@163.com
-To: njavali@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	martin.petersen@oracle.com
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	qutran@marvell.com,
-	himanshu.madhani@oracle.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Cao Guanghui <caoguanghui@kylinos.cn>
-Subject: [PATCH] scsi: qla2xxx: Fix buffer overrun in login template
-Date: Fri,  7 Aug 2026 17:34:29 +0800
-Message-Id: <20260807093429.102604-1-ghuicao@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RtEPFEOC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EF2D1F000E9;
+	Fri,  7 Aug 2026 09:47:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786096072;
+	bh=H2Yk3PQM1ArV4qNrAdPk0xm6OmQrVtsfGcB2QG0z0+A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=RtEPFEOCPyyS78B/hyT1A3sW/N8UGPPrV/5/b6hfGTdlro3Fb5lpm2bh8OG96XoW7
+	 qvAh7DdigHJdKqWPnPQICNAvk7X/LuW12Cc5JE9kpBCER9u6CR4GCYOOxxlZ8cg2MU
+	 /ugDCliXn1xhnU567LvgK+XbxcyqJpU1rJct4PGTDEkiIWvQ1DanPZP4OB9YnFdnXm
+	 Mv5NzqoK3UHlPws9fC6GDwp/4Cep3S/aP6WWEgR237l1z4JP1d/me9ig5lKt39y0B2
+	 djtw8pGgkR5yf2qJT7SvJfRg6cj0fxk6lI9w8ClVEhJCvgtxjmD3uVlXmJ9Zn9KfFo
+	 lWbQcX+ZHS77w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: Fix buffer overrun in login template
+Reply-To: sashiko-reviews@lists.linux.dev
+To: ghuicao@163.com
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260807093429.102604-1-ghuicao@163.com>
+References: <20260807093429.102604-1-ghuicao@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 07 Aug 2026 09:47:51 +0000
+Message-Id: <20260807094752.2EF2D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:QCgvCgDHUCCnpnVq5rxTLA--.581S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ur1rWw1rZFy5tw17tFy3CFg_yoW8AF1DpF
-	W8Jr1Sk3yUWF47ArWDAay3ZF9093ZrKrW8GayUKa45uryjkF98ZFy5G3y5JasI9rnYk3WS
-	vF1vvFZrGF1DJFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j50edUUUUU=
-X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC-AfKXWp1pqeJggAA35
 
-From: Cao Guanghui <caoguanghui@kylinos.cn>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] The fix for the buffer overrun shifts the PLOGI payload by 4 bytes=
+, corrupting the Fibre Channel Service Parameters and breaking connection e=
+stablishment.
+--
 
-In qla_get_login_template(), 'q' points to plogi_els_payld.fl_csp
-(offset 4), but the copy length is sizeof(struct fc_els_flogi) = 152
-bytes. This makes cpu_to_be32_array() write 4 bytes past the end of
-plogi_els_payld, corrupting the adjacent struct member.
-
-Fix by pointing 'q' to the start of plogi_els_payld (offset 0), so the
-152-byte copy fits exactly. The transfer length passed to firmware is
-unchanged, so firmware compatibility is preserved.
-
-The written bytes at offset 0-3 are never consumed: the only consumers
-read from offsetof(fl_csp) onward (148 bytes) - qla_iocb.c copies via
-offsetof(fl_csp) and qla_os.c reads fl_csp.sp_bb_cred. This contract was
-clarified/normalized by commit 134f66959cd0 ("scsi: qla2xxx: Silence a
-static checker warning"), which adjusted the read-side handling and
-silenced static checker warnings. Moving q to the start of the struct
-therefore does not affect any reader.
-
-Fixes: 44f5a37d1e3e ("scsi: qla2xxx: Fix buffer-buffer credit extraction error")
-Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
+--- Patch [1]: [PATCH] scsi: qla2xxx: Fix buffer overrun in login template =
 ---
- drivers/scsi/qla2xxx/qla_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+commit a554cfebac5525fe6bc8fe781ea87856585aeee0
+Author: Cao Guanghui <caoguanghui@kylinos.cn>
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e746c9274cde..7e50cff79b5c 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5666,7 +5666,7 @@ static void qla_get_login_template(scsi_qla_host_t *vha)
- 		       "PLOGI ELS param read fail.\n");
- 		return;
- 	}
--	q = (__be32 *)&ha->plogi_els_payld.fl_csp;
-+	q = (__be32 *)&ha->plogi_els_payld;
- 
- 	bp = (uint32_t *)ha->init_cb;
- 	cpu_to_be32_array(q, bp, sz / 4);
--- 
-2.25.1
+scsi: qla2xxx: Fix buffer overrun in login template
 
+This patch aims to fix a buffer overrun by changing the destination
+pointer for the PLOGI ELS payload copy from the fl_csp field (offset 4)
+to the start of the fc_els_flogi structure (offset 0).
+
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index e746c9274cded..7e50cff79b5c6 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -5666,7 +5666,7 @@ static void qla_get_login_template(scsi_qla_host_t =
+*vha)
+>  		       "PLOGI ELS param read fail.\n");
+>  		return;
+>  	}
+> -	q =3D (__be32 *)&ha->plogi_els_payld.fl_csp;
+> +	q =3D (__be32 *)&ha->plogi_els_payld;
+
+[Severity: High]
+Does this change shift the firmware's payload backwards by 4 bytes
+relative to the struct fields?
+
+The commit message indicates moving the pointer to the start of the
+struct does not affect any reader. However, looking at the consumers of
+this data, they explicitly expect the firmware payload to align at
+offsetof(fl_csp).
+
+For example, in qla24xx_els_dcmd2_iocb() the driver copies the data like
+this:
+
+drivers/scsi/qla2xxx/qla_iocb.c:qla24xx_els_dcmd2_iocb()
+    memcpy(elsio->u.els_plogi.els_plogi_pyld->data,
+           (void *)&ha->plogi_els_payld + offsetof(struct fc_els_flogi, fl_=
+csp),
+           sizeof(ha->plogi_els_payld) - offsetof(struct fc_els_flogi, fl_c=
+sp));
+
+Similarly, qla24xx_process_purex_rdp() reads sp_bb_cred from within fl_csp:
+
+drivers/scsi/qla2xxx/qla_os.c:qla24xx_process_purex_rdp()
+    be16_to_cpu(ha->plogi_els_payld.fl_csp.sp_bb_cred);
+
+If the firmware payload consists purely of the Service Parameters without
+a 4-byte ELS header, pointing q to the start of the structure will write
+the parameters into the fl_cmd field.
+
+Would this cause consumers reading from offsetof(fl_csp) to skip the
+first 4 bytes of the actual parameters and read misaligned data,
+potentially breaking connection establishments?
+
+> =20
+>  	bp =3D (uint32_t *)ha->init_cb;
+>  	cpu_to_be32_array(q, bp, sz / 4);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260807093429.1026=
+04-1-ghuicao@163.com?part=3D1
