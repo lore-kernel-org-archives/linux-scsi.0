@@ -1,66 +1,56 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB2B13B2FD0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00A4B3C73D9
 	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 22:50:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786143045; cv=none; b=aoYfcVQV5bEOW3gSCNKndfcjd37/JCUHauo7SxLdkizxTV6LVE4wsO93LvWB5IVVhhfSptBuPEiAoAQrjoxNOmSrxR5Ac+ajTlYWs3gbUBu2x6c6oDLcJsgCWCoWUH6yGI7atzZrLl5yh2AeQfkL1/xLV38zlOvLO27shGCch8g=
+	t=1786143045; cv=none; b=TzMlbOyDjkuHLCf0Dy2KqNv7uCZ34QhbKsYHvv9IlBEF7newZttGRnKYoIOMkOT3MD+B+UXAI/q52cZUmACP7y93g3wn/e5SxZOHj2gnd313gJvP/vie01fNoOVDTSwIh6f+GUJzpzt9ZNzwpyvfB12ICXy+JlwpsGkjX0p2gQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1786143045; c=relaxed/simple;
-	bh=ooyljqBjUoffNPNA6uCALOkGWfGsBfd+6DyRRHYoKt8=;
+	bh=/uOP2fMHHc9SYQi8aoT1/1xMVlEws3YKvN6mr1vdbSA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Daw3ROabQ9FVXoC5fP9VJkRnnz63ADeOCk1MroA6tVu4M3hG5lRoNUWQb/SIPKi37wsF8QiO/VYIrXyBy/21KKUoxSX/I7hnRkFxcehgDY3fHgWnXBMaGCb/bfZ6i2yaEnQfFCJSc81MUceyomOmWQHzFsjal6h6FO7CYKzvrSE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=IVYl9Yv6; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=iQMttxcwAdRu20uAEubZTzKmHCKxuniO2ly2QuvbXcWN/vb+H4kLGQv7zDWDLUcRM/23TYo/i92ouuAsOUVfDmJhTL0LEZxU3cXfjFqX6NuwZJeCYaQB5CkAIBfZn+wBXjBNeIZzwkPOC/lTcNaLHAXlte7jXGHjPqT788Fzuvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=eArHoqcS; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="IVYl9Yv6"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="eArHoqcS"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGzrg2xCQzlfpMD;
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGzrg3NQjzlfvq8;
 	Fri,  7 Aug 2026 22:50:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1786143030; x=1788735031; bh=P8ctn
-	CQo/l5xYwc2IFyaJPpRepHZNAFBcumHocN1jS8=; b=IVYl9Yv68kR3fVDDkqiSd
-	zwPUkBnISZE5PJh+GxW1CEwe3ew/gNxf0cSy+3XvgZdJButrv5iri8GMQoUgUqNN
-	LaHc5Q53G6K8ee8aJgRsPDI3EmbqkopZ0aKvVvK/O+hyLXW4ZfImPWDWe3fjuo2s
-	R4lL7e9c1Q6dinmQLaYH+J+xcnURV7HYnCxPxfxumwKfMRURvakALUmm/JuYypcq
-	jxhMe6n6IBRdv4Sywrzxcc+czCO9hHHn7AuDCe5Ld57LMhSJW43PplAc1M4GrR46
-	gKlcpuVQA+elke6PExRswRCazCjyxbZEnmZwqFtXB8OPb3AEdDGFRuOkGQm5PPBM
-	g==
+	:received:received; s=mr01; t=1786143039; x=1788735040; bh=8bQ78
+	nqQ90mJwPgbbj3ug9u570P6AH+Y+2BBDmrDnV4=; b=eArHoqcScgWkyFvZ4hNRl
+	FkCTakLi+fGGdr2fFjRyV2uiAddKVbdDru+9SXLmMSXTnUH1gWjl1QISB1T+8Zrc
+	FygW0uX4UO/BSi9h4WEE/MdaONMtEx/iZ1vzeR0q5J7o9WNqj7Xh4nrLzHiwLyjx
+	MYsqkXVINFsF5INLwbab14RTqFTKUqSPcASf9vCyTsvpO2Ni5ekP3wg0iMR1cSJB
+	i4GfdBJubSKn87AO1icTIu31IjydCrAvkHkAXVu/meV2/pWHx2Df5x0PfbwqQnM4
+	J29RbdmEdfVCDpV2SaFf/QtrkNnF4lnMqhRt6fH+5yno6m+IBGPfpNKZJfljm+OX
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id xhV8Lt73k1h9; Fri,  7 Aug 2026 22:50:30 +0000 (UTC)
+ id xliabmCzNajN; Fri,  7 Aug 2026 22:50:39 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGzrL3Dq0zlfvq8;
-	Fri,  7 Aug 2026 22:50:26 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGzrT2rKmzlfvq0;
+	Fri,  7 Aug 2026 22:50:33 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: John Garry <john.g.garry@oracle.com>,
 	Marco Elver <elver@google.com>,
 	linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Can Guo <can.guo@oss.qualcomm.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Li Qiang <liqiang01@kylinos.cn>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Hyeoncheol Jeong <hyenc.jeong@samsung.com>,
-	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
-	Ajay Neeli <ajay.neeli@amd.com>
-Subject: [PATCH v7 2/6] ufs: core: Enable context analysis
-Date: Fri,  7 Aug 2026 15:49:47 -0700
-Message-ID: <3c975386a5bcb939f8a2a0d47fd621f234321a9e.1786142946.git.bvanassche@acm.org>
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH v7 4/6] scsi: core: Add lock context annotations
+Date: Fri,  7 Aug 2026 15:49:49 -0700
+Message-ID: <ad5ca37acf8c933a12830c0811c293af54c87573.1786142946.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.55.0.679.g6767b8d81c-goog
 In-Reply-To: <cover.1786142946.git.bvanassche@acm.org>
 References: <cover.1786142946.git.bvanassche@acm.org>
@@ -72,145 +62,60 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Annotate functions that modify the state of a synchronization object.
-Remove the struct semaphore annotations because lock context annotations
-are not supported for semaphores.
+Document which functions expect that shost->scan_mutex is held.
 
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/Makefile      |  2 ++
- drivers/ufs/core/ufs-debugfs.c |  8 ++++++--
- drivers/ufs/core/ufshcd.c      | 14 ++++++++++++++
- drivers/ufs/host/Makefile      |  2 ++
- 4 files changed, 24 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_scan.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/ufs/core/Makefile b/drivers/ufs/core/Makefile
-index ce7d16d2cf35..67ab9ffbdf5d 100644
---- a/drivers/ufs/core/Makefile
-+++ b/drivers/ufs/core/Makefile
-@@ -1,5 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
-=20
-+CONTEXT_ANALYSIS :=3D y
-+
- obj-$(CONFIG_SCSI_UFSHCD)		+=3D ufshcd-core.o
- ufshcd-core-y				+=3D ufshcd.o ufs-sysfs.o ufs-mcq.o ufs-txeq.o
- ufshcd-core-$(CONFIG_RPMB)		+=3D ufs-rpmb.o
-diff --git a/drivers/ufs/core/ufs-debugfs.c b/drivers/ufs/core/ufs-debugf=
-s.c
-index be527209540d..ed1de70e2ec1 100644
---- a/drivers/ufs/core/ufs-debugfs.c
-+++ b/drivers/ufs/core/ufs-debugfs.c
-@@ -65,8 +65,10 @@ static int ee_usr_mask_get(void *data, u64 *val)
- 	return 0;
- }
-=20
-+token_context_lock(ufs_debugfs);
-+
- static int ufs_debugfs_get_user_access(struct ufs_hba *hba)
--__acquires(&hba->host_sem)
-+	__cond_acquires(0, ufs_debugfs)
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index d7e0e9393194..3b82e80e807a 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1195,6 +1195,7 @@ static int scsi_probe_and_add_lun(struct Scsi_Host =
+*shost,
+ 				  struct scsi_device **sdevp,
+ 				  enum scsi_scan_mode rescan,
+ 				  void *hostdata)
++	__must_hold(&shost->scan_mutex)
  {
- 	down(&hba->host_sem);
- 	if (!ufshcd_is_user_access_allowed(hba)) {
-@@ -74,14 +76,16 @@ __acquires(&hba->host_sem)
- 		return -EBUSY;
- 	}
- 	ufshcd_rpm_get_sync(hba);
-+	__acquire(ufs_debugfs);
- 	return 0;
- }
-=20
- static void ufs_debugfs_put_user_access(struct ufs_hba *hba)
--__releases(&hba->host_sem)
-+	__releases(ufs_debugfs)
+ 	struct scsi_device *sdev;
+ 	unsigned char *result;
+@@ -1352,6 +1353,7 @@ static void scsi_sequential_lun_scan(struct Scsi_Ho=
+st *shost,
+ 				     struct scsi_target *starget,
+ 				     blist_flags_t bflags, int scsi_level,
+ 				     enum scsi_scan_mode rescan)
++	__must_hold(&shost->scan_mutex)
  {
- 	ufshcd_rpm_put_sync(hba);
- 	up(&hba->host_sem);
-+	__release(ufs_debugfs);
- }
-=20
- static int ee_usr_mask_set(void *data, u64 val)
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2c5d8e0e696e..67745d2796d0 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1354,6 +1354,8 @@ static int ufshcd_wait_for_pending_cmds(struct ufs_=
-hba *hba,
-  * On failure, all acquired locks are released and the tagset is unquies=
-ced.
-  */
- int ufshcd_pause_command_processing(struct ufs_hba *hba, u64 timeout_us)
-+	__cond_acquires(0, &hba->host->scan_mutex)
-+	__cond_acquires(0, &hba->clk_scaling_lock)
+ 	uint max_dev_lun;
+ 	u64 sparse_lun, lun;
+@@ -1444,6 +1446,7 @@ static void scsi_sequential_lun_scan(struct Scsi_Ho=
+st *shost,
+ static int scsi_report_lun_scan(struct Scsi_Host *shost,
+ 			struct scsi_target *starget, blist_flags_t bflags,
+ 			enum scsi_scan_mode rescan)
++	__must_hold(&shost->scan_mutex)
  {
- 	int ret =3D 0;
-=20
-@@ -1378,6 +1380,8 @@ int ufshcd_pause_command_processing(struct ufs_hba =
-*hba, u64 timeout_us)
-  * This function resumes command submissions.
-  */
- void ufshcd_resume_command_processing(struct ufs_hba *hba)
-+	__releases(&hba->clk_scaling_lock)
-+	__releases(&hba->host->scan_mutex)
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	unsigned int length;
+@@ -1769,6 +1772,7 @@ EXPORT_SYMBOL(scsi_rescan_device);
+ static void __scsi_scan_target(struct Scsi_Host *shost, struct device *p=
+arent,
+ 			       unsigned int channel, unsigned int id, u64 lun,
+ 			       enum scsi_scan_mode rescan)
++	__must_hold(&shost->scan_mutex)
  {
- 	up_write(&hba->clk_scaling_lock);
- 	blk_mq_unquiesce_tagset(&hba->host->tag_set);
-@@ -1447,6 +1451,9 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, u=
-32 target_gear, bool scale_up
-  * Return: 0 upon success; -EBUSY upon timeout.
-  */
- static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout=
-_us)
-+	__cond_acquires(0, &hba->host->scan_mutex)
-+	__cond_acquires(0, &hba->wb_mutex)
-+	__cond_acquires(0, &hba->clk_scaling_lock)
+ 	blist_flags_t bflags =3D 0;
+ 	int res;
+@@ -1866,6 +1870,7 @@ EXPORT_SYMBOL(scsi_scan_target);
+ static void scsi_scan_channel(struct Scsi_Host *shost, unsigned int chan=
+nel,
+ 			      unsigned int id, u64 lun,
+ 			      enum scsi_scan_mode rescan)
++	__must_hold(&shost->scan_mutex)
  {
- 	int ret =3D 0;
- 	/*
-@@ -1476,6 +1483,9 @@ static int ufshcd_clock_scaling_prepare(struct ufs_=
-hba *hba, u64 timeout_us)
- }
+ 	uint order_id;
 =20
- static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
-+	__releases(&hba->clk_scaling_lock)
-+	__releases(&hba->wb_mutex)
-+	__releases(&hba->host->scan_mutex)
- {
- 	up_write(&hba->clk_scaling_lock);
- 	mutex_unlock(&hba->wb_mutex);
-@@ -3305,6 +3315,8 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, stru=
-ct ufshcd_lrb *lrbp)
- }
-=20
- static void ufshcd_dev_man_lock(struct ufs_hba *hba)
-+	__acquires(&hba->dev_cmd.lock)
-+	__acquires_shared(&hba->clk_scaling_lock)
- {
- 	ufshcd_hold(hba);
- 	mutex_lock(&hba->dev_cmd.lock);
-@@ -3312,6 +3324,8 @@ static void ufshcd_dev_man_lock(struct ufs_hba *hba=
-)
- }
-=20
- static void ufshcd_dev_man_unlock(struct ufs_hba *hba)
-+	__releases_shared(&hba->clk_scaling_lock)
-+	__releases(&hba->dev_cmd.lock)
- {
- 	up_read(&hba->clk_scaling_lock);
- 	mutex_unlock(&hba->dev_cmd.lock);
-diff --git a/drivers/ufs/host/Makefile b/drivers/ufs/host/Makefile
-index 65d8bb23ab7b..7d8db67eb23c 100644
---- a/drivers/ufs/host/Makefile
-+++ b/drivers/ufs/host/Makefile
-@@ -1,5 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
-=20
-+CONTEXT_ANALYSIS :=3D y
-+
- obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) +=3D tc-dwc-g210-pci.o ufshcd-dwc.o tc=
--dwc-g210.o
- obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) +=3D tc-dwc-g210-pltfrm.o ufshcd-=
-dwc.o tc-dwc-g210.o
- obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) +=3D cdns-pltfrm.o
