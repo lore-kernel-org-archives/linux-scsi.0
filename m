@@ -1,158 +1,200 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27035446C1E
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 06:07:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1900044C65C
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 06:43:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786082870; cv=none; b=NseUSLMzLV7puRcqpzu4ifqS2eTEzYO2bjGnULi1toPerP//ZIrZb+r1ajlP2Lu/Tc5ODP8xK6AKWII+1uPeu9NseTbVczlEVdHCzb0uzMag489dz8BYvxCmZp7fO82lY+CJkBCNaKrHuthOCwWSdGy//nd3r3ZvL0UWkqgTV0Q=
+	t=1786085006; cv=none; b=V7P6g1u/6tRJmhjSJXPf3NjOVZK9hZktg+M205VweWRakrS/f46hN2zmebDBFcRIwZkOtz92ucDywvPobU2yDbC+dyATdZFIqbuuiO9qLTM0/JJZVfefEgxwDgTAq28Rgv/fDYd5Gfa38tvFnBtHDgX6SWN1GBOAtKW0UuSJxI4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786082870; c=relaxed/simple;
-	bh=8nK3zk0LJnwP8Kr6V61I0Wwu+5q7KeBflm9aUfHvG3g=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TbnD+6hh+0CLc0QfZ5I3PVcjxiH3Se3QQVhMTXRblNVRqW70UCU+nl+U7/EikEHHZr24OPcivG+5jUFxLQY6ljhqaGgeduBqjz13y5GjsbQ7Yl+2aYF+J8iKfmEtI/jHghA/AY+RXnIwy/RRzGc62/foN4WSiBKFxM4xfQdqGbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k/x95HHT; arc=none smtp.client-ip=209.85.160.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786085006; c=relaxed/simple;
+	bh=WTzdjMrrNG5p8EdJAkF1UDWt43Lzi8taNvi16rI9cj0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=fijtJCh+i3Olo16FJJgVsQrFIq0CZjZBerdAMIvtB9yiw6zkZrqNZfagcJAKcDNxoOBljDNWKt64agIHR90aE2t9atb0L6ha1qByREunpaeZ0XAc/ApwSKhNm4k35wUZ84qSpfWY0ON/xgZmavh6qhapNzFR524Sq0DF+rxDm7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BJ70hSyP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k/x95HHT"
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-51c0cea8883so14772501cf.1
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Aug 2026 23:07:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786082868; x=1786687668; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=HQf34kglk1Yh8CWS1BUF21oEZ3LoRTy5y/WvEz9+4IA=;
-        b=k/x95HHThjboC8AVoHcl28lLtjXggobDvkBbhqJ1QMp4h9jPg/F1ajjjWrSkztfZOW
-         wd68q55nVYQywtFejKuhfc1rnZxPqWd+XdTJqb2wRGv2n9gdN3YMXKXeJwal1TGLvpfV
-         D6rqT8QVJ6JvFAO4iNR4BzuVezhe6rqEzajAEr1Ml6oQ1HrOgOXFV4AHlZdYcu3NAXg5
-         6z2Aku2fSeCafhLvTXiDHE2olj/pPSlZpPcAq2TxfbMNPB2hzQHzfeEG2ni/4UuCeCpp
-         IwbX75gV9NiktKX+4rQbi6dS+1qv7WKFLv+B8IYLiaeqf6apZ2D7Ce0D0rVu7yxUR4Jz
-         sV1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786082868; x=1786687668;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=HQf34kglk1Yh8CWS1BUF21oEZ3LoRTy5y/WvEz9+4IA=;
-        b=ogRXg5BAqryc7STeRnMJ3NaBil4JQWax1acu2Q1tcEr8Wxg2UpnDKsVG1qheD5ZWZ5
-         NMWWn61px2g8Gk51vo827Z9W7YGd+PBNm7kynqwnC0ytg/jae9R+tvsw0CJ1TWLEbTM9
-         3zfllDqH+UTm9T3Jxq6I0ZexBd2/TqQgS12XoYmDpXsyWHzCkMBt5rjMCiMdp1y86FsW
-         fhsZMY+SeZwZUJMGYq9IYb9wQ2zrnk7SUzUTCsrAsqWNpNCjduO+t8dGM3pUUx1XvHDp
-         KCgKeybOyn/IIiwnuTQj8m142c7ezgRYb862zsrw+80rv2vLABEmIKo+oSrTIOefxlmu
-         wPmA==
-X-Forwarded-Encrypted: i=1; AHgh+RqJws9C4icEaufx1M3CNAt8m5OyHOaO02ObcjnYroVExcPURXcuCPMrnfSLXqv0XhAcsjiR6uRqP/+d@vger.kernel.org
-X-Gm-Message-State: AOJu0YzQswtWSpU6sXUarcOgVgedRbz7nSFZcpZeSBZZ57Y6t7OFxdCT
-	hP13B1gCDV/iPmx//wFOz7wzO/cGDA8dylSshXyi6KNmzBD2CRiam9GO
-X-Gm-Gg: AR+sD12lYR2ndQJooj2Zc78EvyQg4T8lDN7DpkcC1yfpO3P5faHUknXKVgLy+b5ApRF
-	GVH0gU4uBDb0cUjdaVfOodrLwsxfxIwHELAQi32dOe63asH4lINPoDeKjsD+2hVCLVjulYdL3f+
-	27+Dm56KEbVBjjP7Uo8l8oAn0Zv0lQrtjPyMkMvW/1n+3lEs1YnYa/iuSDU8TRhCNwV8xLdxupG
-	pdZv0c3uauyo0stKbNArejy2JVpT31vFJRN1d8h6syEvKwh9twMjN5xPtiq/jWNHgCaI+nWGD+E
-	6LJSWaF1htDYG6Dl/+m0URNdXCtWUl+/INKSmfkI1nyfYi9LCX4/lEGWXCFWnOs6vLL+BTp1V96
-	yHTg6KrEZ1oW728QW7jtf7iCR7M2SX5sms8bNKlLimGl/qAynTo1pS1MTxMaTJ1+V2XM2tjN5/O
-	jdPf6J/sev+hYlO0GhyatMjC3rqcowC3VDprAvikPmERHklK1wZRiWadho8uzvT2IthiQs5IpaF
-	mrDDwt5ygcvhzoE7A==
-X-Received: by 2002:a05:622a:4d86:b0:51c:b91a:33f9 with SMTP id d75a77b69052e-52cfb00255dmr137405711cf.13.1786082868001;
-        Thu, 06 Aug 2026 23:07:48 -0700 (PDT)
-Received: from i4-l-hqh5357-03.ad.psu.edu ([130.203.139.71])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-908a92ff8d1sm1985816d6.25.2026.08.06.23.07.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Aug 2026 23:07:47 -0700 (PDT)
-From: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Shuangpeng Bai <shuangpeng.kernel@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] usb: gadget: f_tcm: keep port count until LUN teardown completes
-Date: Fri,  7 Aug 2026 02:07:33 -0400
-Message-ID: <20260807060733.3186624-1-shuangpeng.kernel@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BJ70hSyP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 264111F000E9;
+	Fri,  7 Aug 2026 06:43:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786085003;
+	bh=H+Lxyb8bpSvNqS9wkzIbUtLhvreFmAA2yXa4wleTpv4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BJ70hSyPlll58IF2ph+ID/MMpNW49d4Vfohu+cYSnqxrgc4b6ugnI8ipx0SjGPnDf
+	 i8hnRX9Lj/S3IRAX2/UWotryEwH7RcjeBkCaIjF/ElrjjTRL8SpKa41b+ZAW7KFgGP
+	 nDSQeZ62KhyhQJPpzkP3l6V6kxzW9g/4LpTFRuCS2WrGu6CRJsKd2+gd1sXEJFzh2/
+	 Dxa/s1y6yPzwi2SVlZlXl0AikqmRQi8RFnz5cu1XWAbc7TK5MaMRiv2SraAqmIIF7W
+	 r64ItV9cNXTiffb1jxpDctbTBsu1YQpL1QQBiQpLOCJTze+P0tVJQJb7l/IKs0Vb8f
+	 oe7p2hff6CQpg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] usb: gadget: f_tcm: keep port count until LUN teardown
+ completes
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Shuangpeng Bai" <shuangpeng.kernel@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260807060733.3186624-1-shuangpeng.kernel@gmail.com>
+References: <20260807060733.3186624-1-shuangpeng.kernel@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 07 Aug 2026 06:43:22 +0000
+Message-Id: <20260807064323.264111F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-tcm_usbg_drop_nexus() permits session removal once tpg_port_count
-reaches zero. However, usbg_port_unlink() currently decrements that
-count from the fabric_pre_unlink() callback, before core_dev_del_lun()
-waits for active se_lun references to drain.
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-If removal of the last LUN races a nexus removal, the latter can observe
-a zero port count and call target_remove_session(). This frees
-sess_cmd_map while an in-flight struct usbg_cmd, including its work item,
-can still be accessed.
+Pre-existing issues:
+- [High] The patch moves the `tpg_port_count` decrement to `fabric_post_unl=
+ink` for `f_tcm` to fix a nexus removal UAF race, but fails to apply this f=
+ix to sister drivers `vhost_scsi` and `xen-scsiback`.
+- [High] Lockless access to `tpg->tpg_nexus` in the I/O path leads to Use-A=
+fter-Free and NULL pointer dereferences when racing with `tcm_usbg_drop_nex=
+us`.
+- [High] The patch's fix for 'free active' and `sess_cmd_map` UAF is incomp=
+lete because it ignores pending work items when `tpg_port_count =3D=3D 0`.
+- [High] TOCTOU race between `target_fabric_port_link` and `tcm_usbg_drop_n=
+exus` allows the nexus to be destroyed while a LUN is actively linked.
+--
 
-Overlapping the last-LUN unlink with nexus removal reproduces this
-lifetime violation as a DEBUG_OBJECTS "free active" warning for
-usbg_cmd_work, followed by a target-core BUG/Oops.
+--- Patch [1]: [PATCH] usb: gadget: f_tcm: keep port count until LUN teardo=
+wn completes ---
+commit 052b5e8542d90321dbacef963d1804574c8248ec
+Author: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
 
-The generic target-core unlink path has no callback after
-core_dev_del_lun() completes. Add an optional fabric_post_unlink()
-callback and use it for the f_tcm port count. The count now remains
-nonzero until core_dev_del_lun() has finished draining active LUN
-references, preventing nexus removal from freeing the session during
-command completion.
+usb: gadget: f_tcm: keep port count until LUN teardown completes
 
-Fixes: c52661d60f63 ("usb-gadget: Initial merge of target module for UASP + BOT")
+This patch introduces an optional fabric_post_unlink callback to the
+target core. It uses this callback in f_tcm to defer decrementing the
+port count until after core_dev_del_lun has drained active LUN
+references, fixing a use-after-free race during nexus removal.
+
 Cc: stable@vger.kernel.org
-Signed-off-by: Shuangpeng Bai <shuangpeng.kernel@gmail.com>
----
- drivers/target/target_core_fabric_configfs.c | 8 ++++++++
- drivers/usb/gadget/function/f_tcm.c          | 2 +-
- include/target/target_core_fabric.h          | 2 ++
- 3 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index 166dbf4c4061..ab8f81650710 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -690,6 +690,14 @@ static void target_fabric_port_unlink(
- 	}
- 
- 	core_dev_del_lun(se_tpg, lun);
-+
-+	if (tf->tf_ops->fabric_post_unlink) {
-+		/*
-+		 * Allow fabrics to release state that must remain valid until
-+		 * core_dev_del_lun() has drained all active LUN references.
-+		 */
-+		tf->tf_ops->fabric_post_unlink(se_tpg, lun);
-+	}
- }
- 
- static void target_fabric_port_release(struct config_item *item)
-diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
-index b3fa5a17fd2d..98414e7611c0 100644
---- a/drivers/usb/gadget/function/f_tcm.c
-+++ b/drivers/usb/gadget/function/f_tcm.c
-@@ -2024,7 +2024,7 @@ static const struct target_core_fabric_ops usbg_ops = {
- 	.fabric_enable_tpg		= usbg_enable_tpg,
- 	.fabric_drop_tpg		= usbg_drop_tpg,
- 	.fabric_post_link		= usbg_port_link,
--	.fabric_pre_unlink		= usbg_port_unlink,
-+	.fabric_post_unlink		= usbg_port_unlink,
- 	.fabric_init_nodeacl		= usbg_init_nodeacl,
- 
- 	.tfc_wwn_attrs			= usbg_wwn_attrs,
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index e9039e73d058..390ace5bb252 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -95,6 +95,8 @@ struct target_core_fabric_ops {
- 				struct se_lun *);
- 	void (*fabric_pre_unlink)(struct se_portal_group *,
- 				struct se_lun *);
-+	void (*fabric_post_unlink)(struct se_portal_group *se_tpg,
-+				   struct se_lun *lun);
- 	struct se_tpg_np *(*fabric_make_np)(struct se_portal_group *,
- 				struct config_group *, const char *);
- 	void (*fabric_drop_np)(struct se_tpg_np *);
--- 
-2.43.0
+> diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/targe=
+t/target_core_fabric_configfs.c
+> index 166dbf4c40616..ab8f81650710e 100644
+> --- a/drivers/target/target_core_fabric_configfs.c
+> +++ b/drivers/target/target_core_fabric_configfs.c
+> @@ -690,6 +690,14 @@ static void target_fabric_port_unlink(
+>  	}
+> =20
+>  	core_dev_del_lun(se_tpg, lun);
+> +
+> +	if (tf->tf_ops->fabric_post_unlink) {
+> +		/*
+> +		 * Allow fabrics to release state that must remain valid until
+> +		 * core_dev_del_lun() has drained all active LUN references.
+> +		 */
+> +		tf->tf_ops->fabric_post_unlink(se_tpg, lun);
+> +	}
+>  }
 
+[Severity: High]
+This isn't a bug introduced by this patch, but does the separation of LUN
+attachment and port count increment create a time-of-check to time-of-use
+race?
+
+In target_fabric_port_link():
+
+drivers/target/target_core_fabric_configfs.c:target_fabric_port_link() {
+    ...
+    ret =3D core_dev_add_lun(se_tpg, dev, lun);
+    ...
+    if (tf->tf_ops->fabric_post_link)
+        tf->tf_ops->fabric_post_link(se_tpg, lun);
+}
+
+Since tpg_port_count is incremented inside fabric_post_link() for f_tcm, is
+there a window after core_dev_add_lun() attaches the LUN where
+tcm_usbg_drop_nexus() could observe tpg_port_count =3D=3D 0?
+
+If it executes concurrently during this window, would it bypass the safety
+check and remove the session while a LUN has just been fully linked?
+
+> diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/fun=
+ction/f_tcm.c
+> index b3fa5a17fd2db..98414e7611c08 100644
+> --- a/drivers/usb/gadget/function/f_tcm.c
+> +++ b/drivers/usb/gadget/function/f_tcm.c
+> @@ -2024,7 +2024,7 @@ static const struct target_core_fabric_ops usbg_ops=
+ =3D {
+>  	.fabric_enable_tpg		=3D usbg_enable_tpg,
+>  	.fabric_drop_tpg		=3D usbg_drop_tpg,
+>  	.fabric_post_link		=3D usbg_port_link,
+> -	.fabric_pre_unlink		=3D usbg_port_unlink,
+> +	.fabric_post_unlink		=3D usbg_port_unlink,
+>  	.fabric_init_nodeacl		=3D usbg_init_nodeacl,
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does moving this decrement to
+fabric_post_unlink for f_tcm leave vhost_scsi and xen-scsiback vulnerable to
+the same race?
+
+Looking at vhost_scsi_ops in drivers/vhost/scsi.c:
+
+    .fabric_pre_unlink =3D vhost_scsi_port_unlink,
+
+And scsiback_ops in drivers/xen/xen-scsiback.c:
+
+    .fabric_pre_unlink =3D scsiback_port_unlink,
+
+If a nexus removal is triggered concurrently with the removal of the last
+LUN on either of these fabrics, won't the early port count decrement in
+fabric_pre_unlink allow them to bypass the EBUSY check? It appears they cou=
+ld
+proceed to call target_remove_session() before core_dev_del_lun() has finis=
+hed
+waiting for active commands to drain, potentially causing a similar
+use-after-free.
+
+[Severity: High]
+This is a pre-existing issue, but can lockless reads of tpg->tpg_nexus
+in the I/O path race with nexus removal?
+
+In tcm_usbg_drop_nexus(), we free the nexus and clear the pointer:
+
+drivers/usb/gadget/function/f_tcm.c:tcm_usbg_drop_nexus() {
+    ...
+    tpg->tpg_nexus =3D NULL;
+    kfree(tv_nexus);
+    ...
+}
+
+Meanwhile, the USB completion callbacks like usbg_submit_command() and
+usbg_submit_tmr() read it without holding tpg_mutex or the RCU read lock:
+
+drivers/usb/gadget/function/f_tcm.c:usbg_submit_command() {
+    ...
+    tv_nexus =3D tpg->tpg_nexus;
+    ...
+}
+
+Could this result in a NULL pointer dereference or use-after-free if the
+nexus is dropped via configfs while a command is actively being processed?
+
+[Severity: High]
+This is a pre-existing issue, but does this fix cover the case where
+tpg_port_count is 0 but work is still pending?
+
+If no explicit LUNs are configured, tpg_port_count is 0. If a command is
+queued to usbg_cmd_work concurrently with the admin dropping the nexus:
+
+drivers/usb/gadget/function/f_tcm.c:tcm_usbg_drop_nexus() {
+    ...
+    if (tpg->tpg_port_count !=3D 0) {
+        ...
+    }
+    ...
+    target_remove_session(se_sess);
+}
+
+Could this flow proceed to remove the session and free sess_cmd_map without
+waiting for usbg_cmd_work to complete?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260807060733.3186=
+624-1-shuangpeng.kernel@gmail.com?part=3D1
