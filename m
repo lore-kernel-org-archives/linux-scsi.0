@@ -1,142 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3103B19A9
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 19:09:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC3593D646E
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Aug 2026 22:27:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786129747; cv=none; b=Cs1Q6LOmyIU7mpC6tFIilreNuuCuXOWqcfWrlvLXioiVfZ2La1byys3Dgia7dYmf9/ZOk3rFsucfdMhLvoRsufTNYvC1RrWoND6FniDpjrLNz6plCc/JPo83L/ebiNefZOctEx0BL8vrgCSAoY3DR3cbMbR9sVW1mMftm3c7rLo=
+	t=1786141633; cv=none; b=ZQp4Qo/r0ebvHMGDnA6aRHeoUJRYWaS+eD+OFFVBO2Ogmsg7MnrNXbOzQxb9g15XuRya5x6elFfESH4TqxLPyrz3h/JZKHAIob0cHfTyhE0Bq0tvRN3B46gnVWQSgZHz8khJlfndG1FvkiJzXW7Iglp4amYImi6aBntlxIuAvyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786129747; c=relaxed/simple;
-	bh=SxUpSNVgLykssMt98HPn9kMK1EQjc99tG0gLarPfIAQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uYgIg6tcu1bvuBVeTsWpbjLcizFvpwtrCTdBMkIzCizC081M1X/zZmuGDFpuHyZsfxB0tCIeQvxnH/6U+4qHDftXgbG2qY7M3Oit+Ezn9T7v/KNRon2tILHqVmaVZBBekHfYt2fDJgbF8zK9IA1C5vnsqvuACRh1D4o1p7VxlI0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L7oOO6O1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786141633; c=relaxed/simple;
+	bh=iVXAfp5eHGcKxCHL1xIwI1+0DPkDzuWRIXEprN+hPn8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NA7ezZ4NsvUfZ8oGLopySCEyGU5NewrPSjZ0OtB/dX12myb6Hz87qm5mpDD2uQyOHvxsxcLH+YachXviDuMwruoaj6LcREvxEfWzYgPF5OvfEkKrrqXoh+/W8sLnBnpNkzQ9ua9ZREb4yCOOjwuv6QBy48iu5ITN0zyygAb0pQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Vv5ktyKw; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L7oOO6O1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D352D1F000E9;
-	Fri,  7 Aug 2026 19:09:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786129746;
-	bh=2IDP2PAmKOXJfGYKKnZLpVF2sdaFfra6YpbTtWzmduk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=L7oOO6O16OUEQr/TuBXOGfuu+62TV0pnaseAnen1OERhwBthiy3JEvObVYs/bdMaj
-	 1pM7lHnXawpdYfOVdm/w3hCpbhuUBEhsnW6tUDBIP/EC2m9TC3q1uGNkyvXc/MnGN5
-	 egCBbMA9NJ5pa+1ciWP1NPnkAAnh5XA/bPeN+i+U7Xf4SjLeFYj77L4CHhei/vMBYY
-	 a1k5sEkOQLHTQFTZSWmXSD2guzamJndHMauIpl8G8SvRnxCUNmEr9LOQi6wTocHPwc
-	 j84oaWmKSF6WDWRJIBTvjzRjHGpDSi2T7edqPUwBINlwAg572vVCnrGAuSWRcQIkYL
-	 N5D5W7e97ALfQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: arcmsr: fix DMA memory and IO queue leak on
- arcmsr_alloc_ccb_pool() failure
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ivy Lopez" <skunkolee@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260807185018.80661-1-skunkolee@gmail.com>
-References: <20260807185018.80661-1-skunkolee@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 07 Aug 2026 19:09:05 +0000
-Message-Id: <20260807190905.D352D1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Vv5ktyKw"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hGzKW0wThzlfvq0;
+	Fri,  7 Aug 2026 22:27:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1786141623; x=1788733624; bh=iVXAfp5eHGcKxCHL1xIwI1+0
+	DPkDzuWRIXEprN+hPn8=; b=Vv5ktyKwuorKIxDRqQ6umDsMXTt9CIYHcWDYPduy
+	KoBqAHyIFOWFgEo948d3/jkG/Fs1VDuYBQeysFzMjwXIImP62oiktPJLtP19Ej6T
+	scEhd1CT1b+yVPttKbLKY3Y3w1oSoGer6Rovl53M6SDMQzoXnvQ4foASecnh8NRY
+	YOI0l94H54D4W9lv42f+RTP8IFgez3HIirpTy3NENvwSAp89ZP2zbQC7b/cbk+s1
+	SEWTugXmQMOr/CycqcCu9eSx1vXIpoSt0YVijMe4ZKzLsTqPqdnTPUUKgk1YQ4k9
+	8pfzgMkugo468n9UFZ1jZkd/wtvYOHJIxfCerqXfrGy71Q==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id PG65A5Z_FTj8; Fri,  7 Aug 2026 22:27:03 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hGzKH15wlzlfvpN;
+	Fri,  7 Aug 2026 22:26:58 +0000 (UTC)
+Message-ID: <a1cf63ca-4f75-4dc8-8e8a-58033a0cd63f@acm.org>
+Date: Fri, 7 Aug 2026 15:26:58 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 5/6] scsi: core: Protect host state changes with the
+ host lock
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Marco Elver <elver@google.com>, linux-scsi@vger.kernel.org,
+ Jianzhou Zhao <luckd0g@163.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ Ranjan Kumar <ranjan.kumar@broadcom.com>, Nilesh Javali
+ <njavali@marvell.com>, Manish Rangankar <mrangankar@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com
+References: <cover.1785965531.git.bvanassche@acm.org>
+ <d5b40794ca80ed83888a83847c293349e7f1de43.1785965531.git.bvanassche@acm.org>
+ <6d4a31c0-308d-4f4e-9708-11a559137ee3@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <6d4a31c0-308d-4f4e-9708-11a559137ee3@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On 8/6/26 2:13 AM, John Garry wrote:
+> On 05/08/2026 22:36, Bart Van Assche wrote:
+>> +static inline enum scsi_host_state scsi_get_host_state(struct=20
+>> Scsi_Host *shost)
+>> +{
+>> +=C2=A0=C2=A0=C2=A0 return context_unsafe(READ_ONCE(shost->shost_state=
+));
+>=20
+> I am wondering if it may be better to protect reading this with the=20
+> spinlock as well. We could lose the READ_ONCE and WRITE_ONCE. And we=20
+> would be more symmetrical with the set function.
+>=20
+> I really don't feel strongly about this, though.
 
-New issues:
-- [High] The patch introduces a kernel panic (NULL pointer dereference) in =
-`arcmsr_free_ccb_pool()` when cleaning up after an XOR buffer allocation fa=
-ilure.
+I prefer lockless access from scsi_get_host_state() because this
+function is called from the hot path. Using locking inside this
+function would cause lock contention on the host lock in the hot path.
 
-Pre-existing issues:
-- [High] A race condition during device removal and probe error teardown le=
-aves work queued on the system workqueue after the adapter struct has been =
-freed, causing a use-after-free.
---
+Thanks,
 
---- Patch [1]: [PATCH] scsi: arcmsr: fix DMA memory and IO queue leak on ar=
-cmsr_alloc_ccb_pool() failure ---
-commit 54e963f4d0ddf2b670ba41920062308c1b96d75e
-Author: Ivy Lopez <skunkolee@gmail.com>
-
-scsi: arcmsr: fix DMA memory and IO queue leak on arcmsr_alloc_ccb_pool() f=
-ailure
-
-This commit fixes a DMA memory and IO queue leak that occurs when
-arcmsr_alloc_ccb_pool() fails. It routes the error path through the
-free_ccb_pool label and explicitly frees the IO queue for type F adapters.
-
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcms=
-r_hba.c
-> index 8aa948f06cacf..3ffd160a6a550 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-> @@ -1144,7 +1144,9 @@ static int arcmsr_probe(struct pci_dev *pdev, const=
- struct pci_device_id *id)
->  		arcmsr_free_io_queue(acb);
->  	error =3D arcmsr_alloc_ccb_pool(acb);
->  	if(error){
-> -		goto unmap_pci_region;
-> +		if (acb->adapter_type =3D=3D ACB_ADAPTER_TYPE_F)
-> +			arcmsr_free_io_queue(acb);
-> +		goto free_ccb_pool;
-
-[Severity: High]
-Does this routing of the error path to free_ccb_pool introduce a kernel
-panic if arcmsr_alloc_ccb_pool() fails during XOR buffer allocation?
-
-If arcmsr_alloc_xor_buffer() fails, acb->xor_mega is already set to a
-non-zero value, but acb->xorVirt might be NULL.
-
-When arcmsr_free_ccb_pool() is called from this new error path, it checks
-acb->xor_mega and proceeds to calculate a pointer using the NULL
-acb->xorVirt:
-
-drivers/scsi/arcmsr/arcmsr_hba.c:arcmsr_free_ccb_pool() {
-    ...
-    if (acb->xor_mega) {
-        struct Xor_sg *pXorPhys;
-        ...
-        pXorPhys =3D (struct Xor_sg *)(acb->xorVirt + sizeof(struct HostRam=
-Buf));
-        ...
-        if (pXorPhys->xorPhys) {
-    ...
-}
-
-Will this unconditionally dereference the invalid pXorPhys pointer
-(address 16) and cause a panic?
-
-[Severity: High]
-This is a pre-existing issue, but does the error teardown sequence leave a
-window for a use-after-free?
-
-In the arcmsr_probe() error path, flush_work() is called before the hardware
-interrupt is freed:
-
-drivers/scsi/arcmsr/arcmsr_hba.c:arcmsr_probe() {
-out_free_sysfs:
-    ...
-    flush_work(&acb->arcmsr_do_message_isr_bh);
-    arcmsr_stop_adapter_bgrb(acb);
-    arcmsr_flush_adapter_cache(acb);
-    arcmsr_free_irq(pdev, acb);
-    ...
-}
-
-Because the interrupt is still active, could it fire and re-queue
-arcmsr_do_message_isr_bh after the flush? When scsi_host_put() subsequently
-frees the acb structure, would the system workqueue then dereference the
-freed memory?
-
->  	}
->  	error =3D scsi_add_host(host, &pdev->dev);
->  	if(error){
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260807185018.8066=
-1-1-skunkolee@gmail.com?part=3D1
+Bart.
