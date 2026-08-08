@@ -1,117 +1,137 @@
-Received: from mail-oo1-f99.google.com (mail-oo1-f99.google.com [209.85.161.99])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BB7C3B5E07
-	for <linux-scsi@vger.kernel.org>; Sat,  8 Aug 2026 09:49:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF9B631E826
+	for <linux-scsi@vger.kernel.org>; Sat,  8 Aug 2026 10:09:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786182584; cv=none; b=fsgcCw/TeAZNeIIvUVBO1rvoYqwEfi29qG5b7bJHoLpMIGVUFvg3jrNoYCHcLUNujDvFvr8EXqJWWo3/JH5ddWax827bf/sikHV8l7OgWxt3TspOQ+7IfDvxvx9UvA9neH3QqqBIryxk3gumCULr0xlo85a4ZoP8z8DDrqDXpWg=
+	t=1786183787; cv=none; b=IUMx3qsWZ8k6G8tLc5ucWqqlhoKvS9S0g2tSUxOHzxifYSdq6m2qL1vZpYamt9e1MllNbuafd3LoSq3GrTXZ4Ds/dn57Yg7SUKfyDq38aG5UOegbtEHZPJ3Bff8MF/cjgnKI2E2OWgGwix37ACwv0u44VSnvmELw7m9jjsq/jPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786182584; c=relaxed/simple;
-	bh=5fCc8Hz1+3EpWipECt1SFJoyqPYhlz7oBxDYPJouCoA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RyCs8JeWd3B/JHeMA24o9D1XNCWj2+RhMcADBShX4YdMdBN6ZBu0tW2ft/K0g774DdmGo2TY5eehB/GO+QQgx7dfjOCcCnYlwwCkPbfO9jBjRsNBhCyjZRsSUtTOz1U7uB5XHCl61jOgLbeAEpXpeLhGzs6ZUxWvPmQvRj09E5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=U+9FN2qw; arc=none smtp.client-ip=209.85.161.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1786183787; c=relaxed/simple;
+	bh=RvTHEsQxHebvVjR0ertTVBJKnHSyHIW7evefC0i3fEI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=GaMiEJiXDya83Z01U7ols4OS67NlyYGc2Vv6b8SwAPaC3rQ6E1Kzk85TGXWTGOp5sjAX+ejXwSN+SJiv9GTGiJCLTP5H/XiDsRIHJsKHgRzOn4/jkV3j9RhMXmATd4vM9zBP2fR3+Xa3IW2g2fHihDP0dVIxeb770nbUeOWYSJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HOv/jZBd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="U+9FN2qw"
-Received: by mail-oo1-f99.google.com with SMTP id 006d021491bc7-6aea94f96c4so180119eaf.2
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Aug 2026 02:49:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786182579; x=1786787379;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=46v6GKyUY59OjS/DWCGSKrPxuxkyo1FIyqZlYLTCPwI=;
-        b=RYzyjOAt0I3fAArxyfzK5qnrfekRA5BQvqQygjL0bnzQtoOUO5+DpUkdG1kAF4kuV8
-         pHYOSaKOn36wOKI2UcFjmrhpJTe0qIJmwmmsRANiNyCmB2+QkZzgGgGildwx0Bo0x7Uq
-         +csoDN2LWHz0pTyf5I5bGAYmuE9/6abLfI22ZMhLyrh3yVboqNDaCwmbrGH5FUofrMah
-         knm9Kv1wtrnHmPVODNQsCatgV1B7AyU/SlqjUKGg8P15AEdsSXqVaYmu5gEO9ilAFGsZ
-         poPQ3iePluTm7RtAFhM9WaCirXcgccVIpTLRZcGySpoRYFyXMOfu3DXdQ8v52ht0R2sM
-         Ly9g==
-X-Gm-Message-State: AOJu0YwYkMXepMm0UShK26s/RJmex/Q0T7ceawbu51GUAraqi1b+9Kdh
-	sQMJdiJh76omPbVDBHIbaX3+ugDHvEikzvAZloUZPz8ni2ihCy/tU7ysnrpN8JZTowzRbxjIfQP
-	KPUO3D2St1gK9nZALiydh1mD5gldGvH76tXTJXRoWOE62S1HjV2FFOqlcJiHWlJkRd1KWB7Dnxd
-	pWbT8EAJLdQYgTcu+uJpH3ICrqXdSHcXJrXGUqNNTKcQ16pjqXerW70YiGmMhREuOQtv540Jkw8
-	Sg9Allh5k1Hu0gfurrzI4wj
-X-Gm-Gg: AR+sD13kDfZpWZ22ks12dr9S/ESM86Vq3JNyF2r6YU69DgeSr+pJ4KZjoMPLs1zAd7P
-	gBYIzN/tKkMpNEk7Cg/kOMT+mThmuEQ6E9fYO5udUuMOIeYU0EprBvksDBtVtIQJvBCqdK/UyLC
-	PHfd6dVpo2QaajFS+I3zEcy1SkU/xjQ8HQHdBhsgEBUnVJjrAm+ZowC1GnB2+e+HHzFri2PkfVl
-	trPUCBymflONEef3mpteZPSR4kwY4G6mfzMMAddUZRSbU4Q31cu1wVF/+dlZaHApMrivo5T+ADI
-	5KINV2s3EwCUylwMjIomcw8mNcrmMEOzxjF0QGtz9Fa4+dqZxHHv6fbTGrJkaNC0402PHyxGl/N
-	R78Ydqje1H/uR7GO6mNgamYmc1km4yiNDjHC1VGeP5SJboaCQcuj2RZ9DSbik0IQYVdmv2ISBH3
-	OROy77itLemFDyMIYcGjUCO8vPJBtcpH1dwDcDAjDRv+w=
-X-Received: by 2002:a05:6820:810:b0:6ac:9756:c70c with SMTP id 006d021491bc7-6ae96ec7b08mr12446132eaf.20.1786182578818;
-        Sat, 08 Aug 2026 02:49:38 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-25.dlp.protect.broadcom.com. [144.49.247.25])
-        by smtp-relay.gmail.com with ESMTPS id 006d021491bc7-6b0489f2bb0sm11039eaf.15.2026.08.08.02.49.37
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 08 Aug 2026 02:49:38 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2d004f13426so6120335ad.3
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Aug 2026 02:49:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1786182576; x=1786787376; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=46v6GKyUY59OjS/DWCGSKrPxuxkyo1FIyqZlYLTCPwI=;
-        b=U+9FN2qwAJyOMTabtFxh1Fxxf/pvQ4zGg4z0T5MU68G/xa7Rivq0dEXVMeqMLojaQ3
-         ZQsB0zCn8VwV9MEroK7VPdOHv7+Jb5WhbTizEU1wgu6ngrjRvUFIa7xXnLjzLaBis2Uo
-         6aNhNlE25F7v+ttA7ktU+TG8ZDQsAsep3a/lc=
-X-Received: by 2002:a05:6a21:69c:b0:3b4:6a23:6ba with SMTP id adf61e73a8af0-3cb85efb370mr37428144637.26.1786182576449;
-        Sat, 08 Aug 2026 02:49:36 -0700 (PDT)
-X-Received: by 2002:a05:6a21:69c:b0:3b4:6a23:6ba with SMTP id adf61e73a8af0-3cb85efb370mr37428103637.26.1786182575807;
-        Sat, 08 Aug 2026 02:49:35 -0700 (PDT)
-Received: from dhcp-10-123-98-253.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14101a5ee91sm14631478c88.11.2026.08.08.02.49.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 08 Aug 2026 02:49:35 -0700 (PDT)
-From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-To: linux-scsi@vger.kernel.org
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	Laurence Oberman <loberman@redhat.com>,
-	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH] scsi: mpt3sas: Avoid freeing unallocated PCIe SGL buffers
-Date: Sat,  8 Aug 2026 20:40:10 +0530
-Message-ID: <20260808151010.185603-1-chandrakanth.patil@broadcom.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HOv/jZBd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 526F51F00A3A;
+	Sat,  8 Aug 2026 10:09:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786183785;
+	bh=EQO1HKdIB26NGPKPjJQJuK9Brw+aw479NnaZmdHGqk8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=HOv/jZBdx/hdwxU4uCp0n4iA1nMSFvXoj6EQBw6XlMAw5TYYRUNruQTNxrz9/WE+6
+	 +5LrkszGJLOmvG9e4WLcmUNG/QJqAD+/+r42xIBIQ3aZW4zI0UvpVzTuDvxKvbQ+sC
+	 OpWzfHZpHz5RkBG7w3Nic8p+7ZBLi5e4eH3EkGVE7vO77+M6cptY9tdwhEJqUED6Zg
+	 km7FqijHc9smb+e2d4yx2oO8J5XwYk/uPdEDA8D8phmkC+V4Hyf3DrApgw8Wgoy6vz
+	 zXuLjiRpRRW64CozUSAvcw3qy0h9r934isjLBd83pJAfegqzEAVRh2RAh7GL9cPcwT
+	 i/8kZfVbsc1gA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: mpt3sas: Avoid freeing unallocated PCIe SGL
+ buffers
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chandrakanth Patil" <chandrakanth.patil@broadcom.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260808151010.185603-1-chandrakanth.patil@broadcom.com>
+References: <20260808151010.185603-1-chandrakanth.patil@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 08 Aug 2026 10:09:44 +0000
+Message-Id: <20260808100945.526F51F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+
+Pre-existing issues:
+- [High] _base_release_memory_pools() lacks idempotency, causing fatal Use-=
+After-Free, double-frees, and NULL pointer dereferences when invoked consec=
+utively on error paths.
+- [High] Missing NULL check for `ioc->chain_lookup[i].chains_per_smid` duri=
+ng partial allocation failure cleanup causes a guaranteed kernel panic due =
+to invalid pointer arithmetic.
+--
+
+--- Patch [1]: [PATCH] scsi: mpt3sas: Avoid freeing unallocated PCIe SGL bu=
+ffers ---
+commit 74366255b6baaf468aaa8aa5ff843c58339a10f7
+Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+
+scsi: mpt3sas: Avoid freeing unallocated PCIe SGL buffers
 
 _base_release_memory_pools() unconditionally frees every
 ioc->pcie_sg_lookup[] entry, including ones the setup loop never
 allocated after a partial failure, causing a "bad dma" warning on
 debug kernels or a NULL pointer dereference otherwise.
 
-Fixes: dbec4c9040ed ("scsi: mpt3sas: lockless command submission")
-Reported-by: Laurence Oberman <loberman@redhat.com>
-Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 2 ++
- 1 file changed, 2 insertions(+)
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
+pt3sas_base.c
+> index 791a3c5fbf442..fed7aeffec58d 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -5870,6 +5870,8 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *=
+ioc)
+> =20
+>  	if (ioc->pcie_sgl_dma_pool) {
+>  		for (i =3D 0; i < ioc->scsiio_depth; i++) {
+> +			if (!ioc->pcie_sg_lookup[i].pcie_sgl)
+> +				continue;
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 79052f2accbd..11bcb8440e1c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5870,6 +5870,8 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 
- 	if (ioc->pcie_sgl_dma_pool) {
- 		for (i = 0; i < ioc->scsiio_depth; i++) {
-+			if (!ioc->pcie_sg_lookup[i].pcie_sgl)
-+				continue;
- 			dma_pool_free(ioc->pcie_sgl_dma_pool,
- 					ioc->pcie_sg_lookup[i].pcie_sgl,
- 					ioc->pcie_sg_lookup[i].pcie_sgl_dma);
--- 
-2.52.0
+[Severity: High]
+This is a pre-existing issue, but does adding the array lookup here make
+the function unsafe if called twice?
 
+If _base_release_memory_pools() is invoked a second time on an error path
+(e.g., if a subsequent operation fails after a retry in
+_base_allocate_memory_pools()), ioc->pcie_sgl_dma_pool is still non-NULL
+because it was never cleared.
+
+During the second call, the newly added check will attempt to access
+ioc->pcie_sg_lookup[i].pcie_sgl. Since ioc->pcie_sg_lookup was set to NULL
+at the end of the first call, will this trigger a NULL pointer dereference?
+
+Additionally, variables like ioc->reply_post and ioc->config_page are
+freed earlier in this function but never set to NULL. Would it make sense to
+clear these pointers and ioc->pcie_sgl_dma_pool so the function is safely
+idempotent and avoids double-frees?
+
+>  			dma_pool_free(ioc->pcie_sgl_dma_pool,
+>  					ioc->pcie_sg_lookup[i].pcie_sgl,
+>  					ioc->pcie_sg_lookup[i].pcie_sgl_dma);
+>  			ioc->pcie_sg_lookup[i].pcie_sgl =3D NULL;
+>  		}
+>  		dma_pool_destroy(ioc->pcie_sgl_dma_pool);
+>  	}
+>  	kfree(ioc->pcie_sg_lookup);
+>  	ioc->pcie_sg_lookup =3D NULL;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but while fixing the cleanup
+logic in this function, is there a similar vulnerability for
+ioc->chain_lookup[i].chains_per_smid?
+
+If kzalloc() for ioc->chain_lookup[i].chains_per_smid partially fails in
+_base_allocate_memory_pools(), the unallocated indices are NULL.
+
+In the cleanup loop further down in this function, the code calculates the
+pointer offset:
+
+	ct =3D &ioc->chain_lookup[i].chains_per_smid[j];
+	if (ct && ct->chain_buffer)
+		dma_pool_free(ioc->chain_dma_pool, ...);
+
+If chains_per_smid is NULL and j > 0, C pointer arithmetic will evaluate
+this to a non-NULL address. The subsequent check if (ct && ct->chain_buffer)
+will falsely pass, leading to an immediate page fault when trying to
+dereference memory.
+
+Should we also add a NULL check for ioc->chain_lookup[i].chains_per_smid
+before evaluating the offset?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260808151010.1856=
+03-1-chandrakanth.patil@broadcom.com?part=3D1
