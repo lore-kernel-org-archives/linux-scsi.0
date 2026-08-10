@@ -1,120 +1,139 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [52.237.72.81])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 87A833AE6E5;
-	Mon, 10 Aug 2026 12:35:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.237.72.81
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D89BD3D902E
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2026 12:51:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786365354; cv=none; b=E9cJXA9BVuYDDLEFJiFCM4o71g+lPH0OVMUOCMwQwu7feTN1llEsNUvArUFeSyAfGj/H870b9pYU563YycvIPVFCRI8kzctsBf1IEjnljfPPcCyrkuz701yB+B7ZnNVQk3cDErvpxOS61TQvTtISdgDFudC1TehPASHFFHiMQ6A=
+	t=1786366267; cv=none; b=AXROqYaYqdgyJ3visnksuCXvsu4QgXu528qdhHGfrFxBHSEZ1BLsY1yniH5m3g4PfMZ1NjWCshreXDtbodUWVtYnAhyo2fmeDakwK24bFOGqy56I3XBU8K/NykMI/62qpov1mhE9mK1Z2Msg4WZbg9qaLzCz1MOoxU3WiB9kd9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786365354; c=relaxed/simple;
-	bh=4EGy8XxImze5kg5V93EPfWIg5qCGq+tSC5lMLbZ+JDs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=l2rLd2QSxcL/BCd94Q7id4UTgOEa9JuWjnXOKviUdWzh0WQ9f+8/T15Rz6nOC68Hw19SykIXwerSLD36bpLziHu/BXv1j8O4V1ZzxGgmpoVxWHA319JA4rSBf3zU+/b3n8Xyr6j39KJAc87Bbh0ufZjDZarumQv79na34uADcCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=52.237.72.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [10.98.66.117])
-	by mtasvr (Coremail) with SMTP id _____wB3hjSbxXlqbwCAAA--.36399S3;
-	Mon, 10 Aug 2026 20:35:40 +0800 (CST)
-Received: from localhost.localdomain (unknown [10.98.66.117])
-	by mail-app3 (Coremail) with SMTP id zS_KCgD3D3KbxXlqDWIwBA--.28189S2;
-	Mon, 10 Aug 2026 20:35:39 +0800 (CST)
-From: Fan Wu <fanwu01@zju.edu.cn>
-To: linux-scsi@vger.kernel.org
-Cc: Ram Vegesna <ram.vegesna@broadcom.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Don Brace <don.brace@microchip.com>,
-	Haoxiang Li <haoxiang_li2024@163.com>,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Fan Wu <fanwu01@zju.edu.cn>
-Subject: [PATCH] scsi: elx: efct: Use timer_shutdown_sync() for the stats timer
-Date: Mon, 10 Aug 2026 12:34:43 +0000
-Message-Id: <20260810123443.122397-1-fanwu01@zju.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1786366267; c=relaxed/simple;
+	bh=1PMkMb3U8Riha8TxHDERiU1uR3As4P6C7MMylGPBW3Q=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=gTrf7d5JZeVRfw67AA/dw9zmG1VRfqPEN9eDZcNEhQoIckZr28XV18+1aHpPg7IxMyDF0JACv+s+Rf0nOclphd2ubyBtQEvMkBkVe+K8X6GTkhQ+VZB7GxOkDTH+eHK6J21cEMahPR6xRdN9KBAIDmvicZ22qPxaaKEOFXSZSNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bWb2Exij; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bWb2Exij"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F0CB1F00A3A;
+	Mon, 10 Aug 2026 12:51:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786366265;
+	bh=xS1qGCgww2xA9MmjZbJZ7TvmlJCJHr55F874mUOWj7w=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bWb2ExijJSHzqlGU65isiamPahfYEUC8I4YdTKmgbt6fmLY31RAtpIebLbk/yql0o
+	 npb76xw5LuvddclEGS4uiZKOTvjIX1NzWIWihF2BOTM4hp2ro2bTBxxGBsr4yUvBgI
+	 oyUVFp5qd3PII1y9Hn6dzQ5ZejBeCMH9iL1rJct6YQHim8K08x2UUSwSMkUQSq2up9
+	 hpnfX2Ieg1KpdV3Bad62xpMx1dtCLoM3JQoNuNDXLfDIWqBYg8dnrxcjn5WbDModhH
+	 Wu0wXaU3PlhUU5jqsbv0yUwdsSK1n0Qv2AineUme7xnWzKX7ebGzklbPrpxXv01tWf
+	 32D389UR88y+A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: elx: efct: Use timer_shutdown_sync() for the
+ stats timer
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Fan Wu" <fanwu01@zju.edu.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260810123443.122397-1-fanwu01@zju.edu.cn>
+References: <20260810123443.122397-1-fanwu01@zju.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 10 Aug 2026 12:51:04 +0000
+Message-Id: <20260810125105.4F0CB1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zS_KCgD3D3KbxXlqDWIwBA--.28189S2
-X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
-X-CM-DELIVERINFO: =?B?cvA2bQXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
-	sfnZPoDCNGYdHSfuFmYJL54WO4v8p1q5Ynd8nc+Mqb2Chrg9WE6Tau6FeIlHX0sa0QwWe7
-	wOvWht09dxf3+9JmBgWp9E6mavGmQbzmcFsnzP86
-X-Coremail-Antispam: 1Uk129KBj93XoW7uF4kKF1fCw17tF43JF4fWFX_yoW8Kw18pF
-	4kW39ruryUWF4jkr17Jr4UZFy5ZanaqFWDGF48W3y3uayfXryrCF15tFWDCFW3JrWvq3sI
-	gw1DJrn3XFs5AFXCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUU9Gb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
-	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
-	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
-	xVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
-	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s02
-	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
-	I_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
-	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj4
-	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8
-	JrUvcSsGvfC2KfnxnUUI43ZEXa7IU85l1PUUUUU==
 
-The statistics timer re-arms itself on every expiry through
-efct_xport_config_stats_timer().  timer_delete() only detaches a pending
-timer: it does not wait for a callback that is already running and does
-not stop that callback from re-arming the timer.  In efct_xport_detach()
-the timer is stopped before efct_xport_free() frees the xport,
-so a callback that re-armed it can fire after the free and dereference the
-freed object.  efct_fw_reset() stops the same timer before a hardware
-reset, where a callback left running can race the reset and re-arm the
-timer.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-timer_shutdown_sync() waits for a running callback to finish and
-guarantees that the timer cannot be rearmed once it returns, so use it at
-both points.  The now-pointless timer_pending() checks are dropped.
+Pre-existing issues:
+- [High] The static global workqueue `lio_wq` is re-allocated per-device bu=
+t never destroyed, leaking memory and leading to a Use-After-Free when mult=
+iple devices are present.
+- [High] The timer callback indirectly re-initializes the timer on every ex=
+piration by calling timer_setup(), which violates timer API constraints, cr=
+eates a data race, and corrupts the lockdep state.
+--
 
-This issue was found by an in-house static analysis tool.
+--- Patch [1]: [PATCH] scsi: elx: efct: Use timer_shutdown_sync() for the s=
+tats timer ---
+commit caf9ba0b14580d400c5a8efd53a50eb0210dd8ce
+Author: Fan Wu <fanwu01@zju.edu.cn>
 
-Fixes: ab332fcbcd81 ("scsi: elx: efct: Transport and hardware teardown routines")
+scsi: elx: efct: Use timer_shutdown_sync() for the stats timer
+
+This commit replaces timer_delete() with timer_shutdown_sync() for the
+statistics timer in the efct driver. This guarantees that running callbacks
+finish before the transport is freed or hardware is reset.
+
 Cc: stable@vger.kernel.org # v6.2+
-Assisted-by: Codex:gpt-5.6
-Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
----
- drivers/scsi/elx/efct/efct_driver.c | 3 +--
- drivers/scsi/elx/efct/efct_xport.c  | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/elx/efct/efct_driver.c b/drivers/scsi/elx/efct/efct_driver.c
-index 07c2f4534..3556c6d8a 100644
---- a/drivers/scsi/elx/efct/efct_driver.c
-+++ b/drivers/scsi/elx/efct/efct_driver.c
-@@ -309,8 +309,7 @@ efct_fw_reset(struct efct *efct)
- 	 * Function 0 will update and load the new firmware
- 	 * during attach.
- 	 */
--	if (timer_pending(&efct->xport->stats_timer))
--		timer_delete(&efct->xport->stats_timer);
-+	timer_shutdown_sync(&efct->xport->stats_timer);
- 
- 	if (efct_hw_reset(&efct->hw, EFCT_HW_RESET_FIRMWARE)) {
- 		efc_log_info(efct, "failed to reset firmware\n");
-diff --git a/drivers/scsi/elx/efct/efct_xport.c b/drivers/scsi/elx/efct/efct_xport.c
-index 9dcaef6fc..84fa5589e 100644
---- a/drivers/scsi/elx/efct/efct_xport.c
-+++ b/drivers/scsi/elx/efct/efct_xport.c
-@@ -507,8 +507,7 @@ efct_xport_detach(struct efct_xport *xport)
- 	efct_scsi_del_device(efct);
- 
- 	/*Shutdown FC Statistics timer*/
--	if (timer_pending(&xport->stats_timer))
--		timer_delete(&xport->stats_timer);
-+	timer_shutdown_sync(&xport->stats_timer);
- 
- 	efct_hw_teardown(&efct->hw);
- 
--- 
-2.34.1
+> The statistics timer re-arms itself on every expiry through
+> efct_xport_config_stats_timer().
 
+[Severity: High]
+This is a pre-existing issue, but does efct_xport_config_stats_timer()
+re-initialize the timer instead of just re-arming it?
+
+If the callback calls timer_setup() on every expiration:
+
+drivers/scsi/elx/efct/efct_xport.c:efct_xport_config_stats_timer() {
+    ...
+    timer_setup(&xport->stats_timer, &efct_xport_stats_timer_cb, 0);
+    ...
+}
+
+Calling timer_setup() on an active timer overwrites timer->flags without
+synchronization.
+
+Does this create a data race with concurrent timer API calls and cause lock=
+dep
+or debugobjects warnings about initializing an active object?
+
+> diff --git a/drivers/scsi/elx/efct/efct_xport.c b/drivers/scsi/elx/efct/e=
+fct_xport.c
+> index 9dcaef6fc188e..84fa5589e0213 100644
+> --- a/drivers/scsi/elx/efct/efct_xport.c
+> +++ b/drivers/scsi/elx/efct/efct_xport.c
+> @@ -507,8 +507,7 @@ efct_xport_detach(struct efct_xport *xport)
+>  	efct_scsi_del_device(efct);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does the teardown process le=
+ak
+a global workqueue if multiple devices are present?
+
+When multiple EFCT adapters are initialized, efct_scsi_tgt_new_device()
+unconditionally overwrites a static global workqueue without destroying the
+previous one:
+
+drivers/scsi/elx/efct/efct_lio.c:efct_scsi_tgt_new_device() {
+    ...
+    lio_wq =3D alloc_ordered_workqueue("%s", WQ_MEM_RECLAIM, "efct_lio_work=
+er");
+    ...
+}
+
+During teardown, efct_scsi_tgt_del_device() flushes lio_wq, which now points
+only to the latest allocated workqueue.
+
+Will this fail to flush works queued for earlier devices, potentially leadi=
+ng
+to a use-after-free on efct structures if those works execute concurrently
+while the older device is torn down?
+
+Is destroy_workqueue() also completely missing, causing a memory leak of the
+workqueue structures themselves?
+
+> =20
+>  	/*Shutdown FC Statistics timer*/
+> -	if (timer_pending(&xport->stats_timer))
+> -		timer_delete(&xport->stats_timer);
+> +	timer_shutdown_sync(&xport->stats_timer);
+> =20
+>  	efct_hw_teardown(&efct->hw);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260810123443.1223=
+97-1-fanwu01@zju.edu.cn?part=3D1
