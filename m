@@ -1,35 +1,96 @@
-Received: from zg8tmja2lje4os43os4xodqa.icoremail.net (zg8tmja2lje4os43os4xodqa.icoremail.net [206.189.79.184])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 341FC36212C;
-	Mon, 10 Aug 2026 05:51:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.79.184
+Received: from rcdn-iport-6.cisco.com (rcdn-iport-6.cisco.com [173.37.86.77])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 332223B895D;
+	Mon, 10 Aug 2026 11:06:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.77
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786341094; cv=none; b=YUcZbwEjNyVJ3+eH6CC/4NNgtHzTMCox2tQWXxakWcbwCr6i6yEOflpMdGkA4Iq+h0KAfz7pIneuI/iaRAJw28M1acD3LISyHHwx00sYExbCz2sL2gvNavreOOb63wGO3M8nI5da+6e0+FDLljK2oRIHbYmuBVgWgXh8BBFvUyU=
+	t=1786360020; cv=none; b=p0LCwNLS4R3AdVdtCuZBO6blfC1DGuw6OVCQG0INHZ9z1ix0fSejfYwUAOUCB5LW/D1DqJnOOxf5m6DjbJY1YdILKZfhzKEAOk8Jjh7U0rXd6yaEawiqbji9TUsi+kxuVbOCMKa2p/fxnouHHYO/vMvZHwnTCSSi/UslBrrbr4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786341094; c=relaxed/simple;
-	bh=sqMvHD90TLMozFbzzw4PP+UuKP9eQERepXtf8rWM1vc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WSFqn5/ljs4wZKgt2v133u0BHsequzXHmlDbSCuwGr8x4MjByJ0fABlNsx/JiWgMsjkhHeKuzULh7RM50lwku5UO8pwXJpsVHBZfaZSUwHt8Y1SwywWrafWh/05hYKsyepPK9YtrkwdX9DE5rgN771sKgUQHa0aJxt7VBQTwh04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=206.189.79.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [10.98.66.117])
-	by mtasvr (Coremail) with SMTP id _____wD3_y_cZnlqRXN+AA--.33690S3;
-	Mon, 10 Aug 2026 13:51:25 +0800 (CST)
-Received: from localhost.localdomain (unknown [10.98.66.117])
-	by mail-app3 (Coremail) with SMTP id zS_KCgBXb3HbZnlq5q0tBA--.42268S2;
-	Mon, 10 Aug 2026 13:51:24 +0800 (CST)
-From: Fan Wu <fanwu01@zju.edu.cn>
-To: Oliver Neukum <oliver@neukum.org>,
-	Ali Akcaagac <aliakc@web.de>,
-	Jamie Lenehan <lenehan@twibble.org>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	s=arc-20240116; t=1786360020; c=relaxed/simple;
+	bh=GV4IuH6dMrXz0tbvrq32Kt5q89sSlgcInjt+3wuCwVM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YSOqJ129hMXTkMTSgCFkrb6eZN6VjAsJlbau0v77HxvUt6bKfk8loD6kirlXSB2EWHnHqZmrpqHNC+nVz6XRDK2E4yOTeuupti8r2ZKFDwsoz0Dyk16mEhDLn2rz0KuWBRo7uHnW6WgiHVhGVF2KX4XlrCx8P5EzQahaOdIxG/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=XYB4LEtA; arc=none smtp.client-ip=173.37.86.77
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="XYB4LEtA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=cisco.com; i=@cisco.com; l=2031; q=dns/txt;
+  s=iport01; t=1786360019; x=1787569619;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=z5IQ2G1Nw+suY6yEwO2v6JUwi37yMsaZOTeab+pS14g=;
+  b=XYB4LEtAjaDOuUhMSV5YAAilbegQMVeM8dlyvEjAHEFYRwCqJXKXJCE4
+   muZC6qmXkVTlB0alvg6+zG1zS4JuIunxDHbyGqfEJdmj/wX9yeKFxkD35
+   3k04DQHKO1xOrdSTpfBVhtu6KHU7atPbgr/rOMdYSK88IrUKhHs25gW8D
+   XXBEbrNBoi3wCogvybER9hmeAqtTEQv7SXNuZmYLOss+3NyGxL3uIb0Gt
+   X0mq14mDDKtYnwLbQZ8cO7PlLPcuJVxUuL8NqFVnKnOqYezg/bNyHPIfz
+   OETKNDqHo2aZlOzbuWqkzgkt1mxE/4Yt/9Y2ZneotM0QCcYROaTAqoqaM
+   A==;
+X-CSE-ConnectionGUID: H8soe6MxRXaSwAzz93IKmQ==
+X-CSE-MsgGUID: ezROvmIZRQyIVztSmWlX+Q==
+X-IPAS-Result: =?us-ascii?q?A0BAAgBFsHlq/5T/Ja1aglmCV3ReQxkwBJQloD+Bfg8BA?=
+ =?us-ascii?q?QEPRA0EAQGFBY1oAiY0CQ4BAgQDAgMBAQEBAQEBAQEBAQsBAQUBAQECAQcFg?=
+ =?us-ascii?q?Q4Thk8Nhl02AUaBUIMCAYJ0AxHFOYIsgQHeRoFmAQUGFAGBOI1ghXInFQaBS?=
+ =?us-ascii?q?USEfoFSgz6FeASCIoEMkmNIgR4DWSwBVRMNCgsHBYFmAzUSKhVuMh2BIz4Xg?=
+ =?us-ascii?q?Q0bBgWBHYEohGcjGTZ8gQlegSsqZAESF4EJgjQCgnaBLRULGA1IESw3FBkEP?=
+ =?us-ascii?q?m4HjXQggkZaNStQgUSmDqEPhCiMIZU6GjOqawGZCI4KmzmBaDyBWTMaCBsVg?=
+ =?us-ascii?q?yITQBkPji0WiHPHJicyAgE6AgcCBw4DC5NmAQE?=
+IronPort-Data: A9a23:IyFmSaODZqEVNqbvrR1+lsFynXyQoLVcMsEvi/4bfWQNrUp20D0Dy
+ zAXXWmHOv+OajDxKNlxO9jg/E0C6MXSndU3HnM5pCpnJ55oRWUpJjg4wmPYZX76whjrFRo/h
+ ykmQoCeaphyFTmE+kvF3oHJ9RFUzbuPSqf3FNnKMyVwQR4MYCo6gHqPocZh6mJTqYb/WV7lV
+ e/a+ZWFZgf1gmYsaQr41orawP9RlKWq0N8nlgRWicBj5Df2i3QTBZQDEqC9R1OQapVUBOOzW
+ 9HYx7i/+G7Dlz91Yj9yuu+mGqGiaue60Tmm0hK6aYD76vRxjnBaPpIACRYpQRw/ZwNlMDxG4
+ I4lWZSYEW/FN0BX8QgXe0Ew/ypWZcWq9FJbSJSymZT78qHIT5fj69U+F0Y7Y6gIwNZ+On5n5
+ +5JcxEuaynW0opawJrjIgVtrt4oIM+uOMYUvWttiGiAS/0nWpvEBa7N4Le03h9p2ZsIRqmYP
+ ZdEL2MzPHwsYDUXUrsTIJE3hvupgnD8WzZZs1mS46Ew5gA/ySQsieizbYeFJITiqcN9k1Sig
+ XzD3lbDOwA7Cs6D8j+69kLvv7qa9c/8cMdIfFGizdZug0W7x2oPBRlQXly+ydG8g1SiWtQZM
+ 0EI9zA1oK4a81aiRd3wGRa/pRastxIVWN1IFPAS8gyByqPIpQ2eAwAsTDtMbtEptM4eXzEm1
+ laV2djuAFRHqrCLRGiG3q2ZoTO7JW4eKmpqTSsIUA0O6t/Lu5wog1TESdMLOKq0iMDlXDL92
+ TaHqAAgiLgJy80GzaO2+RbAmT3EjpzISBMlox7cRWON8Ax0fsimapau5Fyd6uxPRLt1VXGbt
+ 3QC3szb5+cUANTUzWqGQf4GG/ei4PPt3CDgvGOD1qIJr1yFk0NPt6gKiN2iDC+F6vo5RAI=
+IronPort-HdrOrdr: A9a23:vEWRMKoz1NuO9ll7zYKgbPIaV5r1eYIsimQD101hICG9vPb1qy
+ nIpoV46faaslgssR0b8+xoW5PwIk80l6QV3WB5B97LNzUO01HGEGgN1+bf6gylMzHi9+JbyK
+ dre7VzBZnNF1Rg5PyKhTVQa+xB/PC3tIa1mOzZ03BhCStua61m8kNFLzzzKDwTeOGDbqBJcq
+ Z1IaF81l2dRUg=
+X-Talos-CUID: =?us-ascii?q?9a23=3ADUN/zGuYxOWO2d5uKE1X7I4w6IsFImbawSn1M3W?=
+ =?us-ascii?q?IAF12Ya+HGASx26Zdxp8=3D?=
+X-Talos-MUID: =?us-ascii?q?9a23=3ArRK3NQ5j6WFhKBNJu7IxY6YCxoxl8Z6JFkUso68?=
+ =?us-ascii?q?/qui6JzBLPgiZvHeOF9o=3D?=
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-AV: E=Sophos;i="6.25,215,1779148800"; 
+   d="scan'208";a="518655860"
+Received: from rcdn-l-core-11.cisco.com ([173.37.255.148])
+  by rcdn-iport-6.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 10 Aug 2026 11:06:51 +0000
+Received: from fedora.cisco.com (unknown [10.189.135.132])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: kartilak@cisco.com)
+	by rcdn-l-core-11.cisco.com (Postfix) with ESMTPSA id 15E6018000255;
+	Mon, 10 Aug 2026 11:06:45 +0000 (GMT)
+From: Karan Tilak Kumar <kartilak@cisco.com>
+To: sebaddel@cisco.com
+Cc: arulponn@cisco.com,
+	djhawar@cisco.com,
+	gcboffa@cisco.com,
+	mkai2@cisco.com,
+	satishkh@cisco.com,
+	aeasi@cisco.com,
+	martin.petersen@oracle.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: dc395x: sync the waiting_timer before freeing the host
-Date: Mon, 10 Aug 2026 05:50:28 +0000
-Message-Id: <20260810055028.119525-1-fanwu01@zju.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	jmeneghi@redhat.com,
+	revers@redhat.com,
+	adakopou@redhat.com,
+	lduncan@suse.com,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	kernel test robot <lkp@intel.com>
+Subject: [PATCH] scsi: fnic: Fix built-in NVMe/FC build
+Date: Mon, 10 Aug 2026 04:06:27 -0700
+Message-ID: <20260810110627.4521-1-kartilak@cisco.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,79 +98,61 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zS_KCgBXb3HbZnlq5q0tBA--.42268S2
-X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
-X-CM-DELIVERINFO: =?B?/B3A8QXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
-	sfnZPoDCNGYdHSfuFmYJL54WM5adWvqgWZ9GpCNvi6cFw1ZBqU+PqqA7yfZZxp4pA7+kq4
-	Y9WhF078IYKEnNodepup9E6mavGmQbzmcFsnzP86
-X-Coremail-Antispam: 1Uk129KBj93XoW7uw4xAF13KF1ktr1rZr4xuFX_yoW8ur4fpa
-	y8Ww12kr1jqr42kw4xGws7XFyrZan3JrWDGFW8Ka1YvFs3JryayF9xKF9FvFWaya93JF47
-	AFn0q3W5Arn8CrbCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUU9lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
-	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
-	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
-	xVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
-	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s02
-	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
-	I_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
-	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj4
-	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8
-	JbIYCTnIWIevJa73UjIFyTuYvjxU7gAwDUUUU
+X-Authenticated-User: kartilak@cisco.com
+X-Outbound-Client-TLS: ANONYMOUS;unknown [10.189.135.132];TLSv1.3;TLS_AES_256_GCM_SHA384;256
+X-Outbound-SMTP-Client: 10.189.135.132, [10.189.135.132]
+X-Outbound-Node: rcdn-l-core-11.cisco.com
 
-The waiting_timer callback re-arms itself and takes the host lock.
-adapter_uninit() currently stops it with timer_delete(), which does not
-wait for a callback already running on another CPU. The final
-scsi_host_put() that frees the host (and the host lock the callback
-dereferences) runs right after adapter_uninit(), so a concurrent or just
-re-armed callback can fire after the free, leaving a potential
-use-after-free window.
+The fnic NVMe/FC code is guarded with IS_ENABLED(CONFIG_NVME_FC).
+That also evaluates true when NVME_FC is built as a module.
 
-Replace timer_delete() with timer_shutdown_sync() and move it after
-free_irq(), outside the host-lock section. This waits for a running
-callback and prevents it from re-arming, while avoiding the self-deadlock
-that would result from syncing a callback blocked on the lock we still
-hold.
+When fnic is built into vmlinux and NVME_FC=m, fnic_nvme.o still
+references the NVMe/FC transport helpers even though those helpers are
+not reachable from built-in code. The final vmlinux link then fails with
+undefined nvme_fc_* symbols.
 
-selto_timer is left untouched; it has no reachable armer or callback.
+Use IS_REACHABLE(CONFIG_NVME_FC) for the fnic NVMe/FC implementation and
+prototypes so built-in fnic uses the disabled stubs unless the NVMe/FC
+transport is reachable.
 
-This issue was found by an in-house static analysis tool.
-
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Cc: stable@vger.kernel.org
-Cc: Jamie Lenehan <lenehan@twibble.org>
-Assisted-by: Codex:gpt-5.6
-Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202608092246.XZe7Hlrt-lkp@intel.com/
+Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
+Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
+Reviewed-by: Arun Easi <aeasi@cisco.com>
+Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
- drivers/scsi/dc395x.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/scsi/fnic/fnic_nvme.c | 2 +-
+ drivers/scsi/fnic/fnic_nvme.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 6183ce05d..3e85d422c 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -3816,18 +3816,14 @@ static void adapter_uninit(struct AdapterCtlBlk *acb)
- 	unsigned long flags;
- 	DC395x_LOCK_IO(acb->scsi_host, flags);
+diff --git a/drivers/scsi/fnic/fnic_nvme.c b/drivers/scsi/fnic/fnic_nvme.c
+index 8794360f2adf..b237948dcafd 100644
+--- a/drivers/scsi/fnic/fnic_nvme.c
++++ b/drivers/scsi/fnic/fnic_nvme.c
+@@ -22,7 +22,7 @@
+ #include "fnic_trace.h"
+ #include "fdls_fc.h"
  
--	/* remove timers */
--	if (timer_pending(&acb->waiting_timer))
--		timer_delete(&acb->waiting_timer);
--	if (timer_pending(&acb->selto_timer))
--		timer_delete(&acb->selto_timer);
--
- 	adapter_uninit_chip(acb);
- 	adapter_remove_and_free_all_devices(acb);
- 	DC395x_UNLOCK_IO(acb->scsi_host, flags);
+-#if IS_ENABLED(CONFIG_NVME_FC)
++#if IS_REACHABLE(CONFIG_NVME_FC)
  
- 	if (acb->irq_level)
- 		free_irq(acb->irq_level, acb);
-+	/* waiting_timer self-rearms and takes host_lock: sync outside lock. */
-+	timer_shutdown_sync(&acb->waiting_timer);
- 	if (acb->io_port_base)
- 		release_region(acb->io_port_base, acb->io_port_len);
+ static bool nvfnic_ls_req_cleanup(struct fnic_iport_s *iport,
+ 				  struct nvmefc_ls_req *lsreq,
+diff --git a/drivers/scsi/fnic/fnic_nvme.h b/drivers/scsi/fnic/fnic_nvme.h
+index 5e897908337c..c05908b68e36 100644
+--- a/drivers/scsi/fnic/fnic_nvme.h
++++ b/drivers/scsi/fnic/fnic_nvme.h
+@@ -61,7 +61,7 @@ struct nvfnic_ls_req {
+ 	unsigned int flags;
+ };
  
+-#if IS_ENABLED(CONFIG_NVME_FC)
++#if IS_REACHABLE(CONFIG_NVME_FC)
+ int nvfnic_nvme_io_done_handler(void *arg);
+ struct fnic_io_req *nvfnic_find_io_req_by_tag(struct fnic *fnic, uint16_t tag);
+ void nvfnic_reset_fcpio_tag_pool(struct fnic_iport_s *iport);
+-- 
+2.47.1
 
