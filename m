@@ -1,197 +1,951 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D23240EB9B;
-	Tue, 11 Aug 2026 08:30:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786437038; cv=fail; b=uG8yHL9Ov6/noJMD/U1flbZaUPFJYvqn0mN/HsFpENI2qnprgHJTQXhrzwF0kDuKAH4XBSPWVmRPY3F0S5PDE2woT++aewOCrTNgnaevOs8vHmJxZTroV0OOaJyaFbFxzP5h7HdnXYECQT14Xkrp2BfCyUnqTi/AFQhODjUnAKE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786437038; c=relaxed/simple;
-	bh=z3JEjLmKeS9uywHwGJWPCKWLaPUdiiBGSCQalUYXx6U=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=gCUqNLHUNxbxYNfuTzd/DWqUMdheTwbqmBtKYyuJwheEMCw+ofl8/R/0oPhVDtaUxl6dl9+t3pSiJrNgpo2C+WpZ0+q8T3gLYaCYu+kOEs+tj+MRVYbZx6iLjIgyyTEWBvoMepQ1ugloiSny7wyYxMz24T4Kthl7uGYvhrMql2k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=MiX5xbqn; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=KbCWtFmd; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07635431A44
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 10:21:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786443717; cv=none; b=HgkcFDKbX0Z0koaVLaIhGFIp8Q3QZtl3uTR7wecO3CuWf88bWmk23HxYAXG+NFdljtkUR7HKZhl3iatV595WPb5T45S3muNvcbCgI8VpbX18yrmdwVIQKVRa75fXDc4vJ3okeGYgprB9T15K8/VJY2Z49E3NxYqjDfJjnr2vvNY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786443717; c=relaxed/simple;
+	bh=g4XGRX5yOvN73681WLy+WGxN3BQuJ/Ims8m0Sfi+VW8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fd17cEjtDAbxpTvAvXBGMAej2RH3GVWLZJlXc1kLT4aXFIZl2ZDc/C3OBf6mDpzw0Y2Fjr40mv5fEKzX/rhLWnZqc7KCBJxp0QY54zQK63vCAPubtyvzhCquMxHCYWhJe5GUvzOgeXGL/HU6KQpxCl0ieyXkv9qRAbUtoLXOFX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=JqVYcXDr; arc=none smtp.client-ip=67.231.156.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MiX5xbqn";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="KbCWtFmd"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67B4aIfD559879;
-	Tue, 11 Aug 2026 08:30:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=0PzxIUF9y5P3HczYvk8zEDbZ2fel0/pSFn8ttA2VBVY=; b=
-	MiX5xbqnU70nJFEMpPizIinco3EEg5TLR52hF3HW8acHSqhvf6FS7THnA8kirwQz
-	Lx7uSOabAT8BAdvlDcr/DSK0t0hB6nXAtb7qDVVMJLoiAxGnNGOtMFgJa8OoPyjt
-	cdSM/ARqGovpPmhQihTwFpOY+DBXU/RvgBenurcj7uaSJcwuYLNnWH5SR6zhi7HC
-	AnFWP9mEir480MlHOchx5piCiy3s600o0xpfKblYwt+aXP5oh5wh27kKUkMvlUhL
-	WVBub5LEzspIByqR4IogG5fFWVAWalFu3p8fZKHCPIE13eoO7f+AHaEZnKAopNsS
-	B5bpwCLgEeZNxBhq40O9DA==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4fwvesvcd1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 11 Aug 2026 08:30:24 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 67B8UDkL037683;
-	Tue, 11 Aug 2026 08:30:23 GMT
-Received: from ch1pr05cu001.outbound.protection.outlook.com (mail-northcentralusazon11010018.outbound.protection.outlook.com [52.101.193.18])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4fwtwdh3cp-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 11 Aug 2026 08:30:23 +0000 (GMT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=SUt+gFboaxeaGpK1BIHqpiTIJq78rQTBqtPnIpvabqDgRTAqDKUvi1VhzYPh15MKj1lyHLo4qCOyC06qNJnUx+Y+5RO1C+a2xwDOYdvDylNVW1T/gmmO8uevafh3CdOWvzXkrNhh1x+vTtcjXELDx7igLjojDODl+QSpr47QUlHOoW0A2H+NgkqUV9+b3MLZW0su/7xjPXTIHHCv6QSJkdLgc/e9Uf0M0Vec7RZzPSPibLvpJXR+HiZKVBslMWXM9USHS0MkWLI8ApM2joqw5zJGPP8RklHUZmDEKBCRQx9t/4Mw2GAeYqJ2Z8Kmt+HSwe87B5WuV1mCLwiKumcFVA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0PzxIUF9y5P3HczYvk8zEDbZ2fel0/pSFn8ttA2VBVY=;
- b=eV2jOzd2YRAaZsOFUuV/ILK0ZgbsS0wtom/dbLIPzSuEV89bGdBkQftdHB7646vTgf5vFX9IoXGR98aVywnSRxmi29VtRF/1OsVO3u1jwgeEDZuMW1YAcEqfqXrB/fbdLldlogo2h27JsJTUNmfWOFadtj+Mh60+1xb3W0nOPN7dop19XAiQdzfAmV76FLuOwDYQmC9tBMHCitR4rFEelkduVMbAwl7mGAODUfC6yciMp3ocXM0OHBAVWcy5r9qvNqE0Rbc2A9kX9tWLpV9BxX6RUaOrI/riXRduSdolmR9Nafl5erTDwtQ42xgESXhSln26nEea0DolJ/w15Zm14g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0PzxIUF9y5P3HczYvk8zEDbZ2fel0/pSFn8ttA2VBVY=;
- b=KbCWtFmdmH315RJfFj+53Wn8lZ240oLVPMab+qgalQXLohRWSjkjWEzD25f+r9LQsPLidMFSWOq+bFZINsmHdqacfmT58Z4vLYaBc56FZ19A4vqTKkMfvEOBj2ZIwAYNoRWGLPlZrCJ0BBYgcOarswKEBeh+xBZsP9A1GU6MOfw=
-Received: from DM4PR10MB6229.namprd10.prod.outlook.com (2603:10b6:8:8c::12) by
- IA4PR10MB8375.namprd10.prod.outlook.com (2603:10b6:208:560::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.270.17; Tue, 11 Aug
- 2026 08:29:42 +0000
-Received: from DM4PR10MB6229.namprd10.prod.outlook.com
- ([fe80::867:63e7:13fa:fa7d]) by DM4PR10MB6229.namprd10.prod.outlook.com
- ([fe80::867:63e7:13fa:fa7d%6]) with mapi id 15.21.0292.024; Tue, 11 Aug 2026
- 08:29:42 +0000
-Message-ID: <330119c8-14d2-4c80-8077-ec572b167c4a@oracle.com>
-Date: Tue, 11 Aug 2026 09:29:39 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 1/2] scsi: libsas: Add sas_ex_phy_to_dev() helper
-To: Xingui Yang <yangxingui@huawei.com>, yanaijie@huawei.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, liuyonglong@huawei.com, kangfenglong@huawei.com
-References: <20260811040334.4184911-1-yangxingui@huawei.com>
- <20260811040334.4184911-2-yangxingui@huawei.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20260811040334.4184911-2-yangxingui@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO4P265CA0305.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:391::9) To DM4PR10MB6229.namprd10.prod.outlook.com
- (2603:10b6:8:8c::12)
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="JqVYcXDr"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67BALleM3065460;
+	Tue, 11 Aug 2026 03:21:49 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pfpt0220; bh=ZlVBCtzDEdh+FjmnhaycdJI
+	AQ6Yuz5Pr9JuDIlgfu6Y=; b=JqVYcXDrT6MCREO1Y6n75OkGEI0uL094fVEsczm
+	ywPIUN/KdSFFFI9rhd3I/lp32MCT2XNC6w8pj2IOEDK3bCgYRuGtqrD/5cfcKo9a
+	9U4o74jqXe1HNVibyF3AV+JWTAms91JAvtUX+p6+gIdzE23CNfMbXdSauhGwW6Z5
+	HZrSz8d8KPY3AQiv5gslvLdsgwWwjq+2/9nW08WMzUKNh+918HC2BTLUwHQ0O9Rb
+	h/WRs2+7hEJDJw4gRyEnRvGdKAnsx9Si4L1T+PYkZu62ILpn4txvweENp6XYEvTz
+	3Sp/w2CREGMGFmjKwLnTCQzJpH+7Bajcx0vF8aob/7o2EDQ==
+Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4fyjvyu0fe-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 11 Aug 2026 03:21:48 -0700 (PDT)
+Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
+ DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.25; Tue, 11 Aug 2026 03:21:40 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
+ (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Tue, 11 Aug 2026 03:21:40 -0700
+Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
+	by maili.marvell.com (Postfix) with ESMTP id B31603F7043;
+	Tue, 11 Aug 2026 03:21:36 -0700 (PDT)
+From: Nilesh Javali <njavali@marvell.com>
+To: <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
+        <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
+        <hare@suse.com>
+Subject: [PATCH v7] scsi: qla2xxx: Add FC operational firmware load for 29xx
+Date: Tue, 11 Aug 2026 15:51:28 +0530
+Message-ID: <20260811102128.4162405-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.23.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM4PR10MB6229:EE_|IA4PR10MB8375:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1b68175f-6e35-4034-a74c-08def782b0f3
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|366016|376014|22082099003|18002099003|4143699003|56012099006|10067099003;
-X-Microsoft-Antispam-Message-Info:
-	OaTRxov9KVeQXnLc/4lMN+zx5VkAMpeCHgZhtEco2Ahbc27Nu4Ue1WpTl72xM/VCxXMLkAxvHhSxZ1cbHI4UWqNf+W2l7gRPNcob6EiEZg6uiNMYhSuJ/iNkhtd0kCqzz6z/sgLVIo6OhICS7ulf0kr0kymCvhhjCaxI1m3MT4yycxYsvXzGEjS4UiOkIkssDOBVegcOwATewp28yrMxr2lOjSs72xfymtpfBtfXBM3cE3EBZFokEhK2UKaAoSQDPnZ1VQr7mRCnk56yy0ouKIKthEKYWf3bd5RDdPanW2XzssntZIY7i47Wyy1twdtHuQUISiaPFMjnEB6KB+TK2UBS+ayF8pqvTeAWaqwXzHGL/xFIIPVvoQo+q3qvAdxIcy1fgO1Qn/petUm1KlYV5ovJ7LAiZy6+Y7iLoHwea+zt2zBojRUR7k6CZa9q89Uf6P2GTFoMbwXIgjWHLfVVU7HT1plLBkrSJ/XckVbBdiH+cOXZgqC+Hi+8RekNZ9XLs7U+fMi8KkwZBHTl9ZrjXcUN+xvZTemeqR8EDISB3gr91Uv5DiuvtsEqI4jgD1fgJeSbuugQGiZ1LHjh1QRGUeenrIjf9tKk6erRwA7WCnAItxfKxN5eduDkPOQchWH6xs5LaGspdgEprCn/SqB/kfr+cGjz0azHAu5WcFdSyfY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR10MB6229.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(366016)(376014)(22082099003)(18002099003)(4143699003)(56012099006)(10067099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?N0hXV0JJbCtGMTdyMVltWlVEM2RTMENyVnhLVStCUUNFSDdmVkJFbHgyMFg2?=
- =?utf-8?B?UWgxbnh4QzZ6bnBBQXdMQVBhNHlaYmdraEtWeHkxdlcwTWVmMWtrNk4rdVRS?=
- =?utf-8?B?WnZ2bkkwUjUxV3BwL29KVzJFRlQvbHd5bHpkSVNwVXdtbkZnaDE0ajFBMzdB?=
- =?utf-8?B?Q0R0RjFnRjdFc3hyTUhLbjlFNVN6K1ZwUnFlMlBqdjI0OHZLajdQYSt0c3B3?=
- =?utf-8?B?QlVrZDBFamZ3Uk5ocGNqL3UzL1g4aHQ4eG5xQWw2SUdlT3ZzSmtpaXFXa0I2?=
- =?utf-8?B?M2M2aGhGVmxMRUg0U3hLVllXRk9ObCs0V1hxd2kxaHpMQmVqR2ltR3ZOODNU?=
- =?utf-8?B?RGlyVU1iaGNaRlg4MFo3cllOSjlxb0g2YWJONFFKRHh0RSs3NnUyUExscHl0?=
- =?utf-8?B?WW1ESVBQc0VEQkdsUEhjNzNIZHBoWW40MUpoWmtqTWJjeGN6cHJsUm9pRyt4?=
- =?utf-8?B?Z3BBdjh1dFZ5ejhaZDYvdit1K29HbEVjTmU5OUhLdmFSNDdsVzVPMzNpZUVH?=
- =?utf-8?B?RGhWR3FJcWJsWVd4Z2ZjZmEzd051SVNBR2pmVWZmazR2TU9uV1V4Zk1lb2ZG?=
- =?utf-8?B?dVBXRm8xbmF4a3JueTl3VlhwQnNKZVF2dEVkTnhJVHUzeUFQNVN6d084dVha?=
- =?utf-8?B?Z0x1Q2lEMi9sZEU5QmhtdWZsQ3pLNG5keFdYaWFpTnBFY2Zjb0wwdVpjUHNN?=
- =?utf-8?B?Z2p3ak1CQmxnQk9ORTNTdjlFeUF3VTNSQmxEa2s0OU1hb2UrVHlRWWFheHFR?=
- =?utf-8?B?TDFhSGkxZlAweEl5MVFrWEhPMG1xTmNLak1IYy93Tk4xa25sMm5KWnhKUkx1?=
- =?utf-8?B?cXRDK1VOa0FWd0lER0FhdTdRb2RiVENTR2lvNVpvT3RLSjMrdHNHcktVbFJE?=
- =?utf-8?B?T1lRQWVyTVU2S0NhWkh5cnZlUnFSeGE1Qnc5U3BOY2Y1UUMzY1NBeWF5bXM3?=
- =?utf-8?B?b1U5eTkxUDF3dFpNdDhoZU81N0dxWGZKU1BKY3R1bGtMcEx2Qy82Q253Tyti?=
- =?utf-8?B?ZnVXTFYrWWZrOWlyaFNzaDh3YjZmWWJNc2h1MEpvSEFNSWxmdm5ObjNDSDhG?=
- =?utf-8?B?UVp2SGJ1V3M2alRWbDc0WG44V0JFRXlocllmeHRhOEIwYWdiVjZFTDdYMGgr?=
- =?utf-8?B?RGVQaS84UDdzTGc5bDJ1aldJcVRFamNMVml6dEZtczVMRUpTVjBvcm5kM1pC?=
- =?utf-8?B?TGt5cm1KRVZ2cngxaXBwS3RMNlZ5eGhhZTRoeFdCK2N3cS83cGp3NUtJZjNr?=
- =?utf-8?B?N1g3RHU5Y0ZSL2RjT09oZ1laSWE2VWtZUXFibWFJalczVVZiVGpHMWI0Sjdh?=
- =?utf-8?B?MWtGOHNnUkhtZ0Y5U2F0RTFVVlBjdUtyTHRvaEw0NW00OFBwYTFPeWFEb3gw?=
- =?utf-8?B?VUw5c1lQRnh1dXRVaUNFcDc1alNVOWZEY1VSQ3ZOaGtoOWFucU9EUkNKMkVt?=
- =?utf-8?B?L1FKMTVCZTNYa2Fha2E2VHIrU003bDBsOUFRL1dhSlR0WGdkTlJvK2I4YmEy?=
- =?utf-8?B?aXFMRXBtY1RGUjdacGZLNXJWT1F0MnlHcEVVL1N6WVdHUDM0MGZ4SmtRZWtW?=
- =?utf-8?B?SXQxQnhGT25mODM5QTArYXkrYmNWL2x5NHhUalREZUN0alJGWXE5NGdWMVV4?=
- =?utf-8?B?bzY1dkpPRGhqaU9Db1doOVVtWU9oRFlrMCtmbmk3SWg1L2I3NmVNM094RW16?=
- =?utf-8?B?MENVZlVVNllNTkVnTWJoNVp2TzZSZ3VyQjhad0hmR1RwT0t1VkdRS3kzS29U?=
- =?utf-8?B?a1R2Yml4RlFpaTUxSGpiakVjY3hOc2ZJRFdXbWhWdE14K2djWm1BSU1UZ3Yw?=
- =?utf-8?B?eGE2bE80SVRGSWNQa2R1c2xLMnFJMkZzVmcwc1pmdFpaSUFScFJUZi9wa2Rp?=
- =?utf-8?B?WEZXa1ZVMURRWkFGbU0rZnd3VGtaSWRTVTZsVkZoWlNqUit5Q05SZFlTZmhI?=
- =?utf-8?B?aHlnaWoydjdsckpJUFNjWmFNMXpwbGV1SFhuOUFoNFFXN2QwQk90dHAvM3Bl?=
- =?utf-8?B?RkFmUWxjNWs5aXFCWUxNVm5jdlcyWUR5Y09EUFVpYWpEenA3NG44U0Zra1Nu?=
- =?utf-8?B?Vm0yUmk2OWJrYTdXbjNEU1pScTlDV2FNVVYrRFJuT2lWUk8wd0lDUUNubmFp?=
- =?utf-8?B?Y3FwRGJrMTErYmdKSmxGVkI2Tkx0ZDNEUSs5RmpYRXVreGtaZ3FmY0NvZDFl?=
- =?utf-8?B?S2x5M1NSUDE4b3pBYjRNWkpvMGZsWHN0MW41cXVpdTc0N1FybDhVcW14M0ds?=
- =?utf-8?B?VTVxcWh2WEE1Vmd5ZXZyZ3AzVjRwM0YxeDZod1FzRWZEWjJRV29rdGEyYkxL?=
- =?utf-8?B?RGE2NmlvbXdkblJoQjNmWDN1cU44d0ZGclhoTktIaFJyU2xwVGhTZz09?=
-X-Exchange-RoutingPolicyChecked:
-	SqJAHWldn66TeZ+97rewTI0gtQedV+E3WB7YXhxRLiMQaTEuMKa6HbwB3cgJSxQkoaSuy3TvQDu7cdVD/jmwIYSWenS3yx7E5ofLu4WsMkRYKrNudSu1U2xpd9H+sQNxQPm3dQ8HOOa7B2ENWb7xAiz5HnegaesUBAqkb4OYejR22t4x55dzyv8FmtyreWV5rNB9tZCYwKyRaKeKSw8J3D1uiljPhOUXOxqnQRN4xkFBUae3jUJNEt0UkNlj6Kc9JkASp3mSl8trqr5jzKLFGQRsIkd3HMB65WpfNKlhIdoCuXBWWjiW+TKaArIr+G6vYQe6x0hyyLaqDRFSYihzQQ==
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	YUcdyV5bvdPffnG0FFsY4zs55TFMZSHvnqjEgDETYZCTiwvq2AM50JMShHfeUzhQNNwrzMvsWom8MHCLHglLQiec/pro2nXUMMkrUbgfyudNKAYGVq+y4lnKO3edQH9Xo2TPXxQ6afM9RjzdXCD9Pdqk+4NFZT7C5fTODB75yAyBSmTu6SquflyhzJyP5J3iT0GsGKrDoneSNS9hKZYCAyxhNVN1PnGeT9s2tE+nYohrr+UVkSKWlF1xltimlDmOdZxWHetqH6Cm1VgUouVCObWJVJO8mzFUFDUNShOckXbH+oqFRqOFSjPR7AeQPsICXY5/UcMZZx80o0btPt+BCGZHzyf4w4wdT8psR40kKFgjR4g/onL9ZAnP654eSdFAHc9XN3kkUMfd3kqLSQLcQM5nURZh4InfE7AH7v4ViW7SZwiAcbxTw/+nE8lyCG/DvmFssOlOYoKSv/PsyurqN9PWRpSjBeDGCxwu/qJ/PTVHJ0WUulJHyCcP3VdYnexoNwSr63s/ecduBA6ut/o/BPJkfrSHxbiBf7nHsGMl6OR6xZ/3kmphtCiNka+Qa1AhXK6lENdsdnCg3foxFTjVh5/21e2YaLK0cf3/Cfvk4xc=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1b68175f-6e35-4034-a74c-08def782b0f3
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR10MB6229.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Aug 2026 08:29:42.0975
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zWX9qjBFVkHoqq/2kz99DnNbiknEJA+MWqpR+mvTVIvHi3Fmhribk1SFN7iisC6uTmzkf3oJbvukdtHsGkGQqQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA4PR10MB8375
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Authority-Analysis: v=2.4 cv=QJ1YgALL c=1 sm=1 tr=0 ts=6a7af7bc cx=c_pps
+ a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
+ a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
+ a=QXcCYyLzdtTjyudCfB6f:22 a=VwQbUJbxAAAA:8 a=QyXUC8HyAAAA:8 a=M5GUcnROAAAA:8
+ a=XCrqa7iWulv0pcma0qwA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-GUID: W7OUpW24Ge35MF21sRfIj7lJ11hrrEWs
+X-Proofpoint-ORIG-GUID: W7OUpW24Ge35MF21sRfIj7lJ11hrrEWs
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODExMDA4NSBTYWx0ZWRfX4KwHF5qVwgf3
+ qMEq0krotHDo6kiL7e1UD4UrWHi8NPfVmg+iUBXKG7nsIFN7OaEtoOblvq0CgftXGlkT1XvHpUy
+ 4Q6pZAX1R/O8VgX2cvPANH3AiBXPBOI=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODExMDA4NSBTYWx0ZWRfX4F7LCwY1MYr1
+ 2d89aUlxXuZuI++zyjJtadqDqqkXq8+4i+CZsL5h54X/jeBxBoZ6xoiFDRXdkSCV1z0QK7cszqk
+ 0A1uA248sb2MJETccadqBgHQ10++oBsqVzaTubTBtbY6L4TfMRuVdUSZsXnuTzCPsJv4kQ+3dEt
+ WJCwTw5e0QRBN1piVcf6wdDANgBlVGs+rR9Cas67Ac5Xcgq0Sp4svSqxRrE+2YPpp0Z6zW7jtrx
+ M2DHMx+twF/ovg7ll51ZfnhoOxkXTzuutAs5BL64bymXGO+SyZWAHVeqNxt0xB0kPG0Il3C9UZS
+ hiBW2Aoh79GX4Lvj3atkW50BE6ZYhr5QrCMdaGdMeSnEbsb4fGD70lIzncqVOAO6bV9gmCJRAep
+ rSa50Mw1RqPCK99U5gsfpKwfSsXhXpDDxMBx8K/GD3RsxsR3KW/PufvuAp4qKzSbrGzM8Uta6lx
+ 2R7gQm4dxNy7zzo2zTQ==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-10_06,2026-08-10_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0
- suspectscore=0 mlxlogscore=999 lowpriorityscore=0 adultscore=0 spamscore=0
- phishscore=0 mlxscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2606160000 definitions=main-2608110070
-X-Authority-Analysis: v=2.4 cv=R8wz39RX c=1 sm=1 tr=0 ts=6a7adda0 cx=c_pps
- a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=Sv0fKeRqtYgA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x0eKOSpe3m1H3M0S9YoZ:22 a=i0EeH86SAAAA:8
- a=yPCof4ZbAAAA:8 a=1NybHGGomp_2RgtOGDcA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: AiEcUZY0OGpFZam3M4XpSUZI9aQ6Q1sB
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODExMDA2OSBTYWx0ZWRfX2AYMZSem7ic/
- +WoU4dMDs02cyPMJP2QTLGrALuW2RAP1WxfqAI0cqM2P6rjpFQB+2ykdJKJxpwUwsGf6a2Uzpoe
- EKiRCyZiIf2qUS0IrgG47Y63uKv3m/oJicbPiWZXe6IuCoGIZZ1DQ62Iwm8MerazXfVaNPPy9gJ
- FEG4u5IWhcDC9FeAF/dW8F+cqPZYw4bAFdWM/ITQVocKLCKaQoznrAI1ACUdQCWfMNu17P8AgmQ
- cDw4Mtitbu0pR1a/HXUll2L6OrmsxuzPpNytUSDT7vQFAPwx2JiGZP5EVzPTQ2xW5QKaNvWsbjO
- 6TH0FRBqSPCsvhafsqA8kcYv0a1VaFA55+MxGBnXSvjtQ5rHxejtfbRP7aDhZ2uV9yOKwN1HAsw
- L423as7QdupzTwH1BB5Q5cPXJmn+YjUJejd+zyeuMQPHpiJfukIGDAqScDjTwNClzgLeeFnMhur
- bLLoaZFVGsI4pPcYJZw==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODExMDA2OSBTYWx0ZWRfXxq0yGro//Peh
- wPoJ9HIe/+cdZZa2/y3KR6gRj8RjK4ryZ+rs1Lglx0WZwpqx8RCk3EjCKOroM4yC7v6ES+wBbeg
- A54nIVbrjPOEIEOZ5+rbynFKwPjCaJe/+xlibYQAiTmpJKsxWDLD
-X-Proofpoint-ORIG-GUID: AiEcUZY0OGpFZam3M4XpSUZI9aQ6Q1sB
+ definitions=2026-08-11_01,2026-08-10_03,2025-10-01_01
 
-On 11/08/2026 05:03, Xingui Yang wrote:
-> Add sas_ex_phy_to_dev() to return any device type attached to an
-> expander phy, and refactor sas_ex_to_ata() to use it.
-> 
-> No functional changes intended.
-> 
-> Signed-off-by: Xingui Yang<yangxingui@huawei.com>
+From: Manish Rangankar <mrangankar@marvell.com>
 
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+Add support to load the 29xx FC operational firmware from the
+filesystem and to set up the corresponding firmware dump
+template.  This follows the same request_firmware / segment-load
+pattern used by earlier adapters.
+
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202608091309.DUR23G15-lkp@intel.com/
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
+---
+v7:
+In qla29xx_process_rd_image() use the %zx length modifier so the
+format is correct on all ABIs.
+ drivers/scsi/qla2xxx/qla_fw.h   |  36 +++
+ drivers/scsi/qla2xxx/qla_gbl.h  |   3 +-
+ drivers/scsi/qla2xxx/qla_init.c | 546 +++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_mbx.c  |  19 +-
+ drivers/scsi/qla2xxx/qla_nx.c   |   2 +-
+ drivers/scsi/qla2xxx/qla_os.c   |  47 ++-
+ drivers/scsi/qla2xxx/qla_sup.c  |   4 +-
+ 7 files changed, 643 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index 42f6125b3cfb..4d6f8b1a36d1 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -2378,4 +2378,40 @@ struct qla_flash_memo_block {
+ 	struct qla_fmb_version  tool_version;
+ };
+ 
++#define TIM_DEST_ADDR	0xffffffff
++#define CHUNK_SIZE	0x10000
++
++#define TIM	0
++#define ARR1	1
++#define ARR2	2
++#define ARR3	3
++#define ARR4	4
++
++#define LD_FL_HEADER_SIGNATURE	0x46434F50
++#define LD_FL_HEADER_VERSION	0x01
++#define LD_FL_HEADER_SIZE	(0x14 * 4)
++
++struct fcop_header {
++	uint32_t signature;
++	uint32_t header_length;
++	uint32_t header_version;
++	uint32_t segment_size;
++	uint32_t tim_length;
++	uint32_t fc_major_version;
++	uint32_t fc_minor_version;
++	uint32_t fc_subminor_version;
++	uint32_t array1_length;
++	uint32_t array1_destination_addr;
++	uint32_t array2_length;
++	uint32_t array2_destination_addr;
++	uint32_t array3_length;
++	uint32_t array4_length;
++	uint32_t attribute;
++	uint32_t extended_attribute;
++	uint32_t reserved0;
++	uint32_t reserved1;
++	uint32_t reserved2;
++	uint32_t image_checksum;
++};
++
+ #endif
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index a032dd047a8f..ca5a80b9c3d2 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -38,6 +38,7 @@ extern void qla24xx_update_fw_options(scsi_qla_host_t *);
+ extern int qla2x00_load_risc(struct scsi_qla_host *, uint32_t *);
+ extern int qla24xx_load_risc(scsi_qla_host_t *, uint32_t *);
+ extern int qla81xx_load_risc(scsi_qla_host_t *, uint32_t *);
++extern int qla29xx_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr);
+ 
+ extern int qla2x00_perform_loop_resync(scsi_qla_host_t *);
+ extern int qla2x00_loop_resync(scsi_qla_host_t *);
+@@ -336,7 +337,7 @@ void qla2x00_els_dcmd2_iocb_timeout(void *data);
+  * Global Function Prototypes in qla_mbx.c source file.
+  */
+ extern int
+-qla2x00_load_ram(scsi_qla_host_t *, dma_addr_t, uint32_t, uint32_t);
++qla2x00_load_ram(scsi_qla_host_t *, dma_addr_t, uint32_t, uint32_t, int);
+ 
+ extern int
+ qla2x00_dump_ram(scsi_qla_host_t *, dma_addr_t, uint32_t, uint32_t);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index c6e928f11758..ebac480ec2e2 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -3868,7 +3868,7 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+ 			eft_size = EFT_SIZE;
+ 	}
+ 
+-	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
++	if (IS_QLA27XX(ha) || IS_QLA28XX(ha) || IS_QLA29XX(ha)) {
+ 		struct fwdt *fwdt = ha->fwdt;
+ 		uint j;
+ 
+@@ -3937,7 +3937,8 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+ 				    "Allocated (%d KB) for firmware dump.\n",
+ 				    dump_size / 1024);
+ 
+-				if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
++				if (IS_QLA27XX(ha) || IS_QLA28XX(ha) ||
++				    IS_QLA29XX(ha)) {
+ 					ha->mpi_fw_dump = (char *)fw_dump +
+ 						ha->fwdt[1].dump_size;
+ 					mutex_unlock(&ha->optrom_mutex);
+@@ -8669,7 +8670,8 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+ 			for (i = 0; i < dlen; i++)
+ 				dcode[i] = swab32(dcode[i]);
+ 
+-			rval = qla2x00_load_ram(vha, req->dma, risc_addr, dlen);
++			rval = qla2x00_load_ram(vha, req->dma, risc_addr,
++			    dlen, 0);
+ 			if (rval) {
+ 				ql_log(ql_log_fatal, vha, 0x008f,
+ 				    "-> Failed load firmware fragment %u.\n",
+@@ -8839,7 +8841,7 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 				wcode[i] = swab16((__force u32)fwcode[i]);
+ 
+ 			rval = qla2x00_load_ram(vha, req->dma, risc_addr,
+-			    wlen);
++			    wlen, 0);
+ 			if (rval) {
+ 				ql_log(ql_log_fatal, vha, 0x008a,
+ 				    "Failed to load segment %d of firmware.\n",
+@@ -8929,7 +8931,8 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 			for (i = 0; i < dlen; i++)
+ 				dcode[i] = swab32((__force u32)fwcode[i]);
+ 
+-			rval = qla2x00_load_ram(vha, req->dma, risc_addr, dlen);
++			rval = qla2x00_load_ram(vha, req->dma, risc_addr,
++			    dlen, 0);
+ 			if (rval) {
+ 				ql_log(ql_log_fatal, vha, 0x0098,
+ 				    "-> Failed load firmware fragment %u.\n",
+@@ -9128,6 +9131,539 @@ qla81xx_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 	return rval;
+ }
+ 
++static int qla29xx_validate_firmware_image(scsi_qla_host_t *vha,
++					   __be32 *dword)
++{
++	if (be32_to_cpu(dword[0]) != LD_FL_HEADER_SIGNATURE) {
++		ql_dbg(ql_dbg_init, vha, 0x0093,
++		       "Firmware image Signature does not match (0x%x).\n",
++		       be32_to_cpu(dword[0]));
++		return QLA_FUNCTION_FAILED;
++	}
++	if (be32_to_cpu(dword[2]) != LD_FL_HEADER_VERSION) {
++		ql_dbg(ql_dbg_init, vha, 0x0093,
++		       "Firmware image Version does not match (0x%x).\n",
++		       be32_to_cpu(dword[2]));
++		return QLA_FUNCTION_FAILED;
++	}
++	return QLA_SUCCESS;
++}
++
++static int qla29xx_process_rd_image(struct scsi_qla_host *vha,
++				    struct fcop_header *header,
++				    __be32 *fwcode, int section,
++				    uint32_t risc_addr, uint32_t section_size)
++{
++	int rval = QLA_SUCCESS;
++	uint32_t *dcode = NULL;
++	struct qla_hw_data *ha = vha->hw;
++	struct req_que *req = ha->req_q_map[0];
++	int num_segments = 0, segment = 0;
++	int chunks_per_segment = 0, chunk = 0;
++	int is_first_chunk = 0;
++	int is_last_chunk = 0;
++	int is_first_segment = 0;
++	int is_last_segment = 0;
++	int opt = 0;
++	uint32_t size = 0;
++	uint32_t size_remainder = 0;
++	uint32_t seg_size_remainder = 0;
++	int i = 0;
++
++	dcode = (uint32_t *)req->ring;
++
++	if (section == TIM) {
++		if (section_size > req->length * qla_req_entry_size(ha)) {
++			ql_log(ql_log_fatal, vha, 0x0098,
++			    "TIM section too large (0x%x bytes, ring 0x%zx bytes).\n",
++			    section_size,
++			    req->length * qla_req_entry_size(ha));
++			return QLA_FUNCTION_FAILED;
++		}
++
++		opt = BIT_15 | BIT_2 | BIT_1 | BIT_0;
++		for (i = 0; i < (section_size >> 2); i++)
++			dcode[i] = swab32((__force u32)fwcode[i]);
++
++		ql_dbg(ql_dbg_init, vha, 0x0098,
++		       "TIM : process_rd_image [opt 0x%x]\n", opt);
++		rval = qla2x00_load_ram(vha, req->dma, risc_addr,
++					section_size >> 2, opt);
++		if (rval) {
++			ql_log(ql_log_fatal, vha, 0x0098,
++			       "-> Failed load TIM\n");
++			return QLA_FUNCTION_FAILED;
++		}
++	} else {
++		size_remainder = section_size;
++		num_segments += (section_size % header->segment_size == 0) ?
++			(section_size / header->segment_size) :
++			(section_size / header->segment_size) + 1;
++		chunks_per_segment =
++			(header->segment_size % CHUNK_SIZE == 0) ?
++			(header->segment_size / CHUNK_SIZE) :
++			(header->segment_size / CHUNK_SIZE) + 1;
++
++		ql_dbg(ql_dbg_init, vha, 0x0098,
++		       "num seg 0x%x chunk per seg 0x%x\n",
++		       num_segments, chunks_per_segment);
++
++		for (segment = 0; segment < num_segments; segment++) {
++			for (chunk = 0; chunk < chunks_per_segment; chunk++) {
++				is_first_chunk = (chunk == 0);
++				if (chunk == 0) {
++					if (size_remainder >=
++					    header->segment_size)
++						seg_size_remainder =
++							header->segment_size;
++					else
++						seg_size_remainder =
++							size_remainder;
++				}
++
++				is_first_segment =
++					(section == ARR1 && segment == 0);
++				is_last_segment =
++					(section == ARR2 &&
++					 (segment == (num_segments - 1)));
++				is_last_chunk =
++					(chunk == (chunks_per_segment - 1) ||
++					 size_remainder <= CHUNK_SIZE);
++
++				if (seg_size_remainder < CHUNK_SIZE)
++					size = seg_size_remainder % CHUNK_SIZE;
++				else
++					size = CHUNK_SIZE;
++
++				ql_dbg(ql_dbg_init, vha, 0x0098,
++				       "[%d]chunk 0x%x segment 0x%x first_segment 0x%x first_chunk 0x%x last_segment 0x%x last_chunk 0x%x\n",
++				       __LINE__, chunk, segment,
++				       is_first_segment, is_first_chunk,
++				       is_last_segment, is_last_chunk);
++
++				opt = BIT_2;
++				if (is_first_chunk)
++					opt |= BIT_0;
++				if (is_last_chunk)
++					opt |= BIT_1;
++				if (is_first_segment)
++					opt |= BIT_3;
++				if (is_last_segment)
++					opt |= BIT_4;
++
++				for (i = 0; i < (size >> 2); i++)
++					dcode[i] =
++					    swab32((__force u32)fwcode[i]);
++
++				ql_dbg(ql_dbg_init, vha, 0x0098,
++				       "ARR[0x%x] : opt 0x%x\n", size, opt);
++				rval = qla2x00_load_ram(vha, req->dma,
++							risc_addr,
++							size >> 2, opt);
++				if (rval) {
++					ql_log(ql_log_fatal, vha, 0x0098,
++					       "-> Failed load ram\n");
++					return QLA_FUNCTION_FAILED;
++				}
++
++				fwcode += size >> 2;
++				size_remainder -= size;
++				seg_size_remainder -= size;
++				if (size_remainder == 0)
++					break;
++			}
++			risc_addr += header->segment_size >> 2;
++		}
++	}
++	return rval;
++}
++
++static int
++qla29xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
++{
++	int rval;
++	struct fcop_header *header;
++	uint32_t *dcode = NULL;
++	struct fw_blob *blob;
++	__be32 *fwcode, *array1_addr, *array3_addr;
++	uint templates;
++	uint32_t array_size, risc_attr = 0;
++	ulong i;
++	uint j;
++	ulong dlen, array3_offset;
++	size_t max_dwords;
++	struct qla_hw_data *ha = vha->hw;
++	struct fwdt *fwdt = ha->fwdt;
++
++	header = vmalloc(sizeof(*header));
++	if (!header)
++		return QLA_FUNCTION_FAILED;
++
++	ql_dbg(ql_dbg_init, vha, 0x0090,
++	       "-> FW: Loading via request-firmware.\n");
++
++	blob = qla2x00_request_firmware(vha);
++	if (!blob) {
++		ql_log(ql_log_warn, vha, 0x0092,
++		       "-> Firmware file not found.\n");
++		vfree(header);
++		return QLA_FUNCTION_FAILED;
++	}
++
++	fwcode = (__force __be32 *)blob->fw->data;
++
++	if (blob->fw->size < sizeof(*header)) {
++		ql_log(ql_log_fatal, vha, 0x0093,
++		       "Firmware image too small (%zu bytes, need %zu).\n",
++		       blob->fw->size, sizeof(*header));
++		vfree(header);
++		return QLA_FUNCTION_FAILED;
++	}
++
++	rval = qla29xx_validate_firmware_image(vha, fwcode);
++	if (rval != QLA_SUCCESS) {
++		ql_log(ql_log_fatal, vha, 0x0093,
++		       "Unable to verify integrity of firmware image\n");
++		vfree(header);
++		return QLA_FUNCTION_FAILED;
++	}
++
++	/* byte-swap big-endian firmware header to CPU endian */
++	for (i = 0; i < sizeof(*header) / sizeof(__be32); i++)
++		((uint32_t *)header)[i] = be32_to_cpu(fwcode[i]);
++
++	/*
++	 * Section lengths are dword counts from the firmware image. Reject
++	 * values that would overflow the u32 fields on conversion to bytes
++	 * (<< 2) or that exceed the image, before using them below.
++	 */
++	max_dwords = blob->fw->size >> 2;
++	if (header->header_length > max_dwords ||
++	    header->tim_length > max_dwords ||
++	    header->array1_length > max_dwords ||
++	    header->array2_length > max_dwords ||
++	    header->array3_length > max_dwords ||
++	    header->array4_length > max_dwords) {
++		ql_log(ql_log_fatal, vha, 0x0098,
++		       "FW image has invalid section length.\n");
++		goto img_corrupt;
++	}
++
++	header->header_length <<= 2;
++	header->tim_length <<= 2;
++	header->array1_length <<= 2;
++	header->array2_length <<= 2;
++	header->array3_length <<= 2;
++	header->array4_length <<= 2;
++
++	if (!header->segment_size) {
++		ql_log(ql_log_fatal, vha, 0x0098,
++		       "FW image has zero segment_size.\n");
++		goto img_corrupt;
++	}
++
++	{
++		size_t fw_size = blob->fw->size;
++		size_t offset;
++
++		/* TIM */
++		offset = header->header_length;
++		if (offset + header->tim_length > fw_size) {
++			ql_log(ql_log_fatal, vha, 0x0098,
++			       "FW image too small for TIM (%#zx > %#zx).\n",
++			       offset + header->tim_length, fw_size);
++			goto img_corrupt;
++		}
++		rval = qla29xx_process_rd_image(vha, header,
++			(__be32 *)((char *)fwcode + offset),
++			TIM, TIM_DEST_ADDR, header->tim_length);
++		if (rval) {
++			ql_log(ql_log_fatal, vha, 0x0098,
++			       "-> Failed load TIM\n");
++			goto img_corrupt;
++		}
++
++		/* Array 1 */
++		offset += header->tim_length;
++		if (offset + header->array1_length > fw_size) {
++			ql_log(ql_log_fatal, vha, 0x0098,
++			       "FW image too small for Arr1 (%#zx > %#zx).\n",
++			       offset + header->array1_length, fw_size);
++			goto img_corrupt;
++		}
++		rval = qla29xx_process_rd_image(vha, header,
++			(__be32 *)((char *)fwcode + offset),
++			ARR1, header->array1_destination_addr,
++			header->array1_length);
++		if (rval) {
++			ql_log(ql_log_fatal, vha, 0x0098,
++			       "-> Failed load Arr1\n");
++			goto img_corrupt;
++		}
++
++		/* Array 2 */
++		offset += header->array1_length;
++		if (offset + header->array2_length > fw_size) {
++			ql_log(ql_log_fatal, vha, 0x0098,
++			       "FW image too small for Arr2 (%#zx > %#zx).\n",
++			       offset + header->array2_length, fw_size);
++			goto img_corrupt;
++		}
++		rval = qla29xx_process_rd_image(vha, header,
++			(__be32 *)((char *)fwcode + offset),
++			ARR2, header->array2_destination_addr,
++			header->array2_length);
++		if (rval) {
++			ql_log(ql_log_fatal, vha, 0x0098,
++			       "-> Failed load Arr2\n");
++			goto img_corrupt;
++		}
++
++		/* Array 3: FW_DUMP template */
++		if (offset + 10 * sizeof(__be32) > fw_size) {
++			ql_log(ql_log_fatal, vha, 0x0098,
++			       "FW image too small for risc_attr.\n");
++			goto img_corrupt;
++		}
++		array1_addr = (__be32 *)((char *)fwcode +
++				header->header_length +
++				header->tim_length);
++		risc_attr = be32_to_cpu(array1_addr[9]);
++	}
++	templates = (risc_attr & BIT_9) ? 2 : 1;
++	ql_dbg(ql_dbg_init, vha, 0x0160,
++	       "-> templates = %u\n", templates);
++
++	array3_offset = header->header_length + header->tim_length +
++		header->array1_length + header->array2_length;
++	if (array3_offset > blob->fw->size) {
++		ql_log(ql_log_fatal, vha, 0x0098,
++		       "FW image too small for Arr3 (%#lx > %#zx).\n",
++		       array3_offset, blob->fw->size);
++		goto img_corrupt;
++	}
++
++	array3_addr = (__be32 *)(((char *)fwcode) + array3_offset);
++	for (j = 0; j < templates; j++, fwdt++) {
++		vfree(fwdt->template);
++		fwdt->template = NULL;
++		fwdt->length = 0;
++
++		if ((char *)&array3_addr[7] >
++		    (char *)blob->fw->data + blob->fw->size) {
++			ql_log(ql_log_warn, vha, 0x0169,
++			       "-> fwdt%u template header exceeds firmware blob.\n",
++			       j);
++			goto failed;
++		}
++
++		array_size = be32_to_cpu(array3_addr[2]);
++		ql_dbg(ql_dbg_init, vha, 0x0161,
++		       "-> fwdt%u template array at %p (%#x dwords)\n",
++		       j, array3_addr, array_size);
++
++		if (!array_size || !~array_size || array_size <= 8) {
++			ql_dbg(ql_dbg_init, vha, 0x0162,
++			       "-> fwdt%u failed to read array\n", j);
++			goto failed;
++		}
++
++		array3_addr += 7;
++		array_size -= 8;
++
++		if ((char *)&array3_addr[array_size] >
++		    (char *)blob->fw->data + blob->fw->size) {
++			ql_log(ql_log_warn, vha, 0x0163,
++			    "-> fwdt%u template array exceeds firmware blob.\n",
++			    j);
++			goto failed;
++		}
++
++		ql_dbg(ql_dbg_init, vha, 0x0163,
++		       "-> fwdt%u template allocate template %#x words...\n",
++		       j, array_size);
++		fwdt->template = vmalloc_array(array_size, sizeof(*dcode));
++		if (!fwdt->template) {
++			ql_log(ql_log_warn, vha, 0x0164,
++			       "-> fwdt%u failed allocate template.\n", j);
++			goto failed;
++		}
++
++		dcode = fwdt->template;
++		for (i = 0; i < array_size; i++)
++			dcode[i] = (__force u32)array3_addr[i];
++
++		if (!qla27xx_fwdt_template_valid(dcode)) {
++			ql_log(ql_log_warn, vha, 0x0165,
++			       "-> fwdt%u failed template validate\n", j);
++			goto failed;
++		}
++
++		dlen = qla27xx_fwdt_template_size(dcode);
++		ql_dbg(ql_dbg_init, vha, 0x0166,
++		       "-> fwdt%u template size %#lx bytes (%#lx words)\n",
++		       j, dlen, dlen / sizeof(*dcode));
++		if (dlen > array_size * sizeof(*dcode)) {
++			ql_log(ql_log_warn, vha, 0x0167,
++			       "-> fwdt%u template exceeds array (%-lu bytes)\n",
++			       j, dlen - array_size * sizeof(*dcode));
++			goto failed;
++		}
++
++		fwdt->length = dlen;
++		ql_dbg(ql_dbg_init, vha, 0x0168,
++		       "-> fwdt%u loaded template ok\n", j);
++
++		array3_addr += array_size + 1;
++	}
++	vfree(header);
++	return QLA_SUCCESS;
++
++failed:
++	vfree(fwdt->template);
++	fwdt->template = NULL;
++	fwdt->length = 0;
++img_corrupt:
++	vfree(header);
++	return QLA_FUNCTION_FAILED;
++}
++
++static int
++qla29xx_load_fw_template(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	struct fwdt *fwdt = ha->fwdt;
++	uint templates = 1;
++	void *fw_dump_tmplt;
++	uint32_t *dcode;
++	void *buf = NULL;
++	uint32_t len;
++	uint32_t template_size;
++	uint j = 0;
++	int rval = 0;
++
++	ql_dbg(ql_dbg_init, vha, 0x01bf,
++	       "-> templates = %u fw_dump_tmplt_len = 0x%x\n",
++	       templates, ha->fw_dump_tmplt_len);
++
++	if (!ha->fw_dump_tmplt_len) {
++		ql_dbg(ql_dbg_init, vha, 0x01bf,
++		       "no fw dump template available\n");
++		return QLA_SUCCESS;
++	}
++
++	fw_dump_tmplt = kzalloc(ha->fw_dump_tmplt_len, GFP_KERNEL);
++	if (!fw_dump_tmplt) {
++		ql_log(ql_log_info, vha, 0x0013,
++		       "Unable to allocate memory\n");
++		return QLA_FUNCTION_FAILED;
++	}
++
++	buf = qla29xx_read_optrom_data(vha, FLT_REG_FW_DUMP_TMPLT, 0,
++				       fw_dump_tmplt, 0,
++				       ha->fw_dump_tmplt_len);
++	if (!buf) {
++		ql_log(ql_log_info, vha, 0x0013,
++		       "Unable to read fw dump temp info.\n");
++		goto free_fw_dump;
++	}
++
++	ql_dump_buffer(ql_dbg_init, vha, 0x006b, fw_dump_tmplt,
++		       min_t(uint32_t, ha->fw_dump_tmplt_len, 1024));
++
++	for (j = 0; j < templates; j++, fwdt++) {
++		vfree(fwdt->template);
++		fwdt->template = NULL;
++		fwdt->length = 0;
++
++		template_size = le32_to_cpu(((__le32 *)fw_dump_tmplt)[2]);
++
++		ql_dbg(ql_dbg_init, vha, 0x0161,
++		       "-> fwdt%u template array at %p (0x%x bytes)\n",
++		       j, fw_dump_tmplt, template_size);
++
++		if (!template_size || !~template_size ||
++		    template_size > ha->fw_dump_tmplt_len) {
++			ql_dbg(ql_dbg_init, vha, 0x0162,
++			       "-> fwdt%u failed to read array\n", j);
++			goto failed;
++		}
++
++		fwdt->template = vmalloc(template_size);
++		if (!fwdt->template) {
++			ql_log(ql_log_warn, vha, 0x0164,
++			       "-> fwdt%u failed allocate template.\n", j);
++			goto failed;
++		}
++
++		dcode = fwdt->template;
++		memcpy((char *)dcode, (char *)fw_dump_tmplt, template_size);
++
++		if (!qla27xx_fwdt_template_valid(dcode)) {
++			ql_log(ql_log_warn, vha, 0x0165,
++			       "-> fwdt%u failed template validate (rval %x)\n",
++			       j, rval);
++			goto failed;
++		}
++
++		len = qla27xx_fwdt_template_size(dcode);
++		if (len > template_size) {
++			ql_log(ql_log_warn, vha, 0x0167,
++			       "-> fwdt%u template exceeds array (%-u bytes)\n",
++			       j, len - template_size);
++			goto failed;
++		}
++
++		fwdt->length = len;
++	}
++
++	kfree(fw_dump_tmplt);
++	return QLA_SUCCESS;
++
++failed:
++	if (fwdt->template) {
++		vfree(fwdt->template);
++		fwdt->template = NULL;
++		fwdt->length = 0;
++	}
++free_fw_dump:
++	kfree(fw_dump_tmplt);
++	return QLA_FUNCTION_FAILED;
++}
++
++int
++qla29xx_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
++{
++	int rval;
++
++	*srisc_addr = 0x100000;
++
++	if (ql2xfwloadbin == 2) {
++		rval = qla29xx_load_risc_blob(vha, srisc_addr);
++		if (rval != QLA_SUCCESS) {
++			ql_log(ql_log_fatal, vha, 0x019e,
++			       "Failed to load firmware from file.\n");
++			return QLA_FUNCTION_FAILED;
++		}
++	} else {
++		rval = qla28xx_load_flash_firmware(vha);
++		if (rval != QLA_SUCCESS) {
++			ql_log(ql_log_fatal, vha, 0x019e,
++			       "Failed to load flash firmware.\n");
++			return QLA_FUNCTION_FAILED;
++		}
++
++		rval = qla29xx_load_fw_template(vha);
++		if (rval != QLA_SUCCESS) {
++			ql_log(ql_log_warn, vha, 0x01bd,
++			       "failed to read firmware template\n");
++			return QLA_FUNCTION_FAILED;
++		}
++	}
++
++	return rval;
++}
++
+ void
+ qla2x00_try_to_stop_firmware(scsi_qla_host_t *vha)
+ {
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 2b232b225c90..d49dacf6d576 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -618,7 +618,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 
+ int
+ qla2x00_load_ram(scsi_qla_host_t *vha, dma_addr_t req_dma, uint32_t risc_addr,
+-    uint32_t risc_code_size)
++		 uint32_t risc_code_size, int opt)
+ {
+ 	int rval;
+ 	struct qla_hw_data *ha = vha->hw;
+@@ -651,7 +651,14 @@ qla2x00_load_ram(scsi_qla_host_t *vha, dma_addr_t req_dma, uint32_t risc_addr,
+ 		mcp->out_mb |= MBX_4;
+ 	}
+ 
+-	mcp->in_mb = MBX_1|MBX_0;
++	if (IS_QLA29XX(ha)) {
++		mcp->mb[9] = opt;
++		mcp->out_mb |= MBX_9;
++		mcp->in_mb = MBX_3|MBX_2|MBX_1|MBX_0;
++	} else {
++		mcp->in_mb = MBX_1|MBX_0;
++	}
++
+ 	mcp->tov = MBX_TOV_SECONDS;
+ 	mcp->flags = 0;
+ 	rval = qla2x00_mailbox_command(vha, mcp);
+@@ -846,15 +853,19 @@ qla28xx_load_flash_firmware(scsi_qla_host_t *vha)
+ 	mbx_cmd_t mc;
+ 	mbx_cmd_t *mcp = &mc;
+ 
+-	if (!IS_QLA28XX(ha))
++	if (!IS_QLA28XX(ha) && !IS_QLA29XX(ha))
+ 		return rval;
+ 
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x11a6,
+ 	       "Entered %s.\n", __func__);
+ 
+ 	mcp->mb[0] = MBC_LOAD_FLASH_FIRMWARE;
++	mcp->mb[1] = 0;
+ 	mcp->out_mb = MBX_2 | MBX_1 | MBX_0;
+-	mcp->in_mb = MBX_0;
++	if (IS_QLA29XX(ha))
++		mcp->in_mb = MBX_1 | MBX_0;
++	else
++		mcp->in_mb = MBX_0;
+ 	mcp->tov = MBX_TOV_SECONDS;
+ 	mcp->flags = 0;
+ 	rval = qla2x00_mailbox_command(vha, mcp);
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 298c060c1292..2366cca51bce 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -2663,7 +2663,7 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, __le32 *dwptr,
+ 
+ 			ret = qla2x00_load_ram(vha, optrom_dma,
+ 			    (ha->flash_data_off | faddr),
+-			    OPTROM_BURST_DWORDS);
++			    OPTROM_BURST_DWORDS, 0);
+ 			if (ret != QLA_SUCCESS) {
+ 				ql_log(ql_log_warn, vha, 0xb01e,
+ 				    "Unable to burst-write optrom segment "
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index c3eb941f71ad..6560e58ad87c 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2640,6 +2640,45 @@ static struct isp_operations qla27xx_isp_ops = {
+ 	.initialize_adapter	= qla2x00_initialize_adapter,
+ };
+ 
++static struct isp_operations qla29xx_isp_ops = {
++	.pci_config		= qla25xx_pci_config,
++	.reset_chip		= qla24xx_reset_chip,
++	.chip_diag		= qla24xx_chip_diag,
++	.config_rings		= qla24xx_config_rings,
++	.reset_adapter		= qla24xx_reset_adapter,
++	.nvram_config		= qla81xx_nvram_config,
++	.update_fw_options	= qla24xx_update_fw_options,
++	.load_risc		= qla29xx_load_risc,
++	.pci_info_str		= qla24xx_pci_info_str,
++	.fw_version_str		= qla24xx_fw_version_str,
++	.intr_handler		= qla24xx_intr_handler,
++	.enable_intrs		= qla24xx_enable_intrs,
++	.disable_intrs		= qla24xx_disable_intrs,
++	.abort_command		= qla24xx_abort_command,
++	.target_reset		= qla24xx_abort_target,
++	.lun_reset		= qla24xx_lun_reset,
++	.fabric_login		= qla24xx_login_fabric,
++	.fabric_logout		= qla24xx_fabric_logout,
++	.calc_req_entries	= NULL,
++	.build_iocbs		= NULL,
++	.prep_ms_iocb		= qla24xx_prep_ms_iocb,
++	.prep_ms_fdmi_iocb	= qla24xx_prep_ms_fdmi_iocb,
++	.read_nvram		= NULL,
++	.write_nvram		= NULL,
++	.fw_dump		= qla27xx_fwdump,
++	.mpi_fw_dump		= qla27xx_mpi_fwdump,
++	.beacon_on		= qla24xx_beacon_on,
++	.beacon_off		= qla24xx_beacon_off,
++	.beacon_blink		= qla83xx_beacon_blink,
++	.read_optrom		= qla25xx_read_optrom_data,
++	.write_optrom		= qla24xx_write_optrom_data,
++	.get_flash_version	= qla24xx_get_flash_version,
++	.start_scsi_mq		= qla2xxx_dif_start_scsi_mq,
++	.abort_isp		= qla2x00_abort_isp,
++	.iospace_config		= qla83xx_iospace_config,
++	.initialize_adapter	= qla2x00_initialize_adapter,
++};
++
+ static inline void
+ qla2x00_set_isp_flags(struct qla_hw_data *ha)
+ {
+@@ -3232,7 +3271,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ha->gid_list_info_size = 8;
+ 		ha->optrom_size = OPTROM_SIZE_28XX;
+ 		ha->nvram_npiv_size = QLA_MAX_VPORTS_QLA25XX;
+-		ha->isp_ops = &qla27xx_isp_ops;
++		ha->isp_ops = &qla29xx_isp_ops;
+ 		ha->flash_conf_off = ~0;
+ 		ha->flash_data_off = ~0;
+ 		ha->nvram_conf_off = ~0;
+@@ -7676,6 +7715,7 @@ qla2x00_timer(struct timer_list *t)
+ #define FW_ISP8031	9
+ #define FW_ISP27XX	10
+ #define FW_ISP28XX	11
++#define FW_ISP29XX	12
+ 
+ #define FW_FILE_ISP21XX	"ql2100_fw.bin"
+ #define FW_FILE_ISP22XX	"ql2200_fw.bin"
+@@ -7689,6 +7729,7 @@ qla2x00_timer(struct timer_list *t)
+ #define FW_FILE_ISP8031	"ql8300_fw.bin"
+ #define FW_FILE_ISP27XX	"ql2700_fw.bin"
+ #define FW_FILE_ISP28XX	"ql2800_fw.bin"
++#define FW_FILE_ISP29XX	"ql2900_fw.bin"
+ 
+ 
+ static DEFINE_MUTEX(qla_fw_lock);
+@@ -7706,6 +7747,7 @@ static struct fw_blob qla_fw_blobs[] = {
+ 	{ .name = FW_FILE_ISP8031, },
+ 	{ .name = FW_FILE_ISP27XX, },
+ 	{ .name = FW_FILE_ISP28XX, },
++	{ .name = FW_FILE_ISP29XX, },
+ 	{ .name = NULL, },
+ };
+ 
+@@ -7739,6 +7781,8 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
+ 		blob = &qla_fw_blobs[FW_ISP27XX];
+ 	} else if (IS_QLA28XX(ha)) {
+ 		blob = &qla_fw_blobs[FW_ISP28XX];
++	} else if (IS_QLA29XX(ha)) {
++		blob = &qla_fw_blobs[FW_ISP29XX];
+ 	} else {
+ 		return NULL;
+ 	}
+@@ -8445,3 +8489,4 @@ MODULE_FIRMWARE(FW_FILE_ISP2300);
+ MODULE_FIRMWARE(FW_FILE_ISP2322);
+ MODULE_FIRMWARE(FW_FILE_ISP24XX);
+ MODULE_FIRMWARE(FW_FILE_ISP25XX);
++MODULE_FIRMWARE(FW_FILE_ISP29XX);
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index ea5e4901cc70..ee7562bf8d38 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -1913,7 +1913,7 @@ qla24xx_write_flash_data(scsi_qla_host_t *vha, __le32 *dwptr, uint32_t faddr,
+ 			ql_log(ql_log_warn + ql_dbg_verbose, vha, 0x7095,
+ 			    "Write burst (%#lx dwords)...\n", dburst);
+ 			ret = qla2x00_load_ram(vha, optrom_dma,
+-			    flash_data_addr(ha, faddr), dburst);
++			    flash_data_addr(ha, faddr), dburst, 0);
+ 			if (!ret) {
+ 				liter += dburst - 1;
+ 				faddr += dburst - 1;
+@@ -3513,7 +3513,7 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 		ql_log(ql_log_warn + ql_dbg_verbose, vha, 0x7095,
+ 		    "Write burst (%#lx dwords)...\n", dburst);
+ 		rval = qla2x00_load_ram(vha, optrom_dma,
+-		    flash_data_addr(ha, faddr), dburst);
++		    flash_data_addr(ha, faddr), dburst, 0);
+ 		if (rval != QLA_SUCCESS) {
+ 			ql_log(ql_log_warn, vha, 0x7097,
+ 			    "Failed burst write at %x (%p/%#llx)...\n",
+-- 
+2.52.0
+
