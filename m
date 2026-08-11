@@ -1,99 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA9FC345EBF;
-	Tue, 11 Aug 2026 18:52:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D09446E003;
+	Tue, 11 Aug 2026 21:40:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786474330; cv=none; b=Pj6/64Q2VQS3MkjT9kau/RWQJbtptxfMqpHJArWkLIKaiUfmvmud+/i3tzsWUZQFaGqntXXh8oaMAD7Iws/4Pot7rRwe4Dt9IG+jquTkF1M9rsilwO1pU6P9NV9m4mwLf3HlIa6TVPkgSVcvT9CutUy3QxDfS2nKYuj9csqGS1w=
+	t=1786484404; cv=none; b=ZrZTHT0uaAsZkjEV8EY79zvsFtwO6ze6iv+gKxDhLjKiN+4pu6pP0piL0M9Zc7Gv9u8n3v+rz+tKIBYLdWz/t1cpCd/qtNhi8gLJiLb5GPqLIuwVza0ug/Hj0n1Nq3lCZlD9VkRXm9N5tm6vDu/OcpbkxBAM4ZgENU5c09FKhzY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786474330; c=relaxed/simple;
-	bh=iG6kolHVo+LhrokzkJn9oo8OafaqsBYZtLW62gK7dbY=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=VhFZrjSH07ikb62SMZR70+VlVvcVEDiOHme77qSfitUFPGpXtqnvdWE9P8rdbbBneIIennFPN/bTW+3u5dxgMoDGpxv+o71fLw1iw88qISexVbrujOl5ycWQwgxarkrU29ZVkazVzy09kXi5siDugI+8ImqF+A1vynkHjhwgrN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f9fcK+NV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786484404; c=relaxed/simple;
+	bh=vIE0vAS5hC8k+IS7OM8i2og1MguSCZYXRCq3Kg80fhI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=IF1/DDkHuwxGNFRXJFutfjNLww1NjxLRQwU4yGCjTZEz130pTpsRVWfuXX5rxUDkfQyBmEwFOh4Fg1PVyjUOckZXWXuOSEhta8aAzgJHHdrZO+8TlclQ5Gyeg5Zmia3ISc8owIrHyQ6LDwseA3jm8UwKUsM6VDEz9JuUNULYDRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NseR48iI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f9fcK+NV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64C9D1F00A3A;
-	Tue, 11 Aug 2026 18:51:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NseR48iI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 147F41F000E9;
+	Tue, 11 Aug 2026 21:40:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786474329;
-	bh=L0HTQS1LYVWSdc3RimfvMueRkxBKnov+tJfBP1Nzenc=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=f9fcK+NVNWrvcSOcKHy6zfAbJxAzV4H4fy8MVkzolSHyhTXevNA14uYiezSHzn6pQ
-	 ycpaMxR2NK5BhnYOlevG/IFGX9tQA5Zq59bExZRq8ebTHdeuBPIJKdmorpcmlYiJYN
-	 enPNXmLxCznd3cawK4k1uWZ7ls5UQ+kBsVAJbZyI9ASkk1wotZU4MuXOcOSURRiwqg
-	 sT65TPpe9rPAxYbWb9c4r08z7q71qyz1ECpgE74A6BnSnCI7mMzF6uQjafv+S2Jyy3
-	 tECe4u8tzT2Nvo9T8WlyH+ZxIb0wNqskL4SGoz+McXb9NEhgBdQAaCdq0Vli+in/qH
-	 jqXBcNxLA7xiA==
-From: Vinod Koul <vkoul@kernel.org>
-To: Julia.Lawall@inria.fr, Alex Deucher <alexander.deucher@amd.com>, 
- Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
- Alexandre Belloni <alexandre.belloni@bootlin.com>, 
- Andrew Lunn <andrew@lunn.ch>, Andrew Morton <akpm@linux-foundation.org>, 
- Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>, 
- Borislav Petkov <bp@alien8.de>, 
- =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
- Daniel Lezcano <daniel.lezcano@kernel.org>, 
- David Airlie <airlied@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
- Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
- Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Hans de Goede <hansg@kernel.org>, Hans Verkuil <hverkuil@kernel.org>, 
- Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
- Herbert Xu <herbert@gondor.apana.org.au>, 
- =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
- Jakub Kicinski <kuba@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- Jani Nikula <jani.nikula@linux.intel.com>, Jaroslav Kysela <perex@perex.cz>, 
- Jason Gunthorpe <jgg@ziepe.ca>, Jiri Pirko <jiri@resnulli.us>, 
- "Joerg Roedel (AMD)" <joro@8bytes.org>, Johan Hovold <johan@kernel.org>, 
- Jonathan Cameron <jic23@kernel.org>, 
- Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
- Julian Anastasov <ja@ssi.bg>, Leon Romanovsky <leon@kernel.org>, 
- Liam Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>, 
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
- Mark Brown <broonie@kernel.org>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Matthew Sakai <msakai@redhat.com>, 
- Mauro Carvalho Chehab <mchehab@kernel.org>, 
- Maxime Ripard <mripard@kernel.org>, 
- Michael Turquette <mturquette@baylibre.com>, 
- Mike Rapoport <rppt@kernel.org>, 
- Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
- Nicolas Palix <nicolas.palix@imag.fr>, 
- Pablo Neira Ayuso <pablo@netfilter.org>, Paolo Abeni <pabeni@redhat.com>, 
- Ping-Ke Shih <pkshih@realtek.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
- Rodrigo Vivi <rodrigo.vivi@intel.com>, Sebastian Reichel <sre@kernel.org>, 
- Shuah Khan <shuah@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
- Simon Horman <horms@verge.net.au>, Stephen Boyd <sboyd@kernel.org>, 
- Steve French <sfrench@samba.org>, Takashi Iwai <tiwai@suse.com>, 
- Thomas Renninger <trenn@suse.com>, Thomas Zimmermann <tzimmermann@suse.de>, 
- Tony Luck <tony.luck@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, 
- Vadim Fedorenko <vadim.fedorenko@linux.dev>, Will Deacon <will@kernel.org>, 
- Yazen Ghannam <Yazen.Ghannam@amd.com>, 
- Sang-Heon Jeon <ekffu200098@gmail.com>
-Cc: cocci@inria.fr, amd-gfx@lists.freedesktop.org, 
- dmaengine@vger.kernel.org, dm-devel@lists.linux.dev, 
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
- intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev, 
- linux-cifs@vger.kernel.org, linux-clk@vger.kernel.org, 
- linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org, 
- linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org, 
- linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-media@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
- linux-rdma@vger.kernel.org, linux-rtc@vger.kernel.org, 
- linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
- linux-wireless@vger.kernel.org, lvs-devel@vger.kernel.org, 
- netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, 
- nouveau@lists.freedesktop.org, platform-driver-x86@vger.kernel.org
-In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
-References: <20260723184538.3888637-1-ekffu200098@gmail.com>
-Subject: Re: (subset) [PATCH 00/36] treewide: remove conditional returns
- with no effect
-Message-Id: <178647430099.1113716.2263974283705757692.b4-ty@kernel.org>
-Date: Wed, 12 Aug 2026 00:21:40 +0530
+	s=k20260515; t=1786484402;
+	bh=0LrgNbSzPvVvkUXP/4ygDy5OGRqFGL39AOM31zICDKE=;
+	h=From:Date:Subject:To:Cc;
+	b=NseR48iIhGjrzjzzP0QHquUVJMsIHz56nlXD6bDrpWP1PROy9FdkNOYG4e7eDLfQk
+	 EMJzLmV9GngC9u/yALlG9rHNbuPjZKQpfipVMuXCn2RqQMxnO5Zt2t2gG/f0TmXM1K
+	 cMF+I07GkAUmCp/fEVQ5MKsp7Q+9kSR7E6ZWZ1Xcnt/fPuFs0f+8nZVQ2K/mEDGXVh
+	 HPN5I+tIoB60Aze+tDonkksCZekL4nde+2Kqs9T7JtPqTV2bIVia/2c+L8ZF2AFuwZ
+	 A6eSGZAjKugci+MHXjxWcyuZNYMgAwh+vOKck3LF0yYJeauKyNtO4ymhgMbgGu3snf
+	 tJdw1wn8uG8Hg==
+From: Nathan Chancellor <nathan@kernel.org>
+Date: Tue, 11 Aug 2026 14:39:51 -0700
+Subject: [PATCH] scsi: qla2xxx: Fix size_t format specifier in
+ qla29xx_process_rd_image()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -102,27 +37,76 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13.0
+Message-Id: <20260811-scsi-qla2xxxx-qla_init-wformat-v1-1-50760021914f@kernel.org>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yWN0Q6CMAxFf4X02SZsKjH+ijGmlE5rdMg6lYTw7
+ wy9T+e8nDuBSVIxOFYTJPmoaR+LuE0FfKN4FdSuOPjaN/XBOTQ2xeFBfixb4aJRM35Dn56Ukfc
+ 73245UBMISuSVJOj4Ozid/27v9i6c1yrM8wKLPqi3ggAAAA==
+X-Change-ID: 20260811-scsi-qla2xxxx-qla_init-wformat-c542b3cfa6fa
+To: Nilesh Javali <njavali@marvell.com>, 
+ GR-QLogic-Storage-Upstream@marvell.com, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@kernel.org>, 
+ Manish Rangankar <mrangankar@marvell.com>, linux-scsi@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Nathan Chancellor <nathan@kernel.org>
+X-Mailer: b4 0.16-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2476; i=nathan@kernel.org;
+ h=from:subject:message-id; bh=vIE0vAS5hC8k+IS7OM8i2og1MguSCZYXRCq3Kg80fhI=;
+ b=owGbwMvMwCUmm602sfCA1DTG02pJDFnV0zbM7E4XfugvoHr+jFSwgpThzgdH+ZeId5QIW7Z9E
+ XON/2/fUcrCIMbFICumyFL9WPW4oeGcs4w3Tk2CmcPKBDKEgYtTACbyfC7DP405v5l/WaXbysXX
+ 7LLrNp2zt9+sd8+vdwnhKqw862q/qDH8z2y+fXf917sf3oTpHHqU9eLrgz0LT7adKOJd/NjpQ/H
+ PyawA
+X-Developer-Key: i=nathan@kernel.org; a=openpgp;
+ fpr=2437CB76E544CB6AB3D9DFD399739260CB6CB716
 
+After commit c3930ec119cb ("scsi: qla2xxx: Add FC operational firmware
+load for 29xx"), there is a warning due to an incorrect format specifier
+for a 'size_t' variable when building for 32-bit platforms, for which
+'size_t' is 'unsigned int':
 
-On Fri, 24 Jul 2026 03:45:02 +0900, Sang-Heon Jeon wrote:
-> While reading mm/memblock, I found a conditional return where both
-> branches return the same value:
-> 
-> 	err = do_something();
-> 	if (err)
-> 		return err;
-> 	return err;
-> 
-> [...]
+  drivers/scsi/qla2xxx/qla_init.c: In function 'qla29xx_process_rd_image':
+  drivers/scsi/qla2xxx/qla_init.c:9272:74: error: format '%lx' expects argument of type 'long unsigned int', but argument 6 has type 'size_t' {aka 'unsigned int'} [-Werror=format=]
+   9272 |                             "TIM section too large (0x%x bytes, ring 0x%lx bytes).\n",
+        |                                                                        ~~^
+        |                                                                          |
+        |                                                                          long unsigned int
+        |                                                                        %x
+   9273 |                             section_size,
+   9274 |                             req->length * qla_req_entry_size(ha));
+        |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        |                                         |
+        |                                         size_t {aka unsigned int}
+  cc1: all warnings being treated as errors
 
-Applied, thanks!
+Use '%zx', the proper 'size_t' format specifier, to clear up the
+warning.
 
-[19/36] dmaengine: qcom_hidma: remove conditional return with no effect
-        commit: 04b8c3de13871653a8ecbd9f1adfea4d0694ecfe
+Fixes: c3930ec119cb ("scsi: qla2xxx: Add FC operational firmware load for 29xx")
+Signed-off-by: Nathan Chancellor <nathan@kernel.org>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 2b9a9c672ec6..900cd141928e 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -9269,7 +9269,7 @@ static int qla29xx_process_rd_image(struct scsi_qla_host *vha,
+ 	if (section == TIM) {
+ 		if (section_size > req->length * qla_req_entry_size(ha)) {
+ 			ql_log(ql_log_fatal, vha, 0x0098,
+-			    "TIM section too large (0x%x bytes, ring 0x%lx bytes).\n",
++			    "TIM section too large (0x%x bytes, ring 0x%zx bytes).\n",
+ 			    section_size,
+ 			    req->length * qla_req_entry_size(ha));
+ 			return QLA_FUNCTION_FAILED;
+
+---
+base-commit: 376a3960e5efe85ff765abfb5b5b7e4655ad6aed
+change-id: 20260811-scsi-qla2xxxx-qla_init-wformat-c542b3cfa6fa
 
 Best regards,
--- 
-~Vinod
-
+--  
+Cheers,
+Nathan
 
