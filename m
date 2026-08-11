@@ -1,30 +1,30 @@
-Received: from outbound.st.icloud.com (st-2001b-snip4-11.eps.apple.com [57.103.76.43])
+Received: from outbound.st.icloud.com (st-2001c-snip4-11.eps.apple.com [57.103.76.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D81A044C670
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 16:22:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.76.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F18453A2F
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 16:23:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.76.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786465376; cv=none; b=HxNJn3C2wEamUe9OlwkpT0NKTqahs68vMiEQKc/inAXUiYYS74smf7ZBHXMU741bjPKU2yusRBV7VnrpgwmnFrwVuT3Fvyuk5wKffXu8zn8QPQVPRwJ2T6eerrXHEx/0Ms9cavP9k7JlD5dUldhvsx+Jyif0Md/Y6cEMCOmF4hA=
+	t=1786465382; cv=none; b=ngKEdJFVRZtG7Wv61qJT0Ha9ZcqaZgCSUuDKu5KnyYimiOnEqo30zswPSGPZfXkouSIXgtB8eNvkdtG6waaMZldqUcgCROJB42vqgcaq0cwppWjAW0m0nTaQRdmkQC36V2GqcgJdvD94+vO6qJW6mbhG5LeEiNR0D5Y7lBROsb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786465376; c=relaxed/simple;
-	bh=0fPc6CARPcuAaajWRtt23gGGfR1jiXTnCmvuXPbfhcM=;
+	s=arc-20240116; t=1786465382; c=relaxed/simple;
+	bh=cDvzLlzFZYdah33bWCiHUL1zftZsV10gayUQkkOysic=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dz2LiyfFg+iskCiK8alX4+fOEM6UmNfogvOAwhrD2Wuj+5+NyVzRLU70a+6J87eo/aVL3k1SnbHcCOAn1cBlKmM9Gsja3cwukFEP9jv+Ykl72qp3BACh3ixc1D8AzQsrkURY9fEueBOVMAcbd8HoLHECoa2CT1YvPeB54E7e/Uo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=0DTKdtAM; arc=none smtp.client-ip=57.103.76.43
+	 MIME-Version; b=ks3OL3YD/lIDeQ+whnOg20CZMxVs2WAIjoq6+/oD/AWwknSuGOwtN4va478plopfI+J0DGDPV0G2GHAgmkHY96a8OMvnPWGLuGsEYATC7o3mp1ztcODmfkDdynv8pbACt1qZOQw77dbto4G8iVdHGF09kRjdIhRKtVymYxFhzIQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=XqGtdR2I; arc=none smtp.client-ip=57.103.76.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="0DTKdtAM"
+	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="XqGtdR2I"
 Received: from outbound.st.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-east-1a-100-percent-10 (Postfix) with ESMTPS id E6C101801785;
-	Tue, 11 Aug 2026 16:22:50 +0000 (UTC)
-X-ICL-RepId: 019ff1a2-432e-730e-a388-a7b91807ae58
-X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQ1PHVwPUxxGClYCVAFLVxQEHUAFVgpcQglLAi1eCF4fTBwdDlgGEhZdRVoOWwRHFBcbXAAXGVFNDlhbCFsEDx9MDFECQgVWXkoMHQRUB10FXVZQAlpLQgRLRWhcBVwcQBdIHV9qS1YUBBFQAVgeVl5aF15NWgJWTQVKA18BWwpBCEkFXwVZAV4NSQJdAlkfQhQdQAVWClxCCUsCLV4IXh9MHB0OWAYMUE0BQwgKAlEcVg1X
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1786465373; x=1789057373; bh=SKbj1OiC/mTsqe+ug23DPAsn1yxr1ddVH2kyAr8TTnY=; h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme; b=0DTKdtAMXgxk4D/MXnE8RJ0/+h1Q5YIHjQgg/HiMTFB1d3aEBVFnhOkHDAWM1cw8tifbsFUtvm6jfsAHroyAfjl/UBGB7bv/1ydzNjsYPZtI7Na3FclQqOLAwp+sZdQxXQSG2BfWzccqbkiRT7z4kiU2wLyKvsJDmXG+o/GH1bLapCwrxpsBp1vlIDUGfl0n0aCCMdjzPULF1xu9xAMswEs1R++nlfBWEwBibSRyrH2nTvebK86XYDy/eX4ufWw53HDly5sQOebPUU9fjv/C3QfXY7OJ5xSsBmvygfNRtekPoHyyHLzo+RCIyCNN0CfY+3U/d3EmvwneGAhXONIIug==
+	by p00-icloudmta-asmtp-us-east-1a-100-percent-10 (Postfix) with ESMTPS id ED5FC180039A;
+	Tue, 11 Aug 2026 16:22:56 +0000 (UTC)
+X-ICL-RepId: 019ff1a2-5a83-772a-aff9-8ae9e4fd2327
+X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQ1PHVwPUxxGClYCVAFLVxQEHUAFVgpcQglLAi1eCF4fTBwdDlgGEhZdRVoOWwRHFBcbXAAXGVFNDlhbCFsEDx9MDFECQgVWXkoMHQRUB10FXVZQAlpLQgRLRWhcBVwcQBdIHV9qS1YUBBFQAVgeVl5aF15NWgJWTQVKA18BWwpBCEkFXwVZAV4NSQJdAlkfQxQdQAVWClxCCUsCLV4IXh9MHB0OWAYMUE0BQwgKAlEcVg1X
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1786465379; x=1789057379; bh=05b0w/YtTgz36UUatu5KxFxKywEL0tdYAlUL3Cd6rng=; h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme; b=XqGtdR2In79NUjjsjcmdUNjnuORCriKTvE+Yj4jSk1M8/DchS04UT8KVj7AUPVdt9Fzr46dXxypLwe/9bJ3HIuZzgS6FHpD+0mDwiPynQ5NmLtLveBlBe5Hkyk1jdm1STjGKCJrDug0wfOm6d6SckPQsXOl1ZksPBfsQfy9N6uVEFJgxffGVSHLE9kw4jW8a+c+oVV4MozIM5ybSnPO0oy47cSR51QJFnWktt4OI+Gg8Enm8Srh1qmJt2rz8R9BSunodK2Pma7Zg223DIOqoARdJxnSJRuefKvQkq6qZU80FY/qQdawwW0MMGpjxcq+qVNjbtE+hEp9mxZy6x7jyIQ==
 Received: from machine (unknown [17.42.251.67])
-	by p00-icloudmta-asmtp-us-east-1a-100-percent-10 (Postfix) with ESMTPSA id 762AF1801784;
-	Tue, 11 Aug 2026 16:22:50 +0000 (UTC)
+	by p00-icloudmta-asmtp-us-east-1a-100-percent-10 (Postfix) with ESMTPSA id 1B1A4180009C;
+	Tue, 11 Aug 2026 16:22:56 +0000 (UTC)
 From: Eshaan Deshmukh <eshaan2031@icloud.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
@@ -33,9 +33,9 @@ Cc: John Garry <john.g.garry@oracle.com>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Eshaan Deshmukh <eshaan2031@icloud.com>
-Subject: [PATCH v2 1/3] scsi: libsas: Handle errors in sas_ex_add_parent_port()
-Date: Tue, 11 Aug 2026 11:22:21 -0500
-Message-ID: <20260811162223.411052-2-eshaan2031@icloud.com>
+Subject: [PATCH v2 2/3] scsi: libsas: Handle errors in sas_set_ex_phy()
+Date: Tue, 11 Aug 2026 11:22:22 -0500
+Message-ID: <20260811162223.411052-3-eshaan2031@icloud.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260811162223.411052-1-eshaan2031@icloud.com>
 References: <20260811162223.411052-1-eshaan2031@icloud.com>
@@ -46,89 +46,119 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: EGe0L9IzSpxheSGvoowNgJeIKGi6R7SE
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODExMDEzNiBTYWx0ZWRfX1qHgB0wdOXto
- p22MGpcjUIQOLP9g1TFraCv09t/MoVKilGoG05NB3/L2FPAev6FmUoXDvf8YBEQfIk3WUIwW4n4
- qzYQJXtLWELjKE+R+cllVsQ6UuZotWkDjAev+JO0BiIKRlvk2ETrU5uIl/hBut6c/I2djTA/bGU
- lmw3D83l9RISML9ot1Az2k+AaaxRwGmEKw//to+6IXzx605CNTJwObMScPyL8UoqxzdrWUyS5om
- nrOVzWAI+eL9ZnHb1buMAi7efLNMip9VTyOhyZhyNaXEHe7zd6IEDt3H4HEPdfH5QS6IQXpipIP
- +XiIXIkFxnyrpx3ZwpAl8fvrR6MmHIEztgktzOTkFEKXV2/VjWzSojdL77jH0g=
-X-Authority-Info-Out: v=2.4 cv=e5sLiKp/ c=1 sm=1 tr=0 ts=6a7b4c5b
+X-Authority-Info-Out: v=2.4 cv=a8Q9NESF c=1 sm=1 tr=0 ts=6a7b4c61
  cx=c_apl:c_pps:t_out a=YrL12D//S6tul8v/L+6tKg==:117
  a=YrL12D//S6tul8v/L+6tKg==:17 a=Sv0fKeRqtYgA:10 a=x7bEGLp0ZPQA:10
  a=ea8ixM18I5MA:10 a=VkNPw1HP01LnGYTKEx00:22 a=v3ZZPjhaAAAA:8
- a=i0Imq2-WVZI-w4_-C1cA:9
-X-Proofpoint-ORIG-GUID: EGe0L9IzSpxheSGvoowNgJeIKGi6R7SE
+ a=PaGFxrA-4Pw6slCmviwA:9
+X-Proofpoint-ORIG-GUID: DXmDAf3rjoyH0vRbwwdnaWNECtvh10RW
+X-Proofpoint-GUID: DXmDAf3rjoyH0vRbwwdnaWNECtvh10RW
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODExMDEzNyBTYWx0ZWRfXw+sirHsPuQPP
+ F14DHFc/AVXewcJeJmlkDr1nK7zeZY6w2lrSEzoFrUIqF77XbN2K3j8hXNJlh2wtbjVOTxh3a+T
+ Br37rQA7Po8rUeAESb6r/kug7BJNZp0is9tfdfBMI9ySskcSUP3VZ/iFZtpiqf7Jmyl+VpWxtvc
+ Vg468L9Xti89poZueRkjZ5TNHeghfz1vYoHz+1XpZLYo3hv+rxjFR76Bo10LqE46cV7rQuIechY
+ qo9tICVQqyegbyowE9zO//vAyuar6Uo9Ecpv1PHZxcUTc6w1o+ZUcX0SH515tEQym6IWZi7j8/5
+ phPBDoZ/6Edrv6+pSXEtb32WJuG7YzRtnxmYqSRLWTjRUAGT1bIJ5Z91XDYqgw=
 
-The function sas_ex_add_parent_port() uses BUG_ON() if sas_port_alloc()
-or sas_port_add() fails. Change sas_ex_add_parent_port() to return error
-codes to the caller and free the sas_port_alloc() allocation. Also
-change sas_ex_discover_dev() to handle errors returned by
-sas_ex_add_parent_port().
+The function sas_set_ex_phy() uses BUG_ON() if sas_phy_alloc() fails.
+Change it to return -ENOMEM error code if that happens. Change all the
+other returns in sas_set_ex_phy() to return 0 to preserve current
+functionality, or to return an error. Change all uses of sas_set_ex_phy
+to handle the returned error codes.
 
 Signed-off-by: Eshaan Deshmukh <eshaan2031@icloud.com>
 ---
- drivers/scsi/libsas/sas_expander.c | 30 +++++++++++++++++++++---------
- 1 file changed, 21 insertions(+), 9 deletions(-)
+ drivers/scsi/libsas/sas_expander.c | 28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index f471ab464..f1a1417b0 100644
+index f1a1417b0..1aa99e7c7 100644
 --- a/drivers/scsi/libsas/sas_expander.c
 +++ b/drivers/scsi/libsas/sas_expander.c
-@@ -33,19 +33,29 @@ static void sas_port_add_ex_phy(struct sas_port *port, struct ex_phy *ex_phy)
- 	ex_phy->phy_state = PHY_DEVICE_DISCOVERED;
+@@ -207,7 +207,7 @@ static enum sas_device_type to_dev_type(struct discover_resp *dr)
+ 		return dr->attached_dev_type;
  }
  
--static void sas_ex_add_parent_port(struct domain_device *dev, int phy_id)
-+static int sas_ex_add_parent_port(struct domain_device *dev, int phy_id)
+-static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
++static int sas_set_ex_phy(struct domain_device *dev, int phy_id,
+ 			   struct smp_disc_resp *disc_resp)
  {
- 	struct expander_device *ex = &dev->ex_dev;
- 	struct ex_phy *ex_phy = &ex->ex_phy[phy_id];
+ 	enum sas_device_type dev_type;
+@@ -220,14 +220,15 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
+ 	struct sas_rphy *rphy = dev->rphy;
+ 	bool new_phy = !phy->phy;
+ 	char *type;
 +	int error;
  
- 	if (!ex->parent_port) {
- 		ex->parent_port = sas_port_alloc(&dev->rphy->dev, phy_id);
--		/* FIXME: error handling */
--		BUG_ON(!ex->parent_port);
--		BUG_ON(sas_port_add(ex->parent_port));
-+		if (!ex->parent_port)
+ 	if (new_phy) {
+ 		if (WARN_ON_ONCE(test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)))
+-			return;
++			return 0;
+ 		phy->phy = sas_phy_alloc(&rphy->dev, phy_id);
+ 
+-		/* FIXME: error_handling */
+-		BUG_ON(!phy->phy);
++		if (!phy->phy)
 +			return -ENOMEM;
-+
-+		error = sas_port_add(ex->parent_port);
-+		if (error) {
-+			sas_port_free(ex->parent_port);
-+			ex->parent_port = NULL;
-+			return error;
-+		}
-+
- 		sas_port_mark_backlink(ex->parent_port);
  	}
- 	sas_port_add_ex_phy(ex->parent_port, ex_phy);
+ 
+ 	switch (disc_resp->result) {
+@@ -296,11 +297,14 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
+ 	phy->phy->enabled = (phy->linkrate != SAS_PHY_DISABLED);
+ 
+  skip:
+-	if (new_phy)
+-		if (sas_phy_add(phy->phy)) {
++	if (new_phy) {
++		error = sas_phy_add(phy->phy);
++		if (error) {
+ 			sas_phy_free(phy->phy);
+-			return;
++			phy->phy = NULL;
++			return error;
+ 		}
++	}
+ 
+  out:
+ 	switch (phy->attached_dev_type) {
+@@ -339,7 +343,7 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
+ 	    SAS_ADDR(phy->attached_sas_addr) != SAS_ADDR(sas_addr))
+ 		/* pass */;
+ 	else
+-		return;
++		return 0;
+ 
+ 	/* if the attached device type changed and ata_eh is active,
+ 	 * make sure we run revalidation when eh completes (see:
+@@ -353,6 +357,8 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
+ 		 SAS_ADDR(dev->sas_addr), phy->phy_id,
+ 		 sas_route_char(dev, phy), phy->linkrate,
+ 		 SAS_ADDR(phy->attached_sas_addr), type);
 +
 +	return 0;
  }
  
- /* ---------- SMP task management ---------- */
-@@ -981,12 +991,14 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
- 	}
- 
- 	/* Parent and domain coherency */
--	if (!dev->parent && sas_phy_match_port_addr(dev->port, ex_phy)) {
--		sas_ex_add_parent_port(dev, phy_id);
--		return 0;
--	}
-+	if (!dev->parent && sas_phy_match_port_addr(dev->port, ex_phy))
-+		return sas_ex_add_parent_port(dev, phy_id);
-+
- 	if (dev->parent && sas_phy_match_dev_addr(dev->parent, ex_phy)) {
--		sas_ex_add_parent_port(dev, phy_id);
-+		res = sas_ex_add_parent_port(dev, phy_id);
-+		if (res)
-+			return res;
-+
- 		if (ex_phy->routing_attr == TABLE_ROUTING)
- 			sas_configure_phy(dev, phy_id, dev->port->sas_addr, 1);
+ /* check if we have an existing attached ata device on this expander phy */
+@@ -397,8 +403,8 @@ static int sas_ex_phy_discover_helper(struct domain_device *dev, u8 *disc_req,
+ 		pr_notice("Found loopback topology, just ignore it!\n");
  		return 0;
+ 	}
+-	sas_set_ex_phy(dev, single, disc_resp);
+-	return 0;
++
++	return sas_set_ex_phy(dev, single, disc_resp);
+ }
+ 
+ int sas_ex_phy_discover(struct domain_device *dev, int single)
+@@ -2021,7 +2027,7 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
+ 		 * the PHY info, like negotiated linkrate.
+ 		 */
+ 		if (res == 0)
+-			sas_set_ex_phy(dev, phy_id, disc_resp);
++			res = sas_set_ex_phy(dev, phy_id, disc_resp);
+ 		goto out_free_resp;
+ 	} else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
+ 		   dev_type_flutter(type, phy->attached_dev_type)) {
 -- 
 2.55.0
 
