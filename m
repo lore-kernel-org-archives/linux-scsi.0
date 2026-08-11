@@ -1,100 +1,60 @@
-Received: from outbound.qs.icloud.com (qs-2007k-snip4-2.eps.apple.com [57.103.84.233])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 930A137A85D
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Aug 2026 23:31:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.84.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B226937F727;
+	Tue, 11 Aug 2026 01:26:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786404712; cv=none; b=feKIPynycJlNNhTMGz3VsaejFPG1XHqbSHKlavHa2cfNnGTKOV+UA0+WIbhqW9c5zD37k+9BXpv+c7QPlsaFsgsHDoZYGaq5QsZhw22mbkXXpkPd36PiJpZ6OXdOQf3mYV3kuCoruFuxjUaxQDbpjpONkqLHsGBUlbV2HsigeB4=
+	t=1786411564; cv=none; b=aElqKyoXW3i0lycJ1qnnNzRnjdF1VmgOSqiyzhLa0CU82rSYKk7ML/h8exd8gPkMJg0qwdUoTvBAsUJDkrpXpR29JluIU0SoWmLgGl4LXlCuWyeEOwQ/dFHaLrVhqvna1TGsvr9tzOIXsK1JswNqMYj7CWFJLJtB/6e46z+pAJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786404712; c=relaxed/simple;
-	bh=Gm5zOKSEWAhE3mXt3G0dNDJ/PcB4syl2jQ254qbijVE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mJu26hAaxkWKWbFREmT5G6Im5O58t9D5TWtudLzgBdcjMWNWTac0198LzpmxaFo7wp/uNAPtiofHz3Kqg4WivY7t60PSevr722+F7atvh69tJD9XpvF9ZFp5YI6m+exXVw5pVz1Qe+xmphh+TNO+QAeQ9GIxGOTb7bo6WhQOIcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=k7WSRe2E; arc=none smtp.client-ip=57.103.84.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1786411564; c=relaxed/simple;
+	bh=BGLpnE3xgDheX8oTIsp3EbEhk7oJln2dbgtrZtiP698=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 MIME-Version:Content-Type; b=eq06DXeMo2Z1ljR4cFwbG0K7OlfmcaQLJcYvAyXMj35mvM8DfXqDndj95JTIF5LStxJncMiJGz1PQno7ASRvQoluAeEBRLHXudw8aL97wllY5UcmX1m3lbDhVSNBImLodgLwgMj0SeMXslDJnMmoe7MJZBe1jezU+k7+gzY3wCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UoItw0P1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="k7WSRe2E"
-Received: from outbound.qs.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-east-2d-60-percent-2 (Postfix) with ESMTPS id 103A21800205;
-	Mon, 10 Aug 2026 23:31:47 +0000 (UTC)
-X-ICL-RepId: 019fee04-9e91-7779-8bce-5f18995e8d23
-X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQ1PHVwPUxxGClYCVAFLVxQEHUAFVgpcQglLAi1eCF4fTBwdDlgGEhZdRVoOWwRHFBcbXAAXGVFNDlhbCFsEDx9MDFECQgVWXkgLHQRUB10FXVZQAlpLQgRLRWhcBVwcQBdIHV9qS1YUBBFQAVgeVl5aF15NWgJWTQVKA18BWwpBCUoAXgZYBV4LTwZfBl0fQRQdQAVWClxCCUsCLV4IXh9MHB0OWAYMUE0BQwgKAlEcVg1X
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1786404710; x=1788996710; bh=ZFPQIxawaE0fVlWGUO2XI7RNDYyUtq2a9C+Qje6V7+o=; h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme; b=k7WSRe2ErCE+53HqdOBHN2JFb9vMhxXZf76FgHILTPinAHnYmaO/4zjoa0I03OKlZ6+ZWbofIagkiwtBRpyBOIYgkRQhDF8aqThBWpiIf/T0PKFKDbqwbWTiSQiknEBxRnne8sytRLypqGQJjG6Mi6hZyNIhxUN4ejSbCmhFVRgShkQ0JDyyVFaGKh+aqn4gTqviS0/IL2u+jltPCEqkn3wthhbmHUaLkO4WVJgBLQc3W5nV4xMyH4u1xR6GwB0nH9iuKluD/sIDNGqmjfShSJJGBjU5O2xCPxxJ6uqpUDrxfqmQQVTS84CvfcZR/Pn+MsMeAKNYacptRhQ4kPbC+A==
-Received: from machine (unknown [17.57.155.37])
-	by p00-icloudmta-asmtp-us-east-2d-60-percent-2 (Postfix) with ESMTPSA id 397F0180023A;
-	Mon, 10 Aug 2026 23:31:46 +0000 (UTC)
-From: Eshaan Deshmukh <eshaan2031@icloud.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Eshaan Deshmukh <eshaan2031@icloud.com>
-Subject: [PATCH] scsi: libsas: Handle errors in  sas_ex_discover_expander()
-Date: Mon, 10 Aug 2026 18:31:37 -0500
-Message-ID: <20260810233137.275216-1-eshaan2031@icloud.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UoItw0P1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0195B1F000E9;
+	Tue, 11 Aug 2026 01:26:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786411563;
+	bh=uRleJ4eP/gnxUnbEgZpawqofU5wZ/GfdTOV4jzbOjc8=;
+	h=To:Cc:Subject:From:In-Reply-To:References:Date;
+	b=UoItw0P1Wn7707HEIrCZ9ftvL2eOzi2ccUGIIWHivetEQtJ/zzlvWrS+lID4doM3H
+	 +batf/ArbRwkoz3gh314qNMl5BdD+zy+kiV9ndZu79VdGc3ZpCjrgnn0SIx19sWpNb
+	 uOAJOMV8ORngRUQYYOSAbqbGw7URxAZoSuji3qPFBdDsQY3jcb+l5ZWGCarWM39bD1
+	 1DgenIZH1pQV4nTXV0RgXLX9JN2RHDMUMhpApblniCKp1z2pkzzGx1k5i92aNC8GtV
+	 /d39aTcghS2V7PAReo2dRQs0yDVMtPgvjQ+JAKEV3WIj7qnwZBnXMmqqvyKMehIh4k
+	 MPSgZC7Rw2PSg==
+To: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: sebaddel@cisco.com,  arulponn@cisco.com,  djhawar@cisco.com,
+  gcboffa@cisco.com,  mkai2@cisco.com,  satishkh@cisco.com,
+  aeasi@cisco.com,  martin.petersen@oracle.com,
+  linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
+  jmeneghi@redhat.com,  revers@redhat.com,  adakopou@redhat.com,
+  lduncan@suse.com,  kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH] scsi: fnic: Fix built-in NVMe/FC build
+From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
+In-Reply-To: <20260810110627.4521-1-kartilak@cisco.com> (Karan Tilak Kumar's
+	message of "Mon, 10 Aug 2026 04:06:27 -0700")
+Message-ID: <yq1bjb9xxbp.fsf@mail.kernel.org>
+References: <20260810110627.4521-1-kartilak@cisco.com>
+Date: Mon, 10 Aug 2026 21:26:01 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEwMDIwMCBTYWx0ZWRfXxJJgxYfGsoyA
- kRws/6JhRhLapIwFgz401NrPBYRjNJ6LOfpyCKj5ja0crsSg6mvvEmFYtoLOTZyaBP4Wy/Zn+nT
- PW568l1LaHacjL8GFMslETh+7HPVxEkxJJ8pLTBD67cSqYCsN6bPMn+nox7B70UhtI35zgjNt3M
- niQWDHu79O0PjHB561U/E8uopVeQp93reGUD+GaQhR21+MEPIwEJ72mbjpGiXOUUwddpb0YelqN
- JxNL9HhkyFxmRyiLZQVc/7vScQtR6g31hff1Q3J8xeP3hbQTpXRqf2hWxbS3RlVjEdn/jbsg8sp
- Ul3iGiK/yYYb8s+UvsL+K4/yGcyoLD+8l3UNpsI/oKBfisKKTxwjNydDS4kGTk=
-X-Proofpoint-GUID: 4z5toeov7Q-hrupBBPI_aE-9qbg5ntWk
-X-Authority-Info-Out: v=2.4 cv=NObYOk6g c=1 sm=1 tr=0 ts=6a7a5f64
- cx=c_apl:c_pps:t_out a=bsP7O+dXZ5uKcj+dsLqiMw==:117
- a=bsP7O+dXZ5uKcj+dsLqiMw==:17 a=Sv0fKeRqtYgA:10 a=x7bEGLp0ZPQA:10
- a=ea8ixM18I5MA:10 a=VkNPw1HP01LnGYTKEx00:22 a=v3ZZPjhaAAAA:8
- a=G5qPdV8fadFp4kCsiFEA:9
-X-Proofpoint-ORIG-GUID: 4z5toeov7Q-hrupBBPI_aE-9qbg5ntWk
+Content-Type: text/plain
 
-The function sas_ex_discover_expander() does not account for the
-potential failure of sas_port_alloc() for phy->port. It also calls
-BUG_ON in case sas_port_add fails for phy->port. Add a check for
-phy->port after sas_port_alloc() where if it is NULL, it cleans up the
-child allocated device and returns NULL. Add another check for
-sas_port_add() where if it returns an error code it frees phy->port,
-sets it to NULL, cleans up the child allocated device, and returns NULL.
 
-Signed-off-by: Eshaan Deshmukh <eshaan2031@icloud.com>
----
- drivers/scsi/libsas/sas_expander.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+Karan,
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 1aa99e7c7..f9ae655a2 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -925,9 +925,18 @@ static struct domain_device *sas_ex_discover_expander(
- 		return NULL;
- 
- 	phy->port = sas_port_alloc(&parent->rphy->dev, phy_id);
--	/* FIXME: better error handling */
--	BUG_ON(sas_port_add(phy->port) != 0);
-+	if (!phy->port) {
-+		sas_put_device(child);
-+		return NULL;
-+	}
- 
-+	res = sas_port_add(phy->port);
-+	if (res) {
-+		sas_port_free(phy->port);
-+		phy->port = NULL;
-+		sas_put_device(child);
-+		return NULL;
-+	}
- 
- 	switch (phy->attached_dev_type) {
- 	case SAS_EDGE_EXPANDER_DEVICE:
+> The fnic NVMe/FC code is guarded with IS_ENABLED(CONFIG_NVME_FC).
+> That also evaluates true when NVME_FC is built as a module.
+
+Applied to 7.3/scsi-staging, thanks!
+
 -- 
-2.55.0
-
+Martin K. Petersen
