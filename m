@@ -1,247 +1,385 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011062.outbound.protection.outlook.com [52.101.57.62])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 637FC36EA98
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 12:49:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786452547; cv=none; b=aUoXQXOwYoYX9F7CYYA+aS8mvByv/fjxRI8dlAbhnebBxhMjaPWTAqtfaL/1S6sEMuwktuc0C6e9XsqFpBQqDAMSE2Q5jKlC5lB35d+ni8G+AlNI9/EbEyocB9uW4QLF5lOrvzKIWQ6wVprT8LipCgZrkK1qJkWrCcXt2k40BAk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786452547; c=relaxed/simple;
-	bh=/SemkPU4Bff8YXOGYAJT+Ed/9wgjOBUmHVCHVQzN2W8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YenaWg53lsdgv1juLRv2B6xFz8/ZMhp6hnFLzqizH4R3F6QGzLDx7i2qXHT9Peh00UAP1WSzdlaENQaUfe82hF2snYz+26ningYzuhc+z8j3Ix/2X04IkmHgAtB0Njp0cOndzFW3VcfSOSLwnb/5xSdB6GiuWA/2F+uMAS9wD9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pEPd2KUW; arc=none smtp.client-ip=209.85.216.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34ED72AD00;
+	Tue, 11 Aug 2026 14:26:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.62
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786458365; cv=fail; b=B2V28jSoA60QfoaUIWwhFrKSrillUZvfuxmeGsKimfrSovXiH9XaNpB1j6FKV8PbyZsR9t7fkjv1/iEGq7qEjMjUq/gNVR+ejFl9oDnUfbApBIPA6ct0UQDsE7da44sy5yZPPvZ/2F+GUrudmpEvatBSnCGnF1+4BsjUkVsKBrM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786458365; c=relaxed/simple;
+	bh=5P66ELHW+kuTtD+yiYVtJOwgt407FsTkr28BS6/EYSE=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=fzW0QujtFmKnvU9/bqzSLeTUqkcMGExvicnQU9dGvJjRHmB59pPQ90z708bXTLXvG6sdclKM6XTEdEFgcPLqsYQJQ5/eNo7p0DHdpQWzVhlZgEKkHCJGGgtd4zKRS1cI2UKJ4MK6FwHykzOlUL4D0QVDMDMp/lMp5kqKOUurqUo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=WBpzkKm2; arc=fail smtp.client-ip=52.101.57.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pEPd2KUW"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-38dcbade417so781426a91.1
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 05:49:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786452545; x=1787057345; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=T0kV3tTim4vynviOZcIlYMP2pHOTcpC0ofsMpZhrjB8=;
-        b=pEPd2KUWZp22QxP05Y1lClVRGbFBjsbfEVRGrFZMFrI7pMu65iH5kvMKyHKYQ3e5Nz
-         +5BDG70x9PYPz/TX4f7S0RABqTZU3beufjzqR+HtxujRywFwp3zBeYBAAppVbCze9JbO
-         o9weV8Qwdruj6mkT0yNRZFbAPQnmOiF+IzwA9iJIkwdbYQ3Bz30cwW4l0yJmW09r29/i
-         VCvbKkfioWXTotHIvDlavvefvtLwDQhe/zEuETQ5LfRisJIJz5qE2Loi3nc0fMGTZma2
-         nWKIkHy+cXlQhStf49jrBXyZNudad69cchETUfNY3pV0vKJUnnjMcN5MeYs3xigifXzh
-         H52Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786452545; x=1787057345;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=T0kV3tTim4vynviOZcIlYMP2pHOTcpC0ofsMpZhrjB8=;
-        b=hDlmVuGasE2kNxRTlACwdx2YJ5fXGZEvtlu2VFExRYO7HQ9I3R57SfObaDddPXgHiz
-         w/q2IAIuq2kG78wDHdSR3/43npXaI561rGgCslgJh4efFTYjXMS0FAqiuvkVeDGWcW3D
-         /Fxsp67gHs2yRsehjCC7e3WD7ZEoaKjsQCnkIjs6OBCPBiTDr1QLwLxxFNshvzzWBjla
-         /UXtK5BIZyy9VvssqplPRJ520WJp735uuZiyvRo2rE5YSPozTGSdMA7fDCCXcOwutPsv
-         Cq2wAnedk5mtpoPx4pjjO0e8dBsoqtEjUkt6p1VKEMlpsBsBntwbErIm0NbJi8XmiYQV
-         0LMQ==
-X-Gm-Message-State: AOJu0YyAFdIgHBKsbZdyzaFjuH+mVA6xh0C4l3RvV7C6tDQIk+kr786D
-	4nFl2cCj2paBkLrWrBvPWrBFKwtMFfv0qEGjJ8j4riRecHUqQKSSVXKg
-X-Gm-Gg: AR+sD11w1Wuyi+bh2wOfTmdEeW06W0/O68TqEjOKnDhNz4dr8AOC/YQ/MAcy1x+lcTI
-	Phy+AsR4igEswMrxxYRjtXEUunjPe7x3uSucPSoD7tLZFUkgJ4MCXva6K/UvTLA38C1HqkPheSd
-	/ijmpE8dkuZdyRdBoCJStinpgx30k/JP4rwJ/feNvUnwwiKvDNoAgZkvKT+M/h766kLsOmf/ati
-	jH3Pz65d0IqMY6uexLwClKnhSDPZ0f7y/rL0fPu5vFGlfZLNyNHpI49uFXIFfO32bkcoOAGIpwW
-	MHN/LzRpMy24ZwZKMiR548TZWe3gP6N8/0juCsFPBg+qxNFzo4gfZNVj3VcRXD2MkO3sw2GE2LW
-	nfwc05Ju21Y+rSunaQReTdl19iHiT9sgLz+tJynGHC/zxyBtURQaZV0Ner36extfITdKWxoG72K
-	AxOiR/XX/MpAnlaxmwlC/DoGjTTfMoDtesEqYsVi3SwqneOau3bruaRNK+2IIX4YRLT66fm/CfK
-	DFnqsvhfO7FLAWPFGfxUTvYt4A=
-X-Received: by 2002:a17:90b:33c4:b0:392:c80b:8ef7 with SMTP id 98e67ed59e1d1-392ec6d3407mr2980329a91.18.1786452544594;
-        Tue, 11 Aug 2026 05:49:04 -0700 (PDT)
-Received: from fedora (103-127-218-229.dynamic-ip.pni.tw. [103.127.218.229])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-392d534bfe7sm3887009a91.9.2026.08.11.05.48.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Aug 2026 05:49:03 -0700 (PDT)
-From: Linfeng Sun <linfeng.sun.dev@gmail.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	Alok Tiwari <alok.a.tiwari@oracle.com>,
-	Mike Christie <michael.christie@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Linfeng Sun <linfeng.sun.dev@gmail.com>
-Subject: [PATCH] scsi: target: iscsi: Fix race in discovery auth updates
-Date: Tue, 11 Aug 2026 20:48:43 +0800
-Message-ID: <20260811124843.6817-1-linfeng.sun.dev@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="WBpzkKm2"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=nQ+O0raNhMJvxMXvTNfdQrHHX1/EZGJyOsuvYoZSDfi436iQRoZCifRpSNN7ENtLhp+pFfddaQOaBNG5gAQDsYzE7ZvWIMtp9BMAvxGLNpky+sEPDvQqnS+bOZB7FTCuPv2+AiqxCzj2Cy2FYvnyl8Dekf9yUqgCW2kbT8nhK/bWRFB4vjKai+GMFF/DHoal2rUtzvBsvS7bNpj9xObaSLi3ScbWfePUpB9vvnHYVe55NV0N5jw6iT/DynfiqcMgDqYkMZ2oGaFK3kQjR7A9MIHvea/5WBg9VAJpsNAeC9cqIPX6KGPK8JaZ1ks0h5ddWqDtSIFiBbhcceUIBbf4bA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2lIe5PD7kYFCQLG2Th1SAANT3Q3n6dwSXPufWFRYVC4=;
+ b=Mt5sASykltXMgu58ltznvFG8okNgYiDli6HSks//fZy6fH86+4cl30rF/N8DI5NJHZz0BwN2qT59fTEa38yRK/DB45VAV5zz2cQvN8jlmI/59fi5JEJ1BwIZ39fuwvHsF9X0mOD0ld+AOHsGDi+ozbcM2FK38s0A7i43US0U3y015S24wHnr/hb3ZM2cBCOro7bYgOqn1YOvbOHha0hZJ6+PrUYRcGHmvO/od5d8y28ZNqn28Yc8+dFrMR2mBLaVbEgJOaPPULDRmcVl3oy3Nn5ThLvNyjDkptKAukfuwrvalUGIGp2Kr7JIR8cFXAd4N8tJGWO0qDNt+x/HJeh7/g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2lIe5PD7kYFCQLG2Th1SAANT3Q3n6dwSXPufWFRYVC4=;
+ b=WBpzkKm2BWGiz74rRlo/0Iv6wIhUlMXovYlxXfll/eRwNkTk+3uWNyUYzaHi/kM9cIF0rC1moE++IivkofTCDMY8drtJN1knFrqNgdx+qVyhsD9p5lpkVC5+45BGUR5wI6T25irIGDYKWejYG/8axtSsniiY2iibn/SaF9g1T20=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from DS0PR12MB9060.namprd12.prod.outlook.com (2603:10b6:8:c4::12) by
+ DS0PR12MB7851.namprd12.prod.outlook.com (2603:10b6:8:14a::8) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.315.11; Tue, 11 Aug 2026 14:25:55 +0000
+Received: from DS0PR12MB9060.namprd12.prod.outlook.com
+ ([fe80::e096:864d:d60a:c83f]) by DS0PR12MB9060.namprd12.prod.outlook.com
+ ([fe80::e096:864d:d60a:c83f%4]) with mapi id 15.21.0292.024; Tue, 11 Aug 2026
+ 14:25:55 +0000
+Message-ID: <6cf0791d-902d-4a89-bb57-d4c607991579@amd.com>
+Date: Tue, 11 Aug 2026 19:55:48 +0530
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] firmware: xilinx: ufs: move PHY/SRAM ready polling into
+ the firmware backend
+To: Michal Simek <michal.simek@amd.com>, linux-kernel@vger.kernel.org,
+ monstr@monstr.eu, git@amd.com
+Cc: Ajay Neeli <ajay.neeli@amd.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ "moderated list:ARM/ZYNQ ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>,
+ "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
+References: <eaeaaea8ed76069943e0706a0917139ff6569929.1785855749.git.michal.simek@amd.com>
+Content-Language: en-US
+From: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
+In-Reply-To: <eaeaaea8ed76069943e0706a0917139ff6569929.1785855749.git.michal.simek@amd.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MA5P287CA0160.INDP287.PROD.OUTLOOK.COM
+ (2603:1096:a01:1ba::8) To DS0PR12MB9060.namprd12.prod.outlook.com
+ (2603:10b6:8:c4::12)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS0PR12MB9060:EE_|DS0PR12MB7851:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5ccd2670-ceac-4f16-d510-08def7b47450
+X-LD-Processed: 3dd8961f-e488-4e60-8e11-a82d994e183d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|23010399003|366016|1800799024|6133799003|10067099003|56012099006|11063799006|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	JXLHuav/43fhrEfpvX5I7reqmJkn8knognbxR7rSBeZbraq57ipMoYvX+Wmms3DZztxE7G1uAYRtXNae5MWMI81MbGJNrjvdKZ2GLg1SpBt34ZqvnBciDkcR8DE6RhGsLEdjpr67m0+IUDCMg8dOSVTfw9vlsMyrx8FFc+qicSBvKqkhJH8zzwzcDY8/XpbJA0I04Hw1w5l5RO7NdYc6BUyc1lm9i0t15OgffuZBnJX6Cs8UeQRdkKLouLDcxl8/LXv1UvKeGqXYCH7PUzzZl+Mo4D/odsDnrKfhYy9M8C+pmtrQ8FBtP50VO+rRTCCQ5l/YcbnMMii3Ss/DD6qxMy5s9tlxGmdtgv12S6peaImF+UJDROnd1AQL4at+1M/pvQqayECoAlfKq9KEFaVTFEfBDVgdVCEyp8Qyew+PmWA9uqb50aSlRTZE5LUCYztNhGNXJkXlU+sm1TqpvhVcLMpc/9KJegh/7YUT+7zkEbwiKtvzzOwaiyAduvl7hX72D1D7qNomYrDhzGzQO9gad4uUZlzLy4svGz34O8uusznzkIn2loPx0K9O2USYU7+u2aTxdG9rJBsjym8ZBBm/b4uRQGxkr0w8tmmLMVTHqu3Rn0nMjIyro/eTFpPl7EtiXJIcvAmoZ4L1XJQGqfEloxyXn6u3+9D63ESUKAr2rxI=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB9060.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(366016)(1800799024)(6133799003)(10067099003)(56012099006)(11063799006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?dVZOa0tweTJMcWsrc1VjY2M1MVVydStEQzA5a0VENkw4ZzZFMkFMQkIxU0NS?=
+ =?utf-8?B?cHE3MmRnNW9YbldrdERzYi9UeFNrTUF5dHdwWS9FNDk3NEJrbEJHdkplYVBT?=
+ =?utf-8?B?OFpXZDNnbnhnUjhtYzIxZEVJc3AyREN4YVEwMFZtMVRPdGQ2SXdUeFlFUjhW?=
+ =?utf-8?B?cWhML0N0OFdQODhOVDdqNTcxWUljZnZpckhMaENvKzBrYkJuMDFBRnNhQWN4?=
+ =?utf-8?B?ZCtFd24wWE1STTdVL0tOQXgyVjg4clFBZG5hQitYdnhodUdwMkVLZ0pqbk82?=
+ =?utf-8?B?L2lVdFNCUWFkZnVUS3d6N2pzMHVQMDI0bitBV01GS2NsMDNKRzM3dEZKdU8r?=
+ =?utf-8?B?bHo1Mml6RnJTeHNRL3YxaW9IVUs4RFh3ZmoxYVRkdzJaQjNaQUpXaUg1ZjNC?=
+ =?utf-8?B?RHdwaEUwcU5qd0loRk5HaXRXekRFVTZJOWxtOXV1TmdxM01pYUlPc1FwTWJ3?=
+ =?utf-8?B?QXZwMEpMbEhTcHRwUVdSdGJKVGxjR1FTQ0lJV3I0Y0xlSUtSLzE3RTdadXh0?=
+ =?utf-8?B?cHJZemxDWEd2Z0FSTlM0S2IrQVZtU2pyVW14YUdHS1Rxbm9GcUczQk9qdUJn?=
+ =?utf-8?B?ZjdVMUFidlFuT1l4Z1dFbWFxZGFzTFVnRE9lM0xwd2hDOWpYSWZjS3ZZdUIz?=
+ =?utf-8?B?Z0dmTFI1S080WUIyRlJpeWYrUFA3SHFDSkhEQXJLQnZicTd0a3RjU21wY29m?=
+ =?utf-8?B?TnRNMXY1UkZOV05udVk3bFgvdVozOWtwUlJhSXJteHZ5azI0QnJBWGY5RmFP?=
+ =?utf-8?B?QVRhOU1udzZpaGFOME5vQWNYWjNsK1JpaWtOWnVOSGRuZGVwR1RpUGU5K2gr?=
+ =?utf-8?B?MTU3SW0vNUx5TDlWVCt0VDVvYVoxOHFrcEpBdzNTSndLN3gwNHdvMUpaaUhq?=
+ =?utf-8?B?cTJONVpDOVYySm9iM2Z6OGJDcHRjYmRLRWtJeXo0MjVKa0Q1STFISTRVR1Ny?=
+ =?utf-8?B?SlVTUG9qdlRBUnJVZkhhTlk0TXFlZjFwY0NjV3FxQm5nWG5BN05XemRxRWNC?=
+ =?utf-8?B?T3N3d3hCSjRaZWxTU2RVWnk0dUpYUjNKa1d5U3BobU9VNElyVVBhaWs5NWtu?=
+ =?utf-8?B?RnVaKytUT0tNWWVYdnRBVENrUU83MXNueGpuZUpuMGV6VjFBblUrOWtMQ0VH?=
+ =?utf-8?B?a01UVHdPMHpkYWVNTnB4UGJ3UlB5Z3d5MlhYZlZBZFlYVTJ0Mzh3aUdydmhN?=
+ =?utf-8?B?dXQrSVgrZUNndXJQS3ZnVE9xME84RlBSbDZYSWFHVTQ1cFcwM2Z1MTJQb1Z1?=
+ =?utf-8?B?cFhWUzlPZ0c1d1hpTTNDc2VKY2xoVXFXTFRVZ3pxd1crTHUxeUlPTHJMN2hF?=
+ =?utf-8?B?ME5oa280YjN6VE9UWjFabW5TbzR4WDBOZ2dYanhSQlYrUlFWc0p4TzgwY3dC?=
+ =?utf-8?B?YUdQekJFbWd5cHpQM1R2dkcxWHZmVWR6NlZLb2ZHSWNPdGgyeGVTWDRGRDU4?=
+ =?utf-8?B?TTBPbkFvM1c0NXVBOUtPQWlmTGQzYWV4QnV1elJRZSt3T3NyaWRobjFtWkFk?=
+ =?utf-8?B?TGZqWjFiRU4reEcwTEJmOGxyNW9YMUszN1B3UTJsME5TN0xoOFYxaE1Ebm5Y?=
+ =?utf-8?B?UW5zM2k3U0ZZSG5WRjErOFVwdWl4Y1dKcXhCRFQvb3NGMG9EK3pTTE9taGdN?=
+ =?utf-8?B?aDVHZFpCcW5HZVF6R1ZrWVQzdE1iS0VhZkVQWWFnSExpVm9OOGN4MDFMUVpX?=
+ =?utf-8?B?S0QrZU1JN2crdXkyMmJTMnlzQXFqNEJhTERackhOTkdzSVRFMEpFK25iNFY1?=
+ =?utf-8?B?N0plL1ZielhjVkdWbXdxNzVGWHpQRVhMMGdxZjVZWkFNUGdsUVFkMFJ2M3VG?=
+ =?utf-8?B?YU96bUZLZnZja0orTHhoRlBNRTZaUW1HQ2FUT080Q0x1bHc4alEyQW01SDNO?=
+ =?utf-8?B?MU8weUpFSnQxSk5tVDNzVVc4VlcwNnpMc3poZWJ5S1B2OXliUVZlQ2h4dGdK?=
+ =?utf-8?B?dlRLWmgyMFV0RmdyM3dXN25hbjdWQ2o0enlhUlNxSkhiQVVFWktmc3YzVnlR?=
+ =?utf-8?B?MnhTbWg5T2FucVRFcXM2SWV2RDF5MC9JbFFhVmIzckNIdm5pQXBpZVIxMWoy?=
+ =?utf-8?B?SnMvbmVIRXhKbGp2MnBqWHdsbWN0bjcyalBzdGRLNi82eXhrbFRHbjByNU96?=
+ =?utf-8?B?Mll0aW9qM1A2R0N3ZnFpQVBHQ09hSUpLVlVRT3FRZFpYK3JRVWc4c21ydllq?=
+ =?utf-8?B?QTRRTTdEMDNyVmFiNDluQWVpWG5yV1pTWEkrS1JES09hMHAyb2dKM3ZaOGdI?=
+ =?utf-8?B?YmZLWWw0Nm9oTzQ4aGJSeUtGdGhkcVNMdHQ1L1Y5WldSR3dyWnc0RFhtN2hP?=
+ =?utf-8?B?eGF4WndWYzdsM3VHRHRaOEN2T1M0L2VuMUd4S3pzWjZFcytHRHdQQT09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5ccd2670-ceac-4f16-d510-08def7b47450
+X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB9060.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Aug 2026 14:25:55.2968
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: xK6l9I/nqRv4rZCQqPyuDCCzJDBCQmGfhWbCzd7+qh22cz3sJ+MLEyvZgwGGtcc1ODTetKt1sgOwnk9CbkPy2A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB7851
 
-Separate configfs opens can concurrently update the discovery AuthMethod
-parameter. Both callers may free the same value in
-iscsi_update_param_value(), causing a double-free.
 
-Protect the lookup and replacement with the discovery TPG access lock, as
-used by the other TPG configfs parameter updates.
 
-I dont consider this a high-severity security bug, but for safety as a
-precaution, I can provide the reproducer PoC privately to the maintainers
-if needed.
+On 8/4/2026 8:32 PM, Michal Simek wrote:
+> The Versal Gen 2 UFS driver polls the firmware for M-PHY TX/RX
+> configuration readiness and SRAM initialisation completion with two
+> open-coded do/while loops. Each iteration is a full firmware round-trip
+> (PM_IOCTL/IOCTL_READ_REG of a protected PMC_IOU_SLCR register), so the
+> loop can issue up to a million EEMI calls, and it hard-codes the wait
+> policy inside the controller driver.
+> 
+> Introduce coarse blocking helpers, zynqmp_pm_wait_mphy_tx_rx_config_ready()
+> and zynqmp_pm_wait_sram_init_done(), that take a caller-supplied timeout
+> budget and contain the poll loop. The loop is EEMI-specific (legacy
+> firmware only exposes the per-read status primitive) so it lives in the
+> firmware driver, keeping the UFS driver backend-agnostic: a future
+> backend can offload the wait to the platform in a single call without
+> touching the controller driver again. The existing per-read primitives stay
+> exported, so the current EEMI interface is unchanged.
+> 
+> The timeout budget remains owned by the UFS driver (the consumer that
+> knows the hardware) and is passed down, so EEMI and any future backend
+> stay consistent.
+> 
+> Signed-off-by: Michal Simek <michal.simek@amd.com>
 
-[   53.935693] ==================================================================
-[   53.936125] BUG: KASAN: double-free in iscsi_update_param_value+0x41/0x140 [iscsi_target_mod]
-[   53.936725] Free of addr ffff888012e355b0 by task a.out/319
-[   53.937027]
-[   53.937120] CPU: 6 UID: 0 PID: 319 Comm: a.out Not tainted 7.2.0-rc7+ #3 PREEMPT(full)
-[   53.937130] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-[   53.937136] Call Trace:
-[   53.937139]  <TASK>
-[   53.937142]  dump_stack_lvl+0xd0/0x110
-[   53.937151]  print_report+0xd1/0x630
-[   53.937161]  ? __pfx__raw_spin_lock_irqsave+0x10/0x10
-[   53.937173]  ? kasan_complete_mode_report_info+0x6a/0x210
-[   53.937182]  ? iscsi_update_param_value+0x41/0x140 [iscsi_target_mod]
-[   53.937327]  kasan_report_invalid_free+0xa0/0xd0
-[   53.937337]  ? iscsi_update_param_value+0x41/0x140 [iscsi_target_mod]
-[   53.937484]  ? iscsi_update_param_value+0x41/0x140 [iscsi_target_mod]
-[   53.937632]  check_slab_allocation+0xee/0x120
-[   53.937641]  __kasan_slab_pre_free+0x24/0x50
-[   53.937650]  kfree+0x170/0x480
-[   53.937657]  ? __pfx_kstrtouint+0x10/0x10
-[   53.937665]  ? iscsi_update_param_value+0x41/0x140 [iscsi_target_mod]
-[   53.937813]  iscsi_update_param_value+0x41/0x140 [iscsi_target_mod]
-[   53.937959]  iscsi_disc_enforce_discovery_auth_store+0x18f/0x450 [iscsi_target_mod]
-[   53.938111]  ? __pfx_iscsi_disc_enforce_discovery_auth_store+0x10/0x10 [iscsi_target_mod]
-[   53.938263]  ? __kmalloc_cache_noprof+0x1be/0x460
-[   53.938272]  ? configfs_write_iter+0x3fe/0x560
-[   53.938284]  ? __pfx_iscsi_disc_enforce_discovery_auth_store+0x10/0x10 [iscsi_target_mod]
-[   53.938435]  configfs_write_iter+0x312/0x560
-[   53.938447]  ? __sanitizer_cov_trace_const_cmp4+0x16/0x30
-[   53.938458]  vfs_write+0x71c/0xe60
-[   53.938464]  ? __pfx_configfs_write_iter+0x10/0x10
-[   53.938477]  ? __pfx_vfs_write+0x10/0x10
-[   53.938484]  ? __pfx_mutex_lock+0x10/0x10
-[   53.938493]  ? fdget_pos+0x213/0x5d0
-[   53.938505]  ksys_write+0x154/0x290
-[   53.938512]  ? __pfx_ksys_write+0x10/0x10
-[   53.938519]  ? fpregs_assert_state_consistent+0xe1/0x160
-[   53.938532]  ? do_syscall_64+0x13f/0x640
-[   53.938539]  ? __sanitizer_cov_trace_cmp4+0x16/0x30
-[   53.938549]  __x64_sys_write+0x77/0xc0
-[   53.938555]  ? prandom_u32_state+0x13/0x180
-[   53.938567]  x64_sys_call+0x259/0x26e0
-[   53.938579]  do_syscall_64+0xf3/0x640
-[   53.938585]  ? do_syscall_64+0xa8/0x640
-[   53.938592]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-[   53.938601] RIP: 0033:0x7e9dc22449ee
-[   53.938607] Code: 08 0f 85 f5 4b ff ff 49 89 fb 48 89 f0 48 89 d7 48 89 ce 4c 89 c2 4d 89 ca 4c 8b 44 24 08 4c 8b 4c 24 10 4c 89 5c 24 08 0f 05 <c3> 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 80 00 00 00 00 48 83 ec 08
-[   53.938615] RSP: 002b:00007e9dc19a4e08 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-[   53.938623] RAX: ffffffffffffffda RBX: 00007e9dc19a56c0 RCX: 00007e9dc22449ee
-[   53.938628] RDX: 0000000000000002 RSI: 00005a09e22de04e RDI: 0000000000000004
-[   53.938633] RBP: 00007e9dc19a4e90 R08: 0000000000000000 R09: 0000000000000000
-[   53.938638] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000021
-[   53.938642] R13: 0000000000000000 R14: 00007ffcf2f464d0 R15: 00007e9dc11a5000
-[   53.938649]  </TASK>
-[   53.938652]
-[   53.953000] Allocated by task 308:
-[   53.953189]  kasan_save_stack+0x39/0x70
-[   53.953404]  kasan_save_track+0x14/0x40
-[   53.953617]  kasan_save_alloc_info+0x37/0x60
-[   53.953858]  __kasan_kmalloc+0xc3/0xd0
-[   53.954073]  __kmalloc_node_track_caller_noprof+0x24b/0x630
-[   53.954385]  kstrdup+0x62/0x110
-[   53.954567]  iscsi_update_param_value+0x4e/0x140 [iscsi_target_mod]
-[   53.955055]  iscsit_load_discovery_tpg+0x3fc/0x6e0 [iscsi_target_mod]
-[   53.955545]  0xffffffffa0479430
-[   53.955724]  do_one_initcall+0xd7/0x660
-[   53.955943]  do_init_module+0x306/0x940
-[   53.956165]  load_module+0x66c2/0x90f0
-[   53.956378]  init_module_from_file+0x192/0x1c0
-[   53.956626]  idempotent_init_module+0x274/0x8c0
-[   53.956883]  __x64_sys_finit_module+0xd3/0x170
-[   53.957134]  x64_sys_call+0x106d/0x26e0
-[   53.957354]  do_syscall_64+0xf3/0x640
-[   53.957562]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-[   53.957851]
-[   53.957946] Freed by task 318:
-[   53.958122]  kasan_save_stack+0x39/0x70
-[   53.958342]  kasan_save_track+0x14/0x40
-[   53.958562]  kasan_save_free_info+0x3b/0x60
-[   53.958802]  __kasan_slab_free+0x6f/0xa0
-[   53.959034]  kfree+0x23c/0x480
-[   53.959210]  iscsi_update_param_value+0x41/0x140 [iscsi_target_mod]
-[   53.959678]  iscsi_disc_enforce_discovery_auth_store+0x18f/0x450 [iscsi_target_mod]
-[   53.960236]  configfs_write_iter+0x312/0x560
-[   53.960478]  vfs_write+0x71c/0xe60
-[   53.960669]  ksys_write+0x154/0x290
-[   53.960865]  __x64_sys_write+0x77/0xc0
-[   53.961075]  x64_sys_call+0x259/0x26e0
-[   53.961287]  do_syscall_64+0xf3/0x640
-[   53.961490]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+Reviewed-by: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
 
-Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
-Signed-off-by: Linfeng Sun <linfeng.sun.dev@gmail.com>
----
- drivers/target/iscsi/iscsi_target_configfs.c | 26 ++++++++++++++------
- 1 file changed, 19 insertions(+), 7 deletions(-)
+Regards
+Sai Krishna
 
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index 704ec94383c3..e1aa0af52c65 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -1306,17 +1306,24 @@ static ssize_t iscsi_disc_enforce_discovery_auth_store(struct config_item *item,
- 		return -EINVAL;
- 	}
- 
-+	if (iscsit_get_tpg(discovery_tpg) < 0)
-+		return -EINVAL;
-+
- 	param = iscsi_find_param_from_key(AUTHMETHOD,
- 				discovery_tpg->param_list);
--	if (!param)
--		return -EINVAL;
-+	if (!param) {
-+		err = -EINVAL;
-+		goto out;
-+	}
- 
- 	if (op) {
- 		/*
- 		 * Reset the AuthMethod key to CHAP.
- 		 */
--		if (iscsi_update_param_value(param, CHAP) < 0)
--			return -EINVAL;
-+		if (iscsi_update_param_value(param, CHAP) < 0) {
-+			err = -EINVAL;
-+			goto out;
-+		}
- 
- 		discovery_tpg->tpg_attrib.authentication = 1;
- 		iscsit_global->discovery_acl.node_auth.enforce_discovery_auth = 1;
-@@ -1327,8 +1334,10 @@ static ssize_t iscsi_disc_enforce_discovery_auth_store(struct config_item *item,
- 		/*
- 		 * Reset the AuthMethod key to CHAP,None
- 		 */
--		if (iscsi_update_param_value(param, "CHAP,None") < 0)
--			return -EINVAL;
-+		if (iscsi_update_param_value(param, "CHAP,None") < 0) {
-+			err = -EINVAL;
-+			goto out;
-+		}
- 
- 		discovery_tpg->tpg_attrib.authentication = 0;
- 		iscsit_global->discovery_acl.node_auth.enforce_discovery_auth = 0;
-@@ -1337,7 +1346,10 @@ static ssize_t iscsi_disc_enforce_discovery_auth_store(struct config_item *item,
- 			" Discovery TPG\n");
- 	}
- 
--	return count;
-+	err = count;
-+out:
-+	iscsit_put_tpg(discovery_tpg);
-+	return err;
- }
- 
- CONFIGFS_ATTR(iscsi_disc_, enforce_discovery_auth);
--- 
-2.55.0
+> ---
+> 
+>   drivers/firmware/xilinx/zynqmp-ufs.c     | 70 ++++++++++++++++++++++--
+>   drivers/ufs/host/ufs-amd-versal2.c       | 46 ++++------------
+>   include/linux/firmware/xlnx-zynqmp-ufs.h |  8 +--
+>   3 files changed, 82 insertions(+), 42 deletions(-)
+> 
+> diff --git a/drivers/firmware/xilinx/zynqmp-ufs.c b/drivers/firmware/xilinx/zynqmp-ufs.c
+> index 85da8a822f3a..81ccf61a037c 100644
+> --- a/drivers/firmware/xilinx/zynqmp-ufs.c
+> +++ b/drivers/firmware/xilinx/zynqmp-ufs.c
+> @@ -5,6 +5,7 @@
+>    * Copyright (C) 2025 Advanced Micro Devices, Inc.
+>    */
+>   
+> +#include <linux/delay.h>
+>   #include <linux/firmware/xlnx-zynqmp.h>
+>   #include <linux/module.h>
+>   
+> @@ -33,7 +34,7 @@
+>    *
+>    * Return:	Returns 0 on success or error value on failure.
+>    */
+> -int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready)
+> +static int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready)
+>   {
+>   	u32 regval;
+>   	int ret;
+> @@ -53,7 +54,6 @@ int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready)
+>   
+>   	return ret;
+>   }
+> -EXPORT_SYMBOL_GPL(zynqmp_pm_is_mphy_tx_rx_config_ready);
+>   
+>   /**
+>    * zynqmp_pm_is_sram_init_done - check SRAM initialization
+> @@ -61,7 +61,7 @@ EXPORT_SYMBOL_GPL(zynqmp_pm_is_mphy_tx_rx_config_ready);
+>    *
+>    * Return:	Returns 0 on success or error value on failure.
+>    */
+> -int zynqmp_pm_is_sram_init_done(bool *is_done)
+> +static int zynqmp_pm_is_sram_init_done(bool *is_done)
+>   {
+>   	u32 regval;
+>   	int ret;
+> @@ -81,7 +81,69 @@ int zynqmp_pm_is_sram_init_done(bool *is_done)
+>   
+>   	return ret;
+>   }
+> -EXPORT_SYMBOL_GPL(zynqmp_pm_is_sram_init_done);
+> +
+> +/**
+> + * zynqmp_pm_wait_mphy_tx_rx_config_ready - wait for M-PHY TX-RX config ready
+> + * @timeout_us:	Caller-supplied timeout budget in microseconds
+> + *
+> + * Poll the M-PHY TX-RX configuration-ready status until it settles or the
+> + * timeout elapses. The poll loop is EEMI-specific (legacy firmware only offers
+> + * the per-read status primitive), so it lives here in the firmware driver
+> + * rather than in the UFS controller driver; an SCMI-based backend can instead
+> + * offload the wait to the platform in a single call. The timeout budget is
+> + * owned by the caller (UFS driver), keeping the policy with the consumer.
+> + *
+> + * Return:	Returns 0 once ready, -ETIMEDOUT on timeout, or error value.
+> + */
+> +int zynqmp_pm_wait_mphy_tx_rx_config_ready(u32 timeout_us)
+> +{
+> +	bool is_ready;
+> +	int ret;
+> +
+> +	while (timeout_us--) {
+> +		ret = zynqmp_pm_is_mphy_tx_rx_config_ready(&is_ready);
+> +		if (ret)
+> +			return ret;
+> +
+> +		if (!is_ready)
+> +			return 0;
+> +
+> +		usleep_range(1, 5);
+> +	}
+> +
+> +	return -ETIMEDOUT;
+> +}
+> +EXPORT_SYMBOL_GPL(zynqmp_pm_wait_mphy_tx_rx_config_ready);
+> +
+> +/**
+> + * zynqmp_pm_wait_sram_init_done - wait for SRAM initialization to complete
+> + * @timeout_us:	Caller-supplied timeout budget in microseconds
+> + *
+> + * Poll the SRAM initialization-done status until it is set or the timeout
+> + * elapses. As with the M-PHY wait, the poll loop is EEMI-specific and kept in
+> + * the firmware driver so the UFS controller driver stays backend-agnostic.
+> + *
+> + * Return:	Returns 0 once done, -ETIMEDOUT on timeout, or error value.
+> + */
+> +int zynqmp_pm_wait_sram_init_done(u32 timeout_us)
+> +{
+> +	bool is_done;
+> +	int ret;
+> +
+> +	while (timeout_us--) {
+> +		ret = zynqmp_pm_is_sram_init_done(&is_done);
+> +		if (ret)
+> +			return ret;
+> +
+> +		if (is_done)
+> +			return 0;
+> +
+> +		usleep_range(1, 5);
+> +	}
+> +
+> +	return -ETIMEDOUT;
+> +}
+> +EXPORT_SYMBOL_GPL(zynqmp_pm_wait_sram_init_done);
+>   
+>   /**
+>    * zynqmp_pm_set_sram_bypass - Set SRAM bypass Control
+> diff --git a/drivers/ufs/host/ufs-amd-versal2.c b/drivers/ufs/host/ufs-amd-versal2.c
+> index 2154d6286817..dff0c2c95486 100644
+> --- a/drivers/ufs/host/ufs-amd-versal2.c
+> +++ b/drivers/ufs/host/ufs-amd-versal2.c
+> @@ -225,8 +225,6 @@ static int ufs_versal2_setup_phy(struct ufs_hba *hba)
+>   static int ufs_versal2_phy_init(struct ufs_hba *hba)
+>   {
+>   	struct ufs_versal2_host *host = ufshcd_get_variant(hba);
+> -	u32 time_left;
+> -	bool is_ready;
+>   	int ret;
+>   	static const struct ufshcd_dme_attr_val rmmi_attrs[] = {
+>   		{ UIC_ARG_MIB(CBREFCLKCTRL2), CBREFREFCLK_GATE_OVR_EN, DME_LOCAL },
+> @@ -235,23 +233,15 @@ static int ufs_versal2_phy_init(struct ufs_hba *hba)
+>   		{ UIC_ARG_MIB(VS_MPHYCFGUPDT), 1, DME_LOCAL }
+>   	};
+>   
+> -	/* Wait for Tx/Rx config_rdy */
+> -	time_left = TIMEOUT_MICROSEC;
+> -	do {
+> -		time_left--;
+> -		ret = zynqmp_pm_is_mphy_tx_rx_config_ready(&is_ready);
+> -		if (ret)
+> -			return ret;
+> -
+> -		if (!is_ready)
+> -			break;
+> -
+> -		usleep_range(1, 5);
+> -	} while (time_left);
+> -
+> -	if (!time_left) {
+> +	/*
+> +	 * Wait for Tx/Rx config_rdy. The poll loop lives in the firmware
+> +	 * backend (EEMI today, SCMI in future) so this driver stays
+> +	 * backend-agnostic; the timeout budget stays here with the consumer.
+> +	 */
+> +	ret = zynqmp_pm_wait_mphy_tx_rx_config_ready(TIMEOUT_MICROSEC);
+> +	if (ret) {
+>   		dev_err(hba->dev, "Tx/Rx configuration signal busy.\n");
+> -		return -ETIMEDOUT;
+> +		return ret;
+>   	}
+>   
+>   	ret = ufshcd_dwc_dme_set_attrs(hba, rmmi_attrs, ARRAY_SIZE(rmmi_attrs));
+> @@ -264,23 +254,11 @@ static int ufs_versal2_phy_init(struct ufs_hba *hba)
+>   		return ret;
+>   	}
+>   
+> -	/* Wait for SRAM init done */
+> -	time_left = TIMEOUT_MICROSEC;
+> -	do {
+> -		time_left--;
+> -		ret = zynqmp_pm_is_sram_init_done(&is_ready);
+> -		if (ret)
+> -			return ret;
+> -
+> -		if (is_ready)
+> -			break;
+> -
+> -		usleep_range(1, 5);
+> -	} while (time_left);
+> -
+> -	if (!time_left) {
+> +	/* Wait for SRAM init done (poll handled by the firmware backend). */
+> +	ret = zynqmp_pm_wait_sram_init_done(TIMEOUT_MICROSEC);
+> +	if (ret) {
+>   		dev_err(hba->dev, "SRAM initialization failed.\n");
+> -		return -ETIMEDOUT;
+> +		return ret;
+>   	}
+>   
+>   	ret = ufs_versal2_setup_phy(hba);
+> diff --git a/include/linux/firmware/xlnx-zynqmp-ufs.h b/include/linux/firmware/xlnx-zynqmp-ufs.h
+> index d3538dd5822a..00383dd835f2 100644
+> --- a/include/linux/firmware/xlnx-zynqmp-ufs.h
+> +++ b/include/linux/firmware/xlnx-zynqmp-ufs.h
+> @@ -9,17 +9,17 @@
+>   #define __FIRMWARE_XLNX_ZYNQMP_UFS_H__
+>   
+>   #if IS_REACHABLE(CONFIG_ZYNQMP_FIRMWARE)
+> -int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready);
+> -int zynqmp_pm_is_sram_init_done(bool *is_done);
+> +int zynqmp_pm_wait_mphy_tx_rx_config_ready(u32 timeout_us);
+> +int zynqmp_pm_wait_sram_init_done(u32 timeout_us);
+>   int zynqmp_pm_set_sram_bypass(void);
+>   int zynqmp_pm_get_ufs_calibration_values(u32 *val);
+>   #else
+> -static inline int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready)
+> +static inline int zynqmp_pm_wait_mphy_tx_rx_config_ready(u32 timeout_us)
+>   {
+>   	return -ENODEV;
+>   }
+>   
+> -static inline int zynqmp_pm_is_sram_init_done(bool *is_done)
+> +static inline int zynqmp_pm_wait_sram_init_done(u32 timeout_us)
+>   {
+>   	return -ENODEV;
+>   }
+> ---
+> base-commit: 848acc8ffe1b7cd5f1bf427b93069becfebc2c9d
+> branch: xnext/ufs
+> 
 
