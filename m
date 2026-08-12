@@ -1,86 +1,100 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6615C282F2A
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 10:34:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC8E4400DE9
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 10:34:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786530845; cv=none; b=tgvpAG//6RFrLlvcITqQAMXWs39PEZ0Mgw5aElh2XbptjRL5Ah+T4JSc5NYjhmle9FW8btPOzA7K3+7tkUHtBft6f2WBBmcvKUtsKYEPG3W2EcSfcb7WqXf+saKnernq49tWs74STAaf9Vsd4oS0BPa5G1uotyzh3jmZPrMuabE=
+	t=1786530852; cv=none; b=qLoD5kLwGi/z5E1SnJ1mQntrNHU2cO7frmRUQNzgi1oowcPq+HKGJNugqfucD6kPuLs9JYfXI4NlsLLFmRdZk97vWUz+p/5KJDZ8Gmwrll3QfMwBEXs+NwKmS3utm3M57bpGt7tpUygUNfqFS/X0uVRpmbRhUat9VhIWGQGRDbA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786530845; c=relaxed/simple;
-	bh=OrJ80CPuFbnrahBwaYh2vDlCN0mdyMJnlS90x7JVRcw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bo7IVisMtBRie5y4aAwKu558m9zlv24cUsG0gAUPyBlKy1dPFaBFrIiIRELdFW7sdAMoT/W7i6YLB242gyMWvrOFyg4mFrSsRJg3kqMML7Mj5/Qq1PdHmeNawSowSlq4GP+Q8oh6UNsdhktTLdr9vtVMdKx37T6wrDQuBJmGhek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fzvbdFjK; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=EA5zCUwC; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1786530852; c=relaxed/simple;
+	bh=3YARpoiLgDt9cepevBmsvmfBu/Wh49o8ppbMDUrcSQ0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=fIb9m+WI0apECaCvxWkE9Un+4QJwT3/XW+QY6gHEwc76ZubACtgv4Db5vCtkh+i0KZtxhtC/uyqApZfpRLvCy+kdRGjCBzAdB3J3od2KkGz6gKGoO756pvCFXHV0+wD+V5lrcjDyavJ002VP/f93cswI6jCN+cnFXwnZCX5ho9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IXmqKAOT; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=A2hv/IIW; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fzvbdFjK";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="EA5zCUwC"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IXmqKAOT";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="A2hv/IIW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786530841;
+	s=mimecast20190719; t=1786530849;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=C9/SbfCuud7YYe27YxIeb0jc72ejQ/OYb3vI7cOH/RM=;
-	b=fzvbdFjK7rup3ooDeLr9B07ammoQP4m2AtpUrOH38sTBQ63ro9i9WuVYB9qjs31XN07pFn
-	bB0ql8MnK0q/CJwUWOanLfenTszYrtlsdrXSxbJSMjgjEcGYe3+bmTVy0/kjR+A8QdVef9
-	VnaAF/EHtRJOs/6KiC2oq/wxsL8sl7A=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=fmJTzfVEll3lbdFDSvEM9OU2A91wWbCw8sY0qVk2q/g=;
+	b=IXmqKAOTG8a6YQdIStI+1e1hvEQbg6xMDf1FxnrQbjseGb6k0FRUPHT5R8MEIrrn1iNSul
+	NhMfrH1gfV8zZGbs0SOT7mItHMooIKbx49myjzDIudfahGBSK9jGFymR53tWP9P/lc7Lva
+	/nqufHIq5BPLw7gghwtulD70uf4AVXw=
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
+ [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-653-lraqKy-qNuOG1D9MoLdEJw-1; Wed, 12 Aug 2026 06:34:00 -0400
-X-MC-Unique: lraqKy-qNuOG1D9MoLdEJw-1
-X-Mimecast-MFC-AGG-ID: lraqKy-qNuOG1D9MoLdEJw_1786530839
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38ea32e57e2so1490874a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 03:34:00 -0700 (PDT)
+ us-mta-696-1hLTI_vNMXOQbNQq5Rabeg-1; Wed, 12 Aug 2026 06:34:08 -0400
+X-MC-Unique: 1hLTI_vNMXOQbNQq5Rabeg-1
+X-Mimecast-MFC-AGG-ID: 1hLTI_vNMXOQbNQq5Rabeg_1786530847
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-388cfc4848dso915257a91.3
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 03:34:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1786530839; x=1787135639; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=C9/SbfCuud7YYe27YxIeb0jc72ejQ/OYb3vI7cOH/RM=;
-        b=EA5zCUwCQ7Bm3HzreNMUyhVo7CXevrj/RRyXALnjmM0bTkaB1G6+pO3tfvRSb4Fsrz
-         X758qavt3z8tenbdtnGaMbaYfEgAD/Vbe18a5Ic1ZARgbzp80svFjPWw7MZ+edy0hbpm
-         E3AP7hud1eBfE2b8uT4N6Ew8h1EktkuM95lr2A/A/kQyhArttXXpYI1CUB6f6ydv086d
-         pfVHFJMSndAerK3GRStm8TVzJpFKwIIYmitHJkXE1PuGfza0xV9Kcswre3zwAxmM5kz4
-         lyC7mi6aqEJqEychZuENk5FZSwVFlCRmatxgtEKe9PBXXyLKJ1lHIjCi1hHv7cMwQNDC
-         w9cA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786530839; x=1787135639;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=redhat.com; s=google; t=1786530847; x=1787135647; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=C9/SbfCuud7YYe27YxIeb0jc72ejQ/OYb3vI7cOH/RM=;
-        b=IePaRDuVAzoLWpkaPc4kOhG72wr8BsWBB2Nlm16QwhoKiwOxG70ic/SFm5+lh/8Cw8
-         DusDinbu8L00lFRWMpEG+AGDQD31KKGaNk1CeQ93DSgoA60pIvDWhLb9dX+S+BfQXs39
-         Kib4iqbbgq7Dp0Q5zeoX0W2Sv57idhPMhjZ3b/jDSyM2SPddi9LDVJkox/P3+BzorTpf
-         zaszVIPgdrlYebjCvKTw/7OXTsiQXr4COMppD80va3fWQkR1+rFC22zqZOqup286e9ea
-         UDmCTA8qER/Styw55hj7xZ7POKYZ6yWcn8dg6+EAEuUBKdsOQ6rDFIcs3nop2m8djZWz
-         H6WQ==
-X-Gm-Message-State: AOJu0Yw/XLC+161Vj+zRkASAJvljoLnrUtOebl1QOkAfGkIRGU1WJa0J
-	2HXCGr1L+Ky6aZPdT2DabZWbtZmHFyozAIkHu2WzOWZrSFAzP/GkqHNNMtClo/sxwD0q279WvzL
-	9i1hNDwvTkJwsVln8W++nlA5dpeye1an9Tg68zIUCPdb5e8E5D/eps3JAOg7vGJzq8psWegBm0b
-	qBiS7faKUkQi/OncqlUI+owEnCXVs5yBalHY/2MH2ZqTTgOA==
-X-Gm-Gg: AR+sD13lIHPjCksv3tlixasJ0fcgLunS5ENXKxyAUhKQclATtARH/ffMb/iNZpjvvmp
-	Lv6RgOxRGG5KmEWjqL/orm4m8QdHIGTzDaQBf4YWpBXuwdSLKeYXEyJkxTR8CiuW4IPzoSIMq0L
-	SNt27yHhynimuLWNs4MTPJOAyTVzeMo7BFqvg2cvnsCpl7slaOs55geyDPCxLXzBDbcfhTO1DJP
-	3Eor7pi2oScQzTqTDfSgt1bLfzUmsbFxUCfOx8c9A0VO7yc4+DwmBby/IWgQ+lX+sXB2t8ZAwoh
-	f5NVUfOMqkqmAOOtZJ+vB5cJzlSrxDB9XguVIT/QBKWtzziSB3qvh0s9taKfBDNMbz9OSBwniN2
-	jSjY06wjFwKtQ5mj2oh7bBXO3vPzsS6R5tNiRMLFA3tWRjW+jEtvewRSSSSPFXy26wCEV
-X-Received: by 2002:a17:90b:4e84:b0:38e:7268:220d with SMTP id 98e67ed59e1d1-39301620ce0mr4829247a91.20.1786530839216;
-        Wed, 12 Aug 2026 03:33:59 -0700 (PDT)
-X-Received: by 2002:a17:90b:4e84:b0:38e:7268:220d with SMTP id 98e67ed59e1d1-39301620ce0mr4829173a91.20.1786530838593;
-        Wed, 12 Aug 2026 03:33:58 -0700 (PDT)
+        bh=fmJTzfVEll3lbdFDSvEM9OU2A91wWbCw8sY0qVk2q/g=;
+        b=A2hv/IIWeng4hn1+DmGshopqJwudhJyLrhzJ60iTUztmyS2XdJvQiYWnJrRSGWVnL9
+         beJjiiAsKKJozQVXpRAsDpGvh+Hg/p3aDbE/vb3Vnyh8euXxHU/91ZAtms1TOSyWY7iS
+         /t6R+uhbv1h2iEOivk0FlCnzLaFNtMPsCugkRE5gAtQqtbmxRX+qGwtfckhnLRq871QV
+         c5YHyMT3tCCtEIFdcvOhFDW170rK6QOFwpb57hueuK+Oxv4Ng+gPleiMFCGm7qkMdqm6
+         rWad5xSFNuwi2EqkD8Rm4jSy5yN2wpkXyWzSsV571lY/3lUjMVy691dI7i1DxPgO351N
+         5QcQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786530847; x=1787135647;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=fmJTzfVEll3lbdFDSvEM9OU2A91wWbCw8sY0qVk2q/g=;
+        b=g65lxC6xU6hBU4hgHJJf5r3eIo4wAx7w5vuVIqCgKWC/7lqMsGgqy2juhU/MQu/SSi
+         lFvXJJHlr4iAYFFBYh9koDboDhPH5hUiTsWag+/HC/GZJ2oX3i8TVG9IrW1bSXmYg+OD
+         5S/dtbzvh4iD2ZKYUFTccIFLwK+2CkoAqL+UbOgXp3KfHlHG0XDZVHlJ3nbiVFUy7ajp
+         +iTILSiuZdprAibeFaXAQJENNl/i+j1fTzo53EoW3poswubLd3bW/l93aL/7DwiKiom0
+         emCS45Iu4RKzzGLG9lrbWqZfG/f3cygz8HKZ2TtLPdtkbnkOsCBIs95R4NH9iZarqhLa
+         ctDg==
+X-Gm-Message-State: AOJu0YzVW7E/HEqxtBSDdh4MkInhCMCsoH8fwTfiPqN4XM8D7bwiJsZy
+	KXxgslWK4D9kjsTQixB10HNpad0c6+KDdc6pCKp9xwkpgdiuMpdi0oPV77PxKtD+JGgUzuj+SJn
+	mV60ZZ0VZDjTNiqQUkWH5y7aYvs3Yt1Mmx8fkdc4Pra24jsvHTpClwRpStxWvR1pTmtKXApSVSS
+	JTJRnyzJwulcJeG99CvVCV34jGnHJ3SB4ZId8XTO0twQlhRg29
+X-Gm-Gg: AR+sD10GUFShLtoVE4Q9GhD+iXeSD5HFhzP1178vHsskY669+Ztgd2r+WnTaykRNMfm
+	9cmw2CFTuGBEm0kURv9B8VV7GHNsyocdJezRi4gR1OXqnAouSkpwFrFH3ysAokwB02W+iOBuecX
+	ETH8tMaWxCtQ1mwcSThH0V+fpNJMjGPxPBKJL0SRCHSQahmGYPgv6unvRrKnnecRn190xBLpJyu
+	XRJ9YNgXmj/UWFjhd1zA+gKovV/k+GCc/oTkkuSDA0n8xAb+SSw7lQbP83gQqR5OzZk2WIfOG0f
+	1B3eBhT9yS4Wd4KDwdtiB/YyzLrZDkYzbEaI3K9RQmBG58Gh+cT5+VFDIMGYqV5rQhHbn+AjKcI
+	3jesDmK8lNtDu4T4yaP/YzaiY6ma2r79Emax/SllvkNEsTra8hCZjGgz9mtOoFTd+fg71
+X-Received: by 2002:a17:90b:4406:b0:37f:fb1d:63fa with SMTP id 98e67ed59e1d1-39301663a8fmr3697933a91.15.1786530847191;
+        Wed, 12 Aug 2026 03:34:07 -0700 (PDT)
+X-Received: by 2002:a17:90b:4406:b0:37f:fb1d:63fa with SMTP id 98e67ed59e1d1-39301663a8fmr3697855a91.15.1786530846491;
+        Wed, 12 Aug 2026 03:34:06 -0700 (PDT)
 Received: from mgandhi-thinkpadp16vgen1.punetw6.csb ([2401:4900:88fa:3d3d:2349:1310:a2eb:9912])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-392f9675e32sm1031413a91.0.2026.08.12.03.33.56
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-392f9675e32sm1031413a91.0.2026.08.12.03.34.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Aug 2026 03:33:57 -0700 (PDT)
+        Wed, 12 Aug 2026 03:34:05 -0700 (PDT)
 From: "Milan P. Gandhi" <mgandhi@redhat.com>
 To: linux-scsi@vger.kernel.org
-Cc: "Milan P. Gandhi" <mgandhi@redhat.com>
-Subject: [PATCH 0/2] scsi: mpi3mr: Fix error handling and resource leak in mpi3mr_sas_port_add()
-Date: Wed, 12 Aug 2026 16:03:42 +0530
-Message-ID: <20260812103344.174247-1-mgandhi@redhat.com>
+Cc: "Milan P. Gandhi" <mgandhi@redhat.com>,
+	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] scsi: mpi3mr: Fix NULL pointer dereference in mpi3mr_sas_port_add()
+Date: Wed, 12 Aug 2026 16:03:43 +0530
+Message-ID: <20260812103344.174247-2-mgandhi@redhat.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260812103344.174247-1-mgandhi@redhat.com>
+References: <20260812103344.174247-1-mgandhi@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -89,22 +103,40 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series fixes resource leaks and potential crashes in the
-mpi3mr_sas_port_add() error path:
+sas_port_alloc_num() can return NULL on memory allocation failure. The
+return value is passed directly to sas_port_add() without a NULL check,
+which causes a NULL pointer dereference.
 
-- Patch 1 adds a missing NULL check on sas_port_alloc_num() failure
-  and ensures allocated ports are released via sas_port_free() if
-  sas_port_add() fails.
-- Patch 2 releases the target device reference acquired via
-  mpi3mr_get_tgtdev_by_addr() if subsequent allocation errors occur.
+Additionally, if sas_port_add() fails, the allocated port is not freed
+before jumping to out_fail, leaking the sas_port structure. Call
+sas_port_free() to properly release it.
 
-Milan P. Gandhi (2):
-  scsi: mpi3mr: Fix NULL pointer dereference in mpi3mr_sas_port_add()
-  scsi: mpi3mr: Fix target device refcount leak in mpi3mr_sas_port_add()
+Fixes: e22bae30667a ("scsi: mpi3mr: Add expander devices to STL")
+Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index 240f67a8e2e3..ea2c04384a0e 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -1428,9 +1428,15 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
+ 	}
+ 
+ 	port = sas_port_alloc_num(mr_sas_node->parent_dev);
++	if (!port) {
++		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		goto out_fail;
++	}
+ 	if ((sas_port_add(port))) {
+ 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+ 		    __FILE__, __LINE__, __func__);
++		sas_port_free(port);
+ 		goto out_fail;
+ 	}
+ 
 -- 
 2.55.0
 
