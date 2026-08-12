@@ -1,159 +1,110 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC5A36166A
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 06:54:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6615C282F2A
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 10:34:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786517691; cv=none; b=gb5wrYI2+BvjDRhEsP18wKxDFOblSdeovCLtru/ViuOt7LsstmlrfxjtABAZ4Vhrz6f3Vb/Ba2iJdqrI8Pm3La/Udd0N/+sK7imWSicZM4vegCEOjF+l4yjED0M8yxcmnxh/bYnS7k6PlA+JW69FuAEdiBKDqTNoUkfeM/psUxs=
+	t=1786530845; cv=none; b=tgvpAG//6RFrLlvcITqQAMXWs39PEZ0Mgw5aElh2XbptjRL5Ah+T4JSc5NYjhmle9FW8btPOzA7K3+7tkUHtBft6f2WBBmcvKUtsKYEPG3W2EcSfcb7WqXf+saKnernq49tWs74STAaf9Vsd4oS0BPa5G1uotyzh3jmZPrMuabE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786517691; c=relaxed/simple;
-	bh=BFpKMu+N+lhLUOhUBprUSLMaE/aR5fqxZY4RYmGejds=;
-	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lILmFcQyEX4c5Bbqx8ypjG+K+noMxcm4gwKHWhsZNfKtJo+7y05m/G/F+Q/rnPXbgoqXCYXMEOAkLhzYgZA22lzacoPnWwTREk0b2elb9EJRDMECwNxCTZs6TUZi/TDuVLNjvMlhC6z3XUgGw6bs91/XEBiyS1GYuT6Q1K+easw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=dyGho3gV; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=TWjZz6QI; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1786530845; c=relaxed/simple;
+	bh=OrJ80CPuFbnrahBwaYh2vDlCN0mdyMJnlS90x7JVRcw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bo7IVisMtBRie5y4aAwKu558m9zlv24cUsG0gAUPyBlKy1dPFaBFrIiIRELdFW7sdAMoT/W7i6YLB242gyMWvrOFyg4mFrSsRJg3kqMML7Mj5/Qq1PdHmeNawSowSlq4GP+Q8oh6UNsdhktTLdr9vtVMdKx37T6wrDQuBJmGhek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fzvbdFjK; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=EA5zCUwC; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="dyGho3gV";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="TWjZz6QI"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67C62RNJ1720190
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 06:54:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=v3VVXKFAuDaFyAg4gLlAG94a
-	Btk5XT2S6br2Q1phvrc=; b=dyGho3gVk+lFAajEzJsE4kCJ3oedIearnfjc5BHC
-	W1lUYX4GLJYWQCrJBLqAxenFoLtdWTMzMUzm6b6EzIjT5z8s7dbhTD4Cx/K3IpVz
-	fa7D6VvOHqE8msiPbKAHdybBZmAf6DoboVaPA51/AE6N+uXD/jyR8XAtqXbCa8vp
-	KrESHNiSRhKDDDhxQxxrHPZet+Sqt8eB7kho+huGDAxGKdtF/Pw4NI6Stm/SyvaQ
-	G94tr0q8PX5UAgTwHaiH5zYjihKKd84yvhrFpIUbBaBtfKLnTzYvE/jn3x88D7dK
-	rLjUgctg38rbO7A3s+Kg8/esmQ3ei3yZ8tc/Ng5PoyEzDw==
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com [209.85.160.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g0hfw0jkm-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 06:54:48 +0000 (GMT)
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-52ce64c41efso11443991cf.3
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 23:54:47 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fzvbdFjK";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="EA5zCUwC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1786530841;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=C9/SbfCuud7YYe27YxIeb0jc72ejQ/OYb3vI7cOH/RM=;
+	b=fzvbdFjK7rup3ooDeLr9B07ammoQP4m2AtpUrOH38sTBQ63ro9i9WuVYB9qjs31XN07pFn
+	bB0ql8MnK0q/CJwUWOanLfenTszYrtlsdrXSxbJSMjgjEcGYe3+bmTVy0/kjR+A8QdVef9
+	VnaAF/EHtRJOs/6KiC2oq/wxsL8sl7A=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-653-lraqKy-qNuOG1D9MoLdEJw-1; Wed, 12 Aug 2026 06:34:00 -0400
+X-MC-Unique: lraqKy-qNuOG1D9MoLdEJw-1
+X-Mimecast-MFC-AGG-ID: lraqKy-qNuOG1D9MoLdEJw_1786530839
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38ea32e57e2so1490874a91.1
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 03:34:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1786517687; x=1787122487; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=v3VVXKFAuDaFyAg4gLlAG94aBtk5XT2S6br2Q1phvrc=;
-        b=TWjZz6QIRcTvnc10HLgvCibDAXVyxdsOHYnZWTwQOZXr9Ko6hQn0V2VlIDD00DL5ld
-         ReTO7PYokTlPyvURABKAvzUR9JbVGWNNsNB/BHuj2l84ao4TKwcT3fOC+LhD/dxdXKaf
-         pdIoJohK9JT517XkgOcSLsyO7RDlo3PwYgFi3M/UYhr+1MyEguzFXeRITvtleJvKVRPl
-         gD0jAcUh5+Uy+xRG9f+QcppHYOoGStbxAxiikf/4tRqk3YBG2b49PbnARmlK/dOtaBLE
-         NQwmpP/Jo1IJWBbDR1hL7YGTLeUK72DkrZpDaJ2xAeQzUNGVoJ7HQme/xFX1Dqgc4PN2
-         l+EA==
+        d=redhat.com; s=google; t=1786530839; x=1787135639; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=C9/SbfCuud7YYe27YxIeb0jc72ejQ/OYb3vI7cOH/RM=;
+        b=EA5zCUwCQ7Bm3HzreNMUyhVo7CXevrj/RRyXALnjmM0bTkaB1G6+pO3tfvRSb4Fsrz
+         X758qavt3z8tenbdtnGaMbaYfEgAD/Vbe18a5Ic1ZARgbzp80svFjPWw7MZ+edy0hbpm
+         E3AP7hud1eBfE2b8uT4N6Ew8h1EktkuM95lr2A/A/kQyhArttXXpYI1CUB6f6ydv086d
+         pfVHFJMSndAerK3GRStm8TVzJpFKwIIYmitHJkXE1PuGfza0xV9Kcswre3zwAxmM5kz4
+         lyC7mi6aqEJqEychZuENk5FZSwVFlCRmatxgtEKe9PBXXyLKJ1lHIjCi1hHv7cMwQNDC
+         w9cA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786517687; x=1787122487;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=v3VVXKFAuDaFyAg4gLlAG94aBtk5XT2S6br2Q1phvrc=;
-        b=Ki2uqMvUZyAwhPPviwTmizIqwg/Rq+Jwx7tyRinIgI8BA5thw3RXVibNAAY60ibWuG
-         tLciHkVtnLODrUopcaLlevrMlX/g5KkBci2umUN7R3G5BBjvWWzoSXm+yoUuXKnpMnmH
-         V0AneF5WGt+Ww7WPMETBfmwcnR+yELb3BI1HxF8gRsYckRKUpBJElJ4dH9F7xhjWJ22p
-         smL4wrs95BGe4NymT/W9hsd68U1ERe6BSiu1HF+E3FE3PIBWImn3BRiRODnjsTfnKdTF
-         g5WecUO8oyI1Vn2AeromKHT5/glthxCIwOcOjkc9DK7u10M6/hSsNiBt7z+N8+r/Mu1I
-         NwHg==
-X-Forwarded-Encrypted: i=1; AHgh+RrrwiNu0i2/ILkDUfe2VFyz0UioQ+sJ6jQlnSh85fFpzJsZ0EwEKOvNVrZtVAC+ZD1mwwdWVo2YXdvT@vger.kernel.org
-X-Gm-Message-State: AOJu0YxKYPmQlQudUMGTG+vmRhgEyA4VthEiScJ4jh96NiKu2nPuCWzU
-	wjV/dE15S9WIvRNZfSkQn3CQBq7FZGqlmpFgYwncwJDb+69yJe1j/MAj7eG/KyzOMVa7G7XKoSc
-	9sm9GBU/8b2brOc5JoNXVOpCU4CmIpn0HJkDxTRuo69ZsD4poVALVgdd31/8ax6KS
-X-Gm-Gg: AR+sD13kiqjRDiBvUWi/EMuR+fCp30J477EkN0wmfwLGiN+gjW4QNbIOLLRp3TcSeq3
-	RmY8QCjlLL+N3EwrynTUniFCQSAuqJlXwxkkXOQ6F+gI+VXH1Gi7D6KE1zA2+6VMjuS5wZ2jvKH
-	aeJaPE8dhpez47QWK4Us3dBPiDrZzbkdHiDI/Ub8OC7dZgO24KMtu0+2BbM/hg/aQbhao5lHzxT
-	JJiIlDiH136lfNAgRYId5EDwZtwJkq598ra9n4yOurle1JNVq7AU32sYhdNSQ/PsTg2biQIJ8uY
-	DeTwONk5bDglzGz50zp/YeRqBzZoxOmgt6FU/Hlr+yXpsQG/wb9jLTK10QgK39sgg3LBE8nYWAL
-	P+tiVlrXl+fjNBNqNeHExqVnMWui1xBNJrqE=
-X-Received: by 2002:ac8:5892:0:b0:51a:8dc5:bf89 with SMTP id d75a77b69052e-52d646b8909mr23232331cf.5.1786517687415;
-        Tue, 11 Aug 2026 23:54:47 -0700 (PDT)
-X-Received: by 2002:ac8:5892:0:b0:51a:8dc5:bf89 with SMTP id d75a77b69052e-52d646b8909mr23232141cf.5.1786517687089;
-        Tue, 11 Aug 2026 23:54:47 -0700 (PDT)
-Received: from trex (182.red-79-144-196.dynamicip.rima-tde.net. [79.144.196.182])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4997c9944ecsm22591555e9.14.2026.08.11.23.54.45
+        d=1e100.net; s=20251104; t=1786530839; x=1787135639;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=C9/SbfCuud7YYe27YxIeb0jc72ejQ/OYb3vI7cOH/RM=;
+        b=IePaRDuVAzoLWpkaPc4kOhG72wr8BsWBB2Nlm16QwhoKiwOxG70ic/SFm5+lh/8Cw8
+         DusDinbu8L00lFRWMpEG+AGDQD31KKGaNk1CeQ93DSgoA60pIvDWhLb9dX+S+BfQXs39
+         Kib4iqbbgq7Dp0Q5zeoX0W2Sv57idhPMhjZ3b/jDSyM2SPddi9LDVJkox/P3+BzorTpf
+         zaszVIPgdrlYebjCvKTw/7OXTsiQXr4COMppD80va3fWQkR1+rFC22zqZOqup286e9ea
+         UDmCTA8qER/Styw55hj7xZ7POKYZ6yWcn8dg6+EAEuUBKdsOQ6rDFIcs3nop2m8djZWz
+         H6WQ==
+X-Gm-Message-State: AOJu0Yw/XLC+161Vj+zRkASAJvljoLnrUtOebl1QOkAfGkIRGU1WJa0J
+	2HXCGr1L+Ky6aZPdT2DabZWbtZmHFyozAIkHu2WzOWZrSFAzP/GkqHNNMtClo/sxwD0q279WvzL
+	9i1hNDwvTkJwsVln8W++nlA5dpeye1an9Tg68zIUCPdb5e8E5D/eps3JAOg7vGJzq8psWegBm0b
+	qBiS7faKUkQi/OncqlUI+owEnCXVs5yBalHY/2MH2ZqTTgOA==
+X-Gm-Gg: AR+sD13lIHPjCksv3tlixasJ0fcgLunS5ENXKxyAUhKQclATtARH/ffMb/iNZpjvvmp
+	Lv6RgOxRGG5KmEWjqL/orm4m8QdHIGTzDaQBf4YWpBXuwdSLKeYXEyJkxTR8CiuW4IPzoSIMq0L
+	SNt27yHhynimuLWNs4MTPJOAyTVzeMo7BFqvg2cvnsCpl7slaOs55geyDPCxLXzBDbcfhTO1DJP
+	3Eor7pi2oScQzTqTDfSgt1bLfzUmsbFxUCfOx8c9A0VO7yc4+DwmBby/IWgQ+lX+sXB2t8ZAwoh
+	f5NVUfOMqkqmAOOtZJ+vB5cJzlSrxDB9XguVIT/QBKWtzziSB3qvh0s9taKfBDNMbz9OSBwniN2
+	jSjY06wjFwKtQ5mj2oh7bBXO3vPzsS6R5tNiRMLFA3tWRjW+jEtvewRSSSSPFXy26wCEV
+X-Received: by 2002:a17:90b:4e84:b0:38e:7268:220d with SMTP id 98e67ed59e1d1-39301620ce0mr4829247a91.20.1786530839216;
+        Wed, 12 Aug 2026 03:33:59 -0700 (PDT)
+X-Received: by 2002:a17:90b:4e84:b0:38e:7268:220d with SMTP id 98e67ed59e1d1-39301620ce0mr4829173a91.20.1786530838593;
+        Wed, 12 Aug 2026 03:33:58 -0700 (PDT)
+Received: from mgandhi-thinkpadp16vgen1.punetw6.csb ([2401:4900:88fa:3d3d:2349:1310:a2eb:9912])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-392f9675e32sm1031413a91.0.2026.08.12.03.33.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Aug 2026 23:54:46 -0700 (PDT)
-From: Jorge Ramirez <jorge.ramirez@oss.qualcomm.com>
-X-Google-Original-From: Jorge Ramirez <JorgeRamirez-Ortiz>
-Date: Wed, 12 Aug 2026 08:54:45 +0200
-To: Jorge Ramirez <jorge.ramirez@oss.qualcomm.com>
-Cc: Bean Huo <beanhuo@iokpp.de>, James.Bottomley@hansenpartnership.com,
-        martin.petersen@oracle.com, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bvanassche@acm.org, can.guo@oss.qualcomm.com,
-        beanhuo@micron.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jenswi@kernel.org,
-        sumit.garg@oss.qualcomm.com
-Subject: Re: [PATCH v1 0/2] ufs: rpmb: make RPMB usable with OP-TEE key
- derivation
-Message-ID: <anwYtSvM4HjI2VLv@trex>
-References: <20260720091614.544968-1-jorge.ramirez@oss.qualcomm.com>
- <2e8b4b54f8bdd933d97afdcd52d44682440647b0.camel@iokpp.de>
- <al3-w3j2-E2twGZj@trex>
- <anNN4gZc9nvadHNs@trex>
- <ccbbd36373238b41ab00b44e22c515b76aaf2ccb.camel@iokpp.de>
- <anRVtmk7ejWewDX_@trex>
+        Wed, 12 Aug 2026 03:33:57 -0700 (PDT)
+From: "Milan P. Gandhi" <mgandhi@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: "Milan P. Gandhi" <mgandhi@redhat.com>
+Subject: [PATCH 0/2] scsi: mpi3mr: Fix error handling and resource leak in mpi3mr_sas_port_add()
+Date: Wed, 12 Aug 2026 16:03:42 +0530
+Message-ID: <20260812103344.174247-1-mgandhi@redhat.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <anRVtmk7ejWewDX_@trex>
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODEyMDA1MyBTYWx0ZWRfX7SecJdO4kEw8
- E+LNrMkKw79LX5zvfwsPIHJCFLV9F/48nieAaxkb4jaNRLgN28o3Qf2o1xjparrFeEOh0Q7tHGx
- A2aYR9z72SyCTtDgzQVjuAVh2InS3ic=
-X-Proofpoint-GUID: DBRBmbE9fkkD5KbQRJ5u9lIrmI4rohQg
-X-Authority-Analysis: v=2.4 cv=fpDsol4f c=1 sm=1 tr=0 ts=6a7c18b8 cx=c_pps
- a=EVbN6Ke/fEF3bsl7X48z0g==:117 a=2lELrtOEK2EaG96G7mOeag==:17
- a=kj9zAlcOel0A:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=NEAV23lmAAAA:8 a=8CC5C0rKepkKukIsmMEA:9 a=CjuIK1q_8ugA:10
- a=a_PwQJl-kcHnX1M80qC6:22
-X-Proofpoint-ORIG-GUID: DBRBmbE9fkkD5KbQRJ5u9lIrmI4rohQg
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEyMDA1MyBTYWx0ZWRfX1XIGp0d3Dswx
- uALgaBHEVVoUlLVWucZgPPXCfZeh+l4yrf8fauVgJfPmT0EoVGhobHk9+rMstMtqwGUBjszVmSh
- xraKJMPaWPaQ2zq6JrK5dI02mTM386QSGoDGiv0S161jPo4+XMPQlueFVCSZU5QYfg4Qs+ygh4c
- Oo8pVUUWkVXGAQlfbYFBLCo4UFlLV7JyNAgcWa60KnDj1JIgtJWnptN3SdPYDhL7zk8zVEaYuwu
- jnI6pqvMnpA4xLshVOHJrzAoPvw8s4Dve4RbiM1zSt7XC10n5eforI7QgP06APBfBh5kcNR05Jf
- VDoRQjvlaBU9CyzebW+NAIkVx/RoCc2QLl2S6iZUjW2ysiUg2iHfkE90DhFrkff4Zrej+eN+Id7
- 3TtPQxMzSoSBxE0CNO4mJgvLzhQXVwuU40JvxBCu7iWAqI+Fkz8aK8pXwp8GJ9TuEkc3koR+oHv
- oKl3i+EvBDrTq+yytfQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-12_02,2026-08-10_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 priorityscore=1501 spamscore=0 impostorscore=0
- lowpriorityscore=0 suspectscore=0 adultscore=0 malwarescore=0 phishscore=0
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608120053
+Content-Transfer-Encoding: 8bit
 
-On 06/08/26 11:36:54, Jorge Ramirez wrote:
-> On 05/08/26 18:18:31, Bean Huo wrote:
-> > On Wed, 2026-08-05 at 16:51 +0200, Jorge Ramirez wrote:
-> > > On 20/07/26 12:56:03, Jorge Ramirez wrote:
-> > > > On 20/07/26 12:23:39, Bean Huo wrote:
-> > > > > 
-> > > > > This is very strange, coverletter is v1, but the patches are v2?
-> > > > 
-> > > > I messed up (manual edition of the letter) but the thread is proper
-> > > 
-> > > Any other comment on this set? Can we agree on the ABI change?
-> > > 
-> > > you can check the overall integration description here for more info:
-> > > https://github.com/OP-TEE/optee_os/pull/7881
-> > 
-> > 
-> > I would be ok on the ABI change, for this series kernel patch, patch [1/2] ok to
-> > me, just [2/2], I will add comment in the patch.
-> 
-> ok. thanks Bean.
+This series fixes resource leaks and potential crashes in the
+mpi3mr_sas_port_add() error path:
 
-could we follow up on this please? 
+- Patch 1 adds a missing NULL check on sas_port_alloc_num() failure
+  and ensures allocated ports are released via sas_port_free() if
+  sas_port_add() fails.
+- Patch 2 releases the target device reference acquired via
+  mpi3mr_get_tgtdev_by_addr() if subsequent allocation errors occur.
+
+Milan P. Gandhi (2):
+  scsi: mpi3mr: Fix NULL pointer dereference in mpi3mr_sas_port_add()
+  scsi: mpi3mr: Fix target device refcount leak in mpi3mr_sas_port_add()
+
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+-- 
+2.55.0
+
