@@ -1,163 +1,285 @@
-Received: from out162-62-57-252.mail.qq.com (out162-62-57-252.mail.qq.com [162.62.57.252])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 689C12D3ED1;
-	Wed, 12 Aug 2026 16:22:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.252
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF45E436BCE
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 18:13:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786551764; cv=none; b=KYR1mUEWuyAocWpVRmLwR1lnIUtV1HXaInVucjQOqh80Anby3z8FNqOaSURj3rLJYclbXNgefEMU61SBsPtxKWIxeSddO2nUe/guu2wmACCRc2Ef+u19D94X/EaHx0RkdjxCImA5uPWQVDRLswEff4pi3kRRdQ3y01kEyKUFWOw=
+	t=1786558402; cv=none; b=fHy/L3SLpZDAk/Xv4zk8G8jWyA4lE0X8dSzveM/DCoLV6KBXrhci/AwRI7NpjOqVgDFMCj24eZ8e5IZySFCaOlISa3CI3+mdC60B249do5K6N4iRGHtjYKmE7QGWF3cU8dOrONKvmuawQ4xHMmA5ZDiVX4XpZorQnLIld2C/VDI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786551764; c=relaxed/simple;
-	bh=09P5j5vtzsQVhIo7m5gslnzhGBDHGynNcRhi2xCdQgM=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=uQc7dn4VzPK5rx8qojnEWfT/3rs9TeYiseCI+iMhxTvrTfvtXRGbsIDSrxgIupX+HHy/Jk75Xyw+4KDwwlpBfPqLLgrlH5bXEuf2Ediiq4aAgSHYQfAApG2W0QSxBZfwO8r8DaoPsC+pj1cqPgqd6hfcD6nuFDlNKNv8jF0uwWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=u0lMdiKI; arc=none smtp.client-ip=162.62.57.252
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1786558402; c=relaxed/simple;
+	bh=AYhq66HOyIUMlCvsokJ8hQlh1oUCBjabz9MUQC8yx/c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=toLCkMRuGjXm1A5jFy58Kegh4xKnUdoAkl/jG7cL7T2uY3ggaP8P1hAEUxGZd+ucqFUSDGHRmAqQ6DDBANzro9ysVFbZXkEdV/vyZtcmxjvrZcuek+VLRk3yNxqOpuik0R6YSuCTl9RFHomc7XBLKcL0Z4s55T1Fkb3yNnqac0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eksXimU2; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="u0lMdiKI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1786551731; bh=TZ28Mi0EYyZwR5mH0KkIhD94xAIzMkOmOxSrbGoCFq4=;
-	h=Date:To:Cc:From:Subject;
-	b=u0lMdiKInK2JCC0zIq8k+tt0IN3US6dqxkPDj9kwD4H9XaRjc8if94PHQRoxlQuMX
-	 tiBAOEbBMmYAIWb1sqAij1uus3e+vMIKv4zpXgHmfxu4MNUaNuHzjVJaGnCczYGxIM
-	 8rmcRLuxb1y+bAuI5Hx1BiSQR/eR5daJ5fpOdPjM=
-Received: from [IPV6:2409:8a00:7894:a160:585d:605d:694d:91cf] ([2409:8a00:7894:a160:585d:605d:694d:91cf])
-	by newxmesmtplogicsvrszc43-0.qq.com (NewEsmtp) with SMTP
-	id 589990D9; Thu, 13 Aug 2026 00:22:09 +0800
-X-QQ-mid: xmsmtpt1786551729txj9r7zcb
-Message-ID: <tencent_FED028EFBFB3FC99E7D4B66C37AF09B1C907@qq.com>
-X-QQ-XMAILINFO: MOnz+xTS1+9iZqyqMfh6w+T+tBeJUPJtFQKURpjlnmkx6qMNrwxKe1iufi2z74
-	 BtbM8Tn+IHGX6kkOWx9AczgltH9QcL+L02oynCBbpHEQYX2NOJnVb5c+Q7Hfc/Hbzph7QpuEhs+O
-	 42kcNCo+whqPHFtifJyYH+r6m4sfNBbGDq5s0YZAIMm18oht6p+TR4Gjn01Cg2N2/xnAIPtY5j3c
-	 DrZbDvTXVpThfZj24jTEq5sbpf4wJX074W7I5mtUkg9M8BUYdE2+kMGPblITvNcGVhuIXkSGaOp8
-	 d5c+Qzobch8m0ZbtsdBOYg0xQlQHJqCtl/bc3GZ4GebwsGtQCN0/Yt0bOtR032COoehnRFKHcFOF
-	 KBg31NVZ59YW8+OCqNvjQANyIDTNWsHn4WM28zhRULd+9+taVgspTkbpP9/D70yIHO+d0ehho1ln
-	 /kJTtNKmh9GPlaTR70qyAo/IFfKcCUE2CcmtTcTxmngMGSpPYGGNSykJMniJ/nxtqE9dZNB0Wd6k
-	 Gv9GNjDKeBLzDHs70vbnV13Z9o6H79Xlaf4KZF9yfROkZhc6eZ1YV3Ibfxu/pjCXfRpkNHu7hnJN
-	 /c55UhjpGhD2HNMR+54/YO6IgrrzKRJvDzp2IAePsvWa69THleQo2534NXO/KXNnEOhIQJ3CRFC2
-	 eNvw+HEotdByqEHek4pJY1cydhxrvZc2fb4tVuuv1O0koyFa4KG8Kc+lPMWL/OAbBVfnnZC7CE9Y
-	 3rSfduWGGq6wimV2liQGS91opHw7J3WjzfxcRlqU4+A7Sm985NMOT3NB5yb1gHrLXWTa10gKjeXc
-	 r9Hkqf7tkhI2aWQgWNgl55e5aS9gdY6i+eCQ9ttF8ah7qre+M20+M+9jg6Pwmj9P3YwRym2AEzeF
-	 yhzkkCP/6AK/cbpbxZAnd/OLM1BcQV/1jQqeCsXs9OTBY8EFsCBtvTOs4eVmVdtZLNhQzNM1E9yf
-	 vX61VS5fFly02VXlxn0lZkXgIgQppbyGQG2dNhysvn17esQQ9adsPNQNY2pAGrdK7iCKfnqYgeOI
-	 TvT93+2NCdyZWriyelfCKmnGF1cJ229ajFGV4c+jpcasBN86o+kUHirnAWvlgUbGyCPi9tvbla7A
-	 VCp/JFLw1SYzLdtrc=
-X-QQ-XMRINFO: MSVp+SPm3vtSI1QTLgDHQqIV1w2oNKDqfg==
-X-OQ-MSGID: <a2032035-2812-4c72-8dab-e48e1594dacc@qq.com>
-Date: Thu, 13 Aug 2026 00:22:09 +0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eksXimU2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1786558399;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=/s54xIz6tpD/x1mCQ2HkaTIJX+XULmmjWVywO144yMg=;
+	b=eksXimU2lrFwixz0bI4dwtOz3amG6U6Hf/URd6jo5A95r4JwHvuiSy3+UFz/ht4lYfZi/Z
+	aeTPy/qkoAW8pRHz7CJWa2RJ7uJO67AT0TrmE0pnoin38UuA0ewrtf2EJkoTDUUEj9MjIq
+	NE5ia5SfIcA7jxJ3smNEnBEhKHsc/UQ=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-609--gcgToVBPpiDQpX9qzIJww-1; Wed,
+ 12 Aug 2026 14:13:14 -0400
+X-MC-Unique: -gcgToVBPpiDQpX9qzIJww-1
+X-Mimecast-MFC-AGG-ID: -gcgToVBPpiDQpX9qzIJww_1786558389
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B248B1800614;
+	Wed, 12 Aug 2026 18:13:08 +0000 (UTC)
+Received: from jtaubepe-thinkpadx1carbongen12.ibmlowe.csb (unknown [10.22.88.181])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D3642180034C;
+	Wed, 12 Aug 2026 18:13:01 +0000 (UTC)
+From: Jesse Taube <jtaubepe@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Keith Busch <kbusch@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Justin Tee <justin.tee@broadcom.com>,
+	Naresh Gottumukkala <nareshgottumukkala83@gmail.com>,
+	Paul Ely <paul.ely@broadcom.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Hannes Reinecke <hare@suse.de>,
+	Jesse Taube <jtaubepe@redhat.com>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	John Meneghini <jmeneghi@redhat.com>,
+	Bryan Gurney <bgurney@redhat.com>,
+	Chris Leech <cleech@redhat.com>,
+	"Ewan D . Milne" <emilne@redhat.com>,
+	shinichiro.kawasaki@wdc.com,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-block@vger.kernel.org
+Subject: [PATCH 00/13] nvme-fc: FPIN link integrity handling
+Date: Wed, 12 Aug 2026 14:12:47 -0400
+Message-ID: <20260812181300.3712426-1-jtaubepe@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-From: Yang Zi <2959243019@qq.com>
-Subject: =?UTF-8?Q?=5BBUG=5D_KASAN=3A_use-after-free_in_=5F=5Funwind=5Fstart?=
- =?UTF-8?Q?_=28arch/x86/kernel/unwind=5Forc=2Ec=29_=E2=80=94_stack_overflow_?=
- =?UTF-8?Q?on_qedi_probe_failure_=5Bqedi=5D_=5Bsyzkaller=5D?=
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Hi,
+FPIN LI (link integrity) messages are received when the attached fabric
+detects hardware errors. In response to these messages I/O should be
+directed away from the affected ports, and only used as a last resort.
+This patch adds a new controller flag 'NVME_CTRL_MARGINAL' which will be
+checked during multipath path selection, causing the path to be skipped
+when checking for paths. If no other paths are available the 'marginal'
+paths are considered for path selection.
 
-While fuzzing the kernel v7.1 with syzkaller, we hit a use-after-free during 
-qedi driver probe that we believe originates in a stack overflow, not a classic 
-slab lifetime bug.
+The testing for this patch set was performed by Bryan Gurney, using the
+process outlined by John Meneghini's presentation at LSFMM 2024, where
+the fibre channel switch sends an FPIN notification on a specific switch
+port, and the following is checked on the initiator:
 
-Reproducer summary (see attached report/log):
+1. The controllers corresponding to the paths on the port that has
+received the notification are showing a set NVME_CTRL_MARGINAL flag.
 
-    BUG: KASAN: use-after-free in __unwind_start+0x26/0x310 arch/x86/kernel/unwind_orc.c:715
-    Write of size 112 at addr ffff88800ea57f40 by task modprobe/1146
+   \
+    +- nvme4 fc traddr=c,host_traddr=e live optimized
+    +- nvme5 fc traddr=8,host_traddr=e live non-optimized
+    +- nvme8 fc traddr=e,host_traddr=f marginal optimized
+    +- nvme9 fc traddr=a,host_traddr=f marginal non-optimized
 
-The task was `modprobe (1146)` (Tainted G W O) loading qedi/qed. The crash is
-preceded by qed initialization failures:
-    [qed_hw_prepare_single:4684] Failed to get HW information
-    [qed_probe:513] hw prepare failed
-    [__qedi_probe:2563] Cannot initialize hardware
-and critically the kernel reported:
-    modprobe (1146) used greatest stack depth: 8 bytes left
+2. The I/O statistics of the test namespace show no I/O activity on the
+controllers with NVME_CTRL_MARGINAL set.
 
-Root-cause hypothesis: on qedi probe failure, the deep nested error/cleanup
-path (qed_hw_prepare_single -> qed_int_igu_read_cam -> qed_hw_get_nvm_info ->
-qed_mcp_cmd_init, ...) drives the process stack to within 8 bytes of the
-limit. When the WARNING path triggers the ORC unwinder, `__unwind_start`
-executes `memset(state, 0, sizeof(*state))` (STRUCT_UNWIND_STATE = 112B).
-Writing 112 bytes through an 8-byte stack headroom overflows past the stack
-boundary into a freed/unmapped physical page, which KASAN flags as a
-use-after-free write (size 112). This is identical to the already-observed
-id103 pattern (mode J).
+   Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+   nvme4c4n1         0.00         0.00         0.00         0.00
+   nvme4c5n1     25001.00         0.00        97.66         0.00
+   nvme4c9n1     25000.00         0.00        97.66         0.00
+   nvme4n1       50011.00         0.00       195.36         0.00
 
-The crash report attached below:
 
-BUG: KASAN: use-after-free in __unwind_start+0x26/0x310 arch/x86/kernel/unwind_orc.c:715
-Write of size 112 at addr ffff88800ea57f30 by task modprobe/1146
+   Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+   nvme4c4n1         0.00         0.00         0.00         0.00
+   nvme4c5n1     48360.00         0.00       188.91         0.00
+   nvme4c9n1      1642.00         0.00         6.41         0.00
+   nvme4n1       49981.00         0.00       195.24         0.00
 
-CPU: 0 UID: 0 PID: 1146 Comm: modprobe Tainted: G        W  O        7.1.0 #1 PREEMPT(lazy) 
-Tainted: [W]=WARN, [O]=OOT_MODULE
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
-Call Trace:
- <TASK>
- </TASK>
 
-The buggy address belongs to the physical page:
-page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0xea57
-flags: 0x100000000000000(node=0|zone=1)
-raw: 0100000000000000 0000000000000000 ffffea00003a95c8 0000000000000000
-raw: 0000000000000000 0000000000000000 00000000ffffffff 0000000000000000
-page dumped because: kasan: bad access detected
+   Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+   nvme4c4n1         0.00         0.00         0.00         0.00
+   nvme4c5n1     50001.00         0.00       195.32         0.00
+   nvme4c9n1         0.00         0.00         0.00         0.00
+   nvme4n1       50016.00         0.00       195.38         0.00
 
-Memory state around the buggy address:
- ffff88800ea57e00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
- ffff88800ea57e80: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->ffff88800ea57f00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-                                     ^
- ffff88800ea57f80: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
- ffff88800ea58000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-==================================================================
-------------[ cut here ]------------
-WARNING: kernel/entry/common.c:140 at raw_irqentry_exit_cond_resched+0x46/0x50 kernel/entry/common.c:140, CPU#0: modprobe/1146
-Modules linked in: qedi(+) iscsi_boot_sysfs libiscsi scsi_transport_iscsi qed kt_runtime(O) uio_pci_kerneltracker_driver(O)
-CPU: 0 UID: 0 PID: 1146 Comm: modprobe Tainted: G        W  O        7.1.0 #1 PREEMPT(lazy) 
-Tainted: [W]=WARN, [O]=OOT_MODULE
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
-RIP: 0010:raw_irqentry_exit_cond_resched+0x46/0x50 kernel/entry/common.c:140
-Code: 36 e6 04 48 29 e0 48 3d 00 80 00 00 73 1b 65 48 8b 05 76 36 e6 04 48 f7 00 10 00 00 00 0f 85 31 4b 19 02 c3 cc cc cc cc cc 90 <0f> 0b 90 eb df 0f 1f 44 00 00 90 90 90 90 90 90 90 90 90 90 90 90
-RSP: 0018:ffff88800ea57ca0 EFLAGS: 00010006
-RAX: 0000000000008360 RBX: 0000000000000000 RCX: ffff888009cb51c0
-RDX: 0000000000000000 RSI: dffffc0000000000 RDI: ffffffff8501e810
-RBP: 0000000000000000 R08: ffff888008a8c053 R09: 1ffff1100115180a
-R10: dffffc0000000000 R11: ffffed100115180b R12: 0000000000000000
-R13: 0000000000000000 R14: ffff88800ea57d08 R15: 0000000000000000
-FS:  00007fee16e6f080(0000) GS:ffff8880e6ae3000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00005627f0cc5518 CR3: 0000000050c6d000 CR4: 00000000000006f0
-Call Trace:
- <TASK>
- </TASK>
-irq event stamp: 90422
-hardirqs last  enabled at (90421): [<ffffffff8367c433>] __raw_spin_unlock_irq include/linux/spinlock_api_smp.h:187 [inline]
-hardirqs last  enabled at (90421): [<ffffffff8367c433>] _raw_spin_unlock_irq+0x23/0x40 kernel/locking/spinlock.c:206
-hardirqs last disabled at (90422): [<ffffffff81380bcd>] handle_softirqs+0x3ed/0x540 kernel/softirq.c:637
-softirqs last  enabled at (90212): [<ffffffff81380f0b>] __do_softirq kernel/softirq.c:656 [inline]
-softirqs last  enabled at (90212): [<ffffffff81380f0b>] invoke_softirq kernel/softirq.c:496 [inline]
-softirqs last  enabled at (90212): [<ffffffff81380f0b>] __irq_exit_rcu+0x8b/0x150 kernel/softirq.c:735
-softirqs last disabled at (90203): [<ffffffff81380f0b>] __do_softirq kernel/softirq.c:656 [inline]
-softirqs last disabled at (90203): [<ffffffff81380f0b>] invoke_softirq kernel/softirq.c:496 [inline]
-softirqs last disabled at (90203): [<ffffffff81380f0b>] __irq_exit_rcu+0x8b/0x150 kernel/softirq.c:735
----[ end trace 0000000000000000 ]---
-[qed_load_mcp_offsets:178()]The address of the MCP scratch-pad is not configured
-[qed_mcp_cmd_init:257()]MCP is not initialized
-[qed_mcp_cmd_and_union:589()]MFW is not initialized!
-[qed_hw_get_nvm_info:4057()]Shared memory not initialized
-[qed_int_igu_read_cam:2258()]IGU CAM returned invalid values igu_dsb_id=0xffff
-[qed_hw_prepare_single:4682()]Failed to get HW information
-[qed_probe:513()]hw prepare failed
-[0000:00:05.0]:[__qedi_probe:2563]:6: Cannot initialize hardware
-modprobe (1146) used greatest stack depth: 8 bytes left
+Link: https://people.redhat.com/jmeneghi/LSFMM_2024/LSFMM_2024_NVMe_Cancel_and_FPIN.pdf
 
-Regards,
-Yang Zi
+Testing has been performed by sending all FPIN LI ELS messages from the
+switch to the Host and verifying the proper nvme multi-pathing behavior
+is effected with each of the eight different FPIN link integrity events.
+Results were verified with iostat and with the nvme list-subsys command.
+
+These tests were run with all scenarios including where there were only
+non-optimized paths available, and where all paths were
+marginal/degraded. All multi-path io-policies were tested including:
+numa, round-robin and queue-depth. When all paths on the host are
+marginal/degraded, I/O continues on the optimized path that was most
+recently non-marginal.  If both of the optimized paths are down, I/O
+properly continues on one of the marginal/degraded non-optimized paths.
+
+Testing has been complete with both Broadcom (lpfc) and Marvell (qla2xx)
+32GB HBAs.  Both HBAs successfully complete all tests.
+
+For a complete description of the tests that were run, please see
+bugzilla 220329.
+
+To test the path handeling use:
+https://github.com/linux-blktests/blktests/pull/264
+or
+https://lore.kernel.org/linux-nvme/20260812174503.3705830-1-jtaubepe@redhat.com/
+
+To test the full set including FPIN decoding use:
+https://github.com/johnmeneghini/fpin_li_tests
+
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=220329
+
+New refactored implementation enables administrators to manually control
+port marginal states via sysfs. For example:
+
+# Set remote port to marginal state
+echo "Marginal" > /sys/class/fc_remote_ports/rport-4:0-1/port_state
+
+# Clear marginal state (set to online)
+echo "Online" > /sys/class/fc_remote_ports/rport-4:0-1/port_state
+
+Changes to the original submission:
+- Changed flag name to 'marginal'
+- Do not block marginal path; influence path selection instead
+  to de-prioritize marginal paths
+
+Changes to v2:
+- Split off driver-specific modifications
+- Introduce 'union fc_tlv_desc' to avoid casts
+
+Changes to v3:
+- Include reviews from Justin Tee
+- Split marginal path handling patch
+
+Changes to v4:
+- Change 'u8' to '__u8' on fc_tlv_desc to fix a failure to build
+- Print 'marginal' instead of 'live' in the state of controllers
+  when they are marginal
+
+Changes to v5:
+- Minor spelling corrections to patch descriptions
+
+Changes to v6:
+- No code changes; added note about additional testing
+
+Changes to v7:
+- Split nvme core marginal flag addition into its own patch
+- Add patch for queue_depth marginal path support
+
+Changes to v8:
+- Rebased patch series to nvme-6.17.
+- Added patch from Gustavo Silva, "scsi: qla2xxx: Fix memcpy field-spanning
+  write issue", which resolves the field-spanning write issue
+- We decided to leave the "marginal" state as is, because the transport
+  driver uses the term "marginal".
+
+Changes to v9:
+- Rebased patch series to nvme-6.18.
+- Refactor and fix a patch from Gustavo Silva, "scsi: qla2xxx: Fix 2 memcpy
+  field-spanning write issue", which resolves the field-spanning write
+  issue.
+  This new version of Gustavo's patch fixes a bug found in testing.
+- Refactored original implementation
+  New functions added:
+    nvme_fc_lport_from_wwpn() - Find local port by WWPN
+    nvme_fc_fpin_set_state() - Set marginal state on controllers
+    nvme_fc_modify_rport_fpin_state() - Main API function
+  Functions removed:
+    nvme_fc_fpin_li_lport_update() - FPIN processing logic
+    nvme_fc_fpin_rcv() - Direct FPIN message processing
+  Functions modified:
+    fc_rport_set_marginal_state - allows administrative control
+
+Changes to v10:
+ - Rebase onto 7.2-rc1
+ - Add marginal support to fcloop driver (new patch)
+ - Rewrite multipath handeling ("nvme-fc: marginal path handling") and
+     ("nvme-multipath: queue-depth support for marginal paths") replacing
+     them with ("nvme-multipath: round-robin...")
+     ("nvme-fc: marginal path handling...") and
+     ("nvme-multipath: queue-depth support")
+ - New patch ("scsi: scsi_transport_fc: Add set_rport_marginal to ")
+     replaces ("scsi: scsi_transport_fc: add fc_host_fpin_set_nvme").
+     Uses existing function template to add a new callback for setting
+     the marginal state on a remote port, similar to the existing
+     set_rport_dev_loss_tmo() callback.
+ - Replace `nvme_fc_modify_rport_fpin_state` with
+     `nvme_fc_set_remoteport_fpin` which takes
+     `struct nvme_fc_remote_port` insead of wwpn and wwnn
+ - Rewrite the "enable FPIN notification for NVMe" patches
+      to use the new callback methods.
+
+This patch series is based upon 7.3/scsi-staging at
+Commit 376a3960e5ef ("scsi: fnic: Fix built-in NVMe/FC build")
+
+https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=7.3/scsi-staging&id=376a3960e5efe85ff765abfb5b5b7e4655ad6aed
+
+Bryan Gurney (2):
+  nvme: add NVME_CTRL_MARGINAL flag
+  nvme: sysfs: emit the marginal path state in show_state()
+
+Hannes Reinecke (1):
+  fc_els: use 'union fc_tlv_desc'
+
+Jesse Taube (8):
+  nvme-multipath: numa support for marginal paths
+  nvme-multipath: round-robin support for marginal paths
+  scsi: scsi_transport_fc: Add set_rport_marginal to
+    fc_function_template
+  nvme-fc: add nvme_fc_set_remoteport_fpin()
+  scsi: qla2xxx: enable FPIN notification for NVMe
+  scsi: lpfc: enable FPIN notification for NVMe
+  nvme: fcloop: Add set_rport_marginal to sysfs
+  docs: nvme-multipath: Add FC-NVMe marginal state
+
+John Meneghini (2):
+  nvme-multipath: queue-depth support for marginal paths
+  scsi: scsi_transport_fc: user support for clearing NVME_CTRL_MARGINAL
+
+ Documentation/admin-guide/nvme-multipath.rst |  17 ++
+ drivers/nvme/host/core.c                     |   1 +
+ drivers/nvme/host/fc.c                       |  20 +++
+ drivers/nvme/host/multipath.c                | 122 +++++++++++--
+ drivers/nvme/host/nvme.h                     |   6 +
+ drivers/nvme/host/sysfs.c                    |   4 +-
+ drivers/nvme/target/fcloop.c                 |  41 +++++
+ drivers/scsi/lpfc/lpfc_attr.c                |  28 +++
+ drivers/scsi/lpfc/lpfc_els.c                 |  77 ++++----
+ drivers/scsi/lpfc/lpfc_hw4.h                 |  12 +-
+ drivers/scsi/qla2xxx/qla_attr.c              |  13 ++
+ drivers/scsi/scsi_transport_fc.c             |  89 +++++++---
+ include/linux/nvme-fc-driver.h               |   2 +
+ include/scsi/scsi_transport_fc.h             |   1 +
+ include/uapi/scsi/fc/fc_els.h                | 174 ++++++++++---------
+ 15 files changed, 441 insertions(+), 166 deletions(-)
+
+-- 
+2.54.0
 
