@@ -1,154 +1,159 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FE693264C3
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 06:06:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC5A36166A
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 06:54:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786514794; cv=none; b=mSnJw5HvgUc4CYFofl34KedhrmoVBPV9/1atz70iq3q2R0W+ZVAsh3U5dw3Dogj7hj263WwJkZOBgx29cL7IWHSVV816Nd1FFh2906WF2TIKH+jl0y74jo1yHw/9fxuYIEg4/z1nM721uPgydByz72bIdriOYs+28Jk7U4sh0UU=
+	t=1786517691; cv=none; b=gb5wrYI2+BvjDRhEsP18wKxDFOblSdeovCLtru/ViuOt7LsstmlrfxjtABAZ4Vhrz6f3Vb/Ba2iJdqrI8Pm3La/Udd0N/+sK7imWSicZM4vegCEOjF+l4yjED0M8yxcmnxh/bYnS7k6PlA+JW69FuAEdiBKDqTNoUkfeM/psUxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786514794; c=relaxed/simple;
-	bh=ZAJzop4AjvsiA4GTl3m1C8MJVDuXUxmiqm9F/Nw8O1g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S3dzKS0vrGvJBpv86+ZKA+SOXmjF2nh7c2Yy8iovl4zuNxgW3ZWxjB80iUpLhPKXqAgbUT9gUDWyF6jMPE3II3TI0EgHnIzts5bR/2LrbclWAPE8NOTk9TF3CWsG4/mEEGqwlEL2aclXDJrweZOVy9TJCi67PeG7rvPjheidFyc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=OkGeLtmu; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	s=arc-20240116; t=1786517691; c=relaxed/simple;
+	bh=BFpKMu+N+lhLUOhUBprUSLMaE/aR5fqxZY4RYmGejds=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lILmFcQyEX4c5Bbqx8ypjG+K+noMxcm4gwKHWhsZNfKtJo+7y05m/G/F+Q/rnPXbgoqXCYXMEOAkLhzYgZA22lzacoPnWwTREk0b2elb9EJRDMECwNxCTZs6TUZi/TDuVLNjvMlhC6z3XUgGw6bs91/XEBiyS1GYuT6Q1K+easw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=dyGho3gV; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=TWjZz6QI; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="OkGeLtmu"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-495437bb891so4778555e9.1
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 23:06:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="dyGho3gV";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="TWjZz6QI"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67C62RNJ1720190
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 06:54:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=v3VVXKFAuDaFyAg4gLlAG94a
+	Btk5XT2S6br2Q1phvrc=; b=dyGho3gVk+lFAajEzJsE4kCJ3oedIearnfjc5BHC
+	W1lUYX4GLJYWQCrJBLqAxenFoLtdWTMzMUzm6b6EzIjT5z8s7dbhTD4Cx/K3IpVz
+	fa7D6VvOHqE8msiPbKAHdybBZmAf6DoboVaPA51/AE6N+uXD/jyR8XAtqXbCa8vp
+	KrESHNiSRhKDDDhxQxxrHPZet+Sqt8eB7kho+huGDAxGKdtF/Pw4NI6Stm/SyvaQ
+	G94tr0q8PX5UAgTwHaiH5zYjihKKd84yvhrFpIUbBaBtfKLnTzYvE/jn3x88D7dK
+	rLjUgctg38rbO7A3s+Kg8/esmQ3ei3yZ8tc/Ng5PoyEzDw==
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com [209.85.160.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g0hfw0jkm-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 06:54:48 +0000 (GMT)
+Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-52ce64c41efso11443991cf.3
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 23:54:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre.com; s=google; t=1786514790; x=1787119590; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1786517687; x=1787122487; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=HorQEIgr4JhNec9eanHk78I2SPpuUlT0tC++CtCiMaE=;
-        b=OkGeLtmuIR9V/25H1nrc0yoWiyVaF/+TIJGtvmBrxZGoGXwevN83Zwe3cN5mkPWQEl
-         EZkE3Z+fq7fgPFzYcdkDwjTzLUQRxtpF9pA9bn6rmYSSdG7pmnjIk2CxtID8xTv6wfT5
-         m2pXvERRFt4RRA2EP1Dhs3/Sgw7BOJFNbC6sLGoSDjgNAwY3FaiXfD8Q5BiMla1LuVaF
-         CGq41vBUZIrF5ojvKBnbATXwjSCTCJrz9UbQDr2yrpKxRkpqTKESI9eax9qR6TL9p80D
-         9K/mKgYqaiRWCgVxmrWl1Cg2rSpfFqBGGYXyegxSzKUHLKhEwWfSOg3noK5IhwC+v5wl
-         s+jQ==
+        bh=v3VVXKFAuDaFyAg4gLlAG94aBtk5XT2S6br2Q1phvrc=;
+        b=TWjZz6QIRcTvnc10HLgvCibDAXVyxdsOHYnZWTwQOZXr9Ko6hQn0V2VlIDD00DL5ld
+         ReTO7PYokTlPyvURABKAvzUR9JbVGWNNsNB/BHuj2l84ao4TKwcT3fOC+LhD/dxdXKaf
+         pdIoJohK9JT517XkgOcSLsyO7RDlo3PwYgFi3M/UYhr+1MyEguzFXeRITvtleJvKVRPl
+         gD0jAcUh5+Uy+xRG9f+QcppHYOoGStbxAxiikf/4tRqk3YBG2b49PbnARmlK/dOtaBLE
+         NQwmpP/Jo1IJWBbDR1hL7YGTLeUK72DkrZpDaJ2xAeQzUNGVoJ7HQme/xFX1Dqgc4PN2
+         l+EA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786514790; x=1787119590;
+        d=1e100.net; s=20251104; t=1786517687; x=1787122487;
         h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :references:message-id:subject:cc:to:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=HorQEIgr4JhNec9eanHk78I2SPpuUlT0tC++CtCiMaE=;
-        b=WRv1KOFAzA/WwtKAJYKU8vJM12yKg6VjJgKdvf1jmp+C+q6YEqlvONJV4fqybYUtzL
-         lTlkXS0QEHwBurb47GA2AoMzq15eKBDdefieJfCgEGBExrXog4GAmt860kttyJnNwrxO
-         r+B0maSLw2sHDzI20hJx/cKsPObgaF4+GEbFwpKKPi+FADrDBQXOESJoq3RH+VPCJmBD
-         4zhmtLJDeDNB1DfVb+CHSv31jt6PRCdxY0B07J5Nk+ubf0P6FdyJsGL2ElUNANTHaU7O
-         cycA+nEuDrjnX4AvQzSsgTtUkgJ9kXg7HVuhnW5YG/GefXr/TUhOUppkT1tp/GS6e6JN
-         SuPw==
-X-Forwarded-Encrypted: i=1; AHgh+RrTKSlnAPIFOHl89LeFEJ8sHxKjMpdFejseWFA/oEcLknST+XjWB38hxmzOFkvg8IyrXM/gnHB2ZUYf@vger.kernel.org
-X-Gm-Message-State: AOJu0YxbkBaiArXthI3j6n8L+KGhxbyzkHJ94ZsjNT3Y+XDmWmMHdaeZ
-	vwGiMm7ItFsYx4+oTNV3iQLOFyNZdBKvQMwVNhpO7tVwHgH5QbUSoqDH+WBEAEkphfo=
-X-Gm-Gg: AR+sD12k4EKZZZrFgkzWvfzJ+6w2iwZmV4KdFodizQ9aY7Wcas+qM+pfOH6DP3SEDw9
-	2H8WM7BYFub7Qf6EZB3/F+s8KK8VQwUNRe/+XJiGKhr+C3hWp1Jmv/5/9MGtP1AfoBb6hz8JIPr
-	Ft9TSMqNo3wGDkpxCTtZL3/oxvHXjDnAKwJtOKXkQ0k4z6OZS+8njxdf7oAmhcy2Wb4W5ZH6ile
-	abL0RjdASywBjudedLjWwyTYLiavCbBDsKKMZfPx7ctEgemGEFIXavKGSy+kV1xBQ5DdMGWlgwQ
-	2nwMk+n3jF41AvzrWlqHQGnZ4kyXUpmKOaCpcuRntlxgUNvEB9MXAgagVq6pEac7uCbhJWoosYF
-	knsU9zeNKErhaWaukPfTT0jzjbE6l1Jfp0x7RI1dlEW3zegqdm1MSg1ijSOOuARB65QkHgcFtwg
-	pcGz1X8EDGNiZ5CCifHmRKJuuPKgG8DHIjiLx/pj0+/R1G2I4F8rq53n5jWmASmNewRA==
-X-Received: by 2002:a05:600c:c87:b0:493:f783:c46a with SMTP id 5b1f17b1804b1-4997c4fb76dmr22206145e9.6.1786514790233;
-        Tue, 11 Aug 2026 23:06:30 -0700 (PDT)
-Received: from localhost ([2a02:8071:56d1:2de0:1d24:d58d:2b65:c291])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-4997c948512sm19224575e9.6.2026.08.11.23.06.29
+        bh=v3VVXKFAuDaFyAg4gLlAG94aBtk5XT2S6br2Q1phvrc=;
+        b=Ki2uqMvUZyAwhPPviwTmizIqwg/Rq+Jwx7tyRinIgI8BA5thw3RXVibNAAY60ibWuG
+         tLciHkVtnLODrUopcaLlevrMlX/g5KkBci2umUN7R3G5BBjvWWzoSXm+yoUuXKnpMnmH
+         V0AneF5WGt+Ww7WPMETBfmwcnR+yELb3BI1HxF8gRsYckRKUpBJElJ4dH9F7xhjWJ22p
+         smL4wrs95BGe4NymT/W9hsd68U1ERe6BSiu1HF+E3FE3PIBWImn3BRiRODnjsTfnKdTF
+         g5WecUO8oyI1Vn2AeromKHT5/glthxCIwOcOjkc9DK7u10M6/hSsNiBt7z+N8+r/Mu1I
+         NwHg==
+X-Forwarded-Encrypted: i=1; AHgh+RrrwiNu0i2/ILkDUfe2VFyz0UioQ+sJ6jQlnSh85fFpzJsZ0EwEKOvNVrZtVAC+ZD1mwwdWVo2YXdvT@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKYPmQlQudUMGTG+vmRhgEyA4VthEiScJ4jh96NiKu2nPuCWzU
+	wjV/dE15S9WIvRNZfSkQn3CQBq7FZGqlmpFgYwncwJDb+69yJe1j/MAj7eG/KyzOMVa7G7XKoSc
+	9sm9GBU/8b2brOc5JoNXVOpCU4CmIpn0HJkDxTRuo69ZsD4poVALVgdd31/8ax6KS
+X-Gm-Gg: AR+sD13kiqjRDiBvUWi/EMuR+fCp30J477EkN0wmfwLGiN+gjW4QNbIOLLRp3TcSeq3
+	RmY8QCjlLL+N3EwrynTUniFCQSAuqJlXwxkkXOQ6F+gI+VXH1Gi7D6KE1zA2+6VMjuS5wZ2jvKH
+	aeJaPE8dhpez47QWK4Us3dBPiDrZzbkdHiDI/Ub8OC7dZgO24KMtu0+2BbM/hg/aQbhao5lHzxT
+	JJiIlDiH136lfNAgRYId5EDwZtwJkq598ra9n4yOurle1JNVq7AU32sYhdNSQ/PsTg2biQIJ8uY
+	DeTwONk5bDglzGz50zp/YeRqBzZoxOmgt6FU/Hlr+yXpsQG/wb9jLTK10QgK39sgg3LBE8nYWAL
+	P+tiVlrXl+fjNBNqNeHExqVnMWui1xBNJrqE=
+X-Received: by 2002:ac8:5892:0:b0:51a:8dc5:bf89 with SMTP id d75a77b69052e-52d646b8909mr23232331cf.5.1786517687415;
+        Tue, 11 Aug 2026 23:54:47 -0700 (PDT)
+X-Received: by 2002:ac8:5892:0:b0:51a:8dc5:bf89 with SMTP id d75a77b69052e-52d646b8909mr23232141cf.5.1786517687089;
+        Tue, 11 Aug 2026 23:54:47 -0700 (PDT)
+Received: from trex (182.red-79-144-196.dynamicip.rima-tde.net. [79.144.196.182])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4997c9944ecsm22591555e9.14.2026.08.11.23.54.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Aug 2026 23:06:29 -0700 (PDT)
-Date: Wed, 12 Aug 2026 08:06:28 +0200
-From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>, 
-	Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
-	GR-FC-Storage-Upstream@marvell.com, agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com, 
-	hare@suse.com, regressions@lists.linux.dev
-Subject: [REGRESSION] Re: [PATCH v6 05/56] scsi: qla2xxx: Add FC operational
- firmware load for 29xx
-Message-ID: <anwLLKJRVgL6a-aQ@monoceros>
-References: <20260723050413.3897522-1-njavali@marvell.com>
- <20260723050413.3897522-6-njavali@marvell.com>
- <c324172a-a754-4194-a841-ec1d813dfde5@oracle.com>
+        Tue, 11 Aug 2026 23:54:46 -0700 (PDT)
+From: Jorge Ramirez <jorge.ramirez@oss.qualcomm.com>
+X-Google-Original-From: Jorge Ramirez <JorgeRamirez-Ortiz>
+Date: Wed, 12 Aug 2026 08:54:45 +0200
+To: Jorge Ramirez <jorge.ramirez@oss.qualcomm.com>
+Cc: Bean Huo <beanhuo@iokpp.de>, James.Bottomley@hansenpartnership.com,
+        martin.petersen@oracle.com, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, bvanassche@acm.org, can.guo@oss.qualcomm.com,
+        beanhuo@micron.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jenswi@kernel.org,
+        sumit.garg@oss.qualcomm.com
+Subject: Re: [PATCH v1 0/2] ufs: rpmb: make RPMB usable with OP-TEE key
+ derivation
+Message-ID: <anwYtSvM4HjI2VLv@trex>
+References: <20260720091614.544968-1-jorge.ramirez@oss.qualcomm.com>
+ <2e8b4b54f8bdd933d97afdcd52d44682440647b0.camel@iokpp.de>
+ <al3-w3j2-E2twGZj@trex>
+ <anNN4gZc9nvadHNs@trex>
+ <ccbbd36373238b41ab00b44e22c515b76aaf2ccb.camel@iokpp.de>
+ <anRVtmk7ejWewDX_@trex>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="wlq7zktslbm7aakd"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c324172a-a754-4194-a841-ec1d813dfde5@oracle.com>
+In-Reply-To: <anRVtmk7ejWewDX_@trex>
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODEyMDA1MyBTYWx0ZWRfX7SecJdO4kEw8
+ E+LNrMkKw79LX5zvfwsPIHJCFLV9F/48nieAaxkb4jaNRLgN28o3Qf2o1xjparrFeEOh0Q7tHGx
+ A2aYR9z72SyCTtDgzQVjuAVh2InS3ic=
+X-Proofpoint-GUID: DBRBmbE9fkkD5KbQRJ5u9lIrmI4rohQg
+X-Authority-Analysis: v=2.4 cv=fpDsol4f c=1 sm=1 tr=0 ts=6a7c18b8 cx=c_pps
+ a=EVbN6Ke/fEF3bsl7X48z0g==:117 a=2lELrtOEK2EaG96G7mOeag==:17
+ a=kj9zAlcOel0A:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=NEAV23lmAAAA:8 a=8CC5C0rKepkKukIsmMEA:9 a=CjuIK1q_8ugA:10
+ a=a_PwQJl-kcHnX1M80qC6:22
+X-Proofpoint-ORIG-GUID: DBRBmbE9fkkD5KbQRJ5u9lIrmI4rohQg
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEyMDA1MyBTYWx0ZWRfX1XIGp0d3Dswx
+ uALgaBHEVVoUlLVWucZgPPXCfZeh+l4yrf8fauVgJfPmT0EoVGhobHk9+rMstMtqwGUBjszVmSh
+ xraKJMPaWPaQ2zq6JrK5dI02mTM386QSGoDGiv0S161jPo4+XMPQlueFVCSZU5QYfg4Qs+ygh4c
+ Oo8pVUUWkVXGAQlfbYFBLCo4UFlLV7JyNAgcWa60KnDj1JIgtJWnptN3SdPYDhL7zk8zVEaYuwu
+ jnI6pqvMnpA4xLshVOHJrzAoPvw8s4Dve4RbiM1zSt7XC10n5eforI7QgP06APBfBh5kcNR05Jf
+ VDoRQjvlaBU9CyzebW+NAIkVx/RoCc2QLl2S6iZUjW2ysiUg2iHfkE90DhFrkff4Zrej+eN+Id7
+ 3TtPQxMzSoSBxE0CNO4mJgvLzhQXVwuU40JvxBCu7iWAqI+Fkz8aK8pXwp8GJ9TuEkc3koR+oHv
+ oKl3i+EvBDrTq+yytfQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-12_02,2026-08-10_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 priorityscore=1501 spamscore=0 impostorscore=0
+ lowpriorityscore=0 suspectscore=0 adultscore=0 malwarescore=0 phishscore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608120053
 
+On 06/08/26 11:36:54, Jorge Ramirez wrote:
+> On 05/08/26 18:18:31, Bean Huo wrote:
+> > On Wed, 2026-08-05 at 16:51 +0200, Jorge Ramirez wrote:
+> > > On 20/07/26 12:56:03, Jorge Ramirez wrote:
+> > > > On 20/07/26 12:23:39, Bean Huo wrote:
+> > > > > 
+> > > > > This is very strange, coverletter is v1, but the patches are v2?
+> > > > 
+> > > > I messed up (manual edition of the letter) but the thread is proper
+> > > 
+> > > Any other comment on this set? Can we agree on the ABI change?
+> > > 
+> > > you can check the overall integration description here for more info:
+> > > https://github.com/OP-TEE/optee_os/pull/7881
+> > 
+> > 
+> > I would be ok on the ABI change, for this series kernel patch, patch [1/2] ok to
+> > me, just [2/2], I will add comment in the patch.
+> 
+> ok. thanks Bean.
 
---wlq7zktslbm7aakd
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: [REGRESSION] Re: [PATCH v6 05/56] scsi: qla2xxx: Add FC operational
- firmware load for 29xx
-MIME-Version: 1.0
-
-On Mon, Aug 10, 2026 at 03:27:01PM +0100, John Garry wrote:
-> On 23/07/2026 06:03, Nilesh Javali wrote:
-> > +
-> > +	if (section =3D=3D TIM) {
-> > +		if (section_size > req->length * qla_req_entry_size(ha)) {
-> > +			ql_log(ql_log_fatal, vha, 0x0098,
-> > +			    "TIM section too large (0x%x bytes, ring 0x%lx bytes).\n",
-> > +			    section_size,
-> > +			    req->length * qla_req_entry_size(ha));
-> > +			return QLA_FUNCTION_FAILED;
-> > +		}
->=20
-> Not that this is generating a warning for i386 builds on the mkp-scsi 7.3
-> staging branch:
->=20
-> drivers/scsi/qla2xxx/qla_init.c: In function =E2=80=98qla29xx_process_rd_=
-image=E2=80=99:
-> drivers/scsi/qla2xxx/qla_init.c:9272:53: error: format =E2=80=98%lx=E2=80=
-=99 expects
-> argument of type =E2=80=98long unsigned int=E2=80=99, but argument 6 has =
-type =E2=80=98size_t=E2=80=99 {aka
-> =E2=80=98unsigned int=E2=80=99} [-Werror=3Dformat=3D]
->  9272 |        "TIM section too large (0x%x bytes, ring 0x%lx bytes).\n",
->       |                                                   ~~^
->       |                                                     |
->       |                                                     long unsigned
-> int
->       |                                                   %x
->  9273 |        section_size,
->  9274 |        req->length * qla_req_entry_size(ha));
->       |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->       |                    |
->       |                    size_t {aka unsigned int}
-> cc1: all warnings being treated as errors
-
-This patch became commit c3930ec119cb ("scsi: qla2xxx: Add FC
-operational firmware load for 29xx") now and is included in
-next-20260810 and later.
-
-#regzbot introduced: c3930ec119cb916be879c017ea1e389e05dbe1aa ^
-
-Best regards
-Uwe
-
---wlq7zktslbm7aakd
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmp8DWAACgkQj4D7WH0S
-/k6BvggAsG7SGFLcknG+/aqI/u1jGCPHEq5z8Jk49ehBP0rOAmmU27VdhIxUL7HJ
-rK6HFRcjx4KfzjAO/NHRP+aOB9Rxluaf/enIVaGJBVQxx5RXmyAFxEM6XZKc9Emf
-UykEio89rzrgOvDUWRxq8PRdAfDCL7frOZEyC2BPanyo6oe/lPrF44qC0CyBE6nl
-+lQ6uKMqMnmvqsyXBQ9SKSRsaX8fKfNT1RYmRk9DyMvSVG6BZNpP2OXlwkmOrEPL
-SIpi4P36GRqOwkrCHq9N1OJ4kZkuAE0r5KxKWbQSteKL00mehRgui0bN+pxvZqeg
-HcpQfUtsre4sbXVojxGWaKtgnvhXxQ==
-=0nEt
------END PGP SIGNATURE-----
-
---wlq7zktslbm7aakd--
+could we follow up on this please? 
