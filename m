@@ -1,198 +1,75 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from outbound.qs.icloud.com (qs-2003b-snip4-1.eps.apple.com [57.103.86.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F4E32D2487
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 19:39:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786563560; cv=pass; b=utOIGaaNTbtJ6Eg7QDDSj8LDFNw3kvVD8d5ASkyVwIaT2eL1w182FCD/MIpXZ+kWulEVm9hB3vo65LV+8FbU8T8DZBKuhL7pyRNpuV+Fcrbti2iQ2p3H/qv0/GQG2vxV2gmfm4KSYqjgTVtPh412FnLBuP3JHz0h9MHskpDISP4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786563560; c=relaxed/simple;
-	bh=tRgGCOewA0lp8S+K3RImRNPbX0DuxXTz1l30c+3uZoE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mxcg/Mq2rj0FRD8M/2yOSKvtdbIym+ZE+4PopANhNt6T/dORNqnyxq4X0Fgj+znCEtwcLRRXfn25/4fFZHoE3+NliZHiDJN9Q2zb5M5LvEI2nY7HcA3rXNCogc5+YM2R8X4U9OUWPXSDNNOZBrrPu6G6PI7KscExf/BE5YDEIf8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AE6ryjOz; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZFVKXQBq; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EC3337F33E
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 19:48:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.86.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786564108; cv=none; b=KlLPFEJWbi2DSR7i8YJq0TbRh8qXmFjON/epcTn4hzdTZgROf5qVKGUmBFzAAOAdM/VDWftE26/6EZ/QT7N/PFBntSpaDjNI0f5AUkVPI19w/qenqi+u0HyO3Pv7IalKSB91vYyP/3rsSmQpFD3SKgEJF+8/s+CcU6UQmOOPodg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786564108; c=relaxed/simple;
+	bh=msfsr2Xu4psqQUI+7pT7TT5XZjVqtJFSnYd7f+QEUAY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jFEAuM+OhaE+8cw/D2yHg2vRVeWRo+m8j7uE6W372IgN2Pd7CWRNsE2dFDfESpyWQEbwQOBcKFCCrfy99iIl91DzuLde734t9hXCLbqfwH8C3fSF5ZaOOpBX/mAwOg4jcYFFeEvALlUF8Z+p9HCmY9+rR7INVbOet8uJ18onbII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=dqoU09tv; arc=none smtp.client-ip=57.103.86.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AE6ryjOz";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZFVKXQBq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786563558;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3C4X2UvQfeeNnOmqDKpOYErY1uer3KEJgj1Xf3vKCt0=;
-	b=AE6ryjOz26RxLq9Mb1cTMYcd6h6cOIq61eJ9m0g6Ecbo1PdQN2fOl7zWOfO0L0p9AjzuoK
-	pjOD1Pi6bBRHyEo8XXRLgnlpy1N3kgFf0dq5M78obH5EAxtsgxtkDpqV/Uo664SJ/3Jnx4
-	Yyj8ifcabwAWMcLuFLw8CHiYEKXN6m8=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-503-fb1UkH_kO1q3-xa0JnTc1A-1; Wed, 12 Aug 2026 15:39:04 -0400
-X-MC-Unique: fb1UkH_kO1q3-xa0JnTc1A-1
-X-Mimecast-MFC-AGG-ID: fb1UkH_kO1q3-xa0JnTc1A_1786563543
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-47f7039fa59so1090635f8f.1
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 12:39:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786563543; cv=none;
-        d=google.com; s=arc-20260327;
-        b=WJE/UsMgKqABDt2oL2JgsOroxFo+DOYbQxKiL1Dfgezq4+YOxWk7llS37KK5UHGE7Y
-         +z5fVcm0oDDLliTYPeAfXr+saYi3LF/c3k5uUJW+6lJMRvZnvnC6206RVlRYje/4bLIH
-         UKKamPMxmLDHBAgzmF0unjuLT42cFHZMSvbC7j93QruTRZPuHUjelzX7EhJQfYn+EZT1
-         QtU9QTxicOJxMGUCdUD6Np92cGpWwHa4/0No2ZhURxEm2i48349s5OHQqU/F6074iC9L
-         T+azf+bSeESSmgMyMLkEjgGC598US2An002p0s8u00jzXiOZCSujTt46d0W98wL5bc3z
-         n5tw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=3C4X2UvQfeeNnOmqDKpOYErY1uer3KEJgj1Xf3vKCt0=;
-        fh=gUfsL9ppqjROwdjOOpA7gVU01au1qshFQ+BhECdF0Kg=;
-        b=aCIbkH6MZCxDJwfn4LhhTFwkU3gguXQkeZu+GSzuOsnE6JajievmP2r+xLkYxRtVzo
-         gF4hceOXta4LW3ngA7fb2jS6jzXLiVX1J6gJh+Xk9ZGiztb2WyeprXKDCGOjDqyyZitT
-         d/pkFvgIc8kiY10/vxz5O8a61vYMAAw183tmZ4r6w7y2qPuoqYrqlayBJLvEwlptKZzs
-         F/ulUbjsKpaXQyCZV0drjDaRy2xJ0DO4Y4NcYkBGYHg4HBySK+NT4pL0/xiEnVM9GM78
-         f+mKqjRvbTtLZP6IjHBNUI3OTycEuD7EXvh1R22i9/1I66zqvHeL9Y9ZqX0wViHPK7zZ
-         BFeg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1786563543; x=1787168343; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=3C4X2UvQfeeNnOmqDKpOYErY1uer3KEJgj1Xf3vKCt0=;
-        b=ZFVKXQBqiFeaku8dfb3FEge8UNIYHGTsvgVgOgNpU5DQvo9QHMJwQhlYexFTbFMerS
-         D2NbUWEAKx92dEEFHNYjAlwBaRPKpcAULcpW/R2SuqE1nS4BhWrniP+A3U0mrnfOwHbf
-         Pn9LkkDGHO6OLi17NZFQDtXm5DpCXJ0AOwexS2RY9p5N92cXvDjFUvwgCOhfMbFLH1MM
-         vjl0M+WVmaIUYvxjqZ78fph3p9y/BX7sts7ELyCYazMSZI/u24qu449sq1bogedIXDSR
-         4LHxN++VRcTOY/Rw8XZtsTZzGayKej4Kiuf8e0JZ+xWDXZ/+WgL0hwumrOL1EQQFIa1l
-         zWEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786563543; x=1787168343;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=3C4X2UvQfeeNnOmqDKpOYErY1uer3KEJgj1Xf3vKCt0=;
-        b=OpLtTulXIFna/fXmGtWctDVfU5pvZlMDcfyB/b4EJSnyW2ru5tsq+Prs1l88JcpsYT
-         NF+Cp6si10gS7vuZ9Me3K69VhkXKeqI4YNHFki5T6HYfrxXMg2NSYTJFDYSUjkmkMaI6
-         ziriKGXrdGPp8S3q4Z6hcyHWqoVXpPIX+FiBLn6eOOC4n5paA5E4uoZVlUV2MfkmkdHf
-         jAzFrUIsiPs0GK6xU0EUVkWC4ifuAwcBpryD32U7t/f96ux9WrOS88Rk6HTqRrsF7xA/
-         +cf3/teEQi1tq9V2L7rqx/svj8BwxRHvSrJ60GfuX5d+yyz35BDEXUyCnNGINGc64cfJ
-         rt1Q==
-X-Gm-Message-State: AOJu0YyKSKZ0pXXh0geTeLhKwxH7RxRP0h6Ag5V8uIpt8JH1Aa8/KG2c
-	+rWWQ9cq8vTz207DPlT6do/vfzdLihjgqproWCQO+rNqjrEw9U3cZMaj3l/niWuLWq7AmxN6L13
-	c2pwTWUhXKIxdbO8HoOy1JTKnidCmBfBd8PvL0FWT50UjAVUCe9OFUinYofgCzd2wFDzp1pfWQZ
-	XLiTKXWGE+0vuX1wBB+T8j1x+8NdCqsn2eUR9Z4pH2aPQ3CmgG
-X-Gm-Gg: AR+sD10AvhZUESDX446L5l2RLDMeDWF6SzP7jGaQYZKb2N/CUMFYLm9fD08J+kkTXli
-	D9UuZezyP2u/RcfwiWNNPsoEudM9idZ8OFiNlSyI81zQ/sKqU5+oNbaxh1DYoVx2DAt/BXIfgBC
-	JyaXSH/t27dGXL4tzYpPpo6z/2pJRI15qOhRJqxsv0NhxTF1qWLgpYy7uflf5/TCsKZABBc3Qs7
-	3vxp9+qsrhJDdn3og==
-X-Received: by 2002:a5d:4749:0:b0:47f:8ff9:c9bc with SMTP id ffacd0b85a97d-48159fe3dbamr560750f8f.14.1786563543189;
-        Wed, 12 Aug 2026 12:39:03 -0700 (PDT)
-X-Received: by 2002:a5d:4749:0:b0:47f:8ff9:c9bc with SMTP id
- ffacd0b85a97d-48159fe3dbamr560719f8f.14.1786563542767; Wed, 12 Aug 2026
- 12:39:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="dqoU09tv"
+Received: from outbound.qs.icloud.com (unknown [127.0.0.2])
+	by p00-icloudmta-asmtp-us-east-2d-60-percent-5 (Postfix) with ESMTPS id DBF081800335;
+	Wed, 12 Aug 2026 19:48:23 +0000 (UTC)
+X-ICL-RepId: 019ff784-ce8e-787f-8e95-66d7b7a42d6c
+X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQ1PHVwPUxxGClYCVAFLVxQEHUAFVgpcQglLAi1eCF4fTBwdDlgGEhZdRVoOWwRHFBcbXAAXGVFNDlhbCFsEDx9MDFECQgVWXkgLHQRUB10FXVZQAlpLQgRLRWhcBVwcQBdIHV9qS1YUBBFQAVgeVl5aF15NWgJWTQVKA18BWwpBC0kKWQ9bCl4MTwVYD10fQRQdQAVWClxCCUsCLV4IXh9MHB0OWAYMUE0BQwgKAlEcVg1X
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1786564105; x=1789156105; bh=vN7GiDpcgSBRtZsQIVeZ+YPpnWj7rPElkOOQH8pZbNo=; h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme; b=dqoU09tvcAY9yhyZaeEiMixjRRU/+T2j4COF7LTsbkVvIo9OJ7UK5p5GX9gLEhOAAUE2nFLgeomGWjRxuJHIJ0cWWeaeF+gtaqx79KhKFloZcpELz5Gsm/WGT6U6K+DZYSCT2GqgKuGiRa/w3MBoztNNtEA+4+K2TC+ZlS7om7ZabHNWyDh0MRIuav4FTbKilx1AP2Cjk3BD6+lhoevcORo0YNOuyptrcF+a9MR97sWj4MfszpP922q8W/sFE3QTCr2QI/UT+7mxsL9i3ZgU8zVHVKCOeUFzM2wDGr5WpBPZnYwFt8dEnZ6lB1sk0nbcX8jEn+RfGG/PwNpJm4w4LA==
+Received: from machine (unknown [17.57.155.37])
+	by p00-icloudmta-asmtp-us-east-2d-60-percent-5 (Postfix) with ESMTPSA id BFDE31800321;
+	Wed, 12 Aug 2026 19:48:22 +0000 (UTC)
+From: Eshaan Deshmukh <eshaan2031@icloud.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Eshaan Deshmukh <eshaan2031@icloud.com>
+Subject: [PATCH v3 0/3] scsi: libsas: Handle errors in 3 functions
+Date: Wed, 12 Aug 2026 14:48:05 -0500
+Message-ID: <20260812194808.576586-1-eshaan2031@icloud.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260812181300.3712426-1-jtaubepe@redhat.com> <20260812181300.3712426-11-jtaubepe@redhat.com>
- <20260812183447.69D111F000E9@smtp.kernel.org>
-In-Reply-To: <20260812183447.69D111F000E9@smtp.kernel.org>
-From: Jesse Taube <jtaubepe@redhat.com>
-Date: Wed, 12 Aug 2026 15:38:51 -0400
-X-Gm-Features: AUfX_mwPGs6928oyO7D9lNr3R67WeJ-UrYuYK8ZSaH9YZfKKzZ1uertCx9vvxe8
-Message-ID: <CADRr4bdf=r802GE8Duz-VMWZ9XFEtjg4n+xWwiO2Ws7Q0C0Q7w@mail.gmail.com>
-Subject: Re: [PATCH 10/13] scsi: qla2xxx: enable FPIN notification for NVMe
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: 9dAtaLMEs0UbChnC7ccmCdP6lXaTIo2k
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEyMDE1OSBTYWx0ZWRfXwXA1mJCu8Oe7
+ KuTQLH1rxXphfRyhBH0XMPTqdjR/2frIRJSeUozlzh1fa3L/N1cttWC2lA/xEfgANTeDH6FWjEb
+ /O+3YNgoR5oKIIO7ASjoStJwiYqx7rvKrbUVUt47gnF3MIsjUv7FqPHCklLQNXUs+LWYdPTAMXS
+ o5n5wcHiVsE/ZMTCtGEMnbKOC4rCbda6EF4F6vW3nBUP7lzPo3pGdDr2yhrkyHVPQDd1UJZhFT8
+ CB/J/rirGLxGhz7HeOUn9kOgoWySSIg7/0pWQN0ZaWwMTvBOdITCxheckjv7crO3ZcAhkNco0nc
+ 1p1IVqhL3k63iXjJhGO7rfBUCKHQK5fQ+Q7S0A89fFiKb3YgTfPTW9GGzS9yvU=
+X-Proofpoint-ORIG-GUID: 9dAtaLMEs0UbChnC7ccmCdP6lXaTIo2k
+X-Authority-Info-Out: v=2.4 cv=LZExKzfi c=1 sm=1 tr=0 ts=6a7cce08
+ cx=c_apl:c_pps:t_out a=bsP7O+dXZ5uKcj+dsLqiMw==:117
+ a=bsP7O+dXZ5uKcj+dsLqiMw==:17 a=Sv0fKeRqtYgA:10 a=x7bEGLp0ZPQA:10
+ a=ea8ixM18I5MA:10 a=VkNPw1HP01LnGYTKEx00:22 a=p5nTp-o6oSFkd0WaucIA:9
+X-JNJ: AAAAAAABsSUno0SwCX4JY3mnEzo0f09hFO1yCsSOKqttzlAIO1NlqUhPpxYy8cFFi9mx0RxH06x5/XHZppdTtGJ6EU9HEAjelTTkmMeUPXuaIcOO6CNNFXJzsO+SkWVWAhS98RXuUjgGqGpObS+NgEVOnGljJvQfyAFrCvSj8x9vQ5zcxLJtlc6/nKDpzT1mr+RXWABnQf2wy9rOio0M63oJObZXCCI2tGi8m1mwmknx3z2zP9wfkXd6SBC/pf24GIXD9ZOAp87t8h+RRNG6L/LInsvuIgPqhHMAE+EgpEVWj2dfK0GxIkANTOFhSO9ymRXt5fUxwG3T3xAJyUFj+iTR/NUNrs/ch3GdNvnUOBsqyb/B2Lp2d+lFsl0LBhzGkYxAM4Vke6FHrWNZmZVB8WSqeJeZ5bx1D1sO5jodjk7P49yIYsMdJk+DUfZE3vSZ4KhlGiDMObPpRtyP1Vo+HllRr3tuyux0DFb+epNk8VQ48a43NHmSy6HTOygvYqmjegyY2OAJFWUg5qGOGNmd9UONjkOap0XUAkDf23Nc8ENpXCCriyQ+jmkt0+f496qUgq5zikPTLs2Dx7j/xX8keih7ZciDwlomDdVpO/UVLLCLxdPee+vFLB7z3h5oNnDMl4/OmyWcz6vpG4JlIxnt/95f2tRSpkd3PfN1UFVTbG4KKW+Obq4FFR17heiSwP4dfhs/Pf5Tfud3m1tZwxwW3ahmLQ2ucvjR2ReD4xukLklsAUvVIXaJG6PVHeO4nogGPTvBuWoPpimjGh+04ibRstektEM5Xpq5HrJCEFFq7ZmM6hzPUQJ5dECKYyi/I9SlCQwxYLY1W59SgT94aUhrJJT/io7H9NwjNSr2Nffjas7guu1SutXuVV84Hb0rfLVy2IbVI6Gaw2XUkVFqj2pFatV7fJ023S+vm/8uqAxl/f6ND9XkHjSeBO2dp5Ya3uW/ExdA3lYcRhQHB+GRSHOMjfekGSG8eWl
+ qTmcpsSLvwClOYYAXWviM9rE9hXfSEQx/nUbHYC41TQtl9CGvriub1pTICMy6KUTgOrCvicp77kCQ/T2aLwMY2KUI+AUoT1k3pDy7RykG3Yhu67IWOollsbnHz0LgW1U0l2OtRwKKtQV9Qvzea7S0nF/s9EZvqb+9cW1+YaYg8W/3K9W55ksmGpiO2AuHChZcNv7ons1n+3ra+mgr23+x4kpowqpTeL12pRoVI0MPRByONYhPDehLaT+qVqOSr7WAXlnSzgB8Auf1wgMus6xVx2eG2Rvk
 
-On Wed, Aug 12, 2026 at 2:35=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
->
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
-> - [High] Lockless access to `fcport->nvme_remote_port` in `qla2x00_set_rp=
-ort_marginal()` introduces TOCTOU Use-After-Free and NULL pointer dereferen=
-ces.
-> --
->
-> --- Patch [10]: [PATCH 10/13] scsi: qla2xxx: enable FPIN notification for=
- NVMe ---
-> commit 1b0bf8a2abd4965d07b3b9fd652b0926356c721b
-> Author: Jesse Taube <jtaubepe@redhat.com>
->
-> scsi: qla2xxx: enable FPIN notification for NVMe
->
-> Implement set_rport_marginal callback using nvme_fc_set_remoteport_fpin()
-> to enable FPIN notifications for NVMe.
->
-> > diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla=
-_attr.c
-> > index a4ca22024edeb..92db7d584eeb8 100644
-> > --- a/drivers/scsi/qla2xxx/qla_attr.c
-> > +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> > @@ -2789,6 +2789,15 @@ qla2x00_set_rport_loss_tmo(struct fc_rport *rpor=
-t, uint32_t timeout)
-> >                                              rport->dev_loss_tmo);
-> >  }
-> >
-> > +static inline void
-> > +qla2x00_set_rport_marginal(struct fc_rport *rport, bool marginal)
-> > +{
-> > +     fc_port_t *fcport =3D *(fc_port_t **)rport->dd_data;
-> > +
-> > +     if (IS_ENABLED(CONFIG_NVME_FC) && fcport && fcport->nvme_remote_p=
-ort)
-> > +             nvme_fc_set_remoteport_fpin(fcport->nvme_remote_port, mar=
-ginal);
->
-> [Severity: High]
-> Does this code introduce a Time-Of-Check to Time-Of-Use (TOCTOU) race con=
-dition?
->
-> The nvme_remote_port pointer is read and dereferenced locklessly here. If=
- a
-> device loss event triggers qla_nvme_remoteport_delete() concurrently, it =
-sets
-> fcport->nvme_remote_port =3D NULL and allows the NVMe FC transport to fre=
-e the
-> remote port memory.
->
-> If qla2x00_set_rport_marginal() checks that nvme_remote_port is non-NULL =
-but
-> is preempted before calling nvme_fc_set_remoteport_fpin(), it will pass a=
- stale
-> pointer to freed memory, causing a use-after-free.
->
-> Alternatively, because the pointer is fetched without READ_ONCE(), the co=
-mpiler
+These 3 functions include several uses of BUG_ON() and lack error
+management. Change all 3 functions to handle their errors in better
+ways.
 
-This is not a valid solution, there would need to be a lock in
-fc_port_t or else we would
-get a use-after-free. Unless there is a better solution im unaware of
-im going to ignore this
-as it already exists in the driver.
+Eshaan Deshmukh (3):
+  scsi: libsas: Handle errors in sas_ex_add_parent_port()
+  scsi: libsas: Handle errors in sas_set_ex_phy()
+  scsi: libsas: Handle errors in  sas_ex_discover_expander()
 
-Thanks,
-Jesse Taube
+ drivers/scsi/libsas/sas_expander.c | 99 ++++++++++++++++++++----------
+ 1 file changed, 65 insertions(+), 34 deletions(-)
 
-> could reload the now-NULL pointer from memory, leading to a NULL pointer
-> dereference inside nvme_fc_set_remoteport_fpin().
->
-> This pre-existing vulnerability is also present in qla2x00_set_rport_loss=
-_tmo()
-> just above this new function.
->
-> > +}
->
-> --
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260812181300.37=
-12426-1-jtaubepe@redhat.com?part=3D10
->
+-- 
+2.55.0
 
