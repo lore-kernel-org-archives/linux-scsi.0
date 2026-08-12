@@ -1,161 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 387613264D8
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 18:42:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2203A1EEA3C;
+	Wed, 12 Aug 2026 18:46:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786560179; cv=none; b=lAQGeRmAmGyi3GuGzktl9p7WO2TsmOGFXFL5exaL8PsQuwykVTTCvIcJa0Ct7AYSVPHLuuoXolIjFC/gKYNaYnciW3ufNff638lKkb6bzfVzQ0Znu8nXgv7ECfnCTM50WUx3YQTa7olyvG+qxwsM5a/EDBDU4df214r5JxI7rXQ=
+	t=1786560376; cv=none; b=AtwRsdDJ0m9nuRzJvpkWkZN3jJ+uM/65EM/hTK8/ZTIm/XcmtaLqpfg46B48llxNVxyHk2f3EvNzfVKUO3pLAnraubV+q0CqyYqOEdBfY0+vSMRg4In7UCdkS+AvvsllISt6m5LcKLSRpOU5k3RlDp7iXkgaVVh+uCjV7N6iJ0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786560179; c=relaxed/simple;
-	bh=hPIv0a3SHCXsNpPgg1ZBypvsT4NwJG6cqoMQCGtd0j0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SAM8dnBzvBVPwELMUS2+yjR9eQ5rh7cBgtG0zM7LeSAPBmDTT7sZHbFligKX8qg61SVTX59OWaBq1zUF483j+eQrRLRS5+iSf5uBe7frnjJCva2JsIQcYdYbXGkG4z9iY9iMkhT8rMzAOF6LFCcmvSQKbal0Dy2an2zhABjDNnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aCIRBCig; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786560376; c=relaxed/simple;
+	bh=CoJsv+YI/gw+I/FkPkHdoR0AOO+DXK7deAe12IFRxV8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Fazi4OvCqnP1VJv6/R1vzZOwXZcFH1CYtjt3p8kVCXpEkSJeQbNKy0EzginWBmYeopopPaWNXDmz5xLmLQ1DMeCsUzk2qZIrRkQBjTJ3FSdSuV21H7mhYMpWVPOf2dxo85d21qkOxW//ge0JSkDWkd/oAIjq2LQ0i9ObV+02tC4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Vu2X01EU; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aCIRBCig"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD92A1F000E9;
-	Wed, 12 Aug 2026 18:42:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786560177;
-	bh=doXjLgfp7xKt5bHhsyFf1CV+r7l4ZXxC/xNFlbaMqXo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aCIRBCigm3gSsG0LV3F7SWodNk+2yxxBpSj3Dv8iBVVFLZk7wE8wmiFV3ip6kBmjb
-	 0CzHhQeRmJ5LjedzvrzCaHLB0v/BXSm/CPJrvkbWVJoADeGRnSkHoN3dWS65Bh6hJG
-	 2umI+bTvIO0GrONXV86rm73RxorsR7fNxS/vr9ZquM5VNACJ5DIJjVB1s2sMSny9If
-	 /kQuY7Vp30ZW2OqzwiNVufKCH+/jXKZCCuoinkC5aGLDuv/zsizQQWZJG6ye7l6Qc7
-	 1RLCbfx5D4b79OOQGJVe/mjt0jN0uS9kK4BuVMvAQbDB3wioAeUE9rbN3a6y9jr/pn
-	 2FFgmxDH1edhQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/3] ufs: core: Fix a race condition triggered by
- ufshcd_eh_timed_out()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bart Van Assche" <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <fc388a5ff11decf35246780f19ccfce2fda35f16.1786558726.git.bvanassche@acm.org>
-References: <cover.1786558726.git.bvanassche@acm.org>
- <fc388a5ff11decf35246780f19ccfce2fda35f16.1786558726.git.bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 12 Aug 2026 18:42:57 +0000
-Message-Id: <20260812184257.BD92A1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Vu2X01EU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+	bh=Jr+riEGEsS/VOhubSi5DovEz/y3HPj5YnJq+sm5In0g=; b=Vu2X01EU/1bVpG+XkJjiJmgcuf
+	9E03KScB/F5OvSyhw8abbrb4MvAtlPWsCgJGHYBGO6G/fpiJlB8zCFz1Ok68ux/FxjOYPX9Bvc8x1
+	Q3A+EMxAL23e7W7+wAUYKx+EXoZQMHxwGUFik0Obm/0mV2oht3O8j57ciJzOnSwkeoYKtN0VYrvt2
+	ASzVLNesl8Prgc8674UNlih+2z6KbU0OIqMHycSMxkFWPXm6PACaJM5rwsceigBBGAqFYEuwcgPiY
+	+wTFNZdO1Gfvxlws8aA909kAt8PXIMOnmshbrjhg6XSwiPRzUtyy0kBZCAPlqD1qn/O47qQzxqAMv
+	eKfsX2WQ==;
+Received: from [50.53.43.113] (helo=[192.168.254.34])
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wuDxq-0000000Govz-1gDG;
+	Wed, 12 Aug 2026 18:46:10 +0000
+Message-ID: <52c3bed5-4c66-4baf-a772-6da2b5b7a815@infradead.org>
+Date: Wed, 12 Aug 2026 11:46:08 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 13/13] docs: nvme-multipath: Add FC-NVMe marginal state
+To: Jesse Taube <jtaubepe@redhat.com>, linux-scsi@vger.kernel.org
+Cc: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+ Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ Justin Tee <justin.tee@broadcom.com>,
+ Naresh Gottumukkala <nareshgottumukkala83@gmail.com>,
+ Paul Ely <paul.ely@broadcom.com>, Chaitanya Kulkarni <kch@nvidia.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
+ Hannes Reinecke <hare@suse.de>, "Gustavo A. R. Silva"
+ <gustavoars@kernel.org>, John Meneghini <jmeneghi@redhat.com>,
+ Bryan Gurney <bgurney@redhat.com>, Chris Leech <cleech@redhat.com>,
+ "Ewan D . Milne" <emilne@redhat.com>, shinichiro.kawasaki@wdc.com,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-block@vger.kernel.org
+References: <20260812181300.3712426-1-jtaubepe@redhat.com>
+ <20260812181300.3712426-14-jtaubepe@redhat.com>
+Content-Language: en-US
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20260812181300.3712426-14-jtaubepe@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Critical] Race condition with hardware completions leading to double-rel=
-ease of DMA and PM resources.
-- [High] Unconditional hardware link recovery for non-timeout START STOP UN=
-IT failures.
---
 
---- Patch [2]: [PATCH 2/3] ufs: core: Fix a race condition triggered by ufs=
-hcd_eh_timed_out() ---
-commit 5124f897a6830560d1ea1c644750541f1ef1fc0b
-Author: Bart Van Assche <bvanassche@acm.org>
 
-ufs: core: Fix a race condition triggered by ufshcd_eh_timed_out()
+On 8/12/26 11:13 AM, Jesse Taube wrote:
+> Adds documentation for the new marginal state for
+> NVMe over Fibre Channel. Documents how to check and reset the state,
+> as well as a description of how it affects multipath policies.
+> 
+> Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
+> ---
+>  Documentation/admin-guide/nvme-multipath.rst | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
 
-This patch moves ufshcd_link_recovery() out of the timeout handler and into
-ufshcd_set_dev_pwr_mode() to prevent deadlocks. It also removes the checking
-of SCMD_STATE_COMPLETE before command cleanup in the timeout handler.
+'make htmldocs' build warnings:
 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 6b94f0d91790c..cdfcd3d4c4c97 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -9550,34 +9550,18 @@ static enum scsi_timeout_action ufshcd_eh_timed_o=
-ut(struct scsi_cmnd *scmd)
->  		return SCSI_EH_NOT_HANDLED;
->  	}
-> =20
-> -	/*
-> -	 * Handle the timeout directly to prevent a deadlock between
-> -	 * ufshcd_set_dev_pwr_mode() and ufshcd_err_handler().
-> -	 */
-> -	ufshcd_link_recovery(hba);
-> -	dev_info(hba->dev, "%s() finished; outstanding_tasks =3D %#lx.\n",
-> -		 __func__, hba->outstanding_tasks);
-> -
-> -	/*
-> -	 * ufshcd_link_recovery() may already have completed @scmd, e.g. via
-> -	 * the existing MCQ force-completion path.
-> -	 */
-> -	if (!test_bit(SCMD_STATE_COMPLETE, &scmd->state)) {
-> -		if (!hba->mcq_enabled) {
-> -			unsigned long flags;
-> -			struct request *rq =3D scsi_cmd_to_rq(scmd);
-> +	if (!hba->mcq_enabled) {
-> +		struct request *rq =3D scsi_cmd_to_rq(scmd);
-> =20
-> -			spin_lock_irqsave(&hba->outstanding_lock, flags);
-> +		scoped_guard(spinlock_irqsave, &hba->outstanding_lock)
->  			__clear_bit(rq->tag, &hba->outstanding_reqs);
-> -			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-> -		}
-> -
-> -		set_host_byte(scmd, DID_TIME_OUT);
-> -		if (ufshcd_is_scsi_cmd(scmd))
-> -			ufshcd_release_scsi_cmd(hba, scmd);
-> -		scsi_done(scmd);
->  	}
-> =20
-> +	set_host_byte(scmd, DID_TIME_OUT);
-> +	if (ufshcd_is_scsi_cmd(scmd))
-> +		ufshcd_release_scsi_cmd(hba, scmd);
+linux-next/Documentation/admin-guide/nvme-multipath.rst:35: WARNING: Title underline too short.
 
-[Severity: Critical]
-Since the synchronous ufshcd_link_recovery() call has been removed from this
-handler, the controller is still running and could complete this command
-concurrently.
+FC-NVMe
+---- [docutils]
+linux-next/Documentation/admin-guide/nvme-multipath.rst:50: ERROR: Unexpected indentation. [docutils]
 
-By removing the check for SCMD_STATE_COMPLETE, doesn't this create a race
-where both the timeout handler and the hardware completion interrupt
-(via ufshcd_compl_one_cqe()) might call ufshcd_release_scsi_cmd() on the
-same command simultaneously?
-
-This could lead to double-unmapping DMA regions and decrementing PM clock
-gating refcounts twice.
-
-> +	scsi_done(scmd);
+> diff --git a/Documentation/admin-guide/nvme-multipath.rst b/Documentation/admin-guide/nvme-multipath.rst
+> index 97ca1ccef459..8df4235d4d10 100644
+> --- a/Documentation/admin-guide/nvme-multipath.rst
+> +++ b/Documentation/admin-guide/nvme-multipath.rst
+> @@ -31,6 +31,23 @@ To set the desired policy (e.g., round-robin), use one of the following methods:
+>     1. echo -n "round-robin" > /sys/module/nvme_core/parameters/iopolicy
+>     2. or add the "nvme_core.iopolicy=round-robin" to cmdline.
+>  
+> +FC-NVMe
+> +----
+> +On NVMe over Fibre Channel there is an additional state called `marginal`
+> +All policies will treat this path as offline and will not use it unless
+> +all other paths are marginal or unavailable. In that case, the policy will
+> +select the best path based on the policy.
 > +
->  	return SCSI_EH_DONE;
->  }
-> =20
-> @@ -10091,9 +10075,13 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hb=
-a *hba,
->  		sdev_printk(KERN_WARNING, sdp,
->  			    "START_STOP failed for power mode: %d, result %x\n",
->  			    pwr_mode, ret);
+> +To see the current path state, use one of the following methods:
+> +   1. cat /sys/class/fc_host/host*/device/rport-*/fc_remote_ports/rport-*/port_state
+> +   2. cat /sys/devices/virtual/nvme-subsystem/nvme-subsys*/nvme*/state
+> +To reset a path to online use:
+> +   1. echo "Online" > /sys/class/fc_host/host*/device/rport-*/fc_remote_ports/rport-*/port_state
 > +
-> +		ufshcd_link_recovery(hba);
+> +The marginal state is caused by a
+> +FPIN-LI (Fabric Performance Impact Notification - Link Impact) event.
+> +FPIN-LI event counters can be seen with:
+> +   1. cat /sys/class/fc_host/host*/statistics/fpin_li*
+>  
+>  NUMA
+>  ----
 
-[Severity: High]
-Does this unconditionally trigger a full hardware link recovery for any
-non-zero return value from scsi_execute_cmd()?
+-- 
+~Randy
 
-The scsi_execute_cmd() call can fail for reasons other than timeouts,
-such as memory pressure returning -ENOMEM or normal device check conditions.
-Calling ufshcd_link_recovery() in these scenarios seems like it would cause
-severe performance degradation and disruptive device resets for routine err=
-ors.
-
-Should this check the specific failure reason, like DID_TIME_OUT, before
-initiating recovery?
-
-> +
->  		if (ret > 0) {
->  			if (scsi_sense_valid(&sshdr))
->  				scsi_print_sense_hdr(sdp, NULL, &sshdr);
-> +
->  			ret =3D -EIO;
->  		}
->  	} else {
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1786558726.gi=
-t.bvanassche@acm.org?part=3D2
