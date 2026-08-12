@@ -1,209 +1,229 @@
-Received: from TYDPR03CU002.outbound.protection.outlook.com (mail-japaneastazon11013015.outbound.protection.outlook.com [52.101.127.15])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEF2037DAA3;
-	Wed, 12 Aug 2026 12:02:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.127.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786536175; cv=fail; b=Xva7XXDlt9DRLzfgscO7yjgILceWiZ/qvvvpmf5NomhTHkXYt29FKuRNGShvmfQ2cCvELyufC4rmRAHQl8O/hrMhV6GjuYmey6uXU0BGrRO3q53pslZNAngd7plX8ffi/I4FKoxVqtXWPZloexskLvEA6aVGNs45lFQT1r28ao8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786536175; c=relaxed/simple;
-	bh=abpgx5+J+J/sJ4gPEQ/1nnMUWyNDPNIufWPaCp2hJwc=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Ym2Epi0n0mM+gHY8SZjq8zUwH+2G0bxJ1tU2TCSoGW/YqqRpnvti8jBk7q7fMHVSX1YAv2SQxKk0Bhqv9HC4tT/NZ4obB48UUNiwwgh8zedYHnscVSn/JHsFBWRITKdpdaLZZLTUraiEcY5zotzJ7jPGEA48tYwVLCDUtzsS/yY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=Rw79WhmQ; arc=fail smtp.client-ip=52.101.127.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A73F31E823;
+	Wed, 12 Aug 2026 12:27:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786537657; cv=none; b=dOfr4jbpGMgxv+moEc//3gZZLbse8+CqW+Eu2TBASkkedsN4Gfas1/2m7QOJI3YXY4FN2eJm1Ibz5TNeQlAtZ9PTnDTB1l0g3iq+GrFC7vBLD2xxFd9GKFya+myRhebMUvnbd0Oj1hLuJXfJ3xd1Gd0p4BeHmZI4ztRZvjDwsBY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786537657; c=relaxed/simple;
+	bh=DHG4WOZEmDwTU3+GxM3cI8lbkXMDPsFPddcxi9d0sts=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=EqQDJOJM9W4CejBjgUgtTlCov4A/xYMFzU51hQfsKIYWdKIzvzj8U3lre+/8IVQw0SFNLJdb4qfAruDlSvmhB+kTAH94nu+kb/NiGX6XX3LLi7GnvjtK6jJdkiNufusDO3gznZ8gJBqUSKv6Ka8oZDYQqREB3R9QFdXO4+iASX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=n8pxuc+o; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="Rw79WhmQ"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=sBibFPqu/BQqbkieK4c6OirJ5xeaZQNA+cHBLF2yb/ZT9FF3mtm//2/HZ9jILBYIu1MFnL7B8hNC8FQx8zXKoeyCM+x9Y4bJBlJonFdtDTQC+zlUf9TodojRwILsiHbl+KdjLPzWnS/ZhLJghCf4o8QjTqvUmqG4CR7c5mRY3pz3Gg9+ShERuD3PDVImB73GTHI0PHCjVmYiGrrfuiN/davwTliEPqIpzOUsE+J4L0dTRRCsjZtL+E/o546gUiDwo5hFVhpbWvHvo5pbNv5Qib2ApCj8QisCnOX8bek4Tm5GDbmi0oSn2iS/OkKYyxHHaEX5izeFW41J5AS5WIs/3g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=abpgx5+J+J/sJ4gPEQ/1nnMUWyNDPNIufWPaCp2hJwc=;
- b=Iw+4E18dwuO2PQjg54/Om2VO3lJmv9qcEfQwA4ICr4zkX0ubSM5XOevKEnH9afkdTYMIQRu4Mh1iwKjkXvAOjk/fsGbsMaoifijZjD4EzwQHC9jHzBBp8OjO38lCfDcke5fzkwHLlA9choatZB8mwvOFIVAlX4MUh0Lj7kbINvKknboHA1ZhjbQZdY1SHlMyJTcU8WXU3bLLlrhXmE8+wXN7wpkjKw/4YglDyZWZOoqM1NLyXZck/pube/BPURoYZyWA+Btck2kojxGke9my/VkHDvoy0Dpy7655WvNLiWBtoaVgm2O6hLtPU9Rr7l+k2CpLqqviOycx4lbjMD3Xlg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=abpgx5+J+J/sJ4gPEQ/1nnMUWyNDPNIufWPaCp2hJwc=;
- b=Rw79WhmQUEWdZfNiKXmZ6Y1sES2TIUd/waK4HVZtU5QXxDmvd9AGzhgWMHlPmrRyRLlH14GhkHB9Fif/1ZF+4oZy3gOAL9v9bMrZoWEKAhog4R903TkWWJjrYcsdbXVC2B615cBTkt+rday5ieGRrad3y3sIfLmgEhh4xXQ80o/iZLKsUW27QX47eKkw4FQCBLQzz8pGeeQNOZlot23BA9VeS/Yv1iMKUqfMu2JZ/bsLA3a14huJRMvJiJrZBK6RyTKhG3IQzhnBnJBtQMI3AVgurc+dhR7ePNey7wL+YYpngel3T2SS2ADZ6sxiHBQj9cS+Vd9285V5fGnJjGKFYw==
-Received: from PUZPR06MB6224.apcprd06.prod.outlook.com (2603:1096:301:116::8)
- by TYZPR06MB5686.apcprd06.prod.outlook.com (2603:1096:400:282::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.292.25; Wed, 12 Aug
- 2026 12:02:50 +0000
-Received: from PUZPR06MB6224.apcprd06.prod.outlook.com
- ([fe80::2cfc:b348:3e15:3751]) by PUZPR06MB6224.apcprd06.prod.outlook.com
- ([fe80::2cfc:b348:3e15:3751%6]) with mapi id 15.21.0315.011; Wed, 12 Aug 2026
- 12:02:50 +0000
-From: =?gb2312?B?uvrBrMfa?= <hulianqin@vivo.com>
-To: "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "axboe@kernel.dk" <axboe@kernel.dk>, "hare@suse.de" <hare@suse.de>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	=?gb2312?B?uvrBrMfa?= <hulianqin@vivo.com>
-Subject: [PATCH v2 2/2]  scsi: sd: mark disk dead on surprise host removal to
- avoid I/O hang
-Thread-Topic: [PATCH v2 2/2]  scsi: sd: mark disk dead on surprise host
- removal to avoid I/O hang
-Thread-Index: Ad0qUjjq9SfafSxZRTCZhWr1AqisVA==
-Date: Wed, 12 Aug 2026 12:02:49 +0000
-Message-ID:
- <PUZPR06MB622453C37D2BABC5E71B195DD2DC2@PUZPR06MB6224.apcprd06.prod.outlook.com>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PUZPR06MB6224:EE_|TYZPR06MB5686:EE_
-x-ms-office365-filtering-correlation-id: 2529dfb8-db2e-4211-9566-08def869a1a8
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|366016|376014|1800799024|42112799006|23010399003|18002099003|5023799004|56012099006|11063799006|38070700021|6133799003|10067099003;
-x-microsoft-antispam-message-info:
- swolDhM5lIIGTodSoADFhzMiyO/xvqq7W5dS1Pfnms+JBldglq8h54VgjL0pODtBx6jDWE1CCW/KKWHl3BPgVwXn+gp9/Nz67jmIhSWA3/mUIk2WjljQ7OHut2BZkTzCWxSYW1A1Jz7q0rfqeeaD+4A/RDGIZKYSlk9oTYdbl+lQ+SZLb0KKP/f64a5EIdp4FIHTj1crruCQ0SA94t5cL23JWkd2AMvTQdjkqFLea7JWo3wL4SsL4qZF+b4QZEVnTSLgF9FryezoDxZJZbtsB1EBWeYWNewuSBAfysqzJJyLIl3lS5/3zHSX1WsF4tHP88qqqHADZwR2L9a01EKcaFU6iNsQ3UM5HdcWSb3bJZASUA3SxaCsGktm5qw5gg1NdKQBFGCTLdr3g18tNlWcinfFIO13jldShmn0HCvypOlqOHUok5NDZgJFDml3dXs4kpm52DthDy/cYC6X0N+9qoX6GKsvaaYplpPN0QGKFIXPZkwd5y2EzZqYd+Q9hkwT8TqL1e+Nn0PFyumrfL1eRdNGuINFo9UaCPk66RF0qwgG8l+lA5a0JRu4xrXn2rZkrZoF8+atliEWPqKljtg5rm0q+0XJDbPKVdkA8d7WRQ6kAZi/6YutQRs9qOLAJZnXa82nb3TLNpVxIa3U4YhFzLxr7OTGKJ7IK6BHBS2aH+EoDSnt/IhhB6RZaqWw52aPIxctM71SKoizkTHDTUxz2S4BnTOkkWl4lHhtWh5b3V4=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PUZPR06MB6224.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(42112799006)(23010399003)(18002099003)(5023799004)(56012099006)(11063799006)(38070700021)(6133799003)(10067099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?gb2312?B?MlZJM1R1bDAwMTFmZEZZU1NFcWNPVTMzWXpZM1Y3Nk95Y3d2UWh1cWtMKzA5?=
- =?gb2312?B?R0Y5QmtTcERiTzhiTm5yai9ZSWJNRnJnUWdwOStXVllpWXVaQnplOHh4dE1E?=
- =?gb2312?B?dmZLVDVvODRpS0JhalNtU1d4S3U5VDdwTWloY1gra21pVU5rVGxsT0NCSXpo?=
- =?gb2312?B?SSsrQ1gwbXNrcENqTHprQU5nYkRpR1MzS2p0TnR5b2hMdG0xMW1EdFRUU29y?=
- =?gb2312?B?bDgrQXZrc1lOanNyT3RJT1VDRUZmbTBoaFJmSmkvUUhMSnk4Rjl4cUhrYTE5?=
- =?gb2312?B?STB4SnJjeTIvNmJTTmN3VWdjTW9hb1NmTEQrNHlNZUlmVGFFV1JNZ1N4Y3NX?=
- =?gb2312?B?QVlyc0NLakZOajNtbC9YcFJ3U2NOMHJMaUtMK2JQVGtYS0VWUDBnUHJzMEtN?=
- =?gb2312?B?TkR0MGV3MGI3RWJxK2Q5R2JWanhzSEhuZyszL2pndnJUb0d3RG5WSUZLcTE0?=
- =?gb2312?B?ZE9zczZPOVJ1MW0xOENKWW1lblRYSThWV1hSMzVlVURmSEZscnYrQnVOc2pt?=
- =?gb2312?B?UktpREVQS0Yvek80MG5jdTYyWkFEUlJNZnZCWWhtVmpwbDI5cFBQa0crOUhC?=
- =?gb2312?B?SUdzUTJCdXJac1RlVkZ0aEh3enU1K1AyUkpHVGw0a05KM2FOL2RSY0oxNVBG?=
- =?gb2312?B?bWlOaWMveXdjekFYeDNEWlU4RmFwTjlKS3RFdWt2MTZoS1ZUdThmNDN1dlhN?=
- =?gb2312?B?RVhGZXBqQ3FTZmZzaEF4ZnpuSjZ6U05nNHFpZ2NsUXZnRmZET3hmdlN0d1pT?=
- =?gb2312?B?V1JBcUE4TEdVZHo3bGhCVnpMNkdsVEI4b0E0T216em5xSGR5NXhmNDQ2ZHFW?=
- =?gb2312?B?YUgrWXBjMVVxN215U3B1M3IyeCsrU0VRYmlPaFk2cDQza3NiYWtrcEZrb3Y2?=
- =?gb2312?B?QS9NUkQ3TU5XWmJ6bUQ2VWFYcVhRc3B0T2p3RXVsL2tVTnhPQzhlWGdZVXhD?=
- =?gb2312?B?U3BUZG10U0NEVmwwS3FjZ09sRjRiWWxLNGpVbkhaQlRCaHVoOTdMN2lBNmJW?=
- =?gb2312?B?N1dINStrdVJBWWRqSEtzbWswUFI2b2Z2Y0dzUHVoWkhVbDM3dVhSeVQzbEFY?=
- =?gb2312?B?RXdqNU91SDk1allIcXdsUjZhRkFuSkZEZS83NVRjb0s1R2hIWGxQdWxLTFVm?=
- =?gb2312?B?eUk1UUFOZEZRakhNR2hzakM5Ny9XYzlZMmN5TWVoMENTczNKL0tyMFo0emI4?=
- =?gb2312?B?Z3JFOGZkOE9iTGVKb1A5RlV6dDBWWEFJVEhwcG9qUzdiMGhsOWEyQVVKOHdH?=
- =?gb2312?B?TGN5V0J5N3dYdEN6QVB1SEN2SnNtYTR2Q2NsSW42N2c4K0tyK05CdzVVRTNI?=
- =?gb2312?B?U2E0S3FTSVVoaHp3SUs2MUNpTGcvcWg2a3J2TExpSWNCZG12Y055d0ZyU0hz?=
- =?gb2312?B?aFExNXdHY3BhclpRbU1CNXdieUgrUFppalFIck16ZWxMSi9kWlo3citHUEFh?=
- =?gb2312?B?ME04Mm9TT3VrbjhkamFPQ0ZlMkZTTjVpaTQ5clh6dml0Zjl2U0dIaWdTNys2?=
- =?gb2312?B?Z29zeEVmWXgrdE9tK1Z5VTNyV2RvU0ZXRGs1c0phcmlqdzBzOXdrNUIyaVI3?=
- =?gb2312?B?RFlWOVl1U3dMSEN3V0lDNk9HUVpEWnQ5dkZTb0x4WjRSUXpvSmRnQklGTjJY?=
- =?gb2312?B?R2NubGZsSk1Ba0ptQUxYdW1hd2VETXo0MjNrOS9RcmtKTXlpSlQreEpTMmRn?=
- =?gb2312?B?d0F0RFBlUDFhOHkreCtvd2J0MnVjK1ljSVJuZHZJbmc5MURzeWM5Njc1ZHpv?=
- =?gb2312?B?MlJjUWNzNHI3aXRTVG9YWlhhek44M0pyRXNjMTlJR2lxN2ltUitXTkQ2OTJJ?=
- =?gb2312?B?SHZGa3lSQ1dFOUVGcTE0d3hjZ2FoUVNWTHRrMFI3cWo1VXVldkxQYnRkMkNR?=
- =?gb2312?B?bktXbXZ6VUlSUU5sbk1HQndycHFwMk1qazgrMVhhakNXTGpZMStyYnBiYysx?=
- =?gb2312?B?Z0ZJa1VaV2ptdXFiYXQxQWYrYXVZUFVubGJpQ1FDL09nUjR5b2ZmS3d6blc4?=
- =?gb2312?B?Y0ovdWxOcVBJZEUwbWxjZmZJaTBzbWVpc3FKWlc1Z3lJaGMrUllmL1hxZCtl?=
- =?gb2312?B?Ulc4RHpZdU9DNWNQNmhzandvRHJvQUlyZDVPeXJlNERCMXlTczRHeFBsek0y?=
- =?gb2312?B?cDJ5UUxBajl6ckN3Vk9xNkNyVWQrMk15Tjh4RCtwV05uWnpZVHlCNCtEQnU2?=
- =?gb2312?B?SG1KZ0VsTEhJbDNsZVJDRzNHbFdDcXhzd2paWHpHYm9xQUxhdTZZOEc5M0NB?=
- =?gb2312?Q?gr1IXQrbMTZm+7d0/N7aZVHG8JHv3/Y8xTRqSNJZ9Y=3D?=
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="n8pxuc+o"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1786537654;
+	bh=DHG4WOZEmDwTU3+GxM3cI8lbkXMDPsFPddcxi9d0sts=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=n8pxuc+oggZFHNLwZ3l9aaOCziSCLIhNhZkwHpWu9ZoPADDW4NHEtZF0ibegwUkDZ
+	 SHGUnIRiLbMhlSfn+9CN2fpAJdBACYpQZGNu0I6IGaDBz9kBrD9Wt++NwC2oL/UOx9
+	 mzSsfe/tkmtZmmd4Iy9yG4ugA53Ozv64Y3teGDNI=
+Received: from [172.16.45.132] (unknown [194.168.75.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 5BD481C029D;
+	Wed, 12 Aug 2026 08:27:33 -0400 (EDT)
+Message-ID: <b1267cecf372f9f8f8472bfc8eaff8290803b5c9.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 7.2-rc7+
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Wed, 12 Aug 2026 13:27:31 +0100
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNE
+ lecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn
+ 1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHU
+ RfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8
+ X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvd
+ HRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGw
+ MGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAml2ZBI
+ FCS3GUMIACgkQgUrkfCFIVNZKjQf/deRzlXZClKxTC/Ee2yEPqqS7mm/INUA49KdQQ5oIhSxkUBy0
+ 9J4qjMIo5F8ZFkFTqikBqeL35LKu7O7rn8WETfX8Bxvos3HUsl3jHo34DES4MUFIpoQPgtiLRGwLb
+ K0cVCAArR2u2qj4ABmTRrs1I1kvdjEw6gatOuXtEe/j5O2fvfzTq9GBr0Q3n2IAsFXi4hLlx6VPE8
+ tyWUZ8BWJKtih3JAeUiXFvASL3McV0rV9RnU0VbjEQEhSE7PMYhWpnDC9AyBb0lXJllQRvC3NSkUB
+ 8KVQgNNxRPss0WE/nBoZ4dFA42jTyzTz8lNylxZoAWV7WJb3QxVg4oCodRVrxxrQhSmFtZXMgQm90
+ dG9tbGV5IDxqZWpiQGtlcm5lbC5vcmc+iQFVBBMBCAA/AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeA
+ QIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mYBQkbNYS9AAoJEIFK5HwhSFTWBpwIAL5Bk3
+ 5FB34U6iHmDzzgdCbxLTs43T/YQyJpcGIvopBvnI/fDY8oSG6Df64/O6B+1R+A8TDp6ZG5ysUWnCC
+ 6GuIaEHemBYkitMPglR6+sGCMQY7O0mlsPvdssvKK1KI9Bno4VU6ogaF2qVzefSqg1Djmf/DcsxWP
+ rI/jdJ8FB5AYR2rjIdDFc+zRdAJuavo1/anyY2wgpFh/3R8IOYAEfWV9nGgYkf9+tA4EIn1sxE0I3
+ L5oW2N3mbyRrkzuBwO8ztMCwqEPk7moWzhokcZqMXiAIahaZdkashJC+s2X2RZSGCy+g+pvY5NN4B
+ BVG5XwLgVBqbHMTcxE0fbmPqz+q6O0LEphbWVzIEJvdHRvbWxleSA8amVqYkBoYW5zZW5wYXJ0bmV
+ yc2hpcC5jb20+iQFXBBMBCABBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmODZ5ACGwMFCRs1hL0F
+ CwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQgUrkfCFIVNZu0Af/TzvL2/NdgAcw9uN3x60H8
+ jc4QUq14VpxcFEFEMpcj1morkX/G93V+56HBBaXZj+yK8PhxIA/SIz+sU7C/0YvKuvzakP8ZX/7WJ
+ e32SOUtjfr/VTaqjIBzNj6OxLvZpmNbBw7s6DwhhNpHOWqJ/1ml+PtDRDV71IB58yVqQjp1xlNKVl
+ ZppcJ5908EJzsFnRIVjiQiDSKoppqB2BCibBbrWcln7CiWMyOC/cco6SIn6twH+f7+aivJ3xGcOE2
+ a9gBKF5rNi9TBoX9oyPmshv/TDmnohsVrH7AYXlGYfZTk15SWEiROh1QX8/uD9wl/gcIv5EDUpT/F
+ L2jzOsA5663bw==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PUZPR06MB6224.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2529dfb8-db2e-4211-9566-08def869a1a8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Aug 2026 12:02:50.0573
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8VL7QxR9ytw8FGrAsHem7fmJUbBv5EJPp8fQfLHJFk3oJvfF46q+uWDjzmBTnzv1CjucZmGris/nfTR4CmKhfg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR06MB5686
 
-V2hlbiBhIFVTQiBtYXNzIHN0b3JhZ2UgZGV2aWNlIHdpdGggYSBtb3VudGVkIGZpbGVzeXN0ZW0g
-KGUuZy4gZXhGQVQpDQplbnRlcnMgcnVudGltZSBzdXNwZW5kIChhdXRvc3VzcGVuZCksIHBoeXNp
-Y2FsIHJlbW92YWwgdHJpZ2dlcnMNCnNjc2lfcmVtb3ZlX2hvc3QoKSB3aGljaCBpbnZva2VzIHNk
-X3JlbW92ZSgpIC0+IGRlbF9nZW5kaXNrKCkgLT4NCmJsa19yZXBvcnRfZGlza19kZWFkKCkuICBU
-aGlzIHRyaWdnZXJzIHN5bmNfZmlsZXN5c3RlbSgpIHRvIHdyaXRlDQpiYWNrIGRpcnR5IGRhdGEs
-IHN1Ym1pdHMgYmlvIGFuZCBibG9ja3MgaW4gX19iaW9fcXVldWVfZW50ZXIoKQ0Kd2FpdGluZyBm
-b3IgSS9PIGNvbXBsZXRpb24gdGhhdCBjYW4gbmV2ZXIgaGFwcGVuIHNpbmNlIHRoZSBkZXZpY2UN
-CmlzIGFscmVhZHkgZ29uZSwgbGVhZGluZyB0byBhIGh1bmcgdGFzay4NCg0KZGVsX2dlbmRpc2so
-KSB1bmNvbmRpdGlvbmFsbHkgY2FsbHMgYmxrX3JlcG9ydF9kaXNrX2RlYWQoZGlzaywgZmFsc2Up
-DQp3aGVuIEdEX0RFQUQgaXMgbm90IHlldCBzZXQsIHdoaWNoIGFsd2F5cyBhdHRlbXB0cyB0byBz
-eW5jIHRoZQ0KZmlsZXN5c3RlbS4gIEZvciBzdXJwcmlzZSByZW1vdmFsIHdoZXJlIHRoZSBkZXZp
-Y2UgY2Fubm90IGhhbmRsZSBJL08sDQp0aGlzIHN5bmMgaXMgZnV0aWxlIGFuZCBoYW5ncyBmb3Jl
-dmVyLg0KDQpBZGQgc2NzaV9ob3N0X2luX2NhbmNlbCgpIGhlbHBlciBhbmQgY2FsbCBibGtfbWFy
-a19kaXNrX2RlYWQoKSBpbg0Kc2RfcmVtb3ZlKCkgd2hlbiB0aGUgU0NTSSBob3N0IGlzIGluIFNI
-T1NUX0NBTkNFTCBvcg0KU0hPU1RfQ0FOQ0VMX1JFQ09WRVJZIHN0YXRlIChzZXQgYnkgc2NzaV9y
-ZW1vdmVfaG9zdCgpIGJlZm9yZQ0KcmVtb3ZpbmcgZGV2aWNlcyksIHNvIHRoYXQgZGVsX2dlbmRp
-c2soKSBzZWVzIEdEX0RFQUQgYWxyZWFkeSBzZXQNCmFuZCBza2lwcyB0aGUgc3luYy4gIEZvciBv
-cmRlcmx5IHJlbW92YWwgKGUuZy4gZWNobyAxID4NCi9zeXMvLi4uL2RlbGV0ZSksIHRoZSBob3N0
-IHJlbWFpbnMgU0hPU1RfUlVOTklORyBhbmQgc3luYyBwcm9jZWVkcw0Kbm9ybWFsbHkuICBUaGlz
-IG1hdGNoZXMgdGhlIE5WTWUgYmVoYXZpb3Igd2hlcmUNCm52bWVfbWFya19uYW1lc3BhY2VzX2Rl
-YWQoKSBpcyBjYWxsZWQgb25seSBvbiBzdXJwcmlzZSByZW1vdmFsDQooTlZNRV9DVFJMX0RFQUQp
-Lg0KDQpDYWxsIHRyYWNlIG9uIFVTQiBzdG9yYWdlIHN1cnByaXNlIHJlbW92YWw6DQpJTkZPOiB0
-YXNrICJrd29ya2VyLzE6MCI6MzEgYmxvY2tlZCBmb3IgbW9yZSB0aGFuIDE0NyBzZWNvbmRzLg0K
-Q2FsbCB0cmFjZToNCiBfX3N3aXRjaF90bysweDE5OC8weDM4MA0KIF9fc2NoZWR1bGUrMHg1NDgv
-MHhmYmMNCiBzY2hlZHVsZSsweDRjLzB4MTE4DQogX19iaW9fcXVldWVfZW50ZXIrMHhiOC8weDE3
-NA0KIGJsa19tcV9zdWJtaXRfYmlvKzB4NjQwLzB4N2U0DQogX19zdWJtaXRfYmlvKzB4MWE0LzB4
-MzE0DQogX19zdWJtaXRfYmlvX25vYWNjdF9tcSsweDM4LzB4OGMNCiBzdWJtaXRfYmlvX25vYWNj
-dCsweDY3OC8weDc1MA0KIHN1Ym1pdF9iaW8rMHhhOC8weDFjOA0KIHN1Ym1pdF9iaF93YmMrMHgx
-NDgvMHgxYjQNCiBfX3N5bmNfZGlydHlfYnVmZmVyKzB4MTIwLzB4MWY4DQogZXhmYXRfc3luY19m
-cysweGE0LzB4ZTANCiBzeW5jX2ZpbGVzeXN0ZW0rMHhhOC8weGRjDQogZnNfYmRldl9tYXJrX2Rl
-YWQrMHgzMC8weDg4DQogYmRldl9tYXJrX2RlYWQrMHg1NC8weGM0DQogYmxrX3JlcG9ydF9kaXNr
-X2RlYWQrMHg4Yy8weGQ0DQogZGVsX2dlbmRpc2srMHhhMC8weDJmOA0KIHNkX3JlbW92ZSsweDMw
-LzB4NjANCiBkZXZpY2VfcmVsZWFzZV9kcml2ZXJfaW50ZXJuYWwrMHgxYzQvMHgyYmMNCiBkZXZp
-Y2VfcmVsZWFzZV9kcml2ZXIrMHgxOC8weDI4DQogYnVzX3JlbW92ZV9kZXZpY2UrMHgxNTgvMHgx
-NzANCiBkZXZpY2VfZGVsKzB4MWM4LzB4MzIwDQogX19zY3NpX3JlbW92ZV9kZXZpY2UrMHg5Yy8w
-eDE4NA0KIHNjc2lfZm9yZ2V0X2hvc3QrMHg1MC8weDcwDQogc2NzaV9yZW1vdmVfaG9zdCsweDg4
-LzB4MThjDQogdXNiX3N0b3JfZGlzY29ubmVjdCsweDY4LzB4ZjQNCiB1c2JfdW5iaW5kX2ludGVy
-ZmFjZSsweDEzYy8weDM0MA0KIGRldmljZV9yZWxlYXNlX2RyaXZlcl9pbnRlcm5hbCsweDFjNC8w
-eDJiYw0KIGRldmljZV9yZWxlYXNlX2RyaXZlcisweDE4LzB4MjgNCiBidXNfcmVtb3ZlX2Rldmlj
-ZSsweDE1OC8weDE3MA0KIGRldmljZV9kZWwrMHgxYzgvMHgzMjANCiB1c2JfZGlzYWJsZV9kZXZp
-Y2UrMHg4NC8weDE5MA0KIHVzYl9kaXNjb25uZWN0KzB4ZTgvMHgzMzgNCiBodWJfZXZlbnQrMHhi
-ZDgvMHgxOWFjDQogcHJvY2Vzc19zY2hlZHVsZWRfd29ya3MrMHgyMDAvMHg5ZDgNCiB3b3JrZXJf
-dGhyZWFkKzB4MTU0LzB4M2IwDQoNCkZpeGVzOiA2ZjgxOTFmZGY0MWQgKCJibG9jazogc2ltcGxp
-ZnkgZGlzayBzaHV0ZG93biIpDQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KU2lnbmVkLW9m
-Zi1ieTogTGlhbnFpbiBIdSA8aHVsaWFucWluQHZpdm8uY29tPg0KLS0tDQoNCkNoYW5nZXMgaW4g
-djI6DQotIFNwbGl0IGludG8gYSB0d28tcGF0Y2ggc2VyaWVzIGZvciBpbmRlcGVuZGVudCByZXZp
-ZXcgYnkgYmxvY2sgYW5kIFNDU0kgbWFpbnRhaW5lcnMuDQotIFRoaXMgaXMgdGhlIFNDU0kgcGFy
-dCBleHRyYWN0ZWQgZnJvbSB2MS4NCi0gTGluayB0byB2MTogaHR0cHM6Ly9sb3JlLmtlcm5lbC5v
-cmcvYWxsL1RZVVBSMDZNQjYyMTc1NjZDRkQzM0Y1N0QzQUU0NjgxNkQyQ0YyQFRZVVBSMDZNQjYy
-MTcuYXBjcHJkMDYucHJvZC5vdXRsb29rLmNvbS8NCg0KIGRyaXZlcnMvc2NzaS9zZC5jICAgICAg
-ICB8IDEwICsrKysrKysrKysNCiBpbmNsdWRlL3Njc2kvc2NzaV9ob3N0LmggfCAgNiArKysrKysN
-CiAyIGZpbGVzIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKykNCg0KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvc2NzaS9zZC5jIGIvZHJpdmVycy9zY3NpL3NkLmMNCmluZGV4IDU5OWU3NWYzMzMzNC4uZmI1
-MDg2NDY1YTIzIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL3NkLmMNCisrKyBiL2RyaXZlcnMv
-c2NzaS9zZC5jDQpAQCAtNDI1Nyw2ICs0MjU3LDE2IEBAIHN0YXRpYyB2b2lkIHNkX3JlbW92ZShz
-dHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkcCkNCiANCiAJc2NzaV9hdXRvcG1fZ2V0X2RldmljZShzZGtw
-LT5kZXZpY2UpOw0KIA0KKwkvKg0KKwkgKiBJZiB0aGUgaG9zdCBpcyBiZWluZyB0b3JuIGRvd24g
-KGUuZy4gVVNCIHN1cnByaXNlIHJlbW92YWwpLA0KKwkgKiB0aGUgZGV2aWNlIGNhbm5vdCBoYW5k
-bGUgSS9PIGFueW1vcmUuDQorCSAqIE1hcmsgdGhlIGRpc2sgZGVhZCBiZWZvcmUgZGVsX2dlbmRp
-c2soKSBzbyB0aGF0IG5ldyBJL08gaXMNCisJICogcmVqZWN0ZWQgaW1tZWRpYXRlbHkgYW5kIHN5
-bmNfZmlsZXN5c3RlbSgpIGluIGRlbF9nZW5kaXNrKCkNCisJICogaXMgc2tpcHBlZCwgYXZvaWRp
-bmcgYSBoYW5nIHdhaXRpbmcgZm9yIEkvTyB0aGF0IGNhbiBuZXZlcg0KKwkgKiBjb21wbGV0ZS4N
-CisJICovDQorCWlmIChzY3NpX2hvc3RfaW5fY2FuY2VsKHNka3AtPmRldmljZS0+aG9zdCkpDQor
-CQlibGtfbWFya19kaXNrX2RlYWQoc2RrcC0+ZGlzayk7DQogCWRldmljZV9kZWwoJnNka3AtPmRp
-c2tfZGV2KTsNCiAJZGVsX2dlbmRpc2soc2RrcC0+ZGlzayk7DQogCWlmICghc2RrcC0+c3VzcGVu
-ZGVkKQ0KZGlmZiAtLWdpdCBhL2luY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaCBiL2luY2x1ZGUvc2Nz
-aS9zY3NpX2hvc3QuaA0KaW5kZXggZjZiMjg2ZmE1OWYyLi4wMzUyM2FkMzI4NGQgMTAwNjQ0DQot
-LS0gYS9pbmNsdWRlL3Njc2kvc2NzaV9ob3N0LmgNCisrKyBiL2luY2x1ZGUvc2NzaS9zY3NpX2hv
-c3QuaA0KQEAgLTc5Niw2ICs3OTYsMTIgQEAgc3RhdGljIGlubGluZSBpbnQgc2NzaV9ob3N0X2lu
-X3JlY292ZXJ5KHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0KQ0KIAkJc2hvc3QtPnRtZl9pbl9wcm9n
-cmVzczsNCiB9DQogDQorc3RhdGljIGlubGluZSBib29sIHNjc2lfaG9zdF9pbl9jYW5jZWwoc3Ry
-dWN0IFNjc2lfSG9zdCAqc2hvc3QpDQorew0KKwlyZXR1cm4gc2hvc3QtPnNob3N0X3N0YXRlID09
-IFNIT1NUX0NBTkNFTCB8fA0KKwkJc2hvc3QtPnNob3N0X3N0YXRlID09IFNIT1NUX0NBTkNFTF9S
-RUNPVkVSWTsNCit9DQorDQogZXh0ZXJuIGludCBzY3NpX3F1ZXVlX3dvcmsoc3RydWN0IFNjc2lf
-SG9zdCAqLCBzdHJ1Y3Qgd29ya19zdHJ1Y3QgKik7DQogZXh0ZXJuIHZvaWQgc2NzaV9mbHVzaF93
-b3JrKHN0cnVjdCBTY3NpX0hvc3QgKik7DQogDQotLSANCjIuMzkuMA0K
+The following changes since commit 0279fd451a9971c0d5b959fc59f3e11b55e1694e=
+:
+
+  scsi: ufs: core: Initialize hba->rpmbs list in ufshcd (2026-07-28 22:26:5=
+1 -0400)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-=
+fixes
+
+for you to fetch changes up to c4f6916a99cf105c3ff340b6210fcbba3fa66b35:
+
+  scsi: scsi_debug: Negate wrapped memcmp() result (2026-08-07 12:14:19 -04=
+00)
+
+----------------------------------------------------------------
+Two minor core fixes: one for power management issues in error handling
+and the other to fix a deadlock in door locking of SCSI devices with
+removable media; and a minor bug fix for the debug driver.
+
+----------------------------------------------------------------
+Hongjie Fang (1):
+      scsi: core: pair EH runtime PM get and put
+
+Xu Rao (1):
+      scsi: scsi_debug: Negate wrapped memcmp() result
+
+Zizhi Wo (1):
+      scsi: core: Do not block on tag allocation in scsi_eh_lock_door()
+
+ drivers/scsi/scsi_debug.c | 4 ++--
+ drivers/scsi/scsi_error.c | 8 +++++---
+ drivers/ufs/core/ufshcd.c | 4 ++--
+ include/scsi/scsi_host.h  | 6 +++---
+ 4 files changed, 12 insertions(+), 10 deletions(-)
+
+---
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 643051332132..4fb2dc403962 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4310,8 +4310,8 @@ static bool comp_write_worker(struct
+sdeb_store_info *sip, u64 lba, u32 num,
+ 	if (!res)
+ 		return res;
+ 	if (rest)
+-		res =3D memcmp(fsp, arr + ((num - rest) * lb_size),
+-			     rest * lb_size);
++		res =3D !memcmp(fsp, arr + ((num - rest) * lb_size),
++			      rest * lb_size);
+ 	if (!res)
+ 		return res;
+ 	if (compare_only)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 453a2232452d..b729407348f7 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2161,7 +2161,7 @@ static void scsi_eh_lock_door(struct scsi_device
+*sdev)
+ 	struct scsi_cmnd *scmd;
+ 	struct request *req;
+=20
+-	req =3D scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
+0);
++	req =3D scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN,
+BLK_MQ_REQ_NOWAIT);
+ 	if (IS_ERR(req))
+ 		return;
+ 	scmd =3D blk_mq_rq_to_pdu(req);
+@@ -2362,6 +2362,7 @@ static void scsi_unjam_host(struct Scsi_Host
+*shost)
+ int scsi_error_handler(void *data)
+ {
+ 	struct Scsi_Host *shost =3D data;
++	bool eh_noresume;
+=20
+ 	/*
+ 	 * We use TASK_INTERRUPTIBLE so that the thread is not
+@@ -2403,7 +2404,8 @@ int scsi_error_handler(void *data)
+ 		 * what we need to do to get it up and online again
+(if we can).
+ 		 * If we fail, we end up taking the thing offline.
+ 		 */
+-		if (!shost->eh_noresume && scsi_autopm_get_host(shost)
+!=3D 0) {
++		eh_noresume =3D READ_ONCE(shost->eh_noresume);
++		if (!eh_noresume && scsi_autopm_get_host(shost) !=3D 0)
+{
+ 			SCSI_LOG_ERROR_RECOVERY(1,
+ 				shost_printk(KERN_ERR, shost,
+ 					     "scsi_eh_%d: unable to
+autoresume\n",
+@@ -2427,7 +2429,7 @@ int scsi_error_handler(void *data)
+ 		 * which are still online.
+ 		 */
+ 		scsi_restart_operations(shost);
+-		if (!shost->eh_noresume)
++		if (!eh_noresume)
+ 			scsi_autopm_put_host(shost);
+ 	}
+ 	__set_current_state(TASK_RUNNING);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 13e6357a8bbb..a41b56dbf3b7 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10016,7 +10016,7 @@ static int ufshcd_set_dev_pwr_mode(struct
+ufs_hba *hba,
+ 	 * we are functional while we are here, skip host resume in
+error
+ 	 * handling context.
+ 	 */
+-	hba->host->eh_noresume =3D 1;
++	WRITE_ONCE(hba->host->eh_noresume, 1);
+=20
+ 	/*
+ 	 * Current function would be generally called from the power
+management
+@@ -10038,7 +10038,7 @@ static int ufshcd_set_dev_pwr_mode(struct
+ufs_hba *hba,
+ 	}
+=20
+ 	scsi_device_put(sdp);
+-	hba->host->eh_noresume =3D 0;
++	WRITE_ONCE(hba->host->eh_noresume, 0);
+ 	return ret;
+ }
+=20
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index f6b286fa59f2..98b0ccf0813e 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -664,6 +664,9 @@ struct Scsi_Host {
+ 	/* Asynchronous scan in progress */
+ 	bool async_scan __guarded_by(&scan_mutex);
+=20
++	/* Don't resume host in EH */
++	bool eh_noresume;
++
+ 	unsigned active_mode:2;
+=20
+ 	/*
+@@ -682,9 +685,6 @@ struct Scsi_Host {
+ 	/* Task mgmt function in progress */
+ 	unsigned tmf_in_progress:1;
+=20
+-	/* Don't resume host in EH */
+-	unsigned eh_noresume:1;
+-
+ 	/* The controller does not support WRITE SAME */
+ 	unsigned no_write_same:1;
+=20
+
