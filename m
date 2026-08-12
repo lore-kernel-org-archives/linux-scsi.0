@@ -1,126 +1,111 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5EFC48A8D8
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 18:14:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0D81473C8C
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 18:21:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786558475; cv=none; b=prkMuunI4SLXaOrz7clgQI5lOhe2b5tRkYg8eJAl6ZN9wkhQhaUi3k4Mg+gkNhkVSaT+YY6mw4ofoCZa1luZr6UTtoXiA1cGwJXx8ypywwZULFyrSJWvO05dgNK5mB3xRrqo5Y62aypUXOLPsZZYUgN8gGebQwhaO0JU5nsqzQU=
+	t=1786558903; cv=none; b=AdMNX6c3MwtSEkT8lLcAma/HNorfyp7NKycAuvUzSyJdL8L1jKoNqrJreXInjRNAQpkDiOZbdOK6v2uspbACDhmg5t/xAMyO+LgY6nE3mHhIRs0P6P8OcURiPyqe/nNi3TOYRWp93HjxsWWufw8gAv8cyXiqntCL6ucGwMfWeGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786558475; c=relaxed/simple;
-	bh=4n1tlQkjXyTWNqMtep5UugGOyl8D8s0TXsvJkpbQSzQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qagkZktH2N2YmmEdYCbCKitTw0rKZnoWJ3gWChrs04KbtjHAoCTtFnXH2YudBJqMKlGLm/C9otRoVf9lZWQZLXMf5/aWreoLlmJj/V/szHZTVyoGiNNPKlCcPHxTvgoJ3/yfs1/s5VZISQg3QtDMv7JGuNq1aGpE7K2CLw2yAxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Hncx38HJ; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1786558903; c=relaxed/simple;
+	bh=l7z8WLhycRRnO1gXrwJtbla34+O+a0u9VdGAfdy5Cwk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=pq7BFnmqymd0Iog726ZfXVRvVhQB2aKkNulPxkcfJW4fleRk6qjU4FSfYthQolpDZP0iintsDJFfm58kEtcYSgGmye51e4tL4MJpb1uAqEEtUYN1E5Ky46PxRd1/6fBNLh409Guc7y9nzo1pHrtaCuggEaSMJF1fQYpvIfvCvB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aXgBEyVJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Hncx38HJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786558472;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=v/PkTYmB9Xqmq9DAbPY6/2gP1sruDO+EphGFwKZ0TkE=;
-	b=Hncx38HJYyOou9ILV01+hsiJGg6kYAEQUiG8dVW7qF6sAw0R0ucdSNlqr8MZtV8U1v7BwN
-	GilF8rQDMEh6liF7I69oMXun9rTJCXgNAO3oIGOyjgLHAUncoVSBgUiDErMitDr2jaGGPb
-	4NKUqZkKo0lzq6/gec4FaUcCc2wJ22k=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-440-wKVI966jP82PysGX33rujA-1; Wed,
- 12 Aug 2026 14:14:29 -0400
-X-MC-Unique: wKVI966jP82PysGX33rujA-1
-X-Mimecast-MFC-AGG-ID: wKVI966jP82PysGX33rujA_1786558463
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F1000195605E;
-	Wed, 12 Aug 2026 18:14:22 +0000 (UTC)
-Received: from jtaubepe-thinkpadx1carbongen12.ibmlowe.csb (unknown [10.22.88.181])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 75607180034F;
-	Wed, 12 Aug 2026 18:14:18 +0000 (UTC)
-From: Jesse Taube <jtaubepe@redhat.com>
-To: linux-scsi@vger.kernel.org
-Cc: Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Keith Busch <kbusch@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Justin Tee <justin.tee@broadcom.com>,
-	Naresh Gottumukkala <nareshgottumukkala83@gmail.com>,
-	Paul Ely <paul.ely@broadcom.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	Hannes Reinecke <hare@suse.de>,
-	Jesse Taube <jtaubepe@redhat.com>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	John Meneghini <jmeneghi@redhat.com>,
-	Bryan Gurney <bgurney@redhat.com>,
-	Chris Leech <cleech@redhat.com>,
-	"Ewan D . Milne" <emilne@redhat.com>,
-	shinichiro.kawasaki@wdc.com,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
-	linux-block@vger.kernel.org
-Subject: [PATCH 13/13] docs: nvme-multipath: Add FC-NVMe marginal state
-Date: Wed, 12 Aug 2026 14:13:00 -0400
-Message-ID: <20260812181300.3712426-14-jtaubepe@redhat.com>
-In-Reply-To: <20260812181300.3712426-1-jtaubepe@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aXgBEyVJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3207A1F00A3E;
+	Wed, 12 Aug 2026 18:21:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786558902;
+	bh=QtpByJ+cQdcwQLOAAKQKB1q26w85hfP9P6tFiIuON+g=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=aXgBEyVJxYDeeSfxLmCZCo7CZbi2gGSJGwVy5SFzCHB/wOsffifxSFfmJIOajXoKA
+	 1mrXOlARcjjCoQPOhtdgv0GPVOnO+MvdqQs2eWbS5KlSub6NB2hFxNQBfBYz/hBxqf
+	 sfhtnLRKUJ/u1O9boryZ/DxbRHQ+dXqG/40aeC4IPiw3Kd5ZqNc02Fo37yBi9tWAWb
+	 lFgsNtHGuVqx+x6C///HgdVpdTuF/n6aaPbUEyrln4ZotwJC7tu87xwIBK6EQk6riF
+	 99wDVR4AVqUWJ2stlWZ/5YMChcscHwRe3Uz+Sv7NZjpBP5r7g9URgSVqGhj8QLZoMO
+	 hjhZRnOJwRGCg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 02/13] nvme: add NVME_CTRL_MARGINAL flag
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jesse Taube" <jtaubepe@redhat.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260812181300.3712426-3-jtaubepe@redhat.com>
 References: <20260812181300.3712426-1-jtaubepe@redhat.com>
+ <20260812181300.3712426-3-jtaubepe@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 12 Aug 2026 18:21:41 +0000
+Message-Id: <20260812182142.3207A1F00A3E@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Adds documentation for the new marginal state for
-NVMe over Fibre Channel. Documents how to check and reset the state,
-as well as a description of how it affects multipath policies.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] The NVME_CTRL_MARGINAL flag is cleared on the wrong structure's fl=
+ags field in the Fibre Channel transport.
+- [Medium] The NVME_CTRL_MARGINAL flag is not cleared universally on all co=
+ntroller resets, leaving non-FC transports and manual resets permanently in=
+ a marginal state.
+--
 
-Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
----
- Documentation/admin-guide/nvme-multipath.rst | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+--- Patch [2]: [PATCH 02/13] nvme: add NVME_CTRL_MARGINAL flag ---
+commit f9c336bbdc7993d3daa484b869cd6845d7fce7a7
+Author: Bryan Gurney <bgurney@redhat.com>
 
-diff --git a/Documentation/admin-guide/nvme-multipath.rst b/Documentation/admin-guide/nvme-multipath.rst
-index 97ca1ccef459..8df4235d4d10 100644
---- a/Documentation/admin-guide/nvme-multipath.rst
-+++ b/Documentation/admin-guide/nvme-multipath.rst
-@@ -31,6 +31,23 @@ To set the desired policy (e.g., round-robin), use one of the following methods:
-    1. echo -n "round-robin" > /sys/module/nvme_core/parameters/iopolicy
-    2. or add the "nvme_core.iopolicy=round-robin" to cmdline.
- 
-+FC-NVMe
-+----
-+On NVMe over Fibre Channel there is an additional state called `marginal`
-+All policies will treat this path as offline and will not use it unless
-+all other paths are marginal or unavailable. In that case, the policy will
-+select the best path based on the policy.
-+
-+To see the current path state, use one of the following methods:
-+   1. cat /sys/class/fc_host/host*/device/rport-*/fc_remote_ports/rport-*/port_state
-+   2. cat /sys/devices/virtual/nvme-subsystem/nvme-subsys*/nvme*/state
-+To reset a path to online use:
-+   1. echo "Online" > /sys/class/fc_host/host*/device/rport-*/fc_remote_ports/rport-*/port_state
-+
-+The marginal state is caused by a
-+FPIN-LI (Fabric Performance Impact Notification - Link Impact) event.
-+FPIN-LI event counters can be seen with:
-+   1. cat /sys/class/fc_host/host*/statistics/fpin_li*
- 
- NUMA
- ----
--- 
-2.54.0
+nvme: add NVME_CTRL_MARGINAL flag
+   =20
+Add a new controller flag, NVME_CTRL_MARGINAL, to help multipath I/O
+policies to react to a path that is set to a "marginal" state.
+The flag is cleared on controller reset, which is often the case when
+faulty cabling or transceiver hardware is replaced.
 
+[ ... ]
+
+> diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+> index 04363b9c4489e..d2ca65f70a0c5 100644
+> --- a/drivers/nvme/host/fc.c
+> +++ b/drivers/nvme/host/fc.c
+> @@ -788,6 +788,10 @@ nvme_fc_ctrl_connectivity_loss(struct nvme_fc_ctrl *=
+ctrl)
+>  		"Reconnect", ctrl->cnum);
+> =20
+>  	set_bit(ASSOC_FAILED, &ctrl->flags);
+> +
+> +	/* clear 'marginal' flag as controller will be reset */
+> +	clear_bit(NVME_CTRL_MARGINAL, &ctrl->flags);
+
+[Severity: High]
+Does this clear the flag on the wrong structure?
+
+Here, ctrl is a pointer to struct nvme_fc_ctrl. Clearing the bit on
+&ctrl->flags will affect the FC-specific flags field instead of the intended
+core NVMe controller flags (&ctrl->ctrl.flags).
+
+[Severity: Medium]
+Will other transports remain in a marginal state indefinitely?
+
+The commit message mentions the flag is cleared on controller reset, but the
+clearing logic is only added here in the FC-specific connectivity loss hand=
+ler.
+
+Should this flag instead be cleared universally inside nvme_reset_ctrl() in
+drivers/nvme/host/core.c to ensure PCIe, TCP, and RDMA paths also recover
+after a reset?
+
+drivers/nvme/host/core.c:nvme_reset_ctrl() {
+    if (!nvme_change_ctrl_state(ctrl, NVME_CTRL_RESETTING))
+        return -EBUSY;
+    ...
+
+> +
+>  	nvme_reset_ctrl(&ctrl->ctrl);
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260812181300.3712=
+426-1-jtaubepe@redhat.com?part=3D2
