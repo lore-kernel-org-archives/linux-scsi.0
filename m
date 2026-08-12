@@ -1,188 +1,154 @@
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com [209.85.208.178])
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CCC12D7380
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 22:40:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.178
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786488015; cv=pass; b=tfjTrHzbpzsynItZpE03U3lSYBFY8gVEGICe7OkK+U3jS7uOHEcJvOAyD7Z0Yz6mfJUsZvmkJuVrQlyIeOAQXGw9aYscToQqE1iO5xoxOh+7ePOzrd9rPae/okMUjFYz4y/mSOdm1ELYeQUogRfz8m7r8b4w7uC3OpvKB9Mnpgk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786488015; c=relaxed/simple;
-	bh=lQ2PDMxZqNNJsyagA2l0ugPQbR15LKHgNZi2teCjjqw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=N/s5q9iJWU7lEFZXJSEl0BeNIL0pqueIy8p6cLvm1K2IQrVkebYOggdk4rAFsO4GdQ1IZei3JevsN+qGN70AbWqVi/kCtZqmarj8nhMg1joOPStSUrAl2u7UBZqlXws54yvHVQwj4yX93xIqj/eQaQnT/l5QTFC1IrNOXVdu9S0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b=Xj3dbLsj; arc=pass smtp.client-ip=209.85.208.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FE693264C3
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 06:06:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786514794; cv=none; b=mSnJw5HvgUc4CYFofl34KedhrmoVBPV9/1atz70iq3q2R0W+ZVAsh3U5dw3Dogj7hj263WwJkZOBgx29cL7IWHSVV816Nd1FFh2906WF2TIKH+jl0y74jo1yHw/9fxuYIEg4/z1nM721uPgydByz72bIdriOYs+28Jk7U4sh0UU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786514794; c=relaxed/simple;
+	bh=ZAJzop4AjvsiA4GTl3m1C8MJVDuXUxmiqm9F/Nw8O1g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=S3dzKS0vrGvJBpv86+ZKA+SOXmjF2nh7c2Yy8iovl4zuNxgW3ZWxjB80iUpLhPKXqAgbUT9gUDWyF6jMPE3II3TI0EgHnIzts5bR/2LrbclWAPE8NOTk9TF3CWsG4/mEEGqwlEL2aclXDJrweZOVy9TJCi67PeG7rvPjheidFyc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=OkGeLtmu; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="Xj3dbLsj"
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-39c7ef2b1e2so2317171fa.1
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 15:40:12 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786488011; cv=none;
-        d=google.com; s=arc-20260327;
-        b=YuZSPPIPd0/bREokez8wLJ1GSx9Yh6jf63WNxNm9oW8C1lMY2gMTCrwGi2AYMPmPVM
-         InMET5+RsJJVHyfrht9pWPuVczPang2AJMjUzvOIYGmjrLEBo21gZdpmlO8ifg2kdmwk
-         MI39BTNoRKt2ESV8DHhN2OX7/ubllv77RSCrOXizDv+TUrSnnPz2eyy23yJDvOoUNWIi
-         n+tjUZr+IjQF2y/uhzXwGXjsqFg4d0g1m/hjVF+z9MU+v4hwAUQ3pjL0mkbJctVCsFiE
-         1GkAkmuN71//xyIm0xvqAuANYUSs+4BlorMYQr5yV0YjM2WmTOevgU+uRlWxxiWHSQyu
-         oLRA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=ZMSvgy6lM/O6XOMnt+YhefRsK1fTzAbWeXvMjkG/I8Q=;
-        fh=bPqnI7NZgkwSWSGgGmPSHyaZErNEPE0D1fdj2e1Stg8=;
-        b=ObUMdrveNtwaEFYgYC+yyd9KVdhPFi0PhTtPVxMSSJ2frJtSI7q6NPGO72dxOilvVK
-         g0UQ3VYMel8QV7TpClCi5u4NVAHlh7QyBJpPy+y8p4aOKhLwCx9mMq3PqjJAvat7hDv2
-         /pBje6NOrj+AeWPnkkgYLWYcbGSJmjrSJSC7JEv9JnHueDknHKR0n7o+Ush7CSQ/smbq
-         AJsliphXXpLi7+3eune1FKIokfi9Dv1HsJNodgBSJ/THnMcfROk74qpoWEzVpyqxt8Yc
-         66jD1VhY5j8e/b924VtKUMPmu4QUJfh7cdnqwspjR57M5Gvn2vRA6xruATZbPBrCIznP
-         3prA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="OkGeLtmu"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-495437bb891so4778555e9.1
+        for <linux-scsi@vger.kernel.org>; Tue, 11 Aug 2026 23:06:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google; t=1786488011; x=1787092811; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=baylibre.com; s=google; t=1786514790; x=1787119590; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=ZMSvgy6lM/O6XOMnt+YhefRsK1fTzAbWeXvMjkG/I8Q=;
-        b=Xj3dbLsj45VnkD+Z46qLgj0/xPxo/cIVVj0JezlEwJOxG9uJuMu1cVwbaUznuE9i/I
-         MtRdGu7kJNUPmMXp+6dk3U2dKKPE2npIbqxz4VdoIfhzam4sOBX7M3diikeoarLCmDHD
-         Ajsavv/CmspwdviWUPSalPc2eDmj130ahWVR2QjCwdGXURc9BxG8wr+Y1OpMvGQM+Yj+
-         jqMn1kWYgz3q7dr3ml/g+hdBW5pg9vftzttdAU7qBbbWF9Rw5xjd2kgfAbCsc87rJgh1
-         2oa5bnV5TDH0rFMtAqyMHnAL+17UY68cOfcsWA3A6lDasF+sp1SC4IGZuLKyoHZ/sEx/
-         QNuQ==
+        bh=HorQEIgr4JhNec9eanHk78I2SPpuUlT0tC++CtCiMaE=;
+        b=OkGeLtmuIR9V/25H1nrc0yoWiyVaF/+TIJGtvmBrxZGoGXwevN83Zwe3cN5mkPWQEl
+         EZkE3Z+fq7fgPFzYcdkDwjTzLUQRxtpF9pA9bn6rmYSSdG7pmnjIk2CxtID8xTv6wfT5
+         m2pXvERRFt4RRA2EP1Dhs3/Sgw7BOJFNbC6sLGoSDjgNAwY3FaiXfD8Q5BiMla1LuVaF
+         CGq41vBUZIrF5ojvKBnbATXwjSCTCJrz9UbQDr2yrpKxRkpqTKESI9eax9qR6TL9p80D
+         9K/mKgYqaiRWCgVxmrWl1Cg2rSpfFqBGGYXyegxSzKUHLKhEwWfSOg3noK5IhwC+v5wl
+         s+jQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786488011; x=1787092811;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20251104; t=1786514790; x=1787119590;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ZMSvgy6lM/O6XOMnt+YhefRsK1fTzAbWeXvMjkG/I8Q=;
-        b=k5rieHlFf18lb9XBM4CYmEZNx2KYHSjNxeB1yZFjBPC78QoewE87e1IjbIzjCQRldU
-         ME69QHI06kJ+0DWxcMjeWYRd8VZdPdV95xCsDBriBr8xyuUXztiAw9EObw9yOI9OO2ts
-         /lNXiFOSzfIEI5acQe24nXr2wIdH78zV43VX91MR2zgFatd0SBFosyD4hLw5TQaVu7AW
-         AnaGd2bIUbmH0AGF+fV+F+//wjP93NIK+5BSDD+PNoDH0t4IbJak7+yPAXyTb9du8H96
-         wKS6e7MKSlH7bjkoP1qndSmSoz2uaJQQjh/PUnrTXDEqYXzq/bZ+fG8l+binzqi3A1es
-         XHvQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrwKD/mD3pBkXYcnDt01CgqyJrL6Rd0YG/X0Qa+By/rEIJvygqPwkfL5eyCtPKgG6BwrcM070Ebi5KL@vger.kernel.org
-X-Gm-Message-State: AOJu0YxfKwg+RsWuVhdZyrJFqPDnwQ3mu2wvD5SraZe02rCjWtc8bfym
-	A6Y7dX4pXrikuEbSVRysaL1E4ew2LPBE/q3jyIkaw7sNJVPl27diL3bt6gyRbKK7pOc1EdgKkLo
-	0sB+Qq2vYS346v5srv3cPMOJsDXoJiWIVYgBP1GB45g==
-X-Gm-Gg: AR+sD12Dg4Lp0YXlsNIWmkiqVZxxTtl1dX1iN5ItadzbvffPp7T0qlmA8SLvtCzEWLN
-	Y1nbjcnKA/p29SIsIf+VYRDndTDCONatZJXCx9eFEIiQUd2oNRztWeKZCgSjJAWAl2yRRZ052+s
-	HKmAIMY3KJlLSuSAtb7qInA6SkH7qvl6UlhXsCAFiCSx90GSBMeU7yUDb/M6xZ32aiHVS/Cg5bk
-	30WfI3Pn6RFzr+/bbZXZMOurMxV5aJuwHmbsDXz/Pu+z1Dei8sQCWLNO23DNe08YWEfLsT2nqzm
-	hcqfKiFIBUb45rI0ZbTh2pGOcrImpbweJfjCYdFUw3055xzdRyE9nRjXk2SrOIZtRDeFz5K9in9
-	OWEqMZnLougSXx5e1gLYDTHQU2qseFAP/bRbNSn+P6sa4vMbq4XZ5lqtEyX6Z
-X-Received: by 2002:a2e:be27:0:b0:39c:6d3a:2dc6 with SMTP id
- 38308e7fff4ca-3a10d57f055mr51371fa.15.1786488011142; Tue, 11 Aug 2026
- 15:40:11 -0700 (PDT)
+        bh=HorQEIgr4JhNec9eanHk78I2SPpuUlT0tC++CtCiMaE=;
+        b=WRv1KOFAzA/WwtKAJYKU8vJM12yKg6VjJgKdvf1jmp+C+q6YEqlvONJV4fqybYUtzL
+         lTlkXS0QEHwBurb47GA2AoMzq15eKBDdefieJfCgEGBExrXog4GAmt860kttyJnNwrxO
+         r+B0maSLw2sHDzI20hJx/cKsPObgaF4+GEbFwpKKPi+FADrDBQXOESJoq3RH+VPCJmBD
+         4zhmtLJDeDNB1DfVb+CHSv31jt6PRCdxY0B07J5Nk+ubf0P6FdyJsGL2ElUNANTHaU7O
+         cycA+nEuDrjnX4AvQzSsgTtUkgJ9kXg7HVuhnW5YG/GefXr/TUhOUppkT1tp/GS6e6JN
+         SuPw==
+X-Forwarded-Encrypted: i=1; AHgh+RrTKSlnAPIFOHl89LeFEJ8sHxKjMpdFejseWFA/oEcLknST+XjWB38hxmzOFkvg8IyrXM/gnHB2ZUYf@vger.kernel.org
+X-Gm-Message-State: AOJu0YxbkBaiArXthI3j6n8L+KGhxbyzkHJ94ZsjNT3Y+XDmWmMHdaeZ
+	vwGiMm7ItFsYx4+oTNV3iQLOFyNZdBKvQMwVNhpO7tVwHgH5QbUSoqDH+WBEAEkphfo=
+X-Gm-Gg: AR+sD12k4EKZZZrFgkzWvfzJ+6w2iwZmV4KdFodizQ9aY7Wcas+qM+pfOH6DP3SEDw9
+	2H8WM7BYFub7Qf6EZB3/F+s8KK8VQwUNRe/+XJiGKhr+C3hWp1Jmv/5/9MGtP1AfoBb6hz8JIPr
+	Ft9TSMqNo3wGDkpxCTtZL3/oxvHXjDnAKwJtOKXkQ0k4z6OZS+8njxdf7oAmhcy2Wb4W5ZH6ile
+	abL0RjdASywBjudedLjWwyTYLiavCbBDsKKMZfPx7ctEgemGEFIXavKGSy+kV1xBQ5DdMGWlgwQ
+	2nwMk+n3jF41AvzrWlqHQGnZ4kyXUpmKOaCpcuRntlxgUNvEB9MXAgagVq6pEac7uCbhJWoosYF
+	knsU9zeNKErhaWaukPfTT0jzjbE6l1Jfp0x7RI1dlEW3zegqdm1MSg1ijSOOuARB65QkHgcFtwg
+	pcGz1X8EDGNiZ5CCifHmRKJuuPKgG8DHIjiLx/pj0+/R1G2I4F8rq53n5jWmASmNewRA==
+X-Received: by 2002:a05:600c:c87:b0:493:f783:c46a with SMTP id 5b1f17b1804b1-4997c4fb76dmr22206145e9.6.1786514790233;
+        Tue, 11 Aug 2026 23:06:30 -0700 (PDT)
+Received: from localhost ([2a02:8071:56d1:2de0:1d24:d58d:2b65:c291])
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-4997c948512sm19224575e9.6.2026.08.11.23.06.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Aug 2026 23:06:29 -0700 (PDT)
+Date: Wed, 12 Aug 2026 08:06:28 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
+To: "Martin K. Petersen" <mkp@kernel.org>
+Cc: John Garry <john.g.garry@oracle.com>, 
+	Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
+	GR-FC-Storage-Upstream@marvell.com, agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com, 
+	hare@suse.com, regressions@lists.linux.dev
+Subject: [REGRESSION] Re: [PATCH v6 05/56] scsi: qla2xxx: Add FC operational
+ firmware load for 29xx
+Message-ID: <anwLLKJRVgL6a-aQ@monoceros>
+References: <20260723050413.3897522-1-njavali@marvell.com>
+ <20260723050413.3897522-6-njavali@marvell.com>
+ <c324172a-a754-4194-a841-ec1d813dfde5@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715135642.456578-1-haris.iqbal@ionos.com> <CAJpMwyjQc_mimuBjUugbBJsZio2vZQCD-Ay966o2jWtpTt2MEg@mail.gmail.com>
-In-Reply-To: <CAJpMwyjQc_mimuBjUugbBJsZio2vZQCD-Ay966o2jWtpTt2MEg@mail.gmail.com>
-From: Haris Iqbal <haris.iqbal@cloud.ionos.com>
-Date: Wed, 12 Aug 2026 00:40:00 +0200
-X-Gm-Features: AUfX_mwxopAEgiB18-Ojw-VQM4RTCyydiWxFsI4oPhRC1ThOaktpDL3qu1EnJm8
-Message-ID: <CAJpMwyhBuH4UdMzib7SaDhYE5j=xsiV3M4hf4qYdzsiZvRZuPA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: mpt3sas: don't post task management replies to
- io_uring poll queues
-To: Sathya Prakash <sathya.prakash@broadcom.com>, 
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, 
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="wlq7zktslbm7aakd"
+Content-Disposition: inline
+In-Reply-To: <c324172a-a754-4194-a841-ec1d813dfde5@oracle.com>
+
+
+--wlq7zktslbm7aakd
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
+Subject: [REGRESSION] Re: [PATCH v6 05/56] scsi: qla2xxx: Add FC operational
+ firmware load for 29xx
+MIME-Version: 1.0
 
-On Wed, Jul 22, 2026 at 3:46=E2=80=AFPM Haris Iqbal <haris.iqbal@cloud.iono=
-s.com> wrote:
->
-> On Wed, Jul 15, 2026 at 3:56=E2=80=AFPM Md Haris Iqbal <haris.iqbal@ionos=
-.com> wrote:
-> >
-> > mpt3sas_scsih_issue_tm() posts a task management (TM) request to the
-> > reply queue given by @msix_task. For ABORT_TASK and the broadcast
-> > primitive QUERY_TASK/ABORT_TASK paths, @msix_task is the msix_io of the
-> > command being managed; for an io_uring polled (RWF_HIPRI) command that =
-is
-> > an io_uring poll reply queue (index >=3D ioc->iopoll_q_start_index).
-> >
-> > io_uring poll queues have no MSI-X interrupt registered and are drained
-> > only by mpt3sas_blk_mq_poll(), which the block layer calls to complete
-> > polled block I/O. A task management request is not a block layer reques=
-t,
-> > so nothing polls on its behalf: the reply is posted to a queue that is
-> > never serviced during the wait, tm_cmds.done is never completed, and th=
-e
-> > TM times out even though the controller is healthy. The abort then
-> > escalates to a controller reset that was not needed.
-> >
-> > Post TM replies to reply queue 0 whenever the selected reply queue is a=
-n
-> > io_uring poll queue; reply queue 0 is always interrupt-serviced. When
-> > poll queues are disabled, iopoll_q_start_index equals reply_queue_count=
-,
-> > so the check is a no-op and behaviour is unchanged.
-> >
-> > Reachable only when the driver is loaded with poll_queues > 0 and an
-> > io_uring polled workload issues I/O that later times out and is aborted=
-.
-> >
-> > Fixes: 432bc7caef4e ("scsi: mpt3sas: Add io_uring iopoll support")
-> > Signed-off-by: Md Haris Iqbal <haris.iqbal@ionos.com>
-> > ---
-> > Found by code inspection while auditing the task-management reply path.
-> > Posting for review of the analysis.
->
-> Gentle ping.
+On Mon, Aug 10, 2026 at 03:27:01PM +0100, John Garry wrote:
+> On 23/07/2026 06:03, Nilesh Javali wrote:
+> > +
+> > +	if (section =3D=3D TIM) {
+> > +		if (section_size > req->length * qla_req_entry_size(ha)) {
+> > +			ql_log(ql_log_fatal, vha, 0x0098,
+> > +			    "TIM section too large (0x%x bytes, ring 0x%lx bytes).\n",
+> > +			    section_size,
+> > +			    req->length * qla_req_entry_size(ha));
+> > +			return QLA_FUNCTION_FAILED;
+> > +		}
+>=20
+> Not that this is generating a warning for i386 builds on the mkp-scsi 7.3
+> staging branch:
+>=20
+> drivers/scsi/qla2xxx/qla_init.c: In function =E2=80=98qla29xx_process_rd_=
+image=E2=80=99:
+> drivers/scsi/qla2xxx/qla_init.c:9272:53: error: format =E2=80=98%lx=E2=80=
+=99 expects
+> argument of type =E2=80=98long unsigned int=E2=80=99, but argument 6 has =
+type =E2=80=98size_t=E2=80=99 {aka
+> =E2=80=98unsigned int=E2=80=99} [-Werror=3Dformat=3D]
+>  9272 |        "TIM section too large (0x%x bytes, ring 0x%lx bytes).\n",
+>       |                                                   ~~^
+>       |                                                     |
+>       |                                                     long unsigned
+> int
+>       |                                                   %x
+>  9273 |        section_size,
+>  9274 |        req->length * qla_req_entry_size(ha));
+>       |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>       |                    |
+>       |                    size_t {aka unsigned int}
+> cc1: all warnings being treated as errors
 
-Yet another ping!
+This patch became commit c3930ec119cb ("scsi: qla2xxx: Add FC
+operational firmware load for 29xx") now and is included in
+next-20260810 and later.
 
->
-> >
-> >  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> >
-> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sa=
-s/mpt3sas_scsih.c
-> > index 12caffeed3a0..572ec1787e10 100644
-> > --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> > +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> > @@ -3186,6 +3186,16 @@ mpt3sas_scsih_issue_tm(struct MPT3SAS_ADAPTER *i=
-oc, u16 handle, uint channel,
-> >         int_to_scsilun(lun, (struct scsi_lun *)mpi_request->LUN);
-> >         mpt3sas_scsih_set_tm_flag(ioc, handle);
-> >         init_completion(&ioc->tm_cmds.done);
-> > +       /*
-> > +        * A task management reply must be posted to an interrupt-servi=
-ced
-> > +        * reply queue. If the associated command was submitted on an i=
-o_uring
-> > +        * poll queue, that queue has no MSI-X interrupt and is drained=
- only by
-> > +        * mpt3sas_blk_mq_poll(); a task management request is not a bl=
-ock layer
-> > +        * request, so nothing would process its reply and the command =
-would
-> > +        * time out. Fall back to reply queue 0 in that case.
-> > +        */
-> > +       if (msix_task >=3D ioc->iopoll_q_start_index)
-> > +               msix_task =3D 0;
-> >         ioc->put_smid_hi_priority(ioc, smid, msix_task);
-> >         wait_for_completion_timeout(&ioc->tm_cmds.done, timeout*HZ);
-> >         if (!(ioc->tm_cmds.status & MPT3_CMD_COMPLETE)) {
-> > --
-> > 2.43.0
-> >
->
->
-> --
->
-> Regards
-> -Haris
+#regzbot introduced: c3930ec119cb916be879c017ea1e389e05dbe1aa ^
+
+Best regards
+Uwe
+
+--wlq7zktslbm7aakd
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmp8DWAACgkQj4D7WH0S
+/k6BvggAsG7SGFLcknG+/aqI/u1jGCPHEq5z8Jk49ehBP0rOAmmU27VdhIxUL7HJ
+rK6HFRcjx4KfzjAO/NHRP+aOB9Rxluaf/enIVaGJBVQxx5RXmyAFxEM6XZKc9Emf
+UykEio89rzrgOvDUWRxq8PRdAfDCL7frOZEyC2BPanyo6oe/lPrF44qC0CyBE6nl
++lQ6uKMqMnmvqsyXBQ9SKSRsaX8fKfNT1RYmRk9DyMvSVG6BZNpP2OXlwkmOrEPL
+SIpi4P36GRqOwkrCHq9N1OJ4kZkuAE0r5KxKWbQSteKL00mehRgui0bN+pxvZqeg
+HcpQfUtsre4sbXVojxGWaKtgnvhXxQ==
+=0nEt
+-----END PGP SIGNATURE-----
+
+--wlq7zktslbm7aakd--
