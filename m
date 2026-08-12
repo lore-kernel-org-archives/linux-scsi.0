@@ -1,96 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 837EE473C8C
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 18:21:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B04F748425C
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Aug 2026 18:23:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786558914; cv=none; b=hO29nBzaY3hKZKh1X+pW0d7detpRbEwXM4BJQue03URUIK/EUZPejUrl1bpld8q/yy49O9BksGeIn59U27qyrNBewKvVpp7W5E5YyzJHS5/WBvw0iItFCvqZssTT3kdbvUtpiyxhAXo6U5e46nM7DGsOD4/kSZKgZkA/TEzJ7hk=
+	t=1786559033; cv=none; b=YWpbvinvmpPXv3kOFaIsY1C/HtFv2ixudHB6jkQyLvZUTYn2PtrNOfFC6i2fOclsrZNwhlJSZQqDQxLMmU4I3gI0rV5fExIuzXMyl17AXifaTfpeOmulIcQqGuqTDiIzmqpcWlpSqVbochTq4C5mVn3acRZi5l1muYctRR6w2C8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786558914; c=relaxed/simple;
-	bh=Ct/4sGeLY3YsK38WkWgsc8fSmlodn2eGBElumPvlNI8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=P/Mbrr75vpXqDgshmHLAA3bsYkdjgFOaJsfurcegpYnMcjlCgsXOCDhvKtx+gXfdjVVaS5GClyXCXR/q7D0/Naev0cz0kjI3SUJVX0Zz2H/LbfuDcQA7XwOE+gN01RmzTEUuSQnb49SIaf599k23x1TnU0PavxwFnyBd90UPuCI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cg+qNnej; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786559033; c=relaxed/simple;
+	bh=X1EB4L7wShkaYvq9v4wVYtdJLJNxTrLfhasaCggoy0U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=O8Q+iRKz/kUldygIsJK841DSScpQr/aqRP7OxeDPwPHyCv4T/QiUGaqDkskAIucqU1Q2+foQHYat1zd4rVS3+GEOqsXtjQPl15qEAqJ9t7oLh7VeYLeCwj4mxQ5FdG8ykyojg+vGRGRKR8zSmDQLuGEhdje9/aeg2NcG6wsiRRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4mO9uylY; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cg+qNnej"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBBD41F000E9;
-	Wed, 12 Aug 2026 18:21:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786558913;
-	bh=t+pLMX0owe9b+/tdQ3YtmoaG8Fs8w0dxCksDXd577Ds=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cg+qNnejB4rUJU0hs2a59T2VBc2n51G2iLBWsZfM0jFe+uOttC1e3HgRv3ICel2W/
-	 c0HP9wlCwFUWKnKFaFpYw0ppVfGH9x1b7ys5ToI7r/sBRcP824OkdxRxkiSkYq1FbN
-	 wlchk0Ch+l9tMQS4HnF+QeEwfLt+pKbBG4A/H23KBmZPtyr9WaZ3WJ2KxhHYr7TaYA
-	 0Xmh9n1Bpo0simF8BqnBpMU/7GtTulyZ5iuJpU8KBa78SgQX7qijaNKUan0nQSt4/W
-	 pxYFqvcogQAmuJa3l3NKk3WV9W8aRLK7F6xtNwRgMlt8jZA3UIZaHcKhnQwwvLYyuD
-	 k08Jbs9qULOWw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 06/13] nvme: sysfs: emit the marginal path state in
- show_state()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jesse Taube" <jtaubepe@redhat.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260812181300.3712426-7-jtaubepe@redhat.com>
-References: <20260812181300.3712426-1-jtaubepe@redhat.com>
- <20260812181300.3712426-7-jtaubepe@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 12 Aug 2026 18:21:52 +0000
-Message-Id: <20260812182152.DBBD41F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4mO9uylY"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hKxhQ6rkkz1XM6Jb;
+	Wed, 12 Aug 2026 18:23:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1786559029; x=1789151030; bh=DSLZH7BkVmN/FFg3Y6nv7UPdooIeyJWUj0d
+	YxbzV4LY=; b=4mO9uylYnRDyjPw8OPUMr5ElHaMJsaqxU1s/ckkQQ3HG0+I66mD
+	tXltM12Aavzr53FxTZgGPrxWccY+vpRAmYEhsVZttMvGT0tLwcWEQUa9rh1cZ+wW
+	7/P2R1ceTZKabDZ+xNl3x63pX53qfSknF3RZeSLDtjfH/bwqZCvEfnIEQCb7fWJO
+	7yeg5plgZ03NR+V9JUc4bgw2QPkqmOvRUiR/h2KCMnW/MZVfBnMTDusE3FtRbKn0
+	P0Cedtw5C7t2j4bzUvmzvAgYUGYvQcD8Jz2xm0UjowoM3J4M9WiuaMOenTr53c5T
+	bW5z5VA+6xx1kOg9wQGds82zT/rvPkCiz4g==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id fihbXuJfeXH9; Wed, 12 Aug 2026 18:23:49 +0000 (UTC)
+Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hKxhN2KpYz1XM6JR;
+	Wed, 12 Aug 2026 18:23:47 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/3] ufs: core: Improve error handling
+Date: Wed, 12 Aug 2026 18:22:55 +0000
+Message-ID: <cover.1786558726.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.55.0.691.gc56d675ccc-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Unconditional override of sysfs state attribute with 'marginal', m=
-asking critical controller states.
---
+Hi Martin,
 
---- Patch [6]: [PATCH 06/13] nvme: sysfs: emit the marginal path state in s=
-how_state() ---
-commit 881ed7168d40f086dcba6f49059055d962ce09aa
-Author: Bryan Gurney <bgurney@redhat.com>
+This patch series fixes two subtle race conditions related to UFS error h=
+andling.
+Please consider these changes for the next merge window.
 
-nvme: sysfs: emit the marginal path state in show_state()
+Thanks,
 
-If a controller has received a link integrity or congestion event, and
-has the NVME_CTRL_MARGINAL flag set, emit "marginal" in the state
-instead of "live", to identify the marginal paths.
+Bart.
 
-> diff --git a/drivers/nvme/host/sysfs.c b/drivers/nvme/host/sysfs.c
-> --- a/drivers/nvme/host/sysfs.c
-> +++ b/drivers/nvme/host/sysfs.c
-> @@ -527,7 +527,9 @@ static ssize_t nvme_sysfs_show_state(struct device *d=
-ev,
->  	};
-> =20
->  	if (state < ARRAY_SIZE(state_name) && state_name[state])
-> -		return sysfs_emit(buf, "%s\n", state_name[state]);
-> +		return sysfs_emit(buf, "%s\n",
-> +			(nvme_ctrl_is_marginal(ctrl)) ? "marginal" :
-> +			state_name[state]);
+Bart Van Assche (3):
+  ufs: core: Simplify timeout handling for START STOP UNIT commands
+  ufs: core: Fix a race condition triggered by ufshcd_eh_timed_out()
+  ufs: core: Do not forcibly complete SCSI commands
 
-[Severity: High]
-The commit message mentions emitting "marginal" in the state instead of
-"live", but does this implementation unconditionally override all valid
-states if the NVME_CTRL_MARGINAL flag is set?
+ drivers/ufs/core/ufs-mcq.c     | 26 ----------
+ drivers/ufs/core/ufshcd-priv.h |  2 -
+ drivers/ufs/core/ufshcd.c      | 88 ++++++++--------------------------
+ 3 files changed, 19 insertions(+), 97 deletions(-)
 
-If a marginal controller encounters a fatal error or is deleted, changing i=
-ts
-internal state to NVME_CTRL_DEAD, NVME_CTRL_RESETTING, or NVME_CTRL_DELETIN=
-G,
-won't this still emit "marginal" as long as the flag is set?
-
-Could this mask critical controller states and cause userspace tools that
-poll this sysfs attribute for teardown or error handling to hang while wait=
-ing
-for the state to change?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260812181300.3712=
-426-1-jtaubepe@redhat.com?part=3D6
