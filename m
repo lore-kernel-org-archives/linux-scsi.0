@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91CF83F1AB8
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2026 22:29:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F10B3E7150
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2026 23:56:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786660203; cv=none; b=chAXiBCgsiIJvWnLx8ldZs50/qHc3suA3P9j3tNk/qu/OUMlocCDGDhG7EkHIKYPAj+//U/H6sAbLTz7d2lMuzGb5GhoZawfDq+kRJ6BBMgruM91x0SSwhuTHVQZqFOZx7/4vfAvDDY+i8j3bKgysDp20ljmBQ07fIMKVtQ46IM=
+	t=1786665380; cv=none; b=jKvCQQXDO2l4IKeGij5Hmwwhkuy6iRNnQ1PrvHOEKN35YzRs65TOL4flXkU/2WY9RAgN9Lli6DNwwbJxXiVyZ1kDiSKcq8SmbSVWVIVZfunWahzERsW9y++P6U78/YhKaNV7r/aUc28xGxJYDM1swk+Ul1icfTf4ijA2pNObgb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786660203; c=relaxed/simple;
-	bh=xRnRyCuBTcc2nR056bYQmULTYSc/l8hw7SLcbzJt/Wk=;
+	s=arc-20240116; t=1786665380; c=relaxed/simple;
+	bh=1zzJ8dr9DJ+mgXnUGX7z0l/lUyHMf6dlgs2HP6sjOoA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QjKdFbuxT/pCG5uqc0SlL9lewZZK6gR7toaJy1qgRMeVZchuOmSCHGzpHHGrZ7VzsbcoeSN9FukujYpEkwplF8UR1DLs7BtpZ+irJnLgBfApHyfXre9YW8jCngyiR7OmRrN5b30UoiCLKJ587XcO1sD5Tq0QzqXaPpD7gVRRn6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hMAN6Ig9; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=d7YgfABEmJxwRXZR34nwy8/c4UOPCMLfInx4MnWCfI23wvYiAblUJb4U+oJBE82+9V4sDxn9BFFpAoo6JY2RrmUc2YhVLCZ6JCaNXEiZCXe55aeD81MRLRbS3yObCWyQgQc+PeZDROnT8KsQGCy7cQpkw8We+Cq5YQqP+o/N10I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IPq2eF7W; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hMAN6Ig9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C1581F00A3E;
-	Thu, 13 Aug 2026 22:29:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IPq2eF7W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 856231F000E9;
+	Thu, 13 Aug 2026 23:56:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786660194;
-	bh=fVt9A4V2+ncc5e5YSSLVy1qklF5kQLpZmRIofA78btA=;
+	s=k20260515; t=1786665378;
+	bh=XDp6j5gESO84iIYLuBdEUj4hgKcOAK/VkhllQTop9UQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hMAN6Ig9xC+GccRYBLrUGBIKANU3a2J0t6V/oplHImUGe8wYSmkoOPNIxr6TeCSD/
-	 yZG6otJgcFChf9SUzvGkrk3ZbTDtkoOJpAqJf54ml0aVvi8H7zVPlC9GUXrCFhqXW2
-	 00Ru5KmBmSZqeuMpaJtyhd9gx/g01UBfLG1dSgAotlma19a8DoNlXglhuSL7HoGOz2
-	 UtrryRpjrcBo/bRh5O2J73iAl3VTvX/UTTqvskkM2LfKz7WCiIzpBrHOLuWLoDXt6R
-	 sLH7SG8mZzZy8FQGUofT39IDVM9QJ+u2l+2HgAzyn8QfG4e5/I8Ia21l2dfHRcdefE
-	 lXSvcAL4Yf6Sg==
+	b=IPq2eF7Wrt8owWoM1UKuT5Is6BsmrJdW4vpnX/r3GvyrkTJ1mK3N1Yez1YvualFyi
+	 6lP5rFORaUvoZJ1e3zLXG+B2L5h4Pu0UPQG2hCOLRR6PE4YwreiTsvRpXagy2sxyUH
+	 +VXbA3SgaYXiLCBtPj0n9OXX/gWpYefZMTqQjrxQVUmBVVay1w5IeA6QVIL0y67MGq
+	 vViB2paEJmggeaSXpuM5RY5xYZtjVMDWgUj5J4FP4WNbjJ84hzW1H/aGPRNv6sLeLc
+	 5M/pBbij5dN4tlUd0tNRsFUEHFHXCCg1gv/uhz6Wa881V+sVyacVBvDfpyriGy+A/6
+	 2cDlx4XRvl6EA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 06/12] scsi: ufs: core: Add helpers to pause and
- resume command processing
+Subject: Re: [PATCH 2/5] ibmvfc: Add NOOP command support
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Can Guo" <can.guo@oss.qualcomm.com>
+To: "Dave Marquardt via B4 Relay" <devnull+davemarq.linux.ibm.com@kernel.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260321031021.1722459-7-can.guo@oss.qualcomm.com>
-References: <20260321031021.1722459-7-can.guo@oss.qualcomm.com>
+In-Reply-To: <20260408-ibmvfc-fpin-support-v1-2-52b06c464e03@linux.ibm.com>
+References: <20260408-ibmvfc-fpin-support-v1-2-52b06c464e03@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 22:29:49 +0000
-Message-Id: <20260813222950.8C1581F00A3E@smtp.kernel.org>
+Date: Thu, 13 Aug 2026 23:56:17 +0000
+Message-Id: <20260813235618.856231F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,128 +45,90 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] AB-BA deadlock between block layer tagset quiesce and clk_scaling_=
-lock during concurrent device management commands.
-- [High] Missing ufshcd_hold() allows concurrent UIC commands and Hibern8 t=
-ransitions from the clock gating worker.
-- [High] Incomplete quiescence allows BSG and TMF commands to disrupt hardw=
-are state during paused operations.
+- [High] Missing empty list check in `ibmvfc_noop_test` causes a kernel pan=
+ic if no VFC hardware is present.
+- [Medium] The KUnit test spuriously fails if the physical adapter or VIOS =
+does not support the NOOP capability.
+- [Low] Passing `NULL` to `cpu_to_be64()` triggers an incompatible integer-=
+to-pointer conversion warning.
 --
 
---- Patch [6]: [PATCH v4 06/12] scsi: ufs: core: Add helpers to pause and r=
-esume command processing ---
-commit fb401ec0f2366dbaa8f0c8881fcde7ff615bb4d2
-Author: Can Guo <can.guo@oss.qualcomm.com>
+--- Patch [2]: [PATCH 2/5] ibmvfc: Add NOOP command support ---
+commit e47751d42fb9d0e5cf4c7d82f8f6ec6ab8f6405c
+Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ufs: core: Add helpers to pause and resume command processing
+ibmvfc: Add NOOP command support
 
-In preparation for supporting TX Equalization refreshing, introduce helper
-functions to safely pause and resume command processing.
-ufshcd_pause_command_processing() ensures the host is in a quiescent state,
-and ufshcd_resume_command_processing() restores it.
+This commit adds support for the VFC_NOOP command to the ibmvfc driver. It
+updates the capabilities sent during login to include NOOP support and
+handles NOOP CRQs. It also adds a KUnit test for the new command.
 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index b2050281f3f89..71bda9dd60729 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
+/ibmvfc_kunit.c
+> index 1c238896049f8..3359e4ebebe29 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+
 [ ... ]
-> @@ -1364,6 +1364,48 @@ static int ufshcd_wait_for_pending_cmds(struct ufs=
-_hba *hba,
->  	return ret;
+
+> @@ -79,8 +79,35 @@ static void ibmvfc_handle_fpin_event_test(struct kunit=
+ *test)
+>  	}
 >  }
 > =20
 > +/**
-> + * ufshcd_pause_command_processing - Pause command processing
-> + * @hba: per-adapter instance
-> + * @timeout_us: timeout in microseconds to wait for pending commands to =
-finish
+> + * ibmvfc_noop_test - unit test for VFC_NOOP command
+> + * @test: pointer to kunit structure
 > + *
-> + * This function stops new command submissions and waits for existing co=
-mmands
-> + * to complete.
-> + *
-> + * Return: 0 on success, %-EBUSY if commands did not finish within @time=
-out_us.
-> + * On failure, all acquired locks are released and the tagset is unquies=
-ced.
+> + * Return: void
 > + */
-> +int ufshcd_pause_command_processing(struct ufs_hba *hba, u64 timeout_us)
+> +static void ibmvfc_noop_test(struct kunit *test)
 > +{
-> +	int ret =3D 0;
+> +	struct ibmvfc_host *vhost;
+> +	struct list_head *queue;
+> +	struct ibmvfc_crq crq;
+> +	struct list_head *headp;
+> +	LIST_HEAD(evtq);
 > +
-> +	mutex_lock(&hba->host->scan_mutex);
-> +	blk_mq_quiesce_tagset(&hba->host->tag_set);
+> +	headp =3D ibmvfc_get_headp();
+> +	queue =3D headp->next;
+> +	vhost =3D container_of(queue, struct ibmvfc_host, queue);
 
 [Severity: High]
-Does quiescing only the SCSI host tagset leave the independent Task Managem=
-ent
-(hba->tmf_queue) and BSG (hba->bsg_queue) queues active?
+Does this code dereference a wild pointer if no VFC hardware is present?
 
-A userspace application could concurrently issue operations via the BSG dev=
-ice
-node, bypassing the scan_mutex and clk_scaling_lock, and write directly to
-hardware doorbell registers (REG_UTP_TASK_REQ_DOOR_BELL and REG_UIC_COMMAND)
-while the controller is undergoing maintenance.
-
-> +	down_write(&hba->clk_scaling_lock);
-
-[Severity: High]
-Does quiescing the tagset before waiting on clk_scaling_lock create an AB-BA
-deadlock with concurrent device management commands?
-
-If a concurrent device management operation calls ufshcd_dev_man_lock() and
-acquires down_read(&hba->clk_scaling_lock), it then submits a request to the
-pseudo_sdev via blk_execute_rq().=20
-
-Because the pseudo_sdev shares the SCSI host tagset which was just quiesced
-above, the request is queued but never dispatched. Since it is never
-dispatched, the block layer timeout timer never starts. The management
-operation waits infinitely in wait_for_completion() holding the
-clk_scaling_lock, while this pause function waits infinitely here for the
-same lock.
+Unlike the previous test which safely aborts using
+KUNIT_ASSERT_PTR_NE(test, queue, headp), it looks like this test accesses
+headp->next unconditionally. If the list is empty, such as when running in
+a CI environment without physical or virtual IBMVFC adapters, could calcula=
+ting
+the vhost pointer and subsequently dereferencing it crash the test runner?
 
 > +
-> +	if (ufshcd_wait_for_pending_cmds(hba, timeout_us)) {
-> +		ret =3D -EBUSY;
-> +		up_write(&hba->clk_scaling_lock);
-> +		blk_mq_unquiesce_tagset(&hba->host->tag_set);
-> +		mutex_unlock(&hba->host->scan_mutex);
-> +	}
+> +	KUNIT_EXPECT_TRUE(test, ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NOOP_CM=
+D));
+
+[Severity: Medium]
+Will this test spuriously fail if the physical adapter or VIOS firmware is
+older and does not support the NOOP capability? Should the test gracefully
+skip instead of failing in environments without IBMVFC_SUPPORT_NOOP_CMD
+support?
+
 > +
-> +	return ret;
+> +	crq.valid =3D 0x80;
+> +	crq.format =3D IBMVFC_VFC_NOOP;
+> +	crq.ioba =3D cpu_to_be64(NULL);
 
-[Severity: High]
-If this function successfully returns without bumping the PM usage counter
-(e.g., via ufshcd_hold()), couldn't the asynchronous ufshcd_gate_work fire?
+[Severity: Low]
+Does passing NULL to cpu_to_be64() trigger an incompatible integer-to-point=
+er
+conversion warning? NULL is a pointer type, but the byte-swapping macro exp=
+ects
+a 64-bit integer, which might break the build if CONFIG_WERROR is enabled.
 
-Once pending SCSI commands complete, the queue becomes idle and active_reqs
-drops to zero. This allows the clock gating worker to put the link into
-Hibern8 mode and disable clocks, which could disrupt the caller of this pau=
-se
-function if it attempts low-level PHY operations assuming the link is fully
-active.
-
+> +	ibmvfc_handle_crq(&crq, vhost, &evtq);
 > +}
-> +
-> +/**
-> + * ufshcd_resume_command_processing - Resume command processing
-> + * @hba: per-adapter instance
-> + *
-> + * This function resumes command submissions.
-> + */
-> +void ufshcd_resume_command_processing(struct ufs_hba *hba)
-> +{
-> +	up_write(&hba->clk_scaling_lock);
-> +	blk_mq_unquiesce_tagset(&hba->host->tag_set);
-> +	mutex_unlock(&hba->host->scan_mutex);
-
-[Severity: High]
-If ufshcd_hold() is added to ufshcd_pause_command_processing(), would a
-matching ufshcd_release() be needed here to restore normal clock gating?
-
-> +}
-> +
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260321031021.1722=
-459-1-can.guo@oss.qualcomm.com?part=3D6
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260408-ibmvfc-fpi=
+n-support-v1-0-52b06c464e03@linux.ibm.com?part=3D2
