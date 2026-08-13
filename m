@@ -1,108 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from pdx-out-001.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-001.esa.us-west-2.outbound.mail-perimeter.amazon.com [44.245.243.92])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9350486341
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2026 07:39:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF1B73A0B31;
+	Thu, 13 Aug 2026 08:44:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.245.243.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786606748; cv=none; b=Dva6C7RYJ21ElKe/H657HOr2Y/xZ/bNCBH2nuprJrv9L4v+6tfpPcyQAkqsVtGYaIaN+2oIr9HSJkrVTpFovYV/RwJ+z71/jGSZjbqnow5Z/QmMbLEi4Ct5N2pTfu4C+36gFfeHnEI/3cipco/HdoR2SDFxMmriPuj+HprzOU7E=
+	t=1786610693; cv=none; b=LaFyqxdKQRAoye7FQfYcPJUnaUlVLjy2mo9CzvEF0BgF+eGlGL+R3G3XqG9nwq3JuBLSqtjnIDPN/5RlcE+LaLEDguRU7cAwO6TjsoYd6Qa2Do62Ie4SLal6BKBa1xuw+lpv8suTUuPHZCdvq0AxPhTgp8MYIqYPgLC+A2YG1+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786606748; c=relaxed/simple;
-	bh=vPrj9PiuOYnywtnmHrONRdjIpLBRKCY9/9HIbIEOmlE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HcWgI40oI5DClrS9zhSeQaAbHImgkp3lZt+3kwfNn6hTp5/IVFfOGmcVef4ZRGhjhT0oqJcuJN/vgXDCMlxwKmQZvmxAQ9IVBvij87UnL0XmKmcIxdxp3viPG9P+yvAmRqFts4TUhFmbXMxsV9pyYBRNedF5m54EfzCNqVe8ZrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ecBD3RZQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786610693; c=relaxed/simple;
+	bh=s2YcNA3pSwZVRLtP7sx7m5aGigPGHbMlBHx7GY3qLd4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Y1Qy0ebh9wu9XOCPR/DCmOA2fdIGkxfuS8YEokzvLyz8edDEB91jx7AZZPvaCBV4cUdmbABOWoZEvq6y6dq+cbPvcBJMTKSg0KNCrNYPhaRV3QRrZVtZiAinF6wc2ASJ0sib8eLzcvJS24YQfrfkd3lmIbXTJG6mpM70Q33UY5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.co.uk; spf=pass smtp.mailfrom=amazon.co.uk; dkim=pass (2048-bit key) header.d=amazon.co.uk header.i=@amazon.co.uk header.b=Uv6atdtP; arc=none smtp.client-ip=44.245.243.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.co.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.co.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ecBD3RZQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24F541F000E9;
-	Thu, 13 Aug 2026 07:39:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786606747;
-	bh=kMRkpK9u12Gy9idMVldVnWsh4v1I6D8d/GKMo7JzofA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ecBD3RZQaDd2tVfykPReV2lebwaqzlBMmkNIfB85/sb+k2BEHSj+KW9SnmLgS4wyY
-	 +g+qEkixr+U47mI3W0uxpl59RP8biNbuLZgrkmPABCxYcSwFtNbxY4qOg4iju12uSe
-	 xiOe6t+ngbiCOcXmVCro9nuBubR9lMIDb7t7jyatAisCyMnkLRaoPcO8gfutkED7mm
-	 oiuMihyaRaqyDwcg09w46p1nVd/zpjacirsBxoQqI1ZMEQj4OGDk2gkH9OsRyxnGgm
-	 pDvjAuWXEyg58B839go3pK7oSe2gsUZ8S6CTIQPcdPFSiEeDg+sVETC8i2xhS/4/jk
-	 JXVSKPTuv3kBA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] scsi: leapraid: serialize firmware log mmap with
- teardown
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Linmao Li" <lilinmao@kylinos.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260813072614.1387555-3-lilinmao@kylinos.cn>
-References: <20260813072614.1387555-1-lilinmao@kylinos.cn>
- <20260813072614.1387555-3-lilinmao@kylinos.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 13 Aug 2026 07:39:06 +0000
-Message-Id: <20260813073907.24F541F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=amazon.co.uk header.i=@amazon.co.uk header.b="Uv6atdtP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.co.uk; i=@amazon.co.uk; q=dns/txt;
+  s=amazoncorp2; t=1786610691; x=1818146691;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=03SX7fNUva996hdLSsqy/qFlfniBH89rSrd5zkxNHfs=;
+  b=Uv6atdtP47MjlpKDhJqpWpksw/I319Yjo/katYjIVS9zemSbCJZ3duqO
+   EWPBJ/vGXLnUKim2qcjBCZTfn/nEe8rLNI7AoxlWsXcGVpQhKgFjs8iFq
+   BBpbPnPZAPeM763nRO6H+EkoaMn4DLqAM5qT8JVgAH8l6WP0lm/lOzcwJ
+   PwSZ8vROHrQRtFVLI+M7OCT1HtgVuXondKxhKvTqvg76ZpPksybrUpM2R
+   uSJi4BqsrOz4uyfKngGvPwrk4KT0uwBWL+gVeq5xqv//GcrVTiV5wu87J
+   R8QS5y5Rs11M/KT+AL7djQWHm5vsaO7q7jkURdppgq6Vr3M2XgDLJjGwu
+   Q==;
+X-CSE-ConnectionGUID: VDArIwv0Rg+iRDPALpKSww==
+X-CSE-MsgGUID: 4Su1cxHVSTS1cmnQU/mlYw==
+X-IronPort-AV: E=Sophos;i="6.25,221,1779148800"; 
+   d="scan'208";a="25364058"
+Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
+  by internal-pdx-out-001.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2026 08:44:48 +0000
+Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.111:27488]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.54.183:2525] with esmtp (Farcaster)
+ id 7b48b8dc-376f-4c2d-b788-44b780cb2652; Thu, 13 Aug 2026 08:44:48 +0000 (UTC)
+X-Farcaster-Flow-ID: 7b48b8dc-376f-4c2d-b788-44b780cb2652
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45;
+ Thu, 13 Aug 2026 08:44:48 +0000
+Received: from dev-dsk-jaspwise-1b-5558f826.eu-west-1.amazon.com
+ (10.13.227.24) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.45; Thu, 13 Aug 2026
+ 08:44:46 +0000
+From: Jasper Wise <jaspwise@amazon.co.uk>
+To: <mst@redhat.com>, <jasowangio@gmail.com>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+CC: <pbonzini@redhat.com>, <stefanha@redhat.com>, <eperezma@redhat.com>,
+	<virtualization@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <nh-open-source@amazon.com>
+Subject: [PATCH] scsi: virtio_scsi: set DRIVER_OK before registering the SCSI host
+Date: Thu, 13 Aug 2026 08:44:05 +0000
+Message-ID: <20260813084405.610322-1-jaspwise@amazon.co.uk>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D036UWC001.ant.amazon.com (10.13.139.233) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+virtscsi_probe() registers the SCSI host, and scsi_add_host() adds the
+class device carrying the host's write-only "scan" attribute. A write to it
+reaches scsi_scan_host_selected(), which submits INQUIRY commands on a
+request virtqueue, notifying the device.
 
-Pre-existing issues:
-- [High] Device removal and module unloading can be permanently blocked by =
-a userspace process holding an open memory mapping.
---
+virtscsi_probe() calls virtio_device_ready() only after scsi_add_host() has
+returned, by which point that attribute is already writable. The virtio
+spec is explicit about that ordering in 3.1 Device Initialization:
+  |  The driver MUST NOT send any buffer available notifications to the
+  |  device before setting DRIVER_OK.
 
---- Patch [2]: [PATCH v2 2/2] scsi: leapraid: serialize firmware log mmap w=
-ith teardown ---
-commit 3180bb0e1579b0aca65c2e7927f3bdc91744a626
-Author: Linmao Li <lilinmao@kylinos.cn>
+Set DRIVER_OK before registering the host, as done for the same reason in
+commit f5866db64f34 ("virtio_console: enable VQs early") and commit
+1d774589f924 ("i2c: virtio: mark device ready before registering the
+adapter"). scsi_add_host() can fail and now runs with DRIVER_OK set, so
+reset the device on that path using the driver's existing
+virtscsi_remove_vqs() helper; the core does not reset it when probe fails.
 
-scsi: leapraid: serialize firmware log mmap with teardown
+Fixes: 4fe74b1cb051 ("[SCSI] virtio-scsi: SCSI driver for QEMU based virtual machines")
+Signed-off-by: Jasper Wise <jaspwise@amazon.co.uk>
+---
+ drivers/scsi/virtio_scsi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-This patch addresses a race condition where a firmware log buffer could be
-freed during device removal while a concurrent mmap operation is
-establishing a userspace mapping. It claims a temporary mmap reference
-while looking up the adapter, and drops it on the exit path.
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 5fdaa71f0652..b394de0335d8 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -976,12 +976,12 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	}
+ #endif
+ 
++	virtio_device_ready(vdev);
++
+ 	err = scsi_add_host(shost, &vdev->dev);
+ 	if (err)
+ 		goto scsi_add_host_failed;
+ 
+-	virtio_device_ready(vdev);
+-
+ 	for (int i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++)
+ 		INIT_WORK(&vscsi->event_list[i].work, virtscsi_handle_event);
+ 
+@@ -991,7 +991,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	return 0;
+ 
+ scsi_add_host_failed:
+-	vdev->config->del_vqs(vdev);
++	virtscsi_remove_vqs(vdev);
+ virtscsi_init_failed:
+ 	scsi_host_put(shost);
+ 	return err;
 
-> diff --git a/drivers/scsi/leapraid/leapraid_app.c b/drivers/scsi/leapraid=
-/leapraid_app.c
-> index 841027ce2501c..790a3191e9259 100644
-> --- a/drivers/scsi/leapraid/leapraid_app.c
-> +++ b/drivers/scsi/leapraid/leapraid_app.c
-[ ... ]
-> @@ -771,6 +773,9 @@ static int leapraid_fw_mmap(struct file *filp, struct=
- vm_area_struct *vma)
-> =20
->  	rc =3D 0;
->  out_put:
-> +	if (adapter &&
-> +	    atomic_dec_and_test(&adapter->fw_log_desc.mmap_refcnt))
-> +		wake_up(&adapter->fw_log_desc.mmap_waitq);
+base-commit: f5098b6bae761e346ebcd9da7f95622c04733cff
+-- 
+2.50.1
 
-[Severity: High]
-This is a pre-existing issue, but can this userspace-controlled reference
-count block device removal and module unloading permanently?
-
-Since a userspace process can hold the VMA open indefinitely, and device
-removal waits unconditionally in leapraid_fw_log_exit() for the count to
-reach zero:
-
-drivers/scsi/leapraid/leapraid_func.c:leapraid_fw_log_exit() {
-    ...
-    wait_event(adapter->fw_log_desc.mmap_waitq,
-               !atomic_read(&adapter->fw_log_desc.mmap_refcnt));
-    ...
-}
-
-Could a buggy or malicious userspace process that never unmaps the memory
-cause the kernel thread handling PCI hotplug or sysfs unbind to hang
-forever without a timeout?
-
->  	leapraid_ctl_put_adapter(adapter);
->  	return rc;
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260813072614.1387=
-555-1-lilinmao@kylinos.cn?part=3D2
