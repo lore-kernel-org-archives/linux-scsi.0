@@ -1,108 +1,142 @@
-Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com [209.85.222.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m32113.qiye.163.com (mail-m32113.qiye.163.com [220.197.32.113])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74B65395AE2
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2026 07:10:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1A86330301;
+	Thu, 13 Aug 2026 07:12:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.113
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786605001; cv=none; b=lXC3IIMa6Tx6NyYxSM6q9QPCvjF1fZFC/8nGu0SbbXLpIrQ0J3RuZy0f2N/S3GR0jZeSJcx2tE0qjMlZUHhl3tZHNdkzlivzulNSBJAECPZoIOgwZgIpWJjqZQjEIY3rU4sPsAW4/jvsuPtL1UUyWU+q3M+6dlIP+z3V0FLCgdM=
+	t=1786605130; cv=none; b=Z3xu7LyR6nIm8/fE7waDovB7e9dobfj3A2EVxqG4RyHaQqANn640coT6Vy+EySIOkhBzPFwTaraTIJ5j2duvTJvsrxqFlXVUXA223iGfU6ErpK8RTpljX+cVwiTSghGQ/gKkUxpB0m7kyoflSjq3cySbLoymDhtdBSRJgj7ylTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786605001; c=relaxed/simple;
-	bh=KJne1rgMDBKjXfe3Af/5iFFfFWNTUfkTo2Zpqz8a9pU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=LQzFMA8hPtjfc2UoUd3AJFHtcrgLFgMAT7mzNx6TrW/SFO/9wdqdAVsens10jXjxhegPctOlcRZY+20q+kFxM+/nuQVT/KbyCDEbzSEyaB1en73w58ELRtN6BdEdTb1Vm6bTCgPpOy/gMa+JJkuMT+NJ+mr4amR+Fdh5I/T6UC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=o7uJwcH5; arc=none smtp.client-ip=209.85.222.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786605130; c=relaxed/simple;
+	bh=YHCvSJNGOvKIH8srICMmwmvs56ymvA0w9uNR6qYykYA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pTh8HyHdcCsRoKGu1Pa/l8SVgiOS8cb6AxSF8h3/dzcR0OWvLcCQzKNFa6sUwbymG3Hrlyj0c8rBnbrYSth1BzWu0J35lYTs5Swi4Wl0R8ECWuif0vUEmjQLZwM9faaZrsq7599OVlKCIf5agDJ4DC82E/hVVEMZ73iRDSdQQwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com; spf=pass smtp.mailfrom=leap-io-kernel.com; dkim=pass (2048-bit key) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.b=FeMCqx4C; arc=none smtp.client-ip=220.197.32.113
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leap-io-kernel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o7uJwcH5"
-Received: by mail-qk1-f179.google.com with SMTP id af79cd13be357-92e5d6f35c1so33197085a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Aug 2026 00:10:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786604999; x=1787209799; darn=vger.kernel.org;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6aycFV7zJuDJkroHf0KclKgoRIxgMjkD8YPBE6IvV4k=;
-        b=o7uJwcH5Ga+Xubnv3VXRZyER73F448t/bO+zDlu8S6QvN05y2sqr+1CqLJOkJKpneI
-         f6jyHTMJVE7QqX7M9+jbJHeeZFDCWFht9qG+J/PRmY7JXIHYufpVHZhY/pwv3LtkPguN
-         Cl4Q3pOklCMM7D+KyuEP6qdi92wIjw+3wDL8Yul6D5u9PGHeVyoy4KcY5hAng31nppeu
-         XcailLK8EeVIs2Ar60fzVap5N0XCStlmdPvyYPdivoi93r30hukrQwugkUly+5XgPo7K
-         fhFT0z3jESOkAuVTMCjH61fYefzZFSnpic4IjPZXgIcFr64y6cV0ZHdpaASWkRT6/CgH
-         yh2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786604999; x=1787209799;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=6aycFV7zJuDJkroHf0KclKgoRIxgMjkD8YPBE6IvV4k=;
-        b=Hi0OTAVwnk3Cg8dgTp7ceRc5W0psQPzMkKZjdLIddnpF0h+AhAg6gizPdSBQXGXdHt
-         aRzikCxiKSfpdeGp9+NYG4wMEep5KjQT37tL8UMDk9hyPY8jOeIU8copAo0ZGID+dIg3
-         dhCH0VEb8AaehaxTFacIa4Ai+gCXaYnKMuYZRNRxmLns8y2gicftO/GYfEkMuzNAMZi6
-         go4fim5olZyvGLBKzWYsOiM1oPgmPDb2JPJDUQ0yXR1SZ6i+lbaKO6eOSsFa5wMPO7AM
-         c9n2udP+Vq3YISNO9i149VpzidwIG0L5XdA6q171jgXSiDhsU+fGuutpXSc7pd5vzfmM
-         bVTw==
-X-Forwarded-Encrypted: i=1; AHgh+RqPA0Gwl4oCVGBLCr7QCO5CW1Toee7GEIguBk0LVg7G2NL+qSlitkJTbfIH/0qcbdAdKmE52+JBJP7s@vger.kernel.org
-X-Gm-Message-State: AOJu0YzmJZw1EeFzUWiiM+dxT5+yflxoFNi13/mmSmuuerDLMVIEjpSI
-	DNHO+YcWFUt3xPj5Z9HNnpuvZBHJB0wmxjhhxL2OWG2kkDFZbpeJF9M6
-X-Gm-Gg: AR+sD124YAvi4BZPla7fUaiG9JHcjBu61gKVHQuFxu49sWfxLNcy8VjCmMKa6fA1Ijy
-	1nIwpxRAwCdLkagjRQOwSg4tophwF2wgaySvEN7axQeT9CpvcBgx9vNiJUV1FbOu9gzcy1LRqDR
-	r3A9aZMe6A92As6QwkrbOkmfT48ZwjixxINaQjIk3Qx0klaMz2RIco0v1kECDbw5375b6hfRsZt
-	L54P82gOq+jnzFvfK8o2f6oTOrawhYMgWjiuYBH8v+7j7napzdkSbei2q/SaYV7h+GNPEwie+S3
-	A2pSfaNuJkKGxLP3yahKkhIhJH/0JTux999MXWO0eKuKYGyVeCG0NB5pW8+5pgC/MkFcCqJB6IP
-	QwtdemqrQ5UjICWNZMzE+qtc2YQTdf8kWGOTZRYtnTAeoaxw8FhSmc+Ek/KMZ40z6vxfBKAwfYF
-	JrqWwRqfg4kR05E3x1Kjnx0Lh7tX5I3d/LyAOnutCNQleQcdDfbF5Y
-X-Received: by 2002:a05:620a:5239:b0:930:b5e8:a40e with SMTP id af79cd13be357-936bfa79328mr242969785a.23.1786604999245;
-        Thu, 13 Aug 2026 00:09:59 -0700 (PDT)
-Received: from localhost ([37.19.206.57])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-936c1b667e9sm86527985a.38.2026.08.13.00.09.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Aug 2026 00:09:58 -0700 (PDT)
-Date: Thu, 13 Aug 2026 10:09:53 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Atul Deshmukh <atul.deshmukh@qlogic.com>
-Cc: Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Saurav Kashyap <saurav.kashyap@qlogic.com>,
-	James Bottomley <JBottomley@parallels.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: qla2xxx: Fix an loop timeout test
-Message-ID: <an1twcxTYSFkkUTA@stanley.mountain>
+	dkim=pass (2048-bit key) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.b="FeMCqx4C"
+Received: from [IPV6:2001:da8:e800:71f4:5c8e:2823:7a5:5139] (unknown [IPV6:2001:da8:e800:71f4:5c8e:2823:7a5:5139])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 49d523870;
+	Thu, 13 Aug 2026 14:36:27 +0800 (GMT+08:00)
+Message-ID: <719a2f4c-0198-4d80-8184-5bd5aaa73dfd@leap-io-kernel.com>
+Date: Thu, 13 Aug 2026 14:36:25 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] scsi: leapraid: serialize firmware log mmap with
+ teardown
+To: Linmao Li <lilinmao@kylinos.cn>, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: hare@kernel.org, dlemoal@kernel.org, linux-kernel@vger.kernel.org
+References: <20260811112001.1158587-1-lilinmao@kylinos.cn>
+ <20260811112001.1158587-3-lilinmao@kylinos.cn>
+From: Hao Dongdong <doubled@leap-io-kernel.com>
+In-Reply-To: <20260811112001.1158587-3-lilinmao@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9ff9d61faf03aekunm631be5fd55ce1a
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCSUlDVk8YQxhDHhkZGR1NGlYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlJS0tKQR8aQ0EeQ0tLQUxKHU9BThhDHkFJQ0lIQUwaTk
+	FOSkhCWVdZFhoPEhUdFFlBWU9LSFVKS0lPT09IVUpLS1VKQktLWQY+
+DKIM-Signature: a=rsa-sha256;
+	b=FeMCqx4CWLyDulyK8/pzvI1nvw1PoKlK2GOBLaEIxVJMXBwCcrB5VXnaIXIxdjJeZ9+KdMeIsC5Ybr19n37YoCm/Tvu8/2yNco+2VU8oftc93+XpzALttpQRpuPztPgQu7wGDheTjxKHfpmR//LAw1EcRipvuE1ipm0CogytvF/s6qEtmp5VFv2Dy8K8oK8IrS1Sqj7AroAEhWIxcdZNmYDP5Se9OGW2NVqWMWWqLGJarp3TYmhoqriDf9iff04+C7SrWt4971/P/+Mj9U4g8SJA58HiZSgFy+wvGMHjwvAVnoeu/f1G7Qk4iqT7odLqczEnlCKJYIi9SM5pmdIHNA==; c=relaxed/relaxed; s=default; d=leap-io-kernel.com; v=1;
+	bh=jNqkXuuWzYztlEg1iZKK/WBpPZ9ME5Rx7ycV/xXobek=;
+	h=date:mime-version:subject:message-id:from;
 
-This loop timeout with "retries" set to -1, not 0.  Fix the test
-for failure.
+在 2026/8/11 19:20, Linmao Li 写道:
+> leapraid_fw_log_exit() waits for mmap_refcnt to reach zero before it
+> frees the firmware log buffer.  leapraid_fw_mmap() checks
+> host_removing, but it does not increment mmap_refcnt until after
+> dma_mmap_coherent() succeeds and the VMA open callback runs.
+> 
+> Removal can set host_removing and observe a zero mmap_refcnt between
+> the check and the VMA open.  It can then free the coherent buffer while
+> the mmap path is still establishing a userspace mapping of it.
+> 
+> Claim a temporary mmap reference while looking up the adapter under
+> leapraid_adapter_lock.  Removal deletes the adapter from the same
+> locked list after setting host_removing, so a mapping is either
+> rejected or included in the count that removal waits for.  Drop the
+> temporary reference on the common exit path, after a successful VMA
+> open has acquired the reference covering the VMA lifetime.
+> 
+> Fixes: 5597088c9e79 ("scsi: leapraid: Add new SCSI driver")
+> Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
+> ---
+>  drivers/scsi/leapraid/leapraid_app.c | 12 +++++++++---
+>  1 file changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/leapraid/leapraid_app.c b/drivers/scsi/leapraid/leapraid_app.c
+> index 841027ce2501c..c124f9eaea6ea 100644
+> --- a/drivers/scsi/leapraid/leapraid_app.c
+> +++ b/drivers/scsi/leapraid/leapraid_app.c
+> @@ -171,7 +171,8 @@ static int leapraid_ctl_validate_sge_offset(struct leapraid_adapter *adapter,
+>  	return 0;
+>  }
+>  
+> -static struct leapraid_adapter *leapraid_ctl_lookup_adapter(int adapter_id)
+> +static struct leapraid_adapter *
+> +leapraid_ctl_lookup_adapter(int adapter_id, bool track_mmap)
 
-Fixes: 7ec0effd30bb ("[SCSI] qla2xxx: Add support for ISP8044.")
-Signed-off-by: Dan Carpenter <error27@gmail.com>
----
- drivers/scsi/qla2xxx/qla_nx2.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Linmao,
 
-diff --git a/drivers/scsi/qla2xxx/qla_nx2.c b/drivers/scsi/qla2xxx/qla_nx2.c
-index 41ff6fbdb933..04d7ab6ad037 100644
---- a/drivers/scsi/qla2xxx/qla_nx2.c
-+++ b/drivers/scsi/qla2xxx/qla_nx2.c
-@@ -3507,7 +3507,7 @@ qla8044_poll_flash_status_reg(struct scsi_qla_host *vha)
- 		msleep(QLA8044_FLASH_STATUS_REG_POLL_DELAY);
- 	}
- 
--	if (!retries)
-+	if (retries == -1)
- 		ret_val = QLA_FUNCTION_FAILED;
- 
- 	return ret_val;
--- 
-2.53.0
+Thank you for identifying and fixing this race. Your analysis and fix
+are correct.
 
+I have only one minor comment: why the line break here? This declaration
+fits within the line-length limit, so please keep the return type and
+function name on the same line to follow the usual kernel coding style.
+
+With this minor formatting issue addressed, I will be happy to accept
+the patch. Thanks again!
+
+Best regards,
+Dongdong
+
+>  {
+>  	struct leapraid_adapter *adapter;
+>  	struct Scsi_Host *shost;
+> @@ -184,6 +185,8 @@ static struct leapraid_adapter *leapraid_ctl_lookup_adapter(int adapter_id)
+>  			shost = adapter->shost;
+>  			if (!shost || !scsi_host_get(shost))
+>  				break;
+> +			if (track_mmap)
+> +				atomic_inc(&adapter->fw_log_desc.mmap_refcnt);
+>  			spin_unlock(&leapraid_adapter_lock);
+>  			return adapter;
+>  		}
+> @@ -589,7 +592,7 @@ static int leapraid_ctl_ioctl_main(struct file *file, unsigned int cmd,
+>  		return -EFAULT;
+>  	}
+>  
+> -	adapter = leapraid_ctl_lookup_adapter(ioctl_header.adapter_id);
+> +	adapter = leapraid_ctl_lookup_adapter(ioctl_header.adapter_id, false);
+>  	if (!adapter)
+>  		return -EFAULT;
+>  
+> @@ -728,7 +731,7 @@ static int leapraid_fw_mmap(struct file *filp, struct vm_area_struct *vma)
+>  
+>  	length = vma->vm_end - vma->vm_start;
+>  
+> -	adapter = leapraid_ctl_lookup_adapter(adapter_id);
+> +	adapter = leapraid_ctl_lookup_adapter(adapter_id, true);
+>  	if (!adapter) {
+>  		pr_err("%s: No adapter found!\n", __func__);
+>  		return -EINVAL;
+> @@ -771,6 +774,9 @@ static int leapraid_fw_mmap(struct file *filp, struct vm_area_struct *vma)
+>  
+>  	rc = 0;
+>  out_put:
+> +	if (adapter &&
+> +	    atomic_dec_and_test(&adapter->fw_log_desc.mmap_refcnt))
+> +		wake_up(&adapter->fw_log_desc.mmap_waitq);
+>  	leapraid_ctl_put_adapter(adapter);
+>  	return rc;
+>  }
