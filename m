@@ -1,137 +1,458 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 129F7480DED
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 17:51:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E2CC367F36
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 20:24:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786729873; cv=none; b=sG9lwqpvWFmVUS2RPE/s/FDnI6g50vG5kkFnzq6/jRcZ3KQq/BwbAzrzP51CGtERsY5nm4Kk4wtFj01cblBCVPvpVIa7MGpStpwl/yshBN+EBqbyP4m4g5PFYSv6yuH+VohH5T8q6ClsvEPHSXyxo63rdUh920Kxs1odOHujf8E=
+	t=1786739069; cv=none; b=kYr4TlgnfOpFhOQvvbZiBtqS4l0tmC8kKf9dyRGzBFSxHG/BBazOUGVy0NB28i6IZGyaWsFw0qMKT+FxcFzn+8F+vDhXVZYSJUYmVnT3//at49YUgcufXQC9GcfVZlzQWlgcVhSgyuoryDTwmnqS66vWpVpWsRTViZweKn4Moyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786729873; c=relaxed/simple;
-	bh=BMmk0tMym7+viEAbSql3mofBm0kxHpAm2sPAPX9FeDQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=EQK3uq6Z0GJwNquIgcfTBx/rTQLTtpPfPLJulTBnTnyBnyc3bzIhHOXSpbJ9TOaSedGF+qJlSbYVL84mmNx4Tn0q6NU98JxWc+FzvzAB8kCcoTw3idWb7jlz1/7W/Gcf96LoEMsl4SEJ/6yQnacLK/Wusmv15FFRkJ05K8AJj3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=N+sxAeEb; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=isOkYdpF; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1786739069; c=relaxed/simple;
+	bh=Xnctre02zLXhejxbGn1MbEBfs+2d8gHS1n+vXzGfnaA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gt1PBPdc0j1/mgpYxGyH8zFsApgBVwqKuuO1G3/V9rAwAF3F51u1VkVe86UUJ/AzwGwbHk3qTPc7rJntijJ2p36PyjuHR6Ds3XF3uuoEqdhmOTCK67TYey+zQRC+nha4eZvs7lHR8s09w7wOUorylFEANNqcAQT8gM15KH2O1hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dC6Dcs4+; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N+sxAeEb";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="isOkYdpF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786729870;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=t/7J9iFZ/zyBKdui9xdbgNhSJDRiyBqfyVHmdu7/Up0=;
-	b=N+sxAeEbf1Wrw6ogKZ7z3EA3b0Z/tcPTwz6rnqd41aXcqG64L6TyRGIch3GvPfZfiKwQpW
-	1D3bK1VJxmqAWzoAhIDWPHaKpRJhTNWZJnQSWeV+hUz0/+pDsOr3nQuZgfoPhAXKDstSf1
-	kVOzDVO4Nw+cDVa/JLSiBwlGgNyF3P0=
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
- [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-395-qkrgfHZVMfWyzXpkQCBtzA-1; Fri, 14 Aug 2026 13:51:04 -0400
-X-MC-Unique: qkrgfHZVMfWyzXpkQCBtzA-1
-X-Mimecast-MFC-AGG-ID: qkrgfHZVMfWyzXpkQCBtzA_1786729864
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93494cce712so148855285a.3
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 10:51:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1786729864; x=1787334664; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=t/7J9iFZ/zyBKdui9xdbgNhSJDRiyBqfyVHmdu7/Up0=;
-        b=isOkYdpF1fS2WiPG0Be/43BFARdJ19vsQa11kUxBI+gsUILThnL9Ors0MvRmW5lLPV
-         CHqrOOLKun9tGk6ouaMk2Ov01qj/O/6w9tFaci/AktU3My2aDTkZfa5npZonL10YktcX
-         0KR3muDyTzKwIsGZeaPtWTe8rCOiHffL2Rd3GB83qDZmmxCv/XrVXCw5krMeslOZ/wWK
-         fuQg//d6v/RI1VOoW8AnZU2mFoZaSfewqwIxwAVrgk1eVGcJeW964yRQyBeUuKs1pyZw
-         hYYjxgeAgQY+rr7xXSKCmuldF1E1U3Sz3WHm12UCgsf2QN95kLXdrWbhzoWNGTXqSFXS
-         AYUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786729864; x=1787334664;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=t/7J9iFZ/zyBKdui9xdbgNhSJDRiyBqfyVHmdu7/Up0=;
-        b=p9eImUwDyxcbr/JtKULBauLwMeAgAFKo9lbHaKHB8NTIV/UPagg7QRr4fEzGgkUBAc
-         CTnkSyPyfc0KAhDqymauezq0PfvLCM4NrOOd2X2+3XFRdfVm4s3D/uX8IMqkL4g+8EGb
-         QJDF/rzxqd1T+68GFGsTNd4N6mIgFr9Y/ODTuqm/j/mYprMWgmuzW25CPXDBaSvdpIaJ
-         3xdnOcA8aENKyTfbS9D+mL6UCvXK2tmzfumFuF0LVgYumVnyg7MDp8qtQTFxuo2QcSU6
-         6Hsas1LGDwWHxrc3GIHttWx8456i0u3TnuWcNc5y5Z6xVO5axB1YVzhnzdCl6H5aF/Rt
-         wh3A==
-X-Forwarded-Encrypted: i=1; AHgh+Rp+hl4c0PdQadIwLW/C/N8WmPp0wLw3srSayA3C5gdaHQUhL6fiJWRDrHiHzF3IvRzo1BQcNRpF9FHo@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy9jW5bxfGVw5m5OQMvaQmrq6LixvdSIWD0xJtTsJ73l4R9H30Q
-	NoY/kGHtmTCTq19P7Rsq0E4qS5XXNcmvFPSBmSTIOU6OBzEIGp9LBY1w95n/Z2wlvTBsrVme3X0
-	NA8vrkDp3KQenze53WgOksOH/GPRDwrH1NLetV7l6fwnS+9+RGuPDUxmUJ+d8MCw=
-X-Gm-Gg: AR+sD13z4wVaDmYcI5Ly8GdqgJ/mr22LEsSXvU+/d6dmZWr6Y0U6z0N1TJMM4gaiw8x
-	4Vvk5gARFJcX2P0PqLLvrnzHPpW8Ii5puh9xfa9SK3QKPtElNAC+4YXcMN7cYpbqfsSS3940aPX
-	WKmN8sQg2uoE3demOvdHtAMpbEcrwco/bLaqcOpLpw9i8oEEz5MAMeo9r/jgEJsEGRuz9oiUeyF
-	xUOdHMUEWBLqB/MuuHmCdH5CUb/giosCA/AvS0bc/N+S7WzGpa5zOFMsRjEtXetqtlt/p0vybJE
-	duS6RH2nYdCNKLmJyxlQrjHt9EOTbvSe99xaSvAVPGCmo806lpXj6IUJya0HJtPLlfAQsCwC00v
-	q170KnMoBp6LtpP5NMK549y0Ijy9ATT91yJMF
-X-Received: by 2002:a05:620a:2810:b0:936:e010:5099 with SMTP id af79cd13be357-936e0105466mr332198885a.44.1786729864097;
-        Fri, 14 Aug 2026 10:51:04 -0700 (PDT)
-X-Received: by 2002:a05:620a:2810:b0:936:e010:5099 with SMTP id af79cd13be357-936e0105466mr332191485a.44.1786729863542;
-        Fri, 14 Aug 2026 10:51:03 -0700 (PDT)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:dbb1:97f1:a6e6:766b])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-936ce217c0esm331252985a.32.2026.08.14.10.51.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2026 10:51:02 -0700 (PDT)
-Message-ID: <22ff0bb82c0ce4ace458130d50fa090c0a24557c.camel@redhat.com>
-Subject: Re: [PATCH] scsi: mpt3sas: Avoid freeing unallocated PCIe SGL
- buffers
-From: Laurence Oberman <loberman@redhat.com>
-To: Chandrakanth Patil <chandrakanth.patil@broadcom.com>, 
-	linux-scsi@vger.kernel.org
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Ranjan Kumar
-	 <ranjan.kumar@broadcom.com>
-Date: Fri, 14 Aug 2026 13:51:01 -0400
-In-Reply-To: <20260808151010.185603-1-chandrakanth.patil@broadcom.com>
-References: <20260808151010.185603-1-chandrakanth.patil@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dC6Dcs4+"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hMDGf5B79z1XM5kD;
+	Fri, 14 Aug 2026 20:24:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1786739056; x=1789331057; bh=2g8eSQr0r/43s6kXwVZZ5yKhWkEfT14BBAX
+	wZgYMI0E=; b=dC6Dcs4+yEkKzOR7aa2yy6BnXjdI94amodM5X6FNgxd54IvHh5a
+	Rvd4J5d84wnTP9ognJS7nPGWuHRHvufnsjo8TbezJBnAnhwecafvqOfDvLBHwo4k
+	dL5c/mFQ7AocE1vs1PP/o8+QHtjGEniZiRru0o6N8TtXWTP8B50Hwss63n/1KDeY
+	VOZ9nnnSHyCd+hq+EeLDgF2eor3isOz6F/OS82ThG46BK626wkeHZUeSyE0kSkxk
+	gvMdRnC94pA18h9ctVWAcPqxv0ee5Hmbe+y7wIPEhaIXYR4pxZJSjlaeBaZKbewL
+	Lj1eIAGZlswTG+cTneqFLhT3W9GZblsFnbA==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 8Vb-4-8DRAUm; Fri, 14 Aug 2026 20:24:16 +0000 (UTC)
+Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hMDGQ3pXbz1XM0pS;
+	Fri, 14 Aug 2026 20:24:14 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Hannes Reinecke <hare@suse.de>,
+	John Garry <john.g.garry@oracle.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] scsi: core: Eliminate scsi_log_{reserve,release}_buffer()
+Date: Fri, 14 Aug 2026 20:24:03 +0000
+Message-ID: <0b34db4ad0baadcdf2e223cc1a2c134b4f67ea1a.1786739033.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.55.0.691.gc56d675ccc-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2026-08-08 at 20:40 +0530, Chandrakanth Patil wrote:
-> _base_release_memory_pools() unconditionally frees every
-> ioc->pcie_sg_lookup[] entry, including ones the setup loop never
-> allocated after a partial failure, causing a "bad dma" warning on
-> debug kernels or a NULL pointer dereference otherwise.
->=20
-> Fixes: dbec4c9040ed ("scsi: mpt3sas: lockless command submission")
-> Reported-by: Laurence Oberman <loberman@redhat.com>
-> Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-> ---
-> =C2=A0drivers/scsi/mpt3sas/mpt3sas_base.c | 2 ++
-> =C2=A01 file changed, 2 insertions(+)
->=20
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 79052f2accbd..11bcb8440e1c 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -5870,6 +5870,8 @@ _base_release_memory_pools(struct
-> MPT3SAS_ADAPTER *ioc)
-> =C2=A0
-> =C2=A0	if (ioc->pcie_sgl_dma_pool) {
-> =C2=A0		for (i =3D 0; i < ioc->scsiio_depth; i++) {
-> +			if (!ioc->pcie_sg_lookup[i].pcie_sgl)
-> +				continue;
-> =C2=A0			dma_pool_free(ioc->pcie_sgl_dma_pool,
-> =C2=A0					ioc-
-> >pcie_sg_lookup[i].pcie_sgl,
-> =C2=A0					ioc-
-> >pcie_sg_lookup[i].pcie_sgl_dma);
+The SCSI logging functions allocate a temporary buffer. This approach has
+multiple disadvantages:
+ - Runtime overhead.
+ - Trunctation of log messages to 127 characters.
+ - Messages are discarded if buffer allocation fails.
 
-Was also tested by a customer, Given the Sahishko analysis was
-responded to and a follow up patch for that will be coming:
+Hence this patch that eliminates temporary buffer allocations. Instead,
+use struct va_format (%pV) and format directly with dev_printk().
 
-Reviewed-by: Laurence Oberman ,loberman@redhat.com>
+Introduce sdev_tag_prefix_vprintk() and sdev_tag_prefix_printk() helper
+functions that emit dev_printk() messages with optional device name
+([<name>]) and request tag (tag#<tag>) prefixes.
 
+Convert sdev_prefix_printk(), scmd_printk(), scsi_print_command(),
+scsi_log_dump_sense(), scsi_log_print_sense_hdr(), and scsi_print_result(=
+)
+to use these helpers. Use the %*ph format specifier to format CDB and
+sense hex buffers directly.
+
+Remove scsi_log_reserve_buffer(), scsi_log_release_buffer(), and
+sdev_format_header().
+
+This patch has been generated by asking Gemini 3.7 to eliminate the
+scsi_log_*_buffer() functions from the scsi_logging.c file, followed by
+some minor manual improvements.
+
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: John Garry <john.g.garry@oracle.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_logging.c | 262 ++++++++++++------------------------
+ 1 file changed, 89 insertions(+), 173 deletions(-)
+
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index 3cd0d3074085..5bf2f1c74ec7 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -15,17 +15,6 @@
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_dbg.h>
+=20
+-static char *scsi_log_reserve_buffer(size_t *len)
+-{
+-	*len =3D 128;
+-	return kmalloc(*len, GFP_ATOMIC);
+-}
+-
+-static void scsi_log_release_buffer(char *bufptr)
+-{
+-	kfree(bufptr);
+-}
+-
+ static inline const char *scmd_name(struct scsi_cmnd *scmd)
+ {
+ 	const struct request *rq =3D scsi_cmd_to_rq(scmd);
+@@ -35,48 +24,56 @@ static inline const char *scmd_name(struct scsi_cmnd =
+*scmd)
+ 	return rq->q->disk->disk_name;
+ }
+=20
+-static size_t sdev_format_header(char *logbuf, size_t logbuf_len,
+-				 const char *name, int tag)
++static void __printf(5, 0)
++sdev_tag_prefix_vprintk(const char *level, const struct scsi_device *sde=
+v,
++			const char *name, int tag, const char *fmt,
++			va_list *args)
+ {
+-	size_t off =3D 0;
++	const struct device *dev =3D &sdev->sdev_gendev;
++	struct va_format vaf =3D {
++		.fmt =3D fmt,
++		.va =3D args,
++	};
+=20
+-	if (name)
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-				 "[%s] ", name);
++	if (!sdev)
++		return;
+=20
+-	if (WARN_ON(off >=3D logbuf_len))
+-		return off;
++	if (name) {
++		if (tag >=3D 0)
++			dev_printk(level, dev, "[%s] tag#%d %pV", name, tag,
++				   &vaf);
++		else
++			dev_printk(level, dev, "[%s] %pV", name, &vaf);
++	} else {
++		if (tag >=3D 0)
++			dev_printk(level, dev, "tag#%d %pV", tag, &vaf);
++		else
++			dev_printk(level, dev, "%pV", &vaf);
++	}
++}
+=20
+-	if (tag >=3D 0)
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-				 "tag#%d ", tag);
+-	return off;
++static void __printf(5, 6)
++sdev_tag_prefix_printk(const char *level, const struct scsi_device *sdev=
+,
++		       const char *name, int tag, const char *fmt, ...)
++{
++	va_list args;
++
++	va_start(args, fmt);
++	sdev_tag_prefix_vprintk(level, sdev, name, tag, fmt, &args);
++	va_end(args);
+ }
+=20
+ void sdev_prefix_printk(const char *level, const struct scsi_device *sde=
+v,
+ 			const char *name, const char *fmt, ...)
+ {
+ 	va_list args;
+-	char *logbuf;
+-	size_t off =3D 0, logbuf_len;
+=20
+ 	if (!sdev)
+ 		return;
+=20
+-	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+-	if (!logbuf)
+-		return;
+-
+-	if (name)
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-				 "[%s] ", name);
+-	if (!WARN_ON(off >=3D logbuf_len)) {
+-		va_start(args, fmt);
+-		off +=3D vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
+-		va_end(args);
+-	}
+-	dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
+-	scsi_log_release_buffer(logbuf);
++	va_start(args, fmt);
++	sdev_tag_prefix_vprintk(level, sdev, name, -1, fmt, &args);
++	va_end(args);
+ }
+ EXPORT_SYMBOL(sdev_prefix_printk);
+=20
+@@ -84,24 +81,14 @@ void scmd_printk(const char *level, struct scsi_cmnd =
+*scmd, const char *fmt,
+ 		 ...)
+ {
+ 	va_list args;
+-	char *logbuf;
+-	size_t off =3D 0, logbuf_len;
+=20
+ 	if (!scmd)
+ 		return;
+=20
+-	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+-	if (!logbuf)
+-		return;
+-	off =3D sdev_format_header(logbuf, logbuf_len, scmd_name(scmd),
+-				 scsi_cmd_to_rq(scmd)->tag);
+-	if (off < logbuf_len) {
+-		va_start(args, fmt);
+-		off +=3D vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
+-		va_end(args);
+-	}
+-	dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
+-	scsi_log_release_buffer(logbuf);
++	va_start(args, fmt);
++	sdev_tag_prefix_vprintk(level, scmd->device, scmd_name(scmd),
++				scsi_cmd_to_rq(scmd)->tag, fmt, &args);
++	va_end(args);
+ }
+ EXPORT_SYMBOL(scmd_printk);
+=20
+@@ -179,60 +166,34 @@ EXPORT_SYMBOL(__scsi_format_command);
+=20
+ void scsi_print_command(struct scsi_cmnd *cmd)
+ {
++	char opcode_name[64];
+ 	int k;
+-	char *logbuf;
+-	size_t off, logbuf_len;
+=20
+-	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+-	if (!logbuf)
++	if (!cmd)
+ 		return;
+=20
+-	off =3D sdev_format_header(logbuf, logbuf_len,
+-				 scmd_name(cmd), scsi_cmd_to_rq(cmd)->tag);
+-	if (off >=3D logbuf_len)
+-		goto out_printk;
+-	off +=3D scnprintf(logbuf + off, logbuf_len - off, "CDB: ");
+-	if (WARN_ON(off >=3D logbuf_len))
+-		goto out_printk;
++	scsi_format_opcode_name(opcode_name, sizeof(opcode_name), cmd->cmnd);
+=20
+-	off +=3D scsi_format_opcode_name(logbuf + off, logbuf_len - off,
+-				       cmd->cmnd);
+-	if (off >=3D logbuf_len)
+-		goto out_printk;
+-
+-	/* print out all bytes in cdb */
+ 	if (cmd->cmd_len > 16) {
+ 		/* Print opcode in one line and use separate lines for CDB */
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off, "\n");
+-		dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
++		sdev_tag_prefix_printk(KERN_INFO, cmd->device, scmd_name(cmd),
++				       scsi_cmd_to_rq(cmd)->tag, "CDB: %s",
++				       opcode_name);
+ 		for (k =3D 0; k < cmd->cmd_len; k +=3D 16) {
+-			size_t linelen =3D min(cmd->cmd_len - k, 16);
+-
+-			off =3D sdev_format_header(logbuf, logbuf_len,
+-						 scmd_name(cmd),
+-						 scsi_cmd_to_rq(cmd)->tag);
+-			if (!WARN_ON(off > logbuf_len - 58)) {
+-				off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-						 "CDB[%02x]: ", k);
+-				hex_dump_to_buffer(&cmd->cmnd[k], linelen,
+-						   16, 1, logbuf + off,
+-						   logbuf_len - off, false);
+-			}
+-			dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s",
+-				   logbuf);
++			size_t linelen =3D min_t(size_t, cmd->cmd_len - k, 16);
++
++			sdev_tag_prefix_printk(KERN_INFO, cmd->device,
++					       scmd_name(cmd),
++					       scsi_cmd_to_rq(cmd)->tag,
++					       "CDB[%02x]: %*ph", k,
++					       (int)linelen, &cmd->cmnd[k]);
+ 		}
+-		goto out;
+-	}
+-	if (!WARN_ON(off > logbuf_len - 49)) {
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off, " ");
+-		hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
+-				   logbuf + off, logbuf_len - off,
+-				   false);
++	} else {
++		sdev_tag_prefix_printk(KERN_INFO, cmd->device, scmd_name(cmd),
++				       scsi_cmd_to_rq(cmd)->tag, "CDB: %s %*ph",
++				       opcode_name, (int)cmd->cmd_len,
++				       cmd->cmnd);
+ 	}
+-out_printk:
+-	dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
+-out:
+-	scsi_log_release_buffer(logbuf);
+ }
+ EXPORT_SYMBOL(scsi_print_command);
+=20
+@@ -292,51 +253,29 @@ static void
+ scsi_log_dump_sense(const struct scsi_device *sdev, const char *name, in=
+t tag,
+ 		    const unsigned char *sense_buffer, int sense_len)
+ {
+-	char *logbuf;
+-	size_t logbuf_len;
+ 	int i;
+=20
+-	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+-	if (!logbuf)
+-		return;
+-
+ 	for (i =3D 0; i < sense_len; i +=3D 16) {
+ 		int len =3D min(sense_len - i, 16);
+-		size_t off;
+-
+-		off =3D sdev_format_header(logbuf, logbuf_len,
+-					 name, tag);
+-		hex_dump_to_buffer(&sense_buffer[i], len, 16, 1,
+-				   logbuf + off, logbuf_len - off,
+-				   false);
+-		dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
++
++		sdev_tag_prefix_printk(KERN_INFO, sdev, name, tag, "%*ph", len,
++				       &sense_buffer[i]);
+ 	}
+-	scsi_log_release_buffer(logbuf);
+ }
+=20
+ static void
+ scsi_log_print_sense_hdr(const struct scsi_device *sdev, const char *nam=
+e,
+ 			 int tag, const struct scsi_sense_hdr *sshdr)
+ {
+-	char *logbuf;
+-	size_t off, logbuf_len;
++	char sense_hdr[64];
++	char extd_sense[64];
+=20
+-	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+-	if (!logbuf)
+-		return;
+-	off =3D sdev_format_header(logbuf, logbuf_len, name, tag);
+-	off +=3D scsi_format_sense_hdr(logbuf + off, logbuf_len - off, sshdr);
+-	dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
+-	scsi_log_release_buffer(logbuf);
++	scsi_format_sense_hdr(sense_hdr, sizeof(sense_hdr), sshdr);
++	sdev_tag_prefix_printk(KERN_INFO, sdev, name, tag, "%s", sense_hdr);
+=20
+-	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+-	if (!logbuf)
+-		return;
+-	off =3D sdev_format_header(logbuf, logbuf_len, name, tag);
+-	off +=3D scsi_format_extd_sense(logbuf + off, logbuf_len - off,
+-				      sshdr->asc, sshdr->ascq);
+-	dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
+-	scsi_log_release_buffer(logbuf);
++	scsi_format_extd_sense(extd_sense, sizeof(extd_sense), sshdr->asc,
++			       sshdr->ascq);
++	sdev_tag_prefix_printk(KERN_INFO, sdev, name, tag, "%s", extd_sense);
+ }
+=20
+ static void
+@@ -381,58 +320,35 @@ EXPORT_SYMBOL(scsi_print_sense);
+=20
+ void scsi_print_result(struct scsi_cmnd *cmd, const char *msg, int dispo=
+sition)
+ {
+-	char *logbuf;
+-	size_t off, logbuf_len;
+ 	const char *mlret_string =3D scsi_mlreturn_string(disposition);
+ 	const char *hb_string =3D scsi_hostbyte_string(cmd->result);
+ 	unsigned long cmd_age =3D (jiffies - cmd->jiffies_at_alloc) / HZ;
++	char mlret_buf[32];
++	char hb_buf[32];
+=20
+-	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+-	if (!logbuf)
+-		return;
+-
+-	off =3D sdev_format_header(logbuf, logbuf_len, scmd_name(cmd),
+-				 scsi_cmd_to_rq(cmd)->tag);
+-
+-	if (off >=3D logbuf_len)
+-		goto out_printk;
+-
+-	if (msg) {
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-				 "%s: ", msg);
+-		if (WARN_ON(off >=3D logbuf_len))
+-			goto out_printk;
+-	}
+ 	if (mlret_string)
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-				 "%s ", mlret_string);
++		snprintf(mlret_buf, sizeof(mlret_buf), "%s", mlret_string);
+ 	else
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-				 "UNKNOWN(0x%02x) ", disposition);
+-	if (WARN_ON(off >=3D logbuf_len))
+-		goto out_printk;
+-
+-	off +=3D scnprintf(logbuf + off, logbuf_len - off, "Result: ");
+-	if (WARN_ON(off >=3D logbuf_len))
+-		goto out_printk;
++		snprintf(mlret_buf, sizeof(mlret_buf), "UNKNOWN(0x%02x)",
++			 disposition);
+=20
+ 	if (hb_string)
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-				 "hostbyte=3D%s ", hb_string);
++		snprintf(hb_buf, sizeof(hb_buf), "hostbyte=3D%s", hb_string);
+ 	else
+-		off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-				 "hostbyte=3D0x%02x ", host_byte(cmd->result));
+-	if (WARN_ON(off >=3D logbuf_len))
+-		goto out_printk;
+-
+-	off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-			 "driverbyte=3DDRIVER_OK ");
+-
+-	off +=3D scnprintf(logbuf + off, logbuf_len - off,
+-			 "cmd_age=3D%lus", cmd_age);
+-
+-out_printk:
+-	dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
+-	scsi_log_release_buffer(logbuf);
++		snprintf(hb_buf, sizeof(hb_buf), "hostbyte=3D0x%02x",
++			 host_byte(cmd->result));
++
++	if (msg)
++		sdev_tag_prefix_printk(
++			KERN_INFO, cmd->device, scmd_name(cmd),
++			scsi_cmd_to_rq(cmd)->tag,
++			"%s: %s Result: %s driverbyte=3DDRIVER_OK cmd_age=3D%lus",
++			msg, mlret_buf, hb_buf, cmd_age);
++	else
++		sdev_tag_prefix_printk(
++			KERN_INFO, cmd->device, scmd_name(cmd),
++			scsi_cmd_to_rq(cmd)->tag,
++			"%s Result: %s driverbyte=3DDRIVER_OK cmd_age=3D%lus",
++			mlret_buf, hb_buf, cmd_age);
+ }
+ EXPORT_SYMBOL(scsi_print_result);
