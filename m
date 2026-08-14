@@ -1,26 +1,33 @@
-Received: from mail-m19731103.qiye.163.com (mail-m19731103.qiye.163.com [220.197.31.103])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E11E43B1ED1;
-	Fri, 14 Aug 2026 08:23:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.103
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A35B3947B8
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 08:31:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786695841; cv=none; b=JpUSYuJZRFTJmm413mZcVfRD04M5brKxr4A5fsAWkGyim2Vu2/R4wrD60LpX0tHplffLPGcbrrnllAuywQmQcJppQuMFhXXP2ZrPjFr1Es2LC5957N9uMc4HufvXEBvwYeHWq4kQYRqS7XJDHttGxBHU90BHyHfVT2q9dZSqFC4=
+	t=1786696288; cv=none; b=Jd8IW0LJzgmn+2HnBSJ9yWWf/8yIPXpcygt3Boucc5Iynj/sD8Ne2CRrQql5q3aTPkM9+8eHf32haN7mtVvJq7/ea1ptTYMXlLkzwAVdUAnxDdZLciDd+FHWaily6fAtIYPv25wk3sVemNA4Auax0y+LGlnr494ztmI/Na6saFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786695841; c=relaxed/simple;
-	bh=vmY8hPKX8ohnlyq+vjzKwWnwiqwe8IslfZMrMxaaNd4=;
+	s=arc-20240116; t=1786696288; c=relaxed/simple;
+	bh=IGbKwXkQE1xEFf1yVrrv6uksXrxJ3Y6Zcv4TfGeD7gA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a0YNKnyW85MFDIKkO1CLJqvySuLfdlAtpBhKXZi5gMnMMb1FJJ/qNHdK4pkHOHU3ySmcMY8CMHBU0CZk1xRvYPfKG1beOYFBKkOdSJBGrc5vLgCpTkesBb6EjXvRKCHf4BUl+pGFQsfNw+kBKMMSpitWiXCLxKDLppujznBSShc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com; spf=pass smtp.mailfrom=leap-io-kernel.com; dkim=pass (2048-bit key) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.b=II+p1Uw9; arc=none smtp.client-ip=220.197.31.103
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leap-io-kernel.com
+	 In-Reply-To:Content-Type; b=QYZsla8wjoHwx+wFWxtZtnQdObmvW0fT7mTnj34LarPFMOJ2DDT8ZeH0aIPpA/EnEHDNelRsQHot8PhdMp0ye8XAT2HruD9zLXy11WQOOYhwMhoYhC5gQusf+6xPfONrA0AKPi4pEn0851vhsUqatoBv4UiXzHvyxZNmAKhTtw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h7RjwQtG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.b="II+p1Uw9"
-Received: from [10.31.68.69] (unknown [112.48.20.89])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 49fe2bd42;
-	Fri, 14 Aug 2026 16:08:29 +0800 (GMT+08:00)
-Message-ID: <bfbd6122-988c-49fe-a1e6-be082d9f93ff@leap-io-kernel.com>
-Date: Fri, 14 Aug 2026 16:08:28 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h7RjwQtG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E55CA1F000E9;
+	Fri, 14 Aug 2026 08:31:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786696279;
+	bh=p3xr6MaZrJYCyUlDIktrbJQGrBUYz4XFSrLK2Z/KEWE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=h7RjwQtGNhGpw67GxHzwIiO4iyythxs+vSU1wG5U6Xlm2A57lnawqMzETMYZdPbBU
+	 LBVHkoRtkq++LANLrErmkiKjvd5a/HaRT1tolNpoAcfiD7YeZ7TD3keeWg7bAAwZfk
+	 MlDX15+oGRI1S9cXRsKCKCbPTq1Mg++7bA+EcANnQtizE08h2l3T8x5nmucDx3xvTQ
+	 cm4Wr0SPjRm22hdGnhdghJCRGJMlE0xHZGbXdNTxEkKs65bxkSwQByx01AgR1CCXkn
+	 iEvNA2WxRF8P4FphLU/dGCBs6NYwX2Ccomk43963A1sYbEJwC3uxmYABXXc6fOkL9D
+	 adV8wzYJL0tAw==
+Message-ID: <356cb94c-d8e0-41c5-b45b-dfdd98b00a03@kernel.org>
+Date: Fri, 14 Aug 2026 17:31:16 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -28,104 +35,55 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/2] scsi: leapraid: serialize firmware log mmap with
- teardown
-To: Linmao Li <lilinmao@kylinos.cn>, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: hare@kernel.org, dlemoal@kernel.org, linux-kernel@vger.kernel.org
-References: <20260814033845.2971706-1-lilinmao@kylinos.cn>
- <20260814033845.2971706-3-lilinmao@kylinos.cn>
-From: Hao Dongdong <doubled@leap-io-kernel.com>
-In-Reply-To: <20260814033845.2971706-3-lilinmao@kylinos.cn>
+Subject: Re: [PATCH] scsi: leapraid: standardize NCQ priority sysfs attributes
+To: Dongdong Hao <doubled@leap-io-kernel.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: hare@kernel.org, hare@suse.de, yjzhang@leap-io-kernel.com,
+ kezijie@leap-io-kernel.com, jzzhang@leap-io-kernel.com,
+ baikefan@leap-io-kernel.com, linux-scsi@vger.kernel.org
+References: <20260814081412.394957-1-doubled@leap-io-kernel.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260814081412.394957-1-doubled@leap-io-kernel.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9fff50bbf403aekunmdab1131864e1f1
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDGEIeVkJCHhhCGU1IGkhLH1YVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlKSklVT0NVSUtVQ0JZV1kWGg8SFR0UWUFZT0tIVUpLSU
-	9PT0hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=II+p1Uw9lwrTdnxuVEdKr9nTTIduNaNQDDC+Iw6O5HIAFX2iStIG4lmU4s7w5ZwRu387PnkqK4DJ2boR/+M+lz451oda//zV5f/mwPayb6fdNKIZjV0hGuwz+pHyaEukiYzR4tbg16d97x1J176668hnB+Y/DvN+5vp3S9bZiTJngAOUo42GzIyRq1ypiA+YRHb9NJxojl0X1Kglna0+/uhDSuKP0pI6PZ0msaO04b9tH3DXbOt8k2QVQjlv9wdTB5vx9+Beuujh4duP6spVBlUDsPPEKtfhIJmwozw4QT0WLM4+ajgU+daDAFWRKB+o5ROYltmMr1H/6UeLCKK9mQ==; c=relaxed/relaxed; s=default; d=leap-io-kernel.com; v=1;
-	bh=NA5AnBAkyEANOx+4jJ8oFk6V2uAVZwmj1HDQsvAGGsY=;
-	h=date:mime-version:subject:message-id:from;
+Content-Transfer-Encoding: 7bit
 
-在 2026/8/14 11:38, Linmao Li 写道:
-> leapraid_fw_log_exit() waits for mmap_refcnt to reach zero before it
-> frees the firmware log buffer.  leapraid_fw_mmap() checks
-> host_removing, but it does not increment mmap_refcnt until after
-> dma_mmap_coherent() succeeds and the VMA open callback runs.
+On 8/14/26 17:14, Dongdong Hao wrote:
+> Replace the earlier LeapRAID ncq_cmd_prio_enable
+> attribute with the standard sas_ncq_prio_supported and
+> sas_ncq_prio_enable names documented in
+> Documentation/ABI/testing/sysfs-block-device, and rename
+> the per-device NCQ priority state to match.
 > 
-> Removal can set host_removing and observe a zero mmap_refcnt between
-> the check and the VMA open.  It can then free the coherent buffer while
-> the mmap path is still establishing a userspace mapping of it.
+> The earlier ncq_cmd_prio_enable name has not yet been
+> established as part of a released userspace ABI, so no
+> compatibility alias is needed.
 > 
-> Claim a temporary mmap reference while looking up the adapter under
-> leapraid_adapter_lock.  Removal deletes the adapter from the same
-> locked list after setting host_removing, so a mapping is either
-> rejected or included in the count that removal waits for.  Drop the
-> temporary reference on the common exit path, after a successful VMA
-> open has acquired the reference covering the VMA lifetime.
+> For LeapRAID, sas_ncq_prio_enable is backed by the
+> driver's per-device NCQ priority state and controls
+> whether RT-class I/O requests are issued with command
+> priority on supported SATA devices.
 > 
-> Fixes: 5597088c9e79 ("scsi: leapraid: Add new SCSI driver")
-> Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
-> ---
->  drivers/scsi/leapraid/leapraid_app.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
+> Update leapraid.rst to describe the standard attribute
+> names and paths, and clean up the surrounding RST text
+> for consistency with kernel documentation style.
 > 
-> diff --git a/drivers/scsi/leapraid/leapraid_app.c b/drivers/scsi/leapraid/leapraid_app.c
-> index 841027ce2501c..84eef50947aea 100644
-> --- a/drivers/scsi/leapraid/leapraid_app.c
-> +++ b/drivers/scsi/leapraid/leapraid_app.c
-> @@ -171,7 +171,8 @@ static int leapraid_ctl_validate_sge_offset(struct leapraid_adapter *adapter,
->  	return 0;
->  }
->  
-> -static struct leapraid_adapter *leapraid_ctl_lookup_adapter(int adapter_id)
-> +static struct leapraid_adapter *leapraid_ctl_lookup_adapter(int adapter_id,
-> +							    bool track_mmap)
->  {
->  	struct leapraid_adapter *adapter;
->  	struct Scsi_Host *shost;
-> @@ -184,6 +185,8 @@ static struct leapraid_adapter *leapraid_ctl_lookup_adapter(int adapter_id)
->  			shost = adapter->shost;
->  			if (!shost || !scsi_host_get(shost))
->  				break;
-> +			if (track_mmap)
-> +				atomic_inc(&adapter->fw_log_desc.mmap_refcnt);
->  			spin_unlock(&leapraid_adapter_lock);
->  			return adapter;
->  		}
-> @@ -589,7 +592,7 @@ static int leapraid_ctl_ioctl_main(struct file *file, unsigned int cmd,
->  		return -EFAULT;
->  	}
->  
-> -	adapter = leapraid_ctl_lookup_adapter(ioctl_header.adapter_id);
-> +	adapter = leapraid_ctl_lookup_adapter(ioctl_header.adapter_id, false);
->  	if (!adapter)
->  		return -EFAULT;
->  
-> @@ -728,7 +731,7 @@ static int leapraid_fw_mmap(struct file *filp, struct vm_area_struct *vma)
->  
->  	length = vma->vm_end - vma->vm_start;
->  
-> -	adapter = leapraid_ctl_lookup_adapter(adapter_id);
-> +	adapter = leapraid_ctl_lookup_adapter(adapter_id, true);
->  	if (!adapter) {
->  		pr_err("%s: No adapter found!\n", __func__);
->  		return -EINVAL;
-> @@ -771,6 +774,9 @@ static int leapraid_fw_mmap(struct file *filp, struct vm_area_struct *vma)
->  
->  	rc = 0;
->  out_put:
-> +	if (adapter &&
-> +	    atomic_dec_and_test(&adapter->fw_log_desc.mmap_refcnt))
-> +		wake_up(&adapter->fw_log_desc.mmap_waitq);
->  	leapraid_ctl_put_adapter(adapter);
->  	return rc;
->  }
+> Also switch the capability check from open-coded VPD
+> page 0x89 parsing to sas_ata_ncq_prio_supported(), use
+> kstrtobool() for the enable path, and expose the NCQ
+> priority attributes only for SATA devices using
+> LeapRAID's target-private SAS device state.
+> 
+> Signed-off-by: Dongdong Hao <doubled@leap-io-kernel.com>
 
-Thanks for fixing this race. Taking the temporary mmap reference under
-leapraid_adapter_lock correctly closes the race with adapter removal.
+Your commit message lines are very short.
+Please use up to 75 chars per line.
 
-Reviewed-by: Dongdong Hao <doubled@leap-io-kernel.com>
+Other than that, looks OK.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
+-- 
+Damien Le Moal
+Western Digital Research
