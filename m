@@ -1,49 +1,48 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 341083D45E6
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 15:10:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4121047CA91
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 15:41:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786720220; cv=none; b=ouSIbVK/atZ11xXnHqODGTrP6TlozSX2EELCmJhhZZtrknEt/WoF1baC0EITPPxjpOr8Zb+w5iNwxK+xgy+bBRm72rlqF9hm0YwgFW3x+wQTkPpPpIcwUZCSPYRDivPxyj3sWSgSVyebioRkBXpMHIUUH46y/U8upFOJi2iqaew=
+	t=1786722118; cv=none; b=Uc5zW9v+FJJQy4KKQ/oU5trYJgP81ZnBw4DE+zqOrW8FhOUBndXUan0mRRvp48SRAayK2FoMdG/wEdrftxVf1LHVt25wy5D70kcFCI2PvB86PEWXtP0Oa+OtKGMplGWUfj4AY1tCbievCRU8yNCXCIVTbUDp6bYhgezwoTQ/5HY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786720220; c=relaxed/simple;
-	bh=aY70QCxUdQ0hzm74LlvRBUgc9sJqiCBiI8yiOJz0QD4=;
+	s=arc-20240116; t=1786722118; c=relaxed/simple;
+	bh=+uw1buLuXFNG3sIiUBqfOujBD1Zh1Ut7dJ7UAULhGbY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OTCHRcYZ2eiDxxVwRETD1/y0o2N8hmV2w+520Wk1PZAhGldnzeIv3Sa8X+ckfNHl74pUHBBQ2RQlaVloVfPxbQh3IY6wGnP4FdUOdbeZNj4MNn0qrAnoeGJ8f3oU/V+o4yH0cynxa84c00G02bHbbkhR53t8WHhThsB0gA4HdW4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GBULrIvt; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 In-Reply-To:Content-Type; b=LJ9pvpTJfMxFXquvPHSCnR7LZJL1PFKqOJti6V0RBZ+ZQQSH4BnHZGZAI5R+6Vx5Qz6tRkSjSh9LcUrpW8DOOnIQZlktmreIVIsdhs5oHqc7dYio3z4ouOozzXBJTpbv36zi1BTYbMHW6eUUDoneUT83i2cne2ZKNVTjUjxPhz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=k4U9QS3G; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GBULrIvt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786720217;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=v1GRrOlyN9nkOUdimeoCQpzY7og1lchpuM501N4iN80=;
-	b=GBULrIvt6FT9uNqWQX0Mk1mncAuV2m6qhWzxFBETIDb6cBJ5CN1h+5yfVMQ/JafFabtMLj
-	RnrrwTFa6NcHT+rrfL82+pl8oPdrNsp1pKCe/juzMe/2hOtKCBDWboWf4alBq7PcPSv1Xo
-	zid35UZmRPNw6GwhwpdZgnDbClzP6Tg=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-36-DvatqclWMhiECNPA0A51Jg-1; Fri,
- 14 Aug 2026 11:10:13 -0400
-X-MC-Unique: DvatqclWMhiECNPA0A51Jg-1
-X-Mimecast-MFC-AGG-ID: DvatqclWMhiECNPA0A51Jg_1786720212
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="k4U9QS3G"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hM60g6YnBzlfpM3;
+	Fri, 14 Aug 2026 15:41:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1786722108; x=1789314109; bh=AZRGVIDQId9MeaBOdvUN0tuk
+	ouSK8TMWk1ss+YDc7ls=; b=k4U9QS3GNOuzrMqwB3R/g+j7pUy1Vdo5BcqIexde
+	TQuHpUk3SgmHZF9YRTdFE34+i+V9Jg578EH95vXJt/Pa9oBk7wEkqN58VmXKSgBj
+	546DRLruR7xVJ/GP44AXLH7YUbx82X4UVXD083tRf1tgE5GqHel9bqDtwRSz6zZA
+	3UlQRo2jzM8Eq3xwhHyhqI7BQCiBkdLp+pqfFRzvJ8x3TmQm8o2JjqR+DX99Cshl
+	qsQoW6w3pn3DmOeHCSVLPs7DElYLglLH7DKs7XXWjr4f3xbyEfuqK6tNEGVV7H6q
+	gn17emXRRyA7dpmBgdIkGBRScxXwlcVwTeyOj3I1Rl0CjQ==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ajetJh8R0lPH; Fri, 14 Aug 2026 15:41:48 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 969F8195608D;
-	Fri, 14 Aug 2026 15:10:11 +0000 (UTC)
-Received: from [10.22.64.139] (unknown [10.22.64.139])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 62CE830001A2;
-	Fri, 14 Aug 2026 15:10:09 +0000 (UTC)
-Message-ID: <3ca229d2-aaa3-46e0-8714-21cd67810153@redhat.com>
-Date: Fri, 14 Aug 2026 11:10:08 -0400
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hM60R2YjNzlfwgC;
+	Fri, 14 Aug 2026 15:41:43 +0000 (UTC)
+Message-ID: <f91c7df9-3534-4ec8-a6b6-417577bc22ad@acm.org>
+Date: Fri, 14 Aug 2026 08:41:42 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,79 +50,48 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH blktests 2/2] nvme/070: Test multipath and marginal ports
-To: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
- Jesse Taube <jtaubepe@redhat.com>
-Cc: linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
- Daniel Wagner <dwagner@suse.de>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20260812174503.3705830-1-jtaubepe@redhat.com>
- <20260812174503.3705830-3-jtaubepe@redhat.com> <an78AkXI1SUHXBwg@shinmob>
+Subject: Re: [PATCH v7 5/6] scsi: core: Protect host state changes with the
+ host lock
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Marco Elver <elver@google.com>, linux-scsi@vger.kernel.org,
+ Jianzhou Zhao <luckd0g@163.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Dongdong Hao <doubled@leap-io-kernel.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ Ranjan Kumar <ranjan.kumar@broadcom.com>, Nilesh Javali
+ <njavali@marvell.com>, Manish Rangankar <mrangankar@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com
+References: <cover.1786142946.git.bvanassche@acm.org>
+ <681e4a5260c182feb5fc1d96f0d43c62c21dc6c9.1786142946.git.bvanassche@acm.org>
+ <3731591a-f495-488a-bbe6-96f4ec2acb78@oracle.com>
 Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <an78AkXI1SUHXBwg@shinmob>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <3731591a-f495-488a-bbe6-96f4ec2acb78@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On 8/14/26 07:47, Shin'ichiro Kawasaki wrote:
-> On Aug 12, 2026 / 13:45, Jesse Taube wrote:
->> Add tests/nvme/070 to test various multipath and marginal port
->> scenarios, while confirming the port useage and state. This test is
->> intended to emulate receiving an FPIN event in a multipath environment.
+On 8/14/26 7:59 AM, John Garry wrote:
+> with my changes in https://lore.kernel.org/linux-scsi/ 
+> yq15x1dtp3r.fsf@mail.kernel.org/T/ 
+> #m064c12513575565cc08afa15738215b98bcca142 on top of this series, I 
+> notice that the following 2x forms of annotation are compliant for the 
+> context analysis checking:
 > 
-> The test contents are comprehensive, which looks good to me. 
->>
->> Suggested-by: John Meneghini <jmeneghi@redhat.com>
+> __must_hold(shost->host_lock)
+> __must_hold(&shost->host_lock)
 
-Please remove the above line.
+This is consistent with my observations - it seems like Clang accepts
+both forms. Marco, do you perhaps know whether this is a bug or a
+feature? I couldn't find the answer to this question in
+https://clang.llvm.org/docs/ThreadSafetyAnalysis.html.
 
->> Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
+Thanks,
 
-Co-authored-by: John Menehgini <jmeneghi@redhat.com>
-Signed-off-by: John Meneghini <jmeneghi@redhat.com>
-
-I've tested these patches and they work.
-
-Tested-by: John Meneghini <jmeneghi@redhat.com>
-
-Note: These patches require the kernel changes introduced by the "FPIN Link integrity handling" patches[1],
-and they should not be merged until the kernel patches are merged.
-
-[1] https://lore.kernel.org/linux-scsi/20260814063616.GA9231@lst.de/T/#m1e8c728cf2dcdfd70d1b50a2fc2f278ea0832c36
-
-
->> diff --git a/tests/nvme/070 b/tests/nvme/070
->> new file mode 100755
->> index 0000000..a8002f8
->> --- /dev/null
->> +++ b/tests/nvme/070
->> @@ -0,0 +1,521 @@
->> +#!/bin/bash
->> +# SPDX-License-Identifier: GPL-3.0+
->> +# Copyright (C) 2024 John Meneghini <jmeneghi@redhat.com>
-> 
-> This patch's author is Jesse, which looks inconstent with the copyright above.
-> Also, please reconfirm the copyright year 2024. Should it be "2026" or
-
-Yes, this is because the original version of this script was authored by me.
-
-Jesse took my first version and greatly improved it.  She got it working.
-> 
-> When I ran this test case on the kernel without the patch series
-> "nvme-fc: FPIN link integrity handling", this test case just failed.
-> I think it should be skipped if the kernel does not have set_marginal_rport
-> sysfs attribute. I suggest to add the check below:
-
-Good suggestion.
-
->         if [[ ! -w /sys/class/fcloop/ctl/set_marginal_rport ]]; then
->                 SKIP_REASONS+=("fcloop does not support set_marginal_rport")
->                 return 1
->         fi
-> 
-
-/John
-
-
+Bart.
