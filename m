@@ -1,46 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 768AD3AAF78;
-	Fri, 14 Aug 2026 01:42:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A921A26A0A7
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 01:46:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786671744; cv=none; b=oyieA4OYlKbm4UNNz3lYbcezSWfRqeBTKkcF838obC//VCkclsje1dwriic5ZuIVx70vdMeAb1rQ1EJC1+2mYadGFW0Ge3Bb3cibzAIR9W2DqoaVcS/HJoY3cDkP8jf9HqweKxDH3qGdQMIQlWPG0peIQ2UiHbFGvDw6AiuTi00=
+	t=1786671970; cv=none; b=f5lisscPRzy2PhvkxUKgS7z6J0k4DNcpUZXl4xLQOPo348HvsmvWhxJamqI0sqcEeCLOlPRvG3j2DUYlQrUZyh6f/mYEeFzkQ7CJXNSW5c5O2f0lVq9bODjAUJh5Xy52vhkTIzGQKjFoXjd+nb5xpZ8M/X+ki7jVk6Cmip4cptw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786671744; c=relaxed/simple;
-	bh=QBOe1hJsV3vhsKMmakTtq3wS47Ua7HlK0Z30Mum1XwU=;
+	s=arc-20240116; t=1786671970; c=relaxed/simple;
+	bh=7lCO0WQCw1wLWGGHrB0TKJuTaioWj+nat+O7QOlo40c=;
 	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 MIME-Version:Content-Type; b=sQpub5885nOVHk7ewJqyc8wpPYt542cwUPdBS7cnxsR6bSuSLoloVc9F3AlZkkoTTK08gC3b1vj+xUfp8sQq/HnO+rrX/ResmUX+3ALWbi1c51OWPuqaYfF+nKRakM2ehpvR6HqcLt4V3Wdy1tccKJSEyRVJPdCTxaxD2JkUQBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C1mhaQRv; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=GhRRZNo1BwzqAUvWrmysyXt1odufNl3YJjxdBJ5ifzfplg+3PeRzfxQGJBYVgbj6cdBZmy3+Ju7LK11HCOdGAs++KL+kjL48r/+KBnGfwEr1syheeL6NKbGc28v/wZul3zFa94VqJtUmy/eoAwf0AoRhQqPs7FGMIndUXBVK4aI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jT6kpq7d; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C1mhaQRv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C95901F000E9;
-	Fri, 14 Aug 2026 01:42:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jT6kpq7d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DD051F000E9;
+	Fri, 14 Aug 2026 01:46:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786671743;
-	bh=kUM2YECYY7pis7LfHLFkM23I5Eqpf96+SMSzqNZignU=;
+	s=k20260515; t=1786671969;
+	bh=suShF0QecovOF18gIBuzRTaFjj7APO8Mi2i/YLrfKuc=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=C1mhaQRv7/HcKfM2CLtoMG3Q+9Y0iE2mdrWntgbf8EPgXxOAFKbtt67LkM3SX1oom
-	 +Fbtel+X7cPbZWWdUn88Cl21YLDyqN3qUpIBaFGW4DKO5fbXK2oJKc0ZzAgDCYOf07
-	 qbrQ14+lS4+B7COeu5YBuJmZsmV1rm66NVCW4IHU5NYTSSCJwbxYonrhwIktK/btRL
-	 jBBebVgyIppv5rLCY33JaJMwQ1XDQ5iXs0jgXM42DbhO08gyrZ8Hpwv4OAo7QcQb+t
-	 T1YHfIHJtR68Trk93nqaLMqDbDI2mPDXQX6fROn8xTqc2ba5QdxfUM62tr7GtsR7Oq
-	 OZkyemYnEPkTw==
-To: Nathan Chancellor <nathan@kernel.org>
-Cc: Nilesh Javali <njavali@marvell.com>,
-  GR-QLogic-Storage-Upstream@marvell.com,  "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
- <martin.petersen@oracle.com>,  Hannes Reinecke <hare@kernel.org>,  Manish
- Rangankar <mrangankar@marvell.com>,  linux-scsi@vger.kernel.org,
-  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: qla2xxx: Fix size_t format specifier in
- qla29xx_process_rd_image()
+	b=jT6kpq7dV02MxlNGmtxTuSLK3buQHElBg4m9KdG0veUczabtMOcF73CL2RUemZkPG
+	 VunOlS3tTbMlBbMxciL7Q0d3X8veNsggUmkNo5hp/C9r6ZucdhJv3TVIzSdFuQ/p92
+	 BQDQ6gXU5MaAa4xz1qR5wSSc02ZmCIWrWszrmuszZMi3a8zpYWvGE82jk9KuP9pVi7
+	 aVwDo9dLQCwKXO8GRyS5T1DdglsPg+YYtqw4xl+vEaZ4Pvvx/EhVWWVmZQLPMaVkqp
+	 lMtAgHsRAEqlr4DYe/lWmeqtBaa5vK/zsbhgJH0vpFrqVSa7UN9+wYb9ILok/iN7ji
+	 kL0oYuez5b9jg==
+To: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Cc: linux-scsi@vger.kernel.org,  Sathya Prakash
+ <sathya.prakash@broadcom.com>,  Ranjan Kumar <ranjan.kumar@broadcom.com>,
+  Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCH] scsi: mpt3sas: Avoid freeing unallocated PCIe SGL buffers
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-In-Reply-To: <20260811-scsi-qla2xxxx-qla_init-wformat-v1-1-50760021914f@kernel.org>
-	(Nathan Chancellor's message of "Tue, 11 Aug 2026 14:39:51 -0700")
-Message-ID: <yq1wltttr4c.fsf@mail.kernel.org>
-References: <20260811-scsi-qla2xxxx-qla_init-wformat-v1-1-50760021914f@kernel.org>
-Date: Thu, 13 Aug 2026 21:42:21 -0400
+In-Reply-To: <20260808151010.185603-1-chandrakanth.patil@broadcom.com>
+	(Chandrakanth Patil's message of "Sat, 8 Aug 2026 20:40:10 +0530")
+Message-ID: <yq1qzk1tqxz.fsf@mail.kernel.org>
+References: <20260808151010.185603-1-chandrakanth.patil@broadcom.com>
+Date: Thu, 13 Aug 2026 21:46:08 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,12 +46,12 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Nathan,
+Chandrakanth,
 
-> After commit c3930ec119cb ("scsi: qla2xxx: Add FC operational firmware
-> load for 29xx"), there is a warning due to an incorrect format
-> specifier for a 'size_t' variable when building for 32-bit platforms,
-> for which 'size_t' is 'unsigned int':
+> _base_release_memory_pools() unconditionally frees every
+> ioc->pcie_sg_lookup[] entry, including ones the setup loop never
+> allocated after a partial failure, causing a "bad dma" warning on
+> debug kernels or a NULL pointer dereference otherwise.
 
 Applied to 7.3/scsi-staging, thanks!
 
