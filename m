@@ -1,134 +1,114 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CEB32BE053;
-	Fri, 14 Aug 2026 03:38:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30D6A3D75A6
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 03:52:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786678740; cv=none; b=NWTf4ZbmA1OXLtaXpjJe2cR66UuaCT2CY+7dE/FfhGV4SfMOnB7TGqiZhfq2SAgeYkYt+BzWNUmR2Wy9TFECPv1wYjz0X3N69p+crBOWyb53xwVll99BvEApUPJ0puv8+/RJu0B4zbLTyUCETGxhmrPO+2BysgG3vPb/drKIXI0=
+	t=1786679576; cv=none; b=hti7RYN2qrIShWS1BDU6WhzDIV56AxE2raw8iSISIIgJgTbglFHMPg7N9ZuW8KehGD0MPksdwpst/zinrV+Xf+LleOD98PK2xQzC0H8eByTqOkXU00ZO2GKiHY6vbiHZUyRF6dym2gINSV+oWvZN72WDH7o8SvmTVkQKeFwJ3oQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786678740; c=relaxed/simple;
-	bh=DWVt38NB461xsFdZU97R+1cBb4cdxomOxgHz8XboOrs=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Gwke8i6UEb7+M33ZbqJIBbGTwtn1jtMhkP4HC66Gg43amXrJwiNpIO+rpDGwkFduiR3I/2Iv4o9w9VgIulIfo/Jh/0a7ktLB1wPM5uT56GvHiqpunmmsvnc1fICQspqsqr6L9Ih6l41jXMyI1g+gkTUzhm37bFvkeL4CToD0MMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: ac1a06ee979111f1aa26b74ffac11d73-20260814
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:1402a34f-99c9-46de-8812-b555e0958cd1,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:e7bac3a,CLOUDID:b8c31851d5e25b3c5409b185b101475e,BulkI
-	D:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|850|865|898,TC:nil,Content:0|1
-	5|50,EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI
-	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: ac1a06ee979111f1aa26b74ffac11d73-20260814
-X-User: lilinmao@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <lilinmao@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1864971825; Fri, 14 Aug 2026 11:38:53 +0800
-From: Linmao Li <lilinmao@kylinos.cn>
-To: doubled@leap-io-kernel.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org
-Cc: hare@kernel.org,
-	dlemoal@kernel.org,
-	linux-kernel@vger.kernel.org,
-	Linmao Li <lilinmao@kylinos.cn>
-Subject: [PATCH v3 2/2] scsi: leapraid: serialize firmware log mmap with teardown
-Date: Fri, 14 Aug 2026 11:38:45 +0800
-Message-Id: <20260814033845.2971706-3-lilinmao@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260814033845.2971706-1-lilinmao@kylinos.cn>
+	s=arc-20240116; t=1786679576; c=relaxed/simple;
+	bh=aF3riP8CieIQwoAhFkiTY8wG6hgKhvEUZPH28Khtra8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=bvJh+rRWdHBF0RCAPI/4nm1M4B6z9xFQ4I/dm6p6/a+HUP76/gQZC4FenaqGvnD4/m17yzISymrzdBJOHtqwdS/V59XU61TY0ObIWyxdF2+0TkJqR8lVVFhHBU3P6Wt4Alx4eFlMeTNzZOitOLJLyiW+WhL+kilm6xkYmUurmkM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dLBZ+RGB; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dLBZ+RGB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85FA01F000E9;
+	Fri, 14 Aug 2026 03:52:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786679574;
+	bh=0pGfBcVHuUlC1Mha3jMmgNNXb14IN6r+8MibR8ODFwE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=dLBZ+RGBe8MiMaCfFMZLm8gxRzAwPZY4jNdzcjLbhUPTAlxs7fQQsjFKK+NkmTIJw
+	 wYaXBQdCBDZbUmmzss8yeMiZgOUZxz5sXv2dcFSHsvMC1qPZuU2PCT+IS/o1wtIbN0
+	 RZHQMfnQWeHMCQjWnkBgxh8QK8pm3sF9jYKbo49T9NHrtoNItaOWpmOX9mN79wkJ1g
+	 Nf5fc5/XcgVQddbmjuMDnWYvvvdydVmstVRa6Fk/1A3G+KMQzPKAb/GjZGuYjPz2E6
+	 6XmU38SwtoRYuJBDgVgPWsRfHjY/y0sej1/PGxTJ0bY+JM1JBYlOoD+fUCFf+7cZjv
+	 fPk1PCKdX06rg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/2] scsi: leapraid: serialize firmware log mmap with
+ teardown
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Linmao Li" <lilinmao@kylinos.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260814033845.2971706-3-lilinmao@kylinos.cn>
 References: <20260814033845.2971706-1-lilinmao@kylinos.cn>
+ <20260814033845.2971706-3-lilinmao@kylinos.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 14 Aug 2026 03:52:54 +0000
+Message-Id: <20260814035254.85FA01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-leapraid_fw_log_exit() waits for mmap_refcnt to reach zero before it
-frees the firmware log buffer.  leapraid_fw_mmap() checks
-host_removing, but it does not increment mmap_refcnt until after
-dma_mmap_coherent() succeeds and the VMA open callback runs.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Removal can set host_removing and observe a zero mmap_refcnt between
-the check and the VMA open.  It can then free the coherent buffer while
-the mmap path is still establishing a userspace mapping of it.
+Pre-existing issues:
+- [High] Unbounded wait in `leapraid_fw_log_exit()` allows userspace to blo=
+ck PCI device removal indefinitely.
+--
 
-Claim a temporary mmap reference while looking up the adapter under
-leapraid_adapter_lock.  Removal deletes the adapter from the same
-locked list after setting host_removing, so a mapping is either
-rejected or included in the count that removal waits for.  Drop the
-temporary reference on the common exit path, after a successful VMA
-open has acquired the reference covering the VMA lifetime.
+--- Patch [2]: [PATCH v3 2/2] scsi: leapraid: serialize firmware log mmap w=
+ith teardown ---
+commit f76020cc63b98ce5d018410c191835d8ffc2261a
+Author: Linmao Li <lilinmao@kylinos.cn>
 
-Fixes: 5597088c9e79 ("scsi: leapraid: Add new SCSI driver")
-Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
----
- drivers/scsi/leapraid/leapraid_app.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+scsi: leapraid: serialize firmware log mmap with teardown
 
-diff --git a/drivers/scsi/leapraid/leapraid_app.c b/drivers/scsi/leapraid/leapraid_app.c
-index 841027ce2501c..84eef50947aea 100644
---- a/drivers/scsi/leapraid/leapraid_app.c
-+++ b/drivers/scsi/leapraid/leapraid_app.c
-@@ -171,7 +171,8 @@ static int leapraid_ctl_validate_sge_offset(struct leapraid_adapter *adapter,
- 	return 0;
- }
- 
--static struct leapraid_adapter *leapraid_ctl_lookup_adapter(int adapter_id)
-+static struct leapraid_adapter *leapraid_ctl_lookup_adapter(int adapter_id,
-+							    bool track_mmap)
- {
- 	struct leapraid_adapter *adapter;
- 	struct Scsi_Host *shost;
-@@ -184,6 +185,8 @@ static struct leapraid_adapter *leapraid_ctl_lookup_adapter(int adapter_id)
- 			shost = adapter->shost;
- 			if (!shost || !scsi_host_get(shost))
- 				break;
-+			if (track_mmap)
-+				atomic_inc(&adapter->fw_log_desc.mmap_refcnt);
- 			spin_unlock(&leapraid_adapter_lock);
- 			return adapter;
- 		}
-@@ -589,7 +592,7 @@ static int leapraid_ctl_ioctl_main(struct file *file, unsigned int cmd,
- 		return -EFAULT;
- 	}
- 
--	adapter = leapraid_ctl_lookup_adapter(ioctl_header.adapter_id);
-+	adapter = leapraid_ctl_lookup_adapter(ioctl_header.adapter_id, false);
- 	if (!adapter)
- 		return -EFAULT;
- 
-@@ -728,7 +731,7 @@ static int leapraid_fw_mmap(struct file *filp, struct vm_area_struct *vma)
- 
- 	length = vma->vm_end - vma->vm_start;
- 
--	adapter = leapraid_ctl_lookup_adapter(adapter_id);
-+	adapter = leapraid_ctl_lookup_adapter(adapter_id, true);
- 	if (!adapter) {
- 		pr_err("%s: No adapter found!\n", __func__);
- 		return -EINVAL;
-@@ -771,6 +774,9 @@ static int leapraid_fw_mmap(struct file *filp, struct vm_area_struct *vma)
- 
- 	rc = 0;
- out_put:
-+	if (adapter &&
-+	    atomic_dec_and_test(&adapter->fw_log_desc.mmap_refcnt))
-+		wake_up(&adapter->fw_log_desc.mmap_waitq);
- 	leapraid_ctl_put_adapter(adapter);
- 	return rc;
- }
--- 
-2.25.1
+This commit fixes a race condition during firmware log teardown by
+claiming a temporary mmap reference during adapter lookup. It ensures
+the driver does not free the coherent buffer while the mmap path is
+still establishing a mapping.
 
+> diff --git a/drivers/scsi/leapraid/leapraid_app.c b/drivers/scsi/leapraid=
+/leapraid_app.c
+> index 841027ce2501c..84eef50947aea 100644
+> --- a/drivers/scsi/leapraid/leapraid_app.c
+> +++ b/drivers/scsi/leapraid/leapraid_app.c
+
+[ ... ]
+
+> @@ -771,6 +774,9 @@ static int leapraid_fw_mmap(struct file *filp, struct=
+ vm_area_struct *vma)
+> =20
+>  	rc =3D 0;
+>  out_put:
+> +	if (adapter &&
+> +	    atomic_dec_and_test(&adapter->fw_log_desc.mmap_refcnt))
+> +		wake_up(&adapter->fw_log_desc.mmap_waitq);
+
+[Severity: High]
+This is a pre-existing issue, but since we are modifying the mmap teardown
+synchronization here, I noticed a potential problem on the wait side of this
+logic.
+
+If a userspace process keeps the VMA open indefinitely, won't the unbind
+process hang forever?
+
+Looking at the teardown side in drivers/scsi/leapraid/leapraid_func.c:
+
+leapraid_fw_log_exit() {
+    wait_event(adapter->fw_log_desc.mmap_waitq,
+               !atomic_read(&adapter->fw_log_desc.mmap_refcnt));
+}
+
+Since this waits in uninterruptible sleep without a timeout, could a rogue
+or stuck userspace application block PCI device removal or module unloading
+permanently?=20
+
+It seems like the kernel shouldn't rely on cooperative userspace behavior=20
+during hardware unbind, perhaps this needs an unmap_mapping_range() or=20
+similar asynchronous shootdown mechanism to ensure the wait completes?
+
+>  	leapraid_ctl_put_adapter(adapter);
+>  	return rc;
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260814033845.2971=
+706-1-lilinmao@kylinos.cn?part=3D2
