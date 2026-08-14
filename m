@@ -1,154 +1,137 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D23A339872;
-	Fri, 14 Aug 2026 17:27:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 129F7480DED
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 17:51:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786728438; cv=none; b=kaxmuiSq7CEEefbHIj1rmAJE53VrJghIYQTB31DGtL7f11EVxpdyrRroAESmp6Z92lBRm/T+dxdDZW7+5Oe+xjXAuv40g4X6SLouahG1LLSRERM3EJDm7At0N3tgnADHxq9t7nfYsbqA65gciLbbfipCUtCjoLdf8/WLPVSI6GU=
+	t=1786729873; cv=none; b=sG9lwqpvWFmVUS2RPE/s/FDnI6g50vG5kkFnzq6/jRcZ3KQq/BwbAzrzP51CGtERsY5nm4Kk4wtFj01cblBCVPvpVIa7MGpStpwl/yshBN+EBqbyP4m4g5PFYSv6yuH+VohH5T8q6ClsvEPHSXyxo63rdUh920Kxs1odOHujf8E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786728438; c=relaxed/simple;
-	bh=M7BVIQ/+SbYKJZZoZt34Xw8W12snXEQ7XHuSQD5+WtI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mLusDDhIRxQCre10YCFSM84guqNUZ5PWZziujpVNxIMUjrs/Kw/1NzLozfXBxDwN2yrUJzOOLfyOgBXwEjl7MiZ7iKeX5tFGdCfJTRHV6U4Aw84056EqGERNLYqqX4Bgv/sgYNf6COcE+VIbowQwkyPICHc6TOLVdx3reCclV9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=t5HPnnZu; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1786729873; c=relaxed/simple;
+	bh=BMmk0tMym7+viEAbSql3mofBm0kxHpAm2sPAPX9FeDQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=EQK3uq6Z0GJwNquIgcfTBx/rTQLTtpPfPLJulTBnTnyBnyc3bzIhHOXSpbJ9TOaSedGF+qJlSbYVL84mmNx4Tn0q6NU98JxWc+FzvzAB8kCcoTw3idWb7jlz1/7W/Gcf96LoEMsl4SEJ/6yQnacLK/Wusmv15FFRkJ05K8AJj3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=N+sxAeEb; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=isOkYdpF; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="t5HPnnZu"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hM8LC6cQkz1XLyhh;
-	Fri, 14 Aug 2026 17:27:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1786728431; x=1789320432; bh=thp8cFGbRG7io6Id2x7m/1rp
-	1dPV40UDC8tQ1E+pZL4=; b=t5HPnnZuI4/O0XplbOjwetLGAuXQTuu6UEHGrAkX
-	t434Q5ygl19D0dC+PCDvb82O+lIN0PcCM7ngCpX84vdSpWpxL5twUseoc1qfhWNy
-	5DiYW56RcwVbMLG97ylIAREmy+K0ZemfbikiZMZy5Btp1v1hcZoaE4as/aUUXFhY
-	BdZ0fm1394gwFr+MQ9ZKU54U8JAlkWj3WgSZA2jAfIJ6YEox73PzN2r92XngJyQV
-	bw70UqNPsOjecbtTGNkP4UGcTy12+O2eTvB/VTjIvTYk5C1XI7Hpw/6FYVi8clIg
-	cxJBfZUCPcVDaGf+gbh7HIpl+mMnyQUVjwLFVdDLITl7Fg==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 6qw0VPSav8dT; Fri, 14 Aug 2026 17:27:11 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hM8L62KWNz1XLyhb;
-	Fri, 14 Aug 2026 17:27:10 +0000 (UTC)
-Message-ID: <414a2b55-ee58-4975-a76a-49202b9c0302@acm.org>
-Date: Fri, 14 Aug 2026 10:27:09 -0700
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N+sxAeEb";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="isOkYdpF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1786729870;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=t/7J9iFZ/zyBKdui9xdbgNhSJDRiyBqfyVHmdu7/Up0=;
+	b=N+sxAeEbf1Wrw6ogKZ7z3EA3b0Z/tcPTwz6rnqd41aXcqG64L6TyRGIch3GvPfZfiKwQpW
+	1D3bK1VJxmqAWzoAhIDWPHaKpRJhTNWZJnQSWeV+hUz0/+pDsOr3nQuZgfoPhAXKDstSf1
+	kVOzDVO4Nw+cDVa/JLSiBwlGgNyF3P0=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-395-qkrgfHZVMfWyzXpkQCBtzA-1; Fri, 14 Aug 2026 13:51:04 -0400
+X-MC-Unique: qkrgfHZVMfWyzXpkQCBtzA-1
+X-Mimecast-MFC-AGG-ID: qkrgfHZVMfWyzXpkQCBtzA_1786729864
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93494cce712so148855285a.3
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 10:51:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1786729864; x=1787334664; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=t/7J9iFZ/zyBKdui9xdbgNhSJDRiyBqfyVHmdu7/Up0=;
+        b=isOkYdpF1fS2WiPG0Be/43BFARdJ19vsQa11kUxBI+gsUILThnL9Ors0MvRmW5lLPV
+         CHqrOOLKun9tGk6ouaMk2Ov01qj/O/6w9tFaci/AktU3My2aDTkZfa5npZonL10YktcX
+         0KR3muDyTzKwIsGZeaPtWTe8rCOiHffL2Rd3GB83qDZmmxCv/XrVXCw5krMeslOZ/wWK
+         fuQg//d6v/RI1VOoW8AnZU2mFoZaSfewqwIxwAVrgk1eVGcJeW964yRQyBeUuKs1pyZw
+         hYYjxgeAgQY+rr7xXSKCmuldF1E1U3Sz3WHm12UCgsf2QN95kLXdrWbhzoWNGTXqSFXS
+         AYUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786729864; x=1787334664;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=t/7J9iFZ/zyBKdui9xdbgNhSJDRiyBqfyVHmdu7/Up0=;
+        b=p9eImUwDyxcbr/JtKULBauLwMeAgAFKo9lbHaKHB8NTIV/UPagg7QRr4fEzGgkUBAc
+         CTnkSyPyfc0KAhDqymauezq0PfvLCM4NrOOd2X2+3XFRdfVm4s3D/uX8IMqkL4g+8EGb
+         QJDF/rzxqd1T+68GFGsTNd4N6mIgFr9Y/ODTuqm/j/mYprMWgmuzW25CPXDBaSvdpIaJ
+         3xdnOcA8aENKyTfbS9D+mL6UCvXK2tmzfumFuF0LVgYumVnyg7MDp8qtQTFxuo2QcSU6
+         6Hsas1LGDwWHxrc3GIHttWx8456i0u3TnuWcNc5y5Z6xVO5axB1YVzhnzdCl6H5aF/Rt
+         wh3A==
+X-Forwarded-Encrypted: i=1; AHgh+Rp+hl4c0PdQadIwLW/C/N8WmPp0wLw3srSayA3C5gdaHQUhL6fiJWRDrHiHzF3IvRzo1BQcNRpF9FHo@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy9jW5bxfGVw5m5OQMvaQmrq6LixvdSIWD0xJtTsJ73l4R9H30Q
+	NoY/kGHtmTCTq19P7Rsq0E4qS5XXNcmvFPSBmSTIOU6OBzEIGp9LBY1w95n/Z2wlvTBsrVme3X0
+	NA8vrkDp3KQenze53WgOksOH/GPRDwrH1NLetV7l6fwnS+9+RGuPDUxmUJ+d8MCw=
+X-Gm-Gg: AR+sD13z4wVaDmYcI5Ly8GdqgJ/mr22LEsSXvU+/d6dmZWr6Y0U6z0N1TJMM4gaiw8x
+	4Vvk5gARFJcX2P0PqLLvrnzHPpW8Ii5puh9xfa9SK3QKPtElNAC+4YXcMN7cYpbqfsSS3940aPX
+	WKmN8sQg2uoE3demOvdHtAMpbEcrwco/bLaqcOpLpw9i8oEEz5MAMeo9r/jgEJsEGRuz9oiUeyF
+	xUOdHMUEWBLqB/MuuHmCdH5CUb/giosCA/AvS0bc/N+S7WzGpa5zOFMsRjEtXetqtlt/p0vybJE
+	duS6RH2nYdCNKLmJyxlQrjHt9EOTbvSe99xaSvAVPGCmo806lpXj6IUJya0HJtPLlfAQsCwC00v
+	q170KnMoBp6LtpP5NMK549y0Ijy9ATT91yJMF
+X-Received: by 2002:a05:620a:2810:b0:936:e010:5099 with SMTP id af79cd13be357-936e0105466mr332198885a.44.1786729864097;
+        Fri, 14 Aug 2026 10:51:04 -0700 (PDT)
+X-Received: by 2002:a05:620a:2810:b0:936:e010:5099 with SMTP id af79cd13be357-936e0105466mr332191485a.44.1786729863542;
+        Fri, 14 Aug 2026 10:51:03 -0700 (PDT)
+Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:dbb1:97f1:a6e6:766b])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-936ce217c0esm331252985a.32.2026.08.14.10.51.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Aug 2026 10:51:02 -0700 (PDT)
+Message-ID: <22ff0bb82c0ce4ace458130d50fa090c0a24557c.camel@redhat.com>
+Subject: Re: [PATCH] scsi: mpt3sas: Avoid freeing unallocated PCIe SGL
+ buffers
+From: Laurence Oberman <loberman@redhat.com>
+To: Chandrakanth Patil <chandrakanth.patil@broadcom.com>, 
+	linux-scsi@vger.kernel.org
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Ranjan Kumar
+	 <ranjan.kumar@broadcom.com>
+Date: Fri, 14 Aug 2026 13:51:01 -0400
+In-Reply-To: <20260808151010.185603-1-chandrakanth.patil@broadcom.com>
+References: <20260808151010.185603-1-chandrakanth.patil@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: check that the tag map is still there in
- scsi_host_find_tag()
-To: Yehyeong Lee <yhlee@isslab.korea.ac.kr>, martin.petersen@oracle.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260814010423.205976-1-yhlee@isslab.korea.ac.kr>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260814010423.205976-1-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 8/13/26 6:04 PM, Yehyeong Lee wrote:
-> diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-> index ea7848e74d257..d62bae05d4e7d 100644
-> --- a/include/scsi/scsi_tcq.h
-> +++ b/include/scsi/scsi_tcq.h
-> @@ -29,7 +29,8 @@ static inline struct scsi_cmnd *scsi_host_find_tag(struct Scsi_Host *shost,
->   		return NULL;
->   
->   	hwq = blk_mq_unique_tag_to_hwq(tag);
-> -	if (hwq < shost->tag_set.nr_hw_queues) {
-> +	if (hwq < shost->tag_set.nr_hw_queues && shost->tag_set.tags &&
-> +	    shost->tag_set.tags[hwq]) {
->   		req = blk_mq_tag_to_rq(shost->tag_set.tags[hwq],
->   					blk_mq_unique_tag_to_tag(tag));
->   	}
+On Sat, 2026-08-08 at 20:40 +0530, Chandrakanth Patil wrote:
+> _base_release_memory_pools() unconditionally frees every
+> ioc->pcie_sg_lookup[] entry, including ones the setup loop never
+> allocated after a partial failure, causing a "bad dma" warning on
+> debug kernels or a NULL pointer dereference otherwise.
+>=20
+> Fixes: dbec4c9040ed ("scsi: mpt3sas: lockless command submission")
+> Reported-by: Laurence Oberman <loberman@redhat.com>
+> Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+> ---
+> =C2=A0drivers/scsi/mpt3sas/mpt3sas_base.c | 2 ++
+> =C2=A01 file changed, 2 insertions(+)
+>=20
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 79052f2accbd..11bcb8440e1c 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -5870,6 +5870,8 @@ _base_release_memory_pools(struct
+> MPT3SAS_ADAPTER *ioc)
+> =C2=A0
+> =C2=A0	if (ioc->pcie_sgl_dma_pool) {
+> =C2=A0		for (i =3D 0; i < ioc->scsiio_depth; i++) {
+> +			if (!ioc->pcie_sg_lookup[i].pcie_sgl)
+> +				continue;
+> =C2=A0			dma_pool_free(ioc->pcie_sgl_dma_pool,
+> =C2=A0					ioc-
+> >pcie_sg_lookup[i].pcie_sgl,
+> =C2=A0					ioc-
+> >pcie_sg_lookup[i].pcie_sgl_dma);
 
-Thanks for the detailed report but I think this is the wrong way to fix
-the reported crash. Please help with testing this patch:
+Was also tested by a customer, Given the Sahishko analysis was
+responded to and a follow up patch for that will be coming:
 
-
-From: Bart Van Assche <bvanassche@acm.org>
-Date: Fri, 14 Aug 2026 17:00:55 +0000
-Subject: [PATCH] RDMA/srp: Fix srp_remove_target()
-
-Remove all logical units before disconnecting the transport because one or
-more SCSI commands may be submitted while removing logical units. Remove
-the SCSI host after the transport has been disconnected because the code
-that disconnects the transport needs resources that are freed by the code
-that removes the SCSI host (SCSI host tag set). Remove the srp_rport_get()
-and srp_rport_put() calls because the purpose of these calls was to keep
-the rport until tl_err_work is cancelled. This patch fixes the following
-crash:
-
-Oops: general protection fault, probably for non-canonical address 
-0xdffffc0000000001: 0000 [#1] SMP KASAN NOPTI
-RIP: 0010:srp_recv_done+0x618/0x1aa0
-  __ib_process_cq+0xe1/0x390
-  ib_poll_handler+0x6e/0x200
-  irq_poll_softirq+0x1df/0x480
-  do_softirq+0x3b/0x60
-  </IRQ>
-
-Reported-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
-  drivers/infiniband/ulp/srp/ib_srp.c | 14 ++++++++++----
-  1 file changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c 
-b/drivers/infiniband/ulp/srp/ib_srp.c
-index acbd787de265..0b296b5715a8 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -1038,15 +1038,20 @@ static void srp_del_scsi_host_attr(struct 
-Scsi_Host *shost)
-
-  static void srp_remove_target(struct srp_target_port *target)
-  {
-+	struct scsi_device *sdev;
-  	struct srp_rdma_ch *ch;
-  	int i;
-
-  	WARN_ON_ONCE(target->state != SRP_TARGET_REMOVED);
-
-  	srp_del_scsi_host_attr(target->scsi_host);
--	srp_rport_get(target->rport);
--	srp_remove_host(target->scsi_host);
--	scsi_remove_host(target->scsi_host);
-+	/*
-+	 * Remove all logical units. This must happen before the
-+	 * srp_disconnect_target() call because scsi_remove_device() may trigger
-+	 * submission of SCSI commands. See also sd_shutdown().
-+	 */
-+	shost_for_each_device(sdev, target->scsi_host)
-+		scsi_remove_device(sdev);
-  	srp_stop_rport_timers(target->rport);
-  	srp_disconnect_target(target);
-  	kobj_ns_drop(KOBJ_NS_TYPE_NET, to_ns_common(target->net));
-@@ -1055,7 +1060,8 @@ static void srp_remove_target(struct 
-srp_target_port *target)
-  		srp_free_ch_ib(target, ch);
-  	}
-  	cancel_work_sync(&target->tl_err_work);
--	srp_rport_put(target->rport);
-+	srp_remove_host(target->scsi_host);
-+	scsi_remove_host(target->scsi_host);
-  	kfree(target->ch);
-  	target->ch = NULL;
-
+Reviewed-by: Laurence Oberman ,loberman@redhat.com>
 
