@@ -1,458 +1,154 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E2CC367F36
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 20:24:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EF2036C5A9
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 20:38:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786739069; cv=none; b=kYr4TlgnfOpFhOQvvbZiBtqS4l0tmC8kKf9dyRGzBFSxHG/BBazOUGVy0NB28i6IZGyaWsFw0qMKT+FxcFzn+8F+vDhXVZYSJUYmVnT3//at49YUgcufXQC9GcfVZlzQWlgcVhSgyuoryDTwmnqS66vWpVpWsRTViZweKn4Moyg=
+	t=1786739930; cv=none; b=pe7lFIl2RN3Jt20eV9+iVWs6cOBoex50Ua8dPZ0f0eC8c+O0LS/2pdHhtxn+kFkdkyMFKb59AO/EyO5zlI5wBF5l4Y11wFjrExRniu6BwyBnW0l3nWqL8Mckye0un9QuTkJM5qX3FB6uAlkAMcQhdMnZB1yfwHOo4RX48cugCAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786739069; c=relaxed/simple;
-	bh=Xnctre02zLXhejxbGn1MbEBfs+2d8gHS1n+vXzGfnaA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gt1PBPdc0j1/mgpYxGyH8zFsApgBVwqKuuO1G3/V9rAwAF3F51u1VkVe86UUJ/AzwGwbHk3qTPc7rJntijJ2p36PyjuHR6Ds3XF3uuoEqdhmOTCK67TYey+zQRC+nha4eZvs7lHR8s09w7wOUorylFEANNqcAQT8gM15KH2O1hU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dC6Dcs4+; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1786739930; c=relaxed/simple;
+	bh=VZSVEO8DKcq3UFJsnFv0hanoLULgbJTcaF/zlOa28ms=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=uRteehlPHS487ODlVSHeM6o1AuGQy7TVwm1ycH0Hba2pkYmvlF1Z/0nBNpUx4EgRAT43UFd+zO+fbMANYwRyBnJQg6Cy9dzTJMR2Rccz86ZAZg6SztnKChAp4dSVvKsv4eoAN1oyrnROSEC6Z7xuGiAuVvqwPwGUwgeuNbDzDBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xr80gVcn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dC6Dcs4+"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hMDGf5B79z1XM5kD;
-	Fri, 14 Aug 2026 20:24:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1786739056; x=1789331057; bh=2g8eSQr0r/43s6kXwVZZ5yKhWkEfT14BBAX
-	wZgYMI0E=; b=dC6Dcs4+yEkKzOR7aa2yy6BnXjdI94amodM5X6FNgxd54IvHh5a
-	Rvd4J5d84wnTP9ognJS7nPGWuHRHvufnsjo8TbezJBnAnhwecafvqOfDvLBHwo4k
-	dL5c/mFQ7AocE1vs1PP/o8+QHtjGEniZiRru0o6N8TtXWTP8B50Hwss63n/1KDeY
-	VOZ9nnnSHyCd+hq+EeLDgF2eor3isOz6F/OS82ThG46BK626wkeHZUeSyE0kSkxk
-	gvMdRnC94pA18h9ctVWAcPqxv0ee5Hmbe+y7wIPEhaIXYR4pxZJSjlaeBaZKbewL
-	Lj1eIAGZlswTG+cTneqFLhT3W9GZblsFnbA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 8Vb-4-8DRAUm; Fri, 14 Aug 2026 20:24:16 +0000 (UTC)
-Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hMDGQ3pXbz1XM0pS;
-	Fri, 14 Aug 2026 20:24:14 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Hannes Reinecke <hare@suse.de>,
-	John Garry <john.g.garry@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] scsi: core: Eliminate scsi_log_{reserve,release}_buffer()
-Date: Fri, 14 Aug 2026 20:24:03 +0000
-Message-ID: <0b34db4ad0baadcdf2e223cc1a2c134b4f67ea1a.1786739033.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.55.0.691.gc56d675ccc-goog
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xr80gVcn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E4B11F000E9;
+	Fri, 14 Aug 2026 20:38:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786739929;
+	bh=L87e0K9m8OjKjHnwQ7m12N3fDH8zowuPJ7jmcgVPVIY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Xr80gVcnMLdsmKQTKEHE2R/0Pjh+nieyBy/ngu88pLU9yy7zL/sBHh2Zci0afqlhR
+	 l8k9VrsdHA45t2qYHwB3eCYujoNBnLbx5MRiEn+nZmMrdK/ufYzWcrjj1X+wQkEyqI
+	 GUhsAnt726s5zqJ+qfeycCLOyclBusVpzi9S+DbeD8WhagUTVCxdAydVMcucZZu4YR
+	 YKS0jmYFlUkyQOoMQYX8Ivl6IPWMVyxljJ23Dom/ccurVGx46ulfLmAe2yq1oHTfHt
+	 55fH/X5ZV5rUiRvsB2bfSo0DCG9cufDLx9/sjZgDcqS92zw0lgbJsVUkb4AC+BOSrT
+	 GLa6gvtbIS9OQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: core: Eliminate
+ scsi_log_{reserve,release}_buffer()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Bart Van Assche" <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <0b34db4ad0baadcdf2e223cc1a2c134b4f67ea1a.1786739033.git.bvanassche@acm.org>
+References: <0b34db4ad0baadcdf2e223cc1a2c134b4f67ea1a.1786739033.git.bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 14 Aug 2026 20:38:48 +0000
+Message-Id: <20260814203849.0E4B11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 
-The SCSI logging functions allocate a temporary buffer. This approach has
-multiple disadvantages:
- - Runtime overhead.
- - Trunctation of log messages to 127 characters.
- - Messages are discarded if buffer allocation fails.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] The newly introduced stack buffers `extd_sense[64]` and `hb_buf[=
+32]` are too small for some valid strings, causing unintended log truncatio=
+ns that contradict the patch's stated goal of eliminating truncation.
+--
 
-Hence this patch that eliminates temporary buffer allocations. Instead,
-use struct va_format (%pV) and format directly with dev_printk().
+--- Patch [1]: [PATCH] scsi: core: Eliminate scsi_log_{reserve,release}_buf=
+fer() ---
+commit 677007193ec0d6990c587a8dbcce949ece4341ff
+Author: Bart Van Assche <bvanassche@acm.org>
 
-Introduce sdev_tag_prefix_vprintk() and sdev_tag_prefix_printk() helper
-functions that emit dev_printk() messages with optional device name
-([<name>]) and request tag (tag#<tag>) prefixes.
+scsi: core: Eliminate scsi_log_{reserve,release}_buffer()
 
-Convert sdev_prefix_printk(), scmd_printk(), scsi_print_command(),
-scsi_log_dump_sense(), scsi_log_print_sense_hdr(), and scsi_print_result(=
-)
-to use these helpers. Use the %*ph format specifier to format CDB and
-sense hex buffers directly.
+This patch eliminates temporary buffer allocations in SCSI logging by using
+struct va_format (%pV) and formatting directly with dev_printk(). Helper
+functions and stack buffers are introduced for CDB formatting, sense header=
+s,
+and result strings.
 
-Remove scsi_log_reserve_buffer(), scsi_log_release_buffer(), and
-sdev_format_header().
+> diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+> index 3cd0d30740855..5bf2f1c74ec70 100644
+> --- a/drivers/scsi/scsi_logging.c
+> +++ b/drivers/scsi/scsi_logging.c
 
-This patch has been generated by asking Gemini 3.7 to eliminate the
-scsi_log_*_buffer() functions from the scsi_logging.c file, followed by
-some minor manual improvements.
+[ ... ]
 
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_logging.c | 262 ++++++++++++------------------------
- 1 file changed, 89 insertions(+), 173 deletions(-)
-
-diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-index 3cd0d3074085..5bf2f1c74ec7 100644
---- a/drivers/scsi/scsi_logging.c
-+++ b/drivers/scsi/scsi_logging.c
-@@ -15,17 +15,6 @@
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_dbg.h>
-=20
--static char *scsi_log_reserve_buffer(size_t *len)
--{
--	*len =3D 128;
--	return kmalloc(*len, GFP_ATOMIC);
--}
--
--static void scsi_log_release_buffer(char *bufptr)
--{
--	kfree(bufptr);
--}
--
- static inline const char *scmd_name(struct scsi_cmnd *scmd)
- {
- 	const struct request *rq =3D scsi_cmd_to_rq(scmd);
-@@ -35,48 +24,56 @@ static inline const char *scmd_name(struct scsi_cmnd =
-*scmd)
- 	return rq->q->disk->disk_name;
- }
-=20
--static size_t sdev_format_header(char *logbuf, size_t logbuf_len,
--				 const char *name, int tag)
-+static void __printf(5, 0)
-+sdev_tag_prefix_vprintk(const char *level, const struct scsi_device *sde=
-v,
-+			const char *name, int tag, const char *fmt,
-+			va_list *args)
- {
--	size_t off =3D 0;
-+	const struct device *dev =3D &sdev->sdev_gendev;
-+	struct va_format vaf =3D {
-+		.fmt =3D fmt,
-+		.va =3D args,
-+	};
-=20
--	if (name)
--		off +=3D scnprintf(logbuf + off, logbuf_len - off,
--				 "[%s] ", name);
-+	if (!sdev)
-+		return;
-=20
--	if (WARN_ON(off >=3D logbuf_len))
--		return off;
-+	if (name) {
-+		if (tag >=3D 0)
-+			dev_printk(level, dev, "[%s] tag#%d %pV", name, tag,
-+				   &vaf);
-+		else
-+			dev_printk(level, dev, "[%s] %pV", name, &vaf);
-+	} else {
-+		if (tag >=3D 0)
-+			dev_printk(level, dev, "tag#%d %pV", tag, &vaf);
-+		else
-+			dev_printk(level, dev, "%pV", &vaf);
-+	}
-+}
-=20
--	if (tag >=3D 0)
--		off +=3D scnprintf(logbuf + off, logbuf_len - off,
--				 "tag#%d ", tag);
--	return off;
-+static void __printf(5, 6)
-+sdev_tag_prefix_printk(const char *level, const struct scsi_device *sdev=
-,
-+		       const char *name, int tag, const char *fmt, ...)
-+{
-+	va_list args;
-+
-+	va_start(args, fmt);
-+	sdev_tag_prefix_vprintk(level, sdev, name, tag, fmt, &args);
-+	va_end(args);
- }
-=20
- void sdev_prefix_printk(const char *level, const struct scsi_device *sde=
-v,
- 			const char *name, const char *fmt, ...)
- {
- 	va_list args;
--	char *logbuf;
--	size_t off =3D 0, logbuf_len;
-=20
- 	if (!sdev)
- 		return;
-=20
--	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
--	if (!logbuf)
--		return;
--
--	if (name)
--		off +=3D scnprintf(logbuf + off, logbuf_len - off,
--				 "[%s] ", name);
--	if (!WARN_ON(off >=3D logbuf_len)) {
--		va_start(args, fmt);
--		off +=3D vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
--		va_end(args);
--	}
--	dev_printk(level, &sdev->sdev_gendev, "%s", logbuf);
--	scsi_log_release_buffer(logbuf);
-+	va_start(args, fmt);
-+	sdev_tag_prefix_vprintk(level, sdev, name, -1, fmt, &args);
-+	va_end(args);
- }
- EXPORT_SYMBOL(sdev_prefix_printk);
-=20
-@@ -84,24 +81,14 @@ void scmd_printk(const char *level, struct scsi_cmnd =
-*scmd, const char *fmt,
- 		 ...)
- {
- 	va_list args;
--	char *logbuf;
--	size_t off =3D 0, logbuf_len;
-=20
- 	if (!scmd)
- 		return;
-=20
--	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
--	if (!logbuf)
--		return;
--	off =3D sdev_format_header(logbuf, logbuf_len, scmd_name(scmd),
--				 scsi_cmd_to_rq(scmd)->tag);
--	if (off < logbuf_len) {
--		va_start(args, fmt);
--		off +=3D vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
--		va_end(args);
--	}
--	dev_printk(level, &scmd->device->sdev_gendev, "%s", logbuf);
--	scsi_log_release_buffer(logbuf);
-+	va_start(args, fmt);
-+	sdev_tag_prefix_vprintk(level, scmd->device, scmd_name(scmd),
-+				scsi_cmd_to_rq(scmd)->tag, fmt, &args);
-+	va_end(args);
- }
- EXPORT_SYMBOL(scmd_printk);
-=20
-@@ -179,60 +166,34 @@ EXPORT_SYMBOL(__scsi_format_command);
-=20
- void scsi_print_command(struct scsi_cmnd *cmd)
- {
-+	char opcode_name[64];
- 	int k;
--	char *logbuf;
--	size_t off, logbuf_len;
-=20
--	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
--	if (!logbuf)
-+	if (!cmd)
- 		return;
-=20
--	off =3D sdev_format_header(logbuf, logbuf_len,
--				 scmd_name(cmd), scsi_cmd_to_rq(cmd)->tag);
--	if (off >=3D logbuf_len)
--		goto out_printk;
--	off +=3D scnprintf(logbuf + off, logbuf_len - off, "CDB: ");
--	if (WARN_ON(off >=3D logbuf_len))
--		goto out_printk;
-+	scsi_format_opcode_name(opcode_name, sizeof(opcode_name), cmd->cmnd);
-=20
--	off +=3D scsi_format_opcode_name(logbuf + off, logbuf_len - off,
--				       cmd->cmnd);
--	if (off >=3D logbuf_len)
--		goto out_printk;
--
--	/* print out all bytes in cdb */
- 	if (cmd->cmd_len > 16) {
- 		/* Print opcode in one line and use separate lines for CDB */
--		off +=3D scnprintf(logbuf + off, logbuf_len - off, "\n");
--		dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
-+		sdev_tag_prefix_printk(KERN_INFO, cmd->device, scmd_name(cmd),
-+				       scsi_cmd_to_rq(cmd)->tag, "CDB: %s",
-+				       opcode_name);
- 		for (k =3D 0; k < cmd->cmd_len; k +=3D 16) {
--			size_t linelen =3D min(cmd->cmd_len - k, 16);
--
--			off =3D sdev_format_header(logbuf, logbuf_len,
--						 scmd_name(cmd),
--						 scsi_cmd_to_rq(cmd)->tag);
--			if (!WARN_ON(off > logbuf_len - 58)) {
--				off +=3D scnprintf(logbuf + off, logbuf_len - off,
--						 "CDB[%02x]: ", k);
--				hex_dump_to_buffer(&cmd->cmnd[k], linelen,
--						   16, 1, logbuf + off,
--						   logbuf_len - off, false);
--			}
--			dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s",
--				   logbuf);
-+			size_t linelen =3D min_t(size_t, cmd->cmd_len - k, 16);
-+
-+			sdev_tag_prefix_printk(KERN_INFO, cmd->device,
-+					       scmd_name(cmd),
-+					       scsi_cmd_to_rq(cmd)->tag,
-+					       "CDB[%02x]: %*ph", k,
-+					       (int)linelen, &cmd->cmnd[k]);
- 		}
--		goto out;
--	}
--	if (!WARN_ON(off > logbuf_len - 49)) {
--		off +=3D scnprintf(logbuf + off, logbuf_len - off, " ");
--		hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
--				   logbuf + off, logbuf_len - off,
--				   false);
-+	} else {
-+		sdev_tag_prefix_printk(KERN_INFO, cmd->device, scmd_name(cmd),
-+				       scsi_cmd_to_rq(cmd)->tag, "CDB: %s %*ph",
-+				       opcode_name, (int)cmd->cmd_len,
-+				       cmd->cmnd);
- 	}
--out_printk:
--	dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
--out:
--	scsi_log_release_buffer(logbuf);
- }
- EXPORT_SYMBOL(scsi_print_command);
-=20
-@@ -292,51 +253,29 @@ static void
- scsi_log_dump_sense(const struct scsi_device *sdev, const char *name, in=
-t tag,
- 		    const unsigned char *sense_buffer, int sense_len)
- {
--	char *logbuf;
--	size_t logbuf_len;
- 	int i;
-=20
--	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
--	if (!logbuf)
--		return;
--
- 	for (i =3D 0; i < sense_len; i +=3D 16) {
- 		int len =3D min(sense_len - i, 16);
--		size_t off;
--
--		off =3D sdev_format_header(logbuf, logbuf_len,
--					 name, tag);
--		hex_dump_to_buffer(&sense_buffer[i], len, 16, 1,
--				   logbuf + off, logbuf_len - off,
--				   false);
--		dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
-+
-+		sdev_tag_prefix_printk(KERN_INFO, sdev, name, tag, "%*ph", len,
-+				       &sense_buffer[i]);
- 	}
--	scsi_log_release_buffer(logbuf);
- }
-=20
- static void
- scsi_log_print_sense_hdr(const struct scsi_device *sdev, const char *nam=
+> @@ -292,51 +253,29 @@ static void
+>  scsi_log_print_sense_hdr(const struct scsi_device *sdev, const char *nam=
 e,
- 			 int tag, const struct scsi_sense_hdr *sshdr)
- {
--	char *logbuf;
--	size_t off, logbuf_len;
-+	char sense_hdr[64];
-+	char extd_sense[64];
-=20
--	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
--	if (!logbuf)
--		return;
--	off =3D sdev_format_header(logbuf, logbuf_len, name, tag);
--	off +=3D scsi_format_sense_hdr(logbuf + off, logbuf_len - off, sshdr);
--	dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
--	scsi_log_release_buffer(logbuf);
-+	scsi_format_sense_hdr(sense_hdr, sizeof(sense_hdr), sshdr);
-+	sdev_tag_prefix_printk(KERN_INFO, sdev, name, tag, "%s", sense_hdr);
-=20
--	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
--	if (!logbuf)
--		return;
--	off =3D sdev_format_header(logbuf, logbuf_len, name, tag);
--	off +=3D scsi_format_extd_sense(logbuf + off, logbuf_len - off,
--				      sshdr->asc, sshdr->ascq);
--	dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
--	scsi_log_release_buffer(logbuf);
-+	scsi_format_extd_sense(extd_sense, sizeof(extd_sense), sshdr->asc,
-+			       sshdr->ascq);
-+	sdev_tag_prefix_printk(KERN_INFO, sdev, name, tag, "%s", extd_sense);
- }
-=20
- static void
-@@ -381,58 +320,35 @@ EXPORT_SYMBOL(scsi_print_sense);
-=20
- void scsi_print_result(struct scsi_cmnd *cmd, const char *msg, int dispo=
+>  			 int tag, const struct scsi_sense_hdr *sshdr)
+>  {
+> -	char *logbuf;
+> -	size_t off, logbuf_len;
+> +	char sense_hdr[64];
+> +	char extd_sense[64];
+        ^^^^
+
+[Severity: Medium]
+Will the extd_sense array truncate valid additional sense codes?
+
+The commit message notes this patch resolves the truncation of log messages,
+but it seems this 64-byte stack buffer might be too small. When formatting
+long Additional Sense strings such as "Invalid token operation, remote rod
+token creation not supported" (64 characters) plus the "Add. Sense: " prefix
+added in scsi_format_extd_sense(), the result requires 77 bytes including t=
+he
+null terminator.
+
+Could this array be expanded to prevent truncation?
+
+> =20
+> -	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+> -	if (!logbuf)
+> -		return;
+> -	off =3D sdev_format_header(logbuf, logbuf_len, name, tag);
+> -	off +=3D scsi_format_sense_hdr(logbuf + off, logbuf_len - off, sshdr);
+> -	dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
+> -	scsi_log_release_buffer(logbuf);
+> +	scsi_format_sense_hdr(sense_hdr, sizeof(sense_hdr), sshdr);
+> +	sdev_tag_prefix_printk(KERN_INFO, sdev, name, tag, "%s", sense_hdr);
+> =20
+> -	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+> -	if (!logbuf)
+> -		return;
+> -	off =3D sdev_format_header(logbuf, logbuf_len, name, tag);
+> -	off +=3D scsi_format_extd_sense(logbuf + off, logbuf_len - off,
+> -				      sshdr->asc, sshdr->ascq);
+> -	dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
+> -	scsi_log_release_buffer(logbuf);
+> +	scsi_format_extd_sense(extd_sense, sizeof(extd_sense), sshdr->asc,
+> +			       sshdr->ascq);
+
+[ ... ]
+
+> @@ -381,58 +320,35 @@ EXPORT_SYMBOL(scsi_print_sense);
+> =20
+>  void scsi_print_result(struct scsi_cmnd *cmd, const char *msg, int dispo=
 sition)
- {
--	char *logbuf;
--	size_t off, logbuf_len;
- 	const char *mlret_string =3D scsi_mlreturn_string(disposition);
- 	const char *hb_string =3D scsi_hostbyte_string(cmd->result);
- 	unsigned long cmd_age =3D (jiffies - cmd->jiffies_at_alloc) / HZ;
-+	char mlret_buf[32];
-+	char hb_buf[32];
-=20
--	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
--	if (!logbuf)
--		return;
--
--	off =3D sdev_format_header(logbuf, logbuf_len, scmd_name(cmd),
--				 scsi_cmd_to_rq(cmd)->tag);
--
--	if (off >=3D logbuf_len)
--		goto out_printk;
--
--	if (msg) {
--		off +=3D scnprintf(logbuf + off, logbuf_len - off,
--				 "%s: ", msg);
--		if (WARN_ON(off >=3D logbuf_len))
--			goto out_printk;
--	}
- 	if (mlret_string)
--		off +=3D scnprintf(logbuf + off, logbuf_len - off,
--				 "%s ", mlret_string);
-+		snprintf(mlret_buf, sizeof(mlret_buf), "%s", mlret_string);
- 	else
--		off +=3D scnprintf(logbuf + off, logbuf_len - off,
--				 "UNKNOWN(0x%02x) ", disposition);
--	if (WARN_ON(off >=3D logbuf_len))
--		goto out_printk;
--
--	off +=3D scnprintf(logbuf + off, logbuf_len - off, "Result: ");
--	if (WARN_ON(off >=3D logbuf_len))
--		goto out_printk;
-+		snprintf(mlret_buf, sizeof(mlret_buf), "UNKNOWN(0x%02x)",
-+			 disposition);
-=20
- 	if (hb_string)
--		off +=3D scnprintf(logbuf + off, logbuf_len - off,
--				 "hostbyte=3D%s ", hb_string);
-+		snprintf(hb_buf, sizeof(hb_buf), "hostbyte=3D%s", hb_string);
- 	else
--		off +=3D scnprintf(logbuf + off, logbuf_len - off,
--				 "hostbyte=3D0x%02x ", host_byte(cmd->result));
--	if (WARN_ON(off >=3D logbuf_len))
--		goto out_printk;
--
--	off +=3D scnprintf(logbuf + off, logbuf_len - off,
--			 "driverbyte=3DDRIVER_OK ");
--
--	off +=3D scnprintf(logbuf + off, logbuf_len - off,
--			 "cmd_age=3D%lus", cmd_age);
--
--out_printk:
--	dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
--	scsi_log_release_buffer(logbuf);
-+		snprintf(hb_buf, sizeof(hb_buf), "hostbyte=3D0x%02x",
-+			 host_byte(cmd->result));
-+
-+	if (msg)
-+		sdev_tag_prefix_printk(
-+			KERN_INFO, cmd->device, scmd_name(cmd),
-+			scsi_cmd_to_rq(cmd)->tag,
-+			"%s: %s Result: %s driverbyte=3DDRIVER_OK cmd_age=3D%lus",
-+			msg, mlret_buf, hb_buf, cmd_age);
-+	else
-+		sdev_tag_prefix_printk(
-+			KERN_INFO, cmd->device, scmd_name(cmd),
-+			scsi_cmd_to_rq(cmd)->tag,
-+			"%s Result: %s driverbyte=3DDRIVER_OK cmd_age=3D%lus",
-+			mlret_buf, hb_buf, cmd_age);
- }
- EXPORT_SYMBOL(scsi_print_result);
+>  {
+> -	char *logbuf;
+> -	size_t off, logbuf_len;
+>  	const char *mlret_string =3D scsi_mlreturn_string(disposition);
+>  	const char *hb_string =3D scsi_hostbyte_string(cmd->result);
+>  	unsigned long cmd_age =3D (jiffies - cmd->jiffies_at_alloc) / HZ;
+> +	char mlret_buf[32];
+> +	char hb_buf[32];
+        ^^^^
+
+[Severity: Medium]
+Does this code truncate hb_buf when formatting DID_TRANSPORT_DISRUPTED?
+
+If scsi_hostbyte_string() returns "DID_TRANSPORT_DISRUPTED", formatting it =
+as
+"hostbyte=3DDID_TRANSPORT_DISRUPTED" requires 33 bytes including the null
+terminator. This will be truncated by the 32-byte array.
+
+Should this array size be increased to comfortably fit the longest possible
+hostbyte string?
+
+> =20
+> -	logbuf =3D scsi_log_reserve_buffer(&logbuf_len);
+> -	if (!logbuf)
+> -		return;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/0b34db4ad0baadcdf2e=
+223cc1a2c134b4f67ea1a.1786739033.git.bvanassche@acm.org?part=3D1
