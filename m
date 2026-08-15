@@ -1,168 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41923264E7
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Aug 2026 22:00:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EDEF3659FB;
+	Sat, 15 Aug 2026 13:24:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786744826; cv=none; b=o/tNizrX2dOCRbMJFhUdnacArjy6UVTYYeNOnYtbELYTnAixowDk66K/pwx4Xh526eR+UlRshzMrpLa70I6TNN4QDDbGqA1tf9vuUbt5qG+orhpupANWh2FBwJgfvHY2Aey/WvQkoCNM0ZJLuotnFxIZvGDQa/FaUJUIwiqec3c=
+	t=1786800295; cv=none; b=aeDN/FhsbPE12tEkORowdptP2Uq4+q6iuVw9YtqkjfbDfHHiTJW3bwryuI2bVmot1agTj5pfoarqnRybNbTkIiOdvaL71Ch/DVkFKTVOX4JBvM61GOtHMbV+rTRt5pWN58kOt1Bg9ITNtgHi2FNhfstwLDTZ84vT5E4huJPxK4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786744826; c=relaxed/simple;
-	bh=hIJa19rntekGgKlamqLLlnArIpS3gDdTWjKykOnun3I=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CbS1iF3NukjhYNGWEwiVGGQAJluG2uLLPdtZiB5EnoZi3jQJhMdOuuKpKv/5cvWvek+aWcRVeuUoD3uNQaoLXVjTLnuTO2bV3pjcJi9U9XGtyK5ZjTXwIg8b+2QBbb4qNQPoWRQTmX637xcp0niajRhnCwOhIEOCfo/goJ4QoCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZK3MqCf8; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZK3MqCf8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D0F31F000E9;
-	Fri, 14 Aug 2026 22:00:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786744825;
-	bh=NNbHoQZqI2emv6BQs7Q4FfBavUYoQnV9HHc9wn/TIus=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZK3MqCf8DaXMkEcT6iUneho5N/syKJH/weU3BEJu7UJv+WqsSlBpscPBT4HdRpyKt
-	 BUk2qE9E9D3XP/6H12UgtH2RlWTDFYfXybeZi/JVaTxRiIG5S9/zZ+PoZGS3FPZ5zv
-	 GZR3JZJyiTFN6qi36bwkwxN99Z49gOa72nJFUTzWbtQvVueztubehUCCYSoHp5ICCS
-	 LbMMhDILHlE0DtGl+Yr7u++ui5NLHhwfoEdQ5oURPTS4EMHH1WLsB5wCBfWsE+Sqs9
-	 ElsPI3qm5wKVglkisjSVww3+X+WV0Z9DpNBGAB3e761rttczcMghxmjKi0NptdOKdR
-	 YVQwYpYJ2eN6w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] ufs: core: Disable queue depth tracking support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bart Van Assche" <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260814214951.80673-1-bvanassche@acm.org>
-References: <20260814214951.80673-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 14 Aug 2026 22:00:24 +0000
-Message-Id: <20260814220025.1D0F31F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1786800295; c=relaxed/simple;
+	bh=2yTkFgPvpVZTAIpT7PD399MhPhKh2LgfyzNpAFr/pFw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=k9P3fiSp6G60wfbTIhtyi5QWDcgu8wbqfS/y/4I0+AVnRjLzEFvnAj4VzTB4bZbCePBWoi6EPEWH7MqdXFJDuMXYmsEKGaZ1J0WlcmJJRr2qfa+h0FezNYluvuIjac+YkG9WOPWOFFjlKSg4K9RHgKuidqtwHVySoPpRAmDF3Zk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.241.250])
+	by APP-05 (Coremail) with SMTP id zQCowAC36EKTaIBqmPbQBQ--.59162S2;
+	Sat, 15 Aug 2026 21:24:36 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: Don Brace <don.brace@microchip.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	storagedev@microchip.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] scsi: hpsa: validate active path before indexing enclosure arrays
+Date: Sat, 15 Aug 2026 21:21:06 +0800
+Message-ID: <20260815132434.27982-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zQCowAC36EKTaIBqmPbQBQ--.59162S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kry5Zw48JF1UCryfAr48Xrb_yoW8Wry5pF
+	W0gFyUAw1kKa13GFW7Aa1UWFy3u3Z5CrWUu3WSy3y8uFnxu348Za1rKr1UXF95JrZ5Gry7
+	t39rtay8GFyUWaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1I6r4UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
+	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
+	JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
+	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIY
+	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
+	v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8
+	JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUBVbkUUU
+	UU=
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+hpsa_get_enclosure_info() uses the firmware-provided active path
+number as an index into the eight-entry box and phys_connector arrays.
+The index is not checked before the array write and connector copy.
 
-New issues:
-- [High] Silently disabling userspace's ability to modify the UFS device qu=
-eue depth via sysfs.
-- [Medium] Unrelated and undocumented modification to the InfiniBand SRP ta=
-rget driver (`ib_srp.c`).
+Reject enclosure information with an out-of-range active path before
+updating those per-path arrays.
 
-Pre-existing issues:
-- [High] Unresolved concurrency and IRQ-handling bug in SCSI core (`scsi_tr=
-ack_queue_full`) and Block layer (`ioc_rqos_queue_depth_changed`).
---
+Fixes: cca8f13b4fda ("hpsa: Add box and bay information for enclosure devices")
+Assisted-by: Codex:gpt-5
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+---
+Changes since v1: https://lore.kernel.org/all/20260704010943.16707-1-pengpeng@iscas.ac.cn/
+- rebase on current hpsa sources
+- validate the firmware path number against the destination arrays before
+  either access
 
---- Patch [1]: [PATCH] ufs: core: Disable queue depth tracking support ---
-commit f181b5b33f08308dbca6a708c0dbc602ecd352b0
-Author: Bart Van Assche <bvanassche@acm.org>
+This revision was not built or tested on Smart Array hardware.
 
-ufs: core: Disable queue depth tracking support
+ drivers/scsi/hpsa.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Disable queue depth tracking support because UFS devices shouldn't need
-queue tracking support. The queue depth tracking code is not thread-safe,
-and scsi_track_queue_full() is called from interrupt context but not all
-code called by it is IRQ-safe.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 8edad1830abe..5725fd9a6aaa 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3505,6 +3505,14 @@ static void hpsa_get_enclosure_info(struct ctlr_info *h,
+ 		goto out;
+ 	}
+ 
++	if (id_phys->active_path_number >= ARRAY_SIZE(encl_dev->box)) {
++		dev_warn(&h->pdev->dev,
++			 "%s: invalid active path %u for bdi[0x%x]\n",
++			 __func__, id_phys->active_path_number, bmic_device_index);
++		rc = -1;
++		goto out;
++	}
++
+ 	encl_dev->box[id_phys->active_path_number] = bssbp->phys_box_on_port;
+ 	memcpy(&encl_dev->phys_connector[id_phys->active_path_number],
+ 		bssbp->phys_connector, sizeof(bssbp->phys_connector));
+-- 
+2.50.1 (Apple Git-155)
 
->      - scsi_track_queue_full() is called from interrupt context but not a=
-ll
->        code called by scsi_track_queue_full() is IRQ-safe. Here is an
->        example of a call chain that may cause interrupts to be enabled,
->        something that is not allowed from interrupt context:
->    =20
->        ufshcd_mcq_poll_cqe_lock()
->          ufshcd_compl_one_cqe()
->            scsi_done()
->              blk_mq_complete_request()
->                scsi_complete()
->                  scsi_decide_disposition()
->                    scsi_handle_queue_full()
->                      scsi_track_queue_full()
->                        scsi_change_queue_depth()
->                          blk_set_queue_depth()
->                            rq_qos_queue_depth_changed()
->                              ioc_rqos_queue_depth_changed()
->                                spin_lock_irq()
->                                spin_unlock_irq() <- enables interrupts
-
-[Severity: High]
-This is a pre-existing issue, but by only disabling queue depth tracking
-locally in the UFS driver, are dozens of other SCSI drivers that set
-.track_queue_depth =3D 1 still exposed to this IRQ-safety bug?
-
-Since ioc_rqos_queue_depth_changed() unconditionally uses spin_unlock_irq(),
-and scsi_track_queue_full() has no locking for sdev->last_queue_full_count,
-should this concurrency and IRQ unmasking issue be addressed in the SCSI co=
-re
-and block layers directly?
-
-> diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp=
-/srp/ib_srp.c
-> index 6b429ef63f8f3..d671a3d3359ba 100644
-> --- a/drivers/infiniband/ulp/srp/ib_srp.c
-> +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-> @@ -1044,6 +1044,10 @@ static void srp_remove_target(struct srp_target_po=
-rt *target)
->  	WARN_ON_ONCE(target->state !=3D SRP_TARGET_REMOVED);
-> =20
->  	srp_del_scsi_host_attr(target->scsi_host);
-> +	/*
-> +	 * The srp_remove_host() call decrements the rport reference count.
-> +	 * Keep the rport as long as its needed.
-> +	 */
-
-[Severity: Medium]
-Was this modification to the InfiniBand SRP target driver included by
-accident?
-
-The commit message only mentions disabling queue depth tracking for UFS, but
-this introduces an undocumented change to srp_remove_target().
-
->  	srp_rport_get(target->rport);
->  	srp_remove_host(target->scsi_host);
->  	scsi_remove_host(target->scsi_host);
-
-[ ... ]
-
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index d3044a3089b53..bdb926a9f2d75 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-
-[ ... ]
-
-> @@ -9580,7 +9566,6 @@ static const struct scsi_host_template ufshcd_drive=
-r_template =3D {
->  	.sdev_init		=3D ufshcd_sdev_init,
->  	.sdev_configure		=3D ufshcd_sdev_configure,
->  	.sdev_destroy		=3D ufshcd_sdev_destroy,
-> -	.change_queue_depth	=3D ufshcd_change_queue_depth,
-
-[Severity: High]
-Does removing .change_queue_depth from the template completely disable
-userspace's ability to modify the queue depth via sysfs?
-
-Looking at sdev_store_queue_depth(), it returns -EINVAL if this callback is
-missing:
-
-drivers/scsi/scsi_sysfs.c:sdev_store_queue_depth() {
-    ...
-	if (!sht->change_queue_depth)
-		return -EINVAL;
-    ...
-}
-
-Could .change_queue_depth be set to scsi_change_queue_depth instead to
-preserve the manual sysfs tuning interface?
-
->  	.eh_abort_handler	=3D ufshcd_abort,
->  	.eh_device_reset_handler =3D ufshcd_eh_device_reset_handler,
->  	.eh_host_reset_handler   =3D ufshcd_eh_host_reset_handler,
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260814214951.8067=
-3-1-bvanassche@acm.org?part=3D1
