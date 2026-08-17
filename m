@@ -1,176 +1,192 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1077B190462;
-	Mon, 17 Aug 2026 08:10:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786954231; cv=none; b=Reg3LjRSOcQPrrPOTHhqW0hllavWOY9NjuV1j90ln/xJwF4+lmaNHFGL3RcsclMoBBTopSvz6soPMQ/41XAFaZ4/acUiOblcKLRY2JdZ++3RMvxkt1EGHzjaKun+xMxm1vHWCa5/T/RtGoH5O6TYpAb5aCTqoSS0hyf8Yv9CP6w=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786954231; c=relaxed/simple;
-	bh=bY4TCuOOw5IetSosG1NCHo6cbnBVS49n+Pmaj4zxxhw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=d+mk34Fy3VGjNvFJjAcFBhhe9A5yO12fkn29TbjCChSWXNSa7yNJ0YVbmLEslKyH3hTYnyYltJyDqTAyHn/xk4O/47VSnp+obKPU4OxfE4/X81q6ck6K57m/Bdd/JigkoEDtdVMb8kCZaBbHZ0DPPTS4+HOpZ6vPTyAN4sP/EXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=lGUpqhY4; arc=none smtp.client-ip=220.197.31.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34FE043BDA7
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 13:42:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786974126; cv=pass; b=TZrg0dGtp0wRzgPrn7Yh11nIkD/pkv4hDoMhMkbFrHX9L0sKTQrfW33s4dZq2WWkQrKMV0ctrrWRwph5X+W9o+9h4zWBQcsopsq18R4vynZF2O2VC4XWbVnKYgZP4QwytXCgTvC48tB6DzHrsZhkcfE7nhLRX3kiKeCgMSD39F4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786974126; c=relaxed/simple;
+	bh=5t0+awvIEoaGKqMdu39TCk34rZ/73tsfHuxRUuz9SGU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QbWboGXA8xE93SzPK8m2wt6dWN/92OgvdvpSASQkC5LYSRsWl9+U+tdd8fxtbe9dSaIdC3LshRLpxR3ypFTcYl9SZlleBbe6CvKzX4l6b4DZahZjGxLEn6ZoXxZPJ6gXqCW4GZr320AZDHH9VlRcTb5VIsBiL0Oa4DbD4LoYZsw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IixH3yvI; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=EOYufjk9; arc=pass smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="lGUpqhY4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=C/
-	Ds0Ouy+iXpMEJIWkJQJBFzDXs1DtTbz9+QQw4wjHc=; b=lGUpqhY4rsR/O0EJus
-	QvdX09cXPzSYkpzJ/bF3WfE/8jfOBRSG7c/UP1rg9GLOy2Wo0FWwC5zdPR++w1B0
-	DELohYhgS/e4lMHnivDl0lImdZ48wOQxVPkYyeQuEYHA6m/UNrw/E1de361Bqx2r
-	110xTfm9IXm8AN+rv5PT/OGJ8=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wBnnvpFwYJqCVRqOA--.71S4;
-	Mon, 17 Aug 2026 16:07:40 +0800 (CST)
-From: Yang Xiuwei <yangxiuwei@kylinos.cn>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: axboe@kernel.dk,
-	bvanassche@acm.org,
-	csander@purestorage.com,
-	fujita.tomonori@lab.ntt.co.jp,
-	io-uring@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	rc@rexion.ai,
-	stable@vger.kernel.org,
-	Yang Xiuwei <yangxiuwei@kylinos.cn>
-Subject: [PATCH v4 2/3] scsi: bsg: fix TOCTOU in io_uring passthrough command setup
-Date: Mon, 17 Aug 2026 16:07:29 +0800
-Message-Id: <20260817080730.967879-3-yangxiuwei@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260817080730.967879-1-yangxiuwei@kylinos.cn>
-References: <20260817080730.967879-1-yangxiuwei@kylinos.cn>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IixH3yvI";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="EOYufjk9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1786974119;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Nar5TPwp4YomIFNBACklaS1XT648jZLKltDco2A2dR0=;
+	b=IixH3yvI9z2a/X+322aB2nzJdCxUoOtDDpzvHJVXR+Blx/W7LSqGtctRzh8N9tItzRZlRC
+	4yZSILNeLiqU8tjZbVzGEDv5X8flcwbIuLoPhdHuuNP8I3tDoPi8z40aAgB4NphjXhR07E
+	oz1WxxaBMvrHufO2QL5mpN5ezLnDfeQ=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-690-uQlrqowqMfi9ivPzi2himw-1; Mon, 17 Aug 2026 09:41:53 -0400
+X-MC-Unique: uQlrqowqMfi9ivPzi2himw-1
+X-Mimecast-MFC-AGG-ID: uQlrqowqMfi9ivPzi2himw_1786974112
+Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-47f2de3ba47so2245796f8f.1
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 06:41:53 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786974112; cv=none;
+        d=google.com; s=arc-20260327;
+        b=AvPVsT+9ha0WVQrQReqMvO/8oCRwBkCQQw4uMewMztN1cp18sIY6XeQCfpEhgTwl0P
+         wrlRkbBL2bdnOxdEiEwwk169vbmYphhz6fUfOLjzzEFqIXXMYCgh5sztdFCt0MZklJXy
+         FMnSe20etIOf44Xu5gcQup38H3gYyrwH7AzC3p/tKnTYlSQaa/lQbkyeDEkTSuNFLHGh
+         MEWrw6j2YR5RQHfo16aPoMsN/fSu0eJq0Yl7XJKiRTBRuM5aafT66sk/iuBADpZLJXrx
+         tH8sE+vBoYVVzkmeDHGwckdHCpl3MSlkf/74msH1SnEWwvdNSbJuEFEMfeDQfy8pGyIQ
+         iR/A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Nar5TPwp4YomIFNBACklaS1XT648jZLKltDco2A2dR0=;
+        fh=gUfsL9ppqjROwdjOOpA7gVU01au1qshFQ+BhECdF0Kg=;
+        b=DPEEe4MXOSGEwdRjLrYugX9GgyP59qUAdqI9nGOox43XS96OkgeZgG4pTPnTRlqQp4
+         3PUzQkAVOTw1Thv/1YUfb74a0Yne7xtF+k5DKcMTH7zsAoFYyTtZXou5Nr2C6HlSWTP7
+         DPbHKgzQBsS1H9tmNkmOXN4ljWfwYUBaGgQIAZxqXa9jSzl2EQaDukaH0DY/r3PB+D+O
+         ug6NbEOGgNqY7aYyi0L26YTdLL+acXZTevAIOZTsbvhwEBmfKceNr1ac3wtfiXhkN9f2
+         zp6fIDokZVsHHsWIuFUK4PLwCcXYRMgiadxvxA3O257+cBRaZKgaBIXT6ABUJorkFske
+         FYYg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1786974112; x=1787578912; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Nar5TPwp4YomIFNBACklaS1XT648jZLKltDco2A2dR0=;
+        b=EOYufjk9tTJqQ/EKOIPjFQS5mZtaOuLULwmKTcM7xg3J/3foBjqvWYiTK18JRFnfI4
+         QaG6BXMJGayRUXawnqXsVrenjRo4jvZ+XSBthCi9rj+3rSZ9zvb96OPmqMPMIXknP52x
+         tz9f27LIrd3Xx93bCM62rxVpjdMKFaipDRu6UxBgzvCZn2Q7YiGG/DujaW50IuGFs3PZ
+         /BTEQn+5YW+jVAkQXefBbES8sdj5h9j+Fpn2dsR69G0mtp8EcBTQZTEbDBYXMNKioaF7
+         8Fe8NFAKGU6KLHvKm7J+D81r+Tx32/S2Y+draPtGD9t+dIjW6aO9SgUrJA4as8IlMoFx
+         fxbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786974112; x=1787578912;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Nar5TPwp4YomIFNBACklaS1XT648jZLKltDco2A2dR0=;
+        b=OlZcnq0b5QiEscclls+ueZbpJhyuExxNqgv2+OO95dKOps4xXo9P6vaNmmpVmCldtX
+         hCXyNmusKbzOaPYzR5TtDND+2M4TilaiGbMhD69ZfCuLVdSUKSoNMrxX3VkmffiVfM4k
+         vG/3sQ9Hg2W+2+XubOcRyh2SKEFgoYQRHWVHot+OO7cBU/94beiv8c4hbFSHCe9ajiLr
+         B+aYgjNRWYibMR1UbF8jzyBLofmX7UYYVxPBx9RxhV96mS6kwhK/GulAP+PhfJec+qwx
+         lossdFAT5xL106DEv6Z6hxOVdLmJwq+5a+MoK8BJJ+JDl34UDJpQZG8A/Zc+72L48vlf
+         CHXw==
+X-Gm-Message-State: AOJu0YxqGdrdY/JvcVMjMH0SoxlXa4o93JT0JJnDXhqRDCvsd4uq7Hzb
+	vRZrZpeMtYO+t0xkQqsYvBs/+KpkkqIYWBDKCKXgTlZbzB2hg0/KQqJLC1VqNf+j/Tzp9GLK15q
+	BhjmFdKmV+IUKKt4Gj5r84oIj+u4lhK6hqVMErmy/yJydMsAaGKlgtSukhjLwI03w9bdCZmCif7
+	Op7TchtSJDh6mNkCLGtsv1MIqNBokPO6wvNsPKyw==
+X-Gm-Gg: AR+sD12g9uwkNBmTEj1kYTwgwNxnWPAyK9u4CIctqSj/HfokEf1hZR38yiZvfJ1TBM0
+	5Y2P9BaKLhyPf31vU7gQA038VItQVXzgyV1/ZtdhdiGfyNOpVrjQMaWnF3tFztzTZsN+T0T8EWK
+	cM6iHCLjNQXll2XdpnK2XxE/IjKwg7agc/bhzx44h6sRefnyUxgFnbVxQMJx8ljsxIhazrcxlMo
+	AvElRV9WoNqbO9Wcg==
+X-Received: by 2002:a05:6000:2612:b0:47f:c648:e265 with SMTP id ffacd0b85a97d-48160758afcmr42033779f8f.17.1786974112291;
+        Mon, 17 Aug 2026 06:41:52 -0700 (PDT)
+X-Received: by 2002:a05:6000:2612:b0:47f:c648:e265 with SMTP id
+ ffacd0b85a97d-48160758afcmr42033697f8f.17.1786974111934; Mon, 17 Aug 2026
+ 06:41:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBnnvpFwYJqCVRqOA--.71S4
-X-Coremail-Antispam: 1Uf129KBjvJXoWxAr1kCr1fWr1xXw47WF43Awb_yoWrur18pF
-	WYqw4Svr45WF1IkFyDJFZ8Aay5twn7C3WxKFW3Ww43trWDur909a18tFyIqF9xAr97AFy8
-	Jr1qgF1DCr1jq3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U_73PUUUUU=
-Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbCwQy+T2qCwUwMgQAA3U
+References: <20260812181300.3712426-1-jtaubepe@redhat.com> <20260812181300.3712426-3-jtaubepe@redhat.com>
+ <20260812182142.3207A1F00A3E@smtp.kernel.org>
+In-Reply-To: <20260812182142.3207A1F00A3E@smtp.kernel.org>
+From: Jesse Taube <jtaubepe@redhat.com>
+Date: Mon, 17 Aug 2026 09:41:39 -0400
+X-Gm-Features: AcwNN1UC6sQe5yjBCYZbkjh1cT7tfFNaedkvSo-HYeu9LkQg5W4yToVKNkirk2E
+Message-ID: <CADRr4bfRsLn2fYcCepK9EjOCn+PH2KUCf6KXcd-a=Hu57LNZRw@mail.gmail.com>
+Subject: Re: [PATCH 02/13] nvme: add NVME_CTRL_MARGINAL flag
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Rahul Chandelkar <rc@rexion.ai>
+On Wed, Aug 12, 2026 at 2:26=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+>
+> Thank you for your contribution! Sashiko AI review found 2 potential issu=
+e(s) to consider:
+> - [High] The NVME_CTRL_MARGINAL flag is cleared on the wrong structure's =
+flags field in the Fibre Channel transport.
+> - [Medium] The NVME_CTRL_MARGINAL flag is not cleared universally on all =
+controller resets, leaving non-FC transports and manual resets permanently =
+in a marginal state.
+> --
+>
+> --- Patch [2]: [PATCH 02/13] nvme: add NVME_CTRL_MARGINAL flag ---
+> commit f9c336bbdc7993d3daa484b869cd6845d7fce7a7
+> Author: Bryan Gurney <bgurney@redhat.com>
+>
+> nvme: add NVME_CTRL_MARGINAL flag
+>
+> Add a new controller flag, NVME_CTRL_MARGINAL, to help multipath I/O
+> policies to react to a path that is set to a "marginal" state.
+> The flag is cleared on controller reset, which is often the case when
+> faulty cabling or transceiver hardware is replaced.
+>
+> [ ... ]
+>
+> > diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+> > index 04363b9c4489e..d2ca65f70a0c5 100644
+> > --- a/drivers/nvme/host/fc.c
+> > +++ b/drivers/nvme/host/fc.c
+> > @@ -788,6 +788,10 @@ nvme_fc_ctrl_connectivity_loss(struct nvme_fc_ctrl=
+ *ctrl)
+> >               "Reconnect", ctrl->cnum);
+> >
+> >       set_bit(ASSOC_FAILED, &ctrl->flags);
+> > +
+> > +     /* clear 'marginal' flag as controller will be reset */
+> > +     clear_bit(NVME_CTRL_MARGINAL, &ctrl->flags);
+>
+> [Severity: High]
+> Does this clear the flag on the wrong structure?
 
-scsi_bsg_uring_cmd() reads bsg_uring_cmd from the shared mmap'd SQE.
-Userspace can change a field after we check it and before we use it.
-request_len is the sharp case: it can grow past sizeof(scmd->cmnd)
-after the bound check and overflow scmd->cmnd in copy_from_user().
+Yes, Will fix.
 
-READ_ONCE() the SQE fields we check or use into locals before use.
+>
+> Here, ctrl is a pointer to struct nvme_fc_ctrl. Clearing the bit on
+> &ctrl->flags will affect the FC-specific flags field instead of the inten=
+ded
+> core NVMe controller flags (&ctrl->ctrl.flags).
+>
+> [Severity: Medium]
+> Will other transports remain in a marginal state indefinitely?
 
-Fixes: 7b6d3255e7f8 ("scsi: bsg: add io_uring passthrough handler")
-Cc: stable@vger.kernel.org
-Link: https://lore.kernel.org/r/20260527105931.3950913-1-rc@rexion.ai
-Signed-off-by: Rahul Chandelkar <rc@rexion.ai>
-Co-developed-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
-Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
----
- drivers/scsi/scsi_bsg.c | 39 +++++++++++++++++++++++++--------------
- 1 file changed, 25 insertions(+), 14 deletions(-)
+Yes, this is intended it wont affect their functionality.
 
-diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-index b3c4b1063d6f..5eec248a77a6 100644
---- a/drivers/scsi/scsi_bsg.c
-+++ b/drivers/scsi/scsi_bsg.c
-@@ -77,12 +77,10 @@ static enum rq_end_io_ret scsi_bsg_uring_cmd_done(struct request *req,
- 
- static int scsi_bsg_map_user_buffer(struct request *req,
- 				    struct io_uring_cmd *ioucmd,
--				    unsigned int issue_flags, gfp_t gfp_mask)
-+				    unsigned int issue_flags, gfp_t gfp_mask,
-+				    bool is_write, u64 buf_addr,
-+				    unsigned long buf_len)
- {
--	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
--	bool is_write = cmd->dout_xfer_len > 0;
--	u64 buf_addr = is_write ? cmd->dout_xferp : cmd->din_xferp;
--	unsigned long buf_len = is_write ? cmd->dout_xfer_len : cmd->din_xfer_len;
- 	struct iov_iter iter;
- 	int ret;
- 
-@@ -105,21 +103,28 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 			       unsigned int issue_flags, bool open_for_write)
- {
- 	struct scsi_bsg_uring_cmd_pdu *pdu = scsi_bsg_uring_cmd_pdu(ioucmd);
--	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
-+	const struct bsg_uring_cmd *cmd =
-+		io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
- 	struct scsi_cmnd *scmd;
- 	struct request *req;
- 	blk_mq_req_flags_t blk_flags = 0;
- 	gfp_t gfp_mask = GFP_KERNEL;
-+	u64 request = READ_ONCE(cmd->request);
-+	u32 request_len = READ_ONCE(cmd->request_len);
-+	u64 dout_xferp = READ_ONCE(cmd->dout_xferp);
-+	u32 dout_xfer_len = READ_ONCE(cmd->dout_xfer_len);
-+	u64 din_xferp = READ_ONCE(cmd->din_xferp);
-+	u32 din_xfer_len = READ_ONCE(cmd->din_xfer_len);
- 	int ret;
- 
- 	if (cmd->protocol != BSG_PROTOCOL_SCSI ||
- 	    cmd->subprotocol != BSG_SUB_PROTOCOL_SCSI_CMD)
- 		return -EINVAL;
- 
--	if (!cmd->request || cmd->request_len == 0)
-+	if (!request || request_len == 0)
- 		return -EINVAL;
- 
--	if (cmd->dout_xfer_len && cmd->din_xfer_len) {
-+	if (dout_xfer_len && din_xfer_len) {
- 		pr_warn_once("BIDI support in bsg has been removed.\n");
- 		return -EOPNOTSUPP;
- 	}
-@@ -132,20 +137,20 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 		gfp_mask = GFP_NOWAIT;
- 	}
- 
--	req = scsi_alloc_request(q, cmd->dout_xfer_len ?
-+	req = scsi_alloc_request(q, dout_xfer_len ?
- 				 REQ_OP_DRV_OUT : REQ_OP_DRV_IN, blk_flags);
- 	if (IS_ERR(req))
- 		return PTR_ERR(req);
- 
- 	scmd = blk_mq_rq_to_pdu(req);
--	if (cmd->request_len > sizeof(scmd->cmnd)) {
-+	if (request_len > sizeof(scmd->cmnd)) {
- 		ret = -EINVAL;
- 		goto out_free_req;
- 	}
--	scmd->cmd_len = cmd->request_len;
-+	scmd->cmd_len = request_len;
- 	scmd->allowed = SG_DEFAULT_RETRIES;
- 
--	if (copy_from_user(scmd->cmnd, uptr64(cmd->request), cmd->request_len)) {
-+	if (copy_from_user(scmd->cmnd, uptr64(request), request_len)) {
- 		ret = -EFAULT;
- 		goto out_free_req;
- 	}
-@@ -158,8 +163,14 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 	pdu->response_addr = cmd->response;
- 	pdu->max_response_len = cmd->max_response_len;
- 
--	if (cmd->dout_xfer_len || cmd->din_xfer_len) {
--		ret = scsi_bsg_map_user_buffer(req, ioucmd, issue_flags, gfp_mask);
-+	if (dout_xfer_len || din_xfer_len) {
-+		bool is_write = dout_xfer_len > 0;
-+		u64 buf_addr = is_write ? dout_xferp : din_xferp;
-+		unsigned long buf_len = is_write ? dout_xfer_len : din_xfer_len;
-+
-+		ret = scsi_bsg_map_user_buffer(req, ioucmd, issue_flags,
-+					       gfp_mask, is_write, buf_addr,
-+					       buf_len);
- 		if (ret)
- 			goto out_free_req;
- 		pdu->bio = req->bio;
--- 
-2.25.1
+> The commit message mentions the flag is cleared on controller reset, but =
+the
+> clearing logic is only added here in the FC-specific connectivity loss ha=
+ndler.
+>
+> Should this flag instead be cleared universally inside nvme_reset_ctrl() =
+in
+> drivers/nvme/host/core.c to ensure PCIe, TCP, and RDMA paths also recover
+> after a reset?
+>
+> drivers/nvme/host/core.c:nvme_reset_ctrl() {
+>     if (!nvme_change_ctrl_state(ctrl, NVME_CTRL_RESETTING))
+>         return -EBUSY;
+>     ...
+>
+> > +
+> >       nvme_reset_ctrl(&ctrl->ctrl);
+> >  }
+>
+> --
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260812181300.37=
+12426-1-jtaubepe@redhat.com?part=3D2
+>
 
