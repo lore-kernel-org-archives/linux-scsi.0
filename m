@@ -1,141 +1,159 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AEE932B110
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 05:26:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D81433090C6
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 05:36:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786944388; cv=none; b=LmqUc9I0wxkZJSPPmkT2+OIqoKW+z5LrDZ7nfleoTjpRipDR+G5+ohaP29x3TqrWRpE/Dn2fCL4M/ZkZYlMFTwUbEjs8zCx+nsStlc+xqHCB5fW4cj5AutG2UcMSu0RpbakiLEvHzui4tSd6E2rfPrLtBVWzSw9t4z13uefSWYs=
+	t=1786945015; cv=none; b=uoBNs4Pk3IAZPfr47zoT72OUUyeOUAUNZ7eKjHBfPV4BvWjqWtW2wYIt3mjtLryWIR3SoOih+rTUUdprIrkZKTeh3n35nMyu+tjODEVxiULqWm2jxiPi0kfALUIbyKeF6zgxFKeCBQE1U2xbdeEFwKhnKQy4sdTj8gls40wJRqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786944388; c=relaxed/simple;
-	bh=wR8uOxHfGhU0ZK50sDbdEW318fKiig+GLeA0R8rLAwQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=momXHujRoCPYOGe4uGZ3KO+jt0h/LC8YRnnMGGywNZZK7X258+5lyRKCFYCIiv7dCWZd2bYoERhgfYJJ+TGgNfyt6M6FUJO6isO2FfhQmiZBX0gyVZ96Jbjsiy/oari3WhtofB9FHQJFa93p4MLSx4c0qAJbbfJzPJnzdV+QVx0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CAmavm6a; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786945015; c=relaxed/simple;
+	bh=HapnrUzqscvtzg8Q4QZKioLYpHuoQf8jr0kcPPczf9c=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=pJZGYo+guY7+3Ch8c8Qk2YNtTMGl7SeKTqCZlUwxburysjoowocDaxF5V2/raH0ZeWAengg+WUQ0j4xEGsWKhZHOwT8GxbEAh8LUANdClW/f4IOhENhVo8uvLj3R9KF4HaGT+L9ivVwTaHhEJ5oX1Sn10uO/yla8uBoxynAS26U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZhSTjbfm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CAmavm6a"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-84830c774a0so2517035b3a.1
-        for <linux-scsi@vger.kernel.org>; Sun, 16 Aug 2026 22:26:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786944387; x=1787549187; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=LCJ96hhAbvo1BoO4jzLY1jRPvpVlGUhbMQS2tTGtXPE=;
-        b=CAmavm6aHMomlYXuEOWJiS1ua6TKBZARHYyJNphXP3DASSmrAaxXhqpr+6G90wVTmx
-         GAgiiI2ONjjwPQnL5liQ15HK5DVQSCs4qhi2UeaBZmsJTGowkoGm01v6TvO1DxWqlcKJ
-         yFHEs3M6IasapE5k9C67jgzm27WGl1XNa7kU2ohBOT6tAOmflNDGTVyCYc117Vf1cByk
-         Dw0e+XJr0xKb5BDoh8hpYFNwy7Sp8hYzPUQAR3jYEI5EVJqLzMUW00QsBjTDnmRQdQz3
-         o5NeI2JiA0HMlKE452RfAFf0yQrQkIo0+poD4V4Vg4BxPRN5Ymum075IZtu7F8M7GIAo
-         PDtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786944387; x=1787549187;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=LCJ96hhAbvo1BoO4jzLY1jRPvpVlGUhbMQS2tTGtXPE=;
-        b=S2Cjq8OlQQ7BlHPT9w4ZzCYT3XIU9S21hgoINH7YppLG0UrGUzNRfqb0FlB9dh1iCu
-         EHHkH91Yrgyt1WreQ8xEstENSa/XOkw6qp+iOKps3Oz4pbftTitM9mg+D150BoLi6/uE
-         /7ltkm9r0cgqfxB3eQbPo4q+0bagBjunJy8AS7MgpdRr5xl5T2X3BJwaFMpEAVTznSjh
-         1bfAPG11uggLH7D5NzkSyJ++Ilo8ADWE8YViSfjAIbGyrs+Eo07AFtrNlmthE3yZx/Bh
-         qLuf42PzHOW1K44D0PoXXtaQopN2xsGD8PlCH8rrQ98VwEjFhibVIzHiFiRqJKnEO1Ps
-         TIqw==
-X-Forwarded-Encrypted: i=1; AHgh+Rqx9NntvJoRps5PU2FX3yGdD21tG6R28VF2jHbZPaj1EPyDA6ywco4LI8m1V+f3dDQ10V6lFrn5qSvc@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz8QBQYwiGB7WrqdRwGfkhm9XK0RcirupnJxs0JMx3bpJHmaSbE
-	6zCN5WrX8/abmPYOyWd12Aa6oJjXjD8JbdzKH+6Fq00HtcnYYsnV63g=
-X-Gm-Gg: AR+sD131LxXiZaqtZ6Zw08yuGGkIGwsq5gn+1D947YpVGqdXnJCwpNOI46IMYZvzIZO
-	tfIhirZQebtjvNx4TvYzU0uKFlA7eDiWarWtxuFpqM/asSwXHZgkree+tJ3GZt+vqABdiJlm8s7
-	FQYPbMCg4Ta2DoN8dCVMqh1y5uNA3Q4TcQOvCHF3htvAPVkLsUweLpcpcwCKF/6NHlAU0d6Vg7G
-	14L2rTzwyahAvSgtTvUYJ77eOlRXfJCLrVxC8gRox+qIDz+kOwQq2fyJTkEwDRzzjwmsUIRwA1D
-	LF2z8iSQ43HJkWx7fe/ZPRW/kbe/RJbCCrZzreXbpLNpAMkM4OPAvR6iIO0A5FtdhKiOCIzNOfk
-	WJ1TbAEcQBjaGUKyNFo/ysRT3tpoOiPOAc83g+wZTjCAUtjrOnEqUkX75B6hrik1balwvUQBlo1
-	myQDWkS9PAq70e9uOqB0ogI5flN0cfHNjbGlhlRsk3mzhnetz7dXpGItXs1fI=
-X-Received: by 2002:a05:6a00:2d12:b0:848:425a:4e31 with SMTP id d2e1a72fcca58-84fde38e8e4mr19894107b3a.24.1786944386764;
-        Sun, 16 Aug 2026 22:26:26 -0700 (PDT)
-Received: from DL2XHKPB4.dl.net ([103.63.104.162])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8517d249b4fsm2115129b3a.46.2026.08.16.22.26.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 16 Aug 2026 22:26:25 -0700 (PDT)
-From: Triet Hoang <triet.hoang.dev@gmail.com>
-To: sathya.prakash@broadcom.com
-Cc: kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Triet Hoang <triet.hoang.dev@gmail.com>
-Subject: [PATCH] scsi: mpi3mr: Handle SAS port and rphy allocation failures
-Date: Mon, 17 Aug 2026 12:26:19 +0700
-Message-ID: <20260817052619.810762-1-triet.hoang.dev@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZhSTjbfm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B7CB1F00A3A;
+	Mon, 17 Aug 2026 05:36:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786945013;
+	bh=iWch3XzSBhpWAORys8bSNHcxeJ3908/ZwhHCcYkv9QQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ZhSTjbfmwn1NU5QI459o6mZYXa+AQGGKUlkcHMGcV9f09C9rlEdITCC1W1whjeA/Z
+	 49glgfGQqAeMCNX5Aq0/5EbT+0OZ3YQvGvqxIDYWg1VkcuCgDD2B+QRCojZ56Cw5ss
+	 XcbgA8D8KFUx/hWJgGlMYkyoFW3kcG+dGlVVTKLdPHPl5pWRv8b8VN7E45GpRyuWDN
+	 g9aS2876W3d8p/CY7N+4hIinm2+VO3XtZWvdm4hVgllDLn3JaZlAX1eFSwwKO1jyjG
+	 kNy7v9Lf3sc8yHB+01CJzUIpuBxSDc3IW3ESHIo27qq+9SwB8hzDOKGwIpfIgnwkSS
+	 7FZm8ExM27y6w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: mpi3mr: Handle SAS port and rphy allocation
+ failures
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Triet Hoang" <triet.hoang.dev@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260817052619.810762-1-triet.hoang.dev@gmail.com>
+References: <20260817052619.810762-1-triet.hoang.dev@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 17 Aug 2026 05:36:52 +0000
+Message-Id: <20260817053653.2B7CB1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Check the return value of sas_port_alloc_num() and handle failures
-before attempting to add the port.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Target device reference and state leak on newly added error paths.
+- [High] Corruption of SAS PHY state on rphy allocation failure.
+--
 
-Free the SAS port if sas_port_add() fails. Also handle failures from
-sas_end_device_alloc() and sas_expander_alloc() by removing the PHYs
-from the port, deleting the SAS port, and returning failure.
+--- Patch [1]: [PATCH] scsi: mpi3mr: Handle SAS port and rphy allocation fa=
+ilures ---
+commit df830714a909590a741f4ae3350492bababc3051
+Author: Triet Hoang <triet.hoang.dev@gmail.com>
 
-This prevents NULL pointer dereferences and ensures resources allocated
-during SAS port creation are properly cleaned up on error paths.
+scsi: mpi3mr: Handle SAS port and rphy allocation failures
+   =20
+This commit adds checks for the return values of sas_port_alloc_num(),
+sas_port_add(), sas_end_device_alloc(), and sas_expander_alloc(), adding
+cleanup and failure paths to prevent NULL pointer dereferences.
 
-Signed-off-by: Triet Hoang <triet.hoang.dev@gmail.com>
----
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr=
+/mpi3mr_transport.c
+> index 240f67a8e2e3b..2fbfd178c5398 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> @@ -1428,9 +1428,17 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add=
+(struct mpi3mr_ioc *mrioc,
+>  	}
+> =20
+>  	port =3D sas_port_alloc_num(mr_sas_node->parent_dev);
+> +	if (!port) {
+> +		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> +		    __FILE__, __LINE__, __func__);
+> +		goto out_fail;
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index 240f67a8e2e3..2fbfd178c539 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -1428,9 +1428,17 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 	}
- 
- 	port = sas_port_alloc_num(mr_sas_node->parent_dev);
-+	if (!port) {
-+		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
-+		    __FILE__, __LINE__, __func__);
-+		goto out_fail;
-+	}
-+
- 	if ((sas_port_add(port))) {
- 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
- 		    __FILE__, __LINE__, __func__);
-+		sas_port_free(port);
-+		port = NULL;
- 		goto out_fail;
- 	}
- 
-@@ -1455,6 +1463,19 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add(struct mpi3mr_ioc *mrioc,
- 		rphy = sas_expander_alloc(port,
- 		    mr_sas_port->remote_identify.device_type);
- 	}
-+
-+	if (!rphy) {
-+		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
-+		    __FILE__, __LINE__, __func__);
-+		list_for_each_entry(mr_sas_phy, &mr_sas_port->phy_list, port_siblings) {
-+			mr_sas_phy->phy_belongs_to_port = 0;
-+			mr_sas_phy->hba_port = NULL;
-+			sas_port_delete_phy(port, mr_sas_phy->phy);
-+		}
-+		sas_port_delete(port);
-+		goto out_fail;
-+	}
-+
- 	rphy->identify = mr_sas_port->remote_identify;
- 
- 	if (mrioc->current_event)
--- 
-2.53.0
+[Severity: High]
+Does this error path leak the tgtdev reference and leave its state corrupte=
+d?
 
+Earlier in the function, if the device type is SAS_END_DEVICE, tgtdev is
+acquired via mpi3mr_get_tgtdev_by_addr() and its pend_sas_rphy_add flag
+is set to 1:
+
+	if (mr_sas_port->remote_identify.device_type =3D=3D SAS_END_DEVICE) {
+		tgtdev =3D mpi3mr_get_tgtdev_by_addr(mrioc, ...);
+        ...
+		tgtdev->dev_spec.sas_sata_inf.pend_sas_rphy_add =3D 1;
+	}
+
+The success path correctly resets this state and drops the reference via
+mpi3mr_tgtdev_put(tgtdev). However, the newly added error paths jumping
+to out_fail bypass this cleanup, which leaves the reference leaked and the
+pend_sas_rphy_add state inconsistent.
+
+> +	}
+> +
+>  	if ((sas_port_add(port))) {
+>  		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+>  		    __FILE__, __LINE__, __func__);
+> +		sas_port_free(port);
+> +		port =3D NULL;
+>  		goto out_fail;
+>  	}
+> =20
+
+[ ... ]
+
+> @@ -1455,6 +1463,19 @@ static struct mpi3mr_sas_port *mpi3mr_sas_port_add=
+(struct mpi3mr_ioc *mrioc,
+>  		rphy =3D sas_expander_alloc(port,
+>  		    mr_sas_port->remote_identify.device_type);
+>  	}
+> +
+> +	if (!rphy) {
+> +		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+> +		    __FILE__, __LINE__, __func__);
+> +		list_for_each_entry(mr_sas_phy, &mr_sas_port->phy_list, port_siblings)=
+ {
+> +			mr_sas_phy->phy_belongs_to_port =3D 0;
+> +			mr_sas_phy->hba_port =3D NULL;
+
+[Severity: High]
+Does clearing hba_port here corrupt the SAS PHY topological state?
+
+The hba_port field appears to be persistently assigned to underlying PHYs
+during discovery. It is required and used earlier in this function to match
+phys to ports:
+
+	for (i =3D 0; i < mr_sas_node->num_phys; i++) {
+		if ((mr_sas_node->phy[i].remote_identify.sas_address !=3D
+		    mr_sas_port->remote_identify.sas_address) ||
+		    (mr_sas_node->phy[i].hba_port !=3D hba_port))
+			continue;
+
+If this error cleanup loop unconditionally sets hba_port to NULL, won't it
+permanently prevent these PHYs from being matched or added to an HBA port in
+future discovery cycles?
+
+> +			sas_port_delete_phy(port, mr_sas_phy->phy);
+> +		}
+> +		sas_port_delete(port);
+> +		goto out_fail;
+
+[Severity: High]
+Similar to the sas_port_alloc_num() failure above, jumping to out_fail here
+also bypasses the cleanup of the tgtdev reference and pend_sas_rphy_add.
+
+> +	}
+> +
+>  	rphy->identify =3D mr_sas_port->remote_identify;
+> =20
+>  	if (mrioc->current_event)
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260817052619.8107=
+62-1-triet.hoang.dev@gmail.com?part=3D1
