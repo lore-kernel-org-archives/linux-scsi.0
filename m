@@ -1,199 +1,131 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0477B35C190
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 20:37:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06A1B3BCD37
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 20:39:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786999043; cv=none; b=KyGYC88uHz7NqjNhuDS60PgtBndC0I4poX1ZzT9GLt8U1ec6OT09UxqdJEgELVgZF5c5elUID3vX46ZsxZO2ytJGe4bme2phqwk9kn7BHxsLZNChkS3Y3i9YAM0TyBAUSIllfBt3SPtymY1gLP6xn01Kl0iypzgfWHEORud+h3o=
+	t=1786999144; cv=none; b=ndZ1N2CB3iEXXwYcU3eOe6aT1FCeZCzLXEQsTOhMN2r0Ekzp00tY22sLh50MJoXNg2cc+UmLmo5Xpw+xq/B55EZJRPx9knGNSPRXjlbQALK4++DG+JLz3IfkDQbsbR+3g9Ci/xIWaZPerATgfz6Oq2hD0GLiLLTLgC0ObdmT5zg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786999043; c=relaxed/simple;
-	bh=qR+qmSBABhS1I5EtFGXEkCRFyFVPP7W9N1WhGQlUV/0=;
+	s=arc-20240116; t=1786999144; c=relaxed/simple;
+	bh=hoXGFhAUobcitFc5s+BQvfqFSwJq8C4ddkHZIPvxPas=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=R/rO6812LgP7URA3TsKDzS5/v+kqyDkXtdBjERlBV9bHOThlPDNz7x0s3iRdNTFVa4cYucMEGVYdaPeUCUiWwlbuAPqE6NP6uP2F+SJwQLvRupz66e759xKOt/gPxgTSzKMD/hyje6KvWtOVUnS0dlGaDBkuWcfx28yuD8fPmRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lsBwUAVB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=O3fURkVuJkqVxC5kS2O68tSuq59JMLPuaki+iwI82E318LR8uObITrpNPnOcfbJ1PW4/S3cp6+fr11V6Wibj+ku8vg2NiDVBAwYC1zRyNdrq7M16DM0LxIpnlDLvk7lsbCr+CzkPJH0Fupwq+6Q1pBsXOOMOWVNPgPUH/z8NDQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d5M5tUXD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lsBwUAVB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 748DA1F000E9;
-	Mon, 17 Aug 2026 20:37:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d5M5tUXD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DEA01F000E9;
+	Mon, 17 Aug 2026 20:39:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786999041;
-	bh=JguY7+3noneRXrcYjhMEByGJffIsqPfiU1IPn7pQePU=;
+	s=k20260515; t=1786999142;
+	bh=IOUudx/tm4qmZaJebjvugTL1npmn5XyFPHmYNINWoJQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lsBwUAVBMIzveGEogg0tVXipm/hxM7rDq4ZOXBmfyDO4xpK5Rt30nGvhAQAuDODGK
-	 Y4x7RQ9Pr9a1hQFkGFkzdOZpKxmd4CmLkoSyxKnfd7dZ6JcU0Ph/fLlSJumkX2nuwO
-	 nIEjrcCWDGn2+TZRJZaKhQln88F5FaqEar6Ath+UubcUXrzC/vOee2XW0MJSsboJjT
-	 0BW5Q1Ch7ATgShXxIOv7U5fmg81Nk0zTSr/h8uqxZp7K9CNckzqoPJHO+nYGzpnJs5
-	 NxJqxCBINABfnBIL/6R7QHKGQ1RFeezdC+g7034MQySVR/dQZFeHQdFueEwJPqm+cA
-	 t3+bTBX9WTxdQ==
+	b=d5M5tUXD5wK5DMtDKBJxaJVpYcK4wT9R0BKsHpWLmd6ZolzJ/uPWIH6j6J+PIV6UL
+	 4asOKY+4FbkM9MPWxcM6+hdE7fZnJ3/h92etQhvDVFqAVYagx2jTiHz4VKKNwyrQVj
+	 haPL3aNI/asbZyDsDplh7XVnSiopJpABPNCJ2tGecrxmOX3iJ36XZ4iVukXfsniuQi
+	 uLgr0mnrP7fezVabPt+E6QaHyH1JPe985R84JomjRII8JLYZWjwrtJqXRutU3QOdNk
+	 r8Cdy08d6uma/W/3zgIjqpIBOHuLqrBTcTw25yhqZt5/s2x6oUZ2KwP/wkdpvDf/AT
+	 OLDxj/ETjDgLQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 1/8] scsi: ibmvfc: add basic FPIN support
+Subject: Re: [PATCH v6 3/8] scsi: ibmvfc: define asynchronous sub-queue
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260817-ibmvfc-fpin-support-v6-1-62a2d525e70d@linux.ibm.com>
+In-Reply-To: <20260817-ibmvfc-fpin-support-v6-3-62a2d525e70d@linux.ibm.com>
 References: <20260817-ibmvfc-fpin-support-v6-0-62a2d525e70d@linux.ibm.com>
- <20260817-ibmvfc-fpin-support-v6-1-62a2d525e70d@linux.ibm.com>
+ <20260817-ibmvfc-fpin-support-v6-3-62a2d525e70d@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 17 Aug 2026 20:37:20 +0000
-Message-Id: <20260817203721.748DA1F000E9@smtp.kernel.org>
+Date: Mon, 17 Aug 2026 20:39:01 +0000
+Message-Id: <20260817203902.5DEA01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The `fpin_workq` workqueue is destroyed too early during driver re=
-moval, allowing a NULL pointer dereference if an FPIN event arrives before =
-the CRQ is torn down.
-- [Medium] KUnit test uses `KUNIT_EXPECT_NOT_NULL` instead of `KUNIT_ASSERT=
-_NOT_NULL` on a pointer before dereferencing it, causing a crash if the poi=
-nter is NULL.
-- [Medium] KUnit test uses a hardcoded `msleep(1U)` to wait for workqueue e=
-xecution, leading to race conditions and test flakiness.
-- [Medium] KUnit test accesses global and host-specific lists without holdi=
-ng the required locks, causing potential use-after-free or list corruption.
+- [High] Use-After-Free / NULL Pointer Dereference (Lifecycle Mismatch)
+- [Medium] Incomplete Implementation / Commit Message Mismatch
 --
 
---- Patch [1]: [PATCH v6 1/8] scsi: ibmvfc: add basic FPIN support ---
-commit ff91d1d40ba087181a6c3109c5264dac2870f637
+--- Patch [3]: [PATCH v6 3/8] scsi: ibmvfc: define asynchronous sub-queue -=
+--
+commit 4682ac13b0e9a18a4a0d6bd0390528a5ffb87d23
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ibmvfc: add basic FPIN support
+scsi: ibmvfc: define asynchronous sub-queue
 
-Implement support for a basic level of Fabric Performance Impact
-Notifications (FPIN) in the ibmvfc driver to enable monitoring of
-fabric congestion and link integrity events. Offloads FPIN
-processing to a dedicated workqueue and adds a KUnit test module.
+Define data structures for asynchronous sub-queue support required for
+full and extended FPIN functionality.
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-core.c
-> index 93b9f699c2e53..22b4d639e74be 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> Add ibmvfc_async_subq structure to represent async events received via
+> the sub-queue, including FPIN status, link state, event type, and WWPN
+> information.
+>=20
+> Update ibmvfc_channel_setup structure to include async_subq_handle field
+> and reduce IBMVFC_MAX_CHANNELS from 502 to 501 to accommodate the async
+> sub-queue. Add async_scrq pointer to ibmvfc_channels structure.
+>=20
+> Add capability flags IBMVFC_USE_ASYNC_SUBQ and IBMVFC_SUPPORT_ASYNC_SUBQ
+> for negotiating async sub-queue support with VIOS during login.
+
+[Severity: Medium]
+Are these changes missing from the patch? The commit message explicitly cla=
+ims
+to define the ibmvfc_async_subq structure, update ibmvfc_channel_setup, red=
+uce
+IBMVFC_MAX_CHANNELS, add an async_scrq pointer, and introduce several
+capability flags. However, almost none of these structural changes exist in=
+ the
+actual patch.
+
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvf=
+c.h
+> index e8ca0d30f483f..d8880d02685b3 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
 
 [ ... ]
 
-> @@ -6945,6 +7213,9 @@ static void ibmvfc_remove(struct vio_dev *vdev)
->  	ENTER;
->  	ibmvfc_remove_trace_file(&vhost->host->shost_dev.kobj, &ibmvfc_trace_at=
-tr);
-> =20
-> +	destroy_workqueue(vhost->fpin_workq);
-> +	vhost->fpin_workq =3D NULL;
-> +
+> @@ -990,6 +990,7 @@ struct ibmvfc_host {
+>  	mempool_t *tgt_pool;
+>  	struct ibmvfc_queue crq;
+>  	struct ibmvfc_queue async_crq;
+> +	struct ibmvfc_queue async_sub_crq;
+
+[Severity: Medium]
+The commit message claims to add an async_scrq pointer to ibmvfc_channels,
+but only async_sub_crq is added to ibmvfc_host here.
+
 
 [Severity: High]
-Is the fpin_workq destroyed too early during driver removal?
+Does the adapter removal process introduce a NULL pointer dereference
+during teardown?
 
-If an asynchronous FPIN event arrives from the fabric after this point but
-before the CRQ is torn down in ibmvfc_release_crq_queue() later in the
-function, ibmvfc_handle_async() could be called and attempt to queue work:
+If an FPIN async event interrupt arrives during the adapter removal process
+after destroy_workqueue() is called but before free_irq(), the interrupt
+handler will schedule the tasklet, which executes ibmvfc_handle_async().
 
-ibmvfc_handle_async()
-    ...
+In drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_remove():
+    destroy_workqueue(vhost->fpin_workq);
+    vhost->fpin_workq =3D NULL;
+
+Then later in drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_release_crq_queue(=
+):
+    free_irq(vdev->irq, vhost);
+    tasklet_kill(&vhost->tasklet);
+
+And the tasklet dereferences the NULL fpin_workq:
+
+drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_handle_async():
     queue_work(vhost->fpin_workq, &aw->async_work_s);
 
-Could this result in a NULL pointer dereference?
-
->  	spin_lock_irqsave(vhost->host->host_lock, flags);
->  	ibmvfc_link_down(vhost, IBMVFC_HOST_OFFLINE);
->  	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-
-[ ... ]
-
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
-/ibmvfc_kunit.c
-> new file mode 100644
-> index 0000000000000..64a517a74af8e
-> --- /dev/null
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-
-[ ... ]
-
-> +static void ibmvfc_async_fpin_test(struct kunit *test)
-> +{
-> +	u64 post[IBMVFC_AE_FPIN_CONGESTION_CLEARED + 1];
-> +	u64 pre[IBMVFC_AE_FPIN_CONGESTION_CLEARED + 1];
-> +	enum ibmvfc_ae_fpin_status fs;
-> +	struct fc_host_attrs *fc_host;
-> +	struct ibmvfc_async_crq crq[IBMVFC_AE_FPIN_CONGESTION_CLEARED + 1];
-> +	struct ibmvfc_target *tgt;
-> +	struct ibmvfc_host *vhost;
-> +	struct list_head *queue;
-> +	struct list_head *headp;
-> +
-> +	headp =3D ibmvfc_get_headp();
-> +	if (list_empty(headp))
-> +		kunit_skip(test, "No ibmvfc devices available");
-> +	queue =3D headp->next;
-> +	vhost =3D container_of_const(queue, struct ibmvfc_host, queue);
-> +
-> +	KUNIT_ASSERT_GE_MSG(test, vhost->scsi_scrqs.num_targets, 1, "No targets=
-");
-> +	tgt =3D list_first_entry(&vhost->scsi_scrqs.targets, struct ibmvfc_targ=
-et, queue);
-
-[Severity: Medium]
-Is it safe to iterate over the global ibmvfc_head list and access
-vhost->scsi_scrqs.targets without acquiring the ibmvfc_driver_lock or
-host_lock?
-
-If a device is unbound or a target logs out concurrently while the test
-runs, could the lists mutate and cause an invalid pointer dereference?
-
-> +	KUNIT_EXPECT_NOT_NULL(test, tgt->rport);
-> +
-> +	fc_host =3D shost_to_fc_host(vhost->host);
-> +
-> +	pre[IBMVFC_AE_FPIN_LINK_CONGESTED] =3D READ_ONCE(fc_host->fpin_stats.cn=
-_device_specific);
-> +	pre[IBMVFC_AE_FPIN_PORT_CONGESTED] =3D READ_ONCE(tgt->rport->fpin_stats=
-.cn);
-
-[Severity: Medium]
-Since KUNIT_EXPECT_NOT_NULL() allows execution to continue on failure, coul=
-d a
-NULL tgt->rport be immediately dereferenced on the following lines when rea=
-ding
-tgt->rport->fpin_stats.cn?
-
-Should this use KUNIT_ASSERT_NOT_NULL() instead to abort the test and preve=
-nt a
-crash?
-
-> +	pre[IBMVFC_AE_FPIN_PORT_CLEARED] =3D READ_ONCE(tgt->rport->fpin_stats.c=
-n_clear);
-> +	pre[IBMVFC_AE_FPIN_PORT_DEGRADED] =3D READ_ONCE(tgt->rport->fpin_stats.=
-li_failure_unknown);
-> +	pre[IBMVFC_AE_FPIN_CONGESTION_CLEARED] =3D READ_ONCE(fc_host->fpin_stat=
-s.cn_clear);
-> +
-> +	for (fs =3D IBMVFC_AE_FPIN_LINK_CONGESTED; fs <=3D IBMVFC_AE_FPIN_CONGE=
-STION_CLEARED; fs++) {
-> +		crq[fs].valid =3D 0x80;
-> +		crq[fs].link_state =3D IBMVFC_AE_LS_LINK_UP;
-> +		crq[fs].fpin_status =3D fs;
-> +		crq[fs].event =3D cpu_to_be64(IBMVFC_AE_FPIN);
-> +		crq[fs].scsi_id =3D cpu_to_be64(tgt->scsi_id);
-> +		crq[fs].wwpn =3D cpu_to_be64(tgt->wwpn);
-> +		crq[fs].node_name =3D cpu_to_be64(tgt->ids.node_name);
-> +		ibmvfc_handle_async(&crq[fs], vhost);
-> +		msleep(1U);
-> +	}
-
-[Severity: Medium]
-Is msleep(1U) a reliable way to wait for the fpin_workq to process the
-offloaded FPIN event?
-
-Under load, it seems like 1 millisecond might be insufficient, causing the =
-test
-to read stale counters and fail intermittently. Would it be safer to use
-flush_workqueue(vhost->fpin_workq) here instead of a hardcoded sleep?
+Because vhost->fpin_workq was destroyed and set to NULL early in
+ibmvfc_remove(), calling queue_work(NULL, ...) will immediately panic the
+kernel.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260817-ibmvfc-fpi=
-n-support-v6-0-62a2d525e70d@linux.ibm.com?part=3D1
+n-support-v6-0-62a2d525e70d@linux.ibm.com?part=3D3
