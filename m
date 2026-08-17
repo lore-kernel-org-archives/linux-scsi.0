@@ -1,34 +1,37 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74E681F63D9;
-	Mon, 17 Aug 2026 19:05:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA32834D3B9;
+	Mon, 17 Aug 2026 20:28:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786993506; cv=none; b=s3eiBp4rokDQirjb9C6FwZaHoSdYxmyEVxE4LopUrPZ/yKq1//lNPqKovDdIxD3frkAd0PnC2Q4UZYK5MtC2Nqt1LDGH/yliZzGuVD44l3/zPfd86pfqG9jfyOhVtWRTr2IBPJCtKGajNizMihPk/ir28uUY/MBIS7ZI0FOAZzY=
+	t=1786998480; cv=none; b=EqU/u0KHA/pjSCWAiySypjZZoWmxV4i3N4cxoO15uNkfKSvy2bLW/d51ZCzNLKZB/X0FzEwcKewNSZ86PqlOW89TpVZNfCkQDqCtxFh8sPQT9KMM967Xm/XFQGn53shCL8m35OvHKXbIuAY1u0FK1GnvGv4BTbK1YVisZsFlocA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786993506; c=relaxed/simple;
-	bh=lUUmBqqkyEdjdH52ETtXEdeeJGgD/7QohYQfKSe/Bro=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=Ka8UdbMAvRVsZAWAuTT/61s2x/Jnrdsam2gifltOo4pf8UeGnDKJr8agjcCmLmKM2qFS37aKYDO7Vl3njixMX8niARcVyerDFezQ8bL9zfHR0oMnSw/k/d/AkreiJLHs0jR56xmgE91CdY9R55kDrCf7j0gIQXSF00a/nbeeBu8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AAkeKTUY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786998480; c=relaxed/simple;
+	bh=HwmWfEDHvET2VABRqB2+L7uM+jxA3WMPRe4ZJvrflZM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=HdornqwkfIZhOCnvnI6gukLnjkAiYXtT2rAH1d9mEXw5zvRFGnA2VfysQL+nPfeT6cm4PDoB1aVEKpPfxO9blEQYDVGtYhI7uY2TOfu37ZS/OWDR0u8tEGfzOhHxtBpY/PBs/05qw9LfnFwwdA5Y+mPiPw33M3EEsvZ484cXfa8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G8cOjpar; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AAkeKTUY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A52D91F000E9;
-	Mon, 17 Aug 2026 19:05:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786993505;
-	bh=ML1B2/r+psY08wn0C4kBVmdPYnKuWxTUSYfY6GsO7Ls=;
-	h=From:Date:Subject:To:Cc;
-	b=AAkeKTUYakkpnGyOQ+HioxNGW3rW7dLbJrjulLpPZzlCO2om5UMh3lmBHhlxYYhdh
-	 /PE+P1z9DHDY+C+OU77wpKTfPjMoxgihfoXJuX3LV7S40bQTmM1b1F1XbXWq3uxUnm
-	 hBzWsDK1xiAxVgAJHgPbTlOTRHVhGN4hjn/dC9DBsgLDmqDpx0nhUWwENwsBR2fktW
-	 tej/uwJL92NQQe/Ij4QyJljQuSGG/EHR2HrJSQPV5LQtWIcFhrjGhzythZj0weAU47
-	 QAlr+a5LdikqDyED2ffnuvuBYKWSHvWUVwJLdkYW3MRAMm6eODXTLBmfQ3c6JQTVj1
-	 /j+61+xg8T0dw==
-From: Nathan Chancellor <nathan@kernel.org>
-Date: Mon, 17 Aug 2026 12:04:55 -0700
-Subject: [PATCH] scsi: ibmvfc: Fix use of uninitialized rport in
- ibmvfc_do_work()
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G8cOjpar"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 87999C2BCF4;
+	Mon, 17 Aug 2026 20:28:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1786998480;
+	bh=HwmWfEDHvET2VABRqB2+L7uM+jxA3WMPRe4ZJvrflZM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=G8cOjparchmZQ27bDjr6H6Zpj15G+qi36rgFkVW2gDt6EbRwponnX8JW9i23XwEwb
+	 uVKJN71+Q3U+4XSCaavHgcOCcv+qGovVFutQGPW6aQqaWKE11UpfCNzKHMDQx3ApC8
+	 6e+ojpwjJSwZ3qjDPvFIN2rSBvsfdxFqavIZn/XPkEwkKXILVexvXMj0LGumCWqNis
+	 3H+eLofhDEx5kOG2HvSSLY7pz4fhScHk0fqnA5e1yCFG4Iz9/t+EiszNSA0Avh6k8L
+	 fbU6EHiPOjK3lbPffQzqXghnrctDXX3iYAFs/cE/7oTmUZck65dn0iUGysjCiMv1f1
+	 VL7jxIXDlc74w==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69976C5DF7E;
+	Mon, 17 Aug 2026 20:28:00 +0000 (UTC)
+From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
+Date: Mon, 17 Aug 2026 15:27:55 -0500
+Subject: [PATCH v6 2/8] scsi: ibmvfc: Add NOOP command support
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,65 +40,99 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260817-ibmvscsi-rport-wuninitialized-v1-1-0fdfb27a5f01@kernel.org>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMQQ6CMBAF0KuQWTtJSwI1XsW4oO2o32ghnYJGw
- t2tunybt5JKhigdmpWyLFCMqcLuGgrXIV2EEaupNW1v9tYx/GPRoOA8jbnwc05IKBjueEtk472
- TLprO9ZbqMWU54/X7j6e/dfY3CeWb0rZ9ADuGQOGBAAAA
-X-Change-ID: 20260817-ibmvscsi-rport-wuninitialized-0bb7e5d05761
-To: Tyrel Datwyler <tyreld@linux.ibm.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
- linux-kernel@vger.kernel.org, llvm@lists.linux.dev, 
- Nathan Chancellor <nathan@kernel.org>
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1841; i=nathan@kernel.org;
- h=from:subject:message-id; bh=lUUmBqqkyEdjdH52ETtXEdeeJGgD/7QohYQfKSe/Bro=;
- b=owGbwMvMwCUmm602sfCA1DTG02pJDFnN0TF2DWbHf7glL5PhvbvTSmaPItfRr1/9WuXkV++2l
- IiaHWrTUcrCIMbFICumyFL9WPW4oeGcs4w3Tk2CmcPKBDKEgYtTACbS183wz0rrbvj62OJcmfdG
- qpzyfGrbjRbaPpzPIRv1OGXtmonRRYwMT3QjEwO1PeqqLpRLVO/39hC/OnfO736t+RbMkw7+vir
- ADAA=
-X-Developer-Key: i=nathan@kernel.org; a=openpgp;
- fpr=2437CB76E544CB6AB3D9DFD399739260CB6CB716
+Message-Id: <20260817-ibmvfc-fpin-support-v6-2-62a2d525e70d@linux.ibm.com>
+References: <20260817-ibmvfc-fpin-support-v6-0-62a2d525e70d@linux.ibm.com>
+In-Reply-To: <20260817-ibmvfc-fpin-support-v6-0-62a2d525e70d@linux.ibm.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+ Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.ibm.com>, 
+ Greg Joyce <gjoyce@linux.ibm.com>, Kyle Mahlkuch <kmahlkuc@linux.ibm.com>, 
+ Dave Marquardt <davemarq@linux.ibm.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1786998478; l=2488;
+ i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
+ bh=9SEbwhnfSVQdalnJewp+335AWlDv08Etc/f1IY3q92c=;
+ b=1Ll5s9Ouf3E7OwQQH6Lbk036WFAuUT3qfwh8ooBIh/3hD8pJsLjitPA2eihfYKiBqu/EBKYB3
+ zK0Bzq4ptZTAOqQsIGj61OlM0/WDXVGd8UxpLQUlWiPohFDmxaBZsFT
+X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
+ pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
+X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
+ auth_id=689
+X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
+Reply-To: davemarq@linux.ibm.com
 
-After commit 696d1cc2aaa2 ("scsi: ibmvfc: process NVMe/FC rports in work
-thread"), clang warns (or errors with CONFIG_WERROR=y / W=e):
+From: Dave Marquardt <davemarq@linux.ibm.com>
 
-  drivers/scsi/ibmvscsi/ibmvfc-core.c:6154:15: error: variable 'rport' is uninitialized when used here [-Werror,-Wuninitialized]
-   6154 |                         } else if (rport && tgt->action == IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
-        |                                    ^~~~~
+Add support for VFC_NOOP messages from VIOS to enable keep-alive
+functionality between the client and server.
 
-The check for rport is unnecessary in this block, it was accidentally
-included from copying and pasting. Remove it to clear up the warning.
+Define the VFC_NOOP CRQ format and add handling in both the main CRQ
+handler (ibmvfc_handle_crq) and sub-CRQ handler (ibmvfc_handle_scrq).
+Log unexpected NOOP messages if received before VIOS advertises support
+during NPIV login.
 
-Fixes: 696d1cc2aaa2 ("scsi: ibmvfc: process NVMe/FC rports in work thread")
-Suggested-by: Tyrel Datwyler <tyreld@linux.ibm.com>
-Link: https://lore.kernel.org/6ccbe8c5-beb6-483f-bfa4-c2d3819ad5f2@linux.ibm.com/
-Signed-off-by: Nathan Chancellor <nathan@kernel.org>
+Set the IBMVFC_CAN_USE_NOOP_CMD capability bit during NPIV login to
+inform VIOS that the client can handle NOOP commands.
+
+Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 93b9f699c2e5..b3bc3ce872d6 100644
+index 1ac730c0a8a6..3aac4fd2c5c3 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -6151,7 +6151,7 @@ static void ibmvfc_do_work(struct ibmvfc_host *vhost)
- 				timer_delete_sync(&tgt->timer);
- 				kref_put(&tgt->kref, ibmvfc_release_tgt);
- 				return;
--			} else if (rport && tgt->action == IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
-+			} else if (tgt->action == IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT) {
- 				tgt_dbg(tgt, "Deleting NVMe rport with outstanding I/O\n");
- 				nvme_rport = tgt->nvme_remote_port;
- 				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_LOGOUT_DELETED_RPORT);
+@@ -1562,7 +1562,9 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+ 		login_info->flags |= cpu_to_be16(IBMVFC_CLIENT_MIGRATED);
+ 
+ 	login_info->max_cmds = cpu_to_be32(max_cmds);
+-	login_info->capabilities = cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN);
++	login_info->capabilities =
++		cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN |
++			    IBMVFC_CAN_USE_NOOP_CMD);
+ 
+ 	if (vhost->mq_enabled || vhost->using_channels) {
+ 		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
+@@ -3657,6 +3659,14 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
+ 	if (crq->format == IBMVFC_ASYNC_EVENT)
+ 		return;
+ 
++	if (crq->format == IBMVFC_NOOP) {
++		if (vhost->state == IBMVFC_ACTIVE &&
++		    !ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NOOP_CMD))
++			dev_err_ratelimited(vhost->dev,
++					    "Received unexpected NOOP command from partner\n");
++		return;
++	}
++
+ 	/* The only kind of payload CRQs we should get are responses to
+ 	 * things we send. Make sure this response is to something we
+ 	 * actually sent
+@@ -4185,9 +4195,15 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost
+ 	case IBMVFC_CRQ_CMD_RSP:
+ 		break;
+ 	case IBMVFC_CRQ_XPORT_EVENT:
++	case IBMVFC_NOOP:
+ 		return;
+ 	default:
+-		dev_err(vhost->dev, "Got and invalid message type 0x%02x\n", crq->valid);
++		dev_err(vhost->dev, "Got an invalid message type 0x%02x\n", crq->valid);
++		return;
++	}
++
++	if (unlikely(!evt)) {
++		dev_err(vhost->dev, "Received null event\n");
+ 		return;
+ 	}
+ 
 
----
-base-commit: 30733f28c0347d237ffb5333fdfab7a9a2d4ed34
-change-id: 20260817-ibmvscsi-rport-wuninitialized-0bb7e5d05761
+-- 
+2.55.0
 
-Best regards,
---  
-Cheers,
-Nathan
 
