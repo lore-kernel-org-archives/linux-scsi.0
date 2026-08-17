@@ -1,76 +1,89 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A46D94B04B1
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Aug 2026 13:04:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B51DF76026;
+	Mon, 17 Aug 2026 01:40:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786885474; cv=none; b=UNfHZ/Byeei2avXlvyE+RTgnm+6vIqHQvmdDKOsZRVIEaJK0KATIDLKNpXkO4gJQtLqsIi26u7UNVsdug/v4alfcT1xoDWG4xJieWogkF4VA6QbvszWEgYsGe0kTHR7UBw6rxykI+fFMJHE2hHyaCmxHuxvzNGroKKvI8MfpbIU=
+	t=1786930857; cv=none; b=ZIvxuRCTpTvEvQWR+XSscKqvvGOI/UZa6jeyieL9NhMHFcf8QgfBeBjBnzXmxE15zBNapq6gjVMpBSOPM26CweYP7aFSVJioXl6v/Yzlekf1yCdaNo+twpwz74BuNyB73+2YLKPAyC2KgKCKxkYHcuCV/Q0KLr9WjzQKSILHVWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786885474; c=relaxed/simple;
-	bh=+SM1mqKjDsLv1yi2Fz628v66oZSELSzpGNjY0lyuq/U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sfIKicHB8urQQ+AcI0PCYkKJjeu7aEKvWwTsiLSOToIQWsPm1PgN4bT+L814lvy+RCWkImWe69CvCZ+hSPzwEbFK3dlzobznlVa3HxVbhOJNxzFbxE1C52GG+eyeSATa+15C/9yfIfEjQvOZVSZ/CQX5iPZvZdHyo9FFq11SeDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=oYrj2bq8; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1786930857; c=relaxed/simple;
+	bh=fsrFasTqjrh5yXlh31yAOvm51YJc8y6RjYKthPPQ76k=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Iu6x39DsC5R506U7MlGqs3pzhXoKfwCucDO9Ly828Htwmk8psSnDw9gtmkmaXr8esQissQpRlnRN/5BQaPdzSapM0v0ae4mZ5vLDzklVpn1N3wW3D8lwAm0T7/vAwJ0lH8CW+u+jB8ZGF0zP2XYd247X0fIXUEy7/1BrpoWAyh8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=XFV4aqOU; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="oYrj2bq8"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hNGQ25Kl5zlfvqJ;
-	Sun, 16 Aug 2026 13:04:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1786885464; x=1789477465; bh=+SM1mqKjDsLv1yi2Fz628v66
-	oZSELSzpGNjY0lyuq/U=; b=oYrj2bq8MMQZWe6xq487bdBVJ2oStXOr9m/blrFE
-	oKRjt4bhI0U/cmEON+kCrxbGbUXwRcW2Vk2fbK3V0uj47HkCgBDgS62BKF+ppbaw
-	VSSC/DuZI45kE2X1VlWz3Os7jKJaqWi+bhtLla8ok6XzL3o37gm1eEANDTDWVGsU
-	tcqtN7EhAHWdqXrTAoURUZoopPjhCDRV9tNK0uJMV0jYpUQZVJkmm3ESNRM/e7RF
-	VSo2cdispvu+ZCR6LxO2CmyKSCl7LcnPPN0SScWLauNiCgEXD4FucS3kX9AHX/Kj
-	Uopv9+/mqv7W0M/noBsg9lI4oW/h3k3+Nl6FJcV+0JQ4pQ==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 6N2f8I69EbLb; Sun, 16 Aug 2026 13:04:24 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hNGPz3qW3zlfvq4;
-	Sun, 16 Aug 2026 13:04:23 +0000 (UTC)
-Message-ID: <6d22ddff-d4d2-42fe-8b01-0a17d0609e81@acm.org>
-Date: Sun, 16 Aug 2026 06:04:21 -0700
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="XFV4aqOU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=dg
+	dJ1FfQ3kBEMkjlqJ0aXGgYodXmUYCRWyfW4sy2SXg=; b=XFV4aqOUQ/GLoH6FMb
+	zK7j/nzbi+F8KRn5AAU78+BPttjnPEIrE4UjR0O6lH0nw3r/vkYlfzQ2TQWHIIgl
+	SJ1R0+0wf5tcVhcpN6vvEwBtZYc+ucLg2p731mkuBkxQdW2kWTsz47lCTnByWsZ3
+	cnOKDtGtOfZOSvfekMMT4kmBc=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgDH5w5yZoJqQVejLg--.13488S2;
+	Mon, 17 Aug 2026 09:40:03 +0800 (CST)
+From: Yang Xiuwei <yangxiuwei@kylinos.cn>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: axboe@kernel.dk,
+	bvanassche@acm.org,
+	csander@purestorage.com,
+	fujita.tomonori@lab.ntt.co.jp,
+	io-uring@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	rc@rexion.ai,
+	Yang Xiuwei <yangxiuwei@kylinos.cn>
+Subject: [PATCH v3 0/2] scsi: bsg: io_uring passthrough TOCTOU and mapping
+Date: Mon, 17 Aug 2026 09:39:57 +0800
+Message-Id: <20260817013959.165425-1-yangxiuwei@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ufs: core: Disable queue depth tracking support
-To: Leon Romanovsky <leon@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>
-References: <20260814214951.80673-1-bvanassche@acm.org>
- <20260816121050.GB66924@unreal>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260816121050.GB66924@unreal>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PSgvCgDH5w5yZoJqQVejLg--.13488S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrZFW7KF1UKw4xtw1UXF4rAFb_yoWDArb_Cr
+	yDCFyrGw40qF4UCayIkF1Svryqy3yrJF1FgF95trW3Ww13J3ZxXFsxGrZ3XrnxX3Z3Xr13
+	Jw1rX3Z2yrn8tjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUboKuUUUUUU==
+Sender: yangxiuwei2025@163.com
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6hTxgmqCZnT6kgAA3f
 
-On 8/16/26 5:10 AM, Leon Romanovsky wrote:
-> I believe we can drop this comment and keep the patch limited
-> to drivers/ufs/core/ufshcd.c only.
+Hi,
 
-Hi Leon,
+Two patches for the BSG io_uring passthrough path.
 
-Agreed that the ib_srp changes should be removed from this patch. These
-changes got included by accident in this patch.
+1/2: fix TOCTOU on the shared SQE.
 
-Thanks,
+Builds on Rahul Chandelkar's earlier TOCTOU patches:
+Link: https://lore.kernel.org/r/20260527105931.3950913-1-rc@rexion.ai
+Link: https://lore.kernel.org/r/20260527191817.142769-1-rc@rexion.ai
 
-Bart.
+2/2: IO_URING_F_NONBLOCK only needs BLK_MQ_REQ_NOWAIT for request
+allocation. Map user buffers with GFP_KERNEL.
+
+Changes in v3:
+- Reword 1/2 commit message.
+Link: https://lore.kernel.org/r/20260727014117.1742202-1-yangxiuwei@kylinos.cn
+
+Changes in v2:
+- Also READ_ONCE max_response_len (Caleb).
+Link: https://lore.kernel.org/r/20260720032338.461681-1-yangxiuwei@kylinos.cn
+
+Rahul Chandelkar (1):
+  scsi: bsg: fix TOCTOU in io_uring passthrough command setup
+
+Yang Xiuwei (1):
+  scsi: bsg: map io_uring user buffers with GFP_KERNEL
+
+ drivers/scsi/scsi_bsg.c | 51 +++++++++++++++++++++++------------------
+ 1 file changed, 29 insertions(+), 22 deletions(-)
+
+-- 
+2.25.1
+
