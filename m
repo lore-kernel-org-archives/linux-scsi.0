@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D959275AFD
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 20:41:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CDF03BB69F
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 20:41:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786999314; cv=none; b=dPncPEEc5Pyydvl1vxhY3wF2IhZIY8pJ/dsQyW3Emn5Z/VnjFDcMhfrA4laCoFUjtPEX9bQBMq+x9eN3j6/KI574zC2Lq3JCS3ps8z5XreFS7jU64AEr5ji1hZCTe+tTCwZcrDmaD8GOCy5zrQhTD3q6OvUNgbuOUrt1unCoP+k=
+	t=1786999315; cv=none; b=lJt5tycTW+enav494XazMrQtvaMsiAHX/zQAipSbjkb73XgAMhPf/lptLD3OmE8m+6ppSfAlLH2bWBVhAGXg0Frqr4W8ot27rN5+9+iHRYpN9H2XcMTrFlax+knAg7bExeaQp51o+IH9H9Z/YyDOLe0mKNFzBaZ/zQQro83ueHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786999314; c=relaxed/simple;
-	bh=BskA2h/X2Fe16tQETHieEvRP37XUQDc/PCXNE4ZNOaA=;
+	s=arc-20240116; t=1786999315; c=relaxed/simple;
+	bh=7qENksdK3cl5s7M/xZtN7HO3inpe1vlsOGG1KeG9kSk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=A59tPDoPoSFsbo0clLK3YcvMUsIWltmix3sE3us0ZqX5cCIYEv/rSS/2F/LKs78XDV3gOGR0iM3DuypYkO38bVBjljQ1E9OdnYrSWh0Gt7cVezirnbNLlRekJWeMDnVBFVBjjJ/QDNSQ90N1QOuIvgIQX6135oNLhl9kf8g687c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D7LRe13f; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=WjIwPjrbBVwnJWQnINcPsFIJ1dG0yXxcMY056slXAv7eUFanDdbDyn3XuAB63wRlzQOspCGT+/RU9/pWr1RF+oYGzRIj8+JZwmfxVctO5H+xHXux0OdkQ72zyBu4bIfMD6cV0kfQjU6AD5yR7zPsXXdCu9MPep71AbxUMepLPks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ODwIZOig; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D7LRe13f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 384DC1F000E9;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ODwIZOig"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC6251F00A3A;
 	Mon, 17 Aug 2026 20:41:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786999313;
-	bh=w059AldXqMGDCRS1BIPMYsZ/8VYHzY0i3drYF9H+PB4=;
+	s=k20260515; t=1786999314;
+	bh=e9Yio3eblHfZD5W8giqNBeiGcfuTo2nAV++IISb3n/I=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=D7LRe13fXhZGR5dx8orlRwy/uQB2TrO2pEustdBNtVJ2WvTFp5y8Fng22wP3eNfHj
-	 NNVFUZUnHeeQ/KKmnTVaEfPsQpgB+Ad9Kgjz6quamiyCrf7h3pNS0mb0Thwpk+jBTP
-	 B1ONQzQxQAm/cKrNqijPn1Hu7SvjBSufolWtL4r0ngxPZSCNQsu2+i2WDoi+E8Co9P
-	 KlhV8JEJv31l/PAjZszcNPOmXSZdcIBwUmIYyLtA16g3ClidD5vJXSBrbKx4zv/5/g
-	 uStM7SwxLpuWOvce8YYSnX7PmsuQD5SOoTsVYZgJdTZ0fIndev+Psx9jf6I4+Kf8oH
-	 r0jXNh63ntOBQ==
+	b=ODwIZOig6x6GkuOzU3MqNOzAJgENIOlfz7iseoV2aJqSB6ekeQ61DLZldpzmNFzH1
+	 MCVEGAE92SII8HHVqFW32kwlQCPtfiQX0+m6yONTxDBw96ohJ30PEuFkcA8jyeNFrN
+	 lyU1g+2MZ1Ebkh0aRzNKwsD0pxj+FY9NdEPe/6EZ9UOYrY5bVJtHEahEfZXQkttGfJ
+	 Js76CX+X6bf3RaNOXXBh6qhIE4BrYFGnDH5vWcVg1rO0iNT1HYqJUSOXjYB74Ablhy
+	 JdJckR83TEb/NSXqS4dDbYgBM/7HBXAiqaIOcy6c8v+pTxqjK+4Y8foUF6/QzqyBAq
+	 diCO/oK+CzUPQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 8/8] scsi: ibmvfc: handle extended FPIN events
+Subject: Re: [PATCH v6 2/8] scsi: ibmvfc: Add NOOP command support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260817-ibmvfc-fpin-support-v6-8-62a2d525e70d@linux.ibm.com>
+In-Reply-To: <20260817-ibmvfc-fpin-support-v6-2-62a2d525e70d@linux.ibm.com>
 References: <20260817-ibmvfc-fpin-support-v6-0-62a2d525e70d@linux.ibm.com>
- <20260817-ibmvfc-fpin-support-v6-8-62a2d525e70d@linux.ibm.com>
+ <20260817-ibmvfc-fpin-support-v6-2-62a2d525e70d@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 17 Aug 2026 20:41:52 +0000
-Message-Id: <20260817204153.384DC1F000E9@smtp.kernel.org>
+Date: Mon, 17 Aug 2026 20:41:53 +0000
+Message-Id: <20260817204153.DC6251F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,182 +46,104 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Extended FPIN events are incorrectly discarded because a structure=
- union overlap corrupts the `node_name` search key.
-- [High] A race condition during driver removal triggers a NULL pointer der=
-eference in the interrupt handler due to premature teardown of `fpin_workq`.
-- [Medium] The `ibmvfc_extended_fpin_test` suite lacks KUnit assertions to =
-verify statistic updates and relies on flaky `msleep()` synchronization.
+
+New issues:
+- [High] The `IBMVFC_NOOP` macro is incorrectly checked against `crq->valid=
+` instead of `crq->format` in `ibmvfc_handle_scrq`.
+- [High] Teardown asymmetry and Use-After-Free of `vhost->fpin_workq` durin=
+g module removal.
+
+Pre-existing issues:
+- [High] Untrusted pointer dereference of `evt->queue` before validation in=
+ `ibmvfc_handle_scrq`.
 --
 
---- Patch [8]: [PATCH v6 8/8] scsi: ibmvfc: handle extended FPIN events ---
-commit 3ae60b854350b472f08abc0cb2cc22c2f6e12865
+--- Patch [2]: [PATCH v6 2/8] scsi: ibmvfc: Add NOOP command support ---
+commit b1d87be5bed78116ccdb644bdfced27ffa4dfe26
 Author: Dave Marquardt <davemarq@linux.ibm.com>
+Subject: scsi: ibmvfc: Add NOOP command support
 
-scsi: ibmvfc: handle extended FPIN events
-
-Implement support for extended FPIN messages received via the asynchronous
-sub-queue. This converts extended FPIN messages from async sub-queue format
-to fc_els_fpin structures and updates capabilities and tests.
+Add support for VFC_NOOP messages from VIOS to enable keep-alive
+functionality between the client and server.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index 0368fb1763c3a..e36c3c0a81fbf 100644
+> index 22b4d639e74be..19a3f12615648 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-[ ... ]
-> @@ -3504,6 +3540,7 @@ static struct ibmvfc_target *ibmvfc_find_target(str=
-uct list_head *target_list,
->  static void ibmvfc_process_async_work(struct work_struct *work)
->  {
->  	struct ibmvfc_async_sub_crq *subq =3D NULL;
-> +	struct ibmvfc_async_subq_fpin *sqfpin;
->  	struct ibmvfc_async_work *aw;
->  	struct ibmvfc_async_crq *crq =3D NULL;
-
-[Severity: High]
-Will extended FPIN events be incorrectly discarded here because of how the
-target lookup is performed?
-
-In the earlier part of ibmvfc_process_async_work(), node_name is read from
-the subq structure:
-
-ibmvfc_process_async_work() {
-        ...
-        if (is_subq) {
-                subq =3D &aw->crq.subq;
-                scsi_id =3D 0;
-                wwpn =3D subq->wwpn;
-                node_name =3D (subq->flags & IBMVFC_ASYNC_ID_IS_ASSOC_ID) ?=
- 0 : subq->id.node_name;
-        }
-        ...
-        tgt =3D ibmvfc_find_target(&vhost->scsi_scrqs.targets, scsi_id, wwp=
-n, node_name);
-        ...
-
-Because the ibmvfc_async_subq_fpin structure overlaps with the id union in
-ibmvfc_async_sub_crq, reading subq->id.node_name for extended FPINs will
-extract garbage bytes from the fpin_data.event_threshold and event_data
-fields.
-
-Does this cause ibmvfc_find_target() to fail and drop valid events?
 
 [ ... ]
->  	if (crq)
->  		fpin =3D ibmvfc_basic_fpin_to_desc(crq, tgt->wwpn);
-> -	else
-> -		fpin =3D ibmvfc_full_fpin_to_desc(subq);
-> +	else {
-> +		sqfpin =3D (struct ibmvfc_async_subq_fpin *)subq;
-> +		if ((subq->flags & IBMVFC_ASYNC_IS_FPIN_EXT) =3D=3D 0) {
+
+> @@ -4220,9 +4230,15 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *=
+crq, struct ibmvfc_host *vhost
+>  	case IBMVFC_CRQ_CMD_RSP:
+>  		break;
+>  	case IBMVFC_CRQ_XPORT_EVENT:
+> +	case IBMVFC_NOOP:
 
 [Severity: High]
-Can this lead to a NULL pointer dereference during driver removal?
+Does this code check IBMVFC_NOOP against the correct field?
 
-When ibmvfc_remove() is called, the fpin_workq is destroyed:
+The switch statement evaluates crq->valid, but IBMVFC_NOOP is a message
+format (0x03).  Will the NOOP case be functionally dead here, causing NOOP
+messages to fall through to the command response handling?
 
-ibmvfc_remove() {
-        ...
+>  		return;
+>  	default:
+> -		dev_err(vhost->dev, "Got and invalid message type 0x%02x\n", crq->vali=
+d);
+> +		dev_err(vhost->dev, "Got an invalid message type 0x%02x\n", crq->valid=
+);
+> +		return;
+> +	}
+> +
+> +	if (unlikely(!evt)) {
+> +		dev_err(vhost->dev, "Received null event\n");
+
+[Severity: High]
+Does this error path get triggered erroneously for every NOOP sent by the
+VIOS?
+
+If a NOOP message falls through to the command response handling, ioba is
+likely zero, which would cause evt to be null.  Will this spam the kernel
+log with 'Received null event' at a high rate and potentially cause disk
+exhaustion?
+
+[Severity: High]
+This is a pre-existing issue, but is it safe to dereference evt->queue
+before validation?
+
+Immediately after this null check, the code executes:
+
+        if (unlikely(!ibmvfc_valid_event(&evt->queue->evt_pool, evt))) {
+
+If a malformed or malicious ioba payload is sent by the VIOS, couldn't this
+cause an immediate out-of-bounds read or kernel panic when evt->queue is
+dereferenced?  Should the queue pointer be securely passed down from
+ibmvfc_drain_sub_crq() instead?
+
+>  		return;
+>  	}
+
+[Severity: High]
+Could the destruction of vhost->fpin_workq during module removal cause a
+use-after-free?
+
+In ibmvfc_remove():
+
         destroy_workqueue(vhost->fpin_workq);
         vhost->fpin_workq =3D NULL;
-        ...
-}
 
-If an FPIN interrupt arrives before the CRQ queues are disabled, the
-interrupt handler unconditionally queues work to it:
+If hardware interrupts and tasklets are not disabled until
+ibmvfc_release_crq_queue() is called later, an IBMVFC_AE_FPIN event could
+trigger the interrupt handler and schedule the tasklet.
 
-ibmvfc_handle_async() {
-        ...
-        case IBMVFC_AE_FPIN:
-                aw =3D kzalloc(sizeof(struct ibmvfc_async_work), GFP_ATOMIC=
-);
-                if (aw) {
-                        ...
-                        queue_work(vhost->fpin_workq, &aw->async_work_s);
-                ...
-}
+Would this result in ibmvfc_handle_async() executing:
 
-Should the interrupts be disabled prior to tearing down the workqueue, or
-should we check if fpin_workq is NULL before queuing work?
+        queue_work(vhost->fpin_workq, &aw->async_work_s);
 
-> +			fpin =3D ibmvfc_full_fpin_to_desc(subq);
-> +		} else if (!(sqfpin->fpin_data.flags & IBMVFC_FPIN_EVENT_TYPE_VALID)) {
-[ ... ]
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
-/ibmvfc_kunit.c
-> index 444e6e6e1c390..ce938b93ecb45 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-[ ... ]
-> @@ -225,9 +226,118 @@ static void ibmvfc_full_fpin_test(struct kunit *tes=
-t)
->  			post[IBMVFC_AE_FPIN_CONGESTION_CLEARED]);
->  }
-> =20
-> +#define IBMVFC_TEST_FPIN_EXT(fs, ev, stat, crq) {		\
-> +	crq.valid =3D 0x80;					\
-> +	crq.flags =3D IBMVFC_ASYNC_IS_FPIN_EXT;			\
-> +	crq.link_state =3D IBMVFC_AE_LS_LINK_UP;			\
-> +	crq.fpin_status =3D (fs);					\
-> +	crq.event =3D cpu_to_be16(IBMVFC_AE_FPIN);		\
-> +	crq.wwpn =3D cpu_to_be64(tgt->wwpn);			\
-> +	crq.fpin_data.flags =3D IBMVFC_FPIN_EVENT_TYPE_VALID;	\
-> +	crq.fpin_data.event_type =3D cpu_to_be16((ev));		\
-> +	pre =3D READ_ONCE(tgt->rport->fpin_stats.stat);		\
-> +	ibmvfc_handle_async((struct ibmvfc_crq *)&crq, vhost, true);	\
-> +	msleep(1U);							\
-> +	post =3D READ_ONCE(tgt->rport->fpin_stats.stat);		\
-> +}
-
-[Severity: Medium]
-Is it expected that this macro only reads the pre and post statistics witho=
-ut
-asserting any changes? The KUNIT_EXPECT_* macros seem to be missing here
-to validate the update.
-
-Additionally, could relying on msleep(1U) for synchronization lead to flaky
-test results when running under heavy load?
-
-> +
-> +/**
-> + * ibmvfc_extended_fpin_test - unit test for extended FPIN events
-> + * @test: pointer to kunit structure
-> + *
-> + * Tests
-> + *
-> + * Return: void
-> + */
-> +static void ibmvfc_extended_fpin_test(struct kunit *test)
-> +{
-[ ... ]
-> +	for (fs =3D IBMVFC_AE_FPIN_LINK_CONGESTED; fs <=3D IBMVFC_AE_FPIN_CONGE=
-STION_CLEARED; fs++) {
-> +		switch (fs) {
-> +		case IBMVFC_AE_FPIN_PORT_CLEARED:
-> +		case IBMVFC_AE_FPIN_CONGESTION_CLEARED:
-> +			crq[fs].valid =3D 0x80;
-> +			crq[fs].flags =3D IBMVFC_ASYNC_IS_FPIN_EXT;
-> +			crq[fs].link_state =3D IBMVFC_AE_LS_LINK_UP;
-> +			crq[fs].fpin_status =3D fs;
-> +			crq[fs].event =3D cpu_to_be16(IBMVFC_AE_FPIN);
-> +			crq[fs].wwpn =3D cpu_to_be64(tgt->wwpn);
-> +			crq[fs].fpin_data.flags =3D IBMVFC_FPIN_EVENT_TYPE_VALID;
-> +			crq[fs].fpin_data.event_type =3D cpu_to_be16(FPIN_CONGN_CLEAR);
-> +			pre =3D READ_ONCE(tgt->rport->fpin_stats.cn_clear);
-> +			ibmvfc_handle_async((struct ibmvfc_crq *)&crq[fs], vhost, true);
-> +			msleep(1U);
-> +			post =3D READ_ONCE(tgt->rport->fpin_stats.cn_clear);
-> +			break;
-
-[Severity: Medium]
-Similar to the macro above, this inline manual test logic is missing
-assertions to verify the stats actually changed. Does it need a KUNIT_EXPEC=
-T_*
-call here?
-
-[ ... ]
+on the explicitly destroyed and NULL-ed workqueue?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260817-ibmvfc-fpi=
-n-support-v6-0-62a2d525e70d@linux.ibm.com?part=3D8
+n-support-v6-0-62a2d525e70d@linux.ibm.com?part=3D2
