@@ -1,190 +1,223 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77194153BE9
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 14:24:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BE8C39EF05
+	for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 14:26:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786976695; cv=pass; b=FAjGch3mFBNLg0IJUPhBgV9pLaSc0Rl0Ry4f5E++I/JLYZZHDsHJX6cSag6vjBB+E+WUael8G8KqmVUeD9D7XC5vB0QrkvT7DpFLuYIslBpK69Hlhp/nJciLM26DoJR14qYDyHz5UxU1v2/JqUrMveT5RYYU9w9lD0N4teFlvvY=
+	t=1786976779; cv=pass; b=OFFYLQmZZySEmkK/Z2oslG/KgMgkDuVumUlLygpB9N89YxP2A7lVHiXquvBZE6tPpPvvSKZckAJ5tdHzKkQRUq7Pu7HneuOtOsfVUARftmVwSUphX7+xxtfmJOIcNQVDFzrhXVix47eueS2AIFZDTozqbf2KGgt1S+47e8XDNKw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786976695; c=relaxed/simple;
-	bh=5zMANYOL6OMX63n9a2mTSlmz6sYz7y/VGD+m3NyD6Vw=;
+	s=arc-20240116; t=1786976779; c=relaxed/simple;
+	bh=5Fx/jLBt4NjgKsouyRUj62+jA3S0tsigRG7T1AupIoU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EbeJuamHBh7L4IEzqQejvg0Cp9mqUxpWwxr8hXXYT19JfjO+EVrKGS8+Y4iz4NFacAkT8dMwWcX+WraYMqFayyY42o+sXAmmVDIGPy3jdR6oPfhnLS/XwKBIJshtXtRtA2UhT0RhoGaazaFSiG1408aj50u1mQE/YjDG7JI2VSE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LP+61kEE; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=GXtizEdE; arc=pass smtp.client-ip=170.10.129.124
+	 To:Cc:Content-Type; b=k2a2cxZF2dOhDYblGwG+WSG0v7C1aD7fMIwf1voIPX1bL2cVMmkOpJ8K0AlkUnAJGYFFiTtap4j9dfhbffKHouhbVvEk4ZPgYHvjM/0ud2iinpP2rgpvb8oFw1RhxD5vwwv+sWEAkKFYZpA5cpTs+dD/3fu1aOgW5mPYVNK71y0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dTEFdRV9; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=iS2uGnrd; arc=pass smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LP+61kEE";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="GXtizEdE"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dTEFdRV9";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="iS2uGnrd"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1786976692;
+	s=mimecast20190719; t=1786976776;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=N1AzHe4P7wnTJu3tJI94lrInGSy7mvVyAJicROGnecY=;
-	b=LP+61kEERetedd7HWGv3SbLXQxWiE1feBcWfUZReksNL1EUBso4S5RAvBt9+bxCewrwPpl
-	wCbCrkUEBSR87hY0XzjpRPkkIyrWrd0xkOjHFr6rKmbGwlyND/wMvFb3mju/Wp0k1zT20C
-	IiL5XR9YpJy0c/rettc3iYUVRvs85Xs=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=0xVoO4PGa93cBgoTmsmPlqVbYL9tE4BTnM50GMQnOmg=;
+	b=dTEFdRV9uiiE7aQI0N0cTEB0Czz5GMPIP2fp9PJmdzuPh6o7DbUNDzn7jDn5tbUdtWmPQD
+	M6blIgsOmQw78mJ1TcFpJ2d0UgxEqGIyYWeEMIUGxuNK8VQCWyNmqIx03A+QcagftIUXZ7
+	U+AnxRcM3/tHfcqbyuIOGBozZhrw3YI=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-653-064aZFo4MB2BPra3OgEGuw-1; Mon, 17 Aug 2026 10:24:51 -0400
-X-MC-Unique: 064aZFo4MB2BPra3OgEGuw-1
-X-Mimecast-MFC-AGG-ID: 064aZFo4MB2BPra3OgEGuw_1786976690
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4997b060af8so20972775e9.1
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 07:24:50 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786976689; cv=none;
+ us-mta-526-gPBv8xJQPpGK4biiXnHgKg-1; Mon, 17 Aug 2026 10:26:10 -0400
+X-MC-Unique: gPBv8xJQPpGK4biiXnHgKg-1
+X-Mimecast-MFC-AGG-ID: gPBv8xJQPpGK4biiXnHgKg_1786976769
+Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-47feac2021eso1949339f8f.3
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 07:26:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786976769; cv=none;
         d=google.com; s=arc-20260327;
-        b=LKsyJ4CI7llsEYwEhozTGveiIXiHHOzJvXyuEbZWKK0K7atLJTMJgpqY5I05MNOj3w
-         7fcqfBYr9rPWGbGHPJefBdlYGz1HNTo/Fzj2emrYj3Sza2F0xEmhMGtV1et2xF6t1Oj5
-         xEGrl2Snpe3AO51yRcQ+f7bv6CRamIOHmw67epUEPz7vdzv0x0uOICJHb38QXyfeeBBA
-         +vlF2gDfjZ08nevxriG2XmxnvDotnoju2WWJWlbRffpAvFFZLjdjtevARMCetJjjh78H
-         1v0ZAVY/L5ipO8ArTFtQl+TLtH19fMKlrxFUMtYYNIEN2f7OUAhSUHTGaTbIR+DEJ0S/
-         z8Nw==
+        b=Vn3wi9tUVDZYWGrAzxdjs2WpbdUu9J+OA8CM7VY+ecfMoBeTT/j9KVfsyhCTKZ6Znk
+         8zhJ7ZMR9L3qabzf+7M/MpBeAIK7/dcpQeEETVbOo5f/94MdYlEKY474nDFwHHUxBp4g
+         3GwX3BBocDYutL+DUZgIo45Dg3LH8pEAVvJB/zSLwdGf+tGFSk6h4sSAZnkwntnMvcXQ
+         blF/cIDejuTuk9KMS3qCBhmfnJyWlWk7V4OVBYbpSD0hHMPHSim/F0vfJIPW1mU8bxUO
+         tBo2x9S8W6BcbaSBnRCeMhDo5hxAV2oozE5tBiCLNHsgxreGEJUhTKTe9HLHXmBot+tJ
+         zTtg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=N1AzHe4P7wnTJu3tJI94lrInGSy7mvVyAJicROGnecY=;
+        bh=0xVoO4PGa93cBgoTmsmPlqVbYL9tE4BTnM50GMQnOmg=;
         fh=gUfsL9ppqjROwdjOOpA7gVU01au1qshFQ+BhECdF0Kg=;
-        b=UnBS6XPcx2YJeWWA5ES1IKRFVXEXknKYQoHPlh7tfnPND+6iawOxsOrt7/7SAo0pR0
-         i/FAnnzdTEXxHoU2/NElQTSkjt1jMjlTkNdiPnAuo8dn82qenfdVkn1Uxf8DK4TnhXaS
-         pcAbafAyLgx1pI7fPf3g5HYkRPAtsB7hPwV6OuQjK8dkGKl1aWP9I9OZPd4sELRak3u6
-         qYQwHaaWi9cWMMtYnogsuhCZ9T592qpFU/PODkVMI5vfiSJH58junCs90RfT+JNBkNse
-         mvjycND/DS9oikqE4VixwfEPEOPCEh8gEAGsYNNG34q4FE+w6hNdw8fxfLSWTphKR9N3
-         FIBg==;
+        b=hPyiflaL00zBLx3Y4rbW30iGXc231XT3Gc1zkw6VaybVCrKPpqF2Sd0TFHMMctiUZ9
+         qKS8w+w4YZCFz0siFlTxMToraFVJLztnLqM1WCtV+olU2U7Omh5txSjsWWUycXtKfUAC
+         aphGSRLeeX4NMdMo2jcyosJr3LvG7cCFUGRi5d/SvkTGzEcjV3PLD2XiBTrnGAbAUo7U
+         XFU+MWAWruDJx0qIr6PlDhe9+kQfmbpCftzogvYC79zeZZ7z3zLLK6TAIXKaine2d1bG
+         B92RLpRUnL6YKP+PYRXAkFCNdMXVdsHThim6BpjJQBZz2/rpcM0mbUHoUgVEbam2pfax
+         +Ukw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1786976689; x=1787581489; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1786976769; x=1787581569; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=N1AzHe4P7wnTJu3tJI94lrInGSy7mvVyAJicROGnecY=;
-        b=GXtizEdEyk5ecZSF0UHu2WsxIB6BodAKivAgZWUvapG7yndPqpLXseWMHOOpPRKpnO
-         oCbhCcLtQtfFzSb27X7wNzk5/QeqZQAXGu+YSyW67PuYzsBP7LhY44PlXilZbFuHCjvp
-         71qL+FsVVLkETFQRBpnXiShXU47NZn7hdS8S7D1ZP6W1Nn7BgevBixNx+ivGdL3Fo9+I
-         srAtu0PTX4FdtmmQSxRS08LEmjajdQeg2a7wzWDZkWiY1Z/bwp6smTEI1UBgy0nXa2SC
-         EPxfSza7KsbnsN6T2KgG9bFMitKpYRfM521SyLoIvW0XdZBTyRbgDaPhE2rkqv+LOE/+
-         7GVg==
+        bh=0xVoO4PGa93cBgoTmsmPlqVbYL9tE4BTnM50GMQnOmg=;
+        b=iS2uGnrdZdGpvgPbJsX/oU3E0DhG+WiPQIEQMA0hoBRPZHE00qWBAOqvsJMxUKgFMJ
+         7DDROVZXIkcZuWty/z6cI45ijNMJkgFCZ6Uxt87kM2Mx58xW4pozEC1m5uNR7IgtJ1KN
+         uurkVs6/sECQWb1dJTY8FbKcBO13/Rlvv1Jin+357S0pRcYV8NAd4RY0SPW/Hb/doYIm
+         R0uQwbL2h6A4pXbV6ZbUxoPRN/8EotwLahScGfpWjZK8IUrzWQOLKfiygiPE8rxW2A3i
+         Gp7QWbMjg4yLytIAYtkunTAh9S4Mga+kJOI4AhaIqBEHXp13BokrQxIgQr4Z930ZSA3v
+         5/Fw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786976689; x=1787581489;
+        d=1e100.net; s=20251104; t=1786976769; x=1787581569;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=N1AzHe4P7wnTJu3tJI94lrInGSy7mvVyAJicROGnecY=;
-        b=jBtRt5UtMP2etNXFn+SNHM3SyVRSNSsJW4phK+dZnjinbKg8Gg7ndvZxuIkiH72gwd
-         Clm2Ufhi+qoQ57trcHqnylmfpyAEXcxOUDopqEb+qo+gzIE0CnWEVnspFMWWl3HG6Bqp
-         K4ASrkxVOhYI319PLFY1+r8pDKMzV5N0pIkD0WSvNdjZlzYpgdwxAqq3u4GJpNaU4Wci
-         KUwHYIqa6V1CW0ko7vCZPGc89SpFZO7u3KR/1QjeLMzoUEeVGs2t0ouiUs5ufccoa+QP
-         BP6AGUvbyOOzXDI7KeNAoPHsbmJ0+D1wF1b2dIs44M0hIKto2yHuw7eA/9RdSVW8Wb4+
-         oeGA==
-X-Gm-Message-State: AOJu0YyOxQuApxOxojs2hKcMapIoPH8a+M0PI3ZGEAR7FRIOGrX7Abi3
-	ZD0R5odupWZ8m/I7EfdMK5U6atlmRcwTeCbXY1ezx+rc2j4EjbvDfpCFCy11+/AgAqcSUrhPlw2
-	8Aecf6o6pTtancpUi8DLYMphQ3AdYbIzv4MBXSPrn/ZgyJqeMJnGtzAp3NILG187ktoKWNPqIet
-	6KfuXDZUku96SiGhp+xpp6nWhmMamHwKMeMU7rdg==
-X-Gm-Gg: AR+sD11f+ZlWzTyEOZl0fR71M1FZF47+c5mPuCtVtt8dJgQttqGCedWUaT5UZ+N/Bc8
-	QcLG/qvWH1VyglDx/GidKZ75lTHEqxAf+EdkcrFUyDBCOWGOXz1GtsJOSL2mY3To2R0j54L7XGD
-	qLeoSbb6FYyXbwSmkNGdaOZzfSnqRvqTOINSDMDlLg5cqNDgBbAnTO+d/HtL+qJEfaVpaf4Sn1q
-	qR2nYA/toSk3hunPA==
-X-Received: by 2002:a05:600c:8509:b0:496:c9cd:e7ab with SMTP id 5b1f17b1804b1-499879337acmr453690275e9.5.1786976689577;
-        Mon, 17 Aug 2026 07:24:49 -0700 (PDT)
-X-Received: by 2002:a05:600c:8509:b0:496:c9cd:e7ab with SMTP id
- 5b1f17b1804b1-499879337acmr453689025e9.5.1786976688989; Mon, 17 Aug 2026
- 07:24:48 -0700 (PDT)
+        bh=0xVoO4PGa93cBgoTmsmPlqVbYL9tE4BTnM50GMQnOmg=;
+        b=g1yPnsB6sTConnZH4XN0QUXEKvj2d3614/kiZ90kPT3BgDcZWQJJfyAVPWULi8iAei
+         l7Vf77VZ9aecd9uxQDwulofbTxxfZ0IIOiH69PkdqtX7u/cve+xT2zm1hnbuEMIOKfNj
+         p0Tij3WFXNKJ1dnJWvcMbblPN+/gwIxC613m3FXwcTFnT55IkgJHM8DDOkrVdaNwEA8D
+         xaUjI6yFjMcG9ub26LtSSRmLEgfm37UJ9EQBR+5gaHv6chnn+G+KWWtWDcNrdO5+Aj2C
+         eKYqDjGVkWrMdTDOznefXdlvwAGD7ggZMy4rL4RJHjgKzmCZkjzltaKiSAgLQEHzTBiC
+         e8tA==
+X-Gm-Message-State: AOJu0Yx3pGZsUDg4Bx3p2n5MnYWpi2Z3KMNo7/0vkmM4Bbpz2pcQdHbF
+	pozwm7cDlsl+X05SX5AWxSxDTw314W/jCIm+XqH5EinMi0RYYN87FgbqSKJa2ApiuU+I2qK7fdb
+	NyX9o/Ves/Q7LU2k0jEKXn+bVA4wd5z8VvPUbMnDcMZvWcTZkZa+U1zH93b8JK7GgIIfzsr+s1W
+	cdiDJbNAK6TWxnynDQINuwpmcy5RnTzvmPia6n9pgflcCYBg==
+X-Gm-Gg: AR+sD127O/nyiAVY1NFKYmLjTmilR4VnjAiOcrxufBGU80cMgx8/TB269SHUO79gZWd
+	fYM7qQkHHz20jGgBvw1uYY+TMlonHkhdNQsBDsnZaxO+TxV0xxoxFFQiUzZFAfQPtZ0oGrZs0H2
+	aRspVAVar5sYFeHvdm1GFWJwhWvSZkno2a7mC2xdjSFj3oVcHk0O756Cz3K9zSo4T2cHK9hOFhY
+	Ajvh0jVTbnFemS0pg==
+X-Received: by 2002:a5d:4b45:0:b0:47f:8f8f:db74 with SMTP id ffacd0b85a97d-482a908a3ddmr728345f8f.12.1786976768695;
+        Mon, 17 Aug 2026 07:26:08 -0700 (PDT)
+X-Received: by 2002:a5d:4b45:0:b0:47f:8f8f:db74 with SMTP id
+ ffacd0b85a97d-482a908a3ddmr728270f8f.12.1786976768264; Mon, 17 Aug 2026
+ 07:26:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260812181300.3712426-1-jtaubepe@redhat.com> <20260812181300.3712426-10-jtaubepe@redhat.com>
- <20260812182733.309881F000E9@smtp.kernel.org>
-In-Reply-To: <20260812182733.309881F000E9@smtp.kernel.org>
+References: <20260812181300.3712426-1-jtaubepe@redhat.com> <20260812181300.3712426-12-jtaubepe@redhat.com>
+ <20260812183533.423061F00A3A@smtp.kernel.org>
+In-Reply-To: <20260812183533.423061F00A3A@smtp.kernel.org>
 From: Jesse Taube <jtaubepe@redhat.com>
-Date: Mon, 17 Aug 2026 10:24:36 -0400
-X-Gm-Features: AcwNN1U5N3XQmwsxmOb1TCuFX1muZNY1UIu4l6yc7tEcDI5Zd5X-qM0qbhm5h-M
-Message-ID: <CADRr4bd_aa=W7DMxzcJA+50TQh8WHtdEmAPtdFzJ_WjqbnTuow@mail.gmail.com>
-Subject: Re: [PATCH 09/13] nvme-fc: add nvme_fc_set_remoteport_fpin()
+Date: Mon, 17 Aug 2026 10:25:56 -0400
+X-Gm-Features: AcwNN1WoAXOWHM0UvOaW2H_aN_oGR153U8en9mLKgo-ACm1moZ0bC2Z130Jd7D8
+Message-ID: <CADRr4bfgy_e=2QjTKxGrUWXvKW6KoJZZOmDabgzp0yYx3SSfAw@mail.gmail.com>
+Subject: Re: [PATCH 11/13] scsi: lpfc: enable FPIN notification for NVMe
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-scsi@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Aug 12, 2026 at 2:27=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+On Wed, Aug 12, 2026 at 2:35=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
 >
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+> Thank you for your contribution! Sashiko AI review found 2 potential issu=
 e(s) to consider:
-> - [High] `nvme_fc_ctrl_connectivity_loss()` clears the `NVME_CTRL_MARGINA=
-L` bit on the wrong structure's flags field, causing state corruption and p=
-ermanent marginal state.
+>
+> New issues:
+> - [Low] Logging Formatting Defect: Error message is improperly split acro=
+ss two consecutive `dev_info()` calls.
+>
+> Pre-existing issues:
+> - [High] Concurrency / Use-After-Free: Lockless access to `ndlp->nrport` =
+and `nrport->remoteport` can lead to a Use-After-Free due to concurrent unr=
+egistration.
 > --
 >
-> --- Patch [9]: [PATCH 09/13] nvme-fc: add nvme_fc_set_remoteport_fpin() -=
---
-> commit a1aaa3c652a2b842059c76da3884f9c0dcb9925a
+> --- Patch [11]: [PATCH 11/13] scsi: lpfc: enable FPIN notification for NV=
+Me ---
+> commit 6d41021b653095acd49d1f7828d07c1405835a16
 > Author: Jesse Taube <jtaubepe@redhat.com>
 >
-> nvme-fc: add nvme_fc_set_remoteport_fpin()
+> scsi: lpfc: enable FPIN notification for NVMe
 >
-> Add nvme_fc_set_remoteport_fpin() and supporting functions. This
-> function is called by the SCSI FC transport and driver layer to set or
-> clear the 'marginal' path status for a specific rport.
+> Implement set_rport_marginal callback using nvme_fc_set_remoteport_fpin()=
+ to
+> enable FPIN notifications for NVMe.
 >
-> > diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
-> > index d2ca65f70a0c5..4acf23ea8aea2 100644
-> > --- a/drivers/nvme/host/fc.c
-> > +++ b/drivers/nvme/host/fc.c
-> > @@ -895,6 +895,22 @@ nvme_fc_set_remoteport_devloss(struct nvme_fc_remo=
-te_port *portptr,
+> > diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_att=
+r.c
+> > index f4e8164b94abb..d54899cceed99 100644
+> > --- a/drivers/scsi/lpfc/lpfc_attr.c
+> > +++ b/drivers/scsi/lpfc/lpfc_attr.c
+>
+> [ ... ]
+>
+> > @@ -7134,6 +7134,30 @@ lpfc_set_rport_loss_tmo(struct fc_rport *rport, =
+uint32_t timeout)
+> >  #endif
 > >  }
-> >  EXPORT_SYMBOL_GPL(nvme_fc_set_remoteport_devloss);
 > >
-> > +void
-> > +nvme_fc_set_remoteport_fpin(struct nvme_fc_remote_port *portptr, bool =
-marginal)
+> > +static void
+> > +lpfc_set_rport_marginal(struct fc_rport *rport, bool marginal)
 > > +{
-> > +     struct nvme_fc_rport *rport =3D remoteport_to_rport(portptr);
-> > +     struct nvme_fc_ctrl *ctrl;
+> > +     struct lpfc_rport_data *rdata =3D rport->dd_data;
+> > +     struct lpfc_nodelist *ndlp =3D rdata->pnode;
+> > +     struct lpfc_nvme_rport *nrport =3D NULL;
 > > +
-> > +     spin_lock_irq(&rport->lock);
-> > +     list_for_each_entry(ctrl, &rport->ctrl_list, ctrl_list) {
-> > +             if (marginal)
-> > +                     set_bit(NVME_CTRL_MARGINAL, &ctrl->ctrl.flags);
-> > +             else
-> > +                     clear_bit(NVME_CTRL_MARGINAL, &ctrl->ctrl.flags);
+> > +     /* Break early if NVME_FC is not enabled */
+> > +     if (!IS_ENABLED(CONFIG_NVME_FC))
+> > +             return;
+> > +
+> > +     if (!ndlp) {
+> > +             dev_info(&rport->dev, "Cannot find remote node to ");
+> > +             dev_info(&rport->dev, "set rport marginal, port_id x%x\n"=
+,
+> > +                      rport->port_id);
+>
+> [Severity: Low]
+> Does this code format the output correctly?
+
+Will fix
+
+>
+> Because dev_info() prepends the device name and KERN_INFO to every
+> invocation, splitting the message across two calls without a newline on t=
+he
+> first will cause the prefix to be injected in the middle of the sentence =
+in
+> the kernel log.
+>
+> > +             return;
+> > +     }
+> > +
+> > +     nrport =3D lpfc_ndlp_get_nrport(ndlp);
+> > +
+> > +     if (nrport && nrport->remoteport)
+> > +             nvme_fc_set_remoteport_fpin(nrport->remoteport, marginal)=
+;
 >
 > [Severity: High]
-> This code correctly uses &ctrl->ctrl.flags for NVME_CTRL_MARGINAL. Howeve=
-r, in
-> nvme_fc_ctrl_connectivity_loss() introduced in the earlier commit "nvme: =
-add
-> NVME_CTRL_MARGINAL flag", the marginal state is cleared like this:
->
-> drivers/nvme/host/fc.c:nvme_fc_ctrl_connectivity_loss() {
->         ...
->         /* clear 'marginal' flag as controller will be reset */
->         clear_bit(NVME_CTRL_MARGINAL, &ctrl->flags);
->         ...
-> }
->
-> Could clearing NVME_CTRL_MARGINAL on the transport-specific &ctrl->flags
-> instead of &ctrl->ctrl.flags leave the NVMe controller permanently marked=
- as
-> marginal across reconnects, preventing the multipath scheduler from fully
-> utilizing the repaired path?
+> This is a pre-existing issue, but does this lockless retrieval of nrport =
+via
+> lpfc_ndlp_get_nrport() safely protect against concurrent unregistration?
 
-Will fix, same issue brought up earlier.
+Will fix
 
+> The macro performs a lockless double-fetch of ndlp->nrport without acquir=
+ing
+> ndlp->lock:
 >
-> > +     }
-> > +     spin_unlock_irq(&rport->lock);
+> drivers/scsi/lpfc/lpfc_nvme.h:
+> #define lpfc_ndlp_get_nrport(ndlp)                              \
+>         ((!ndlp->nrport || (ndlp->fc4_xpt_flags & NVME_XPT_UNREG_WAIT))\
+>         ? NULL : ndlp->nrport)
+>
+> If a concurrent remote port loss triggers lpfc_nvme_unregister_port(), it
+> could free the NVMe remote port memory before setting ndlp->nrport =3D NU=
+LL.
+>
+> Could this code then read a dangling pointer and pass nrport->remoteport
+> to nvme_fc_set_remoteport_fpin(), resulting in a Use-After-Free?
+>
 > > +}
 >
 > --
 > Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260812181300.37=
-12426-1-jtaubepe@redhat.com?part=3D9
+12426-1-jtaubepe@redhat.com?part=3D11
 >
 
