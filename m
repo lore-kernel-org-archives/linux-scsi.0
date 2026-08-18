@@ -1,76 +1,137 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 228D4248F4B;
-	Tue, 18 Aug 2026 16:43:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBB6A471CFA
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 17:53:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787071401; cv=none; b=k77mSGidQMHC1ZluPoOpGOQVn8ZBcWsnMhvchsg01SgvwvYUBmRPsfRhlAz/oIg07svyIjlRlGRcU7WaMJYjk4y+D3risrX3FKiRjDZqQuB+D4CUQpiuZeg/R/LexgKioKLDwrr9T/Y3qBqUwAy/dRj40ePTPTWMnYrGv7lUwpk=
+	t=1787075610; cv=none; b=nY/+GVkg7Kw5O3vX0u+oPE91jqWwfDzKApPTrBbkCmr40xMXDDzqR18r31VRDt056gJFNSUnlGyi2WmGFOgRxbqplaLSccdJadCeahp7FvzWy9HWxy5pLs6+kxYxajPp5sOgkHHmRWiksOJf8uuTsupPK1JsALJNJUPCViQi+8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787071401; c=relaxed/simple;
-	bh=xvT/P/1iUeQyvPLMgAxOyNVydmFkVLD1QMvDtLNo+hs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=T+LnROdYvwXUUj+xh2S/mR7FVWmUymDSUkg+2funo/9lk+1cQylTafo8kxzvs2bXRSNiEWRE2O914d+uTPGBVuS6tIL4mwd6PYdDj35OPo2U9XPi2ZVIOCrZNtJU7AGXaQTyxj0/hcjngZu7czatdfpEhqLaXOELC5UgdetjJmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=P6MiPxv4; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1787075610; c=relaxed/simple;
+	bh=SZHyITtIDScNooashDzy82V1xB83tStOWg0WY75kBkk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ieB73aL/IDz+j+nkdM4owJz7fFrmXq3kUR705YzGB5/QdnKWhSyjgoS7cMK4h3GECHlKsyaqgfJjqUTCp/6dYTRhrCk9NWQYfF0UBJ4dMFy2Tr7AM614qBccaRQH6c8n00sIJDV6DjME2TQGBmNc20mn2z0TV1I46krdfihs6Os=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=bmG+oOJ7; arc=none smtp.client-ip=209.85.215.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="P6MiPxv4"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hPb9g2l6hzlfvq4;
-	Tue, 18 Aug 2026 16:43:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1787071396; x=1789663397; bh=xvT/P/1iUeQyvPLMgAxOyNVy
-	dmFkVLD1QMvDtLNo+hs=; b=P6MiPxv4rlHVi0cZfAijWopQiRpAyleU/wGKUpVi
-	9OtrHTHRQ/Y79aBjFKQWETcbSF4l9JJUGYYtg+wiCXqOxRpQvscfzqoxT1P9fqM9
-	L5E/nd+FurWScksYgoOGXIUeF6g0qEL96/z0srzjIACJkntYNg8fom/w0sF3RfT2
-	i4ERoK7fK1XE2VaZhUw4xkGNAnqmbpQH0tMsaMiGsEGgSDaApLr9s6cheMHdaMMj
-	cZRfPXgK1K7D1qAEVwc9EoF76Tcf3qSokJqpUQHxn1jVF2w++tdEXv7/XBoy7ymY
-	UjiLagBEby79GvNjYX7/lhPb/NSe4EzxPW+H/JscwnGgQA==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id B9fYpXPC6A2M; Tue, 18 Aug 2026 16:43:16 +0000 (UTC)
-Received: from [100.80.228.34] (unknown [104.135.182.42])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hPb9Y5hmszlfvpy;
-	Tue, 18 Aug 2026 16:43:13 +0000 (UTC)
-Message-ID: <5f7f4619-0042-4b69-af25-4f387ccc08a3@acm.org>
-Date: Tue, 18 Aug 2026 09:43:12 -0700
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="bmG+oOJ7"
+Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cbe6295f05bso973121a12.1
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 10:53:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787075608; x=1787680408;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=S8yT5MLcmwDHcZNcUmXv0h7oHriO4FbtMVMJc3B+V5M=;
+        b=GJsbOc2oUbnY3Y8E00kBaBUfGmFnwM9ygoaY6rmZC4BkQRWw2tsEPYsdpHjJnnX9eY
+         cvjYqB90EpSusoRCwOJ3Jm7ibKDfZ4k8SihB74O3HUINWB+jvalXvlnpU7l4sWI3NDju
+         IcxsKZLa8WktfP4KGKSKvRnwwRykyuTc/3GBqi+w9AwtgGzh1SySGMYTHZIC9ZhukFlb
+         TrrYJz+rL+brDV3ojMHkg19llenC8+7+lPrWjZrIR/61SJ17Kw/s+tk6v7JKkazzG2K/
+         yHdN6lEmvowg1JNmiOeV1hQLokRvQiRKcK8A4zt1WxajDlG56BosL+3cAzKTzp3ez5Kv
+         jk1Q==
+X-Gm-Message-State: AOJu0YysV7x+T1HKOwZYT5PQ1sHyTpJSg7Qsq5hBIHH5UTWD48aSYZs1
+	uTu5s+oaOPZ55T1xQSplp16ziirwzDUOZTfaW+vNUw08Dj3kl6Ejv0IyLYht2ytP0xDYRH5KIEF
+	S7Qtdof4HCyN8JgjQkkYo5wBadXicLtsuIAtT8PXfIviW01NLFn1kwMWSVP+j634e1zYU6//RL2
+	LfSIl3P3Q1UDb/m8iMgMlp5Jt8JsTRH1Xiji/gRg+cXXkjyg8f6Yj3RhPYded03XQZjBK0Sxaah
+	yEYF/oBhWnQ7GycsOcaNJhv
+X-Gm-Gg: AR+sD13m3y2AuKLkYrnp6RwNUrlZo0fthn5dgstwux1z5L9VuohXlLtx7U2Lp6bH5Rw
+	JnDXPBZ5R70hU3x/Q+01vfccFCxg/pjsAyH5V6alPY0S2QNVCluohMBrOY5q2TK1Q9921AL/LwY
+	B2Apm6H1QYF9+iQXXSA9jJGzvEKQy/PyOc7ybITz5BWM9g4aoB+WZUdno9YxCD5ipqJU3zuePZi
+	0Uj9+kNkrLgogQzziTQiMuzGVoqrWbJsiOmOKNnhmvT6iY+6vYQ+kJ/GfdpGGxQsbnDZJw+WF9u
+	aqjDPFnB0+MNfi39h2AdfgryznEGUpWIGQHzcFdBjMobtHXrWPeGR/3Hgp8x7QLUsS83danWsuW
+	G1iqABXYDh/65K+Ffe6GCjnCdE9zt3BiVtGyXuOT2vXEFQ8uRA0Yec0onwfSNRXZOkUQ9lb7vQM
+	+WL1VK6OUIpz3AS9hP5Yrn2SNiYuCzd+ptJk9QBpUMCrE=
+X-Received: by 2002:a17:90a:d404:b0:38e:7f22:f674 with SMTP id 98e67ed59e1d1-39579a03ad7mr2326a91.11.1787075607811;
+        Tue, 18 Aug 2026 10:53:27 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3954d176bfesm2720119a91.0.2026.08.18.10.53.27
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 18 Aug 2026 10:53:27 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-385d2703b64so1367869a91.1
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 10:53:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1787075606; x=1787680406; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=S8yT5MLcmwDHcZNcUmXv0h7oHriO4FbtMVMJc3B+V5M=;
+        b=bmG+oOJ7aBE+O/U6wbsZzPUsC2t/SzIQowb+2GlCB0hv5Mw0fXW4FaPI2bRfDyKKvB
+         aOapRnkNTDLl8x+lQIP6Q0RsCFR4D4/BC5Ohfvw+7Pj5uE0eiGgVu578YHeyG0dBIXiW
+         Kd5+ud7e0Bx7ltKE3wITtqI95Pz3T99CZeghY=
+X-Received: by 2002:a17:90b:5404:b0:380:8bb9:aba9 with SMTP id 98e67ed59e1d1-3955f0c0364mr9533123a91.3.1787075605771;
+        Tue, 18 Aug 2026 10:53:25 -0700 (PDT)
+X-Received: by 2002:a17:90b:5404:b0:380:8bb9:aba9 with SMTP id 98e67ed59e1d1-3955f0c0364mr9533069a91.3.1787075605160;
+        Tue, 18 Aug 2026 10:53:25 -0700 (PDT)
+Received: from dhcp-10-123-98-253.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14153187de4sm16741958c88.15.2026.08.18.10.53.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Aug 2026 10:53:24 -0700 (PDT)
+From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	sweeti.vandure@broadcom.com,
+	vishakhavc@google.com,
+	ipylypiv@google.com
+Subject: [PATCH 0/17] mpi3mr: fix out-of-bounds accesses and reference leaks
+Date: Wed, 19 Aug 2026 04:44:09 +0530
+Message-ID: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: =?UTF-8?B?UmU6IOetlOWkjTogW1BBVENIIHYyIDIvMl0gc2NzaTogc2Q6IG1hcmsg?=
- =?UTF-8?Q?disk_dead_on_surprise_host_removal_to_avoid_I/O_hang?=
-To: =?UTF-8?B?6IOh6L+e5Yuk?= <hulianqin@vivo.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "hare@suse.de" <hare@suse.de>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <PUZPR06MB622453C37D2BABC5E71B195DD2DC2@PUZPR06MB6224.apcprd06.prod.outlook.com>
- <TYUPR06MB6217E3739EDF2016EAB78E45D2A62@TYUPR06MB6217.apcprd06.prod.outlook.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <TYUPR06MB6217E3739EDF2016EAB78E45D2A62@TYUPR06MB6217.apcprd06.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On 8/18/26 2:17 AM, =E8=83=A1=E8=BF=9E=E5=8B=A4 wrote:
-> Gentle ping.
+This series contains a set of fixes for the mpi3mr driver:
 
-The merge window opened yesterday. Please repost this patch after the
-merge window has closed.
+ - out-of-bounds accesses where values reported by the controller
+   (device handles, phy numbers, topology event entry counts, reply and
+   sense buffer addresses, event data lengths) are used to index arrays,
+   derive pointers or size copies without being checked first
 
-Bart.
+ - out-of-bounds accesses in the BSG passthrough paths, from a request
+   size held in too narrow a variable and from a copy made without
+   checking the payload holds that much data
+
+ - target device reference leaks and an I/O block counter leak on error
+   and teardown paths, the latter leaving a device blocked for I/O
+
+ - a response buffer copied back to user space without being zeroed
+   first, so its unwritten fields carry whatever the allocation held
+
+ - a use-after-free and a NULL dereference around the firmware event
+   workqueue during driver removal and PCI error recovery
+
+Chandrakanth Patil (17):
+  mpi3mr: Fix buffer overflow in BSG passthrough request copy
+  mpi3mr: Fix out-of-bounds read when copying BSG MPI requests
+  mpi3mr: Fix I/O block counter leak on admin request post failure
+  mpi3mr: Fix target device reference leak in BSG task management
+  mpi3mr: Fix buffer overflow when caching log data
+  mpi3mr: Fix out-of-bounds reply frame access
+  mpi3mr: Fix out-of-bounds sense buffer access
+  mpi3mr: Fix out-of-bounds bitmap access during device removal
+  mpi3mr: Fix target device reference leak in device removal handshake
+  mpi3mr: Fix out-of-bounds read in SAS topology change events
+  mpi3mr: Fix out-of-bounds read of event data
+  mpi3mr: Fix out-of-bounds phy array access on link change
+  mpi3mr: Fix buffer overflow in the BSG target device map
+  mpi3mr: Fix out-of-bounds read in PCIe topology change events
+  mpi3mr: zero out diagnostic buffer status memory
+  mpi3mr: Fix use-after-free of the firmware event workqueue
+  mpi3mr: Fix NULL pointer dereference on PCI error recovery
+
+ drivers/scsi/mpi3mr/mpi3mr_app.c       | 43 +++++++++++++++++-----
+ drivers/scsi/mpi3mr/mpi3mr_fw.c        |  9 +++--
+ drivers/scsi/mpi3mr/mpi3mr_os.c        | 76 +++++++++++++++++++++++++++++++++++++++-----
+ drivers/scsi/mpi3mr/mpi3mr_transport.c |  7 ++++
+ 4 files changed, 111 insertions(+), 24 deletions(-)
