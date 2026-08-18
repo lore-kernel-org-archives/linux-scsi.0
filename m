@@ -1,142 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33D9F368D50
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 04:40:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EAB6243964
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 04:51:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787028049; cv=none; b=UWVXOV7HC9T4j8M4+An4bUvTjdGyYI/DKWHRJ13QrNlXgqTUOUhO4zmXyH7HTpTrzon1yg847NKTbBzNaMTfs6Dn584RlJoWxkW6EQHobTTEuZSE62f8Nn/AXovz1hkIreTADTsYiY44BeWkLI9LLLTjQTLM1tJLEk/Vz89EgeE=
+	t=1787028707; cv=none; b=Hym/PyhqBGjHKqpzgqw69WfUAN9GmKCdErHJ/+JL0f5LGx6/D479xxuXc0uHDhAxJ6Jb7//LGKGCOspw97AlwVAlVzzxjy1QL3y2kw0ZRBEXiAu/+NGKt9SRJhHdkDzWiogr1Tzeem3fY30M8zHPdbVTX/WJf/QyB7yG3LAZruc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787028049; c=relaxed/simple;
-	bh=JUPJAXneYRZnQRYuObo4a+QalfhUWr9fxPQHcuMomx8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=r8IpljLjPu6JHf2VWxR+sqyLKX61N/9SNNHPYkPnX45VBZIDjhXpVJ2av57XZSEq+Zy1q1iANpaDnc+JDRDiJ9TrBTu/+7H5SeY9veO9Xz1CJFrwfgB0mhPtdTKgfbzFN6nUpDA59BCS/zFZ6iUabd48RaLO8cXB5QUHl3drKys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GkFufwAD; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787028707; c=relaxed/simple;
+	bh=X1DtbALC8lq/ghoiIC6r92wHhi4MIrtWASByGX/cqA0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=j/aI+RFmYDD5A0gujVHgNmyxgJnVkD/ttRL/qiWBteWR8pNRde9qy1KAQ3E2yTG9x7fskGBv50CeGTuThT85QB9ipYySdAK8RS9FMUs8cv5jtyWYPbAtzeCZSMrLrcb1juqCwQQZktERX+IYQE7VPOSrydgKjmoIqt/Bd8bCE3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=gQAfjlXl; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GkFufwAD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85A821F000E9;
-	Tue, 18 Aug 2026 04:40:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787028047;
-	bh=CY7tx1ZonX//sCyshmXgUHsbO6RD0tH3ddabWxApM2g=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GkFufwADoGQBKFHINnoUDqK642ZmvvMeq0IAhj03J7HojGkwWEEdUwJEfhw7jp5YG
-	 z84c416mgsYfZTqH2SQwBMLaQ6ebku9wI56nZX7TiAc1GLwkPuEwopneEfMMfFi4cR
-	 gGA+UCbv//7RCG/PObGdPiiMoE79zNLTFKweem4zRuDsRkbYkR3VuvCoc/o/X5BGOY
-	 jThApiXXPkMSTYDGPFpKklA8nmsLUUFfsDMvRmbmqzz67IKj2IsRT8BqKLG7uACrXJ
-	 Q8gaQI1wwKgwGo6qQ4y1qnHGK4ra0guqwHKz355bu8YVNZ39G+lzB6LKwcZ0+/3da+
-	 AQ2Her1Fh/L1A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: reject configfs db_root for ALUA metadata
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260818042720.1511778-1-runyu.xiao@seu.edu.cn>
-References: <20260818042720.1511778-1-runyu.xiao@seu.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 18 Aug 2026 04:40:47 +0000
-Message-Id: <20260818044047.85A821F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="gQAfjlXl"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2cace91f112so49128495ad.0
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 21:51:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1787028705; x=1787633505; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ss7P/kgwCwj4T2j+XXbkDqzG57+Au+3YcauiAcKnt/Y=;
+        b=gQAfjlXlTUlBKZE16gE8JOWeohyBJV7jhvM6EoSWDWhQC7SU8pcqRCDj9rLtqXNRNC
+         X/lFJF0OFNlxVwRN0hEvnZNwvWEmuuxxmNR1oRJPFTx/3C41PswXF2F5fagcVx6tnQgT
+         wnJBwKJyVmKOfnS4aMKvdI8BiEGmze9i9g3YvMV4/YDIlBGILvac+65I5YFU3ro32Shi
+         fgtq5SdYGH3JxU1iGo9egQTNDyePRVxQZ5WL05VAv4HP2R8A+5xWx+D4bl8718ClMoW/
+         EscYK7g2KaSVkfO35tFqE9sA10vLIf3v+MDBqOebvQLdSSRPBhEZQcwGzzcAWl4NVdYs
+         +Zdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787028705; x=1787633505;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ss7P/kgwCwj4T2j+XXbkDqzG57+Au+3YcauiAcKnt/Y=;
+        b=pkteGKJ/mqqpdcT4VFrj4MSfDZPFcBSJ+BaNdFeZE79IryaBK4FLwILYWqJ8xZAUUo
+         c4WqXQbzZcEbRUr6+7ydpvs9pD6MDHTQUw81lPaqzfaKBoOyKT0GSOzY0w2Ep/icGSbZ
+         7WOZIX7mtJvC4ffXM6dwupDUnsD2KXAfPuYMHGeBQT4iYkXxT/xNdLahMPIGYiX8FMZJ
+         JW7ponNH9a6f6RwNH3Ulv8cGUI3D898sIUJzWGS+0rV8ISAlXVmpT3eBmlCtuMxnZphi
+         q3nivXgQOkEDXnhaag02nJTiNJn2bC/Jixb43QcFBCdnR0+/weH9fgBwvy8+HnXa1wcJ
+         jzug==
+X-Forwarded-Encrypted: i=1; AHgh+RpzNySMUu/3fqrHKLM/ajYDC7fsfxM9Ik57X0D8DZCDmEV2e0vvp4sDqLBmua1YbR3S0rB1POtyTBuj@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzs+if1lJ2iowVaKkUGDJCqCCx3rbEYtHB13P6q+lk8TZbWYtKl
+	bbiFdAApY65DHXUI0OpSv3NEPQ72yvmUf2OhDidWdrYttK0bf3iJSR0uYDxKTphAwoyi0LjTf/D
+	J734ET3E=
+X-Gm-Gg: AR+sD11KLEARC8Nwd+jksxnSGfzYkM5SrTy11DuczGe49bSvcKZhC8rg+ACmS+7BMRs
+	wxu247zoeFozpeH3pw1y426YQ3T2vDZmlXP5Jli4FtaKAneN6u+a8w9gy664m1cCXaAoIRU2MZY
+	mVbmbrx8p/P6+1Qgjf5+RtXi1xJkOYHs+hyf0BigevD7FugS1ENoiOKtRj+CNKRZfyEv3RDpgq4
+	offeuFOY8F4I4oLT4wJyJTGJc/KDZFF+dmBGgEWJRv5jMRuLl4B9a8azuqi81j3ZV4VmxY3Hp5G
+	/ns8VXfWqEK1HKcvRfjIdO2uu/15Fj40bbtxD0iQ58euz6fKC8A+S2Rcftod80vYlgQcI5WcXvE
+	Q+4lnAgs+49W1hRoDQHZlUlq3sgJp1JRN6A8ahVcsaRswFQuHhkK4S39jC25oO1kbyDyXM++vja
+	v9l1Wq/S43UMFI8YUl+BGpURtMW2Lz2yaYTvMTaA88cUwa8JonrR02ien5KTnFqOUbNshZ
+X-Received: by 2002:a17:902:fc4e:b0:2d5:2f49:b3de with SMTP id d9443c01a7336-2d52f49c24bmr311753835ad.0.1787028705457;
+        Mon, 17 Aug 2026 21:51:45 -0700 (PDT)
+Received: from yhlee-960QFG.. ([125.131.91.97])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d5c1f01787sm9515675ad.82.2026.08.17.21.51.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 17 Aug 2026 21:51:45 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: bvanassche@acm.org
+Cc: Yehyeong Lee <yhlee@isslab.korea.ac.kr>,
+	martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: check that the tag map is still there in scsi_host_find_tag()
+Date: Tue, 18 Aug 2026 13:51:25 +0900
+Message-ID: <20260818045125.539058-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <414a2b55-ee58-4975-a76a-49202b9c0302@acm.org>
+References: <414a2b55-ee58-4975-a76a-49202b9c0302@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On 8/15/26 2:27 AM, Bart Van Assche wrote:
+> Thanks for the detailed report but I think this is the wrong way to fix
+> the reported crash. Please help with testing this patch:
 
-New issues:
-- [High] Time-Of-Check to Time-Of-Use (TOCTOU) race bypasses the configfs p=
-ath validation, leaving the deadlock vulnerability open.
+Tested.  With the replay target that reposts an SRP_RSP for a command it
+has already answered, the crash appears in 5 of 5 runs on an unpatched
+kernel and in 0 of 5 with your patch.  The target still delivered about
+2680 unsolicited responses per run either way, so what went away is the
+window, not the traffic.
 
-Pre-existing issues:
-- [High] Pre-existing lock inversion between `target_devices_lock` and the =
-VFS directory `i_rwsem` causes an ABBA deadlock.
---
+I have sent your patch as 2/2 of a v2 series on linux-rdma:
 
---- Patch [1]: [PATCH] scsi: target: reject configfs db_root for ALUA metad=
-ata ---
-commit 2cce6aeea624aad95569faa866567fc7a0a6be25
-Author: Runyu Xiao <runyu.xiao@seu.edu.cn>
+https://lore.kernel.org/linux-rdma/20260818035229.505098-1-yhlee@isslab.korea.ac.kr/
 
-scsi: target: reject configfs db_root for ALUA metadata
+Martin, please drop this patch.  The lookup it guards is not reachable
+once srp_remove_target() is fixed, and the review point that the check is
+lockless stands.
 
-The commit adds a check to target_core_item_dbroot_store to reject db_root
-paths that resolve to a configfs filesystem. This is to prevent ALUA metada=
-ta
-writes from recursively re-entering configfs and deadlocking.
+Tested-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/targe=
-t_core_configfs.c
-> index 2b19a956007b7..2c79e78105ea6 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -138,8 +138,16 @@ static ssize_t target_core_item_dbroot_store(struct =
-config_item *item,
->  			pr_err("db_root: not a directory: %s\n", db_root_stage);
->  		goto unlock;
->  	}
+Best regards,
 
-[Severity: High]
-This is a pre-existing issue, but does calling kern_path() while holding
-target_devices_lock introduce a lock inversion with i_rwsem?
-
-Looking at target_core_item_dbroot_store(), it acquires target_devices_lock
-and then resolves a path using kern_path(). If the provided path forces a w=
-alk
-through an uncached directory, VFS acquires the directory's i_rwsem:
-
-drivers/target/target_core_configfs.c:target_core_item_dbroot_store() {
-    mutex_lock(&target_devices_lock);
-    ...
-    r =3D kern_path(db_root_stage, LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &path);
-    ...
-}
-
-Conversely, if a user creates a directory in configfs, vfs_mkdir() acquires
-the parent directory's i_rwsem and calls target_core_make_subdev(), which
-subsequently tries to acquire target_devices_lock:
-
-drivers/target/target_core_configfs.c:target_core_make_subdev() {
-    ...
-    mutex_lock(&target_devices_lock);
-    ...
-}
-
-Could this result in an ABBA deadlock if a user concurrently creates a
-directory in configfs while writing an uncached configfs path to dbroot?
-
-> +	if (!strcmp(path.dentry->d_sb->s_type->name, "configfs")) {
-> +		pr_err("db_root: configfs is not a valid target database root: %s\n",
-> +		       db_root_stage);
-> +		r =3D -EINVAL;
-> +	}
->  	path_put(&path);
-> =20
-> +	if (r)
-> +		goto unlock;
-> +
->  	strscpy(db_root, db_root_stage);
-
-[Severity: High]
-Does saving the path string instead of the path reference leave a TOCTOU
-window that could bypass the new validation?
-
-The new validation checks if the resolved path is on configfs, but then dro=
-ps
-the path reference and stores only the string. If a user writes a path to a
-symlink pointing to a normal directory, it would pass this validation check.
-
-If the user then modifies the symlink to point to /sys/kernel/config after
-the check succeeds, later ALUA operations that use filp_open() on the string
-will follow the symlink directly into configfs. Could this allow the recurs=
-ive
-deadlock to still be triggered?
-
->  	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
->
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818042720.1511=
-778-1-runyu.xiao@seu.edu.cn?part=3D1
+Yehyeong Lee
