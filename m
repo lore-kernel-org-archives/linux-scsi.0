@@ -1,221 +1,183 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22A442FC037
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 18:14:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3255485CC7
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 18:15:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787076887; cv=none; b=MMB06X7W3nsDMNuPtqw51+Ub74N35D8jJRZ4HSdko0B/PZ/IUjHwQdyL6brUKsKMVx+e04BFPBfLf1E4I3PtFULLG0Bsr98eyhaCGq4bQkOaDXFkRYUZYWWRDdqPsHiWVn/G5A5fKKpIZrqFOzZaZvebKRtkwzf66noNpCfDDI8=
+	t=1787076913; cv=none; b=WI7wTvtyxyVVxAk4+xywqRxwCsmssRYO6oCjygAWGkR3Y3kJdpsgIly+GORLyjTj0E9I1hI4FkQPdkaebbapClygmd0OGHP85el1oO9930JGJhHur721dWqDpJN8juRj9wFuXYcnAszgflC5Gan9JQYomxlUSnwewATb+FbTmU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787076887; c=relaxed/simple;
-	bh=GzJjOa08Ue34QHFVBxFZQpOADynNtFzrMZEMwbbR9w4=;
+	s=arc-20240116; t=1787076913; c=relaxed/simple;
+	bh=+1Exz42S0qgPN0QsOJkuWkB4ClyyWxOZ4tlUAa7Dl4c=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BhYUS0L95ca9WWeqPXiRF6lRDxCFMsHbctciiT/mFUKe9CN83G8LnMvgtlnhtfcT9ulByb2CpVAq7j3byHigK9gWQYZCVwHcmApKQhsilOHb1Vts+PNsxmqSEF8I/qsrf1cTIbr9c1KzmcxVru3G9c7H48Lblhv73enmjbp3k2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kb695wiI; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Nlbelx7687sBBwO7JgfKvBYY/45a1+hIwnQhapjV67NdYqkW/kEPKGn1qiKtxawnZaA754Pv/9ikEyVlfUgL8jVxOBaXa1ELpo60zmVoAvHAHsrf1v6l2u+wsXhcxLjlWCcYmG7vR/4xpZT34Vnie+klCOhNnzefYi4sKXp5eH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fDq+qzbH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kb695wiI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E16AC1F000E9;
-	Tue, 18 Aug 2026 18:14:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fDq+qzbH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75BDB1F000E9;
+	Tue, 18 Aug 2026 18:15:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787076886;
-	bh=tO6k/4Cvpy1EKQ79kyDyvf9rUtgm+nMOtj/R7md7t4M=;
+	s=k20260515; t=1787076911;
+	bh=hjDKHRDBKTIIsM1IZnezr4Oj/N4H/u463HxfKEUADYI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Kb695wiIA2zUtKoFA2qytCvCt8jDtN9y0qvqlULaumvpUVNwpJMaiWZiwc++7zuq+
-	 H+EZ7A8RA1KWuW73hkLLmq90VnwLL7oEiIiNQQIbmeyZbOgj7sDgrVKALsGG2GH24E
-	 j0uACxDJxW7kGKNpAU/4tnNqBKgUYqU5UVe9yiLMsS75fWuqF2EgRvMmkvlBFc8rPT
-	 zJHhG2aNIjPVweqHmgS2M8m9mO5kWkwOkLT+zAe8s5L5GxeIq6JKp4aOVweclbi9RN
-	 nG2raT9W1bOEHwdQ23MSxUnY0k7vpYQiJWxUBsZ6P4W6X14SzrOXPTwGZEwkuSr3Qm
-	 T53W/oCO4r7Ew==
+	b=fDq+qzbHTU/5n17dhbO7IxEuBjebO47+mtPNw8GKIvqwwovfjLcRNO2EQnoltG6H9
+	 Gd3seyywb55BI0VWkDBv/PB0MELBWYpvV24leL0ozDC5ImO8r+rTV+Jbodbyhx7sUG
+	 JCDhI5gRjNEiN8bD8LX8Ue0Drv5sAQahnqb4Lyfa1MwgFKUt0/iAskvkpB59ogNBjm
+	 /XHWcZ8vJNm77rQCJF8Q+7wXNdu2gfYpobPo2BuvacP9hy2eAbmxjgT8iftZ9yrXjm
+	 SAHSJtyW/OuBl2+zF4OTwxLp2eD6/wdhnMxPDLXh2ve6ROXGvwr+7KH44bYTsOfHmL
+	 1XC+5okRwdV6w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 01/17] mpi3mr: Fix buffer overflow in BSG passthrough
- request copy
+Subject: Re: [PATCH 02/17] mpi3mr: Fix out-of-bounds read when copying BSG
+ MPI requests
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chandrakanth Patil" <chandrakanth.patil@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260818231426.58105-2-chandrakanth.patil@broadcom.com>
+In-Reply-To: <20260818231426.58105-3-chandrakanth.patil@broadcom.com>
 References: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
- <20260818231426.58105-2-chandrakanth.patil@broadcom.com>
+ <20260818231426.58105-3-chandrakanth.patil@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 18 Aug 2026 18:14:45 +0000
-Message-Id: <20260818181445.E16AC1F000E9@smtp.kernel.org>
+Date: Tue, 18 Aug 2026 18:15:11 +0000
+Message-Id: <20260818181511.75BDB1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Pointer arithmetic wrap-around on 32-bit architectures allows =
-bypassing bounds checks, leading to arbitrary kernel memory read/write via =
-DMA.
-- [High] DMA coherent memory allocated for NVMe PRPs is leaked on BSG comma=
-nd timeout or submission failure.
-- [High] Target device `block_io` atomic counter is leaked if BSG command s=
-ubmission fails.
-- [High] Lockless TOCTOU check of `MPI3MR_CMD_COMPLETE` causes a Use-After-=
-Free of `sense_buff_k` and data races on `reply` buffers.
-- [High] Missing validation of the BSG request length (`job->request_len`) =
-allows a user to send an undersized request buffer, leading to out-of-bound=
-s memory reads and kernel panics.
+- [Critical] On 32-bit architectures, pointer wrap-around and integer trunc=
+ation bypass buffer bounds checks, leading to arbitrary kernel memory read/=
+write.
+- [Critical] The driver fails to validate the user-provided `job->request_l=
+en` before casting and parsing the BSG request packet, leading to an out-of=
+-bounds heap read and a kernel panic.
+- [High] Failure to decrement `stgt_priv->block_io` on early failure of `mp=
+i3mr_admin_request_post`.
+- [High] DMA coherent memory allocated for PRP lists is leaked on command t=
+imeout or post failure.
 --
 
---- Patch [1]: [PATCH 01/17] mpi3mr: Fix buffer overflow in BSG passthrough=
- request copy ---
-commit ed6513158d24e842e223917348ef598d4d161609
+--- Patch [2]: [PATCH 02/17] mpi3mr: Fix out-of-bounds read when copying BS=
+G MPI requests ---
+commit 0259dbaa420364e7270c5c71574f90668291edf7
 Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: mpi3mr: Fix buffer overflow in BSG passthrough request copy
 
-This commit fixes a buffer overflow in the BSG passthrough request copy.
-The check for an incoming BSG request size used a narrower variable than
-its source field, allowing large values to wrap and pass the check.
-The variable is widened to ensure the full size is validated properly.
+mpi3mr: Fix out-of-bounds read when copying BSG MPI requests
+
+The MPI request is copied out of the caller supplied payload without
+first checking that the requested amount is actually present, so the
+copy can read past the end of the payload buffer.
+
+Check the range before copying.
+
+Fixes: 506bc1a0d6ba ("scsi: mpi3mr: Add support for MPT commands")
+Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3m=
 r_app.c
-> index 1353a8ff9c85d..8e5d24793efd0 100644
+> index 8e5d24793efd0..1cd1c38dcd565 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> @@ -2384,7 +2384,7 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_=
-job *job)
->  	long rval =3D -EINVAL;
->  	struct mpi3mr_ioc *mrioc =3D NULL;
->  	u8 *mpi_req =3D NULL, *sense_buff_k =3D NULL;
-> -	u8 mpi_msg_size =3D 0;
-> +	u32 mpi_msg_size =3D 0;
->  	struct mpi3mr_bsg_packet *bsg_req =3D NULL;
->  	struct mpi3mr_bsg_mptcmd *karg;
->  	struct mpi3mr_buf_entry *buf_entries =3D NULL;
-> @@ -2538,7 +2538,7 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_=
-job *job)
+> @@ -2538,6 +2538,14 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg=
+_job *job)
 >  				rval =3D -EINVAL;
 >  				goto out;
 >  			}
-> -			memcpy(mpi_req, sgl_iter, buf_entries->buf_len);
-> +			memcpy(mpi_req, sgl_iter, mpi_msg_size);
->  			break;
->  		default:
->  			invalid_be =3D 1;
+> +			if (sgl_iter + mpi_msg_size >
+> +			    dout_buf + job->request_payload.payload_len) {
 
 [Severity: Critical]
-This is a pre-existing issue, but can the pointer arithmetic nearby lead to
-an integer wrap-around on 32-bit architectures?
+This is a pre-existing issue, but can pointer arithmetic wrap around on 32-=
+bit
+architectures and bypass this new bounds check?
 
-When iterating over buffer entries in the same function:
+If a userspace application sends an MPI3MR_MPT_CMD BSG request with a craft=
+ed
+buf_len (e.g., 0x10001000) such that the sum modulo 2^32 remains small, the
+sgl_iter pointer wrap-around could mathematically bypass both the end-of-bu=
+ffer
+limit check and this newly added check.
 
-	case MPI3MR_BSG_BUFTYPE_DATA_OUT:
-		sgl_iter =3D sgl_dout_iter;
-		sgl_dout_iter +=3D buf_entries->buf_len;
+Concurrently, can kern_buf_len / MPI3MR_IOCTL_SGE_SIZE truncate from 0x10001
+to 1 in the u16 needed_desc variable in mpi3mr_map_data_buffer_dma()?
 
-If a user submits a BSG request with a crafted buf_len, does the u32 value =
-wrap
-the sgl_dout_iter pointer on 32-bit systems? This wrapped pointer could then
-bypass the later bounds check:
+This would bypass the descriptor limits, allowing the driver to create DMA
+mappings for arbitrary kernel addresses.
 
-	if (sgl_dout_iter > (dout_buf + job->request_payload.payload_len)) {
+> +				dprint_bsg_err(mrioc, "%s: MPI request buf exceeds dout_buf\n",
+> +					       __func__);
+> +				mutex_unlock(&mrioc->bsg_cmds.mutex);
+> +				rval =3D -EINVAL;
+> +				goto out;
+> +			}
+>  			memcpy(mpi_req, sgl_iter, mpi_msg_size);
+>  			break;
+>  		default:
 
-and allow arbitrary kernel memory access during subsequent payload processi=
-ng.
+[Severity: Critical]
+This is a pre-existing issue, but does the driver validate job->request_len
+before casting and parsing the BSG request packet?
 
-While reviewing this patch, I noticed a few other pre-existing issues.
+If a userspace application submits a BSG request with request_len set to 0,
+the BSG core invokes memdup_user(), which returns ZERO_SIZE_PTR (0x10).
 
-> drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_request()
-> {
-> 	long rval =3D -EINVAL;
-> 	unsigned int reply_payload_rcv_len =3D 0;
->=20
-> 	struct mpi3mr_bsg_packet *bsg_req =3D job->request;
->=20
-> 	switch (bsg_req->cmd_type) {
+Will the driver unconditionally dereference this pointer here?
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does this function properly
-validate job->request_len before dereferencing bsg_req->cmd_type?
+drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_request() {
+	...
+	switch (bsg_req->cmd_type) {
+	...
+}
 
-If userspace submits a BSG request with a request_len of zero, could this
-trigger a zero size pointer dereference and cause a kernel panic? Similarly,
-if the length is too small, would this read uninitialized heap memory?
-
-> drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds()
-> {
-[ ... ]
-> 	if (block_io) {
-> 		tgtdev =3D mpi3mr_get_tgtdev_by_handle(mrioc, dev_handle);
-> 		if (tgtdev && tgtdev->starget && tgtdev->starget->hostdata) {
-> 			stgt_priv =3D (struct mpi3mr_stgt_priv_data *)
-> 			    tgtdev->starget->hostdata;
-> 			atomic_inc(&stgt_priv->block_io);
-> 			mpi3mr_tgtdev_put(tgtdev);
-> 		}
-> 	}
-[ ... ]
-> 	rval =3D mpi3mr_admin_request_post(mrioc, mpi_req,
-> 	    MPI3MR_ADMIN_REQ_FRAME_SZ, 0);
->=20
-> 	if (rval) {
-> 		mrioc->bsg_cmds.is_waiting =3D 0;
-> 		dprint_bsg_err(mrioc,
-> 		    "%s: posting bsg request is failed\n", __func__);
-> 		rval =3D -EAGAIN;
-> 		goto out_unlock;
-> 	}
+Could this lead to an immediate unhandled kernel panic?  Additionally, if a
+small non-zero length is provided, does the driver read bufcnt from the
+unvalidated payload in mpi3mr_bsg_process_mpt_cmds() and loop over unalloca=
+ted
+heap memory?
 
 [Severity: High]
-This is a pre-existing issue, but does this error path permanently leak the
-block_io atomic counter?
+This is a pre-existing issue, but is there a missing decrement of
+stgt_priv->block_io on early failure of mpi3mr_admin_request_post()?
 
-If mpi3mr_admin_request_post() fails, the goto out_unlock bypasses the
-atomic_dec(&stgt_priv->block_io) that occurs after the completion timeout
-logic. Does this leave the SCSI target device blocked indefinitely?
+When processing a SCSI task management request that specifies blocking I/O,
+stgt_priv->block_io is incremented. If mpi3mr_admin_request_post() fails,
+the code jumps directly to out_unlock:
+
+drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds() {
+	...
+		goto out_unlock;
+	...
+}
+
+Does this skip the atomic_dec(&stgt_priv->block_io) matching the earlier
+increment, permanently blocking all future I/O to the affected SCSI target?
 
 [Severity: High]
-Similarly, this is a pre-existing issue, but does the same goto out_unlock
-skip freeing the DMA memory allocated for NVMe PRPs?
+This is a pre-existing issue, but is DMA coherent memory allocated for PRP
+lists leaked on command timeout or post failure?
 
-If mpi3mr_build_nvme_prp() successfully allocated DMA memory in
-mrioc->prp_list_virt earlier in this function, the jump to out_unlock skips
-the success-path cleanup block:
+When an NVMe encapsulated request utilizes a PRP list, mpi3mr_build_nvme_pr=
+p()
+allocates a DMA coherent buffer in mrioc->prp_list_virt.
 
+If mpi3mr_admin_request_post() fails, or if wait_for_completion_timeout()
+times out, the code branches to out_unlock without freeing the memory:
+
+drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds() {
+	...
 	if (mrioc->prp_list_virt) {
 		dma_free_coherent(&mrioc->pdev->dev, mrioc->prp_sz,
-		    mrioc->prp_list_virt, mrioc->prp_list_dma);
+	...
+}
 
-Would subsequent commands overwrite mrioc->prp_list_virt and permanently
-leak the previous DMA coherent allocation?
-
-> drivers/scsi/mpi3mr/mpi3mr_fw.c:mpi3mr_process_admin_reply_desc()
-> {
-[ ... ]
-> 	cmdptr =3D mpi3mr_get_drv_cmd(mrioc, host_tag, def_reply);
-> 	if (cmdptr) {
-> 		if (cmdptr->state & MPI3MR_CMD_PENDING) {
-> 			cmdptr->state |=3D MPI3MR_CMD_COMPLETE;
-> 			cmdptr->ioc_loginfo =3D ioc_loginfo;
-[ ... ]
-> 			if (sense_buf && cmdptr->sensebuf) {
-> 				cmdptr->is_sense =3D 1;
-> 				memcpy(cmdptr->sensebuf, sense_buf,
-> 				       MPI3MR_SENSE_BUF_SZ);
-> 			}
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does setting the
-MPI3MR_CMD_COMPLETE flag before the memory copy create a race condition?
-
-If the application thread in mpi3mr_bsg_process_mpt_cmds() wakes up from a
-natural timeout exactly when this flag is set, it performs a lockless check:
-
-	if (!(mrioc->bsg_cmds.state & MPI3MR_CMD_COMPLETE)) {
-
-Could the application thread assume the handler has fully finished, proceed
-to read uninitialized reply memory, and free sense_buff_k before the interr=
-upt
-handler finishes copying into it? Would this result in a use-after-free when
-the interrupt handler eventually executes the memcpy?
+Would a subsequent NVMe command blindly overwrite mrioc->prp_list_virt with=
+ a
+new allocation, permanently leaking the previous DMA buffer?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818231426.5810=
-5-1-chandrakanth.patil@broadcom.com?part=3D1
+5-1-chandrakanth.patil@broadcom.com?part=3D2
