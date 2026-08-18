@@ -1,76 +1,76 @@
-Received: from mail-pj1-f98.google.com (mail-pj1-f98.google.com [209.85.216.98])
+Received: from mail-pj1-f97.google.com (mail-pj1-f97.google.com [209.85.216.97])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8307147AF65
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 17:57:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0392747AF65
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 17:57:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787075836; cv=none; b=HS1X0ooX3Cz6N8lIgllcxKMgXpMhuVhx9HJ7nIjUwdYcknX2hIN7r1TF8IIiTN39bwDBexxbgcU76d+zFDISYSkqyXYf5y0aE+Fr36kSGNTGwZaMoSmXHcNED3nRpwfJzPp0klvxSj1CAgg+n5jo7HTkild4R8SozYbD6S+321Y=
+	t=1787075844; cv=none; b=PS0MvFbvbXwR9vMPNI4nlrLDDvI9Ss0yrttLCPUusDU9wE0jVrB0QNWyUGDNveiyIWonevkfyOtVIFEMUQSEigbseqYbgtwsk+ZbMhL7dUrM3JApZPC/mK88bqQd7qiICo7GV8/v8I3barfzjcr5lktBq9h3yFGQ5gO8ec9SI2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787075836; c=relaxed/simple;
-	bh=H4rfqbjZW3PjCg+laeg3Z7ylMiXzkUNFWZc+La6hF1E=;
+	s=arc-20240116; t=1787075844; c=relaxed/simple;
+	bh=Fmo7yPsigqajPKR8yphLtuGp0a42yV+NGwdysAD5q0E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PTuvKMQIFBPgtIfpwkwyaeoicgVKq2yKx4A+Q66vG9XpuNSp2S6ulWVdYVU4mc/L3eje/UG/B+S2p69LGnIvHeJBjC+z3le5LmYQn3MZww/RduPN/V129+RHSJ1aAinuUv77Q4oM1uND85pS8XeMBaqcVjkkDljya7RjH54ToWQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=YCSka42T; arc=none smtp.client-ip=209.85.216.98
+	 MIME-Version; b=Xfx5e/f1WcH/9XiduIZ5KeLt41aIAKWnAeV6PbmOv4S4BK3dRGiBzGRW91Chv38Yi3EoSPywXSP1h450yuR0P/+AW/LkxjSxZrwvTBkdsevP34pBgLXwLB0rB8U+K8366pFD3FVDcaMqJfbBEoFbJ/yxQt0ElTXBGqBgOnwlQoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=BAL55Aht; arc=none smtp.client-ip=209.85.216.97
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YCSka42T"
-Received: by mail-pj1-f98.google.com with SMTP id 98e67ed59e1d1-381b831d535so340044a91.0
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 10:57:15 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BAL55Aht"
+Received: by mail-pj1-f97.google.com with SMTP id 98e67ed59e1d1-38e88b60121so196370a91.3
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 10:57:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787075835; x=1787680635;
+        d=1e100.net; s=20251104; t=1787075842; x=1787680642;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=KMAOfD8xNts03aElkbAlSJN0VAr63f0GAnw4kXjqhRM=;
-        b=FL+h/XF4vmcEc2lvowutrAKOUa+yOeUhP7jgTXS3rSDHkZYLq5dSldzDNOCXJFndou
-         Y17543eC58psOj2cZoi30p+rmafTPFRERNb1llpKKVH86Vj/7Jd9fMp6cY3PvSXBunGF
-         HehRfeVNA5NHtUHGsG5628ueUAbAIZa8zt0J4Vujqc7vuE6mEMlgj9azoFo2MFBpchV4
-         4wjF6V/CYnBMknRNqRemvQeK1g7ksoMfCa5mgKj+PJZO60kVr25wHv93dDctCL2otAQ3
-         BQ+cCHcikBF2UKZaIWFr7cRBwtYfFelZFUsIg+3PvMfI0dva48zcZqn2Fzp7lkl6sw+7
-         tCkg==
-X-Gm-Message-State: AOJu0YxHahq3K0hCrmrz0hWVfxQP0yPAu9EwIeMOQ++h2W3gYlDnUuXh
-	2mlY82vx/LMwa3kJ93Y5fYqjNWJ8F2GtWrMMx3qbQ67SI04CD6VYaxj4/FUthjtma4Aa4UW+GWp
-	AGibyN0UBG9tgqbosAUUUbG0D2Pb/LZHMM7DYGiLflTipp4sioemq7SsO6/oJ7Qd9b4u1V/VibN
-	iEUgnQsqDub7sbXgjnUYzfcl/mTgKMCAHyW9koVAhJ5T9Cri5bUEzqd5ZpASBxCme7O6KGW23Pe
-	lV0WhWDRPREXO78ic4GZIrr
-X-Gm-Gg: AR+sD12H61M73lSQwprMxlB6fc2XEOZSScFeHdAh5JD1UbiuZQzvXRUR8SqT5HCaD2U
-	CGdje4OmbDsij5Tr7jFxLRJC/rE2yxtKDw092ZrLkUmF+wFDvqtTV4UmDlKhSoZpQrem2itaAgP
-	RHWK91jJDn4v4qCfjZX70qNQDVUBrofLPfPjHatoPEyGovinKOqeUjk/K4O9SdRjOj+dAf4jg/E
-	lxc1L9rxeDCzoJ0JBW0sgPMIPdyBhdf1Lw4kQApDDxbVmtgjWtAZmh2SLeXkjHaEE49GpTJh2z6
-	Kn0MrxSz4geR+I5H+63tArg4yfFwoKpG09I5TvVerWut2Z7vmTP9PNB+URPwboGZ86SlSy/GoPw
-	8/9BGz7RbjrqCVchI3F+0CzanC3Wna6TvlRankq5hKetTeeLkQRYO6WBjs0x1Mf+H3/QP+cquGY
-	xR+2LwewHvwmnaAN5PyXiwFDWowwbOlUl8CkSwkUGrTYE=
-X-Received: by 2002:a17:90b:5101:b0:36d:b424:4f17 with SMTP id 98e67ed59e1d1-3933b6d0deamr44984283a91.1.1787075834736;
-        Tue, 18 Aug 2026 10:57:14 -0700 (PDT)
+        bh=0u2taD75VqdCd70afoG/cqRKa0GB+IR20/XdQeyP4DA=;
+        b=b25M52mgwIJFw2dfPa10yZBFZbE3PV3ItCYkzbVMqI5Kh/vZZgEHQV2hMbTaslmsQG
+         rA+EEsK1iAjDrPED+I9vIOhcMtcYd26zw7deyw6ogERmPHCw4b2UrVZSA53utgyjFbFP
+         kNiVG+bhz9Ow7c4nIGkPM79T9sL5xbh0mVHJ6XZTLjJDNzP5zcDokoC2jw5LGs3nwHkA
+         o2S1P5EE2OwWTAcrN/Xo/s8ZE9uWtuTBnFXJ982n9AGv+tRt6T3GG/Whtbt9Grgn3ShW
+         CiGDWSE0YLKvQlty75zEiMkdOJgAyjNBAypQOsi4nSb2lRAcLjDGz5K+iM4ZojC7cd64
+         242Q==
+X-Gm-Message-State: AOJu0YwdWbA2kpLk7Z0ZCVRWNbpGDOZr44Egv213g6UifLE7wvuURPIY
+	abHKdrH3jZsxBdU3oaoYON8y1IAjl7YuFenvWRxWDlWfrrljNezC/9yS8r7L0IklvpN2cO3laoM
+	yyqU4doNWBlzlP9werQWvSvFrSZRqMrmw3ygso/TICqpGOoN7PNKzNK+pW7mOi4IZ0GgdPGOkq6
+	mVd+Ud2sfrH/H2uOrn301iqlqvM7UtDuw8gaIpKE4nvVSxFqx/mPS3DjW4E8GyZ/C+yvufvY7uO
+	v4/xt3z7eTp2bRDaFwVvirI
+X-Gm-Gg: AR+sD13Ctb+AmK5AmE7z/Oex6yT+yteGomDYYVwqM2YsH39ByuUL8XNFno3pxFiCjWv
+	WZf6OxeXNZpto52fy9zNN1k6Sia8FJew33d+RTnoiNHI9BtmOYkz1rfEJhvcmSFx2RhuJon/ch9
+	8kq5R47sVn4NwJriiL8AzCfwDkA79guk0yLF9lWzlRtJeK4+dG9v20O5OMxqpEN1/c9qKMqIhYV
+	acJuqrx+yG36vwm5HWcz2md6s2imhg/KKM7TaLkf7w5R536u6JvIDNVDQfN8SMYnuSgK3lf4SaH
+	L85pp6SiPwNq+8jWp8EtPPbnkkRp6cZwTTecrOPAIoEs2UUum/UQZ4EUkm/Nj+U6+mQAR39Amxx
+	cccwf6qbU6akBATru9dpiMjIyD21mhkvmwBxLIB4Rqa1i0v7famaF6lB+upK9LmLB+8O7bgkQY0
+	2IKAUinuaVj/CuvK0cZr3LElNKlruJiA4fN5rYhqAzVs8=
+X-Received: by 2002:a17:90b:39b0:b0:38e:659b:f366 with SMTP id 98e67ed59e1d1-3933b500d17mr36430300a91.0.1787075841989;
+        Tue, 18 Aug 2026 10:57:21 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-16.dlp.protect.broadcom.com. [144.49.247.16])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3954d176bfesm2723597a91.0.2026.08.18.10.57.14
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3954d28db6esm2750023a91.2.2026.08.18.10.57.21
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 18 Aug 2026 10:57:14 -0700 (PDT)
+        Tue, 18 Aug 2026 10:57:21 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38dbf293831so376323a91.3
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 10:57:13 -0700 (PDT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38ecc48b3c2so297827a91.1
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 10:57:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1787075833; x=1787680633; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1787075840; x=1787680640; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=KMAOfD8xNts03aElkbAlSJN0VAr63f0GAnw4kXjqhRM=;
-        b=YCSka42TmeewijJHP6cKeFAdAD/x5OGL6GLtaVUkymethACzlfsjz6dU5lWrtu9RMb
-         HLlf72K/KOK1RqLrr0gl1XHndGQ/v+KBxh7J7bgSesA1EZ01AsMcqGDB23ZcmxLbL+Ie
-         NpaXskApfteFP0VHGZT74qQHkD3hXb/V4NCIo=
-X-Received: by 2002:a17:90b:520d:b0:38f:5801:cd76 with SMTP id 98e67ed59e1d1-3933b6d0171mr42958851a91.3.1787075833029;
-        Tue, 18 Aug 2026 10:57:13 -0700 (PDT)
-X-Received: by 2002:a17:90b:520d:b0:38f:5801:cd76 with SMTP id 98e67ed59e1d1-3933b6d0171mr42958713a91.3.1787075832416;
-        Tue, 18 Aug 2026 10:57:12 -0700 (PDT)
+        bh=0u2taD75VqdCd70afoG/cqRKa0GB+IR20/XdQeyP4DA=;
+        b=BAL55Aht74sTDJJkAXsxGZMlTVGHpUZGQUQl2JSDaQn1mMl/wJDCqsRNVfLNrXEOPY
+         sf6b3edlAhD9jCJmDm+uoH1Uha9fQ8mDcxImQUhSkzbcMXZWsxIoCtOtMeUd8NePOhK9
+         gzY2VQcnQ11LrzCVa/rGaIk5cvSXmeG6QqW6Y=
+X-Received: by 2002:a17:90a:6c96:b0:395:4de4:92c8 with SMTP id 98e67ed59e1d1-3954de49a7bmr11660543a91.15.1787075839675;
+        Tue, 18 Aug 2026 10:57:19 -0700 (PDT)
+X-Received: by 2002:a17:90a:6c96:b0:395:4de4:92c8 with SMTP id 98e67ed59e1d1-3954de49a7bmr11660482a91.15.1787075839057;
+        Tue, 18 Aug 2026 10:57:19 -0700 (PDT)
 Received: from dhcp-10-123-98-253.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14153187de4sm16741958c88.15.2026.08.18.10.57.08
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14153187de4sm16741958c88.15.2026.08.18.10.57.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Aug 2026 10:57:11 -0700 (PDT)
+        Tue, 18 Aug 2026 10:57:18 -0700 (PDT)
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -82,9 +82,9 @@ Cc: sathya.prakash@broadcom.com,
 	vishakhavc@google.com,
 	ipylypiv@google.com,
 	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 05/17] mpi3mr: Fix buffer overflow when caching log data
-Date: Wed, 19 Aug 2026 04:44:14 +0530
-Message-ID: <20260818231426.58105-6-chandrakanth.patil@broadcom.com>
+Subject: [PATCH 06/17] mpi3mr: Fix out-of-bounds reply frame access
+Date: Wed, 19 Aug 2026 04:44:15 +0530
+Message-ID: <20260818231426.58105-7-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
 References: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
@@ -97,45 +97,30 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Each log data slot holds a header followed by the payload, but the copy
-was sized against the whole slot and so wrote one header length past
-the end of it. Subtracting the header on its own is not enough either,
-because the entry size is derived from the controller reply size and
-can be smaller than the header.
+The reply frame address reported on completion is only checked against
+the start and the end of the pool. An address near the top can pass the
+check while leaving less than a full frame, and an unaligned one
+resolves into the middle of a frame instead of the start of one.
 
-Work out the payload room first and clamp the copy to it.
+Require a whole frame to fit and the address to be frame aligned.
 
-Fixes: 43ca11005098 ("scsi: mpi3mr: Add support for PEL commands")
+Fixes: 824a156633df ("scsi: mpi3mr: Base driver code")
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_app.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 94b992acb233..cd772b2cb98a 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -2947,7 +2947,8 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- void mpi3mr_app_save_logdata_th(struct mpi3mr_ioc *mrioc, char *event_data,
- 	u16 event_data_size)
- {
--	u32 index = mrioc->logdata_buf_idx, sz;
-+	u32 index = mrioc->logdata_buf_idx;
-+	size_t entry_payload_len, sz;
- 	struct mpi3mr_logdata_entry *entry;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 681868716ebd..5e61448d8dbc 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -128,7 +128,8 @@ void *mpi3mr_get_reply_virt_addr(struct mpi3mr_ioc *mrioc,
+ 		return NULL;
  
- 	if (!(mrioc->logdata_buf))
-@@ -2956,7 +2957,12 @@ void mpi3mr_app_save_logdata_th(struct mpi3mr_ioc *mrioc, char *event_data,
- 	entry = (struct mpi3mr_logdata_entry *)
- 		(mrioc->logdata_buf + (index * mrioc->logdata_entry_sz));
- 	entry->valid_entry = 1;
--	sz = min(mrioc->logdata_entry_sz, event_data_size);
-+	if (mrioc->logdata_entry_sz > MPI3MR_BSG_LOGDATA_ENTRY_HEADER_SZ)
-+		entry_payload_len = (size_t)mrioc->logdata_entry_sz -
-+		    MPI3MR_BSG_LOGDATA_ENTRY_HEADER_SZ;
-+	else
-+		entry_payload_len = 0;
-+	sz = min_t(size_t, entry_payload_len, event_data_size);
- 	memcpy(entry->data, event_data, sz);
- 	mrioc->logdata_buf_idx =
- 		((++index) % MPI3MR_BSG_LOGDATA_MAX_ENTRIES);
+ 	if ((phys_addr < mrioc->reply_buf_dma) ||
+-	    (phys_addr > mrioc->reply_buf_dma_max_address))
++	    (phys_addr > mrioc->reply_buf_dma_max_address - mrioc->reply_sz) ||
++	    ((phys_addr - mrioc->reply_buf_dma) % mrioc->reply_sz))
+ 		return NULL;
+ 
+ 	return mrioc->reply_buf + (phys_addr - mrioc->reply_buf_dma);
