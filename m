@@ -1,208 +1,158 @@
-Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5951F4477E8;
-	Tue, 18 Aug 2026 09:42:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27E9A43F0B8
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 09:52:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787046128; cv=none; b=YDGMX8+wRicW+vcstZy+RBugKhLgLRP5imQG3iOzlvVRYmX/kzuV39INEEslHcfMAhf4hFUX7ZiTTlAPCZ3yVG9l84Ro9syU2GgsWVqEFCTJPqUDHX8pdR4CZ7E/5QRVuD41BSm23hYT+q1eyWTItvI1lJ+iE03yHSpaaZZVwLg=
+	t=1787046744; cv=none; b=pCOAabWu221WYRjV+AQq9sH4B8QpB7z0YE06XPU5jpFmGRDbD8TE9es2r+NRR0xAuUnHfbDJjZ7HUbr5DwAU14T8uSdVZgW3eyxUS6TVRTX4eyU30Ns+tU3ZqBG1KSkcBiwapK6AdcpH34kgXD2Ax18vhXnKoO3GSoaQHchZud4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787046128; c=relaxed/simple;
-	bh=OJ8nXTRKS/39+g45AO8X3MsAHcd/a6wcRxPr0gDMcRk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=RbfBHpM72buMEevsBPh+Jz/iCjHLhPIZgnAnJvRsFDFyb4D8SqZUBRkioyStei5wOGG2LESWjMMo4Q3VuCIigk1oedeTHpYb9J3zFmY50AR5RLu7L3z2UTjSQp0u7yTuCoPUfd21OURY9Nz3ddNpcwfvFcxk8oup9clh3SCm1Bc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=JBkXy81A; arc=none smtp.client-ip=113.46.200.224
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1787046744; c=relaxed/simple;
+	bh=I0KP1IbAbezWkauYtZTJspxTeAjgpXqlUGWgDjtx5PM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=daPFgOKkMbeKAeJ9V2cxkdmTi1DBhwwkJGs8K5dfxDo5Kbpvv/xFqQok8n+VgZqa7uMttfmD0qA5x78iPlQuW9xRYRFXeqblN2HNsVm65XAVFqaKkHnTazWuvvWyizKgYyQz0sgnEGctzaX47oqlcpFGhAUlwjga/v2G0bfdE1U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=nWbKWcVC; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=txPAXiKZ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=O4FFOC95; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=7rAb5AmM; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="JBkXy81A"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=Mfk6kC41flOs9S4tTGuDvyDtZ2MtwDDXuUdpCO4Ql1U=;
-	b=JBkXy81AFcwowDScUzPxoX1OcBLb93daI0ko6Nqern7IzFqYKz4iFr+9MRzNMdeABgBMVLPoM
-	zT9xXRizPf+efZUhnIlwKBJdakwJt1G23HVYzgzAYECfTFu+igANKzkoAZ97GNzQScafr6Jiha6
-	dutklQT3b+fah09Z3+rxYvE=
-Received: from mail.maildlp.com (unknown [172.19.163.15])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4hPPbC6kQtz1cyTS;
-	Tue, 18 Aug 2026 17:31:19 +0800 (CST)
-Received: from kwepemp500012.china.huawei.com (unknown [7.202.195.81])
-	by mail.maildlp.com (Postfix) with ESMTPS id E1E8240586;
-	Tue, 18 Aug 2026 17:41:59 +0800 (CST)
-Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
- kwepemp500012.china.huawei.com (7.202.195.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Tue, 18 Aug 2026 17:41:59 +0800
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Tue, 18 Aug 2026 17:41:59 +0800
-Message-ID: <bfff52e0-53b3-7daf-aa38-ff881379f8c1@huawei.com>
-Date: Tue, 18 Aug 2026 17:41:58 +0800
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="nWbKWcVC";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="txPAXiKZ";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="O4FFOC95";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="7rAb5AmM"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 2608A8448E;
+	Tue, 18 Aug 2026 09:52:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1787046737; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=tY9AQhgEP8GwLHSc2bQUzh4WNu0DrIro7po4Tza2WWE=;
+	b=nWbKWcVC5O6mkyVccdyvIflBktcoiGRa4UYJtZL+DPGebs1g/JYa67j9Nn0lmZXf9tl28K
+	JraoLMpAuBDdkz9Te9xmruGI0udVBlH7xn9HoEzY+raxlm7/R10MHWDTpksCiRu+Ju+f8+
+	rbpxqZCNdQu42RLnADYmjbioEXdthg8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1787046737;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=tY9AQhgEP8GwLHSc2bQUzh4WNu0DrIro7po4Tza2WWE=;
+	b=txPAXiKZoBbVkjxX26hCvvJcSpcSjsPcTXZtKTMlG/xBjmXjdx3QyWfkAd733rrleBFwTO
+	N5WOFFIPYXlvnzCg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1787046733; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=tY9AQhgEP8GwLHSc2bQUzh4WNu0DrIro7po4Tza2WWE=;
+	b=O4FFOC95GHTvBi+xIuMfremfNRFiGFGybK9NzcuIpLexloCm26Ch1WqYkK3eJEuJTzniUF
+	FLdUzlcqWCL7WGqlv1TjD/1NZWylY4hOfGR7a52P/+CkvRF4AW4wicN5+Xb3hMN3avgXV8
+	QqqcOrh2dQ4YCEbRQd0I+xbcAuVK/Tk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1787046733;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=tY9AQhgEP8GwLHSc2bQUzh4WNu0DrIro7po4Tza2WWE=;
+	b=7rAb5AmMbXzDGZN31ULnUxnzmBq9XzP73oyZVtsAR6+QhVgf9sdkji/SaqRqafjoxXt+2P
+	IB3+3+Mi0YFndEBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 09D6D22BA;
+	Tue, 18 Aug 2026 09:52:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Vtn2AU0rhGoXcAAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 18 Aug 2026 09:52:13 +0000
+Message-ID: <bed9ae35-00e9-4819-9c35-ab2a905e6220@suse.de>
+Date: Tue, 18 Aug 2026 11:52:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v10 2/2] scsi: libsas: Add linkrate and sas_addr change
- detection in rediscover
-Content-Language: en-CA
-To: Jason Yan <yanaijie@huawei.com>, <john.g.garry@oracle.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <kangfenglong@huawei.com>
-References: <20260811040334.4184911-1-yangxingui@huawei.com>
- <20260811040334.4184911-3-yangxingui@huawei.com>
- <528a4c8f-f061-4879-9547-73eda8db77b0@huawei.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <528a4c8f-f061-4879-9547-73eda8db77b0@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: leapraid: standardize NCQ priority sysfs
+ attributes
+To: Dongdong Hao <doubled@leap-io-kernel.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: dlemoal@kernel.org, hare@kernel.org, yjzhang@leap-io-kernel.com,
+ kezijie@leap-io-kernel.com, jzzhang@leap-io-kernel.com,
+ baikefan@leap-io-kernel.com, linux-scsi@vger.kernel.org
+References: <20260814090526.395704-1-doubled@leap-io-kernel.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260814090526.395704-1-doubled@leap-io-kernel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepemh500015.china.huawei.com (7.202.181.149) To
- kwepemp500015.china.huawei.com (7.202.195.9)
+X-Spam-Score: -4.30
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.996];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[10];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,leap-io-kernel.com:email,imap1.dmz-prg2.suse.org:helo]
 
-
-
-On 2026/8/14 14:33, Jason Yan wrote:
-> 在 2026/8/11 12:03, Xingui Yang 写道:
->> Introduce sas_dev_is_flutter() and sas_rediscover_ex_phy() to improve
->> flutter and device replace detection during rediscovery.
->>
->> sas_dev_is_flutter() calls sas_ex_phy_discover() before looking up the
->> child device via sas_ex_phy_to_dev(), ensuring the PHY state is always
->> updated and avoiding use-after-free since the child device pointer is
->> obtained after the sleeping SMP request completes.
->>
->> It adds validation for linkrate and sas_addr changes. When the SAS
->> address changes, phy->attached_sas_addr is restored to the original
->> address before returning false, so sas_unregister_devs_sas_addr() can
->> properly match and unregister the old device. The sas_addr check is
->> ordered before the linkrate check to avoid skipping the restoration
->> when both change simultaneously.
->>
->> sas_rediscover_ex_phy() uses the async discovery pattern
->> (sas_discover_event) instead of the synchronous sas_discover_new() to
->> ensure proper ordering between device unregistration and rediscovery,
->> avoiding sysfs_warn_dup() errors.
->>
->> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->> Suggested-by: John Garry <john.g.garry@oracle.com>
->> ---
->>   drivers/scsi/libsas/sas_expander.c | 83 +++++++++++++++++++++++++-----
->>   1 file changed, 69 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/scsi/libsas/sas_expander.c 
->> b/drivers/scsi/libsas/sas_expander.c
->> index a5c5327cd0dd..811c9eb4fef1 100644
->> --- a/drivers/scsi/libsas/sas_expander.c
->> +++ b/drivers/scsi/libsas/sas_expander.c
->> @@ -1963,6 +1963,72 @@ static bool dev_type_flutter(enum 
->> sas_device_type new, enum sas_device_type old)
->>       return false;
->>   }
->> +static void sas_rediscover_ex_phy(struct domain_device *dev, int phy_id,
->> +                  bool last)
->> +{
->> +    struct expander_device *ex = &dev->ex_dev;
->> +    struct ex_phy *phy = &ex->ex_phy[phy_id];
->> +
->> +    phy->phy_change_count = -1;
->> +    ex->ex_change_count = -1;
->> +    sas_unregister_devs_sas_addr(dev, phy_id, last);
->> +    sas_discover_event(dev->port, DISCE_REVALIDATE_DOMAIN);
->> +}
->> +
->> +static bool sas_dev_is_flutter(struct domain_device *dev, int phy_id,
->> +                   u8 *sas_addr, enum sas_device_type type)
->> +{
->> +    struct expander_device *ex = &dev->ex_dev;
->> +    struct ex_phy *phy = &ex->ex_phy[phy_id];
->> +    struct domain_device *child_dev;
->> +    char *action = "";
->> +    int res;
->> +
->> +    if (SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr) ||
->> +        !dev_type_flutter(type, phy->attached_dev_type))
->> +        return false;
->> +
->> +    res = sas_ex_phy_discover(dev, phy_id);
->> +    if (res)
->> +        return false;
->> +
->> +    child_dev = sas_ex_phy_to_dev(dev, phy_id);
->> +    if (!child_dev)
->> +        goto out;
->> +
->> +    if (dev_is_sata(child_dev) &&
->> +        phy->attached_dev_type == SAS_SATA_PENDING) {
->> +        action = ", needs recovery";
->> +        goto out;
->> +    }
->> +
->> +    if (SAS_ADDR(child_dev->sas_addr) != 
->> SAS_ADDR(phy->attached_sas_addr)) {
->> +        pr_info("ex %016llx phy%02d sas_addr changed from %016llx to 
->> %016llx\n",
->> +            SAS_ADDR(dev->sas_addr), phy_id,
->> +            SAS_ADDR(child_dev->sas_addr),
->> +            SAS_ADDR(phy->attached_sas_addr));
->> +        /*
->> +         * Device unregistering relies on address matching. Restore
->> +         * attached_sas_addr back to the original address so that the 
->> old
->> +         * device can be unregistered later
->> +         */
->> +        memcpy(phy->attached_sas_addr, child_dev->sas_addr, 
->> SAS_ADDR_SIZE);
->> +        return false;
->> +    }
->> +
->> +    if (child_dev->linkrate != phy->linkrate) {
->> +        pr_info("ex %016llx phy%02d linkrate changed from %d to %d\n",
->> +            SAS_ADDR(dev->sas_addr), phy_id,
->> +            child_dev->linkrate, phy->linkrate);
->> +        return false;
->> +    }
->> +
->> +out:
->> +    pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
->> +         SAS_ADDR(dev->sas_addr), phy_id, action);
->> +    return true;
->> +}
->> +
->>   static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
->>                     bool last, int sibling)
->>   {
->> @@ -2016,27 +2082,16 @@ static int sas_rediscover_dev(struct 
->> domain_device *dev, int phy_id,
->>           if (res == 0)
->>               sas_set_ex_phy(dev, phy_id, disc_resp);
->>           goto out_free_resp;
->> -    } else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
->> -           dev_type_flutter(type, phy->attached_dev_type)) {
->> -        struct domain_device *ata_dev = sas_ex_to_ata(dev, phy_id);
->> -        char *action = "";
->> -
->> -        sas_ex_phy_discover(dev, phy_id);
->> +    }
->> -        if (ata_dev && phy->attached_dev_type == SAS_SATA_PENDING)
->> -            action = ", needs recovery";
->> -        pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
->> -             SAS_ADDR(dev->sas_addr), phy_id, action);
->> +    if (sas_dev_is_flutter(dev, phy_id, sas_addr, type))
->>           goto out_free_resp;
->> -    }
->>       /* we always have to delete the old device when we went here */
+On 8/14/26 11:05 AM, Dongdong Hao wrote:
+> Replace the earlier LeapRAID ncq_cmd_prio_enable attribute with the
+> standard sas_ncq_prio_supported and sas_ncq_prio_enable names documented
+> in Documentation/ABI/testing/sysfs-block-device, and rename the
+> per-device NCQ priority state to match.
 > 
-> Please remove this comment since you are not deleting the old device now.
+> The earlier ncq_cmd_prio_enable name has not yet been established as part
+> of a released userspace ABI, so no compatibility alias is needed.
+> 
+> For LeapRAID, sas_ncq_prio_enable is backed by the driver's per-device
+> NCQ priority state and controls whether RT-class I/O requests are issued
+> with command priority on supported SATA devices.
+> 
+> Update leapraid.rst to describe the standard attribute names and paths,
+> and clean up the surrounding RST text for consistency with kernel
+> documentation style.
+> 
+> Also switch the capability check from open-coded VPD page 0x89 parsing to
+> sas_ata_ncq_prio_supported(), use kstrtobool() for the enable path, and
+> expose the NCQ priority attributes only for SATA devices using LeapRAID's
+> target-private SAS device state.
+> 
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> Signed-off-by: Dongdong Hao <doubled@leap-io-kernel.com>
+> ---
+> Changes in v2:
+>   - Reflow commit message lines to fit within 75 columns.
+>   - No functional change.
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-Hi, Jason
+Cheers,
 
-We will call sas_rediscover_ex_phy(dev, phy_id, last) later to delete 
-the old device, and rediscover the device.
-
-Thanks,
-Xingui
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
