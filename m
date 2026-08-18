@@ -1,112 +1,208 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEA01443A9D
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 09:27:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5951F4477E8;
+	Tue, 18 Aug 2026 09:42:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787045233; cv=none; b=JiwylPJD9+DYAHmSzfGSAM32pqgCOYBUckr+11iWiWt7ECJWetBMME07V3HMrBvomlmolc3c6CgybNAj7L/ji85z7AkYt2VDcNTP7E3zqrAff+nrgtLy1iU5DB0iT7rWx80bBskFYL2VFhNXfgouqmoWWHsPeZgbCsk6pVoEoGQ=
+	t=1787046128; cv=none; b=YDGMX8+wRicW+vcstZy+RBugKhLgLRP5imQG3iOzlvVRYmX/kzuV39INEEslHcfMAhf4hFUX7ZiTTlAPCZ3yVG9l84Ro9syU2GgsWVqEFCTJPqUDHX8pdR4CZ7E/5QRVuD41BSm23hYT+q1eyWTItvI1lJ+iE03yHSpaaZZVwLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787045233; c=relaxed/simple;
-	bh=5SYgNcVwkgQC4vfUw0vUZMLGASnSwdnUw0Obx5XgmS4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kJO0djWyYK+U281YkcJxPsrgXbyT/Y1dkW/ZNN7HYRyAtxHPWPimheggv6eoHULEVlleDhKVeZOh+YmmxNfLRjPIUX8KEZBypOK6UVL6ngq4F3uzMEm9xGkTbVyt1rhsw+92RkHccHsAZnxWkxoD+Prx8TuPk+qHDcDyko1Rj6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z9+z3mLL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787046128; c=relaxed/simple;
+	bh=OJ8nXTRKS/39+g45AO8X3MsAHcd/a6wcRxPr0gDMcRk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=RbfBHpM72buMEevsBPh+Jz/iCjHLhPIZgnAnJvRsFDFyb4D8SqZUBRkioyStei5wOGG2LESWjMMo4Q3VuCIigk1oedeTHpYb9J3zFmY50AR5RLu7L3z2UTjSQp0u7yTuCoPUfd21OURY9Nz3ddNpcwfvFcxk8oup9clh3SCm1Bc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=JBkXy81A; arc=none smtp.client-ip=113.46.200.224
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z9+z3mLL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87B8D1F000E9;
-	Tue, 18 Aug 2026 09:27:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787045231;
-	bh=Mlmrq9Rmy5M35adR4pB4Iy7McK3Zjn2B78/VF9QVg04=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Z9+z3mLL0Rf55IRGP5yyH32dBpRUugYaNYRZBLdBUM8/v8pJIakH76j28VlvVy9Hf
-	 2XaWNIsNfud6EzPj2gQAHrB4NaN/4IrPClMuuTnmG3R+w1dkv+b4Dtq9zJqpMNMV5T
-	 OhDa7cMqZhbdcy4cGE+tbqQ/2QFE229B6W0/DOqs/GErh1VfYAirq8vC5up1NcOGHB
-	 UyvrzG4N1PUAuDogZdgXu8E6xFnQkTqVql+SBNuUBN7ULw/XIx7qFVokN6WnwVDSTo
-	 Kjnzjg7tag/pFWXgJeslq5qBHyKtmMzubKizS+oqEBXGM1+F+t7g9S+YJDfJzWtphV
-	 ogec59gSQDAnQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] scsi: target: file: avoid recursive configfs open in
- fd_init_prot()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260818091326.1582200-1-runyu.xiao@seu.edu.cn>
-References: <20260818073539.1555605-1-runyu.xiao@seu.edu.cn>
- <20260818091326.1582200-1-runyu.xiao@seu.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 18 Aug 2026 09:27:11 +0000
-Message-Id: <20260818092711.87B8D1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="JBkXy81A"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=Mfk6kC41flOs9S4tTGuDvyDtZ2MtwDDXuUdpCO4Ql1U=;
+	b=JBkXy81AFcwowDScUzPxoX1OcBLb93daI0ko6Nqern7IzFqYKz4iFr+9MRzNMdeABgBMVLPoM
+	zT9xXRizPf+efZUhnIlwKBJdakwJt1G23HVYzgzAYECfTFu+igANKzkoAZ97GNzQScafr6Jiha6
+	dutklQT3b+fah09Z3+rxYvE=
+Received: from mail.maildlp.com (unknown [172.19.163.15])
+	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4hPPbC6kQtz1cyTS;
+	Tue, 18 Aug 2026 17:31:19 +0800 (CST)
+Received: from kwepemp500012.china.huawei.com (unknown [7.202.195.81])
+	by mail.maildlp.com (Postfix) with ESMTPS id E1E8240586;
+	Tue, 18 Aug 2026 17:41:59 +0800 (CST)
+Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
+ kwepemp500012.china.huawei.com (7.202.195.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 18 Aug 2026 17:41:59 +0800
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Tue, 18 Aug 2026 17:41:59 +0800
+Message-ID: <bfff52e0-53b3-7daf-aa38-ff881379f8c1@huawei.com>
+Date: Tue, 18 Aug 2026 17:41:58 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v10 2/2] scsi: libsas: Add linkrate and sas_addr change
+ detection in rediscover
+Content-Language: en-CA
+To: Jason Yan <yanaijie@huawei.com>, <john.g.garry@oracle.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <kangfenglong@huawei.com>
+References: <20260811040334.4184911-1-yangxingui@huawei.com>
+ <20260811040334.4184911-3-yangxingui@huawei.com>
+ <528a4c8f-f061-4879-9547-73eda8db77b0@huawei.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <528a4c8f-f061-4879-9547-73eda8db77b0@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepemh500015.china.huawei.com (7.202.181.149) To
+ kwepemp500015.china.huawei.com (7.202.195.9)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Reopening an existing PI sidecar file using `dentry_open()` bypass=
-es `may_open()` and `inode_permission()` checks.
---
 
---- Patch [1]: [PATCH v3] scsi: target: file: avoid recursive configfs open=
- in fd_init_prot() ---
-commit 12b71238378c9751f15927b9f16e21baaa769408
-Author: Runyu Xiao <runyu.xiao@seu.edu.cn>
 
-scsi: target: file: avoid recursive configfs open in fd_init_prot()
+On 2026/8/14 14:33, Jason Yan wrote:
+> 在 2026/8/11 12:03, Xingui Yang 写道:
+>> Introduce sas_dev_is_flutter() and sas_rediscover_ex_phy() to improve
+>> flutter and device replace detection during rediscovery.
+>>
+>> sas_dev_is_flutter() calls sas_ex_phy_discover() before looking up the
+>> child device via sas_ex_phy_to_dev(), ensuring the PHY state is always
+>> updated and avoiding use-after-free since the child device pointer is
+>> obtained after the sleeping SMP request completes.
+>>
+>> It adds validation for linkrate and sas_addr changes. When the SAS
+>> address changes, phy->attached_sas_addr is restored to the original
+>> address before returning false, so sas_unregister_devs_sas_addr() can
+>> properly match and unregister the old device. The sas_addr check is
+>> ordered before the linkrate check to avoid skipping the restoration
+>> when both change simultaneously.
+>>
+>> sas_rediscover_ex_phy() uses the async discovery pattern
+>> (sas_discover_event) instead of the synchronous sas_discover_new() to
+>> ensure proper ordering between device unregistration and rediscovery,
+>> avoiding sysfs_warn_dup() errors.
+>>
+>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>> Suggested-by: John Garry <john.g.garry@oracle.com>
+>> ---
+>>   drivers/scsi/libsas/sas_expander.c | 83 +++++++++++++++++++++++++-----
+>>   1 file changed, 69 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_expander.c 
+>> b/drivers/scsi/libsas/sas_expander.c
+>> index a5c5327cd0dd..811c9eb4fef1 100644
+>> --- a/drivers/scsi/libsas/sas_expander.c
+>> +++ b/drivers/scsi/libsas/sas_expander.c
+>> @@ -1963,6 +1963,72 @@ static bool dev_type_flutter(enum 
+>> sas_device_type new, enum sas_device_type old)
+>>       return false;
+>>   }
+>> +static void sas_rediscover_ex_phy(struct domain_device *dev, int phy_id,
+>> +                  bool last)
+>> +{
+>> +    struct expander_device *ex = &dev->ex_dev;
+>> +    struct ex_phy *phy = &ex->ex_phy[phy_id];
+>> +
+>> +    phy->phy_change_count = -1;
+>> +    ex->ex_change_count = -1;
+>> +    sas_unregister_devs_sas_addr(dev, phy_id, last);
+>> +    sas_discover_event(dev->port, DISCE_REVALIDATE_DOMAIN);
+>> +}
+>> +
+>> +static bool sas_dev_is_flutter(struct domain_device *dev, int phy_id,
+>> +                   u8 *sas_addr, enum sas_device_type type)
+>> +{
+>> +    struct expander_device *ex = &dev->ex_dev;
+>> +    struct ex_phy *phy = &ex->ex_phy[phy_id];
+>> +    struct domain_device *child_dev;
+>> +    char *action = "";
+>> +    int res;
+>> +
+>> +    if (SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr) ||
+>> +        !dev_type_flutter(type, phy->attached_dev_type))
+>> +        return false;
+>> +
+>> +    res = sas_ex_phy_discover(dev, phy_id);
+>> +    if (res)
+>> +        return false;
+>> +
+>> +    child_dev = sas_ex_phy_to_dev(dev, phy_id);
+>> +    if (!child_dev)
+>> +        goto out;
+>> +
+>> +    if (dev_is_sata(child_dev) &&
+>> +        phy->attached_dev_type == SAS_SATA_PENDING) {
+>> +        action = ", needs recovery";
+>> +        goto out;
+>> +    }
+>> +
+>> +    if (SAS_ADDR(child_dev->sas_addr) != 
+>> SAS_ADDR(phy->attached_sas_addr)) {
+>> +        pr_info("ex %016llx phy%02d sas_addr changed from %016llx to 
+>> %016llx\n",
+>> +            SAS_ADDR(dev->sas_addr), phy_id,
+>> +            SAS_ADDR(child_dev->sas_addr),
+>> +            SAS_ADDR(phy->attached_sas_addr));
+>> +        /*
+>> +         * Device unregistering relies on address matching. Restore
+>> +         * attached_sas_addr back to the original address so that the 
+>> old
+>> +         * device can be unregistered later
+>> +         */
+>> +        memcpy(phy->attached_sas_addr, child_dev->sas_addr, 
+>> SAS_ADDR_SIZE);
+>> +        return false;
+>> +    }
+>> +
+>> +    if (child_dev->linkrate != phy->linkrate) {
+>> +        pr_info("ex %016llx phy%02d linkrate changed from %d to %d\n",
+>> +            SAS_ADDR(dev->sas_addr), phy_id,
+>> +            child_dev->linkrate, phy->linkrate);
+>> +        return false;
+>> +    }
+>> +
+>> +out:
+>> +    pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
+>> +         SAS_ADDR(dev->sas_addr), phy_id, action);
+>> +    return true;
+>> +}
+>> +
+>>   static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
+>>                     bool last, int sibling)
+>>   {
+>> @@ -2016,27 +2082,16 @@ static int sas_rediscover_dev(struct 
+>> domain_device *dev, int phy_id,
+>>           if (res == 0)
+>>               sas_set_ex_phy(dev, phy_id, disc_resp);
+>>           goto out_free_resp;
+>> -    } else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
+>> -           dev_type_flutter(type, phy->attached_dev_type)) {
+>> -        struct domain_device *ata_dev = sas_ex_to_ata(dev, phy_id);
+>> -        char *action = "";
+>> -
+>> -        sas_ex_phy_discover(dev, phy_id);
+>> +    }
+>> -        if (ata_dev && phy->attached_dev_type == SAS_SATA_PENDING)
+>> -            action = ", needs recovery";
+>> -        pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
+>> -             SAS_ADDR(dev->sas_addr), phy_id, action);
+>> +    if (sas_dev_is_flutter(dev, phy_id, sas_addr, type))
+>>           goto out_free_resp;
+>> -    }
+>>       /* we always have to delete the old device when we went here */
+> 
+> Please remove this comment since you are not deleting the old device now.
 
-This patch fixes a recursive configfs open hazard by avoiding the reopening
-of a user-controlled pathname. Instead, it derives the protection sidecar
-file from the opened backing file itself and opens it directly.
+Hi, Jason
 
-Link: https://lore.kernel.org/r/20260818073539.1555605-1-runyu.xiao@seu.edu=
-.cn
+We will call sas_rediscover_ex_phy(dev, phy_id, last) later to delete 
+the old device, and rediscover the device.
 
-> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_co=
-re_file.c
-> index 62ced9f5102ff..f6c34e69dbfed 100644
-> --- a/drivers/target/target_core_file.c
-> +++ b/drivers/target/target_core_file.c
-[ ... ]
-> @@ -86,6 +90,131 @@ static struct se_device *fd_alloc_device(struct se_hb=
-a *hba, const char *name)
-[ ... ]
-> +static int fd_open_prot_file(struct file *file, int flags, umode_t mode,
-> +			     struct file **filep)
-> +{
-[ ... ]
-> +	if (d_is_negative(prot_path.dentry)) {
-> +		prot_file =3D dentry_create(&prot_path, flags, mode, current_cred());
-> +	} else {
-> +		if (!d_is_reg(prot_path.dentry)) {
-> +			ret =3D -EINVAL;
-> +			goto out_dput;
-> +		}
-> +
-> +		inode_unlock(d_inode(parent_path.dentry));
-> +		mnt_drop_write_file(file);
-> +		release_dentry_name_snapshot(&backing_name);
-> +		kfree(prot_name);
-> +
-> +		prot_file =3D dentry_open(&prot_path, flags & ~O_CREAT,
-> +					current_cred());
-
-[Severity: High]
-Does this dentry_open() call bypass standard permission checks?
-
-When reopening an existing sidecar file, this goes straight to dentry_open()
-without calling inode_permission() or may_open(). This appears to skip
-access controls, including standard permissions, security hooks, and checks
-for immutable or append-only file attributes.
-
-If someone with configuration access sets up a backend and links an
-immutable file (or one they lack write access to) at the sidecar path,
-could they use this to overwrite the file since the permission gates
-are bypassed?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818091326.1582=
-200-1-runyu.xiao@seu.edu.cn?part=3D1
+Thanks,
+Xingui
