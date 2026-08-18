@@ -1,354 +1,201 @@
-Received: from mail-m49197.qiye.163.com (mail-m49197.qiye.163.com [45.254.49.197])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B260E3D3CEE;
-	Tue, 18 Aug 2026 05:14:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.197
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.76.78.106])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 099E62F8E82
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 07:24:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.76.78.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787030098; cv=none; b=NeaXoX+WmdAUBrW81JJhLK7HKd7h5TQD1ojDIYRVfcMNYD+8eL3BCHFK11Ir9OCp9r4icHgBcMCOOkzN4ledB8ragM0Xok2OutCyLjfbpjOzKy0cINs5aTGKUUbEixUBsB2wcRXoZJ63puiAPKfxM1DzmGm+wkKX77ks2ymWMtU=
+	t=1787037860; cv=none; b=dqZ5gWRjoVIpkwssuqc+D08HJaNBlLFaz+9/0iujHCUZ571ZFSVWLXW9Pl0HexPmhtzcMc5H4hdCHCwwW/P4T0Wc7nkjAAzK52H4Asik2IkAIfJyG6VlMqtmsrmcse437KMs2qclrPBxSiBAw2YOhj2GgS8jPrGJrZ3XwnBUtTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787030098; c=relaxed/simple;
-	bh=xcCrXBRJwwJIVxDb8wMsZi0W8TTSs3hoL4lt0ROqKV0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=oXQXFRXcV919wn/t5AKoOVxJDcAyBAP5k+yT5sxhPv1f+P9hy8sVx4Gy39H2aPWhcR+MGFEYHLQaebP6hdqUQcpR84ajD+CADSKH63vVcI+6vXF8Fyj7PDW3AQ5BBu8gd/3lbAywIq3ByM7D9REeYJ791R6Q/ybOAq6327rg/xQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=YHK7qeTg; arc=none smtp.client-ip=45.254.49.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="YHK7qeTg"
-Received: from PC-202605011814.localdomain (unknown [58.241.16.34])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4a5c35185;
-	Tue, 18 Aug 2026 13:14:49 +0800 (GMT+08:00)
-From: Runyu Xiao <runyu.xiao@seu.edu.cn>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>,
-	Lee Duncan <lduncan@suse.com>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Runyu Xiao <runyu.xiao@seu.edu.cn>,
-	Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: [PATCH v2] scsi: target: pin db_root for metadata writes
-Date: Tue, 18 Aug 2026 13:14:42 +0800
-Message-Id: <20260818051442.1523210-1-runyu.xiao@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260818042720.1511778-1-runyu.xiao@seu.edu.cn>
-References: <20260818042720.1511778-1-runyu.xiao@seu.edu.cn>
+	s=arc-20240116; t=1787037860; c=relaxed/simple;
+	bh=+cmtWNLZ49eWKMVNnC9CK7hH+YGqGvDyDfGDNMkM93k=;
+	h=Date:From:To:Cc:Subject:Content-Type:MIME-Version:Message-ID; b=Ogfm9VKhc96/dw319VmBU7PsBOQsFPKKkCuHBPKaUE9sqtqs1z6AeXSQskhomo011inlSrWqYN4Oagnxoi/WEaZ49PA+nZHfU0ABBeCdKR7eol18jWPDzlWnRnmcryVI6TEXIniredfOOu3+fzbUqJh/9fICciysUqyLt0Llr9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=13.76.78.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.190.164.155])
+	by mtasvr (Coremail) with SMTP id _____wCXn3+RCIRqT8yiAA--.12876S3;
+	Tue, 18 Aug 2026 15:24:02 +0800 (CST)
+Received: from stitch$zju.edu.cn ( [10.190.164.155] ) by
+ ajax-webmail-mail-app2 (Coremail) ; Tue, 18 Aug 2026 15:24:01 +0800
+ (GMT+08:00)
+Date: Tue, 18 Aug 2026 15:24:01 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: "Jiacheng Xu" <stitch@zju.edu.cn>
+To: "Doug Gilbert" <dgilbert@interlog.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: sg: Normalize scatter element size before get_order()
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2025.3-cmXT6 build
+ 20260617(6f868824) Copyright (c) 2002-2026 www.mailtech.cn zju.edu.cn
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_479335_146532246.1787037841221"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa0134b2d2d03a1kunmd19dcf4f100ddd
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCHksYVhpIQxpLGENPGBkdS1YeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlOQ1VJT0pVSk1VSE9ZV1kWGg8SFR0UWUFZT0tIVUpLSEpPSE
-	xVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=YHK7qeTgrxapvlvXZqIEQa4abNhb9XVZrTVqPmlA3OLtxf+clBzPiyeLqWydncjWocUR+CCLUKaZ8cgffucmV2mP1cQs9EZEGSvIUQzUx8JC+PtIhtHrlPeWODFikW+yGV5DU5aChgfvJEPwd3mxsGeqScQC4tIQl0vST4mmBlY=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
-	bh=DBZXc7HLX9/pYjM/ke+KsiHNFOie7BrTQqBdvFxmdp0=;
-	h=date:mime-version:subject:message-id:from;
+Message-ID: <4370b94b.1482b.1a013c17746.Coremail.stitch@zju.edu.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:zC_KCgC3atKRCIRqkm_4Aw--.24097W
+X-CM-SenderInfo: qtrxiiaqttimo62m3hxhgxhubq/1tbiAwEHC2qDvBYGSwAAsA
+X-CM-DELIVERINFO: =?B?36+y/gXKKxbFmtjJiESix3B1w3tMoM3snk/k5SVzZVydjEqe1eefKHnLf95EnB4iem
+	egWyMyrD1siZ9z+A7RyMy/uaDtwOxtu+nFy7vZk/9JzKsZxA+IAOuCjMIRryckJ5yFWNR6
+	04pKURsPZwG+UI/baSYJMXHgr+BVOVsf9cBtaDhujRFy7fY2JkEspSTIELtpZg==
+X-Coremail-Antispam: 1Uk129KBj93XoW7KrWkKF4DKw17XFyDWrW5CFX_yoW8GrWrpF
+	WxZ3yjy3y8G3Wjk3ZrX3WUX3WF93sxGa47Kay8Aw15Z3s0kFyUury3tFW5WFZ8Jr4rCrWk
+	JrWDZwn8Za9rCacCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUPCb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487M2AExVA0xI801c8C04v7Mc804VCY07
+	AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWU
+	JVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7V
+	AKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxM4xvF2IEb7IF0Fy264kE64k0F24lFcxC
+	0VAYjxAxZF0Ex2IqxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s
+	026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_
+	JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20x
+	vEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa
+	7IU86OJ7UUUUU==
 
-db_root is configured from configfs as a pathname string. ALUA and
-APTPL later build metadata filenames under that string and open them
-with filp_open().
+------=_Part_479335_146532246.1787037841221
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 
-Validating db_root once in target_core_item_dbroot_store() is not
-enough. A later symlink retarget can bypass a one-time check, and doing
-path resolution under target_devices_lock keeps the VFS lock-order
-concern in the configfs store path.
+V2hlbiBzY2F0dGVyX2VsZW1fc3ogaXMgc2V0IHRvIGEgdmFsdWUgc21hbGxlciB0aGFuIFBBR0Vf
+U0laRSB0aHJvdWdoCml0cyB3cml0YWJsZSBzeXNmcyBtb2R1bGUgcGFyYW1ldGVyLCBzZ19idWls
+ZF9pbmRpcmVjdCgpIHVwZGF0ZXMgdGhlCmdsb2JhbCBzY2F0dGVyIGVsZW1lbnQgc2l6ZSB2YXJp
+YWJsZXMgYnV0IGxlYXZlcyB0aGUgbG9jYWwgYG51bWAKdmFyaWFibGUgdW5jaGFuZ2VkLgoKSWYg
+dGhlIHBhcmFtZXRlciBpcyBzZXQgdG8gemVybywgZ2V0X29yZGVyKG51bSkgaXMgY2FsbGVkIHdp
+dGggemVyby4KT24gNjQtYml0IHN5c3RlbXMsIGdldF9vcmRlcigwKSB1bmRlcmZsb3dzIGludGVy
+bmFsbHkgYW5kIHJldHVybnMgYW4KaW52YWxpZCBvcmRlci4gVGhpcyBjYXVzZXM6CgogICAgcmV0
+X3N6ID0gMSA8PCAoUEFHRV9TSElGVCArIG9yZGVyKTsKCnRvIHNoaWZ0IGEgMzItYml0IGludGVn
+ZXIgYnkgNjQgYml0cywgdHJpZ2dlcmluZzoKCiAgICBVQlNBTjogc2hpZnQtb3V0LW9mLWJvdW5k
+cyBpbiBzZ19idWlsZF9pbmRpcmVjdAoKVXBkYXRlIGBudW1gIHRvZ2V0aGVyIHdpdGggdGhlIGds
+b2JhbCB2YWx1ZXMgd2hlbiBjbGFtcGluZyBpdCB0bwpQQUdFX1NJWkUuCgpUaGUgcmVwcm9kdWNl
+ciBhbmQgVUJTQU4gY3Jhc2ggcmVwb3J0IGFyZSBhdHRhY2hlZDoKICAtIHJlcHJvLmMKICAtIHJl
+cHJvLnJlcG9ydDogVUJTQU4gY3Jhc2ggcmVwb3J0CgpGaXhlczogNjQ2MGU3NWExMDRkICgiW1ND
+U0ldIHNnOiBmaXhlcyBmb3IgbGFyZ2UgcGFnZV9zaXplIikKClNpZ25lZC1vZmYtYnk6IG0wY2sx
+bmcgPHN0aXRjaEB6anUuZWR1LmNuPgotLS0KICBkcml2ZXJzL3Njc2kvc2cuYyB8IDEgKwogIDEg
+ZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9z
+Zy5jIGIvZHJpdmVycy9zY3NpL3NnLmMKaW5kZXggNTQwOGYwMDJlNmMwLi42OTAxMzMzNWU0MzMg
+MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9zZy5jCisrKyBiL2RyaXZlcnMvc2NzaS9zZy5jCkBA
+IC0xODc2LDYgKzE4NzYsNyBAQCBzZ19idWlsZF9pbmRpcmVjdChTZ19zY2F0dGVyX2hvbGQgKiBz
+Y2hwLCBTZ19mZCAqIHNmcCwgaW50IGJ1ZmZfc2l6ZSkKICAgICAgbnVtID0gc2NhdHRlcl9lbGVt
+X3N6OwogICAgICBpZiAodW5saWtlbHkobnVtICE9IHNjYXR0ZXJfZWxlbV9zel9wcmV2KSkgewog
+ICAgICAgICAgICAgIGlmIChudW0gPCBQQUdFX1NJWkUpIHsKKyAgICAgICAgICAgICAgICAgICAg
+IG51bSA9IFBBR0VfU0laRTsKICAgICAgICAgICAgICAgICAgICAgIHNjYXR0ZXJfZWxlbV9zeiA9
+IFBBR0VfU0laRTsKICAgICAgICAgICAgICAgICAgICAgIHNjYXR0ZXJfZWxlbV9zel9wcmV2ID0g
+UEFHRV9TSVpFOwogICAgICAgICAgICAgIH0gZWxzZQogICAgICAgICAgICAgICAgICAgICAgc2Nh
+dHRlcl9lbGVtX3N6X3ByZXYgPSBudW07Cg==
+------=_Part_479335_146532246.1787037841221
+Content-Type: text/plain; name=repro.c
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="repro.c"
 
-Resolve db_root to a directory path once, keep a pinned struct path
-reference, and open metadata files relative to that fixed root with
-file_open_root(). Also reject configfs-backed roots before publishing
-them and move the path walk out from under target_devices_lock.
+I2luY2x1ZGUgPGZjbnRsLmg+CiNpbmNsdWRlIDxzdGRpby5oPgojaW5jbHVkZSA8dW5pc3RkLmg+
+CgppbnQgbWFpbih2b2lkKQp7CiAgICAgICAgaW50IGZkOwoKICAgICAgICBmZCA9IG9wZW4oIi9z
+eXMvbW9kdWxlL3NnL3BhcmFtZXRlcnMvc2NhdHRlcl9lbGVtX3N6IiwgT19XUk9OTFkpOwogICAg
+ICAgIGlmIChmZCA8IDApIHsKICAgICAgICAgICAgICAgIHBlcnJvcigib3BlbiBzY2F0dGVyX2Vs
+ZW1fc3oiKTsKICAgICAgICAgICAgICAgIHJldHVybiAxOwogICAgICAgIH0KICAgICAgICBpZiAo
+d3JpdGUoZmQsICIwIiwgMSkgIT0gMSkgewogICAgICAgICAgICAgICAgcGVycm9yKCJ3cml0ZSBz
+Y2F0dGVyX2VsZW1fc3oiKTsKICAgICAgICAgICAgICAgIGNsb3NlKGZkKTsKICAgICAgICAgICAg
+ICAgIHJldHVybiAxOwogICAgICAgIH0KICAgICAgICBjbG9zZShmZCk7CgogICAgICAgIGZkID0g
+b3BlbigiL2Rldi9zZzAiLCBPX1JET05MWSk7CiAgICAgICAgaWYgKGZkIDwgMCkgewogICAgICAg
+ICAgICAgICAgcGVycm9yKCJvcGVuIC9kZXYvc2cwIik7CiAgICAgICAgICAgICAgICByZXR1cm4g
+MTsKICAgICAgICB9CiAgICAgICAgY2xvc2UoZmQpOwogICAgICAgIHJldHVybiAwOwp9
+------=_Part_479335_146532246.1787037841221
+Content-Type: application/octet-stream; name=repro.report
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="repro.report"
 
-This closes the ALUA recursive configfs re-entry path without leaving a
-string-based TOCTOU gap, and keeps the same fixed-root semantics for
-APTPL metadata writes.
+VUJTQU46IHNoaWZ0LW91dC1vZi1ib3VuZHMgaW4gZHJpdmVycy9zY3NpL3NnLmM6MTkyMzoxMwpz
+aGlmdCBleHBvbmVudCA2NCBpcyB0b28gbGFyZ2UgZm9yIDMyLWJpdCB0eXBlICdpbnQnCkNQVTog
+MCBVSUQ6IDAgUElEOiAxMTc2NiBDb21tOiBzeXouMS45NSBOb3QgdGFpbnRlZCA2LjEyLjkzICMx
+CkhhcmR3YXJlIG5hbWU6IFFFTVUgVWJ1bnR1IDI0LjA0IFBDIHYyIChpNDQwRlggKyBQSUlYLCBh
+cmNoX2NhcHMgZml4LCAxOTk2KSwgQklPUyAxLjE2LjMtZGViaWFuLTEuMTYuMy0yIDA0LzAxLzIw
+MTQKQ2FsbCBUcmFjZToKIDxUQVNLPgogX19kdW1wX3N0YWNrIGxpYi9kdW1wX3N0YWNrLmM6OTQg
+W2lubGluZV0KIGR1bXBfc3RhY2tfbHZsKzB4MTY0LzB4MWYwIGxpYi9kdW1wX3N0YWNrLmM6MTIw
+CiB1YnNhbl9lcGlsb2d1ZSsweGEvMHg0MCBsaWIvdWJzYW4uYzoyMzEKIF9fdWJzYW5faGFuZGxl
+X3NoaWZ0X291dF9vZl9ib3VuZHMrMHgxZWIvMHgyMDggbGliL3Vic2FuLmM6NDY4CiBzZ19idWls
+ZF9pbmRpcmVjdC5jb2xkKzB4MWIvMHgyMCBkcml2ZXJzL3Njc2kvc2cuYzoxOTIzCiBzZ19idWls
+ZF9yZXNlcnZlKzB4YzQvMHgxODAgZHJpdmVycy9zY3NpL3NnLmM6MjAzMwogc2dfYWRkX3NmcCBk
+cml2ZXJzL3Njc2kvc2cuYzoyMjE1IFtpbmxpbmVdCiBzZ19vcGVuKzB4YzNiLzB4MTkwMCBkcml2
+ZXJzL3Njc2kvc2cuYzozNDgKIGNocmRldl9vcGVuKzB4MjMyLzB4NmIwIGZzL2NoYXJfZGV2LmM6
+NDE0CiBkb19kZW50cnlfb3BlbisweDZkZi8weDE1MjAgZnMvb3Blbi5jOjk1MgogdmZzX29wZW4r
+MHg4Mi8weDNmMCBmcy9vcGVuLmM6MTA4NAogZG9fb3BlbiBmcy9uYW1laS5jOjM3ODIgW2lubGlu
+ZV0KIHBhdGhfb3BlbmF0KzB4MWRmNC8weDJkYjAgZnMvbmFtZWkuYzozOTQxCiBkb19maWxwX29w
+ZW4rMHgxYmEvMHgzZDAgZnMvbmFtZWkuYzozOTY4CiBkb19zeXNfb3BlbmF0MisweDE3YS8weDFl
+MCBmcy9vcGVuLmM6MTQxMQogZG9fc3lzX29wZW4gZnMvb3Blbi5jOjE0MjYgW2lubGluZV0KIF9f
+ZG9fc3lzX29wZW5hdCBmcy9vcGVuLmM6MTQ0MiBbaW5saW5lXQogX19zZV9zeXNfb3BlbmF0IGZz
+L29wZW4uYzoxNDM3IFtpbmxpbmVdCiBfX3g2NF9zeXNfb3BlbmF0KzB4MTQyLzB4MjAwIGZzL29w
+ZW4uYzoxNDM3CiBkb19zeXNjYWxsX3g2NCBhcmNoL3g4Ni9lbnRyeS9jb21tb24uYzo0NyBbaW5s
+aW5lXQogZG9fc3lzY2FsbF82NCsweGM3LzB4MjQwIGFyY2gveDg2L2VudHJ5L2NvbW1vbi5jOjc4
+CiBlbnRyeV9TWVNDQUxMXzY0X2FmdGVyX2h3ZnJhbWUrMHg3Ny8weDdmClJJUDogMDAzMzoweDdm
+MzI5MDFiY2QxNQpDb2RlOiA4YiA1NSBkMCA0OCA4OSA0NSBiMCA3NSBhMCA0NCA4OSA1NSA5YyBl
+OCBlMyA5OSAwMiAwMCA0NCA4YiA1NSA5YyA4OSBkYSA0YyA4OSBlNiA0MSA4OSBjMCBiZiA5YyBm
+ZiBmZiBmZiBiOCAwMSAwMSAwMCAwMCAwZiAwNSA8NDg+IDNkIDAwIGYwIGZmIGZmIDc3IDMzIDQ0
+IDg5IGM3IDg5IDQ1IDljIGU4IDM4IDlhIDAyIDAwIDhiIDQ1IDljClJTUDogMDAyYjowMDAwN2Yz
+MjkxMDczYjQwIEVGTEFHUzogMDAwMDAyOTMgT1JJR19SQVg6IDAwMDAwMDAwMDAwMDAxMDEKUkFY
+OiBmZmZmZmZmZmZmZmZmZmRhIFJCWDogMDAwMDAwMDAwMDAwMDAwMCBSQ1g6IDAwMDA3ZjMyOTAx
+YmNkMTUKUkRYOiAwMDAwMDAwMDAwMDAwMDAwIFJTSTogMDAwMDdmMzI5MTA3M2JlMCBSREk6IDAw
+MDAwMDAwZmZmZmZmOWMKUkJQOiAwMDAwN2YzMjkxMDczYmIwIFIwODogMDAwMDAwMDAwMDAwMDAw
+MCBSMDk6IDAwMDAwMDAwMDAwMDAwMDAKUjEwOiAwMDAwMDAwMDAwMDAwMDAwIFIxMTogMDAwMDAw
+MDAwMDAwMDI5MyBSMTI6IDAwMDA3ZjMyOTEwNzNiZTAKUjEzOiAwMDAwN2YzMjkwNGE2MDM4IFIx
+NDogMDAwMDdmMzI5MDRhNWZhMCBSMTU6IDAwMDA3ZmZlMjAwYzMwYTAKIDwvVEFTSz4KLS0tWyBl
+bmQgdHJhY2UgXS0tLQoKPDw8PDw8PDw8PDw8PDw8IHRhaWwgcmVwb3J0ID4+Pj4+Pj4+Pj4+Pj4+
+PgoKc2hpZnQgZXhwb25lbnQgNjQgaXMgdG9vIGxhcmdlIGZvciAzMi1iaXQgdHlwZSAnaW50JwpD
+UFU6IDAgVUlEOiAwIFBJRDogMTE3NjYgQ29tbTogc3l6LjEuOTUgTm90IHRhaW50ZWQgNi4xMi45
+MyAjMQpIYXJkd2FyZSBuYW1lOiBRRU1VIFVidW50dSAyNC4wNCBQQyB2MiAoaTQ0MEZYICsgUElJ
+WCwgYXJjaF9jYXBzIGZpeCwgMTk5NiksIEJJT1MgMS4xNi4zLWRlYmlhbi0xLjE2LjMtMiAwNC8w
+MS8yMDE0CkNhbGwgVHJhY2U6CiA8VEFTSz4KIGR1bXBfc3RhY2tfbHZsKzB4MTY0LzB4MWYwCiB1
+YnNhbl9lcGlsb2d1ZSsweGEvMHg0MAogX191YnNhbl9oYW5kbGVfc2hpZnRfb3V0X29mX2JvdW5k
+cysweDFlYi8weDIwOAogc2dfYnVpbGRfaW5kaXJlY3QuY29sZCsweDFiLzB4MjAKIHNnX2J1aWxk
+X3Jlc2VydmUrMHhjNC8weDE4MAogc2dfb3BlbisweGMzYi8weDE5MDAKIGNocmRldl9vcGVuKzB4
+MjMyLzB4NmIwCiBkb19kZW50cnlfb3BlbisweDZkZi8weDE1MjAKIHZmc19vcGVuKzB4ODIvMHgz
+ZjAKIHBhdGhfb3BlbmF0KzB4MWRmNC8weDJkYjAKIGRvX2ZpbHBfb3BlbisweDFiYS8weDNkMAog
+ZG9fc3lzX29wZW5hdDIrMHgxN2EvMHgxZTAKIF9feDY0X3N5c19vcGVuYXQrMHgxNDIvMHgyMDAK
+IGRvX3N5c2NhbGxfNjQrMHhjNy8weDI0MAogZW50cnlfU1lTQ0FMTF82NF9hZnRlcl9od2ZyYW1l
+KzB4NzcvMHg3ZgpSSVA6IDAwMzM6MHg3ZjMyOTAxYmNkMTUKQ29kZTogOGIgNTUgZDAgNDggODkg
+NDUgYjAgNzUgYTAgNDQgODkgNTUgOWMgZTggZTMgOTkgMDIgMDAgNDQgOGIgNTUgOWMgODkgZGEg
+NGMgODkgZTYgNDEgODkgYzAgYmYgOWMgZmYgZmYgZmYgYjggMDEgMDEgMDAgMDAgMGYgMDUgPDQ4
+PiAzZCAwMCBmMCBmZiBmZiA3NyAzMyA0NCA4OSBjNyA4OSA0NSA5YyBlOCAzOCA5YSAwMiAwMCA4
+YiA0NSA5YwpSU1A6IDAwMmI6MDAwMDdmMzI5MTA3M2I0MCBFRkxBR1M6IDAwMDAwMjkzIE9SSUdf
+UkFYOiAwMDAwMDAwMDAwMDAwMTAxClJBWDogZmZmZmZmZmZmZmZmZmZkYSBSQlg6IDAwMDAwMDAw
+MDAwMDAwMDAgUkNYOiAwMDAwN2YzMjkwMWJjZDE1ClJEWDogMDAwMDAwMDAwMDAwMDAwMCBSU0k6
+IDAwMDA3ZjMyOTEwNzNiZTAgUkRJOiAwMDAwMDAwMGZmZmZmZjljClJCUDogMDAwMDdmMzI5MTA3
+M2JiMCBSMDg6IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwMDAwMDAwMDAwMDAwClIxMDogMDAw
+MDAwMDAwMDAwMDAwMCBSMTE6IDAwMDAwMDAwMDAwMDAyOTMgUjEyOiAwMDAwN2YzMjkxMDczYmUw
+ClIxMzogMDAwMDdmMzI5MDRhNjAzOCBSMTQ6IDAwMDA3ZjMyOTA0YTVmYTAgUjE1OiAwMDAwN2Zm
+ZTIwMGMzMGEwCiA8L1RBU0s+Ci0tLVsgZW5kIHRyYWNlIF0tLS0KS2VybmVsIHBhbmljIC0gbm90
+IHN5bmNpbmc6IFVCU0FOOiBwYW5pY19vbl93YXJuIHNldCAuLi4KQ1BVOiAwIFVJRDogMCBQSUQ6
+IDExNzY2IENvbW06IHN5ei4xLjk1IE5vdCB0YWludGVkIDYuMTIuOTMgIzEKSGFyZHdhcmUgbmFt
+ZTogUUVNVSBVYnVudHUgMjQuMDQgUEMgdjIgKGk0NDBGWCArIFBJSVgsIGFyY2hfY2FwcyBmaXgs
+IDE5OTYpLCBCSU9TIDEuMTYuMy1kZWJpYW4tMS4xNi4zLTIgMDQvMDEvMjAxNApDYWxsIFRyYWNl
+OgogPFRBU0s+CiBkdW1wX3N0YWNrX2x2bCsweDNiLzB4MWYwCiBwYW5pYysweDZmOS8weDdlMAog
+Y2hlY2tfcGFuaWNfb25fd2FybisweGFiLzB4YjAKIF9fdWJzYW5faGFuZGxlX3NoaWZ0X291dF9v
+Zl9ib3VuZHMrMHgxZWIvMHgyMDgKIHNnX2J1aWxkX2luZGlyZWN0LmNvbGQrMHgxYi8weDIwCiBz
+Z19idWlsZF9yZXNlcnZlKzB4YzQvMHgxODAKIHNnX29wZW4rMHhjM2IvMHgxOTAwCiBjaHJkZXZf
+b3BlbisweDIzMi8weDZiMAogZG9fZGVudHJ5X29wZW4rMHg2ZGYvMHgxNTIwCiB2ZnNfb3Blbisw
+eDgyLzB4M2YwCiBwYXRoX29wZW5hdCsweDFkZjQvMHgyZGIwCiBkb19maWxwX29wZW4rMHgxYmEv
+MHgzZDAKIGRvX3N5c19vcGVuYXQyKzB4MTdhLzB4MWUwCiBfX3g2NF9zeXNfb3BlbmF0KzB4MTQy
+LzB4MjAwCiBkb19zeXNjYWxsXzY0KzB4YzcvMHgyNDAKIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJf
+aHdmcmFtZSsweDc3LzB4N2YKUklQOiAwMDMzOjB4N2YzMjkwMWJjZDE1CkNvZGU6IDhiIDU1IGQw
+IDQ4IDg5IDQ1IGIwIDc1IGEwIDQ0IDg5IDU1IDljIGU4IGUzIDk5IDAyIDAwIDQ0IDhiIDU1IDlj
+IDg5IGRhIDRjIDg5IGU2IDQxIDg5IGMwIGJmIDljIGZmIGZmIGZmIGI4IDAxIDAxIDAwIDAwIDBm
+IDA1IDw0OD4gM2QgMDAgZjAgZmYgZmYgNzcgMzMgNDQgODkgYzcgODkgNDUgOWMgZTggMzggOWEg
+MDIgMDAgOGIgNDUgOWMKUlNQOiAwMDJiOjAwMDA3ZjMyOTEwNzNiNDAgRUZMQUdTOiAwMDAwMDI5
+MyBPUklHX1JBWDogMDAwMDAwMDAwMDAwMDEwMQpSQVg6IGZmZmZmZmZmZmZmZmZmZGEgUkJYOiAw
+MDAwMDAwMDAwMDAwMDAwIFJDWDogMDAwMDdmMzI5MDFiY2QxNQpSRFg6IDAwMDAwMDAwMDAwMDAw
+MDAgUlNJOiAwMDAwN2YzMjkxMDczYmUwIFJESTogMDAwMDAwMDBmZmZmZmY5YwpSQlA6IDAwMDA3
+ZjMyOTEwNzNiYjAgUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogMDAwMDAwMDAwMDAwMDAwMApS
+MTA6IDAwMDAwMDAwMDAwMDAwMDAgUjExOiAwMDAwMDAwMDAwMDAwMjkzIFIxMjogMDAwMDdmMzI5
+MTA3M2JlMApSMTM6IDAwMDA3ZjMyOTA0YTYwMzggUjE0OiAwMDAwN2YzMjkwNGE1ZmEwIFIxNTog
+MDAwMDdmZmUyMDBjMzBhMAogPC9UQVNLPgpLZXJuZWwgT2Zmc2V0OiBkaXNhYmxlZApSZWJvb3Rp
+bmcgaW4gODY0MDAgc2Vjb25kcy4u
+------=_Part_479335_146532246.1787037841221--
 
-Fixes: a96e9783e058 ("target: make target db location configurable")
-Cc: stable@vger.kernel.org
-Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
----
-v2:
-- replace one-time store-path validation with a pinned db_root path
-- move db_root path resolution out from under target_devices_lock
-- open ALUA and APTPL metadata files relative to the pinned root
-- close the string-based TOCTOU gap raised in review
-
- drivers/target/target_core_alua.c     | 40 ++++++++-----
- drivers/target/target_core_configfs.c | 83 ++++++++++++++++++---------
- drivers/target/target_core_internal.h |  3 +
- drivers/target/target_core_pr.c       | 19 ++++--
- 4 files changed, 96 insertions(+), 49 deletions(-)
-
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 10250aca5a81..cfe4c30e534a 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -856,17 +856,27 @@ static int core_alua_write_tpg_metadata(
- 	unsigned char *md_buf,
- 	u32 md_buf_len)
- {
--	struct file *file = filp_open(path, O_RDWR | O_CREAT | O_TRUNC, 0600);
-+	struct file *file;
- 	loff_t pos = 0;
- 	int ret;
- 
-+	if (!db_root_path.dentry) {
-+		pr_err("db_root is not initialized for ALUA metadata path: %s/%s\n",
-+		       db_root, path);
-+		return -ENODEV;
-+	}
-+
-+	file = file_open_root(&db_root_path, path, O_RDWR | O_CREAT | O_TRUNC,
-+			      0600);
- 	if (IS_ERR(file)) {
--		pr_err("filp_open(%s) for ALUA metadata failed\n", path);
-+		pr_err("file_open_root(%s/%s) for ALUA metadata failed\n",
-+		       db_root, path);
- 		return -ENODEV;
- 	}
- 	ret = kernel_write(file, md_buf, md_buf_len, &pos);
- 	if (ret < 0)
--		pr_err("Error writing ALUA metadata file: %s\n", path);
-+		pr_err("Error writing ALUA metadata file: %s/%s\n", db_root,
-+		       path);
- 	fput(file);
- 	return (ret < 0) ? -EIO : 0;
- }
-@@ -896,9 +906,9 @@ static int core_alua_update_tpg_primary_metadata(
- 			tg_pt_gp->tg_pt_gp_alua_access_status);
- 
- 	rc = -ENOMEM;
--	path = kasprintf(GFP_KERNEL, "%s/alua/tpgs_%s/%s", db_root,
--			&wwn->unit_serial[0],
--			config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item));
-+	path = kasprintf(GFP_KERNEL, "alua/tpgs_%s/%s",
-+			 &wwn->unit_serial[0],
-+			 config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item));
- 	if (path) {
- 		rc = core_alua_write_tpg_metadata(path, md_buf, len);
- 		kfree(path);
-@@ -1187,16 +1197,16 @@ static int core_alua_update_tpg_secondary_metadata(struct se_lun *lun)
- 			lun->lun_tg_pt_secondary_stat);
- 
- 	if (se_tpg->se_tpg_tfo->tpg_get_tag != NULL) {
--		path = kasprintf(GFP_KERNEL, "%s/alua/%s/%s+%hu/lun_%llu",
--				db_root, se_tpg->se_tpg_tfo->fabric_name,
--				se_tpg->se_tpg_tfo->tpg_get_wwn(se_tpg),
--				se_tpg->se_tpg_tfo->tpg_get_tag(se_tpg),
--				lun->unpacked_lun);
-+		path = kasprintf(GFP_KERNEL, "alua/%s/%s+%hu/lun_%llu",
-+				 se_tpg->se_tpg_tfo->fabric_name,
-+				 se_tpg->se_tpg_tfo->tpg_get_wwn(se_tpg),
-+				 se_tpg->se_tpg_tfo->tpg_get_tag(se_tpg),
-+				 lun->unpacked_lun);
- 	} else {
--		path = kasprintf(GFP_KERNEL, "%s/alua/%s/%s/lun_%llu",
--				db_root, se_tpg->se_tpg_tfo->fabric_name,
--				se_tpg->se_tpg_tfo->tpg_get_wwn(se_tpg),
--				lun->unpacked_lun);
-+		path = kasprintf(GFP_KERNEL, "alua/%s/%s/lun_%llu",
-+				 se_tpg->se_tpg_tfo->fabric_name,
-+				 se_tpg->se_tpg_tfo->tpg_get_wwn(se_tpg),
-+				 lun->unpacked_lun);
- 	}
- 	if (!path) {
- 		rc = -ENOMEM;
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index a2bd2e81d2c6..7788db0c64eb 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -96,8 +96,31 @@ static ssize_t target_core_item_version_show(struct config_item *item,
- CONFIGFS_ATTR_RO(target_core_item_, version);
- 
- char db_root[DB_ROOT_LEN] = DB_ROOT_DEFAULT;
-+struct path db_root_path;
- static char db_root_stage[DB_ROOT_LEN];
- 
-+static int target_validate_db_root(const char *path_str, struct path *path)
-+{
-+	int ret;
-+
-+	ret = kern_path(path_str, LOOKUP_FOLLOW | LOOKUP_DIRECTORY, path);
-+	if (ret) {
-+		pr_err("db_root: cannot open: %s\n", path_str);
-+		if (ret == -ENOTDIR)
-+			pr_err("db_root: not a directory: %s\n", path_str);
-+		return ret;
-+	}
-+
-+	if (!strcmp(path->dentry->d_sb->s_type->name, "configfs")) {
-+		pr_err("db_root: configfs is not a valid target database root: %s\n",
-+		       path_str);
-+		path_put(path);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static ssize_t target_core_item_dbroot_show(struct config_item *item,
- 					    char *page)
- {
-@@ -110,43 +133,49 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
- 	ssize_t read_bytes;
- 	ssize_t r = -EINVAL;
- 	struct path path = {};
--
--	mutex_lock(&target_devices_lock);
--	if (target_devices) {
--		pr_err("db_root: cannot be changed because it's in use\n");
--		goto unlock;
--	}
-+	struct path old_path = {};
-+	bool have_old_path = false;
- 
- 	if (count > (DB_ROOT_LEN - 1)) {
- 		pr_err("db_root: count %d exceeds DB_ROOT_LEN-1: %u\n",
- 		       (int)count, DB_ROOT_LEN - 1);
--		goto unlock;
-+		return r;
- 	}
- 
- 	read_bytes = scnprintf(db_root_stage, DB_ROOT_LEN, "%s", page);
- 	if (!read_bytes)
--		goto unlock;
-+		return r;
- 
- 	if (db_root_stage[read_bytes - 1] == '\n')
- 		db_root_stage[read_bytes - 1] = '\0';
- 
- 	/* validate new db root before accepting it */
--	r = kern_path(db_root_stage, LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &path);
--	if (r) {
--		pr_err("db_root: cannot open: %s\n", db_root_stage);
--		if (r == -ENOTDIR)
--			pr_err("db_root: not a directory: %s\n", db_root_stage);
--		goto unlock;
-+	r = target_validate_db_root(db_root_stage, &path);
-+	if (r)
-+		return r;
-+
-+	mutex_lock(&target_devices_lock);
-+	if (target_devices) {
-+		pr_err("db_root: cannot be changed because it's in use\n");
-+		goto unlock_put;
- 	}
--	path_put(&path);
- 
-+	have_old_path = db_root_path.dentry;
-+	if (have_old_path)
-+		old_path = db_root_path;
-+	db_root_path = path;
-+	path = (struct path){};
- 	strscpy(db_root, db_root_stage);
- 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
- 
- 	r = read_bytes;
- 
--unlock:
-+unlock_put:
- 	mutex_unlock(&target_devices_lock);
-+	if (path.dentry)
-+		path_put(&path);
-+	if (have_old_path)
-+		path_put(&old_path);
- 	return r;
- }
- 
-@@ -3643,21 +3672,19 @@ void target_setup_backend_cits(struct target_backend *tb)
- 
- static void target_init_dbroot(void)
- {
--	struct file *fp;
-+	struct path path = {};
-+	int ret;
- 
--	snprintf(db_root_stage, DB_ROOT_LEN, DB_ROOT_PREFERRED);
--	fp = filp_open(db_root_stage, O_RDONLY, 0);
--	if (IS_ERR(fp)) {
--		pr_err("db_root: cannot open: %s\n", db_root_stage);
--		return;
--	}
--	if (!S_ISDIR(file_inode(fp)->i_mode)) {
--		filp_close(fp, NULL);
--		pr_err("db_root: not a valid directory: %s\n", db_root_stage);
--		return;
-+	strscpy(db_root_stage, DB_ROOT_LEN, DB_ROOT_PREFERRED);
-+	ret = target_validate_db_root(db_root_stage, &path);
-+	if (ret) {
-+		strscpy(db_root_stage, DB_ROOT_LEN, DB_ROOT_DEFAULT);
-+		ret = target_validate_db_root(db_root_stage, &path);
-+		if (ret)
-+			return;
- 	}
--	filp_close(fp, NULL);
- 
-+	db_root_path = path;
- 	strscpy(db_root, db_root_stage);
- 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
- }
-diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
-index 20aab1f50565..4cbc6218d4de 100644
---- a/drivers/target/target_core_internal.h
-+++ b/drivers/target/target_core_internal.h
-@@ -169,6 +169,9 @@ extern struct se_portal_group xcopy_pt_tpg;
- #define	DB_ROOT_DEFAULT		"/var/target"
- #define	DB_ROOT_PREFERRED	"/etc/target"
- 
-+struct path;
-+
- extern char db_root[];
-+extern struct path db_root_path;
- 
- #endif /* TARGET_CORE_INTERNAL_H */
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 83e172c92238..35ec38c6f528 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -1965,15 +1965,21 @@ static int __core_scsi3_write_aptpl_to_file(
- 	int ret;
- 	loff_t pos = 0;
- 
--	path = kasprintf(GFP_KERNEL, "%s/pr/aptpl_%s", db_root,
--			&wwn->unit_serial[0]);
-+	path = kasprintf(GFP_KERNEL, "pr/aptpl_%s", &wwn->unit_serial[0]);
- 	if (!path)
- 		return -ENOMEM;
- 
--	file = filp_open(path, flags, 0600);
-+	if (!db_root_path.dentry) {
-+		pr_err("db_root is not initialized for APTPL metadata path: %s/%s\n",
-+		       db_root, path);
-+		kfree(path);
-+		return -ENODEV;
-+	}
-+
-+	file = file_open_root(&db_root_path, path, flags, 0600);
- 	if (IS_ERR(file)) {
--		pr_err("filp_open(%s) for APTPL metadata"
--			" failed\n", path);
-+		pr_err("file_open_root(%s/%s) for APTPL metadata failed\n",
-+		       db_root, path);
- 		kfree(path);
- 		return PTR_ERR(file);
- 	}
-@@ -1983,7 +1989,8 @@ static int __core_scsi3_write_aptpl_to_file(
- 	ret = kernel_write(file, buf, pr_aptpl_buf_len, &pos);
- 
- 	if (ret < 0)
--		pr_debug("Error writing APTPL metadata file: %s\n", path);
-+		pr_debug("Error writing APTPL metadata file: %s/%s\n", db_root,
-+			 path);
- 	fput(file);
- 	kfree(path);
- 
--- 
-2.34.1
