@@ -1,295 +1,146 @@
-Received: from mail-m49197.qiye.163.com (mail-m49197.qiye.163.com [45.254.49.197])
+Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11012027.outbound.protection.outlook.com [52.101.126.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4245427F89;
-	Tue, 18 Aug 2026 09:13:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.197
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787044428; cv=none; b=DxyjnLjB7HVp4xy26yNu5mUMZvUe5u9qoQgUdOx+9LG991UThbuwXmoWPzVIW1L38lW/iU1P+GTMdqC1nsilXXjL6yg2kYHFi6nnwyvTeSEjOEXyLLylBfE2YwcMCgB0GHDB5nmKymJkEq4ZyvKRl9quVWsRA5hNlObvJCjMyvI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787044428; c=relaxed/simple;
-	bh=dNhGmxnCH8HR1mt5KSMqYSLcoLTdd7vKtWnuLvIG4+w=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KQ2PE2f04BbtzIzpB3sgeRJYLoWiu0syjXqDw2Z3zqqs8UwwhZG70zESuCvz9gn7DxSjr7YnuhcvsTWmhuwfDL+xlahauOeiG3cOxQAocyX+ePokXO6Ctf9BeMirq28KFnMqGuPxTR5OQv9UT35k2l96LqBb97z1g3SGnsfz1xE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=ZTXXEuwL; arc=none smtp.client-ip=45.254.49.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61F2D3BF692;
+	Tue, 18 Aug 2026 09:17:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.27
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787044661; cv=fail; b=qOEP1qWzYUVUw0Orse646j8CeMt9ctSZWH9OhTT5AhNeLwYsgeZH/w3BFoqUP2G0HnJHHSyh4oKIqDXL/s9KPwqJLDnBRehXIUiSXS6VPj+yoig1BdFzllWsB1kBAREOJp90ekBW/YfJ7mFVhCl5UqVpJCPgixtyetM6j5/LbG0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787044661; c=relaxed/simple;
+	bh=ao0fHH8N677E4/foKlQApsks3YQ/bHFJ8RUeZDLLmgQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=bwtMFpWXDZK4llen8hVm+BEH7M3WUc1wyVW5fHxR3gA4s6ZuLmaFBCVOVd6Gj0cRJhorO60h3+t0L2i4EeygMdesGD+KklhDoCiGehkbc7Fgmo9F3P1G6qNKS1GmncXUlQGR/wiuz4tcBvnhgFLCx0H47lMn9vjNw5aPt/aARDU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=OFc3ZAkp; arc=fail smtp.client-ip=52.101.126.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="ZTXXEuwL"
-Received: from PC-202605011814.localdomain (unknown [223.112.146.162])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4a64fc06a;
-	Tue, 18 Aug 2026 17:13:32 +0800 (GMT+08:00)
-From: Runyu Xiao <runyu.xiao@seu.edu.cn>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@suse.de>,
-	Nicholas Bellinger <nab@linux-iscsi.org>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Runyu Xiao <runyu.xiao@seu.edu.cn>,
-	Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: [PATCH v3] scsi: target: file: avoid recursive configfs open in fd_init_prot()
-Date: Tue, 18 Aug 2026 17:13:26 +0800
-Message-Id: <20260818091326.1582200-1-runyu.xiao@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260818073539.1555605-1-runyu.xiao@seu.edu.cn>
-References: <20260818073539.1555605-1-runyu.xiao@seu.edu.cn>
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="OFc3ZAkp"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=VO0o+cTqTyIE9m23lP20WV75nus0Bc9S2HFtwndqDTcQLUO2Bqimt6+HqLvX0D3IWUL5B8+fWGe0EkoBhANNvCRv5Gs0NLTOiVensIbYzlM1P6jNd8pripWmBu6Zazt2ZxEP3WFcCVLB8VVx/aquk85GVmfYMULJ7B7k/P2an+jlIMZyqjMbTP+NjzxF9fvX3GLxL1TKwYrCXiwhs56jU7ZfFxFNiyTXo8aGPS3ciDglH2TcNkiaODAQwmztdrbZKezXURqbIY3YjZp28u+n+dE1FQzk5tLCCP/3vbXub5bja4bGZy0Yf2hgaY6Df4En5EQz7mHvJNzD/AZaP0cLfA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ao0fHH8N677E4/foKlQApsks3YQ/bHFJ8RUeZDLLmgQ=;
+ b=khtlxnIwWahOYCQruc+dqR6MsTEEmnm797+CudYkbKzZ3pxp+eyVCe/QWn6PpPRf70kAEKLy2iq50retSVTGY3ke3kFHsC+32t24XL9PUi2KEDqZp+7FPKZrQhUyiuTkJvs+weK4b7YyuyKx6Ux/fTyrK3c0btubpYzTWwKWSx1iw+/56+BU+GvCEULMMQ+p1UE5+NA1c2CkCQYEaOQ8Kf3725b79rQvEMRwZobr7nA7WrEXdy2x7DiIYv5iWaz7fYfRVS2zTbdBIlOrHA4bI6w+8WqkwXcO3zLi0a74zGSvF53Ddi8ah1++rNX7Jvu0gCKVBuEAveJt/2sTw4zFLA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ao0fHH8N677E4/foKlQApsks3YQ/bHFJ8RUeZDLLmgQ=;
+ b=OFc3ZAkpOv+vaMlDTQOui4jLYpRoCyBADYiy6uRF55Afi87cl8REzCS5alii+qqsw+yD/C/nCn5ygnyQA/oVe+rnO2aapxXsmv21XIno6JQGRE7vaiNM43NIsx6tHalTSSt2ADKrNKTs+TrWAtGrg4Bmw09LsHGobZdgjc/nzbFtbjOHP7SzJJuPktuxjOb3C6HaK5zxXqgPp6jXrGpQelYxgPghXK26aunr4mcUXYhM1Pf+R8cqZH25VkSPH9MCvZdvn1gQa8BzQXs/NN1t9vK1YmtJtKwUpcbH4pEb3/8KZi5EP/IMxbTZFayBGfcj/m0h4y1EX24gg3nvkUvfhA==
+Received: from TYUPR06MB6217.apcprd06.prod.outlook.com (2603:1096:400:358::7)
+ by OSNPR06MB8859.apcprd06.prod.outlook.com (2603:1096:604:4a0::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.315.17; Tue, 18 Aug
+ 2026 09:17:37 +0000
+Received: from TYUPR06MB6217.apcprd06.prod.outlook.com
+ ([fe80::8d51:58c7:42f3:ecc]) by TYUPR06MB6217.apcprd06.prod.outlook.com
+ ([fe80::8d51:58c7:42f3:ecc%6]) with mapi id 15.21.0315.016; Tue, 18 Aug 2026
+ 09:17:36 +0000
+From: =?gb2312?B?uvrBrMfa?= <hulianqin@vivo.com>
+To: "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "axboe@kernel.dk" <axboe@kernel.dk>, "hare@suse.de" <hare@suse.de>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject:
+ =?gb2312?B?tPC4tDogW1BBVENIIHYyIDIvMl0gIHNjc2k6IHNkOiBtYXJrIGRpc2sgZGVh?=
+ =?gb2312?Q?d_on_surprise_host_removal_to_avoid_I/O_hang?=
+Thread-Topic: [PATCH v2 2/2]  scsi: sd: mark disk dead on surprise host
+ removal to avoid I/O hang
+Thread-Index: Ad0qUjjq9SfafSxZRTCZhWr1AqisVAEn0u+A
+Date: Tue, 18 Aug 2026 09:17:36 +0000
+Message-ID:
+ <TYUPR06MB6217E3739EDF2016EAB78E45D2A62@TYUPR06MB6217.apcprd06.prod.outlook.com>
+References:
+ <PUZPR06MB622453C37D2BABC5E71B195DD2DC2@PUZPR06MB6224.apcprd06.prod.outlook.com>
+In-Reply-To:
+ <PUZPR06MB622453C37D2BABC5E71B195DD2DC2@PUZPR06MB6224.apcprd06.prod.outlook.com>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: TYUPR06MB6217:EE_|OSNPR06MB8859:EE_
+x-ms-office365-filtering-correlation-id: 747e535c-0bc3-46fb-2c37-08defd098b27
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|42112799006|23010399003|376014|366016|38070700021|10067099003|11063799006|56012099006|18002099003|22082099003;
+x-microsoft-antispam-message-info:
+ V4lGNFh5vP8FC/LF8c3hH26lGhe7sUOsCCP8s+mU+4eAEHInAYuGj19GaB5MEi8q/0wcwfbss74yp9y8kQzi3vZue3gzCr8pZbvZCe32EWs6dTC2eODBrMm08PY4j15hYnrfOFfVkJPKGtCCP2xlsp5KcmXRDEDHQlzd6KR5MH+WS9+V2bBgXr1S+kPol8X2mUX3t/PfEnAUOvOKW5fSYnsxeoVzKUciivimcveqhzheFvAsVQbS6hIlBddezx0QxTELlFemoRwqxg/dMKwpszajiZKsQorydxwYq29vGSrNumvnSl9e1mTT50hYeIZjB647DYkAgTxuXh+6bIEVnSONTNfC2i8WAxzGxRpP8IkIa8Ga+5m/qH6qX+AYep6soVTd9Xj/7zGR7/JOhXDehpli87YcEygWKYhbRJzU1QiAbfMJbsCnU1EIofOuFroaFThI8rRJ7uK2icQa3gH8yTbpQyM6ablgRRaLAPg5L/yVx2Dane29Yp0Vca2kXo4g6w/onSo3+LX9KhQ6eUmXyqegsXT+TxGKKxAjhRWk8lVA4fSAhy0EN9/z3akfQaAgXGbaiB9r7/Ei4YwRfI4ynlnDE5OW3EtpEfNQ1+zZNG3YvOBOBrSu8Y5q4ZKTxTazCixTv+8WiZx3UVGIy1ioDbvH8/xzn+3ufBFn47B0NNUw/d9l7uRrf4fsjNgFGsysuSOW6PFpQ77BvHs45yiqE102C39XfkZTC2yIgA3mZcU=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYUPR06MB6217.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(42112799006)(23010399003)(376014)(366016)(38070700021)(10067099003)(11063799006)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?gb2312?B?eXRGWHRZOVdIL0hiQ1JTSFNQeXRJb2k5V3Y4d2Z5ZnV4N0F3M0NzTWVscHJr?=
+ =?gb2312?B?dVZBd1AvU3ozU0F5ZmdFcGJzNlF3OTgwZXhJajZMTitmQlp2WEk0TG9sN1o1?=
+ =?gb2312?B?cGVDL3BQUmpQT1hYS3ljVnZvMVI1NTBqbkJWbW5mcnBtUXBpTVlFRzdOdkJ4?=
+ =?gb2312?B?L3dRbXc1QkM3K1hPcjlYRlUrLzlzZDd4TXFRa1lEYUs2VzBFVE9UNzhia3I4?=
+ =?gb2312?B?VlN0RWZJSmxRMU0zbHREMHFPOWNMWm5qaWpkZGh0T2ljdC9mQVVHMExNelZv?=
+ =?gb2312?B?MENmN1lWeGZTK2FkcjUra1pza0FUWTY1VmozM1l3NGFmRVdQQUJzUGYzUGl5?=
+ =?gb2312?B?NytqanM2Y1BrTWVVazZsYTJLbjZ3UFFPcHE4WlJ2cjh1ZFM5SjRpamJmUDNV?=
+ =?gb2312?B?VndPK0pDYWNTL1ZqdVYzbkdsU01VbU5Ccmk1Z1BLQnBMazJIa0NtbHdDdWZO?=
+ =?gb2312?B?WjN3RVc3R1RBRGFnZlkzcndETWoweDVSK2x5MmpZUFJXditsT1lxR3NMMWxG?=
+ =?gb2312?B?WURKT2hFTHFIWUVsckZOYkdHSC9yZmdGcFJvK0FiTjBCRDVxT1Q0NlNBdUdy?=
+ =?gb2312?B?Rmw4WjlWM0gwT0NvSjZZdXBESGpsUkVTT2tKWFFlQTFYZ05sdUYrRVlUOXhS?=
+ =?gb2312?B?SWRwbkF3ejNKcU5JeWM1UHR1QU1IOU04dVZiYy9jTTUxa0EvYzloampFRHlx?=
+ =?gb2312?B?K0pTbjYvRWVZd25uZE96am9sTHRJYWsra1ZpSitlNE1PdThydEpxUnRieFV1?=
+ =?gb2312?B?OXhoWjRHdWg3em5KNTFIeTh1TW5pdzNhZE1uNmdkdmlRbmRVTlJkQlhLWk5J?=
+ =?gb2312?B?TEUxMzBhaUJtYk9HVjZjdmxtL09oWlNvMzBVUUcyQlM1cFFJTXhYM3luVVQr?=
+ =?gb2312?B?akZubUxHbnM4VE9LK0N3TXJIWkpTRGJ6TFpsY2J6OU1NYUU0YjI5bVljUmI1?=
+ =?gb2312?B?Snd0OGMweWs3UmRGZFJYNEZRckN6V3ZsL1ZWaDdJNHZiVXp0K0lzaXFUKytG?=
+ =?gb2312?B?YWFSQVR4M2krN1hYcEJZeGhoMWZlMFhjck44SWNNVU9jN1NWaS9ER1dVZ1B6?=
+ =?gb2312?B?OFBoSU40eFQrN2sxT0ladEgza3UxZ3djb2ovaW0vUUUwWFlQNXlRZWpIcEht?=
+ =?gb2312?B?ZU9UbVlKYnBrQUtLUktDY0NERElmSnByMDd5ZkNDa1piVStiTUxQaXB2MlJs?=
+ =?gb2312?B?ei9RcHpKUVc3QWxJc1ppcTdkQk1aSEVKTGlocFJuN0gwYUtjTGRyQ3h5WExo?=
+ =?gb2312?B?SFFOSGI3emZRa0JlWHgzVVJMaGloVnpKWjRvY041UmxtZ2x0bDJtNldTdGxH?=
+ =?gb2312?B?OGNBZlJCU1YrM0JFYXFZRjdnQm9KTVQ2ZmloRm1CcXBXZGV5SXJvNjA5c2V0?=
+ =?gb2312?B?Uk9BWWdDdG5xSXEzS3NzSWxYTDFUUUZPM0JWdmFYWEZpRVdnbk5sQnVmUUJa?=
+ =?gb2312?B?NkZac2grV3JXb2FQWktBYVNCdTlabTdIZWVlcmpCQjBGOUhDOHptV1FFMXFT?=
+ =?gb2312?B?TDlGK3N4L0J4ZDFmMGc4NjRIVlg5OWFLVXRWU1RTMTdSUnhxejJQTVdzZlVI?=
+ =?gb2312?B?RXREVmlPU0V3TnF6YlZqcTFJSkRxUTJxcDkxR0RFajhhOXlnNGtFdjNCRjVS?=
+ =?gb2312?B?OHphd08vUGh0eUtyYnV2V2ZIM0E3amRZUVNoSUVpOVo3UkxXajVKWlFROWNU?=
+ =?gb2312?B?U3FUVmw5N1MwV2poNmxxcG93dXNFVEsvMXFVak1RYjZMWVZqZGVKQXcrRXdk?=
+ =?gb2312?B?NTVRM2xqbzhtN1RtTXZMOXZWQS9sREdLc1c0bGZvN1hNdGhxa1N2N0FMcGxZ?=
+ =?gb2312?B?dWZManJZNm5TQVczam9xdGdmOWhBZ0x2TEZ2Z3JYdmlrdnFIRkN1TWpidUQ1?=
+ =?gb2312?B?Ui9ySDIwcjg1Qm5vR3JmaDkzMWhESlVzMWpkUWRvUy9uRFVFK29XUkJUdjRn?=
+ =?gb2312?B?eFU0WllIaGo4c01CZ3Q4R2laTFBHRDQ4M014d0pRQWVXb0tEdk1ONmJpendr?=
+ =?gb2312?B?Y2xxdTJUT1J2cTQzMG5lY0ZQYmtNRlRaR2NqRVZCQzh1eHNLcFArZHJDQWFN?=
+ =?gb2312?B?UURLdzVRRzhFdDVVUVZRRTUwQklZQWZZUkxiazNvc09wOER1cnZ3TktBV3NP?=
+ =?gb2312?B?MmJzbU40WVZuUll6alVzTThZUGRleDZIWnRqWXJHZ3BPYzM4R1UrTDdGWXJQ?=
+ =?gb2312?B?bmpRUWErYUJ5akdQN1lqUS9QT1pXSVNoM3lQekg2SnA0eEowc1k5Zk1qaHgz?=
+ =?gb2312?B?YVlWZzVBR25oR0VOa1crUG1zY08xZGVIUG5mUkhQTDFmNmR2S3NWaTdYYjFH?=
+ =?gb2312?Q?dyOSIazOhy/U24wwd5?=
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa01425bd4b03a1kunmf920a4c31092c1
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCHR1OVk5PTh4fGR9NQh4ZT1YeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUhVSkpJVUpPTVVKTUlZV1kWGg8SFR0UWUFZT0tIVUpLSE
-	pPSExVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=ZTXXEuwLYhYhMwac3C6TRo6Ef0hLNNpJ9lMTMmc3taq0s2gYDIPEbW6moLNjLM7+guyDdYKBdr3LuTNm0IfllN5lvVWcBNpGi2fbT1qn5GABeCkK5oY+1UeB990VQjEHzX57WIlMh+rS1ywmhx/4TsmHIKQZEPl8Ggo4aJBxeYI=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
-	bh=M1UIIr3l7xC4eeVjoIAlMM//4MLCmh0DuaERhj38woI=;
-	h=date:mime-version:subject:message-id:from;
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: TYUPR06MB6217.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 747e535c-0bc3-46fb-2c37-08defd098b27
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Aug 2026 09:17:36.4054
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: VlUAIckGqPkk2ONM1QTQsIjpo2x9E28FTz5IrdwAX2dZ38DoKMY0fp91SXnJp80+xxfvDh2FT1ggBleImpTnsg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSNPR06MB8859
 
-pi_prot_type_store() runs under the configfs item's frag_sem.  For
-FILEIO devices it calls fd_init_prot(), which rebuilds a
-"$FILE.protection" pathname from fd_dev_name and opens it with
-filp_open().  If that pathname resolves inside configfs, the open path
-can re-enter configfs while the store callback still holds frag_sem.
-
-By the time fd_init_prot() runs, the backing file has already been
-configured and pinned in fd_dev->fd_file, so avoid reopening a
-user-controlled pathname.  Instead, derive the protection sidecar from
-the opened backing file itself: reject configfs-backed backing files,
-take freeze protection before locking the parent directory, snapshot the
-stable backing dentry name under that lock, and look up the sibling
-sidecar by that stable name.  Create the sidecar directly when it is
-absent, but only reopen an existing sidecar if it is a regular file.
-
-If the backing file is itself the root of a mounted file, there is no
-in-mount sibling pathname for a ".protection" sidecar.  Reject that
-case explicitly instead of reconstructing a pathname from fd_dev_name,
-which would reintroduce the same configfs recursion hazard this fix is
-trying to remove.
-
-This keeps the PI sidecar tied to the opened backing file while closing
-the rename, hash initialization, non-regular sidecar, and sb_writers
-ordering issues in the earlier v2 draft.
-
-Link: https://lore.kernel.org/r/20260818073539.1555605-1-runyu.xiao@seu.edu.cn
-Fixes: 0f5e2ec46dd6 ("target/file: Add DIF protection init/format support")
-Cc: stable@vger.kernel.org
-Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
-
-v3:
-- take freeze protection before locking the parent directory
-- snapshot the backing dentry name under the parent lock
-- use lookup_one() with mnt_idmap() for hashed sibling lookup
-- only reopen an existing PI sidecar if it is a regular file
-- reject mounted-file-root backends instead of rebuilding a pathname
----
- drivers/target/target_core_file.c | 153 ++++++++++++++++++++++++++++--
- drivers/target/target_core_file.h |   1 -
- 2 files changed, 145 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 2d78ef74633c..a499545e6272 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -19,6 +19,10 @@
- #include <linux/module.h>
- #include <linux/vmalloc.h>
- #include <linux/falloc.h>
-+#include <linux/dcache.h>
-+#include <linux/limits.h>
-+#include <linux/mount.h>
-+#include <linux/namei.h>
- #include <linux/uio.h>
- #include <linux/scatterlist.h>
- #include <scsi/scsi_proto.h>
-@@ -86,6 +90,131 @@ static struct se_device *fd_alloc_device(struct se_hba *hba, const char *name)
- 	return &fd_dev->dev;
- }
- 
-+static bool fd_backing_file_is_configfs(struct file *file)
-+{
-+	return !strcmp(d_real(file_dentry(file), D_REAL_DATA)->d_sb->s_type->name,
-+		       "configfs");
-+}
-+
-+static int fd_open_prot_file(struct file *file, int flags, umode_t mode,
-+			     struct file **filep)
-+{
-+	struct dentry *backing_dentry = file_dentry(file);
-+	struct name_snapshot backing_name;
-+	struct path parent_path;
-+	struct path prot_path;
-+	struct file *prot_file;
-+	struct qstr prot_qname;
-+	char *prot_name;
-+	size_t prot_name_len;
-+	int ret, retries = 0;
-+
-+	if (fd_backing_file_is_configfs(file))
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * A regular file used as the root of a mount has no in-mount sibling
-+	 * pathname for a ".protection" sidecar.  Reconstructing one from the
-+	 * original string path would reopen the configfs recursion hole.
-+	 */
-+	if (backing_dentry == file->f_path.mnt->mnt_root)
-+		return -EXDEV;
-+
-+retry:
-+	parent_path.mnt = mntget(file->f_path.mnt);
-+	parent_path.dentry = dget_parent(backing_dentry);
-+	prot_path.mnt = parent_path.mnt;
-+
-+	ret = mnt_want_write_file(file);
-+	if (ret)
-+		goto out_put_parent;
-+
-+	inode_lock_nested(d_inode(parent_path.dentry), I_MUTEX_PARENT);
-+	if (d_unlinked(backing_dentry) ||
-+	    backing_dentry->d_parent != parent_path.dentry) {
-+		ret = -ESTALE;
-+		goto out_unlock;
-+	}
-+
-+	take_dentry_name_snapshot(&backing_name, backing_dentry);
-+	prot_name_len = backing_name.name.len + strlen(".protection");
-+	if (prot_name_len > NAME_MAX) {
-+		ret = -ENAMETOOLONG;
-+		goto out_release_name;
-+	}
-+
-+	prot_name = kmalloc(prot_name_len + 1, GFP_KERNEL);
-+	if (!prot_name) {
-+		ret = -ENOMEM;
-+		goto out_release_name;
-+	}
-+
-+	memcpy(prot_name, backing_name.name.name, backing_name.name.len);
-+	memcpy(prot_name + backing_name.name.len, ".protection",
-+	       strlen(".protection") + 1);
-+	prot_qname = QSTR_LEN(prot_name, prot_name_len);
-+
-+	prot_path.dentry = lookup_one(mnt_idmap(parent_path.mnt), &prot_qname,
-+				      parent_path.dentry);
-+	if (IS_ERR(prot_path.dentry)) {
-+		ret = PTR_ERR(prot_path.dentry);
-+		goto out_free_name;
-+	}
-+
-+	if (d_is_negative(prot_path.dentry)) {
-+		prot_file = dentry_create(&prot_path, flags, mode, current_cred());
-+	} else {
-+		if (!d_is_reg(prot_path.dentry)) {
-+			ret = -EINVAL;
-+			goto out_dput;
-+		}
-+
-+		inode_unlock(d_inode(parent_path.dentry));
-+		mnt_drop_write_file(file);
-+		release_dentry_name_snapshot(&backing_name);
-+		kfree(prot_name);
-+
-+		prot_file = dentry_open(&prot_path, flags & ~O_CREAT,
-+					current_cred());
-+		if (IS_ERR(prot_file)) {
-+			ret = PTR_ERR(prot_file);
-+			goto out_dput_nolock;
-+		}
-+
-+		*filep = prot_file;
-+		ret = 0;
-+		goto out_dput_nolock;
-+	}
-+
-+	if (IS_ERR(prot_file)) {
-+		ret = PTR_ERR(prot_file);
-+		goto out_dput;
-+	}
-+
-+	*filep = prot_file;
-+	ret = 0;
-+
-+out_dput:
-+	dput(prot_path.dentry);
-+out_free_name:
-+	kfree(prot_name);
-+out_release_name:
-+	release_dentry_name_snapshot(&backing_name);
-+out_unlock:
-+	inode_unlock(d_inode(parent_path.dentry));
-+	mnt_drop_write_file(file);
-+out_put_parent:
-+	path_put(&parent_path);
-+	if (ret == -ESTALE && !retries++)
-+		goto retry;
-+	return ret;
-+
-+out_dput_nolock:
-+	dput(prot_path.dentry);
-+	path_put(&parent_path);
-+	return ret;
-+}
-+
- static bool fd_configure_unmap(struct se_device *dev)
- {
- 	struct file *file = FD_DEV(dev)->fd_file;
-@@ -827,7 +956,6 @@ static int fd_init_prot(struct se_device *dev)
- 	struct file *prot_file, *file = fd_dev->fd_file;
- 	struct inode *inode;
- 	int ret, flags = O_RDWR | O_CREAT | O_LARGEFILE | O_DSYNC;
--	char buf[FD_MAX_DEV_PROT_NAME];
- 
- 	if (!file) {
- 		pr_err("Unable to locate fd_dev->fd_file\n");
-@@ -844,13 +972,22 @@ static int fd_init_prot(struct se_device *dev)
- 	if (fd_dev->fbd_flags & FDBD_HAS_BUFFERED_IO_WCE)
- 		flags &= ~O_DSYNC;
- 
--	snprintf(buf, FD_MAX_DEV_PROT_NAME, "%s.protection",
--		 fd_dev->fd_dev_name);
--
--	prot_file = filp_open(buf, flags, 0600);
--	if (IS_ERR(prot_file)) {
--		pr_err("filp_open(%s) failed\n", buf);
--		ret = PTR_ERR(prot_file);
-+	ret = fd_open_prot_file(file, flags, 0600, &prot_file);
-+	if (ret) {
-+		if (ret == -EOPNOTSUPP)
-+			pr_err("FILEIO PI sidecars are not supported for configfs-backed backends\n");
-+		else if (ret == -EXDEV)
-+			pr_err("FILEIO PI sidecars are not supported when the backend file is the root of a mount\n");
-+		else if (ret == -EINVAL)
-+			pr_err("existing FILEIO PI sidecar must be a regular file\n");
-+		else if (ret == -ENAMETOOLONG)
-+			pr_err("FILEIO PI sidecar name is too long: %pd.protection\n",
-+			       file_dentry(file));
-+		else if (ret == -ESTALE)
-+			pr_err("FILEIO backing file moved during PI sidecar setup\n");
-+		else
-+			pr_err("failed to open FILEIO PI sidecar for %pd: %d\n",
-+			       file_dentry(file), ret);
- 		return ret;
- 	}
- 	fd_dev->fd_prot_file = prot_file;
-diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
-index 929b1ecd544e..1b4c1b43827f 100644
---- a/drivers/target/target_core_file.h
-+++ b/drivers/target/target_core_file.h
-@@ -7,7 +7,6 @@
- #define FD_VERSION		"4.0"
- 
- #define FD_MAX_DEV_NAME		256
--#define FD_MAX_DEV_PROT_NAME	FD_MAX_DEV_NAME + 16
- #define FD_DEVICE_QUEUE_DEPTH	32
- #define FD_MAX_DEVICE_QUEUE_DEPTH 128
- #define FD_BLOCKSIZE		512
--- 
-2.34.1
+R2VudGxlIHBpbmcuDQoNClRoZSBjb21wYW5pb24gYmxvY2sgcGF0Y2ggWzFdIGhhcyBiZWVuIHJl
+dmlld2VkIGJ5IENocmlzdG9waCBIZWxsd2lnDQphbmQgYXBwbGllZCBieSBKZW5zIEF4Ym9lIChj
+b21taXQgN2U5YTQ2MDA0YjQ3MWVhZikuDQoNClsxXSBodHRwczovL2xvcmUua2VybmVsLm9yZy9h
+bGwvUFVaUFIwNk1CNjIyNDdFODJFNjZBM0VENDZDQzNFNkM3RDJEQzJAUFVaUFIwNk1CNjIyNC5h
+cGNwcmQwNi5wcm9kLm91dGxvb2suY29tLw0KDQoNCj4g1vfM4jogW1BBVENIIHYyIDIvMl0gc2Nz
+aTogc2Q6IG1hcmsgZGlzayBkZWFkIG9uIHN1cnByaXNlIGhvc3QgcmVtb3ZhbCB0byBhdm9pZCBJ
+L08gaGFuZw0KPiANCg0K
