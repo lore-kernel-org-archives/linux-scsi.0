@@ -1,201 +1,234 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.76.78.106])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 099E62F8E82
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 07:24:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.76.78.106
+Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B9EB23EA97;
+	Tue, 18 Aug 2026 07:36:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787037860; cv=none; b=dqZ5gWRjoVIpkwssuqc+D08HJaNBlLFaz+9/0iujHCUZ571ZFSVWLXW9Pl0HexPmhtzcMc5H4hdCHCwwW/P4T0Wc7nkjAAzK52H4Asik2IkAIfJyG6VlMqtmsrmcse437KMs2qclrPBxSiBAw2YOhj2GgS8jPrGJrZ3XwnBUtTU=
+	t=1787038568; cv=none; b=HKeSlM9QeI7GfyqJiuGvV/pNc3OviUpqaklYroZ2l3SEAoxSYnQs6RzwHn7Sl6Sb3i3hWfmP5vwLxq2WftY/n7HDRf7yAmINIifsmR1d/0WX4zTmvJKBuyLEt0aAN3NLrdjWn15GVYssy1NBtPjqgXl7qU0pflS2iPW1EYx5TxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787037860; c=relaxed/simple;
-	bh=+cmtWNLZ49eWKMVNnC9CK7hH+YGqGvDyDfGDNMkM93k=;
-	h=Date:From:To:Cc:Subject:Content-Type:MIME-Version:Message-ID; b=Ogfm9VKhc96/dw319VmBU7PsBOQsFPKKkCuHBPKaUE9sqtqs1z6AeXSQskhomo011inlSrWqYN4Oagnxoi/WEaZ49PA+nZHfU0ABBeCdKR7eol18jWPDzlWnRnmcryVI6TEXIniredfOOu3+fzbUqJh/9fICciysUqyLt0Llr9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=13.76.78.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [10.190.164.155])
-	by mtasvr (Coremail) with SMTP id _____wCXn3+RCIRqT8yiAA--.12876S3;
-	Tue, 18 Aug 2026 15:24:02 +0800 (CST)
-Received: from stitch$zju.edu.cn ( [10.190.164.155] ) by
- ajax-webmail-mail-app2 (Coremail) ; Tue, 18 Aug 2026 15:24:01 +0800
- (GMT+08:00)
-Date: Tue, 18 Aug 2026 15:24:01 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: "Jiacheng Xu" <stitch@zju.edu.cn>
-To: "Doug Gilbert" <dgilbert@interlog.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: sg: Normalize scatter element size before get_order()
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2025.3-cmXT6 build
- 20260617(6f868824) Copyright (c) 2002-2026 www.mailtech.cn zju.edu.cn
-Content-Type: multipart/mixed; 
-	boundary="----=_Part_479335_146532246.1787037841221"
+	s=arc-20240116; t=1787038568; c=relaxed/simple;
+	bh=uTp+uLto/TEqOTFzZDptyQ6pUb6Frc5lNvFWs20Y3xA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=kEmO011sU2NRAzaNbSGXSGxesPR1HRs89QQLGZ6jHDgPVfZu5OJHpJXC9lb2q41nXgSDyPO9aegCUlSnobX8252FCoXMtNVOEw2tRP4giS1Z1CyBZtXZ1oOUZpxpM33Lhd6TGr7WMi5qc6uyYbPWtCQrH4AaYvHMUkaPkt6zAKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=mcOYsRl9; arc=none smtp.client-ip=45.254.49.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="mcOYsRl9"
+Received: from PC-202605011814.localdomain (unknown [222.191.246.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4a6132812;
+	Tue, 18 Aug 2026 15:35:56 +0800 (GMT+08:00)
+From: Runyu Xiao <runyu.xiao@seu.edu.cn>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@suse.de>,
+	Nicholas Bellinger <nab@linux-iscsi.org>,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Runyu Xiao <runyu.xiao@seu.edu.cn>,
+	Jianhao Xu <jianhao.xu@seu.edu.cn>
+Subject: [PATCH v2] scsi: target: file: avoid recursive configfs open in fd_init_prot()
+Date: Tue, 18 Aug 2026 15:35:39 +0800
+Message-Id: <20260818073539.1555605-1-runyu.xiao@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260818045807.1519433-1-runyu.xiao@seu.edu.cn>
+References: <20260818045807.1519433-1-runyu.xiao@seu.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <4370b94b.1482b.1a013c17746.Coremail.stitch@zju.edu.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:zC_KCgC3atKRCIRqkm_4Aw--.24097W
-X-CM-SenderInfo: qtrxiiaqttimo62m3hxhgxhubq/1tbiAwEHC2qDvBYGSwAAsA
-X-CM-DELIVERINFO: =?B?36+y/gXKKxbFmtjJiESix3B1w3tMoM3snk/k5SVzZVydjEqe1eefKHnLf95EnB4iem
-	egWyMyrD1siZ9z+A7RyMy/uaDtwOxtu+nFy7vZk/9JzKsZxA+IAOuCjMIRryckJ5yFWNR6
-	04pKURsPZwG+UI/baSYJMXHgr+BVOVsf9cBtaDhujRFy7fY2JkEspSTIELtpZg==
-X-Coremail-Antispam: 1Uk129KBj93XoW7KrWkKF4DKw17XFyDWrW5CFX_yoW8GrWrpF
-	WxZ3yjy3y8G3Wjk3ZrX3WUX3WF93sxGa47Kay8Aw15Z3s0kFyUury3tFW5WFZ8Jr4rCrWk
-	JrWDZwn8Za9rCacCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUUPCb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
-	xVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487M2AExVA0xI801c8C04v7Mc804VCY07
-	AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWU
-	JVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7V
-	AKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxM4xvF2IEb7IF0Fy264kE64k0F24lFcxC
-	0VAYjxAxZF0Ex2IqxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s
-	026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_
-	JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20x
-	vEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE
-	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa
-	7IU86OJ7UUUUU==
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa013cc61b903a1kunm1ff69152105bd3
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZTEsdVh0YSkxNSkxLHhhNQlYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSE
+	pPSExVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=mcOYsRl9y+9t4ROPQO6DjJeE0KHSxvMtSLQ43Ww4YF4Oey0Vg97BCIYhp5vadPCYH0/CSaAvwAKW0e2P1owXs151xi8qk95NQXd0icxuPNwWCC/Ue+IafdA0HgQ1WwWDwdtxC8TzR2LmHdMebrfxd52ctS+20EuN7czLO+INNcc=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=4IWrbNq7h4KF+lauRZBDNE72SQyrFEFofHbGv3OQkn4=;
+	h=date:mime-version:subject:message-id:from;
 
-------=_Part_479335_146532246.1787037841221
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+pi_prot_type_store() runs under the configfs item's frag_sem.  For
+FILEIO devices it calls fd_init_prot(), which rebuilds a
+"$FILE.protection" pathname from fd_dev_name and opens it with
+filp_open().  If that pathname resolves inside configfs, the open path
+can re-enter configfs while the store callback still holds frag_sem.
 
-V2hlbiBzY2F0dGVyX2VsZW1fc3ogaXMgc2V0IHRvIGEgdmFsdWUgc21hbGxlciB0aGFuIFBBR0Vf
-U0laRSB0aHJvdWdoCml0cyB3cml0YWJsZSBzeXNmcyBtb2R1bGUgcGFyYW1ldGVyLCBzZ19idWls
-ZF9pbmRpcmVjdCgpIHVwZGF0ZXMgdGhlCmdsb2JhbCBzY2F0dGVyIGVsZW1lbnQgc2l6ZSB2YXJp
-YWJsZXMgYnV0IGxlYXZlcyB0aGUgbG9jYWwgYG51bWAKdmFyaWFibGUgdW5jaGFuZ2VkLgoKSWYg
-dGhlIHBhcmFtZXRlciBpcyBzZXQgdG8gemVybywgZ2V0X29yZGVyKG51bSkgaXMgY2FsbGVkIHdp
-dGggemVyby4KT24gNjQtYml0IHN5c3RlbXMsIGdldF9vcmRlcigwKSB1bmRlcmZsb3dzIGludGVy
-bmFsbHkgYW5kIHJldHVybnMgYW4KaW52YWxpZCBvcmRlci4gVGhpcyBjYXVzZXM6CgogICAgcmV0
-X3N6ID0gMSA8PCAoUEFHRV9TSElGVCArIG9yZGVyKTsKCnRvIHNoaWZ0IGEgMzItYml0IGludGVn
-ZXIgYnkgNjQgYml0cywgdHJpZ2dlcmluZzoKCiAgICBVQlNBTjogc2hpZnQtb3V0LW9mLWJvdW5k
-cyBpbiBzZ19idWlsZF9pbmRpcmVjdAoKVXBkYXRlIGBudW1gIHRvZ2V0aGVyIHdpdGggdGhlIGds
-b2JhbCB2YWx1ZXMgd2hlbiBjbGFtcGluZyBpdCB0bwpQQUdFX1NJWkUuCgpUaGUgcmVwcm9kdWNl
-ciBhbmQgVUJTQU4gY3Jhc2ggcmVwb3J0IGFyZSBhdHRhY2hlZDoKICAtIHJlcHJvLmMKICAtIHJl
-cHJvLnJlcG9ydDogVUJTQU4gY3Jhc2ggcmVwb3J0CgpGaXhlczogNjQ2MGU3NWExMDRkICgiW1ND
-U0ldIHNnOiBmaXhlcyBmb3IgbGFyZ2UgcGFnZV9zaXplIikKClNpZ25lZC1vZmYtYnk6IG0wY2sx
-bmcgPHN0aXRjaEB6anUuZWR1LmNuPgotLS0KICBkcml2ZXJzL3Njc2kvc2cuYyB8IDEgKwogIDEg
-ZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9z
-Zy5jIGIvZHJpdmVycy9zY3NpL3NnLmMKaW5kZXggNTQwOGYwMDJlNmMwLi42OTAxMzMzNWU0MzMg
-MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9zZy5jCisrKyBiL2RyaXZlcnMvc2NzaS9zZy5jCkBA
-IC0xODc2LDYgKzE4NzYsNyBAQCBzZ19idWlsZF9pbmRpcmVjdChTZ19zY2F0dGVyX2hvbGQgKiBz
-Y2hwLCBTZ19mZCAqIHNmcCwgaW50IGJ1ZmZfc2l6ZSkKICAgICAgbnVtID0gc2NhdHRlcl9lbGVt
-X3N6OwogICAgICBpZiAodW5saWtlbHkobnVtICE9IHNjYXR0ZXJfZWxlbV9zel9wcmV2KSkgewog
-ICAgICAgICAgICAgIGlmIChudW0gPCBQQUdFX1NJWkUpIHsKKyAgICAgICAgICAgICAgICAgICAg
-IG51bSA9IFBBR0VfU0laRTsKICAgICAgICAgICAgICAgICAgICAgIHNjYXR0ZXJfZWxlbV9zeiA9
-IFBBR0VfU0laRTsKICAgICAgICAgICAgICAgICAgICAgIHNjYXR0ZXJfZWxlbV9zel9wcmV2ID0g
-UEFHRV9TSVpFOwogICAgICAgICAgICAgIH0gZWxzZQogICAgICAgICAgICAgICAgICAgICAgc2Nh
-dHRlcl9lbGVtX3N6X3ByZXYgPSBudW07Cg==
-------=_Part_479335_146532246.1787037841221
-Content-Type: text/plain; name=repro.c
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="repro.c"
+By the time fd_init_prot() runs, the backing file has already been
+configured and pinned in fd_dev->fd_file.  Instead of reopening a
+user-controlled pathname, derive the protection sidecar from the
+configured backing file itself: reject configfs-backed backing files,
+take the opened file's parent dentry, and open or create
+"<resolved-name>.protection" there with direct dentry operations.
 
-I2luY2x1ZGUgPGZjbnRsLmg+CiNpbmNsdWRlIDxzdGRpby5oPgojaW5jbHVkZSA8dW5pc3RkLmg+
-CgppbnQgbWFpbih2b2lkKQp7CiAgICAgICAgaW50IGZkOwoKICAgICAgICBmZCA9IG9wZW4oIi9z
-eXMvbW9kdWxlL3NnL3BhcmFtZXRlcnMvc2NhdHRlcl9lbGVtX3N6IiwgT19XUk9OTFkpOwogICAg
-ICAgIGlmIChmZCA8IDApIHsKICAgICAgICAgICAgICAgIHBlcnJvcigib3BlbiBzY2F0dGVyX2Vs
-ZW1fc3oiKTsKICAgICAgICAgICAgICAgIHJldHVybiAxOwogICAgICAgIH0KICAgICAgICBpZiAo
-d3JpdGUoZmQsICIwIiwgMSkgIT0gMSkgewogICAgICAgICAgICAgICAgcGVycm9yKCJ3cml0ZSBz
-Y2F0dGVyX2VsZW1fc3oiKTsKICAgICAgICAgICAgICAgIGNsb3NlKGZkKTsKICAgICAgICAgICAg
-ICAgIHJldHVybiAxOwogICAgICAgIH0KICAgICAgICBjbG9zZShmZCk7CgogICAgICAgIGZkID0g
-b3BlbigiL2Rldi9zZzAiLCBPX1JET05MWSk7CiAgICAgICAgaWYgKGZkIDwgMCkgewogICAgICAg
-ICAgICAgICAgcGVycm9yKCJvcGVuIC9kZXYvc2cwIik7CiAgICAgICAgICAgICAgICByZXR1cm4g
-MTsKICAgICAgICB9CiAgICAgICAgY2xvc2UoZmQpOwogICAgICAgIHJldHVybiAwOwp9
-------=_Part_479335_146532246.1787037841221
-Content-Type: application/octet-stream; name=repro.report
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="repro.report"
+This keeps the PI sidecar tied to the configured backing file, avoids a
+new pathname walk from the configfs store path, and also rejects
+stacked filesystems whose real backing file lives on configfs.
 
-VUJTQU46IHNoaWZ0LW91dC1vZi1ib3VuZHMgaW4gZHJpdmVycy9zY3NpL3NnLmM6MTkyMzoxMwpz
-aGlmdCBleHBvbmVudCA2NCBpcyB0b28gbGFyZ2UgZm9yIDMyLWJpdCB0eXBlICdpbnQnCkNQVTog
-MCBVSUQ6IDAgUElEOiAxMTc2NiBDb21tOiBzeXouMS45NSBOb3QgdGFpbnRlZCA2LjEyLjkzICMx
-CkhhcmR3YXJlIG5hbWU6IFFFTVUgVWJ1bnR1IDI0LjA0IFBDIHYyIChpNDQwRlggKyBQSUlYLCBh
-cmNoX2NhcHMgZml4LCAxOTk2KSwgQklPUyAxLjE2LjMtZGViaWFuLTEuMTYuMy0yIDA0LzAxLzIw
-MTQKQ2FsbCBUcmFjZToKIDxUQVNLPgogX19kdW1wX3N0YWNrIGxpYi9kdW1wX3N0YWNrLmM6OTQg
-W2lubGluZV0KIGR1bXBfc3RhY2tfbHZsKzB4MTY0LzB4MWYwIGxpYi9kdW1wX3N0YWNrLmM6MTIw
-CiB1YnNhbl9lcGlsb2d1ZSsweGEvMHg0MCBsaWIvdWJzYW4uYzoyMzEKIF9fdWJzYW5faGFuZGxl
-X3NoaWZ0X291dF9vZl9ib3VuZHMrMHgxZWIvMHgyMDggbGliL3Vic2FuLmM6NDY4CiBzZ19idWls
-ZF9pbmRpcmVjdC5jb2xkKzB4MWIvMHgyMCBkcml2ZXJzL3Njc2kvc2cuYzoxOTIzCiBzZ19idWls
-ZF9yZXNlcnZlKzB4YzQvMHgxODAgZHJpdmVycy9zY3NpL3NnLmM6MjAzMwogc2dfYWRkX3NmcCBk
-cml2ZXJzL3Njc2kvc2cuYzoyMjE1IFtpbmxpbmVdCiBzZ19vcGVuKzB4YzNiLzB4MTkwMCBkcml2
-ZXJzL3Njc2kvc2cuYzozNDgKIGNocmRldl9vcGVuKzB4MjMyLzB4NmIwIGZzL2NoYXJfZGV2LmM6
-NDE0CiBkb19kZW50cnlfb3BlbisweDZkZi8weDE1MjAgZnMvb3Blbi5jOjk1MgogdmZzX29wZW4r
-MHg4Mi8weDNmMCBmcy9vcGVuLmM6MTA4NAogZG9fb3BlbiBmcy9uYW1laS5jOjM3ODIgW2lubGlu
-ZV0KIHBhdGhfb3BlbmF0KzB4MWRmNC8weDJkYjAgZnMvbmFtZWkuYzozOTQxCiBkb19maWxwX29w
-ZW4rMHgxYmEvMHgzZDAgZnMvbmFtZWkuYzozOTY4CiBkb19zeXNfb3BlbmF0MisweDE3YS8weDFl
-MCBmcy9vcGVuLmM6MTQxMQogZG9fc3lzX29wZW4gZnMvb3Blbi5jOjE0MjYgW2lubGluZV0KIF9f
-ZG9fc3lzX29wZW5hdCBmcy9vcGVuLmM6MTQ0MiBbaW5saW5lXQogX19zZV9zeXNfb3BlbmF0IGZz
-L29wZW4uYzoxNDM3IFtpbmxpbmVdCiBfX3g2NF9zeXNfb3BlbmF0KzB4MTQyLzB4MjAwIGZzL29w
-ZW4uYzoxNDM3CiBkb19zeXNjYWxsX3g2NCBhcmNoL3g4Ni9lbnRyeS9jb21tb24uYzo0NyBbaW5s
-aW5lXQogZG9fc3lzY2FsbF82NCsweGM3LzB4MjQwIGFyY2gveDg2L2VudHJ5L2NvbW1vbi5jOjc4
-CiBlbnRyeV9TWVNDQUxMXzY0X2FmdGVyX2h3ZnJhbWUrMHg3Ny8weDdmClJJUDogMDAzMzoweDdm
-MzI5MDFiY2QxNQpDb2RlOiA4YiA1NSBkMCA0OCA4OSA0NSBiMCA3NSBhMCA0NCA4OSA1NSA5YyBl
-OCBlMyA5OSAwMiAwMCA0NCA4YiA1NSA5YyA4OSBkYSA0YyA4OSBlNiA0MSA4OSBjMCBiZiA5YyBm
-ZiBmZiBmZiBiOCAwMSAwMSAwMCAwMCAwZiAwNSA8NDg+IDNkIDAwIGYwIGZmIGZmIDc3IDMzIDQ0
-IDg5IGM3IDg5IDQ1IDljIGU4IDM4IDlhIDAyIDAwIDhiIDQ1IDljClJTUDogMDAyYjowMDAwN2Yz
-MjkxMDczYjQwIEVGTEFHUzogMDAwMDAyOTMgT1JJR19SQVg6IDAwMDAwMDAwMDAwMDAxMDEKUkFY
-OiBmZmZmZmZmZmZmZmZmZmRhIFJCWDogMDAwMDAwMDAwMDAwMDAwMCBSQ1g6IDAwMDA3ZjMyOTAx
-YmNkMTUKUkRYOiAwMDAwMDAwMDAwMDAwMDAwIFJTSTogMDAwMDdmMzI5MTA3M2JlMCBSREk6IDAw
-MDAwMDAwZmZmZmZmOWMKUkJQOiAwMDAwN2YzMjkxMDczYmIwIFIwODogMDAwMDAwMDAwMDAwMDAw
-MCBSMDk6IDAwMDAwMDAwMDAwMDAwMDAKUjEwOiAwMDAwMDAwMDAwMDAwMDAwIFIxMTogMDAwMDAw
-MDAwMDAwMDI5MyBSMTI6IDAwMDA3ZjMyOTEwNzNiZTAKUjEzOiAwMDAwN2YzMjkwNGE2MDM4IFIx
-NDogMDAwMDdmMzI5MDRhNWZhMCBSMTU6IDAwMDA3ZmZlMjAwYzMwYTAKIDwvVEFTSz4KLS0tWyBl
-bmQgdHJhY2UgXS0tLQoKPDw8PDw8PDw8PDw8PDw8IHRhaWwgcmVwb3J0ID4+Pj4+Pj4+Pj4+Pj4+
-PgoKc2hpZnQgZXhwb25lbnQgNjQgaXMgdG9vIGxhcmdlIGZvciAzMi1iaXQgdHlwZSAnaW50JwpD
-UFU6IDAgVUlEOiAwIFBJRDogMTE3NjYgQ29tbTogc3l6LjEuOTUgTm90IHRhaW50ZWQgNi4xMi45
-MyAjMQpIYXJkd2FyZSBuYW1lOiBRRU1VIFVidW50dSAyNC4wNCBQQyB2MiAoaTQ0MEZYICsgUElJ
-WCwgYXJjaF9jYXBzIGZpeCwgMTk5NiksIEJJT1MgMS4xNi4zLWRlYmlhbi0xLjE2LjMtMiAwNC8w
-MS8yMDE0CkNhbGwgVHJhY2U6CiA8VEFTSz4KIGR1bXBfc3RhY2tfbHZsKzB4MTY0LzB4MWYwCiB1
-YnNhbl9lcGlsb2d1ZSsweGEvMHg0MAogX191YnNhbl9oYW5kbGVfc2hpZnRfb3V0X29mX2JvdW5k
-cysweDFlYi8weDIwOAogc2dfYnVpbGRfaW5kaXJlY3QuY29sZCsweDFiLzB4MjAKIHNnX2J1aWxk
-X3Jlc2VydmUrMHhjNC8weDE4MAogc2dfb3BlbisweGMzYi8weDE5MDAKIGNocmRldl9vcGVuKzB4
-MjMyLzB4NmIwCiBkb19kZW50cnlfb3BlbisweDZkZi8weDE1MjAKIHZmc19vcGVuKzB4ODIvMHgz
-ZjAKIHBhdGhfb3BlbmF0KzB4MWRmNC8weDJkYjAKIGRvX2ZpbHBfb3BlbisweDFiYS8weDNkMAog
-ZG9fc3lzX29wZW5hdDIrMHgxN2EvMHgxZTAKIF9feDY0X3N5c19vcGVuYXQrMHgxNDIvMHgyMDAK
-IGRvX3N5c2NhbGxfNjQrMHhjNy8weDI0MAogZW50cnlfU1lTQ0FMTF82NF9hZnRlcl9od2ZyYW1l
-KzB4NzcvMHg3ZgpSSVA6IDAwMzM6MHg3ZjMyOTAxYmNkMTUKQ29kZTogOGIgNTUgZDAgNDggODkg
-NDUgYjAgNzUgYTAgNDQgODkgNTUgOWMgZTggZTMgOTkgMDIgMDAgNDQgOGIgNTUgOWMgODkgZGEg
-NGMgODkgZTYgNDEgODkgYzAgYmYgOWMgZmYgZmYgZmYgYjggMDEgMDEgMDAgMDAgMGYgMDUgPDQ4
-PiAzZCAwMCBmMCBmZiBmZiA3NyAzMyA0NCA4OSBjNyA4OSA0NSA5YyBlOCAzOCA5YSAwMiAwMCA4
-YiA0NSA5YwpSU1A6IDAwMmI6MDAwMDdmMzI5MTA3M2I0MCBFRkxBR1M6IDAwMDAwMjkzIE9SSUdf
-UkFYOiAwMDAwMDAwMDAwMDAwMTAxClJBWDogZmZmZmZmZmZmZmZmZmZkYSBSQlg6IDAwMDAwMDAw
-MDAwMDAwMDAgUkNYOiAwMDAwN2YzMjkwMWJjZDE1ClJEWDogMDAwMDAwMDAwMDAwMDAwMCBSU0k6
-IDAwMDA3ZjMyOTEwNzNiZTAgUkRJOiAwMDAwMDAwMGZmZmZmZjljClJCUDogMDAwMDdmMzI5MTA3
-M2JiMCBSMDg6IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiAwMDAwMDAwMDAwMDAwMDAwClIxMDogMDAw
-MDAwMDAwMDAwMDAwMCBSMTE6IDAwMDAwMDAwMDAwMDAyOTMgUjEyOiAwMDAwN2YzMjkxMDczYmUw
-ClIxMzogMDAwMDdmMzI5MDRhNjAzOCBSMTQ6IDAwMDA3ZjMyOTA0YTVmYTAgUjE1OiAwMDAwN2Zm
-ZTIwMGMzMGEwCiA8L1RBU0s+Ci0tLVsgZW5kIHRyYWNlIF0tLS0KS2VybmVsIHBhbmljIC0gbm90
-IHN5bmNpbmc6IFVCU0FOOiBwYW5pY19vbl93YXJuIHNldCAuLi4KQ1BVOiAwIFVJRDogMCBQSUQ6
-IDExNzY2IENvbW06IHN5ei4xLjk1IE5vdCB0YWludGVkIDYuMTIuOTMgIzEKSGFyZHdhcmUgbmFt
-ZTogUUVNVSBVYnVudHUgMjQuMDQgUEMgdjIgKGk0NDBGWCArIFBJSVgsIGFyY2hfY2FwcyBmaXgs
-IDE5OTYpLCBCSU9TIDEuMTYuMy1kZWJpYW4tMS4xNi4zLTIgMDQvMDEvMjAxNApDYWxsIFRyYWNl
-OgogPFRBU0s+CiBkdW1wX3N0YWNrX2x2bCsweDNiLzB4MWYwCiBwYW5pYysweDZmOS8weDdlMAog
-Y2hlY2tfcGFuaWNfb25fd2FybisweGFiLzB4YjAKIF9fdWJzYW5faGFuZGxlX3NoaWZ0X291dF9v
-Zl9ib3VuZHMrMHgxZWIvMHgyMDgKIHNnX2J1aWxkX2luZGlyZWN0LmNvbGQrMHgxYi8weDIwCiBz
-Z19idWlsZF9yZXNlcnZlKzB4YzQvMHgxODAKIHNnX29wZW4rMHhjM2IvMHgxOTAwCiBjaHJkZXZf
-b3BlbisweDIzMi8weDZiMAogZG9fZGVudHJ5X29wZW4rMHg2ZGYvMHgxNTIwCiB2ZnNfb3Blbisw
-eDgyLzB4M2YwCiBwYXRoX29wZW5hdCsweDFkZjQvMHgyZGIwCiBkb19maWxwX29wZW4rMHgxYmEv
-MHgzZDAKIGRvX3N5c19vcGVuYXQyKzB4MTdhLzB4MWUwCiBfX3g2NF9zeXNfb3BlbmF0KzB4MTQy
-LzB4MjAwCiBkb19zeXNjYWxsXzY0KzB4YzcvMHgyNDAKIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJf
-aHdmcmFtZSsweDc3LzB4N2YKUklQOiAwMDMzOjB4N2YzMjkwMWJjZDE1CkNvZGU6IDhiIDU1IGQw
-IDQ4IDg5IDQ1IGIwIDc1IGEwIDQ0IDg5IDU1IDljIGU4IGUzIDk5IDAyIDAwIDQ0IDhiIDU1IDlj
-IDg5IGRhIDRjIDg5IGU2IDQxIDg5IGMwIGJmIDljIGZmIGZmIGZmIGI4IDAxIDAxIDAwIDAwIDBm
-IDA1IDw0OD4gM2QgMDAgZjAgZmYgZmYgNzcgMzMgNDQgODkgYzcgODkgNDUgOWMgZTggMzggOWEg
-MDIgMDAgOGIgNDUgOWMKUlNQOiAwMDJiOjAwMDA3ZjMyOTEwNzNiNDAgRUZMQUdTOiAwMDAwMDI5
-MyBPUklHX1JBWDogMDAwMDAwMDAwMDAwMDEwMQpSQVg6IGZmZmZmZmZmZmZmZmZmZGEgUkJYOiAw
-MDAwMDAwMDAwMDAwMDAwIFJDWDogMDAwMDdmMzI5MDFiY2QxNQpSRFg6IDAwMDAwMDAwMDAwMDAw
-MDAgUlNJOiAwMDAwN2YzMjkxMDczYmUwIFJESTogMDAwMDAwMDBmZmZmZmY5YwpSQlA6IDAwMDA3
-ZjMyOTEwNzNiYjAgUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogMDAwMDAwMDAwMDAwMDAwMApS
-MTA6IDAwMDAwMDAwMDAwMDAwMDAgUjExOiAwMDAwMDAwMDAwMDAwMjkzIFIxMjogMDAwMDdmMzI5
-MTA3M2JlMApSMTM6IDAwMDA3ZjMyOTA0YTYwMzggUjE0OiAwMDAwN2YzMjkwNGE1ZmEwIFIxNTog
-MDAwMDdmZmUyMDBjMzBhMAogPC9UQVNLPgpLZXJuZWwgT2Zmc2V0OiBkaXNhYmxlZApSZWJvb3Rp
-bmcgaW4gODY0MDAgc2Vjb25kcy4u
-------=_Part_479335_146532246.1787037841221--
+Fixes: 0f5e2ec46dd6 ("target/file: Add DIF protection init/format support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
 
+v2:
+- narrow the scope to 022 / fd_init_prot() only
+- drop the earlier shared 022/023 pathname helper attempt
+- use LOOKUP_CREATE so a missing sidecar can actually be created
+- open or create the PI sidecar next to the configured backing file
+---
+ drivers/target/target_core_file.c | 102 +++++++++++++++++++++++++++---
+ drivers/target/target_core_file.h |   1 -
+ 2 files changed, 94 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 2d78ef74633c..b7810ccceb44 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -19,6 +19,10 @@
+ #include <linux/module.h>
+ #include <linux/vmalloc.h>
+ #include <linux/falloc.h>
++#include <linux/limits.h>
++#include <linux/magic.h>
++#include <linux/mount.h>
++#include <linux/namei.h>
+ #include <linux/uio.h>
+ #include <linux/scatterlist.h>
+ #include <scsi/scsi_proto.h>
+@@ -86,6 +90,86 @@ static struct se_device *fd_alloc_device(struct se_hba *hba, const char *name)
+ 	return &fd_dev->dev;
+ }
+ 
++static bool fd_backing_file_is_configfs(struct file *file)
++{
++	return d_real(file_dentry(file), D_REAL_DATA)->d_sb->s_magic ==
++	       CONFIGFS_MAGIC;
++}
++
++static int fd_open_prot_file(struct file *file, int flags, umode_t mode,
++			     struct file **filep)
++{
++	struct dentry *backing_dentry = file_dentry(file);
++	struct path parent_path = {
++		.mnt = mntget(file->f_path.mnt),
++		.dentry = dget_parent(backing_dentry),
++	};
++	struct path prot_path = { .mnt = parent_path.mnt };
++	struct file *prot_file;
++	struct qstr prot_qname;
++	char *prot_name;
++	size_t prot_name_len;
++	int ret;
++
++	if (fd_backing_file_is_configfs(file)) {
++		ret = -EINVAL;
++		goto out_put_parent;
++	}
++
++	prot_name_len = backing_dentry->d_name.len + strlen(".protection");
++	if (prot_name_len > NAME_MAX) {
++		ret = -ENAMETOOLONG;
++		goto out_put_parent;
++	}
++
++	prot_name = kmalloc(prot_name_len + 1, GFP_KERNEL);
++	if (!prot_name) {
++		ret = -ENOMEM;
++		goto out_put_parent;
++	}
++
++	memcpy(prot_name, backing_dentry->d_name.name, backing_dentry->d_name.len);
++	memcpy(prot_name + backing_dentry->d_name.len, ".protection",
++	       strlen(".protection") + 1);
++	prot_qname = QSTR_INIT(prot_name, prot_name_len);
++
++	inode_lock_nested(d_inode(parent_path.dentry), I_MUTEX_PARENT);
++	prot_path.dentry = lookup_one_qstr_excl(&prot_qname, parent_path.dentry,
++						LOOKUP_CREATE);
++	if (IS_ERR(prot_path.dentry)) {
++		ret = PTR_ERR(prot_path.dentry);
++		goto out_unlock;
++	}
++
++	if (d_is_negative(prot_path.dentry)) {
++		ret = mnt_want_write_file(file);
++		if (ret)
++			goto out_dput;
++
++		prot_file = dentry_create(&prot_path, flags, mode, current_cred());
++		mnt_drop_write_file(file);
++	} else {
++		prot_file = dentry_open(&prot_path, flags & ~O_CREAT,
++					current_cred());
++	}
++	if (IS_ERR(prot_file)) {
++		ret = PTR_ERR(prot_file);
++		goto out_dput;
++	}
++
++	*filep = prot_file;
++	ret = 0;
++
++out_dput:
++	dput(prot_path.dentry);
++out_unlock:
++	inode_unlock(d_inode(parent_path.dentry));
++	kfree(prot_name);
++out_put_parent:
++	path_put(&parent_path);
++	return ret;
++}
++
+ static bool fd_configure_unmap(struct se_device *dev)
+ {
+ 	struct file *file = FD_DEV(dev)->fd_file;
+@@ -827,7 +911,6 @@ static int fd_init_prot(struct se_device *dev)
+ 	struct file *prot_file, *file = fd_dev->fd_file;
+ 	struct inode *inode;
+ 	int ret, flags = O_RDWR | O_CREAT | O_LARGEFILE | O_DSYNC;
+-	char buf[FD_MAX_DEV_PROT_NAME];
+ 
+ 	if (!file) {
+ 		pr_err("Unable to locate fd_dev->fd_file\n");
+@@ -844,13 +927,16 @@ static int fd_init_prot(struct se_device *dev)
+ 	if (fd_dev->fbd_flags & FDBD_HAS_BUFFERED_IO_WCE)
+ 		flags &= ~O_DSYNC;
+ 
+-	snprintf(buf, FD_MAX_DEV_PROT_NAME, "%s.protection",
+-		 fd_dev->fd_dev_name);
+-
+-	prot_file = filp_open(buf, flags, 0600);
+-	if (IS_ERR(prot_file)) {
+-		pr_err("filp_open(%s) failed\n", buf);
+-		ret = PTR_ERR(prot_file);
++	ret = fd_open_prot_file(file, flags, 0600, &prot_file);
++	if (ret) {
++		if (ret == -EINVAL)
++			pr_err("configfs-backed FILEIO backends cannot store PI metadata\n");
++		else if (ret == -ENAMETOOLONG)
++			pr_err("protection sidecar name is too long for FILEIO backend: %pd.protection\n",
++			       file_dentry(file));
++		else
++			pr_err("failed to open FILEIO protection sidecar for %pd: %d\n",
++			       file_dentry(file), ret);
+ 		return ret;
+ 	}
+ 	fd_dev->fd_prot_file = prot_file;
+diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
+index 929b1ecd544e..1b4c1b43827f 100644
+--- a/drivers/target/target_core_file.h
++++ b/drivers/target/target_core_file.h
+@@ -7,7 +7,6 @@
+ #define FD_VERSION		"4.0"
+ 
+ #define FD_MAX_DEV_NAME		256
+-#define FD_MAX_DEV_PROT_NAME	FD_MAX_DEV_NAME + 16
+ #define FD_DEVICE_QUEUE_DEPTH	32
+ #define FD_MAX_DEVICE_QUEUE_DEPTH 128
+ #define FD_BLOCKSIZE		512
+-- 
+2.34.1
