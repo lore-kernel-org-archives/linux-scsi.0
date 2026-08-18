@@ -1,224 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A1863DDB02
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 07:50:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49E56412C06
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 07:59:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787039435; cv=none; b=cKCPHZvroS9Dr3c/X9W2A+5KA8cbNEosQNglsdRlUy6DGbQre1Y47xoi+JzNzPVGL0u5Q2cE9a4xGnpQ/fsVtQFGLx9u5lNSeeNouTwL/5jCIb+3tBhp30+jEF2g7DtYa0QJShQT91slzB7x+lmxL2/8NoAIH24JTCbZdZw4vi0=
+	t=1787039968; cv=none; b=hrbmm//9eoIbPa8Skjg4bV2/1kx3aWK2FFzBqUUs0RYhow0TWbmAQv2+LVag82gkc4JN2Do9LjAWMejRUV9o/PojZZ7B/91ehrr1vDXFQzFYNnzkyy24RGZ8j4gA32f7SxIdY9dWTcbMkPcXyh4Q50nnDvs99beCTqNhXffzyYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787039435; c=relaxed/simple;
-	bh=mMyAtKZpgVmx8PD+nmn4OrogejaOxG6r1p1HuagbdEU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EU/7S1Ba71uxyY6tc/PlHjMwEOS3SZdtCm0yhcTv35l4gHIhBA6HbljSkvQJkSjgtHu/6PXOfSI18GL80i4tvxWgzpwpbEjFK1ulYnx1GMybAbgby9Tl8gKwUeGSOo/ISO/C2ahMt0uUmLe/Irmx+W7U4bG3EYb57dZybhM5SWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jAg73PX2; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787039968; c=relaxed/simple;
+	bh=YFU3Pxe6gZ6OmY9pTLdPdTUYsy1M0azynELZsCUa+Fg=;
+	h=Subject:To:References:Cc:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=MakM2/tPsGSaax+CaQfgXrGqIRKzenoxqJfHAc0dwpQWau/8LrWDEUPdMlUon2VafUDmLUeLGwMvFxKetqDWoht92Q3pNukMfOyNjmWRS92uYECffsgR34/h/MnR32+w7x7Bj2uB95cbCjzbRwBKJOJuljMGPL8NLL2ZtLCcAfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P7dgyZfT; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jAg73PX2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E96F1F000E9;
-	Tue, 18 Aug 2026 07:50:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787039433;
-	bh=o6wp0vzthGvy9eqVoWnmVfK+QQHootdbcVW0lkgWaAc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jAg73PX2oEmufOsW+0PVuoX+fmyNQepooQGNzwH0JyrGrTK2D9KAzcUd76skOK2PF
-	 ICyoFQNYZMwzPxLjNyuQLATSSb0Flfzy1jBZZ6sFvQfJVUCSmAIg4Pph6dGJ6joTsN
-	 ON4Pv0kxZ1HDuPiFo+cu2PnqdjJXUzheiQo8dMf6XxDZGT+UPY+ME5e8sNHnMrgzKZ
-	 Z19lBejY/+OJejkKiLKuciG/8KKx15LqPfra8y/Ee2Re0oOgn24Yf9FvdAwt24rOgN
-	 dOyxFCvMttC33YIwawquOFAU1WHEP9KusHa8oLTVzZxiNI77SHpr43zgTWnovqppJr
-	 CjOhNhKWSps6A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: target: file: avoid recursive configfs open in
- fd_init_prot()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260818073539.1555605-1-runyu.xiao@seu.edu.cn>
-References: <20260818045807.1519433-1-runyu.xiao@seu.edu.cn>
- <20260818073539.1555605-1-runyu.xiao@seu.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 18 Aug 2026 07:50:32 +0000
-Message-Id: <20260818075033.6E96F1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P7dgyZfT"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-848743155bcso1387404b3a.0
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 00:59:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787039966; x=1787644766; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:mime-version
+         :user-agent:date:message-id:from:cc:references:to:subject:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=ZchxzJNZlCmLlQz1ZrVBz9XS0KwQdc7Hx8gtAKmig1U=;
+        b=P7dgyZfTD9GVADMHvqAZ8j+fnkz+ifDlE7Q12aNpZk0SeBxlrTd2Dgj+nX+CanPwq+
+         Rm44yrvbOr2rLWLaXPtytRfdhuMFl7/WK8EZ0DdWvylc+d/e7O5iU4cvA4LsqZVb7qEI
+         kFBJJm458Sw0hDXkfr+7Dbb+ymsr1Yi8DxkBQgzHi0eLYa70nLzaF63rv6V8BlqhsXEI
+         kE963PsjGQuY/k59nbBzkz8oldgKXR/HMUzlwWPIGxakDL7uDx6td3zGehXlY3ii/pjw
+         YQEGX8gszGsTV+7TeBJhCt1geDQlg/Vm299Q5ryXCXJ2JoQv1/ymgTas4pczvtB/Iam4
+         KDjw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787039966; x=1787644766;
+        h=content-transfer-encoding:content-type:in-reply-to:mime-version
+         :user-agent:date:message-id:from:cc:references:to:subject:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ZchxzJNZlCmLlQz1ZrVBz9XS0KwQdc7Hx8gtAKmig1U=;
+        b=mV95RzkENQV+mMa0SSvO4hVPJlyVO1XL0j3C6LnrI/ReJdNgPxXI2dDLQt7tjol8T1
+         24V3xh+k6h8R9p4obRDGpmFDwMD+3YTCiky+xJ9hN1oPNkjkGzgsAYV3NARaYM4Po2i7
+         ITpR4+Vl3iqRl9fMMdOeGqGrV1wE0wsLSpUJ015EECHcvvQvUMOHpW/DvkeogLw/zKXL
+         aMvAktReOcSAw4mRKOIfWZx7O3YbECVG6f6bpsuVqs7gAVlmtPmM4ZYM8rwYgiryPEfA
+         vzfgf0ZiZzcZtBbbomwVB84ODxWyPcP1sQ5WHFtuzGbKJpubUhm0NZpG9XdQJDVZ6ouK
+         d9jg==
+X-Forwarded-Encrypted: i=1; AHgh+Robdal5T30zEoAAgMTYnJeEQaE5Mml/8S7/KPjkC+f4W+Zq2bNpD5IhCUO5n1lXgx279k4YkxcixXFI@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxo6D/NGHdMO7GL72cabxdCPBdje8d6jjLB6eo6RqstAzTtGzf4
+	9G7GPf/XEdXCpy6GNpxiLuCJRKMhI0RsA5lHfvpZ1lvA16PGd1/smTobA41FPA==
+X-Gm-Gg: AR+sD12wv0Oq/XEDRH6m801naBnLS/Qj0iJ+VeOslTOHc6oaUOJ6AZ7BJpBH5dJ50nF
+	0xKiqlsWntdbOSyTmXIOlLKjrtYSs8rcyZXQhDXinPW+pVm8xFwur9w3qXZF/1n4HuArp4pnKN3
+	CfhTfb7XRk4VmvqVZ/CBVD3ul14Fe8kX9pknDTEZBskRs6s6P+9MGJxe5nQS+jW9zazEe/RXTym
+	6uugxbBYtOoqCYC/XljeVWwfZ+mK4eSEP/ypX2cIITTPK8J5mzFmTs8MpyhlP4r1oJs/qcHq7kg
+	FxRovP99WP5CeM+kUMpuysg5sVeC8mGc8QyC76aaIgA2/ZOpx63uf+BxsvD5b9jI5Wntd0a3eAW
+	EAAzdHfQr6FwRYEF2X55clLXAV56qXfrV64CTVXiKSUR4MPQI+uvo8PtWAEKqBSLOrN/imZjGDx
+	2tmrvhKjBMIurkgTM+3BjQppAvvKdWc/7cJ/LtZcu8VgtrLRrFNlgF6CiswodouQ+zSsH9giCk+
+	DtTcBu4Zh/PwzdcJQMJsb37
+X-Received: by 2002:a05:6a00:428e:b0:848:8445:6956 with SMTP id d2e1a72fcca58-84fde223e4cmr33063388b3a.18.1787039966532;
+        Tue, 18 Aug 2026 00:59:26 -0700 (PDT)
+Received: from [10.1.1.24] (222-152-170-159-fibre.sparkbb.co.nz. [222.152.170.159])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-851b4072c39sm1416320b3a.26.2026.08.18.00.59.21
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 18 Aug 2026 00:59:26 -0700 (PDT)
+Subject: Re: [PATCH] MAINTAINERS: Leave the cumana_1 and oak drivers to the
+ RISCPC maintainers
+To: Finn Thain <fthain@linux-m68k.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <935b08c0fb292888c06c2233570331f2ccadcd53.1787014824.git.fthain@linux-m68k.org>
+Cc: Russell King <linux@armlinux.org.uk>, Arnd Bergmann <arnd@arndb.de>,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Michael Schmitz <schmitzmic@gmail.com>
+Message-ID: <12b21181-dd25-70e0-8b55-f29fc33829ac@gmail.com>
+Date: Tue, 18 Aug 2026 19:59:19 +1200
+User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
+ Icedove/45.4.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <935b08c0fb292888c06c2233570331f2ccadcd53.1787014824.git.fthain@linux-m68k.org>
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
-s) to consider:
-- [High] Double fetch of `d_name.len` allows concurrent rename to cause a h=
-eap buffer overflow and use-after-free
-- [High] AB-BA deadlock between the directory inode lock (`i_rwsem`) and fi=
-lesystem freeze protection (`sb_writers`)
-- [High] Synthesizing a `struct path` using a bind mount's vfsmount and the=
- underlying dcache parent creates an invalid VFS object state
-- [High] Opening an existing protection sidecar file does not verify its fi=
-le type, allowing an unprivileged user to panic the kernel
-- [Medium] Usage of the unexported static function `lookup_one_qstr_excl()`=
- causes build failures, and passing an uninitialized `qstr.hash` corrupts t=
-he dcache
-- [Medium] Missing validation of the backing file's parent directory and ha=
-shed state after acquiring the parent inode lock
---
+Hi Finn,
 
---- Patch [1]: [PATCH v2] scsi: target: file: avoid recursive configfs open=
- in fd_init_prot() ---
-commit dff9df1c1570ab279457bc3f5bedd541efae3c74
-Author: Runyu Xiao <runyu.xiao@seu.edu.cn>
-scsi: target: file: avoid recursive configfs open in fd_init_prot()
+thanks for your patch!
 
-This commit addresses a potential recursive configfs open issue when creati=
-ng
-protection sidecar files. It introduces fd_open_prot_file() to lookup, and
-either create or open the protection sidecar directly from the configured
-backing file's parent directory, instead of using filp_open() which might
-re-enter configfs.
+Am 18.08.2026 um 13:00 schrieb Finn Thain:
+> The NCR5380 entry in MAINTAINERS includes drivers/scsi/arm/cumana_1.c and
+> drivers/scsi/arm/oak.c. However, those two files are also covered by the
+> drivers/scsi/arm/ pathname in the ARM/RISCPC entry.
+>
+> The latter entry is more effective than the former because, AIUI, neither
+> Michael nor I have access to the necessary hardware. IMHO, such access is
+> a pre-requisite for the 'maintainer' role for device drivers.
+>
+> To work on these particular drivers would require an old GCC compiler,
+> having support for -march=armv3m, which is a problem for contributors.
+>
+> Cc: Michael Schmitz <schmitzmic@gmail.com>
+> Cc: Russell King <linux@armlinux.org.uk>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Finn Thain <fthain@linux-m68k.org>
 
-> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_co=
-re_file.c
-> index 62ced9f5102ff..9872f8eda1ac4 100644
-> --- a/drivers/target/target_core_file.c
-> +++ b/drivers/target/target_core_file.c
+Acked-by: Michael Schmitz <schmitzmic@gmail.com>
 
-[ ... ]
-
-> @@ -86,6 +90,86 @@ static struct se_device *fd_alloc_device(struct se_hba=
- *hba, const char *name)
->  	return &fd_dev->dev;
->  }
-> =20
-> +static bool fd_backing_file_is_configfs(struct file *file)
-> +{
-> +	return d_real(file_dentry(file), D_REAL_DATA)->d_sb->s_magic =3D=3D
-> +	       CONFIGFS_MAGIC;
-> +}
-> +
-> +static int fd_open_prot_file(struct file *file, int flags, umode_t mode,
-> +			     struct file **filep)
-> +{
-> +	struct dentry *backing_dentry =3D file_dentry(file);
-> +	struct path parent_path =3D {
-> +		.mnt =3D mntget(file->f_path.mnt),
-> +		.dentry =3D dget_parent(backing_dentry),
-> +	};
-
-[Severity: High]
-Does this create an invalid VFS object state if the backing file is a
-file-level bind mount?
-
-If the file was provided via a file-level bind mount, the vfsmount's root is
-the file itself. Using dget_parent() escapes this root to the underlying pa=
-rent
-directory, and passing this disjoint path to dentry_open() or dentry_create=
-()
-could violate VFS invariants.
-
-> +	struct path prot_path =3D { .mnt =3D parent_path.mnt };
-> +	struct file *prot_file;
-> +	struct qstr prot_qname;
-> +	char *prot_name;
-> +	size_t prot_name_len;
-> +	int ret;
-> +
-> +	if (fd_backing_file_is_configfs(file)) {
-> +		ret =3D -EINVAL;
-> +		goto out_put_parent;
-> +	}
-> +
-> +	prot_name_len =3D backing_dentry->d_name.len + strlen(".protection");
-> +	if (prot_name_len > NAME_MAX) {
-> +		ret =3D -ENAMETOOLONG;
-> +		goto out_put_parent;
-> +	}
-> +
-> +	prot_name =3D kmalloc(prot_name_len + 1, GFP_KERNEL);
-> +	if (!prot_name) {
-> +		ret =3D -ENOMEM;
-> +		goto out_put_parent;
-> +	}
-> +
-> +	memcpy(prot_name, backing_dentry->d_name.name, backing_dentry->d_name.l=
-en);
-
-[Severity: High]
-Is there a risk of a heap buffer overflow here?
-
-The length of d_name is read without locks to allocate prot_name via kmallo=
-c().
-
-If an unprivileged user renames the backing file concurrently to a longer n=
-ame,
-couldn't the second fetch of d_name.len during memcpy() exceed the allocated
-buffer size?
-
-> +	memcpy(prot_name + backing_dentry->d_name.len, ".protection",
-> +	       strlen(".protection") + 1);
-> +	prot_qname =3D QSTR_INIT(prot_name, prot_name_len);
-> +
-> +	inode_lock_nested(d_inode(parent_path.dentry), I_MUTEX_PARENT);
-
-[Severity: Medium]
-Is there a missing check for concurrent renames or unlinks here?
-
-The parent dentry was fetched locklessly via dget_parent(), but there is no
-re-validation that backing_dentry->d_parent still matches parent_path.dentr=
-y,
-or that the dentry is still hashed, after acquiring the inode lock.
-
-> +	prot_path.dentry =3D lookup_one_qstr_excl(&prot_qname, parent_path.dent=
-ry,
-> +						LOOKUP_CREATE);
-
-[Severity: Medium]
-Will this cause a build failure when compiled as a module?
-
-lookup_one_qstr_excl() is a static function in fs/namei.c and is not export=
-ed
-to modules.
-
-Additionally, prot_qname is initialized above using QSTR_INIT() without
-computing its hash. Does passing a qstr with a zero hash to low-level VFS
-functions force dentries into bucket 0 and corrupt the dcache hash table?
-
-> +	if (IS_ERR(prot_path.dentry)) {
-> +		ret =3D PTR_ERR(prot_path.dentry);
-> +		goto out_unlock;
-> +	}
-> +
-> +	if (d_is_negative(prot_path.dentry)) {
-> +		ret =3D mnt_want_write_file(file);
-
-[Severity: High]
-Does this invert the standard VFS lock ordering and risk an AB-BA deadlock?
-
-The directory's i_rwsem is currently held via inode_lock_nested(), and
-mnt_want_write_file() internally acquires sb_writers (read). The standard
-order is sb_writers before i_rwsem, so this could deadlock against a
-filesystem freeze which takes sb_writers exclusively.
-
-> +		if (ret)
-> +			goto out_dput;
-> +
-> +		prot_file =3D dentry_create(&prot_path, flags, mode, current_cred());
-> +		mnt_drop_write_file(file);
-> +	} else {
-> +		prot_file =3D dentry_open(&prot_path, flags & ~O_CREAT,
-> +					current_cred());
-
-[Severity: High]
-Is there a check missing to ensure the existing protection sidecar is a reg=
-ular
-file?
-
-If an unprivileged user preemptively creates a symlink named with .protecti=
-on,
-opening it directly via dentry_open() triggers a WARN_ON in do_dentry_open()
-because symlinks generally have a NULL i_fop. This can panic the kernel on
-systems with panic_on_warn.
-
-> +	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818073539.1555=
-605-1-runyu.xiao@seu.edu.cn?part=3D1
+> ---
+>  MAINTAINERS | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 8014b9f8253e..e36df6b23326 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -18571,8 +18571,6 @@ L:	linux-scsi@vger.kernel.org
+>  S:	Maintained
+>  F:	Documentation/scsi/g_NCR5380.rst
+>  F:	drivers/scsi/NCR5380.*
+> -F:	drivers/scsi/arm/cumana_1.c
+> -F:	drivers/scsi/arm/oak.c
+>  F:	drivers/scsi/atari_scsi.*
+>  F:	drivers/scsi/dmx3191d.c
+>  F:	drivers/scsi/g_NCR5380.*
+>
