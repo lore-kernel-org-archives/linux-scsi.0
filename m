@@ -1,77 +1,37 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EAB6243964
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 04:51:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3FF419049B;
+	Tue, 18 Aug 2026 04:58:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787028707; cv=none; b=Hym/PyhqBGjHKqpzgqw69WfUAN9GmKCdErHJ/+JL0f5LGx6/D479xxuXc0uHDhAxJ6Jb7//LGKGCOspw97AlwVAlVzzxjy1QL3y2kw0ZRBEXiAu/+NGKt9SRJhHdkDzWiogr1Tzeem3fY30M8zHPdbVTX/WJf/QyB7yG3LAZruc=
+	t=1787029101; cv=none; b=vEwek9f7nVRja0FeGWC0bhIKnE1yxzUatX4EU0eJMvAK+UD9HB8F2seG0L+rOYtHeGFbzqlzPJRMMDVGu7ru6ZaCnKHRVOV+P0Ir2RTYdNveNEGloa/JYyoWoSxJWMFK9yW80DFjCljYhxt9ssuOjXd+HH/AJWDTPHB1qXVJls8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787028707; c=relaxed/simple;
-	bh=X1DtbALC8lq/ghoiIC6r92wHhi4MIrtWASByGX/cqA0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j/aI+RFmYDD5A0gujVHgNmyxgJnVkD/ttRL/qiWBteWR8pNRde9qy1KAQ3E2yTG9x7fskGBv50CeGTuThT85QB9ipYySdAK8RS9FMUs8cv5jtyWYPbAtzeCZSMrLrcb1juqCwQQZktERX+IYQE7VPOSrydgKjmoIqt/Bd8bCE3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=gQAfjlXl; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1787029101; c=relaxed/simple;
+	bh=7OVz7dOOrKHJmoXUfbZIey0um5f+c2mye9lnrDg8uYo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=a+sFoIwEY804MKR53MGoiOQaePJWWS3afF14eDfKJFoGc7ahX56GtOUuSo8Dre+Yb0Lt9W9FkNFZCFz3gxr0YsiwfsuSpZCJLsNLoacosyfhmKnM4RsV57BYpZkUWpL+uI/EJgwLFpFkFIPY7ymhmotMoolQUEX4SY94ZXC+IzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=WUpPntwQ; arc=none smtp.client-ip=45.254.49.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="gQAfjlXl"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2cace91f112so49128495ad.0
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Aug 2026 21:51:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1787028705; x=1787633505; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ss7P/kgwCwj4T2j+XXbkDqzG57+Au+3YcauiAcKnt/Y=;
-        b=gQAfjlXlTUlBKZE16gE8JOWeohyBJV7jhvM6EoSWDWhQC7SU8pcqRCDj9rLtqXNRNC
-         X/lFJF0OFNlxVwRN0hEvnZNwvWEmuuxxmNR1oRJPFTx/3C41PswXF2F5fagcVx6tnQgT
-         wnJBwKJyVmKOfnS4aMKvdI8BiEGmze9i9g3YvMV4/YDIlBGILvac+65I5YFU3ro32Shi
-         fgtq5SdYGH3JxU1iGo9egQTNDyePRVxQZ5WL05VAv4HP2R8A+5xWx+D4bl8718ClMoW/
-         EscYK7g2KaSVkfO35tFqE9sA10vLIf3v+MDBqOebvQLdSSRPBhEZQcwGzzcAWl4NVdYs
-         +Zdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787028705; x=1787633505;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ss7P/kgwCwj4T2j+XXbkDqzG57+Au+3YcauiAcKnt/Y=;
-        b=pkteGKJ/mqqpdcT4VFrj4MSfDZPFcBSJ+BaNdFeZE79IryaBK4FLwILYWqJ8xZAUUo
-         c4WqXQbzZcEbRUr6+7ydpvs9pD6MDHTQUw81lPaqzfaKBoOyKT0GSOzY0w2Ep/icGSbZ
-         7WOZIX7mtJvC4ffXM6dwupDUnsD2KXAfPuYMHGeBQT4iYkXxT/xNdLahMPIGYiX8FMZJ
-         JW7ponNH9a6f6RwNH3Ulv8cGUI3D898sIUJzWGS+0rV8ISAlXVmpT3eBmlCtuMxnZphi
-         q3nivXgQOkEDXnhaag02nJTiNJn2bC/Jixb43QcFBCdnR0+/weH9fgBwvy8+HnXa1wcJ
-         jzug==
-X-Forwarded-Encrypted: i=1; AHgh+RpzNySMUu/3fqrHKLM/ajYDC7fsfxM9Ik57X0D8DZCDmEV2e0vvp4sDqLBmua1YbR3S0rB1POtyTBuj@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzs+if1lJ2iowVaKkUGDJCqCCx3rbEYtHB13P6q+lk8TZbWYtKl
-	bbiFdAApY65DHXUI0OpSv3NEPQ72yvmUf2OhDidWdrYttK0bf3iJSR0uYDxKTphAwoyi0LjTf/D
-	J734ET3E=
-X-Gm-Gg: AR+sD11KLEARC8Nwd+jksxnSGfzYkM5SrTy11DuczGe49bSvcKZhC8rg+ACmS+7BMRs
-	wxu247zoeFozpeH3pw1y426YQ3T2vDZmlXP5Jli4FtaKAneN6u+a8w9gy664m1cCXaAoIRU2MZY
-	mVbmbrx8p/P6+1Qgjf5+RtXi1xJkOYHs+hyf0BigevD7FugS1ENoiOKtRj+CNKRZfyEv3RDpgq4
-	offeuFOY8F4I4oLT4wJyJTGJc/KDZFF+dmBGgEWJRv5jMRuLl4B9a8azuqi81j3ZV4VmxY3Hp5G
-	/ns8VXfWqEK1HKcvRfjIdO2uu/15Fj40bbtxD0iQ58euz6fKC8A+S2Rcftod80vYlgQcI5WcXvE
-	Q+4lnAgs+49W1hRoDQHZlUlq3sgJp1JRN6A8ahVcsaRswFQuHhkK4S39jC25oO1kbyDyXM++vja
-	v9l1Wq/S43UMFI8YUl+BGpURtMW2Lz2yaYTvMTaA88cUwa8JonrR02ien5KTnFqOUbNshZ
-X-Received: by 2002:a17:902:fc4e:b0:2d5:2f49:b3de with SMTP id d9443c01a7336-2d52f49c24bmr311753835ad.0.1787028705457;
-        Mon, 17 Aug 2026 21:51:45 -0700 (PDT)
-Received: from yhlee-960QFG.. ([125.131.91.97])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d5c1f01787sm9515675ad.82.2026.08.17.21.51.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2026 21:51:45 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: bvanassche@acm.org
-Cc: Yehyeong Lee <yhlee@isslab.korea.ac.kr>,
-	martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com,
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="WUpPntwQ"
+Received: from PC-202605011814.localdomain (unknown [222.191.246.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4a5b56963;
+	Tue, 18 Aug 2026 12:58:13 +0800 (GMT+08:00)
+From: Runyu Xiao <runyu.xiao@seu.edu.cn>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@suse.de>,
+	Nicholas Bellinger <nab@linux-iscsi.org>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: check that the tag map is still there in scsi_host_find_tag()
-Date: Tue, 18 Aug 2026 13:51:25 +0900
-Message-ID: <20260818045125.539058-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <414a2b55-ee58-4975-a76a-49202b9c0302@acm.org>
-References: <414a2b55-ee58-4975-a76a-49202b9c0302@acm.org>
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Runyu Xiao <runyu.xiao@seu.edu.cn>,
+	Jianhao Xu <jianhao.xu@seu.edu.cn>
+Subject: [PATCH] scsi: target: file: reject configfs-backed paths in configfs stores
+Date: Tue, 18 Aug 2026 12:58:07 +0800
+Message-Id: <20260818045807.1519433-1-runyu.xiao@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -79,27 +39,121 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa0133bfce303a1kunm5b4c6f7a1004f6
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaHkMZVkpPH0IYH0gZHkJOQ1YeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSE
+	pPSExVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=WUpPntwQkB7EIgXC2Cj+ktHJVXq8sHqFC7bTQ2KP/BPlUPHzV0Z9jjMxD0LqXUOlkJhxXAvoOYCv5M1vB+QL4eSCBJZ4Mv9WnMaissrYD5jSd5fRGkiJypcPI5EryZoJw/1el/y24ugDLPEaGu9Can3NN+TycVMaBz4adH+p2t4=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=+qLDLYB5zBcm54HIVhHmOzhqWqYYLYqCzHz/Wk6MAEI=;
+	h=date:mime-version:subject:message-id:from;
 
-On 8/15/26 2:27 AM, Bart Van Assche wrote:
-> Thanks for the detailed report but I think this is the wrong way to fix
-> the reported crash. Please help with testing this patch:
+FILEIO paths can be opened from configfs store callbacks while configfs
+holds the item's frag_sem.
 
-Tested.  With the replay target that reposts an SRP_RSP for a command it
-has already answered, the crash appears in 5 of 5 runs on an unpatched
-kernel and in 0 of 5 with your patch.  The target still delivered about
-2680 unsolicited responses per run either way, so what went away is the
-window, not the traffic.
+target_dev_enable_store() reaches fd_configure_device() and
+pi_prot_type_store() reaches fd_init_prot(). Both helpers call
+filp_open() on user-controlled FILEIO paths. If either path resolves
+inside configfs, the lookup can re-enter __configfs_open_file() and try
+to take the same frag_sem again.
 
-I have sent your patch as 2/2 of a v2 series on linux-rdma:
+Reject configfs-backed FILEIO paths before calling filp_open(). Resolve
+existing paths with kern_path(), and when O_CREAT may create the last
+component, fall back to checking the parent directory with
+kern_path_parent(). Keep reporting ordinary path lookup failures instead
+of silently bypassing the existing FILEIO error paths.
 
-https://lore.kernel.org/linux-rdma/20260818035229.505098-1-yhlee@isslab.korea.ac.kr/
+Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
+Fixes: 0f5e2ec46dd6 ("target/file: Add DIF protection init/format support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
+---
+ drivers/target/target_core_file.c | 50 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
-Martin, please drop this patch.  The lookup it guards is not reachable
-once srp_remove_target() is fixed, and the review point that the check is
-lockless stands.
-
-Tested-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-
-Best regards,
-
-Yehyeong Lee
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 2d78ef7..4351300 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -19,6 +19,7 @@
+ #include <linux/module.h>
+ #include <linux/vmalloc.h>
+ #include <linux/falloc.h>
++#include <linux/namei.h>
+ #include <linux/uio.h>
+ #include <linux/scatterlist.h>
+ #include <scsi/scsi_proto.h>
+@@ -86,6 +87,33 @@ static struct se_device *fd_alloc_device(struct se_hba *hba, const char *name)
+ 	return &fd_dev->dev;
+ }
+ 
++static int fd_validate_fileio_path(const char *path)
++{
++	struct path lookup_path = {};
++	struct dentry *dentry;
++	int ret;
++
++	ret = kern_path(path, LOOKUP_FOLLOW, &lookup_path);
++	if (!ret) {
++		ret = !strcmp(lookup_path.dentry->d_sb->s_type->name, "configfs") ?
++			-EINVAL : 0;
++		path_put(&lookup_path);
++		return ret;
++	}
++	if (ret != -ENOENT)
++		return ret;
++
++	dentry = kern_path_parent(path, &lookup_path);
++	if (IS_ERR(dentry))
++		return PTR_ERR(dentry);
++
++	ret = !strcmp(lookup_path.dentry->d_sb->s_type->name, "configfs") ?
++		-EINVAL : 0;
++	dput(dentry);
++	path_put(&lookup_path);
++	return ret;
++}
++
+ static bool fd_configure_unmap(struct se_device *dev)
+ {
+ 	struct file *file = FD_DEV(dev)->fd_file;
+@@ -137,6 +165,17 @@ static int fd_configure_device(struct se_device *dev)
+ 		flags &= ~O_DSYNC;
+ 	}
+ 
++	ret = fd_validate_fileio_path(fd_dev->fd_dev_name);
++	if (ret) {
++		if (ret == -EINVAL)
++			pr_err("configfs-backed path is not valid for FILEIO backend: %s\n",
++			       fd_dev->fd_dev_name);
++		else
++			pr_err("FILEIO backend path lookup failed for %s: %d\n",
++			       fd_dev->fd_dev_name, ret);
++		goto fail;
++	}
++
+ 	file = filp_open(fd_dev->fd_dev_name, flags, 0600);
+ 	if (IS_ERR(file)) {
+ 		pr_err("filp_open(%s) failed\n", fd_dev->fd_dev_name);
+@@ -847,6 +886,17 @@ static int fd_init_prot(struct se_device *dev)
+ 	snprintf(buf, FD_MAX_DEV_PROT_NAME, "%s.protection",
+ 		 fd_dev->fd_dev_name);
+ 
++	ret = fd_validate_fileio_path(buf);
++	if (ret) {
++		if (ret == -EINVAL)
++			pr_err("configfs-backed path is not valid for FILEIO protection: %s\n",
++			       buf);
++		else
++			pr_err("FILEIO protection path lookup failed for %s: %d\n",
++			       buf, ret);
++		return ret;
++	}
++
+ 	prot_file = filp_open(buf, flags, 0600);
+ 	if (IS_ERR(prot_file)) {
+ 		pr_err("filp_open(%s) failed\n", buf);
+-- 
+2.34.1
