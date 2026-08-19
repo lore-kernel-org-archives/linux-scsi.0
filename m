@@ -1,41 +1,44 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB4A93C81B5
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2026 06:58:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C220F3C81B5
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2026 06:58:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787122735; cv=none; b=BgEoP757hByy/kj0SrLwORstflsB6OrW5Wwr7dvebFAJeyyrwEH22bNh7ZqKfPyhYqL3mLrKRWbv8h81fncsEuWTCJV8IpoIUoWUXT6fYOuxA0ua63F58YuZq6A54yqBe2ixjhJFqRp0PFD/c4p01tCd0scRZL9qrM5GdA0A4SQ=
+	t=1787122738; cv=none; b=YKtuX2IN6l+Mp9Xcx3jgNZ1dvsDFQPzNrdRSJaC2HNwExPxYbaWmIIZXWrmEXorZH8PnDVZ0NGTlkscBXzuURd4oPfNzArQT7iH70zVguoScvF0Sqw+fYS/WFJpfh8WDF1/7DOJj8LMWWEzS0l/5n8GY6xxSc7MrLGjDDqr9oWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787122735; c=relaxed/simple;
-	bh=RAdBuHlxGzBX+EqmAk35Z0H1pMUQsn8118359kTsrD8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RHLbueW4kTHcgOrUM4reU41BTuww07WTIwVxH68zLXCldnCt8dG7OtoEkj06IgB2QH3GvTuABXypwiT4j1t4qy6CYUE2WpGPHWCeq5CcZE1jpByMSEfrM5nTC3gAC0q416UjFsxvR0ZhU1yRz1RcnX21t9sNzv6Pmq5Ej0C/3Kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ZFrYhaCm; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1787122738; c=relaxed/simple;
+	bh=jZa/oTLZb78F5zwiSI72MJm1tzBFQrkaw15aHkwa5ek=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=h0MB/kFX5hNigE0P8T9/eIiYNACTQx147SSOYFLO4FCxPKFqKf4uXtwHQW7GCzGhCoK20v+BgbXakidFSt6BJ5OGsOLdwk0p3auh0R4eVeLIAgWa0V5st5W1bVkNzTVnxVHb4rAPjQaFFYooG2lyfzttn+RnOHHRGANrO4y5IAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ShngkQEc; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZFrYhaCm"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ShngkQEc"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=MMYPLILCLkBIU1tAm6h7jKO0yYOOUI8i0AZFSOrIRHA=; b=ZFrYhaCm4Zm1t82MIffXDbK6D2
-	kRsKDSg7tX3ZPZWEoE1TwfxCZgeNQW8Br6+9wXg++tfTV1Ol1bnYhzTVtsK5IjJqT8+inIrdrfF0f
-	yd3C3YQk0zLsuwlYav235uAXah5fhcxxfSo9MmeR94bgHh7jq1S0ZNUG+2Vs8o1liT8fU3ntcweUD
-	RV7lzK32nr6hqvGwGKyH+/O9kkhbbL+MWXEwJWP3kNmFmpHxYsnLDMu3QjEw5rFz0g6uBeaEcg9IA
-	r1X9hFHTJ7GPCzeet//BGmKDP9cGgfUfAeRcL3AfKZ+beyudByhHHcE5UwURSU87UmZ6j/2lV82kF
-	0kuVN9+Q==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=u2tKufwBEZotkPVV5RC2zDpcVOMOAXF+NfOaogQ0Xos=; b=ShngkQEc4+90R9oobh0nuoT1D7
+	jPeh82gDl/y2AOA2pE4ZqcpPzoFXeKccfFgSp7oEELPDv0t2b3nRgcnT8Nk7n7Mib5/VmNHs7YU+J
+	Scdy0efJHHGeJbMEHkjI6eEItejEnMlbthPSiuklFJHOXAX6qNuulFWvG+IRFY58h1WBnmd3aYwBG
+	RGVS0EL+SnX5EUJz+g+6GEIYP0ClQKxgqwR/umH3Uyag3cpnoAbyY2Y3uv2/aBqb56yRmyuWKLFiF
+	CpyptIB2Gfub8TWjFvVfPpjdHTsfun0bhKx1eVjL9NEkbleNHRsSAInWZlz6+C3pyLPL22Oo2CjBT
+	kInVRL/w==;
 Received: from 2a02-8389-2301-9f00-b711-947d-6c5b-1af5.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:b711:947d:6c5b:1af5] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wwaGC-000000098uW-3fR2;
-	Wed, 19 Aug 2026 06:58:53 +0000
+	id 1wwaGF-000000098vI-3oKx;
+	Wed, 19 Aug 2026 06:58:56 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org
-Subject: scsi_debug: add support to corrupt data and/or reftag v2
-Date: Wed, 19 Aug 2026 08:58:44 +0200
-Message-ID: <20260819065850.1358861-1-hch@lst.de>
+Subject: [PATCH] scsi_debug: add support to corrupt data and/or reftag
+Date: Wed, 19 Aug 2026 08:58:45 +0200
+Message-ID: <20260819065850.1358861-2-hch@lst.de>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260819065850.1358861-1-hch@lst.de>
+References: <20260819065850.1358861-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,14 +48,222 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This will be used for testing PI support in xfstests.
+Add a new debugfs file to inject corruptions of the data and/or reftag.
+This will be used to detect that protection information and/or file
+system checksumming can detect random bit errors or misplaced writes.
 
-Changes since v1:
- - use match_int to parse the  reftag_adjust option
- - don't bypass error cleanup on parsing failure
- - allow to corrupt the entire capacity
- - set the bug_if_fake_rw to devip2sip to false
- - fix the check for unmapped LBAs
- - require DIX for reftag corruption injection
- - make the kernel messages a bit less verbose
- - add calls to sdeb_data_lock and sdeb_data_sector_lock
+To use this echo the start LBA, number of logical blocks and type of
+corruption into the new "corrupt" debugfs file for each scsi_debug
+device.
+
+For example:
+
+	echo lba=42,num=1,bit_errors=2 > /sys/kernel/debug/scsi_debug/1:0:0:0/corrupt
+or
+	echo lba=2,num=4,reftag_adjust=8 > /sys/kernel/debug/scsi_debug/1:0:0:0/corrupt
+
+The injection will be used by new xfstests test cases.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/scsi_debug.c | 163 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 163 insertions(+)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 4fb2dc403962..b63190298e0c 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -44,6 +44,7 @@
+ #include <linux/debugfs.h>
+ #include <linux/async.h>
+ #include <linux/cleanup.h>
++#include <linux/parser.h>
+ 
+ #include <net/checksum.h>
+ 
+@@ -1214,6 +1215,95 @@ static const struct file_operations sdebug_error_fops = {
+ 	.release = single_release,
+ };
+ 
++enum corrupt_options {
++	Opt_lba			= (1u << 0),
++	Opt_num			= (1u << 1),
++	Opt_bit_errors		= (1u << 2),
++	Opt_reftag_adjust	= (1u << 3),
++
++	Opt_invalid,
++};
++
++static const match_table_t corrupt_tokens = {
++	{ Opt_lba,			"lba=%u"		},
++	{ Opt_num,			"num=%u"		},
++	{ Opt_bit_errors,		"bit_errors=%u"		},
++	{ Opt_reftag_adjust,		"reftag_adjust=%d"	},
++	{ Opt_invalid,			NULL,			},
++};
++
++static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
++		u32 nr_bit_errors, s32 reftag_adjust);
++static ssize_t sdebug_corrupt_write(struct file *file, const char __user *ubuf,
++		size_t count, loff_t *ppos)
++{
++	struct scsi_device *sdev = file->f_inode->i_private;
++	struct sdebug_dev_info *devip = sdev->hostdata;
++	substring_t args[MAX_OPT_ARGS];
++	char *buf, *options, *p;
++	int error = 0;
++	u64 lba = 0;
++	u32 num = 1;
++	u32 nr_bit_errors = 0;
++	s32 reftag_adjust = 0;
++
++	buf = memdup_user_nul(ubuf, count);
++	if (IS_ERR(buf))
++		return PTR_ERR(buf);
++
++	options = buf;
++	while ((p = strsep(&options, ",\n")) != NULL) {
++		if (!*p)
++			continue;
++		switch (match_token(p, corrupt_tokens, args)) {
++		case Opt_lba:
++			error = match_u64(args, &lba);
++			break;
++		case Opt_num:
++			error = match_uint(args, &num);
++			break;
++		case Opt_bit_errors:
++			error = match_uint(args, &nr_bit_errors);
++			break;
++		case Opt_reftag_adjust:
++			error = match_int(args, &reftag_adjust);
++			break;
++		default:
++			pr_warn("unknown parameter or missing value '%s'\n", p);
++			error = -EINVAL;
++		}
++		if (error)
++			goto out_free_buf;
++	}
++
++	if (num == 0) {
++		pr_warn("invalid number of logical blocks: %u\n", num);
++		error = -EINVAL;
++		goto out_free_buf;
++	}
++
++	if (reftag_adjust &&
++	    (!sdebug_dix ||
++	     (sdebug_dif != T10_PI_TYPE1_PROTECTION &&
++	      sdebug_dif != T10_PI_TYPE2_PROTECTION))) {
++		pr_warn("reftag adjust requires type 1 or type 2 PI with DIX\n");
++		error = -EINVAL;
++		goto out_free_buf;
++	}
++
++	error = corrupt_lbas(devip, lba, num, nr_bit_errors, reftag_adjust);
++
++out_free_buf:
++	kfree(buf);
++	if (error)
++		return error;
++	return count;
++}
++
++static const struct file_operations sdebug_corrupt_fops = {
++	.write		= sdebug_corrupt_write,
++};
++
+ static int sdebug_target_reset_fail_show(struct seq_file *m, void *p)
+ {
+ 	struct scsi_target *starget = (struct scsi_target *)m->private;
+@@ -4908,6 +4998,77 @@ static int resp_write_tape(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	return 0;
+ }
+ 
++static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
++		u32 nr_bit_errors, s32 reftag_adjust)
++{
++	struct sdeb_store_info *sip = devip2sip(devip, false);
++	bool meta_data_locked = false;
++	u8 *fsp = sip->storep;
++	u32 block, num_mapped, b, i;
++	int error = 0;
++
++	if (sdebug_dev_is_zoned(devip) ||
++	    sdebug_dix ||
++	    scsi_debug_lbp())  {
++		sdeb_meta_write_lock(sip);
++		meta_data_locked = true;
++	}
++
++	if (num > sdebug_capacity || lba > sdebug_capacity - num) {
++		pr_err("logical blocks out of bounds: %llu:%u", lba, num);
++		error = -EINVAL;
++		goto out_unlock;
++	}
++
++	if (scsi_debug_lbp() &&
++	    (!map_state(sip, lba, &num_mapped) || num > num_mapped)) {
++		pr_err("can't modify unmapped logical blocks: %llu:%u",
++			lba, num);
++		error = -EINVAL;
++		goto out_unlock;
++	}
++
++	/*
++	 * For each possible bit error, flip the same bit in each corrupted
++	 * block to simulate repeated patterns like errors in cables.
++	 */
++	sdeb_data_lock(sip, false);
++	for (b = 0; b < nr_bit_errors; b++) {
++		unsigned int bit;
++
++		bit = get_random_u32_below(sdebug_sector_size * BITS_PER_BYTE);
++		pr_info("flipping bit %u in LBAs %llu:%llu\n",
++				bit, lba, lba + num - 1);
++
++		div_u64_rem(lba, sdebug_store_sectors, &block);
++		for (i = 0; i < num; i++) {
++			u8 *p = fsp + (block * sdebug_sector_size);
++
++			sdeb_data_sector_lock(sip, true);
++			p[bit / BITS_PER_BYTE] ^= (1 << (bit % BITS_PER_BYTE));
++			sdeb_data_sector_unlock(sip, true);
++			if (++block >= sdebug_store_sectors)
++				block = 0;
++		}
++	}
++
++	if (reftag_adjust) {
++		pr_info("adjusting reftag by %d sectors for LBAs %llu:%llu\n",
++			reftag_adjust, lba, lba + num - 1);
++		for (i = 0; i < num; i++) {
++			struct t10_pi_tuple *sdt = dif_store(sip, lba + i);
++
++			be32_add_cpu(&sdt->ref_tag, reftag_adjust);
++		}
++	}
++	sdeb_data_unlock(sip, false);
++
++out_unlock:
++	if (meta_data_locked)
++		sdeb_meta_write_unlock(sip);
++	return error;
++}
++
+ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ {
+ 	bool check_prot;
+@@ -6674,6 +6835,8 @@ static int scsi_debug_sdev_configure(struct scsi_device *sdp,
+ 	if (IS_ERR_OR_NULL(dentry))
+ 		pr_info("failed to create error file for device %s\n",
+ 			dev_name(&sdp->sdev_gendev));
++	debugfs_create_file("corrupt", 0600, devip->debugfs_entry, sdp,
++				&sdebug_corrupt_fops);
+ 
+ 	return 0;
+ }
+-- 
+2.53.0
+
