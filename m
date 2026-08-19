@@ -1,143 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from outbound.st.icloud.com (st-2006j-snip4-3.eps.apple.com [57.103.76.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D56AE3BE652;
-	Wed, 19 Aug 2026 03:23:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DC5638B124
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2026 03:23:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.76.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787109814; cv=none; b=ZreT6bBacbym1GbbN/1gxnflOhnFO9ay74zGqnG7Wylx/rRW2D7mAz9WtoYMdKRBneFdHumj4eC6kuoTtbTVTglD7UGiwyYZbg14kQUJliQu0gA7xsScuCehRrgqgLaDVt0GNIJ+9+e3f+PFY5sFbH2ajKqWO4Oy5hZGESXZf30=
+	t=1787109825; cv=none; b=pXSR44pHsJGCKLgk6Y2xM9iLU2AZxafdZXf9cT2XUAFcOTakrgJWJO9+qfjxpyA8S8JdjxWEntvaru9XxvcJ//8Hyoh3IrJoeTk5iXt7jAb0gjkC+oU8d1N+aW/Gq2crJt1QspZo2vb13gjHf/INoIwvCH+RVxxGe+k7o3RoZro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787109814; c=relaxed/simple;
-	bh=tF3vC/jSsAS2ZCsahL49g6i+80aiWSj9SUNFvf/LloQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=coCBYZ5Tkj343eUe8i3Hs+Ga/zxfzG3hPLu8VB3Isx9AOnCoY5oCAz/i0LUjKrqnVgsB4F1wX1XWkN8e7Tf6ZXi9mFBxyvO2WhTK5Lm6U0O5B0g/j0e02Kzte/cUQgAh5A05pVqfYHV0qmjLEgbxghguu1AZbqIxb0kHOdnfcGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zs5l+SLI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1787109825; c=relaxed/simple;
+	bh=ylJxSml66eSdEcWFnt44RyzT2km06LqKisxCfiubXos=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YuyhaBpNiLx7/3UMfrZ2zvy0LZDvqvw/M3xQK/86mlchlF/TEQk4PHfPc5vOIpAYDC7t5wEeQGKPisG2waNPnBLK/q1KGL7ty6gcoGcXqUJr8g5g1DHFOpYbwD7HFWMWWZT3Rlhxe19xPsMXtH7mEQgUYFwJK33dvK5T1gmUAiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=OcCQCpXj; arc=none smtp.client-ip=57.103.76.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zs5l+SLI"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7B26FC19425;
-	Wed, 19 Aug 2026 03:23:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1787109814;
-	bh=tF3vC/jSsAS2ZCsahL49g6i+80aiWSj9SUNFvf/LloQ=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=Zs5l+SLI337kGGyQFrdwYTo7rgEOdnRaXGxjfVAGIlAB5QBqlqrLySeURUzIoxBO8
-	 4UfWLxmucuorfQR7ZDqHPVFF5N2yjJQ1+EgK9dPb5j/pIwnrmxdKRUPuWsZ/PKBx9r
-	 ribQCw+TnzvCvrqVPdH+braBLe6p2+oSTsk9qMbmlqLcyaIrZqCGtZnvjuwzuj3rFt
-	 3rJb0cqNXi9Thn+KnTNuhjqbYgkesZW6ALFRAcqTqaiyv55vgeR4rjjnudGBB8IoLB
-	 s5Eib0O5RrTGMSMtG/hTOe2cHLgpElrqLV9837WYsab/QKPoFZvibQMJyqxLnmI1PZ
-	 nr4T7xGepmVZQ==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EA01C5DF82;
-	Wed, 19 Aug 2026 03:23:34 +0000 (UTC)
-From: Mark Amirkan via B4 Relay <devnull+markdamirkan.gmail.com@kernel.org>
-Date: Wed, 19 Aug 2026 03:23:26 +0000
-Subject: [PATCH] scsi: target: bound VPD identifier formatting
+	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="OcCQCpXj"
+Received: from outbound.st.icloud.com (unknown [127.0.0.2])
+	by p00-icloudmta-asmtp-us-east-1a-100-percent-4 (Postfix) with ESMTPS id 40BFF1800117;
+	Wed, 19 Aug 2026 03:23:42 +0000 (UTC)
+X-ICL-RepId: 01a0180b-cef1-748c-a13d-959704ab168f
+X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQhKC0MFWgNeC00HQwZdBlBcHA4IRANTEVdKA14GK1sTVRdGCRkIXR0ZHldQXgheH0wcHQ5YBhICWkUETV8OXh8EF0YZVQRHHl1WQBkZAlEcVg1XQ1QEX1BJDEFQbFoARxdIHV0ZWW9QXRwOBFQHXQVdVlACWktfGV1FD18HWQRAAUkKXQRZAUIIVgdUBFwGRhRJHghEA1MRV0oDXgYrWxNVF0YJGQhdHQdYRxRHDg8ZWhRcGFM=
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1787109823; x=1789701823; bh=A1QpEVx2b6+aa4ylMexU8jRm255JWvlShN3Aa+0+5l4=; h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme; b=OcCQCpXj1JW5D5mepvO2codG6tYZD1I88OS1PdxNDFrmcdpvh7V1Eo1Tfea7r3/eCGt0SMJdjKMdgygY5JNRFBNl2gPwm2lAdDoSMkzMyaPih51thzzHTDoj0HWG31HAgy9L/GmJt8J4+1UjzVGAOrd4HQuKwbKnwe8Qpa0gLijLYdXK+rP9gPD9llNubMSHFqv4YSAmsj8/soY/+hGTfJnZaDIAvpx8A50KiIVhjTRqz9and52HJHGOR5s93r5uuv5VHRuoP+rFmdAmZ2h3cFdq7Y6LPSK99qUj0ZEYc3BZiDTEIUhz+JOwo4thzx/9/fQmj0pNCI9fACkVn+VGXw==
+Received: from machine.resnet.purdue.edu (unknown [17.156.216.30])
+	by p00-icloudmta-asmtp-us-east-1a-100-percent-4 (Postfix) with ESMTPSA id 53AB918000AC;
+	Wed, 19 Aug 2026 03:23:41 +0000 (UTC)
+From: Eshaan Deshmukh <eshaan2031@icloud.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Eshaan Deshmukh <eshaan2031@icloud.com>
+Subject: [PATCH v4 0/3] Fix control flow in sas_ex_add_parent_port()
+Date: Tue, 18 Aug 2026 23:23:18 -0400
+Message-ID: <20260819032321.493746-1-eshaan2031@icloud.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260819-pscsi-vpd-ident-bounds-v1-1-ba28dcb0af08@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMywqDMBCF4VeRWXfABG/tqxQXTTLR6SKGjEoh+
- O6muvw4nD+DUGISeFUZEu0svIQC9ajAzp8wEbIrBl3rrh7UgFGsMO7RlYHCimbZghM0rfdG6Wf
- fNg7KOSby/LvC7/G2bOZLdv3X4DhO3Eq2gnoAAAA=
-X-Change-ID: 20260818-pscsi-vpd-ident-bounds-b5ffb129754d
-To: martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
- target-devel@vger.kernel.org
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787109813; l=2920;
- i=markdamirkan@gmail.com; s=pscsi-20260818; h=from:subject:message-id;
- bh=L8mPB4bIaFikTHrgHz6nuvvi6qLxDbVD6mrN0KpPLA4=;
- b=bObFYuDHrVvOgAblWgKkkU/381Mm3pmZ7jVJDJ9bBFZmkiuiofrvAeRmvxQqDdZq1Bikcjixd
- DXKSY7SDwPWA3WfsCqAmBHbhhr9k0dO0Vs3A9tPrHGJxHxo1QInwXgh
-X-Developer-Key: i=markdamirkan@gmail.com; a=ed25519;
- pk=/wb49ibt4gZFDncmhFQBYtjPvzT1tfJtvK4Mqt1P2Wc=
-X-Endpoint-Received: by B4 Relay for markdamirkan@gmail.com/pscsi-20260818
- with auth_id=961
-X-Original-From: Mark Amirkan <markdamirkan@gmail.com>
-Reply-To: markdamirkan@gmail.com
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: LQvDOUylx1PXj9H-FFSn7ucTBZ8nLp4A
+X-Proofpoint-ORIG-GUID: LQvDOUylx1PXj9H-FFSn7ucTBZ8nLp4A
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE5MDAyMiBTYWx0ZWRfX5fC7RJkSXs9u
+ e9rxyM2lnvZDbiT6trT+WerMZBrfgEwjjLe+RbzvvrA/q5GMowzgmG8KBi+bCA5i17S+TTfqXzi
+ HMAs2F0haAFRSUbYzQz31N066qxvjSc3mPxZxSbdNrKZi4vGSAHb2aNzq8KYeJYGA0lT1Hzl/WW
+ MH3p/v8SreU5zvVAVg/V77tCC0gRM2R+tEd+lWR5rj3rahXyc4FmnyDIonc9T/IDXZPiIO3GbNP
+ cCxGODFdJOFNGmx/47fKkAIUe0PCZ9FcBjZNl1Pwx4rp7LB+IAVb8fhq48DzNcHiFTdmnHdHClZ
+ 6aOwk781Dh0/npyrgC5Qap4WzSfwyEyc+BgDmB62hBjd6GYyx0mSNMDq4Jx5rk=
+X-Authority-Info-Out: v=2.4 cv=E9/AZKdl c=1 sm=1 tr=0 ts=6a8521bf
+ cx=c_apl:c_pps:t_out a=oyWFxbOnq+dmhQrAPgaJYA==:117
+ a=oyWFxbOnq+dmhQrAPgaJYA==:17 a=Sv0fKeRqtYgA:10 a=x7bEGLp0ZPQA:10
+ a=ea8ixM18I5MA:10 a=VkNPw1HP01LnGYTKEx00:22 a=-oGykA3_1HC3A3QQqTgA:9
+X-JNJ: AAAAAAABDHEdfqArtBjUK5FFV/El34pPyA3GCdrzj0HeO0Pi7wdwTbWF9/my3P7LgyCl9ftqJwBnUCGr3uIsigDclIPPUbX04UFc1t66A1mb8PMUWj4OvxbUfJw2RNeTa2gFBZ4Tdv93PLUlzmYWMReLogvkjosillhRXuklX0a9zlES6/QvvVV97VaXs5oOgQq26yLABpNFGP/7hRzMNbyjxvB93UDJJ6nWSFmShCI31wYphFlcbXMAzTG+FmcNtnZv5mozk+YO9F/Dxm4lKNZxGuM4u/bm7ycNFjVpbxmg2zjvhMlBjfXie5rn8yj3BWMJom1nTq6ylt2OYcJGpdLn9JaY3WPOgNnBUvZFJjfwdYE6vVmsUVBdpIDgyiRrw3U9HKzPfXdAYQNYLytoICxqhQoUSYwgJn3wihZrTX6q5Wy9HlEKztdtCRo7nZpKjNjdU/5XpqEDpfI1L75lumqhsQ4EhizF9BhsynjKrxrSoM0TRaBqrK5NOS4aDkr8PNR90hI2BOnvkTZeKTEutEihcBLjjGpLMB5HXmhlNsKMDxOHiFNwe2hNGaG2C/WsSvPl74PckmYmkiWOYD9CYCSlPuHzFYXPb18PYmRKzknANSJn19WS8V0JsKsnuJ0yXIXpr8kFxB8aGe6BUO1Frm1DFE9opNq49jM6PQ0Oo66C50/fRWQVXfGdAWsOjUBWXz1f14OI99UUYUEFPd1XQ/Dh8hVPUt2mg1EA49/8tYCsuPqEKvPNUs1KjQbaXukN4ffN2GL1oVHfRxrVjjYnRZlLP7I4fzWhfoENh48EsZzbjS+rxKFxsElThUD6xBfdOE5HNEmqqSCWmLuW+2qQM07bYWfsVrSo5oeClsTgX41FIDX6h2bOA/XFtv0gHV5QqqGREOY1G8fxPE6ZC8eHw5bedHiaq+kBx/43D0QuacYdSJ8XbzJklw1O/HQnScOUjrTkp1MZMlE3xuT53l+yGjnFkCC058I
+ IZqozlRFSiOQWgCfUOv6e3vqCOOATnuYf0IM3lBO3WiZB+SN8U1tc+xjB4Z/XlGAiHj7r59exn43qNbEVj6qTg8NNq919vxukUr8gY/7ytYO0ndtc2JXMH7hljn4SqYnC0xLaG+gDWOwo30Vwr4izp/X68bOXqpc8ZD2HkfClGF0dXQ1MksAgK9DuwNOIbb/JXePCdX56jH0FHhP5xdYOqJWG01Kj1c4rSeRjy6BrUGtTZSoubD7uILycPUdf5glJUq0il9Ae3SQsqS5s8AiSFze11mMD5iDU
 
-From: Mark Amirkan <markdamirkan@gmail.com>
+Fix label control flow for the function sas_ex_add_parent_port(). Remove
+labels and move the code back to their original places.
 
-transport_set_vpd_ident() formats device-provided VPD page 0x83
-identifiers into the 254-byte t10_vpd::device_identifier array without
-checking whether the result fits.
+Eshaan Deshmukh (3):
+  scsi: libsas: Handle errors in sas_ex_add_parent_port()
+  scsi: libsas: Handle errors in sas_set_ex_phy()
+  scsi: libsas: Handle errors in  sas_ex_discover_expander()
 
-A binary identifier emits one type character followed by two hexadecimal
-characters per input byte.  A 148-byte identifier therefore emits 297
-characters, eventually writing beyond the 296-byte t10_vpd allocation.
+ drivers/scsi/libsas/sas_expander.c | 75 ++++++++++++++++++++----------
+ 1 file changed, 50 insertions(+), 25 deletions(-)
 
-Reject binary identifiers longer than 126 bytes and apply the equivalent
-destination bound to ASCII and UTF-8 identifiers.  Explicitly terminate
-accepted identifiers.  Rejecting instead of truncating avoids creating a
-false device identity.
-
-The write was reproduced with generic KASAN on arm64 Linux 7.2-rc7 using
-a complete 168-byte VPD response.  With the same input, the fixed kernel
-retains the valid NAA descriptor, skips the 148-byte vendor-specific
-descriptor, enables the pSCSI backstore, and produces no KASAN report.
-Seven boundary tests pass.
-
-The demonstrated path requires a device-provided response and privileged
-pSCSI configuration.  No claim is made about exploitability or
-unprivileged reachability.
-
-The tested source reproducer is available privately on request.
-
-Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
-Cc: stable@vger.kernel.org
-Assisted-by: Codex:gpt-5.6
-Signed-off-by: Mark Amirkan <markdamirkan@gmail.com>
----
- drivers/target/target_core_transport.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index dcfe9459..26a0bb66 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1335,6 +1335,14 @@ transport_set_vpd_ident(struct t10_vpd *vpd, unsigned char *page_83)
- 	vpd->device_identifier_code_set = (page_83[0] & 0x0f);
- 	switch (vpd->device_identifier_code_set) {
- 	case 0x01: /* Binary */
-+		/*
-+		 * Reserve one character for the type and one for the NUL;
-+		 * each binary byte expands to two hex characters.
-+		 */
-+		if (page_83[3] >
-+		    (sizeof(vpd->device_identifier) - 2) / 2)
-+			return -EINVAL;
-+
- 		vpd->device_identifier[j++] =
- 				hex_str[vpd->device_identifier_type];
- 		while (i < (4 + page_83[3])) {
-@@ -1344,11 +1352,16 @@ transport_set_vpd_ident(struct t10_vpd *vpd, unsigned char *page_83)
- 				hex_str[page_83[i] & 0x0f];
- 			i++;
- 		}
-+		vpd->device_identifier[j] = '\0';
- 		break;
- 	case 0x02: /* ASCII */
- 	case 0x03: /* UTF-8 */
-+		if (page_83[3] >= sizeof(vpd->device_identifier))
-+			return -EINVAL;
-+
- 		while (i < (4 + page_83[3]))
- 			vpd->device_identifier[j++] = page_83[i++];
-+		vpd->device_identifier[j] = '\0';
- 		break;
- 	default:
- 		break;
-
----
-base-commit: 3a0dd7ba4f44cdc116d83712f61e7c1a95be3588
-change-id: 20260818-pscsi-vpd-ident-bounds-b5ffb129754d
-
-Best regards,
---  
-Mark Amirkan <markdamirkan@gmail.com>
-
+-- 
+2.55.0
 
