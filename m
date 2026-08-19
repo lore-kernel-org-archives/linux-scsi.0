@@ -1,171 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1E8F2D061C
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Aug 2026 18:33:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from zg8tmtyylji0my4xnjeumjiw.icoremail.net (zg8tmtyylji0my4xnjeumjiw.icoremail.net [162.243.161.220])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id BAA3B36A34F;
+	Wed, 19 Aug 2026 00:51:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.243.161.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787077986; cv=none; b=ZY92Qhx1Qs+DW7OKO5XOYAP3LJjVcrk57zb29ilXrCZIl9i/2lFN0GgD3/P8gGrsxoycqADcD+sqzFHn1aY7LGWIrMxC6XoP1uwlWGVtIxEH8rkOtgiPqfrKJ9qXeahybuz+sZjnf6nqgOoo1iTpypLAf0HPvwu94eg8hcUVXWI=
+	t=1787100716; cv=none; b=YpLRx+W7nkyO4CiVFWejY2vwiDR6s1skjXxL5NFMsUEFHLaq7oXitaLz8Rh8z7xivwmtVD78iCSm/PUTpJvzBWciVkvmhOTpWtS3Q8BCUQ8UtLrUz+FkSkd4NguPtrGe8YLlGal82QuG0t9ChnNVBNo1qbZpvGZnexwuD9w4DuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787077986; c=relaxed/simple;
-	bh=AMrPixSdcd9fTuHRWcvBJ8NLG2p9f3IB7wJ9lU2bGOM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=e9gGYNGbiGlwycbXyLc3MDYEX1OM1jU8xFajlELRSuxlZ+qhpKXIkTAZMfyuTq+/W6RtoTUjcFhqoDtgmwOh+tq3knhU02FgFPJV1g3FSdB4v8KAibbvwtNludf9HfnaRHKM6egXkAHg8j/4TJcDsmwzIg25me0N8NAO+4fCBzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RophIqcq; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RophIqcq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2176B1F000E9;
-	Tue, 18 Aug 2026 18:33:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787077985;
-	bh=EkcgyrfeiY9zt1ttlQmNLjypYy5nlxr3DOqbFI5XFSo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RophIqcqUcVYgbCmc1ChpX80zQTaLgmqSeEO4LpjAURVj/45MyteAmd2dOO7JfeAg
-	 yARyMQgoWGFpLMf/5KMS4LRf2jHZ/hL/o+SZerW4vTit12bzBbq/OJAIvAmx0cQMoo
-	 6Bhrk8dP9e2cnqiBPosWejeDvDlYrY1YYoc6cncjIt/csXPJwzjL7QAww+KSqUOtg+
-	 W2FzgVpAB7cDwEd9fnOBUtngyCTdZPf5Q+gubTIpvk7vw/DHKHCI+pdaAX+OM8+RCt
-	 Ejamzn12gsN243IBGE1y7m9IoH9r/SglscB3p8ZYBIjgKSixP+xTqE7/LcNEE70HHU
-	 oJi4m48TtXlUw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 12/17] mpi3mr: Fix out-of-bounds phy array access on
- link change
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chandrakanth Patil" <chandrakanth.patil@broadcom.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260818231426.58105-13-chandrakanth.patil@broadcom.com>
-References: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
- <20260818231426.58105-13-chandrakanth.patil@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 18 Aug 2026 18:33:04 +0000
-Message-Id: <20260818183305.2176B1F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1787100716; c=relaxed/simple;
+	bh=oc/0KULaHoN6SnJXZv/6S58xCCc+QyBkXF8Ljgn0zQ4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=fsts9CE+Q52ViU9/vIRzoHji6DolWNvUj3Eze72NVh0MA0AdA6CyBhBgZVUCdhyB6QS2oPmlumW+Ft5m7GHGbNM69T8MOgEilmC4Lw7NFhlx9DswLldqWYmtvYxjy8mZXmTDzpmpMYTUKDEG9rxrcV7Aywji2yJYsyDYP1eLyRQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=162.243.161.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.98.66.117])
+	by mtasvr (Coremail) with SMTP id _____wDXwH4e_oRqDEumAA--.18943S3;
+	Wed, 19 Aug 2026 08:51:43 +0800 (CST)
+Received: from localhost.localdomain (unknown [10.98.66.117])
+	by mail-app3 (Coremail) with SMTP id zS_KCgD3MHQe_oRqBs19BA--.43316S2;
+	Wed, 19 Aug 2026 08:51:42 +0800 (CST)
+From: Fan Wu <fanwu01@zju.edu.cn>
+To: linux-scsi@vger.kernel.org
+Cc: kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	shivasharan.srikanteshwara@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	megaraidlinux.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	Fan Wu <fanwu01@zju.edu.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: megaraid_sas: kill tasklet after free_irq in teardown paths
+Date: Wed, 19 Aug 2026 00:50:43 +0000
+Message-Id: <20260819005043.439436-1-fanwu01@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zS_KCgD3MHQe_oRqBs19BA--.43316S2
+X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
+X-CM-DELIVERINFO: =?B?BO2tRAXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
+	sfnZPoDCNGYdHSfuFmYJL54WMaYFv/hR4zMR5+IQtbZGQZ2QMhKutmIkYA9lCRHeVpib8H
+	VZo9S4DSVA/s4W9DIsbN5RPxYw6l01w8CbPzC/8w
+X-Coremail-Antispam: 1Uk129KBj93XoWxCw17WFyfAr43Cr4xJrWfXrc_yoW5AFWkpr
+	ykGw4Utry8Z3WF9rWqvw48Cr1jy39xG3s8CrW8t347tr1Fvr9avrs7tr4fKFs2yr4kXanr
+	Jr1jqws5uan8JwcCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUPYb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAF
+	wI0_Cr1j6rxdM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l57
+	IF6xkI12xvs2x26I8E6xACxx1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE
+	14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2
+	IYc2Ij64vIr41lF7xvr2IYc2Ij64vIr40E4x8a64kEw24lFIxGxcIEc7CjxVA2Y2ka0xkI
+	wI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxV
+	WUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI
+	7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r
+	1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI
+	42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07jbo7NUUUUU=
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On MFI-series adapters the interrupt handler arms instance->isr_tasklet
+for as long as the interrupt is registered, so the tasklet can be armed
+again after tasklet_kill() has returned.  megasas_detach_one() and
+megasas_suspend() kill the tasklet before unregistering the interrupts,
+and the probe error paths skip the kill entirely, so the completion
+callback can run after the teardown frees the buffers it dereferences,
+or a tasklet pending across suspend is re-initialized by resume's
+tasklet_init() while still queued.
 
-Pre-existing issues:
-- [High] The firmware event handlers for SAS and PCIe topology changes iter=
-ate up to `num_entries` without ensuring it is strictly bounded by the even=
-t data length, leading to out-of-bounds reads.
-- [High] This problem wasn't introduced by this patch, but the entirety of =
-`mpi3mr_update_links` continues to access `mr_sas_node` and performs lockle=
-ss list traversals on its structures after releasing `mrioc->sas_node_lock`=
- on the happy path.
-- [High] This problem wasn't introduced by this patch, but a shift-sign-ext=
-ension bug exists when updating 64-bit `phy_mask` bitmasks using `1 << i`, =
-leading to out-of-bounds array accesses when `i >=3D 31`.
---
+Kill the tasklet after megasas_destroy_irqs(), which drains the handler
+via free_irq(), and add the missing kills in the probe error paths.
 
---- Patch [12]: [PATCH 12/17] mpi3mr: Fix out-of-bounds phy array access on=
- link change ---
-commit 5a98eebaf3b1e059c60e29aa1529199221440703
-Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+This issue was found by an in-house static analysis tool.
 
-mpi3mr: Fix out-of-bounds phy array access on link change
+Fixes: 5d018ad05734 ("[SCSI] megaraid_sas: adds tasklet for cmd completion")
+Cc: stable@vger.kernel.org
+Assisted-by: Codex:gpt-5.6
+Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-This commit adds a bounds check to ensure the phy number associated with a
-link change does not exceed the allocated number of phys for the node. If it
-does, the event is logged and ignored.
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ecd365d78ae3..627bcba720cd 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -6536,6 +6536,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ fail_get_ld_pd_list:
+ 	instance->instancet->disable_intr(instance);
+ 	megasas_destroy_irqs(instance);
++	tasklet_kill(&instance->isr_tasklet);
+ fail_init_adapter:
+ 	if (instance->msix_vectors)
+ 		pci_free_irq_vectors(instance->pdev);
+@@ -7618,6 +7619,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 
+ 	instance->instancet->disable_intr(instance);
+ 	megasas_destroy_irqs(instance);
++	tasklet_kill(&instance->isr_tasklet);
+ 
+ 	if (instance->adapter_type != MFI_SERIES)
+ 		megasas_release_fusion(instance);
+@@ -7770,12 +7772,11 @@ megasas_suspend(struct device *dev)
+ 		instance->ev = NULL;
+ 	}
+ 
+-	tasklet_kill(&instance->isr_tasklet);
+-
+ 	pci_set_drvdata(instance->pdev, instance);
+ 	instance->instancet->disable_intr(instance);
+ 
+ 	megasas_destroy_irqs(instance);
++	tasklet_kill(&instance->isr_tasklet);
+ 
+ 	if (instance->msix_vectors)
+ 		pci_free_irq_vectors(instance->pdev);
+@@ -8010,8 +8011,6 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 	/* cancel all wait events */
+ 	wake_up_all(&instance->int_cmd_wait_q);
+ 
+-	tasklet_kill(&instance->isr_tasklet);
+-
+ 	/*
+ 	 * Take the instance off the instance array. Note that we will not
+ 	 * decrement the max_index. We let this array be sparse array
+@@ -8028,6 +8027,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 	instance->instancet->disable_intr(instance);
+ 
+ 	megasas_destroy_irqs(instance);
++	tasklet_kill(&instance->isr_tasklet);
+ 
+ 	if (instance->msix_vectors)
+ 		pci_free_irq_vectors(instance->pdev);
 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr=
-/mpi3mr_transport.c
-> index 240f67a8e2e3b..2afff1a002ed9 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-> @@ -1090,6 +1090,13 @@ void mpi3mr_update_links(struct mpi3mr_ioc *mrioc,
->  		return;
->  	}
-> =20
-> +	if (phy_number >=3D mr_sas_node->num_phys) {
-> +		spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
-> +		ioc_err(mrioc, "%s: phy_number(%d) >=3D num_phys(%d)\n",
-> +			__func__, phy_number, mr_sas_node->num_phys);
-> +		return;
-> +	}
-> +
->  	mr_sas_phy =3D &mr_sas_node->phy[phy_number];
->  	mr_sas_phy->attached_handle =3D handle;
->  	spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
-
-[Severity: High]
-This is a pre-existing issue, but does dropping the sas_node_lock here leave
-mr_sas_node vulnerable to concurrent modification or use-after-free?
-
-Looking at the remainder of mpi3mr_update_links(), mr_sas_node and its memb=
-ers
-continue to be used after the lock is released:
-
-    spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
-    if (handle && (link_rate >=3D MPI3_SAS_NEG_LINK_RATE_1_5)) {
-        mpi3mr_set_identify(mrioc, handle, &mr_sas_phy->remote_identify);
-        mpi3mr_add_phy_to_an_existing_port(mrioc, mr_sas_node, mr_sas_phy, =
-...);
-
-When mpi3mr_add_phy_to_an_existing_port() is called, it iterates over the
-sas_port_list locklessly:
-
-    list_for_each_entry(mr_sas_port, &mr_sas_node->sas_port_list, port_list=
-) {
-
-Since mrioc->sas_node_lock is no longer held, can other events concurrently=
- add
-or remove ports, corrupting the traversal? Additionally, mr_sas_node is fet=
-ched
-without acquiring a reference, potentially allowing it to be concurrently f=
-reed.
-
-[Severity: High]
-This isn't a bug introduced by this patch, but could the firmware event
-handlers for SAS and PCIe topology changes iterate up to num_entries without
-bounds checking against the event data length?
-
-In mpi3mr_sastopochg_evt_bh() and mpi3mr_pcietopochg_evt_bh() in mpi3mr_os.=
-c,
-the loop blindly iterates up to num_entries:
-
-    for (i =3D 0; i < event_data->num_entries; i++) {
-        handle =3D le16_to_cpu(event_data->phy_entry[i].attached_dev_handle=
-);
-
-If the hardware or an attacker controlling the controller issues an event w=
-ith
-a num_entries field larger than what fits in the reply buffer, could this
-lead to an out-of-bounds read? Even if the top-half handler attempts to bou=
-nd
-num_entries, returning early without dropping the event still allows the
-bottom-half to iterate over the truncated buffer.
-
-Additionally, mpi3mr_pcietopochg_evt_th() appears to completely lack any
-bounds checking before iterating over topo_evt->port_entry.
-
-[Severity: High]
-This isn't a bug introduced by this patch, but is there a sign-extension
-regression when updating the 64-bit phy_mask bitmask in
-mpi3mr_add_phy_to_an_existing_port()?
-
-    mr_sas_port->phy_mask |=3D (1 << i);
-
-When i evaluates to 31, the expression 1 << 31 evaluates as a negative 32-b=
-it
-integer (0x80000000). When this is bitwise OR'd into the 64-bit phy_mask, it
-sign-extends to 0xFFFFFFFF80000000ULL, erroneously setting bits 31 through =
-63.
-
-Later, in mpi3mr_update_mr_sas_port(), this corrupted mask seems to be used
-in a loop:
-
-    for_each_set_bit(i, (ulong *) &phys_to_be_added, BITS_PER_TYPE(u64)) {
-        mr_sas_phy =3D &mrioc->sas_hba.phy[i];
-
-If phys_to_be_added inherits the sign-extended mask, won't this loop exceed
-the allocated bounds of mrioc->sas_hba.phy (which may only have 32 elements)
-and corrupt memory?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818231426.5810=
-5-1-chandrakanth.patil@broadcom.com?part=3D12
