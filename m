@@ -1,167 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5916223909C
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2026 03:35:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A7D038BF6A
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2026 03:37:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787110521; cv=none; b=lu7XzqIFAXY4tvbmNvvImv1AKXyugfjX7nn4phYAEo526Mo3L1C4rJYQFrUewO1ca1tRtk867n7hVV0OgSsCkPzKiwUSNIPVCUilpl/PfTLbL2yMhFyVmRXhpmHCOnPxyJKC2hhYkpfi8T2vEOTZuBmQ7Ow/LExMv0iZAzV1HhQ=
+	t=1787110622; cv=none; b=L9sLiqqgkklX5mSyxcXfHFCel3olSpEmvYE3jdey7tiHsTHqysw9I3yy4IR+/X+RZC/E3N8lfm2Bv3fn5XpKOSw0tLBrEpoUNHD5bLhdQF01JgDjduId+1Rt48FpSeT/d77Ypbf1K8oDahduQTmaqb8TNNB351l7srdVpU31Tmg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787110521; c=relaxed/simple;
-	bh=ByKzBr+vWx4mWj6XQCpl01zbFxDmZyMxYl4AbZP3Vc8=;
+	s=arc-20240116; t=1787110622; c=relaxed/simple;
+	bh=fvWzo6fdALj6KjKBMKAlGbifuFa8SrJg+rFQCoceo4s=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=AdXCrLsUJH3mSvZpPfvTuuAEVbGeyfEJ+EW/tNFXw9zHG+imUA2pa2uAHTOdLDJgw6WVcxAEmG+euEwqE0JFA1fW87akkzUIYC8JLYfywpDkOUyb4RgB9EEwRUqA7IByIkNGiWhtBOxs4sEqYlTjKehBAMw0Am2IpK1R7POnPMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BFRApcMy; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=S8+c/Xs7l6U6UgYpUSEKm5f8FISezXs3hWUxVksaLHJFDYI7GyE4ysg8mLRgvMnnVNVpUU/QNp/hW9UHkwlvuOr4bdt9suQpVYtZY39Y2ZGwQ7fuhSntLTiwT6xj8+kBRwMUcKaey6JFiQAFnFX4jlnMN3FXunSfokUZYq5fGgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eFTJoozk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BFRApcMy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEDC81F000E9;
-	Wed, 19 Aug 2026 03:35:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eFTJoozk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87C5C1F000E9;
+	Wed, 19 Aug 2026 03:37:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787110520;
-	bh=9XSExiAFeLvUv8uMm2RNUSiniT6XDZ3DlYGHoG06ePc=;
+	s=k20260515; t=1787110620;
+	bh=QOxR3Zb3sxmbcPg6t2t9Z0ifmq9n53IYGHonYAfWEiQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BFRApcMyzPiwxgRbzAyilV1Ne+WnpsFFELhQh8bDbi1Ai40A0oiEeiUvT/iuxuWAN
-	 FzsPdHgeFp5btikEUDe1F1+qUqYJpxmNpnAbXPrCdkJb/mxvAxFuXyEj9d+8uhB4ty
-	 9Yhd5/nzveIFw8Qw8wE8HBTw9ON0FKEQBc7ac9JKfOW/OIl79326xloI44YDdKeXLz
-	 j65hhX3iXPJywgHjDeyfCJoMLF8YtauyBu5ksIXWSeqnAGhVANbV8FJxQ8H0ORki8u
-	 KLDMoB7gSxMvmzw0KNNLHyDalcD6jqUKG1qn1td6Yql7eYLf6AfWTjhSE/gtG7N0XA
-	 dlfy7NeFd7F9g==
+	b=eFTJoozkhPplZkUAUSJgog5f97u++juzF9m6ojXZPmAeb4C3liyX1lMBm/Z68h+/t
+	 HceCpo+LwjncYXveb5hQnzQr7ZYYIzmLPXCrgzXu0jnNHyjRKL//BEDoFuw6POSbpy
+	 Q/fvl5v5JMWcFHuZag37cyHwuwqSUfyN2By4XUR5+8J2qFfRZAxXgl9h7aQ2iXh7se
+	 R3PIGDD4hYs9c6VvtXcP2ISxqvJDaFp5IDv+y1VSFg4eRD7ocngADmdBtoOO+/ui9s
+	 wTw6VC6tNnSCkC9D9t5PNlZG86pqOPv4FPJxWAjoO7kE+N4IqA+QzYlihx5xhzlMR+
+	 iRNY8h3Hh1TSA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: bound VPD identifier formatting
+Subject: Re: [PATCH v4 2/3] scsi: libsas: Handle errors in sas_set_ex_phy()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mark Amirkan" <markdamirkan@gmail.com>
+To: "Eshaan Deshmukh" <eshaan2031@icloud.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260819-pscsi-vpd-ident-bounds-v1-1-ba28dcb0af08@gmail.com>
-References: <20260819-pscsi-vpd-ident-bounds-v1-1-ba28dcb0af08@gmail.com>
+In-Reply-To: <20260819032321.493746-3-eshaan2031@icloud.com>
+References: <20260819032321.493746-1-eshaan2031@icloud.com>
+ <20260819032321.493746-3-eshaan2031@icloud.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 19 Aug 2026 03:35:19 +0000
-Message-Id: <20260819033519.DEDC81F000E9@smtp.kernel.org>
+Date: Wed, 19 Aug 2026 03:37:00 +0000
+Message-Id: <20260819033700.87C5C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] pscsi_get_inquiry_vpd_device_ident() lacks bounds checking against=
- the allocated buffer size when parsing VPD Identification descriptors.
-- [High] Leaked bios in pscsi_execute_cmd() error path.
-- [Medium] Missing NUL-termination enforcement in pscsi_get_inquiry_vpd_ser=
-ial() leads to an out-of-bounds read via unbounded snprintf().
+- [High] Propagating errors from sas_set_ex_phy() aborts the entire expande=
+r discovery loop, leading to unintended and complete topology loss.
 --
 
---- Patch [1]: [PATCH] scsi: target: bound VPD identifier formatting ---
-commit 63526716e874620c72b9c2ea7622a0eea0ce5c5e
-Author: Mark Amirkan <markdamirkan@gmail.com>
+--- Patch [2]: [PATCH v4 2/3] scsi: libsas: Handle errors in sas_set_ex_phy=
+() ---
+commit 5c1f09068df832f5cb0e690bb6d4560d1c0cf52e
+Author: Eshaan Deshmukh <eshaan2031@icloud.com>
 
-scsi: target: bound VPD identifier formatting
+scsi: libsas: Handle errors in sas_set_ex_phy()
 
-This patch adds bounds checking to transport_set_vpd_ident() when
-formatting device-provided VPD page 0x83 identifiers into the fixed-size
-t10_vpd::device_identifier array. It rejects binary, ASCII, and UTF-8
-identifiers that exceed the allocation limits to avoid writing past the
-296-byte boundary.
+This commit modifies sas_set_ex_phy() to return an error instead of
+using BUG_ON() or returning void. It updates the callers of
+sas_set_ex_phy() to propagate the newly returned error codes.
 
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/targ=
-et_core_transport.c
-> index dcfe945949167..26a0bb66c2530 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -1335,6 +1335,14 @@ transport_set_vpd_ident(struct t10_vpd *vpd, unsig=
-ned char *page_83)
->  	vpd->device_identifier_code_set =3D (page_83[0] & 0x0f);
->  	switch (vpd->device_identifier_code_set) {
->  	case 0x01: /* Binary */
-> +		/*
-> +		 * Reserve one character for the type and one for the NUL;
-> +		 * each binary byte expands to two hex characters.
-> +		 */
-> +		if (page_83[3] >
-> +		    (sizeof(vpd->device_identifier) - 2) / 2)
-> +			return -EINVAL;
-> +
->  		vpd->device_identifier[j++] =3D
->  				hex_str[vpd->device_identifier_type];
->  		while (i < (4 + page_83[3])) {
-> @@ -1344,11 +1352,16 @@ transport_set_vpd_ident(struct t10_vpd *vpd, unsi=
-gned char *page_83)
->  				hex_str[page_83[i] & 0x0f];
->  			i++;
->  		}
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the caller pass a prope=
-rly
-bounded page_83 pointer into this function?
-
-Looking at pscsi_get_inquiry_vpd_device_ident() in target_core_pscsi.c, the=
- loop
-blindly advances the buffer offset using unvalidated lengths from the devic=
-e:
-
-drivers/target/target_core_pscsi.c:pscsi_get_inquiry_vpd_device_ident() {
-    ...
-    page_len =3D get_unaligned_be16(&buf[2]);
-    while (page_len > 0) {
-        page_83 =3D &buf[off];
-        ident_len =3D page_83[3];
-    ...
-}
-
-If page_len or ident_len exceed the 254-byte allocation limit for buf, coul=
-dn't
-the while loop here in transport_set_vpd_ident() read out-of-bounds heap
-memory when accessing page_83[i]?
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas=
+_expander.c
+> index f1a1417b09819..ab6afbad37feb 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
 
 [ ... ]
 
-While reviewing the VPD handling, I also noticed a couple of other pre-exis=
-ting
-issues in the related target_core_pscsi.c code:
+> @@ -220,14 +220,15 @@ static void sas_set_ex_phy(struct domain_device *de=
+v, int phy_id,
+>  	struct sas_rphy *rphy =3D dev->rphy;
+>  	bool new_phy =3D !phy->phy;
+>  	char *type;
+> +	int error;
+> =20
+>  	if (new_phy) {
+>  		if (WARN_ON_ONCE(test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)))
+> -			return;
+> +			return -EBUSY;
+>  		phy->phy =3D sas_phy_alloc(&rphy->dev, phy_id);
+> =20
+> -		/* FIXME: error_handling */
+> -		BUG_ON(!phy->phy);
+> +		if (!phy->phy)
+> +			return -ENOMEM;
+>  	}
+> =20
+>  	switch (disc_resp->result) {
 
-[Severity: Medium]
-This is a pre-existing issue, but is there a risk of an out-of-bounds read
-in pscsi_get_inquiry_vpd_serial() when parsing an untrusted buffer?
+[ ... ]
 
-drivers/target/target_core_pscsi.c:pscsi_get_inquiry_vpd_serial() {
-    ...
-    snprintf(&wwn->unit_serial[0], INQUIRY_VPD_SERIAL_LEN, "%s", &buf[4]);
-    ...
-}
-
-If a device returns 254 bytes of non-NUL characters for the INQUIRY respons=
-e,
-won't the %s format specifier cause snprintf() to read past the end of the
-254-byte buf allocation up to the INQUIRY_VPD_SERIAL_LEN limit?
+> @@ -397,8 +403,8 @@ static int sas_ex_phy_discover_helper(struct domain_d=
+evice *dev, u8 *disc_req,
+>  		pr_notice("Found loopback topology, just ignore it!\n");
+>  		return 0;
+>  	}
+> -	sas_set_ex_phy(dev, single, disc_resp);
+> -	return 0;
+> +
+> +	return sas_set_ex_phy(dev, single, disc_resp);
+>  }
 
 [Severity: High]
-This is also a pre-existing issue, but does the error path in
-pscsi_execute_cmd() leak bio structures?
+Does propagating this error up abort the entire expander discovery loop?
 
-drivers/target/target_core_pscsi.c:pscsi_execute_cmd() {
-    ...
-    if (scmd->cmd_len > sizeof(scmd->cmnd)) {
-        ret =3D TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-        goto fail_put_request;
-    }
-    ...
-fail_put_request:
-    blk_mq_free_request(req);
-    return ret;
+If sas_set_ex_phy() returns -EBUSY (e.g. when SATA error recovery is active)
+or -ENOMEM, sas_ex_phy_discover_helper() will pass that error back to
+sas_ex_phy_discover().
+
+sas_ex_phy_discover() iterates over all PHYs in the expander:
+
+drivers/scsi/libsas/sas_expander.c:sas_ex_phy_discover() {
+        ...
+        for (i =3D 0; i < ex->num_phys; i++) {
+                res =3D sas_ex_phy_discover_helper(dev, disc_req,
+                                                 disc_resp, i);
+                if (res)
+                        goto out_err;
+        }
+        ...
 }
 
-If pscsi_map_sg() successfully maps the scatterlist and allocates bios via
-bio_kmalloc() attached to req->bio, and then the subsequent CDB length check
-fails, doesn't blk_mq_free_request() free the request state without freeing=
- the
-attached bios? Could an unprivileged remote initiator repeatedly send
-variable-length CDBs greater than 32 bytes to trigger this path and exhaust
-memory?
+Could this cause the entire expander discovery to fail and tear down the
+expander if a single PHY fails to initialize, instead of just skipping the
+problematic PHY as it did previously?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260819-pscsi-vpd-=
-ident-bounds-v1-1-ba28dcb0af08@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260819032321.4937=
+46-1-eshaan2031@icloud.com?part=3D2
