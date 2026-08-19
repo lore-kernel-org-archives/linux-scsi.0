@@ -1,200 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 611B535E925
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Aug 2026 01:25:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D56AE3BE652;
+	Wed, 19 Aug 2026 03:23:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787102757; cv=none; b=rgEIbPdXePjcHQjmDZZdeqY0lOAeAYpXSuQx89K3lF/Fc/vSoT86gctUjH8hi3D9jRU0y9mbXvBVyfVGPQcui+ZF64KFhYh8uttL0lRE5Rcm+gGHzM1eCiPEmewviWJSPtuNcM90+UGj7NNry/3qPEsq+2BD+dKk+BlHSYPqUYw=
+	t=1787109814; cv=none; b=ZreT6bBacbym1GbbN/1gxnflOhnFO9ay74zGqnG7Wylx/rRW2D7mAz9WtoYMdKRBneFdHumj4eC6kuoTtbTVTglD7UGiwyYZbg14kQUJliQu0gA7xsScuCehRrgqgLaDVt0GNIJ+9+e3f+PFY5sFbH2ajKqWO4Oy5hZGESXZf30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787102757; c=relaxed/simple;
-	bh=m/jG6d/ko8sYIMA7zN9czjC3Dw/zu+L32zSNmxzGghs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kcKxqpkSX1m/Zl80IkttxJ53MIePBeAT9D31IMifSLiD8bOKpbbSQ6giOIm5tOnWsg4+50XtIlOivNdzPZO3UPSXZkgyFj02MYDsDiCh0h5BJqf4qDO8OG8OtqLBLTmPZ7csLBCNldzv2oPJ41EGnRqPu4qznu86SHq/Fil+MY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W6aYaImy; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787109814; c=relaxed/simple;
+	bh=tF3vC/jSsAS2ZCsahL49g6i+80aiWSj9SUNFvf/LloQ=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=coCBYZ5Tkj343eUe8i3Hs+Ga/zxfzG3hPLu8VB3Isx9AOnCoY5oCAz/i0LUjKrqnVgsB4F1wX1XWkN8e7Tf6ZXi9mFBxyvO2WhTK5Lm6U0O5B0g/j0e02Kzte/cUQgAh5A05pVqfYHV0qmjLEgbxghguu1AZbqIxb0kHOdnfcGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zs5l+SLI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W6aYaImy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 245851F000E9;
-	Wed, 19 Aug 2026 01:25:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787102755;
-	bh=WH4ErY0sIYnoE4K6cRgt03FHDkwKs7M0SF7PMS4qbIM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=W6aYaImypIuXiGw+ddfd1cwG0kJNFm05uqtibN4QGVwLVk1zIPO+IqflMlZp12C3X
-	 OblUv7RQht7Jz6a5uT6v26O74vLmXsn27yYf+sh1PlircPzpvTwXVDc5mM21j2DNC+
-	 noCKshNRGrAIH9xB/Sargj2xdPHkXJnhwgr++6w5LqZy4qSmzYi3utyXpE1lWZMdFG
-	 4Btv3zqFC9+8UT/tOME7HO1HfCweRhUPDdB1sQsvRUyE044c344Tfaj4H6L6HhFBSj
-	 l3V81yku2N55lFouAdqEIxKfa6YwZNLjXsHvPYj6aBJJTr5k5KMp63eKVRV6r7e4Km
-	 Ie8spFgeskUpw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: megaraid_sas: kill tasklet after free_irq in
- teardown paths
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Fan Wu" <fanwu01@zju.edu.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260819005043.439436-1-fanwu01@zju.edu.cn>
-References: <20260819005043.439436-1-fanwu01@zju.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 19 Aug 2026 01:25:54 +0000
-Message-Id: <20260819012555.245851F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zs5l+SLI"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 7B26FC19425;
+	Wed, 19 Aug 2026 03:23:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1787109814;
+	bh=tF3vC/jSsAS2ZCsahL49g6i+80aiWSj9SUNFvf/LloQ=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=Zs5l+SLI337kGGyQFrdwYTo7rgEOdnRaXGxjfVAGIlAB5QBqlqrLySeURUzIoxBO8
+	 4UfWLxmucuorfQR7ZDqHPVFF5N2yjJQ1+EgK9dPb5j/pIwnrmxdKRUPuWsZ/PKBx9r
+	 ribQCw+TnzvCvrqVPdH+braBLe6p2+oSTsk9qMbmlqLcyaIrZqCGtZnvjuwzuj3rFt
+	 3rJb0cqNXi9Thn+KnTNuhjqbYgkesZW6ALFRAcqTqaiyv55vgeR4rjjnudGBB8IoLB
+	 s5Eib0O5RrTGMSMtG/hTOe2cHLgpElrqLV9837WYsab/QKPoFZvibQMJyqxLnmI1PZ
+	 nr4T7xGepmVZQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EA01C5DF82;
+	Wed, 19 Aug 2026 03:23:34 +0000 (UTC)
+From: Mark Amirkan via B4 Relay <devnull+markdamirkan.gmail.com@kernel.org>
+Date: Wed, 19 Aug 2026 03:23:26 +0000
+Subject: [PATCH] scsi: target: bound VPD identifier formatting
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260819-pscsi-vpd-ident-bounds-v1-1-ba28dcb0af08@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMywqDMBCF4VeRWXfABG/tqxQXTTLR6SKGjEoh+
+ O6muvw4nD+DUGISeFUZEu0svIQC9ajAzp8wEbIrBl3rrh7UgFGsMO7RlYHCimbZghM0rfdG6Wf
+ fNg7KOSby/LvC7/G2bOZLdv3X4DhO3Eq2gnoAAAA=
+X-Change-ID: 20260818-pscsi-vpd-ident-bounds-b5ffb129754d
+To: martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ target-devel@vger.kernel.org
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787109813; l=2920;
+ i=markdamirkan@gmail.com; s=pscsi-20260818; h=from:subject:message-id;
+ bh=L8mPB4bIaFikTHrgHz6nuvvi6qLxDbVD6mrN0KpPLA4=;
+ b=bObFYuDHrVvOgAblWgKkkU/381Mm3pmZ7jVJDJ9bBFZmkiuiofrvAeRmvxQqDdZq1Bikcjixd
+ DXKSY7SDwPWA3WfsCqAmBHbhhr9k0dO0Vs3A9tPrHGJxHxo1QInwXgh
+X-Developer-Key: i=markdamirkan@gmail.com; a=ed25519;
+ pk=/wb49ibt4gZFDncmhFQBYtjPvzT1tfJtvK4Mqt1P2Wc=
+X-Endpoint-Received: by B4 Relay for markdamirkan@gmail.com/pscsi-20260818
+ with auth_id=961
+X-Original-From: Mark Amirkan <markdamirkan@gmail.com>
+Reply-To: markdamirkan@gmail.com
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+From: Mark Amirkan <markdamirkan@gmail.com>
 
-Pre-existing issues:
-- [Critical] Unprotected concurrent access to the global `megasas_mgmt_info=
-` array during device probe and detach causes out-of-bounds writes.
-- [High] The error paths in `megasas_resume` fail to disable/destroy IRQs, =
-kill the tasklet, and free PCI IRQ vectors, causing a use-after-free.
-- [High] Legacy INTx IRQ vectors are systematically leaked in teardown and =
-error paths.
-- [High] Incomplete tasklet cleanup in initialization error paths allows a =
-pending tasklet to execute after the `instance` is freed.
-- [High] The asynchronous work item `instance->work_init` is never cancelle=
-d during driver teardown, suspend, or probe error paths.
---
+transport_set_vpd_ident() formats device-provided VPD page 0x83
+identifiers into the 254-byte t10_vpd::device_identifier array without
+checking whether the result fits.
 
---- Patch [1]: [PATCH] scsi: megaraid_sas: kill tasklet after free_irq in t=
-eardown paths ---
-commit 8d9eb16b77703617161e881af92f251c7fb898af
-Author: Fan Wu <fanwu01@zju.edu.cn>
+A binary identifier emits one type character followed by two hexadecimal
+characters per input byte.  A 148-byte identifier therefore emits 297
+characters, eventually writing beyond the 296-byte t10_vpd allocation.
 
-scsi: megaraid_sas: kill tasklet after free_irq in teardown paths
+Reject binary identifiers longer than 126 bytes and apply the equivalent
+destination bound to ASCII and UTF-8 identifiers.  Explicitly terminate
+accepted identifiers.  Rejecting instead of truncating avoids creating a
+false device identity.
 
-On MFI-series adapters the interrupt handler arms instance->isr_tasklet
-for as long as the interrupt is registered, so the tasklet can be armed
-again after tasklet_kill() has returned.  This patch moves tasklet_kill()
-after megasas_destroy_irqs() to ensure tasklets are stopped after
-the handler is drained.
+The write was reproduced with generic KASAN on arm64 Linux 7.2-rc7 using
+a complete 168-byte VPD response.  With the same input, the fixed kernel
+retains the valid NAA descriptor, skips the 148-byte vendor-specific
+descriptor, enables the pSCSI backstore, and produces no KASAN report.
+Seven boundary tests pass.
 
+The demonstrated path requires a device-provided response and privileged
+pSCSI configuration.  No claim is made about exploitability or
+unprivileged reachability.
+
+The tested source reproducer is available privately on request.
+
+Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
 Cc: stable@vger.kernel.org
+Assisted-by: Codex:gpt-5.6
+Signed-off-by: Mark Amirkan <markdamirkan@gmail.com>
+---
+ drivers/target/target_core_transport.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
-araid/megaraid_sas_base.c
-> index f0152b043e18c..e72009a587567 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -6536,6 +6536,7 @@ static int megasas_init_fw(struct megasas_instance =
-*instance)
->  fail_get_ld_pd_list:
->  	instance->instancet->disable_intr(instance);
->  	megasas_destroy_irqs(instance);
-> +	tasklet_kill(&instance->isr_tasklet);
->  fail_init_adapter:
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index dcfe9459..26a0bb66 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1335,6 +1335,14 @@ transport_set_vpd_ident(struct t10_vpd *vpd, unsigned char *page_83)
+ 	vpd->device_identifier_code_set = (page_83[0] & 0x0f);
+ 	switch (vpd->device_identifier_code_set) {
+ 	case 0x01: /* Binary */
++		/*
++		 * Reserve one character for the type and one for the NUL;
++		 * each binary byte expands to two hex characters.
++		 */
++		if (page_83[3] >
++		    (sizeof(vpd->device_identifier) - 2) / 2)
++			return -EINVAL;
++
+ 		vpd->device_identifier[j++] =
+ 				hex_str[vpd->device_identifier_type];
+ 		while (i < (4 + page_83[3])) {
+@@ -1344,11 +1352,16 @@ transport_set_vpd_ident(struct t10_vpd *vpd, unsigned char *page_83)
+ 				hex_str[page_83[i] & 0x0f];
+ 			i++;
+ 		}
++		vpd->device_identifier[j] = '\0';
+ 		break;
+ 	case 0x02: /* ASCII */
+ 	case 0x03: /* UTF-8 */
++		if (page_83[3] >= sizeof(vpd->device_identifier))
++			return -EINVAL;
++
+ 		while (i < (4 + page_83[3]))
+ 			vpd->device_identifier[j++] = page_83[i++];
++		vpd->device_identifier[j] = '\0';
+ 		break;
+ 	default:
+ 		break;
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does the jump to
-fail_init_adapter leave the tasklet pending if IRQ setup fails?
+---
+base-commit: 3a0dd7ba4f44cdc116d83712f61e7c1a95be3588
+change-id: 20260818-pscsi-vpd-ident-bounds-b5ffb129754d
 
-If megasas_setup_irqs_msix() partially succeeds but fails on a
-subsequent vector, it returns an error and the code jumps to
-fail_init_adapter, bypassing the tasklet_kill() added here.
+Best regards,
+--  
+Mark Amirkan <markdamirkan@gmail.com>
 
-Since the rollback loop in megasas_setup_irqs_msix() calls free_irq()
-which doesn't kill scheduled tasklets, can the pending tasklet
-execute and dereference the freed instance memory?
 
->  	if (instance->msix_vectors)
->  		pci_free_irq_vectors(instance->pdev);
-
-[Severity: High]
-This is a pre-existing issue, but does this conditional check leak
-legacy INTx IRQ vectors?
-
-When MSI-X is unavailable, the driver falls back to allocating a
-legacy INTx interrupt, but instance->msix_vectors remains 0.
-By wrapping pci_free_irq_vectors() in this condition across the
-teardown and error paths, it appears the cleanup is skipped for
-INTx vectors.
-
-Does this permanently leak IRQ resources in the error paths?
-
-[ ... ]
-
-> @@ -7618,6 +7619,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
-> =20
->  	instance->instancet->disable_intr(instance);
->  	megasas_destroy_irqs(instance);
-> +	tasklet_kill(&instance->isr_tasklet);
-
-[Severity: High]
-This is a pre-existing issue, but do the error paths in megasas_probe_one()
-properly clean up interrupts and tasklets before freeing the instance?
-
-If a late step in the probe fails, such as megasas_fusion_start_watchdog(),
-the code jumps to fail_init_mfi.  At this point, IRQs have already been
-requested and the tasklet initialized.
-
-However, the fail_init_mfi path skips disable_intr, megasas_destroy_irqs,
-and tasklet_kill, but proceeds to free the coherent DMA buffers and the
-host structure.
-
-Can an active ISR or scheduled tasklet execute after these are freed,
-resulting in a use-after-free?
-
-[ ... ]
-
-> @@ -8010,8 +8011,6 @@ static void megasas_detach_one(struct pci_dev *pdev)
->  	/* cancel all wait events */
->  	wake_up_all(&instance->int_cmd_wait_q);
-> =20
-
-[Severity: High]
-This is a pre-existing issue, but is the asynchronous work item
-instance->work_init properly cancelled during detach?
-
-The driver schedules instance->work_init on the global system
-workqueue to handle firmware state changes and online controller
-resets.  Neither the detach path nor the suspend and probe error
-handlers appear to call cancel_work_sync(&instance->work_init).
-
-If a controller fault triggers the work right before teardown,
-will the asynchronous work dereference the freed instance memory?
-
-> -	tasklet_kill(&instance->isr_tasklet);
-> -
->  	/*
->  	 * Take the instance off the instance array. Note that we will not
->  	 * decrement the max_index. We let this array be sparse array
-
-[Severity: Critical]
-This is a pre-existing issue, but does this sparse array management
-allow unbounded growth and out-of-bounds writes?
-
-Because megasas_detach_one() intentionally does not decrement
-max_index, repeated unbind and bind cycles via sysfs or hotplugs
-will cause max_index to grow continuously.
-
-Since there is no bounds checking in megasas_probe_one() when
-inserting new instances:
-
-megasas_probe_one() {
-        ...
-        megasas_mgmt_info.count++;
-        megasas_mgmt_info.instance[megasas_mgmt_info.max_index] =3D instanc=
-e;
-        megasas_mgmt_info.max_index++;
-        ...
-}
-
-Will max_index eventually exceed MAX_MGMT_ADAPTERS and overwrite
-adjacent kernel memory?
-
-> @@ -8028,6 +8027,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
->  	instance->instancet->disable_intr(instance);
-> =20
->  	megasas_destroy_irqs(instance);
-> +	tasklet_kill(&instance->isr_tasklet);
-> =20
->  	if (instance->msix_vectors)
->  		pci_free_irq_vectors(instance->pdev);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260819005043.4394=
-36-1-fanwu01@zju.edu.cn?part=3D1
