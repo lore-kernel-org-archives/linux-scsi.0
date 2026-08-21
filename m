@@ -1,45 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6199B30F533;
-	Fri, 21 Aug 2026 23:27:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A2D30F533;
+	Fri, 21 Aug 2026 23:29:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787354865; cv=none; b=H9Uno/E0IubaO6k2CO0wL/k4oTESRhUqH5GZHAViO/7hkhKPNaJvNAxi6UfO27DnZJvhI/kTtdUt/VSaiCyM6VF+syHXbCje7H2hx5Oq9EplQ4hLKlmverBMA2WvE+dMs2cXDqaWYI0cdEQbfpVEjESshMWBC9MSIIRtN53hmYg=
+	t=1787354950; cv=none; b=NsaSPH6rWlM/kmTeDiYQzNH9Meg+rwZ6wOFa02knP/x8qdBa/hloFAvetnQZiuJKu3WUShGNvN0JL3fOlNtRgvhigEVYUIfP399wo9eoSDupWqNOBiet3bjKPzSSMAOg7hqYSVGDpOcpeFSaEXoq8ZnPY1HseF0VGlIQ/WCAu34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787354865; c=relaxed/simple;
-	bh=JHgnv4kMmCTOIZ6jij0MVt8TYeJ3idTL+yZwMhFEnl4=;
+	s=arc-20240116; t=1787354950; c=relaxed/simple;
+	bh=ZZFD7l2+9lS33vHjglqXnS6Sh8Xq4Gf37C5BphsOAXM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PnoRE/cpiNlxscMfgCrAK0w4avZDYpht3sAQ+TMjPtp0vV/3twt/9Xc1cL4CEun6rcnfmIRpqJYrMDRoUWQjGIe3ZhZW4rNM4ZrZDudUA2vIHcIUWsuFTqpEcQ90fFhLB6qAWLL9qvUTSb+DIDIi0cF0tMz/jfn3+rskCLnhiFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d4RuQ2Ni; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=PlcXPZGbN95qt33lWLnrwlcEViP2VLUVhGuOTUrvdMj6fbRYPn+hjVwfJtJ/kBppaVBXbFr+aVYs29P9kiS2lJ//0/NMnk3zeOZLBiRjkkY8W+euAhJJELFn2q+2qz9EMdoZkVYya7DtVygX0bEVvPpqwz1Mu02J8Vx/1f6ZyXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YaCyIJzW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d4RuQ2Ni"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 24D2A1F000E9;
-	Fri, 21 Aug 2026 23:27:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YaCyIJzW"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1A4321F000E9;
+	Fri, 21 Aug 2026 23:29:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787354864;
-	bh=fEy5SZpIQpL1zxNj0z/t+6CU//F0Q/5IbpqqjxZru18=;
+	s=k20260515; t=1787354949;
+	bh=uk+Rmzv5gBv8VWdlpVfDgYW9q/M/e2xLHfE+7/xMLTY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=d4RuQ2Ni4P2R/Ev9xfEfeioOImJR2Sf2GeIceIdWDKGDvNJFDujww5RozD3JngwMV
-	 sy7S542Rhzih9DwTx5MGfi5qzISWbXN5JFEyu2byaoEh0JLByRY9CQMJUBja136CGB
-	 FT/RKHIh5mIJihlC4DWKWV0MBjQF2vcQxRclMT2yVmihvi1E3BXKOKlW09Oq9KM69w
-	 muunD6R1/zgUtO4bBo8LBrZZiG8UZZ80VaGKIMHiBt6N/sKzq0FOSyhYrDczc0C4an
-	 QI2Gpa4/aU4QUkQqztdxGXFiA6el3P2EyATl/dcNUJeT4aoQa3FWCI14BSGZIFTCcu
-	 /Yeo70X9KGxSw==
-Date: Fri, 21 Aug 2026 16:27:43 -0700
+	b=YaCyIJzWcg8yVMuOFbR4JefFv4/B/f5XDk4o5mOyTBhcoS4OgRbGYlDG01CFzXaQP
+	 G2Jo+nQCbvkjkW41lpyAH9E1AKjB113RuONMFU87UQROAUBWge2xZSfnU+kIVgQGQX
+	 U8u7mjrTStHFRQ2K2imf7MVkDKHWazRWszcybCVrw6o4aWtaX6/zFGmXsoCvNvZulo
+	 yIrvnlwaTO/47JPf2HtbVYewyv8boT/wOs9OnvvRIde5QzS8b2dQg7KfD4QZDoSU9M
+	 /Na8R0+He14Kyy8/Eusp2UIz3/cjysWj2PoRoqsF5NX34zDGzms8EeRv964LPJWRRC
+	 LzSFQdlAYrpww==
+Date: Fri, 21 Aug 2026 16:29:08 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: John Garry <john.g.garry@oracle.com>, Christoph Hellwig <hch@lst.de>,
-	Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Kanchan Joshi <joshi.k@samsung.com>,
 	Anuj Gupta <anuj20.g@samsung.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/5] common/scsi_debug: don't slow down I/O
-Message-ID: <20260821232743.GD839663@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/5] common: add a _sysfs_block_integrity_path helper
+Message-ID: <20260821232908.GE839663@frogsfrogsfrogs>
 References: <20260821051133.1817670-1-hch@lst.de>
- <20260821051133.1817670-2-hch@lst.de>
- <d3289f5b-7b4c-44ce-99ba-c7ff0f59404d@oracle.com>
- <23760489-a45c-4b00-8500-9e8f4c9189df@acm.org>
+ <20260821051133.1817670-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,26 +45,60 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <23760489-a45c-4b00-8500-9e8f4c9189df@acm.org>
+In-Reply-To: <20260821051133.1817670-3-hch@lst.de>
 
-On Fri, Aug 21, 2026 at 09:14:29AM -0700, Bart Van Assche wrote:
-> On 8/21/26 12:41 AM, John Garry wrote:
-> > On 21/08/2026 06:11, Christoph Hellwig wrote:
-> > > scsi_debug by defaults delays I/O
-> > 
-> > Maybe we can just make delay=0 default for that driver. Or use ndelay > 0.
+On Fri, Aug 21, 2026 at 07:11:27AM +0200, Christoph Hellwig wrote:
+> Add a helper function to find the sysfs integrity directory for a given
+> block device.
 > 
-> I'm in favor of changing the default delay to zero. It's what most users
-> need and it's easy to forget to specify delay=0 when loading scsi_debug.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  common/rc | 25 +++++++++++++++++++++++++
+>  1 file changed, 25 insertions(+)
+> 
+> diff --git a/common/rc b/common/rc
+> index 02bdb31a76a6..61a899da3bd7 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -5257,6 +5257,31 @@ _sysfs_queue_path()
+>  	fi
+>  }
+>  
+> +# Get the sysfs block device integrity/ path for a block device, handling
+> +# partitions correctly.
+> +_sysfs_block_integrity_path()
+> +{
+> +	local dev parent
+> +	dev=$(_short_dev "$1")
+> +
+> +	# For partitions, integrity details are in the parent device's sysfs dir
+> +	if [ -e "/sys/class/block/$dev/partition" ]; then
+> +		parent=$(basename "$(readlink -f /sys/class/block/$dev/..)")
+> +	else
+> +		parent="$dev"
+> +	fi
 
-I didn't even *know* that you had to do that!
-
-I agree with these changes.
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+I wonder if this part should get pulled out into a _sysfs_block_path
+helper, since the code is already in _sysfs_queue_path?
 
 --D
 
-> Thanks,
+> +
+> +	local integrity_path="/sys/block/$parent/integrity"
+> +
+> +	# Verify the path exists before returning
+> +	if [ -e "$integrity_path" ]; then
+> +		echo "$integrity_path"
+> +		return 0
+> +	fi
+> +
+> +	return 1
+> +}
+> +
+>  # Get the minimum block size of a file.  Usually this is the
+>  # minimum fs block size, but some filesystems (ocfs2) do block
+>  # mappings in larger units.
+> -- 
+> 2.53.0
 > 
-> Bart.
 > 
