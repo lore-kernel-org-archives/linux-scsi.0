@@ -1,137 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DB85499F26;
-	Fri, 21 Aug 2026 14:39:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C2F2421238;
+	Fri, 21 Aug 2026 14:43:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787323169; cv=none; b=Un3yvixuKasjFWw3aRPNb3e4OwdyD1KRoI1spcDSSOxibp3J61q9+2rUrOIlN5QAK5hmxFuezdRZGAoZkXEEAV38X0H54IPRt36uPqvvvjyQNHf7X1c/1mBNJjdwnKBQgTkmMmtea1ek90Mz3vMGToVzmKdCWSIzA0YqSFqAcjY=
+	t=1787323416; cv=none; b=pfrgIdCi0CYyIg+44cXvZl3whTgrTHpTZ6NfvLKwOETy44K+fvIY3OV1Hs2/pZpYUKWVUV1okigAueOeVcdpcmDZilzEBAV7IJwPO+PFdh03Kd+AGvhWvrzAojjiFAiTJYqVIrHSNV4y2mqOyTdc2HF1y5Mb+R+7YPIveuld31I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787323169; c=relaxed/simple;
-	bh=rgy0APk7BgIlcJNWRWQdrn6OmIdF7mErwVVj7dI8YpY=;
+	s=arc-20240116; t=1787323416; c=relaxed/simple;
+	bh=c4oHNF7z5bJGgAuGIwyFwuN0KhSF0wqTt9ckM8xl9Wc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hjh8ALl/+ksopxt69HjRwSTTh3Vmw8DeI4xhlj7zyIpzk4pCNZsB4bj/fHq6SlqYpRABIPb3fKjLU6UgZ6ZdobhkPUzHXmAGqezKS8xoVc878DPF0H2CowoauU68TOPrhl5m5DCsTY/0Pk5dQykoM4uHzJB1skmwD6oVeCPLgUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nw2jmTCA; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=qxIL51MS4def9Bp/Rs00MLM7CYWwXhH9fpISgYZnTYcOEWf3W55iR6TE5VfvmZ43LcMSx4RHSXwi6sufwU1TZvjPrTGBDaosQWEFl+CobX+PfFTHwyZNjQrM8ldTvc+0wA0pd4JZag50cKCrfwsdVJU7gZAot1mCZIlArZwJ3E8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GKUlJ5FQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nw2jmTCA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A69441F00ACF;
-	Fri, 21 Aug 2026 14:39:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GKUlJ5FQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BE1F1F000E9;
+	Fri, 21 Aug 2026 14:43:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787323167;
-	bh=zgzUoieUcClgeUqGY7Sf1EaPji1ajkgDY/1ls28KB8k=;
+	s=k20260515; t=1787323415;
+	bh=kl+rulfmOjMb427yFUDHKO/SQjIADnoXMoWRrF9n+uQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Nw2jmTCAjANkdrx28BntNJ5dfw6JBkcf91/YMIP9ygMoLHJF1k8nmvwbGYMVmB+4w
-	 8W0z+9uEBni2QqQd3k02y3Hchwhh9B08Ha/WKtqHpX28JKqSa3eSwq2A6Z5TtChs43
-	 SjO/1hmY/31wv3UIKPfzLPCDT+NVUwPACnLBNGQrbBvT94jZckvvc1TTkxXYyC8WkA
-	 ++CIi9a9Fwaj1Cey/ge0meRcaiQavpyeLodqGsK+dJN3606js0lwTt0l25hWfkKS9i
-	 aM8dsdsK7FcOuaMof0HIkMeJZM5flMzGW01u6YiZZpGKTS3ArzyZVMNElaQfiACD0h
-	 Q2LLX9/8fe+Ag==
+	b=GKUlJ5FQwX1S8yBDtC2Y4Q5zMY00N11KFVf8ysRw2pZAGKCegRoBirRcUEDJIljWb
+	 0hTgY1ggKS5AsrBOw77w3Ef/QORzjQ9r1oMSJ9qeuZY4T5+VEbZpMniACMwryT0EIh
+	 2FxPvRlBLBCDtgMXfiH6CyJ8X0YPS1kx7Orhp4NEiq/aFYgEYdnYZL5A5wI9PdivPL
+	 5ZUjRgYBuzoO1YxMM2Jj7JzQJj+z5Wl4kr0KkSYowC0MVycforKVjJAJdgqtGQs/sI
+	 WtHO9zBHsZ9fFcUWMTydxuzQQj6ZOEuoXhjSQMIH/5+tYFTVaJUCqFYJ49fTpppapP
+	 L87xBDkvF36BA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 8/9] PCI: Enable async shutdown support
+Subject: Re: [PATCH 2/9] driver core: prevent device_add() during system
+ shutdown
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Jeffery" <djeffery@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260821142414.150892-9-djeffery@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260821142414.150892-3-djeffery@redhat.com>
 References: <20260821142414.150892-1-djeffery@redhat.com>
- <20260821142414.150892-9-djeffery@redhat.com>
+ <20260821142414.150892-3-djeffery@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 21 Aug 2026 14:39:27 +0000
-Message-Id: <20260821143927.A69441F00ACF@smtp.kernel.org>
+Date: Fri, 21 Aug 2026 14:43:34 +0000
+Message-Id: <20260821144335.1BE1F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [Medium] Setting the device async shutdown flag after exposing the device=
- via device_add() creates a race condition.
-
-Pre-existing issues:
-- [High] Double put_device() on error path leads to premature freeing and s=
-ubsequent use-after-free of the host bridge device.
-- [High] Unhandled device_add() failure leaves PCI device in an indetermina=
-te state and globally visible in the bus list.
-- [High] Modifying PM bitfields without locking after a device is exposed c=
-auses data corruption if the PM core is active.
+- [High] Race condition in device_add() abort path during system shutdown l=
+eading to Use-After-Free.
 --
 
---- Patch [8]: [PATCH 8/9] PCI: Enable async shutdown support ---
-commit f9f4c656f43f8b78ec5f8dac98964decb5920b89
-Author: David Jeffery <djeffery@redhat.com>
-Subject: PCI: Enable async shutdown support
+--- Patch [2]: [PATCH 2/9] driver core: prevent device_add() during system =
+shutdown ---
+commit 17748fb46ccfdb0adadd634adbfe70a9fd601b9a
+Author: Tarun Sahu <tarunsahu@google.com>
 
-Like its async suspend support, allow PCI device shutdown to be performed
-asynchronously to reduce shutdown time.
+driver core: prevent device_add() during system shutdown
 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index dd0abbc63e18d..af23814464060 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1046,6 +1046,7 @@ static int pci_register_host_bridge(struct pci_host=
-_bridge *bridge)
-> =20
->  	bus->bridge =3D get_device(&bridge->dev);
->  	device_enable_async_suspend(bus->bridge);
+This commit adds system state checks to device_add() to prevent new
+devices from being added while the system is halting, powering off, or
+restarting. It re-checks the state under devices_kset->list_lock to
+avoid a TOCTOU race window with device_shutdown().
 
-[Severity: High]
-This is a pre-existing issue, but does calling device_enable_async_suspend()
-here after the device is exposed to the PM core cause a data corruption rac=
-e?
-
-Since this performs an unlocked read-modify-write on the PM bitfields,
-concurrent PM operations like dpm_prepare() could clobber these flags.
-
-> +	dev_set_async_shutdown(bus->bridge);
-
-[Severity: Medium]
-Since this is called right after device_add() exposed the bridge device, co=
-uld
-this create a race condition where a concurrent system shutdown observes the
-device before the async_shutdown flag is set?
-
->  	pci_set_bus_of_node(bus);
->  	pci_set_bus_msi_domain(bus);
->  	if (bridge->msi_domain && !dev_get_msi_domain(&bus->dev) &&
-
-[Severity: High]
-This isn't a bug introduced by this patch, but looking further down in the
-error path of pci_register_host_bridge(), does the code introduce a
-use-after-free?
-
-If device_register() fails, the unregister path calls
-put_device(&bridge->dev) and then falls through to the free path which
-calls put_device(&bus->dev).
-
-Since release_pcibus_dev() internally drops a reference to
-pci_bus->bridge, this would drop a second reference to bridge->dev,
-improperly consuming the caller's initial reference.
-
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
 [ ... ]
-
-> @@ -2748,6 +2749,7 @@ void pci_device_add(struct pci_dev *dev, struct pci=
-_bus *bus)
->  	pci_reassigndev_resource_alignment(dev);
+> @@ -3699,6 +3720,18 @@ int device_add(struct device *dev)
+>  		goto Error;
+>  	}
 > =20
->  	pci_init_capabilities(dev);
-> +	dev_set_async_shutdown(&dev->dev);
-> =20
->  	/*
->  	 * Add the device to our list of discovered devices
+> +	/*
+> +	 * Check system_state again under list_lock to prevent a TOCTOU race
+> +	 * where device_shutdown() runs concurrently and misses this device.
+> +	 */
+> +	spin_lock(&devices_kset->list_lock);
+> +	if (unlikely(system_is_shutting_down())) {
+> +		spin_unlock(&devices_kset->list_lock);
+> +		error =3D -ESHUTDOWN;
+> +		goto ShutdownError;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but looking further down in
-pci_device_add(), does ignoring a failure from device_add() leave the PCI
-device in an indeterminate state?
+Does this error path introduce a use-after-free race with device_shutdown()?
 
-If device_add() fails, it only logs a WARN_ON and returns without cleaning
-up the device from bus->devices, which could crash subsystems iterating over
-the global bus list.
+If device_add() successfully links the device to devices_kset->list via
+kobject_add(), device_shutdown() could concurrently run and pull the
+newly added device from the list:
+
+device_shutdown() {
+    ...
+    spin_lock(&devices_kset->list_lock);
+    ...
+    dev =3D list_entry(devices_kset->list.prev, struct device, kobj.entry);
+    ...
+    list_del_init(&dev->kobj.entry);
+    spin_unlock(&devices_kset->list_lock);
+    ...
+}
+
+If device_add() then resumes, acquires the list lock, and sees
+system_is_shutting_down(), it will jump to ShutdownError and return
+-ESHUTDOWN.
+
+The caller of device_add() will typically treat this as a failure and
+free the device and its associated private data. Meanwhile,
+device_shutdown() is already outside the lock and actively executing the
+shutdown callbacks on that exact same device:
+
+device_shutdown() {
+    ...
+    if (dev->bus && dev->bus->shutdown) {
+        ...
+        dev->bus->shutdown(dev);
+    }
+    ...
+}
+
+Can this lead to device_shutdown() accessing freed device memory?
+
+> +	}
+> +	spin_unlock(&devices_kset->list_lock);
+> +
+>  	/* notify platform of device entry */
+>  	device_platform_notify(dev);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821142414.1508=
-92-1-djeffery@redhat.com?part=3D8
+92-1-djeffery@redhat.com?part=3D2
