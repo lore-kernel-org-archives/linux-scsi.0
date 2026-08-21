@@ -1,158 +1,134 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6B62DC32C
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Aug 2026 09:32:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5243C432BD9
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Aug 2026 09:48:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787304756; cv=none; b=CfqCStT2/GyEjHHxbjP1lkqroKcKIECjM+FmO02ph5cf9Leo6PoKLRFXESkh4UwyJJ2PwZ0Bc0X8Rb69Eli0JT3VJsDatlmy5W0EQ6pcrUdhVxe2Z7m8ZxfiMjIE6lEl+6JTlDGne4pD45O/HnSm7Vglmz4WS1eb7X6HLsEV3vM=
+	t=1787305684; cv=none; b=PA0kD09mbU9DEkfsFNMLhDbfZmEhVukrp/WSXX5a1R37cvHFm7LAHpqi2Z4PNglilOpw1XO1vHSA+ZVgDsk+hSHxzJcoWQ1FYlR2jeL5TUJgUscOHPGXjKvuKxi5kjErbMDoaBTyDAPU9ATIhrrD0bEuR/+r4yzv9A/nZf80l8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787304756; c=relaxed/simple;
-	bh=e/JyF43nrqavF+lLQe/bTDPM4997fqJm4Cu9uB/n3KY=;
-	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=s917X93HxidWec5HtsebbEDz5/LdgxKhIPnUrOtWgCAciqMbZLDzDiCepXM9sJx54nZ7Ne/RTq8WXjHcYEVA95yfOUItvvUrDvpg3Nf0A4+lIODIcsAsWYoEkHqA6O3jSLYgmGa4Z8nK2ae9uh4vWVag72QpNdDJvm1tfJtU7OA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=Bp4oJirR; arc=none smtp.client-ip=113.46.200.219
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1787305684; c=relaxed/simple;
+	bh=vuaHieavW4ubzKnxKhdBjrMqgoWkYksqMjdPWQE50XE=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=L3LhrkW8IoNXw4D3z2umcgpH/PghLpYmqsQ28fdo5EJOsUTij8EmNPcdcYxwS5s8N0GChZOyqlQHpJIvh37tFXbKa7kBjSAM+mxb9UWbIzD0gK/BFnJv3uwddfq3R7ts4NoLHbxbmpxI1F2UV4xuQCNUFSN4QRgEKN9qh0BXvJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JyGX4quA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="Bp4oJirR"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=Bbe11uCihv9GTB874+m++IYl3uZ8KyNiyzn3g+IC9OA=;
-	b=Bp4oJirRjx58otDTUv1iyttl+Yk3lZYWzt9yYY3Lepmw7TW8xmvreNU7Z0thCC0cQjU5ontYt
-	sDrB8CUq4LlArPSjBY/9mpbq00/k8TXD8MbifMzrxpBp8Fpy0mZu5MYOOqWqwv3ymIZnIIZp/Np
-	Hyh9O0SCo2VuR0yT1hVTN7s=
-Received: from mail.maildlp.com (unknown [172.19.163.0])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4hRFDd0Y8qz1prQt;
-	Fri, 21 Aug 2026 17:21:37 +0800 (CST)
-Received: from dggemv712-chm.china.huawei.com (unknown [10.1.198.32])
-	by mail.maildlp.com (Postfix) with ESMTPS id 9A7A640537;
-	Fri, 21 Aug 2026 17:32:21 +0800 (CST)
-Received: from kwepemq500016.china.huawei.com (7.202.194.202) by
- dggemv712-chm.china.huawei.com (10.1.198.32) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 21 Aug 2026 17:32:21 +0800
-Received: from [10.174.178.185] (10.174.178.185) by
- kwepemq500016.china.huawei.com (7.202.194.202) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 21 Aug 2026 17:32:20 +0800
-Subject: Re: [PATCH] scsi: iscsi: fix NULL pointer dereference in
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JyGX4quA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45F171F00A3A;
+	Fri, 21 Aug 2026 09:47:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787305677;
+	bh=9Yv2c/YtB7hKkBUO5MMlb9kv13yBQTgrK+nBiCOulsI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=JyGX4quAIylkP8UCLfVo9xpO0w+4mwpGB6ejHJ8/B9B78XUA3O60jgfArOUQwrpfa
+	 obByaGQNfsBzQBgAdpITjpfe9aYxMsRFmugekfG5s17mYSOF75Kai/sT+L8sM5of5a
+	 /90tgMiCB8sn2rLNzfpMG3a23CBMsX1YpQXJCqbJvdRuPt2fykTm79yhhuHSrY79Ar
+	 OzfvlRT9+h55wM9Uj2vtqmwG9OBA7kCqM+XBpyBoMi/0LtBR69wezkvUR8s2A3U/Mx
+	 Cz7KrwRvFNMkK18ok/WJ+gXXQpiPAc4tSRMEyhvZvXkKr1WZhz4lEoXArFNqjeLmPi
+	 71QVmjIibt6jw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH -next 1/2] scsi: iscsi: fix NULL pointer dereference in
  iscsi_sw_tcp_release_conn()
-To: <sashiko-reviews@lists.linux.dev>, Ye Bin <yebin@huaweicloud.com>
-References: <20260820020321.1537641-1-yebin@huaweicloud.com>
- <20260820022614.CAEDD1F000E9@smtp.kernel.org>
-CC: <linux-scsi@vger.kernel.org>
-From: "yebin (H)" <yebin10@huawei.com>
-Message-ID: <6A881B1B.9010306@huawei.com>
-Date: Fri, 21 Aug 2026 17:32:11 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101
- Thunderbird/38.1.0
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ye Bin" <yebin@huaweicloud.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260821092435.1632931-2-yebin@huaweicloud.com>
+References: <20260821092435.1632931-1-yebin@huaweicloud.com>
+ <20260821092435.1632931-2-yebin@huaweicloud.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 21 Aug 2026 09:47:56 +0000
+Message-Id: <20260821094757.45F171F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20260820022614.CAEDD1F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
- kwepemq500016.china.huawei.com (7.202.194.202)
 
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] The patch introduces an endpoint (`struct iscsi_endpoint`) referen=
+ce leak by unconditionally clearing `ISCSI_CLS_CONN_BIT_CLEANUP` in `iscsi_=
+if_stop_conn()` during a `STOP_CONN_TERM`, causing the subsequent endpoint =
+disconnect to incorrectly skip releasing the workqueue's reference.
+--
 
+--- Patch [1]: [PATCH -next 1/2] scsi: iscsi: fix NULL pointer dereference =
+in iscsi_sw_tcp_release_conn() ---
+commit 15cab28507a9da46dab7d098d970770bae480083
+Author: Ye Bin <yebin10@huawei.com>
 
-On 2026/8/20 10:26, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
->
-> Pre-existing issues:
-> - [High] Use-after-free of `iscsi_cls_conn` due to missing cancellation of `cleanup_work` on release.
-> --
->
-> --- Patch [1]: [PATCH] scsi: iscsi: fix NULL pointer dereference in iscsi_sw_tcp_release_conn() ---
-> commit bdfb05c9a6c008e559f81d0c3e5ffb712699e0cc
-> Author: Ye Bin <yebin10@huawei.com>
->
-> scsi: iscsi: fix NULL pointer dereference in iscsi_sw_tcp_release_conn()
->
-> This commit fixes a NULL pointer dereference by setting the
-> ISCSI_CLS_CONN_BIT_CLEANUP bit when userspace delivers STOP_CONN_TERM.
-> This prevents concurrent execution of iscsi_stop_conn() and cancels or
-> flushes the kernel connection cleanup work as needed.
->
-> Fixes: 23d6fefbb3f6 ("scsi: iscsi: Fix in-kernel conn failure handling")
->
->> --- a/drivers/scsi/scsi_transport_iscsi.c
->> +++ b/drivers/scsi/scsi_transport_iscsi.c
->> @@ -2266,6 +2266,8 @@ static void iscsi_if_disconnect_bound_ep(struct iscsi_cls_conn *conn,
->>
->>   static int iscsi_if_stop_conn(struct iscsi_cls_conn *conn, int flag)
->>   {
->> +	bool cleanup;
->> +
->>   	ISCSI_DBG_TRANS_CONN(conn, "iscsi if conn stop.\n");
->>   	/*
->>   	 * For offload, iscsid may not know about the ep like when iscsid is
-> [ ... ]
->> -	if (flag == STOP_CONN_TERM) {
->> -		cancel_work_sync(&conn->cleanup_work);
->> -		iscsi_stop_conn(conn, flag);
->> -	} else {
->> +	spin_lock_irq(&conn->lock);
->> +	cleanup = test_and_set_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags);
->> +	spin_unlock_irq(&conn->lock);
->> +
->> +	if (cleanup) {
->>   		/*
->> -		 * Figure out if it was the kernel or userspace initiating this.
->> +		 * If this is a termination we have to call stop_conn with
->> +		 * that flag so the correct states get set. If we haven't
->> +		 * run the work yet try to avoid the extra run.
->>   		 */
->> -		spin_lock_irq(&conn->lock);
->> -		if (!test_and_set_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags)) {
->> -			spin_unlock_irq(&conn->lock);
->> +		if (flag == STOP_CONN_TERM) {
->> +			ISCSI_DBG_TRANS_CONN(conn,
->> +					"cancel kernel conn cleanup.\n");
->> +			cancel_work_sync(&conn->cleanup_work);
->
-> [Severity: High]
-> This is a pre-existing issue, but since we are modifying cleanup_work
-> handling here, is there a risk of a use-after-free if the connection is
-> destroyed before the work executes?
->
-> Looking at iscsi_conn_error_event(), it queues conn->cleanup_work without
-> taking a reference to the connection. If a session is torn down before the
-> work executes (e.g. via device removal calling iscsi_remove_session()),
-> iscsi_iter_destroy_conn_fn() drops the references:
->
-Indeed, this issue does exist, although it is unrelated to this revision.
-I will fix this issue and send another version.
+scsi: iscsi: fix NULL pointer dereference in iscsi_sw_tcp_release_conn()
 
-> drivers/scsi/scsi_transport_iscsi.c:iscsi_iter_destroy_conn_fn()
->      ...
->      iscsi_remove_conn(iscsi_dev_to_conn(dev));
->      iscsi_put_conn(iscsi_dev_to_conn(dev));
->
-> This final reference drop triggers iscsi_conn_release(), which frees the
-> connection memory:
->
-> drivers/scsi/scsi_transport_iscsi.c:iscsi_conn_release()
->      ...
->      kfree(conn);
->
-> Since iscsi_conn_release() does not call cancel_work_sync(&conn->cleanup_work),
-> could iscsi_cleanup_conn_work_fn() execute and dereference the already freed
-> conn struct? Should we be cancelling or flushing the work during
-> iscsi_conn_release() to prevent this?
->
->>   			iscsi_stop_conn(conn, flag);
->>   		} else {
->> -			spin_unlock_irq(&conn->lock);
->>   			ISCSI_DBG_TRANS_CONN(conn,
->> -					     "flush kernel conn cleanup.\n");
->> +					"flush kernel conn cleanup.\n");
->>   			flush_work(&conn->cleanup_work);
->>   		}
->
+This commit addresses a NULL pointer dereference in iscsi_sw_tcp_release_co=
+nn()
+by ensuring the ISCSI_CLS_CONN_BIT_CLEANUP bit is set during STOP_CONN_TERM.
+This prevents concurrent execution of iscsi_stop_conn().
+
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_tran=
+sport_iscsi.c
+> index 8aa76f813bcdb..aea319c1e72fe 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -2278,35 +2280,36 @@ static int iscsi_if_stop_conn(struct iscsi_cls_co=
+nn *conn, int flag)
+
+[ ... ]
+
+> -		/*
+> -		 * Only clear for recovery to avoid extra cleanup runs during
+> -		 * termination.
+> -		 */
+> -		spin_lock_irq(&conn->lock);
+> -		clear_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags);
+> -		spin_unlock_irq(&conn->lock);
+> -	}
+> +	} else {
+> +		iscsi_stop_conn(conn, flag);
+> +	}
+> +
+> +	spin_lock_irq(&conn->lock);
+> +	clear_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags);
+> +	spin_unlock_irq(&conn->lock);
+
+[Severity: High]
+Does this unconditionally clear ISCSI_CLS_CONN_BIT_CLEANUP during
+STOP_CONN_TERM?
+
+The original code avoided clearing this bit during termination, as the remo=
+ved
+comment explicitly noted.
+
+If a connection error queues iscsi_cleanup_conn_work_fn(), which unbinds the
+endpoint (setting conn->ep =3D NULL), and then userspace initiates terminat=
+ion
+via iscsi_if_stop_conn(conn, STOP_CONN_TERM), iscsi_if_disconnect_bound_ep()
+won't be called here because conn->ep is NULL.
+
+When this bit is subsequently cleared unconditionally, and userspace later =
+issues
+an event to disconnect the endpoint, will iscsi_if_disconnect_bound_ep() sk=
+ip
+releasing the workqueue's reference?
+
+drivers/scsi/scsi_transport_iscsi.c:iscsi_if_disconnect_bound_ep() {
+    ...
+	if (!test_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags)) {
+		spin_unlock_irq(&conn->lock);
+		iscsi_ep_disconnect(conn, is_active);
+	} else {
+		...
+		iscsi_put_endpoint(ep);
+    ...
+}
+
+Could this cause a resource leak of struct iscsi_endpoint over time?
+
+> +
+>  	ISCSI_DBG_TRANS_CONN(conn, "iscsi if conn stop done.\n");
+>  	return 0;
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821092435.1632=
+931-1-yebin@huaweicloud.com?part=3D1
