@@ -1,79 +1,63 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB8AF36B908;
-	Fri, 21 Aug 2026 16:14:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6573D3DDDA1;
+	Fri, 21 Aug 2026 19:11:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787328879; cv=none; b=AOCuUhfjaKwaoO5fPIPh+tYe4K78QfAD62J17WmMIU6iNT4HxpsOESwl4UiTJQmlgEW8LYiHuc2V/8Ls/EkdtAV/HJigsCWyUgGLTDGPnX8UWXd9QiLnDIEhoAKx+zQBLcH/iXDA1uQucKpVIs/M2CrQGfOUvNxTMYE4nBNEbwo=
+	t=1787339498; cv=none; b=u08Ua4Ibez0mzcQjJHJO89jr9Sh6G48PdeAiiSiLKw9uNrswpsAD2vuKZihBLUwwK4EJPsLBiNs1W8Bt8b0epx1kYUobV9w6E5dA42qsLKzi2p6qg71XZ0AwkKYHZrzcZQglh5iclQ62Y/yEBrZxkEVo6elel/ZzTPr2KCpya5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787328879; c=relaxed/simple;
-	bh=5HQ6LKMAfYJOcaRPpNVwXNgm7nStCMcmJUbjgtK+j+A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DJx2O8gNhrZqx1M1GMCz+sF5WMUTpOx5pyQo4paNKX3FGi4XitcdKq8u9h1PkPQgR4Qp0HqWSY0YoQS0tpMaKhJKkSsad10srJ87Fc6emU2mzITW+wNHN0nvPn0NjFW6u21igGmDjh2WiQHlfi4uaClA/CYTS81XI7tQ0h6z77k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Yl6tLHTE; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1787339498; c=relaxed/simple;
+	bh=oNYtk2ryzbBtIzwf3H4ak5BayNyAjg+TyJinI3UbIps=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=IPz6Bj7yfp8IfkNwOedcRwiKQMD3EwegIR1xjSdTPL7zEb2UD88v+8UaqoCHBW4MmDrN+2M3j7vsW+KdqKVUCQnwnJuNssHT/xuo3PoQ6F5ywQGmLpNR+bsI4Mi5kHY0QuRyK/He2GJiKhPZPNAjA9JEasrwnxNTWxUearY/Fnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b7jB105u; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Yl6tLHTE"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hRQP926zDzlfq9x;
-	Fri, 21 Aug 2026 16:14:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1787328873; x=1789920874; bh=8pfpPXTgOfF4lURELYBCo77Q
-	gdRT2xOc5dBqD1JjLNA=; b=Yl6tLHTEVCztXQf1GvEG0WhmBlKR1A48LX150JrW
-	5nqa/hHQgMtGtM+qCIhVjjdkNlfzah3Q6hRKCC2yy7EG19k0d7IFKCYKhSFIUIOw
-	IZraebTOuAugrjYGO06WAWXk7uTKEVTcrr4k1jbrp5eTVMZ97gt0Ac7ddNPU+57G
-	A82MS8RzXa/cfzj6lS++rELOt+ziS3yTMSZRgFtgJpRVP3MrPEaMKODeS06s5PI4
-	oEWkc9jCBNI06tmqvyFedg6ns41WhUpyl2gQ19oRN4UdraGF4b4ZsaiJo2cex44C
-	CiiTgSW1bjAazgM+hZs9ZnN6FtxZVX44wTIbKgQadVwj3Q==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id hIJGUDIfx9oc; Fri, 21 Aug 2026 16:14:33 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hRQP33LKvzlfvpS;
-	Fri, 21 Aug 2026 16:14:30 +0000 (UTC)
-Message-ID: <23760489-a45c-4b00-8500-9e8f4c9189df@acm.org>
-Date: Fri, 21 Aug 2026 09:14:29 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b7jB105u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3988E1F01803;
+	Fri, 21 Aug 2026 19:11:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787339477;
+	bh=SoYNcaVqdkYxtOL7KRxhHlIyl2lOXS+EbAbds6BIp3Y=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc;
+	b=b7jB105uNdC5fcsJUYRi9oqcbZMGocFdfBr4q1AdgF9PJ/+eP8umetRu0hTohSYN6
+	 Ssvcpqqp3bHiGr/O/TbxhLb62/0K9ZCa7yR4tjcxhjLqbyhfVme4u2R5IDYqQymjRS
+	 Pw02jkWtSPLOZKQf5gwewsKNAwAQNXgsdZtXWfhJE/lFI/OJ1pM4r5tqh/2G5Kgr5E
+	 d+6viyua+ulIksTJT/uklzxXo6EuorxPEVrgobKEfcvyzNHtlNWioIW+xpOsvSAAhr
+	 +tERzQ1V6I+F8s1O3NT27TPdLbrWew8erHd/PXJVdqwFGdcrrBTNaiHFC+JIj/Ose/
+	 dFrJogw8ZbG/g==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 009C4380CEC2;
+	Fri, 21 Aug 2026 19:10:28 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI updates for the 7.2+ merge window
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <1cec13635d688db8d8185fd4df8a8df621d60a75.camel@HansenPartnership.com>
+References: <1cec13635d688db8d8185fd4df8a8df621d60a75.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <1cec13635d688db8d8185fd4df8a8df621d60a75.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-misc
+X-PR-Tracked-Commit-Id: 376a3960e5efe85ff765abfb5b5b7e4655ad6aed
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 35748ddd3b2c91555bd86b8cf88edc90e7317e57
+Message-Id: <178733942664.1438271.16412568242181002942.pr-tracker-bot@kernel.org>
+Date: Fri, 21 Aug 2026 19:10:26 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/5] common/scsi_debug: don't slow down I/O
-To: John Garry <john.g.garry@oracle.com>, Christoph Hellwig <hch@lst.de>,
- Zorro Lang <zlang@kernel.org>
-Cc: fstests@vger.kernel.org, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Kanchan Joshi <joshi.k@samsung.com>,
- Anuj Gupta <anuj20.g@samsung.com>, linux-scsi@vger.kernel.org
-References: <20260821051133.1817670-1-hch@lst.de>
- <20260821051133.1817670-2-hch@lst.de>
- <d3289f5b-7b4c-44ce-99ba-c7ff0f59404d@oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <d3289f5b-7b4c-44ce-99ba-c7ff0f59404d@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 8/21/26 12:41 AM, John Garry wrote:
-> On 21/08/2026 06:11, Christoph Hellwig wrote:
->> scsi_debug by defaults delays I/O 
-> 
-> Maybe we can just make delay=0 default for that driver. Or use ndelay > 0.
+The pull request you sent on Fri, 21 Aug 2026 09:03:55 +0100:
 
-I'm in favor of changing the default delay to zero. It's what most users
-need and it's easy to forget to specify delay=0 when loading scsi_debug.
+> https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-misc
 
-Thanks,
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/35748ddd3b2c91555bd86b8cf88edc90e7317e57
 
-Bart.
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
