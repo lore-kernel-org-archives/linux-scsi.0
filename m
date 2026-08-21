@@ -1,165 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B0D4495052;
-	Fri, 21 Aug 2026 14:34:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E07BC469848;
+	Fri, 21 Aug 2026 14:38:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787322855; cv=none; b=k1OSwD9M209BXtgZMvDPOKQiCcxrZXTcC26XRg0O/4MkVdaTp8PY/44sHss7WjSLtFbs95QStcQV8+++kZfIxwavYgpm/F2bAQAWxDQC6qOxXGc0UgaGwJgfpoSlNFtA60RnDhpRtuBDp5CeNm/3x4XmJ+VmbI14qkIALvpbpH8=
+	t=1787323095; cv=none; b=QtTBQ/Bo5j0J1SaIkI4rWKCTODvpo3N7rm8TDCh49UDRdwJxizJvgBe6E9sAATVOkrRp0ys4Dizxya9Vsy1NxH3PU5NWqrlgBxssG3oE4EuN5Zrikuwc/eKrbFwzuCDu/AIco4Dt5lqvesNSb6PPKJJNa12VWP6jI1mzCbKX7Ew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787322855; c=relaxed/simple;
-	bh=UwwRTVkxUIMODKXM4UDVw0sJVgwZ8b0X5rCpEIPbt6s=;
+	s=arc-20240116; t=1787323095; c=relaxed/simple;
+	bh=g66c49g2gV02OO4Gv3cC4Wj3wRt7WKGsajCLoaK9RMM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=iPRU6Fgvr/616747dloyXnDViYJTqRnPsmpF6hmaoEwnwl8D2tUf0tVKhdv2fMUKTW3E6NKb2XfoYYbIm/dvzFZrqBqMd2M+flnAXXcVZg4fQi3tbS8eVPgMXvyzSbLLe0BSyXr0EgrIppIPB4xtISpjXzkBL4+v/xUE19Ti2pI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PYJppTYO; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=pv6qiiPFeTv3hvcKp7U0KLftp4uSHOaLYM+sVB3xkw8NH6ykKn7Q2xOBzSo6NYwiLcCwwewIJaBCYzv1w6TwoMcFzKoq1EdG7CNULvpa/FGPsF9epc2VW1wbVWkRUF+5wfoRl55BzK9sGuAcoOflD4keo+X1Y8REgtxiQmBdDAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bzvymU2R; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PYJppTYO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB5AF1F000E9;
-	Fri, 21 Aug 2026 14:34:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bzvymU2R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27C091F000E9;
+	Fri, 21 Aug 2026 14:38:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787322853;
-	bh=b+m20f91dQsyrhJg6EKKUIU9aKaknQ+Qu1431+vSYjI=;
+	s=k20260515; t=1787323091;
+	bh=g66c49g2gV02OO4Gv3cC4Wj3wRt7WKGsajCLoaK9RMM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PYJppTYOvnmLKQAPQ61C3EglzMxuCDh+x0oXpT6kXW7oM/kViw4D6eS+AEm3HUaKH
-	 j4svn6tdAWhS9KAS2o2nSigu4iL6LGEgBgJcU6ykTR+DHt66ItpAkm63p4q6Qijn/3
-	 GsTTyVCk0pRtNEF5MlbuD1q0ta2ZHZpx+1F5aAXOwvS0Tz8x1p4ATwrjQAeX6bv2ug
-	 zk9me2Hg0TpLuTIc19tIHaiCCEiEQJszferXpe5qs5aeuvlqqZ4zvUlFtLg8iVbCkt
-	 Y7x07b7OMu5oRg41/Hr82VzEWlJprPSGTMHAmRMx96L/tH3zDaiJjmePDQqXzbqBCL
-	 YSGQxvDXDH47Q==
+	b=bzvymU2RPAsv3wSAa5p2l0mkt0IV53hVU/wNN+a6Z5ZQ4SCILEcEMUqPZEmaq/V9O
+	 s88J+zn4XE3LaGhvWULGvyeuVGCQXwsVew5uL4r+q+OtckwsfDFc6QZbA8cALbkDtq
+	 6dtq4iLNQIOaqVYswE794+M1zNZUxTfqdl1uTXD4gN7B+AZnM5iK+qxYivpWZikpBf
+	 1tgNlWhFtmWZ2qJ7Ltd7nQKlJjZoTjLjQb5U7HB7jLXwsr1HhHi6WCQ9EYGu50tYC5
+	 0rPcFmJCF6zvhGaCcE/YABiwa3fAZVLJEC+tCe352eAdoqHBF4v8Mtdvduk+obCgKq
+	 5i502SUxNqIxQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/9] driver core: warn should device_move try to move a
- need_parent_lock device
+Subject: Re: [PATCH 9/9] scsi: Enable async shutdown support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Jeffery" <djeffery@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260821142414.150892-4-djeffery@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260821142414.150892-10-djeffery@redhat.com>
 References: <20260821142414.150892-1-djeffery@redhat.com>
- <20260821142414.150892-4-djeffery@redhat.com>
+ <20260821142414.150892-10-djeffery@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 21 Aug 2026 14:34:13 +0000
-Message-Id: <20260821143413.AB5AF1F000E9@smtp.kernel.org>
+Date: Fri, 21 Aug 2026 14:38:10 +0000
+Message-Id: <20260821143811.27C091F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+> Like scsi's async suspend support, allow scsi devices to be shut down
+> asynchronously to reduce system shutdown time.
+>=20
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
+> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
 
-Pre-existing issues:
-- [Critical] Concurrent execution of device_move() and PM runtime operation=
-s causes a Use-After-Free on the parent device pointer.
-- [High] device_move() corrupts PM runtime child_count accounting, potentia=
-lly causing active devices to panic when their parent is prematurely suspen=
-ded.
---
-
---- Patch [3]: [PATCH 3/9] driver core: warn should device_move try to move=
- a need_parent_lock device ---
-commit da39f0a4e63233986f7aa69f70fc28bb25510d0a
-Author: David Jeffery <djeffery@redhat.com>
-
-driver core: warn should device_move try to move a need_parent_lock device
-
-Currently, no device has need_parent_lock set and is moved by
-device_move. need_parent_lock is only set by the usb bus and very
-few device types ever use device_move.
-
-Adds a warning to device_move to catch should it ever be used on a
-device with need_parent_lock set.
-
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 78b90326addb6..20b37ee07b5ac 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -4708,6 +4708,14 @@ int device_move(struct device *dev, struct device =
-*new_parent,
->  	if (!dev)
->  		return -EINVAL;
-> =20
-> +	/*
-> +	 * device_move() should not be used on devices with need_parent_lock
-> +	 * set. Concurrent reparenting will violate the immutable
-> +	 * relationship needed while locking and unlocking both parent and
-> +	 * child.
-> +	 */
-> +	WARN_ON(dev->bus && dev->bus->need_parent_lock);
-> +
->  	device_pm_lock();
->  	new_parent =3D get_device(new_parent);
->  	new_parent_kobj =3D get_device_parent(dev, new_parent);
-
-[Severity: Critical]
-This is a pre-existing issue, but does this code allow a use-after-free of
-the parent pointer if rpm_resume() runs concurrently with device_move()?
-
-In drivers/base/power/runtime.c:rpm_resume(), dev->parent is read into a
-local variable while holding dev->power.lock, but the lock is released
-before pm_runtime_get_noresume() takes a reference to it:
-
-drivers/base/power/runtime.c:rpm_resume() {
-    ...
-	parent =3D dev->parent;
-	if (dev->power.irq_safe)
-		goto skip_parent;
-
-	spin_unlock(&dev->power.lock);
-
-	pm_runtime_get_noresume(parent);
-    ...
-}
-
-Meanwhile, device_move() modifies dev->parent and drops the reference to
-old_parent without holding dev->power.lock:
-
-drivers/base/core.c:device_move() {
-    ...
-	old_parent =3D dev->parent;
-	dev->parent =3D new_parent;
-    ...
-	put_device(old_parent);
-    ...
-}
-
-If device_move() frees old_parent during the lockless window in rpm_resume(=
-),
-this could cause a use-after-free memory corruption.
-
-[Severity: High]
-This isn't a bug introduced by this patch, but when device_move() reparents
-an active device, could it corrupt the PM runtime child_count accounting?
-
-When reparenting an active device, device_move() does not transfer the PM
-runtime child_count from the old parent to the new parent:
-
-drivers/base/core.c:device_move() {
-    ...
-	old_parent =3D dev->parent;
-	dev->parent =3D new_parent;
-    ...
-}
-
-When the moved device later suspends, rpm_suspend() decrements the child_co=
-unt
-of the new parent:
-
-drivers/base/power/runtime.c:rpm_suspend() {
-    ...
-	if (dev->parent) {
-		parent =3D dev->parent;
-		atomic_add_unless(&parent->power.child_count, -1, 0);
-	}
-    ...
-}
-
-If the new parent has other active children, its child_count will premature=
-ly
-reach zero. This could cause the PM core to suspend the parent while its
-other children are still actively performing I/O, potentially resulting in a
-kernel panic or hardware lockup.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821142414.1508=
-92-1-djeffery@redhat.com?part=3D3
+92-1-djeffery@redhat.com?part=3D9
+
