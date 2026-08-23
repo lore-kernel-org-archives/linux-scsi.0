@@ -1,96 +1,97 @@
-Received: from rcdn-iport-5.cisco.com (rcdn-iport-5.cisco.com [173.37.86.76])
+Received: from rcdn-iport-4.cisco.com (rcdn-iport-4.cisco.com [173.37.86.75])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05B8A32AADB;
-	Sun, 23 Aug 2026 05:03:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=173.37.86.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82F8F41A8F;
+	Sun, 23 Aug 2026 05:05:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=173.37.86.75
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787461422; cv=fail; b=mPjFCJf5Z7OKb2V50WBPZvzUfG9kk8AOwYT9voJ5k2wq6O8BoHZ2ghc9dRBYkQv249v4w0maGnjhQ8U8y6cMl6Au7EAdKuql1iVvzyYRtXKGLDI+GNqRmQxmd1zQdHBqHEUmxSlHVdjhXdajqc8Y6Q3gW5/CIqHBb6ja+hhOylo=
+	t=1787461517; cv=fail; b=AabFNx0iM/ZBnd1n/FqAZ/JtLC8KV3vkx77Wap7kJfSANfe21BEF7L0kUCqN91a9IPPil6cx4O+mBdxvuncW9ZY8mpgryFP4Y3piM7Oc43orEEQDG1GbBQp6KLoxqltBlAuFthYykDB+ZbVo4A11Mr/M0JY2CY18AwD9+3X7b78=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787461422; c=relaxed/simple;
-	bh=y3SgHUcrQucBbXmQU3IHQuKlE4n3e6J2sSU1fQUfn8A=;
+	s=arc-20240116; t=1787461517; c=relaxed/simple;
+	bh=eeNv5QZuQ5fl6EhH7swBkgcNgrhv6JemO6NeSf7NOI8=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Gtjwlqw7wlmVHmb57Ia+n0k+X85/XI+lT8q/MgRHZbGGcrS0Q+IaHAt6aFjm5ZdN0VzgJ+rgxUAxA3NYhmdcfHl0jykwFj2SxDhYuJAwlQXHI+nyxrfJ7q1uH/FBt4b6TGwWQiyaNIszkKwgXJZyrdrhW49ZAPO+cLiyRqjN7us=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=Pk77B6Ru; arc=fail smtp.client-ip=173.37.86.76
+	 Content-Type:MIME-Version; b=tcawS5h9ChYDrsXPdKR/95y8tEqJMyBV5g5AS59XD+JFvzCeVJI2eXppsHbxgHRlhhSgzSPza9R8a8/2EiFEpSl9IdvQVyOjL/rWFFU5Kj0721McA3TR8Vh3qZJEFCBGnfcZUXCV4WPXrnK+XmcerokBiOx8GSHaGVLO8SOVeiU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=R5uezt5G; arc=fail smtp.client-ip=173.37.86.75
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="Pk77B6Ru"
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="R5uezt5G"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=1614; q=dns/txt;
-  s=iport01; t=1787461421; x=1788671021;
+  d=cisco.com; i=@cisco.com; l=1832; q=dns/txt;
+  s=iport01; t=1787461515; x=1788671115;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=bED4eo2Hwj+LxItiFfkE27JaUpl0oTygBIlvmrtGRS8=;
-  b=Pk77B6RubmzajWywANYkh4mC4IoXDFvbcVDEIoPWZSoKP/VjjikJYOhb
-   AD/hiuC5FsMXEx+vnn5QjK6oJZ0XOYV2vr9+CAwiTnqpQ/Pqe0qpgq3/O
-   4+yqERloTu+ZaVZFMddhh/xNuCmP7Hj4T+nmI23MX7zgKa5/9pEeORHdz
-   rB5JGq5YMHpfPS4hVT1vSwNI2LEf78NPMVqy8szvmX6A+bP/cv0vnwnpe
-   elb+AZ1d5LQ2F/01ruX16Fc+pYgVChdiQ4pQco8LzbnwEvdkpL+Kjbbcy
-   /GRlk1Hf2DxjheL4z7uFrbtzLDtSQKqgqeuwL92NFWVrvWZKguzL/+a3p
-   Q==;
-X-CSE-ConnectionGUID: EPGBs0JCQfm94t8cEwdaTw==
-X-CSE-MsgGUID: 9nFj5q1qRuORFDNN2l0EYw==
-X-IPAS-Result: =?us-ascii?q?A0BoAwBzfopq/4z/Ja1agS6BK4FuU4IrSYgjA4UriHkDn?=
- =?us-ascii?q?huBfg8BAQENAlEEAQGFBQKNbAImNAkOAQIEAwIDAQEBAQEBAQEBAQELAQEFA?=
- =?us-ascii?q?QEBAgEHBYEOE4ZchloBAQEBAycTPxACAQgYHQEQMSUCBAENBQiFbwMBArQJA?=
- =?us-ascii?q?ooceIEBM4EB4DkVgTiIXgGFeBuEYScbgg2BV4JpPoQhAQEihBOCMASCIoEMh?=
- =?us-ascii?q?ESPE1J4HANZLAFVExcLBwWBI0MDKi8tFg0PEykFLR2BIxIPHRcXHlgbBgUSI?=
- =?us-ascii?q?CpBRCMDPoEZQQKBdT8jGTZ6gQlegSspYAECEBdGLhWCBwKCWoEnXgIBSUMOB?=
- =?us-ascii?q?0giC209NxQZAwSBNQWOVB+CTIEjOjZtCDURxx4KhB6iEheEBI0UhwOSUZgNe?=
- =?us-ascii?q?yOodQIEAgQFAhABAQaBaDyBWXAVgyJTGQ+OX89deT0BAQcCBw4DC4FokX4BA?=
- =?us-ascii?q?Q?=
-IronPort-PHdr: A9a23:gOGeihWWtFxdKYMUxdiV8qsyKqXV8K3PAWYlg6HPw5pUeailupP6M
- 1Oav7NmjUTCWsPQ7PcXw+bVsqW1QWUb+t7Bq3ENdpVQSgUIwdsbhQ0uAcOJSAX7IffmYjZ8H
- ZFqX15+9Hb9Ok9QcPs=
-IronPort-Data: A9a23:1wXqG6y6FhvUFcjjLvB6t+dcxyrEfRIJ4+MujC+fZmUNrF6WrkUHn
- GAZXW+EaauJNzGhfNt+O4XgpkpS7ZXUmIc2QABlpFhgHilAwSbn6Xt1DatR0we6dJCroJdPt
- p1GAjX4BJlqCCea/VH1buSJQUBUjcmgXqD7BPPPJhd/TAplTDZJoR94kobVuKYw6TSCK13L4
- 46aT/H3Ygf/hWYkaDlMsspvlTs21BjMkGJA1rABTagjUG/2zxE9EJ8ZLKetGHr0KqE8NvK6X
- evK0Iai9Wrf+Ro3Yvv9+losWhRXKlJ6FVHmZkt+A8BOsDAbzsAB+vpT2M4nVKtio27hc+adZ
- zl6ncfYpQ8BZsUgkQmGOvVSO3kW0aZuoNcrLZUj2CCe5xWuTpfi/xlhJGwOEqcDosRcOG9Lp
- KAEeDsgcRyKu/3jldpXSsE07igiBNPgMIVavjRryivUSK59B5vCWK7No9Rf2V/chOgXQq2YP
- JVfM2cyKk2cO3WjOX9PYH46tOShnGX+dzRbgFmUvqEwpWPUyWSd1ZCwaoOMIYTbHZo9ckCw9
- 2To/TngWwggKful5xaj1Cio3sL+gnauMG4VPPjinhJwu3WXx2oOGFgVWEG9rP2RlEGzQZRcJ
- lYS9y5oqrI9nGSvT9/gT1ijq2WFlgATVsAWEOAg7gyJjK3O7G6k6nMsVDVNbpki8cQxXzFvj
- gTPlNLyDjspu7qQIZ6AyoqpQfqJEXF9BUcJZDQPSk0O5NyLnW35pkunogpLeEJtsuDIJA==
-IronPort-HdrOrdr: A9a23:X1kGyKz/MDzaYx9hfxQgKrPxI+gkLtp133Aq2lEZdPULSL36qy
- n+ppQmPEHP6Qr5AEtQ5+xoWJPtfZvdnaQFh7X5To3SLTUO31HYY72KjLGSjwEIdBeOjNK1uZ
- 0QF5SWTeeAcmSS7vyKrjVQcexQveVvmZrA7YyxvhUdKD2CKZsQkzuRYTzra3GeMTM2fqbRY6
- DsnvavyQDQHkg/X4CQPFVAde7FoNHAiZLhZjA7JzNP0mOzpALtwoTXVzyD0Dkjcx4n+9of2F
- mAvx3y562lvf3+8RnBym/V4a1Rndvq2vFDCMaPhsV9EESstu+vXutccozHmApwjPCk6V4snt
- WJiQwnJd5P53TYeXzwiQfx2iH7uQxeqEPK+Bu9uz/OsMb5TDU1B45qnoRCaCbU7EImoZVVzL
- 9L5WSErJBaZCmw3hgVpuK4Ei2CpHDE5kbKotRjyUC3lrFuMYO5mLZvuH+91q1wRB4SprpXS9
- WGR/uslMq+OWnqHEwx+FMfgOCEbzAUAgqMRFQEt4i+1jhbm2088m4jrfZvxEvpMPkGOsV5Dy
- OuCNU0qJheCsARdq5zH+EHXI++DXHMWwvFNCaILU3gD7xvAQOHl3fb2sR92AiRQu1B8LIi3J
- DaFF9Iv287fEzjTcWIwZ1Q6xjIBGGwRy7kxM1S74Vw/uSUfsunDQSTDFQ118ewqfQWBcPWH/
- 61JZJNGvfmaW/jA5xA0QHyU4RbbXMeTMoWsNAmXE/mmLOAFqT68ujANPrDLrvkFjgpHmv5H3
- sYRTD2YN5N60i6M0WI9iQ5m0mdDXAX0agAZJQypdJjurTlHrc8xzQotQ==
-X-Talos-CUID: 9a23:LRrgiW4coRDLIXxqDdss2XY7MNt9UFbkwnKBf1PoAkt2RLSpVgrF
-X-Talos-MUID: 9a23:wDFjUguhiCc4NgAeE82n1TdMNppxur2UFWc3v7kgnZOAbQFBJGLI
+  bh=C17kN4Qgg5Fm4/HUFq/8NX+c2uB4rYyyCpJ7yPleGK8=;
+  b=R5uezt5GEAWh+hAqD6rQejsqmbLdB9M7mJ9woZwugT3S43OnBKZbY0Dm
+   oWaa5yawJLd4c6Rjmfudf9G+grw6oxdapr2epk/NzKeV+Vkc8c+hBZgJx
+   nUrYB7HkJgJgnBUejpUuyRBj860QMys8gVgUean4tJrAXwRuDfhGq8Mbi
+   sAOLEPGPHmXjNbk1wx1acpYeDl7FvDv4OtWPKpo/uWNE6uMrr41tcXXTT
+   zm5whG1XBeYYrjz+HMWszKrYduHAMI9os3xWZvunvJcBHO5Q8O5gNJNiy
+   XUiXdjyLgIDhZMlvv1vzB1DJ6OxUvCBJzk6b6a4//sLUg+BzBIPgB3Awr
+   A==;
+X-CSE-ConnectionGUID: DrKmBRVTSrKau3rPg1u/Gw==
+X-CSE-MsgGUID: IYx/MdI+SQGezdoV6RlwmQ==
+X-IPAS-Result: =?us-ascii?q?A0B2BABzfopq/5X/Ja1aHgEBCxIMZYEgC4FuU4IrSYgjA?=
+ =?us-ascii?q?4UrhliCJJ4bgX4PAQEBDQJRBAEBhQUCjWwCJjYHDgECBAMCAwEBAQEBAQEBA?=
+ =?us-ascii?q?QEBCwEBBQEBAQIBBwWBDhOGXIZaAQEBAQMnEz8QAgEIGB0BEDElAgQBDQUIh?=
+ =?us-ascii?q?W8DAQK0CQKKHHiBATOBAeA5FAGBOIheAYV4hHwnG4INgVeCaT6ECjuEE4IwB?=
+ =?us-ascii?q?IIigQyBfZFaUngcA1ksAVUTFwsHBYEjQwMqLy0WDQ8TKQUtHYEjEg8dFxceW?=
+ =?us-ascii?q?BsGBRIgKkFEIwM+gRlBAoF1PyMZNnqBCV6BKylgAQIQF0YuFYIHAoJagSdeA?=
+ =?us-ascii?q?gFJQw4HSCILbT03FBkDBIE1BY5UH4JMAWQqllGCaQGwIgqEHqISF4QElBeSU?=
+ =?us-ascii?q?ZkII6h1AgQCBAUCEAEBBoFvCC2BWXAVgyJTGQ+OX89deT0CBwIHDgMLkWiBf?=
+ =?us-ascii?q?gEB?=
+IronPort-PHdr: A9a23:timrkhzR9fWVLT/XCzPsngc9DxPP853uNQITr50/hK0LL+Ko/o/pO
+ wrU4vA+xFPKXICO8/tfkKKWqKHvX2Uc/IyM+G4Pap1CVhIJyI0WkgUsDdTDCBjTJ//xZCt8F
+ 8NHPGI=
+IronPort-Data: A9a23:O8QsQqopeMYPt3kPc9mSVyc3duxeBmJzZBIvgKrLsJaIsI4StFCzt
+ garIBnSbvaDY2OjL9gkYYjg/UsEscXdy9cwHAZv/382RikRoOPIVI+TRqvS04x+DSFioGZPt
+ Zh2hgzodZhsJpPkjk7zdOCn9j8kif3gqoPUUIbsIjp2SRJvVBAvgBdin/9RqoNziLBVOSvV0
+ T/Ji5OZYgLNNwJcaDpOtfrT8kg35ZwehRtB1rAATaET1LPhvyF94KI3fcmZM3b+S49IKe+2L
+ 86r5K255G7Q4yA2AdqjlLvhGmVSKlIFFVHT4pb+c/HKbilq/kTe4I5iXBYvQRs/ZwGyojxE4
+ I4lWapc5useFvakdOw1C3G0GszlVEFM0OevzXOX6aR/w6BaGpfh660GMa04AWEX0sptImRkz
+ 8IkEyouZw3Yndq5ma/8ZfY506zPLOGzVG8ekmtrwTecCbMtRorOBvyQo9RZxzw3wMtJGJ4yZ
+ eJANmEpN0uGOUASfA5LWfrSn8/w7pX7Wz5Rsk6UoaM0y2PS1wd2lrPqNbI5f/TXH50EwhnD9
+ z2uE2LRIyAKc/mT6Hm+y12hlOPIo33BXJ0XLejtnhJtqBjJroAJMzUSVF2msby6h1S4VtZ3N
+ UMZ4GwtoLI0+UjtScPyNzW8oXiZrlsHUMFRO/M15RvLyafO5QudQG8eQVZ8hMcOrsQ6Q3kuk
+ 1SOhd6sXGYpu7yOQnXb/bCRxd+vBRUowaY5TXZsZSMO4sLop8c4iRenczqpOPfdYgHdcd0o/
+ w23kQ==
+IronPort-HdrOrdr: A9a23:8OFAmqhBEAHeL+JnxsAlxoU0f3BQX9V23DAbv31ZSRFFG/FwyP
+ re/8jzhCWVtN9OYhAdcIi7Sde9qBPnmaKc4eEqTNGftXrdyRqVxeZZnMTfKlzbamHDH4FmpN
+ 1dmsRFebnN5B1B/LnHCWqDYpgdKbu8gd2VbI7lph8HI3AJGsRdBkVCe3qm+yZNNXB77O8CZe
+ GhD7181kKdkBosH6OGL0hAddLu4/fMk5XrawMHARkI1Cmi5AnD1JfKVzKj8lM7ST1g/ZcOmF
+ KpryXJoomzufCyzRHRk1TU84lXn9XZzN5CDtyni8QeKDng4zzYJbiJXYfsgBkF5MWUrHo6mt
+ jFpBkte+5p7WnKQ22zqRzxnyH9zTcH8RbZuBylqEqmhfa8aCMxCsJHi44cWADe8VAcsNZ117
+ 8O936FtqBQEQjLkE3Glpr1vlBR5w+JSEgZ4KkuZk9kIM0jgXhq3NUiFXZuYdM99eTBmdga+a
+ dVfZrhDb1tACOnhjjizxpSKZqXLzQONybDZFQescqI1DUTtnV4w0wEgPE7pB47hcgAo10u3Z
+ WZDkyu/4s+E/M+fOZzAvwMTtCwDXGISRXQMHiKKVCiD60fPWnRwqSHq4ndydvaMaDg9qFC0K
+ jpQRddryo/akjuAcqB0NlC9Q3MWny0WXDoxttF75Z0t7XgTP6zWBfzBWwGgo+lubESE8fbU/
+ G8NNZfBOLiN3LnHcJM0xflU5dfJHECWIkeu8o9WViJvsXXQ7ea/NDzYbLWPv7gADwkUmTwDj
+ 8KWyXyPtxJ6gSxVnrxkHHqKgXQk4zEjOVN+YThjpwuIdI2R/9xWyAu+CGE2v0=
+X-Talos-CUID: 9a23:rzgqmWHf2DXCEM+NqmJL7m0RMPobTkbH737NeFWABj90D5KKHAo=
+X-Talos-MUID: 9a23:2puuzQsqZhGjfC1rGM2npQByc+JkwueVMW8Ag5kBhZe+MTN1AmLI
 X-IronPort-Anti-Spam-Filtered: true
-Received: from rcdn-l-core-03.cisco.com ([173.37.255.140])
-  by rcdn-iport-5.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 23 Aug 2026 05:02:31 +0000
-Received: from rcdn-opgw-2.cisco.com (rcdn-opgw-2.cisco.com [72.163.7.163])
+Received: from rcdn-l-core-12.cisco.com ([173.37.255.149])
+  by rcdn-iport-4.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 23 Aug 2026 05:05:08 +0000
+Received: from rcdn-opgw-5.cisco.com (rcdn-opgw-5.cisco.com [72.163.7.169])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by rcdn-l-core-03.cisco.com (Postfix) with ESMTPS id F2E0A180001D0;
-	Sun, 23 Aug 2026 05:02:30 +0000 (GMT)
-X-CSE-ConnectionGUID: QRwobj5DQf+8LNbBTwfYYg==
-X-CSE-MsgGUID: KvcOOlQXRp6zpy6lzFR+hw==
-Authentication-Results: rcdn-opgw-2.cisco.com; dkim=pass (signature verified) header.i=@cisco.com
+	by rcdn-l-core-12.cisco.com (Postfix) with ESMTPS id DC3A6180001D1;
+	Sun, 23 Aug 2026 05:05:07 +0000 (GMT)
+X-CSE-ConnectionGUID: 9UuM32ACTPup1CjJZ6+IXQ==
+X-CSE-MsgGUID: uc7dJ18fTO2paSZ1ltypiA==
+Authentication-Results: rcdn-opgw-5.cisco.com; dkim=pass (signature verified) header.i=@cisco.com
 X-IronPort-AV: E=Sophos;i="6.25,238,1779148800"; 
-   d="scan'208";a="72223033"
-Received: from mail-westus2azon11012016.outbound.protection.outlook.com (HELO MW6PR02CU001.outbound.protection.outlook.com) ([52.101.48.16])
-  by rcdn-opgw-2.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 23 Aug 2026 05:02:30 +0000
+   d="scan'208";a="66884235"
+Received: from mail-westusazon11010046.outbound.protection.outlook.com (HELO BYAPR05CU005.outbound.protection.outlook.com) ([52.101.85.46])
+  by rcdn-opgw-5.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 23 Aug 2026 05:05:06 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fvJ3H9dHfM82jlX7xP+xPSsOXlKvL+iDo04Th4gqJtW7eXpF9/j8kTYTLtBCAZWmsXFEoW8bY3ui1L8Q+X0vCtXrGI+r4G/Nh4c5IRgKLKKlpL0WGgt+XpxObYTRHCpTeWeTiKgXOqty/KfIroFV1AU4ZhjaDgw5O0OYqkAPv7IpCzQv35hkBbuytGB6aulMMagtypAFoU+KiawlFyV+RL0+s95aPixoxyFYslFmQX8EEmyTY1AICrXcKBnJIHuWvvgjaQtCYuAZW8pa4mdzseSXH+/9N7JBm0+RAJLQNGwO5tR84FR3zaNRweU79NFOPfLUsI3UNRHhJaHNbEVLiA==
+ b=sVTG1mXqmD3HIR2gdOs4vDn758LJe70HwJ9RfL5tlpOz8yl7ZfbxWu62SKAxe83IWNt5O3pDIdkmNmrLsxfHJxCLw/DK3xJCAf6EoL/WKluIgQLoI6DUnrZppASwgmUtUCREQ65wLnYQ9A0LH2VU4gMdq62GIGOgET4urH8l/kuJkFhZmoCmhDHmDdGflDFTSBzVN5794dAxOgSj423M/QC/XYlLds1TKppaDNshKyEZDPXiBT0MsE1TzkCB2Q7IpsMZ+e7GR2agQt5iReUEbfV0B5BGbyHcCSDnLcL43rNRoJZpyE7XwaOYdAM1cglSph2UeRs6V4vcPKNGjphkhA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bED4eo2Hwj+LxItiFfkE27JaUpl0oTygBIlvmrtGRS8=;
- b=qBhqIZOopAV6lz6AHaf3RopAUVSq85FzlAB6X2xzvnQ/8HMFvoAHYh/IHkplHfa418VYiPm3jhW/XUS/zMFbozPJ59Ge4viczFp4yu2bxJhva4pozas2cRkI/2JXxj9XJ3+C+jMfaoSpxUnmSMwpzHvySzbbZvImGP48ab2gicTpJlFH4MaSThDRWBiWbQ7/5CwILTFnV95Rp035VQNlQO52xB7F2E1tKIp+1D+Uc2hp8nIcN/Xd8wi92WpXfUshCE6KBQn1P5lxrgMj2jZCfSeX/U/xnXOS9XJtkFXqb+Wvsf5XWgfk2ZW+CJwp5Ptj4rVQbkQzXDHqU3qUbWYcRA==
+ bh=C17kN4Qgg5Fm4/HUFq/8NX+c2uB4rYyyCpJ7yPleGK8=;
+ b=vDmXVqlNJarL4vYSKx8fIBUlAQzwktVHJrk9DQ7M/guXdotWdDY4WKASBZgIjAxDbbdmEhVX89VmvQMZOIM8a2SBYj35r5oCeQ3FJeUOWTfie1vWLTge/VdhddsIWfTFt+ygjlXb393hzaZ0ccbGPCfcPFM2KWGf6JCpbN3xJQsBNhGOpQZ5xZ4leTc4MdO772jJ9aofgc8rHkcKJecL48ruugZbBphdV2F048o+C0AxwGaC6CwvjxWxJaJ/nSla2fAtNwii/ANOxhf+Edj/D+0n0Y7RX9a/c5uBVcM4DMGxapQhByF4sxBMvZujhguNiGR4GG55M7gCJ6wzPAPPrg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=cisco.com; dmarc=pass action=none header.from=cisco.com;
  dkim=pass header.d=cisco.com; arc=none
@@ -98,74 +99,79 @@ Received: from SJ0PR11MB5896.namprd11.prod.outlook.com (2603:10b6:a03:42c::19)
  by DSVPR11MB9743.namprd11.prod.outlook.com (2603:10b6:8:34d::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.12; Sun, 23 Aug
- 2026 05:02:27 +0000
+ 2026 05:05:04 +0000
 Received: from SJ0PR11MB5896.namprd11.prod.outlook.com
  ([fe80::41fa:d12d:31c1:d5db]) by SJ0PR11MB5896.namprd11.prod.outlook.com
  ([fe80::41fa:d12d:31c1:d5db%6]) with mapi id 15.21.0339.010; Sun, 23 Aug 2026
- 05:02:27 +0000
+ 05:05:04 +0000
 From: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
-To: Linmao Li <lilinmao@kylinos.cn>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>, "Satish Kharat (satishkh)"
-	<satishkh@cisco.com>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/2] scsi: fnic: free the NVMe port template from the
- delete callback
-Thread-Topic: [PATCH 2/2] scsi: fnic: free the NVMe port template from the
- delete callback
-Thread-Index: AQHdL8/rYE8/YKPb8EimITGU4DriEbami8oAgASMszA=
-Date: Sun, 23 Aug 2026 05:02:27 +0000
+To: Linmao Li <lilinmao@kylinos.cn>, "Satish Kharat (satishkh)"
+	<satishkh@cisco.com>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+CC: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Hannes
+ Reinecke <hare@kernel.org>, Justin Tee <justin.tee@broadcom.com>, Naresh
+ Gottumukkala <nareshgottumukkala83@gmail.com>, Paul Ely
+	<paul.ely@broadcom.com>, "linux-nvme@lists.infradead.org"
+	<linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/2] scsi: fnic: initialize the NVMe local port info
+ before registering
+Thread-Topic: [PATCH 1/2] scsi: fnic: initialize the NVMe local port info
+ before registering
+Thread-Index: AQHdL8/tiO9knU7kREqpjtsF7UOa8LarGafg
+Date: Sun, 23 Aug 2026 05:05:04 +0000
 Message-ID:
- <SJ0PR11MB58965D752AF8F07FAF4AA364C3A12@SJ0PR11MB5896.namprd11.prod.outlook.com>
-References: <20260819114242.3598034-3-lilinmao@kylinos.cn>
- <20260820073000.3984849-1-lilinmao@kylinos.cn>
-In-Reply-To: <20260820073000.3984849-1-lilinmao@kylinos.cn>
+ <SJ0PR11MB5896AC03937115745995EFDFC3A12@SJ0PR11MB5896.namprd11.prod.outlook.com>
+References: <20260819114242.3598034-1-lilinmao@kylinos.cn>
+ <20260819114242.3598034-2-lilinmao@kylinos.cn>
+In-Reply-To: <20260819114242.3598034-2-lilinmao@kylinos.cn>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach:
 X-MS-TNEF-Correlator:
 x-ms-publictraffictype: Email
 x-ms-traffictypediagnostic: SJ0PR11MB5896:EE_|DSVPR11MB9743:EE_
-x-ms-office365-filtering-correlation-id: f17b5aca-b8ca-4493-402d-08df00d3ba7a
+x-ms-office365-filtering-correlation-id: 496afccd-2310-4a00-5b74-08df00d417c6
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|23010399003|376014|10067099003|56012099006|6133799003|22082099003|18002099003|11063799006|4143699003|38070700021;
+ BCL:0;ARA:13230040|1800799024|366016|23010399003|7416014|376014|10067099003|56012099006|22082099003|18002099003|11063799006|4143699003|38070700021;
 x-microsoft-antispam-message-info:
- hgHT6307i/1kDisPZVVbLy75lRpBdZfOcQdRIYppWz7hMFXTLu9N33+KxUL/oxIuDkTLG4vW68nxpcq8M6iGAK9hUgNrkbEiATIHIrxlQ1VGOvs0qI0zLuxSHfquGa82ELfM6PL6/hCps23WlZRNSZpcy44ve61ofMgGCWyilWGX+5g1PpCU7v/5r0nhdJN6tnCeHH4Bhb8ZrThQahQE3y/aJ0M1jWi0tKlLmeWT6dFgjTPrj8W6O65ASDnE2rJw2hcSDotenp8yCaqyDwJ4CBghMJjItRdJK3vMTUD6n5SJALKNDsZqXtKIzBUMJljUhtqjvN4cvlLL/dNzY0rEm8nXz5GoyZcRiCM3uJ4zekpV0C7zjoAp9jOWhTNidwL7P8d6VGbXSvcDzrsmr12RdIoLvP81bJvGoANefjKvdQ//Ypd14Ks72O5FI5k6Q7n3Beawyb25ZhLo0WyI8vz/N41QyQlPkBG0l/fLOylOQi65F8JEor3NeIpFkOk6Y6c+7VJkWZ70x2xybn4ROm8kq0e39+/A2Tk5VwANaDds1qloB+JfZiBZL8TOHwhVX+5OqmlOrCSvpw18uIpPPVkfQrbs0cBqefPH0N7Jc194uuVxRD068HukBOLwnvNv5cOb9IHy3g755cJmWPFggPI0t1Kqe8UFB9nATXjWOzNjSHLQ3QuXXpZZ8H/AKNZHsV/OcF5q+tBmMoSIwgTkg0KD4SceRVEaON2rqS89x3FmdtQ=
+ /l3AhrE69/d/x2j5InP1t+Qc5YWA44Vny0/KDkvhirIva8Ueg2UIH+NwsdPtkuuyB5zzpqlcptGZ0zbbCBnpIXgw+YbUd8Bq2pGKC9fL0N3mB69R26ydgcdY84NLE693GP4el0gMw29wrmpoKeVhIUdCFxw/+I98dM0o/I3QjjnEcp8COy81YIkfntpQ/oBdzIsUbSrklxr6nqIeWY5PFdztTJwmPibx094Zw19Wopkz8y2z2FP4s+FcgMA6V9s3m/rbnEAMa7judmPe4Us/eBhANjsHKkEPFHdN9+ZEE7ezjeux6xzSN7HFkdm11yXQK1cgrReBPvi1GWDZTPNZlaoPxrwy+15FdYJoUo1DjX7pRSsqlZHywjHdqEmA2Y4RAs1okF5Qlk5KpL29Kh7SOvP1fvhdQUJDrE/An8TR2jL5GfoJ1oF9lBvnONI2O9jaxz181nhc7NVCff3VXUgNpY8kK8Lh9lmUkg/BwiXnqMNimNAvNO166M1xwnJ+pMHdriekiUEiu9Ce78+jvgCmdRk/sfmyHnQcF7+41FK+qbn92WCFhZMkBR12r/ihElyj/Y/10l5cb8o2eTTKEcK4A5EJx/aTnnMDHU7xrzqUe7DrEDcD7PEJHg+zlFaJ2Yoe1HiAP5+0kLqotTsvTzEThNNTxj9SWYGUZ2ADMlZ6kAqsz/uqZ4ZOvpDgP9tSQGCCRmRT5YoO0h8tPfDQF9jeTasLj/3Ng19FCiIIxURppz4=
 x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB5896.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(376014)(10067099003)(56012099006)(6133799003)(22082099003)(18002099003)(11063799006)(4143699003)(38070700021);DIR:OUT;SFP:1101;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB5896.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(7416014)(376014)(10067099003)(56012099006)(22082099003)(18002099003)(11063799006)(4143699003)(38070700021);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?uGKjbtMPpMNBFNZq5oyiTsTqUOOcUQdyabO5BXdBjDGXAls0Cwqam1ODSAX+?=
- =?us-ascii?Q?iqrmicX/4ECE0qOe621HCk5y3MPjXESWzYGdz79ezmY2PaZmFxwL7qKRzEq0?=
- =?us-ascii?Q?YEh4/5kBbWtM2ZtzeoH3OH7UI+EdFmi2gksGDAepvdgle2FERVCQ0oD/2v73?=
- =?us-ascii?Q?G5R+F/oLCjd+9r9284jaivrN2uZEob6rxSZMieixqPSzWXRrWlBolT0NULSa?=
- =?us-ascii?Q?m/KC0q2BZ0kRi31GTksjzA3qMhY6xtAl5RtW3mHUhpT9oiv0RvpOg/0b1BfS?=
- =?us-ascii?Q?VesKQFM5Ii8KtScSUiYqcM+KPbFpwMf5jOpvp5X98Y831LMh1ZW6DHjw9mNU?=
- =?us-ascii?Q?QLPDOYcPfeUr/mGwQoNMveWvZyuBnrylj+r4vunHsXVlyQTS75YFsT3yjPrx?=
- =?us-ascii?Q?yPs7/EGWa8AK/ijQJ+/h72Qa2wVfi7gDyL+DnISh5ZGOirpN5ffOp5Mcq0Pp?=
- =?us-ascii?Q?LztacgoWmqumiI79mNCvi4aKBbirwZtTUeq0fHtrvtlS8zLMw/hJEvh+mp3h?=
- =?us-ascii?Q?htUEmIihvX9q1iREO17cl/nj9sHlvrj6mLtRdnuOmHEGK/dHagyqeNbuG8+r?=
- =?us-ascii?Q?saA+XwdCfe2i0cp6r7cR8BPrk9zlHHSdY9Tr6jRxql2rW7NtL3dgKJqtOVmq?=
- =?us-ascii?Q?C/mjPcKAPc/5KRsyRuyD9jZ2iOTIYfntKdqz/KeBfF71fqlwIR+BfU+i74Ha?=
- =?us-ascii?Q?9WUUHz5D7AtF/ylENtoNhbxIsEoOGI0c887ohnpxOPt76mIoHGUkJyeghAsq?=
- =?us-ascii?Q?UIHUWESeCkwMb+1B+3KIXxOZN6KEEAbBh0xRpRpG1rIHJJ+CkLv4w5Mkt8Y8?=
- =?us-ascii?Q?KlS5vU2VbL1hVsordWESx2UARgIU1SfXKIK58pA/7UwgrkkaMxBrUqEsDv9u?=
- =?us-ascii?Q?CKJq5ulyRuJFVe3XzDZNmNXU5lAUveIcXyPsLenaW2FNykAhUipMn9GOyecj?=
- =?us-ascii?Q?+p+77eWXQK60m2KcmTyPzMDBeh3iEOxRcqFqScE/GXgdQDxo9eiEGn5bcph9?=
- =?us-ascii?Q?CAoFW80CVB3PhbRgiuqM27Uw+SyeR8Qd5wlNE5ciPgHvW9KcyO2HAr6H9/6C?=
- =?us-ascii?Q?ftQs6ocrsNHn52GQm+o47m7bBB/u6oZMmNSAuwscsroXJBA5PCwZ9a4uRnqU?=
- =?us-ascii?Q?MDHq0cTPRH6IanS9800PTKevXvaEau5hjpOuH4nhqaJJwGlz9P+1fBMmdNN7?=
- =?us-ascii?Q?+VyDm3k9+wLC/QZM32PKfUKCR5b/BvJfvXDv0PLAoJ3IWswH9JieIgOTliGQ?=
- =?us-ascii?Q?eu8ulZ2Mwelqxe4u/rbZ1hOLo4bNol7fGp6oYY8RQYqJf+kxxSHerqAUbEuI?=
- =?us-ascii?Q?Xt8N7yd1FLgvMq4rO/XOBLoP5WsmcSkvFO4xHaHYsIlURc8VdZM4QmQm10kC?=
- =?us-ascii?Q?JNTsJ+iCc2IUqYbLoFJ4PDAHD4T2eZvGJ2RgotCG4Js6zAGIClvPMctFED2B?=
- =?us-ascii?Q?Y0W+tlqaXgQZ2yk2xbcQP4mDhMt4Frjevc6HETlFBoM3t2FoDz+QPoZZ+rsg?=
- =?us-ascii?Q?1b0qxL6OwRCDmiohXrMbHeVlBueotDD11M0itf7xXSXsvnfX6sC7Dy0oFe9B?=
- =?us-ascii?Q?QhAwzVU8fbp07CtRF+JS/Vp/dl/IhHQAqByE5IuZqnn+e8Akxzf0UTZveqB5?=
- =?us-ascii?Q?94vk1qrMPf4pwZ+pihCshAU47tVAV2rF8Ns6nfr0ceV9X0pWD9DPAXhg7GsD?=
- =?us-ascii?Q?cvI8D3gD1o3BEXm9bmuRWPNeDYTWzBi3Z5MTmzgbrHnQ6G92?=
+ =?us-ascii?Q?69XyNFSCfnBrysDVVL0Wzp5xSgXZNXHAlJnwOh/WlqaWh76xVTu+t44vMrjY?=
+ =?us-ascii?Q?g6cvEkew0SHIK103T4WK4n3e/rNcMmuBljCFEKpu4jgR1SbHLhGcwKzVjJKe?=
+ =?us-ascii?Q?D2Nb2qr9IlvTAX9zDp0YhfaK5Vsj4FPhdfS6wh4R6hGqyhtjrAQ2hPoYlqOc?=
+ =?us-ascii?Q?/HNIDxdbpR3BoQF8B10D1iSKQtlicb4N24fJr0eHXZQm6qUbp644Kwobk02E?=
+ =?us-ascii?Q?Xr69JP6ioejTsQuD1hjPS/jCmRr/sMmjjt/160OtiVOwnbjZs3vhucI9Pfnv?=
+ =?us-ascii?Q?HnOsZEOTm6+cQ98zuTSS0k+omONZ8fk0w00jxzP1sxj5V+bVEIJvCvsXTvpV?=
+ =?us-ascii?Q?uYi9UJMINiP+WPyCyawRgLTKPDldQ3gjspGYpI774gWZzR3LyLMxJtcwaX3F?=
+ =?us-ascii?Q?fGZ8cK/Q15FVSIVdOQHUpmdZhyz83ZljEkFN7bWR9Nse+Zw+3u8QSCl3C6Zr?=
+ =?us-ascii?Q?UWRDMfSn40Wzfqp2Y3Z7KjMTUX2LOJYIWoOB1K3o7bJF7UtvZrqX3XkmYCGJ?=
+ =?us-ascii?Q?YtAfJTdlj8D4LRHR8RVNKr01vtyW17Dl+nJghqU3R0Ibmo54h7cbyRG9Gyo5?=
+ =?us-ascii?Q?RZSqfI6u2SLLGEqc6jMKX5W+naVyBOsnxntA5jRSDlMhI2MkjKOyUXXi7LsT?=
+ =?us-ascii?Q?hUly4fYrXvP5rb/55+oEUHQtoU67UiCwBD/FRzfGcb0+weJKAi6S1ZscuMUN?=
+ =?us-ascii?Q?RQ95+P73g0RIwisT+6mlCote5aIc5H4JfSy16qx/99k7rX83msF11c1khuQw?=
+ =?us-ascii?Q?vxwuTgEKQkDjklMxKPDX+3c3RfWe6NZkVKcIS7VeCtDMbRFuLPo95oG19HKE?=
+ =?us-ascii?Q?d22ExGGa6gNEYWczggQ76JZXsAcE4e6L82Ar6yaFWLli5wM+O6y+pgo9DLwB?=
+ =?us-ascii?Q?Jw+TfMboUS35bVAmK1+ELmWpSor0jnACD4nGIHtxnw0hjrlZyu/+8ecJDNIU?=
+ =?us-ascii?Q?MjPaZvgRc84BVhkGayZMY8rq+rYdCvafsA9I3+WxChwg6obIQZ6VNxpj7yNR?=
+ =?us-ascii?Q?fEWvHdkuz6cTvvUUW1CD6mMHja0J/YXE1k4nOjBZ9oftwB736h3GdChaISxs?=
+ =?us-ascii?Q?oR+MAls4Kh+Am6zhqTMheYqaotkMnkMsPSBKYDlBl6WjT9WOj7x5OkH/ICbt?=
+ =?us-ascii?Q?4DJNlY9MW/S9T0UCvS808dpHxMPVBoUiXWzb5E6wofehNjuc39Ty07M9yYQ3?=
+ =?us-ascii?Q?wM5XpkhmFZIr0HrVm3EDp3aO4CDe05MYaRVAnMILqYUwrVxYME9bEL94vXBJ?=
+ =?us-ascii?Q?oHfHe/9pZr9EXfU6YQQ10fWAFJTi97YBxlPwDxjhJ3V4BirTxa1+Q0ZLABjv?=
+ =?us-ascii?Q?MpU/vlthlBTtw3GQAPakpJLkFwjv35l/ImtCZJmRGIJ0ZVcn8Vh63d9r80Fo?=
+ =?us-ascii?Q?e7uQg9CTGexn6BhCx9w5gM8nt27RTJXjWR94SPnOnGOh0y3LIYa3YvG/cul4?=
+ =?us-ascii?Q?6ntXoVXrxgie+R+FG+208T39EJKEu/k833YQGSaMYflNZs7AUPreVReBDIZp?=
+ =?us-ascii?Q?+3h8FGNyl0Zr3AEyKXj4EyIdQeQx5Iuxzq07Lex/BDjceHLpXvYUSEBHVt8V?=
+ =?us-ascii?Q?y5KqXrqvxBU6FG5ImR1UW8Od6AsDoUXoTa438tfGehOFeg20vi++bIHijxA1?=
+ =?us-ascii?Q?HViJEZx5918PpI3fuPxmHRM4p5w4idPAxN0DiyUvD6M8YHXPEurJ2enUSh0u?=
+ =?us-ascii?Q?S7qEhfHiWWyOC1YSOd1OQalGUOk0yr/b7u2wbuWuQEAE9n+A?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
@@ -175,66 +181,70 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Exchange-RoutingPolicyChecked:
-	rIT0lF2+pM/vmV4juFcdbavjQMYGUUPr0SHSKtuXkWmUIC7Z6qkj39jonrXoaLhUZrO2vRF4SLcWpDNq9tT/lCfNv2zTGGSHF5//5cR6Hn2LK691D9xoQjkYYj9WQzj1vKcAF7lMQymikBR1OJyJGhL3piXNlmsKc7rhMo9YBw6VoZBvY6cR0/7g5jA0Puq4/2gK0IfZT+Y5lIdQpCViwwxmThh0pAgV3JhssIqGlfVHm6h1m2TNlq6mxgq9onuH54GSzqLeUq6Hj8fH5R7x+Qq+7myM5chwQ10AFc5P4jOneg3wgX2n68VuYGT8DuX3P8+CXG7703UyZClU5YNbyQ==
+	DHm4SCAdS4G6iy5qW+0OLT6WjU5+IKSqoZzXLVFEiuPVws2Ix6Ze6BfR9zrArcspgHJSg8t1gN89BM747vMWjli0rDqwr40AljwAjicHPHDzJq4kyFIAY8WyZiDOYX11lPbV0JyfUklKnAKJZ9Nh8qPE2WJqQKL1iVlP6xgYhN++kPs5wrGwkrTwex0H5Y/amLau2/jNz+w0yf6HilLIvXfhuNlsrkLTjB9E10zCPLrGiNm8797+FNbXzWr7kP1r9WE33xfC84SSLro/VcetEODKX6fK2fHPcntZgKNs3y+YTJjzHVYwPKQFA0Saoak3roiUzIQ9ZW1Z9lBST+Bhpw==
 X-OriginatorOrg: cisco.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SJ0PR11MB5896.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f17b5aca-b8ca-4493-402d-08df00d3ba7a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Aug 2026 05:02:27.5970
+X-MS-Exchange-CrossTenant-Network-Message-Id: 496afccd-2310-4a00-5b74-08df00d417c6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Aug 2026 05:05:04.1569
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 5ae1af62-9505-4097-a69a-c1553ef7840e
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: CxlEgFM1nwnNyNDMjv9dsbSEvRMvLW48Bgc0FcoNCRRLMsrFSxL3lSZyjecdqqh6gjyiAAtRh2gBAS5rPwL7cQ==
+X-MS-Exchange-CrossTenant-userprincipalname: TK5v77FSiVgb09L+1UZ1UXqJ0NvLxa63INvJy8ZBKp5ppnDVjhzcf6cRnRcUk5V3JBkzqKfI7D4GHeg15JXx7Q==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSVPR11MB9743
-X-Outbound-Client-TLS: ANONYMOUS;rcdn-opgw-2.cisco.com [72.163.7.163];TLSv1.3;TLS_AES_256_GCM_SHA384;256
-X-Outbound-SMTP-Client: 72.163.7.163, rcdn-opgw-2.cisco.com
-X-Outbound-Node: rcdn-l-core-03.cisco.com
+X-Outbound-Client-TLS: ANONYMOUS;rcdn-opgw-5.cisco.com [72.163.7.169];TLSv1.3;TLS_AES_256_GCM_SHA384;256
+X-Outbound-SMTP-Client: 72.163.7.169, rcdn-opgw-5.cisco.com
+X-Outbound-Node: rcdn-l-core-12.cisco.com
 
-On Thursday, August 20, 2026 1:00 PM, Linmao Li <lilinmao@kylinos.cn> wrote=
-:
+On Wednesday, August 19, 2026 5:13 PM, Linmao Li <lilinmao@kylinos.cn> wrot=
+e:
 >
-> Resending: this reply went to the review thread and linux-scsi on Aug 19
-> but not to any of you directly, so you may not have seen it.  Please drop
-> 2/2.  The bot's two findings are quoted below; the rest of its mail is
-> trimmed.
+> nvfnic_add_lport() declares struct nvme_fc_port_info on the stack and
+> fills in four of its five members, leaving dev_loss_tmo holding whatever
+> the stack happened to contain before the call.  The structure is then
+> handed to nvme_fc_register_localport().
 >
-> On Wed, Aug 19, 2026 at 11:52 AM +0000, sashiko-bot@kernel.org wrote:
-> > New issues:
-> > - [Critical] Relocating `kfree(iport->nv_tmpl)` to the asynchronous
-> > `nvfnic_local_port_delete()` callback introduces a severe arbitrary fre=
-e
-> > and memory corruption vulnerability if the unregister process times out=
-.
-> >
-> > Pre-existing issues:
-> > - [Critical] The driver's bounded timeout design for NVMe FC
-> > unregistration leaves the `fnic` structure vulnerable to a Use-After-Fr=
-ee
-> > when deferred callbacks execute.
+> nvfnic_add_tport(), which registers the remote port a few lines further
+> down, memsets its own struct nvme_fc_port_info first, so only the local
+> port path passes uninitialized data across the transport interface.
 >
-> The bot is right.  Please drop this patch; 1/2 is independent and still
-> stands on its own.
+> The NVMe/FC transport documents dev_loss_tmo as "Used only on a
+> remoteport" and does not read it in nvme_fc_register_localport(), so
+> there is no behavioural change today.  Initialize the structure anyway:
+> the driver must not depend on which members the transport happens to
+> consume, and any member added to struct nvme_fc_port_info later would
+> silently start out as stack garbage.
 >
-> If the wait times out, fnic_remove() continues and eventually frees fnic,
-> which also frees the embedded iport still referenced by lport->private.
-> A later ->localport_delete() callback would therefore read nv_tmpl from
-> freed memory before passing it to kfree().
+> Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
+> ---
+> drivers/scsi/fnic/fnic_nvme.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> The underlying problem is that the bounded wait allows fnic to be freed
-> while the NVMe/FC transport still holds pointers into it.  I will revisit
-> that teardown separately.
+> diff --git a/drivers/scsi/fnic/fnic_nvme.c b/drivers/scsi/fnic/fnic_nvme.=
+c
+> index b237948dcafdc..00d9d5d439a38 100644
+> --- a/drivers/scsi/fnic/fnic_nvme.c
+> +++ b/drivers/scsi/fnic/fnic_nvme.c
+> @@ -2216,7 +2216,7 @@ int nvfnic_add_tport(struct fnic *fnic, struct fnic=
+_tport_s *tport,
 >
-> Sorry for the noise on 2/2.
+> int nvfnic_add_lport(struct fnic *fnic)
+> {
+> -     struct nvme_fc_port_info pinfo;
+> +     struct nvme_fc_port_info pinfo =3D {};
+> struct fnic_iport_s *iport =3D &fnic->iport;
+> int ret =3D 0;
 >
+> --
+> 2.25.1
 >
-> Thanks,
-> Linmao
 >
 
 Thanks for the change, Linmao.
-
-I will get back to you about this change after testing it internally.
+It seems simple and straightforward.=20
+I'll bundle it up with the other change in our internal testing and get bac=
+k to you.
 
 Regards,
 Karan
