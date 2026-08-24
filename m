@@ -1,221 +1,236 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF51540B0E2
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2026 11:53:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8DCA36D51F;
+	Mon, 24 Aug 2026 15:25:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787572421; cv=none; b=tRqt5Lp4k/q3xT01Js+HkyST2k11G4yCOPsb1PkqmigdOdMLxedxG4YnNeOnqFuiZkpIsgkYz4dlUZyMFLa1KfWZ7DcJNgHL8EbBvv/dw4gBOXJUy0+MkaHBs1LazMAFOHyGuLvjAozjbgVmY9ZCGiYSgmtNxKF5ZE0fHVptSMA=
+	t=1787585121; cv=none; b=ion65+1tV2p3ZSHteNEXGbbtFFtvMgNyDdGdpiMNbVza6FbJQ2wXl0rwjWNSbLw0vP2QcZvJHSgTPRMtFXwd7jimBUjFilKwDzWAkLtBtkdjz6Sj9VeCHhV8U94aIR0Wp33QiUCRSAv17a8Nj3vc1EVLq/XhiZWP398rCXABiXM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787572421; c=relaxed/simple;
-	bh=bmIFPXzqPHF0KAx+yIoADW9/sWB9nlQto3GZIjNe/cs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QKsd7tRHvdoVAycuyyMHf1C34ePai5tgXjh43ji8+wXin8xNXWu45DePpdyKwubQ2nTWcx2C9ter3ydlWu/1FFPZZVD5JwpKsbsjokXbKEo6EBQzrzooY45w6HU8f4CepEgYIfGh6qqhjCgmS4OGE2fYJK0Jv/ix5b8D2rCjDmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FqKdOlvn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787585121; c=relaxed/simple;
+	bh=KKGcEXFe4ZxRx85agFPZ67EVtV94+pM4/zrtVMpMh/I=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=qMkFT0xWOthYbiaxozYZLol3e65l8o0H9W1iHpeHK4WdgQ+aYFxvSmzEEwMzIzkknPcwfD+EDBgAJBe11I270QSW1M/j1IwuW+lfqK7RHQtGtDkrADJxHpRofnzPdFElmJnwig5U/jpRhYui8VtIJ9gTC328t6izJgv9N5gyT70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ke8btP9a; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FqKdOlvn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60FF61F000E9;
-	Mon, 24 Aug 2026 11:53:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787572419;
-	bh=OwBASN7XpatS5PU76MDLHUvKnwv2jfc0q+nUU/2G1uU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=FqKdOlvnJ9nYInJyTJzQjXQDOsDumLscyhXs0wq7hZrIcSCxL4NBesP5MVzdhlwpn
-	 fwo/dzPnLOIWNjLWnsZG41mvhXQeC6vcFPRGhwMSMs+3msbXoQKqU58NxCDobn4wpy
-	 Yldt1mg+jhHFOBVGKtSg8pQSNXusvEAUWphzZiYFuQ5aFkJmpuv17J3eajcfC67dee
-	 xCtuc3kCDp7MX4Fa9bCkRmc0ljKcMfGlNHNc6tNKwwJdN0yYhKoNfZkKK2wGOY8/gQ
-	 xzlBWMkp7ZKI3rgNyql6Zhe8ILSuIk+jTAYFujHk9rYTlnW4TG5MYG4GDp44yMcamg
-	 xJkR5Ls+PoUVg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: pm8001: use rollback index when freeing MSI-X
- vectors
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ke8btP9a"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67OD1VIi1957820;
+	Mon, 24 Aug 2026 15:25:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=8klEpw9hKUJ5rXKrIrtNier1mKSI+W
+	zQjX2Bac6Mq/Y=; b=ke8btP9aipO8B02Z0/3XZJncTqrzUNkVsjnwsKgTs9TEJn
+	HNGady9Zdh/nVKMEITh6ojISHdxOanRwtetrjms1cBHSGyxhd3W1Im86urEmonch
+	huvwJmbaGnYyrhFMG+Nfxqrtm8lq58bZAgGZwWMqP2Qag31TYi332Vcb4hr/QFI1
+	/3LLKXGUXIMDcAiS0SB3XgNOx6004Jy8UvgKjDQ9qqHh7nJO3hDeAJ5VJxSJ4F4l
+	5J4CNz1qnYjZbLeR9cpZZTWg62pDkuKBnWA2qQCMVhZe9Ey68ms463jf6OHkqw7A
+	+18wqCyThJEsQEv6rJZ2oFeicXG6/QDGj7DCV+gA==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4g73g4j99g-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 24 Aug 2026 15:25:18 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 67OFBJO1025577;
+	Mon, 24 Aug 2026 15:25:17 GMT
+Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4g7qkgxq8q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 24 Aug 2026 15:25:17 +0000 (GMT)
+Received: from smtpav03.dal12v.mail.ibm.com (smtpav03.dal12v.mail.ibm.com [10.241.53.102])
+	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 67OFPGXX32244308
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 24 Aug 2026 15:25:17 GMT
+Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DD9FC58060;
+	Mon, 24 Aug 2026 15:25:16 +0000 (GMT)
+Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C696D58056;
+	Mon, 24 Aug 2026 15:25:16 +0000 (GMT)
+Received: from d (unknown [9.61.150.207])
+	by smtpav03.dal12v.mail.ibm.com (Postfix) with ESMTPS;
+	Mon, 24 Aug 2026 15:25:16 +0000 (GMT)
+From: Dave Marquardt <davemarq@linux.ibm.com>
+To: sashiko-reviews@lists.linux.dev
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260824113618.2239100-1-runyu.xiao@seu.edu.cn>
-References: <20260824113618.2239100-1-runyu.xiao@seu.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 24 Aug 2026 11:53:38 +0000
-Message-Id: <20260824115339.60FF61F000E9@smtp.kernel.org>
+Subject: Re: [PATCH v6 8/8] scsi: ibmvfc: handle extended FPIN events
+In-Reply-To: <20260817204153.384DC1F000E9@smtp.kernel.org>
+References: <20260817-ibmvfc-fpin-support-v6-0-62a2d525e70d@linux.ibm.com>
+	<20260817-ibmvfc-fpin-support-v6-8-62a2d525e70d@linux.ibm.com>
+	<20260817204153.384DC1F000E9@smtp.kernel.org>
+Date: Mon, 24 Aug 2026 10:25:16 -0500
+Message-ID: <87se43mtgj.fsf@linux.ibm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: RslBIyo3iB1a-EGzXtFWdxdFEyx6a5OL
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODI0MDEyNiBTYWx0ZWRfX5YB9ZYuk5wwM
+ p2Mck1W7rvLORBSWnVC0rjg5Wdy9hTINRuIKK5Qw1EqB+x43+b8YeReI5NNdBub2IMDF4vW1by2
+ 5DwOuszX0L5TYfjBxmfKYGWefzYNwL0=
+X-Proofpoint-GUID: RslBIyo3iB1a-EGzXtFWdxdFEyx6a5OL
+X-Authority-Analysis: v=2.4 cv=JZyMa0KV c=1 sm=1 tr=0 ts=6a8c625e cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=U7nrCbtTmkRpXpFmAIza:22 a=VwQbUJbxAAAA:8 a=uDYi2d91FQ9Up9g7aLIA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI0MDEyNiBTYWx0ZWRfX0KCz6ZJaHklQ
+ 8s9VFqHw/6KcT64j7RPwRuRQpjxGdscyZ0luHCnq9cTdVGdvsGp8V/EHCCJzG7mqQvGwWV6KtVJ
+ VLICXyO/0R8osNfjcmIb2u3mKGUfgtkFwtkNI6r+O2tRCvKOvuyWGtHsvCpJLq5NP9O0YuzDI3H
+ EbknB5nZRlHGrWoPbQcsNqBITTYpbmjcz5GtsHRgCTTiW+qPVQG4O2bGZN2YbVVIJCiYVFm30Dm
+ VN7sce85R1DZ1rDjsDkzf2OwYEBQZqfmT7D38Rx+TmLIe3ABbPCjRh2j1ckijGfePKPQNFP5sv1
+ Jqe/LwMKA2lfvEGlbDSUpRoTOJ8iTlsRDtupVwLTPUrGZl9BqwNF+jf7jRiOYL8Zh/ZLUzycb04
+ X1+EU/mBjj+egy3sse5HXfY5TengSDIYs75V0nMGE0WLjk8llZy0q3TUqvxUBjdq4MBpyihOLcK
+ TpkcuDCOFRia7Zbcfyg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-24_04,2026-08-24_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 clxscore=1015 adultscore=0 priorityscore=1501 impostorscore=0
+ malwarescore=0 bulkscore=0 lowpriorityscore=0 suspectscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608240126
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+sashiko-bot@kernel.org writes:
 
-Pre-existing issues:
-- [High] Probe and allocation error paths fail to unregister IRQ handlers, =
-kill tasklets, and free PCI IRQ vectors.
-- [High] Incorrect error jump label in pm8001_pci_probe() bypasses all clea=
-nup.
-- [High] Broken fallback to legacy INT-X interrupts when MSI-X vector alloc=
-ation fails.
-- [Medium] Missing teardown of specific memory allocations (pm8001_ha->devi=
-ces, sha->sas_phy, sha->sas_port) in probe error paths.
---
+> [Severity: High]
+> Will extended FPIN events be incorrectly discarded here because of how the
+> target lookup is performed?
+>
+> In the earlier part of ibmvfc_process_async_work(), node_name is read from
+> the subq structure:
+>
+> ibmvfc_process_async_work() {
+>         ...
+>         if (is_subq) {
+>                 subq = &aw->crq.subq;
+>                 scsi_id = 0;
+>                 wwpn = subq->wwpn;
+>                 node_name = (subq->flags & IBMVFC_ASYNC_ID_IS_ASSOC_ID) ? 0 : subq->id.node_name;
+>         }
+>         ...
+>         tgt = ibmvfc_find_target(&vhost->scsi_scrqs.targets, scsi_id, wwpn, node_name);
+>         ...
+>
+> Because the ibmvfc_async_subq_fpin structure overlaps with the id union in
+> ibmvfc_async_sub_crq, reading subq->id.node_name for extended FPINs will
+> extract garbage bytes from the fpin_data.event_threshold and event_data
+> fields.
+>
+> Does this cause ibmvfc_find_target() to fail and drop valid events?
 
---- Patch [1]: [PATCH] scsi: pm8001: use rollback index when freeing MSI-X =
-vectors ---
-commit 961717b6ef49f9e3b852de4ab73c7119e69629df
-Author: Runyu Xiao <runyu.xiao@seu.edu.cn>
+Yes, quite possibly. I've updated the code that sets node_name in
+ibmvfc_process_async_work() and ibmvfc_handle_async() to take into
+account that node_name isn't available in the extended FPIN case.
 
-scsi: pm8001: use rollback index when freeing MSI-X vectors
+> [Severity: High]
+> Can this lead to a NULL pointer dereference during driver removal?
+>
+> When ibmvfc_remove() is called, the fpin_workq is destroyed:
+>
+> ibmvfc_remove() {
+>         ...
+>         destroy_workqueue(vhost->fpin_workq);
+>         vhost->fpin_workq = NULL;
+>         ...
+> }
+>
+> If an FPIN interrupt arrives before the CRQ queues are disabled, the
+> interrupt handler unconditionally queues work to it:
+>
+> ibmvfc_handle_async() {
+>         ...
+>         case IBMVFC_AE_FPIN:
+>                 aw = kzalloc(sizeof(struct ibmvfc_async_work), GFP_ATOMIC);
+>                 if (aw) {
+>                         ...
+>                         queue_work(vhost->fpin_workq, &aw->async_work_s);
+>                 ...
+> }
+>
+> Should the interrupts be disabled prior to tearing down the workqueue, or
+> should we check if fpin_workq is NULL before queuing work?
 
-pm8001_request_msix() unwinds previously registered handlers with
-free_irq() when request_irq() fails. The rollback loop uses the
-failing index i for every iteration instead of the already
-registered vector index j. This patch uses j for both
-pci_irq_vector() and the matching irq_vector entry in the
-rollback loop.
+Yes, fixed in v8.
 
-Cc: stable@vger.kernel.org
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+>> index 444e6e6e1c390..ce938b93ecb45 100644
+>> --- a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+> [ ... ]
+>> @@ -225,9 +226,118 @@ static void ibmvfc_full_fpin_test(struct kunit *test)
+>>  			post[IBMVFC_AE_FPIN_CONGESTION_CLEARED]);
+>>  }
+>>  
+>> +#define IBMVFC_TEST_FPIN_EXT(fs, ev, stat, crq) {		\
+>> +	crq.valid = 0x80;					\
+>> +	crq.flags = IBMVFC_ASYNC_IS_FPIN_EXT;			\
+>> +	crq.link_state = IBMVFC_AE_LS_LINK_UP;			\
+>> +	crq.fpin_status = (fs);					\
+>> +	crq.event = cpu_to_be16(IBMVFC_AE_FPIN);		\
+>> +	crq.wwpn = cpu_to_be64(tgt->wwpn);			\
+>> +	crq.fpin_data.flags = IBMVFC_FPIN_EVENT_TYPE_VALID;	\
+>> +	crq.fpin_data.event_type = cpu_to_be16((ev));		\
+>> +	pre = READ_ONCE(tgt->rport->fpin_stats.stat);		\
+>> +	ibmvfc_handle_async((struct ibmvfc_crq *)&crq, vhost, true);	\
+>> +	msleep(1U);							\
+>> +	post = READ_ONCE(tgt->rport->fpin_stats.stat);		\
+>> +}
+>
+> [Severity: Medium]
+> Is it expected that this macro only reads the pre and post statistics without
+> asserting any changes? The KUNIT_EXPECT_* macros seem to be missing here
+> to validate the update.
 
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm80=
-01_init.c
-> index e93ea76b565e5..54b35893261a6 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -1029,8 +1029,8 @@ static u32 pm8001_request_msix(struct pm8001_hba_in=
-fo *pm8001_ha)
->  			&(pm8001_ha->irq_vector[i]));
->  		if (rc) {
->  			for (j =3D 0; j < i; j++) {
-> -				free_irq(pci_irq_vector(pm8001_ha->pdev, i),
-> -					&(pm8001_ha->irq_vector[i]));
-> +				free_irq(pci_irq_vector(pm8001_ha->pdev, j),
-> +					 &pm8001_ha->irq_vector[j]);
->  			}
->  			pci_free_irq_vectors(pm8001_ha->pdev);
->  			break;
+Yes, there is no validation. This is merely meant to exercise the
+extended FPIN processing paths in the kernel and in multipathd.
 
-[Severity: High]
-This isn't a bug introduced by this patch, but I noticed that probe and
-allocation error paths fail to unregister IRQ handlers, kill tasklets, and
-free PCI IRQ vectors.
+> Additionally, could relying on msleep(1U) for synchronization lead to flaky
+> test results when running under heavy load?
 
-Looking at pm8001_alloc() in drivers/scsi/pm8001/pm8001_init.c:
+Fixed to use flush_workqueue().
 
-	rc =3D pm8001_request_irq(pm8001_ha);
-	if (rc)
-		goto err_out;
-...
-err_out:
-	return 1;
+>> +
+>> +/**
+>> + * ibmvfc_extended_fpin_test - unit test for extended FPIN events
+>> + * @test: pointer to kunit structure
+>> + *
+>> + * Tests
+>> + *
+>> + * Return: void
+>> + */
+>> +static void ibmvfc_extended_fpin_test(struct kunit *test)
+>> +{
+> [ ... ]
+>> +	for (fs = IBMVFC_AE_FPIN_LINK_CONGESTED; fs <= IBMVFC_AE_FPIN_CONGESTION_CLEARED; fs++) {
+>> +		switch (fs) {
+>> +		case IBMVFC_AE_FPIN_PORT_CLEARED:
+>> +		case IBMVFC_AE_FPIN_CONGESTION_CLEARED:
+>> +			crq[fs].valid = 0x80;
+>> +			crq[fs].flags = IBMVFC_ASYNC_IS_FPIN_EXT;
+>> +			crq[fs].link_state = IBMVFC_AE_LS_LINK_UP;
+>> +			crq[fs].fpin_status = fs;
+>> +			crq[fs].event = cpu_to_be16(IBMVFC_AE_FPIN);
+>> +			crq[fs].wwpn = cpu_to_be64(tgt->wwpn);
+>> +			crq[fs].fpin_data.flags = IBMVFC_FPIN_EVENT_TYPE_VALID;
+>> +			crq[fs].fpin_data.event_type = cpu_to_be16(FPIN_CONGN_CLEAR);
+>> +			pre = READ_ONCE(tgt->rport->fpin_stats.cn_clear);
+>> +			ibmvfc_handle_async((struct ibmvfc_crq *)&crq[fs], vhost, true);
+>> +			msleep(1U);
+>> +			post = READ_ONCE(tgt->rport->fpin_stats.cn_clear);
+>> +			break;
+>
+> [Severity: Medium]
+> Similar to the macro above, this inline manual test logic is missing
+> assertions to verify the stats actually changed. Does it need a KUNIT_EXPECT_*
+> call here?
 
-Does the internal error path here return failure after pm8001_request_irq()
-succeeded, bypassing IRQ teardown?
+Same answer as above. Exercising the extended FPIN paths.
 
-Additionally, the primary teardown function used in probe error paths does
-not call pm8001_free_irq(), pm8001_kill_tasklet(), or
-pci_free_irq_vectors():
-
-static void pm8001_free(struct pm8001_hba_info *pm8001_ha)
-{
-...
-	PM8001_CHIP_DISP->chip_iounmap(pm8001_ha);
-	flush_workqueue(pm8001_wq);
-	bitmap_free(pm8001_ha->rsvd_tags);
-	kfree(pm8001_ha);
-}
-
-When probe error paths invoke pm8001_free() and kfree(sha):
-
-err_out_ha_free:
-	pm8001_free(pm8001_ha);
-err_out_free:
-	kfree(sha);
-
-Doesn't this leave dangling IRQ handlers that still point to these freed
-structures?
-
-If probe fails after IRQs are requested, it appears the driver leaks the
-IRQ handlers, tasklets, and MSI-X vectors. Furthermore, since the handler's
-dev_id pointer (pm8001_ha) is freed by pm8001_free(), could a subsequent
-interrupt on the shared line or an unmasked device interrupt cause a kernel
-panic when the ISR dereferences pm8001_ha?
-
-[Severity: High]
-This is a pre-existing issue and was not introduced by the patch under
-review, but I noticed the incorrect error jump label in pm8001_pci_probe()
-bypasses all cleanup.
-
-In pm8001_pci_probe():
-
-	rc =3D pm8001_init_ccb_tag(pm8001_ha);
-	if (rc)
-		goto err_out_enable;
-...
-err_out_regions:
-	pci_release_regions(pdev);
-err_out_disable:
-	pci_disable_device(pdev);
-err_out_enable:
-	return rc;
-
-Does this failure path wrongly jump to the end of the function, bypassing
-all preceding teardown labels?
-
-If pm8001_init_ccb_tag() fails during probe, the code jumps directly to the
-err_out_enable label. This skips all necessary rollback steps, leaking the
-Scsi_Host, PCI regions, sas_ha_struct, and pm8001_ha structures, and
-leaving the PCI device enabled.
-
-[Severity: Medium]
-This isn't a bug introduced by this patch, but there seems to be missing
-teardown of specific memory allocations in probe error paths.
-
-In pm8001_free():
-
-static void pm8001_free(struct pm8001_hba_info *pm8001_ha)
-{
-...
-	bitmap_free(pm8001_ha->rsvd_tags);
-	kfree(pm8001_ha);
-}
-
-Does this function omit kfree(pm8001_ha->devices), unlike its counterpart
-pm8001_pci_remove()?
-
-Also, in the probe error path:
-
-err_out_free:
-	kfree(sha);
-
-Is it safe for the probe error path to drop the sha structure without
-freeing its embedded dynamically allocated arrays (sas_phy and sas_port)?
-
-The structures allocated in pm8001_alloc() (pm8001_ha->devices) and
-pm8001_prep_sas_ha_init() (sha->sas_phy and sha->sas_port) are properly
-freed during device removal in pm8001_pci_remove(), but seem completely
-ignored in the standard probe error paths. Can this lead to memory leaks
-on cold paths when initialization fails?
-
-[Severity: High]
-This is a pre-existing issue, but I noticed a broken fallback to legacy
-INT-X interrupts when MSI-X vector allocation fails.
-
-Looking at pm8001_request_irq():
-
-	if (pm8001_use_msix && pci_find_capability(pdev, PCI_CAP_ID_MSIX)) {
-		rc =3D pm8001_setup_msix(pm8001_ha);
-		if (rc) {
-			pm8001_dbg(pm8001_ha, FAIL,
-				   "pm8001_setup_irq failed [ret: %d]\n", rc);
-			return rc;
-		}
-
-Does this exact block break the fallback logic by unconditionally returning
-rather than branching to the use_intx label when allocation fails?
-
-If pm8001_setup_msix() fails, the function immediately returns the error.
-This entirely skips the intended fallback to legacy shared interrupts at
-the use_intx label. Could this unnecessarily fail to initialize the device
-on systems where MSI-X is unavailable?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260824113618.2239=
-100-1-runyu.xiao@seu.edu.cn?part=3D1
+-Dave
