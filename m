@@ -1,85 +1,136 @@
-Received: from mail-m49197.qiye.163.com (mail-m49197.qiye.163.com [45.254.49.197])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EECA405C3F;
-	Mon, 24 Aug 2026 11:36:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B109B4119F2
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2026 11:48:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787571408; cv=none; b=VXIHtPMrcG5StH+7MyXBXng+INUaXdIoJGJhbuYU0RU1s/QNrYQ9pM9+hH7v4TIwTVSTBY4i6QpX5c/+/61bkJI7NMIF1YnR27DeD4CpnxR92iOPAthYijxAVRcnh1jFM0i6nWbrrNd0rAY33eSKD2WExSCVWSJyngTYkWjElbA=
+	t=1787572090; cv=none; b=QfLelgQUpoyq95121vJh7PbtbTnZIYjURUW8Y+9YsteWrulyTJsdnK2YyX2NPVtVnjBrXkhPSIeR1HCXQzXiXIJ4XWSr6A9odz8cy8nimdkivLWuJS6yGur3joICcAZcF08mJw8bxBnIsiDcNvIoc6k14Bj5NSWtwlsMHlnERW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787571408; c=relaxed/simple;
-	bh=T3Mw4IxXHQGlq00EaitD6+1dpV/KL4PbSWsaZvO22+Q=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TyzJ/gdIHHwM47xjVWdO5i2v4wQSJrj/eDi98+XPb5j5tqU3dZ5lnFWnAUu4Hy9pjc47mz+PJWPWMHDbvBc8z/c0XtRgzI36t+PF3G3tGsUIENWwVY0yGH//l8GkleD70QlfJ7BZM6xIb67tlA7A3iJ/9y98dVDU/RQejFKmzI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=dHv6Q43V; arc=none smtp.client-ip=45.254.49.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	s=arc-20240116; t=1787572090; c=relaxed/simple;
+	bh=/kLZe0LZY7epdewSRqWmVzvosMrX/YF76cd2BhDemyU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=bpSUTgGpgTzMEpRTd+sVuUJ1ZhfHPgnbnvUjmZaPRRsu7oSOCr7SDbbuaDu2AQuIjXHbNlDDG41SuFIDgMNYYjt0xdVDJ2a7kUN4vs4OBdpqbGrz/7BZP8GenllEKHbVFFI5rXjzHOJgBMg2IiA8z+lgy14zK/Nfh6haLTKS5Hw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AEJMlDWN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="dHv6Q43V"
-Received: from PC-202605011814.localdomain (unknown [222.191.246.242])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4b1a0b505;
-	Mon, 24 Aug 2026 19:36:34 +0800 (GMT+08:00)
-From: Runyu Xiao <runyu.xiao@seu.edu.cn>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Runyu Xiao <runyu.xiao@seu.edu.cn>,
-	Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: [PATCH] scsi: pm8001: use rollback index when freeing MSI-X vectors
-Date: Mon, 24 Aug 2026 19:36:18 +0800
-Message-Id: <20260824113618.2239100-1-runyu.xiao@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AEJMlDWN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05C6B1F000E9;
+	Mon, 24 Aug 2026 11:48:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787572088;
+	bh=iS5W/39dBmIducPKlF0yPsJClSpsZq0oaGGg81Ivun8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=AEJMlDWNddCZ+rMxvX6IzuOJuPurCyxRki6TVnEBFjaPxJ+/jlKxDMCdEoKLvPMx/
+	 u0Xxrw2bTHYiIec9A6weMduYF9wpyKC2q3gxwO7XIJ214FELxdC9iEPoe+pUjTL3lX
+	 YrpxwJa8qF7euI5xNjJdft7sCbVBFKLwv8ezeO/k4AoK/19wuECKnFJ2j04kQNsOJR
+	 UnYSHuio8BkqBHhGSPaYhC5I2HC4IJRYVMRdP3xyiLzFHSqTwdgQ7QvGbM92nnChBr
+	 muZakHqh8yC/dJeNStinS88sJPXDMzl0JWcyGHjcAj9KgI08vq9tbETnB+ljEAvo/a
+	 UAPsONMciNlng==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] scsi: be2iscsi: use rollback index when freeing
+ MSI-X vectors
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260824113246.2235666-1-runyu.xiao@seu.edu.cn>
+References: <20260824092712.2130707-1-runyu.xiao@seu.edu.cn>
+ <20260824113246.2235666-1-runyu.xiao@seu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 24 Aug 2026 11:48:07 +0000
+Message-Id: <20260824114808.05C6B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa0338ed97303a1kunmba8a283c2268a9
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDTR9OVkJLGh5PTE1NSxhPTVYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSE
-	pPSExVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=dHv6Q43VKxoJWkitp02IIMoP/mI2zr0Bw7SzDLU8VrtE+E63XKSGisl/7FyWuMKXjK8VKexoaJurV7xDA9ISjGSmPC0+t/+JvgOC701nxK8d/f5zqDysTGTBhqxfH9AuLpmdWzG6ewY7BMFzIayoIZvS7MwdMhGbbGT6dfYou6M=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
-	bh=TwSXypq6xqOYTYG42OhR27zQHgxYnkbkRhwp4/mvE/k=;
-	h=date:mime-version:subject:message-id:from;
 
-pm8001_request_msix() unwinds previously registered handlers with
-free_irq() when request_irq() fails. The rollback loop uses the
-failing index i for every iteration instead of the already
-registered vector index j.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-That passes the wrong IRQ/dev_id pair to free_irq() and leaves the
-earlier handlers installed. Use j for both pci_irq_vector() and the
-matching irq_vector entry in the rollback loop.
+Pre-existing issues:
+- [Critical] Critical out-of-bounds array access and multi-queue degradatio=
+n due to inverted MSI-X allocation logic.
+- [High] Use-After-Free in INTx error recovery due to incorrect MCC work ca=
+ncellation index.
+--
 
-Fixes: a76037ff3479 ("scsi: pm8001: switch to pci_irq_alloc_vectors")
-Cc: stable@vger.kernel.org
-Assisted-by: Codex:GPT-5
-Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
----
- drivers/scsi/pm8001/pm8001_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--- Patch [1]: [PATCH v2] scsi: be2iscsi: use rollback index when freeing M=
+SI-X vectors ---
+commit fbea15e24723499491cb379659e8bf49028d4fb3
+Author: Runyu Xiao <runyu.xiao@seu.edu.cn>
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index e93ea76b565e..21419e46c16d 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1029,8 +1029,8 @@ static u32 pm8001_request_msix(struct pm8001_hba_info *pm8001_ha)
- 			&(pm8001_ha->irq_vector[i]));
- 		if (rc) {
- 			for (j = 0; j < i; j++) {
--				free_irq(pci_irq_vector(pm8001_ha->pdev, i),
--					&(pm8001_ha->irq_vector[i]));
-+				free_irq(pci_irq_vector(pm8001_ha->pdev, j),
-+					 &pm8001_ha->irq_vector[j]);
- 			}
- 			pci_free_irq_vectors(pm8001_ha->pdev);
- 			break;
--- 
-2.34.1
+scsi: be2iscsi: use rollback index when freeing MSI-X vectors
+
+beiscsi_init_irqs() unwinds previously registered MSI-X handlers with
+free_irq(pci_irq_vector(pcidev, i), &phwi_context->be_eq[j]). The IRQ
+number should match the rollback slot j, not the current loop index i.
+Using i passes the wrong IRQ/dev_id pair and leaves earlier handlers
+registered on failure.
+
+Use j for pci_irq_vector() in the rollback loop.
+
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_m=
+ain.c
+> index fd18d4d3d219b..9833ab06b299a 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -878,7 +878,7 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+>  	return 0;
+>  free_msix_irqs:
+>  	for (j =3D i - 1; j >=3D 0; j--) {
+> -		free_irq(pci_irq_vector(pcidev, i), &phwi_context->be_eq[j]);
+> +		free_irq(pci_irq_vector(pcidev, j), &phwi_context->be_eq[j]);
+>  		kfree(phba->msi_name[j]);
+>  	}
+>  	return ret;
+
+[Severity: Critical]
+This is a pre-existing issue, but I noticed a potential problem in
+be2iscsi_enable_msix() while reviewing this code.
+
+Is the logic for handling the return value of
+pci_alloc_irq_vectors_affinity() inverted?
+
+drivers/scsi/be2iscsi/be_main.c:be2iscsi_enable_msix() {
+	if (pci_alloc_irq_vectors_affinity(phba->pcidev, 2, nvec,
+			PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &desc) < 0) {
+		phba->num_cpus =3D nvec - 1;
+		return;
+	}
+	...
+	phba->num_cpus =3D 1;
+}
+
+If allocation fails, phba->num_cpus is set up to nvec - 1. Could this
+cause an out-of-bounds write on the 64-element be_eq array later in
+beiscsi_enable_port()?
+
+drivers/scsi/be2iscsi/be_main.c:beiscsi_enable_port() {
+	for (i =3D 0; i < phba->num_cpus; i++) {
+		pbe_eq =3D &phwi_context->be_eq[i];
+		irq_poll_init(&pbe_eq->iopoll, be_iopoll_budget, be_iopoll);
+	}
+}
+
+[Severity: High]
+This is also a pre-existing issue, but I have a question about the error
+recovery path in beiscsi_disable_port().
+
+When msix_enabled is false, mcc_work is queued on be_eq[0]. Does this
+code fail to cancel the active work because it uses the leftover loop
+counter 'i'?
+
+drivers/scsi/be2iscsi/be_main.c:beiscsi_disable_port() {
+	if (!unload && beiscsi_hba_in_error(phba)) {
+		pbe_eq =3D &phwi_context->be_eq[i];
+		cancel_work_sync(&pbe_eq->mcc_work);
+	}
+}
+
+Could this result in a use-after-free when the hardware queues are
+subsequently destroyed?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260824113246.2235=
+666-1-runyu.xiao@seu.edu.cn?part=3D1
