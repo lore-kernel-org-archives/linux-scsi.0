@@ -1,45 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E9DB8632B
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2026 01:58:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 818C349362B;
+	Mon, 24 Aug 2026 02:15:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787536704; cv=none; b=CKxnRPfdBtHIvjXSjquwBOHrt88uaKgm4Tu4B3Xk7XnorCc1rPF+dpmQVnUwIWQd19bT8VUsrUAB7SWVKrZT+OKFVeSGsaK82eXHieQ6xi/5xCL+aEdLXeA0yt2VBd/KCcxplPN+y/Xn8z9iozo1xVmdUK9fqFRybyZdACP7dfE=
+	t=1787537757; cv=none; b=Me22DnreX1dDZL8d3BosxnR4O3EoMgXIIw/GHpZmkaVuTkq4Bu0Y1uguHz3yqE/z1ZJ7jtRHY+NjTRc/Q0bC7FWrBUXN00rKn++T5pmk48uoXxnvc2lFhisQfftTzOWozaTENKBbSZ6U9BMWyyuk9ditJRZqIo9sLzwjz8Eze0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787536704; c=relaxed/simple;
-	bh=ha8x/ywyveC7xbQ8nRZ7uTG2J07iNpRSkiCRDDPqKnQ=;
+	s=arc-20240116; t=1787537757; c=relaxed/simple;
+	bh=k9sUFuvFMOl8ZXUcTmdxb6GnD5luKwWY/PgGBH00+e4=;
 	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 MIME-Version:Content-Type; b=l5vXUYdWYOygip5n046OtfF3EAedgLTuqshpDrG6bfXI6d+LK50BPUEu6pNUfkIWhKGzIcFmUBxnEhGQVel/lAhdX6BDN+sFTq+5m3+V756VUU3X7Ya/8XXNehuv7wDdv9e1lEqW6nEXsQV16rrgOcpWLDBmnvz42CV2Sl0oW0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aRjye+zG; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=TTx7dCGBy/+D7UgkJmz620dlVm/2KDIqwAOsWTBkekJrjEgwsMpuRSQyRMLp0ZlbR0l+T6gkUT51jQWkDoWkXdq0AQ+9POIx9uk3IMe7cNs61jGzfhTRgyMC9CtcQHQ4GfMNccwVvSK7qI4qwqqBQ27oGaxxbu+sQHat6ziSHLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VTV8UUeR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aRjye+zG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D965E1F000E9;
-	Mon, 24 Aug 2026 01:58:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VTV8UUeR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C146B1F000E9;
+	Mon, 24 Aug 2026 02:15:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787536703;
-	bh=KeGH5JPrE5dObb0cgWjNMz+TvTWXWCKROWZb35fopDw=;
+	s=k20260515; t=1787537756;
+	bh=C25YMGrGsmckspMXFyPm3h4b6WibrKz9jRhEOjvTQaI=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=aRjye+zGsC+N5ly2oqisLWMmgi/kXLJnj0cylJ+nM8UyKPU02l+p8g0X/daqPz7Ia
-	 52BgRx8hEH2xRLWRCZWSDnhpuddrqyn9wTtFOwpyPwL1Veo1zt1jkjBrlOQGGMF+xE
-	 4DgzpykpGopLB6/p9rH2T6QLvoM1FCUdoAe5uAIzcTVpMr8Lpvex9UAo+4gnjUgAsr
-	 EZRthEUYF67gyImUDitxZ5yUSX67aHsBpgW1qljMdVyPq6wG21z6EssVLOZEmwaOEZ
-	 Dkpt6vgYdzDfvoLPAku/PnX9dNlAi46txSmR7T5wseXRewU3/6gOfKhsqLeRcb2nBw
-	 fGE9YKbz5hDKw==
-To: Dongdong Hao <doubled@leap-io-kernel.com>
-Cc: <James.Bottomley@HansenPartnership.com>,  <martin.petersen@oracle.com>,
-  <dlemoal@kernel.org>,  <hare@kernel.org>,  <hare@suse.de>,
-  <yjzhang@leap-io-kernel.com>,  <kezijie@leap-io-kernel.com>,
-  <jzzhang@leap-io-kernel.com>,  <baikefan@leap-io-kernel.com>,
-  <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH v2] scsi: leapraid: standardize NCQ priority sysfs
- attributes
+	b=VTV8UUeRm9stw6DjOkwdVR1TPV5DZOT3IlvT5Qa7kVMORKDSlqHWVK8YQYCVMtMWl
+	 xBpDebAIUa5bA82t1WJx46w8cRWvGrbklzUe5RySIIU5z6JrOLXKgnp77m0Qf+dGLo
+	 kPCB3DFkBmWpoJsBlpdETJ2xZotvrnM2Lb/KzMv5RFqPVikJHj08MKSANSWBo5g2H9
+	 4PG4iCkSaTYbKcqVq51nk2IK8eXhMzTamX4lCZdDdqwNBZvthHJyP5iZGhUvZH19Wq
+	 xyUVuyc9FlCi+hOr3ySjBC7Ph8nkIIxpXg+wWigOARxGL4ix+g7JZP5hDcRfEAI3G4
+	 DE9GfwoC04WuQ==
+To: Chen Changcheng <chenchangcheng@kylinos.cn>
+Cc: <kartilak@cisco.com>,  <nmusini@cisco.com>,  <sebaddel@cisco.com>,
+  <ames.Bottomley@HansenPartnership.com>,  <linux-scsi@vger.kernel.org>,
+  <linux-kernel@vger.kernel.org>,  <ccc194101@163.com>
+Subject: Re: [PATCH] scsi: snic: Fix scsi host leak on workqueue allocation
+ failure
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-In-Reply-To: <20260814090526.395704-1-doubled@leap-io-kernel.com> (Dongdong
-	Hao's message of "Fri, 14 Aug 2026 17:05:26 +0800")
-Message-ID: <yq1o6esnuts.fsf@mail.kernel.org>
-References: <20260814090526.395704-1-doubled@leap-io-kernel.com>
-Date: Sun, 23 Aug 2026 21:58:21 -0400
+In-Reply-To: <20260727073438.209673-1-chenchangcheng@kylinos.cn> (Chen
+	Changcheng's message of "Mon, 27 Jul 2026 15:34:38 +0800")
+Message-ID: <yq1bjasnu0t.fsf@mail.kernel.org>
+References: <20260727073438.209673-1-chenchangcheng@kylinos.cn>
+Date: Sun, 23 Aug 2026 22:15:54 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,12 +47,14 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Dongdong,
+Chen,
 
-> Replace the earlier LeapRAID ncq_cmd_prio_enable attribute with the
-> standard sas_ncq_prio_supported and sas_ncq_prio_enable names
-> documented in Documentation/ABI/testing/sysfs-block-device, and rename
-> the per-device NCQ priority state to match.
+> In snic_add_host(), if scsi_add_host() succeeds but
+> alloc_ordered_workqueue() fails, the function returns -ENOMEM with
+> shost->work_q left as NULL. The caller's error path then calls
+> snic_del_host(), which returns early when !shost->work_q without
+> calling scsi_remove_host(). The Scsi_Host remains registered in sysfs
+> as a zombie device even after the probe has failed. This causes:
 
 Applied to 7.3/scsi-staging, thanks!
 
