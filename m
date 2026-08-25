@@ -1,130 +1,151 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5BF34E761
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:20:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7317A1632E7
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 17:15:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787674842; cv=none; b=cDB4Qcv6xME0zx6jhY2PIpc9JDdYCXDlyDnFZAkNF0LGGnTVlihLuekirGYl9/Nl1Pg2AuYtAqTCPK0DjScZTTT5Nry+NDw0vM/8t4dZEZxoIrYM3p1VpNBU5xNFEBABi5950M6Nw9o/zU7yZZl6royKibn6tHkn8jzhJDc5zYA=
+	t=1787678137; cv=none; b=PkdRSPkIJBDNcVuCLT9o07Y92PF9HVaFsWZrfneQvSlRSREgtKyNC02Y+tSQJW/vtBQ0hz+WRKyZYtMYLmpQPDWQrtOleU/iWPySxAaW1GVsA3FXvA5NNFIaLAWln5LooBr5IarupBRJNyFacJKvrLOmqw25ug4ZXPSGP5s4nFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787674842; c=relaxed/simple;
-	bh=5T1/eD8jKMaVe6oD7iSIjUaaaDkcwkcYdJ8rjqpc+2o=;
+	s=arc-20240116; t=1787678137; c=relaxed/simple;
+	bh=R5L2QGs2oTC6/y38tuI0h5QiQ9b/01L2YxEhnphYo/s=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KdNAJ8q6awRV2/V5kGO26Xryuvhwkv+sV6qWV7IP0X3QmiF4EZAsuWVuNCaaLEAn/9ijzSv2SpqZUBwKQPJ3EAgzVL6POJIMEHAWyJclZQq4Q27IDCrdHAOw9GcsDIldWtNuMdiv5brcdV2WguHn+xGIQlvmjqpwFv4sGnfwagE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G2fI+mWs; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=gmhRmrlGrv94EQPu7UbgkxtPmXBTlx+B2usk5I39rHLogVOrOPBU7QHaPeYyGcVcMnU5d3AnTUJVw203iDautC/pqGU68tKZmGkZgOJvKmtLHRRNQTY8f3J0vqh8QuK7ZHf76liFrjTMFKALmLh9VsFVl5YSy6ax4S1eVPtoEg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kV7Vtg6N; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G2fI+mWs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 417FE1F000E9;
-	Tue, 25 Aug 2026 16:20:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kV7Vtg6N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D86071F000E9;
+	Tue, 25 Aug 2026 17:15:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787674841;
-	bh=bXgWCwz7ETgp2ZeU+SS30AEcLSYEkw34BfSqk/XsYQY=;
+	s=k20260515; t=1787678136;
+	bh=HSLbGE7MNcYQop8VMd6om1q+TaawrqmVCfjwuS1rsMY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=G2fI+mWsWTej8TBoVcMoSvEOvqboFRhSbDSVGnSPMcF7f/RkX3azlzPwFALyLzikY
-	 jH8cAWVuD6qOtauM08d8e1hKu2iTKcShbfBBrTu+XOepUyRwb0d0gDfDq+2YgVnIPK
-	 MO0aXJbP7i3TobuAQ42orhgAFwbGMOCDsscFLMN6T6HBm9wFvbZFnoDm4wUGz1fGOH
-	 SsK2ARsqqATrpy9ZLhAHvCPWzyu0iwnYtzTis4o7QRu9TLEwaqAURNIDEwSZJq/42E
-	 y9RIaTNyXRzso3smQEpP3cYeXNZp7EesvvCb3OzbUIkTZdfxsUm7iG3Yg+aiyrb+dr
-	 2DRu2fjvJPyIQ==
+	b=kV7Vtg6NdtrUONO6VgTXGehuVbLMyZd9N3TpGtJiQEaei5zjFGuVeFAqa0KXseuNL
+	 +WFCC9KG50IwZyPYh1K4OfTQoqtlmwNq8OCPoouQCALrgnJja5HgDvOYfZP9wJPGTC
+	 iMZ4ur1gUdjt6oLXpy6MDmrKey5YjKpn4CXWK3chGHs8Sz/M+0pSZkXi7Ep6sNUxuu
+	 8Ab/4foyqkKHVwik6tn9UTaAVtTWF03EWfg5/Xo0d0r159TKxAwjWy9Z5uI3cDjmyY
+	 w397k3grphxzNC/bf/ow8JGGCJL354XjUiSigr4mh9u+P3Ebe3IBwgJdwyfEy7ic55
+	 DryysYMLus/Mw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 09/17] mpi3mr: Fix target device reference leak in
- device removal handshake
+Subject: Re: [PATCH v2 10/17] mpi3mr: Fix out-of-bounds read in SAS topology
+ change events
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chandrakanth Patil" <chandrakanth.patil@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260825210411.301535-10-chandrakanth.patil@broadcom.com>
+In-Reply-To: <20260825210411.301535-11-chandrakanth.patil@broadcom.com>
 References: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
- <20260825210411.301535-10-chandrakanth.patil@broadcom.com>
+ <20260825210411.301535-11-chandrakanth.patil@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 16:20:40 +0000
-Message-Id: <20260825162041.417FE1F000E9@smtp.kernel.org>
+Date: Tue, 25 Aug 2026 17:15:35 +0000
+Message-Id: <20260825171535.D86071F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Compiler-inserted bounds checks from __counted_by bypass the local=
+ caching of num_entries, defeating the TOCTOU mitigation and risking spurio=
+us kernel panics.
+
 Pre-existing issues:
-- [Medium] Target device reference count leak on `mpi3mr_target_alloc` fail=
-ure paths.
-- [Medium] Silent failure and wedged hardware state machine when device rem=
-oval handshake TM allocation fails.
+- [High] The bounds check aborts the top-half handler but fails to prevent =
+the malformed event from reaching the bottom-half handler, resulting in a h=
+eap out-of-bounds read.
+- [High] Lockless access of tgtdev->starget in event handlers leads to Use-=
+After-Free racing with mpi3mr_target_destroy().
 --
 
-commit e0b0b39b67b7199d7920836b376fd3080aa21730
+commit 9d8265fdf635644a7462d4ecd8e229ec48572ac3
 Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
-mpi3mr: Fix target device reference leak in device removal handshake
+mpi3mr: Fix out-of-bounds read in SAS topology change events
 
-The device removal handshake looks up the target device to update its
-state but never drops the reference that the lookup takes.
+The number of entries in a SAS topology change event is used to walk
+the entry array without being compared against the amount of event data
+that was received, so the walk can run past the end of the buffer.
 
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
 _os.c
-> index 2a35f146fe69b..9aeec6146acbb 100644
+> index 9aeec6146acbb..6a80b784200b3 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -2536,6 +2536,9 @@ static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_i=
-oc *mrioc, u16 handle,
->  		tgtdev->state =3D MPI3MR_DEV_REMOVE_HS_STARTED;
->  	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-> =20
-> +	if (tgtdev)
-> +		mpi3mr_tgtdev_put(tgtdev);
+> @@ -2827,12 +2827,28 @@ static void mpi3mr_sastopochg_evt_th(struct mpi3m=
+r_ioc *mrioc,
+[ ... ]
+> +	if (num_entries > max_entries) {
+> +		ioc_err(mrioc, "SAS topology event: num_entries(%d) exceeds max(%d)\n",
+> +			num_entries, max_entries);
+> +		return;
+
+[Severity: High]
+This is a pre-existing issue, but returning early here aborts top-half
+processing without clearing the caller's process_evt_bh flag.
+
+In drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_os_handle_events(), process_evt_bh
+is set to 1 before calling mpi3mr_sastopochg_evt_th(). If we return early,
+the event is unconditionally scheduled for bottom-half processing.
+
+Since the bottom-half blindly loops using the attacker-controlled num_entri=
+es
+on the fwevt buffer:
+
+drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_sastopochg_evt_bh() {
+    ...
+    for (i =3D 0; i < event_data->num_entries; i++) {
+    ...
+}
+
+Could this leave the bottom-half exposed to a heap out-of-bounds read when
+processing a malformed event?
+
+> +	}
 > +
->  	if (drv_cmd)
->  		goto issue_cmd;
->  	do {
+> +	for (i =3D 0; i < num_entries; i++) {
+>  		handle =3D le16_to_cpu(topo_evt->phy_entry[i].attached_dev_handle);
 
-[Severity: Medium]
+[Severity: High]
+Since phy_entry is annotated with __counted_by(num_entries), won't the
+compiler-inserted bounds check for topo_evt->phy_entry[i] directly re-fetch
+topo_evt->num_entries from DMA memory?
+
+If the firmware alters topo_evt->num_entries to be less than the loop index=
+ i
+during the loop in mpi3mr_sastopochg_evt_th(), wouldn't this bypass the loc=
+al
+num_entries cache and trigger an array bounds sanitizer violation panic?
+
+[Severity: High]
 This isn't a bug introduced by this patch, but further down in
-mpi3mr_dev_rmhs_send_tm(), if the pre-allocated command slots are exhausted,
-the code falls back to allocating a delayed_dev_rmhs node:
+mpi3mr_sastopochg_evt_th() there is a lockless access to tgtdev->starget
+that can race with device removal:
 
-    delayed_dev_rmhs =3D kzalloc_obj(*delayed_dev_rmhs, GFP_ATOMIC);
-    if (!delayed_dev_rmhs)
-        return;
+drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_sastopochg_evt_th() {
+    ...
+    if (tgtdev && tgtdev->starget && tgtdev->starget->hostdata)
+        scsi_tgt_priv_data =3D (struct mpi3mr_stgt_priv_data *)
+            tgtdev->starget->hostdata;
+    ...
+    case MPI3_EVENT_SAS_TOPO_PHY_RC_TARG_NOT_RESPONDING:
+        if (scsi_tgt_priv_data) {
+            scsi_tgt_priv_data->dev_removed =3D 1;
+    ...
+}
 
-If this GFP_ATOMIC allocation fails, the function returns without schedulin=
-g a
-retry or rolling back the device state (MPI3MR_DEV_REMOVE_HS_STARTED).
+Is it possible that if this executes concurrently with mpi3mr_target_destro=
+y(),
+tgtdev->starget could be cleared under lock and the scsi_target freed by the
+SCSI midlayer, causing a Use-After-Free when writing to
+scsi_tgt_priv_data->dev_removed?
 
-Can this silent failure leave the hardware state machine permanently wedged,
-waiting for the host to send this TM request?
-
-[Severity: Medium]
-This is a pre-existing issue, but looking at mpi3mr_target_alloc() in the s=
-ame
-file, there appears to be a reference count leak on the error paths.
-
-If __mpi3mr_get_tgtdev_by_perst_id() or
-__mpi3mr_get_tgtdev_by_addr_and_rphy() successfully finds a target device,
-but the device doesn't satisfy the conditional checks for PCIe devices:
-
-    if (tgt_dev && !tgt_dev->is_hidden && tgt_dev->non_stl) {
-        ...
-    } else
-        retval =3D -ENXIO;
-
-Or for SAS/SATA devices:
-
-    if (tgt_dev && !tgt_dev->is_hidden && !tgt_dev->non_stl &&
-        (tgt_dev->dev_type =3D=3D MPI3_DEVICE_DEVFORM_SAS_SATA)) {
-        ...
-    } else
-        retval =3D -ENXIO;
-
-In both cases, the code returns -ENXIO without dropping the reference count
-via mpi3mr_tgtdev_put(tgt_dev), and without assigning it to
-scsi_tgt_priv_data->tgt_dev for later cleanup.
-
-Would this leak the mpi3mr_tgt_dev memory structures during device scanning
-if hidden or non-standard devices are present?
+>  		if (!handle)
+>  			continue;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825210411.3015=
-35-1-chandrakanth.patil@broadcom.com?part=3D9
+35-1-chandrakanth.patil@broadcom.com?part=3D10
