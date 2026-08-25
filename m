@@ -1,72 +1,72 @@
-Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
+Received: from mail-vk1-f225.google.com (mail-vk1-f225.google.com [209.85.221.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 414C73FF8A5
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:18:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C429A41BA77
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:20:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787660343; cv=none; b=ePCsF0mUdIDjDbve8r6ylERXwKI57UOYiCjeyoxu5+SrUkym37sKdvZBLz8hi1PekCCpuJOdrnJTPEBF3wiLyvockYnHt7WEsUqTs9IzL/yLe/OkRe73u9YtQNK6qA/bIWdKwDnmr+Y2mu4Ue9QU1E8RTWqmauTslJLEScVeEcc=
+	t=1787660421; cv=none; b=Nnv6FG+njSGZu3qM/mbFClzV964EW3f0GoWzxF3k9IqomSsJMe0WIN8W2XjW0GClxEGadpFnY0f8I2DUQlqe0rSeDfmngHweXXuwbbH2Fz7hcrZ40zbwe3Tu7NrUka2FTR4qIF0sfl1Yf/+WLaAHLIhjVkAW0pmpB1J4yMKXJ8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787660343; c=relaxed/simple;
-	bh=36mKIjqZJRLMQZi0zKfwUj1PH7igk64eNJGJLwUAaGU=;
+	s=arc-20240116; t=1787660421; c=relaxed/simple;
+	bh=0eeXxEyfssQRhlgewmsF4Gp93Z0Lg1D2g/uKStZfk0s=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uKFDzKmshhkPMwnmVs3lw7yy7+lPj4bKE7R/uSF2AToDrC4gG24SGw28Q7+3DNCBhCMgwDF9dV+zTpkVmj48cqJlasEY5eMVk5JH3qi3fZbUY8pVqtm9rGD6/Srd1wy2kqDEYcZADoZ5YxHhbqwlJeXyDhJl/bCgC48/yT7Cm+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=T5wSUe2I; arc=none smtp.client-ip=209.85.215.225
+	 To:Cc:Content-Type; b=ly6folflhpdDPsc54axPBulQQggQVhDrtVYtDfm0SqoRRe3fZma9iRTH6z/Rjev21489P2fetKZbhopTsRgbNbd7louHsJTNvD9nvLTN+ukVoYdV9+437ri/K+FOJvsKdTDTqFlHlc0/umBj72IWBehjg+Lxdcqb7n4hemB9Cbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=O6p6xRxC; arc=none smtp.client-ip=209.85.221.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="T5wSUe2I"
-Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-ca766c1c9ccso3207070a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:18:58 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="O6p6xRxC"
+Received: by mail-vk1-f225.google.com with SMTP id 71dfb90a1353d-5bfbbe5220dso467580e0c.1
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:20:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787660337; x=1788265137;
+        d=1e100.net; s=20251104; t=1787660417; x=1788265217;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:dkim-signature:x-gm-gg:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=EWknq6+Vvre7ycyzJHEaXu7Zn/EmTTFqTUaMwJXgjFw=;
-        b=Y+n0aN/Mo9nEi30QyYLZ/xfbrY3IpPAi+Jof0ZdkVntOMFt4l+F7L19AAa4eaINgrJ
-         mA6UHLA4v0zfYREzEh4Hun6ZmmBTEb7zktES02IzQ6MGAM7Tx6bp04XmUpLpX/rZFV/E
-         VDfbnIHZpCeWFGmBWcdbLiWVIVaaguFPZm+HQaqsCeEt6oQW98EegQruLMG86fF6KRNC
-         biUlzxWPjoC9lpbW1c3EhqbeuNkjfu2QjkLrMBGLhcs/zfxqWm4hKv6uvTgwlVgay5Ey
-         b4ERTqo7L0eUDpGmWw/Gw0jaTDlEMhuvLKyobFMPGR5tTmz7fARnH7UgodNvyD4I/iML
-         O/Dw==
-X-Gm-Message-State: AFuF++k2eYBGIz3cOqz7UE+uRgGeuJBi82o7k3ujoKlcQQjJF6pNAdgL
-	570BsRwpGmM70cJz5skPAEiIX2HQtEiCILwENjVhi4JpmqV+jDQXudDhUAGr7+tODLzYktp0fRg
-	DgN1OCQ5xTh7LABvNractOmg1xI5BlQyxHWpdBDSnRVo6KdK8C2Va58quKfSnbS7kv1bo3Q9U19
-	Lfd0DdNExOewyldtpkmHBeNuyJkUsHiy/joLd+0qyYUAUIIdBuWJzVUyk7JCehLqDj49ZNo8sNQ
-	H8mxyeFUlvBYnFUnnZz2vT5
-X-Gm-Gg: AR+sD12ZPE4Z4l7R5/pwN7xwe61zydM6WiGUfbQvOub8PTFA4JAc2xYezpWTcZkqB7r
-	CKGguMZAvwLAHwfMZ23ZT92Jqz5VushwbosEH7byHocSjM6BI5ZyXiVYc/yi1mLBr783OZJlC3a
-	NVlaOFk+YmU5dCA+YTlFgDFYO2SJSABJNIv1OTstQ54IpzFfx2uyMTFLq7CCaxpchoCrTPTCLng
-	nbhsCmNjFpN4JkuhvCilglFIQlL3D5NjnEsp89nzeij8ht247+mD6v2GaT9rIkmk3yWIR1FdxHK
-	s8OmfdyoujiPgPdYS1clkvb4iwVeDcnyfMjUu1p9F8CWdLoP8KwgvQ5EM/lPccU+7dafCVCp84i
-	egO1FcPWgKkkH3ScqYWwc2af+RhI+n9kv5pZMVs/7q9kXfM/YWcw8ecoEDztGIBLpAVz4YlMWG7
-	GaSkNoqapGPtI4Y08ErRc51ciyhP7uyohj8vUQB/ur79g=
-X-Received: by 2002:a05:6a00:b53:b0:848:46a0:3d74 with SMTP id d2e1a72fcca58-8520ba16ce2mr43485656b3a.9.1787660336092;
-        Tue, 25 Aug 2026 05:18:56 -0700 (PDT)
+        bh=ze8RxenBjb56H0aWTXEzNeK6bKxXvTxV27NqWXyKP8Y=;
+        b=TyPtuYk2M4fIMnhU2mWHBXCG8/OITaHnw+ETJPrES5VwR9xlzbdgVsh+1r2T05dSPI
+         usTzDerDRLzIAJaTezg55DkvhUTRhsO+lSEtRnd24GPe4G60sUWbZwFay0oJgq6tXpuV
+         SgG1ItdBL0q0xU3dmcxJ/6LR5OBKur6gtqOSKOxfbW0fdGDluVfNe7s3xfgRCp7G7kL4
+         uPqMjus3oRPJ+8qKQ6U9LxaftwVIFSKBcLjRxkOVbdnfSV7D5YowW2uWCIN7vN6Wz54D
+         fdItIZM9JiTIdXye4yiR8BuLukCuLijNjTUZLy+iLcy6V2mcTecbsSB3cYKn5uj0Gjof
+         dVkQ==
+X-Gm-Message-State: AFuF++nMNe3DAfRxCjjmyG5FRiXyer5lD8TSVGs0Vgvlci2aFilpyPC4
+	49boddCgMIAT392V/c2xqk+Gj4yDQbzK8Xal88VBoBOSvR3Yx+QIBaxiZVHK5Wo/Fic6NG1QTlF
+	5QXatSjwAQpAd1YOK8Q8bvOArijbklarCrFGndsLy/FlXWoiBnxANn7apNHWIf5JyQ5D+/megII
+	FvPWpETEhq8wPGbhOJ7tmnbOdJ15HyRknfwgykcOyOXX7aHED5XQ7z2c1H/FMKG75dU89OFOjIE
+	MAxtM0kuvgQSoEkv/ZEzFUa
+X-Gm-Gg: AR+sD10Rhy99OCMlBhz1+B7W33EQrBhOO8KZd3/jBPAZ9JgMv2NWoe3qpbMdCC4CEFJ
+	IoewGPWI/4QJT78fFFcPhJ/OOHMUPxZ/84mKOIIcUTN+XexpPR/x8xLTDbPzPRx1SKzQvSqug6h
+	b/6Sg615iHZXmgxn65EkY+Hf6l2Jsf8KclcBuzBQrI7XxXKhMRmAsEyz9NFrhaVm2qqDqfpu+Vm
+	apdCM4rC+amO6cGeFzX1t4NZt38WvQL2Yu1cpSb0a88K1rPT3du2g72vBxoYI/E8AyxfThJPXCP
+	LeGYDLhBrjV5GeBWYxYcoVPjDiwVIwW9/aFlVF1tj0VyDjaXpfAg95zNj6Pe0hI7ErZf5I/tm9k
+	FoGfzTnwzXrFzcLHl6cPUdOWlmtrOewyThMGoZbyhLzHuIFg1tD87j3jmYIXoCP94k+SxrVZS3a
+	5baqWo7+wC0RWNlqtDa92a+R5DBshodLzpv2nxqjKSCaM=
+X-Received: by 2002:ac5:c775:0:b0:5c5:924a:4616 with SMTP id 71dfb90a1353d-5c641602533mr1265690e0c.0.1787660416820;
+        Tue, 25 Aug 2026 05:20:16 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
-        by smtp-relay.gmail.com with ESMTPS id d2e1a72fcca58-852102693cdsm4823906b3a.2.2026.08.25.05.18.55
+        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5c623dad280sm2106023e0c.3.2026.08.25.05.20.15
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Aug 2026 05:18:56 -0700 (PDT)
+        Tue, 25 Aug 2026 05:20:16 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c1f3117bc6bso428794566b.0
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:18:55 -0700 (PDT)
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c15c6a68406so314641266b.3
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:20:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1787660334; x=1788265134; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1787660414; x=1788265214; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=EWknq6+Vvre7ycyzJHEaXu7Zn/EmTTFqTUaMwJXgjFw=;
-        b=T5wSUe2IaX7vR1DrosqSJ9DMbL6I+FdHNZIw07t97gLxqQC7sOUXSMbP19fdDaK1K2
-         4TQp/LnQF+CskZuLdBphtu5BqmVapA2hL24ZPtJLCQdzVSwbaKg/ipuFH/Ouda4UMw+9
-         m69WLSv3f7uwZQ+1RM8l55RaTLy5wCt2o+XKo=
-X-Received: by 2002:a17:907:9814:b0:c21:792:8257 with SMTP id a640c23a62f3a-c24e5ad9556mr685265866b.15.1787660333775;
-        Tue, 25 Aug 2026 05:18:53 -0700 (PDT)
+        bh=ze8RxenBjb56H0aWTXEzNeK6bKxXvTxV27NqWXyKP8Y=;
+        b=O6p6xRxC5X6KOAZgHfsDnEo0b5KomiptITGyR9GuKu9APl7Xf7NYsKgxE2tkIwHQ48
+         IB53YSeFbRbcoNQwI8ECGio6KSQ3Y2dYs/7CUtodJwWOfwUv1jUbi3RY+gLlulqsIyN9
+         f1LV09/glmH3R21Xlz2SXJgL30gRE+pCrPc38=
+X-Received: by 2002:a17:907:9814:b0:c21:792:8257 with SMTP id a640c23a62f3a-c24e5ad9556mr686532266b.15.1787660414534;
+        Tue, 25 Aug 2026 05:20:14 -0700 (PDT)
 X-Received: by 2002:a17:907:9814:b0:c21:792:8257 with SMTP id
- a640c23a62f3a-c24e5ad9556mr685258966b.15.1787660333235; Tue, 25 Aug 2026
- 05:18:53 -0700 (PDT)
+ a640c23a62f3a-c24e5ad9556mr686522566b.15.1787660413951; Tue, 25 Aug 2026
+ 05:20:13 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,112 +74,141 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
- <20260818231426.58105-16-chandrakanth.patil@broadcom.com> <20260818182113.87AB51F000E9@smtp.kernel.org>
-In-Reply-To: <20260818182113.87AB51F000E9@smtp.kernel.org>
+ <20260818231426.58105-17-chandrakanth.patil@broadcom.com> <20260818182335.C3EBE1F000E9@smtp.kernel.org>
+In-Reply-To: <20260818182335.C3EBE1F000E9@smtp.kernel.org>
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Date: Tue, 25 Aug 2026 17:48:41 +0530
-X-Gm-Features: AcwNN1XkQGQuLfaz-UIJhGXKKDnlqy0-3fcVPcLuKUO5yXgp_qhpfANSELUcxkw
-Message-ID: <CABvwm=Nx8Skq+1eTcE09G8byqd_FXnSRZLFrCOdcdALKYiLtTA@mail.gmail.com>
-Subject: Re: [PATCH 15/17] mpi3mr: zero out diagnostic buffer status memory
+Date: Tue, 25 Aug 2026 17:50:01 +0530
+X-Gm-Features: AcwNN1WVv-13rUaW2qUEOJfbDVd3sls2OitVfDqZfEPENqk8PdOn_hNgdPh63r0
+Message-ID: <CABvwm=PzwVZc6szk-bnkDOzfjzGNX+RkwrZHdaOGrAKq86U7tQ@mail.gmail.com>
+Subject: Re: [PATCH 16/17] mpi3mr: Fix use-after-free of the firmware event workqueue
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-scsi@vger.kernel.org
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000003586ff0659de1b02"
+	boundary="000000000000027f690659de20b9"
 
---0000000000003586ff0659de1b02
+--000000000000027f690659de20b9
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 18, 2026 at 11:51=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+On Tue, Aug 18, 2026 at 11:53=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
 >
 > Thank you for your contribution! Sashiko AI review found 1 potential issu=
 e(s) to consider:
 >
 > Pre-existing issues:
-> - [High] An integer overflow in the bounds check of `mpi3mr_bsg_upload_hd=
-b` allows a malicious user to bypass the check and read arbitrary kernel me=
-mory.
+> - [High] Use-After-Free of firmware event (`fwevt`) in `mpi3mr_cleanup_fw=
+evt_list` during driver teardown.
 > --
 >
-> --- Patch [15]: [PATCH 15/17] mpi3mr: zero out diagnostic buffer status m=
-emory ---
-> commit 76872b40f16cd1ab1c93f0a03cc6bd1fb6b3db94
+> --- Patch [16]: [PATCH 16/17] mpi3mr: Fix use-after-free of the firmware =
+event workqueue ---
+> commit d1068d82a1a0b06d1a9647481bac5d43ff5f1ebc
 > Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 >
-> mpi3mr: zero out diagnostic buffer status memory
+> mpi3mr: Fix use-after-free of the firmware event workqueue
 >
-> Memory allocated for the BSG diagnostic buffer status is not zero'd
-> before it is copied back to user space. Several fields in this
-> structure are reserved and never written by the driver. Use kzalloc
-> instead of kmalloc to zero out the allocated memory.
+> This commit fixes a use-after-free issue regarding the firmware event
+> workqueue in the mpi3mr driver. It ensures the worker thread pointer is
+> checked while holding the event lock to prevent a race condition with the
+> workqueue being destroyed.
 >
-> Fixes: 78b506984ebe ("scsi: mpi3mr: Add ioctl support for HDB")
-> Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
->
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi=
-3mr_app.c
-> > index f5b48c95cf055..0cdcb8d236d37 100644
-> > --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-> > +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> > @@ -1244,7 +1244,7 @@ static long mpi3mr_bsg_query_hdb(struct mpi3mr_io=
-c *mrioc,
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3=
+mr_os.c
+> > index 510c990d42d1b..4a72b3d89c294 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > @@ -233,10 +233,11 @@ static void mpi3mr_fwevt_add_to_list(struct mpi3m=
+r_ioc *mrioc,
+> >  {
+> >       unsigned long flags;
 > >
-> >       length =3D (sizeof(*hbd_status) + ((MPI3MR_MAX_NUM_HDB - 1) *
-> >                   sizeof(*hbd_status_entry)));
-> > -     hbd_status =3D kmalloc(length, GFP_KERNEL);
-> > +     hbd_status =3D kzalloc(length, GFP_KERNEL);
-> >       if (!hbd_status)
-> >               return -ENOMEM;
-> >       hbd_status_entry =3D &hbd_status->entry[0];
+> > -     if (!mrioc->fwevt_worker_thread)
+> > -             return;
+> > -
+> >       spin_lock_irqsave(&mrioc->fwevt_lock, flags);
+> > +     if (!mrioc->fwevt_worker_thread) {
+> > +             spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+> > +             return;
+> > +     }
+> >       /* get fwevt reference count while adding it to fwevt_list */
+> >       mpi3mr_fwevt_get(fwevt);
+> >       INIT_LIST_HEAD(&fwevt->list);
 >
 > [Severity: High]
-> This is a pre-existing issue, but while reviewing this file I noticed a
-> potential integer overflow in mpi3mr_bsg_upload_hdb():
+> This is a pre-existing issue, but while reviewing the firmware event
+> lifecycle, I noticed another potential use-after-free during driver teard=
+own.
 >
-> drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_upload_hdb() {
+> In mpi3mr_dequeue_fwevt(), the list reference is dropped before returning
+> the pointer:
+>
+> drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_dequeue_fwevt() {
 >     ...
->         if ((upload_hdb.start_offset + upload_hdb.length) > diag_buffer->=
-size) {
->                 dprint_bsg_err(mrioc,
->                     "%s: invalid start offset %d, length %d for type %d\n=
-",
->                     __func__, upload_hdb.start_offset, upload_hdb.length,
->                     upload_hdb.buf_type);
->                 return -EINVAL;
+>                 fwevt =3D list_first_entry(&mrioc->fwevt_list,
+>                     struct mpi3mr_fwevt, list);
+>                 list_del_init(&fwevt->list);
+>                 /*
+>                  * Put fwevt reference count after
+>                  * removing it from fwevt_list
+>                  */
+>                 mpi3mr_fwevt_put(fwevt);
 >         }
+>         spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+>
+>         return fwevt;
+> }
+>
+> Then in mpi3mr_cleanup_fwevt_list(), we pass this unreferenced pointer to
+> cancel_work_sync():
+>
+> drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_cleanup_fwevt_list() {
+>     ...
+>         while ((fwevt =3D mpi3mr_dequeue_fwevt(mrioc)))
+>                 mpi3mr_cancel_work(fwevt);
 >     ...
 > }
 >
-> Can upload_hdb.start_offset and upload_hdb.length wrap around during addi=
-tion?
+> Could the background worker thread (mpi3mr_fwevt_worker) concurrently fin=
+ish
+> executing and free the fwevt structure, causing cancel_work_sync() inside
+> mpi3mr_cancel_work() to access freed memory?
 >
-> Since they are 32-bit unsigned integers controlled by user space via the =
-BSG
-> interface, a large start_offset (e.g. 0xFFFFFFF0) and a small length
-> (e.g. 0x20) could wrap to a sum that passes the bounds check against
-> diag_buffer->size.
+> Additionally, lockless access to mrioc->current_event in
+> mpi3mr_cleanup_fwevt_list() could similarly read a concurrently freed eve=
+nt if
+> the worker thread finishes in the middle of cleanup:
 >
-> Would this allow a malicious user to bypass the check and read arbitrary =
-kernel
-> memory when the subsequent copy occurs?
+> drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_cleanup_fwevt_list() {
+>     ...
+>         if (mrioc->current_event) {
+>                 fwevt =3D mrioc->current_event;
+>         ...
+>                 mpi3mr_cancel_work(fwevt);
+>         }
+> }
+>
+> Does this code need to hold a reference to fwevt while calling
+> mpi3mr_cancel_work() to prevent the worker thread from freeing it?
 >
 > --
 > Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818231426.58=
-105-1-chandrakanth.patil@broadcom.com?part=3D15
+105-1-chandrakanth.patil@broadcom.com?part=3D16
 
 Thanks for the review.
 
 New issues:
-- None. This patch specifically ensures diagnostic buffer status
-memory is zeroed out using kzalloc() before copying to user space.
+- None. This patch specifically ensures that
+mrioc->fwevt_worker_thread is checked while holding fwevt_lock to
+prevent a race with workqueue destruction.
 
 Pre-existing issues:
-- The potential integer overflow in mpi3mr_bsg_upload_hdb() is a
-pre-existing issue in the driver and will be addressed in a separate
-follow-up patch series.
+- The teardown reference counting observation in
+mpi3mr_cleanup_fwevt_list() and mpi3mr_dequeue_fwevt() is a
+pre-existing issue in the driver and will be
+  addressed in a separate follow-up patch series.
 
---0000000000003586ff0659de1b02
+--000000000000027f690659de20b9
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -273,13 +302,13 @@ LfSp/K5DCYsrXNqitPmQaAAGAiG4d4WDxBev6vtoyH7ejLcuCKkxCefrLO5qYnuDHsMNCObdslAe
 tMVer+USn6AqB//6EwmqdiLr4o20UQ79jxNFMAEKdwyNkA8mVCVUAtTe3mPrMYICVzCCAlMCAQEw
 YjBSMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xv
 YmFsU2lnbiBHQ0MgUjYgU01JTUUgQ0EgMjAyMwIMAgfxQ1Z7DrZKmCE/MA0GCWCGSAFlAwQCAQUA
-oIHHMC8GCSqGSIb3DQEJBDEiBCCkvFQFQzHbteOogCBf5h9UF0zyzRqqiWGOzpu73nQ+LjAYBgkq
-hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjE4NTRaMFwGCSqG
+oIHHMC8GCSqGSIb3DQEJBDEiBCDWafw7KbFiyfDX/qQI1AfOXIXBg72tRtNQ5HwaZxZY/zAYBgkq
+hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjIwMTRaMFwGCSqG
 SIb3DQEJDzFPME0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZI
-hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAQjdHv5Qx/
-HdMReiJW+IAiJUa9aIyfhOsqjY4KHDeJzXRIl35eINVaqKsRt6AfE5Y9Ao2gHoN271TTE9peOXjR
-sewvyC1077HD9CNOYmoCYGL9wbdy0I+PZH1CL7lXD7KMa6fRdsH5UD6KmkoucFMisomqIJXW93cO
-BLL/0YFvqdgfpDemtFAOgyEW/q6I/LlKzLVLMO/bah3WIBjpmZkw2JMS0sidINPgrye7hSHXDgpY
-zKz15cT8dbEMNfoMjo/WXXbfaoPeUQQ8IX8pLyhnvv0ye6oOQokPMA0lt/tu494jxCE6TopBHDn6
-n+kdmNrEBEThYxXSVkyreW2XXBzj
---0000000000003586ff0659de1b02--
+hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQABiGsEMml6
+quQuQd3xNWjKePiYUmsMeGdnAUkirrfx9m5i+a/lnbMHE8phEpIWEm0Z/Lm8zaWREqIIMf4Eqjp7
+fQJq5MWZ5ftI0ms4FpACNYOpwxRd9+8FQjhykiOXjKbWkafeOWNOj/92ckxJ0UVkuazG/sCBaZX/
+1iX+2n6sStPkSge8xo8129B/NAR7AXt1N1zQxMN0zxp9k/L2ki2ZbwjOOXTo4e5dIxERhXtygA2H
+9n8oNeDRCUu2vn7gGhoOxsHoJTnSs7EIc8YppCvqlXFlNQ/Zjjp8x+mzAmP026AcL6KZy6H9cPGT
+hZqedFtmd6egb7CUC6EFzVvtR5mz
+--000000000000027f690659de20b9--
