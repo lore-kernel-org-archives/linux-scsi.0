@@ -1,72 +1,72 @@
-Received: from mail-pf1-f227.google.com (mail-pf1-f227.google.com [209.85.210.227])
+Received: from mail-vk1-f226.google.com (mail-vk1-f226.google.com [209.85.221.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 132AB349CCD
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:03:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45B703CFF61
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:04:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787659384; cv=none; b=jYrREQ2onJd/ZevRlqVbkM2dXBpsVSIdh9q1pLYa+0SQEvgRyWtHFWSHlUa2cAz8DJ75996q82HRTjMp7W82RNHLlzPOj2yVoeWluxIo/r+eXjNJv7uAUr1A81k1B8AjKgJCVeL2g/QBhMQiNdMtX+ZYqQE2NzEA7pZuFGApIkg=
+	t=1787659465; cv=none; b=LhFFlAs8kH43//lFhEh1oLCkvKXZ3lUuBDlhYE33kto4aAtxbKNgBsBvQ8bcA0pDIZUTWBaDoGOtioKIRVu82qfZHtz0KFuuyAFDYFpV4ePyS7t/cznXlnLVmYgqx1qd4EjxeXcrFahrTZPbKD5xPMw5knpnOBgs4qzlgNnlK5g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787659384; c=relaxed/simple;
-	bh=ovvlq0ibqY16iPbQ2d4D6uuoA5MkxtE0kvZZ3BRkO1w=;
+	s=arc-20240116; t=1787659465; c=relaxed/simple;
+	bh=OTRfQZDQZrDXkoiVqPk7j3JLG7m2k0cPTpEUz0zUBdk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AncndgYScIktIofSin1NWlhlFHZBxftKMYouPOkKPxztoI7jcxTTNqlG5m964PmL9N411X3ustWRJ9n3HQz7VL6c6dLL+y6SAZiyRM0AeNlo0nnzGpSFRQ3dccASYlg2n00mWpF5bWhkCCNynCipAV9066IWBFofGfHgiaaQ5O0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Xcd5zpFr; arc=none smtp.client-ip=209.85.210.227
+	 To:Cc:Content-Type; b=JzXAFUCTmGtnuwJTSqLS0BkNOkZZPx1lCOWwuDox3+RYhql+w0Latn0etpEY/5U5dC3L1GlyfxDfZ6Z4r4LQ+0V542NQCokeMMdxlCnTEjZuAUejZHi5f6nPQBsf2n22ZdSAjGcYpY64zY0fWphwpzvi29U2wEnvszdEuqLooMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Fen/Dx1V; arc=none smtp.client-ip=209.85.221.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Xcd5zpFr"
-Received: by mail-pf1-f227.google.com with SMTP id d2e1a72fcca58-8485b358552so1898388b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:03:02 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Fen/Dx1V"
+Received: by mail-vk1-f226.google.com with SMTP id 71dfb90a1353d-5c2dbaf828eso1954806e0c.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:04:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787659382; x=1788264182;
+        d=1e100.net; s=20251104; t=1787659463; x=1788264263;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:dkim-signature:x-gm-gg:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=17H3Nn/fwYXnRIA+qVdEKEpt+rzuU8oxJxCQRB81GNg=;
-        b=f+GLc9z53EliBBJtyRlftVTOVn6BsYdbasfNCx1bNZh+yeeVKn8Jyz6v+Nw21TOepU
-         yt8CvnU6x4ZY8YmUJcRBTSwsctN3EjpVgqg4/TKiY2XPzvcupYN1Gpfi1XCSj+Z/I4Ev
-         4oGlUZ9bOwhFoDFhhJpAlsGKIyxSFcPSsv7nKh9m7ZZjnBhokB70irWoFH1NpFwp1B5S
-         tnvtUALk/AW7WV1BP5dehpngvtLGJiWDK1QNIgTIYEYus2uNmY7pUF9jtFOeIbrQ6FQW
-         i+yS5keT2V6Eb4TPKWGJ/uMnAQbrWl/wgpZcILKVLH6kA8zCOXTucfQa06hrpr/qjAh6
-         e8HQ==
-X-Gm-Message-State: AFuF++nBtK2vtzAdBvFA6rsmJqDCiHOPlxZBqjyzkF0c115eY13gWGI9
-	dho322Z62OiRwaeAb1XGMVMU8mZJzXrWAtEUfjZ35azKfiHoTU9SsdLxn5bjhdHtB/dvu+VYqWk
-	N5wSabDpU/PM/0/AwTM+cvnyaSKar01UFooImwkyMs+ET7xpfunCDI4bM8cz52ckHY3SsyHc4eH
-	HRHf5mi2r0Z187TTBjChIgq0D5VxrTdOJydrKIxo7awnlYe5j0Xyh3cvq1rE329WxFd/1Cxt3X6
-	12auEN36Ml08v+Uk2QU6Fg3
-X-Gm-Gg: AR+sD13WNJDSRUDHCyqwRsO6czW7Z5dNRSQFAjUgQxliv7lz4vpIm53tRAzzkbe3v6s
-	aoLN8KXaQWTib6xmlS8Zz2JhnmNAFAgyqYmTUm654ChSvSG8ammi7lGfKk/wmCEXzbI4clm7xtT
-	yXOtQdqVn9f8omzsZHKZEGlowiI7tOkI3agpt4PfWkzrXyRK0hzXsjkuzb6tU9Gu9Dk8tRV8mxt
-	pvuoxyBML/BJnrWONfajVDQfAeSqZKbYCWwg0ESYTeglB7+5nwQJ2nLPAYIR9PJsBZDzQBqgXyD
-	Uw8WHWkCCLvq8JYzCoGdU51g/0WwC1xKKGfpmpnhFi3LI+oW54tg7UfqiirDj9eGKVO8xszjTba
-	XkMu1imQzEWb4DuuUJxwotA+MoBPNYSFU+XVg6Pd26z0Ic92D4EoHNwpTzdireF8sWeWi+ovjpv
-	xZmrga1xkEIQFLUyB1fYRwo/KrxTUfZPAkoJ3fv4E/omtEiQ==
-X-Received: by 2002:a05:6a00:2283:b0:848:3f07:c5a2 with SMTP id d2e1a72fcca58-851f9bb67d5mr57740675b3a.4.1787659381844;
-        Tue, 25 Aug 2026 05:03:01 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-121.dlp.protect.broadcom.com. [144.49.247.121])
-        by smtp-relay.gmail.com with ESMTPS id d2e1a72fcca58-852102693dasm5047257b3a.1.2026.08.25.05.03.01
+        bh=KVp+w8oEdENeGsYsICn2p3Ju1XMVGj279A/kAHtg/hU=;
+        b=gGbJ9dmuXvEU9eRD90TkOOAGjjEgVbaMY74atp8G5g4vuWtx3tUThRxWGi6f7Iv0wp
+         rTqbBwmKsEr1NPMq8Qhu5lW/Se/4t4RKtplUdzLWkHND4CmGacx682O4WhOHqkaa7QnD
+         DQEJcFRPY442bD9V5+5qRYuN0HedgTeflycqH/1097ex8oh/wNrOs3q6UE51Dse/dd4l
+         bezVdRf2M2h7Jw2sywJy3psl/s11ZDbS/Xu1iMnmAtzshPUQ+JUOnVHM40NyJEziYWhc
+         SDsnt2XQtLTm3YBZfzU6ObShgo73VVWUrel9A3oLW/5zC1Us5CwZGI0R+kqCNfW2G17K
+         f1ew==
+X-Gm-Message-State: AFuF++nFfhmYe4lYaOd7mVkzD5HP6Y3MqmLbUyAfhdRI4cIok9OrtY2z
+	GFVvAQY9DwG00RWg+RnYCGHFb4diYotszRB+GWs8vFVItDeQDkqGDPfRYrrllR7VVNxi/N9VVED
+	ZE8WTFag5AApwSsa/3S+iFgYsYylwYgA67D20I0qID6b+PIeYFp3OtDyfqykeb5Ml7BtYjMiTaO
+	VK0+2vAW8IiFAdgZZLRz3xKF9wLcDrqqwCrBEdNMQ8/jRHlBOk4EPrgfMHI2o+hnJhJCyVdgo00
+	Spcl2p6B2IpOUlRuB//Rp8C
+X-Gm-Gg: AR+sD10ZduRDzXNG8lUNjUXHQkeMQDzlckW7T11csv1iE5+om0NKbD+Ccup/VJd8kY0
+	NSLkpGuCuTIKqByuOdoL2x4Fu+grquP7qtkdbYvIxoacMd82LPgzo/tqVGmJUfxJSAG57ocvq+2
+	bRrVM7wDGuuWrHyTuHdeg+UnQctcGUb9hf9Mw0e4M55C8cUoMFo7pAx1g1xG+Zyk0FOrcb+3F34
+	fySn2ZO41J8LIMKMDTYo/JVySq1jCnGjdtaBHcbB5jQ4cE0u+HdtM71KvBscoALGJw3qU7YVIyK
+	iHu8xqaI/1Xqhn1IHmNI9qcP46W6B/Be6wVkko/zGCarZtUBHxB+AcvgERdcDDubh8jrtqXghrU
+	xMG7QsLAHQxm8tZLfh5rdXSi+Qnx69Kg48NQgBW7xNDVlurjIoNSMUPi7DG1BmyWczTOAhpgS9h
+	6p5dVKe8KpaXieSlPfrohPKpeIcN6+erQBtMT2W5cHBbc=
+X-Received: by 2002:a05:6122:8b03:b0:5bd:af82:fd9e with SMTP id 71dfb90a1353d-5c60deb6161mr10144649e0c.8.1787659462542;
+        Tue, 25 Aug 2026 05:04:22 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-16.dlp.protect.broadcom.com. [144.49.247.16])
+        by smtp-relay.gmail.com with ESMTPS id a1e0cc1a2514c-97c83279941sm777061241.1.2026.08.25.05.04.22
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Aug 2026 05:03:01 -0700 (PDT)
+        Tue, 25 Aug 2026 05:04:22 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c1630a90890so326249866b.1
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:02:59 -0700 (PDT)
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c1f3117bc6bso427500066b.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:04:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1787659378; x=1788264178; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1787659461; x=1788264261; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=17H3Nn/fwYXnRIA+qVdEKEpt+rzuU8oxJxCQRB81GNg=;
-        b=Xcd5zpFrJGJaebwRk70dlPjWN8uYHDNNVmP2/njxUPIBMnPQxHfZW/h1jHZJMHyfS3
-         4jdBSNG+H24AgEFJNmeqWb5iui+ruWv3ABpZlU290cI+At/r2nfHs8cX98EnkbyAqwnV
-         kKpp7c8FMS6swpyCTu/885UQ4RZylAvm51MMs=
-X-Received: by 2002:a17:906:81d8:b0:c16:12ff:dc93 with SMTP id a640c23a62f3a-c246a6ca584mr3088944666b.18.1787659378555;
-        Tue, 25 Aug 2026 05:02:58 -0700 (PDT)
-X-Received: by 2002:a17:906:81d8:b0:c16:12ff:dc93 with SMTP id
- a640c23a62f3a-c246a6ca584mr3088936766b.18.1787659377959; Tue, 25 Aug 2026
- 05:02:57 -0700 (PDT)
+        bh=KVp+w8oEdENeGsYsICn2p3Ju1XMVGj279A/kAHtg/hU=;
+        b=Fen/Dx1V9gfmzI5GzqnS2bE2VBqH+jgIkeMiehx2B1OgVcBBu7y4VzMRs+YJESNrDQ
+         GhK1dxtd+B35Xl6ncUUjA32aJkW0qiOVAHLcqmyuqw3fhq7EK9mmvx/9GDYbZUAsHkCV
+         80w9sY9gicszJzgM2KdYcF35eUoVC0TV0vNiw=
+X-Received: by 2002:a17:907:d0c:b0:c20:53c7:488d with SMTP id a640c23a62f3a-c24e5ade3a4mr674422766b.14.1787659460814;
+        Tue, 25 Aug 2026 05:04:20 -0700 (PDT)
+X-Received: by 2002:a17:907:d0c:b0:c20:53c7:488d with SMTP id
+ a640c23a62f3a-c24e5ade3a4mr674411666b.14.1787659460085; Tue, 25 Aug 2026
+ 05:04:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,188 +74,126 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
- <20260818231426.58105-3-chandrakanth.patil@broadcom.com> <20260818181511.75BDB1F000E9@smtp.kernel.org>
-In-Reply-To: <20260818181511.75BDB1F000E9@smtp.kernel.org>
+ <20260818231426.58105-4-chandrakanth.patil@broadcom.com> <20260818181131.B7A541F000E9@smtp.kernel.org>
+In-Reply-To: <20260818181131.B7A541F000E9@smtp.kernel.org>
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Date: Tue, 25 Aug 2026 17:32:45 +0530
-X-Gm-Features: AcwNN1XSCYKA_lTmPmP4hry_7_KUZ2M0Z9aRq9LVID3g4DN2NmTwJ_TzVVVVtRo
-Message-ID: <CABvwm=OM7-iDg33KL8TksqjUjEZx1yk_oJhwAayvKznrLjuADA@mail.gmail.com>
-Subject: Re: [PATCH 02/17] mpi3mr: Fix out-of-bounds read when copying BSG MPI requests
+Date: Tue, 25 Aug 2026 17:34:08 +0530
+X-Gm-Features: AcwNN1XQsIL_k4kkB_41hzk8OMRP6ENZANiYMBGV0XWL9qsRT8zcNUxRiKSP9-4
+Message-ID: <CABvwm=PWk07NjVmTCQzkU=rC53gGWdFSLttb_qBzb+f_3gBxKg@mail.gmail.com>
+Subject: Re: [PATCH 03/17] mpi3mr: Fix I/O block counter leak on admin request
+ post failure
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-scsi@vger.kernel.org
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000004358360659dde2b3"
+	boundary="0000000000002bd4910659dde786"
 
---0000000000004358360659dde2b3
+--0000000000002bd4910659dde786
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 18, 2026 at 11:45=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+On Tue, Aug 18, 2026 at 11:41=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
 >
-> Thank you for your contribution! Sashiko AI review found 4 potential issu=
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
 e(s) to consider:
 >
 > Pre-existing issues:
-> - [Critical] On 32-bit architectures, pointer wrap-around and integer tru=
-ncation bypass buffer bounds checks, leading to arbitrary kernel memory rea=
-d/write.
-> - [Critical] The driver fails to validate the user-provided `job->request=
-_len` before casting and parsing the BSG request packet, leading to an out-=
-of-bounds heap read and a kernel panic.
-> - [High] Failure to decrement `stgt_priv->block_io` on early failure of `=
-mpi3mr_admin_request_post`.
-> - [High] DMA coherent memory allocated for PRP lists is leaked on command=
- timeout or post failure.
+> - [Critical] Dereferencing `stgt_priv` on the error and timeout/completio=
+n paths leads to a Use-After-Free if the SCSI target is concurrently remove=
+d.
 > --
 >
-> --- Patch [2]: [PATCH 02/17] mpi3mr: Fix out-of-bounds read when copying =
-BSG MPI requests ---
-> commit 0259dbaa420364e7270c5c71574f90668291edf7
+> --- Patch [3]: [PATCH 03/17] mpi3mr: Fix I/O block counter leak on admin =
+request post failure ---
+> commit 1533f8fc86e8eb7e7a5042ad5aab564671eb7b8c
 > Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 >
-> mpi3mr: Fix out-of-bounds read when copying BSG MPI requests
+> mpi3mr: Fix I/O block counter leak on admin request post failure
 >
-> The MPI request is copied out of the caller supplied payload without
-> first checking that the requested amount is actually present, so the
-> copy can read past the end of the payload buffer.
->
-> Check the range before copying.
->
-> Fixes: 506bc1a0d6ba ("scsi: mpi3mr: Add support for MPT commands")
-> Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+> This commit addresses an issue where the per-device I/O block counter is =
+not
+> decremented if posting a task management request fails. It lowers the cou=
+nter
+> on the failure path to prevent I/O from remaining blocked.
 >
 > > diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi=
 3mr_app.c
-> > index 8e5d24793efd0..1cd1c38dcd565 100644
+> > index 1cd1c38dcd565..a4fe10a05cb3a 100644
 > > --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
 > > +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> > @@ -2538,6 +2538,14 @@ static long mpi3mr_bsg_process_mpt_cmds(struct b=
-sg_job *job)
-> >                               rval =3D -EINVAL;
-> >                               goto out;
-> >                       }
-> > +                     if (sgl_iter + mpi_msg_size >
-> > +                         dout_buf + job->request_payload.payload_len) =
-{
+> > @@ -2782,6 +2782,8 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bs=
+g_job *job)
+> >               dprint_bsg_err(mrioc,
+> >                   "%s: posting bsg request is failed\n", __func__);
+> >               rval =3D -EAGAIN;
+> > +             if (block_io && stgt_priv)
+> > +                     atomic_dec(&stgt_priv->block_io);
 >
 > [Severity: Critical]
-> This is a pre-existing issue, but can pointer arithmetic wrap around on 3=
-2-bit
-> architectures and bypass this new bounds check?
+> This is a pre-existing issue, but does this add another path that can tri=
+gger
+> a use-after-free if the SCSI target is concurrently removed?
 >
-> If a userspace application sends an MPI3MR_MPT_CMD BSG request with a cra=
-fted
-> buf_len (e.g., 0x10001000) such that the sum modulo 2^32 remains small, t=
-he
-> sgl_iter pointer wrap-around could mathematically bypass both the end-of-=
-buffer
-> limit check and this newly added check.
+> Looking at mpi3mr_bsg_process_mpt_cmds(), stgt_priv is fetched from
+> tgtdev->starget->hostdata, but the tgtdev reference is immediately droppe=
+d
+> before posting the bsg request:
 >
-> Concurrently, can kern_buf_len / MPI3MR_IOCTL_SGE_SIZE truncate from 0x10=
-001
-> to 1 in the u16 needed_desc variable in mpi3mr_map_data_buffer_dma()?
+>         if (block_io) {
+>                 tgtdev =3D mpi3mr_get_tgtdev_by_handle(mrioc, dev_handle)=
+;
+>                 if (tgtdev) {
+>                         if (tgtdev->starget && tgtdev->starget->hostdata)=
+ {
+>                                 stgt_priv =3D (struct mpi3mr_stgt_priv_da=
+ta *)
+>                                     tgtdev->starget->hostdata;
+>                                 atomic_inc(&stgt_priv->block_io);
+>                         }
+>                         mpi3mr_tgtdev_put(tgtdev);
+>                 }
+>         }
 >
-> This would bypass the descriptor limits, allowing the driver to create DM=
-A
-> mappings for arbitrary kernel addresses.
+> Because there are no references or locks held, if the device is concurren=
+tly
+> removed (e.g., via hot-unplug), the SCSI midlayer can invoke
+> mpi3mr_target_destroy(), which unconditionally frees the hostdata memory:
 >
-> > +                             dprint_bsg_err(mrioc, "%s: MPI request bu=
-f exceeds dout_buf\n",
-> > +                                            __func__);
-> > +                             mutex_unlock(&mrioc->bsg_cmds.mutex);
-> > +                             rval =3D -EINVAL;
-> > +                             goto out;
-> > +                     }
-> >                       memcpy(mpi_req, sgl_iter, mpi_msg_size);
-> >                       break;
-> >               default:
->
-> [Severity: Critical]
-> This is a pre-existing issue, but does the driver validate job->request_l=
-en
-> before casting and parsing the BSG request packet?
->
-> If a userspace application submits a BSG request with request_len set to =
-0,
-> the BSG core invokes memdup_user(), which returns ZERO_SIZE_PTR (0x10).
->
-> Will the driver unconditionally dereference this pointer here?
->
-> drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_request() {
+> mpi3mr_target_destroy() {
 >         ...
->         switch (bsg_req->cmd_type) {
+>         kfree(starget->hostdata);
 >         ...
 > }
 >
-> Could this lead to an immediate unhandled kernel panic?  Additionally, if=
- a
-> small non-zero length is provided, does the driver read bufcnt from the
-> unvalidated payload in mpi3mr_bsg_process_mpt_cmds() and loop over unallo=
-cated
-> heap memory?
+> Since the original completion path also dereferences stgt_priv after slee=
+ping
+> in wait_for_completion_timeout(), both the timeout/completion path and th=
+is
+> newly added error path seem to potentially call
+> atomic_dec(&stgt_priv->block_io) on freed memory.
 >
-> [Severity: High]
-> This is a pre-existing issue, but is there a missing decrement of
-> stgt_priv->block_io on early failure of mpi3mr_admin_request_post()?
->
-> When processing a SCSI task management request that specifies blocking I/=
-O,
-> stgt_priv->block_io is incremented. If mpi3mr_admin_request_post() fails,
-> the code jumps directly to out_unlock:
->
-> drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds() {
->         ...
->                 goto out_unlock;
->         ...
-> }
->
-> Does this skip the atomic_dec(&stgt_priv->block_io) matching the earlier
-> increment, permanently blocking all future I/O to the affected SCSI targe=
-t?
->
-> [Severity: High]
-> This is a pre-existing issue, but is DMA coherent memory allocated for PR=
-P
-> lists leaked on command timeout or post failure?
->
-> When an NVMe encapsulated request utilizes a PRP list, mpi3mr_build_nvme_=
-prp()
-> allocates a DMA coherent buffer in mrioc->prp_list_virt.
->
-> If mpi3mr_admin_request_post() fails, or if wait_for_completion_timeout()
-> times out, the code branches to out_unlock without freeing the memory:
->
-> drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds() {
->         ...
->         if (mrioc->prp_list_virt) {
->                 dma_free_coherent(&mrioc->pdev->dev, mrioc->prp_sz,
->         ...
-> }
->
-> Would a subsequent NVMe command blindly overwrite mrioc->prp_list_virt wi=
-th a
-> new allocation, permanently leaking the previous DMA buffer?
+> >               goto out_unlock;
+> >       }
+> >       wait_for_completion_timeout(&mrioc->bsg_cmds.done,
 >
 > --
 > Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818231426.58=
-105-1-chandrakanth.patil@broadcom.com?part=3D2
+105-1-chandrakanth.patil@broadcom.com?part=3D3
 
 Thanks for the review.
 
 New issues:
-- None. This patch specifically fixes an out-of-bounds read during BSG
-MPI request copy by checking that sgl_iter + mpi_msg_size does not
-exceed the payload length.
+- None. This patch specifically fixes an I/O block counter leak when
+posting a task management request fails by decrementing
+stgt_priv->block_io on the failure path.
 
 Pre-existing issues:
-- The block_io counter leak on post failure is already addressed by
-Patch 3/17 in this series.
-- The pointer wrap-around on 32-bit, job->request_len validation, and
-PRP DMA memory leaks are pre-existing in the driver and will be
-addressed in a separate follow-up series.
+- The stgt_priv lifecycle/UAF risk during concurrent target removal is
+a pre-existing issue in mpi3mr_bsg_process_mpt_cmds() (also present on
+the completion path)
+  and will be addressed in a separate follow-up series.
 
---0000000000004358360659dde2b3
+--0000000000002bd4910659dde786
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -349,13 +287,13 @@ LfSp/K5DCYsrXNqitPmQaAAGAiG4d4WDxBev6vtoyH7ejLcuCKkxCefrLO5qYnuDHsMNCObdslAe
 tMVer+USn6AqB//6EwmqdiLr4o20UQ79jxNFMAEKdwyNkA8mVCVUAtTe3mPrMYICVzCCAlMCAQEw
 YjBSMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xv
 YmFsU2lnbiBHQ0MgUjYgU01JTUUgQ0EgMjAyMwIMAgfxQ1Z7DrZKmCE/MA0GCWCGSAFlAwQCAQUA
-oIHHMC8GCSqGSIb3DQEJBDEiBCBk/h3MlnUzOqrlOFBCWlH+DGjtHg/Ma6qf5vCsP0Yi4zAYBgkq
-hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjAyNThaMFwGCSqG
+oIHHMC8GCSqGSIb3DQEJBDEiBCAujwE1rZDmhaQlD+qiq4gP3cT8dV3KTX9QmgvNicRoyTAYBgkq
+hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjA0MjFaMFwGCSqG
 SIb3DQEJDzFPME0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZI
-hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQADA0wBW1sg
-o8M36y6QXdq7YmqYrz6RAob4m9pS1k1RSn7L6UzNTB3ZgVJP0964ZHwDUT4wZwtLeNhUIvGtx8S1
-enqJd8/8gV9c62W2ymiamLghQ9zKEbLADVj/9756ChiWxOHnt0HXumW1DaA+c8Qsnb6vwWwPOL+K
-VznULW/oJ/g5F+IIYx/6KpIcl9lqLPX+ty8OtELyPGdRcYDrYMie8RbmQwEDVfPAOxcBiLiaQun5
-RMYr25mvFitW4Dt0CpMjuWk3TGHKezDx6op4rSXFNsBG3pW36HR2FVmT5dH3bovan5CgDSDKGgd4
-dGH/CpiBwM04pGnrh+PyZfvSTkdy
---0000000000004358360659dde2b3--
+hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA3yOULt/wq
+WHRhcbpm1Y39Fo693WbKQjObc1A2sNHzh1HpEY1rjppuq5BQ0ql7NOEfKviU3Jh9Wf3MzKJxVwII
+QYD1vKz/hUKKyCkjzdUJj3ONNOMAPSwI6P5CMsAoa302DJYsSOUMSuruIuEFO07dV6hefnjzFen5
+LPiEmSPv3P9uSxugleAOWnGH3amtkBrhh1U128GXHOS77AFd+Tip3cdTwwwARwmZCntl9OdIJU5B
+SWtrwJvIONTBGx27HsAa8uCKIaa00q1xzCZoXdPGX7zlRjDVJeBAZ0l6kLC/BFTXoqWNxg7YEypi
+o7NOhSqDs/ITMEax/rwKz91C7hBz
+--0000000000002bd4910659dde786--
