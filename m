@@ -1,171 +1,169 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98ECF33CE80
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:05:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D6CE1531C8
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:06:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787673937; cv=none; b=jW3TrpgyKXoT/tIQs/kl/Hy/q9Byzte8HjbCjL+nUX+CUwNXHdNVD3sBNmFEtIvHPI4fdGkm+grWZ5Vc+J0RJP486fk6RuEIueTbyUCi9XLxAQckGmlUxVQGm/FViJW857JGyyJuoWo6z+Gy0+rm5JSqCqORTVKq2BvamuXC7Uw=
+	t=1787673967; cv=none; b=U2sYFYbiVHkocIZXp7fjHZj5+GOa6MpWXeylJdUDHFY1D9Fsp4oeYWM7M4AY7vp722DRyWxDwkBy+eyXumep9PtDc4H9AtbTvtbO/Fm86+q2wAEpF66dxJLY9yBOuzdAOTS9Unt35AGctaszL0XNr/JXlLTiJ87xo3cJVS/a4LA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787673937; c=relaxed/simple;
-	bh=MqcVRQHXCs7eu0kAKoSS0vdccFI9yiYJiH6Slq5d8sM=;
+	s=arc-20240116; t=1787673967; c=relaxed/simple;
+	bh=Tef8ehv176eNiia/g18t84XHszz4M+tUcLlhMIJ8Ot8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DlO5ABnbSLpQfp2yWwEtk+lJ0oMxvFklSJXD2/U2VfNMsLMx2K8cLjoMW+8XGoRoc4E26l4KpM8HF7gcSlEslF0/dfqjrGY/SAn6AGldcNbihlyINJF1am5B4EDuSz3aP8Hzaw777JU2YU/DlG1bvAUSuavRWvDrUOvFhluOPMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VvU2pLrU; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=JuKC0GvUqFFclgk9RBccvIlFjZLsUQL0MiJgGkjUQy9b84Nh9NDIjo+4td7j/Et5xy9VWQzZyyEGEjNJGd7PY/5qIFqA2kE2Bgl+LxOELWueVLS9xl+Fzsr/NWJsOvUJtiqLe1hcZc95iI0hzvUe8Xq5ppyuvuB2AFHo0gycJJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jF+zi4yY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VvU2pLrU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAD3E1F00A3A;
-	Tue, 25 Aug 2026 16:05:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jF+zi4yY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CEC01F000E9;
+	Tue, 25 Aug 2026 16:06:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787673935;
-	bh=3PLo6w6PwGFI0MKhf6ig3idh1FHdQSrZzGsAn6sxWFs=;
+	s=k20260515; t=1787673965;
+	bh=qolEghv5YgZnhYsk+fJKTD+F+EG3rDbBE/FuxnxMlto=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VvU2pLrU04O1xF7DLbzQZJEg9Ob/NtEsGWUBcXt2RgBADGY5+7KEZ3lRH8H+LNZmk
-	 8Rzn3lkhg8vaGIH7hLI6XGc6ujXzZOgLFWg5rqgHGqsJEpcv+omMa4Hd3pLBpxSyfU
-	 0G0wG434Y9MBVx/WrnX9JP220Zo7h4mygx/9nkgf7RQyUfc4tKFkFkfl/JegB9/kD0
-	 4IOpm73/UfE0y3b0fRVQ9DF1uRUQxDQr2LrjGPAUEzXg9itrxouC0wOzE4zHh/RaKs
-	 jE/knFXED78y+gG+LPdLv4vM/QQVMnTeYOi6b+5z0yB4RimyTP67kizZnDcEkrDMbg
-	 jKkto3oQioApw==
+	b=jF+zi4yYFalXy4ReEdOa1RXAfNNC6dOEnsFghFQuNE9FTzEb6infI0s0ez/CA4ja8
+	 pG9p0M7Hl8jEKmme1SvfJn998287Cy5TgqDe1CMMQPWEiR+4AiUC4ujahXA2emKO0D
+	 5ZujhdqPuNwZqOPchuqCqeXmsxm2kxgaAGVSCPGQjPwyXYPuaASIfogiK4OpOxgNGy
+	 h8WWCQeM8z5og0XMLwtPWUL1vEv9+462+trvZBQgISZP44IprWnmgd5uONvZkjHlw6
+	 7HKzorEIG2K+yjsMdfvh4rY+c5xoB+J74JZz8VwhVAU1NPicPulTGPvztj46rjcjfE
+	 88yPXe+G4zeOA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 04/17] mpi3mr: Fix target device reference leak in
- BSG task management
+Subject: Re: [PATCH v2 11/17] mpi3mr: Fix out-of-bounds read of event data
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chandrakanth Patil" <chandrakanth.patil@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260825210411.301535-5-chandrakanth.patil@broadcom.com>
+In-Reply-To: <20260825210411.301535-12-chandrakanth.patil@broadcom.com>
 References: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
- <20260825210411.301535-5-chandrakanth.patil@broadcom.com>
+ <20260825210411.301535-12-chandrakanth.patil@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 16:05:34 +0000
-Message-Id: <20260825160534.CAD3E1F00A3A@smtp.kernel.org>
+Date: Tue, 25 Aug 2026 16:06:05 +0000
+Message-Id: <20260825160605.8CEC01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Heap out-of-bounds read in bottom-half topology handlers due to ne=
+wly clamped allocation size without clamped logical array counts.
+
 Pre-existing issues:
-- [High] Time-of-check to time-of-use (TOCTOU) race condition leading to a =
-Use-After-Free on `stgt_priv`.
-- [High] Data race between BSG timeout handling and admin reply ISR causing=
- a Use-After-Free on `sense_buff_k`.
-- [Medium] Missing endianness conversion when reading `dev_handle` from `mp=
-i3_scsi_task_mgmt_request`.
+- [High] MPI3_EVENT_DEVICE_INFO_CHANGED events are erroneously processed as=
+ log data and entirely bypass bottom-half processing.
+- [High] Incomplete fix leaves DMA buffer out-of-bounds reads unpatched in =
+top-half topology event handlers.
+- [High] Bottom-half event handlers risk out-of-bounds slab reads by blindl=
+y casting event data without checking length.
 --
 
-commit da89cfba68bbe3f0b3052ef72f3e8e056a2cdb4d
+commit bbda3bacb81906126bd46f33bc2d5656197ac85e
 Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
-mpi3mr: Fix target device reference leak in BSG task management
+mpi3mr: Fix out-of-bounds read of event data
 
-This commit fixes a reference leak for the target device in the BSG task
-management path. It ensures the reference is dropped whenever the device
-lookup succeeds, regardless of whether the SCSI target data is fully set up.
+This commit restricts the size of event data read from the reply buffer to
+prevent reading past the end of the frame when caching log data or allocati=
+ng
+the buffer for bottom-half event processing.
 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3m=
-r_app.c
-> index a4fe10a05cb3a..94b992acb2330 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> @@ -2745,10 +2745,12 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bs=
-g_job *job)
->  	}
->  	if (block_io) {
->  		tgtdev =3D mpi3mr_get_tgtdev_by_handle(mrioc, dev_handle);
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
+_os.c
+> index 6a80b784200b3..65a6192cf3960 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
 
-[Severity: Medium]
-This isn't a bug introduced by this patch, but is dev_handle missing an
-endianness conversion here?
+[ ... ]
 
-It appears dev_handle is read natively from the request structure:
-
-mpi3mr_bsg_process_mpt_cmds() {
-    ...
-    dev_handle =3D tm_req->dev_handle;
-    ...
-}
-
-Since dev_handle is defined as little-endian (__le16) in
-struct mpi3_scsi_task_mgmt_request, could Big-Endian systems read a
-byte-swapped value, causing mpi3mr_get_tgtdev_by_handle() to look up the
-wrong device?
-
-> -		if (tgtdev && tgtdev->starget && tgtdev->starget->hostdata) {
-> -			stgt_priv =3D (struct mpi3mr_stgt_priv_data *)
-> -			    tgtdev->starget->hostdata;
-> -			atomic_inc(&stgt_priv->block_io);
-> +		if (tgtdev) {
-> +			if (tgtdev->starget && tgtdev->starget->hostdata) {
-> +				stgt_priv =3D (struct mpi3mr_stgt_priv_data *)
-> +				    tgtdev->starget->hostdata;
-> +				atomic_inc(&stgt_priv->block_io);
+> @@ -3179,7 +3179,12 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mr=
+ioc,
+>  	case MPI3_EVENT_DEVICE_INFO_CHANGED:
+>  	case MPI3_EVENT_LOG_DATA:
 
 [Severity: High]
-This is a pre-existing issue, but does caching stgt_priv here create a
-use-after-free risk later in the function?
+This is a pre-existing issue, but is it intentional that
+MPI3_EVENT_DEVICE_INFO_CHANGED falls through to MPI3_EVENT_LOG_DATA?
 
-When a user-space process issues a blocking command, the thread will wait
-for completion:
+When this happens, the payload is passed to mpi3mr_app_save_logdata_th()
+and process_evt_bh is not set to 1. This appears to cause the bottom-half
+event to never be scheduled, and might overwrite firmware log buffers with
+unrelated device information page data.
 
-mpi3mr_bsg_process_mpt_cmds() {
-    ...
-    wait_for_completion_timeout(&mrioc->bsg_cmds.done, ...);
-    if (block_io && stgt_priv)
-        atomic_dec(&stgt_priv->block_io);
-    ...
-}
-
-If the target device and its hostdata are concurrently destroyed while the
-thread is blocked, tgt_dev->starget is cleared:
-
-mpi3mr_target_destroy() {
-    ...
-    tgt_dev->starget =3D NULL;
-    ...
-}
-
-If this race occurs, wouldn't the BSG thread wake up and dereference the
-freed stgt_priv pointer when calling atomic_dec()?
-
-> +			}
->  			mpi3mr_tgtdev_put(tgtdev);
->  		}
+> -		sz =3D event_reply->event_data_length * 4;
+> +		if (mrioc->reply_sz > offsetof(struct mpi3_event_notification_reply, e=
+vent_data))
+> +			avail_reply_room =3D mrioc->reply_sz -
+> +			    offsetof(struct mpi3_event_notification_reply, event_data);
+> +		else
+> +			avail_reply_room =3D 0;
+> +		sz =3D min_t(u16, event_reply->event_data_length * 4, avail_reply_room=
+);
+>  		mpi3mr_app_save_logdata_th(mrioc,
+>  			(char *)event_reply->event_data, sz);
+>  		break;
 
 [Severity: High]
-This is also a pre-existing issue, but is there a data race in the BSG
-timeout handling that can cause a use-after-free on the sense buffer?
+This is a pre-existing issue, but while this fixes the buffer copy size
+here, does it leave out-of-bounds reads unpatched in the top-half topology
+event handlers?
 
-In the timeout path, the user thread locklessly clears the pointer and
-frees the memory:
+In mpi3mr_pcietopochg_evt_th(), the bounds checking still uses the
+unclamped firmware-provided length directly:
 
-mpi3mr_bsg_process_mpt_cmds() {
-    ...
-    mrioc->bsg_cmds.sensebuf =3D NULL;
-    mrioc->bsg_cmds.state =3D MPI3MR_CMD_NOTUSED;
-    ...
-    kfree(sense_buff_k);
-    ...
-}
+avail_len =3D event_reply->event_data_length * 4;
+...
+max_entries =3D (avail_len - ...) / sizeof(...);
 
-If the admin reply ISR executes concurrently and checks the cmdptr->sensebuf
-condition before it is cleared:
+If the event_data_length provided by firmware is larger than the physical
+DMA reply frame size, could this lead to reading out of bounds directly
+from the DMA mapping during the top-half processing loop?
 
-mpi3mr_fw.c:mpi3mr_process_admin_reply_desc() {
-    if (sense_buf && cmdptr->sensebuf) {
-        cmdptr->is_sense =3D 1;
-        memcpy(cmdptr->sensebuf, sense_buf, MPI3MR_SENSE_BUF_SZ);
-    }
-    ...
-}
+[ ... ]
 
-Could the ISR execute memcpy() into the freed sense_buff_k memory block?
+> @@ -3213,7 +3218,12 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mr=
+ioc,
+>  		dprint_event_th(mrioc,
+>  		    "scheduling bottom half handler for event(0x%02x) - (0x%08x), ack_=
+required=3D%d\n",
+>  		    evt_type, le32_to_cpu(event_reply->event_context), ack_req);
+> -		sz =3D event_reply->event_data_length * 4;
+> +		if (mrioc->reply_sz > offsetof(struct mpi3_event_notification_reply, e=
+vent_data))
+> +			avail_reply_room =3D mrioc->reply_sz -
+> +			    offsetof(struct mpi3_event_notification_reply, event_data);
+> +		else
+> +			avail_reply_room =3D 0;
+> +		sz =3D min_t(u16, event_reply->event_data_length * 4, avail_reply_room=
+);
 
->  	}
+[Severity: High]
+Since this patch restricts the allocated size of the heap buffer fwevt by
+clamping it to avail_reply_room, could this cause an out-of-bounds read in
+the bottom-half handler?
+
+For instance, in mpi3mr_sastopochg_evt_bh(), the loop iterates up to the
+unclamped num_entries from the payload. If the allocation was truncated,
+iterating up to the original unvalidated num_entries could read past the
+end of the newly clamped fwevt heap allocation.
+
+[Severity: High]
+This is a pre-existing issue, but could truncating the event data size
+cause out-of-bounds slab reads later if the buffer size is exceptionally
+small?
+
+If the clamped sz ends up being extremely small or zero, the bottom-half
+handlers like mpi3mr_fwevt_bh() blindly cast fwevt->event_data to
+fixed-size structures such as struct mpi3_device_page0 and access fields
+like persistent_id. Should there be a minimum size check before accessing
+these fields in the bottom half?
+
+>  		fwevt =3D mpi3mr_alloc_fwevt(sz);
+>  		if (!fwevt) {
+>  			dprint_event_th(mrioc,
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825210411.3015=
-35-1-chandrakanth.patil@broadcom.com?part=3D4
+35-1-chandrakanth.patil@broadcom.com?part=3D11
