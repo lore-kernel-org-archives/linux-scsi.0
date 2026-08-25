@@ -1,50 +1,37 @@
-Received: from out203-205-221-202.mail.qq.com (out203-205-221-202.mail.qq.com [203.205.221.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-144.mta1.migadu.com [95.215.58.144])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1160E3EFFCE;
-	Tue, 25 Aug 2026 09:29:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62ABE3F326F
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 10:45:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787650145; cv=none; b=NCvPkDGRza6rpPJTZSHEn8ZD8YU04svHpBhovphk3leRHc9tc12XYSlLrzWrBmR/B/QqeFsmPYV/+nTO3o5da/QDDBvS3Lq2RkTHtAg/wVXMAcrE78QxRM/KP3OH7QB8Ph7iJa4HanNarviXIV+fpEvsN4RlEaKfcenwlYHMCsk=
+	t=1787654703; cv=none; b=npfijeR8byBaK3lYXyNGP6iysFtiteq4tgFe9RbLsQGSm3r035cHdmAz8IMxSR/+Naux4mEgXG8EIUFwkbrgHg7f4WCun3vbJ/IxioxRFH8Mc0otOyMERDDVoVzR9FA+PS7QROqu6d6FEF1iZKLqYFKju8xMivkjC/SJnZXgLK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787650145; c=relaxed/simple;
-	bh=hG6Rbzda8WXlPRWyN5r0uEX/2Nv+pjxijtW22TU0hHk=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=IwMnIoCxq6tbE+hRsAu3KyNf/khhuE6BtRlZI3q6F9/i4nt2ypIBbOYhsnP8RMqrPcek4KqlwjsicjSJoruLokDplOhy8J1b/otJZTdG2kQs/qbQSlZTFqIjdqzA4k8BQDGzo5uawSHaw7V3miucjv0+OIqMJWbQ85EqUT0hcRE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=G0dOlIOg; arc=none smtp.client-ip=203.205.221.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1787654703; c=relaxed/simple;
+	bh=5WC2UZBXgeTyuTj/TpglhebfH9qrWxZpjz+I4+99Hto=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SCEI+HWFPF1UFFJNk7nm5d522fY0lPusf6swvAemlpv0x4ah3IihySiRprh7Y10w0G6beHRQEJwYJK6beZ0FnlaBVLCzVCLOLEVA7NavWPzYCarqYH2AZ9TkmUMhWJeVfujD6OttsjerDUFbCB2OR7OBDCM5gdSEtebpazYoAvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=baW23DUW; arc=none smtp.client-ip=95.215.58.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="G0dOlIOg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1787650140; bh=hG6Rbzda8WXlPRWyN5r0uEX/2Nv+pjxijtW22TU0hHk=;
-	h=Date:To:Cc:From:Subject;
-	b=G0dOlIOgwwJ1IqrvT2M16jdnyzpw8S44RcgBkq6+1LAN+0PWOpzRaYPGxzXr3jzDX
-	 iGq5G831fiLAMv0WMJiQuwhaIcRkWikVX0cZU6BX1f90Gel5cIeAnrCjRGy5NXDwMM
-	 OCywxNFeqvYUnETHQv3vyVaOFpSkEnW6IG/7EkXw=
-Received: from [192.168.255.10] ([111.206.96.150])
-	by newxmesmtplogicsvrszc43-0.qq.com (NewEsmtp) with SMTP
-	id 73A870DD; Tue, 25 Aug 2026 17:28:58 +0800
-X-QQ-mid: xmsmtpt1787650138t1dukefhj
-Message-ID: <tencent_D0279D01CC3CA502651B79ED88B585B6780A@qq.com>
-X-QQ-XMAILINFO: OVFdYp27KdlJt443li83Hli383KzjAFjCosLvQe+b27zeZC5Pwv7zY7obHZwcQ
-	 1t+e6pfumLCbCJY04VNvuoFko2yrvI0q/LfspLnQ/yjYLU+6wKFwwKfiYwiFuyPySvwdBEV5NMeW
-	 9n+y24SJYl3XGcGvN2RwEzbaZ5uPCwKysanw//wdXE1W95aRF3dmbDl/YazQ3ObN7iQ8a7mF0LvV
-	 qCgfcdES3d4kSIb9b+b7Ux4edaAg0iErxs/cjVJkcuWOrKCXUfYVkme8ap5nRZhHqHoj56qJXoiv
-	 R4PRNNoHSda+hl8Gfttw+b6l2pWigLxmSrIbOhfd06G7yTSPAIhB/r0+qydVqBdPes/ioCW5LmpD
-	 IDSfF4bKirXSNIMaAVB8eRLG5r86We1vrdWDWHjsalc6yL74+TPED8I9VW1QPsnb72MtbNhUesBj
-	 rN/oU+D67jF/bpnGOoHPaNbmzhOvQj0HJ6dIsCnH2R+EEToDXBFn3CchT6YlH2v3WIaYVTK7St+k
-	 Vv9GvmDjgZe6Gafc8y7ksxQpgzNbciirm2PLN5jB8R9dJ5ZPBMWIS7v1Js6ZVz2hv9V4T4f6BNOa
-	 P9rzQUv7gIKd2Y73xpG1hsXfcGAHPjEf6sBEjZ+5ecSrvgZiDJUdH/PedPJ/jTHWCISee644zTXX
-	 L7xv37dMf+PZhEB9+5EkI4s/Kk6Xw0lEPG9MWmZfkHE5SLx6yHZ6RJHMAoVILF/O7UYwK6UNOiK8
-	 ueRF+i1JCLJUneYkAzU4dFbjE3z7f1chTVpSlEQdGnLi/VcIMNLGtadWQfY1hyftbRQlJyCyRJDR
-	 qAicNJwO7Gk9IlpFjqgEuqb6cz8AVZIGGdNG1MmMIYvR92EOVTnh5hpPnuQYxvB/qR2qA5OpSL3S
-	 XD7APND7nT7/z24pNJXQLKw2DoqQ+HQDVq3/aGAI6QQX20WPyioy1+YSsTK+HX5yndAaFmZ0LTrx
-	 KI193Ob+RvJduTsG+c91RrHEx2IbDVD+Mx/nDslF1tK+UAW2Kc1H4aSOu3EwMq6kAdg8KKmwUV1k
-	 iyug03Mnsuk3XizkxNS0UIuXX07TgKQJycPGgtb2tIzBfGjK6RuXnbVPGh8pZn0/r6K9wcb9Q+uE
-	 jQUTGSJ0wC8GTBXC5r1S1bmFLFbg==
-X-QQ-XMRINFO: MSVp+SPm3vtSI1QTLgDHQqIV1w2oNKDqfg==
-X-OQ-MSGID: <5fd57bad-49d1-4236-b424-d42030374130@qq.com>
-Date: Tue, 25 Aug 2026 17:28:57 +0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="baW23DUW"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=5WC2UZBXgeTyuTj/TpglhebfH9qrWxZpjz+I4+99Hto=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787654699; v=1; x=1788259499;
+ b=baW23DUWc1lQWVwR1fDzFRcA6Ec0CHv/09y/9xFcLv8nqLDEwkCvwmWONRNOfNxwbLFKq53w
+ hERXNFmrfplOu8t58h4c8E4JZGDo3L6yG12q9hyTMV9rPQvuYOzfAw9rWjcXH8wIs8or19rfreH
+ jIraH5zNVY4haehTGHqOWzNk=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: from [192.168.68.106] (80.176.231.63)
+	by mta10.migadu.com with ESMTPS id afb7a9e0f1f19918;
+	Tue, 25 Aug 2026 10:44:59 +0000
+X-Mizu-Trace-ID: afb7a9e0f1f19918
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <1586c3fc-eeb2-4601-b8f3-3096a1c30671@linux.dev>
+Date: Tue, 25 Aug 2026 11:44:54 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,76 +39,66 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+Subject: Re: [PATCH] scsi: ips: Fix NULL pointer dereference in ips_release()
+To: Yang Zi <2959243019@qq.com>, aacraid@microsemi.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
  linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-From: Yang Zi <2959243019@qq.com>
-Subject: [PATCH] scsi: stex: Fix NULL pointer dereference in stex_hard_reset()
-Content-Type: text/plain; charset=UTF-8
+References: <tencent_F38F19C2D497EC19AF3331BC5030EFEF3307@qq.com>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <tencent_F38F19C2D497EC19AF3331BC5030EFEF3307@qq.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-stex_hard_reset() reads the PCI bridge device via hba->pdev->bus->self
-and passes it to pci_read_config_byte()/pci_write_config_byte() without
-checking whether it is NULL.  When the controller is attached to a root
-bus (or otherwise has no bridge device), bus->self is NULL, and
-pci_read_config_byte(NULL, ...) dereferences it in
-pci_dev_is_disconnected(), triggering a NULL pointer dereference.
+On 8/25/26 10:25, Yang Zi wrote:
+> When ips_insert_device() fails before calling pci_set_drvdata(), the
+> PCI device's drvdata is NULL.  The .remove callback ips_remove_device()
+> then calls ips_release(NULL), which immediately calls
+> scsi_remove_host(NULL).  That dereferences shost->scan_mutex at a fixed
+> offset of the NULL pointer, triggering a NULL pointer dereference.
+> 
+> KASAN report:
+> 
+>      BUG: KASAN: null-ptr-deref in __mutex_lock_common kernel/locking/mutex.c:625 [inline]
+>      BUG: KASAN: null-ptr-deref in __mutex_lock+0x8b/0x1010 kernel/locking/mutex.c:820
+>      Read of size 8 at addr 00000000000000d0 by task syz.0.671/5574
+> 
+>      __mutex_lock+0x8b/0x1010  kernel/locking/mutex.c:820
+>      scsi_remove_host+0x24/0x300  drivers/scsi/hosts.c:169
+>      ips_release  drivers/scsi/ips.c:654 [inline] [ips]
+>      ips_remove_device+0x155/0x2840  drivers/scsi/ips.c:6701 [ips]
 
-KASAN report:
+You have sent many fixes for similar crashes in other drivers today. How 
+did you recreate this? You have this ips HW, right?
 
-    BUG: KASAN: null-ptr-deref in pci_dev_is_disconnected include/linux/pci.h:2676 [inline]
-    BUG: KASAN: null-ptr-deref in pci_read_config_byte+0x23/0x90 drivers/pci/access.c:562
-    Read of size 4 at addr 00000000000000c4 by task scsi_eh_6/2005
+> 
+> Make ips_release() handle a NULL Scsi_Host by returning early, so the
+> remove path is safe when probe never established drvdata.
 
-    RIP: 0010:pci_dev_is_disconnected include/linux/pci.h:2676 [inline]
-    RIP: 0010:pci_read_config_byte+0x23/0x90 drivers/pci/access.c:562
-    ...
-    stex_hard_reset  drivers/scsi/stex.c:1322 [inline] [stex]
-    stex_do_reset+0x3da6/0x6490  drivers/scsi/stex.c:1424 [stex]
+ips_release() is only called from ips_remove_device(), and this is in 
+the driver removal path. This would not be called if the probe fails 
+(and pci_set_drvdata() was not called). So there seems to be something 
+wrong in ips_insert_device().
 
-Skip the secondary bus reset when there is no bridge device; the rest of
-the reset sequence (config space save/restore and the PCI_COMMAND poll)
-does not depend on bus->self and still runs.
-
-Signed-off-by: Yang Zi <2959243019@qq.com>
----
- drivers/scsi/stex.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 6aeeb338633d..f1dff2cc6086 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -1319,17 +1319,20 @@ static void stex_hard_reset(struct st_hba *hba)
-     /* Reset secondary bus. Our controller(MU/ATU) is the only device on
-        secondary bus. Consult Intel 80331/3 developer's manual for detail */
-     bus = hba->pdev->bus;
--    pci_read_config_byte(bus->self, PCI_BRIDGE_CONTROL, &pci_bctl);
--    pci_bctl |= PCI_BRIDGE_CTL_BUS_RESET;
--    pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
-+    if (bus->self) {
-+        pci_read_config_byte(bus->self, PCI_BRIDGE_CONTROL, &pci_bctl);
-+        pci_bctl |= PCI_BRIDGE_CTL_BUS_RESET;
-+        pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
- 
--    /*
--     * 1 ms may be enough for 8-port controllers. But 16-port controllers
--     * require more time to finish bus reset. Use 100 ms here for safety
--     */
--    msleep(100);
--    pci_bctl &= ~PCI_BRIDGE_CTL_BUS_RESET;
--    pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
-+        /*
-+         * 1 ms may be enough for 8-port controllers. But 16-port
-+         * controllers require more time to finish bus reset. Use 100 ms
-+         * here for safety
-+         */
-+        msleep(100);
-+        pci_bctl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-+        pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
-+    }
- 
-     for (i = 0; i < MU_HARD_RESET_WAIT; i++) {
-         pci_read_config_word(hba->pdev, PCI_COMMAND, &pci_cmd);
-
+> 
+> Signed-off-by: Yang Zi <2959243019@qq.com>
+> ---
+>   drivers/scsi/ips.c | 3 +++
+>   1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+> index 41ed73966a48..39568a7effb3 100644
+> --- a/drivers/scsi/ips.c
+> +++ b/drivers/scsi/ips.c
+> @@ -649,6 +649,9 @@ static void ips_release(struct Scsi_Host *sh)
+>       ips_ha_t *ha;
+>       int i;
+>   
+> +    if (!sh)
+> +        return;
+> +
+>       METHOD_TRACE("ips_release", 1);
+>   
+>       scsi_remove_host(sh);
 
