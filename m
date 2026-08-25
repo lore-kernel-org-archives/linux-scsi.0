@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17C723431E6
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:19:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 008BD32B10E
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:20:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787674792; cv=none; b=A3TTxoGioU6rGcJmoYcxKdl1uTV2G3nsNbMC11NcHWaPbUGU+rZm2GitKACh22ZjQzWWvoSb+OC1PhtI4izKMwC3WxqDR8q0ohJjpV3IR3DHBwnd34y/HDmvUnrTDQMKwdLD/nIFi5SwBfJwslUsg5DUYVcTMaRaiu4EhhI/5/E=
+	t=1787674802; cv=none; b=NeQ11q99gruAaCT/0Jzs5a8bK0xdEwh03B2zS1mAejepawTQuh9sGVYIXZ2myEaGJ9CDz/UzI10wlXn08Ji17T7egCvnefH+NkCjywtuF8xgcTytkxGb0YfuYYZm6YxL2y7KkDo0+UDANh0avkosQJF6K+VPdop52OwtDX+BCAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787674792; c=relaxed/simple;
-	bh=omO34x7byIMOzy2pnsqyNY7766/9m2lokt+FOm6wQZk=;
+	s=arc-20240116; t=1787674802; c=relaxed/simple;
+	bh=GW2s+7W0c/GZwB9vB5hiyjNaS8geH+1Ou04gpkbp6lw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mGr6G7ttEgDBA3LdZHh4kCzB2yksttK5cKY1SXPwccM9rsm/VdL8EqG/q2l7oRgpBXidhJ297pNanHQH13nctXB56IJuuy/jPqBb1rtADqcVZLzCpnjibmGJPie0KwMZeuIrxN3erp2V15+T1W7C3CPbXUhjxM/RbeMKdsNk3sg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XvMNfQkL; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ni9VbeTWm1eaRMxjuL11z7JDLqCkY8N6rWjfs2Gu85aQljbISJvX1MhwGRHh5kwE3ViMIipbzLwSFn1mXn/+LmTidJYowCxhOQbaackXmGl89vQoVR5a4zzCahwBf4rfBkJYdm1H9Y5gWZokx5NcZFbuJzrgCXbYUgVyCRbu/7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iB5p+hp+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XvMNfQkL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC9DB1F000E9;
-	Tue, 25 Aug 2026 16:19:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iB5p+hp+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E60B1F000E9;
+	Tue, 25 Aug 2026 16:20:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787674790;
-	bh=WdFm/WKM+fm8MQqHIs3ZkzqiulWZGx/9k8cf4fTI3Ok=;
+	s=k20260515; t=1787674800;
+	bh=cerNN6hwAH74cHovoCNUWae1mRZSZ5d+OXqz+LsA1GI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XvMNfQkL+tE7scqLaHHcAJQ31vvoOvjWk8dmrUknmt+HdkJTZzJCCuGMXEVBOjPqL
-	 QPhJL+oRd5kCptEq9ol0iE4FgXvZ0ueCRLY9JeEU9+YqItI39EiiR5gwinCGXZk9rl
-	 W5BFG3ZHf1j0LAyl/0LPmHP2m7EAG5a5sS22zzC/hmcYrlXLMT7LAFSH30CF4iKxPz
-	 b1dn//kGUJN5A044AnX6bZecBDwbr0J1qNODCXeZOxhiEt51wfw8rpKvnMiIJ0tTVR
-	 IoOUYYXtImUT8VAfK3OJtiEh7aLMnNvvilzOECYVJIf25MYy6+r7QfrPCkgXoXXe2m
-	 3+JDeZwqDssnQ==
+	b=iB5p+hp+yAqBzlR3CmABDb3vW1gDwTnGpou4jbY6JoZZlMZqY1heZXSdHCt6T19JI
+	 DIZPnNqlvK0lN0gn+3qlPx/RV1U/fjaMfmIZB+ktTmpKXn3znD9lKZNBI2fNKqCEWL
+	 9lorxZnD6q48gNcqMROCWWbJ/iUzKzSIRkQDZTNDy5fGTfvWsZYFggrEqSTBOsWS1+
+	 0RVKpUpn38IRb74NXgBJIBHIksgrVCrLKteBM+3w4K3Wm9/sPIt5uabm/pkoGe3gju
+	 r0kwLTSk4G+++BVWI1vV4VpsQ+MYe6iJUEtXCqOpPBEU2p5w4hiF1AwfgapKgdOMz+
+	 1dkiQ0Nd1O8Rw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 16/17] mpi3mr: Fix use-after-free of the firmware
- event workqueue
+Subject: Re: [PATCH v2 17/17] mpi3mr: Fix NULL pointer dereference on PCI
+ error recovery
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chandrakanth Patil" <chandrakanth.patil@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260825210411.301535-17-chandrakanth.patil@broadcom.com>
+In-Reply-To: <20260825210411.301535-18-chandrakanth.patil@broadcom.com>
 References: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
- <20260825210411.301535-17-chandrakanth.patil@broadcom.com>
+ <20260825210411.301535-18-chandrakanth.patil@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 16:19:49 +0000
-Message-Id: <20260825161949.DC9DB1F000E9@smtp.kernel.org>
+Date: Tue, 25 Aug 2026 16:20:00 +0000
+Message-Id: <20260825162000.8E60B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,121 +49,99 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Use-after-free in `mpi3mr_cancel_work` when canceling concurrently=
- executing firmware event work.
-- [High] Data race leading to Use-After-Free of `mrioc->current_event` duri=
-ng firmware event cleanup.
+- [Critical] Concurrent execution between `mpi3mr_cleanup_fwevt_list()` and=
+ the firmware event worker thread results in a Use-After-Free of the `mrioc=
+->current_event` pointer.
+- [High] The patch fails to resolve the 'already in flight' race condition =
+described in its commit message, leaving the driver vulnerable to NULL poin=
+ter dereferences via a Time-Of-Check to Time-Of-Use (TOCTOU) race.
 --
 
-commit c5c6dc4f18099cddf01a3785308a8b8fac21872d
+commit 67ebeaa54b154ad043a90c5a2e98345f3782e9c3
 Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
-mpi3mr: Fix use-after-free of the firmware event workqueue
-   =20
-The enqueue path reads the workqueue pointer before taking the event
-lock, while the remove path clears that pointer and destroys the
-workqueue while holding it. The enqueue can therefore reach
-queue_work() after the workqueue is gone.
-   =20
-Move the check inside the lock.
+mpi3mr: Fix NULL pointer dereference on PCI error recovery
+
+This patch attempts to fix a race condition on a frozen PCI channel by
+preventing in-flight firmware event handlers from accessing unmapped
+register windows. It adds a check for pci_err_recovery early in the
+bottom-half handler to skip event processing during recovery.
 
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
 _os.c
-> index 543e9b8e3fc37..e97e343b14fa5 100644
+> index e97e343b14fa5..a389f7f2c741e 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -233,10 +233,11 @@ static void mpi3mr_fwevt_add_to_list(struct mpi3mr_=
-ioc *mrioc,
->  {
->  	unsigned long flags;
-> =20
-> -	if (!mrioc->fwevt_worker_thread)
-> -		return;
-> -
->  	spin_lock_irqsave(&mrioc->fwevt_lock, flags);
-> +	if (!mrioc->fwevt_worker_thread) {
-> +		spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
-> +		return;
-> +	}
->  	/* get fwevt reference count while adding it to fwevt_list */
->  	mpi3mr_fwevt_get(fwevt);
->  	INIT_LIST_HEAD(&fwevt->list);
+> @@ -2130,9 +2130,11 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mri=
+oc,
+>  	mpi3mr_fwevt_del_from_list(mrioc, fwevt);
+>  	mrioc->current_event =3D fwevt;
 
-[Severity: High]
-This isn't a bug introduced by this patch, but looking at how firmware even=
-ts
-are managed and cleaned up, is there a use-after-free risk during cancellat=
-ion?
+[Severity: Critical]
+This is a pre-existing issue, but does assigning mrioc->current_event here
+lead to a use-after-free during driver teardown or reset?
 
-When mpi3mr_cleanup_fwevt_list() flushes pending events, it removes the eve=
-nt
-from the list and immediately drops its list reference:
-
-drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_dequeue_fwevt() {
-    ...
-    list_del_init(&fwevt->list);
-    /*
-     * Put fwevt reference count after
-     * removing it from fwevt_list
-     */
-    mpi3mr_fwevt_put(fwevt);
-    ...
-}
-
-It then calls mpi3mr_cancel_work(fwevt), which invokes
-cancel_work_sync(&fwevt->work). If the work is already executing but hasn't=
- yet
-removed itself from the list in mpi3mr_fwevt_bh(), cancel_work_sync() will
-block waiting for the worker thread.
-
-When the worker thread completes, it drops all remaining references and fre=
-es
-the event memory:
-
-drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_fwevt_worker() {
-    ...
-    mpi3mr_fwevt_bh(fwevt->mrioc, fwevt);
-    /*
-     * Put fwevt reference count after
-     * dequeuing it from worker queue
-     */
-    mpi3mr_fwevt_put(fwevt);
-}
-
-Does this leave cancel_work_sync() operating on a freed work_struct?
-
-
-[Severity: High]
-This is a pre-existing issue, but there appears to be a data race when acce=
-ssing
-mrioc->current_event in the cleanup path.
-
-In mpi3mr_cleanup_fwevt_list(), after draining the list, the current_event
-pointer is accessed without holding a lock or taking a reference:
+If mpi3mr_cleanup_fwevt_list() is executing concurrently, it performs a
+lockless read of mrioc->current_event:
 
 drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_cleanup_fwevt_list() {
-    ...
-    if (mrioc->current_event) {
+        ...
         fwevt =3D mrioc->current_event;
         ...
-        if (current_work() =3D=3D &fwevt->work || fwevt->pending_at_sml) {
-    ...
 }
 
-Concurrently, if the worker thread is finishing execution in mpi3mr_fwevt_b=
-h(),
-it drops the reference and sets the pointer to NULL:
+At the end of mpi3mr_fwevt_bh(), the worker thread drops the reference and
+NULLs the pointer:
 
-    mpi3mr_fwevt_put(fwevt);
-    mrioc->current_event =3D NULL;
+drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_fwevt_bh() {
+        ...
+out:
+        mpi3mr_fwevt_put(fwevt);
+        mrioc->current_event =3D NULL;
+}
 
-If the cleanup thread reads mrioc->current_event before it is set to NULL, =
-and
-the worker thread completes and drops its final reference (freeing the even=
-t),
-could the cleanup thread dereference freed memory when evaluating
-fwevt->pending_at_sml or calling mpi3mr_cancel_work(fwevt)?
+If mpi3mr_cleanup_fwevt_list() captures the pointer before the worker thread
+NULLs it, but accesses it after mpi3mr_fwevt_put() frees the memory, could
+this corrupt memory when interacting with the freed event's work struct?
+
+> =20
+> -	if (mrioc->stop_drv_processing) {
+> -		dprint_event_bh(mrioc, "ignoring event(0x%02x) in the bottom half hand=
+ler\n"
+> -				"due to stop_drv_processing\n", fwevt->event_id);
+> +	if (mrioc->stop_drv_processing || mrioc->pci_err_recovery) {
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this lockless check ful=
+ly
+resolve the race condition described in the commit message?
+
+Since this check is evaluated early in the handler, could an in-flight work=
+er
+pass this check, get preempted, and then attempt to access hardware registe=
+rs
+concurrently with mpi3mr_error_detected() unmapping and NULLing sysif_regs?
+
+For example, if the worker proceeds to mpi3mr_admin_request_post():
+
+drivers/scsi/mpi3mr/mpi3mr_fw.c:mpi3mr_admin_request_post() {
+        ...
+        writel(mrioc->admin_req_pi, &mrioc->sysif_regs->admin_request_queue=
+_pi);
+        ...
+}
+
+Would this still result in a NULL pointer dereference or unmapped memory
+access if the PCI error recovery path clears mrioc->sysif_regs after the
+boolean check in mpi3mr_fwevt_bh() has already passed?
+
+> +		dprint_event_bh(mrioc,
+> +				"ignoring event(0x%02x) in the bottom half handler\n"
+> +				"due to stop_drv_processing or pci_err_recovery\n",
+> +				fwevt->event_id);
+>  		goto out;
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825210411.3015=
-35-1-chandrakanth.patil@broadcom.com?part=3D16
+35-1-chandrakanth.patil@broadcom.com?part=3D17
