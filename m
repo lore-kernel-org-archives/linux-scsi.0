@@ -1,72 +1,72 @@
-Received: from mail-pj1-f97.google.com (mail-pj1-f97.google.com [209.85.216.97])
+Received: from mail-oi1-f228.google.com (mail-oi1-f228.google.com [209.85.167.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCCFD222599
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:15:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B423DD862
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:16:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.228
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787660138; cv=none; b=tXfs2wA2ieFkmdisEKno1Mv/nTZHMDyD/3u0OzwgVQTbXQ47wDWvFJMSfxQub5+E2+5xx+nrCRr8RKdt2DtTxrtJgHyAN/dGk6+4NB/LT7yK2Wz48Tg0P0KaVk67OSGU4Zo+qYkNxO+pbyEJ5NBC8sDK6719/8xJVlPiqddvo9g=
+	t=1787660196; cv=none; b=bw1SD2jYYPmdfRfKNfkfWq/IudzMQqBQy9cVfvFQPKoYbImZ0on+4wiOeHHsZP6Tl2zgcKmobl8nQtp/f60zxfhFU+qeJP7WbO5YjqmSu37pkqAGB0TGvY3cEIGleNmzEMT42C7JXhEjMBsGqWSP4P5TBb2vuXZGOQkLXmKaYsk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787660138; c=relaxed/simple;
-	bh=tPI25LBbzEUlVY4G6iSxo4xndETr23r78k973ETS/Kw=;
+	s=arc-20240116; t=1787660196; c=relaxed/simple;
+	bh=TH7y86ZxIOBP34KenEOmDd8eYkkxxtWOTCSZKDcjDTw=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KkJp8HxjY0N0KSATvkfLatVHxDGAbL6q2MsCd905NhEOn8azGT8ayzEyNe/3fjYTOltXSWEayYr95Mh3cxV41TI6neP0no9JA6wQE9v0hboz0KWqvpXaf6HWnQBi1Os5Fdx7xiNzcOFinw1bkS/SDvrdM2ENsPs3TrMyeEww0dQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Ta5q76yH; arc=none smtp.client-ip=209.85.216.97
+	 To:Cc:Content-Type; b=m06/MHDlJMu75kYeXnzAUdZt1SupViLjdl7vWwPDIn12xKDTm1oN1DtUtLJXeIfwuZWwXUiCUeC+T3Tkb1Lbtmz165zNjvL85iQaGfVJXAJ/lP3ZSR2yxkgzcH4vW4BdQ/wDNkae9UDru0kJI32k2Yyavb3UKDqyFZOspj6IJfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=ABZK9vkd; arc=none smtp.client-ip=209.85.167.228
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Ta5q76yH"
-Received: by mail-pj1-f97.google.com with SMTP id 98e67ed59e1d1-39647184c73so703537a91.1
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:15:36 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ABZK9vkd"
+Received: by mail-oi1-f228.google.com with SMTP id 5614622812f47-4af81963f35so3995722b6e.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:16:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787660136; x=1788264936;
+        d=1e100.net; s=20251104; t=1787660187; x=1788264987;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:dkim-signature:x-gm-gg:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=HhvMWehaYarF1fHcwJryLLOMmkaUKt8qKV303hVFQvY=;
-        b=LQ/PYoEcHN8VksCnzc7Uv2XdRfdP8GaAscdqb3jzBEWePIxfKhe7zWC/VMDWovLtxC
-         YoyR/PDTHHAd5q2OZvoi9p1BUTEr+QfTNPuD5bvQ550UX3td4w7T6fDDBnBRmtb4lcNP
-         wz7sOjwsFB2J8Qr1JNx0WW1kaOexrFAmt3pQz5OW6h4IFSap2K5QBtFhY9a6trNi4T7y
-         Ypq+1qHiGHJiIXbOl7AC8EEY8sybAUb9Hnloh194hZHgVuaMyId7DkKxWiQRTlrCuuHE
-         34PHoKpKwjM7jljOFvvebJ+8YuyB++VEDRfC92vVr73zOiUefWftwKmguC4BYlrQ9GJe
-         y2og==
-X-Gm-Message-State: AFuF++nlUhVqiEN1XiRU90OAKsgrWsUD2oecn7hi2id7qU9Xp1Ao+i2b
-	z7QbmABEHfIgr+V7A0q8u94PcNfGtGNFzN5SE5eQHtXSbQ7/FlBC6WbQbCSOjZx3NTA7gcN6WP/
-	wl8HpVOtW4N9xGY72HbzUL+chglQd2Jc8HI/Il7tHnwo/d6V56Eh1MldQTQa6VKbBRplgYgwxbd
-	+8t7WGRlygSZj3cvpTpZZ5uhpmvAsnLqdJ9q8JjigsHr3MomA72d8QhK278HD9vj0a3NlINJAbH
-	JLVurUg56yLdZJAykj2giZS
-X-Gm-Gg: AR+sD10lOv7XQmF61PAP4lIauVMxWPuhnoRxV5ZhYzw07r1nHED+U1RlM1XRt9Mx7lF
-	8JyScLF+BiapJB+olN2jSVXuXp+5ukDChEbqLMR0+nM1ZnA0OZG4zhwPah8Mf21MO2EduWDOzPV
-	MqUDftP2bf+18xwHI+yyRyt9h7V7LcRv2JkltuOLPWCgaLJ5GmS3oMXRFcXD5w1saV4DIv6YzrS
-	gTWoWn5itDiTPs/Fqmu6bkY2n3g5J7Bd7jHXdIEOGqidy8T0GHZkk5pKYO57LCkXmBB6+LEMXAu
-	1YQghKewypSVwvHGBTPOtWnnkxc9VAoAmX8ct0JJylxi2M2F+7hFuw+rtNC6cF+37sGzWno4TzI
-	BIjm+9zs+4+hnEtTicDHGSUErAwXmjZV9PRbtPtxJb4gWTLghhSvwi+CrAl7QC6NG93frX7n2CG
-	lS2XlXs4zI071RcCDQg68BLvMcExqeTcy5K3WUOckUmrI=
-X-Received: by 2002:a17:90b:4b42:b0:390:84db:888e with SMTP id 98e67ed59e1d1-39645b1c818mr6325464a91.7.1787660135786;
-        Tue, 25 Aug 2026 05:15:35 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39645a4b71bsm1311670a91.3.2026.08.25.05.15.35
+        bh=wCc2mK39X+FEcDhr49B3slAMG7nD5fqJ2MMmWfrnhjo=;
+        b=p3If9VGFYc0PsbWL5ZQRn3YojnpPVSalgsxVgdr/GL8gVtFkN4leiwVNnqoPNP68Oj
+         OufQY5XTU+hG6ef3WGzQS/GTHMgCiREMlFMc+BAGMS1BTJhn/FVfueqbP1svz4lTuWla
+         W5EFHwvWe0Huv4aAU8xNoOwFv1Xpjvx1J+/ii1t/1dTroID/fBYli9BudX9m6hFp+1MD
+         rgDuOWVaHBpAQJe7BEip0RcDRjPyZt8KblJfA6nK2t9vdUAPaFv4fJMUiZH0AxYViCC4
+         p2va15EMttSE5QpflO2BTTR7cSDoCMURSj3zvH1w2KBioPhLygjc/O4s/zibcS+32wNu
+         B7iA==
+X-Gm-Message-State: AFuF++nDUkd9ACxN2Rt3b/nwo59kFOt+mXlFDmUdbf5ef4CpCed/b2oD
+	PkYEIbyMQQrkewSv2QP6xMIPNQPI2BKJSpZVFNgeMHDeePTlMKoAzS+YZXh60JNCoGk2wQWbzkB
+	ef8huC0Yd2289zfp3A1ERgZWDa34d3kFYeIZGLwym79K5BLi+sIlkM+aCX3DMil6ZV/8/frm7D1
+	dojIWeLVHF6k8Ry/wBrTnnL9v5LNiwbb/Q5cOpES7U/u0DkfD7txQxiiIEls1Qbyg07e+lFD79y
+	3qix4QQAv1g5SaKYAbI71hI
+X-Gm-Gg: AR+sD13MpZd8DGVPExvO+FoJ1wD5qx4c0ZtISqrE7iMuRT7EP3AMo6we+0HERxhNn4Y
+	4TV+MMTPo4RQ1lJrpWSRaafFFczrPM+Li42kPNulOzQdWVsxsy626SMPXJAHoQ1FhrhZ+yut1b2
+	DDBZ6b9Zoj9dNh02pROidg74G3lIhljAwHDB1yNQrw+AD8IaxuDshbtA0qEU2xmpwv8tfUgdWFr
+	QmUOEh7xTO/HqXkdyAV62U7kmvRsMnGIG5Bk+E++e9KNPC/esecCzVaeiqY0eWAuCz8PH45Vm8L
+	sBa2QEon0PVbEdbw7Avl9V1kTFtlpaXRifdKsL1+0dsCoqZlHC0lrwzZBZAuh+e/P6MwEupC4lH
+	gUPeABdHdu5sJjV2U9nlLsdmX7xu+wGWtEYlWHwAcvmT4XRKeqLs8l1cvUGjOUQoXzJhF3zCU+u
+	lqenuqC26AUvxSVhSqCIHpwM8wGoUD7kOybv58bIQlfMY=
+X-Received: by 2002:a05:6808:4482:b0:495:fb79:7712 with SMTP id 5614622812f47-4b2eef561demr35692803b6e.0.1787660187257;
+        Tue, 25 Aug 2026 05:16:27 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-16.dlp.protect.broadcom.com. [144.49.247.16])
+        by smtp-relay.gmail.com with ESMTPS id 41be03b00d2f7-cc199db398asm767933a12.2.2026.08.25.05.16.26
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Aug 2026 05:15:35 -0700 (PDT)
+        Tue, 25 Aug 2026 05:16:27 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c1630a90890so327005166b.1
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:15:34 -0700 (PDT)
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c1c25c44d15so598815266b.1
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:16:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1787660133; x=1788264933; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1787660185; x=1788264985; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=HhvMWehaYarF1fHcwJryLLOMmkaUKt8qKV303hVFQvY=;
-        b=Ta5q76yHeqVBWl1qTmT1/dzV2YDmXAocUzPvowCR3d+T/0tlO+f4/gILDByOvezEPF
-         WYzUyNvTdhD8K3U9MJpM2M8gadpBM3xBSOtHuKMkIX8UWLUvOVU9+cFv1+ElmbF54OND
-         MAXuJSx0OYaBCY9TDltkQ2Q7ZAMOeGRHa5W+0=
-X-Received: by 2002:a17:907:3d4e:b0:c20:1bc5:7002 with SMTP id a640c23a62f3a-c246a4ad6abmr3940787766b.3.1787660133500;
-        Tue, 25 Aug 2026 05:15:33 -0700 (PDT)
-X-Received: by 2002:a17:907:3d4e:b0:c20:1bc5:7002 with SMTP id
- a640c23a62f3a-c246a4ad6abmr3940775666b.3.1787660132791; Tue, 25 Aug 2026
- 05:15:32 -0700 (PDT)
+        bh=wCc2mK39X+FEcDhr49B3slAMG7nD5fqJ2MMmWfrnhjo=;
+        b=ABZK9vkdltYvxRQ6/EJOXxg3RfUmEwsV+e8tYkOCT3YNKCovl1EDF2mjClyz2t1VJq
+         hUvmY84DZ9UXNVd3FENtPuy+UZACo9G9esiXPmoNOVU/oELAwe+pe06tMJ6gDZqwFOUp
+         J5KxelLyu5s/itfV4FASSTleLWmJxIT5bQHFk=
+X-Received: by 2002:a17:907:60cd:b0:c24:c22c:6372 with SMTP id a640c23a62f3a-c24c22c6490mr1546818066b.5.1787660184916;
+        Tue, 25 Aug 2026 05:16:24 -0700 (PDT)
+X-Received: by 2002:a17:907:60cd:b0:c24:c22c:6372 with SMTP id
+ a640c23a62f3a-c24c22c6490mr1546808166b.5.1787660184265; Tue, 25 Aug 2026
+ 05:16:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,230 +74,175 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
- <20260818231426.58105-12-chandrakanth.patil@broadcom.com> <20260818181602.2719A1F000E9@smtp.kernel.org>
-In-Reply-To: <20260818181602.2719A1F000E9@smtp.kernel.org>
+ <20260818231426.58105-13-chandrakanth.patil@broadcom.com> <20260818183305.2176B1F000E9@smtp.kernel.org>
+In-Reply-To: <20260818183305.2176B1F000E9@smtp.kernel.org>
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Date: Tue, 25 Aug 2026 17:45:20 +0530
-X-Gm-Features: AcwNN1Vj3-x4W8uyf0ZQ0D-GhLSmLG_9lfaEMri9xwMdLkB88szqvGzTvwlvjIc
-Message-ID: <CABvwm=McLhOrzxvQAbYRu0Ex8Biiyo0XB8vQQyyufxVdwbFKsg@mail.gmail.com>
-Subject: Re: [PATCH 11/17] mpi3mr: Fix out-of-bounds read of event data
+Date: Tue, 25 Aug 2026 17:46:12 +0530
+X-Gm-Features: AcwNN1VQQQma3VCUKOb6iQKKp_C_MDhttD93_oiiSRjR6Jsz60fz-Z41jkLk0rc
+Message-ID: <CABvwm=N5jTUGXkwJWh11RMRhzzpy+18SD2bMwpZdMaJee=8vfQ@mail.gmail.com>
+Subject: Re: [PATCH 12/17] mpi3mr: Fix out-of-bounds phy array access on link change
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-scsi@vger.kernel.org
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000004306040659de0f70"
+	boundary="00000000000053cf160659de1222"
 
---0000000000004306040659de0f70
+--00000000000053cf160659de1222
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 18, 2026 at 11:46=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+On Wed, Aug 19, 2026 at 12:03=E2=80=AFAM <sashiko-bot@kernel.org> wrote:
 >
-> Thank you for your contribution! Sashiko AI review found 4 potential issu=
+> Thank you for your contribution! Sashiko AI review found 3 potential issu=
 e(s) to consider:
 >
-> New issues:
-> - [High] Bottom-half event handlers perform out-of-bounds heap reads on t=
-he `fwevt` buffer because they trust unvalidated loop bounds against the ne=
-wly clamped allocation size.
->
 > Pre-existing issues:
-> - [High] Top-half event handlers perform out-of-bounds DMA reads on the r=
-eply buffer due to missing or flawed bounds checking for variable-length ar=
-rays.
-> - [High] `MPI3_EVENT_DEVICE_INFO_CHANGED` incorrectly falls through to `M=
-PI3_EVENT_LOG_DATA`, silently dropping events and bypassing its required bo=
-ttom-half processing.
-> - [High] Accessing a potentially freed work item during event cleanup via=
- `cancel_work_sync`.
+> - [High] The firmware event handlers for SAS and PCIe topology changes it=
+erate up to `num_entries` without ensuring it is strictly bounded by the ev=
+ent data length, leading to out-of-bounds reads.
+> - [High] This problem wasn't introduced by this patch, but the entirety o=
+f `mpi3mr_update_links` continues to access `mr_sas_node` and performs lock=
+less list traversals on its structures after releasing `mrioc->sas_node_loc=
+k` on the happy path.
+> - [High] This problem wasn't introduced by this patch, but a shift-sign-e=
+xtension bug exists when updating 64-bit `phy_mask` bitmasks using `1 << i`=
+, leading to out-of-bounds array accesses when `i >=3D 31`.
 > --
 >
-> --- Patch [11]: [PATCH 11/17] mpi3mr: Fix out-of-bounds read of event dat=
-a ---
-> commit 4872e2f7b284da8f062de528f26e6b6482b6a169
+> --- Patch [12]: [PATCH 12/17] mpi3mr: Fix out-of-bounds phy array access =
+on link change ---
+> commit 5a98eebaf3b1e059c60e29aa1529199221440703
 > Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-> Subject: mpi3mr: Fix out-of-bounds read of event data
 >
-> The commit clamps the event data length read from the reply to what the
-> frame can hold. This prevents out-of-bounds reads when caching log data
-> and when sizing the buffer allocated for the bottom-half event handlers.
+> mpi3mr: Fix out-of-bounds phy array access on link change
 >
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3=
-mr_os.c
-> > index 1291c60b4d98c..68b13c2ad2244 100644
-> > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > @@ -3170,7 +3170,12 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *=
-mrioc,
-> >       case MPI3_EVENT_DEVICE_INFO_CHANGED:
-> >       case MPI3_EVENT_LOG_DATA:
+> This commit adds a bounds check to ensure the phy number associated with =
+a
+> link change does not exceed the allocated number of phys for the node. If=
+ it
+> does, the event is logged and ignored.
 >
-> [Severity: High]
-> This is a pre-existing issue, but does MPI3_EVENT_DEVICE_INFO_CHANGED
-> intentionally fall through to MPI3_EVENT_LOG_DATA without setting
-> process_evt_bh =3D 1?
->
-> Because process_evt_bh is not set, the bottom-half handler is completely
-> bypassed, leaving mpi3mr_devinfochg_evt_bh() as effectively dead code:
->
-> mpi3mr_fwevt_bh() {
->     ...
->     case MPI3_EVENT_DEVICE_INFO_CHANGED:
->     {
->         dev_pg0 =3D (struct mpi3_device_page0 *)fwevt->event_data;
->         perst_id =3D le16_to_cpu(dev_pg0->persistent_id);
->         if (perst_id !=3D MPI3_DEVICE0_PERSISTENTID_INVALID)
->             mpi3mr_devinfochg_evt_bh(mrioc, dev_pg0);
->     ...
-> }
->
-> Will this cause the driver to fail to process queue depth changes for tar=
-get
-> devices?
->
-> > -             sz =3D event_reply->event_data_length * 4;
-> > +             if (mrioc->reply_sz > offsetof(struct mpi3_event_notifica=
-tion_reply, event_data))
-> > +                     avail_reply_room =3D mrioc->reply_sz -
-> > +                         offsetof(struct mpi3_event_notification_reply=
-, event_data);
-> > +             else
-> > +                     avail_reply_room =3D 0;
-> > +             sz =3D min_t(u16, event_reply->event_data_length * 4, ava=
-il_reply_room);
-> >               mpi3mr_app_save_logdata_th(mrioc,
-> >                       (char *)event_reply->event_data, sz);
-> >               break;
->
-> [ ... ]
->
-> > @@ -3204,7 +3209,12 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *=
-mrioc,
-> >               dprint_event_th(mrioc,
-> >                   "scheduling bottom half handler for event(0x%02x) - (=
-0x%08x), ack_required=3D%d\n",
-> >                   evt_type, le32_to_cpu(event_reply->event_context), ac=
-k_req);
-> > -             sz =3D event_reply->event_data_length * 4;
-> > +             if (mrioc->reply_sz > offsetof(struct mpi3_event_notifica=
-tion_reply, event_data))
-> > +                     avail_reply_room =3D mrioc->reply_sz -
-> > +                         offsetof(struct mpi3_event_notification_reply=
-, event_data);
-> > +             else
-> > +                     avail_reply_room =3D 0;
-> > +             sz =3D min_t(u16, event_reply->event_data_length * 4, ava=
-il_reply_room);
-> >               fwevt =3D mpi3mr_alloc_fwevt(sz);
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3=
+mr/mpi3mr_transport.c
+> > index 240f67a8e2e3b..2afff1a002ed9 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> > @@ -1090,6 +1090,13 @@ void mpi3mr_update_links(struct mpi3mr_ioc *mrio=
+c,
+> >               return;
+> >       }
+> >
+> > +     if (phy_number >=3D mr_sas_node->num_phys) {
+> > +             spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
+> > +             ioc_err(mrioc, "%s: phy_number(%d) >=3D num_phys(%d)\n",
+> > +                     __func__, phy_number, mr_sas_node->num_phys);
+> > +             return;
+> > +     }
+> > +
+> >       mr_sas_phy =3D &mr_sas_node->phy[phy_number];
+> >       mr_sas_phy->attached_handle =3D handle;
+> >       spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
 >
 > [Severity: High]
-> Does clamping the allocation size here introduce an out-of-bounds heap re=
-ad in
-> the bottom-half handlers?
+> This is a pre-existing issue, but does dropping the sas_node_lock here le=
+ave
+> mr_sas_node vulnerable to concurrent modification or use-after-free?
 >
-> The patch correctly limits the allocation of fwevt to sz, but the payload
-> copied into it can still contain an unmodified, untrusted num_entries fro=
-m
-> the firmware.
+> Looking at the remainder of mpi3mr_update_links(), mr_sas_node and its me=
+mbers
+> continue to be used after the lock is released:
 >
-> When the bottom-half worker executes, won't it iterate up to num_entries,
-> reading past the end of the strictly clamped fwevt allocation?
+>     spin_unlock_irqrestore(&mrioc->sas_node_lock, flags);
+>     if (handle && (link_rate >=3D MPI3_SAS_NEG_LINK_RATE_1_5)) {
+>         mpi3mr_set_identify(mrioc, handle, &mr_sas_phy->remote_identify);
+>         mpi3mr_add_phy_to_an_existing_port(mrioc, mr_sas_node, mr_sas_phy=
+, ...);
 >
-> mpi3mr_sastopochg_evt_bh() {
->     ...
+> When mpi3mr_add_phy_to_an_existing_port() is called, it iterates over the
+> sas_port_list locklessly:
+>
+>     list_for_each_entry(mr_sas_port, &mr_sas_node->sas_port_list, port_li=
+st) {
+>
+> Since mrioc->sas_node_lock is no longer held, can other events concurrent=
+ly add
+> or remove ports, corrupting the traversal? Additionally, mr_sas_node is f=
+etched
+> without acquiring a reference, potentially allowing it to be concurrently=
+ freed.
+>
+> [Severity: High]
+> This isn't a bug introduced by this patch, but could the firmware event
+> handlers for SAS and PCIe topology changes iterate up to num_entries with=
+out
+> bounds checking against the event data length?
+>
+> In mpi3mr_sastopochg_evt_bh() and mpi3mr_pcietopochg_evt_bh() in mpi3mr_o=
+s.c,
+> the loop blindly iterates up to num_entries:
+>
 >     for (i =3D 0; i < event_data->num_entries; i++) {
 >         handle =3D le16_to_cpu(event_data->phy_entry[i].attached_dev_hand=
 le);
->     ...
-> }
 >
-> Can this lead to an out-of-bounds read on the kernel heap?
+> If the hardware or an attacker controlling the controller issues an event=
+ with
+> a num_entries field larger than what fits in the reply buffer, could this
+> lead to an out-of-bounds read? Even if the top-half handler attempts to b=
+ound
+> num_entries, returning early without dropping the event still allows the
+> bottom-half to iterate over the truncated buffer.
 >
-> [Severity: High]
-> This is a pre-existing issue, but does mpi3mr_pcietopochg_evt_th() also
-> lack proper bounds checking before looping over num_entries?
->
-> It iterates directly based on the untrusted num_entries:
->
-> mpi3mr_pcietopochg_evt_th() {
->     ...
->     for (i =3D 0; i < topo_evt->num_entries; i++) {
->         handle =3D le16_to_cpu(topo_evt->port_entry[i].attached_dev_handl=
-e);
->     ...
-> }
->
-> Similarly, in mpi3mr_sastopochg_evt_th(), the bounds check relies on
-> the unclamped event_data_length instead of mrioc->reply_sz:
->
-> mpi3mr_sastopochg_evt_th() {
->     avail_len =3D event_reply->event_data_length * 4;
->     ...
->     max_entries =3D (avail_len - offsetof(...)) / sizeof(...);
->     if (topo_evt->num_entries > max_entries) return;
-> }
->
-> Will this result in out-of-bounds DMA reads during top-half event process=
-ing if
-> the firmware sends an erroneously large event_data_length?
+> Additionally, mpi3mr_pcietopochg_evt_th() appears to completely lack any
+> bounds checking before iterating over topo_evt->port_entry.
 >
 > [Severity: High]
-> This is a pre-existing issue, but is there a use-after-free risk during
-> driver cleanup?
+> This isn't a bug introduced by this patch, but is there a sign-extension
+> regression when updating the 64-bit phy_mask bitmask in
+> mpi3mr_add_phy_to_an_existing_port()?
 >
-> In mpi3mr_cleanup_fwevt_list(), current_event is read locklessly and pass=
-ed to
-> mpi3mr_cancel_work():
+>     mr_sas_port->phy_mask |=3D (1 << i);
 >
-> mpi3mr_cleanup_fwevt_list() {
->     ...
->     if (mrioc->current_event) {
->         fwevt =3D mrioc->current_event;
->         ...
->         mpi3mr_cancel_work(fwevt);
->     ...
-> }
+> When i evaluates to 31, the expression 1 << 31 evaluates as a negative 32=
+-bit
+> integer (0x80000000). When this is bitwise OR'd into the 64-bit phy_mask,=
+ it
+> sign-extends to 0xFFFFFFFF80000000ULL, erroneously setting bits 31 throug=
+h 63.
 >
-> Concurrently, the worker thread can drop the reference count and free fwe=
-vt
-> before clearing mrioc->current_event:
+> Later, in mpi3mr_update_mr_sas_port(), this corrupted mask seems to be us=
+ed
+> in a loop:
 >
-> mpi3mr_fwevt_bh() {
->     ...
-> out:
->     mpi3mr_fwevt_put(fwevt);
->     mrioc->current_event =3D NULL;
-> }
+>     for_each_set_bit(i, (ulong *) &phys_to_be_added, BITS_PER_TYPE(u64)) =
+{
+>         mr_sas_phy =3D &mrioc->sas_hba.phy[i];
 >
-> Could mpi3mr_cleanup_fwevt_list() pass a freed fwevt pointer to
-> cancel_work_sync(&fwevt->work)?
->
-> >               if (!fwevt) {
-> >                       dprint_event_th(mrioc,
+> If phys_to_be_added inherits the sign-extended mask, won't this loop exce=
+ed
+> the allocated bounds of mrioc->sas_hba.phy (which may only have 32 elemen=
+ts)
+> and corrupt memory?
 >
 > --
 > Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818231426.58=
-105-1-chandrakanth.patil@broadcom.com?part=3D11
+105-1-chandrakanth.patil@broadcom.com?part=3D12
 
 Thanks for the review.
 
 New issues:
-- The bottom-half event handlers trusting num_entries without
-validating against the copied fwevt size is a pre-existing structural
-issue in the bottom-half event processing logic.
-  This patch specifically fixes the top-half out-of-bounds read by
-clamping event data size to avail_reply_room, preventing memcpy() and
-mpi3mr_app_save_logdata_th() from reading past
-  the end of the reply buffer. Bottom-half payload validation will be
-addressed in a separate follow-up patch series.
+- None. This patch specifically prevents an out-of-bounds array access
+by checking phy_number against mr_sas_node->num_phys before indexing
+mr_sas_node->phy[].
 
 Pre-existing issues:
-- The MPI3_EVENT_DEVICE_INFO_CHANGED fallthrough, top-half DMA bounds
-checks, and cleanup race condition in mpi3mr_cleanup_fwevt_list() are
-all pre-existing issues in the driver and
-  will be addressed in separate follow-up patch series.
+- The pre-existing issues noted (lock scoping in
+mpi3mr_update_links(), bottom-half topology change event iterations,
+and the 64-bit phy_mask shift sign-extension)
+  are pre-existing in the driver transport layer and will be addressed
+in a separate follow-up patch series.
 
---0000000000004306040659de0f70
+--00000000000053cf160659de1222
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -391,13 +336,13 @@ LfSp/K5DCYsrXNqitPmQaAAGAiG4d4WDxBev6vtoyH7ejLcuCKkxCefrLO5qYnuDHsMNCObdslAe
 tMVer+USn6AqB//6EwmqdiLr4o20UQ79jxNFMAEKdwyNkA8mVCVUAtTe3mPrMYICVzCCAlMCAQEw
 YjBSMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xv
 YmFsU2lnbiBHQ0MgUjYgU01JTUUgQ0EgMjAyMwIMAgfxQ1Z7DrZKmCE/MA0GCWCGSAFlAwQCAQUA
-oIHHMC8GCSqGSIb3DQEJBDEiBCCPM/Yr0IepwKzTf9eCJCTF7i+XuMZyk8ZnrXo6VhD+TTAYBgkq
-hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjE1MzNaMFwGCSqG
+oIHHMC8GCSqGSIb3DQEJBDEiBCCUbgL/3cSrMp8FyOnVaOED7MtFm02+9ZIktiz20ePIEjAYBgkq
+hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjE2MjVaMFwGCSqG
 SIb3DQEJDzFPME0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZI
-hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAdIOphxkgK
-Iahe0nE3eGktTKlhjO164NoCVL2FjL+c1ouPqV8yCDnPjs6A3vAk3djuG/AmZ9ixUqEDsWrHSohW
-2IcmIkNnJ86mEqFZn3LX0dko5usxL9ll4bXkVIY+qmsotC5y5KzTNwcvR8SVZwVwc8TLqbB4I5iA
-bpEjjS5+Y5ChjKdLHgbJmCA9fJO8IuLXLn9oJetCoixG7ARRKps/4cGaxIk2EDusvyi+N+Z5xX4S
-UAqcH9W8rAy2HMVkZQG9vtajSJaoxe3crf1kG2nmgpy8hu5LCuMnvzlrpeYKtrsS8Lrbd0TKRGy6
-TFOj/Ec9K4beOn6luhHxvWjlVum7
---0000000000004306040659de0f70--
+hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA/Jp5qobzS
+D0sieRcK7SmFruY+p3hPjmxFw6p6zNTHc3o+7Wh1SZhmhQUqzV8cpEkKisBO//HpqAMNzpy6prEu
+aCTchFlx6UUpJR6c5kr6ORxn8K9OvdSj+9Qyh5yiItqSgR3dUfAqvrlBBzcewYGgawAKkl0wHOjz
+QvhoazybDGY9llo4hERAK4igoTwB+Yebv812Jvw8H2df952y27Yf1H6Gh/TN6/gYvH1KtWxRePiM
+W5Vh6EJaj7FsSJH427PZYAAOuY54oVkQR2PgX/GEnXpH1iAJaeSFoabq+IqYPRjtXK/67YRe4Z6o
+7ynWFBmuTdjNvGh9nIOXPk9SR97f
+--00000000000053cf160659de1222--
