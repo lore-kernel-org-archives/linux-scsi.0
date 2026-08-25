@@ -1,50 +1,50 @@
-Received: from out162-62-57-252.mail.qq.com (out162-62-57-252.mail.qq.com [162.62.57.252])
+Received: from out162-62-58-216.mail.qq.com (out162-62-58-216.mail.qq.com [162.62.58.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 643E23939A6;
-	Tue, 25 Aug 2026 09:25:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.252
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C1C03EEAEB;
+	Tue, 25 Aug 2026 09:26:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.58.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787649910; cv=none; b=rA3xdJP3mKghHMwXsoyfZo0Wj69Jfgm7w5GzDg7lQjhxCE6kn4S7C5lVgG7Uhk2MyzLDab8FHDPt4rARwa3vJ25JykMLDuEDyklEfFhDIKSnUpkzEQVuweDekVMGHzWEQpq+LHvyb3MwjU9+j07gRdxvNTG0+LqWjKCym8iwOaQ=
+	t=1787649978; cv=none; b=D3giwjSUx7i3n7LtRJ9a3530T2cYqr1O61y/J0XFTfwHJnPEWzZi6K/mAo5hYJ93J+bdtAKa/YyU8YvOjEsOrXhjnplJg66NyrYsJ9VoALzNdXPK9tSyPpCPTiiwtq0sj+fmDwk6c8eZKl/qyHi/4jZf1/QtC6CdjhQTfg34YzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787649910; c=relaxed/simple;
-	bh=obHdAStsjgQmHq+Ul2pCG+c1IZtNocYaXatSOFMUKW8=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=PwhWMtEVByIkb7JUVk6AroOJkTImr7j1CMiiMOpPSTUHf+EB2LW5jW3AlJwz9+Dlz1bD6+/3zliokL+lUWvtytPssTTIFhOOKMg8B0TCTv6nZ9dq38YZ+y7YX4XN7yO3qkTLsqn/7FUsZaitrByyokTd6KQb6jPJxgDd0RPYvWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=DDJqg3HI; arc=none smtp.client-ip=162.62.57.252
+	s=arc-20240116; t=1787649978; c=relaxed/simple;
+	bh=hG6Rbzda8WXlPRWyN5r0uEX/2Nv+pjxijtW22TU0hHk=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=FGSmvtdowf4Sw9uSwWUqwn66WY3ztTp9Qq2kCUrCdz1f2uTAwmHh3qvZOURvphltgn3E26QwQ3yRrjJQvVzqxZSKDuSIvQzH2W/JfRjRZtUwSCp+s5jspl1VVd9MSPT67F7u6lmN2c955upULvQwkQqQTKOLGZOv0AXLNB7Xaxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=v2PVwPMX; arc=none smtp.client-ip=162.62.58.216
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="DDJqg3HI"
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="v2PVwPMX"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1787649903; bh=obHdAStsjgQmHq+Ul2pCG+c1IZtNocYaXatSOFMUKW8=;
+	t=1787649971; bh=hG6Rbzda8WXlPRWyN5r0uEX/2Nv+pjxijtW22TU0hHk=;
 	h=Date:To:Cc:From:Subject;
-	b=DDJqg3HIr8j1BUJA5GNEEmf1mSQCRS0V9RW3y5ZirL3P0y0wE30QNwzQtj7nbvaOU
-	 DdZSlQE02POChPAD2fLl1SSQFdNDagtp1nT5ksc+7dspgtmC81hFtEulR3xPxADKBf
-	 Ir/qcJRP3nPfsQGPZUzRk9BW+QJNmomyiiwLocNU=
-Received: from [192.168.255.10] ([111.206.96.146])
-	by newxmesmtplogicsvrsza53-0.qq.com (NewEsmtp) with SMTP
-	id 6419BCEA; Tue, 25 Aug 2026 17:25:01 +0800
-X-QQ-mid: xmsmtpt1787649901tyxrp4iao
-Message-ID: <tencent_F38F19C2D497EC19AF3331BC5030EFEF3307@qq.com>
-X-QQ-XMAILINFO: NaMvLgwjnAy7PLC0WL7/JOAN53qt8heco/ddc66s+yZwRtdJ3nFiEunOBRA0MF
-	 oJvfcwQFND25LN2NfqDWPwnIxsaRs4c0TfMEHZsSpAcH5tgjUAZXvnT/oxd8M1E7IXGEZtU1/hUs
-	 xgpNNKalNdidb0kyhaxnGtLiDWTIpOyNEgRsf2PgqnjS0dlAhxnlEpipCKR7Hh9HK1BdULyj9VgE
-	 yOKrJDiREznYiJ4Zd9AtD5h5vkQVD9XG+gVjwCf+sf8tJhA8D/1349L9KSLsl+sgzzJ6TlW0JOpQ
-	 s0S/DWj1rOztGlgwnKXtAqhFjEyZ/fD5zXYbt+yi+pFlDBMIJLhlblM8IhZ6qHoLr7vjn8RgDYic
-	 z7xhvJYaaSv3LqAxe14i6rdY1mulfmcqtWMid441Z+jnzB8LK+y9bWWIGENu2ubSP3midg5NYDHf
-	 cMhaDn+1MRXPKXDNmBZHy6IrpkoU0uGja2joa1QTgohoav3BKpSD4tzVRFcZjzMvNy/6s+/+HsGq
-	 GLC3g48jamjXEAg+2J89KU4Q1TtWo/i7eVDjXWBPPGNzUldKAdKna68B8h8+62Q9gvWEHNHlX0IR
-	 +IA+pH+VnGOaWx98QjGX+q1IQdygQZZ2E0WT6V9xiceVYfX14pCCxQg2YkvMqqiB7dyWO1XU6SvL
-	 ipEw4Uts+xfTWXpaYQNKrNhD+bn1APn0uefNp9LIKJvGUtng/ftl9ocEjE4Vvd79MqHRgjlJH/sR
-	 ClLwtbsXUxo9u0U6kK1LN6I71kTw902a5SwFjG/YXQI/cnmbHCS2Rw6GHbYTvjinBOoT7DjCfkCp
-	 auE6gfhVUgEKCv5TK9XgsehZrWICCVstFUCQ4Sll817V7K9ye3MwSHPkV7XiBhXFTdvwegVnKaD4
-	 ak0XFowmi2WmJB2exh1saThNC8oMhsXHnOQzPK8vrKlok+047ElMMNEslcQNsjf0mkpL88qfsluj
-	 PtlEzGJbQ/mwKaCaRl80mmcVCerO6TBMvhHIvMJOsOeI4cFDHJYQ6/i/1ftARc06bOrr7WK+w6RR
-	 BipMueI/UPE1ISfuCnw95bVnY9V+bUjsqrkDX1JzjzyjW8wEzBhoLim9FuAtYMmbBoZ9gXIMWEKR
-	 A3OWw9jZM3lLRED4khVuNlP1pKeA==
+	b=v2PVwPMXGfLkTT4sh6RcksIe7uEpPtwExqTfgsC6GNUsQ29Kp8Q9mggJxWdU+U1X+
+	 Pb5ZHuv0pBoFffWyK46Z5h8Oas/xGUAiDY2KTttKCBAldJoU6mJUanQfjAInVYVbAN
+	 trDFpmKbPLHeQiL18MIcAZtiWnKKy03raNVpxsQQ=
+Received: from [192.168.255.10] ([111.206.96.150])
+	by newxmesmtplogicsvrszb51-0.qq.com (NewEsmtp) with SMTP
+	id 6890382F; Tue, 25 Aug 2026 17:26:09 +0800
+X-QQ-mid: xmsmtpt1787649969tvinrkqe6
+Message-ID: <tencent_2399D44C746A4F7691D7B8987F68ACB7D206@qq.com>
+X-QQ-XMAILINFO: NT7uTz3cNku2DrDd6U1srupvRLAscJX8ywIUEa12SkdPhzQiwG/veDwhpSlqOx
+	 eLkl1t5kU0nlc2n/pun3r9AdexqvOjSLliNj1VXGdwd8xAiMzqtveYSgi0NhxyqFT1t5ZRbxMEOX
+	 ncNKPRazKjwO24lp9KfToRasaSLdcneKbb6X7ikzudlOhPGpjA6ueZpWqxMSVz4d4fvSzmsWbZ0O
+	 7/HSe/XaL0XhWuF8sY2grMbLS10108MVapR2BbbH7BWCg+VzJUIo38C3NPXSPDqlRlKZWy1pM3Dn
+	 RdyBiCfLtwqC8jLXs+P7Lgi3L/ffO6OYVmaAv35uybbkPfFdO2LWUOEYh3jypvfRP1fEsI4vL8uH
+	 XhpYBxGAFRl1aD4eU13vyggXsZ5bFt3an3Vpzugdf/7qZhcKnAb/Uev0YIma0OXzGgRxNq0ARzmm
+	 JWHvgZhagOtWfQNpkjlyNTBraVbTCbKWbrK04/+ni+mp0OOICQfTE3xiF2MjQdF+YHGjHhV5KbRE
+	 puQCH/uFUYWrmPkZbR+t1LlXOD9nnz7j1h9JMHUFHTshfyHIoEq3X939bEGZZVIvManDszkIzQKU
+	 3hNBnRQQ0owQdZtl82AG6fCtLcukbEOjfKiECkwb+svpIQInie7CiqukyIJOiDzBWRni2sOMwX8U
+	 Ij+HWNo+ZMHvtIIQN34tMdWL1S+pKGyJgMueybmnb27UpxdPXVgpkzJoyJcl8LvM59b84DCIt4ru
+	 pOaoy3RwmcWgo/3ADwxg0LoEQy3nAKBHN6MkTKQVWJb+tTsnPBz3W4/Vqk4mw3OEFqH7A/xrIPgp
+	 5CEkqWbJ7N0JEiVZmjHkQ4w8nZSTNnvKHa8C7mimZvW3yd9qtYdIE9jQBTeLcBG2XWgRyeIShSi+
+	 L2M8AmFH++BC+WAc04mQJiHsg+9ePKkystJcYEZs6fiJ4VvpG4BoIN5fj3VqJcqbWLsbm3ggKDJN
+	 IESdt7KS/5YLCtfSywgtOsODNoS4mktoDzwHqva9V9Z/iWHh5OAPGl1Q0oxDsHkEpksmieIr7Hdg
+	 ABTPIk9+te0424zFzkJUJiOso3bO+hAJhU/scVHDNjPXmvm2sElgj/Y6h7JisXAyfpJq+f5oLj3B
+	 ZvYgTN
 X-QQ-XMRINFO: OWPUhxQsoeAVwkVaQIEGSKwwgKCxK/fD5g==
-X-OQ-MSGID: <b29b0d5a-4081-4ca7-9b37-c245c60a3393@qq.com>
-Date: Tue, 25 Aug 2026 17:25:00 +0800
+X-OQ-MSGID: <05c2cb1d-794a-451b-be8b-dc1149f0a2c5@qq.com>
+Date: Tue, 25 Aug 2026 17:26:08 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,51 +52,75 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-To: aacraid@microsemi.com, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 From: Yang Zi <2959243019@qq.com>
-Subject: [PATCH] scsi: ips: Fix NULL pointer dereference in ips_release()
+Subject: [PATCH] scsi: stex: Fix NULL pointer dereference in stex_hard_reset()
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-When ips_insert_device() fails before calling pci_set_drvdata(), the
-PCI device's drvdata is NULL.  The .remove callback ips_remove_device()
-then calls ips_release(NULL), which immediately calls
-scsi_remove_host(NULL).  That dereferences shost->scan_mutex at a fixed
-offset of the NULL pointer, triggering a NULL pointer dereference.
+stex_hard_reset() reads the PCI bridge device via hba->pdev->bus->self
+and passes it to pci_read_config_byte()/pci_write_config_byte() without
+checking whether it is NULL.  When the controller is attached to a root
+bus (or otherwise has no bridge device), bus->self is NULL, and
+pci_read_config_byte(NULL, ...) dereferences it in
+pci_dev_is_disconnected(), triggering a NULL pointer dereference.
 
 KASAN report:
 
-    BUG: KASAN: null-ptr-deref in __mutex_lock_common kernel/locking/mutex.c:625 [inline]
-    BUG: KASAN: null-ptr-deref in __mutex_lock+0x8b/0x1010 kernel/locking/mutex.c:820
-    Read of size 8 at addr 00000000000000d0 by task syz.0.671/5574
+    BUG: KASAN: null-ptr-deref in pci_dev_is_disconnected include/linux/pci.h:2676 [inline]
+    BUG: KASAN: null-ptr-deref in pci_read_config_byte+0x23/0x90 drivers/pci/access.c:562
+    Read of size 4 at addr 00000000000000c4 by task scsi_eh_6/2005
 
-    __mutex_lock+0x8b/0x1010  kernel/locking/mutex.c:820
-    scsi_remove_host+0x24/0x300  drivers/scsi/hosts.c:169
-    ips_release  drivers/scsi/ips.c:654 [inline] [ips]
-    ips_remove_device+0x155/0x2840  drivers/scsi/ips.c:6701 [ips]
+    RIP: 0010:pci_dev_is_disconnected include/linux/pci.h:2676 [inline]
+    RIP: 0010:pci_read_config_byte+0x23/0x90 drivers/pci/access.c:562
+    ...
+    stex_hard_reset  drivers/scsi/stex.c:1322 [inline] [stex]
+    stex_do_reset+0x3da6/0x6490  drivers/scsi/stex.c:1424 [stex]
 
-Make ips_release() handle a NULL Scsi_Host by returning early, so the
-remove path is safe when probe never established drvdata.
+Skip the secondary bus reset when there is no bridge device; the rest of
+the reset sequence (config space save/restore and the PCI_COMMAND poll)
+does not depend on bus->self and still runs.
 
 Signed-off-by: Yang Zi <2959243019@qq.com>
 ---
- drivers/scsi/ips.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/stex.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 41ed73966a48..39568a7effb3 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -649,6 +649,9 @@ static void ips_release(struct Scsi_Host *sh)
-     ips_ha_t *ha;
-     int i;
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 6aeeb338633d..f1dff2cc6086 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1319,17 +1319,20 @@ static void stex_hard_reset(struct st_hba *hba)
+     /* Reset secondary bus. Our controller(MU/ATU) is the only device on
+        secondary bus. Consult Intel 80331/3 developer's manual for detail */
+     bus = hba->pdev->bus;
+-    pci_read_config_byte(bus->self, PCI_BRIDGE_CONTROL, &pci_bctl);
+-    pci_bctl |= PCI_BRIDGE_CTL_BUS_RESET;
+-    pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
++    if (bus->self) {
++        pci_read_config_byte(bus->self, PCI_BRIDGE_CONTROL, &pci_bctl);
++        pci_bctl |= PCI_BRIDGE_CTL_BUS_RESET;
++        pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
  
-+    if (!sh)
-+        return;
-+
-     METHOD_TRACE("ips_release", 1);
+-    /*
+-     * 1 ms may be enough for 8-port controllers. But 16-port controllers
+-     * require more time to finish bus reset. Use 100 ms here for safety
+-     */
+-    msleep(100);
+-    pci_bctl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+-    pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
++        /*
++         * 1 ms may be enough for 8-port controllers. But 16-port
++         * controllers require more time to finish bus reset. Use 100 ms
++         * here for safety
++         */
++        msleep(100);
++        pci_bctl &= ~PCI_BRIDGE_CTL_BUS_RESET;
++        pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
++    }
  
-     scsi_remove_host(sh);
+     for (i = 0; i < MU_HARD_RESET_WAIT; i++) {
+         pci_read_config_word(hba->pdev, PCI_COMMAND, &pci_cmd);
 
