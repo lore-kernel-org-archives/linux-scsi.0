@@ -1,76 +1,76 @@
-Received: from mail-qk1-f228.google.com (mail-qk1-f228.google.com [209.85.222.228])
+Received: from mail-pj1-f100.google.com (mail-pj1-f100.google.com [209.85.216.100])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 863DB449B3B
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 15:45:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CB0331F99C
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 15:45:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787672713; cv=none; b=BR5xksgg7Sa8ULMsrhHP8gri8MB+xDoLacAHOLjeOqZeXiKB24+iHcHwGaMB0KKSIF6QccQXuukOHQOVTjLitZDdNJcJ4Cnl8RgGAruU/M4m2ZveWJGp9aU8ocj6al/0fdcTRRrgiPbvqh4LGXHcZsANKmd13qFq0/I7Mu7Sgtk=
+	t=1787672717; cv=none; b=NVUj+GJ81mBjnnmhDBbWYbxOSXDBcpal8Eh4h6lLMJdREV1dA2A1rCb0mRyu/EMX63zTl8OkvfzrFQmMCW7OafbbLy0oZNkDwqoXAYvIc0bQ2CtMu3cp7x/2U0cUr2uCWoOoLQb9Q+B4ZHqCb3Om37NjyoF1ssLlpAtZPQmkH6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787672713; c=relaxed/simple;
-	bh=BhY1eSPa4XHwIyXw8M8J8tQMyq+0EQXcDulpM9oU2PA=;
+	s=arc-20240116; t=1787672717; c=relaxed/simple;
+	bh=TXn+KX+9sb655B874wY75OlngMa4JQUx6lioc+Ghv2k=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uFe0CfCeYR26QIhJ5PHEqWtFwHihj+Lqwpmo9QemANtJKnpm8tRBM6LQh9mx3GDKlPx3rlW9Oeozj3YXfj2vIaXV9IO2+HjsIi97vI56KW7ZsX3lUYGV21EZFthoCX49hQxPNwuDMSJtyMvuw8LMyZNIA5RD5wmbtacsz8y+aUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=eOBzhTRH; arc=none smtp.client-ip=209.85.222.228
+	 MIME-Version; b=MNFlNpkfq9Z4WwFnX6/voqrvV+y9r02eTE0BjlMVk+qA3VTYaUXtIKqvqnhjLA5AjFKdx33/RO1nAswTPvrKueyrNdZoFV/SDBG/qRAXWnOwVj/8viNbHONWnpumZS4X1CB1GoXHSK9VG1nwgf7y5Fx/ou69t2lhKkkjl30+s5s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=MqZi5ewq; arc=none smtp.client-ip=209.85.216.100
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="eOBzhTRH"
-Received: by mail-qk1-f228.google.com with SMTP id af79cd13be357-936e393176fso223240585a.0
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:45:12 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MqZi5ewq"
+Received: by mail-pj1-f100.google.com with SMTP id 98e67ed59e1d1-38ea87caafeso3790870a91.3
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:45:16 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787672711; x=1788277511;
+        d=1e100.net; s=20251104; t=1787672715; x=1788277515;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=u38u/nyeaBO34n8uFE5PRDfAAcSLZkffixSCZhsmrFM=;
-        b=ScZc6KEQ0qEgHemZLn1xsIY2cv3hKi7L/C4sly5HirXBd8eclb4xYUhFNJwWOyN8wM
-         vdW4T58lKnZPqdzYWZ6mOqazN0jSRUt2uPMkzG/TSS6lCa6UBExnb+JpUY/1pANtCmhP
-         E9bfwfXyxXFH/XbY0Q7mw8Dppo9/w9E8ERgieyheoHoZ2SZgMyOva08r0xf4f/RWmO89
-         ghmrOozo3sGICgFzuvOOCBbrMG2RXvjNSlgNxWueuhP6IwFBZgI2pzULlMRavGY+3q6f
-         9LGXq+hI29PiPnYPpCz1aN4DYrPGQrATzeLmy3dMFX/FWV3eZnA7VKca/KhfE4UQT6zL
-         FPQA==
-X-Gm-Message-State: AFuF++kOdT92mXJrYr7rghhyeZkJGGOQaxp1aV3eUztUpRdFKAKN6CUf
-	D/2cikoR7RTjdenI/Mg9CYN0+dzkrOpxC2kOsoxnLFyWuy6NE6LDfO+zmQmFLrHPCAnmbTYDt1c
-	Wb0pF69xuqDb79rEo+rXe4LQNYvWbOskWnSZG3qbNER97otWYtBy4O+g9uvR3T+j44gnMZnYI1D
-	nrwc52DGRq/cdugnXV2zs42eAaZ5ROnIBwJiq4HfMGdLILH3qPe/cZIku/2Nqlbf/9hDiFnFE7J
-	/nH2GqAbaIG1ReLcN6ZdyeA
-X-Gm-Gg: AR+sD129A21CsoP7So4BnXBkh25lAXr/z5mgais/ogJQqpLYRqvBgFnMjdw/NZ2I3f6
-	I8pa74l/iqb6Sxn/3Ug0fMNH/kWDBz891ZkY5vLwoLuZuESS3lZS9E8IfSieXOGyR38itAy/VSf
-	R4hTKYH/qIlq3kCnplt3MLYuYIEjtlX1jXPBNVBlG9UqyiMV84IhEdT53OdoIcmj9wU+1ge1P+n
-	ImSNmZ4PH/nvbrE0E8Co6xWiTcCcXgYQBybWcPE07X3orwJjdCmm1NHbMoYeiEcsdb3Ii83OJ80
-	seT0Tln+Nmslol/3Df+OKMpyzmqt93W3B8ix6rofMB8O/zqxPHiSd8VXQnKzBrQ7DakuQT2DsCj
-	2fvIKMNx3btetDA5kl3+bv5TqaQqALiHvXmxKoDQFsoVZcGvl9Y9+d8oQoIYbNrf2y6+6kLs2MC
-	q53JTvsBN2UObQ3VyOI963MzlNgD9AorGYhRHeKasE4/svGA==
-X-Received: by 2002:a05:620a:3d03:b0:937:37d4:5dbb with SMTP id af79cd13be357-9376fa5f689mr606283585a.27.1787672711146;
-        Tue, 25 Aug 2026 08:45:11 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-121.dlp.protect.broadcom.com. [144.49.247.121])
-        by smtp-relay.gmail.com with ESMTPS id af79cd13be357-9377e4974b3sm1023085a.8.2026.08.25.08.45.10
+        bh=5SG68dDupXfLaorzhNW0d/2ss11Voe2ZELst7K2mj+8=;
+        b=PvmP3qduTlxdzLjSS7twK3OqiES48mn09JIoJZKIWfH0fKVQd8xB+6yCkViYxwZ9z6
+         AWMQeOO25BJgJHH7Nz/v5v0Gc2HOxrylAliF1l6sSWDi+iGOgOKDD+oBqt9KJcAMmh7l
+         jD6MSRud0oLivwL78viJQsIsBT0TM3L3OYsS989TJIgQAb5qT+0EfcYDSw0IX8OPVBTF
+         /T31EOjze4ovv1/OK48A9jCATdL0yc0GRTd4wYUY1dZO9pdOd8moThayloxAt6CpUQ+R
+         LrvsdFrI67WbwtKxH6puhr8rc/8/SVyEX91dDvAf0iUNpH3KTuzbrZx9koLqgoReCpSR
+         hqgg==
+X-Gm-Message-State: AFuF++nEHqdhcHIthF2iz0gyCk8da8JApeZon3PweRSug3Fw+9u180Qj
+	UO/6q+dqZBojafkQW5X1nhuRzaMGrxycJO66ytAw3GHHJylQShT44qvWFL//X7lAeA0l6tyYf4G
+	+UJ4FN4w+yHomMCJIQc/wAgeOuAjMYSu047neI4qdjYWBxv42smqNOirAJ7MsCKcsh4q5v01Bqy
+	iICxoUiuRZ+ByueuEmnhNWbG2E4LsOSVGMY1lQJaTiBMpDzRGGyDBVEx1M6NiLN1Wn+nz3/LJkD
+	IEb+gSjTmDpnHh+9vm1hQsf
+X-Gm-Gg: AR+sD11/T76mdA2Xy1URDFA/lqwy7kKUmDS/k72F9KEkZP8BZ27H58oYXqk2IVPkgbt
+	DUXdCUlMWXAvQ9phoRU3YkAGGjdApGpkoMHR1mpCEvbvjZDTGmZOO4OpN15WHELa13j9daVysDz
+	fBn3LgcxyT1HUBRoEKFm+Y7jrV0Lv333padLXt7PPW2PPCPTPxUPnATh8kwmjAU04wO+hZ2qJX9
+	tfwwzBdCJ+bvpn/d5xa+FIh1/WXsZAYWLVMRwImMqcwDcAOJl0KPirpJ2T38akBgCXlmzKSL0rz
+	By2yk0PgAsXhJtw1RzRmiCOWZzEoMcY6jSl2OXZPHiwbsFB2OJoZBodPmtkAPS0XUGOKqUri8GI
+	mEvWTo7hPcW0wj52/yQ9ea7JiktkBPmouLBNeel//ke+I5ruaUmgjKCE4rqhLT7cKc9XQvjKmKv
+	8sddbC4xguCIrv4bnkz+agMTrO9g+W6ZvBamz3RFaKzcA=
+X-Received: by 2002:a17:90b:2c88:b0:380:f85c:94b4 with SMTP id 98e67ed59e1d1-3966d20e7aamr210417a91.7.1787672715407;
+        Tue, 25 Aug 2026 08:45:15 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3966871dd1bsm97063a91.4.2026.08.25.08.45.14
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Aug 2026 08:45:11 -0700 (PDT)
+        Tue, 25 Aug 2026 08:45:15 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c856470fe9fso3938521a12.2
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:45:09 -0700 (PDT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38e4758ab46so16311a91.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:45:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1787672709; x=1788277509; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1787672714; x=1788277514; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=u38u/nyeaBO34n8uFE5PRDfAAcSLZkffixSCZhsmrFM=;
-        b=eOBzhTRHCBfLnk3Zbh4K+/v6inXKKxUBeuFgQ2eZYXCK2G+lXbpzCPj4mDyvT4fd7T
-         wvA+Yampeo24piccnKqR4QY/dAKI04i185AlcuygauoQSDHJCBp0coklwcxMPDt7ESt+
-         O4veqtL4nPrGxECtnGpRYPJf8ZY69jxzSTZEw=
-X-Received: by 2002:a17:903:b0c:b0:2d3:160b:c01f with SMTP id d9443c01a7336-2d6dcaae0dcmr160242695ad.6.1787672708990;
-        Tue, 25 Aug 2026 08:45:08 -0700 (PDT)
-X-Received: by 2002:a17:903:b0c:b0:2d3:160b:c01f with SMTP id d9443c01a7336-2d6dcaae0dcmr160240895ad.6.1787672708183;
-        Tue, 25 Aug 2026 08:45:08 -0700 (PDT)
+        bh=5SG68dDupXfLaorzhNW0d/2ss11Voe2ZELst7K2mj+8=;
+        b=MqZi5ewqZd7ST60VJqXFkctWF6FvLcKeXHjkcksjWF7Y4nsffj5yRLNa+vxba2Rp5J
+         H56XowhsNMmFO8WRz7ehoEpvKxr62IvBzwMdgYrCsMDSxUUKlF7MZpslaiVwKBFHxzq/
+         nyb8T8w+kd6hwz9fkY+L2OBg8YDUKh/dxMfaU=
+X-Received: by 2002:a17:90b:4a8d:b0:381:28e0:6259 with SMTP id 98e67ed59e1d1-3966d412ab2mr115280a91.9.1787672713702;
+        Tue, 25 Aug 2026 08:45:13 -0700 (PDT)
+X-Received: by 2002:a17:90b:4a8d:b0:381:28e0:6259 with SMTP id 98e67ed59e1d1-3966d412ab2mr115122a91.9.1787672713019;
+        Tue, 25 Aug 2026 08:45:13 -0700 (PDT)
 Received: from dhcp-10-123-98-253.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327f9209fafsm63445311eec.23.2026.08.25.08.45.04
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327f9209fafsm63445311eec.23.2026.08.25.08.45.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Aug 2026 08:45:07 -0700 (PDT)
+        Tue, 25 Aug 2026 08:45:12 -0700 (PDT)
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -81,9 +81,9 @@ Cc: sathya.prakash@broadcom.com,
 	vishakhavc@google.com,
 	ipylypiv@google.com,
 	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH v2 13/17] mpi3mr: Fix buffer overflow in the BSG target device map
-Date: Wed, 26 Aug 2026 02:34:07 +0530
-Message-ID: <20260825210411.301535-14-chandrakanth.patil@broadcom.com>
+Subject: [PATCH v2 14/17] mpi3mr: Fix out-of-bounds read in PCIe topology change events
+Date: Wed, 26 Aug 2026 02:34:08 +0530
+Message-ID: <20260825210411.301535-15-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
 References: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
@@ -96,46 +96,57 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-The size of the target device map buffer is held in a u16 while the
-number of devices it is derived from is not bounded to fit. With enough
-devices the size wraps, a short buffer is allocated, and the loop that
-fills it writes past the end.
+The number of entries in a PCIe topology change event is used to walk
+the entry array without being compared against the amount of event
+data that was received.
 
-Do the calculation in size_t.
+Bound the entry count to the received event data before use.
 
-Fixes: fb428a2005fc ("scsi: mpi3mr: Fix issues in mpi3mr_get_all_tgt_info()")
+Fixes: 8e653455547a ("scsi: mpi3mr: Add support for PCIe device event handling")
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 ---
 v2:
- - No changes from v1.
- drivers/scsi/mpi3mr/mpi3mr_app.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ - Cached num_entries in a local variable before bounds check and used it
+   for the loop condition to prevent re-fetching from DMA memory (TOCTOU).
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 22 +++++++++++++++++++---
+ 1 file changed, 19 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index cd772b2cb98a..f5b48c95cf05 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -1466,7 +1466,8 @@ static long mpi3mr_bsg_pel_enable(struct mpi3mr_ioc *mrioc,
- static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
- 	struct bsg_job *job)
- {
--	u16 num_devices = 0, i = 0, size;
-+	u16 num_devices = 0, i = 0;
-+	size_t size;
- 	unsigned long flags;
- 	struct mpi3mr_tgt_dev *tgtdev;
- 	struct mpi3mr_device_map_info *devmap_info = NULL;
-@@ -1492,8 +1493,8 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
- 		return 0;
- 	}
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 65a6192cf396..543e9b8e3fc3 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -2761,12 +2761,28 @@ static void mpi3mr_pcietopochg_evt_th(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3_event_data_pcie_topology_change_list *topo_evt =
+ 	    (struct mpi3_event_data_pcie_topology_change_list *)event_reply->event_data;
+ 	int i;
+-	u16 handle;
+-	u8 reason_code;
++	u16 handle, avail_len;
++	u8 reason_code, max_entries, num_entries;
+ 	struct mpi3mr_tgt_dev *tgtdev = NULL;
+ 	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data = NULL;
  
--	kern_entrylen = num_devices * sizeof(*devmap_info);
--	size = sizeof(u64) + kern_entrylen;
-+	kern_entrylen = (uint32_t)num_devices * sizeof(*devmap_info);
-+	size = sizeof(u64) + (size_t)kern_entrylen;
- 	alltgt_info = kzalloc(size, GFP_KERNEL);
- 	if (!alltgt_info)
- 		return -ENOMEM;
+-	for (i = 0; i < topo_evt->num_entries; i++) {
++	avail_len = event_reply->event_data_length * 4;
++	if (avail_len < offsetof(struct mpi3_event_data_pcie_topology_change_list, port_entry)) {
++		ioc_err(mrioc, "PCIe topology event: event data too small (%u bytes)\n",
++			avail_len);
++		return;
++	}
++	max_entries = (avail_len -
++		      offsetof(struct mpi3_event_data_pcie_topology_change_list, port_entry)) /
++		      sizeof(struct mpi3_event_pcie_topo_port_entry);
++	num_entries = topo_evt->num_entries;
++	if (num_entries > max_entries) {
++		ioc_err(mrioc, "PCIe topology event: num_entries(%d) exceeds max(%d)\n",
++			num_entries, max_entries);
++		return;
++	}
++
++	for (i = 0; i < num_entries; i++) {
+ 		handle = le16_to_cpu(topo_evt->port_entry[i].attached_dev_handle);
+ 		if (!handle)
+ 			continue;
 -- 
 2.52.0
 
