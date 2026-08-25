@@ -1,140 +1,171 @@
-Received: from mail-pj1-f98.google.com (mail-pj1-f98.google.com [209.85.216.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 689F12F5A06
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 15:45:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98ECF33CE80
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:05:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787672733; cv=none; b=m0lWIrH9mGCc2fHtZB+fBUXnYmITKTfkPKoQbMh6i6MoPbP5cHm77tp04j0x9F7hAVgmPjqA9R5NmTZxueNApJEN+cIZiwaChagFwwQH6P8vw2feCnwjJxmbDyWZIyCY5cG/RRe8K5zeKcMiqoF+krJnuG4D3c40KGRLcZrfN0U=
+	t=1787673937; cv=none; b=jW3TrpgyKXoT/tIQs/kl/Hy/q9Byzte8HjbCjL+nUX+CUwNXHdNVD3sBNmFEtIvHPI4fdGkm+grWZ5Vc+J0RJP486fk6RuEIueTbyUCi9XLxAQckGmlUxVQGm/FViJW857JGyyJuoWo6z+Gy0+rm5JSqCqORTVKq2BvamuXC7Uw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787672733; c=relaxed/simple;
-	bh=IT47/JA4fCV8LQHDCPeZc3lhGHmL2UEJNvl9TL8X6dM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SOx+Oll0r03cM4I+BJRLYloHWslKBdPvipOPZeC+zZpTrV+nCPzi8cfecLTjWPLhb3UO4v2j0P2PxUhO4HKmu9vMJ2QAg3xccXvyJMjr1DLTwxKnGuc2+IiJnrHq0g8x3+1WHX4ZHF2WYKhQkgVpH/+VOQs9Fkq1LnYnecYi74Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=hPaff2e/; arc=none smtp.client-ip=209.85.216.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1787673937; c=relaxed/simple;
+	bh=MqcVRQHXCs7eu0kAKoSS0vdccFI9yiYJiH6Slq5d8sM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=DlO5ABnbSLpQfp2yWwEtk+lJ0oMxvFklSJXD2/U2VfNMsLMx2K8cLjoMW+8XGoRoc4E26l4KpM8HF7gcSlEslF0/dfqjrGY/SAn6AGldcNbihlyINJF1am5B4EDuSz3aP8Hzaw777JU2YU/DlG1bvAUSuavRWvDrUOvFhluOPMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VvU2pLrU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hPaff2e/"
-Received: by mail-pj1-f98.google.com with SMTP id 98e67ed59e1d1-3964e480f76so1263726a91.1
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:45:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787672732; x=1788277532;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=/MN33ituDobO68T8U4zoo+FK6MwYnpBfS15rEucuKFM=;
-        b=pMKVd3s6OGBSiiahey3FhKGgcD/FAyn2iwYQc8nOgvhKG6Sgy4Tr5m4dS8+E9ut+LO
-         5JrYOAk/FIsqocW9dDcDx7WHjFPaF63ugI2O2v7jg/2fJtBLyTTHgVh+AxLutuOJSQeS
-         omaK8hheABPBF7npMUDiwyyZderkckiAcJIgtTrIFopcM/X0DtHdR8jv6mbBWd2FhuEZ
-         Xt1XU+LQ71kXVwEPYMKaVRu5CrGvURmXkEz3vE/MxTx92xS9tWGkfHEl0cO0R8IQlWbr
-         DwEHCPBTSJklvcss0wP95l3PvTjMgWo/n8m9+c11+QNhpbovGQMC1dRw0zeVEenDglK4
-         E1VA==
-X-Gm-Message-State: AFuF++mPu/vY4hk/0BxzIIk6u9xNubsGj3OppQgpMSD3O+bFNFb/6NFC
-	T5D01gBYjfxBSwzcKxX13JVLos5TOjGivMzsYgJHIiVgqK9oPPI0gEaggmxu44n8feY3DUfcxOh
-	3x/OnX4FIanjnWptdEcQhLZ2VR7ugrrvd0gF6igdG5L0GX5EYe9HUEDvobrcjdeJZfdAKBxar7G
-	KLzU2LHAVqzYZfVgiKixT5S2qKkWJtCdyk8OPWG+WuczJnogakCSdROh6c7YVMtU3w9l1BjLvU0
-	agE2lB4aHb5tns9XY05M677
-X-Gm-Gg: AR+sD10Vj8ggedgRxhiXjAmn5czFAH1zKdMFX0PoBAFOtbc/IQCQj0m5lLXvEFc9L0G
-	ESksPVJv0uYUdPDPSmOCT4aWdgtbX63ruJlxElRwhoVpsv3NgBm4y5TC5Hgvb7FYnISG/JnCy9P
-	KI1bxqHyM2nFpR7lrH+MNkEyUuI6Bz74DE1/kJwjB7ahqdDd+53P1t3VnpIlSVS7OQL9ngV1Qg8
-	BOVevo0PocAkRQmML65s6x7YmnRyM51FzIu11k4jUfC6ejlFXdQ+j5oMzTCPF2r7FpgvUGJzlxn
-	/8DTQLOpAvYC/ci1SWotD2CJK9rXsNNTzVLmXc4qVbV/DLCWkKIrK65dGu+dJwR11LookaFeoLK
-	WK8DLuxvCP2KW437Kk3h7QSd62NwNLZIFl/c8IcjZwL4AGxSAWVQ8CdjsDl3u+uZ5dlFcdj6ngr
-	KS5lC06tsdoLTl8GyOpaH5DPANFH5Fyrb0WfTE9OURf9c=
-X-Received: by 2002:a17:90b:390e:b0:395:5eec:b932 with SMTP id 98e67ed59e1d1-3966d5f90b8mr49982a91.11.1787672731602;
-        Tue, 25 Aug 2026 08:45:31 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-16.dlp.protect.broadcom.com. [144.49.247.16])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39641f540e7sm498601a91.0.2026.08.25.08.45.31
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Aug 2026 08:45:31 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc11b5dd54dso6206611a12.3
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:45:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1787672729; x=1788277529; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=/MN33ituDobO68T8U4zoo+FK6MwYnpBfS15rEucuKFM=;
-        b=hPaff2e/CntljwTcapzUbznnmfNaLiMQUIa/wTjh4YMUiToAKaz+MkjdvF8lwLfuh7
-         dPVC1EAAmw09zZ5k1kTwgefPFOhyypH1Qm4LHIc8KwmkCethObYX5sshxv/87SdX60H0
-         OBp42aknIuEQamPVyFhWvGOqlFErWYbC+xnxo=
-X-Received: by 2002:a05:6a20:b7aa:b0:3c3:bbe6:95c7 with SMTP id adf61e73a8af0-3cd913c6c58mr17665135637.17.1787672729446;
-        Tue, 25 Aug 2026 08:45:29 -0700 (PDT)
-X-Received: by 2002:a05:6a20:b7aa:b0:3c3:bbe6:95c7 with SMTP id adf61e73a8af0-3cd913c6c58mr17664973637.17.1787672728813;
-        Tue, 25 Aug 2026 08:45:28 -0700 (PDT)
-Received: from dhcp-10-123-98-253.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327f9209fafsm63445311eec.23.2026.08.25.08.45.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Aug 2026 08:45:27 -0700 (PDT)
-From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com,
-	ranjan.kumar@broadcom.com,
-	sumit.saxena@broadcom.com,
-	sweeti.vandure@broadcom.com,
-	vishakhavc@google.com,
-	ipylypiv@google.com,
-	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH v2 17/17] mpi3mr: Fix NULL pointer dereference on PCI error recovery
-Date: Wed, 26 Aug 2026 02:34:11 +0530
-Message-ID: <20260825210411.301535-18-chandrakanth.patil@broadcom.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VvU2pLrU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAD3E1F00A3A;
+	Tue, 25 Aug 2026 16:05:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787673935;
+	bh=3PLo6w6PwGFI0MKhf6ig3idh1FHdQSrZzGsAn6sxWFs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=VvU2pLrU04O1xF7DLbzQZJEg9Ob/NtEsGWUBcXt2RgBADGY5+7KEZ3lRH8H+LNZmk
+	 8Rzn3lkhg8vaGIH7hLI6XGc6ujXzZOgLFWg5rqgHGqsJEpcv+omMa4Hd3pLBpxSyfU
+	 0G0wG434Y9MBVx/WrnX9JP220Zo7h4mygx/9nkgf7RQyUfc4tKFkFkfl/JegB9/kD0
+	 4IOpm73/UfE0y3b0fRVQ9DF1uRUQxDQr2LrjGPAUEzXg9itrxouC0wOzE4zHh/RaKs
+	 jE/knFXED78y+gG+LPdLv4vM/QQVMnTeYOi6b+5z0yB4RimyTP67kizZnDcEkrDMbg
+	 jKkto3oQioApw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 04/17] mpi3mr: Fix target device reference leak in
+ BSG task management
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chandrakanth Patil" <chandrakanth.patil@broadcom.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260825210411.301535-5-chandrakanth.patil@broadcom.com>
 References: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
+ <20260825210411.301535-5-chandrakanth.patil@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 25 Aug 2026 16:05:34 +0000
+Message-Id: <20260825160534.CAD3E1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On a frozen PCI channel the driver unmaps the register window and frees
-the interrupts, but leaves the firmware event workqueue running. An
-event handler that is already in flight can still reach the register
-window after it has been unmapped.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-Stop event processing and drain the queue first, and start it again
-when the channel resumes.
+Pre-existing issues:
+- [High] Time-of-check to time-of-use (TOCTOU) race condition leading to a =
+Use-After-Free on `stgt_priv`.
+- [High] Data race between BSG timeout handling and admin reply ISR causing=
+ a Use-After-Free on `sense_buff_k`.
+- [Medium] Missing endianness conversion when reading `dev_handle` from `mp=
+i3_scsi_task_mgmt_request`.
+--
 
-Fixes: 30bafe1774f0 ("scsi: mpi3mr: Support PCI Error Recovery callback handlers")
-Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
----
-v2:
- - Removed stop_drv_processing and mpi3mr_cleanup_fwevt_list() calls from
-   pci_channel_io_frozen to avoid workqueue cancellation deadlocks and
-   preserve transparent I/O recovery (SCSI_MLQUEUE_HOST_BUSY).
- - Added pci_err_recovery check in mpi3mr_fwevt_bh() to safely skip bottom-half
-   event handling during PCI error recovery.
- drivers/scsi/mpi3mr/mpi3mr_os.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+commit da89cfba68bbe3f0b3052ef72f3e8e056a2cdb4d
+Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index e97e343b14fa..a389f7f2c741 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2130,9 +2130,11 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
- 	mpi3mr_fwevt_del_from_list(mrioc, fwevt);
- 	mrioc->current_event = fwevt;
- 
--	if (mrioc->stop_drv_processing) {
--		dprint_event_bh(mrioc, "ignoring event(0x%02x) in the bottom half handler\n"
--				"due to stop_drv_processing\n", fwevt->event_id);
-+	if (mrioc->stop_drv_processing || mrioc->pci_err_recovery) {
-+		dprint_event_bh(mrioc,
-+				"ignoring event(0x%02x) in the bottom half handler\n"
-+				"due to stop_drv_processing or pci_err_recovery\n",
-+				fwevt->event_id);
- 		goto out;
- 	}
- 
--- 
-2.52.0
+mpi3mr: Fix target device reference leak in BSG task management
 
+This commit fixes a reference leak for the target device in the BSG task
+management path. It ensures the reference is dropped whenever the device
+lookup succeeds, regardless of whether the SCSI target data is fully set up.
+
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3m=
+r_app.c
+> index a4fe10a05cb3a..94b992acb2330 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+> @@ -2745,10 +2745,12 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bs=
+g_job *job)
+>  	}
+>  	if (block_io) {
+>  		tgtdev =3D mpi3mr_get_tgtdev_by_handle(mrioc, dev_handle);
+
+[Severity: Medium]
+This isn't a bug introduced by this patch, but is dev_handle missing an
+endianness conversion here?
+
+It appears dev_handle is read natively from the request structure:
+
+mpi3mr_bsg_process_mpt_cmds() {
+    ...
+    dev_handle =3D tm_req->dev_handle;
+    ...
+}
+
+Since dev_handle is defined as little-endian (__le16) in
+struct mpi3_scsi_task_mgmt_request, could Big-Endian systems read a
+byte-swapped value, causing mpi3mr_get_tgtdev_by_handle() to look up the
+wrong device?
+
+> -		if (tgtdev && tgtdev->starget && tgtdev->starget->hostdata) {
+> -			stgt_priv =3D (struct mpi3mr_stgt_priv_data *)
+> -			    tgtdev->starget->hostdata;
+> -			atomic_inc(&stgt_priv->block_io);
+> +		if (tgtdev) {
+> +			if (tgtdev->starget && tgtdev->starget->hostdata) {
+> +				stgt_priv =3D (struct mpi3mr_stgt_priv_data *)
+> +				    tgtdev->starget->hostdata;
+> +				atomic_inc(&stgt_priv->block_io);
+
+[Severity: High]
+This is a pre-existing issue, but does caching stgt_priv here create a
+use-after-free risk later in the function?
+
+When a user-space process issues a blocking command, the thread will wait
+for completion:
+
+mpi3mr_bsg_process_mpt_cmds() {
+    ...
+    wait_for_completion_timeout(&mrioc->bsg_cmds.done, ...);
+    if (block_io && stgt_priv)
+        atomic_dec(&stgt_priv->block_io);
+    ...
+}
+
+If the target device and its hostdata are concurrently destroyed while the
+thread is blocked, tgt_dev->starget is cleared:
+
+mpi3mr_target_destroy() {
+    ...
+    tgt_dev->starget =3D NULL;
+    ...
+}
+
+If this race occurs, wouldn't the BSG thread wake up and dereference the
+freed stgt_priv pointer when calling atomic_dec()?
+
+> +			}
+>  			mpi3mr_tgtdev_put(tgtdev);
+>  		}
+
+[Severity: High]
+This is also a pre-existing issue, but is there a data race in the BSG
+timeout handling that can cause a use-after-free on the sense buffer?
+
+In the timeout path, the user thread locklessly clears the pointer and
+frees the memory:
+
+mpi3mr_bsg_process_mpt_cmds() {
+    ...
+    mrioc->bsg_cmds.sensebuf =3D NULL;
+    mrioc->bsg_cmds.state =3D MPI3MR_CMD_NOTUSED;
+    ...
+    kfree(sense_buff_k);
+    ...
+}
+
+If the admin reply ISR executes concurrently and checks the cmdptr->sensebuf
+condition before it is cleared:
+
+mpi3mr_fw.c:mpi3mr_process_admin_reply_desc() {
+    if (sense_buf && cmdptr->sensebuf) {
+        cmdptr->is_sense =3D 1;
+        memcpy(cmdptr->sensebuf, sense_buf, MPI3MR_SENSE_BUF_SZ);
+    }
+    ...
+}
+
+Could the ISR execute memcpy() into the freed sense_buff_k memory block?
+
+>  	}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825210411.3015=
+35-1-chandrakanth.patil@broadcom.com?part=3D4
