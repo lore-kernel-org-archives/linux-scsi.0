@@ -1,72 +1,72 @@
-Received: from mail-pf1-f227.google.com (mail-pf1-f227.google.com [209.85.210.227])
+Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D1053DA7D9
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:18:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 414C73FF8A5
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:18:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787660296; cv=none; b=pRFihQJnemlJREeXwHUKyScRxhItVHB9F0uTkAPg0ReaqzmV/ZNgc6Xsy8kB20pzcb4QStetRKo1btw9+jXqUapk4d6N+yVxnwHznF91CgeCftm+o0gmfnb5ft88/JIFuYeQg+X0rNunNUPASy4uUGt8KPrZn1lOFSJAPEAHs9k=
+	t=1787660343; cv=none; b=ePCsF0mUdIDjDbve8r6ylERXwKI57UOYiCjeyoxu5+SrUkym37sKdvZBLz8hi1PekCCpuJOdrnJTPEBF3wiLyvockYnHt7WEsUqTs9IzL/yLe/OkRe73u9YtQNK6qA/bIWdKwDnmr+Y2mu4Ue9QU1E8RTWqmauTslJLEScVeEcc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787660296; c=relaxed/simple;
-	bh=Sx9FwfWQJu77q/p9ytKRZxVjjtef6eYI45tqGLRtads=;
+	s=arc-20240116; t=1787660343; c=relaxed/simple;
+	bh=36mKIjqZJRLMQZi0zKfwUj1PH7igk64eNJGJLwUAaGU=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=N02s4IhhWT5mtJUsBgkq0jA1NtPQqSaAuVJUN0BUbeAweqUlZ1cUrPUCvdX3PNDnzR+iXtWirq0aJQqHbKB3fULm9/DaMCo+gfYTdGAI6IqOijB97AfRpuxB4g0/CjaMvVchEumCoAoI4IXaUSVMos2JbuQR+96Cb/qOPhW+wY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=K0qs8AcK; arc=none smtp.client-ip=209.85.210.227
+	 To:Cc:Content-Type; b=uKFDzKmshhkPMwnmVs3lw7yy7+lPj4bKE7R/uSF2AToDrC4gG24SGw28Q7+3DNCBhCMgwDF9dV+zTpkVmj48cqJlasEY5eMVk5JH3qi3fZbUY8pVqtm9rGD6/Srd1wy2kqDEYcZADoZ5YxHhbqwlJeXyDhJl/bCgC48/yT7Cm+Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=T5wSUe2I; arc=none smtp.client-ip=209.85.215.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="K0qs8AcK"
-Received: by mail-pf1-f227.google.com with SMTP id d2e1a72fcca58-84faf87d19dso4490241b3a.3
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:18:14 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="T5wSUe2I"
+Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-ca766c1c9ccso3207070a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:18:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787660294; x=1788265094;
+        d=1e100.net; s=20251104; t=1787660337; x=1788265137;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:dkim-signature:x-gm-gg:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=tLTIdKdpiYUwiG6K5UXOoRvzn3RPKuIEtOMCR/cx/x4=;
-        b=j1/9xcb9tloA6MMqFy5tTbTSsOrwp6Tf7+pD+K/FEyUNIMHTYCR2zIgwFmBP+yMn0s
-         GLkSZ7PENxUm1rM+GPZemP9/BxoanXnNVIiETcyyFmKCgVNZXAwh8YV+73F/2lNP5qMa
-         6RHROFHmVCJyw8mQLDBVzajzZXYR9i+Ib6tnZgvAATwlv3SRCJRrgSK/aEAU7wmBZDHn
-         m/MvCe0aSL/GLr4pyVJo3iRRBI5QPjAWxXVjElwcsYqJArm/dH03VzU9F00zGdm/3sVn
-         nbvWjhP30Ac0ot4R/m5VhUR6dxEX0v1mVK+n7xo/DeSn6BwpInSZmyEvCK4p34NR0Yz/
-         hUrg==
-X-Gm-Message-State: AFuF++lhXdq/riIEjjLUL6LSLM/v/DmZcc6kzPet6MmpefsxhYgHJrYd
-	u3Mul2v6UqSCkQxhHrXLVtzMl/BZ6Ui/fuGhE2ae+4MRx7eguWlQPE8AdXpa7fyhaIX8jR5e5eL
-	b3fTi2iDOdnUGDP2fj09p7NBKYUVojKNB1LOimArLb//Won3tQP7D6WGhgL7fI8izaHrZuxnJXw
-	2fstNlPFjQlMRJrIAem/zCDnjDvcrDtfnBJGs1ieeXhaHI7djgJT77ELaku/8EhPYortaKwEwHM
-	BSNqZJpQWPL+0HyFkQQmTcn
-X-Gm-Gg: AR+sD11L4p5HnumU68diniZUHDulXFGqMGq/RBIgQ4P4TIH5+H5+5PABRhZwbQMiNnG
-	bSyARQFqsODNZ0wWA6vz8+R+FqOLTnWWDCBhqyrtGZzHa1Mki7bMv5RowH7vicpyquIRAPYS8t3
-	6y5UWQ7MoYVzFWbdryTb+mhszTYhC/2wkc/PQ6hI3TXN8ci8hMSTdOOYpP7Apa8vKnMHNdZVH7T
-	bswcf1oNwFsGy7b9K57TKhyp53DD6yYYNh0t36h1mVuzpfY9XFcpW2DSazVkb8mCoCpMMoHV5a9
-	h/ZtkfLDlWNagoatfxHNJRdeH1ipF6rqef8tiThtbg4HcbOZpfwYHzBBuvSUV6LiJcW/fdR+pH3
-	THY47+D2XkVZj6sCs4MI1qhWVcQjycsrDdMYKOmw9zbw2GaX+eE71nJ6HSWF9zVkBQxAQyQDCyB
-	aaJFfoAVJpQ6UwZIXQXhUlLdfBPRL7VFvYwxc/jCMT7GhB4Q==
-X-Received: by 2002:a05:6a00:e1b:b0:84e:b7ed:7d50 with SMTP id d2e1a72fcca58-8520ba65912mr46111092b3a.16.1787660293439;
-        Tue, 25 Aug 2026 05:18:13 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-121.dlp.protect.broadcom.com. [144.49.247.121])
-        by smtp-relay.gmail.com with ESMTPS id d2e1a72fcca58-85210950706sm4905510b3a.4.2026.08.25.05.18.12
+        bh=EWknq6+Vvre7ycyzJHEaXu7Zn/EmTTFqTUaMwJXgjFw=;
+        b=Y+n0aN/Mo9nEi30QyYLZ/xfbrY3IpPAi+Jof0ZdkVntOMFt4l+F7L19AAa4eaINgrJ
+         mA6UHLA4v0zfYREzEh4Hun6ZmmBTEb7zktES02IzQ6MGAM7Tx6bp04XmUpLpX/rZFV/E
+         VDfbnIHZpCeWFGmBWcdbLiWVIVaaguFPZm+HQaqsCeEt6oQW98EegQruLMG86fF6KRNC
+         biUlzxWPjoC9lpbW1c3EhqbeuNkjfu2QjkLrMBGLhcs/zfxqWm4hKv6uvTgwlVgay5Ey
+         b4ERTqo7L0eUDpGmWw/Gw0jaTDlEMhuvLKyobFMPGR5tTmz7fARnH7UgodNvyD4I/iML
+         O/Dw==
+X-Gm-Message-State: AFuF++k2eYBGIz3cOqz7UE+uRgGeuJBi82o7k3ujoKlcQQjJF6pNAdgL
+	570BsRwpGmM70cJz5skPAEiIX2HQtEiCILwENjVhi4JpmqV+jDQXudDhUAGr7+tODLzYktp0fRg
+	DgN1OCQ5xTh7LABvNractOmg1xI5BlQyxHWpdBDSnRVo6KdK8C2Va58quKfSnbS7kv1bo3Q9U19
+	Lfd0DdNExOewyldtpkmHBeNuyJkUsHiy/joLd+0qyYUAUIIdBuWJzVUyk7JCehLqDj49ZNo8sNQ
+	H8mxyeFUlvBYnFUnnZz2vT5
+X-Gm-Gg: AR+sD12ZPE4Z4l7R5/pwN7xwe61zydM6WiGUfbQvOub8PTFA4JAc2xYezpWTcZkqB7r
+	CKGguMZAvwLAHwfMZ23ZT92Jqz5VushwbosEH7byHocSjM6BI5ZyXiVYc/yi1mLBr783OZJlC3a
+	NVlaOFk+YmU5dCA+YTlFgDFYO2SJSABJNIv1OTstQ54IpzFfx2uyMTFLq7CCaxpchoCrTPTCLng
+	nbhsCmNjFpN4JkuhvCilglFIQlL3D5NjnEsp89nzeij8ht247+mD6v2GaT9rIkmk3yWIR1FdxHK
+	s8OmfdyoujiPgPdYS1clkvb4iwVeDcnyfMjUu1p9F8CWdLoP8KwgvQ5EM/lPccU+7dafCVCp84i
+	egO1FcPWgKkkH3ScqYWwc2af+RhI+n9kv5pZMVs/7q9kXfM/YWcw8ecoEDztGIBLpAVz4YlMWG7
+	GaSkNoqapGPtI4Y08ErRc51ciyhP7uyohj8vUQB/ur79g=
+X-Received: by 2002:a05:6a00:b53:b0:848:46a0:3d74 with SMTP id d2e1a72fcca58-8520ba16ce2mr43485656b3a.9.1787660336092;
+        Tue, 25 Aug 2026 05:18:56 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
+        by smtp-relay.gmail.com with ESMTPS id d2e1a72fcca58-852102693cdsm4823906b3a.2.2026.08.25.05.18.55
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Aug 2026 05:18:13 -0700 (PDT)
+        Tue, 25 Aug 2026 05:18:56 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c1f3117bc6bso428743166b.0
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:18:12 -0700 (PDT)
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c1f3117bc6bso428794566b.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:18:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1787660291; x=1788265091; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1787660334; x=1788265134; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=tLTIdKdpiYUwiG6K5UXOoRvzn3RPKuIEtOMCR/cx/x4=;
-        b=K0qs8AcKOqiWi8+c+ljhTkCRI8ZBqbMznhN9p6qZGe4yGB5NWh5H6SfKxiBKBZrkky
-         LEUMh7sYZ2cY/KbsDKegOCHXSAYKpPNnHTsqlUnuzTzn902ATe2lvAIu5tCvC8qFMLQz
-         jOGooWA1lx/CeYcNd3vWNokdiv821/rEzAcxU=
-X-Received: by 2002:a17:907:8995:b0:c24:4128:c19d with SMTP id a640c23a62f3a-c24e584dc37mr609648766b.4.1787660291033;
-        Tue, 25 Aug 2026 05:18:11 -0700 (PDT)
-X-Received: by 2002:a17:907:8995:b0:c24:4128:c19d with SMTP id
- a640c23a62f3a-c24e584dc37mr609639566b.4.1787660290381; Tue, 25 Aug 2026
- 05:18:10 -0700 (PDT)
+        bh=EWknq6+Vvre7ycyzJHEaXu7Zn/EmTTFqTUaMwJXgjFw=;
+        b=T5wSUe2IaX7vR1DrosqSJ9DMbL6I+FdHNZIw07t97gLxqQC7sOUXSMbP19fdDaK1K2
+         4TQp/LnQF+CskZuLdBphtu5BqmVapA2hL24ZPtJLCQdzVSwbaKg/ipuFH/Ouda4UMw+9
+         m69WLSv3f7uwZQ+1RM8l55RaTLy5wCt2o+XKo=
+X-Received: by 2002:a17:907:9814:b0:c21:792:8257 with SMTP id a640c23a62f3a-c24e5ad9556mr685265866b.15.1787660333775;
+        Tue, 25 Aug 2026 05:18:53 -0700 (PDT)
+X-Received: by 2002:a17:907:9814:b0:c21:792:8257 with SMTP id
+ a640c23a62f3a-c24e5ad9556mr685258966b.15.1787660333235; Tue, 25 Aug 2026
+ 05:18:53 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,224 +74,112 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
- <20260818231426.58105-15-chandrakanth.patil@broadcom.com> <20260818182309.9BCE91F000E9@smtp.kernel.org>
-In-Reply-To: <20260818182309.9BCE91F000E9@smtp.kernel.org>
+ <20260818231426.58105-16-chandrakanth.patil@broadcom.com> <20260818182113.87AB51F000E9@smtp.kernel.org>
+In-Reply-To: <20260818182113.87AB51F000E9@smtp.kernel.org>
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Date: Tue, 25 Aug 2026 17:47:57 +0530
-X-Gm-Features: AcwNN1XxWOS-t-cETKeYz4WuuGdacYiSrUAXp5lWX9Lwkr9YfULJaZMrwWQKTk8
-Message-ID: <CABvwm=MxRTEjcrFBr33O5pnOhOwX_kezpPojgvFBynXnBQZ-Qw@mail.gmail.com>
-Subject: Re: [PATCH 14/17] mpi3mr: Fix out-of-bounds read in PCIe topology
- change events
+Date: Tue, 25 Aug 2026 17:48:41 +0530
+X-Gm-Features: AcwNN1XkQGQuLfaz-UIJhGXKKDnlqy0-3fcVPcLuKUO5yXgp_qhpfANSELUcxkw
+Message-ID: <CABvwm=Nx8Skq+1eTcE09G8byqd_FXnSRZLFrCOdcdALKYiLtTA@mail.gmail.com>
+Subject: Re: [PATCH 15/17] mpi3mr: zero out diagnostic buffer status memory
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-scsi@vger.kernel.org
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000aa78540659de1833"
+	boundary="0000000000003586ff0659de1b02"
 
---000000000000aa78540659de1833
+--0000000000003586ff0659de1b02
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 18, 2026 at 11:53=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+On Tue, Aug 18, 2026 at 11:51=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
 >
-> Thank you for your contribution! Sashiko AI review found 4 potential issu=
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
 e(s) to consider:
 >
-> New issues:
-> - [High] The newly added bounds check reads `topo_evt->num_entries` direc=
-tly from a DMA-mapped buffer, and the subsequent loop condition re-reads it=
-, creating a Time-Of-Check to Time-Of-Use (TOCTOU) race condition.
->
 > Pre-existing issues:
-> - [High] The bounds check for PCIe and SAS topology change events fails t=
-o protect the bottom-half event handlers from out-of-bounds reads because e=
-arly returns in the top-half do not prevent the malformed event from being =
-queued.
-> - [High] The bounds check uses an untrusted `event_data_length` without v=
-erifying it against the actual physical dimensions of the hardware reply bu=
-ffer, allowing an out-of-bounds read in the top-half handler.
-> - [High] Missing `dma_rmb()` after polling the phase bit in DMA-mapped re=
-ply descriptors, which can lead to processing stale descriptor data on weak=
-ly ordered architectures.
+> - [High] An integer overflow in the bounds check of `mpi3mr_bsg_upload_hd=
+b` allows a malicious user to bypass the check and read arbitrary kernel me=
+mory.
 > --
 >
-> --- Patch [14]: [PATCH 14/17] mpi3mr: Fix out-of-bounds read in PCIe topo=
-logy change events ---
-> commit 8553af34c1ff3c0cff0462ca66842979af8cb4d4
+> --- Patch [15]: [PATCH 15/17] mpi3mr: zero out diagnostic buffer status m=
+emory ---
+> commit 76872b40f16cd1ab1c93f0a03cc6bd1fb6b3db94
 > Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 >
-> mpi3mr: Fix out-of-bounds read in PCIe topology change events
+> mpi3mr: zero out diagnostic buffer status memory
 >
-> The number of entries in a PCIe topology change event is used to walk
-> the entry array without being compared against the amount of event
-> data that was received. Bound the entry count to the received event data
-> before use.
+> Memory allocated for the BSG diagnostic buffer status is not zero'd
+> before it is copied back to user space. Several fields in this
+> structure are reserved and never written by the driver. Use kzalloc
+> instead of kmalloc to zero out the allocated memory.
 >
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3=
-mr_os.c
-> > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > @@ -2753,11 +2753,26 @@ static void mpi3mr_pcietopochg_evt_th(struct mp=
-i3mr_ioc *mrioc,
-> >       struct mpi3_event_data_pcie_topology_change_list *topo_evt =3D
-> >           (struct mpi3_event_data_pcie_topology_change_list *)event_rep=
-ly->event_data;
-> >       int i;
-> > -     u16 handle;
-> > -     u8 reason_code;
-> > +     u16 handle, avail_len;
-> > +     u8 reason_code, max_entries;
-> >       struct mpi3mr_tgt_dev *tgtdev =3D NULL;
-> >       struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data =3D NULL;
+> Fixes: 78b506984ebe ("scsi: mpi3mr: Add ioctl support for HDB")
+> Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+>
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi=
+3mr_app.c
+> > index f5b48c95cf055..0cdcb8d236d37 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+> > @@ -1244,7 +1244,7 @@ static long mpi3mr_bsg_query_hdb(struct mpi3mr_io=
+c *mrioc,
 > >
-> > +     avail_len =3D event_reply->event_data_length * 4;
+> >       length =3D (sizeof(*hbd_status) + ((MPI3MR_MAX_NUM_HDB - 1) *
+> >                   sizeof(*hbd_status_entry)));
+> > -     hbd_status =3D kmalloc(length, GFP_KERNEL);
+> > +     hbd_status =3D kzalloc(length, GFP_KERNEL);
+> >       if (!hbd_status)
+> >               return -ENOMEM;
+> >       hbd_status_entry =3D &hbd_status->entry[0];
 >
 > [Severity: High]
-> This isn't a bug introduced by this patch, but could this calculation
-> exceed the actual physical dimensions of the hardware reply buffer?
+> This is a pre-existing issue, but while reviewing this file I noticed a
+> potential integer overflow in mpi3mr_bsg_upload_hdb():
 >
-> Because avail_len is derived strictly from the untrusted event_data_lengt=
-h,
-> a compromised or malicious device could provide a value larger than the
-> allocated DMA reply buffer (mrioc->reply_sz).
->
-> Should we verify event_data_length against mrioc->reply_sz to prevent
-> the bounds check from being artificially inflated, which would lead to an
-> out-of-bounds read?
->
-> The SAS topology handler mpi3mr_sastopochg_evt_th() appears to share this
-> exact pattern.
->
-> > +     if (avail_len < offsetof(struct mpi3_event_data_pcie_topology_cha=
-nge_list, port_entry)) {
-> > +             ioc_err(mrioc, "PCIe topology event: event data too small=
- (%u bytes)\n",
-> > +                     avail_len);
-> > +             return;
-> > +     }
-> > +     max_entries =3D (avail_len -
-> > +                   offsetof(struct mpi3_event_data_pcie_topology_chang=
-e_list, port_entry)) /
-> > +                   sizeof(struct mpi3_event_pcie_topo_port_entry);
-> > +     if (topo_evt->num_entries > max_entries) {
-> > +             ioc_err(mrioc, "PCIe topology event: num_entries(%d) exce=
-eds max(%d)\n",
-> > +                     topo_evt->num_entries, max_entries);
-> > +             return;
-> > +     }
->
-> [Severity: High]
-> This is a pre-existing issue, but does this early return actually prevent
-> the malformed event from being processed by the bottom-half handler?
->
-> When mpi3mr_pcietopochg_evt_th() returns early here, the process_evt_bh f=
-lag
-> remains set in mpi3mr_os_handle_events():
->
-> drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_os_handle_events() {
+> drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_upload_hdb() {
 >     ...
->         case MPI3_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
->         {
->                 process_evt_bh =3D 1;
->                 mpi3mr_pcietopochg_evt_th(mrioc, event_reply);
->                 break;
+>         if ((upload_hdb.start_offset + upload_hdb.length) > diag_buffer->=
+size) {
+>                 dprint_bsg_err(mrioc,
+>                     "%s: invalid start offset %d, length %d for type %d\n=
+",
+>                     __func__, upload_hdb.start_offset, upload_hdb.length,
+>                     upload_hdb.buf_type);
+>                 return -EINVAL;
 >         }
 >     ...
 > }
 >
-> Since process_evt_bh remains 1, the event is queued to the worker thread.
-> The bottom-half handler mpi3mr_pcietopochg_evt_bh() will then blindly
-> iterate up to the unvalidated event_data->num_entries, causing an
-> out-of-bounds read past the end of the allocated fwevt heap buffer.
+> Can upload_hdb.start_offset and upload_hdb.length wrap around during addi=
+tion?
 >
-> Would it be safer to clear process_evt_bh or return a status from the
-> top-half handler to prevent queuing malformed events? The SAS topology
-> handler mpi3mr_sastopochg_evt_bh() is likely vulnerable to the exact
-> same incomplete fix flaw.
+> Since they are 32-bit unsigned integers controlled by user space via the =
+BSG
+> interface, a large start_offset (e.g. 0xFFFFFFF0) and a small length
+> (e.g. 0x20) could wrap to a sum that passes the bounds check against
+> diag_buffer->size.
 >
-> >
-> >       for (i =3D 0; i < topo_evt->num_entries; i++) {
-> >               handle =3D le16_to_cpu(topo_evt->port_entry[i].attached_d=
-ev_handle);
-> >               if (!handle)
->
-> [Severity: High]
-> Is this loop vulnerable to a Time-Of-Check to Time-Of-Use (TOCTOU) race
-> condition?
->
-> The newly added bounds check reads topo_evt->num_entries directly from a
-> DMA-mapped buffer, and this loop condition continually re-evaluates it.
->
-> Because the loop body contains functions that acquire spinlocks
-> (e.g., mpi3mr_get_tgtdev_by_handle()), which act as full compiler memory
-> barriers, the compiler is forced to re-fetch num_entries from DMA memory
-> on every iteration.
->
-> If a malicious device alters num_entries in DMA memory after the initial
-> max_entries check, could it extend the loop beyond bounds?
->
-> Should we cache num_entries in a local variable before the bounds check
-> and use the local variable for the loop condition? The SAS topology handl=
-er
-> mpi3mr_sastopochg_evt_th() appears to have the identical issue.
->
-> [Severity: High]
-> This isn't a bug introduced by this patch, but is a dma_rmb() barrier nee=
-ded
-> after polling the phase bit in the DMA-mapped reply descriptors?
->
-> Looking at mpi3mr_process_op_reply_q() in drivers/scsi/mpi3mr/mpi3mr_fw.c=
-:
->
-> drivers/scsi/mpi3mr/mpi3mr_fw.c:mpi3mr_process_op_reply_q() {
->     ...
->         if ((le16_to_cpu(reply_desc->reply_flags) &
->             MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) !=3D exp_phase) {
->                 atomic_dec(&op_reply_q->in_use);
->                 return 0;
->         }
->
->         do {
->                 if (mrioc->unrecoverable || mrioc->io_admin_reset_sync)
->                         break;
->
->                 req_q_idx =3D le16_to_cpu(reply_desc->request_queue_id) -=
- 1;
->     ...
-> }
->
-> The driver polls the hardware DMA ring by checking the reply_flags phase =
-mask.
-> Without a subsequent dma_rmb(), weakly ordered CPU architectures (such as
-> ARM64) can speculatively execute out-of-order reads and fetch the rest of
-> the descriptor payload (like request_queue_id) before the hardware has
-> actually committed the updated descriptor.
->
-> Could this result in processing corrupted or stale descriptor payloads?
-> There appears to be a similar polling loop for the admin reply queue in
-> mpi3mr_process_admin_reply_q() lacking a dma_rmb() before accessing
-> request_queue_ci.
+> Would this allow a malicious user to bypass the check and read arbitrary =
+kernel
+> memory when the subsequent copy occurs?
 >
 > --
 > Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818231426.58=
-105-1-chandrakanth.patil@broadcom.com?part=3D14
+105-1-chandrakanth.patil@broadcom.com?part=3D15
 
 Thanks for the review.
 
 New issues:
-- The TOCTOU observation is valid and will be fixed in the v2
-submission. num_entries is now cached in a local variable before the
-bounds check and used for the
-  loop condition to prevent re-fetching from DMA memory.
+- None. This patch specifically ensures diagnostic buffer status
+memory is zeroed out using kzalloc() before copying to user space.
 
 Pre-existing issues:
-- The event_data_length check against reply_sz is addressed in
-"mpi3mr: Fix out-of-bounds read of event data" in this same series.
-- The top-half early return behavior and missing dma_rmb() memory
-barriers are pre-existing in the driver and will be addressed in a
-separate follow-up patch series.
+- The potential integer overflow in mpi3mr_bsg_upload_hdb() is a
+pre-existing issue in the driver and will be addressed in a separate
+follow-up patch series.
 
---000000000000aa78540659de1833
+--0000000000003586ff0659de1b02
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -385,13 +273,13 @@ LfSp/K5DCYsrXNqitPmQaAAGAiG4d4WDxBev6vtoyH7ejLcuCKkxCefrLO5qYnuDHsMNCObdslAe
 tMVer+USn6AqB//6EwmqdiLr4o20UQ79jxNFMAEKdwyNkA8mVCVUAtTe3mPrMYICVzCCAlMCAQEw
 YjBSMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xv
 YmFsU2lnbiBHQ0MgUjYgU01JTUUgQ0EgMjAyMwIMAgfxQ1Z7DrZKmCE/MA0GCWCGSAFlAwQCAQUA
-oIHHMC8GCSqGSIb3DQEJBDEiBCBIr4g76/uHu3XAkd+UYwHeDLv+5chEU8aYPjKD2Flo1jAYBgkq
-hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjE4MTFaMFwGCSqG
+oIHHMC8GCSqGSIb3DQEJBDEiBCCkvFQFQzHbteOogCBf5h9UF0zyzRqqiWGOzpu73nQ+LjAYBgkq
+hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjE4NTRaMFwGCSqG
 SIb3DQEJDzFPME0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZI
-hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAT9xW8gXAr
-ojlKwV+GRQBpANbIvLujctBvAM0v/pgYbUA5Kah0apSIChWUOsy2ZB7aQhJhVkHVnOhaCeKI9oRT
-yjAdfJXraHHbZqJnuFG+jWY8BzQfPgYPqm0Hwis/0jFj5k5049O0w2hS2NQP0b7e+AQUsmYxAVJ1
-hawWW6L2o9uAlywjtlNkurJ3hFyOQxhkXWvHIBi+aTwy+qBySMTvqTNY86mnNiEVbLmZ9V0CepWq
-7L7Nk4kyFGtCSEGC4+0W/hGz9y+XhulPo7sWb0JsSb+89q5uEmte/U/7RGB9BmyfVXruYV5EGg6n
-zHAEeD+GaMI/PLT9mSz04WzLH/PU
---000000000000aa78540659de1833--
+hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAQjdHv5Qx/
+HdMReiJW+IAiJUa9aIyfhOsqjY4KHDeJzXRIl35eINVaqKsRt6AfE5Y9Ao2gHoN271TTE9peOXjR
+sewvyC1077HD9CNOYmoCYGL9wbdy0I+PZH1CL7lXD7KMa6fRdsH5UD6KmkoucFMisomqIJXW93cO
+BLL/0YFvqdgfpDemtFAOgyEW/q6I/LlKzLVLMO/bah3WIBjpmZkw2JMS0sidINPgrye7hSHXDgpY
+zKz15cT8dbEMNfoMjo/WXXbfaoPeUQQ8IX8pLyhnvv0ye6oOQokPMA0lt/tu494jxCE6TopBHDn6
+n+kdmNrEBEThYxXSVkyreW2XXBzj
+--0000000000003586ff0659de1b02--
