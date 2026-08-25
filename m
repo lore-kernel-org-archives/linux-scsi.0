@@ -1,184 +1,113 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out203-205-221-209.mail.qq.com (out203-205-221-209.mail.qq.com [203.205.221.209])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8638223EAAF
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 03:30:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9EE43E0758;
+	Tue, 25 Aug 2026 09:10:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.209
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787628618; cv=none; b=ASl51H5wMhY5JZ52YBpwASQuvStbyZqmYKZVKrVZ496OY2szDsQfwy1+P0N+b+ZYm3szvraNE4KB06JEmLt12zXKnM98kOFO0ToroFQz9iNWe9e5H8RNO0r7o421rEYm8LSRg7OtKv3kQbUQeDJ4GNmdOh2lN7rQUxwPocLLCEE=
+	t=1787649015; cv=none; b=dJrm/Vc+y8YfyX+qBkIxpfaiyxKJThc/DxWsYmhIyp41fHWDsudnWExjrXtIxJHOY2C+NOC1hWIgIyHHWFuePsC2vKn7V0lsXHTY5oWLesWWbPZvnCCrw2UUDqV6R9UBZDEydr0ALnChOLDWje5DgBj8MgJU8uhcUy7NVVUZmMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787628618; c=relaxed/simple;
-	bh=2AhcLjrsIzdCHr80T9Irqs7JkoGtT/A/4BaDwo9EtJc=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=B4wAnUrAn7HCsWLYqdS1V3T1y1BvvEzCB3bUfrRzphBwnRf7maXu1IGUPSostiBk2FgdF+e1HeX8ObmDO3fIFUTw4TguAs3DZZWMJU+aFaajoPbS8XJUCMtGo8p6ycgbOZ8VptHIZX1XCLDopDLhe1Y1NHbeb1/vY4ugFUquxL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BUMnoaIL; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787649015; c=relaxed/simple;
+	bh=PeysLjeJbnAEECANd68FkaW6zaswjbf3M4PEeOvY/G8=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=HJdwOdrBkzyKBT+scH/rbsHjBlkOVrgR510f5znsSARa+f7sesVFn+LPhizPvNmoJdiS1qRgVBImuzRMEOXOW4Y23rozuo+gtziTlmJm5wb1OzYQLv+Hsrpnoifkt2d40ksp9wWz2KzJQ5ncYcE9N3bUJ95m9P7ES4ldOt6du5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=W67fGX5R; arc=none smtp.client-ip=203.205.221.209
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BUMnoaIL"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5aeb8c19017so5954870e87.0
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Aug 2026 20:30:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787628614; x=1788233414; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=/5OOFU01Ir/Kr+JNPLWPtPKMHKr+x+zQ9G28y7INQ50=;
-        b=BUMnoaILW6MgBU4vnHg0dEwVKjSjznRVAjKr2A9Wdl/L6D0k/tOGO8AUpMmsPWWW3z
-         +ozzbO5L78fkRXgFQ2V92csXhuC8eTycTMKPsM8nWnB1KNLweA5g1VabBi7vhd+RS0tH
-         rfBcNrpdTiPt7TidS2XM3BenYovdkg5DDLEmLMyOl9M802KK82i3UUdJR4DTtlJAdJRt
-         JAd5dYCNQh5Ju+nq9wwmjFfgWzvPONhQW93jdpRK6hhOa/bhcs4gsl4Wgv9IUS/UHxDo
-         eceeUfdE68bBNRZginFKwAuOoCaEtKWbhosB/KXdW8MINa9a8Q8S2qNw9R4ARCgGJMK4
-         Clbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787628614; x=1788233414;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=/5OOFU01Ir/Kr+JNPLWPtPKMHKr+x+zQ9G28y7INQ50=;
-        b=ATgwSBzF9wNTEYAVdr+gXYpbatElbtlBqHQDlcR1pih5fti3rtCoB25LH4/tD7SrB+
-         T+BWnSPHZcZB1dx0NOhSjk9leZsKPJJno52uqwV6v6GEEpXv3l6RHt8iT2QPmGQ7m2ZF
-         A0wfe3Di4OsrGrPcPy+Sg8wZq7e5Rt7kqamTMKT/RuqBDF8nk8W5m0NvQOAf1p9PSGvN
-         LsnQrjEKUbC6HA+/8xHLN4r+/MwlkhF1gGB8vtTTSPYcs9Kr1NYIZFn9+sF+N/zApscq
-         fnFQN10/n4eIp+gn6Vwuyle3DPg3tGGR2tNZnhgnAykmWLn3XMhLqv9W8Yd5+krgBhAJ
-         n0nQ==
-X-Gm-Message-State: AFuF++k9jfUWrFtj3I8niYRQn1PFJWfUmPBET0jAWAcTp+WuKbPKZxxF
-	OQjrowNNoOlRZdX7JOaWRIWhiEzsYD9AOjm42sak54cWaSJy1rVTI2cfqoOyOA==
-X-Gm-Gg: AR+sD10lBj2MPRjJKmrH8MMWfcaaHzg1lKhHq7sE52dk2WilLcoyTxAMTh151Y/Muvd
-	0u4WYO2enJZsHJ4HpynNHZdqapVtauk8GSCOi9G0BgpBOkRx7xnNyDRBQtQVzI6eSdoGz4gt2+R
-	U2ZhrASZZ3ZtHp1ebtvXdzjP/IoNNyN3Cz+cdf809LExU9G5FpoP6QVmo1eC5dUCoD3BZzbzbNO
-	niiINX3UZS9vEOW+g6A4Sv5eaJhY6g8PEFOzPm/0Tsyqkspkx+/u1ZLt5a8Q6k/g4PFRxR09987
-	nliBuThM26xtCGPULvgYH/+p/MMnDDNumLz4k6sryDG+uFOlS8bkNUOE3XXgPg7U1Ibtzlrz/qc
-	Pq2I40Sgq8K8Ax4C3ihvwWPCwPr++s0Wc1WzNqVv6Ob9wa4aE1LlPlpqf061rg9l/WZT/V5Huso
-	Vcxuj76vm5YVR76StaNt18xv6vZliIbIE25yRlmwG9VJJpQH/REZsx4PjToKpy9fwiDxtLK8FJ5
-	VJG6JXipg==
-X-Received: by 2002:a05:6512:834a:b0:5b4:7795:8abb with SMTP id 2adb3069b0e04-5b4841f3e21mr7234892e87.7.1787628614267;
-        Mon, 24 Aug 2026 20:30:14 -0700 (PDT)
-Received: from [192.168.243.250] ([94.229.16.221])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b48cd9ab35sm2179799e87.3.2026.08.24.20.30.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Aug 2026 20:30:13 -0700 (PDT)
-From: Nikolay Kulikov <nikolayof23@gmail.com>
-Date: Tue, 25 Aug 2026 06:30:07 +0300
-Subject: [PATCH] scsi: csiostor: remove 'state' parameter from
- csio_do_hello()
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="W67fGX5R"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1787649010; bh=PeysLjeJbnAEECANd68FkaW6zaswjbf3M4PEeOvY/G8=;
+	h=Date:To:Cc:From:Subject;
+	b=W67fGX5RQCydYWBbPoLDmTvJUFKa35Hnl6uTZCviD/5V3gWtVrVL/I3v96rbu1sep
+	 jCQMuoIPt9LcV8DMODvBx84RGnEmyM5txNm3yepOx0iRT2cP7D12HNOLJ7K0wzydAZ
+	 ESL9Zhjq5RnE2JSPXZ/aQ52MtuS5zf+S3XD8ZkJc=
+Received: from [192.168.255.10] ([111.206.145.19])
+	by newxmesmtplogicsvrszc50-0.qq.com (NewEsmtp) with SMTP
+	id 28826E04; Tue, 25 Aug 2026 17:10:08 +0800
+X-QQ-mid: xmsmtpt1787649008tn0u5fa0i
+Message-ID: <tencent_973A1BCA2B57AC33B4D37BE0EC74C6263505@qq.com>
+X-QQ-XMAILINFO: OEUhVsHQax4MPp8nCAIKGj5ki1A3XXDk18QBK2r46FtMVaLJzMypxbum8OxIM8
+	 TS8mLIYhzF/CHoN1ipoLUeqrN50WlBgCAIjEIZPaZxqA21ubgrhXqVlxXJVGFqDCug/i/Vibcdf2
+	 NwxdDYvjrEXDOrKgiTZMwK5JoSZSt8aip3VFgknTOGdJ9Sepoof8oORFZyfQ5vW7n9wRTUYCvVIJ
+	 ar3uguid8W3sU7FVipwLZvLKbFp/J3YwaLEPn5M0HDBJxqXMOdV0mpmVa77c60QAbNSz99VUVbPU
+	 1db23tORlrfwWTv7Dc1rFMRne2rc++jWmkxTHQ337WYkZ3Tz+chv8i/t+qOCjtwiTaB20VhlHTr2
+	 clwqoRV+m2DFgllRhlVbQC+Dsak8IHAUiFD/ky9PplIiALUJaLCoAUFepKs8VsWQbJprTsVRzuTE
+	 ul282L7DlT/e2YBN+zRK12cdPDZmRsPRkNBQ1XargEDSE3vnp1bQ4vH7iJjvCz63y16c7qtXcwNV
+	 twP6kIlBQiK+o7F6xqfU9yqqBMNZ9Jzv0sIEhX7DhNq0ba/xr5g5GmGv4JK9ohwJB6ZZe2IlJPs0
+	 WXZxfyp495SWpEXFJZRstk4EMLPbA+BiogujJcSuo6gWpRTqiTv3/HY6E6BB/R7LwImeo7Uv2/18
+	 jJc84MDh2swG1gzfb3F5FE8jKlGM02Jja4yuT+NjfK7hBoCo04qx/0pg6Lw6ZsIBcURlC96uluu8
+	 aRDvZiLX/BbsTDWzW3OrXZjy0cePmMwihKym13FcRseIiiuzib/HhmD8mODuHalw3RLD5jUCj1VR
+	 iHzaCxfaylb3Yo/GpA865gxetNwAqddwvJ+OWxCP3hCj/WcnemWbU04DYSo3HaR1tdiI57rnhEO/
+	 mknzYtYI3bwMhGV6KWntVpczeeeFEqHc+pqv3MvevcFT9NZopVK/YrFj2PYEGVZS0cg4dQgga9V2
+	 fI4Fc2qWXKjnWaEZURtkZ2mdFvwF6wWt9ek14YBHpCk+f+yQOZyo4hd20vP7wZV+PVPIw8g1vEsr
+	 so2kcPbamCXHU0iopzdKuo2hGQCJPALw7BvYCelbsxQrACt3p36joPuk7X3He0Z9st3CqiLJvAui
+	 VpwhoUx3Vu2O7q4mVY6ovhvI/TtA==
+X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
+X-OQ-MSGID: <8c03e205-a4d6-4aea-91bb-d5764c19296f@qq.com>
+Date: Tue, 25 Aug 2026 17:10:07 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260825-scsi_csio_state-v1-1-34921cc9e879@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMQQ5AMBCF4avIrDWpRqRcRUQYU8YC6ZRIxN0Vi
- 7f4Fu+/QMgzCVTJBZ4OFl6XiCxNAKduGUnxEA1Gm0JbkytB4TZubSV0gZRFzAarHTpbQnxtnhy
- fX7Fufsvez4ThzcB9P9T0ySBzAAAA
-X-Change-ID: 20260824-scsi_csio_state-8cc1d80fcf89
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Nikolay Kulikov <nikolayof23@gmail.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1787628612; l=3254;
- i=nikolayof23@gmail.com; s=20260402; h=from:subject:message-id;
- bh=2AhcLjrsIzdCHr80T9Irqs7JkoGtT/A/4BaDwo9EtJc=;
- b=sGg2zLKY1Hoif8Rn0H1I7WlXPxHZk0Z/jViXqu0AA2oieTwe2rZo+7bkcu6O1vrfnSGoHqIG4
- 4L0yrb03pEBC/i8Ksa/pEJRLIWBLOSm/9hDTELMO3meeJelhREjpjoD
-X-Developer-Key: i=nikolayof23@gmail.com; a=ed25519;
- pk=2GWUU1isl5NJpkwSCQ4OG80EinZ3EUZXlrgAg6Pz5zI=
+User-Agent: Mozilla Thunderbird
+To: njavali@marvell.com, mrangankar@marvell.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+From: Yang Zi <2959243019@qq.com>
+Subject: [PATCH] scsi: qla4xxx: Fix NULL pointer dereference in
+ qla4xxx_abort_active_cmds()
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-At the single call site, the 'state' parameter holds the address of the
-'hw->fw_state' field. However, the csio_do_hello() also receives a
-pointer to 'hw', so use that field directly to avoid unnecessary pointer
-check.
+qla4xxx_probe_adapter()'s failure path first calls scsi_remove_host(),
+which drops the SCSI host's tag set reference and frees tag_set.tags via
+scsi_mq_free_tags() -> blk_mq_free_tag_set().  It then falls through to
+qla4xxx_free_adapter(), which calls qla4xxx_abort_active_cmds().  That
+function walks ha->host->can_queue entries and, for each one, calls
+qla4xxx_del_from_active_array() -> scsi_host_find_tag(), which
+dereferences shost->tag_set.tags -- now NULL -- resulting in a NULL
+pointer dereference.
 
-Detected by Smatch:
-drivers/scsi/csiostor/csio_hw.c:1007 csio_do_hello()
-	warn: variable dereferenced before check 'state' (see line 954)
+KASAN report:
 
-Signed-off-by: Nikolay Kulikov <nikolayof23@gmail.com>
+    BUG: KASAN: null-ptr-deref in scsi_host_find_tag include/scsi/scsi_tcq.h:33 [inline] [qla4xxx]
+    BUG: KASAN: null-ptr-deref in qla4xxx_del_from_active_array drivers/scsi/qla4xxx/ql4_os.c:9095 [inline] [qla4xxx]
+    BUG: KASAN: null-ptr-deref in qla4xxx_abort_active_cmds+0x10b/0x610 drivers/scsi/qla4xxx/ql4_os.c:4816 [qla4xxx]
+
+Guard qla4xxx_abort_active_cmds() so that it returns early when the SCSI
+host has not been set up yet or its tag set has already been released:
+in both cases there are no outstanding commands left to abort, and
+scsi_host_find_tag() must not dereference a NULL tag_set.tags pointer.
+This covers both the failed-probe cleanup path and the normal
+qla4xxx_remove_adapter() path.
+
+This patch addresses two reports with the same root cause (tracking IDs
+115 and 139).
+
+Signed-off-by: Yang Zi <2959243019@qq.com>
 ---
- drivers/scsi/csiostor/csio_hw.c | 22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio_hw.c
-index df9f81f29950..ea3775161d7b 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -908,12 +908,11 @@ csio_hw_dev_ready(struct csio_hw *hw)
- /*
-  * csio_do_hello - Perform the HELLO FW Mailbox command and process response.
-  * @hw: HW module
-- * @state: Device state
-  *
-  * FW_HELLO_CMD has to be polled for completion.
-  */
- static int
--csio_do_hello(struct csio_hw *hw, enum csio_dev_state *state)
-+csio_do_hello(struct csio_hw *hw)
- {
- 	struct csio_mb	*mbp;
- 	int	rv = 0;
-@@ -941,7 +940,7 @@ csio_do_hello(struct csio_hw *hw, enum csio_dev_state *state)
- 		goto out_free_mb;
- 	}
- 
--	csio_mb_process_hello_rsp(hw, mbp, &retval, state, &mpfn);
-+	csio_mb_process_hello_rsp(hw, mbp, &retval, &hw->fw_state, &mpfn);
- 	if (retval != FW_SUCCESS) {
- 		csio_err(hw, "HELLO cmd failed with ret: %d\n", retval);
- 		rv = -EINVAL;
-@@ -951,7 +950,7 @@ csio_do_hello(struct csio_hw *hw, enum csio_dev_state *state)
- 	/* Firmware has designated us to be master */
- 	if (hw->pfn == mpfn) {
- 		hw->flags |= CSIO_HWF_MASTER;
--	} else if (*state == CSIO_DEV_STATE_UNINIT) {
-+	} else if (hw->fw_state == CSIO_DEV_STATE_UNINIT) {
- 		/*
- 		 * If we're not the Master PF then we need to wait around for
- 		 * the Master PF Driver to finish setting up the adapter.
-@@ -1004,12 +1003,11 @@ csio_do_hello(struct csio_hw *hw, enum csio_dev_state *state)
- 			 * We either have an Error or Initialized condition
- 			 * report errors preferentially.
- 			 */
--			if (state) {
--				if (pcie_fw & PCIE_FW_ERR_F) {
--					*state = CSIO_DEV_STATE_ERR;
--					rv = -ETIMEDOUT;
--				} else if (pcie_fw & PCIE_FW_INIT_F)
--					*state = CSIO_DEV_STATE_INIT;
-+			if (pcie_fw & PCIE_FW_ERR_F) {
-+				hw->fw_state = CSIO_DEV_STATE_ERR;
-+				rv = -ETIMEDOUT;
-+			} else if (pcie_fw & PCIE_FW_INIT_F) {
-+				hw->fw_state = CSIO_DEV_STATE_INIT;
- 			}
- 
- 			/*
-@@ -1025,7 +1023,7 @@ csio_do_hello(struct csio_hw *hw, enum csio_dev_state *state)
- 		hw->flags &= ~CSIO_HWF_MASTER;
- 	}
- 
--	switch (*state) {
-+	switch (hw->fw_state) {
- 	case CSIO_DEV_STATE_UNINIT:
- 		strcpy(state_str, "Initializing");
- 		break;
-@@ -2511,7 +2509,7 @@ csio_hw_configure(struct csio_hw *hw)
- 
- 	csio_hw_print_fw_version(hw, "Firmware revision");
- 
--	rv = csio_do_hello(hw, &hw->fw_state);
-+	rv = csio_do_hello(hw);
- 	if (rv != 0) {
- 		CSIO_INC_STATS(hw, n_err_fatal);
- 		csio_post_event(&hw->sm, CSIO_HWE_FATAL);
-
----
-base-commit: 12e67eb89eb2b9516685c744d3f7de0a2d1bd701
-change-id: 20260824-scsi_csio_state-8cc1d80fcf89
-
-Best regards,
---  
-Nikolay Kulikov <nikolayof23@gmail.com>
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index d598ab4126f8..2277f48fede8 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -4811,6 +4811,15 @@ static void qla4xxx_abort_active_cmds(struct scsi_qla_host *ha, int res)
+     int i;
+     unsigned long flags;
+ 
++    /*
++     * The SCSI host may not be fully set up yet, or its tag set may
++     * already have been released by scsi_remove_host().  In either case
++     * there are no outstanding commands to abort, and scsi_host_find_tag()
++     * would dereference a NULL tag_set.tags pointer.
++     */
++    if (!ha->host || !ha->host->tag_set.tags)
++        return;
++
+     spin_lock_irqsave(&ha->hardware_lock, flags);
+     for (i = 0; i < ha->host->can_queue; i++) {
+         srb = qla4xxx_del_from_active_array(ha, i);
 
