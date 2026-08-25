@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 008BD32B10E
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:20:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5BF34E761
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:20:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787674802; cv=none; b=NeQ11q99gruAaCT/0Jzs5a8bK0xdEwh03B2zS1mAejepawTQuh9sGVYIXZ2myEaGJ9CDz/UzI10wlXn08Ji17T7egCvnefH+NkCjywtuF8xgcTytkxGb0YfuYYZm6YxL2y7KkDo0+UDANh0avkosQJF6K+VPdop52OwtDX+BCAU=
+	t=1787674842; cv=none; b=cDB4Qcv6xME0zx6jhY2PIpc9JDdYCXDlyDnFZAkNF0LGGnTVlihLuekirGYl9/Nl1Pg2AuYtAqTCPK0DjScZTTT5Nry+NDw0vM/8t4dZEZxoIrYM3p1VpNBU5xNFEBABi5950M6Nw9o/zU7yZZl6royKibn6tHkn8jzhJDc5zYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787674802; c=relaxed/simple;
-	bh=GW2s+7W0c/GZwB9vB5hiyjNaS8geH+1Ou04gpkbp6lw=;
+	s=arc-20240116; t=1787674842; c=relaxed/simple;
+	bh=5T1/eD8jKMaVe6oD7iSIjUaaaDkcwkcYdJ8rjqpc+2o=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Ni9VbeTWm1eaRMxjuL11z7JDLqCkY8N6rWjfs2Gu85aQljbISJvX1MhwGRHh5kwE3ViMIipbzLwSFn1mXn/+LmTidJYowCxhOQbaackXmGl89vQoVR5a4zzCahwBf4rfBkJYdm1H9Y5gWZokx5NcZFbuJzrgCXbYUgVyCRbu/7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iB5p+hp+; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=KdNAJ8q6awRV2/V5kGO26Xryuvhwkv+sV6qWV7IP0X3QmiF4EZAsuWVuNCaaLEAn/9ijzSv2SpqZUBwKQPJ3EAgzVL6POJIMEHAWyJclZQq4Q27IDCrdHAOw9GcsDIldWtNuMdiv5brcdV2WguHn+xGIQlvmjqpwFv4sGnfwagE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G2fI+mWs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iB5p+hp+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E60B1F000E9;
-	Tue, 25 Aug 2026 16:20:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G2fI+mWs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 417FE1F000E9;
+	Tue, 25 Aug 2026 16:20:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787674800;
-	bh=cerNN6hwAH74cHovoCNUWae1mRZSZ5d+OXqz+LsA1GI=;
+	s=k20260515; t=1787674841;
+	bh=bXgWCwz7ETgp2ZeU+SS30AEcLSYEkw34BfSqk/XsYQY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iB5p+hp+yAqBzlR3CmABDb3vW1gDwTnGpou4jbY6JoZZlMZqY1heZXSdHCt6T19JI
-	 DIZPnNqlvK0lN0gn+3qlPx/RV1U/fjaMfmIZB+ktTmpKXn3znD9lKZNBI2fNKqCEWL
-	 9lorxZnD6q48gNcqMROCWWbJ/iUzKzSIRkQDZTNDy5fGTfvWsZYFggrEqSTBOsWS1+
-	 0RVKpUpn38IRb74NXgBJIBHIksgrVCrLKteBM+3w4K3Wm9/sPIt5uabm/pkoGe3gju
-	 r0kwLTSk4G+++BVWI1vV4VpsQ+MYe6iJUEtXCqOpPBEU2p5w4hiF1AwfgapKgdOMz+
-	 1dkiQ0Nd1O8Rw==
+	b=G2fI+mWsWTej8TBoVcMoSvEOvqboFRhSbDSVGnSPMcF7f/RkX3azlzPwFALyLzikY
+	 jH8cAWVuD6qOtauM08d8e1hKu2iTKcShbfBBrTu+XOepUyRwb0d0gDfDq+2YgVnIPK
+	 MO0aXJbP7i3TobuAQ42orhgAFwbGMOCDsscFLMN6T6HBm9wFvbZFnoDm4wUGz1fGOH
+	 SsK2ARsqqATrpy9ZLhAHvCPWzyu0iwnYtzTis4o7QRu9TLEwaqAURNIDEwSZJq/42E
+	 y9RIaTNyXRzso3smQEpP3cYeXNZp7EesvvCb3OzbUIkTZdfxsUm7iG3Yg+aiyrb+dr
+	 2DRu2fjvJPyIQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 17/17] mpi3mr: Fix NULL pointer dereference on PCI
- error recovery
+Subject: Re: [PATCH v2 09/17] mpi3mr: Fix target device reference leak in
+ device removal handshake
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chandrakanth Patil" <chandrakanth.patil@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260825210411.301535-18-chandrakanth.patil@broadcom.com>
+In-Reply-To: <20260825210411.301535-10-chandrakanth.patil@broadcom.com>
 References: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
- <20260825210411.301535-18-chandrakanth.patil@broadcom.com>
+ <20260825210411.301535-10-chandrakanth.patil@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 16:20:00 +0000
-Message-Id: <20260825162000.8E60B1F000E9@smtp.kernel.org>
+Date: Tue, 25 Aug 2026 16:20:40 +0000
+Message-Id: <20260825162041.417FE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,99 +49,82 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] Concurrent execution between `mpi3mr_cleanup_fwevt_list()` and=
- the firmware event worker thread results in a Use-After-Free of the `mrioc=
-->current_event` pointer.
-- [High] The patch fails to resolve the 'already in flight' race condition =
-described in its commit message, leaving the driver vulnerable to NULL poin=
-ter dereferences via a Time-Of-Check to Time-Of-Use (TOCTOU) race.
+- [Medium] Target device reference count leak on `mpi3mr_target_alloc` fail=
+ure paths.
+- [Medium] Silent failure and wedged hardware state machine when device rem=
+oval handshake TM allocation fails.
 --
 
-commit 67ebeaa54b154ad043a90c5a2e98345f3782e9c3
+commit e0b0b39b67b7199d7920836b376fd3080aa21730
 Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
-mpi3mr: Fix NULL pointer dereference on PCI error recovery
+mpi3mr: Fix target device reference leak in device removal handshake
 
-This patch attempts to fix a race condition on a frozen PCI channel by
-preventing in-flight firmware event handlers from accessing unmapped
-register windows. It adds a check for pci_err_recovery early in the
-bottom-half handler to skip event processing during recovery.
+The device removal handshake looks up the target device to update its
+state but never drops the reference that the lookup takes.
 
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
 _os.c
-> index e97e343b14fa5..a389f7f2c741e 100644
+> index 2a35f146fe69b..9aeec6146acbb 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -2130,9 +2130,11 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mri=
-oc,
->  	mpi3mr_fwevt_del_from_list(mrioc, fwevt);
->  	mrioc->current_event =3D fwevt;
-
-[Severity: Critical]
-This is a pre-existing issue, but does assigning mrioc->current_event here
-lead to a use-after-free during driver teardown or reset?
-
-If mpi3mr_cleanup_fwevt_list() is executing concurrently, it performs a
-lockless read of mrioc->current_event:
-
-drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_cleanup_fwevt_list() {
-        ...
-        fwevt =3D mrioc->current_event;
-        ...
-}
-
-At the end of mpi3mr_fwevt_bh(), the worker thread drops the reference and
-NULLs the pointer:
-
-drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_fwevt_bh() {
-        ...
-out:
-        mpi3mr_fwevt_put(fwevt);
-        mrioc->current_event =3D NULL;
-}
-
-If mpi3mr_cleanup_fwevt_list() captures the pointer before the worker thread
-NULLs it, but accesses it after mpi3mr_fwevt_put() frees the memory, could
-this corrupt memory when interacting with the freed event's work struct?
-
+> @@ -2536,6 +2536,9 @@ static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_i=
+oc *mrioc, u16 handle,
+>  		tgtdev->state =3D MPI3MR_DEV_REMOVE_HS_STARTED;
+>  	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
 > =20
-> -	if (mrioc->stop_drv_processing) {
-> -		dprint_event_bh(mrioc, "ignoring event(0x%02x) in the bottom half hand=
-ler\n"
-> -				"due to stop_drv_processing\n", fwevt->event_id);
-> +	if (mrioc->stop_drv_processing || mrioc->pci_err_recovery) {
+> +	if (tgtdev)
+> +		mpi3mr_tgtdev_put(tgtdev);
+> +
+>  	if (drv_cmd)
+>  		goto issue_cmd;
+>  	do {
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does this lockless check ful=
-ly
-resolve the race condition described in the commit message?
+[Severity: Medium]
+This isn't a bug introduced by this patch, but further down in
+mpi3mr_dev_rmhs_send_tm(), if the pre-allocated command slots are exhausted,
+the code falls back to allocating a delayed_dev_rmhs node:
 
-Since this check is evaluated early in the handler, could an in-flight work=
-er
-pass this check, get preempted, and then attempt to access hardware registe=
-rs
-concurrently with mpi3mr_error_detected() unmapping and NULLing sysif_regs?
+    delayed_dev_rmhs =3D kzalloc_obj(*delayed_dev_rmhs, GFP_ATOMIC);
+    if (!delayed_dev_rmhs)
+        return;
 
-For example, if the worker proceeds to mpi3mr_admin_request_post():
+If this GFP_ATOMIC allocation fails, the function returns without schedulin=
+g a
+retry or rolling back the device state (MPI3MR_DEV_REMOVE_HS_STARTED).
 
-drivers/scsi/mpi3mr/mpi3mr_fw.c:mpi3mr_admin_request_post() {
+Can this silent failure leave the hardware state machine permanently wedged,
+waiting for the host to send this TM request?
+
+[Severity: Medium]
+This is a pre-existing issue, but looking at mpi3mr_target_alloc() in the s=
+ame
+file, there appears to be a reference count leak on the error paths.
+
+If __mpi3mr_get_tgtdev_by_perst_id() or
+__mpi3mr_get_tgtdev_by_addr_and_rphy() successfully finds a target device,
+but the device doesn't satisfy the conditional checks for PCIe devices:
+
+    if (tgt_dev && !tgt_dev->is_hidden && tgt_dev->non_stl) {
         ...
-        writel(mrioc->admin_req_pi, &mrioc->sysif_regs->admin_request_queue=
-_pi);
+    } else
+        retval =3D -ENXIO;
+
+Or for SAS/SATA devices:
+
+    if (tgt_dev && !tgt_dev->is_hidden && !tgt_dev->non_stl &&
+        (tgt_dev->dev_type =3D=3D MPI3_DEVICE_DEVFORM_SAS_SATA)) {
         ...
-}
+    } else
+        retval =3D -ENXIO;
 
-Would this still result in a NULL pointer dereference or unmapped memory
-access if the PCI error recovery path clears mrioc->sysif_regs after the
-boolean check in mpi3mr_fwevt_bh() has already passed?
+In both cases, the code returns -ENXIO without dropping the reference count
+via mpi3mr_tgtdev_put(tgt_dev), and without assigning it to
+scsi_tgt_priv_data->tgt_dev for later cleanup.
 
-> +		dprint_event_bh(mrioc,
-> +				"ignoring event(0x%02x) in the bottom half handler\n"
-> +				"due to stop_drv_processing or pci_err_recovery\n",
-> +				fwevt->event_id);
->  		goto out;
->  	}
+Would this leak the mpi3mr_tgt_dev memory structures during device scanning
+if hidden or non-standard devices are present?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825210411.3015=
-35-1-chandrakanth.patil@broadcom.com?part=3D17
+35-1-chandrakanth.patil@broadcom.com?part=3D9
