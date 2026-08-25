@@ -1,253 +1,181 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FCDF33B96B
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:09:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 075A431F9A6
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 16:10:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787674157; cv=none; b=X2elXnUYYHhVmm1idajUxoNq9ZiOI6tb/3p9oQeECJ0mR1BNlYUUHc4rwfRYTaE/wbEUaltPS9b5NhFyU32zmpkfh4OTUQbZER6P1MbIGDysej081DLy+cSYvb14/o7GWz9oyG9YnYKEmAtd+y6J9rBioIOEeU61nAkJvUR3dcE=
+	t=1787674214; cv=none; b=il/gDo5XWdVRSyCXOoLEntyJ5jcumpI95xtXt1gZX70/RmxcZhn+WEQ8tGA152OW3TzIWX7Tovf6WH6lfvRsez0lTblTSzM+fLhz2hI2ABOD4EtMktppmyNg9onitKAew1gSx4UeqhDJVplUysAmVmnhhE7zl1nbvro7NZw/its=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787674157; c=relaxed/simple;
-	bh=GFj8dECLO2DW2mK/XNhpHDSwrRziFVVgKyGLgqbCAtA=;
+	s=arc-20240116; t=1787674214; c=relaxed/simple;
+	bh=WENoviPKuC3Wur87IrTgfSr14gH9/ylTgPQ1qO/m4hE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dxq8/07q6PUY5b4UjQVJigLCfVsb/XukARPijFai4gGWnC+sMt8Ac0shTjtqNFs6MnBg3eYjtGrwmgu//3RA7LFpo3iLY5qTrengfmgZyaRBwtfICw+sCfdSA44E2HmGK2ym8JRxCIIUchPQXpNaaQOV2WVJKbYIjq8ahAiddTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WYbNRexb; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=M/WcJ3Atu3V8mxsVXxlI4nxdQyouWtOJPfQgPxfEovcILYVBx2tJqEhei1ajNUbNjCUhVKujnx5Wie3DXR+tXpptvMORPjUBEtQ3tTu7pgx0YhRya+sk06WnZLkQAbCn9M77r2lJeNcaV0S2CzA8KYcZXTh0bOuGr39X4BT5f9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GWrFRdLj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WYbNRexb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C81FA1F000E9;
-	Tue, 25 Aug 2026 16:09:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GWrFRdLj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EEE11F000E9;
+	Tue, 25 Aug 2026 16:10:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787674156;
-	bh=Xk4fUTkEoafE8vCMyLEsEUj3t0qz32Pgqhn1f62DOx4=;
+	s=k20260515; t=1787674212;
+	bh=B2ksJubMoyCg2yUMtYg31KvbX/i1cn+Qo/zK1kTcwhw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WYbNRexbCEZwffyC1+qK2ruKWU73lJMuXpX+1R7BefX+KOSXkCuN8fTLG3x6g28Nt
-	 1QRH89Gx8ZMHEu6CJ+0eoDt7nEr23cU4xMtVipGaGTkEP6A8cUwuXe/uQGsvxLEIPo
-	 /bsLXjSM6TpooMHbBpw2GzQbHMqKGmOsTGxhaXeQv7+Sx44dprH2k7eb/cV7NoCqDu
-	 I33Mq0BbK+TKHDUJyExM+5TAe6jHJx56/woxMTrNUMnsA3RV+ZeT6+hKGdK+Yi21cD
-	 T3cUtQkgvVWPqk3u3UBwzYfNHlcWGo0HiIdsH6KfDX+1NeBBvzLGaDdtFuAwkUgN5r
-	 rkep2wBo+XFow==
+	b=GWrFRdLjFeGc+n+zzHCZxYH2E2n3Qy4mK/YRkU7gb5zXUja1b9TZ5eV+D6Do22+nZ
+	 nzE6aW2O+dPzI253mTFWxqZesKBULsqTlKuY0ujTN/WKwKrbGMb4n+xHf0OBlfUOwo
+	 Q60+/gaZIWElUDbfs5XwYykaNXDmOoO2y1JL3x6UHk0NJIlZeMyztRiNdMzMENSp1f
+	 6Q1kcwz30ruyZ1M1raUsV/dFS5MPR+TjVD61Qpei63bZ5HkGhEJneQ7k26BpUci9kB
+	 UqEdAdFm9YkRTPGvHOx8Ao2475CTE1bf6gT1UQHi21i5A8RDQ2/WGGOFQLZd+ZlC0k
+	 9H0ndR1MztNAQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 01/17] mpi3mr: Fix buffer overflow in BSG passthrough
- request copy
+Subject: Re: [PATCH v2 14/17] mpi3mr: Fix out-of-bounds read in PCIe
+ topology change events
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Chandrakanth Patil" <chandrakanth.patil@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260825210411.301535-2-chandrakanth.patil@broadcom.com>
+In-Reply-To: <20260825210411.301535-15-chandrakanth.patil@broadcom.com>
 References: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
- <20260825210411.301535-2-chandrakanth.patil@broadcom.com>
+ <20260825210411.301535-15-chandrakanth.patil@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 16:09:15 +0000
-Message-Id: <20260825160915.C81FA1F000E9@smtp.kernel.org>
+Date: Tue, 25 Aug 2026 16:10:11 +0000
+Message-Id: <20260825161012.5EEE11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Missing validation of `job->request_len` allows out-of-bounds slab=
- memory reads when parsing the BSG request and buffer entries.
-- [High] On 32-bit architectures, pointer wrap-around allows bypassing boun=
-ds checks for specific buffer types, leading to out-of-bounds heap access.
-- [High] DMA coherent memory allocated for NVMe PRP lists is leaked on comm=
-and posting failures or command timeouts.
-- [High] Potential Use-After-Free of `stgt_priv` if the SCSI target is remo=
-ved concurrently during a long-running BSG command.
-- [High] Data race and use-after-timeout on `mrioc->bsg_cmds` state between=
- timeout handler and interrupt handler.
+- [High] The bounds check blindly trusts `event_data_length` provided by th=
+e hardware without clamping it to the physical size of the DMA reply buffer=
+, failing to prevent out-of-bounds reads in the top-half handlers.
+- [High] The patch adds bounds checking to the top-half handler, but fails =
+to prevent the bottom-half handler from being scheduled and iterating out-o=
+f-bounds over the same malformed event data.
+- [High] The compiler-inserted bounds checks from the `__counted_by` attrib=
+ute bypass the local variable cache, re-introducing a TOCTOU vulnerability.
+- [High] Lockless access to `tgtdev->starget` and `starget->hostdata` leads=
+ to a Use-After-Free vulnerability.
 --
 
-commit 6909218adbd3af92548ad9194e535cec60aaccf1
+commit 63bdf6fdca71d0debbf3d9facb074c2cc5e861c5
 Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
-mpi3mr: Fix buffer overflow in BSG passthrough request copy
+mpi3mr: Fix out-of-bounds read in PCIe topology change events
 
-The size of an incoming BSG request is checked using a variable that is
-narrower than the field it is read from, so large values wrap and pass
-the check. The copy that follows then uses the full value and writes
-past the request buffer.
+This commit bounds the entry count to the received event data before use to
+prevent out-of-bounds reads when processing PCIe topology change events.
 
-Widen the variable and copy only the amount that was checked.
-
-Fixes: 506bc1a0d6ba ("scsi: mpi3mr: Add support for MPT commands")
-Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3m=
-r_app.c
-> index 1353a8ff9c85d..8e5d24793efd0 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> @@ -2384,7 +2384,7 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_=
-job *job)
->  	long rval =3D -EINVAL;
->  	struct mpi3mr_ioc *mrioc =3D NULL;
->  	u8 *mpi_req =3D NULL, *sense_buff_k =3D NULL;
-> -	u8 mpi_msg_size =3D 0;
-> +	u32 mpi_msg_size =3D 0;
->  	struct mpi3mr_bsg_packet *bsg_req =3D NULL;
->  	struct mpi3mr_bsg_mptcmd *karg;
->  	struct mpi3mr_buf_entry *buf_entries =3D NULL;
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
+_os.c
+> index 65a6192cf3960..543e9b8e3fc37 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> @@ -2761,12 +2761,28 @@ static void mpi3mr_pcietopochg_evt_th(struct mpi3=
+mr_ioc *mrioc,
+>  	struct mpi3_event_data_pcie_topology_change_list *topo_evt =3D
+>  	    (struct mpi3_event_data_pcie_topology_change_list *)event_reply->ev=
+ent_data;
+>  	int i;
+> -	u16 handle;
+> -	u8 reason_code;
+> +	u16 handle, avail_len;
+> +	u8 reason_code, max_entries, num_entries;
+>  	struct mpi3mr_tgt_dev *tgtdev =3D NULL;
+>  	struct mpi3mr_stgt_priv_data *scsi_tgt_priv_data =3D NULL;
+> =20
+> -	for (i =3D 0; i < topo_evt->num_entries; i++) {
+> +	avail_len =3D event_reply->event_data_length * 4;
 
 [Severity: High]
-This is a pre-existing issue, but does this lack validation of
-job->request_len when parsing the BSG request and buffer entries?
+This is a pre-existing issue, but the patch provides an incomplete fix. Does
+this code blindly trust event_data_length provided by the hardware without
+clamping it to the physical size of the DMA reply buffer?
 
-drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds() {
-...
-	bsg_req =3D job->request;
-	karg =3D (struct mpi3mr_bsg_mptcmd *)&bsg_req->cmd.mptcmd;
-...
-	bufcnt =3D karg->buf_entry_list.num_of_entries;
-...
-	buf_entries =3D karg->buf_entry_list.buf_entry;
-...
-}
+If a malicious or buggy hardware controller sends a PCIe topology change
+event with a large event_data_length (e.g., 255) and a large num_entries,
+avail_len could become up to 1020, exceeding the actual physical buffer size
+(mrioc->reply_sz, typically 128 bytes).
 
-And similarly in mpi3mr_bsg_process_drv_cmds():
+Since avail_len is not clamped, max_entries would become artificially large,
+bypassing the loop bounds check. Could this result in an out-of-bounds read
+of kernel memory adjacent to the DMA reply buffer?
 
-drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_drv_cmds() {
-...
-	bsg_req =3D job->request;
-	drvrcmd =3D &bsg_req->cmd.drvrcmd;
-	mrioc =3D mpi3mr_bsg_verify_adapter(drvrcmd->mrioc_id);
-...
-}
-
-If a user intentionally specifies a request_len smaller than the size of
-struct mpi3mr_bsg_packet, could this result in an out-of-bounds slab memory
-read since the driver casts and accesses the buffer without checking the
-length?
-
-> @@ -2538,7 +2538,7 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_=
-job *job)
->  				rval =3D -EINVAL;
->  				goto out;
->  			}
-> -			memcpy(mpi_req, sgl_iter, buf_entries->buf_len);
-> +			memcpy(mpi_req, sgl_iter, mpi_msg_size);
->  			break;
->  		default:
->  			invalid_be =3D 1;
+> +	if (avail_len < offsetof(struct mpi3_event_data_pcie_topology_change_li=
+st, port_entry)) {
+> +		ioc_err(mrioc, "PCIe topology event: event data too small (%u bytes)\n=
+",
+> +			avail_len);
+> +		return;
+> +	}
+> +	max_entries =3D (avail_len -
+> +		      offsetof(struct mpi3_event_data_pcie_topology_change_list, port_=
+entry)) /
+> +		      sizeof(struct mpi3_event_pcie_topo_port_entry);
+> +	num_entries =3D topo_evt->num_entries;
+> +	if (num_entries > max_entries) {
+> +		ioc_err(mrioc, "PCIe topology event: num_entries(%d) exceeds max(%d)\n=
+",
+> +			num_entries, max_entries);
+> +		return;
 
 [Severity: High]
-This is a pre-existing issue, but does this pointer arithmetic bypass
-bounds checks on 32-bit architectures?
+This isn't a bug introduced by this patch, but the patch's attempt to fix t=
+he
+bounds check might be bypassed in the bottom half. If the top-half handler
+returns early here, what happens to process_evt_bh which was set to 1 prior
+to this call by mpi3mr_os_handle_events()?
 
-drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds() {
-...
-		case MPI3MR_BSG_BUFTYPE_MPI_REPLY:
-			sgl_iter =3D sgl_din_iter;
-			sgl_din_iter +=3D buf_entries->buf_len;
-...
-}
+If process_evt_bh is not cleared, wouldn't the bottom-half handler
+mpi3mr_pcietopochg_evt_bh() still be scheduled and iterate out-of-bounds ov=
+er
+the same malformed event data?
 
-If a user submits a massive buf_len (e.g., 0xFFFFFFFF), could the addition
-to sgl_din_iter (which is a u8 *) cause an integer wrap-around on 32-bit
-systems?
+mpi3mr_pcietopochg_evt_bh():
+	for (i =3D 0; i < event_data->num_entries; i++) {
 
-Since a wrapped pointer is mathematically smaller, would it bypass the
-safety check:
-
-	if (sgl_din_iter > (din_buf + job->reply_payload.payload_len))
-
-And allow an out-of-bounds heap write when the driver copies the reply:
-
-	memcpy(drv_buf_iter->bsg_buf, bsg_reply_buf, tmplen);
+> +	}
+> +
+> +	for (i =3D 0; i < num_entries; i++) {
+>  		handle =3D le16_to_cpu(topo_evt->port_entry[i].attached_dev_handle);
 
 [Severity: High]
-This is a pre-existing issue, but does this code leak DMA coherent memory
-on command posting failures or timeouts?
+This isn't a bug introduced by this patch, but the patch's attempt to fix t=
+he
+TOCTOU vulnerability might be nullified. Even though num_entries is cached =
+in
+a local variable, doesn't accessing topo_evt->port_entry[i] trigger a
+compiler-inserted bounds check because of the __counted_by(num_entries)
+attribute in the structure definition?
 
-drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_build_nvme_prp() {
-...
-	mrioc->prp_list_virt =3D dma_alloc_coherent(&mrioc->pdev->dev,
-	    dev_pgsz, &mrioc->prp_list_dma, GFP_KERNEL);
-...
-}
+Under CONFIG_UBSAN_BOUNDS, this would force the compiler to re-read
+topo_evt->num_entries directly from DMA memory to perform the bounds check.
 
-drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds() {
-...
-		if (rval) {
-			mrioc->bsg_cmds.is_waiting =3D 0;
-			dprint_bsg_err(mrioc,
-			    "%s: posting bsg request is failed\n", __func__);
-			rval =3D -EAGAIN;
-			if (block_io && stgt_priv)
-				atomic_dec(&stgt_priv->block_io);
-			goto out_unlock;
-		}
-...
-}
+If a malicious device modifies this value post-validation, could it trigger
+a bounds check failure and panic the kernel?
 
-If mpi3mr_admin_request_post() fails or if the command times out, the code
-jumps to out_unlock. Does out_unlock fail to free mrioc->prp_list_virt,
-leading to a permanent leak of DMA memory?
+>  		if (!handle)
+>  			continue;
+>  		reason_code =3D topo_evt->port_entry[i].port_status;
+>  		scsi_tgt_priv_data =3D  NULL;
+>  		tgtdev =3D mpi3mr_get_tgtdev_by_handle(mrioc, handle);
+>  		if (tgtdev && tgtdev->starget && tgtdev->starget->hostdata)
 
 [Severity: High]
-This is a pre-existing issue, but is there a potential Use-After-Free of
-stgt_priv if the SCSI target is removed concurrently?
+This is a pre-existing issue that was not addressed, but is it safe to acce=
+ss
+tgtdev->starget and starget->hostdata locklessly here?
 
-drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds() {
-...
-		if (tgtdev) {
-			if (tgtdev->starget && tgtdev->starget->hostdata) {
-				stgt_priv =3D (struct mpi3mr_stgt_priv_data *)
-				    tgtdev->starget->hostdata;
-				atomic_inc(&stgt_priv->block_io);
-			}
-			mpi3mr_tgtdev_put(tgtdev);
-		}
-...
-		if (block_io && stgt_priv)
-			atomic_dec(&stgt_priv->block_io);
-...
-}
+If mpi3mr_target_destroy() executes concurrently, it can take the lock, set
+tgtdev->starget =3D NULL, release the lock, and call kfree(starget->hostdat=
+a).
 
-The reference to the target device is dropped via mpi3mr_tgtdev_put(tgtdev)
-before the long wait. If the physical SCSI device is hot-unplugged during
-the wait for command completion, could the SCSI midlayer free the starget
-and stgt_priv before atomic_dec() is called?
-
-[Severity: High]
-This is a pre-existing issue, but is there a data race on mrioc->bsg_cmds
-state between the timeout handler and the interrupt handler?
-
-drivers/scsi/mpi3mr/mpi3mr_app.c:mpi3mr_bsg_process_mpt_cmds() {
-...
-		if (!(mrioc->bsg_cmds.state & MPI3MR_CMD_COMPLETE)) {
-			mrioc->bsg_cmds.is_waiting =3D 0;
-			rval =3D -EAGAIN;
-...
-}
-
-And in the interrupt handler:
-
-drivers/scsi/mpi3mr/mpi3mr_fw.c:mpi3mr_process_admin_reply_desc() {
-...
-	cmdptr->state |=3D MPI3MR_CMD_COMPLETE;
-...
-	cmdptr->state &=3D ~MPI3MR_CMD_PENDING;
-...
-	if (cmdptr->is_waiting) {
-		cmdptr->is_waiting =3D 0;
-		complete(&cmdptr->done);
-	}
-...
-}
-
-If a BSG command times out, the timeout handler locklessly sets
-is_waiting =3D 0 and aborts, allowing another thread to acquire the lock
-and submit a new command using the same structure.
-
-If a delayed hardware interrupt for the original command fires while the
-new command is pending, could the non-atomic modifications to cmdptr->state
-in mpi3mr_process_admin_reply_desc corrupt the state of the new command
-and prematurely complete it?
+Could the top-half handler race with this destruction and lead to a
+Use-After-Free when dereferencing scsi_tgt_priv_data immediately afterwards?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825210411.3015=
-35-1-chandrakanth.patil@broadcom.com?part=3D1
+35-1-chandrakanth.patil@broadcom.com?part=3D14
