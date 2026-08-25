@@ -1,65 +1,87 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f225.google.com (mail-vk1-f225.google.com [209.85.221.225])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 739F2299922;
-	Tue, 25 Aug 2026 14:52:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A964846F495
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 15:43:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787669546; cv=none; b=Pl80FjuFphUCu+yYYPy5KXSfbNHF6thcPw6zh/mvvp5rpSV5WwDi17s6gXLTjyR0l0DJJWk7g0H0Wh17MBfW7YG2a+HJdUswczWVwvxEYVzK+aPM2TJfPx9F9JO1nkrfq/bNRAE9W+IhYhzwD83UNxjdQ4sehx09IKjM0vd4j88=
+	t=1787672601; cv=none; b=n8+edOW79TVA2CDNJGMe87oNumnVKZSmo1r9WOFkmnQeUXxpAfOlKqo8bHk3KoGtDCpVfuc7oOb+4aAFBAfy5POXMKf4PPsybcthGTRI7HO8X3bCVE7t7JwDwXiECIqJ3e/lHXU2mWfDjO7vizWEayBr1PwspkGj7wUc4jXEEO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787669546; c=relaxed/simple;
-	bh=2+5AmPM/bnoC/0AGB8YWIpRzHhxre1udeUZJmrST0UQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Qckz5fdPcOWHKe4l7TNaOuuKYs+9uFfVLqbB3oy6EevtvAP6/7jaKl90YGo2T+7pIc7JYEP7jVkQ+wbiOhSjOiDr46sbAx2nKfbU0Gcs+48Oh2KtZniDm8ZOBDqbu0fSWZRKv9d7C4MiPZcCNCYCI88i5bfAtPzW8zfnhK66SKY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=JpVqzeI5; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1787672601; c=relaxed/simple;
+	bh=Ex2HHFx2dg/EP7S7uke5WCvzATR3ZZm+DYkBBbrq+NE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Noy4CV3+wAjk7/tpVroDczA3AiSooN5PVZcCS3SNVibhv4xdhsR5XA0/S4BwmfYPhNuQ8CA5VyBvHUSnFYntrBUoZu0M7O8vVaE0ykdGu5LOIYdN9anCxKxwjqw+0vGcq7ERLgXDzaZ+TG4B6vWkK5j9wvK8lLZ9pNWmvlWiyjE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Gr9ASxqO; arc=none smtp.client-ip=209.85.221.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="JpVqzeI5"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67PEUKJs1727613;
-	Tue, 25 Aug 2026 14:52:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=JVbsZ1A9bAk
-	AazSfcmCvj7O4DpTxLXgjjGjpEvKDVCw=; b=JpVqzeI5hjyR7IiXsUBCHzjao/W
-	8lDnwk3j6ireZbTvF9/7u3MS7vRrb1YXVzX1Y2YUoOu2hVhPQylRItNhTwKylBt7
-	2lK3RrUTTdg8fKaUI7qPkksqhp/75EK3AHCFBoDyWGqY/ynmF01rN33EOJCB07rh
-	V9xcukNX9YEomzQJLofBeyNJ9+t8TVg+FV5YyB+Jthnv9EzGtIh7nasVB84B8kO+
-	68XVlNzSCUmBButf4ClXovySJV8n2OGjWEaEu/jowrC/evx49c0K3GPG1322aqG7
-	NXt9vv2f58FjkloswCDtyHnWWJ7QaMLUKzgm0PP0keA7OC1ps21NROo4feg==
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g9cgu06wr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 25 Aug 2026 14:52:11 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 67PEq8K1006177;
-	Tue, 25 Aug 2026 14:52:08 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 4g74uk183f-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 25 Aug 2026 14:52:08 +0000 (GMT)
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 67PEq8Hd006157;
-	Tue, 25 Aug 2026 14:52:08 GMT
-Received: from hu-devc-hyd-u22-c.qualcomm.com ([10.213.101.157])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 67PEq80P006150
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 25 Aug 2026 14:52:08 +0000 (GMT)
-Received: by hu-devc-hyd-u22-c.qualcomm.com (Postfix, from userid 2342877)
-	id C1EEC64A; Tue, 25 Aug 2026 20:22:07 +0530 (+0530)
-From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com, konrad.dybcio@oss.qualcomm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Subject: [PATCH V2 2/2] ufs: ufs-qcom: Fix sequential read variance
-Date: Tue, 25 Aug 2026 20:22:03 +0530
-Message-Id: <20260825145203.265579-3-nitin.rawat@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260825145203.265579-1-nitin.rawat@oss.qualcomm.com>
-References: <20260825145203.265579-1-nitin.rawat@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Gr9ASxqO"
+Received: by mail-vk1-f225.google.com with SMTP id 71dfb90a1353d-5c56dbc3a51so1568922e0c.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:43:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787672598; x=1788277398;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=5wGVmnSgRMM4+oZz8GuN8y52+VM0YonCZQic+TFjgxw=;
+        b=qlLdiPdnNQd52cL4A6X5vxF/mzjTjcyB/XonVIK7e7aoJSBCSQgSOO/uLPK+cak7Lj
+         hLEb4RPTlhsMprRtiPyRecVuNWSVc3hVTrrsOH5tsaed4OJhEXr9eke/2r9EbeKD9ssB
+         GQL78P4cx3WdpmuKaOsCd+vXNRTmvoOGuUyRorwhoooqxl6Yy9wzFUnek8eLbDqSPk4E
+         YJ0nUOrInS3cI8oaS2IMrO749LaaWqHdK9yFsqBvnsa5raYDbDtshxQdIUTmedY6UzIP
+         dHppwjrdvDY5L+iMiPiZ4GrBc/yGVa8Dq2LJaHB7S5Sc0hWRJuzzxAVuvUPIhLbAC+NS
+         PAew==
+X-Gm-Message-State: AFuF++kinFMpC9QS1vLn6PMfoklMWhX0hbO3XQVXlHbgA7mSbhE+o8LZ
+	kJOFhj16b5cONadIRBh3/9gTLU4ZRAXneDOtKS4EARaqckiV+3IwFUFQALaxmnovTqAs07M9IGC
+	w3osj3F0BKD/Eu0KvfGR5yOzrA6LzCxmKI+AbcH9DV1drUjlEX3sYzULXq7gNllg+BxsDHZ6ewa
+	mcCN7w1eeeZ94tEYYzi9HcZTMZhOB6dZi5mgCLpJdJU7hNweEOaBfCDiBr5dOQyZzVcNGa/u5NS
+	NLsZDf/5hi0im2ofyCwb+dA
+X-Gm-Gg: AR+sD10kHVcMmZFp4KLrXGf9CrqEuFJsTbv0UOGWSAdSnjptE4JCdVAqBul5V76GJYy
+	48RP2yH7ufkfN0Z97N2zxo6zGtCGrfYIC2GRUz+gIiuFEqghAbGUWlm9tLH3Jo3BcV/460FEIlU
+	7b9nMN8apMuWi8rVjh4be1TMshbuKZYJGfqBHpCscBCZYKIabVUKrbzkNxT+t9Rcxl1EZbmSofK
+	qa2XPYrQHhpxmPlgeKH/fr2rVWvFKJKDL9yJ1YaS9TuS9hODDOGfM/8bgEYIo9My4BnbEN2gzS9
+	m7XF5jR0l+pwZ3cJq+3Leu5bcH8aAQgtpkV5Ar3UN9AeJShYVE4+HEhxaJr833fZE+bEnY+955A
+	pFXXnRkJ9JARi2n/8WzYOVs37qkxiPF41oOus/Tb0eXDO6Jt4yuF4/YKFF6wQs37c20WvOGMgbl
+	q25Wsqorg3QUPcSRot+q9M/cVt7lbF94UU3soF8YU3pCI=
+X-Received: by 2002:a05:6122:d27:b0:5a1:fbbd:6bd0 with SMTP id 71dfb90a1353d-5c642dd5964mr3105708e0c.5.1787672598088;
+        Tue, 25 Aug 2026 08:43:18 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
+        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5c623dedb48sm2313790e0c.6.2026.08.25.08.43.17
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 25 Aug 2026 08:43:18 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-39512608fb1so11971394a91.1
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:43:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1787672597; x=1788277397; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=5wGVmnSgRMM4+oZz8GuN8y52+VM0YonCZQic+TFjgxw=;
+        b=Gr9ASxqOIiXhmXU6+JRaq/bjwZCgGz0WfkSrcvKVvY3ONpXfzUbLj7J7v8kdYNY28k
+         80oGIxXw8SFhvH898n4VWOW7u0+ypPCDHtkSzlbTwkvU5h5rc0uICrLMUw1eCpr2yVZC
+         3+8U3lxMAgWfaFdtzz60AzOma+58JqWI3sDyE=
+X-Received: by 2002:a17:90b:48c9:b0:36d:b424:4f17 with SMTP id 98e67ed59e1d1-3966d3690e2mr151616a91.1.1787672596884;
+        Tue, 25 Aug 2026 08:43:16 -0700 (PDT)
+X-Received: by 2002:a17:90b:48c9:b0:36d:b424:4f17 with SMTP id 98e67ed59e1d1-3966d3690e2mr151515a91.1.1787672596242;
+        Tue, 25 Aug 2026 08:43:16 -0700 (PDT)
+Received: from dhcp-10-123-98-253.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327f9209fafsm63445311eec.23.2026.08.25.08.43.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Aug 2026 08:43:15 -0700 (PDT)
+From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: sathya.prakash@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	sumit.saxena@broadcom.com,
+	sweeti.vandure@broadcom.com,
+	vishakhavc@google.com,
+	ipylypiv@google.com,
+	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Subject: [PATCH v2 00/17] scsi: mpi3mr: Fix out-of-bounds accesses and reference leaks
+Date: Wed, 26 Aug 2026 02:33:54 +0530
+Message-ID: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,65 +89,71 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODI1MDEyNiBTYWx0ZWRfX1L9ir1dt29id
- E0WWXwHArUoao4zI4TxWiyBwrHej6FXSw/WWjZarPM28ZCNwiYbBvSVMOhMb5tJWfSIFTkAcD86
- Sg9+8zvVocJFk8jDJh9jVhxDxDJA3YM=
-X-Proofpoint-ORIG-GUID: k10n2tlsxLiUTw36MqMRmPFsUA9mVGmH
-X-Proofpoint-GUID: k10n2tlsxLiUTw36MqMRmPFsUA9mVGmH
-X-Authority-Analysis: v=2.4 cv=Sb7HsPRu c=1 sm=1 tr=0 ts=6a8dac1b cx=c_pps
- a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=yx91gb_oNiZeI1HMLzn7:22 a=EUspDBNiAAAA:8 a=Qz0M3Qwa2ObwqG_0uY4A:9
- a=+jEqtf1s3R9VXZ0wqowq2kgwd+I=:19
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI1MDEyNiBTYWx0ZWRfX7E7qjxoSIcWl
- HmPgyQukCp3P1ChiEuhRRh2YvpMD0cT3UxmIUWXD2HYF+HVLBMTp3v/Uk2NEg5ksQcWkfEn3xBS
- jDJ2aW313KA5XSO/tT3vk610xlBv8yXxxfvXfOrYKmHp1mMfrNKJmeodNcF91u6lP3pLJYC6M/8
- +FrV51jM2IR2qHJ4mC/ItIqcCwdEr/lzvC7QKK9aHzD1Jjlx7FfhPZg1NgSr2yHBTrRh30VfL0H
- gX66aZoRjlExDtbupRpgH8t0pqSn2zYje95gHPks7BAZR/XSlRQbC2xGf6e6BxXqpdilo2l0Y6e
- L20R6EUXQpXj9HvN1/Qhb39iQHyq3OFZ5jUd/YKlbUdM1+sPhdZMQpuLyvCfqMwovhVs6Pk2D2A
- 9SeAj8Nj++7c7R4lD3MqmpznF7iluMIRezTppvSkFJ/9J2s0jQAFrBxY6UpFdqPjdmI/0Hgaphv
- oFlO8/V2o/3AI0smozw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-25_04,2026-08-24_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 malwarescore=0 phishscore=0 spamscore=0 adultscore=0
- suspectscore=0 bulkscore=0 clxscore=1015 priorityscore=1501
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608250126
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-The current devfreq downdifferential threshold of 5% causes overly
-aggressive frequency downscaling, leading to performance degradation
-sometimes during sequential read workloads.
+This series contains a set of fixes for the mpi3mr driver:
 
-Update the UFS devfreq downdifferential threshold to 65.
-This widens the hysteresis window and prevents overly aggressive
-downscaling, ensuring that frequency is maintained for loads above 5%
-and scaling down occurs only when utilization falls below this level,
-while scale-up still triggers above the 70% threshold.
+ - out-of-bounds accesses where values reported by the controller
+   (device handles, phy numbers, topology event entry counts, reply and
+   sense buffer addresses, event data lengths) are used to index arrays,
+   derive pointers or size copies without being checked first
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
----
- drivers/ufs/host/ufs-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ - out-of-bounds accesses in the BSG passthrough paths, from a request
+   size held in too narrow a variable and from a copy made without
+   checking the payload holds that much data
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 35bb9ab5fa2c..16cf1260cbfb 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -2291,7 +2291,7 @@ static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
- 	p->polling_ms = 60;
- 	p->timer = DEVFREQ_TIMER_DELAYED;
- 	d->upthreshold = 70;
--	d->downdifferential = 5;
-+	d->downdifferential = 65;
+ - target device reference leaks and an I/O block counter leak on error
+   and teardown paths, the latter leaving a device blocked for I/O
 
- 	hba->clk_scaling.suspend_on_no_request = true;
- }
---
-2.34.1
+ - a response buffer copied back to user space without being zeroed
+   first, so its unwritten fields carry whatever the allocation held
+
+ - a use-after-free and a NULL dereference around the firmware event
+   workqueue during driver removal and PCI error recovery
+
+Changes in v2:
+ - Patch 6: Switched to do_div() for alignment check to fix 32-bit
+   build issue.
+ - Patch 7: Switched to do_div() for alignment check to fix 32-bit
+   build issue.
+ - Patch 8: Relocated handle bounds check to the entry of
+   mpi3mr_dev_rmhs_send_tm() so out-of-bounds handles are rejected
+   immediately without polluting delayed_rmhs_list.
+ - Patch 10: Cached num_entries in a local variable before bounds
+   checking to eliminate the TOCTOU re-fetch race from DMA memory.
+ - Patch 14: Cached num_entries in a local variable before bounds
+   checking to eliminate the TOCTOU re-fetch race from DMA memory.
+ - Patch 17: Removed stop_drv_processing and workqueue cleanup from
+   pci_channel_io_frozen to prevent I/O breakage (DID_NO_CONNECT) and
+   workqueue deadlocks. Added pci_err_recovery check in
+   mpi3mr_fwevt_bh() to safely skip event processing.
+ - Patches 1-5, 9, 11-13, 15-16: Unchanged from v1.
+
+Chandrakanth Patil (17):
+  mpi3mr: Fix buffer overflow in BSG passthrough request copy
+  mpi3mr: Fix out-of-bounds read when copying BSG MPI requests
+  mpi3mr: Fix I/O block counter leak on admin request post failure
+  mpi3mr: Fix target device reference leak in BSG task management
+  mpi3mr: Fix buffer overflow when caching log data
+  mpi3mr: Fix out-of-bounds reply frame access
+  mpi3mr: Fix out-of-bounds sense buffer access
+  mpi3mr: Fix out-of-bounds bitmap access during device removal
+  mpi3mr: Fix target device reference leak in device removal handshake
+  mpi3mr: Fix out-of-bounds read in SAS topology change events
+  mpi3mr: Fix out-of-bounds read of event data
+  mpi3mr: Fix out-of-bounds phy array access on link change
+  mpi3mr: Fix buffer overflow in the BSG target device map
+  mpi3mr: Fix out-of-bounds read in PCIe topology change events
+  mpi3mr: zero out diagnostic buffer status memory
+  mpi3mr: Fix use-after-free of the firmware event workqueue
+  mpi3mr: Fix NULL pointer dereference on PCI error recovery
+
+ drivers/scsi/mpi3mr/mpi3mr_app.c       | 43 ++++++++----
+ drivers/scsi/mpi3mr/mpi3mr_fw.c        | 17 ++++-
+ drivers/scsi/mpi3mr/mpi3mr_os.c        | 95 +++++++++++++++++++++-----
+ drivers/scsi/mpi3mr/mpi3mr_transport.c |  7 ++
+ 4 files changed, 133 insertions(+), 29 deletions(-)
+
+-- 
+2.52.0
 
