@@ -1,76 +1,76 @@
-Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
+Received: from mail-pf1-f228.google.com (mail-pf1-f228.google.com [209.85.210.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56CEF481A92
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 15:44:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE79F33938C
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 15:44:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.228
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787672687; cv=none; b=nzicnCC++j3h5ir9KbQVwgrN5spKSsF1+PRLycsAqJsW3Z5i9GFfvEbODfsotcAnIwvXLJOGFa5LqViCl9k7M9ejv/sPxPaVrMUxgF28xhnrJodCePYGiepOT1nKkmFJqdZueGuJGbDIXyqeqTfn1HsKCoK8GRv6GBXrmv67BZM=
+	t=1787672693; cv=none; b=V8Uek+zD94z3Ry/ynfiMSaFnxz1Ou3GNniOiaOKfUQTDoOLVCVhjmZ3z473avVYTDkIYw6B4/fgti/XzgNoZBLnqRKTw+Jb7PBcBJSOb7GUnCG8wcg9wIwJ75PPGVGMFPoVICoirx0vaIPwwhaXwzD0eaCKoy60MxHDFnLXQr1M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787672687; c=relaxed/simple;
-	bh=5tugmiIhXwgo8PkNrzvbpvgBh1zooI33zj+7+bvi8to=;
+	s=arc-20240116; t=1787672693; c=relaxed/simple;
+	bh=lWNRT0dpGzEI2oqvV2myzUTDYGU1H1BmMwV9TYb+68Y=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=skanBK5/ZvCcm8aNCYvJNwJZ1nDk68qHbCNzeNPmza+NjJlCKXDuEZGDpOR5p/de32lEDhJhEXVHOkxpXMHT6PJSOi1YYx2AjWn0usjYnDTSs4bzVZi5Hn546VG0+EJhjIRnKf0mIs2Lpt655bUeRKpuXH3PhbZO91zdnnSdUK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=GS2IT269; arc=none smtp.client-ip=209.85.215.225
+	 MIME-Version; b=Yk/Jkpe2MCCbdE+WU0ozeqv6TZFVZ8fpfeh2bNblfy1wZA/bLA3o6PgNupdgw+RKgzbCAmffYzLWNDRc+ByACZGoq4O9ekww2HbvFLBdQUU7rzbro3bKm22ayQTdbTGt01fYZ7WyGiwm6W/noxwaRu7p//+AcsgzhFGilw8XMWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=E2dDc1VG; arc=none smtp.client-ip=209.85.210.228
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="GS2IT269"
-Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cc1bc88a20eso83608a12.3
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:44:46 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="E2dDc1VG"
+Received: by mail-pf1-f228.google.com with SMTP id d2e1a72fcca58-8486672f03cso6278b3a.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:44:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787672686; x=1788277486;
+        d=1e100.net; s=20251104; t=1787672691; x=1788277491;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Lyp+NqZnwdH7PZw0OHvNoktWyEa81jmTKO1kbsaFlBQ=;
-        b=aQfbH+7x+YnVUv/ziihP+Wbpz+tCbw+q7ZODH12NoZmUVfcPJiLWM7BTzujW3adI1J
-         KceDQ+IgjFSESu5yIVm0GjTdpmS+0v48hOWmMLdh+16kv+k23dF5l3OirsnG6NOQVxud
-         GysbTfLU0U2AeWaDIoJv6BstAVQcF3epZGod1hNrIeRYemCHGwG+ksfXTtiYqCzo9Li2
-         fm4Gu3S+qJ0WcwFf9Xw1bfZ/boQvhkvwSS4aiEOaPOnHcjR/vAT4izVzT8yerIpMdRdR
-         +bHn5g7iRXbA3/KZuo80jLWsE6L5mWxjqxJOrMzehJOvzmaMHQc2KEab7/cwp0ttvIs+
-         oe9w==
-X-Gm-Message-State: AFuF++l8ru+7en5MwZ4NVM5pnLE/hqjCw96oB0DU0R+DlNhnScvVFwDF
-	v1uj9wDCi1mjK9NDqyenAfP8hOlWNtQxHYErIkrp1u6kGBEueexmKXloOmSZwyplG2h3n1P38ow
-	ugV/7rhgiBwxtzVYyJ2t4NAQgqvIvGB18ONxxnNSYzqLa3Qn4+/oo5nv1bKx/bAYRnXa5+L2Ryo
-	7rLhlWipqod4xWjaNOwsRA3P6OSGtezIc7Orb1E/uev0MEMVsmp7zmy78q4Lo5l8swS1anmT5pR
-	zytazB198rAS1Y5ph8mqFSG
-X-Gm-Gg: AR+sD13jv5FT8DTTZ4w9UfXwdDWEsFI42fmpajwsnr+m2sXDJVekVBMKFQ3jIg1T5JT
-	pKFq3gioH5S63kmPHaNXFZlbrrh9+q0NrpjnteH/YJWzJgmNusllrMYivIHx0i8fpgf4fHk5hu2
-	jBISr5LAs+gdgiGOzhb8mehQNYm0CiufbiAo0fuB825+0ZEu01HdzpaTYN7enRx+8YevSY5TVzl
-	mioV73GAHyqPNU6dIDwcujYSSvFf8DbKd4VdgLWipDkGumIPcjx82FnjC9g0zbHgsPDzZgk8+v2
-	NAliHw7pyfYpNf4m55aTxpZh2Z+idhK1SFE8eOjwhmTGvektltNRLvye5ZAkyxrphARBphOPqFE
-	hUm5DT0wQp5NjFkZDUQQbrl/2JXK58EDXxt4TGJfOShTPcGVbx8FsKVZqsu28+ltz82TFedoF/y
-	X86gEsbj4yPbZ+BEwY94pPHYrBdCMsOmfJPggXafKHhh0=
-X-Received: by 2002:a05:6a21:4606:b0:3bf:b1d3:393e with SMTP id adf61e73a8af0-3cd9103bb66mr17252896637.2.1787672685630;
-        Tue, 25 Aug 2026 08:44:45 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
-        by smtp-relay.gmail.com with ESMTPS id 41be03b00d2f7-cc199d0d3b1sm1287586a12.0.2026.08.25.08.44.45
+        bh=ps459r/Uwin9/wh7kL89gnryTD3GIvOk4wve4H59T28=;
+        b=gFzlwWAb/ooy4ggRTcpiEUMaHPU/xFy9d3C5bsVsH0QI1ZZFbAC2UkII8O5U9DzCfT
+         liNqdbhjHcyAf+Vai23QJaiZG6xhFLAt5gqYtEiL5PP2uQ303Svj5UsCOY3VM27syiyQ
+         VaeYhRXe/CHE3c7oNe+GVZUGACZF+U/dI1Xv7uvjMBYN50WacAT+O5r+pXtUI8y6D1N1
+         GpxGPAai/+FOklZPO8e6PNu0VTaANT1krEy4C3tyY/l+j1IHUJ5lUDX0ID9gFWi7upMg
+         eUIWbZThG4VUy02VOpti1Vn8Hw9ZguNd6PaGKwa2SAxkimt5mP6Py1soOorA1/FT5yDN
+         VWSg==
+X-Gm-Message-State: AFuF++nEmoqW235SUN9SXU+2YWNNApRq8f2fj0nAml94t1UH1Bz/BC9F
+	FzVqOe1s1Hxp5ME5cpIKpWJoaBm80wBhF42IGWTjoMJyKslhJGE+jEJ12WuB176tPua61o1FMLp
+	1grYkB3QIUKeLXUkyWJHATHEycgDYov+bCJJQoEotR+0oV+e9Qgpj/6B6H6x3InFLSvcgDJW/2m
+	bhamLz3TQ20PSDh6jGwuu+Qgph8BXtyfMMJlKp5PBpdM2Pll9yItkVrVrFcWS2WAMQjDn/BSIGW
+	ceK2X8J9gGM6ulNMK9/2GwC
+X-Gm-Gg: AR+sD10PSg2tdGsjUWcdbVoNckXe6yK/XuSP87KsYlJddm1Xu6GYrtquq6bdnkZjsJs
+	m+qD+7W4fe2MwIBQ/0tQ16FJWgOwfcaQ32BQcLytB6ORPqROuJIG5+81qRgI2wzXqhLy10niHTP
+	cpLtipPH1+LNr3R8rk8fs3p2ME+A3oa1R3rxNlgLd1eu0oVPq5PM4GYIZ98uDUIOYUsJC88ihHC
+	oRaTbj3sDdGQUlRJnl3GiGu+lMwQ1lutDp7fMGd6gt5kYEzDux/9cQUPiVaYmeEq/aqre2y39I4
+	NL9Ie4yoc6gKM335dV+rOTvIallInIMVKtl/N+UOdOD2T1b5sz9FiTIHdwErUuVl+636ZJNyial
+	GL3oEYFTA9rlanim6OeEe9R9ESK+PnEnFdNbKjoqu5leovJnfsVfY8EPov3yS0B3bu2z6Eg4e39
+	De7XyTqQtWEcAkB5IlG0QymyWpbNsBHvay76oz26m05Q4=
+X-Received: by 2002:a05:6a00:bd03:b0:845:cf73:c1d8 with SMTP id d2e1a72fcca58-8520ba55d99mr44525402b3a.14.1787672690881;
+        Tue, 25 Aug 2026 08:44:50 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-16.dlp.protect.broadcom.com. [144.49.247.16])
+        by smtp-relay.gmail.com with ESMTPS id d2e1a72fcca58-8535cf5068csm30784b3a.6.2026.08.25.08.44.50
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Aug 2026 08:44:45 -0700 (PDT)
+        Tue, 25 Aug 2026 08:44:50 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc11b5dd54dso6204876a12.3
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:44:44 -0700 (PDT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-38dc085b0a7so9377523a91.2
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 08:44:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1787672684; x=1788277484; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1787672689; x=1788277489; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Lyp+NqZnwdH7PZw0OHvNoktWyEa81jmTKO1kbsaFlBQ=;
-        b=GS2IT269eWueWgpgDY/WrjPlMpworpPmnCONFUpQIgn9Wc0Ui6SbQ/HCP/SutgedOv
-         Av3xvCueAcnQe88S9fMuoS+KHODlyk+/sPtZislTdvqFCZ225BueuckpusyGRmZiQkcC
-         k1yebL2FadFQM2HNvTFR5CihWbC4zCetVNEp8=
-X-Received: by 2002:a05:6a20:be8f:b0:3b3:216b:2743 with SMTP id adf61e73a8af0-3cd9103c931mr17395708637.4.1787672683778;
-        Tue, 25 Aug 2026 08:44:43 -0700 (PDT)
-X-Received: by 2002:a05:6a20:be8f:b0:3b3:216b:2743 with SMTP id adf61e73a8af0-3cd9103c931mr17395589637.4.1787672683312;
-        Tue, 25 Aug 2026 08:44:43 -0700 (PDT)
+        bh=ps459r/Uwin9/wh7kL89gnryTD3GIvOk4wve4H59T28=;
+        b=E2dDc1VGUZ2A/wkcMjhDeuGT4ZH3+BV9aPA5B+5AyzNQC8faWw4PpfXNFRVUAzmNy9
+         ymFp6y9acmupsoIvqnGaX3jWFlHRdN6ZtyojMM5ytcdCI8N2MedOgOEJXLhn2zUpMDLG
+         AAreSkQ//QKRrYrH5LI/8EeOPwEhTKXGD5fys=
+X-Received: by 2002:a17:90b:448c:b0:38f:5801:dc0e with SMTP id 98e67ed59e1d1-3966d8a71b5mr2381a91.15.1787672689266;
+        Tue, 25 Aug 2026 08:44:49 -0700 (PDT)
+X-Received: by 2002:a17:90b:448c:b0:38f:5801:dc0e with SMTP id 98e67ed59e1d1-3966d8a71b5mr2244a91.15.1787672688279;
+        Tue, 25 Aug 2026 08:44:48 -0700 (PDT)
 Received: from dhcp-10-123-98-253.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327f9209fafsm63445311eec.23.2026.08.25.08.44.39
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327f9209fafsm63445311eec.23.2026.08.25.08.44.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Aug 2026 08:44:42 -0700 (PDT)
+        Tue, 25 Aug 2026 08:44:47 -0700 (PDT)
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -81,9 +81,9 @@ Cc: sathya.prakash@broadcom.com,
 	vishakhavc@google.com,
 	ipylypiv@google.com,
 	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH v2 08/17] mpi3mr: Fix out-of-bounds bitmap access during device removal
-Date: Wed, 26 Aug 2026 02:34:02 +0530
-Message-ID: <20260825210411.301535-9-chandrakanth.patil@broadcom.com>
+Subject: [PATCH v2 09/17] mpi3mr: Fix target device reference leak in device removal handshake
+Date: Wed, 26 Aug 2026 02:34:03 +0530
+Message-ID: <20260825210411.301535-10-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
 References: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
@@ -96,57 +96,33 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Device handles reported by the controller are used to index the remove
-pending bitmap and to build a task management request without being
-compared against the maximum handle the controller reported.
+The device removal handshake looks up the target device to update its
+state but never drops the reference that the lookup takes.
 
-Check the handle before using it.
+Drop it once the state has been updated.
 
 Fixes: 13ef29ea4aa0 ("scsi: mpi3mr: Add support for device add/remove event handling")
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 ---
 v2:
- - Relocated handle bounds check to the entry of mpi3mr_dev_rmhs_send_tm()
-   so out-of-bounds handles are rejected immediately without polluting
-   delayed_rmhs_list.
- drivers/scsi/mpi3mr/mpi3mr_os.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+ - No changes from v1.
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index f80a21ec161b..2a35f146fe69 100644
+index 2a35f146fe69..9aeec6146acb 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2401,7 +2401,8 @@ static void mpi3mr_dev_rmhs_complete_iou(struct mpi3mr_ioc *mrioc,
- 		ioc_info(mrioc,
- 		    "%s :dev removal handshake completed successfully: handle(0x%04x)\n",
- 		    __func__, drv_cmd->dev_handle);
--		clear_bit(drv_cmd->dev_handle, mrioc->removepend_bitmap);
-+		if (drv_cmd->dev_handle < mrioc->facts.max_devhandle)
-+			clear_bit(drv_cmd->dev_handle, mrioc->removepend_bitmap);
- 	}
+@@ -2536,6 +2536,9 @@ static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_ioc *mrioc, u16 handle,
+ 		tgtdev->state = MPI3MR_DEV_REMOVE_HS_STARTED;
+ 	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
  
- 	if (!list_empty(&mrioc->delayed_rmhs_list)) {
-@@ -2515,6 +2516,20 @@ static void mpi3mr_dev_rmhs_send_tm(struct mpi3mr_ioc *mrioc, u16 handle,
- 	struct mpi3mr_tgt_dev *tgtdev = NULL;
- 	unsigned long flags;
- 
-+	if (handle >= mrioc->facts.max_devhandle) {
-+		ioc_err(mrioc, "dev_remove_hs: handle(0x%04x) >= max_devhandle(0x%04x)\n",
-+			handle, mrioc->facts.max_devhandle);
-+		if (drv_cmd) {
-+			cmd_idx = drv_cmd->host_tag - MPI3MR_HOSTTAG_DEVRMCMD_MIN;
-+			drv_cmd->state = MPI3MR_CMD_NOTUSED;
-+			drv_cmd->callback = NULL;
-+			drv_cmd->dev_handle = MPI3MR_INVALID_DEV_HANDLE;
-+			drv_cmd->retry_count = 0;
-+			clear_bit(cmd_idx, mrioc->devrem_bitmap);
-+		}
-+		return;
-+	}
++	if (tgtdev)
++		mpi3mr_tgtdev_put(tgtdev);
 +
- 	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
- 	tgtdev = __mpi3mr_get_tgtdev_by_handle(mrioc, handle);
- 	if (tgtdev && (iou_rc == MPI3_CTRL_OP_REMOVE_DEVICE))
+ 	if (drv_cmd)
+ 		goto issue_cmd;
+ 	do {
 -- 
 2.52.0
 
