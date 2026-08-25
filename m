@@ -1,72 +1,72 @@
-Received: from mail-vk1-f225.google.com (mail-vk1-f225.google.com [209.85.221.225])
+Received: from mail-pj1-f99.google.com (mail-pj1-f99.google.com [209.85.216.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C429A41BA77
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:20:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D099F41F359
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 12:21:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787660421; cv=none; b=Nnv6FG+njSGZu3qM/mbFClzV964EW3f0GoWzxF3k9IqomSsJMe0WIN8W2XjW0GClxEGadpFnY0f8I2DUQlqe0rSeDfmngHweXXuwbbH2Fz7hcrZ40zbwe3Tu7NrUka2FTR4qIF0sfl1Yf/+WLaAHLIhjVkAW0pmpB1J4yMKXJ8Y=
+	t=1787660506; cv=none; b=FRP7vl+MAHPrjNYD2XmrY5mOHtYo5G0v0XGXT5EoxkPT7Cmd2b0gSFNO8GaTPVYn8+7tNWnW08bP32boHl/zAVSwhoJ4PGH8egOoT920eBr8IEvEzFRayzdA8UZSlRaFbuXj4lKIBQ+XbdtH52E6z8fmVtGjP5KcQhKtzvy90Ag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787660421; c=relaxed/simple;
-	bh=0eeXxEyfssQRhlgewmsF4Gp93Z0Lg1D2g/uKStZfk0s=;
+	s=arc-20240116; t=1787660506; c=relaxed/simple;
+	bh=0uliIV/7qOiPXfORttlKypFR0cVcaPHzxbAULGWPqEY=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ly6folflhpdDPsc54axPBulQQggQVhDrtVYtDfm0SqoRRe3fZma9iRTH6z/Rjev21489P2fetKZbhopTsRgbNbd7louHsJTNvD9nvLTN+ukVoYdV9+437ri/K+FOJvsKdTDTqFlHlc0/umBj72IWBehjg+Lxdcqb7n4hemB9Cbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=O6p6xRxC; arc=none smtp.client-ip=209.85.221.225
+	 To:Cc:Content-Type; b=HoYqUucAey4OQCqdtMNBO5ITu2nsd4uu7Cp5ndhJ6qTSAFtxEDhL0AIkLoNNhwlcbMacVTVH5XIe3AV6Y55mP68E1OQ1rXYx36AoFHmr2v1Z7K2HiQZ9D/hkAP0pblYXkXMDoNMiiwa6z58WTKf6baEa2ozZs3l0Jnf7hmuuATo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=R7O2plXw; arc=none smtp.client-ip=209.85.216.99
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="O6p6xRxC"
-Received: by mail-vk1-f225.google.com with SMTP id 71dfb90a1353d-5bfbbe5220dso467580e0c.1
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:20:18 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="R7O2plXw"
+Received: by mail-pj1-f99.google.com with SMTP id 98e67ed59e1d1-3900e39d935so5101840a91.0
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:21:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787660417; x=1788265217;
+        d=1e100.net; s=20251104; t=1787660487; x=1788265287;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:dkim-signature:x-gm-gg:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ze8RxenBjb56H0aWTXEzNeK6bKxXvTxV27NqWXyKP8Y=;
-        b=TyPtuYk2M4fIMnhU2mWHBXCG8/OITaHnw+ETJPrES5VwR9xlzbdgVsh+1r2T05dSPI
-         usTzDerDRLzIAJaTezg55DkvhUTRhsO+lSEtRnd24GPe4G60sUWbZwFay0oJgq6tXpuV
-         SgG1ItdBL0q0xU3dmcxJ/6LR5OBKur6gtqOSKOxfbW0fdGDluVfNe7s3xfgRCp7G7kL4
-         uPqMjus3oRPJ+8qKQ6U9LxaftwVIFSKBcLjRxkOVbdnfSV7D5YowW2uWCIN7vN6Wz54D
-         fdItIZM9JiTIdXye4yiR8BuLukCuLijNjTUZLy+iLcy6V2mcTecbsSB3cYKn5uj0Gjof
-         dVkQ==
-X-Gm-Message-State: AFuF++nMNe3DAfRxCjjmyG5FRiXyer5lD8TSVGs0Vgvlci2aFilpyPC4
-	49boddCgMIAT392V/c2xqk+Gj4yDQbzK8Xal88VBoBOSvR3Yx+QIBaxiZVHK5Wo/Fic6NG1QTlF
-	5QXatSjwAQpAd1YOK8Q8bvOArijbklarCrFGndsLy/FlXWoiBnxANn7apNHWIf5JyQ5D+/megII
-	FvPWpETEhq8wPGbhOJ7tmnbOdJ15HyRknfwgykcOyOXX7aHED5XQ7z2c1H/FMKG75dU89OFOjIE
-	MAxtM0kuvgQSoEkv/ZEzFUa
-X-Gm-Gg: AR+sD10Rhy99OCMlBhz1+B7W33EQrBhOO8KZd3/jBPAZ9JgMv2NWoe3qpbMdCC4CEFJ
-	IoewGPWI/4QJT78fFFcPhJ/OOHMUPxZ/84mKOIIcUTN+XexpPR/x8xLTDbPzPRx1SKzQvSqug6h
-	b/6Sg615iHZXmgxn65EkY+Hf6l2Jsf8KclcBuzBQrI7XxXKhMRmAsEyz9NFrhaVm2qqDqfpu+Vm
-	apdCM4rC+amO6cGeFzX1t4NZt38WvQL2Yu1cpSb0a88K1rPT3du2g72vBxoYI/E8AyxfThJPXCP
-	LeGYDLhBrjV5GeBWYxYcoVPjDiwVIwW9/aFlVF1tj0VyDjaXpfAg95zNj6Pe0hI7ErZf5I/tm9k
-	FoGfzTnwzXrFzcLHl6cPUdOWlmtrOewyThMGoZbyhLzHuIFg1tD87j3jmYIXoCP94k+SxrVZS3a
-	5baqWo7+wC0RWNlqtDa92a+R5DBshodLzpv2nxqjKSCaM=
-X-Received: by 2002:ac5:c775:0:b0:5c5:924a:4616 with SMTP id 71dfb90a1353d-5c641602533mr1265690e0c.0.1787660416820;
-        Tue, 25 Aug 2026 05:20:16 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
-        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5c623dad280sm2106023e0c.3.2026.08.25.05.20.15
+        bh=iVU/2MMx6hHnYoERgrrBq/D16JN5J0gXxx1g80d+4OQ=;
+        b=X7bzhpoaCkAtMNqCD6nG68zPU5lspeE+3cdzSPhLl5utgDurpt/oKsSGR4qT3ruLZm
+         zGJBcljYNPc1GRHEMYNIBpg5fyoie3MKy5iKgkEoVfCfVTAx3HD0xlHLuYTtnm/BUrL6
+         YZuielyWM+OkeCeCDz+xh+QXCrDy0Wkj+MFf60QqIlNJe5zarYXkts13HrJusifqU4OF
+         04WYIHULhM4mvRzYE1KXwNJ6KZUHuxOOAnUfxZTc2RONy6MWs+VmUOONM4oe2D9kFEA/
+         KsY55Z40rONRFzstPkQNfj3lGfm3vKlqzG2bSG2ZnE2hVxrOUCU1nLiRbvV7im9IzyRW
+         v/zw==
+X-Gm-Message-State: AFuF++lHa7yrY3HaNJzUV7YiAkUTTfZOvwl+bqQHUXWvbad+y0aQOeLK
+	EE96yKhi9FNge2KReQCvqqb3yAqEyXNKnfYJxJMM9mzvKlz0QsG+UHoEtQRj4q8koERf1X4QiHV
+	L7ZBIh7OvwXpInasdHWBZJyaN4jhvvrxmX7d70tNAjFgZ5oEMU9NvcjYX1ZUQCRO4aaKuPAxnEe
+	SBOPpeBZ6US2O6lQhnkXviA8R02dYXw0JbRFXWspmAMAWTNKZu6mLKfmIQ6TizbMDcSw/10WpD+
+	ABhBd5AkcXVbOqXW4R5kgHV
+X-Gm-Gg: AR+sD120+w0kuJUAXXMwyOc2YAUPaR/w3SgG5F6DcuahbiY1i138WD3zfI3Le2u4aQO
+	4V4Ha55AC8CJ9dokis0RasHEoMJHg50xxH5fJ0LpE6Khecub7YEzD2jYUklIJ99KyDuuotqHlRT
+	MlZJSGxgbuhI7BKjuyMZrs8xXH+W/sJL3Yj+KCz3nxqqd2zR/1ogjAVmWR0bbS06rVwvfFGuTY2
+	+Ua9WqCMoP94oEtpSJBlSILA1ARP7san/eCw6jeurGm5ujH2NfI+T4FU0/Gd5v2TlwL8gNFxvLL
+	1I0FkxzcFqC3cN8mTd63p+C1ibwcOhV7zwiiSpoNHR13PkYqwwXT6MGBPtBk2NUypZt915MfleS
+	eHa2Zi7Myvz6i8H0Uk7wExdIbczgiWaBfX/qfO6oQsiqTKfPgNCxqttfjZkQdK11JrdAzLHU7MW
+	x5uG+HVRh3UTST0V8peF2d61LDA0R8TwOAEX1WPEUBO2A=
+X-Received: by 2002:a17:90b:5706:b0:38f:de97:b06 with SMTP id 98e67ed59e1d1-395deea4a72mr50535276a91.5.1787660487405;
+        Tue, 25 Aug 2026 05:21:27 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-16.dlp.protect.broadcom.com. [144.49.247.16])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39645c58313sm1271798a91.8.2026.08.25.05.21.26
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Aug 2026 05:20:16 -0700 (PDT)
+        Tue, 25 Aug 2026 05:21:27 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c15c6a68406so314641266b.3
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:20:15 -0700 (PDT)
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c15fff01a30so294555266b.1
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 05:21:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1787660414; x=1788265214; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1787660485; x=1788265285; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ze8RxenBjb56H0aWTXEzNeK6bKxXvTxV27NqWXyKP8Y=;
-        b=O6p6xRxC5X6KOAZgHfsDnEo0b5KomiptITGyR9GuKu9APl7Xf7NYsKgxE2tkIwHQ48
-         IB53YSeFbRbcoNQwI8ECGio6KSQ3Y2dYs/7CUtodJwWOfwUv1jUbi3RY+gLlulqsIyN9
-         f1LV09/glmH3R21Xlz2SXJgL30gRE+pCrPc38=
-X-Received: by 2002:a17:907:9814:b0:c21:792:8257 with SMTP id a640c23a62f3a-c24e5ad9556mr686532266b.15.1787660414534;
-        Tue, 25 Aug 2026 05:20:14 -0700 (PDT)
-X-Received: by 2002:a17:907:9814:b0:c21:792:8257 with SMTP id
- a640c23a62f3a-c24e5ad9556mr686522566b.15.1787660413951; Tue, 25 Aug 2026
- 05:20:13 -0700 (PDT)
+        bh=iVU/2MMx6hHnYoERgrrBq/D16JN5J0gXxx1g80d+4OQ=;
+        b=R7O2plXwLUog7/eBbLmGC2jdA6eImBrG3SC6eyxdo9VDAXHOJ4ODkxSomKy3T1XMhA
+         g1yXSQzZGM8f7cFDLury+jxo4Go0EYi060FzfQ4nHLyrWR8iivMLwysA8PCD6GnefsTC
+         86QdROb5hBYjBbgQro+jzauzAuqdrVRcQ1gO4=
+X-Received: by 2002:a17:907:5c5:b0:c20:f6d9:d8c7 with SMTP id a640c23a62f3a-c24e5c0d2d7mr643430366b.24.1787660485235;
+        Tue, 25 Aug 2026 05:21:25 -0700 (PDT)
+X-Received: by 2002:a17:907:5c5:b0:c20:f6d9:d8c7 with SMTP id
+ a640c23a62f3a-c24e5c0d2d7mr643424666b.24.1787660484646; Tue, 25 Aug 2026
+ 05:21:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,141 +74,222 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260818231426.58105-1-chandrakanth.patil@broadcom.com>
- <20260818231426.58105-17-chandrakanth.patil@broadcom.com> <20260818182335.C3EBE1F000E9@smtp.kernel.org>
-In-Reply-To: <20260818182335.C3EBE1F000E9@smtp.kernel.org>
+ <20260818231426.58105-18-chandrakanth.patil@broadcom.com> <20260818183223.B90ED1F000E9@smtp.kernel.org>
+In-Reply-To: <20260818183223.B90ED1F000E9@smtp.kernel.org>
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Date: Tue, 25 Aug 2026 17:50:01 +0530
-X-Gm-Features: AcwNN1WVv-13rUaW2qUEOJfbDVd3sls2OitVfDqZfEPENqk8PdOn_hNgdPh63r0
-Message-ID: <CABvwm=PzwVZc6szk-bnkDOzfjzGNX+RkwrZHdaOGrAKq86U7tQ@mail.gmail.com>
-Subject: Re: [PATCH 16/17] mpi3mr: Fix use-after-free of the firmware event workqueue
+Date: Tue, 25 Aug 2026 17:51:11 +0530
+X-Gm-Features: AcwNN1UEJAAr2zNOE0ngWzZwtuLIypR8Nz7OpKyeLvnGkxdY54gwLoITZGTW9V4
+Message-ID: <CABvwm=PRFH1cdco_o0MLbEK1cGhjwawaxxtRyy=kyvaWQzN9ag@mail.gmail.com>
+Subject: Re: [PATCH 17/17] mpi3mr: Fix NULL pointer dereference on PCI error recovery
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-scsi@vger.kernel.org
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000027f690659de20b9"
+	boundary="0000000000003c10d10659de2458"
 
---000000000000027f690659de20b9
+--0000000000003c10d10659de2458
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Aug 18, 2026 at 11:53=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+On Wed, Aug 19, 2026 at 12:02=E2=80=AFAM <sashiko-bot@kernel.org> wrote:
 >
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+> Thank you for your contribution! Sashiko AI review found 5 potential issu=
 e(s) to consider:
 >
+> New issues:
+> - [High] Calling `mpi3mr_cleanup_fwevt_list` during PCI error recovery ca=
+uses a deadlock due to a race with the fwevt worker thread calling SML func=
+tions.
+> - [High] Setting `stop_drv_processing =3D 1` during PCI channel freeze br=
+eaks transparent I/O recovery by permanently failing commands with `DID_NO_=
+CONNECT`.
+>
 > Pre-existing issues:
-> - [High] Use-After-Free of firmware event (`fwevt`) in `mpi3mr_cleanup_fw=
-evt_list` during driver teardown.
+> - [High] Unprotected and unreferenced access to `mrioc->current_event` an=
+d `fwevt` in `mpi3mr_cleanup_fwevt_list` leads to a Use-After-Free, exacerb=
+ated by the patch executing it asynchronously during PCI error recovery.
+> - [High] Skipping `cancel_work_sync` for events blocked in the SCSI mid-l=
+ayer (SML) leaves the worker thread running, allowing access to unmapped re=
+gisters on suspend.
+> - [High] Missing memory barriers between `stop_drv_processing` and `mrioc=
+->current_event` allows the worker thread to bypass the abort check and acc=
+ess unmapped memory.
 > --
 >
-> --- Patch [16]: [PATCH 16/17] mpi3mr: Fix use-after-free of the firmware =
-event workqueue ---
-> commit d1068d82a1a0b06d1a9647481bac5d43ff5f1ebc
+> --- Patch [17]: [PATCH 17/17] mpi3mr: Fix NULL pointer dereference on PCI=
+ error recovery ---
+> commit 21853a66ae88d53ee80d24101e9ce79158e66a4e
 > Author: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 >
-> mpi3mr: Fix use-after-free of the firmware event workqueue
+> mpi3mr: Fix NULL pointer dereference on PCI error recovery
 >
-> This commit fixes a use-after-free issue regarding the firmware event
-> workqueue in the mpi3mr driver. It ensures the worker thread pointer is
-> checked while holding the event lock to prevent a race condition with the
-> workqueue being destroyed.
+> On a frozen PCI channel the driver unmaps the register window and frees
+> the interrupts, but leaves the firmware event workqueue running. An
+> event handler that is already in flight can still reach the register
+> window after it has been unmapped. Stop event processing and drain the
+> queue first, and start it again when the channel resumes.
 >
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3=
-mr_os.c
-> > index 510c990d42d1b..4a72b3d89c294 100644
 > > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 > > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> > @@ -233,10 +233,11 @@ static void mpi3mr_fwevt_add_to_list(struct mpi3m=
-r_ioc *mrioc,
-> >  {
-> >       unsigned long flags;
+> > @@ -5972,6 +5972,8 @@ mpi3mr_pcierr_error_detected(struct pci_dev *pdev=
+, pci_channel_state_t state)
+> >                       return PCI_ERS_RESULT_DISCONNECT;
+> >               }
 > >
-> > -     if (!mrioc->fwevt_worker_thread)
-> > -             return;
-> > -
-> >       spin_lock_irqsave(&mrioc->fwevt_lock, flags);
-> > +     if (!mrioc->fwevt_worker_thread) {
-> > +             spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
-> > +             return;
-> > +     }
-> >       /* get fwevt reference count while adding it to fwevt_list */
-> >       mpi3mr_fwevt_get(fwevt);
-> >       INIT_LIST_HEAD(&fwevt->list);
+> > +             mrioc->stop_drv_processing =3D 1;
 >
 > [Severity: High]
-> This is a pre-existing issue, but while reviewing the firmware event
-> lifecycle, I noticed another potential use-after-free during driver teard=
-own.
+> Does setting stop_drv_processing to 1 here break transparent I/O recovery=
+?
 >
-> In mpi3mr_dequeue_fwevt(), the list reference is dropped before returning
-> the pointer:
+> If mrioc->stop_drv_processing evaluates to true in mpi3mr_qcmd(), it
+> preempts the block_on_pci_err check. Instead of returning
+> SCSI_MLQUEUE_HOST_BUSY to allow the midlayer to safely pause and retry
+> I/Os once the PCI channel recovers, it causes all incoming queued
+> read/write commands to immediately fail with DID_NO_CONNECT:
 >
-> drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_dequeue_fwevt() {
+> mpi3mr_qcmd() {
 >     ...
->                 fwevt =3D list_first_entry(&mrioc->fwevt_list,
->                     struct mpi3mr_fwevt, list);
->                 list_del_init(&fwevt->list);
->                 /*
->                  * Put fwevt reference count after
->                  * removing it from fwevt_list
->                  */
->                 mpi3mr_fwevt_put(fwevt);
->         }
->         spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
->
->         return fwevt;
-> }
->
-> Then in mpi3mr_cleanup_fwevt_list(), we pass this unreferenced pointer to
-> cancel_work_sync():
->
-> drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_cleanup_fwevt_list() {
->     ...
->         while ((fwevt =3D mpi3mr_dequeue_fwevt(mrioc)))
->                 mpi3mr_cancel_work(fwevt);
+>     if (mrioc->stop_drv_processing && !(mpi3mr_allow_scmd_to_fw(scmd))) {
+>         scmd->result =3D DID_NO_CONNECT << 16;
+>         scsi_done(scmd);
+>         goto out;
+>     }
 >     ...
 > }
 >
-> Could the background worker thread (mpi3mr_fwevt_worker) concurrently fin=
-ish
-> executing and free the fwevt structure, causing cancel_work_sync() inside
-> mpi3mr_cancel_work() to access freed memory?
+> Could this lead to immediate I/O errors and potential filesystem corrupti=
+on
+> instead of transparently pausing I/O?
 >
-> Additionally, lockless access to mrioc->current_event in
-> mpi3mr_cleanup_fwevt_list() could similarly read a concurrently freed eve=
-nt if
-> the worker thread finishes in the middle of cleanup:
+> [Severity: High]
+> This is a pre-existing issue, but does the lack of explicit memory barrie=
+rs
+> here allow a race condition?
 >
-> drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_cleanup_fwevt_list() {
+> The synchronization between writing stop_drv_processing here and reading
+> mrioc->current_event in mpi3mr_cleanup_fwevt_list() appears to be lockles=
+s.
+> Concurrently, mpi3mr_fwevt_bh() writes mrioc->current_event and reads
+> stop_drv_processing.
+>
+> Without smp_mb(), could the CPU reorder these operations such that
+> mpi3mr_pcierr_error_detected() reads a NULL current_event while
+> mpi3mr_fwevt_bh() sees stop_drv_processing as 0? This would let the worke=
+r
+> continue and access PCI registers after they have been unmapped.
+>
+> > +             mpi3mr_cleanup_fwevt_list(mrioc);
+>
+> [Severity: High]
+> Can calling mpi3mr_cleanup_fwevt_list() during PCI error recovery cause a
+> deadlock?
+>
+> During PCI error recovery, mrioc->block_on_pci_err is true. This cleanup
+> function reads fwevt->pending_at_sml locklessly. If the worker hasn't yet
+> set pending_at_sml to 1, the cleanup function sees 0 and calls
+> cancel_work_sync(), which blocks the PCI error handler.
+>
+> The worker thread could then set pending_at_sml to 1 and call SCSI mid-la=
+yer
+> functions like scsi_remove_target(), issuing I/O commands like
+> SYNCHRONIZE_CACHE. Because mpi3mr_allow_scmd_to_fw() permits these bypass
+> commands, mpi3mr_qcmd() will hit the block_on_pci_err check and return
+> SCSI_MLQUEUE_HOST_BUSY.
+>
+> Since the SCSI mid-layer retries indefinitely, the worker thread remains
+> permanently blocked, and cancel_work_sync() deadlocks the PCI error handl=
+er.
+>
+> [Severity: High]
+> This is a pre-existing issue, but does the asynchronous call to
+> mpi3mr_cleanup_fwevt_list() introduced here exacerbate a use-after-free
+> risk?
+>
+> In mpi3mr_cleanup_fwevt_list(), mrioc->current_event is read locklessly
+> into a local fwevt pointer. Concurrently, the firmware event worker threa=
+d
+> might finish its execution, drop all references via mpi3mr_fwevt_put(), a=
+nd
+> free the mpi3mr_fwevt structure.
+>
+> If mpi3mr_cleanup_fwevt_list() accesses fwevt->pending_at_sml or fwevt->w=
+ork
+> after the last reference is dropped but before mrioc->current_event is
+> set to NULL, does this trigger a use-after-free?
+>
+> [Severity: High]
+> This isn't a bug introduced by this patch, but does skipping
+> cancel_work_sync() in mpi3mr_cleanup_fwevt_list() when
+> fwevt->pending_at_sml is set leave the worker thread running?
+>
+> If the event is pending at the SCSI mid-layer, the code sets
+> fwevt->discard =3D 1 and returns early without stopping the worker thread=
+:
+>
+> mpi3mr_cleanup_fwevt_list() {
 >     ...
->         if (mrioc->current_event) {
->                 fwevt =3D mrioc->current_event;
->         ...
->                 mpi3mr_cancel_work(fwevt);
->         }
+>     if (current_work() =3D=3D &fwevt->work || fwevt->pending_at_sml) {
+>         fwevt->discard =3D 1;
+>         return;
+>     }
+>     ...
 > }
 >
-> Does this code need to hold a reference to fwevt while calling
-> mpi3mr_cancel_work() to prevent the worker thread from freeing it?
+> During operations like system suspend where pci_err_recovery is false, th=
+e
+> caller unmaps mrioc->sysif_regs. Once unblocked, the worker thread contin=
+ues
+> to mpi3mr_process_event_ack() and mpi3mr_admin_request_post().
+>
+> Since pci_err_recovery is false, it blindly dereferences the unmapped
+> mrioc->sysif_regs to post the request, causing a kernel panic.
+>
+> >               scsi_block_requests(mrioc->shost);
+> >               mpi3mr_stop_watchdog(mrioc);
+> >               mpi3mr_cleanup_resources(mrioc);
+>
+> [ ... ]
+>
+> > @@ -6069,6 +6071,7 @@ static void mpi3mr_pcierr_resume(struct pci_dev *=
+pdev)
+> >
+> >       if (mrioc->block_on_pci_err) {
+> >               mrioc->block_on_pci_err =3D false;
+> > +             mrioc->stop_drv_processing =3D 0;
+> >               scsi_unblock_requests(shost);
+> >               mpi3mr_start_watchdog(mrioc);
+> >       }
 >
 > --
 > Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260818231426.58=
-105-1-chandrakanth.patil@broadcom.com?part=3D16
+105-1-chandrakanth.patil@broadcom.com?part=3D17
 
 Thanks for the review.
 
 New issues:
-- None. This patch specifically ensures that
-mrioc->fwevt_worker_thread is checked while holding fwevt_lock to
-prevent a race with workqueue destruction.
+- The observations regarding stop_drv_processing and
+mpi3mr_cleanup_fwevt_list() are valid and will be fixed in v2:
+  1. Setting stop_drv_processing during pci_channel_io_frozen caused
+mpi3mr_qcmd() to fail I/Os with DID_NO_CONNECT instead of pausing them
+with SCSI_MLQUEUE_HOST_BUSY
+     via block_on_pci_err. In v2, stop_drv_processing and
+mpi3mr_cleanup_fwevt_list() calls have been removed from
+pci_channel_io_frozen.
+  2. To prevent in-flight firmware event handlers from accessing
+unmapped MMIO register space during PCI error recovery,
+mpi3mr_fwevt_bh() now checks mrioc->pci_err_recovery
+     and safely skips event processing when PCI recovery is in
+progress. Incoming I/O remains safely paused via block_on_pci_err for
+transparent recovery.
 
 Pre-existing issues:
-- The teardown reference counting observation in
-mpi3mr_cleanup_fwevt_list() and mpi3mr_dequeue_fwevt() is a
-pre-existing issue in the driver and will be
-  addressed in a separate follow-up patch series.
+- The lockless current_event UAF in mpi3mr_cleanup_fwevt_list(),
+missing cancel_work_sync() for pending SML events, and memory barrier
+observations are pre-existing issues
+  in the driver and will be addressed in a separate follow-up patch series.
 
---000000000000027f690659de20b9
+--0000000000003c10d10659de2458
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -302,13 +383,13 @@ LfSp/K5DCYsrXNqitPmQaAAGAiG4d4WDxBev6vtoyH7ejLcuCKkxCefrLO5qYnuDHsMNCObdslAe
 tMVer+USn6AqB//6EwmqdiLr4o20UQ79jxNFMAEKdwyNkA8mVCVUAtTe3mPrMYICVzCCAlMCAQEw
 YjBSMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xv
 YmFsU2lnbiBHQ0MgUjYgU01JTUUgQ0EgMjAyMwIMAgfxQ1Z7DrZKmCE/MA0GCWCGSAFlAwQCAQUA
-oIHHMC8GCSqGSIb3DQEJBDEiBCDWafw7KbFiyfDX/qQI1AfOXIXBg72tRtNQ5HwaZxZY/zAYBgkq
-hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjIwMTRaMFwGCSqG
+oIHHMC8GCSqGSIb3DQEJBDEiBCD8KveVI0uxHIa6V3enaaroBkT5hqD5o0VwngED74TjHzAYBgkq
+hkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0yNjA4MjUxMjIxMjVaMFwGCSqG
 SIb3DQEJDzFPME0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZI
-hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQABiGsEMml6
-quQuQd3xNWjKePiYUmsMeGdnAUkirrfx9m5i+a/lnbMHE8phEpIWEm0Z/Lm8zaWREqIIMf4Eqjp7
-fQJq5MWZ5ftI0ms4FpACNYOpwxRd9+8FQjhykiOXjKbWkafeOWNOj/92ckxJ0UVkuazG/sCBaZX/
-1iX+2n6sStPkSge8xo8129B/NAR7AXt1N1zQxMN0zxp9k/L2ki2ZbwjOOXTo4e5dIxERhXtygA2H
-9n8oNeDRCUu2vn7gGhoOxsHoJTnSs7EIc8YppCvqlXFlNQ/Zjjp8x+mzAmP026AcL6KZy6H9cPGT
-hZqedFtmd6egb7CUC6EFzVvtR5mz
---000000000000027f690659de20b9--
+hvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAU7CCctauu
+FrO1wyVYNRngWszv8ruEtifWx88XlcDYh9r4A9hjgaCr6xcNuHjCPTp/MWTfUUF8PZmU7Wqf9kfk
+xMzFsAOg8edKl7XZnlm+60qKVfeIrHf2WxCqBDQAj0503bKN7S34Eqpj6/eGgYgb9TFP7nqpMN6E
+9aEBv2SE0UbuDmOY7HXy68TTf4tpdCCS6PiQ/MbH0mhZ8Sq4ZMcjFPxHPdUZgpcsyfRY2Tb65Rzn
+/clSiY1m3xCo5G4DujBvbkzNMxcMplYf1RJohBAnH25YXmm4TT8Tk7N4y/l2MRRXjmxvWteJjh3I
+RiiFbYbHQJCyEbgPPfc7OoEJpH68
+--0000000000003c10d10659de2458--
