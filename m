@@ -1,48 +1,48 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012021.outbound.protection.outlook.com [52.101.66.21])
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011012.outbound.protection.outlook.com [40.107.130.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84F0E435523;
-	Wed, 26 Aug 2026 14:35:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 489C1448382;
+	Wed, 26 Aug 2026 15:05:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.12
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787754922; cv=fail; b=hAc/ygWon0gClKfB6at77IzvC02G+98sy3qH3qieRAJQIynue4v5yl0Fa3cUwBCZzA5Z5SxVfIbnKcQoCLHzQDcoMRTkhb8aVYxixBmhZd7ALliC0YifhJcz4enSgM7txEHJ2Ytp7HTNgGaWq19ffujnnz77OLnEhnH8GvRI3Rg=
+	t=1787756747; cv=fail; b=UtAtf0R/mpA2SxbOo/rmfp9v0UuTL8hoVEGnqVRUmkaE1nH6B6nypu5n/a+96VGA8ORbTs0zR7R93KAjKst297TDoJBl6EBwYGCnjohTMXshAjRX8TuzecDDiSXLop60VzGFk4SjMjgsmiLlN0x6LpkEmvLiQnhhgxq4ODi2dfk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787754922; c=relaxed/simple;
-	bh=wwtjQ4woDWouqvioENlkL6Bt00qVMK/KCg/7CeKiajM=;
+	s=arc-20240116; t=1787756747; c=relaxed/simple;
+	bh=VLEbu/QvPLykJrttRzum4/4dJqJNXuLujmLW4LrieDk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=NrZKi1X3wBw+XHJcgUs0QDR/Dv5b5DF/SXm98IIQrTe6Tjr0UkrcX/4V1F7g3VmyR9v4OMnZX8Ip5MZOwoBZ3S/dfVgFBbz86DQoe6nHfwGdlcHaRMu0IaPeLzpiHYVlr5ts8N96cB2VJioC1HzzgAcwUH2wNu31RI3FNjPHCsc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=MDhswKGD; arc=fail smtp.client-ip=52.101.66.21
+	 Content-Disposition:In-Reply-To:MIME-Version; b=dIphTlSWAByf8Fn3DXa7UBuP0ozZmH7CCm53hfpDwOKsKlh6le043KPE63hXX15M1ZSjjwPvtkehOry1lnEXVwLB9lhXLafoZFb1nJuZszL3PGk5EPbdhWO/t8pkVRGzy7+5wWZcrM7aWD76FmxaqbfXrjfGgV5HY0h5zs4mcb8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=dqd3AfNv; arc=fail smtp.client-ip=40.107.130.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="MDhswKGD"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="dqd3AfNv"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RRXCvyKUMielM4AbG1yGq3uaZbDb7WcixKklN84F7iNRdmBff6UzCV8uaf6IREJ5FrlwiWIHDYg886hkAmHa1r/INCufzCRiAbEvb7PiNDSR4anpAcdkVmOlmwxUi+AcKnDV8rPOcPYKyRPwv3Cxgjrd+wszaH2kIJ+KnK6T8l8mzSkV3EL4T9NHLCIjy7McNHTYassYbfKOM5L5FhHK6KKmGfZwQ8thq9McUYBexUXijIKvShNSpECBWWbr9ptWMSQaE3rNzlezH3W9IqTw8EH/e26BOvaOduBe+55jc1s8E8yB/4QzFwMapsk21PxsnqnSufobKtwIDi/Q4zpJZw==
+ b=bX96TS5kcFKXsjYBn1goPT6c0GQYQkDNJmtylAB8B8o6xd89u5MQL08PZrBkD7gHybqyIOf4pLKV9Zy/pD4OKjFwoWLKDkqfjluhSXIQpwlIlvdA27CJOZgDKkilKvcrrxVCKgzJfhpCmJ3blvVPc9qY8YPy+uEvjQQnxIFKdcOq4pwtAt4IkVoaIF68bmn1EEoe+9xkK/fp1243HtzOnp1P65VRIQt1qmkgsMolRL6vNdYy4dI8d54oGh+GBxgiBY2NKoe6n4rWRAej8MpUEJnb7uWO3Jc6KOiH6h/sP4DjvoRtxiikGWcJEFmtb3tAouO9K+0lSnJHDajc1XTHiw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1JtqDX/iIjI+Yod3O8jj8tCrxWMNRyZgjyNMEDzhwLw=;
- b=G9zqBQd32Mnz3WJ4b7COwwObg/lnuKjvmkEjP5xAQ53/wAUw/idgcsJhzgM78Wkm+cVKUG1hlfI94D4KM329CSeNWJj5cH8nP//k4n647JkN1gXVRf9CX56+Tw6ER4A/fLHSfB3l4Xm8kI+/3+v36N3hZmbv1g6VDqoiE3gNgqDlodxsUhbXkD/u4+tadf2zeR48Tw8KvtCkp1G9EQ761VAjOdpZAc6pCx0gkhMgcEQQcp/WMlOecz6qw0jR+TWBHUm4NwH/yNp8i1WgrIL86WuM2ER+lJ0vz2lOZrEepjArvV+2cdQ1nVXUGUTH0fCdjfMqLFLEa0GrYk5CXhL5VQ==
+ bh=aLjsRmVRvxKWk2GpFV4WTDdqB2V85R1PFvCdHj7WBJw=;
+ b=wU7SJy68YurOW1+CdIQ5arQayL6rx0cxSI6+UTEKf3TMsUHvI7mVedIlKIv+voTd+6d8YqVe4I/xj70fDPnVZnvLII1xtXE0MZWadxVOtfDNT+2Cif5nlS2SuICWM2vZ7QXde6BHFQ3O+9MrGyoLcAc86jINxWjvQJfmOo+iTnwJmb7e5x+6I2kR0mpgUZcHqmDvrCOtOI3rBbUEnqUx3UoghIa1b/9eFvRL5aDRzaBoEYlpkhGK7Qtnd+ZpQlF07GByg7IH0e2BOIgWmRSc9Sy8E0CwH6/o7JKjW8cavGHpwx4L/qKdyd3cgXo3mvnHTG4KtAyAKsn+ZRPFp3iCjw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1JtqDX/iIjI+Yod3O8jj8tCrxWMNRyZgjyNMEDzhwLw=;
- b=MDhswKGDExFbwV5lJ9+BwYMwulJNisZlK37AIPBCM96XIjcyBePYMSmAuGUiE5GMEAMKFRAK8tks7Lieb9B1abxMdQ7uPp+tXJq+yjouQn0Roeqq3UJ21r3uioErXtU48tv+lEjYyTsdrp5Vf7e8qTE8Pw+mlcZvJTH/9TUtNpJd3tHawjDmpnLRRSAjjxDfwkpg96ENcWqnu88xADr3J8aSdJVuoJnEyX8L9O497o1ObkPHjhgy5sLwZ1QRMHcVSjL02bP/+vn58s735XTIKMxvQXIiqxpudMpzWmPoyAGQSGMPNUqqFDiKogz+/hOZXY4E3nRblgJdQA6g4ySAHg==
+ bh=aLjsRmVRvxKWk2GpFV4WTDdqB2V85R1PFvCdHj7WBJw=;
+ b=dqd3AfNvXYCGo7E/2oWUwUckSlxBYIqIf8ABfQhg08e5igL0SXqWDn/1qEERdfszu0teDb0MF/lWofz/WvDcHg9BklJvA3E9tjk5k9zr5LJ5731hQczzj5iLFQkVMAC7ZcnDpaC3HzaJhdKAJKCyjysVC1WPKOcYpkRDR971Y+VrlFR7uNRUsvcnp2qWt7TPceE5sVyjkSVRuQfbFrH2rjpvC45Av1YZA/Q/DnVROWmmgScJvzgNhDYOCPftfZ4cGriU02Oj2Waciid8xlrZlOwYo9KA2FYSuat3MgEBAJfVXy3kW3HX7vMOX2eglsjz/EMV8Zn770BekZ6UJNANxQ==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by GVXPR04MB10406.eurprd04.prod.outlook.com (2603:10a6:150:1e3::18) with
+ by VI0PR04MB11537.eurprd04.prod.outlook.com (2603:10a6:800:2cb::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.8; Wed, 26 Aug
- 2026 14:35:14 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.6; Wed, 26 Aug
+ 2026 15:05:37 +0000
 Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
  ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
  ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0339.012; Wed, 26 Aug 2026
- 14:35:13 +0000
-Date: Wed, 26 Aug 2026 09:35:01 -0500
+ 15:05:37 +0000
+Date: Wed, 26 Aug 2026 10:05:24 -0500
 From: Frank Li <Frank.li@oss.nxp.com>
 To: Larisa Grigore <larisa.grigore@oss.nxp.com>
 Cc: NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
@@ -63,16 +63,16 @@ Cc: NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
 	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org, imx@lists.linux.dev,
 	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH 06/10] dt-bindings: ufs: Add compatibles for S32N79 Host
- Controller platform driver
-Message-ID: <ao75lU2zYDeOZi2f@SMW015318>
+Subject: Re: [PATCH 01/10] ufs: unipro: Move Tx/Rx FSM state definitions to
+ unipro.h
+Message-ID: <ao8AtFsYdr26rHVc@SMW015318>
 References: <20260826134048.854748-1-larisa.grigore@oss.nxp.com>
- <20260826134048.854748-7-larisa.grigore@oss.nxp.com>
+ <20260826134048.854748-2-larisa.grigore@oss.nxp.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260826134048.854748-7-larisa.grigore@oss.nxp.com>
-X-ClientProxiedBy: SN7PR04CA0080.namprd04.prod.outlook.com
- (2603:10b6:806:121::25) To GV2PR04MB11799.eurprd04.prod.outlook.com
+In-Reply-To: <20260826134048.854748-2-larisa.grigore@oss.nxp.com>
+X-ClientProxiedBy: PH8P222CA0020.NAMP222.PROD.OUTLOOK.COM
+ (2603:10b6:510:2d7::32) To GV2PR04MB11799.eurprd04.prod.outlook.com
  (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -81,201 +81,139 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|GVXPR04MB10406:EE_
-X-MS-Office365-Filtering-Correlation-Id: da76c66b-813f-4c01-35db-08df037f3d32
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|VI0PR04MB11537:EE_
+X-MS-Office365-Filtering-Correlation-Id: d730ed86-9a3d-407d-147d-08df03837c56
 X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
- BCL:0;ARA:13230040|1800799024|366016|7416014|19092799006|376014|23010399003|22082099003|18002099003|3023799007|10067099003|11063799006|56012099006|4143699003|6133799003;
+ BCL:0;ARA:13230040|1800799024|366016|23010399003|19092799006|376014|7416014|10067099003|11063799006|4143699003|56012099006|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
- K4j2R2EkjKVuDzq4iZs0BciSoWQrvjjlJUdBC/fjPYPWCgQMY6M/CuBXAyx3O/3/ODQ/6aCsdM4nvzxLykAYKj6EOzbdaet1ZmcLfid9BdfqlnCPjwkK/ePi8NlWEQn6JPys1wZ+kWJZ254MmEpj3dg+QHFZlbRyhwo5UDO3aKmAaI8IRbkX/dlnAgSmjmR3AFHHIlFoD7G2pBvzcOiyrrYiDrjyH9msePFpiQMNcVSfJWPC1RZwT9p5sib4WjWwob2lFf3wnP63dfoJEU8HeS2TR9veYw24wTAbgN2ADN59C1OVuaGy/3oGGO/nntKL3gXUTqJiamL5+Bxj3kvm7BIihA7aDiWLYSakBTM+EeNdywnkKYakikmOdtLztkUm0lEoCl42Ua+HxBjjDLqssuSEV9FxPugf/MNbfoflWMDUp/29ItWBC2HLbEYkqiFkOc4+HXNtVdqIABKBTo6J2sjR05kpSrfTDSiXT8ivCx4gpBRfNBO/IC1ApAK4s3C+Uh5acStXR7qbyWUUksmQkpcPwJRcTNsR/XbppBMI+lynvscPIMzNuYqYhghGxX9wJK7GGbOFqRYZKlTyTrkSYslCwqW5fj1fD3/T2XhE9p57z1VVAd1rBqkPh62u7FO2
+ gKFs5mi8D0ZQyHauTzAoKAr6DPJcSCHf8/4hAk6p+q+4Ens1/ZgFsLK6RoCoElAQW2dNOhq8gUwynsPfNOY9JpNavNeclHVC4xXaA5HFwRDp5R/WtYbmRZoGbd3TPBNb6P+zvnd6TR9NXccxjyUV7j3PhUPOLvul7EOVWIWin4yt+JTq6YzINRRY3a+Qj25/SpKDIrh/NuD2iNSBxtz5XA8f19Fm5JesOTW3LfWtZJnQZbl7PltwnNSwl0toqYRaT++dazoqcY6aDmaT77zAq8GJDJlVvfaJD9bdl/avSYBPfi2ldPKE1yFQTI2LETtRibgPVUIZBhIdpzjbKjjK/eqSnm76Gsr8DIbO8ZBC3Nc/0YJpMNhE6LPXfRYmGf+wP/tWe7GDJp0IXnSME9O+JWv+Z2A2c++wmkk5dfb6x5HeAWQF2qSbIVY0y3o+lruOs6Mbv837V/qyhmMK9xoTbc9fIuaZaEmOrdoodQQJwUcbzd+gHj2rXq3kJL711DAhcB8ErIyeclLTl3tMI1yeAuNFbHA+ZJyQ3S6YKDPgw/KCMaVeE1kgfnx7Dpm64cjgu/SP6OPnvi2JUyldosFdaQSiuGX4X5Ytf21Lo4t//Z8DAApIBsIPaqVC+lbHjvUPQMyE1WcS7JXD/3w76aNOoXSAQ/k6VpT91iB4q5xxXnU=
 X-Forefront-Antispam-Report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(19092799006)(376014)(23010399003)(22082099003)(18002099003)(3023799007)(10067099003)(11063799006)(56012099006)(4143699003)(6133799003);DIR:OUT;SFP:1101;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(19092799006)(376014)(7416014)(10067099003)(11063799006)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
- =?us-ascii?Q?ynp2eP/ukFO6NQaYlcyc23U7Rk/PeN9aoMHbfhfV1yHaTmgG1GsxuJOFENQ3?=
- =?us-ascii?Q?13e3cK+yGSCT3/nP5qkDh5Vba9Qeu4Wtt3eZnbGFed5H58WfV794m5yLz0ts?=
- =?us-ascii?Q?GtlbHn+G1YW5vbufu7FZjKeSfjepX1oUQDEdayV0mR1KJbDTW4iaLBYGFxNy?=
- =?us-ascii?Q?p+EKStFLR1j3tx2z1QWplRBHXHOK6nijIEqk5KoYqCpinuiWkfL/qEh7oSjS?=
- =?us-ascii?Q?cG8pO1ygvvQi7KtGJ0BhPQ9x+DKXwZiL6lb0HSbn/xTnm5dHcTXdZg2ve7qk?=
- =?us-ascii?Q?tqkYKPPgr/RLzZIKvwVa2wZo1d7ehdgh7zwvSi4oKjbzhmzZoPKZ2NmBuUAS?=
- =?us-ascii?Q?HOngDdv7A1KkQhMGXG/DsOfbl8PR8UGxYoO0MGMTmfJ8+MMQYvaHNLaT441y?=
- =?us-ascii?Q?tu3kdV22jFtIPnjWAhOFE3eUiWyxNTbDH+V+/kXBgajdJG8cXv2qXNSKDorw?=
- =?us-ascii?Q?Co1MJOScB3RJ6+7Pg1f3STLv2wA8Q5ZKtt5X7kxFRWaTVViaFnoL0QRaQda2?=
- =?us-ascii?Q?WcoY8lFL8PrD6Dz3PCRD8HF7whCPF9EVnhDbyrFGWwhrGEh6tHzQZscmhJdI?=
- =?us-ascii?Q?YLfRn+Qhw0jdHUna59IwIavZSN424tueAyTj9OjDG8mtDb1XgSHn45iNc0QZ?=
- =?us-ascii?Q?WSx3mxJWTyCNfDGM7ZHA35SfZVqxjkh4lCqeTgDEQTlPCaEY4J/P/W9zBnc6?=
- =?us-ascii?Q?CyZGp8Q2u44DTOsdpSUZKk4gjT3pxaiK3WRMekXFsY5fL64bO3tKjVk8fPJe?=
- =?us-ascii?Q?PMOARntEJxvlmqvjq/MTsHSrD6TkqvzYwlc0ZICjjY24/ScjclLv4v8dIZ1N?=
- =?us-ascii?Q?8YS36ZFOyS/o6lHxIATWAg/URf2QjNqG2xS9gmzU3DRZHMOHKiJfpcW9JqRC?=
- =?us-ascii?Q?Dz84hNJxDGwmjsmtgwGnQkVD61qJ7aohfxwRR1pVRy831aJaA2/z/ZJiOB9j?=
- =?us-ascii?Q?ZIaMyg72Gt5jfIeSzN0tt0pAWtAcnGlMOm6uZZaUlyy8tVJv3CLOtHxUipqm?=
- =?us-ascii?Q?9MXMM77V/TZJLjZ8/j5fBXme/aYlKiSKAS8t3Z9hfECWzZrUdGsVBr1Q1wcs?=
- =?us-ascii?Q?ICWo1+SQI9Rt9+6CVQynOSlA0B5ECR150AJ1Bn+6tddihqPVhkaL+F7O+tUh?=
- =?us-ascii?Q?8XudWx9SLHAKBdOzqDro5Xp+ipVLLn523V3prP/VbOEVcAK6ZMri0sN/i1G3?=
- =?us-ascii?Q?vfnXKz6I+/CRkU5o6VHdHlgnDy/86kMJ8G1Qp9x3MQHPmeNrU6EHN8LFigJH?=
- =?us-ascii?Q?SSpAXpPjd0TZrvTsoj4j9TPxgz8hNZ/CS8xs/We2U+3IJMVCTGrPvXgBARbK?=
- =?us-ascii?Q?la/NhoocuWLetiyJRWZVWQH4BvGvsK9C+IqqqAabP99fATb3xOS7VDZyP/O9?=
- =?us-ascii?Q?KU3lmKkn/QmEn3N2dodhVqQwGC/ZWpOBsepZnkJAfsJMbshaqyluPwrhJJHV?=
- =?us-ascii?Q?G/mfw4H6Bpz4QjpaIo27hnQv2T7sAhamDKL7T8jap2z2gDv6YWK0/8GoYOHD?=
- =?us-ascii?Q?tZbyib8wqq7/mYkcHlsFNGHmuOut/de1NwE/ZBgjXaHGJbKBU9M2qJ3VpXPp?=
- =?us-ascii?Q?+AtCT7PSV6ua3z+MshN/rBiay6XzdoWoRKkbBlPRpXAei+hUnh2AsbN4Ieaw?=
- =?us-ascii?Q?YWmWIP2pHmZ2cKg+GKiHBeJ15IEMLob7VR2l7ytA3Vfxxt9Hj1HNeSIfdsip?=
- =?us-ascii?Q?SKtx5sSphIf/Q5A0BOhezg7q++X3tvrOjx9zdhwqzSSRIhUrRmL4bFC7J6Zo?=
- =?us-ascii?Q?ctYHQ8w52YHVgjpiWLnBt4Z6ARew0EPxtBw8pLIrIkcj83Vfl7km?=
+ =?us-ascii?Q?AQ67tbSASZ9kDP5CH1O0iXYvA/F/KNJYYyjnv6bBP9pmA1cwfSoQpp490zSO?=
+ =?us-ascii?Q?c3NFvms23Fllxooz5hJUd5BEMPVfQQw7odLLE0EhaGxK7xsn15lUyIK8rEge?=
+ =?us-ascii?Q?Dso/f2Ulx3uJuv4lD0sL69f1NUPLoOSSVRYoF2WiJEASpb09DH56dBJ00sp6?=
+ =?us-ascii?Q?sTcY/4ylDMxB7eg1HhAm1D6fN/HyuiGPma0FScfQwUpjjAHJZ+hodLcM6IjV?=
+ =?us-ascii?Q?6zb2z9vIv/QxBIouI75tvBRGfGxv7ZcSVnVwgzRd2aAxsTTNW5G+azr9NUuH?=
+ =?us-ascii?Q?NIDStwu/QNX4EEljJG+tW4LuXpBHCZwYwqSfWOU/DOi/OhEPCFWPzpNVr1VY?=
+ =?us-ascii?Q?m/iR1Swmgq5HrFkwkI1F23HIP/85YUhqLkmAcbuC/A+AuuIqCjYPmmqtRmmi?=
+ =?us-ascii?Q?vQDgLH7eFuWUA7cc5ABfUboLZH97AWndH1A5jXwjayoeVWK9dHM6N7waQEKK?=
+ =?us-ascii?Q?TGLe8Nqv779D4xhihLxlOKYQhRWLP/uwoEytRq7JYVLIhhQnHwblB1onznWP?=
+ =?us-ascii?Q?AV1fdSz+IU0Y3ZxI+HDccBdTETS7CUkZsWreA+wI2RzgktD9L25OPuZLxO4b?=
+ =?us-ascii?Q?CTqJgqv2rZD1K1MW7TeW+EJVaSxT+y/ol4VfCDB2DOgQw7hPIDPsjL5Aqkjt?=
+ =?us-ascii?Q?/qgVz5QhhCkjDv+X/66ZI9Xn6+dqFy4nKgM1TvKLPv5cLMbqhyaqbqF5ic5N?=
+ =?us-ascii?Q?Lk19QApqugEgfZGQaGSffM1ffLPqJU/HDxq6v8uCzxwJgm83cPfjl6Tpltdj?=
+ =?us-ascii?Q?k+ptT0olYCVZkqu+jOFwfdcKQ/aS0nl3cJpRiredPx2p3K/b4uT0d/aU0OTU?=
+ =?us-ascii?Q?WO8s4a1RNdi+0V9ili1fun/FaG0mfqC21Letx9SDvO3G5kM7J4H4Zb8GDsmh?=
+ =?us-ascii?Q?rzHIatcXN3vR1zJYLu8SnEQSvCeZoUpFTEwXSJbeT5ERRzgWYUzgYD2STD8y?=
+ =?us-ascii?Q?j+KdmGC+0jzhH4fcf9gf2EsYYo3V3wkGqAT1ILnDwOs9shk+9jG3CNe4gz4w?=
+ =?us-ascii?Q?8bdLMjo4VJfqeHod7xG3uaRSKp8np4RcHnpDb/WTUN0zAXWBwrRIxwbdz9fy?=
+ =?us-ascii?Q?dm/TSaxgxsFrE5UoEhWYPBJqC7Tcs8BejG+oAeLBFTH+tO6aNjZQzg8sKb0M?=
+ =?us-ascii?Q?AwYSadqDy/iGydrMwUyZ5XZcfcBbsuqPdXCXeyOUrgLQ4ymibDtBnCUMNq61?=
+ =?us-ascii?Q?hFQKbGznKhAuY75oZPSzHRhF22R9HvYq+uD0S4A/LKpnUUq0QySx1HDhb1ay?=
+ =?us-ascii?Q?0JGZnlsQKAx6g4vaRC3shYlnMN1vbcjfCuebjKnWeFtzYW/l4ocd6A3hQl9F?=
+ =?us-ascii?Q?jdnLQv1tvrl4ErCuTJC69QwPMbJjxe7vQsq4oofC+ywigcGfB0RiAD2Etuni?=
+ =?us-ascii?Q?KCN2DJnpfe00swqKMX/ZUEwZsOjSbRUkw6xqt9c4fMQFOayX2Xg6QwIVUxH5?=
+ =?us-ascii?Q?IUJByNTAiGJjFWm/6u06xbbWOivmIWsSpQVm7N8WYAutLiGeD51DFdOJxY5l?=
+ =?us-ascii?Q?j27PXFsmdfKWp9CYXDVOO60q2+2DoFoMPk4JnVAQsstktqCCGnDZbabS/M0+?=
+ =?us-ascii?Q?joRT2NhSb3brWWRLHxcHZUq7e0kuMVI54zxQ5Dd8Lpc/URv6AASGpM88TWWB?=
+ =?us-ascii?Q?XxbpcQNT1kwOvzrDbGdJna2pkcsv1yp5UNozQpiroylfVLlOVLgvk6Jj2vuL?=
+ =?us-ascii?Q?MNxtzeIfwt3HO7aPbzyAvR9tVh5CynIHtzOfNo1ZIYuS3oEFCEqNegguN32A?=
+ =?us-ascii?Q?keuuIqy4PqygRFtGb3Mnfv8adZ0s2zZKSsFzYQpYHhyUXnzfoPyT?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: da76c66b-813f-4c01-35db-08df037f3d32
+X-MS-Exchange-CrossTenant-Network-Message-Id: d730ed86-9a3d-407d-147d-08df03837c56
 X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Aug 2026 14:35:13.5048
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Aug 2026 15:05:37.5051
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2TmTykJpMuJDwYrcsEaV+3Yo/c7O/OtluvwwgUavcdAdI33cqeG7DNDV5jCwg+EB2Rc3czu9Yyphtp/7i7aD5dZPI9DXwfZrr4ltQm+FMfd1MwUrTxtqa/kxzfSFAl6o
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB10406
+X-MS-Exchange-CrossTenant-UserPrincipalName: EQedrkXSHk2Ws9m+VCVXRVEHEr2+tyZnH1H/I9us0J1uSjtzcLyFEO/rnRiw6avj4cbvo2RMalWKlnRPYEJSdMpu9nTJZmW15qKbsTZn8Ur1fIAadDHJRP7hTzAB1dHG
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB11537
 
-On Wed, Aug 26, 2026 at 03:40:44PM +0200, Larisa Grigore wrote:
+On Wed, Aug 26, 2026 at 03:40:39PM +0200, Larisa Grigore wrote:
 > [You don't often get email from larisa.grigore@oss.nxp.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
 >
-> Document the device tree binding for the NXP S32N79 DWC-based UFS host
-> controller which is compliant with JESD-223D "Universal Flash Storage Host
-> Controller Interface" v3.0.
+> Move the Tx/Rx FSM state definitions from ufshcd-dwc.h to
+> include/ufs/unipro.h.
 >
-> The controller requires access to the SCM register block and the core
-> clock rate when M-PHY initialization is performed. Add the optional
-> nxp,mphy-boot-mode property to select the M-PHY firmware execution
-> environment.
-> Currently, the M-PHY firmware can only run from ROM. If the property is
-> omitted, M-PHY initialization is assumed to be handled externally.
+> These state values are UniPro/M-PHY related and are not specific to
+> the DesignWare UFS host controller implementation, so unipro.h is a
+> more appropriate location for sharing them.
+>
+> As part of this move, drop the driver-private TX_FSM_HIBERN8 define in
+> ufs-hisi and ufs-qcom and repoint their Hibern8 checks at the shared
+> TX_STATE_HIBERN8 enum constant. This is a no-op change: TX_FSM_HIBERN8
+> was 0x1 and TX_STATE_HIBERN8 is 1, so the compared values are identical.
+>
+> This also prepares for using these definitions in a subsequent commit.
 >
 > Signed-off-by: Larisa Grigore <larisa.grigore@oss.nxp.com>
 > ---
->  .../bindings/ufs/nxp,s32n7-ufshc.yaml         | 99 +++++++++++++++++++
->  1 file changed, 99 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/nxp,s32n7-ufshc.yaml
+...
+> -enum rx_fsm_state {
+> -       RX_STATE_DISABLED = 0,
+> -       RX_STATE_HIBERN8 = 1,
+> -       RX_STATE_SLEEP = 2,
+> -       RX_STATE_STALL = 3,
+> -       RX_STATE_LSBURST = 4,
+> -       RX_STATE_HSBURST = 5,
+> -};
+> -
+> -enum tx_fsm_state {
+> -       TX_STATE_DISABLED = 0,
+> -       TX_STATE_HIBERN8 = 1,
+> -       TX_STATE_SLEEP = 2,
+> -       TX_STATE_STALL = 3,
+> -       TX_STATE_LSBURST = 4,
+> -       TX_STATE_HSBURST = 5,
+> -};
+> -
+>  struct ufshcd_dme_attr_val {
+>         u32 attr_sel;
+>         u32 mib_val;
+> diff --git a/include/ufs/unipro.h b/include/ufs/unipro.h
+> index 9c168703b104..bf063edc284d 100644
+> --- a/include/ufs/unipro.h
+> +++ b/include/ufs/unipro.h
+> @@ -466,4 +466,23 @@ enum {
+>         CPORT_CONNECTED,
+>  };
 >
-> diff --git a/Documentation/devicetree/bindings/ufs/nxp,s32n7-ufshc.yaml b/Documentation/devicetree/bindings/ufs/nxp,s32n7-ufshc.yaml
-> new file mode 100644
-> index 000000000000..d9d5669be313
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/nxp,s32n7-ufshc.yaml
-> @@ -0,0 +1,99 @@
-> +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ufs/nxp,s32n7-ufshc.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +/* Tx/Rx FSM state */
+> +enum ufs_rx_fsm_state {
+> +       RX_STATE_DISABLED = 0,
+> +       RX_STATE_HIBERN8 = 1,
+> +       RX_STATE_SLEEP = 2,
+> +       RX_STATE_STALL = 3,
+> +       RX_STATE_LSBURST = 4,
+> +       RX_STATE_HSBURST = 5,
+> +};
 > +
-> +title: NXP S32N79 Universal Flash Storage (UFS) Controller
-> +
-> +maintainers:
-> +  - Larisa Grigore <larisa.grigore@oss.nxp.com>
-> +
-> +# Select only our matches, not all jedec,ufs
-> +select:
-> +  properties:
-> +    compatible:
-> +      contains:
-> +        const: nxp,s32n79-ufshc
-> +  required:
-> +    - compatible
-> +
-> +properties:
-> +  compatible:
-> +    items:
-> +      - const: nxp,s32n79-ufshc
-> +      - const: jedec,ufs-3.0
+> +enum ufs_tx_fsm_state {
+> +       TX_STATE_DISABLED = 0,
+> +       TX_STATE_HIBERN8 = 1,
+> +       TX_STATE_SLEEP = 2,
+> +       TX_STATE_STALL = 3,
+> +       TX_STATE_LSBURST = 4,
+> +       TX_STATE_HSBURST = 5,
+> +};
 
-Any place actually use this fallback?
+Suppose ref RX(TX)_FSM_State in mipi m-phy speci v6.0, table 50 M-RX status
+attributes. you add ref to mipi M-phy to let reader know it is really
+defined by spec, not dwc implementation.
 
-> +
-> +  reg:
-> +    minItems: 1
-> +    items:
-> +      - description: UFS Host Controller registers
-> +      - description: System Control Module registers
-> +
-> +  reg-names:
-> +    description: |
-> +      Names for the register regions. The first entry must be "ufshc".
-> +      The second entry "scm" is mandatory only when nxp,mphy-boot-mode
-> +      property is present.
-
-you already us if - else branch to restrict this limition, needn't
-description here.
-
-> +    minItems: 1
-> +    items:
-> +      - const: ufshc
-> +      - const: scm
-> +
-> +  clocks:
-> +    maxItems: 1
-> +    description: UFS core clock
-> +
-> +  clock-names:
-> +    items:
-> +      - const: core_clk
-
-Needn't suffix _clk, just "core", generally needn't clock-names if only
-one clocks.
-
-> +
-> +  nxp,mphy-boot-mode:
-> +    description: |
-> +      MPHY initialization mode. Defines how the MPHY firmware should be
-> +      initialized and executed during UFS controller startup.
-> +      If this property is not specified, MPHY initialization will be skipped.
-> +    $ref: /schemas/types.yaml#/definitions/string
-> +    enum:
-> +      - rom
-
-why not use standard "phy" property, if no "phy" means ROM init it.
+Both value are the same, why need define two copy.
 
 Frank
+
 > +
-> +required:
-> +  - compatible
-> +  - reg
-> +
-> +allOf:
-> +  - $ref: ufs-common.yaml
-> +  - if:
-> +      required:
-> +        - nxp,mphy-boot-mode
-> +    then:
-> +      properties:
-> +        reg:
-> +          minItems: 2
-> +        reg-names:
-> +          minItems: 2
-> +      required:
-> +        - reg-names
-> +        - clocks
-> +        - clock-names
-> +    else:
-> +      properties:
-> +        reg:
-> +          maxItems: 1
-> +        reg-names:
-> +          maxItems: 1
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    ufshc@4ac80000 {
-> +        compatible = "nxp,s32n79-ufshc", "jedec,ufs-3.0";
-> +        reg = <0x4ac80000 0x1000>, <0x4ac40000 0x1000>;
-> +        reg-names = "ufshc", "scm";
-> +        interrupt-parent = <&irqsteer_coss>;
-> +        interrupts = <211>;
-> +        clocks = <&sys_clk>;
-> +        clock-names = "core_clk";
-> +        nxp,mphy-boot-mode = "rom";
-> +    };
+>  #endif /* _UNIPRO_H_ */
 > --
 > 2.43.0
 >
