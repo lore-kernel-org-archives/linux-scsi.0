@@ -1,128 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 884E1395ADE
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Aug 2026 19:17:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB4193112BD;
+	Wed, 26 Aug 2026 03:28:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787685451; cv=none; b=FpLfH1mIj1OOjYUMJE/vBsSmvy0tXUynZKRuy17dsKW38Ceoy2lagiJJWNHsQtqT3b7VEs5gijNDMa0HHd1cdyKLnHlvs4UnPBDPux7kP3BliG/unaRBzSmiorEkZM+M13eTuh7N0P402gtF9vB5IoqlyXTPAwe9bR6jfw16crs=
+	t=1787714934; cv=none; b=r7WBFudcViOFp0pCPfUGcUveF589Bz1Tbx9FRrfZ1HRAMgZY7XoNtMsEoPfJ8n3G4aF5+rscun2Vkj5B6Pj/rp6jKOqiWp+diXT9LfdIFvJSr2Z8zjuKVRFB+7M93ydcm3MsOMXV9o232/5/QB5x/AXXkIuLapbB8+Eh66gBmOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787685451; c=relaxed/simple;
-	bh=w+IYL6I49d9ZVpgHUL4+2aCm+gTpB8oE5NucA6GDoMg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FqrJygPbrqvRTtsrh0J8IAh8Who1DmuLEAf35IeTmPzBvgjPVQth0sR2wHHRk4zpp1zOEP+tEj4eIOjAmj8AIGO0qOeemyIzw2nBOxJ3LeHDF3JrsGGiwe0rgmAla959GDQE7fML/c5efljf+FOFzzHatxTW/aX8tlFXhpyvEW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J0vRCgiu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787714934; c=relaxed/simple;
+	bh=DthfDNhoV1XNJsV+1yH2/m1B+rdlEdq3+ZvznYtLAv4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=e1noGHP0kn9TpjQdACjIMWkiYe3fw8XkVOAMkoItwcYrTuIFB4dIldS4bPkbhHDGV/WovF0jrgXDRF5ZDS4GThbVxrnydtlWSYN7nVyXSEDK60zw6XsP+QOOfQ/OKkUsTv+IF/oPDjfHftExKSN5uprH4aQ93hVrTAFnuZeAuzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=gY75Mhjv; arc=none smtp.client-ip=113.46.200.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J0vRCgiu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED3911F000E9;
-	Tue, 25 Aug 2026 19:17:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787685450;
-	bh=YVT1iqtVXZMrYbYAi0mesWuXliDAcSRlxv3k8bz/hDA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=J0vRCgiuM+fezGRHwWly9tABHZH283ENGtdgUDfWXj7py/o0JwRjLsMKeX//HJl+I
-	 9hFnFZOabXR2YKcUP0AolxilhSjl+kO/fAWe5NKygd4OSnuhjDKGa58Sm4j6cJMM6h
-	 7QEsRPCohofCSMLAJKWiVj7QyABmef3fpb92m4UDj9zAuzg/Gtl0S2AWpE6PysSgNQ
-	 +W/AFwMt22sDKbvs2iWsJnqwbGo9Qtq9i/a/uVQN0lrQlQEaF1uktDVtSXAh6s13SR
-	 CXhUDeP8MK9N2ICl2vAG++fwZh+jy+oLUjE4G0m7Oj19ohpHIT1kuJPEf4of7WFitx
-	 k9FLv37NG5dvw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: mpt3sas: avoid out-of-bounds cpumask_of_node()
- call in _base_assign_reply_queues()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ivy Lopez" <skunkolee@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260825190313.24013-1-skunkolee@gmail.com>
-References: <20260817221300.43286-1-skunkolee@gmail.com>
- <20260825190313.24013-1-skunkolee@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 25 Aug 2026 19:17:29 +0000
-Message-Id: <20260825191729.ED3911F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="gY75Mhjv"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=tdGPxB0y0XRY73OfcAYt8lQ0bNMrdjCTEoyOt8zPMto=;
+	b=gY75MhjvMYL2ObsjpBi1LCwSxGZPjzD8jnmkYFobVigzwDwhtPuPfV5VRcyRwC5clcoq9vGJ1
+	RFxOzuy+Z0Z0eqDOgnmqqt1vU3ETuY18c0R9p7VGZkdDVGq6O2EwED2x/1Wxod5g0k5A2sU0X3X
+	7JtED+4R50/ISm26Uc5am5o=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4hV8wm5FsLz1K96b;
+	Wed, 26 Aug 2026 11:18:00 +0800 (CST)
+Received: from kwepemp200011.china.huawei.com (unknown [7.202.194.174])
+	by mail.maildlp.com (Postfix) with ESMTPS id 5B31A4055B;
+	Wed, 26 Aug 2026 11:28:46 +0800 (CST)
+Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
+ kwepemp200011.china.huawei.com (7.202.194.174) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Wed, 26 Aug 2026 11:28:46 +0800
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Wed, 26 Aug 2026 11:28:45 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+Subject: [PATCH] scsi: libsas: Fix SMP IO deadlock during HA resume
+Date: Wed, 26 Aug 2026 11:28:45 +0800
+Message-ID: <20260826032845.1632348-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemp500015.china.huawei.com (7.202.195.9)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+During sas_resume_ha() -> sas_drain_work(), ATA EH will trigger SMP IOs via
+sas_phy_reset() -> sas_smp_phy_control() for expander-attached ATA devices.
+Since ha->dev is RPM_RESUMING at that point, pm_runtime_get_sync() blocks
+waiting for the resume to finish, but the resume is blocked in
+sas_drain_work() waiting for the SMP IO — a deadlock.
 
-Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but incorrect subtra=
-ction in the fall_back path causes unassigned CPUs in the msix table and a =
-potential divide by zero if nr_msix evaluates to zero.
---
+Skip the PM get/put when SAS_HA_RESUMING is set. The hardware is already
+initialized by the LLDD resume callback before sas_resume_ha() runs, so no
+explicit resume is needed.
 
-commit 9e90c3b985462523aebc40d2af67de713d3be849
-Author: Ivy Lopez <skunkolee@gmail.com>
+Only hisi_sas enables runtime PM among libsas LLDDs, so other drivers
+(pm8001, isci, aic94xx, mvsas) are unaffected.
 
-scsi: mpt3sas: avoid out-of-bounds cpumask_of_node() call in _base_assign_r=
-eply_queues()
+Fixes: 0da7ca4c4fd9 ("scsi: libsas: Resume host while sending SMP I/Os")
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+ drivers/scsi/libsas/sas_expander.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-dev_to_node() can return NUMA_NO_NODE (-1) on systems without NUMA
-topology information for the PCI device, such as single-socket
-boards that don't expose device-to-node affinity. Fall back to
-cpu_online_mask when no NUMA node is available, rather than assuming
-dev_to_node() always returns a valid node index.
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 811c9eb4fef1..77ae2ae7b2c4 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -61,8 +61,17 @@ static int smp_execute_task_sg(struct domain_device *dev,
+ 	struct sas_internal *i =
+ 		to_sas_internal(dev->port->ha->shost->transportt);
+ 	struct sas_ha_struct *ha = dev->port->ha;
+-
+-	pm_runtime_get_sync(ha->dev);
++	bool skip_pm = test_bit(SAS_HA_RESUMING, &ha->state);
++
++	/*
++	 * Skip PM get/put during HA resume to avoid deadlock: the host is
++	 * RPM_RESUMING and the drain waits for this SMP IO to finish, but
++	 * pm_runtime_get_sync() would block on RPM_RESUMING. Safe because
++	 * hardware is already initialized by the LLDD before call
++	 * sas_resume_ha().
++	 */
++	if (!skip_pm)
++		pm_runtime_get_sync(ha->dev);
+ 	mutex_lock(&dev->ex_dev.cmd_mutex);
+ 	for (retry = 0; retry < 3; retry++) {
+ 		if (test_bit(SAS_DEV_GONE, &dev->state)) {
+@@ -135,7 +144,8 @@ static int smp_execute_task_sg(struct domain_device *dev,
+ 		}
+ 	}
+ 	mutex_unlock(&dev->ex_dev.cmd_mutex);
+-	pm_runtime_put_sync(ha->dev);
++	if (!skip_pm)
++		pm_runtime_put_sync(ha->dev);
+ 
+ 	BUG_ON(retry == 3 && task != NULL);
+ 	sas_free_task(task);
+-- 
+2.43.0
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D221294
-
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
-pt3sas_base.c
-> index fed7aeffec58d..1af25a22611a1 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -3238,7 +3238,10 @@ _base_assign_reply_queues(struct MPT3SAS_ADAPTER *=
-ioc)
->  		 * corresponding to high iops queues.
->  		 */
->  		if (ioc->high_iops_queues) {
-> -			mask =3D cpumask_of_node(dev_to_node(&ioc->pdev->dev));
-> +			int node =3D dev_to_node(&ioc->pdev->dev);
-> +
-> +			mask =3D (node =3D=3D NUMA_NO_NODE) ?
-> +				cpu_online_mask : cpumask_of_node(node);
->  			for (index =3D 0; index < ioc->high_iops_queues;
->  			    index++) {
->  				irq =3D pci_irq_vector(ioc->pdev, index);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but incorrect subtraction in the
-fall_back path causes unassigned CPUs in the msix table and a potential
-divide by zero.
-
-In _base_assign_reply_queues(), the calculation evaluates incorrectly:
-
-drivers/scsi/mpt3sas/mpt3sas_base.c:_base_assign_reply_queues() {
-...
-fall_back:
-	cpu =3D cpumask_first(cpu_online_mask);
-	nr_msix -=3D (ioc->high_iops_queues - iopoll_q_count);
-	index =3D 0;
-
-	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
-		unsigned int i, group =3D nr_cpus / nr_msix;
-...
-}
-
-If iopoll_q_count > 0, the calculation nr_msix -=3D (ioc->high_iops_queues -
-iopoll_q_count) evaluates to nr_msix - high_iops_queues + iopoll_q_count.
-
-This mathematically adds iopoll_q_count instead of subtracting it, inflating
-nr_msix. This causes group =3D nr_cpus / nr_msix to calculate a smaller gro=
-up
-size, leaving trailing CPUs mapped to vector 0.
-
-Furthermore, if PCI MSI-X allocation limits nr_msix to exactly
-high_iops_queues (e.g. system interrupt limits), nr_msix evaluates to 0.
-
-This would trigger a hardware divide-by-zero exception when evaluating
-nr_cpus / nr_msix.
-
-Is it possible to rewrite this subtraction to avoid inflating nr_msix and
-prevent a potential divide-by-zero?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260825190313.2401=
-3-1-skunkolee@gmail.com?part=3D1
