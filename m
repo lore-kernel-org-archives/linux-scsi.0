@@ -1,93 +1,148 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9114B448393;
-	Thu, 27 Aug 2026 16:18:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D66736A004;
+	Thu, 27 Aug 2026 16:19:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787847532; cv=none; b=UcXHUCSxjtFRsdU2EZoYsQrW0j4K3XsC5INrzqctn+hMIpn3HGcJZdORQdgd8486E0/HwKh3iDFmHfZeQ3MwJDpIE+rwZxRL9LjTZsqr0eVI31I3wIKZqtLcVoipNgbvr6zfb8wzYcPniCS7apBt1yqFTB8DrvYndI90xGG6Nyo=
+	t=1787847598; cv=none; b=DEQaY3hJPR+MV6pHLTy30mSHAwyPJNh9dVI21bSgPVqlf7xKXkxJb8j3Kw5DMZBykzlMrYFj/4Ta/WEmkbxFZPPTSkrHvYoy4S+BEevBx+mYWtfZqO1SsPzQXBCrdUFfzif7Kq/NT1/8gMqubOheqrXRb6Mj998L9k8YYy6BAFw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787847532; c=relaxed/simple;
-	bh=87c11ldS0HqVl+PaZzbB5fh02V1b/d7q3Gd9io5Jgy8=;
+	s=arc-20240116; t=1787847598; c=relaxed/simple;
+	bh=I6EwbYK82+Us6SL6ec1C1k04zXtMhFQYDY7D0UfejGU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=A26HKNwyZYBYVP+HOgd74pBMuhNVdnxH6V2IcJgg/Hwol11ZI+4SPCFyDcMLTjWSMUvwkiBUn0HSeXCvbAAJaS6Nhk/j8+5t+6zG14ATDc8LzXR5yK9bp7KMqe2jui6MtCF8MsD1F07HfV1oIddkd6WLlU5xjZpDLPqH1S898Gc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gu7u4Dqk; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=dHF1OoVnP8uOv7oM45XlP+WMkTZs8z6w5Qha8qPsulDcpPKTkOZ+R3OfjGuGs7oHTmTSdJ1YKMhh6XSlc1OzM5dIa1nINCA2gUeDxOjuODUq8W+clZRiTVzrhEUDKrLTN9j2rd2aV9KBf6wio/aSKtYTj/wKi1oFVMxUHwErV7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PeYQrfAh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gu7u4Dqk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D87801F000E9;
-	Thu, 27 Aug 2026 16:18:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PeYQrfAh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7C0B1F00A3A;
+	Thu, 27 Aug 2026 16:19:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787847531;
-	bh=xRDI+5oD/8/TgBl5cPM2VmNwJzTiQZ3MYmjGxwleGdU=;
+	s=k20260515; t=1787847596;
+	bh=7cP0ZYUXZI80PHeDtaILEq3ALSOs1dSrM5l9Fe7cxlQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Gu7u4DqkQGKijlrs7KW8YXjKKEL5m5eD39YlBPB3e4WwIGlXRDGR+ih+mpGyq/61j
-	 b8qN5uCVdDmIZzBYF+skvxLyRW4rAAhfcfDiwdDXi9urFFYZW/oi9EL3aVTK1I7uXd
-	 mI/fxuBPevKYbXcL9dsojkZO2ry1LwZVUwIIp69Y2a5JAUVJ+2Kc5bN8QBidL1OZcs
-	 9aiSOy2YDvfuLNi9VEYw980zWEpcHizBSV4zOU36rPQXmYYcXsMt9ArQIX03EP31R5
-	 ZcnPoCM3IRPqUQ14ujiS0WesXvozN0BrIurECD17HaMIPtp+B80Ercp9yjyyF/PgM4
-	 Ueiz6/rHbN43g==
+	b=PeYQrfAhZ2yfKDtAXiP0GRnWXBxZImr8DgZ5GsX5gGAPB7x/uG+OuQx8iboZFrmMv
+	 ZXjAGRlnHcVbqkynEvtg3H328/5kw1HF4GMbm6B2rSxU0KSilteXfgVes3TfqXZzoH
+	 SLV05TwwuEkRYKiVWXDBqiY36VF6XjrABOJQ/2oG4DTEfiTdkKazm62Mxz0+vGUCz/
+	 ll96yUICLbcU5c7kjZU4S4rjib8pCkW1ED983XscWPuCdEGgpIOsRJ1VF5b1a7QOa9
+	 Q+ngPyQ70ZjS0AOWk1+pXQFGrx1vOuosz1XeexMDHS9T40yrOszb1V1DyQUcDCZL6Z
+	 wbCIRwblA8vVw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 07/11] blk-crypto: move bio_crypt_dun_increment() to
- the public header
+Subject: Re: [PATCH v1 03/11] soc: qcom: crypto_virt: add support for
+ create, prepare and import keys
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Linlin Zhang" <linlin.zhang@oss.qualcomm.com>
-Cc: devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, conor+dt@kernel.org, robh@kernel.org
-In-Reply-To: <20260827160806.1295313-8-linlin.zhang@oss.qualcomm.com>
+Cc: robh@kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260827160806.1295313-4-linlin.zhang@oss.qualcomm.com>
 References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
- <20260827160806.1295313-8-linlin.zhang@oss.qualcomm.com>
+ <20260827160806.1295313-4-linlin.zhang@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 27 Aug 2026 16:18:50 +0000
-Message-Id: <20260827161850.D87801F000E9@smtp.kernel.org>
+Date: Thu, 27 Aug 2026 16:19:56 +0000
+Message-Id: <20260827161956.A7C0B1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [Low] Missing EXPORT_SYMBOL_GPL for bio_crypt_dun_increment causes module=
- build failures.
+- [High] Missing QCOM SCM dependency check leads to NULL pointer dereference
+- [Medium] Global state inheritance of `g_wrapped_key_size` across devices
+- [Low] Unconditional registration of unsupported hardware-wrapped key oper=
+ations
 --
 
-commit a07e0dacccb884a51c1f14000f1404eb1f5c2cf7
+commit 4b3400c30fba3c871f1ea78eace978c0fff73f5a
 Author: linlzhan <linlin.zhang@oss.qualcomm.com>
-blk-crypto: move bio_crypt_dun_increment() to the public header
+soc: qcom: crypto_virt: add support for create, prepare and import keys
 
-This commit moves the declaration of bio_crypt_dun_increment() from the
-internal block header to the public blk-crypto.h header. This allows drivers
-managing inline-encrypted I/O directly to advance the data unit number.
+This commit adds support for generating, preparing, and importing hardware
+wrapped keys in the crypto_virt driver. It obtains the wrapped key size
+from the "qcom,wrapped-key-size" property and enables SCM helpers.
 
-> diff --git a/include/linux/blk-crypto.h b/include/linux/blk-crypto.h
-> index 33ae52b77522b..c9f436b6b2ef4 100644
-> --- a/include/linux/blk-crypto.h
-> +++ b/include/linux/blk-crypto.h
-> @@ -181,6 +181,9 @@ bool bio_crypt_dun_is_contiguous(const struct bio_cry=
-pt_ctx *bc,
->  				 unsigned int bytes,
->  				 const u64 next_dun[BLK_CRYPTO_DUN_ARRAY_SIZE]);
-> =20
-> +void bio_crypt_dun_increment(u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
-> +			     unsigned int inc);
+> diff --git a/drivers/soc/qcom/crypto_virt.c b/drivers/soc/qcom/crypto_vir=
+t.c
+> index 4ee2a36af6c1f..93c7993fb4a5d 100644
+> --- a/drivers/soc/qcom/crypto_virt.c
+> +++ b/drivers/soc/qcom/crypto_virt.c
+[ ... ]
+> +static int crypto_virt_probe(struct platform_device *pdev)
+>  {
+> +	int ret;
 > +
 
+[Severity: High]
+Should this probe function verify that the QCOM SCM driver is available
+before proceeding?
+
+Since the driver registers virtio block crypto operations here, userspace c=
+an
+issue block crypto ioctls as soon as this completes. If SCM is not yet read=
+y,
+a call to a function like qcom_scm_generate_ice_key() will unconditionally
+dereference the uninitialized __scm pointer:
+
+qcom_scm_generate_ice_key()
+   void *lt_key_buf =3D qcom_tzmem_alloc(__scm->mempool, ...);
+
+Could we add a check for qcom_scm_is_available() and return -EPROBE_DEFER
+if it is not yet ready?
+
+> +	ret =3D of_property_read_u32(pdev->dev.of_node, "qcom,wrapped-key-size",
+> +				    &g_wrapped_key_size);
+> +	if (ret)
+> +		dev_warn(&pdev->dev, "qcom,wrapped-key-size not found\n");
+
+[Severity: Medium]
+Could this leak state between different probed devices?
+
+Because g_wrapped_key_size is a static global variable, it retains its value
+from previous probes. If a newly probed device is missing the
+qcom,wrapped-key-size property, of_property_read_u32() returns an error
+without modifying the output variable.
+
+Would it be safer to zero-initialize g_wrapped_key_size before the read,
+so that a device without this property doesn't accidentally inherit the
+wrapped key size from a previously probed device?
+
+> +
+> +	if (!g_wrapped_key_size ||
+> +	    g_wrapped_key_size > BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE) {
+> +		dev_err(&pdev->dev,
+> +			"invalid qcom,wrapped-key-size %u, won't support generate/import/prep=
+are hardware wrapped key\n",
+> +			g_wrapped_key_size);
+> +		g_wrapped_key_size =3D 0;
+> +	}
+> +
+>  	virtblk_set_crypto_ops(&virtblk_crypto_qcom_vops);
+
 [Severity: Low]
-Does the missing EXPORT_SYMBOL_GPL() for this function cause module build
-failures?
+Does this code unconditionally register the hardware-wrapped key operations,
+even when they are unsupported?
 
-Since this function is now exposed for external drivers to use, if a driver
-using it is configured as a loadable module, it seems the kernel build will
-fail at the modpost step with an undefined symbol error.
+By registering virtblk_crypto_qcom_vops with non-NULL function pointers for
+generate_key, prepare_key, and import_key, the block layer framework will
+assume these capabilities are supported.
 
-Should an EXPORT_SYMBOL_GPL(bio_crypt_dun_increment) be added alongside its
-implementation in block/blk-crypto.c so that modules can successfully link
-against it?
+When invoked, the unsupported operations check for !g_wrapped_key_size and
+return -EINVAL:
 
->  int blk_crypto_init_key(struct blk_crypto_key *blk_key,
->  			const u8 *key_bytes, size_t key_size,
->  			enum blk_crypto_key_type key_type,
+crypto_virt_generate_key() {
+    ...
+    if (!g_wrapped_key_size) {
+        ...
+        return -EINVAL;
+    }
+}
+
+Should these operations either return the standard -EOPNOTSUPP, or avoid
+being registered altogether when the feature is locally disabled?
+
+>  	return 0;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827160806.1295=
-313-1-linlin.zhang@oss.qualcomm.com?part=3D7
+313-1-linlin.zhang@oss.qualcomm.com?part=3D3
