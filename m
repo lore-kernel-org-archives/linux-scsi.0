@@ -1,278 +1,243 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99A243A813;
-	Thu, 27 Aug 2026 16:23:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 117B0490C0C;
+	Thu, 27 Aug 2026 16:24:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787847822; cv=none; b=g1/2iCbfhbB81Z4lpqNaFAJp0KEjRaRKUzjqXJVeozwnEHsnlIDfRzFOtjKAZqJBdCJRfYuXekqSOrHDsykJI6HBDWXnQWR9Nq/qKU0vYTup5bXB/EttqjqUIDKmIxcLpiHeWMjuNpRtFjjvG6vJNbADHn0+MRs4X5uEOg46QSQ=
+	t=1787847899; cv=none; b=EYYhp1N9MWEMn+sNH3Q4lKuXk7VCbWboJjRu7WY5JAYsMUBSH/0JIJrB+E4C1mJhToGmN7KoD7OHOm8qjn4eTyeIeqsOr2k9nZp3KCOxmzNxFqXvSdiGP8ffW0cJMU29RwgEixVUww8EBB1zJB66hQ9pITW4bI7eg3LVLKw28h8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787847822; c=relaxed/simple;
-	bh=ASsr8CJ1pBBlhRwZiWMTS/aOyYihh+0kBd42uRhfAtY=;
+	s=arc-20240116; t=1787847899; c=relaxed/simple;
+	bh=AAaAhpDY4KAM1i06B/ju3TrttQ5WOn58RzSf14pscyo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UoVr3r0nNIGUrLGRw2ZX7ClKTxDKKhuLDjpWKqrOcRdugt02pferHE4MDDJzMMZbqGGMrKsT0/sC356xO2j9VCpnkCUpLpEVUXeBN3Y18EcNgbZYKmTXBZ2eAlwJ53YwY+iY/av0OujWvaG+NoXenxIexCaDXW/vU+A4BEwrM18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k1LjnbGR; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ijKg3zlBwXTvkx1wSQi0L9CxQelYQci9jZFY9Zwna9V7LLO+AJDfCnfihWqHywDc6+K9E9/VmznCnUK6RS4W347/YMNGSfetVvuEI9ExK4jLwhvVNKJ05XHU0VwdbPEH6PBvaEXlW6bNkqbARCtnNUOyIDR0v8t5LFB/Fyts0mc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gJYsD68y; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k1LjnbGR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A9DC1F00A3A;
-	Thu, 27 Aug 2026 16:23:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gJYsD68y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D0D21F00A3A;
+	Thu, 27 Aug 2026 16:24:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787847820;
-	bh=M28tsMtXsRjJPwNiY8/DzqPv+2sqwDD5bYAyGEZXEiU=;
+	s=k20260515; t=1787847896;
+	bh=KcbZDW6Fi62cdlu1LueiTwmxFeY2s3DoNR8fleT0L+k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=k1LjnbGRI2w8yxBYZf/p0mTBRxRXiHYOK8TSo6uqsDuQ9uIERUx8WtNY9iB/sW/Rd
-	 hDhoh+HS1ASWaDmlNnp/6+tnCWveFpveCWoka6J2gXquZlnSrZ7RixXLLXaNOay9uD
-	 tymjgEIqXsMg96F5FGY3Zlq9D0Z4pu8PTzctuUmYNZaUCqHUBmtek5PejxWuPBzsJK
-	 PjohgB4jgL6Y+og0G1XkFd/nkL7a8OMIKfeXhxh2YDJP4ZpS8Daw1qjTqtzOh8/Lxd
-	 bQwerkaRbQT1bxZeJEyluXdVxGWi0Z0BmwpLENqTfcb+Txb+0Z/DfCm1P5pB2NPYGR
-	 ORL35sdAIOsjw==
+	b=gJYsD68yKSCAAhtzNLtxrKYU4wdWR5pxNiTpyCztngsnxj5d5f8Ix+ix3K9gW5E/X
+	 lYK8fud5WZLZQnQrUPKhL3vncYZtJP1I89Nc1MDH9ZMaS92DRRx3J1RVay9MxTtipS
+	 jta4qGjl8pUtUqHpAMEBFT6qtVZfjNhOezVN+sAPzWQ0ZHjrrgIzEVpQ23N7Bp7AX+
+	 YEl/D/6CeJTR5h8/nzd9vT9K93yyk8MOcM7D53tQYtQLi0yFltKb3NG8QV8F5Iwk2G
+	 krK1yOvdsQwBrHX4YS0IcVqo8aotGh16lQY5hkk0SL/SIiYYoFf2Kn/EqytG90MNAC
+	 2tRN+3AbtAu8A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 01/11] virtio_blk: add inline encryption support
+Subject: Re: [PATCH v1 08/11] block: add /dev/blk-crypto-proxy for host-side
+ virtio-blk inline encryption
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Linlin Zhang" <linlin.zhang@oss.qualcomm.com>
-Cc: robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260827160806.1295313-2-linlin.zhang@oss.qualcomm.com>
+Cc: conor+dt@kernel.org, robh@kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260827160806.1295313-9-linlin.zhang@oss.qualcomm.com>
 References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
- <20260827160806.1295313-2-linlin.zhang@oss.qualcomm.com>
+ <20260827160806.1295313-9-linlin.zhang@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 27 Aug 2026 16:23:40 +0000
-Message-Id: <20260827162340.5A9DC1F00A3A@smtp.kernel.org>
+Date: Thu, 27 Aug 2026 16:24:55 +0000
+Message-Id: <20260827162456.1D0D21F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 7 potential issue(=
 s) to consider:
-- [High] The singleton inline crypto profile stores a pointer to the first =
-probed virtio-blk device, leading to a Use-After-Free when that device is u=
-nbound.
-- [Medium] Missing validation of crypto_modes_supported when reusing the si=
-ngleton blk_crypto_profile across multiple devices.
-- [Low] Accessing `req->crypt_ctx` and `req->crypt_keyslot` without `#ifdef=
- CONFIG_BLK_INLINE_ENCRYPTION` breaks compilation when inline encryption is=
- disabled.
-- [Low] A reversed Kconfig dependency between VIRTIO_BLK and VIRTBLK_CRYPTO=
-_VIRTUALIZATION causes a vmlinux linkage failure when VIRTIO_BLK is built-i=
-n and the extension is a module.
+- [Critical] Kernel crash when calling import_iovec with iov_cnt =3D=3D 1 a=
+nd a NULL iov pointer.
+- [High] Sleeping in Atomic Context inside bcp_ioctl_bind_context.
+- [High] UAPI mismatch causes silent data corruption for 32-bit compat user=
+space processes.
+- [High] Pinned user pages are leaked unconditionally on every successful o=
+r failed bio submission.
+- [High] The driver passes guest-provided data_unit_size_bits directly to h=
+ardware without validating it against the block device's supported crypto p=
+rofile.
+- [High] Missing little-endian to host-endian conversion for arg.dun.
+- [Low] Dead error handling path for bio_alloc() using GFP_KERNEL.
 --
 
-commit a4edc1b4437c893d0130908c0c7ae81f9e6802b0
-Author: linlzhan <linlzhan@qti.qualcomm.com>
+commit 654e63cd96fb66a7cdbe2a3c22748ad74f166ab2
+Author: linlzhan <linlin.zhang@oss.qualcomm.com>
 
-virtio_blk: add inline encryption support
+block: add /dev/blk-crypto-proxy for host-side virtio-blk inline encryption
+   =20
+This patch introduces a misc character device to allow userspace virtio-blk
+backends to submit inline-encrypted block I/O on behalf of virtual machines.
+It maps virtual keyslots to physical hardware keyslots and submits bios
+synchronously.
 
-Negotiate VIRTIO_BLK_F_INLINE_ENCRYPTION with the host and wire it into
-the block layer's inline-crypto framework to enable inline encryption
-on virtio block device.
-
-> diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-> index 858320b6ebb7e..7790ee2c700c4 100644
-> --- a/drivers/block/Kconfig
-> +++ b/drivers/block/Kconfig
-> @@ -312,6 +312,19 @@ config VIRTIO_BLK
->  	  This is the virtual block driver for virtio.  It can be used with
->            QEMU based VMMs (like KVM or Xen).  Say Y or M.
-> =20
-> +config VIRTBLK_CRYPTO_VIRTUALIZATION
-> +	tristate "Virtio block inline encryption virtualization support"
-> +	depends on VIRTIO_BLK && BLK_INLINE_ENCRYPTION
-
-[Severity: Low]
-Can this combination cause a linker error? If VIRTIO_BLK=3Dy and
-VIRTBLK_CRYPTO_VIRTUALIZATION=3Dm, IS_ENABLED(CONFIG_VIRTBLK_CRYPTO_VIRTUAL=
-IZATION)
-evaluates to true in the built-in virtio_blk.o, causing it to call
-virtblk_init_inline_crypto(). Since that function is in a separate module,
-would this result in an undefined reference during the vmlinux link?
-
-> +	help
-> +	  Say 'Y or M' to enable routing of crypto requests to a different
-> +	  operating system in a virtualized environment. This option by
-> +	  itself does not provide a working backend: enable a
-> +	  platform-specific driver that implements struct
-> +	  virtblk_crypto_variant_ops as well (e.g. QCOM_CRYPTO_VIRT on
-> +	  Qualcomm platforms). Without one, VIRTIO_BLK_F_INLINE_ENCRYPTION is
-> +	  still negotiated and advertised to the block layer, but every
-> +	  inline-crypto operation fails with -EOPNOTSUPP at runtime.
-> +
->  config BLK_DEV_RBD
->  	tristate "Rados block device (RBD)"
->  	depends on INET && BLOCK
-> diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-> index 32bf3ba07a9dc..61a3967bb4dfe 100644
-> --- a/drivers/block/virtio_blk.c
-> +++ b/drivers/block/virtio_blk.c
-
-[ ... ]
-
-> @@ -235,6 +249,15 @@ static void virtblk_cleanup_cmd(struct request *req)
->  		kfree(bvec_virt(&req->special_vec));
->  }
-> =20
-> +static bool is_crypto_request(struct virtio_device *vdev, struct request=
- *req)
-> +{
-> +	if (!IS_ENABLED(CONFIG_VIRTBLK_CRYPTO_VIRTUALIZATION) ||
-> +	    !virtio_has_feature(vdev, VIRTIO_BLK_F_INLINE_ENCRYPTION))
-> +		return false;
-> +
-> +	return req->crypt_ctx && req->crypt_keyslot;
-
-[Severity: Low]
-Does this cause a build failure when CONFIG_BLK_INLINE_ENCRYPTION is disabl=
-ed?
-Even though is_crypto_request() returns false, the compiler still evaluates
-req->crypt_ctx and req->crypt_keyslot. Since these fields are conditionally
-compiled out of struct request without inline encryption, accessing them he=
-re
-and in virtblk_setup_cmd() might break the build.
-
-> +}
-> +
->  static blk_status_t virtblk_setup_cmd(struct virtio_device *vdev,
->  				      struct request *req,
->  				      struct virtblk_req *vbr)
-
-[ ... ]
-
-> @@ -309,8 +339,8 @@ static blk_status_t virtblk_setup_cmd(struct virtio_d=
-evice *vdev,
-> =20
->  	/* Set fields for non-REQ_OP_DRV_IN request types */
->  	vbr->in_hdr_len =3D in_hdr_len;
-> -	vbr->out_hdr.type =3D cpu_to_virtio32(vdev, type);
-> -	vbr->out_hdr.sector =3D cpu_to_virtio64(vdev, sector);
-> +	vbr->out_hdr.base.type =3D cpu_to_virtio32(vdev, type);
-> +	vbr->out_hdr.base.sector =3D cpu_to_virtio64(vdev, sector);
-> =20
->  	if (type =3D=3D VIRTIO_BLK_T_DISCARD || type =3D=3D VIRTIO_BLK_T_WRITE_=
-ZEROES ||
->  	    type =3D=3D VIRTIO_BLK_T_SECURE_ERASE) {
-> @@ -318,6 +348,17 @@ static blk_status_t virtblk_setup_cmd(struct virtio_=
-device *vdev,
->  			return BLK_STS_RESOURCE;
->  	}
-> =20
-> +	if (type =3D=3D VIRTIO_BLK_T_CRYPTO_IN || type =3D=3D VIRTIO_BLK_T_CRYP=
-TO_OUT) {
-> +		unsigned int slot =3D blk_crypto_keyslot_index(req->crypt_keyslot);
-> +		unsigned int data_unit_size_bits =3D req->crypt_ctx->bc_key->data_unit=
-_size_bits;
-> +		u64 dun =3D req->crypt_ctx->bc_dun[0];
-
-[Severity: Low]
-Does this also cause a build failure when CONFIG_BLK_INLINE_ENCRYPTION is
-disabled, since these conditionally compiled struct fields are directly
-accessed without preprocessor guards?
-
-> +
-> +		vbr->out_hdr.crypto_append.msg.slot =3D cpu_to_virtio32(vdev, slot);
-> +		vbr->out_hdr.crypto_append.msg.data_unit_size_bits =3D
-> +				cpu_to_virtio32(vdev, data_unit_size_bits);
-> +		vbr->out_hdr.crypto_append.msg.dun =3D cpu_to_virtio64(vdev, dun);
-> +	}
-> +
->  	return 0;
->  }
-> =20
-> diff --git a/drivers/block/virtio_blk_crypto_ext.c b/drivers/block/virtio=
-_blk_crypto_ext.c
-> new file mode 100644
-> index 0000000000000..00b6d410d3036
+> diff --git a/drivers/block/blk-crypto-proxy.c b/drivers/block/blk-crypto-=
+proxy.c
+> index 0000000000000..60722884dbcd7
 > --- /dev/null
-> +++ b/drivers/block/virtio_blk_crypto_ext.c
-
+> +++ b/drivers/block/blk-crypto-proxy.c
 [ ... ]
-
-> +int virtblk_init_inline_crypto(unsigned int max_slots, unsigned int max_=
-dun_bytes,
-> +			       unsigned int key_types,
-> +			       const unsigned int crypto_modes_supported[BLK_ENCRYPTION_MODE_=
-MAX],
-> +			       struct device *dev)
-> +{
-> +	struct blk_crypto_profile *profile =3D &g_vdcp.profile;
-> +	unsigned int key_type_supported =3D 0;
-> +	int err =3D 0;
-> +
-> +	dev_info(dev, "probing inline crypto capabilities\n");
-> +
-> +	mutex_lock(&virtblk_crypto_init_lock);
-> +
-> +	/*
-> +	 * profile is a single, process-wide blk_crypto_profile shared by every
-> +	 * VIRTIO_BLK_F_INLINE_ENCRYPTION device. Only the first device to get
-> +	 * here actually initializes it; any other device just reuses it as-is
-> +	 * if its negotiated capabilities match. A mismatch means this device's
-> +	 * capabilities don't actually correspond to what the shared profile
-> +	 * was set up for (wrong keyslot count, DUN size, or key types), which
-> +	 * is a correctness/security concern, not just a cosmetic one -- fail
-> +	 * instead of silently registering a profile that doesn't match what
-> +	 * this device supports.
-> +	 */
-> +	if (g_crypto_profile_initialized) {
-> +		if (max_slots !=3D g_max_slots || max_dun_bytes !=3D g_max_dun_bytes ||
-> +		    key_types !=3D g_key_types) {
-
-[Severity: Medium]
-Does this logic skip validating the negotiated crypto_modes_supported array?
-If a second device supports different cryptographic modes than the first on=
+> @@ -180,11 +180,11 @@ static long bcp_ioctl_bind_context(struct file *fil=
 e,
-could it silently inherit the first device's modes, potentially causing the
-block layer to send unsupported crypto requests?
-
-> +			dev_warn(dev,
-> +				 "inline crypto profile already initialized by %s (max_slots=3D%u ma=
-x_dun_bytes=3D%u key_types=3D0x%x); "
-> +				 "this device reports max_slots=3D%u max_dun_bytes=3D%u key_types=3D=
-0x%x -- sharing one "
-> +				 "blk_crypto_profile across multiple VIRTIO_BLK_F_INLINE_ENCRYPTION =
-devices with differing "
-> +				 "capabilities is not supported, refusing to enable inline crypto fo=
-r this device\n",
-> +				 dev_name(virtblk_profile_owner), g_max_slots, g_max_dun_bytes, g_ke=
-y_types,
-> +				 max_slots, max_dun_bytes, key_types);
-> +			err =3D -EINVAL;
-> +		}
-> +		goto out_unlock;
+> +	/*
+> +	 * get_guest_id() may sleep; call it before taking bind_lock.
+> +	 */
+> +	rcu_read_lock();
+> +	hv_ops =3D rcu_dereference(g_hypervisor_ops);
+> +	if (!hv_ops) {
+> +		rcu_read_unlock();
+> +		return -EOPNOTSUPP;
 > +	}
-> +
-> +	if (key_types & VIRTIO_BLK_CRYPTO_KEY_TYPE_RAW)
-> +		key_type_supported |=3D BLK_CRYPTO_KEY_TYPE_RAW;
-> +	if (key_types & VIRTIO_BLK_CRYPTO_KEY_TYPE_HW_WRAPPED)
-> +		key_type_supported |=3D BLK_CRYPTO_KEY_TYPE_HW_WRAPPED;
-> +
-> +	err =3D blk_crypto_profile_init(profile, max_slots);
-> +	if (err) {
-> +		dev_err(dev, "crypto profile initialization failed: %d\n", err);
-> +		goto out_unlock;
-> +	}
-> +
-> +	profile->ll_ops =3D virtblk_crypto_ops;
-> +	profile->max_dun_bytes_supported =3D max_dun_bytes;
-> +	profile->key_types_supported =3D key_type_supported;
-> +	profile->dev =3D dev;
-> +	memcpy(profile->modes_supported, crypto_modes_supported,
-> +	       BLK_ENCRYPTION_MODE_MAX * sizeof(unsigned int));
-> +
-> +	virtblk_profile_owner =3D dev;
+> +	ret =3D hv_ops->get_guest_id(arg.vm_fd, &guest_id);
 
 [Severity: High]
-Can this lead to a use-after-free?
+Since the comment explicitly mentions that get_guest_id() may sleep, is it
+safe to call it while holding the RCU read lock? Sleeping in an RCU
+read-side critical section typically leads to scheduling while atomic
+warnings or panics.
 
-profile->dev stores a pointer to the first probed virtio-blk device in a
-globally shared singleton. If this device is hot-unplugged or unbound,
-its struct device is freed.
+> +	rcu_read_unlock();
+[ ... ]
+> @@ -411,10 +411,10 @@ static long bcp_ioctl_submit_io_by_vslot(struct fil=
+e *file,
+[ ... ]
+> +	memset(dun, 0, sizeof(dun));
+> +	dun[0] =3D arg.dun;
 
-When a subsequent device performs a crypto operation, could blk_crypto_hw_e=
-nter()
-dereference this freed pointer when calling pm_runtime_get_sync(profile->de=
-v)?
+[Severity: High]
+Does this assignment need a little-endian to host-endian conversion? The
+UAPI specifies arg.dun as little-endian, but it is being assigned verbatim
+to dun[0] which the crypto subsystem expects to be host-endian. On a
+big-endian system, this might result in an incorrect data unit number and
+silent decryption failures.
+
+> +
+> +	slot.phy_slot            =3D phy_slot;
+> +	slot.data_unit_size_bits =3D arg.data_unit_size_bits;
+
+[Severity: High]
+Is it safe to pass the guest-provided data_unit_size_bits directly into the
+crypto slot configuration without validating it against the block device's
+supported crypto profile? For slot-based bios, the block layer skips
+blk_crypto_config_supported_natively(), meaning an invalid unit size could
+be pushed directly to the hardware driver.
+
+> +
+> +	align =3D 1ULL << arg.data_unit_size_bits;
+[ ... ]
+> +	/*
+> +	 * Import the caller's iovec once.  import_iovec() validates every
+> +	 * segment with access_ok(), returns the total byte count, and takes a
+> +	 * private kernel copy that eliminates TOCTOU from a guest mutating its
+> +	 * own iovec array mid-ioctl.
+> +	 */
+> +	ret =3D import_iovec(arg.direction =3D=3D BCP_DIR_READ ? ITER_DEST : IT=
+ER_SOURCE,
+> +			   (const struct iovec __user *)u64_to_user_ptr(arg.iov_ptr),
+> +			   arg.iov_cnt, 0, &iov, &iter);
+
+[Severity: Critical]
+Can this crash if a userspace process provides iov_cnt =3D=3D 1 and a NULL
+iov_ptr? The fast_segs parameter is set to 0 and iov is initialized
+to NULL. When nr_segs is 1, import_iovec() will clear the iov pointer and
+pass it to copy_iovec_from_user(), which directly writes to the NULL pointe=
+r.
+
+[Severity: High]
+Does this also cause an issue for 32-bit compat userspace processes? The
+UAPI bcp_iovec is exactly 16 bytes. However, when in_compat_syscall() is
+true, import_iovec() parses the input using copy_compat_iovec_from_user(),
+which assumes 8-byte array elements (struct compat_iovec). This UAPI
+mismatch could lead to memory corruption or misdirected block I/O.
+
+> +	if (ret < 0)
+> +		return ret;
+[ ... ]
+> +	/*
+> +	 * Reject an out-of-range DUN: slot-based bios skip
+> +	 * bio_crypt_check_alignment(), so an overflow would silently truncate
+> +	 * in the hardware DUN field rather than error out.
+> +	 */
+> +	{
+> +		u64 total_units =3D total_bytes >> arg.data_unit_size_bits;
+> +		u64 max_dun_used, dun_limit;
+> +
+> +		if (check_add_overflow(arg.dun, total_units - 1, &max_dun_used)) {
+
+[Severity: High]
+Could this overflow check yield incorrect results on big-endian hosts? It
+performs host-endian arithmetic directly on arg.dun, which is a little-endi=
+an
+value according to the UAPI.
+
+> +			ret =3D -EINVAL;
+> +			goto out;
+> +		}
+[ ... ]
+> +		if (bio_bytes =3D=3D 0)
+> +			break;
+> +
+> +		bio =3D bio_alloc(bdev, pages_used,
+> +				arg.direction =3D=3D BCP_DIR_WRITE ?
+> +					REQ_OP_WRITE : REQ_OP_READ,
+> +				GFP_KERNEL);
+> +		if (!bio) {
+> +			ret =3D -ENOMEM;
+> +			goto out;
+> +		}
+
+[Severity: Low]
+Can this allocation ever fail? bio_alloc() is backed by a mempool and is
+called here with GFP_KERNEL (which implies __GFP_DIRECT_RECLAIM). Standard
+block subsystem guidelines suggest this failure path is unreachable. Treati=
+ng
+it as reachable can lead to incorrect assumptions about memory allocation
+behaviors.
+
+> +		bio->bi_iter.bi_sector =3D arg.sector + (bytes_done >> SECTOR_SHIFT);
+[ ... ]
+> +		remaining_before =3D iov_iter_count(&iter);
+> +		iov_iter_truncate(&iter, bio_bytes);
+> +		ret =3D bio_iov_iter_get_pages(bio, &iter, 0, 0);
+> +		if (ret < 0) {
+> +			bio_put(bio);
+> +			goto out;
+> +		}
+> +		if (iov_iter_count(&iter) !=3D 0) {
+> +			/*
+> +			 * The lookahead verified bio_bytes fits in BIO_MAX_VECS;
+> +			 * if bio_iov_iter_get_pages() stopped early, its page
+> +			 * accounting disagreed with bcp_iov_pages_for_bytes().
+> +			 */
+> +			bio_put(bio);
+> +			ret =3D -EIO;
+> +			goto out;
+> +		}
+
+[Severity: High]
+When iov_iter_count is not zero, bio_put() is called, but it does not
+implicitly release the pages pinned by bio_iov_iter_get_pages(). Should this
+error path explicitly call bio_release_pages(bio, false) to prevent memory
+leaks?
+
+> +		iov_iter_reexpand(&iter, remaining_before - bio_bytes);
+[ ... ]
+> +		bio_crypt_set_ctx_by_slot(bio, &slot, dun, GFP_KERNEL);
+> +
+> +		ret =3D submit_bio_wait(bio);
+> +		bio_put(bio);
+> +		if (ret)
+> +			goto out;
+
+[Severity: High]
+Similar to the error path above, should there be a call to
+bio_release_pages(bio, false) before or after bio_put() finishes? Otherwise
+the pinned user pages appear to be leaked unconditionally for every bio
+submitted.
+
+> +
+> +		/*
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827160806.1295=
-313-1-linlin.zhang@oss.qualcomm.com?part=3D1
+313-1-linlin.zhang@oss.qualcomm.com?part=3D8
