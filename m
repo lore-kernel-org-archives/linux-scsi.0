@@ -1,148 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D66736A004;
-	Thu, 27 Aug 2026 16:19:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3540436A004;
+	Thu, 27 Aug 2026 16:20:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787847598; cv=none; b=DEQaY3hJPR+MV6pHLTy30mSHAwyPJNh9dVI21bSgPVqlf7xKXkxJb8j3Kw5DMZBykzlMrYFj/4Ta/WEmkbxFZPPTSkrHvYoy4S+BEevBx+mYWtfZqO1SsPzQXBCrdUFfzif7Kq/NT1/8gMqubOheqrXRb6Mj998L9k8YYy6BAFw=
+	t=1787847619; cv=none; b=VOKFQ2J1JhgCMXCZJHd6+r0JyFqI8/u18bwQPwAYzJ3fEbzPDMn6m4ipIAvbsoJcCkALR4AufV10TNUFN5d7hdGYNC/HlPwJFbl9yoLCS9F6RFWCthc4s+zXNZGQYlErXnbDvH/yGqdCYyg5pepcbcUUk/20Bo+tbdFYvOgOLMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787847598; c=relaxed/simple;
-	bh=I6EwbYK82+Us6SL6ec1C1k04zXtMhFQYDY7D0UfejGU=;
+	s=arc-20240116; t=1787847619; c=relaxed/simple;
+	bh=RjozzEK/mBaJ4pou6nS2k9gczW+DO+Fp2Z8m6+D6yp8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dHF1OoVnP8uOv7oM45XlP+WMkTZs8z6w5Qha8qPsulDcpPKTkOZ+R3OfjGuGs7oHTmTSdJ1YKMhh6XSlc1OzM5dIa1nINCA2gUeDxOjuODUq8W+clZRiTVzrhEUDKrLTN9j2rd2aV9KBf6wio/aSKtYTj/wKi1oFVMxUHwErV7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PeYQrfAh; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Rxl+X5dOesr2d3uYkKx28s+10fE//wLGOz+j8BvHXBSmFqAQxXSThuYTjjQcCFUmDgYACQ5G3/B2YPz5xIV9/LTAjqGx2AOr/nt5fV0NffLFSZcGRkqrZRpPw2N9cqob0Vwi+7uT00/J6m1kDggIAZuw06mSFZoMgmBQxQr6WVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L3H0MHxy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PeYQrfAh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7C0B1F00A3A;
-	Thu, 27 Aug 2026 16:19:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L3H0MHxy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CB7D1F00A3A;
+	Thu, 27 Aug 2026 16:20:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787847596;
-	bh=7cP0ZYUXZI80PHeDtaILEq3ALSOs1dSrM5l9Fe7cxlQ=;
+	s=k20260515; t=1787847617;
+	bh=/ksg0JVedViNQKvOlYwvHgVgfdBPvf/W8cYrBdgEsvw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PeYQrfAhZ2yfKDtAXiP0GRnWXBxZImr8DgZ5GsX5gGAPB7x/uG+OuQx8iboZFrmMv
-	 ZXjAGRlnHcVbqkynEvtg3H328/5kw1HF4GMbm6B2rSxU0KSilteXfgVes3TfqXZzoH
-	 SLV05TwwuEkRYKiVWXDBqiY36VF6XjrABOJQ/2oG4DTEfiTdkKazm62Mxz0+vGUCz/
-	 ll96yUICLbcU5c7kjZU4S4rjib8pCkW1ED983XscWPuCdEGgpIOsRJ1VF5b1a7QOa9
-	 Q+ngPyQ70ZjS0AOWk1+pXQFGrx1vOuosz1XeexMDHS9T40yrOszb1V1DyQUcDCZL6Z
-	 wbCIRwblA8vVw==
+	b=L3H0MHxyVxvFV/qYF2V5j7MZpTs0WLY7AnKl6w+dvka0sBFtaprBfUXR9PWGre4FZ
+	 QruvHFOGPO9po9cj7weRWJu9jhfG+1RxTRGNYtElVbEfPTdUAhLo7v2mpfU9HIaHRE
+	 aAtdtMbRCX8npkMws6Vx5OLSP/r+Nqgo89nrq+AbQhXsNF3kbX74/LktairrqRe1DH
+	 V7sfoANQmWcpKdNogZlgW3t3BRCskb9UAzNhLc8IunWGnZ0gAVQbZDAPHuI+eKlN6D
+	 bNCJl+RTsHu4urfRFrqsat7w6LDbgrEi80lgXQkHboihwRejB/fjULTMo3ySvuo0MM
+	 UBcr9GdDbkktQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 03/11] soc: qcom: crypto_virt: add support for
- create, prepare and import keys
+Subject: Re: [PATCH v1 06/11] scsi: ufs: core: add slot path to
+ ufshcd_prepare_lrbp_crypto
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Linlin Zhang" <linlin.zhang@oss.qualcomm.com>
-Cc: robh@kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260827160806.1295313-4-linlin.zhang@oss.qualcomm.com>
+Cc: linux-scsi@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org
+In-Reply-To: <20260827160806.1295313-7-linlin.zhang@oss.qualcomm.com>
 References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
- <20260827160806.1295313-4-linlin.zhang@oss.qualcomm.com>
+ <20260827160806.1295313-7-linlin.zhang@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 27 Aug 2026 16:19:56 +0000
-Message-Id: <20260827161956.A7C0B1F00A3A@smtp.kernel.org>
+Date: Thu, 27 Aug 2026 16:20:17 +0000
+Message-Id: <20260827162017.6CB7D1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Missing QCOM SCM dependency check leads to NULL pointer dereference
-- [Medium] Global state inheritance of `g_wrapped_key_size` across devices
-- [Low] Unconditional registration of unsupported hardware-wrapped key oper=
-ations
+- [High] Malformed crypto contexts with `data_unit_size_bits =3D=3D 0` sile=
+ntly bypass encryption instead of failing the request.
 --
 
-commit 4b3400c30fba3c871f1ea78eace978c0fff73f5a
+commit 406714defb60086f0a0900753b849815524e2e23
 Author: linlzhan <linlin.zhang@oss.qualcomm.com>
-soc: qcom: crypto_virt: add support for create, prepare and import keys
 
-This commit adds support for generating, preparing, and importing hardware
-wrapped keys in the crypto_virt driver. It obtains the wrapped key size
-from the "qcom,wrapped-key-size" property and enables SCM helpers.
+scsi: ufs: core: add slot path to ufshcd_prepare_lrbp_crypto
 
-> diff --git a/drivers/soc/qcom/crypto_virt.c b/drivers/soc/qcom/crypto_vir=
-t.c
-> index 4ee2a36af6c1f..93c7993fb4a5d 100644
-> --- a/drivers/soc/qcom/crypto_virt.c
-> +++ b/drivers/soc/qcom/crypto_virt.c
-[ ... ]
-> +static int crypto_virt_probe(struct platform_device *pdev)
+This commit extends ufshcd_prepare_lrbp_crypto() to support bios that carry=
+ a
+pre-programmed physical ICE keyslot index in crypt_ctx->bc_slot instead of
+a blk_crypto_key pointer. It adds a check for bc_slot.data_unit_size_bits to
+determine if the slot path should be used.
+
+> diff --git a/drivers/ufs/core/ufshcd-crypto.h b/drivers/ufs/core/ufshcd-c=
+rypto.h
+> index 8f66db94e179a..2fc5601c0f769 100644
+> --- a/drivers/ufs/core/ufshcd-crypto.h
+> +++ b/drivers/ufs/core/ufshcd-crypto.h
+> @@ -15,13 +15,21 @@
+>  static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
+>  					      struct ufshcd_lrb *lrbp)
 >  {
-> +	int ret;
-> +
-
-[Severity: High]
-Should this probe function verify that the QCOM SCM driver is available
-before proceeding?
-
-Since the driver registers virtio block crypto operations here, userspace c=
-an
-issue block crypto ioctls as soon as this completes. If SCM is not yet read=
-y,
-a call to a function like qcom_scm_generate_ice_key() will unconditionally
-dereference the uninitialized __scm pointer:
-
-qcom_scm_generate_ice_key()
-   void *lt_key_buf =3D qcom_tzmem_alloc(__scm->mempool, ...);
-
-Could we add a check for qcom_scm_is_available() and return -EPROBE_DEFER
-if it is not yet ready?
-
-> +	ret =3D of_property_read_u32(pdev->dev.of_node, "qcom,wrapped-key-size",
-> +				    &g_wrapped_key_size);
-> +	if (ret)
-> +		dev_warn(&pdev->dev, "qcom,wrapped-key-size not found\n");
-
-[Severity: Medium]
-Could this leak state between different probed devices?
-
-Because g_wrapped_key_size is a static global variable, it retains its value
-from previous probes. If a newly probed device is missing the
-qcom,wrapped-key-size property, of_property_read_u32() returns an error
-without modifying the output variable.
-
-Would it be safer to zero-initialize g_wrapped_key_size before the read,
-so that a device without this property doesn't accidentally inherit the
-wrapped key size from a previously probed device?
-
-> +
-> +	if (!g_wrapped_key_size ||
-> +	    g_wrapped_key_size > BLK_CRYPTO_MAX_HW_WRAPPED_KEY_SIZE) {
-> +		dev_err(&pdev->dev,
-> +			"invalid qcom,wrapped-key-size %u, won't support generate/import/prep=
-are hardware wrapped key\n",
-> +			g_wrapped_key_size);
-> +		g_wrapped_key_size =3D 0;
+> -	if (!rq || !rq->crypt_keyslot) {
+> +	if (!rq) {
+>  		lrbp->crypto_key_slot =3D -1;
+>  		return;
+>  	}
+> =20
+> -	lrbp->crypto_key_slot =3D blk_crypto_keyslot_index(rq->crypt_keyslot);
+> -	lrbp->data_unit_num =3D rq->crypt_ctx->bc_dun[0];
+> +	if (rq->crypt_keyslot) {
+> +		lrbp->crypto_key_slot =3D blk_crypto_keyslot_index(rq->crypt_keyslot);
+> +		lrbp->data_unit_num =3D rq->crypt_ctx->bc_dun[0];
+> +	} else if (rq->crypt_ctx && rq->crypt_ctx->bc_slot.data_unit_size_bits)=
+ {
+> +		lrbp->crypto_key_slot =3D rq->crypt_ctx->bc_slot.phy_slot;
+> +		lrbp->data_unit_num =3D rq->crypt_ctx->bc_dun[0];
+> +	} else {
+> +		lrbp->crypto_key_slot =3D -1;
 > +	}
 > +
->  	virtblk_set_crypto_ops(&virtblk_crypto_qcom_vops);
-
-[Severity: Low]
-Does this code unconditionally register the hardware-wrapped key operations,
-even when they are unsupported?
-
-By registering virtblk_crypto_qcom_vops with non-NULL function pointers for
-generate_key, prepare_key, and import_key, the block layer framework will
-assume these capabilities are supported.
-
-When invoked, the unsupported operations check for !g_wrapped_key_size and
-return -EINVAL:
-
-crypto_virt_generate_key() {
-    ...
-    if (!g_wrapped_key_size) {
-        ...
-        return -EINVAL;
-    }
-}
-
-Should these operations either return the standard -EOPNOTSUPP, or avoid
-being registered altogether when the feature is locally disabled?
-
->  	return 0;
 >  }
+
+[Severity: High]
+Does this code silently bypass encryption if a malformed request is submitt=
+ed?
+
+If an IO request is submitted with a crypto context (rq->crypt_ctx !=3D NUL=
+L) but
+has data_unit_size_bits =3D=3D 0, this logic falls through to the final els=
+e block
+and sets crypto_key_slot to -1.
+
+Since the block layer explicitly skips validation (bio_crypt_check_alignmen=
+t())
+for slot-based bios, could an untrusted guest VM submitting a virtio-blk
+request with data_unit_size_bits =3D=3D 0 cause an explicitly encrypted IO =
+to be
+written to the physical storage device as plaintext?
+
+Should this path fail the request rather than falling open to plaintext,
+perhaps by surfacing an error up to the caller so it can be failed with
+BLK_STS_IOERR?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827160806.1295=
-313-1-linlin.zhang@oss.qualcomm.com?part=3D3
+313-1-linlin.zhang@oss.qualcomm.com?part=3D6
