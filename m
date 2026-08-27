@@ -1,131 +1,225 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f42.google.com (mail-oa1-f42.google.com [209.85.160.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 945D0499F3B;
-	Thu, 27 Aug 2026 19:29:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787858994; cv=none; b=cUStnzDFQg/I7xD3jtxaGQT9bDnBYnWduYml3o/LvfrnkR93R7eOz6n1ULb9rY9B+gcDSDUaRemAI0o47Sa4MO+aQ/a2WPkgeLol0ICZSpLX5nRKHY3Rw2obxg9dRacMmSayTrbM2cZlCs26IaiAnMNlUMQVETQUYhiqy5aFKJ0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787858994; c=relaxed/simple;
-	bh=HakblkERuJ8lxUcZ1No75a/kXLlrNKrK0yRSRw1Fsz8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TvfIn4nBcX+DCj2ir9VX7guGgn2nSF0eJhHn5QADWc5qoPe2pneB8WqKXr20veVOD/PD/E2W3tGO7RAFQ6fkeUXwqrvM6cZ+eiKo6W22RjtrDHA07m6WpBAScRIx637g6fNxZGOEMh9ahObTvWPzj5WbFJeg68JbOZPfXIxJLBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=bne3dwsn; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 871CF4B0480
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 19:53:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787860403; cv=pass; b=EAciorD4CnWRppovB31tYJbvhiXEloKA+RG3gATVAnVCz17phPoG7R4mSwYrgahFW8E0uZEDgvyOV5aEQqDiBY0aP8XNcSydMz+Sn8Jk1yvtdQ7jOiDN3hMxHrDc5JxUzj4g0Dno8iFdqglpXvcgctT+MdPLi2MBJVUhDyZy1+c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787860403; c=relaxed/simple;
+	bh=gVjMhbAwFcmGN4yhqQ+ojB2Np3m6fVMAekUHo9EEer0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Ur+EgxLE7AmzB31hMg2G+JpqVtV4LgrADs6SxbRJNluwqhy44zXQvoxg45jMJhgNhu2WeURNP0Yivcv6GLQV65F/0zec6FCEdWy7tuLZucti2B6jFTtWE01l/0Kvy/lZMMwtXiYeYWX8wdH1ASfmQW04UITYfNl52M2xp4/aNfg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=KKqnjruD; arc=pass smtp.client-ip=209.85.160.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="bne3dwsn"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67RIVcCV3876912;
-	Thu, 27 Aug 2026 19:29:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=S59u3T
-	RnsKVWGoWTMHD50JnHRjTpgKKLIHcP2taOCtc=; b=bne3dwsnf80iDYIgrV5mWR
-	yK6RHL+Xqti0MnuFPSUbi1UKcT5E2DLnaUSvppfOrfovhep/HHHfhGK4gVede6SP
-	hFCDacKXGs/o+4phBMON0Eq2LmyQR9y1T8fIINBXmfrQcfJatsaPRkfSdMlAple4
-	Xt9ioWW6HlikXrEeJEBQFlW+hSqOo2skfJDQqj4RXOwJruYpWPNDDjpw0wEqaGB8
-	Qg6BXvZZqqF/+/T97rGh7/8FsCZESuDqKixP/xp35pLGoj/d1QFMI2RBldkwgG0T
-	hGcu5hgqh1oJg9xODtX13ojVKpETdkdQqeAlpXb0DOGOkmDAU7joEv3gSEfB5Dzg
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4g73dxq677-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 27 Aug 2026 19:29:29 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 67RJQcWD021730;
-	Thu, 27 Aug 2026 19:29:28 GMT
-Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4g7rsyhp42-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 27 Aug 2026 19:29:28 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
-	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 67RJTRdj51315146
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 27 Aug 2026 19:29:27 GMT
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9F37F58053;
-	Thu, 27 Aug 2026 19:29:27 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 640E058043;
-	Thu, 27 Aug 2026 19:29:26 +0000 (GMT)
-Received: from [9.61.79.161] (unknown [9.61.79.161])
-	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 27 Aug 2026 19:29:26 +0000 (GMT)
-Message-ID: <b96e1cdf-bf10-464d-9fb9-5afc625d8984@linux.ibm.com>
-Date: Thu, 27 Aug 2026 12:29:25 -0700
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="KKqnjruD"
+Received: by mail-oa1-f42.google.com with SMTP id 586e51a60fabf-459bd8ea98aso16007fac.0
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 12:53:17 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787860396; cv=none;
+        d=google.com; s=arc-20260327;
+        b=oCGz1PRyNUankxnh0f1NEPMY3lZZJbBjvANUHc1UaYqt6Fxmxjd+GK/VvIvmjCzh3y
+         AcBstmFroEYJAwddFqMYchucvI3+Hojmx86FCvoZgQ3f9oM32mOC2WUfENx79r4rYJgQ
+         /LU3uWSJfHSAfmVO1YYKIEKyrFnA1Oe8ocae7VIWC+mZDoOKb5eK9Y1PYBTMVlUQGnbe
+         HPeOs+sueNlQJFy94lY3bRJ36fakjsuTyOzzsPcbF9kgZClxQaaITuqn3ZKrnbZPJncZ
+         KeTImd5hv1OzWQ0pfG/tCPaMU8sZjJVUani/mtrJN7C/cWIPU0HWtC7PvwbGAMGnCNN/
+         yEaw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=h/okYFTS2lL08kFzVd4eJiLNff++PKarqdGjVYshS7E=;
+        fh=isiogoDDiKCC6jyK2J76iE7jU+NRi05jWTzvkvruoP4=;
+        b=R1RIqd/qKyfPLhVjqk023vSqXAlc9cfRx6SYFcifNHdsHBOo1bdwoDjAz40pJrWX8n
+         g3M5ThXd93rSqsMCjCxM/UEfbel5lYp8YIcbNnhEmQt3G5JHLpMC3oJVCZacNXSW36Nc
+         YPn7luwcxdPMZEHzLGGFrs/8DMNF2APz8IZcAA60j1awIwLymYwFusIvQX0LIA5T0C6L
+         gHyvRuHeibi5I0GsLqv0NKhCoD185DJPt0d+aj+do68JUMhJJnhcKg0t6qZDxY5xwYjM
+         abpqiaUGfNeBGuXZyVnpO3zcmijhFmN6n7frsrLXjC4cUk6OdgUgyPTomMkRP2uk78X9
+         G+wQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1787860396; x=1788465196; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=h/okYFTS2lL08kFzVd4eJiLNff++PKarqdGjVYshS7E=;
+        b=KKqnjruDG7BgYYNvYkguIGiSe2cfKaWpoRjv6XjJVVVK3K9go9A0iUqSjQKa1h3lJ+
+         Dc6IFJPFk2mrQj9iR53f9go+aPmEYPio4RlVh24DjTYNHcIUnLMSisI1YRckGdr0PpHr
+         K6Esaz2Rut7fbayN0gKJSpPh8jqhfFHDguBg4Hv6yv1mvCaQaKvLFNbnXiopx5xjTT4+
+         0YsYLK9COp1lnYfZVAjEELN9mrvsss/y8/HJ15+g4lA78KAnPVUSZa9CfYKjCwYmzV/d
+         a4URMNX+8DNZ7cQtawU5J3ZkU5L/GFpsSE236xAjswe+06MDKzjvFzqp00nKTz4ua8gV
+         V3xQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787860396; x=1788465196;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=h/okYFTS2lL08kFzVd4eJiLNff++PKarqdGjVYshS7E=;
+        b=qpuihmVL4zWubI/iIWqO1eyEfnb2CbsxZMrERFUSyaYEXEquHWFk6/SzakakJReVHW
+         KJcC5gXX27jAbL4eO8NggFfaZrec6L8V7wFtpRNXatEybA0WVW4mi2Kz3s78rqv5pd/k
+         nFPhbFW8JLEwCffjKTSsZR1BKocUc/T8ux76DDxrgZqYg+xN1/n4xsrEJvqeTVGKGDEH
+         gZ9kJW2zWQyHRPvGNaAOaGaheJ3ArQhPB/iiXiY95F7z/BlteuO0rbH6t/DQvdKU4Uc8
+         Vkk3LFyxysPm9Ycs20FfC4AzJlZIv72AWMo9xzzwOLmAFXLduzPOCkK6D51igI3FfXj0
+         kOSQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpIdqR+wbMAKiq2ORpZG49q55owpOvRNB+GwqJY2Qb5CKy9Fc8guIIR68vITn1d1WZT5UUPZCDt97Vg@vger.kernel.org
+X-Gm-Message-State: AFuF++l+LVPBhDvtPTJFd1jHJFTSfRyyswkIVrLJinwTjpDSnuzGhG0I
+	z4RFISLwPve6AcxR4+SePeM00skAz/xsHzjJO37OctPcj2kzdBIbdvoQ/nbCKIA4gnRqQZ+IXAz
+	p7MKI5jA3fq+1MUnPL09lC+DEnrBtowbzTy7DQbqSblqvsMpXWvO2lN0/zQ==
+X-Gm-Gg: AR+sD13BCr9UCpyTyx1ueAJ0xkSsTuzE/+2ehRu6Mq6E04gvuP5owP8jpMg1uu8QwbM
+	xTUKmM5p+cpUBRY4cNQJp/UhaWblwT65iWKt+hAgVPI+4wHi3P94RCsFi2Q0F+mGb5FhaIm2/ye
+	qw0ctgPYWRB7dhkKo4vLFFgLMweBByay8fOqphzqQr64eOWcyuWKENOkELjGWgKZ4Nd87OC1sUB
+	xDKU816E7bXGHgSwQTNkuJbkGl8vAbFrL6KyVuvrUKCeCUdV1ZiGxobs+6gCHo+cRasdGMwHvec
+	q9hzmEj5t0uhI841EnN7lnx1BhEkGBusJUq7MFMDnlN5
+X-Received: by 2002:a05:6871:4183:b0:45f:32fe:3223 with SMTP id
+ 586e51a60fabf-4683778aef5mr1163905fac.4.1787860395608; Thu, 27 Aug 2026
+ 12:53:15 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: ibmvfc: document protocol parameter of
- ibmvfc_alloc_target()
-To: Muhammad Falak R Wani <falakreyaz@gmail.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel test robot <lkp@intel.com>,
-        Madhavan Srinivasan
- <maddy@linux.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        linuxppc-dev@lists.ozlabs.org
-References: <dd866cf2321381694af027fbd726bcbd63ac3751.1787828961.git.falakreyaz@gmail.com>
- <b073968ae020b6ae0240e91341a92f428587ebd9.1787828961.git.falakreyaz@gmail.com>
-Content-Language: en-US
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-In-Reply-To: <b073968ae020b6ae0240e91341a92f428587ebd9.1787828961.git.falakreyaz@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODI3MDE2MSBTYWx0ZWRfXzlWOBqC9HRUO
- ++8bm4Puiev9eabSGcxJ4pLaVVP4fIdg60N0LwqB5e2Il4IMIssuaQ5uEmsefsq/0PgfruA097A
- /63KZXCeH7bpkaQZOQn8QVdhCR8hB4g=
-X-Authority-Analysis: v=2.4 cv=AYuB2XXG c=1 sm=1 tr=0 ts=6a909019 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
- a=QyXUC8HyAAAA:8 a=pGLkceISAAAA:8 a=VnNF1IyMAAAA:8 a=xP4I_6v4Ii45Jom1HAIA:9
- a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: VA61OV9oQxz5OlhCAXktmQ5nW6BdwtE5
-X-Proofpoint-GUID: 1sVxm5x9ea8oTlMhMr8MewCaWL1plwGh
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI3MDE2MSBTYWx0ZWRfXw6MNoQrSvALG
- lcXHZ7kMcY1Z2CvQ4LSR2mBFjBcjYlQnX8fZGYESmQtr3bQA0kZgeAAba0KCtTsprQ6YPKdrlhz
- 0MzpU+ZtQepip7L1ISIHR/Gvt++SoJbPAuglWR5+mci2smj4lwGWznEvSUcNPrCfvZh5WTbCRjF
- +gZDS9R/2WqQrsOZZdKfffN1weHIlEmgEb0Ps8LGJWeVuZ14X+Yksc1+UMWU937I7zhLc6uYAAs
- 1Vz62LTmlqZ52cVj3eEftdyV2U1WwJ2HVvzhum7PH7tgFDFNp+qmE9529Wp06yDp7UENmiBpmaS
- OLKUPhHQQs64/qCSyTsBZ+63C825/GMThTBsaz8kYyTa/dxNA3w8s4x+DQLuyqg7iA5VDp4EC7E
- UOlapKTa5uO1tEC+iJ1wQyn6PZknhFkX8G0Te1ErLvi1nBJZ0wt4gvmW9AwfbfQCg/y+++fYuYo
- n1qoe4jg+M9jt4GwLkQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-27_07,2026-08-27_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 phishscore=0 clxscore=1015 adultscore=0 bulkscore=0
- impostorscore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608270161
+References: <20260827185722.3234622-1-csander@purestorage.com>
+ <20260827185722.3234622-3-csander@purestorage.com> <20260827191705.D53C91F000E9@smtp.kernel.org>
+In-Reply-To: <20260827191705.D53C91F000E9@smtp.kernel.org>
+From: Caleb Sander Mateos <csander@purestorage.com>
+Date: Thu, 27 Aug 2026 12:53:04 -0700
+X-Gm-Features: AcwNN1W4YwDKJsJ4I9wWFXfEnGuBCnFCExgwaK_ALpgcocy3M7K8ifopiYrTRDc
+Message-ID: <CADUfDZoJj6_wHv7_hpCOGRfAEGfb7J=5PJJ+++VrLqH-MZvNfg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] nvme/ioctl: call io_uring_cmd_set_res32() in ->end_io()
+To: sashiko-reviews@lists.linux.dev
+Cc: dsterba@suse.cz, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 8/27/26 4:20 AM, Muhammad Falak R Wani wrote:
-> Commit 249313b3f7b5 ("scsi: ibmvfc: allocate targets based on protocol")
-> added a protocol parameter to ibmvfc_alloc_target() but did not describe
-> it in the function's kernel-doc comment, so a W=1 build warns:
-> 
->   drivers/scsi/ibmvscsi/ibmvfc-core.c:4996: warning: Function parameter
->   or struct member 'protocol' not described in 'ibmvfc_alloc_target'
-> 
-> Add the missing parameter description.
-> 
-> Fixes: 249313b3f7b5 ("scsi: ibmvfc: allocate targets based on protocol")
-> Reported-by: kernel test robot <lkp@intel.com>
-> Closes: https://lore.kernel.org/oe-kbuild-all/202608270829.lHI1FAdO-lkp@intel.com/
-> Signed-off-by: Muhammad Falak R Wani <falakreyaz@gmail.com>
-> ---
-Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+On Thu, Aug 27, 2026 at 12:17=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+>
+> Thank you for your contribution! Sashiko AI review found 2 potential issu=
+e(s) to consider:
+>
+> Pre-existing issues:
+> - [Critical] Polled NVMe uring_cmd requests completing via IRQ cause a Us=
+e-After-Free in nvme_ns_chr_uring_cmd_iopoll.
+> - [Critical] io_do_iopoll unconditionally overwrites req->cqe.flags, dest=
+roying IORING_CQE_F_32 for polled uring_cmd requests.
+> --
+>
+> commit 67604b5180877187b81d959a1a1acc3b5bc52ca4
+> Author: Caleb Sander Mateos <csander@purestorage.com>
+>
+> nvme/ioctl: call io_uring_cmd_set_res32() in ->end_io()
+>
+> This commit moves io_uring_cmd_set_res32() from the task work callback
+> into the end_io handler for nvme uring commands. This eliminates the need
+> to store the result and status in the PDU, saving memory and unifying
+> the completion path.
+>
+> > diff --git a/drivers/nvme/host/ioctl.c b/drivers/nvme/host/ioctl.c
+> > index 269afd5bc02e3..8d357c47111f8 100644
+> > --- a/drivers/nvme/host/ioctl.c
+> > +++ b/drivers/nvme/host/ioctl.c
+>
+> [ ... ]
+>
+> > @@ -414,15 +411,17 @@ static enum rq_end_io_ret nvme_uring_cmd_end_io(s=
+truct request *req,
+> >  {
+> >       struct io_uring_cmd *ioucmd =3D req->end_io_data;
+> >       struct nvme_uring_cmd_pdu *pdu =3D nvme_uring_cmd_pdu(ioucmd);
+> > +     u64 result =3D le64_to_cpu(nvme_req(req)->result.u64);
+> > +     int status;
+> >
+> >       if (nvme_req(req)->flags & NVME_REQ_CANCELLED) {
+> > -             pdu->status =3D -EINTR;
+> > +             status =3D -EINTR;
+> >       } else {
+> > -             pdu->status =3D nvme_req(req)->status;
+> > -             if (!pdu->status)
+> > -                     pdu->status =3D blk_status_to_errno(err);
+> > +             status =3D nvme_req(req)->status;
+> > +             if (!status)
+> > +                     status =3D blk_status_to_errno(err);
+> >       }
+> > -     pdu->result =3D le64_to_cpu(nvme_req(req)->result.u64);
+> > +     io_uring_cmd_set_res32(ioucmd, status, result);
+>
+> [Severity: Critical]
+> This is a pre-existing issue, but does moving this call before polling ex=
+pose
+> a regression with IORING_CQE_F_32?
+>
+> When io_uring_cmd_set_res32() posts 32-byte CQE results, it sets:
+>     req->cqe.flags |=3D IORING_CQE_F_32;
+>
+> However, for polled requests, io_do_iopoll() later executes:
+>     req->cqe.flags =3D io_put_kbuf(req, max(req->cqe.res, 0), NULL);
+>
+> This unconditional assignment completely overwrites the flags, erasing
+> IORING_CQE_F_32. As a result, when io_fill_cqe_req() processes the
+> completion, it allocates a 16-byte slot instead of 32 bytes and silently
+> drops extra1 and extra2 (the NVMe-specific result values).
+
+Yes, this does look like an existing issue. Perhaps the req->cqe.flags
+=3D io_put_kbuf(...) should be using |=3D instead? That would match how
+io_req_rw_complete() uses it.
+>
+> >
+> >       /*
+> >        * For IOPOLL, check if this completion is happening in the conte=
+xt
+> > @@ -435,7 +434,6 @@ static enum rq_end_io_ret nvme_uring_cmd_end_io(str=
+uct request *req,
+> >           iob->poll_ctx =3D=3D io_uring_cmd_ctx_handle(ioucmd)) {
+> >               if (pdu->bio)
+> >                       blk_rq_unmap_user(pdu->bio);
+> > -             io_uring_cmd_set_res32(ioucmd, pdu->status, pdu->result);
+> >               io_uring_cmd_done(ioucmd, 0);
+> >       } else {
+> >               io_uring_cmd_do_in_task_lazy(ioucmd, nvme_uring_task_cb);
+> >       }
+> >       return RQ_END_IO_FREE;
+>
+> [Severity: Critical]
+> This isn't a bug introduced by this patch, but is there a use-after-free
+> regression when a polled NVMe uring_cmd completes via an interrupt?
+
+Aren't the blk-mq poll queues mutually exclusive with the
+interrupt-driven queues? I'm not sure this is possible.
+
+Best,
+Caleb
+
+>
+> If the completion is not in the expected poll context (e.g. hybrid pollin=
+g
+> or a spurious interrupt), this path queues nvme_uring_task_cb() via
+> io_uring_cmd_do_in_task_lazy() and returns RQ_END_IO_FREE, which frees th=
+e
+> block request immediately.
+>
+> However, the io_uring state flag req->iopoll_completed is not set to 1 un=
+til
+> the task_work runs. Concurrently, the io_uring polling thread in
+> io_do_iopoll() sees req->iopoll_completed =3D=3D 0 and invokes
+> nvme_ns_chr_uring_cmd_iopoll().
+>
+> This function then dereferences pdu->req (which points to the just-freed
+> block request) to check blk_rq_is_poll(req):
+>
+> drivers/nvme/host/ioctl.c:nvme_ns_chr_uring_cmd_iopoll() {
+>     ...
+>     struct request *req =3D pdu->req;
+>
+>     if (req && blk_rq_is_poll(req))
+>     ...
+> }
+>
+> Can this lead to memory corruption if the unprivileged user issuing the
+> command continues polling while the interrupt path frees the request?
+>
+> --
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827185722.32=
+34622-1-csander@purestorage.com?part=3D2
