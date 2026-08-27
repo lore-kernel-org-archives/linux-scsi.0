@@ -1,181 +1,160 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33AFC3451D6;
-	Thu, 27 Aug 2026 06:42:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505F2351C13
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 06:47:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787812980; cv=none; b=iW9CydZOLMCd+AeVxru9dlN4QDMEwdz7MrlV5JSg08jGtz/GC9czGRwCUmbT0wCzZnrlh8Cn2tDM1yRDsTyvtTnB6fDKj2VPziiDpMSktGx6xyrxhaBgRq0sQ+T9AABs7PVx6QiyNX/cUNSEKq5n6r3w2CfBftYwKoknjBGUfZs=
+	t=1787813232; cv=none; b=sdEmxReCKCpWITo3i36j27YbBeLV2HzEQlIW42FaBX/IFTjAhfIRzSs1V/Nad5bWM7Tbnn1/E8hDuLy0CvP2/M4MhltlLaU+0ondggQhK2Enw9RWh1hvaEPl2FibdvCCcCpKzyTXURE8yowoJg7yNN5tlM6ProiFk9bfIpqZHcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787812980; c=relaxed/simple;
-	bh=MB/LVh6IvL9fgyrBiG1se/VXlzz6S89Sb+Ts7WSlJF0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=R9+B4O4HHhdVpmjxWW5Y6qKbT/7m4hBVSLjfzeWOEaKt9iuphJjP36e775fjkrib8b/eVlNSDiDyyQjzLeelcGGuKsMxE7wnXYJZZ3tnNeFoVlf+yMTy4maNp208hRhZWAu4AC2EVJe6xg/0ST7mSAQOilL+Li98+tU0bK7gcA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ZxcVLj+p; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1787813232; c=relaxed/simple;
+	bh=9cU4U+BdT0JcM3/H9SU4/WioDrfsF7Fo4dffAPzaix4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qgAN6SGKf8GukhxUWyHwvvd/X4rh1tfmUIeGdglGDSh/nmS2W7R/JaLxxgEhAoBW5KNWiCdqUlkE91DQhLhQFtKe+vnLXmfZqjnswWBCdzyA9oBuPedW21ln6YNZWikN9bpxz5Vd2tnW72DoQbrzGUr3Al91zPoqfF4bjAVDYfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=chv4SF9s; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=CTNvi5R3; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ZxcVLj+p"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Qd
-	f/9O/ikCIzL+++ZJBYi7IldqURvSfUUvVHb4OMlTs=; b=ZxcVLj+p8T5fZ17Av0
-	DrSUE4DEsZhlwgqDoCjtApZcBuXZsVmjDm0bPt90JoMZiLb4TN5mjivWmqBqTjrS
-	DB0vB9ndrNp2BsTLKhHs5F3S94vaSA8rN7TdAiBTqhGSUqwR1lGWe8giKeFFEc4R
-	KrVWc8pyaZd9w1IZ8cdujmDA0=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wD3n1Ji3I9qCBuTRQ--.33879S2;
-	Thu, 27 Aug 2026 14:42:42 +0800 (CST)
-From: ghuicao@163.com
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Cao Guanghui <caoguanghui@kylinos.cn>
-Subject: [PATCH v4 1/2] scsi: target: iscsi: Reject CDB size exceeding available buffer
-Date: Thu, 27 Aug 2026 14:42:40 +0800
-Message-Id: <20260827064241.88352-1-ghuicao@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260827013245.21289-1-ghuicao@163.com>
-References: <20260827013245.21289-1-ghuicao@163.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="chv4SF9s";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="CTNvi5R3"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67R6RHq43592094
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 06:47:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	b/AhrSXNQms8JbMbrVJXa9I6QwNAo12of30xAmlbY7A=; b=chv4SF9sagsZtzY2
+	BilGCN4MtUUf3vXNv0d2blfxOwCcpMXezUvkX8MSPx5v51R4X742Aeqd46RJPgsP
+	8mmOo+G/5rn3T/L/qmf6xgFlcoAW54Nt5ToSJBDyvfauy9zXHwyzzQL6KSRpBCvw
+	vQOzZfplf2lLnGeO1w73x7GexWui8fhWzmteQsybpG7w2yd+s/3zGEFqVi8N6uJ6
+	QZzv5BOIRVjIsa65YtahCEzpdt39IWVlfSVnZ7ZSKGuS26DQqJI3vbsdrDZHc3nv
+	8qqEg3MYKmpI+N1LpHE01vk0V6yEGJXMv+vy+Cqpt6ZnU6rjVa7Nm8ztShNuM3S1
+	RKbAWQ==
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ga4egjebw-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 06:47:10 +0000 (GMT)
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2cc6dd43737so28825175ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Aug 2026 23:47:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1787813229; x=1788418029; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=b/AhrSXNQms8JbMbrVJXa9I6QwNAo12of30xAmlbY7A=;
+        b=CTNvi5R3KlWab4JlwHldsIekHpIDPmfCosi4fKNyayqPh0SGcLGSI5s3Z5ThDPDg4T
+         jas18jK76lE0fqw1NGPNKf1cqpRF0EwOf3avPtTVKMURfDQI2SVoWo2ytPXhMkz9SmMQ
+         9uZbEVSIAkRh21DT320KHNl7Q+zMnnCcvGfQAV4E0xI6t1U6l3LPCfkgOEJyz8BQXv7T
+         fE+lp1UOKnWK5clhHbRDPvbXzC2no6V3yLQn7YM7Mzzu+C87VZQSiLiBOGabflG83hXa
+         cOrK9ZRowkDlJSDXRLmrFXkjW1N9mfkbZacqitTKktJo5WWIlQORyqYsK6lTrz4MOHS3
+         hpig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787813229; x=1788418029;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=b/AhrSXNQms8JbMbrVJXa9I6QwNAo12of30xAmlbY7A=;
+        b=sfj8f59yETTuPqoUG+j5zCMYRilMVNPaBmwlf3RzKPJSFdXAi/dLNwyGxLuXCMaK7N
+         m12AxjSwfAw7wqM6f0L35XtRD+fWRke9jwf+pBxdScCMFMYhDe5D53b91HlXkmNnyw3a
+         Sb+6wp2lJ+dQWXUKPO+8I6M9gegAvvQxtgJAt2FB9CRk0/umtAquP8bLxrBOXfUNb//S
+         qXSwk2cmR5ng5gUGqustidTyEOPD7kCby2MKkGzd3nyG901s7ccG6Gm68KJchTmq/Z19
+         3zgaCI/JnHOzyHrZ32z32SvqU61iHTCl1TxZAWVR+gVPKNU5I2lecmuj5z49/dQU/4hj
+         5ABA==
+X-Forwarded-Encrypted: i=1; AHgh+RragZXgrFAhbwfEYfz1d+8NdAEWu40b5KM8/tc3osHw88VcrGk9j8E8lJRNIcDBu6SSnKsDRkdZCaoV@vger.kernel.org
+X-Gm-Message-State: AFuF++mhHvSMboPJW8I3KbUPrHVW4duZQ5PqNWRxVyzrT5Ox4AMkK6bl
+	Y7Sy3d8WWjGv8mIDpSkla/YTpNKDC9tPA9aWiEFbLcAP/OESKJw1+pj2GJqt1sw4GFeNsQ7jt62
+	Ux0oYJvy4mDIrrCtfbs/qfRX5zH4fp2KtJO9BFIJVjtf/DFOb2y1fvrKfrK4XfeJc
+X-Gm-Gg: AR+sD121RTy+DgAxnmdhkYwy6QxbIbhq0bbvVi8xLQ1C1mVGHRV3pVy5rv7TgsV20lB
+	5EnNAR7eT2+j/8rHE3eHtGtt2oH7cfg3a/FHG8SgBQB9SOJ+l5ULdQlCEYph/M2HaA/XBTmPyhU
+	p2M+0H9A7HAEx3tkFt366aGMiW20zQCE8lT1BVHhPuD1FVEKQUlF9lxkPK5ENLrV8dEQOTxEtzS
+	ij5ClFINx3zcKVXIo+WrtacG+GG142lQecHt8vzjhQ39z243qQRHJlQAa9FsMobSC87UAjs3W/k
+	ubhW/5XqPnlFRAYYavlB4g9LVqCxZpJmm3asF+ILt515iL21k1EDHNEumg9d3dQAZi6lLhi+ezs
+	zvetWzwX90JxSpI9JF/fF+UAzc9NeYgw=
+X-Received: by 2002:a17:90b:4a50:b0:392:b509:b1a5 with SMTP id 98e67ed59e1d1-3966d48c3e9mr23462910a91.14.1787813229264;
+        Wed, 26 Aug 2026 23:47:09 -0700 (PDT)
+X-Received: by 2002:a17:90b:4a50:b0:392:b509:b1a5 with SMTP id 98e67ed59e1d1-3966d48c3e9mr23462842a91.14.1787813228830;
+        Wed, 26 Aug 2026 23:47:08 -0700 (PDT)
+Received: from [10.218.31.125] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-396b1123142sm1486827a91.15.2026.08.26.23.47.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 26 Aug 2026 23:47:08 -0700 (PDT)
+Message-ID: <d8304387-ecff-42d5-8cc6-d3b4526fb294@oss.qualcomm.com>
+Date: Thu, 27 Aug 2026 12:17:02 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3n1Ji3I9qCBuTRQ--.33879S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW3Ww18GryfXFWrtw18JF17Awb_yoW7CFWkpF
-	12gw1FyrWrZayIkwnxAayYvry5u39akayDKa43G34UCrn8JFy0ga42ga4agayUt3Z2grWU
-	tr1qva4rGF4Iqr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jYPfdUUUUU=
-X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC-APNYGqP3GOAMgAA36
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v12 1/6] soc: qcom: ice: Add OPP-based clock scaling
+ support for ICE
+To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        Harshal Dev <harshal.dev@oss.qualcomm.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        devicetree@vger.kernel.org
+References: <20260824-enable-ice-clock-scaling-v12-0-09271f583dc6@oss.qualcomm.com>
+ <20260824-enable-ice-clock-scaling-v12-1-09271f583dc6@oss.qualcomm.com>
+Content-Language: en-US
+From: Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
+In-Reply-To: <20260824-enable-ice-clock-scaling-v12-1-09271f583dc6@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-GUID: Oy32WNro8bSAr7iLqg36CsAW1cW4iaWA
+X-Proofpoint-ORIG-GUID: Oy32WNro8bSAr7iLqg36CsAW1cW4iaWA
+X-Authority-Analysis: v=2.4 cv=DsRmPm/+ c=1 sm=1 tr=0 ts=6a8fdd6e cx=c_pps
+ a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
+ a=WeR_djdGDpRL5iHq6P8A:9 a=QEXdDO2ut3YA:10 a=GvdueXVYPmCkWapjIL-Q:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI3MDA1NCBTYWx0ZWRfXw2QOzXXFHEjl
+ 9iZy9qTCZs6WpnwTm+IiQL0LyLeEyoVmWOjBTVQUEvQzuJy2nB8nHDK2y2vUdxYQxGQ8k5rY3e4
+ 4zNx8ueUG9fHDjs/1HyntC07Ly2AaMU93A0PFoR1rNEnKWjK12Ufo9T2VfW00yRe3i0p9cADDai
+ udYKRNJ6GTgOQy9rRT7RU8NiJRR1l94SmDLkYdv85vj+GcewXZgf6VYrD6Lux/+7QT0FcxvrGr6
+ r/i9dV+sdSuswUtJaSPGsTCuyLvJgF9haBgh5O3hpK9rZipVutxoo8M8mvq9xEqA3O+VT5p072A
+ fCKfjphfrYmkJGVzkkLpynD7H6JE+GrGkZtvn0JxB3Ln+TnYtKeBv56Xfoj4+Yj4ytsNz3woThA
+ ec6D6O/uSzNUQD141BXxcL//4Wi9CGR3jvzl7RApiId/FLouStHI0Z+PhF0Uy9oz1QKyuNhDzNS
+ YSdfGXG55YV0X9mKWWw==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODI3MDA1NCBTYWx0ZWRfXx9ttmD3n0FFj
+ FaMBaSl2pKhVZ+X3hoG9RDOqw0ax9O6L1c6MvAknGd6y5Dssu6E8xkYsDqSaASZVOLXv6s5A3q6
+ S0rsphz8LjNlmzqkBJzhKiE4GxUFeJ0=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-27_03,2026-08-26_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 lowpriorityscore=0 impostorscore=0 bulkscore=0 malwarescore=0
+ clxscore=1015 priorityscore=1501 phishscore=0 adultscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608270054
 
-From: Cao Guanghui <caoguanghui@kylinos.cn>
+On 24-08-2026 01:17, Abhinaba Rakshit wrote:
+> Register optional operation-points-v2 table for ICE device
+> during device probe. Attach the OPP-table with only the ICE
+> core clock. Since, dtbinding is on a transition phase to include
+> iface clock and clock-names, attaching the opp-table to core clock
+> remains optional such that it does not cause probe failures.
 
-In iscsit_setup_scsi_cmd(), the CDB is later re-parsed by
-scsi_command_size() based on its SCSI opcode. For a VARIABLE_LENGTH_CMD
-(0x7f) the returned size is cdb[7] + 8, where both cdb[0] and cdb[7]
-come verbatim from the initiator-controlled PDU. The amount of CDB data
-actually available is never cross-checked against this opcode-declared
-length before the CDB is handed to target_cmd_init_cdb(), which does:
+iface clock and corresponding dtbindings are merged for v7.3 and your
+change will land post that.
+We can drop this from commit message?
 
-  memcpy(cmd->t_task_cdb, cdb, scsi_command_size(cdb));
+I think we should scale only core clock and for iface clock should rely
+on ufs/eMMC controller maitained frequency.
 
-An initiator can set cdb[0]=0x7f and cdb[7]=252 so that
-scsi_command_size() returns 260, while the available CDB space is only
-16 bytes (the basic header, when no Extended CDB AHS is present) or the
-AHS-provided length. target_cmd_init_cdb() then reads up to 244 bytes
-past the end of the CDB buffer, a heap out-of-bounds read. The leaked
-bytes are later parsed as the CDB and can be indirectly observed by the
-initiator through sense data and responses.
-
-Additionally, when an Extended CDB AHS is present with a large
-ahslength (up to 1017, bounded only by hlength), the code copies
-cdb_length - ISCSI_CDB_SIZE bytes from ecdb_ahdr->ecdb, a fixed 244-byte
-array declared in struct iscsi_ecdb_ahdr. When cdb_length exceeds
-SCSI_MAX_VARLEN_CDB_SIZE (260) this reads past the array, and with
-CONFIG_FORTIFY_SOURCE=y the runtime check in fortify_memcpy_chk()
-detects the overflow and panics the kernel, causing a system-wide
-Denial of Service.
-
-Reject the command before either memcpy can occur:
-
-- Without an Extended CDB AHS the CDB is limited to ISCSI_CDB_SIZE (16)
-  bytes in the basic header, so reject when scsi_command_size() >
-  ISCSI_CDB_SIZE.
-- With an Extended CDB AHS reject when cdb_length exceeds
-  SCSI_MAX_VARLEN_CDB_SIZE (260), which also bounds the read from the
-  fixed-size ecdb array, and reject when scsi_command_size() >
-  cdb_length.
-
-commit 2f3835771dff ("scsi: target: iscsi: reject invalid size Extended
-CDB AHS") fixed the zero-length ahslength overflows and the AHS-buffer
-overread, but did not cover the orthogonal "available CDB space vs.
-opcode-declared size" path or the ecdb array overread.
-
-Fixes: 8f1f7d297bce ("scsi: target: iscsi: Add support for extended CDB AHS")
-Cc: stable@vger.kernel.org
-Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
----
-v3:
-  - Add cdb_length > SCSI_MAX_VARLEN_CDB_SIZE check in AHS path to
-    prevent FORTIFY_SOURCE panic from ecdb array overread (Sashiko)
-  - Shorten subject line to fit 75-char convention
-  - Add Cc: stable@vger.kernel.org
-
-v2:
-  - Add bounds check for standard path without AHS (hdr->hlength == 0)
-  - Use if/else to make the two paths explicit
-
- drivers/target/iscsi/iscsi_target.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 45 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1100,7 +1100,22 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
- 
- 	cdb = hdr->cdb;
- 
--	if (hdr->hlength) {
-+	if (!hdr->hlength) {
-+		/*
-+		 * Without an Extended CDB AHS the CDB is limited to the 16
-+		 * bytes in the basic header. The CDB is later re-parsed by
-+		 * scsi_command_size() based on its opcode, which may claim a
-+		 * larger length (e.g. VARIABLE_LENGTH_CMD with cdb[7]=252).
-+		 * Reject such a mismatch before handing the CDB to
-+		 * target_cmd_init_cdb() to avoid an out-of-bounds read.
-+		 */
-+		if (scsi_command_size(hdr->cdb) > ISCSI_CDB_SIZE) {
-+			pr_err("SCSI command size %u exceeds CDB size %u, protocol error.\n",
-+			       scsi_command_size(hdr->cdb), ISCSI_CDB_SIZE);
-+			return iscsit_add_reject_cmd(cmd,
-+				ISCSI_REASON_PROTOCOL_ERROR, buf);
-+		}
-+	} else {
- 		ecdb_ahdr = (struct iscsi_ecdb_ahdr *) (hdr + 1);
- 		if (ecdb_ahdr->ahstype != ISCSI_AHSTYPE_CDB) {
- 			pr_err("Additional Header Segment type %d not supported!\n",
-@@ -1124,7 +1139,36 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
- 
- 		cdb_length = ahslength - 1 + ISCSI_CDB_SIZE;
- 
-+		/*
-+		 * The Extended CDB AHS ecdb field is a fixed-size array of
-+		 * SCSI_MAX_VARLEN_CDB_SIZE - ISCSI_CDB_SIZE (244) bytes. An
-+		 * attacker-controlled ahslength can make cdb_length exceed
-+		 * this, causing the memcpy below to read past the ecdb array
-+		 * and triggering a FORTIFY_SOURCE runtime panic. Reject CDB
-+		 * lengths exceeding the SCSI maximum before allocating.
-+		 */
-+		if (cdb_length > SCSI_MAX_VARLEN_CDB_SIZE) {
-+			pr_err("Extended CDB length %u exceeds maximum %u, protocol error.\n",
-+			       cdb_length, SCSI_MAX_VARLEN_CDB_SIZE);
-+			return iscsit_add_reject_cmd(cmd,
-+				ISCSI_REASON_PROTOCOL_ERROR, buf);
-+		}
-+
-+		/*
-+		 * The CDB buffer is later re-parsed by scsi_command_size()
-+		 * based on its opcode, which may claim a length larger than
-+		 * the AHS provided. Reject such a mismatch before allocating
-+		 * to avoid an out-of-bounds read of the CDB buffer in
-+		 * target_cmd_init_cdb().
-+		 */
-+		if (scsi_command_size(hdr->cdb) > cdb_length) {
-+			pr_err("Extended CDB AHS: SCSI command size %u exceeds AHS-provided CDB length %u, protocol error.\n",
-+			       scsi_command_size(hdr->cdb), cdb_length);
-+			return iscsit_add_reject_cmd(cmd,
-+				ISCSI_REASON_PROTOCOL_ERROR, buf);
-+		}
-+
- 		cdb = kmalloc(cdb_length, GFP_KERNEL);
- 		if (cdb == NULL)
- 			return iscsit_add_reject_cmd(cmd,
- 				ISCSI_REASON_BOOKMARK_NO_RESOURCES, buf);
 -- 
-2.34.1
+Regards
+Kuldeep
 
