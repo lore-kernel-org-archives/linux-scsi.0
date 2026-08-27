@@ -1,106 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0B0925A2DD
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 01:44:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6C1332B100;
+	Thu, 27 Aug 2026 02:05:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787795088; cv=none; b=adDJ8xR34MajdqzcuoHQlsBjqf6TvXUCnyQSpdjpyT4KUtoYuNoSZvIZf5d8HYhnWUp/pxEQc/+IqoMOSgOW/DjxFtmQhYwx2WdQ4P3DfZSAt+RxVPJu4sCdhNTDz7OM0TOJvBLYx5sBhaXGZP0IJJtkFaxztDpy8xw96GOu6lk=
+	t=1787796358; cv=none; b=P5XJAJ5eghqtAicEY3mm3On3aTYy1awq3bLL0hZEOtBmNqimUaZgnruTxE7Rp06hgBX11Al364NGvBolTqJF4MizJF7ca1kGfZd1got/dqQ1cNWAhGhDiRPMYx+bD/g2MxmH10TVPzikC4yNJ13W7OGBm+n79YLtKNLc287nY3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787795088; c=relaxed/simple;
-	bh=LSVKhz0Zt2rwg2SFSGYlbY3nSXFXwSgJhqU0CtUI4yI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jcal7I1J5Jsv5Bv5ekdRzPymBHDAh132OdS43BZVHd4BoLJe9q/BYFDvCMtuSBij4FdnLRKGscB6KWOE1xD9MVbhxwiJlFiTHB5GpSqD2T0AW25cl4ukSUu5POao+vx3X0MLpAymV2KnwOOOAb84yHsqp0xCXo+eC4kUK7NTs4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XZlG5HEg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787796358; c=relaxed/simple;
+	bh=pw1sL4GCKzOrVaTCSIyFIIP6qDP3kJo7hS6eJKxXYP0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=YPfAX94R1axgTpMBYSZOkXsEW17v5bNBHTTqA4CnKQC8Ua40qxl2uQxg4nyCtk7o+7uu7rB+Ui5xk8OHAbDcXAIYK+8YgrIl/MT1zee8CNwjSjp8hIXGniUJXKWYB361YhPzuuhdU70oDpNks8R7Xttj5AOZhTNle8SPtea+gtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=CMdP1DJA; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XZlG5HEg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 664561F000E9;
-	Thu, 27 Aug 2026 01:44:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787795086;
-	bh=l/QRXlD7uwr9ljVtYe0VVu1gvgNtUOfySjlInsA/LyU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XZlG5HEg0vabt/YVyyvVES6yrZjAUl8J6uZD4b6kis1kjhoN40L4x8DP+Jy7/0ilX
-	 QvV9cY41aUtqn41U/expGS+0r1cgv4DHlXxK8KyXtK8kch2awx64/ktdvBd5BR1+th
-	 1cz5pTQ7fsJmY1VhuSRmVIiIDlj5kZI9e1O+1OmgSM25fHHmhPuMAe4SDPucWc8fbl
-	 amIKVZilkDrtBnmD1H4cw68yfdPoAPHshtqYq03IsgELVq+lrpgJ1l8/4lrlT5egqN
-	 aNvIt2Elj+x5K30YCupXTmd008g5s3Zt22avPfV4t0G0Rla54nW11nNA9jOMFmC+7U
-	 XhSuStv/iEmBA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] scsi: target: iscsi: Reject CDB size exceeding
- available buffer
-Reply-To: sashiko-reviews@lists.linux.dev
-To: ghuicao@163.com
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260827013245.21289-1-ghuicao@163.com>
-References: <20260826100526.106011-1-ghuicao@163.com>
- <20260827013245.21289-1-ghuicao@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 27 Aug 2026 01:44:45 +0000
-Message-Id: <20260827014446.664561F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="CMdP1DJA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=nr
+	cvEP3Xhkd19RV4CkWuoVyi53edPcp87hFyJB/+lYw=; b=CMdP1DJAFwPy8JzRU0
+	X7TPU1yNvXphzYMhQ6Y5I+7veNJk/jArNfQjVDmqIyADlDYFW7SArGqbb4C3Y63L
+	+KQ7smXiI1amx0W5IT9p6/QIQzYx1VBVclR8mgabcNvqfDPwc7AbwoAtXMwfdfcJ
+	n474uzCQ/2lSiCBnvndIc1gzQ=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgDXXx91m49q9OxpOQ--.43841S2;
+	Thu, 27 Aug 2026 10:05:42 +0800 (CST)
+From: ghuicao@163.com
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Cao Guanghui <caoguanghui@kylinos.cn>
+Subject: [PATCH] scsi: target: iscsi: Fix HeaderDigest to cover AHS data
+Date: Thu, 27 Aug 2026 10:05:36 +0800
+Message-Id: <20260827020536.29835-1-ghuicao@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:QCgvCgDXXx91m49q9OxpOQ--.43841S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ZFWUAFWDZF1fCF4kKrWrAFb_yoW8ury3pw
+	s8Ww1jvr45u3y5ur47AF4Yqw1YqayrGFWjvFWfG34093Z8JFWq9a4Iga4agFy8trWvgF1a
+	vr4qg345tF40qw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UpCJQUUUUU=
+X-CM-SenderInfo: 5jkxxuldr6il2tof0z/xtbC4BaCFWqPm3bpagAA3q
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+From: Cao Guanghui <caoguanghui@kylinos.cn>
 
-Pre-existing issues:
-- [High] The iSCSI target RX path fails to include Additional Header Segmen=
-ts (AHS) when computing the received HeaderDigest, breaking CRC verificatio=
-n for valid PDUs with AHS.
---
+In iscsit_get_rx_pdu(), the HeaderDigest CRC32C is computed over only
+the 48-byte basic header (ISCSI_HDR_LEN), excluding any Additional
+Header Segments.  However, RFC 3720 Section 10.2.1.2 specifies that
+the header digest covers "all the header segments of a PDU, i.e., BHS
+and AHS."
 
-commit 6cf5aacf20580909d513380590652bf27da173c3
-Author: Cao Guanghui <caoguanghui@kylinos.cn>
+The iSCSI initiator (libiscsi) correctly computes the digest over
+BHS + AHS (task->hdr_len = 48 + hlength * 4), so any valid PDU with
+both HeaderDigest negotiated and AHS present (e.g., SCSI commands with
+Extended CDB) would fail CRC verification on the target side and be
+falsely rejected.
 
-scsi: target: iscsi: Reject CDB size exceeding available buffer
+Track the total header length in a local variable and use it for the
+CRC computation so that the digest covers the full header as required
+by the RFC.
 
-This commit adds validation to ensure the CDB size requested by
-scsi_command_size() and the Extended CDB length do not exceed available
-buffers. It prevents out-of-bounds reads during memcpy in
-target_cmd_init_cdb() and fortify_source panics when an Extended CDB AHS
-is present.
+Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
+Cc: stable@vger.kernel.org
+Signed-off-by: Cao Guanghui <caoguanghui@kylinos.cn>
+---
+ drivers/target/iscsi/iscsi_target.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/i=
-scsi_target.c
-> index 62ada3a52210e..f19f1c31a39b2 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4026,6 +4026,6 @@ static void iscsit_get_rx_pdu(struct iscsit_conn *conn)
+ {
+ 	int ret;
+ 	u8 *buffer, *tmp_buf, opcode;
+-	u32 checksum = 0, digest = 0;
++	u32 checksum = 0, digest = 0, header_length;
+ 	struct iscsi_hdr *hdr;
+ 	struct kvec iov;
+@@ -4053,8 +4053,10 @@ static void iscsit_get_rx_pdu(struct iscsit_conn *conn)
+ 		}
+ 
+ 		hdr = (struct iscsi_hdr *) buffer;
++		header_length = ISCSI_HDR_LEN;
+ 		if (hdr->hlength) {
+ 			iov.iov_len = hdr->hlength * 4;
++			header_length = ISCSI_HDR_LEN + iov.iov_len;
+ 			tmp_buf = krealloc(buffer,
+ 					  ISCSI_HDR_LEN + iov.iov_len,
+ 					  GFP_KERNEL);
+@@ -4082,5 +4084,5 @@ static void iscsit_get_rx_pdu(struct iscsit_conn *conn)
+ 			}
+ 
+-			checksum = iscsit_crc_buf(buffer, ISCSI_HDR_LEN, 0,
+-						  NULL);
++			checksum = iscsit_crc_buf(buffer, header_length, 0,
++						  NULL);
+ 			if (digest != checksum) {
+-- 
+2.34.1
 
-[ ... ]
-
-[Severity: High]
-This isn't a bug introduced by this patch, but since this code correctly
-handles AHS structures, I noticed a pre-existing issue in the iSCSI target
-RX path that might also need addressing.
-
-In iscsit_get_rx_pdu(), does the header digest calculation need to be updat=
-ed
-to include the AHS length?
-
-drivers/target/iscsi/iscsi_target.c:iscsit_get_rx_pdu() {
-    ...
-			checksum =3D iscsit_crc_buf(buffer, ISCSI_HDR_LEN, 0,
-						  NULL);
-    ...
-}
-
-Doesn't this calculate the CRC exclusively over the 48-byte basic header
-(ISCSI_HDR_LEN)?
-
-If the initiator negotiates HeaderDigest and sends an iSCSI PDU with an
-Additional Header Segment (hdr->hlength > 0), wouldn't this break CRC
-verification for valid PDUs with AHS since they will be falsely rejected
-with a CRC error?
-
-According to RFC 3720 Section 10.2.1.2, shouldn't the Header Digest be
-calculated over the basic header AND any AHS, using
-ISCSI_HDR_LEN + (hdr->hlength * 4) instead of just ISCSI_HDR_LEN?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827013245.2128=
-9-1-ghuicao@163.com?part=3D1
