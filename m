@@ -1,123 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03C1846AEE4
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 18:21:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48D1D381B0D;
+	Thu, 27 Aug 2026 18:42:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787854868; cv=none; b=oT3lQy+pXkqMk7OWiKVAWkw5NUc1agkFr74EGiHRTtUU7SJZiwXqIeRg3HsnTn8S6ZluEIIv/shP4koQ2FSiH57c6Wa+lELjt6Te7+3kAhtm0fMDWNTJ9PJa2kVMWCrItGjfdYFDe49tg/RdFOafTTq3TZDWqEOoYEaWCodRqlU=
+	t=1787856143; cv=none; b=uzYEORYyE0n61oBSSpsDOK9T2Z7SAWfpHVf0JZFf9g00OuBtSbXbSOpRUrbKDP160WPouewMuAj1Db3IZNilWVRcL+WteLr/YCSNq/u1KMqN6YdWy6srBLVfpiOOBsV0dHgnYHbfQzImmjgXYPCLzOCtD+Gnj/tJma/SCLunjc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787854868; c=relaxed/simple;
-	bh=o8HGamV5A1kVRs4FiPdPcA9QGnHS/rwsRtgUYMqTXe4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mB7zWUHeYYkw7ii7XSVA85tzAV5fMY6PpXWT3nHGXiz9V5kDiTvSyb6IdzdtmqDmW7m0fqhnLQRw2tPoQ3lD/v0ODkGum6o0QkczwBmZXEhg6xe7AaubPKzuhEVr3mehWE+7bFBJqE4lCkxwhviLAGczPPjTzkmHmDZWubTzjMo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U52rMYWz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787856143; c=relaxed/simple;
+	bh=BQxeBCzlpdIBx1IQubyGP4cIIBLKUfAEpmsojcE+y0o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WwsbLJhSSRzo88WJWhuniaWbY4xu29Ut8jBgjORiPVs2rGKhGTArm3SMAcR3ZKJ/tK+Iy3HeRrKn71WcDNZ+Ec7PiLq9vbpwniYoJ2hImfrFFvdtMRglRJ4Vaj/RItdkbmRFbpDttQ+74yVutyzvYQ9fmBY3MBKw/yQn1eRfc2A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JGyGZ1iF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U52rMYWz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 535D61F000E9;
-	Thu, 27 Aug 2026 18:21:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JGyGZ1iF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5E891F000E9;
+	Thu, 27 Aug 2026 18:42:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787854866;
-	bh=eisZaWLwrx7oajnlpURa/eS8PaIT0B3XBxwF7hRiyjY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=U52rMYWzvUL4G7pc62b5V/WTYFDdDywXDaKAuxXdqxQEYnbIuTiJHsOF7Gxu8EZK8
-	 IT0TQd0Kjws854sS3Vpei6q4/RJEEfzF6wDRymSQ3Pr3WK3gxWQeVzcPHP5E2V1p1U
-	 MS4duv+HMlLP21t5p8ZtDRs/2jhburMG2k781P42njSHiwBu5K1BHwc9ZTvut4eiMA
-	 Jg54aq9l+8P5Po/njhIXgnLu+9f35DM/IEaLn+bSdg1ZcFJ8bnVt8s/MMk5HggLVY9
-	 chubpch/2QwARA6XBDhzGBNr/zxoWjKAP6Y2FUov0vwAwAA2rnmbL42S0RlG+SBXvy
-	 Su3JA8WxENfoA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: megaraid_sas: Limit NVMe request size to the PRP
- chain frame
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Thomas Lamprecht" <t.lamprecht@proxmox.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260827175743.734593-1-t.lamprecht@proxmox.com>
-References: <20260827175743.734593-1-t.lamprecht@proxmox.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 27 Aug 2026 18:21:05 +0000
-Message-Id: <20260827182106.535D61F000E9@smtp.kernel.org>
+	s=k20260515; t=1787856141;
+	bh=KHhkLS/1kvPLnma3IR3pFI9fv8AtiL1iUd3rkfzN1lg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=JGyGZ1iFBz3zCcmK5s+YpaPPkJwF8HLlFKvCFOqnrCOgPcUbrmKgH4FEBYa/xbr7a
+	 h/1ZV4SVVbM08ujfZXsGjzeLQi4WVe7WUlIBnKyfNROLYwwBE28tqTXgbthsIqCcr9
+	 ZTWE0eGpePQDRxQ4T0lnMZV/0ukCtizTYpLByJER98aCyL6tH9cbxgroRedeTOZdvL
+	 L4OLoDn9U3H0qcxLGzwu9kX45We7ZNJbUcASVdMW9I5BuakpxhZ1Nj+jjlWmKwxDYc
+	 IT4Z/cvAibf/UWNXsYhG8Xs0ZCsGG25RgCt0UAQWvVjYpyNU/7Ig3ny/dkKNLseFfP
+	 aDTjGRsQ/HeTg==
+Date: Thu, 27 Aug 2026 18:42:19 +0000
+From: Eric Biggers <ebiggers@kernel.org>
+To: Linlin Zhang <linlin.zhang@oss.qualcomm.com>
+Cc: axboe@kernel.dk, mst@redhat.com, jasowangio@gmail.com,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+	linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
+	linux-scsi@vger.kernel.org, virtualization@lists.linux.dev,
+	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	neeraj.soni@oss.qualcomm.com, gaurav.kashyap@oss.qualcomm.com,
+	mani@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
+	bvanassche@acm.org, alim.akhtar@samsung.com,
+	avri.altman@sandisk.com, stefanha@redhat.com, pbonzini@redhat.com,
+	eperezma@redhat.com, xuanzhuo@linux.alibaba.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 00/11] FBE virtualization: inline encryption for
+ virtio-blk guests
+Message-ID: <20260827184219.GB2137493@google.com>
+References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Thu, Aug 27, 2026 at 09:07:09AM -0700, Linlin Zhang wrote:
+> From: linlzhan <linlin.zhang@oss.qualcomm.com>
+> 
+> Current virtio-blk does not provide a mechanism for a guest to
+> program hardware keys or submit encrypted I/O using pre-programmed
+> keyslots.  It drops the crypto context when issuing a bio request
+> to the virtio-blk queue, preventing inline-encryption-based FBE
+> on virtio block devices.
+> 
+> This series enables File-Based Encryption in guest VMs on Qualcomm
+> GVM platforms where the ICE inline encryption hardware is shared
+> between the host and guests.  In this environment the guest kernel
+> has no access to the ICE hardware directly; it supplies a virtual
+> keyslot index and data unit number with each encrypted I/O request
+> via VIRTIO_BLK_F_INLINE_ENCRYPTION, and the host must translate the
+> virtual slot to a physical ICE keyslot and submit the bio — without
+> transferring raw key material across the VM boundary.
 
-Pre-existing issues:
-- [Critical] Preexisting: `megasas_make_prp_nvme` uses the virtual address =
-instead of the physical address to detect NVMe page boundaries, which break=
-s PRP chain pointers if the NVMe page size exceeds the DMA pool alignment.
---
+This seems to be designed incorrectly by not making virtio-blk itself
+support key programming and eviction.  That complicates things
+significantly by then having to handle the key programming and eviction
+out-of-band using Qualcomm-specific SCM calls.  It also means that
+adding other implementations of this would be very difficult.
 
-commit fd59af10f7e697e784da3de5d62a37975fb7023a
-Author: Thomas Lamprecht <t.lamprecht@proxmox.com>
+There are some claims that not transmitting keys across the VM boundary
+is desirable.  But that doesn't seem meaningful, given that all the I/O
+is transmitted across that boundary in plaintext anyway, and also it
+seems that hardware-wrapped keys will be supported too.
 
-scsi: megaraid_sas: Limit NVMe request size to the PRP chain frame
+Please make virtio-blk support the key programming, eviction, and
+HW-wrapped key management operations that are needed for this to work.
 
-This patch limits the max_hw_sectors for NVMe transfers in the megaraid_sas
-driver to prevent PRP list construction from overrunning its DMA buffer
-boundary. It calculates the capacity dynamically based on the adapter's
-max_chain_frame_sz.
-
-Link: https://lore.kernel.org/all/yq17bmzd5jr.fsf@ca-mkp.ca.oracle.com/
-
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
-araid/megaraid_sas_base.c
-> index ecd365d78ae3c..d83abded2039b 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -1973,12 +1973,23 @@ megasas_set_nvme_device_properties(struct scsi_de=
-vice *sdev,
->  {
->  	struct megasas_instance *instance;
->  	u32 mr_nvme_pg_size;
-> +	u64 max_prp_io;
-> =20
->  	instance =3D (struct megasas_instance *)sdev->host->hostdata;
->  	mr_nvme_pg_size =3D max_t(u32, instance->nvme_page_size,
->  				MR_DEFAULT_NVME_PAGE_SIZE);
-> =20
-> -	lim->max_hw_sectors =3D max_io_size / 512;
-> +	/*
-> +	 * megasas_make_prp_nvme() builds the PRP list in cmd->sg_frame without
-> +	 * bounding it against that buffer, and spends one entry per page of
-> +	 * it on the chain pointer. Cap the transfer at what the buffer holds,
-> +	 * less one page for lists that start off a page boundary.
-> +	 */
-
-[Severity: Critical]
-This is a pre-existing issue, but since this patch directly addresses how
-megasas_make_prp_nvme() builds PRP chains and accounts for page boundaries,
-does the chain boundary detection logic in that function safely calculate
-the boundary?
-
-Looking at megasas_make_prp_nvme() in
-drivers/scsi/megaraid/megaraid_sas_fusion.c:
-
-	page_mask_result =3D (uintptr_t)(ptr_sgl + 1) & page_mask;
-
-This tests the virtual address (ptr_sgl) against the NVMe page mask instead
-of the physical IOVA address. If the system uses an IOMMU and creates an
-unaligned virtual mapping for the DMA pool (modulo the NVMe page size), this
-will miscalculate physical NVMe page boundaries.
-
-Could this result in the NVMe controller misinterpreting the PRP list,
-treating data PRPs as chain pointers and reading or writing disk data to
-arbitrary physical addresses provided by user data?
-
-> +	max_prp_io =3D (u64)((instance->max_chain_frame_sz / sizeof(u64)) -
-> +			   (instance->max_chain_frame_sz / mr_nvme_pg_size) - 1) *
-> +		     mr_nvme_pg_size;
-> +
-> +	lim->max_hw_sectors =3D min_t(u64, max_io_size, max_prp_io) >> SECTOR_S=
-HIFT;
->  	lim->virt_boundary_mask =3D mr_nvme_pg_size - 1;
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827175743.7345=
-93-1-t.lamprecht@proxmox.com?part=3D1
+- Eric
