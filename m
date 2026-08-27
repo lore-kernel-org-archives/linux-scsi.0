@@ -1,61 +1,63 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0DA1445ACE
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 11:21:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2981E3DBD4E
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 11:21:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787829674; cv=none; b=G4BhQd1RitVnsjb030OahFErB5w1h4T6EuiPOy395biR05ZitazhVSHrhaVASeoZjagbEHe/DCny0+lXAiLTBJlMrInM6cO07DGhzNf5QHe4QR7ohO8I7Dn1BkOlG8l5BzLQRBCGfz/M/3o6St6rPzBdwVWyB5y2b9gte2RQ3So=
+	t=1787829692; cv=none; b=Q2YLJdUFh4tEGKKPt8oe/MZx/O1yyDKE2sdHNqKgdgRnqdxAINQxdmM2OgvPoZAQFHaZVcMOXywx6GwS98M42tnqbPfK36plO45fuvCdgZNxPAU4jTI2y7bswReFBZ+Z/XjJVcsRt9HuLL1eEpw6ZSa+/EI21OfkFgc48Qa69Pw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787829674; c=relaxed/simple;
-	bh=SWZzYG82ddIf4CWzyYSqf8meUDhHnZNy8MmQcSNHLqg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=d/R6J8OW8bn3S3EvSUHkrUQKWy23QfmKwp9Jv5G6YdntR6++a4RrlJB/rmfoJv/H18CjOr1j2F0XXxELTmi3WwYWTQy6TTL68VYaOiOHpExIDe1x+V/UDdeOAOa/UB3d9VvKk6XtxiC23yueZgcd5b7cXu5z4lXmD9zCO0y/8hU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E1SmviCV; arc=none smtp.client-ip=209.85.214.178
+	s=arc-20240116; t=1787829692; c=relaxed/simple;
+	bh=jAJCUoDhgJdImNIePC7j08N47hwd3t2WfQxePgjwS3M=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=baSU/qYGtfN0GhPt5dFZWw1IaBl3jV0p8qyqhigyw/6b+4jDOtIz65na4U10iXLcSFdo6JYmcpXeKCn+G3pg5Xui6S6iHr+mXEXQCNsypknGZeVu00OoL1l30Ox3/5NmgQL62AX5KftxGO1mLvfSMFdnBjgoOdk7l4vUI2Hi7M8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mViux1bY; arc=none smtp.client-ip=209.85.216.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E1SmviCV"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2d049069377so24934145ad.0
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 04:21:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mViux1bY"
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-39652a6e963so804135a91.0
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 04:21:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787829666; x=1788434466; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=G+EJF4VycVNW4dQeq5vgulgjlvSit3NOpyYWBllNXVY=;
-        b=E1SmviCVobiyI45rJLMIAVTULqw5gfQH6MkFtmBqzXg8+5MoexNlIpNZ7W57gRfIpu
-         0x8QgbvagqYHAVIPWuw3y7rln/eyi2oWhkyhGHyQQxIouAKZScw6d5izYA6FmVMdBE0+
-         Q0blZgSfhdkXF02tJvrI3S/EUwSRP9N6+OgUw1NirXBvtROdk1P3PzkeKvei7e5WBH1R
-         vt+v2hxjxr6iPHFh92+CqwdgXnVtYiONm/23vHC/V/xWb9m9F4bVZxsiVBbH7lf3CbFL
-         DzTbGprmm8UIUjmlT7Q7G8eXSqoepTyhUSJhGfElTcK3NJkw9nXvaxdxUhcSv3nWK62H
-         l1lA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787829666; x=1788434466;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1787829686; x=1788434486; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=G+EJF4VycVNW4dQeq5vgulgjlvSit3NOpyYWBllNXVY=;
-        b=MYyToiLi+o1EgETZpG3Gco1MFO8NEcmx2geDJPIMqAZcwZzY60ipfuzLvUn6dx9S52
-         AqFKFyQnffXTPup8oEjDiYH/8sYTEkAkTUbmO9P+yviQlt8vooyahzuhr2Vc1AgSGg6l
-         hoPjIxmm277+zJxGoSbJBcI0Gt1qbsGMYumJ0/zv5/6q7APLSSswxteqfLUrhgqXKw/j
-         +r6dAz+r0yFi9HT1F/+9hQJwCfXhw2n7qYn22xwy/j0aRPhJ6kBGAVgCsyTfBbu+N9Fn
-         zVsDlpuHujvO9p1KMn2kKO1BXCzCcBuGx2SXIqiQBIKbiflOFzDmDBWmmjmwuSqWcai+
-         UVRQ==
-X-Gm-Message-State: AFuF++kHR2QYdvRgsQ3yukhKf4uvLdwasgGzb2FgWpDL9nWIdL4dp7jg
-	pPohiWQjvDR4DgfZUKub85fVdQ8ZFe/0ZVj2Q581Zoemxh50ySvcZok/
-X-Gm-Gg: AR+sD10qmtqmii1txLBEA5xGX4XeY0Ktq3Zq2mmqrFSjQa3yq814Doocekk3aYNvvan
-	ZIfjb3k5VHMav7fm49MSYbknqS5EUvtMPwwqn/AFMnhzl3nLpb1OjgIALbNmMLTm1uWnlcRlzbJ
-	LQ4nVovUHn0pVirkYbW3wnpApBEDjMUSm5r/4/d93K2eA3k8//N75+AiP8t3HkqUVWU1cIPk8i5
-	fMfDoW7Y7krmgsaNQ98hfoWBApbiO4pvfI6QdDSzQhblNH+WtaaEMkqMcX9j7jyQljS4rfcn4Bg
-	otmF40S8wh9qVXeU2exZ9ND7cGo1oLKZg9cwEmuU0eOXM1WnFPvzO1Fu1hYB31YCtGO3WBqWxDR
-	2+6UNmMwrY7gknTQAGcXJq7MvxKl4EOyNyaWUFF37MYydkBGcJ3WsISFvTyW5wQdm3c+k12EmQF
-	isP6quFX7aTMTXnNxpJ0SGMW+efneFTVualJnyvnmaYkQv2wzu+zsiKAieaJlh5/HDKHhzN7S4y
-	i6cxo/USOMGhi4tFkKLu9besG3A8/qsCfuxX2su
-X-Received: by 2002:a17:90b:4f49:b0:395:4de9:b30 with SMTP id 98e67ed59e1d1-3966d1baf30mr26872063a91.5.1787829666315;
-        Thu, 27 Aug 2026 04:21:06 -0700 (PDT)
+        bh=6AQl5RP9TxXn81ZgXLlb05Y9y6XA1JA2H2ttGtX56P8=;
+        b=mViux1bYxGTC+ThorwbYBWpDwOYm0/6QXKtKgdDK5vyjlVjS0R1+dPWEYg570CRFAD
+         XKHI87iyRxzJ2W+QvLy/0GPOiXTmSK7L/9e95XmSMvvxYMhBb5YfqWk1YxsHVeorlAFu
+         Vod0Y5EBYdNs+obYp8XSonZc/TozJ0LgOjSYUqMZc0RkhGovtXeSht18DiFgUzxACC1c
+         5aI/fv9pq3gH38zWr3tbiKp0BbxKbjzslBbLhBM738gFrFBJx0jMunybuAEyX5ZGxmqg
+         iHHElr5OxKhdLmQVXLd/A/8gFL2v1Y72xzAiwiLdfARkV6eNrfEkEc04sNApSYu7xqw5
+         iALg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787829686; x=1788434486;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=6AQl5RP9TxXn81ZgXLlb05Y9y6XA1JA2H2ttGtX56P8=;
+        b=XVTXxXnyYlhmW42JXHQwBBLmu+7r3FOFlyNNZTPEfkSC0FMu7muc70p1baVg7uKng+
+         /zVlSueYK++wcip85AClqu65li8cMrrFaQpE6128IUnCOL+gUAtNYZSr4Fqj/LjePEVz
+         dECrIdZ3SzGZw525ZMl1FVp+vYWeh8PIyjvLQrP/LbyaJ6r3eBv8x5JuIs92bBHIYr0J
+         NO1A+4qTwmDgqnxcv9vM5qfZRasZoPoCpNAVX/wwbGLag5qQq3iO5awR2DD9i6Ek8RYN
+         +ZAVRLXfTB5mANuv2HXBx+CYXOu2KrUNDfSYqNxEwiiqVWRLJMe9re8y6ARRqaV+g7p8
+         qwtw==
+X-Gm-Message-State: AFuF++mzBmB1MaGun8vCHfH1T+2j7/IfLK+XrbSxwVP79YW41vF0Y2s4
+	AgcpnDiqCt3TNsVWOXSEh+PBxRcCnHQ4RMEHsAbCBOGCkniMLsjf8JJe
+X-Gm-Gg: AR+sD13eRPF9UvhA9PFuWA8j74ArtvrIK3fBG9Mw0YaSdLETjG6Dva8UBbD8muxhqwc
+	0ljxFoRXvMtk/BVLpVI8YnQVTicpjA8ZQmSzUFYmcrRuF0Kl7GSIyQRbFhff57Yf3RVHHEnkZFX
+	KTCJHdlVTOnt3iOLOKyBBcZO3C2m83l/X89I/1TISWzQgR/BK18iMDXLVmUNxCUuQZZexfp3ZtO
+	55bSh94K3YMUVE3J1dztXRVTimy5IUMvf4HXwYz5bfUlc42UVy1PtbP7C9TyNQ8z87ZV+LNgcij
+	0gjodIttHVAzyHXJsjHvQRo8nAVeA09+R5HEm9DMhgo+MeG/7bnMWt+ZFexkgibKj6oioUVk6Xz
+	WWQ5sba8NHibnJpJTSFJPsOoMCHU2jVd1pxmc0c7At+diZaji0sFnPzQ1mPjQtujJzrlJb1i725
+	ROzsNct0v8A+p/kVbN1+hLgzS/whcksqvGa8JqncfBR2/VGcRjzOKoKxsS4OX88xyZv6cZ5p+8U
+	eitZgvBoN8zw6bjf+mEIW90ICs/x4lc1Tl27Gw=
+X-Received: by 2002:a17:90a:e70f:b0:38f:cfe2:fd3a with SMTP id 98e67ed59e1d1-3969bc5054dmr8099705a91.15.1787829686419;
+        Thu, 27 Aug 2026 04:21:26 -0700 (PDT)
 Received: from baaz.tail58d41.ts.net ([2401:4900:8853:c223:d8cf:ffee:2034:18a5])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-141a8f20095sm16423327c88.6.2026.08.27.04.20.59
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-141a8f20095sm16423327c88.6.2026.08.27.04.21.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Aug 2026 04:21:05 -0700 (PDT)
+        Thu, 27 Aug 2026 04:21:25 -0700 (PDT)
 From: Muhammad Falak R Wani <falakreyaz@gmail.com>
 To: Tyrel Datwyler <tyreld@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -68,10 +70,12 @@ Cc: linux-scsi@vger.kernel.org,
 	Nicholas Piggin <npiggin@gmail.com>,
 	Christophe Leroy <christophe.leroy@csgroup.eu>,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 1/2] scsi: ibmvfc: fix kernel-doc name for ibmvfc_scsi_relogin()
-Date: Thu, 27 Aug 2026 16:50:37 +0530
-Message-ID: <dd866cf2321381694af027fbd726bcbd63ac3751.1787828961.git.falakreyaz@gmail.com>
+Subject: [PATCH 2/2] scsi: ibmvfc: document protocol parameter of ibmvfc_alloc_target()
+Date: Thu, 27 Aug 2026 16:50:38 +0530
+Message-ID: <b073968ae020b6ae0240e91341a92f428587ebd9.1787828961.git.falakreyaz@gmail.com>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <dd866cf2321381694af027fbd726bcbd63ac3751.1787828961.git.falakreyaz@gmail.com>
+References: <dd866cf2321381694af027fbd726bcbd63ac3751.1787828961.git.falakreyaz@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,36 +84,35 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit e0fca728a89f ("scsi: ibmvfc: delete NVMe/FC targets as well as
-SCSI") renamed ibmvfc_relogin() to ibmvfc_scsi_relogin() but left the
-kernel-doc comment referring to the old name, so a W=1 build warns:
+Commit 249313b3f7b5 ("scsi: ibmvfc: allocate targets based on protocol")
+added a protocol parameter to ibmvfc_alloc_target() but did not describe
+it in the function's kernel-doc comment, so a W=1 build warns:
 
-  drivers/scsi/ibmvscsi/ibmvfc-core.c:1901: warning: expecting prototype
-  for ibmvfc_relogin(). Prototype was for ibmvfc_scsi_relogin() instead
+  drivers/scsi/ibmvscsi/ibmvfc-core.c:4996: warning: Function parameter
+  or struct member 'protocol' not described in 'ibmvfc_alloc_target'
 
-Update the kernel-doc comment to use the current function name.
+Add the missing parameter description.
 
-Fixes: e0fca728a89f ("scsi: ibmvfc: delete NVMe/FC targets as well as SCSI")
+Fixes: 249313b3f7b5 ("scsi: ibmvfc: allocate targets based on protocol")
 Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202608271026.iMLmrwz4-lkp@intel.com/
+Closes: https://lore.kernel.org/oe-kbuild-all/202608270829.lHI1FAdO-lkp@intel.com/
 Signed-off-by: Muhammad Falak R Wani <falakreyaz@gmail.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 93b9f699c2e53..d1956552698e0 100644
+index d1956552698e0..6fd4c601f978c 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -1894,7 +1894,7 @@ static void ibmvfc_log_error(struct ibmvfc_event *evt)
- }
- 
- /**
-- * ibmvfc_relogin - Log back into the specified device
-+ * ibmvfc_scsi_relogin - Log back into the specified device
-  * @sdev:	scsi device struct
+@@ -4987,6 +4987,7 @@ static void ibmvfc_tgt_query_target(struct ibmvfc_target *tgt)
+  * ibmvfc_alloc_target - Allocate and initialize an ibmvfc target
+  * @vhost:		ibmvfc host struct
+  * @target:		Holds SCSI ID to allocate target forand the WWPN
++ * @protocol:		protocol of the target to allocate
   *
-  **/
+  * Returns:
+  *	0 on success / other on failure
 -- 
 2.55.0
 
