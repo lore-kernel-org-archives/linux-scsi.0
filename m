@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3540436A004;
-	Thu, 27 Aug 2026 16:20:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1073C47D933;
+	Thu, 27 Aug 2026 16:23:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787847619; cv=none; b=VOKFQ2J1JhgCMXCZJHd6+r0JyFqI8/u18bwQPwAYzJ3fEbzPDMn6m4ipIAvbsoJcCkALR4AufV10TNUFN5d7hdGYNC/HlPwJFbl9yoLCS9F6RFWCthc4s+zXNZGQYlErXnbDvH/yGqdCYyg5pepcbcUUk/20Bo+tbdFYvOgOLMg=
+	t=1787847821; cv=none; b=t+5MyiWC6MNi4jx20VXsRj+9CmkTtw9DAj2UqHyl7GC1v3XOMgajQYZom2kGP/qGCrSZFDlZ55zWv6frlul54JeFoY35G/0iBfD36H7l8o+3uSekypWjartcl9YF+kcbUu7BZ1I9blprkWm1VxVXDU+NljJvQ0qbDz76wIGJUKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787847619; c=relaxed/simple;
-	bh=RjozzEK/mBaJ4pou6nS2k9gczW+DO+Fp2Z8m6+D6yp8=;
+	s=arc-20240116; t=1787847821; c=relaxed/simple;
+	bh=bBim+wGR9QnFRs+7oS5n8nAYYOm0NZC6Nw8f2R3bbpY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Rxl+X5dOesr2d3uYkKx28s+10fE//wLGOz+j8BvHXBSmFqAQxXSThuYTjjQcCFUmDgYACQ5G3/B2YPz5xIV9/LTAjqGx2AOr/nt5fV0NffLFSZcGRkqrZRpPw2N9cqob0Vwi+7uT00/J6m1kDggIAZuw06mSFZoMgmBQxQr6WVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L3H0MHxy; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=RclZL3cHhHVyd5mJHeGVsZZ2O0U7GjxKTCP+oULX9reFuqxsftFh80+iINI1BgfnSa5/8SfsQJOq/kuozx/KjwM7AWQvMGLLVLugRRyccxgAdepv7vfGXHWQeHSilLN3Y9hGAjGNJ0tV2pnoZnrcmMJRbFBUGO46Os3WW/KTyzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aP/nwW5A; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L3H0MHxy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CB7D1F00A3A;
-	Thu, 27 Aug 2026 16:20:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aP/nwW5A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA8101F000E9;
+	Thu, 27 Aug 2026 16:23:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787847617;
-	bh=/ksg0JVedViNQKvOlYwvHgVgfdBPvf/W8cYrBdgEsvw=;
+	s=k20260515; t=1787847820;
+	bh=NiE0DU2hO0d9CosO3gd+PFxcxdHd/yHWJkZiV5RxOKE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=L3H0MHxyVxvFV/qYF2V5j7MZpTs0WLY7AnKl6w+dvka0sBFtaprBfUXR9PWGre4FZ
-	 QruvHFOGPO9po9cj7weRWJu9jhfG+1RxTRGNYtElVbEfPTdUAhLo7v2mpfU9HIaHRE
-	 aAtdtMbRCX8npkMws6Vx5OLSP/r+Nqgo89nrq+AbQhXsNF3kbX74/LktairrqRe1DH
-	 V7sfoANQmWcpKdNogZlgW3t3BRCskb9UAzNhLc8IunWGnZ0gAVQbZDAPHuI+eKlN6D
-	 bNCJl+RTsHu4urfRFrqsat7w6LDbgrEi80lgXQkHboihwRejB/fjULTMo3ySvuo0MM
-	 UBcr9GdDbkktQ==
+	b=aP/nwW5A2AzqmCnIxoZbZitHw+mVYBR0mVm6VFpSG6xO55wyURcB9LGlsvnmtB60J
+	 QcqEDCVzSzEfwjhvEBTSaInMvMQHL49utdnuMxNnPUhStEwcbkClfyubeNyfUL0cAl
+	 Smv/Bvw1fsbh/LZlYeZj0sGHceyoPknnQZlS3dKcy/ua2lLMpYJqkW6JPaQ3aiyWpx
+	 l+lHM/TQ68g11DzqFVBY9gr2ijALhDRWCpMYBaLIM115DYT8Q7N1UWl9AIsFYAqnaJ
+	 dtza1MOOsF+b6SHVPWyFOYuDCHz4f4EFrrkJb+Gqh6rZX+2foXT8+eWc1c3RPl7SYD
+	 7YV4mQ7Ih3ozA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 06/11] scsi: ufs: core: add slot path to
- ufshcd_prepare_lrbp_crypto
+Subject: Re: [PATCH v1 10/11] blk-crypto: add slot_offset to
+ blk_crypto_profile
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Linlin Zhang" <linlin.zhang@oss.qualcomm.com>
-Cc: linux-scsi@vger.kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org
-In-Reply-To: <20260827160806.1295313-7-linlin.zhang@oss.qualcomm.com>
+Cc: conor+dt@kernel.org, robh@kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260827160806.1295313-11-linlin.zhang@oss.qualcomm.com>
 References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
- <20260827160806.1295313-7-linlin.zhang@oss.qualcomm.com>
+ <20260827160806.1295313-11-linlin.zhang@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 27 Aug 2026 16:20:17 +0000
-Message-Id: <20260827162017.6CB7D1F00A3A@smtp.kernel.org>
+Date: Thu, 27 Aug 2026 16:23:39 +0000
+Message-Id: <20260827162339.BA8101F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,72 +47,111 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Malformed crypto contexts with `data_unit_size_bits =3D=3D 0` sile=
-ntly bypass encryption instead of failing the request.
+- [Critical] Loops iterating over keyslots in block and driver crypto initi=
+alization and reprogramming paths pass logical indices instead of physical =
+indices to keyslot_program/keyslot_evict, failing to account for the new sl=
+ot_offset.
 --
 
-commit 406714defb60086f0a0900753b849815524e2e23
+commit 2859a14efba8a99150c0d93c45a6b7ad003d0250
 Author: linlzhan <linlin.zhang@oss.qualcomm.com>
 
-scsi: ufs: core: add slot path to ufshcd_prepare_lrbp_crypto
+blk-crypto: add slot_offset to blk_crypto_profile
+   =20
+On platforms where ICE keyslots are partitioned across the host and
+guest VMs, the host's physical keyslot range does not necessarily start
+at slot 0.  blk_crypto_keyslot_index() currently returns a 0-based
+array index, which is wrong for such configurations =E2=80=94 hardware
+programming requires the physical slot number, not the array position.
 
-This commit extends ufshcd_prepare_lrbp_crypto() to support bios that carry=
- a
-pre-programmed physical ICE keyslot index in crypt_ctx->bc_slot instead of
-a blk_crypto_key pointer. It adds a check for bc_slot.data_unit_size_bits to
-determine if the slot path should be used.
+Add an unsigned int slot_offset field to struct blk_crypto_profile.
+It defaults to zero (no change for existing drivers) and is set by
+storage drivers that share ICE hardware across guests.
 
-> diff --git a/drivers/ufs/core/ufshcd-crypto.h b/drivers/ufs/core/ufshcd-c=
-rypto.h
-> index 8f66db94e179a..2fc5601c0f769 100644
-> --- a/drivers/ufs/core/ufshcd-crypto.h
-> +++ b/drivers/ufs/core/ufshcd-crypto.h
-> @@ -15,13 +15,21 @@
->  static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
->  					      struct ufshcd_lrb *lrbp)
->  {
-> -	if (!rq || !rq->crypt_keyslot) {
-> +	if (!rq) {
->  		lrbp->crypto_key_slot =3D -1;
->  		return;
->  	}
-> =20
-> -	lrbp->crypto_key_slot =3D blk_crypto_keyslot_index(rq->crypt_keyslot);
-> -	lrbp->data_unit_num =3D rq->crypt_ctx->bc_dun[0];
-> +	if (rq->crypt_keyslot) {
-> +		lrbp->crypto_key_slot =3D blk_crypto_keyslot_index(rq->crypt_keyslot);
-> +		lrbp->data_unit_num =3D rq->crypt_ctx->bc_dun[0];
-> +	} else if (rq->crypt_ctx && rq->crypt_ctx->bc_slot.data_unit_size_bits)=
- {
-> +		lrbp->crypto_key_slot =3D rq->crypt_ctx->bc_slot.phy_slot;
-> +		lrbp->data_unit_num =3D rq->crypt_ctx->bc_dun[0];
-> +	} else {
-> +		lrbp->crypto_key_slot =3D -1;
-> +	}
-> +
+Update blk_crypto_keyslot_index() to add slot_offset to the array
+index so that callers always receive the correct physical ICE keyslot
+number to program into hardware.
+
+> diff --git a/block/blk-crypto-profile.c b/block/blk-crypto-profile.c
+> index 53126c091b0be..64202d64a0182 100644
+> --- a/block/blk-crypto-profile.c
+> +++ b/block/blk-crypto-profile.c
+> @@ -218,14 +218,15 @@ blk_crypto_find_and_grab_keyslot(struct blk_crypto_=
+profile *profile,
 >  }
+> =20
+>  /**
+> - * blk_crypto_keyslot_index() - Get the index of a keyslot
+> + * blk_crypto_keyslot_index() - Get the physical index of a keyslot
+>   * @slot: a keyslot that blk_crypto_get_keyslot() returned
+>   *
+> - * Return: the 0-based index of the keyslot within the device's keyslots.
+> + * Return: the physical ICE keyslot index, i.e. the 0-based position of =
+@slot
+> + * within the profile's keyslot array plus @slot->profile->slot_offset.
+>   */
+>  unsigned int blk_crypto_keyslot_index(struct blk_crypto_keyslot *slot)
+>  {
+> -	return slot - slot->profile->slots;
+> +	return (slot - slot->profile->slots) + slot->profile->slot_offset;
+>  }
+>  EXPORT_SYMBOL_GPL(blk_crypto_keyslot_index);
+> =20
 
-[Severity: High]
-Does this code silently bypass encryption if a malformed request is submitt=
-ed?
+[ ... ]
 
-If an IO request is submitted with a crypto context (rq->crypt_ctx !=3D NUL=
-L) but
-has data_unit_size_bits =3D=3D 0, this logic falls through to the final els=
-e block
-and sets crypto_key_slot to -1.
+> diff --git a/include/linux/blk-crypto-profile.h b/include/linux/blk-crypt=
+o-profile.h
+> index 4f39e9cd75766..a9bdc05abfa3c 100644
+> --- a/include/linux/blk-crypto-profile.h
+> +++ b/include/linux/blk-crypto-profile.h
+> @@ -162,6 +162,15 @@ struct blk_crypto_profile {
+>  	 */
+>  	struct device *dev;
+> =20
+> +	/**
+> +	 * @slot_offset: offset added to the slot array index to obtain the
+> +	 * physical ICE keyslot number.  Zero in the common case.  Set to a
+> +	 * non-zero value by storage drivers that share ICE hardware across
+> +	 * multiple guests, where the host's keyslots do not start at physical
+> +	 * slot 0.
+> +	 */
+> +	unsigned int slot_offset;
+> +
 
-Since the block layer explicitly skips validation (bio_crypt_check_alignmen=
-t())
-for slot-based bios, could an untrusted guest VM submitting a virtio-blk
-request with data_unit_size_bits =3D=3D 0 cause an explicitly encrypted IO =
-to be
-written to the physical storage device as plaintext?
+[Severity: Critical]
+Does this new slot_offset need to be applied in loops that manually iterate
+over keyslots?
 
-Should this path fail the request rather than falling open to plaintext,
-perhaps by surfacing an error up to the caller so it can be failed with
-BLK_STS_IOERR?
+For example, in block/blk-crypto-profile.c:blk_crypto_reprogram_all_keys(),
+the logical loop counter slot is passed directly to keyslot_program():
+
+	for (slot =3D 0; slot < profile->num_slots; slot++) {
+		...
+		err =3D profile->ll_ops.keyslot_program(profile, key, slot);
+		...
+	}
+
+Since this bypasses the new slot_offset, will it program keys into physical
+slots starting at 0 during device resume, corrupting foreign keyslots belon=
+ging
+to the host or other VMs?
+
+Similarly, in drivers/ufs/core/ufshcd-crypto.c:ufshcd_init_crypto():
+
+	for (slot =3D 0; slot < hba->crypto_profile.num_slots; slot++)
+		hba->crypto_profile.ll_ops.keyslot_evict(&hba->crypto_profile,
+							 NULL, slot);
+
+And in drivers/mmc/host/cqhci-crypto.c:cqhci_crypto_init():
+
+	for (slot =3D 0; slot < profile->num_slots; slot++)
+		profile->ll_ops.keyslot_evict(profile, NULL, slot);
+
+Do these initialization paths also incorrectly evict physical keyslots star=
+ting
+at 0 because they ignore slot_offset, destroying host/guest ICE keyslots?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260827160806.1295=
-313-1-linlin.zhang@oss.qualcomm.com?part=3D6
+313-1-linlin.zhang@oss.qualcomm.com?part=3D10
