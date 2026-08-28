@@ -1,153 +1,169 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB54C39CD13
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2026 09:40:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE96C32C942
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2026 10:21:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787910059; cv=none; b=RXD/gzDJNe0/Rcm4Y7NwYf1uxrDGx8cPp+LbtRBqXAL+grxx89mXoNMIWbS2iLTKArmkOvN77U1DAEhKeNCm/n506iZWJYmTFiZJ/oM4CHOXcfz7/7dF2aMVVdSFcVbA519pt0l4DmpdrwBWyOhab0Zs/VqaYOTM4xgPEOE5TNI=
+	t=1787912515; cv=none; b=nKnBQAP2qohFMlXG7tODqumGuvAqKOR6b5JtLTibcTgWlYEPIc6D3IQeSZt2vawsOUlxSQXPRJP7I43K8Yw8sTNpKxyW1dEqqxTKQVFk9+UXnmLndy3aLL/sHueM4OED4oonvxcywQl7Xu2jpF4NV6Bu0fi0FKEdyW2I14ltaYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787910059; c=relaxed/simple;
-	bh=2DMmmKrZFi5lpNcb6FdTssjtHf/Dfk9FuO7r12GDTWc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=seBAV8ClXoSRm1DyMM2MB+5osSfe8hogr/jV23vNBq4bhfeI5PzN1YIu0LeUrnFOxbhcks7BaUXhgpm8UBKHfTD3EYx88CQUCaTSEgsbTB47eZ0tsLhwF9WWhOql8VClXcKmOcWtKi08Mjtal/dE1G9r6AOBsw3fkdShOKMni70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ado2A58z; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ado2A58z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17B7D1F000E9;
-	Fri, 28 Aug 2026 09:40:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787910058;
-	bh=kFgtKpG4qWBhiWOAPtdRMQOIVjmiAQ3uqfptUtcEvD8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ado2A58zbpxcA6BDs8/cS+HQ/9nAlfxnmup4aEc+k9uQelSEN4PVZBNCVxBhelk+3
-	 zu44nck5ExGQx28j/nP1dZp2ol6yIx3bp9HN0dgHF67mB4L/XPr0TChIsADoyEJ71K
-	 mHj9h6tSj5LrS/khoY4Tbn2hj04eA8CeJHo7kPG1tvQEAdoQqVQFrymHsP72SX1Tc6
-	 BIcXyh48RMN8cHVTV6VXgwtpl3f8mpoaS3yK6KVBd19eJ0rbZtsTsMb5mWtsViX7xc
-	 aisifYNdyDGnmT3WsV9bFYJu1pKcTE7hRWYDX14F4rQCkeIjMXznKxgGDu0PxQQHcM
-	 r9X9mu6FedEcQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: ufs: mediatek: Handle mPHY power-on failures
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pengpeng Hou" <pengpeng@iscas.ac.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260828092311.10774-1-pengpeng@iscas.ac.cn>
-References: <20260828092311.10774-1-pengpeng@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 28 Aug 2026 09:40:57 +0000
-Message-Id: <20260828094058.17B7D1F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1787912515; c=relaxed/simple;
+	bh=bwTr8Q9/PV3ludg73IViJ3egSVsuMkJNR6wUibdWcwU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HRTyYCcAe4XcmBA3z28UYmSt35hL+3fs56dLUn2tFai04KYOX1bTtD5t5OIW80rOqeUG+xzvB+DWrEM4aCA5MucG4P4gei24knNxIg+yskEk48QYa0oHwVqTT1QooyaZAla2Q5wcHjsEHCTe5r+Y7u6vjiSsgpJxWiiORykFxmU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
+Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
+	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id 9EE45C527D;
+	Fri, 28 Aug 2026 12:21:49 +0200 (CEST)
+Message-ID: <ec3d38d7-3da1-4a0b-a256-b0e56ead9764@proxmox.com>
+Date: Fri, 28 Aug 2026 12:21:48 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird Beta
+Subject: Re: [PATCH] scsi: megaraid_sas: Limit NVMe request size to the PRP
+ chain frame
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+References: <20260827175743.734593-1-t.lamprecht@proxmox.com>
+ <20260827182106.535D61F000E9@smtp.kernel.org>
+Content-Language: en-US
+From: Thomas Lamprecht <t.lamprecht@proxmox.com>
+In-Reply-To: <20260827182106.535D61F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Bm-Milter-Handled: 55990f41-d878-4baa-be0a-ee34c49e34d2
+X-Bm-Transport-Timestamp: 1787912498820
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Am 27.08.26 um 20:21 schrieb sashiko-bot@kernel.org:
+> [Severity: Critical]
+> This is a pre-existing issue, but since this patch directly addresses how
+> megasas_make_prp_nvme() builds PRP chains and accounts for page boundaries,
+> does the chain boundary detection logic in that function safely calculate
+> the boundary?
+> 
+> Looking at megasas_make_prp_nvme() in
+> drivers/scsi/megaraid/megaraid_sas_fusion.c:
+> 
+> 	page_mask_result = (uintptr_t)(ptr_sgl + 1) & page_mask;
+>
+> This tests the virtual address (ptr_sgl) against the NVMe page mask instead
+> of the physical IOVA address. If the system uses an IOMMU and creates an
+> unaligned virtual mapping for the DMA pool (modulo the NVMe page size), this
+> will miscalculate physical NVMe page boundaries.
 
-Pre-existing issues:
-- [High] Failure in `regulator_disable()` during power-off leaves the softw=
-are state flagged as 'powered on', despite the physical PHY being powered d=
-own, which breaks subsequent power-on attempts.
-- [High] Unbalanced PHY power management leading to clock setup with an unp=
-owered PHY and VA09 regulator during resume.
---
+The observation is correct FWICT, but does not require a change to this
+patch and probably also not in practice as no > 4K NVMes/controllers exist
+AFAIK.
 
-commit abe799aa942a1ffc27379395adfb1d36f8c84af2
-Author: Pengpeng Hou <pengpeng@iscas.ac.cn>
+The sg_frame pool is created with an alignment of MR_DEFAULT_NVME_PAGE_SIZE:
 
-scsi: ufs: mediatek: Handle mPHY power-on failures
+	fusion->sg_dma_pool =
+		dma_pool_create("mr_sg", &instance->pdev->dev,
+				instance->max_chain_frame_sz,
+				MR_DEFAULT_NVME_PAGE_SIZE, 0);
 
-This patch updates ufs_mtk_mphy_power_on() to handle phy_power_on() failure=
-s.
-If the PHY fails to power on, the VA09 regulator is turned back off to prev=
-ent
-it from being left enabled, and the initialization path now checks and
-propagates this error.
+while the mask the loop tests against comes from
 
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-> index 865be3ddf448e..92dbd240c7ea5 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
+	mr_nvme_pg_size = max_t(u32, instance->nvme_page_size,
+				MR_DEFAULT_NVME_PAGE_SIZE);
 
-[ ... ]
+dma_pool backs its blocks with allocations of max(size, PAGE_SIZE), so the
+CPU and DMA bases of a pool page are both PAGE_SIZE aligned and the blocks
+sit at the same offset in each. The two tests agree as long as
+mr_nvme_pg_size divides PAGE_SIZE, and can diverge once it is larger. The
+driver then places the chain pointer where it sees a boundary and the
+controller looks for one somewhere else, so it would read a data PRP as a
+list pointer.
 
-> @@ -524,7 +525,18 @@ static int ufs_mtk_mphy_power_on(struct ufs_hba *hba=
-, bool on)
->  			usleep_range(200, 210);
->  			ufs_mtk_va09_pwr_ctrl(res, 1);
->  		}
-> -		phy_power_on(mphy);
-> +		ret =3D phy_power_on(mphy);
-> +		if (ret) {
-> +			if (ufs_mtk_is_va09_supported(hba)) {
-> +				ufs_mtk_va09_pwr_ctrl(res, 0);
-> +				rollback_ret =3D regulator_disable(host->reg_va09);
-> +				if (rollback_ret)
-> +					dev_warn(hba->dev, "failed to disable va09 after mphy failure: %d\n=
-",
-> +						 rollback_ret);
-> +			}
-> +			dev_info(hba->dev, "failed to enable mphy: %d\n", ret);
-> +			return ret;
-> +		}
->  	} else {
->  		phy_power_off(mphy);
->  		if (ufs_mtk_is_va09_supported(hba)) {
+The misalignment can also introduce a chain pointer where an aligned buffer
+has none: for a 4 KiB chain frame with an 8 KiB NVMe page size, a buffer at
+0 modulo 8 KiB never trips the test, while one at 4 KiB modulo 8 KiB trips
+it at offset 4088.
 
-[Severity: High]
-This isn't a bug introduced by this patch, but if regulator_disable() fails
-here during power-off, does it leave the software state permanently out of =
-sync?
+Reaching it needs instance->nvme_page_size above PAGE_SIZE, so above 4096 on
+x86. The encoding allows it, 1 << (scratch_pad_3 & MR_NVME_PAGE_SIZE_MASK)
+with a shift of at least 12, but NVMe puts the minimum memory page size at 4
+KiB and the OCP datacenter SSD spec requires drives to report exactly that,
+so I would not expect a larger value here. I have no data on what the MR
+firmware actually reports, though. The driver logs the value at probe,
 
-In ufs_mtk_mphy_power_on(), we have:
+	dev_info(&instance->pdev->dev, "NVME page size\t: (%d)\n",
+		 instance->nvme_page_size);
 
-	} else {
-		phy_power_off(mphy);
-		if (ufs_mtk_is_va09_supported(hba)) {
-			ufs_mtk_va09_pwr_ctrl(res, 0);
-			ret =3D regulator_disable(host->reg_va09);
-		}
-	}
-out:
-	if (ret) {
-        ...
-	} else {
-		host->mphy_powered_on =3D on;
-	}
+so a dmesg grep for "NVME page size" on any of the affected machines would
+settle it. If one of them reports more than 4 KiB then this is live there,
+and I would like to know.
 
-If regulator_disable() returns an error, host->mphy_powered_on won't be
-updated to false, even though phy_power_off() was already executed. Can this
-cause future calls to ufs_mtk_mphy_power_on(hba, true) to early-exit, leavi=
-ng
-the PHY physically unpowered?
+This patch neither introduces nor widens that: it bounds how large a
+transfer may be and does not touch where the chain pointers land.
 
+The term that reserves room for the chain pointers,
 
-[Severity: High]
-This is also a pre-existing issue, but does the current power management fl=
-ow
-cause unbalanced PHY power off calls?
+	instance->max_chain_frame_sz / mr_nvme_pg_size
 
-During suspend, ufs_mtk_suspend() calls ufs_mtk_mphy_power_on(false), which
-executes phy_power_off(mphy) and disables the regulator.
+does share the assumption though: it counts boundaries as if the frame base
+were page aligned, just as the test in megasas_make_prp_nvme() does, so with
+a misaligned base it can be one short. I replayed the loop for chain frames
+of 1024 to 15872 bytes, NVMe page sizes of 4, 8 and 16 KiB, every 4 KiB base
+offset within a page, every 512 byte transfer start offset, and both
+coalesced and one-entry-per-page scatterlists. The list never leaves the
+frame, but above 4 KiB the worst case fills it exactly instead of leaving
+the slot of slack it leaves today. At 4 KiB, where the pool alignment makes
+the count exact, the margin stays.
 
-Later in the suspend path, ufshcd_suspend() calls ufs_mtk_setup_clocks(fals=
-e),
-which triggers ufs_mtk_pwr_ctrl(false). This redundantly calls
-phy_power_off(mphy) again, dropping its internal power_count to -1.
+So I would keep it out of this fix. The test wants ptr_sgl_phys instead;
+that patch is below the scissors.
 
-During resume, ufs_mtk_pwr_ctrl(true) calls phy_power_on(mphy). Because
-the power_count was -1, it only increments to 0 without actually powering on
-the hardware. The VA09 regulator is also left disabled.
+-- >8 --
+Subject: [PATCH] scsi: megaraid_sas: Test PRP boundaries on DMA address
 
-ufs_mtk_pwr_ctrl() then calls ufs_mtk_setup_ref_clk(true), which attempts to
-poll reference clock registers on physically unpowered hardware.
+megasas_make_prp_nvme() decides where the chain pointer that continues a
+PRP list into the next page goes by testing the CPU address of the next
+entry:
 
-Does this unconditionally lead to a timeout and broken I/O during resume on
-systems binding a PHY?
+	page_mask_result = (uintptr_t)(ptr_sgl + 1) & page_mask;
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260828092311.1077=
-4-1-pengpeng@iscas.ac.cn?part=3D1
+The controller walks the same list by its DMA address. dma_pool backs its
+blocks with allocations of max(size, PAGE_SIZE), so the CPU and DMA bases
+of a pool page are both PAGE_SIZE aligned and the blocks sit at the same
+offset in each. The two therefore agree modulo mr_nvme_pg_size only while
+that divides PAGE_SIZE. Above it the driver can place the chain pointer
+where the controller does not look for one, and the controller then
+follows a data PRP as a list pointer.
+
+The misalignment can add a boundary rather than move it: for a 4 KiB chain
+frame with an 8 KiB NVMe page size a buffer at 0 modulo 8 KiB never trips
+the test, while one at 4 KiB modulo 8 KiB trips it at offset 4088.
+
+ptr_sgl_phys advances in lockstep with ptr_sgl, so test that instead.
+
+Reported-by: sashiko-bot@kernel.org
+Closes: https://lore.kernel.org/linux-scsi/20260827182106.535D61F000E9@smtp.kernel.org
+Signed-off-by: Thomas Lamprecht <t.lamprecht@proxmox.com>
+---
+NOTE: not really tested end-to-end as I do not have any controller
+reporting an NVMe page size above 4096 here, not even sure one exists?
+
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 056cbe50e19e..fad747206ed1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -2221,7 +2221,7 @@ megasas_make_prp_nvme(struct megasas_instance *instance, struct scsi_cmnd *scmd,
+ 		offset = (u32)(sge_addr & page_mask);
+ 
+ 		/* Put PRP pointer due to page boundary*/
+-		page_mask_result = (uintptr_t)(ptr_sgl + 1) & page_mask;
++		page_mask_result = (ptr_sgl_phys + 8) & page_mask;
+ 		if (unlikely(!page_mask_result)) {
+ 			scmd_printk(KERN_NOTICE,
+ 				    scmd, "page boundary ptr_sgl: 0x%p\n",
+
