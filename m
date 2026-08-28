@@ -1,167 +1,98 @@
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30F543769F4
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2026 16:01:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A9CF370AEB
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2026 18:19:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787932907; cv=none; b=E/h+JT+F0/YUHlD3tYpMl/IiQkGmY6XhP/h1nFYgg+r3TyaWUfozfRrgzbp8Ch+WSBynj2Lk4dyZSruqCWqC/yiyonXvRk15FGdQsf+BN7M7l9gv9dV6AJN54d322x/tlXvCUgl9qTIep7hFdgaP4KtHlw/DvkBMrYfWSRMTfyc=
+	t=1787941172; cv=none; b=TqR8XNKy7pZ5LklrGzC3qNW7TNYBp9ru9hUvazc2SZ4MmS973B3I8SA0n0ZJcS1bV5k73X6jli7OUhIDwvLceRODvt+fOvQi121C39tVMDJvegEdSOYcU93wi/KJxkpIph67htX++3AO+KxGiCHw1zH9f3UDLnW2vkHSjUrk1ZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787932907; c=relaxed/simple;
-	bh=UuWnHtXL8N/w/Q5WNTbDJxeFR+DQc7c1YtM6Y9NEeTw=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=ovp8WLmZzTDDDsKDDoVCgkCKHkOqVXUbngHGKpJfvDW+RiVQtk5cbQ3oPmLZmvmbhkZUGqt6jWeUiDr5sqMRaheru+CGSOGojucm9tNchBBuPRk6JhngtPGr53UG4Qv+NuQe+JlHz6LJG/fO6q+1uUj3e9YMa7oDrB29vYrafd8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DnLREiv6; arc=none smtp.client-ip=209.85.208.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
+	s=arc-20240116; t=1787941172; c=relaxed/simple;
+	bh=bUHu0nE8Itd/gyYfZBWIZQRB2LcfKsvw6lqRv5NRrBE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hU4KpwFFOF6g8sVTlbKozpbaVbGQtZ3q6bpeBsyfmkCbmr5U7T89qzhRP+qNPh5wQhTavSuhqjWTEUGt/q02jTNecziwlpzU/kCnd8bRvOQOU900v/WdTp4wGP41hJhPSlJK9/oxsjPkXDY2pcd83AqTLKS+g60UIL9XPj+Po6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xeZkV+9u; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DnLREiv6"
-Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-6a5f2b256aeso1139597a12.3
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2026 09:01:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1787932904; x=1788537704; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=rbwr+K5nPn6tIRCwsto5KEIPiqdePxzLIo1QhD83FDw=;
-        b=DnLREiv6DOftqMow2FPIZ5x9Xx0gAKzmcnaAj2IQcYhJ0Meos6uCzsdSGHHQ3a9k3W
-         ECMqr4J2By/m+LevKjkPi1zvjCnN3sI45kOgBqOkxQNSrNLztgwxk4NI1H92jxUo7JzT
-         EIYwPqwYoOgXH3x8jb26DONwnkOOkWOJL4XqgMlVU9sRqTY0PPqPZvL2MTpUAR2m6ecQ
-         VdxsoSSBIv+VSWF6XX8swWtP15116RVoWFm/OiHEpLPRMT36pAIbi9kmWg6ifBCHnM2U
-         C4hgXe0m2GHZvY5S0Uz4zL5WByuIEDu9ZYPJLGZs7EoASriU3CjXVXFToKUQKfr8geE+
-         T9pg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787932904; x=1788537704;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=rbwr+K5nPn6tIRCwsto5KEIPiqdePxzLIo1QhD83FDw=;
-        b=HIcf967FeaYQxG0DQ7KCDHvmjM8+1+NBudv1HLvO+4oMjKvDD8mgmmINSyfE3maPXV
-         KIgdAzTthNjNI9HyDzufUT8K5Sh8Qt32ptWemISIPeUXymDQ/DREItvcMaYOp1rn3vIy
-         Uzi6aC3tI8yKIIdkF2xH4vHwHK6UvyMsXtcmpVXRCz9H/Q/GJgn5A6j/tgb3WjvxGuSL
-         GnYqMm93DZI1N4YAGhgueOyvlnN/AYrmA66MDw84767cvho2Wb5BygjxiDIteZiwitWz
-         pF5nYun1d1S5InW5QOJizMJd5DHwy+fjkzKDP25Mx9piOwaf7mfLrEclnqpRAxY9QSOy
-         HvuQ==
-X-Gm-Message-State: AFuF++maCy2VNnuFm/VauPq+6lL2qRj0l3lclVfj9xoCdpXMRQQVSBAh
-	WIM6zPB6myApFGpC5U+I3Dlesx4DHim2VJbv11S3+yT4R4DF9dMtJhv+y+MRvVDbNB58u8rzgGE
-	n7QBhib2zARZw98pr0g==
-X-Received: from edj18.prod.google.com ([2002:a05:6402:3252:b0:6a0:9689:91c0])
- (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6402:455a:b0:6a3:f74d:6a47 with SMTP id 4fb4d7f45d1cf-6a60d157efamr5227378a12.0.1787932903626;
- Fri, 28 Aug 2026 09:01:43 -0700 (PDT)
-Date: Fri, 28 Aug 2026 16:01:43 +0000
-In-Reply-To: <20260821144335.1BE1F1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xeZkV+9u"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hWmr23Vr1zlfvq6;
+	Fri, 28 Aug 2026 18:19:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1787941166; x=1790533167; bh=KBnsO4kDz2w7wryNiVyF0WurWVA7/KEMWKe
+	cS2jNkqs=; b=xeZkV+9uYoRUJBUzpaA9xeUYqiPFPlQbIfse+6kIEcweizYMJW9
+	iXFaqY/dN6shlluK5038OI7Fu5/J7Gl+Lo8UFxK8uKCuQH7UTSbeqmju6Minpdbn
+	LnqBzxLuqAL2Nhsd+S7Jfhpbp01BZg44Xk02MzVADkm3y4boRcaV1b2mPqtVeee1
+	sIxrS7iawM83d6CRZqEwF/XqdBtTacrYDWxjHPwrqHI7Pk89sEqWpFIfFnOtCnfc
+	nmjB9G83r7nT/Vv3seheIjPuuINYB0Nhe/JR9CaYI+uzF1RMhOSwBVM2sJ31w9QX
+	HcEllIEhwXZtP54B1wJI1FYb3xs+OQfSq0g==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id PjUjpNbhRAVI; Fri, 28 Aug 2026 18:19:26 +0000 (UTC)
+Received: from bvanassche.c.googlers.com.com (148.60.168.34.bc.googleusercontent.com [34.168.60.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hWmqv6ngbzlfvpq;
+	Fri, 28 Aug 2026 18:19:23 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] scsi: megaraid_sas: Protect megasas_get_ctrl_info() in megasas_resume()
+Date: Fri, 28 Aug 2026 11:19:14 -0700
+Message-ID: <6e802da5e402b1d304ab753da77d27f118d0f61b.1787941140.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.55.0.897.gb25b4bd76c-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260821142414.150892-1-djeffery@redhat.com> <20260821142414.150892-3-djeffery@redhat.com>
- <20260821144335.1BE1F1F000E9@smtp.kernel.org>
-Message-ID: <9huzh5kez120.fsf@tarunix.c.googlers.com>
-Subject: Re: [PATCH 2/9] driver core: prevent device_add() during system shutdown
-From: tarunsahu@google.com
-To: sashiko-reviews@lists.linux.dev, David Jeffery <djeffery@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-sashiko-bot@kernel.org writes:
+Protect the megasas_get_ctrl_info() call in megasas_resume() with
+instance->reset_mutex using scoped_guard().
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
-> - [High] Race condition in device_add() abort path during system shutdown=
- leading to Use-After-Free.
-> --
->
-> --- Patch [2]: [PATCH 2/9] driver core: prevent device_add() during syste=
-m shutdown ---
-> commit 17748fb46ccfdb0adadd634adbfe70a9fd601b9a
-> Author: Tarun Sahu <tarunsahu@google.com>
->
-> driver core: prevent device_add() during system shutdown
->
-> This commit adds system state checks to device_add() to prevent new
-> devices from being added while the system is halting, powering off, or
-> restarting. It re-checks the state under devices_kset->list_lock to
-> avoid a TOCTOU race window with device_shutdown().
->
->> diff --git a/drivers/base/core.c b/drivers/base/core.c
->> --- a/drivers/base/core.c
->> +++ b/drivers/base/core.c
-> [ ... ]
->> @@ -3699,6 +3720,18 @@ int device_add(struct device *dev)
->>  		goto Error;
->>  	}
->> =20
->> +	/*
->> +	 * Check system_state again under list_lock to prevent a TOCTOU race
->> +	 * where device_shutdown() runs concurrently and misses this device.
->> +	 */
->> +	spin_lock(&devices_kset->list_lock);
->> +	if (unlikely(system_is_shutting_down())) {
->> +		spin_unlock(&devices_kset->list_lock);
->> +		error =3D -ESHUTDOWN;
->> +		goto ShutdownError;
->
-> [Severity: High]
-> Does this error path introduce a use-after-free race with device_shutdown=
-()?
->
-> If device_add() successfully links the device to devices_kset->list via
-> kobject_add(), device_shutdown() could concurrently run and pull the
-> newly added device from the list:
->
-> device_shutdown() {
->     ...
->     spin_lock(&devices_kset->list_lock);
->     ...
->     dev =3D list_entry(devices_kset->list.prev, struct device, kobj.entry=
-);
->     ...
->     list_del_init(&dev->kobj.entry);
->     spin_unlock(&devices_kset->list_lock);
->     ...
-> }
->
-> If device_add() then resumes, acquires the list lock, and sees
-> system_is_shutting_down(), it will jump to ShutdownError and return
-> -ESHUTDOWN.
->
-> The caller of device_add() will typically treat this as a failure and
-> free the device and its associated private data. Meanwhile,
-> device_shutdown() is already outside the lock and actively executing the
-> shutdown callbacks on that exact same device:
->
-> device_shutdown() {
->     ...
->     if (dev->bus && dev->bus->shutdown) {
->         ...
->         dev->bus->shutdown(dev);
->     }
->     ...
-> }
->
-> Can this lead to device_shutdown() accessing freed device memory?
+megasas_get_ctrl_info() submits a DCMD command and modifies shared
+controller information (instance->ctrl_info_buf). Calling it without
+holding reset_mutex can race with adapter reset and other DCMD
+operations.
 
-We can make device_add and device_shutdown synchronise like
+Fixes: c3b10a55abc9 ("scsi: megaraid_sas: Update controller info during r=
+esume")
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: Chandrakanth patil <chandrakanth.patil@broadcom.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-+device_block_adding();
-+wait_for_device_add();
-
-calling these two in device_shutdown similiarly we have for probing.
-
-~Tarun
-
->
->> +	}
->> +	spin_unlock(&devices_kset->list_lock);
->> +
->>  	/* notify platform of device entry */
->>  	device_platform_notify(dev);
->
-> --=20
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260821142414.15=
-0892-1-djeffery@redhat.com?part=3D2
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
+araid/megaraid_sas_base.c
+index f0152b043e18..f345fb266db0 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -7875,8 +7875,9 @@ megasas_resume(struct device *dev)
+ 			goto fail_init_mfi;
+ 	}
+=20
+-	if (megasas_get_ctrl_info(instance) !=3D DCMD_SUCCESS)
+-		goto fail_init_mfi;
++	scoped_guard(mutex, &instance->reset_mutex)
++		if (megasas_get_ctrl_info(instance) !=3D DCMD_SUCCESS)
++			goto fail_init_mfi;
+=20
+ 	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
+ 		     (unsigned long)instance);
