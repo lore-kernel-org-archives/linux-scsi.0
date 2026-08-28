@@ -1,152 +1,98 @@
-Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C21A3A7F78
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2026 03:34:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787888041; cv=pass; b=bcTbQDWuaFBShFuv7Bj7/i6Aflu9jYDXZk6Wc2JoK8GAtcs+fYtEjiWymJNj/CtukCrGvnZd2qOs/NxVHxeZbTnEDZjlRgYfY9qoMG8oUXOkYs0ZCUPM6jqRfiGBVCcRfjZvskcu16Cc7aQC9VQOVQgnpLJ0jRTNvguUy+5RsZo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787888041; c=relaxed/simple;
-	bh=eVCUgnuZPY9rp4G0hxfWBoh/8wdCFKKRU8Eq9Q7yXbg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PBGf3o9+i0YMtxIBw9Axi073+IgZpGtKBYGgIChwL+TYETV9J59S3F4eVs5L3L4HfkYnM0MnMM2nRg1hEJuh++lBPbd7AwsuYuKqueAVqVciK0ihPjEKxmwRM9AzjMysO9j42Xul7q8izUOpVAk7lcaPO7Up9VUNB59//uJF5Qw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qoJ0brIm; arc=pass smtp.client-ip=209.85.210.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qoJ0brIm"
-Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-7f4f824de5dso151188a34.2
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Aug 2026 20:33:59 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787888039; cv=none;
-        d=google.com; s=arc-20260327;
-        b=LTFOETzC0yySMhkVxGQ91xwBXIfbpA+okpBDa6gEiNhDlrCVaZy9F7Ot0wJ15/7jPw
-         TisQluLuMOKAzoOfchnLmDxEQ/UdgkKbpf1LYKYY6k7vCY2hMNSkcgq/DSjlrly8LS5c
-         UfWoM1rPkHxFDXa827XqztsoRuJTAgLpfOTd5AgAfFfKcjk5xgS1O1MLGZCXzdp0rNqd
-         +hIjTQiTWQGJQs3RK9QzBC8b/sx/TzUwVpc6ImerTX43uxl2NhL4zvIhnNvSEMYGOkFH
-         bXor4J/rk9FF22nespTd94vp/DhMfbFE0j6uMtSjv8uX1W+lfAmi38QpZTS6S/ccEFt/
-         OLTQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=tJ6GRA/2LwQW6/jDEIjrj/TZS2ZKHOJ3XYsZbyYACDw=;
-        fh=CW9X3CPgER36fz0Eds3JMg7O8dSMo1nMwOYdN0zulKY=;
-        b=I3Tvqw7rL909EVHezoMOto9npZwqJ74y8ZT3jxfyGqgcbTLQwmNGuonHcCIe3efsVe
-         3BWHOYanNlQ8li4MfnyrPQ5bp6jkuBEb1o6caNcsvpB+leiYJQNPhUnB7LemQDkN48S2
-         ipGw+oa2NpY2myQsAfMtikAzwtgZkgAhmvSUTtbre55F3ASCx8gNO35c6E7TWmHiIl1r
-         10VwvqDT5GrGuUKt0PMPeMrAfcIdsjtyzXJmUomG3hw1fDxh5bvugxykG7OmOu5OK85P
-         +kMNNH3BH5O18BzWYyApTp1R81mBQ7QOZqdP+2YB2UlcsBMbDaLs4+fCobiDyMoX+0mq
-         pF5w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787888039; x=1788492839; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=tJ6GRA/2LwQW6/jDEIjrj/TZS2ZKHOJ3XYsZbyYACDw=;
-        b=qoJ0brImXYW2jxuJ/+X9STf16jjXZ92rLmZ4786e6MVSpMWvhHnkJ14DzuZd++/cjq
-         iXnv5vvRllyON65+nnXaCJ/b6+YH56o0zedDj/zHvJNlAGDchuDSruVJyLQBrV8WAXWs
-         SravIim8345TcwwvXjYeU75tQ4kL7jLhRajFS1OSDokJJV/2VK2hrLyNHeytc09YbPBE
-         jM2IhEqSV04jlyvKp+lPOuB2WYY9aatRDk+LOTBeBnMlDt3YlDDVrTb0oSdatP/JD6YQ
-         IL0Ud2rj4HI2GkkPVHkPeM+vv4EnsEOhUTSW45cOfdJ43h4sIYmtFzLdciJnJMx53rpl
-         0bRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787888039; x=1788492839;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=tJ6GRA/2LwQW6/jDEIjrj/TZS2ZKHOJ3XYsZbyYACDw=;
-        b=IRAlJKrdTlnLfd1zh5UYkkNyxMy/5gSzPO6oUwNaFIV7mX15jZEMoZReFtmrcyproz
-         eKm9fktZdQ6vW/nYHf5LzbhYnR9tha8EsXKQM79suPQOOJvyMwXwuUkfch3Ie9zLKhdu
-         xT26WwvmLN4j4mez52HMs7lmahHsx3hKRWiYW835Pz7kaSt+dFzFsfo62i3UOBoLeGoV
-         AFBOQxPPYi4ONIjzlGXl9f5jRQJ58vRXsOC1DRYBOwm5ms109VibCeT2M1rJ6BJqi9yR
-         6+vAtDTTjan4O1L2QIC9QxsnrhMp1/UJpnno+nolcdE3cKV9RofENSvdetPX8qfDN4uj
-         iMPA==
-X-Forwarded-Encrypted: i=1; AHgh+RoQa3TahrbJ2d5GdsOEv+EX4WAAz6VFLiFmt2jtwWe4qeZyJQ5J1t61hGb4nVA1+HqjWwN8yXyBKp2F@vger.kernel.org
-X-Gm-Message-State: AFuF++kxwjx6PWjm+TsOo+5ZucNwPd8oU7yI7POJtHmPy5FoglnyGuIm
-	UJASefdIpZgcvtXGI0/JSfBe/0j4peURZOaMJlG5dHdPRaivGkezsk1Cwu8VZF/08qjQ4X+Qfvk
-	QuvHAPgsNWe39uciseeaXU63/AWxMLIk=
-X-Gm-Gg: AR+sD13Apm3f4DAS9M48I46E02oIELY8WVSJ3KyNVjMoPz9tMhyqrBA0J08QiD9H6na
-	2LxdZNZblOl85avahqFLIbk37JUDygob+RwtgvOG9mEy58ipnJKsHfhhwXNpsfs0/O833FqWnbN
-	WhYv4Sk8g0Yh2NeYEQXw+g7fsPr5Z88V8/UBBPGjShLpL0XXsKE00WNptv1OuVdILAibbxaw6wY
-	9GB/OokToZgcUALOqhf3V+IqBWpYcrNOwLD3COO6UaMuxQcsloMPb+5kpVPbKurw9zma2VMP7gk
-	ocOkc4CPEa6Vy0eKODfGLInjMaSUIyyvckhDajMZDz1OQ6+f54l/868YDW7ljRKdzu4SajPBeKR
-	hBMrLeCozDSDrJgUF5rK4d0LO63wT5mKIaM8kirCechfU
-X-Received: by 2002:a05:6820:340e:10b0:6b1:67e1:fc8e with SMTP id
- 006d021491bc7-6b1c66e6ce5mr2559540eaf.25.1787888038951; Thu, 27 Aug 2026
- 20:33:58 -0700 (PDT)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD49039A057;
+	Fri, 28 Aug 2026 09:22:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787908948; cv=none; b=RJScuTjI1k5GB0gZLG3qvwJBHhy+MOFtKvzTCn1Ft/kA7038eHnJ097oxDVuHnG+ov1b9x/E5t76Wk2N+rxWsCzsd9IH28uXbSAaQklXhFyRj2eKCVjRAZiyLBpc1K0585yW5nk+WPOFl199RwDmvY28HqofYa1rqT0tfo+/4po=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787908948; c=relaxed/simple;
+	bh=xGAczdk5GwJSEcskz8uGUkPJQJtEfqg+TDNnKhPmuFw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nZb4kX2m2+h4cwQ9lTr5NMy+DYD90c1o6sWsZWCjCnHlxZyr2IwA7yl0yuYf6NXKiEjdbrnDP5xyu1j1031v8kwrrYYoacWn3Chfll2JBKFrt93xq4Ju32OfMQqyfD+G1pvghgq70XqL/0rPUgxiX3+NxvibXfHi7C1/dY7ZITI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.241.250])
+	by APP-03 (Coremail) with SMTP id rQCowAD3AUBHU5FqDFR1Bg--.64738S2;
+	Fri, 28 Aug 2026 17:22:15 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+	Peter Griffin <peter.griffin@linaro.org>
+Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk@kernel.org>,
+	linux-samsung-soc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: ufs: exynos: Propagate PHY power-on errors
+Date: Fri, 28 Aug 2026 17:22:13 +0800
+Message-ID: <20260828092213.10127-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260827185722.3234622-1-csander@purestorage.com>
- <20260827185722.3234622-2-csander@purestorage.com> <CAJnrk1YfTg-Lz+TmM+c=Asc8N4QGuY9_g8zUXtaNr4O7hG1Djw@mail.gmail.com>
- <CADUfDZoEosgMMQ47BDWBskTOZrYZpg6VUT5c4kwczDLRLXYk=Q@mail.gmail.com>
-In-Reply-To: <CADUfDZoEosgMMQ47BDWBskTOZrYZpg6VUT5c4kwczDLRLXYk=Q@mail.gmail.com>
-From: Ming Lei <tom.leiming@gmail.com>
-Date: Thu, 27 Aug 2026 22:33:46 -0500
-X-Gm-Features: AcwNN1V96G10EnqkMmlBEbQoJ8ihVOlJhML3SIuW3TsrH3jrmu0CBU7aGovmtII
-Message-ID: <CACVXFVOLBVVGwfo+mbn+4jnGKZS66dL_2ghsKiaT6buscWJg6w@mail.gmail.com>
-Subject: Re: [PATCH 1/2] io_uring/cmd: split io_uring_cmd_set_res() from io_uring_cmd_done()
-To: Caleb Sander Mateos <csander@purestorage.com>
-Cc: Joanne Koong <joannelkoong@gmail.com>, Jens Axboe <axboe@kernel.dk>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, 
-	Bernd Schubert <bernd@bsbernd.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, fuse-devel@lists.linux.dev, 
-	io-uring@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowAD3AUBHU5FqDFR1Bg--.64738S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Xw4fKr4fZFW8tF1rArWDJwb_yoW8JrW5pF
+	s7Gr48Ar1kWay3JF40yF4YyFyfG397CrWUWrWxCas7Za4xCwnrK34vkFy3W3WDtFZ5Xw1j
+	9FW8J3WUXrsF9r7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr
+	1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_
+	JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+	sGvfC2KfnxnUUI43ZEXa7VUbUPEDUUUUU==
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-On Thu, Aug 27, 2026 at 4:44=E2=80=AFPM Caleb Sander Mateos
-<csander@purestorage.com> wrote:
->
-> On Thu, Aug 27, 2026 at 1:05=E2=80=AFPM Joanne Koong <joannelkoong@gmail.=
-com> wrote:
-> >
-> > Hi Caleb,
-> >
-> > On Thu, Aug 27, 2026 at 11:57=E2=80=AFAM Caleb Sander Mateos
-> > <csander@purestorage.com> wrote:
-> > >
-> > > In preparation for setting the io_uring NVMe passthru CQE results fro=
-m
-> > > the blk-mq request completion rather than the task work callback, spl=
-it
-> > > out functions io_uring_cmd_set_res{,32}() from io_uring_cmd_done{,32}=
-().
-> > > This allows io_uring_cmd_done{,32}() and __io_uring_cmd_done() to be
-> > > consolidated into a single CQE-size-agnostic function with 3 fewer
-> > > arguments than __io_uring_cmd_done().
-> > >
-> >
-> > The conversion looks logically correct to me but the interface feels a
-> > bit annoying / fragile on the caller side.
-> >
-> > Is there a way nvme can get what it needs without changing the other
-> > callers? Would it work to just keep the existing
-> > io_uring_cmd_done{,32}() as is and add a separate API for special
-> > callers like nvme, eg:
-> >
-> >   void io_uring_cmd_set_res32(struct io_uring_cmd *cmd, s32 ret, u64 re=
-s2);
-> >   void __io_uring_cmd_done(struct io_uring_cmd *cmd, unsigned issue_fla=
-gs);
-> >
-> > where io_uring_cmd_done{,32} would then just be inline wrappers over
-> > those? afaict, then only the nvme callsite would have to change and
-> > fuse, btrfs, block, ublk, and scsi_bsg could just stay as is. Do you
-> > think something like that makes sense to do?
+The Exynos UFS variant resume hook powers on the PHY when the link is
+inactive but ignores the result and continues with SMU and FMP
+restoration.
 
-Yeah, this way is definitely much better from a driver viewpoint.
+Return the PHY error before touching the controller-specific state.
 
+The issue was identified via static analysis and manually reviewed.
 
+Fixes: 55f4b1f73631 ("scsi: ufs: ufs-exynos: Add UFS host support for Exynos SoCs")
 
-Thanks,
-Ming Lei
+Assisted-by: LLM
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+---
+ drivers/ufs/host/ufs-exynos.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index b2f65c465525..35fc0673fd03 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1829,9 +1829,13 @@ static int exynos_ufs_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+ static int exynos_ufs_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
++	int ret;
+ 
+-	if (!ufshcd_is_link_active(hba))
+-		phy_power_on(ufs->phy);
++	if (!ufshcd_is_link_active(hba)) {
++		ret = phy_power_on(ufs->phy);
++		if (ret)
++			return ret;
++	}
+ 
+ 	exynos_ufs_config_smu(ufs);
+ 	exynos_ufs_fmp_resume(hba);
+-- 
+2.43.0
+
