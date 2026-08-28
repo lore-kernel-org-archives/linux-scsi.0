@@ -1,169 +1,117 @@
-Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE96C32C942
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Aug 2026 10:21:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CE2F3F44C1;
+	Fri, 28 Aug 2026 10:28:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787912515; cv=none; b=nKnBQAP2qohFMlXG7tODqumGuvAqKOR6b5JtLTibcTgWlYEPIc6D3IQeSZt2vawsOUlxSQXPRJP7I43K8Yw8sTNpKxyW1dEqqxTKQVFk9+UXnmLndy3aLL/sHueM4OED4oonvxcywQl7Xu2jpF4NV6Bu0fi0FKEdyW2I14ltaYA=
+	t=1787912891; cv=none; b=MOkOGcrYkIKZ0jdQTvHPsmBWorLs7keJ3MusgdpRx20ssYaMaoy83hetl5dy3Md8kcFC8VR8ofSxB/FC/XMML39aJB0qLypXoEznu9KtUdfcfM3RKRQnbAHp6y+244zJxSYsEOvl5vE5iSvyVyhR5uvv29zy18RD+uetqU6c6ak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787912515; c=relaxed/simple;
-	bh=bwTr8Q9/PV3ludg73IViJ3egSVsuMkJNR6wUibdWcwU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HRTyYCcAe4XcmBA3z28UYmSt35hL+3fs56dLUn2tFai04KYOX1bTtD5t5OIW80rOqeUG+xzvB+DWrEM4aCA5MucG4P4gei24knNxIg+yskEk48QYa0oHwVqTT1QooyaZAla2Q5wcHjsEHCTe5r+Y7u6vjiSsgpJxWiiORykFxmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
-Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
-	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id 9EE45C527D;
-	Fri, 28 Aug 2026 12:21:49 +0200 (CEST)
-Message-ID: <ec3d38d7-3da1-4a0b-a256-b0e56ead9764@proxmox.com>
-Date: Fri, 28 Aug 2026 12:21:48 +0200
+	s=arc-20240116; t=1787912891; c=relaxed/simple;
+	bh=aoKZWDUHo+Fcao1jZ8fwlVQ+ANgNQirHdxSNu9tQk14=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nkEfQQdt0QwcWsM5TcK0mf3IcozZZDbpb9k7xaMXjiYZ85Vmq5t6vDSV8oXP+zSsnrU0sPrnWw7rUob+7oXkcipYqQr/IsNfJV4QtcxaW2AaGZCY2UAEFQn9Nzt+N0qlZ7rMeFbmn9CwSZkxSDwWCu58OlZ+vIAHCm7rIZOtavk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HIjWXox8; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HIjWXox8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 052001F000E9;
+	Fri, 28 Aug 2026 10:28:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787912889;
+	bh=O19Kqaz7Dc0R78cpyBBCb7hRpvdqq1kuEoC+NWYg7mY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HIjWXox84GVYA5/r5qnIDGTHPXsVfcElHLj7e6zkZzow0JfkOrlXCrbBE9kcfljnT
+	 rO62Mb40W98e75UU5oJhfnTA8MOIfKbeshdvlhuz2m1iMDND8DDfxUs/xTD/oFC8hn
+	 MQMcrg70klncgs4VW1DD5B9ztlK7OyaOretgMGZIfgpidmjJKzk03fyFmyuDU1eKCO
+	 ds7RXxsyPjg7MmMsTlx4rAU3KlKszflh2YE30YS7idK8ObpOk0U3OpgvZXIhOBmwDk
+	 kpGhW+kZLDc00wdSdW2Rs4kJGE5/E2N+ZTn8P2A2lZODO5KmikRbWceHDwvgCBIWlt
+	 ib4IxtNfdRJtw==
+Date: Fri, 28 Aug 2026 12:28:06 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Larisa Grigore <larisa.grigore@oss.nxp.com>
+Cc: NXP S32 Linux Team <s32@nxp.com>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@sandisk.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
+	Fabio Estevam <festevam@gmail.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>, Ajay Neeli <ajay.neeli@amd.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Pedro Sousa <pedrom.sousa@synopsys.com>, clizzi@redhat.com, 
+	aruizrui@redhat.com, eballetb@redhat.com, echanude@redhat.com, 
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH 06/10] dt-bindings: ufs: Add compatibles for S32N79 Host
+ Controller platform driver
+Message-ID: <20260828-dark-foamy-guillemot-0b60be@quoll>
+References: <20260826134048.854748-1-larisa.grigore@oss.nxp.com>
+ <20260826134048.854748-7-larisa.grigore@oss.nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH] scsi: megaraid_sas: Limit NVMe request size to the PRP
- chain frame
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-References: <20260827175743.734593-1-t.lamprecht@proxmox.com>
- <20260827182106.535D61F000E9@smtp.kernel.org>
-Content-Language: en-US
-From: Thomas Lamprecht <t.lamprecht@proxmox.com>
-In-Reply-To: <20260827182106.535D61F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Bm-Milter-Handled: 55990f41-d878-4baa-be0a-ee34c49e34d2
-X-Bm-Transport-Timestamp: 1787912498820
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260826134048.854748-7-larisa.grigore@oss.nxp.com>
 
-Am 27.08.26 um 20:21 schrieb sashiko-bot@kernel.org:
-> [Severity: Critical]
-> This is a pre-existing issue, but since this patch directly addresses how
-> megasas_make_prp_nvme() builds PRP chains and accounts for page boundaries,
-> does the chain boundary detection logic in that function safely calculate
-> the boundary?
-> 
-> Looking at megasas_make_prp_nvme() in
-> drivers/scsi/megaraid/megaraid_sas_fusion.c:
-> 
-> 	page_mask_result = (uintptr_t)(ptr_sgl + 1) & page_mask;
->
-> This tests the virtual address (ptr_sgl) against the NVMe page mask instead
-> of the physical IOVA address. If the system uses an IOMMU and creates an
-> unaligned virtual mapping for the DMA pool (modulo the NVMe page size), this
-> will miscalculate physical NVMe page boundaries.
+On Wed, Aug 26, 2026 at 03:40:44PM +0200, Larisa Grigore wrote:
+> +  clocks:
+> +    maxItems: 1
+> +    description: UFS core clock
+> +
+> +  clock-names:
+> +    items:
+> +      - const: core_clk
 
-The observation is correct FWICT, but does not require a change to this
-patch and probably also not in practice as no > 4K NVMes/controllers exist
-AFAIK.
+_clk is redundant, just "core". Or skip names, not really useful in this
+case.
 
-The sg_frame pool is created with an alignment of MR_DEFAULT_NVME_PAGE_SIZE:
+> +
+> +  nxp,mphy-boot-mode:
+> +    description: |
+> +      MPHY initialization mode. Defines how the MPHY firmware should be
+> +      initialized and executed during UFS controller startup.
+> +      If this property is not specified, MPHY initialization will be skipped.
 
-	fusion->sg_dma_pool =
-		dma_pool_create("mr_sg", &instance->pdev->dev,
-				instance->max_chain_frame_sz,
-				MR_DEFAULT_NVME_PAGE_SIZE, 0);
+Isn't this implied by the compatible?
 
-while the mask the loop tests against comes from
+> +    $ref: /schemas/types.yaml#/definitions/string
+> +    enum:
+> +      - rom
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +
+> +allOf:
+> +  - $ref: ufs-common.yaml
+> +  - if:
+> +      required:
+> +        - nxp,mphy-boot-mode
+> +    then:
+> +      properties:
+> +        reg:
+> +          minItems: 2
+> +        reg-names:
+> +          minItems: 2
+> +      required:
+> +        - reg-names
+> +        - clocks
+> +        - clock-names
+> +    else:
+> +      properties:
+> +        reg:
+> +          maxItems: 1
+> +        reg-names:
+> +          maxItems: 1
 
-	mr_nvme_pg_size = max_t(u32, instance->nvme_page_size,
-				MR_DEFAULT_NVME_PAGE_SIZE);
+I don't get why for the SAME device diffeernt initialization means
+device has different address space or clocks. It's the same device, same
+wiring, same hardware setup.
 
-dma_pool backs its blocks with allocations of max(size, PAGE_SIZE), so the
-CPU and DMA bases of a pool page are both PAGE_SIZE aligned and the blocks
-sit at the same offset in each. The two tests agree as long as
-mr_nvme_pg_size divides PAGE_SIZE, and can diverge once it is larger. The
-driver then places the chain pointer where it sees a boundary and the
-controller looks for one somewhere else, so it would read a data PRP as a
-list pointer.
-
-The misalignment can also introduce a chain pointer where an aligned buffer
-has none: for a 4 KiB chain frame with an 8 KiB NVMe page size, a buffer at
-0 modulo 8 KiB never trips the test, while one at 4 KiB modulo 8 KiB trips
-it at offset 4088.
-
-Reaching it needs instance->nvme_page_size above PAGE_SIZE, so above 4096 on
-x86. The encoding allows it, 1 << (scratch_pad_3 & MR_NVME_PAGE_SIZE_MASK)
-with a shift of at least 12, but NVMe puts the minimum memory page size at 4
-KiB and the OCP datacenter SSD spec requires drives to report exactly that,
-so I would not expect a larger value here. I have no data on what the MR
-firmware actually reports, though. The driver logs the value at probe,
-
-	dev_info(&instance->pdev->dev, "NVME page size\t: (%d)\n",
-		 instance->nvme_page_size);
-
-so a dmesg grep for "NVME page size" on any of the affected machines would
-settle it. If one of them reports more than 4 KiB then this is live there,
-and I would like to know.
-
-This patch neither introduces nor widens that: it bounds how large a
-transfer may be and does not touch where the chain pointers land.
-
-The term that reserves room for the chain pointers,
-
-	instance->max_chain_frame_sz / mr_nvme_pg_size
-
-does share the assumption though: it counts boundaries as if the frame base
-were page aligned, just as the test in megasas_make_prp_nvme() does, so with
-a misaligned base it can be one short. I replayed the loop for chain frames
-of 1024 to 15872 bytes, NVMe page sizes of 4, 8 and 16 KiB, every 4 KiB base
-offset within a page, every 512 byte transfer start offset, and both
-coalesced and one-entry-per-page scatterlists. The list never leaves the
-frame, but above 4 KiB the worst case fills it exactly instead of leaving
-the slot of slack it leaves today. At 4 KiB, where the pool alignment makes
-the count exact, the margin stays.
-
-So I would keep it out of this fix. The test wants ptr_sgl_phys instead;
-that patch is below the scissors.
-
--- >8 --
-Subject: [PATCH] scsi: megaraid_sas: Test PRP boundaries on DMA address
-
-megasas_make_prp_nvme() decides where the chain pointer that continues a
-PRP list into the next page goes by testing the CPU address of the next
-entry:
-
-	page_mask_result = (uintptr_t)(ptr_sgl + 1) & page_mask;
-
-The controller walks the same list by its DMA address. dma_pool backs its
-blocks with allocations of max(size, PAGE_SIZE), so the CPU and DMA bases
-of a pool page are both PAGE_SIZE aligned and the blocks sit at the same
-offset in each. The two therefore agree modulo mr_nvme_pg_size only while
-that divides PAGE_SIZE. Above it the driver can place the chain pointer
-where the controller does not look for one, and the controller then
-follows a data PRP as a list pointer.
-
-The misalignment can add a boundary rather than move it: for a 4 KiB chain
-frame with an 8 KiB NVMe page size a buffer at 0 modulo 8 KiB never trips
-the test, while one at 4 KiB modulo 8 KiB trips it at offset 4088.
-
-ptr_sgl_phys advances in lockstep with ptr_sgl, so test that instead.
-
-Reported-by: sashiko-bot@kernel.org
-Closes: https://lore.kernel.org/linux-scsi/20260827182106.535D61F000E9@smtp.kernel.org
-Signed-off-by: Thomas Lamprecht <t.lamprecht@proxmox.com>
----
-NOTE: not really tested end-to-end as I do not have any controller
-reporting an NVMe page size above 4096 here, not even sure one exists?
-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 056cbe50e19e..fad747206ed1 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2221,7 +2221,7 @@ megasas_make_prp_nvme(struct megasas_instance *instance, struct scsi_cmnd *scmd,
- 		offset = (u32)(sge_addr & page_mask);
- 
- 		/* Put PRP pointer due to page boundary*/
--		page_mask_result = (uintptr_t)(ptr_sgl + 1) & page_mask;
-+		page_mask_result = (ptr_sgl_phys + 8) & page_mask;
- 		if (unlikely(!page_mask_result)) {
- 			scmd_printk(KERN_NOTICE,
- 				    scmd, "page boundary ptr_sgl: 0x%p\n",
+Best regards,
+Krzysztof
 
