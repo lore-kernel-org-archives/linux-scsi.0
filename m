@@ -1,56 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC36306744;
-	Sat, 29 Aug 2026 01:33:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A36682EEE91;
+	Sat, 29 Aug 2026 01:36:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787967235; cv=none; b=DXls49CSn3vOBoauDPGtqOlsK5Kh+N0cViQ6HUac718IevnhmGEv0+GeDNskVE7S36sR0DhKDdaTL2dSOEd1xKEEmLoJAIq1hvVXygVomOpTaOrgyVaOgsprUs7R/HJKghRpF+tuaMH19UcQaYorWPOxq/PM3Vku7ZU+7OZqQVg=
+	t=1787967420; cv=none; b=RCv59uczLBl/jqe+Q/Yi3gIvmfmPqYi0DS5TDkfCnnhp6s5O0Qa7QN60ZwK4TUgVkizNqM7GnurTsk7D4fsYZYauPR3O5E7PoBSIEaPoC9f0eeZM8iU36xmboi9VOH0ErWSL/Ij7bLx8lB32k+wHBluxWK6Z3le3+BSsnUYkRd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787967235; c=relaxed/simple;
-	bh=HxhvuIu14D5oWRmsJTxe/MS4jbBe0tc41awDFzEaEho=;
+	s=arc-20240116; t=1787967420; c=relaxed/simple;
+	bh=katZUr6+yF7b2HTv2jkIb7ULQbV16Nnzg5UU5WHdbfw=;
 	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 MIME-Version:Content-Type; b=HyYaudphMdijDONMBeQ1JYFE8BaaebpgLH7kMGUxIGOeFcmY4oStHkivQJy7QofB9YPLdeMh9DV1G+v3AS6hS2q4nE2sx/5YWTHmSRVZq5RxN2f9oKbyvsTt11LqpG/sf54mi0YLjU6Hr+vPs1dqvglh1n57jHagO1c4fCYHH0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BC/btGKt; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=qzsuO9jUpDm32qBw9RlJQhafq1HZY+iOjpgQs2XudmMwHWMgqn/3+SHhFIZJXNANYZhuTfjaq7X8kt54WSRSJdhxpZ87ykifFQVs2cEml8VvVlxVGclg2QEhapIxVeVO9dqA6G0RDzsSAlHp8FsmIrcNKfybciOIzH/ofvk9tUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gt4f3IOD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BC/btGKt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9773B1F000E9;
-	Sat, 29 Aug 2026 01:33:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gt4f3IOD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0C2F1F000E9;
+	Sat, 29 Aug 2026 01:36:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787967231;
-	bh=qcLcaICBn/Ust3qCyT+QAX9s51VWpBQrTS4NDoDQpJQ=;
+	s=k20260515; t=1787967419;
+	bh=oCbFk4XmjAKOD7UIbVFDdzWsCAjhAN7hz6x9575oE1s=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=BC/btGKtX1ijynyzc9Inb7SM82UVg6ZQge8iQ45RQTu1QH5F12BEvBS9GlF8wNoWt
-	 uW7FYVw2KrvE8fvQIfkzegJwdVpzC69wmYI7ruePsIoWEJddG97jMim5XIF/Vd5vT7
-	 eedaDoZE7W4s7H/gsLoLV+SE+4KIKaM3WnPphjDoQyOdwzwsVcC6H5m7QRU80EKoH3
-	 nJeYr2QJp6tH5rVnmvkpOrdeGFRF1JuFZpFWu0hixvkFR7uJgO56zB9VMTlMpBYeav
-	 +zarnyNHD9Fn1ilVroE5P4N6t+UDjJSV2+KJHizOzaCSQMu3vOJkPrRePGLpOBIIkW
-	 vzNAovJ6PDbmA==
-To: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
-Cc: Linmao Li <lilinmao@kylinos.cn>,  "Satish Kharat (satishkh)"
- <satishkh@cisco.com>,  "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>,
-  "Martin K . Petersen" <martin.petersen@oracle.com>,  "James E . J .
- Bottomley" <James.Bottomley@HansenPartnership.com>,  Hannes Reinecke
- <hare@kernel.org>,  Justin Tee <justin.tee@broadcom.com>,  Naresh
- Gottumukkala <nareshgottumukkala83@gmail.com>,  Paul Ely
- <paul.ely@broadcom.com>,  "linux-nvme@lists.infradead.org"
- <linux-nvme@lists.infradead.org>,  "linux-scsi@vger.kernel.org"
- <linux-scsi@vger.kernel.org>,  "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>,  "Gian Carlo Boffa (gcboffa)"
- <gcboffa@cisco.com>,  "Arun Easi (aeasi)" <aeasi@cisco.com>,  "Arulprabhu
- Ponnusamy (arulponn)" <arulponn@cisco.com>
-Subject: Re: [PATCH 1/2] scsi: fnic: initialize the NVMe local port info
- before registering
+	b=gt4f3IOD4IuwUVuw6mVnQuY2s4yMXsjAC/HAtJobBotIzqQ4VS5PbIKErIfMiI5/J
+	 BvamN3m+EtkapmP5opnd5r49QeqG8DqUIZqRg9mZONFQE+U23vKemBjYI15ThNXi3J
+	 uyDGiUQQnskKj/8tx/ECPec7hSkR6StbrxIbeJrblfnQ9ETSxoz23NUI0qu5LnbQxq
+	 pZ8q5EQTL2SEFHuLSXJWw0yIsYDdzpR6a3SN83zB5bLEHaz+nTM4z4zxYTSVNHJgyg
+	 Hp192B+Ddkd79NBjuajBeB7xhMDgNOm0+lCSj0RBr6CYfEBz9RY3wrsS+YmUFPLzv+
+	 tJda+9BxNCtiQ==
+To: Runyu Xiao <runyu.xiao@seu.edu.cn>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>,  "James E . J . Bottomley"
+ <James.Bottomley@HansenPartnership.com>,  "Martin K . Petersen"
+ <martin.petersen@oracle.com>,  linux-scsi@vger.kernel.org,
+  linux-kernel@vger.kernel.org,  stable@vger.kernel.org,  Jianhao Xu
+ <jianhao.xu@seu.edu.cn>
+Subject: Re: [PATCH] scsi: pm8001: use rollback index when freeing MSI-X
+ vectors
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-In-Reply-To: <SJ0PR11MB5896ACCB95853799B658E896C3A02@SJ0PR11MB5896.namprd11.prod.outlook.com>
-	(Karan Tilak Kumar's message of "Mon, 24 Aug 2026 09:54:04 +0000")
-Message-ID: <yq1o6elk8wy.fsf@mail.kernel.org>
-References: <20260819114242.3598034-1-lilinmao@kylinos.cn>
-	<20260819114242.3598034-2-lilinmao@kylinos.cn>
-	<SJ0PR11MB5896AC03937115745995EFDFC3A12@SJ0PR11MB5896.namprd11.prod.outlook.com>
-	<SJ0PR11MB58963CA2B53ABA6D1E89A0B1C3A12@SJ0PR11MB5896.namprd11.prod.outlook.com>
-	<SJ0PR11MB5896ACCB95853799B658E896C3A02@SJ0PR11MB5896.namprd11.prod.outlook.com>
-Date: Fri, 28 Aug 2026 21:33:50 -0400
+In-Reply-To: <20260824113618.2239100-1-runyu.xiao@seu.edu.cn> (Runyu Xiao's
+	message of "Mon, 24 Aug 2026 19:36:18 +0800")
+Message-ID: <yq1ik4tk8r6.fsf@mail.kernel.org>
+References: <20260824113618.2239100-1-runyu.xiao@seu.edu.cn>
+Date: Fri, 28 Aug 2026 21:36:57 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,12 +49,16 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Karan,
+Runyu,
 
-> Thanks for the change. It looks good.
+> pm8001_request_msix() unwinds previously registered handlers with
+> free_irq() when request_irq() fails. The rollback loop uses the
+> failing index i for every iteration instead of the already registered
+> vector index j.
 >
-> Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
-> Reviewed-by: Karan Tilak Kumar <kartilak@cisco.com>
+> That passes the wrong IRQ/dev_id pair to free_irq() and leaves the
+> earlier handlers installed. Use j for both pci_irq_vector() and the
+> matching irq_vector entry in the rollback loop.
 
 Applied to 7.3/scsi-staging, thanks!
 
