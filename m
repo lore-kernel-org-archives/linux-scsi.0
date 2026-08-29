@@ -1,115 +1,159 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCA5F283FE5
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Aug 2026 03:36:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FBAD26ED4F
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Aug 2026 03:56:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787974590; cv=none; b=tCtsXu4k3kHBI4c6zP7oHhxm9H+MutKZ6O1/C+DD32rXT6qXQapwf9JB8WUqezPoYCMk0eIzrCJZViWXYlXz7HjtH8dvkwh24mznwpsP9qFDBPombIRc4u2VopHB77429UIAlYYMyAAIKqfU372m7ZOZeBvtaCkY/d65FVHPPrc=
+	t=1787975764; cv=none; b=KWfr2rmUz7YRZuk0lQGqIxSF2lDc+nCkppNOWwHPfwNtP83e8Xlsa503YFUVBE8LR2WbjNvihUifCg756xUvnsjolJ41NvFiZ3qFYTFFQOTHcmUCEPhk5oRSIt37grIle5SgQlCSxqixT/zAZWWtKJlbAlqznh9KuLt1aWMV00c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787974590; c=relaxed/simple;
-	bh=J3eWuEcZmUueuwoXfs2yxX4pWOmfCrhM1t36LD4doag=;
+	s=arc-20240116; t=1787975764; c=relaxed/simple;
+	bh=g0rjEiLJKLsXFWOZq4DAegRT3E/upteTCckWTpXwYYI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=B7y2pQtE+686tdtawtYQF9VnSyO5C4LEeHQzyuLqC9UMWhK0jzSoLAGvfUrp5fVsKbpxul5ENcNEenIQB25Qe63Rvu3ETI3mB+r8DyWqoI6urMz2eaWQmtm8BpMzukmEjhYyVUzntZA8Y/Vya2Wvige9LzUIPah2+918sKOIFL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UFtWz+Ke; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=sWQPlBk6YhKNcti0FK6reGrir/41PZ5lu95o4VdCxEzD8ILQBZiI63qBWEvktFjrgTd7APoYHyp5GLyuw2BiV6vM2S2An7tj6iQNVpazfIzldRKnLiPFmv4Eb06hvcIOyvH+IEliB7DPqBCJLfXwultyY4H7osJ9KNkCt8uygq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K5fIbqSb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UFtWz+Ke"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9802D1F000E9;
-	Sat, 29 Aug 2026 03:36:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K5fIbqSb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6BFA1F000E9;
+	Sat, 29 Aug 2026 03:56:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787974588;
-	bh=r/Fwn2ky7nB/MU0L5pHBCLtoYEwzN21SZ4tqhiqLMPk=;
+	s=k20260515; t=1787975762;
+	bh=qP5c31vBTgy6QRYC5gh9qvr+/lur8xNOUxojzdsQego=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UFtWz+Ke+d3ylpXBuZ5+VN9DC5iz0lKq0PbUU/e5YTnSUsBKpZJD/z9Dj5ZILMhso
-	 4R02HMZ+wRMxxhMxKsOC/mPBZFTI/311HNoFh4rjOIE7BTmfJDzF9ackeoehhS2AJG
-	 uaFyVrpUKfAwZg1AMqQ30ItDBaMP+1jHAWL0RXKVlq+P6dGPsRXsDswLHZdNzWvxxv
-	 F3EmgTaT+EBNV4KT0XHZdre23c3OHTiLovdhj2vTwxzKFsTMYcf378EV3ngFa7fCzL
-	 hPkt39MjGp+8+PDvniDfFCDDz8FNbiyfj3gggLLMl9kBGoMDmylkFu75YunV3E19+R
-	 Jca7XrCZDcn2w==
+	b=K5fIbqSbgYZUxFPOa+sPjfdS32Ta9/tKAMPIUGkct/1jPdngHbzpT+nT5j4m6NFj6
+	 zGqGF22ZB6S1VoP3g/57OFMfr+SCE3qjpYGU3Nq2/a5hflfPwM3uACb7c6LYuQIes+
+	 fdBHDqyw2GBZhc/oN0krFmUQPfPUg6Vl+MiOqf3G7uupj2FSoC3V43zmLTfXL+grIs
+	 dZ5PxDulV6e7BHFnh3QhUohF72wZ6XpgH5nsKJ1AAoUeH4sB7UHcWFGDLzKcURsSV1
+	 srURhPqw0CpEWObDD+3Iuyva9KuS0GHHV5dRpFHpPUZOl+YVoK4drj/E0XhPLOK85Q
+	 wFRlX+RWV8kzQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/3] scsi: hisi_sas: Fix incorrect delay values from
- magic-number cleanup
+Subject: Re: [PATCH 2/3] scsi: hisi_sas: Clear PHY error counts on phyup
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Xingui Yang" <yangxingui@huawei.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260829032858.1661019-2-yangxingui@huawei.com>
+In-Reply-To: <20260829032858.1661019-3-yangxingui@huawei.com>
 References: <20260829032858.1661019-1-yangxingui@huawei.com>
- <20260829032858.1661019-2-yangxingui@huawei.com>
+ <20260829032858.1661019-3-yangxingui@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 29 Aug 2026 03:36:28 +0000
-Message-Id: <20260829033628.9802D1F000E9@smtp.kernel.org>
+Date: Sat, 29 Aug 2026 03:56:02 +0000
+Message-Id: <20260829035602.C6BFA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Hardware callback executes a 50ms busy-wait delay while holding an=
- IRQ-disabled spinlock, severely degrading system latency and risking watch=
-dog timeouts.
+- [High] Log noise suppression logic incorrectly uses cumulative software c=
+ounters, failing to suppress logs after the first error.
+- [High] The patch fails to clear intermediate link establishment errors be=
+cause the interrupt handler processes them before phyup.
+- [Medium] Clearing CHL_INT2 interrupt statuses in phy_up_v3_hw races with =
+the channel interrupt handler, causing spurious warnings.
+- [Medium] Concurrent lockless reads of read-to-clear hardware registers ca=
+use non-deterministic error accounting.
 --
 
-commit e8ddd9bef8daf2db411c3a4e51016ed28809f393
+commit 7c1564a2ad8d2d14ea2f5907d02dc785640e35d4
 Author: Xingui Yang <yangxingui@huawei.com>
 
-scsi: hisi_sas: Fix incorrect delay values from magic-number cleanup
+scsi: hisi_sas: Clear PHY error counts on phyup
 
-This commit fixes incorrect delay values in the hisi_sas v3 hardware driver
-that were introduced during a magic-number cleanup. It adds separate macros
-for each delay site to restore their original timings of 50us, 50ms, and
-10ms respectively.
+This commit clears PHY intermediate error counts generated during link
+establishment upon a successful phyup. It aims to prevent logging of stale
+error data by clearing hardware counters and only printing errors when they
+are non-zero.
 
 > diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_s=
 as/hisi_sas_v3_hw.c
-> index 8a2500993e19d..9c363e2373538 100644
+> index 9c363e2373538..f7e259aff3df1 100644
 > --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
 > +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> @@ -1061,6 +1061,19 @@ static void enable_phy_v3_hw(struct hisi_hba *hisi=
+_hba, int phy_no)
+>  	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
+>  }
+> =20
+> +static void clear_phy_err_cnt_v3_hw(struct hisi_hba *hisi_hba, int phy_n=
+o)
+> +{
+> +	static const u32 msk =3D BIT(CHL_INT2_RX_DISP_ERR_OFF) |
+> +			       BIT(CHL_INT2_RX_CODE_ERR_OFF) |
+> +			       BIT(CHL_INT2_RX_INVLD_DW_OFF);
+> +
+> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_INVLD_DW);
+> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DISP_ERR);
+> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_CODE_ERR);
+
+[Severity: Medium]
+Could these lockless reads of read-to-clear hardware registers cause
+non-deterministic error accounting?
+
+If this runs concurrently with the accounting reads in phy_get_events_v3_hw=
+()
+from the interrupt handler or sysfs, it seems one of the readers will consu=
+me
+the register and get zero, leading to lost or corrupted statistics.
+
+> +
+> +	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2, msk);
+> +}
+
+[Severity: Medium]
+Will clearing the CHL_INT2 interrupt statuses here race with the channel
+interrupt handler?
+
+When phy_up_v3_hw() calls this function, it writes to CHL_INT2 without
+synchronization or masking. If handle_chl_int2_v3_hw() is executing
+concurrently on another CPU, it might read CHL_INT2 immediately after it was
+cleared. This would result in a read of zero and trigger the spurious warni=
+ng:
+"channel int 2 received with status bits cleared".
 
 [ ... ]
 
-> @@ -1072,7 +1075,7 @@ static void disable_phy_v3_hw(struct hisi_hba *hisi=
-_hba, int phy_no)
->  	cfg &=3D ~PHY_CFG_ENA_MSK;
->  	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
+> @@ -1673,6 +1682,8 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct =
+hisi_hba *hisi_hba)
+>  	phy->phy_attached =3D 1;
+>  	spin_unlock(&phy->lock);
 > =20
-> -	mdelay(HISI_SAS_DELAY_FOR_PHY_DISABLE);
-> +	mdelay(DISABLE_PHY_DELAY_MS);
+> +	clear_phy_err_cnt_v3_hw(hisi_hba, phy_no);
+> +
 
 [Severity: High]
-This is a pre-existing issue, but is it safe to use a 50ms busy-wait delay
-here while holding an IRQ-disabled spinlock?
+Does this clear the hardware counters too late in the process?
 
-Looking at hisi_sas_phy_enable() in drivers/scsi/hisi_sas/hisi_sas_main.c,
-the hardware callback is invoked with interrupts disabled:
-
-hisi_sas_phy_enable() {
-        ...
-        spin_lock_irqsave(&phy->lock, flags);
-        if (enable) {
-                ...
-        } else {
-                phy->negotiated_linkrate =3D SAS_PHY_DISABLED;
-                hisi_hba->hw->phy_disable(hisi_hba, phy_no);
-        }
-        ...
-}
-
-Since hisi_hba->hw->phy_disable resolves to disable_phy_v3_hw(), this will
-block the CPU with interrupts disabled for 50ms. When looping over multiple
-PHYs in hisi_sas_stop_phys(), this delay can multiply, potentially causing
-severe scheduling latency, dropped interrupts, or triggering softlockup
-panics.
-
-Could this delay be moved outside the spinlock, or could we use a sleepable
-context here instead?
+Since the CHL_INT2 error interrupts are unmasked by default during link
+establishment, any intermediate error will immediately trigger an interrupt.
+The handle_chl_int2_v3_hw() handler will process and log these errors before
+phy_up_v3_hw() executes this cleanup, which appears to miss the goal of
+suppressing those intermediate logs.
 
 [ ... ]
+
+> @@ -1926,15 +1937,18 @@ static void handle_chl_int2_v3_hw(struct hisi_hba=
+ *hisi_hba, int phy_no)
+> =20
+>  		phy_get_events_v3_hw(hisi_hba, phy_no);
+> =20
+> -		if (irq_value & BIT(CHL_INT2_RX_INVLD_DW_OFF))
+> +		if ((irq_value & BIT(CHL_INT2_RX_INVLD_DW_OFF)) &&
+> +		    sphy->invalid_dword_count > 0)
+
+[Severity: High]
+Does checking the cumulative software counter (sphy->invalid_dword_count)
+break the log suppression logic?
+
+Once a single link error occurs, this lifetime counter remains permanently
+greater than zero. Subsequent link events will then evaluate this condition
+to true and print the stale lifetime total, even if the new hardware error
+count is zero. Should this be checking a newly read hardware count instead?
+
+>  			dev_info(dev, "phy%d invalid dword cnt:   %u\n", phy_no,
+>  				 sphy->invalid_dword_count);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260829032858.1661=
-019-1-yangxingui@huawei.com?part=3D1
+019-1-yangxingui@huawei.com?part=3D2
