@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FBAD26ED4F
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Aug 2026 03:56:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B694A199E89
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Aug 2026 03:56:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787975764; cv=none; b=KWfr2rmUz7YRZuk0lQGqIxSF2lDc+nCkppNOWwHPfwNtP83e8Xlsa503YFUVBE8LR2WbjNvihUifCg756xUvnsjolJ41NvFiZ3qFYTFFQOTHcmUCEPhk5oRSIt37grIle5SgQlCSxqixT/zAZWWtKJlbAlqznh9KuLt1aWMV00c=
+	t=1787975806; cv=none; b=E0J3C42ppf6/05lGGzE2HcX7EE0z511iTpLvS/Sb60Flyn0Y8ylWHp9jmUpJbEs7hbWhEO/sVgj1j08HZ98mn45KKwTTpDrO2pw5CXLb6DFg5sTHCvkqeOWVKeQ5Xg8WY49tzcVCaNkAlG49s3X/+nTTZMOTK7dLN7EkfuVtGKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787975764; c=relaxed/simple;
-	bh=g0rjEiLJKLsXFWOZq4DAegRT3E/upteTCckWTpXwYYI=;
+	s=arc-20240116; t=1787975806; c=relaxed/simple;
+	bh=1lCDRr+gC4H90EXd6Qxjzh9eF6064D/FjYBvqpOOrkM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sWQPlBk6YhKNcti0FK6reGrir/41PZ5lu95o4VdCxEzD8ILQBZiI63qBWEvktFjrgTd7APoYHyp5GLyuw2BiV6vM2S2An7tj6iQNVpazfIzldRKnLiPFmv4Eb06hvcIOyvH+IEliB7DPqBCJLfXwultyY4H7osJ9KNkCt8uygq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K5fIbqSb; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=cyvcS2kWmC3IsfjUerMwmAJaRKgFWh9+XBTHDS6Pj4ogar3Vgy4JFSkqiId06RSUblTD2tbcTQfcaPecRdiZasxqSQneFjdNkoJhWLsjmmeuDxwLaHSTZfAuBZ5d4jvPk2TE9n/YJ6Z5/NihMM4dquqJeDCc2HU4JcCasi+H4mg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fTGu7MtA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K5fIbqSb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6BFA1F000E9;
-	Sat, 29 Aug 2026 03:56:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fTGu7MtA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32ED11F000E9;
+	Sat, 29 Aug 2026 03:56:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787975762;
-	bh=qP5c31vBTgy6QRYC5gh9qvr+/lur8xNOUxojzdsQego=;
+	s=k20260515; t=1787975804;
+	bh=BVLHG+iyzy7MidAyxNUXt298bYlOXcBVc4lCzZGPYto=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=K5fIbqSbgYZUxFPOa+sPjfdS32Ta9/tKAMPIUGkct/1jPdngHbzpT+nT5j4m6NFj6
-	 zGqGF22ZB6S1VoP3g/57OFMfr+SCE3qjpYGU3Nq2/a5hflfPwM3uACb7c6LYuQIes+
-	 fdBHDqyw2GBZhc/oN0krFmUQPfPUg6Vl+MiOqf3G7uupj2FSoC3V43zmLTfXL+grIs
-	 dZ5PxDulV6e7BHFnh3QhUohF72wZ6XpgH5nsKJ1AAoUeH4sB7UHcWFGDLzKcURsSV1
-	 srURhPqw0CpEWObDD+3Iuyva9KuS0GHHV5dRpFHpPUZOl+YVoK4drj/E0XhPLOK85Q
-	 wFRlX+RWV8kzQ==
+	b=fTGu7MtASl9PcYBqcHUslXeaVI4h3OZdwh8m9P8BKVrhn9OghobZZu14OynksZ9N7
+	 EDQ/aBdFIZ9zPybIVebBabTlS/I/WZ70t6MalSFyweYGr6HvCmftRwrNAV0c2k8ZL1
+	 9giD47cE+ueU5R5tKcUMur6YmELa5pbNC6MWy7MUJRQ9dc6zGEd1mc+dXeV+dzstZo
+	 RvS/RS3LpkDZDXxDGQorZFdDugICSytM/TnWjvlUNMC7QLZMysvkKNI40NsCo/J1oE
+	 Pr2LmuTunp6wxzvRJFwbMWZWHWCi3i05LcpwbcgT+PiU0ZQsjtLaiK3OrVh9zlhmRh
+	 ySg3wgnqhPYuA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/3] scsi: hisi_sas: Clear PHY error counts on phyup
+Subject: Re: [PATCH 3/3] scsi: hisi_sas: Fix spinup failure for SAS SSP
+ devices in Active_Wait state
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Xingui Yang" <yangxingui@huawei.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260829032858.1661019-3-yangxingui@huawei.com>
+In-Reply-To: <20260829032858.1661019-4-yangxingui@huawei.com>
 References: <20260829032858.1661019-1-yangxingui@huawei.com>
- <20260829032858.1661019-3-yangxingui@huawei.com>
+ <20260829032858.1661019-4-yangxingui@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 29 Aug 2026 03:56:02 +0000
-Message-Id: <20260829035602.C6BFA1F000E9@smtp.kernel.org>
+Date: Sat, 29 Aug 2026 03:56:43 +0000
+Message-Id: <20260829035644.32ED11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,114 +47,157 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] Log noise suppression logic incorrectly uses cumulative software c=
-ounters, failing to suppress logs after the first error.
-- [High] The patch fails to clear intermediate link establishment errors be=
-cause the interrupt handler processes them before phyup.
-- [Medium] Clearing CHL_INT2 interrupt statuses in phy_up_v3_hw races with =
-the channel interrupt handler, causing spurious warnings.
-- [Medium] Concurrent lockless reads of read-to-clear hardware registers ca=
-use non-deterministic error accounting.
+
+New issues:
+- [High] The asynchronous work `hisi_sas_spinup_notify_work` accesses MMIO =
+registers without acquiring a runtime PM reference, potentially accessing u=
+nclocked hardware and causing bus faults.
+
+Pre-existing issues:
+- [Critical] Integer overflow in `min_t` causes a massive out-of-bounds `me=
+mcpy` when processing malicious SAS sense data.
+- [High] Read-modify-write race on the `SL_CONTROL` register between proces=
+s context and hardirq context can lead to lost hardware state updates.
+- [High] Race condition in suspend path allows hardware access after device=
+ is disabled due to improper `flush_workqueue()` ordering.
 --
 
-commit 7c1564a2ad8d2d14ea2f5907d02dc785640e35d4
+commit 02edb194a91901ddad40e4d837a58a4131b5ffa4
 Author: Xingui Yang <yangxingui@huawei.com>
 
-scsi: hisi_sas: Clear PHY error counts on phyup
+scsi: hisi_sas: Fix spinup failure for SAS SSP devices in Active_Wait state
 
-This commit clears PHY intermediate error counts generated during link
-establishment upon a successful phyup. It aims to prevent logging of stale
-error data by clearing hardware counters and only printing errors when they
-are non-zero.
+This commit fixes a spinup failure for SAS SSP devices powered up with RNOT=
+=3D1.
+It parses sense data in the driver's slot completion path and queues a defe=
+rred
+work item to notify the phy to spin up the device.
 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_s=
-as/hisi_sas_v3_hw.c
-> index 9c363e2373538..f7e259aff3df1 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> @@ -1061,6 +1061,19 @@ static void enable_phy_v3_hw(struct hisi_hba *hisi=
-_hba, int phy_no)
->  	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sa=
+s/hisi_sas_main.c
+> index 944ce19ae2fc1..1cb578e6ae593 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -996,10 +996,22 @@ static void hisi_sas_phyup_pm_work(struct work_stru=
+ct *work)
+>  	pm_runtime_put_sync(dev);
 >  }
 > =20
-> +static void clear_phy_err_cnt_v3_hw(struct hisi_hba *hisi_hba, int phy_n=
-o)
+> +static void hisi_sas_spinup_notify_work(struct work_struct *work)
 > +{
-> +	static const u32 msk =3D BIT(CHL_INT2_RX_DISP_ERR_OFF) |
-> +			       BIT(CHL_INT2_RX_CODE_ERR_OFF) |
-> +			       BIT(CHL_INT2_RX_INVLD_DW_OFF);
+> +	struct hisi_sas_phy *phy =3D
+> +		container_of(work, typeof(*phy), works[HISI_PHYE_SPINUP_NOTIFY]);
+> +	struct hisi_hba *hisi_hba =3D phy->hisi_hba;
+> +	int phy_no =3D phy->sas_phy.id;
 > +
-> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_INVLD_DW);
-> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DISP_ERR);
-> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_CODE_ERR);
+> +	hisi_hba->hw->sl_notify_ssp(hisi_hba, phy_no);
 
-[Severity: Medium]
-Could these lockless reads of read-to-clear hardware registers cause
-non-deterministic error accounting?
+[Severity: High]
+Could this MMIO access happen while the device is in a suspended state?
 
-If this runs concurrently with the accounting reads in phy_get_events_v3_hw=
-()
-from the interrupt handler or sysfs, it seems one of the readers will consu=
-me
-the register and get zero, leading to lost or corrupted statistics.
+When hisi_sas_spinup_notify() queues the HISI_PHYE_SPINUP_NOTIFY work, it
+does not take a runtime PM reference on the HBA. Once the completed SAS task
+finishes, the block layer can release its runtime PM reference on the devic=
+e.
 
-> +
-> +	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2, msk);
+If the system is under load and the work execution is delayed beyond the
+autosuspend timeout, the host controller might enter runtime suspend. When
+hisi_sas_spinup_notify_work() eventually executes, it calls
+hisi_hba->hw->sl_notify_ssp(), which directly reads and writes hardware
+registers.
+
+Would it be safer to wrap this hardware access with pm_runtime_get_sync()
+and pm_runtime_put_sync() to prevent synchronous bus faults or invalid
+reads on unclocked hardware?
+
+[Severity: High]
+This is a pre-existing issue, but does sl_notify_ssp() contain a
+read-modify-write race with hardirq contexts?
+
+For example, in sl_notify_ssp_v3_hw() (called here via workqueue in process
+context), the code performs a lockless read-modify-write on the SL_CONTROL
+register:
+
+sl_control =3D hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
+sl_control |=3D SL_CONTROL_NOTIFY_EN_MSK;
+hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
+
+However, phy_down_v3_hw() (called from the int_phy_up_down_bcast_v3_hw
+hardirq handler) also performs a lockless read-modify-write on the same
+SL_CONTROL register. Since sl_notify_ssp_v3_hw() doesn't disable interrupts
+or hold a spinlock, can the interrupt fire exactly between its read and
+write, causing the interrupt's modification to be completely overwritten
+and lost?
+
+> +	dev_info(hisi_hba->dev, "spinup notify primitive on phy%d\n", phy_no);
 > +}
-
-[Severity: Medium]
-Will clearing the CHL_INT2 interrupt statuses here race with the channel
-interrupt handler?
-
-When phy_up_v3_hw() calls this function, it writes to CHL_INT2 without
-synchronization or masking. If handle_chl_int2_v3_hw() is executing
-concurrently on another CPU, it might read CHL_INT2 immediately after it was
-cleared. This would result in a read of zero and trigger the spurious warni=
-ng:
-"channel int 2 received with status bits cleared".
-
-[ ... ]
-
-> @@ -1673,6 +1682,8 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct =
-hisi_hba *hisi_hba)
->  	phy->phy_attached =3D 1;
->  	spin_unlock(&phy->lock);
-> =20
-> +	clear_phy_err_cnt_v3_hw(hisi_hba, phy_no);
 > +
+>  static const work_func_t hisi_sas_phye_fns[HISI_PHYES_NUM] =3D {
+>  	[HISI_PHYE_PHY_UP] =3D hisi_sas_phyup_work,
+>  	[HISI_PHYE_LINK_RESET] =3D hisi_sas_linkreset_work,
+>  	[HISI_PHYE_PHY_UP_PM] =3D hisi_sas_phyup_pm_work,
+> +	[HISI_PHYE_SPINUP_NOTIFY] =3D hisi_sas_spinup_notify_work,
 
 [Severity: High]
-Does this clear the hardware counters too late in the process?
+This is a pre-existing issue, but could there be a race condition in the
+suspend path that executes newly queued work on disabled hardware?
 
-Since the CHL_INT2 error interrupts are unmasked by default during link
-establishment, any intermediate error will immediately trigger an interrupt.
-The handle_chl_int2_v3_hw() handler will process and log these errors before
-phy_up_v3_hw() executes this cleanup, which appears to miss the goal of
-suppressing those intermediate logs.
+In _suspend_v3_hw(), the workqueue is flushed before threaded IRQs are
+silenced:
+
+flush_workqueue(hisi_hba->wq);
+interrupt_disable_v3_hw(hisi_hba);
+
+Because the driver uses threaded IRQs, an interrupt could have already woken
+the IRQ thread before interrupt_disable_v3_hw() runs. The IRQ thread (calli=
+ng
+slot_complete_v3_hw()) can queue new work items like HISI_PHYE_SPINUP_NOTIFY
+to hisi_hba->wq after the flush_workqueue() call has returned.
+
+Will these newly queued works then execute and access hardware registers
+concurrently with or after disable_host_v3_hw(), leading to illegal
+accesses on disabled or suspended hardware?
 
 [ ... ]
 
-> @@ -1926,15 +1937,18 @@ static void handle_chl_int2_v3_hw(struct hisi_hba=
- *hisi_hba, int phy_no)
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_s=
+as/hisi_sas_v1_hw.c
+> index fa94d7110714f..9d89db6e8716e 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+> @@ -1272,6 +1272,9 @@ static void slot_complete_v1_hw(struct hisi_hba *hi=
+si_hba,
+>  				&status_buffer->iu[0];
 > =20
->  		phy_get_events_v3_hw(hisi_hba, phy_no);
-> =20
-> -		if (irq_value & BIT(CHL_INT2_RX_INVLD_DW_OFF))
-> +		if ((irq_value & BIT(CHL_INT2_RX_INVLD_DW_OFF)) &&
-> +		    sphy->invalid_dword_count > 0)
+>  		sas_ssp_task_response(dev, task, iu);
 
-[Severity: High]
-Does checking the cumulative software counter (sphy->invalid_dword_count)
-break the log suppression logic?
+[Severity: Critical]
+This isn't a bug introduced by this patch, but is there a potential integer
+overflow leading to a buffer overflow when sas_ssp_task_response() processes
+malicious SAS sense data?
 
-Once a single link error occurs, this lifetime counter remains permanently
-greater than zero. Subsequent link events will then evaluate this condition
-to true and print the stale lifetime total, even if the new hardware error
-count is zero. Should this be checking a newly read hardware count instead?
+In sas_ssp_task_response() (called here), iu->sense_data_len is converted
+to CPU byte order and bounded using min_t():
 
->  			dev_info(dev, "phy%d invalid dword cnt:   %u\n", phy_no,
->  				 sphy->invalid_dword_count);
+tstat->buf_valid_size =3D
+    min_t(int, SAS_STATUS_BUF_SIZE,
+          be32_to_cpu(iu->sense_data_len));
+
+Because both arguments are cast to int, if a malicious or malformed device
+provides a sense_data_len like 0xFFFFFFFF, the cast results in -1. Since
+-1 < 96, min_t() returns -1.
+
+When this -1 is passed to the subsequent memcpy(tstat->buf, iu->sense_data,
+tstat->buf_valid_size), it is interpreted as a massive size_t value.=20
+Can this cause an immediate out-of-bounds read from the DMA buffer and a=20
+massive out-of-bounds write to kernel memory?
+
+> +		if (ts->stat =3D=3D SAS_SAM_STAT_CHECK_CONDITION &&
+> +		    !dev_parent_is_expander(device))
+> +			hisi_sas_spinup_notify(hisi_hba, task);
+>  		break;
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260829032858.1661=
-019-1-yangxingui@huawei.com?part=3D2
+019-1-yangxingui@huawei.com?part=3D3
