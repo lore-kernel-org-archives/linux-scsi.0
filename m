@@ -1,203 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B694A199E89
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Aug 2026 03:56:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 782C72D061C;
+	Sat, 29 Aug 2026 07:44:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787975806; cv=none; b=E0J3C42ppf6/05lGGzE2HcX7EE0z511iTpLvS/Sb60Flyn0Y8ylWHp9jmUpJbEs7hbWhEO/sVgj1j08HZ98mn45KKwTTpDrO2pw5CXLb6DFg5sTHCvkqeOWVKeQ5Xg8WY49tzcVCaNkAlG49s3X/+nTTZMOTK7dLN7EkfuVtGKc=
+	t=1787989446; cv=none; b=oSOcrd0KHlcHqCUlsTz+QZZ3K9baqVuGaEJDbOFQNEMO3pbEF5yl7vLdw90Jivq/oPf0TMQ1YXexZ25GToLaxP6W03vD0tBYRg1lGzueZFOrutxDsCnYjumFAkiko0+VvCkcKS4o84CV1RLieyHUKT0LKnXmoSC8m2bDm0mmBc0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787975806; c=relaxed/simple;
-	bh=1lCDRr+gC4H90EXd6Qxjzh9eF6064D/FjYBvqpOOrkM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cyvcS2kWmC3IsfjUerMwmAJaRKgFWh9+XBTHDS6Pj4ogar3Vgy4JFSkqiId06RSUblTD2tbcTQfcaPecRdiZasxqSQneFjdNkoJhWLsjmmeuDxwLaHSTZfAuBZ5d4jvPk2TE9n/YJ6Z5/NihMM4dquqJeDCc2HU4JcCasi+H4mg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fTGu7MtA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787989446; c=relaxed/simple;
+	bh=juVydeC6ZRo7gPFEtzN8jHuzip7JwcvpVU/Pl3ADBB4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=S6bIkDTMNmbXDJl8Q56Fe/6fDV0XuYnHpvFihOmtNph0h/iFAflL/KUVewf76r0ZlmsotWTkssRgxTc4YMOqvh0JPyneLr1myY4+Z1bLprg4ajgUuw84KCWTy3/F7+IzPDipjlHj1MU6vyrPZauBMRP3HhTUcAXpA7luElY38QE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=PdlgoCtb; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fTGu7MtA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32ED11F000E9;
-	Sat, 29 Aug 2026 03:56:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787975804;
-	bh=BVLHG+iyzy7MidAyxNUXt298bYlOXcBVc4lCzZGPYto=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fTGu7MtASl9PcYBqcHUslXeaVI4h3OZdwh8m9P8BKVrhn9OghobZZu14OynksZ9N7
-	 EDQ/aBdFIZ9zPybIVebBabTlS/I/WZ70t6MalSFyweYGr6HvCmftRwrNAV0c2k8ZL1
-	 9giD47cE+ueU5R5tKcUMur6YmELa5pbNC6MWy7MUJRQ9dc6zGEd1mc+dXeV+dzstZo
-	 RvS/RS3LpkDZDXxDGQorZFdDugICSytM/TnWjvlUNMC7QLZMysvkKNI40NsCo/J1oE
-	 Pr2LmuTunp6wxzvRJFwbMWZWHWCi3i05LcpwbcgT+PiU0ZQsjtLaiK3OrVh9zlhmRh
-	 ySg3wgnqhPYuA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/3] scsi: hisi_sas: Fix spinup failure for SAS SSP
- devices in Active_Wait state
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Xingui Yang" <yangxingui@huawei.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260829032858.1661019-4-yangxingui@huawei.com>
-References: <20260829032858.1661019-1-yangxingui@huawei.com>
- <20260829032858.1661019-4-yangxingui@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 29 Aug 2026 03:56:43 +0000
-Message-Id: <20260829035644.32ED11F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="PdlgoCtb"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67T57gFX297147;
+	Sat, 29 Aug 2026 07:44:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=L96cf7qs+bP0PlwOJ/I2cBM+xCrriJi0jw/
+	fOMOD68M=; b=PdlgoCtbf6+NWHvuZrpeh4JtYHiNkuYeYfdMFp6RtsXxcoTb9vE
+	iUV8Lg8nj3+GNDguzADQRQEyRCMIjnBqoqeYenvSHxM4WL4x8K1/cLq/TfrOZLV2
+	49gMFvrucxoYUAt+M5FeD9kHlWreaPdh4gEIKurA2Eh740L4cS/xxPK6SfEuRms/
+	IFDFjtKW6vGERQ7bqIIw24+n6rVs3BAvlsNw6LsW2WEX1CT/aN/pgBvgkE5IZAvo
+	zGiJ9suz+IKHVxTQqoYGPjrsTtxsQwIMkGwR/SUuPTLjy/8aMT5M1wvVilMsAEHe
+	BjAs/1qyvF76wIbKu4F25BsqAAb+QNZHErg==
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gbrq809qg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 29 Aug 2026 07:44:01 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 67T7hwsl002260;
+	Sat, 29 Aug 2026 07:43:58 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 4gbrgh21tx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 29 Aug 2026 07:43:58 +0000 (GMT)
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 67T7hv7U002255;
+	Sat, 29 Aug 2026 07:43:57 GMT
+Received: from hu-devc-hyd-u22-c.qualcomm.com ([10.213.101.157])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 67T7hviQ002254
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 29 Aug 2026 07:43:57 +0000 (GMT)
+Received: by hu-devc-hyd-u22-c.qualcomm.com (Postfix, from userid 2342877)
+	id C234363E; Sat, 29 Aug 2026 13:13:56 +0530 (+0530)
+From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+To: krzk+dt@kernel.org, robh@kernel.org, conor+dt@kernel.org,
+        andersson@kernel.org, konradybcio@kernel.org, mani@kernel.org,
+        James.Bottomley@HansenPartnership.com, mkp@kernel.org
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+Subject: [PATCH V1 0/2] scsi: ufs: ufs-qcom: Add specified gear support for multi gear scaling
+Date: Sat, 29 Aug 2026 13:13:53 +0530
+Message-Id: <20260829074355.946543-1-nitin.rawat@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-GUID: hUtT9nh1EsPqdNKpBLybkUBCGkFb8r3O
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODI5MDA2NSBTYWx0ZWRfX0tze1WiWA4vv
+ di9tOGGNGGaxX83JtYC3NB/TOBEjcORAOrei9lvxmGHy1/NWDznABmQu4+6Aiiaa157mwU+7yPf
+ /6KYfu62cfUmFHoZJUN+5eDpMtwXtBY=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI5MDA2NSBTYWx0ZWRfX+2Kw4x577/k6
+ MEJYl1cy/lJhzGZcFgcM9HX4GGKm2vDi+VjfCICQBbx+Alj9xZ1voVbi2EmCJBpYtgmv3NM7tsu
+ dQowB3YJpfmWbSeEOySFXc4/nf7XxRn2si/EGIqTWxNUe9QVseq+wFznZvaOnPyCeBe5rATgVem
+ 4BxhMFmu1BeSde26UWh787CTgH9eBrI56YcCjaA247rBsucwrLWPk8xEfXkYkq2xC+BOFJQaw/U
+ oThPEpaKiba2RMLnS3VwgvOySDPOYuM2yrBbX2rW1NBhUdQzReNd2SvPiE/zD79pfJ3HbyPo6Kw
+ RpXM8dO+z87RF9nqWBr3/9/pqG9gDE87yPJ4vktKOimJDUIxgtViM/l9YVMOxRP5eNFrakhwo25
+ FWq9o83ievd8z5k3+ZQKfbxkpVp4V+vtgm2u64kQdQH9TMsbBruwh6rYuDiccmnVF36saiDlUfy
+ s2ctBE6RTraONOmWpdQ==
+X-Authority-Analysis: v=2.4 cv=ZOPnX37b c=1 sm=1 tr=0 ts=6a928dc1 cx=c_pps
+ a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=Sv0fKeRqtYgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=YMgV9FUhrdKAYTUUvYB2:22 a=wa_km6tUUitTdDDs5jcA:9
+X-Proofpoint-ORIG-GUID: hUtT9nh1EsPqdNKpBLybkUBCGkFb8r3O
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-29_02,2026-08-27_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 spamscore=0 malwarescore=0 lowpriorityscore=0
+ priorityscore=1501 adultscore=0 bulkscore=0 impostorscore=0 phishscore=0
+ clxscore=1011 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608290065
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+This patch series adds support for configuring UFS gear speeds on a
+per-OPP frequency basis for Qualcomm UFS host controllers, enabling
+more flexible multi-gear scaling.
 
-New issues:
-- [High] The asynchronous work `hisi_sas_spinup_notify_work` accesses MMIO =
-registers without acquiring a runtime PM reference, potentially accessing u=
-nclocked hardware and causing bus faults.
+On certain Qualcomm platforms, the UFS clock frequency and gear speed
+do not have a strict one-to-one mapping. To handle this, the first patch
+introduces a device tree based configuration mechanism using the
+"opp-level" property within the OPP table. This allows each supported
+operating frequency to be explicitly associated with a specific HS gear
+speed. When this property is absent, the driver gracefully falls back to
+the existing default frequency-to-gear lookup table.
 
-Pre-existing issues:
-- [Critical] Integer overflow in `min_t` causes a massive out-of-bounds `me=
-mcpy` when processing malicious SAS sense data.
-- [High] Read-modify-write race on the `SL_CONTROL` register between proces=
-s context and hardirq context can lead to lost hardware state updates.
-- [High] Race condition in suspend path allows hardware access after device=
- is disabled due to improper `flush_workqueue()` ordering.
+The second patch applies this configuration to the Hamoa platform,
+assigning the appropriate HS gear levels (G1, G3, G5) to the
+corresponding OPP frequency entries in the device tree.
+
+Nitin Rawat (1):
+  arm64: dts: qcom: Set specified gear configuration for Hamoa
+
+Ziqi Chen (1):
+  scsi: ufs: ufs-qcom: Add specified gear support for multi gear scaling
+
+ arch/arm64/boot/dts/qcom/hamoa.dtsi |  3 +++
+ drivers/ufs/host/ufs-qcom.c         | 30 +++++++++++++++++++++++++----
+ 2 files changed, 29 insertions(+), 4 deletions(-)
+
 --
+2.34.1
 
-commit 02edb194a91901ddad40e4d837a58a4131b5ffa4
-Author: Xingui Yang <yangxingui@huawei.com>
-
-scsi: hisi_sas: Fix spinup failure for SAS SSP devices in Active_Wait state
-
-This commit fixes a spinup failure for SAS SSP devices powered up with RNOT=
-=3D1.
-It parses sense data in the driver's slot completion path and queues a defe=
-rred
-work item to notify the phy to spin up the device.
-
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sa=
-s/hisi_sas_main.c
-> index 944ce19ae2fc1..1cb578e6ae593 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -996,10 +996,22 @@ static void hisi_sas_phyup_pm_work(struct work_stru=
-ct *work)
->  	pm_runtime_put_sync(dev);
->  }
-> =20
-> +static void hisi_sas_spinup_notify_work(struct work_struct *work)
-> +{
-> +	struct hisi_sas_phy *phy =3D
-> +		container_of(work, typeof(*phy), works[HISI_PHYE_SPINUP_NOTIFY]);
-> +	struct hisi_hba *hisi_hba =3D phy->hisi_hba;
-> +	int phy_no =3D phy->sas_phy.id;
-> +
-> +	hisi_hba->hw->sl_notify_ssp(hisi_hba, phy_no);
-
-[Severity: High]
-Could this MMIO access happen while the device is in a suspended state?
-
-When hisi_sas_spinup_notify() queues the HISI_PHYE_SPINUP_NOTIFY work, it
-does not take a runtime PM reference on the HBA. Once the completed SAS task
-finishes, the block layer can release its runtime PM reference on the devic=
-e.
-
-If the system is under load and the work execution is delayed beyond the
-autosuspend timeout, the host controller might enter runtime suspend. When
-hisi_sas_spinup_notify_work() eventually executes, it calls
-hisi_hba->hw->sl_notify_ssp(), which directly reads and writes hardware
-registers.
-
-Would it be safer to wrap this hardware access with pm_runtime_get_sync()
-and pm_runtime_put_sync() to prevent synchronous bus faults or invalid
-reads on unclocked hardware?
-
-[Severity: High]
-This is a pre-existing issue, but does sl_notify_ssp() contain a
-read-modify-write race with hardirq contexts?
-
-For example, in sl_notify_ssp_v3_hw() (called here via workqueue in process
-context), the code performs a lockless read-modify-write on the SL_CONTROL
-register:
-
-sl_control =3D hisi_sas_phy_read32(hisi_hba, phy_no, SL_CONTROL);
-sl_control |=3D SL_CONTROL_NOTIFY_EN_MSK;
-hisi_sas_phy_write32(hisi_hba, phy_no, SL_CONTROL, sl_control);
-
-However, phy_down_v3_hw() (called from the int_phy_up_down_bcast_v3_hw
-hardirq handler) also performs a lockless read-modify-write on the same
-SL_CONTROL register. Since sl_notify_ssp_v3_hw() doesn't disable interrupts
-or hold a spinlock, can the interrupt fire exactly between its read and
-write, causing the interrupt's modification to be completely overwritten
-and lost?
-
-> +	dev_info(hisi_hba->dev, "spinup notify primitive on phy%d\n", phy_no);
-> +}
-> +
->  static const work_func_t hisi_sas_phye_fns[HISI_PHYES_NUM] =3D {
->  	[HISI_PHYE_PHY_UP] =3D hisi_sas_phyup_work,
->  	[HISI_PHYE_LINK_RESET] =3D hisi_sas_linkreset_work,
->  	[HISI_PHYE_PHY_UP_PM] =3D hisi_sas_phyup_pm_work,
-> +	[HISI_PHYE_SPINUP_NOTIFY] =3D hisi_sas_spinup_notify_work,
-
-[Severity: High]
-This is a pre-existing issue, but could there be a race condition in the
-suspend path that executes newly queued work on disabled hardware?
-
-In _suspend_v3_hw(), the workqueue is flushed before threaded IRQs are
-silenced:
-
-flush_workqueue(hisi_hba->wq);
-interrupt_disable_v3_hw(hisi_hba);
-
-Because the driver uses threaded IRQs, an interrupt could have already woken
-the IRQ thread before interrupt_disable_v3_hw() runs. The IRQ thread (calli=
-ng
-slot_complete_v3_hw()) can queue new work items like HISI_PHYE_SPINUP_NOTIFY
-to hisi_hba->wq after the flush_workqueue() call has returned.
-
-Will these newly queued works then execute and access hardware registers
-concurrently with or after disable_host_v3_hw(), leading to illegal
-accesses on disabled or suspended hardware?
-
-[ ... ]
-
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_s=
-as/hisi_sas_v1_hw.c
-> index fa94d7110714f..9d89db6e8716e 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> @@ -1272,6 +1272,9 @@ static void slot_complete_v1_hw(struct hisi_hba *hi=
-si_hba,
->  				&status_buffer->iu[0];
-> =20
->  		sas_ssp_task_response(dev, task, iu);
-
-[Severity: Critical]
-This isn't a bug introduced by this patch, but is there a potential integer
-overflow leading to a buffer overflow when sas_ssp_task_response() processes
-malicious SAS sense data?
-
-In sas_ssp_task_response() (called here), iu->sense_data_len is converted
-to CPU byte order and bounded using min_t():
-
-tstat->buf_valid_size =3D
-    min_t(int, SAS_STATUS_BUF_SIZE,
-          be32_to_cpu(iu->sense_data_len));
-
-Because both arguments are cast to int, if a malicious or malformed device
-provides a sense_data_len like 0xFFFFFFFF, the cast results in -1. Since
--1 < 96, min_t() returns -1.
-
-When this -1 is passed to the subsequent memcpy(tstat->buf, iu->sense_data,
-tstat->buf_valid_size), it is interpreted as a massive size_t value.=20
-Can this cause an immediate out-of-bounds read from the DMA buffer and a=20
-massive out-of-bounds write to kernel memory?
-
-> +		if (ts->stat =3D=3D SAS_SAM_STAT_CHECK_CONDITION &&
-> +		    !dev_parent_is_expander(device))
-> +			hisi_sas_spinup_notify(hisi_hba, task);
->  		break;
->  	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260829032858.1661=
-019-1-yangxingui@huawei.com?part=3D3
