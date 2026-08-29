@@ -1,136 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4960A24A078;
-	Sat, 29 Aug 2026 07:55:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EB5F374A1B;
+	Sat, 29 Aug 2026 10:35:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787990117; cv=none; b=cORfqTOEmm2didJkb6NjtaCYGwSMcV8CMYmkn/AUOf3r36/ppU8LrrHyO2Ai9XTS58FooTeGyZ8NNcXSNieUUIhRuoSG5Gh0okLkEBBCMNsC2JMr6IgpfZb6M5WcDWO1ikIn8UWCYOyMcYNXTw1Yzo9487nzCEf5LhKTErtjrAg=
+	t=1787999720; cv=none; b=PHwizCRbtxqnfxrs1O2xS54E1RsX5WvO1LpaLAq4UPY/PY2ImWzHEb4UTY/X8knRgAvTM3KydWALtnWHXWssZBF8rtXAWNmwJXU6Imf8qFGXGkAbWOMdgajJy8PbmAxyGR7T83RITID5C8z9g2l8aPrNsXI8wKN+1JH0oVEwa7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787990117; c=relaxed/simple;
-	bh=FxANAY7SliOvAm/6NUkHq6tagheVLIOMYTmYHBwm0Jw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qSno6ctGv1RGh2JCKyKsBBhea6EBgukAR7N9Np17Mx3Hv8GRaz73nPNf/2UjgsXwruu9WgPn+IMqfLQvE68iHtPyeFs/VQHCCUgQi7EK1GhXHpQtrcyvq+FmLUOZut0mO29raZJX825O9gHEAsaAU7QFH6b4dETnBc+zoUfjG9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CdvJm0v1; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787999720; c=relaxed/simple;
+	bh=TMjEM4qL8n/RjmKlbHGpaQh+OEsEcOVV0nLrPlTqzYE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=p9jPfLir8i/3dH69+GpApKaIwf71GPmL0zxEpfphxg0iOu+tcaj4uhr7dJP4+YotuZdYtRs8B+Nh7iBl/IJTfScCAUY9G6uAzQeNL16FGhnpr+YG6380mCbBNM/vyWnjBaQRcucxNhyyvHu/2tEVJavFPauGfCloKK32NHaXhBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O4hQnDvs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CdvJm0v1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2674E1F000E9;
-	Sat, 29 Aug 2026 07:55:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O4hQnDvs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1854E1F000E9;
+	Sat, 29 Aug 2026 10:35:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787990115;
-	bh=4Jrxe2NFe6z+4UAOF/ws4ZtdTGXM1xJAP+l305qoIzk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CdvJm0v11DAJ81+/0gnzAoawf26K9SfFx/5RdiqCE3ylegh65jTAdFJuW81cyx0VV
-	 8MECWtrSSNcya4r9dgGXSeb5XsxUS+z8cWk0fzbiVgaV7NZGyt0K+MM2KeVnWfSOP8
-	 K5K3aXBK1bdLBifgzYcgl6VjaOMsQHLQRilXp6zZ3sUAqm8zVJHYQWK7ZJbd55osFu
-	 LX6sf3FcLFK0wKNSUvv9pirfTiHtaa6HiI4Y/Ef1C7zklBamRlFIXsBlGfF9Szg5Wc
-	 BQVvXRdnH24s4kDdHYtT+kq8RMXhA05Zeisfu5kRdzvHtfDitFPGZ30Nrmp9bz2FGg
-	 x7VswJ6eXKcng==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V1 1/2] scsi: ufs: ufs-qcom: Add specified gear support
- for multi gear scaling
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nitin Rawat" <nitin.rawat@oss.qualcomm.com>
-Cc: devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260829074355.946543-2-nitin.rawat@oss.qualcomm.com>
-References: <20260829074355.946543-1-nitin.rawat@oss.qualcomm.com>
- <20260829074355.946543-2-nitin.rawat@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 29 Aug 2026 07:55:14 +0000
-Message-Id: <20260829075515.2674E1F000E9@smtp.kernel.org>
+	s=k20260515; t=1787999716;
+	bh=2cSRCs8wDnCpBsS5x9/4R2NQI4neq/3EffewAPnRfKA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=O4hQnDvsR3xz25zX0vx3nLmgtgXidRy0h4sWYehV2mXaWQF9J/8/dCttJ+E6EWeiL
+	 AU5vXmX8gEuh+eiBybVN36gcL9arMMcSOSmanqnA1H0jUHcst2QpkRCuZYvOQ1utna
+	 CmwIa3FMYIznrNaOU5idsntYbhRRO3HxdH82sL2QSmZq4KSQ//9h/0e1+1QzkyWNZ0
+	 0rU3vqxq8xzjrVdcdZh5qOVfsw3iXccSIzOadiD6bqnoMbprP3lZK1UtNz4gXJHS5C
+	 0O9KudEm0w62SpmKO8x56+dxacucnGq4B3gGwuAtRjfi6EA2/TmEU4oUb4c3BtwI86
+	 LMFxBKkcdwmyA==
+Date: Sat, 29 Aug 2026 13:35:09 +0300
+From: Mike Rapoport <rppt@kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Brian King <brking@us.ibm.com>, Hannes Reinecke <hare@suse.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Wen Xiong <wenxiong@linux.ibm.com>, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, Hannes Reinecke <hare@kernel.org>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH v2 0/4] scsi: replace __get_free_pages() with kmalloc()
+Message-ID: <apK13danJIU2PD8f@kernel.org>
+References: <20260704-b4-scsi-v2-0-7d2d21a810de@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260704-b4-scsi-v2-0-7d2d21a810de@kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Valid `opp-level` DT gear configurations are improperly ignored an=
-d downgraded if they exceed the attached device's maximum supported gear, b=
-reaking forward compatibility.
---
+Hi Martin,
 
-commit d0c65635e24a4008e442b75486fc367af65e28be
-Author: Ziqi Chen <ziqi.chen@oss.qualcomm.com>
+This seems to fall between the cracks.
 
-scsi: ufs: ufs-qcom: Add specified gear support for multi gear scaling
+Do you want me to resend?
 
-This commit introduces a device tree based configuration interface that all=
-ows
-specifying the HS gear speed for supported operating frequencies using the
-"opp-level" property. If this property is not configured, the driver falls
-back to a default frequency-to-gear mapping table.
+On Sat, Jul 04, 2026 at 09:13:33AM +0300, Mike Rapoport (Microsoft) wrote:
+> This is a (small) part of larger work of replacing page allocator calls
+> with kmalloc.
+> 
+> My initial intention a few month ago was to remove ugly casts [1], but then
+> willy pointed out that Linus objected to something like this [2] and it
+> looks like more than a decade old technical debt.
+> 
+> Largely, anything that doesn't need struct page (or a memdesc in the
+> future) should just use kmalloc() or kvmalloc() to allocate memory.
+> kmalloc() guarantees alignment, physical contiguity and working
+> virt_to_phys() and beside nicer API that returns void * on alloc and
+> doesn't require to know the allocation size on free, kmalloc() provides
+> better debugging capabilities than page allocator.
+> 
+> Another thing is that touching these allocation sites gives the reviewers
+> opportunity to see if a PAGE_SIZE buffer is actually needed or maybe
+> another size is appropriate.
+> 
+> For larger allocations that don't need physically contiguous memory
+> kvmalloc() can be a better option that __get_free_pages() because under
+> memory pressure it's is easier to allocate several order-0 pages than a
+> physically contiguous chunk with the same number of pages.
+> 
+> And last, but not least, removing needless calls to page allocator should
+> help with memdesc (aka project folio) conversion. There will be way less
+> places to audit to see if the user was actually using struct page.
+> 
+> Also in git:
+> https://git.kernel.org/pub/scm/linux/kernel/git/rppt/linux.git gfp-to-kmalloc/scsi
+> 
+> [1] https://lore.kernel.org/all/20251018093002.3660549-1-rppt@kernel.org/
+> [2] https://lore.kernel.org/all/CA+55aFwp4iy4rtX2gE2WjBGFL=NxMVnoFeHqYa2j1dYOMMGqxg@mail.gmail.com/ 
+> 
+> ---
+> v2 changes:
+> * replace GFP_ATOMIC with GFP_NOIO in ipr driver
+> 
+> v1: https://patch.msgid.link/20260630-b4-scsi-v1-0-494fb37ebe7b@kernel.org
+> 
+> ---
+> Mike Rapoport (Microsoft) (4):
+>       scsi: target: file: use kmalloc() to allocate temporary protection buffer
+>       scsi: proc: use kmalloc() in proc writers
+>       scsi: ipr: use kmalloc() to allocate IPR dump buffer memory
+>       scsi: sym53c8xx_2: replace __get_free_pages() with kmalloc()
+> 
+>  drivers/scsi/ipr.c                  | 4 ++--
+>  drivers/scsi/scsi_devinfo.c         | 5 +++--
+>  drivers/scsi/scsi_proc.c            | 9 +++++----
+>  drivers/scsi/sym53c8xx_2/sym_hipd.h | 4 ++--
+>  drivers/target/target_core_file.c   | 4 ++--
+>  5 files changed, 14 insertions(+), 12 deletions(-)
+> ---
+> base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+> change-id: 20260611-b4-scsi-d0b0eb4895f4
+> 
+> --
+> Sincerely yours,
+> Mike.
+> 
 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 291c434487648..399269c3f0597 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-
-[ ... ]
-
-> @@ -2490,12 +2491,32 @@ static unsigned long ufs_qcom_opp_freq_to_clk_fre=
-q(struct ufs_hba *hba,
-> =20
->  static u32 ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned lon=
-g freq)
->  {
-> -	u32 gear =3D UFS_HS_DONT_CHANGE;
-> +	struct dev_pm_opp *opp;
->  	unsigned long unipro_freq;
-> +	u32 gear =3D UFS_HS_DONT_CHANGE;
-> =20
->  	if (!hba->use_pm_opp)
->  		return gear;
-> =20
-> +	opp =3D dev_pm_opp_find_freq_exact_indexed(hba->dev, freq, 0, true);
-> +	if (IS_ERR_OR_NULL(opp)) {
-> +		dev_err(hba->dev, "%s: Failed to find OPP for exact frequency %lu\n",
-> +			__func__, freq);
-> +		return gear;
-> +	}
-> +
-> +	/* Get HS gear speed from 'opp-level' */
-> +	gear =3D dev_pm_opp_get_level(opp);
-> +	dev_pm_opp_put(opp);
-> +
-> +	/*
-> +	 * Greater than max gear means that there is no specified gear configur=
-ed in DT
-> +	 * or the specified gear is invalid.
-> +	 */
-> +	if (gear <=3D hba->max_pwr_info.info.gear_rx)
-> +		return gear;
-> +
-
-[Severity: High]
-Does this condition inadvertently downgrade valid DT gear configurations if
-they exceed the attached device's maximum supported gear?
-
-If a platform specifies a valid opp-level (e.g., 5) but the connected UFS
-device supports a lower maximum gear (e.g., gear_rx =3D 4), this check
-evaluates to false. The driver will then incorrectly fall back to the
-legacy hardcoded mapping table instead of using the capped value.
-
-If the frequency is not present in the fallback table, it returns
-UFS_HS_DONT_CHANGE, which can cause a mismatch between the configured clock
-and active gear speed. This mismatch could potentially lead to UFS link dro=
-ps
-and system panics during frequency scaling.
-
-It appears this logic conflates a missing DT property (where gear might
-evaluate to OPP_LEVEL_UNSET or U32_MAX) with a valid property that simply
-exceeds the device capability.
-
-Could this be addressed by explicitly checking if the property was provided,
-and if so, safely capping it to the device's maximum supported gear using
-min_t(u32, gear, hba->max_pwr_info.info.gear_rx)?
-
-> +	gear =3D UFS_HS_DONT_CHANGE;
->  	unipro_freq =3D ufs_qcom_opp_freq_to_clk_freq(hba, freq, "core_clk_unip=
-ro");
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260829074355.9465=
-43-1-nitin.rawat@oss.qualcomm.com?part=3D1
+-- 
+Sincerely yours,
+Mike.
