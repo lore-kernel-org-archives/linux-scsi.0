@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E8E284693;
-	Sat, 29 Aug 2026 07:53:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4960A24A078;
+	Sat, 29 Aug 2026 07:55:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787990010; cv=none; b=Vx0K6X28F00Z3zvjh6jGI9K3Imlt89YtgB9aiCQ8GDxP8q7FaC7dE+B+vwsp2RA02RtZSAtsiEInP7ibD7CpShrHxroaHU3c/+3HRE9pIGJpOr2Yj9l9JkBfKOgHOkKoF6qPNarTOF6I1nHOLLrtdFO09bl+rPvb2p6igbc7EHI=
+	t=1787990117; cv=none; b=cORfqTOEmm2didJkb6NjtaCYGwSMcV8CMYmkn/AUOf3r36/ppU8LrrHyO2Ai9XTS58FooTeGyZ8NNcXSNieUUIhRuoSG5Gh0okLkEBBCMNsC2JMr6IgpfZb6M5WcDWO1ikIn8UWCYOyMcYNXTw1Yzo9487nzCEf5LhKTErtjrAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787990010; c=relaxed/simple;
-	bh=5FDn16gPl5WvH6TVmRyzmlZKiawpkgsYL7vZvSP1dns=;
+	s=arc-20240116; t=1787990117; c=relaxed/simple;
+	bh=FxANAY7SliOvAm/6NUkHq6tagheVLIOMYTmYHBwm0Jw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=SFepH0WAXfTefI8n7fao/2lr49bBqffqnthYTw3wxENi0dTRbzjmnA93ixA1F0EpVLRGebAW9wY7yIXyKFk+LlzJFCVPH8pNBXuRFfN2mF3FWPcon3A9TEI9oBTLqyVR6Jv1hVxuabUTDZzZ6MOHTrd245PSB6P4/cRLkCGHyp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R6WT1pjp; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=qSno6ctGv1RGh2JCKyKsBBhea6EBgukAR7N9Np17Mx3Hv8GRaz73nPNf/2UjgsXwruu9WgPn+IMqfLQvE68iHtPyeFs/VQHCCUgQi7EK1GhXHpQtrcyvq+FmLUOZut0mO29raZJX825O9gHEAsaAU7QFH6b4dETnBc+zoUfjG9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CdvJm0v1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R6WT1pjp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BB4D1F000E9;
-	Sat, 29 Aug 2026 07:53:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CdvJm0v1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2674E1F000E9;
+	Sat, 29 Aug 2026 07:55:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787990008;
-	bh=YO640cg4KkDoPu6JIxmzDpTtvCZfNIwwo21iVY383+Y=;
+	s=k20260515; t=1787990115;
+	bh=4Jrxe2NFe6z+4UAOF/ws4ZtdTGXM1xJAP+l305qoIzk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=R6WT1pjppF0BEjcsHyoOuIgN6jdyq19SgViRjsJ9H3jL9Ni+knU49FYyZ8AjUDJAw
-	 3v0D19Dwv0cnzS2PMjlKfcvboAlLpc+2mE/xsfUg3DciQsKseCQyLLfGnCDNbeHgBG
-	 /LU1Is6FkuTdZDuMM9InJH5C92uXOHAyqasn69IQAg/lj+5F+SamwnT7doChnHmw2r
-	 gBvsP51AiLKIoRIOm39lnSQ+nhQ7Jg0FM592wrYbHp4Xl1ba921tCobqU1eCva21n7
-	 EU7pVo06xHaG+fxFhmleAi6Iqso+/5wF/OQj9XkgB0ec1ZfE6KmSGs8wdb5mknfZ9y
-	 xqfwRqWmiOKzQ==
+	b=CdvJm0v11DAJ81+/0gnzAoawf26K9SfFx/5RdiqCE3ylegh65jTAdFJuW81cyx0VV
+	 8MECWtrSSNcya4r9dgGXSeb5XsxUS+z8cWk0fzbiVgaV7NZGyt0K+MM2KeVnWfSOP8
+	 K5K3aXBK1bdLBifgzYcgl6VjaOMsQHLQRilXp6zZ3sUAqm8zVJHYQWK7ZJbd55osFu
+	 LX6sf3FcLFK0wKNSUvv9pirfTiHtaa6HiI4Y/Ef1C7zklBamRlFIXsBlGfF9Szg5Wc
+	 BQVvXRdnH24s4kDdHYtT+kq8RMXhA05Zeisfu5kRdzvHtfDitFPGZ30Nrmp9bz2FGg
+	 x7VswJ6eXKcng==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V1 2/2] arm64: dts: qcom: Set specified gear
- configuration for Hamoa
+Subject: Re: [PATCH V1 1/2] scsi: ufs: ufs-qcom: Add specified gear support
+ for multi gear scaling
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nitin Rawat" <nitin.rawat@oss.qualcomm.com>
 Cc: devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260829074355.946543-3-nitin.rawat@oss.qualcomm.com>
+In-Reply-To: <20260829074355.946543-2-nitin.rawat@oss.qualcomm.com>
 References: <20260829074355.946543-1-nitin.rawat@oss.qualcomm.com>
- <20260829074355.946543-3-nitin.rawat@oss.qualcomm.com>
+ <20260829074355.946543-2-nitin.rawat@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 29 Aug 2026 07:53:27 +0000
-Message-Id: <20260829075328.5BB4D1F000E9@smtp.kernel.org>
+Date: Sat, 29 Aug 2026 07:55:14 +0000
+Message-Id: <20260829075515.2674E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,66 +47,90 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Incorrect fallback logic when DT-specified `opp-level` exceeds the=
- negotiated maximum gear.
+- [High] Valid `opp-level` DT gear configurations are improperly ignored an=
+d downgraded if they exceed the attached device's maximum supported gear, b=
+reaking forward compatibility.
 --
 
-commit 1074dd135232851ffc9d0417dea7de1323a012a4
-Author: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+commit d0c65635e24a4008e442b75486fc367af65e28be
+Author: Ziqi Chen <ziqi.chen@oss.qualcomm.com>
 
-arm64: dts: qcom: Set specified gear configuration for Hamoa
+scsi: ufs: ufs-qcom: Add specified gear support for multi gear scaling
 
-Assign the appropriate UFS HS gear speed levels to each OPP frequency
-entry in the device tree, enabling proper per-frequency gear
-scaling (G1 at 75MHz, G3 at 150MHz, G5 at 300MHz).
+This commit introduces a device tree based configuration interface that all=
+ows
+specifying the HS gear speed for supported operating frequencies using the
+"opp-level" property. If this property is not configured, the driver falls
+back to a default frequency-to-gear mapping table.
 
-> diff --git a/arch/arm64/boot/dts/qcom/hamoa.dtsi b/arch/arm64/boot/dts/qc=
-om/hamoa.dtsi
-> index 4ba751a65142b..bc7383937a293 100644
-> --- a/arch/arm64/boot/dts/qcom/hamoa.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/hamoa.dtsi
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 291c434487648..399269c3f0597 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+
 [ ... ]
-> @@ -3992,6 +3994,7 @@ opp-300000000 {
->  						 /bits/ 64 <0>,
->  						 /bits/ 64 <0>,
->  						 /bits/ 64 <0>;
-> +					opp-level =3D <5>; /* HS-G5 */
+
+> @@ -2490,12 +2491,32 @@ static unsigned long ufs_qcom_opp_freq_to_clk_fre=
+q(struct ufs_hba *hba,
+> =20
+>  static u32 ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned lon=
+g freq)
+>  {
+> -	u32 gear =3D UFS_HS_DONT_CHANGE;
+> +	struct dev_pm_opp *opp;
+>  	unsigned long unipro_freq;
+> +	u32 gear =3D UFS_HS_DONT_CHANGE;
+> =20
+>  	if (!hba->use_pm_opp)
+>  		return gear;
+> =20
+> +	opp =3D dev_pm_opp_find_freq_exact_indexed(hba->dev, freq, 0, true);
+> +	if (IS_ERR_OR_NULL(opp)) {
+> +		dev_err(hba->dev, "%s: Failed to find OPP for exact frequency %lu\n",
+> +			__func__, freq);
+> +		return gear;
+> +	}
+> +
+> +	/* Get HS gear speed from 'opp-level' */
+> +	gear =3D dev_pm_opp_get_level(opp);
+> +	dev_pm_opp_put(opp);
+> +
+> +	/*
+> +	 * Greater than max gear means that there is no specified gear configur=
+ed in DT
+> +	 * or the specified gear is invalid.
+> +	 */
+> +	if (gear <=3D hba->max_pwr_info.info.gear_rx)
+> +		return gear;
+> +
 
 [Severity: High]
-Will adding this HS-G5 opp-level break devfreq gear scaling if the host is
-paired with a slower UFS memory device, such as one with a maximum of G4?
+Does this condition inadvertently downgrade valid DT gear configurations if
+they exceed the attached device's maximum supported gear?
 
-Looking at ufs_qcom_freq_to_gear_speed() in drivers/ufs/host/ufs-qcom.c, the
-retrieved opp-level is checked against the negotiated maximum gear:
+If a platform specifies a valid opp-level (e.g., 5) but the connected UFS
+device supports a lower maximum gear (e.g., gear_rx =3D 4), this check
+evaluates to false. The driver will then incorrectly fall back to the
+legacy hardcoded mapping table instead of using the capped value.
 
-    gear =3D dev_pm_opp_get_level(dev, freq);
-    /* ... */
-    /*
-     * Greater than max gear means that there is no specified gear configur=
-ed
-     * in DT or the specified gear is invalid.
-     */
-    if (gear <=3D hba->max_pwr_info.info.gear_rx)
-        return gear;
+If the frequency is not present in the fallback table, it returns
+UFS_HS_DONT_CHANGE, which can cause a mismatch between the configured clock
+and active gear speed. This mismatch could potentially lead to UFS link dro=
+ps
+and system panics during frequency scaling.
 
-    gear =3D UFS_HS_DONT_CHANGE;
+It appears this logic conflates a missing DT property (where gear might
+evaluate to OPP_LEVEL_UNSET or U32_MAX) with a valid property that simply
+exceeds the device capability.
 
-If this DT configures a gear level of 5 (HS-G5), but the attached UFS device
-only supports gear 4 (HS-G4), the check `5 <=3D 4` evaluates to false.
+Could this be addressed by explicitly checking if the property was provided,
+and if so, safely capping it to the device's maximum supported gear using
+min_t(u32, gear, hba->max_pwr_info.info.gear_rx)?
 
-Because dev_pm_opp_get_level() returns OPP_LEVEL_UNSET (U32_MAX) when the
-property is missing, the code seems to conflate a missing property with a
-gear that simply exceeds the attached device's maximum capability.
-
-When the check fails, instead of capping the gear to the device's maximum,
-the code falls through to the legacy hardcoded switch block. If the new
-frequency is missing from that legacy block, it hits the default case, logs
-an "Unsupported clock freq" error, and fails to scale entirely.
-
-Does ufs_qcom_freq_to_gear_speed() need to explicitly check against
-OPP_LEVEL_UNSET and cap the DT gear to the negotiated maximum instead of
-falling back to the legacy behavior?
+> +	gear =3D UFS_HS_DONT_CHANGE;
+>  	unipro_freq =3D ufs_qcom_opp_freq_to_clk_freq(hba, freq, "core_clk_unip=
+ro");
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260829074355.9465=
-43-1-nitin.rawat@oss.qualcomm.com?part=3D2
+43-1-nitin.rawat@oss.qualcomm.com?part=3D1
