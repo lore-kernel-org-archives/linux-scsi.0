@@ -1,30 +1,34 @@
 Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EE61264612;
-	Sun, 30 Aug 2026 13:24:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BC1825B0AC;
+	Sun, 30 Aug 2026 13:27:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788096250; cv=none; b=lN31amSkcK3DZyJi3CMrs+TE+2ezjFvqqE6UYNRZRbWrRVdtwgRJK6Ae5zrNbMyqwgxM9nUCK56DXjm8DiBSsq6p6lHlijurnoNSFYbl+FVf0YJp/pwmkKywiziLtysfKQeBoD5+cz5IiGRB762FscWUHGjNVfUUyr9sXj30jDs=
+	t=1788096455; cv=none; b=Slbrd3RCwwjcexmkj2xJQ7fu7uX8RBzSPTN4T1uRo3VAEEdSAdZIoN1QoGPaeSli9atpAR6lKk+3G1SSXVLw0H+mYyN/z+RpRGa6PukUUxCJfOIAM949ZaxNPUgtpOGm9uEFItiu0kmZ8pqQu/GO1F55Pvo2x4BFcpIXVycnmq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788096250; c=relaxed/simple;
-	bh=qlRyVLiWOfSGXWeRkK4L68tZCwILGwMCRHJ4h5FUx+Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JkVgdoBBzXuaPdMFWqSKu59NLbMRqYxfIiC5PX0gnuQFV0UYw3jWHpnP5XGzF390vZzisETegvOePO0+y2FG2CBtJ7DZNkKpYDUOao+dPlRBmQla4TabrE1p2jq4nT0VuIh5AF83Yn63gh8KzBid1djjyd74Eg7TSptKXggBHac=
+	s=arc-20240116; t=1788096455; c=relaxed/simple;
+	bh=gTknnmJVsv1KKwoadU2pO+gLkmP3l7mc+0gm7q9pZNw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fyvxqdzWWTlD4F1vpc9HRWmnEv3Ei9oVhuBkdnrrjl85gtIz88+fPBUNUkC3Viezd/qzgFSWVPF/V3n8pVHDpI8sKfktoCx7X1VwPLel5YkDt8jHVIvMDy48KdoNZHcjcrZsFN7fYBAEVClx9zbaZdAh3dbm/1e6U7DdriVB8V4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from localhost.localdomain (unknown [111.196.241.250])
-	by APP-03 (Coremail) with SMTP id rQCowADn8T_2LpRqCAybBg--.16943S2;
-	Sun, 30 Aug 2026 21:24:06 +0800 (CST)
+	by APP-03 (Coremail) with SMTP id rQCowABHUD6+L5RqwBebBg--.40350S2;
+	Sun, 30 Aug 2026 21:27:26 +0800 (CST)
 From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: "Martin K . Petersen" <mkp@kernel.org>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
 Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
 	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] iscsi: cxgbit: bound LRO fragment aggregation
-Date: Sun, 30 Aug 2026 21:24:04 +0800
-Message-ID: <20260830132404.5053-1-pengpeng@iscas.ac.cn>
+Subject: [PATCH] ufs: rockchip: propagate controller reset errors
+Date: Sun, 30 Aug 2026 21:27:23 +0800
+Message-ID: <20260830132723.5855-1-pengpeng@iscas.ac.cn>
 X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -33,103 +37,96 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowADn8T_2LpRqCAybBg--.16943S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxGrWUKryftFW3tFW7Wr18AFb_yoW5Wr4UpF
-	4vka4UGr4qqrZ3Xw48ArsrCr4Sv3yFyrZrurySkw4Iyr1a9rWDWF1SkF1aya15G395C3yU
-	JF42vrWUGw4qqw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkE14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:rQCowABHUD6+L5RqwBebBg--.40350S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7tr1xAF4fZrWkuF18AFWrXwb_yoW8KF45pF
+	s8C3y3tr1DKF43XFZ7trn3A3WFqan3Kw47J397Ga4fAw1xtw1UWa4vkF1FqF4Dtry5ZFy5
+	uF43Ja48uanFqrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1I6r4UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
-	6r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
-	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCI
-	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267
-	AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_
-	Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUxcT
-	PUUUUU=
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
+	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JF0_Jw1lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
+	Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
+	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIY
+	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
+	v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWx
+	JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbo5l5
+	UUUUU==
 X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-cxgbit_lro_skb_merge() appends header and data fragments to a persistent
-partial-PDU skb without checking its own nr_frags. Source skb fragment
-limits do not bound the accumulated destination across LRO fragments.
+The Rockchip UFS reset helper discards reset-controller errors before
+probe, HCE enable, and runtime resume continue as if the controller were
+reset.
 
-Reject an overfull merge and reset the partial aggregation state on
-failure.
+Return reset errors from the helper and unwind the resume clock on failure.
 
-Fixes: 9730ffcb8957 ("cxgbit: add files for cxgbit.ko")
+Fixes: d3cbe455d6eb ("scsi: ufs: rockchip: Initial support for UFS")
 Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
 ---
- drivers/target/iscsi/cxgbit/cxgbit_target.c | 26 ++++++++++++++++++++++----
- 1 file changed, 22 insertions(+), 4 deletions(-)
+ drivers/ufs/host/ufs-rockchip.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_target.c b/drivers/target/iscsi/cxgbit/cxgbit_target.c
-index 3698f2eb097e3..b5c66c4ebe07c 100644
---- a/drivers/target/iscsi/cxgbit/cxgbit_target.c
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_target.c
-@@ -1420,7 +1420,7 @@ static void cxgbit_lro_hskb_reset(struct cxgbit_sock *csk)
- 	skb->len = 0;
- }
+diff --git a/drivers/ufs/host/ufs-rockchip.c b/drivers/ufs/host/ufs-rockchip.c
+index bac68f238e1c4..3b9661befe6ae 100644
+--- a/drivers/ufs/host/ufs-rockchip.c
++++ b/drivers/ufs/host/ufs-rockchip.c
+@@ -20,11 +20,16 @@
+ #include "ufshcd-pltfrm.h"
+ #include "ufs-rockchip.h"
  
--static void
-+static int
- cxgbit_lro_skb_merge(struct cxgbit_sock *csk, struct sk_buff *skb, u8 pdu_idx)
+-static void ufs_rockchip_controller_reset(struct ufs_rockchip_host *host)
++static int ufs_rockchip_controller_reset(struct ufs_rockchip_host *host)
  {
- 	struct sk_buff *hskb = csk->lro_hskb;
-@@ -1429,6 +1429,15 @@ cxgbit_lro_skb_merge(struct cxgbit_sock *csk, struct sk_buff *skb, u8 pdu_idx)
- 	struct skb_shared_info *hssi = skb_shinfo(hskb);
- 	struct skb_shared_info *ssi = skb_shinfo(skb);
- 	unsigned int len = 0;
-+	u8 nr_frags = 0;
+-	reset_control_assert(host->rst);
++	int ret;
 +
-+	if (pdu_cb->flags & PDUCBF_RX_HDR)
-+		nr_frags++;
-+	if (pdu_cb->flags & PDUCBF_RX_DATA)
-+		nr_frags += pdu_cb->nr_dfrags;
-+	if (hssi->nr_frags > MAX_SKB_FRAGS ||
-+	    nr_frags > MAX_SKB_FRAGS - hssi->nr_frags)
-+		return -EMSGSIZE;
- 
- 	if (pdu_cb->flags & PDUCBF_RX_HDR) {
- 		u8 hfrag_idx = hssi->nr_frags;
-@@ -1489,6 +1498,8 @@ cxgbit_lro_skb_merge(struct cxgbit_sock *csk, struct sk_buff *skb, u8 pdu_idx)
- 		hpdu_cb->ddigest = pdu_cb->ddigest;
- 		hpdu_cb->pdulen = pdu_cb->pdulen;
- 	}
++	ret = reset_control_assert(host->rst);
++	if (ret)
++		return ret;
+ 	udelay(1);
+-	reset_control_deassert(host->rst);
 +
-+	return 0;
++	return reset_control_deassert(host->rst);
  }
  
- static int cxgbit_process_lro_skb(struct cxgbit_sock *csk, struct sk_buff *skb)
-@@ -1499,7 +1510,11 @@ static int cxgbit_process_lro_skb(struct cxgbit_sock *csk, struct sk_buff *skb)
- 	int ret = 0;
- 
- 	if (!pdu_cb->complete) {
--		cxgbit_lro_skb_merge(csk, skb, 0);
-+		ret = cxgbit_lro_skb_merge(csk, skb, 0);
-+		if (ret < 0) {
-+			cxgbit_lro_hskb_reset(csk);
-+			goto out;
-+		}
- 
- 		if (pdu_cb->flags & PDUCBF_RX_STATUS) {
- 			struct sk_buff *hskb = csk->lro_hskb;
-@@ -1524,8 +1539,11 @@ static int cxgbit_process_lro_skb(struct cxgbit_sock *csk, struct sk_buff *skb)
- 			goto out;
+ static int ufs_rockchip_hce_enable_notify(struct ufs_hba *hba,
+@@ -46,9 +51,7 @@ static int ufs_rockchip_hce_enable_notify(struct ufs_hba *hba,
  	}
  
--	if ((!lro_cb->complete) && lro_cb->pdu_idx)
--		cxgbit_lro_skb_merge(csk, skb, lro_cb->pdu_idx);
-+	if (!lro_cb->complete && lro_cb->pdu_idx) {
-+		ret = cxgbit_lro_skb_merge(csk, skb, lro_cb->pdu_idx);
-+		if (ret < 0)
-+			cxgbit_lro_hskb_reset(csk);
+ 	/* PRE_CHANGE */
+-	ufs_rockchip_controller_reset(host);
+-
+-	return 0;
++	return ufs_rockchip_controller_reset(host);
+ }
+ 
+ static void ufs_rockchip_set_pm_lvl(struct ufs_hba *hba)
+@@ -167,7 +170,9 @@ static int ufs_rockchip_common_init(struct ufs_hba *hba)
+ 		return dev_err_probe(dev, PTR_ERR(host->rst),
+ 				"failed to get reset control\n");
+ 
+-	ufs_rockchip_controller_reset(host);
++	err = ufs_rockchip_controller_reset(host);
++	if (err)
++		return dev_err_probe(dev, err, "failed to reset controller\n");
+ 
+ 	host->ref_out_clk = devm_clk_get_enabled(dev, "ref_out");
+ 	if (IS_ERR(host->ref_out_clk))
+@@ -291,7 +296,11 @@ static int ufs_rockchip_runtime_resume(struct device *dev)
+ 		return err;
+ 	}
+ 
+-	ufs_rockchip_controller_reset(host);
++	err = ufs_rockchip_controller_reset(host);
++	if (err) {
++		clk_disable_unprepare(host->ref_out_clk);
++		return err;
 +	}
  
- out:
- 	return ret;
+ 	return ufshcd_runtime_resume(dev);
+ }
 
 base-commit: 08dbfad3f5040f5bdb6c529da20d6d4e81fefd72
 -- 
