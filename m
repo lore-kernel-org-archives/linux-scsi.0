@@ -1,73 +1,72 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.53])
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9217625B0AC;
-	Sun, 30 Aug 2026 15:47:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58511231A3B;
+	Sun, 30 Aug 2026 16:05:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.80
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788104840; cv=pass; b=nSAGygSEuM1OUnPQobb6J4MIxU9GQnbIsKbeWwJlSPzFG8vvUVdewol/JrkjwnaWKhVcKt8r5a5hCZSKbxZfAQ+A1eF0NEfxWdtfxglWvDH1jL/STmPqVDWv7RA2QrLj0yChbPFbPD0LW3qpDHH0IvKBMtmNKLHpaXOdqvO8kgU=
+	t=1788105958; cv=pass; b=UZeBrs8uC6HetueaIAZlyA98/9kb9AFvS6zUHqiwsaCdG/OTZKIeBM7EcjqWT99LkvrnTMZLMhQvROfHYNczN1B16TauXddEbLxD1cQzyTKl/IMUKsoKpLOfErGK5SJE9ppCWaW5vZkYiQVECHuftdMO9ZEn5rywUNwMk06xGew=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788104840; c=relaxed/simple;
-	bh=z2m01tKlkKHlaM/0IXx3sQbwCS88IIrV5vJiFQBhVbI=;
+	s=arc-20240116; t=1788105958; c=relaxed/simple;
+	bh=/AK2pwbuFrAO5t6+Sofph1O7MYFXlwSHtqydgrNy/bE=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IlonV3gZTKkVJ9cxxAzzxRF4O0V0u+LAKRN5l6CZtHFh+TiL7ZIikh49zVNVS9MRmigK524aB7y4envF7J9Baqac2gD/19JgPqW4x31lzp9oCVa+k4v2qFkAWjfWaGgIrGDkFB0UdrhMjW8k9MEiyAHa2vlYyQez32HHrD5rqC4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=ngkf2WV/; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=h6Z8MQty; arc=pass smtp.client-ip=85.215.255.53
+	 Content-Type:MIME-Version; b=sEv0acx38XoCFr+f3LENL+UxvtgT9lVLToYyAY14Xsqq4xJTcPoIRjLK5ZDiWQnHI/lnluAm6Odc0QsV1Nm0vgBbuqmY2U31Q8RIIC+XdFxPGzfi6YRdXXEq6Kjgb/i/rwHD6+b5HhE/KbpkYedLth3OaYqdBH1E4pEzmWtTuK8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=RpBA0sfv; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=WUXZ8F2Q; arc=pass smtp.client-ip=85.215.255.80
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="ngkf2WV/";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="h6Z8MQty"
-ARC-Seal: i=1; a=rsa-sha256; t=1788104656; cv=none;
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="RpBA0sfv";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="WUXZ8F2Q"
+ARC-Seal: i=1; a=rsa-sha256; t=1788105943; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=UYmDnMqEHTl4rYDHkmoO6PdkWPzzGACfMgsSbl/R4tNwjr1G5h2H8aWoQa1M9yKkYu
-    UCTrQTF0jD1GCPQCluzI3nbg1T/vhZaLSYRPXpb3i7dNNWmg3aT2/EOoveD0cBJ9FaMu
-    2FfEQGasrvCDZpD/CMl0gF8nRrbwBrGMg7boflqswvs90tPdTEGIKVnhbv6n/s4Ryaph
-    lDRSnCOYe0mZoUNLQJ3dk+mAnfUvZc2kI32+yRfax71qJS3WG+y5CB1XFAjWQyAhZue0
-    H55l8/ddkJr2ATvolB0IcHkmqTMuqkdvdErgBiHv4WYAdGbPzmxXqeCP1mBGQM/jpA22
-    vBEw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1788104656;
+    b=ca+u/j8uOQbDAlxSYgIpQDr4Xe5pFULvOFnVXM2w4A0zxmHvWCg7RNRYvj728Aza0p
+    GpiqmAX/E8hs0kk9tsZHQY5/AH0dRQmEPD+CRU080BCkMeCqn+cKIJXHrzgAF3EVI5dE
+    q3zGV5LYj6QNFh3/1Qe3v0/5A6muqZ6AJcHHI3V4Tn7oHYMDphkVfaXT8kGfVtVYj5Ik
+    H09UkBbp7SgTweakDYd+V3QzWgy6mL6uV2SdQNiAFpzwQK0nnXJ8FOr7luHTfMwKyCZ1
+    jLJ9YQkQXOmUkMmyjUz6ZCsIr0XDA3nvmqkk5/plDHTSUY8oWMWhUA66anO0L91lLAFl
+    e7vg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1788105943;
     s=strato-dkim-0002; d=strato.com;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=z2m01tKlkKHlaM/0IXx3sQbwCS88IIrV5vJiFQBhVbI=;
-    b=mDUdXC5CFE/R137N7liXkn839asvGfEE3lMidgqTsNrOFY/7bXSjsVGHJY0l81hgmK
-    JGkls59WEzgi9TxbSRKtoEdgbByFjifQ7nc3hXv1kFb4PR8QOXqVqcbtf7MXB3x6ZcOd
-    LIG1E2dm9HZbU8pFbhz4PeruuN7wkUu0aeoK7VdAqfZvQUPcevx7UMDHm5/NU25Zd0O4
-    SbsZJVXl9NudETKhQ+IARZsrrGGdgHeAxuBAxS8ATmUFOVp6ycVt9/CDrbEphped+2gB
-    N3jdTfZbsPLt/n79AoZPNGsg4fqZ5rl0Z7RIfkT4b3xP635TaRacVsBYekMcL5tz9iBL
-    M8QA==
+    bh=/AK2pwbuFrAO5t6+Sofph1O7MYFXlwSHtqydgrNy/bE=;
+    b=PhwFuVftFTcZjTCErImauo/j59j7o/JzFuqBd2QvlTZsz4AK++VrhRHV8iIDF2sHVY
+    jYt0RV48mPn3ZgJd4Yvj4y/dtU0ushkvmoOW+20L76N3gWczdlIiPNhGRdAPqUQPbW2+
+    jUq7JXCskNuXRc6atGd2dVxB54gdxRh8aOBozynHMx1mP5JumicnalX8AL1/sfNguJaB
+    jlwd6XbTwzrGrDuRf5x4YJNABIHFUbgU8kBQXoXfUouYQwR3qyBDcQGXzCDg0CpRIVJI
+    MyqRe5IpK+/8FD7ZEB+IFpGJ/lBgl3+13D/OJllyPzo89vjXOjY/BvMs1VSdv0EAMgyM
+    ivTQ==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1788104656;
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1788105943;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=z2m01tKlkKHlaM/0IXx3sQbwCS88IIrV5vJiFQBhVbI=;
-    b=ngkf2WV/1/liM7L66IfArmEQHa2SGESNiHkMA9RleyNmSf/otueoq6bnalT8LWc/DS
-    i/yByp83JLOrbru74+7Ir9lHvqbAet3BF8jr4ahvofX6z/GV/9lOtDhexniSDbkl+1f9
-    ZLwL3kyT3/rjMNhey087teemy3MOA7gpsNpiBscYQWt3tAtWtMEb40jjoTNQXD0LuoJL
-    aAm6/qF/3mCgNKLfkvdze7W/xojszEqkKhULO45TsDG+iTg096srvHiUUvOXPesCHMsK
-    OcrQW9zPrO6otmWC85XoRQZqxvhtMI2+73b0Y7wWuAEHPQjQhwDwZcwJuSz1pFyml4UD
-    GDfQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1788104656;
+    bh=/AK2pwbuFrAO5t6+Sofph1O7MYFXlwSHtqydgrNy/bE=;
+    b=RpBA0sfvOIPSlooflLqEo6vIKaTRZDQZja2aX9m9JsxB0m0IxCsSw+1N+4eJlS4idq
+    m+2mZ8+BuAG2HP6PxOu6YI9UODeHdcaNpfVz5l7TzKlRmg+E3cpbaGCOQdRu6fh/lB24
+    +ev21eC/rUulKZwM3U5gOst3TmGGrWmIyJfCI57q9/3L2GPg8b0e2foNY8kLJ+82ckBP
+    PdXcGpUGPL4M4/St7oYQCtuWk/emuQ0traSN7O+LHJG08YQeA/yozeULtk7zgQyYJcIB
+    PYUOJVq6Cl4ZhE4oZPpJsMZkOeeLuv6H9MndNQRKddKQiA7OVmNxUevhMGvOZWDimTHB
+    R3ag==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1788105943;
     s=strato-dkim-0003; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=z2m01tKlkKHlaM/0IXx3sQbwCS88IIrV5vJiFQBhVbI=;
-    b=h6Z8MQtyHGi9/ITjy3HNgiSPnYk/Xim/QJBCZ9XlGuV4LgMmzfz7vtkNVyYn7jNu6v
-    G2+OPqaABV5CPhbTpPAw==
+    bh=/AK2pwbuFrAO5t6+Sofph1O7MYFXlwSHtqydgrNy/bE=;
+    b=WUXZ8F2Qq+adkPA/Pwn4Tt9JfMMNzU9Q8SgdTGqdMJnOdwkKIzaS7+PleFTA36Z3Xm
+    gdewr4CLM8kjx5vYNcBg==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0zNriHg+YfT0rGaZpI+/4y2xJGqxKO/71WLEX+9Og/eiUqko/dE="
 Received: from p200300c5872968993aedd1469d684940.dip0.t-ipconnect.de
     by smtp.strato.de (RZmta 55.6.2 AUTH)
-    with ESMTPSA id ze37e127UFiFgif
+    with ESMTPSA id ze37e127UG5ggkD
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Sun, 30 Aug 2026 17:44:15 +0200 (CEST)
-Message-ID: <3e9b0d90733b6fdee6da3f1acb7c91c320ac2179.camel@iokpp.de>
-Subject: Re: [PATCH v4 1/2] ufs: rpmb: retry power-on UNIT ATTENTION on the
- RPMB WLUN
+    Sun, 30 Aug 2026 18:05:42 +0200 (CEST)
+Message-ID: <0993b0a14b17331dff17dd643be56144d0ae267b.camel@iokpp.de>
+Subject: Re: [PATCH v4 2/2] ufs: rpmb: use a fixed-length RPMB dev_id
 From: Bean Huo <beanhuo@iokpp.de>
 To: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>, 
 	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, 
@@ -76,10 +75,10 @@ To: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>,
 	jenswi@kernel.org
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	op-tee@lists.trustedfirmware.org
-Date: Sun, 30 Aug 2026 17:44:15 +0200
-In-Reply-To: <20260827070345.2853821-2-jorge.ramirez@oss.qualcomm.com>
+Date: Sun, 30 Aug 2026 18:05:42 +0200
+In-Reply-To: <20260827070345.2853821-3-jorge.ramirez@oss.qualcomm.com>
 References: <20260827070345.2853821-1-jorge.ramirez@oss.qualcomm.com>
-	 <20260827070345.2853821-2-jorge.ramirez@oss.qualcomm.com>
+	 <20260827070345.2853821-3-jorge.ramirez@oss.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2.1 
@@ -91,19 +90,41 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
 On Thu, 2026-08-27 at 09:03 +0200, Jorge Ramirez-Ortiz wrote:
-> After a power cycle, the first command sent to any UFS logical unit
-> completes with CHECK CONDITION reporting a power-on UNIT ATTENTION.
-> The SCSI core surfaces this condition to the caller rather than
-> retrying it.
+> The RPMB authentication key is derived from the dev_id handed to the
+> RPMB subsystem. OP-TEE implements the eMMC RPMB flow, where the dev_id
+> is the eMMC CID: a fixed 16-byte value the key derivation depends on.
 >=20
-> For the RPMB well-known LU the first command after boot is the first
-> RPMB frame, and RPMB has no earlier, guaranteed access that could clear
-> the condition beforehand. The power-on UNIT ATTENTION therefore reaches
-> RPMB and fails that first frame, breaking RPMB on every cold boot.
+> The UFS RPMB id is "<device_id>-R<region>", which is variable length
+> and longer than 16 bytes. Handing it to the RPMB subsystem as-is would
+> tie the derived key to a length OP-TEE does not expect and diverge from
+> the fixed-CID eMMC ABI, forcing OP-TEE to be taught about
+> variable-length UFS ids.
 >=20
-> The RPMB WLUN needs the power-on UNIT ATTENTION to be retried so that
-> RPMB works from the very first access after a power cycle.
+> A fixed 16-byte dev_id is needed so the derived key stays stable and
+> unique per region while matching the eMMC CID layout OP-TEE relies on,
+> keeping the key-derivation ABI identical with no OP-TEE change. The
+> reduction to a fixed 16 bytes must also be reproducible by the
+> bootloaders (such as U-Boot) that derive the same dev_id.
 >=20
 > Signed-off-by: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
 
+I gave my Reviewed-by on v3 2/2 [1], but it seems to have been dropped here=
+. If
+the patch hasn't changed much, must be picked, add again:
+
+
 Reviewed-by: Bean Huo <beanhuo@micron.com>
+
+
+Documentation/process/submitting-patches.rst asks author to carry review ta=
+gs
+into later versions, and to note it below the '---' when a tag is dropped.
+
+[1]https://lore.kernel.org/all/c041d409bf6f564c6743a0d03e0c851ce3afa6d5.cam=
+el@iokpp.de/
+
+Kind regards,
+Bean
+
+
+
