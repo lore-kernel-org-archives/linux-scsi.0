@@ -1,134 +1,193 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BC1825B0AC;
-	Sun, 30 Aug 2026 13:27:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66FC824293C
+	for <linux-scsi@vger.kernel.org>; Sun, 30 Aug 2026 13:31:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788096455; cv=none; b=Slbrd3RCwwjcexmkj2xJQ7fu7uX8RBzSPTN4T1uRo3VAEEdSAdZIoN1QoGPaeSli9atpAR6lKk+3G1SSXVLw0H+mYyN/z+RpRGa6PukUUxCJfOIAM949ZaxNPUgtpOGm9uEFItiu0kmZ8pqQu/GO1F55Pvo2x4BFcpIXVycnmq0=
+	t=1788096688; cv=none; b=WoUZhVZpOBoeGSLe9/JkEm9BMp/+0lKDpRsMRwoO0v0shruNQjbWaO7kBsWqpVU08pW/ed8LPCIDDjyItLPpses2fkUQMbg9gcw7CtjhrBc4lD77IFpVsJbpslvetpy0pyQNvf5Q1l1x9VaqXoNC11QgGbXHq4veI+nQAWROBaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788096455; c=relaxed/simple;
-	bh=gTknnmJVsv1KKwoadU2pO+gLkmP3l7mc+0gm7q9pZNw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fyvxqdzWWTlD4F1vpc9HRWmnEv3Ei9oVhuBkdnrrjl85gtIz88+fPBUNUkC3Viezd/qzgFSWVPF/V3n8pVHDpI8sKfktoCx7X1VwPLel5YkDt8jHVIvMDy48KdoNZHcjcrZsFN7fYBAEVClx9zbaZdAh3dbm/1e6U7DdriVB8V4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.241.250])
-	by APP-03 (Coremail) with SMTP id rQCowABHUD6+L5RqwBebBg--.40350S2;
-	Sun, 30 Aug 2026 21:27:26 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	linux-scsi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] ufs: rockchip: propagate controller reset errors
-Date: Sun, 30 Aug 2026 21:27:23 +0800
-Message-ID: <20260830132723.5855-1-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1788096688; c=relaxed/simple;
+	bh=Cm5B89ICPWUEXvDsaEzxyhSH9PhmnG9PrlPf5DnepXI=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=C8by20jq1sbtH9gx8oRA9bcZlGK9EPH13rneazanDsMZacdsCmm9P/3UTd+sOdEILkRatWmXfGfmcXipCPIFufmVf/28DpYlxVqQWD2ymbeyFEQzlPGdAIxPt+MGXP+hn1npCJ/zEZzTyWsBEg76+IyIYpGzci60k9gWnQvWzWA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kwGcCtLO; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kwGcCtLO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA7731F000E9;
+	Sun, 30 Aug 2026 13:31:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788096687;
+	bh=gZtQ3qXEaaNG/cl3hhxdG5FKYrbWBOPgF4M0EzoaXhA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kwGcCtLOQia9ClQdmkcSO5mxONRJuzBVR+8IDmOjT4kzTjOo0ovPgrQGIAdOqWygC
+	 rdTq4KRokp+nVFYcGKXXHKzMSasMYN9suS7UdVCpFxgI067pHay07+rQ/5VQ70bmh2
+	 m2OwU1stoQOEzabpMhS2jBsJwoa/Sp2Zgbc1kbv2WyMdrkSaj5EhohMJgRgHhUfese
+	 nVZLhQ5eARuwZMTNLLbNRmPEomgH/2RTIYmaNtjDk37+tS0gZBRCLuEGQfkRfHZzck
+	 HkNRTmsveltp81SQ42nmQ+QnIN7fNbYJwVCdkpv0S4mxK7C+iGvuB6y/8ATH3f7/ll
+	 u/hrLcyhVnHIw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: efct: validate firmware header size
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Pengpeng Hou" <pengpeng@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260830132051.4441-1-pengpeng@iscas.ac.cn>
+References: <20260830132051.4441-1-pengpeng@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 30 Aug 2026 13:31:26 +0000
+Message-Id: <20260830133126.CA7731F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowABHUD6+L5RqwBebBg--.40350S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7tr1xAF4fZrWkuF18AFWrXwb_yoW8KF45pF
-	s8C3y3tr1DKF43XFZ7trn3A3WFqan3Kw47J397Ga4fAw1xtw1UWa4vkF1FqF4Dtry5ZFy5
-	uF43Ja48uanFqrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkK14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
-	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JF0_Jw1lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
-	Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
-	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIY
-	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
-	v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWx
-	JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbo5l5
-	UUUUU==
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-The Rockchip UFS reset helper discards reset-controller errors before
-probe, HCE enable, and runtime resume continue as if the controller were
-reset.
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-Return reset errors from the helper and unwind the resume clock on failure.
+Pre-existing issues:
+- [High] This problem wasn't introduced by this patch, but the firmware wri=
+te loop exits on signal interruption without canceling the pending asynchro=
+nous hardware operation, leading to DMA use-after-free and stack corruption.
+- [High] This problem wasn't introduced by this patch, but missing timer sy=
+nchronization before freeing xport leads to Use-After-Free.
+- [High] This problem wasn't introduced by this patch, but there is unprote=
+cted traversal and modification of the global efct_devices list.
+- [Medium] This problem wasn't introduced by this patch, but there is an in=
+formation leak via out-of-bounds read due to missing null-termination when =
+logging fw_image->revision.
+--
 
-Fixes: d3cbe455d6eb ("scsi: ufs: rockchip: Initial support for UFS")
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
----
- drivers/ufs/host/ufs-rockchip.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+commit 96d5d1eba778004d13f602bb0b32a97487f39774
+Author: Pengpeng Hou <pengpeng@iscas.ac.cn>
 
-diff --git a/drivers/ufs/host/ufs-rockchip.c b/drivers/ufs/host/ufs-rockchip.c
-index bac68f238e1c4..3b9661befe6ae 100644
---- a/drivers/ufs/host/ufs-rockchip.c
-+++ b/drivers/ufs/host/ufs-rockchip.c
-@@ -20,11 +20,16 @@
- #include "ufshcd-pltfrm.h"
- #include "ufs-rockchip.h"
- 
--static void ufs_rockchip_controller_reset(struct ufs_rockchip_host *host)
-+static int ufs_rockchip_controller_reset(struct ufs_rockchip_host *host)
- {
--	reset_control_assert(host->rst);
-+	int ret;
-+
-+	ret = reset_control_assert(host->rst);
-+	if (ret)
-+		return ret;
- 	udelay(1);
--	reset_control_deassert(host->rst);
-+
-+	return reset_control_deassert(host->rst);
- }
- 
- static int ufs_rockchip_hce_enable_notify(struct ufs_hba *hba,
-@@ -46,9 +51,7 @@ static int ufs_rockchip_hce_enable_notify(struct ufs_hba *hba,
- 	}
- 
- 	/* PRE_CHANGE */
--	ufs_rockchip_controller_reset(host);
--
--	return 0;
-+	return ufs_rockchip_controller_reset(host);
- }
- 
- static void ufs_rockchip_set_pm_lvl(struct ufs_hba *hba)
-@@ -167,7 +170,9 @@ static int ufs_rockchip_common_init(struct ufs_hba *hba)
- 		return dev_err_probe(dev, PTR_ERR(host->rst),
- 				"failed to get reset control\n");
- 
--	ufs_rockchip_controller_reset(host);
-+	err = ufs_rockchip_controller_reset(host);
-+	if (err)
-+		return dev_err_probe(dev, err, "failed to reset controller\n");
- 
- 	host->ref_out_clk = devm_clk_get_enabled(dev, "ref_out");
- 	if (IS_ERR(host->ref_out_clk))
-@@ -291,7 +296,11 @@ static int ufs_rockchip_runtime_resume(struct device *dev)
- 		return err;
- 	}
- 
--	ufs_rockchip_controller_reset(host);
-+	err = ufs_rockchip_controller_reset(host);
-+	if (err) {
-+		clk_disable_unprepare(host->ref_out_clk);
-+		return err;
-+	}
- 
- 	return ufshcd_runtime_resume(dev);
- }
+scsi: efct: validate firmware header size
+   =20
+This commit adds a size check for the firmware blob before casting it to an
+efct_hw_grp_hdr structure. This prevents accessing header fields out of bou=
+nds
+on undersized firmware images.
 
-base-commit: 08dbfad3f5040f5bdb6c529da20d6d4e81fefd72
--- 
-2.50.1
+> diff --git a/drivers/scsi/elx/efct/efct_driver.c b/drivers/scsi/elx/efct/=
+efct_driver.c
+> index 07c2f453459e1..b0d8ca58daebe 100644
+> --- a/drivers/scsi/elx/efct/efct_driver.c
+> +++ b/drivers/scsi/elx/efct/efct_driver.c
+> @@ -338,6 +338,10 @@ efct_request_firmware_update(struct efct *efct)
+>  		efc_log_debug(efct, "Firmware file(%s) not found.\n", file_name);
+>  		return rc;
+>  	}
+> +	if (fw->size < sizeof(*fw_image)) {
+> +		rc =3D -EINVAL;
+> +		goto exit;
+> +	}
+> =20
+>  	fw_image =3D (struct efct_hw_grp_hdr *)fw->data;
+> =20
 
+[Severity: Medium]
+This is a pre-existing issue, but since we are validating the firmware
+image here, is there a risk of an out-of-bounds read when logging the
+revision?
+
+In efct_request_firmware_update(), fw_image->revision is printed using
+the %s format specifier:
+
+	efc_log_info(efct, "Firmware update is initiated. %s -> %s\n",
+		     efct->hw.sli.fw_name[0], fw_image->revision);
+
+Since fw_image->revision is a 32-byte fixed array from an external file,
+it may not be null-terminated. Will vsnprintf read past the array
+boundaries into adjacent memory?
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does the firmware write
+path handled later in this function suffer from a use-after-free if
+interrupted?
+
+When efct_request_firmware_update() calls efct_firmware_write(), the
+write loop allocates a DMA buffer and completion struct on the stack,
+then waits for completion:
+
+	if (wait_for_completion_interruptible(&result.done) !=3D 0) {
+		rc =3D -ENXIO;
+		break;
+	}
+
+If interrupted by a signal, the loop breaks, frees the DMA buffer, and
+the function returns, destroying its stack frame.
+
+Could the asynchronous hardware callback efct_fw_write_cb() then execute
+and write to the freed stack pointer?
+
+	result->status =3D status;
+	result->actual_xfer =3D actual_write_length;
+	result->change_status =3D change_status;
+
+	complete(&result->done);
+
+Does the hardware operation need to be canceled before returning?
+
+[Severity: High]
+This is a pre-existing issue, but does the firmware reset path invoked
+at the end of this function safely clean up timers?
+
+When efct_request_firmware_update() triggers efct_fw_reset(), it deletes
+the timer unsafely:
+
+	if (timer_pending(&efct->xport->stats_timer))
+		timer_delete(&efct->xport->stats_timer);
+
+A similar pattern exists during general device teardown in
+efct_xport_detach():
+
+	if (timer_pending(&xport->stats_timer))
+		timer_delete(&xport->stats_timer);
+
+Because timer_delete() is used instead of timer_delete_sync(), could the
+timer callback efct_xport_stats_timer_cb() be running concurrently on
+another CPU?
+
+If the teardown path then proceeds to free the xport object, could the
+concurrently running callback access freed memory or re-arm the timer,
+causing memory corruption?
+
+[Severity: High]
+This problem wasn't introduced by this patch, but is the global
+efct_devices list protected against concurrent access during configfs
+operations?
+
+Devices are added and removed from the list during PCI probe and
+teardown without holding any locks:
+
+drivers/scsi/elx/efct/efct_driver.c:efct_device_alloc() {
+	...
+	list_add_tail(&efct->list_entry, &efct_devices);
+	...
+}
+
+drivers/scsi/elx/efct/efct_driver.c:efct_device_free() {
+	...
+	list_del(&efct->list_entry);
+	...
+}
+
+Meanwhile, LIO configfs operations traverse the list unprotected:
+
+drivers/scsi/elx/efct/efct_lio.c:efct_find_wwpn() {
+	...
+	list_for_each_entry(efct, &efct_devices, list_entry) {
+		if (wwpn =3D=3D efct_get_wwpn(&efct->hw))
+			return efct;
+	}
+	...
+}
+
+If a device is hot-unplugged or unbound while a configfs operation is
+traversing the list, could this result in a data race reading corrupted
+list pointers or freed memory?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260830132051.4441=
+-1-pengpeng@iscas.ac.cn?part=3D1
