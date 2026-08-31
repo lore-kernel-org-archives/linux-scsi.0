@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 250082E7370;
-	Mon, 31 Aug 2026 02:19:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0678137F31C;
+	Mon, 31 Aug 2026 02:24:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788142769; cv=none; b=hrHkG7+yTKFMTgf2GvYg4dEME5qbfgJeoEujaAZzl3JabBz/5CGeOAqOaDrBg/2XmGeKwyTYlPLpcV/uy5PnFjaATyXAJ/M4TK/oJFUJl3/kmf0XnntPtc548r4pJ1t3KoBdHbTnCTc8dQD5+lTh3tQJsoaRp+jzf66V/EmMxqs=
+	t=1788143079; cv=none; b=oM0hiwzz93cca2sQ1YkDSnusglKVypEBORxIZUiC3fP42OTWhr02W+kQFHIN/xml3ewHPgqoedd0O8+Tu8Y47GWQx1mozpvNkpqH7MJXnI9q/E04aZyMZp5SrKAzEHYAcYSmcvpOgynpITzWTpBfe2m38IxdkpM4eJN6EFTCXnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788142769; c=relaxed/simple;
-	bh=XIEeq8L2Hm/apkBJ070KAMvFmMaXTivjgSem6P64w5k=;
+	s=arc-20240116; t=1788143079; c=relaxed/simple;
+	bh=DNI2+Xeo45W9qB+xoNYY1UXU2B/0LBsRXSMvG/Yo5UU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aDFt3KSivxdEEXWvUZ8TvLvUrrS9wSZh4R5vqsPCbPSVF5lJIqffsepE2m77hz9JnGAphZSlveOqGirLvbHhuM9dbURKEdyYwaRHnqHHPVKFeh3UhWZOHtTOjWjicDDZtifwG2cRLFfSZTqH6ocqG9NzrZ34+mZl9l6MbLVPaoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k8pgezwT; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=fJVNGa2T2xntUHjNSZycS44YTZ5bNZ80WIIUIac2T8P4+HJARIYThNsBcvgqcxpu1WlzmhwtAu15gO8YpgMX6L1oFa2VGFk7i30EzQpihJLw+yGg14V2orE8Tozv32Urw1ICLfEu5lI9O7EirU39NQAYtKf/9ZqP003WxryPl9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=naVZMHup; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k8pgezwT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90FD21F00A3D;
-	Mon, 31 Aug 2026 02:19:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="naVZMHup"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9A991F000E9;
+	Mon, 31 Aug 2026 02:24:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788142767;
-	bh=aowGbJ0mpmqCuX8TIz4QjmUWk5PPd28GIX12T4vlQOI=;
+	s=k20260515; t=1788143064;
+	bh=ZH9N1/TRlvtLSBOTaA70nE9gJ062Cuqp1e2IEyy6nCM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=k8pgezwT+E4yiy8pVr/CmGPuw94x9lfSpf/s/gtTeU5AklIpKvh9sCDSGF8DO5CIk
-	 EFybQNg6NznzQJgsTTX7NIYcHPahPqfTxxLugZjYQ1eICt1u7JQlNK9H2PvBjpE7n7
-	 D/U3zNjBKwkJlp+zfFN1VDtydmHCZ611bQqZmvMuICRDWfC3NTgVqSxy5sNuHhvqnV
-	 ekSHpZO9wRzNZuRj6fIWsdfVe0e8LMFm8WhyDQexzRplLl6MRHHNK9oZG52jJrAWUV
-	 sLgGwg+3IgIzD6zJcMYPFA/Pp5YDBRx4i/kgohDqmzvLKt0g6iU1gfVJSob9vyxRXg
-	 f4ERWuO0koYnw==
+	b=naVZMHupt+vHiNpS+Ju1lDPptLnZVKkbt9a3LyCQkSbEeqfIVTA2Kc2pOSVang2K8
+	 O6kwT4hJ/Umrq+PnvLxliQ1o6eFxPRi2I07UbgKHpFAvkKqX6kDnL6ujUg5ACvMx7y
+	 IhX6uwj1aX79ZRT9J5uTWZdRpM5X5cq0oa3XJ45+OFirtPmC1OhF1zhC83NR5AX8Fj
+	 BdvtOwjW4uO2sWKU2HQx59iENgTMRk8KVdeB6s0jsVhGBrFNkkI5o1dc1fnsdq2iwF
+	 gzNr8olCVoYC88fBQNigvStxsE/MHHoIxLymAVpK+COZyg9ijtBHgGlGYCHA1bfGIB
+	 SnJBcohKCIIWw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 12/37] scsi: st: use 16-bits defined sense codes
+Subject: Re: [PATCH 28/37] scsi: mvumi: use 16-bits defined sense codes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org
-In-Reply-To: <20260831020451.585944-13-dlemoal@kernel.org>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260831020451.585944-29-dlemoal@kernel.org>
 References: <20260831020451.585944-1-dlemoal@kernel.org>
- <20260831020451.585944-13-dlemoal@kernel.org>
+ <20260831020451.585944-29-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 02:19:27 +0000
-Message-Id: <20260831021927.90FD21F00A3D@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 02:24:23 +0000
+Message-Id: <20260831022423.C9A991F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,45 +46,63 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] Incorrectly assigning ASC value to ASCQ in SCSI tracepoint.
+
+Pre-existing issues:
+- [High] Unhandled dma_map_sg failure in mvumi_make_sgl
 --
 
-commit c1f7c0aa9501c3562bd45de8a85431d940fa338b
+commit 741665dea239f5c02068d60c93684dd2fc4d00e6
 Author: Damien Le Moal <dlemoal@kernel.org>
-Subject: scsi: st: use 16-bits defined sense codes
 
-This commit refactors the SCSI tape driver to use the 16-bit sense_code
-field of struct scsi_sense_hdr. It replaces hard-coded additional sense
-codes and qualifiers with enum values defined in include/scsi/scsi_sense.h
-to improve code clarity.
+scsi: mvumi: use 16-bits defined sense codes
 
-While reviewing this patch series, I noticed an issue introduced in the
-related change to include/trace/events/scsi.h:
+This refactors the Marvell UMI driver to use scsi_set_sense() and replaces
+all hard-coded additional sense codes and additional sense code qualifiers
+with the enum values defined in include/scsi/scsi_sense.h to improve code
+clarity.
 
-> diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-> --- a/include/trace/events/scsi.h
-> +++ b/include/trace/events/scsi.h
-> @@ -303,8 +303,8 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
->  		if (cmd->sense_buffer && SCSI_SENSE_VALID(cmd) &&
->  		    scsi_command_normalize_sense(cmd, &sshdr)) {
->  			__entry->sense_key =3D sshdr.sense_key;
-> -			__entry->asc =3D sshdr.asc;
-> -			__entry->ascq =3D sshdr.ascq;
-> +			__entry->asc =3D scsi_sense_asc(&sshdr);
-> +			__entry->ascq =3D scsi_sense_asc(&sshdr);
-                                        ^^^^^^^^^^^^^^
+> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+> index e70d336b4ab39..a5bd3258a3994 100644
+> --- a/drivers/scsi/mvumi.c
+> +++ b/drivers/scsi/mvumi.c
+> @@ -2067,7 +2067,7 @@ static unsigned char mvumi_build_frame(struct mvumi=
+_hba *mhba,
+>  	return 0;
+> =20
+>  error:
+> -	scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
+> +	scsi_set_sense(scmd, 0, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
 
-[Severity: Medium]
-Is there a typo in this assignment?
+[Severity: High]
+This isn't a bug introduced by this patch, but there is a pre-existing issue
+in the error handling path leading here.
 
-In the scsi_cmd_done_timeout_template tracepoint, __entry->ascq is being
-assigned scsi_sense_asc(&sshdr) instead of the ASCQ value. This appears to
-log the Additional Sense Code for both the asc and ascq fields, which will
-result in lost diagnostic data when userspace tools analyze SCSI errors via
-tracepoints.
+In mvumi_make_sgl(), which is called just before the error label, if
+dma_map_sg() fails it returns 0. However, mvumi_make_sgl() incorrectly
+checks for failure by checking if the returned count is greater than max_sg=
+e:
 
-Should this use scsi_sense_ascq(&sshdr) for the ascq field instead?
+drivers/scsi/mvumi.c:mvumi_make_sgl() {
+...
+	*sg_count =3D dma_map_sg(&mhba->pdev->dev, scsi_sglist(scmd), sgnum,
+			       scmd->sc_data_direction);
+	if (*sg_count > mhba->max_sge) {
+...
+}
+
+Since 0 is not greater than max_sge, the check is bypassed. mvumi_make_sgl()
+then skips the scatterlist loop and incorrectly returns 0 (success).
+
+mvumi_build_frame() proceeds to pass the command to the firmware with a
+non-zero data_transfer_length (from scsi_bufflen) but 0 scatter-gather
+entries.
+
+Could this crash or wedge the Marvell UMI firmware by sending a malformed
+command?
+
+>  	return -1;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831020451.5859=
-44-1-dlemoal@kernel.org?part=3D12
+44-1-dlemoal@kernel.org?part=3D28
