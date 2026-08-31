@@ -1,177 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DDFD357D1D;
-	Mon, 31 Aug 2026 02:06:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 053DB35E1CE;
+	Mon, 31 Aug 2026 02:17:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788141964; cv=none; b=i0Ea4fSXHuhBxhpPRmBCoiI1POyGBMwEFYLwHZ4kCdSQroRxsQxM3irwHldQAwdaaFSHINwRwBPNp2XgIfAF1p6ADTbkw1MIXdgRjP/mWWOB1xVS15z8BoyGeiMXMXHVP5FgH8FY4/bQRauQycfzJEeIldnPjkijvi0GLyVELiY=
+	t=1788142671; cv=none; b=V3c1SAfh9Tp6kJjzOhIe32mfaeL6XGoxPg7/DcGED12L3nTlJ3FbLZqy2fvrXkA+sCLjsplOM42nIZ4zBiu1NYBivBAmohL1IruauFyYdwf0aa0E0HZ/DkAPOdtlRstmBZjKIS2qNbJ5h/h7OXehpOs3dfXLGcquf0SUQg6El+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788141964; c=relaxed/simple;
-	bh=4l9+HCMFaQ212MEl7pf7pVhb8i42lH37Tm5ulqMsybE=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=vD/bZzPU3xdMQXpMsqb6KME4/fxw4+Se2c3n+hJXZF8rDha2uuFR8Yuv+FbBEqYUdw7YOcW8PgeZF/bXGasvAca1ifQxdtvB9e/pweDgwnZIxESle/hF2MOhmrtVKOqyba+KT9SwlSV/e+M4MmZc50KsSkx3fdJM7V/MnL+Huek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CO6riV7c; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788142671; c=relaxed/simple;
+	bh=gRZhtzWHdkNr5Qp6V5W2c3t+qmfi1jOitTb8o+iM9jg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=JhyzUew3Yq0U5MhRtQE1Yn+5X4NKF8pX1lQDJoxGUi2HvkV2qHxUiQYH+LhpFugTYXTb9YCFRsWZF4kFJhIAQWZz8mDlxgCOSluYkcodAqF/FqpJUgOljF8hnjv0c3NX0AjD5C5/oWf8rv8r+kIdZt6xJSt3AwHowQgI4CdTMBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V3NmhF9H; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CO6riV7c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C2611F000E9;
-	Mon, 31 Aug 2026 02:06:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V3NmhF9H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52CD01F000E9;
+	Mon, 31 Aug 2026 02:17:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788141963;
-	bh=fqf0UlUwP6GGhjtFSuRvVx1+33EcFmwfLOiWAsYbzqg=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=CO6riV7cNex0W7hMpG0upavESLAqnW9ycCbzAC8Tq5EH4Ca+hV8iEr9aSMxnsjbdU
-	 2nCry9jmjgtWGHbCETn0ynT6SI0TChlq/JoIJSHkMPGJhrhnGVCfPgTs9/V8RhT6TW
-	 96b9TEGH7Cs2pWdcsC9MOe/QBvyhVXeA/4DdtV7fWn3d1eedsCfAqh+c4SFMnE/Rjf
-	 8gEx8Xd19h74dwIgeltjWij3NihoXFi5LMCpFmsrSfBrtlHaf8bB1OWlUWHgPIqxcR
-	 s1v2TYQYlvkhtFAPY40NYpbyM5zq02OjGfpzhhzf5A/KYjQSH2iQhgSizechJE/d4u
-	 X4hehpMPrkGvw==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-scsi@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-usb@vger.kernel.org,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 37/37] scsi: cleanup scsi_proto.h
-Date: Mon, 31 Aug 2026 11:04:51 +0900
-Message-ID: <20260831020451.585944-38-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260831020451.585944-1-dlemoal@kernel.org>
+	s=k20260515; t=1788142669;
+	bh=gf1TRzrFEPUzjIXPz/snoLKMCABC4GtwJviroPGsThg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=V3NmhF9H5Tb6uCqOolI/G0MOxdmo9e3k5e/WnS2Xu3rwhph7fdPtXPOzkHTVMw24a
+	 G/6Fp++PeaVuaf82Sluv49641S+OjD7e+HoAxAhWJk4yRNMM0xEXxggjK0P9yRQRgR
+	 Nujt4gs4xlR7o3VGs8yR9/U/ypPQtV0VKpn0qIihMFp+vBGRM1vPm3g+snfyA1wqJ+
+	 UrgopoqJf+Oi2eI+xPA5Gi81dl8ZZ4cRNLCoCzIxMAoAbLsLfjBJJDCwVpkt5gzEOK
+	 653sXGVf10wd8Ej0jdyxIEtwSUgXKdyBU45/UKBjQcNbFibXkg6nYboEvNcq1WLfh6
+	 dN17xh6zbMYIg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 04/37] scsi: rename sense field of struct scsi_failure
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Damien Le Moal" <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org
+In-Reply-To: <20260831020451.585944-5-dlemoal@kernel.org>
 References: <20260831020451.585944-1-dlemoal@kernel.org>
+ <20260831020451.585944-5-dlemoal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 31 Aug 2026 02:17:48 +0000
+Message-Id: <20260831021749.52CD01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Now that all users of SCSI sense codes have been modified to use macro
-definitions and the 16-bits sense code instead of separate 8-bits ASC and
-ASCQ, remove the now unused asc and ascq fields of struct scsi_failure and
-struct scsi_sense_hdr, and the old (and incomplete) definitions of SCSI
-additional sense codes and sense code qualifiers in scsi_proto.h.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] The unit test `scsi_lib_test_any_sense()` is broken because `.re=
+sult` is incorrectly initialized to `SCMD_FAILURE_RESULT_ANY`, completely b=
+ypassing the sense key check.
+--
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- include/scsi/scsi_common.h | 13 +---------
- include/scsi/scsi_device.h | 13 +---------
- include/scsi/scsi_proto.h  | 51 --------------------------------------
- 3 files changed, 2 insertions(+), 75 deletions(-)
+commit be75fcae059f5a6c0fee14ecc0a6ae4e8a66d23d
+Author: Damien Le Moal <dlemoal@kernel.org>
 
-diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
-index 6fb2c290ba33..405512554ee8 100644
---- a/include/scsi/scsi_common.h
-+++ b/include/scsi/scsi_common.h
-@@ -71,18 +71,7 @@ extern u64 scsilun_to_int(struct scsi_lun *);
- struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
- 	u8 response_code;	/* permit: 0x0, 0x70, 0x71, 0x72, 0x73 */
- 	u8 sense_key;
--	union {
--		struct {
--#if defined(__BIG_ENDIAN)
--			u8 asc;
--			u8 ascq;
--#elif defined(__LITTLE_ENDIAN)
--			u8 ascq;
--			u8 asc;
--#endif
--		};
--		u16 sense_code;
--	};
-+	u16 sense_code;
- 	u8 byte4;
- 	u8 byte5;
- 	u8 byte6;
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 11910142ac50..e6fd6bc30644 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -527,18 +527,7 @@ extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
- struct scsi_failure {
- 	int result;
- 	u8 sense_key;
--	union {
--		struct {
--#if defined(__BIG_ENDIAN)
--			u8 asc;
--			u8 ascq;
--#elif defined(__LITTLE_ENDIAN)
--			u8 ascq;
--			u8 asc;
--#endif
--		};
--		u16 sense_code;
--	};
-+	u16 sense_code;
- 	/*
- 	 * Number of times scsi_execute_cmd will retry the failure. It does
- 	 * not count for the total_allowed.
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index f742a3bfeb86..9c7d31aa6bae 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -219,57 +219,6 @@ enum sam_status {
- 
- #define STATUS_MASK         0xfe
- 
--/*
-- * Additional Sense Codes (ASC).
-- */
--#define NO_ADDITIONAL_SENSE		0x00
--#define OVERLAP_ATOMIC_COMMAND_ASC	0x00
--#define LOGICAL_UNIT_NOT_READY		0x04
--#define LOGICAL_UNIT_COMMUNICATION_FAILURE 0x8
--#define WRITE_ERROR_ASC			0x0c
--#define UNRECOVERED_READ_ERR		0x11
--#define PARAMETER_LIST_LENGTH_ERR	0x1a
--#define MISCOMPARE_VERIFY_ASC		0x1d
--#define INVALID_OPCODE			0x20
--#define LBA_OUT_OF_RANGE		0x21
--#define INVALID_FIELD_IN_CDB		0x24
--#define INVALID_FIELD_IN_PARAM_LIST	0x26
--#define WRITE_PROTECTED			0x27
--#define UA_READY_ASC			0x28
--#define UA_RESET_ASC			0x29
--#define UA_CHANGED_ASC			0x2a
--#define TOO_MANY_IN_PARTITION_ASC	0x3b
--#define TARGET_CHANGED_ASC		0x3f
--#define SAVING_PARAMS_UNSUP		0x39
--#define TRANSPORT_PROBLEM		0x4b
--#define INSUFF_RES_ASC			0x55
--#define LOW_POWER_COND_ON		0x5e
--#define THRESHOLD_EXCEEDED		0x5d
--
--/*
-- * Additional Sense Code Qualifiers (ASCQ).
-- */
--#define POWER_ON_RESET_ASCQ		0x00
--#define MODE_CHANGED_ASCQ		0x01	/* mode parameters changed */
--#define FILEMARK_DETECTED_ASCQ		0x01
--#define POWER_ON_OCCURRED_ASCQ		0x01
--#define MICROCODE_CHANGED_ASCQ		0x01	/* with TARGET_CHANGED_ASC */
--#define BUS_RESET_ASCQ			0x02	/* scsi bus reset occurred */
--#define EOP_EOM_DETECTED_ASCQ		0x02
--#define INSUFF_RES_ASCQ			0x03
--#define BEGINNING_OF_P_M_DETECTED_ASCQ	0x04
--#define UNALIGNED_WRITE_ASCQ		0x04
--#define EOD_DETECTED_ASCQ		0x05
--#define WRITE_BOUNDARY_ASCQ		0x05
--#define READ_INVDATA_ASCQ		0x06
--#define READ_BOUNDARY_ASCQ		0x07
--#define CAPACITY_CHANGED_ASCQ		0x09
--#define ATTEMPT_ACCESS_GAP		0x09
--#define LUNS_CHANGED_ASCQ		0x0e
--#define INSUFF_ZONE_ASCQ		0x0e
--#define MICROCODE_CHANGED_WO_RESET_ASCQ 0x16
--#define OVERLAP_ATOMIC_COMMAND_ASCQ	0x23
--
- /*
-  *  DEVICE TYPES
-  *  Please keep them in 0x%02x format for $MODALIAS to work
--- 
-2.55.0
+scsi: rename sense field of struct scsi_failure
 
+This commit renames the sense field of struct scsi_failure to sense_key
+to make its purpose clearer and align it with struct scsi_sense_hdr. It
+also renames the associated SCMD_FAILURE_SENSE_ANY macro and updates
+initializations in tests.
+
+> diff --git a/drivers/scsi/scsi_lib_test.c b/drivers/scsi/scsi_lib_test.c
+> index ae8af0e0047a8..4558dc853e26e 100644
+> --- a/drivers/scsi/scsi_lib_test.c
+> +++ b/drivers/scsi/scsi_lib_test.c
+[ ... ]
+> @@ -116,8 +116,9 @@ static void scsi_lib_test_any_sense(struct kunit *tes=
+t)
+>  {
+>  	struct scsi_failure any_sense_failure_defs[] =3D {
+>  		{
+> -			.result =3D SCMD_FAILURE_SENSE_ANY,
+> +			.sense_key =3D SCMD_FAILURE_SENSE_KEY_ANY,
+>  			.allowed =3D SCSI_LIB_TEST_MAX_ALLOWED,
+> +			.result =3D SCMD_FAILURE_RESULT_ANY,
+>  		},
+>  		{}
+>  	};
+
+[Severity: Medium]
+Does setting .result to SCMD_FAILURE_RESULT_ANY here cause the test to
+bypass the sense key checking logic completely?
+
+Looking at scsi_check_passthrough() in drivers/scsi/scsi_lib.c, the check
+short-circuits when .result is SCMD_FAILURE_RESULT_ANY:
+
+drivers/scsi/scsi_lib.c:scsi_check_passthrough() {
+	...
+	for (failure =3D failures->failure_definitions; failure->result;
+	     failure++) {
+		if (failure->result =3D=3D SCMD_FAILURE_RESULT_ANY)
+			goto maybe_retry;
+	...
+}
+
+Because of this short-circuit, the sense key check logic is never actually
+evaluated. To properly test SCMD_FAILURE_SENSE_KEY_ANY, shouldn't .result be
+initialized to SAM_STAT_CHECK_CONDITION instead?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831020451.5859=
+44-1-dlemoal@kernel.org?part=3D4
