@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2493BCD12
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 22:34:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C3D929ACFD
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 22:46:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788215673; cv=none; b=BEPj+okywMIDdHbgdLeGBp9H8DqyDPDZ53RhMM6T4qbXMGVSfz+jx61CjuKrFEhcJyghP+9soXE55Av2gP8wVpQ/nspp8okBGvDferSZFo/zMp4Dkv7EK4WGwi0t0T94Q1uAEF+ONQvkXxT1BpI4QHeM4OrCA/FZ7XbAk7Lrv6Q=
+	t=1788216363; cv=none; b=NcH+BHn4IQWW+d4Te+fJkt8S28TrZ313yMFbEB793iylQmJsPB4FO2+pqWJEbRDuBoMJ4VlRfqkyEYLSB3RVD1nTmgUJWVeeOYJ0ybo54rSIJih37BH+yRnXyQhJOv0Ya5o9yQGqCFUjfKCRL12B+VObQBXIWYwyK9GwG1tru+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788215673; c=relaxed/simple;
-	bh=/UQJK+pt23D4W6sEDnBdm3/3BwF+78dr+dXeqRhXDPE=;
+	s=arc-20240116; t=1788216363; c=relaxed/simple;
+	bh=MuUbw6ig6t9X6rTCsrbGs0kds6YzzYa0JaWcdQPQtGs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HulvWTP47ScFdSgLsbrCKIw4LJaJt4MNcmdwntdvvYCgcNPT8yAlGePG884cV/jt6YT3H+ERqNG3w86F1MQO/9ptVjHVaFpe4MVuA6rJb04Edc1IpggIR+behWCi9e+dVAXBl8zsqgVOHCx4UH5FO9SuIZYKLYSzEQj385FQG84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zbyd3jVe; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=WXwFDnHY7HG2U3jdrOdstUgod3QOhz6bbGDa6redwNOQHj/4gkRIb50A81FxE2/H2vpD+AmbAtLX30bbvhshSbRTT4mebY55luyviMWahZEsr1Iky2V8DTZhh1Ce0qq+3cUPdNxUzm+dkkYsZNZKMXq0Y9DBIQKFLfEVGtPIvcM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QFIoaE7p; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zbyd3jVe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F4341F000E9;
-	Mon, 31 Aug 2026 22:34:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QFIoaE7p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C23911F000E9;
+	Mon, 31 Aug 2026 22:46:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788215671;
-	bh=oSok4zGewcwa/412/qVq/TG9pe/zZsQiLeuXpNfN4eU=;
+	s=k20260515; t=1788216361;
+	bh=XSly9omuXVNgEMaxW8em4gu4I3pboDPcBpK9PIkcOHY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Zbyd3jVeO4tyGFOFvRMEOubzHwwkfwqbujGwuUIKAbbWMnAYt56swsWWvi0RKZNAE
-	 vxheZfSitHMU3aFd/DOU525CQ0MkWx/lSjqdKopTDMqLIJZq5EkHSBHOHDmet+2LEP
-	 ySqXKFPkGsdFFw6hgmCSN4aGn9ofdmjpjM0+sHM0rVuuyXLJnmQ5o5o674NvwkosFI
-	 0Q4UrdKe8fjksAlAHTReL+ZDhinfbdQPlGtVGBFeB3p2BLE3w63obPcUwQoRIlwfeL
-	 FWlA/RfEKx1RjhwPBdmAG8yPXKbNqDzRuLR/SgUlm51Jx0C6iCoRPF2YsYoVV/7Sx4
-	 NnCAfn9DtSdPQ==
+	b=QFIoaE7pSpXEWObsgcSbCqpenVkKldjfeR3FOsHkSj/hEW76L+OOQR3uXXKLd0akv
+	 UBhBG57qmn1HrquMITEg7Wglq2c94eKvm7jlDjG1nmgoMOO+jLIEFNoXHf6cqU69yq
+	 1ZsjpscotIfnsufTnUJpSByZDNTJEHs/45AlMivP8nzAseCjny2wYfujn6TOXV8ZRz
+	 2JANU7MdxwmtXEBV2xQMroOIh85q/rkeWu+bgGFwWEybJO950qJMw8BrYL/AZXnzmt
+	 D/wLfscLWFUt0B7tZ/tasc98D91fQxkoV7krSfQP07CPsmlpoRbi+L5mK8VSl2rh5s
+	 AdEhBnY9fgQmg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 6/8] scsi: ibmvfc: extend channel registration and
- deregistration for async subq
+Subject: Re: [PATCH v7 7/8] scsi: ibmvfc: register and use asynchronous sub
+ CRQ for events
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260831-ibmvfc-fpin-support-v7-6-77d0b9809080@linux.ibm.com>
+In-Reply-To: <20260831-ibmvfc-fpin-support-v7-7-77d0b9809080@linux.ibm.com>
 References: <20260831-ibmvfc-fpin-support-v7-0-77d0b9809080@linux.ibm.com>
- <20260831-ibmvfc-fpin-support-v7-6-77d0b9809080@linux.ibm.com>
+ <20260831-ibmvfc-fpin-support-v7-7-77d0b9809080@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 22:34:30 +0000
-Message-Id: <20260831223431.2F4341F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 22:46:01 +0000
+Message-Id: <20260831224601.C23911F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,86 +49,109 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 New issues:
-- [High] Race condition and lockless list access in async sub-CRQ handler.
+- [High] Unconditional deregistration of the uninitialized async sub-CRQ ca=
+uses a NULL pointer dereference.
 
 Pre-existing issues:
-- [Medium] Stale IRQ mapping handle left on error path causes free_irq kern=
-el WARNING.
+- [High] Buffer overflow due to out-of-bounds array writes and reads when p=
+rocessing unvalidated queue counts from the VIOS.
 --
 
-commit 99a10b7da4dba7f584bda8695781cb27e1b928b0
+commit 908a7af2b04b0b17f4fc0a40814f0dacec88332a
 Author: Dave Marquardt <davemarq@linux.ibm.com>
+scsi: ibmvfc: register and use asynchronous sub CRQ for events
 
-scsi: ibmvfc: extend channel registration and deregistration for async subq
-
-This commit extends ibmvfc_register_channel() and
-ibmvfc_deregister_channel() to handle the async sub-CRQ by accepting a
-negative index. It also removes the __maybe_unused attribute from the async
-interrupt handler to enable its use.
+This commit wires the asynchronous sub-CRQ into the sub-CRQ lifecycle so it=
+ is
+allocated, registered, and freed alongside the SCSI channel queues. It modi=
+fies
+multi-queue initialization and teardown paths to accommodate the new queue =
+and
+advertises relevant capabilities to the VIOS.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
+> index cc1ef82580608..adc730af67d2b 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -4409,7 +4409,7 @@ static void ibmvfc_drain_async_subq(struct ibmvfc_q=
-ueue *scrq)
->   * @scrq_instance: async subq
->   *
->   **/
-> -static irqreturn_t __maybe_unused ibmvfc_interrupt_async_subq(int irq, v=
-oid *scrq_instance)
-> +static irqreturn_t ibmvfc_interrupt_async_subq(int irq, void *scrq_insta=
-nce)
->  {
->  	struct ibmvfc_queue *scrq =3D (struct ibmvfc_queue *)scrq_instance;
+
+[ ... ]
+
+> @@ -5800,6 +5808,7 @@ static void ibmvfc_channel_setup_done(struct ibmvfc=
+_event *evt)
+>  		for (i =3D 0; i < nvme->active_queues; i++)
+>  			nvme->scrqs[i].vios_cookie =3D
+>  				be64_to_cpu(setup->channel_handles[scsi->active_queues + i]);
+> +		vhost->async_sub_crq.vios_cookie =3D be64_to_cpu(setup->async_sub_crq_=
+handle);
 > =20
+>  		ibmvfc_dbg(vhost, "Using %u SCSI channels\n",
 
 [Severity: High]
-Now that the async sub-CRQ handler is enabled by this patch, can its
-execution race with target teardown or host reset?=20
+This is a pre-existing issue, but can this out-of-bounds write occur if the
+VIOS returns untrusted queue counts?
 
-In drivers/scsi/ibmvscsi/ibmvfc-core.c, the interrupt handler calls:
-ibmvfc_interrupt_async_subq() -> ibmvfc_drain_async_subq() ->
-ibmvfc_handle_async().
+In ibmvfc_channel_setup_done(), the driver reads num_scsi_subq_channels and
+num_nvme_subq_channels from the VIOS response into active_queues without
+validating them against the dynamically allocated max_queues array size:
 
-The ibmvfc_handle_async() function expects to hold vhost->host->host_lock,
-but this call chain only holds scrq->q_lock. Consequently, it iterates over
-and modifies vhost->scsi_scrqs.targets without the proper lock.=20
+ibmvfc_channel_setup_done() {
+    scsi->active_queues =3D be32_to_cpu(setup->num_scsi_subq_channels);
+    nvme->active_queues =3D be32_to_cpu(setup->num_nvme_subq_channels);
+    ...
+}
 
-Could this lockless list traversal cause a use-after-free or data corruption
-when handling dynamic async events sent by the hypervisor?
+The loop just above this patch hunk then directly uses this unvalidated val=
+ue
+to write to the scrqs array:
+
+ibmvfc_channel_setup_done() {
+    ...
+    for (i =3D 0; i < scsi->active_queues; i++)
+        scsi->scrqs[i].vios_cookie =3D
+            be64_to_cpu(setup->channel_handles[i]);
+    ...
+}
+
+Could a compromised or malfunctioning VIOS provide values that exceed the
+locally allocated array size and cause a buffer overflow here?
 
 [ ... ]
 
-> @@ -6825,36 +6841,49 @@ static int ibmvfc_register_channel(struct ibmvfc_=
-host *vhost,
-[ ... ]
->  	rc =3D request_irq(scrq->irq, scrq->handler, 0, scrq->name, scrq);
-> =20
->  	if (rc) {
-> -		dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
-> +		if (!is_async)
-> +			dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
-> +		else
-> +			dev_err(dev, "Couldn't register async sub-crq irq\n");
->  		irq_dispose_mapping(scrq->irq);
->  		goto irq_failed;
->  	}
+> @@ -7055,6 +7087,9 @@ static void ibmvfc_release_channels(struct ibmvfc_h=
+ost *vhost,
+>  static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
+>  {
+>  	ENTER;
+> +	ibmvfc_deregister_channel(vhost, &vhost->scsi_scrqs, -1);
+> +	ibmvfc_free_queue(vhost, &vhost->async_sub_crq);
+> +
+>  	if (!vhost->scsi_scrqs.scrqs)
+>  		return;
 
-[Severity: Medium]
-This is a pre-existing issue, but does leaving scrq->irq populated with a
-stale value after irq_dispose_mapping() cause a kernel warning during
-teardown?
+[Severity: High]
+Does this unconditional teardown cause a NULL pointer dereference when
+multi-queue is disabled?
 
-If request_irq() fails in ibmvfc_register_channel(), the error path calls
-irq_dispose_mapping(scrq->irq) but does not clear the irq field to 0. Later,
-when ibmvfc_deregister_channel() is unconditionally called for the async
-sub-CRQ during teardown, it might call free_irq(scrq->irq, scrq) on this
-stale mapping ID (or on 0 if it was never registered).=20
+During module unload or reset, if multi-queue was disabled (mq_enabled=3D0)=
+ or
+initialization failed, vhost->async_sub_crq is left zero-initialized.
 
-Should scrq->irq be explicitly cleared to 0 in this error path to prevent
-invalid IRQ descriptor warnings?
+Unconditionally calling ibmvfc_deregister_channel() routes to a cleanup path
+that behaves as follows:
+
+ibmvfc_deregister_channel() {
+    ...
+    /* Clean out the queue */
+    memset(scrq->msgs.crq, 0, PAGE_SIZE);
+    ...
+}
+
+Since msgs.crq aliases the unallocated msgs.handle (which is NULL), will th=
+is
+memset() write 4KB of zeroes to a NULL pointer and cause a deterministic
+kernel panic?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831-ibmvfc-fpi=
-n-support-v7-0-77d0b9809080@linux.ibm.com?part=3D6
+n-support-v7-0-77d0b9809080@linux.ibm.com?part=3D7
