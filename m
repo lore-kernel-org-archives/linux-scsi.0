@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3D3B3DB326;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C25C63DAAD8;
 	Mon, 31 Aug 2026 19:00:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788202817; cv=none; b=Rv0KmvbiyOOXx19KXig5cmTvPSrK013P/OZS1iOKe8QxU6ETdkr4LfrTcA2qKonF4OpzDb+HJrKC6QxZXy4+UYw40USuZOYUSkv+PbrLVfjn3ajszBJiCEsbru+/6nx6GMaHB6PLnWAySXPGEYVclQyB6G+pyFz7LHoN1wKQ1ww=
+	t=1788202817; cv=none; b=t+76B8c1K8IdO6u4jmqbyyqxtFS0IXSGQkg51J3TKenNGmgTc3GPYJCNfwrDdWSe8DGDdzj3DonFE3P8zPhgVQupbi+xTflB30/0i+QqSo5V3BVOmlIRu1yjRilADmuXbZ97DesxavDkxXasd1xJWaIy0HN5XTevo06OgNdannM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788202817; c=relaxed/simple;
-	bh=rjBmlQQTMG7h7d2b5mk9jOmECyYSFyRAc5cMyiPFXBM=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=S1H0m9/CSP+kLa9PdILZ63wFDf7TlKOznI2bhWFfDHctAI4uxZdw6tui0sRRoNQ5zxJ8zzOmqdspd9I2AbDx/H1jOZ+MF6Iu25t9MlA6Gety+Z17qtWE7DNJ7cn4wZxpUBvsY1nnn6tbH2/yzKA+423HA1tWE3D7OTf8oduwK6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b+Q2UdAL; arc=none smtp.client-ip=10.30.226.201
+	bh=bGxCMqk7Tca/HbrntvZOHhlkrnA0xoCRIXj6OVdWpxo=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=C5y/23TO2q5GmEBboatk2ueGwrvca8bgo5+Ryhd/nomBwrUikFuTouwVXLMSZ9s4sV9Jp3TEliuNSL7ZQOCPoAhCnckVLuomcxL663Y744IdutdulhvOwP4NJEX+ZBgFPCfDCXn1q0YC6keJLthrzpCVsws23JmyOuBE99crVyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Evt5lOXb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+Q2UdAL"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 76819C4AF09;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Evt5lOXb"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 54BF0C2BCB8;
 	Mon, 31 Aug 2026 19:00:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1788202817;
-	bh=rjBmlQQTMG7h7d2b5mk9jOmECyYSFyRAc5cMyiPFXBM=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=b+Q2UdALgQsDfkNTSjMjNMlI6axcqokp8Jynzt7Y3ul4bc0ubwHx3PlqSejTUqmWT
-	 d0R4nKglu45htYQji+CniK0/ka2t1vVU/7h0Eqru/JSmqQr46tOnmTuUFgyEdPV2/j
-	 NdDXplZzfedG2T4BMBIllSotpBsYlF2FlRaN1cFDRhnYjBUOvZl54ij/ajex3iRHQH
-	 bYTckeiaQXQztyiDNe+IqmQjzveB0Rrhv4fWhG3Qj759BpS37lx7isfRTRFBcQ92hE
-	 E4A3wfTCFk8teZNudVI43d2tpqtu/WLo+DV/EMN1HkGU4TBLx4EyzbNniXxsvv12/t
-	 B3JUap/qRqi5A==
+	bh=bGxCMqk7Tca/HbrntvZOHhlkrnA0xoCRIXj6OVdWpxo=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=Evt5lOXbat8HyDuN+ollb0bw3LRYYP4duOAd03GbHpwIjybHBaMqgzcO6Fbd09cwS
+	 p4/gED8D0NBOwDZAcQZSsa7NIhOEuIPZzSY1F+lLprehg0MTOfjrV51E7RKmikImZV
+	 owhH/76QIXMrrJfrZSAWULbqOzNGW74G5CgnwnlYKAr2MYKgBUgVXPIX1xTy6vkQ2n
+	 JgWtzSDc2rB2y8lJgarO1qTPh77EpJstqfv2m1Czn/6D+Ots9Qfsz+Oq6HEYh/oEuX
+	 UGh35aY5F0IuMA2v1cLd8PokPqr2qYtzCmlXBM4pnGvMtYucuae1IFrjbh2xvY/9wI
+	 e8X7lBC7Y8g7w==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57360C61DFD;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E731C624A4;
 	Mon, 31 Aug 2026 19:00:17 +0000 (UTC)
 From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Date: Mon, 31 Aug 2026 14:00:14 -0500
-Subject: [PATCH v7 2/8] scsi: ibmvfc: Add NOOP command support
+Subject: [PATCH v7 0/8] scsi: ibmvfc: make ibmvfc support FPIN messages
+Date: Mon, 31 Aug 2026 14:00:12 -0500
+Message-Id: <20260831-ibmvfc-fpin-support-v7-0-77d0b9809080@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -40,9 +40,12 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260831-ibmvfc-fpin-support-v7-2-77d0b9809080@linux.ibm.com>
-References: <20260831-ibmvfc-fpin-support-v7-0-77d0b9809080@linux.ibm.com>
-In-Reply-To: <20260831-ibmvfc-fpin-support-v7-0-77d0b9809080@linux.ibm.com>
+X-B4-Tracking: v=1; b=H4sIADzPlWoC/3XRTU7DMBAF4KtUXuNq7HhshxX3QCz8S41oEsWJV
+ VTl7jhFqBUyyye9+d5iriSHOYVMng9XMoeSchqHGtTTgbiTGd4DTb5mwoFLEKBosucSHY1TGmh
+ ep2mcF2p7iwqd594wUi+nOcR0uamvbz85r/YjuGWn9sYp5WWcv26zhe293wXdXCiMAkVuQTohR
+ YDu5TMN6+VYu0c3nsm+Uvjdkf85vDpesIgCojXoWk53dxTwttPtTo+2R6Fc1LrliAeHQdsR1Qk
+ ROmYc65FDy8G7o0G2HawO66KXURsdtW058sFh7U8WWR3JDffIMSjwf51t274BMPZrQTQCAAA=
+X-Change-ID: 20260407-ibmvfc-fpin-support-b9b575cd2da1
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
  Madhavan Srinivasan <maddy@linux.ibm.com>, 
  Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
@@ -54,11 +57,11 @@ Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
  Greg Joyce <gjoyce@linux.ibm.com>, Kyle Mahlkuch <kmahlkuc@linux.ibm.com>, 
  Dave Marquardt <davemarq@linux.ibm.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788202815; l=2519;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788202815; l=5318;
  i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=ZPYobFx4Tjmjv4+HMsDvOBnSXCtpmV13W5cWm9Aqs+k=;
- b=QhmopkvLCRSB87GEEqkFKKcdQ19roqMvftbaia9cA9eSUNEKQ5PJbfYNBlak1jIlBPZmmW1hr
- qSgI9yD0UunDT7qfO4ewn/esxZ5b2OoH9ouZJOps3mJaW963qSncfWa
+ bh=bGxCMqk7Tca/HbrntvZOHhlkrnA0xoCRIXj6OVdWpxo=;
+ b=A7iQTutu+dU3vu9jiywR5kwlmiVFYEJuzMJfkBBxWBd3WrtGzqPsWURMi3FcVvTIhBV6pcOSv
+ 5H1wlfVsOekBV6fLddp5A/leff0rbq9ssfSKPWfOQGf0EHRQws7jUAB
 X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
  pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
 X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
@@ -66,73 +69,117 @@ X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
 X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
 Reply-To: davemarq@linux.ibm.com
 
-From: Dave Marquardt <davemarq@linux.ibm.com>
+This patch series adds FPIN (fabric performance impact notification)
+support to the ibmvfc (IBM Virtual Fibre Channel) driver. This comes
+in three flavors:
 
-Add support for VFC_NOOP messages from VIOS to enable keep-alive
-functionality between the client and server.
+- basic, to recognize existing FPIN messages from the virtual I/O
+  server (VIOS) (patch 1)
+- full, supporting additional FPIN information and using its own
+  asynchronous sub-queue and interrupt (patches 3-7)
+- extended, supporting FC-LS-5 (patch 8)
 
-Define the VFC_NOOP CRQ format and add handling in both the main CRQ
-handler (ibmvfc_handle_crq) and sub-CRQ handler (ibmvfc_handle_scrq).
-Log unexpected NOOP messages if received before VIOS advertises support
-during NPIV login. Also fix a typo in ibmvfc_handle_scrq.
+Full and extended FPIN support requires a new asynchronous sub-queue
+with its own interrupt. The asynchronous sub-queue support requires
+ibmvfc to also support a new IBMVFC_NOOP command, which the driver
+recognizes and ignores (patch 2).
 
-Set the IBMVFC_CAN_USE_NOOP_CMD capability bit during NPIV login to
-inform VIOS that the client can handle NOOP commands.
+The asynchronous sub-queue work is split across three patches: patch 3
+defines the necessary data structures, patch 5 adds the interrupt and
+drain routines for the queue, and patch 6 refactors channel
+registration and deregistration to accommodate the new queue. Patch 7
+wires everything together, registering the async sub-queue during
+channel initialization and advertising support to VIOS during NPIV
+login.
+
+All three modes convert an incoming FPIN message from VIOS to an FC
+extended link service message, in some cases using default values for
+information not provided by the VIOS FPIN message but expected in the
+FC ELS message. This FC ELS message is passed to fc_host_rcv_fpin for
+updating statistics and sending the information upstream by netlink
+multicast, where it may be read by listeners including the DM
+multipath daemon "multipathd."
 
 Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
+Changes in v7:
+- Removed CRQ valid bit clearing to callers of ibmvfc_handle_async in
+  all cases
+- Added validity checks that IBMVFC_ASYNC_ID_IS_ASSOC_ID is clear
+  before using node_name
+- Fixed error path cleanup in ibmvfc_init_sub_crqs
+- Deregister and reregister async sub-CRQ in CRQ reset and reenable
+  code.
+- Moved work queue destruction after sub CRQs teardown in ibmvfc_remove
+- Modified async event handling code to use a tagged union rather than
+  void *.
+- Use WQ_UNBOUND rather than WQ_PERCPU for fpin workqueue, as FPIN
+  events should be rare. Hold q_lock only in
+  ibmvfc_drain_async_subq(), like ibmvfc_drain_sub_crq().
+- Hardened KUnit tests to use host_lock and kref.
+- Link to v6: https://patch.msgid.link/20260817-ibmvfc-fpin-support-v6-0-62a2d525e70d@linux.ibm.com
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 78be00d31a06..e972e4ec5be0 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -1578,7 +1578,9 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
- 		login_info->flags |= cpu_to_be16(IBMVFC_CLIENT_MIGRATED);
- 
- 	login_info->max_cmds = cpu_to_be32(max_cmds);
--	login_info->capabilities = cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN);
-+	login_info->capabilities =
-+		cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN |
-+			    IBMVFC_CAN_USE_NOOP_CMD);
- 
- 	if (vhost->mq_enabled || vhost->using_channels) {
- 		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
-@@ -3693,6 +3695,14 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
- 	if (crq->format == IBMVFC_ASYNC_EVENT)
- 		return;
- 
-+	if (crq->format == IBMVFC_NOOP) {
-+		if (vhost->state == IBMVFC_ACTIVE &&
-+		    !ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NOOP_CMD))
-+			dev_err_ratelimited(vhost->dev,
-+					    "Received unexpected NOOP command from partner\n");
-+		return;
-+	}
-+
- 	/* The only kind of payload CRQs we should get are responses to
- 	 * things we send. Make sure this response is to something we
- 	 * actually sent
-@@ -4223,7 +4233,15 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost
- 	case IBMVFC_CRQ_XPORT_EVENT:
- 		return;
- 	default:
--		dev_err(vhost->dev, "Got and invalid message type 0x%02x\n", crq->valid);
-+		dev_err(vhost->dev, "Got an invalid message type 0x%02x\n", crq->valid);
-+		return;
-+	}
-+
-+	if (crq->format == IBMVFC_NOOP)
-+		return;
-+
-+	if (unlikely(!evt)) {
-+		dev_err(vhost->dev, "Received null event\n");
- 		return;
- 	}
- 
+Changes in v6:
+- Use alloc_workqueue rather than devm_alloc_workqueue, and add
+  explicit destroy_workqueue calls
+- Moved ibmvfc_find_target into patch 1
+- Link to v5: https://patch.msgid.link/20260806-ibmvfc-fpin-support-v5-0-13fd6f8a8f8b@linux.ibm.com
 
--- 
-2.55.0
+Changes in v5:
+- Incorporate changes for NVME-over-FC.
+- Removed now redundant fabric login patch.
+- Link to v4: https://patch.msgid.link/20260710-ibmvfc-fpin-support-v4-0-ef031ac19520@linux.ibm.com
+
+Changes in v4:
+- Refactored channel registration
+- Check whether async work queue is allocated before using or freeing
+- Fixed work queue allocation/destruction
+- Skip basic KUnit test when there are no ibmvfc devices available
+- Fix target not found condition in ibmvfc_process_async_work
+- Link to v3: https://patch.msgid.link/20260702-ibmvfc-fpin-support-v3-0-d95b9747cf88@linux.ibm.com
+
+Changes in v3:
+- Fixed latent bug, exposed by VFC_NOOP, related to dataless CRQs and events
+- Fixed FPIN TLV descriptor length calculations
+- Use safe list walker to walk targets in ibmvfc_process_async_work
+- Added write memory barriers after clearing CRQ valid field
+- Use per-vhost work queue for FPIN work
+- Link to v2: https://patch.msgid.link/20260608-ibmvfc-fpin-support-v2-0-d41f540fba5c@linux.ibm.com
+
+Highlights of changes in v2:
+- Refactored mostly common FPIN conversion routines and async event
+  processing into single routines with wrappers for differences.
+- Moved FPIN processing to a work queue to avoid conflicts with
+  fc_host_fpin_rcv and memory allocation
+- Set descriptor sizes correctly
+- Use target WWPN for basic FPIN descriptor
+- Split patch 4 into 3 patches, for definition, allocation, and use of
+  the asynchronous sub-queue for events
+- Link to v1: https://patch.msgid.link/20260408-ibmvfc-fpin-support-v1-0-52b06c464e03@linux.ibm.com
+
+---
+Dave Marquardt (8):
+      scsi: ibmvfc: add basic FPIN support
+      scsi: ibmvfc: Add NOOP command support
+      scsi: ibmvfc: add FPIN extended flag and async sub-CRQ queue handle
+      scsi: ibmvfc: extend async event handlers to handle async sub queue events
+      scsi: ibmvfc: add interrupt routine for asynchronous sub CRQ
+      scsi: ibmvfc: extend channel registration and deregistration for async subq
+      scsi: ibmvfc: register and use asynchronous sub CRQ for events
+      scsi: ibmvfc: handle extended FPIN events
+
+ drivers/scsi/Kconfig                 |  10 +
+ drivers/scsi/ibmvscsi/Makefile       |   1 +
+ drivers/scsi/ibmvscsi/ibmvfc-core.c  | 690 ++++++++++++++++++++++++++++++++---
+ drivers/scsi/ibmvscsi/ibmvfc.h       |  63 ++++
+ drivers/scsi/ibmvscsi/ibmvfc_kunit.c | 398 ++++++++++++++++++++
+ 5 files changed, 1105 insertions(+), 57 deletions(-)
+---
+base-commit: 12e67eb89eb2b9516685c744d3f7de0a2d1bd701
+change-id: 20260407-ibmvfc-fpin-support-b9b575cd2da1
+
+Best regards,
+--  
+Dave Marquardt <davemarq@linux.ibm.com>
 
 
