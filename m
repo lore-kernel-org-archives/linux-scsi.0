@@ -1,169 +1,117 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D82D3B47F4
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 07:27:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788161273; cv=none; b=hPBh3kKz8o0Ce56aziipikgEoswtsjVafph9p7iHMgBMUGAhBE4LPoHUON2iV6hi/78RVrOMUiWRqcitRXKcOfn2FlyGgfiaoi+NeiCKewIrM4M7UzW0dYluZEzEvIA4Fvml9eSsbqS3ZSeCGSVn9y/ze/BuomJ2KwRQZJ2ppws=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788161273; c=relaxed/simple;
-	bh=oee+dgqoYaaF2j4n+RCLjyCIiiIc/++4KI5FnkgHTSg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mAhIIbWO3oXxw7Y0RoLcbo+00zippLzubOSkpELD3xbmhrqY4rXUU1DCcZoEwA0RbpGdT4UL9WWdCQLI5NihyYuuvUUZns1hglCdKf4reLiXaIiNKJ7rOmgeCdQKpwN0g1HrJUGNAgjlxBIdhmo6QLQUAUT8cy49a45ArdcOnFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RYcNGFK2; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5873DAAB1
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 08:26:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.177
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788164773; cv=pass; b=XEGaWCij1V1FSzQnhKyyylLI06/cBvUATYFfNmobwfzAbfA9J9PSxDXgf24epKeVYLBUo0L0NGK3mYeI5+BbI+0lUQ+5oLnL1CI8Hds3eOZ4xNb6cwmxN86g75u3v5J5quHULTKj/561e2TiQLj/n+ATGBnWjQICHNRgOVRCUqA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788164773; c=relaxed/simple;
+	bh=L50lYICP106cKUnxwcy3VRTlzI/KCvX3m5TcfCKQ+uY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=te/VGDQqMloo3vv+b2uf61GKnvl+Qu/iehxntJMVsdeGaR2j3nTief2uB/hTYbl2p7vRTyRILtBwRAj93TsZcAzAvCB6YC6ZELHFEYCF/JFIGCnFLW0ab3zvif9TZTVZELngdv2gPfF7jWWzpLvrIds8lpeAKNdaoB1abrUYgv4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=tDs5ZxsA; arc=pass smtp.client-ip=209.85.160.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RYcNGFK2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5B6A1F000E9;
-	Mon, 31 Aug 2026 07:27:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788161272;
-	bh=D/1t5xmzSppP3tZHek4JPisY9RcXge+vO0kRJ3G3gzM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RYcNGFK2yFBugbyBvfX902DeZtClyVmboxVHLBAfrmiu2z2C5LCS2WeUU/oRXksA4
-	 xbV6YTzgveBdqSPYWiNuyhh+11LVpYp7Sno4MGp0jzMtBSSH/3dBavG9MVKOlN6j7d
-	 AaitsKbdwiZJB3+Z4MgOyj1hhKQo/arLHk5tfr8yaNbKyYEhWrGaWMHybhMcTIlp8q
-	 9S6GZnND4msLsDmg5hfb9sBYW6mrrx3jugXwfj50wgTJ3ifDPiTIZ0Fu5Edy1XoGhI
-	 Gjl5d/1dIZV12LOtKqqH4trBuHzvGJfTI+3FXUQs+7U09L/BHgFktRAP/OJ2IB5RKt
-	 tk6IAiIQZW0vw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi_debug: add support to corrupt data and/or reftag
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Christoph Hellwig" <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260831064500.2576832-2-hch@lst.de>
-References: <20260831064500.2576832-1-hch@lst.de>
- <20260831064500.2576832-2-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 07:27:51 +0000
-Message-Id: <20260831072751.D5B6A1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="tDs5ZxsA"
+Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-51c01c79467so367171cf.0
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 01:26:11 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788164771; cv=none;
+        d=google.com; s=arc-20260327;
+        b=NU0+8w5k3DX/eQ/FiWLOkJJCIh9jOiLsKOoULqRrO1nDGnQ6CqDUdbHkJxQpPJh5WM
+         Yd+x3Cxan64D91xqSw/3Sh4wOTkGZGRvZn4mzxHPX9y+5b3EHzAvA/cJFlgpDtbmJMGn
+         apY9xwcbCnt4FZPAqBC4YnjBlED/1growpGYXLR2AdrZP5OIm+tdtxBkVWV9OIamLxOX
+         43y+73FiitlQ0lcSpKyXrP2pvBrGFJ6Zqfi/kzNltlCksvgnJO1u3qc0tKVykjFI7LRN
+         VMViQjHCAy8H05TmSBrgKrfFXe6xIt1zXKthFqL+EWAamWGuB8hzqbsVgw6b8/Pyi0mr
+         xhOg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=L50lYICP106cKUnxwcy3VRTlzI/KCvX3m5TcfCKQ+uY=;
+        fh=f9/VcjgqmhjeO2xeqvn7QATDWbastD6G5BTgpTIBKTw=;
+        b=WAw5750K0VaA/9y/9+B8bmTsGSKFyPnaliVKq/zsU3c+OCZj6i98Z8xtmSMpyN1Vcm
+         FRY+cY3fHkJDfzmjjg2y339Lo81t9w3X7GxVdVf/tARjZkCCKJD6UZ0PnULJ3sRo5Pz6
+         g9HFa8fK4xsdFbAHL9qNvshfVHQvMkhfiJmRdpvIscqONUVL763QK4qcZBrkxtxY+pd4
+         I/L0iZp2KetFwoJ8mRBdZNrOY4EHXvmxj0hP5if3qcelpQ0f4v0HVRshtgahgZl2kuJD
+         Xwt7eBsr444wofmHeB4WcuSsKGFUen8T/AxwuK+m8NTj+C1oB4aY/8Wcdi4l3DsePfDI
+         gmnA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1788164771; x=1788769571; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=L50lYICP106cKUnxwcy3VRTlzI/KCvX3m5TcfCKQ+uY=;
+        b=tDs5ZxsA8eAthtxPfEYQVkB4LNXNAh0IKPq+qmRZMAg2QD4kV5SyfJQhYCFxAKeS08
+         kdiWrNZaIYsEBpRpcKh1mqrDvExO2lFOCVWsRLai27b+ObncNljSADSlf0texI/+zPMD
+         UlvaNYurtRGLaS9kmmi6ASAp6TO+if/yoqrWv/UWmKcqEP+Q/ePTgt9mK3s9fmrIYPvx
+         xHH1llvM4XKq0new2KRAo16pDt5qae7YPPeBe+XIVeIHqEj9iFmn/cZFWnFTPjpQvSV4
+         SlhWVNxA0q2PiEi1EaNG8zKrRV4Y56+xyE1RYtcyCfLIEVzuwXJfJbmIm7hh7O3ZbM/5
+         38NA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788164771; x=1788769571;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=L50lYICP106cKUnxwcy3VRTlzI/KCvX3m5TcfCKQ+uY=;
+        b=VHrv72lphO8dT7MZFl9L4xNG1uso53Hsob0bjOMU1lLD5SymwXGXGbjuVwMRtzqAQ1
+         8PHW1oGtPnFd57NyikwSCqNMvspcJOeXThEV5gMKuZhzKbjxm8rS+A0O6/ugTdpudfBs
+         W6lwGLP9irLy5FvskiKyY3FgsRPKvuuAnUX3HCPFT2Uhjj0/B1snNJLaQcN4DxH6SEio
+         GBzzDzx8IjfdMDl2NYHxQEconRUhD97Rl9OYm/0WfTmzP4H9ojwk42L5rYaMIRoAkOb0
+         +r+IdNLelFRetVAsYv5Dxe7KvJC4dJ5O4FqQ/H6Oq3lGwWhcdfyYpbS5cMGP9VIqAztg
+         92Mg==
+X-Gm-Message-State: AFuF++mxHdbEb1Qp5LbBtLO1jsH4TkMchWK5JZMg8uOsKJEka3wLIRS6
+	RwEX/aWtUZebt4Jr7eS+jl4/oUp6FvnZvC108qZ4WAom7h7nT9OHie1fjxr6aCnWdG9p7LAuTQd
+	l/+x2gtGEuuYLtGIysFKfndN2Rsc/yJeLI2LVXqfx
+X-Gm-Gg: AR+sD11LqQT9MMV0FQ7j9MxtupG+NnunNCnPjeyRd4VCBUvU21NwSNFaKruQe0HAa93
+	r20PMjWfPIORPsgeGxMhDeB8d977kZqnj/OR8mZU7FM976Hi6wKbiuJ7ld71HKUoASb4ppT6yMT
+	DJnM5phKe6WtSXO8N9xu1ePXwoLTovtZ6wuRtYFFNwfBSmsb7OZOVeK0rRLFdQMnAef9jUNP0Ng
+	swus6NiupMfJB9MSTA09fDwfS9buRamPNbXgU23ZRNnlON0V6Kmj93/SzPLOFOR4VnDBbJZXAzP
+	T/m8zrBVYFrnYYdeU6IjzhwHeXZ3JPjwQli77Tw+4+wWF3vgDqLc9Rst0ssV/JR4ylODkE69fH4
+	2lg==
+X-Received: by 2002:a05:622a:90b:b0:52b:806e:2633 with SMTP id
+ d75a77b69052e-52ff716a474mr28081931cf.1.1788164769903; Mon, 31 Aug 2026
+ 01:26:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260827070345.2853821-1-jorge.ramirez@oss.qualcomm.com> <20260827070345.2853821-2-jorge.ramirez@oss.qualcomm.com>
+In-Reply-To: <20260827070345.2853821-2-jorge.ramirez@oss.qualcomm.com>
+From: Stanley Jhu <stanleyjhu@google.com>
+Date: Mon, 31 Aug 2026 16:25:33 +0800
+X-Gm-Features: AcwNN1WVv-1JxNRBi1FdqkSyKkrL3KqIt4GooQUTfRRAXFQqWs_ZljDsUxFdizM
+Message-ID: <CAE14pdejGMw-4hpj+nydgMi_Ff0WiACEEisa6Y=wp5cV1H_NnA@mail.gmail.com>
+Subject: Re: [PATCH v4 1/2] ufs: rpmb: retry power-on UNIT ATTENTION on the
+ RPMB WLUN
+To: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>, beanhuo@iokpp.de, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	beanhuo@micron.com, can.guo@oss.qualcomm.com, sumit.garg@oss.qualcomm.com, 
+	jenswi@kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	op-tee@lists.trustedfirmware.org
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On Thu, 27 Aug 2026 09:03:35 +0200, Jorge Ramirez-Ortiz wrote:
+> After a power cycle, the first command sent to any UFS logical unit
+> completes with CHECK CONDITION reporting a power-on UNIT ATTENTION.
+> The SCSI core surfaces this condition to the caller rather than
+> retrying it.
+>
+> For the RPMB well-known LU the first command after boot is the first
+> RPMB frame, and RPMB has no earlier, guaranteed access that could clear
+> the condition beforehand. The power-on UNIT ATTENTION therefore reaches
+> RPMB and fails that first frame, breaking RPMB on every cold boot.
+>
+> The RPMB WLUN needs the power-on UNIT ATTENTION to be retried so that
+> RPMB works from the very first access after a power cycle.
+>
+> Signed-off-by: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
 
-New issues:
-- [High] Unbounded loops with preemption disabled, combined with excessive =
-kernel logging and wrap-around logic errors, cause CPU lockups and state co=
-rruption.
-- [Medium] The debugfs write handler passes the raw user-provided count to =
-`memdup_user_nul()` without capping it, risking kernel allocator warnings.
-
-Pre-existing issues:
-- [High] Out-of-bounds memory read in `map_state()` when Logical Block Prov=
-isioning (LBP) and `virtual_gb` are used together.
---
-
-commit 9a79e34fe4a44a1c0a0765e0674426353e4ac98e
-Author: Christoph Hellwig <hch@lst.de>
-
-scsi_debug: add support to corrupt data and/or reftag
-
-This commit adds a new debugfs file "corrupt" to inject data and/or reftag
-corruptions into scsi_debug devices. This enables testing file system and
-protection information mechanisms via random bit errors or misplaced writes.
-
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 3346562275f80..959177adfc9a8 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-[ ... ]
-> +static ssize_t sdebug_corrupt_write(struct file *file, const char __user=
- *ubuf,
-> +		size_t count, loff_t *ppos)
-> +{
-[ ... ]
-> +	u64 lba =3D 0;
-> +	u32 num =3D 1;
-> +	u32 nr_bit_errors =3D 0;
-> +	s32 reftag_adjust =3D 0;
-> +
-> +	buf =3D memdup_user_nul(ubuf, count);
-
-[Severity: Medium]
-Could passing the raw VFS count directly to memdup_user_nul() trigger page
-allocator warnings?=20
-
-Since count can be up to ~2GB (MAX_RW_COUNT), and memdup_user_nul()
-internally uses kmalloc_track_caller() without the __GFP_NOWARN flag, a
-large write request might cause loud warning stack traces or allocation
-failures.
-
-[ ... ]
-> +static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
-> +		u32 nr_bit_errors, s32 reftag_adjust)
-> +{
-[ ... ]
-> +	if (scsi_debug_lbp() &&
-> +	    (!map_state(sip, lba, &num_mapped) || num > num_mapped)) {
-
-[Severity: High]
-This is a pre-existing issue, but does calling map_state() with an
-un-folded lba cause an out-of-bounds read if virtual_gb > 0?
-
-When map_state() uses test_bit() on lba_to_map_index(lba), it doesn't
-verify if the index exceeds the allocated map_size. If lba goes up to
-sdebug_capacity, it can easily exceed the backing store size. This vector
-was already reachable via block I/O (like GET LBA STATUS) but this patch
-now exposes it directly via debugfs.
-
-[ ... ]
-> +	/*
-> +	 * For each possible bit error, flip the same bit in each corrupted
-> +	 * block to simulate repeated patterns like errors in cables.
-> +	 */
-> +	sdeb_data_lock(sip, false);
-> +	for (b =3D 0; b < nr_bit_errors; b++) {
-> +		unsigned int bit;
-> +
-> +		bit =3D get_random_u32_below(sdebug_sector_size * BITS_PER_BYTE);
-> +		pr_info("flipping bit %u in LBAs %llu:%llu\n",
-> +				bit, lba, lba + num - 1);
-> +
-> +		div_u64_rem(lba, sdebug_store_sectors, &block);
-> +		for (i =3D 0; i < num; i++) {
-> +			u8 *p =3D sip->storep + (block * sdebug_sector_size);
-> +
-> +			sdeb_data_sector_lock(sip, true);
-> +			p[bit / BITS_PER_BYTE] ^=3D (1 << (bit % BITS_PER_BYTE));
-> +			sdeb_data_sector_unlock(sip, true);
-> +			if (++block >=3D sdebug_store_sectors)
-> +				block =3D 0;
-> +		}
-> +	}
-
-[Severity: High]
-Can these nested loops cause CPU soft lockups?
-
-Since nr_bit_errors and num are parsed from user input without strict upper
-bounds, large values might stall the CPU while holding sdeb_data_lock(),
-which acquires a rwlock in read mode and disables preemption.
-
-Also, if num is larger than sdebug_store_sectors, the wrap-around logic=20
-will visit the same physical backing memory multiple times. If a sector is
-visited an even number of times, does this accidentally undo the bit flips?
-
-> +	if (reftag_adjust) {
-> +		pr_info("adjusting reftag by %d sectors for LBAs %llu:%llu\n",
-> +			reftag_adjust, lba, lba + num - 1);
-> +		for (i =3D 0; i < num; i++) {
-> +			struct t10_pi_tuple *sdt =3D dif_store(sip, lba + i);
-> +
-> +			be32_add_cpu(&sdt->ref_tag, reftag_adjust);
-> +		}
-> +	}
-> +	sdeb_data_unlock(sip, false);
-
-[Severity: High]
-Similar to the wrap-around logic above, if num exceeds sdebug_store_sectors,
-will dif_store() wrap around and redundantly apply reftag_adjust multiple
-times to the exact same tuple?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831064500.2576=
-832-2-hch@lst.de?part=3D1
+Reviewed-by: Stanley Jhu <stanleyjhu@google.com>
