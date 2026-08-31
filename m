@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11C1F4582E1;
-	Mon, 31 Aug 2026 17:03:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA4AA45C6E9;
+	Mon, 31 Aug 2026 17:03:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788195807; cv=none; b=cHVBG9QnwIseaLcik9S1fT4McVw1xEu/DauwJFGPtbdBRH/NmiglS7a8ECqW9+R7uT50W0DGB/EeudKVoGq1V5KjZ7+n72Fh2QwDMNuSopaxBSYI35Zda+QulCTPvBL3ZjlCf0W6PgYwnvJGFMn0l+Ha6/jzPrHK4ri2GfOr8ok=
+	t=1788195819; cv=none; b=OzjcyhqWCXUbw0ODhEMBLAH0dam2rU1NLoDOc0esjOAjuMkSFuRe8mBNuOPVFXOocoPNK17zpZcQqdQxqXU94pQJj8/UtUdi+97J2FNjo3DbtDhcA4bdGSmYGQbDf+YoMHw7ob5+LvssyRI2+sv0/xZJ5d3gyHRxyarT+5e17b4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788195807; c=relaxed/simple;
-	bh=N4a3IGBIgWo3xSn0pDfyojf4j06Ir+jekNevnk4j4c4=;
+	s=arc-20240116; t=1788195819; c=relaxed/simple;
+	bh=WhXvhLvCYXq3gpn8etdGGnJ5D8EEDOOQI1Dk7+EMr0Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MnfXanz9r+MDGayNg2S/aGm2gHJzqXiLc+q2cbrM+LjTT2AUHQXgTtYrUOZ5/tAbCYfjFyY3DRysE64dr6dOhgSHhpTqPRsRtuaQ7FQZTN7DQnu+jWlx4/WVviFR/gjkirHP+hj3vZQwWSFwQHSd64VF2LK9j/919C7M33XFkZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SwG6UrdK; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Uj/h93H1P9vtBPGbq/wisYos2dMAgqTWQAxGysudbJUreq1DHa2Alyb+FxrmAhlz2gX4mUMJ5JMOnJC6Ngv+qUlx+T2PXorOIVPLtAt6jwptORpB7zN3f3ThVh4cTZ7bjGqb/2/2EVwh5QQkstWA5cQ+ZSL3dD2xWGhKro9K4hM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eYT6a3qT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SwG6UrdK"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 88E971F000E9;
-	Mon, 31 Aug 2026 17:03:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eYT6a3qT"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 8F9741F000E9;
+	Mon, 31 Aug 2026 17:03:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788195805;
-	bh=h4hiZqyRUrpSjQM/JiE2djp6K/bUQsz3EWD+p8v8e7k=;
+	s=k20260515; t=1788195818;
+	bh=ZUwdEUywFfqiyBmn4YTr1ijPkfwObC0/H5O3Qs1N5JU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=SwG6UrdKob4QTNhmah1DrfLrAyZ0ytoZWjc+yrEr+eYqdxRuMTw5G8k4Wzcjwnk6g
-	 mfUE36d9qsEcOTXYMbO2kU3oqUKxZXRnQQNJGPX9u4wB/6RBspo+yxvlcZkVlsk3+m
-	 QxVVvWuZ6FBa/pIWs5coKdzX0For71BHIRyt2mCLL/15P1bJlMJS/3d5a7/PJCuz0E
-	 B2MXT7umSWpWxr1WllTzM6HvDNzCxbOcP4YvKf6JXDXtmrydACFDFsMZrtiRYaVJFe
-	 COPHnzBe4l3t6o3T47L71pwxksd7/z1no2ChRa8u+obN9a4rFkS/4iKkRCpwcXuR5u
-	 MqftoPE/QJn0Q==
-Date: Mon, 31 Aug 2026 10:03:24 -0700
+	b=eYT6a3qTc/nmx5xlFjv3jRY5i1vW7vo25LVdkfA6g9+cd01TzyfG9g6hPC/aARRSI
+	 gmrIqD4uQ6UrY/+JXHVB7kTT3v8pDRlF+8XYm2rFzCaJgoC+Q8VkoQcCValO34reUP
+	 YWEPVX2yL6THGaBuzmZ3pMbI6y+3p9OFcCWaP1gIA7AKzdvVdOcxGGC5IxMu6E6IFo
+	 1dhQ6Elo6k1+qXfMkdAUm1plW41iLhA9FE1RvQsPX3MqLYfGyb5x/teWHz8n2H1Cnw
+	 c9/SZljMAYN7y+l/FrRafXp/nB4WCBQOd8D34MsMVvaawZEspFZb3IkXNIAPy0R6Z2
+	 74wwuC0QZFEeA==
+Date: Mon, 31 Aug 2026 10:03:38 -0700
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
@@ -34,10 +34,10 @@ Cc: Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
 	Kanchan Joshi <joshi.k@samsung.com>,
 	Anuj Gupta <anuj20.g@samsung.com>,
 	John Garry <john.g.garry@oracle.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 2/6] common: factor out a _bdev_disk_name helper
-Message-ID: <20260831170324.GZ839663@frogsfrogsfrogs>
+Subject: Re: [PATCH 3/6] common: add a _sysfs_block_integrity_path helper
+Message-ID: <20260831170338.GA839663@frogsfrogsfrogs>
 References: <20260831064557.2577241-1-hch@lst.de>
- <20260831064557.2577241-3-hch@lst.de>
+ <20260831064557.2577241-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,72 +46,49 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260831064557.2577241-3-hch@lst.de>
+In-Reply-To: <20260831064557.2577241-4-hch@lst.de>
 
-On Mon, Aug 31, 2026 at 09:45:46AM +0300, Christoph Hellwig wrote:
-> This will be reused to look for the integrity subdirectory soon.
+On Mon, Aug 31, 2026 at 09:45:47AM +0300, Christoph Hellwig wrote:
+> Add a helper function to find the sysfs integrity directory for a given
+> block device.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good to me, thanks for refactoring this!
+Looks good now,
 Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
 
 --D
 
 > ---
->  common/rc | 27 +++++++++++++++++----------
->  1 file changed, 17 insertions(+), 10 deletions(-)
+>  common/rc | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
 > 
 > diff --git a/common/rc b/common/rc
-> index 8add0eedf942..2fa7ddebd8fd 100644
+> index 2fa7ddebd8fd..5e709dd79993 100644
 > --- a/common/rc
 > +++ b/common/rc
-> @@ -5233,28 +5233,35 @@ _sysfs_dev()
->  	echo /sys/dev/block/$maj:$min
+> @@ -5264,6 +5264,21 @@ _sysfs_queue_path()
+>  	return 1
 >  }
 >  
-> -# Get the sysfs queue path for a block device, handling partitions correctly.
-> -_sysfs_queue_path()
-> +#
-> +# Get the name for the main disk block device given an arbitrary blockdevice
-> +# /dev/ entry
-> +#
-> +_bdev_disk_name()
->  {
-> -	local dev parent
-> -	dev=$(_short_dev "$1")
-> +	local dev=$(_short_dev "$1")
->  
->  	# For partitions, queue details are in the parent device's sysfs dir
->  	if [ -e "/sys/class/block/$dev/partition" ]; then
-> -		parent=$(basename "$(readlink -f /sys/class/block/$dev/..)")
-> -	else
-> -		parent="$dev"
-> +		dev=$(basename "$(readlink -f /sys/class/block/$dev/..)")
->  	fi
->  
-> -	local queue_path="/sys/block/$parent/queue"
-> +	echo "$dev"
-> +}
-> +
-> +# Get the sysfs queue path for a block device, handling partitions correctly.
-> +_sysfs_queue_path()
+> +# Get the sysfs block device integrity/ path for a block device, handling
+> +# partitions correctly.
+> +_sysfs_block_integrity_path()
 > +{
 > +	local disk=$(_bdev_disk_name "$1")
-> +	local queue_path="/sys/block/$disk/queue"
->  
->  	# Verify the path exists before returning
->  	if [ -e "$queue_path" ]; then
->  		echo "$queue_path"
->  		return 0
-> -	else
-> -		return 1
->  	fi
+> +	local integrity_path="/sys/block/$disk/integrity"
+> +
+> +	if [ -e "$integrity_path" ]; then
+> +		echo "$integrity_path"
+> +		return 0
+> +	fi
 > +
 > +	return 1
->  }
->  
+> +}
+> +
 >  # Get the minimum block size of a file.  Usually this is the
+>  # minimum fs block size, but some filesystems (ocfs2) do block
+>  # mappings in larger units.
 > -- 
 > 2.53.0
 > 
