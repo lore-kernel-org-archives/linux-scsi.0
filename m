@@ -1,215 +1,288 @@
-Received: from TYDPR03CU002.outbound.protection.outlook.com (mail-japaneastazon11013010.outbound.protection.outlook.com [52.101.127.10])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D93B73A5E77;
-	Mon, 31 Aug 2026 03:24:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.127.10
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788146662; cv=fail; b=Ieta3Esj+RkSks0GiBUCBKWg+KkVr0jfzGwUaKkO7zAAYJS9T8pLTErhasustRbXwTaDFlx1emOUd0EVOTaIrCqhJeWT5REFtfmOX+QTBv6rzboZg3jsyb3It84TaLo7nLEIVrO145zWz6yrEAAZdoBxN7GSYJF2M6QSXWu0ki8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788146662; c=relaxed/simple;
-	bh=HscJyfbvb1IzbuTafgUNYBtAcU7BdabX4Uj+b301Ejw=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=SlHHnYZ5G4TKbHw3HuD5GTvznQg4b60FxHAENtN/iTgbx/yrZBHZRzAyMsHhiDN6YGiEpEZxOHraMmoVefRGAFvOFIIUDa1e/mhmpLCIB5AiJls++2gGg3kQHnDVPoCdCi5+R65NbjoqqQzAchFDpD+FxSeOCsRPdqbhm1tgsys=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=EMmLHlK9; arc=fail smtp.client-ip=52.101.127.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D9593C1F
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 06:22:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788157322; cv=none; b=g7Reo/vXYj/Lc0h52hon8FtwdfCGPKjuBwwiHF5Dc8igsq3uV+VnAquWGlO8cxgSe7MeBNSGPD3lFVX8jedCGu6PW8H6lt22zB4JxGlhzY0gjoc6towi+hG5UFBxtsumEE0Nn9dRVPNTm0eu8GxMBbAyQaFlDCl/0LLARTjSAos=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788157322; c=relaxed/simple;
+	bh=WqBC9k9dQo1Fkp8FeGnmJpcacq5DVytNnWXm1742Lso=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=UujsxdEWGxeRPxpyeXaWHJ9chfN10QoO2H+h446BAAGfRiuGnBrkVQpcKH89XD/wyTm2O8+wQtPhIWkOxHpD1dhsAh//j1kP/dFChZCJCPWZZOiyvQPo2s9Vp87Shezo2O9XV7Qz0Hw40IbUizgSUU8vVAxAGyGs4l0hPTdoIBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Kn1YWkQ+; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=CTXoUPlF; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="EMmLHlK9"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mBvNA1MWNtTsgBOdcjTJJpKca0fTWWvQLJwoovrbq02vmg03wK4NnetIJxtKRtqooc3LIoE6Yyghtf+bPAwNlNyQCYoUQAVrTVGzTpam1CFUh43EeGof0u3hoNrF18pyhxuzWxymbrm3Qr7e5kuWxopcWjyGnmRd87PsrCwKBSdM/xSYJ2neQO95i51qk4dCfCUrVjLQ6XtNQKJF6raxO4ni71i8GE4qb4nzJV/A+WL7wTG843A5InjysypH13EDD7qN6Nmzw/kAq2DLukvxOsMiXjpA5Ccmq8O9wSpIBhP5ue6m8vWhKbazgWelFw7skcX+pl2hwUShluiZPTg5RQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HscJyfbvb1IzbuTafgUNYBtAcU7BdabX4Uj+b301Ejw=;
- b=pHxkY6PsSARyMlfNttOrpLNTjDv2d/xc8Jy9du04VpN0FgWN/54oc8AsbhWgxqUIPFFwF8x9uK0OfWYbVjQps3+9RztnZzf7CcUBQS4OPW64N+P+6oGTZusauXMa47Fx93NFq9E38m4UMi8DnwClpILtILYKD7/l57P/uE8GEhuNsjgN2R1S88OrER4EFaK+WAyMI7RnwbDMARg8xwx0GYu9WLx2sT+He+PaCWZp4OvdNyl4xhq+R7OObbi/MbaDlkX9NlNiSO1DGoQju/EDbDxKuY359tXfgSyFL1IPvKWPOB5nRfN8YBAA1CX6V3hCglkgov3BC3FgKwS13WhxIg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HscJyfbvb1IzbuTafgUNYBtAcU7BdabX4Uj+b301Ejw=;
- b=EMmLHlK9mxIpEZIOYlkY566d/yodEEfdXuPrR2FI/+Qyx/B46+0S8eJXURnZWFUnFa78BBIXQ9DM1MFRFHRXLjybttveNueTTRFdyMSrAwd1tkPZoyKhkobb+GD+jHO4jyUwg3v1SYlMGVjVE85PlW5NVerw3jl0Pf1q7QyZpaBu6uO+RXEESuW9k6hHNFhHNqPcIp9/mw19rIglalnoFK27wG5LveHdxdKai7p2pHvqxCy6B64FdWrAxZn6t/HnRNV5lI1M5E4BKJ9wNRpE6ZuHCupwIToHR1OMsDk7mooNuXYajPJEGtyfb2KwAZVwJXxz/w0cc1Q6oA7Ss9ZTew==
-Received: from TYUPR06MB6217.apcprd06.prod.outlook.com (2603:1096:400:358::7)
- by TYPPR06MB8104.apcprd06.prod.outlook.com (2603:1096:405:313::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Mon, 31 Aug
- 2026 03:24:16 +0000
-Received: from TYUPR06MB6217.apcprd06.prod.outlook.com
- ([fe80::8d51:58c7:42f3:ecc]) by TYUPR06MB6217.apcprd06.prod.outlook.com
- ([fe80::8d51:58c7:42f3:ecc%4]) with mapi id 15.21.0360.008; Mon, 31 Aug 2026
- 03:24:16 +0000
-From: =?gb2312?B?uvrBrMfa?= <hulianqin@vivo.com>
-To: "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "mkp@kernel.org" <mkp@kernel.org>,
-	"bvanassche@acm.org" <bvanassche@acm.org>
-CC: "hare@suse.de" <hare@suse.de>, "axboe@kernel.dk" <axboe@kernel.dk>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	=?gb2312?B?uvrBrMfa?= <hulianqin@vivo.com>
-Subject: [PATCH v3] scsi: sd: mark disk dead on surprise host removal to avoid
- I/O hang
-Thread-Topic: [PATCH v3] scsi: sd: mark disk dead on surprise host removal to
- avoid I/O hang
-Thread-Index: Ad0498L2lTsPnQZSRp243d53DEDriQ==
-Date: Mon, 31 Aug 2026 03:24:15 +0000
-Message-ID:
- <TYUPR06MB62177178F9305DF5C1A7D046D2A92@TYUPR06MB6217.apcprd06.prod.outlook.com>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TYUPR06MB6217:EE_|TYPPR06MB8104:EE_
-x-ms-office365-filtering-correlation-id: b20def40-c1f2-47d2-9ecd-08df070f55ee
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|376014|23010399003|366016|42112799006|38070700021|6133799003|10067099003|56012099006|5023799004|18002099003|11063799006;
-x-microsoft-antispam-message-info:
- ct0hIF+nL88UZIKNZhon2RB/B8hlbvC/QNDA4DSAKI/jEfJtSCa+fHxMwPwoAnDNppxxL/f1s2VvB8RlVmN705A8Rv/Pn9HN4j7RpLLf8yBifoRSZYgnZDo0JFL3pdfxLZ9bri2RtAxEqPh1cXlNZ0Mf4PDbTf0rqnih1x3KhsNgn1cm6bsvGkj2QntV5sDJnc1i6y44OC1wPShbfdOO7y4SYob6KgI4+hLrJ3t764VxBOA3ixUzCdj4xIYDFn1Nja1fBrGfHFE6yT0zc9VbRM44mwzTtJ7+aIIL801ZUnBexOTIZhcCGXg4jhJc37b2USKikrGJTxFeZZkJneMBoWG1S1mLpTluoxOx43qLjfjehe0uZjxdf6LIEQWM+B3cvFYJxmYWsqOtlH9k2gjnBNvDMMcJiUvwbvpX7vhnzNn2yMoLh+ca7quOt6AiJgGx5VO197JTxmEZAS4LCaENMTmbckQUybZF5iYXsZEiDbxdlPOAYLpEbyXLCbU8ubhM8U2csvz3XhRvkAef9JhfLT9NPcSN9zYhWR7dLWeVohkpI/QUzBI3utYmcd4AhxLZNIYiPx8ogVtFqtbVM2GJ/zKxfJy4K1bWkUbEqAPFQ9r8k+8Jl8y+iZHqZth24vVvCO/lIwP5W3p+BGkzfkQEu1PcfS9p9Gp1qePa5oL21WyOy/mMXLLl3ao0lnB8lEnevOj2R280mdCKTVGP3DiKqLN+FKfoOG5bhiiPCSxIx8I=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYUPR06MB6217.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(366016)(42112799006)(38070700021)(6133799003)(10067099003)(56012099006)(5023799004)(18002099003)(11063799006);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?gb2312?B?MVRjUnA2VWJreVFtcTExTWZ3TmRnNHgvS21tRVlFREFwazJhQlJmTWFsS0Z2?=
- =?gb2312?B?bU5wTkE0Q0ZueGoyU1ZPR3BNY1dxR0I2SUc1Rmo5VkNLYkpTWjg1Z0xMZmp1?=
- =?gb2312?B?Y1A5ZFlKblYvOVNETndhNThDbmZwbW9rZE8xbCtyR1A4L0RzVlVzbDF1OW1W?=
- =?gb2312?B?RHRlMzk2bDdiK3MzSnN3cmFaOGpkV2JtM1J3RGFpOVZoRzVZYktER0JjZEoz?=
- =?gb2312?B?V2hxbERCa2tzSE9sY2FYUUorU2xVek5JOERwSGI1TUtEYUxGbGUwV2haUzBK?=
- =?gb2312?B?S01PSWJYNGNrZWdVR1ZjQjIyRnhTMGx0L1l6NUxxOXd0bWpkT0orUTEwaXdY?=
- =?gb2312?B?VkUvcDUyNEFrVlcxMjNkUGJZR3pjb1ZhdXVKRklHcEZuLzhuOGZVekcvYitU?=
- =?gb2312?B?V3I0VEpBYTNzMTJOTnZOS3h5VS8yZ3VTYlY1UEpYQTM2RkRqajlrbDJBN0tI?=
- =?gb2312?B?dVZTUlIrWUxKNVJTOEM3dW83Tnlnc1krUktSL2cxYkNRZGsrSXZCNW1hZ2wr?=
- =?gb2312?B?RVBzYmdpUXRMcm5SNVRaZzhBK1kzNlJLR1E0NjQ2Q2JNL2lPT0RjUm1GRy9C?=
- =?gb2312?B?OUh4andWbG8xUzd2Q05nbkRuMFZJVkdnbWlySy9hTW9yWWJLaVorUHpuSXgv?=
- =?gb2312?B?YW9HMWpDekdDMXYyaW95aWZLaGdwTXNJcy9kV0FwUDgydUtxSkJCYXpGRGZa?=
- =?gb2312?B?Qy9UeEJydGhUak5pOVhSVW1kbmh2UlJJVGR3RG9JSmZRam1IL3U2WndWMVJL?=
- =?gb2312?B?WWx5VWRLamgvWEs1OER6Nm0xRFdHTXNPL2pvcUlQeXV5cDRpWG9UOFlDVVlI?=
- =?gb2312?B?UUQyZmpXVWsyOEdTUHUrQllGVnZDT2R1amNDVG1Za2tiQmFvRWdFTVhXazNX?=
- =?gb2312?B?bzhJQlMwWHluTjRUK1ZMQmdTM2pzWEpka0FnMENVQnJneGZmWllGSTIrSk9N?=
- =?gb2312?B?KytlTnV6UitzTUg5T0NHa09EOWFyNzBwZjBCZGkzQkdrdjNNTWJLRytlaFFq?=
- =?gb2312?B?MnBGZGdiUjVSY003bnBxaTNkaUZqZ29mMGhMaEpaZnlpb0hFQUFpRTVRTEVR?=
- =?gb2312?B?MGZMczU0YWorcW1UbEhQK0g0WC9UcGd6MkE2S0JRRnpaZnQ1RElqa1NJUUdz?=
- =?gb2312?B?YTA3QXFFblg2Q2lYa3NWREdFV2l0enBZcWVQa28rU3FCYURsQkFBL2ZteHFM?=
- =?gb2312?B?ejdHN2FpYnovQUF2YzVSMVRxeFBzK0lOaWVPQUtPRzdsTVlGRW9Ram9BbEFM?=
- =?gb2312?B?VGVRSDdxMHlsV1N0dHoxK1grcC91bzhZbTY3bk5zSmZkNTlnZXBkc0xXajgy?=
- =?gb2312?B?c1ppYWxJdDE0R0V0QTR1Qkl0LzhkTmxsZ2h2ZWFuQ2p3SC9vWkNlZFE5N1hP?=
- =?gb2312?B?MU9rS1k1czJTMEFMMWNxZHJyTnpIUGlmcS9ZZkRIZTJDakkxRzBiNVd6NURj?=
- =?gb2312?B?K0lMemlqNDE2S2UzLzhPaVVXNmtSYklqcFczQUppUVV5ODlMT3FOOG85TWVt?=
- =?gb2312?B?N3ZUZWpPWXZKTTdwTUVGMjkvZ1BuVXhpMzJCQi9rdXUwUW50Q2xHMjJCQjlx?=
- =?gb2312?B?VjJYTm1hVUJvUHNCMm8vL0Y2UGlKUDNxa0g2bCtWcGt1UDVFQjgrekhMWCtm?=
- =?gb2312?B?aVR4T0xkVXRIYW91V3ZJc2tvMU1sSVE1aWJVdyszc0xEQTFMTG0yNHQrMWl0?=
- =?gb2312?B?Z3Uwb1EwRjArTHRja1k3SEVlUWVZOTdKRVVVQTEwcnA5N0ROM0VVeGl1cFYv?=
- =?gb2312?B?SjU1WmNzdnI3cHNsTzZCZG5XYVVKLzM5RWxuK1hRdHpLMTdtTGhlalFXVkFH?=
- =?gb2312?B?NWRRbWFPZm1UZnFDS0RxY3EzZFB2QWpZd3pGRURWcmVKckJPK0tuMS83M1ZO?=
- =?gb2312?B?NlBTdCtNcVNmbmZsa3MzSUhxeld1b2VlbDZlNVBlUURQVGl1VmN4VWl1Ny9B?=
- =?gb2312?B?Qk41cks2NWdOcU9Ic2l0YWVvaW8zTTZ4dEx5cURDZXlIQnB2WSttUmhkb0RM?=
- =?gb2312?B?aDhiN3Q2RkdKdVF6eFg5MGdSdlBQUjNDNko0TXBSc244bUxmZXFVNjFzcmIr?=
- =?gb2312?B?NjBWM3F2MW5oYzUvYXRWMndJUXdSekdYUnBIMWhkTTk5NEdxZGlOZ0RJRDlL?=
- =?gb2312?B?bXk5UCtnQUR5ZkFkUlpmT1N1aVJZb0MzMytUVU5TTEMrRW5DbytuUDMzNnYr?=
- =?gb2312?B?Q2ZxUHdYdllpSk9GcElGWjU0TitHRzNCWmpQMU9ST1U0a1F4S0p3dDBvQTM1?=
- =?gb2312?Q?nNz6g/BZ/814zScC1p/zIDu/muw6AG22BkPJMjFRzc=3D?=
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Kn1YWkQ+";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="CTXoUPlF"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67V52Vqb1445304
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 06:22:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	wcg0Ez9nJOyV/8LnbrobWqWP9ec96FQgJeXfFdTZe98=; b=Kn1YWkQ+vhRQHjuO
+	SVI5IsM2hTE6k/B7tdf0xyH4PlNsXgYl0N7x5vnWCEca9O8XKKg3jahYZUWkPR0n
+	+qeSVd8FRmIHiewURxfvjSJx+uB64pJtZrLrdWPHjCg9DpizkuocQjaFcrVAYkdA
+	WDc0L3w92gEM5Q6XgPxrcAVACH75rTknrsWOyWoifZj6aMGpw+/JdPW8KpmmqdTR
+	2DNyt5eb9xVa2A/rliKmaFuK9WT9pS/5fEYovg4utjnON5Xd8G3nJx79Paor08QO
+	Y4IZqDQaCcKxlz8U8G4vQ1MSFmarnUr5FdbXlPv8RgNsz599hGjCmB4+7NR8x6nI
+	mTa+6g==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gbrkgvpf0-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 06:22:00 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-396b9ef3070so6300411a91.3
+        for <linux-scsi@vger.kernel.org>; Sun, 30 Aug 2026 23:22:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1788157320; x=1788762120; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :references:cc:to:from:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=wcg0Ez9nJOyV/8LnbrobWqWP9ec96FQgJeXfFdTZe98=;
+        b=CTXoUPlFxDy5AjZY6a2DZj94A/vhfWRpXd7rGiup+u4Tc0zbU9uNwhexOwweSvyxPw
+         2Zso9xODn7Yp80lPj8bZMMYTew5Q10i5omdUpQRrXlAtNQqSMlAAdR+Swko4rG3RennM
+         tjZBgjEvcxAzZ3u8+Sq6H7FF7K5Ll4nCZji9S7FuIHyj06qvOGeV/kR1tbP5p90g8TZ/
+         yx8aHBQGLq7SibJMxdi3CQPcBVKNWQVZRD3TWxvevGN0lmgoAoPPLXJ3V1B112u+IraR
+         g46S8pzPTWVJvzmDM0bmrpcPR1QHEcgun1gjSGmGbyxNLPrFP3pQ0WHt94tGON4JuLeP
+         4Iew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788157320; x=1788762120;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :references:cc:to:from:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=wcg0Ez9nJOyV/8LnbrobWqWP9ec96FQgJeXfFdTZe98=;
+        b=S31e07VHC99WlRYNUuHBYqYPkihwVpJCeIdOAWaGK+akR/kw3+++L9lNxaj+C4tdqx
+         cvRd5Wqm39OWL36vGFsKNOjS9dFEPD+Y3pxhp/P4VvoFukFzmBitbiNmrqwwuykcBliP
+         nv4h1lbbruuR2Ch3RUB4spH7+0VadtTzL08gXgevBatWb+w2q1340l4N/vgghhNaUgE7
+         HLd+p0jgSOQ7czB4Bl0KpI7N076lvNd9j0rTbR+EyI18x+Bd75HIebhIXQCFF5E6TVY4
+         M93cmx9tkYCIp02cdaT6YXTRVEibNSwm35LDNo0hS89ye0lhfkd8ZSZlPK+Br2jIWaoU
+         M/eQ==
+X-Forwarded-Encrypted: i=1; AKwUvBz/77YVf5RQZSGCjWtSViXSY8Nfbc7tG4xO8L9/vuq1jDMbAER1HgQLw44OQTZpfVBe4hchQKFFLY8j@vger.kernel.org
+X-Gm-Message-State: AFuF++lD0Inq5b7JD6cJYMGm2ENrtgY9YW+DQhYjF9Ferql0qrMF+A3C
+	Bu7nxmzTcYQwkOmNTlbMfSvbi62lOL1r5kAY3wm/y9MjHns4c6zqBn2E7rB9FAfAdYyaRVV/gV1
+	0mMDNmhd5YMMCQTF2dYcn6hlKNovJUiQBqwOmSkE4EeOFY8FO+h9kM+sguM7dTYlW
+X-Gm-Gg: AYBFou0HJl9btfB9diz2Kqp5t/Tu5ccebW6Z47R9Cp6nSKMHKp/42QRWoHtzBGsyrEz
+	IiilyUGKR6g26ALd0A6G2xNlQKG+lP/svueHLhk7ClUGpExK0kcdCEhqODBe1PK8CVYE2XMj6xY
+	1v+HZhx3q7GU+xEc3FsGvtRbJo+fKhwf6KeR9T1HjRwni+LLFe4q8R/GttOFyOi8aNyhk2k5Q4J
+	9HQk9dT/PmkiccDlaPauenaGr+H4LvczhS/CStvXsJ2gci5YVl95Tu9/IEKEVapTe+LThcH/NGi
+	2hNZi7sR6ZmVixGkW79L8r6WnbaDLhOugSY9YlAD6YRU+k4z8D0ln03VloGTTFknjHSPXRk4bak
+	5zZ0WxOElPfgUV+c6qygpmfwr2KcOpBuQWKFpxiYAs+OuNMdkuCpPJKJpMw==
+X-Received: by 2002:a17:90b:4d0c:b0:37f:c97a:939f with SMTP id 98e67ed59e1d1-396d0dd5069mr33909570a91.7.1788157319601;
+        Sun, 30 Aug 2026 23:21:59 -0700 (PDT)
+X-Received: by 2002:a17:90b:4d0c:b0:37f:c97a:939f with SMTP id 98e67ed59e1d1-396d0dd5069mr33909493a91.7.1788157319060;
+        Sun, 30 Aug 2026 23:21:59 -0700 (PDT)
+Received: from [10.110.79.126] (i-global254.qualcomm.com. [199.106.103.254])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-142e0d38207sm25010026c88.5.2026.08.30.23.21.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 30 Aug 2026 23:21:58 -0700 (PDT)
+Message-ID: <e09d1622-29aa-43f3-8e3f-776dc78c3641@oss.qualcomm.com>
+Date: Mon, 31 Aug 2026 14:21:50 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TYUPR06MB6217.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b20def40-c1f2-47d2-9ecd-08df070f55ee
-X-MS-Exchange-CrossTenant-originalarrivaltime: 31 Aug 2026 03:24:15.6982
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: KQf3B+x8AifeFI1j2P3kXNbgB4SU8VZOBnRmINCFp/sIjXlkkaggHiElnsS7kVRkdIVoL1AbcCM+hEjOCZcl7A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYPPR06MB8104
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 00/11] FBE virtualization: inline encryption for
+ virtio-blk guests
+From: Linlin Zhang <linlin.zhang@oss.qualcomm.com>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: axboe@kernel.dk, mst@redhat.com, jasowangio@gmail.com,
+        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+        linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-scsi@vger.kernel.org, virtualization@lists.linux.dev,
+        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        neeraj.soni@oss.qualcomm.com, gaurav.kashyap@oss.qualcomm.com,
+        mani@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
+        bvanassche@acm.org, alim.akhtar@samsung.com, avri.altman@sandisk.com,
+        stefanha@redhat.com, pbonzini@redhat.com, eperezma@redhat.com,
+        xuanzhuo@linux.alibaba.com, linux-kernel@vger.kernel.org
+References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
+ <20260827184219.GB2137493@google.com>
+ <d81e347e-8ca7-40a1-a428-5bce6f0d4b02@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <d81e347e-8ca7-40a1-a428-5bce6f0d4b02@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODMxMDA1MyBTYWx0ZWRfXxZ17c+KZQzw9
+ ohNlZuHivNPd2Ur6Y487lM9sPWKV81VC+Fcu5VCsaJfvyxeI7H07nL+85XvSy6ADmhQyJHtekza
+ Mnaf931G4GYkEnkEWE9MJAbmqrjQrPOrewNHeEdgxn5GB734342EBPvQnTZNLO1HZsD5EfHd6x2
+ DaTFPJ3dbhULu/P2jHqd9cWIqbiXY+rRTxbqhIT423xklSt0nmUq4lofJZ90sHCMCUb3VRtUOSr
+ TzPatFEUm1MyEr6uD4cdU0W6kbHAI+mFUthegO74fOuDKrLUj5MdGnoYCX0N3oB/zBZnsLAv2Bb
+ 58bIJ8KjR/HHQ48qopa7kMKQRJU9pd/F//lHmUcGvN7/H/THo/h30/8jhoiZ+JqhKtApBpBsjri
+ O3wFZ6Aof6Tnoxrr4Us3Hvnv2ZK+XbYTEgfeG4xd0EfHA6qXPtPV0xSjQrr3jU1vYEuwFDckccW
+ jsD1Oa4Y8aTugIUOcIA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODMxMDA1MyBTYWx0ZWRfX9/NVfasQdIUZ
+ lhJGg/yVDMNPzShPh5bcdmnJ8NP2AB4OjVzUA3E6i1pIeQokW5nMxH3H8RDnBOoGATiGXINyDME
+ +u8q4wH8EOxE/oKWvSOi2m/YnkLg4m4=
+X-Proofpoint-ORIG-GUID: v9AGQ_3dg0F9CXqvybdAG7sg2pjc5uEr
+X-Authority-Analysis: v=2.4 cv=Cr6PtH4D c=1 sm=1 tr=0 ts=6a951d88 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=EUspDBNiAAAA:8 a=_h6NAR8LnRz2utxSRfIA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-GUID: v9AGQ_3dg0F9CXqvybdAG7sg2pjc5uEr
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-31_02,2026-08-27_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 spamscore=0 phishscore=0 bulkscore=0 adultscore=0
+ malwarescore=0 clxscore=1015 priorityscore=1501 lowpriorityscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608310053
 
-V2hlbiBhIFVTQiBtYXNzIHN0b3JhZ2UgZGV2aWNlIHdpdGggYSBtb3VudGVkIGZpbGVzeXN0ZW0g
-KGUuZy4gZXhGQVQpDQplbnRlcnMgcnVudGltZSBzdXNwZW5kIChhdXRvc3VzcGVuZCksIHBoeXNp
-Y2FsIHJlbW92YWwgdHJpZ2dlcnMNCnNjc2lfcmVtb3ZlX2hvc3QoKSB3aGljaCBpbnZva2VzIHNk
-X3JlbW92ZSgpIC0+IGRlbF9nZW5kaXNrKCkgLT4NCmJsa19yZXBvcnRfZGlza19kZWFkKCkuICBU
-aGlzIHRyaWdnZXJzIHN5bmNfZmlsZXN5c3RlbSgpIHRvIHdyaXRlDQpiYWNrIGRpcnR5IGRhdGEs
-IHN1Ym1pdHMgYmlvIGFuZCBibG9ja3MgaW4gX19iaW9fcXVldWVfZW50ZXIoKQ0Kd2FpdGluZyBm
-b3IgSS9PIGNvbXBsZXRpb24gdGhhdCBjYW4gbmV2ZXIgaGFwcGVuIHNpbmNlIHRoZSBkZXZpY2UN
-CmlzIGFscmVhZHkgZ29uZSwgbGVhZGluZyB0byBhIGh1bmcgdGFzay4NCg0KZGVsX2dlbmRpc2so
-KSB1bmNvbmRpdGlvbmFsbHkgY2FsbHMgYmxrX3JlcG9ydF9kaXNrX2RlYWQoZGlzaywgZmFsc2Up
-DQp3aGVuIEdEX0RFQUQgaXMgbm90IHlldCBzZXQsIHdoaWNoIGFsd2F5cyBhdHRlbXB0cyB0byBz
-eW5jIHRoZQ0KZmlsZXN5c3RlbS4gIEZvciBzdXJwcmlzZSByZW1vdmFsIHdoZXJlIHRoZSBkZXZp
-Y2UgY2Fubm90IGhhbmRsZSBJL08sDQp0aGlzIHN5bmMgaXMgZnV0aWxlIGFuZCBoYW5ncyBmb3Jl
-dmVyLg0KDQpBZGQgc2NzaV9ob3N0X2luX2NhbmNlbCgpIGhlbHBlciBhbmQgY2FsbCBibGtfbWFy
-a19kaXNrX2RlYWQoKSBpbg0Kc2RfcmVtb3ZlKCkgd2hlbiB0aGUgU0NTSSBob3N0IGlzIGluIFNI
-T1NUX0NBTkNFTCBvcg0KU0hPU1RfQ0FOQ0VMX1JFQ09WRVJZIHN0YXRlIChzZXQgYnkgc2NzaV9y
-ZW1vdmVfaG9zdCgpIGJlZm9yZQ0KcmVtb3ZpbmcgZGV2aWNlcyksIHNvIHRoYXQgZGVsX2dlbmRp
-c2soKSBzZWVzIEdEX0RFQUQgYWxyZWFkeSBzZXQNCmFuZCBza2lwcyB0aGUgc3luYy4gIEZvciBv
-cmRlcmx5IHJlbW92YWwgKGUuZy4gZWNobyAxID4NCi9zeXMvLi4uL2RlbGV0ZSksIHRoZSBob3N0
-IHJlbWFpbnMgU0hPU1RfUlVOTklORyBhbmQgc3luYyBwcm9jZWVkcw0Kbm9ybWFsbHkuICBUaGlz
-IG1hdGNoZXMgdGhlIE5WTWUgYmVoYXZpb3Igd2hlcmUNCm52bWVfbWFya19uYW1lc3BhY2VzX2Rl
-YWQoKSBpcyBjYWxsZWQgb25seSBvbiBzdXJwcmlzZSByZW1vdmFsDQooTlZNRV9DVFJMX0RFQUQp
-Lg0KDQpDYWxsIHRyYWNlIG9uIFVTQiBzdG9yYWdlIHN1cnByaXNlIHJlbW92YWw6DQpJTkZPOiB0
-YXNrICJrd29ya2VyLzE6MCI6MzEgYmxvY2tlZCBmb3IgbW9yZSB0aGFuIDE0NyBzZWNvbmRzLg0K
-Q2FsbCB0cmFjZToNCiBfX3N3aXRjaF90bysweDE5OC8weDM4MA0KIF9fc2NoZWR1bGUrMHg1NDgv
-MHhmYmMNCiBzY2hlZHVsZSsweDRjLzB4MTE4DQogX19iaW9fcXVldWVfZW50ZXIrMHhiOC8weDE3
-NA0KIGJsa19tcV9zdWJtaXRfYmlvKzB4NjQwLzB4N2U0DQogX19zdWJtaXRfYmlvKzB4MWE0LzB4
-MzE0DQogX19zdWJtaXRfYmlvX25vYWNjdF9tcSsweDM4LzB4OGMNCiBzdWJtaXRfYmlvX25vYWNj
-dCsweDY3OC8weDc1MA0KIHN1Ym1pdF9iaW8rMHhhOC8weDFjOA0KIHN1Ym1pdF9iaF93YmMrMHgx
-NDgvMHgxYjQNCiBfX3N5bmNfZGlydHlfYnVmZmVyKzB4MTIwLzB4MWY4DQogZXhmYXRfc3luY19m
-cysweGE0LzB4ZTANCiBzeW5jX2ZpbGVzeXN0ZW0rMHhhOC8weGRjDQogZnNfYmRldl9tYXJrX2Rl
-YWQrMHgzMC8weDg4DQogYmRldl9tYXJrX2RlYWQrMHg1NC8weGM0DQogYmxrX3JlcG9ydF9kaXNr
-X2RlYWQrMHg4Yy8weGQ0DQogZGVsX2dlbmRpc2srMHhhMC8weDJmOA0KIHNkX3JlbW92ZSsweDMw
-LzB4NjANCiBkZXZpY2VfcmVsZWFzZV9kcml2ZXJfaW50ZXJuYWwrMHgxYzQvMHgyYmMNCiBkZXZp
-Y2VfcmVsZWFzZV9kcml2ZXIrMHgxOC8weDI4DQogYnVzX3JlbW92ZV9kZXZpY2UrMHgxNTgvMHgx
-NzANCiBkZXZpY2VfZGVsKzB4MWM4LzB4MzIwDQogX19zY3NpX3JlbW92ZV9kZXZpY2UrMHg5Yy8w
-eDE4NA0KIHNjc2lfZm9yZ2V0X2hvc3QrMHg1MC8weDcwDQogc2NzaV9yZW1vdmVfaG9zdCsweDg4
-LzB4MThjDQogdXNiX3N0b3JfZGlzY29ubmVjdCsweDY4LzB4ZjQNCiB1c2JfdW5iaW5kX2ludGVy
-ZmFjZSsweDEzYy8weDM0MA0KIGRldmljZV9yZWxlYXNlX2RyaXZlcl9pbnRlcm5hbCsweDFjNC8w
-eDJiYw0KIGRldmljZV9yZWxlYXNlX2RyaXZlcisweDE4LzB4MjgNCiBidXNfcmVtb3ZlX2Rldmlj
-ZSsweDE1OC8weDE3MA0KIGRldmljZV9kZWwrMHgxYzgvMHgzMjANCiB1c2JfZGlzYWJsZV9kZXZp
-Y2UrMHg4NC8weDE5MA0KIHVzYl9kaXNjb25uZWN0KzB4ZTgvMHgzMzgNCiBodWJfZXZlbnQrMHhi
-ZDgvMHgxOWFjDQogcHJvY2Vzc19zY2hlZHVsZWRfd29ya3MrMHgyMDAvMHg5ZDgNCiB3b3JrZXJf
-dGhyZWFkKzB4MTU0LzB4M2IwDQoNCkZpeGVzOiA2ZjgxOTFmZGY0MWQgKCJibG9jazogc2ltcGxp
-ZnkgZGlzayBzaHV0ZG93biIpDQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KU2lnbmVkLW9m
-Zi1ieTogTGlhbnFpbiBIdSA8aHVsaWFucWluQHZpdm8uY29tPg0KLS0tDQoNCkNoYW5nZXMgaW4g
-djM6DQotIFJlcG9zdCBhZnRlciBtZXJnZSB3aW5kb3cgY2xvc3VyZSBhcyByZXF1ZXN0ZWQgYnkg
-bWFpbnRhaW5lci4NCi0gVXNlIHNjc2lfZ2V0X2hvc3Rfc3RhdGUoKSB0byBtYXRjaCBzY3NpX2hv
-c3RfaW5fcmVjb3ZlcnkoKSBwYXR0ZXJuLg0KLSBGaXggTGluayB0byB2MSBVUkwuDQotIExpbmsg
-dG8gdjI6IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2FsbC9QVVpQUjA2TUI2MjI0NTNDMzdEMkJB
-QkM1RTcxQjE5NUREMkRDMkBQVVpQUjA2TUI2MjI0LmFwY3ByZDA2LnByb2Qub3V0bG9vay5jb20v
-DQoNCkNoYW5nZXMgaW4gdjI6DQotIFNwbGl0IGludG8gYSB0d28tcGF0Y2ggc2VyaWVzIGZvciBp
-bmRlcGVuZGVudCByZXZpZXcgYnkgYmxvY2sgYW5kIFNDU0kgbWFpbnRhaW5lcnMuDQotIFRoaXMg
-aXMgdGhlIFNDU0kgcGFydCBleHRyYWN0ZWQgZnJvbSB2MS4NCi0gTGluayB0byB2MTogaHR0cHM6
-Ly9sb3JlLmtlcm5lbC5vcmcvYWxsL1RZVVBSMDZNQjYyMTcyRTQxMjA1NDE0MDc1M0Q1RTc4MkQy
-QzgyQFRZVVBSMDZNQjYyMTcuYXBjcHJkMDYucHJvZC5vdXRsb29rLmNvbS8NCg0KIGRyaXZlcnMv
-c2NzaS9zZC5jICAgICAgICB8IDEwICsrKysrKysrKysNCiBpbmNsdWRlL3Njc2kvc2NzaV9ob3N0
-LmggfCAgOCArKysrKysrKw0KIDIgZmlsZXMgY2hhbmdlZCwgMTggaW5zZXJ0aW9ucygrKQ0KDQpk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NkLmMgYi9kcml2ZXJzL3Njc2kvc2QuYw0KaW5kZXgg
-NTk5ZTc1ZjMzMzM0Li5mYjUwODY0NjVhMjMgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvc2Qu
-Yw0KKysrIGIvZHJpdmVycy9zY3NpL3NkLmMNCkBAIC00MjU3LDYgKzQyNTcsMTYgQEAgc3RhdGlj
-IHZvaWQgc2RfcmVtb3ZlKHN0cnVjdCBzY3NpX2RldmljZSAqc2RwKQ0KIA0KIAlzY3NpX2F1dG9w
-bV9nZXRfZGV2aWNlKHNka3AtPmRldmljZSk7DQogDQorCS8qDQorCSAqIElmIHRoZSBob3N0IGlz
-IGJlaW5nIHRvcm4gZG93biAoZS5nLiBVU0Igc3VycHJpc2UgcmVtb3ZhbCksDQorCSAqIHRoZSBk
-ZXZpY2UgY2Fubm90IGhhbmRsZSBJL08gYW55bW9yZS4NCisJICogTWFyayB0aGUgZGlzayBkZWFk
-IGJlZm9yZSBkZWxfZ2VuZGlzaygpIHNvIHRoYXQgbmV3IEkvTyBpcw0KKwkgKiByZWplY3RlZCBp
-bW1lZGlhdGVseSBhbmQgc3luY19maWxlc3lzdGVtKCkgaW4gZGVsX2dlbmRpc2soKQ0KKwkgKiBp
-cyBza2lwcGVkLCBhdm9pZGluZyBhIGhhbmcgd2FpdGluZyBmb3IgSS9PIHRoYXQgY2FuIG5ldmVy
-DQorCSAqIGNvbXBsZXRlLg0KKwkgKi8NCisJaWYgKHNjc2lfaG9zdF9pbl9jYW5jZWwoc2RrcC0+
-ZGV2aWNlLT5ob3N0KSkNCisJCWJsa19tYXJrX2Rpc2tfZGVhZChzZGtwLT5kaXNrKTsNCiAJZGV2
-aWNlX2RlbCgmc2RrcC0+ZGlza19kZXYpOw0KIAlkZWxfZ2VuZGlzayhzZGtwLT5kaXNrKTsNCiAJ
-aWYgKCFzZGtwLT5zdXNwZW5kZWQpDQpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9zY3NpL3Njc2lfaG9z
-dC5oIGIvaW5jbHVkZS9zY3NpL3Njc2lfaG9zdC5oDQppbmRleCBmNmIyODZmYTU5ZjIuLjAzNTIz
-YWQzMjg0ZCAxMDA2NDQNCi0tLSBhL2luY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaA0KKysrIGIvaW5j
-bHVkZS9zY3NpL3Njc2lfaG9zdC5oDQpAQCAtNzk2LDYgKzc5NiwxNCBAQCBzdGF0aWMgaW5saW5l
-IGludCBzY3NpX2hvc3RfaW5fcmVjb3Zlcnkoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QpDQogCQlz
-aG9zdC0+dG1mX2luX3Byb2dyZXNzOw0KIH0NCiANCitzdGF0aWMgaW5saW5lIGJvb2wgc2NzaV9o
-b3N0X2luX2NhbmNlbChzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9zdCkNCit7DQorCWVudW0gc2NzaV9o
-b3N0X3N0YXRlIHN0YXRlID0gc2NzaV9nZXRfaG9zdF9zdGF0ZShzaG9zdCk7DQorDQorCXJldHVy
-biBzdGF0ZSA9PSBTSE9TVF9DQU5DRUwgfHwNCisJCXN0YXRlID09IFNIT1NUX0NBTkNFTF9SRUNP
-VkVSWTsNCit9DQorDQogZXh0ZXJuIGludCBzY3NpX3F1ZXVlX3dvcmsoc3RydWN0IFNjc2lfSG9z
-dCAqLCBzdHJ1Y3Qgd29ya19zdHJ1Y3QgKik7DQogZXh0ZXJuIHZvaWQgc2NzaV9mbHVzaF93b3Jr
-KHN0cnVjdCBTY3NpX0hvc3QgKik7DQogDQotLSANCjIuMzkuMA0K
+
+
+On 8/28/2026 11:37 PM, Linlin Zhang wrote:
+> 
+> 
+> On 8/28/2026 2:42 AM, Eric Biggers wrote:
+>> On Thu, Aug 27, 2026 at 09:07:09AM -0700, Linlin Zhang wrote:
+>>> From: linlzhan <linlin.zhang@oss.qualcomm.com>
+>>>
+>>> Current virtio-blk does not provide a mechanism for a guest to
+>>> program hardware keys or submit encrypted I/O using pre-programmed
+>>> keyslots.  It drops the crypto context when issuing a bio request
+>>> to the virtio-blk queue, preventing inline-encryption-based FBE
+>>> on virtio block devices.
+>>>
+>>> This series enables File-Based Encryption in guest VMs on Qualcomm
+>>> GVM platforms where the ICE inline encryption hardware is shared
+>>> between the host and guests.  In this environment the guest kernel
+>>> has no access to the ICE hardware directly; it supplies a virtual
+>>> keyslot index and data unit number with each encrypted I/O request
+>>> via VIRTIO_BLK_F_INLINE_ENCRYPTION, and the host must translate the
+>>> virtual slot to a physical ICE keyslot and submit the bio — without
+>>> transferring raw key material across the VM boundary.
+>>
+>> This seems to be designed incorrectly by not making virtio-blk itself
+>> support key programming and eviction.  That complicates things
+>> significantly by then having to handle the key programming and eviction
+>> out-of-band using Qualcomm-specific SCM calls.  It also means that
+>> adding other implementations of this would be very difficult.
+>>
+>> There are some claims that not transmitting keys across the VM boundary
+>> is desirable.  But that doesn't seem meaningful, given that all the I/O
+>> is transmitted across that boundary in plaintext anyway, and also it
+>> seems that hardware-wrapped keys will be supported too.
+>>
+>> Please make virtio-blk support the key programming, eviction, and
+>> HW-wrapped key management operations that are needed for this to work.
+>>
+>> - Eric
+> 
+> Thanks for your comments!
+> 
+> Not making virtio-blk itself support key programming and eviction is
+> something done deliberately. Based on that HW-wrapped key management
+> operations are also handled in the out-of-band path.
+> 
+> There are bellow 2 approaches I investigated to let virtio-blk programming
+> the key.
+> 
+>   1. virtio_blk implements blk_crypto_ll_ops interfaces, including program
+>      key and evict key interfaces.(Same to 'the virtio-blk interface standardized
+>      blk_crypto_ll_ops requests' mentioned by Stefan in the virtio SPEC thread)
+> 
+>      The guest's block crypto profile manages the keyslot in virtual slot
+>      format in this scenario.
+> 
+>       - block crypto key and virt_slot index it passed to the hypervisor's
+>        (EL2) device emulation (QEMU, using QEMU in the following) which
+>        runs in userspace of the host. Besides of transferring the virtual
+>        slot to the physical slot, a programming block crypto key UAPI need
+>        be added. Follow current blk-crypto design, it may be like
+>        BLKCRYPTOGENERATEKEY. I thought this results in a security risk that
+>        allows userspace process a key into a key slot.
+> 
+>      - For key eviction, it's similar to above key programming handling, also
+>        need a key eviction in blk IOCTLs, but leads to the security risk
+>        that allow userspace client to evict a key in a key slot.
+> 
+>     virt_slot, DUN and DUSize is appended to virtblk request during crypto
+>     I/O.
+> 
+>   2. virtio_blk implements blk_crypto_ll_ops interfaces, excluding program
+>      key and evict key interfaces.
+> 
+>      The guest's block crypto profile doesn't manage keyslot for the guest,
+>      the host's block crypto profile manages keyslot for both the guest and
+>      the host. The trigger of key programming operation is moved from the
+>      guest to the host.
+> 
+>        - The whole block crypto key (key size, key bytes, blk_crypto_config)
+>          and DUN are appended to the virtblk request during IO, a little
+>          high payload.
+> 
+>          The backend parses the crypto message in the virtio queue and
+>          construct a block crypto key and DUN for the bio_crypto_ctx
+>          set to the BIO. So that the IO flow in the host can program
+>          the key. 
+> 
+>          The question is that the blk-crypto-profile distinguishs the
+>          block crypto key via the key's address. But the host has
+>          different key addresses for the programming and eviction key
+>          operations of the same block crypto key from GVM, because the
+>          key is re-constructed in the host for the key program and
+>          eviction operations. 
+> 
+>          To fix it, the approach I thought is maintaining a new key
+>          hash table in the backend, and comparing the block crypto key
+>          content and DUN parsed from virtio queue with that in the key
+>          hash table. 
+>          My major concern is that this need keep the keys synchronization
+>          b/w this new hash table and the blk-crypto-profile's hash table
+>          carefully, avoiding that key is still present in the
+>          blk-crypto-profile's hash table, but removed in backend hash
+>          table. Another point is that the whole block crypto key and
+>          DUN are appended into virtio block request per crypto I/O.
+> 
+>        - For key eviction, adding a key eviction in blk IOCTLs allows
+>          userspace client to evict a key in a key slot. I thought this
+>          is a security concern.
+
+Correction.
+
+The key eviction operation is also moved from the Guest's blk_crypto_profile
+to the Host's blk_crypto_profile. As a result, the entire block crypto key
+(including the key size, key material, and blk_crypto_config) is appended to
+the virtblk request. The backend parses the supplied blk_crypto_key, looks
+it up in its key hash table, and can then invoke blk_crypto_evict_key() to
+evict the corresponding key from the ICE keyslot. Unlike Approach 1, Approach
+2 does not allow the guest to specify the keyslot to be evicted through the
+block ioctl interface.
+
+I'm appreciated if you can share your insights and thoughts about these 3
+approaches.
+
+> 
+> 
+>      This option doesn't need map virt_slot to physical one.
+> 
+> 
+> Taking all the above into account, I made a compromise to implement
+> blk_crypto_ll_ops interfaces in a out-of-band path, which lets the virtio
+> blk only need focus on the data path. I agree that it is complex than
+> the second option mentioned in the above, but small payload (only
+> virt_slot, DUN, DUSize) in the virtio block request and no security
+> risk of key eviction from userspace.
+> 
+> 
+> I would like to hear your thoughts about the above and am appreciated
+> if you could share your insights about the design of inline
+> encryption in virtio block.
+> 
+> Regards,
+> Linlin
+> 
+> 
+> 
+
