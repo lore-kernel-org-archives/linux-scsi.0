@@ -1,143 +1,102 @@
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-226.mta1.migadu.com [95.215.58.226])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B09BE3195FD;
-	Mon, 31 Aug 2026 13:02:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.170
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788181323; cv=pass; b=O5GRvrmiyFf/AVwKj27K4s5JofGrJFjuJJdcwjrbkK53R9TtmnmCKIMOcQiPto1VgBqL/VVSKNo6ktYNts7RHU75UNeKGi7KNKD0d9dodu/Ka7Le2JWR6s3um2dFBznXWsd/ChQ3rme5e0DxlMmPOfWhOMb3WdmslY0LvG3/QoE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788181323; c=relaxed/simple;
-	bh=7K2++2lVCH/mhMxQmGo9pjPt8HQrezFr/5LDlPaqLm8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BkBrS93M+k5mo2DhqR/BN6Pj2CqWI7I0aVgyVPgB7SGnfbZn2UjSlZHOuMrzaLfwDGa+YCUqyvxrNfmCWhxuxHC/Q+GLLX/CbkktUw4okNWLy602bHOEjOA7O6+PCkI930TOewB5c8u+k7Y0HxZCdJYefzFmNQVNzGsme5VRVB4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=rLltL18x; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=J5qUM+A2; arc=pass smtp.client-ip=81.169.146.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26A6E434E50
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 13:22:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.226
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788182526; cv=none; b=LGEQBv7p/tKZ9b9ooSlM+stH7ZiuTTj6/9AyZjdoR/H7pspGI6ZlkCZ8rHaUklh2V0U0us5N2A/n1IR82kJxhW8XLR9YzkdFUFlT4HBo1P4YOn2vjdmALvvV0N5Xnt2vQGyv3057arTf5Bu12Y+tbGon9vWCAWlUdTUihfjNpVM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788182526; c=relaxed/simple;
+	bh=Z99y3W+Jp+BBxP0dT9ocAAQAdReiGw83GVMdtID0gnk=;
+	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc; b=UwWvaz7KIFoQ1DmbQTYl0DhlhDzKkFxjQL808Goh0ZkjrKX5R+fmoB3rlIuUR9lxAIlifQlJSyoqhBTPcCt5WM0LUIF8xLLlgKv9LfMNqtZJ15S1EnRM/fnGq+Gp1mvyyFvmWC1hVsH7t2kU+71Ru3z7SYW/d2kD4sb+MJPlZM4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=uySohnx+; arc=none smtp.client-ip=95.215.58.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="rLltL18x";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="J5qUM+A2"
-ARC-Seal: i=1; a=rsa-sha256; t=1788181299; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=ta8OmsDsot2gg4c9trXmg4QkvqmuOrx40FzhaoAGT5umHLXFTfv+Ir+m1iSgIyD2ba
-    L3D28kixnFWf3XrbhXAiu8WRw/gK32xwcAYwI8Elkm4zNjLnXYKeB0WC+ouMzNp8cdj/
-    WGzP3RNNk7qLOyUXNNG2lycAzLRRpnH78FZUteBoJWaCxhy1U9Pz4kPQY5IrkALR1eVp
-    QnxWxvXCpE7YaaaYZP6lR45BsqjBaIw7YgmHOQIcTpJyAfEuRjCU8BjnrbisPZAkY09d
-    vbyh/jgQLpKdgGzUyp65toRV722x9fJh74bJKAdUnMLv1Fh4gMtJQpndWjCxKmx283Ev
-    ZQDg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1788181299;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=DQNekzi3HMaJqX2BC7HG+aXLO4uXJg8AL/wH7W8AuKg=;
-    b=BITry1WPy2PjcTRJVr6l0khh0FcTMKANTZuCXPGt6qaUo+PgciMeH/SZ71c99zS773
-    Gu2IGNBWyulhIi/3xD8CxRffCQceMXCMcAQv2ycSXaqhmje4ui/m4Uk/rtzWwwPhqDFC
-    Oz3gpIXnDzyDsN+rUPIXp0D4smO2AeRV46il7lYJw9SxAcVywYnpgumw4xOpxkVEPr4N
-    1MThmsoQaq2jJ6d7u1O5jORUotJ3s9OnUPaTGRnFL6P32A3mlc1WjyRgo5iUXEbPCNxl
-    uyfKuGd+Xye9uHhuPwXJ8/UxWH1Woi0x4vQ53I78PG6lANiRQCMLn+TYqyqiPJe1+WT6
-    fmIQ==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1788181299;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=DQNekzi3HMaJqX2BC7HG+aXLO4uXJg8AL/wH7W8AuKg=;
-    b=rLltL18xdIS/o0eI7KyFlcs9Ce/BwJGrrlv3HrtmTilGqTC3P8p4dgK6cbo2pKgyNM
-    tW4KCarWbwvy3LaVesOrP9KotR3wgqQRNZalAJ2jNYeQ9hSgT/waprmNzU104Q0Xn/7q
-    y+J19SyCyWpaME+aN8Ot4FcDgkz8zrvFToEwyvaMC24WNB0LH1gzI2FnuP9+bWkc/P3y
-    KOtbNixw24I6rjTYJ58EfFLUJnYGRdjBUrXZioH8cxIr0G5udrEecuzFMOumY4qOZXa6
-    QwRJl3UaHn44gVvW0KXBMWeJbbneTLe2mq30HVFMlpCRYfruLChnz9n/AUSVN9APkeDj
-    q9ng==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1788181299;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=DQNekzi3HMaJqX2BC7HG+aXLO4uXJg8AL/wH7W8AuKg=;
-    b=J5qUM+A2EJfVAtX12oCv6pGPuLWK5fxnb328CkGOVzOzRPPIdeRaB8PTCMfOTsyV6+
-    buTtRZiIP9J4ykk2fvDw==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O2J2YOom0XQaPis+nU/xK"
-Received: from Munilab01-lab.micron.com
-    by smtp.strato.de (RZmta 55.6.2 AUTH)
-    with ESMTPSA id ze37e127VD1ckHk
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Mon, 31 Aug 2026 15:01:38 +0200 (CEST)
-From: Bean Huo <beanhuo@iokpp.de>
-To: MyungJoo Ham <myungjoo.ham@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	Chanwoo Choi <cw00.choi@samsung.com>,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Jie Zhan <zhanjie9@hisilicon.com>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	linux-pm@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH 1/3] PM / devfreq: Fall back to previous_freq when get_cur_freq() fails
-Date: Mon, 31 Aug 2026 15:01:27 +0200
-Message-Id: <20260831130129.3979454-2-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260831130129.3979454-1-beanhuo@iokpp.de>
-References: <20260831130129.3979454-1-beanhuo@iokpp.de>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="uySohnx+"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Z99y3W+Jp+BBxP0dT9ocAAQAdReiGw83GVMdtID0gnk=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788182521; v=1; x=1788787321;
+ b=uySohnx+l0d9/LgrCSCzRz09hrzE9ZZ34D06w/OlLfr0Wx61VcOImfu+UDZXDON2cUXkJoEf
+ oJQk1SrJiCp8XdfFE5OONO5C9J5P+W2MTfz89w8JzSatVOz7STxIIlW+FRAta3QmWSkPfzK+Izd
+ G2Pz7P0ZuhEoougFqmgcSvAs=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 06215eb84a0c848f;
+	Mon, 31 Aug 2026 13:21:51 +0000
+X-Mizu-Trace-ID: 06215eb84a0c848f
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset="us-ascii"
+Date: Mon, 31 Aug 2026 13:21:51 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+From: "Tianchu Chen" <tianchu.chen@linux.dev>
+Message-ID: <cfc81cd805c38b2600a219329c351580aa535326@linux.dev>
+TLS-Required: No
+Subject: [PATCH] scsi: target: fix PRIN READ_FULL_STATUS buffer bounds check
+To: mkp@kernel.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+From: Tianchu Chen <flynnnchen@tencent.com>
 
-devfreq_set_target() calls the optional ->get_cur_freq() callback to get
-the frequency that is passed as freqs.old to the DEVFREQ_PRECHANGE and
-DEVFREQ_POSTCHANGE notifiers, but it does not check the return value. If
-the callback fails without setting @freq, cur_freq is never assigned, and
-an uninitialized stack value is passed to the notifiers.
+core_scsi3_pri_read_full_status() writes one Full Status descriptor
+per registered I_T nexus into the PRIN response buffer: a fixed
+24-byte descriptor header followed by the variable-length
+TransportID.  The overflow check, however, compares
 
-hisi_uncore_get_cur_freq() can hit this. It returns -ENODEV without
-setting @freq when its PCC channel is missing. On the mailbox error path
-it sets @freq to 0 instead, so that the core does not read a random
-value.
+	exp_desc_len + add_len > cmd->data_length
 
-The other two callers, cur_freq_show() and devfreq_monitor_resume(),
-already check the return value and use devfreq->previous_freq when the
-callback fails. Do the same in devfreq_set_target().
+where exp_desc_len covers only the TransportID and add_len
+accumulates only after completed descriptors, so it undershoots the actua=
+l
+write extent by a constant 32 bytes (the 8-byte PRIN header, since
+off =3D add_len + 8, plus the 24-byte descriptor header), leading a
+remotely-triggerable heap OOB-write.
 
-This does not seem to cause a visible problem today. The passive governor
-is the only DEVFREQ_TRANSITION_NOTIFIER user in the tree, and it only
-reads freqs.new. So this patch is not marked for stable.
+The allocation length of the PERSISTENT RESERVE IN CDB is fully
+controlled by the (possibly remote) initiator and truncates
+cmd->data_length, so an initiator that registered itself can pick a
+data_length in [desc_len, desc_len + 31] and make the first
+descriptor write up to 32 bytes past the end of the command's data
+buffer.
 
-Fixes: 0fe3a66410a3 ("PM / devfreq: Add new DEVFREQ_TRANSITION_NOTIFIER notifier")
-Signed-off-by: Bean Huo <beanhuo@micron.com>
+Base the check on the actual write offset instead, so the test
+covers exactly what the loop is about to write (24-byte descriptor
+header plus TransportID, matching add_desc_len =3D 24 + desc_len
+below), as core_scsi3_pri_read_keys() already does. Same principle
+as commit c58a252beb04c ("target: fix buffer offset in
+core_scsi3_pri_read_full_status").
+
+Discovered by Atuin - Automated Vulnerability Discovery Engine.
+
+Fixes: c66ac9db8d4ad ("[SCSI] target: Add LIO target core v4.0.0-rc6")
+Cc: stable@vger.kernel.org
+Assisted-by: LLM
+Signed-off-by: Tianchu Chen <flynnnchen@tencent.com>
 ---
- drivers/devfreq/devfreq.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/target/target_core_pr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
-index f08fc6966eae..f20d9a660779 100644
---- a/drivers/devfreq/devfreq.c
-+++ b/drivers/devfreq/devfreq.c
-@@ -348,9 +348,8 @@ static int devfreq_set_target(struct devfreq *devfreq, unsigned long new_freq,
- 	unsigned long cur_freq;
- 	int err = 0;
- 
--	if (devfreq->profile->get_cur_freq)
--		devfreq->profile->get_cur_freq(devfreq->dev.parent, &cur_freq);
--	else
-+	if (!devfreq->profile->get_cur_freq ||
-+	    devfreq->profile->get_cur_freq(devfreq->dev.parent, &cur_freq))
- 		cur_freq = devfreq->previous_freq;
- 
- 	freqs.old = cur_freq;
--- 
-2.34.1
-
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core=
+_pr.c
+index 25b1bcacc0c8f..1d34887e9e845 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -3990,7 +3990,7 @@ core_scsi3_pri_read_full_status(struct se_cmd *cmd)
+ 		exp_desc_len =3D target_get_pr_transport_id_len(se_nacl, pr_reg,
+ 					&format_code);
+ 		if (exp_desc_len < 0 ||
+-		    exp_desc_len + add_len > cmd->data_length) {
++		    off + 24 + exp_desc_len > cmd->data_length) {
+ 			pr_warn("SPC-3 PRIN READ_FULL_STATUS ran"
+ 				" out of buffer: %d\n", cmd->data_length);
+ 			spin_lock(&pr_tmpl->registration_lock);
+--=20
+2.51.0
