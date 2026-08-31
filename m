@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E3893BD659;
-	Mon, 31 Aug 2026 06:58:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45C383C1F5B;
+	Mon, 31 Aug 2026 07:01:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788159538; cv=none; b=TKDiEdMYtF1shiovAnZP4xuPDUGqpMtRxHqorXjWpPbkqoHqptVYi91tBsdn58vU8oF0RGX/C5oW9sBppdW0rzKHy+8iAlJBmng7W9MmeAW1kJ1VI7oOwiBRXVtZOaoKrODwEbYts7r8ZQUx5KS3OeJ3JbWC2/qtXNLMlMrlxU4=
+	t=1788159722; cv=none; b=njRtf7aVbWUUJ+W1uwp2gQAthB5A7XKh+x/F+fzi+qy2ZmwhGEUhThqB+eqFKmPSSpBXqclqYfeH6PCl11lk6KW4UY/1MJ7nPG2x777gycd62qelgER9ptMwIJN1RcKcyuAPjTX5PYUt8ll2+SQvnnoD98ueK/FvF2ih/LD8g80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788159538; c=relaxed/simple;
-	bh=4p0A96O0hiovpEVMIakXJLugxxbaJAt6SsW0UQ4WssQ=;
+	s=arc-20240116; t=1788159722; c=relaxed/simple;
+	bh=qe86AbVS5lqIvhup1N8sPwnLE/3ZQY+/oFjXHO4sWvo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DeuEx5YMJk3ONoj4vvHw00O6vx8G33SSRK2z/dEokWbmMl0pivWKPNlJiAuFPI8qrhbymPe8D8qp5+9xw88mJ3+FtB9Y/owEq9DPZFQ09o2d5VK2QUgwmCEnmbauljA8A5ZrowGi+CAb7HolofGCd/jHBwcofZN811fwa6H2X2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ck53d1kz; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=rOAhPMDUI4Wjtrt9CPAEjH7xLUM+R/U4KRDgJEPGo7OMlb4tOTMlh5xg+tvXx8zI78vmzDTksO6uK7ZSk62PL+9ueMoxpQPzATwZtdQyuoOIb7dRra4GzEPiwq9Pky5NPj1ObIjc23jRuY7Ts9VAio5D/wFQNn14AKSIW+F9LH0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CAKeoSZr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ck53d1kz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ECB01F000E9;
-	Mon, 31 Aug 2026 06:58:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CAKeoSZr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 046FC1F000E9;
+	Mon, 31 Aug 2026 07:01:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788159534;
-	bh=gjhD6jwTBB81AC3ALAnD4e25Jipk8Dhme7whBLycs+U=;
+	s=k20260515; t=1788159711;
+	bh=YmFfC/GD2EW+EPgb3KdMUeXaMGIr8zKUHC9RY3Pgx8A=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ck53d1kzwEx4TkhCZMerkM0MM+ayXna8fxiqb9DTFXS3RnlohYdCrmswuedjeNOj/
-	 TNepywF2YfOWiNd67Vqo+cz6CSJKCqwwNVjjbJaKsicQfmcBDGl87vXMO51TZ7YPFt
-	 Drs5ycI2xQwCP1W5A9hWil78wI7uvCopLgjcPHznY9iIE6AIhF+WHiOCxZRGx5U+oF
-	 G7wuCGR40192k6oStZr4NnPdmJQP8lXlKVdn1TecZZCf0sNQ6UmDKceD4h7iJ8S06o
-	 FfiFWDj+0xd6Yjow70XW4dtwbk7aGtpOIOFlUqpDzksYWRYJoOmogQghzI8TqdW72R
-	 UAFVOkzn65vew==
-Message-ID: <4594e3db-a8e3-4f8d-95c2-a4edcbc8ca7c@kernel.org>
-Date: Mon, 31 Aug 2026 08:58:39 +0200
+	b=CAKeoSZrB1VeMXt7vup7Bn/XQqNUTqqqPI2+eXVnMElarSQV8K1ky+S39tDVynfs5
+	 vZ2skMB/Q/tP15MVpdRJ5DAldHYmYgYqMKIP0TS9qeC+HfeLwdaNIlO7UPEObmcIee
+	 spTN5lTDqptft8nJfiMgdm0uSlRwGBEVSydETIYDvHDBVvmPSOCS3AyXlZgZl3vY3I
+	 ddLoATIITxy+zmJGzzaeepah0KVc+n6TwzcTYxbrkyQOxEVVZGwOmTPOKqVF+F5kIq
+	 AZE+10AV/JUoxnjplYZXk2ni5sRyvIXVDFI+yf83p3DrVxfxpMWpGhbAxZn3Le4+w8
+	 bM52iwiniU/xQ==
+Message-ID: <bf36b0b7-d6c3-4731-b00c-c3a4c02ffc76@kernel.org>
+Date: Mon, 31 Aug 2026 09:01:35 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 03/11] soc: qcom: crypto_virt: add support for create,
- prepare and import keys
+Subject: Re: [PATCH v1 04/11] dt-bindings: soc: qcom: add binding for
+ qcom,crypto-virt
 To: Linlin Zhang <linlin.zhang@oss.qualcomm.com>, ebiggers@kernel.org,
  axboe@kernel.dk, mst@redhat.com, jasowangio@gmail.com,
  James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
@@ -50,7 +50,7 @@ Cc: neeraj.soni@oss.qualcomm.com, gaurav.kashyap@oss.qualcomm.com,
  stefanha@redhat.com, pbonzini@redhat.com, eperezma@redhat.com,
  xuanzhuo@linux.alibaba.com, linux-kernel@vger.kernel.org
 References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
- <20260827160806.1295313-4-linlin.zhang@oss.qualcomm.com>
+ <20260827160806.1295313-5-linlin.zhang@oss.qualcomm.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -96,51 +96,54 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
  n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
  qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <20260827160806.1295313-4-linlin.zhang@oss.qualcomm.com>
+In-Reply-To: <20260827160806.1295313-5-linlin.zhang@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 27/08/2026 18:07, Linlin Zhang wrote:
-> +static void crypto_virt_remove(struct platform_device *pdev)
-> +{
-> +	virtblk_set_crypto_ops(NULL);
-> +}
+> From: linlzhan <linlin.zhang@oss.qualcomm.com>
+> 
+> Document the device tree binding for the Qualcomm GVM crypto-virt node,
+> which provides the wrapped-key buffer size needed by the QCOM_CRYPTO_VIRT
+> driver to perform hardware-wrapped-key SCM operations backing virtio_blk's
+> inline crypto layer.
+> 
+> The host does not report this size over virtio, so it is supplied via DT
+> through the optional qcom,wrapped-key-size property.
+> 
+> Signed-off-by: linlzhan <linlin.zhang@oss.qualcomm.com>
+
+Your Git does not look like properly configured.
+
+> ---
+>  .../bindings/soc/qcom/qcom,crypto-virt.yaml   | 39 +++++++++++++++++++
+>  1 file changed, 39 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/soc/qcom/qcom,crypto-virt.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/soc/qcom/qcom,crypto-virt.yaml b/Documentation/devicetree/bindings/soc/qcom/qcom,crypto-virt.yaml
+> new file mode 100644
+> index 000000000000..5eb204f29762
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/soc/qcom/qcom,crypto-virt.yaml
+> @@ -0,0 +1,39 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/soc/qcom/qcom,crypto-virt.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
 > +
-> +static const struct of_device_id crypto_virt_of_match[] = {
-> +	{ .compatible = "qcom,crypto-virt" },
+> +title: QCOM GVM Crypto Virt driver
 
-Undocumented ABI, also not really allowed. We don't take bindings for
-drivers.
+We do not take bindings for drivers. Follow standard rules for bindings,
+e.g. read DTS101 slides.
 
-> +	{ }
-> +};
-> +MODULE_DEVICE_TABLE(of, crypto_virt_of_match);
-> +
-> +static struct platform_driver crypto_virt_driver = {
-> +	.probe = crypto_virt_probe,
-> +	.remove = crypto_virt_remove,
-> +	.driver = {
-> +		.name = "crypto_virt",
-> +		.of_match_table = crypto_virt_of_match,
-> +	},
-> +};
-> +
-> +static int __init crypto_virt_init(void)
-> +{
-> +	return platform_driver_register(&crypto_virt_driver);
-> +}
->  module_init(crypto_virt_init);
->  
->  #if IS_MODULE(CONFIG_QCOM_CRYPTO_VIRT)
->  static void __exit crypto_virt_exit(void)
->  {
-> -	virtblk_set_crypto_ops(NULL);
-> +	platform_driver_unregister(&crypto_virt_driver);
+Also:
+drop second/last, redundant "binding for". The "dt-bindings" prefix is
+already stating that these are bindings.
+See also:
+https://elixir.bootlin.com/linux/v7.1-rc7/source/Documentation/devicetree/bindings/submitting-patches.rst#L23
+Just describe the hardware (not drivers)
 
-You just added this line, so previous code was simply wrong?
-
-Please read submitting patches doc - you need to organize your work in
-proper commits.
 
 Best regards,
 Krzysztof
