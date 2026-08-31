@@ -1,41 +1,41 @@
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.84])
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.81])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B41730674C;
-	Mon, 31 Aug 2026 13:01:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53F7B314A79;
+	Mon, 31 Aug 2026 13:01:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.81
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788181317; cv=pass; b=ocT0HKlUBJXXYXR8mrgOYd5pSnqhBeFCLVAben/Zn0KCucG1MEeswCfNqhsQKS2CqjfhgmfP4W8EcMMY/mtkk/QWhQvgQNCkagZx+cJYgxxFWygdKusMaY/1WqMnu3ujl2QMK/KKIAbDqoOh66HBQE3BqMzZgu4OluO6xNM2520=
+	t=1788181320; cv=pass; b=BIWuR+sXVtZbSmXybV6S4x5z1OschJcS6a399RWTSe0l3GG+yQ9sXsFx79QCcpF+5imDi081ERbj6xKgdmQBSh0+UaYkJGT+AWCzE6gVh4tagOFQPBnQ/uE+AjCsL++SMrNbkLVUw0UskkI0M21uGNL3XJKpkB9n6LZSKLDMbdE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788181317; c=relaxed/simple;
-	bh=53GClohDVNUq80O0s28UO9y06MRiLO0L0qiayYoNT00=;
+	s=arc-20240116; t=1788181320; c=relaxed/simple;
+	bh=WWMfqDeoUapcnUvFpaGWwoF0HEapcYfpFETOMYA9Dlw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KySKTI5Hnw9c6SuUSq/wfbEVfWSyTLIotZiJIyHCN/JclIJu5LdtFwOMwiXZs/XGguLd3hCXuHSlKn5NsF4ZdQiR9cHcI5wiFE97ZkesmMKpYc9N7meGQYk+2UonVHfGjP76+83EuHKlCj9VDKsxYN6cD4QVVIjpjnMnRjO6kPg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=bm/ZxCzS; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=a8Iv4tyb; arc=pass smtp.client-ip=85.215.255.84
+	 MIME-Version:Content-Type; b=tSxntbjQqGGU9gk6Y0BfUIWv6TmeRI8N+n05ScZjtXEnJQz4xSQYcIgZQ7HLTtloAKpTMIoptKoVne8XJEYV+E1B6UyaARfh9qm8528hvUNxxde2Le4yuf8t8aWFu7/qHN2c5EpWd+MDJLB2QQ7xJXxFEyleXqlbTuCv2CjB/pA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=KYwIwNfz; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=LjeAGzce; arc=pass smtp.client-ip=85.215.255.81
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="bm/ZxCzS";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="a8Iv4tyb"
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="KYwIwNfz";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="LjeAGzce"
 ARC-Seal: i=1; a=rsa-sha256; t=1788181300; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=WfwuN4QpX8O+mjFgs9Gq/gzFBhGrIev9YX/+rsEvYVHorBHobl9wHb1ECyvAS0y8d4
-    OIpyjwhq65um8yiWXqEcfmM41adv1DLtaIMY5nSGLeYi9RTKSBzQtalx7E21gXdesoUk
-    WcR1XdhH6tah9+pT8Rmznr+mG3JDUSJNUWd2T1mI74YEIvGA9uh2sUPFZ6GdxP8dFWqW
-    +W+f/1f2/1OeNzcQ0y2Q78Xoxhn101Me9I4OHgOCzU/CADJ7WbEX3HBv/yfj3JoeCGw4
-    UBekl9Hy1Q1YXmsM4nxcV8xBsSY8hlWAi2IofsFvJcedATVFaQr5l8Cmt22q1zuNPDkH
-    BSqA==
+    b=cpmcnQr1q3Axe/66FO8sXyRm3HvwzeyJwvAaY0QeDAuhhCDAFo/BgIv8DHu2uCIrAs
+    fqDV9SeQ9LDwK58ny3/z2eH9oPu/WQ4jBAkHeRgadO4dCiA/Je4c4o3Wsg/UDjvRZwEb
+    Gl7e6XHSOeqtlR5nPFLT5DrUYzZqRZdzDjlKYaIu9MkHyPY/EG6NUPwDBPO2YKWOKBhG
+    97eYCv+6Snq3njabFw9C9gRBjkf4NHHsk54JJQEoYqX8bkRe8nNm3aGU21G28oVunkQ4
+    6qpE3rZ7AKfiVAFe2lBMGmNiSY291wfzE+r+uA12QAdTLxNwbD+vivMAOfIT4voqYWS7
+    F0jg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1788181300;
     s=strato-dkim-0002; d=strato.com;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=7tWJLc2AfX1JQbEqmTT83Dxd/SQ1Lf+Y2dv19BU5jxA=;
-    b=cQzRT1To2erejjwgHSS5yHQO3Z+RmsGEB9dtSP8HCkzDbYtnjqFQHh+9EeovIRKdcC
-    yh3GS+6PcAjxFBDsa0BPNCEqwPQALRRhAg0ENdPQEXpSAFFMlFCRhR0chQ7907Y/W0BF
-    lPaX6I1jTpSw6zpmdCdsbDFJ8JQ0FnHCtK/rAEN3SLvp5U3iUsgPX3XrfehaiHCbsSic
-    8+g7lzdLZCyfeRZdAEYiac7KMfoALeuRxqi/XsFwRfP6lPuTZb045y76djBmlCyv3n8E
-    0unS3mOp4bbOWm1DQB5AtywGMB80VLEtwfEoHYNodI2K4uODU1xgH4lXTQVFV10saYi0
-    k2lA==
+    bh=hMmdCpitcW0C+fnS3gjjIWuyuf7ujXR/AKQ3vpCycXI=;
+    b=ZKtpTJyiPuGqYok7LY+8E8EM/4i00c9ckyB+mBuzrSe6nA97vnBcvsyJ+0f/+VhXfs
+    fK6Ejsi4vYIq2Huq4UG7I6tMhz9anpwjYOI7TqvBaElNHRJdQF/s+vMlO5PTu4KaEduY
+    tzOdWrWLp2e0X3kzfk29fZ8y6I0SXwl6jCTcfZDb4edV1lbF+WrQer2sdGWP481J7r8l
+    WJPU3PdWCcSRcAzfwAK54nziate0EjXivDdbl3b1ud1dJTkWoOa+NlFhCu2C/iE9b9W0
+    9t/MYj3eeec3Jy/i48FGP1WSS50dVSr7PywqlkHExpajj9BTJaE7H75a7An3p1CRgHk6
+    3Cmg==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
@@ -44,27 +44,27 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1788181300;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=7tWJLc2AfX1JQbEqmTT83Dxd/SQ1Lf+Y2dv19BU5jxA=;
-    b=bm/ZxCzSaV+IdCwFRkXPD/ZMUKBqpjVmUj1gApdTaxwn2P+ChSZeTP6VmcFphAzD0S
-    +ZDEajS/I/FB6D0RXal5RB8pfqkMtSaySX/aHXvySfSP8zOKLQjuXNdU2294MPF0PED3
-    3y0NS55J41uFSlR9Y8t6aoeet5mjo2mMmm1B4begsyRCV7qVQam/LJ2hdfhAJOpcaHtK
-    Xdd1BWBucdaG8h497L7zQ7EAOPpqMMchoC1KQIdea+HUi+vzvcARc45Ictz08j880nc9
-    WvnCeX5XuVUG4XVgalD7la38/JEtDv2u8MXgT50/02/AjGnN0LmlBO5MB24eVTTafU5x
-    BJgg==
+    bh=hMmdCpitcW0C+fnS3gjjIWuyuf7ujXR/AKQ3vpCycXI=;
+    b=KYwIwNfzsGqAtS4GTasQ64ozuVoYH2X5M9BC3j8oyRxXN0qRbMYSRNBS3tr5VyzS16
+    REJjv1GJ9Moh4CeWjloBYVQcfTA/rJFGYRvwVIIcCeej5MfZbgV2eWC8FUsHCV7zTXy2
+    0xuzkw0CjBocmPnSgY9VEnyuaTks7NsIUhfpQU6dfI5hDg/KkvGP4fy8PF1hzFIUKVMp
+    u8pzVRWEWJCV8yEiNn04zjq8FDFf8L5GhaUWpkoo9TpOwiETrJgIEa3/I6VbeZbaz4/f
+    jw/V2Pf0TNylFz8QOWYkNuxJMA2Bh+WX2Dakvpf03AbOk2vknzH3bu8ZFE9N+6tzmLt0
+    59Iw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1788181300;
     s=strato-dkim-0003; d=iokpp.de;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=7tWJLc2AfX1JQbEqmTT83Dxd/SQ1Lf+Y2dv19BU5jxA=;
-    b=a8Iv4tybK9+mQcMEBlNSychSUE47RovIs/Il2IgR9TzXhnjX93VfhZRLQvVPDbFhCA
-    Y1R6/x44uqKFAFPuv4DQ==
+    bh=hMmdCpitcW0C+fnS3gjjIWuyuf7ujXR/AKQ3vpCycXI=;
+    b=LjeAGzceTeEhnTb/vKaR6yynRpDRGNFKA6MQbqvwaumGTS1y6egIJkDZMlPbBkUkqU
+    Om+inzgnqKxKRYpYuFAg==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O2J2YOom0XQaPis+nU/xK"
 Received: from Munilab01-lab.micron.com
     by smtp.strato.de (RZmta 55.6.2 AUTH)
-    with ESMTPSA id ze37e127VD1ekHm
+    with ESMTPSA id ze37e127VD1dkHl
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Mon, 31 Aug 2026 15:01:40 +0200 (CEST)
+    Mon, 31 Aug 2026 15:01:39 +0200 (CEST)
 From: Bean Huo <beanhuo@iokpp.de>
 To: MyungJoo Ham <myungjoo.ham@samsung.com>,
 	Kyungmin Park <kyungmin.park@samsung.com>,
@@ -80,9 +80,9 @@ Cc: Alim Akhtar <alim.akhtar@samsung.com>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH 3/3] scsi: ufs: core: Report the current clock frequency to devfreq
-Date: Mon, 31 Aug 2026 15:01:29 +0200
-Message-Id: <20260831130129.3979454-4-beanhuo@iokpp.de>
+Subject: [PATCH 2/3] PM / devfreq: Add more details to the get_cur_freq() comment
+Date: Mon, 31 Aug 2026 15:01:28 +0200
+Message-Id: <20260831130129.3979454-3-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260831130129.3979454-1-beanhuo@iokpp.de>
 References: <20260831130129.3979454-1-beanhuo@iokpp.de>
@@ -97,79 +97,37 @@ Content-Type: text/plain; charset="us-ascii"
 
 From: Bean Huo <beanhuo@micron.com>
 
-When a driver does not provide a ->get_cur_freq() callback, the cur_freq
-sysfs attribute shows devfreq->previous_freq, which only tracks the
-scaling that the governor itself did.
+The comment for ->get_cur_freq() only says that the device should
+provide the frequency at which it is operating. It does not tell the
+driver author which unit to use, what the return value means, or that
+the frequency should be one of @freq_table. These have to be found by
+reading the devfreq core.
 
-The UFS controller is also scaled outside the governor. The clearest
-example is writing 0 to clkscale_enable: ufshcd_clkscale_enable_store()
-sets the clocks to max_freq through ufshcd_devfreq_scale() and suspends
-the governor, so devfreq_set_target() is never called. After that,
-cur_freq keeps showing the last frequency the governor chose instead of
-the one the controller runs at, and it does so as long as clock scaling
-stays disabled.
-
-Add ufshcd_devfreq_get_cur_freq(). It reports clk_scaling.target_freq
-when OPPs are used and the first clock's curr_freq otherwise, the same
-values that ufshcd_devfreq_get_dev_status() reports. Both are 0 until
-the controller is scaled for the first time, so return an error in that
-case and let devfreq use the frequency it last set.
+Add these details to the comment.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/ufs/core/ufshcd.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ include/linux/devfreq.h | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2ba244cf40ac..45187a7e4f4f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1716,6 +1716,37 @@ static int ufshcd_devfreq_get_dev_status(struct device *dev,
- 	return 0;
- }
- 
-+static int ufshcd_devfreq_get_cur_freq(struct device *dev, unsigned long *freq)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	unsigned long cur_freq;
-+
-+	if (!ufshcd_is_clkscaling_supported(hba))
-+		return -EINVAL;
-+
-+	if (hba->use_pm_opp) {
-+		cur_freq = hba->clk_scaling.target_freq;
-+	} else {
-+		struct ufs_clk_info *clki;
-+
-+		clki = list_first_entry(&hba->clk_list_head,
-+					struct ufs_clk_info, list);
-+		cur_freq = clki->curr_freq;
-+	}
-+
-+	/*
-+	 * target_freq stays 0 until something scales the controller for the
-+	 * first time. Report nothing rather than 0 so devfreq falls back to
-+	 * the frequency it last set.
-+	 */
-+	if (!cur_freq)
-+		return -EINVAL;
-+
-+	*freq = cur_freq;
-+
-+	return 0;
-+}
-+
- static int ufshcd_devfreq_init(struct ufs_hba *hba)
- {
- 	struct list_head *clk_list = &hba->clk_list_head;
-@@ -9612,6 +9643,7 @@ static struct ufs_hba_variant_params ufs_hba_vps = {
- 	.devfreq_profile.polling_ms	= 100,
- 	.devfreq_profile.target		= ufshcd_devfreq_target,
- 	.devfreq_profile.get_dev_status	= ufshcd_devfreq_get_dev_status,
-+	.devfreq_profile.get_cur_freq	= ufshcd_devfreq_get_cur_freq,
- 	.ondemand_data.upthreshold	= 70,
- 	.ondemand_data.downdifferential	= 5,
- };
+diff --git a/include/linux/devfreq.h b/include/linux/devfreq.h
+index dc1075dc3446..809ef29b9af5 100644
+--- a/include/linux/devfreq.h
++++ b/include/linux/devfreq.h
+@@ -90,8 +90,11 @@ struct devfreq_dev_status {
+  *			use this directly. Instead, governors are recommended
+  *			to use devfreq_update_stats() along with
+  *			devfreq.last_status.
+- * @get_cur_freq:	The device should provide the current frequency
+- *			at which it is operating.
++ * @get_cur_freq:	The device should provide the frequency, in Hz, at
++ *			which it is currently operating, and return 0, or a
++ *			negative errno on failure. The frequency should be one
++ *			of @freq_table, as it is used for the transition
++ *			statistics.
+  * @exit:		An optional callback that is called when devfreq
+  *			is removing the devfreq object due to error or
+  *			from devfreq_remove_device() call. If the user
 -- 
 2.34.1
 
