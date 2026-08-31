@@ -1,175 +1,201 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7952A45C6FD
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 18:14:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5EF935DA4A
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 18:58:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788200054; cv=none; b=Bew754LAvW7cg8oCPEJ9q0VsxxXMYRKjf98WS949RXXpJaDf0TlSPhgqgENRvX5wYSP7JjHqqKqGCWlOjdKkMWCmEhikf8V5kfYtPpesAFe676uEm2Fn6xlEK1P1Umf8uYL4F12cwzpvWEuqYuilW7S3HlUhrdrjZLl4iKAA3HE=
+	t=1788202741; cv=none; b=jjoU0iq9qZ+lEx2hZi5PUlKaxOS4AeyMc5x4ijsfmAVBRr+OYK8fqbBqebG6/hXNGWlVpDDX0ZsXWoDO6m6x2c9UxVf1cCHBgb5fDdMdbUE9quJLXC4HAMArFE+maO9vG7KoFK/6Slim90i98KNbIRg2DXWXBkG8XdqVanuuwKM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788200054; c=relaxed/simple;
-	bh=4xBz36/PWzI8P2WA/e8hNiesmDEQimqv9Nc36jICNVw=;
+	s=arc-20240116; t=1788202741; c=relaxed/simple;
+	bh=97iLlLM7/Npn6chgs+ow+W9qugbFQdx9LW9RzgSb8Rw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Wk8YuP2PSiIiaJGG65sRIAbQpvBe5/DwQLdbcbvP0rJaZrk1xe82BA8HhdDk+fRFVU5m1dU4R8GckVLNVYhSfrwHwq3y1kqSX9Hirw1eD9mtlfbmi4wOq4sa2LBFXDcxVK8qzpnYJ+jrh1MX8DDWBiwxGmVUUghtNBsmvzmS64w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kcW36Wqw; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=EPmsVyZxhDx8PlHJtKeF0vqSZvsY/nAl+u7NMFCPYe3cpbVunud2YpYNHRQegoGl1wb9V+wl1zTnwXvOtQ48IQuVz2Bw3R/JVU9xi+ooMYObcvdA9Hhsj5q4q+jL1yjLKdXTXQilB/AXxBg/mnHK9o3KK4lYgJrE5AEQKVlMGLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GUrV6ZDV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kcW36Wqw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B4E51F000E9;
-	Mon, 31 Aug 2026 18:14:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GUrV6ZDV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 607811F000E9;
+	Mon, 31 Aug 2026 18:58:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788200053;
-	bh=DBRk14FOWh/96dPTefeJWrV+tCVo4VqkBalqyEUTKIM=;
+	s=k20260515; t=1788202739;
+	bh=SzILj7kzwCRMJ/Gx9f1GXS1Xlim1Dl7D3vtUmk9IHLs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kcW36WqwU4qSDDBJKiryLlsqjkmT2oObVbDLxYeroLDtQVX/qzYHgQKAgdfgHzh4c
-	 mLwjU7y0ZOmpIxgjsipvxeYaLjkh6C32E4zeiAj/7io8WeYH12bgkdzLQ+cBp1YMBM
-	 xBfVNvbobZ9Be49QdGS6HjyipDtoyetJ29GIk/rByxbeavgB8eQSVGMFd/34d3w+k5
-	 ndXAMC68JOVB5+zj/SMiPxEXGq2wzmn6L7/qBY05UntXO1JyV6B4KhjaErLeY8sooV
-	 4YAvQIHDrKgjORWZ5ZT1ZnDEemW+chVGSOSaooD4KLbfDK+5FjeaFQYBjS7ldgrS52
-	 185dfljDFzmkQ==
+	b=GUrV6ZDV2sBRVjg423fokOVMoQQWOIIRU/J4P76oUwstU6gIMUZnuQegfO+tiLIBh
+	 DxVcpxnUIh1MpW+Cqh+kVydgNA9Wu3G+/ROrAie+DQtkNXXlJf53IrMU/5eE3ianFc
+	 bsAV4gTU5m1YC3DeOthDCmxRm+VXwXdBxbpJ3i2D/4rkvPcbJ3uaqNzEb/UpE9/DLt
+	 3Cd0d7gfWVXAN6FB9KlPtEi/c/CjWl8Wpg2VQrDadaN+1rd73ZnnC7l6/i/KxV1MJ3
+	 Ccfkdu78O40azdX/hlDzS9ksmIohrAKmhh2xotG/CyrRN5UYIhXM+UR5JNCJE5z4B7
+	 TwqrN3NE4FKeg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: fix use-after-free on self-preempt in
- PROUT PREEMPT
+Subject: Re: [PATCH v5 2/2] ufs: rpmb: use a fixed-length RPMB dev_id
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Tianchu Chen" <tianchu.chen@linux.dev>
+To: "Jorge Ramirez-Ortiz" <jorge.ramirez@oss.qualcomm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <ddf3c216cf486a1939784731bd1fb50e58092256@linux.dev>
-References: <cfc81cd805c38b2600a219329c351580aa535326@linux.dev>
- <ddf3c216cf486a1939784731bd1fb50e58092256@linux.dev>
+In-Reply-To: <20260831154804.719528-3-jorge.ramirez@oss.qualcomm.com>
+References: <20260831154804.719528-1-jorge.ramirez@oss.qualcomm.com>
+ <20260831154804.719528-3-jorge.ramirez@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 18:14:12 +0000
-Message-Id: <20260831181413.4B4E51F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 18:58:58 +0000
+Message-Id: <20260831185859.607811F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] When processing PREEMPT_AND_ABORT, preempted registrations are add=
-ed to `preempt_and_abort_list` but are leaked if a specific condition is no=
-t met, skipping required task aborts.
-- [High] Unsafe `list_for_each_entry_safe` iteration across a spinlock drop=
- in PR clearing and preemption paths leads to a potential Use-After-Free.
-- [High] Missing reference decrement in `core_scsi3_emulate_pro_clear` caus=
-es a soft lockup if the caller's registration is concurrently unlinked.
+- [High] Allocating a structure embedding a reference-counted `struct devic=
+e` with `devm_kzalloc()` causes a Use-After-Free due to lifecycle mismatch.
+- [High] Circular reference between `ufs_rpmb->dev` and `rdev` prevents dev=
+ice cleanup, leading to permanent resource leaks of both device structures.
+- [High] Initialization race: RPMB device is exposed to the subsystem and n=
+otifiers before `region_id` is initialized.
+- [High] The `ufs_rpmb_bus_type` is never registered with the driver core, =
+causing `device_register()` to deterministically fail.
 --
 
-commit 3df8f536b0380acddfcc85e22e361b03863b2a7d
-Author: Tianchu Chen <flynnnchen@tencent.com>
+commit a3eaa4c56fa0d1803a39f46b9f298247acd5bdfd
+Author: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
 
-scsi: target: fix use-after-free on self-preempt in PROUT PREEMPT
+ufs: rpmb: use a fixed-length RPMB dev_id
 
-This commit fixes a use-after-free bug in core_scsi3_pro_preempt() that
-occurs when a remote initiator preempts its own registration. It tracks if
-the free path consumed the locate reference and conditionally skips the
-final put.
-
-> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core=
-_pr.c
-> index e7933115087ab..e4160ed3c1191 100644
-> --- a/drivers/target/target_core_pr.c
-> +++ b/drivers/target/target_core_pr.c
-> @@ -2926,6 +2927,13 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int typ=
-e, int scope, u64 res_key,
->  				sa_res_key_unmatched =3D false;
-> =20
->  				calling_it_nexus =3D (pr_reg_n =3D=3D pr_reg) ? 1 : 0;
-> +				/*
-> +				 * dec_holders=3D1 makes the free path drop the
-> +				 * reference core_scsi3_locate_pr_reg() took on
-> +				 * pr_reg_n, so the tail must not put it again.
-> +				 */
-> +				if (calling_it_nexus)
-> +					reg_n_released =3D true;
->  				pr_reg_nacl =3D pr_reg->pr_reg_nacl;
->  				pr_res_mapped_lun =3D pr_reg->pr_res_mapped_lun;
->  				__core_scsi3_free_registration(dev, pr_reg,
-
-[Severity: High]
-This is a pre-existing issue, but since we are modifying the preemption
-logic here, could this list iteration be unsafe?
-
-The loop enclosing this section uses list_for_each_entry_safe, which caches
-the next element assuming the list remains safely locked. However, inside
-__core_scsi3_free_registration():
-
-__core_scsi3_free_registration() {
-        ...
-        spin_unlock(&pr_tmpl->registration_lock);
-        while (atomic_read(&pr_reg->pr_res_holders) !=3D 0) {
-                cpu_relax();
-        }
-        ...
-}
-
-Since the list lock is dropped inside the loop body, couldn't a concurrent
-thread acquire the lock and unlink or free the cached next element, causing
-a use-after-free when iteration resumes?
+The RPMB authentication key is derived from the dev_id handed to the
+RPMB subsystem. OP-TEE implements the eMMC RPMB flow, where the dev_id
+is the eMMC CID: a fixed 16-byte value the key derivation depends on.
 
 [ ... ]
 
-> @@ -2997,7 +3005,8 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type=
-, int scope, u64 res_key,
->  		if (pr_tmpl->pr_aptpl_active)
->  			core_scsi3_update_and_write_aptpl(cmd->se_dev, true);
+> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
+> index 00ba4f3b842bf..783ecfc7581d7 100644
+> --- a/drivers/ufs/core/ufs-rpmb.c
+> +++ b/drivers/ufs/core/ufs-rpmb.c
+> @@ -21,6 +22,7 @@
+>  #include <linux/unaligned.h>
+>  #include "ufshcd-priv.h"
 > =20
-> -		core_scsi3_put_pr_reg(pr_reg_n);
-> +		if (!reg_n_released)
-> +			core_scsi3_put_pr_reg(pr_reg_n);
->  		core_scsi3_pr_generation(cmd->se_dev);
->  		return 0;
+> +#define UFS_RPMB_ID_LEN			16	/* Match eMMC CID Length */
+>  #define UFS_RPMB_UA_RETRIES		3	/* Retries for the power-on UNIT ATTENTIO=
+N */
+>  #define UFS_RPMB_SEC_PROTOCOL		0xEC	/* JEDEC UFS application */
+>  #define UFS_RPMB_SEC_PROTOCOL_ID	0x01	/* JEDEC UFS RPMB protocol ID, CDB=
+ byte3 */
 
 [Severity: High]
-This is a pre-existing issue, but I noticed something unusual about how
-preempt_and_abort_list is handled before we return here.
+This is a pre-existing issue, but the ufs_rpmb_bus_type defined nearby is
+completely missing a corresponding bus_register() call anywhere in the code=
+base:
 
-When processing PREEMPT_AND_ABORT, preempted registrations are added to the
-local preempt_and_abort_list. However, earlier in this function,
-core_scsi3_release_preempt_and_abort() is only called if a very specific
-condition is met:
+static const struct bus_type ufs_rpmb_bus_type =3D {
+	.name =3D "ufs_rpmb",
+};
 
-if (pr_res_holder && all_reg && !(sa_res_key)) {
-        __core_scsi3_complete_pro_preempt(...)
-        if (preempt_type =3D=3D PREEMPT_AND_ABORT)
-                core_scsi3_release_preempt_and_abort(...)
-}
+When ufs_rpmb_probe() assigns this unregistered bus type to ufs_rpmb->dev.b=
+us:
 
-If that condition evaluates to false, we eventually reach this return 0
-statement without cleaning up the list.
+	ufs_rpmb->dev.bus =3D &ufs_rpmb_bus_type;
 
-Does this permanently leak the local preempt_and_abort_list and skip the
-required task aborts if a remote initiator sends a PREEMPT_AND_ABORT command
-with all_reg=3D0 or a non-zero sa_res_key?
+does this guarantee that device_register() will deterministically fail when=
+ it
+attempts to retrieve the bus subsystem?
+
+[ ... ]
+
+> @@ -157,6 +159,7 @@ static void ufs_rpmb_device_release(struct device *de=
+v)
+>  int ufs_rpmb_probe(struct ufs_hba *hba)
+>  {
+>  	struct ufs_rpmb_dev *ufs_rpmb, *it, *tmp;
+> +	u8 dev_id[UFS_RPMB_ID_LEN];
+>  	struct rpmb_dev *rdev;
+>  	char *cid =3D NULL;
+>  	int region;
 
 [Severity: High]
-This is another pre-existing issue, but looking at a similar pattern in
-core_scsi3_emulate_pro_clear():
+This isn't a bug introduced by this patch, but ufs_rpmb_device_release() ju=
+st
+above here accesses memory that could have already been freed:
 
-core_scsi3_emulate_pro_clear() {
-        pr_reg_n =3D core_scsi3_locate_pr_reg(...);
+static void ufs_rpmb_device_release(struct device *dev)
+{
+	struct ufs_rpmb_dev *ufs_rpmb =3D dev_get_drvdata(dev);
 
-        list_for_each_entry_safe(...) {
-                calling_it_nexus =3D (pr_reg_n =3D=3D pr_reg) ? 1 : 0;
-                __core_scsi3_free_registration(..., calling_it_nexus);
-        }
-        ...
-        return 0;
+	rpmb_dev_unregister(ufs_rpmb->rdev);
 }
 
-The function relies exclusively on finding pr_reg_n during its list loop to
-drop the reference via __core_scsi3_free_registration. If another thread
-concurrently unlinks pr_reg_n before the list lock is acquired, the loop
-never encounters it.
+Since ufs_rpmb_probe() allocates ufs_rpmb with devm_kzalloc() and subsequen=
+tly
+calls device_register(&ufs_rpmb->dev), if the host driver unbinds, devres w=
+ill
+free ufs_rpmb unconditionally. If a local user holds an open file descripto=
+r or
+sysfs reference to the device, the kobject remains alive.
 
-Since the function eventually returns 0 without a fallback
-core_scsi3_put_pr_reg() call, could this leaked reference force the
-unlinking thread to spin infinitely in its atomic_read cpu_relax loop,
-leading to a soft lockup?
+When the final reference is dropped, ufs_rpmb_device_release() is invoked,
+which then dereferences the already-freed ufs_rpmb memory. Can this cause a
+use-after-free?
+
+[Severity: High]
+This is also a pre-existing issue, but child unregistration is incorrectly
+placed inside the parent's release function:
+
+static void ufs_rpmb_device_release(struct device *dev)
+{
+	struct ufs_rpmb_dev *ufs_rpmb =3D dev_get_drvdata(dev);
+
+	rpmb_dev_unregister(ufs_rpmb->rdev);
+}
+
+During driver removal, ufs_rpmb_remove() calls device_unregister(&ufs_rpmb-=
+>dev)
+on the parent before unregistering the child. Because the child still pins =
+the
+parent's refcount, the parent's refcount never reaches zero, preventing its
+release function from executing.
+
+Does this create an unbreakable circular reference that prevents device cle=
+anup
+and permanently leaks both device structures?
+
+[ ... ]
+
+> @@ -215,8 +218,10 @@ int ufs_rpmb_probe(struct ufs_hba *hba)
+>  			goto err_out;
+>  		}
+> =20
+> -		descr.dev_id =3D cid;
+> -		descr.dev_id_len =3D strlen(cid);
+> +		blake2b(NULL, 0, cid, strlen(cid), dev_id, UFS_RPMB_ID_LEN);
+> +
+> +		descr.dev_id =3D dev_id;
+> +		descr.dev_id_len =3D UFS_RPMB_ID_LEN;
+>  		descr.capacity =3D cap;
+> =20
+>  		/* Register RPMB device */
+
+[Severity: High]
+This isn't a bug introduced by this patch, but there is an initialization
+race when registering the RPMB device just below this block:
+
+		/* Register RPMB device */
+		rdev =3D rpmb_dev_register(&ufs_rpmb->dev, &descr);
+		...
+		ufs_rpmb->rdev =3D rdev;
+		ufs_rpmb->region_id =3D region;
+
+rpmb_dev_register() exposes the device to the rpmb_class, which synchronous=
+ly
+triggers class notifiers. If a notifier like OP-TEE schedules a workqueue to
+probe the RPMB device, the worker could issue SMC calls resulting in an RPC
+back to ufs_rpmb_route_frames(), which relies on ufs_rpmb->region_id.
+
+Since ufs_rpmb->region_id is initialized after rpmb_dev_register() returns,
+could the asynchronous probe thread read an uninitialized region_id for
+non-zero regions?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/ddf3c216cf486a19397=
-84731bd1fb50e58092256@linux.dev?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831154804.7195=
+28-1-jorge.ramirez@oss.qualcomm.com?part=3D2
