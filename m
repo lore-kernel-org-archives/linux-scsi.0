@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D006B3546FE;
-	Mon, 31 Aug 2026 02:05:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A200335A385;
+	Mon, 31 Aug 2026 02:05:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788141942; cv=none; b=tf/MXcBWmPAecgh4dspmu2o7VSztFPSFPVBPNi+gjZFfi6GDC4ld6IeyhwerL/UDv00yc9+4H5DYyOnJX8dBQ3uZbmshEinUS0hapfW3Q7DP9CJwsQRxIj7ATP2fXai+MVHYH2lHkZ0S4PnUUPoR6j8VbaLWi4MhQO2KEpqeYLU=
+	t=1788141943; cv=none; b=TD/8AFIK2lPty/hD8069ti+E3ZB38eTb0pzwt5ApTaHNvVD7t7M1R/jyHrM/nvFUTqECh4R/0oNxAG4MnXMaueCY+uG6jtC9BzwCePpOoQj1gIq2W6oXh7G1DbBALDvcFAccfVJZv/lHBBr2iM+8WNIEx6ezZaRWI28bXeYNS1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788141942; c=relaxed/simple;
-	bh=NTKEZIJWPLPWoIQ0QSJ5AVkd02EfznGvCXmP4ER42uU=;
+	s=arc-20240116; t=1788141943; c=relaxed/simple;
+	bh=jVUvAU/jipcW7xL3UyK6BLg5G3rAjjS4URRj2j+qCmE=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=J2zipaLoQQZR16qvc30knTaTn3wYXhUNIeocN1pGlYn8rkwude3IEl2oQvO90exmtqcW8zvITkMZ1KbqcHZIl93OBJx37GgMD1cNPFcs9c7ZYQwT33kYPY+bwlNSE4uMl/rTTRw34s3TJ2PSDfnKnkI7SjgUr9kGcIT4yO6FZe4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Se8v/vG4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=ErLlxJ1AszymNfed8QeCHKyMumst2I9hTmSxUkwO7b62zCciTqKupugpm7kWFwuHqVW6HBHvsvV3N0NjE02PZCg7eRtX79ZhIlgvydzNvKUnNMvvwEgnHRdYehK4W2QFoos8/tnqsLjJwh9BppgUUhBaaE4kTrKpDhLqFWWC2Pc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VJCWscFm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Se8v/vG4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E35F1F000E9;
-	Mon, 31 Aug 2026 02:05:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VJCWscFm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A59D1F00A3D;
+	Mon, 31 Aug 2026 02:05:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788141940;
-	bh=g2xxdO03kqVG4q6+qdwC955GVUQYqVcHMezZs3jk1UA=;
+	s=k20260515; t=1788141942;
+	bh=7du7Ly4+lxohLAzkVpO8BgMX1xcb851UPT7FENfEx7Q=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=Se8v/vG4lqiLyMA1yQVMGkaoHqi1MU70OJSbjU3waOsjJAJGjkHt/gwZOdxOY+KNX
-	 c5cyxfNO2ZH6IdOXq+sirX687I/9YWs+TY+PJAh/oCfY9hc0kJhTzN4tJY1L4V9DJO
-	 ieCZXofjHpLJp+cd95GfvbQTsHYg/KfV6ysZirPr9gEvlIKE/Co/1B1db7+TyegElp
-	 30vHDhwX6XWG7QEQlvuAjcVk308PKY7MaYDIC+4oUHeBUw5gzrnqsmjUR7t5JEPZFp
-	 i4ph42sggLRsOEMmcgW1WuH4LrRlY6ojbuBjLgjnAnNchQvHx35698sYHE9d7hfMQj
-	 xU0hbgq6+T7tw==
+	b=VJCWscFmfthbWKZIhz74X9LeHXtx17cypCQ149aCsX47Ar7U1f2ONl4uC025Opsvg
+	 Y7LR+zAvO8TYIu4H6LTeI9nLS07KzDsTnUpW9aRxDurenMpOFm86Ie2lftJD8cryV6
+	 DpuWsBO6tOtoDcOX4uTMbo6lZT0paslMkRUPVEve2KuahO+gJa4ZSncFefxr0+tb0+
+	 NtOSL+sY8SP0pOhyfyD1WX74c6sQKiufqv60djHfneMJkAcUzwEWPiClCpndgCRfcF
+	 g7yLZClW0tt5LH71blFBr31lvJ76zymQ74yN/jDFtD4QYvcFfWbd3ZqHExsmi6HOwX
+	 tq3fu0fRNvsJw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -35,9 +35,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	linux-usb@vger.kernel.org,
 	Alan Stern <stern@rowland.harvard.edu>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 23/37] scsi: smartpqi: use 16-bits defined sense codes
-Date: Mon, 31 Aug 2026 11:04:37 +0900
-Message-ID: <20260831020451.585944-24-dlemoal@kernel.org>
+Subject: [PATCH 24/37] scsi: qla2xxx: use 16-bits defined sense codes
+Date: Mon, 31 Aug 2026 11:04:38 +0900
+Message-ID: <20260831020451.585944-25-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260831020451.585944-1-dlemoal@kernel.org>
 References: <20260831020451.585944-1-dlemoal@kernel.org>
@@ -49,88 +49,51 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the smartpqi driver to use the 16-bits sense_code field of
-struct scsi_sense_hdr and replace all hard-coded additional sense codes
-and additional sense code qualifiers with the enum values defined in
-include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
-being processed are easier to test and self-documented.
+Refactor the qla2xxx driver to use scsi_set_sense() and replace all
+hard-coded additional sense codes and additional sense code qualifiers
+with the enum values defined in include/scsi/scsi_sense.h. This helps with
+code clarity as the sense codes being processed are easier to test and
+self-documented.
 
 No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 31 ++++++++++++++++-----------
- 1 file changed, 18 insertions(+), 13 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 140e8a6addbe..d8d0fe915805 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -3249,15 +3249,15 @@ static void pqi_process_raid_io_error(struct pqi_io_request *io_request)
- 			sense_data_length = sizeof(error_info->data);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 63b70d4abbf0..89c2af3fee4f 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3263,21 +3263,24 @@ qla2x00_handle_dif_error(srb_t *sp, void *pkt)
  
- 		if (scsi_status == SAM_STAT_CHECK_CONDITION &&
--			scsi_normalize_sense(error_info->data,
--				sense_data_length, &sshdr) &&
--				sshdr.sense_key == HARDWARE_ERROR &&
--				sshdr.asc == 0x3e) {
-+		    scsi_normalize_sense(error_info->data,
-+					 sense_data_length, &sshdr) &&
-+		    sshdr.sense_key == HARDWARE_ERROR &&
-+		    scsi_sense_asc(&sshdr) == ASC_LU_HAS_NOT_SELF_CONFIGURED_YET) {
- 			struct pqi_ctrl_info *ctrl_info = shost_to_hba(scmd->device->host);
- 			struct pqi_scsi_dev *device = scmd->device->hostdata;
- 
--			switch (sshdr.ascq) {
--			case 0x1: /* LOGICAL UNIT FAILURE */
-+			switch (sshdr.sense_code) {
-+			case LU_FAILURE:
- 				if (printk_ratelimit())
- 					scmd_printk(KERN_ERR, scmd, "received 'logical unit failure' from controller for scsi %d:%d:%d:%d\n",
- 						ctrl_info->scsi_host->host_no, device->bus, device->target, device->lun);
-@@ -3265,10 +3265,15 @@ static void pqi_process_raid_io_error(struct pqi_io_request *io_request)
- 				host_byte = DID_NO_CONNECT;
- 				break;
- 
--			default: /* See http://www.t10.org/lists/asc-num.htm#ASC_3E */
-+			default:
-+				/* include/scsi/scsi_sense.h */
- 				if (printk_ratelimit())
--					scmd_printk(KERN_ERR, scmd, "received unhandled error %d from controller for scsi %d:%d:%d:%d\n",
--						sshdr.ascq, ctrl_info->scsi_host->host_no, device->bus, device->target, device->lun);
-+					scmd_printk(KERN_ERR, scmd,
-+						"received unhandled error %d from controller for scsi %d:%d:%d:%d\n",
-+						scsi_sense_ascq(&sshdr),
-+						ctrl_info->scsi_host->host_no,
-+						device->bus, device->target,
-+						device->lun);
- 				break;
- 			}
- 		}
-@@ -3286,11 +3291,11 @@ static void pqi_process_raid_io_error(struct pqi_io_request *io_request)
- 	    sense_data_length &&
- 	    scsi_normalize_sense(error_info->data, sense_data_length, &sshdr) &&
- 	    sshdr.sense_key == ILLEGAL_REQUEST &&
--	    sshdr.asc == 0x26 &&
--	    sshdr.ascq == 0x0) {
-+	    sshdr.sense_code == INVALID_FIELD_IN_PARAMETER_LIST) {
- 		host_byte = DID_NO_CONNECT;
- 		pqi_take_device_offline(scmd->device, "AIO");
--		scsi_build_sense_buffer(0, scmd->sense_buffer, HARDWARE_ERROR, 0x3e, 0x1);
-+		scsi_set_sense_buffer(0, scmd->sense_buffer, HARDWARE_ERROR,
-+				      LU_FAILURE);
+ 	/* check guard */
+ 	if (e_guard != a_guard) {
+-		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x1);
++		scsi_set_sense(cmd, 1, ILLEGAL_REQUEST,
++			       LOGICAL_BLOCK_GUARD_CHECK_FAILED);
+ 		set_host_byte(cmd, DID_ABORT);
+ 		return 1;
  	}
  
- 	scmd->result = scsi_status;
-@@ -3380,7 +3385,7 @@ static void pqi_process_aio_io_error(struct pqi_io_request *io_request)
+ 	/* check ref tag */
+ 	if (e_ref_tag != a_ref_tag) {
+-		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x3);
++		scsi_set_sense(cmd, 1, ILLEGAL_REQUEST,
++			       LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED);
+ 		set_host_byte(cmd, DID_ABORT);
+ 		return 1;
  	}
  
- 	if (device_offline && sense_data_length == 0)
--		scsi_build_sense(scmd, 0, HARDWARE_ERROR, 0x3e, 0x1);
-+		scsi_set_sense(scmd, 0, HARDWARE_ERROR, LU_FAILURE);
- 
- 	scmd->result = scsi_status;
- 	set_host_byte(scmd, host_byte);
+ 	/* check appl tag */
+ 	if (e_app_tag != a_app_tag) {
+-		scsi_build_sense(cmd, 1, ILLEGAL_REQUEST, 0x10, 0x2);
++		scsi_set_sense(cmd, 1, ILLEGAL_REQUEST,
++			       LOGICAL_BLOCK_APPLICATION_TAG_CHECK_FAILED);
+ 		set_host_byte(cmd, DID_ABORT);
+ 		return 1;
+ 	}
 -- 
 2.55.0
 
