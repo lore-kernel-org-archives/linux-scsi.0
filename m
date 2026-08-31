@@ -1,201 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5EF935DA4A
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 18:58:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3D3B3DB326;
+	Mon, 31 Aug 2026 19:00:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788202741; cv=none; b=jjoU0iq9qZ+lEx2hZi5PUlKaxOS4AeyMc5x4ijsfmAVBRr+OYK8fqbBqebG6/hXNGWlVpDDX0ZsXWoDO6m6x2c9UxVf1cCHBgb5fDdMdbUE9quJLXC4HAMArFE+maO9vG7KoFK/6Slim90i98KNbIRg2DXWXBkG8XdqVanuuwKM=
+	t=1788202817; cv=none; b=Rv0KmvbiyOOXx19KXig5cmTvPSrK013P/OZS1iOKe8QxU6ETdkr4LfrTcA2qKonF4OpzDb+HJrKC6QxZXy4+UYw40USuZOYUSkv+PbrLVfjn3ajszBJiCEsbru+/6nx6GMaHB6PLnWAySXPGEYVclQyB6G+pyFz7LHoN1wKQ1ww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788202741; c=relaxed/simple;
-	bh=97iLlLM7/Npn6chgs+ow+W9qugbFQdx9LW9RzgSb8Rw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EPmsVyZxhDx8PlHJtKeF0vqSZvsY/nAl+u7NMFCPYe3cpbVunud2YpYNHRQegoGl1wb9V+wl1zTnwXvOtQ48IQuVz2Bw3R/JVU9xi+ooMYObcvdA9Hhsj5q4q+jL1yjLKdXTXQilB/AXxBg/mnHK9o3KK4lYgJrE5AEQKVlMGLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GUrV6ZDV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788202817; c=relaxed/simple;
+	bh=rjBmlQQTMG7h7d2b5mk9jOmECyYSFyRAc5cMyiPFXBM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=S1H0m9/CSP+kLa9PdILZ63wFDf7TlKOznI2bhWFfDHctAI4uxZdw6tui0sRRoNQ5zxJ8zzOmqdspd9I2AbDx/H1jOZ+MF6Iu25t9MlA6Gety+Z17qtWE7DNJ7cn4wZxpUBvsY1nnn6tbH2/yzKA+423HA1tWE3D7OTf8oduwK6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b+Q2UdAL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GUrV6ZDV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 607811F000E9;
-	Mon, 31 Aug 2026 18:58:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788202739;
-	bh=SzILj7kzwCRMJ/Gx9f1GXS1Xlim1Dl7D3vtUmk9IHLs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GUrV6ZDV2sBRVjg423fokOVMoQQWOIIRU/J4P76oUwstU6gIMUZnuQegfO+tiLIBh
-	 DxVcpxnUIh1MpW+Cqh+kVydgNA9Wu3G+/ROrAie+DQtkNXXlJf53IrMU/5eE3ianFc
-	 bsAV4gTU5m1YC3DeOthDCmxRm+VXwXdBxbpJ3i2D/4rkvPcbJ3uaqNzEb/UpE9/DLt
-	 3Cd0d7gfWVXAN6FB9KlPtEi/c/CjWl8Wpg2VQrDadaN+1rd73ZnnC7l6/i/KxV1MJ3
-	 Ccfkdu78O40azdX/hlDzS9ksmIohrAKmhh2xotG/CyrRN5UYIhXM+UR5JNCJE5z4B7
-	 TwqrN3NE4FKeg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 2/2] ufs: rpmb: use a fixed-length RPMB dev_id
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jorge Ramirez-Ortiz" <jorge.ramirez@oss.qualcomm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260831154804.719528-3-jorge.ramirez@oss.qualcomm.com>
-References: <20260831154804.719528-1-jorge.ramirez@oss.qualcomm.com>
- <20260831154804.719528-3-jorge.ramirez@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 18:58:58 +0000
-Message-Id: <20260831185859.607811F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+Q2UdAL"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 76819C4AF09;
+	Mon, 31 Aug 2026 19:00:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1788202817;
+	bh=rjBmlQQTMG7h7d2b5mk9jOmECyYSFyRAc5cMyiPFXBM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=b+Q2UdALgQsDfkNTSjMjNMlI6axcqokp8Jynzt7Y3ul4bc0ubwHx3PlqSejTUqmWT
+	 d0R4nKglu45htYQji+CniK0/ka2t1vVU/7h0Eqru/JSmqQr46tOnmTuUFgyEdPV2/j
+	 NdDXplZzfedG2T4BMBIllSotpBsYlF2FlRaN1cFDRhnYjBUOvZl54ij/ajex3iRHQH
+	 bYTckeiaQXQztyiDNe+IqmQjzveB0Rrhv4fWhG3Qj759BpS37lx7isfRTRFBcQ92hE
+	 E4A3wfTCFk8teZNudVI43d2tpqtu/WLo+DV/EMN1HkGU4TBLx4EyzbNniXxsvv12/t
+	 B3JUap/qRqi5A==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57360C61DFD;
+	Mon, 31 Aug 2026 19:00:17 +0000 (UTC)
+From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
+Date: Mon, 31 Aug 2026 14:00:14 -0500
+Subject: [PATCH v7 2/8] scsi: ibmvfc: Add NOOP command support
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260831-ibmvfc-fpin-support-v7-2-77d0b9809080@linux.ibm.com>
+References: <20260831-ibmvfc-fpin-support-v7-0-77d0b9809080@linux.ibm.com>
+In-Reply-To: <20260831-ibmvfc-fpin-support-v7-0-77d0b9809080@linux.ibm.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+ Tyrel Datwyler <tyreld@linux.ibm.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.ibm.com>, 
+ Greg Joyce <gjoyce@linux.ibm.com>, Kyle Mahlkuch <kmahlkuc@linux.ibm.com>, 
+ Dave Marquardt <davemarq@linux.ibm.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788202815; l=2519;
+ i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
+ bh=ZPYobFx4Tjmjv4+HMsDvOBnSXCtpmV13W5cWm9Aqs+k=;
+ b=QhmopkvLCRSB87GEEqkFKKcdQ19roqMvftbaia9cA9eSUNEKQ5PJbfYNBlak1jIlBPZmmW1hr
+ qSgI9yD0UunDT7qfO4ewn/esxZ5b2OoH9ouZJOps3mJaW963qSncfWa
+X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
+ pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
+X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
+ auth_id=689
+X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
+Reply-To: davemarq@linux.ibm.com
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+From: Dave Marquardt <davemarq@linux.ibm.com>
 
-Pre-existing issues:
-- [High] Allocating a structure embedding a reference-counted `struct devic=
-e` with `devm_kzalloc()` causes a Use-After-Free due to lifecycle mismatch.
-- [High] Circular reference between `ufs_rpmb->dev` and `rdev` prevents dev=
-ice cleanup, leading to permanent resource leaks of both device structures.
-- [High] Initialization race: RPMB device is exposed to the subsystem and n=
-otifiers before `region_id` is initialized.
-- [High] The `ufs_rpmb_bus_type` is never registered with the driver core, =
-causing `device_register()` to deterministically fail.
---
+Add support for VFC_NOOP messages from VIOS to enable keep-alive
+functionality between the client and server.
 
-commit a3eaa4c56fa0d1803a39f46b9f298247acd5bdfd
-Author: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
+Define the VFC_NOOP CRQ format and add handling in both the main CRQ
+handler (ibmvfc_handle_crq) and sub-CRQ handler (ibmvfc_handle_scrq).
+Log unexpected NOOP messages if received before VIOS advertises support
+during NPIV login. Also fix a typo in ibmvfc_handle_scrq.
 
-ufs: rpmb: use a fixed-length RPMB dev_id
+Set the IBMVFC_CAN_USE_NOOP_CMD capability bit during NPIV login to
+inform VIOS that the client can handle NOOP commands.
 
-The RPMB authentication key is derived from the dev_id handed to the
-RPMB subsystem. OP-TEE implements the eMMC RPMB flow, where the dev_id
-is the eMMC CID: a fixed 16-byte value the key derivation depends on.
+Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
 
-[ ... ]
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+index 78be00d31a06..e972e4ec5be0 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+@@ -1578,7 +1578,9 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+ 		login_info->flags |= cpu_to_be16(IBMVFC_CLIENT_MIGRATED);
+ 
+ 	login_info->max_cmds = cpu_to_be32(max_cmds);
+-	login_info->capabilities = cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN);
++	login_info->capabilities =
++		cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN |
++			    IBMVFC_CAN_USE_NOOP_CMD);
+ 
+ 	if (vhost->mq_enabled || vhost->using_channels) {
+ 		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
+@@ -3693,6 +3695,14 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
+ 	if (crq->format == IBMVFC_ASYNC_EVENT)
+ 		return;
+ 
++	if (crq->format == IBMVFC_NOOP) {
++		if (vhost->state == IBMVFC_ACTIVE &&
++		    !ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NOOP_CMD))
++			dev_err_ratelimited(vhost->dev,
++					    "Received unexpected NOOP command from partner\n");
++		return;
++	}
++
+ 	/* The only kind of payload CRQs we should get are responses to
+ 	 * things we send. Make sure this response is to something we
+ 	 * actually sent
+@@ -4223,7 +4233,15 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost
+ 	case IBMVFC_CRQ_XPORT_EVENT:
+ 		return;
+ 	default:
+-		dev_err(vhost->dev, "Got and invalid message type 0x%02x\n", crq->valid);
++		dev_err(vhost->dev, "Got an invalid message type 0x%02x\n", crq->valid);
++		return;
++	}
++
++	if (crq->format == IBMVFC_NOOP)
++		return;
++
++	if (unlikely(!evt)) {
++		dev_err(vhost->dev, "Received null event\n");
+ 		return;
+ 	}
+ 
 
-> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-> index 00ba4f3b842bf..783ecfc7581d7 100644
-> --- a/drivers/ufs/core/ufs-rpmb.c
-> +++ b/drivers/ufs/core/ufs-rpmb.c
-> @@ -21,6 +22,7 @@
->  #include <linux/unaligned.h>
->  #include "ufshcd-priv.h"
-> =20
-> +#define UFS_RPMB_ID_LEN			16	/* Match eMMC CID Length */
->  #define UFS_RPMB_UA_RETRIES		3	/* Retries for the power-on UNIT ATTENTIO=
-N */
->  #define UFS_RPMB_SEC_PROTOCOL		0xEC	/* JEDEC UFS application */
->  #define UFS_RPMB_SEC_PROTOCOL_ID	0x01	/* JEDEC UFS RPMB protocol ID, CDB=
- byte3 */
+-- 
+2.55.0
 
-[Severity: High]
-This is a pre-existing issue, but the ufs_rpmb_bus_type defined nearby is
-completely missing a corresponding bus_register() call anywhere in the code=
-base:
 
-static const struct bus_type ufs_rpmb_bus_type =3D {
-	.name =3D "ufs_rpmb",
-};
-
-When ufs_rpmb_probe() assigns this unregistered bus type to ufs_rpmb->dev.b=
-us:
-
-	ufs_rpmb->dev.bus =3D &ufs_rpmb_bus_type;
-
-does this guarantee that device_register() will deterministically fail when=
- it
-attempts to retrieve the bus subsystem?
-
-[ ... ]
-
-> @@ -157,6 +159,7 @@ static void ufs_rpmb_device_release(struct device *de=
-v)
->  int ufs_rpmb_probe(struct ufs_hba *hba)
->  {
->  	struct ufs_rpmb_dev *ufs_rpmb, *it, *tmp;
-> +	u8 dev_id[UFS_RPMB_ID_LEN];
->  	struct rpmb_dev *rdev;
->  	char *cid =3D NULL;
->  	int region;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but ufs_rpmb_device_release() ju=
-st
-above here accesses memory that could have already been freed:
-
-static void ufs_rpmb_device_release(struct device *dev)
-{
-	struct ufs_rpmb_dev *ufs_rpmb =3D dev_get_drvdata(dev);
-
-	rpmb_dev_unregister(ufs_rpmb->rdev);
-}
-
-Since ufs_rpmb_probe() allocates ufs_rpmb with devm_kzalloc() and subsequen=
-tly
-calls device_register(&ufs_rpmb->dev), if the host driver unbinds, devres w=
-ill
-free ufs_rpmb unconditionally. If a local user holds an open file descripto=
-r or
-sysfs reference to the device, the kobject remains alive.
-
-When the final reference is dropped, ufs_rpmb_device_release() is invoked,
-which then dereferences the already-freed ufs_rpmb memory. Can this cause a
-use-after-free?
-
-[Severity: High]
-This is also a pre-existing issue, but child unregistration is incorrectly
-placed inside the parent's release function:
-
-static void ufs_rpmb_device_release(struct device *dev)
-{
-	struct ufs_rpmb_dev *ufs_rpmb =3D dev_get_drvdata(dev);
-
-	rpmb_dev_unregister(ufs_rpmb->rdev);
-}
-
-During driver removal, ufs_rpmb_remove() calls device_unregister(&ufs_rpmb-=
->dev)
-on the parent before unregistering the child. Because the child still pins =
-the
-parent's refcount, the parent's refcount never reaches zero, preventing its
-release function from executing.
-
-Does this create an unbreakable circular reference that prevents device cle=
-anup
-and permanently leaks both device structures?
-
-[ ... ]
-
-> @@ -215,8 +218,10 @@ int ufs_rpmb_probe(struct ufs_hba *hba)
->  			goto err_out;
->  		}
-> =20
-> -		descr.dev_id =3D cid;
-> -		descr.dev_id_len =3D strlen(cid);
-> +		blake2b(NULL, 0, cid, strlen(cid), dev_id, UFS_RPMB_ID_LEN);
-> +
-> +		descr.dev_id =3D dev_id;
-> +		descr.dev_id_len =3D UFS_RPMB_ID_LEN;
->  		descr.capacity =3D cap;
-> =20
->  		/* Register RPMB device */
-
-[Severity: High]
-This isn't a bug introduced by this patch, but there is an initialization
-race when registering the RPMB device just below this block:
-
-		/* Register RPMB device */
-		rdev =3D rpmb_dev_register(&ufs_rpmb->dev, &descr);
-		...
-		ufs_rpmb->rdev =3D rdev;
-		ufs_rpmb->region_id =3D region;
-
-rpmb_dev_register() exposes the device to the rpmb_class, which synchronous=
-ly
-triggers class notifiers. If a notifier like OP-TEE schedules a workqueue to
-probe the RPMB device, the worker could issue SMC calls resulting in an RPC
-back to ufs_rpmb_route_frames(), which relies on ufs_rpmb->region_id.
-
-Since ufs_rpmb->region_id is initialized after rpmb_dev_register() returns,
-could the asynchronous probe thread read an uninitialized region_id for
-non-zero regions?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831154804.7195=
-28-1-jorge.ramirez@oss.qualcomm.com?part=3D2
