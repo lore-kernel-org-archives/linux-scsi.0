@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E8BA345EA2;
-	Mon, 31 Aug 2026 02:18:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73401CA6F;
+	Mon, 31 Aug 2026 02:19:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788142697; cv=none; b=tPC/q1MyQT1yIFp4vFZVRnkjCd0aAuKtPqeMe21wSDDGoTPhneQTVYSXPcZv+Jt7dhrf/auXS725UReZxaEOagryQOdwxm8TYjrztH/5kOVx/+krTY+KrnPBDHjvt6J87n5o+wHKfyBxG61ws6pQazYk4yqhPfouhPlkB0TqcGU=
+	t=1788142768; cv=none; b=EL70bnev+q4DkVGpV/5rz8Hlubn+vnRLMynr2P+9Gcm8ylQPmBc7lBbynhIPWHnWzp6Ndv/qV/s3LwgbtPIstpu0Btl9YjNMRQqIPv6MWfJIWXWkno8QA0p8FaSHoowQ2bGpXJht1bktBZh3Iaugs7Zoui/bC03/qCHSGa3IAlk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788142697; c=relaxed/simple;
-	bh=5ENS61U06y+kxk/QWBcmnAgMgID5LNfA5f2jRauAtbY=;
+	s=arc-20240116; t=1788142768; c=relaxed/simple;
+	bh=ILSOUD2sU+e5Qaj73r/+7uPRbIlLolGrm1XTaEROp7g=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QqH1QHxdEKsDQgrZlRSXbBdM5a5N5YnjbGaqEh//yVilvaLXa74cfj8GQSgqugcNRqzF9LJzqv2IzUDwraHbOel1RnbY+LiFT5/kTocOtVacvHx9/uQ95CEWIeIriPhnLYkgr8RIcbFdWCDgJS9RCxE6jEAwnINheXUCBlyarL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cQn32CvB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=P+DuJNSD7X5NSfoBQhqcYySgr4XKtZ7BQsfwNy4L1TM27wEfOXNyEV9/bvaFgADK5ivqusjfxhUzhyej3bU1rSpasCKHhsmyc+ujix6o8yTe3ZM/AJ/Y3Fc4V1qHE/n3VBn1yYUcYAH0mU5j7usjRh2hFKpxi/7TzW3VZeNqaXI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OoWR5Zlx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cQn32CvB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E44641F000E9;
-	Mon, 31 Aug 2026 02:18:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OoWR5Zlx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0EBC1F000E9;
+	Mon, 31 Aug 2026 02:19:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788142696;
-	bh=LhLn1o0Hov98mH/gskNcXEwblfoWr3KYOQ1oSakU0io=;
+	s=k20260515; t=1788142767;
+	bh=fuo49Qfms8JOA+LBe0rAdwrCzYNJN3CyBCBufb0dW1E=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cQn32CvBMb9MrljHJYRk2ua75fKOYculnw4+ESYG5skqjpUq0FtMytl4uSuBBhEaU
-	 j1NYd2FlAIXmteiE8Oj0s5QM1XZwGdqiB20HHzgcmgncEjameHJPM15CAyHKptjSXt
-	 LuhyddRYXA0vQD62mQNuaeL+j61atlgkCjInpi3scKX8PutYJdj71cIJlCwlOPxooD
-	 EJaDjN8LkMLjIKeWyUrRMzVHVZtXzACE1boqojWpn+3tE9pqYER62M74oMJZMhMVLd
-	 BlDJ0Tm3sCrLqrTxNZ7hqPpLXI50O+UFBRUQGxCDuKW9NFk6q+5xHP/jBL5OSXRjt8
-	 FW/fS5pUHNmtQ==
+	b=OoWR5ZlxkrH3FSridIrN6j4VvS5gSCyTM6Tzm1J/q8OYbGg8cax0pOcobOywaQq00
+	 Q3yPy57WKmOeEnVdBUEUnvI5J23FkCSM3Wmb2gO5cUK4U2JLRcNSUwWlpYpMp4q8jE
+	 9f8KPUOU6wZlOyGFpVbuHCXttvZV+zvgL6waD/yth8tl4KQzJSyblIXrxFwKm4s2ku
+	 PEvvl2oyuBG83Dfw+X3LmACb2t0Cvcwd4Q2tdbjwst/AYdpZHB+3OdCHhkckMIaqa9
+	 L3lE8a3UHSVcoQU5iCkn7vCCtmJgmyjBSjMXoodP3A0K9lLm3+Gzf2HsTHQtcy5O/E
+	 QGQ1Qf//eYHgg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 07/37] scsi: core: use 16-bits defined sense codes
+Subject: Re: [PATCH 17/37] scsi: mpt3sas: use 16-bits defined sense codes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260831020451.585944-8-dlemoal@kernel.org>
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org, cassel@kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260831020451.585944-18-dlemoal@kernel.org>
 References: <20260831020451.585944-1-dlemoal@kernel.org>
- <20260831020451.585944-8-dlemoal@kernel.org>
+ <20260831020451.585944-18-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 02:18:15 +0000
-Message-Id: <20260831021815.E44641F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 02:19:26 +0000
+Message-Id: <20260831021926.C0EBC1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,46 +46,54 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] The `scsi_cmd_done_timeout_template` trace event incorrectly ass=
-igns the ASC value to the ASCQ field, causing a loss of ASCQ trace data.
+
+Pre-existing issues:
+- [High] Data race on static local variable 'rc' in _scsih_determine_dispos=
+ition causing erratic device discovery states.
 --
 
-commit 18b8d3cbe68a6be05817a223fa4182ba612faa08
+commit 494f343d73ff2ef15d8e6f7b1ea653d86adb0fd3
 Author: Damien Le Moal <dlemoal@kernel.org>
-Subject: scsi: core: use 16-bits defined sense codes
 
-This commit refactors the SCSI core code to use the 16-bit sense_code field
-of struct scsi_sense_hdr and struct scsi_failure. Hard-coded additional sen=
-se
-codes and qualifiers are replaced with enum values from scsi_sense.h to
-improve clarity.
+scsi: mpt3sas: use 16-bits defined sense codes
 
-> diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-> index c36c72ab7f2bf..4d17c9b61e44a 100644
-> --- a/include/trace/events/scsi.h
-> +++ b/include/trace/events/scsi.h
-> @@ -303,8 +303,8 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
->  		if (cmd->sense_buffer && SCSI_SENSE_VALID(cmd) &&
->  		    scsi_command_normalize_sense(cmd, &sshdr)) {
->  			__entry->sense_key =3D sshdr.sense_key;
-> -			__entry->asc =3D sshdr.asc;
-> -			__entry->ascq =3D sshdr.ascq;
-> +			__entry->asc =3D scsi_sense_asc(&sshdr);
-> +			__entry->ascq =3D scsi_sense_asc(&sshdr);
-                                        ^^^^^^^^^^^^^^
+This commit refactors the mpt3sas driver to replace hard-coded sense codes
+with the enum values defined in include/scsi/scsi_sense.h. This improves
+code clarity and self-documentation.
 
-[Severity: Medium]
-Does this code assign the wrong value to the ascq field?=20
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
+mpt3sas_scsih.c
+> index 0e12009a87f62..085d4672db854 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+[ ... ]
+> @@ -7691,38 +7691,41 @@ _scsih_determine_disposition(struct MPT3SAS_ADAPT=
+ER *ioc,
+> =20
+>  	if (check_sense) {
+>  		_scsih_normalize_sense(transfer_packet->sense, &sense_info);
+> -		if (sense_info.skey =3D=3D UNIT_ATTENTION)
+> +		if (sense_info.skey =3D=3D UNIT_ATTENTION) {
+>  			rc =3D DEVICE_RETRY_UA;
 
-It looks like scsi_sense_asc() is called instead of scsi_sense_ascq(),
-which would cause the trace event to duplicate the asc byte and lose
-the actual ascq trace data when a SCSI command completes or times out
-with valid sense data.
+[Severity: High]
+This is a pre-existing issue, but I noticed a potential data race involving
+the variable rc in this function. At the beginning of
+_scsih_determine_disposition(), it is declared as a static local variable:
 
->  		} else {
->  			__entry->sense_key =3D 0;
->  			__entry->asc =3D 0;
+static enum device_responsive_state rc;
+
+Because this variable is static, it is shared across all concurrent executi=
+ons
+of the function. If multiple threads (such as from asynchronous SCSI scanni=
+ng
+or event handlers) execute this concurrently, could one thread overwrite the
+disposition state calculated by another?
+
+If this overwrite occurs, would it cause devices to be incorrectly marked
+offline, skipped, or subjected to invalid retry loops? Does this variable
+need to be static, or can it be changed to a standard local variable?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831020451.5859=
-44-1-dlemoal@kernel.org?part=3D7
+44-1-dlemoal@kernel.org?part=3D17
