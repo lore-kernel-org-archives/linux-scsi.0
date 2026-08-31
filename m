@@ -1,94 +1,93 @@
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5873DAAB1
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 08:26:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A5AC3DB629
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 08:26:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.173
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788164773; cv=pass; b=XEGaWCij1V1FSzQnhKyyylLI06/cBvUATYFfNmobwfzAbfA9J9PSxDXgf24epKeVYLBUo0L0NGK3mYeI5+BbI+0lUQ+5oLnL1CI8Hds3eOZ4xNb6cwmxN86g75u3v5J5quHULTKj/561e2TiQLj/n+ATGBnWjQICHNRgOVRCUqA=
+	t=1788164784; cv=pass; b=EGBvZ3tO/vD3mBVo8kQ9DQxmEEuruN3QI4VuM9hcy7ilSMiSKW5eCX33zVWEVrTBSzIuL8naSI3/TSxAqWDTcH/xAE+GBVXWOCr2UPzXpchYIZkGAHF7F9pAr+gPIXTYIm7MNmmT72UChVaS6QuvwxVrujCB9fH8H1pR63Cewws=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788164773; c=relaxed/simple;
-	bh=L50lYICP106cKUnxwcy3VRTlzI/KCvX3m5TcfCKQ+uY=;
+	s=arc-20240116; t=1788164784; c=relaxed/simple;
+	bh=i7Pvgb3oiy1hq0LGOiit/djv7hiLdC62LcWzykGTNDg=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=te/VGDQqMloo3vv+b2uf61GKnvl+Qu/iehxntJMVsdeGaR2j3nTief2uB/hTYbl2p7vRTyRILtBwRAj93TsZcAzAvCB6YC6ZELHFEYCF/JFIGCnFLW0ab3zvif9TZTVZELngdv2gPfF7jWWzpLvrIds8lpeAKNdaoB1abrUYgv4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=tDs5ZxsA; arc=pass smtp.client-ip=209.85.160.177
+	 To:Cc:Content-Type; b=dgw6a/bW0xZ4QAzgh3uEsD5j9ry6dioSI+B1M92quHb3sUlVrShIC2VKuwWS5Cj/KcrDcWDj1Y45qxF/uiMzpSPjFaTkBBt809xd4/+Y0VifCy7oft/YPaMBRhseBrSDg0siaU0di9HbiivVTyRpn6J7RWgxoPjgWCrFjAShUc8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Arv2w2P3; arc=pass smtp.client-ip=209.85.160.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="tDs5ZxsA"
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-51c01c79467so367171cf.0
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 01:26:11 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1788164771; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Arv2w2P3"
+Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-52faa58bff5so324671cf.0
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 01:26:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788164780; cv=none;
         d=google.com; s=arc-20260327;
-        b=NU0+8w5k3DX/eQ/FiWLOkJJCIh9jOiLsKOoULqRrO1nDGnQ6CqDUdbHkJxQpPJh5WM
-         Yd+x3Cxan64D91xqSw/3Sh4wOTkGZGRvZn4mzxHPX9y+5b3EHzAvA/cJFlgpDtbmJMGn
-         apY9xwcbCnt4FZPAqBC4YnjBlED/1growpGYXLR2AdrZP5OIm+tdtxBkVWV9OIamLxOX
-         43y+73FiitlQ0lcSpKyXrP2pvBrGFJ6Zqfi/kzNltlCksvgnJO1u3qc0tKVykjFI7LRN
-         VMViQjHCAy8H05TmSBrgKrfFXe6xIt1zXKthFqL+EWAamWGuB8hzqbsVgw6b8/Pyi0mr
-         xhOg==
+        b=XQ4os3ICMzYqf/Y/GvHsI9BY1UgoHZC6AidcYP8ccN705k90Ze0oh91LkBdScaLiof
+         D4Hl4EJD18NNEG78Io4IsUsn7GzdELxqy6794hY4QFB+P9vGmdyRHUXGz8ZR2fjoF9My
+         021oDcM7icOv6teh/Jy7tJnPlhhkcpjHxJ5OYmxuZYNj9kmgdtP1qMCnANJO0nm4YpkO
+         hIPM7fMK09b9dGgcWcoIlAOTfEeFBBygXPyh3g1Ln+rsqWY0AIypcWCI/lhd49odff4F
+         /RMZaV+cTDuNMz/m4ZRYjnd1mx/UMAdMCzoYGfjKFGihKtDRtl6UWBk3x3x+f3AYP2/7
+         lh/A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature;
-        bh=L50lYICP106cKUnxwcy3VRTlzI/KCvX3m5TcfCKQ+uY=;
+        bh=i7Pvgb3oiy1hq0LGOiit/djv7hiLdC62LcWzykGTNDg=;
         fh=f9/VcjgqmhjeO2xeqvn7QATDWbastD6G5BTgpTIBKTw=;
-        b=WAw5750K0VaA/9y/9+B8bmTsGSKFyPnaliVKq/zsU3c+OCZj6i98Z8xtmSMpyN1Vcm
-         FRY+cY3fHkJDfzmjjg2y339Lo81t9w3X7GxVdVf/tARjZkCCKJD6UZ0PnULJ3sRo5Pz6
-         g9HFa8fK4xsdFbAHL9qNvshfVHQvMkhfiJmRdpvIscqONUVL763QK4qcZBrkxtxY+pd4
-         I/L0iZp2KetFwoJ8mRBdZNrOY4EHXvmxj0hP5if3qcelpQ0f4v0HVRshtgahgZl2kuJD
-         Xwt7eBsr444wofmHeB4WcuSsKGFUen8T/AxwuK+m8NTj+C1oB4aY/8Wcdi4l3DsePfDI
-         gmnA==;
+        b=XeSt1nosDXAVWLppZXLWUyDbWVjFNxuRnFvh0HZ+0/Wdtja0pyOAnnwLVsRzWWS1/n
+         Ua42wHhwQ3shrS/L61aTMk5DJiydbLsfeS1PlnwHEpJVD321ZQRkIxcY6wwQsaf0vvLt
+         YfymaemKj2opiKBiygTTcV30n+u+oC41VdJxVSCNg5SnInaeBASiQ5OsElp2QQ4X57lT
+         L/Jblm+u8lPvp88PfnEcoYmi7a5SEkFTuedYxxPNcTGqT+H4gjt5tA+Ydy/WhZ7A1vKb
+         nPYONBX6vMhUFG+ethuKCoTwIhFW5XhSMiNEUntMQ/UUVRrCWggLXWFsh3ZNh1y1fR7e
+         ZGUw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788164771; x=1788769571; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1788164780; x=1788769580; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=L50lYICP106cKUnxwcy3VRTlzI/KCvX3m5TcfCKQ+uY=;
-        b=tDs5ZxsA8eAthtxPfEYQVkB4LNXNAh0IKPq+qmRZMAg2QD4kV5SyfJQhYCFxAKeS08
-         kdiWrNZaIYsEBpRpcKh1mqrDvExO2lFOCVWsRLai27b+ObncNljSADSlf0texI/+zPMD
-         UlvaNYurtRGLaS9kmmi6ASAp6TO+if/yoqrWv/UWmKcqEP+Q/ePTgt9mK3s9fmrIYPvx
-         xHH1llvM4XKq0new2KRAo16pDt5qae7YPPeBe+XIVeIHqEj9iFmn/cZFWnFTPjpQvSV4
-         SlhWVNxA0q2PiEi1EaNG8zKrRV4Y56+xyE1RYtcyCfLIEVzuwXJfJbmIm7hh7O3ZbM/5
-         38NA==
+        bh=i7Pvgb3oiy1hq0LGOiit/djv7hiLdC62LcWzykGTNDg=;
+        b=Arv2w2P3TIZLnRD6C476tlrQY5qFr4a7yCxon8MfJGbh95sgrsIdZ0z/gbktbfV/Gl
+         YnWBtIzpiGvGFFn0t3goA3aPn0JAXVWJdHN5rApV934smTQnSO0UqbgGy4fWiHqLHdLj
+         EhNclZ+wGZIowEBKlkPoK23OR3tQUCKaPsa4Va0eYFOXdfseCFzn7m0C5kwR+XaNioRY
+         PuP3tictKr8g73Li+Lgo/sVDrBqEeWceQ1qnv5iOPC092xvSNaRNglda0setAOj9ttI0
+         nlUZKrNTtEknL+24kAWnyTmzII/8alk2dxO5wR12IV47qnvXX5/e5hlMHJKWGiRfoPPq
+         QGNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788164771; x=1788769571;
+        d=1e100.net; s=20251104; t=1788164780; x=1788769580;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=L50lYICP106cKUnxwcy3VRTlzI/KCvX3m5TcfCKQ+uY=;
-        b=VHrv72lphO8dT7MZFl9L4xNG1uso53Hsob0bjOMU1lLD5SymwXGXGbjuVwMRtzqAQ1
-         8PHW1oGtPnFd57NyikwSCqNMvspcJOeXThEV5gMKuZhzKbjxm8rS+A0O6/ugTdpudfBs
-         W6lwGLP9irLy5FvskiKyY3FgsRPKvuuAnUX3HCPFT2Uhjj0/B1snNJLaQcN4DxH6SEio
-         GBzzDzx8IjfdMDl2NYHxQEconRUhD97Rl9OYm/0WfTmzP4H9ojwk42L5rYaMIRoAkOb0
-         +r+IdNLelFRetVAsYv5Dxe7KvJC4dJ5O4FqQ/H6Oq3lGwWhcdfyYpbS5cMGP9VIqAztg
-         92Mg==
-X-Gm-Message-State: AFuF++mxHdbEb1Qp5LbBtLO1jsH4TkMchWK5JZMg8uOsKJEka3wLIRS6
-	RwEX/aWtUZebt4Jr7eS+jl4/oUp6FvnZvC108qZ4WAom7h7nT9OHie1fjxr6aCnWdG9p7LAuTQd
-	l/+x2gtGEuuYLtGIysFKfndN2Rsc/yJeLI2LVXqfx
-X-Gm-Gg: AR+sD11LqQT9MMV0FQ7j9MxtupG+NnunNCnPjeyRd4VCBUvU21NwSNFaKruQe0HAa93
-	r20PMjWfPIORPsgeGxMhDeB8d977kZqnj/OR8mZU7FM976Hi6wKbiuJ7ld71HKUoASb4ppT6yMT
-	DJnM5phKe6WtSXO8N9xu1ePXwoLTovtZ6wuRtYFFNwfBSmsb7OZOVeK0rRLFdQMnAef9jUNP0Ng
-	swus6NiupMfJB9MSTA09fDwfS9buRamPNbXgU23ZRNnlON0V6Kmj93/SzPLOFOR4VnDBbJZXAzP
-	T/m8zrBVYFrnYYdeU6IjzhwHeXZ3JPjwQli77Tw+4+wWF3vgDqLc9Rst0ssV/JR4ylODkE69fH4
-	2lg==
-X-Received: by 2002:a05:622a:90b:b0:52b:806e:2633 with SMTP id
- d75a77b69052e-52ff716a474mr28081931cf.1.1788164769903; Mon, 31 Aug 2026
- 01:26:09 -0700 (PDT)
+        bh=i7Pvgb3oiy1hq0LGOiit/djv7hiLdC62LcWzykGTNDg=;
+        b=eq5zpD85OjtAOvOjpmhFQoPzA1vDQfbH1fc1YM909s9TH1hPbaSnLuQltjYBN+sYuv
+         +a7QTupFmfyc9uzf6k3rbZXJtDNZFZ8OqocAFhCQB9EA2pyk+po5HpvuQ60Gc5Uub7vV
+         DAbEDsJSvUOFNA1+8DiqMXaUx8TYvI9B3XGShg+BKSEktogyZWJnUN3hIkyIKn1N9nwZ
+         0C1BLUEISg7vXLbzs7suxnxwVuYWekksE/ijCbHpbR83GPQKuXrxtSYw+cA8cfQSdQR7
+         KKfjYCNJszVHc9xNuqA0C72IbDVgl5b3u4uYJJDTGfAhe2am+Q8U6QHpDgXALYL+CgVF
+         T/dQ==
+X-Gm-Message-State: AFuF++ljnt6uiQgKNlAKQ08AhQ0f2ZhaDkF6k3Px2UpgBV9ItUE2W8UU
+	G8ZpqoIpTBxjT4zRTEfpLq7OGB5xsiMWT3Ck2Ilx8H7mJtRt2Pqgx75cmhxSDGcmCwQZ82VnsDO
+	Y9R9z+ZcQKJH8jsj4Ok7wsl74GNXJ7xg7BMxWebBn
+X-Gm-Gg: AR+sD116WsFr9DGcAW7lv5vNZTjBb38PBO+2KJdXvR1tgdY15HZlYnCIlHLLCG0Edgj
+	INklQdxZpVvw9r0VNsz9PlIuDWyJRVRXe2ynHLChpHKWIUeYHD8csL+8hE6WSIFg1LDwpK03JDY
+	6BL+jKLgjH7c8CrwlKuxLX86qHgPek3Br8S/HFdOzbAG7twlIfc1nglnynHYpsznmNKAg6aie+Q
+	Z1cmkPaaGkv6QfN84uMD2c0Cjtgx8RV+3Puh+FouOE1lpmu88npVK7+a8pWug/TJDWfbVRCdmwQ
+	nOektnSUOCcpZJ9TwusfWnQOJGgdMJayHMaIW65CrFwG4YCtUqvWoviqk1Fi0PmXOB2F7pwCej+
+	eWg==
+X-Received: by 2002:a05:622a:64c:b0:519:b655:235 with SMTP id
+ d75a77b69052e-52ff711704cmr26458811cf.3.1788164779732; Mon, 31 Aug 2026
+ 01:26:19 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260827070345.2853821-1-jorge.ramirez@oss.qualcomm.com> <20260827070345.2853821-2-jorge.ramirez@oss.qualcomm.com>
-In-Reply-To: <20260827070345.2853821-2-jorge.ramirez@oss.qualcomm.com>
+References: <20260827070345.2853821-1-jorge.ramirez@oss.qualcomm.com> <20260827070345.2853821-3-jorge.ramirez@oss.qualcomm.com>
+In-Reply-To: <20260827070345.2853821-3-jorge.ramirez@oss.qualcomm.com>
 From: Stanley Jhu <stanleyjhu@google.com>
-Date: Mon, 31 Aug 2026 16:25:33 +0800
-X-Gm-Features: AcwNN1WVv-1JxNRBi1FdqkSyKkrL3KqIt4GooQUTfRRAXFQqWs_ZljDsUxFdizM
-Message-ID: <CAE14pdejGMw-4hpj+nydgMi_Ff0WiACEEisa6Y=wp5cV1H_NnA@mail.gmail.com>
-Subject: Re: [PATCH v4 1/2] ufs: rpmb: retry power-on UNIT ATTENTION on the
- RPMB WLUN
+Date: Mon, 31 Aug 2026 16:25:42 +0800
+X-Gm-Features: AcwNN1Wql6TjF2E32SMAe0niU5XIn-Fsgvx0mgJJYkagFD8DWijLMQS03XBChpU
+Message-ID: <CAE14pdczcD5zsOm57pBaDqb04btPY8abOncDgFwF0_E4LP9sKA@mail.gmail.com>
+Subject: Re: [PATCH v4 2/2] ufs: rpmb: use a fixed-length RPMB dev_id
 To: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>, beanhuo@iokpp.de, 
 	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
 	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
@@ -98,19 +97,22 @@ Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
 	op-tee@lists.trustedfirmware.org
 Content-Type: text/plain; charset="UTF-8"
 
-On Thu, 27 Aug 2026 09:03:35 +0200, Jorge Ramirez-Ortiz wrote:
-> After a power cycle, the first command sent to any UFS logical unit
-> completes with CHECK CONDITION reporting a power-on UNIT ATTENTION.
-> The SCSI core surfaces this condition to the caller rather than
-> retrying it.
+On Thu, 27 Aug 2026 09:03:36 +0200, Jorge Ramirez-Ortiz wrote:
+> The RPMB authentication key is derived from the dev_id handed to the
+> RPMB subsystem. OP-TEE implements the eMMC RPMB flow, where the dev_id
+> is the eMMC CID: a fixed 16-byte value the key derivation depends on.
 >
-> For the RPMB well-known LU the first command after boot is the first
-> RPMB frame, and RPMB has no earlier, guaranteed access that could clear
-> the condition beforehand. The power-on UNIT ATTENTION therefore reaches
-> RPMB and fails that first frame, breaking RPMB on every cold boot.
+> The UFS RPMB id is "<device_id>-R<region>", which is variable length
+> and longer than 16 bytes. Handing it to the RPMB subsystem as-is would
+> tie the derived key to a length OP-TEE does not expect and diverge from
+> the fixed-CID eMMC ABI, forcing OP-TEE to be taught about
+> variable-length UFS ids.
 >
-> The RPMB WLUN needs the power-on UNIT ATTENTION to be retried so that
-> RPMB works from the very first access after a power cycle.
+> A fixed 16-byte dev_id is needed so the derived key stays stable and
+> unique per region while matching the eMMC CID layout OP-TEE relies on,
+> keeping the key-derivation ABI identical with no OP-TEE change. The
+> reduction to a fixed 16 bytes must also be reproducible by the
+> bootloaders (such as U-Boot) that derive the same dev_id.
 >
 > Signed-off-by: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
 
