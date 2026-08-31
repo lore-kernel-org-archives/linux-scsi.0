@@ -1,79 +1,81 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2FAC4B1299
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 15:48:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD784AF682
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 15:48:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788191293; cv=none; b=oG7w+xR4K8MA3uVKByifY8wFGyP1sf0R2zRgqjLWoOT0kKujOMJy9gf6T/3APuqR3I2d4EP6pei1TS0Xbnit8bSkhZDoUqS86ZuOVlJAfQWd217s61y73FYgDWpUt1x6tYqvrEk0TefuTM5k2ywMkRDEsngHHVK/TCMxkGHCpe0=
+	t=1788191295; cv=none; b=Xe5v/goPUNv5tFbLTKSOxZ4R8KaFjDHG8UchwgGTo8GH4Q3Vl473PWFUnOJqV01VjFkUhLUo33G4StwZx7/2qN5wmcr4jT0Hf3FJkj0QKYcRoNllA1Rj8PtIti0cafDdmX4nSzioM7BItpJCJio+zWOIJZzJR4pM/e3vXiI9AP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788191293; c=relaxed/simple;
-	bh=YuKf4TfuLSdGcJuTuRIIpFh/EgM5srvGQvIHuE7PH7w=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HveoQyCOI0Mi04h8N41VBeHA+jQnY1IMmtTGOTcBVHlofw4EZ41prKuHhu+iRtEUr3NuwIYiKjArF9f2llPVPZaLbBgpV8/HYJBtp1i4g+vofh79A/deA7x5lSz/cJhay+JJKevIfgiLMZmnDq8TUY2pURgvQ6lAWE7ydOUbnMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=mU3lnRsN; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=gcjow6IO; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1788191295; c=relaxed/simple;
+	bh=55VPGsducrFBA+UqitLk9xJS9IoxNdI2kJrTVgqF7JY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YiueD3laXBcsXcWnMjFLZf+Ue+7IGKkLPwba6qBJyeY+WnS3MkB76Y+GtRXSp9VRVcsl0gZH2HANK0JKoTJxPbiVbN2IsANR34dz+so44/s4lFhCK4JDJ36oA0qtrlMFHJfLAhG8cVzk1PKnnwwkEKrZh1pxEUb5e+XsBLaLF5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=flJICbHk; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Vi7iiakD; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="mU3lnRsN";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="gcjow6IO"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67VEU1QO3809030
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 15:48:10 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="flJICbHk";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Vi7iiakD"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67VETL7U358485
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 15:48:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=QHh/nIGzCoRgzWrKEq4S+OEYLKw4ImM5Urz
-	S+/gfDoQ=; b=mU3lnRsNSYlMYCEIiPZ3eu+N7BYcecUPtZgG4kBAeXFPD30iZ96
-	9RfRKS9iOaqgtBkcYcnacwRFBO9kvL7+wR6/KA5l5IyQF0Dqb/oyV0yKt8S515Yb
-	Hj+uhvT2Y8N9it8VbFGFLFgJorRoq+jbvqquAb6MNUHnLzX3Xwn4zZ51HsfRHenK
-	5Hu/bsd7C9bPdnn62stacyujdVphdHpdzKdngy9Jp9G8K8fgbEMmxLQNI37nYljz
-	FXq1s6F1EaswEFr0PbQwnrQWaThoKPiXK0pdp29+8OFoKMlcx3g/npHAqlATRX9S
-	kxBrgbTV0eyG3vyU9zo7o9w6O4DqGCD82Jw==
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=lRFPnoHcYDM
+	nlTrKBHKWdtQ6nLD/+ObQpWW6OKlIDQU=; b=flJICbHk7WkcQ6BGwyu7cD9ptYz
+	R2YruVwmtpnoyuv1muhvXN2aTa1zjJBxXofO/cldvl+Kp5yJ8jTnKKgeWLU9AXAq
+	hX4iTrVNqgKb0M/t/L+VYbU5u+8uRdJqc7I2ZUwhuDx7x6VpHrVYvn033l9WQEaT
+	nzhHcvE6O4pGHYe7fQFGEwHrazxZxGuGHfa3ism5SKyocR4sQ9GY5IBQ7TiuluDN
+	GJ9Dh7cucT3dZhoT+vukmHzUuMTS5sg9+d/WgwgaZQM+tv3y4ckCSuh33H+nZ4gh
+	TORJaLxeyef/Q+E+cAfw4JOZFlBINGTCwhCuXwlXePsSPigX4t256fC6xUQ==
 Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gcv7wbge6-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gd4x0a4em-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 15:48:10 +0000 (GMT)
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-92e62e3459fso462215885a.0
-        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 08:48:10 -0700 (PDT)
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 15:48:12 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-92e52306621so475318985a.1
+        for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 08:48:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788191289; x=1788796089; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=QHh/nIGzCoRgzWrKEq4S+OEYLKw4ImM5UrzS+/gfDoQ=;
-        b=gcjow6IOZI90LNrcHMbEehFMS81uA+otCCSNjuS8za/qTrLe1P7dpTE8pUjM/ilH9r
-         COuJTLw6jV/ek7SzHXZXokOVkqwn5ORJKvp3gVWBYrZxvwXVwx0Dyxb3EJLci0oEnEE3
-         BjCMdItcx+IoZTms183KbT63gk8fVJvLk+U8+6U933zGq/pQOHHkzRxc6yelTGrYht37
-         Ln2I00MJiV9JkTNILAxEwlHVo5hnyHgPrY/0JaoDpBy7cRUmUs+3RaJLyO/ryToXEzWh
-         +RCj16ECrsaSdgwrUZRC4evxqeCAvgAnCqiD4278EnVXAwideapDHofgphJNKxXLChm0
-         VCiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788191289; x=1788796089;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=oss.qualcomm.com; s=google; t=1788191292; x=1788796092; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=QHh/nIGzCoRgzWrKEq4S+OEYLKw4ImM5UrzS+/gfDoQ=;
-        b=hCM4606ohfYjT4jBqvzrx4YmdSDXkxRcER25y4tt0MI4Guj+xnHtyQhLnmISIcn/wP
-         Zwoeb+rgBRf0te5vFF5MazFAYSblf4VOT0b3IuaIgIzgoIRExghggNLM3iFf2+cg+cjo
-         2zOmo+bSZ0Wp0IEyjkSO3TITQSyhTT3was1XBuaBhq8QmhS+c5z4E8uaCtao4ltevwRg
-         o8n1XZW1yUEPvEJPSN1ZdYFUJj8+cWwl7Y/eUVq4dYLdQx/qF2VEkIlNeLtOJ+b3rkh6
-         G8LSfhJtSbfQpS4fMOQ7zClILLGA2DIqEQhEaqtQi7wa53pVrk8iIBJ54V6kuj9rvQGM
-         vgsQ==
-X-Gm-Message-State: AFuF++kAxj2MMI2Fs/+ddJ1WdDDKQYM1oWPUP4SbNMMQrhYMDdD2naY/
-	uKR9GI3CB5RfFYi+lLkVtbSJ5kt7nwy5DH7kDhhdVpS9dfyXfoWmDupStWJw+ag0L8uwczFXP7+
-	YvPyHcjxgJoaGavCWBMDmFuNgJ/C5SKFkSk451da2V1TicagPolXC3zcHUhp+ur4k
-X-Gm-Gg: AR+sD10Av8GDfyZ7miDO2SLwnmGcvS1/+NCXLGCAhFLkgCndyn/IynjCSmJ7+aORXF8
-	HYs8YlR93r974u9obyD9T4fGzkQQ8yR/PhKYZ/UUfdxb81VUCfkEiKf2xIvdE6PdPwYm4QkyUys
-	1+oomNOLmrOv+L0BGaHOr2SSJTj7FA3Wl3Q8zTFyosdkahYfIkDPBKUlXoTIv8aZiYqAbWhgUxz
-	IfvjGiwTESlLyIfWIYJ5nGGWgUFDyTr0L7ws19rMkhBJiYXgLP4PG+4OBCzg1+zRAElzXP/y6IQ
-	wFE02PJRWToW6abwrCAEIORq0Elcxa+vb05deSInOxFBt/JJ0bbCWjkQdZAY2Nl2iIJTCISodS9
-	EEbiJHXVOGtnnBEpZRnfdejXEybgJs9I2LTCPfiII74N6s7U=
-X-Received: by 2002:a05:620a:40cb:b0:936:cda7:554d with SMTP id af79cd13be357-93913798773mr3050736785a.14.1788191289373;
-        Mon, 31 Aug 2026 08:48:09 -0700 (PDT)
-X-Received: by 2002:a05:620a:40cb:b0:936:cda7:554d with SMTP id af79cd13be357-93913798773mr3050728285a.14.1788191288866;
-        Mon, 31 Aug 2026 08:48:08 -0700 (PDT)
+        bh=lRFPnoHcYDMnlTrKBHKWdtQ6nLD/+ObQpWW6OKlIDQU=;
+        b=Vi7iiakDrnTHY9PE0RC56vGawoS3NeFccoauABEHXO696+Q0l3dGiifwcbtcxgCcY+
+         sw6su6+W7rO5o/Z5nwT5FplfNl5sFJ06sIJJPfJQTpeMaZSHuG/zi4Oi81Dlo9qskTC3
+         EZtxFQ0XLk31HH5HwxdSd9nF22cIT2vPrnk7oHEiZIChrXOdnZVik9oShQEP1S3LZJWo
+         nR542KT0QtH58DdnvWo6IcvF9xx64cpD2C7l705grHoeQfr7AhNRFxXU8g1O2jpA5nmp
+         B4VT4Sb/xYnggZEuA7I5eegfc+tNxaB65xc6m+eQAGRj/i0LtaDMbF5OAMaJZgiRfWaX
+         DHEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788191292; x=1788796092;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=lRFPnoHcYDMnlTrKBHKWdtQ6nLD/+ObQpWW6OKlIDQU=;
+        b=lnRmTtnlqlahL7qjCI6GHwA+u1XWGnaOhvGW9YhGnMwRgt78EjluCRlAx4oHbUfmks
+         fypfOlYpK5oawk+52udjMLt0vK5zp1SeGrXaAJ8VyIqo04tOyUata21uXVZLuG1bdNZr
+         iluuAUWkVnD4e0rdQB7tn5bAMv1Kqd9oNdh5pnaxQlfMB1btlFw66Ues6YllSl0/UJGJ
+         tboUQE4pGjjIY8o1T2Q1H5A89Dco0JhXoz0D5i0+mzM/y0eCkGY0/iDHZ4BrOp9aHEOL
+         pqtiJ9Jtbfj7e36IV5KAykf0RBFbuNxN5al1WEBuB3QX/wVt/XUNu+RUSQRBwfhVSkJ6
+         bDAQ==
+X-Gm-Message-State: AFuF++lfocbkix4vi0/JHGXqPQ86TJahzCaImeMwcptd2XYC++b7FbHs
+	B+ab8ctcH25JVzx2zkpOd1iwv2VaHzoD4fXcriRr8d4w45FnI2UsfsajeHz6vjVySbQzCp+GzGP
+	0Oi+uqsZbZaw8jGXDxw3UwzmNDXN6GUV/3fVSq1HvMvno6Uh506Kg36l+BQn5DC2A
+X-Gm-Gg: AR+sD13WroBKp3AuACe1zVikejSZK6LZXU/dYPQSs1QDpjGGBN4+6flXsTlEHK8MtMr
+	7L13rd5wwL8ILbWrd37RzyNP1EFcesTcrDHhZG8sSOvfJZ6DZdFQpnIOvdKouVHRCLpXiKsjmr1
+	yTIZQM9sbjSLuzggrYR1pbukZxEYNsvmiaQNrOfgWn5GfQb+6IU9nID1s3l3J7mxjuQ8LL476ja
+	H/oFsamxOzjlTRhWDHdfSfEmV5rNGCLGQYO6ka35YqQmV5D09bZgVimYp/4OdRQa8LiBuYPXNW0
+	06tpbW1eyKfDZX+NaDPwkOYz0wQCcTl77DIrpGIfEEuRJQGGIglBa6XlImGBBFzn8wkXwDWYya8
+	CyzE9w/2wce6K7hyW+dPpoX8P4n9HDWW+xBsyCEAmOdWm/ak=
+X-Received: by 2002:a05:620a:199d:b0:939:48ab:3632 with SMTP id af79cd13be357-93948ab36f2mr239122385a.10.1788191291680;
+        Mon, 31 Aug 2026 08:48:11 -0700 (PDT)
+X-Received: by 2002:a05:620a:199d:b0:939:48ab:3632 with SMTP id af79cd13be357-93948ab36f2mr239110885a.10.1788191290565;
+        Mon, 31 Aug 2026 08:48:10 -0700 (PDT)
 Received: from trex (250.red-81-38-139.dynamicip.rima-tde.net. [81.38.139.250])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cdce0b456sm1558315e9.2.2026.08.31.08.48.07
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cdce0b456sm1558315e9.2.2026.08.31.08.48.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Aug 2026 08:48:07 -0700 (PDT)
+        Mon, 31 Aug 2026 08:48:09 -0700 (PDT)
 From: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
 To: jorge.ramirez@oss.qualcomm.com, stanleyjhu@google.com, beanhuo@micron.com,
         beanhuo@iokpp.de, James.Bottomley@hansenpartnership.com,
@@ -82,10 +84,12 @@ To: jorge.ramirez@oss.qualcomm.com, stanleyjhu@google.com, beanhuo@micron.com,
         sumit.garg@oss.qualcomm.com, jenswi@kernel.org
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         op-tee@lists.trustedfirmware.org
-Subject: [PATCH v5 0/2] ufs: rpmb: make RPMB usable with OP-TEE key derivation
-Date: Mon, 31 Aug 2026 17:47:59 +0200
-Message-ID: <20260831154804.719528-1-jorge.ramirez@oss.qualcomm.com>
+Subject: [PATCH v5 1/2] ufs: rpmb: retry power-on UNIT ATTENTION on the RPMB WLUN
+Date: Mon, 31 Aug 2026 17:48:00 +0200
+Message-ID: <20260831154804.719528-2-jorge.ramirez@oss.qualcomm.com>
 X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260831154804.719528-1-jorge.ramirez@oss.qualcomm.com>
+References: <20260831154804.719528-1-jorge.ramirez@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -93,118 +97,99 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=E9f9Y6dl c=1 sm=1 tr=0 ts=6a95a23a cx=c_pps
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODMxMDEzNSBTYWx0ZWRfX5QieGEKyNRS2
+ j37gTW6wPwLXDgboB/IeekLa5al7pzStaE3DIxEdhm/Z966Tl0jAkcpA1beLltVYtM01DUnGb+i
+ X/LFd5Jsi/OK3MI8lt1PTg4FVdK9U+c=
+X-Proofpoint-ORIG-GUID: kNyjQgSTP_5Guda6fpdLNPf9KGzjuEyc
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODMxMDEzNSBTYWx0ZWRfXzDLAO8FnZq3N
+ HHbaF6kOrILVaAeo4yKS4bysYXRlLYGkZRPex1L8RkZpfYCXLl1rXK840Yh6xQjv4hw1qtCjHOX
+ 84b06tSW4Vt57FX2NL1cnJDUTbH9tpJuF3pnqhj23AmSdB0dqVGjwbchYfAwG2B0HrkB6law6v7
+ n2zFhzaGffXbpFk5ugG/yiIkjFV7DvWUPqEp9qHHQcQPeDDBMUEOA9gy1+1T63YjMwSXlDSVlbL
+ P0FmzVGv6H4RHmvzTvZ+WE860i3LAZPPCG9KqN5WSkwz2lQCbops5mZj2xrQWTjwI8tJUPp7vrv
+ cTp8svFOPUcE55ue+p/YyrxkUJ25RbM6RSuzILxOWYI935X1Hln8H0s4SIOSdTQK1f9IRkHC5X0
+ peaQ0CC+LMKubZqorEBJFpYhzNLqNDyr0ZxuhSHXYmSNuwAyLVRaL1h080PlrmR9mWeuQRbUrXU
+ IVm2n4w3+0+EtjkzvsQ==
+X-Authority-Analysis: v=2.4 cv=Iqsutr/g c=1 sm=1 tr=0 ts=6a95a23c cx=c_pps
  a=HLyN3IcIa5EE8TELMZ618Q==:117 a=N2KLPU99T7rsMuN2xAoQUA==:17
  a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22 a=_EMmJvYMAAAA:8
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=NEAV23lmAAAA:8 a=wgeUl87hhcvhY68aDoIA:9
- a=qcg49hLlgF0N60+LroqrWnV/Vu4=:19 a=bTQJ7kPSJx9SKPbeHEYW:22
- a=emCv1hD2LFd8cNRmW21v:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODMxMDEzNSBTYWx0ZWRfX0d9XIQa4JxQg
- tkNMLQbKLH3WZI+/8nvMG7vI/lCe55IhwC2NIl+xN+/Zg/iHEYj908qSef3NlQFc40oY7VCSIf0
- MkMVH8GOTHkR5etSpnEOWhxbRWM6H/M=
-X-Proofpoint-ORIG-GUID: 3Nd5fEMl9n0SbMcw6wcBphT-t95f3Y20
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODMxMDEzNSBTYWx0ZWRfX2QegE0njlRjW
- zcUcpqkxV805cFUpbLHYDAzGldO8zFkkckYQ6lMZZWfuArsT8trg9G+xbpLDl55fOPZp9/6CF40
- 0elM145V08MvmaIf2X48muNMF4sSGUGZD020Awva4YRYwQClN5+61BIZxMO0IKja0NzayHk+us7
- R4gFxCrqi3QKNtiS00MX6VZZRmamSuXmkcm1cXnIw/poD6B2QzqRTr9m0iOeTwBZ0KxjQRY2Dib
- QlylozC5o7zxlnErJi59If6s8m3Ie8JGVhIoFr/+0Ko5/p0M4tv8YxOmwFFYMPhQDxolvbHqKGe
- keF/O4Q9yxWO65EEl7CgjMue9gaTDO8ox6UDv6HC2DlNmShsdHb+ubksuIrMqde4gbFaEP/AthG
- wtdWC4xQAtUTODeyqGF3+gffMt+ThKh+ddNhKT6vFsnx/h6QtLKDUyYolwpJLUc2suvUkvZuf2c
- UsF7PwQLFiPV+lbQcZg==
-X-Proofpoint-GUID: 3Nd5fEMl9n0SbMcw6wcBphT-t95f3Y20
+ a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22 a=EUspDBNiAAAA:8
+ a=PY6Zn8H8AAAA:8 a=1XWaLZrsAAAA:8 a=w0io_FmA1e-6CLxyNa8A:9
+ a=bTQJ7kPSJx9SKPbeHEYW:22 a=ySS05r0LPNlNiX1MMvNp:22
+X-Proofpoint-GUID: kNyjQgSTP_5Guda6fpdLNPf9KGzjuEyc
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-08-31_05,2026-08-27_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 malwarescore=0 bulkscore=0 spamscore=0 phishscore=0
- lowpriorityscore=0 adultscore=0 impostorscore=0 priorityscore=1501
- clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608310135
+ clxscore=1015 priorityscore=1501 spamscore=0 malwarescore=0 adultscore=0
+ lowpriorityscore=0 impostorscore=0 phishscore=0 suspectscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608310135
 
-This series makes UFS RPMB work out of the box with an OP-TEE that
-implements the standard eMMC RPMB key-derivation flow, without requiring
-any fundamental changes on the OP-TEE side.
+After a power cycle, the first command sent to any UFS logical unit
+completes with CHECK CONDITION reporting a power-on UNIT ATTENTION.
+The SCSI core surfaces this condition to the caller rather than
+retrying it.
 
-RPMB provides an authenticated, replay-protected storage area whose
-security relies on a secret authentication key. In our setup that key is
-never exposed to the kernel: OP-TEE derives it in the secure world from
-its hardware-unique key and a device identifier (dev_id) that the RPMB
-core hands down. OP-TEE's implementation targets eMMC, where dev_id is
-the 16-byte eMMC CID, and both the fixed length and the raw-CID layout
-are baked into its key derivation.
+For the RPMB well-known LU the first command after boot is the first
+RPMB frame, and RPMB has no earlier, guaranteed access that could clear
+the condition beforehand. The power-on UNIT ATTENTION therefore reaches
+RPMB and fails that first frame, breaking RPMB on every cold boot.
 
-Two things stand in the way of reusing that same, unmodified OP-TEE flow
-for UFS RPMB:
+The RPMB WLUN needs the power-on UNIT ATTENTION to be retried so that
+RPMB works from the very first access after a power cycle.
 
-  1. On a cold boot the very first frame sent to the RPMB well-known LU
-     comes back with a power-on UNIT ATTENTION (ASC 0x29), which the SCSI
-     core reports rather than retries. RPMB has no earlier guaranteed
-     access that could clear the condition first, so RPMB fails on every
-     power cycle. Patch 1 asks the SCSI core to retry the power-on UNIT
-     ATTENTION on the RPMB WLUN.
+Signed-off-by: Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Stanley Jhu <stanleyjhu@google.com>
+---
+ drivers/ufs/core/ufs-rpmb.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-  2. The UFS RPMB id is "<device_id>-R<region>", which is variable length
-     and longer than 16 bytes. Passing it verbatim would tie the derived
-     key to a length OP-TEE does not expect and diverge from the fixed
-     eMMC CID ABI. Patch 2 hashes it into a fixed 16-byte dev_id with
-     blake2b, keeping the key stable and unique per region while matching
-     the eMMC CID layout OP-TEE relies on. The hash algorithm and input
-     string are thus part of the key-derivation ABI and must stay stable.
-
-With both patches, UFS RPMB is functional from the first access after a
-cold boot and derives keys through the existing eMMC-style OP-TEE flow,
-(requires minimal OP-TEE changes pending on the CID proposal done here).
-
-Tested on IQ-9075 with Open Firmware [1], pending OP-TEE changes
-[1]https://ldts.github.io/qcom-buildroot
-
-Dependencies:
-
-U-boot:
-https://lore.kernel.org/u-boot/20260720085202.537019-1-jorge.ramirez@oss.qualcomm.com/T/#mc423eb4dcf8a15849077029e4f7c1913bb7d8873
-
-OP-TEE:
-https://github.com/OP-TEE/optee_os/pull/7881
-
-v5:
-  * added Reviewed-by tags from Bean Huo and Stanley Jhu; no code change.
-
-v4:
-  * ufs: rpmb: retry power-on UNIT ATTENTION on the RPMB WLUN: open-code
-    the power-on ASC 0x29 (with a naming comment) as the rest of the SCSI
-    tree does, instead of a UFS_RPMB_ASC_POWER_ON define; add a
-    UFS_RPMB_UA_RETRIES define for the retry count; reworded the commit
-    message.
-  * ufs: rpmb: use a fixed-length RPMB dev_id: reworded the commit
-    message; no functional change.
-
-v3:
-  * ufs: rpmb: use a fixed-length RPMB dev_id: hash into a stack buffer
-    instead of a kzalloc'd one; rpmb_dev_register() copies dev_id, so the
-    heap allocation and its cleanup were unnecessary.
-
-v2:
-  * ufs: rpmb: replace blake2s with blake2b so that the same support
-    can be added to u-boot (CRYPTO_LIB_BLAKE2B)
-  * added links to U-boot and OP-TEE changes.
-
-v1:
-  * ufs: rpmb: retry power-on UNIT ATTENTION on the RPMB WLUN:
-     - fix using uses SCMD_FAILURE_ASC_ANY to retry any Unit Attention
-     - fix unused variable
-  * ufs: rpmb: use a fixed-length RPMB dev_id
-     - fix selecting a non-existent Kconfig symbol
-
-Jorge Ramirez-Ortiz (2):
-  ufs: rpmb: retry power-on UNIT ATTENTION on the RPMB WLUN
-  ufs: rpmb: use a fixed-length RPMB dev_id
-
- drivers/ufs/Kconfig         |  1 +
- drivers/ufs/core/ufs-rpmb.c | 29 ++++++++++++++++++++++++++---
- 2 files changed, 27 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
+index ffad049872b9..79e6cd2b20a0 100644
+--- a/drivers/ufs/core/ufs-rpmb.c
++++ b/drivers/ufs/core/ufs-rpmb.c
+@@ -21,6 +21,7 @@
+ #include <linux/unaligned.h>
+ #include "ufshcd-priv.h"
+ 
++#define UFS_RPMB_UA_RETRIES		3	/* Retries for the power-on UNIT ATTENTION */
+ #define UFS_RPMB_SEC_PROTOCOL		0xEC	/* JEDEC UFS application */
+ #define UFS_RPMB_SEC_PROTOCOL_ID	0x01	/* JEDEC UFS RPMB protocol ID, CDB byte3 */
+ 
+@@ -40,6 +41,22 @@ struct ufs_rpmb_dev {
+ static int ufs_sec_submit(struct ufs_hba *hba, u16 spsp, void *buffer, size_t len, bool send)
+ {
+ 	struct scsi_device *sdev = hba->ufs_rpmb_wlun;
++	struct scsi_failure failure_defs[] = {
++		{
++			.sense = UNIT_ATTENTION,
++			.asc = 0x29,	/* power on, reset, or bus device reset occurred */
++			.ascq = SCMD_FAILURE_ASCQ_ANY,
++			.allowed = UFS_RPMB_UA_RETRIES,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		{}
++	};
++	struct scsi_failures failures = {
++		.failure_definitions = failure_defs,
++	};
++	const struct scsi_exec_args exec_args = {
++		.failures = &failures,
++	};
+ 	u8 cdb[12] = { };
+ 
+ 	cdb[0] = send ? SECURITY_PROTOCOL_OUT : SECURITY_PROTOCOL_IN;
+@@ -48,7 +65,8 @@ static int ufs_sec_submit(struct ufs_hba *hba, u16 spsp, void *buffer, size_t le
+ 	put_unaligned_be32(len, &cdb[6]);
+ 
+ 	return scsi_execute_cmd(sdev, cdb, send ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN,
+-				buffer, len, /*timeout=*/30 * HZ, 0, NULL);
++				buffer, len, /*timeout=*/30 * HZ, /*retries=*/0,
++				&exec_args);
+ }
+ 
+ /* UFS RPMB route frames implementation */
 -- 
 2.54.0
 
