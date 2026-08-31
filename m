@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 053DB35E1CE;
-	Mon, 31 Aug 2026 02:17:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2C2B356754;
+	Mon, 31 Aug 2026 02:18:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788142671; cv=none; b=V3c1SAfh9Tp6kJjzOhIe32mfaeL6XGoxPg7/DcGED12L3nTlJ3FbLZqy2fvrXkA+sCLjsplOM42nIZ4zBiu1NYBivBAmohL1IruauFyYdwf0aa0E0HZ/DkAPOdtlRstmBZjKIS2qNbJ5h/h7OXehpOs3dfXLGcquf0SUQg6El+0=
+	t=1788142691; cv=none; b=tKSI8rClVptIcIcK5zCxKwR8oRqyxobwnNuI/6mHVnAdPpLPqK8ajFotbs0gVBk9mFSc7kq5/fHOaQ9ZDAi6BCMds7QV+1PmXeR9cbVclQI5r4nFLIF6fa0E5/XdYLCA8kziUJ9/Sr6tuyVP/pQDjC6DXTJmSc/uITqJaMsAy0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788142671; c=relaxed/simple;
-	bh=gRZhtzWHdkNr5Qp6V5W2c3t+qmfi1jOitTb8o+iM9jg=;
+	s=arc-20240116; t=1788142691; c=relaxed/simple;
+	bh=SFpX3MP954KAVujBufUqjMVEP5wiygQK0HhfOnXROMA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=JhyzUew3Yq0U5MhRtQE1Yn+5X4NKF8pX1lQDJoxGUi2HvkV2qHxUiQYH+LhpFugTYXTb9YCFRsWZF4kFJhIAQWZz8mDlxgCOSluYkcodAqF/FqpJUgOljF8hnjv0c3NX0AjD5C5/oWf8rv8r+kIdZt6xJSt3AwHowQgI4CdTMBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V3NmhF9H; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=h2ecqDBsDS3TaUeDMzDXQdlBH1ieNcQcyNfXERcDMblBznvmzLDDidvfUeJOI5WCohaPKsN06chQIQ16Ijp5k3NdwmWR62KHs4bkzIhyMbESBQDzYVa04rIuXbrEYbRe9xZ1WhFW3fgaa7Q0TvpSpRGSnnB0HFNveCeYDqf/rWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J8O2Ka2k; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V3NmhF9H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52CD01F000E9;
-	Mon, 31 Aug 2026 02:17:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J8O2Ka2k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 235281F000E9;
+	Mon, 31 Aug 2026 02:18:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788142669;
-	bh=gf1TRzrFEPUzjIXPz/snoLKMCABC4GtwJviroPGsThg=;
+	s=k20260515; t=1788142690;
+	bh=rA9xzBXq2nXhB4RMXCMCbKUhehENuytSQMFPqFp9L5k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=V3NmhF9H5Tb6uCqOolI/G0MOxdmo9e3k5e/WnS2Xu3rwhph7fdPtXPOzkHTVMw24a
-	 G/6Fp++PeaVuaf82Sluv49641S+OjD7e+HoAxAhWJk4yRNMM0xEXxggjK0P9yRQRgR
-	 Nujt4gs4xlR7o3VGs8yR9/U/ypPQtV0VKpn0qIihMFp+vBGRM1vPm3g+snfyA1wqJ+
-	 UrgopoqJf+Oi2eI+xPA5Gi81dl8ZZ4cRNLCoCzIxMAoAbLsLfjBJJDCwVpkt5gzEOK
-	 653sXGVf10wd8Ej0jdyxIEtwSUgXKdyBU45/UKBjQcNbFibXkg6nYboEvNcq1WLfh6
-	 dN17xh6zbMYIg==
+	b=J8O2Ka2kBma8Mwc9uMNyiniJURlV9UVE4BbEKY1j9BRyCAGNJ+t5mfljDnys2c82S
+	 MIVLpxQkErCkpX4EVOKC+x4ainWKKT3R5ROifp4T94+T8oWGkN7EOW1+z1DLVPpbY0
+	 +NqyyEzG2g8QZ+L5Lgz4s+AbACMESQv37OD52EDUh0dJsfhr2Fyj6VLm8XDjeGGv6K
+	 9E5hGTX8laKnd6Yn/m+YVVO1lMMNiZmZnDtoEQVs0BIXcURKLnliuftME2SE6ov29I
+	 MgMFG5dEdFq6kzk6EDkNCl6YJhHl8INjSxauv+S2ZmW82ISfQoGkC1AfaSaP8SyNl4
+	 hbt1dxJyGs0tA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 04/37] scsi: rename sense field of struct scsi_failure
+Subject: Re: [PATCH 20/37] scsi: leapraid: use 16-bits defined sense codes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260831020451.585944-5-dlemoal@kernel.org>
+Cc: linux-scsi@vger.kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, dlemoal@kernel.org
+In-Reply-To: <20260831020451.585944-21-dlemoal@kernel.org>
 References: <20260831020451.585944-1-dlemoal@kernel.org>
- <20260831020451.585944-5-dlemoal@kernel.org>
+ <20260831020451.585944-21-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 02:17:48 +0000
-Message-Id: <20260831021749.52CD01F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 02:18:09 +0000
+Message-Id: <20260831021810.235281F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,59 +46,53 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] The unit test `scsi_lib_test_any_sense()` is broken because `.re=
-sult` is incorrectly initialized to `SCMD_FAILURE_RESULT_ANY`, completely b=
-ypassing the sense key check.
+
+Pre-existing issues:
+- [High] The driver synthesizes a CHECK_CONDITION for REPORT_LUNS when a da=
+ta underrun occurs but fails to update `scmd->result`.
 --
 
-commit be75fcae059f5a6c0fee14ecc0a6ae4e8a66d23d
+commit 909befd157ab89fe2f70728b01ba29158ee9d0b5
 Author: Damien Le Moal <dlemoal@kernel.org>
 
-scsi: rename sense field of struct scsi_failure
+scsi: leapraid: use 16-bits defined sense codes
 
-This commit renames the sense field of struct scsi_failure to sense_key
-to make its purpose clearer and align it with struct scsi_sense_hdr. It
-also renames the associated SCMD_FAILURE_SENSE_ANY macro and updates
-initializations in tests.
+This refactors the leapraid driver to use the 16-bit sense_code field
+of struct scsi_sense_hdr and replaces all hard-coded additional sense
+codes with enum values. It deletes the locally defined macros for ASC
+and ASCQ values in favor of standard definitions.
 
-> diff --git a/drivers/scsi/scsi_lib_test.c b/drivers/scsi/scsi_lib_test.c
-> index ae8af0e0047a8..4558dc853e26e 100644
-> --- a/drivers/scsi/scsi_lib_test.c
-> +++ b/drivers/scsi/scsi_lib_test.c
+> diff --git a/drivers/scsi/leapraid/leapraid_os.c b/drivers/scsi/leapraid/=
+leapraid_os.c
+> index ee3242779dfdf..eb8b114399231 100644
+> --- a/drivers/scsi/leapraid/leapraid_os.c
+> +++ b/drivers/scsi/leapraid/leapraid_os.c
 [ ... ]
-> @@ -116,8 +116,9 @@ static void scsi_lib_test_any_sense(struct kunit *tes=
-t)
->  {
->  	struct scsi_failure any_sense_failure_defs[] =3D {
->  		{
-> -			.result =3D SCMD_FAILURE_SENSE_ANY,
-> +			.sense_key =3D SCMD_FAILURE_SENSE_KEY_ANY,
->  			.allowed =3D SCSI_LIB_TEST_MAX_ALLOWED,
-> +			.result =3D SCMD_FAILURE_RESULT_ANY,
->  		},
->  		{}
->  	};
+> @@ -382,9 +382,8 @@ static void leapraid_handle_data_underrun(
+>  	} else if (!xfer_cnt && scmd->cmnd[0] =3D=3D REPORT_LUNS) {
+>  		scsiio_rep->scsi_state =3D LEAPRAID_SCSI_STATE_AUTOSENSE_VALID;
+>  		scsiio_rep->scsi_status =3D SAM_STAT_CHECK_CONDITION;
+> -		scsi_build_sense(scmd, 0, ILLEGAL_REQUEST,
+> -				 LEAPRAID_SCSI_ASC_INVALID_CMD_CODE,
+> -				 LEAPRAID_SCSI_ASCQ_DEFAULT);
+> +		scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
+> +			       INVALID_COMMAND_OP_CODE);
 
-[Severity: Medium]
-Does setting .result to SCMD_FAILURE_RESULT_ANY here cause the test to
-bypass the sense key checking logic completely?
+[Severity: High]
+This is a pre-existing issue, but should this code also update scmd->result
+with the new status?
 
-Looking at scsi_check_passthrough() in drivers/scsi/scsi_lib.c, the check
-short-circuits when .result is SCMD_FAILURE_RESULT_ANY:
+Because scmd->result is not updated with SAM_STAT_CHECK_CONDITION in
+leapraid_handle_data_underrun(), it retains the initial DID_OK | scsi_status
+(which is typically 0 here).=20
 
-drivers/scsi/scsi_lib.c:scsi_check_passthrough() {
-	...
-	for (failure =3D failures->failure_definitions; failure->result;
-	     failure++) {
-		if (failure->result =3D=3D SCMD_FAILURE_RESULT_ANY)
-			goto maybe_retry;
-	...
-}
+Doesn't this cause leapraid_scsiio_done_dispatch() to return early, hiding
+the synthesized ILLEGAL_REQUEST sense data from the SCSI midlayer and
+breaking LUN discovery when a data underrun occurs?
 
-Because of this short-circuit, the sense key check logic is never actually
-evaluated. To properly test SCMD_FAILURE_SENSE_KEY_ANY, shouldn't .result be
-initialized to SAM_STAT_CHECK_CONDITION instead?
+>  	}
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831020451.5859=
-44-1-dlemoal@kernel.org?part=3D4
+44-1-dlemoal@kernel.org?part=3D20
