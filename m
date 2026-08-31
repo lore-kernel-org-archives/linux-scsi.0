@@ -1,46 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1369753A8B3;
-	Mon, 31 Aug 2026 13:45:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6973956C64B;
+	Mon, 31 Aug 2026 13:48:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183935; cv=none; b=C1+xnjcHs0OD8/F2GIXI+BY53QFcKRS46Yp5HPZO/GeQYZCZAs4EwrIF4PU6YGYZHt0Lt3Y1L5sQQ5lTHrVrWc4/RIFckREYohqauD9rRQKFST2e3CHP14QRa8Uq8fSEy4m1D8HhhNhSA3009JBlSdiGA7zhBaTLlgYy1/TIMhI=
+	t=1788184108; cv=none; b=jeDeTfIgzpYJjagvm1N31fL8SvrUDnJ6loGJsZ5tH7SPewj3s3DneHpekQKa4H18d4q/no/YI1/9i0k4KQQ3WgBAgX+EH2mW3sMMAMxdiDCKWiO5oN16Eg+PU+U8cm2PDNr7S3sCS49lxR03BnsJmVdzhshi/lEE2EvtHdSjrXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183935; c=relaxed/simple;
-	bh=u2VbWB1KOfslj0Y7EK2JZGHgIF4SYu7D6lhQ0Tns460=;
+	s=arc-20240116; t=1788184108; c=relaxed/simple;
+	bh=xkXO7Xn9rTOeoxTnAPikfIGYnyGBWrQvEYDXsA/8l80=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cock+0ItA7/tZdDsPKVmU0sZPVFYFk4zwlHSFz/h6ScamnVNRPNtr65rPKUuEAz3OAIbCCvvH+P9hGwExzhGKQunSWbwMz49MdIF8GNkPUqJZHlLIhyTRwrL1o/FLA2PmNpuzCUnfsUOZ49GgmBmLsLu8qrPAKpyK59DZIrI3ZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E9SQnUUs; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=aNYtpB/soSC6wxDBgRqOfoXU/NiGuahJtdr/sP+D+RYuqtFXdMp6u9VFYeg/OohHcAKrcXvvAdwRnA14acBSs4uRtDDxq9Ih7d9ylj1pSxhb3mYHa6aMZaeJi5vdi8r4dAjU9rLqT1HDUKykCW+m1z0C+YZfQYjD9inneecssaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ewRK8erH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E9SQnUUs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17EC01F000E9;
-	Mon, 31 Aug 2026 13:45:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ewRK8erH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B99F51F00ACF;
+	Mon, 31 Aug 2026 13:48:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183933;
-	bh=2PhcN9tAPCIbV4oOF7CSg18XLXgOjlOxm46iEzvCf64=;
+	s=k20260515; t=1788184105;
+	bh=mhUV1L2AUmXHJKZbxJWi4kIFg3U6/9Hyhje/cu/Ziks=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=E9SQnUUsphwzUJdaVIFMG/vO03CzQJtIw+UqIrTz8RJjjE1/Ow64p8tk762H92/3j
-	 ASgkN+Qq+czf7LY3MclXr6ynN4PHamz+PwI+N67vJ4xoVUGvYGUmIk8d6dFL1dqZpK
-	 UMbs0lfofgLjWfwusY+PwQVt6dgwp3YMDLv6Jdt6iriUcUPf77EEPvOnHEfKerD/Xc
-	 VmtqjxMASFThYgjghRCtkv7pGwzuUr+8q4gAtgNTYQyM8CO6DmDmQCvjfq5AhiSXFO
-	 KxUJU8PejWFcn5fL22cmS74cVoIxSx2Rd/W3TAXu2Xk2N/1zHMTMMW2batEbfaf35U
-	 KNP/JtACJnsXQ==
+	b=ewRK8erHtjknv9LfeisT86BqkypZ728eVwBcA7BCnKIX2X0y8eiFF33duczP43Nwt
+	 GqPEByOpEumlD5X0+FZueRS61hWVQBrJSOtU2TcSil9PoPEwEQsQOdiIQhcc5blKBv
+	 LVSAp/wG7b27y0dcCyhzLZZ2lEMu8vxxYqlXQorv3gNQFyKqpSPjkDfVtG0spHuHTh
+	 q1IPWMP9VlPcvRj5dawBBAn72x4vL73Y+sYP8YFoFi5f+Vez6rtjzSiWQp6OVTU4ju
+	 WbDhVTIE/8HneNlVMGM6hNMObuDVVKj+iZCXJV6LXC1F3P8BnfY5zjLWGtoFrZs7iW
+	 OcU4/N4/IPUiA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>,
+Cc: Kumar Meiyappan <kumar.meiyappan@microchip.com>,
+	Sagar Biradar <sagar.biradar@microchip.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	anil.gurumurthy@qlogic.com,
-	sudarsana.kalluru@qlogic.com,
+	jinpu.wang@cloud.ionos.com,
 	James.Bottomley@HansenPartnership.com,
 	mkp@kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] scsi: bfa: Reduce kernel stack usage in bfa_fcs_lport_fdmi_build_portattr_block()
-Date: Mon, 31 Aug 2026 09:26:57 -0400
-Message-ID: <20260831133314.4125787-389-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] scsi: pm8001: Reject non-fatal dump when controller is crashed
+Date: Mon, 31 Aug 2026 09:28:41 -0400
+Message-ID: <20260831133314.4125787-493-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -56,27 +56,24 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Arnd Bergmann <arnd@arndb.de>
+From: Kumar Meiyappan <kumar.meiyappan@microchip.com>
 
-[ Upstream commit 57a6ed0b41677ccc5e28cc0976e495c1dfa33747 ]
+[ Upstream commit aa3b8f56ef27ed72394a752820abdec4608b731c ]
 
-bfa_fcs_fdmi_get_portattr() gets inlined into multiple places and has
-two fairly large variables on the stack, to the point of causing a
-warning in some randconfig builds:
+pm80xx_get_non_fatal_dump() can be called even after the controller has
+entered a fatal error state. In that case the forensic memory contents
+are not safe to access for a non-fatal dump request, and attempting to
+do so can trigger a call trace.
 
-drivers/scsi/bfa/bfa_fcs_lport.c:2198:1: error: stack frame size (1560) exceeds limit (1280) in 'bfa_fcs_lport_fdmi_build_portattr_block' [-Werror,-Wframe-larger-than]
- 2198 | bfa_fcs_lport_fdmi_build_portattr_block(struct bfa_fcs_lport_fdmi_s *fdmi,
-      | ^
-drivers/scsi/bfa/bfa_fcs_lport.c:1856:1: error: stack frame size (1600) exceeds limit (1280) in 'bfa_fcs_lport_fdmi_build_rhba_pyld' [-Werror,-Wframe-larger-than]
- 1856 | bfa_fcs_lport_fdmi_build_rhba_pyld(struct bfa_fcs_lport_fdmi_s *fdmi, u8 *pyld)
-      | ^
+Check controller_fatal_error before reading the non-fatal dump buffer
+and return -EINVAL when the controller is already in a crashed state.
 
-Mark the inner function as noinline_for_stack to keep it separate from
-the other variables and prevent multiple copies of the same variable to
-get inlined here.
+This prevents non-fatal dump collection from running in an invalid
+controller state.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Link: https://patch.msgid.link/20260611125601.3385418-1-arnd@kernel.org
+Signed-off-by: Kumar Meiyappan <kumar.meiyappan@microchip.com>
+Signed-off-by: Sagar Biradar <sagar.biradar@microchip.com>
+Link: https://patch.msgid.link/20260416154650.415624-1-sagar.biradar@microchip.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
@@ -86,256 +83,261 @@ LLM Generated explanations, may be completely bogus:
 ## Phase 1: Commit Message Forensics
 
 ### Step 1.1: Subject Line
-**Record:** `[scsi: bfa] [reduce] Reduce kernel stack usage in
-bfa_fcs_lport_fdmi_build_portattr_block()` — prevents excessive stack
-frame size from compiler inlining in the Brocade BFA FC driver's FDMI
-attribute-building path.
+Record: **[scsi: pm8001]** **[Reject]** — Reject non-fatal forensic dump
+collection when the PMC-Sierra PM8001 controller is already in a fatal
+error state.
 
-### Step 1.2: Parse All Tags
-**Record:**
-- **Link:**
-  https://patch.msgid.link/20260611125601.3385418-1-arnd@kernel.org
-- **Signed-off-by:** Arnd Bergmann `<arnd@arndb.de>` (author)
-- **Signed-off-by:** Martin K. Petersen `<martin.petersen@oracle.com>`
+### Step 1.2: Commit Message Tags
+Record:
+- **Fixes:** — not present (expected for manual review)
+- **Reported-by:** — none
+- **Tested-by:** — none
+- **Reviewed-by:** — none
+- **Acked-by:** — none
+- **Link:** https://patch.msgid.link/20260416154650.415624-1-
+  sagar.biradar@microchip.com
+- **Cc: stable@** — present in original patch submission (verified via
+  `b4 dig -w`)
+- **Signed-off-by:** Kumar Meiyappan, Sagar Biradar, Martin K. Petersen
   (SCSI maintainer)
-- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or Cc:
-  stable tags
-- Notable: maintainer Signed-off-by; no syzbot or user bug reports
+
+Notable: authors explicitly CC'd `stable@vger.kernel.org`; no syzbot or
+user bug reports.
 
 ### Step 1.3: Commit Body Analysis
-**Record:**
-- **Bug:** `bfa_fcs_fdmi_get_portattr()` is inlined into callers that
-  already hold large stack variables, pushing frame sizes to 1560/1600
-  bytes.
-- **Symptom:** Build failure with `-Werror,-Wframe-larger-than` (limit
-  1280) in randconfig builds.
-- **Affected functions:** `bfa_fcs_lport_fdmi_build_portattr_block`
-  (1560 bytes) and `bfa_fcs_lport_fdmi_build_rhba_pyld` (1600 bytes).
-- **Root cause:** Inlining duplicates `struct bfa_port_attr_s` and
-  `struct bfa_lport_attr_s` locals from `get_portattr` into parent
-  frames.
-- **Fix:** Mark `bfa_fcs_fdmi_get_portattr()` as `noinline_for_stack` to
-  keep its stack usage in a separate frame.
-- No kernel version info in the message.
+Record:
+- **Bug:** `pm80xx_get_non_fatal_dump()` can run after the controller
+  has entered fatal error state.
+- **Symptom:** Attempting to read forensic memory in that state can
+  trigger a kernel call trace.
+- **Root cause:** Missing guard on `controller_fatal_error` before
+  initiating non-fatal dump hardware access.
+- **Fix approach:** Check `controller_fatal_error` and return `-EINVAL`
+  early.
+- **Version info:** none in commit message.
 
 ### Step 1.4: Hidden Bug Fix Detection
-**Record:** Not a hidden runtime bug fix. This is an explicit **build
-fix** for `-Wframe-larger-than` treated as error (`-Werror`). No crash,
-corruption, or deadlock at runtime.
+Record: **Yes, this is a straightforward bug fix** disguised as "reject"
+rather than "fix", but it clearly prevents unsafe hardware access and
+kernel call traces during error recovery.
 
 ---
 
 ## Phase 2: Diff Analysis
 
-### Step 2.1: Inventory
-**Record:**
-- **Files:** `drivers/scsi/bfa/bfa_fcs_lport.c` — 1 line changed
-  (attribute added to function declaration)
-- **Functions modified:** `bfa_fcs_fdmi_get_portattr()` only
-- **Scope:** Single-file, surgical (1-line change)
+### Step 2.1: Change Inventory
+Record:
+- **Files:** `drivers/scsi/pm8001/pm80xx_hwi.c` (+7 / -0)
+- **Function modified:** `pm80xx_get_non_fatal_dump()`
+- **Scope:** Single-file, surgical fix
 
 ### Step 2.2: Code Flow Change
-**Record:**
-- **Before:** `static void bfa_fcs_fdmi_get_portattr(...)` — compiler
-  may inline it into `bfa_fcs_lport_fdmi_build_portattr_block()`,
-  `bfa_fcs_fdmi_get_hbaattr()` (called from
-  `bfa_fcs_lport_fdmi_build_rhba_pyld()`), and other callers.
-- **After:** `static noinline_for_stack void
-  bfa_fcs_fdmi_get_portattr(...)` — function stays out-of-line; its
-  `pport_attr` and `lport_attr` stack variables live in its own frame,
-  not duplicated in callers.
-- **Path affected:** FDMI attribute gathering during FC fabric
-  registration (RHBA/RPRT/RPA CT payloads). Normal operation path, not
-  error-only.
+Record:
+- **Before:** After mapping host forensic buffer pointer, function
+  immediately increments `non_fatal_count` and performs MMIO
+  writes/reads to the crashed controller (`pm8001_mw32`, `pm8001_mr32`,
+  `pm8001_cw32`).
+- **After:** If `controller_fatal_error` is true, log debug message and
+  return `-EINVAL` before any controller interaction.
+- **Path affected:** Sysfs read of `non_fatal_log` via
+  `non_fatal_log_show()` → `pm80xx_get_non_fatal_dump()`.
 
 ### Step 2.3: Bug Mechanism
-**Record:**
-- **Category:** Build failure / stack frame size (not a runtime memory-
-  safety bug).
-- **Mechanism:** Compiler inlining expands caller stack frames beyond
-  `CONFIG_FRAME_WARN` limit. With `-Werror`, this becomes a hard compile
-  error.
+Record:
+- **Category:** Logic/correctness fix — unsafe hardware access in
+  invalid controller state.
+- **Mechanism:** After fatal firmware error (`controller_fatal_error =
+  true` set in interrupt handler at line 4084), forensic DMA/MMIO
+  operations are unsafe; the function lacked the same state check used
+  elsewhere in the driver.
 
 ### Step 2.4: Fix Quality
-**Record:**
-- **Quality:** Obviously correct — standard kernel pattern for stack
-  pressure (`noinline_for_stack` is defined as `noinline` in
-  `include/linux/compiler_types.h`).
-- **Regression risk:** Very low. Slight code-size/call-overhead cost on
-  an infrequent FDMI registration path; no behavioral change.
-- **No red flags:** No API changes, no locking changes, no data
-  structure changes.
+Record:
+- **Quality:** Obviously correct; mirrors existing driver pattern
+  (`pm8001_sas.c` task path, `pm80xx_chip_soft_rst()`).
+- **Regression risk:** Very low — only rejects an operation that should
+  never succeed on a dead controller.
+- **Red flags:** None.
 
 ---
 
 ## Phase 3: Git History Investigation
 
-### Step 3.1: Blame
-**Record:**
-- `bfa_fcs_fdmi_get_portattr()` introduced by Krishna Gudipati,
-  2010-09-15 (commit `a36c61f9025b89`).
-- `struct bfa_lport_attr_s lport_attr` added 2013-05-13 (commit
-  `d7cbc3044f2b2`).
-- Buggy inlining pattern has been present for many years; exposure
-  depends on compiler inlining decisions and `CONFIG_FRAME_WARN`.
+### Step 3.1: Blame / Introduction
+Record:
+- Buggy function exists in local tree at
+  `drivers/scsi/pm8001/pm80xx_hwi.c:387-503`.
+- Non-fatal dump sysfs feature originally added in `dba2cc03b9db`
+  (2020-03-16, "scsi: pm80xx: sysfs attribute for non fatal dump").
+- `controller_fatal_error` exists at lines 1445, 1650, 4084 in current
+  tree.
+- Local autosel tree has squashed history; per-file `git blame` is not
+  reliable for introduction dating.
 
-### Step 3.2: Fixes: Tag
-**Record:** No Fixes: tag. N/A.
+### Step 3.2: Fixes Tag
+Record: **N/A** — no `Fixes:` tag present.
 
 ### Step 3.3: Related File History
-**Record:**
-- Prior related fix in same file: `a7a11b6cfec2c` (Mar 2021) — "Move a
-  large struct from the stack onto the heap" for
-  `bfa_fcs_lport_fdmi_build_rhba_pyld()` (1200-byte frame > 1024 limit).
-  That fix is **present in this tree**.
-- Recent changes: strscpy conversion, unused code removal, state machine
-  type fixes — unrelated.
-- **Standalone:** Yes — single one-line patch, not part of a series.
+Record:
+- Sibling upstream commit `2a8fbcfb04aa9` ("scsi: pm8001: Reject
+  firmware update in fatal error state") from same author/date — same
+  pattern, different sysfs path; also **not** in current HEAD.
+- Standalone v1 patch; not part of a multi-patch series.
 
 ### Step 3.4: Author Context
-**Record:** Arnd Bergmann is a prolific contributor of `-Wframe-larger-
-than` build fixes across the tree. Martin K. Petersen is the SCSI
-maintainer. Neither is the BFA driver author, but both are credible
-reviewers for this class of fix.
+Record: Kumar Meiyappan / Sagar Biradar are Microchip pm8001 driver
+authors. Martin K. Petersen (SCSI maintainer) committed the fix upstream
+as `aa3b8f56ef27`.
 
 ### Step 3.5: Dependencies
-**Record:** No dependencies. `noinline_for_stack` exists in this tree
-(`include/linux/compiler_types.h:278`). Patch applies cleanly to current
-`bfa_fcs_lport.c` at line 2630.
+Record: **Standalone.** No prerequisite commits required.
+`controller_fatal_error` field and `pm80xx_get_non_fatal_dump()` both
+exist in this tree. Patch applies at line ~403 with clean context
+(verified against upstream diff and local file).
 
 ---
 
 ## Phase 4: Mailing List and External Research
 
 ### Step 4.1: Original Discussion
-**Record:** Lore/patch.msgid.link fetch blocked by Anubis bot
-protection. Could not retrieve thread. Commit message Link tag present
-but content unverified.
+Record:
+- **URL:** https://patch.msgid.link/20260416154650.415624-1-
+  sagar.biradar@microchip.com
+- **Series:** v1 only (no v2/v3)
+- **Maintainer response:** Martin K. Petersen applied to 7.2/scsi-queue
+  (May 22, 2026)
+- **NAKs/concerns:** None found in thread
+- **Stable nomination:** Authors CC'd `stable@vger.kernel.org` in
+  original submission
 
 ### Step 4.2: Reviewers
-**Record:** `b4 dig -c` failed (commit hash not in local tree).
-Recipients unverified.
+Record: CC'd Martin K. Petersen, James Bottomley, Jack Wang, linux-scsi,
+stable@, Brian King, Don Brace, and other Microchip engineers.
 
 ### Step 4.3: Bug Report
-**Record:** No external bug report. Failure mode documented in commit
-message (compiler error output from randconfig).
+Record: No external bug report, syzbot, or stack trace in commit
+message. Issue appears internally discovered by driver vendor during
+fatal-error handling review.
 
 ### Step 4.4: Related Patches
-**Record:** Related prior fix `a7a11b6cfec2c` (heap allocation for HBA
-attr struct) addresses the same class of problem in the same file and is
-already in 6.18.y.
+Record: Related upstream fix `2a8fbcfb04aa9` for
+`pm8001_store_update_fw()` — same failure class, separate commit. Not a
+dependency for this fix.
 
 ### Step 4.5: Stable List History
-**Record:** Could not search lore (bot protection). No stable discussion
-found.
+Record: Patch was posted directly to stable@ (spinics stable archive).
+No rejection or prior stable discussion found beyond the submission
+itself.
 
 ---
 
 ## Phase 5: Code Semantic Analysis
 
 ### Step 5.1: Key Functions
-**Record:** `bfa_fcs_fdmi_get_portattr()` — builds port attribute
-structure from HAL/driver info.
+Record: `pm80xx_get_non_fatal_dump()` (modified), `non_fatal_log_show()`
+(caller), fatal error ISR path setting `controller_fatal_error`.
 
 ### Step 5.2: Callers
-**Record:**
-- `bfa_fcs_lport_fdmi_build_portattr_block()` — line 2212 (direct)
-- `bfa_fcs_fdmi_get_hbaattr()` — line 2617 (indirect, via
-  `bfa_fcs_lport_fdmi_build_rhba_pyld()` at line 1873)
-- `bfa_fcs_lport_fdmi_build_portattr_block()` also called from
-  `build_rprt_pyld()` and `build_rpa_pyld()`
-- FDMI paths triggered from state machine during FC port online/fabric
-  registration
+Record:
+- `non_fatal_log_show()` in `pm8001_ctl.c:588-591` directly returns
+  result.
+- Exposed as read-only sysfs host attribute `non_fatal_log` in
+  `pm8001_host_attrs[]`.
+- Called during diagnostic collection, typically by root/admin tooling
+  after controller errors.
 
 ### Step 5.3: Callees
-**Record:** `bfa_fcport_get_attr()`, `fc_get_fc4type_bitmask()`,
-`bfa_fcs_lport_get_*()` — attribute queries, no allocation in
-`get_portattr` itself.
+Record: `pm8001_mw32()`, `pm8001_mr32()`, `pm8001_cw32()` — MMIO
+register access to potentially dead controller; forensic DMA buffer
+reads from `FORENSIC_MEM`.
 
 ### Step 5.4: Reachability
-**Record:** Reachable during FC HBA operation when FDMI registration
-runs (port coming online on fabric). Not directly syscall-triggered, but
-normal driver operation for Brocade FC hardware. Requires
-`CONFIG_SCSI_BFA_FC`.
+Record:
+- **Trigger chain:** Controller fatal firmware error → ISR sets
+  `controller_fatal_error` → admin reads
+  `/sys/class/scsi_host/hostN/non_fatal_log` → unsafe MMIO without
+  guard.
+- **Userspace reachable:** Yes, via sysfs read (requires appropriate
+  permissions, typically root/CAP_SYS_ADMIN).
 
 ### Step 5.5: Similar Patterns
-**Record:** Same file already uses heap allocation (`kzalloc`) for
-`fcs_hba_attr` in `build_rhba_pyld()` (from `a7a11b6cfec2c`). This patch
-uses the lighter-weight `noinline_for_stack` approach for
-`get_portattr`.
+Record: Driver already guards fatal-error state in:
+- `pm8001_sas.c:505` — task execution
+- `pm80xx_hwi.c:1650` — soft reset MPI uninit
+- `pm8001_sas.c:237-244` — phy control via `fatal_errors()`
+- `pm8001_init.c:702-704` — NVMD read
+
+This fix fills a gap in the same error-handling model.
 
 ---
 
 ## Phase 6: Cross-Reference Against Local Tree
 
 ### Step 6.1: Buggy Code Present?
-**Record:** **YES.** Local tree is **v6.18.44** (`stable/linux-6.18.y`).
-At line 2630, function is still `static void
-bfa_fcs_fdmi_get_portattr(...)` without `noinline_for_stack`. Large
-stack variables (`pport_attr`, `lport_attr`) and callers
-(`build_portattr_block`, `build_rhba_pyld`) all present. Fix commit is
-**not** in this tree.
+Record: **YES.** Local tree is **v6.18.43** (`git describe HEAD` →
+`v6.18.43-1-gc7f0dac02d232`, `make kernelversion` → `6.18.43`).
+`pm80xx_get_non_fatal_dump()` at lines 403-404 lacks
+`controller_fatal_error` check. Upstream fix commit `aa3b8f56ef27` is
+**NOT** an ancestor of HEAD.
 
 ### Step 6.2: Backport Complications
-**Record:** Clean apply expected — single-line attribute addition. No
-conflicting recent changes in this area. File line numbers differ
-slightly from commit message (2198→2198 area, 2630 for the function) but
-context matches.
+Record: **Clean apply expected.** Local file matches upstream pre-fix
+context at the insertion point. No conflicting changes in that function
+region.
 
 ### Step 6.3: Related Fixes Already Present?
-**Record:** Prior heap-based stack fix `a7a11b6cfec2c` is present. This
-`noinline_for_stack` fix is **not** present — `git log -S
-"noinline_for_stack"` returns nothing for this file.
+Record: **No.** Neither `aa3b8f56ef27` (this fix) nor sibling
+`2a8fbcfb04aa9` (firmware update guard) are in HEAD.
+`non_fatal_log_show()` directly returns `ssize_t` from dump function, so
+`-EINVAL` propagates correctly to sysfs (no need for separate error-code
+fix `1b6f03b`).
 
 ---
 
-## Phase 7: Subsystem and Maintainer Context
+## Phase 7: Subsystem Context
 
-### Step 7.1: Subsystem
-**Record:** `drivers/scsi/bfa/` — Brocade BFA Fibre Channel HBA driver.
-**Criticality: PERIPHERAL** (niche PCI FC hardware, `CONFIG_SCSI_BFA_FC`
-tristate module).
+### Step 7.1: Subsystem Criticality
+Record: **drivers/scsi/pm8001** — PERIPHERAL driver (Microchip/PMC-
+Sierra SAS HBA, `CONFIG_SCSI_PM8001`). Important for deployments using
+this hardware, but not core kernel.
 
-### Step 7.2: Activity
-**Record:** Moderate maintenance activity (strscpy migration, dead code
-removal, type fixes in 2024–2025). Mature, stable driver code with long
-history.
+### Step 7.2: Subsystem Activity
+Record: pm8001 driver is mature; forensic dump sysfs has existed since
+2020. Recent upstream activity includes fatal-error handling hardening
+from Microchip (April 2026).
 
 ---
 
 ## Phase 8: Impact and Risk Assessment
 
 ### Step 8.1: Who Is Affected
-**Record:** **Config-specific** — kernel builders with
-`CONFIG_SCSI_BFA_FC=y/m` and `-Werror` (W=1/randconfig CI). Not runtime
-users of already-built kernels.
+Record: **Driver-specific** — systems with PM8001/PM80xx SAS HBAs and
+`CONFIG_SCSI_PM8001` enabled.
 
 ### Step 8.2: Trigger Conditions
-**Record:**
-- `CONFIG_FRAME_WARN` default is **1280 on 32-bit** (`!64BIT`) and
-  **2048 on 64-bit** (verified in `lib/Kconfig.debug:441-449`).
-- Reported frame sizes: 1560/1600 bytes — **exceed 1280** (32-bit
-  default) but **under 2048** (64-bit default).
-- Build error requires `-Werror` treating the warning as error.
-- **Practical trigger:** 32-bit kernel builds with default
-  `FRAME_WARN=1280` and W=1, or any arch with `FRAME_WARN ≤ 1560` and
-  W=1, with BFA enabled.
-- On typical 64-bit stable builds with default `FRAME_WARN=2048`, this
-  does **not** fail even with W=1.
+Record:
+- Controller must first enter fatal firmware error state (already a
+  serious failure).
+- Then sysfs read of `non_fatal_log` (diagnostic path during triage).
+- **Likelihood:** Uncommon but realistic during failure investigation —
+  exactly when admins collect dumps.
+- **Privilege:** Typically root/admin.
 
 ### Step 8.3: Failure Mode Severity
-**Record:** **Compilation error** — kernel fails to build. **Severity:
-LOW-MEDIUM** for stable (blocks builds for a narrow config subset; no
-runtime crash, security issue, or data corruption).
+Record:
+- **Failure mode:** Kernel call trace from unsafe MMIO/DMA on dead
+  controller.
+- **Severity:** **MEDIUM-HIGH** — secondary kernel instability during
+  already-critical failure recovery; not a normal-I/O-path crash, but
+  can produce oops/warnings and complicate diagnostics.
 
 ### Step 8.4: Risk-Benefit
-**Record:**
-- **Benefit:** LOW — unblocks randconfig/W=1 builds for BFA on 32-bit
-  (or low FRAME_WARN configs). No runtime user benefit.
-- **Risk:** VERY LOW — one-line `noinline_for_stack`, zero behavioral
-  change, standard kernel idiom.
-- **Ratio:** Low benefit, very low risk. Qualifies as a build-fix
-  exception but is not a high-priority stable item.
+Record:
+- **Benefit:** Prevents additional kernel call traces during HBA failure
+  recovery; aligns driver error handling.
+- **Risk:** Very low — 7-line guard, no API changes, no behavior change
+  on healthy controllers.
+- **Ratio:** Favorable for stable backport.
 
 ---
 
@@ -343,117 +345,119 @@ runtime crash, security issue, or data corruption).
 
 ### Step 9.1: Evidence Summary
 
-**FOR backporting:**
-- Real build failure with `-Werror,-Wframe-larger-than` (documented
-  compiler errors)
-- Build-fix exception category per stable rules
-- One-line, obviously correct, zero regression risk
-- Same file had prior stack-frame fix (`a7a11b6cfec2c`) already in
-  6.18.y
-- Buggy code confirmed present in local 6.18.44 tree
-- Applies cleanly
+**FOR backport:**
+- Real bug with concrete trigger (fatal error + sysfs non_fatal dump
+  read)
+- Prevents kernel call trace / unsafe hardware access
+- Small (7 lines), obviously correct, standalone
+- Buggy code confirmed present in v6.18.43 tree
+- Consistent with existing `controller_fatal_error` checks in same
+  driver
+- Authors CC'd stable@; SCSI maintainer merged upstream
+- Clean apply expected
 
-**AGAINST backporting:**
-- **No runtime bug** — purely a compilation issue
-- Affects only `CONFIG_SCSI_BFA_FC` (niche Brocade FC hardware)
-- On 64-bit (majority of 6.18.y deployments), default `FRAME_WARN=2048`
-  means frames of 1560/1600 do **not** trigger the error
-- Primary impact is 32-bit + W=1 + BFA — very narrow audience
-- No user reports, syzbot, or security implications
-- Stable rule #3 ("important issue") is weakly satisfied — this is not
-  crash/corruption/security
+**AGAINST backport:**
+- Narrow hardware scope (PM8001 SAS HBAs only)
+- Only affects diagnostic sysfs path after controller already failed
+- No syzbot report or public user bug report
+- "Call trace" severity not fully documented with stack trace
 
 **Unresolved:**
-- Lore discussion content (bot-blocked)
-- Whether reviewers nominated for stable
+- Exact call trace type (WARN vs oops) not documented in commit message
+- Introduction date of `controller_fatal_error` not determinable from
+  squashed local git history (but field is present in tree)
 
 ### Step 9.2: Stable Rules Checklist
-1. Obviously correct and tested? **PASS** — standard
-   `noinline_for_stack` idiom; maintainer SOB
-2. Fixes a real bug affecting users? **PASS (narrow)** — real build
-   failure, but only for specific build configs
-3. Important issue? **BORDERLINE/FAIL** — build break, not
-   crash/corruption/security; narrow config
-4. Small and contained? **PASS** — 1 line
-5. No new features or APIs? **PASS**
-6. Can apply to local tree? **PASS** — clean apply to 6.18.44
+1. Obviously correct and tested? **PASS** — logic is clear; maintainer-
+   applied; no Tested-by but low complexity.
+2. Fixes a real bug? **PASS** — unsafe operation on crashed controller.
+3. Important issue? **PASS** — kernel call trace during failure recovery
+   (medium-high severity).
+4. Small and contained? **PASS** — 7 lines, 1 file, 1 function.
+5. No new features/APIs? **PASS** — guard only.
+6. Can apply to local tree? **PASS** — code exists, patch applies
+   cleanly.
 
-### Step 9.3: Exception Category
-**Record:** **BUILD FIX** — prevents compilation errors with `-Wframe-
-larger-than` + `-Werror`.
+### Step 9.3: Exception Categories
+Record: **None** — standard driver bug fix.
 
 ### Step 9.4: Decision Rationale
-
-This is a legitimate, surgical build fix that applies cleanly to
-linux-6.18.y and follows a pattern already used in this same file.
-However, the practical impact on 6.18.y is narrow: the documented frame
-sizes (1560/1600) exceed the 32-bit default limit (1280) but not the
-64-bit default (2048), so typical 64-bit stable builds are unaffected.
-The failure only manifests in randconfig/W=1 CI with BFA enabled on
-32-bit or low-FRAME_WARN configs — a peripheral driver on an uncommon
-build path.
-
-Per the instructions, build fixes are backport-eligible, and the fix is
-trivially safe. The benefit is low but real for kernel builders hitting
-this configuration. Given zero regression risk and the established
-precedent of stack-frame fixes in this driver already being in stable,
-this qualifies for backport under the build-fix exception.
+This is a small, vendor-submitted fix for a real gap in fatal-error
+handling. The buggy code is present in the local **6.18.43** tree, the
+fix is minimal and follows established driver patterns, and it prevents
+additional kernel instability during exactly the scenario where
+administrators are collecting diagnostic data from a failed HBA. The
+risk is negligible and the authors explicitly nominated it for stable.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed subject, tags, body from user-provided commit
-  message
-- **[Phase 2]** Diff analysis: 1-line `noinline_for_stack` addition to
-  `bfa_fcs_fdmi_get_portattr()`
-- **[Phase 3]** `git describe HEAD`: v6.18.44-1-g2736c32da98b9
-  (linux-6.18.y)
-- **[Phase 3]** `git blame -L 2630,2640`: function from 2010,
-  `lport_attr` from 2013
-- **[Phase 3]** `git show a7a11b6cfec2c`: prior heap-based stack fix in
-  same file, present in tree
-- **[Phase 3]** `git log -S "noinline_for_stack"`: no match — fix not
-  yet in tree
-- **[Phase 4]** WebFetch/curl lore.kernel.org: blocked by Anubis —
-  discussion unverified
-- **[Phase 4]** `b4 dig -c 8c9d423129c07`: commit not in local tree,
-  failed
-- **[Phase 5]** `grep bfa_fcs_fdmi_get_portattr`: callers at lines 2212,
-  2617 confirmed
-- **[Phase 5]** Read call chain: FDMI state machine → send_rhba/rprt/rpa
-  → build_*_pyld → get_portattr
-- **[Phase 6]** Read `bfa_fcs_lport.c:2630`: `static void` without fix —
-  buggy code present
-- **[Phase 6]** `git log --oneline -20 --
-  drivers/scsi/bfa/bfa_fcs_lport.c`: no conflicting changes
-- **[Phase 7]** `drivers/scsi/Kconfig:1502`: `CONFIG_SCSI_BFA_FC`
-  tristate, PCI FC
-- **[Phase 8]** `lib/Kconfig.debug:441-449`: FRAME_WARN default 1280
-  (!64BIT), 2048 (64BIT)
-- **[Phase 8]** Struct size estimate: inlined frames ~1380+ bytes,
-  consistent with reported 1560/1600
-- **[Phase 8]** `include/linux/compiler_types.h:278`:
-  `noinline_for_stack` defined as `noinline`
+- [Phase 1] Parsed subject, tags; confirmed stable@ CC in original
+  submission via `b4 dig -w`
+- [Phase 1] No Fixes:/Reported-by/syzbot tags
+- [Phase 2] Read full `pm80xx_get_non_fatal_dump()` (lines 387-503);
+  confirmed MMIO access after missing guard
+- [Phase 2] Diff is +7 lines adding `controller_fatal_error` check
+  returning `-EINVAL`
+- [Phase 3] `git describe HEAD` → v6.18.43; `make kernelversion` →
+  6.18.43
+- [Phase 3] `git merge-base --is-ancestor aa3b8f56ef27 HEAD` →
+  NOT_IN_HEAD (fix not yet applied)
+- [Phase 3] `git show aa3b8f56ef27^` at lines 400-415 confirms buggy
+  pre-fix code
+- [Phase 3] `dba2cc03b9db` identified as 2020 introduction of non_fatal
+  dump sysfs
+- [Phase 3] Sibling commit `2a8fbcfb04aa9` found (fw update guard); also
+  NOT_IN_HEAD
+- [Phase 4] `b4 dig -c aa3b8f56ef27` → lore URL found
+- [Phase 4] `b4 dig -a` → v1 only, no later revisions
+- [Phase 4] `b4 dig -w` → stable@, Martin Petersen, James Bottomley CC'd
+- [Phase 4] `b4 dig -m /tmp/pm8001_thread.mbox` → Martin Petersen
+  "Applied to 7.2/scsi-queue"
+- [Phase 5] `grep pm80xx_get_non_fatal_dump` → caller
+  `non_fatal_log_show()` in pm8001_ctl.c:591
+- [Phase 5] `grep controller_fatal_error` → used in pm80xx_hwi.c,
+  pm8001_ctl.c, pm8001_sas.c, pm8001_sas.h
+- [Phase 5] Fatal error set at pm80xx_hwi.c:4084 in interrupt handler
+- [Phase 6] Buggy code confirmed at pm80xx_hwi.c:403-404 without guard
+- [Phase 6] `non_fatal_log_show()` directly returns ssize_t — `-EINVAL`
+  propagation works
+- [Phase 8] CONFIG_SCSI_PM8001 confirmed in drivers/scsi/Kconfig:1494
+- [UNVERIFIED] Exact kernel version when `controller_fatal_error` was
+  introduced (squashed local history)
+- [UNVERIFIED] Full stack trace / oops type from original bug report
+  (not in commit message)
 
-**YES**
+**YES**The background check finished: `aa3b8f56ef27` is **not** in this
+tree (`v6.18.43`), and the buggy code is still present in
+`pm80xx_get_non_fatal_dump()`.
 
- drivers/scsi/bfa/bfa_fcs_lport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The backport analysis stands: **YES** — this is a small, low-risk guard
+that prevents kernel call traces when reading `non_fatal_log` on a
+controller already in fatal error state.
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 9a85f417018f9..cabe408214b3f 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -2627,7 +2627,7 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
+ drivers/scsi/pm8001/pm80xx_hwi.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 31960b72c1e92..1ce8226fcd292 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -401,6 +401,13 @@ ssize_t pm80xx_get_non_fatal_dump(struct device *cdev,
+ 	char *buf_copy = buf;
  
- }
- 
--static void
-+static noinline_for_stack void
- bfa_fcs_fdmi_get_portattr(struct bfa_fcs_lport_fdmi_s *fdmi,
- 			  struct bfa_fcs_fdmi_port_attr_s *port_attr)
- {
+ 	temp = (u32 *)pm8001_ha->memoryMap.region[FORENSIC_MEM].virt_ptr;
++
++	if (pm8001_ha->controller_fatal_error) {
++		pm8001_dbg(pm8001_ha, FAIL,
++			   "non-fatal dump not available in fatal error state\n");
++		return -EINVAL;
++	}
++
+ 	if (++pm8001_ha->non_fatal_count == 1) {
+ 		if (pm8001_ha->chip_id == chip_8001) {
+ 			snprintf(pm8001_ha->forensic_info.data_buf.direct_data,
 -- 
 2.53.0
 
