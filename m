@@ -1,157 +1,146 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C3D929ACFD
-	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 22:46:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F69A3C3F6A
+	for <linux-scsi@vger.kernel.org>; Mon, 31 Aug 2026 22:56:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788216363; cv=none; b=NcH+BHn4IQWW+d4Te+fJkt8S28TrZ313yMFbEB793iylQmJsPB4FO2+pqWJEbRDuBoMJ4VlRfqkyEYLSB3RVD1nTmgUJWVeeOYJ0ybo54rSIJih37BH+yRnXyQhJOv0Ya5o9yQGqCFUjfKCRL12B+VObQBXIWYwyK9GwG1tru+4=
+	t=1788216965; cv=none; b=TD0E8ovv7lrY3p9QX7a2TJMN++S4P+WsL0McalWHrM2Dp8xsGy3l30Zib137KQXbD+VuzuSdjWBCuXd1wflnXtu3m6oS9DeRwg+J24mFduZxOeqzGapMFLbb8VDsYtmsZ4jLz4Hbv59v5pmB7ZQ4QaM3a6R7CN8CRr0z/pFCfDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788216363; c=relaxed/simple;
-	bh=MuUbw6ig6t9X6rTCsrbGs0kds6YzzYa0JaWcdQPQtGs=;
+	s=arc-20240116; t=1788216965; c=relaxed/simple;
+	bh=wY1pphrIdgXI829jqs4uV2vS12taVC6zU4UXZ9Rnixw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WXwFDnHY7HG2U3jdrOdstUgod3QOhz6bbGDa6redwNOQHj/4gkRIb50A81FxE2/H2vpD+AmbAtLX30bbvhshSbRTT4mebY55luyviMWahZEsr1Iky2V8DTZhh1Ce0qq+3cUPdNxUzm+dkkYsZNZKMXq0Y9DBIQKFLfEVGtPIvcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QFIoaE7p; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=PViDF5plZJLDxCf6E1tlPjZB+AuW1xnIsA8/id04KhsC771EpRKNsM32fD3xfH1XlwC9Tuzt/64dQFFGFChqpRTRZ9sUAePoKWXjM+BWUNa4zFDPTpnG0QwHbdOuGoe+fs5ZPjFxINmlQaCf1bsOSwUMiM49f8TbPIi6mKNRezs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bCTqEeuh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QFIoaE7p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C23911F000E9;
-	Mon, 31 Aug 2026 22:46:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bCTqEeuh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 007591F000E9;
+	Mon, 31 Aug 2026 22:56:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788216361;
-	bh=XSly9omuXVNgEMaxW8em4gu4I3pboDPcBpK9PIkcOHY=;
+	s=k20260515; t=1788216964;
+	bh=iyFt0BjChBFLwIurTqKUX41wzmQxfe5b/5A0EediKZ4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QFIoaE7pSpXEWObsgcSbCqpenVkKldjfeR3FOsHkSj/hEW76L+OOQR3uXXKLd0akv
-	 UBhBG57qmn1HrquMITEg7Wglq2c94eKvm7jlDjG1nmgoMOO+jLIEFNoXHf6cqU69yq
-	 1ZsjpscotIfnsufTnUJpSByZDNTJEHs/45AlMivP8nzAseCjny2wYfujn6TOXV8ZRz
-	 2JANU7MdxwmtXEBV2xQMroOIh85q/rkeWu+bgGFwWEybJO950qJMw8BrYL/AZXnzmt
-	 D/wLfscLWFUt0B7tZ/tasc98D91fQxkoV7krSfQP07CPsmlpoRbi+L5mK8VSl2rh5s
-	 AdEhBnY9fgQmg==
+	b=bCTqEeuh9VEZN69VP4lR1K/3JEFiiwQWgQArX6oUnR4FOdrc/e5Mfxra9eaSdSshF
+	 rIhrI2I5yi4BL0/6gEvOCxvNigb9lVe7+DNN0Yeqe2K4v2Di8fEX8I85hVSX1U7Odu
+	 ypjmV6PBdSMNR0+aw8PP4YbnLAXYzIyGgrM/8EFrjn++0exoq5+ivxCeOeGTHL4YJT
+	 TXDcnueJYCgB4qHvJI2piOUh9rHVReAic3SQGiMsjx4coqYi4bUMfOCWaVeuxjBliA
+	 QERlzhq/iIFcF3ZuMwPAuQf2p16s/w4/PATYJUSzhMEJjFsXqnr5gEhx4EOMDUu85f
+	 PZjWHUDAqcGvw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 7/8] scsi: ibmvfc: register and use asynchronous sub
- CRQ for events
+Subject: Re: [PATCH v7 8/8] scsi: ibmvfc: handle extended FPIN events
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260831-ibmvfc-fpin-support-v7-7-77d0b9809080@linux.ibm.com>
+In-Reply-To: <20260831-ibmvfc-fpin-support-v7-8-77d0b9809080@linux.ibm.com>
 References: <20260831-ibmvfc-fpin-support-v7-0-77d0b9809080@linux.ibm.com>
- <20260831-ibmvfc-fpin-support-v7-7-77d0b9809080@linux.ibm.com>
+ <20260831-ibmvfc-fpin-support-v7-8-77d0b9809080@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 31 Aug 2026 22:46:01 +0000
-Message-Id: <20260831224601.C23911F000E9@smtp.kernel.org>
+Date: Mon, 31 Aug 2026 22:56:03 +0000
+Message-Id: <20260831225604.007591F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Unconditional deregistration of the uninitialized async sub-CRQ ca=
-uses a NULL pointer dereference.
-
-Pre-existing issues:
-- [High] Buffer overflow due to out-of-bounds array writes and reads when p=
-rocessing unvalidated queue counts from the VIOS.
+- [Medium] The `ibmvfc_extended_fpin_test` test suite is entirely invalid d=
+ue to missing KUnit assertions and incorrect statistics targeting.
 --
 
-commit 908a7af2b04b0b17f4fc0a40814f0dacec88332a
+commit 7f2470a8cbfd29182f9253c971ce356e69e43c8e
 Author: Dave Marquardt <davemarq@linux.ibm.com>
-scsi: ibmvfc: register and use asynchronous sub CRQ for events
 
-This commit wires the asynchronous sub-CRQ into the sub-CRQ lifecycle so it=
- is
-allocated, registered, and freed alongside the SCSI channel queues. It modi=
-fies
-multi-queue initialization and teardown paths to accommodate the new queue =
-and
-advertises relevant capabilities to the VIOS.
+scsi: ibmvfc: handle extended FPIN events
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-core.c
-> index cc1ef82580608..adc730af67d2b 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+Implement support for extended FPIN messages received via the asynchronous=
+=20
+sub-queue. Add parsing and processing logic to convert these into=20
+fc_els_fpin structures. Include comprehensive KUnit tests to validate the=20
+extended FPIN event handling.
 
-[ ... ]
-
-> @@ -5800,6 +5808,7 @@ static void ibmvfc_channel_setup_done(struct ibmvfc=
-_event *evt)
->  		for (i =3D 0; i < nvme->active_queues; i++)
->  			nvme->scrqs[i].vios_cookie =3D
->  				be64_to_cpu(setup->channel_handles[scsi->active_queues + i]);
-> +		vhost->async_sub_crq.vios_cookie =3D be64_to_cpu(setup->async_sub_crq_=
-handle);
-> =20
->  		ibmvfc_dbg(vhost, "Using %u SCSI channels\n",
-
-[Severity: High]
-This is a pre-existing issue, but can this out-of-bounds write occur if the
-VIOS returns untrusted queue counts?
-
-In ibmvfc_channel_setup_done(), the driver reads num_scsi_subq_channels and
-num_nvme_subq_channels from the VIOS response into active_queues without
-validating them against the dynamically allocated max_queues array size:
-
-ibmvfc_channel_setup_done() {
-    scsi->active_queues =3D be32_to_cpu(setup->num_scsi_subq_channels);
-    nvme->active_queues =3D be32_to_cpu(setup->num_nvme_subq_channels);
-    ...
-}
-
-The loop just above this patch hunk then directly uses this unvalidated val=
-ue
-to write to the scrqs array:
-
-ibmvfc_channel_setup_done() {
-    ...
-    for (i =3D 0; i < scsi->active_queues; i++)
-        scsi->scrqs[i].vios_cookie =3D
-            be64_to_cpu(setup->channel_handles[i]);
-    ...
-}
-
-Could a compromised or malfunctioning VIOS provide values that exceed the
-locally allocated array size and cause a buffer overflow here?
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
+/ibmvfc_kunit.c
+> index 47f7c4e79cd81..b016c7da24cd6 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
 
 [ ... ]
 
-> @@ -7055,6 +7087,9 @@ static void ibmvfc_release_channels(struct ibmvfc_h=
-ost *vhost,
->  static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
->  {
->  	ENTER;
-> +	ibmvfc_deregister_channel(vhost, &vhost->scsi_scrqs, -1);
-> +	ibmvfc_free_queue(vhost, &vhost->async_sub_crq);
+> +#define IBMVFC_TEST_FPIN_EXT(fs, ev, stat, crq) {				\
+> +	struct ibmvfc_async_crq_event ae =3D { .type =3D IBMVFC_ASYNC_CRQ_SUB }=
+;	\
+> +	(crq).valid =3D 0x80;							\
+> +	(crq).flags =3D IBMVFC_ASYNC_IS_FPIN_EXT;					\
+> +	(crq).link_state =3D IBMVFC_AE_LS_LINK_UP;				\
+> +	(crq).fpin_status =3D (fs);						\
+> +	(crq).event =3D cpu_to_be16(IBMVFC_AE_FPIN);				\
+> +	(crq).wwpn =3D cpu_to_be64(tgt->wwpn);					\
+> +	(crq).fpin_data.flags =3D IBMVFC_FPIN_EVENT_TYPE_VALID;			\
+> +	(crq).fpin_data.event_type =3D cpu_to_be16((ev));				\
+> +	ae.subq =3D *(struct ibmvfc_async_sub_crq *)&(crq);			\
+> +	pre =3D READ_ONCE(tgt->rport->fpin_stats.stat);				\
+> +	ibmvfc_handle_async(&ae, vhost);					\
+> +	flush_workqueue(vhost->fpin_workq);					\
+> +	post =3D READ_ONCE(tgt->rport->fpin_stats.stat);				\
+> +}
+
+[Severity: Medium]
+Does this macro actually verify the statistics have changed? It captures the
+pre and post state, but doesn't appear to perform any KUnit assertions
+(like KUNIT_EXPECT_GE) to validate the test results.
+
+Additionally, this macro always queries tgt->rport->fpin_stats for all even=
+ts.
+Is this correct for host-level link congestion events which might update
+fc_host->fpin_stats instead?
+
 > +
->  	if (!vhost->scsi_scrqs.scrqs)
->  		return;
+> +/**
+> + * ibmvfc_extended_fpin_test - unit test for extended FPIN events
+> + * @test: pointer to kunit structure
+> + *
+> + * Tests
+> + *
+> + * Return: void
+> + */
+> +static void ibmvfc_extended_fpin_test(struct kunit *test)
+> +{
+> +	enum ibmvfc_ae_fpin_status fs;
 
-[Severity: High]
-Does this unconditional teardown cause a NULL pointer dereference when
-multi-queue is disabled?
+[ ... ]
 
-During module unload or reset, if multi-queue was disabled (mq_enabled=3D0)=
- or
-initialization failed, vhost->async_sub_crq is left zero-initialized.
+> +	for (fs =3D IBMVFC_AE_FPIN_LINK_CONGESTED; fs <=3D IBMVFC_AE_FPIN_CONGE=
+STION_CLEARED; fs++) {
+> +		switch (fs) {
+> +		case IBMVFC_AE_FPIN_PORT_CLEARED:
+> +		case IBMVFC_AE_FPIN_CONGESTION_CLEARED: {
+> +			struct ibmvfc_async_crq_event ae =3D { .type =3D IBMVFC_ASYNC_CRQ_SUB=
+ };
+> +
+> +			crq[fs].valid =3D 0x80;
+> +			crq[fs].flags =3D IBMVFC_ASYNC_IS_FPIN_EXT;
+> +			crq[fs].link_state =3D IBMVFC_AE_LS_LINK_UP;
+> +			crq[fs].fpin_status =3D fs;
+> +			crq[fs].event =3D cpu_to_be16(IBMVFC_AE_FPIN);
+> +			crq[fs].wwpn =3D cpu_to_be64(tgt->wwpn);
+> +			crq[fs].fpin_data.flags =3D IBMVFC_FPIN_EVENT_TYPE_VALID;
+> +			crq[fs].fpin_data.event_type =3D cpu_to_be16(FPIN_CONGN_CLEAR);
+> +			ae.subq =3D *(struct ibmvfc_async_sub_crq *)&crq[fs];
+> +			pre =3D READ_ONCE(tgt->rport->fpin_stats.cn_clear);
+> +			ibmvfc_handle_async(&ae, vhost);
+> +			flush_workqueue(vhost->fpin_workq);
+> +			post =3D READ_ONCE(tgt->rport->fpin_stats.cn_clear);
+> +			break;
+> +		}
 
-Unconditionally calling ibmvfc_deregister_channel() routes to a cleanup path
-that behaves as follows:
-
-ibmvfc_deregister_channel() {
-    ...
-    /* Clean out the queue */
-    memset(scrq->msgs.crq, 0, PAGE_SIZE);
-    ...
-}
-
-Since msgs.crq aliases the unallocated msgs.handle (which is NULL), will th=
-is
-memset() write 4KB of zeroes to a NULL pointer and cause a deterministic
-kernel panic?
+[Severity: Medium]
+Similar to the macro above, is there a missing KUnit assertion here in
+ibmvfc_extended_fpin_test() to validate that the statistics were properly
+updated?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260831-ibmvfc-fpi=
-n-support-v7-0-77d0b9809080@linux.ibm.com?part=3D7
+n-support-v7-0-77d0b9809080@linux.ibm.com?part=3D8
