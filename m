@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B240353A88;
-	Tue,  1 Sep 2026 14:01:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5C67367B6E;
+	Tue,  1 Sep 2026 14:03:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788271295; cv=none; b=DpSbLyI0i5Jb5ORL3Zz+RyU2Bo7rvCJ+Gj6tu+iQHzjFwOtDKd4B/ug28GspuGiX4U7P0IRn/OhgUUzpD24Tgaeo/dkntOqcHvA0p42qoNT2hkaJLTHXEMm6QASVrJz92463DsRd+mhuwiM8/XVcA08Otp0KJ1yvSZvx0vYUIQw=
+	t=1788271381; cv=none; b=FfpINJ5XDXtOC3sg6JGCptMM/O7r8EekFNP2dIeB6TMNiYeYJMQgSx7FeplNg8rxhX6D0wXAWKvDgJQ0xopcpcjP+TiAaQJ+K0pAP4RTOuHO1mSD3B65Tq4ivRiNsbfAOdOXufzcaQJbk5ARjyiPPQjqIHjU+Ayl3Xxt1e+ngDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788271295; c=relaxed/simple;
-	bh=i0auOqviT7OdfQYFxKaGhvnbI3u48O1A/LNjWrh7uTA=;
+	s=arc-20240116; t=1788271381; c=relaxed/simple;
+	bh=jPZ01+rb7mljLUxX40w8DG5H+CC+i3TzhhRaHa7YAWw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=quN/Hxg/cWpcsgeWUOWK1tUt0640eMPIz6Ha0vqOGy6n8ipGoLAa2I/bE+ueBIHBQGbI7HajfRiZyHGJZfD+lxT4ndoCoWPBulWBb8E0aRZbE9w8vc0SLh1yHFdeZ/C5cVF/c+mF8ByRalz7TwZR6TVKO+tCDSsmv337vF0u/+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mzcQJWVk; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=ERxXe1OXSbKLJFQixy2Rhb33Byp9CDf1+9NuZlC13kxpKrWielEcSzKugx8+tVFjXeDEVwOkiZu0LW0ZNcSHxXlg3XPzY2SZcOB0EgJDXYAcSIoz7I4r46uJ3W2XgXkenwtYt5/9dad1DKm9iCuZUIgo3RyzL9YHk2QLyOJvf40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ayeav+1c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mzcQJWVk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 233E01F000E9;
-	Tue,  1 Sep 2026 14:01:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ayeav+1c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 593511F000E9;
+	Tue,  1 Sep 2026 14:02:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788271293;
-	bh=82Y0DK4uWf3NpKC3fa3COeqgaTO2DjUIts3rlyJPJm0=;
+	s=k20260515; t=1788271380;
+	bh=MKemib+A90Yyi/0o2sYe3BoQDFeH6318s3f7nIMLnwQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=mzcQJWVkxU+PXzv+ZtVeMmMdyZGweBL1BLmGKXl6+dqqSWRPFnQr+3Exr81nThINA
-	 zNcfVHa/tD7uQYMe+01vEhvIBg+kXY6ZkwjNJQ8tbguSekArPbfRcV+bC/x5qouhPN
-	 fOziTB2CQoWjNEkOBaq/fPYRc/Un767CKF5KI1Il2YklHz1qckNEgih+/MRgpCYjQQ
-	 yrs+jr5c7MID8cWcami2udW3SJ1xZV0XGhY9huub0gObe9HkE/q7r4fkjkC5uKTXsB
-	 3RXdVkwEkPFfFX2QbrVl5VVnXtVqLUkLH4AQcfpyTn/Q41Btf4gymoHmXF3NbgIyVU
-	 RsoDR9GrrqxeQ==
-Message-ID: <650ac172-312f-43a3-ab5f-82318796472d@kernel.org>
-Date: Tue, 1 Sep 2026 16:01:20 +0200
+	b=Ayeav+1cL3WlPsJuHOUBGxG5nG5lFl65dzKAELeDfJFeeVnMw+mFCAIIT46P5DNWn
+	 1O7kmI+NvRD1RycBh8k/GQEMCIwpLNL1XREsz6TWdahkcz0W5iDI6vPQMHftZoD+r0
+	 4UsOYwJb3kqiuD1bDFuUAc5ACTBuFuwtixsoFGDAE8wH4uTlfMItdl0Dmiqz7CKjYZ
+	 7S2PR3Xv0JLtZKzN1eDYoNqY9OpDUxO7Tn7+v4onW1f1ubZpQuLWBSxVkCl9fMQSUT
+	 /bQ95fvuEuy4SjrEDyZ3EDZq2gpFVT8xEJQmEwu7qzv4v6gLpckH1swQipb5OBuqux
+	 KRAoH3N+2lWfQ==
+Message-ID: <ff869d8a-85d1-4148-b19d-af3a70fcc904@kernel.org>
+Date: Tue, 1 Sep 2026 16:02:48 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 03/11] soc: qcom: crypto_virt: add support for create,
- prepare and import keys
+Subject: Re: [PATCH v1 11/11] scsi: ufs: ufs-qcom: support ICE keyslot
+ partitioning for guest VMs
 To: Linlin Zhang <linlin.zhang@oss.qualcomm.com>, ebiggers@kernel.org,
  axboe@kernel.dk, mst@redhat.com, jasowangio@gmail.com,
  James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
@@ -50,9 +50,9 @@ Cc: neeraj.soni@oss.qualcomm.com, gaurav.kashyap@oss.qualcomm.com,
  stefanha@redhat.com, pbonzini@redhat.com, eperezma@redhat.com,
  xuanzhuo@linux.alibaba.com, linux-kernel@vger.kernel.org
 References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
- <20260827160806.1295313-4-linlin.zhang@oss.qualcomm.com>
- <4594e3db-a8e3-4f8d-95c2-a4edcbc8ca7c@kernel.org>
- <40156974-6637-49b7-8629-11e7d0d4e55d@oss.qualcomm.com>
+ <20260827160806.1295313-12-linlin.zhang@oss.qualcomm.com>
+ <046e4b62-6d25-40fc-baa3-2978eb96eb70@kernel.org>
+ <b571ea8a-4434-45e0-958f-20b2f83ced24@oss.qualcomm.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -98,107 +98,30 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
  n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
  qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <40156974-6637-49b7-8629-11e7d0d4e55d@oss.qualcomm.com>
+In-Reply-To: <b571ea8a-4434-45e0-958f-20b2f83ced24@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 01/09/2026 12:31, Linlin Zhang wrote:
-> 
-> 
-> On 8/31/2026 2:58 PM, Krzysztof Kozlowski wrote:
->> On 27/08/2026 18:07, Linlin Zhang wrote:
->>> +static void crypto_virt_remove(struct platform_device *pdev)
->>> +{
->>> +	virtblk_set_crypto_ops(NULL);
->>> +}
+On 01/09/2026 12:54, Linlin Zhang wrote:
+>>> +		u32 off, max;
 >>> +
->>> +static const struct of_device_id crypto_virt_of_match[] = {
->>> +	{ .compatible = "qcom,crypto-virt" },
+>>> +		if (of_property_read_u32(child, "qcom,ice-slot-offset", &off) ||
+>>> +		    of_property_read_u32(child, "qcom,max-ice-slots", &max))
 >>
->> Undocumented ABI, also not really allowed. We don't take bindings for
->> drivers.
+>> No, there is no such ABI.
 >>
 > 
-> The dt-binding document is included in another patch in this series.
-
-And what does the submitting patches document ask you?
-
-
-> The concern about introducing a DT binding for a software-only driver.
-> The underlying problem I am trying to solve is how to communicate the
-> wrapped-key size to the guest.
-
-I am not asking about your problem. Can you please stop answering to
-actual problems with irrelevant other aspects?
-
-You cannot have DT for a driver.
-
-That's it, please read DTS101 slides.
-
-
+> ACK
 > 
-> Because the guest has no access to the ICE hardware, it cannot get
-> the key size by reading the ICE hardware directly. In the other hand,
-> the wrapped key size may vary across ICE versions, it's infeasible
-> to have a fixed wrapped key size in the code. Additionally, wrapped
-> key size is vendor-specific, it's nor proper to pass it via virtio.
-> 
-> As an experiment, I used a DT property to set this wrapped key and
-> wanted to get feedback on whether this is a reasonable approach.
-> 
-> Is there a preferred mechanism for handling this kind of vendor-specific
-> configuration, or are there similar examples elsewhere in the kernel
-> that I should follow?
+> This is submitted for visibility. It may be revised in a future version to use
+> a TZ SCM query interface if current out-of-band key operation in the guest is
+> approved.
 
-Not DT. Use whatever other mechanism kernel provides.
+Don't submit downstream code for visibility. It just clutters review and
+wastes our time.
 
-
-> 
->>> +	{ }
->>> +};
->>> +MODULE_DEVICE_TABLE(of, crypto_virt_of_match);
->>> +
->>> +static struct platform_driver crypto_virt_driver = {
->>> +	.probe = crypto_virt_probe,
->>> +	.remove = crypto_virt_remove,
->>> +	.driver = {
->>> +		.name = "crypto_virt",
->>> +		.of_match_table = crypto_virt_of_match,
->>> +	},
->>> +};
->>> +
->>> +static int __init crypto_virt_init(void)
->>> +{
->>> +	return platform_driver_register(&crypto_virt_driver);
->>> +}
->>>  module_init(crypto_virt_init);
->>>  
->>>  #if IS_MODULE(CONFIG_QCOM_CRYPTO_VIRT)
->>>  static void __exit crypto_virt_exit(void)
->>>  {
->>> -	virtblk_set_crypto_ops(NULL);
->>> +	platform_driver_unregister(&crypto_virt_driver);
->>
->> You just added this line, so previous code was simply wrong?
-> No. In previous patch, virtblk_set_crypto_ops is called in
-> crypto_virt_init and crypto_virt_exit. This patch moves the caller
-> to the driver probe and remove APIs.
-
-Heh?
-
-Let's look at your previous patch:
-
-+#if IS_MODULE(CONFIG_QCOM_CRYPTO_VIRT)
-+static void __exit crypto_virt_exit(void)
-+{
-+	virtblk_set_crypto_ops(NULL);
-+}
-+module_exit(crypto_virt_exit);
-+#endif
-
-And you claim that you did not add this line?
-
-Do you understand how diff format works?
+Such code IS NOT ACCEPTED to upstream, thus posting it is absolutely
+pointless.
 
 Best regards,
 Krzysztof
