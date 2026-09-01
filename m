@@ -1,127 +1,159 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5C67367B6E;
-	Tue,  1 Sep 2026 14:03:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F8023CEB99
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2026 14:39:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788271381; cv=none; b=FfpINJ5XDXtOC3sg6JGCptMM/O7r8EekFNP2dIeB6TMNiYeYJMQgSx7FeplNg8rxhX6D0wXAWKvDgJQ0xopcpcjP+TiAaQJ+K0pAP4RTOuHO1mSD3B65Tq4ivRiNsbfAOdOXufzcaQJbk5ARjyiPPQjqIHjU+Ayl3Xxt1e+ngDw=
+	t=1788273572; cv=none; b=nKsI4Z3N9W646b/yaB3/OhyV56uOI81sSV9hso/Y5z5GjZxl2V1+3EXq3vLakn3n6hj6PQuEjjHJPyfwvUA5wMTvlmYnI3QECyioHTGaFzjqt4z1uDW+OWRe/+5ty2NJhZ+1Th5PgoDywajIzvLp+u92394an85LKeCq9vcaQA8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788271381; c=relaxed/simple;
-	bh=jPZ01+rb7mljLUxX40w8DG5H+CC+i3TzhhRaHa7YAWw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ERxXe1OXSbKLJFQixy2Rhb33Byp9CDf1+9NuZlC13kxpKrWielEcSzKugx8+tVFjXeDEVwOkiZu0LW0ZNcSHxXlg3XPzY2SZcOB0EgJDXYAcSIoz7I4r46uJ3W2XgXkenwtYt5/9dad1DKm9iCuZUIgo3RyzL9YHk2QLyOJvf40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ayeav+1c; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788273572; c=relaxed/simple;
+	bh=PpjuOycMnvKcsr6i4JwrDRk3fLhhuojReIjxUw1zJuY=;
+	h=Subject:Date:Message-ID:From:To:Cc:Content-Type:MIME-Version; b=hmpzxpYR3sUM+QttyvieQoG1t2BLbqjF8LHPB0BgNc9fiFbu7nQT/EdtrsK4pzHC7G+EjTd6paAyHcyxNdZ5odBxzS907Z50d4YsUFAdGZ/180e5Qa3tVmrgpIH2+FOlE+7CR3xMkKl9uF0l2itJJOpco+zQlCv8cOzNdx5bE+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E9o/nJgs; arc=none smtp.client-ip=209.85.216.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ayeav+1c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 593511F000E9;
-	Tue,  1 Sep 2026 14:02:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788271380;
-	bh=MKemib+A90Yyi/0o2sYe3BoQDFeH6318s3f7nIMLnwQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Ayeav+1cL3WlPsJuHOUBGxG5nG5lFl65dzKAELeDfJFeeVnMw+mFCAIIT46P5DNWn
-	 1O7kmI+NvRD1RycBh8k/GQEMCIwpLNL1XREsz6TWdahkcz0W5iDI6vPQMHftZoD+r0
-	 4UsOYwJb3kqiuD1bDFuUAc5ACTBuFuwtixsoFGDAE8wH4uTlfMItdl0Dmiqz7CKjYZ
-	 7S2PR3Xv0JLtZKzN1eDYoNqY9OpDUxO7Tn7+v4onW1f1ubZpQuLWBSxVkCl9fMQSUT
-	 /bQ95fvuEuy4SjrEDyZ3EDZq2gpFVT8xEJQmEwu7qzv4v6gLpckH1swQipb5OBuqux
-	 KRAoH3N+2lWfQ==
-Message-ID: <ff869d8a-85d1-4148-b19d-af3a70fcc904@kernel.org>
-Date: Tue, 1 Sep 2026 16:02:48 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E9o/nJgs"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-38a0c7e841fso1638181a91.2
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2026 07:39:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788273571; x=1788878371; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:cc:to:from
+         :message-id:date:subject:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Sq8WERtPgYhkPbAu1lD9X5RHbMKk+hk5c82yqST5k6M=;
+        b=E9o/nJgsD3nmRXeyyKjwqPAgLLTLQvaEZKQSEcBx4xjzI/Mwd7nEWobbpTs8j45r9J
+         6GwHWhhDUDUHihgxEqSj6nMJ+bJYg2LD+tQ0hbTctzn0PxsppQ/pwuWH6g9GZwzGgibN
+         KFMxR5u4egf5ogmzCauuFrd+Hy102S7swgDWoBclVbmcc6W2SMYpk76LiKbJUZnPpqfc
+         VDTrG5mVKcNhz5Lm1wB4kamup/9xLpnY3e+8cCP0+AWVLPPJi7AJRoWI8fURef8cAZm9
+         LUr81ZC1mm9BtOURc5bVZDUhXhelAeJPA7EiVpNdfwMvmpnnZBakk3Li4hO5ExoN2u9J
+         azzQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788273571; x=1788878371;
+        h=mime-version:content-transfer-encoding:content-type:cc:to:from
+         :message-id:date:subject:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=Sq8WERtPgYhkPbAu1lD9X5RHbMKk+hk5c82yqST5k6M=;
+        b=Wk58VU5SMk+O7P8bkS6JMKEuthhy7y3OZUT5EySYTVqXx5neChKD1LVJ3euo4VyHKk
+         pkPzjIoD0ocF1RsxEknEUmf2rraHvlwlrrs55mHEB5JoMF9VDHjVGcVLRnak/ZMlw2EI
+         HxkcbXti9UAVn9P1wINx5+9uwxmd45X0v4PlxiZUFVCVpbCrgQT5y0HnwWePcjevo8KG
+         21mMpNjZGGj929W+e4MUdQHtDkqbO3BP7zj31YB8k5NcivhqkHHJ771mxtLoSJW4/rNo
+         AkPo6N7WOejWs82+IoSiXjGOmgn2ruB9DVOsI174TNjvQCqx5Xw+1tAeVTwRaGbnrR7U
+         fFFQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwDo4q8O5lwbPX9dKfS4RWZRW47EX1zOlVASCiCwzjfAmi/VDlxDlkmid+Wo0Syaoc7/MMMuyqkOP+a@vger.kernel.org
+X-Gm-Message-State: AFuF++lwNQzSZSk81QfpnHiv5/cDGjNyNpSJhThT49wRxdfdK8egpOMe
+	lH04rEKV9pu2m6wlsbZ9KNXIWJtRosPsVGvUFe/tgJDYaAehNyoJfRYd
+X-Gm-Gg: AYBFou3VEEgz/VCuvPxBNBjwmyg+j2AGIJkP5gQtagxEFyqaZVrs4vWfTUvi9dgaViX
+	gaFR4Z0V7SdtjdI1S68KB6RKcZ/nITsdRNGzA3nra+zZgsQxv+tRoXUaOiqv1eExxjYG56IZdJz
+	K0s+DplE8tAkloXORQGBY4xD6HFZ9XprZiPApOQyCOaoBcGGmgzfSw1CZ+keU408ZmrKMrTa/QT
+	c6lkpg9VNVJjy2XlHz/N0EoR3asqEC5lUrdJA5kVzMz69Gts21uQR9Dx/PROvhIoioUJq/naWoA
+	t27fE6LOzoRIlfqRvJi7TQf+7lsfNra4RT00bQCjxXlu9lgqYqOWynLVsC/P8vL4ANqy1ATLZK7
+	MUvMuVP7ZksohffCoFWcf/BwqwyjDUnYP3Ki0+12CpanJ7FC18k/p1GJXOqb5X2zut67gT/hXkk
+	1nNTqqGviLO3VuFSLNa1M7mT61tEVqal+cYN1MCTpTnpdn9E2CTi9F+BiXf38sOPOAHhozKVUth
+	Vtq
+X-Received: by 2002:a17:90b:6c7:b0:396:6344:3b63 with SMTP id 98e67ed59e1d1-396d0e25905mr53255820a91.2.1788273570553;
+        Tue, 01 Sep 2026 07:39:30 -0700 (PDT)
+Received: from [192.168.71.146] ([240e:b8f:91e2:d400:ec2a:b15e:fef8:70a])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39ae0dfcd65sm59248a91.3.2026.09.01.07.39.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Sep 2026 07:39:29 -0700 (PDT)
+Subject:
+ [PATCH RFC 0/1] leds: add ASUS Aura SCSI driver for ROG NVMe enclosures
+Date: Tue, 01 Sep 2026 22:26:46 +0800
+Message-ID: <202609012200.RFC0.lhw@gmail.com>
+From: Liang Haowen <nbg2974@gmail.com>
+To: linux-leds@vger.kernel.org
+Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
+ Martin K. Petersen <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+ platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Denis Benato <denis.benato@linux.dev>, Armin Wolf <W_Armin@gmx.de>,
+ Hans de Goede <hansg@kernel.org>,
+ Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 11/11] scsi: ufs: ufs-qcom: support ICE keyslot
- partitioning for guest VMs
-To: Linlin Zhang <linlin.zhang@oss.qualcomm.com>, ebiggers@kernel.org,
- axboe@kernel.dk, mst@redhat.com, jasowangio@gmail.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
- linux-scsi@vger.kernel.org, virtualization@lists.linux.dev,
- devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Cc: neeraj.soni@oss.qualcomm.com, gaurav.kashyap@oss.qualcomm.com,
- mani@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
- bvanassche@acm.org, alim.akhtar@samsung.com, avri.altman@sandisk.com,
- stefanha@redhat.com, pbonzini@redhat.com, eperezma@redhat.com,
- xuanzhuo@linux.alibaba.com, linux-kernel@vger.kernel.org
-References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
- <20260827160806.1295313-12-linlin.zhang@oss.qualcomm.com>
- <046e4b62-6d25-40fc-baa3-2978eb96eb70@kernel.org>
- <b571ea8a-4434-45e0-958f-20b2f83ced24@oss.qualcomm.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
- cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
- JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
- gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
- J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
- NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
- BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
- vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
- Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
- TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
- S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGPBBMBCgA5AhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJp2mE8AAoJEBuTQ307QWKbeaIP
- /ihHTkTW4KsN/DQ945JJbyu5tI0J80Wue7QyyLPglyKfhgb5cLLNPpOC8cCIJsc7+W3i2P38
- s2c1cOH6CYGE7E9ur3Vfme8NW2S2I/Z8VC7bZnzyS23wT17LrsdS/qCpx4o8U+pt/xdXDKph
- EGRYrIEmMpUWvyYzyYKGIe25FtaayIIKpq8eZYyFcp2f/sG5IkOW5uZzHPMPdcm87jU7fyuQ
- rAU2vx9r+ulUfQ/q9Z2roC/ode3l7t2pN7BCBCsUDp6JCrUyZrtT1e7EbA0ZRP3aOBNk2P2E
- DQOgJGjGdO5Yx2Y9LFtltu6JbsBJHi1syGRX3AtQYOMc4Y1WGoeZJmMlvKj2ZqqXNkcWi2DS
- IQEWB0uW6CqFsBBIMGDa+6OzdaVO/uAVXWDWml02Men3CILdI1MbVjoh8ECqYUY7OQ+JJvNN
- vnliuq5WM3Ghd3jg/LZZrxXjdIginRHFQCjIJYLKpLZWm1/iDFedcfzqRNYmTtqscdCNHW41
- oT3Z7BmO9xwdjuwBS6nmS6JJwkbf5Ot2QR4pB/DRU7ZwjT1qHe+9r9gF32wXVQatHNGK/VVu
- sfwOnkdxCWkp/qb2gdQRmZh+SedStWshigH6sNfuHBloF/q+hjMRc8b2m326OZdrbSHwY1Sz
- vti8Hn7n8NjdHO9LKB7BIdjkA9DA5WsqOuVCzsFNBFVDXDQBEADNkrQYSREUL4D3Gws46JEo
- Z9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLueMNsWLJBv
- BaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6eiOMheesVS
- 5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wAGldWsRxb
- f3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA6z6lBZn0
- WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9YegxWKvX
- XHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt91pFzBSO
- IpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gUBLHFTg2h
- YnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/JoFzZ4B0
- p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu4vXVFBYI
- GmpyNPYzRm0QPwARAQABwsF2BBgBCgAgAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtBYpsFAmna
- YUkACgkQG5NDfTtBYptX+BAApg32CkxwNucNEi8WfWA8oKkW0y8YDuY6ORMo9FWNGiT/OTy0
- vyJrLocrpn86zwfjVp+eCrssPYh8eqJfnWqmYv6ACQtHPYzPZQ3mSo8H97Z01oUxITzCxpXm
- ZkLgPIqtDPcC2E3dPM/fVxcyowM8XsaMA9wcsaUYrta8toOq2b9tKcjleKMfMrm0gQ9u7wUc
- QbLkwj6TCLOwucb07GXzLTNF9PZmaDUpKAZjMjmrW+le+SFvQbhamx0rxLWPR0NWntXpbCn+
- +ACch03p/JyTBVktxFsFyCt7pTPE1kEaeuXBTe/a2D9iQvRxRW19LvuO2e59/u1wYUiH/orz
- wbIC2S4dBsPAPihL3ztOU1yE86GPyQtSE0kU+/7snnLt4QGi6PChf3t5gnNjAzjUUovO8rgI
- c+5yN5heq5loYHgK6OQ9OlHzsPHO9e9MOQcKlFycs1pyijFGzDwdNUm/SchK8iWT2QApTx4A
- K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
- n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
- qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <b571ea8a-4434-45e0-958f-20b2f83ced24@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 01/09/2026 12:54, Linlin Zhang wrote:
->>> +		u32 off, max;
->>> +
->>> +		if (of_property_read_u32(child, "qcom,ice-slot-offset", &off) ||
->>> +		    of_property_read_u32(child, "qcom,max-ice-slots", &max))
->>
->> No, there is no such ABI.
->>
-> 
-> ACK
-> 
-> This is submitted for visibility. It may be revised in a future version to use
-> a TZ SCM query interface if current out-of-band key operation in the guest is
-> approved.
 
-Don't submit downstream code for visibility. It just clutters review and
-wastes our time.
 
-Such code IS NOT ACCEPTED to upstream, thus posting it is absolutely
-pointless.
+Hello,
 
-Best regards,
-Krzysztof
+this is the v1 I promised in the "Placement of ASUS Aura and
+platform/x86 ASUS files relocation" thread: the LED side of ASUS Aura
+RGB on ROG external NVMe enclosures, posted for review in drivers/leds
+as Armin suggested, and in line with the shared ASUS Aura interface
+Denis has been coordinating.
+
+The hardware: ROG external NVMe enclosures (ROG STRIX Arion, USB
+0b05:1932) are plain USB mass-storage devices. They expose two mass
+storage interfaces (BOT and UAS) and no HID interface; the Aura LEDs
+hang off an ENE controller reached through vendor SCSI commands on the
+same LUN as the disk. The Arion has 4 independently addressable LEDs,
+verified on hardware.
+
+The interface: the driver registers a scsi_device_handler, matches by
+INQUIRY strings (vendor "ROG", model "ESD-S1C"), does not claim the
+sdev (sd keeps owning the disk), and exposes each LED as a multicolor
+LED class device, /sys/class/leds/asus-arion:led0 through led3.
+
+Protocol summary: a 16-byte vendor CDB (opcode 0xec, 'A' 'S'
+signature, register index, argument count in cdb[13]). MODE 0x8021
+(Static) must be written first in every sequence or the device ignores
+the whole sequence; colours are written to 0x8160 + 3 * led and
+0x8100 + 3 * led (3 bytes each, order R, B, G; both tables are written
+because firmware revisions pull from one or the other); APPLY 0x80a0
+takes 0x01 to apply and 0xaa to save, and only the save makes a change
+stick.
+
+A transport gotcha that seems worth wider visibility: the CDB cannot
+go through scsi_execute_cmd(), because it derives the command length
+from scsi_command_size(opcode), which maps vendor opcode 0xec to
+10 bytes. The ENE protocol is a 16-byte CDB with the data length in
+cdb[13], so scsi_execute_cmd() drops that byte and the device silently
+ignores the write (GOOD status, no error). The driver builds the block
+request by hand and forces cmd_len =3D 16, which is what SG_IO does from
+userspace. Any kernel driver sending a vendor CDB whose real length
+does not match scsi_command_size(opcode) is going to hit the same
+thing.
+
+Placement: per Armin's suggestion in the thread, the LED side belongs
+in drivers/leds, since the enclosure is not a platform device and the
+user-facing interface is the multicolor LED sysfs. What is posted here
+is the driver as verified on hardware, still monolithic. The agreed
+shape going forward, with Denis, is a SCSI transport helper in
+drivers/scsi feeding an Aura LED driver in drivers/leds behind a
+shared ASUS Aura interface; the Kconfig, Makefile and MAINTAINERS
+wiring lands with that split. So the main questions for this round are
+the LED interface, the protocol handling and the placement.
+
+Known caveats, stated up front:
+
+- the handler attaches manually until a notifier lands
+  (echo asus_aura > /sys/block/sdX/device/dh_state);
+- SAVE (0xaa) is issued on every colour change, which writes the
+  enclosure flash each time; wear has not been characterized yet;
+- the LEDs are registered with a NULL parent device, because
+  parenting them to the sdev creates a reference cycle that blocks
+  the sdev's final release on unplug and leaks the LED nodes and the
+  module refcount.
+
+Comments on the interface shape and on folding this into the shared
+Aura work are very welcome.
+
+Signed-off-by: Liang Haowen <nbg2974@gmail.com>
+
+Liang Haowen (1):
+  leds: add ASUS Aura SCSI driver for ROG NVMe enclosures
+
+ drivers/leds/leds-asus-aura-scsi.c | 302 +++++++++++++++++++++++++++++++++++=
+++
+ 1 file changed, 302 insertions(+)
+
+--=20
+2.55.0
+
