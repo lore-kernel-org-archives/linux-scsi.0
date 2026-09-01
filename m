@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA22F2F7EE7;
-	Tue,  1 Sep 2026 13:58:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B240353A88;
+	Tue,  1 Sep 2026 14:01:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788271104; cv=none; b=gB/4NQLU1B42/tm87Mh8JXaUGZGlQobzO+45cqI2r3jDog3+B/9BPfI/d7O43sUkBhoa5drapEOh7Hke4OwNTYvne6I7JIA4REVE8QgWHEHfZDADajJy0wPFRmqe0A0G12XNlGTPBuOdFhpRtqYLlsFRcC98KJDK2Fg2GGpavIA=
+	t=1788271295; cv=none; b=DpSbLyI0i5Jb5ORL3Zz+RyU2Bo7rvCJ+Gj6tu+iQHzjFwOtDKd4B/ug28GspuGiX4U7P0IRn/OhgUUzpD24Tgaeo/dkntOqcHvA0p42qoNT2hkaJLTHXEMm6QASVrJz92463DsRd+mhuwiM8/XVcA08Otp0KJ1yvSZvx0vYUIQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788271104; c=relaxed/simple;
-	bh=Uzb9oLzP/M/veRTwQx8O16a2XGVn4c5i03hGnQZaKic=;
+	s=arc-20240116; t=1788271295; c=relaxed/simple;
+	bh=i0auOqviT7OdfQYFxKaGhvnbI3u48O1A/LNjWrh7uTA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pDushV396/6YifvgXeTli+tvHLt7mHIESETzRdDKkmzUJoHzXeYULzTIqHzz1QE/ulPUTZ1uQyIpUtvbV7FnM4lup9E/ywhqhe46uTz5usNC5qHfD4xB5ShGZ+C+KXAU0p/zmnWVdMEybehYBweS3q2TJERd7oX5we2X+I/m/9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NVxWcULt; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=quN/Hxg/cWpcsgeWUOWK1tUt0640eMPIz6Ha0vqOGy6n8ipGoLAa2I/bE+ueBIHBQGbI7HajfRiZyHGJZfD+lxT4ndoCoWPBulWBb8E0aRZbE9w8vc0SLh1yHFdeZ/C5cVF/c+mF8ByRalz7TwZR6TVKO+tCDSsmv337vF0u/+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mzcQJWVk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NVxWcULt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1AE61F000E9;
-	Tue,  1 Sep 2026 13:58:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mzcQJWVk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 233E01F000E9;
+	Tue,  1 Sep 2026 14:01:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788271102;
-	bh=v7puyWp/ROQswaeSJtWkmIdn56iY62cBg7FWAYcpIY8=;
+	s=k20260515; t=1788271293;
+	bh=82Y0DK4uWf3NpKC3fa3COeqgaTO2DjUIts3rlyJPJm0=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=NVxWcULtb8vZvibgQJ/A72FOUxIHYDUw2GJXZris9HtuxuyMqpwcbdSNfPO4+THil
-	 zjycOub+YLQEFzY9SEneBsrVF6ZhvhloT6Fi9bt/tJpPTGCyS9eH2AxZemWhJDpvgj
-	 CRikl0X+igBO2+zRbFVaSmAjyIQwfqEhC6jrS3RQrnqVW26Gfz2q6mOE8PGMCz+zGa
-	 oEOlXMcy+fAqIZH8tBgfE42ttP0oVYxCVa2idJK3iXtq+cZz0Dnke++ewDFtBg5jUT
-	 5K5q1RnOa6MPc8l3SCQkLR0AQXEc8EzqDII/3nptXowzoE7r43McL55nkO3SQPEYLz
-	 WQR5IATopGGrQ==
-Message-ID: <38389106-9609-4ec4-bc83-3d1b7fac3698@kernel.org>
-Date: Tue, 1 Sep 2026 15:58:10 +0200
+	b=mzcQJWVkxU+PXzv+ZtVeMmMdyZGweBL1BLmGKXl6+dqqSWRPFnQr+3Exr81nThINA
+	 zNcfVHa/tD7uQYMe+01vEhvIBg+kXY6ZkwjNJQ8tbguSekArPbfRcV+bC/x5qouhPN
+	 fOziTB2CQoWjNEkOBaq/fPYRc/Un767CKF5KI1Il2YklHz1qckNEgih+/MRgpCYjQQ
+	 yrs+jr5c7MID8cWcami2udW3SJ1xZV0XGhY9huub0gObe9HkE/q7r4fkjkC5uKTXsB
+	 3RXdVkwEkPFfFX2QbrVl5VVnXtVqLUkLH4AQcfpyTn/Q41Btf4gymoHmXF3NbgIyVU
+	 RsoDR9GrrqxeQ==
+Message-ID: <650ac172-312f-43a3-ab5f-82318796472d@kernel.org>
+Date: Tue, 1 Sep 2026 16:01:20 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 02/11] soc: qcom: add crypto_virt backend for
- virtio-blk inline crypto
+Subject: Re: [PATCH v1 03/11] soc: qcom: crypto_virt: add support for create,
+ prepare and import keys
 To: Linlin Zhang <linlin.zhang@oss.qualcomm.com>, ebiggers@kernel.org,
  axboe@kernel.dk, mst@redhat.com, jasowangio@gmail.com,
  James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
@@ -50,9 +50,9 @@ Cc: neeraj.soni@oss.qualcomm.com, gaurav.kashyap@oss.qualcomm.com,
  stefanha@redhat.com, pbonzini@redhat.com, eperezma@redhat.com,
  xuanzhuo@linux.alibaba.com, linux-kernel@vger.kernel.org
 References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
- <20260827160806.1295313-3-linlin.zhang@oss.qualcomm.com>
- <f5915133-ffac-4777-b7d9-cf38ba163d43@kernel.org>
- <03097984-fded-477e-82b6-f9b31fd2f1d3@oss.qualcomm.com>
+ <20260827160806.1295313-4-linlin.zhang@oss.qualcomm.com>
+ <4594e3db-a8e3-4f8d-95c2-a4edcbc8ca7c@kernel.org>
+ <40156974-6637-49b7-8629-11e7d0d4e55d@oss.qualcomm.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -98,207 +98,107 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
  n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
  qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <03097984-fded-477e-82b6-f9b31fd2f1d3@oss.qualcomm.com>
+In-Reply-To: <40156974-6637-49b7-8629-11e7d0d4e55d@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 01/09/2026 11:39, Linlin Zhang wrote:
+On 01/09/2026 12:31, Linlin Zhang wrote:
 > 
 > 
-> On 8/31/2026 2:56 PM, Krzysztof Kozlowski wrote:
+> On 8/31/2026 2:58 PM, Krzysztof Kozlowski wrote:
 >> On 27/08/2026 18:07, Linlin Zhang wrote:
->>> From: linlzhan <linlin.zhang@oss.qualcomm.com>
->>>
->>> In a Qualcomm GVM environment the ICE hardware is controlled by the
->>
->> What is GVM?
-
-There is no such TLA (git grep).
-
-Maybe you meant guest in a virtual machine? Don't use some qcom-specific
-TLA.
-
-
->>
-> 
-> GVM means Guest Virtual Machine. This is designed for the virtualization
-> platform.
-> 
->>> host, GVM has no direct access to it. So, key operation in GVM is
->>> done through SCM calls rather than direct register access. In this
->>> way the access to ICE registers are offloaded to Trust Zone.
->>>
->>> Add QCOM_CRYPTO_VIRT, which implements struct virtblk_crypto_variant_ops
->>> for the virtio_blk_crypto_ext dispatch layer. It maps keyslot
->>> program/evict to qcom_scm_ice_set_key() and
->>> qcom_scm_ice_invalidate_key(), and software-secret derivation to
->>> qcom_scm_derive_sw_secret().
->>>
->>> Signed-off-by: linlzhan <linlin.zhang@oss.qualcomm.com>
->>> ---
->>>  drivers/soc/qcom/Kconfig       | 12 +++++
->>>  drivers/soc/qcom/Makefile      |  1 +
->>>  drivers/soc/qcom/crypto_virt.c | 89 ++++++++++++++++++++++++++++++++++
->>>  3 files changed, 102 insertions(+)
->>>  create mode 100644 drivers/soc/qcom/crypto_virt.c
->>>
->>> diff --git a/drivers/soc/qcom/Kconfig b/drivers/soc/qcom/Kconfig
->>> index 2b524154d9fb..6c632d114d45 100644
->>> --- a/drivers/soc/qcom/Kconfig
->>> +++ b/drivers/soc/qcom/Kconfig
->>> @@ -298,6 +298,18 @@ config QCOM_INLINE_CRYPTO_ENGINE
->>>  	tristate
->>>  	select QCOM_SCM
->>>  
->>> +config QCOM_CRYPTO_VIRT
->>> +	tristate "Qualcomm Technologies, Inc. Crypto Virt driver"
->>> +	depends on VIRTBLK_CRYPTO_VIRTUALIZATION
->>> +	depends on QCOM_SCM
->>> +	default VIRTBLK_CRYPTO_VIRTUALIZATION if ARCH_QCOM
->>> +	help
->>> +	  GVM-side hardware-wrapped-key SCM operations exposed to
->>> +	  virtio_blk's inline crypto layer: per-slot key programming and
->>> +	  eviction, and key derive/generate/prepare/import.
->>> +	  Say Y here to compile the driver as a part of kernel or M to compile
->>> +	  as a module.
->>> +
->>>  config QCOM_KRYO_L2_ACCESSORS
->>>  	bool
->>>  	depends on ARM64
->>> diff --git a/drivers/soc/qcom/Makefile b/drivers/soc/qcom/Makefile
->>> index 798643be3590..6d4b7546d1fb 100644
->>> --- a/drivers/soc/qcom/Makefile
->>> +++ b/drivers/soc/qcom/Makefile
->>> @@ -39,5 +39,6 @@ obj-$(CONFIG_QCOM_KRYO_L2_ACCESSORS) +=	kryo-l2-accessors.o
->>>  obj-$(CONFIG_QCOM_ICC_BWMON)	+= icc-bwmon.o
->>>  qcom_ice-objs			+= ice.o
->>>  obj-$(CONFIG_QCOM_INLINE_CRYPTO_ENGINE)	+= qcom_ice.o
->>> +obj-$(CONFIG_QCOM_CRYPTO_VIRT)	+= crypto_virt.o
->>>  obj-$(CONFIG_QCOM_PBS) +=	qcom-pbs.o
->>>  obj-$(CONFIG_QCOM_UBWC_CONFIG) += ubwc_config.o
->>> diff --git a/drivers/soc/qcom/crypto_virt.c b/drivers/soc/qcom/crypto_virt.c
->>> new file mode 100644
->>> index 000000000000..4ee2a36af6c1
->>> --- /dev/null
->>> +++ b/drivers/soc/qcom/crypto_virt.c
->>> @@ -0,0 +1,89 @@
->>> +// SPDX-License-Identifier: GPL-2.0-only
->>> +
->>> +#include <linux/module.h>
->>> +#include <linux/types.h>
->>> +#include <linux/blk-crypto.h>
->>> +#include <linux/virtio_blk_crypto_ext.h>
->>> +#include <linux/firmware/qcom/qcom_scm.h>
->>> +
->>> +static int crypto_virt_program_key(const struct blk_crypto_key *key,
->>> +				   unsigned int slot)
+>>> +static void crypto_virt_remove(struct platform_device *pdev)
 >>> +{
->>> +	u32 dus_512_units;
->>> +	int ret;
->>> +
->>> +	if (!key || !key->size) {
->>> +		pr_err("%s: invalid key\n", __func__);
->>> +		return -EINVAL;
->>> +	}
->>> +
->>> +	/* Only AES-256-XTS has been tested so far. */
->>> +	if (key->crypto_cfg.crypto_mode !=
->>> +	    BLK_ENCRYPTION_MODE_AES_256_XTS) {
->>> +		pr_err_ratelimited("Unsupported crypto mode: %d\n",
->>> +				    key->crypto_cfg.crypto_mode);
->>> +		return -EINVAL;
->>> +	}
->>> +
->>> +	/* qcom_scm_ice_set_key()'s data_unit_size is expressed in 512-byte units */
->>> +	dus_512_units = key->crypto_cfg.data_unit_size / 512;
->>> +
->>> +	ret = qcom_scm_ice_set_key(slot, key->bytes, key->size,
->>> +		QCOM_SCM_ICE_CIPHER_AES_256_XTS, dus_512_units);
->>> +	if (ret)
->>> +		pr_err("%s: slot=%u ret=%d\n", __func__, slot, ret);
->>> +
->>> +	return ret;
+>>> +	virtblk_set_crypto_ops(NULL);
 >>> +}
 >>> +
->>> +static int crypto_virt_invalidate_key(unsigned int slot)
->>> +{
->>> +	int ret;
->>> +
->>> +	ret = qcom_scm_ice_invalidate_key(slot);
->>> +	if (ret)
->>> +		pr_err("%s: slot=%u ret=%d\n", __func__, slot, ret);
->>> +
->>> +	return ret;
->>> +}
->>> +
->>> +static int crypto_virt_derive_sw_secret_key(const u8 *eph_key, size_t eph_key_size,
->>> +					    u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE])
->>> +{
->>> +	int ret;
->>> +
->>> +	ret = qcom_scm_derive_sw_secret(eph_key, eph_key_size,
->>> +					sw_secret, BLK_CRYPTO_SW_SECRET_SIZE);
->>> +	if (ret == -EIO || ret == -EINVAL)
->>> +		ret = -EBADMSG; /* probably invalid key */
->>> +
->>> +	if (ret)
->>> +		pr_err("%s: ret=%d\n", __func__, ret);
->>> +
->>> +	return ret;
->>> +}
->>> +
->>> +static struct virtblk_crypto_variant_ops virtblk_crypto_qcom_vops = {
+>>> +static const struct of_device_id crypto_virt_of_match[] = {
+>>> +	{ .compatible = "qcom,crypto-virt" },
 >>
->> Why is a crypto-handling code in drivers/soc/?
+>> Undocumented ABI, also not really allowed. We don't take bindings for
+>> drivers.
 >>
 > 
-> This driver is a Qualcomm vendor-specific driver, plays the similar role in the
+> The dt-binding document is included in another patch in this series.
 
-Not really, there is nothing vendor specific here. Look at this code.
+And what does the submitting patches document ask you?
 
-> guest, like the ice driver in the host. so I place it in drivers/soc/.
+
+> The concern about introducing a DT binding for a software-only driver.
+> The underlying problem I am trying to solve is how to communicate the
+> wrapped-key size to the guest.
+
+I am not asking about your problem. Can you please stop answering to
+actual problems with irrelevant other aspects?
+
+You cannot have DT for a driver.
+
+That's it, please read DTS101 slides.
+
+
 > 
->>> +	.owner = THIS_MODULE,
->>> +	.program_key = crypto_virt_program_key,
->>> +	.evict_key = crypto_virt_invalidate_key,
->>> +	.derive_sw_secret_key = crypto_virt_derive_sw_secret_key,
+> Because the guest has no access to the ICE hardware, it cannot get
+> the key size by reading the ICE hardware directly. In the other hand,
+> the wrapped key size may vary across ICE versions, it's infeasible
+> to have a fixed wrapped key size in the code. Additionally, wrapped
+> key size is vendor-specific, it's nor proper to pass it via virtio.
+> 
+> As an experiment, I used a DT property to set this wrapped key and
+> wanted to get feedback on whether this is a reasonable approach.
+> 
+> Is there a preferred mechanism for handling this kind of vendor-specific
+> configuration, or are there similar examples elsewhere in the kernel
+> that I should follow?
+
+Not DT. Use whatever other mechanism kernel provides.
+
+
+> 
+>>> +	{ }
+>>> +};
+>>> +MODULE_DEVICE_TABLE(of, crypto_virt_of_match);
+>>> +
+>>> +static struct platform_driver crypto_virt_driver = {
+>>> +	.probe = crypto_virt_probe,
+>>> +	.remove = crypto_virt_remove,
+>>> +	.driver = {
+>>> +		.name = "crypto_virt",
+>>> +		.of_match_table = crypto_virt_of_match,
+>>> +	},
 >>> +};
 >>> +
 >>> +static int __init crypto_virt_init(void)
 >>> +{
->>> +	virtblk_set_crypto_ops(&virtblk_crypto_qcom_vops);
->>> +	return 0;
+>>> +	return platform_driver_register(&crypto_virt_driver);
 >>> +}
->>> +module_init(crypto_virt_init);
->>> +
->>> +#if IS_MODULE(CONFIG_QCOM_CRYPTO_VIRT)
->>> +static void __exit crypto_virt_exit(void)
->>> +{
->>> +	virtblk_set_crypto_ops(NULL);
->>> +}
->>> +module_exit(crypto_virt_exit);
->>> +#endif
+>>>  module_init(crypto_virt_init);
+>>>  
+>>>  #if IS_MODULE(CONFIG_QCOM_CRYPTO_VIRT)
+>>>  static void __exit crypto_virt_exit(void)
+>>>  {
+>>> -	virtblk_set_crypto_ops(NULL);
+>>> +	platform_driver_unregister(&crypto_virt_driver);
 >>
->> How do you instantiate this driver exactly?
->>
-> 
-> This driver is not instantiated per device. It acts as a provider of
-> Qualcomm vendor-specific inline crypto operations, which is based on
-> qcom_scm driver, and registers a global virtblk_crypto_ops instance
-> during module initialization. So that, each blk_crypto_ll_ops from
-> virtio block driver in common kernel can be sent via qcom_smc driver.
+>> You just added this line, so previous code was simply wrong?
+> No. In previous patch, virtblk_set_crypto_ops is called in
+> crypto_virt_init and crypto_virt_exit. This patch moves the caller
+> to the driver probe and remove APIs.
 
+Heh?
 
-If it is not instantiated, then it is dead code. Drop all this. Or read
-my message again very carefully instead of replying with whatever copy
-of commit msg. I did not ask what is this driver about. I did not ask
-what it is providing. I asked how do you instantiate it or clarifying -
-how do you load and run this code in final system.
+Let's look at your previous patch:
 
-This is just dead/unused code, straight from downstream.
++#if IS_MODULE(CONFIG_QCOM_CRYPTO_VIRT)
++static void __exit crypto_virt_exit(void)
++{
++	virtblk_set_crypto_ops(NULL);
++}
++module_exit(crypto_virt_exit);
++#endif
 
-NAK.
+And you claim that you did not add this line?
 
+Do you understand how diff format works?
 
 Best regards,
 Krzysztof
