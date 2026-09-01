@@ -1,135 +1,153 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EDBA47ECC1;
-	Tue,  1 Sep 2026 16:32:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08E9548124E;
+	Tue,  1 Sep 2026 16:33:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788280350; cv=none; b=GtKmHaMcf6pcjQjW/h5Lv9IZwoJCa2cH5SxiVTYwqYETZ83DArx6fgbpfrHdugohngGbfSgRBLY+axjAo7xsO2DgmyMJJi8gFmFagQs4UcrbqFHzQAzOIV+riMKscv55+7m9lbXtJnZJasGy3rfsCK2zNVAmA8JHfogWtYYtB+c=
+	t=1788280386; cv=none; b=o205QyeEY7qn68E610Z2BMgOq9tLTBADxncc2Jrt1nT6dbRCNfbaxfdWmFYCNGdJbwevsjp9j3tqrDL+GY7gJxMsV02jm4TtFXPHPC9d/yhkW3JRmogkoY9vuuQIDTe/XNkjAOGH4UTGOOgYLMpFnhlb2qT2l1sfsSV8HXaKaCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788280350; c=relaxed/simple;
-	bh=/zkxMpUggAMf1m7EghNt+ZY9m+DyQrjrU6E72Mj9ZfU=;
+	s=arc-20240116; t=1788280386; c=relaxed/simple;
+	bh=GxO6TxUuUy0vtN0rYZD1huC+39hD0vWWQF52HK3/5Jo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NiGpQvJvfYsnA5+lJtqxlzUfndwZt6djN3aASMnaZPL3oagoND+4vZaV2KBtTu5zt1UZQcJ5su4yJEPKRLmr5rVxr4vutD+WISCS2x+JBGLwdM9igpr8FL8rRw2cO6lSs8PJ/ERN4IqrRslTZKrBMTBSfSwpZdJ72eqz4IEn6jM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NEcYq2JY; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=JXdv2AHO4hRnDidkhd/HGaRRL7tQ9rMJltwvLDEf4gVOSoOgkYo4X88QQjZVyv0VeY7Ij5UNNKXsAOhC6L4nVJ+ohqLirID4g2xEvytEz2tE3gqVlB2Jtbufhf5WpzGldI1mmhVC8miTzyaVOg1pK2yY4uDLvXPxKFeTPW8SL/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dwz3dSFU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NEcYq2JY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C1E81F000E9;
-	Tue,  1 Sep 2026 16:32:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dwz3dSFU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D8841F000E9;
+	Tue,  1 Sep 2026 16:33:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788280348;
-	bh=RVThgaMR7YohtKU+H34GcPG6L+uQ/2tYAFBh5huo7Aw=;
+	s=k20260515; t=1788280384;
+	bh=YJz8BbL1/lzpe86MseU3HV4c3Tlb2GBXlla8B3STk6E=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NEcYq2JYd/dvywBUlY5TZauCY6BC/h3ZQk+q0O8o2ofgu8WAguvE2utBzaLhf2WTZ
-	 CBoNatInlvzyrgUR1nZ3dna6okUWkCPJgzGTWXB9S650GbL7efzj//P2LIlI5v4OVe
-	 hfIByv2BfvOfQ3C50rzJflWiqXwLOk6YNzgVX6AXy9a+t+aQZ1vef54u4FSrI8CYAR
-	 PC4U+VnaEJsc5RwYUGkI8kWwA2PqUOTGG81gei3XnwOV2U+pE+AL+MeIgooLdGPbpH
-	 nmSi6Brc+wmPiEOr1q0OftMn6ameRzg6CsQBZTqxm6YYlCG8yn1Nk+BA73GdgUfSFg
-	 2knVwUg1N99Ig==
+	b=Dwz3dSFUTdbRNrChSM+WsLO1oh0ND20nFVKk7cgOmzW4m4it5LUcIn2LynWsVSMUT
+	 4Po+kO3m34cG4NCpmuB6clIKEVlsdVGHx6bbmWFtAJVHrt53BHdqvlFhHRXJOeVTRX
+	 ZSlIMKX90VijLCUsG7ZTDjmtUA+3CBqUpmO+oOIHBQ/8iO6Nodndkj5NAZ233lFO3Q
+	 WuHSIKu2cU8Ok4CeCOst5G1EQJXhshwoekaFLez1XX1oqI+v9vJXct6BUSaqHd9RW3
+	 hOt9CI4QgFeDoj1JLGUQo7Bj84U5DiZfruNPgxlUdSdrCpnUAmlFCodgbQtxxEndVE
+	 AQBIeA9wDJ9pA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v11 24/24] scsi: ufs: mediatek: Add MT8196 compatible,
- update copyright
+Subject: Re: [PATCH v11 21/24] scsi: ufs: mediatek: Back up idle timer in
+ per-instance struct
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Louis-Alexis Eyraud" <louisalexis.eyraud@collabora.com>
-Cc: olteanv@gmail.com, linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, devicetree@vger.kernel.org, robh@kernel.org, neil.armstrong@linaro.org, vkoul@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260901-mt8196-ufs-v11-24-dbd007704490@collabora.com>
+Cc: robh@kernel.org, devicetree@vger.kernel.org, linux-phy@lists.infradead.org, vkoul@kernel.org, linux-scsi@vger.kernel.org, neil.armstrong@linaro.org, olteanv@gmail.com, conor+dt@kernel.org
+In-Reply-To: <20260901-mt8196-ufs-v11-21-dbd007704490@collabora.com>
 References: <20260901-mt8196-ufs-v11-0-dbd007704490@collabora.com>
- <20260901-mt8196-ufs-v11-24-dbd007704490@collabora.com>
+ <20260901-mt8196-ufs-v11-21-dbd007704490@collabora.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 16:32:27 +0000
-Message-Id: <20260901163228.3C1E81F000E9@smtp.kernel.org>
+Date: Tue, 01 Sep 2026 16:33:03 +0000
+Message-Id: <20260901163304.6D8841F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Inconsistent hardware state on rollback failure in ufs_mtk_09v_off=
-() leads to regulator state mismatch and potential crash.
+- [High] A failed power mode change will permanently disable the auto-hiber=
+n8 timer due to brittle backup/restore logic.
+- [High] Concurrent sysfs write to `auto_hibern8` races with power mode cha=
+nges, circumventing hardware constraints and losing user configuration.
 --
 
-commit 532592d1862d942dd09400d688803111fc2d12cb
+commit dec217a616e37a6d6c6074f353ace1fc743596e2
 Author: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
-scsi: ufs: mediatek: Add MT8196 compatible, update copyright
-   =20
-THe MT8196's UFS controller has a new compatible. Add the necessary
-struct definitions to support it.
-   =20
-Also update the copyrights and authors, without tabs following spaces to
-avoid checkpatch errors, to list myself as having contributed to this
-driver after the preceding rework patches.
+scsi: ufs: mediatek: Back up idle timer in per-instance struct
 
-> THe MT8196's UFS controller has a new compatible. Add the necessary
-
-This isn't a bug, but there is a typo (THe) in the commit message.
+The MediaTek UFS driver uses a function-scope static variable to back up
+a hardware register across a power change in the
+ufs_mtk_pwr_change_notify function. This is dangerous, as it's only
+correct if only ever one instance of the driver is loaded, which isn't
+true if there's more than one device on a SoC that needs it, or it
+otherwise gets loaded a second time.
 
 > diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
 tek.c
-> index a894810a83de7..e6a672888d043 100644
+> index f405f511f41fd..4782fdf54866b 100644
 > --- a/drivers/ufs/host/ufs-mediatek.c
 > +++ b/drivers/ufs/host/ufs-mediatek.c
-
-[ ... ]
-
-> @@ -2254,10 +2260,18 @@ static const struct ufs_mtk_soc_data mt8192_8195_=
-data =3D {
->  	.num_reg_names =3D ARRAY_SIZE(ufs_mtk_regs_avdd12_ckbuf_avdd18),
->  };
+> @@ -1441,27 +1441,24 @@ static int ufs_mtk_pwr_change_notify(struct ufs_h=
+ba *hba,
+>  				enum ufs_notify_change_status stage,
+>  				struct ufs_pa_layer_attr *dev_req_params)
+>  {
+> -	int ret =3D 0;
+> -	static u32 reg;
+> +	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
 > =20
-> +static const struct ufs_mtk_soc_data mt8196_data =3D {
-> +	.has_avdd09 =3D true,
-> +	.has_avdd09_1 =3D true,
+>  	switch (stage) {
+>  	case PRE_CHANGE:
+>  		if (ufshcd_is_auto_hibern8_supported(hba)) {
+> -			reg =3D ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +			host->ahit =3D ufshcd_readl(
+> +				hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
+>  			ufs_mtk_auto_hibern8_disable(hba);
+>  		}
 
 [Severity: High]
-This is a pre-existing issue, but this commit explicitly exposes a dormant
-regulator state mismatch bug because mt8196_data is the first to set
-has_avdd09_1 to true.
+This isn't a bug introduced by this patch, but does this brittle caching lo=
+gic
+risk permanently disabling the auto-hibernate feature?
 
-In ufs_mtk_09v_off(), if host->reg_avdd09 is successfully disabled but
-host->reg_avdd09_1 subsequently fails to disable, the function enters an
-error rollback path:
+In ufshcd_change_power_mode(), PRE_CHANGE is called first, which reads the
+hardware timer value and disables it. If the subsequent
+ufshcd_dme_change_power_mode() fails (e.g., due to a UIC command timeout),
+POST_CHANGE is bypassed.
 
-drivers/ufs/host/ufs-mediatek.c:ufs_mtk_09v_off() {
-...
-	if (host->reg_avdd09) {
-		ret =3D regulator_disable(host->reg_avdd09);
-...
-	}
+This leaves the hardware timer physically disabled (0).
 
-	if (host->reg_avdd09_1) {
-		ret =3D regulator_disable(host->reg_avdd09_1);
-		if (ret) {
-			dev_err(host->hba->dev, "Failed to disable avdd09-1-supply: %pe\n",
-				ERR_PTR(ret));
-			ufs_mtk_va09_pwr_ctrl(res, 1);
-			return ret;
-		}
-	}
-...
-}
+On the next power mode change attempt, PRE_CHANGE reads the now-disabled
+value (0) and overwrites host->ahit with 0. When POST_CHANGE eventually
+succeeds, it restores 0, permanently disabling the feature until a reboot.
 
-It restores SMC power with ufs_mtk_va09_pwr_ctrl(res, 1) and returns an
-error, but crucially misses calling regulator_enable(host->reg_avdd09) to
-revert the previously disabled host->reg_avdd09 regulator.
+Could we instead restore from the core driver's hba->ahit, which reliably
+tracks the configured value, rather than caching the physical hardware state
+here?
 
-This leaves the UFS PHY state marked as powered on, but the PHY is
-physically disabled and its essential reg_avdd09 regulator is powered off.
+> -		ret =3D ufs_mtk_pre_pwr_change(hba, dev_req_params);
+> -		break;
+> +		return ufs_mtk_pre_pwr_change(hba, dev_req_params);
+>  	case POST_CHANGE:
+>  		if (ufshcd_is_auto_hibern8_supported(hba))
+> -			ufshcd_writel(hba, reg, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> -		break;
+> -	default:
+> -		ret =3D -EINVAL;
+> -		break;
+> +			ufshcd_writel(hba, host->ahit,
+> +				      REG_AUTO_HIBERNATE_IDLE_TIMER);
 
-Could subsequent accesses to the UFS controller attempt to operate on
-unpowered hardware, likely causing a hardware hang or an asynchronous
-external abort that crashes the system?
+[Severity: High]
+This is a pre-existing issue, but does blindly restoring this cached value =
+risk
+losing user configuration and violating hardware constraints during a race
+with sysfs?
 
-> +	.reg_names =3D ufs_mtk_regs_avdd12_ckbuf,
-> +	.num_reg_names =3D ARRAY_SIZE(ufs_mtk_regs_avdd12_ckbuf),
-> +};
-> +
+When ufshcd_devfreq_scale() changes power modes, it holds clk_scaling_lock =
+and
+scan_mutex, but does not acquire hba->host_sem. Concurrently, a sysfs write=
+ to
+the auto_hibern8 node invokes auto_hibern8_store(), which updates the hardw=
+are
+register under hba->host_sem but without holding clk_scaling_lock.
+
+If a sysfs write occurs immediately after PRE_CHANGE disabled the
+auto-hibernate timer, the timer is re-enabled during
+ufshcd_dme_change_power_mode(), violating the constraint this function is
+trying to enforce.
+
+Furthermore, when POST_CHANGE executes, it overwrites the register with the
+stale host->ahit value, completely undoing the user's sysfs configuration.
+
+> +		return 0;
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901-mt8196-ufs=
--v11-0-dbd007704490@collabora.com?part=3D24
+-v11-0-dbd007704490@collabora.com?part=3D21
