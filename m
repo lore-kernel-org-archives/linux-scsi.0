@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5EAC47A0C7
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2026 11:05:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F294A47CA9D
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2026 11:09:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788260750; cv=none; b=IWZ4hjxMEkGsf3m112qmUJ6Kre2M6QGuyXrYcmnoW4zyROkMK+sDerpbM9o3ttc/B/H3PQtL4fBwtPYKyHW4wbW3FAm2oVq/20h22zcOO/1KPlP4Gdkpyn1sDiNt8PuElVOyZg2HEllUm0bW/wv59KpHbwA1TQxm2pTSgrPfcug=
+	t=1788260992; cv=none; b=FKIACvcRaCQnRmtsAr4B+fRrJfQsTttog5RuakOuKIRMGl7s/yyIYy5atxkiylMD4BeXSK/peFy+myy9Y1YseCHxlzyK24p4Z82hMBmxyerwr7oNjKiCFhdE3DOfHPGpKmPVAIQpyjTbvszNqKvtahTtkDhdXlsGUX3XX5aPYXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788260750; c=relaxed/simple;
-	bh=EHOLmqUpHwzpPZEj3GknA6UsFpa+ImBy1c3L80N66c8=;
+	s=arc-20240116; t=1788260992; c=relaxed/simple;
+	bh=ROW6bGNRxFoaqbfZelJUaWBEOHJGT1FbYZ2HtG6JU50=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=c5OFrw4gkuTm9IMLrYRQBMp9zGvqJUfBWJ9Q9AoLAF3SQuTvMTl94hdVU34cdPdZspMe/iIgsnGYCfTBffP7kx/al7c3c74EEXGQRIWzEJ3Vl3C3vrNUThTkl0Im/sYLG/ts6t8ID3c9f1q/AU5WW0QnnJqWtLocMXxdq1Vr5uE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k13urAE4; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=bPfBDNIuyuT57LWAs5b3SnDi9CsTOBWOEVtcR2Ymijv5sR6DG0jxf8m1lw4Z5TF/b7vTo5myqFOvro7/KOUfHBWQ7phrAXL/5RIeNWAqooPfDLzAk1EcWW5w0WJNUNZbJbnwBg1b4CgypktWknGviOkAu+qoouUdAvoaQzxEXy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LupzVQ9f; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k13urAE4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A06911F000E9;
-	Tue,  1 Sep 2026 11:05:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LupzVQ9f"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8159E1F000E9;
+	Tue,  1 Sep 2026 11:09:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788260748;
-	bh=n4Ls5VwmkLFLRY3Ac6wO/8d4rl3avLi4jAQf4yRA5kE=;
+	s=k20260515; t=1788260990;
+	bh=JM6nK2TEKCmyaItB5NKkVKhjJcHKq6CTmwSSl/d21kc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=k13urAE4CycbvTTIyp2mSfjg4ZfLe1oAWs+z4oAcZ9Cgood7PsAp6cArU6gzm/fVv
-	 +FhUvv/uzN6m7Too31m0sm0AYkQiFWcsdF2gANkd96E5PMFsoqO0FWd6gMpP8qvzKs
-	 WPelxw9hIA8laknKdz3sw3d0V+hw/j5zdfYawwaZDzldjN86IKBIN40BZcIh00sG0Q
-	 zPmcnvqSVjgUx4GEN6WEgaGmKhCkRrzysHmNaxD5jRlzpXq8NO8c+K56UxA4g6y5Z6
-	 8CR8juwz3BVMuwqS/19FsfsSi3y5lz/XvSpLcWZEVEZbg1uM3qbdr1sOPY5lFzTj6A
-	 KtDiyAyY9DncQ==
+	b=LupzVQ9fa5RvW0xETRqdjvYrBa6ZHf7rkxbIqs/8Y/FORfoffs1SWfcR3yyQ3MXhF
+	 M5C9KSuOxRcAzM8OdTsWx0tuzVUamD9gDIJCN297hV6EdrWDAiYeEPbsAZEUwL1wf0
+	 6CDcU0HmYYpsew3RfSoJXz8PADnYAxNTMQ1YWXk2Y/CnyTNMuLeHJ2vAHQHdcTUBmk
+	 wtgTAFXxYwY46c1hNHVf2hjzp2yqnEFGUDX9Fps0Df0DCFNgUEZxPNFye3nMY6FlZ6
+	 T+n5kDiarLaLfHlbEXvh0sZJDY+O2fFSCNUNfiQUoYtm8b5LhSwHrLOhkc655c5sUW
+	 nx4YvT8yr6OLg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 06/27] libmultipath: Add delayed removal support
+Subject: Re: [PATCH v7 18/27] scsi-multipath: failover handling
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260901104526.3850621-7-john.g.garry@oracle.com>
+In-Reply-To: <20260901104526.3850621-19-john.g.garry@oracle.com>
 References: <20260901104526.3850621-1-john.g.garry@oracle.com>
- <20260901104526.3850621-7-john.g.garry@oracle.com>
+ <20260901104526.3850621-19-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 11:05:48 +0000
-Message-Id: <20260901110548.A06911F000E9@smtp.kernel.org>
+Date: Tue, 01 Sep 2026 11:09:49 +0000
+Message-Id: <20260901110950.8159E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,73 +46,78 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Setting `delayed_removal_secs` to 0 via sysfs clears the `MPATH_HE=
-AD_QUEUE_IF_NO_PATH` flag but fails to kick the requeue list, leaving alrea=
-dy-queued I/Os stranded indefinitely.
+- [High] Path failover is prematurely aborted if the underlying path device=
+ is removed, and dropping its reference causes a sleep-in-atomic bug.
 --
 
-commit 751b8b804bd2a99a7fc5d0ec1509ae11a6846846
+commit 657b83f2533d51dce7950c14bb5248625186e04d
 Author: John Garry <john.garry@linux.dev>
-Subject: libmultipath: Add delayed removal support
+Subject: scsi-multipath: failover handling
 
-This commit adds support for delayed removal of multipath devices, similar
-to NVMe, to keep the disk and cdev present during intermittent periods with
-no available paths. A delayed work callback is utilized to handle the teard=
-own,
-and sysfs helpers are exposed for the driver to configure the duration.
+This commit implements failover handling for scsi_cmnd by requeuing the
+master bio of each bio attached to a failed request. Failover is detected
+in scsi_mpath_clone_end_io() when blk_path_error() occurs.
 
-> diff --git a/lib/multipath.c b/lib/multipath.c
-> index 6b8f6e846987a..fada92bf9754c 100644
-> --- a/lib/multipath.c
-> +++ b/lib/multipath.c
+> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+> --- a/drivers/scsi/scsi_multipath.c
+> +++ b/drivers/scsi/scsi_multipath.c
 
 [ ... ]
 
-> @@ -572,6 +620,47 @@ void mpath_device_set_live(struct mpath_device *mpat=
-h_device)
->  }
->  EXPORT_SYMBOL_GPL(mpath_device_set_live);
-
-[ ... ]
-
-> +ssize_t mpath_delayed_removal_secs_store(struct mpath_head *mpath_head,
-> +			const char *buf, size_t count)
-> +{
-> +	unsigned int sec;
-> +	ssize_t ret;
+>  static void scsi_mpath_clone_end_io(struct bio *clone)
+>  {
+>  	struct bio *master_bio =3D clone->bi_private;
+> =20
+> +	if (clone->bi_status && blk_path_error(clone->bi_status)) {
+> +		struct block_device *bi_bdev =3D clone->bi_bdev;
+> +		struct request_queue *q =3D bi_bdev->bd_queue;
+> +		struct scsi_device *sdev =3D scsi_device_from_queue(q);
+> +		struct scsi_mpath_device *scsi_mpath_dev;
+> +		struct mpath_device *mpath_device;
+> +		struct mpath_head *mpath_head;
+> +		unsigned long flags;
 > +
-> +	ret =3D kstrtouint(buf, 0, &sec);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	mutex_lock(&mpath_head->lock);
-> +	mpath_head->delayed_removal_secs =3D sec;
-> +	if (sec)
-> +		set_bit(MPATH_HEAD_QUEUE_IF_NO_PATH, &mpath_head->flags);
-> +	else
-> +		clear_bit(MPATH_HEAD_QUEUE_IF_NO_PATH, &mpath_head->flags);
-> +	mutex_unlock(&mpath_head->lock);
-> +
-> +	/*
-> +	 * Ensure that update to MPATH_HEAD_QUEUE_IF_NO_PATH is seen
-> +	 * by its reader.
-> +	 */
-> +	mpath_synchronize(mpath_head);
-> +
-> +	return count;
+> +		if (!sdev)
+> +			goto end_bio;
 
 [Severity: High]
-When delayed_removal_secs is set to 0, this clears the
-MPATH_HEAD_QUEUE_IF_NO_PATH flag, but does it also need to kick the requeue
-list (e.g., via mpath_schedule_requeue_work())?
+If the underlying device is being removed and scsi_device_from_queue()
+returns NULL, does this prematurely abort the failover?
 
-If there are I/Os already placed in mpath_head->requeue_list during a path
-failure while the delay was active, could they remain stranded indefinitely
-once the delay is disabled?
+Bailing out here directly propagates the path error to the master bio,
+which seems to break the multipath failover guarantee.
 
-> +}
-> +EXPORT_SYMBOL_GPL(mpath_delayed_removal_secs_store);
+> +
+> +		scsi_mpath_dev =3D sdev->scsi_mpath_dev;
+> +		mpath_device =3D &scsi_mpath_dev->mpath_device;
+> +		mpath_head =3D mpath_device->mpath_head;
+> +
+> +		spin_lock_irqsave(&mpath_head->requeue_lock, flags);
+> +		bio_list_add_clone(&mpath_head->requeue_list, clone);
+> +		spin_unlock_irqrestore(&mpath_head->requeue_lock, flags);
+> +
+> +		mpath_schedule_requeue_work(mpath_head);
+> +		put_device(&sdev->sdev_gendev);
+
+[Severity: High]
+Can this put_device() call trigger a sleep-in-atomic panic?
+
+Since scsi_mpath_clone_end_io() executes in the softirq context of a bio
+end_io handler, dropping the last reference here can call
+scsi_device_dev_release(), which explicitly enforces might_sleep().
+
+Could mpath_head be safely derived directly from
+master_bio->bi_bdev->bd_disk->private_data instead of indirectly through
+the underlying path device?
+
+> +		return;
+> +	}
+> +
+> +end_bio:
+>  	master_bio->bi_status =3D clone->bi_status;
+>  	bio_put(clone);
+>  	bio_endio(master_bio);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901104526.3850=
-621-1-john.g.garry@oracle.com?part=3D6
+621-1-john.g.garry@oracle.com?part=3D18
