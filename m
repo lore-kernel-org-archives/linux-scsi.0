@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A9E049F13F
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2026 19:08:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8337C4A093F
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2026 19:13:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788289710; cv=none; b=GmAjxvzet9A175XeKSYQzxIggM528GpiS/Luzd0OV7YcO/XZ5ALJp8noMpViqR3zSMEzGR+jB2+krG3LunhkLn35SnlQBsf3XIlKOKUTeZJ2ahcZhbu2Av8y68zXHO4geUF7A0UbZjjDK1GypOSpBd1SunI/QVGEi3Kuk2mc9Ic=
+	t=1788290039; cv=none; b=Sbi6J9StVso5xy2Se7MU/bIFopS49eBTwutgnMQRyx66erFeINHZcn/jakozrvPvNf75wPq8DzaSNCedzulAsVShZvQXPGmDR1+Bp4Xhks3w2/2Wvnu0J7+mpsBZPH8F/06wFmbr3nAdASLPH29qhPOUKGOFbWqcBZ2aQTWlAIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788289710; c=relaxed/simple;
-	bh=9LFsoPdA7Z96tuN4KE74hGywRfz1bmrcnuAywiH5gdE=;
+	s=arc-20240116; t=1788290039; c=relaxed/simple;
+	bh=rlnEpoQqZM0q1JKCIvkU4Yzcc1HivHI0aGOTf4jB2Lo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OAuCpsLY5vOgo9GEAEpkr64ZWKT5o6MpG6NPQA3mk+024zEy3czLB4CRuBDeA2WE6LB7H0MU85xzzvF/4H9wrXxtRylogkpuPXxfsy7+0eSHOEN+PJoKZAK1BkETZNppYchVNDvd2p9Fj+vvB/zHODzxHK7NKKZlrVFZyeBBDp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iI4sQjiX; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=PtltMreZGY1U6iEfmUsw75RSJTWKKifTULUQZEXt0Axkq3B6a13mIH9QaFBpwNCxhe718e82/wVt+h2ljsxDlvMGg9acouCwEcjL08dVuaTedXny83VC+4b49UMGCuJzURxuBYHpORrezfNDd4pOQIDAl5OPuHPxxoAdmSk8bBA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=O0WEUnCl; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iI4sQjiX"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O0WEUnCl"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1788289708;
+	s=mimecast20190719; t=1788290033;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=aIxAvTRNvxJgRJBiEkDQ2UEAvyzYXhxvE+oYR37jJhI=;
-	b=iI4sQjiXNiLP87Ypju4n3fQqdDye9SjBCz3t+pHNbpXITDqx8VVHfOpr5dtEweTFZSu5Dl
-	wbkX1fWB4Dtc9uyeKA3IT+Nbrq+ORgP7kI6CGZIeXke09O0pFAVtYIQdcALtNr7tvI8gKT
-	d5P8ep72F+aBigdYCvtSV9sQgu0fqDE=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=2Gc0ait3L/IgveRSbsQEV85pq6/ltievYnmCwsbLN8s=;
+	b=O0WEUnClA/dZltVM2YvPxEQW0gm8PQC87ubfb3mfZq/1VLj/gr1ab6Ow8rg62LFyJyCppU
+	Qu+uH/skrSLdXy9BKaW3E5N6ul3ssrv+2HU1HirWLOoqrorrv364v2nW6R+qpsSpMgquSU
+	wcT1SRY2nOICbpzuWAgc7Ls0mv7o1Xc=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-655-P5I-FGMdPmOCoUPEPOt70Q-1; Tue,
- 01 Sept 2026 15:08:26 -0400
-X-MC-Unique: P5I-FGMdPmOCoUPEPOt70Q-1
-X-Mimecast-MFC-AGG-ID: P5I-FGMdPmOCoUPEPOt70Q_1788289703
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-634-k8giU1h9OVCJTn1H8fntNg-1; Tue,
+ 01 Sept 2026 15:13:49 -0400
+X-MC-Unique: k8giU1h9OVCJTn1H8fntNg-1
+X-Mimecast-MFC-AGG-ID: k8giU1h9OVCJTn1H8fntNg_1788290026
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0EA59183035E;
-	Tue,  1 Sep 2026 19:08:23 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A6D0B195411F;
+	Tue,  1 Sep 2026 19:13:45 +0000 (UTC)
 Received: from localhost (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3C5807E3;
-	Tue,  1 Sep 2026 19:08:22 +0000 (UTC)
-Date: Tue, 1 Sep 2026 15:08:20 -0400
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 000DC30001A2;
+	Tue,  1 Sep 2026 19:13:43 +0000 (UTC)
+Date: Tue, 1 Sep 2026 15:13:42 -0400
 From: Stefan Hajnoczi <stefanha@redhat.com>
 To: Linlin Zhang <linlin.zhang@oss.qualcomm.com>
 Cc: ebiggers@kernel.org, axboe@kernel.dk, mst@redhat.com,
@@ -56,11 +56,11 @@ Cc: ebiggers@kernel.org, axboe@kernel.dk, mst@redhat.com,
 	alim.akhtar@samsung.com, avri.altman@sandisk.com,
 	pbonzini@redhat.com, eperezma@redhat.com,
 	xuanzhuo@linux.alibaba.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 06/11] scsi: ufs: core: add slot path to
- ufshcd_prepare_lrbp_crypto
-Message-ID: <20260901190820.GB729142@fedora>
+Subject: Re: [PATCH v1 07/11] blk-crypto: move bio_crypt_dun_increment() to
+ the public header
+Message-ID: <20260901191342.GC729142@fedora>
 References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
- <20260827160806.1295313-7-linlin.zhang@oss.qualcomm.com>
+ <20260827160806.1295313-8-linlin.zhang@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,89 +68,91 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="pBRcO3zyIP96qqRf"
+	protocol="application/pgp-signature"; boundary="PEA6fpBf2bNc3JFu"
 Content-Disposition: inline
-In-Reply-To: <20260827160806.1295313-7-linlin.zhang@oss.qualcomm.com>
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
+In-Reply-To: <20260827160806.1295313-8-linlin.zhang@oss.qualcomm.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
---pBRcO3zyIP96qqRf
+--PEA6fpBf2bNc3JFu
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 27, 2026 at 09:07:15AM -0700, Linlin Zhang wrote:
+On Thu, Aug 27, 2026 at 09:07:16AM -0700, Linlin Zhang wrote:
 > From: linlzhan <linlin.zhang@oss.qualcomm.com>
 >=20
-> ufshcd_prepare_lrbp_crypto() programs crypto_key_slot in the LRB from
-> rq->crypt_keyslot.  With the blk-crypto slot path a bio can carry a
-> pre-programmed physical ICE keyslot index in crypt_ctx->bc_slot rather
-> than a blk_crypto_key pointer.  In that case rq->crypt_keyslot is NULL
-> and the existing code incorrectly falls through to the "no encryption"
-> path, leaving crypto_key_slot as -1.
+> bio_crypt_dun_increment() is currently declared only in
+> block/blk-crypto-internal.h, which is not accessible to code
+> outside of block/.  Drivers that manage inline-encrypted I/O
+> directly need to advance the DUN across bio_vecs within a bio,
+> or across multiple bios in a request, and have no other way
+> to call this function.
 >=20
-> Extend the function to handle both cases: when rq->crypt_keyslot is
-> set, derive the slot index via blk_crypto_keyslot_index() as before;
-> when bc_slot.data_unit_size_bits is non-zero, read crypto_key_slot
-> directly from bc_slot.phy_slot.
+> Move the declaration from block/blk-crypto-internal.h to
+> include/linux/blk-crypto.h alongside the existing
+> bio_crypt_dun_is_contiguous() and blk_crypto_init_key()
+> declarations. The implementation in block/blk-crypto.c is
+> unchanged.
 >=20
 > Signed-off-by: linlzhan <linlin.zhang@oss.qualcomm.com>
 > ---
->  drivers/ufs/core/ufshcd-crypto.h | 14 +++++++++++---
->  1 file changed, 11 insertions(+), 3 deletions(-)
+>  block/blk-crypto-internal.h | 3 ---
+>  include/linux/blk-crypto.h  | 3 +++
+>  2 files changed, 3 insertions(+), 3 deletions(-)
 
-This patch also looks like it's specific to the out-of-band key slot
-programming interface. Skipping for now.
+Other include/linux/blk-crypto.h functions export their symbols. Does
+bio_crypt_dun_increment() need EXPORT_SYMBOL_GPL() like
+bio_crypt_set_ctx() and friends?
 
 >=20
-> diff --git a/drivers/ufs/core/ufshcd-crypto.h b/drivers/ufs/core/ufshcd-c=
-rypto.h
-> index 8f66db94e179..2fc5601c0f76 100644
-> --- a/drivers/ufs/core/ufshcd-crypto.h
-> +++ b/drivers/ufs/core/ufshcd-crypto.h
-> @@ -15,13 +15,21 @@
->  static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
->  					      struct ufshcd_lrb *lrbp)
->  {
-> -	if (!rq || !rq->crypt_keyslot) {
-> +	if (!rq) {
->  		lrbp->crypto_key_slot =3D -1;
->  		return;
->  	}
+> diff --git a/block/blk-crypto-internal.h b/block/blk-crypto-internal.h
+> index 04035d237f03..32c720aabba7 100644
+> --- a/block/blk-crypto-internal.h
+> +++ b/block/blk-crypto-internal.h
+> @@ -26,9 +26,6 @@ int blk_crypto_sysfs_register(struct gendisk *disk);
 > =20
-> -	lrbp->crypto_key_slot =3D blk_crypto_keyslot_index(rq->crypt_keyslot);
-> -	lrbp->data_unit_num =3D rq->crypt_ctx->bc_dun[0];
-> +	if (rq->crypt_keyslot) {
-> +		lrbp->crypto_key_slot =3D blk_crypto_keyslot_index(rq->crypt_keyslot);
-> +		lrbp->data_unit_num =3D rq->crypt_ctx->bc_dun[0];
-> +	} else if (rq->crypt_ctx && rq->crypt_ctx->bc_slot.data_unit_size_bits)=
- {
-> +		lrbp->crypto_key_slot =3D rq->crypt_ctx->bc_slot.phy_slot;
-> +		lrbp->data_unit_num =3D rq->crypt_ctx->bc_dun[0];
-> +	} else {
-> +		lrbp->crypto_key_slot =3D -1;
-> +	}
+>  void blk_crypto_sysfs_unregister(struct gendisk *disk);
+> =20
+> -void bio_crypt_dun_increment(u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
+> -			     unsigned int inc);
+> -
+>  bool bio_crypt_rq_ctx_compatible(struct request *rq, struct bio *bio);
+> =20
+>  bool bio_crypt_ctx_mergeable(struct bio_crypt_ctx *bc1, unsigned int bc1=
+_bytes,
+> diff --git a/include/linux/blk-crypto.h b/include/linux/blk-crypto.h
+> index 33ae52b77522..c9f436b6b2ef 100644
+> --- a/include/linux/blk-crypto.h
+> +++ b/include/linux/blk-crypto.h
+> @@ -181,6 +181,9 @@ bool bio_crypt_dun_is_contiguous(const struct bio_cry=
+pt_ctx *bc,
+>  				 unsigned int bytes,
+>  				 const u64 next_dun[BLK_CRYPTO_DUN_ARRAY_SIZE]);
+> =20
+> +void bio_crypt_dun_increment(u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
+> +			     unsigned int inc);
 > +
->  }
-> =20
->  static inline void
+>  int blk_crypto_init_key(struct blk_crypto_key *blk_key,
+>  			const u8 *key_bytes, size_t key_size,
+>  			enum blk_crypto_key_type key_type,
 > --=20
 > 2.34.1
 >=20
 
---pBRcO3zyIP96qqRf
+--PEA6fpBf2bNc3JFu
 Content-Type: application/pgp-signature; name=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmqXIqQACgkQnKSrs4Gr
-c8iYNQf/Z/Mg0LaUa6dUJKhoFrywpY04b1BFZC1/1mBEcV2rEpgme0EWNIrKViN/
-3k9Cl7masxIgvtvpYzcTYaXy/es7h5fzlSTiP8qyPftSB9iBVHq8mzRO3oJqybld
-z0R8smUmJK8J0eRDOcNbPmEEiY/bV6r4xgNZD0qC3+K+lJHQinp7yz2D9HySG1cO
-Vh3+MBiYeUpmoRya/8hEa1X1hXhoIlQRmrNkL6+mhR3A46ybQCAcmVtjfguXcGGk
-KJ0wH4y6TcHdZCy8PnGRKOe+Pg8/XTw3q9Eittz5wr26GmhPqtjn7dAmWKwtz42l
-tyy1f3bl5pR2uOxzo3IH0lNg4wcHig==
-=a1Wq
+iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmqXI+YACgkQnKSrs4Gr
+c8iM3Qf/XFmILiCbeSjbXunU0k6T8u+dWvrzWNhq4pxK9Sj3ejQwcBFSp0YgWTeP
+huZvq2kGaf90TF7mw48y1hF3UnUHN9YCdADHFCePBQjaUsXeCtVguebgzFhhqvCe
+govoIFLmGhVjuU08W4/32X2McSZm/RU7nEaXkwX8baWQGmT6OJeteJsng7GyyCWW
+FHCOoHLTI3UKR40LJrijN1S/cnP/vZvYMs9X2LCwGmHua5uaTdoI0APEWwH34397
+u7yXS7G74oYNxIFC3zuqZ2ikoZQ7LDpNqrlTb4WttYP1sOhForEze0lQO6gFt/s/
+8Iyi2gjGMdOLc56RWntVSrqktDwQYA==
+=lhw/
 -----END PGP SIGNATURE-----
 
---pBRcO3zyIP96qqRf--
+--PEA6fpBf2bNc3JFu--
 
