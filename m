@@ -1,275 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD54230ACFB
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2026 11:19:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC145299931
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2026 11:25:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788261546; cv=none; b=rDOLqaZq06XoOoJNjeyV2ebZaXz6MGBSqNXCizjEm4D0bK0eydZuDS3cI4Z27r8ivJd2RVGMYXsDU0AePU0ASML3mA+kTVVkTjVjq2vjz33cYGC4eKwmQRHDgohwgqf69wF8S4RdK/MZKGVn9jzYAOO2Z/x635ObIziJkloq/pg=
+	t=1788261934; cv=none; b=IDrH3mY1jLVTj2NkUHFxzXgy5smWFdkB0g5p6nl1Aeq8Hpwcgry9u/itlDR4iKPeG63AQGQc9AcmAkw03dOgSODOytrRxnTnpWIQOaFy/dD6vz+BgxR5Xkly3l6dd1IIrc0ICZF3kwMtcu4roHYjNHjukw3al+LFIR0v/csABO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788261546; c=relaxed/simple;
-	bh=pNqCHaqxwYfdyaZnO/iauZLhkCeS5I4eeaBefHYRojo=;
+	s=arc-20240116; t=1788261934; c=relaxed/simple;
+	bh=AO2+FGYassbPwqjb/zi73ax86Z9slStrOOjuwbQnJ5U=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Sd/Ok8qZHJeoo/ga+DUZ1mYoGXj/sjMP2SSqQI0VWsa/4sD/jiaAE28OklAVjnh64jSqj2V+82gGLgLSt9NPh4sj17wP7J+h1Dr+QyvKEuGYZexTtnZdzS9xkdloG2UOUvLC+ZEHj+TKsf/Po75JTQNQHp3uebo4weW39jpzByk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=om5h0GDN; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=HQfaBAGZv+9+uYCvVdqWtXytWwMjK5OxsRS35a/OOm5RYc8W8sPr2luo+le70SAj8GRfZggIC2iYCwrml7qqrJn9Xqavw1pFurO1jkEK4tcaOFo9CySPfYM7I1hE1efB6l2DLUhBIzBd9GEmXBbmhRv3wBHIYCh0C4rwgkZTl4A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l30+ZrCP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="om5h0GDN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 288951F000E9;
-	Tue,  1 Sep 2026 11:19:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l30+ZrCP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BC161F000E9;
+	Tue,  1 Sep 2026 11:25:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788261544;
-	bh=grAzq6Yd5R6BFhY6eBD8vDxMhUQgF6wX1sIcFsq4UIY=;
+	s=k20260515; t=1788261933;
+	bh=1FhUFxNyMP6SATAmEHttdHB0MbfD15brfR8CCj/1SBE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=om5h0GDNo8+cEsiyhArLo+4GTiIByVk3i8EB2gdktaiZli0tZpQFu4LI+ZG3FO+8P
-	 RKWWaVG7RyUBqPtlCL9ogl0hO74ynaRPZMGB7Q+oZgT9efZGKjJ6BCcUGVH+xzkv8x
-	 Iu6JsDjAlJV6QAxjTjKisITdXbHTZVi4Z4OEKL+IMU1+WzGXPCouBjzoi0Nv4PJiq4
-	 bOjjolWL5aYsQdi9jFAua8e3iVq7t7ulQA0tRxT6+HSfOedpJ9K+eFugKrFw/XfWYM
-	 hr/wjrmRFPODFGKKULRJNiY8eWiW3YmaG9rgvRY6BbVrOubVtzedkWK5bhaqPN5o02
-	 mVFyNEMCscrIw==
+	b=l30+ZrCP7PPanouFvr3dGeGi1Tp59ke6VeCFYAQZsyyY+E3KgbyiNXJ4mbzu+u3Ke
+	 i/x4IMBwkTM0xgDn5atqJsc3ltztps6MBVb7T2BvRja4K/EQUN0fYC0iNDJ2LEG3hr
+	 UqPusJf66gGX1OSn+HSLNVJ4kMIOSd5W3Kw1Q30Ym9NOsT4SaIqsWbL4JoWUhqLHGP
+	 uECBbAzn1JVzthvaDSBZSqrOKmNFbCLbJYvnipSrZ7L7NdE7SKbzAqnLi0LbCYM2rD
+	 BPgX3WxpjCyjQBsoNa+cJhg/9XaOZJuoS5t/V3sG/IZOMJZaszy5KNR+wZFw2PJHym
+	 hJsFkHFjUZWsA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 24/27] scsi: sd: support multipath disk
+Subject: Re: [PATCH v7 20/27] scsi-multipath: add
+ scsi_mpath_{start,end}_request()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260901104526.3850621-25-john.g.garry@oracle.com>
+In-Reply-To: <20260901104526.3850621-21-john.g.garry@oracle.com>
 References: <20260901104526.3850621-1-john.g.garry@oracle.com>
- <20260901104526.3850621-25-john.g.garry@oracle.com>
+ <20260901104526.3850621-21-john.g.garry@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 01 Sep 2026 11:19:03 +0000
-Message-Id: <20260901111904.288951F000E9@smtp.kernel.org>
+Date: Tue, 01 Sep 2026 11:25:32 +0000
+Message-Id: <20260901112533.2BC161F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Unprotected overwrite of mpath_head->parent before validation caus=
-es Use-After-Free during concurrent I/O when probe fails.
-- [High] Queue limits are explicitly overwritten before stacking, breaking =
-multipath limits aggregation.
-- [Medium] Circular reference between sd_mpath_disk and its child multipath=
- gendisk prevents both structures from ever being freed.
-- [Medium] Missing put_device() in sd_probe() error path leaks the scsi_dis=
-k structure and device references.
-- [Medium] TOCTOU race in disk removal paths allows a concurrent probe to f=
-ail with a duplicate sysfs name error.
+- [High] Bypassing `scsi_end_request()` on hard errors in `scsi_queue_rq()`=
+ permanently leaks multipath active counters and corrupts state for recycle=
+d blk-mq tags.
 --
 
-commit 7a8d9795d762973e091f3a0357c1112c3afc4c60
+commit d6985f792a0819a7b56a04e827a71ff5a8dd2172
 Author: John Garry <john.garry@linux.dev>
-Subject: scsi: sd: support multipath disk
 
-Add support to attach a multipath disk, allocating gendisks per path but
-marking them as hidden, and maintaining a global list of multipath disks
-for scsi_device matching.
+scsi-multipath: add scsi_mpath_{start,end}_request()
 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 60e071d23ddd0..28304a497d8c6 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
+This commit adds scsi_mpath_start_request() and scsi_mpath_end_request() to
+handle private multipath request data. It also introduces mpath_nr_active
+per SCSI host to track active requests for queue depth io-policies.
+
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 189263ce56624..5916dead5422e 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
 [ ... ]
-> @@ -115,12 +115,30 @@ static mempool_t *sd_large_page_pool;
->  static atomic_t sd_large_page_pool_users =3D ATOMIC_INIT(0);
->  static struct lock_class_key sd_bio_compl_lkclass;
->  #ifdef CONFIG_SCSI_MULTIPATH
-> +static LIST_HEAD(sd_mpath_disks_list);
-> +static DEFINE_MUTEX(sd_mpath_disks_lock);
-> +
->  struct sd_mpath_disk {
-> +	struct device			dev;
-> +	int				disk_index;
-> +	int				disk_count;
-> +	struct list_head		entry;
->  	struct scsi_mpath_head		*scsi_mpath_head;
->  };
+> @@ -1918,6 +1921,9 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_=
+ctx *hctx,
+>  	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+>  	cmd->submitter =3D SUBMITTED_BY_BLOCK_LAYER;
 > =20
->  static void sd_mpath_disk_release(struct device *dev)
->  {
-> +	struct sd_mpath_disk *sd_mpath_disk =3D
-> +		container_of(dev, struct sd_mpath_disk, dev);
-> +	struct scsi_mpath_head *scsi_mpath_head =3D
-> +		sd_mpath_disk->scsi_mpath_head;
-> +	struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
+> +	if (sdev->scsi_mpath_dev && is_mpath_request(req))
+> +		scsi_mpath_start_request(req);
 > +
-> +	mpath_put_disk(mpath_head);
+>  	blk_mq_start_request(req);
+>  	if (blk_mq_is_reserved_rq(req)) {
+>  		reason =3D shost->hostt->queue_reserved_command(shost, cmd);
 
-[Severity: Medium]
-In sd_mpath_probe(), the child multipath gendisk takes a reference on this
-device via mpath_head->parent =3D &sd_mpath_disk->dev. Since the child holds
-a strong reference to the parent, the parent's refcount cannot reach zero
-while the child exists.
-
-Does dropping the child reference here in the parent's release function cre=
-ate
-an unbreakable circular dependency that leaks both structures during remova=
-l?
-
-> +	ida_free(&sd_index_ida, sd_mpath_disk->disk_index);
-> +	scsi_mpath_put_head(scsi_mpath_head);
-> +
-> +	kfree(sd_mpath_disk);
->  }
 [ ... ]
-> @@ -4019,6 +4038,90 @@ static int sd_format_disk_name(char *prefix, int i=
-ndex, char *buf, int buflen)
->  	return 0;
->  }
-> =20
-> +#ifdef CONFIG_SCSI_MULTIPATH
-> +static int sd_mpath_revalidate_head(struct scsi_disk *sdkp)
-> +{
-> +	struct sd_mpath_disk *sd_mpath_disk =3D sdkp->sd_mpath_disk;
-> +	struct scsi_mpath_head *scsi_mpath_head =3D sd_mpath_disk->scsi_mpath_h=
-ead;
-> +	struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
-> +	struct gendisk *disk =3D mpath_head->disk;
-> +	struct queue_limits *sdkp_lim =3D &sdkp->disk->queue->limits;
-> +	struct queue_limits lim;
-> +	unsigned int memflags;
-> +	int ret;
-> +
-> +	lim =3D queue_limits_start_update(disk->queue);
-> +	memflags =3D blk_mq_freeze_queue(disk->queue);
-> +
-> +	lim.logical_block_size =3D sdkp_lim->logical_block_size;
-> +	lim.physical_block_size =3D sdkp_lim->physical_block_size;
-> +	lim.io_min =3D sdkp_lim->io_min;
-> +	lim.io_opt =3D sdkp_lim->io_opt;
-> +
-> +	queue_limits_stack_bdev(&lim, sdkp->disk->part0, 0,
-> +					disk->disk_name);
+
+> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+> index 8ecfb94049db5..52227e2cd9749 100644
+> --- a/include/scsi/scsi_cmnd.h
+> +++ b/include/scsi/scsi_cmnd.h
+[ ... ]
+> @@ -58,8 +58,11 @@ struct scsi_pointer {
+>   */
+>  #define SCMD_FORCE_EH_SUCCESS	(1 << 3)
+>  #define SCMD_FAIL_IF_RECOVERING	(1 << 4)
+> +#define SCMD_MPATH_IO_STATS	(1 << 5)
+> +#define SCMD_MPATH_CNT_ACTIVE	(1 << 6)
+>  /* flags preserved across unprep / reprep */
+> -#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED | SCMD_FAIL_IF_RECOVERING)
+> +#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED | SCMD_FAIL_IF_RECOVERING=
+ | \
+> +				SCMD_MPATH_IO_STATS | SCMD_MPATH_CNT_ACTIVE)
 
 [Severity: High]
-Does overwriting the multipath limits with sdkp_lim before calling
-queue_limits_stack_bdev() erase the previously stacked limits?
+Does preserving these multipath flags across requeue operations cause a lea=
+k=20
+of the mpath_nr_active counter and stale state for recycled tags?
 
-If an older path required stricter limits (e.g. larger block size or
-alignment), would this downgrade the multipath limits to match only the new=
-ly
-probed path, potentially causing I/O errors on the older paths?
+If a multipath request is dispatched, it calls scsi_mpath_start_request()=20
+which increments the host's mpath_nr_active counter and sets these flags.=20
 
-> +
-> +	/* TODO: setup integrity and zoned limits */
-[ ... ]
-> +static int sd_mpath_probe(struct scsi_disk *sdkp)
-> +{
-[ ... ]
-> +	sd_mpath_disk =3D kzalloc(sizeof(*sd_mpath_disk), GFP_KERNEL);
-> +	if (!sd_mpath_disk) {
-> +		error =3D -ENOMEM;
-> +		goto out_unlock;
-> +	}
-> +
-> +	sd_mpath_disk->scsi_mpath_head =3D scsi_mpath_head;
-> +
-> +	blk_set_stacking_limits(&lim);
-> +	lim.dma_alignment =3D 3;
-> +	lim.features |=3D BLK_FEAT_IO_STAT | BLK_FEAT_NOWAIT |
-> +		BLK_FEAT_POLL | BLK_FEAT_ATOMIC_WRITES;
-> +
-> +	mpath_head->parent =3D &sd_mpath_disk->dev;
-> +	mpath_head->drv_module =3D THIS_MODULE;
-> +	mpath_head->disk_groups =3D sd_mpath_disk_attr_groups;
-> +	error =3D mpath_alloc_head_disk(mpath_head, &lim,
-> +				dev_to_node(dma_dev));
-> +	if (error)
-> +		goto out_free_disk;
+If this request is requeued (for example, if the host is busy) and then=20
+re-dispatched while the device is offline or entering recovery,=20
+scsi_device_state_check() in scsi_queue_rq() will fail early. This causes=20
+scsi_queue_rq() to return a hard error directly to the block layer.
 
-[Severity: High]
-If mpath_alloc_head_disk() fails here, the error path jumps to out_free_disk
-and calls kfree(sd_mpath_disk). However, mpath_head->parent was
-unconditionally set to &sd_mpath_disk->dev just before the call.
+Because the block layer completes the request natively on hard dispatch=20
+errors, it bypasses scsi_end_request(), leaving scsi_mpath_end_request()=20
+uncalled. The mpath_nr_active counter is leaked.=20
 
-If the multipath disk is still active from a prior failed removal, will it
-dereference the freed parent pointer during subsequent I/O or workqueue
-processing?
+Furthermore, since SCMD_MPATH_IO_STATS and SCMD_MPATH_CNT_ACTIVE are=20
+preserved in SCMD_PRESERVED_FLAGS, any new request reusing this tag might=20
+inherit the stale flags, bypassing initialization in=20
+scsi_mpath_start_request().
 
-> +	disk =3D mpath_head->disk;
-[ ... ]
-> +static void sd_mpath_remove_head(struct scsi_mpath_head *scsi_mpath_head)
-> +{
-> +	struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
-> +	struct sd_mpath_disk *sd_mpath_disk;
-> +	struct device *dev =3D &scsi_mpath_head->dev;
-> +
-> +	mutex_lock(&sd_mpath_disks_lock);
-> +	sd_mpath_disk =3D sd_mpath_find_disk(scsi_mpath_head);
-> +	if (!sd_mpath_disk) {
-> +		dev_warn(dev, "could not find mpath disk\n");
-> +		mutex_unlock(&sd_mpath_disks_lock);
-> +		return;
-> +	}
-> +
-> +	if (sd_mpath_disk->disk_count) {
-> +		dev_dbg(dev, "non-zero multipath disk count in removal\n");
-> +		sd_mpath_put_disk(sd_mpath_disk);
-> +		mutex_unlock(&sd_mpath_disks_lock);
-> +		return;
-> +	}
-> +
-> +	list_del_init(&sd_mpath_disk->entry);
-> +	mutex_unlock(&sd_mpath_disks_lock);
-> +
-> +	device_del(&sd_mpath_disk->dev);
-
-[Severity: Medium]
-Could a time-of-check to time-of-use race happen here during device removal?
-The disk is removed from sd_mpath_disks_list inside the lock, but device_de=
-l()
-is called after dropping the lock.
-
-Would a concurrent sd_mpath_probe() acquire the lock, fail to find the disk,
-allocate a new one with the same index, and call device_add() before this
-device_del() completes, causing a sysfs naming collision and -EEXIST failur=
-e?
-
-> +	mpath_remove_disk(mpath_head);
-> +	sd_mpath_put_disk(sd_mpath_disk);
-> +}
-[ ... ]
-> @@ -4192,6 +4556,7 @@ static int sd_probe(struct scsi_device *sdp)
-> =20
->  	error =3D device_add_disk(dev, gd, NULL);
->  	if (error) {
-> +		sd_mpath_fail_probe(sdkp);
->  		device_unregister(&sdkp->disk_dev);
->  		put_disk(gd);
->  		if (sdp->sector_size > PAGE_SIZE)
-> @@ -4199,6 +4564,19 @@ static int sd_probe(struct scsi_device *sdp)
->  		goto out;
->  	}
-> =20
-> +	if (sdp->scsi_mpath_dev) {
-> +		error =3D sd_mpath_add_disk(sdkp);
-> +		if (error) {
-> +			sd_mpath_fail_probe(sdkp);
-> +			device_del(&sdkp->disk_dev);
-> +			del_gendisk(sdkp->disk);
-> +
-> +			put_disk(sdkp->disk);
-> +			if (sdp->sector_size > PAGE_SIZE)
-> +				sd_large_pool_destroy();
-> +			goto out;
-
-[Severity: Medium]
-Does this error path leak the scsi_disk structure and its device reference?
-
-device_del() removes the device from the system, but since sdkp->disk_dev w=
-as
-initialized with device_initialize() (giving it a refcount of 1), shouldn't
-there be a matching put_device(&sdkp->disk_dev) to drop the base reference =
-and
-eventually call scsi_disk_release()?
-
-> +		}
-> +	}
->  	if (sdkp->security) {
->  		sdkp->opal_dev =3D init_opal_dev(sdkp, &sd_sec_submit);
->  		if (sdkp->opal_dev)
+Could there be a mechanism to clear these flags and decrement the counter=20
+when a requeued request encounters a hard failure during re-dispatch?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260901104526.3850=
-621-1-john.g.garry@oracle.com?part=3D24
+621-1-john.g.garry@oracle.com?part=3D20
