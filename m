@@ -1,45 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 934FB4A64C4
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2026 17:08:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04B904AA3FC
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2026 17:08:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788368938; cv=none; b=sKoSRHCURBS5fENReHdbfx2C7PSO7Q6iIfdFo7SO3o6mEYpeESWYCkKTFNf7ilVOmGbeSbyEGllBM+ioxg/Xpab0q4nLsd60lU9i3wl0aVEx5SLjODyrcqv1jbsvoreWoOkj5B7R8iiVDOWq0px/5zzYzBG9XH27mTQWdkj0Q2g=
+	t=1788368939; cv=none; b=XdLsfJkIAiVaZIjVKyMCqV+w2Tn/Pn9i76SE5sDZZcTlVtPpgFZLUs/nuVby4t4QrdYfl3l/HfpJ/4nUXdoaWAghFXEgaZMGIY26pOJ7/cXuDGT+4zdksJnS4koCV4eh/oZ1g5hj8UjVVsb4vLQE9+TU4FKfG/BmsWKF/yncVxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788368938; c=relaxed/simple;
-	bh=TMIYaTI/mkH0viaYqmV8FJlYo1dAnCICTFz6ny5+zUk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JTSX81MH8AqA2+HTTrwtYaGfSZzJRP2dCw4tltp9SR3+zAoMCe5sgUvRZvI/Q8RE6dQ5bImvOCobMtnst7yG3XXktUR64V6hOLUNy2NoZH5CzIYx9GwzLOhx56QHlgrXNMM9eR003veN+Cf80L4xcnSp0wctUgd5eeO2ER4SSiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AihD/Kw3; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1788368939; c=relaxed/simple;
+	bh=CvVkhhBXZG0ZDrJsnmBXLSGYgGyIZi2GM0825+aHLdA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=f7JDVRgF0afVP6amVV/O5Ry7Nd0BOUMY+f78kGe3AoE3RbRBC6p8K9391GX16KeYi/s9gz+E2MVeeEW4xY1BWLyRAepeMQG4WVwJlX/Hh9l9N7euKj9ACmnEV8fp3LEUs/jkMtAKkcT6/EolO9OruePwawlo07rlpgJDkboVOxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PzOt+9ny; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AihD/Kw3"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PzOt+9ny"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1788368935;
+	s=mimecast20190719; t=1788368936;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=xOI6fE6IFzn2Y2SJgYgTQiaYQdwE/HE1TtjRKTx+nYQ=;
-	b=AihD/Kw3PQp3JPEb/oAGuo5KTm3HM8t+4W8Zyb5uMQ4OqHy+AQDdDeABrwaIAkY0fufERg
-	g6C6eABZjmkMxXxqH+XA50l9PlcW36fLHIOxFHSHXev0hkjBFMkUsj/AMZhG5k8S+gm1TM
-	zZlf4EEmoDBI0dByfuGxSuanALw/n+s=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=S4w5b49VFjE4E0AFoA0Qcj7jylDcxSilk3hvFC5nqKA=;
+	b=PzOt+9nytrxavgwI3Y/sqxXW/W+zmQUpBHl1bxtFA153KyOi6a+PYh9oZMDsgNhkQ8sAkV
+	Rly7W8R9n7Q6WV2LlqDWGuRXZgDnUE2Ik+bwZV18XjnO55zO1buSFrTADsGfcTKe6oPKnf
+	U6opdqyGatgt9zsq9PLmxexxx1zOoZ4=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-190-QabH0riVNguA83tMeaLkNg-1; Wed,
- 02 Sep 2026 13:08:52 -0400
-X-MC-Unique: QabH0riVNguA83tMeaLkNg-1
-X-Mimecast-MFC-AGG-ID: QabH0riVNguA83tMeaLkNg_1788368928
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-37--k90ol-JP_ebVAxtldOu9g-1; Wed,
+ 02 Sep 2026 13:08:55 -0400
+X-MC-Unique: -k90ol-JP_ebVAxtldOu9g-1
+X-Mimecast-MFC-AGG-ID: -k90ol-JP_ebVAxtldOu9g_1788368933
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A0D9D195E920;
-	Wed,  2 Sep 2026 17:08:47 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4B1821944D43;
+	Wed,  2 Sep 2026 17:08:52 +0000 (UTC)
 Received: from djeffery-thinkpadp1gen3.rmtusga.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A00C01955D8D;
-	Wed,  2 Sep 2026 17:08:43 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 1A2201955D69;
+	Wed,  2 Sep 2026 17:08:47 +0000 (UTC)
 From: David Jeffery <djeffery@redhat.com>
 To: driver-core@lists.linux.dev,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -62,9 +64,11 @@ Cc: linux-kernel@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	"Pasha Tatashin" <tatashin@google.com>,
 	David Jeffery <djeffery@redhat.com>
-Subject: [PATCH v21 0/9] shut down devices asynchronously
-Date: Wed,  2 Sep 2026 13:07:25 -0400
-Message-ID: <20260902170734.95504-1-djeffery@redhat.com>
+Subject: [PATCH 1/9] driver core: rely on put_device to free dev->p
+Date: Wed,  2 Sep 2026 13:07:26 -0400
+Message-ID: <20260902170734.95504-2-djeffery@redhat.com>
+In-Reply-To: <20260902170734.95504-1-djeffery@redhat.com>
+References: <20260902170734.95504-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,185 +78,51 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-These patches are rebased against the driver-core tree's driver-core-next
-branch and should also apply against recent linux-next. Changes for v18 are
-contained in patch 3.
+From: Tarun Sahu <tarunsahu@google.com>
 
-This patchset allows the kernel to shutdown devices asynchronously and
-unrelated async devices to be shut down in parallel to each other.
+device_add allocate private_data for device and assigns to
+dev->p. If device_add fails in later steps of the function,
+it cleans up this dev->p which is not necessary because In
+the next call, put_device free it anyway (if reference to
+the device is 0 which will be unless someone concurrently
+get the reference to this device).
 
-Only devices which explicitly enable it are shut down asynchronously. The
-default is for a device to be shut down from the synchronous shutdown loop.
+This avoids unnecessary races introduced in system. After device
+is added in device_kset->list by device_add and later steps in the
+device_add function failures occur, it will free dev->p manually,
+while in between there might be a user of device_kset->list will
+take reference to the device just added by device_add. and might
+try to access dev->p. So relying on put_device to free dev->p
+prevents such problem.
 
-This can dramatically reduce system shutdown/reboot time on systems that
-have multiple devices that take many seconds to shut down (like certain
-NVMe drives). On one system tested, the shutdown time went from 11 minutes
-without this patch to 55 seconds with the patch. And on another system from
-80 seconds to 11.
+Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+Signed-off-by: David Jeffery <djeffery@redhat.com>
+Tested-by: Laurence Oberman <loberman@redhat.com>
+---
+ drivers/base/core.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-And thank you to everyone who has spent some of their valuable time
-providing reviews, suggestions, criticisms, or tests on the various
-iterations of this patchset.
-
-Changes from V20:
-- Move PCI bridge async enablement to before its call to device_add
-- Use srcu to prevent ensure any active device_add is completed before
-  device_shutdown begins shutting down devices.
-
-Changes from V19:
-- Convert initial creation of shutdown_one_device to a code move with no
-  changes or side effects
-- Add a warning to device_move should some device ever mix need_parent_lock
-  with device_move in the future
-- Link a PCI virtual function as consumer of its associated physical
-  function to ensure proper shutdown order
-
-Changes from V18:
-- Fix deadlock and race condition on concurrent device_add
-- Use local variable to device_shutdown for caching async_shutdown
-- Added dev->p check to avoid NULL pointer deference and tell if the
-  device is not registered so no need to be shutdown. This is to handle
-  the cases when devices consumers list might have devices that are not
-  yet registered.
-
-Changes from V17:
-
-Fix mangled text in kernel parameter description
-Re-protect the list removal with the spinlock
-  * Hold a device reference to ensure the device cannot be freed before
-    attempting list removal
-
-Changes from V16:
-
-Drop spinlock before async subsystem call which uses GFP_KERNEL
-Handle that async shutdown can widen races between device shutdown and deletion
-  * __shutdown_one_device will immediately return if a device is dead
-  * Set shutdown device completion to complete when marking a device dead to
-      prevent waiting on a dead device
-  * Only late-access a parent pointer if device is in a non-dead state to
-      ensure the pointer is still valid
-
-Changes from V15:
-
-The async_shutdown bit field is converted to a device flags bit
-Convert all patches to use the flag bit accessor macros to set or check if
-  async shutdown should be used
-Added documentation on the kernel parameter to control use of async shutdown
-
-Changes from V14:
-
-Remove unneeded use of '!!' with boolean type
-
-Changes from V13:
-
-Remove duplicate flagging of async shutdown on scsi hosts/targets/devices
-
-Changes from V12:
-
-Only acquire a parent reference if acquiring the parent's lock
-device_enable_async_shutdown should return void
-Minor comment and description cleanups
-
-Changes from V11:
-
-  * Swap the order of the first two patches
-  * Rework conditional parent locking so that lock and unlock no longer use
-    separate conditional checks
-  * Remove an used variable
-  * Comment and description text cleanups
-
-Changes from V10:
-
-Reworked to more closely match the design used for async suspend
-  * No longer uses async subsystem cookies for synchronization
-  * Minimized changes to struct device
-  * Enable async shutdown for pci and scsi devices which support async suspend
-
-Changes from V9:
-
-Address resource and timing issues when spawning a unique async thread
-for every device during shutdown:
-  * Make the asynchronous threads able to shut down multiple devices,
-    instead of spawning a unique thread for every device.
-  * Modify core kernel async code with a custom wake function so it
-    doesn't wake up a thread waiting to synchronize on a cookie until
-    the cookie has reached the desired value, instead of waking up
-    every waiting thread to check the cookie every time an async thread
-    ends.
-
-Changes from V8:
-
-Deal with shutdown hangs resulting when a parent/supplier device is
-  later in the devices_kset list than its children/consumers:
-  * Ignore sync_state_only devlinks for shutdown dependencies
-  * Ignore shutdown_after for devices that don't want async shutdown
-  * Add a sanity check to revert to sync shutdown for any device that
-    would otherwise wait for a child/consumer shutdown that hasn't
-    already been scheduled
-
-Changes from V7:
-
-Do not expose driver async_shutdown_enable in sysfs.
-Wrapped a long line.
-
-Changes from V6:
-
-Removed a sysfs attribute that allowed the async device shutdown to be
-"on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
-previously "safe" is now the only behavior, so drivers now only need to
-have the option to enable or disable async shutdown.
-
-Changes from V5:
-
-Separated into multiple patches to make review easier.
-Reworked some code to make it more readable
-Made devices wait for consumers to shut down, not just children
-  (suggested by David Jeffery)
-
-Changes from V4:
-
-Change code to use cookies for synchronization rather than async domains
-Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
-  opt-out of async shutdown (when not disabled), with ability to control
-  driver opt-in/opt-out via sysfs
-  
-Changes from V3:
-
-Bug fix (used "parent" not "dev->parent" in device_shutdown)
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 4c0c373998a1..83263e3fa5d4 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -2618,6 +2618,7 @@ static void device_release(struct kobject *kobj)
+ 	struct device *dev = kobj_to_dev(kobj);
+ 	struct device_private *p = dev->p;
  
-Changes from V2:
- 
-Removed recursive functions to schedule children to be shutdown before
-  parents, since existing device_shutdown loop will already do this
- 
-Changes from V1:
-
-Rewritten using kernel async code (suggested by Lukas Wunner)
-
-David Jeffery (7):
-  driver core: warn should device_move try to move a need_parent_lock
-    device
-  driver core: separate function to shutdown one device
-  driver core: do not always lock parent in shutdown
-  driver core: async device shutdown infrastructure
-  PCI: Link a virtual function to its physical function
-  PCI: Enable async shutdown support
-  scsi: Enable async shutdown support
-
-Tarun Sahu (2):
-  driver core: rely on put_device to free dev->p
-  driver core: prevent device_add() during system shutdown
-
- .../admin-guide/kernel-parameters.txt         |  10 +
- drivers/base/base.h                           |   2 +
- drivers/base/core.c                           | 269 +++++++++++++++---
- drivers/pci/iov.c                             |  11 +-
- drivers/pci/probe.c                           |   2 +
- drivers/scsi/hosts.c                          |   2 +
- drivers/scsi/scsi_sysfs.c                     |   3 +
- include/linux/device.h                        |   2 +
- 8 files changed, 260 insertions(+), 41 deletions(-)
-
++	dev->p = NULL;
+ 	/*
+ 	 * Some platform devices are driven without driver attached
+ 	 * and managed resources may have been acquired.  Make sure
+@@ -3828,8 +3829,6 @@ int device_add(struct device *dev)
+ parent_error:
+ 	put_device(parent);
+ name_error:
+-	kfree(dev->p);
+-	dev->p = NULL;
+ 	goto done;
+ }
+ EXPORT_SYMBOL_GPL(device_add);
 -- 
 2.55.0
 
