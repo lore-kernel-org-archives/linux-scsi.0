@@ -1,148 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2DE74ACC82;
-	Wed,  2 Sep 2026 17:22:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3E2E4ACC9D;
+	Wed,  2 Sep 2026 17:24:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788369749; cv=none; b=g/e0UIyN371up1j7VxmNAVfxmuisdNtBCgHI4+QLlaxVarVBPPDQK0ok4yi5KGxlBRDH7/NoGYlx01EOS9/tF1JtdJJTSp0osBeDC5pT2y2XZ04mwR/e5Qm0zE5LiaY+RoqBn/YnmbD4qAHGo6pDNnbfnOEFbj0eBomlbjGyfco=
+	t=1788369865; cv=none; b=iScrDdsEfM7/G9KJ8pOK3tuRpKUOJ9/8mbOVzq7PjEyqU2y6Oum/TwGgFcNdFuybfMINRnpjbwDs1GiRH3jWEEObfFIWd0FO/An2fM57721lY/YLJZnFCOmbm7cYuFT43Wa53/Pq78RhRgzxaX6Xc1xI9WBKuwsDa+QdCeKt2k4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788369749; c=relaxed/simple;
-	bh=oPZtH2fDP6ZOqSeyie/E2TobMTgqczmgQ3uNwn8ZnDA=;
+	s=arc-20240116; t=1788369865; c=relaxed/simple;
+	bh=eeLRw7d1grT4dsdje/AGv8bA6TLqEHQqgitZ7cG2VmE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=B93rc2ky5ZyB+NnfWTdy7I1MZt8qxebrz7JTv4xkf3zqJ+TQJ+dCZqr3iOES/Tg2n8ryhZ6yLMCO85A1NkDlVpBLVWBBYslM4LAaIrIhp3HNdsb5NeCsEXb7OkPRuiQIXfbjZD4QohOr5nuSB+bJxV/mXgUc+F7k9qZcFDbKCoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N4EhbZfk; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=R4qHVCvMvMmsqDaa/xmDvjHPhrSOOHCSBQrEgbzKz9YnRG0T1Iqk5PlVwxuOxaQBV/ElZHRL4FUtXzDLTkFwhUq/pYEIaLsI0MNQk3NMS8wS3PLaw3K+P/AGn+Gcg8T7/pNkD+f/e2rwXcAr7hfO108YAOVz1GFZGzZLFgu6bRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HgVxwDnI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N4EhbZfk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D7FF1F000E9;
-	Wed,  2 Sep 2026 17:22:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HgVxwDnI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22B9B1F000E9;
+	Wed,  2 Sep 2026 17:24:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788369747;
-	bh=6FmuSUViuPOrcu8Mypq9ufUDolOYDQVZKMTEQpEMGA0=;
+	s=k20260515; t=1788369863;
+	bh=o9QVaXvhVFf3OAMWsq7YQ5bnPF6nwdCB8djYgDCUIy0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=N4EhbZfkU8LQDAvebizcZRpTyj1Zowxrs58iV1kvC1yeg4yCp2NHPDBq5YAw4s74K
-	 Z627aRMJLDQZ4FKkbxxO0hS2gxSqoL8U4y8KfymL6q4ciFXUEgWpdne89AUbWoLFd/
-	 LW9/FR+IQUxgNG/vkrkP/sYaQMOfqfOGLgxOyt2nzJRkQ0ZtTYO/bANTWy9ptybGed
-	 B7PKWY/tKDFLEEpfMtjC/Bba1hxSBwTtQcseQSKF6enJ1x80En1osbyFRCCFI9dGq0
-	 F2ntXO3tSa4474rxTSZMyNk24yQPhYi1ED0COoM79zKeylyXfxDZP9QEfr4S2ezuqm
-	 bP9rt7Ouq36Tg==
+	b=HgVxwDnIn/s5XFBnKzZK6tKXuXHxUlCMbZmgIbpiUn60RqRrAtBZA+0cMhui8L7HH
+	 b9YQAbUidAC5nZZn+m1JL3O6u6SqdH66g5bB/ZlKAQMpdb2PcRr63bnI9FXdM0twB7
+	 8WbtVNsCtsA9jbpHuiGDhrKoqsX4VuKFJyit0PBf1movFFd2TBfGje3IRahnvsCya0
+	 BgRMiqxvJtrzyfSepStNn/F8n/Km+1HAe7FXZrtNenwJ4qptj7ExqxuOSSbpofozCZ
+	 D7k5UzvFt8aK3MN8J8XU4IWxqa8R6QHrCtBAbphWgwZO1+8AiJ3Lx56XsXd5ELmBy8
+	 aJkaknmUHNjdw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/9] driver core: warn should device_move try to move a
- need_parent_lock device
+Subject: Re: [PATCH 8/9] PCI: Enable async shutdown support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Jeffery" <djeffery@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260902170734.95504-4-djeffery@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260902170734.95504-9-djeffery@redhat.com>
 References: <20260902170734.95504-1-djeffery@redhat.com>
- <20260902170734.95504-4-djeffery@redhat.com>
+ <20260902170734.95504-9-djeffery@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 17:22:26 +0000
-Message-Id: <20260902172227.2D7FF1F000E9@smtp.kernel.org>
+Date: Wed, 02 Sep 2026 17:24:22 +0000
+Message-Id: <20260902172423.22B9B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Sysfs tree corruption during rollback of device_move_class_links f=
-ailure.
-- [High] Unconditional cleanup on failed rollback of device_move_class_link=
-s leads to Use-After-Free of new_parent and its glue directory.
+- [Critical] Double free and subsequent use-after-free of `bridge->dev` on =
+`pci_register_host_bridge` error path.
 --
 
-commit 80ab7b1ec98b82ed303226de698cbc0d137b6732
+commit 54e023865d6e2709d08edb15dbcb7e1249cfbfb7
 Author: David Jeffery <djeffery@redhat.com>
 
-driver core: warn should device_move try to move a need_parent_lock device
+PCI: Enable async shutdown support
+   =20
+Like its async suspend support, allow PCI device shutdown to be performed
+asynchronously to reduce shutdown time.
 
-This commit adds a warning to device_move() to catch any attempts to move a
-device with need_parent_lock set. Moving such a device would break the
-immutable parent-child relationship required for locking.
-
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index bce555dd74f69..e8a62c8f0ad3d 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -4705,6 +4705,14 @@ int device_move(struct device *dev, struct device =
-*new_parent,
->  	if (!dev)
->  		return -EINVAL;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 27008e2ea5afc..101a96718acd9 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1038,6 +1038,7 @@ static int pci_register_host_bridge(struct pci_host=
+_bridge *bridge)
+>  	if (err)
+>  		goto free;
 > =20
-> +	/*
-> +	 * device_move() should not be used on devices with need_parent_lock
-> +	 * set. Concurrent reparenting will violate the immutable
-> +	 * relationship needed while locking and unlocking both parent and
-> +	 * child.
-> +	 */
-> +	WARN_ON(dev->bus && dev->bus->need_parent_lock);
-> +
->  	device_pm_lock();
->  	new_parent =3D get_device(new_parent);
->  	new_parent_kobj =3D get_device_parent(dev, new_parent);
+> +	dev_set_async_shutdown(&bridge->dev);
+>  	/* Temporarily move resources off the list */
+>  	list_splice_init(&bridge->windows, &resources);
+>  	err =3D device_add(&bridge->dev);
 
-Later in device_move():
+[Severity: Critical]
+This isn't a bug introduced by this patch, but does the error handling path
+for pci_register_host_bridge() have a double free and use-after-free of
+bridge->dev?
 
-> 	if (dev->class) {
-> 		error =3D device_move_class_links(dev, old_parent, new_parent);
-> 		if (error) {
-> 			/* We ignore errors on cleanup since we're hosed anyway... */
-> 			device_move_class_links(dev, new_parent, old_parent);
-> 			if (!kobject_move(&dev->kobj, &old_parent->kobj)) {
-                                                      ^^^^^^^^^^^^^^^^^^^
+If device_register(&bus->dev) fails later in this function, it jumps to
+unregister:
 
-[Severity: High]
-This is a pre-existing issue, but does this rollback correctly restore the
-device's sysfs location?
+drivers/pci/probe.c:pci_register_host_bridge() {
+	...
+unregister:
+	put_device(&bridge->dev);
+	device_del(&bridge->dev);
+free:
+	...
+	if (bus_registered)
+		put_device(&bus->dev);
+}
 
-The rollback explicitly uses &old_parent->kobj instead of the original glue
-directory.
+The first explicit put_device(&bridge->dev) drops a reference to the
+bridge. Then if bus_registered is true, it calls put_device(&bus->dev).
 
-If a device uses a class glue directory, rolling back a failed move bypasses
-the glue directory and places the device directly under the old parent's
-kobject.
+This triggers the bus release function release_pcibus_dev(), which
+unconditionally drops a second reference to bridge->dev:
 
-Can this break sysfs expectations for userspace and leak the original glue
-directory during subsequent device removal if device_move_class_links()
-fails?
+drivers/pci/probe.c:release_pcibus_dev() {
+	...
+	put_device(pci_bus->bridge);
+	...
+}
 
-> 				if (new_parent)
-> 					klist_remove(&dev->p->knode_parent);
-> 				dev->parent =3D old_parent;
-> 				if (old_parent) {
-> 					klist_add_tail(&dev->p->knode_parent,
-> 						       &old_parent->p->klist_children);
-> 					set_dev_node(dev, dev_to_node(old_parent));
-> 				}
-> 			}
-> 			cleanup_glue_dir(dev, new_parent_kobj);
-> 			put_device(new_parent);
-                        ^^^^^^^^^^^^^^^^^^^^^^^
+This drops the reference count of the bridge to 0, freeing the bridge objec=
+t.
 
-[Severity: High]
-This isn't a bug introduced by this patch, but is it safe to unconditionally
-drop these references here?
+When pci_register_host_bridge() returns the error, callers like
+pci_create_root_bus() will then try to drop their initial reference:
 
-These lines drop the references to the new parent and glue directory, even =
-if
-the rollback failed and the device still holds pointers to them.
+drivers/pci/probe.c:pci_create_root_bus() {
+	...
+err_out:
+	put_device(&bridge->dev);
+	...
+}
 
-If device_move_class_links() fails and the subsequent rollback attempt via
-kobject_move() also fails, the device remains partially moved with its pare=
-nt
-and kobj.parent pointers attached to the new parent.
-
-Can dropping the references unconditionally leave these pointers dangling,
-leading to a use-after-free or double-free?
-
-> 			goto out;
-> 		}
-> 	}
+Will this dereference the already freed bridge object, causing a
+use-after-free and double free?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902170734.9550=
-4-1-djeffery@redhat.com?part=3D3
+4-1-djeffery@redhat.com?part=3D8
