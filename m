@@ -1,209 +1,158 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB8B430C617
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Sep 2026 23:00:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788303652; cv=none; b=kWAAUijgIpRc1JTN1ofdC7Jh+pxnHb/hIFba7pwx+lg2fHVSYG31HOacJI6e1pi37NxyMYPf53QDo69QCwcus8dxOHBrdhwpNIQOmhRXNdqQCxAEBNpIwpfsfJc701aRxIJ2KI7I9YSwMhZc1Cv/0/dG9AoAVglyioM6zB8ryg8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788303652; c=relaxed/simple;
-	bh=upC9D2XVPdpvneF/ucxlVs4pd/Ku9T9AErXz2nCBWP4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=EqOXwQpqMLfR2yIKoaVBSzEds5ouQyAmeJPkYluSiIeSkPSczFs+gxnocS1agX1qYMlDUmbQB1nXLYRb588JZpeHyFZjzpvZnKhrs+wvTKa5kGb393nLfLKlK9gLUs/rELIaEUlztgqFb7BKo46B2a5ECE9xcvpeS4OL/bYcHXw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=QyVtjJN4; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2827A34FF79
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2026 02:01:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.178
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788314483; cv=pass; b=tEKB4y53/3lAW0JptX3GkFRH0ZQQ/vn9iJcF5bY06QUu0NlYpuW6AMnB7aEXkbZRAPpOsN/MPZQT+a7JFn4EKGodn8X+xhjPvZaD2BsMsxyGjTnb8cx2mxxf7EkWznbR+S7ZnozKRsPo1tkmMT6t8By/5bfZeUvvLw+M4gKttl8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788314483; c=relaxed/simple;
+	bh=U3aa/uX2QJ6x8/cys5PY/EmIY6wqHCxmh0up08kwOCg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=hH1nSp0CiCYSrZvTCy5go4bXUMqxQaAIwFrTC5Kvq3C1FrspLOKKq47g5HCJznqxQchj13tfGlYF7PX8ggSGzoHNEt4SenBbQmdD8dyca20RY7zwK0FGEGkkmN05+Zdi8lDND3fYwJZY+kmnDAqXx5n7R6OeOONO0Nao89v3Gys=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=hIGjMTBm; arc=pass smtp.client-ip=209.85.160.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="QyVtjJN4"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id BD750240103
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2026 01:00:40 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
-	s=1984.8680eb; t=1788303640;
-	bh=n533z9YPNBc7/1apeLWGiTfcDorGQ40Y0X08///3rFs=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=QyVtjJN4NHDrbGErU7jvT4r1pc8Ij6fFb6AlgtH5ARKXlmBZqMCDUTaGL/cvVzodN
-	 KCcAApGyE7J1cVw9UX7gZ2uo7+XU5luIlyuf8/ksUl0OtLplEMc95KpBGYIoB0J2fn
-	 3rgkPfV9bWPCWGf1Ww2mwqYfTeZqr1Y01OMxR0lgdmCa/6PzC9YZ/qqiVAgxUjF/b9
-	 yylvn4EJ5s4E3oGYK15yz9+7ZIP1v/QlhHlGvEFBWqenI6z+5lgWbRvT8EQU5DsWWo
-	 Nt2Y5qGgZKPwLWGn+hhe0WAshsl9IwTyD+FkBPnuQYNRZbpmIoTuJzD9wfffAQi/Qy
-	 zYfFHpCcmYV5w==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4hZLtc0tDNz6tsb;
-	Wed,  2 Sep 2026 01:00:40 +0200 (CEST)
-Message-ID: <1e8279e68f2b990e6183f5906ab0924739af28b3.camel@posteo.de>
-Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
-From: Markus Probst <markus.probst@posteo.de>
-To: Ian Pilcher <arequipeno@gmail.com>
-Cc: linux-leds@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Date: Tue, 01 Sep 2026 23:00:40 +0000
-In-Reply-To: <03a91568-d1a0-4779-a465-2788f4765a42@gmail.com>
-References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
-	 <aXctPaaXFYemV20T@ryzen> <03a91568-d1a0-4779-a465-2788f4765a42@gmail.com>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=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
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-vX2SMDVTwD0R68gdcS7x"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hIGjMTBm"
+Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-52faa58bff5so140941cf.0
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Sep 2026 19:01:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788314473; cv=none;
+        d=google.com; s=arc-20260327;
+        b=qEkTvEF3b1N6T1f6VcYS3txWGFlxQCmucJnf+xw8K7i41XW95/CEj2cDEoLJ6n7jpe
+         ArwpnPzK7zgcX4wHXG64xEeyLVO6qsTUE3wdOSdh/5voEfjmc5StIdTPI+WihN+jxINv
+         EEycaKOglKBSBEDIB5rU9op8gwpwWzphP/RikdgWetw/HCQEyP3jHFDc7Db2r3XgmGTp
+         n6bKI0rOoE7xCqAcVGoOebV9GGzhQ7QhoUpELoDbZljbyqiAhWXiCfEbPP19CbC7Y4lq
+         10QShMyrZ6EAi+pqqfj71GO7Hl8D1ymQ5AGhf/w1s7gEfEqs3OgL5Pb1rVPhND+2X/LB
+         raMQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=mCiyEAo5wxMzkcXu7vU1R6+a/fDtwqnpSwvfpXQcP5o=;
+        fh=x5j3fNUSNGNt9ugVx8qJfM9FRQzqTmWAbN+GJ+M7I4Y=;
+        b=ShDxfYKcnNtilV4No07GLLbLpX9Ie2q4vIsp/UnqcHB2X6oD44+9jm4DxziwludtYW
+         1voFymS3TX5a0RBP1fBq6c8mHZVy4t6wjqup8I4Jul8T0G1tnY9yCsnHzIawpD4l6Jkx
+         G7jf9GI2UgEJm+9mMjUAHYj/snoEMg7sarKF4osAfAk2PnmwwmFhK9P51Wx0aRV4esbu
+         Sqdqp5xd2jJwSZFEgpIu3d371Ebzj/5BprCVoIy1aEuw1yUi7WOgiW9IlH+TrF8VpXWq
+         /QhRkcioQNqxFfCUgKrYYPCptKFgD0f9imdoA5T5jxqszYaObma5RFN9YkpFEQ/YAfew
+         hnMw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1788314473; x=1788919273; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mCiyEAo5wxMzkcXu7vU1R6+a/fDtwqnpSwvfpXQcP5o=;
+        b=hIGjMTBmM3Oj1b0BTXO2ogWByJcQEr0YgZ5EDJQnklj7mkITqmbuTDB3pRAZEOBeLx
+         sdFqQN94oERcWYCMTCs7whPrflUW4dA/5RpE8233FovbO4exrjwGe/3UamUcjarYFTH5
+         /U5b17OMQzyHsq+UtGXjOoCDOqYaAuXwr/0V5HB37ekIx6QWt0UVQFAmqpZ5JzSX+TbQ
+         ExHy/wEx5+pyjk/9qAoPUIJ6qgbrkK9iiNYn2eGHkWbf73ywm5cee9VJ8OwRI04JbQ3o
+         zszOFwDfqAl4NmwO4XfNBT/N/yZLHljK09J6JFrDA57QLWoiylrIHmwHxiue7QbyBSTO
+         X/zQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788314473; x=1788919273;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=mCiyEAo5wxMzkcXu7vU1R6+a/fDtwqnpSwvfpXQcP5o=;
+        b=WuulDpfDFImzUgtcpa9PrjVkVsHv9v4l/tikJAjm3itlHxmji+nRpQeuu5biArYD2t
+         PXu6qu40CyqXFjO4bQ4yr3rIVGR8/BV1OeAZyYFaCvgj04lHKZm+Bvl2JWKaw3D4FHQf
+         U8vLx/8PnkDNSkvifMiPqTG604+uHDv90OIqZzcfYeQpwC5FuK9t51ocleJEZy9fpbBg
+         FMgL+D9+lf1z75ICsjh9xMYi3O9u2ypqxY3amt9cT3QftA70HR+0BcHbnQIcL1dN5Wao
+         zbPbK9qPaV+H84GXaeXAB2OcRe/Hnm0CGqbeiq9R9UbaNYVZ2vBh+UqY8EQX4Sy8xLMh
+         6ZSQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqS/7HqVJ1kFSA4INyXEEr5S2CNCIhxLaaXGgLzUtjmncURAH0KlhOsPhXh273BJhhrgd6TBN7s11bO@vger.kernel.org
+X-Gm-Message-State: AFuF++m3CsIHFGyBpFBrZhh9lWx8M54db9SBUvOr8QdjHbBhjcajzGyQ
+	O+Gz8i17wFPabRqSRFaSY1mTHtFPmg2EjZMgwres1l46wsVzC275xGPqu1PMcObhT8PwMGmIVvy
+	9Sws7K8/yg8Xx7hEicthHXKL4SMVYTZERYv0vtdwp
+X-Gm-Gg: AR+sD12VWpd1VclIZ4iaXfjjJNpnER0HLJlYItKFFnMNW+XOiODmqGd7DCoKjxXnlM1
+	HmURMbznniV5Wo+3VDl78ejcefCgBb5H57nplKSJ16R/QKGCZUQhSCSTIaYhQKhgyw9HNu144un
+	hrIzd7yh0/jp+O3dqPAu+k47dVnDAEy115pvRLyL51I3YRcxDQxMGFmlOm5c+t6pK4yL5MJ9vNf
+	qwYrgGxXF91YUrv8vACHQ/uqZgyJFpAJoM0cyUQM7cakVtGp/l8ukfWEoFUc033BZ+uh0884W+E
+	o9sJijw7v7gWL1A/yNdlo0XOwLhINXiAMix3Dlj8U3KRky6+uvTzXE53xHoYHMcLIRWyvp5PrY1
+	S
+X-Received: by 2002:a05:622a:1b1c:b0:519:b82d:fe62 with SMTP id
+ d75a77b69052e-53035b0244fmr4577611cf.7.1788314472279; Tue, 01 Sep 2026
+ 19:01:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
-
-
---=-vX2SMDVTwD0R68gdcS7x
+References: <CAE14pdef2u=Eo7M9NGdABzsjy2o2SO=Z-U_BbRn9n45nJJR+wg@mail.gmail.com>
+ <6f78c4bd-a70b-402d-abfd-599091b67674@acm.org>
+In-Reply-To: <6f78c4bd-a70b-402d-abfd-599091b67674@acm.org>
+From: Stanley Jhu <stanleyjhu@google.com>
+Date: Wed, 2 Sep 2026 10:00:33 +0800
+X-Gm-Features: AcwNN1UiOHbd-lkyUlqZ5G0VRdeSeGP_sY6ZABq_Mgd0A-kN0QJuBUaEk2kVvBk
+Message-ID: <CAE14pdcnmcvPZv4_pKOnH57OZmJBqe8DTwRnmrMTwOnBm+iOOg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: core: Set BLK_FEAT_SKIP_TAGSET_QUIESCE on pseudo
+ SCSI devices
+To: Bart Van Assche <bvanassche@acm.org>, Stanley Jhu <stanleyjhu@google.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <mkp@kernel.org>
+Cc: hare@suse.de, john.g.garry@oracle.com, hch@lst.de, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2026-01-26 at 10:19 -0600, Ian Pilcher wrote:
-> On 1/26/26 3:00 AM, Niklas Cassel wrote:
-> > But I'm not a fan of making the driver more complex.
-> > If we want something more complex than what is already there, then it
-> > is probably much better handled in user space, considering the amount
-> > of possible configuration options.
-> >=20
-> > Basically the same argument as used in:
-> > https://lore.kernel.org/linux-nvme/20220227234258.24619-1-ematsumiya@su=
-se.de/T/#u
->=20
-> Niklas -
->=20
-> Can you provide some links on how this might be done in userspace?
->=20
-> I've been maintaining my out-of-tree block device trigger for years, to
-> make the LEDs on my NAS work.
->=20
->   https://github.com/ipilcher/ledtrig-blkdev/blob/v6.9%2B/drivers/leds/tr=
-igger/ledtrig-blkdev.c
->=20
-> I'd love to be able to replace it with something in-tree.
+On Tue, 1 Sep 2026, Bart Van Assche wrote:
+> Does setting BLK_FEAT_SKIP_TAGSET_QUIESCE on pseudo_sdev break frequency
+> scaling? ufshcd_pause_command_processing() also calls blk_mq_quiesce_tagset().
+>
+> Why not replace blk_mq_quiesce_tagset() in ufshcd_err_handling_prepare()
+> with blk_mq_wait_quiesce_done() and drop blk_mq_unquiesce_tagset() in
+> ufshcd_err_handling_unprepare()?
 
-(I left the mailing lists except dt in Cc, so others with the same
-feature requirement can find this mail on the LKML).
+Hi Bart,
 
-Hi Ian,
+Looking at the three call sites of blk_mq_quiesce_tagset() in ufshcd.c, they
+have distinct requirements regarding pseudo_sdev:
 
-In the case you are interested, I ended up writing a userspace daemon:
-https://codeberg.org/0xIO32/statusd .
-Also published as rust crate at https://crates.io/crates/statusd .
+1. Clock scaling (ufshcd_clock_scaling_prepare):
+   Requires freezing all queues (including pseudo_sdev) while clock
+   frequencies change.
+2. Command pause (ufshcd_pause_command_processing):
+   Requires freezing all queues while TX equalization retraining runs.
+3. Error handling (ufshcd_err_handling_prepare):
+   Requires quiescing attached logical units to avoid HOST_BUSY retry
+   storms during host reset, but must keep pseudo_sdev open so internal
+   recovery commands (e.g. NOP OUT in ufshcd_verify_dev_init) can proceed.
 
-It has a bit more functionality, but for simple disk blinking a example
-config would be:
+Setting BLK_FEAT_SKIP_TAGSET_QUIESCE on pseudo_sdev in SCSI core breaks (1)
+and (2). Conversely, replacing blk_mq_quiesce_tagset() with
+blk_mq_wait_quiesce_done() in (3) leaves logical units unquiesced, causing
+incoming I/O to storm the recovering controller with HOST_BUSY retries.
 
-```
-disks:
-    # Any path that is a symlink to a block device works.
-    # Any component in the path can be a regex, so any special regex
-characters must be escaped.
-  - path: '/dev/disk/by-path/pci-0000:02:00\.0-nvme-1'
-    present:
-      - led: disk1
-        priority: 10
-        mode: static
-        brightness: 255
-    io:
-      poll_interval: 100ms
-      # min_active_time: 300ms
-      activity:
-        - led: disk1
-          priority: 20
-          mode: blink
-          delay_on: 90
-          delay_off: 90
-      # read: [] (events in here trigger only with read activity)
-      # write: [] (events in here trigger only with write activity)
+Would it be cleaner to keep blk_mq_quiesce_tagset() for (1) and (2), and
+handle (3) locally in UFS error handling by quiescing only logical units?
 
-leds:
-  disk1:
-    name: multicolor:disk-1
-    default:
-      priority: 0
-      mode: static
-      brightness: 0
-```
-Config path: /etc/statusd.yaml
+    static void ufshcd_quiesce_all_sdevs(struct ufs_hba *hba)
+    {
+        struct scsi_device *sdev;
 
-In this config, the led brightness is 255 if the disk is present, 0
-otherwise. If there is read or write activity, it will blink with a
-delay of 90 ms (brightness is unset, so it gets inherited from the
-lower priority, resulting in 255).
-Disk and Led Hotplugging is fine, but `ledtrig-timer` should be loaded
-ahead of time or it might cause an error loop (statusd.service takes
-care of that).
+        shost_for_each_device(sdev, hba->host)
+            blk_mq_quiesce_queue_nowait(sdev->request_queue);
+        blk_mq_wait_quiesce_done(&hba->host->tag_set);
+    }
 
-After the goals in the README are completed, I will try to get it
-packaged into the debian repositories.
+    static void ufshcd_unquiesce_all_sdevs(struct ufs_hba *hba)
+    {
+        struct scsi_device *sdev;
 
-Thanks
-- Markus Probst
+        shost_for_each_device(sdev, hba->host)
+            blk_mq_unquiesce_queue(sdev->request_queue);
+    }
 
---=-vX2SMDVTwD0R68gdcS7x
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Because shost_for_each_device() explicitly skips pseudo SCSI devices
+(via scsi_device_is_pseudo_dev() in __scsi_iterate_devices()), logical units
+are quiesced while pseudo_sdev remains unquiesced for recovery commands.
 
------BEGIN PGP SIGNATURE-----
+What do you think about this approach? If this looks reasonable to you,
+I will withdraw the SCSI core patch and submit the UFS-local fix.
 
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmqXWRUbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTIsMiwyAAoJEDR2H/jnrUPSBG4QAKTBhRa25zZPtY89PoF0
-eEjIXUouD/QxR/7GfmK1f9DvyJgl5GhUp0qgoohnT7Fa3drERe2xCaKnSA9WZHaN
-bbeTr5CFJVUjXvMT/vMhTHtO10RYDJ3AVhJJ8APufFuVTmnWp1TnFsoSeipA6pJI
-n0mst+13SxC1snq4/HAWBmtScYkY+FLYEjxhR8JtU73lCsTg4gqW/V3vgrGfJXRd
-tnONjXbTDanOSmbKA9/5KN8rTAsi0NBnulN7YbnasL/Ai4Pur4wfkCaPLSkGuP7A
-CHMb/O19/qR/xqq0gNAfubvkR8JDXt31OE1X1ZWv0TwPTiFVR8yImCu4KBi4WRox
-RVKi39nawngseeE5XisFqLsVfEsASA36dbj5ob11VYlf3zupg2Jvxq68Xn6zpARY
-CyWBPWWPco4noOgZqnrqHwD+7tEl3e/dvKbb8JfizBJVXJwuFy+rZV7DX/o+SsZY
-iNJf2r5g1wkQCnueZ4DINrq9gRCXvydJRmOf90qCCTrboS8rXZr2OZmX5UN/Brjj
-CqrwuzPOcWYFB5GMRBIfR1L8TuXpKrWbwf4QgfOAhdri/gIWgsplThrhVKeYfB5P
-peO4ppZNnsnUl8qqeSxBfXw5fwii/p0t+PBDfUVm3UWUo4ytflp9EA8gLR4SInyd
-jo8bVIBg+gKII/Y0Rx+qKFZe
-=Rspn
------END PGP SIGNATURE-----
-
---=-vX2SMDVTwD0R68gdcS7x--
+Thanks,
+Stanley Jhu
