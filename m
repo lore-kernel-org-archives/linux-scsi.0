@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D1B24AA3F1;
-	Wed,  2 Sep 2026 17:15:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5EFF4A92E6;
+	Wed,  2 Sep 2026 17:16:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788369309; cv=none; b=bp618E5AA6aLR9mrWLtNproeOU2JCFb0jAj6n+nyStdpNI41/oL9ERH7LCsOmxDiPqcW8hSjzGpnAUrzyvrcogET25xVkog5a+cFVRbMFCrNqnDVWxgqynI3tkR5RcYA9JVZ8unf/Nsm8qstZfmAeBY02YgCuVa8Vdxh1zApOt0=
+	t=1788369395; cv=none; b=VmsPUwW2/I9qEItvfMFv62AzJkqxtvrVMLM7HxXGgF/NgEjWwEgrrL461lJSe0WufBobTSwVDmoYbRxMrPPTnIY/zn/kG5vAP48HF++WaqbbEqMhMrEZ7AWLweu2TvU7BmnTJACdwZx0ne+Qin2JxTMxuegSsE1p6fRfQZJ9nkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788369309; c=relaxed/simple;
-	bh=gyzRRNKiER4sC+Q7Ep+ITx8hOBiZACbTB3GJVLcZIQ8=;
+	s=arc-20240116; t=1788369395; c=relaxed/simple;
+	bh=KZX2rWGCNpik8AAAhhyBBLit130QcO68IknrrqtskW8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lGFczPU4B+6w5mvmOwBq35CBJkN8LKUGSCMn007Vf9GMK51GgZFnDrqOGMQ+jx2b6j0LKOgd9dJBf8cm6I4LeqbxE93jYK2TXuFSCziFNlOtLqElcS06OWL2Dt7O68N8wKIGT4ThtAoy8WNbQvG5SxMhU6gXBeelDG0jwvWmwfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jU9ykNpe; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=BKsBTJSiTJnMmFiQiZ3QaJL3bYVUyu/nS+pP1SruGIx5rhXmVamTjOy4/wUTe7WDxNAcWqECco2pWrWmn5lVKHSeZTFl/IE/gPR9V8u/6p2dJtGIvmG28VVkA3FZ5jXtOvxDPjXmnzxBHSETPja3akyK0c4ihqSTYGgt38GWOrY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e60qNdp0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jU9ykNpe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60A341F000E9;
-	Wed,  2 Sep 2026 17:15:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e60qNdp0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E4AC1F000E9;
+	Wed,  2 Sep 2026 17:16:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788369307;
-	bh=gyzRRNKiER4sC+Q7Ep+ITx8hOBiZACbTB3GJVLcZIQ8=;
+	s=k20260515; t=1788369393;
+	bh=KZX2rWGCNpik8AAAhhyBBLit130QcO68IknrrqtskW8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jU9ykNpe+5VuXqYFMLB8PJvXmc/RXZsLGd1CiHUVRoUZh4uXv4JsLd9boj9cas3OI
-	 h+upU7oCo6LCwB9E/u5cVyIDVxpnOLFabQmLYXOlVUwgRnJwxfT8VG+dHdlMRpUkpe
-	 3DkWRqArbkub250OTS3eENSp7XyAqTUE8gT72NIcP1nWPn//5wTGQhNu0YJQQlhZW4
-	 Dla12kSXLNUpjsVCAuxddR5Ajpdhex8DARnBPWAkK8P5Iv9bnb7OBtUtr2kkRgit5q
-	 5JIqGSITnuJmnpiiRP6b5L97TbuLF5MnW1DIQt7OeLePye+qxBHERcQDv0RNLZYd5P
-	 b2CCMKssRSdNA==
+	b=e60qNdp0wg1bT3sy+crGCvvAOVfPFSEsBtLuWcC83S+5ykQiKwuEyWGkjFWKh3/PV
+	 GG5Lu5Vl+QvrLdUWj/pHQjx/v9DyE0qlW8ioTl+pGSiFxtdyBxHabTZwXVFQWebJBb
+	 cOE27Dvf7RNO1ZN6uxFlZjjlfSplT1c7L6XsXU35kdfCmtM8IgYfL26v+3R5m53EuH
+	 XZWv+RYM3CXODa/j+P8fRVP4ypPiMSSQLtdBm8rESvChvgvEyBkMmsd6dVKSuXZwPl
+	 32R2q9YF/dtHMcujqMzcQq1QQJBmU/VTpQ+WwRCNKcKaB2Oah/0ots5wBB+O/zg9OM
+	 C5rhwcGvD3AGQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/9] driver core: prevent device_add() during system
- shutdown
+Subject: Re: [PATCH 1/9] driver core: rely on put_device to free dev->p
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Jeffery" <djeffery@redhat.com>
 Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260902170734.95504-3-djeffery@redhat.com>
+In-Reply-To: <20260902170734.95504-2-djeffery@redhat.com>
 References: <20260902170734.95504-1-djeffery@redhat.com>
- <20260902170734.95504-3-djeffery@redhat.com>
+ <20260902170734.95504-2-djeffery@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 17:15:07 +0000
-Message-Id: <20260902171507.60A341F000E9@smtp.kernel.org>
+Date: Wed, 02 Sep 2026 17:16:32 +0000
+Message-Id: <20260902171633.3E4AC1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,22 +46,20 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 > From: Tarun Sahu <tarunsahu@google.com>
 >=20
-> In Async device shutdown, device_kset->list lock is released to handle
-> asynchronisation and hold again to get entry from device_kset->list.
-> Which will leave window when device_add can try to add the device to
-> device_kset list and temper with ongoing shutdown process. New added
-> device can be async type or sync type and might also introduce new
-> dependency which can cause device_shutdown path to deadlock. S is
-> waiting C to finish but C is never scheduled as it was added recently
-> from device_add path. And C can only be scheduled when main loops
-> continue to reach to C which is waiting on S.
+> device_add allocate private_data for device and assigns to
+> dev->p. If device_add fails in later steps of the function,
+> it cleans up this dev->p which is not necessary because In
+> the next call, put_device free it anyway (if reference to
+> the device is 0 which will be unless someone concurrently
+> get the reference to this device).
 >=20
-> So, When a system enters shutdown (SYSTEM_HALT, SYSTEM_POWER_OFF, or
-> SYSTEM_RESTART), new devices should not be allowed to be added.
-> Adding system_state check (system_is_shutting_down()) to avoid
-> device_add incase of these states of the system. And use srcu so the
-> device shutdown operation can synchronize device_add and ensure any
-> device_add in progress is finished.
+> This avoids unnecessary races introduced in system. After device
+> is added in device_kset->list by device_add and later steps in the
+> device_add function failures occur, it will free dev->p manually,
+> while in between there might be a user of device_kset->list will
+> take reference to the device just added by device_add. and might
+> try to access dev->p. So relying on put_device to free dev->p
+> prevents such problem.
 >=20
 > Signed-off-by: Tarun Sahu <tarunsahu@google.com>
 > Signed-off-by: David Jeffery <djeffery@redhat.com>
@@ -71,5 +68,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902170734.9550=
-4-1-djeffery@redhat.com?part=3D2
+4-1-djeffery@redhat.com?part=3D1
 
