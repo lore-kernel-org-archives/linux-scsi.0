@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A726A4A5EDB
-	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2026 20:06:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9F7E4A92E4
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2026 20:06:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788379584; cv=none; b=GiNlX8Doaz8W1LsdwlBCAbSuwQOHvZhtbVhQZdt7Dmy1BP9fs7avCf5pieMXPDy7RH+9gdHN7pHvP2nuxyhmInqDcjzJWLdTzwAYB4Lpwk6gng/Ay8Z+q1nHQ5J9rYIGasM4Qq3aZRlLhX+sx4QBHHSd4i91b6Pm9kaDrV7//Z8=
+	t=1788379587; cv=none; b=rc2tgoHlWWAx8McMLMKrg/CS3ybWsDeffuf4jsnb4FFfQrYeASugorQzuiu0mzrcnJsSzdxw17wK7OX8+6cFvAaYmkWON89Cai6iLeE4UNgPWQxXnJBrjYbFaRxTV0CM1Yrw6+WnIb3ncnefMYPC2zYfV5jgzyPDJEpo90H92r0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788379584; c=relaxed/simple;
-	bh=KyigujruG9PSQ4X/h7TyBYjnfhYpTml3X/Nidvemv3c=;
+	s=arc-20240116; t=1788379587; c=relaxed/simple;
+	bh=TX/A9T7k2l7O+z/2UKblsu8QuGJl1aMR7tTvqKEq/WE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rf0lZ3gIbU9f/XZGl1Fq8o/FiftpvsH1kfD3OP8PCb7x/Dz6H/HwZu2A1Dofl/UDiYhDGLvWpw+cHA5HCythWgYNR/jzjWT/MV0EcPVOFU7h3drxNUxrRzpqV5h8hfSG7+cyrujPdWeEXXnl6/bNEXGgEcUSmIaaJ2TxkxcHjnA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iAdk/zPm; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=hWTidnYUTy9DFX35U1mw3o9VqZ//mi9P0iB2G8Luj/TOkx0lmyd0tDYvGsLrntfSMPphh/c9PvIJ0Vkp1GcBYn+e280w4RETgqr5ViOCG6SRiLRHYi6FmDzDx7TcC3FIxb1DdRF47Fi2rbbU3DMLAO3yR9bhcpeUOSXTDBc25W4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VM+5h22Q; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iAdk/zPm"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VM+5h22Q"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1788379581;
+	s=mimecast20190719; t=1788379584;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=aOzuicW09ymDk9cexEa+3/Sews5a9NJ263znpzR+848=;
-	b=iAdk/zPmrbBeH4oqp1GvfYp3OK2tO9SV+tWBNsQ4ozSVqvtOxp3Z8P9c3NXyZew7zFN3HY
-	Py1znvpGI1AHKg0CmTz3Pp+SHgmoZYmU0IwzInD6PKwVTYeeNW04wKqVVx/PQH5J79Dl0G
-	g5n6+wgEeN4Cap2mN4NmmTQbkWpnP6M=
+	bh=XMYZkkfvLk4oMTmC0tcijBigxpVsXAU2YnaVB3q+VDM=;
+	b=VM+5h22QWV6MHI4DZ0aaaJ+EaAEnruzQ9Rw49fIHtT3TSSwM8XjvIXhO43kkHQbK0DIq7b
+	CbDrkdxgK7JLJCRriqlgLKSGPIw29cpbMg+8cHIFBRFgLG11XC6DVBglFu5OxIMQVwopfv
+	M47lw64vE7Rq/BBrSXgSaCgLszWI8qs=
 Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-28-72-yttTKMveSGAZMlApg2A-1; Wed,
- 02 Sep 2026 16:06:17 -0400
-X-MC-Unique: 72-yttTKMveSGAZMlApg2A-1
-X-Mimecast-MFC-AGG-ID: 72-yttTKMveSGAZMlApg2A_1788379568
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-119-Oa_6jVWVNQewd7r_--03mw-1; Wed,
+ 02 Sep 2026 16:06:19 -0400
+X-MC-Unique: Oa_6jVWVNQewd7r_--03mw-1
+X-Mimecast-MFC-AGG-ID: Oa_6jVWVNQewd7r_--03mw_1788379575
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E64BF1955D99;
-	Wed,  2 Sep 2026 20:06:07 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 691F9192DD55;
+	Wed,  2 Sep 2026 20:06:15 +0000 (UTC)
 Received: from jtaubepe-thinkpadx1carbongen12.ibmlowe.csb (unknown [10.17.16.153])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A8FE51955F02;
-	Wed,  2 Sep 2026 20:06:04 +0000 (UTC)
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B12581955F02;
+	Wed,  2 Sep 2026 20:06:11 +0000 (UTC)
 From: Jesse Taube <jtaubepe@redhat.com>
 To: linux-nvme@lists.infradead.org
 Cc: linux-scsi@vger.kernel.org,
@@ -69,10 +69,11 @@ Cc: linux-scsi@vger.kernel.org,
 	shinichiro.kawasaki@wdc.com,
 	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: [PATCH v2 4/7] nvme-multipath: round-robin support for marginal paths
-Date: Wed,  2 Sep 2026 16:05:44 -0400
-Message-ID: <20260902200547.184734-5-jtaubepe@redhat.com>
+	linux-block@vger.kernel.org,
+	Hannes Reinecke <hare@kernel.org>
+Subject: [PATCH v2 6/7] nvme-fc: add nvme_fc_set_remoteport_fpin()
+Date: Wed,  2 Sep 2026 16:05:46 -0400
+Message-ID: <20260902200547.184734-7-jtaubepe@redhat.com>
 In-Reply-To: <20260902200547.184734-1-jtaubepe@redhat.com>
 References: <20260902200547.184734-1-jtaubepe@redhat.com>
 Precedence: bulk
@@ -84,85 +85,62 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Exclude marginal paths from round-robin io policy. In the case where all
-paths are marginal and no optimized or non-optimized path is found, we
-fall back and perform round-robin on the marginal paths.
+Add nvme_fc_set_remoteport_fpin() and supporting functions. This
+function is called by the SCSI FC transport and driver layer to set or
+clear the 'marginal' path status for a specific rport.
 
+Co-developed-by: Hannes Reinecke <hare@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@kernel.org>
+Signed-off-by: John Meneghini <jmeneghi@redhat.com>
 Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
 ---
 V10 -> V1:
- - New commit
+ - Remove nvme_fc_modify_rport_fpin_state
+ - Use struct nvme_fc_remote_port instead of wwpn and wwnn
 V1 -> V2:
- - Rewrite
+ - Use nvme_ctrl_assign_marginal over set/clear_bit
 ---
- drivers/nvme/host/multipath.c | 32 +++++++++++++++++++++++++-------
- 1 file changed, 25 insertions(+), 7 deletions(-)
+ drivers/nvme/host/fc.c         | 13 +++++++++++++
+ include/linux/nvme-fc-driver.h |  2 ++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
-index f28797deab68..738e3c742b74 100644
---- a/drivers/nvme/host/multipath.c
-+++ b/drivers/nvme/host/multipath.c
-@@ -392,22 +392,29 @@ static struct nvme_ns *nvme_round_robin_path(struct nvme_ns_head *head)
- 	int node = numa_node_id();
- 	struct nvme_ns *old = srcu_dereference(head->current_path[node],
- 					       &head->srcu);
-+	bool need_marginal;
+diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+index 7886c0dcc626..c4810d048b87 100644
+--- a/drivers/nvme/host/fc.c
++++ b/drivers/nvme/host/fc.c
+@@ -895,6 +895,19 @@ nvme_fc_set_remoteport_devloss(struct nvme_fc_remote_port *portptr,
+ }
+ EXPORT_SYMBOL_GPL(nvme_fc_set_remoteport_devloss);
  
- 	if (unlikely(!old))
- 		return __nvme_find_path(head, node);
- 
- 	if (list_is_singular(&head->list)) {
--		if (nvme_path_is_disabled(old))
--			return NULL;
--		return old;
-+		if (nvme_path_is_usable(old))
-+			return old;
-+		return NULL;
- 	}
- 
-+	need_marginal = nvme_all_paths_marginal(head);
++void
++nvme_fc_set_remoteport_fpin(struct nvme_fc_remote_port *portptr, bool marginal)
++{
++	struct nvme_fc_rport *rport = remoteport_to_rport(portptr);
++	struct nvme_fc_ctrl *ctrl;
++	unsigned long flags;
 +
- 	for (ns = nvme_next_ns(head, old);
- 	     ns && ns != old;
- 	     ns = nvme_next_ns(head, ns)) {
- 		if (nvme_path_is_disabled(ns))
- 			continue;
++	spin_lock_irqsave(&rport->lock, flags);
++	list_for_each_entry(ctrl, &rport->ctrl_list, ctrl_list)
++		nvme_ctrl_assign_marginal(&ctrl->ctrl, marginal);
++	spin_unlock_irqrestore(&rport->lock, flags);
++}
++EXPORT_SYMBOL_GPL(nvme_fc_set_remoteport_fpin);
  
-+		/* Skip marginal paths unless we need to use them */
-+		if (!need_marginal && nvme_ctrl_is_marginal(ns->ctrl))
-+			continue;
+ /* *********************** FC-NVME DMA Handling **************************** */
+ 
+diff --git a/include/linux/nvme-fc-driver.h b/include/linux/nvme-fc-driver.h
+index 9f6acadfe0c8..95d79386d126 100644
+--- a/include/linux/nvme-fc-driver.h
++++ b/include/linux/nvme-fc-driver.h
+@@ -536,6 +536,8 @@ void nvme_fc_rescan_remoteport(struct nvme_fc_remote_port *remoteport);
+ int nvme_fc_set_remoteport_devloss(struct nvme_fc_remote_port *remoteport,
+ 			u32 dev_loss_tmo);
+ 
++void nvme_fc_set_remoteport_fpin(struct nvme_fc_remote_port *portptr, bool marginal);
 +
- 		if (ns->ana_state == NVME_ANA_OPTIMIZED) {
- 			found = ns;
- 			goto out;
-@@ -419,12 +426,23 @@ static struct nvme_ns *nvme_round_robin_path(struct nvme_ns_head *head)
- 	/*
- 	 * The loop above skips the current path for round-robin semantics.
- 	 * Fall back to the current path if either:
--	 *  - no other optimized path found and current is optimized,
-+	 *  - no other optimized path found and current is,
-+	 *      optimized and not marginal.
-+	 *  - no other non-marginal path found and current is,
-+	 *      optimized and marginal.
- 	 *  - no other usable path found and current is usable.
- 	 */
--	if (!nvme_path_is_disabled(old) &&
--	    (old->ana_state == NVME_ANA_OPTIMIZED ||
--	     (!found && old->ana_state == NVME_ANA_NONOPTIMIZED)))
-+	/* no other usable path found and current is usable. */
-+	if (nvme_path_is_usable(old) && !found)
-+		return old;
-+	/*
-+	 *  - no other optimized path found and current is,
-+	 *      optimized and not marginal.
-+	 *  - no other non-marginal path found and current is,
-+	 *      optimized and marginal.
-+	 */
-+	if (nvme_path_is_usable(old) && old->ana_state == NVME_ANA_OPTIMIZED &&
-+	   (!nvme_ctrl_is_marginal(old->ctrl) || need_marginal))
- 		return old;
- 
- 	if (!found)
+ /*
+  * Routine called to pass a NVME-FC LS request, received by the lldd,
+  * to the nvme-fc transport.
 -- 
 2.55.0
 
