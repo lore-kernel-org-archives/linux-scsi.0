@@ -1,165 +1,125 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-156.mta1.migadu.com [95.215.58.156])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB5273EE1D4;
-	Wed,  2 Sep 2026 08:40:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0D33EF67D
+	for <linux-scsi@vger.kernel.org>; Wed,  2 Sep 2026 09:28:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.156
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788338449; cv=none; b=lwx9vM5J3GNBh6tKAt1zQSDX8ThyofgSVUrCTaXdxK56kpizetnKts31arYvOUPG/5h9g2YSYOXO6onpEjXSv/ir4hSVCv0B3RXjkGZh/xiFDP44XRTuigV2gczxWdgyBFzL9/Yd5RfEuX3byZLbhzT9AbeNNFjaRBMh8jFaUPA=
+	t=1788341342; cv=none; b=LlJ9+l4EBHy9U/U4GAk1MWW5RFjzELedIwEP+Bq80TCQENS2YYnorFH2nc+t2J+Xjb+kT+H++58VNGX/DaaGcUJ28/ZtiJfyylgA4ftDHQESQvKUHChmbgtR5tK0NGjEpP5CzZMUp+0+/uM0v7LW56na9I0GZP1iH+GSI2kozE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788338449; c=relaxed/simple;
-	bh=wtOM+/wiabhllYjdkjNcNUzPA3neBoqeh/08JLGeQ8U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EZd5bQg5R73AvgmdnEOK9vyRuGZypvCz363atmF5g838DTR5J32eF2FXuh/YGl3Pa/cYOUTrBH5I42TYlMAHCEqsR/QjNue5CwV8X1GGIblUqqU3qRUDCreF/DqlhhscNlazTia4g5HuGUG96qQ38kvrnsubpbEjPfNMDkIcY+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=QfEXpsKb; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1788341342; c=relaxed/simple;
+	bh=peZnTaKnvDeoh2LG4G9grBL+W1Kp7tQuGWd/KnYr4P4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ny+Lp6roMxlabxQgF1nV9OWDN5LZLtt3dsgXcAEgLaiZ4iBm34W7B3jVyXB7aHHBRaUs9x2O5ruAQwYcWln4w8Yr6Ygyj2BBDreC14MBd3SL12Qwi407FeTWLBrP+f2VzKdR1qZB3TTVlvpHg1A0lOZ91D7zxLX06+tshqnYVxc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=tYKNDwri; arc=none smtp.client-ip=95.215.58.156
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="QfEXpsKb"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6826VYV33438175;
-	Wed, 2 Sep 2026 08:40:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=G0a/zW
-	qfSIg+dcjUg7KWBjpbdRqkTWWjHihunYmWn8c=; b=QfEXpsKbaK8IIhbaD252d1
-	y5JYcv3aebn34fdlualOJuAr/PfqASBrB+u7qld9i09LjUipm9l5wwJqEU4J3aoU
-	reSrdoN6OZ08QYx8xjK66h2xw/IUEwPs37eg1b0qXkWKmwLicMhm6ZZBYRzhay2Y
-	MpE7l8wVinJ4ioQJaY6MxpFmvaREAb7eRGO9k+bw+OTO4edKCgXXaNLxtSpXiwnH
-	7Nn/9qgH5bH/7pu1dP30FzQTljGc1Anfv5M+BxTyL9yKv4YD8SbYPydUfpPnzyH3
-	rYx98FBqwbd2cKtPEA0xKUs1TxHIA/u1086hSOrRuPL/X/LcoUeCOZoijdKGns6A
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gbq54wat9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 02 Sep 2026 08:40:44 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 6828QP5s020397;
-	Wed, 2 Sep 2026 08:40:43 GMT
-Received: from smtprelay03.wdc07v.mail.ibm.com ([172.16.1.70])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gccey8exq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 02 Sep 2026 08:40:43 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
-	by smtprelay03.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6828e0E021299880
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 2 Sep 2026 08:40:00 GMT
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7F3CD58059;
-	Wed,  2 Sep 2026 08:40:41 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1290858068;
-	Wed,  2 Sep 2026 08:40:39 +0000 (GMT)
-Received: from [9.123.9.83] (unknown [9.123.9.83])
-	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed,  2 Sep 2026 08:40:38 +0000 (GMT)
-Message-ID: <afd6fdc7-0fae-4fcf-b30a-a69294d26576@linux.ibm.com>
-Date: Wed, 2 Sep 2026 14:10:37 +0530
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="tYKNDwri"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=peZnTaKnvDeoh2LG4G9grBL+W1Kp7tQuGWd/KnYr4P4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788341337; v=1; x=1788946137;
+ b=tYKNDwrio7EVyw+6PXFyS7UU5KC0QqT/3Mbtd6fAsj4oaOThWF2EM5z+QG+aG8esuhg2cG3R
+ O77uaZIIFr/4tZ4Xk5UF2YmzBjLFHwmPp5VWJpFWr1VWO3a8hHNUyRgXasw1X+vVADfmwBVTDjq
+ JhwtQGNHoMrKjSvBDn7ItCHg=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta11.migadu.com with ESMTPS id 50ff65e1dfcd947f;
+	Wed, 02 Sep 2026 09:28:57 +0000
+X-Mizu-Trace-ID: 50ff65e1dfcd947f
+X-Migadu-Flow: FLOW_OUT
+From: John Garry <john.garry@linux.dev>
+To: James.Bottomley@HansenPartnership.com,
+	mkp@kernel.org
+Cc: linux-scsi@vger.kernel.org,
+	djwong@kernel.org,
+	hch@lst.de,
+	fstests@vger.kernel.org,
+	bvanassche@acm.org,
+	John Garry <john.garry@linux.dev>
+Subject: [PATCH] scsi: scsi_debug: default to a higher throughput config
+Date: Wed,  2 Sep 2026 10:28:44 +0100
+Message-ID: <20260902092844.1741533-1-john.garry@linux.dev>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: scsi: ibmvfc: Add Kconfig dependency on NVME_FC to prevent link
- failure
-To: pavrampu <pavrampu@linux.ibm.com>, tyreld@linux.ibm.com
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        brking@linux.ibm.com, linux-kernel@vger.kernel.org,
-        davemarq@linux.ibm.com
-References: <327877a29337aa526cc50ac88fbddb86@linux.ibm.com>
-Content-Language: en-GB
-From: Venkat Rao Bagalkote <venkat88@linux.ibm.com>
-In-Reply-To: <327877a29337aa526cc50ac88fbddb86@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAyMDA3NSBTYWx0ZWRfX2GONLxbT5ley
- O3f8SGH8RIeZxRyM3t4BRBXcOcKuQUBz4z8QDx4oOKL5f875gnfS4LH3H14OlNl81vLCeNvHiGy
- 4vr+EfzwPgHZMTr/aivb+9pBDcIjFuJZv927hsGw/ZJj1akOJAINipB8m81vaetniRNYcPLX+qG
- noz6hWJt34ewPAAq5MK6kJziYZVRpOY1PQ5x62QYAFfgAIJuAqmuKjbcrrAKoZPjgR18P3u72g9
- t2SMvEl28Cut7OeZfK7GqZ6SfgQLdtf2+7FJeUOQObgruLkPV8tZHAkhEFyo1Hqm+moSrPwXiA3
- LQwsjl4hVkae/q4/Dyhsl8rTTJnmMMj1RDXV+Y2DplQCgCS4WTkqHO6A5XHWbhqdJW8T+Cy4ELw
- 6nLCpGsCY11QNIeh4kKI3OZtKWeOMd0wGKaNJNPLyrz1ileANbYlO9repMXTyVCQpOPw1IWDRz+
- hzUscZJ5/jk9X2oQgTw==
-X-Proofpoint-ORIG-GUID: g227ejspB4Rwy6ygrI9IrzfV-v5bGmKh
-X-Authority-Analysis: v=2.4 cv=CNgamxrD c=1 sm=1 tr=0 ts=6a97e10c cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=rqf9Ed0saxO1yiMWrtYA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: g227ejspB4Rwy6ygrI9IrzfV-v5bGmKh
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAyMDA3NSBTYWx0ZWRfX93f/GhDZ5m9+
- twCv2xuA+RfWYMt3vF1fu32rwB+2xLeTtMFiy7rsbtCNCe9DWMKu0eypPdiT8WCI2C3AN0t9Tvn
- IlF3Ke1wAIXEBvDIRHVOMo2YyMtHz70=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-02_01,2026-09-01_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 bulkscore=0 suspectscore=0 phishscore=0 lowpriorityscore=0
- priorityscore=1501 clxscore=1011 impostorscore=0 adultscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609020075
 
+Currently the default config goes not give as high a throughput as some
+would like.
 
-On 02/09/26 1:55 pm, pavrampu wrote:
-> Hi,
->
-> I am seeing below build failure with latest linux-next repo.
->
-> Description:
->
-> Building the kernel with CONFIG_SCSI_IBMVFC=y and CONFIG_NVME_FC=m 
-> results in a link failure when building vmlinux:
->
-> Build failure logs:
->
-> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function 
-> `ibmvfc_nvme_register_remoteport':
-> ibmvfc-nvme.c:488: undefined reference to `nvme_fc_register_remoteport'
-> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function 
-> `ibmvfc_nvme_unregister_remoteport':
-> ibmvfc-nvme.c:515: undefined reference to `nvme_fc_unregister_remoteport'
-> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function 
-> `ibmvfc_nvme_register':
-> ibmvfc-nvme.c:536: undefined reference to `nvme_fc_register_localport'
-> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function 
-> `ibmvfc_nvme_unregister':
-> ibmvfc-nvme.c:565: undefined reference to `nvme_fc_unregister_localport'
-> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function 
-> `ibmvfc_nvme_unregister':
-> ibmvfc-nvme.c:565: undefined reference to `nvme_fc_unregister_localport'
-> ld: drivers/scsi/ibmvscsi/ibmvfc-core.c:6798: undefined reference to 
-> `nvme_fc_rescan_remoteport'
+Give a higher default throughput by modifying the following:
+- set completion response delay as 0
+- increase shost can_queue to 4096, which aligns better with modern
+  high-speed HBAs
+- turn on clustering
 
+Signed-off-by: John Garry <john.garry@linux.dev>
 
-Below simple check in Kconfig fixes the build failure.
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 3346562275f8..f2afe757c438 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -79,7 +79,7 @@ static const char *sdebug_version_date = "20210520";
+  */
+ #define DEF_ATO 1
+ #define DEF_CDB_LEN 10
+-#define DEF_JDELAY   1		/* if > 0 unit is a jiffy */
++#define DEF_JDELAY   0		/* if > 0 unit is a jiffy */
+ #define DEF_DEV_SIZE_PRE_INIT   0
+ #define DEF_DEV_SIZE_MB   8
+ #define DEF_ZBC_DEV_SIZE_MB   128
+@@ -106,6 +106,7 @@ static const char *sdebug_version_date = "20210520";
+ #define DEF_PTYPE   TYPE_DISK
+ #define DEF_RANDOM false
+ #define DEF_REMOVABLE false
++#define DEF_CLUSTERING true
+ #define DEF_SCSI_LEVEL   7    /* INQUIRY, byte2 [6->SPC-4; 7->SPC-5] */
+ #define DEF_SECTOR_SIZE 512
+ #define DEF_UNMAP_ALIGNMENT 0
+@@ -217,8 +218,7 @@ struct tape_block {
+  * /sys/class/scsi_device/<h:c:t:l>/device/queue_depth
+  * but cannot exceed SDEBUG_CANQUEUE .
+  */
+-#define SDEBUG_CANQUEUE_WORDS  3	/* a WORD is bits in a long */
+-#define SDEBUG_CANQUEUE  (SDEBUG_CANQUEUE_WORDS * BITS_PER_LONG)
++#define SDEBUG_CANQUEUE  (4096)
+ #define DEF_CMD_PER_LUN  SDEBUG_CANQUEUE
+ 
+ /* UA - Unit Attention; SA - Service Action; SSU - Start Stop Unit */
+@@ -850,7 +850,7 @@ static int sdebug_num_hosts;
+ static int sdebug_add_host = DEF_NUM_HOST;  /* in sysfs this is relative */
+ static int sdebug_ato = DEF_ATO;
+ static int sdebug_cdb_len = DEF_CDB_LEN;
+-static int sdebug_jdelay = DEF_JDELAY;	/* if > 0 then unit is jiffies */
++static int sdebug_jdelay = DEF_JDELAY;
+ static int sdebug_dev_size_mb = DEF_DEV_SIZE_PRE_INIT;
+ static int sdebug_dif = DEF_DIF;
+ static int sdebug_dix = DEF_DIX;
+@@ -899,7 +899,7 @@ static int sdebug_uuid_ctl = DEF_UUID_CTL;
+ static bool sdebug_random = DEF_RANDOM;
+ static bool sdebug_per_host_store = DEF_PER_HOST_STORE;
+ static bool sdebug_removable = DEF_REMOVABLE;
+-static bool sdebug_clustering;
++static bool sdebug_clustering = DEF_CLUSTERING;
+ static bool sdebug_host_lock = DEF_HOST_LOCK;
+ static bool sdebug_strict = DEF_STRICT;
+ static bool sdebug_no_rwlock;
+@@ -7373,8 +7373,8 @@ MODULE_VERSION(SDEBUG_VERSION);
+ MODULE_PARM_DESC(add_host, "add n hosts, in sysfs if negative remove host(s) (def=1)");
+ MODULE_PARM_DESC(ato, "application tag ownership: 0=disk 1=host (def=1)");
+ MODULE_PARM_DESC(cdb_len, "suggest CDB lengths to drivers (def=10)");
+-MODULE_PARM_DESC(clustering, "when set enables larger transfers (def=0)");
+-MODULE_PARM_DESC(delay, "response delay (def=1 jiffy); 0:imm, -1,-2:tiny");
++MODULE_PARM_DESC(clustering, "when set enables larger transfers (def=1)");
++MODULE_PARM_DESC(delay, "response delay (def=0 jiffy); 0:imm, -1,-2:tiny");
+ MODULE_PARM_DESC(dev_size_mb, "size in MiB of ram shared by devs(def=8)");
+ MODULE_PARM_DESC(dif, "data integrity field type: 0-3 (def=0)");
+ MODULE_PARM_DESC(dix, "data integrity extensions mask (def=0)");
+-- 
+2.43.0
 
-If this is acceptable, then I will send a formal patch.
-
-# git diff
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 4a2af0f702e1..6612d5d445e2 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -753,6 +753,7 @@ config SCSI_IBMVFC
-         tristate "IBM Virtual FC support"
-         depends on PPC_PSERIES && SCSI
-         depends on SCSI_FC_ATTRS
-+      depends on NVME_FC || NVME_FC=n
-         help
-           This is the IBM POWER Virtual FC Client
-
-
-Regards,
-
-Venkat.
-
->
-> If you happen to fix this, please add below tag.
->
-> Reported-by: Pavithra <pavrampu@linux.ibm.com>
->
-> Thanks,
-> Pavithra
