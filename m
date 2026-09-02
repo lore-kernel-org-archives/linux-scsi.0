@@ -1,65 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5EFF4A92E6;
-	Wed,  2 Sep 2026 17:16:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 933F9476055;
+	Wed,  2 Sep 2026 17:17:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788369395; cv=none; b=VmsPUwW2/I9qEItvfMFv62AzJkqxtvrVMLM7HxXGgF/NgEjWwEgrrL461lJSe0WufBobTSwVDmoYbRxMrPPTnIY/zn/kG5vAP48HF++WaqbbEqMhMrEZ7AWLweu2TvU7BmnTJACdwZx0ne+Qin2JxTMxuegSsE1p6fRfQZJ9nkU=
+	t=1788369440; cv=none; b=RWTKLSlGaBIIAeDzR1xn5pc4l2OcbgGKV4Ei+SZcNmiqSEpYX05TEenc/RnBR9fOK2lKrvi1zIRdXxS8cqKu1vyl5P/VGHyIR8sFt4EsNuh0m2CbhnoYFoYVkn66SjOFwkkN4QSOrr3UWlppZZuGLqTacNM4jypIFuNUoxT//Lw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788369395; c=relaxed/simple;
-	bh=KZX2rWGCNpik8AAAhhyBBLit130QcO68IknrrqtskW8=;
+	s=arc-20240116; t=1788369440; c=relaxed/simple;
+	bh=o2Mv7WRrpwA7jgMetkVKrbR3crOX5CzXQPI21Zi2wMM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BKsBTJSiTJnMmFiQiZ3QaJL3bYVUyu/nS+pP1SruGIx5rhXmVamTjOy4/wUTe7WDxNAcWqECco2pWrWmn5lVKHSeZTFl/IE/gPR9V8u/6p2dJtGIvmG28VVkA3FZ5jXtOvxDPjXmnzxBHSETPja3akyK0c4ihqSTYGgt38GWOrY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e60qNdp0; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=oRCEq27BRE7qkqCyKPdIAjnt9bmZWnD4Wd5BJDRqZmy2HQt1piPy0BQrnvt6cmWkQ6pS+xtM8gn0D9hudPgKa+W36vcSf2q/6uXZtu2xA7pPgJGtfUr0ZAXVhjgQokVLiUaVoM8b6YhgP03FX57QsPRKs5L+63oO6XMtLjO692c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OW9JwkVP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e60qNdp0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E4AC1F000E9;
-	Wed,  2 Sep 2026 17:16:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OW9JwkVP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 010FE1F000E9;
+	Wed,  2 Sep 2026 17:17:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788369393;
-	bh=KZX2rWGCNpik8AAAhhyBBLit130QcO68IknrrqtskW8=;
+	s=k20260515; t=1788369439;
+	bh=o2Mv7WRrpwA7jgMetkVKrbR3crOX5CzXQPI21Zi2wMM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=e60qNdp0wg1bT3sy+crGCvvAOVfPFSEsBtLuWcC83S+5ykQiKwuEyWGkjFWKh3/PV
-	 GG5Lu5Vl+QvrLdUWj/pHQjx/v9DyE0qlW8ioTl+pGSiFxtdyBxHabTZwXVFQWebJBb
-	 cOE27Dvf7RNO1ZN6uxFlZjjlfSplT1c7L6XsXU35kdfCmtM8IgYfL26v+3R5m53EuH
-	 XZWv+RYM3CXODa/j+P8fRVP4ypPiMSSQLtdBm8rESvChvgvEyBkMmsd6dVKSuXZwPl
-	 32R2q9YF/dtHMcujqMzcQq1QQJBmU/VTpQ+WwRCNKcKaB2Oah/0ots5wBB+O/zg9OM
-	 C5rhwcGvD3AGQ==
+	b=OW9JwkVPNE3PyDLTKkEJueitferbFrJtrSCD/+Scydlci/lDUSgw0RwmGNosra2lv
+	 VSlvjBbpPKf5EyXkclq6l4erX5492OcUdx/DijX5YRXsQk0Zdgf6qG3AauvnxLMSiE
+	 FAkPDr2xWbyyl2u08pBh6hrrC+UDOdjLVRWNCSzyKEVzoiaH7ghpkTaczqjxH4roNo
+	 grbPNZQzY6+zIHhVAjV77Y8/t3GeMwAWJmS9crpPkpmtrMugDcgIl2g+JfmDvZir5V
+	 Xh/lcl9WsWBBs0x5OJ8sF3k2Gs6G1ngZMNPPB0wieFaxLau+tlYn4pGHN64MRYSTMj
+	 c7gvCegsYql6w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/9] driver core: rely on put_device to free dev->p
+Subject: Re: [PATCH 7/9] PCI: Link a virtual function to its physical
+ function
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Jeffery" <djeffery@redhat.com>
 Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260902170734.95504-2-djeffery@redhat.com>
+In-Reply-To: <20260902170734.95504-8-djeffery@redhat.com>
 References: <20260902170734.95504-1-djeffery@redhat.com>
- <20260902170734.95504-2-djeffery@redhat.com>
+ <20260902170734.95504-8-djeffery@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 02 Sep 2026 17:16:32 +0000
-Message-Id: <20260902171633.3E4AC1F000E9@smtp.kernel.org>
+Date: Wed, 02 Sep 2026 17:17:18 +0000
+Message-Id: <20260902171719.010FE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> From: Tarun Sahu <tarunsahu@google.com>
+> With a PCI virtual function having the same bus for its parent
+> as the physical function it is associated with, there is no
+> explicit dependency between the two in the device tree. With
+> async shutdown, this can result in the PF being shutdown before the
+> VF has an opportunity to shutdown.
 >=20
-> device_add allocate private_data for device and assigns to
-> dev->p. If device_add fails in later steps of the function,
-> it cleans up this dev->p which is not necessary because In
-> the next call, put_device free it anyway (if reference to
-> the device is 0 which will be unless someone concurrently
-> get the reference to this device).
->=20
-> This avoids unnecessary races introduced in system. After device
-> is added in device_kset->list by device_add and later steps in the
-> device_add function failures occur, it will free dev->p manually,
-> while in between there might be a user of device_kset->list will
-> take reference to the device just added by device_add. and might
-> try to access dev->p. So relying on put_device to free dev->p
-> prevents such problem.
+> Link the VF as a consumer of the PF to note its dependency and
+> ensure clean shutdown ordering.
 >=20
 > Signed-off-by: Tarun Sahu <tarunsahu@google.com>
 > Signed-off-by: David Jeffery <djeffery@redhat.com>
@@ -68,5 +61,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260902170734.9550=
-4-1-djeffery@redhat.com?part=3D1
+4-1-djeffery@redhat.com?part=3D7
 
