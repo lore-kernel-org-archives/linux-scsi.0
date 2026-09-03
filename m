@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DD42380FEE;
-	Thu,  3 Sep 2026 03:43:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87AB239479B;
+	Thu,  3 Sep 2026 03:43:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788406993; cv=none; b=qTX4sU6ZrXaTy1JEofDiYxTuubmFX5tGLntWsyEAFDlUpZP/JTO022fdJ7C8iLVUnxrKIKbFX3WA3p3szlAF6LZiHb7hS7O2Nl75Y9dpxk0I0Jk4yBWIVb3PfEUe8741hMv+a1tH7T+T6Td+aR9yyui+6O3U99dlR3zAS/O4xco=
+	t=1788407000; cv=none; b=uXNnAsle24vdgkRf6P47lHgOmzQAWFC3/d5f1UhqL1+pBt2nfiRLhWzVmvxcD7e8EJrHf1akCIPWyH0kseyrVW46OJAr1LL3d22dgTDYa+GKWec+3JnGeG096+PpdOMtfCOdfYVleY+gWeUQlW3GfPa6ycNKbX0yMvX9LClMtT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788406993; c=relaxed/simple;
-	bh=/mW41zqDDqdpOsgXHkPmsVI/0GS/DDbcEJiTrCb2nMc=;
+	s=arc-20240116; t=1788407000; c=relaxed/simple;
+	bh=czEvGvequjNPcuTW4mQPvet0E5w0nP8lxOvbX5Y4qv4=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ABeo8TKV6kF6JsFkq4pBldE4xmRfKoQWP7hhNrXwdkVhsghvh44eRFQ6ge742l5maKEiUiF/lUr/Rzbk+ltwMn8ell3Padm+YJp9a0B0iNFM+eXXvxePOoqbiwuNiJePGKkYQVL9zX3Hr5VdMZhRDii8Y/FBb9vaCgXO2sH7q08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PRwHqlPX; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=UejZphOWATKv3sx7adDzSx6QtBAQkJJaL7+AWFnMKrKUpEYG2WiKm4B+uEnw4Gdm9XNZ3dVQCuvlTzjp0B9R6PPTsSFU/yFT6VdAwP0xwdytYf1BY4qOjE6PEc99VUPYUzDa8f3vx3/9r70Kfr2zRmEiSLMKb7PjY00M1HHlwcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WcGgAQ01; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PRwHqlPX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97FA51F00A3E;
-	Thu,  3 Sep 2026 03:43:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WcGgAQ01"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 650BD1F000E9;
+	Thu,  3 Sep 2026 03:43:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788406988;
-	bh=ezZo3cIeZob5n0jUfDw8efAraNLL9XA404n3FNk6lwA=;
+	s=k20260515; t=1788406989;
+	bh=y5531/ziW4yYSlUfHnpSR1gRaWvxio9dXP0OqmFFusg=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=PRwHqlPXhMh/VIbmmoc0NZJWwXnkRqsZmOBBQ0CRO7ecKcUVLh4fdD+0zl5Oa+2BG
-	 gwV3ZKHFBPjGyNqZ0IeZXcKGETrAnylQ0kcxSfGQM+G6I8uD0qcZUAUHzl7t5fQLD5
-	 yU7RPq6OAEzfZwV1/+PAUW8eAGaQVqbUbUFIcSon4SLNrkVJn8HKtmvwY9FNqPKOUE
-	 RuhdmkxIbtCgMP4eozg51zD/lryWISzGQGnqdivAqhcnkxN9OUNwwhvDqidrVs+ePU
-	 6UxPFjnwvHoCFwJbQnXrLMXcdJtajMDgwgN4X1w7vIByqj3ugR8zKl6Y2puNyHdzBQ
-	 PNtn1xTo/l9BA==
+	b=WcGgAQ01cvNyUg8aX2T8EF/vxzil+E2GkRGTYISrsexTxQJumHZeJLxuN6HJ4KMSi
+	 46LnTrwKsYhSAaPr4gMZ651Egv2tUA2iiVSujLgxyOHltF9IZVg5XeQO6HfpHj9nob
+	 wSp2csn0FztxSEUViUZIUmDFcSh0755NPsTC8bUBqHkdqRI53qPbUBy2ZomnU2/NlZ
+	 we6P0splgnskbibrUr+yruAfp2+4jW5WXWSdE21cA1IiveaKXGDxDyd6aa35e/XwHf
+	 t2DERlokTUOTwwzajXyWBhgtuWKkXOp68lDAlXyQovPtbCtXE8dWIS2RxyLWqGqOKP
+	 m5NRUa8JZDxaQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v2 29/40] scsi: libiscsi: use 16-bits defined sense codes
-Date: Thu,  3 Sep 2026 12:41:50 +0900
-Message-ID: <20260903034201.112211-30-dlemoal@kernel.org>
+Subject: [PATCH v2 30/40] scsi: ibmvscsi_tgt: use 16-bits defined sense codes
+Date: Thu,  3 Sep 2026 12:41:51 +0900
+Message-ID: <20260903034201.112211-31-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260903034201.112211-1-dlemoal@kernel.org>
 References: <20260903034201.112211-1-dlemoal@kernel.org>
@@ -51,32 +51,35 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor libiscsi to use scsi_set_sense() and replace all hard-coded
-additional sense codes and additional sense code qualifiers with the enum
-values defined in include/scsi/scsi_sense.h. This helps with code clarity
-as the sense codes being processed are easier to test and self-documented.
+Refactor the IBM virtual SCSI target driver to use scsi_set_sense_buffer()
+and replace all hard-coded additional sense codes and additional sense
+code qualifiers with the enum values defined in include/scsi/scsi_sense.h.
+This helps with code clarity as the sense codes being processed are easier
+to test and self-documented.
 
 No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/libiscsi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 5cbc51899de0..7637aacd6037 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -892,7 +892,8 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 61f682800765..e2af90b6da39 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -3757,9 +3757,8 @@ static int ibmvscsis_queue_data_in(struct se_cmd *se_cmd)
+ 		dev_err(&vscsi->dev, "srp_transfer_data failed: %d\n", rc);
+ 		se_cmd->scsi_sense_length = 18;
+ 		memset(se_cmd->sense_buffer, 0, se_cmd->scsi_sense_length);
+-		/* Logical Unit Communication Time-out asc/ascq = 0x0801 */
+-		scsi_build_sense_buffer(0, se_cmd->sense_buffer, MEDIUM_ERROR,
+-					0x08, 0x01);
++		scsi_set_sense_buffer(0, se_cmd->sense_buffer, MEDIUM_ERROR,
++				      LU_COMMUNICATION_TIMEOUT);
+ 	}
  
- 		ascq = session->tt->check_protection(task, &sector);
- 		if (ascq) {
--			scsi_build_sense(sc, 1, ILLEGAL_REQUEST, 0x10, ascq);
-+			scsi_set_sense(sc, 1, ILLEGAL_REQUEST,
-+				scsi_sense_code(ASC_ID_CRC_OR_ECC_ERROR, ascq));
- 			scsi_set_sense_information(sc->sense_buffer,
- 						   SCSI_SENSE_BUFFERSIZE,
- 						   sector);
+ 	srp_build_response(vscsi, cmd, &len);
 -- 
 2.55.0
 
