@@ -1,240 +1,270 @@
-Received: from mail-oo2-f6.google.com (mail-oo2-f6.google.com [74.125.231.134])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1328F4CA29F
-	for <linux-scsi@vger.kernel.org>; Thu,  3 Sep 2026 15:13:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.134
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C4564DC53E;
+	Thu,  3 Sep 2026 16:14:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788448410; cv=none; b=VykQ9dj49M0EbQPRzgY9R6E02z7aiPVj46qBS9RKieHvp0N1XJdnmjdTDgBSTostrDPy6HUe/w0a4g0Hy95Sk2oXiSJPSzEV15383/wWXBjZaXYey+2VQ+YSX2Q/WEOEmq5rtYYCEuVQ90R73OCVBk+lXubl2MSBCnV4oOjs3SY=
+	t=1788452043; cv=none; b=O+eleHx9w8/oD5a2XJuT6AUThnyIjrmOXpH1vol4WbqVtNLauLEndYeMUn+2C4sEJdZZRQh0uEtk2u6HVBh55Z5WaRUzcWhj1Fi2I5ynxVQDYgRHnfMSaU1ADxyabVQ6T3fqiyhONgYI4eHlhDS7GFXT6Qrq1GfAYWzwNjMOKS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788448410; c=relaxed/simple;
-	bh=8oDPwKyJq6D8iNtKGoCjRBDtydxKgNge9OBI1Z9R0JA=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=IcpCF0p+X8tTWOMtboZy4GYlQI0MsJNlc3ib4s3j9gFRI6TGnnO+BsXc7MZlkozB/hp6bG+Hg5JP0kahqDvX867xKmSXrWvJkP1PgXuM2rbGMAoBgzUyZ0Xz2CxcpqFodu8XwCMkFMKn+me93Ro9lq+hkysZndOv3kpRI7NBo04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.134
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oo2-f6.google.com with SMTP id 006d021491bc7-6b1b32cc57bso116500eaf.1
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Sep 2026 08:13:27 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788448407; x=1789053207;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=n88pISbCSWfh8Nmha5aYNHR09vbvpIlX43fQfrQW0kg=;
-        b=MJnARQP9hn9KoMc4W+0/RKC/5AamRzgNSssh0y5SDTVJ4xfLAmH8CtoIwUzlMd2sxI
-         fCKNKBPTGWSagueD4WjCwYzB5Lo5wV4vFaSw+GXg8YCLeY1bzDlWbnhGOuR5k6JTkzfM
-         Ent8fXMf77XWY2yx+y9UMRXs4nSDH8ygSXAUH6NdYsA/c3/TcV5EkwkYye72i2jaPok4
-         tBxs64Ea4LJAY4ftPGM64REGW0y9Qj665trlni9toa0jjgnbEAmTv5U9XOYH+mEKBAmr
-         cWKaU23UUuOOLMMGwAl0SgsskQfgZblX1LN+esrMk3P4hMJbjrv/sIScUcPICFtiBPET
-         Ehcg==
-X-Forwarded-Encrypted: i=1; AKwUvBx/RMhmywgd7R+HwJl8qrM+iq8dCgh8xa3aSvLYwde7ixu5GYWlq8A5o3w1MhGUUqR50IIHcVnkkoRp@vger.kernel.org
-X-Gm-Message-State: AFuF++kmKYjkUvuyc7kXmAeDU8xGNwm4FrLe5AzsSNyAr9h6XKf/X+r8
-	D3bFLgaadMjPlaYwFdgd254coq7d2KT28q909jCyDxmhdslqtLDG/PsTeQHPLGQwN45vDmEOsUm
-	nfTi9Qy+qwCeIndQ83chisNsEWQuCLXNTO89P6om6DsZ1zmWAb1p6EL4VFqo=
+	s=arc-20240116; t=1788452043; c=relaxed/simple;
+	bh=+vIyJ55JwfiugNBsVbUkXE42T3sQQCq8oBVpUpLL0z8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VYP3goCQUIush9hFL+BJpUFyJmXVGmelLrFZt24LtoDc71q0G4T/WAzLXl4vyNkG4kZS5BGVtqWSi5Sl6yo7c2cnDpiGJi+lQVshoCAcH90/nlhRJ02kpwC/1/jWCXkpC7XFBOsFwf+fcUjnzgrGYwibQ0FySEmDamWRXIt9ZFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hbDz5Six; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hbDz5Six"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 853E41F000E9;
+	Thu,  3 Sep 2026 16:14:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788452041;
+	bh=RXvP2AE6LBhdzWhfsyL5aOMR8/s9fFz8n1HlG2XmpQg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=hbDz5SixQXmN6vyqhkLn+lgB0rAKZdxUqL8iyNpJcVEtC6B3youPCLePlnxZeA9dI
+	 iwz3UovZDL8H8WMVQzIgStxhyH03WW5q4oa51XvsLD8oIq2pWuW1DWuCY6cd7z0GyL
+	 ieT7sykzyxgVMAc5m9BIXbR+GnIJgWkJXM+DSIUU8QCF2tcqPqMKUMuBfcunLwbDvA
+	 XpbBTIOPOUrgpd5JqxZX/s64Vb/dnefamXrmHdk+b0+Pcn8GK+GJdlK/x9lk85TZvX
+	 OYd5GVrHfiArYph+QTZv4l8lqUOmoBSK9mg9FlqXQlAexnLJ2nPmtA9X3BLgAvjFAW
+	 DhisBcXC+DN0A==
+Date: Thu, 3 Sep 2026 17:13:57 +0100
+From: Lee Jones <lee@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: Liang Haowen <nbg2974@gmail.com>, linux-scsi@vger.kernel.org,
+	linux-leds@vger.kernel.org
+Subject: Re: [PATCH RFC v2 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED
+ driver for ROG NVMe enclosures
+Message-ID: <20260903161357.GX2133376@google.com>
+References: <202609012200.RFC0.lhw@gmail.com>
+ <202609012200.RFC1.lhw@gmail.com>
+ <202609032000.RFCv2-1.lhw@gmail.com>
+ <20260903122408.3CA6B1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:619:b0:6ae:9815:7c8e with SMTP id
- 006d021491bc7-6b48102eaa1mr9727355eaf.21.1788448406931; Thu, 03 Sep 2026
- 08:13:26 -0700 (PDT)
-Date: Thu, 03 Sep 2026 08:13:26 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a998e96.9266084e.bf0d7.026d.GAE@google.com>
-Subject: [syzbot] [scsi?] INFO: task hung in scsi_scan_host_selected
-From: syzbot <syzbot+1f678bd2872aefb11d8a@syzkaller.appspotmail.com>
-To: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, mkp@kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260903122408.3CA6B1F00A3A@smtp.kernel.org>
 
-Hello,
+On Thu, 03 Sep 2026, sashiko-bot@kernel.org wrote:
 
-syzbot found the following issue on:
+> Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
+> - [High] The workqueue function unconditionally writes to flash even when no LEDs are dirty.
+> - [Medium] Hardcoded LED class device names will cause a sysfs collision if multiple enclosures are connected.
+> - [Medium] Missing memory barriers and locking for led->rgb cause data races and lost color updates.
+> - [Low] Missing 'struct request_queue *' argument in blk_rq_map_kern() call.
+> - [Low] Use of non-existent kzalloc_obj macro prevents compilation.
 
-HEAD commit:    940de590b839 Merge tag 'hardening-v7.3-rc2' of git://git.k..
-git tree:       upstream
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=14f950f9580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=b454dc6b1b7acd30
-dashboard link: https://syzkaller.appspot.com/bug?extid=1f678bd2872aefb11d8a
-compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=15114b49580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=16769f79580000
+Please review, explain or fix the Sashiko review(s).
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/bd9a624b9ba1/disk-940de590.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/9d23d27ba1b3/vmlinux-940de590.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/fbe1a9f530ca/bzImage-940de590.xz
+If this is a set, this request includes the other patches too.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+1f678bd2872aefb11d8a@syzkaller.appspotmail.com
+> --
+> 
+> commit 12eb38bf536e935469d4f61d68a4b96acd78d4b1
+> Author: Liang Haowen <nbg2974@gmail.com>
+> 
+> leds: asus-aura-scsi: Add ASUS Aura RGB LED driver for ROG NVMe enclosures
+> 
+> This commit adds a new out-of-tree driver for ASUS ROG external NVMe
+> enclosures. It registers a SCSI device handler matched by INQUIRY and
+> exposes the 4 addressable Aura RGB LEDs as multicolor LED class devices.
+> A single per-zone work item handles the ENE protocol sequences and
+> serializes updates.
+> 
+> > diff --git a/drivers/leds/leds-asus-aura-scsi.c b/drivers/leds/leds-asus-aura-scsi.c
+> > new file mode 100644
+> > index 0000000000000..4dd559a5d8ec1
+> > --- /dev/null
+> > +++ b/drivers/leds/leds-asus-aura-scsi.c
+> [ ... ]
+> > +static int ene_write(struct scsi_device *sdev, u16 reg,
+> > +		     const void *data, u8 arg_count)
+> > +{
+> > +	struct request *rq;
+> > +	struct scsi_cmnd *scmd;
+> > +	u8 cdb[ENE_CDB_LEN];
+> > +	int ret;
+> > +
+> > +	ene_build_cdb(cdb, reg, arg_count);
+> > +
+> > +	rq = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_OUT, 0);
+> > +	if (IS_ERR(rq))
+> > +		return PTR_ERR(rq);
+> > +
+> > +	if (arg_count) {
+> > +		ret = blk_rq_map_kern(rq, (void *)data, arg_count, GFP_NOIO);
+> 
+> [Severity: Low]
+> Does this missing argument in ene_write() in
+> drivers/leds/leds-asus-aura-scsi.c cause a build failure? The
+> blk_rq_map_kern() function takes 5 arguments (requiring a
+> struct request_queue *q as the first parameter), but only 4 are provided
+> here.
+> 
+> > +		if (ret)
+> > +			goto out;
+> > +	}
+> [ ... ]
+> > +static void asus_aura_zone_work(struct work_struct *work)
+> > +{
+> > +	struct asus_aura_zone *zone =
+> > +		container_of(work, struct asus_aura_zone, work);
+> > +	struct scsi_device *sdev = zone->sdev;
+> > +	u8 apply = ENE_APPLY;
+> > +	u8 save = ENE_SAVE;
+> > +	u8 mode = ENE_MODE_STATIC;
+> > +	int i, ret;
+> > +
+> > +	if (!scsi_device_online(sdev))
+> > +		return;
+> > +
+> > +	/* Mode first: without it the device ignores the whole sequence. */
+> > +	ret = ene_write(sdev, ENE_REG_MODE, &mode, 1);
+> > +	if (ret)
+> > +		goto err;
+> > +
+> > +	for (i = 0; i < ARION_NUM_LEDS; i++) {
+> > +		struct asus_aura_led *led = &zone->leds[i];
+> > +
+> > +		if (!test_and_clear_bit(i, &zone->dirty))
+> > +			continue;
+> > +
+> > +		ret = ene_write(sdev, ENE_REG_COLORS + i * ENE_RGB_LEN,
+> > +				led->rgb, ENE_RGB_LEN);
+> > +		if (ret)
+> > +			goto err;
+> > +
+> > +		/*
+> > +		 * Cover the DIRECT colour set too; some firmware revisions
+> > +		 * pull from 0x8100 instead of 0x8160.
+> > +		 */
+> > +		ret = ene_write(sdev, ENE_REG_COLORS_DIRECT + i * ENE_RGB_LEN,
+> > +				led->rgb, ENE_RGB_LEN);
+> > +		if (ret)
+> > +			goto err;
+> > +	}
+> > +
+> > +	ret = ene_write(sdev, ENE_REG_APPLY, &apply, 1);
+> > +	if (ret)
+> > +		goto err;
+> > +
+> > +	/*
+> > +	 * The change only takes effect after SAVE (0xaa). NOTE: saving on
+> > +	 * every brightness change writes flash each time; revisit for wear
+> > +	 * once confirmed.
+> > +	 */
+> > +	ret = ene_write(sdev, ENE_REG_APPLY, &save, 1);
+> 
+> [Severity: High]
+> Does asus_aura_zone_work() in drivers/leds/leds-asus-aura-scsi.c
+> unconditionally write to the device flash even when no LEDs are dirty?
+> 
+> If schedule_work() is called while asus_aura_zone_work() is already
+> executing, the work item gets re-queued. If the first execution already
+> processed the newly set LED bit, the second execution will observe a fully
+> cleared zone->dirty bitmap, but still send the MODE, APPLY, and SAVE
+> commands to the hardware.
+> 
+> Since SAVE writes to the device flash, these spurious empty runs could cause
+> unnecessary device flash wear.
+> 
+> > +	if (ret)
+> > +		goto err;
+> > +
+> > +	return;
+> > +err:
+> > +	dev_err(&sdev->sdev_gendev,
+> > +		"asus_aura: colour update failed: %d\n", ret);
+> > +}
+> > +
+> > +/* Non-blocking LED callback (LED core fast path). Cache colour, defer SCSI. */
+> > +static void asus_aura_set(struct led_classdev *cdev,
+> > +			  enum led_brightness brightness)
+> > +{
+> > +	struct led_classdev_mc *mc = lcdev_to_mccdev(cdev);
+> > +	struct asus_aura_led *led =
+> > +		container_of(mc, struct asus_aura_led, mc_cdev);
+> > +
+> > +	led_mc_calc_color_components(mc, brightness);
+> > +	/* ENE colour register byte order is R, B, G. */
+> > +	led->rgb[0] = led->subled[0].brightness;
+> > +	led->rgb[1] = led->subled[2].brightness;
+> > +	led->rgb[2] = led->subled[1].brightness;
+> > +
+> > +	set_bit(led->index, &led->zone->dirty);
+> > +	schedule_work(&led->zone->work);
+> 
+> [Severity: Medium]
+> Can this cause data races and lost color updates?
+> 
+> In asus_aura_set() in drivers/leds/leds-asus-aura-scsi.c, led->rgb is updated
+> before marking the LED as dirty via set_bit(). Because set_bit() lacks a full
+> memory barrier, the CPU or compiler can reorder the led->rgb writes to occur
+> after the dirty bit is set.
+> 
+> A concurrently executing asus_aura_zone_work() on another CPU could observe
+> the dirty bit via test_and_clear_bit(), read stale led->rgb values, and
+> clear the bit, causing the new color to be permanently lost.
+> 
+> > +}
+> > +
+> > +static int asus_aura_register_led(struct asus_aura_zone *zone, int index)
+> > +{
+> > +	struct asus_aura_led *led = &zone->leds[index];
+> > +	struct led_classdev *cdev = &led->mc_cdev.led_cdev;
+> > +	int ret;
+> > +
+> > +	led->zone = zone;
+> > +	led->index = index;
+> > +
+> > +	led->subled[0].color_index = LED_COLOR_ID_RED;
+> > +	led->subled[1].color_index = LED_COLOR_ID_GREEN;
+> > +	led->subled[2].color_index = LED_COLOR_ID_BLUE;
+> > +	led->mc_cdev.num_colors = 3;
+> > +	led->mc_cdev.subled_info = led->subled;
+> > +
+> > +	cdev->name = kasprintf(GFP_KERNEL, "asus-arion:led%d", index);
+> 
+> [Severity: Medium]
+> Will this hardcoded name in asus_aura_register_led() in
+> drivers/leds/leds-asus-aura-scsi.c cause a sysfs collision if multiple
+> enclosures are connected?
+> 
+> If a user connects two ASUS ROG external NVMe enclosures, the second enclosure
+> will attempt to register identical sysfs names (e.g.,
+> /sys/class/leds/asus-arion:led0), resulting in an -EEXIST error and
+> preventing the use of multiple devices simultaneously.
+> 
+> > +	if (!cdev->name)
+> > +		return -ENOMEM;
+> [ ... ]
+> > +static int asus_aura_attach(struct scsi_device *sdev)
+> > +{
+> > +	struct asus_aura_zone *zone;
+> > +	int i, ret;
+> > +
+> > +	if (strncmp(sdev->vendor, ARION_INQ_VENDOR, strlen(ARION_INQ_VENDOR)) ||
+> > +	    strncmp(sdev->model, ARION_INQ_MODEL, strlen(ARION_INQ_MODEL)))
+> > +		return SCSI_DH_DEV_UNSUPP;
+> > +
+> > +	zone = kzalloc_obj(*zone, GFP_KERNEL);
+> 
+> [Severity: Low]
+> Does this prevent the driver from compiling?
+> 
+> In asus_aura_attach() in drivers/leds/leds-asus-aura-scsi.c, the macro
+> kzalloc_obj does not exist in the Linux kernel headers, leading to an
+> implicit declaration or undefined reference error.
+> 
+> > +	if (!zone)
+> > +		return SCSI_DH_NOMEM;
+> 
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/202609032000.RFCv2-1.lhw@gmail.com?part=1
 
-INFO: task syz-executor247:5632 blocked for more than 143 seconds.
-      Not tainted syzkaller #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:syz-executor247 state:D stack:27912 pid:5632  tgid:5632  ppid:5629   task_flags:0x400140 flags:0x00080002
-Call Trace:
- <TASK>
- context_switch kernel/sched/core.c:5520 [inline]
- __schedule+0x16d9/0x5700 kernel/sched/core.c:7270
- __schedule_loop kernel/sched/core.c:7347 [inline]
- rt_mutex_schedule+0x76/0xf0 kernel/sched/core.c:7643
- rt_mutex_slowlock_block+0x55e/0x690 kernel/locking/rtmutex.c:1670
- __rt_mutex_slowlock kernel/locking/rtmutex.c:1747 [inline]
- __rt_mutex_slowlock_locked kernel/locking/rtmutex.c:1787 [inline]
- rt_mutex_slowlock+0x2d4/0x780 kernel/locking/rtmutex.c:1827
- __rt_mutex_lock kernel/locking/rtmutex.c:1842 [inline]
- __mutex_lock_common kernel/locking/rtmutex_api.c:560 [inline]
- mutex_lock_nested+0x168/0x1d0 kernel/locking/rtmutex_api.c:578
- scsi_scan_host_selected+0x19f/0x6c0 drivers/scsi/scsi_scan.c:1916
- scsi_scan drivers/scsi/scsi_sysfs.c:151 [inline]
- store_scan+0x4aa/0x540 drivers/scsi/scsi_sysfs.c:191
- kernfs_fop_write_iter+0x3a5/0x540 fs/kernfs/file.c:345
- new_sync_write fs/read_write.c:595 [inline]
- vfs_write+0x61e/0xbb0 fs/read_write.c:687
- ksys_write+0x156/0x270 fs/read_write.c:739
- do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
- do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f95515558b9
-RSP: 002b:00007ffdb0003058 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f95515558b9
-RDX: 0000000000000005 RSI: 0000200000001400 RDI: 0000000000000003
-RBP: 00000000000f4240 R08: 0000000000000009 R09: 0000000000000009
-R10: 0000000000000009 R11: 0000000000000246 R12: 00007ffdb00031d8
-R13: 0000000000000002 R14: 00007ffdb0003080 R15: 00007ffdb0003070
- </TASK>
-
-Showing all locks held in the system:
-locks held by pr/ttyS0/17: 3, last CPU#1:
- #0: ffffffff8e09d578 (console_srcu){....}-{0:0}, at: rcu_try_lock_acquire include/linux/rcupdate.h:314 [inline]
- #0: ffffffff8e09d578 (console_srcu){....}-{0:0}, at: srcu_read_lock_nmisafe include/linux/srcu.h:439 [inline]
- #0: ffffffff8e09d578 (console_srcu){....}-{0:0}, at: console_srcu_read_lock+0x30/0x60 kernel/printk/printk.c:291
- #1: ffffffff99e981f8 (&port_lock_key){+.+.}-{3:3}, at: nbcon_emit_one kernel/printk/nbcon.c:1137 [inline]
- #1: ffffffff99e981f8 (&port_lock_key){+.+.}-{3:3}, at: nbcon_kthread_func+0x64c/0x880 kernel/printk/nbcon.c:1271
- #2: ffffffff8e1c3ac0 (rcu_read_lock){....}-{1:3}, at: rcu_lock_acquire include/linux/rcupdate.h:309 [inline]
- #2: ffffffff8e1c3ac0 (rcu_read_lock){....}-{1:3}, at: rcu_read_lock include/linux/rcupdate.h:849 [inline]
- #2: ffffffff8e1c3ac0 (rcu_read_lock){....}-{1:3}, at: __rt_spin_lock kernel/locking/spinlock_rt.c:50 [inline]
- #2: ffffffff8e1c3ac0 (rcu_read_lock){....}-{1:3}, at: rt_spin_lock+0x1e2/0x400 kernel/locking/spinlock_rt.c:57
-locks held by khungtaskd/38: 1, last CPU#0:
- #0: ffffffff8e1c3ac0 (rcu_read_lock){....}-{1:3}, at: rcu_lock_acquire include/linux/rcupdate.h:309 [inline]
- #0: ffffffff8e1c3ac0 (rcu_read_lock){....}-{1:3}, at: rcu_read_lock include/linux/rcupdate.h:849 [inline]
- #0: ffffffff8e1c3ac0 (rcu_read_lock){....}-{1:3}, at: debug_show_all_locks+0x2e/0x180 kernel/locking/lockdep.c:6837
-locks held by getty/5344: 2, on CPU#0:
- #0: ffff8880290a90a0 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x25/0x70 drivers/tty/tty_ldisc.c:243
- #1: ffffc900044cb2e0 (&ldata->atomic_read_lock){+.+.}-{4:4}, at: n_tty_read+0x460/0x1360 drivers/tty/n_tty.c:2211
-locks held by syz-executor247/5632: 4, on CPU#0:
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: file_start_write include/linux/fs.h:2753 [inline]
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: vfs_write+0x231/0xbb0 fs/read_write.c:683
- #1: ffff88802d053878 (&of->mutex){+.+.}-{4:4}, at: kernfs_fop_write_iter+0x1d9/0x540 fs/kernfs/file.c:336
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_get_active_of fs/kernfs/file.c:73 [inline]
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_fop_write_iter+0x22c/0x540 fs/kernfs/file.c:337
- #3: ffff8880227cc110 (&shost->scan_mutex){+.+.}-{4:4}, at: scsi_scan_host_selected+0x19f/0x6c0 drivers/scsi/scsi_scan.c:1916
-locks held by syz-executor247/5633: 4, on CPU#0:
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: file_start_write include/linux/fs.h:2753 [inline]
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: vfs_write+0x231/0xbb0 fs/read_write.c:683
- #1: ffff88803bd46878 (&of->mutex){+.+.}-{4:4}, at: kernfs_fop_write_iter+0x1d9/0x540 fs/kernfs/file.c:336
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_get_active_of fs/kernfs/file.c:73 [inline]
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_fop_write_iter+0x22c/0x540 fs/kernfs/file.c:337
- #3: ffff8880227cc110 (&shost->scan_mutex){+.+.}-{4:4}, at: scsi_scan_host_selected+0x19f/0x6c0 drivers/scsi/scsi_scan.c:1916
-locks held by syz-executor247/5640: 4, on CPU#1:
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: file_start_write include/linux/fs.h:2753 [inline]
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: vfs_write+0x231/0xbb0 fs/read_write.c:683
- #1: ffff88803bd47078 (&of->mutex){+.+.}-{4:4}, at: kernfs_fop_write_iter+0x1d9/0x540 fs/kernfs/file.c:336
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_get_active_of fs/kernfs/file.c:73 [inline]
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_fop_write_iter+0x22c/0x540 fs/kernfs/file.c:337
- #3: ffff8880227cc110 (&shost->scan_mutex){+.+.}-{4:4}, at: scsi_scan_host_selected+0x19f/0x6c0 drivers/scsi/scsi_scan.c:1916
-locks held by syz-executor247/5641: 4, on CPU#1:
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: file_start_write include/linux/fs.h:2753 [inline]
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: vfs_write+0x231/0xbb0 fs/read_write.c:683
- #1: ffff88803bd47478 (&of->mutex){+.+.}-{4:4}, at: kernfs_fop_write_iter+0x1d9/0x540 fs/kernfs/file.c:336
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_get_active_of fs/kernfs/file.c:73 [inline]
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_fop_write_iter+0x22c/0x540 fs/kernfs/file.c:337
- #3: ffff8880227cc110 (&shost->scan_mutex){+.+.}-{4:4}, at: scsi_scan_host_selected+0x19f/0x6c0 drivers/scsi/scsi_scan.c:1916
-locks held by syz-executor247/5648: 4, on CPU#1:
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: file_start_write include/linux/fs.h:2753 [inline]
- #0: ffff888035fc8510 (sb_writers#7){.+.+}-{0:0}, at: vfs_write+0x231/0xbb0 fs/read_write.c:683
- #1: ffff88803bd47878 (&of->mutex){+.+.}-{4:4}, at: kernfs_fop_write_iter+0x1d9/0x540 fs/kernfs/file.c:336
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_get_active_of fs/kernfs/file.c:73 [inline]
- #2: ffff888027b9b0f8 (kn->active#49){.+.+}-{0:0}, at: kernfs_fop_write_iter+0x22c/0x540 fs/kernfs/file.c:337
- #3: ffff8880227cc110 (&shost->scan_mutex){+.+.}-{4:4}, at: scsi_scan_host_selected+0x19f/0x6c0 drivers/scsi/scsi_scan.c:1916
-
-=============================================
-
-NMI backtrace for cpu 0
-CPU: 0 UID: 0 PID: 38 Comm: khungtaskd Not tainted syzkaller #0 PREEMPT_{RT,(full)} 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/24/2026
-Call Trace:
- <TASK>
- dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
- nmi_cpu_backtrace+0x274/0x2d0 lib/nmi_backtrace.c:123
- nmi_trigger_cpumask_backtrace+0x17d/0x390 lib/nmi_backtrace.c:66
- trigger_all_cpu_backtrace include/linux/nmi.h:164 [inline]
- __sys_info lib/sys_info.c:157 [inline]
- sys_info+0x135/0x170 lib/sys_info.c:165
- check_hung_uninterruptible_tasks kernel/hung_task.c:353 [inline]
- watchdog+0xfd7/0x1030 kernel/hung_task.c:561
- kthread+0x38b/0x470 kernel/kthread.c:436
- ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-Sending NMI from CPU 0 to CPUs 1:
-NMI backtrace for cpu 1
-CPU: 1 UID: 0 PID: 17 Comm: pr/ttyS0 Not tainted syzkaller #0 PREEMPT_{RT,(full)} 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/24/2026
-RIP: 0010:io_serial_in+0x77/0xc0 drivers/tty/serial/8250/8250_port.c:409
-Code: e8 ce cc 65 fc 44 89 f9 d3 e3 49 83 ee 80 4c 89 f0 48 c1 e8 03 42 80 3c 20 00 74 08 4c 89 f7 e8 6f 7b d1 fc 41 03 1e 89 da ec <0f> b6 c0 5b 41 5c 41 5e 41 5f c3 cc cc cc cc cc 44 89 f9 80 e1 07
-RSP: 0018:ffffc900001678b8 EFLAGS: 00000202
-RAX: 1ffffffff33d3000 RBX: 00000000000003fd RCX: 0000000000000000
-RDX: 00000000000003fd RSI: 0000000000000000 RDI: 0000000000000000
-RBP: dffffc0000000000 R08: 0000000000000000 R09: 0000000000000000
-R10: dffffc0000000000 R11: ffffffff8560aca0 R12: dffffc0000000000
-R13: 0000000000000000 R14: ffffffff99e98220 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff888125cd5000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00005555889aa798 CR3: 000000003ff02000 CR4: 00000000003526f0
-Call Trace:
- <TASK>
- serial_in drivers/tty/serial/8250/8250.h:128 [inline]
- serial_lsr_in drivers/tty/serial/8250/8250.h:150 [inline]
- wait_for_lsr+0x190/0x300 drivers/tty/serial/8250/8250_port.c:2013
- serial8250_fifo_wait_for_lsr_thre drivers/tty/serial/8250/8250_port.c:3270 [inline]
- __serial8250_console_fifo_write+0xd0/0x3f0 drivers/tty/serial/8250/8250_port.c:3345
- serial8250_console_fifo_write drivers/tty/serial/8250/8250_port.c:3378 [inline]
- __serial8250_console_write drivers/tty/serial/8250/8250_port.c:3429 [inline]
- serial8250_console_write+0xac5/0x1230 drivers/tty/serial/8250/8250_port.c:3493
- nbcon_emit_next_record+0xef5/0x1a90 kernel/printk/nbcon.c:-1
- nbcon_emit_one kernel/printk/nbcon.c:1157 [inline]
- nbcon_kthread_func+0x679/0x880 kernel/printk/nbcon.c:1271
- kthread+0x38b/0x470 kernel/kthread.c:436
- ret_from_fork+0x514/0xb70 arch/x86/kernel/process.c:158
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+-- 
+Lee Jones
