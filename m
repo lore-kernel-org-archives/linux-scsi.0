@@ -1,41 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6673D361976
-	for <linux-scsi@vger.kernel.org>; Thu,  3 Sep 2026 03:10:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BFFA35F192;
+	Thu,  3 Sep 2026 03:10:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788405031; cv=none; b=GLvO2uajeg7ST629WwGUkFkYd2bR4c31vR0d8WwVZ/q1/l1+UwwsPqHq4F3Y03Ujz2UKT1cNxeQsapYwjlSaa3nT08B7Dbr2OXWdOpJ/V1KMK8146wiULLkZZTqKUYzY1T17BRIUFRps0eF/G8+x6Zcy2FQAgL4Z/8n2cD581oM=
+	t=1788405033; cv=none; b=H5VJyx7wI4E+bkNwPs81LM3S8KOwAJCJEkQLGePYBRKYoUns0nR8Wz0KBY1FLcM6X43QzySo29MBbnYy7F8/cv7YRfnFOtAOScf+eqWdBa7LNMDM9a2k93NUXwYVDBOtW1vdxau5PvAFCwCAiFyfTasc8sEbj8vyvBtbZ0inwcE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788405031; c=relaxed/simple;
-	bh=ppN+AA9RoMDmQN0OnusM6e+twye9gzevwnd4PpAk67M=;
+	s=arc-20240116; t=1788405033; c=relaxed/simple;
+	bh=GC3V6d5LVyN9ZapyIohub5pUzEXZEte0qmAaoPWM6Rs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kntTq4tz7KrOn04sUI26oQczobLKS4skeCnskxU+Y34Mr6+QftPrfYad/cGl/pMiL7OsRuZwYH+9PiS9D5HWmn9yMKqQKDxeZplRAf2/C07proUTEDMAGMQ92Hh/rT6KdqZ3vW3hxYTL36MTBxhNCLn7S6L1/xH7QJV3yYbd6Qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HiOyC8m6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=O2479u/q8R3cQStpgaIxoegVwyN0kdyHgz+FOxEgEPt5qrjHfrxApFb+whPQkHVHNU8bz9iEX58OZiBNdYDMggs4oXasmz3lgpMzwGp2OLQANflxIGL8aDdJ7SJHY8gkNXNpDPHATfy4kcBiHWDDhgeHwUskH4aZYfZPzC9idm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SDHv8NkN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HiOyC8m6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A993D1F00A3E;
-	Thu,  3 Sep 2026 03:10:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SDHv8NkN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69A551F00A3F;
+	Thu,  3 Sep 2026 03:10:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788405030;
-	bh=kF07EpDxnZ5+1Mi+Bsse1OteTvybi7s5pKRZ8G5s2ek=;
+	s=k20260515; t=1788405032;
+	bh=zeX7gtYKN89Liuupi4nVllGGrXh/cbBcQafIcyPbjlo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HiOyC8m6e3VUtEbbfv4JWoE3QLlrjTxGEt6H+xzRzJOjYh67QQGq8vp0MtQtNyMPc
-	 OlKpl85osIEFbGp/Cf2TjP3apKEvXOn2n/VVpbYFqvpCqdW5UyHyERbmM3MvLgjtpQ
-	 iR+9OouZOP/HYlFu9whX+A2mWsSVKKVKOk2yhMuY1kEWJtkHEvom96oAxi6y3c4BDb
-	 rhbUbHP6300Y95iZksxw0AXMWMRg4rVtv1tgQ62b2kl3/CnOYQ/CmWhiJdrPmre8t5
-	 EAO1NorAorCm2QxMH0giMVAlElUpe1VJwIptOoBIwyuqh/oahRpBgV7OeCXoL8k5SM
-	 zy+sV8/07cZzg==
+	b=SDHv8NkNoU8bG2mcjp7JptwceT+0ZBtXCtVl8Qe6v/zu45TLrxyoyipkY9P7CkUhI
+	 Q7sQRu0vMANOO04OLKpmaifttfzOIYFQoKHNvvF2xy02fZdSrtOcKdmB4vVW6gNKoO
+	 3Mf4U+3dHt2Col2NYEaA9FUOFtp21KaHn1QtSBDKZlJcjVTKTbCTfSj8oTlUJkgJR/
+	 D4j6HFAtAMhBT65giexJP+9FbZE7tkJIDKMySIf4JaCmXwpIlTh8nXxdotB6PZYffr
+	 mXhVl7jjESVXOHttmRqmbT/QG/1MrjOF5flKReYLxSEoWm4hs42y4cfT33iwDGoz9W
+	 sQbvGzeKhNDaA==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: linux-scsi@vger.kernel.org,
-	"Milan P. Gandhi" <mgandhi@redhat.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>
-Subject: Re: [PATCH 0/2] scsi: mpi3mr: Fix error handling and resource leak in mpi3mr_sas_port_add()
-Date: Wed,  2 Sep 2026 23:10:09 -0400
-Message-ID: <178840472587.670675.4679083574169753199.b4-ty@b4>
+To: mani@kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	konrad.dybcio@oss.qualcomm.com,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH V2 0/2] ufs: ufs-qcom: Fixes and optimizations for Qualcomm UFS Controller
+Date: Wed,  2 Sep 2026 23:10:11 -0400
+Message-ID: <178840472586.670675.7481898545515362226.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260812103344.174247-1-mgandhi@redhat.com>
-References: <20260812103344.174247-1-mgandhi@redhat.com>
+In-Reply-To: <20260825145203.265579-1-nitin.rawat@oss.qualcomm.com>
+References: <20260825145203.265579-1-nitin.rawat@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,25 +50,24 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Wed, 12 Aug 2026 16:03:42 +0530, Milan P. Gandhi wrote:
+On Tue, 25 Aug 2026 20:22:01 +0530, Nitin Rawat wrote:
 
-> This series fixes resource leaks and potential crashes in the
-> mpi3mr_sas_port_add() error path:
+> This patch series introduces few fixes and performance optimizations
+> for the Qualcomm UFS host controller driver to improve performance
+> and to align with Qualcomm UFS hardware programming sequence.
 > 
-> - Patch 1 adds a missing NULL check on sas_port_alloc_num() failure
->   and ensures allocated ports are released via sas_port_free() if
->   sas_port_add() fails.
-> - Patch 2 releases the target device reference acquired via
->   mpi3mr_get_tgtdev_by_addr() if subsequent allocation errors occur.
+> The series addresses below issues:
+> 1. Hardware programming sequence alignment for UFS controller v6.2
+> 2. Performance tuning for sequential read workloads.
 > 
 > [...]
 
 Applied to 7.3/scsi-fixes, thanks!
 
-[1/2] scsi: mpi3mr: Fix NULL pointer dereference in mpi3mr_sas_port_add()
-      https://git.kernel.org/mkp/scsi/c/dba9e2181ca5
-[2/2] scsi: mpi3mr: Fix target device refcount leak in mpi3mr_sas_port_add()
-      https://git.kernel.org/mkp/scsi/c/419d129f970a
+[1/2] ufs: ufs-qcom: Restore HS/LS link startup mode for Qualcomm UFS controller v6.2+
+      https://git.kernel.org/mkp/scsi/c/a3756f53baf1
+[2/2] ufs: ufs-qcom: Fix sequential read variance
+      https://git.kernel.org/mkp/scsi/c/b2ededcb271b
 
 -- 
 Martin K. Petersen
