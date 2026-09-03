@@ -1,159 +1,191 @@
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50C5D31F984
-	for <linux-scsi@vger.kernel.org>; Thu,  3 Sep 2026 03:13:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.71
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B73D32D8DDB;
+	Thu,  3 Sep 2026 03:42:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788405228; cv=none; b=mozinpo5/LbGdWcs7/xAPwjEKqU+8nyvN48THc1xfoRfqLleluK9cnKqCRTMr7+6V33xFhEct8TS0FE5BetMNf+2XIlvK4VtGYCmj6qTS6dfzvHj4KkiPWByWW1YL3e5CT2O4iIJSPQw6YlflkTniuJbE7YIA+BwzmKmR/Fsj/0=
+	t=1788406937; cv=none; b=jZgX8fxFxX4ZM0wokkGSQttWjHpx92hZ4sLLxbxVFQTnRYh10wMV/xy3OtpS1gsKwLqQgvX65b/DQiWjo+t4/n1VefAPGXfzdY6q5OrvfLpNsQvQ4nKfxpOPrrMxm35agiMbXgpH+V7TpmVI/elQr3m1ScWCo4d/qprgSzhSZnc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788405228; c=relaxed/simple;
-	bh=CshTmL+8XoyHo3HWtopNI4aZFLUjYTuRU2/2Ijnc6f4=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=n38cC/yvS5JjF/9N6Y3LnipLoL/zisxAnjrfGGUh5orK3iL2EnvApB7n3E83tCkEM2CDWpu0oJA9VLt7mre7TINm1MOb6jGbsGmYO7RwLqD6pr1xDQkZiROCJMD+CwtOiA/chXI+JLOmgo+tDw4Aca528kQ3027G8+HSXiuEmAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ft3RGVCY; arc=none smtp.client-ip=209.85.216.71
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1788406937; c=relaxed/simple;
+	bh=geB7IcHMQKdiUr/yNJgzr7yB7zabcVHfPGUZFdYJl6Q=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=N38Zc9OsrkoVg7orwA3FYsUEuoPCa40n3bFbQyBQfEiU6w6d84K6fstzOsRVlIUpqeW+dqk2YWU+p4tAoW/TP9RtYR2DOq/GZ1wGhkTaNuP/yTZj7WEanY32jbN+eqZ5UqKnrtojQc8E0smT5uUrNza1rsUASqxcziFABa9Bb3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ODKUy3wR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ft3RGVCY"
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-398d292eac1so3784155a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Sep 2026 20:13:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788405227; x=1789010027; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Pb11Sv5Oqcejo9Niy+ADZ+x65tQwyCrGSX+ts1QvInA=;
-        b=ft3RGVCYp/2kdfsi1CEeB73UFw1PQg/FHJIgy5xlqy/bG8+2uMRLm+/rQS6Ie/J7V/
-         v7zajtrgle8bFkCFAF0kDsYUcyFDoLtP8oC3Pm5T9NO4xmJQ0cRZlQ0bzD/ro1keGEaW
-         +6IuVfUqRh57Akkawe2k2KBR+uYQPth67hv3NybuIO42MEDyHE5n28NVjqM2Y03IzhmM
-         Mh3Nv0BzYLDrebnRhYp/ph/v2LM+iO6XPuml4IBvDDw3u4FIm7kjUE9AepHdrfp9uVAi
-         vt5jzvK6rlqHnmKHUxWT5A9fcCj/bUSzqD4Zf+4MWuC7wO1Gjaj1rAq7NdZDjRhlFFTV
-         wufw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788405227; x=1789010027;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Pb11Sv5Oqcejo9Niy+ADZ+x65tQwyCrGSX+ts1QvInA=;
-        b=rEbcP//+h3bIy4eWxkpB26KmJAUFpcngxraIib5AVcsYdiXrDnPfOJJibllxQ0Sig6
-         M5XU4wO+nmL5n1+ISu5uAX+I2IHOQnvqK0/iOVe3DOd0+qjHODupJU75VMl/HkMQMoxR
-         8Eo4P3ShSSTZwfosjjhKBKa+4BoakGhImOwbGFen4v09cykCgVK1mwU4JOjtPDWGriJM
-         kzO9HduUw6ekPVVy8bv8h8WEyVXbciDJloyO/RcnejzRCntOcQkp4RvazbEe2wjGKGFn
-         v/MMqpt1oIhsNIW7zbW2eFgbWyHknyhDt7dUjv3dp4j/tMk++yBVjIh3JJntY+UQzJvO
-         zP+w==
-X-Forwarded-Encrypted: i=1; AKwUvBxnSukWvhuAo418IzPrLjlXNie0Q1QWuKoHFA9QK1KwDvFC34HTLBqXCNDkSCFLF4G/YM0oVSaq881D@vger.kernel.org
-X-Gm-Message-State: AFuF++le3BpES8QyrFnbh5aAYtnljjbE64tltT3Qg/m60yNyiT+R78G2
-	ZIuGJlA26lqoJ6UZE9slT0Kkdbsgn/E9A17glenmB493hcL3FnDMUWdIgo1lj4BZ9Sc/Sd8dSqp
-	RbfVjk1wWeIVIlDlDxw2Hug==
-X-Received: from pjuy11.prod.google.com ([2002:a17:90a:d70b:b0:38e:813b:9944])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:2750:b0:398:e73e:5a0c with SMTP id 98e67ed59e1d1-39aedf5d887mr14329828a91.1.1788405226424;
- Wed, 02 Sep 2026 20:13:46 -0700 (PDT)
-Date: Thu,  3 Sep 2026 11:13:44 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ODKUy3wR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DB5D1F00A3A;
+	Thu,  3 Sep 2026 03:42:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788406935;
+	bh=A0T2pyw+Z4N7gniZaS+KCR3Gcmpdwg+vSMiOX8M6/VI=;
+	h=From:To:Subject:Date;
+	b=ODKUy3wRRJVfh9CyypB34RmlENNmHEt+c2Z0X/sA3H5qvf/FPFDxmp44Yj/igeuUp
+	 sRSniIXwey9sel+AWgjf+5kQP72pssGtpKr2lZO8n9xN6g8Ou+Nwl7dxJkqOO4La0l
+	 fjcYKZVjCJTehBJ+kHupJVQxg65GdmbO9pqX4v4eQTXwiXmX2nmmcuJNGTAlPEXoo+
+	 42ltcAcuCnLPZeKrtnrlF/JZ0J64jS5ZM7I7FzVHay53ZC6T7i7PWBqbr4eBYU5UE/
+	 S0QVlCJHVF/0CteC6fbIvHLWS9JtbXAXub04Tu7KNAdVnfXz4PVuvqykWTMfpuMGY1
+	 DEnjeSsTaBrNg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-usb@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-s390@vger.kernel.org,
+	Heiko Carstens <hca@linux.ibm.com>
+Subject: [PATCH v2 00/40] Use defined 16-bits ASC/ASCQ combinations 
+Date: Thu,  3 Sep 2026 12:41:21 +0900
+Message-ID: <20260903034201.112211-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.55.0.970.g62bdec98f9-goog
-Message-ID: <20260903031344.3740524-1-stanleyjhu@google.com>
-Subject: [PATCH] scsi: ufs: core: Prevent MMIO access and drain in-flight
- commands during shutdown
-From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K . Petersen" <mkp@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Seunghwan Baek <sh8267.baek@samsung.com>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@sandisk.com>, 
-	Peter Wang <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>, 
-	Bean Huo <beanhuo@micron.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
-	Stanley Jhu <stanleyjhu@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Commit 19a198b67767 ("scsi: ufs: core: Put the normal LU into
-SDEV_OFFLINE when ufs device wl-lun suspend") transitioned normal
-logical units into SDEV_OFFLINE during ufshcd_wl_shutdown() to prevent
-requeue deadlocks. However, setting SDEV_OFFLINE does not wait for
-in-flight or currently dispatching requests to drain.
+Martin, James,
 
-If an I/O request races past scsi_queue_rq() right as or before
-SDEV_OFFLINE is set, or if an asynchronous command execution suffers
-scheduling delays, it can arrive in ufshcd_queuecommand() or issue MMIO
-writes after ufshcd_wl_shutdown() has powered off the UFS controller
-(is_powered = false, regulators disabled, clocks gated). Writing to MMIO
-registers of a power-gated or clock-gated controller triggers fatal
-hardware bus errors, system hangs, or kernel panics.
+This patch series defines as macros all ASC/ASCQ combinations present in
+https://www.t10.org/lists/asc-num.txt and converts the SCSI core code and
+SCSI low level drivers to use these macros instead of hard-coded
+ASC/ASCQs. To do this, struct scsi_sense_hdr and struct scsi_failure are
+modified to replace the asc and ascq 8-bits fields with a 16-bits
+sense_code field.
 
-Fix this with a dual-layer defense:
-1. In ufshcd_queuecommand(), check if hba->shutting_down is set. Reject
-   any non-WLUN / non-PM requests immediately with DID_NO_CONNECT before
-   any MMIO register access.
-   Note that checking !hba->is_powered is unnecessary here because
-   hba->shutting_down is asserted prior to disabling clocks and
-   regulators in ufshcd_wl_shutdown(), and module removal drains and
-   destroys all request queues via scsi_remove_host() before is_powered
-   is cleared.
-2. In ufshcd_wl_shutdown(), invoke ufshcd_wait_for_pending_cmds() after
-   taking regular LUNs offline to drain all existing hardware transfer
-   and task management requests before putting the device into powerdown
-   mode and powering down the host controller. Warn if draining times
-   out after 1 second.
+This cleans up the code in many places and makes it easier, and self
+documented, to test sense codes in the case of errors.
 
-Fixes: 19a198b67767 ("scsi: ufs: core: Put the normal LU into SDEV_OFFLINE when ufs device wl-lun suspend")
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
----
- drivers/ufs/core/ufshcd.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+Overall, there should be no functional chnages here.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2ba244cf40ac..6d78e34a19b2 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3105,6 +3105,25 @@ static enum scsi_qc_status ufshcd_queuecommand(struct Scsi_Host *host,
- 	int err = 0;
- 	struct ufs_hw_queue *hwq = NULL;
- 
-+	/*
-+	 * During host shutdown, fail any incoming regular I/O commands
-+	 * immediately. This prevents stray requests that bypassed SCSI queue
-+	 * offline checks from writing to MMIO doorbells after the controller
-+	 * is power-gated (causing fatal bus errors / panics).
-+	 *
-+	 * Note: Checking !hba->is_powered is not needed here because:
-+	 * 1. During shutdown, hba->shutting_down is set prior to cutting
-+	 *    controller power, so shutting_down alone fully covers the
-+	 *    unpowered window.
-+	 * 2. During module removal, scsi_remove_host() freezes and destroys
-+	 *    all request queues before hba->is_powered is set to false in
-+	 *    ufshcd_hba_exit().
-+	 */
-+	if (unlikely(READ_ONCE(hba->shutting_down))) {
-+		if (!is_device_wlun(cmd->device) ||
-+		    !(scsi_cmd_to_rq(cmd)->rq_flags & RQF_PM)) {
-+			set_host_byte(cmd, DID_NO_CONNECT);
-+			scsi_done(cmd);
-+			return 0;
-+		}
-+	}
-+
- 	switch (hba->ufshcd_state) {
- 	case UFSHCD_STATE_OPERATIONAL:
- 		break;
-@@ -10931,6 +10950,14 @@ static void ufshcd_wl_shutdown(struct scsi_device *sdev)
- 		scsi_device_set_state(sdev, SDEV_OFFLINE);
- 		mutex_unlock(&sdev->state_mutex);
- 	}
-+
-+	/*
-+	 * Drain all in-flight transfer and task management requests before
-+	 * putting the device into low power and turning off controller power.
-+	 */
-+	if (ufshcd_wait_for_pending_cmds(hba, USEC_PER_SEC))
-+		dev_warn(hba->dev,
-+			 "timed out waiting for in-flight commands during shutdown\n");
-+
- 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
- 
- 	/*
+Changes from v1:
+ - Addressed Sashiko comments signaling missing "ASC_" prefix when using
+   the named macros for ASC codes.
+ - Fixed up patch 7 to correct trace event print of asc/ascq. Also
+   extended the use of scsi_set_sense() in place of scsi_build_sense().
+ - Modified patch 37 to extend the use of scsi_set_sense_buffer() in place
+   of scsi_build_sense_buffer().
+ - Added patch 34 and 38 to extend the use of scsi_set_sense() in place of
+   scsi_build_sense().
+ - Added patch 40 to remove scsi_build_sense() and
+   scsi_build_sense_buffer().
+
+Damien Le Moal (40):
+  scsi: define all additional sense codes and their qualifiers
+  scsi: constants: use defined sense codes
+  scsi: constants: rename internal struct field names
+  scsi: rename sense field of struct scsi_failure
+  scsi: prepare for using 16-bits defined sense codes
+  scsi: use struct scsi_sense_hdr to log sense keys and codes
+  scsi: core: use 16-bits defined sense codes
+  scsi: sd: use 16-bits defined sense codes
+  scsi: sr: use 16-bits defined sense codes
+  scsi: ses: use 16-bits defined sense codes
+  scsi: ch: use 16-bits defined sense codes
+  scsi: st: use 16-bits defined sense codes
+  scsi: device_handlers: hp_sw: use 16-bits defined sense codes
+  scsi: device_handlers: rdac: use 16-bits defined sense codes
+  scsi: device_handlers: emc: use 16-bits defined sense codes
+  scsi: device_handlers: alua: use 16-bits defined sense codes
+  scsi: mpt3sas: use 16-bits defined sense codes
+  scsi: mpi3mr: use 16-bits defined sense codes
+  scsi: 3w-xxxx: use 16-bits defined sense codes
+  scsi: leapraid: use 16-bits defined sense codes
+  scsi: megaraid: use 16-bits defined sense codes
+  scsi: myrX: use 16-bits defined sense codes
+  scsi: smartpqi: use 16-bits defined sense codes
+  scsi: qla2xxx: use 16-bits defined sense codes
+  scsi: ps3rom: use 16-bits defined sense codes
+  scsi: lpfc: use 16-bits defined sense codes
+  scsi: stex: use 16-bits defined sense codes
+  scsi: mvumi: use 16-bits defined sense codes
+  scsi: libiscsi: use 16-bits defined sense codes
+  scsi: ibmvscsi_tgt: use 16-bits defined sense codes
+  scsi: scsi_debug: use 16-bits defined sense codes
+  scsi: hpsa: use 16-bits defined sense codes
+  scsi: storvsc: use 16-bits defined sense codes
+  target: use 16-bits defined sense codes
+  usb: storage: use 16-bits defined sense codes
+  cdrom: use 16-bits defined sense codes
+  ata: libata: use 16-bits defined sense codes
+  s390: scsi: use 16-bits defined sense codes
+  scsi: cleanup scsi_proto.h
+  scsi: remove scsi_build_sense() and scsi_build_sense_buffer()
+
+ drivers/ata/libata-eh.c                      |   13 +-
+ drivers/ata/libata-sata.c                    |   20 +-
+ drivers/ata/libata-scsi.c                    |  346 ++-
+ drivers/ata/libata.h                         |    5 +-
+ drivers/cdrom/cdrom.c                        |   10 +-
+ drivers/s390/scsi/zfcp_scsi.c                |    3 +-
+ drivers/scsi/3w-xxxx.c                       |    3 +-
+ drivers/scsi/ch.c                            |   55 +-
+ drivers/scsi/constants.c                     |   61 +-
+ drivers/scsi/device_handler/scsi_dh_alua.c   |   55 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c    |   28 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c  |   29 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c   |   55 +-
+ drivers/scsi/hpsa.c                          |   69 +-
+ drivers/scsi/hpsa_cmd.h                      |   23 -
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c     |    5 +-
+ drivers/scsi/leapraid/leapraid_func.h        |    7 -
+ drivers/scsi/leapraid/leapraid_os.c          |   15 +-
+ drivers/scsi/libiscsi.c                      |    3 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                |   18 +-
+ drivers/scsi/megaraid.c                      |    8 +-
+ drivers/scsi/megaraid/mega_common.h          |    2 -
+ drivers/scsi/megaraid/megaraid_mbox.c        |   12 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c              |    3 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c              |   50 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c         |   69 +-
+ drivers/scsi/mvumi.c                         |    2 +-
+ drivers/scsi/myrb.c                          |   67 +-
+ drivers/scsi/myrs.c                          |   23 +-
+ drivers/scsi/ps3rom.c                        |    5 +-
+ drivers/scsi/qla2xxx/qla_isr.c               |    9 +-
+ drivers/scsi/scsi.c                          |    3 +-
+ drivers/scsi/scsi_common.c                   |   24 +-
+ drivers/scsi/scsi_debug.c                    |  332 +--
+ drivers/scsi/scsi_error.c                    |   94 +-
+ drivers/scsi/scsi_ioctl.c                    |    3 +-
+ drivers/scsi/scsi_lib.c                      |  130 +-
+ drivers/scsi/scsi_lib_test.c                 |   96 +-
+ drivers/scsi/scsi_logging.c                  |   22 +-
+ drivers/scsi/scsi_scan.c                     |   22 +-
+ drivers/scsi/scsi_transport_spi.c            |   12 +-
+ drivers/scsi/sd.c                            |  126 +-
+ drivers/scsi/sd_zbc.c                        |    2 +-
+ drivers/scsi/sense_codes.h                   | 2496 ++++++++++++------
+ drivers/scsi/ses.c                           |   23 +-
+ drivers/scsi/smartpqi/smartpqi_init.c        |   31 +-
+ drivers/scsi/sr.c                            |    3 +-
+ drivers/scsi/sr_ioctl.c                      |   29 +-
+ drivers/scsi/st.c                            |   35 +-
+ drivers/scsi/stex.c                          |    3 +-
+ drivers/scsi/storvsc_drv.c                   |   15 +-
+ drivers/target/target_core_spc.c             |   11 +-
+ drivers/target/target_core_transport.c       |   11 +-
+ drivers/target/target_core_ua.c              |   28 +-
+ drivers/target/target_core_ua.h              |    7 +-
+ drivers/usb/gadget/function/f_mass_storage.c |   34 +-
+ drivers/usb/gadget/function/storage_common.h |   71 +-
+ drivers/usb/storage/debug.c                  |   12 +-
+ drivers/usb/storage/debug.h                  |    4 +-
+ drivers/usb/storage/transport.c              |    7 +-
+ include/scsi/scsi_cmnd.h                     |    3 +-
+ include/scsi/scsi_common.h                   |   16 +-
+ include/scsi/scsi_dbg.h                      |    6 +-
+ include/scsi/scsi_device.h                   |   26 +-
+ include/scsi/scsi_proto.h                    |   71 +-
+ include/scsi/scsi_sense.h                    |  943 +++++++
+ include/trace/events/scsi.h                  |    4 +-
+ 67 files changed, 3821 insertions(+), 2007 deletions(-)
+ create mode 100644 include/scsi/scsi_sense.h
+
 -- 
-2.43.0
+2.55.0
+
