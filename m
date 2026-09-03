@@ -1,50 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ABB536197D;
-	Thu,  3 Sep 2026 03:10:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42D5B36E473;
+	Thu,  3 Sep 2026 03:10:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788405038; cv=none; b=jlUn8Lq3drE1aVuFqqt2xhCrovk0gqjWd7rh6w5RE0cAQAJrUC4+lafXalSDZBPh9y8iBxSttS6Bwq42usyFL1X/Zg2IyhXBKgEZAL3wLp1SzY7gvf7I/+7PevoM51e0xZhKeByUKlyXRsYZKcKMuXNqUa4j3FJ5PkUTbaA8FgE=
+	t=1788405041; cv=none; b=uuw1mvZP63rNoO9AfrIh+VInJIE60VT9e3R8rPCkVvfd7YKmSs47sHuWLHU+0Fo56PAX0gqlrMA75p/77423EEJKJ6Ia8i0jtGVcqmhRI52RummVhSMbBHNPM0XGdt4DuRCCv/Y6/3FaBPFRXSspxY8XVmg82FCoH+JVDjZXMiw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788405038; c=relaxed/simple;
-	bh=O8ezuFnDP6L/5tg2uw+jNCQGLcmU08Nmf8heUOyLMjc=;
+	s=arc-20240116; t=1788405041; c=relaxed/simple;
+	bh=RJd40JkEZf+kQU/eK7Dy9hLTRWapXhsk2ucG9x4jLSM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VFKmiKrxb3fCRRtwQUevJMQEmP2zGA+IGuwS8Ih1G/nxH5x+4mjcA+jmPhSWe5nrdOYkL7r4SOIDBl6NzWEGhlMniPTgqyhp+uxZXaq1+BB1q5JcTjfY9dJTL27pkDXgPM1LwLNau+2lxH8yySGl706ad19Z37mDJ8lZjMJUVN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lAFRIkNz; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=td7LiLJJVmyUdLS+5v1fWN7U6xcCnMIAEr7SnyVWJM3DQkPq9qP+BKh27rhhin9NvP7Vmb9aGTThPIDWpVTqM7QOc2p0ZohAgditsJiD+oOpGt/oZF1DY3UXlzKPWedbDemNSzTOZ/qAuRv/NOJS2DzL5U8HfDaehoeHpbviO+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VIRZZHi1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lAFRIkNz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D47311F000E9;
-	Thu,  3 Sep 2026 03:10:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VIRZZHi1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 671D81F00A3A;
+	Thu,  3 Sep 2026 03:10:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788405037;
-	bh=w5nwvG99pIjh48weOU+xAUMEJWc4NtELf8BdM/zlWxg=;
+	s=k20260515; t=1788405039;
+	bh=PH+5MG+KfhO/TuU48UqZC1IktPi1jIP9wzsCgbmWzCM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=lAFRIkNzoHNJOqgHYshzy0QfM7pNt7fi9NV6m4QkjL5AcRzPJbZLHmP4YPEsYoyUd
-	 6pQcxCdNflPphT1rIhw1/KM+eo9PLgUMqsmMWtyXoHy3DwfZjMbe2OcUvIopFsxbro
-	 DDfJMyAauVnqKy8yGkU4A08pUFfaTfgNKIj1UbWJ+0PUihJ1u0vAGJdHlEk10+n1/K
-	 nhrVQomD7WrVwNPQ8o8QOWcBdN5uMD/e973YDie82uurChgrdoSNTsthIEnJRt04xq
-	 b4zXc/ouJYH/G2ogus+uDmRCrs+MR4isD2zybiogFlyHT384Md62TdhrfOs6T+j6Hh
-	 GW9pRNvL091Kg==
+	b=VIRZZHi1gVHm2W+2yUeqlBTdaFPOf7tlDY9r0TvR4SsGrJyxN5+r3jMV2gHrWeOKX
+	 chVNMxAa5C9ZYjzGuxVCqxhdpp/mpIH+4rxYTrbYT/8hkHMT3ohNGxYk07UY0Cc7vi
+	 7ajTeY8JCqVDlvWFYmDbB81Jj3XG8gHqL6eh6ttHOxWWr+1ZZpZW2h7nLZbm1SZfLo
+	 ZW8JTA/O41S3iXuGcAqb44kygKby4/rv6u76jf1PSqLCvwsRuAGLrNL+gPjpSBPx33
+	 47o/9Rrt/2KhLH3OmZr01Nn0l4CWa2YJ1GfDYqkdudS0zjhf5abNVbMS5On8wN4Cjd
+	 qLdlh506g475Q==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com,
-	ranjan.kumar@broadcom.com,
-	Ivy Lopez <skunkolee@gmail.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	James.Bottomley@HansenPartnership.com,
-	MPT-FusionLinux.pdl@broadcom.com,
+To: Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	megaraidlinux.pdl@broadcom.com,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Thomas Lamprecht <t.lamprecht@proxmox.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	johannes.thumshirn@wdc.com,
-	john.g.garry@oracle.com
-Subject: Re: [PATCH v2] scsi: mpt3sas: avoid out-of-bounds cpumask_of_node() call in _base_assign_reply_queues()
-Date: Wed,  2 Sep 2026 23:10:15 -0400
-Message-ID: <178840472603.670675.6111450509404633801.b4-ty@b4>
+	Damien Le Moal <dlemoal@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Keith Busch <kbusch@kernel.org>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	Thorsten Leemhuis <regressions@leemhuis.info>,
+	regressions@lists.linux.dev,
+	Lukasz Magiera <me@magik.net>,
+	Mira Limbeck <m.limbeck@proxmox.com>,
+	Daniel Fernau <mail@danielfernau.com>,
+	Mats Topstad <Mats.topstad@intility.no>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: megaraid_sas: Limit NVMe request size to the PRP chain frame
+Date: Wed,  2 Sep 2026 23:10:16 -0400
+Message-ID: <178840472610.670675.12272571379596581093.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260825190313.24013-1-skunkolee@gmail.com>
-References: <20260825190313.24013-1-skunkolee@gmail.com>
+In-Reply-To: <20260827175743.734593-1-t.lamprecht@proxmox.com>
+References: <20260827175743.734593-1-t.lamprecht@proxmox.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -54,23 +63,28 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Tue, 25 Aug 2026 13:03:13 -0600, Ivy Lopez wrote:
+On Thu, 27 Aug 2026 19:24:24 +0200, Thomas Lamprecht wrote:
 
-> dev_to_node() can return NUMA_NO_NODE (-1) on systems without NUMA
-> topology information for the PCI device, such as single-socket
-> boards that don't expose device-to-node affinity. Passing -1
-> directly into cpumask_of_node() indexes node_to_cpumask_map[-1],
-> an out-of-bounds array read caught by UBSAN:
+> megasas_make_prp_nvme() builds a command's PRP list in cmd->sg_frame, a
+> DMA pool buffer of instance->max_chain_frame_sz bytes, spending one entry
+> per NVMe page of the transfer plus one per page of the buffer for the
+> chain pointer. The loop runs until the transfer is described and never
+> checks the buffer bound.
 > 
->   UBSAN: array-index-out-of-bounds in arch/x86/include/asm/topology.h:72:28
->   index -1 is out of range for type 'cpumask *[1024]'
+> max_hw_sectors comes straight from the MDTS the firmware reports for the
+> drive. On drives with a large MDTS the only thing keeping the list inside
+> the buffer was the block layer default of 1280 KiB, which needs 320
+> entries, which fit into a 4 KiB frame as that holds 512. But since commit
+> 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP") that default is
+> 4 MiB, and such a transfer needs 1025 entries, so the list runs a full
+> page past the end of the frame:
 > 
 > [...]
 
 Applied to 7.3/scsi-fixes, thanks!
 
-[1/1] scsi: mpt3sas: avoid out-of-bounds cpumask_of_node() call in _base_assign_reply_queues()
-      https://git.kernel.org/mkp/scsi/c/e0d26fe176a8
+[1/1] scsi: megaraid_sas: Limit NVMe request size to the PRP chain frame
+      https://git.kernel.org/mkp/scsi/c/af8c27375733
 
 -- 
 Martin K. Petersen
