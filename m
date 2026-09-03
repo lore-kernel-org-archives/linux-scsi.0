@@ -1,60 +1,33 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B25C3C9EE9;
-	Thu,  3 Sep 2026 07:46:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCF6A42E420;
+	Thu,  3 Sep 2026 08:16:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788421575; cv=none; b=QEOIQaBTk/UrWcRZP2s6ELKdYjp4cNAaBPBAIy/d52YlnYZakJRzMONz6nHnDTSJ3EsLEwVDdLjD+ZgrcNdYUsKbe7QrlitAY497PWO/36EcwvCqWzu74igiUhyovbpBOoadhcBDSDP2KDdboedn5NKzjYJhav1pJoEQXR9lZ5s=
+	t=1788423390; cv=none; b=XzkNOGqOFZDZd79Zi9j0S6Mm8ZBfl3o3MPdvSbkkmn7eSg1ENp0Kjf0WXYJL6FdQeE8vvilvYoZAd6AttwoWsK0KVqm2tcyxWT1O015wKfGk3YuSCA1aRMxfVYMEFyrDHJpSrkqgxr4/ECK1vvALmQT5whEJQiWxukCCxG0HTIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788421575; c=relaxed/simple;
-	bh=TusS9N1RR7He/Kk9YZXjKMBjbTd6i5U/DANrCr8zito=;
+	s=arc-20240116; t=1788423390; c=relaxed/simple;
+	bh=+o+nyoSdpxikK8CJnBLVivh+R0jr8SwEQzzgfF6g3nU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dDCrHU4uC9d0KPVW5zS2JCrA3o0coLT4io40x6ChuDP2aLGKuoZb5ktr53xW7T1PSswHivBpea8y6Q4RGSo5sDMUAnaXWUWKsv5BSkiEzFpPI3iIUufB2i9V9dv+OUzIFSpitXomtgSXtZO3ZAXaC0xYAARS62De8n43xtYGICc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=TSlU0VVE; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 In-Reply-To:Content-Type; b=YIi72Txbxf37hxISUjk3Luh1P5BTyPaLc1X+l0b3j3Fh/Ds9X0UctFJV2skSZrTfRpMsjA+bBZ9vEGbvkhYQuUf1apvJrUbGJ7gC4fSo7VvfLXjWVy1TwH+1KYgwhJheFLob4LbIh+CmNcVB/tWfnI3Q+9kxoZCHc/Xuq0FWSm8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XoIfMXX5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="TSlU0VVE"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68361ecM2239326;
-	Thu, 3 Sep 2026 07:46:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=7f2Wki
-	fVw0NguaifgmPtUXuEgHUauSvNBua3tTJ+apc=; b=TSlU0VVEOYZvXLfjWYV8Oa
-	HAVJ0k5OVz6Xe7WtELfQ65d7sEz+FNNVJ/8tXoyULUfL9rgSbcpTTqTGaf0fYbhg
-	QFjrGh7XhiIclcRsj17T9uKRluGDv8ScVcuJBg+lgFPDMsZ+vzaA+eplEuMsnTIe
-	xGxEgZ1jAbnIm3jKkSEEQynbBOPl7YXHZ8rVwNkxHqeTT1UiykVZVJVwDACJ1KYJ
-	dQSFnHw1iQP+vpNgfa34d5nwEUXej31i1sfc2JmwA7Wt5EahI3ihF5TD9YaT4wKO
-	VPDGBHY8eu6bjPmHCdfX+SIWDHGu9ANs7KQkWT64GB3CXu8D9LtZx84to/rwg3dQ
-	==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gbq2tk44f-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Sep 2026 07:46:08 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 6837fLDC028596;
-	Thu, 3 Sep 2026 07:46:07 GMT
-Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4gecjaq03q-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Sep 2026 07:46:07 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
-	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6837k56s30212708
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 3 Sep 2026 07:46:06 GMT
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id CF30558054;
-	Thu,  3 Sep 2026 07:46:05 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 78DFC5803F;
-	Thu,  3 Sep 2026 07:46:03 +0000 (GMT)
-Received: from [9.61.240.230] (unknown [9.61.240.230])
-	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Thu,  3 Sep 2026 07:46:03 +0000 (GMT)
-Message-ID: <b9f8c317-f919-47f2-8988-e57e22176a82@linux.ibm.com>
-Date: Thu, 3 Sep 2026 13:16:01 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XoIfMXX5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 857471F000E9;
+	Thu,  3 Sep 2026 08:16:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788423388;
+	bh=l9GVgLZffkTPbMsDs2bbDfVam0Psx72PkFvt8O0E+VQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=XoIfMXX5ocuhbQCMKDwoP3JIopHIJQoNOvejs6fXrWRLslo/NDmEAaC1H2oNWyRw1
+	 hzHCFm6LOuwVKu6t83oW1ehUsyyZ9lNfl1v8fAjODOS9xauDahuuvRM7/lsxI50yTu
+	 T1UmBnLs6NjzO7trJyB/folysjUawhfIFeTowrL5kpmirDCIzZ74TPCShHkraTNKcb
+	 KXIR3uz7iQsksmH4QVKfKbG3jPhPaVeH2pUlEOcl0H60yn25YvhzUOAlHFEBHG5gT4
+	 DBtKo9g56niDE9ksL/zJ+ATLD3GvpM+9UHfgt4eIXcsVbSBSv6LpJXu0ANOwpR3CWW
+	 Vj7PP/c5vYK3A==
+Message-ID: <206b8a0a-0953-402f-b8c5-862da0ff1c5e@kernel.org>
+Date: Thu, 3 Sep 2026 10:16:14 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,119 +35,102 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: scsi: ibmvfc: Add Kconfig dependency on NVME_FC to prevent link
- failure
-To: Tyrel Datwyler <tyreld@linux.ibm.com>, pavrampu <pavrampu@linux.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        brking@linux.ibm.com, linux-kernel@vger.kernel.org,
-        davemarq@linux.ibm.com
-References: <327877a29337aa526cc50ac88fbddb86@linux.ibm.com>
- <afd6fdc7-0fae-4fcf-b30a-a69294d26576@linux.ibm.com>
- <9873559a-59df-4f4c-b653-6930636096a6@linux.ibm.com>
-Content-Language: en-GB
-From: Venkat Rao Bagalkote <venkat88@linux.ibm.com>
-In-Reply-To: <9873559a-59df-4f4c-b653-6930636096a6@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=bc1bluPB c=1 sm=1 tr=0 ts=6a9925c0 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=gCSP5jI7dXej6UQmhssA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAzMDA2NiBTYWx0ZWRfX9jLg9A4OksDW
- XLvMiPP3ON5x+lQ2s4+SG9wYnSQZyXphFPQYG8ZGaQMtpBxGQahEfM8eV39SYlg/l4cLj5kPvbw
- 6wrizuOvcRq1BTSESrCFnckZQ3tGSJI=
-X-Proofpoint-ORIG-GUID: rLt_s67DKpB8sDS9buZinlg1K1nrPOmZ
-X-Proofpoint-GUID: rLt_s67DKpB8sDS9buZinlg1K1nrPOmZ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAzMDA2NiBTYWx0ZWRfX+Pg0Dmh3W035
- /O4BFQ2PBsHDaNJ6Vs/rvt83WF9Y40i8yRDEjRrWg9jLsqqyFV9xCACSaDNYM6lFOGdso0kS90I
- AN/5KOgafIVvWNYxfm9/QOWQ+Uyw9HBW5KQ5IpFshQgLbf5mdiPLJMet2bXZT6pmJF1wSQHqbhx
- pmRiRGY+kVR44jhD/eO+F9ByqweQczD2iV8njE65nXReE5cuNlT5hJnj/Mug9wiwGehSQDKdtYK
- p2V73G+PULTk3ugnWCuW1feLiHgwtCEWWDqRSwYYXZwv1QPzhv2tjIyxcSEKvtC4TkxDIvX8NVU
- E9N0GvL5J+eTcUHf89GPYHVLRLqAQVociBqvVRiqfXZ7bHNEqM1awR2w7YGSFattxKuc6RNFPI/
- 6i6FAQZHpwnA7mVWkV1DdRpxQNnOTFACfe8TA1z6JScQ7I6qFFSWFg9kXiLfDCNXiZCUPQO5x6n
- TULLHzmYpj77PpcDcyQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-03_02,2026-09-02_04,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 suspectscore=0 adultscore=0 malwarescore=0 spamscore=0
- lowpriorityscore=0 phishscore=0 clxscore=1015 priorityscore=1501
- impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2609030066
+Subject: Re: [PATCH v1 02/11] soc: qcom: add crypto_virt backend for
+ virtio-blk inline crypto
+To: Linlin Zhang <linlin.zhang@oss.qualcomm.com>, ebiggers@kernel.org,
+ axboe@kernel.dk, mst@redhat.com, jasowangio@gmail.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
+ linux-scsi@vger.kernel.org, virtualization@lists.linux.dev,
+ devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Cc: neeraj.soni@oss.qualcomm.com, gaurav.kashyap@oss.qualcomm.com,
+ mani@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
+ bvanassche@acm.org, alim.akhtar@samsung.com, avri.altman@sandisk.com,
+ stefanha@redhat.com, pbonzini@redhat.com, eperezma@redhat.com,
+ xuanzhuo@linux.alibaba.com, linux-kernel@vger.kernel.org
+References: <20260827160806.1295313-1-linlin.zhang@oss.qualcomm.com>
+ <20260827160806.1295313-3-linlin.zhang@oss.qualcomm.com>
+ <f5915133-ffac-4777-b7d9-cf38ba163d43@kernel.org>
+ <03097984-fded-477e-82b6-f9b31fd2f1d3@oss.qualcomm.com>
+ <38389106-9609-4ec4-bc83-3d1b7fac3698@kernel.org>
+ <c5aaea57-c9c4-44ca-9bd5-7f09175637b3@oss.qualcomm.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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
+In-Reply-To: <c5aaea57-c9c4-44ca-9bd5-7f09175637b3@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-
-On 03/09/26 6:57 am, Tyrel Datwyler wrote:
-> On 9/2/26 1:40 AM, Venkat Rao Bagalkote wrote:
->> On 02/09/26 1:55 pm, pavrampu wrote:
->>> Hi,
+On 02/09/2026 17:01, Linlin Zhang wrote:
+>>>>> +	ret = qcom_scm_derive_sw_secret(eph_key, eph_key_size,
+>>>>> +					sw_secret, BLK_CRYPTO_SW_SECRET_SIZE);
+>>>>> +	if (ret == -EIO || ret == -EINVAL)
+>>>>> +		ret = -EBADMSG; /* probably invalid key */
+>>>>> +
+>>>>> +	if (ret)
+>>>>> +		pr_err("%s: ret=%d\n", __func__, ret);
+>>>>> +
+>>>>> +	return ret;
+>>>>> +}
+>>>>> +
+>>>>> +static struct virtblk_crypto_variant_ops virtblk_crypto_qcom_vops = {
+>>>>
+>>>> Why is a crypto-handling code in drivers/soc/?
+>>>>
 >>>
->>> I am seeing below build failure with latest linux-next repo.
->>>
->>> Description:
->>>
->>> Building the kernel with CONFIG_SCSI_IBMVFC=y and CONFIG_NVME_FC=m results in
->>> a link failure when building vmlinux:
->>>
->>> Build failure logs:
->>>
->>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function
->>> `ibmvfc_nvme_register_remoteport':
->>> ibmvfc-nvme.c:488: undefined reference to `nvme_fc_register_remoteport'
->>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function
->>> `ibmvfc_nvme_unregister_remoteport':
->>> ibmvfc-nvme.c:515: undefined reference to `nvme_fc_unregister_remoteport'
->>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function `ibmvfc_nvme_register':
->>> ibmvfc-nvme.c:536: undefined reference to `nvme_fc_register_localport'
->>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function `ibmvfc_nvme_unregister':
->>> ibmvfc-nvme.c:565: undefined reference to `nvme_fc_unregister_localport'
->>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function `ibmvfc_nvme_unregister':
->>> ibmvfc-nvme.c:565: undefined reference to `nvme_fc_unregister_localport'
->>> ld: drivers/scsi/ibmvscsi/ibmvfc-core.c:6798: undefined reference to
->>> `nvme_fc_rescan_remoteport'
+>>> This driver is a Qualcomm vendor-specific driver, plays the similar role in the
 >>
->> Below simple check in Kconfig fixes the build failure.
+>> Not really, there is nothing vendor specific here. Look at this code.
 >>
->> If this is acceptable, then I will send a formal patch.
-> Yep, need to force ibmvfc to be a module when NVME_FC isn't builtin, or NVME_FC
-> must be disabled.
+> 
+> crypto_virt_program_key calls the interface from qcom_scm driver. Similar to
+> crypto_virt_invalidate_key and crypto_virt_derive_sw_secret_key.
 
+Indeed I missed that. And it does include scm header and depends on it,
+fine then.
 
-Thank you for confirming.
-
-Link to Patch: 
-https://lore.kernel.org/all/20260903074329.6705-1-venkat88@linux.ibm.com/
-
-
-Regards,
-
-Venkat.
-
->
-> -Tyrel
->> # git diff
->> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
->> index 4a2af0f702e1..6612d5d445e2 100644
->> --- a/drivers/scsi/Kconfig
->> +++ b/drivers/scsi/Kconfig
->> @@ -753,6 +753,7 @@ config SCSI_IBMVFC
->>          tristate "IBM Virtual FC support"
->>          depends on PPC_PSERIES && SCSI
->>          depends on SCSI_FC_ATTRS
->> +      depends on NVME_FC || NVME_FC=n
->>          help
->>            This is the IBM POWER Virtual FC Client
->>
->>
->> Regards,
->>
->> Venkat.
->>
->>> If you happen to fix this, please add below tag.
->>>
->>> Reported-by: Pavithra <pavrampu@linux.ibm.com>
->>>
->>> Thanks,
->>> Pavithra
+Best regards,
+Krzysztof
