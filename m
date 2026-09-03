@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45F1737DABE;
-	Thu,  3 Sep 2026 03:42:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57D553876B3;
+	Thu,  3 Sep 2026 03:42:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788406970; cv=none; b=f055obEgpnCG0j/4Hc9FutB6f5X7gVIK1ucrj+W2gasItCepfvtxmzDZU4BkIQrskkeJTNmsndssZbSfylhqml7MeFCFsSqMPwJI2TVoyiyXuf96cLD0EZvg1kH2CiNTYw3Z1yGUoe1X4kzBCe1VGZXZKJfkaexXOaSHElq4+gI=
+	t=1788406974; cv=none; b=ijHHqruVTD8UciS0BJulr+xVx9tzK/y/CSiQvkcm6QQeKqJyAtCSspLD775yiL33q68blRjI2c9lpoDh++U5k63gU2+du+MMHctzt+W0Ru6XZbeFxRA9m0tnoVDrdmzrV2BDqjKsqE58mPxbTWhmyBWnKjOZAeXtroPnOcQaueU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788406970; c=relaxed/simple;
-	bh=Zrny4kVyjNcVCM8jDZ+WLVr4ZOAcLvAA56jPMbDs+hI=;
+	s=arc-20240116; t=1788406974; c=relaxed/simple;
+	bh=2SggC+ZVuOsQ7XYce6B55mmWU6M7mDvHN8RGclSGMmM=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nugjVgTQMCrWwZZ4PatVjVD5wh2q9usjUNkF30tUqvvDo3QbaE5KWDRSxGCjwLS2smQQ6oR6k4Wykj/WB78zPNF/Z3cTBgIkJblpDyXSZRogoHZRe7Umiuwi/v7pmKkUPhPR7z7yZzgHIFm54kJUw840XXRPR0n+bjfryW7SDZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NVTNpC5R; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=iv793PkykFndQp5PF7uP/KZtY/pmWcYDYejrsmTFQj7jM2ccJYt3O3KsbVPusaW3T63xsxW9fIpZsdbgt+/B8YsI8W1SoeBMbfZRoqmHsozftEqsJQ2UtRt+wa4PWIryTMKeLsxl8TEgLGpZiSvKDfHZMJskx1xK6ddhWplKux0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GxbiQhM+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NVTNpC5R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 359EF1F00A3E;
-	Thu,  3 Sep 2026 03:42:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GxbiQhM+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE5E31F00A3A;
+	Thu,  3 Sep 2026 03:42:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788406962;
-	bh=Wq2O31rVUsmAND4iJLnv+ct8nXlKYJzJ5m4tzACLXk0=;
+	s=k20260515; t=1788406966;
+	bh=XRIHjC99X3BvhlsCWuYonNooUNHHjj6FPKdt9T3x+3E=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=NVTNpC5RAeJUBDQhgV+uvlJBmDcZZsWVQekx292Ckpv31S2POyYeH7WbKOCUYRjDN
-	 NsmszsxZa7gHq0500U9iP2wO9mT7bFTF+vFIhPGuQyDjkh1+qWWJkPbGIBfuoYmJVU
-	 20J4jCXL82CvHEf1HYvUuB2h4SeZGaoU0xrdm9wmWsNKho+btLVwxYjFTib5N1Dqq9
-	 qQjeM/+LxBWsHIWVONfo5Bs3PKBSq8qZUpdfjcyjC9evKfTJtfbI5SNVcKHmCzCJRH
-	 OXp+NBAszs2EqiFPnfeAyNe/juQtGy9XASHzTRqmFOKLFaF24sgDfSuZL9KIqI6ZFY
-	 xMriaer5KFauQ==
+	b=GxbiQhM+IK3zHFB6im6FibCRS5cLBcmvsOyIJfbvrj5Pq6pWpCSs3uE7u/PuVOuWP
+	 l6JNWYIAv6n0ZFpaE78ooMtjEb9iBGLqb2HEfiOD/wNoUm/X0yr7hCQNcwIeNXhW4k
+	 y/kh2YElFgpI6kNzzZZIxOPr8+GHJT+UIBaL65tDhllYvjCYOHpTKwk0Sx0pUHOAKw
+	 q3LWRUVU02ecIWSW2Hq2Fhc1yE5FSn97m1AI4dw7mvG4t3oZe1rFO/AYY/S9lN8WPK
+	 MQQTcAghbIVpqaPYVQtoYTi3W4ev/rZaNdNnEc9otZwLXGY+DlOU5xUvEhUZdga19m
+	 J+Whw7QVm74dw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v2 15/40] scsi: device_handlers: emc: use 16-bits defined sense codes
-Date: Thu,  3 Sep 2026 12:41:36 +0900
-Message-ID: <20260903034201.112211-16-dlemoal@kernel.org>
+Subject: [PATCH v2 17/40] scsi: mpt3sas: use 16-bits defined sense codes
+Date: Thu,  3 Sep 2026 12:41:38 +0900
+Message-ID: <20260903034201.112211-18-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260903034201.112211-1-dlemoal@kernel.org>
 References: <20260903034201.112211-1-dlemoal@kernel.org>
@@ -51,8 +51,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the EMC SCSI device handler driver to use the 16-bits sense_code
-field of struct scsi_sense_hdr and replace all hard-coded additional sense
+Refactor the mpt3sas driver to replace all hard-coded additional sense
 codes and additional sense code qualifiers with the enum values defined in
 include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
 being processed are easier to test and self-documented.
@@ -61,82 +60,146 @@ No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/device_handler/scsi_dh_emc.c | 28 ++++++++++++-----------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 69 +++++++++++++++-------------
+ 1 file changed, 36 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index ff41b51ef462..4b0ea6045ba3 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -105,10 +105,10 @@ static int trespass_endio(struct scsi_device *sdev,
- 	sdev_printk(KERN_ERR, sdev, "%s: Found valid sense data 0x%2x, "
- 		    "0x%2x, 0x%2x while sending CLARiiON trespass "
- 		    "command.\n", CLARIION_NAME, sshdr->sense_key,
--		    sshdr->asc, sshdr->ascq);
-+		    scsi_sense_asc(sshdr), scsi_sense_ascq(sshdr));
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 0e12009a87f6..085d4672db85 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -5401,23 +5401,23 @@ _scsih_setup_eedp(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ static void
+ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+ {
+-	u8 ascq;
++	u16 sense_code;
  
--	if (sshdr->sense_key == 0x05 && sshdr->asc == 0x04 &&
--	    sshdr->ascq == 0x00) {
-+	if (sshdr->sense_key == ILLEGAL_REQUEST &&
-+	    sshdr->sense_code == LU_NOT_READY) {
- 		/*
- 		 * Array based copy in progress -- do not send
- 		 * mode_select or copy will be aborted mid-stream.
-@@ -117,18 +117,18 @@ static int trespass_endio(struct scsi_device *sdev,
- 			    "progress while sending CLARiiON trespass "
- 			    "command.\n", CLARIION_NAME);
- 		err = SCSI_DH_DEV_TEMP_BUSY;
--	} else if (sshdr->sense_key == 0x02 && sshdr->asc == 0x04 &&
--		   sshdr->ascq == 0x03) {
--		/*
--		 * LUN Not Ready - Manual Intervention Required
--		 * indicates in-progress ucode upgrade (NDU).
--		 */
-+	} else if (sshdr->sense_key == NOT_READY &&
-+		   sshdr->sense_code ==
-+		   LU_NOT_READY_MANUAL_INTERVENTION_REQUIRED) {
-+		/* Indicates in-progress ucode upgrade (NDU). */
- 		sdev_printk(KERN_INFO, sdev, "%s: Detected in-progress "
- 			    "ucode upgrade NDU operation while sending "
- 			    "CLARiiON trespass command.\n", CLARIION_NAME);
- 		err = SCSI_DH_DEV_TEMP_BUSY;
--	} else
-+	} else {
- 		err = SCSI_DH_DEV_FAILED;
-+	}
-+
- 	return err;
+ 	switch (ioc_status) {
+ 	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
+-		ascq = 0x01;
++		sense_code = LOGICAL_BLOCK_GUARD_CHECK_FAILED;
+ 		break;
+ 	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
+-		ascq = 0x02;
++		sense_code = LOGICAL_BLOCK_APPLICATION_TAG_CHECK_FAILED;
+ 		break;
+ 	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
+-		ascq = 0x03;
++		sense_code = LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED;
+ 		break;
+ 	default:
+-		ascq = 0x00;
++		sense_code = ID_CRC_OR_ECC_ERROR;
+ 		break;
+ 	}
+-	scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x10, ascq);
++	scsi_set_sense(scmd, 0, ILLEGAL_REQUEST, sense_code);
+ 	set_host_byte(scmd, DID_ABORT);
  }
  
-@@ -288,7 +288,8 @@ static enum scsi_disposition clariion_check_sense(struct scsi_device *sdev,
- {
- 	switch (sense_hdr->sense_key) {
- 	case NOT_READY:
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x03)
-+		if (sense_hdr->sense_code ==
-+		    LU_NOT_READY_MANUAL_INTERVENTION_REQUIRED)
- 			/*
- 			 * LUN Not Ready - Manual Intervention Required
- 			 * indicates this is a passive path.
-@@ -305,7 +306,7 @@ static enum scsi_disposition clariion_check_sense(struct scsi_device *sdev,
- 			return SUCCESS;
+@@ -5474,7 +5474,8 @@ static enum scsi_qc_status scsih_qcmd(struct Scsi_Host *shost,
+ 	if (handle == MPT3SAS_INVALID_DEVICE_HANDLE || sas_device_priv_data->block) {
+ 		if (scsi_get_host_state(scmd->device->host) == SHOST_RECOVERY &&
+ 		    scmd->cmnd[0] == TEST_UNIT_READY) {
+-			scsi_build_sense(scmd, 0, UNIT_ATTENTION, 0x29, 0x07);
++			scsi_set_sense(scmd, 0, UNIT_ATTENTION,
++				       I_T_NEXUS_LOSS_OCCURRED);
+ 			scsi_done(scmd);
+ 			return 0;
+ 		}
+@@ -5986,7 +5987,7 @@ _scsih_smart_predicted_fault(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	event_data = (Mpi2EventDataSasDeviceStatusChange_t *)
+ 	    event_reply->EventData;
+ 	event_data->ReasonCode = MPI2_EVENT_SAS_DEV_STAT_RC_SMART_DATA;
+-	event_data->ASC = 0x5D;
++	event_data->ASC = ASC_FAILURE_PREDICTION_THRESHOLD_EXCEEDED;
+ 	event_data->DevHandle = cpu_to_le16(handle);
+ 	event_data->SASAddress = cpu_to_le64(sas_target_priv_data->sas_address);
+ 	mpt3sas_ctl_add_to_event_log(ioc, event_reply);
+@@ -6109,8 +6110,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 		    le32_to_cpu(mpi_reply->SenseCount));
+ 		memcpy(scmd->sense_buffer, sense_data, sz);
+ 		_scsih_normalize_sense(scmd->sense_buffer, &data);
+-		/* failure prediction threshold exceeded */
+-		if (data.asc == 0x5D)
++		if (data.asc == ASC_FAILURE_PREDICTION_THRESHOLD_EXCEEDED)
+ 			_scsih_smart_predicted_fault(ioc,
+ 			    le16_to_cpu(mpi_reply->DevHandle));
+ 		mpt3sas_trigger_scsi(ioc, data.skey, data.asc, data.ascq);
+@@ -6199,8 +6199,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 		else if (!xfer_cnt && scmd->cmnd[0] == REPORT_LUNS) {
+ 			mpi_reply->SCSIState = MPI2_SCSI_STATE_AUTOSENSE_VALID;
+ 			mpi_reply->SCSIStatus = SAM_STAT_CHECK_CONDITION;
+-			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST,
+-					 0x20, 0);
++			scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
++				       INVALID_COMMAND_OP_CODE);
+ 		}
  		break;
- 	case ILLEGAL_REQUEST:
--		if (sense_hdr->asc == 0x25 && sense_hdr->ascq == 0x01)
-+		if (sense_hdr->sense_code == scsi_sense_code(0x25, 0x01))
- 			/*
- 			 * An array based copy is in progress. Do not
- 			 * fail the path, do not bypass to another PG,
-@@ -319,7 +320,8 @@ static enum scsi_disposition clariion_check_sense(struct scsi_device *sdev,
- 			return SUCCESS;
- 		break;
- 	case UNIT_ATTENTION:
--		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-+		if (sense_hdr->sense_code ==
-+		    POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED)
- 			/*
- 			 * Unit Attention Code. This is the first IO
- 			 * to the new path, so just retry.
+ 
+@@ -7691,38 +7691,41 @@ _scsih_determine_disposition(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	if (check_sense) {
+ 		_scsih_normalize_sense(transfer_packet->sense, &sense_info);
+-		if (sense_info.skey == UNIT_ATTENTION)
++		if (sense_info.skey == UNIT_ATTENTION) {
+ 			rc = DEVICE_RETRY_UA;
+-		else if (sense_info.skey == NOT_READY) {
+-			/* medium isn't present */
+-			if (sense_info.asc == 0x3a)
++		} else if (sense_info.skey == NOT_READY) {
++			if (sense_info.asc == ASC_MEDIUM_NOT_PRESENT) {
+ 				rc = DEVICE_READY;
+-			/* LOGICAL UNIT NOT READY */
+-			else if (sense_info.asc == 0x04) {
+-				if (sense_info.ascq == 0x03 ||
+-				   sense_info.ascq == 0x0b ||
+-				   sense_info.ascq == 0x0c) {
++			} else if (sense_info.asc == ASC_LU_NOT_READY) {
++				u16 scode = scsi_sense_code(sense_info.asc,
++							    sense_info.ascq);
++
++				if (scode ==
++				    LU_NOT_READY_MANUAL_INTERVENTION_REQUIRED ||
++				    scode ==
++				    LU_NOT_ACCESSIBLE_TARGET_PORT_IN_STANDBY_STATE ||
++				    scode ==
++				    LU_NOT_ACCESSIBLE_TARGET_PORT_IN_UNAVAILABLE_STATE)
+ 					rc = DEVICE_ERROR;
+-				} else
++				else
+ 					rc = DEVICE_START_UNIT;
+-			}
+-			/* LOGICAL UNIT HAS NOT SELF-CONFIGURED YET */
+-			else if (sense_info.asc == 0x3e && !sense_info.ascq)
++			} else if (sense_info.asc ==
++				   ASC_LU_HAS_NOT_SELF_CONFIGURED_YET &&
++				   !sense_info.ascq) {
+ 				rc = DEVICE_START_UNIT;
++			}
+ 		} else if (sense_info.skey == ILLEGAL_REQUEST &&
+-		    transfer_packet->cdb[0] == REPORT_LUNS) {
++			   transfer_packet->cdb[0] == REPORT_LUNS) {
+ 			rc = DEVICE_READY;
+ 		} else if (sense_info.skey == MEDIUM_ERROR) {
+-
+-			/* medium is corrupt, lets add the device so
+-			 * users can collect some info as needed
++			/*
++			 * medium is corrupt, lets add the device so users can
++			 * collect some info as needed
+ 			 */
+-
+-			if (sense_info.asc == 0x31)
++			if (sense_info.asc == ASC_MEDIUM_FORMAT_CORRUPTED)
+ 				rc = DEVICE_READY;
+ 		} else if (sense_info.skey == HARDWARE_ERROR) {
+-			/* Defect List Error, still add the device */
+-			if (sense_info.asc == 0x19)
++			if (sense_info.asc == ASC_DEFECT_LIST_ERROR)
+ 				rc = DEVICE_READY;
+ 		}
+ 	}
 -- 
 2.55.0
 
