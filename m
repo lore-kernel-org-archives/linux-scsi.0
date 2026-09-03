@@ -1,46 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BFFA35F192;
-	Thu,  3 Sep 2026 03:10:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C55A30DEA3;
+	Thu,  3 Sep 2026 03:10:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788405033; cv=none; b=H5VJyx7wI4E+bkNwPs81LM3S8KOwAJCJEkQLGePYBRKYoUns0nR8Wz0KBY1FLcM6X43QzySo29MBbnYy7F8/cv7YRfnFOtAOScf+eqWdBa7LNMDM9a2k93NUXwYVDBOtW1vdxau5PvAFCwCAiFyfTasc8sEbj8vyvBtbZ0inwcE=
+	t=1788405034; cv=none; b=X3EIqnD+YQB2KvRecSgYM4eJjEJJUn7SLSbBIiymMcMaND2foxVA+rbhtM5VKReIDgfOKM7/1omm6Y8o3l9HnT/SXf1r2pCIB3u8HptTBKe7wQEMwT8I6HJudk3hDWpl95Faciycdi8fH5vxz0oKqNkzrtiX7b9dNCrrNMZ77Nc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788405033; c=relaxed/simple;
-	bh=GC3V6d5LVyN9ZapyIohub5pUzEXZEte0qmAaoPWM6Rs=;
+	s=arc-20240116; t=1788405034; c=relaxed/simple;
+	bh=tA4Q6N1CIJ3hKf0vm/GvRQ4H7b+TI1vJ4t4jhEptkOA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=O2479u/q8R3cQStpgaIxoegVwyN0kdyHgz+FOxEgEPt5qrjHfrxApFb+whPQkHVHNU8bz9iEX58OZiBNdYDMggs4oXasmz3lgpMzwGp2OLQANflxIGL8aDdJ7SJHY8gkNXNpDPHATfy4kcBiHWDDhgeHwUskH4aZYfZPzC9idm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SDHv8NkN; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=mNMfZFHn/nDWEmxj3RIvGjScl4av/PuaJFTs1aLlxl0JpKQ04K5heQOrerVCrQPHqEC/fzf3GBZ9sXiDNF+gKMzDYU/gv+NCvB79Mk/i+KrhZuTmQzupy8Qlx0irVQmZI1RtqeW1XdoaUkxyVrfvcdu+ourTOmbvOp+4j0iZvvo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ePOdoNQ9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SDHv8NkN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69A551F00A3F;
-	Thu,  3 Sep 2026 03:10:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ePOdoNQ9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97CE81F000E9;
+	Thu,  3 Sep 2026 03:10:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788405032;
-	bh=zeX7gtYKN89Liuupi4nVllGGrXh/cbBcQafIcyPbjlo=;
+	s=k20260515; t=1788405033;
+	bh=lmT/4gYql1mcBSDghObg9HMhiUerb6MIaPyswNem1rU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=SDHv8NkNoU8bG2mcjp7JptwceT+0ZBtXCtVl8Qe6v/zu45TLrxyoyipkY9P7CkUhI
-	 Q7sQRu0vMANOO04OLKpmaifttfzOIYFQoKHNvvF2xy02fZdSrtOcKdmB4vVW6gNKoO
-	 3Mf4U+3dHt2Col2NYEaA9FUOFtp21KaHn1QtSBDKZlJcjVTKTbCTfSj8oTlUJkgJR/
-	 D4j6HFAtAMhBT65giexJP+9FbZE7tkJIDKMySIf4JaCmXwpIlTh8nXxdotB6PZYffr
-	 mXhVl7jjESVXOHttmRqmbT/QG/1MrjOF5flKReYLxSEoWm4hs42y4cfT33iwDGoz9W
-	 sQbvGzeKhNDaA==
+	b=ePOdoNQ9eO/0lxTRJfl4HolZ4jnX0sW/j4KRhlsVisxw3FN/7gjqblRoEX7cI1dZR
+	 N8oIqisFpy6yZDgh9oerYVq8lJWmD1EUdMXSIJGYuNryfO2PuRNs6Uox6ICBnNCI6G
+	 aGhtJiX3o40AlpkKEcmCkVs9kHYuffuuoELB0Q9Y3fwtFoQz7QdjSs//mJ/I59CCN+
+	 UMIGgebu6wUtM1hlq+c4csEsyUWmS6zosXlomwLEVAJ95Lxhn/GnOQvlyasyqGmQ6t
+	 K7ybcYmxCp6KNTS/BHP2aHqzSJgRruH0v2/Fra7hPG7lxIrG4p9PC/ZG++w20DRpFF
+	 FK0p2bwb0Y9GQ==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: mani@kernel.org,
+To: dgilbert@interlog.com,
+	raoxu <raoxu@uniontech.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
-	konrad.dybcio@oss.qualcomm.com,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH V2 0/2] ufs: ufs-qcom: Fixes and optimizations for Qualcomm UFS Controller
-Date: Wed,  2 Sep 2026 23:10:11 -0400
-Message-ID: <178840472586.670675.7481898545515362226.b4-ty@b4>
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: sg: report request-table problems when any status is set
+Date: Wed,  2 Sep 2026 23:10:12 -0400
+Message-ID: <178840472589.670675.4347743833855760197.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260825145203.265579-1-nitin.rawat@oss.qualcomm.com>
-References: <20260825145203.265579-1-nitin.rawat@oss.qualcomm.com>
+In-Reply-To: <26BF67F369E2123E+20260706084443.805598-1-raoxu@uniontech.com>
+References: <26BF67F369E2123E+20260706084443.805598-1-raoxu@uniontech.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,24 +48,25 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Tue, 25 Aug 2026 20:22:01 +0530, Nitin Rawat wrote:
+On Mon, 06 Jul 2026 16:44:43 +0800, raoxu wrote:
 
-> This patch series introduces few fixes and performance optimizations
-> for the Qualcomm UFS host controller driver to improve performance
-> and to align with Qualcomm UFS hardware programming sequence.
+> SG_GET_REQUEST_TABLE reports per-request diagnostic state through
+> sg_req_info::problem. The field is meant to indicate whether there is
+> an error to report for a completed request.
 > 
-> The series addresses below issues:
-> 1. Hardware programming sequence alignment for UFS controller v6.2
-> 2. Performance tuning for sequential read workloads.
+> sg_fill_request_table() currently combines masked_status, host_status
+> and driver_status with bitwise AND. This only reports a problem when all
+> three status fields are non-zero at the same time. A normal target check
+> condition, for example, has masked_status set while host_status and
+> driver_status may both be zero, so the request is incorrectly reported
+> as clean.
 > 
 > [...]
 
 Applied to 7.3/scsi-fixes, thanks!
 
-[1/2] ufs: ufs-qcom: Restore HS/LS link startup mode for Qualcomm UFS controller v6.2+
-      https://git.kernel.org/mkp/scsi/c/a3756f53baf1
-[2/2] ufs: ufs-qcom: Fix sequential read variance
-      https://git.kernel.org/mkp/scsi/c/b2ededcb271b
+[1/1] scsi: sg: report request-table problems when any status is set
+      https://git.kernel.org/mkp/scsi/c/11300f8ddee3
 
 -- 
 Martin K. Petersen
