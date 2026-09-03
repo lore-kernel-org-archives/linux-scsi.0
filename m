@@ -1,266 +1,168 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0770349DB86;
-	Thu,  3 Sep 2026 12:24:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788438250; cv=none; b=SWXydAg1K9KKsmBP4jpVYi/UVs1peoruwrWATc4Nt3Y2A3WpDdOTGrvtm2s3IM+nSNiGME4ceXUdrSXPQb76B7g7/WYCr6DaPudi2O7TOW4/CkforqAqqmJVuc1qvZ8bEbzeDte5vYU/ZASbwY+y0jvW6JqmZ5yCD7ClrBzD9pc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788438250; c=relaxed/simple;
-	bh=plPVReR3aOcsS069d0n0qceKY0+r0wK1piw5KRtY9XY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bJ8QEVYyMlGkgcqAt41tjMNd0C1pNWTPv2mBpckU13CQmxbGV9flv9doaL7VOxL2votnXJSSowkop8nF68cQ4FfpEU8tu7cB1BLoboYoVK6218fYQqsYQGHx31ZANDLes3HGE80Xnf5E/UCOQSNOSlUU5cHp1CM1vtQ9eUU1WEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DENo3zOk; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CA9549C4C8;
+	Thu,  3 Sep 2026 12:36:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.143.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788438965; cv=fail; b=Jd/EZRM4YdWNt7VbtSfYTZh0/wpYZ7WbvM+3fdReLDz7i3Fua7YaflO6LMS+gHHQQs/Ldq7BMHEsDKywBghL9+Ll1roIRnjxz/uGn3/JFKFwWViOyYhFp7PAcj55/81bZ9b0lqrHBTsfnqaMEFyldeWTegzmSODjs+6QlmF6j3o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788438965; c=relaxed/simple;
+	bh=0hFm4yO+V2KgeQG0ik8lLOHczCQdLX2syeEcd394fgI=;
+	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=Oub3AnZGKF8EI2iuEWorrjbJckPZ0XwAFZt0iC+V7WnPX5R+sWTjDPZNQvL8ykPMj158Lok70n0wUzV/MNCpuVJTFj+zgqlwUBeUFrdoaWun1CYG5ziw5mX6h5yx3ul0r97IFzmw8e6VJ1sBrWU3iJdGbf3FqJ2KW3QYECdl+Zs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=GQ25DibP; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=QgYqAVac; arc=fail smtp.client-ip=68.232.143.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DENo3zOk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CA6B1F00A3A;
-	Thu,  3 Sep 2026 12:24:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788438248;
-	bh=q5POko0sUiRncaFp/YIrOSduHhs26KPKvFV67rmjG1g=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DENo3zOkgnoNEI86XQEmdCrrcL8jnzG8VosPcR6TnlEZWNczYQHj0GG2UDf90rsLs
-	 fmj+Y3nWYNi8flCRzkvNN3ISW0r9m+YIlsNx8YNjqk7uhtfqdfpoWLDAWkOwTHNf2K
-	 /0fBmAMTbaQvt9g0z1kYtNWCb91gA9g5axkEbjrCUSPveUNIszC986gdrzgy8KZgA0
-	 /ck0gvIPBxwfafCDceCiOp5EN/jrLKbpCiBWMsjQxzmcHjxIbO6jxHbZPMhIdRC6aP
-	 out3Vq5zNqQpSjrV2vFi34mWBAvASrgNF1buW3mpfwISA3thJUucDlDWz3fpevsBdx
-	 4VAnJuTZhMguQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC v2 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED
- driver for ROG NVMe enclosures
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Liang Haowen" <nbg2974@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-leds@vger.kernel.org, lee@kernel.org
-In-Reply-To: <202609032000.RFCv2-1.lhw@gmail.com>
-References: <202609012200.RFC0.lhw@gmail.com>
- <202609012200.RFC1.lhw@gmail.com> <202609032000.RFCv2-1.lhw@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 03 Sep 2026 12:24:07 +0000
-Message-Id: <20260903122408.3CA6B1F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="GQ25DibP";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="QgYqAVac"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1788438968; x=1819974968;
+  h=message-id:date:subject:to:references:from:in-reply-to:
+   content-transfer-encoding:mime-version;
+  bh=0hFm4yO+V2KgeQG0ik8lLOHczCQdLX2syeEcd394fgI=;
+  b=GQ25DibPs7U7CbbVzFgHITbpzxU9mGoMtHudgHUuaF1zhE8PWBYuOn1+
+   0qvIyYBJ60Qr+MN5MAY/W+sZv2UjU/3XJjvTz84+qzP67pCoOxbfcqsVN
+   7cT/l6q4CmHN2pCfG/lMRt3oK+TVzpEYjkcHCp6Njm+NYai0/uwIX2YrY
+   TWr+S44useEVZvFmpEW/I/aYeQVKMEaqM54bl1a2RS9AXhLLwPYjHZyFQ
+   pvwnFxZhPMvqQd5MGr8xAt/TiQ8SM1jxDa7KuW62QTjMV/NMF9dnFKRbo
+   ZvlsJ91F1zQPuHLiR3yYf8zxi/u5G1Cp7NnYsPy1BVZvSJyCipv9Exn1O
+   g==;
+X-CSE-ConnectionGUID: NuxEoElcTlueR7jH8xlaZw==
+X-CSE-MsgGUID: +Q/U4e96REeK80upn1YlCg==
+X-IronPort-AV: E=Sophos;i="6.25,260,1779120000"; 
+   d="scan'208";a="155795274"
+Received: from mail-westcentralusazon11010054.outbound.protection.outlook.com (HELO CY7PR03CU001.outbound.protection.outlook.com) ([40.93.198.54])
+  by ob1.hgst.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 03 Sep 2026 20:36:01 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=sP5VuJiOFowATdvXznDIa4fr/7oJzxoCjstiqh03SveIrnfb7We2EAsxAOy7bQvqqXzEFOyyk2KgMfx4IZ3P9dzyvP8hgtS0kBuhSfSFQnKfOAKHTyGgHMeuNxXybvnMN3lap43+wcdAOLc7eyrIYwFpeMZOJLlMjMFiqNkeZvwbmh18Lg8ekDn1oG/ibRz1rEgQDx3xoINOG0zZ37M0REjYwkEKZ5cYnlyEk8xmAS3dVMHC1ZtmRoWX0eb8QMIADmT0hM7S90v32WsMQCEN6kUxiOG3q6Iw/618C2bIKwjq841EzBFco5kBZdLzg5DL8dJj1ZS+/i5ZPvuwAZG4Og==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0hFm4yO+V2KgeQG0ik8lLOHczCQdLX2syeEcd394fgI=;
+ b=JNMZxNA8i2T1Jj8i3oGSgUKC9g4tmsyGGrXyUCUPVnwqOyQJcguo0RmunS1w0w/pGP3ztyAM7lFbXkJPTmpHAJQtrYqM1h0PzZ5VPl758zoeF7u1G6lrIHhAnQIymVsadmsmVuipPexNRJlDY26A1K7Png9zjHGHctOmEuB0qqVpNCoIwaGqvRs/tuEZD34jRo00i/4Sg0rUuKw4+aFKyj35oUiE9pyqO9sl5yL+lrnKZ7cepQeq1l7Yln12pKpOowZmJRTIzC0xUtLXBjbF8EMAEGX/2Xt0f77PCFsdiX0zDha436C/K8p1qyIFN/GOjmriZ5iYH6CWVx21+NC9hw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0hFm4yO+V2KgeQG0ik8lLOHczCQdLX2syeEcd394fgI=;
+ b=QgYqAVacLEEz9eGoUTnS/DnVt6sImTxkwj9zACv8w3ewQueKkmsZxZwGl7AQw7v2F404ABA56un84o0dgZo/Y6qDUpXqoG2tFIPl75zhvMSMm/5hKsnqyYOR9Cij0bMtXnSuvJgLn3i0lZVa2eLx+MAPP8PFAVk2SLPZsg3G8gE=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+Received: from SA6PR04MB9447.namprd04.prod.outlook.com (2603:10b6:806:436::21)
+ by PH0PR04MB7656.namprd04.prod.outlook.com (2603:10b6:510:54::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.10; Thu, 3 Sep
+ 2026 12:35:55 +0000
+Received: from SA6PR04MB9447.namprd04.prod.outlook.com
+ ([fe80::14c6:1c14:485f:1825]) by SA6PR04MB9447.namprd04.prod.outlook.com
+ ([fe80::14c6:1c14:485f:1825%6]) with mapi id 15.21.0360.008; Thu, 3 Sep 2026
+ 12:35:55 +0000
+Message-ID: <047678f2-3d11-4d29-adbe-4eb251300488@wdc.com>
+Date: Thu, 3 Sep 2026 14:35:49 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 02/40] scsi: constants: use defined sense codes
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
+ Alan Stern <stern@rowland.harvard.edu>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
+ Heiko Carstens <hca@linux.ibm.com>
+References: <20260903034201.112211-1-dlemoal@kernel.org>
+ <20260903034201.112211-3-dlemoal@kernel.org>
+Content-Language: en-US
+From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+In-Reply-To: <20260903034201.112211-3-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR0P281CA0238.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:b2::13) To SA6PR04MB9447.namprd04.prod.outlook.com
+ (2603:10b6:806:436::21)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA6PR04MB9447:EE_|PH0PR04MB7656:EE_
+X-MS-Office365-Filtering-Correlation-Id: fb19ed5b-699d-4a57-8150-08df09b7e5a8
+WDCIPOUTBOUND: EOP-TRUE
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|10070799003|1800799024|7416014|19092799006|23010399003|366016|4143699003|10067099003|56012099006|11063799006|22082099003|18002099003|921020;
+X-Microsoft-Antispam-Message-Info:
+	/YogmlMcFN04pThqjeDUkiV/TQJv1kfUT6KIoo/BeD++sKj19QdbbqNoQs7Qmx6BTXpwD4exoWSpzKo6eFTNFGzJ7t+xruPpg8xR418HbdYgETLDMYsOCLsGR/zE5XjSoUWnVFL2sr1Vu00zrQ+dwqnNGRp3wJS0bJZXnydTlBM9lBJSHOhupxZEgIQrm1QF74/6UYbKmmBH5Lr6CN4G2QbOvysb8M2WtCCfffE2z8IgNiFp1DYBmvfPEi0iD5pf1lett7hrhomNt8gFAtwMI+5Z8Rw+IVBmaFBFTaDGpXj4i2l/snKbE1W7trDeCcXU6vT8skP13UYRyjSg5VHbRS0OFSUgiXGNe1FXTy8u4PfwqeERQtLqlODx7WmQQ9sloBxG52yk+wzEFjrYwzNsSgvq45QibHHVO47zq/chKm+HAm9DFc8epU6AIHOzDVQoiYLzSl2ooqWCijSQGD4Hyn8bgJWmkiPzEW4jz1WFClV0q6XBJRtKe0X2g0rPTFWWzqQ+A5a1XL8l+2yPMk9Tv6Z+nJYe4nnSjFzms6eHLahz8fkGvaKf+6Vfn/0g2XTUvx4DJPPeIwdfWjSxaM/HtGWC0TnQ7SPMpNo1M1R+qq0c6toy25uEfcaYve0RW/XDYpLg4Hmnq8CHkHgLK9mFAesje+XmLh3QH9uodcmFY2xC9Qf0jT2sP9mw1xd7otGDh8BGpeocXSSBL5bVkUDGBg==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA6PR04MB9447.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(10070799003)(1800799024)(7416014)(19092799006)(23010399003)(366016)(4143699003)(10067099003)(56012099006)(11063799006)(22082099003)(18002099003)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?MDdkMzA4VzAwL3NWSHprL2JKdVQ3ak8vUGRFa2U2NzN5Y2VLeWpvbkpUcEJa?=
+ =?utf-8?B?M2dlUkVqZ29kdmFLV3h1RWRveGQyZ0JGL2grZE9JcTZPSGVyYzJRUG5SRFdH?=
+ =?utf-8?B?cjR0RGxPTndVM1hPejFDc0ZwUmVBQXVaNzA5bnBnOGtlWEh2c1FRaWlYWGYx?=
+ =?utf-8?B?S0VPZlg4NHFiUHdUcVFSQnprYmdXd2JuQVZFNXJVMWhJZFJqc2pBcUp2OVhp?=
+ =?utf-8?B?UXNhU1QzSVBHK2NSNS9TUXFvOTFxUGtPQjdZTDdWT3FDTllFeHlpMHc0NytS?=
+ =?utf-8?B?SityZXRMZGUwU2tLOTR4L3dVcEtiemtjcCtySEhwM1Uxb1UzWFU4bUptM2dR?=
+ =?utf-8?B?aDNucVBzOGd1QTlzTVFUN2dIeUIzNExoVjRaTElYMkZQSlFqYnp5T3ZMNmdE?=
+ =?utf-8?B?cURYcW81QmZyWVZaU2lQekl3M09LR05TaVNoYUlxUUtUWkZaczlTQ1NqV3Qy?=
+ =?utf-8?B?UCtGbUEyL1N6Nktpd2src1ZBbFRLcy9ZTWd3amxEZGNYbWtFZUhnY2Y2SGJG?=
+ =?utf-8?B?WVpIejl6WFZWbnM5TEFadHBybnhtanNZczNFZXNyYzJaTXFvTFUvTnR0SEZ6?=
+ =?utf-8?B?VXl4YTdzaTRBb0o2U3dhR0E3L1hoZU5DRmtIL1hvd05FWm41UGxjL1NGdVhM?=
+ =?utf-8?B?Sk1aRFh5RnhBZzRrcnNRMkpteTMxRVI1YjAwVTNRRlRubHdZS3drU25aaVBK?=
+ =?utf-8?B?OGRlTXNFRlpteTlrbFdoY2w5SEtFbm5WcEJMdy9OZnNEdUJwdGlzTEtZdEp3?=
+ =?utf-8?B?K3lLZTIrQ0Q2WWJmU2p4cFlxUCt6ZExrWHhQQStvb0hTdW5BS3pBazg5bFR0?=
+ =?utf-8?B?RU5idVV2UUdqdUo1SjQyWWFnZ29WS0VmUndoTVFpK3hiTlJ5d0pGQVdLQXl3?=
+ =?utf-8?B?VkJLblhlN1EyT1F0ZFFOalZvZVlNZjZ1K1VKQzRSQ3dXUmdJZEszTUM4cWZr?=
+ =?utf-8?B?bFRmZnpsbGdiN1RrdVdIQzEyVW5QNlRZeFA4SUFiTlBCQm5PYlQ1cmVEMWUw?=
+ =?utf-8?B?WWl3TDVBU244WmpaaXptYjFxVk9lVXd1SXBuYk5WdlRYSWRQdmZTN1RwbUlE?=
+ =?utf-8?B?L1M0QlRZZFhJenVmbWM5S1BFQ3R6dXd3UTl6VE5INWMvSklSVWJRYjl4OWN0?=
+ =?utf-8?B?TlFnaUVPM1RwQ29vMExrOWlGTEVLZTM3d01pUlNDMWtFNHZLVk5IVUgyMzBK?=
+ =?utf-8?B?WGpMcUlSaVFyR2ZKS25zM25QMGRIbkNyZVFwZ0hxZjd6R1RrUVA2ZFg1K05q?=
+ =?utf-8?B?a3Myd2Z0eExPZGZUcEZSMjdUZEtDZWl2WnlPSUNHZ3BGcTgvWTNhWHlRejFa?=
+ =?utf-8?B?dS9JbzVzL3FmTnhyV214ZnFFZE1wb2g3N20yZWhBUUkyc0g3ejZZSFQrcXV3?=
+ =?utf-8?B?TDU1aHNBSkRSRUx0NG1rdlIxeml0emswNVI3NHVjYlRwMHF5NU1ONWhPeHZp?=
+ =?utf-8?B?WjBZT3c2Z28zNnE0aG4wTW9hczEwMjhrQWxlVFNTTXNtN0liRGUwU3lmT2s4?=
+ =?utf-8?B?SE1BemExZVNmVUcxNUZtU1IwZS9PVXBCSDIxZkZaZzRlRm4xaVNPUkw1OEFa?=
+ =?utf-8?B?aVg1RktLcTBURmxrQjJLUDI0SmVNa2RycHZXTUk1VmN1L3ZEK2VyVlRDck9G?=
+ =?utf-8?B?ZlAyNitYZnl3VFptRTc2SEJDY2xrR1hFbWVoUE9qTGhndUlHOEwyMnM3Nk11?=
+ =?utf-8?B?RFZlRjF4UmRsL3B2RndhZEFoVDR6YjN2UVJYWWFHNWpTSTVTUGJ5L3NDTEZy?=
+ =?utf-8?B?RDdxa0VydGgxWnI1MFV3a2VqRHpianJpa09rSmxtZlVZZzdnMlY0d2U5NlpW?=
+ =?utf-8?B?M09USG9YbEtDL2tWY2w2QnViaGpId3dHd0Z5TmV2RXJCeWdENE5FV2Y4b1l3?=
+ =?utf-8?B?NU5iTGN0eVdVUE0zdlIxQThKTUlZR3d1MWtMc09pOEVNa1pVOWZTVm9EMHpa?=
+ =?utf-8?B?NFlWaEFBVUxCY2d6ZUpKSC9xVW5xYXowN0c0YURxVVFPaElSR0gxQnRyZ1NM?=
+ =?utf-8?B?VnFIREs2b29kRFBRUGVobU9QODk3M0drc2Q0bkVmOVEraHNLTEV1WGNtaTlR?=
+ =?utf-8?B?OENpRjVkaWFqYWIxMzc0K1J1aDR1SjZNaGxCSDFITHpDZGxXOGYzZ2FnMXJ2?=
+ =?utf-8?B?VEhiSDZqUnFBUmF2RWg3MTcvb0puM0ErNU9XS1IxbktNT0x0QndLQXo4N09Z?=
+ =?utf-8?B?Z3lKSE1sZW1PdlFxbS9qcDhCL2pYMGlubXhrWWFxQjJwVFg3WVZJd2l2ZmdQ?=
+ =?utf-8?B?ZWdxNFlHdnZNa3F1b1ozUFJrWTlXTjFXTy9UUDQ0dmEwR1YrMFBUc29lbXgv?=
+ =?utf-8?B?M2JKWjNtWm5pWEl5c1JXZjZlcW8xWGtYUDZCeGtzL2IyZ0lHR2hwTjZHejNm?=
+ =?utf-8?Q?G2LZqi3Lp9BNT10+QMj3/m3WEo+WUZaRJzgp5uqrnOq6a?=
+X-MS-Exchange-AntiSpam-MessageData-1: 9xbADSFmR+iaICBCKfVQEfoRTT912LKlkvM=
+X-Exchange-RoutingPolicyChecked:
+	Wm5wu/ak4SqZ03rSYdblpfw05guqkMlwmLXr7sIa5mN4a14w14nA/5lmSwmoGjx6JQdWvadEjZqQ9h2T66wRTmai3Z9D7+6hxRgdePn0KpkvPI+JVzFgao7JLy13wU9LkmC8B7XYvBHr0EROUYdCwN72YCm0ty+Zal6RVPAPiX4VNZiocRTRgiQ4heK7iClEtNbaRylaenx77f7VvZBVvxdJ66sO5XBF5xcBUz9ONFhGnwciytzt/MguHXZBCOc5oZ+ue1Muq2frVMVYypVqgMjjCvAA7w0BdlIPBCvFuCtbKeRy/LIe0qjLu5/jPsIfn9FcGJO4y65u4RtEGuAE8w==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	eOvzOOCoYeVZJPAjet648sYaMDnqRuDHG3MYU92PCeGTBhVWEp1ojiE4tqsip5I9qfuKIsr8y34V6wHfyPWhyoIVmc5FKnavpfmJg74zO/d4s7JZOKoZlVer6YyFJ0U/mTprRYVGoud6O+kUgCL7bLw2bCVrpaEloqGnG/npqq68EHIj8daM87ZD1pjPdIm1W7cbmeTnOrYVlWtKRP64eeV299cjxzv7sxnJfAg0f8s0Fs9kQibpAbokED6aLIu7Y2KJmFP4G5fEP+D+IwL74/a/aJLFsVjeAsDa4QNWyMN5y2d18bc0EsDTugGPLa680LIdI/dmocWo7f0tplzocl5aUhoh1o3NFWddZqztedG1p9ARX/RaH5w4CvBFKB1FEe2MoYMhIeCS5gINIkyhVxctwahu6QgkIZPgpWpxWb5SbD9o1ppcW46NKrVUs19Sr2rR8KfsQsPe8UkCfNoG80qLve621B1VhmmTd/bgsPP6ZY0A72NuGBrsRqa0GDeBqbp8fqXFd9bFVdP9efHMNkyQqD1VToj+QDmCzuIhFB0cKkEil+gWP+TgdfyWwknLCMVDhABA8rU2QZgRgDAg3gqEo73VnPiSm1fDMX0hhrpn0d8ZRY2D73ooebq+AI0/
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fb19ed5b-699d-4a57-8150-08df09b7e5a8
+X-MS-Exchange-CrossTenant-AuthSource: SA6PR04MB9447.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Sep 2026 12:35:54.9197
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: sZ6GNoidsSjqf07QOVjji8udOfg/s48pXRLv7vdsYbmJLQCcCcWtT4qdLaySTnIkCb6LliaV+KwzUrf0Cuz4IUNwrfzB4WOIKJ6GBinnY4w=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR04MB7656
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
-- [High] The workqueue function unconditionally writes to flash even when n=
-o LEDs are dirty.
-- [Medium] Hardcoded LED class device names will cause a sysfs collision if=
- multiple enclosures are connected.
-- [Medium] Missing memory barriers and locking for led->rgb cause data race=
-s and lost color updates.
-- [Low] Missing 'struct request_queue *' argument in blk_rq_map_kern() call.
-- [Low] Use of non-existent kzalloc_obj macro prevents compilation.
---
+Looks good,
 
-commit 12eb38bf536e935469d4f61d68a4b96acd78d4b1
-Author: Liang Haowen <nbg2974@gmail.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-leds: asus-aura-scsi: Add ASUS Aura RGB LED driver for ROG NVMe enclosures
-
-This commit adds a new out-of-tree driver for ASUS ROG external NVMe
-enclosures. It registers a SCSI device handler matched by INQUIRY and
-exposes the 4 addressable Aura RGB LEDs as multicolor LED class devices.
-A single per-zone work item handles the ENE protocol sequences and
-serializes updates.
-
-> diff --git a/drivers/leds/leds-asus-aura-scsi.c b/drivers/leds/leds-asus-=
-aura-scsi.c
-> new file mode 100644
-> index 0000000000000..4dd559a5d8ec1
-> --- /dev/null
-> +++ b/drivers/leds/leds-asus-aura-scsi.c
-[ ... ]
-> +static int ene_write(struct scsi_device *sdev, u16 reg,
-> +		     const void *data, u8 arg_count)
-> +{
-> +	struct request *rq;
-> +	struct scsi_cmnd *scmd;
-> +	u8 cdb[ENE_CDB_LEN];
-> +	int ret;
-> +
-> +	ene_build_cdb(cdb, reg, arg_count);
-> +
-> +	rq =3D scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_OUT, 0);
-> +	if (IS_ERR(rq))
-> +		return PTR_ERR(rq);
-> +
-> +	if (arg_count) {
-> +		ret =3D blk_rq_map_kern(rq, (void *)data, arg_count, GFP_NOIO);
-
-[Severity: Low]
-Does this missing argument in ene_write() in
-drivers/leds/leds-asus-aura-scsi.c cause a build failure? The
-blk_rq_map_kern() function takes 5 arguments (requiring a
-struct request_queue *q as the first parameter), but only 4 are provided
-here.
-
-> +		if (ret)
-> +			goto out;
-> +	}
-[ ... ]
-> +static void asus_aura_zone_work(struct work_struct *work)
-> +{
-> +	struct asus_aura_zone *zone =3D
-> +		container_of(work, struct asus_aura_zone, work);
-> +	struct scsi_device *sdev =3D zone->sdev;
-> +	u8 apply =3D ENE_APPLY;
-> +	u8 save =3D ENE_SAVE;
-> +	u8 mode =3D ENE_MODE_STATIC;
-> +	int i, ret;
-> +
-> +	if (!scsi_device_online(sdev))
-> +		return;
-> +
-> +	/* Mode first: without it the device ignores the whole sequence. */
-> +	ret =3D ene_write(sdev, ENE_REG_MODE, &mode, 1);
-> +	if (ret)
-> +		goto err;
-> +
-> +	for (i =3D 0; i < ARION_NUM_LEDS; i++) {
-> +		struct asus_aura_led *led =3D &zone->leds[i];
-> +
-> +		if (!test_and_clear_bit(i, &zone->dirty))
-> +			continue;
-> +
-> +		ret =3D ene_write(sdev, ENE_REG_COLORS + i * ENE_RGB_LEN,
-> +				led->rgb, ENE_RGB_LEN);
-> +		if (ret)
-> +			goto err;
-> +
-> +		/*
-> +		 * Cover the DIRECT colour set too; some firmware revisions
-> +		 * pull from 0x8100 instead of 0x8160.
-> +		 */
-> +		ret =3D ene_write(sdev, ENE_REG_COLORS_DIRECT + i * ENE_RGB_LEN,
-> +				led->rgb, ENE_RGB_LEN);
-> +		if (ret)
-> +			goto err;
-> +	}
-> +
-> +	ret =3D ene_write(sdev, ENE_REG_APPLY, &apply, 1);
-> +	if (ret)
-> +		goto err;
-> +
-> +	/*
-> +	 * The change only takes effect after SAVE (0xaa). NOTE: saving on
-> +	 * every brightness change writes flash each time; revisit for wear
-> +	 * once confirmed.
-> +	 */
-> +	ret =3D ene_write(sdev, ENE_REG_APPLY, &save, 1);
-
-[Severity: High]
-Does asus_aura_zone_work() in drivers/leds/leds-asus-aura-scsi.c
-unconditionally write to the device flash even when no LEDs are dirty?
-
-If schedule_work() is called while asus_aura_zone_work() is already
-executing, the work item gets re-queued. If the first execution already
-processed the newly set LED bit, the second execution will observe a fully
-cleared zone->dirty bitmap, but still send the MODE, APPLY, and SAVE
-commands to the hardware.
-
-Since SAVE writes to the device flash, these spurious empty runs could cause
-unnecessary device flash wear.
-
-> +	if (ret)
-> +		goto err;
-> +
-> +	return;
-> +err:
-> +	dev_err(&sdev->sdev_gendev,
-> +		"asus_aura: colour update failed: %d\n", ret);
-> +}
-> +
-> +/* Non-blocking LED callback (LED core fast path). Cache colour, defer S=
-CSI. */
-> +static void asus_aura_set(struct led_classdev *cdev,
-> +			  enum led_brightness brightness)
-> +{
-> +	struct led_classdev_mc *mc =3D lcdev_to_mccdev(cdev);
-> +	struct asus_aura_led *led =3D
-> +		container_of(mc, struct asus_aura_led, mc_cdev);
-> +
-> +	led_mc_calc_color_components(mc, brightness);
-> +	/* ENE colour register byte order is R, B, G. */
-> +	led->rgb[0] =3D led->subled[0].brightness;
-> +	led->rgb[1] =3D led->subled[2].brightness;
-> +	led->rgb[2] =3D led->subled[1].brightness;
-> +
-> +	set_bit(led->index, &led->zone->dirty);
-> +	schedule_work(&led->zone->work);
-
-[Severity: Medium]
-Can this cause data races and lost color updates?
-
-In asus_aura_set() in drivers/leds/leds-asus-aura-scsi.c, led->rgb is updat=
-ed
-before marking the LED as dirty via set_bit(). Because set_bit() lacks a fu=
-ll
-memory barrier, the CPU or compiler can reorder the led->rgb writes to occur
-after the dirty bit is set.
-
-A concurrently executing asus_aura_zone_work() on another CPU could observe
-the dirty bit via test_and_clear_bit(), read stale led->rgb values, and
-clear the bit, causing the new color to be permanently lost.
-
-> +}
-> +
-> +static int asus_aura_register_led(struct asus_aura_zone *zone, int index)
-> +{
-> +	struct asus_aura_led *led =3D &zone->leds[index];
-> +	struct led_classdev *cdev =3D &led->mc_cdev.led_cdev;
-> +	int ret;
-> +
-> +	led->zone =3D zone;
-> +	led->index =3D index;
-> +
-> +	led->subled[0].color_index =3D LED_COLOR_ID_RED;
-> +	led->subled[1].color_index =3D LED_COLOR_ID_GREEN;
-> +	led->subled[2].color_index =3D LED_COLOR_ID_BLUE;
-> +	led->mc_cdev.num_colors =3D 3;
-> +	led->mc_cdev.subled_info =3D led->subled;
-> +
-> +	cdev->name =3D kasprintf(GFP_KERNEL, "asus-arion:led%d", index);
-
-[Severity: Medium]
-Will this hardcoded name in asus_aura_register_led() in
-drivers/leds/leds-asus-aura-scsi.c cause a sysfs collision if multiple
-enclosures are connected?
-
-If a user connects two ASUS ROG external NVMe enclosures, the second enclos=
-ure
-will attempt to register identical sysfs names (e.g.,
-/sys/class/leds/asus-arion:led0), resulting in an -EEXIST error and
-preventing the use of multiple devices simultaneously.
-
-> +	if (!cdev->name)
-> +		return -ENOMEM;
-[ ... ]
-> +static int asus_aura_attach(struct scsi_device *sdev)
-> +{
-> +	struct asus_aura_zone *zone;
-> +	int i, ret;
-> +
-> +	if (strncmp(sdev->vendor, ARION_INQ_VENDOR, strlen(ARION_INQ_VENDOR)) ||
-> +	    strncmp(sdev->model, ARION_INQ_MODEL, strlen(ARION_INQ_MODEL)))
-> +		return SCSI_DH_DEV_UNSUPP;
-> +
-> +	zone =3D kzalloc_obj(*zone, GFP_KERNEL);
-
-[Severity: Low]
-Does this prevent the driver from compiling?
-
-In asus_aura_attach() in drivers/leds/leds-asus-aura-scsi.c, the macro
-kzalloc_obj does not exist in the Linux kernel headers, leading to an
-implicit declaration or undefined reference error.
-
-> +	if (!zone)
-> +		return SCSI_DH_NOMEM;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/202609032000.RFCv2-=
-1.lhw@gmail.com?part=3D1
