@@ -1,33 +1,60 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41B6F44C4FF;
-	Wed,  2 Sep 2026 23:48:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95126171B1;
+	Thu,  3 Sep 2026 01:28:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788392893; cv=none; b=NyJ3zEmxspboRF9nOMLvV7P3rJbTj+LDrmgbsUbwnjuUDTVpiR0Uf1oPAbgl/AVY4ubb01U3YS9/G6gST/9T1grKKItkFtuUUGgFvRkLiKPJrjWx1Nlwlau+3Rk6Ya1P3+vJJQ3p1CWP70XkPHivwW5I8bKe/Co4XscQoGD+w1k=
+	t=1788398888; cv=none; b=ViiAH3p7zugngozPiPXgpCtfdhgvmbi3k+bjzex+za4fqTtCYPzGae31qwDrEOFhFsjnOTx8x4R+O3SqHQxxY7EBsBGnw2lZUObMIgync2sGQIR+6PzKZrn6IVFTb/P50Vjvkoi1rYBaWsMoJjx/bIumvzXdpDgNuT0HcF1qnWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788392893; c=relaxed/simple;
-	bh=Eo7ra9z2bA0aaBishdVE7k1dujTMoQjHCSi05hRbaG0=;
+	s=arc-20240116; t=1788398888; c=relaxed/simple;
+	bh=mXl4nV02DIkoU9EW05M/ZICcMk38AfMVdgtQzrtmicY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cJFeSLkbUy2N2+zmkKpzyrWS+N21iC2+ctZsubOnQK8sfscousXUdsdwfIlu0tuOdU/Fwa1BbMEzIV9dh6WBfdYJrk4t8qHzYwj/uZd85txaM4XG0EpsrAn4f/49h8DfWOs5c9iDC7OKd+4TE1COd3flJ+tD/G8z8iysWa03WA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g8zXy9+/; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=OvesfdMzIrggFy8sGIMXe1WUcxEd55NcJEx8e8uQ8f0E87lbYUA3cY1+3hHMk5B76eVn4YDqduUc346x/q3EC3vg9KGDN16emJtv1aqPwo6aLw5Pxbx05vrm0Tr1LNYRP87gvZhXRnchnqAadzcTTKlhRBT3gvwbgv5PfCCYlx0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=XaB1eERK; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g8zXy9+/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6964A1F000E9;
-	Wed,  2 Sep 2026 23:48:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788392886;
-	bh=i/GwMT4U3xnVi5MO4i6/tHZeK2B907WFmo17+jtp7Dk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=g8zXy9+/OBdihwlKGzIj2liMZObR7ovzsPYsQd9EJR95DmUaR3g3TmWISSViGEonR
-	 nPids4BANuHG43MrLlfzdcjyHzn1sVC9PeImw03/2AYDPaLuMccoN0sJVXeDE3RAhQ
-	 EOVZ93HohilCISs9J4IEQ8CvC54h+/W60eGeAx2YRDuO2KrCTAy7u7z55VmxylvUjT
-	 aDJ3WJWnIGlwMb8lQvq+OwZ3SvUn758eK3N0i5OtpGUTcKJPuQ3LoDZk8sOyjn+jhp
-	 AikEcjw1lGVjrxASAGV+49aXE5N0sGdwZdzCpLsVDQDkN4iRDb+njK+eX3Ua/HMyCD
-	 8gM+F6Fxoga+Q==
-Message-ID: <d2d31879-b01f-4af3-836c-d0372f90c26d@kernel.org>
-Date: Thu, 3 Sep 2026 08:48:03 +0900
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XaB1eERK"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 682NVg7w1472100;
+	Thu, 3 Sep 2026 01:28:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=MOYDww
+	w5UbDPQDuCOnc4C6bpM7ArImYjmh7y2/UGN08=; b=XaB1eERKnLh7ISIZ60Q3VI
+	fd7NwdaGH4JrS0Oo+ScKXK3p7nj+BrRO6offp1AmFR8n6fMoK7OoD246eAOLSHPg
+	E4p7b3A1HAOnBJZ04fb0jghygOltEj4b5601SssELbfmlzK48Jv2Kpahc2jofwmx
+	cBSxaYCsZ5n9rqkx8IiHwFNXZ1daDroS5e5zkIELn1qwPVDcfLA/EifEmsvEjz0K
+	S/W2CvgGp5l0TFg8xcLOFWf2vd2EiQvEM+fgD4FwmT2IQOI8kQjJ8vG5aD/HMdrw
+	m3qc4nelfaEmwu2OW60ia2xkaL1trbVVUV+7cOS47TPPiFrZm7Nmx9fJR+1CBlqw
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gbq2thxx3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 03 Sep 2026 01:27:59 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 6831QHW3012383;
+	Thu, 3 Sep 2026 01:27:59 GMT
+Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4gcb8hncfx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 03 Sep 2026 01:27:59 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
+	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6831RwUb7209622
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 3 Sep 2026 01:27:58 GMT
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 06D385805E;
+	Thu,  3 Sep 2026 01:27:58 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 6BB6858055;
+	Thu,  3 Sep 2026 01:27:57 +0000 (GMT)
+Received: from [9.61.27.13] (unknown [9.61.27.13])
+	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Thu,  3 Sep 2026 01:27:57 +0000 (GMT)
+Message-ID: <9873559a-59df-4f4c-b653-6930636096a6@linux.ibm.com>
+Date: Wed, 2 Sep 2026 18:27:56 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,83 +62,112 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 36/37] ata: libata: use 16-bits defined sense codes
-To: Niklas Cassel <cassel@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
- linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20260831020451.585944-1-dlemoal@kernel.org>
- <20260831020451.585944-37-dlemoal@kernel.org> <apgIfRr9MjNov6FV@ryzen>
+Subject: Re: scsi: ibmvfc: Add Kconfig dependency on NVME_FC to prevent link
+ failure
+To: Venkat Rao Bagalkote <venkat88@linux.ibm.com>,
+        pavrampu <pavrampu@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        brking@linux.ibm.com, linux-kernel@vger.kernel.org,
+        davemarq@linux.ibm.com
+References: <327877a29337aa526cc50ac88fbddb86@linux.ibm.com>
+ <afd6fdc7-0fae-4fcf-b30a-a69294d26576@linux.ibm.com>
 Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <apgIfRr9MjNov6FV@ryzen>
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+In-Reply-To: <afd6fdc7-0fae-4fcf-b30a-a69294d26576@linux.ibm.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=bc1bluPB c=1 sm=1 tr=0 ts=6a98cd1f cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8
+ a=KZpsQks5LnckocmEDf0A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAzMDAwNyBTYWx0ZWRfX4W1QbXC2jI+E
+ QGXCBnyRyrSdRn7OLNmE1v/PkbReLkQvlNRoP+jdA+adMSHtZMXTUznPIltvPLtQZzMsKkGzwmK
+ +vC4Q3K5gIgF319T29lB10TFkTvorCk=
+X-Proofpoint-ORIG-GUID: rRVE2T7NeSMiPmS2OLRgAJ9Xs7Hfm7_w
+X-Proofpoint-GUID: rRVE2T7NeSMiPmS2OLRgAJ9Xs7Hfm7_w
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAzMDAwNyBTYWx0ZWRfX/P/b5dkJmOol
+ YRmf4Fw0KOn4+snJxI9c5cO3JFTPyjel+HQKuHJcBQuVCR0XFSETn2PmMlqy2rZCjx6CvWH5iKV
+ r9UbE+BChG8l4CW9k/rOw9ygap4b2CUj0byN/eJx5/qF1T87WmMbzvvk5ECVqZZiNwm+XT+Y7B2
+ Z46FPQVB6z9ZBWUz65muB7WbiWJ47VFTQhI/gU90moKTIASTQuv4pRDQ6azf/6QsP/BijyhvkMc
+ s7LftFllxREayr0LFn4/dkro0OZ+mqlktib/HxWxgeqKkQjK4CEHfDaq58HwJJdkACfrnHmUnAe
+ MKg5/NUhqW9HB+Nfx9LCgPWdZcYPIX5f0xaYpK52g+UP5VIGzm/VTW59ae0FnR4V0KydZV097SI
+ 7l+tt8pBC62o2/cZqV+l7eMlBoht0aOzojns45kBJRoYjlHa5p+7deZI0TTrr8O+LJjnmMYvjWm
+ dT8PoGuuukm6ROBNhZA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-02_06,2026-09-02_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 suspectscore=0 adultscore=0 malwarescore=0 spamscore=0
+ lowpriorityscore=0 phishscore=0 clxscore=1015 priorityscore=1501
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2609030007
 
-On 9/2/26 20:29, Niklas Cassel wrote:
->> +		if (ata_scsi_sense_is_valid(tf.lbah, sense_code)) {
->>  			/* Set sense without also setting scsicmd->result */
->> -			scsi_build_sense_buffer(dev->flags & ATA_DFLAG_D_SENSE,
->> -						cmd->sense_buffer, tf.lbah,
->> -						tf.lbam, tf.lbal);
->> +			scsi_set_sense_buffer(dev->flags & ATA_DFLAG_D_SENSE,
->> +					      cmd->sense_buffer, tf.lbah,
->> +					      sense_code);
+On 9/2/26 1:40 AM, Venkat Rao Bagalkote wrote:
 > 
-> However, here you call scsi_set_sense_buffer() which is just an inline
-> function that calls:
-> scsi_build_sense_buffer(desc, buf, key, scsi_sense_code_asc(code),
-> 			scsi_sense_code_ascq(code));
+> On 02/09/26 1:55 pm, pavrampu wrote:
+>> Hi,
+>>
+>> I am seeing below build failure with latest linux-next repo.
+>>
+>> Description:
+>>
+>> Building the kernel with CONFIG_SCSI_IBMVFC=y and CONFIG_NVME_FC=m results in
+>> a link failure when building vmlinux:
+>>
+>> Build failure logs:
+>>
+>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function
+>> `ibmvfc_nvme_register_remoteport':
+>> ibmvfc-nvme.c:488: undefined reference to `nvme_fc_register_remoteport'
+>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function
+>> `ibmvfc_nvme_unregister_remoteport':
+>> ibmvfc-nvme.c:515: undefined reference to `nvme_fc_unregister_remoteport'
+>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function `ibmvfc_nvme_register':
+>> ibmvfc-nvme.c:536: undefined reference to `nvme_fc_register_localport'
+>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function `ibmvfc_nvme_unregister':
+>> ibmvfc-nvme.c:565: undefined reference to `nvme_fc_unregister_localport'
+>> ld: drivers/scsi/ibmvscsi/ibmvfc-nvme.o: in function `ibmvfc_nvme_unregister':
+>> ibmvfc-nvme.c:565: undefined reference to `nvme_fc_unregister_localport'
+>> ld: drivers/scsi/ibmvscsi/ibmvfc-core.c:6798: undefined reference to
+>> `nvme_fc_rescan_remoteport'
 > 
-> which will call scsi_sense_code_asc() and scsi_sense_code_ascq() to
-> split sense_code to asc and ascq again.
-
-Yes. I considered keeping the original call to scsi_build_sense_buffer() but
-went with using scsi_set_sense_buffer() to be consistent with the fact that we
-have the 16-bits sense_code and to try to stick with using it as much as we can.
-I do understand that this is a bit silly to combined and split again the
-asc/ascq, but this is all done only if there is a sense, meaning there was an
-error and so things went through EH already and thus have been slow anyway. So I
-do not see this as a perf problem at all and prefer to priviledge
-readability/code simplicity.
-
-> It seems that you series has decided to not kill scsi_build_sense_buffer().
 > 
-> As long as scsi_build_sense_buffer() exists, and since we already have asc
-> and ascq stored in separate variables, I think we should let this code
-> continue calling scsi_build_sense_buffer().
+> Below simple check in Kconfig fixes the build failure.
 > 
-> Especially since, even after this series, we still will have a call to
-> scsi_build_sense_buffer() in libata-sata.c:ata_eh_get_ncq_success_sense().
+> If this is acceptable, then I will send a formal patch.
+
+Yep, need to force ibmvfc to be a module when NVME_FC isn't builtin, or NVME_FC
+must be disabled.
+
+-Tyrel
 > 
-> I think either this function and ata_eh_get_ncq_success_sense() should both
-> call scsi_build_sense_buffer(), or both should call scsi_set_sense_buffer().
+> # git diff
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 4a2af0f702e1..6612d5d445e2 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -753,6 +753,7 @@ config SCSI_IBMVFC
+>         tristate "IBM Virtual FC support"
+>         depends on PPC_PSERIES && SCSI
+>         depends on SCSI_FC_ATTRS
+> +      depends on NVME_FC || NVME_FC=n
+>         help
+>           This is the IBM POWER Virtual FC Client
 > 
-> Is there a reason why you don't convert all scsi_build_sense_buffer() users
-> to scsi_set_sense_buffer() and drop scsi_build_sense_buffer() ?
+> 
+> Regards,
+> 
+> Venkat.
+> 
+>>
+>> If you happen to fix this, please add below tag.
+>>
+>> Reported-by: Pavithra <pavrampu@linux.ibm.com>
+>>
+>> Thanks,
+>> Pavithra
+> 
 
-The target code (and ATA code) fill the sense buffer from asc and ascq obtained
-directly from command results, not from a sense code. So I kept that function to
-avoid doing the combine/split asc/ascq everywhere. This is not great: blame the
-scsi specs that define asc/ascq as separate fields while the sense codes are
-essentially defined as a 16-bits value combining both :)
-
-> You could even keep the same function name (scsi_build_sense_buffer()) and
-> just have it take an u16 sense_code instead of u8 asc + u8 ascq?
-
-Yeah, I wanted to, but that would mean having a single gigantic patch that
-change the function use is all scsi and ata code in one go. I did not want to do
-that to facilitate review. But if that's the preferred path, I will do that.
-
-> (Doing a git grep scsi_build_sense_buffer shows a few users even after this
-> series.)
-
-Yes, I can completely drop it if everyone is OK with a few unnecessary
-combine/split asc/ascq in some places.
-
--- 
-Damien Le Moal
-Western Digital Research
