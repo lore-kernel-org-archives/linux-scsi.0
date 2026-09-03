@@ -1,166 +1,272 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41E57381B0A;
-	Thu,  3 Sep 2026 18:43:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8783938B7D6
+	for <linux-scsi@vger.kernel.org>; Thu,  3 Sep 2026 20:32:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788461020; cv=none; b=N7b70Cjh9SOlnmtdVaGNLl2+eCad6IWYJfGdcaKisdfuoT809djmvZ7Mi7bwuwoUqHJn8pVxNanc8ku59Zx4Wkd9OSamXl5VDqWuWud44TXjFU5jsfDJBxzlGm6duYD6RPll+5FTrILGC9mrX7KDxnnv33vP4yFgyUnFtIQJ7JA=
+	t=1788467578; cv=none; b=APfmzhpdbcMfVmK7hkH4Ll7/uG0363qvGFR4OU3tU53nDYm1iIOUCaXvVmDLDqtN1wmzO2hPjO/X1P/M3xWIUEgy9bN5uMSMqeMXORrS70Pk6PwNhuDuR8qcvT8FCfVCmoFYh0kX+8bOk1gipmjB59sCtbk3k05UpeN2yO4LQOU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788461020; c=relaxed/simple;
-	bh=VY9pyL00O9MfgC7Uz2zjys8pVKtfm83bsFaJSlzNPXY=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=RsSRrsN83e7vqUEmHdPg2W7ScBtNysnvCyMAtzCxNnN4jix5miqjbjO5CaklEfG2kMQpLjyX8eUJjBVjxEhaIkXsZICR7Cc1w1e2dzXI+JIm/ueB3521XyPCBtclRJQt4/vUvlAeRmv3Mr35XM8eUDLQpH8BQCxufzPbvdT1mDI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=dtkkQXFL; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1788467578; c=relaxed/simple;
+	bh=WHNrUCfnRz7m/hj7cjO+2IgflCsHFhVI7ERkCsj23/o=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=CkRRLk4JOWEGcRAp0qGQx97LD9B1o/2SUN1Zon65MPDz8JdGwkgFr6Sf5DrQz4Bzotc8OjAq7eAHvCW5Ygg0Jbq2/DZH1otIhnOada1XsAnYqEWfmPHDJKPDw1Jufjt7g5aFEucw8a2EqdTQHeY4V0G6E24JnNEQszJ5lpJT9fg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BaSUZp39; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=KkRyeMnS; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="dtkkQXFL"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 683G2Q7r3425605;
-	Thu, 3 Sep 2026 18:43:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=lNoCnKIKmJnAV/tEP3zbMoKZ1ehvE8
-	Ho++ZZ+eK9vhs=; b=dtkkQXFLVj4zN5WP4jAeW4d3EpGb8vdw6tg/xz6evmG564
-	b6KTgPCIu/bFjcKdhCPCTGhfTj91UJS13R8TsMlt+rN66U1OWyK1YWWWUAFMBKWL
-	Pq0O/I0ZPpE3f2dd9UCiyypYNwGb0ziXB+WOSKP1kZ9dohBYJ1bTIwJPStTIJkEu
-	CnuE4ReIlsQe5dz/VZBADuJCm7daYQouUi1O6xG/EZXIZOx+IHfeF9Kn1WuXPC33
-	Uhw2DkMAxjs+KGpZnC47378XW8mb8u+Xq+Aauvjm1OGa6+1lL6wRnuNg2jTIzq7O
-	IHGud3JfktcaG8y7QVADm3m7CqIK6ajajzVtHKyQ==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gbq556jf0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Sep 2026 18:43:38 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 683IfXDx000412;
-	Thu, 3 Sep 2026 18:43:37 GMT
-Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4gecjasd4a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Sep 2026 18:43:37 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 683IhaVd16908906
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 3 Sep 2026 18:43:36 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7A1595805D;
-	Thu,  3 Sep 2026 18:43:36 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 63B3658055;
-	Thu,  3 Sep 2026 18:43:36 +0000 (GMT)
-Received: from d (unknown [9.16.41.19])
-	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTPS;
-	Thu,  3 Sep 2026 18:43:36 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v7 6/8] scsi: ibmvfc: extend channel registration and
- deregistration for async subq
-In-Reply-To: <20260831223431.2F4341F000E9@smtp.kernel.org>
-References: <20260831-ibmvfc-fpin-support-v7-0-77d0b9809080@linux.ibm.com>
-	<20260831-ibmvfc-fpin-support-v7-6-77d0b9809080@linux.ibm.com>
-	<20260831223431.2F4341F000E9@smtp.kernel.org>
-Date: Thu, 03 Sep 2026 13:43:36 -0500
-Message-ID: <8733vq5g6f.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BaSUZp39";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="KkRyeMnS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1788467568;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=H7heLBpWFoof/Lo8sLrlgN9gw1h8nebNbjFCGP84TXI=;
+	b=BaSUZp39LzkjgcItRgqozQumd4/DAgEEx/J1+bJhnRwaJ1EOSPyvsugMmox9S5GrSJZCle
+	vsABrfFFAmNhE00gfrMae63AvyfCqGAEw9EvniUsIop80ZBLk5OaJbKdKgsYR+Sw7WIgc2
+	bLyX0B1lGF4PXf3yBbJBPJl4OUDf15Q=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-451-cfuTzIWCMimZ4d3Potr4qg-1; Thu, 03 Sep 2026 16:32:47 -0400
+X-MC-Unique: cfuTzIWCMimZ4d3Potr4qg-1
+X-Mimecast-MFC-AGG-ID: cfuTzIWCMimZ4d3Potr4qg_1788467566
+Received: by mail-qv1-f71.google.com with SMTP id 6a1803df08f44-90e96bdbbdaso4867156d6.2
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Sep 2026 13:32:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1788467566; x=1789072366; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=H7heLBpWFoof/Lo8sLrlgN9gw1h8nebNbjFCGP84TXI=;
+        b=KkRyeMnS2uRGXoLfecwCMOKVqTev3UFLXiipjvFOCY1KUKgSvgx8XYtQBOEHo+xvp1
+         kjiPijtvWMwPhCS3RqyH+KYlY9U3YG3CY+cVEMvkdpAn/GV7axkts39XzgkgTpq64iEB
+         70hlLhVG5apfOCxz9jxM0OoDh3lZmuDuV5dX09Pff4MvNqKq8ePwR0xlubK55JNPI4Ki
+         16wy4diyjtBS2eUe08+K4UeslvnendXAOHcCCK75OrPMavSARAY4Fq/7BiwaI1WZ+2FD
+         K20Pi7qjoxDv63xVFVt50n4MLPKr7/xLdrglNZHt0+FseTG5b0h57gP4cBJcrj8OKShL
+         r+/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788467566; x=1789072366;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=H7heLBpWFoof/Lo8sLrlgN9gw1h8nebNbjFCGP84TXI=;
+        b=PMAfN2kfZkvGYKlssQhYqPPbm59lOGlYsQ+o5acdYjv2DhnM1a9Uccv9VJ3UT+k8AO
+         HUSX9jHQLiV47EdFjvo9CjoIukKc4S3JbGYwNSEoQN6JRtsq1SLgWVPnJErkknG2JhmZ
+         LQckAlng6LySh3qp8PHqXwA6rykLf+9so0lemaeNh5BcFa1UNUCBKvq1KSzONC0DxBqi
+         Sd3n7KLN1n4QDQvk20/bbAtwa+iY6fyupp/Z9SrJb8QiKNrlCKOZn0EZnx10rhjHc277
+         tScqnLfPZWK3jKA3QCxouKKRmR+aZJc9Cp7C9rXNbMis58XSg43tV3tsifL6MwEDA3k6
+         k6BQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxbyPsPKT3bqaBg0Lfn3fTn/B8yyIw3hdfFY3MMqPb2JIQrukkS5MHpspb5V6VL0lxIF0q54bYEWRZZ@vger.kernel.org
+X-Gm-Message-State: AFuF++kEARi7sGAMdEQVSUHf0eP4t4hEeecZNSlnLoTWSL38cHb6BqSO
+	MGA68+i2mAec/RAJ8NOkEcZOBPs4PhizmjwA3ibsdPk89kqwtMveWWPZLV86WGabQkB/uyWqvaN
+	/eUbCaeyYMGAR0ZUL8CWw9plL28GoxcaRYj1Lei1FVHjgYY4fnvv2OZYXEn7L6Fo=
+X-Gm-Gg: AYBFou1wg4qsb/WwVzrqzU9arbsRiMQykrBWiyEfEk4QwmzttKfJvacKMerx6YblIuA
+	kLEOB7Hcypxcc9b4KN6HupjH5WfdS3KEh064WvWQ5NknlSzsqvQupqmDDP6lPBMSKi/Q/kzdjLl
+	i2FFpexpgy8O1gPxAen5CISyJ5PWo+1T48jrxxad2v4mtKwXVn0LNklV572AW38PaWk5Dn1k/IA
+	LPDlvlX61iuctpyFYa2iO9/u7xUKYSIrSojKW5B8S3HwZzpKaDk392Ojgj9ZDGuRUNWmQwzgFuK
+	sAt1EqNSYBdqfnc4b6kHdZV55rhzKAWbSy50JhD58M0nkN/vM7lkcE2DuRVybsROJeYmVPSR98m
+	lptHyBIoQe7Ys21Db4FUWK2alhv/yNeclT9a4
+X-Received: by 2002:a05:6214:3301:b0:90e:7f1a:6e0a with SMTP id 6a1803df08f44-9103f0ccadbmr18266176d6.28.1788467566333;
+        Thu, 03 Sep 2026 13:32:46 -0700 (PDT)
+X-Received: by 2002:a05:6214:3301:b0:90e:7f1a:6e0a with SMTP id 6a1803df08f44-9103f0ccadbmr18265606d6.28.1788467565766;
+        Thu, 03 Sep 2026 13:32:45 -0700 (PDT)
+Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:dbb1:97f1:a6e6:766b])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-910406bf8c3sm3077256d6.48.2026.09.03.13.32.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Sep 2026 13:32:44 -0700 (PDT)
+Message-ID: <7126726ef41117a1307b931fbccf40b826730e50.camel@redhat.com>
+Subject: Re: [PATCH] scsi: fnic: Fix missed link-up when a critical IRQ
+ targets an offline CPU
+From: Laurence Oberman <loberman@redhat.com>
+To: Arun Easi <aeasi@cisco.com>, sebaddel@cisco.com
+Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
+ mkai2@cisco.com, 	satishkh@cisco.com, kartilak@cisco.com,
+ jejb@linux.ibm.com, 	martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, jmeneghi@redhat.com, 	revers@redhat.com,
+ adakopou@redhat.com, lduncan@suse.com
+Date: Thu, 03 Sep 2026 16:32:42 -0400
+In-Reply-To: <20260903175547.57971-1-aeasi@cisco.com>
+References: <20260903175547.57971-1-aeasi@cisco.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAzMDE2MiBTYWx0ZWRfX2qP3PaEyX4Kd
- tJ5492BHBpDhuwlYft5cEcaMVGDh5OLTIAzeZR+5HaQbhYqDTCmcIWr2Z1FOg/07RayUnrpQ0PT
- ZKSbptU5xBa9x9s/SCuVbwwKB+eaMIPEvtWIPifVup6zoftDSV78DDefGEAWqIiXb41GK+HQhgy
- YppNwK/wLChVboN32xzH84FYTF20N+FN1T+urHMQ0K3P+0FLK9qx3vJQvBwX8eRSLZOuBW7VS+K
- q+KFRe0h+o0Fb2kE8kUmn64SmFF6HXm4bNtmsJ6BC9HpwzIcK7Y3GGHJr8uzi8jrn8dad23lYPt
- tVggMZ//LGc8jNEDxfaY3VJpEDjUHdhB5dARsVRg2qeEHwnSaB5uEr0cWTm60PgI15hH9wjVNbS
- h5YHBC4yx6sxXuQ3PgIrij5L2VdRea5OQgyBDgWBs3UGc7PXpcm8TQ8Xm1eGefXBWxpP9yEODMp
- /EVssti3UgEx+9U975Q==
-X-Proofpoint-ORIG-GUID: nNdcDsrwh3BYkpSl0Me4-2RE9uEkTfSD
-X-Authority-Analysis: v=2.4 cv=CNgamxrD c=1 sm=1 tr=0 ts=6a99bfda cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=U7nrCbtTmkRpXpFmAIza:22 a=VwQbUJbxAAAA:8 a=cFIKowR6tQ2XqRsfE8cA:9
-X-Proofpoint-GUID: nNdcDsrwh3BYkpSl0Me4-2RE9uEkTfSD
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAzMDE2MiBTYWx0ZWRfX/pkxUQ/dnUbf
- y72es/9NxzRyJiv8z9jS2AofViI6CBpZdDPrbG27/faNyt0zRGWxirYpwf9Bx9olLpzLoMqZZ1r
- nVI3TGMBAz3jPDEe6kjKQcMPt2Gmodk=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-03_05,2026-09-03_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 bulkscore=0 suspectscore=0 phishscore=0 lowpriorityscore=0
- priorityscore=1501 clxscore=1015 impostorscore=0 adultscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609030162
 
-sashiko-bot@kernel.org writes:
+On Thu, 2026-09-03 at 10:55 -0700, Arun Easi wrote:
+> When CPU Hyper-Threading is disabled, sibling CPUs remain present but
+> are reported offline. Managed MSI-X IRQs can still receive affinity
+> masks that include those offline CPUs. If a driver-critical vector is
+> managed, it can be parked on an offline CPU and the driver may miss
+> critical events such as link-up.
+>=20
+> Keep driver-critical vectors unmanaged so they can be migrated by the
+> IRQ core when their target CPU is offlined.
+>=20
+> Since HWQ-0 is unmanaged now, in some queue combinations there can be
+> no
+> mappings to it in mq_map. So without the blk-mq fix mentioned below,
+> system may crash during cpu offline/online tests.
+>=20
+> Fixes: 8a8449ca5e33 ("scsi: fnic: Modify ISRs to support multiqueue
+> (MQ)")
+> Cc: stable@vger.kernel.org
+> Depends-on: commit 10845a105bbc ("blk-mq: skip CPU offline notify on
+> unmapped hctx")
+> Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
+> Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+> Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
+> Reviewed-by: Karan Tilak Kumar <kartilak@cisco.com>
+> Signed-off-by: Arun Easi <aeasi@cisco.com>
+> ---
+> =C2=A0drivers/scsi/fnic/fnic.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 2 +-
+> =C2=A0drivers/scsi/fnic/fnic_isr.c=C2=A0 | 13 ++++++++---
+> =C2=A0drivers/scsi/fnic/fnic_main.c | 41
+> ++++++++++++++++++++++++++++++++++-
+> =C2=A03 files changed, 51 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+> index c576a7f5083e..3ba1592940ca 100644
+> --- a/drivers/scsi/fnic/fnic.h
+> +++ b/drivers/scsi/fnic/fnic.h
+> @@ -31,7 +31,7 @@
+> =C2=A0
+> =C2=A0#define DRV_NAME		"fnic"
+> =C2=A0#define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+> -#define DRV_VERSION		"1.9.0.0"
+> +#define DRV_VERSION		"1.9.0.1"
+> =C2=A0#define PFX			DRV_NAME ": "
+> =C2=A0#define DFX=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 DRV_NAME=
+ "%d: "
+> =C2=A0
+> diff --git a/drivers/scsi/fnic/fnic_isr.c
+> b/drivers/scsi/fnic/fnic_isr.c
+> index 02856745580f..43149d8312ec 100644
+> --- a/drivers/scsi/fnic/fnic_isr.c
+> +++ b/drivers/scsi/fnic/fnic_isr.c
+> @@ -245,7 +245,14 @@ int fnic_set_intr_mode_msix(struct fnic *fnic)
+> =C2=A0	unsigned int m =3D ARRAY_SIZE(fnic->wq);
+> =C2=A0	unsigned int o =3D ARRAY_SIZE(fnic->hw_copy_wq);
+> =C2=A0	unsigned int min_irqs =3D n + m + 1 + 1; /*rq, raw wq, wq,
+> err*/
+> -
+> +	/*
+> +	 * Make driver critical vectors unmanaged, or else it can
+> get tied
+> +	 * to an offline CPU. This can happen when hyper-threading
+> is off.
+> +	 */
+> +	struct irq_affinity affd =3D {
+> +		.pre_vectors =3D n + m + 1, /* rq, raw wq, 1 ioq */
+> +		.post_vectors =3D 1, /* err */
+> +	};
+> =C2=A0	/*
+> =C2=A0	 * We need n RQs, m WQs, o Copy WQs, n+m+o CQs, and n+m+o+1
+> INTRs
+> =C2=A0	 * (last INTR is used for WQ/RQ errors and notification
+> area)
+> @@ -263,8 +270,8 @@ int fnic_set_intr_mode_msix(struct fnic *fnic)
+> =C2=A0		int vec_count =3D 0;
+> =C2=A0		int vecs =3D fnic->rq_count + fnic->raw_wq_count +
+> fnic->wq_copy_count + 1;
+> =C2=A0
+> -		vec_count =3D pci_alloc_irq_vectors(fnic->pdev,
+> min_irqs, vecs,
+> -					PCI_IRQ_MSIX |
+> PCI_IRQ_AFFINITY);
+> +		vec_count =3D pci_alloc_irq_vectors_affinity(fnic-
+> >pdev, min_irqs,
+> +			=C2=A0=C2=A0=C2=A0 vecs, PCI_IRQ_MSIX|PCI_IRQ_AFFINITY,
+> &affd);
+> =C2=A0		FNIC_ISR_DBG(KERN_INFO, fnic,
+> =C2=A0					"allocated %d MSI-X
+> vectors\n",
+> =C2=A0					vec_count);
+> diff --git a/drivers/scsi/fnic/fnic_main.c
+> b/drivers/scsi/fnic/fnic_main.c
+> index 9b3025007075..f13c381a66d7 100644
+> --- a/drivers/scsi/fnic/fnic_main.c
+> +++ b/drivers/scsi/fnic/fnic_main.c
+> @@ -744,8 +744,19 @@ static int fnic_nvme_drv_init(struct fnic *fnic)
+> =C2=A0	return ret;
+> =C2=A0}
+> =C2=A0
+> +static void fnic_mq_init_queue_map(struct fnic *fnic,
+> +		struct blk_mq_queue_map *qmap)
+> +{
+> +	unsigned int cpu;
+> +
+> +	for_each_possible_cpu(cpu)
+> +		qmap->mq_map[cpu] =3D 0;
+> +}
+> +
+> =C2=A0void fnic_mq_map_queues_cpus(struct Scsi_Host *host)
+> =C2=A0{
+> +	const struct cpumask *mask;
+> +	unsigned int queue, cpu;
+> =C2=A0	struct fnic *fnic =3D *((struct fnic **) shost_priv(host));
+> =C2=A0	struct pci_dev *l_pdev =3D fnic->pdev;
+> =C2=A0	int intr_mode =3D fnic->config.intr_mode;
+> @@ -766,7 +777,35 @@ void fnic_mq_map_queues_cpus(struct Scsi_Host
+> *host)
+> =C2=A0		return;
+> =C2=A0	}
+> =C2=A0
+> -	blk_mq_map_hw_queues(qmap, &l_pdev->dev, FNIC_PCI_OFFSET);
+> +	fnic_mq_init_queue_map(fnic, qmap);
+> +
+> +	/*
+> +	 * Setup CPU to Queue mapping for all managed MSI-X IRQs.
+> +	 * Q0 is driver critical and non-managed, hence start from
+> Q1.
+> +	 */
+> +	for (queue =3D 1; queue < qmap->nr_queues; queue++) {
+> +		int irq_num =3D pci_irq_vector(fnic->pdev,
+> +					=C2=A0=C2=A0=C2=A0=C2=A0 queue +
+> FNIC_PCI_OFFSET);
+> +
+> +		if (irq_num < 0)
+> +			continue;
+> +
+> +		mask =3D pci_irq_get_affinity(fnic->pdev,
+> +					=C2=A0=C2=A0=C2=A0 queue +
+> FNIC_PCI_OFFSET);
+> +		if (!mask) {
+> +			shost_printk(KERN_ERR, host,
+> +				"failed to get irq_affinity map for
+> queue:%d\n", irq_num);
+> +			continue;
+> +		}
+> +		FNIC_MAIN_DBG(KERN_INFO, fnic,
+> +				"got irq_affinity map for %d:\n",
+> irq_num);
+> +		for_each_cpu(cpu, mask) {
+> +			qmap->mq_map[cpu] =3D qmap->queue_offset +
+> queue;
+> +			FNIC_MAIN_DBG(KERN_INFO, fnic,
+> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 "[Q%d] cpu:%d <=3D> irq:%d\n",
+> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 queue, cpu, irq_num);
+> +		}
+> +	}
+> =C2=A0}
+> =C2=A0
+> =C2=A0static int fnic_probe(struct pci_dev *pdev, const struct
+> pci_device_id *ent)
 
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> @@ -4409,7 +4409,7 @@ static void ibmvfc_drain_async_subq(struct ibmvfc_queue *scrq)
->>   * @scrq_instance: async subq
->>   *
->>   **/
->> -static irqreturn_t __maybe_unused ibmvfc_interrupt_async_subq(int irq, void *scrq_instance)
->> +static irqreturn_t ibmvfc_interrupt_async_subq(int irq, void *scrq_instance)
->>  {
->>  	struct ibmvfc_queue *scrq = (struct ibmvfc_queue *)scrq_instance;
->>  
->
-> [Severity: High]
-> Now that the async sub-CRQ handler is enabled by this patch, can its
-> execution race with target teardown or host reset? 
->
-> In drivers/scsi/ibmvscsi/ibmvfc-core.c, the interrupt handler calls:
-> ibmvfc_interrupt_async_subq() -> ibmvfc_drain_async_subq() ->
-> ibmvfc_handle_async().
->
-> The ibmvfc_handle_async() function expects to hold vhost->host->host_lock,
-> but this call chain only holds scrq->q_lock. Consequently, it iterates over
-> and modifies vhost->scsi_scrqs.targets without the proper lock. 
->
-> Could this lockless list traversal cause a use-after-free or data corruption
-> when handling dynamic async events sent by the hypervisor?
->
-> [ ... ]
+This hit an actual customer who had the hyper CPUS showing but offline.
 
-This is fixed in the next revision of patch 5, where the host lock is
-acquired and released in ibmvfc_handle_async.
+Patch looks OK to me, I understand how it prevents the original issue.
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
 
->> @@ -6825,36 +6841,49 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
-> [ ... ]
->>  	rc = request_irq(scrq->irq, scrq->handler, 0, scrq->name, scrq);
->>  
->>  	if (rc) {
->> -		dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
->> +		if (!is_async)
->> +			dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
->> +		else
->> +			dev_err(dev, "Couldn't register async sub-crq irq\n");
->>  		irq_dispose_mapping(scrq->irq);
->>  		goto irq_failed;
->>  	}
->
-> [Severity: Medium]
-> This is a pre-existing issue, but does leaving scrq->irq populated with a
-> stale value after irq_dispose_mapping() cause a kernel warning during
-> teardown?
->
-> If request_irq() fails in ibmvfc_register_channel(), the error path calls
-> irq_dispose_mapping(scrq->irq) but does not clear the irq field to 0. Later,
-> when ibmvfc_deregister_channel() is unconditionally called for the async
-> sub-CRQ during teardown, it might call free_irq(scrq->irq, scrq) on this
-> stale mapping ID (or on 0 if it was never registered). 
->
-> Should scrq->irq be explicitly cleared to 0 in this error path to prevent
-> invalid IRQ descriptor warnings?
+Thanks
+Laurence
 
-Agreed, this is a bug. I will add a separate patch to fix this issue.
-
--Dave
