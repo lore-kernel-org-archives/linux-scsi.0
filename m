@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9303E30D3EF;
-	Thu,  3 Sep 2026 03:43:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF783955F5;
+	Thu,  3 Sep 2026 03:43:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788407011; cv=none; b=Fz29cQcz1Ucci6PorXvrIAzmAAkVNm4ftLXsvepkoTNyGbuJ13M7xiI8q6LxyGOnnLmsr1i+VWeLUqA0yuFfoG/vi6zrOgLULPEsgHS2fWwV4YHoCYftVRivrfHy//b9OiTNtUiwoAvybQpXN5TosG1ioDykJVff/t6ouMGwxr0=
+	t=1788407013; cv=none; b=nS1aahGdTzt6wdbWHOhfZEUagVedbN1pKiEcdk41K0nJPRurKSilUfNSfhBmT/F+ViZrY4aVa9ayiEF9k+l63G5uBFJvkqgX/tH4EfhMrDMaIpoa+8rtoLsQsd4goImXkQpmWwHcBJcuwlhV/+xpDU+Sz8cROoDmBKgvY9+M86I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788407011; c=relaxed/simple;
-	bh=DN7FlXUW0lkgj1usVZmlfq1rhb3RSV4TqH5A0CQl1WM=;
+	s=arc-20240116; t=1788407013; c=relaxed/simple;
+	bh=4l9+HCMFaQ212MEl7pf7pVhb8i42lH37Tm5ulqMsybE=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gg/BKSsuDwdVHbiWIjBd2m3fa8ChN7c80cI56ddai825gibm7Gyiqduhwzg7dZsXYOO+nJ3cDb1eVMP7RUt40B1QCPf0VDTQgXA8G+Cn5wiTEanSS87JYpWefTAcPmqDb4ABymFhChydgHVLA01t+jPySRLuYh3d0T0/p51rGwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DLj0WnZf; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=e/HHzNBH0f6PNl+kg6CshgUM4n0fGi+WZeU4T9Ei6UN1gffN1xJcKdwZPMBe9rp4qErHr/GzG6wDJhzCOa4Pb6fuAh+Uh9Y/cTdHn6JYlwBdGLKjk49Q2Q3mj4u/fsGFSIle3LZdW/6eBqPNB6uR17m01N6moPj9g74Ey4+rhB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gEzMZ8LB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DLj0WnZf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78D471F00AC4;
-	Thu,  3 Sep 2026 03:43:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gEzMZ8LB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 468121F000E9;
+	Thu,  3 Sep 2026 03:43:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788407004;
-	bh=qqNO9Pzl8CFFEsdq0uZZZu13a5cGGO5WAky/SX5enkQ=;
+	s=k20260515; t=1788407006;
+	bh=fqf0UlUwP6GGhjtFSuRvVx1+33EcFmwfLOiWAsYbzqg=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=DLj0WnZf8sobDvvHO67/TEAjBPQKsirkIOGkwRccQZDRchgYlPBnZVkjqkU3z6fBp
-	 6ccFWLGG8PFEIwyL/h54GzcQonpwK33WqQ9F7CPaq1CT7Px0rF9zPRKEHSLp0Ei41+
-	 KjdVRlLVZuEOOWzrZoAwbWi5y4S0WHfAokAJE87ec/rI8nCAJgGxtLGGzPel+0DJXh
-	 nkPWn2BPf+EAMKi38Sv3eLnDZoOGDKueVcbY+e0wpBvYIT3cqIejjcERWcJ3kQYoOX
-	 oU4Duj0gnhSDA3s7XG4J/aP6dhmCPWGae8ButPl8BkscJxiFt/jw2MyibaiZJfT51u
-	 /tHt6DRppaeHA==
+	b=gEzMZ8LBVJX8NMSWvSVjoBkuqVZh+ww9RkFT4bpVjv1m9qOTp6nTCoFxEHh4yp4Dp
+	 5FccqxXo4SKzWLeKGqHI94kS2gKyrEAyumylW9jvf/REtFAEWSJFXqKIbUiq5CWHa+
+	 ovsSW+qs0ax2Vg8oRoz0bLD3Ypyn3a0NGyJ0WU+v518gUn9NwZ3XQRcBRBOsQIEyjf
+	 chl/c1Bp5bZdzKTgsl9VfFLYv20u99eQePVwnImisXbSZHZpKHGXyu4Dc7J4cLYUmv
+	 lMCgXkuJkRcBWIxymMK2lQ655TzNdrIXStdwPaJ/O/RY/6CYUXzIb6fquwVE8t0HMx
+	 vS8H6yWearYHw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v2 38/40] s390: scsi: use 16-bits defined sense codes
-Date: Thu,  3 Sep 2026 12:41:59 +0900
-Message-ID: <20260903034201.112211-39-dlemoal@kernel.org>
+Subject: [PATCH v2 39/40] scsi: cleanup scsi_proto.h
+Date: Thu,  3 Sep 2026 12:42:00 +0900
+Message-ID: <20260903034201.112211-40-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260903034201.112211-1-dlemoal@kernel.org>
 References: <20260903034201.112211-1-dlemoal@kernel.org>
@@ -51,32 +51,129 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Use the 16-bits sense codes and replace all hard-coded additional sense
-codes and additional sense code qualifiers with the enum values defined
-in include/scsi/scsi_sense.h. This helps with code clarity as the sense
-codes being processed are easier to test and self-documented.
-
-No functional change intended.
+Now that all users of SCSI sense codes have been modified to use macro
+definitions and the 16-bits sense code instead of separate 8-bits ASC and
+ASCQ, remove the now unused asc and ascq fields of struct scsi_failure and
+struct scsi_sense_hdr, and the old (and incomplete) definitions of SCSI
+additional sense codes and sense code qualifiers in scsi_proto.h.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/s390/scsi/zfcp_scsi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/scsi/scsi_common.h | 13 +---------
+ include/scsi/scsi_device.h | 13 +---------
+ include/scsi/scsi_proto.h  | 51 --------------------------------------
+ 3 files changed, 2 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 3590113c2b74..0994fa328a4f 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -856,7 +856,8 @@ void zfcp_scsi_set_prot(struct zfcp_adapter *adapter)
-  */
- void zfcp_scsi_dif_sense_error(struct scsi_cmnd *scmd, int ascq)
- {
--	scsi_build_sense(scmd, 1, ILLEGAL_REQUEST, 0x10, ascq);
-+	scsi_set_sense(scmd, 1, ILLEGAL_REQUEST,
-+		       scsi_sense_code(ASC_ID_CRC_OR_ECC_ERROR, ascq));
- 	set_host_byte(scmd, DID_SOFT_ERROR);
- }
+diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
+index 6fb2c290ba33..405512554ee8 100644
+--- a/include/scsi/scsi_common.h
++++ b/include/scsi/scsi_common.h
+@@ -71,18 +71,7 @@ extern u64 scsilun_to_int(struct scsi_lun *);
+ struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
+ 	u8 response_code;	/* permit: 0x0, 0x70, 0x71, 0x72, 0x73 */
+ 	u8 sense_key;
+-	union {
+-		struct {
+-#if defined(__BIG_ENDIAN)
+-			u8 asc;
+-			u8 ascq;
+-#elif defined(__LITTLE_ENDIAN)
+-			u8 ascq;
+-			u8 asc;
+-#endif
+-		};
+-		u16 sense_code;
+-	};
++	u16 sense_code;
+ 	u8 byte4;
+ 	u8 byte5;
+ 	u8 byte6;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 11910142ac50..e6fd6bc30644 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -527,18 +527,7 @@ extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
+ struct scsi_failure {
+ 	int result;
+ 	u8 sense_key;
+-	union {
+-		struct {
+-#if defined(__BIG_ENDIAN)
+-			u8 asc;
+-			u8 ascq;
+-#elif defined(__LITTLE_ENDIAN)
+-			u8 ascq;
+-			u8 asc;
+-#endif
+-		};
+-		u16 sense_code;
+-	};
++	u16 sense_code;
+ 	/*
+ 	 * Number of times scsi_execute_cmd will retry the failure. It does
+ 	 * not count for the total_allowed.
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index f742a3bfeb86..9c7d31aa6bae 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -219,57 +219,6 @@ enum sam_status {
  
+ #define STATUS_MASK         0xfe
+ 
+-/*
+- * Additional Sense Codes (ASC).
+- */
+-#define NO_ADDITIONAL_SENSE		0x00
+-#define OVERLAP_ATOMIC_COMMAND_ASC	0x00
+-#define LOGICAL_UNIT_NOT_READY		0x04
+-#define LOGICAL_UNIT_COMMUNICATION_FAILURE 0x8
+-#define WRITE_ERROR_ASC			0x0c
+-#define UNRECOVERED_READ_ERR		0x11
+-#define PARAMETER_LIST_LENGTH_ERR	0x1a
+-#define MISCOMPARE_VERIFY_ASC		0x1d
+-#define INVALID_OPCODE			0x20
+-#define LBA_OUT_OF_RANGE		0x21
+-#define INVALID_FIELD_IN_CDB		0x24
+-#define INVALID_FIELD_IN_PARAM_LIST	0x26
+-#define WRITE_PROTECTED			0x27
+-#define UA_READY_ASC			0x28
+-#define UA_RESET_ASC			0x29
+-#define UA_CHANGED_ASC			0x2a
+-#define TOO_MANY_IN_PARTITION_ASC	0x3b
+-#define TARGET_CHANGED_ASC		0x3f
+-#define SAVING_PARAMS_UNSUP		0x39
+-#define TRANSPORT_PROBLEM		0x4b
+-#define INSUFF_RES_ASC			0x55
+-#define LOW_POWER_COND_ON		0x5e
+-#define THRESHOLD_EXCEEDED		0x5d
+-
+-/*
+- * Additional Sense Code Qualifiers (ASCQ).
+- */
+-#define POWER_ON_RESET_ASCQ		0x00
+-#define MODE_CHANGED_ASCQ		0x01	/* mode parameters changed */
+-#define FILEMARK_DETECTED_ASCQ		0x01
+-#define POWER_ON_OCCURRED_ASCQ		0x01
+-#define MICROCODE_CHANGED_ASCQ		0x01	/* with TARGET_CHANGED_ASC */
+-#define BUS_RESET_ASCQ			0x02	/* scsi bus reset occurred */
+-#define EOP_EOM_DETECTED_ASCQ		0x02
+-#define INSUFF_RES_ASCQ			0x03
+-#define BEGINNING_OF_P_M_DETECTED_ASCQ	0x04
+-#define UNALIGNED_WRITE_ASCQ		0x04
+-#define EOD_DETECTED_ASCQ		0x05
+-#define WRITE_BOUNDARY_ASCQ		0x05
+-#define READ_INVDATA_ASCQ		0x06
+-#define READ_BOUNDARY_ASCQ		0x07
+-#define CAPACITY_CHANGED_ASCQ		0x09
+-#define ATTEMPT_ACCESS_GAP		0x09
+-#define LUNS_CHANGED_ASCQ		0x0e
+-#define INSUFF_ZONE_ASCQ		0x0e
+-#define MICROCODE_CHANGED_WO_RESET_ASCQ 0x16
+-#define OVERLAP_ATOMIC_COMMAND_ASCQ	0x23
+-
+ /*
+  *  DEVICE TYPES
+  *  Please keep them in 0x%02x format for $MODALIAS to work
 -- 
 2.55.0
 
