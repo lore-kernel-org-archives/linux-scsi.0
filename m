@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D44C37C91E;
-	Thu,  3 Sep 2026 03:42:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A56F372B2F;
+	Thu,  3 Sep 2026 03:42:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788406965; cv=none; b=WRji/rHrFJTRJB6PHc95MjPrNvNLoAkLhb/trJyQDepNf9xw3NIQcL4hRtvAVV5fcJo2kZ9vAUW1xGHSSmG+kgDlUdLW8nhG8qWg8DsX9VBfRs0DZce3ZPg8e68GgYaexvOe0rz7hwDX/BiO5dLeLq3vL83G83TZzjta2nASFfI=
+	t=1788406964; cv=none; b=AwnxkS9uzkURR9WB0DcRo0H1CAUlA3I483xYsJLUQudE92mFXquBo0gXy/4M1i6glwgTM7EmbYcTBqhl+2o7NAk8gWbBO6+FE+kjW+QdRvhV8stZtTLh9/HgCIkzHBi/fhlDSbd4Fg4h7aPdaCDLJONxaIsF48piq52X9EWvyq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788406965; c=relaxed/simple;
-	bh=viIF6CyZtthkRsLQO8fQlXyoC/+Y6fi8PlFvobsOUgM=;
+	s=arc-20240116; t=1788406964; c=relaxed/simple;
+	bh=sIMKjJ7dsyTCxJ3imfTKd6WHTdSCosVSuPHPWK5tErY=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=T96IBn9oiLJdxMDQEY03J2QtMqnSDUGf1i9JyPPaXxrDZfRZKj8bkMCMSHAAUSC5vwO1hbT6XingrXXvWR0t9QXMxAWp0bTmYeRmRcqqaowwLV4sEoZZEF+85NvHgfo6gUwTXdLX8bdSQCW0ktr7HbExHpBx+ErSND6aV3xzMTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WTtEzD6X; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=Zt64dtu/MfMaQgfJytXLsV11zgQBIBPXhXVUR0oIFnakjHh9SGD1peZYRYEk/mSbZanTF1F+s6ARIyk+STvaRZQlPYYJ3XroD8detOg9+Sn/8ZNWB1LjGqMzNpUOXYYQsmqJKu6o807JxNxyXzbmEb5TON9Y5LykvDOxw6DhReA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gacx6e8j; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WTtEzD6X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C159A1F00ACA;
-	Thu,  3 Sep 2026 03:42:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gacx6e8j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DBC81F00A3D;
+	Thu,  3 Sep 2026 03:42:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788406957;
-	bh=iS5O/hr4rZ0YkdRljRugC9w1UK6x+zNNcYZof5Ad4zc=;
+	s=k20260515; t=1788406960;
+	bh=h7+bLMSnKQOrXGLcG0qV2AXpoC9KL2kuM6IVbNs/QEI=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=WTtEzD6XNAp/l6NsMbnA/CDXPcQCDavYyfFO3ERSniTPeLH8gwxwRZMxtTNNuonwh
-	 rFqGMjs+gKrRw1mCtfBaL7IexX1v1fbSnVtcSgjL72pn39XV9+HEodOKJbvN9Oy3zz
-	 ooMymwdvCGsemGwMVfnwMdgq1DnnFUQZKjmVevQD8gTZKAIJXQtGxrB5LbBxEnIxPK
-	 pEGDVIcU71zlD+gglg66X1D1J09tcmS5lZ8zz9LfyxkjCE0SzvlAhLw3qB7g33sc6q
-	 emOZC+qGGZIwIx9E6ypLFbYTf8lMesgh/I9hc+C4CX/okCaOLzNe+OI5PgcBAPP2je
-	 D6xysnctw0L4g==
+	b=gacx6e8jG21NHOIGxPYdQ2QSEHZ0mQRlNcf8OG0EY868ub5qHVK+jFuVo7xP40/jZ
+	 6KHDIQ43mozacaYCmD/BRwDcU164hgclnx6tX+sNQTADx1gLlUjDUR6r9JGXm9A5Ax
+	 jcAM1oDi850eeHjPkC2TGBu2fqPYYOZKVUs3IWlpLuI+PE+kele9A5UHU2r1T4YpiD
+	 yfcbKUry1Bj2bF/CUvH4WLdnxp8VBs27U0lOF0cRJBomUmHjhfWYEr58GkiwJLSPuP
+	 kKpMfZzBRbLSKWAYa9PIeWSM+0MohenOElTmSkfjo/k9gB0ifazKRWLZd2I4j5zq5q
+	 YVZMgCOWcbQAw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v2 12/40] scsi: st: use 16-bits defined sense codes
-Date: Thu,  3 Sep 2026 12:41:33 +0900
-Message-ID: <20260903034201.112211-13-dlemoal@kernel.org>
+Subject: [PATCH v2 14/40] scsi: device_handlers: rdac: use 16-bits defined sense codes
+Date: Thu,  3 Sep 2026 12:41:35 +0900
+Message-ID: <20260903034201.112211-15-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260903034201.112211-1-dlemoal@kernel.org>
 References: <20260903034201.112211-1-dlemoal@kernel.org>
@@ -51,87 +51,143 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the SCSI tape driver to use the 16-bits sense_code field of
-struct scsi_sense_hdr and replace all hard-coded additional sense codes
-and additional sense code qualifiers with the enum values defined in
-include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
-being processed are easier to test and self-documented.
+Refactor the NetApp E-Series RDAC SCSI device handler driver to use the
+16-bits sense_code field of struct scsi_sense_hdr and struct scsi_failure
+and replace all hard-coded additional sense codes and additional sense
+code qualifiers with the enum values defined in include/scsi/scsi_sense.h.
+This helps with code clarity as the sense codes being processed are easier
+to test and self-documented.
 
 No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/st.c | 35 +++++++++++++++++++----------------
- 1 file changed, 19 insertions(+), 16 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_rdac.c | 45 ++++++++++------------
+ 1 file changed, 21 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index f1c3c4946637..1ca9753cb734 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -421,11 +421,13 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
- 					       STp->cln_sense_mask) != 0);
- 	}
- 	if (cmdstatp->have_sense &&
--	    cmdstatp->sense_hdr.asc == 0 && cmdstatp->sense_hdr.ascq == 0x17)
--		STp->cleaning_req = 1; /* ASC and ASCQ => cleaning requested */
-+	    cmdstatp->sense_hdr.sense_code == CLEANING_REQUESTED)
-+		STp->cleaning_req = 1;
- 	if (cmdstatp->have_sense && scode == UNIT_ATTENTION &&
--		cmdstatp->sense_hdr.asc == 0x29 && !STp->pos_unknown) {
--		STp->pos_unknown = 1; /* ASC => power on / reset */
-+	    scsi_sense_asc(&cmdstatp->sense_hdr) ==
-+	    ASC_POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED &&
-+	    !STp->pos_unknown) {
-+		STp->pos_unknown = 1;
- 		st_printk(KERN_WARNING, STp, "Power on/reset recognized.");
- 	}
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index 75c9cc291e38..742534c99386 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -493,7 +493,8 @@ static int mode_select_handle_sense(struct scsi_device *sdev,
+ 	RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+ 		"MODE_SELECT returned with sense %02x/%02x/%02x",
+ 		(char *) h->ctlr->array_name, h->ctlr->index,
+-		sense_hdr->sense_key, sense_hdr->asc, sense_hdr->ascq);
++		 sense_hdr->sense_key, scsi_sense_asc(sense_hdr),
++		 scsi_sense_ascq(sense_hdr));
  
-@@ -1003,7 +1005,8 @@ static int test_ready(struct scsi_tape *STp, int do_wait)
- 			scode = cmdstatp->sense_hdr.sense_key;
+ 	return SCSI_DH_IO;
+ }
+@@ -515,34 +516,28 @@ static void send_mode_select(struct work_struct *work)
+ 	struct scsi_failure failure_defs[] = {
+ 		{
+ 			.sense_key = NO_SENSE,
+-			.asc = SCMD_FAILURE_ASC_ANY,
+-			.ascq = SCMD_FAILURE_ASCQ_ANY,
++			.sense_code = SCMD_FAILURE_SENSE_CODE_ANY,
+ 			.result = SAM_STAT_CHECK_CONDITION,
+ 		},
+ 		{
+ 			.sense_key = ABORTED_COMMAND,
+-			.asc = SCMD_FAILURE_ASC_ANY,
+-			.ascq = SCMD_FAILURE_ASCQ_ANY,
++			.sense_code = SCMD_FAILURE_SENSE_CODE_ANY,
+ 			.result = SAM_STAT_CHECK_CONDITION,
+ 		},
+ 		{
+ 			.sense_key = UNIT_ATTENTION,
+-			.asc = SCMD_FAILURE_ASC_ANY,
+-			.ascq = SCMD_FAILURE_ASCQ_ANY,
++			.sense_code = SCMD_FAILURE_SENSE_CODE_ANY,
+ 			.result = SAM_STAT_CHECK_CONDITION,
+ 		},
+-		/* LUN Not Ready and is in the Process of Becoming Ready */
+ 		{
+ 			.sense_key = NOT_READY,
+-			.asc = 0x04,
+-			.ascq = 0x01,
++			.sense_code = LU_IS_IN_PROCESS_OF_BECOMING_READY,
+ 			.result = SAM_STAT_CHECK_CONDITION,
+ 		},
+-		/* Command Lock contention */
++		/* Command Lock contention (not a standard sense code) */
+ 		{
+ 			.sense_key = ILLEGAL_REQUEST,
+-			.asc = 0x91,
+-			.ascq = 0x36,
++			.sense_code = scsi_sense_code(0x91, 0x36),
+ 			.allowed = SCMD_FAILURE_NO_LIMIT,
+ 			.result = SAM_STAT_CHECK_CONDITION,
+ 		},
+@@ -674,33 +669,34 @@ static enum scsi_disposition rdac_check_sense(struct scsi_device *sdev,
+ {
+ 	struct rdac_dh_data *h = sdev->handler_data;
  
- 			if (scode == UNIT_ATTENTION) { /* New media? */
--				if (cmdstatp->sense_hdr.asc == 0x28) { /* New media */
-+				if (scsi_sense_asc(&cmdstatp->sense_hdr) ==
-+				    ASC_NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED) {
- 					new_session = 1;
- 					DEBC_printk(STp, "New tape session.");
- 				}
-@@ -1026,14 +1029,13 @@ static int test_ready(struct scsi_tape *STp, int do_wait)
- 					waits++;
- 					continue;
- 				}
--				else {
--					if ((STp->device)->scsi_level >= SCSI_2 &&
--					    cmdstatp->sense_hdr.asc == 0x3a)	/* Check ASC */
--						retval = CHKRES_NO_TAPE;
--					else
--						retval = CHKRES_NOT_READY;
--					break;
--				}
-+				if ((STp->device)->scsi_level >= SCSI_2 &&
-+				    scsi_sense_asc(&cmdstatp->sense_hdr) ==
-+				    ASC_MEDIUM_NOT_PRESENT)
-+					retval = CHKRES_NO_TAPE;
-+				else
-+					retval = CHKRES_NOT_READY;
-+				break;
- 			}
+-	RDAC_LOG(RDAC_LOG_SENSE, sdev, "array %s, ctlr %d, "
+-			"I/O returned with sense %02x/%02x/%02x",
+-			(char *) h->ctlr->array_name, h->ctlr->index,
+-			sense_hdr->sense_key, sense_hdr->asc, sense_hdr->ascq);
++	RDAC_LOG(RDAC_LOG_SENSE, sdev,
++		 "array %s, ctlr %d, I/O returned with sense %02x/%02x/%02x",
++		 (char *) h->ctlr->array_name, h->ctlr->index,
++		 sense_hdr->sense_key, scsi_sense_asc(sense_hdr),
++		 scsi_sense_ascq(sense_hdr));
+ 
+ 	switch (sense_hdr->sense_key) {
+ 	case NOT_READY:
+-		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x01)
++		if (sense_hdr->sense_code == LU_IS_IN_PROCESS_OF_BECOMING_READY)
+ 			/* LUN Not Ready - Logical Unit Not Ready and is in
+ 			* the process of becoming ready
+ 			* Just retry.
+ 			*/
+ 			return ADD_TO_MLQUEUE;
+-		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x81)
++		if (sense_hdr->sense_code == scsi_sense_code(0x04, 0x81))
+ 			/* LUN Not Ready - Storage firmware incompatible
+ 			 * Manual code synchonisation required.
+ 			 *
+ 			 * Nothing we can do here. Try to bypass the path.
+ 			 */
+ 			return SUCCESS;
+-		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0xA1)
++		if (sense_hdr->sense_code == scsi_sense_code(0x04, 0xA1))
+ 			/* LUN Not Ready - Quiescense in progress
+ 			 *
+ 			 * Just retry and wait.
+ 			 */
+ 			return ADD_TO_MLQUEUE;
+-		if (sense_hdr->asc == 0xA1  && sense_hdr->ascq == 0x02)
++		if (sense_hdr->sense_code == scsi_sense_code(0xA1, 0x02))
+ 			/* LUN Not Ready - Quiescense in progress
+ 			 * or has been achieved
+ 			 * Just retry.
+@@ -708,7 +704,7 @@ static enum scsi_disposition rdac_check_sense(struct scsi_device *sdev,
+ 			return ADD_TO_MLQUEUE;
+ 		break;
+ 	case ILLEGAL_REQUEST:
+-		if (sense_hdr->asc == 0x94 && sense_hdr->ascq == 0x01) {
++		if (sense_hdr->sense_code == scsi_sense_code(0x94, 0x01)) {
+ 			/* Invalid Request - Current Logical Unit Ownership.
+ 			 * Controller is not the current owner of the LUN,
+ 			 * Fail the path, so that the other path be used.
+@@ -718,12 +714,13 @@ static enum scsi_disposition rdac_check_sense(struct scsi_device *sdev,
  		}
- 
-@@ -3105,9 +3107,10 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 			   cmd_in == MTSETDRVBUFFER ||
- 			   cmd_in == SET_DENS_AND_BLK) {
- 			if (cmdstatp->sense_hdr.sense_key == ILLEGAL_REQUEST &&
--				cmdstatp->sense_hdr.asc == 0x24 &&
--				(STp->device)->scsi_level <= SCSI_2 &&
--				!(STp->use_pf & PF_TESTED)) {
-+			    scsi_sense_asc(&cmdstatp->sense_hdr) ==
-+			    ASC_INVALID_FIELD_IN_CDB &&
-+			    (STp->device)->scsi_level <= SCSI_2 &&
-+			    !(STp->use_pf & PF_TESTED)) {
- 				/* Try the other possible state of Page Format if not
- 				   already tried */
- 				STp->use_pf = (STp->use_pf ^ USE_PF) | PF_TESTED;
+ 		break;
+ 	case UNIT_ATTENTION:
+-		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
++		if (sense_hdr->sense_code ==
++		    POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED)
+ 			/*
+ 			 * Power On, Reset, or Bus Device Reset, just retry.
+ 			 */
+ 			return ADD_TO_MLQUEUE;
+-		if (sense_hdr->asc == 0x8b && sense_hdr->ascq == 0x02)
++		if (sense_hdr->sense_code == scsi_sense_code(0x8b, 0x02))
+ 			/*
+ 			 * Quiescence in progress , just retry.
+ 			 */
 -- 
 2.55.0
 
