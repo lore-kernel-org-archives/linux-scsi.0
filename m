@@ -1,50 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F5D21A9B24;
-	Thu,  3 Sep 2026 03:10:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1439357CE9;
+	Thu,  3 Sep 2026 03:10:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788405028; cv=none; b=NK3CPfqu+li23KNH/hCK/+1nAMbeaYUbhXR3XIrPikUfnUDXbt+rlMvQkTsKImKqZcQbOFT0B8Iwtxf0vMmuGCWsAhYFGrdM1x0JjrMApMZYbuo4LTqBoyfDURqmL0HGxMENQTEe49rssmr2sOra438nauRgFJJ2qDOEy45LLOw=
+	t=1788405029; cv=none; b=N/YDKy/zInV3KrfuVQgoDClFsJwFwxcdat+TTseePpgzEKxjKhlHLeuhV5YnESJyggYlxEAt2ivH3YYrN9a8wGzuvBu4vQY4MN8LYExl5kxtiz6rhDj3NvNuNuk3kzLOuVjZIRORZYo8u94tsRRVeB4nijkshOCvisY8uxrLj4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788405028; c=relaxed/simple;
-	bh=wMwjnUIqv6wFeNjqfbo3PZVBRMjA2EFba3AGN6LbpxA=;
+	s=arc-20240116; t=1788405029; c=relaxed/simple;
+	bh=yDUYyQaFlq8tXXASfcARcljHFMLdm3RuonF8ltHah4c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IU3h0gm1SqVwFwUaXVhtcHqiTDbgQWsDPJYopVdUQJOf1BOJbMv4GW6Fpjcmps44e+HSFVcwDQCB67OPqGXEo9J7MO1XTxsaEgeQoJFokt/0YCGpT+DWtL5Tlcoozv7Ip4FXcyye8ti3x94OuYJdImhV1+XmF5U3Mu4gG3ddF/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pqx/rl34; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=fosUGkRuVmZxyNpTLWRBDmn8zp+9XxgR9f6Xke9hwCinBxpnPvc/4mMDRxP+/L1QelgKk/BF1jfIKljmGN3ets9xtVGyd2Bjjz4FfjzVGH1KEvhseKlQJUmr08rshqsQK/XT894wSo+pqn9GsGLrqBTxR7LeivDbgXF4mZ88daE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G6OjU7wj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pqx/rl34"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F8061F000E9;
-	Thu,  3 Sep 2026 03:10:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G6OjU7wj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2535D1F00A3A;
+	Thu,  3 Sep 2026 03:10:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788405026;
-	bh=piM931iS3QcfCvF/iNCzNGuy1jpOOsm4i5NMdfyql7A=;
+	s=k20260515; t=1788405028;
+	bh=caX7x7i80gxUKHQCtZGsBvZac/QLQkNHPvkqj51y0dw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Pqx/rl34GXIy2YUVQIAN8KcHzRqFCKapNXV1jX4PRub8FPpiWJe3GPRjv0nqjy3Li
-	 oGUWKRwiqghdEnN315R1fxtCUjwW58jttnYawIWL4ZfZyGXSKW6Y6zSNJam7XEsoNQ
-	 rNZcb9mx60taj89JBpVXLZhjOEB4LW7RNYtOmGs5yqNzZofqHt3qcn/18bYCHBBqnI
-	 Gktdmtn44aLWnBO2UXc/FnTSQMRRmjCArGZ/knNvlpLGLrUsoBnBaRJb+TeXZfe+hJ
-	 JAgJhIFTXIEQ01DVh58ybiI3SuHijVm2elKoWWH6lL4NbOv6oR+JWiCnaQC6mfO2RV
-	 kHbOf32YGsLcQ==
+	b=G6OjU7wjxVazV3ru3gGUnKIkWmYVS+gdbMQdhxxOErXRfEDA1B6RK+7v3exoF91Kf
+	 HRuxTQpPiXgAG99eC2WTC3zhgfrqWaB50z1ctQ4em2YOcQFOhZfOsoasCrije79IH6
+	 r2jKhRk3jl/ro5ECfP8eN2s1G6lTgwrE6gjix3ofwfFR3goxbiWiJ0HpQ4yxosSjOi
+	 PnOTCm0e/JBbkXWfGr4YnjnxQKFZE9ikDNu+3jVD8XZ2FWytO+seOA/kH2iOoVUvj9
+	 x01fZMe9e+LpkYHUr/rhVK0xO4952YJJuMbrxxhodD2emqFyyzw5G/yoHW8SlfPEJF
+	 Gom9TjSXFAT5w==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: Tyrel Datwyler <tyreld@linux.ibm.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+To: Satish Kharat <satishkh@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
 	"Martin K. Petersen" <mkp@kernel.org>,
-	Muhammad Falak R Wani <falakreyaz@gmail.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	kernel test robot <lkp@intel.com>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	linuxppc-dev@lists.ozlabs.org,
-	Christophe Leroy <chleroy@kernel.org>
-Subject: Re: [PATCH 1/2] scsi: ibmvfc: fix kernel-doc name for ibmvfc_scsi_relogin()
-Date: Wed,  2 Sep 2026 23:10:06 -0400
-Message-ID: <178840472584.670675.12007008371974390707.b4-ty@b4>
+	Linmao Li <lilinmao@kylinos.cn>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Hannes Reinecke <hare@kernel.org>,
+	Justin Tee <justin.tee@broadcom.com>,
+	Naresh Gottumukkala <nareshgottumukkala83@gmail.com>,
+	Paul Ely <paul.ely@broadcom.com>,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: (subset) [PATCH 0/2] scsi: fnic: fix NVMe/FC local port setup and teardown
+Date: Wed,  2 Sep 2026 23:10:07 -0400
+Message-ID: <178840472579.670675.9863331512584936736.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <dd866cf2321381694af027fbd726bcbd63ac3751.1787828961.git.falakreyaz@gmail.com>
-References: <dd866cf2321381694af027fbd726bcbd63ac3751.1787828961.git.falakreyaz@gmail.com>
+In-Reply-To: <20260819114242.3598034-1-lilinmao@kylinos.cn>
+References: <20260819114242.3598034-1-lilinmao@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -54,23 +55,25 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Thu, 27 Aug 2026 16:50:37 +0530, Muhammad Falak R Wani wrote:
+On Wed, 19 Aug 2026 19:42:40 +0800, Linmao Li wrote:
 
-> Commit e0fca728a89f ("scsi: ibmvfc: delete NVMe/FC targets as well as
-> SCSI") renamed ibmvfc_relogin() to ibmvfc_scsi_relogin() but left the
-> kernel-doc comment referring to the old name, so a W=1 build warns:
+> Two small fixes to the NVMe/FC transport path added in commit 5efdd5cf9281
+> ("scsi: fnic: Add the NVMe/FC transport path"), both found by reading the
+> code rather than by hitting them on hardware.  They apply to
+> scsi/for-next, since that code is not in mainline yet.
 > 
->   drivers/scsi/ibmvscsi/ibmvfc-core.c:1901: warning: expecting prototype
->   for ibmvfc_relogin(). Prototype was for ibmvfc_scsi_relogin() instead
+> Patch 1 initializes struct nvme_fc_port_info in nvfnic_add_lport().
+> dev_loss_tmo is currently left uninitialized on the stack.  The transport
+> does not read it for a local port, so this is hygiene rather than a
+> behaviour fix, and it carries no Fixes tag; nvfnic_add_tport() right below
+> already memsets its own copy.
 > 
 > [...]
 
 Applied to 7.3/scsi-fixes, thanks!
 
-[1/2] scsi: ibmvfc: fix kernel-doc name for ibmvfc_scsi_relogin()
-      https://git.kernel.org/mkp/scsi/c/9a0716348daf
-[2/2] scsi: ibmvfc: document protocol parameter of ibmvfc_alloc_target()
-      https://git.kernel.org/mkp/scsi/c/9a69cc5f192f
+[1/2] scsi: fnic: initialize the NVMe local port info before registering
+      https://git.kernel.org/mkp/scsi/c/98f0a1422e28
 
 -- 
 Martin K. Petersen
