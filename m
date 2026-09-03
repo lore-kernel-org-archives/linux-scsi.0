@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B180046C4C5;
-	Thu,  3 Sep 2026 09:10:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DA442DEA61;
+	Thu,  3 Sep 2026 09:15:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788426622; cv=none; b=SWjsNSh0PytuhZIraK0hPDMNdy5doU9tNbdZlvOHXK+FpBmtVehXo08UlCSsLCRqGINQtc2XyywglcYp5rZApjxnTeYqc1a6I5Qqzf23EXpzKIPhbDnJ1l/O8JW5mZoQBFdvmnuKZt0XJU07yqCJTV/Uqxdr8jCLvClIecXbUmg=
+	t=1788426933; cv=none; b=HvpfHUgWwPUHtmdsap8Sr2Nszka1RZFtn20rSrucRIU/i6lSIRwM3aEmhPWhJhKTc93kSt51ZWiLk48i3BcpiSyZf8lpdo/+gElp2oy/e2j6FH28Zwc0QVdvwcrTKe1cBvgqg8vbpvPWY9ZuCuadyDamZy9G/EbK1+8m70fvRQo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788426622; c=relaxed/simple;
-	bh=9XoT+H1ehv8kAWOcNBLLeUQGjzj14LJuK6py3NF1kJ0=;
+	s=arc-20240116; t=1788426933; c=relaxed/simple;
+	bh=m7H8TekOSG4qos5vPIPxVNKUjiw0Ygyq7vH0ZgiEr8k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bJISxsFY94dKaQYsEf8TseEgD74TYM1zFv4SsUYNLei3qG1bxpyI7a/4izNq++c5dhXjyp+3ER4HFrLSXYYIiy/g3gZgUbgPlCHz+ngEbXls3fttFzLK96J1CPgBz2BWoTAPHtR1Bbe2LHVKTI3sjBDugp73ZO7hX1IPax+KrRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tb/gCs+O; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bb/JXN5dd/rrVAiHEZrRrVh0Jpc/CVchY2C2wpUED2mosbl7Bg0VRc4/L4HGg35chVMYJKM4qBC+LbWEzpRsBydL3Joncn24PL3b5KgNcs8R200jaYjGMvhiH436xv0UtyLb4VtYekqhdRuuBEnrvJZnVTwM1hgIFSGYdN5iVK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RrCbQwxR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tb/gCs+O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14CED1F000E9;
-	Thu,  3 Sep 2026 09:10:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RrCbQwxR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4A2E1F000E9;
+	Thu,  3 Sep 2026 09:15:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788426620;
-	bh=xEBCmL7iZF2+rXLjhRctVJzNVxezOd3WR7caHQvbGE4=;
+	s=k20260515; t=1788426931;
+	bh=x2LmtDPoQQAqRYsbmaLvBhgbgEQtElpqcQehovTbr9w=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Tb/gCs+OwZGAGKZoGS/ZLN+IFDG3XSZZjfKR2Yg8AyfY2aC0kKWkP75BxcCI0CXsi
-	 oR1/eDjzvpkFKD1EfDNKeTVwqc+8lfj/CHPFdkmaMpR5qzxh1J7f8PKpW7LtXDp9Sq
-	 +5CcLRQ1uNkSh0Uh1WcHx+KaG15O7odz7a8Vte/9g6LpuFh/pEDzHTkn0UYdY9Ncym
-	 D89ONMOgeWFxqA3QlcpVJpwVicCU8xggzxyRiG8IPlwXzCiMUWC2x8EvXwfkw2qEZg
-	 KdyxYDuNfXmEhh44D/AMeC/ZCoF2DJvoyonQNqsUns94U/1ol/Jw9gVXn9i5oEndmF
-	 2FPzwk3F/tVgA==
-Date: Thu, 3 Sep 2026 11:10:15 +0200
+	b=RrCbQwxRxTr0kOnpHqghHXmh0MsR0a/mkb+rslwZhV6bNToULfBYV6Dh3pE9HI+YT
+	 Lse4DYVV4yXCARTQhtkkYZ975+RZtId9h1yVwqwg2HbMk0kshQc+M69VnmBFfJfB5f
+	 /9boofSb0/EcIya7qqNdogJkxthRYaCqwiRNKHDa3KR1F+a/XMq/RUzpHSK3RVh5Oa
+	 rZSgLSog8YBD1W05YV8RuaLMIZKoaeWwapK4aL9iC2QE0KNgAeRgRQKHSRVJixtlOF
+	 fcE0eBiJ4j6kjSzHitsmsK+lOFFSiX+9thOj0OWhcZ179Wxw+pySJVdiUpzeWnyA8e
+	 RCL/f0nR6B0dg==
+Date: Thu, 3 Sep 2026 11:15:27 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -35,10 +35,11 @@ Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org, Heiko Carstens <hca@linux.ibm.com>
-Subject: Re: [PATCH v2 37/40] ata: libata: use 16-bits defined sense codes
-Message-ID: <apk5d2uHcD59FU1D@ryzen>
+Subject: Re: [PATCH v2 40/40] scsi: remove scsi_build_sense() and
+ scsi_build_sense_buffer()
+Message-ID: <apk6r6Ad3QB872f6@ryzen>
 References: <20260903034201.112211-1-dlemoal@kernel.org>
- <20260903034201.112211-38-dlemoal@kernel.org>
+ <20260903034201.112211-41-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,17 +48,19 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260903034201.112211-38-dlemoal@kernel.org>
+In-Reply-To: <20260903034201.112211-41-dlemoal@kernel.org>
 
-On Thu, Sep 03, 2026 at 12:41:58PM +0900, Damien Le Moal wrote:
-> Refactor libata core code to use the 16-bits sense_code field of
-> struct scsi_sense_hdr and replace all hard-coded additional sense codes
-> and additional sense code qualifiers with the enum values defined in
-> include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
-> being processed are easier to test and self-documented.
-> 
-> No functional change intended.
+On Thu, Sep 03, 2026 at 12:42:01PM +0900, Damien Le Moal wrote:
+> Now that all code has been converted to use 16-bits sense codes and to
+> initialize sense with scsi_set_sense() and scsi_set_sense_buffer(), remove
+> the inline definitions of these new functions, change scsi_build_sense()
+> and scsi_build_sense_buffer() to use a single 16-bits sense code as
+> argument (instead of separate arguments for the ASC and ASCQ), and
+> rename them to scsi_set_sense()  and scsi_set_sense_buffer().
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-Acked-by: Niklas Cassel <cassel@kernel.org>
+
+With the trivial kdoc nit for scsi_set_sense() pointed out by Sashiko fixed:
+
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
