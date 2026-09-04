@@ -1,114 +1,65 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80CE6242D88;
-	Fri,  4 Sep 2026 02:12:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7332D242D88;
+	Fri,  4 Sep 2026 02:12:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788487939; cv=none; b=g+1V6z5dxLo7au0XnYgDrEEzWS8vqFR2oUygZQtHi5HZThZYMd4HfNe6sMMQjaMIYs5MtXGjpbqDr/wU9/arWWhcN4WaM/BppNMPf2dJmCMl3Pf15NQ2BDjzP9JsuC8v/h3ob+fze8uRqXTolzUDifjXtoU5L1b0FoiAT/kOk+8=
+	t=1788487960; cv=none; b=mVKYdsweu/r8IyViP0+mLMqdUW1rhLAicvAMeukpiznYkjc43VifiYxeXPKJ7RdRneFskKu60mkHQ2Sw7AprT2PmV54z+jzJZeFiszH4gLlFvKAIX61ONCd/dd237qTu8ZcNDg55RhN2WwosJfzWy/S92GM+By02K6Ea1f6INNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788487939; c=relaxed/simple;
-	bh=5YIrh7A4BM8rg91MnwdfHy7I3ewnsfXy9XVbMNCjFrs=;
+	s=arc-20240116; t=1788487960; c=relaxed/simple;
+	bh=qgZ530366g0odKigjWsn4hiKJoOf3pxrVUmohB7c5HI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DTkTdBZ+z+uXlN1Y8fafwoivlIuiDU3Eu6zhxWgermiuvdTLVyZQXt7JBhSWB+fgCNrklpPdvD6klwW3/JzyuARDsum4+nPhkmsKmLGrdteOvMBWN/+9P2aFbROzH+mKkdEpHbwcR2LQBowBzkgAVP8cW59KVJPpubft7wNQHRE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gZgSONJF; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=qc+r4u4K/k3sHzp2Vykp1+K3msg0nXC97704XC15P07IcW363wytfoQWFrDzch4yppvr2ulM4aGLdl3AOGk0WrtDwM7yNqQmvFqHxjHYiywTSwsdpv+pic5e2TknpgNa+JV9bnUCDa7hyDYtNJ6Kxc2mQLHECyVqIut4bhtGF80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LuPw0XLT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gZgSONJF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D2501F000E9;
-	Fri,  4 Sep 2026 02:12:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LuPw0XLT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C84A1F000E9;
+	Fri,  4 Sep 2026 02:12:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788487938;
-	bh=eRVY+wz42f3W4zGEJfJdtkKNlwOKRzeINu7BTVNvT4M=;
+	s=k20260515; t=1788487959;
+	bh=qgZ530366g0odKigjWsn4hiKJoOf3pxrVUmohB7c5HI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gZgSONJFCOxVU/MW+RPQf7Pb1qvAVNROgr6PhCsiq6q3IDNsG5kjdNbGRyXXDgdZD
-	 ucnzzBgWtvozYCNTgu/DWQNdG1Lsq9pNBX7iN32gPVyvhgIVPpYwDpJD2M0kCJ+b+M
-	 Ba6eZcjJ+0dg2Ur3f9Plmq6oJMB2NV4hvIN0Am4j5pRdlNwXWiKvi8A7GVG4oCpvKi
-	 3lgdBO0sYEEhhn82PksaG9xuaIJGqUj5VpPpWnTXF1vRR6HnkwBvCi62WLzJdjy8Hf
-	 3i9kTqu0PWn5WJ+dGUJZNf0t00vJBfQErrZow9JcGYOPKMsyNpmeDr5KrLrGL5fvdG
-	 EwmEU7reP1ogA==
+	b=LuPw0XLTP1BQ1itAWiqHiLdX5qa4FCuuMZIXIz+kWYQsmM3Kyfhv33l3q7tr48mp7
+	 9VCl/lAXLvw2j14+O5Rx3aFKA1oHMKyDLa2zBYZzOrgBlWH2+n+wzPsHAKinaU08gz
+	 KvRT7wLIMlelmqPbl30l6tkluceCVT0Zivo66zTdMniq3ebvNZX+x/phpeogo6nOK7
+	 afE2icRExPVrgZD08RP7fk0cfGvXxTBw/nu5pw38at3Jc6JnwEhZV1DNynRb1zQb2k
+	 frvyY1tS+DOSyD2X9By8XBysRm9QM0HwQOu9XZtOh7noNGqWOy/0xlpJmWvOaeiOfE
+	 twu+YgO52UjNw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 28/40] scsi: mvumi: use 16-bits defined sense codes
+Subject: Re: [PATCH v3 29/40] scsi: libiscsi: use 16-bits defined sense
+ codes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Heiko Carstens" <hca@linux.ibm.com>, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>, dlemoal@kernel.org, linux-s390@vger.kernel.org, "Vasily
- Gorbik" <gor@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>, linux-scsi@vger.kernel.org, cassel@kernel.org
-In-Reply-To: <20260904002644.157668-29-dlemoal@kernel.org>
+Cc: cassel@kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, dlemoal@kernel.org, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, linux-s390@vger.kernel.org, "Heiko
+ Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>
+In-Reply-To: <20260904002644.157668-30-dlemoal@kernel.org>
 References: <20260904002644.157668-1-dlemoal@kernel.org>
- <20260904002644.157668-29-dlemoal@kernel.org>
+ <20260904002644.157668-30-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 04 Sep 2026 02:12:17 +0000
-Message-Id: <20260904021217.7D2501F000E9@smtp.kernel.org>
+Date: Fri, 04 Sep 2026 02:12:38 +0000
+Message-Id: <20260904021238.8C84A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+> Refactor libiscsi to use scsi_set_sense() and replace all hard-coded
+> additional sense codes and additional sense code qualifiers with the enum
+> values defined in include/scsi/scsi_sense.h. This helps with code clarity
+> as the sense codes being processed are easier to test and self-documented.
+>=20
+> No functional change intended.
+>=20
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-Pre-existing issues:
-- [High] DMA Mapping Failure Mishandling in `mvumi_make_sgl`
---
-
-commit 8f7e0d6528db79abbbc2754c90191d5fcfa6d746
-Author: Damien Le Moal <dlemoal@kernel.org>
-
-scsi: mvumi: use 16-bits defined sense codes
-   =20
-Refactor the Marvell UMI driver to use scsi_set_sense() and replace all
-hard-coded additional sense codes and additional sense code qualifiers
-with the enum values defined in include/scsi/scsi_sense.h. This helps with
-code clarity as the sense codes being processed are easier to test and
-self-documented.
-
-> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> index e70d336b4ab39..a5bd3258a3994 100644
-> --- a/drivers/scsi/mvumi.c
-> +++ b/drivers/scsi/mvumi.c
-> @@ -2067,7 +2067,7 @@ static unsigned char mvumi_build_frame(struct mvumi=
-_hba *mhba,
->  	return 0;
-> =20
->  error:
-> -	scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
-> +	scsi_set_sense(scmd, 0, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does mvumi_make_sgl() proper=
-ly
-handle DMA mapping failures?
-
-Under memory pressure or IOMMU resource exhaustion, dma_map_sg() can fail a=
-nd
-return 0. However, in mvumi_make_sgl():
-
-	*sg_count =3D dma_map_sg(&mhba->pdev->dev, scsi_sglist(scmd), sgnum,
-			       scmd->sc_data_direction);
-	if (*sg_count > mhba->max_sge) {
-        ...
-
-If dma_map_sg() returns 0, the check (*sg_count > mhba->max_sge) evaluates =
-to
-false. The scsi_for_each_sg loop is skipped, and mvumi_make_sgl() incorrect=
-ly
-returns 0 (success).
-
-The caller mvumi_build_frame() receives this success status and proceeds to
-submit the command with a non-zero data_transfer_length but an sg_counts of=
- 0,
-along with uninitialized scatter-gather elements in the hardware frame payl=
-oad.
-
-Could this malformed frame cause the hardware controller to crash or perform
-wild DMA accesses?
-
->  	return -1;
->  }
->
+Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260904002644.1576=
-68-1-dlemoal@kernel.org?part=3D28
+68-1-dlemoal@kernel.org?part=3D29
+
