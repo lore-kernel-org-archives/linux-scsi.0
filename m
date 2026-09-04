@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79B7931F98D;
-	Fri,  4 Sep 2026 00:27:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 735FD2E8897;
+	Fri,  4 Sep 2026 00:27:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788481676; cv=none; b=Kb+bp+dJCU8qC3/rDTjASBCt722II7WgPKOGKIkthSjRi8CP/kzERjOgI2KnuQ7zxCdQ3ZZXuSz2lY5quloRNaieQRQ5ULzB2eTtrFIa0Zz5vl1DDaI8s4hiBJs10HFHw7dnntu8iz9nwoGv1PSS+yFVmDWA1Jjs5A6OREKAndM=
+	t=1788481678; cv=none; b=u9OmIlcIWCO5eJh5bylPI893qOZsgcUWtT7a9GrTL8KANlHwm2lz/Lg/VHUpEkiy4BlEAHpz90GY+Q+pQeIMct4RKFKJTwYcLHGR9zNfqQ7D4kN2N1dfvIeuJmZpo47CUyz2jUjkZ9W1R9qyjm+JV3T9OKj0j2hCCL1uusGIDNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788481676; c=relaxed/simple;
-	bh=UEkksSlxyFrOyMXmYUcci/0laVXNLurv0stVKLOhYPY=;
+	s=arc-20240116; t=1788481678; c=relaxed/simple;
+	bh=VbwfpfuiuGlHSgLR0fjYMcOrV+EAAzDV2H5NwF26hH8=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=u4NsyuIOxTX1g60+g3Q15Zfx0mlBePLz5FRTv7ZUJZAOBA56qqKctFFiXl+bZt9iMiND8tvS3TCrQbDHyLf1R/oMkty9dr37K+ScfAuLP8VKbLqA3fkTDC+f01aTcFQayUwdRsa7b0UMA/Ara9KhnElZtyLRJMWMnliD9/Z0GXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gwxNVrA6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=rpgp633bpNmnGWq89rfyajdbo2KKvqr3woInfdpxMIIyR1KIUj80Pe/TXRyhH2lhrdu1BPeQRIlACYOqFRG/xnQifnxwxuZt+zAiA8+U1AAlq04o/aNzY5ADfljQE4eSVWed1DnYn3oTySWd32CBivuHAZpDk0hnmQymk9fZVzA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E7ImneQe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gwxNVrA6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01C611F000E9;
-	Fri,  4 Sep 2026 00:27:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E7ImneQe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B53001F00A3D;
+	Fri,  4 Sep 2026 00:27:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788481675;
-	bh=7EDmrAkNKY6icF6hbFNSI+9lqeNwbzVCdBaXNPEH1Gc=;
+	s=k20260515; t=1788481677;
+	bh=Pk4emyvifA4orO5X5/G1ydM6TMymW2SBTv4w8skrXw8=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=gwxNVrA65hx2tYuC+3E44RYEXz/RmUU25WxfKpHbALk3XmrDe2pWcfJdgqwZ+LTbR
-	 Yn9KfEO0Tcaj3U6cAG+KL2LXuAyPtaNmrWyX5LKhWUK3jz3VxmrWRqc0Cfa8ZPMM4s
-	 +gGE7+lCxhWw0eXp2sSHRSQYHP8ycOiYJ3aooHjO+fDtws2mKSkswTyokKemVIdKZs
-	 NDLCV4OdmpUi0+LZOgFfOJ5V3s3wvKofU8UVyA7/k6Hub0JUkQcfljkjLpl7D8l9tt
-	 lBqshy2tw+APioJCvkVzS4LVkFXMXbhEL03T665l5rUPo8tuLsVpYmwj3g+ni4lYMm
-	 6y/02CVpYz14A==
+	b=E7ImneQebb0d/URbyeRGFCn0d9Yg09HTOOPL2OQWjN1kPpL6s0qzIEZWs+jujNl64
+	 LwL45DhjUu31DDksyxDzYLBsRh57Cg+DS0XBlvWVYM86qEN4YqX68eZuy9cxgRV3bh
+	 jFtWMuul+IwsYAV3UWA8PhtEyGQCi0BsWCgoL9pMs1udTgooQewspTQxcXEn4zof2q
+	 m7t6bNpy5Dq7D2mn2WAxhb+p53foDEBndYbL8N72SGZD+75pfq6iS2Kl5PvZ8JJqaa
+	 npR6M0uKH95JsiNmstHRgTa5e9p+9HuhE6jv1v+fiIZytMqrKcP1qnlcjFO15yNyAF
+	 x6kJ+fFmzIgNQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v3 33/40] scsi: storvsc: use 16-bits defined sense codes
-Date: Fri,  4 Sep 2026 09:26:37 +0900
-Message-ID: <20260904002644.157668-34-dlemoal@kernel.org>
+Subject: [PATCH v3 34/40] target: use 16-bits defined sense codes
+Date: Fri,  4 Sep 2026 09:26:38 +0900
+Message-ID: <20260904002644.157668-35-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260904002644.157668-1-dlemoal@kernel.org>
 References: <20260904002644.157668-1-dlemoal@kernel.org>
@@ -51,9 +51,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the storvsc driver to use the 16-bits sense_code field of
-struct scsi_sense_hdr and replace all hard-coded additional sense codes
-and additional sense code qualifiers with the enum values defined in
+Refactor the target core code to use the 16-bits sense codes for building
+sense and replace all hard-coded additional sense codes and additional
+sense code qualifiers with the enum values defined in
 include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
 being processed are easier to test and self-documented.
 
@@ -61,56 +61,187 @@ No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/storvsc_drv.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ drivers/target/target_core_spc.c       | 11 +++++-----
+ drivers/target/target_core_transport.c | 11 +++++-----
+ drivers/target/target_core_ua.c        | 28 ++++++++++----------------
+ drivers/target/target_core_ua.h        |  7 +++----
+ 4 files changed, 25 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index ef3cd3bc7390..625db97d1a03 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1016,7 +1016,7 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
- static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 				struct scsi_cmnd *scmnd,
- 				struct Scsi_Host *host,
--				u8 asc, u8 ascq)
-+				struct scsi_sense_hdr *sshdr)
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index f964a531e053..b70e81af867e 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -1226,9 +1226,9 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
  {
- 	struct storvsc_scan_work *wrk;
- 	void (*process_err_fn)(struct work_struct *work);
-@@ -1033,7 +1033,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 	case SRB_STATUS_DATA_OVERRUN:
- 		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID) {
- 			/* Check for capacity change */
--			if ((asc == 0x2a) && (ascq == 0x9)) {
-+			if (sshdr->sense_code == CAPACITY_DATA_HAS_CHANGED) {
- 				process_err_fn = storvsc_device_scan;
- 				/* Retry the I/O that triggered this. */
- 				set_host_byte(scmnd, DID_REQUEUE);
-@@ -1049,8 +1049,12 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 			 * want scsi_report_sense() to output a message
- 			 * that a sysadmin wouldn't know what to do with.
- 			 */
--			if ((asc == 0x3f) && (ascq != 0x03) &&
--					(ascq != 0x0e)) {
-+			if (scsi_sense_asc(sshdr) ==
-+			    ASC_TARGET_OPERATING_CONDITIONS_HAVE_CHANGED &&
-+			    sshdr->sense_code !=
-+			    INQUIRY_DATA_HAS_CHANGED &&
-+			    sshdr->sense_code !=
-+			    REPORTED_LUNS_DATA_HAS_CHANGED) {
- 				process_err_fn = storvsc_device_scan;
- 				set_host_byte(scmnd, DID_REQUEUE);
- 				goto do_work;
-@@ -1141,8 +1145,7 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request,
+ 	unsigned char *cdb = cmd->t_task_cdb;
+ 	unsigned char *rbuf;
+-	u8 ua_asc = 0, ua_ascq = 0;
+ 	unsigned char buf[SE_SENSE_BUF];
+ 	bool desc_format = target_sense_desc_format(cmd->se_dev);
++	u16 sense_code = NO_ADDITIONAL_SENSE_INFORMATION;
+ 
+ 	memset(buf, 0, SE_SENSE_BUF);
+ 
+@@ -1242,11 +1242,12 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
+ 	if (!rbuf)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+-	if (!core_scsi3_ua_clear_for_request_sense(cmd, &ua_asc, &ua_ascq))
+-		scsi_build_sense_buffer(desc_format, buf, UNIT_ATTENTION,
+-					ua_asc, ua_ascq);
++	if (!core_scsi3_ua_clear_for_request_sense(cmd, &sense_code))
++		scsi_set_sense_buffer(desc_format, buf, UNIT_ATTENTION,
++				      sense_code);
+ 	else
+-		scsi_build_sense_buffer(desc_format, buf, NO_SENSE, 0x0, 0x0);
++		scsi_set_sense_buffer(desc_format, buf, NO_SENSE,
++				      NO_ADDITIONAL_SENSE_INFORMATION);
+ 
+ 	memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
+ 	transport_kunmap_data_sg(cmd);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index dcfe94594916..ba208def8cb5 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3555,7 +3555,8 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
+ 	const struct sense_detail *sd;
+ 	u8 *buffer = cmd->sense_buffer;
+ 	int r = (__force int)reason;
+-	u8 key, asc, ascq;
++	u16 code;
++	u8 key;
+ 	bool desc_format = target_sense_desc_format(cmd->se_dev);
+ 
+ 	if (r < ARRAY_SIZE(sense_detail_table) && sense_detail_table[r].key)
+@@ -3566,21 +3567,19 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
+ 
+ 	key = sd->key;
+ 	if (reason == TCM_CHECK_CONDITION_UNIT_ATTENTION) {
+-		if (!core_scsi3_ua_for_check_condition(cmd, &key, &asc,
+-						       &ascq)) {
++		if (!core_scsi3_ua_for_check_condition(cmd, &key, &code)) {
+ 			cmd->scsi_status = SAM_STAT_BUSY;
+ 			return;
+ 		}
+ 	} else {
+ 		WARN_ON_ONCE(sd->asc == 0);
+-		asc = sd->asc;
+-		ascq = sd->ascq;
++		code = scsi_sense_code(sd->asc, sd->ascq);
  	}
  
- 	if (vm_srb->srb_status != SRB_STATUS_SUCCESS) {
--		storvsc_handle_error(vm_srb, scmnd, host, sense_hdr.asc,
--					 sense_hdr.ascq);
-+		storvsc_handle_error(vm_srb, scmnd, host, &sense_hdr);
+ 	cmd->se_cmd_flags |= SCF_EMULATED_TASK_SENSE;
+ 	cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
+ 	cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER;
+-	scsi_build_sense_buffer(desc_format, buffer, key, asc, ascq);
++	scsi_set_sense_buffer(desc_format, buffer, key, code);
+ 	if (sd->add_sense_info)
+ 		WARN_ON_ONCE(scsi_set_sense_information(buffer,
+ 							cmd->scsi_sense_length,
+diff --git a/drivers/target/target_core_ua.c b/drivers/target/target_core_ua.c
+index 4276690fb6cb..ea97b05d47ab 100644
+--- a/drivers/target/target_core_ua.c
++++ b/drivers/target/target_core_ua.c
+@@ -187,11 +187,10 @@ void core_scsi3_ua_release_all(
+ 
+ /*
+  * Dequeue a unit attention from the unit attention list. This function
+- * returns true if the dequeuing succeeded and if *@key, *@asc and *@ascq have
++ * returns true if the dequeuing succeeded and if *@key and *@code have
+  * been set.
+  */
+-bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+-				       u8 *ascq)
++bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u16 *code)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_dev_entry *deve;
+@@ -214,8 +213,7 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+ 	if (!deve) {
+ 		rcu_read_unlock();
+ 		*key = ILLEGAL_REQUEST;
+-		*asc = 0x25; /* LOGICAL UNIT NOT SUPPORTED */
+-		*ascq = 0;
++		*code = LU_NOT_SUPPORTED;
+ 		return true;
+ 	}
+ 	*key = UNIT_ATTENTION;
+@@ -232,8 +230,7 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+ 		 * clearing it.
+ 		 */
+ 		if (!dev_ua_intlck_clear) {
+-			*asc = ua->ua_asc;
+-			*ascq = ua->ua_ascq;
++			*code = scsi_sense_code(ua->ua_asc, ua->ua_ascq);
+ 			break;
+ 		}
  		/*
- 		 * The Windows driver set data_transfer_length on
- 		 * SRB_STATUS_DATA_OVERRUN. On other errors, this value
+@@ -242,8 +239,7 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+ 		 * (head of the list) in the outgoing CHECK_CONDITION + sense.
+ 		 */
+ 		if (head) {
+-			*asc = ua->ua_asc;
+-			*ascq = ua->ua_ascq;
++			*code = scsi_sense_code(ua->ua_asc, ua->ua_ascq);
+ 			head = 0;
+ 		}
+ 		list_del(&ua->ua_nacl_list);
+@@ -258,15 +254,13 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+ 		nacl->se_tpg->se_tpg_tfo->fabric_name,
+ 		dev_ua_intlck_clear ? "Releasing" : "Reporting",
+ 		dev->dev_attrib.emulate_ua_intlck_ctrl,
+-		cmd->orig_fe_lun, cmd->t_task_cdb[0], *asc, *ascq);
++		cmd->orig_fe_lun, cmd->t_task_cdb[0],
++		scsi_sense_code_asc(*code), scsi_sense_code_ascq(*code));
+ 
+ 	return head == 0;
+ }
+ 
+-int core_scsi3_ua_clear_for_request_sense(
+-	struct se_cmd *cmd,
+-	u8 *asc,
+-	u8 *ascq)
++int core_scsi3_ua_clear_for_request_sense(struct se_cmd *cmd, u16 *code)
+ {
+ 	struct se_dev_entry *deve;
+ 	struct se_session *sess = cmd->se_sess;
+@@ -304,8 +298,7 @@ int core_scsi3_ua_clear_for_request_sense(
+ 	spin_lock(&deve->ua_lock);
+ 	list_for_each_entry_safe(ua, ua_p, &deve->ua_list, ua_nacl_list) {
+ 		if (head) {
+-			*asc = ua->ua_asc;
+-			*ascq = ua->ua_ascq;
++			*code = scsi_sense_code(ua->ua_asc, ua->ua_ascq);
+ 			head = 0;
+ 		}
+ 		list_del(&ua->ua_nacl_list);
+@@ -317,7 +310,8 @@ int core_scsi3_ua_clear_for_request_sense(
+ 	pr_debug("[%s]: Released UNIT ATTENTION condition, mapped"
+ 		" LUN: %llu, got REQUEST_SENSE reported ASC: 0x%02x,"
+ 		" ASCQ: 0x%02x\n", nacl->se_tpg->se_tpg_tfo->fabric_name,
+-		cmd->orig_fe_lun, *asc, *ascq);
++		cmd->orig_fe_lun, scsi_sense_code_asc(*code),
++		scsi_sense_code_ascq(*code));
+ 
+ 	return (head) ? -EPERM : 0;
+ }
+diff --git a/drivers/target/target_core_ua.h b/drivers/target/target_core_ua.h
+index 76487c9be090..6b636c13fee2 100644
+--- a/drivers/target/target_core_ua.h
++++ b/drivers/target/target_core_ua.h
+@@ -37,9 +37,8 @@ extern sense_reason_t target_scsi3_ua_check(struct se_cmd *);
+ extern int core_scsi3_ua_allocate(struct se_dev_entry *, u8, u8);
+ extern void target_ua_allocate_lun(struct se_node_acl *, u32, u8, u8);
+ extern void core_scsi3_ua_release_all(struct se_dev_entry *);
+-extern bool core_scsi3_ua_for_check_condition(struct se_cmd *, u8 *, u8 *,
+-					      u8 *);
+-extern int core_scsi3_ua_clear_for_request_sense(struct se_cmd *,
+-						u8 *, u8 *);
++extern bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key,
++					      u16 *code);
++extern int core_scsi3_ua_clear_for_request_sense(struct se_cmd *cmd, u16 *code);
+ 
+ #endif /* TARGET_CORE_UA_H */
 -- 
 2.55.0
 
