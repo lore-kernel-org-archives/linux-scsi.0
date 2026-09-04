@@ -1,129 +1,112 @@
-Received: from mta1.migadu.com (out-26.mta1.migadu.com [95.215.58.26])
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E8FC3F0AAF
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2026 10:46:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.26
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FADC46C822
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2026 11:00:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788518795; cv=none; b=gxnvHlS/oecoy3nfT1AZFYzW8M8oqSpY7jRkJ/p+DsHhJT82ZgcPuFJk1tNxuYnc2HVaqAi4jUxvvMGaLFs+jO+cIDupdje7ufKfWJayFXplvh6HvWCM9O0F6x5d4s5gx2MUn7ihp36MTKywJELFWx5YoBqnwLY9/aUDGoAPGJE=
+	t=1788519621; cv=none; b=RMFdygl6DzTtpCfRLWDaqXxt/ywtiKif+OIlaaAoDZMJM/IoIB5lLvVKo8F10X0m5zvm0Gc7rgs+hx+aYFMkwfJpaVPxvEaJmnfNmMak+qmZwMN84mc0d+C8YkFGpO8aebJLJ3xqfPDsgidtZI0F6t9NqX/nfEDdT0L/PQVdVac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788518795; c=relaxed/simple;
-	bh=SWLNDM3X58Oi951rjmtN8VDdEwnQ812gsu954cQ4Gzc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CAsovmhKoJhPKmQlMrkwRMoEptvXLcn/LlCRR9CrdmKTUPiB+Fm5yGV+OQ4e4qfRuZtCHNV+fZeKoy2yumzOfokICW/l4Q5VMFK+pEO+NyhVic9oLxGkJlCKKUeyO5rwVy9u//CX3yba+LNgbmlCWA5n0V+FkNV1Wsv/kBbw1dI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CB/ia8qR; arc=none smtp.client-ip=95.215.58.26
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788519621; c=relaxed/simple;
+	bh=F6qhUBtu5YspPWJwLVz7Ug0cYXURMIPFcnHqC5icyQg=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=GHDLJm6tQ2oOMGRexzWRyNsgiVG668LkHH+Pnlheoj5sM2ImLcc0XwvU+lVKUWdW+V2Z8+SzScm9vlU3owzB6yUcd/0artgw+59c1J/N4LaiI8S2RYQ4da01fxcA8rr/N1WcJRI+lHy8tgJnAZK6YdDiW4I7bi2CwFdzLrF4hOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=I37p6kx+; arc=none smtp.client-ip=209.85.215.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CB/ia8qR"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=SWLNDM3X58Oi951rjmtN8VDdEwnQ812gsu954cQ4Gzc=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788518791; v=1; x=1789123591;
- b=CB/ia8qRm5aT0bckbLlBpkwe21ZtNPXxS/AptttCDMMqcHoDahAo2ZfSRYXJK1GbH34+OhZ2
- +UDpJZ8yj7rScsyYC4mxeZJ/vnO5R8AoTwAtdSO51fnC9nZqAaeUvi/RCcsGzaRjGORveKBSbjI
- o3EVKqUGI7mpibuXjA6G71FQ=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 61d7ee7e5d4c238e;
-	Fri, 04 Sep 2026 10:46:31 +0000
-X-Mizu-Trace-ID: 61d7ee7e5d4c238e
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <f17d5e16-cc0e-4dd1-90c4-c7583cdf5ee9@linux.dev>
-Date: Fri, 4 Sep 2026 11:46:30 +0100
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="I37p6kx+"
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cc1b8088203so1156040a12.3
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Sep 2026 04:00:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1788519619; x=1789124419; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=uhJXG+jI+lGIJtzjn1qpUhBX4B4g6+5Q4kRtY0eVfw4=;
+        b=I37p6kx+uAU1oRZcwE/ZfJpOBLRLJHNbpiYQHlEfQueQxDE3imzRvPlJFAMhjunIsL
+         MHBTSgjDDANaVmzdiABNLK7tKopP3Y0dGWCwY/Kd+t8OIEwIWgNtbAo8Wq3uCm0I8QNK
+         uyetWmAr+TMZzSP1oNLJHdvT9zhfdPS9UJ/zQXMlOLFHeF29jFPc7CzB/VykktKBqXGx
+         0e1z5eef6eA0lRw0a/k5RTuM8jic4sOXBBRMyoPScKl0xtTFee27WKQOVAe111YCp0Ov
+         4V91kKHmDy3BHMGJXacHyppByUpCzTMqoKAqKuCL0QMDL7oSAGnphcqcoAp2FgCQ7xmJ
+         4r/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788519619; x=1789124419;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=uhJXG+jI+lGIJtzjn1qpUhBX4B4g6+5Q4kRtY0eVfw4=;
+        b=FOTfkQLfFv/bqH9RQKJ5fnH4RopKi5l1G6OtmHVHnopdOcbWMRj8SlRNsxnlXpkEm2
+         cAGlQ8t87UCE1PbB2hrhZ+Fl9Z3jBzG8aIba7z3M9D91iioWWVW8/p8XUIuDP1wCd+n7
+         DphLVbD3a49/NGijJlYsunZg7Gnzmx/K3BvkwrcgzqlLABchm2Q/AZSahE5qx+A8vzAS
+         sFwgMjlS9q6/A6YWTglLeIlu8yjDDufUy/rfblMHki9A+0hB5U4rbCWUvdtwbETU2HPb
+         QmeHZwDEIOHm1BJoaUIU6+8LxeJ16gJ/b8zgVNXQW+T1S0d21kAFIjvwWNus9r5PclpA
+         cOUQ==
+X-Forwarded-Encrypted: i=1; AKwUvByqKNNJ/YikUny3Tq+TIY12bDBK5wokmJT3j1MVr7y4rqLLEAFexQwlx/p0IP7vsCc+m7vDjPLvJ42k@vger.kernel.org
+X-Gm-Message-State: AFuF++kYx9qLTD3bmRwhNDxNt/UmSGtLBD+hJmzerOoxUBXlWhQw8nR8
+	s6sL+E37Tz5PiUqoiOh+68VpHd6NwOlMs8wdYYWt+N5zvqaRIqDTBJt0g58/mdWeL19SA2r5Ag0
+	n2Ac9q6vb3NDCw85qk7hhjw==
+X-Received: from pgcv11.prod.google.com ([2002:a05:6a02:530b:b0:c9a:ffcc:19c8])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a20:db90:b0:3d3:ad3c:49a9 with SMTP id adf61e73a8af0-3da3a1c8619mr8248441637.23.1788519618942;
+ Fri, 04 Sep 2026 04:00:18 -0700 (PDT)
+Date: Fri,  4 Sep 2026 19:00:15 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 20/27] scsi-multipath: add
- scsi_mpath_{start,end}_request()
-To: sashiko-reviews@lists.linux.dev, John Garry <john.g.garry@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-References: <20260901104526.3850621-1-john.g.garry@oracle.com>
- <20260901104526.3850621-21-john.g.garry@oracle.com>
- <20260901112533.2BC161F000E9@smtp.kernel.org>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260901112533.2BC161F000E9@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.979.g7e5102b832-goog
+Message-ID: <20260904110017.3444852-1-stanleyjhu@google.com>
+Subject: [PATCH 0/2] scsi: ufs: rpmb: Fix device lifetime UAF and unregistered
+ bus regression
+From: Stanley Jhu <stanleyjhu@google.com>
+To: "Martin K . Petersen" <mkp@kernel.org>, 
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+Cc: Brian Kao <powenkao@google.com>, Bean Huo <beanhuo@micron.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@sandisk.com>, Can Guo <can.guo@oss.qualcomm.com>, 
+	Peter Wang <peter.wang@mediatek.com>, linux-kernel@vger.kernel.org, 
+	Stanley Jhu <stanleyjhu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/1/26 12:25, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] Bypassing `scsi_end_request()` on hard errors in `scsi_queue_rq()` permanently leaks multipath active counters and corrupts state for recycled blk-mq tags.
-> --
-> 
-> commit d6985f792a0819a7b56a04e827a71ff5a8dd2172
-> Author: John Garry <john.garry@linux.dev>
-> 
-> scsi-multipath: add scsi_mpath_{start,end}_request()
-> 
-> This commit adds scsi_mpath_start_request() and scsi_mpath_end_request() to
-> handle private multipath request data. It also introduces mpath_nr_active
-> per SCSI host to track active requests for queue depth io-policies.
-> 
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 189263ce56624..5916dead5422e 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
-> [ ... ]
->> @@ -1918,6 +1921,9 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->>   	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
->>   	cmd->submitter = SUBMITTED_BY_BLOCK_LAYER;
->>   
->> +	if (sdev->scsi_mpath_dev && is_mpath_request(req))
->> +		scsi_mpath_start_request(req);
->> +
->>   	blk_mq_start_request(req);
->>   	if (blk_mq_is_reserved_rq(req)) {
->>   		reason = shost->hostt->queue_reserved_command(shost, cmd);
-> 
-> [ ... ]
-> 
->> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
->> index 8ecfb94049db5..52227e2cd9749 100644
->> --- a/include/scsi/scsi_cmnd.h
->> +++ b/include/scsi/scsi_cmnd.h
-> [ ... ]
->> @@ -58,8 +58,11 @@ struct scsi_pointer {
->>    */
->>   #define SCMD_FORCE_EH_SUCCESS	(1 << 3)
->>   #define SCMD_FAIL_IF_RECOVERING	(1 << 4)
->> +#define SCMD_MPATH_IO_STATS	(1 << 5)
->> +#define SCMD_MPATH_CNT_ACTIVE	(1 << 6)
->>   /* flags preserved across unprep / reprep */
->> -#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED | SCMD_FAIL_IF_RECOVERING)
->> +#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED | SCMD_FAIL_IF_RECOVERING | \
->> +				SCMD_MPATH_IO_STATS | SCMD_MPATH_CNT_ACTIVE)
-> 
-> [Severity: High]
-> Does preserving these multipath flags across requeue operations cause a leak
-> of the mpath_nr_active counter and stale state for recycled tags?
-> 
-> If a multipath request is dispatched, it calls scsi_mpath_start_request()
-> which increments the host's mpath_nr_active counter and sets these flags.
-> 
-> If this request is requeued (for example, if the host is busy) and then
-> re-dispatched while the device is offline or entering recovery,
-> scsi_device_state_check() in scsi_queue_rq() will fail early. This causes
-> scsi_queue_rq() to return a hard error directly to the block layer.
-> 
-> Because the block layer completes the request natively on hard dispatch
-> errors, it bypasses scsi_end_request(), leaving scsi_mpath_end_request()
-> uncalled. The mpath_nr_active counter is leaked.
+This series fixes two architectural defects in the UFS OP-TEE RPMB
+driver: a use-after-free (UAF) during controller unbind or shutdown, and
+an unregistered bus rejection by the driver core.
 
-This seems like something which needs to be fixed in scsi midlayer
+Patch 1: Decouple RPMB device lifecycle from devres
+- Problem: struct ufs_rpmb_dev embeds a struct device but was allocated
+  via devres tied to the parent controller. When the controller unbinds,
+  devres prematurely frees the structure while external references
+  remain, causing a UAF Oops on SLUB-poisoned memory
+  (0x006b6b6b6b6b6b9c). Additionally, in-flight I/O lacks transport
+  pinning to the underlying SCSI device.
+- Solution: Transition to a reference-counted device lifecycle, pin the
+  underlying SCSI device and host hierarchy during probe, and enforce
+  proper subsystem unregistration and offline state validation.
 
-> 
-> Furthermore, since SCMD_MPATH_IO_STATS and SCMD_MPATH_CNT_ACTIVE are
-> preserved in SCMD_PRESERVED_FLAGS, any new request reusing this tag might
-> inherit the stale flags, bypassing initialization in
-> scsi_mpath_start_request().
-> 
-> Could there be a mechanism to clear these flags and decrement the counter
-> when a requeued request encounters a hard failure during re-dispatch?
-> 
+Patch 2: Register and unregister ufs_rpmb_bus_type
+- Problem: The driver assigns devices to ufs_rpmb_bus_type without
+  registering the bus with the driver core, causing device_register()
+  to fail with -EINVAL during probe.
+- Solution: Register the bus during UFS core initialization and
+  unregister it on exit, using IS_REACHABLE(CONFIG_RPMB) to provide clean
+  fallback stubs and prevent modular build breakages.
+
+Verification:
+- QEMU ARM64 with virtual UFS 4.0 PCI controller:
+  * Verified /sys/bus/ufs_rpmb registration and successful device probe.
+  * Verified probe, unbind, and shutdown complete without leaks or Oops.
+- checkpatch.pl: 0 errors, 0 warnings across all patches.
+
+Stanley Jhu (2):
+  scsi: ufs: rpmb: Decouple device lifecycle from devres to avoid UAF
+  scsi: ufs: rpmb: Register and unregister ufs_rpmb_bus_type
+
+ drivers/ufs/core/ufs-rpmb.c    | 96 ++++++++++++++++++++------------
+ drivers/ufs/core/ufshcd-priv.h | 11 ++++-
+ drivers/ufs/core/ufshcd.c      | 16 ++++++-
+ 3 files changed, 84 insertions(+), 39 deletions(-)
+
+-- 
+2.55.0.979.g7e5102b832-goog
 
