@@ -1,180 +1,67 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E443D336883;
-	Fri,  4 Sep 2026 00:28:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47B81175A8A;
+	Fri,  4 Sep 2026 00:36:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788481689; cv=none; b=fXSAJHp5xyLSXx+cEMT9KAFKosifvejs2MP3cz4KFNVJH5iebREflQJvDWAQCK/krV9ejdHhSNwEwnZsFjiNQBxVbMmRDYzYz5tZFin6PNebcNi/QLJs3OlY4jjWWLMxBDrEHuCMDPyWWBgzJJm9fsg38HMoxLD585U0x81UiQc=
+	t=1788482175; cv=none; b=GpPspJJCR4TjGk4edz+z+HnKCml/E9YAQTvEmP7Dpk0Ig5BH7LPsr/YkTeE7jhovR9W67Zh3ngLVuMkZXwN/133odVSlCO1uwWf369xzNKWD1iC4RVMKQ7bIytkk5PtaWCnK9RMj3SY7vjfuR/NFpJX1jET3sGI/0s5viGW4324=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788481689; c=relaxed/simple;
-	bh=PvgOFC0G42YzmzzUojGiarXwEKtn7W06vqScjkjTs14=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EVXJcnYDwqNwJ5OoI+oymISnKlFnll88W45Vhb23re30+hHrlR14uavQmGdj8B3uVhrXgeUZjJiytuP/eJduSoO6EuuJHoiMvEWiDdTuw3qVyzfjURtIotIC7JD8NLR6opxT/4iOjDgVEKdtPZJWQjpZP4wH9989uaTdpHHc4To=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FncQTNZF; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788482175; c=relaxed/simple;
+	bh=V9ZnJt1/kaDGAz3ZB8qZyO6TtNycuDkHYm1DuzcrXyo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=YVAqgF6s8L73xjD8aPzPKraVqwReh41kWUfmx6L79HjPzEIPdnxo8KqCNJR1qyCezAqt+49F6vmfIDh8kJ3t9ihukJqe6Cqtqk/ozhnSFjJsxYhI5V/4yjjD0+MOWH5DHmqlgSuHm3nMtRwLvbgoopADVC0IifguTrzC2i27goE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eu/zBsjy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FncQTNZF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 622301F00A3D;
-	Fri,  4 Sep 2026 00:28:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eu/zBsjy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 788AE1F000E9;
+	Fri,  4 Sep 2026 00:36:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788481687;
-	bh=4VUYebA6xq/3FG1607Mb1UU3hdr5E8HJTAqLNJ0kZTk=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=FncQTNZFfJYO7U5q/Nd4uzUOWNgGvoosMKmiiJSKKG9sRMRP4e7awixLI0wW5jc4N
-	 7f5su+/GMeISbDQ+0Yblo/YS8SXA7ulx52Y9r/jjyG9+OahtKmnhopGYLNjR6aBsL6
-	 sts1o3+1uZEhtyA53hNoZkTdJi1e8RvyONa2LOur7SIgUOFkL5Cf3jsMEuoQUjTM51
-	 0EmtM2KjfwCpQ1E6pOvGovEqLuPU83jOoafP8vJxJ6GGvYTsYI0Ms+COHjXVBhN2BW
-	 ysb7nMTG32FhsnzvJugfanpS23fNOlaX34ftaPyQS5r60j0ywMLS2RYFKrKncYTbzj
-	 cEMPM8PFDyzuw==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-scsi@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-usb@vger.kernel.org,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-s390@vger.kernel.org,
-	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v3 40/40] scsi: remove scsi_build_sense() and scsi_build_sense_buffer()
-Date: Fri,  4 Sep 2026 09:26:44 +0900
-Message-ID: <20260904002644.157668-41-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260904002644.157668-1-dlemoal@kernel.org>
+	s=k20260515; t=1788482174;
+	bh=V9ZnJt1/kaDGAz3ZB8qZyO6TtNycuDkHYm1DuzcrXyo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Eu/zBsjyoDBTU1usfEEj6foru5mK1IdJpbzmQim3M2bUW+t/PxL1i9+PwVD8TnadX
+	 altW54Ac8tgDiohmsmYKfDurFN1LiX3I4uKOXM398LHpTLEPRMKprsUgi7ifvMQBo1
+	 3HGuthlDhsytuT2d9oBDlsjluxDe0UCT0WYrSNVw7Z38fJf93WkeUrKM56pAJc3c99
+	 vdINd2PSMoH5gdunfY/LDjNQ5GQpATUwxUzUDcURCmFQhEFxwjh//p27gyYJbmDBIm
+	 j7LPHXB4UxMtN2CnKLGEoq211K4Fg7booGxAml/fDl96tky4HDgLOWWFtfr7sLZSgw
+	 J0Bl3UynwJv2A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 02/40] scsi: constants: use defined sense codes
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Damien Le Moal" <dlemoal@kernel.org>
+Cc: "Christian Borntraeger" <borntraeger@linux.ibm.com>, linux-s390@vger.kernel.org, "Vasily
+ Gorbik" <gor@linux.ibm.com>, dlemoal@kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Heiko
+ Carstens" <hca@linux.ibm.com>, cassel@kernel.org, "Alexander Gordeev" <agordeev@linux.ibm.com>
+In-Reply-To: <20260904002644.157668-3-dlemoal@kernel.org>
 References: <20260904002644.157668-1-dlemoal@kernel.org>
+ <20260904002644.157668-3-dlemoal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 04 Sep 2026 00:36:13 +0000
+Message-Id: <20260904003613.788AE1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Now that all code has been converted to use 16-bits sense codes and to
-initialize sense with scsi_set_sense() and scsi_set_sense_buffer(), remove
-the inline definitions of these new functions, change scsi_build_sense()
-and scsi_build_sense_buffer() to use a single 16-bits sense code as
-argument (instead of separate arguments for the ASC and ASCQ), and
-rename them to scsi_set_sense()  and scsi_set_sense_buffer().
+> The SENSE_CODE() macro is used for defining the array of struct error_info
+> which associates a string description to an additional sense code and its
+> combinations with additional sense code qualifiers. These are however
+> hardcoded values.
+>=20
+> Now that all 16-bits sense codes are defined as macros in
+> include/scsi/scsi_sense.h, modify sense_codes.h to use the defined
+> sense code macros. While doing this, 2 missing entries are added for the
+> codes OVERLAPPING_ATOMIC_COMMAND_IN_PROGRESS and
+> DEPOPULATION_RESTORATION_INTERRUPTED.
+>=20
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/scsi/scsi_common.c | 12 +++++++-----
- drivers/scsi/scsi_lib.c    | 11 +++++------
- include/scsi/scsi_cmnd.h   | 10 +---------
- include/scsi/scsi_common.h |  8 +-------
- 4 files changed, 14 insertions(+), 27 deletions(-)
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
-index 2cabc932acd4..94b160336247 100644
---- a/drivers/scsi/scsi_common.c
-+++ b/drivers/scsi/scsi_common.c
-@@ -276,17 +276,19 @@ const u8 * scsi_sense_desc_find(const u8 * sense_buffer, int sb_len,
- EXPORT_SYMBOL(scsi_sense_desc_find);
- 
- /**
-- * scsi_build_sense_buffer - build sense data in a buffer
-+ * scsi_set_sense_buffer - build sense data in a buffer
-  * @desc:	Sense format (non-zero == descriptor format,
-  *              0 == fixed format)
-  * @buf:	Where to build sense data
-  * @key:	Sense key
-- * @asc:	Additional sense code
-- * @ascq:	Additional sense code qualifier
-+ * @code:	Additional sense code and sense code qualifier
-  *
-  **/
--void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
-+void scsi_set_sense_buffer(int desc, u8 *buf, u8 key, u16 code)
- {
-+	u8 asc = scsi_sense_code_asc(code);
-+	u8 ascq = scsi_sense_code_ascq(code);
-+
- 	if (desc) {
- 		buf[0] = 0x72;	/* descriptor, current */
- 		buf[1] = key;
-@@ -301,7 +303,7 @@ void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
- 		buf[13] = ascq;
- 	}
- }
--EXPORT_SYMBOL(scsi_build_sense_buffer);
-+EXPORT_SYMBOL(scsi_set_sense_buffer);
- 
- /**
-  * scsi_set_sense_information - set the information field in a
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b58e028a362e..97684acffdb9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3585,21 +3585,20 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
- EXPORT_SYMBOL(scsi_vpd_tpg_id);
- 
- /**
-- * scsi_build_sense - build sense data for a command
-+ * scsi_set_sense - build sense data for a command
-  * @scmd:	scsi command for which the sense should be formatted
-  * @desc:	Sense format (non-zero == descriptor format,
-  *              0 == fixed format)
-  * @key:	Sense key
-- * @asc:	Additional sense code
-- * @ascq:	Additional sense code qualifier
-+ * @code:	Additional sense code and sense code qualifier
-  *
-  **/
--void scsi_build_sense(struct scsi_cmnd *scmd, int desc, u8 key, u8 asc, u8 ascq)
-+void scsi_set_sense(struct scsi_cmnd *scmd, int desc, u8 key, u16 code)
- {
--	scsi_build_sense_buffer(desc, scmd->sense_buffer, key, asc, ascq);
-+	scsi_set_sense_buffer(desc, scmd->sense_buffer, key, code);
- 	scmd->result = SAM_STAT_CHECK_CONDITION;
- }
--EXPORT_SYMBOL_GPL(scsi_build_sense);
-+EXPORT_SYMBOL_GPL(scsi_set_sense);
- 
- #ifdef CONFIG_SCSI_LIB_KUNIT_TEST
- #include "scsi_lib_test.c"
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index bf6d69f0249f..2f2364c96457 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -391,15 +391,7 @@ static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
- 	return xfer_len;
- }
- 
--extern void scsi_build_sense(struct scsi_cmnd *scmd, int desc,
--			     u8 key, u8 asc, u8 ascq);
--
--static inline void scsi_set_sense(struct scsi_cmnd *scmd, int desc,
--				  u8 key, u16 code)
--{
--	scsi_build_sense(scmd, desc, key, scsi_sense_code_asc(code),
--			 scsi_sense_code_ascq(code));
--}
-+void scsi_set_sense(struct scsi_cmnd *scmd, int desc, u8 key, u16 code);
- 
- struct request *scsi_alloc_request(struct request_queue *q, blk_opf_t opf,
- 				   blk_mq_req_flags_t flags);
-diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
-index 405512554ee8..88a076c1a137 100644
---- a/include/scsi/scsi_common.h
-+++ b/include/scsi/scsi_common.h
-@@ -99,13 +99,7 @@ static inline u8 scsi_sense_ascq(const struct scsi_sense_hdr *sshdr)
- extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 				 struct scsi_sense_hdr *sshdr);
- 
--extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
--
--static inline void scsi_set_sense_buffer(int desc, u8 *buf, u8 key, u16 code)
--{
--	scsi_build_sense_buffer(desc, buf, key, scsi_sense_code_asc(code),
--				scsi_sense_code_ascq(code));
--}
-+void scsi_set_sense_buffer(int desc, u8 *buf, u8 key, u16 code);
- 
- int scsi_set_sense_information(u8 *buf, int buf_len, u64 info);
- int scsi_set_sense_field_pointer(u8 *buf, int buf_len, u16 fp, u8 bp, bool cd);
--- 
-2.55.0
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260904002644.1576=
+68-1-dlemoal@kernel.org?part=3D2
 
