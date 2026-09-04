@@ -1,145 +1,208 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC1178F2F;
-	Fri,  4 Sep 2026 00:12:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3A7A131E49;
+	Fri,  4 Sep 2026 00:26:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788480737; cv=none; b=dUynHvc1wK0GRPFuMe4B2JuSYLMsUnWe2BQ+ZmaWVffNBppFfGxLn5omDXPuBqicu9ugq7xoTj78UKiongKGBM5XnMHEBwULtilDOAOfB3fZiBK6bviJjOjiqbMNBADoN5iZFgGidNwYkQ2IQQp6rjlhkB1amCyj3IVRiALn41w=
+	t=1788481619; cv=none; b=aOqUtot6xLvv9Gn6dmPA2zTEb2KSN2n7vYkFMANG4LWU/DE/MRvtdAJW1YkJDdHwJs2CoClKYxGJMwcdU237FmRxZRDXEOSQLoj83Hm/waSW//PTj69ReW8ers6HP56385ZseX0cIU4bmDkARImnjh2MIzLLoSu2t64IZLFp5Nk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788480737; c=relaxed/simple;
-	bh=1oje6I6cprMjdcZ3w+KgH6EanbVWQeayLSc3PmDGyL4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tOd39DrQuyQl91FsTprbMOGzFSNl6nT8Zbh8CfsfbuAIjrWJJnqcpp2V2XMS9ulm2vXpObb4o/7eoIA7iV6S/P/lrbxQJnCq6rno4iouKbLnuvQnBLu/nhfmHnMJbXKBmW2baMDlDHKDqC0cMfW/dm3iSeXQX5Oczt+XgALldgg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XW9ZtjJd; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788481619; c=relaxed/simple;
+	bh=YIrU1a5LIk8R8UmC4YvL7asVO1wT4Xei6fV+VatqJp4=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=lqaC9ZDAkKS3rDyWIqPoVHCK+8Q2AMBogJ3E6NPZlcQvXqccBI1rwdgCLKtbwQu8khWmyFjkOnYL+37jw6qXuyVXQmRPd58mpI9Jg9FyNFZhDfeE2QuWVgZ1X0LV6qe9tFNbW7b8qQ6by+aoxpYDtsMmKPYSo95Q2MgMbjc3/Hk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ug91L3qe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XW9ZtjJd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D0081F000E9;
-	Fri,  4 Sep 2026 00:12:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ug91L3qe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 336831F000E9;
+	Fri,  4 Sep 2026 00:26:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788480736;
-	bh=uwU9myAIHfxtIC/MA9ZCvJe1sgh7d4K5eTnJj1GTYxg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=XW9ZtjJdCEfhzI3DxWMXkt9DtZEB/PYWe755TnnZH/tac17RQJCHcrDOy1PTtv0Wo
-	 BbVOQriqqG6KoM1atfZmXUpQV9Oh9vyOoi8QisKTUV2eCe+A+qDkQcB3nYS6J+c5kj
-	 GygJk2zJqUKYukpQqfDZqWvtEYGznn53rUeWTfkNNFy14OnDZC6FUMTKufgeP8W+Nn
-	 ahCExJ+/ST1mem1vNNM+HLCEQ5wLZzHSdwmT2+D0vkEqu8UWhzpSu7hnbEHwXW24JY
-	 6ujse3Q2i8z3fZ3GfubUaORUT1JqibaBOq8g/8xfYlirIP6vkWt2LwfgdqhKABykOs
-	 BS3hYKU5XOFhg==
-Message-ID: <795ac93a-9377-4503-9dc4-58f21c815f71@kernel.org>
-Date: Fri, 4 Sep 2026 09:12:11 +0900
+	s=k20260515; t=1788481617;
+	bh=OWri4F0Svaj3nnPmZom/8lW/4zU2p7+FpDTOdKpLxjk=;
+	h=From:To:Subject:Date;
+	b=Ug91L3qeN3VWPF/oWIIteU79HpBhrHU56r0rR0vYbGUXaS/XDVxZTJg1CZIXg2bD1
+	 m/ztJErq9m683IV9tp0+V1gC9QdDjwTYhK+SdXCyV/Rq3nwou8qUoSgT8ad7eQCYDz
+	 biK8vrFyS1Wx+Fb73eJy4m7VIl8Lng4qRmTkSbggv4oeOgSd6v6RaBAiRAm5AaFV7M
+	 G+9wNebQMcUBzHUK0dL5gErh6Rajvakja0hZ3hJHMagVb76LqPNzuOGasn0xmqHs/N
+	 3ydxrzufkKLr7fFL4ymJVkMXwJMJ0HiNCA6fh6pqdKgZav5BFoEWxHuwFaCabzABiG
+	 9wlx2gXKW+6eQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-usb@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-s390@vger.kernel.org,
+	Heiko Carstens <hca@linux.ibm.com>
+Subject: [PATCH v3 00/40] Use defined 16-bits ASC/ASCQ combinations 
+Date: Fri,  4 Sep 2026 09:26:04 +0900
+Message-ID: <20260904002644.157668-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] scsi: Initial commit of VirtIO PCIe Endpoint Driver
-To: Manivannan Sadhasivam <mani@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: alistair23@gmail.com, mst@redhat.com, eperezma@redhat.com,
- linux-kernel@vger.kernel.org, xuanzhuo@linux.alibaba.com,
- jasowangio@gmail.com, linux-scsi@vger.kernel.org, mkp@kernel.org,
- virtualization@lists.linux.dev, James.Bottomley@hansenpartnership.com,
- alistair@alistair23.me, Alistair Francis <alistair.francis@wdc.com>,
- linux-pci@vger.kernel.org, Shunsuke Mie <mie@igel.co.jp>,
- Frank Li <Frank.Li@kernel.org>, Koichiro Den <den@valinux.co.jp>,
- Kishon Vijay Abraham I <kishon@kernel.org>
-References: <20260901014650.2728658-1-alistair.francis@wdc.com>
- <apaOZeeDBIRlpB7b@ryzen>
- <akvzpivrbg3b3jra6ibga6j637pwqkwnnzs6q2ymcn5ixrdym6@wniqpspkcknt>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <akvzpivrbg3b3jra6ibga6j637pwqkwnnzs6q2ymcn5ixrdym6@wniqpspkcknt>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 9/3/26 20:51, Manivannan Sadhasivam wrote:
-> On Tue, Sep 01, 2026 at 10:35:49AM +0200, Niklas Cassel wrote:
->> On Tue, Sep 01, 2026 at 11:46:48AM +1000, alistair23@gmail.com wrote:
->>> From: Alistair Francis <alistair.francis@wdc.com>
->>>
->>> This series adds a VirtIO SCSI endpoint built on top of the VirtIO PCIe
->>> endpoint. This is a similar approach to the NVMe PCIe Endpoint
->>> (drivers/nvme/target/pci-epf.c) but for SCSI.
->>>
->>> This does end up being somewhat similar to the pci-epf.c code, but
->>> re-written for SCSI.
->>>
->>> This approach allows a PCIe Endpoint device (tested on a
->>> radxa-rock5b) to setup what appears to be a SCSI device, using an
->>> existing SCSI backend (tested using scsi_debug).
->>>
->>> At this point a host can connect over PCIe, ensure virtio_pci and
->>> virtio_scsi is loaded and on PCIe rescan will see a scsi device.
->>>
->>> There are a few pain points with this approach though:
->>>  1. We have to use the Legacy SCSI VirtIO driver. This is because the
->>>     Raxda Rock5b (and AFAIK all PCIe Endpoint hardware) can't add
->>>     capabilities. So we can't advertise the VirtIO Common configuration
->>>     capability, which means we can't be a modern VirtIO SCSI device.
->>>
->>>     This is unfortunate, but there doesn't seem to be any way around
->>>     this, at least with the current hardware.
->>>
->>>  1.2. Legacy virtio devices only have 32 feature bits and therefore can't
->>>     set the VIRTIO_F_ACCESS_PLATFORM (bit 33) feature. This means the
->>>     vring_use_map_api() function will return false.
->>>
->>>     Currently Linux endpoint devices use the legacy virtio interface as
->>>     they aren't able to advertise the Common configuration capability.
->>>     As most PCI endpoint capable PCIe controllers do not allow modifying the
->>>     capability list, and thus are unable to advertise the Common configuration
->>>     capability. This means the device's inbound TLPs fault on the host
->>>     SMMU because the vring descriptors carry raw physical addresses.
->>>
->>>     This series adds a quirk that forces a subset of legacy virtio devices
->>>     to use the DMA Map API (vring_use_map_api() will return true),
->>>     which fixes this issue.
->>>
->>>     It's unideal that we have to hard code a quirk to basically just
->>>     advertise the VIRTIO_F_ACCESS_PLATFORM feature, but (see 1) as we
->>>     are stuck with legacy virtio devices there isn't much else we can do.
->>>
->>>  2. We have to pin scsit_pci_epf_poll_cfg_thread() on a CPU in order to
->>>     respond fast enough to the host. This means we effectivly burn a CPU
->>>     to read and write some values. But as there are no intterupts
->>>     generated on these events and we need to be very quick there isn't
->>>     another option.
->>>
-> 
-> Most of these pain points will go away if you use virtio-msg [1] transport
-> instead of the virtio-pci transport. Using the virtio-pci transport on a real
-> PCIe device without a way to trap and emulate the config space requests will
-> always be racy.
+Martin, James,
 
-There is nothing inherently racy about the config space. It is about the fact
-that most PCI endpoint controllers:
-1) Do not raise an interrupt when PCI BARs or config space is written by the
-host RC, and
-2) All PCI endpoint controllers that Linux supports do not allow drivers to
-create extended capabilities in the config space that can then be emulated in
-the endpoint driver (enabling that would require 1 to be supported, obviously).
+This patch series defines as macros all ASC/ASCQ combinations present in
+https://www.t10.org/lists/asc-num.txt and converts the SCSI core code and
+SCSI low level drivers to use these macros instead of hard-coded
+ASC/ASCQs. To do this, struct scsi_sense_hdr and struct scsi_failure are
+modified to replace the asc and ascq 8-bits fields with a 16-bits
+sense_code field.
 
-(2) can be delt with quirks. Not great, but simple enough. And in this case, we
-need it more because of the virtio-pci specs, which are not great to start with.
+This cleans up the code in many places and makes it easier, and self
+documented, to test sense codes in the case of errors.
 
-And for (1), the only real problem that causes is that an endpoint driver needs
-to poll PCI BARs/submission queues to see if the host issued commands. Again not
-great, but that works just fine. Alistair's point about burning a CPU doing that
-is simply so that we can reduce command latency and get good enough performance.
+Overall, there should be no functional chnages here.
 
-We went through all of that already with the NVMe PCI endpoint. Works well
-enough and does what is intended, which is the same here for the virtio-scsi
-endpoint driver: create a platform where one can emulate a SCSI device to
-experiment with new features etc. This is all intended as a development/test
-tool, not for production use.
+Note: this dwiseries currently applies cleanly to Linus tree, but will
+have a conflict with a libata fix patch that will be sent out for 7.3rc2.
 
-I do not know virtio-msg. First time I hear about it. And I am not sure if there
-is a standard way of exposing a SCSI host through that.
+Changes from v2:
+ - Removed unintended duplication of KUNIT_EXPECT_EQ() call in patch 7
+   (Sashiko comment).
+ - Improved patch 38 to directly use 16-bits sense code instead of passing
+   only an ascq around (Sashiko comment).
+ - Added missing local variable initialization in
+   spc_emulate_request_sense() in patch 34 (Sashiko comment).
+ - Added review tags
 
+Sashiko also did comment about several pre-existing issues for different
+drivers, but I am not addressing these issues in this series.
+
+Changes from v1:
+ - Addressed Sashiko comments signaling missing "ASC_" prefix when using
+   the named macros for ASC codes.
+ - Fixed up patch 7 to correct trace event print of asc/ascq. Also
+   extended the use of scsi_set_sense() in place of scsi_build_sense().
+ - Modified patch 37 to extend the use of scsi_set_sense_buffer() in place
+   of scsi_build_sense_buffer().
+ - Added patch 34 and 38 to extend the use of scsi_set_sense() in place of
+   scsi_build_sense().
+ - Added patch 40 to remove scsi_build_sense() and
+   scsi_build_sense_buffer().
+
+Damien Le Moal (40):
+  scsi: define all additional sense codes and their qualifiers
+  scsi: constants: use defined sense codes
+  scsi: constants: rename internal struct field names
+  scsi: rename sense field of struct scsi_failure
+  scsi: prepare for using 16-bits defined sense codes
+  scsi: use struct scsi_sense_hdr to log sense keys and codes
+  scsi: core: use 16-bits defined sense codes
+  scsi: sd: use 16-bits defined sense codes
+  scsi: sr: use 16-bits defined sense codes
+  scsi: ses: use 16-bits defined sense codes
+  scsi: ch: use 16-bits defined sense codes
+  scsi: st: use 16-bits defined sense codes
+  scsi: device_handlers: hp_sw: use 16-bits defined sense codes
+  scsi: device_handlers: rdac: use 16-bits defined sense codes
+  scsi: device_handlers: emc: use 16-bits defined sense codes
+  scsi: device_handlers: alua: use 16-bits defined sense codes
+  scsi: mpt3sas: use 16-bits defined sense codes
+  scsi: mpi3mr: use 16-bits defined sense codes
+  scsi: 3w-xxxx: use 16-bits defined sense codes
+  scsi: leapraid: use 16-bits defined sense codes
+  scsi: megaraid: use 16-bits defined sense codes
+  scsi: myrX: use 16-bits defined sense codes
+  scsi: smartpqi: use 16-bits defined sense codes
+  scsi: qla2xxx: use 16-bits defined sense codes
+  scsi: ps3rom: use 16-bits defined sense codes
+  scsi: lpfc: use 16-bits defined sense codes
+  scsi: stex: use 16-bits defined sense codes
+  scsi: mvumi: use 16-bits defined sense codes
+  scsi: libiscsi: use 16-bits defined sense codes
+  scsi: ibmvscsi_tgt: use 16-bits defined sense codes
+  scsi: scsi_debug: use 16-bits defined sense codes
+  scsi: hpsa: use 16-bits defined sense codes
+  scsi: storvsc: use 16-bits defined sense codes
+  target: use 16-bits defined sense codes
+  usb: storage: use 16-bits defined sense codes
+  cdrom: use 16-bits defined sense codes
+  ata: libata: use 16-bits defined sense codes
+  s390: scsi: use 16-bits defined sense codes
+  scsi: cleanup scsi_proto.h
+  scsi: remove scsi_build_sense() and scsi_build_sense_buffer()
+
+ drivers/ata/libata-eh.c                      |   13 +-
+ drivers/ata/libata-sata.c                    |   20 +-
+ drivers/ata/libata-scsi.c                    |  346 ++-
+ drivers/ata/libata.h                         |    5 +-
+ drivers/cdrom/cdrom.c                        |   10 +-
+ drivers/s390/scsi/zfcp_ext.h                 |    2 +-
+ drivers/s390/scsi/zfcp_fsf.c                 |    9 +-
+ drivers/s390/scsi/zfcp_scsi.c                |    6 +-
+ drivers/scsi/3w-xxxx.c                       |    3 +-
+ drivers/scsi/ch.c                            |   55 +-
+ drivers/scsi/constants.c                     |   61 +-
+ drivers/scsi/device_handler/scsi_dh_alua.c   |   55 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c    |   28 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c  |   29 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c   |   55 +-
+ drivers/scsi/hpsa.c                          |   69 +-
+ drivers/scsi/hpsa_cmd.h                      |   23 -
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c     |    5 +-
+ drivers/scsi/leapraid/leapraid_func.h        |    7 -
+ drivers/scsi/leapraid/leapraid_os.c          |   15 +-
+ drivers/scsi/libiscsi.c                      |    3 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                |   18 +-
+ drivers/scsi/megaraid.c                      |    8 +-
+ drivers/scsi/megaraid/mega_common.h          |    2 -
+ drivers/scsi/megaraid/megaraid_mbox.c        |   12 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c              |    3 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c              |   50 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c         |   69 +-
+ drivers/scsi/mvumi.c                         |    2 +-
+ drivers/scsi/myrb.c                          |   67 +-
+ drivers/scsi/myrs.c                          |   23 +-
+ drivers/scsi/ps3rom.c                        |    5 +-
+ drivers/scsi/qla2xxx/qla_isr.c               |    9 +-
+ drivers/scsi/scsi.c                          |    3 +-
+ drivers/scsi/scsi_common.c                   |   24 +-
+ drivers/scsi/scsi_debug.c                    |  332 +--
+ drivers/scsi/scsi_error.c                    |   94 +-
+ drivers/scsi/scsi_ioctl.c                    |    3 +-
+ drivers/scsi/scsi_lib.c                      |  133 +-
+ drivers/scsi/scsi_lib_test.c                 |   95 +-
+ drivers/scsi/scsi_logging.c                  |   22 +-
+ drivers/scsi/scsi_scan.c                     |   22 +-
+ drivers/scsi/scsi_transport_spi.c            |   12 +-
+ drivers/scsi/sd.c                            |  126 +-
+ drivers/scsi/sd_zbc.c                        |    2 +-
+ drivers/scsi/sense_codes.h                   | 2496 ++++++++++++------
+ drivers/scsi/ses.c                           |   23 +-
+ drivers/scsi/smartpqi/smartpqi_init.c        |   31 +-
+ drivers/scsi/sr.c                            |    3 +-
+ drivers/scsi/sr_ioctl.c                      |   29 +-
+ drivers/scsi/st.c                            |   35 +-
+ drivers/scsi/stex.c                          |    3 +-
+ drivers/scsi/storvsc_drv.c                   |   15 +-
+ drivers/target/target_core_spc.c             |   11 +-
+ drivers/target/target_core_transport.c       |   11 +-
+ drivers/target/target_core_ua.c              |   28 +-
+ drivers/target/target_core_ua.h              |    7 +-
+ drivers/usb/gadget/function/f_mass_storage.c |   34 +-
+ drivers/usb/gadget/function/storage_common.h |   71 +-
+ drivers/usb/storage/debug.c                  |   12 +-
+ drivers/usb/storage/debug.h                  |    4 +-
+ drivers/usb/storage/transport.c              |    7 +-
+ include/scsi/scsi_cmnd.h                     |    3 +-
+ include/scsi/scsi_common.h                   |   16 +-
+ include/scsi/scsi_dbg.h                      |    6 +-
+ include/scsi/scsi_device.h                   |   26 +-
+ include/scsi/scsi_proto.h                    |   71 +-
+ include/scsi/scsi_sense.h                    |  943 +++++++
+ include/trace/events/scsi.h                  |    4 +-
+ 69 files changed, 3829 insertions(+), 2015 deletions(-)
+ create mode 100644 include/scsi/scsi_sense.h
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.55.0
+
