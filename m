@@ -1,194 +1,145 @@
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFAF731E823
-	for <linux-scsi@vger.kernel.org>; Thu,  3 Sep 2026 23:53:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC1178F2F;
+	Fri,  4 Sep 2026 00:12:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788479593; cv=none; b=DaxMiv3f/pdQOgs4O+QbQbqFIbGTNu0I217GxW3AH2wcDcDvgMgPEGnWVRsIIGBLT1RQ8S0L53QPX78529g27PQYoJgAVyC/m+uKB/TtS5MTC2Qf6lyRmaWd//zJQ1CIyAsiEBrTZL9G0Iwrw5enCdO0f1aYxbEzbpgJnYrCAXM=
+	t=1788480737; cv=none; b=dUynHvc1wK0GRPFuMe4B2JuSYLMsUnWe2BQ+ZmaWVffNBppFfGxLn5omDXPuBqicu9ugq7xoTj78UKiongKGBM5XnMHEBwULtilDOAOfB3fZiBK6bviJjOjiqbMNBADoN5iZFgGidNwYkQ2IQQp6rjlhkB1amCyj3IVRiALn41w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788479593; c=relaxed/simple;
-	bh=+kIP7y78ResGK0mg1X+wjST5HlfTny0oUXjSjO/YqeU=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=cknHvYem8ml8AFhL6qF1xoPCPGr4dzaT9SbXR0oWAwH82dxUHxHYDmX7d8RTH/2s4xIiraEwNMyN3Hjtv7mV1jUhd2o/5zUxermVwrhm4MffM0gjUMi/zGjNoMhxEm179jrz40opazwSR4ZI+7hfh9INPUj+AD15cxdJnouQzn8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Wo7ztnGc; arc=none smtp.client-ip=209.85.216.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1788480737; c=relaxed/simple;
+	bh=1oje6I6cprMjdcZ3w+KgH6EanbVWQeayLSc3PmDGyL4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=tOd39DrQuyQl91FsTprbMOGzFSNl6nT8Zbh8CfsfbuAIjrWJJnqcpp2V2XMS9ulm2vXpObb4o/7eoIA7iV6S/P/lrbxQJnCq6rno4iouKbLnuvQnBLu/nhfmHnMJbXKBmW2baMDlDHKDqC0cMfW/dm3iSeXQX5Oczt+XgALldgg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XW9ZtjJd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Wo7ztnGc"
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-396901263b6so660523a91.2
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Sep 2026 16:53:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788479591; x=1789084391; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2UV+8BVa840QAWI1056d4zVig0jh8eLQSYzgvwbA6Us=;
-        b=Wo7ztnGc0rh3an/h5qIhecSfPAwDVw1PF/NSCg8gK/2ya8fsg9zeHclXix54LVmlT+
-         wESpecTrdY2tcnPG5g7a0k+rjSjNNKGPrq4rH9X1vhhqZ4fYWwkRfEs3kXlsEIXzrfD3
-         WPX5G7TK5RyT4GM/vHwoI/tlhCZ3nqfK/DxtUY4YybQn3F6zuW2wRE+Q2ucK4QFkfUvG
-         r6627KKX8VsGm9ZYwx6KG7G47V7dWypfxiZsFaRzjK+5mb3vdF61h8iboBhGlMPWAzkg
-         cGeMI8MtyolaOcDj1wsS84lslVZBp3luhb8YAQNOvBQWPZGfflzCI6SuuwXXt2YM5gJy
-         MkQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788479591; x=1789084391;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=2UV+8BVa840QAWI1056d4zVig0jh8eLQSYzgvwbA6Us=;
-        b=f8+fRXkjlQTrSxhqf/p3PBR5Swv6GbLCi2woPfKHCEcPaNgadF3ovR2CFuKIOh1e82
-         JXN1l3ENZVAfcwOQU8vbwTfbzBfdfkoaCJPKMLFGG9GHnt88ZUyVSucC13zh2wL4lsWV
-         +FI1rZ3zss9Au3PMPJxO0uKrgDGLYraJbnuN8SwDquZBNnq4N2y2Xk3dyAlgY47wnqBw
-         Di89sRpajwSHxud5tXY8/q3y5QJ55Y9T3eXx+3rKFwKWwfWD2qCQOFsiV+PTYqYHn1sg
-         CLKU4C/9aB7quMtCDsKO922BD88NjyhE4bjPZDXtKckxxrGRx3Vo5iM6DjyM9JVbY/1L
-         /S9A==
-X-Forwarded-Encrypted: i=1; AKwUvBzaRLw/2kIjEggOPEM54nWbGN8fV1C3k6BreKtzezGByR65yPKtZ3qvLdi4uivp0O1Jr/CDWgulERH0@vger.kernel.org
-X-Gm-Message-State: AFuF++l9/944rgMiZ7DlfgJxy3afPrLatW3NaiKghkYa8yqdSaWZUTvf
-	6+MK/Be+cOk/6ZnN+CXxMHvZOHj675dl714V80xE7QmKUSCy8uBUrx/dzK7E1RLXojCEPAei7ph
-	NAIuk4BI4LjaM6EjEabkWAw==
-X-Received: from pjbqi2.prod.google.com ([2002:a17:90b:2742:b0:39b:1f3d:2676])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:2ccb:b0:398:9be8:ea64 with SMTP id 98e67ed59e1d1-39b261d8533mr3377437a91.17.1788479590823;
- Thu, 03 Sep 2026 16:53:10 -0700 (PDT)
-Date: Fri,  4 Sep 2026 07:53:08 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XW9ZtjJd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D0081F000E9;
+	Fri,  4 Sep 2026 00:12:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788480736;
+	bh=uwU9myAIHfxtIC/MA9ZCvJe1sgh7d4K5eTnJj1GTYxg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=XW9ZtjJdCEfhzI3DxWMXkt9DtZEB/PYWe755TnnZH/tac17RQJCHcrDOy1PTtv0Wo
+	 BbVOQriqqG6KoM1atfZmXUpQV9Oh9vyOoi8QisKTUV2eCe+A+qDkQcB3nYS6J+c5kj
+	 GygJk2zJqUKYukpQqfDZqWvtEYGznn53rUeWTfkNNFy14OnDZC6FUMTKufgeP8W+Nn
+	 ahCExJ+/ST1mem1vNNM+HLCEQ5wLZzHSdwmT2+D0vkEqu8UWhzpSu7hnbEHwXW24JY
+	 6ujse3Q2i8z3fZ3GfubUaORUT1JqibaBOq8g/8xfYlirIP6vkWt2LwfgdqhKABykOs
+	 BS3hYKU5XOFhg==
+Message-ID: <795ac93a-9377-4503-9dc4-58f21c815f71@kernel.org>
+Date: Fri, 4 Sep 2026 09:12:11 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.55.0.979.g7e5102b832-goog
-Message-ID: <20260903235308.1240963-1-stanleyjhu@google.com>
-Subject: [PATCH] scsi: ufs: core: Add fault injection for task abort failures
-From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K . Petersen" <mkp@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@sandisk.com>, Peter Wang <peter.wang@mediatek.com>, 
-	Bean Huo <beanhuo@micron.com>, Can Guo <can.guo@oss.qualcomm.com>, 
-	Hyeoncheol Jeong <hyenc.jeong@samsung.com>, Po-Wen Kao <powenkao@google.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Stanley Jhu <stanleyjhu@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/2] scsi: Initial commit of VirtIO PCIe Endpoint Driver
+To: Manivannan Sadhasivam <mani@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: alistair23@gmail.com, mst@redhat.com, eperezma@redhat.com,
+ linux-kernel@vger.kernel.org, xuanzhuo@linux.alibaba.com,
+ jasowangio@gmail.com, linux-scsi@vger.kernel.org, mkp@kernel.org,
+ virtualization@lists.linux.dev, James.Bottomley@hansenpartnership.com,
+ alistair@alistair23.me, Alistair Francis <alistair.francis@wdc.com>,
+ linux-pci@vger.kernel.org, Shunsuke Mie <mie@igel.co.jp>,
+ Frank Li <Frank.Li@kernel.org>, Koichiro Den <den@valinux.co.jp>,
+ Kishon Vijay Abraham I <kishon@kernel.org>
+References: <20260901014650.2728658-1-alistair.francis@wdc.com>
+ <apaOZeeDBIRlpB7b@ryzen>
+ <akvzpivrbg3b3jra6ibga6j637pwqkwnnzs6q2ymcn5ixrdym6@wniqpspkcknt>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <akvzpivrbg3b3jra6ibga6j637pwqkwnnzs6q2ymcn5ixrdym6@wniqpspkcknt>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Commit 045da3077bc5 ("scsi: ufs: core: Make fault injection dynamically
-configurable per HBA") added fault injection support for UFS error
-handling and completion timeouts. However, there was no fault
-injection capability to simulate task abort failures.
+On 9/3/26 20:51, Manivannan Sadhasivam wrote:
+> On Tue, Sep 01, 2026 at 10:35:49AM +0200, Niklas Cassel wrote:
+>> On Tue, Sep 01, 2026 at 11:46:48AM +1000, alistair23@gmail.com wrote:
+>>> From: Alistair Francis <alistair.francis@wdc.com>
+>>>
+>>> This series adds a VirtIO SCSI endpoint built on top of the VirtIO PCIe
+>>> endpoint. This is a similar approach to the NVMe PCIe Endpoint
+>>> (drivers/nvme/target/pci-epf.c) but for SCSI.
+>>>
+>>> This does end up being somewhat similar to the pci-epf.c code, but
+>>> re-written for SCSI.
+>>>
+>>> This approach allows a PCIe Endpoint device (tested on a
+>>> radxa-rock5b) to setup what appears to be a SCSI device, using an
+>>> existing SCSI backend (tested using scsi_debug).
+>>>
+>>> At this point a host can connect over PCIe, ensure virtio_pci and
+>>> virtio_scsi is loaded and on PCIe rescan will see a scsi device.
+>>>
+>>> There are a few pain points with this approach though:
+>>>  1. We have to use the Legacy SCSI VirtIO driver. This is because the
+>>>     Raxda Rock5b (and AFAIK all PCIe Endpoint hardware) can't add
+>>>     capabilities. So we can't advertise the VirtIO Common configuration
+>>>     capability, which means we can't be a modern VirtIO SCSI device.
+>>>
+>>>     This is unfortunate, but there doesn't seem to be any way around
+>>>     this, at least with the current hardware.
+>>>
+>>>  1.2. Legacy virtio devices only have 32 feature bits and therefore can't
+>>>     set the VIRTIO_F_ACCESS_PLATFORM (bit 33) feature. This means the
+>>>     vring_use_map_api() function will return false.
+>>>
+>>>     Currently Linux endpoint devices use the legacy virtio interface as
+>>>     they aren't able to advertise the Common configuration capability.
+>>>     As most PCI endpoint capable PCIe controllers do not allow modifying the
+>>>     capability list, and thus are unable to advertise the Common configuration
+>>>     capability. This means the device's inbound TLPs fault on the host
+>>>     SMMU because the vring descriptors carry raw physical addresses.
+>>>
+>>>     This series adds a quirk that forces a subset of legacy virtio devices
+>>>     to use the DMA Map API (vring_use_map_api() will return true),
+>>>     which fixes this issue.
+>>>
+>>>     It's unideal that we have to hard code a quirk to basically just
+>>>     advertise the VIRTIO_F_ACCESS_PLATFORM feature, but (see 1) as we
+>>>     are stuck with legacy virtio devices there isn't much else we can do.
+>>>
+>>>  2. We have to pin scsit_pci_epf_poll_cfg_thread() on a CPU in order to
+>>>     respond fast enough to the host. This means we effectivly burn a CPU
+>>>     to read and write some values. But as there are no intterupts
+>>>     generated on these events and we need to be very quick there isn't
+>>>     another option.
+>>>
+> 
+> Most of these pain points will go away if you use virtio-msg [1] transport
+> instead of the virtio-pci transport. Using the virtio-pci transport on a real
+> PCIe device without a way to trap and emulate the config space requests will
+> always be racy.
 
-Both legacy single-doorbell mode (in ufshcd_abort()) and MCQ mode (in
-ufshcd_mcq_abort()) invoke ufshcd_try_to_abort_task() to query device
-status and execute task aborts.
+There is nothing inherently racy about the config space. It is about the fact
+that most PCI endpoint controllers:
+1) Do not raise an interrupt when PCI BARs or config space is written by the
+host RC, and
+2) All PCI endpoint controllers that Linux supports do not allow drivers to
+create extended capabilities in the config space that can then be emulated in
+the endpoint driver (enabling that would require 1 to be supported, obviously).
 
-Add fault injection support for task abort:
-- Add "abort" module parameter and "abort_inject" debugfs attribute.
-- Hook ufs_fail_abort() at the entry of ufshcd_try_to_abort_task() to
-  short-circuit task abort with -EIO. This universally simulates task
-  abort failure across both single-doorbell and MCQ modes without
-  incurring query polling delays.
+(2) can be delt with quirks. Not great, but simple enough. And in this case, we
+need it more because of the virtio-pci specs, which are not great to start with.
 
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
----
- drivers/ufs/core/ufs-fault-injection.c | 15 +++++++++++++++
- drivers/ufs/core/ufs-fault-injection.h |  6 ++++++
- drivers/ufs/core/ufshcd.c              |  2 ++
- include/ufs/ufshcd.h                   |  1 +
- 4 files changed, 24 insertions(+)
+And for (1), the only real problem that causes is that an endpoint driver needs
+to poll PCI BARs/submission queues to see if the host issued commands. Again not
+great, but that works just fine. Alistair's point about burning a CPU doing that
+is simply so that we can reduce command latency and get good enough performance.
 
-diff --git a/drivers/ufs/core/ufs-fault-injection.c b/drivers/ufs/core/ufs-fault-injection.c
-index 55db38e75cc4..25ae763da4f6 100644
---- a/drivers/ufs/core/ufs-fault-injection.c
-+++ b/drivers/ufs/core/ufs-fault-injection.c
-@@ -34,6 +34,12 @@ MODULE_PARM_DESC(timeout,
- 	"Fault injection. timeout=<interval>,<probability>,<space>,<times>");
- static DECLARE_FAULT_ATTR(ufs_timeout_attr);
- 
-+static char g_abort_str[FAULT_INJ_STR_SIZE];
-+module_param_cb(abort, &ufs_fault_ops, g_abort_str, 0644);
-+MODULE_PARM_DESC(abort,
-+		 "Fault injection. abort=<interval>,<probability>,<space>,<times>");
-+static DECLARE_FAULT_ATTR(ufs_abort_attr);
-+
- static int ufs_fault_get(char *buffer, const struct kernel_param *kp)
- {
- 	const char *fault_str = kp->arg;
-@@ -49,6 +55,8 @@ static int ufs_fault_set(const char *val, const struct kernel_param *kp)
- 		attr = &ufs_trigger_eh_attr;
- 	else if (kp->arg == g_timeout_str)
- 		attr = &ufs_timeout_attr;
-+	else if (kp->arg == g_abort_str)
-+		attr = &ufs_abort_attr;
- 
- 	if (WARN_ON_ONCE(!attr))
- 		return -EINVAL;
-@@ -65,9 +73,11 @@ void ufs_fault_inject_hba_init(struct ufs_hba *hba)
- {
- 	hba->trigger_eh_attr = ufs_trigger_eh_attr;
- 	hba->timeout_attr = ufs_timeout_attr;
-+	hba->abort_attr = ufs_abort_attr;
- #ifdef CONFIG_FAULT_INJECTION_DEBUG_FS
- 	fault_create_debugfs_attr("trigger_eh_inject", hba->debugfs_root, &hba->trigger_eh_attr);
- 	fault_create_debugfs_attr("timeout_inject", hba->debugfs_root, &hba->timeout_attr);
-+	fault_create_debugfs_attr("abort_inject", hba->debugfs_root, &hba->abort_attr);
- #endif
- }
- 
-@@ -80,3 +90,8 @@ bool ufs_fail_completion(struct ufs_hba *hba)
- {
- 	return should_fail(&hba->timeout_attr, 1);
- }
-+
-+bool ufs_fail_abort(struct ufs_hba *hba)
-+{
-+	return should_fail(&hba->abort_attr, 1);
-+}
-diff --git a/drivers/ufs/core/ufs-fault-injection.h b/drivers/ufs/core/ufs-fault-injection.h
-index d0c870e19f0e..56725e3d4556 100644
---- a/drivers/ufs/core/ufs-fault-injection.h
-+++ b/drivers/ufs/core/ufs-fault-injection.h
-@@ -12,6 +12,7 @@ struct ufs_hba;
- void ufs_fault_inject_hba_init(struct ufs_hba *hba);
- bool ufs_trigger_eh(struct ufs_hba *hba);
- bool ufs_fail_completion(struct ufs_hba *hba);
-+bool ufs_fail_abort(struct ufs_hba *hba);
- #else
- static inline void ufs_fault_inject_hba_init(struct ufs_hba *hba)
- {
-@@ -26,6 +27,11 @@ static inline bool ufs_fail_completion(struct ufs_hba *hba)
- {
- 	return false;
- }
-+
-+static inline bool ufs_fail_abort(struct ufs_hba *hba)
-+{
-+	return false;
-+}
- #endif
- 
- #endif /* _UFS_FAULT_INJECTION_H */
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2ba244cf40ac..a25b6a0cb5c6 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7990,6 +7990,8 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
- 		return -EINVAL;
- 
- 	lrbp = scsi_cmd_priv(cmd);
-+	if (ufs_fail_abort(hba))
-+		return -EIO;
- 
- 	for (poll_cnt = 100; poll_cnt; poll_cnt--) {
- 		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, tag, UFS_QUERY_TASK,
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index dfd302f2dc7c..dbf326efdbc4 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1245,6 +1245,7 @@ struct ufs_hba {
- #ifdef CONFIG_SCSI_UFS_FAULT_INJECTION
- 	struct fault_attr trigger_eh_attr;
- 	struct fault_attr timeout_attr;
-+	struct fault_attr abort_attr;
- #endif
- 	u32 luns_avail;
- 	unsigned int nr_hw_queues;
+We went through all of that already with the NVMe PCI endpoint. Works well
+enough and does what is intended, which is the same here for the virtio-scsi
+endpoint driver: create a platform where one can emulate a SCSI device to
+experiment with new features etc. This is all intended as a development/test
+tool, not for production use.
+
+I do not know virtio-msg. First time I hear about it. And I am not sure if there
+is a standard way of exposing a SCSI host through that.
+
+
 -- 
-2.55.0.970.g62bdec98f9-goog
-
+Damien Le Moal
+Western Digital Research
