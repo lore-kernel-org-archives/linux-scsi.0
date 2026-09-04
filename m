@@ -1,63 +1,67 @@
 Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4BA846F498
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2026 15:53:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74234493637
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2026 15:53:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.69
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788537192; cv=none; b=pg9j9A72Mgylfk4qMJfH9b31GesZg1Ugd0YwoOBcabiP6VGB6mYD+0yx7+nZRoYEtZ7MxXwsSb3uBncIo+TD9ZjQIUcBHoy6fLSvOJlFHvcm9sudvy8Af04uOemw9pD5C4zmG/LffiavmuwOts1e5YaQ0ekjQQoAXCFkmyihVms=
+	t=1788537194; cv=none; b=qWmlDGp991/flx5K5cs3wKZNo6aUo2bDR8kglj0TctOxJVEjxeb9CWLGQ2fI4xJ/wiBSwcXoS/r9dnrqAXAe5qE6scoEJSLQ3YVzV0B+w4NW/qgLffX3QvwIACjHeA3Trf1pkMdxz/MeMstXfJyk5ONOTAFKsqaD8dih7Keup+I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788537192; c=relaxed/simple;
-	bh=ce8IFznMENWgDfvskcJyGjHIaRDeyquxTRFJpdXtgAQ=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=bbMRYKWhkfXuBKIyvFQWkLLuCDery8iIhQVkZJ3Aszkuq07hp4G5BaSePCK/R6+9WWECtEJSXBOjzuPWG2gsSjEKCWWgkwIKpCOKqKcZcOnebSTBGjYOmuRgEWntD/y+94miS3O1qsn4I6MXliOiwptTpjTy54HXTQCsI46u/ok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Xm6IWLTt; arc=none smtp.client-ip=209.85.216.69
+	s=arc-20240116; t=1788537194; c=relaxed/simple;
+	bh=5KUfU2UUZ3fPmA3o93xPIyFBexPShXAE5Elg3/MLXI0=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=ICrSIi9tGvvOc1YHtFyQ7W9fpcZNhRVFDCFuRH1HTtWurSdAByQb9oNAC1Ayxmxe3vKg7TvpDdgq6+ZgRxGD03W38UyUTPjJMPh2zy+QYUDwjcfMl5EjUZEWN+3DUlb8Uf2FedpZd/TX/BZ32ZQMEqEooeISoY1d1BEwh8Zxf88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=YGqbt+qS; arc=none smtp.client-ip=209.85.216.69
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Xm6IWLTt"
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-399311947f6so1811727a91.0
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Sep 2026 08:53:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YGqbt+qS"
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38e475f83a2so2165295a91.1
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Sep 2026 08:53:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1788537189; x=1789141989; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=SGiSc34z3NAjOFx7jNSchlmLnMlO9ZnccSX8lcYMPKM=;
-        b=Xm6IWLTt544iDs4i60ST27W301cCvdOvyAP9U2kfEX9K6jZTQ+BJ/KsOYco4qdCAr0
-         /IG9HKs6Yt423KqGFJWyQ6XZ+1Y7LkAmk0JM/KlfbnErkylw1h4XuRR3lerBeWdH04VU
-         mGy2btdwCDKfhs5TmGGQTzvEewqL21ou+KnbMZ5WEkQ77cBHHkMC8KOIrQi4wTOoyC3f
-         16H84hn3kWdfNrY33ML++jmZdhZr2Dy2ySSPFbdApGWyywyWGmaSutGydkU9C8chlffm
-         lQ/gyFTxijYWlEpFNu/VNQtNQ6N7varH+7tWc0w4O+Q+yyVkl/Mfuw5w/RnePJVN8ZHX
-         4cjg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788537189; x=1789141989;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20251104; t=1788537192; x=1789141992; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=SGiSc34z3NAjOFx7jNSchlmLnMlO9ZnccSX8lcYMPKM=;
-        b=TEPDKewR9YvU4vAIJGVjwogLP//F8/HWnwyaButyu5uHEB4MNtaWIyyXRPkxhPzrga
-         +A0DX0/A/MonMY1C3QrPetyFbVaZXWn9aI49gdhZgqxQWupsDHyuTVUsVISOKc1IFnSY
-         YKT33jwrY8jpvvjXyxb6bTCb6FKwHTEIlTAZJapwT+JcwRrRfzSj+uD/vH7UUomp3Jp5
-         6dFJqWzT6Irtq9r39Rk+QH6CHEWJChLvBTzDiMKTDcvmg7te2FfUjLP8KZjiO9IkQZ5o
-         jTiFcWzZIjE76b0sZNSl1cqFvTY+1ogO1iW4iIrbyDYK5CoITILaZdJShjy3KfT2GoHa
-         1XZg==
-X-Forwarded-Encrypted: i=1; AKwUvBz0Pf8HGQhRZNnU+jLOgfos4QWpScQY00KutuiWnKKs8ygKYKrqxkojWRSAyqzTYFa21dHpDvhKbn/s@vger.kernel.org
-X-Gm-Message-State: AFuF++kfTbymSLiSIJmx+OzyoQQTwoISoRg6C36g9x9xL3rQJuRYkCFD
-	yxcwIsBtd4FWn7l5GEg9eJYD0+0EdF38RhTgoInMMJKsEmj+fDM5Twnfl8D+Nia0csdOLRtDCeB
-	TEtMLr2w3MpJvszQGuCIWFg==
-X-Received: from pjbdt19.prod.google.com ([2002:a17:90a:fa53:b0:38f:c902:4ae8])
+        bh=Pt0L+O53/xVVWaghU8W5mtgRgEzuJWx3ygItaBNaDoI=;
+        b=YGqbt+qS+5wY17ubQ5x1Kg8vThfV7Vw4gk2cQ773f74jldwXq2WADwq0yy8Y06zHQK
+         u0Evd62RedatoonDavbxzP7//6zD4abUvMUOpAozjpFDGMANCdiA/SbOwSgN+T5+mFBA
+         qT4ykgR6fd4hXaRcpf0x3sD3CUSe9Isu4MaflY+5IAUMbu1V5f5Iv56nGUZB9S7sTxcJ
+         he5zIhFWH7ymmJcdrcv+O+91Kw7lW2jLBNQfpG/E4Jpp5rbYWUFuNKVQ4Bneu6bn9GDX
+         KT//8hZVCbwEj/WT5jCKSbuXlq06dzOLDHE0IUreKAV0EM0GBOD+xxkv2FLaVJF+KTHZ
+         lyVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788537192; x=1789141992;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Pt0L+O53/xVVWaghU8W5mtgRgEzuJWx3ygItaBNaDoI=;
+        b=brXc9LZnr3sASBKhMZ1r2i7vIlvnC7bGilZaiTbALjUrSJjkwrLX0hVPUZ0tE3A37M
+         l0gPEbkT2zqeKfpJVK0/FYUZLxiPyU4U9AGcDPn5zdrBpZIXDa0yqpAxxoVuSL69NFhz
+         DqfvoTPLO/y8DUgX9hxPgyAlo18uWQ+L2ZT3lepofnZ4NVwNwt0ywwkUBYFH+RGN6S5b
+         hsje582NB5icdLl7hvjmgYUPMyAJdxf5GbZNwYTJAJZf2kOOSp7rkYGFWbs4dTva0VDX
+         jEaw26kGSDkdlVcc5dOc0i3YUhVRBuwS3PFPJrBRt314AghXAsLAE+qgON/InSpI81YW
+         Rcnw==
+X-Forwarded-Encrypted: i=1; AKwUvBxtPyELjsCTKyk27fvGugyR2rDM5LaWpepO2S/7Va1mRu8C8CzLNQ9u+CupHO9oL/cDG5/NB0W/zs6K@vger.kernel.org
+X-Gm-Message-State: AFuF++kSgoMXhUb76Yhwrt4qRhs0ORgIkRYjY4Uf2cSkAHaW0ld0ieyE
+	f7+oOho5ksXBJRVcSisQTB4euyTtaHRV4xm+I8IOE8oC4n2pt6Q32SAvFQipyKuODLEJ4wgpXHx
+	GQP2sRgt91o0mE2PtqNnw3w==
+X-Received: from pjyp14.prod.google.com ([2002:a17:90a:e70e:b0:395:1a86:4fe8])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:4c03:b0:398:cb56:e92 with SMTP id 98e67ed59e1d1-39b26130698mr9199108a91.11.1788537188969;
- Fri, 04 Sep 2026 08:53:08 -0700 (PDT)
-Date: Fri,  4 Sep 2026 23:53:04 +0800
+ 2002:a17:90a:e7ce:b0:398:bacb:1137 with SMTP id 98e67ed59e1d1-39b2624a1bbmr9099604a91.19.1788537191083;
+ Fri, 04 Sep 2026 08:53:11 -0700 (PDT)
+Date: Fri,  4 Sep 2026 23:53:05 +0800
+In-Reply-To: <20260904155307.150443-1-stanleyjhu@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+References: <20260904155307.150443-1-stanleyjhu@google.com>
 X-Mailer: git-send-email 2.55.0.979.g7e5102b832-goog
-Message-ID: <20260904155307.150443-1-stanleyjhu@google.com>
-Subject: [PATCH v2 0/3] Fix RPMB cross-subsystem UAF and UFS OP-TEE RPMB lifecycle
+Message-ID: <20260904155307.150443-2-stanleyjhu@google.com>
+Subject: [PATCH v2 1/3] rpmb: core: Pin parent device and guard requests with rwsem
 From: Stanley Jhu <stanleyjhu@google.com>
 To: Jens Wiklander <jens.wiklander@linaro.org>, 
 	"Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
@@ -65,63 +69,132 @@ To: Jens Wiklander <jens.wiklander@linaro.org>,
 Cc: Bart Van Assche <bvanassche@acm.org>, Brian Kao <brian.kao@mediatek.com>, 
 	Brian Kao <powenkao@google.com>, Avri Altman <avri.altman@wdc.com>, 
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Stanley Jhu <stanleyjhu@google.com>
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Stanley Jhu <stanleyjhu@google.com>, 
+	stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-This series addresses a critical cross-subsystem Use-After-Free (UAF)
-vulnerability in the RPMB subsystem core, along with lifecycle and bus
-registration fixes in the UFS OP-TEE RPMB driver.
+When an RPMB device is unregistered, device_del(&rdev->dev) drops the
+driver core's reference to the parent device. If external callers still
+hold references to rdev, rdev outlives the parent provider (e.g. UFS
+host). Once the parent is freed, subsequent access to rdev->dev.parent
+causes a Use-After-Free (UAF).
 
-Problem Overview:
-During concurrent accesses to an RPMB partition while the UFS host
-controller unbinds or shuts down, a critical Use-After-Free (UAF) occurs:
-1. When the driver calls rpmb_dev_unregister(), device_del() drops the
-   driver core's reference to the parent device taken during device_add().
-2. Because rpmb_dev_register() never explicitly pinned the parent device
-   via get_device(), the parent device's refcount drops prematurely while
-   the child struct rpmb_dev remains alive via external references.
-3. The parent driver teardown frees the parent device structure.
-4. Subsequent calls to rpmb_route_frames() dereference rdev->dev.parent,
-   resulting in a crash or arbitrary memory corruption on freed memory.
-5. In addition, in the UFS RPMB driver, struct ufs_rpmb_dev was allocated
-   using devm_kzalloc(), which gets freed prematurely by devres on host
-   unbind, and its bus_type was never registered with the driver core.
+Additionally, lockless access in rpmb_route_frames() races with parent
+teardown, risking frame dispatch against an unpowered or torn-down host.
 
-Patch Breakdown:
+Fix these issues by explicitly pinning the parent device for the
+lifetime of the RPMB device, and guarding in-flight requests against
+device unregistration with an rw_semaphore teardown barrier.
 
-Patch 1: rpmb: core: Pin parent device and guard requests with rwsem
-- Pins the parent device for the lifetime of the RPMB device, and
-  guards in-flight requests against teardown with an rw_semaphore
-  barrier.
-
-Patch 2: scsi: ufs: rpmb: Decouple device lifecycle from devres
-- Decouples ufs_rpmb from devres, managing its lifetime strictly through
-  the embedded struct device reference count, and pins the underlying
-  SCSI device.
-
-Patch 3: scsi: ufs: rpmb: Register and unregister ufs_rpmb_bus_type
-- Registers ufs_rpmb_bus_type in ufshcd_core_init() and unregisters it
-  in ufshcd_core_exit(), preventing device_register() rejection with
-  -EINVAL.
-
+Fixes: 1e9046e3a154 ("rpmb: add Replay Protected Memory Block (RPMB) subsystem")
+Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+Cc: stable@vger.kernel.org
+---
 Changes in v2:
-- Added Patch 1 to pin parent device in RPMB core and guard in-flight
-  requests with an rw_semaphore teardown barrier (sashiko-bot).
+- New patch in v2 addressing cross-subsystem UAF and TOCTOU races (sashiko-bot).
+- Pin parent device with get_device() in register and put_device() in release.
+- Introduce rw_semaphore and dead flag to serialize in-flight requests.
+ drivers/misc/rpmb-core.c | 24 +++++++++++++++++-------
+ include/linux/rpmb.h     |  5 +++++
+ 2 files changed, 25 insertions(+), 4 deletions(-)
 
-Verification:
-- Tested on QEMU ARM64 with concurrent RPMB accesses under driver unbind.
-
-Stanley Jhu (3):
-  rpmb: core: Pin parent device and guard requests with rwsem
-  scsi: ufs: rpmb: Decouple device lifecycle from devres to avoid UAF
-  scsi: ufs: rpmb: Register and unregister ufs_rpmb_bus_type
-
- drivers/misc/rpmb-core.c       | 24 ++++++++++----
- drivers/ufs/core/ufs-rpmb.c    | 96 +++++++++++++++++++++-------------
- drivers/ufs/core/ufshcd-priv.h | 13 ++++-
- drivers/ufs/core/ufshcd.c      | 16 +++++-
- include/linux/rpmb.h           |  5 ++
- 5 files changed, 111 insertions(+), 43 deletions(-)
-
+diff --git a/drivers/misc/rpmb-core.c b/drivers/misc/rpmb-core.c
+index ecf14acf230a..c0e19cfe3faa 100644
+--- a/drivers/misc/rpmb-core.c
++++ b/drivers/misc/rpmb-core.c
+@@ -50,11 +50,21 @@ EXPORT_SYMBOL_GPL(rpmb_dev_put);
+ int rpmb_route_frames(struct rpmb_dev *rdev, u8 *req,
+ 		      unsigned int req_len, u8 *rsp, unsigned int rsp_len)
+ {
+-	if (!req || !req_len || !rsp || !rsp_len)
++	int ret;
++
++	if (!rdev || !req || !req_len || !rsp || !rsp_len)
+ 		return -EINVAL;
+ 
+-	return rdev->descr.route_frames(rdev->dev.parent, req, req_len,
+-					rsp, rsp_len);
++	down_read(&rdev->lock);
++	if (rdev->dead || !device_is_registered(&rdev->dev)) {
++		up_read(&rdev->lock);
++		return -ENODEV;
++	}
++
++	ret = rdev->descr.route_frames(rdev->dev.parent, req, req_len,
++				       rsp, rsp_len);
++	up_read(&rdev->lock);
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(rpmb_route_frames);
+ 
+@@ -62,6 +72,7 @@ static void rpmb_dev_release(struct device *dev)
+ {
+ 	struct rpmb_dev *rdev = to_rpmb_dev(dev);
+ 
++	put_device(rdev->dev.parent);
+ 	ida_free(&rpmb_ida, rdev->id);
+ 	kfree(rdev->descr.dev_id);
+ 	kfree(rdev);
+@@ -133,6 +144,10 @@ int rpmb_dev_unregister(struct rpmb_dev *rdev)
+ 	if (!rdev)
+ 		return -EINVAL;
+ 
++	down_write(&rdev->lock);
++	rdev->dead = true;
++	up_write(&rdev->lock);
++
+ 	device_del(&rdev->dev);
+ 
+ 	rpmb_dev_put(rdev);
+@@ -164,6 +179,7 @@ struct rpmb_dev *rpmb_dev_register(struct device *dev,
+ 	rdev = kzalloc_obj(*rdev);
+ 	if (!rdev)
+ 		return ERR_PTR(-ENOMEM);
++	init_rwsem(&rdev->lock);
+ 	rdev->descr = *descr;
+ 	rdev->descr.dev_id = kmemdup(descr->dev_id, descr->dev_id_len,
+ 				     GFP_KERNEL);
+@@ -179,7 +195,7 @@ struct rpmb_dev *rpmb_dev_register(struct device *dev,
+ 
+ 	dev_set_name(&rdev->dev, "rpmb%d", rdev->id);
+ 	rdev->dev.class = &rpmb_class;
+-	rdev->dev.parent = dev;
++	rdev->dev.parent = get_device(dev);
+ 
+ 	ret = device_register(&rdev->dev);
+ 	if (ret) {
+diff --git a/include/linux/rpmb.h b/include/linux/rpmb.h
+index ed3f8e431eff..2d8a41716883 100644
+--- a/include/linux/rpmb.h
++++ b/include/linux/rpmb.h
+@@ -7,6 +7,7 @@
+ #define __RPMB_H__
+ 
+ #include <linux/device.h>
++#include <linux/rwsem.h>
+ #include <linux/types.h>
+ 
+ /**
+@@ -48,15 +49,19 @@ struct rpmb_descr {
+  * struct rpmb_dev - device which can support RPMB partition
+  *
+  * @dev              : device
++ * @lock             : protects in-flight operations against teardown
+  * @id               : device_id
+  * @list_node        : linked list node
+  * @descr            : RPMB description
++ * @dead             : set to true when device is unregistered
+  */
+ struct rpmb_dev {
+ 	struct device dev;
++	struct rw_semaphore lock;
+ 	int id;
+ 	struct list_head list_node;
+ 	struct rpmb_descr descr;
++	bool dead;
+ };
+ 
+ #define to_rpmb_dev(x)		container_of((x), struct rpmb_dev, dev)
 -- 
-2.48.1
+2.55.0.979.g7e5102b832-goog
+
