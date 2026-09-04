@@ -1,116 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f52.google.com (mail-oo1-f52.google.com [209.85.161.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB3B377AA6
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2026 12:26:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 947B23CF976
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2026 12:41:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788524819; cv=none; b=JizdT9rOB2UTVHxu69k6cptw6q8gnpQZDF/5PJ5E+4yZFFEql35RyxgzPjJl97fK3u+DXnWNbmchcCyEzzizlQipQcUFZ595elS8+x7zKrTPJPm9feFuOYlFCDo7pEAlCuXM8PVfbRWz/KNyLIjqPOXtj/3y51x+9cs9TRG6ohA=
+	t=1788525663; cv=none; b=Z35YZu9LtzNcJbTh4TFjwc5Isr0XhfMOCNFIt41HmL71nPnjxluUDaAivLGBhD8DCPDSSjyeKpeHMr1T/F6xosj99ZowvWn2SNvTV/6nxPkV5pPZBRTy97HnLRNNehaCIjYARHRLg6+xdS5HfAQKuJ6/eSU5+eiu3eXab4+M5ww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788524819; c=relaxed/simple;
-	bh=bAAS9jjN1AOXrTI+1mZk7gz59YP5It5Y11fzK3qjd8s=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DlOsXSgev54w666/yud8KtGb1vbJt4x465rdjbKBw7fZgvoLRe6jVyl5pIFRJhYJi2hYuApMompD0yWQLWD8zbVTlZSUJp2TZlpPeG5dtenlPkZPpwIySZVp13I75Zq1rgHbZl8KxgomaKKYnorgcnLch22uMIoWUmFzmznnVIc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AScDjjMg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788525663; c=relaxed/simple;
+	bh=W9E7oTbSIOoSr5ROfBnqOFjp+a55TyKIr8RY0NeVMW4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=C4i8Zq4+omILIQcQ2tOzdoz712pw1u1K+nZ85ZlrUNZ0frh4TEvubfjpv8GEyRMZMet/4Z57TN/ErD1C/ylvUledSOIkJqrHE08MhCsUH952WSjaN3wtGrNBW1NAO/a7r0q/Jkwme0plkkoKeZea0Mz8juB8NZ5TCMWTNhRZzgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XonATC2g; arc=none smtp.client-ip=209.85.161.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AScDjjMg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B6B41F00A3D;
-	Fri,  4 Sep 2026 12:26:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788524817;
-	bh=QR6K4j7sVPwtUJKnZCCmL8FeL0faBOBXtAITITjfGlc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AScDjjMgpc992zmq+T6+famHEG+e8jjn0I0RxrNEl42RRly+QxsgFcSoqjcx7ZAhP
-	 Che/pYaQg9RfhpY3lgoR8JNl4FHCAOdlFqUTqjaw8yWON3Yi/B9e7aIIKMt9jIFc52
-	 sLOv46dyP/N2bB1bwgy/4d0GGrBj6cFX6DqDc2n5wYfOa02nG7YjkQdtrQY2XjG9is
-	 VAw2S1Myodwf0ycmZm33kyPI3mE14Bks83Aj/FyR9Eju1tj2TtW0xJmKD5Iqqa0Ews
-	 hPFlz7TDcq4SP/MLJlfcMJzatiHHkb4k9eAaaDwXiCr78rxq4WCa8cZjWmM2XzmkSz
-	 81ZeSWB8AkZ6g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] scsi: fix typos in comments
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hemanth Selam" <hemanth.selam@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260904121449.24178-2-hemanth.selam@gmail.com>
-References: <20260904121449.24178-1-hemanth.selam@gmail.com>
- <20260904121449.24178-2-hemanth.selam@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 04 Sep 2026 12:26:56 +0000
-Message-Id: <20260904122657.3B6B41F00A3D@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XonATC2g"
+Received: by mail-oo1-f52.google.com with SMTP id 006d021491bc7-6b1497f0453so723534eaf.3
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Sep 2026 05:41:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788525661; x=1789130461; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=/o2hmJ0LIrPtpf95qcGGCcq5zc3JRhE9kQ0QRna2H5Q=;
+        b=XonATC2gLtSoAx71i2zlqNRqBCE4mT+w3dggAeaZsGi0jhLtF+fKYWNLyb+5TeMqGr
+         +9YuCaNdd5aN2y+/6RRJgpjScAxfMiUMdjO5O/GpFFRonpy3v5qqvkJ9fGQH9m/nFbvT
+         lCpyXdb4Gwk2Ed89KZ2yA8qSl/S4eHbciQoH/IUXGq4L79i8TO1R+Ez9Q2Je2mcnSuTn
+         ldddip7R+AZtsIwTSolfumLermoTUsm1FBasYxNn5dPReCozFmDqwXxJp43exWsFFMj4
+         DIy+05NzmWa6XhY3jdkQzIjyetMNHioIa/f4xin7rEXztlIyKZaxkge0BKk8ia0GJ28z
+         osAg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788525661; x=1789130461;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=/o2hmJ0LIrPtpf95qcGGCcq5zc3JRhE9kQ0QRna2H5Q=;
+        b=P0UwARd7Kp2pihhxz0kgoSHefHQ4o3LK3cJYt4ghapOEuPRVs4NyXKyDIp4O7ggeHm
+         mTAdNSUF60qxmkWdm6ia92S2oNj4+45hnWNwVYDtw5Q6XQTywBteV0qEelaLk1J12mSk
+         gqgk18wVzz1xJpGfX7z6cQvP7KvvlmRP+d6nTJPRZe4YR9Z2pbtn/J0CA5/PE5KHrdfi
+         +xUi+VSmtVv5vcDaXlyTJLXRH0zHfcxCCEuCw6cJ407QfXxLfUV67zWT8T3JN3dD0Ozr
+         h2kLJDSRbddPo2qehDj9kU3s05dIqzl1Bg3d++LhjCj0o71WSLJqoSCZAN8/LGtEqS+4
+         1/zw==
+X-Forwarded-Encrypted: i=1; AKwUvBxJoshZkN/2dC1U8DcgKME3OvqOQ+CG26earwo+CczR83LuKkuG1WozkJGsQfBM1QbUsjWEMgpzZK97@vger.kernel.org
+X-Gm-Message-State: AFuF++mVicokhVzkxXcre3DCQTDwTEFkKNueeMPjwyhFsr5D+DMeBWDL
+	Z+C6VWVIWctTDtLPyWgHy5adW7xFScQZdgbIHaKZgukRpIe79jQJKpdlJOTNRDGPy6g=
+X-Gm-Gg: AYBFou1Gbeelqbtpnj2kXWtxx38wTr6XTlh28CWyYFaQt+YKPyLz9F7lbCeNuUBIKAH
+	wCSAk2thLtE7ptajHqmUfIw1WDX/TreYhPNUSYqmMsIRvkAK4GcP5yCK8HKMZl+vH//DKC1tB8q
+	U02yqYZbVrIIEvRgHfFwDAzMZ6AGg0WmVSa/VOFEExOihpYqksFXUzezB6Fzf4PUWqvTMFQGiDb
+	sk1c9xAadfHvLJRpEtYv/XJvingu6BpVvRsvlganRVfu9g2lG5zdzLFKdvfBl1Nffj5hNscRFyj
+	XXDTf9dOzMrbzmLRyCMVIjuWAAXHGjCUBc+46zwxaDoogolWNMhI5fZqqLqBPJ/4b7nOzVoOs7n
+	pNAW3/7MZmnpbN23yJzFEq7AhtGv50Zv7l76pOK2hfDqKaqHuEbdvNZCkSemJCisENIRTd+kXwl
+	XMqkU+5x+9l9cTGp2mmxEchrS9hclDFWb2rRkjECqwd+DJ5cG/q038t3t8f7sAJgBGcC8aRYPL+
+	NF9/qhLxVE/AVU=
+X-Received: by 2002:a05:6820:a50e:20b0:6b7:46fa:16ac with SMTP id 006d021491bc7-6b746fa1b09mr1628291eaf.65.1788525661030;
+        Fri, 04 Sep 2026 05:41:01 -0700 (PDT)
+Received: from volcano9f6e-hostos.amd.com ([165.204.217.251])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1432437d0f4sm6185774c88.7.2026.09.04.05.40.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Sep 2026 05:41:00 -0700 (PDT)
+From: Hemanth Selam <hemanth.selam@gmail.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] bsg: fix typo "deafult" in comment
+Date: Fri,  4 Sep 2026 18:10:55 +0530
+Message-ID: <20260904124056.3929-1-hemanth.selam@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-
-Pre-existing issues:
-- [High] Double completion and use-after-free race between normal I/O compl=
-etion and abort timeout.
---
-
-commit 557225524672ba2157c18527e3000f5d88170125
-Author: Hemanth Selam <hemanth.selam@gmail.com>
-Subject: scsi: fix typos in comments
-
-Fix typos in comments, reported by scripts/checkpatch.pl using the
+Correct "deafult" to "default", reported by scripts/checkpatch.pl using the
 misspelling list in scripts/spelling.txt.  Only touches comments, no code
 changes.
 
-> diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/cs=
-io_scsi.c
-> index 0114e70e98844..ff924be3ecbb9 100644
-> --- a/drivers/scsi/csiostor/csio_scsi.c
-> +++ b/drivers/scsi/csiostor/csio_scsi.c
-[ ... ]
-> @@ -1968,7 +1968,7 @@ csio_eh_abort_handler(struct scsi_cmnd *cmnd)
-> =20
->  	wait_for_completion_timeout(&ioreq->cmplobj, msecs_to_jiffies(tmo));
-> =20
-> -	/* FW didnt respond to abort within our timeout */
-> +	/* FW didn't respond to abort within our timeout */
->  	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) =3D=3D cmnd) {
+Assisted-by: Cursor:claude-opus-5
+Signed-off-by: Hemanth Selam <hemanth.selam@gmail.com>
+---
+ include/uapi/linux/bsg.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[Severity: High]
-This is a pre-existing issue, but it appears there might be a race condition
-between normal io completion and the abort timeout here.
+diff --git a/include/uapi/linux/bsg.h b/include/uapi/linux/bsg.h
+index 6cff77f5b857..b67d86eff33b 100644
+--- a/include/uapi/linux/bsg.h
++++ b/include/uapi/linux/bsg.h
+@@ -17,7 +17,7 @@
+  * For flag constants below:
+  * sg.h sg_io_hdr also has bits defined for it's flags member. These
+  * two flag values (0x10 and 0x20) have the same meaning in sg.h . For
+- * bsg the BSG_FLAG_Q_AT_HEAD flag is ignored since it is the deafult.
++ * bsg the BSG_FLAG_Q_AT_HEAD flag is ignored since it is the default.
+  */
+ #define BSG_FLAG_Q_AT_TAIL 0x10 /* default is Q_AT_HEAD */
+ #define BSG_FLAG_Q_AT_HEAD 0x20
+-- 
+2.48.1
 
-Looking at csio_eh_abort_handler() in drivers/scsi/csiostor/csio_scsi.c aro=
-und
-line 1968, the driver waits for an abort response via
-wait_for_completion_timeout(). If this times out, it locklessly checks if
-csio_scsi_cmnd(ioreq) =3D=3D cmnd.
-
-Concurrently, if the firmware completes the original io, the interrupt
-handler calls csio_scsi_err_handler(), which unmaps the dma and completes t=
-he
-command:
-
-drivers/scsi/csiostor/csio_scsi.c:csio_scsi_err_handler() {
-        ...
-        scsi_done(cmnd);
-
-        /* Wake up waiting threads */
-        csio_scsi_cmnd(req) =3D NULL;
-        complete(&req->cmplobj);
-}
-
-If the abort handler's lockless read occurs between the scsi_done(cmnd) call
-and the pointer assignment csio_scsi_cmnd(req) =3D NULL, could it mistakenly
-observe that the command has not been completed yet?
-
-This sequence would cause csio_eh_abort_handler() to proceed into its timeo=
-ut
-recovery path and execute a second completion on the potentially already fr=
-eed
-command.
-
-> =20
->  		csio_err(hw, "Abort timed out -- req: %p\n", ioreq);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260904121449.2417=
-8-1-hemanth.selam@gmail.com?part=3D1
