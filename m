@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22B152222AA;
-	Fri,  4 Sep 2026 00:27:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFD6F26ED41;
+	Fri,  4 Sep 2026 00:27:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788481630; cv=none; b=j266lQTf4Gow7JHqM17a/6bRnhhKl7euG/ahLM00Vz9710lhObQpTOJ8/m1PRzVSLFE600paIdi1lyE3/MJTp+Ev3ERtk5DwTxv0+cHOErZQpefdqusSdtNOSIH7cQpSp+vNaTHUZSVl9q0jWagC0mUlakoGhHFiAb6NbEtR9KI=
+	t=1788481631; cv=none; b=eAa6ogWgEcYiz99d9z8YqNL0BK/h/H+nBI/Vq6KP0KUuecOcPiEm+IeyWk2DCRw2NMlHNarz+dLcExIchRksHxQUfeNFaNPUWSQcnZvjG7nqmytVdSFFialvmTMYT1BtR5rGKMQBStdlYrlvYgB3mXsUNRzNqRUn7utfScfCR3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788481630; c=relaxed/simple;
-	bh=p6Vn7ir6GyvBLd/CbT1CC0lsYu99WNCtCn3PS2pKDgQ=;
+	s=arc-20240116; t=1788481631; c=relaxed/simple;
+	bh=5IEM4hyPqTZukDYmiow8oBSmQVKGzXouktaKy0cEE2U=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OFlefM28bVl5hsyaDdEKwfaLzOtCdNsKKUla3+6Srm5PlJHaREZZn/aJQR/jFMfdw9a4e93uZdYsmslBh4o8KdzUyO/eWOB7Df006DMtEuKkgwj80xjCPota2i5bBV8crRV6segiFEN8764C0B5d6zZl2ex407rfkc+y/uuYueI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TKdARIT8; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=uKeIynhMWQw3hVMpvCPXA6XOeUHXlN2ay+W6BD7iDz1vigVwAZ9yODONqT2GBrhc8xTbLuzvxkr5N5iVlj4QKvQxYcLbzf09TEteEq2yfmQX0aXZc4rzuH8c2xnJqphS3qSwLcqIuZhIgLOjGp5f2wOOHfjlTs/LkivCmLF9g4g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KklHMENl; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TKdARIT8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 434E71F00A3F;
-	Fri,  4 Sep 2026 00:27:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KklHMENl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08CC51F00AC4;
+	Fri,  4 Sep 2026 00:27:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788481626;
-	bh=Guaqk/BBX5vgOdW0a3i3b9jcaHjfbK+jFdXc8XR3lFE=;
+	s=k20260515; t=1788481628;
+	bh=0F6hSxePRsqr4rNFDrqQH0NacYJg0wCl6/MEWlWLg/E=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=TKdARIT8C3N78xIUlqd0mh1NiI6/Bhaaue4Ice15WpsXxYmvzPXtrZwAkozu0SYMC
-	 CCZLyJ/djZfxspJ6FxrsKFYNkjHUt4uv65jGOO7+uJRKPmF1zHhSBxV51LqsLcZzvT
-	 NPV0+5gAMoe3j0SyrCKbkBbQMXX4MvQzyWztVPajJQ/FN9QGxPpYovFpXR8A+k8dFx
-	 4AxAzPpVkxqg1+6nVjlFJrPfVj8bdWztD1BTG0NnvUK4zLQZF7xRj7PyXGNonVQhMo
-	 LWxHnQED3vezWrFH9SuI0Mpbot1iar45NXGKZWCGU7gX1rxKrjka8EEsIjBCXPqJeM
-	 lGZLhGh03Wu9g==
+	b=KklHMENlKO7iWFdlK5YjN7ge263zMQM5GNQ7A1UuipEgWHBzEGujfwEZ35xIkOvJw
+	 M/diJw1qnCl0nMXDctlfsrly4oy8GycNKsHAabgJPUFVUrsQaOCN7fEZ5PACCx9Oi8
+	 oBM/IsrtPesxa6Ftl2BNO0VF1F2W2SLZgOYJaxdtoJHF3rAc1GKSu1Ldf0Nax5UbY8
+	 JeyEGvrFwPu22MNM8q3s/p9zY/aHXCjqjrZwbBYzid8/00azAuKez1MiMYNIvHsQ+/
+	 s8LSWJZgmvlyw0UFGcyNdPhfEQZf02m17NMVfxwysXcDcGupklC6UApBFzTO3dsAD7
+	 xZz1QivPWZ6Qw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v3 05/40] scsi: prepare for using 16-bits defined sense codes
-Date: Fri,  4 Sep 2026 09:26:09 +0900
-Message-ID: <20260904002644.157668-6-dlemoal@kernel.org>
+Subject: [PATCH v3 06/40] scsi: use struct scsi_sense_hdr to log sense keys and codes
+Date: Fri,  4 Sep 2026 09:26:10 +0900
+Message-ID: <20260904002644.157668-7-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260904002644.157668-1-dlemoal@kernel.org>
 References: <20260904002644.157668-1-dlemoal@kernel.org>
@@ -51,155 +51,196 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In preparation for handling sense codes and their qualifiers as a single
-16-bits sense code field, with the values  defined as macros in
-include/scsi/scsi_sense.h, modify the definition of the structures
-scsi_failure and scsi_sense_hdr to introduce a 16-bits sense_code field
-as a union with the existing 8-bits asc and ascq fields.
+Instead of passing the sense key, additional sense code and additional
+sense code qualifier as separate parameters, change the functions
+scsi_extd_sense_format(), scsi_format_extd_sense(), and
+usb_stor_show_sense() to take a pointer to a struct scsi_sense_hdr to
+access the sense key and sense code with a single argument.
 
-This temporary modification allows accessing either the asc and ascq
-fields individually, or their combination as the 16-bits sense_code field.
-
-The helper functions scsi_sense_asc(), scsi_sense_ascq() are defined to
-allow accessing the 8-bits ASC and ASCQ values from the sense_code filed
-of struct scsi_sense_hdr. The helper functions scsi_failure_asc() and
-scsi_failure_ascq() provide the same for the sense code field of struct
-scsi_failure.
-
-The helper functions scsi_set_sense_buffer() and scsi_set_sense() are also
-added to wrap calls to scsi_build_sense_buffer() and scsi_build_sense()
-using a 16-bits sense code aregument instead of the 8-bits ASC and ASCQ
-arguments.
+No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- include/scsi/scsi_cmnd.h   |  7 +++++++
- include/scsi/scsi_common.h | 31 +++++++++++++++++++++++++++++--
- include/scsi/scsi_device.h | 25 +++++++++++++++++++++++--
- 3 files changed, 59 insertions(+), 4 deletions(-)
+ drivers/scsi/constants.c        | 11 +++++------
+ drivers/scsi/scsi_logging.c     | 22 ++++++++++++----------
+ drivers/usb/storage/debug.c     | 12 +++++-------
+ drivers/usb/storage/debug.h     |  4 ++--
+ drivers/usb/storage/transport.c |  2 +-
+ include/scsi/scsi_dbg.h         |  6 +++---
+ 6 files changed, 28 insertions(+), 29 deletions(-)
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 8ecfb94049db..bf6d69f0249f 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -394,6 +394,13 @@ static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
- extern void scsi_build_sense(struct scsi_cmnd *scmd, int desc,
- 			     u8 key, u8 asc, u8 ascq);
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 4b97f574fe8c..57b51c4529c3 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -377,22 +377,21 @@ EXPORT_SYMBOL(scsi_sense_key_string);
+  * This string may contain a "%x" and should be printed with ascq as arg.
+  */
+ const char *
+-scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
++scsi_extd_sense_format(const struct scsi_sense_hdr *sshdr, const char **fmt)
+ {
+-	u16 code = scsi_sense_code(asc, ascq);
+ 	unsigned offset = 0;
+ 	int i;
  
-+static inline void scsi_set_sense(struct scsi_cmnd *scmd, int desc,
-+				  u8 key, u16 code)
-+{
-+	scsi_build_sense(scmd, desc, key, scsi_sense_code_asc(code),
-+			 scsi_sense_code_ascq(code));
-+}
-+
- struct request *scsi_alloc_request(struct request_queue *q, blk_opf_t opf,
- 				   blk_mq_req_flags_t flags);
+ 	*fmt = NULL;
+ 	for (i = 0; i < ARRAY_SIZE(additional); i++) {
+-		if (additional[i].code == code)
++		if (additional[i].code == sshdr->sense_code)
+ 			return additional_text + offset;
+ 		offset += additional[i].size;
+ 	}
+ 	for (i = 0; additional2[i].fmt; i++) {
+-		if (additional2[i].asc == asc &&
+-		    ascq >= additional2[i].ascq_min &&
+-		    ascq <= additional2[i].ascq_max) {
++		if (additional2[i].asc == scsi_sense_asc(sshdr) &&
++		    scsi_sense_ascq(sshdr) >= additional2[i].ascq_min &&
++		    scsi_sense_ascq(sshdr) <= additional2[i].ascq_max) {
+ 			*fmt = additional2[i].fmt;
+ 			return additional2[i].str;
+ 		}
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index 3cd0d3074085..0a9a2f7c1966 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -238,29 +238,32 @@ EXPORT_SYMBOL(scsi_print_command);
  
-diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
-index 00c8a16d3cd2..6fb2c290ba33 100644
---- a/include/scsi/scsi_common.h
-+++ b/include/scsi/scsi_common.h
-@@ -71,8 +71,18 @@ extern u64 scsilun_to_int(struct scsi_lun *);
- struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
- 	u8 response_code;	/* permit: 0x0, 0x70, 0x71, 0x72, 0x73 */
- 	u8 sense_key;
--	u8 asc;
--	u8 ascq;
-+	union {
-+		struct {
-+#if defined(__BIG_ENDIAN)
-+			u8 asc;
-+			u8 ascq;
-+#elif defined(__LITTLE_ENDIAN)
-+			u8 ascq;
-+			u8 asc;
-+#endif
-+		};
-+		u16 sense_code;
-+	};
- 	u8 byte4;
- 	u8 byte5;
- 	u8 byte6;
-@@ -87,10 +97,27 @@ static inline bool scsi_sense_valid(const struct scsi_sense_hdr *sshdr)
- 	return (sshdr->response_code & 0x70) == 0x70;
+ static size_t
+ scsi_format_extd_sense(char *buffer, size_t buf_len,
+-		       unsigned char asc, unsigned char ascq)
++		       const struct scsi_sense_hdr *sshdr)
+ {
+ 	size_t off = 0;
+ 	const char *extd_sense_fmt = NULL;
+-	const char *extd_sense_str = scsi_extd_sense_format(asc, ascq,
+-							    &extd_sense_fmt);
++	const char *extd_sense_str =
++		scsi_extd_sense_format(sshdr, &extd_sense_fmt);
+ 
+ 	if (extd_sense_str) {
+ 		off = scnprintf(buffer, buf_len, "Add. Sense: %s",
+ 				extd_sense_str);
+ 		if (extd_sense_fmt)
+ 			off += scnprintf(buffer + off, buf_len - off,
+-					 "(%s%x)", extd_sense_fmt, ascq);
++					 "(%s%x)", extd_sense_fmt,
++					 scsi_sense_ascq(sshdr));
+ 	} else {
+-		if (asc >= 0x80)
++		if (scsi_sense_asc(sshdr) >= 0x80)
+ 			off = scnprintf(buffer, buf_len, "<<vendor>>");
+ 		off += scnprintf(buffer + off, buf_len - off,
+-				 "ASC=0x%x ", asc);
+-		if (ascq >= 0x80)
++				 "ASC=0x%x ",
++				 scsi_sense_asc(sshdr));
++		if (scsi_sense_ascq(sshdr) >= 0x80)
+ 			off += scnprintf(buffer + off, buf_len - off,
+ 					 "<<vendor>>");
+ 		off += scnprintf(buffer + off, buf_len - off,
+-				 "ASCQ=0x%x ", ascq);
++				 "ASCQ=0x%x ",
++				 scsi_sense_ascq(sshdr));
+ 	}
+ 	return off;
+ }
+@@ -333,8 +336,7 @@ scsi_log_print_sense_hdr(const struct scsi_device *sdev, const char *name,
+ 	if (!logbuf)
+ 		return;
+ 	off = sdev_format_header(logbuf, logbuf_len, name, tag);
+-	off += scsi_format_extd_sense(logbuf + off, logbuf_len - off,
+-				      sshdr->asc, sshdr->ascq);
++	off += scsi_format_extd_sense(logbuf + off, logbuf_len - off, sshdr);
+ 	dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
+ 	scsi_log_release_buffer(logbuf);
+ }
+diff --git a/drivers/usb/storage/debug.c b/drivers/usb/storage/debug.c
+index dda610f689b7..4cc5a019382a 100644
+--- a/drivers/usb/storage/debug.c
++++ b/drivers/usb/storage/debug.c
+@@ -140,15 +140,12 @@ void usb_stor_show_command(const struct us_data *us, struct scsi_cmnd *srb)
+ 		     (const unsigned char *)srb->cmnd);
  }
  
-+static inline u8 scsi_sense_asc(const struct scsi_sense_hdr *sshdr)
-+{
-+	return scsi_sense_code_asc(sshdr->sense_code);
-+}
-+
-+static inline u8 scsi_sense_ascq(const struct scsi_sense_hdr *sshdr)
-+{
-+	return scsi_sense_code_ascq(sshdr->sense_code);
-+}
-+
- extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 				 struct scsi_sense_hdr *sshdr);
+-void usb_stor_show_sense(const struct us_data *us,
+-			 unsigned char key,
+-			 unsigned char asc,
+-			 unsigned char ascq)
++void usb_stor_show_sense(const struct us_data *us, struct scsi_sense_hdr *sshdr)
+ {
+ 	const char *what, *keystr, *fmt;
  
- extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
-+
-+static inline void scsi_set_sense_buffer(int desc, u8 *buf, u8 key, u16 code)
-+{
-+	scsi_build_sense_buffer(desc, buf, key, scsi_sense_code_asc(code),
-+				scsi_sense_code_ascq(code));
-+}
-+
- int scsi_set_sense_information(u8 *buf, int buf_len, u64 info);
- int scsi_set_sense_field_pointer(u8 *buf, int buf_len, u16 fp, u8 bp, bool cd);
- extern const u8 * scsi_sense_desc_find(const u8 * sense_buffer, int sb_len,
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index e321471e8ca2..11910142ac50 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -518,6 +518,7 @@ extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
-  * to match any sense key, ASC, and ASCQ value.
-  */
- #define SCMD_FAILURE_SENSE_KEY_ANY	0xff
-+#define SCMD_FAILURE_SENSE_CODE_ANY	0xffff
- #define SCMD_FAILURE_ASC_ANY		0xff
- #define SCMD_FAILURE_ASCQ_ANY		0xff
- /* Always retry a matching failure. */
-@@ -526,8 +527,18 @@ extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
- struct scsi_failure {
- 	int result;
- 	u8 sense_key;
--	u8 asc;
--	u8 ascq;
-+	union {
-+		struct {
-+#if defined(__BIG_ENDIAN)
-+			u8 asc;
-+			u8 ascq;
-+#elif defined(__LITTLE_ENDIAN)
-+			u8 ascq;
-+			u8 asc;
-+#endif
-+		};
-+		u16 sense_code;
-+	};
- 	/*
- 	 * Number of times scsi_execute_cmd will retry the failure. It does
- 	 * not count for the total_allowed.
-@@ -537,6 +548,16 @@ struct scsi_failure {
- 	s8 retries;
- };
+-	keystr = scsi_sense_key_string(key);
+-	what = scsi_extd_sense_format(asc, ascq, &fmt);
++	keystr = scsi_sense_key_string(sshdr->sense_key);
++	what = scsi_extd_sense_format(sshdr, &fmt);
  
-+static inline u8 scsi_failure_asc(const struct scsi_failure *failure)
-+{
-+	return scsi_sense_code_asc(failure->sense_code);
-+}
-+
-+static inline u8 scsi_failure_ascq(const struct scsi_failure *failure)
-+{
-+	return scsi_sense_code_ascq(failure->sense_code);
-+}
-+
- struct scsi_failures {
- 	/*
- 	 * If a scsi_failure does not have a retry limit setup this limit will
+ 	if (keystr == NULL)
+ 		keystr = "(Unknown Key)";
+@@ -156,7 +153,8 @@ void usb_stor_show_sense(const struct us_data *us,
+ 		what = "(unknown ASC/ASCQ)";
+ 
+ 	if (fmt)
+-		usb_stor_dbg(us, "%s: %s (%s%x)\n", keystr, what, fmt, ascq);
++		usb_stor_dbg(us, "%s: %s (%s%x)\n", keystr, what, fmt,
++			     scsi_sense_ascq(sshdr));
+ 	else
+ 		usb_stor_dbg(us, "%s: %s\n", keystr, what);
+ }
+diff --git a/drivers/usb/storage/debug.h b/drivers/usb/storage/debug.h
+index a6505ceb6693..616e518eeb21 100644
+--- a/drivers/usb/storage/debug.h
++++ b/drivers/usb/storage/debug.h
+@@ -31,8 +31,8 @@
+ 
+ #ifdef CONFIG_USB_STORAGE_DEBUG
+ void usb_stor_show_command(const struct us_data *us, struct scsi_cmnd *srb);
+-void usb_stor_show_sense(const struct us_data *us, unsigned char key,
+-			 unsigned char asc, unsigned char ascq);
++void usb_stor_show_sense(const struct us_data *us,
++			 struct scsi_sense_hdr *sshdr);
+ __printf(2, 3) void usb_stor_dbg(const struct us_data *us,
+ 				 const char *fmt, ...);
+ 
+diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
+index 9a4bf86e7b6a..8e9359501d88 100644
+--- a/drivers/usb/storage/transport.c
++++ b/drivers/usb/storage/transport.c
+@@ -805,7 +805,7 @@ void usb_stor_invoke_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 			     sshdr.response_code, sshdr.sense_key,
+ 			     sshdr.asc, sshdr.ascq);
+ #ifdef CONFIG_USB_STORAGE_DEBUG
+-		usb_stor_show_sense(us, sshdr.sense_key, sshdr.asc, sshdr.ascq);
++		usb_stor_show_sense(us, &sshdr);
+ #endif
+ 
+ 		/* set the result so the higher layers expect this data */
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index efcdc78530d5..f21a5e3caca9 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -20,8 +20,8 @@ extern void scsi_print_result(struct scsi_cmnd *, const char *, int);
+ #ifdef CONFIG_SCSI_CONSTANTS
+ extern bool scsi_opcode_sa_name(int, int, const char **, const char **);
+ extern const char *scsi_sense_key_string(unsigned char);
+-extern const char *scsi_extd_sense_format(unsigned char, unsigned char,
+-					  const char **);
++extern const char *scsi_extd_sense_format(const struct scsi_sense_hdr *sshdr,
++					  const char **fmt);
+ extern const char *scsi_mlreturn_string(int);
+ extern const char *scsi_hostbyte_string(int);
+ #else
+@@ -57,7 +57,7 @@ scsi_sense_key_string(unsigned char key)
+ }
+ 
+ static inline const char *
+-scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
++scsi_extd_sense_format(const struct scsi_sense_hdr *sshdr, const char **fmt)
+ {
+ 	*fmt = NULL;
+ 	return NULL;
 -- 
 2.55.0
 
