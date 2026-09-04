@@ -1,36 +1,36 @@
-Received: from mta1.migadu.com (out-235.mta1.migadu.com [95.215.58.235])
+Received: from mta1.migadu.com (out-132.mta1.migadu.com [95.215.58.132])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D0D544AB9D
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2026 10:28:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.235
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD36C44BC87
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Sep 2026 10:42:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.132
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788517714; cv=none; b=m9rnMess/QtATHfj4z6RMZ6q8VcmrPdogpQjwmkRWki96avVIT+zcNOk05f1CusDiixo+Gz6MGtF2+4woBLgDjnhXcb/YRL9kJhmZWZmZ2vTxmNbKWe4h+bbMv0EEtG4AlQhOs5Lrzx8jGYTCMFzteT0+keWTjhZ+qh+s8UFnnA=
+	t=1788518567; cv=none; b=AxgHAtO3BMqgDhzpaLNoefWlTpghb7crQ5I253DgWilLAb8iUZ+Tw8lX0IdNOWntlhPR79ni5fSDznaNYhUPr5BRNcbh6jspIcX96JEEx0Cb5d3sNSGkxl3FPgWx1yzCEfzFIv6auwPg3j9gHqWi1yDGpO3e+mPX+7CLKxfB+lI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788517714; c=relaxed/simple;
-	bh=z4R36ZA/T7Ab+zK4BLS9IjXROG1y96L29XGD9o8l6MU=;
+	s=arc-20240116; t=1788518567; c=relaxed/simple;
+	bh=3eGbGpaiJkSJDxpx9xc+XjxObIRpjfGF5zwgJme+sxU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bFr8BGQhXyiICF25lXLTgZ0B8UNW+y5K1hjk3vh0UgwpesjVVR9MpBs/vK7PgT645nsRHDgeNieCPjvZfJgDvfDCrWBiPYOxt4J/nXqRsehAao4+XTVOVY5DeyiBY36CuIp0+QJXAXzjQ11zWEHazaJKk4c+iAs+1p93IzZg1pg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XCTCvs1X; arc=none smtp.client-ip=95.215.58.235
+	 In-Reply-To:Content-Type; b=Uds2acIrLzlJmef7ov8rEyPGOyvGfP+OMpynYUvxPKrDf1N6PWxPXGwS/4SCTQ/vKE0mtKyiwigjIqd2aPdSrziOO3d94oXt4pyKAxplaOHjOHMTRd7nG96w4SfcSEpcojiViU9HOqMoTXZE2gMUxFTFpDCYaZf+k40bTKmQuyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lVotfOSu; arc=none smtp.client-ip=95.215.58.132
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XCTCvs1X"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lVotfOSu"
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=z4R36ZA/T7Ab+zK4BLS9IjXROG1y96L29XGD9o8l6MU=;
+DKIM-Signature: a=rsa-sha256; bh=3eGbGpaiJkSJDxpx9xc+XjxObIRpjfGF5zwgJme+sxU=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788517710; v=1; x=1789122510;
- b=XCTCvs1XU0n8bt3v0YwVmhRmUQEPC1SSjDdnN8u7/jVeosUppuYew4oXUTmwHNLFVNVhrlQt
- qR7ksOExJCOSNFksiBDgtD7YzL9TOwHnFBl4TDSM/kS3FjOTz1pfA5XMaAxJgc9FyB4tUerv3/s
- 8p/YZCZVMpjtN7CyZW+i36/M=
+ t=1788518561; v=1; x=1789123361;
+ b=lVotfOSuPAAQ5r4FctJWCZc7+NFrxpHzZFXaK8fTwz/7XHM2+e5zE7AS/bjDnWKG2q1juFX0
+ /zJCqHPjvCmYTyPSFDcDpMtvmgNHIDeKW3AtQ4L3hhOatR6/AE54PepWJ5jh5E699u9gvIM2tYg
+ 4RQ8ImiuE7vlLW9NpwYzE7qc=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id 2a8bbbdeaa5ab8bb;
-	Fri, 04 Sep 2026 10:28:30 +0000
-X-Mizu-Trace-ID: 2a8bbbdeaa5ab8bb
+Received: by mta12.migadu.com with ESMTPS id d9c98f6a4a4bc61c;
+	Fri, 04 Sep 2026 10:42:41 +0000
+X-Mizu-Trace-ID: d9c98f6a4a4bc61c
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <434526d4-4996-4de3-a3b6-29860bc178b8@linux.dev>
-Date: Fri, 4 Sep 2026 11:28:29 +0100
+Message-ID: <f46c8465-e61e-4e79-adad-d7578b4f358b@linux.dev>
+Date: Fri, 4 Sep 2026 11:42:40 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,78 +38,96 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 17/27] scsi-multipath: revalidate paths upon device
- unblock
+Subject: Re: [PATCH v7 18/27] scsi-multipath: failover handling
 To: sashiko-reviews@lists.linux.dev, John Garry <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 References: <20260901104526.3850621-1-john.g.garry@oracle.com>
- <20260901104526.3850621-18-john.g.garry@oracle.com>
- <20260901111258.4F9381F000E9@smtp.kernel.org>
+ <20260901104526.3850621-19-john.g.garry@oracle.com>
+ <20260901110950.8159E1F000E9@smtp.kernel.org>
 Content-Language: en-US
 From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260901111258.4F9381F000E9@smtp.kernel.org>
+In-Reply-To: <20260901110950.8159E1F000E9@smtp.kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 9/1/26 12:12, sashiko-bot@kernel.org wrote:
+On 9/1/26 12:09, sashiko-bot@kernel.org wrote:
 > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] Unsynchronized access to `sdev->scsi_mpath_dev` in `scsi_internal_device_unblock()` races with device initialization, leading to a NULL pointer dereference or Use-After-Free.
+> - [High] Path failover is prematurely aborted if the underlying path device is removed, and dropping its reference causes a sleep-in-atomic bug.
 > --
 > 
-> commit 9827c5b37e1215c845ce584c07c0fadae92e797b
+> commit 657b83f2533d51dce7950c14bb5248625186e04d
 > Author: John Garry <john.garry@linux.dev>
+> Subject: scsi-multipath: failover handling
 > 
-> scsi-multipath: revalidate paths upon device unblock
+> This commit implements failover handling for scsi_cmnd by requeuing the
+> master bio of each bio attached to a failed request. Failover is detected
+> in scsi_mpath_clone_end_io() when blk_path_error() occurs.
 > 
-> This commit revalidates paths when a scsi_device is unblocked. It clears
-> any paths and requeues queued bios as part of the revalidation process.
-> 
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index f02b3a50e20cd..189263ce56624 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -3093,6 +3093,8 @@ static int scsi_internal_device_unblock(struct scsi_device *sdev,
->>   	mutex_lock(&sdev->state_mutex);
->>   	ret = scsi_internal_device_unblock_nowait(sdev, new_state);
->>   	mutex_unlock(&sdev->state_mutex);
->> +	if ((ret == 0) && sdev->scsi_mpath_dev)
->> +		scsi_mpath_revalidate_paths(sdev->scsi_mpath_dev);
-> 
-> [Severity: High]
-> Does this lockless access to sdev->scsi_mpath_dev race with device
-> initialization?
-> 
-> If a transport unblock event occurs concurrently with hardware discovery,
-> scsi_internal_device_unblock() might read sdev->scsi_mpath_dev while it is
-> being initialized.
-
-That should not happen - sdev->scsi_mpath_dev setup is done before that 
-sdev is even added and transport would be calling unblock on it.
-
-> 
-> For instance, scsi_multipath_sdev_init() publishes the pointer before
-> initialization is fully complete:
-> 
-> drivers/scsi/scsi_multipath.c:scsi_multipath_sdev_init() {
->      ...
->      scsi_mpath_dev->sdev = sdev;
->      sdev->scsi_mpath_dev = scsi_mpath_dev;
->      ...
-> }
-> 
-> Could calling scsi_mpath_revalidate_paths() here lead to a NULL pointer
-> dereference when it attempts to access an uninitialized scsi_mpath_head?
-> 
-> Additionally, if initialization fails and the structure is freed in the error
-> path, could this result in a use-after-free?
-
-Again, the same as above.
-
-> 
->>   
->>   	return ret;
->>   }
+>> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+>> --- a/drivers/scsi/scsi_multipath.c
+>> +++ b/drivers/scsi/scsi_multipath.c
 > 
 > [ ... ]
+> 
+>>   static void scsi_mpath_clone_end_io(struct bio *clone)
+>>   {
+>>   	struct bio *master_bio = clone->bi_private;
+>>   
+>> +	if (clone->bi_status && blk_path_error(clone->bi_status)) {
+>> +		struct block_device *bi_bdev = clone->bi_bdev;
+>> +		struct request_queue *q = bi_bdev->bd_queue;
+>> +		struct scsi_device *sdev = scsi_device_from_queue(q);
+>> +		struct scsi_mpath_device *scsi_mpath_dev;
+>> +		struct mpath_device *mpath_device;
+>> +		struct mpath_head *mpath_head;
+>> +		unsigned long flags;
+>> +
+>> +		if (!sdev)
+>> +			goto end_bio;
+> 
+> [Severity: High]
+> If the underlying device is being removed and scsi_device_from_queue()
+> returns NULL, does this prematurely abort the failover?
+> 
+> Bailing out here directly propagates the path error to the master bio,
+> which seems to break the multipath failover guarantee.
+We need the sdev to lookup the mpath_head. However I can also get the 
+mpath_head from master_bio->bi_bdev->bd_disk->private_data, so I can do 
+away with any sdev usage altogether.
+
+> 
+>> +
+>> +		scsi_mpath_dev = sdev->scsi_mpath_dev;
+>> +		mpath_device = &scsi_mpath_dev->mpath_device;
+>> +		mpath_head = mpath_device->mpath_head;
+>> +
+>> +		spin_lock_irqsave(&mpath_head->requeue_lock, flags);
+>> +		bio_list_add_clone(&mpath_head->requeue_list, clone);
+>> +		spin_unlock_irqrestore(&mpath_head->requeue_lock, flags);
+>> +
+>> +		mpath_schedule_requeue_work(mpath_head);
+>> +		put_device(&sdev->sdev_gendev);
+> 
+> [Severity: High]
+> Can this put_device() call trigger a sleep-in-atomic panic?
+
+See above
+
+> 
+> Since scsi_mpath_clone_end_io() executes in the softirq context of a bio
+> end_io handler, dropping the last reference here can call
+> scsi_device_dev_release(), which explicitly enforces might_sleep().
+> 
+> Could mpath_head be safely derived directly from
+> master_bio->bi_bdev->bd_disk->private_data instead of indirectly through
+> the underlying path device?
+> 
+>> +		return;
+>> +	}
+>> +
+>> +end_bio:
+>>   	master_bio->bi_status = clone->bi_status;
+>>   	bio_put(clone);
+>>   	bio_endio(master_bio);
 > 
 
