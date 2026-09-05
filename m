@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C9C636C0C8;
-	Sat,  5 Sep 2026 03:22:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 973C536C0C8;
+	Sat,  5 Sep 2026 03:23:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788578580; cv=none; b=Cw5KH6qPmkfWCA1Exrs0xfYI9empUohxISZh5uAqNfRx/sSasnuC3KMlV8VCAuyMppvC1ZTzFAxgHuTV1IDXwlPXj6Q+EhIt82+PFEhGVCwOoBcRNaojtE0gENHiQqOTg6OiQmE6ICK/gevWlOHepT6nrxBbqto44tXh8FhDKfE=
+	t=1788578584; cv=none; b=MwKitBRrHTykRGDfe1oOx6MgiAnrk6ooRlCG3o9pdKb81Vge5WedAjkgtpEMbv0IMmeJIiwtuWYGtyyhiiWOHGgBT2Kc2ijmfIxxrRPFkc4H7BAAN0QPxNQ30ZpgKmjDMzIdUo+jWV8zhTlfpXSMdC7fcsFwjn3Kts+nxFAM85U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788578580; c=relaxed/simple;
-	bh=viIF6CyZtthkRsLQO8fQlXyoC/+Y6fi8PlFvobsOUgM=;
+	s=arc-20240116; t=1788578584; c=relaxed/simple;
+	bh=+ro/Xg8E61wmsgyq+k2dC0zLPx8G66gcFcguSdy117A=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uB7kzkBzdS35OJpxS9NY17N6H/vNp6ZxjQM5+JAkNRs8bWEB2emCbdZIzU7GuliPC39nGOe2i8aQmp6v1q5heijbdGUx7Z+gDW2KXLpFCwm02LW3Z+AZw98e6DVGz28GWI0cASvslPui+O97iphhpX3k5zsSMiJQznTXqUrV/+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O9vERkKb; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=ZvC3zsdUaoaXXmj8nZUsmxBommIy4paN9gurl9Gyp8bo0DRRDw2QgT94cniSwUzlxbh6tOoFr4L7nEgEuSgFoB4kLHyNxKXtfucNZRjDeWfHWEc1s1MqQxdqNQR9ZYapwg+T7qweF1c2LVTi2DKzAJ7ju7BsWeIO1kdqOGgThVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a6avbgUT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O9vERkKb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09DF21F00A3F;
-	Sat,  5 Sep 2026 03:22:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a6avbgUT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA7C81F00A3E;
+	Sat,  5 Sep 2026 03:22:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788578579;
-	bh=iS5O/hr4rZ0YkdRljRugC9w1UK6x+zNNcYZof5Ad4zc=;
+	s=k20260515; t=1788578581;
+	bh=cs9H4qj/FC8oc1B8LkzZiBLHNKg4nRkU0a+azNT3/2o=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=O9vERkKb832KJiFOTUFQnWHR7zAFn0+FPPW4N2otnRMId4N/IQq5BgR/r+UtDmwVL
-	 g9866DHz7QRLnpyGAFMRxSmZxL0QJf/KZRDDDVQbk1k+53hrvq1OksC89MkgMsmZwd
-	 NqVUAxMHVnkubBC6V/qtQG2RjZM5C4SWmNPAxUBAIfbximyGL2RNrz0+8MLGOa3kyM
-	 lUS3Zqm13/ueAM7G4YNn7KWsFB1xbEuDTrUTEBgIgO/5dZRcbHKezDEBaujsVJ4krR
-	 u7D/KV4sRiY8u8YBFg9Zv0WFlAnrnG8S4uLMvu5rYPLP79oUR6Q1YSnPVULMi1rvGv
-	 gDAxwsjyHYp0A==
+	b=a6avbgUTEHHSVBRuHxcRIsguC6+gtjPmRq/CN0nRGJnjgzKqFwRwBrWtgZvtKwzvS
+	 pHxtzuIhzaGwWbWD1QMTbaNZj83jnNNo1QalssMC1DEYJGcoS/oTRSa/CfUXqLt/UR
+	 7y9Yk/Dc1iJuCnIhvU7oBbIX+dQhOOBxgbQxKD730ZNXLKgpXxoKU7XA24wvuyH3vs
+	 YGhuXXAE1f88J/s+DeV01/x771Nb9ZnnRRY+gMYXcgurUXN3BMhxuA5lt+2UWnBes8
+	 XjScSFqjW0pRYTq5VaNgrtTQTA3uysL+ATRx14lklRW8jRB7fxgtkcgbPziqTwJd2T
+	 KAO6A1a9AsCyw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v4 12/40] scsi: st: use 16-bits defined sense codes
-Date: Sat,  5 Sep 2026 12:21:56 +0900
-Message-ID: <20260905032224.509860-13-dlemoal@kernel.org>
+Subject: [PATCH v4 13/40] scsi: device_handlers: hp_sw: use 16-bits defined sense codes
+Date: Sat,  5 Sep 2026 12:21:57 +0900
+Message-ID: <20260905032224.509860-14-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260905032224.509860-1-dlemoal@kernel.org>
 References: <20260905032224.509860-1-dlemoal@kernel.org>
@@ -51,87 +51,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the SCSI tape driver to use the 16-bits sense_code field of
-struct scsi_sense_hdr and replace all hard-coded additional sense codes
-and additional sense code qualifiers with the enum values defined in
-include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
-being processed are easier to test and self-documented.
+Refactor the HP sw device handler driver to use the 16-bits sense_code
+field of struct scsi_sense_hdr and struct scsi_failure and replace all
+hard-coded additional sense codes and additional sense code qualifiers
+with the enum values defined in include/scsi/scsi_sense.h. This helps with
+code clarity as the sense codes being processed are easier to test and
+self-documented.
 
 No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/st.c | 35 +++++++++++++++++++----------------
- 1 file changed, 19 insertions(+), 16 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c | 25 +++++++++------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index f1c3c4946637..1ca9753cb734 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -421,11 +421,13 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
- 					       STp->cln_sense_mask) != 0);
- 	}
- 	if (cmdstatp->have_sense &&
--	    cmdstatp->sense_hdr.asc == 0 && cmdstatp->sense_hdr.ascq == 0x17)
--		STp->cleaning_req = 1; /* ASC and ASCQ => cleaning requested */
-+	    cmdstatp->sense_hdr.sense_code == CLEANING_REQUESTED)
-+		STp->cleaning_req = 1;
- 	if (cmdstatp->have_sense && scode == UNIT_ATTENTION &&
--		cmdstatp->sense_hdr.asc == 0x29 && !STp->pos_unknown) {
--		STp->pos_unknown = 1; /* ASC => power on / reset */
-+	    scsi_sense_asc(&cmdstatp->sense_hdr) ==
-+	    ASC_POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED &&
-+	    !STp->pos_unknown) {
-+		STp->pos_unknown = 1;
- 		st_printk(KERN_WARNING, STp, "Power on/reset recognized.");
- 	}
+diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+index 3431e1ce95fd..d8653452ed2b 100644
+--- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
++++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+@@ -47,7 +47,8 @@ static int tur_done(struct scsi_device *sdev, struct hp_sw_dh_data *h,
  
-@@ -1003,7 +1005,8 @@ static int test_ready(struct scsi_tape *STp, int do_wait)
- 			scode = cmdstatp->sense_hdr.sense_key;
+ 	switch (sshdr->sense_key) {
+ 	case NOT_READY:
+-		if (sshdr->asc == 0x04 && sshdr->ascq == 2) {
++		if (sshdr->sense_code ==
++		    LU_NOT_READY_INITIALIZING_COMMAND_REQUIRED) {
+ 			/*
+ 			 * LUN not ready - Initialization command required
+ 			 *
+@@ -61,8 +62,8 @@ static int tur_done(struct scsi_device *sdev, struct hp_sw_dh_data *h,
+ 	default:
+ 		sdev_printk(KERN_WARNING, sdev,
+ 			   "%s: sending tur failed, sense %x/%x/%x\n",
+-			   HP_SW_NAME, sshdr->sense_key, sshdr->asc,
+-			   sshdr->ascq);
++			    HP_SW_NAME, sshdr->sense_key,
++			    scsi_sense_asc(sshdr), scsi_sense_ascq(sshdr));
+ 		break;
+ 	}
+ 	return ret;
+@@ -85,8 +86,7 @@ static int hp_sw_tur(struct scsi_device *sdev, struct hp_sw_dh_data *h)
+ 	struct scsi_failure failure_defs[] = {
+ 		{
+ 			.sense_key = UNIT_ATTENTION,
+-			.asc = SCMD_FAILURE_ASC_ANY,
+-			.ascq = SCMD_FAILURE_ASCQ_ANY,
++			.sense_code = SCMD_FAILURE_SENSE_CODE_ANY,
+ 			.allowed = SCMD_FAILURE_NO_LIMIT,
+ 			.result = SAM_STAT_CHECK_CONDITION,
+ 		},
+@@ -133,14 +133,9 @@ static int hp_sw_start_stop(struct hp_sw_dh_data *h)
+ 				REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER;
+ 	struct scsi_failure failure_defs[] = {
+ 		{
+-			/*
+-			 * LUN not ready - manual intervention required
+-			 *
+-			 * Switch-over in progress, retry.
+-			 */
++			/* Switch-over in progress, retry. */
+ 			.sense_key = NOT_READY,
+-			.asc = 0x04,
+-			.ascq = 0x03,
++			.sense_code = LU_NOT_READY_MANUAL_INTERVENTION_REQUIRED,
+ 			.allowed = HP_SW_RETRIES,
+ 			.result = SAM_STAT_CHECK_CONDITION,
+ 		},
+@@ -167,7 +162,8 @@ static int hp_sw_start_stop(struct hp_sw_dh_data *h)
  
- 			if (scode == UNIT_ATTENTION) { /* New media? */
--				if (cmdstatp->sense_hdr.asc == 0x28) { /* New media */
-+				if (scsi_sense_asc(&cmdstatp->sense_hdr) ==
-+				    ASC_NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED) {
- 					new_session = 1;
- 					DEBC_printk(STp, "New tape session.");
- 				}
-@@ -1026,14 +1029,13 @@ static int test_ready(struct scsi_tape *STp, int do_wait)
- 					waits++;
- 					continue;
- 				}
--				else {
--					if ((STp->device)->scsi_level >= SCSI_2 &&
--					    cmdstatp->sense_hdr.asc == 0x3a)	/* Check ASC */
--						retval = CHKRES_NO_TAPE;
--					else
--						retval = CHKRES_NOT_READY;
--					break;
--				}
-+				if ((STp->device)->scsi_level >= SCSI_2 &&
-+				    scsi_sense_asc(&cmdstatp->sense_hdr) ==
-+				    ASC_MEDIUM_NOT_PRESENT)
-+					retval = CHKRES_NO_TAPE;
-+				else
-+					retval = CHKRES_NOT_READY;
-+				break;
- 			}
+ 	switch (sshdr.sense_key) {
+ 	case NOT_READY:
+-		if (sshdr.asc == 0x04 && sshdr.ascq == 3) {
++		if (sshdr.sense_code ==
++		    LU_NOT_READY_MANUAL_INTERVENTION_REQUIRED) {
+ 			rc = SCSI_DH_RETRY;
+ 			break;
  		}
+@@ -176,7 +172,8 @@ static int hp_sw_start_stop(struct hp_sw_dh_data *h)
+ 		sdev_printk(KERN_WARNING, sdev,
+ 			    "%s: sending start_stop_unit failed, "
+ 			    "sense %x/%x/%x\n", HP_SW_NAME,
+-			    sshdr.sense_key, sshdr.asc, sshdr.ascq);
++			    sshdr.sense_key, scsi_sense_asc(&sshdr),
++			    scsi_sense_ascq(&sshdr));
+ 		rc = SCSI_DH_IO;
+ 	}
  
-@@ -3105,9 +3107,10 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 			   cmd_in == MTSETDRVBUFFER ||
- 			   cmd_in == SET_DENS_AND_BLK) {
- 			if (cmdstatp->sense_hdr.sense_key == ILLEGAL_REQUEST &&
--				cmdstatp->sense_hdr.asc == 0x24 &&
--				(STp->device)->scsi_level <= SCSI_2 &&
--				!(STp->use_pf & PF_TESTED)) {
-+			    scsi_sense_asc(&cmdstatp->sense_hdr) ==
-+			    ASC_INVALID_FIELD_IN_CDB &&
-+			    (STp->device)->scsi_level <= SCSI_2 &&
-+			    !(STp->use_pf & PF_TESTED)) {
- 				/* Try the other possible state of Page Format if not
- 				   already tried */
- 				STp->use_pf = (STp->use_pf ^ USE_PF) | PF_TESTED;
 -- 
 2.55.0
 
