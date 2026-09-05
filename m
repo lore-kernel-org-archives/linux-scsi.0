@@ -1,60 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 479342F5A06;
-	Sat,  5 Sep 2026 03:30:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 160391F4634;
+	Sat,  5 Sep 2026 03:31:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788579050; cv=none; b=aubE4usk+WIzD347+2x9tiH7n3da9q63dzBM0m0L01Rs6g3+vwAIdpi8RGKUkKWdovRQZNBNwZZAnIsRcKrk0tgphcKqx0j0nwC/sL/Xbk2YL5wNbWy978tBnYbWK9bzRskGXGqgOJujI4W17hub0UJpxpDDWOFW4J5fEubfYx0=
+	t=1788579061; cv=none; b=WJ51dSdNfs1Tb4TiaLA3bp7V9f+cus43Sg/DK6J6Klq/99x6AMrCNA9Gb/fRyeqo5cttLDErBoNBCId/tlfBKMl7Am1iNMvm5IJ+S3eaAkYUnxs8u/Ihufh+yIZuVvOuFrBjni6/toIGqfpUVNVDQveLF+aPARvXRev6UjsXjnA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788579050; c=relaxed/simple;
-	bh=QaK4MHjL8TYRQ8OeJNxBfvW6bG8pPpVE9iUBYEYYt0Y=;
+	s=arc-20240116; t=1788579061; c=relaxed/simple;
+	bh=cqW2tRe66GN4fmh/78ls1D2KfdpTlO3zzoWlVr9Dlh8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IccaNxTVy2xmTWpdtrNOqH5zpNUOSg5Cp1+b9m02uUaRQmlkqXlD2pfwFgya51Nrlab3hfgBYqTZ/WZNjV1cfWv/hjEyGthYdqBCQieLSm+3oecbgOhNCmoLxIytIoU0Fmtq4LUognXT44ZmY2uWWY6548mtblX1wK52zJ15gDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jmJcKhus; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=OOctHgx6o5T1yFfKQdQG3xk36MkIwYzAEu8IaehIyoTjXIMWubslelQ073Wxok0DbWdyl0JPWdQZPIp4A7jYwKDLOSb0s12fVCLY94M4XCNKe7JuPV6O4w5wd7dLx74KUGLUsFv1MJky8ojHPxYj//YVPQd/tkMFN4FBljVHtlc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MGg8QLfB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jmJcKhus"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5B221F00A3D;
-	Sat,  5 Sep 2026 03:30:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MGg8QLfB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E52F1F00A3D;
+	Sat,  5 Sep 2026 03:30:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788579048;
-	bh=QaK4MHjL8TYRQ8OeJNxBfvW6bG8pPpVE9iUBYEYYt0Y=;
+	s=k20260515; t=1788579060;
+	bh=cqW2tRe66GN4fmh/78ls1D2KfdpTlO3zzoWlVr9Dlh8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jmJcKhusXPxcIGMJGT2jn4BRjkIec5hroVNboYjAGn3NvgkhiwU2mDG3nfBWYhXBD
-	 YwaztXTQLm6CDEk3klxM1IfZE8Ktuwfeo/d3zMXHSmurgVLhCdwEu6TtOJtF+XP3Ia
-	 q+2325v3QC4f68OSiMejXqCbssp4ivlMwbC4/7Tdg+CKIzW7hlF9VVekB7GaTxPnyO
-	 gkutmvMbXQOoNtYrsNB2W62iwbBn/9EgN6AF5LLaUnTSxdflA7z3ckJMTZI5OweV8s
-	 aFLFi5X2WG8vvrncbgOEVxTw2VOsIMH9hx/zOAwcqMoU5rR2JQ8izWyuzvoD6Bo0oB
-	 VlfZ6GCUJVheg==
+	b=MGg8QLfBwrCUlaLm9RDjVbVNZ1urUcNQtm09cFA2KctA0fluhK8rnr4RPD8cusUDh
+	 Huk/qk45vEa8UFm2LwPokXoeQMm9ByrPFveggdhkKyw5X8X8HUB6Kii38P2vsT5v+f
+	 TdBT0noY/PBIh8ubVSWxa2XCSO2E3Omr9w9SAORJwKknV9BloP4ASoknNfMomosf0U
+	 X5grROI64WkTntNaQ7Pb8yFk+dVm9WyREMOm+Kq04z+saLiS74tNuiya0bMak1mEkw
+	 eD0beQpTCWN9idIpQZr2OW9CDdTx0LpbUbCkH7E739kuEZ5Es7oryqa9EsBoKRNzMl
+	 Zi/FYXDdfU4dw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 14/40] scsi: device_handlers: rdac: use 16-bits
- defined sense codes
+Subject: Re: [PATCH v4 04/40] scsi: rename sense field of struct
+ scsi_failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: "Alexander Gordeev" <agordeev@linux.ibm.com>, linux-ide@vger.kernel.org, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>, cassel@kernel.org, linux-s390@vger.kernel.org, "Heiko
- Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, dlemoal@kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260905032224.509860-15-dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, "Christian Borntraeger" <borntraeger@linux.ibm.com>, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, "Heiko
+ Carstens" <hca@linux.ibm.com>, cassel@kernel.org
+In-Reply-To: <20260905032224.509860-5-dlemoal@kernel.org>
 References: <20260905032224.509860-1-dlemoal@kernel.org>
- <20260905032224.509860-15-dlemoal@kernel.org>
+ <20260905032224.509860-5-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 05 Sep 2026 03:30:47 +0000
-Message-Id: <20260905033047.C5B221F00A3D@smtp.kernel.org>
+Date: Sat, 05 Sep 2026 03:30:59 +0000
+Message-Id: <20260905033059.6E52F1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> Refactor the NetApp E-Series RDAC SCSI device handler driver to use the
-> 16-bits sense_code field of struct scsi_sense_hdr and struct scsi_failure
-> and replace all hard-coded additional sense codes and additional sense
-> code qualifiers with the enum values defined in include/scsi/scsi_sense.h.
-> This helps with code clarity as the sense codes being processed are easier
-> to test and self-documented.
+> Rename the sense field of struct scsi_failure to sense_key. This makes
+> it clear that this field stores the sense key, and also unifies this
+> structure field names with the names used in struct scsi_sense_hdr.
 >=20
-> No functional change intended.
+> To be consistent with this change, the macro SCMD_FAILURE_SENSE_ANY is
+> renamed SCMD_FAILURE_SENSE_KEY_ANY.
+>=20
+> Of note is that the definition of the array any_sense_failure_defs in
+> scsi_lib_test_any_sense() is modified to change the initialization of the
+> result field to use SCMD_FAILURE_RESULT_ANY and add the .sense_key field
+> initialization to SCMD_FAILURE_SENSE_KEY_ANY to match the test target
+> case.
 >=20
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
@@ -62,5 +66,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260905032224.5098=
-60-1-dlemoal@kernel.org?part=3D14
+60-1-dlemoal@kernel.org?part=3D4
 
