@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB6F2382F0F;
-	Sat,  5 Sep 2026 03:23:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 405DB378D9A;
+	Sat,  5 Sep 2026 03:23:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788578616; cv=none; b=uIed/eSFPa167KLS1cbs9Vfhsk0H5VgdmbVT2+Cfp/260qsq0hVbME3Q8kqF9wUdLbdWEWSSIp+rrluGtpVDsSrDSfsVC8nAjY85eqzwjhLBuBHOFsNddVAzV1HeYcqJiN3boLCSy/ZB5T6CIt3jPxuF2S7bAmocn2Le7bt8qfY=
+	t=1788578617; cv=none; b=UvULm5Hc/vDXPSdE1jxIbve/YRnLVn+p51fPoxVR9uiBDptbBO1eA/Cu6nwssZvSQvWCd9EgCTsuMTOZSyuTwPfq0Gn64yqcvtNLl67vWdr72Q6w8O1L99RpJs9qEnb00xj4eHWi/jtPZzKkp5O4eoWoPNfEBtawQZKUwItuAMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788578616; c=relaxed/simple;
-	bh=0UIOe9y5FS+jdZ0af+X/28BQp4B7bR8JlAmYJMpLzRc=;
+	s=arc-20240116; t=1788578617; c=relaxed/simple;
+	bh=UEkksSlxyFrOyMXmYUcci/0laVXNLurv0stVKLOhYPY=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=i1lEKe3b0ECNJSEUIKFWK3QeL7N2+HqyZ+FevB3fJjo6etP4p7L8VSj/PvUzEeM8ptsU7BGjYQeMafru7F1akpt233uOhC/MXsip5D309TNBuIOi2GkZIk42viTiFR+MswJFSEY3vLaCZQPDUFrp4JCvf/ryCX54ivy2w/KXNvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IK0JHUhY; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=tT8UJbUXPA8QQ92jaYD01C+y6WnUGHpyh1wSbNuyhHTl+Lv4P3D7D3JlHWnd/gZ/9DzlIz35Lvw9HeFql1LmhwHw2bpbKhAz8We8Os9OzlLPmIsR3TZC7CWpGNBKtI42RUQCbho92hqHZmZVEf+Q4GAv1fsJpjI6tBOWtQoiAvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Be5e4CEi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IK0JHUhY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04BDC1F00A3D;
-	Sat,  5 Sep 2026 03:23:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Be5e4CEi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCC0B1F00AC4;
+	Sat,  5 Sep 2026 03:23:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788578614;
-	bh=fNUzL//XswYehiARTWvaXN7FAdIgLXxP8qpVlVUB/fM=;
+	s=k20260515; t=1788578616;
+	bh=7EDmrAkNKY6icF6hbFNSI+9lqeNwbzVCdBaXNPEH1Gc=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=IK0JHUhYvzSje8n848DOFuX4u8TlbLvFE37xNOfYexWWdDBagjtLjN0FcWaXIaXzN
-	 xt1M4o2W9RT+O/i58KeZ/QpdD8/V4Tq3MqCFbaaPDwMQHaFgKYT8ZedUDKxN/eufCM
-	 hFpeRbLZ/WiX8cSm/mSbpO2f92nqB3ymK2O4KfI+FhOdRSaPjJoUE/NWIicZpdP4ZO
-	 bCfV52aSr0ds7BgCp/Fegm/ZQBH+YXk/SZ4hFPWVu5q1Kk8VH6l/6Pl1LdvT9a00Z8
-	 ir+G6c9cABdg7lGERWm8OUOkyq1/4Aj6R+girZhIinc8XVMW2c7Bs6B0nOECT2cUbl
-	 r49k9/xWFtOkA==
+	b=Be5e4CEiLCIm/Y+a6ki4+VRZEod3D+yF45DeesW5NlHE8dCN/VRRPDvM+mihIUEdN
+	 l7Qp8KNdfHgjayecfnEk5L3uq1GJABeyD8mw6OtAaQZz5y0EBoxfwEadM33FpKLtGD
+	 zzzyEcYMsTgPRiXDGXW2vSrvBAn0ejKV6K70w6YGFrmsYKYY9EoGVQoDN876VJipiM
+	 2AqykLh2RThFdIZZGVCq+yS/FLeClKsvVsV8xLBiU11+WIl+LgG1kQFP1/rJoMIZj2
+	 dlezWmogcMfDIjly7oK338vtsX+8lC3sMulyYAfbKWntl2CpgYXTbp7ZWizKvqWYbA
+	 8Pn3eLx8cR/5Q==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v4 32/40] scsi: hpsa: use 16-bits defined sense codes
-Date: Sat,  5 Sep 2026 12:22:16 +0900
-Message-ID: <20260905032224.509860-33-dlemoal@kernel.org>
+Subject: [PATCH v4 33/40] scsi: storvsc: use 16-bits defined sense codes
+Date: Sat,  5 Sep 2026 12:22:17 +0900
+Message-ID: <20260905032224.509860-34-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260905032224.509860-1-dlemoal@kernel.org>
 References: <20260905032224.509860-1-dlemoal@kernel.org>
@@ -51,255 +51,66 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the hpsa driver to replace all hard-coded additional sense codes
+Refactor the storvsc driver to use the 16-bits sense_code field of
+struct scsi_sense_hdr and replace all hard-coded additional sense codes
 and additional sense code qualifiers with the enum values defined in
 include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
 being processed are easier to test and self-documented.
 
-The function decode_sense_data() is also modified to take a pointer to a
-16-bits sense_code variable in place of the two pointers to the additional
-sense code and its code qualifier. The local definitions of ASCs and ASCQs
-are deleted too.
-
-No functional change intended, but the function hpsa_volume_offline() was
-checking only the addditional sense code qualifier with checking the
-additional sense code. This change assumes that the intended additional
-sense code to check is ASC_LU_NOT_READY.
+No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/hpsa.c     | 69 +++++++++++++++++++++--------------------
- drivers/scsi/hpsa_cmd.h | 23 --------------
- 2 files changed, 35 insertions(+), 57 deletions(-)
+ drivers/scsi/storvsc_drv.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8edad1830abe..795e8c7592af 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -353,14 +353,13 @@ static inline bool hpsa_is_cmd_idle(struct CommandList *c)
- 
- /* extract sense key, asc, and ascq from sense data.  -1 means invalid. */
- static void decode_sense_data(const u8 *sense_data, int sense_data_len,
--			u8 *sense_key, u8 *asc, u8 *ascq)
-+			      u8 *sense_key, u16 *sense_code)
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ef3cd3bc7390..625db97d1a03 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1016,7 +1016,7 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
+ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+ 				struct scsi_cmnd *scmnd,
+ 				struct Scsi_Host *host,
+-				u8 asc, u8 ascq)
++				struct scsi_sense_hdr *sshdr)
  {
- 	struct scsi_sense_hdr sshdr;
- 	bool rc;
- 
- 	*sense_key = -1;
--	*asc = -1;
--	*ascq = -1;
-+	*sense_code = -1;
- 
- 	if (sense_data_len < 1)
- 		return;
-@@ -368,15 +367,15 @@ static void decode_sense_data(const u8 *sense_data, int sense_data_len,
- 	rc = scsi_normalize_sense(sense_data, sense_data_len, &sshdr);
- 	if (rc) {
- 		*sense_key = sshdr.sense_key;
--		*asc = sshdr.asc;
--		*ascq = sshdr.ascq;
-+		*sense_code = sshdr.sense_code;
+ 	struct storvsc_scan_work *wrk;
+ 	void (*process_err_fn)(struct work_struct *work);
+@@ -1033,7 +1033,7 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+ 	case SRB_STATUS_DATA_OVERRUN:
+ 		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID) {
+ 			/* Check for capacity change */
+-			if ((asc == 0x2a) && (ascq == 0x9)) {
++			if (sshdr->sense_code == CAPACITY_DATA_HAS_CHANGED) {
+ 				process_err_fn = storvsc_device_scan;
+ 				/* Retry the I/O that triggered this. */
+ 				set_host_byte(scmnd, DID_REQUEUE);
+@@ -1049,8 +1049,12 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
+ 			 * want scsi_report_sense() to output a message
+ 			 * that a sysadmin wouldn't know what to do with.
+ 			 */
+-			if ((asc == 0x3f) && (ascq != 0x03) &&
+-					(ascq != 0x0e)) {
++			if (scsi_sense_asc(sshdr) ==
++			    ASC_TARGET_OPERATING_CONDITIONS_HAVE_CHANGED &&
++			    sshdr->sense_code !=
++			    INQUIRY_DATA_HAS_CHANGED &&
++			    sshdr->sense_code !=
++			    REPORTED_LUNS_DATA_HAS_CHANGED) {
+ 				process_err_fn = storvsc_device_scan;
+ 				set_host_byte(scmnd, DID_REQUEUE);
+ 				goto do_work;
+@@ -1141,8 +1145,7 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request,
  	}
- }
  
- static int check_for_unit_attention(struct ctlr_info *h,
- 	struct CommandList *c)
- {
--	u8 sense_key, asc, ascq;
-+	u8 sense_key;
-+	u16 sense_code;
- 	int sense_len;
- 
- 	if (c->err_info->SenseLen > sizeof(c->err_info->SenseInfo))
-@@ -385,34 +384,35 @@ static int check_for_unit_attention(struct ctlr_info *h,
- 		sense_len = c->err_info->SenseLen;
- 
- 	decode_sense_data(c->err_info->SenseInfo, sense_len,
--				&sense_key, &asc, &ascq);
--	if (sense_key != UNIT_ATTENTION || asc == 0xff)
-+			  &sense_key, &sense_code);
-+	if (sense_key != UNIT_ATTENTION ||
-+	    scsi_sense_code_asc(sense_code) == 0xff)
- 		return 0;
- 
--	switch (asc) {
--	case STATE_CHANGED:
-+	switch (scsi_sense_code_asc(sense_code)) {
-+	case ASC_PARAMETERS_CHANGED:
- 		dev_warn(&h->pdev->dev,
- 			"%s: a state change detected, command retried\n",
- 			h->devname);
- 		break;
--	case LUN_FAILED:
-+	case ASC_LU_HAS_NOT_SELF_CONFIGURED_YET:
- 		dev_warn(&h->pdev->dev,
- 			"%s: LUN failure detected\n", h->devname);
- 		break;
--	case REPORT_LUNS_CHANGED:
-+	case ASC_TARGET_OPERATING_CONDITIONS_HAVE_CHANGED:
- 		dev_warn(&h->pdev->dev,
- 			"%s: report LUN data changed\n", h->devname);
- 	/*
--	 * Note: this REPORT_LUNS_CHANGED condition only occurs on the external
--	 * target (array) devices.
-+	 * Note: this ASC_TARGET_OPERATING_CONDITIONS_HAVE_CHANGED condition
-+	 * only occurs on the external target (array) devices.
- 	 */
- 		break;
--	case POWER_OR_RESET:
-+	case ASC_POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED:
- 		dev_warn(&h->pdev->dev,
- 			"%s: a power on or device reset detected\n",
- 			h->devname);
- 		break;
--	case UNIT_ATTENTION_CLEARED:
-+	case ASC_COMMANDS_CLEARED_BY_ANOTHER_INITIATOR:
- 		dev_warn(&h->pdev->dev,
- 			"%s: unit attention cleared by another initiator\n",
- 			h->devname);
-@@ -2562,10 +2562,8 @@ static void complete_scsi_command(struct CommandList *cp)
- 	struct ErrorInfo *ei;
- 	struct hpsa_scsi_dev_t *dev;
- 	struct io_accel2_cmd *c2;
--
- 	u8 sense_key;
--	u8 asc;      /* additional sense code */
--	u8 ascq;     /* additional sense code qualifier */
-+	u16 sense_code;
- 	unsigned long sense_data_size;
- 
- 	ei = cp->err_info;
-@@ -2666,18 +2664,19 @@ static void complete_scsi_command(struct CommandList *cp)
- 		memcpy(cmd->sense_buffer, ei->SenseInfo, sense_data_size);
- 		if (ei->ScsiStatus)
- 			decode_sense_data(ei->SenseInfo, sense_data_size,
--				&sense_key, &asc, &ascq);
-+				&sense_key, &sense_code);
- 		if (ei->ScsiStatus == SAM_STAT_CHECK_CONDITION) {
- 			switch (sense_key) {
- 			case ABORTED_COMMAND:
- 				cmd->result |= DID_SOFT_ERROR << 16;
- 				break;
- 			case UNIT_ATTENTION:
--				if (asc == 0x3F && ascq == 0x0E)
-+				if (sense_code ==
-+				    REPORTED_LUNS_DATA_HAS_CHANGED)
- 					h->drv_req_rescan = 1;
- 				break;
- 			case ILLEGAL_REQUEST:
--				if (asc == 0x25 && ascq == 0x00) {
-+				if (sense_code == LU_NOT_SUPPORTED) {
- 					dev->removed = 1;
- 					cmd->result = DID_NO_CONNECT << 16;
- 				}
-@@ -2693,7 +2692,9 @@ static void complete_scsi_command(struct CommandList *cp)
- 				"Sense: 0x%x, ASC: 0x%x, ASCQ: 0x%x, "
- 				"Returning result: 0x%x\n",
- 				cp, ei->ScsiStatus,
--				sense_key, asc, ascq,
-+				sense_key,
-+				scsi_sense_code_asc(sense_code),
-+				scsi_sense_code_ascq(sense_code),
- 				cmd->result);
- 		} else {  /* scsi status is zero??? How??? */
- 			dev_warn(&h->pdev->dev, "cp %p SCSI status was 0. "
-@@ -2919,7 +2920,8 @@ static void hpsa_scsi_interpret_error(struct ctlr_info *h,
- {
- 	const struct ErrorInfo *ei = cp->err_info;
- 	struct device *d = &cp->h->pdev->dev;
--	u8 sense_key, asc, ascq;
-+	u8 sense_key;
-+	u16 sense_code;
- 	int sense_len;
- 
- 	switch (ei->CommandStatus) {
-@@ -2928,12 +2930,13 @@ static void hpsa_scsi_interpret_error(struct ctlr_info *h,
- 			sense_len = sizeof(ei->SenseInfo);
- 		else
- 			sense_len = ei->SenseLen;
--		decode_sense_data(ei->SenseInfo, sense_len,
--					&sense_key, &asc, &ascq);
-+		decode_sense_data(ei->SenseInfo, sense_len, &sense_key,
-+				  &sense_code);
- 		hpsa_print_cmd(h, "SCSI status", cp);
- 		if (ei->ScsiStatus == SAM_STAT_CHECK_CONDITION)
- 			dev_warn(d, "SCSI Status = 02, Sense key = 0x%02x, ASC = 0x%02x, ASCQ = 0x%02x\n",
--				sense_key, asc, ascq);
-+				sense_key, scsi_sense_code_asc(sense_code),
-+				 scsi_sense_code_ascq(sense_code));
- 		else
- 			dev_warn(d, "SCSI Status = 0x%02x\n", ei->ScsiStatus);
- 		if (ei->ScsiStatus == 0)
-@@ -3868,12 +3871,10 @@ static unsigned char hpsa_volume_offline(struct ctlr_info *h,
- {
- 	struct CommandList *c;
- 	unsigned char *sense;
--	u8 sense_key, asc, ascq;
-+	u8 sense_key;
-+	u16 sense_code;
- 	int sense_len;
- 	int rc, ldstat = 0;
--#define ASC_LUN_NOT_READY 0x04
--#define ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS 0x04
--#define ASCQ_LUN_NOT_READY_INITIALIZING_CMD_REQ 0x02
- 
- 	c = cmd_alloc(h);
- 
-@@ -3889,7 +3890,7 @@ static unsigned char hpsa_volume_offline(struct ctlr_info *h,
- 		sense_len = sizeof(c->err_info->SenseInfo);
- 	else
- 		sense_len = c->err_info->SenseLen;
--	decode_sense_data(sense, sense_len, &sense_key, &asc, &ascq);
-+	decode_sense_data(sense, sense_len, &sense_key, &sense_code);
- 	cmd_free(h, c);
- 
- 	/* Determine the reason for not ready state */
-@@ -3912,8 +3913,8 @@ static unsigned char hpsa_volume_offline(struct ctlr_info *h,
- 		/* If VPD status page isn't available,
- 		 * use ASC/ASCQ to determine state
- 		 */
--		if ((ascq == ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS) ||
--			(ascq == ASCQ_LUN_NOT_READY_INITIALIZING_CMD_REQ))
-+		if (sense_code == LU_NOT_READY_FORMAT_IN_PROGRESS ||
-+		    sense_code == LU_NOT_READY_INITIALIZING_COMMAND_REQUIRED)
- 			return ldstat;
- 		break;
- 	default:
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index ba6a3aa8d954..0dbfbec37ce2 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -63,29 +63,6 @@
- #define CISS_TMF_WRONG_LUN	0x09
- #define CISS_TMF_OVERLAPPED_TAG 0x0a
- 
--/* Unit Attentions ASC's as defined for the MSA2012sa */
--#define POWER_OR_RESET			0x29
--#define STATE_CHANGED			0x2a
--#define UNIT_ATTENTION_CLEARED		0x2f
--#define LUN_FAILED			0x3e
--#define REPORT_LUNS_CHANGED		0x3f
--
--/* Unit Attentions ASCQ's as defined for the MSA2012sa */
--
--	/* These ASCQ's defined for ASC = POWER_OR_RESET */
--#define POWER_ON_RESET			0x00
--#define POWER_ON_REBOOT			0x01
--#define SCSI_BUS_RESET			0x02
--#define MSA_TARGET_RESET		0x03
--#define CONTROLLER_FAILOVER		0x04
--#define TRANSCEIVER_SE			0x05
--#define TRANSCEIVER_LVD			0x06
--
--	/* These ASCQ's defined for ASC = STATE_CHANGED */
--#define RESERVATION_PREEMPTED		0x03
--#define ASYM_ACCESS_CHANGED		0x06
--#define LUN_CAPACITY_CHANGED		0x09
--
- /* transfer direction */
- #define XFER_NONE               0x00
- #define XFER_WRITE              0x01
+ 	if (vm_srb->srb_status != SRB_STATUS_SUCCESS) {
+-		storvsc_handle_error(vm_srb, scmnd, host, sense_hdr.asc,
+-					 sense_hdr.ascq);
++		storvsc_handle_error(vm_srb, scmnd, host, &sense_hdr);
+ 		/*
+ 		 * The Windows driver set data_transfer_length on
+ 		 * SRB_STATUS_DATA_OVERRUN. On other errors, this value
 -- 
 2.55.0
 
