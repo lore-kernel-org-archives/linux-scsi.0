@@ -1,75 +1,108 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBAD43546CD;
-	Sat,  5 Sep 2026 03:37:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8C52D94B5;
+	Sat,  5 Sep 2026 03:37:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788579463; cv=none; b=gOO95HMXgVwwzjIi9ArtcTgE1nwf2dWEsMqFyEUI1beFrE15XwiOa52LG7cnNLKOO2EAm2oU3sAAz9luPprk+L3muPFUpaUhL4DiFPgrn/+ymMizveJZkOootw8n57wI0b+y4tJdSUK3fRMdVueDxlgnissg5sp1OyuiXZpxjLc=
+	t=1788579470; cv=none; b=aWOHblboe0BypYketE1uFZJuRQTQEMNUWkCqZyfy0QVS/9Cn4ZrMecHnzM3nbN2lAW/OddY/Phvt5gwPU7QZykbjaqvtHJnPk8W2mG3L5HBrsAMHwWnu6d+jO3NWBN4MRtrnys+f1KFtYoeGDh/e5kWpeTT1bfA0lRirTip04fM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788579463; c=relaxed/simple;
-	bh=fzcL7eNHhGDpG6FXY28UPCDIvr1z5s9StDqwpCxSMeA=;
+	s=arc-20240116; t=1788579470; c=relaxed/simple;
+	bh=Wi0Nk5BqqzfdBMCy3XDN1buKJ7w5kBS7xhB9p2dc7Js=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MPi+p+mSt5C9RMfP3apXNpyAtoCWPyFM6p/1FpPaA4gD7Ad9PIn/6xs7tey3FGnUvDqr2AJWS+J/4f/OP1zc1yMvfcLikJl/MqRhtEyPzohvwGy6RTiXLt8jHqzIfkQMQOTvRNv8MXizzTNiJgFriuxGso6SeH1z1D/t7JAMooU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KAm7Djeh; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=fbao5t6xOuoQ7Aehr/j/wBJzTjfb11gPLJGDLD+Oz3wCc0EsxnP567u5IzsXG1us9VRCZGM3Kjtl7xEREUp6MkAK/UUXXx7T5WCrOyJiuhrNUsWscwRx6PS3olrzlR7d4Qm8NVKgoHPHGedorZ/igPXRBt6x3VYLMew7o0jf44s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K3bgTCA1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KAm7Djeh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AC761F00A3D;
-	Sat,  5 Sep 2026 03:37:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K3bgTCA1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38DDD1F00A3D;
+	Sat,  5 Sep 2026 03:37:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788579462;
-	bh=fzcL7eNHhGDpG6FXY28UPCDIvr1z5s9StDqwpCxSMeA=;
+	s=k20260515; t=1788579468;
+	bh=xqR41W9j5tBGjQWTGFXAIKDfw6DymEl7tt1zse8DbHQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KAm7DjehA2C8XI8B37uvMRMwnvKFNqB6dSlDTIu+08viSzt23nJ3AaLENgx3mGZqg
-	 /yMFI7+6wPH5gmUxOaS9oMi0Ic+Il9giNsIzqm1AHr0GkT8mzk3mgW/H4kBSLU51Bs
-	 bljdjOfOzDSOaaSRCuS22CCHUo/txlKZMoZ599GWyEmTaTtRgnfWkte750iCXxqYoh
-	 uAnap386S/e8JcYixOKqdi+Y5z8bccqVLIY+QcDnr3V8ArnwSadjkourO1M3KmMQWy
-	 hldj8yzikjgaHkTsRKTfeN+JUMLtA1xh9sqp0/f0ddDAWWncjCRchANwZrCl/Pto5d
-	 MtifcdxRnIHbw==
+	b=K3bgTCA13HlPsV7TGDGEReVhgfRABgqS8t1ha0Y8tn0oU7JM2pEmBbYXdiW8snmil
+	 0yZOOTVr8mAYmhp1Nmlm8BRrL9FKCHu/r/2sQ9WwzN/9OLLtzEfKVvrEvL4tMfXCQW
+	 3lx+/UTWQilmgL4eC4ow8+j8usD1waUAu1gkRlKBLzF59P63r39A2JQz2EiTbtb9mD
+	 9xS0/WFGhvnnr+zJj56WEAVwEPiz2mzovxzuSnAdA2qyrs+UVGlt8Pghc006ksODPU
+	 tczGON4Z/lnwqE/WGI+E8jdlCBIGtMqWtWybDw6uJ0GDnt/qwzA+w62QKSxW+ey60s
+	 wRmHAeX5fO7Wg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 01/40] scsi: define all additional sense codes and
- their qualifiers
+Subject: Re: [PATCH v4 22/40] scsi: myrX: use 16-bits defined sense codes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: "Alexander Gordeev" <agordeev@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, linux-scsi@vger.kernel.org, cassel@kernel.org, linux-s390@vger.kernel.org, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>, "Heiko Carstens" <hca@linux.ibm.com>, linux-ide@vger.kernel.org, dlemoal@kernel.org
-In-Reply-To: <20260905032224.509860-2-dlemoal@kernel.org>
+Cc: "Alexander Gordeev" <agordeev@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, "Heiko
+ Carstens" <hca@linux.ibm.com>, linux-scsi@vger.kernel.org, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, linux-s390@vger.kernel.org
+In-Reply-To: <20260905032224.509860-23-dlemoal@kernel.org>
 References: <20260905032224.509860-1-dlemoal@kernel.org>
- <20260905032224.509860-2-dlemoal@kernel.org>
+ <20260905032224.509860-23-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 05 Sep 2026 03:37:41 +0000
-Message-Id: <20260905033742.2AC761F00A3D@smtp.kernel.org>
+Date: Sat, 05 Sep 2026 03:37:47 +0000
+Message-Id: <20260905033748.38DDD1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> Introduce the file include/scsi/scsi_sense.h to define all existing
-> additional sense codes and their combinations with additional sense code
-> qualifiers, according to the most current T10 list available at
-> https://www.t10.org/lists/asc-num.txt.
->=20
-> Additional sense codes (ASCs) are individually defined as an 8-bit value
-> with the ASC_ name prefix. The combination of all ASCs with T10 defined
-> possible non-zero code qualifiers are defined as 16-bits values. The
-> 16-bits value for ASCs with a zero ASCQ are defined together with the ASC
-> 8-code using the ASC() macro.
->=20
-> The sense key macro definitions in include/scsi/scsi_proto.h are also
-> moved into this new file and scsi_sense.h is included in scsi_proto.h. The
-> helper function scsi_sense_code() is defined to facilitate generating a
-> 16-bits sense code from 8-bits ASC and ASCQ. The accessors
-> scsi_sense_code_asc() and scsi_sense_code_ascq() are defined for the
-> reverse operation, that is, to respectively extract an ASC and an ASCQ
-> from a 16-bits sense code.
->=20
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Pre-existing issues:
+- [High] This problem wasn't introduced by this patch, but the missing scsi=
+_done() call for emulated REQUEST_SENSE commands causes a command timeout.
+--
+
+commit f3ff7cfa5745e4930586f17ede3cb83961872a54
+Author: Damien Le Moal <dlemoal@kernel.org>
+
+scsi: myrX: use 16-bits defined sense codes
+
+Refactor the Mylex RAID controller driver to use scsi_set_sense() and the
+16-bits sense_code field of struct scsi_sense_hdr and replace all
+hard-coded additional sense codes and additional sense code qualifiers
+with the enum values defined in include/scsi/scsi_sense.h. This helps with
+code clarity as the sense codes being processed are easier to test and
+self-documented.
+
+> diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+> index 3678b66310ed0..e7d796add9864 100644
+> --- a/drivers/scsi/myrb.c
+> +++ b/drivers/scsi/myrb.c
+
+[ ... ]
+
+> @@ -1493,8 +1495,8 @@ static enum scsi_qc_status myrb_ldev_queuecommand(s=
+truct Scsi_Host *shost,
+>  		return 0;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is the REQUEST_SENSE
+case in myrb_ldev_queuecommand() missing a call to scsi_done() before
+returning?
+
+Looking at the preceding lines in myrb_ldev_queuecommand():
+
+	case REQUEST_SENSE:
+		myrb_request_sense(cb, scmd);
+		scmd->result =3D (DID_OK << 16);
+		return 0;
+
+It appears the SCSI command never completes. Without calling scsi_done(),
+wouldn't the command time out and trigger SCSI error handler escalation?
+
+Could this allow a user issuing a REQUEST_SENSE command via the SG_IO
+ioctl to cause a local denial of service via adapter reset?
+
+>  	case SEND_DIAGNOSTIC:
+>  		if (scmd->cmnd[1] !=3D 0x04) {
+> -			/* Illegal request, invalid field in CDB */
+> -			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x24, 0);
+> +			scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
+> +				       INVALID_FIELD_IN_CDB);
+>  		} else {
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260905032224.5098=
-60-1-dlemoal@kernel.org?part=3D1
-
+60-1-dlemoal@kernel.org?part=3D22
