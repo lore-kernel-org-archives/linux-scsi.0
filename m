@@ -1,79 +1,86 @@
 Received: from mail-pj2-f8.google.com (mail-pj2-f8.google.com [74.125.227.136])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1201A3AB47E
-	for <linux-scsi@vger.kernel.org>; Sun,  6 Sep 2026 03:40:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E39BF1DED5C
+	for <linux-scsi@vger.kernel.org>; Sun,  6 Sep 2026 04:02:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.136
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788666050; cv=none; b=EklmszIhGFZsR2JKsw32kARVSTct/n+3rcl7L8Voi48JXXNRGLNdhT2cNU6M6hnXmChgSqVkEdr/W+NCgUhmhgq34DrbiZY+Ow56SfAgYn4SafU0eBBpvqFoRS8bG0djii9RuPsfxYbH7VBLFJhxs6MLalY84gQiyjG7xI395Q8=
+	t=1788667331; cv=none; b=R6yXLaNJFQOYq8wzLLyaxRrr2+pfpPF44CwEqXstptiO8SZxnH0wZP6913m1b6cGTc4PtBC/t5JuzmBfGpowmzBV9m7G9ZL6JdHUyl4mFG/pIQ0lgR/Nu2263AbAJJ09eluDuVow0G17N4A9sY2pvMvrbTh19lfHpAV+6CaYRLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788666050; c=relaxed/simple;
-	bh=/8M0tegxRt4HmKQN/LPB34a28YCNaa39wlzYTA1fjKc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fUMoZMI9x18gcFKAdGj6MVOKrLlWxedockoRtHL2+hrZEopM/QT2LzYwSHCw2/od+q9jTQdijd9cC6wR4VIRkY7RiuKrVufOWWNIThNhbAb4lRGtwFVjQREgenEO85Ubq6vZTT9MqrvvuSI8T9mCjQPBQAay1bstuK1pZx4FNOY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Iya4Hw0w; arc=none smtp.client-ip=74.125.227.136
+	s=arc-20240116; t=1788667331; c=relaxed/simple;
+	bh=e3kDwgTbjRMMWW/kMDqb+WZJtSvUWK03BPKsrvS7uos=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ine5W9yoThUl32wedsATFqKRPFsQKn+RFklJOAeM2Tx6gbwRSnCHuK4cpt3gOd/7yzJ138d7TUAS8eXth7gKL/rId72UZMomjJUP9mi+JEXeSUGJ/8kiuuDndRSPWwE8qRoZlSp1DJl9DkKUcB54Pt8YTg6DVEmqU61nJPeffxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ry1vF3i8; arc=none smtp.client-ip=74.125.227.136
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Iya4Hw0w"
-Received: by mail-pj2-f8.google.com with SMTP id 98e67ed59e1d1-398b9f722abso720738a91.0
-        for <linux-scsi@vger.kernel.org>; Sat, 05 Sep 2026 20:40:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ry1vF3i8"
+Received: by mail-pj2-f8.google.com with SMTP id d9443c01a7336-2db33361b2fso4453125ad.1
+        for <linux-scsi@vger.kernel.org>; Sat, 05 Sep 2026 21:02:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788666048; x=1789270848; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788667329; x=1789272129; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=IKdp+HR5KTqwNHJfV8ToQcuLLzhKcZ0RoFebWPsbOCw=;
-        b=Iya4Hw0weJMIL7mEWc2ZjRd2aSU6vPCBCf61lbWazsbzuXC57PAS/GEFgCD/CznI9E
-         m58rcbrw22KlrSTuDRXxxj5fXy95dHy3YPL986L4vh2SngmHvc3f3vo7Cmhe+ojHoY9v
-         ssfIPx/TB6+qDSZ2UHb/oMgm2ZBSog9EQLqmk04JoNPEIBbuyx7eWjKRNnL+G/HQRZJw
-         8V6nR3+J3ZHiTkRUKUUzNdpfZHZmm/eWazqhFu14hvrDQ3xDpF86lBfHXwmgo/UHOdSS
-         ot83Vfe3jPpQJ25DUz8QjF8dQRXR2ktiFfWK25pSSaSW+YxJhN3ehLYo0qXfz2dTPgHk
-         wRIg==
+        bh=cQv+gwRX7Z+DTbRSq5jeq2W2+DL4A8UrN+ZaQRvPPtM=;
+        b=Ry1vF3i85d3xZxYFMf9l1+18Y4eU3hfd7Mr3wvMLZ+v2cfzskYwgvDe5K1FXLsUbXQ
+         gJgRPhCzj8HG3y8IzG0D30D59Qc2BFtJAKw4bH9RQIpBDxKlqar2oKvwRvifBGOIAO9z
+         6S58mJW+dSKIhL4r9X54GXUcalHHZuXIsiEqo3TXUUHUwuqkesnkEFGLjV4KtFvDnqkz
+         TLEGWzCJTisCfgk2gwXHKZbMfyGpB4laomXANHByyVbsGgQ61GA1FnBG/S4cpvjxvpHg
+         TYbKK4dcPl0Lz76v2Zs6cZsLsoyqay2maCdKPZmuD9N8pHle13wcofUkm4V2gAmoxMCH
+         YfcA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788666048; x=1789270848;
+        d=1e100.net; s=20251104; t=1788667329; x=1789272129;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=IKdp+HR5KTqwNHJfV8ToQcuLLzhKcZ0RoFebWPsbOCw=;
-        b=nuSbHElKIHyhBcoY5jqrnLN8HxddwxNeD5m1XowTHWE4r7ekFYhAVSICFKmNp0/52I
-         OTl0EpO8Phq9P+FugBGUqtU/get9bmp2wlqtrTMaEf1tMEWyKIDBP4D+y6laavjD7DMr
-         QrG9Z3MNdCQST41W31MtTTCZrAjvffQFfrhATs3nayajVfMHrp3asI5esD8EmKaad3qh
-         Oz+B9e+7Q4FT9oBEBJQpSct08hpRPwy+jHFGYRr8R/2Bl8Qs6mjmR4NKlU/Vy3hooBUX
-         VwMM6msxedIt7pLG2+WhnVhHI67Eqzx3zOUixyj2H49jZEloSVZS7pZgfvALAwXMFabf
-         a7Xg==
-X-Forwarded-Encrypted: i=1; AKwUvByRKnk0WETg3ArArBy9ZApCtKWDwVrr379MzsAVcNGdOBLYBrFggpG+CZvv3glX14YrHCWfZf6lly+4@vger.kernel.org
-X-Gm-Message-State: AFuF++mu8s6YlxJ9iywy2tjxjyWcHJTwjP08Zl7NNpz2CaK9Q/yKFG1y
-	ZzpOhB87WUjJIjYxc4iO4hCoTgnJSMBAa9RMOYpZX8gWeoiaekfkCssf
-X-Gm-Gg: AYBFou2a02YV3Bz07PQScQ1UcgFxe0VwkzbpalZQsVV/zNDrU5DbcsHpVo+RpIDumcV
-	/tT1PAhbe1nDY6+p8hzTf5wxDnqTDH9mTuM1Xerdw+bS1+BJKl8ThWJHLkKwQ7aVCDrYjWqBCik
-	/N1Tf9YZ+TSQIL1GojPfX+F4Omm77T7MmD1rP2xMy8328wxbZ5JTXxYJPAf2M23WZyMsFNfxZ1z
-	iqpHf7A0pD6Wspa3RRfI0VD3Q5noEQTsAL77bLaOJwW5t2oE5eBz4EQnPl64rb7lno8rI167Hf7
-	bQLRuoCNXO8y/6QRvpQcf2Z3rP4h9wm6944ISrLD+wd3gOZ5So1oqrY2QFHU1nY4mmWwGraA96x
-	hFuYmlILypk2NdroZSCxbtkM6vxsGGS45HZuAzyQLIXXKY/kE3bhEZ/fswp5D4K2Ae+qp9FaUZy
-	ie4nfMzG1nT0Kinbvs3nON3jjyKxuwq/2l456KOpcDrS7tshjY/n5Bu8Wvcz7aNgWCPUR8YrJFQ
-	g8ngyI/uyXWKN+2LgsNSJ39zZpeXMBQL0INfO7dle3WgwSRjNk/qx8Dvsp1SVq+8099o/mzLWDy
-	twZmbvuAh7/Ot1mPefnxn3+KqY5boJywnlO3AmyagbPSe2rvIdD54BA=
-X-Received: by 2002:a17:90b:1dc3:b0:398:d6f4:c61a with SMTP id 98e67ed59e1d1-39b26207ee4mr24439031a91.17.1788666048184;
-        Sat, 05 Sep 2026 20:40:48 -0700 (PDT)
+        bh=cQv+gwRX7Z+DTbRSq5jeq2W2+DL4A8UrN+ZaQRvPPtM=;
+        b=A1Bm4hICrcbjtQ3/46vLV/+Qgvvx8YGE221HuD1yFSxLtc7WjGEILSVmvOfqbY/+ou
+         Ys4LOfEK+PniyVBxd+xSyaIsQngOWJoUHY/viog20RaKsoGycmF05IxyvpEOGth307Ry
+         wJzxlxspXZNl+y97XLFHNqovzlg6m+BQy7oawlPXPiS1BsUsGrJBeqE9nmMgq9KQot05
+         DR8lf7cPAgzg3q9Nph3jBB+oS5Rtq1p9hL9lp659yGTBEC8p5VN9joXiSSuBVCRZd5SN
+         veGktqn6sb9IjP3NDa0MOTwRyj5zixIzE663CsJPBZhKjLOspss6itUMZfmEsDRpDczf
+         owgw==
+X-Forwarded-Encrypted: i=1; AKwUvBzt3A22VdRalGOVkCOi9Exc/AcwaFOnKPEGCRaawzKPiBUyZ2RZvgBCPi4dP29x+HEYJiyLIgk+snY4@vger.kernel.org
+X-Gm-Message-State: AFuF++lkYcdVQ+64WyQDnMQQo+WJRIct1D5VNBE5oVbd6rzMg9xiNI79
+	D9C0bGGB773hsSM7TRbBX8XjjhYMK3lNBO4c/gFZd+UkYEt26C0jQjWs
+X-Gm-Gg: AYBFou254RSsHtl6mGqNef1DrQZVlRMiOX1BrE6HStPxoRLyATyblg+qaydxVqpNwh3
+	1MgdEbk6c8l8XisC34OoGILY9RXRShgUdVZmRZoWumA6uGAP7anZLSOXqdj5ieB69zT38sqKglu
+	lq0Hgi8vSu9r9GTZVWWJ3rIxdYJJHu61GkcCV4hQfrdSId5cqZDiCn3fB5tMyYrkD0hWiT8vsUS
+	qa85E/VKsMECh45GvvoUCRUK8rps4VSQ7sD3+yg/P5JcxMjmP9iuJkAI3J1N/6b7tvX9xJdBrAf
+	415/hiwO2zuOwOn6miTQmV33qhoMfSzzAlsyZumAnxBDZt0kr6sWcDxyhQwDJHI/7bJ4TzwTEfa
+	EcB+Ean/0K9lpOaax/VyAGbu2fEYGI+evUENsvMJ8j9cmvzp2mXa4MXDm18RlKYi/xTbIID0Lwi
+	hSj7npmLJ0xfwJpGaa/i47rkzl8fD5GjnUsC/IwfDBUyc7bLz3No1kpiqsrc55BG49i3EyWgzct
+	HpDZZkE7ffznnwJMsuZYNmZHmoIGpyAzARL3Dit1pKUgiMUfqgcclc9jeGWu8nTR5HjalBMPhQQ
+	UTIRvW6Tks4v360JU/E7kD7xMtTWtDYtDAhh+LQz7WTzdkmjOlOl81o=
+X-Received: by 2002:a17:903:9cf:b0:2d8:d4d1:313a with SMTP id d9443c01a7336-2db12634535mr249979245ad.17.1788667329144;
+        Sat, 05 Sep 2026 21:02:09 -0700 (PDT)
 Received: from ethan-latitude5420.. (host-127-24.cafrjco.fresno.ca.us.clients.pavlovmedia.net. [68.180.127.24])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-143243a9388sm16121651c88.10.2026.09.05.20.40.46
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3339a534152sm17127334eec.10.2026.09.05.21.02.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Sep 2026 20:40:47 -0700 (PDT)
+        Sat, 05 Sep 2026 21:02:08 -0700 (PDT)
 From: Ethan Nelson-Moore <enelsonmoore@gmail.com>
-To: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig=20=28The=20Capable=20Hub=29?= <u.kleine-koenig@baylibre.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
+To: Kees Cook <kees@kernel.org>,
+	linux-ide@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
 	netdev@vger.kernel.org,
-	linux-scsi@vger.kernel.org
+	linux-scsi@vger.kernel.org,
+	linux-serial@vger.kernel.org
 Cc: Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Russell King <linux@armlinux.org.uk>,
 	Andrew Lunn <andrew+netdev@lunn.ch>,
 	"David S. Miller" <davem@davemloft.net>,
 	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
 	Paolo Abeni <pabeni@redhat.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Subject: [PATCH] zorro: use module_driver() to avoid repeated boilerplate code
-Date: Sat,  5 Sep 2026 20:40:19 -0700
-Message-ID: <20260906034037.81379-1-enelsonmoore@gmail.com>
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>
+Subject: [PATCH] ecard: use module_driver() to avoid repeated boilerplate code
+Date: Sat,  5 Sep 2026 21:01:46 -0700
+Message-ID: <20260906040153.105692-1-enelsonmoore@gmail.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -83,207 +90,295 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Many Zorro drivers have module_init and module_exit functions that only
-call zorro_register_driver() and zorro_unregister_driver(). The
-module_driver() macro automatically generates these functions given the
-register and unregister functions. Switch to it to simplify the code.
+Many Acorn expansion card drivers have module_init and module_exit
+functions that only call ecard_register_driver() and
+ecard_remove_driver(). The module_driver() macro automatically
+generates these functions given the register and unregister functions.
+Switch to it to simplify the code.
 
 Signed-off-by: Ethan Nelson-Moore <enelsonmoore@gmail.com>
 ---
- drivers/net/ethernet/8390/hydra.c     | 13 +------------
- drivers/net/ethernet/8390/zorro8390.c | 13 +------------
- drivers/net/ethernet/amd/a2065.c      | 13 +------------
- drivers/net/ethernet/amd/ariadne.c    | 13 +------------
- drivers/scsi/a2091.c                  | 12 +-----------
- drivers/scsi/gvp11.c                  | 12 +-----------
- drivers/scsi/zorro7xx.c               | 13 +------------
- drivers/scsi/zorro_esp.c              | 13 +------------
- 8 files changed, 8 insertions(+), 94 deletions(-)
+ drivers/ata/pata_icside.c            | 13 +------------
+ drivers/net/ethernet/i825xx/ether1.c | 13 +------------
+ drivers/net/ethernet/seeq/ether3.c   | 13 +------------
+ drivers/scsi/arm/acornscsi.c         | 13 +------------
+ drivers/scsi/arm/arxescsi.c          | 14 +-------------
+ drivers/scsi/arm/cumana_1.c          | 13 +------------
+ drivers/scsi/arm/cumana_2.c          | 13 +------------
+ drivers/scsi/arm/eesox.c             | 13 +------------
+ drivers/scsi/arm/oak.c               | 14 +-------------
+ drivers/scsi/arm/powertec.c          | 13 +------------
+ drivers/tty/serial/8250/8250_acorn.c | 13 +------------
+ 11 files changed, 11 insertions(+), 134 deletions(-)
 
-diff --git a/drivers/net/ethernet/8390/hydra.c b/drivers/net/ethernet/8390/hydra.c
-index 9a59915436d2..2edf97e500df 100644
---- a/drivers/net/ethernet/8390/hydra.c
-+++ b/drivers/net/ethernet/8390/hydra.c
-@@ -257,18 +257,7 @@ static void hydra_remove_one(struct zorro_dev *z)
-     free_netdev(dev);
- }
- 
--static int __init hydra_init_module(void)
--{
--    return zorro_register_driver(&hydra_driver);
--}
--
--static void __exit hydra_cleanup_module(void)
--{
--    zorro_unregister_driver(&hydra_driver);
--}
--
--module_init(hydra_init_module);
--module_exit(hydra_cleanup_module);
-+module_driver(hydra_driver, zorro_register_driver, zorro_unregister_driver);
- 
- MODULE_DESCRIPTION("Zorro-II Hydra 8390 ethernet driver");
- MODULE_LICENSE("GPL");
-diff --git a/drivers/net/ethernet/8390/zorro8390.c b/drivers/net/ethernet/8390/zorro8390.c
-index cb1d5ed20874..0f66f28e50b4 100644
---- a/drivers/net/ethernet/8390/zorro8390.c
-+++ b/drivers/net/ethernet/8390/zorro8390.c
-@@ -430,18 +430,7 @@ static struct zorro_driver zorro8390_driver = {
- 	.remove		= zorro8390_remove_one,
+diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
+index 70f056e47e6b..df7203a74f45 100644
+--- a/drivers/ata/pata_icside.c
++++ b/drivers/ata/pata_icside.c
+@@ -613,19 +613,8 @@ static struct ecard_driver pata_icside_driver = {
+ 	},
  };
  
--static int __init zorro8390_init_module(void)
+-static int __init pata_icside_init(void)
 -{
--	return zorro_register_driver(&zorro8390_driver);
+-	return ecard_register_driver(&pata_icside_driver);
 -}
 -
--static void __exit zorro8390_cleanup_module(void)
+-static void __exit pata_icside_exit(void)
 -{
--	zorro_unregister_driver(&zorro8390_driver);
+-	ecard_remove_driver(&pata_icside_driver);
 -}
--
--module_init(zorro8390_init_module);
--module_exit(zorro8390_cleanup_module);
-+module_driver(zorro8390_driver, zorro_register_driver, zorro_unregister_driver);
++module_driver(pata_icside_driver, ecard_register_driver, ecard_remove_driver);
  
- MODULE_DESCRIPTION("Zorro NS8390-based ethernet driver");
+ MODULE_AUTHOR("Russell King <rmk@arm.linux.org.uk>");
  MODULE_LICENSE("GPL");
-diff --git a/drivers/net/ethernet/amd/a2065.c b/drivers/net/ethernet/amd/a2065.c
-index 672c4996b30e..93f2261f4bfe 100644
---- a/drivers/net/ethernet/amd/a2065.c
-+++ b/drivers/net/ethernet/amd/a2065.c
-@@ -768,18 +768,7 @@ static void a2065_remove_one(struct zorro_dev *z)
- 	free_netdev(dev);
- }
- 
--static int __init a2065_init_module(void)
--{
--	return zorro_register_driver(&a2065_driver);
--}
+ MODULE_DESCRIPTION("ICS PATA driver");
 -
--static void __exit a2065_cleanup_module(void)
--{
--	zorro_unregister_driver(&a2065_driver);
--}
--
--module_init(a2065_init_module);
--module_exit(a2065_cleanup_module);
-+module_driver(a2065_driver, zorro_register_driver, zorro_unregister_driver);
- 
- MODULE_DESCRIPTION("Commodore A2065 Ethernet driver");
- MODULE_LICENSE("GPL");
-diff --git a/drivers/net/ethernet/amd/ariadne.c b/drivers/net/ethernet/amd/ariadne.c
-index ec6e7e8c14fe..662eba9e8ffd 100644
---- a/drivers/net/ethernet/amd/ariadne.c
-+++ b/drivers/net/ethernet/amd/ariadne.c
-@@ -777,18 +777,7 @@ static struct zorro_driver ariadne_driver = {
- 	.remove		= ariadne_remove_one,
+-module_init(pata_icside_init);
+-module_exit(pata_icside_exit);
+diff --git a/drivers/net/ethernet/i825xx/ether1.c b/drivers/net/ethernet/i825xx/ether1.c
+index 3e7d7c4bafdc..d21aeb831531 100644
+--- a/drivers/net/ethernet/i825xx/ether1.c
++++ b/drivers/net/ethernet/i825xx/ether1.c
+@@ -1070,17 +1070,6 @@ static struct ecard_driver ether1_driver = {
+ 	},
  };
  
--static int __init ariadne_init_module(void)
+-static int __init ether1_init(void)
 -{
--	return zorro_register_driver(&ariadne_driver);
+-	return ecard_register_driver(&ether1_driver);
 -}
 -
--static void __exit ariadne_cleanup_module(void)
+-static void __exit ether1_exit(void)
 -{
--	zorro_unregister_driver(&ariadne_driver);
+-	ecard_remove_driver(&ether1_driver);
 -}
 -
--module_init(ariadne_init_module);
--module_exit(ariadne_cleanup_module);
-+module_driver(ariadne_driver, zorro_register_driver, zorro_unregister_driver);
+-module_init(ether1_init);
+-module_exit(ether1_exit);
++module_driver(ether1_driver, ecard_register_driver, ecard_remove_driver);
  
- MODULE_DESCRIPTION("Ariadne Ethernet Driver");
  MODULE_LICENSE("GPL");
-diff --git a/drivers/scsi/a2091.c b/drivers/scsi/a2091.c
-index f81e53b53e20..421330a7b6a7 100644
---- a/drivers/scsi/a2091.c
-+++ b/drivers/scsi/a2091.c
-@@ -288,17 +288,7 @@ static struct zorro_driver a2091_driver = {
- 	.remove		= a2091_remove,
+diff --git a/drivers/net/ethernet/seeq/ether3.c b/drivers/net/ethernet/seeq/ether3.c
+index 20dad39b5ab9..b0d2cbc35914 100644
+--- a/drivers/net/ethernet/seeq/ether3.c
++++ b/drivers/net/ethernet/seeq/ether3.c
+@@ -882,17 +882,6 @@ static struct ecard_driver ether3_driver = {
+ 	},
  };
  
--static int __init a2091_init(void)
+-static int __init ether3_init(void)
 -{
--	return zorro_register_driver(&a2091_driver);
+-	return ecard_register_driver(&ether3_driver);
 -}
--module_init(a2091_init);
 -
--static void __exit a2091_exit(void)
+-static void __exit ether3_exit(void)
 -{
--	zorro_unregister_driver(&a2091_driver);
+-	ecard_remove_driver(&ether3_driver);
 -}
--module_exit(a2091_exit);
-+module_driver(a2091_driver, zorro_register_driver, zorro_unregister_driver);
+-
+-module_init(ether3_init);
+-module_exit(ether3_exit);
++module_driver(ether3_driver, ecard_register_driver, ecard_remove_driver);
  
- MODULE_DESCRIPTION("Commodore A2091/A590 SCSI");
  MODULE_LICENSE("GPL");
-diff --git a/drivers/scsi/gvp11.c b/drivers/scsi/gvp11.c
-index 79bd64e12adc..eba868ac355d 100644
---- a/drivers/scsi/gvp11.c
-+++ b/drivers/scsi/gvp11.c
-@@ -461,17 +461,7 @@ static struct zorro_driver gvp11_driver = {
- 	.remove		= gvp11_remove,
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index 79d7d7336b6a..8b899fbf092e 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -2902,18 +2902,7 @@ static struct ecard_driver acornscsi_driver = {
+ 	},
  };
  
--static int __init gvp11_init(void)
+-static int __init acornscsi_init(void)
 -{
--	return zorro_register_driver(&gvp11_driver);
+-	return ecard_register_driver(&acornscsi_driver);
 -}
--module_init(gvp11_init);
 -
--static void __exit gvp11_exit(void)
+-static void __exit acornscsi_exit(void)
 -{
--	zorro_unregister_driver(&gvp11_driver);
+-	ecard_remove_driver(&acornscsi_driver);
 -}
--module_exit(gvp11_exit);
-+module_driver(gvp11_driver, zorro_register_driver, zorro_unregister_driver);
+-
+-module_init(acornscsi_init);
+-module_exit(acornscsi_exit);
++module_driver(acornscsi_driver, ecard_register_driver, ecard_remove_driver);
  
- MODULE_DESCRIPTION("GVP Series II SCSI");
+ MODULE_AUTHOR("Russell King");
+ MODULE_DESCRIPTION("AcornSCSI driver");
+diff --git a/drivers/scsi/arm/arxescsi.c b/drivers/scsi/arm/arxescsi.c
+index 925d0bd68aa5..2d3f5b0519d1 100644
+--- a/drivers/scsi/arm/arxescsi.c
++++ b/drivers/scsi/arm/arxescsi.c
+@@ -344,20 +344,8 @@ static struct ecard_driver arxescsi_driver = {
+ 	},
+ };
+ 
+-static int __init init_arxe_scsi_driver(void)
+-{
+-	return ecard_register_driver(&arxescsi_driver);
+-}
+-
+-static void __exit exit_arxe_scsi_driver(void)
+-{
+-	ecard_remove_driver(&arxescsi_driver);
+-}
+-
+-module_init(init_arxe_scsi_driver);
+-module_exit(exit_arxe_scsi_driver);
++module_driver(arxescsi_driver, ecard_register_driver, ecard_remove_driver);
+ 
+ MODULE_AUTHOR("Stefan Hanske");
+ MODULE_DESCRIPTION("ARXESCSI driver for Acorn machines");
  MODULE_LICENSE("GPL");
-diff --git a/drivers/scsi/zorro7xx.c b/drivers/scsi/zorro7xx.c
-index 21c769dc1ecb..80e156b04b99 100644
---- a/drivers/scsi/zorro7xx.c
-+++ b/drivers/scsi/zorro7xx.c
-@@ -173,15 +173,4 @@ static struct zorro_driver zorro7xx_driver = {
- 	.remove	  = zorro7xx_remove_one,
+-
+diff --git a/drivers/scsi/arm/cumana_1.c b/drivers/scsi/arm/cumana_1.c
+index d1a2a22ffe8c..62c11168f321 100644
+--- a/drivers/scsi/arm/cumana_1.c
++++ b/drivers/scsi/arm/cumana_1.c
+@@ -324,18 +324,7 @@ static struct ecard_driver cumanascsi1_driver = {
+ 	},
  };
  
--static int __init zorro7xx_scsi_init(void)
+-static int __init cumanascsi_init(void)
 -{
--	return zorro_register_driver(&zorro7xx_driver);
+-	return ecard_register_driver(&cumanascsi1_driver);
 -}
 -
--static void __exit zorro7xx_scsi_exit(void)
+-static void __exit cumanascsi_exit(void)
 -{
--	zorro_unregister_driver(&zorro7xx_driver);
+-	ecard_remove_driver(&cumanascsi1_driver);
 -}
 -
--module_init(zorro7xx_scsi_init);
--module_exit(zorro7xx_scsi_exit);
-+module_driver(zorro7xx_driver, zorro_register_driver, zorro_unregister_driver);
-diff --git a/drivers/scsi/zorro_esp.c b/drivers/scsi/zorro_esp.c
-index 178d46140674..121bcbbce52d 100644
---- a/drivers/scsi/zorro_esp.c
-+++ b/drivers/scsi/zorro_esp.c
-@@ -946,15 +946,4 @@ static struct zorro_driver zorro_esp_driver = {
- 	.remove	  = zorro_esp_remove,
+-module_init(cumanascsi_init);
+-module_exit(cumanascsi_exit);
++module_driver(cumanascsi1_driver, ecard_register_driver, ecard_remove_driver);
+ 
+ MODULE_DESCRIPTION("Cumana SCSI-1 driver for Acorn machines");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/arm/cumana_2.c b/drivers/scsi/arm/cumana_2.c
+index e460068f6834..24945e1765ae 100644
+--- a/drivers/scsi/arm/cumana_2.c
++++ b/drivers/scsi/arm/cumana_2.c
+@@ -504,18 +504,7 @@ static struct ecard_driver cumanascsi2_driver = {
+ 	},
  };
  
--static int __init zorro_esp_scsi_init(void)
+-static int __init cumanascsi2_init(void)
 -{
--	return zorro_register_driver(&zorro_esp_driver);
+-	return ecard_register_driver(&cumanascsi2_driver);
 -}
 -
--static void __exit zorro_esp_scsi_exit(void)
+-static void __exit cumanascsi2_exit(void)
 -{
--	zorro_unregister_driver(&zorro_esp_driver);
+-	ecard_remove_driver(&cumanascsi2_driver);
 -}
 -
--module_init(zorro_esp_scsi_init);
--module_exit(zorro_esp_scsi_exit);
-+module_driver(zorro_esp_driver, zorro_register_driver, zorro_unregister_driver);
+-module_init(cumanascsi2_init);
+-module_exit(cumanascsi2_exit);
++module_driver(cumanascsi2_driver, ecard_register_driver, ecard_remove_driver);
+ 
+ MODULE_AUTHOR("Russell King");
+ MODULE_DESCRIPTION("Cumana SCSI-2 driver for Acorn machines");
+diff --git a/drivers/scsi/arm/eesox.c b/drivers/scsi/arm/eesox.c
+index 99be9da8757f..823ad179f24c 100644
+--- a/drivers/scsi/arm/eesox.c
++++ b/drivers/scsi/arm/eesox.c
+@@ -626,18 +626,7 @@ static struct ecard_driver eesoxscsi_driver = {
+ 	},
+ };
+ 
+-static int __init eesox_init(void)
+-{
+-	return ecard_register_driver(&eesoxscsi_driver);
+-}
+-
+-static void __exit eesox_exit(void)
+-{
+-	ecard_remove_driver(&eesoxscsi_driver);
+-}
+-
+-module_init(eesox_init);
+-module_exit(eesox_exit);
++module_driver(eesoxscsi_driver, ecard_register_driver, ecard_remove_driver);
+ 
+ MODULE_AUTHOR("Russell King");
+ MODULE_DESCRIPTION("EESOX 'Fast' SCSI driver for Acorn machines");
+diff --git a/drivers/scsi/arm/oak.c b/drivers/scsi/arm/oak.c
+index d69245007096..aea21bb13355 100644
+--- a/drivers/scsi/arm/oak.c
++++ b/drivers/scsi/arm/oak.c
+@@ -194,20 +194,8 @@ static struct ecard_driver oakscsi_driver = {
+ 	},
+ };
+ 
+-static int __init oakscsi_init(void)
+-{
+-	return ecard_register_driver(&oakscsi_driver);
+-}
+-
+-static void __exit oakscsi_exit(void)
+-{
+-	ecard_remove_driver(&oakscsi_driver);
+-}
+-
+-module_init(oakscsi_init);
+-module_exit(oakscsi_exit);
++module_driver(oakscsi_driver, ecard_register_driver, ecard_remove_driver);
+ 
+ MODULE_AUTHOR("Russell King");
+ MODULE_DESCRIPTION("Oak SCSI driver");
+ MODULE_LICENSE("GPL");
+-
+diff --git a/drivers/scsi/arm/powertec.c b/drivers/scsi/arm/powertec.c
+index 823c65ff6c12..67f071a0543b 100644
+--- a/drivers/scsi/arm/powertec.c
++++ b/drivers/scsi/arm/powertec.c
+@@ -432,18 +432,7 @@ static struct ecard_driver powertecscsi_driver = {
+ 	},
+ };
+ 
+-static int __init powertecscsi_init(void)
+-{
+-	return ecard_register_driver(&powertecscsi_driver);
+-}
+-
+-static void __exit powertecscsi_exit(void)
+-{
+-	ecard_remove_driver(&powertecscsi_driver);
+-}
+-
+-module_init(powertecscsi_init);
+-module_exit(powertecscsi_exit);
++module_driver(powertecscsi_driver, ecard_register_driver, ecard_remove_driver);
+ 
+ MODULE_AUTHOR("Russell King");
+ MODULE_DESCRIPTION("Powertec SCSI driver");
+diff --git a/drivers/tty/serial/8250/8250_acorn.c b/drivers/tty/serial/8250/8250_acorn.c
+index fb596262b9c7..f634de6e159f 100644
+--- a/drivers/tty/serial/8250/8250_acorn.c
++++ b/drivers/tty/serial/8250/8250_acorn.c
+@@ -120,19 +120,8 @@ static struct ecard_driver serial_card_driver = {
+ 	},
+ };
+ 
+-static int __init serial_card_init(void)
+-{
+-	return ecard_register_driver(&serial_card_driver);
+-}
+-
+-static void __exit serial_card_exit(void)
+-{
+-	ecard_remove_driver(&serial_card_driver);
+-}
++module_driver(serial_card_driver, ecard_register_driver, ecard_remove_driver);
+ 
+ MODULE_AUTHOR("Russell King");
+ MODULE_DESCRIPTION("Acorn 8250-compatible serial port expansion card driver");
+ MODULE_LICENSE("GPL");
+-
+-module_init(serial_card_init);
+-module_exit(serial_card_exit);
 -- 
 2.43.0
 
