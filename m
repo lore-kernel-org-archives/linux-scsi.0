@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F961231A23
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 03:59:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1000124EA90;
+	Mon,  7 Sep 2026 04:03:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788753556; cv=none; b=DgMAWDHpmt16mNckIfcNUkhigLlvoswA+drs+Uey/DBwrY+GUA176PV15cTCfWWFM6ekLU4cFSFwIeqw8JN2oYYx+BGAYQxh8GsrygXmXtshzdq89W4b3t1sbO3h3/QYLH2ggFe0/7AU7iDqjdPvlhqBeRuRdIic+UIkQRTawmI=
+	t=1788753827; cv=none; b=IasxUeyJqASbQRV80xUpc1TtxU0EsOZihtbx/rdrJ5+LtT3fuwCGem1YCnwqHDSW9v2MmnFCoq4Q+7GTlEXLuJWVFoqN+bJlXYZLqyGweGEZHjdig2uM0g7cOvEoYK4FfglTAALMAzpyxNEq3JaHmyVNGVpcWv+Oi+OpwnLOuHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788753556; c=relaxed/simple;
-	bh=QYn6zzZQJ6CR5e51b/bx/JCTm/2zGVFVVOQGLn3WI98=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=IG6s/qk1NGz4ILaR+LK0IPEwBzAvCilI3U/3DT4SqZv5S4e5cjSVkozcrgrl9ujmWrwYxhQmSysibBuMM10qijXUd7f8hLqw719He1z71TN+avbhXYWqMvkDLt0YpB7Shwp1QFvpYLCfcdEzGredwaQxsRSYNu4ADQNs0Cknkic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RKBSZ0zF; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788753827; c=relaxed/simple;
+	bh=qy+rrqoJuO1rVcHwSphbzs7pRftMwU1ZDnXzSpXQqY0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=EEv+h1GSRZ/19+/GZ1xeXNz90E+u2T4aNDu8L/duHBiMtfupi+0POap7lRN9FX2FHHakJ5GMK1gN+dzW1zJvLRnXDAUpJTEzsfAjjQkh4Gl/C3KvVhxin+vDuCLSiXiKste1IPxwdjzZXbBpA/p1+tHabEo24yxXhGnXFys65Ok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mpocj/J9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RKBSZ0zF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 684D91F00A3A;
-	Mon,  7 Sep 2026 03:59:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mpocj/J9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C8411F00A3A;
+	Mon,  7 Sep 2026 04:03:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788753554;
-	bh=NjQmowA277SLdzkMD8bZNyr6HfTSO1ROQ4ByobmmI78=;
-	h=Date:Subject:From:To:References:In-Reply-To;
-	b=RKBSZ0zFI3ulrB8GADUeYkiTFpbPXb9AG+1732YQfRZsLzEQ5tThpYDKNTD1fQvd8
-	 pasoBTqgRmxYK2KyXXPvSAoc9XSghz/Wr7A1cNNUXy+Q76Hw0WmisTEVjAYMr0dlp6
-	 xb0gzYWqH4Km4R7uV5sWL7mjEyBF6Hxjap0jwbjqy8Iu86xqwux3dz2e6xw87uSdsU
-	 ++uBnSCrHCagOfQwxTyRj0GiZPqCz876Vl0FT9v4zFDIvA4jtQe0czaIUMAp0en528
-	 dHK/NsTqJBZlcyIRfA3dBgzFtWDKv2WT4HGGbIZ3hGYvEHSAB5+KLHxQ9mrKpHd3a9
-	 OPHygDFKbM86w==
-Message-ID: <d4a7f2c8-9811-4a5f-a3d9-df26456c4bd6@kernel.org>
-Date: Mon, 7 Sep 2026 12:59:12 +0900
+	s=k20260515; t=1788753825;
+	bh=+l2Ct03+eBT4GrlphGE1IIBrO/rNORAR4on5Wu4oVFs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=mpocj/J9F6UxR7CMuFpvwzZ6wIsIr3/gHq7yR13J6tusH7w5HiMFZKj6T81H773yo
+	 f60ualVnI/D/mQT0shGwuBx4/BdIYQGzjRMzKvHTMDzY9XZedwtf9A80v/ElfunZPG
+	 9Fn7H889j/RFVYSlzEJB9xiWrmMCfmWlsqHQZo0etNPJ5anUaXyv+UqjC+9lDKkW5W
+	 kNf+OnTVQ+xsBNBullsvhlbNbe33jE+WbwDdcSG+Hu1Gmu4ydguBZzlQNbChfQxXxs
+	 kN5oQQjPWRZTP4F/Rk2e8YFtKYFaJ9Ompd4nfOWOxA8nr4/9clSyvaN63DCYozBmTP
+	 WEP2ngzbEMmPA==
+Message-ID: <e5600160-56da-4285-939c-6b5648264cec@kernel.org>
+Date: Mon, 7 Sep 2026 13:03:42 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,67 +35,67 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 01/40] scsi: define all additional sense codes and
- their qualifiers
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- James Bottomley <James.Bottomley@hansenpartnership.com>
-References: <20260907024343.1046387-1-dlemoal@kernel.org>
- <20260907024343.1046387-2-dlemoal@kernel.org>
- <20260907031437.87FC41F00A3A@smtp.kernel.org>
- <531b5431-dc8d-4708-a67d-0bfcac96e1ea@kernel.org>
+Subject: Re: [PATCH] scsi: core: Validate MODE SENSE lengths in
+ scsi_cdl_enable()
+To: Alberto Carboneri <acarboneri@drivesec.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <mkp@kernel.org>
+Cc: Flavian Dei <fdei@drivesec.com>, Willy Tarreau <w@1wt.eu>,
+ Hannes Reinecke <hare@suse.de>, Niklas Cassel <niklas.cassel@wdc.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20260904135410.360314-1-acarboneri@drivesec.com>
 Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <531b5431-dc8d-4708-a67d-0bfcac96e1ea@kernel.org>
+In-Reply-To: <20260904135410.360314-1-acarboneri@drivesec.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 9/7/26 12:51, Damien Le Moal wrote:
-> On 9/7/26 12:14, sashiko-bot@kernel.org wrote:
->> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
->> - [Low] The newly introduced `scsi_sense_code` enum injects hundreds of generic, un-prefixed identifiers into the global namespace.
->> --
->>
->> commit 483fa6eeda05c51714847f3283212cc3d768cf57
->> Author: Damien Le Moal <dlemoal@kernel.org>
->>
->> scsi: define all additional sense codes and their qualifiers
->>
->> Introduce include/scsi/scsi_sense.h to define all existing additional
->> sense codes and their combinations with additional sense code qualifiers.
->> The sense key macro definitions in include/scsi/scsi_proto.h are also
->> moved into this new file, and scsi_sense.h is included in scsi_proto.h.
->>
->>> diff --git a/include/scsi/scsi_sense.h b/include/scsi/scsi_sense.h
->>> new file mode 100644
->>> index 0000000000000..e668ac1c2302c
->>> --- /dev/null
->>> +++ b/include/scsi/scsi_sense.h
->> [ ... ]
->>> +enum scsi_sense_code {
->>> +	ASC(NO_ADDITIONAL_SENSE_INFORMATION,			0x00),
->>> +	FILEMARK_DETECTED					= 0x0001,
->> [ ... ]
->>> +	ASC(WARNING,						0x0B),
->>
->> [Severity: Low]
->> Does defining scsi_sense_code this way inject generic, un-prefixed
->> identifiers like WARNING and WRITE_ERROR into the global namespace?
->>
->> Could this cause symbol collisions since scsi_sense.h is widely included
->> through scsi_proto.h?
+On 9/4/26 22:54, Alberto Carboneri wrote:
+> scsi_cdl_enable() uses length fields returned by MODE SENSE to locate the
+> ATA feature mode page in a 64-byte stack buffer. A target can report a
+> total length shorter than its mode header and block descriptors. The
+> unsigned subtraction used for the MODE SELECT length can wrap, and the
+> separately computed buf_data can point beyond buf.
 > 
-> Martin, James,
+> During automatic scan, enable is false, so the read-modify-write of
+> buf_data[4] can clear the low two bits of a target-selected out-of-bounds
+> stack byte. scsi_mode_select() can then copy up to 64 bytes from outside
+> the buffer into the outgoing MODE SELECT payload, disclosing stack contents
+> to the target.
 > 
-> This is a valid concern which I had when writing scsi_sense.h. But so far,
-> building with allyesconfig/allmodconfig did not great any issue. But I can
-
-s/great/create
-
-> change these names if you think it is better to avoid issues going forward.
+> This is reachable while scanning a USB storage device that identifies as
+> an ATA device and advertises CDL support. No filesystem mount or userspace
+> access to the block device is required.
 > 
+> On upstream commit cee9395acd80 ("Linux 7.3-rc1"), a build-specific,
+> one-vCPU QEMU/Raw Gadget proof using QEMU-only multi-UDC allocator
+> sampling executed a fixed proof command inside the guest and created a
+> UID-0-owned marker during automatic enumeration, with KASLR and NX
+> enabled.
+> 
+> The issue was independently found during security research at Drivesec
+> S.r.l.
+> 
+> Cap the available length to the buffer size. Validate and consume the mode
+> header and block descriptor lengths before using the page, and require the
+> five bytes needed to access the CDL field.
+> 
+> Fixes: 1b22cfb14142 ("scsi: core: Allow enabling and disabling command duration limits")
+> Reported-by: Sashiko AI Review <sashiko-bot@kernel.org>
+> Closes: https://lore.kernel.org/linux-scsi/20260717192313.93D791F000E9@smtp.kernel.org/
+> Link: https://lore.kernel.org/linux-scsi/20260717222931.AC4EE1F000E9@smtp.kernel.org/
+> Link: https://lore.kernel.org/linux-scsi/df13ec87ac9b28e3b0a2d9eb26477e276ff0278a.camel@HansenPartnership.com/
+> Cc: stable@vger.kernel.org
+> Assisted-by: LLM
+> Co-developed-by: Pimen Flavian Dei (Drivesec S.r.l.) <fdei@drivesec.com>
+> Signed-off-by: Pimen Flavian Dei (Drivesec S.r.l.) <fdei@drivesec.com>
+> Signed-off-by: Alberto Carboneri (Drivesec S.r.l.) <acarboneri@drivesec.com>
 
+Looks good.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
