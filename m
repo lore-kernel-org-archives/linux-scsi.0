@@ -1,36 +1,36 @@
-Received: from mta0.migadu.com (out-241.mta0.migadu.com [91.218.175.241])
+Received: from mta1.migadu.com (out-145.mta1.migadu.com [95.215.58.145])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5D2483BD5
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:06:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.241
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 784C246983C
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:08:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.145
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788782817; cv=none; b=HuorsmltGJv/1jXSlNQJtI5l8JTHu1WB5S3gSstXkPPtskmzC3+1NWoCFVCfTgQXLMMuwkPNYaHt95DsOuopYpF9HbJr+RRk60QiV6Nv4NumoSdatwz2V7O66cikYKLa6mxgLk29jM//tZ8gWl2OByeSov5wZ0okY/1kdBtCTqc=
+	t=1788782908; cv=none; b=eEWmRYAxr4KY6QtQfUeqF2oq83SsHLLGEDAYNavYNptnV5pJm4Uyo4eAwhc3Pw2gf8gXMRqO28SqoayLpIPydWz3eKWdfO4hrXnlRIt3xTDGG/vIysHb1dIj1zi0bZ3KG/gjfo8GKtghcpqGoNNyq3ma6eAQbSz2uNVRUpPCBs8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788782817; c=relaxed/simple;
-	bh=eouoanbRbUdceuGhWjgRaCPuvUqxMYOlNAo2dEfU+kg=;
+	s=arc-20240116; t=1788782908; c=relaxed/simple;
+	bh=0Z2ZGxZKqnTwRetas2V5IK8TR9SG8S9E/yoFBRl3MJE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rJrKNeNiyVc28w6fHZgZwGHkG8gqHU7tGe2O38w+aPToWK94/q4qMI02uoV7ZgLiqhf7QJpOIPx3Y2qUVOfj0nxr33liPJjK1FVfTdZakhgmqkp7NLkQMee5xoaCnuiyQ9e5dhMFoybPqQhnj/pMKWGvA5fTEUaXLAlimdecBt8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TZIO+cfh; arc=none smtp.client-ip=91.218.175.241
+	 In-Reply-To:Content-Type; b=I/Kh2HBUvzzfF1lnwt/lnxvVXiVnWvI2PdwVajay2C3KmFYbl0F4Gcv/dSa89cFn5Djos2lTAa+Ct/sEqENDLUaiiWjHO2aI/DdHfpxSriCrQQ1HUMxeEsXN/Dn9KUT1SDQyrDxVB6EItGwGoctYsy4KJbBRFYwjjGwTFIIybAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rllsHWcY; arc=none smtp.client-ip=95.215.58.145
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TZIO+cfh"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rllsHWcY"
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=eouoanbRbUdceuGhWjgRaCPuvUqxMYOlNAo2dEfU+kg=;
+DKIM-Signature: a=rsa-sha256; bh=0Z2ZGxZKqnTwRetas2V5IK8TR9SG8S9E/yoFBRl3MJE=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788782813; v=1; x=1789387613;
- b=TZIO+cfhYG7/uslcZ1lMlOHOvpRuHsg8CWAbi+nhRV58mvJe+/UcQ1xzhKX6KkoAi30AlZt6
- FbdC7E1AWB72qaAttAdy32xJBUSYGss9Kw23m2x4TtNpahUrTVRdN9vd2vdAyv2SmuSkl6K8p3R
- KoBy8ZC90VnR7cTmBwLJ+Niw=
+ t=1788782904; v=1; x=1789387704;
+ b=rllsHWcY6iMfmWZqTafAeR6Lp39mZ//V1S8bZ6sGHmRF8Km9O3tcftloiOE4JiPQRGSH4kRf
+ oOarKn0UKOl0IAWz7s9vBLnW52J2JH2rXkRYEGD3Kc3/yujopO6Irn03uUd7bwk93C6HzkPJcyk
+ D4MBxLEn42uQtlHuZ6DybNog=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 4028d51d5cc5b359;
-	Mon, 07 Sep 2026 12:06:53 +0000
-X-Mizu-Trace-ID: 4028d51d5cc5b359
+Received: by mta10.migadu.com with ESMTPS id cab069c3bdd34d9b;
+	Mon, 07 Sep 2026 12:08:24 +0000
+X-Mizu-Trace-ID: cab069c3bdd34d9b
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <beef6759-9594-4a38-bb20-f1796e617aeb@linux.dev>
-Date: Mon, 7 Sep 2026 13:06:50 +0100
+Message-ID: <07862c5c-94ed-4e41-9271-2245192c72ae@linux.dev>
+Date: Mon, 7 Sep 2026 13:08:23 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,72 +38,71 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 11/27] scsi-multipath: introduce basic SCSI device
- support
+Subject: Re: [PATCH v8 15/27] scsi-multipath: clone each bio
 To: sashiko-reviews@lists.linux.dev, John Garry <john.g.garry@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 References: <20260907105021.1763236-1-john.g.garry@oracle.com>
- <20260907105021.1763236-12-john.g.garry@oracle.com>
- <20260907113341.395EA1F00A3A@smtp.kernel.org>
+ <20260907105021.1763236-16-john.g.garry@oracle.com>
+ <20260907114530.211B01F00A3A@smtp.kernel.org>
 Content-Language: en-US
 From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260907113341.395EA1F00A3A@smtp.kernel.org>
+In-Reply-To: <20260907114530.211B01F00A3A@smtp.kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 9/7/26 12:33, sashiko-bot@kernel.org wrote:
+On 9/7/26 12:45, sashiko-bot@kernel.org wrote:
 > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] scsi_mpath_unique_lun_id ignores string truncation of the unique LUN ID, risking incorrect multipath grouping.
+> - [Critical] Failure to copy the updated `bi_sector` from the clone back to the master bio breaks `REQ_OP_ZONE_APPEND` completions.
 > --
 > 
-> commit 1346e25fe4922ff0f78a31848664daccf7121f0f
+> commit 7a2bc90e62297f99675ed0e03f2410ced58b148e
 > Author: John Garry <john.garry@linux.dev>
 > 
-> scsi-multipath: introduce basic SCSI device support
+> scsi-multipath: clone each bio
 > 
-> For a scsi_device to support multipath, introduce structure
-> scsi_mpath_device to hold multipath-specific details. A module param
-> is introduced to enable multipath. SCSI multipath will only be
-> available when supported and unique ID is available in VPD page 83.
+> This commit updates SCSI failover handling by cloning each original bio
+> before submission. Since SCSI has no guarantee that submitted bios are
+> entirely completed or not at all, this ensures the original bio can be
+> safely resubmitted upon failure.
 > 
 >> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
->> new file mode 100644
->> index 0000000000000..5559e2e8d64a8
->> --- /dev/null
+>> index 7164bc61e65e1..68fe50f62158c 100644
+>> --- a/drivers/scsi/scsi_multipath.c
 >> +++ b/drivers/scsi/scsi_multipath.c
+> 
 > [ ... ]
->> +static int scsi_mpath_unique_lun_id(struct scsi_device *sdev)
+> 
+>> @@ -237,7 +238,34 @@ static int scsi_multipath_sdev_init(struct scsi_device *sdev)
+>>   	return 0;
+>>   }
+>>   
+>> +static void scsi_mpath_clone_end_io(struct bio *clone)
 >> +{
->> +	struct scsi_mpath_device *scsi_mpath_dev = sdev->scsi_mpath_dev;
->> +	int ret;
+>> +	struct bio *master_bio = clone->bi_private;
 >> +
->> +	ret = scsi_vpd_lun_id(sdev, scsi_mpath_dev->device_id_str,
->> +				SCSI_MPATH_DEVICE_ID_LEN);
->> +	if (ret < 0)
->> +		return ret;
->> +	else if (ret == 0)
->> +		return -EINVAL;
->> +
->> +	return 0;
-> 
-> [Severity: Medium]
-> Can the LUN ID be silently truncated here without returning an error?
-
-Yeah, I think we we can add a check for ret >= SCSI_MPATH_DEVICE_ID_LEN
-
-> 
-> Similar to snprintf, scsi_vpd_lun_id returns the number of bytes that would
-> have been written. If a device provides a pathological T10 Vendor ID that
-> causes the expanded string to exceed SCSI_MPATH_DEVICE_ID_LEN (256 bytes),
-> the string in the buffer is truncated but the returned length will be
-> greater than or equal to SCSI_MPATH_DEVICE_ID_LEN.
-> 
-> Because any positive value of ret results in returning 0, a truncated ID
-> will be treated as a success. If the unique identifier portion of the ID is
-> pushed past the 255th byte, multiple distinct LUNs might share the exact same
-> 255-character prefix and be incorrectly grouped together by
-> scsi_mpath_find_head.
-> 
+>> +	master_bio->bi_status = clone->bi_status;
+>> +	bio_put(clone);
+>> +	bio_endio(master_bio);
 >> +}
+> 
+> [Severity: Critical]
+> Does this completion function need to propagate the appended sector location
+> for REQ_OP_ZONE_APPEND bios?
+
+We're not supporting zoned devices yet
+
+> 
+> When a filesystem issues a REQ_OP_ZONE_APPEND bio to a zoned multipath
+> device, the lower layers choose where exactly within the zone the data is
+> written and update clone->bi_iter.bi_sector upon completion.
+> 
+> Since scsi_mpath_clone_end_io() only copies clone->bi_status and omits
+> copying the updated clone->bi_iter.bi_sector back to
+> master_bio->bi_iter.bi_sector before calling bio_endio(master_bio), will
+> this cause filesystems like btrfs or f2fs to record incorrect data locations
+> resulting in data corruption?
+
+This can be updated later
+
 > 
 
