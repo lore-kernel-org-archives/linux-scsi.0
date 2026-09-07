@@ -1,186 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E87E48C400
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:25:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F6F4442B1D;
+	Mon,  7 Sep 2026 12:25:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788783927; cv=none; b=lkyp8mEP5n1yqvtsSlrBJFcgr3mqnemIeq89CE1tJVR1kFJddXYDZXP+nLFDlCCRnKIdYalj/SZFqc5f0KgTKMiA18wojxA89V8zUWYf+HCsl0BmJChW5wawyy95Q4Ps9LiXi4m1wVwBxHdGwxat+ljBlRPeuv4sX4BcVDWdNyg=
+	t=1788783960; cv=none; b=crbO7PNlxoIo+VtUO+q54oF5N7kYf25LbxPZKuotn1BY5A7WEFjgT3UwUZlcIlgSDuyl5aQLrk+4H+svf05aNunNdZk6N8VPcUbdgJOMZWYxoCAKLRRLcYcysGC+vb7JSI2fKNsE+Sy6kWRGztND6VDmxLSf3T5fIewdwef1MAk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788783927; c=relaxed/simple;
-	bh=nA5kU7bxTtQrOkOIL/3AtRtM4CIeRZcZHwGBsTHfnYg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=AFNZnOH7PIeNz/Uwk3CuivQwkEyW3NnI0AI2lYeQNgo0zadSP3/+DVPkBpgGKJbbbusIpyPmTcuQfRCNlX+pgVB/1yTOZWSqTizK5lUcXyM071cfNKZDD/NXvd0t/VUBmoHuFECxfRVahczRj7DVH+5nZ7/1Y4m7HiqoEYfjsjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cyWBLrZK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788783960; c=relaxed/simple;
+	bh=RD8cJvCcWrITWOPcmJjIbbl5mO13rutxuoJTLDMaksA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ScA5jcayVbCd0gdE9+xkzh8S5uoSdf30Gf+QyQdEXwK9zM0RNwsRHIhwHrgO99weeTjnE5PkKYXBRF8Gg2vy3EMjmoBkFKHeRtetfeVBe66eGKInDTieOYoMH+pWRI/FunThAORyBSQWD7OIEMrNGuQk9JJKWiiFy0SckMwVG44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VlOHJ/ag; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=TKi2DeEG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=S84etnik; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=lVRTt0un; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cyWBLrZK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 940BF1F00A3A;
-	Mon,  7 Sep 2026 12:25:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788783925;
-	bh=55g2gT85y0Q963YhKAAu4Ug9NeWJFOaNZ3DulYZCY/A=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cyWBLrZK/gnLpJ8/nn8tM8XDSi7ZLRT/w6HVY7rvDLJdwfVWu7lC8YcllamA1dvKS
-	 6auWBMrmSDEFJun5Q2Pvc7iMhpsjXBdXBMfEJRuJrxcGIOVyqipqMbGITBeoCvnPaQ
-	 X3jzOId9JKK2h+npyyflejX8haTu30tWH47HRySGUJOa33qXKifXK08L/kuZDeJHPp
-	 ZzTlH+yDWSyQnSskNssz+5XWTx3GVcbE9qFIrL6lSlcOkW3MbfqlkAFoakTQRcjoRb
-	 OubznqThCH+z74/th3OFHqFRH8dyERGPl93bZQ4HcJKCoCSciB8FXsOyH1ivaORepa
-	 6VI9hrHmaSKmA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 24/27] scsi: sd: support multipath disk
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "John Garry" <john.g.garry@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260907105021.1763236-25-john.g.garry@oracle.com>
-References: <20260907105021.1763236-1-john.g.garry@oracle.com>
- <20260907105021.1763236-25-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 12:25:24 +0000
-Message-Id: <20260907122525.940BF1F00A3A@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VlOHJ/ag";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="TKi2DeEG";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="S84etnik";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="lVRTt0un"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 79137219B0;
+	Mon,  7 Sep 2026 12:25:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1788783952; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cNrJBRVqfDqJGfN/zCQUW6w8Y2kkMmeEAPhFE60Qg0Y=;
+	b=VlOHJ/agDQ88lS20qmekudHbacUGIGq4BACMoz8+Q5JlbTl8U7+2jHIvLyq2Aj1SAHF4fD
+	4ElWI/releUMLak67DiGHhfqBbK5ICEcO4Inw6JrxCBCHOq+fTkZZQr68JrMhsyKWHVSdK
+	la4wjra+TfjmLG/CyJDMZXL3m6jFaUs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1788783952;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cNrJBRVqfDqJGfN/zCQUW6w8Y2kkMmeEAPhFE60Qg0Y=;
+	b=TKi2DeEGfv7KJK3y278GPC+oW8+jTievRKgTVAe9+yjneRAzSfMmhojCUI2SWtcLDoCr2J
+	O3VsRGduzlkCMjCg==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=S84etnik;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=lVRTt0un
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1788783948; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cNrJBRVqfDqJGfN/zCQUW6w8Y2kkMmeEAPhFE60Qg0Y=;
+	b=S84etnik9RIKeT4O8WF/T7OR7ajNuikKwB7r6gxahB5PgOTYzqlcX7WcnfQ8geTpMGyoIK
+	4dlmkNGVEDA02KciJ08z0rvcEdpYsuvyij8ezlw7ozGUBms/rgkhKWXHh1dbU5p2Xh+Azi
+	Ew689Pl+0ZEco56msVpoHyWrzghy7M8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1788783948;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cNrJBRVqfDqJGfN/zCQUW6w8Y2kkMmeEAPhFE60Qg0Y=;
+	b=lVRTt0unTK0+KiMUSCuZnYxfF+7na5qRFppSsv69MSO4xntPGj0a7VJhd3AETFFqQxNpPz
+	tudJdzyHguEtJ5Cw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 20455138A5;
+	Mon,  7 Sep 2026 12:25:48 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id cFa8BkytnmpJLAAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 07 Sep 2026 12:25:48 +0000
+Message-ID: <2c2cff23-97bf-4e19-8660-011414294d04@suse.de>
+Date: Mon, 7 Sep 2026 14:25:47 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 08/40] scsi: sd: use 16-bits defined sense codes
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
+ Alan Stern <stern@rowland.harvard.edu>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
+ Heiko Carstens <hca@linux.ibm.com>
+References: <20260903034201.112211-1-dlemoal@kernel.org>
+ <20260903034201.112211-9-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260903034201.112211-9-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 79137219B0
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:email,suse.de:mid];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On 9/3/26 5:41 AM, Damien Le Moal wrote:
+> Refactor the SCSI disk driver to use as much as possible the 16-bits
+> sense_code field of struct scsi_sense_hdr and struct scsi_failure and
+> replace all hard-coded additional sense codes and additional sense code
+> qualifiers with the enum values defined in include/scsi/scsi_sense.h. This
+> helps with code clarity as the sense codes being processed are easier to
+> test and self-documented.
+> 
+> No functional change intended.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/scsi/sd.c     | 106 +++++++++++++++++++++---------------------
+>   drivers/scsi/sd_zbc.c |   2 +-
+>   2 files changed, 53 insertions(+), 55 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-New issues:
-- [High] Pending delayed removal work is not cancelled when `sd_mpath_fail_=
-probe()` tears down a multipath disk, leading to use-after-free of `mpath_h=
-ead`.
+Cheers,
 
-Pre-existing issues:
-- [Critical] Preexisting double put of `sdkp->disk_dev` when `sd_large_pool=
-_create()` or `device_add_disk()` fails.
---
-
-commit 9972be7d4ae335cb741d2858144500af92bf6dc3
-Author: John Garry <john.garry@linux.dev>
-
-scsi: sd: support multipath disk
-
-This commit adds support to attach a multipath disk by allocating a hidden
-gendisk per path. A global list of multipath disks is kept for matching
-SCSI devices, and the multipath gendisk mimics a standard SCSI disk.
-
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 60e071d23ddd0..27230ecc2337e 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-[ ... ]
-> @@ -4048,13 +4151,260 @@ static const struct attribute_group sd_mpath_dis=
-k_attr_group =3D {
-[ ... ]
-> +static void sd_mpath_fail_probe(struct scsi_disk *sdkp)
-> +{
-> +	struct sd_mpath_disk *sd_mpath_disk =3D sdkp->sd_mpath_disk;
-> +	struct scsi_mpath_device *scsi_mpath_dev;
-> +	struct mpath_device *mpath_device;
-> +	struct scsi_device *sdp =3D sdkp->device;
-> +	struct scsi_mpath_head *scsi_mpath_head;
-> +	struct mpath_head *mpath_head;
-> +	bool remove =3D false;
-> +
-> +	if (!sd_mpath_disk)
-> +		return;
-> +
-> +	scsi_mpath_dev =3D sdp->scsi_mpath_dev;
-> +	mpath_device =3D &scsi_mpath_dev->mpath_device;
-> +	scsi_mpath_head =3D sd_mpath_disk->scsi_mpath_head;
-> +	mpath_head =3D &scsi_mpath_head->mpath_head;
-> +
-> +	mutex_lock(&sd_mpath_disks_lock);
-> +	sd_mpath_disk->disk_count--;
-> +	if (!sd_mpath_disk->disk_count) {
-> +		list_del_init(&sd_mpath_disk->entry);
-> +		remove =3D true;
-> +	}
-> +	mutex_unlock(&sd_mpath_disks_lock);
-> +	mpath_device->disk =3D NULL;
-> +
-> +	if (remove) {
-> +		device_del(&sd_mpath_disk->dev);
-> +		mpath_remove_disk(mpath_head);
-> +	}
-> +	sd_mpath_put_disk(sd_mpath_disk);
-
-[Severity: High]
-Can this sequence leave pending delayed removal work uncancelled when teari=
-ng
-down a multipath disk?
-
-If a multipath disk has its last path removed, it can enter delayed removal
-where disk_count drops to 0 and remove_work is scheduled via
-mpath_can_remove_head().=20
-
-If a path is then re-probed, disk_count becomes 1. If that probe subsequent=
-ly
-fails and sd_mpath_fail_probe() is called, the disk_count drops back to 0,
-which triggers the device deletion and frees the head.
-
-However, since this path bypasses mpath_can_remove_head(), could the pending
-remove_work scheduled earlier go uncancelled, potentially leading to a
-use-after-free of mpath_head when the delayed work timer expires?
-
-> +}
-[ ... ]
-> @@ -4171,6 +4529,7 @@ static int sd_probe(struct scsi_device *sdp)
->  	sd_revalidate_disk(gd);
->  	if (sdp->sector_size > PAGE_SIZE) {
->  		if (sd_large_pool_create()) {
-> +			sd_mpath_fail_probe(sdkp);
->  			error =3D -ENOMEM;
->  			device_unregister(&sdkp->disk_dev);
->  			put_disk(gd);
-
-[Severity: Critical]
-This is a pre-existing issue, but could this error path result in a
-double-free of sdkp->disk_dev?
-
-When sd_large_pool_create() fails, device_unregister() is called on
-sdkp->disk_dev, which drops the refcount to 0 and frees sdkp.=20
-
-Immediately following this, put_disk(gd) is called. Because gd->fops is
-already set to &sd_fops, dropping the gendisk refcount invokes
-scsi_disk_free_disk(), which reads the already freed sdkp and attempts a
-second put_device() on sdkp->disk_dev.
-
->  			goto out;
->  		}
->  	}
-> =20
-> +	if (sdp->scsi_mpath_dev) {
-> +		error =3D sd_mpath_revalidate_head(sdkp);
-> +		if (error)
-> +			sdev_printk(KERN_WARNING, sdp, "could not revalidate multipath limits=
-\n");
-> +	}
-> +
->  	if (sdp->removable) {
->  		gd->flags |=3D GENHD_FL_REMOVABLE;
->  		gd->events |=3D DISK_EVENT_MEDIA_CHANGE;
-> @@ -4192,6 +4557,7 @@ static int sd_probe(struct scsi_device *sdp)
-> =20
->  	error =3D device_add_disk(dev, gd, NULL);
->  	if (error) {
-> +		sd_mpath_fail_probe(sdkp);
->  		device_unregister(&sdkp->disk_dev);
->  		put_disk(gd);
-
-[Severity: Critical]
-This is a pre-existing issue, but might this error path also suffer from the
-same double-free of sdkp->disk_dev?
-
-Just like the memory allocation failure path above, if device_add_disk()
-fails, device_unregister() frees sdkp, and the subsequent put_disk(gd)
-accesses the freed sdkp and performs a second put_device() on
-sdkp->disk_dev.
-
->  		if (sdp->sector_size > PAGE_SIZE)
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907105021.1763=
-236-1-john.g.garry@oracle.com?part=3D24
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
