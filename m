@@ -1,36 +1,80 @@
-Received: from mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 158CD45038
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:10:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 251A948823A;
+	Mon,  7 Sep 2026 12:11:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788783043; cv=none; b=T+2dZlrrarO1JxSoOOL0RQ44j8BYb1jndljXGxbyuAtTnEbbwF+5O/1xzM4Ixivzkjfl21MrxsKhj8mgZuXbRWjmyZ2lOTKvJ+0rXQtW1S90HXf18foyr5FAJrdZWoaApjKwxBUDN39H1QPi3EWekQbJ9JJrf/Yavx88BgRovPk=
+	t=1788783068; cv=none; b=TD732MaPpkljw+C2E5Otun5hNdhtH3ILDUsrZiHGYZH9gjoK9cgE+NdmRN7nREqCaSUNw9WlW02lrSjWqO27thYIC73zGOEU6hjEnu+s/Kh8xRH7yGpugb8sVRh9/vM4D+2xCAL4o/qY6JdGWYRJPC8clrxMzgW69dw7mBqOJHE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788783043; c=relaxed/simple;
-	bh=5QMaGMhloJZ8X7unOM4uVeF7Ycv2Zye+o487DoK3d/Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=frAULDMXP+y7mTzlFCvkknK/HbuYgVirT674D4Mz1alQKOwaSNGfakVJrqBJEUEJ9JfhLMoiN9t9rhzwShtkof0kXUghkt9WOZJj2BLQi2LjKyPYzKRr/+X5KurrMeSPCZFOrHy319Lxoss/XAzZwZtdyZnGwD3aOlyKXrtT+VY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=jeC99CA3; arc=none smtp.client-ip=95.215.58.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788783068; c=relaxed/simple;
+	bh=z0srhFhnhCzKvHk52yfbss4F64271/EiMNC1osZtxEc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=N7CyoapUl8d2gQWnPRcsnmFO2ePvtrQr4uoUUucdl9BloRUJ9XeH/7EIHM93rH2F2nwrGHoOH+GvF6gcdYc+K07HG+95JiXMysRsReHn5IOJXGf0LaQwGlms9UeF260++cX/XukVYqNrBJEWspEGFfHQGQB95AQbl7gTtrr+SlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=efKbcJo+; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Qlzx/ElI; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=cdBoWHvh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=U8XlSHHi; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="jeC99CA3"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=5QMaGMhloJZ8X7unOM4uVeF7Ycv2Zye+o487DoK3d/Y=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788783039; v=1; x=1789387839;
- b=jeC99CA3rHdX9vBstRJqaBIBkZFU3qaYdm3j6IpAnwUUuSsPiDePtnRvhELghaJkjlzYL6uk
- stP9MIqgRYu/rPVTmNA6tBTG+lVONGclIVKgSJwcyB5OaX2I1zSiLlj6T9+rfGNvdz4LLJpINsG
- xWuSCBj4uqHjpik75ztwaKe4=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id dcd267842b1cde3d;
-	Mon, 07 Sep 2026 12:10:29 +0000
-X-Mizu-Trace-ID: dcd267842b1cde3d
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <02d55880-ac40-4cbc-82fe-d175c81bbd19@linux.dev>
-Date: Mon, 7 Sep 2026 13:10:28 +0100
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="efKbcJo+";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Qlzx/ElI";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="cdBoWHvh";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="U8XlSHHi"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id E6FAD219C2;
+	Mon,  7 Sep 2026 12:10:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1788783061; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZuO925TticfZXvC4A8yZlRmQvCeXjsFi1hJFxCn5Q94=;
+	b=efKbcJo+z0Q+gvfoxG8gjEpyqZ6JdPqpgwQWg0FGOn7ChANb47Cjr8FC8Atk1KglCR/Riq
+	1XmdQt4L4v19We3KLk95H97mAcXd+4+UI4NAYamexzLAzJRNux2CtPSqBOOQaW63zCl0HH
+	Q5yfqCbZWFwnKym2gRKnV4ePNv+M2hw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1788783061;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZuO925TticfZXvC4A8yZlRmQvCeXjsFi1hJFxCn5Q94=;
+	b=Qlzx/ElIPe32gfGtYsojqxD90pSvcP1Mg7ngr8fCSoJ0e8q3kMmjA3tz+4zNVvnS8kjB7f
+	VYoxMlNuc8MkeYAw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1788783056; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZuO925TticfZXvC4A8yZlRmQvCeXjsFi1hJFxCn5Q94=;
+	b=cdBoWHvhYBmBG31/fSNu7KcgFKTW+BQqWZyD8icqQLVE/8OLh16It6ppp6jfjLSCKmp7LS
+	K8no75GtEo0LaHLctWpAI2BB5XyI2zju68mv3QBj4SMHDvUpZeBMThXJokEq3Tnpc4qg/u
+	yRKG2Zs9rceQQWvEMsXkZgq2rqmtHP0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1788783056;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZuO925TticfZXvC4A8yZlRmQvCeXjsFi1hJFxCn5Q94=;
+	b=U8XlSHHiai1xmDgiUhUDl4j65u04F1YUbGB1ikQkzySvYaGIv6ss6aH2tXEYDat4XF4FOM
+	WAzTOOagzChoBjAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 969BB1339B;
+	Mon,  7 Sep 2026 12:10:56 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 6B6AI9CpnmrbHQAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 07 Sep 2026 12:10:56 +0000
+Message-ID: <2554fab5-d531-45ad-b5cc-80c9713f137f@suse.de>
+Date: Mon, 7 Sep 2026 14:10:56 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,87 +82,79 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 17/27] scsi-multipath: revalidate paths upon device
- unblock
-To: sashiko-reviews@lists.linux.dev, John Garry <john.g.garry@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-References: <20260907105021.1763236-1-john.g.garry@oracle.com>
- <20260907105021.1763236-18-john.g.garry@oracle.com>
- <20260907115604.63C811F00A3A@smtp.kernel.org>
+Subject: Re: [PATCH v2 04/40] scsi: rename sense field of struct scsi_failure
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
+ Alan Stern <stern@rowland.harvard.edu>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
+ Heiko Carstens <hca@linux.ibm.com>
+References: <20260903034201.112211-1-dlemoal@kernel.org>
+ <20260903034201.112211-5-dlemoal@kernel.org>
 Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260907115604.63C811F00A3A@smtp.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260903034201.112211-5-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.996];
+	MIME_GOOD(-0.10)[text/plain];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
 
-On 9/7/26 12:56, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] Concurrent invocation of device block/unblock during initialization dereferences a NULL scsi_mpath_head.
-> - [High] TOCTOU race in scsi_device_block and scsi_internal_device_unblock accessing multipath state outside state_mutex, causing a NULL pointer dereference during device teardown.
-> --
+On 9/3/26 5:41 AM, Damien Le Moal wrote:
+> Rename the sense field of struct scsi_failure to sense_key. This makes
+> it clear that this field stores the sense key, and also unifies this
+> structure field names with the names used in struct scsi_sense_hdr.
 > 
-> commit d9e004c51ebcdd24da98702a7fb3f90971c90665
-> Author: John Garry <john.garry@linux.dev>
+> To be consistent with this change, the macro SCMD_FAILURE_SENSE_ANY is
+> renamed SCMD_FAILURE_SENSE_KEY_ANY.
 > 
->      scsi-multipath: revalidate paths upon device unblock
+> Of note is that the definition of the array any_sense_failure_defs in
+> scsi_lib_test_any_sense() is modified to change the initialization of the
+> result field to use SCMD_FAILURE_RESULT_ANY and add the .sense_key field
+> initialization to SCMD_FAILURE_SENSE_KEY_ANY to match the test target
+> case.
 > 
-> This patch adds a revalidation step for multipath devices when a scsi_device
-> is unblocked, clearing paths and requeuing any queued bios.
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/scsi/ch.c                           |  2 +-
+>   drivers/scsi/device_handler/scsi_dh_hp_sw.c |  4 ++--
+>   drivers/scsi/device_handler/scsi_dh_rdac.c  | 10 ++++-----
+>   drivers/scsi/scsi_lib.c                     |  6 ++---
+>   drivers/scsi/scsi_lib_test.c                | 25 +++++++++++----------
+>   drivers/scsi/scsi_scan.c                    |  8 +++----
+>   drivers/scsi/scsi_transport_spi.c           |  2 +-
+>   drivers/scsi/sd.c                           | 20 ++++++++---------
+>   drivers/scsi/ses.c                          |  8 +++----
+>   include/scsi/scsi_device.h                  | 12 +++++-----
+>   10 files changed, 49 insertions(+), 48 deletions(-)
 > 
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 56200a7f5c748..1a6f5e1fd80cb 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -3093,6 +3093,8 @@ static int scsi_internal_device_unblock(struct scsi_device *sdev,
->>   	mutex_lock(&sdev->state_mutex);
->>   	ret = scsi_internal_device_unblock_nowait(sdev, new_state);
->>   	mutex_unlock(&sdev->state_mutex);
->> +	if ((ret == 0) && sdev->scsi_mpath_dev)
->> +		scsi_mpath_revalidate_paths(sdev->scsi_mpath_dev);
-> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-See response for v7
+Cheers,
 
-> [Severity: High]
-> Are there race conditions involving multipath state modification outside of
-> the sdev->state_mutex?
-> 
-> It appears a concurrent __scsi_remove_device() could acquire state_mutex,
-> transition the device to SDEV_CANCEL or SDEV_DEL, and call
-> scsi_mpath_remove_device(). This sets scsi_mpath_dev->scsi_mpath_head to
-> NULL. When scsi_internal_device_unblock() resumes, it could call
-> scsi_mpath_revalidate_paths() which then attempts to use the NULL pointer.
-> 
-> Is it also possible for this code to execute on a partially initialized
-> multipath device?
-> 
-> During device discovery, scsi_mpath_dev_alloc() assigns sdev->scsi_mpath_dev
-> but initially leaves scsi_mpath_dev->scsi_mpath_head as NULL while
-> performing a blocking INQUIRY. If a transport event (like a link flap)
-> concurrently triggers scsi_target_block() and scsi_target_unblock(),
-> scsi_internal_device_unblock() could be called and operate on the still-NULL
-> scsi_mpath_head.
-> 
-> The same unprotected call pattern appears to exist in scsi_device_block(),
-> which was introduced in a prior patch in this series.
-> 
-> [ ... ]
->> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
->> index b16fe6a55fa73..456351fee4b98 100644
->> --- a/drivers/scsi/scsi_multipath.c
->> +++ b/drivers/scsi/scsi_multipath.c
->> @@ -238,6 +238,14 @@ static int scsi_multipath_sdev_init(struct scsi_device *sdev)
->>   	return 0;
->>   }
->>   
->> +void scsi_mpath_revalidate_paths(struct scsi_mpath_device *scsi_mpath_dev)
->> +{
->> +       struct scsi_mpath_head *scsi_mpath_head = scsi_mpath_dev->scsi_mpath_head;
->> +       struct mpath_head *mpath_head = &scsi_mpath_head->mpath_head;
-> 
-> [Severity: High]
-> If scsi_mpath_head is NULL due to the races mentioned above during unblock
-> or block operations, will this unconditionally dereference the NULL pointer
-> when calculating the offset for mpath_head?
-> 
-
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
