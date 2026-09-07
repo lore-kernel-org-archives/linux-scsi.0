@@ -1,80 +1,36 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mta0.migadu.com (out-198.mta0.migadu.com [91.218.175.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09FB748823A;
-	Mon,  7 Sep 2026 12:21:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEBA341D65E
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:22:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788783682; cv=none; b=DI2zcpDbtwiiL4jHFqwfLvEZBUuj9DkVprfBBTULXUBH4wpUed41JrF2Ts/5fuSCzMTojXiAX0Jrjbhjp0sd5zVtoBnzmcb3AyNRp3iyOhr0Kbt8cbYYvNNRAgQHcaJUecaKzbexd+ZlHP4n2H5aaPKgyV5Nfjnc4LjQvbxA4y0=
+	t=1788783738; cv=none; b=hS6rncFQxYd1v6jKqllLSZsNmqFVBz6CNq7Z9VhFN+SYGHxkSW0TLFUfWAIrOULXFqblKIc9yc9RYOMGY+5jB6s0eAoMgzgL/QoNlBR7F16G2Gb9hmmno5bLmBm45nXF/htDQpiFL2SUeuRG5f5tvLnbpOEshWzoiZGHWfEIpEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788783682; c=relaxed/simple;
-	bh=oAHfA76obTH+YI3GbvepF3koZyhy36+i4uuLX1lST8A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=NsYp4YbVkuNpodxCWDW1tVMWXr+bkoJ6aC0oKBJGHWkvJPDZcgX4d3htAh48gAMOG+HplYwFf4Ra5h+ZfsH5cQgvwstdc38EO7aHvS9y3n8MB4f0JFRWWkEcXl//H0DMZpPhQnLyNzuoLa+vwDMW9VxwkmZax3PtSCRtjmCR8l0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=airwtW6q; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=jgj4ISWG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Bg70B9Cq; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Sg3BInx+; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1788783738; c=relaxed/simple;
+	bh=5vkJI9zTlzzch+3lJHnixMQuUkwacMAayJAfA7pqKiI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UZ4UAuv4A5uSj7U72/uAGqOPi9H6AXMTleBBWhRWCoUcIL86aLJm1fosXfTZhyUFvsXWqUfGS+ZlEZNocSQd4+hlnCdsA+OnOj2U8cDlR2Qy4pBz3gHBnQLXKgsnxOKYuO4AdMrMziJ+AP4wRPwnnOltyOCjiOXyef8XpXOVRcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=K1kuYhVM; arc=none smtp.client-ip=91.218.175.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="airwtW6q";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="jgj4ISWG";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Bg70B9Cq";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Sg3BInx+"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id C96B221AFE;
-	Mon,  7 Sep 2026 12:21:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788783674; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GsXqf2g1mN5bJN6aL4DMzjn5jdwLxV16Fo9+BjunJI0=;
-	b=airwtW6qOwOi64+zaT1pDpPL19H+9sZcyBtKosvzSOYIL4IH7i8x4S8zEVQmKUOaC6Wprw
-	bFA3Di6g0J47G7L7fzbjJBx34JugckD7TMc/HZ511HgYw83Pi81JafJaToZ/UK7ThAuv2g
-	pucVXqMPEaJ8OXKesI+Vjn81S1DU2nI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788783674;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GsXqf2g1mN5bJN6aL4DMzjn5jdwLxV16Fo9+BjunJI0=;
-	b=jgj4ISWGsVqYPytKYwm81EC8L3Yhs3oMsawHkEiuJwOs8sTqXsKJmxMcYHteBvf0muTyBM
-	Z4Nf5Tj44vE+aaDQ==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788783669; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GsXqf2g1mN5bJN6aL4DMzjn5jdwLxV16Fo9+BjunJI0=;
-	b=Bg70B9CqVlKiu2IEQoIDBh56b+qo5sPo7hUiFZ2MkeTN8oF+ryezL5aZrnzsv60cO/qAim
-	csBYuE2bN+MyIktXsiawJY1h6I+MXEidwGbMNynPhAfYwhyohUEGw/ZYmnWYKicM5e+M3N
-	oiYs3F46KY9sV3bd2dtFMjY7DUq/3R8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788783669;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GsXqf2g1mN5bJN6aL4DMzjn5jdwLxV16Fo9+BjunJI0=;
-	b=Sg3BInx+qfSDDDAP3noep8dkIlVoZAZsjNvPkOkkmynfjzkndNoWMkFWhpBgIT+55mQ4Bi
-	s0QqGm4T7SBuePDA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 72DBA1339B;
-	Mon,  7 Sep 2026 12:21:09 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id yDO0GjWsnmp3JwAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 07 Sep 2026 12:21:09 +0000
-Message-ID: <86e40368-c385-48dc-8bf0-6d707acac1d1@suse.de>
-Date: Mon, 7 Sep 2026 14:21:08 +0200
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="K1kuYhVM"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=5vkJI9zTlzzch+3lJHnixMQuUkwacMAayJAfA7pqKiI=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788783733; v=1; x=1789388533;
+ b=K1kuYhVMVjOKkUeWRlICIomBOmhGixvMtLU38S7VGw4EXBU5XCq6x+TIf/Y/ZrYZbjcFnb3/
+ UDG3rsFP29Xv9H34rPFf72xR84aAJmBJYitpBuOotfF34H8C1/+20kfX0Hz6Ywtl5REQsshJ1D3
+ sQLAEvrFJqgCjcJLI2yxeDpc=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta11.migadu.com with ESMTPS id ba0837834e12b6c0;
+	Mon, 07 Sep 2026 12:22:13 +0000
+X-Mizu-Trace-ID: ba0837834e12b6c0
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <ff023bb0-9bf1-4257-a1c5-46d2dedc3367@linux.dev>
+Date: Mon, 7 Sep 2026 13:22:08 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,903 +38,101 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 07/40] scsi: core: use 16-bits defined sense codes
-To: Damien Le Moal <dlemoal@kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
- Alan Stern <stern@rowland.harvard.edu>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
- Heiko Carstens <hca@linux.ibm.com>
-References: <20260903034201.112211-1-dlemoal@kernel.org>
- <20260903034201.112211-8-dlemoal@kernel.org>
+Subject: Re: [PATCH v8 20/27] scsi-multipath: add
+ scsi_mpath_{start,end}_request()
+To: sashiko-reviews@lists.linux.dev, John Garry <john.g.garry@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+References: <20260907105021.1763236-1-john.g.garry@oracle.com>
+ <20260907105021.1763236-21-john.g.garry@oracle.com>
+ <20260907120918.DC4D41F00A3A@smtp.kernel.org>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260903034201.112211-8-dlemoal@kernel.org>
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20260907120918.DC4D41F00A3A@smtp.kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spam-Score: -4.30
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.997];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[11];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
+Content-Transfer-Encoding: 7bit
 
-On 9/3/26 5:41 AM, Damien Le Moal wrote:
-> Refactor the SCSI core code to use the 16-bits sense_code field of
-> struct scsi_sense_hdr and struct scsi_failure and replace all hard-coded
-> additional sense codes and additional sense code qualifiers with the enum
-> values defined in include/scsi/scsi_sense.h. This helps with code clarity
-> as the sense codes being processed are easier to test and self-documented.
+On 9/7/26 13:09, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] Leaked multipath active counter (`mpath_nr_active`) and corrupted IO stats when `scsi_queue_rq` returns a hard error or `blk_mq` cancels a requeued request.
+> --
 > 
-> No functional change intended, with the exception of a correction of the
-> array any_sense_failure_defs in scsi_lib_test_any_sense() which
-> erroenously sets result to SCMD_FAILURE_RESULT_ANY instead of
-> SAM_STAT_CHECK_CONDITION and does not sets sense_key to
-> SCMD_FAILURE_SENSE_KEY_ANY.
+> commit 2b78aa9717f460c8d3814043976386ee7f6864c3
+> Author: John Garry <john.garry@linux.dev>
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/scsi/constants.c          |  38 ++++++++--
->   drivers/scsi/scsi.c               |   3 +-
->   drivers/scsi/scsi_common.c        |  12 ++--
->   drivers/scsi/scsi_error.c         |  94 ++++++++++++++----------
->   drivers/scsi/scsi_ioctl.c         |   3 +-
->   drivers/scsi/scsi_lib.c           | 116 ++++++++++++++++--------------
->   drivers/scsi/scsi_lib_test.c      |  73 +++++++++++--------
->   drivers/scsi/scsi_scan.c          |  14 ++--
->   drivers/scsi/scsi_transport_spi.c |  10 ++-
->   include/trace/events/scsi.h       |   4 +-
->   10 files changed, 219 insertions(+), 148 deletions(-)
+> scsi-multipath: add scsi_mpath_{start,end}_request()
 > 
-> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-> index 57b51c4529c3..767631835c81 100644
-> --- a/drivers/scsi/constants.c
-> +++ b/drivers/scsi/constants.c
-> @@ -327,13 +327,37 @@ struct error_info2 {
->   
->   static const struct error_info2 additional2[] =
->   {
-> -	{0x40, 0x00, 0x7f, "Ram failure", ""},
-> -	{0x40, 0x80, 0xff, "Diagnostic failure on component", ""},
-> -	{0x41, 0x00, 0xff, "Data path failure", ""},
-> -	{0x42, 0x00, 0xff, "Power-on or self-test failure", ""},
-> -	{0x4D, 0x00, 0xff, "Tagged overlapped commands", "task tag "},
-> -	{0x70, 0x00, 0xff, "Decompression exception", "short algorithm id of "},
-> -	{0, 0, 0, NULL, NULL}
-> +	{
-> +		ASC_RAM_FAILURE,
-> +		0x00, 0x7f,
-> +		"Ram failure", ""
-> +	},
-> +	{
-> +		ASC_RAM_FAILURE,
-> +		0x80, 0xff,
-> +		"Diagnostic failure on component", ""
-> +	},
-> +	{
-> +		ASC_DATA_PATH_FAILURE,
-> +		0x00, 0xff,
-> +		"Data path failure", ""
-> +	},
-> +	{
-> +		ASC_POWER_ON_OR_SELFTEST_FAILURE,
-> +		0x00, 0xff,
-> +		"Power-on or self-test failure", ""
-> +	},
-> +	{
-> +		ASC_TAGGED_OVERLAPPED_COMMANDS,
-> +		0x00, 0xff,
-> +		"Tagged overlapped commands", "task tag "
-> +	},
-> +	{
-> +		ASC_DECOMPRESSION_EXCEPTION_SHORT_ALGORITHM_ID,
-> +		0x00, 0xff,
-> +		"Decompression exception", "short algorithm id of "
-> +	},
-> +	{ 0, 0, 0, NULL, NULL }
->   };
->   
->   /* description of the sense key values */
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 76cdad063f7b..ff1367aaa3e6 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -606,7 +606,8 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
->   		return result;
->   	if (result && scsi_sense_valid(&sshdr) &&
->   	    sshdr.sense_key == ILLEGAL_REQUEST &&
-> -	    (sshdr.asc == 0x20 || sshdr.asc == 0x24) && sshdr.ascq == 0x00)
-> +	    (sshdr.sense_code == INVALID_COMMAND_OP_CODE ||
-> +	     sshdr.sense_code == INVALID_FIELD_IN_CDB))
->   		return -EINVAL;
->   
->   	if ((buffer[1] & 3) == 3) /* Command supported */
-> diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
-> index e1a2a62b6910..2cabc932acd4 100644
-> --- a/drivers/scsi/scsi_common.c
-> +++ b/drivers/scsi/scsi_common.c
-> @@ -191,6 +191,8 @@ EXPORT_SYMBOL(int_to_scsilun);
->   bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
->   			  struct scsi_sense_hdr *sshdr)
->   {
-> +	u8 asc = 0, ascq = 0;
-> +
->   	memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
->   
->   	if (!sense_buffer || !sb_len)
-> @@ -208,9 +210,9 @@ bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
->   		if (sb_len > 1)
->   			sshdr->sense_key = (sense_buffer[1] & 0xf);
->   		if (sb_len > 2)
-> -			sshdr->asc = sense_buffer[2];
-> +			asc = sense_buffer[2];
->   		if (sb_len > 3)
-> -			sshdr->ascq = sense_buffer[3];
-> +			ascq = sense_buffer[3];
->   		if (sb_len > 7)
->   			sshdr->additional_length = sense_buffer[7];
->   	} else {
-> @@ -222,12 +224,14 @@ bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
->   		if (sb_len > 7) {
->   			sb_len = min(sb_len, sense_buffer[7] + 8);
->   			if (sb_len > 12)
-> -				sshdr->asc = sense_buffer[12];
-> +				asc = sense_buffer[12];
->   			if (sb_len > 13)
-> -				sshdr->ascq = sense_buffer[13];
-> +				ascq = sense_buffer[13];
->   		}
->   	}
->   
-> +	sshdr->sense_code = scsi_sense_code(asc, ascq);
-> +
->   	return true;
->   }
->   EXPORT_SYMBOL(scsi_normalize_sense);
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index b729407348f7..2b1698600660 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -490,24 +490,27 @@ static void scsi_report_sense(struct scsi_device *sdev,
->   	enum scsi_device_event evt_type = SDEV_EVT_MAXBITS;	/* i.e. none */
->   
->   	if (sshdr->sense_key == UNIT_ATTENTION) {
-> -		if (sshdr->asc == 0x3f && sshdr->ascq == 0x03) {
-> +		if (sshdr->sense_code == INQUIRY_DATA_HAS_CHANGED) {
->   			evt_type = SDEV_EVT_INQUIRY_CHANGE_REPORTED;
->   			sdev_printk(KERN_WARNING, sdev,
->   				    "Inquiry data has changed");
-> -		} else if (sshdr->asc == 0x3f && sshdr->ascq == 0x0e) {
-> +		} else if (sshdr->sense_code == REPORTED_LUNS_DATA_HAS_CHANGED) {
->   			evt_type = SDEV_EVT_LUN_CHANGE_REPORTED;
->   			scsi_report_lun_change(sdev);
->   			sdev_printk(KERN_WARNING, sdev,
->   				    "LUN assignments on this target have "
->   				    "changed. The Linux SCSI layer does not "
->   				    "automatically remap LUN assignments.\n");
-> -		} else if (sshdr->asc == 0x3f)
-> +		} else if (scsi_sense_asc(sshdr) ==
-> +			   ASC_TARGET_OPERATING_CONDITIONS_HAVE_CHANGED) {
->   			sdev_printk(KERN_WARNING, sdev,
->   				    "Operating parameters on this target have "
->   				    "changed. The Linux SCSI layer does not "
->   				    "automatically adjust these parameters.\n");
-> +		}
->   
-> -		if (sshdr->asc == 0x38 && sshdr->ascq == 0x07) {
-> +		if (sshdr->sense_code ==
-> +		    THIN_PROVISIONING_SOFT_THRESHOLD_REACHED) {
->   			evt_type = SDEV_EVT_SOFT_THRESHOLD_REACHED_REPORTED;
->   			sdev_printk(KERN_WARNING, sdev,
->   				    "Warning! Received an indication that the "
-> @@ -515,7 +518,8 @@ static void scsi_report_sense(struct scsi_device *sdev,
->   				    "threshold.\n");
->   		}
->   
-> -		if (sshdr->asc == 0x29) {
-> +		if (scsi_sense_asc(sshdr) ==
-> +		    ASC_POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED) {
->   			evt_type = SDEV_EVT_POWER_ON_RESET_OCCURRED;
->   			/*
->   			 * Do not print message if it is an expected side-effect
-> @@ -526,21 +530,22 @@ static void scsi_report_sense(struct scsi_device *sdev,
->   					    "Power-on or device reset occurred\n");
->   		}
->   
-> -		if (sshdr->asc == 0x2a && sshdr->ascq == 0x01) {
-> +		if (sshdr->sense_code == MODE_PARAMETERS_CHANGED) {
->   			evt_type = SDEV_EVT_MODE_PARAMETER_CHANGE_REPORTED;
->   			sdev_printk(KERN_WARNING, sdev,
->   				    "Mode parameters changed");
-> -		} else if (sshdr->asc == 0x2a && sshdr->ascq == 0x06) {
-> +		} else if (sshdr->sense_code == ASYMMETRIC_ACCESS_STATE_CHANGED) {
->   			evt_type = SDEV_EVT_ALUA_STATE_CHANGE_REPORTED;
->   			sdev_printk(KERN_WARNING, sdev,
->   				    "Asymmetric access state changed");
-> -		} else if (sshdr->asc == 0x2a && sshdr->ascq == 0x09) {
-> +		} else if (sshdr->sense_code == CAPACITY_DATA_HAS_CHANGED) {
->   			evt_type = SDEV_EVT_CAPACITY_CHANGE_REPORTED;
->   			sdev_printk(KERN_WARNING, sdev,
->   				    "Capacity data has changed");
-> -		} else if (sshdr->asc == 0x2a)
-> +		} else if (scsi_sense_asc(sshdr) == ASC_PARAMETERS_CHANGED) {
->   			sdev_printk(KERN_WARNING, sdev,
->   				    "Parameters changed");
-> +		}
->   	}
->   
->   	if (evt_type != SDEV_EVT_MAXBITS) {
-> @@ -582,9 +587,11 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->   		 * that all ULDs interested in these can see that those have
->   		 * happened, even if someone else gets the sense data.
->   		 */
-> -		if (sshdr.asc == 0x28)
-> +		if (scsi_sense_asc(&sshdr) ==
-> +		    ASC_NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED)
->   			atomic_inc(&sdev->ua_new_media_ctr);
-> -		else if (sshdr.asc == 0x29)
-> +		else if (scsi_sense_asc(&sshdr) ==
-> +			 ASC_POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED)
->   			atomic_inc(&sdev->ua_por_ctr);
->   	}
->   
-> @@ -636,7 +643,8 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->   		return /* soft_error */ SUCCESS;
->   
->   	case ABORTED_COMMAND:
-> -		if (sshdr.asc == 0x10) /* DIF */
-> +		if (scsi_sense_asc(&sshdr) == ASC_ID_CRC_OR_ECC_ERROR)
-> +			/* DIF */
->   			return SUCCESS;
->   
->   		/*
-> @@ -647,18 +655,20 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->   		 * COMMAND TIMEOUT DURING PROCESSING DUE TO ERROR RECOVERY
->   		 * additional sense code qualifiers.
->   		 */
-> -		if (sshdr.asc == 0x2e &&
-> -		    sshdr.ascq >= 0x01 && sshdr.ascq <= 0x03) {
-> +		if (sshdr.sense_code >= COMMAND_TIMEOUT_BEFORE_PROCESSING &&
-> +		    sshdr.sense_code <=
-> +		    COMMAND_TIMEOUT_DURING_PROCESSING_DUE_TO_ERROR_RECOVERY) {
->   			set_scsi_ml_byte(scmd, SCSIML_STAT_DL_TIMEOUT);
->   			req->cmd_flags |= REQ_FAILFAST_DEV;
->   			req->rq_flags |= RQF_QUIET;
->   			return SUCCESS;
->   		}
->   
-> -		if (sshdr.asc == 0x44 && sdev->sdev_bflags & BLIST_RETRY_ITF)
-> +		if ((sdev->sdev_bflags & BLIST_RETRY_ITF) &&
-> +		    scsi_sense_asc(&sshdr) == ASC_INTERNAL_TARGET_FAILURE)
->   			return ADD_TO_MLQUEUE;
-> -		if (sshdr.asc == 0xc1 && sshdr.ascq == 0x01 &&
-> -		    sdev->sdev_bflags & BLIST_RETRY_ASC_C1)
-> +		if ((sdev->sdev_bflags & BLIST_RETRY_ASC_C1) &&
-> +		    sshdr.sense_code == scsi_sense_code(0xc1, 0x01))
->   			return ADD_TO_MLQUEUE;
->   
->   		return NEEDS_RETRY;
-> @@ -672,12 +682,13 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->   		 */
->   		if (scmd->device->expecting_cc_ua) {
->   			/*
-> -			 * Because some device does not queue unit
-> -			 * attentions correctly, we carefully check
-> -			 * additional sense code and qualifier so as
-> -			 * not to squash media change unit attention.
-> +			 * Because some devices do not queue unit attentions
-> +			 * correctly, we carefully check additional sense code
-> +			 * and qualifier so as not to squash media change unit
-> +			 * attention.
->   			 */
-> -			if (sshdr.asc != 0x28 || sshdr.ascq != 0x00) {
-> +			if (sshdr.sense_code !=
-> +			    NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED) {
->   				scmd->device->expecting_cc_ua = 0;
->   				return NEEDS_RETRY;
->   			}
-> @@ -688,21 +699,23 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->   		 * REPORTED LUNS DATA HAS CHANGED.
->   		 */
->   		if (scmd->device->sdev_target->expecting_lun_change &&
-> -		    sshdr.asc == 0x3f && sshdr.ascq == 0x0e)
-> +		    sshdr.sense_code == REPORTED_LUNS_DATA_HAS_CHANGED)
->   			return NEEDS_RETRY;
->   		/*
->   		 * if the device is in the process of becoming ready, we
->   		 * should retry.
->   		 */
-> -		if ((sshdr.asc == 0x04) &&
-> -		    (sshdr.ascq == 0x01 || sshdr.ascq == 0x0a))
-> +		if (sshdr.sense_code == LU_IS_IN_PROCESS_OF_BECOMING_READY ||
-> +		    sshdr.sense_code ==
-> +		    LU_NOT_ACCESSIBLE_ASYMMETRIC_ACCESS_STATE_TRANSITION)
->   			return NEEDS_RETRY;
->   		/*
->   		 * if the device is not started, we need to wake
->   		 * the error handler to start the motor
->   		 */
->   		if (scmd->device->allow_restart &&
-> -		    (sshdr.asc == 0x04) && (sshdr.ascq == 0x02))
-> +		    sshdr.sense_code ==
-> +		    LU_NOT_READY_INITIALIZING_COMMAND_REQUIRED)
->   			return FAILED;
->   		/*
->   		 * Pass the UA upwards for a determination in the completion
-> @@ -712,7 +725,7 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->   
->   		/* these are not supported */
->   	case DATA_PROTECT:
-> -		if (sshdr.asc == 0x27 && sshdr.ascq == 0x07) {
-> +		if (sshdr.sense_code == SPACE_ALLOCATION_FAILED_WRITE_PROTECT) {
->   			/* Thin provisioning hard threshold reached */
->   			set_scsi_ml_byte(scmd, SCSIML_STAT_NOSPC);
->   			return SUCCESS;
-> @@ -726,11 +739,14 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->   		return SUCCESS;
->   
->   	case MEDIUM_ERROR:
-> -		if (sshdr.asc == 0x11 || /* UNRECOVERED READ ERR */
-> -		    sshdr.asc == 0x13 || /* AMNF DATA FIELD */
-> -		    sshdr.asc == 0x14) { /* RECORD NOT FOUND */
-> +		switch (scsi_sense_asc(&sshdr)) {
-> +		case ASC_UNRECOVERED_READ_ERROR:
-> +		case ASC_ADDRESS_MARK_NOT_FOUND_FOR_DATA_FIELD:
-> +		case ASC_RECORDED_ENTITY_NOT_FOUND:
->   			set_scsi_ml_byte(scmd, SCSIML_STAT_MED_ERROR);
->   			return SUCCESS;
-> +		default:
-> +			break;
->   		}
->   		return NEEDS_RETRY;
->   
-> @@ -742,13 +758,17 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->   		fallthrough;
->   
->   	case ILLEGAL_REQUEST:
-> -		if (sshdr.asc == 0x20 || /* Invalid command operation code */
-> -		    sshdr.asc == 0x21 || /* Logical block address out of range */
-> -		    sshdr.asc == 0x22 || /* Invalid function */
-> -		    sshdr.asc == 0x24 || /* Invalid field in cdb */
-> -		    sshdr.asc == 0x26 || /* Parameter value invalid */
-> -		    sshdr.asc == 0x27) { /* Write protected */
-> +		switch (scsi_sense_asc(&sshdr)) {
-> +		case ASC_INVALID_COMMAND_OP_CODE:
-> +		case ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE:
-> +		case ASC_ILLEGAL_FUNCTION:
-> +		case ASC_INVALID_FIELD_IN_CDB:
-> +		case ASC_INVALID_FIELD_IN_PARAMETER_LIST:
-> +		case ASC_WRITE_PROTECTED:
->   			set_scsi_ml_byte(scmd, SCSIML_STAT_TGT_FAILURE);
-> +			break;
-> +		default:
-> +			break;
->   		}
->   		return SUCCESS;
->   
-> @@ -760,7 +780,7 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->   		 * that the command was in fact aborted because it exceeded its
->   		 * duration limit. Never retry these commands.
->   		 */
-> -		if (sshdr.asc == 0x55 && sshdr.ascq == 0x0a) {
-> +		if (sshdr.sense_code == DATA_CURRENTLY_UNAVAILABLE) {
->   			set_scsi_ml_byte(scmd, SCSIML_STAT_DL_TIMEOUT);
->   			req->cmd_flags |= REQ_FAILFAST_DEV;
->   			req->rq_flags |= RQF_QUIET;
-> diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-> index c14f81403a09..122403ec3ab8 100644
-> --- a/drivers/scsi/scsi_ioctl.c
-> +++ b/drivers/scsi/scsi_ioctl.c
-> @@ -96,7 +96,8 @@ static int ioctl_internal_command(struct scsi_device *sdev, char *cmd,
->   					    "ioctl_internal_command: "
->   					    "ILLEGAL REQUEST "
->   					    "asc=0x%x ascq=0x%x\n",
-> -					    sshdr.asc, sshdr.ascq);
-> +					    scsi_sense_asc(&sshdr),
-> +					    scsi_sense_ascq(&sshdr));
->   			break;
->   		case NOT_READY:	/* This happens if there is no disc in drive */
->   			if (sdev->removable)
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 4901b2dff653..b58e028a362e 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -252,14 +252,14 @@ static int scsi_check_passthrough(struct scsi_cmnd *scmd,
->   		if (failure->sense_key != sshdr.sense_key)
->   			continue;
->   
-> -		if (failure->asc == SCMD_FAILURE_ASC_ANY)
-> +		if (scsi_failure_asc(failure) == SCMD_FAILURE_ASC_ANY)
->   			goto maybe_retry;
->   
-> -		if (failure->asc != sshdr.asc)
-> +		if (scsi_failure_asc(failure) != scsi_sense_asc(&sshdr))
->   			continue;
->   
-> -		if (failure->ascq == SCMD_FAILURE_ASCQ_ANY ||
-> -		    failure->ascq == sshdr.ascq)
-> +		if (scsi_failure_ascq(failure) == SCMD_FAILURE_ASCQ_ANY ||
-> +		    scsi_failure_ascq(failure) == scsi_sense_ascq(&sshdr))
->   			goto maybe_retry;
->   	}
->   
-> @@ -839,6 +839,8 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
->   		 */
->   		action = ACTION_RETRY;
->   	} else if (sense_valid && sense_current) {
-> +		u8 asc = scsi_sense_asc(&sshdr);
-> +
->   		switch (sshdr.sense_key) {
->   		case UNIT_ATTENTION:
->   			if (cmd->device->removable) {
-> @@ -865,64 +867,72 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
->   			 * where READ CAPACITY failed, we may have
->   			 * read past the end of the disk.
->   			 */
-> -			if ((cmd->device->use_10_for_rw &&
-> -			    sshdr.asc == 0x20 && sshdr.ascq == 0x00) &&
-> +			if (cmd->device->use_10_for_rw &&
-> +			    sshdr.sense_code == INVALID_COMMAND_OP_CODE &&
->   			    (cmd->cmnd[0] == READ_10 ||
->   			     cmd->cmnd[0] == WRITE_10)) {
->   				/* This will issue a new 6-byte command. */
->   				cmd->device->use_10_for_rw = 0;
->   				action = ACTION_REPREP;
-> -			} else if (sshdr.asc == 0x10) /* DIX */ {
-> +				break;
-> +			}
-> +			if (asc == ASC_ID_CRC_OR_ECC_ERROR) {
-> +				/* DIX */
->   				action = ACTION_FAIL;
->   				blk_stat = BLK_STS_PROTECTION;
-> -			/* INVALID COMMAND OPCODE or INVALID FIELD IN CDB */
-> -			} else if (sshdr.asc == 0x20 || sshdr.asc == 0x24) {
-> +				break;
-> +			}
-> +			if (asc == ASC_INVALID_COMMAND_OP_CODE ||
-> +			    asc == ASC_INVALID_FIELD_IN_CDB) {
->   				action = ACTION_FAIL;
->   				blk_stat = BLK_STS_TARGET;
-> -			} else
-> -				action = ACTION_FAIL;
-> +				break;
-> +			}
-> +			action = ACTION_FAIL;
->   			break;
->   		case ABORTED_COMMAND:
->   			action = ACTION_FAIL;
-> -			if (sshdr.asc == 0x10) /* DIF */
-> +			if (asc == ASC_ID_CRC_OR_ECC_ERROR) /* DIF */
->   				blk_stat = BLK_STS_PROTECTION;
->   			break;
->   		case NOT_READY:
->   			/* If the device is in the process of becoming
->   			 * ready, or has a temporary blockage, retry.
->   			 */
-> -			if (sshdr.asc == 0x04) {
-> -				switch (sshdr.ascq) {
-> -				case 0x01: /* becoming ready */
-> -				case 0x04: /* format in progress */
-> -				case 0x05: /* rebuild in progress */
-> -				case 0x06: /* recalculation in progress */
-> -				case 0x07: /* operation in progress */
-> -				case 0x08: /* Long write in progress */
-> -				case 0x09: /* self test in progress */
-> -				case 0x11: /* notify (enable spinup) required */
-> -				case 0x14: /* space allocation in progress */
-> -				case 0x1a: /* start stop unit in progress */
-> -				case 0x1b: /* sanitize in progress */
-> -				case 0x1d: /* configuration in progress */
-> -					action = ACTION_DELAYED_RETRY;
-> -					break;
-> -				case 0x0a: /* ALUA state transition */
-> -					action = ACTION_DELAYED_REPREP;
-> -					break;
-> -				/*
-> -				 * Depopulation might take many hours,
-> -				 * thus it is not worthwhile to retry.
-> -				 */
-> -				case 0x24: /* depopulation in progress */
-> -				case 0x25: /* depopulation restore in progress */
-> -					fallthrough;
-> -				default:
-> -					action = ACTION_FAIL;
-> -					break;
-> -				}
-> -			} else
-> +			if (asc != ASC_LU_NOT_READY) {
->   				action = ACTION_FAIL;
-> +				break;
-> +			}
-> +
-> +			switch (sshdr.sense_code) {
-> +			case LU_IS_IN_PROCESS_OF_BECOMING_READY:
-> +			case LU_NOT_READY_FORMAT_IN_PROGRESS:
-> +			case LU_NOT_READY_REBUILD_IN_PROGRESS:
-> +			case LU_NOT_READY_RECALCULATION_IN_PROGRESS:
-> +			case LU_NOT_READY_OP_IN_PROGRESS:
-> +			case LU_NOT_READY_LONG_WRITE_IN_PROGRESS:
-> +			case LU_NOT_READY_SELFTEST_IN_PROGRESS:
-> +			case LU_NOT_READY_NOTIFY_REQUIRED:
-> +			case LU_NOT_READY_SPACE_ALLOCATION_IN_PROGRESS:
-> +			case LU_NOT_READY_START_STOP_UNIT_COMMAND_IN_PROGRESS:
-> +			case LU_NOT_READY_SANITIZE_IN_PROGRESS:
-> +			case LU_NOT_READY_CONFIG_IN_PROGRESS:
-> +				action = ACTION_DELAYED_RETRY;
-> +				break;
-> +			case LU_NOT_ACCESSIBLE_ASYMMETRIC_ACCESS_STATE_TRANSITION:
-> +				action = ACTION_DELAYED_REPREP;
-> +				break;
-> +			/*
-> +			 * Depopulation might take many hours, thus it is not
-> +			 * worthwhile to retry.
-> +			 */
-> +			case DEPOPULATION_IN_PROGRESS:
-> +			case DEPOPULATION_RESTORATION_IN_PROGRESS:
-> +				fallthrough;
-> +			default:
-> +				action = ACTION_FAIL;
-> +				break;
-> +			}
->   			break;
->   		case VOLUME_OVERFLOW:
->   			/* See SSC3rXX or current. */
-> @@ -930,11 +940,14 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
->   			break;
->   		case DATA_PROTECT:
->   			action = ACTION_FAIL;
-> -			if ((sshdr.asc == 0x0C && sshdr.ascq == 0x12) ||
-> -			    (sshdr.asc == 0x55 &&
-> -			     (sshdr.ascq == 0x0E || sshdr.ascq == 0x0F))) {
-> -				/* Insufficient zone resources */
-> +			switch (sshdr.sense_code) {
-> +			case WRITE_ERROR_INSUFFICIENT_ZONE_RESOURCES:
-> +			case INSUFFICIENT_ZONE_RESOURCES:
-> +			case INSUFFICIENT_ZONE_RESOURCES_TO_COMPLETE_WRITE:
->   				blk_stat = BLK_STS_ZONE_OPEN_RESOURCE;
-> +				break;
-> +			default:
-> +				break;
->   			}
->   			break;
->   		case COMPLETED:
-> @@ -1041,7 +1054,7 @@ static int scsi_io_completion_nz_result(struct scsi_cmnd *cmd, int result,
->   		 * skip print since caller wants ATA registers. Only occurs
->   		 * on SCSI ATA PASS_THROUGH commands when CK_COND=1
->   		 */
-> -		if ((sshdr.asc == 0x0) && (sshdr.ascq == 0x1d))
-> +		if (sshdr.sense_code == ATA_PASS_THROUGH_INFORMATION_AVAILABLE)
->   			do_print = false;
->   		else if (req->rq_flags & RQF_QUIET)
->   			do_print = false;
-> @@ -2373,8 +2386,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage, int subpage,
->   	struct scsi_failure failure_defs[] = {
->   		{
->   			.sense_key = UNIT_ATTENTION,
-> -			.asc = SCMD_FAILURE_ASC_ANY,
-> -			.ascq = SCMD_FAILURE_ASCQ_ANY,
-> +			.sense_code = SCMD_FAILURE_SENSE_CODE_ANY,
->   			.allowed = retries,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
-> @@ -2432,8 +2444,8 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage, int subpage,
->   
->   	if (!scsi_status_is_good(result)) {
->   		if (scsi_sense_valid(sshdr)) {
-> -			if ((sshdr->sense_key == ILLEGAL_REQUEST) &&
-> -			    (sshdr->asc == 0x20) && (sshdr->ascq == 0)) {
-> +			if (sshdr->sense_key == ILLEGAL_REQUEST &&
-> +			    sshdr->sense_code == INVALID_COMMAND_OP_CODE) {
->   				/*
->   				 * Invalid command operation code: retry using
->   				 * MODE SENSE(6) if this was a MODE SENSE(10)
-> diff --git a/drivers/scsi/scsi_lib_test.c b/drivers/scsi/scsi_lib_test.c
-> index 4558dc853e26..9b895644c8e9 100644
-> --- a/drivers/scsi/scsi_lib_test.c
-> +++ b/drivers/scsi/scsi_lib_test.c
-> @@ -18,41 +18,42 @@ static void scsi_lib_test_multiple_sense(struct kunit *test)
->   	struct scsi_failure multiple_sense_failure_defs[] = {
->   		{
->   			.sense_key = DATA_PROTECT,
-> -			.asc = 0x1,
-> -			.ascq = 0x1,
-> +			.sense_code =
-> +				scsi_sense_code(ASC_NO_INDEX_SECTOR_SIGNAL,
-> +						0x1),
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{
->   			.sense_key = UNIT_ATTENTION,
-> -			.asc = 0x11,
-> -			.ascq = 0x0,
-> +			.sense_code = UNRECOVERED_READ_ERROR,
->   			.allowed = SCSI_LIB_TEST_MAX_ALLOWED,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{
->   			.sense_key = NOT_READY,
-> -			.asc = 0x11,
-> -			.ascq = 0x22,
-> +			.sense_code =
-> +				scsi_sense_code(ASC_UNRECOVERED_READ_ERROR,
-> +						0x22),
->   			.allowed = SCSI_LIB_TEST_MAX_ALLOWED,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{
->   			.sense_key = ABORTED_COMMAND,
-> -			.asc = 0x11,
-> -			.ascq = SCMD_FAILURE_ASCQ_ANY,
-> +			.sense_code =
-> +				scsi_sense_code(ASC_UNRECOVERED_READ_ERROR,
-> +						SCMD_FAILURE_ASCQ_ANY),
->   			.allowed = SCSI_LIB_TEST_MAX_ALLOWED,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{
->   			.sense_key = HARDWARE_ERROR,
-> -			.asc = SCMD_FAILURE_ASC_ANY,
-> +			.sense_code = scsi_sense_code(SCMD_FAILURE_ASC_ANY, 0),
->   			.allowed = SCSI_LIB_TEST_MAX_ALLOWED,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{
->   			.sense_key = ILLEGAL_REQUEST,
-> -			.asc = 0x91,
-> -			.ascq = 0x36,
-> +			.sense_code = scsi_sense_code(0x91, 0x36),
->   			.allowed = SCSI_LIB_TEST_MAX_ALLOWED,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
-> @@ -72,32 +73,37 @@ static void scsi_lib_test_multiple_sense(struct kunit *test)
->   	KUNIT_EXPECT_EQ(test, 0, scsi_check_passthrough(&sc, &failures));
->   	KUNIT_EXPECT_EQ(test, 0, scsi_check_passthrough(&sc, NULL));
->   	/* Command failed but caller did not pass in a failures array */
-> -	scsi_build_sense(&sc, 0, ILLEGAL_REQUEST, 0x91, 0x36);
-> +	scsi_set_sense(&sc, 0, ILLEGAL_REQUEST, scsi_sense_code(0x91, 0x36));
->   	KUNIT_EXPECT_EQ(test, 0, scsi_check_passthrough(&sc, NULL));
->   	/* Match end of array */
-> -	scsi_build_sense(&sc, 0, ILLEGAL_REQUEST, 0x91, 0x36);
-> +	scsi_set_sense(&sc, 0, ILLEGAL_REQUEST, scsi_sense_code(0x91, 0x36));
->   	KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc, &failures));
->   	/* Basic match in array */
-> -	scsi_build_sense(&sc, 0, UNIT_ATTENTION, 0x11, 0x0);
-> +	scsi_set_sense(&sc, 0, UNIT_ATTENTION, UNRECOVERED_READ_ERROR);
->   	KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc, &failures));
->   	/* No matching sense entry */
-> -	scsi_build_sense(&sc, 0, MISCOMPARE, 0x11, 0x11);
-> +	scsi_set_sense(&sc, 0, MISCOMPARE, READ_ERROR_LOSS_OF_STREAMING);
->   	KUNIT_EXPECT_EQ(test, 0, scsi_check_passthrough(&sc, &failures));
->   	/* Match using SCMD_FAILURE_ASCQ_ANY */
-> -	scsi_build_sense(&sc, 0, ABORTED_COMMAND, 0x11, 0x22);
-> +	scsi_set_sense(&sc, 0, ABORTED_COMMAND,
-> +		       scsi_sense_code(ASC_UNRECOVERED_READ_ERROR, 0x22));
->   	KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc, &failures));
->   	/* Fail to match */
-> -	scsi_build_sense(&sc, 0, ABORTED_COMMAND, 0x22, 0x22);
-> +	scsi_set_sense(&sc, 0, ABORTED_COMMAND,
-> +		       scsi_sense_code(ASC_ILLEGAL_FUNCTION, 0x22));
->   	KUNIT_EXPECT_EQ(test, 0, scsi_check_passthrough(&sc, &failures));
->   	/* Match using SCMD_FAILURE_ASC_ANY */
-> -	scsi_build_sense(&sc, 0, HARDWARE_ERROR, 0x11, 0x22);
-> +	scsi_set_sense(&sc, 0, HARDWARE_ERROR,
-> +		       scsi_sense_code(ASC_UNRECOVERED_READ_ERROR, 0x22));
-> +	KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc, &failures));
->   	KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc, &failures));
->   	/* No matching status entry */
->   	sc.result = SAM_STAT_RESERVATION_CONFLICT;
->   	KUNIT_EXPECT_EQ(test, 0, scsi_check_passthrough(&sc, &failures));
->   
->   	/* Test hitting allowed limit */
-> -	scsi_build_sense(&sc, 0, NOT_READY, 0x11, 0x22);
-> +	scsi_set_sense(&sc, 0, NOT_READY,
-> +		       scsi_sense_code(ASC_UNRECOVERED_READ_ERROR, 0x22));
->   	for (i = 0; i < SCSI_LIB_TEST_MAX_ALLOWED; i++)
->   		KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc,
->   				&failures));
-> @@ -108,7 +114,8 @@ static void scsi_lib_test_multiple_sense(struct kunit *test)
->   	scsi_failures_reset_retries(&failures);
->   
->   	/* Test no retries allowed */
-> -	scsi_build_sense(&sc, 0, DATA_PROTECT, 0x1, 0x1);
-> +	scsi_set_sense(&sc, 0, DATA_PROTECT,
-> +		       scsi_sense_code(ASC_NO_INDEX_SECTOR_SIGNAL, 0x1));
->   	KUNIT_EXPECT_EQ(test, 0, scsi_check_passthrough(&sc, &failures));
->   }
->   
-> @@ -118,7 +125,7 @@ static void scsi_lib_test_any_sense(struct kunit *test)
->   		{
->   			.sense_key = SCMD_FAILURE_SENSE_KEY_ANY,
->   			.allowed = SCSI_LIB_TEST_MAX_ALLOWED,
-> -			.result = SCMD_FAILURE_RESULT_ANY,
-> +			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{}
->   	};
-> @@ -132,7 +139,8 @@ static void scsi_lib_test_any_sense(struct kunit *test)
->   
->   	/* Match using SCMD_FAILURE_SENSE_KEY_ANY */
->   	failures.failure_definitions = any_sense_failure_defs;
-> -	scsi_build_sense(&sc, 0, MEDIUM_ERROR, 0x11, 0x22);
-> +	scsi_set_sense(&sc, 0, MEDIUM_ERROR,
-> +		       scsi_sense_code(ASC_UNRECOVERED_READ_ERROR, 0x22));
->   	KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc, &failures));
->   }
->   
-> @@ -217,8 +225,7 @@ static void scsi_lib_test_total_allowed(struct kunit *test)
->   	struct scsi_failure total_allowed_defs[] = {
->   		{
->   			.sense_key = UNIT_ATTENTION,
-> -			.asc = SCMD_FAILURE_ASC_ANY,
-> -			.ascq = SCMD_FAILURE_ASCQ_ANY,
-> +			.sense_code = SCMD_FAILURE_SENSE_CODE_ANY,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		/* Fail all CCs except the UA above */
-> @@ -246,7 +253,8 @@ static void scsi_lib_test_total_allowed(struct kunit *test)
->   	scsi_failures_reset_retries(&failures);
->   	failures.total_allowed = SCSI_LIB_TEST_TOTAL_MAX_ALLOWED;
->   
-> -	scsi_build_sense(&sc, 0, UNIT_ATTENTION, 0x28, 0x0);
-> +	scsi_set_sense(&sc, 0, UNIT_ATTENTION,
-> +		       NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED);
->   	for (i = 0; i < SCSI_LIB_TEST_TOTAL_MAX_ALLOWED; i++)
->   		/* Retry since we under the total_allowed limit */
->   		KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc,
-> @@ -261,12 +269,14 @@ static void scsi_lib_test_mixed_total(struct kunit *test)
->   	struct scsi_failure mixed_total_defs[] = {
->   		{
->   			.sense_key = UNIT_ATTENTION,
-> -			.asc = 0x28,
-> +			.sense_code =
-> +				NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{
->   			.sense_key = UNIT_ATTENTION,
-> -			.asc = 0x29,
-> +			.sense_code =
-> +				POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{
-> @@ -292,7 +302,8 @@ static void scsi_lib_test_mixed_total(struct kunit *test)
->   	scsi_failures_reset_retries(&failures);
->   	failures.total_allowed = SCSI_LIB_TEST_TOTAL_MAX_ALLOWED;
->   
-> -	scsi_build_sense(&sc, 0, UNIT_ATTENTION, 0x28, 0x0);
-> +	scsi_set_sense(&sc, 0, UNIT_ATTENTION,
-> +		       NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED);
->   	for (i = 0; i < SCSI_LIB_TEST_TOTAL_MAX_ALLOWED; i++)
->   		/* Retry since we under the total_allowed limit */
->   		KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc,
-> @@ -301,7 +312,8 @@ static void scsi_lib_test_mixed_total(struct kunit *test)
->   	KUNIT_EXPECT_EQ(test, 0, scsi_check_passthrough(&sc, &failures));
->   
->   	scsi_failures_reset_retries(&failures);
-> -	scsi_build_sense(&sc, 0, UNIT_ATTENTION, 0x28, 0x0);
-> +	scsi_set_sense(&sc, 0, UNIT_ATTENTION,
-> +		       NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED);
->   	for (i = 0; i < SCSI_LIB_TEST_TOTAL_MAX_ALLOWED; i++)
->   		/* Retry since we under the total_allowed limit */
->   		KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc,
-> @@ -309,7 +321,8 @@ static void scsi_lib_test_mixed_total(struct kunit *test)
->   	sc.result = DID_TIME_OUT << 16;
->   	/* Retry because this failure has a per failure limit */
->   	KUNIT_EXPECT_EQ(test, -EAGAIN, scsi_check_passthrough(&sc, &failures));
-> -	scsi_build_sense(&sc, 0, UNIT_ATTENTION, 0x29, 0x0);
-> +	scsi_set_sense(&sc, 0, UNIT_ATTENTION,
-> +		       POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED);
->   	/* total_allowed is now hit so no more retries */
->   	KUNIT_EXPECT_EQ(test, 0, scsi_check_passthrough(&sc, &failures));
->   }
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 003ab639e76d..10721f7093ee 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -652,19 +652,18 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
->   	int pass, count, result, resid;
->   	struct scsi_failure failure_defs[] = {
->   		/*
-> -		 * not-ready to ready transition [asc/ascq=0x28/0x0] or
-> -		 * power-on, reset [asc/ascq=0x29/0x0], continue. INQUIRY
-> -		 * should not yield UNIT_ATTENTION but many buggy devices do
-> -		 * so anyway.
-> +		 * not-ready to ready transition or power-on, reset, continue.
-> +		 * INQUIRY should not yield UNIT_ATTENTION but many buggy
-> +		 * devices do so anyway.
->   		 */
->   		{
->   			.sense_key = UNIT_ATTENTION,
-> -			.asc = 0x28,
-> +			.sense_code = NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{
->   			.sense_key = UNIT_ATTENTION,
-> -			.asc = 0x29,
-> +			.sense_code = POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		{
-> @@ -1458,8 +1457,7 @@ static int scsi_report_lun_scan(struct Scsi_Host *shost,
->   	struct scsi_failure failure_defs[] = {
->   		{
->   			.sense_key = UNIT_ATTENTION,
-> -			.asc = SCMD_FAILURE_ASC_ANY,
-> -			.ascq = SCMD_FAILURE_ASCQ_ANY,
-> +			.sense_code = SCMD_FAILURE_SENSE_CODE_ANY,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
->   		/* Fail all CCs except the UA above */
-> diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-> index ec3884a6657f..bd049d549244 100644
-> --- a/drivers/scsi/scsi_transport_spi.c
-> +++ b/drivers/scsi/scsi_transport_spi.c
-> @@ -113,8 +113,7 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
->   	struct scsi_failure failure_defs[] = {
->   		{
->   			.sense_key = UNIT_ATTENTION,
-> -			.asc = SCMD_FAILURE_ASC_ANY,
-> -			.ascq = SCMD_FAILURE_ASCQ_ANY,
-> +			.sense_code = SCMD_FAILURE_SENSE_CODE_ANY,
->   			.allowed = DV_RETRIES,
->   			.result = SAM_STAT_CHECK_CONDITION,
->   		},
-> @@ -680,10 +679,9 @@ spi_dv_device_echo_buffer(struct scsi_device *sdev, u8 *buffer,
->   		if (result || !scsi_device_online(sdev)) {
->   
->   			scsi_device_set_state(sdev, SDEV_QUIESCE);
-> -			if (result > 0 && scsi_sense_valid(&sshdr)
-> -			    && sshdr.sense_key == ILLEGAL_REQUEST
-> -			    /* INVALID FIELD IN CDB */
-> -			    && sshdr.asc == 0x24 && sshdr.ascq == 0x00)
-> +			if (result > 0 && scsi_sense_valid(&sshdr) &&
-> +			    sshdr.sense_key == ILLEGAL_REQUEST &&
-> +			    sshdr.sense_code == INVALID_FIELD_IN_CDB)
->   				/* This would mean that the drive lied
->   				 * to us about supporting an echo
->   				 * buffer (unfortunately some Western
-Why don't we check against the 16-bit code here?
+> This patch adds scsi_mpath_start_request() and scsi_mpath_end_request() to
+> manage multipath request data. It also introduces mpath_nr_active to track
+> the number of active requests per SCSI host.
+> 
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index 1a6f5e1fd80cb..193e7e9a2d30b 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+> [ ... ]
+>> @@ -1918,6 +1921,9 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>>   	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+>>   	cmd->submitter = SUBMITTED_BY_BLOCK_LAYER;
+>>   
+>> +	if (sdev->scsi_mpath_dev && is_mpath_request(req))
+>> +		scsi_mpath_start_request(req);
+>> +
+>>   	blk_mq_start_request(req);
+>>   	if (blk_mq_is_reserved_rq(req)) {
+> 
+> [Severity: High]
 
-> diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-> index c36c72ab7f2b..e8328df587c3 100644
-> --- a/include/trace/events/scsi.h
-> +++ b/include/trace/events/scsi.h
-> @@ -303,8 +303,8 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
->   		if (cmd->sense_buffer && SCSI_SENSE_VALID(cmd) &&
->   		    scsi_command_normalize_sense(cmd, &sshdr)) {
->   			__entry->sense_key = sshdr.sense_key;
-> -			__entry->asc = sshdr.asc;
-> -			__entry->ascq = sshdr.ascq;
-> +			__entry->asc = scsi_sense_asc(&sshdr);
-> +			__entry->ascq = scsi_sense_ascq(&sshdr);
->   		} else {
->   			__entry->sense_key = 0;
->   			__entry->asc = 0;
+Same response as v7 - I think that the SCSI core needs to be fixed here
 
-Cheers,
+> Can this leak the mpath_nr_active counter and corrupt IO stats if a request
+> encounters a hard error after being requeued?
+> 
+> For example, if a request is dispatched and scsi_mpath_start_request()
+> increments the counter and sets SCMD_MPATH_CNT_ACTIVE:
+> 
+> If the dispatch returns a non-fatal error (like BLK_STS_RESOURCE), the
+> block layer requeues the request. The SCMD_MPATH_CNT_ACTIVE flag is
+> preserved across the requeue via SCMD_PRESERVED_FLAGS.
+> 
+> On the next dispatch attempt, if the device goes offline,
+> scsi_device_state_check() fails early, jumping to the error path in
+> scsi_queue_rq():
+> 
+> 	out_put_budget:
+> 	...
+> 	default:
+> 		if (unlikely(!scsi_device_online(sdev)))
+> 			cmd->result = DID_NO_CONNECT << 16;
+> 		...
+> 		if (req->rq_flags & RQF_DONTPREP)
+> 			scsi_mq_uninit_cmd(cmd);
+> 
+> scsi_queue_rq() then returns the hard error to the block layer, which
+> completes the request directly, bypassing scsi_end_request() and
+> scsi_mpath_end_request().
+> 
+> Since the counter and stats are never decremented, will this permanently
+> skew the in-flight IO stats and eventually stall I/O when MPATH_IOPOLICY_QD
+> is used?
+> 
+>> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+>> index 8ecfb94049db5..52227e2cd9749 100644
+>> --- a/include/scsi/scsi_cmnd.h
+>> +++ b/include/scsi/scsi_cmnd.h
+>> @@ -58,8 +58,11 @@ struct scsi_pointer {
+>>    */
+>>   #define SCMD_FORCE_EH_SUCCESS	(1 << 3)
+>>   #define SCMD_FAIL_IF_RECOVERING	(1 << 4)
+>> +#define SCMD_MPATH_IO_STATS	(1 << 5)
+>> +#define SCMD_MPATH_CNT_ACTIVE	(1 << 6)
+>>   /* flags preserved across unprep / reprep */
+>> -#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED | SCMD_FAIL_IF_RECOVERING)
+>> +#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED | SCMD_FAIL_IF_RECOVERING | \
+>> +				SCMD_MPATH_IO_STATS | SCMD_MPATH_CNT_ACTIVE)
+> 
+> [Severity: High]
+> Does adding these flags to SCMD_PRESERVED_FLAGS cause the issue mentioned
+> above by masking the fact that the request already holds the mpath active
+> counter when it comes back through scsi_queue_rq()?
+> 
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
