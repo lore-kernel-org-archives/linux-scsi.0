@@ -1,80 +1,36 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mta0.migadu.com (out-241.mta0.migadu.com [91.218.175.241])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08F324756C4;
-	Mon,  7 Sep 2026 12:05:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5D2483BD5
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:06:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.241
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788782703; cv=none; b=WA5ovAnTLzYkjSAocjmwibOquciit2nuvL9AMYTsOIuYaCcUNmZhWPW7RpR0008ymshQS20X3Un2/A8XJ3NqjQigJeHyna2gnctGcgFHchpcqOtP0JcAXZD8B6s82fAPkiMz5JFoyhBZ94Kj+7LachzLKNmnOHLow4VwjC3JOYw=
+	t=1788782817; cv=none; b=HuorsmltGJv/1jXSlNQJtI5l8JTHu1WB5S3gSstXkPPtskmzC3+1NWoCFVCfTgQXLMMuwkPNYaHt95DsOuopYpF9HbJr+RRk60QiV6Nv4NumoSdatwz2V7O66cikYKLa6mxgLk29jM//tZ8gWl2OByeSov5wZ0okY/1kdBtCTqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788782703; c=relaxed/simple;
-	bh=w8VS46d+D0Z2kODIr5EcV6KSxNjlAQshEk54xKy/IrU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Y60wbo0/34OcH2M8aM7vxrvQRixw6lNSM7dgO3Pp0bJ/UENLjCkmA3Tnp5NZBaJTysF6LXdJEvpnF1SqlgiNlikAYIZYFsPNDL8kxiOe+0cgF79ffEsj0aqM9s17sMlcrRV7xHUfR06sYWy2o4UFzDa1okWcDfyPdnEnbSNWt3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=UVeYlHtm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=5hdfSuru; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=K2xH8Eif; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nBoY8eeJ; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1788782817; c=relaxed/simple;
+	bh=eouoanbRbUdceuGhWjgRaCPuvUqxMYOlNAo2dEfU+kg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rJrKNeNiyVc28w6fHZgZwGHkG8gqHU7tGe2O38w+aPToWK94/q4qMI02uoV7ZgLiqhf7QJpOIPx3Y2qUVOfj0nxr33liPJjK1FVfTdZakhgmqkp7NLkQMee5xoaCnuiyQ9e5dhMFoybPqQhnj/pMKWGvA5fTEUaXLAlimdecBt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TZIO+cfh; arc=none smtp.client-ip=91.218.175.241
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="UVeYlHtm";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="5hdfSuru";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="K2xH8Eif";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nBoY8eeJ"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id CF97B1F78B;
-	Mon,  7 Sep 2026 12:04:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788782696; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ucTBYiva6bntVsdLRifND6L/1V4CuvnpLUUStKFWFmc=;
-	b=UVeYlHtmNyxwTq2VkcfvZajoz7hRTLwCCEzvZbGKQIcGvOkEleFiUeXS7f0ST+rvXXvdxF
-	+S8tBe8PFma1yqpkv3AlfXDdsZIPs6ZTr3YukjCnv0B8fW0+7BAsapvrpSmgStDYEznuJr
-	xx7x8yY0839tD14xjnhLHyWQzXCRovs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788782696;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ucTBYiva6bntVsdLRifND6L/1V4CuvnpLUUStKFWFmc=;
-	b=5hdfSuruhQyYuHDr0Db7WyooiUHXxm3e8fJQUc2mj7AB7aUSDgYpW70SXZYXTpWzWfaoCs
-	30lkIDqxZh0M2hCA==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788782691; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ucTBYiva6bntVsdLRifND6L/1V4CuvnpLUUStKFWFmc=;
-	b=K2xH8EifUb6mw3BDl6VQ7/DQF0FlvKRscuQlZYLmSKc4Bb4F9YI0MQcqpw+gat7OLh7r4h
-	PLO8EGscr4nfbUIrVd1vqX4uIZ+/3Vn+SeTFkNUy0Y7rmHnsP8I2xbnQ4qhuC/MLTHf0XY
-	gYzTK+bSW6AvWaj4T7/hXlR35v4rKg4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788782691;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ucTBYiva6bntVsdLRifND6L/1V4CuvnpLUUStKFWFmc=;
-	b=nBoY8eeJlHYNAyXBvvBBEceimBJKT4f/pfsEzvjibZdA6MxkI+NE28okV8lNypSvzRvAOc
-	i/iwV3Uhy4xijqCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4D2751339B;
-	Mon,  7 Sep 2026 12:04:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id DFQjEWOonmqnFwAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 07 Sep 2026 12:04:51 +0000
-Message-ID: <59d3ec1f-1b9c-4c1b-b277-1cbd073dee9d@suse.de>
-Date: Mon, 7 Sep 2026 14:04:50 +0200
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TZIO+cfh"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=eouoanbRbUdceuGhWjgRaCPuvUqxMYOlNAo2dEfU+kg=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788782813; v=1; x=1789387613;
+ b=TZIO+cfhYG7/uslcZ1lMlOHOvpRuHsg8CWAbi+nhRV58mvJe+/UcQ1xzhKX6KkoAi30AlZt6
+ FbdC7E1AWB72qaAttAdy32xJBUSYGss9Kw23m2x4TtNpahUrTVRdN9vd2vdAyv2SmuSkl6K8p3R
+ KoBy8ZC90VnR7cTmBwLJ+Niw=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta10.migadu.com with ESMTPS id 4028d51d5cc5b359;
+	Mon, 07 Sep 2026 12:06:53 +0000
+X-Mizu-Trace-ID: 4028d51d5cc5b359
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <beef6759-9594-4a38-bb20-f1796e617aeb@linux.dev>
+Date: Mon, 7 Sep 2026 13:06:50 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,65 +38,72 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 03/40] scsi: constants: rename internal struct field
- names
-To: Damien Le Moal <dlemoal@kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
- Alan Stern <stern@rowland.harvard.edu>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
- Heiko Carstens <hca@linux.ibm.com>
-References: <20260903034201.112211-1-dlemoal@kernel.org>
- <20260903034201.112211-4-dlemoal@kernel.org>
+Subject: Re: [PATCH v8 11/27] scsi-multipath: introduce basic SCSI device
+ support
+To: sashiko-reviews@lists.linux.dev, John Garry <john.g.garry@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+References: <20260907105021.1763236-1-john.g.garry@oracle.com>
+ <20260907105021.1763236-12-john.g.garry@oracle.com>
+ <20260907113341.395EA1F00A3A@smtp.kernel.org>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260903034201.112211-4-dlemoal@kernel.org>
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20260907113341.395EA1F00A3A@smtp.kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spam-Score: -4.30
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.996];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[11];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
+Content-Transfer-Encoding: 7bit
 
-On 9/3/26 5:41 AM, Damien Le Moal wrote:
-> To make the code more clear, rename the code12 field of struct error_info
-> to the more natural name "code" and the fields code1, code2_min and
-> code2_max of struct error_info2 to the more explicit asc, ascq_min and
-> ascq_max.
+On 9/7/26 12:33, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] scsi_mpath_unique_lun_id ignores string truncation of the unique LUN ID, risking incorrect multipath grouping.
+> --
 > 
-> No functional change intended.
+> commit 1346e25fe4922ff0f78a31848664daccf7121f0f
+> Author: John Garry <john.garry@linux.dev>
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/scsi/constants.c | 22 ++++++++++++----------
->   1 file changed, 12 insertions(+), 10 deletions(-)
+> scsi-multipath: introduce basic SCSI device support
 > 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+> For a scsi_device to support multipath, introduce structure
+> scsi_mpath_device to hold multipath-specific details. A module param
+> is introduced to enable multipath. SCSI multipath will only be
+> available when supported and unique ID is available in VPD page 83.
+> 
+>> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+>> new file mode 100644
+>> index 0000000000000..5559e2e8d64a8
+>> --- /dev/null
+>> +++ b/drivers/scsi/scsi_multipath.c
+> [ ... ]
+>> +static int scsi_mpath_unique_lun_id(struct scsi_device *sdev)
+>> +{
+>> +	struct scsi_mpath_device *scsi_mpath_dev = sdev->scsi_mpath_dev;
+>> +	int ret;
+>> +
+>> +	ret = scsi_vpd_lun_id(sdev, scsi_mpath_dev->device_id_str,
+>> +				SCSI_MPATH_DEVICE_ID_LEN);
+>> +	if (ret < 0)
+>> +		return ret;
+>> +	else if (ret == 0)
+>> +		return -EINVAL;
+>> +
+>> +	return 0;
+> 
+> [Severity: Medium]
+> Can the LUN ID be silently truncated here without returning an error?
 
-Cheers,
+Yeah, I think we we can add a check for ret >= SCSI_MPATH_DEVICE_ID_LEN
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+> 
+> Similar to snprintf, scsi_vpd_lun_id returns the number of bytes that would
+> have been written. If a device provides a pathological T10 Vendor ID that
+> causes the expanded string to exceed SCSI_MPATH_DEVICE_ID_LEN (256 bytes),
+> the string in the buffer is truncated but the returned length will be
+> greater than or equal to SCSI_MPATH_DEVICE_ID_LEN.
+> 
+> Because any positive value of ret results in returning 0, a truncated ID
+> will be treated as a success. If the unique identifier portion of the ID is
+> pushed past the 255th byte, multiple distinct LUNs might share the exact same
+> 255-character prefix and be incorrectly grouped together by
+> scsi_mpath_find_head.
+> 
+>> +}
+> 
+
