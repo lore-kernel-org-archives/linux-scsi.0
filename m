@@ -1,46 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2533D2222D9;
-	Mon,  7 Sep 2026 03:05:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D58D63EB102;
+	Mon,  7 Sep 2026 03:06:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788750340; cv=none; b=rW5xU6N6wnxgdLfLLzJr+J8Bn4ObRbO8Ualn4e9Gnk1xy28tqmc2vRmOoKYrFies9O25x5L9FVJ2wUQhrJ5YoMYfxvy/KiLe/+jdSu/zD1sHlqD8fJ7Y+YJSxeDIP4s3G5sn0pyYXXOWHsRCVESUMsVgy5TZHgcps8FJJuU9GV0=
+	t=1788750378; cv=none; b=SNhe16bXSJ7Cji2GHpvivBVEQH6mBo4jwoaJkT/JWQpko1qhtApQzkq5+tZx7c8zlYjB7++fPgz+BY90FmJzyTcqg6uRSSRefqFLZckjderUJMkNUI6PpFoJ06o6F0bLxUoI6rBiXG97dvuuv6d0WI56WJw44PDeFqGGxZA6mis=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788750340; c=relaxed/simple;
-	bh=4a5metdf2CBbfBsvai18ymMQPxf9kMA0loR0jK28f40=;
+	s=arc-20240116; t=1788750378; c=relaxed/simple;
+	bh=RH0S24QzMuhW/hyX16thrm/nTEdZ2Q9n4qgiFfm562Q=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=USH7NlxokVM3WIAMV4nkdzzObVuljM+YifS3mizrPxN2Kb5xAaG5+5arYsYPwSyPwnVVqPx4y65FbknY5NWOPtOshQhet+x5GlE8CSPHarVYs4dHb1H2YEhb7pnofsCgxoiETU96jxQG40SRCPFlhgcMJ+P/LUeGaqsvHG+jJsw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a6NwvTCq; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=WppfY1vkLqcHz0qhs1np2CzdKvxoLSrYBz6BBHcVEddcaEC7wbE16Aykw+mubpXkd2cgXrHq5EIZ3pZHwanti08/4c09xKdE8IQR5pxbz9KavKsZmziBIFbdQaSjHWoXZ4fd/fr0RbydC6qNJAH5vZfu6+IVF2NHvcI2IfXzenk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WGRA8N8c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a6NwvTCq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27F5D1F00A3D;
-	Mon,  7 Sep 2026 03:05:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WGRA8N8c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CD861F00A3A;
+	Mon,  7 Sep 2026 03:06:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788750338;
-	bh=myD7kMtlV9gMrefHKOP3Eh7/cEmVpJfz2OqwBKMN6eI=;
+	s=k20260515; t=1788750374;
+	bh=qJvGj9sB96pReyFJjIDQklrShNDVaNVqN1+o+K/v5VE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=a6NwvTCquMujmCrPr6gLtvMiYjE6zI0sAn0J9MaMRPmiDBVb/ivYfpSgZ64Xmtgur
-	 TqMia7NF62MONx52u4QrPQ4Uua4oXuqH/K6CkRXWZB6EcpPJrUhiqNNnwMgQkIqfd2
-	 WmmaURWOc/3CctqlRYItAi7ifHXndjHhrnXIOrP0brj493eFkEDLJDXj12x1+xcPf0
-	 cMdqcPp2rGKVzJjyg/BP9TIkBBLOvtbnfwsjTyiVGE7OpJcJCzBrfUM/lbWTmZKzyE
-	 HSam/82xlfcZtqW2pywQogBww2FstorMJfaVwcZpHt2DVK6HEkrA3f5tRG8NDgUnR9
-	 s+GwqzD+gPxUg==
+	b=WGRA8N8cKecSBm+XxVhiVQ7caSf5TpnDFbU2TGv6HoM/7XCrN4NQQ45xr4xJXBajC
+	 HqtRtmadz+dJ/woyOEkIdb30lLK8rFJCumwcukLDTaewMOi6hZffYJo4WEvnw3RtuH
+	 /P5HTMTuUeyyAYNC3oHLLy+9oIyRn75KI9JUpW18LCAn8XRVKmWi2aeEOPBSausojP
+	 Vla0MJvqMOrMR8w07SARr/guWMOqG78JzepSh25mj1Gxw/xTMvt30uVsp3JbNM8TEx
+	 iz0ijvLo2eGLv4RDAdZzBPyWci0F3K4sWn0xxDnGRlr031VfCiD9xmSApbwwewuRfN
+	 VTeuNW81oOshA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 30/40] scsi: ibmvscsi_tgt: use 16-bits defined sense
- codes
+Subject: Re: [PATCH v5 33/40] scsi: storvsc: use 16-bits defined sense codes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: cassel@kernel.org, linux-scsi@vger.kernel.org, "Heiko Carstens" <hca@linux.ibm.com>, linux-ide@vger.kernel.org, "Vasily
- Gorbik" <gor@linux.ibm.com>, linux-s390@vger.kernel.org, "Alexander Gordeev" <agordeev@linux.ibm.com>, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>, dlemoal@kernel.org
-In-Reply-To: <20260907024343.1046387-31-dlemoal@kernel.org>
+Cc: "Christian Borntraeger" <borntraeger@linux.ibm.com>, linux-ide@vger.kernel.org, "Vasily
+ Gorbik" <gor@linux.ibm.com>, linux-s390@vger.kernel.org, "Heiko Carstens" <hca@linux.ibm.com>, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, cassel@kernel.org, linux-scsi@vger.kernel.org, dlemoal@kernel.org
+In-Reply-To: <20260907024343.1046387-34-dlemoal@kernel.org>
 References: <20260907024343.1046387-1-dlemoal@kernel.org>
- <20260907024343.1046387-31-dlemoal@kernel.org>
+ <20260907024343.1046387-34-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 03:05:37 +0000
-Message-Id: <20260907030538.27F5D1F00A3D@smtp.kernel.org>
+Date: Mon, 07 Sep 2026 03:06:13 +0000
+Message-Id: <20260907030614.4CD861F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,77 +50,69 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] When `srp_transfer_data()` fails during an RDMA read data tran=
-sfer to the initiator, the target populates the sense buffer but fails to u=
-pdate the command status to `SAM_STAT_CHECK_CONDITION`. This causes the tar=
-get to send a `SAM_STAT_GOOD` response to the initiator, masking the transf=
-er failure and causing the initiator to process stale/corrupted data from i=
-ts unmodified read buffers.
+- [High] Use-After-Free of a destroyed workqueue in storvsc_remove().
 --
 
-commit 6317be85b00b8041ec78e59ae2da48d7e5d24fde
+commit 78aa8a5b1c990af91c1c28201470aeedf9180e53
 Author: Damien Le Moal <dlemoal@kernel.org>
+Subject: scsi: storvsc: use 16-bits defined sense codes
 
-scsi: ibmvscsi_tgt: use 16-bits defined sense codes
+This commit refactors the storvsc driver to use the 16-bit sense_code field
+of struct scsi_sense_hdr and replaces hard-coded additional sense codes
+with enum values. No functional change is intended.
 
-Refactor the IBM virtual SCSI target driver to use scsi_set_sense_buffer()
-and replace all hard-coded additional sense codes and additional sense
-code qualifiers with the enum values defined in include/scsi/scsi_sense.h.
-This helps with code clarity as the sense codes being processed are easier
-to test and self-documented.
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index ef3cd3bc7390e..625db97d1a03e 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+[ ... ]
+> @@ -1049,8 +1049,12 @@ static void storvsc_handle_error(struct vmscsi_req=
+uest *vm_srb,
+>  			 * want scsi_report_sense() to output a message
+>  			 * that a sysadmin wouldn't know what to do with.
+>  			 */
+> -			if ((asc =3D=3D 0x3f) && (ascq !=3D 0x03) &&
+> -					(ascq !=3D 0x0e)) {
+> +			if (scsi_sense_asc(sshdr) =3D=3D
+> +			    ASC_TARGET_OPERATING_CONDITIONS_HAVE_CHANGED &&
+> +			    sshdr->sense_code !=3D
+> +			    INQUIRY_DATA_HAS_CHANGED &&
+> +			    sshdr->sense_code !=3D
+> +			    REPORTED_LUNS_DATA_HAS_CHANGED) {
+>  				process_err_fn =3D storvsc_device_scan;
+>  				set_host_byte(scmnd, DID_REQUEUE);
+>  				goto do_work;
 
-> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmv=
-scsi_tgt/ibmvscsi_tgt.c
-> index 61f6828007654..e2af90b6da39b 100644
-> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> @@ -3757,9 +3757,8 @@ static int ibmvscsis_queue_data_in(struct se_cmd *s=
-e_cmd)
->  		dev_err(&vscsi->dev, "srp_transfer_data failed: %d\n", rc);
->  		se_cmd->scsi_sense_length =3D 18;
->  		memset(se_cmd->sense_buffer, 0, se_cmd->scsi_sense_length);
-> -		/* Logical Unit Communication Time-out asc/ascq =3D 0x0801 */
-> -		scsi_build_sense_buffer(0, se_cmd->sense_buffer, MEDIUM_ERROR,
-> -					0x08, 0x01);
-> +		scsi_set_sense_buffer(0, se_cmd->sense_buffer, MEDIUM_ERROR,
-> +				      LU_COMMUNICATION_TIMEOUT);
+[Severity: High]
+This is a pre-existing issue, but does this error handling path have a
+use-after-free vulnerability during device teardown?
 
-[Severity: Critical]
-This is a pre-existing issue, but when srp_transfer_data() fails during an
-RDMA read data transfer, the code populates the sense buffer but fails to
-update the command status to SAM_STAT_CHECK_CONDITION.
+If the Hyper-V host sends a device removal request, storvsc_remove()
+is called which destroys the workqueue before waiting for outstanding I/O
+requests to drain:
 
-Without setting se_cmd->scsi_status =3D SAM_STAT_CHECK_CONDITION here, the =
-target
-core seems to believe the command succeeded.
-
-Later in srp_build_response():
-
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:srp_build_response() {
+storvsc_remove() {
     ...
-    if (cmd->type =3D=3D SCSI_CDB) {
-        rsp->status =3D ibmvscsis_fast_fail(vscsi, cmd);
-        if (rsp->status) {
-            ...
-            if (se_cmd->scsi_sense_length && se_cmd->sense_buffer) {
-                rsp->sense_data_len =3D cpu_to_be32(se_cmd->scsi_sense_leng=
-th);
-    ...
+    destroy_workqueue(host_dev->handle_error_wq);
+    scsi_remove_host(host);
+    storvsc_dev_remove(dev);
 }
 
-Because se_cmd->scsi_status is 0 (SAM_STAT_GOOD), rsp->status remains 0. The
-check if (rsp->status) evaluates to false, causing the sense data to be
-completely bypassed and ignored.
+If the host then sends an I/O error completion (like a data overrun)
+for an outstanding request while the host is being removed,
+storvsc_command_completion() handles it by calling storvsc_handle_error().
 
-Could this cause the target to send a SAM_STAT_GOOD response to the initiat=
-or,
-masking the transfer failure and causing the initiator to process stale or
-corrupted data from its unmodified read buffers?
+When storvsc_handle_error() takes the goto do_work path shown above, it
+will eventually call queue_work() using the already destroyed workqueue
+pointer:
 
->  	}
-> =20
->  	srp_build_response(vscsi, cmd, &len);
+do_work:
+    ...
+    queue_work(host_dev->handle_error_wq, &wrk->work);
+
+Can this sequence cause a use-after-free when queue_work accesses the freed
+memory, and is this reachable by an untrusted Hyper-V host?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907024343.1046=
-387-1-dlemoal@kernel.org?part=3D30
+387-1-dlemoal@kernel.org?part=3D33
