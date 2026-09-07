@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA6CB3F65F7;
-	Mon,  7 Sep 2026 02:44:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 705F32D8385;
+	Mon,  7 Sep 2026 02:44:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788749090; cv=none; b=X8INwrJJGVlyDrBodaPmgJuaoFR6q/vxvfZpywDXpzSVPzE7ZjUAouHbuYcMroTjb+ZjXXsrz4DYcQOkTAoj6gJuSplWknHMy1kpPytbFgi44t/i50PHs3zlvGgZ3Xooy5ge/34QH+6sk6s5iCG1DR1+GXI2vp9syWNdXsfHCaM=
+	t=1788749091; cv=none; b=EsaoHdZleNncoWCM4u9gC/dk6z9ikg6jktESefqCjggYGKwhTlpsrFn7mcW/WkxwUKLBo6e0dcgYGXXZS/O7u2xIoIsYHhZgz8D0/3O4VdU79BTSwtkVRoYzL+SXCWGmo2SzqBpOgGIUQAE4NRptp1P971+5ZZegPVd9XNo36KU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788749090; c=relaxed/simple;
-	bh=VbwfpfuiuGlHSgLR0fjYMcOrV+EAAzDV2H5NwF26hH8=;
+	s=arc-20240116; t=1788749091; c=relaxed/simple;
+	bh=JisUTP7ezwEBgdazW6wegi5wYqba5Kk1BAyZgnCv43A=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=R/IS26lu7/je7Uz1x6Hw60WDuqh7THArbaDjK7HticOpgjny4LRxLAn7Ul239GBMW87RbOHtyRqlFPZFTMVV3NZ8b4DTbXNpOXOJzx3INCE6CnW8SHuI1SkbSlzEdfSQIwODGXvF/oekZEEnPzA5KF9ta1Pv5btKvXG3HX+uV+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y4VDa9ef; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=f38NUb0vBH+zdKpJgP7g/yXu5bHPFAH3//wYUUgySX9njHw7eiKO8nvVFaN3lwvO8VXuONxusoFLWGkYTzXd4tf5KUFdaOA4upOUtMUSOIEJ3xD88+ittyxeaZAOUDHAxbLK1TmURlYyTkGtk72yTULVmpqn17RmqhJDbRFD+Ko=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kltllkkt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y4VDa9ef"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9410E1F00A3D;
-	Mon,  7 Sep 2026 02:44:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kltllkkt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20AB71F00A3E;
+	Mon,  7 Sep 2026 02:44:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788749088;
-	bh=Pk4emyvifA4orO5X5/G1ydM6TMymW2SBTv4w8skrXw8=;
+	s=k20260515; t=1788749090;
+	bh=orsiKtqpPXuKdHSBEufYlWL8TusHNlkQmAJxHp9f26E=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=Y4VDa9efiko5UNQafF1y/r/Bhgt0BZHVrULuUwpGiV+g1adkcy8BIgZUADYoY7+JQ
-	 MHf12bykrrH8nh4DXZueofOYKjkF8PzSTmm9tdeTTRSMviJmNIrSjSDRAzoZQc+XMM
-	 FcdZ0pXavN8rbknojRzj99qwlxrXAYNzmC/+ezkJkT53Cav8HTS0S8t0QiNxASDbDn
-	 Ze9915VI196gNWIgqgkZ8UGRqkfBEzeiYjyfRTnt+RD2XxmvP16Dg5o/3YgoC5DYHF
-	 W6qtm368NoWE5Iv9J3SiRoSam8lKDUDW3/96+AFAKVzzJWiWdwEyRHkPlTYtjKvlxq
-	 oD/dnI3HU24FQ==
+	b=kltllkktalCt0DfFwq0uZYCDCaBjCzC/uMuJBMx+4XxoMcxdpQjAqBy/ZrBd86e2v
+	 uVoQCr6K30yw0DR5ZcgamOT2uROJe+2km1a19oudWABM87LCahEr0hmsWX2c9uH8sE
+	 EvV+6+GojN9A2I2JJttykePwTfdu8OqYalmRAwhjC5/q9oVzYg4Ltmr0eZ/oD+Y9dV
+	 g+9LVXV6QYp5TNuaZlD/7ypg+5+9MVXIDmVadlDQNDG/NcsIXzsyuFN6wJc4H/ri5/
+	 6nR5DviqKLXINeQrIw/4TBQLnXMAvTbAayNAVMnO3BdmZYRkfN2n2TT66Y7kdgqy3M
+	 9NCittKD3R68g==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v5 34/40] target: use 16-bits defined sense codes
-Date: Mon,  7 Sep 2026 11:43:37 +0900
-Message-ID: <20260907024343.1046387-35-dlemoal@kernel.org>
+Subject: [PATCH v5 35/40] usb: storage: use 16-bits defined sense codes
+Date: Mon,  7 Sep 2026 11:43:38 +0900
+Message-ID: <20260907024343.1046387-36-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260907024343.1046387-1-dlemoal@kernel.org>
 References: <20260907024343.1046387-1-dlemoal@kernel.org>
@@ -51,197 +51,227 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the target core code to use the 16-bits sense codes for building
-sense and replace all hard-coded additional sense codes and additional
-sense code qualifiers with the enum values defined in
-include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
-being processed are easier to test and self-documented.
+Refactor the USB mass storage driver to replace all hard-coded additional
+sense codes and additional sense code qualifiers with the enum values
+defined in include/scsi/scsi_sense.h. This helps with code clarity as the
+sense codes being processed are easier to test and self-documented.
 
 No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/target/target_core_spc.c       | 11 +++++-----
- drivers/target/target_core_transport.c | 11 +++++-----
- drivers/target/target_core_ua.c        | 28 ++++++++++----------------
- drivers/target/target_core_ua.h        |  7 +++----
- 4 files changed, 25 insertions(+), 32 deletions(-)
+ drivers/usb/gadget/function/f_mass_storage.c | 34 +++++-----
+ drivers/usb/gadget/function/storage_common.h | 71 +++++++++++++++-----
+ drivers/usb/storage/transport.c              |  5 +-
+ 3 files changed, 74 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index f964a531e053..b70e81af867e 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -1226,9 +1226,9 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
- {
- 	unsigned char *cdb = cmd->t_task_cdb;
- 	unsigned char *rbuf;
--	u8 ua_asc = 0, ua_ascq = 0;
- 	unsigned char buf[SE_SENSE_BUF];
- 	bool desc_format = target_sense_desc_format(cmd->se_dev);
-+	u16 sense_code = NO_ADDITIONAL_SENSE_INFORMATION;
+diff --git a/drivers/usb/gadget/function/f_mass_storage.c b/drivers/usb/gadget/function/f_mass_storage.c
+index a50743caf083..05e138968389 100644
+--- a/drivers/usb/gadget/function/f_mass_storage.c
++++ b/drivers/usb/gadget/function/f_mass_storage.c
+@@ -1103,9 +1103,9 @@ static int do_request_sense(struct fsg_common *common, struct fsg_buffhd *bh)
+ 	 * FSG normally uses option a); enable this code to use option b).
+ 	 */
+ #if 0
+-	if (curlun && curlun->unit_attention_data != SS_NO_SENSE) {
++	if (curlun && curlun->unit_attention_data != NO_SENSE) {
+ 		curlun->sense_data = curlun->unit_attention_data;
+-		curlun->unit_attention_data = SS_NO_SENSE;
++		curlun->unit_attention_data = NO_SENSE;
+ 	}
+ #endif
  
- 	memset(buf, 0, SE_SENSE_BUF);
- 
-@@ -1242,11 +1242,12 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
- 	if (!rbuf)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
--	if (!core_scsi3_ua_clear_for_request_sense(cmd, &ua_asc, &ua_ascq))
--		scsi_build_sense_buffer(desc_format, buf, UNIT_ATTENTION,
--					ua_asc, ua_ascq);
-+	if (!core_scsi3_ua_clear_for_request_sense(cmd, &sense_code))
-+		scsi_set_sense_buffer(desc_format, buf, UNIT_ATTENTION,
-+				      sense_code);
- 	else
--		scsi_build_sense_buffer(desc_format, buf, NO_SENSE, 0x0, 0x0);
-+		scsi_set_sense_buffer(desc_format, buf, NO_SENSE,
-+				      NO_ADDITIONAL_SENSE_INFORMATION);
- 
- 	memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
- 	transport_kunmap_data_sg(cmd);
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index dcfe94594916..ba208def8cb5 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3555,7 +3555,8 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
- 	const struct sense_detail *sd;
- 	u8 *buffer = cmd->sense_buffer;
- 	int r = (__force int)reason;
--	u8 key, asc, ascq;
-+	u16 code;
-+	u8 key;
- 	bool desc_format = target_sense_desc_format(cmd->se_dev);
- 
- 	if (r < ARRAY_SIZE(sense_detail_table) && sense_detail_table[r].key)
-@@ -3566,21 +3567,19 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
- 
- 	key = sd->key;
- 	if (reason == TCM_CHECK_CONDITION_UNIT_ATTENTION) {
--		if (!core_scsi3_ua_for_check_condition(cmd, &key, &asc,
--						       &ascq)) {
-+		if (!core_scsi3_ua_for_check_condition(cmd, &key, &code)) {
- 			cmd->scsi_status = SAM_STAT_BUSY;
- 			return;
- 		}
- 	} else {
- 		WARN_ON_ONCE(sd->asc == 0);
--		asc = sd->asc;
--		ascq = sd->ascq;
-+		code = scsi_sense_code(sd->asc, sd->ascq);
+@@ -1118,18 +1118,18 @@ static int do_request_sense(struct fsg_common *common, struct fsg_buffhd *bh)
+ 		sd = curlun->sense_data;
+ 		sdinfo = curlun->sense_data_info;
+ 		valid = curlun->info_valid << 7;
+-		curlun->sense_data = SS_NO_SENSE;
++		curlun->sense_data = NO_SENSE;
+ 		curlun->sense_data_info = 0;
+ 		curlun->info_valid = 0;
  	}
  
- 	cmd->se_cmd_flags |= SCF_EMULATED_TASK_SENSE;
- 	cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
- 	cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER;
--	scsi_build_sense_buffer(desc_format, buffer, key, asc, ascq);
-+	scsi_set_sense_buffer(desc_format, buffer, key, code);
- 	if (sd->add_sense_info)
- 		WARN_ON_ONCE(scsi_set_sense_information(buffer,
- 							cmd->scsi_sense_length,
-diff --git a/drivers/target/target_core_ua.c b/drivers/target/target_core_ua.c
-index 4276690fb6cb..ea97b05d47ab 100644
---- a/drivers/target/target_core_ua.c
-+++ b/drivers/target/target_core_ua.c
-@@ -187,11 +187,10 @@ void core_scsi3_ua_release_all(
+ 	memset(buf, 0, 18);
+ 	buf[0] = valid | 0x70;			/* Valid, current error */
+-	buf[2] = SK(sd);
++	buf[2] = usb_sense_key(sd);
+ 	put_unaligned_be32(sdinfo, &buf[3]);	/* Sense information */
+ 	buf[7] = 18 - 8;			/* Additional sense length */
+-	buf[12] = ASC(sd);
+-	buf[13] = ASCQ(sd);
++	buf[12] = usb_sense_asc(sd);
++	buf[13] = usb_sense_ascq(sd);
+ 	return 18;
+ }
+ 
+@@ -1678,21 +1678,23 @@ static void send_status(struct fsg_common *common)
+ 	if (curlun) {
+ 		sd = curlun->sense_data;
+ 		sdinfo = curlun->sense_data_info;
+-	} else if (common->bad_lun_okay)
+-		sd = SS_NO_SENSE;
+-	else
++	} else if (common->bad_lun_okay) {
++		sd = NO_SENSE;
++	} else {
+ 		sd = SS_LOGICAL_UNIT_NOT_SUPPORTED;
++	}
+ 
+ 	if (common->phase_error) {
+ 		DBG(common, "sending phase-error status\n");
+ 		status = US_BULK_STAT_PHASE;
+ 		sd = SS_INVALID_COMMAND;
+-	} else if (sd != SS_NO_SENSE) {
++	} else if (sd != NO_SENSE) {
+ 		DBG(common, "sending command-failure status\n");
+ 		status = US_BULK_STAT_FAIL;
+ 		VDBG(common, "  sense data: SK x%02x, ASC x%02x, ASCQ x%02x;"
+ 				"  info x%x\n",
+-				SK(sd), ASC(sd), ASCQ(sd), sdinfo);
++		     usb_sense_key(sd), usb_sense_asc(sd),
++		     usb_sense_ascq(sd), sdinfo);
+ 	}
+ 
+ 	/* Store and send the Bulk-only CSW */
+@@ -1798,7 +1800,7 @@ static int check_command(struct fsg_common *common, int cmnd_size,
+ 	curlun = common->curlun;
+ 	if (curlun) {
+ 		if (common->cmnd[0] != REQUEST_SENSE) {
+-			curlun->sense_data = SS_NO_SENSE;
++			curlun->sense_data = NO_SENSE;
+ 			curlun->sense_data_info = 0;
+ 			curlun->info_valid = 0;
+ 		}
+@@ -1820,11 +1822,11 @@ static int check_command(struct fsg_common *common, int cmnd_size,
+ 	 * If a unit attention condition exists, only INQUIRY and
+ 	 * REQUEST SENSE commands are allowed; anything else must fail.
+ 	 */
+-	if (curlun && curlun->unit_attention_data != SS_NO_SENSE &&
++	if (curlun && curlun->unit_attention_data != NO_SENSE &&
+ 	    common->cmnd[0] != INQUIRY &&
+ 	    common->cmnd[0] != REQUEST_SENSE) {
+ 		curlun->sense_data = curlun->unit_attention_data;
+-		curlun->unit_attention_data = SS_NO_SENSE;
++		curlun->unit_attention_data = NO_SENSE;
+ 		return -EINVAL;
+ 	}
+ 
+@@ -2501,8 +2503,8 @@ static void handle_exception(struct fsg_common *common)
+ 			if (!curlun)
+ 				continue;
+ 			curlun->prevent_medium_removal = 0;
+-			curlun->sense_data = SS_NO_SENSE;
+-			curlun->unit_attention_data = SS_NO_SENSE;
++			curlun->sense_data = NO_SENSE;
++			curlun->unit_attention_data = NO_SENSE;
+ 			curlun->sense_data_info = 0;
+ 			curlun->info_valid = 0;
+ 		}
+diff --git a/drivers/usb/gadget/function/storage_common.h b/drivers/usb/gadget/function/storage_common.h
+index 11ac785d5eee..e73a30cc553f 100644
+--- a/drivers/usb/gadget/function/storage_common.h
++++ b/drivers/usb/gadget/function/storage_common.h
+@@ -70,24 +70,59 @@ do {									\
+ #define MAX_COMMAND_SIZE	16
+ 
+ /* SCSI Sense Key/Additional Sense Code/ASC Qualifier values */
+-#define SS_NO_SENSE				0
+-#define SS_COMMUNICATION_FAILURE		0x040800
+-#define SS_INVALID_COMMAND			0x052000
+-#define SS_INVALID_FIELD_IN_CDB			0x052400
+-#define SS_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE	0x052100
+-#define SS_LOGICAL_UNIT_NOT_SUPPORTED		0x052500
+-#define SS_MEDIUM_NOT_PRESENT			0x023a00
+-#define SS_MEDIUM_REMOVAL_PREVENTED		0x055302
+-#define SS_NOT_READY_TO_READY_TRANSITION	0x062800
+-#define SS_RESET_OCCURRED			0x062900
+-#define SS_SAVING_PARAMETERS_NOT_SUPPORTED	0x053900
+-#define SS_UNRECOVERED_READ_ERROR		0x031100
+-#define SS_WRITE_ERROR				0x030c02
+-#define SS_WRITE_PROTECTED			0x072700
+-
+-#define SK(x)		((u8) ((x) >> 16))	/* Sense Key byte, etc. */
+-#define ASC(x)		((u8) ((x) >> 8))
+-#define ASCQ(x)		((u8) (x))
++static inline u32 usb_sense_kc(u8 sense_key, u16 sense_code)
++{
++	return ((u32)sense_key << 16) | (u32)sense_code;
++}
++
++static inline u8 usb_sense_key(u32 kc)
++{
++	return kc >> 16;
++}
++
++static inline u16 usb_sense_code(u32 kc)
++{
++	return kc & 0xFFFF;
++}
++
++static inline u8 usb_sense_asc(u32 kc)
++{
++	return scsi_sense_code_asc(usb_sense_code(kc));
++}
++
++static inline u8 usb_sense_ascq(u32 kc)
++{
++	return scsi_sense_code_ascq(usb_sense_code(kc));
++}
++
++#define SS_COMMUNICATION_FAILURE		\
++	usb_sense_kc(HARDWARE_ERROR, LU_COMMUNICATION_FAILURE)
++#define SS_INVALID_COMMAND			\
++	usb_sense_kc(ILLEGAL_REQUEST, INVALID_COMMAND_OP_CODE)
++#define SS_INVALID_FIELD_IN_CDB			\
++	usb_sense_kc(ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB)
++#define SS_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE	\
++	usb_sense_kc(ILLEGAL_REQUEST, LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE)
++#define SS_LOGICAL_UNIT_NOT_SUPPORTED		\
++	usb_sense_kc(ILLEGAL_REQUEST, LU_NOT_SUPPORTED)
++#define SS_MEDIUM_NOT_PRESENT			\
++	usb_sense_kc(NOT_READY, MEDIUM_NOT_PRESENT)
++#define SS_MEDIUM_REMOVAL_PREVENTED		\
++	usb_sense_kc(ILLEGAL_REQUEST, MEDIUM_REMOVAL_PREVENTED)
++#define SS_NOT_READY_TO_READY_TRANSITION	\
++	usb_sense_kc(UNIT_ATTENTION,		\
++		     NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED)
++#define SS_RESET_OCCURRED			\
++	usb_sense_kc(UNIT_ATTENTION,		\
++		     POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED)
++#define SS_SAVING_PARAMETERS_NOT_SUPPORTED	\
++	usb_sense_kc(ILLEGAL_REQUEST, SAVING_PARAMETERS_NOT_SUPPORTED)
++#define SS_UNRECOVERED_READ_ERROR		\
++	usb_sense_kc(MEDIUM_ERROR, UNRECOVERED_READ_ERROR)
++#define SS_WRITE_ERROR				\
++	usb_sense_kc(MEDIUM_ERROR, WRITE_ERROR_AUTO_REALLOCATION_FAILED)
++#define SS_WRITE_PROTECTED			\
++	usb_sense_kc(DATA_PROTECT, WRITE_PROTECTED)
  
  /*
-  * Dequeue a unit attention from the unit attention list. This function
-- * returns true if the dequeuing succeeded and if *@key, *@asc and *@ascq have
-+ * returns true if the dequeuing succeeded and if *@key and *@code have
-  * been set.
-  */
--bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
--				       u8 *ascq)
-+bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u16 *code)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct se_dev_entry *deve;
-@@ -214,8 +213,7 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
- 	if (!deve) {
- 		rcu_read_unlock();
- 		*key = ILLEGAL_REQUEST;
--		*asc = 0x25; /* LOGICAL UNIT NOT SUPPORTED */
--		*ascq = 0;
-+		*code = LU_NOT_SUPPORTED;
- 		return true;
- 	}
- 	*key = UNIT_ATTENTION;
-@@ -232,8 +230,7 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
- 		 * clearing it.
+  * Vendor (8 chars), product (16 chars), release (4 hexadecimal digits) and NUL
+diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
+index 8e9359501d88..8de3015bce05 100644
+--- a/drivers/usb/storage/transport.c
++++ b/drivers/usb/storage/transport.c
+@@ -803,7 +803,7 @@ void usb_stor_invoke_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 			     temp_result);
+ 		usb_stor_dbg(us, "-- code: 0x%x, key: 0x%x, ASC: 0x%x, ASCQ: 0x%x\n",
+ 			     sshdr.response_code, sshdr.sense_key,
+-			     sshdr.asc, sshdr.ascq);
++			     scsi_sense_asc(&sshdr), scsi_sense_ascq(&sshdr));
+ #ifdef CONFIG_USB_STORAGE_DEBUG
+ 		usb_stor_show_sense(us, &sshdr);
+ #endif
+@@ -820,7 +820,8 @@ void usb_stor_invoke_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 		 * everything worked or that there was an unspecified
+ 		 * problem.  We have to decide which.
  		 */
- 		if (!dev_ua_intlck_clear) {
--			*asc = ua->ua_asc;
--			*ascq = ua->ua_ascq;
-+			*code = scsi_sense_code(ua->ua_asc, ua->ua_ascq);
- 			break;
- 		}
- 		/*
-@@ -242,8 +239,7 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
- 		 * (head of the list) in the outgoing CHECK_CONDITION + sense.
- 		 */
- 		if (head) {
--			*asc = ua->ua_asc;
--			*ascq = ua->ua_ascq;
-+			*code = scsi_sense_code(ua->ua_asc, ua->ua_ascq);
- 			head = 0;
- 		}
- 		list_del(&ua->ua_nacl_list);
-@@ -258,15 +254,13 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
- 		nacl->se_tpg->se_tpg_tfo->fabric_name,
- 		dev_ua_intlck_clear ? "Releasing" : "Reporting",
- 		dev->dev_attrib.emulate_ua_intlck_ctrl,
--		cmd->orig_fe_lun, cmd->t_task_cdb[0], *asc, *ascq);
-+		cmd->orig_fe_lun, cmd->t_task_cdb[0],
-+		scsi_sense_code_asc(*code), scsi_sense_code_ascq(*code));
- 
- 	return head == 0;
- }
- 
--int core_scsi3_ua_clear_for_request_sense(
--	struct se_cmd *cmd,
--	u8 *asc,
--	u8 *ascq)
-+int core_scsi3_ua_clear_for_request_sense(struct se_cmd *cmd, u16 *code)
- {
- 	struct se_dev_entry *deve;
- 	struct se_session *sess = cmd->se_sess;
-@@ -304,8 +298,7 @@ int core_scsi3_ua_clear_for_request_sense(
- 	spin_lock(&deve->ua_lock);
- 	list_for_each_entry_safe(ua, ua_p, &deve->ua_list, ua_nacl_list) {
- 		if (head) {
--			*asc = ua->ua_asc;
--			*ascq = ua->ua_ascq;
-+			*code = scsi_sense_code(ua->ua_asc, ua->ua_ascq);
- 			head = 0;
- 		}
- 		list_del(&ua->ua_nacl_list);
-@@ -317,7 +310,8 @@ int core_scsi3_ua_clear_for_request_sense(
- 	pr_debug("[%s]: Released UNIT ATTENTION condition, mapped"
- 		" LUN: %llu, got REQUEST_SENSE reported ASC: 0x%02x,"
- 		" ASCQ: 0x%02x\n", nacl->se_tpg->se_tpg_tfo->fabric_name,
--		cmd->orig_fe_lun, *asc, *ascq);
-+		cmd->orig_fe_lun, scsi_sense_code_asc(*code),
-+		scsi_sense_code_ascq(*code));
- 
- 	return (head) ? -EPERM : 0;
- }
-diff --git a/drivers/target/target_core_ua.h b/drivers/target/target_core_ua.h
-index 76487c9be090..6b636c13fee2 100644
---- a/drivers/target/target_core_ua.h
-+++ b/drivers/target/target_core_ua.h
-@@ -37,9 +37,8 @@ extern sense_reason_t target_scsi3_ua_check(struct se_cmd *);
- extern int core_scsi3_ua_allocate(struct se_dev_entry *, u8, u8);
- extern void target_ua_allocate_lun(struct se_node_acl *, u32, u8, u8);
- extern void core_scsi3_ua_release_all(struct se_dev_entry *);
--extern bool core_scsi3_ua_for_check_condition(struct se_cmd *, u8 *, u8 *,
--					      u8 *);
--extern int core_scsi3_ua_clear_for_request_sense(struct se_cmd *,
--						u8 *, u8 *);
-+extern bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key,
-+					      u16 *code);
-+extern int core_scsi3_ua_clear_for_request_sense(struct se_cmd *cmd, u16 *code);
- 
- #endif /* TARGET_CORE_UA_H */
+-		if (sshdr.sense_key == 0 && sshdr.asc == 0 && sshdr.ascq == 0 &&
++		if (sshdr.sense_key == NO_SENSE &&
++		    sshdr.sense_code == NO_ADDITIONAL_SENSE_INFORMATION &&
+ 		    fm_ili == 0) {
+ 			/*
+ 			 * If things are really okay, then let's show that.
 -- 
 2.55.0
 
