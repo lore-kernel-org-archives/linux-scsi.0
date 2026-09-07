@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46B033EB0F4;
-	Mon,  7 Sep 2026 02:44:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1AF03F1052;
+	Mon,  7 Sep 2026 02:44:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788749062; cv=none; b=VHyDbumD5skKmk82MjWW2wI4Bg/u6bFr+TZ42LrHQkLmnuweyOm7bj3EH+1KJd/Tcs2yGmbymDBlNk4jD1M1Vf2ChPIf4AsISUoh2htKMjUaeI8bsSmcPb05l88kOsEosrUHL6li4VbmryYRlInF+wwD36W0rsqs2TJiY/F1FUM=
+	t=1788749064; cv=none; b=gNBmo0V+0Tas40rQDQq4Gc3ZyWlM44vnThNfme9Axe9/IAOLEIKJk782uAG4UvHZTUXYou288bFwqmnfldSp7Ac2797bgCt2pxLa7vD5z7LHu7K9ielnsupTV1rN3jFqysT2nAsPlR0N/eLbV9SPDF2fKpzA57w+rp8R9fFX970=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788749062; c=relaxed/simple;
-	bh=W8SDKK89LAx+SNXJ9pzeBlwvj+DqDWV7Rf2GfCgvtfk=;
+	s=arc-20240116; t=1788749064; c=relaxed/simple;
+	bh=2SggC+ZVuOsQ7XYce6B55mmWU6M7mDvHN8RGclSGMmM=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iOWunle671EmlhhwPutCBR7YTnS7shtiynqUBkrmWCTeN86l640pJA3eamOnbxYL8CykAXkKZlmbCvpV+kHi6ogvLXAg0i/LzYxe2a/7+j5h3O9T0+N3Lh733VQr0q/hU+93bw2CqOTJGomRN6wTCqzfgB3qxRP67RnBBLj11uQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PJU/hYXN; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=Q63dHIbZstl6Z4PzNr9lCMX4fcfmkUds2J68oPgXMKJgcuHNI1DnbQviSTFNhTabuBrgr0gG2cf4s2i3M111+RP+D6fCEZYpCHeGpe/J31tp3vteNzeEwGySLTN6ljInyhauIAZIyZlxM9ouJrsZOzbS7DYrkwuo8Izz3LmpCbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c1eK44Az; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PJU/hYXN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF5D31F00A3A;
-	Mon,  7 Sep 2026 02:44:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c1eK44Az"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50CD71F00A3F;
+	Mon,  7 Sep 2026 02:44:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788749061;
-	bh=UNXUBAZ8ICfIyb8tEaDoT3lH671WaEtZb+b1MjV/MHw=;
+	s=k20260515; t=1788749062;
+	bh=XRIHjC99X3BvhlsCWuYonNooUNHHjj6FPKdt9T3x+3E=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=PJU/hYXNR3TglN7+YNrobVYmjhNLmiP0SS7tspR77z2yiPbuX5atRDWjlVQz1I+Qa
-	 cJ+LpvY6fyMIxIkahlUerFNK3KDrOYjBEfDg7PF0N0PscTOf4FLyGuxx/TlFFUMHpi
-	 6l11ZcSO7bSJEY9IrAkwj/FBNxzA0gya8odIuBMJ3kEJLnMRAI1Tci1inPB6UObATs
-	 w9mhHfCya7MWVA41vMb/ROUwJ4wyn+ZR1JrtoYZTcBbFroJm7l5Uzk0ALp57OG5Y2g
-	 ewhUM4tUP8rKkn9WtlI+Q696lnCznhep0f3+s01QhCNzgqp0xEXIwThwwadXLhWmjE
-	 yUtcuglaLjnhg==
+	b=c1eK44AzGR9LaiRwxcAxnrHO5HKAUG+KGE+R9VJKD67t4NhsTlTbhvjfqI4PQckg8
+	 YbufOy4VzHDN1U3K5KApqY+3v82ibXqHlfqSm3i/Tt0hDF3NBJJEAcYIWUoYqjpU0p
+	 iS6siloe45CZ3QXdM/JBiKN/FH2cv9TE3zRT3H0GT3L5ny5FvzvgBmYJJWzSahrX5i
+	 gX1ZdbUlEFYaldaMtNOlC1P7OOkh026mV7CcxcHpqQ/ZT4b0skaoCxkkO/KqqVFHm4
+	 vtt76+yptUaxm7aRF4KCO6duR3msUwgGrlRM6henMYPrcAezck2rqwnkFe3V7ykjNZ
+	 SrDLcluF0on4g==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v5 16/40] scsi: device_handlers: alua: use 16-bits defined sense codes
-Date: Mon,  7 Sep 2026 11:43:19 +0900
-Message-ID: <20260907024343.1046387-17-dlemoal@kernel.org>
+Subject: [PATCH v5 17/40] scsi: mpt3sas: use 16-bits defined sense codes
+Date: Mon,  7 Sep 2026 11:43:20 +0900
+Message-ID: <20260907024343.1046387-18-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260907024343.1046387-1-dlemoal@kernel.org>
 References: <20260907024343.1046387-1-dlemoal@kernel.org>
@@ -51,8 +51,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the SCSI ALUA devie handler driver to use the 16-bits sense_code
-field of struct scsi_sense_hdr and replace all hard-coded additional sense
+Refactor the mpt3sas driver to replace all hard-coded additional sense
 codes and additional sense code qualifiers with the enum values defined in
 include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
 being processed are easier to test and self-documented.
@@ -61,115 +60,146 @@ No functional change intended.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 55 ++++++++--------------
- 1 file changed, 19 insertions(+), 36 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 69 +++++++++++++++-------------
+ 1 file changed, 36 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index d81ec47a7140..87ac0a6d63e5 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -433,61 +433,43 @@ static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 0e12009a87f6..085d4672db85 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -5401,23 +5401,23 @@ _scsih_setup_eedp(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ static void
+ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
  {
- 	switch (sense_hdr->sense_key) {
- 	case NOT_READY:
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
--			/*
--			 * LUN Not Accessible - ALUA state transition
--			 */
-+		if (sense_hdr->sense_code ==
-+		    LU_NOT_ACCESSIBLE_ASYMMETRIC_ACCESS_STATE_TRANSITION) {
- 			alua_handle_state_transition(sdev);
- 			return NEEDS_RETRY;
- 		}
+-	u8 ascq;
++	u16 sense_code;
+ 
+ 	switch (ioc_status) {
+ 	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
+-		ascq = 0x01;
++		sense_code = LOGICAL_BLOCK_GUARD_CHECK_FAILED;
  		break;
- 	case UNIT_ATTENTION:
--		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
--			/*
--			 * LUN Not Accessible - ALUA state transition
--			 */
-+		if (sense_hdr->sense_code ==
-+		    LU_NOT_ACCESSIBLE_ASYMMETRIC_ACCESS_STATE_TRANSITION) {
- 			alua_handle_state_transition(sdev);
- 			return NEEDS_RETRY;
- 		}
--		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
-+		if (sense_hdr->sense_code ==
-+		    POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED) {
- 			/*
--			 * Power On, Reset, or Bus Device Reset.
- 			 * Might have obscured a state transition,
- 			 * so schedule a recheck.
- 			 */
- 			alua_check(sdev, true);
- 			return ADD_TO_MLQUEUE;
- 		}
--		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x04)
--			/*
--			 * Device internal reset
--			 */
-+		if (sense_hdr->sense_code == DEVICE_INTERNAL_RESET)
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x01)
--			/*
--			 * Mode Parameters Changed
--			 */
-+		if (sense_hdr->sense_code == MODE_PARAMETERS_CHANGED)
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06) {
--			/*
--			 * ALUA state changed
--			 */
-+		if (sense_hdr->sense_code == ASYMMETRIC_ACCESS_STATE_CHANGED) {
- 			alua_check(sdev, true);
- 			return ADD_TO_MLQUEUE;
- 		}
--		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07) {
--			/*
--			 * Implicit ALUA state transition failed
--			 */
-+		if (sense_hdr->sense_code ==
-+		    IMPLICIT_ASYMMETRIC_ACCESS_STATE_TRANSITION_FAILED) {
- 			alua_check(sdev, true);
- 			return ADD_TO_MLQUEUE;
- 		}
--		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x03)
--			/*
--			 * Inquiry data has changed
--			 */
-+		if (sense_hdr->sense_code == INQUIRY_DATA_HAS_CHANGED)
- 			return ADD_TO_MLQUEUE;
--		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x0e)
-+		if (sense_hdr->sense_code == REPORTED_LUNS_DATA_HAS_CHANGED)
- 			/*
- 			 * REPORTED_LUNS_DATA_HAS_CHANGED is reported
- 			 * when switching controllers on targets like
-@@ -517,12 +499,12 @@ static int alua_tur(struct scsi_device *sdev)
- 				      ALUA_FAILOVER_RETRIES, &sense_hdr);
- 	if ((sense_hdr.sense_key == NOT_READY ||
- 	     sense_hdr.sense_key == UNIT_ATTENTION) &&
--	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
-+	    sense_hdr.sense_code ==
-+	    LU_NOT_ACCESSIBLE_ASYMMETRIC_ACCESS_STATE_TRANSITION)
- 		return SCSI_DH_RETRY;
--	else if (retval)
-+	if (retval)
- 		return SCSI_DH_IO;
--	else
--		return SCSI_DH_OK;
-+	return SCSI_DH_OK;
+ 	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
+-		ascq = 0x02;
++		sense_code = LOGICAL_BLOCK_APPLICATION_TAG_CHECK_FAILED;
+ 		break;
+ 	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
+-		ascq = 0x03;
++		sense_code = LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED;
+ 		break;
+ 	default:
+-		ascq = 0x00;
++		sense_code = ID_CRC_OR_ECC_ERROR;
+ 		break;
+ 	}
+-	scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x10, ascq);
++	scsi_set_sense(scmd, 0, ILLEGAL_REQUEST, sense_code);
+ 	set_host_byte(scmd, DID_ABORT);
  }
  
- /*
-@@ -619,7 +601,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		 * transition. So set the state to 'transitioning' directly.
- 		 */
- 		if (sense_hdr.sense_key == NOT_READY &&
--		    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a) {
-+		    sense_hdr.sense_code ==
-+		    LU_NOT_ACCESSIBLE_ASYMMETRIC_ACCESS_STATE_TRANSITION) {
- 			transitioning_sense = true;
- 			goto skip_rtpg;
+@@ -5474,7 +5474,8 @@ static enum scsi_qc_status scsih_qcmd(struct Scsi_Host *shost,
+ 	if (handle == MPT3SAS_INVALID_DEVICE_HANDLE || sas_device_priv_data->block) {
+ 		if (scsi_get_host_state(scmd->device->host) == SHOST_RECOVERY &&
+ 		    scmd->cmnd[0] == TEST_UNIT_READY) {
+-			scsi_build_sense(scmd, 0, UNIT_ATTENTION, 0x29, 0x07);
++			scsi_set_sense(scmd, 0, UNIT_ATTENTION,
++				       I_T_NEXUS_LOSS_OCCURRED);
+ 			scsi_done(scmd);
+ 			return 0;
  		}
+@@ -5986,7 +5987,7 @@ _scsih_smart_predicted_fault(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	event_data = (Mpi2EventDataSasDeviceStatusChange_t *)
+ 	    event_reply->EventData;
+ 	event_data->ReasonCode = MPI2_EVENT_SAS_DEV_STAT_RC_SMART_DATA;
+-	event_data->ASC = 0x5D;
++	event_data->ASC = ASC_FAILURE_PREDICTION_THRESHOLD_EXCEEDED;
+ 	event_data->DevHandle = cpu_to_le16(handle);
+ 	event_data->SASAddress = cpu_to_le64(sas_target_priv_data->sas_address);
+ 	mpt3sas_ctl_add_to_event_log(ioc, event_reply);
+@@ -6109,8 +6110,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 		    le32_to_cpu(mpi_reply->SenseCount));
+ 		memcpy(scmd->sense_buffer, sense_data, sz);
+ 		_scsih_normalize_sense(scmd->sense_buffer, &data);
+-		/* failure prediction threshold exceeded */
+-		if (data.asc == 0x5D)
++		if (data.asc == ASC_FAILURE_PREDICTION_THRESHOLD_EXCEEDED)
+ 			_scsih_smart_predicted_fault(ioc,
+ 			    le16_to_cpu(mpi_reply->DevHandle));
+ 		mpt3sas_trigger_scsi(ioc, data.skey, data.asc, data.ascq);
+@@ -6199,8 +6199,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 		else if (!xfer_cnt && scmd->cmnd[0] == REPORT_LUNS) {
+ 			mpi_reply->SCSIState = MPI2_SCSI_STATE_AUTOSENSE_VALID;
+ 			mpi_reply->SCSIStatus = SAM_STAT_CHECK_CONDITION;
+-			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST,
+-					 0x20, 0);
++			scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
++				       INVALID_COMMAND_OP_CODE);
+ 		}
+ 		break;
+ 
+@@ -7691,38 +7691,41 @@ _scsih_determine_disposition(struct MPT3SAS_ADAPTER *ioc,
+ 
+ 	if (check_sense) {
+ 		_scsih_normalize_sense(transfer_packet->sense, &sense_info);
+-		if (sense_info.skey == UNIT_ATTENTION)
++		if (sense_info.skey == UNIT_ATTENTION) {
+ 			rc = DEVICE_RETRY_UA;
+-		else if (sense_info.skey == NOT_READY) {
+-			/* medium isn't present */
+-			if (sense_info.asc == 0x3a)
++		} else if (sense_info.skey == NOT_READY) {
++			if (sense_info.asc == ASC_MEDIUM_NOT_PRESENT) {
+ 				rc = DEVICE_READY;
+-			/* LOGICAL UNIT NOT READY */
+-			else if (sense_info.asc == 0x04) {
+-				if (sense_info.ascq == 0x03 ||
+-				   sense_info.ascq == 0x0b ||
+-				   sense_info.ascq == 0x0c) {
++			} else if (sense_info.asc == ASC_LU_NOT_READY) {
++				u16 scode = scsi_sense_code(sense_info.asc,
++							    sense_info.ascq);
++
++				if (scode ==
++				    LU_NOT_READY_MANUAL_INTERVENTION_REQUIRED ||
++				    scode ==
++				    LU_NOT_ACCESSIBLE_TARGET_PORT_IN_STANDBY_STATE ||
++				    scode ==
++				    LU_NOT_ACCESSIBLE_TARGET_PORT_IN_UNAVAILABLE_STATE)
+ 					rc = DEVICE_ERROR;
+-				} else
++				else
+ 					rc = DEVICE_START_UNIT;
+-			}
+-			/* LOGICAL UNIT HAS NOT SELF-CONFIGURED YET */
+-			else if (sense_info.asc == 0x3e && !sense_info.ascq)
++			} else if (sense_info.asc ==
++				   ASC_LU_HAS_NOT_SELF_CONFIGURED_YET &&
++				   !sense_info.ascq) {
+ 				rc = DEVICE_START_UNIT;
++			}
+ 		} else if (sense_info.skey == ILLEGAL_REQUEST &&
+-		    transfer_packet->cdb[0] == REPORT_LUNS) {
++			   transfer_packet->cdb[0] == REPORT_LUNS) {
+ 			rc = DEVICE_READY;
+ 		} else if (sense_info.skey == MEDIUM_ERROR) {
+-
+-			/* medium is corrupt, lets add the device so
+-			 * users can collect some info as needed
++			/*
++			 * medium is corrupt, lets add the device so users can
++			 * collect some info as needed
+ 			 */
+-
+-			if (sense_info.asc == 0x31)
++			if (sense_info.asc == ASC_MEDIUM_FORMAT_CORRUPTED)
+ 				rc = DEVICE_READY;
+ 		} else if (sense_info.skey == HARDWARE_ERROR) {
+-			/* Defect List Error, still add the device */
+-			if (sense_info.asc == 0x19)
++			if (sense_info.asc == ASC_DEFECT_LIST_ERROR)
+ 				rc = DEVICE_READY;
+ 		}
+ 	}
 -- 
 2.55.0
 
