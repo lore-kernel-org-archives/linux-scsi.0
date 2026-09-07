@@ -1,138 +1,186 @@
-Received: from mta0.migadu.com (out-198.mta0.migadu.com [91.218.175.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEBA341D65E
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:22:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E87E48C400
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:25:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788783738; cv=none; b=hS6rncFQxYd1v6jKqllLSZsNmqFVBz6CNq7Z9VhFN+SYGHxkSW0TLFUfWAIrOULXFqblKIc9yc9RYOMGY+5jB6s0eAoMgzgL/QoNlBR7F16G2Gb9hmmno5bLmBm45nXF/htDQpiFL2SUeuRG5f5tvLnbpOEshWzoiZGHWfEIpEc=
+	t=1788783927; cv=none; b=lkyp8mEP5n1yqvtsSlrBJFcgr3mqnemIeq89CE1tJVR1kFJddXYDZXP+nLFDlCCRnKIdYalj/SZFqc5f0KgTKMiA18wojxA89V8zUWYf+HCsl0BmJChW5wawyy95Q4Ps9LiXi4m1wVwBxHdGwxat+ljBlRPeuv4sX4BcVDWdNyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788783738; c=relaxed/simple;
-	bh=5vkJI9zTlzzch+3lJHnixMQuUkwacMAayJAfA7pqKiI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UZ4UAuv4A5uSj7U72/uAGqOPi9H6AXMTleBBWhRWCoUcIL86aLJm1fosXfTZhyUFvsXWqUfGS+ZlEZNocSQd4+hlnCdsA+OnOj2U8cDlR2Qy4pBz3gHBnQLXKgsnxOKYuO4AdMrMziJ+AP4wRPwnnOltyOCjiOXyef8XpXOVRcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=K1kuYhVM; arc=none smtp.client-ip=91.218.175.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1788783927; c=relaxed/simple;
+	bh=nA5kU7bxTtQrOkOIL/3AtRtM4CIeRZcZHwGBsTHfnYg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=AFNZnOH7PIeNz/Uwk3CuivQwkEyW3NnI0AI2lYeQNgo0zadSP3/+DVPkBpgGKJbbbusIpyPmTcuQfRCNlX+pgVB/1yTOZWSqTizK5lUcXyM071cfNKZDD/NXvd0t/VUBmoHuFECxfRVahczRj7DVH+5nZ7/1Y4m7HiqoEYfjsjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cyWBLrZK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="K1kuYhVM"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=5vkJI9zTlzzch+3lJHnixMQuUkwacMAayJAfA7pqKiI=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788783733; v=1; x=1789388533;
- b=K1kuYhVMVjOKkUeWRlICIomBOmhGixvMtLU38S7VGw4EXBU5XCq6x+TIf/Y/ZrYZbjcFnb3/
- UDG3rsFP29Xv9H34rPFf72xR84aAJmBJYitpBuOotfF34H8C1/+20kfX0Hz6Ywtl5REQsshJ1D3
- sQLAEvrFJqgCjcJLI2yxeDpc=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id ba0837834e12b6c0;
-	Mon, 07 Sep 2026 12:22:13 +0000
-X-Mizu-Trace-ID: ba0837834e12b6c0
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <ff023bb0-9bf1-4257-a1c5-46d2dedc3367@linux.dev>
-Date: Mon, 7 Sep 2026 13:22:08 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cyWBLrZK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 940BF1F00A3A;
+	Mon,  7 Sep 2026 12:25:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788783925;
+	bh=55g2gT85y0Q963YhKAAu4Ug9NeWJFOaNZ3DulYZCY/A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=cyWBLrZK/gnLpJ8/nn8tM8XDSi7ZLRT/w6HVY7rvDLJdwfVWu7lC8YcllamA1dvKS
+	 6auWBMrmSDEFJun5Q2Pvc7iMhpsjXBdXBMfEJRuJrxcGIOVyqipqMbGITBeoCvnPaQ
+	 X3jzOId9JKK2h+npyyflejX8haTu30tWH47HRySGUJOa33qXKifXK08L/kuZDeJHPp
+	 ZzTlH+yDWSyQnSskNssz+5XWTx3GVcbE9qFIrL6lSlcOkW3MbfqlkAFoakTQRcjoRb
+	 OubznqThCH+z74/th3OFHqFRH8dyERGPl93bZQ4HcJKCoCSciB8FXsOyH1ivaORepa
+	 6VI9hrHmaSKmA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 24/27] scsi: sd: support multipath disk
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "John Garry" <john.g.garry@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260907105021.1763236-25-john.g.garry@oracle.com>
+References: <20260907105021.1763236-1-john.g.garry@oracle.com>
+ <20260907105021.1763236-25-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 07 Sep 2026 12:25:24 +0000
+Message-Id: <20260907122525.940BF1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 20/27] scsi-multipath: add
- scsi_mpath_{start,end}_request()
-To: sashiko-reviews@lists.linux.dev, John Garry <john.g.garry@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-References: <20260907105021.1763236-1-john.g.garry@oracle.com>
- <20260907105021.1763236-21-john.g.garry@oracle.com>
- <20260907120918.DC4D41F00A3A@smtp.kernel.org>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260907120918.DC4D41F00A3A@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 9/7/26 13:09, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] Leaked multipath active counter (`mpath_nr_active`) and corrupted IO stats when `scsi_queue_rq` returns a hard error or `blk_mq` cancels a requeued request.
-> --
-> 
-> commit 2b78aa9717f460c8d3814043976386ee7f6864c3
-> Author: John Garry <john.garry@linux.dev>
-> 
-> scsi-multipath: add scsi_mpath_{start,end}_request()
-> 
-> This patch adds scsi_mpath_start_request() and scsi_mpath_end_request() to
-> manage multipath request data. It also introduces mpath_nr_active to track
-> the number of active requests per SCSI host.
-> 
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 1a6f5e1fd80cb..193e7e9a2d30b 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
-> [ ... ]
->> @@ -1918,6 +1921,9 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->>   	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
->>   	cmd->submitter = SUBMITTED_BY_BLOCK_LAYER;
->>   
->> +	if (sdev->scsi_mpath_dev && is_mpath_request(req))
->> +		scsi_mpath_start_request(req);
->> +
->>   	blk_mq_start_request(req);
->>   	if (blk_mq_is_reserved_rq(req)) {
-> 
-> [Severity: High]
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Same response as v7 - I think that the SCSI core needs to be fixed here
+New issues:
+- [High] Pending delayed removal work is not cancelled when `sd_mpath_fail_=
+probe()` tears down a multipath disk, leading to use-after-free of `mpath_h=
+ead`.
 
-> Can this leak the mpath_nr_active counter and corrupt IO stats if a request
-> encounters a hard error after being requeued?
-> 
-> For example, if a request is dispatched and scsi_mpath_start_request()
-> increments the counter and sets SCMD_MPATH_CNT_ACTIVE:
-> 
-> If the dispatch returns a non-fatal error (like BLK_STS_RESOURCE), the
-> block layer requeues the request. The SCMD_MPATH_CNT_ACTIVE flag is
-> preserved across the requeue via SCMD_PRESERVED_FLAGS.
-> 
-> On the next dispatch attempt, if the device goes offline,
-> scsi_device_state_check() fails early, jumping to the error path in
-> scsi_queue_rq():
-> 
-> 	out_put_budget:
-> 	...
-> 	default:
-> 		if (unlikely(!scsi_device_online(sdev)))
-> 			cmd->result = DID_NO_CONNECT << 16;
-> 		...
-> 		if (req->rq_flags & RQF_DONTPREP)
-> 			scsi_mq_uninit_cmd(cmd);
-> 
-> scsi_queue_rq() then returns the hard error to the block layer, which
-> completes the request directly, bypassing scsi_end_request() and
-> scsi_mpath_end_request().
-> 
-> Since the counter and stats are never decremented, will this permanently
-> skew the in-flight IO stats and eventually stall I/O when MPATH_IOPOLICY_QD
-> is used?
-> 
->> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
->> index 8ecfb94049db5..52227e2cd9749 100644
->> --- a/include/scsi/scsi_cmnd.h
->> +++ b/include/scsi/scsi_cmnd.h
->> @@ -58,8 +58,11 @@ struct scsi_pointer {
->>    */
->>   #define SCMD_FORCE_EH_SUCCESS	(1 << 3)
->>   #define SCMD_FAIL_IF_RECOVERING	(1 << 4)
->> +#define SCMD_MPATH_IO_STATS	(1 << 5)
->> +#define SCMD_MPATH_CNT_ACTIVE	(1 << 6)
->>   /* flags preserved across unprep / reprep */
->> -#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED | SCMD_FAIL_IF_RECOVERING)
->> +#define SCMD_PRESERVED_FLAGS	(SCMD_INITIALIZED | SCMD_FAIL_IF_RECOVERING | \
->> +				SCMD_MPATH_IO_STATS | SCMD_MPATH_CNT_ACTIVE)
-> 
-> [Severity: High]
-> Does adding these flags to SCMD_PRESERVED_FLAGS cause the issue mentioned
-> above by masking the fact that the request already holds the mpath active
-> counter when it comes back through scsi_queue_rq()?
-> 
+Pre-existing issues:
+- [Critical] Preexisting double put of `sdkp->disk_dev` when `sd_large_pool=
+_create()` or `device_add_disk()` fails.
+--
 
+commit 9972be7d4ae335cb741d2858144500af92bf6dc3
+Author: John Garry <john.garry@linux.dev>
+
+scsi: sd: support multipath disk
+
+This commit adds support to attach a multipath disk by allocating a hidden
+gendisk per path. A global list of multipath disks is kept for matching
+SCSI devices, and the multipath gendisk mimics a standard SCSI disk.
+
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 60e071d23ddd0..27230ecc2337e 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+[ ... ]
+> @@ -4048,13 +4151,260 @@ static const struct attribute_group sd_mpath_dis=
+k_attr_group =3D {
+[ ... ]
+> +static void sd_mpath_fail_probe(struct scsi_disk *sdkp)
+> +{
+> +	struct sd_mpath_disk *sd_mpath_disk =3D sdkp->sd_mpath_disk;
+> +	struct scsi_mpath_device *scsi_mpath_dev;
+> +	struct mpath_device *mpath_device;
+> +	struct scsi_device *sdp =3D sdkp->device;
+> +	struct scsi_mpath_head *scsi_mpath_head;
+> +	struct mpath_head *mpath_head;
+> +	bool remove =3D false;
+> +
+> +	if (!sd_mpath_disk)
+> +		return;
+> +
+> +	scsi_mpath_dev =3D sdp->scsi_mpath_dev;
+> +	mpath_device =3D &scsi_mpath_dev->mpath_device;
+> +	scsi_mpath_head =3D sd_mpath_disk->scsi_mpath_head;
+> +	mpath_head =3D &scsi_mpath_head->mpath_head;
+> +
+> +	mutex_lock(&sd_mpath_disks_lock);
+> +	sd_mpath_disk->disk_count--;
+> +	if (!sd_mpath_disk->disk_count) {
+> +		list_del_init(&sd_mpath_disk->entry);
+> +		remove =3D true;
+> +	}
+> +	mutex_unlock(&sd_mpath_disks_lock);
+> +	mpath_device->disk =3D NULL;
+> +
+> +	if (remove) {
+> +		device_del(&sd_mpath_disk->dev);
+> +		mpath_remove_disk(mpath_head);
+> +	}
+> +	sd_mpath_put_disk(sd_mpath_disk);
+
+[Severity: High]
+Can this sequence leave pending delayed removal work uncancelled when teari=
+ng
+down a multipath disk?
+
+If a multipath disk has its last path removed, it can enter delayed removal
+where disk_count drops to 0 and remove_work is scheduled via
+mpath_can_remove_head().=20
+
+If a path is then re-probed, disk_count becomes 1. If that probe subsequent=
+ly
+fails and sd_mpath_fail_probe() is called, the disk_count drops back to 0,
+which triggers the device deletion and frees the head.
+
+However, since this path bypasses mpath_can_remove_head(), could the pending
+remove_work scheduled earlier go uncancelled, potentially leading to a
+use-after-free of mpath_head when the delayed work timer expires?
+
+> +}
+[ ... ]
+> @@ -4171,6 +4529,7 @@ static int sd_probe(struct scsi_device *sdp)
+>  	sd_revalidate_disk(gd);
+>  	if (sdp->sector_size > PAGE_SIZE) {
+>  		if (sd_large_pool_create()) {
+> +			sd_mpath_fail_probe(sdkp);
+>  			error =3D -ENOMEM;
+>  			device_unregister(&sdkp->disk_dev);
+>  			put_disk(gd);
+
+[Severity: Critical]
+This is a pre-existing issue, but could this error path result in a
+double-free of sdkp->disk_dev?
+
+When sd_large_pool_create() fails, device_unregister() is called on
+sdkp->disk_dev, which drops the refcount to 0 and frees sdkp.=20
+
+Immediately following this, put_disk(gd) is called. Because gd->fops is
+already set to &sd_fops, dropping the gendisk refcount invokes
+scsi_disk_free_disk(), which reads the already freed sdkp and attempts a
+second put_device() on sdkp->disk_dev.
+
+>  			goto out;
+>  		}
+>  	}
+> =20
+> +	if (sdp->scsi_mpath_dev) {
+> +		error =3D sd_mpath_revalidate_head(sdkp);
+> +		if (error)
+> +			sdev_printk(KERN_WARNING, sdp, "could not revalidate multipath limits=
+\n");
+> +	}
+> +
+>  	if (sdp->removable) {
+>  		gd->flags |=3D GENHD_FL_REMOVABLE;
+>  		gd->events |=3D DISK_EVENT_MEDIA_CHANGE;
+> @@ -4192,6 +4557,7 @@ static int sd_probe(struct scsi_device *sdp)
+> =20
+>  	error =3D device_add_disk(dev, gd, NULL);
+>  	if (error) {
+> +		sd_mpath_fail_probe(sdkp);
+>  		device_unregister(&sdkp->disk_dev);
+>  		put_disk(gd);
+
+[Severity: Critical]
+This is a pre-existing issue, but might this error path also suffer from the
+same double-free of sdkp->disk_dev?
+
+Just like the memory allocation failure path above, if device_add_disk()
+fails, device_unregister() frees sdkp, and the subsequent put_disk(gd)
+accesses the freed sdkp and performs a second put_device() on
+sdkp->disk_dev.
+
+>  		if (sdp->sector_size > PAGE_SIZE)
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907105021.1763=
+236-1-john.g.garry@oracle.com?part=3D24
