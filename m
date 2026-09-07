@@ -1,81 +1,81 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6ED64AFE12;
-	Mon,  7 Sep 2026 12:40:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FBA24B04B9;
+	Mon,  7 Sep 2026 12:40:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788784828; cv=none; b=cFD03l0Vc8GqgloIEdxhZLmbHF/dWC+OwHopfRsYreD+7i4QR7T+vK4DsQbN911gJTJCsqoSEbm8NXwx2pAII8/jGbUQGwZ0sAhz1VvAXkuJA622uSxUmJxy4apw4PwBPFjSR3AOaC8qtlaa6P+n+vTY80B/yr61FY9gpnorLYE=
+	t=1788784859; cv=none; b=ergmgStlSm9zRR9TTg65uBawrwKNFicL8JRDIggYkjJI0QLSqF3yrIO60TabQvXN9EBReqyC9JMISqwkUmUToJAZU9KxtEu41wB4iecL6idoAbESQ+1rqHwnG9yaXPmggbxJjNrswO+xxm9S1Vcrs+7ZOJxbjL3qkIiNnrAxrIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788784828; c=relaxed/simple;
-	bh=BMkWRE+Jer3wxbXkIQ2rpbU0HADys+EW4Zn1AIpE64A=;
+	s=arc-20240116; t=1788784859; c=relaxed/simple;
+	bh=nsb9lwr7OkMBfXu7iDmvfdFcs4wDWkTBEJnRTnPqvx4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=AKqpkdwJ97tDZiINiXdQtSsxtGPeBZsbVduZmOAdsAXmTdy385uQwmY35Rl5t+zaxqbZxv/nNpAAJ65OFYf14IDN6b5sykuFX8ncbrvp1qnRD/GaZaqYeS+sV9bBH/i6zc7jdwJXNlkvpQaiXgmObHtaM6Npq1AtDWJRUewFlJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=w1Qelq7Z; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NzN8PKta; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=FmxBmYkH; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=sWUIHzGL; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=S1BPhKqN/96doDyDVd24dB3UdgX8PFnDu2IOqW14ZhdzjgwdC10uaZilHJBvAQS/SUXNzy7mouW5E2kAoG+3EyVgOS2EmYNMVo1hIQ0iG9vRXQNKcfz04VJYg/tydRPPISXAdjGZOjcwuRDtQsQJbRoB070d0IKyDTSWZLact6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Rdd9HcAI; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ciSAdel3; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=p5tgnNVO; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IXra2oHl; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="w1Qelq7Z";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NzN8PKta";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="FmxBmYkH";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="sWUIHzGL"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Rdd9HcAI";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ciSAdel3";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="p5tgnNVO";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IXra2oHl"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id A60FD1F750;
-	Mon,  7 Sep 2026 12:40:16 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id A541C1F7A2;
+	Mon,  7 Sep 2026 12:40:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788784820; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1788784850; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=spho1EoanIR4qdHhA4fnI0A4gnMCdYOvXFIg1O5EhO0=;
-	b=w1Qelq7Zmg9ckPWCdSrai7iqGLwT87s9qED5gvlzwk6tdceSEwphLlcLvFJM0paew9E/Fu
-	CHPNwZLEYEbQdEQIPyAlEZ/g25Yt/hsa1XqSCdbBY4Uaq7RFzWcqXAiW5DAjXmDLYgFr4e
-	YBOmTjQMTLIcngrscV7ySqxnhQAoMIY=
+	bh=U5kGGKE8tb4xkWVeJKaWI8+bYW27uNC9aoNmmtnYBgw=;
+	b=Rdd9HcAIOuKEGAGTSbnyNHy53hZxmVhCFuM8JAWKbjevAjM3+KbaJLt+sUReBEVJNmPUPI
+	He2+fYGqQw17kDiUHW/WilIjwHjbh5RJ6JvzBz/J0n56W0re5lR0WMPNWbUedfewj+ZYBD
+	jXT29oIdOjxeEKGQKrR3dUuW1GT5rD0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788784820;
+	s=susede2_ed25519; t=1788784850;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=spho1EoanIR4qdHhA4fnI0A4gnMCdYOvXFIg1O5EhO0=;
-	b=NzN8PKtab6qLxAcFdJqbsYIUPgNeILwLKLrcRR8d+xof83xXUKVclhK9grfI9+A6roJp06
-	XZ/Loa7gp9kYFZAg==
+	bh=U5kGGKE8tb4xkWVeJKaWI8+bYW27uNC9aoNmmtnYBgw=;
+	b=ciSAdel3zy/g1drb7WsiM4+filiKcoV7CDbFDHXMkiUmd4GoLkJbvS3vR4orvxCJDHG4JD
+	KwP+bC9ay+DzKNBw==
 Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=FmxBmYkH;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=sWUIHzGL
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=p5tgnNVO;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=IXra2oHl
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1788784816; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1788784846; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=spho1EoanIR4qdHhA4fnI0A4gnMCdYOvXFIg1O5EhO0=;
-	b=FmxBmYkHN+QFKu2mKOnUe+APDL6FzDNU1T349aH0oABFYetvQ0oworExRIn/8sN3shIXrp
-	zMKnY1OL1TUHBg1tGXQ22zA2/iPZT568hXx0oap1+/WCLdF7AiRbwovPSMj3zCSFQGM9IN
-	QHreMyIpA9G0VMwAbKN/fmyiO4ncIEg=
+	bh=U5kGGKE8tb4xkWVeJKaWI8+bYW27uNC9aoNmmtnYBgw=;
+	b=p5tgnNVOJu48AC0RUW17xVRx+Yo1oStBiUCar8gXw0wGWnWZw6soRDDzujaG/qXQwrQtI2
+	RlchLRo7QnV5rzB8l/td29+xiWUGC+G+QDu/NbrQiCqsxEhx+myEQCftDM/TKwu9r+VYR9
+	TiIL+ZW2nqjboPb08iTQuOOLm65KyXw=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1788784816;
+	s=susede2_ed25519; t=1788784846;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=spho1EoanIR4qdHhA4fnI0A4gnMCdYOvXFIg1O5EhO0=;
-	b=sWUIHzGLFEA5vklLq5KhhumheVgUUTeEVAgvNK9z8YPbwbJXUWRfkf293joVKYUTMmb26s
-	zjJ40y2wJ4mLoQBg==
+	bh=U5kGGKE8tb4xkWVeJKaWI8+bYW27uNC9aoNmmtnYBgw=;
+	b=IXra2oHlbP6V759QnhOOBVSK/63/ltPkRQ5mJ2WMc17xbsJePhzlEIyn86tsMm6OIDGTQe
+	VeCmeKLjcpqiZkAg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 513271339B;
-	Mon,  7 Sep 2026 12:40:16 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3B80A1339B;
+	Mon,  7 Sep 2026 12:40:46 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id I2zBErCwnmqMOgAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 07 Sep 2026 12:40:16 +0000
-Message-ID: <c9948fa3-8bfc-4dc0-97e6-63bcde39bc27@suse.de>
-Date: Mon, 7 Sep 2026 14:40:15 +0200
+	id Xs5dDc6wnmpYOwAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 07 Sep 2026 12:40:46 +0000
+Message-ID: <b7aecaeb-2e27-4eb4-b5aa-01d7b301b834@suse.de>
+Date: Mon, 7 Sep 2026 14:40:45 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -83,7 +83,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 29/40] scsi: libiscsi: use 16-bits defined sense codes
+Subject: Re: [PATCH v2 30/40] scsi: ibmvscsi_tgt: use 16-bits defined sense
+ codes
 To: Damien Le Moal <dlemoal@kernel.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>,
  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -93,19 +94,19 @@ To: Damien Le Moal <dlemoal@kernel.org>,
  Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
  Heiko Carstens <hca@linux.ibm.com>
 References: <20260903034201.112211-1-dlemoal@kernel.org>
- <20260903034201.112211-30-dlemoal@kernel.org>
+ <20260903034201.112211-31-dlemoal@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260903034201.112211-30-dlemoal@kernel.org>
+In-Reply-To: <20260903034201.112211-31-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Spam-Score: -4.51
-X-Rspamd-Queue-Id: A60FD1F750
+X-Rspamd-Queue-Id: A541C1F7A2
 X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 X-Spam-Level: 
 X-Rspamd-Action: no action
 X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
+	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
@@ -130,17 +131,18 @@ X-Spamd-Result: default: False [-4.51 / 50.00];
 X-Spam-Flag: NO
 
 On 9/3/26 5:41 AM, Damien Le Moal wrote:
-> Refactor libiscsi to use scsi_set_sense() and replace all hard-coded
-> additional sense codes and additional sense code qualifiers with the enum
-> values defined in include/scsi/scsi_sense.h. This helps with code clarity
-> as the sense codes being processed are easier to test and self-documented.
+> Refactor the IBM virtual SCSI target driver to use scsi_set_sense_buffer()
+> and replace all hard-coded additional sense codes and additional sense
+> code qualifiers with the enum values defined in include/scsi/scsi_sense.h.
+> This helps with code clarity as the sense codes being processed are easier
+> to test and self-documented.
 > 
 > No functional change intended.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/scsi/libiscsi.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
+>   drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 5 ++---
+>   1 file changed, 2 insertions(+), 3 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
