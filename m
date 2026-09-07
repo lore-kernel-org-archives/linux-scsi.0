@@ -1,124 +1,246 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-20.mta1.migadu.com [95.215.58.20])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A20A39280C
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 11:56:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84B3F5B21A
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:00:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788782166; cv=none; b=FTXA6CR2rbTvT29x/fXbaQS9EqEuAOxun4gyq37XSQgHsYcwEP9BQeS8DoWhngHwAkDAZwqYL7Kv/2MQXLIH8XV+nyUh4udUEAzSSMaBJW+W5tX3CnK9AtwqvYsEPR5gU8aZMZFdomzM3+1/oPb3pEnZIFfY6eIPWLNJbxQUWcA=
+	t=1788782427; cv=none; b=XBKlYurtv6AO0hhzoYcvc9AZyDk1aTw2/P0Gt6jfBSoB0//LoJDu675JNSRRxryVZchaUwm2Svo4coHsQCIlCm47IKqepD85Yo2AT62Pn1hzfW2geG67iXPlckDmFow5QoH4LD/AjdeUD30Mh8vyFnLD28YLLap8zq0wd/kU/0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788782166; c=relaxed/simple;
-	bh=1AixA4bkl8pQG6cUgCv925UfbvQBf7HX9WyAdDznv+Y=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=upMGIzKtJJTrFT4EW298x/7YypObJm5sgtJomWebY9FxXhDSjXUsAccWcfCpJGrni8i8exyhjbNdG5kMFT4o6OQv5fT3LbAon+oiBcN6+64J1yzlsRLlkbAfrJzIGM14qUIum5LsZLISh4dlIbeXk/TloJwsIkO0f+NV36la2Fc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dHPQjK2/; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788782427; c=relaxed/simple;
+	bh=rTsYp2NGw5bcO20fwMn5il/lu32/vuPJF65Qflx9zbk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jxP2sTdx4x1DKUJXbrIK3F6DBdtoeJ0/GqU86CJZd9kvtmgrZA5wJXsywkdMXLlhipCI2vZnnpobMgb+Y9L8D6fiQR+0ePqV6fdfpqHRvEOHV5BzEpwhyxpkHSKn3f0TJulZJprQfcxjU3si4v3UrRW55sa3f9yVCrUNcKGv2e0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=NyLhGZLJ; arc=none smtp.client-ip=95.215.58.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dHPQjK2/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63C811F00A3A;
-	Mon,  7 Sep 2026 11:56:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788782164;
-	bh=S8U4xIIY4JYoyKcBUJVASF0nWJFYoCsJjjvP0kgrMqc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dHPQjK2/ezjZuY3cWrIa7G8OQC5Q3LPWr1r3tkw+KNTvz0cjgaEXl208uaVlDeYHX
-	 +Ec6399Ze5ChuDeOrVe/MBg4tjqQUdBZzRPJXnuwqBxpF0ZLfA6e/cBxhFXHCquXE8
-	 JoxY1QOgByuqLwFxa30tVTlSIfzaTZDHHSye1gId6q/DBcZ2gc9F71HVexrV8kdGep
-	 nhjook61hT5JYPhzqI9Wz7Db1b8J0bMhbWgyi8Aka6QSeeL0UxHre1Pa7dEKvr7qxX
-	 dEOC0VxLI5zo1xUaDP69u8q+kHRgMS6NvwdDMKZlWkZxi6JvK03wcBcwtwe+dA2/O3
-	 hbLCFI5NHbp6g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 17/27] scsi-multipath: revalidate paths upon device
- unblock
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "John Garry" <john.g.garry@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260907105021.1763236-18-john.g.garry@oracle.com>
-References: <20260907105021.1763236-1-john.g.garry@oracle.com>
- <20260907105021.1763236-18-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 11:56:03 +0000
-Message-Id: <20260907115604.63C811F00A3A@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="NyLhGZLJ"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=rTsYp2NGw5bcO20fwMn5il/lu32/vuPJF65Qflx9zbk=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788782423; v=1; x=1789387223;
+ b=NyLhGZLJb6PElmqv6aGTg/CVlLOCyEZ816N/OZV9E0HrbLX2dkjg0/McSAWaHW9IqKouPgzt
+ p4qvSEn/6c7v2mpmBrO5loKf6CWDlxbR2rT5NCOJnmjrpkgisbYIBBLhyQK0QsLkKhKzqx00Nem
+ zC7dZAV5Kr4J3OFPy2rG70rI=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta10.migadu.com with ESMTPS id 2c071b0a3a216c58;
+	Mon, 07 Sep 2026 12:00:18 +0000
+X-Mizu-Trace-ID: 2c071b0a3a216c58
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <a710c011-e85d-40f3-a6c5-d8344d608430@linux.dev>
+Date: Mon, 7 Sep 2026 13:00:13 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 03/27] libmultipath: Add path selection support
+To: sashiko-reviews@lists.linux.dev, John Garry <john.g.garry@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+References: <20260907105021.1763236-1-john.g.garry@oracle.com>
+ <20260907105021.1763236-4-john.g.garry@oracle.com>
+ <20260907110926.ED4271F00A3A@smtp.kernel.org>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20260907110926.ED4271F00A3A@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Concurrent invocation of device block/unblock during initializatio=
-n dereferences a NULL scsi_mpath_head.
-- [High] TOCTOU race in scsi_device_block and scsi_internal_device_unblock =
-accessing multipath state outside state_mutex, causing a NULL pointer deref=
-erence during device teardown.
---
+On 9/7/26 12:09, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 6 potential issue(s) to consider:
+> 
+> New issues:
+> - [High] Infinite loop in `mpath_round_robin_path()` if the current round-robin path is concurrently removed from the device list, causing an SRCU deadlock.
+> - [High] `mpath_round_robin_path` fast-path incorrectly returns an unlinked path, breaking failover.
+> - [Medium] Calling `list_is_singular()` on an RCU-protected list without holding the update lock causes a data race on `head->prev`.
+> - [Medium] Path selection functions bypass the `.is_optimized` callback, violating the API contract and causing inconsistent path evaluation.
+> - [Low] Missing bounds check on iopolicy index in `mpath_get_iopolicy`.
+> 
+> Pre-existing issues:
+> - [Medium] `mpath_device_set_live()` silently swallows setup failures, leaving the driver unaware of the aborted initialization.
+> --
+> 
+> commit 59f56cbf3b60a1ec3a1336f453b4cd772a005e7b
+> Author: John Garry <john.garry@linux.dev>
+> 
+> libmultipath: Add path selection support
+> 
+> This commit adds path selection support to libmultipath, providing
+> round-robin, NUMA, and queue-depth selection modes similar to NVMe. It also
+> abstracts NVMe ANA into enum mpath_access_state to allow SCSI ALUA usage
+> and introduces iopolicy management functions.
+> 
+>> diff --git a/lib/multipath.c b/lib/multipath.c
+>> index 574868ce53381..3541357d07f8d 100644
+>> --- a/lib/multipath.c
+>> +++ b/lib/multipath.c
+>> @@ -7,8 +7,245 @@
+> 
+> [ ... ]
+> 
+>> +int mpath_get_iopolicy(char *buf, int iopolicy)
+>> +{
+>> +	return sprintf(buf, "%s\n", mpath_iopolicy_names[iopolicy]);
+>> +}
+> 
+> [Severity: Low]
+> Does this code overflow mpath_iopolicy_names[] if a caller provides an
+> uninitialized or out-of-bounds iopolicy value?
 
-commit d9e004c51ebcdd24da98702a7fb3f90971c90665
-Author: John Garry <john.garry@linux.dev>
+The caller should sanitize iopolicy
 
-    scsi-multipath: revalidate paths upon device unblock
+> 
+> [ ... ]
+> 
+>> +static struct mpath_device *__mpath_find_path(struct mpath_head *mpath_head,
+>> +					int node)
+>> +{
+>> +	int found_distance = INT_MAX, fallback_distance = INT_MAX, distance;
+>> +	struct mpath_device *found = NULL, *fallback = NULL, *mpath_device;
+>> +
+>> +	list_for_each_entry_srcu(mpath_device, &mpath_head->dev_list, siblings,
+>> +		srcu_read_lock_held(&mpath_head->srcu)) {
+>> +		if (mpath_path_is_disabled(mpath_head, mpath_device))
+>> +			continue;
+> 
+> [ ... ]
+> 
+>> +		switch(mpath_device->access_state) {
+>> +		case MPATH_STATE_OPTIMIZED:
+> 
+> [Severity: Medium]
+> Does this code bypass the driver's dynamic state evaluation by accessing
+> access_state directly instead of invoking the provided
+> mpath_path_is_optimized() callback wrapper?
+> 
+> If a driver like SCSI ALUA dynamically changes state, this will read
+> stale data.
 
-This patch adds a revalidation step for multipath devices when a scsi_device
-is unblocked, clearing paths and requeuing any queued bios.
+ALUA support will be added later
 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 56200a7f5c748..1a6f5e1fd80cb 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -3093,6 +3093,8 @@ static int scsi_internal_device_unblock(struct scsi=
-_device *sdev,
->  	mutex_lock(&sdev->state_mutex);
->  	ret =3D scsi_internal_device_unblock_nowait(sdev, new_state);
->  	mutex_unlock(&sdev->state_mutex);
-> +	if ((ret =3D=3D 0) && sdev->scsi_mpath_dev)
-> +		scsi_mpath_revalidate_paths(sdev->scsi_mpath_dev);
+> 
+>> +		    if (distance < found_distance) {
+>> +			    found_distance = distance;
+>> +			    found = mpath_device;
+>> +		    }
+>> +		    break;
+> 
+> [ ... ]
+> 
+>> +static struct mpath_device *mpath_round_robin_path(
+>> +				struct mpath_head *mpath_head)
+>> +{
+>> +	struct mpath_device *mpath_device, *found = NULL;
+>> +	int node = numa_node_id();
+>> +	enum mpath_access_state access_state_old;
+>> +	struct mpath_device *old =
+>> +			srcu_dereference(mpath_head->current_path[node],
+>> +				&mpath_head->srcu);
+>> +
+>> +	if (unlikely(!old))
+>> +		return __mpath_find_path(mpath_head, node);
+>> +
+>> +	if (list_is_singular(&mpath_head->dev_list)) {
+> 
+> [Severity: Medium]
+> Calling list_is_singular() on an RCU-protected list without holding the
+> update lock causes a data race on head->prev. In RCU-protected lists,
+> only next pointers are safely updated for lockless readers.
 
-[Severity: High]
-Are there race conditions involving multipath state modification outside of
-the sdev->state_mutex?
+locking will be added later
 
-It appears a concurrent __scsi_remove_device() could acquire state_mutex,
-transition the device to SDEV_CANCEL or SDEV_DEL, and call
-scsi_mpath_remove_device(). This sets scsi_mpath_dev->scsi_mpath_head to
-NULL. When scsi_internal_device_unblock() resumes, it could call
-scsi_mpath_revalidate_paths() which then attempts to use the NULL pointer.
+> 
+> [Severity: High]
+> Does this fast-path blindly return old without verifying if it is actually
+> the element present in the singular list?
 
-Is it also possible for this code to execute on a partially initialized
-multipath device?
+as above
 
-During device discovery, scsi_mpath_dev_alloc() assigns sdev->scsi_mpath_dev
-but initially leaves scsi_mpath_dev->scsi_mpath_head as NULL while
-performing a blocking INQUIRY. If a transport event (like a link flap)
-concurrently triggers scsi_target_block() and scsi_target_unblock(),
-scsi_internal_device_unblock() could be called and operate on the still-NULL
-scsi_mpath_head.
+> 
+> If the previously cached old path was concurrently removed from dev_list
+> and exactly one valid path remains, list_is_singular() evaluates to true,
+> causing the function to incorrectly return the unlinked path instead of
+> the remaining valid path.
+> 
+>> +		if (mpath_path_is_disabled(mpath_head, old))
+>> +			return NULL;
+>> +		return old;
+>> +	}
+>> +
+>> +	for (mpath_device = mpath_next_dev(mpath_head, old);
+>> +	    mpath_device && mpath_device != old;
+>> +	    mpath_device = mpath_next_dev(mpath_head, mpath_device)) {
+> 
+> [Severity: High]
+> Can this loop spin infinitely if old is concurrently removed from the
+> RCU-protected list?
 
-The same unprotected call pattern appears to exist in scsi_device_block(),
-which was introduced in a prior patch in this series.
+as above
 
-[ ... ]
-> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-> index b16fe6a55fa73..456351fee4b98 100644
-> --- a/drivers/scsi/scsi_multipath.c
-> +++ b/drivers/scsi/scsi_multipath.c
-> @@ -238,6 +238,14 @@ static int scsi_multipath_sdev_init(struct scsi_devi=
-ce *sdev)
->  	return 0;
->  }
-> =20
-> +void scsi_mpath_revalidate_paths(struct scsi_mpath_device *scsi_mpath_de=
-v)
-> +{
-> +       struct scsi_mpath_head *scsi_mpath_head =3D scsi_mpath_dev->scsi_=
-mpath_head;
-> +       struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
+> 
+> The loop relies on reaching old again to terminate. If a concurrent writer
+> unlinks old using list_del_rcu(), it is removed from the circular list but
+> its next pointer remains intact. mpath_next_dev() follows old->next into
+> the remaining list elements, wrapping around and circling the remaining
+> elements indefinitely without ever evaluating mpath_device == old.
+> 
+> If all remaining paths are non-optimized or disabled, the loop never hits
+> the break condition, spinning forever under the SRCU read lock and stalling
+> any writer.
+> 
+>> +
+>> +		if (mpath_path_is_disabled(mpath_head, mpath_device))
+>> +			continue;
+>> +		if (mpath_device->access_state == MPATH_STATE_OPTIMIZED) {
+> 
+> [Severity: Medium]
+> Similar to __mpath_find_path(), does this bypass the driver's dynamic state
+> evaluation by accessing access_state directly rather than calling the
+> mpath_path_is_optimized() callback wrapper?
+> 
+>> +			found = mpath_device;
+>> +			goto out;
+>> +		}
+>> +		if (mpath_device->access_state == MPATH_STATE_NONOPTIMIZED)
+>> +			found = mpath_device;
+>> +	}
+> 
+> [ ... ]
+> 
+>> @@ -133,6 +371,19 @@ void mpath_device_set_live(struct mpath_device *mpath_device)
+>>   		}
+>>   		queue_work(mpath_wq, &mpath_head->partition_scan_work);
+>>   	}
+> 
+> [Severity: Medium]
+> This is a pre-existing issue, but does mpath_device_set_live() silently
+> swallow setup failures earlier in this function?
 
-[Severity: High]
-If scsi_mpath_head is NULL due to the races mentioned above during unblock
-or block operations, will this unconditionally dereference the NULL pointer
-when calculating the offset for mpath_head?
+Yes, this just minics what NVMe does
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907105021.1763=
-236-1-john.g.garry@oracle.com?part=3D17
+> 
+> If device_add_disk() fails, for example due to memory exhaustion, the
+> function clears the MPATH_HEAD_DISK_LIVE flag and returns early, masking
+> the failure from the caller and leaving the driver unaware of the aborted
+> initialization.
+> 
+>> +
+>> +	mutex_lock(&mpath_head->lock);
+>> +	if (mpath_path_is_optimized(mpath_head, mpath_device)) {
+>> +		int node, srcu_idx;
+>> +
+>> +		srcu_idx = srcu_read_lock(&mpath_head->srcu);
+>> +		for_each_online_node(node)
+>> +			__mpath_find_path(mpath_head, node);
+>> +		srcu_read_unlock(&mpath_head->srcu, srcu_idx);
+>> +	}
+>> +	mutex_unlock(&mpath_head->lock);
+>> +
+>> +	mpath_synchronize(mpath_head);
+>>   }
+> 
+
