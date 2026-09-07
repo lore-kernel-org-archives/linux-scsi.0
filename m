@@ -1,102 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0527A5B21A
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Sep 2026 12:03:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08F324756C4;
+	Mon,  7 Sep 2026 12:05:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788782601; cv=none; b=i/56fwkL7K+leqwdpN/gHJp9AUdSZwCCslBr23PvxRXG5RifnYLxl06b4SviyB+fw6jxRyjA1hFGd0rgzvuM9/wepVHRiENJtca8wjz8tIl19gDtBFoWLJHB2QPvObiMB9EbWMec1wEw5mHAOoKoDc4IT9Q+1Fe4sUx7EzakSj8=
+	t=1788782703; cv=none; b=WA5ovAnTLzYkjSAocjmwibOquciit2nuvL9AMYTsOIuYaCcUNmZhWPW7RpR0008ymshQS20X3Un2/A8XJ3NqjQigJeHyna2gnctGcgFHchpcqOtP0JcAXZD8B6s82fAPkiMz5JFoyhBZ94Kj+7LachzLKNmnOHLow4VwjC3JOYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788782601; c=relaxed/simple;
-	bh=fViXrMuLBoxTGzQVsEgKneQhJc/SHbtAlYliT8tncrk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=J3dxlW1qMU2MBYjcWdH/s6LWs+YFUhseMpzvuFBBj8PN3KWPgHfXDH89x68yYzItYpF//iASAUI5/izbEmzVpEEEJbfngi5v0vNOw6skYs0sgE8WV+RTs61salfWyoc6mLmbfnN9+4W1qFZHyC9d0M/HHk6lHlN0Stghyp+mvf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gsLchuhv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788782703; c=relaxed/simple;
+	bh=w8VS46d+D0Z2kODIr5EcV6KSxNjlAQshEk54xKy/IrU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=Y60wbo0/34OcH2M8aM7vxrvQRixw6lNSM7dgO3Pp0bJ/UENLjCkmA3Tnp5NZBaJTysF6LXdJEvpnF1SqlgiNlikAYIZYFsPNDL8kxiOe+0cgF79ffEsj0aqM9s17sMlcrRV7xHUfR06sYWy2o4UFzDa1okWcDfyPdnEnbSNWt3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=UVeYlHtm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=5hdfSuru; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=K2xH8Eif; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nBoY8eeJ; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gsLchuhv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 678721F00A3A;
-	Mon,  7 Sep 2026 12:03:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788782599;
-	bh=/afiyoo+gJGvB6QcrFoEkYXLZ71KYNBwy1R08hQMl6M=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gsLchuhvKtoohs+JfCuT4MzHaK2QlmhGysk9vDgAAyq90BH6/sQxjrYO0TUHp0l0b
-	 jhoiTSaOI+1kb8f/N+i6p0g9cwXOxfTRXctpy4h5gs1jChQdV+7895D0o/zXPX/epG
-	 6f2TYKWFx6Uj7n3jjp4dHTHXGMoVbaR41uboeQ6pEb8pf90PZc3zwx2Kmkk6/RTyZp
-	 gqVv9FmxtW1Wkc7UM5dYkQnqs7ksfelWCMGtfFrMwql6vc6/O5BYALRIJkCbMXRQ8b
-	 XEjnNTHolcyXMQSsE4+LFEGOHkDSVo4f9kDUWQafy25vq6pYEg3zLeZCRRfRcY8wBg
-	 PNUdsRva6TOcQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 19/27] scsi-multipath: provide callbacks for path
- state
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "John Garry" <john.g.garry@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260907105021.1763236-20-john.g.garry@oracle.com>
-References: <20260907105021.1763236-1-john.g.garry@oracle.com>
- <20260907105021.1763236-20-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 07 Sep 2026 12:03:18 +0000
-Message-Id: <20260907120319.678721F00A3A@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="UVeYlHtm";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="5hdfSuru";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="K2xH8Eif";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nBoY8eeJ"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id CF97B1F78B;
+	Mon,  7 Sep 2026 12:04:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1788782696; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ucTBYiva6bntVsdLRifND6L/1V4CuvnpLUUStKFWFmc=;
+	b=UVeYlHtmNyxwTq2VkcfvZajoz7hRTLwCCEzvZbGKQIcGvOkEleFiUeXS7f0ST+rvXXvdxF
+	+S8tBe8PFma1yqpkv3AlfXDdsZIPs6ZTr3YukjCnv0B8fW0+7BAsapvrpSmgStDYEznuJr
+	xx7x8yY0839tD14xjnhLHyWQzXCRovs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1788782696;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ucTBYiva6bntVsdLRifND6L/1V4CuvnpLUUStKFWFmc=;
+	b=5hdfSuruhQyYuHDr0Db7WyooiUHXxm3e8fJQUc2mj7AB7aUSDgYpW70SXZYXTpWzWfaoCs
+	30lkIDqxZh0M2hCA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1788782691; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ucTBYiva6bntVsdLRifND6L/1V4CuvnpLUUStKFWFmc=;
+	b=K2xH8EifUb6mw3BDl6VQ7/DQF0FlvKRscuQlZYLmSKc4Bb4F9YI0MQcqpw+gat7OLh7r4h
+	PLO8EGscr4nfbUIrVd1vqX4uIZ+/3Vn+SeTFkNUy0Y7rmHnsP8I2xbnQ4qhuC/MLTHf0XY
+	gYzTK+bSW6AvWaj4T7/hXlR35v4rKg4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1788782691;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ucTBYiva6bntVsdLRifND6L/1V4CuvnpLUUStKFWFmc=;
+	b=nBoY8eeJlHYNAyXBvvBBEceimBJKT4f/pfsEzvjibZdA6MxkI+NE28okV8lNypSvzRvAOc
+	i/iwV3Uhy4xijqCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4D2751339B;
+	Mon,  7 Sep 2026 12:04:51 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id DFQjEWOonmqnFwAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 07 Sep 2026 12:04:51 +0000
+Message-ID: <59d3ec1f-1b9c-4c1b-b277-1cbd073dee9d@suse.de>
+Date: Mon, 7 Sep 2026 14:04:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 03/40] scsi: constants: rename internal struct field
+ names
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>, linux-usb@vger.kernel.org,
+ Alan Stern <stern@rowland.harvard.edu>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-s390@vger.kernel.org,
+ Heiko Carstens <hca@linux.ibm.com>
+References: <20260903034201.112211-1-dlemoal@kernel.org>
+ <20260903034201.112211-4-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260903034201.112211-4-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.996];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi_mpath_available_path() erroneously returns true for ALUA unav=
-ailable/offline states, leading to infinite I/O requeuing.
---
+On 9/3/26 5:41 AM, Damien Le Moal wrote:
+> To make the code more clear, rename the code12 field of struct error_info
+> to the more natural name "code" and the fields code1, code2_min and
+> code2_max of struct error_info2 to the more explicit asc, ascq_min and
+> ascq_max.
+> 
+> No functional change intended.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/scsi/constants.c | 22 ++++++++++++----------
+>   1 file changed, 12 insertions(+), 10 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-commit 4cf5187795e3a1d7ac00b1645759bf9140204feb
-Author: John Garry <john.garry@linux.dev>
+Cheers,
 
-scsi-multipath: provide callbacks for path state
-
-This patch provides callbacks for .is_disabled, .is_optimized, and
-.available_path. These use scsi_device.sdev_state and access_state, which
-will be driven by ALUA.
-
-> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-> index 12200664ed676..4055b86c83a03 100644
-> --- a/drivers/scsi/scsi_multipath.c
-> +++ b/drivers/scsi/scsi_multipath.c
-> @@ -306,7 +306,56 @@ static struct bio *scsi_mpath_clone_bio(struct bio *=
-bio)
-[ ... ]
-> +static bool scsi_mpath_available_path(struct mpath_device *mpath_device)
-> +{
-> +	struct scsi_mpath_device *scsi_mpath_dev =3D
-> +				to_scsi_mpath_device(mpath_device);
-> +	struct scsi_device *sdev =3D scsi_mpath_dev->sdev;
-> +	enum scsi_device_state sdev_state =3D READ_ONCE(sdev->sdev_state);
-> +
-> +	if (sdev_state =3D=3D SDEV_RUNNING || sdev_state =3D=3D SDEV_QUIESCE ||
-> +	    sdev_state =3D=3D SDEV_BLOCK || sdev_state =3D=3D SDEV_CREATED_BLOC=
-K)
-> +		return true;
-> +
-> +	return false;
-> +}
-
-[Severity: High]
-Does this logic bypass queue_if_no_path limits when devices are in ALUA
-offline or unavailable states?
-
-Since this only checks sdev_state, if all paths transition to an ALUA
-offline or unavailable state but remain physically connected (SDEV_RUNNING),
-would this function still return true?
-
-If it returns true for ALUA offline paths, could mpath_bdev_submit_bio()
-indefinitely queue I/O in the requeue_list, ignoring the user's
-configuration for timeout and failure?
-
-Should this function also check sdev->access_state to prevent treating
-paths as available when they are in ALUA states that can never serve I/O?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260907105021.1763=
-236-1-john.g.garry@oracle.com?part=3D19
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
