@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7F883E4107;
-	Tue,  8 Sep 2026 20:10:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42C453E4107;
+	Tue,  8 Sep 2026 20:11:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788898235; cv=none; b=Fi1UEEoX9XS7bpZKZVRNic03ptDfiyckZEOCx9FXR2TfgF4LMEU8yU5rfdnI6HX0PTxahj3C2gJbHWahp7vx2R8x86cWWqguM50E/TFYoASx53HTFunJ/rRx72ztWPzwvbXfdmCkzOMqpOjYhuKhWrAbMqdua9pq78wmBQD4FNY=
+	t=1788898263; cv=none; b=bVr2kRfPz8pyGrbN7miy8H7dms2gVNMkgas7qmu72a8JHR5kH9wzCDLDlMIu85l98f/nR/INQgj2a8NVJ56I7fD7KUMP3pKqDE5OxtlHY+GT6XJCfwLTxkFYEeR3BqhoVNN7rpouedJCEJH7lQQyMQmKn0F5fC6210/Ikz/nxSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788898235; c=relaxed/simple;
-	bh=mW1naObXPKtLwSWApVWsQPYHiLfHpNWdJIadTG8SHEw=;
+	s=arc-20240116; t=1788898263; c=relaxed/simple;
+	bh=sqcIlbxY+dm7DeefjumELfmk33yU5orxoE39c7c7Zbs=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Fsz/QHrkN5XUnoIGUeEZw3yWTWyjv+iDZ0oIIPIiOXC6pDnRU82t3TyjfSA7/29Oj4rIFpbADiFNRtYxl8ZPISoWnIAbMBaPGAmVxg+WXlepg5D6JSaOsr5cGNfl8Wl/rAX3LgU3KHj+3XDpNTfAtBM2oUMSYdHZVVXBJvmQqOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tl9ZV6Hb; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=PRG27l5pySjtoziC4dUbyADB9ZAgBIP40ZSUYBFDpbPmiX6spRPVbDRmU8z568nK68sRZrZxCd80HAmnLQ1jBfOZIozTHmVuaDd3y5QzTNI0wLgAwChsjiKyJXTjO6KziJBp19n5NbOYxfRcgJ/cOlvlYSh8JOkk5PV5J2FYwBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DBmTdx1K; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tl9ZV6Hb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49B8C1F00A3A;
-	Tue,  8 Sep 2026 20:10:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DBmTdx1K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C87EB1F00A3D;
+	Tue,  8 Sep 2026 20:10:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788898233;
-	bh=oPJX0y8/AFpF4NLkzH+iQBcndkDmeOupn/4emEXwzc4=;
+	s=k20260515; t=1788898261;
+	bh=OAOIZdRVUolP7m+UlelI9upMvAKcRO1WMQng4paj+jo=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=Tl9ZV6Hb8Hjiuc60Ij+5vASX4LO4r2f5Hjq6CP1FNLVozhArVz9mi1Jif7gPMJdIi
-	 4++H88OwBH/cogRhHQit1xi7oDME44hQN+VP+YZU4PJ57L8nsQXS/p5n4SXS57x5GK
-	 x619Olb5JOmJzBxzUUNKU71Y4lSc0ZV5Lb9Bcv3T3GsiFgV0TDnq5vt2SNzPS2lm5y
-	 FbYol0Fxi4EsP7jRcmb0BLBzoeikFrPPwtP6zJyl9ounKHiOiG4FUkK7FR+JVUcWWQ
-	 hoYJQAkJTHkCesL3G5CW1CVz7BbhVpPBN2Yw7kjQuTuX6MRqns6c/bi16DttknbuFV
-	 62dS5Inoq/Ffg==
+	b=DBmTdx1KZGSkEDEcii/q39f+XKsGHraP4WDkgtAf8wP7TIpwv1k00mEV1lgAB96X6
+	 JFTze709burwTzs4EmZWJxTKW59UStMjF9b+5Pq/Lw0FDWDOnISmKILxwphHTzdck0
+	 NYLzka1VDWQ2LeBLzKL0rzVzSoiR2OSuPcjSVoWZF+h9mf3VEwi4dCnusX+02tn5Cg
+	 tvPq8yx5jRtbNY1zcLwwRcQR3Agy1bwWAspTm8/tCJyhFlE5Boi+tX42B5bTjDPZ6A
+	 yQZtgSju8tugLzrzGaSyZqkHEwhBQkT/49kJBGXUZq/yv8ok4BVaUEb2mm0eVTlsDn
+	 XbXi3m4fkJPWQ==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Tue, 08 Sep 2026 21:01:21 +0100
-Subject: [PATCH 17/39] scsi: sg: convert mmap hook to mmap_prepare and
- rework
+Date: Tue, 08 Sep 2026 21:01:22 +0100
+Subject: [PATCH 18/39] fbdev: defio: assert FBINFO_VIRTFB, drop VM_IO, add
+ VM_MIXEDMAP
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-17-dacf19cce22b@kernel.org>
+Message-Id: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-18-dacf19cce22b@kernel.org>
 References: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org>
 In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -122,197 +122,71 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5941; i=ljs@kernel.org;
- h=from:subject:message-id; bh=mW1naObXPKtLwSWApVWsQPYHiLfHpNWdJIadTG8SHEw=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIWZG7+YfQznv34ok35avkX82er69RE11TdcfjmKdEzh
- U15v2NeRykLgxgXg6yYIsvzL+L7g0TC5nVe8HeDmcPKBDKEgYtTACbSlsrI8GBzr7PJndJrvjb1
- l3MuT37UrxbVn16c5yHUa2VdtsFvPyPD5IthfpMVE29zJX2yOxuTIfxt1sMV6SaLjU7oe3lYPHr
- ABgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2308; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=sqcIlbxY+dm7DeefjumELfmk33yU5orxoE39c7c7Zbs=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIWZG6WuGeiusTh3B7GhKNzFKZ+lurLVP6t02HKsKbr1
+ LrfalPmdJSyMIhxMciKKbI8/yK+P0gkbF7nBX83mDmsTCBDGLg4BWAiZc2MDM1X7h7bEfPG8hxX
+ Znxi3b8FT2anxu09dUQ0olb5GEfxgWpGhtnCvvW1dUf7J9q/y7h3dMnaZDdVyYW+xidVTbKZdXv
+ c2QA=
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-Move from the deprecated mmap hook to the new mmap_prepare hook.
+Currently all drivers which use defio allocate system memory. All of them
+also set FBINFO_VIRTFB, other than ssd1307fb, however this driver allocates
+system RAM, so simply failed to set this flag when it ought to.
 
-We are mapping kernel pages here, so use the discontiguous kernel mapping
-mmap action to do so.
+This patch sets FBINFO_VIRTFB on ssd1307fb probe, then drops setting VM_IO
+in fb_deferred_io_mmap() and instead requires FBINFO_VIRTFB to be set,
+erroring out with a kernel warning if not.
 
-Unwind the rather confusing loop and instead map as many pages as we can at
-one time.
+The logic requires a page from the driver and since commit 1ecbc7dd2902
+("fbdev/deferred-io: Always call get_page() for framebuffer pages") has
+always required it to be refcounted, so this was implicitly already the
+case.
 
-Note that we do not need to pay attention to rsv_schp->k_use_sg here, as
-the pages are populated for the length of the buffer at
-rsv_schp->page_order granularity as compound pages.
-
-The discontiguous kernel page mapping logic handles the compound pages for
-us.
-
-sfp->mmap_called keeps the buffer stable for us. As before it is never
-cleared, so a failed mmap also leaves it set.
-
-We also remove some useless vma, vma->vm_file NULL checks - these will
-always be non-NULL if you reached the mmap hook logic.
-
-We retain log output for consistency, but change what's output on page
-mapping to indicate that sg_discontig_get() does the work now.
-
-Note that we drop the VMA_IO_BIT flag for the VMA here. It was never
-necessary as we invoke alloc_pages() which gives us refcounted folios that
-are fine for GUP to access (VMA_IO_BIT would prevent that).
+Finally this patch sets VM_MIXEDMAP, as the logic is mapping
+kernel-allocated memory so this is appropriate.
 
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- drivers/scsi/sg.c | 115 ++++++++++++++++++++++++------------------------------
- 1 file changed, 51 insertions(+), 64 deletions(-)
+ drivers/video/fbdev/core/fb_defio.c | 6 +++---
+ drivers/video/fbdev/ssd1307fb.c     | 2 ++
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 5408f002e6c0..12837b828b89 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1212,85 +1212,72 @@ sg_fasync(int fd, struct file *filp, int mode)
- 	return fasync_helper(fd, filp, mode, &sfp->async_qp);
- }
- 
--static vm_fault_t
--sg_vma_fault(struct vm_fault *vmf)
-+static int sg_discontig_init(void *vm_private_data, void **private)
+diff --git a/drivers/video/fbdev/core/fb_defio.c b/drivers/video/fbdev/core/fb_defio.c
+index fd00b86e1ae6..fb359ecc3966 100644
+--- a/drivers/video/fbdev/core/fb_defio.c
++++ b/drivers/video/fbdev/core/fb_defio.c
+@@ -366,13 +366,13 @@ int fb_deferred_io_mmap(struct fb_info *info, struct vm_area_struct *vma)
  {
--	struct vm_area_struct *vma = vmf->vma;
--	Sg_fd *sfp;
--	unsigned long offset, len, sa;
--	Sg_scatter_hold *rsv_schp;
--	int k, length;
--
--	if ((NULL == vma) || (!(sfp = (Sg_fd *) vma->vm_private_data)))
--		return VM_FAULT_SIGBUS;
--	rsv_schp = &sfp->reserve;
--	offset = vmf->pgoff << PAGE_SHIFT;
--	if (offset >= rsv_schp->bufflen)
--		return VM_FAULT_SIGBUS;
--	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
--				      "sg_vma_fault: offset=%lu, scatg=%d\n",
--				      offset, rsv_schp->k_use_sg));
--	sa = vma->vm_start;
--	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
--	for (k = 0; k < rsv_schp->k_use_sg && sa < vma->vm_end; k++) {
--		len = vma->vm_end - sa;
--		len = (len < length) ? len : length;
--		if (offset < len) {
--			struct page *page = rsv_schp->pages[k] + (offset >> PAGE_SHIFT);
--			get_page(page);	/* increment page count */
--			vmf->page = page;
--			return 0; /* success */
--		}
--		sa += len;
--		offset -= len;
-+	const unsigned long req_sz = (unsigned long)*private;
-+	Sg_fd *sfp = vm_private_data;
-+	Sg_scatter_hold *rsv_schp = &sfp->reserve;
-+	int err = 0;
+ 	vma->vm_page_prot = pgprot_decrypted(vma->vm_page_prot);
+ 
++	if (WARN_ON_ONCE(!(info->flags & FBINFO_VIRTFB)))
++		return -EINVAL;
+ 	if (!try_module_get(THIS_MODULE))
+ 		return -EINVAL;
+ 
+ 	vma->vm_ops = &fb_deferred_io_vm_ops;
+-	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
+-	if (!(info->flags & FBINFO_VIRTFB))
+-		vm_flags_set(vma, VM_IO);
++	vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND | VM_DONTDUMP);
+ 	vma->vm_private_data = info->fbdefio_state;
+ 
+ 	fb_deferred_io_state_get(info->fbdefio_state); /* released in vma->vm_ops->close() */
+diff --git a/drivers/video/fbdev/ssd1307fb.c b/drivers/video/fbdev/ssd1307fb.c
+index c4fdecafd856..958514a35433 100644
+--- a/drivers/video/fbdev/ssd1307fb.c
++++ b/drivers/video/fbdev/ssd1307fb.c
+@@ -763,6 +763,8 @@ static int ssd1307fb_probe(struct i2c_client *client)
+ 	info->fix.smem_start = __pa(vmem);
+ 	info->fix.smem_len = vmem_size;
+ 
++	info->flags = FBINFO_VIRTFB;
 +
-+	mutex_lock(&sfp->f_mutex);
-+	if (req_sz > rsv_schp->bufflen) {
-+		err = -ENOMEM;	/* cannot map more than reserved buffer */
-+		goto out;
-+	}
-+	sfp->mmap_called = 1; /* Prevents changes to buffer size. */
-+out:
-+	mutex_unlock(&sfp->f_mutex);
-+	return err;
-+}
-+
-+static int
-+sg_discontig_get(struct discontig_kernel_page_state *state)
-+{
-+	Sg_fd *sfp = state->vm_private_data;
-+	Sg_scatter_hold *rsv_schp = &sfp->reserve;
-+	const unsigned int order = rsv_schp->page_order;
-+	const pgoff_t nr_pages = state->nr_pages_mapped;
-+
-+	if (nr_pages >= (rsv_schp->bufflen >> PAGE_SHIFT)) {
-+		discontig_kernel_map_abort(state);
-+		return 0;
- 	}
+ 	fb_deferred_io_init(info);
  
--	return VM_FAULT_SIGBUS;
-+	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
-+				      "sg_discontig_get: offset=%lu, scatg=%d\n",
-+				      nr_pages << PAGE_SHIFT, rsv_schp->k_use_sg));
-+
-+	discontig_kernel_map_page(state, rsv_schp->pages[nr_pages >> order]);
-+	return 0;
- }
- 
--static const struct vm_operations_struct sg_mmap_vm_ops = {
--	.fault = sg_vma_fault,
-+static const struct discontig_kernel_page_ops sg_discontig_ops = {
-+	.init = sg_discontig_init,
-+	.get = sg_discontig_get,
- };
- 
- static int
--sg_mmap(struct file *filp, struct vm_area_struct *vma)
-+sg_mmap_prepare(struct vm_area_desc *desc)
- {
--	Sg_fd *sfp;
--	unsigned long req_sz, len, sa;
--	Sg_scatter_hold *rsv_schp;
--	int k, length;
--	int ret = 0;
-+	Sg_fd *sfp = desc->file->private_data;
-+	const unsigned long req_sz = vma_desc_size(desc);
- 
--	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
-+	if (!sfp)
- 		return -ENXIO;
--	req_sz = vma->vm_end - vma->vm_start;
-+
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
- 				      "sg_mmap starting, vm_start=%p, len=%d\n",
--				      (void *) vma->vm_start, (int) req_sz));
--	if (vma->vm_pgoff)
-+				      (void *) desc->start, (int) req_sz));
-+
-+	if (desc->pgoff)
- 		return -EINVAL;	/* want no offset */
--	rsv_schp = &sfp->reserve;
--	mutex_lock(&sfp->f_mutex);
--	if (req_sz > rsv_schp->bufflen) {
--		ret = -ENOMEM;	/* cannot map more than reserved buffer */
--		goto out;
--	}
- 
--	sa = vma->vm_start;
--	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
--	for (k = 0; k < rsv_schp->k_use_sg && sa < vma->vm_end; k++) {
--		len = vma->vm_end - sa;
--		len = (len < length) ? len : length;
--		sa += len;
--	}
-+	vma_desc_set_flags(desc, VMA_DONTEXPAND_BIT, VMA_DONTDUMP_BIT);
-+	desc->private_data = sfp;
- 
--	sfp->mmap_called = 1;
--	vm_flags_set(vma, VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
--	vma->vm_private_data = sfp;
--	vma->vm_ops = &sg_mmap_vm_ops;
--out:
--	mutex_unlock(&sfp->f_mutex);
--	return ret;
-+	mmap_action_map_discontig_kernel_pages(desc, (void *)req_sz,
-+					       &sg_discontig_ops);
-+	return 0;
- }
- 
- static void
-@@ -1415,7 +1402,7 @@ static const struct file_operations sg_fops = {
- 	.unlocked_ioctl = sg_ioctl,
- 	.compat_ioctl = compat_ptr_ioctl,
- 	.open = sg_open,
--	.mmap = sg_mmap,
-+	.mmap_prepare = sg_mmap_prepare,
- 	.release = sg_release,
- 	.fasync = sg_fasync,
- };
+ 	i2c_set_clientdata(client, info);
 
 -- 
 2.55.0
