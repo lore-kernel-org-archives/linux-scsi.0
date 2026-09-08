@@ -1,87 +1,111 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk2-f12.google.com (mail-qk2-f12.google.com [74.125.230.204])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA252D47F1
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Sep 2026 01:20:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788830445; cv=none; b=Nid1UqZaeRlNyG6ebBSs5DI+LDN4+4YeY4pmquSn6Viv0HGR4lldGfWVZ0TYJKa3qp6trjKEd7ufULPvrue5TyDnl51Qtu4cTulhHzq92JUaPiprI3oWDwRVtdtzeisKS8y4jfYg6TxVwFRX7WRoVxsyFNuH+NRybhPCincabmw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788830445; c=relaxed/simple;
-	bh=HYnt0lgNZgdEnl2AZEbrIVxiG7QqHlBfDK5sg9QaNWY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=SkDZ7eQhY5qwTynjiGQW++HmLegd6s/UA9Ky5hFYzWZeOfNbql7z8sTS9VYuY0ikP2tBRus8N8sbt0AWmWn8ujZUrLGj3QzWn5mhiLI0ap59b/370WkAoMt1oQRt5qbcFHwJl8WkT4fKDBPaSfFASyszU9o/UO0BGU+LFyFeE80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=XDt2o2ad; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80CA23126B2
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Sep 2026 01:34:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.230.204
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788831294; cv=pass; b=TTP++nk80hqxB6Gp6LSMoi8fKh1rQZDV9z7i5L4aygF/3AKIXV5ppH4fF2cGj+Ezi6FAsx0N+n8wB4yP+Rz6BmQky97SrLzZ0Ln8VJcXZ/fqhUtIoY9upQcmc/4MF0xAc2QIqeg3xoYWieGS3IzsAPrO6HiD7yEEvQdiS6YA340=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788831294; c=relaxed/simple;
+	bh=C8sk1qEEBHqvgTdmahyfxl6izzwTI6I+XEK6unrL7yQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ZhOWyW104TlKJcDdrR71l5ZO2+jBvCtWVBNz161J4QwNdXDI+f/BW8HdwzUPHIWkGpcnOl1rqyMhIonyUDuJd6hQSMPfIiZvwqExyn+DECJ7zV54lXgs8zT5L9tugtt92FoBD7xNWudl6B42zbOEMlP56rHhja95X2MWdaTXfWI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DymFgwAO; arc=pass smtp.client-ip=74.125.230.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="XDt2o2ad"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hf5jH533Nzlfvq1;
-	Tue,  8 Sep 2026 01:20:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1788830433; x=1791422434; bh=HYnt0lgNZgdEnl2AZEbrIVxi
-	G7QqHlBfDK5sg9QaNWY=; b=XDt2o2aduOBCF2mXeSYT/RAGQjg3vOtc+aVjrj/g
-	9qyiOJf0BLqVxyZznOP6PSdCpp3SBtRHzUNbICmwOEh+U1rWGVsImUWsRoB6sQoM
-	wcTh/W0Qp72Zbpc6R6O7wNiN2AMpMjkvH/GQhgeLUfztz2ptBtmH5X+jH3cjcFBU
-	blftTbJ6+vQfiwrdPuo13C7+PAfMnrRrKhBBoysXIaJqNIhIQoOKLNAkyHLukuJH
-	om75ZDM+Rry9X0lfm7rcBbdwJDPUY0gTmpWZV2gbCR/IJLokfGvl6jziO7UBk9i5
-	c3q7WVro84/ZUpvwmuC2hf55oyAPRziJRaFJ6jg58I+7ww==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id yUUsy0qwIRYS; Tue,  8 Sep 2026 01:20:33 +0000 (UTC)
-Received: from [192.168.51.14] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hf5jD10z1zlfvpS;
-	Tue,  8 Sep 2026 01:20:31 +0000 (UTC)
-Message-ID: <7b329106-d5e0-472f-a9fb-72f979310c51@acm.org>
-Date: Mon, 7 Sep 2026 18:20:30 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DymFgwAO"
+Received: by mail-qk2-f12.google.com with SMTP id d75a77b69052e-530411c7ee1so422811cf.0
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Sep 2026 18:34:51 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1788831290; cv=none;
+        d=google.com; s=arc-20260327;
+        b=IIrC8TNh5EzEN7Swj6OKYXZRTU/4uaFNMlh/H0LLLDYRRi2J6dyACd7TqH/Rq8KwPK
+         zoVAQo1kmTNT6xrxEBYzXtM4moyRK4UMruSTquI4Wx88x5ikblKzqQrGsXgLJMvLNFDQ
+         eZ2wUrjJwaolfReNoLVG7M3Df/7ohGPrOFXmJy+syqRsmzJBzG5/M47/Oj3sE3xxDdLQ
+         F5Ij4J2X0/ElhaJpseBlcmuXyI1EXqEEMWVs4nJe8Nqut0gkWDAvWXsxbLwVB/Nxjro3
+         X14bZ25GEh7R7YCt+q2WZNsDHijf/BqAj95KE1D23DnE9GIAj+xbuz/zuoNmcBBWKPhK
+         XBGA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=YQzs+TvnkG8jX4qlU9/TEe5EeymKa8IftTGzTEUV4Yk=;
+        fh=hJ24zjeHQqN8qsLrhEHmcXNpAGpYwss3a0dyAQzAwMU=;
+        b=lyBbDSwVr6JR21+XqdgQsUMeor/0xumzp4gELdmSRn8+/iuOnRiI4WW0gzXaR5PIEt
+         giZqPqHoCkJ6hl6FGbfBRgvgCaHEvdVgnZ1wKXZYruPlFdbXmB0IVRIuPIEc4/f+c/JF
+         LfubKierH4adCw9VixWmZ2uqAOzLW51tRT4oi22IbrBj29QWUZopr2Xvufhgyjk7S/Ig
+         yUVQQD4UgQQ46O84a6aCd6A4STJqhC3+FIXwrUYQho6e8r08wOXUp/GRB2w91wPOwpfY
+         hw/Swlp1KBVHAkgKYCmflAjF83SrDZeVOgmPgZpcV4758SJmxO1Hu4VI6O9wa4+tjb6l
+         HN6g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1788831290; x=1789436090; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=YQzs+TvnkG8jX4qlU9/TEe5EeymKa8IftTGzTEUV4Yk=;
+        b=DymFgwAOtJUFGZt5lu1Tshdi/d8zDIHmuinpeTQTNgWV0ex6voSVJR9OID1gJb8Y7m
+         pcMFQ2d6JRyJJ/jIKuxmiT6A5x4sJpz0/1DDroDqCROFVYLApkyutPOJzm0AbECRKQ3e
+         TgSdtFxORfU3kSpIn7tMFqtP4puzKQUM3Mk8cCYHa9dhvQ8FTKbyo9q1euOqd3UFlfL6
+         83F3tGuaE/trAXkb5dSe7fQySehyEFGoTgFJD6V9sSTQZf9+yDuR3pGjbIOxf9Js87K/
+         lP3NpB1LimQgUQBFafZSEOky2bs67jzN9b/dSlChv/3QLQJo4rf4/CW/b4tkg2V9uscP
+         rVkg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788831290; x=1789436090;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=YQzs+TvnkG8jX4qlU9/TEe5EeymKa8IftTGzTEUV4Yk=;
+        b=OUeZlRitpxojS2VuWL0BamT2BffyYYyIGnbgpDAn2CAaDxHQxPQUHTSed93feXvECs
+         HajmqsS8JLQad3HaEdv4iWqmjpYZaMAn5MGWdUWNQqS0XaLC7HepmMD4EWXTJi0IW/xl
+         yFjvmXg+P29JlqpRH41M09fEn1k81veLFcM/TLIx7dc0i4Zm0Ekq/99glGB698THA4+D
+         5kYwP2TYupWU15/5fuLNY7Ss0GGHlfDOnXWd/2epa1ikXDHgHL1IGJF0fcz/I0yFthDK
+         nyc2I1ZbVNnIzqkpnlOVFYN6wFYDo87rlY4sasZ9caC0tuMba23z6pETKUeurM7gQRnK
+         eQEA==
+X-Forwarded-Encrypted: i=1; AKwUvBwI4M1xy4ceKSogC75rryHMcuFmafrZpCuVXLN4ZHfxpKzqIo8o5fOIV8sa4n1tCfMdjUVRgM0TtotC@vger.kernel.org
+X-Gm-Message-State: AFuF++mZpxYgqqFetrGkPqgVA+UQjMbyVt1sRd/pdBnoAaHCLmnrHXWn
+	NB4QeyaavZ6GmvNO3quvjuPVn14hXWyt4/M61lPodEUlaRxmCtr+JIH4wA7s70pnogWp1WR8yG9
+	oFkQ1LcknhZWRR4pB3CHxR04u1AbvKt4y9QHLzDNi
+X-Gm-Gg: AYBFou1tWBDZTijgsL822F8TxAq7ksDrD+MVLYe3URdpntb23ZE+AMoF9pFxI3qMe3u
+	rjcytCue5f1GVUqT1/P7X/26wZboOe5dpqFka60aOxE961B6SPSBwBL0G7Cg3zDoPYDcx0TsYkj
+	aoP4ozSJINbPsZ1AWMld9SrduBMEeIs2BLqncw9vinUoVQvHfpNElu3dTtSgXWPBJgIKo1dqJdd
+	6/hjUS++cGCfK8EdIOgLZn2XPR/vIfvM2fzfZTTunovBIl4wHiTlQUDa1oM/rt2B5T0A0ER8TBB
+	hFuzdraUBPYuDWLN24txMycOaiR4SlDlWoSfHnFCyXixcYt/S63jls54hvGjxLe6+uTYvP6tXi8
+	=
+X-Received: by 2002:ac8:5752:0:b0:530:5120:19da with SMTP id
+ d75a77b69052e-53065d62b52mr36529551cf.2.1788831289919; Mon, 07 Sep 2026
+ 18:34:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 01/40] scsi: define all additional sense codes and
- their qualifiers
-To: Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- James Bottomley <James.Bottomley@hansenpartnership.com>
-References: <20260907024343.1046387-1-dlemoal@kernel.org>
- <20260907024343.1046387-2-dlemoal@kernel.org>
- <20260907031437.87FC41F00A3A@smtp.kernel.org>
- <531b5431-dc8d-4708-a67d-0bfcac96e1ea@kernel.org>
- <b7d26272-f53c-4355-a5ca-b6d9fb321599@gmail.com>
- <835e4db9-5be7-4118-94ee-afc412e82a2e@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <835e4db9-5be7-4118-94ee-afc412e82a2e@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20260907192140.2701755-1-beanhuo@iokpp.de>
+In-Reply-To: <20260907192140.2701755-1-beanhuo@iokpp.de>
+From: Stanley Jhu <stanleyjhu@google.com>
+Date: Tue, 8 Sep 2026 09:34:12 +0800
+X-Gm-Features: AcwNN1Xobqe2_angS2HD3JLnQDpNBy1jGEuPGetaKk41wua1zBXLIX34Pe_T310
+Message-ID: <CAE14pddo4ecRZLZs7XmuHtUhhcPnPphbn_AgJ-yZyzMGq=QjRQ@mail.gmail.com>
+Subject: Re: [PATCH v2 0/4] devfreq: check the get_cur_freq() return value and
+ use it in ufshcd
+To: Bean Huo <beanhuo@iokpp.de>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, MyungJoo Ham <myungjoo.ham@samsung.com>, 
+	Kyungmin Park <kyungmin.park@samsung.com>, Chanwoo Choi <cw00.choi@samsung.com>, 
+	"Martin K . Petersen" <mkp@kernel.org>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Stanley Jhu <stanleyjhu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/7/26 5:30 PM, Damien Le Moal wrote:
-> Sure, easy to do. But I have not seen any compilation errors. So their is
-> currently no clash, but indeed, this is at the mercy of any change in included
-> files. So better safe here and I will rename. Not sure what a good prefix is
-> though... Maybe SCSI_WARNING ? Or SCSI_SENSE_WARNING ? Any better suggestion?
+On Mon, 7 Sep 2026 21:21:36 +0200, Bean Huo wrote:
+> Changes since v1:
+> - New patch 3, so that target_freq and devfreq's previous_freq are not 0
+>   at boot (suggested by Stanley Jhu).
+> - Patch 4: drop the !cur_freq check, it cannot happen any more.
 
-As you know any enumeration label ends up in the global namespace so
-it's considered a good practice to make the names of all enumeration
-labels of the same enumeration type start with the same prefix. Would
-it be acceptable to make all labels in enum scsi_sense_code start with
-the SCSI_SENSE_ prefix? The labels in enum scsi_sense_key probably could
-also use a prefix? Constants with names like "NOT_READY" and "COMPLETED"
-might also be defined in other kernel headers. Would SSK_ (SCSI SENSE
-KEY) be a good prefix?
+Thanks for addressing the initial frequency desync in v2.
 
-Thanks,
-
-Bart.
+For the series:
+Reviewed-by: Stanley Jhu <stanleyjhu@google.com>
