@@ -1,82 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41A593B058A;
-	Tue,  8 Sep 2026 20:42:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C93843BBFDB;
+	Tue,  8 Sep 2026 20:42:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788900133; cv=none; b=sz5PpgSyFJkbB4Sqnfzmcwrz/o48mlmgYhxkZICmB5ad44/34+7v3YZZ7h7sDxCFtuxjCNFzr4zT/3rHM+5DalUfwxh7lU/DfO0KH1h0Yct+yDO96bbRuvZtXIDgR+E/h8N/OR92ngwjOdN8UVuHoihwcFgt8xdiQCgUvRVvRFM=
+	t=1788900136; cv=none; b=VlZ5q2E29U1rMpFhIr9BMA4XioR0eaa2z0ijhvMyVamgdCfNsSacJ28unnLzVnpsLB5UBVtky+/7FoUbmYCKgYoEUuEYneL0CpWuNyLKLCNsjKcws7c0vCgAss0VD768YKKnYCqbik10ZSiKup39086QcOEqwbmKrbW5BNfk8Ls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788900133; c=relaxed/simple;
-	bh=ZEHXXIn5MPhqvEFo2IZk3OAkWv+n7ylTTyz8NGZ5HlU=;
+	s=arc-20240116; t=1788900136; c=relaxed/simple;
+	bh=wFU7iBIGQrPCxNFp3DVhi1MPkRBX5eJ1aEEaj90/iKE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sFU/GYIjQt+O6IVqiFrWALgFVt+dJ6yOFNfavFeOFwvcbb2C5npk8IiWySTt/16SvrRcHaPKUZ1WzBUrFH7xOpmAuOpZESlX8qI2OXFYi78UCAdTffdqxaCHn9MniPaTJGODpWYhkt49EQz4QNx8T3pQ/mswhM4OZYyt1jL/T+0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QVENvXy+; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=uZd1fwdQ/a1wo3+IaF4KrmjgSuRGgBMFmoM6zw3/y8TnLXO/0E8E2MsWaTjWFIGmziMyRivcbEGF7gTR/JOZgvs+uJVvZve4nnCqklMhb6Pu616x8swwVvEUGCyR25B0uhdeqUqG5nOe/LZ3TFXcWqFlsQDUIx1RxzmDobIf5bk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=niXtcxlv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QVENvXy+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 505551F00A3A;
-	Tue,  8 Sep 2026 20:42:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="niXtcxlv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A4BC1F00A3D;
+	Tue,  8 Sep 2026 20:42:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788900132;
-	bh=ZEHXXIn5MPhqvEFo2IZk3OAkWv+n7ylTTyz8NGZ5HlU=;
+	s=k20260515; t=1788900133;
+	bh=hZJHLSYuWsPGHgMsZ6wDtKv+Nmu7iCoJKynKPiE+7QY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QVENvXy+w5E29pNkrXUvhpfma0eJ3SaQ+KREk1R4WPFe8FJyVnPghIwnav7AmxPqD
-	 wUhW5K87e3jZF3kZqKuniPKHYddBRKFrMN2jMBtZKlNzqMqf/6FSiuh4nT2VidtUH4
-	 eKfio2fk1wETy+nlvz4MHr554/3hCaJDC6OmhkA11SInoZn9rIEv7DQjYg9A6Hsqlz
-	 1Q+PaAYqGDODlaYIRoC60PDkfBU3n0Re063FmUkWfyyXxKc83gvQbbYmZMNnlAa+dy
-	 nAFjKqOneyTB7FQ8pIIBEF7tiohdLxYaC+o+UXzajRaRTEy5EcUYZr8LdV60h4ZyHB
-	 1UKEYG6OL4ayg==
+	b=niXtcxlvQiNTpo+iCoXferY/ogFz6WgWQTcJwN0FBdhNy5NdE8YpL2eiELkmgv5Xp
+	 Y8B1/4ajJgLvZ4q6UeTnWqPc5l8dCGWOcAlo+R5PQQr9uL6uxe4wRnmBa6GhEFvQXf
+	 nPd6S6Jm/Xt/OyG90lsCWrwwr3c1lamReaSg7AT+hqN8C4XUMoaDoblckBcChQj9do
+	 ht3Acrl0DKeg00F7ecI8wS3sSvnUDKcUrFklZBA0zTt2hcEdf/tRUAKQ/1mznL9Pay
+	 Lx7X7zqPRnZ8hdMAIy2oVJEaT9/wOmMI0l9KxO62fOSbkbhkLkNxjvKaNUfAOUEPP5
+	 yTFCsYXfO7bUQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 16/39] mm/vma: add and use vma_[flags]_is_fixed_mapping
+Subject: Re: [PATCH 15/39] mm/vma: only allow mmap to clear VMA_MAYWRITE_BIT
+ if kernel-owned
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
-Cc: "Marc Zyngier" <maz@kernel.org>, "Christian Borntraeger" <borntraeger@linux.ibm.com>, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, linux-s390@vger.kernel.org, "Heiko
- Carstens" <hca@linux.ibm.com>, kvm@vger.kernel.org, linux-trace-kernel@vger.kernel.org, "Oliver
- Upton" <oupton@kernel.org>, kvmarm@lists.linux.dev, linux-scsi@vger.kernel.org, bpf@vger.kernel.org, "Vasily
- Gorbik" <gor@linux.ibm.com>, linux-perf-users@vger.kernel.org, selinux@vger.kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-16-dacf19cce22b@kernel.org>
+Cc: kvm@vger.kernel.org, selinux@vger.kernel.org, "Vasily Gorbik" <gor@linux.ibm.com>, linux-trace-kernel@vger.kernel.org, kvmarm@lists.linux.dev, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, linux-perf-users@vger.kernel.org, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, "Oliver Upton" <oupton@kernel.org>, "Marc
+ Zyngier" <maz@kernel.org>, bpf@vger.kernel.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-s390@vger.kernel.org, "Heiko
+ Carstens" <hca@linux.ibm.com>
+In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-15-dacf19cce22b@kernel.org>
 References: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org>
- <20260908-b4-mmap-prepare-vma-flag-sanify-v1-16-dacf19cce22b@kernel.org>
+ <20260908-b4-mmap-prepare-vma-flag-sanify-v1-15-dacf19cce22b@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 20:42:10 +0000
-Message-Id: <20260908204211.505551F00A3A@smtp.kernel.org>
+Date: Tue, 08 Sep 2026 20:42:12 +0000
+Message-Id: <20260908204212.9A4BC1F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> This determines whether a VMA cannot be expanded or merged because what
-> they mapped was determined to be a set size at mmap time.
->=20
-> This typically refers to kernel-owned mappings, however VMA_DONTEXPAND_BIT
-> is not reliably set alongside VMA_PFNMAP_BIT or VMA_MIXEDMAP_BIT, so we
-> must explicitly test for this for now.
->=20
-> We also explicitly test for VMA_PFNMAP_BIT as VMA_DONTEXPAND_BIT may not =
-be
-> set for VMA_PFNMAP_BIT's despite the one implying the other.
->=20
-> Use this predicate in vma_flags_can_merge() and in check_prep_vma() in the
-> mremap logic testing to see if mremap() can expand the VMA. The criteria
-> for khugepaged and MADV_COLLAPSE eligibility in
-> __thp_vma_allowable_orders() are precisely those for mergeability, so use
-> vma_can_merge() there (with an expanded comment).
->=20
-> This obviates the need for the VM_NO_KHUGEPAGED mask, so remove it.
->=20
-> Hugetlb VMAs remain excluded from khugepaged as hugetlbfs always sets
-> VMA_DONTEXPAND_BIT.
->=20
-> No functional change intended.
->=20
-> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Pre-existing issues:
+- [High] Leaked struct file reference when a driver replaces desc->vm_file =
+but mmap_prepare_validate() subsequently fails.
+--
+
+commit bf1e56ed42b1d9fbc6eb9edeebea26ac54edd5c4
+Author: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+
+mm/vma: only allow mmap to clear VMA_MAYWRITE_BIT if kernel-owned
+
+This commit restricts the ability to clear the VMA_MAYWRITE_BIT to
+kernel-owned mappings. It ensures that drivers which do not own the
+mapping's contents cannot violate file system semantics by altering file
+attributes. Any mmap hook attempting to do so without establishing a
+kernel-owned mapping will now fail validation.
+
+> diff --git a/mm/vma.c b/mm/vma.c
+> index 9e45fc83f74c6..5264287532182 100644
+> --- a/mm/vma.c
+> +++ b/mm/vma.c
+> @@ -2780,6 +2780,11 @@ static int mmap_validate(unsigned long prev_start,
+>  	if (WARN_ON_ONCE(!was_maywrite && is_maywrite))
+>  		return -EINVAL;
+> =20
+> +	/* Only kernel-owned mappings may clear VMA_MAYWRITE_BIT. */
+> +	if (!vma_flags_is_kernel_owned(curr_flags) &&
+> +	    WARN_ON_ONCE(was_maywrite && !is_maywrite))
+> +		return -EINVAL;
+> +
+
+[Severity: High]
+This isn't a bug introduced by this patch, but this new validation failure
+exposes a pre-existing resource leak. Does this code leak the struct file
+reference if the driver legitimately replaced desc->vm_file during the
+mmap_prepare hook?
+
+If a driver's f_op->mmap_prepare hook swaps desc->vm_file (acquiring a new
+file reference via split ownership) and then fails this new validation
+step (e.g., clearing VMA_MAYWRITE_BIT without being kernel-owned),
+call_mmap_prepare() will return early:
+
+mm/vma.c:call_mmap_prepare() {
+        ...
+        err =3D mmap_prepare_validate(&prev_desc, desc);
+        if (err)
+                return err;
+               =20
+        map->pgoff =3D desc->pgoff;
+        if (desc->vm_file !=3D map->file) {
+                map->file_doesnt_need_get =3D true;
+                map->file =3D desc->vm_file;
+        }
+        ...
+}
+
+Because the early return happens before map->file and
+map->file_doesnt_need_get are updated, the core cleanup path in
+__mmap_region() remains unaware of the new file and fails to fput() it,
+leaking the file reference and pinning the mount.
+
+>  	return mmap_validate_vma_flags(curr_flags);
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-b4-mmap-pr=
-epare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org?part=3D16
-
+epare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org?part=3D15
