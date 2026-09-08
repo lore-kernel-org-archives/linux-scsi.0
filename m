@@ -1,64 +1,60 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA8BA3AFCED;
-	Tue,  8 Sep 2026 20:27:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4823647C0EA;
+	Tue,  8 Sep 2026 20:27:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788899252; cv=none; b=JsUERyzQe9lAKFjfEiHG2YHF1NP+AAWaMwH4zIKg+31WOZ++r2tJ4yNEcmxus5S+wm5SMAxip67Jm41s6ROIfgGUs9HK4bhCT1gOsTOyyVeVmNfIKpNx+tbycOL54dLPrEtoFTg5+cdrV/ehc6NcEAtHi0b1xzV85DJGqaRvWpY=
+	t=1788899264; cv=none; b=S8YL4o1O8UMiDtKDv0RZUuS2vYt60OCQvAA9gTVm05Vp50AfxKbEhmeyq1PM7Mb6sfBfVyZfONWv6i6dnnliF3ke3PIYf8XkY5gTzgRXpXznOvr9WFOMcrK6HpoqltxBxez3VW6w05DzCq/sH4NQnDIFq+VXf51wFso/5V0NYqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788899252; c=relaxed/simple;
-	bh=knPUMGPnqC15TKEwcjLwB4bS1neKjXQ+prhdgeJCVJw=;
+	s=arc-20240116; t=1788899264; c=relaxed/simple;
+	bh=CxPktu2krGXA9dJay4P9gAzjPmp2OPwopEPgxLzhj6g=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=D4DlByulTOzwW3MPLQ6k5csEWbJyuhNkMrdExR6Wn96wDqy6m3qJwPvLJzLtnqnK5+x6JLuF5YGFH5igDyMwwINZ2g3ymIfUaZYNWkpctRNkj/tl7SREjd+HzMdmV0Nf6KH7YQFc0Oys6miFzif6KS/KvvWMWtr9tclbs65g81o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hn4Vibo+; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jwhLEkNW+HgC7GtLFb8QAG+oAcLG2kJe7q8bliGQBq03cEF4K/q5bkN0fCsPHAWaLdQZ3e2kFy6tA+jZnr5WpnCprgqy7PShqGW20WWKedPTeq6Coj0/jqRg4VlLtWE0wgTAo0Mq0DzgIqjysdD2Tzu7vFp1b5WWKKCQ3NGzYWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V9l4KWQi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hn4Vibo+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE4F31F00A3A;
-	Tue,  8 Sep 2026 20:27:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V9l4KWQi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12B851F00A3A;
+	Tue,  8 Sep 2026 20:27:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788899251;
-	bh=knPUMGPnqC15TKEwcjLwB4bS1neKjXQ+prhdgeJCVJw=;
+	s=k20260515; t=1788899262;
+	bh=CxPktu2krGXA9dJay4P9gAzjPmp2OPwopEPgxLzhj6g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hn4Vibo+Kj2gkfvEu3PAQ7RXogzStGrJlOtOCVNZ4PNZRO45Je3n/yPMcJ1n2uxEm
-	 78bACCaHSPYa4LN91HlysFTHCclq8I26G2GSS1aYsK9lcLZj3Rvzz5wDwoGrIlanf3
-	 KSBryTV0bPiJe8DnmlJD4gbPPw8l/8x8Ve7E84Paes5fs5WrCw/rupe4rqyqsJ4Vdf
-	 zkx6x6s6atTOhB0ggjKdPK8FOpkgVT1Lw1mB9cTGPRiGfKRwdhZh62rN+cn74ATMJX
-	 qb6MOMhdpfmlpAwdaxPGt1qv4tfZj3VwsBBB16CaxBsj7OfSyi4CUh2nxjCDtNo6xk
-	 LgsYk68ZcUTfg==
+	b=V9l4KWQi/hWnsKQxnrfWXYfwWRJXMuc3X1bRjOb3LwXCOvBj7fkONDhelivIpbvRF
+	 LrTomwYRxBBZGEY43jkzVKhIzz32iM7DwT6E0nxJEs18c5nxpl9Qh5gM8HDC/FENDs
+	 oM8WTcIX07QPB1jl3lWPoed5uQTy4cXScQwS6kJwZq6JpsRQp5FSuCupAyR8M+9FWf
+	 ypsbd8EMyGkrSU8Mqz3N9qIwNvGcKmXMDxgQx3lNarAF8tdEQ+iG5mhjkbld+vwkEy
+	 WccWvU7bNmYoaegiBIAhSQqywybdblNnXTsZFMbopU5iDnBtX1AlasbOZY/q1ggiDY
+	 1o7omylrIf4gg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 02/39] mm/vma: introduce and use vma_[flags_]can_merge()
+Subject: Re: [PATCH 06/39] mm/vma: tidy up map kernel pages enum values
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
-Cc: "Vasily Gorbik" <gor@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, "Marc Zyngier" <maz@kernel.org>, linux-s390@vger.kernel.org, linux-perf-users@vger.kernel.org, kvmarm@lists.linux.dev, "Oliver
- Upton" <oupton@kernel.org>, bpf@vger.kernel.org, linux-scsi@vger.kernel.org, "Heiko
- Carstens" <hca@linux.ibm.com>, dri-devel@lists.freedesktop.org, selinux@vger.kernel.org, kvm@vger.kernel.org, linux-trace-kernel@vger.kernel.org
-In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-2-dacf19cce22b@kernel.org>
+Cc: linux-trace-kernel@vger.kernel.org, kvm@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-s390@vger.kernel.org, "Vasily
+ Gorbik" <gor@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, kvmarm@lists.linux.dev, linux-perf-users@vger.kernel.org, bpf@vger.kernel.org, selinux@vger.kernel.org, "Heiko
+ Carstens" <hca@linux.ibm.com>, "Oliver Upton" <oupton@kernel.org>, "Marc
+ Zyngier" <maz@kernel.org>, linux-scsi@vger.kernel.org
+In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-6-dacf19cce22b@kernel.org>
 References: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org>
- <20260908-b4-mmap-prepare-vma-flag-sanify-v1-2-dacf19cce22b@kernel.org>
+ <20260908-b4-mmap-prepare-vma-flag-sanify-v1-6-dacf19cce22b@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 20:27:30 +0000
-Message-Id: <20260908202730.AE4F31F00A3A@smtp.kernel.org>
+Date: Tue, 08 Sep 2026 20:27:41 +0000
+Message-Id: <20260908202742.12B851F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> Replace the open-coded VMA_SPECIAL_FLAGS check in the VMA merge logic with
-> two new functions vma_flags_can_merge() and vma_can_merge() and update the
-> merge logic to use the former.
+> MMAP_MAP_KERNEL_PAGES is a mouthful, discard the MAP_ as that's implied by
+> MMAP.
 >=20
-> This abstracts the check and expresses it in terms of the desired behavio=
-ur
-> rather than an arbitrary and confusing VMA flag.
+> Also while we're here delete useless comments for mmap actions whose names
+> clearly indicate what they are for.
 >=20
-> This also lays the groundwork for making further improvements in VMA flag
-> usage.
->=20
-> Also update the userland VMA tests to reflect the change.
+> Also update the userland VMA tests to reflect this change.
 >=20
 > No functional change intended.
 >=20
@@ -68,5 +64,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-b4-mmap-pr=
-epare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org?part=3D2
+epare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org?part=3D6
 
