@@ -1,48 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7460635F5E3;
-	Tue,  8 Sep 2026 20:47:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7418834F270;
+	Tue,  8 Sep 2026 20:48:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788900467; cv=none; b=NgwaIg+9ViNGAsFU4aIgIKbfJtsipUT4Q0lDvaH1r+7YgIYu5BSd7qqohAJOvFGR7K6jGretQfzj0qDZVF+b4EJB9kogfjgg5II7r6aB2gQD2Mil2n8iKOh8ZYhSZfXYXGbUg11U8baDKJqkiz0aYkS1aOYo3b/km30OFTr/Z2o=
+	t=1788900488; cv=none; b=GOJEf0ozvxZScHe6pMFfWk+3OBHtCDSaePu+84bCYpXx7OR2Bwcy1ZOEig9GiNItAXwCu4+QeTId58MDarvFXYjQhPp5pg1hBRKTV4myAFJRE66kDFtnadX0AWu1KdUjNB1hz7Lp4YFBH92yIhbyALrbeN3XAJN9enHpEUuqrmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788900467; c=relaxed/simple;
-	bh=/EtxPl08yCMs/74q46oVtPI42N58yV7lkM7c4rcaNDU=;
+	s=arc-20240116; t=1788900488; c=relaxed/simple;
+	bh=Cr7cISdHgtRk5bbEoaLaHowgEff97HmOeSZVJgIRolA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=oSmBVFx5czi5EeIKFxoLoy84PHJMc/WlLhLYH0FGg3LigiEFH5xmlcUDjuOR3aOYOM35m9BD+VDxBajwdjNs84gMSmjH8XDv9mgBtsRt7x1FBqIzuR4+tmiK8DK3UJ5c58bQoKJCSXNHcTjn0zN/qxkBbRxYR0MSXRSbhyzqZYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZmTLlbey; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=oDcKsKkoecSPja8l91GcCYNdi+fF2wvWEymUSuM5NsNy+FcS6j5xSLujXbKwZpGquzOd+xTch/yieszjAgJX4KOvXuj1IlxQXvBkR69rB+YdTRAWXE7erwHN3CFMel/O+C+KwKMtizs44nfxoOQW+xZZvWHGz9/isLb+zBf3WUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YTjI+4Nv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZmTLlbey"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8188D1F00A3A;
-	Tue,  8 Sep 2026 20:47:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YTjI+4Nv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D5E71F00A3A;
+	Tue,  8 Sep 2026 20:48:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788900466;
-	bh=+KP7Reu7QYCYdusFcN2vvX4YzKfsxfGgEj90qNDhOuM=;
+	s=k20260515; t=1788900487;
+	bh=fxuRN8dWyYnHwvsalLZYGKX5rFAk6jiZ11/s8/5XP28=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZmTLlbeyS19W1F2n17CwHNvSsvgCObTtbjU6pB7a/ASzaXp1a54oSV37GyTeMhMKK
-	 yDVzXX/tGPx8sTtRP5ExAJFQr8yN6YdYO5t/cscR0VqHuJQ30STxpJuWBpgTSLFDKQ
-	 valaJmBIQQEALdoRh56tcyrzc5wnewyaNSnJ4/BTridJnRKmm9LvTqPaMUK6Sdu+sn
-	 fsLkh2XcowH9ZLxfgxTi7upULDpQZfLQ0ZFJUXOAA3+jo5UYKoWHCKeOqq8sanajBt
-	 4nmevi2OFWlTkLKEpUJbz/+FEek7+W2+qvS9kG/oN0EEEusaO+Ibvemcgf6FxPcgUG
-	 dg5jQTlQp/fww==
+	b=YTjI+4Nvahv27dmxLaq05MSEm00mQ1Yn+X1KBlULmk0dZJBtD8fhXnqFGXlpEA6hh
+	 3Ao1pfudJ5RgKRP36WoTJuvQ0PpswyRygxJlbxF239rGP1QsdYwM62oXjnTRNNUIOy
+	 vfuUdCUU8mmle/ONyYGFpJZcy1yRBRanJDyY1IaJH5bcOM8HT+dDV9Lh3519M6nt8h
+	 KUlInXgss+HLUvs0sK+aglmPEIjpAGY5gzLDtldCgTwCpqzwtewYG+EGk51GJBRVwb
+	 j7ZdV0NM0eew/45AgkC/0U+OOdM2oCVuBE1WQ+H8CW6yi/tpBqyh+CRDOzSdDd1F7R
+	 DJ/8u6tcXmyDw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 23/39] mm/mlock: eliminate weird VMA_IO_BIT abuse and
- simplify
+Subject: Re: [PATCH 32/39] mm/madvise: use predicates for madvise(...,
+ MADV_DOFORK)
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
-Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org, dri-devel@lists.freedesktop.org, "Heiko
- Carstens" <hca@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>, "Marc
- Zyngier" <maz@kernel.org>, selinux@vger.kernel.org, bpf@vger.kernel.org, kvmarm@lists.linux.dev, linux-s390@vger.kernel.org, linux-trace-kernel@vger.kernel.org, "Vasily
- Gorbik" <gor@linux.ibm.com>, linux-perf-users@vger.kernel.org, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, "Oliver Upton" <oupton@kernel.org>
-In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-23-dacf19cce22b@kernel.org>
+Cc: kvmarm@lists.linux.dev, "Heiko Carstens" <hca@linux.ibm.com>, linux-perf-users@vger.kernel.org, "Vasily
+ Gorbik" <gor@linux.ibm.com>, linux-trace-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Marc
+ Zyngier" <maz@kernel.org>, linux-s390@vger.kernel.org, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, dri-devel@lists.freedesktop.org, kvm@vger.kernel.org, bpf@vger.kernel.org, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, "Oliver Upton" <oupton@kernel.org>, selinux@vger.kernel.org
+In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-32-dacf19cce22b@kernel.org>
 References: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org>
- <20260908-b4-mmap-prepare-vma-flag-sanify-v1-23-dacf19cce22b@kernel.org>
+ <20260908-b4-mmap-prepare-vma-flag-sanify-v1-32-dacf19cce22b@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 20:47:45 +0000
-Message-Id: <20260908204745.8188D1F00A3A@smtp.kernel.org>
+Date: Tue, 08 Sep 2026 20:48:06 +0000
+Message-Id: <20260908204806.8D5E71F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,98 +51,71 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Missing munlock during concurrent unmap due to vma flag check regr=
-ession
+
+Pre-existing issues:
+- [High] MADV_WIPEONFORK and __MADV_SET_ANON_VMA_NAME incorrectly use vma->=
+vm_file to classify anonymous VMAs, falsely rejecting private /dev/zero map=
+pings.
 --
 
-commit 2a2d17538653740326938f5e55760a431c727840
+commit eca1ad64ddd91aa6f5fb87e2a56f40c30ef8259e
 Author: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 
-mm/mlock: eliminate weird VMA_IO_BIT abuse and simplify
+mm/madvise: use predicates for madvise(..., MADV_DOFORK)
 
-This patch simplifies the mlock implementation by eliminating the use of
-the VMA_IO_BIT flag. Instead, it temporarily sets VMA_LOCKONFAULT_BIT and
-clears VMA_LOCKED_BIT during page table walks to prevent double counting.
-It also updates various mlock functions to check the new VMA lock state.
+This commit updates MADV_DOFORK to use vma_can_merge() instead of manually
+checking for VM_SPECIAL flags. This clarifies the intent, ensuring that if a
+mapping isn't allowed to be merged, its CoW behavior cannot be manipulated =
+on
+fork. No functional change is intended.
 
-> diff --git a/mm/internal.h b/mm/internal.h
-> index 6e27d3b10c015..04b1f1d3d9604 100644
-> --- a/mm/internal.h
-> +++ b/mm/internal.h
-> @@ -993,7 +992,7 @@ static inline void munlock_vma_folio(struct folio *fo=
-lio,
->  	 * always munlock the folio and page reclaim will correct it
->  	 * if it's wrong.
->  	 */
-> -	if (unlikely(vma->vm_flags & VM_LOCKED))
-> +	if (unlikely(vma_test(vma, VMA_LOCKED_BIT)))
-
-[Severity: High]
-Does this change leak the mlock_count if a concurrent unmap occurs?
-
-If a process calls mlock(), mlock_vma_pages_range() now clears
-VMA_LOCKED_BIT and sets VMA_LOCKONFAULT_BIT during the walk. If another
-process concurrently unmaps a file-backed page in this VMA (for example,
-via ftruncate() which only takes i_mmap_rwsem), the unmap path calls
-folio_remove_rmap_pte() -> munlock_vma_folio().
-
-Because VMA_LOCKED_BIT is temporarily clear during the mlock walk, this
-check evaluates to false and skips calling munlock_folio(). This leaves
-the folio pinned on the unevictable LRU with an elevated mlock_count.
-
-Would it be better to check for VMA_LOCKED_MASK here, similar to how
-try_to_unmap_one() was updated in this patch?
-
->  		munlock_folio(folio);
->  }
-> =20
-> diff --git a/mm/mlock.c b/mm/mlock.c
-> index 39215a3eab1fb..4235a1518fc9e 100644
-> --- a/mm/mlock.c
-> +++ b/mm/mlock.c
-
-[ ... ]
-
-> @@ -428,31 +417,29 @@ static void mlock_vma_pages_range(struct vm_area_st=
-ruct *vma,
->  		.pmd_entry =3D mlock_pte_range,
->  		.walk_lock =3D PGWALK_WRLOCK_VERIFY,
->  	};
-> +	const bool lock =3D vma_flags_test(new_vma_flags, VMA_LOCKED_BIT);
-> +	vma_flags_t walk_flags =3D *new_vma_flags;
-> =20
->  	/*
-> -	 * There is a slight chance that concurrent page migration,
-> -	 * or page reclaim finding a page of this now-VMA_LOCKED_BIT vma,
-> -	 * will call mlock_vma_folio() and raise page's mlock_count:
-> -	 * double counting, leaving the page unevictable indefinitely.
-> -	 * Communicate this danger to mlock_vma_folio() with VMA_IO_BIT,
-> -	 * which is a VMA_SPECIAL_FLAGS flag not allowed on VMA_LOCKED_BIT vmas.
-> -	 * mmap_lock is held in write mode here, so this weird
-> -	 * combination should not be visible to other mmap_lock users;
-> -	 * but WRITE_ONCE so rmap walkers must see VMA_IO_BIT if VMA_LOCKED_BIT.
-> +	 * LOCKONFAULT without LOCKED never otherwise occurs: it marks a walk in
-> +	 * progress so that rmap-side callers, which test VMA_LOCKED_BIT, do not
-> +	 * count folios, while try_to_unmap_one(), which tests VMA_LOCKED_MASK,
-> +	 * still refuses to unmap them.
->  	 */
-> -	if (vma_flags_test(new_vma_flags, VMA_LOCKED_BIT))
-> -		vma_flags_set(new_vma_flags, VMA_IO_BIT);
-> +	if (lock) {
-> +		vma_flags_clear(&walk_flags, VMA_LOCKED_BIT);
-> +		vma_flags_set(&walk_flags, VMA_LOCKONFAULT_BIT);
-> +	}
+> diff --git a/mm/madvise.c b/mm/madvise.c
+> index 0fc31835fee1a..f805a4876c875 100644
+> --- a/mm/madvise.c
+> +++ b/mm/madvise.c
+> @@ -1400,7 +1400,7 @@ static int madvise_vma_behavior(struct madvise_beha=
+vior *madv_behavior)
+>  		new_flags |=3D VM_DONTCOPY;
+>  		break;
+>  	case MADV_DOFORK:
+> -		if (new_flags & VM_SPECIAL)
+> +		if (!vma_can_merge(vma))
+>  			return -EINVAL;
+>  		new_flags &=3D ~VM_DONTCOPY;
+>  		break;
 
 [Severity: High]
-Because VMA_LOCKED_BIT is temporarily cleared here, any concurrent rmap
-walks (like a truncation unmapping pages) that rely on munlock_vma_folio()
-will see a cleared lock bit and fail to drop the mlock_count.
+This isn't a bug introduced by this patch, but just below this in
+madvise_vma_behavior(), MADV_WIPEONFORK incorrectly uses vma->vm_file to
+classify anonymous VMAs:
 
-> +
->  	vma_start_write(vma);
-> -	vma_flags_reset_once(vma, new_vma_flags);
-> +	vma_flags_reset_once(vma, &walk_flags);
+	case MADV_WIPEONFORK:
+		/* MADV_WIPEONFORK is only supported on anonymous memory. */
+		if (vma->vm_file || new_flags & VM_SHARED)
+			return -EINVAL;
+
+Does this condition falsely reject private /dev/zero mappings because they
+retain a file reference?
+
+If userspace ignores this failure, wouldn't memory intended to be wiped
+(such as cryptographic secrets) be copied to child processes during fork,
+resulting in a cross-process information leak?
+
+Should this use vma_is_anonymous(vma) instead?
+
+[Severity: High]
+This is also a pre-existing issue, but further down in the same function,
+__MADV_SET_ANON_VMA_NAME has a similar check:
+
+	case __MADV_SET_ANON_VMA_NAME:
+		/* Only anonymous mappings can be named */
+		if (vma->vm_file && !vma_is_anon_shmem(vma))
+			return -EBADF;
+		break;
+
+Does this also falsely reject private /dev/zero mappings by relying on
+vma->vm_file to enforce the anonymous mapping restriction?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-b4-mmap-pr=
-epare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org?part=3D23
+epare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org?part=3D32
