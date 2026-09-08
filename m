@@ -1,48 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28B854B4863;
-	Tue,  8 Sep 2026 20:38:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF0853B71A5;
+	Tue,  8 Sep 2026 20:39:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788899919; cv=none; b=P6Zqizum5QQIk4lAPovEGUznyx63KdLgL+lPe3Lr47taYUFzFp5j6RIWuFF/qYjGho2DpExIDoO+IoTLs0CWX2/cMhxU1kjtioLBQwHFaJCyfOf2a92zw4NK39hKUpchOHWQcR/GIhvZ90sDcpwbZisYvW+xB1tkpsfkBE5qvS4=
+	t=1788899996; cv=none; b=U1NyawUW6AnqlJyOAT0UUkbnGW0MNFOEagLrc2ZjRap4VTTQ1eesfuLqdTW8jz1evjbx3F52OOqGdcliZCY8ZFKgb6ZS5bK3XzTQsyXePXUHUdKbZqal3bFu0cBMZXmpZ3fxP0PFYgWF8FPsVyOKmap9/0xwxuDao3Aad7MyADM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788899919; c=relaxed/simple;
-	bh=ppmARh4Pmn96MNd49lZT/DDe52REhZyU99fBknWw2e0=;
+	s=arc-20240116; t=1788899996; c=relaxed/simple;
+	bh=RZAqAh0KcoOYwfJJg3T/gWNuSmqEb8yGxluKle4/q6o=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Bg0qMwHYgx+bkDdql1u30hzou6JhU30G3KfV5lln5DN+n+VUGk0svLlBw9oiRB9/YnTX5cmX3SJ5VSnpK4nYPKQ7FB+/viG6BL1GQmu/TdOG2hIGVYtBuVJjabo9U0JFdNRycdja1Cfzydz3PHKlpwG5WVjI6QwpVqiSsUNiyTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k6phVvwp; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Vyz+18HXrIeL05+2goSM1jieqX+ULKKMW4eHec7thsr1MSVIpwtib14RJwnDzVvwf94V5m9SRzYNlFRUhBVwDaRC/ER9skVb+x6NX2N61pXawRte4EBikrQW0RITkH7Z9tpDKHeUPUYIIpjRr7JbG+hWRWS1+93fv+rTZpUgomU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GSPf0ROu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k6phVvwp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48C7C1F00A3A;
-	Tue,  8 Sep 2026 20:38:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GSPf0ROu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B08E61F00A3A;
+	Tue,  8 Sep 2026 20:39:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788899918;
-	bh=bC+w9KXVcmk/AeVg0oQOtYsspFdleloBnGxxXSPVx28=;
+	s=k20260515; t=1788899994;
+	bh=+SEM3hwrzWq3mSCFdua4tIVPxVP/retHRbMIyziJQIU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=k6phVvwpts028nsCxBmHTn1C9SnFPiUTA6JEYxZ/De4o09yhv6LcJTNPGiLVdOrmE
-	 AfMoMBmLvfYQAIt8tEx6kbGCkreixnSJWwa5PI3R2jiRjmWsPTB2N1qwA0BeIj6+CD
-	 VIT3DZDL1+d0NeTbVAj9NxwfpAHqvNRRTIZ/yqLotwPQsZ+QVZAUPblwTIpLEW7Jhk
-	 nkmtSyer6Fdk2nZ8bByZ3atzIfvxqqfMwpWueOLoMatPdyHiRVk2zzkVZyo7UuqARO
-	 kB1vFDms8RKAi7kvLofPqN9SPTQoGKb53KcEtD9FnVYk2NoeMqryYS6yne6FNE9jX9
-	 8KYXaUjd6kAcQ==
+	b=GSPf0ROuoxv6AIUXZlyAPE+erQ9K/8DmEYgX/+fSgPEIhGhynCfR1AUewkUDnI5wL
+	 owrBlAtq5wFAXD9vWDV31CqzPtPWs0d+ns+T3+aMQVn5qGaXxZg/sVjxZFMstb8OvV
+	 gVaUIz2zqwuQhcG1KQjzgK7h99P0Cy34181jjLq4EeNtzRKCsJq5TlN1/tWqpBBAhM
+	 Dw1hE7r5T24qOz2hElGC9DmNQNhm+uMwUW5skmeWVdO9gO0EGb7cAO6oinaT08e75m
+	 uzGmOgj6a51jTIl/qL+obbPIBsJ8X18Nwok9jc8ONjV7duHsYgkCWOBpeXSzC8Okf0
+	 aRJ5A5quWx3VQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 08/39] docs: filesystems: update mmap_prepare docs for
- discontig kernel pgs
+Subject: Re: [PATCH 18/39] fbdev: defio: assert FBINFO_VIRTFB, drop VM_IO,
+ add VM_MIXEDMAP
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
-Cc: linux-perf-users@vger.kernel.org, bpf@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-trace-kernel@vger.kernel.org, "Heiko
- Carstens" <hca@linux.ibm.com>, "Oliver Upton" <oupton@kernel.org>, kvm@vger.kernel.org, dri-devel@lists.freedesktop.org, kvmarm@lists.linux.dev, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, selinux@vger.kernel.org, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>, "Marc Zyngier" <maz@kernel.org>, "Vasily
- Gorbik" <gor@linux.ibm.com>
-In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-8-dacf19cce22b@kernel.org>
+Cc: "Alexander Gordeev" <agordeev@linux.ibm.com>, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, "Marc
+ Zyngier" <maz@kernel.org>, "Vasily Gorbik" <gor@linux.ibm.com>, linux-perf-users@vger.kernel.org, kvmarm@lists.linux.dev, bpf@vger.kernel.org, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, dri-devel@lists.freedesktop.org, selinux@vger.kernel.org, kvm@vger.kernel.org, linux-trace-kernel@vger.kernel.org, "Oliver
+ Upton" <oupton@kernel.org>, "Heiko Carstens" <hca@linux.ibm.com>
+In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-18-dacf19cce22b@kernel.org>
 References: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org>
- <20260908-b4-mmap-prepare-vma-flag-sanify-v1-8-dacf19cce22b@kernel.org>
+ <20260908-b4-mmap-prepare-vma-flag-sanify-v1-18-dacf19cce22b@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 20:38:36 +0000
-Message-Id: <20260908203837.48C7C1F00A3A@smtp.kernel.org>
+Date: Tue, 08 Sep 2026 20:39:53 +0000
+Message-Id: <20260908203953.B08E61F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,111 +50,81 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Insufficient Validation of nr_pages (Integer Overflow and Zero-Pag=
-e Hang)
+
+Pre-existing issues:
+- [High] Unchecked return value of fb_deferred_io_init() in ssd1307fb_probe=
+() leads to a NULL pointer dereference in fb_deferred_io_mmap().
 --
 
-commit 0017a54bcba2043c3f552b308a32a39be664f463
+commit 20b4c9f03621ce152d836b82e0b4d3c3cda114ce
 Author: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+fbdev: defio: assert FBINFO_VIRTFB, drop VM_IO, add VM_MIXEDMAP
 
-mm: add mmap action for discontiguous kernel page mapping
+This commit updates defio drivers to assert the FBINFO_VIRTFB flag, drops
+the VM_IO flag, and sets VM_MIXEDMAP since kernel-allocated memory is mappe=
+d.
+It also ensures the ssd1307fb driver sets FBINFO_VIRTFB during its probe.
 
-The existing kernel page mapping mmap actions allow for partial and full
-mapping of an array of struct page pointers.
-
-However some drivers require the mapping of discontiguous ranges. Permit
-this by providing discontig_kernel_page_ops which allows a driver to
-specify how the operation should begin and how batches of pages should be
-retrieved.
-
-> diff --git a/mm/memory.c b/mm/memory.c
-> index dc38cad1dcb7e..8c9675451d4ba 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-
-[ ... ]
-
->  int map_kernel_pages_prepare(struct vm_area_desc *desc)
+> diff --git a/drivers/video/fbdev/core/fb_defio.c b/drivers/video/fbdev/co=
+re/fb_defio.c
+> index fd00b86e1ae60..fb359ecc39661 100644
+> --- a/drivers/video/fbdev/core/fb_defio.c
+> +++ b/drivers/video/fbdev/core/fb_defio.c
+> @@ -366,13 +366,13 @@ int fb_deferred_io_mmap(struct fb_info *info, struc=
+t vm_area_struct *vma)
 >  {
->  	const struct mmap_action *action =3D &desc->action;
->  	const unsigned long addr =3D action->map_kernel.start;
->  	unsigned long nr_pages, end;
+>  	vma->vm_page_prot =3D pgprot_decrypted(vma->vm_page_prot);
 > =20
-> -	if (!vma_desc_test(desc, VMA_MIXEDMAP_BIT)) {
-> -		VM_WARN_ON_ONCE(mmap_read_trylock(desc->mm));
-> -		VM_WARN_ON_ONCE(vma_desc_test(desc, VMA_PFNMAP_BIT));
-> -		vma_desc_set_flags(desc, VMA_MIXEDMAP_BIT);
-> -	}
-> +	__map_kernel_pages_prepare(desc);
+> +	if (WARN_ON_ONCE(!(info->flags & FBINFO_VIRTFB)))
+> +		return -EINVAL;
+>  	if (!try_module_get(THIS_MODULE))
+>  		return -EINVAL;
 > =20
->  	nr_pages =3D action->map_kernel.nr_pages;
->  	end =3D addr + PAGE_SIZE * nr_pages;
->  	if (!range_in_vma_desc(desc, addr, end))
->  		return -EFAULT;
+>  	vma->vm_ops =3D &fb_deferred_io_vm_ops;
+> -	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
+> -	if (!(info->flags & FBINFO_VIRTFB))
+> -		vm_flags_set(vma, VM_IO);
+> +	vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND | VM_DONTDUMP);
+>  	vma->vm_private_data =3D info->fbdefio_state;
+> =20
+>  	fb_deferred_io_state_get(info->fbdefio_state); /* released in vma->vm_o=
+ps->close() */
 
 [Severity: High]
-Can the end calculation overflow here if nr_pages is exceptionally large?
+This isn't a bug introduced by this patch, but could this lead to a NULL
+pointer dereference if fb_deferred_io_init() previously failed?
 
-If a driver supplies an overly large nr_pages, PAGE_SIZE * nr_pages
-could wrap to a small value. Because range_is_subset() lacks an
-inner_start <=3D inner_end validation, this wrapped end value would
-incorrectly pass the range_in_vma_desc() bounds check.
-
-This could lead to inserting PTEs far out of VMA bounds and corrupting page
-tables.
+If memory allocation fails during fb_deferred_io_init() in the driver probe,
+it returns an error code and leaves info->fbdefio_state as NULL. When a
+userspace program maps the framebuffer, fb_deferred_io_mmap() unconditional=
+ly
+passes the NULL info->fbdefio_state to fb_deferred_io_state_get(), which wi=
+ll
+subsequently dereference it via kref_get().
 
 [ ... ]
 
-> +int map_discontig_kernel_pages_complete(struct vm_area_struct *vma,
-> +					struct mmap_action *action)
-> +{
-
-[ ... ]
-
-> +	do {
-> +		unsigned long end, pgoff_end;
-> +		unsigned long nr_pages;
+> diff --git a/drivers/video/fbdev/ssd1307fb.c b/drivers/video/fbdev/ssd130=
+7fb.c
+> index c4fdecafd8560..958514a354338 100644
+> --- a/drivers/video/fbdev/ssd1307fb.c
+> +++ b/drivers/video/fbdev/ssd1307fb.c
+> @@ -763,6 +763,8 @@ static int ssd1307fb_probe(struct i2c_client *client)
+>  	info->fix.smem_start =3D __pa(vmem);
+>  	info->fix.smem_len =3D vmem_size;
+> =20
+> +	info->flags =3D FBINFO_VIRTFB;
 > +
-> +		/* Default to abort. */
-> +		state.action =3D DISCONTIG_KERNEL_PAGE_ABORT;
-> +		err =3D ops->get(&state);
-> +		if (err || state.action =3D=3D DISCONTIG_KERNEL_PAGE_ABORT)
-> +			return err;
-> +		nr_pages =3D state.__nr_pages;
-> +
-> +		end =3D state.addr + PAGE_SIZE * nr_pages;
-> +		if (end > vma->vm_end)
-> +			return -EINVAL;
+>  	fb_deferred_io_init(info);
 
 [Severity: High]
-Does this bounds check handle a huge nr_pages value correctly?
+This is a pre-existing issue, but the return value of fb_deferred_io_init()
+is ignored here in ssd1307fb_probe().
 
-Similar to the check in map_kernel_pages_prepare(), if nr_pages is
-huge, end will wrap to a small value. This bypasses the end > vma->vm_end
-check, potentially allowing page table corruption.
-
-> +		pgoff_end =3D state.pgoff + nr_pages;
-> +
-> +		err =3D apply_discontig_action(vma, &state);
-> +		if (err)
-> +			return err;
-> +
-> +		state.addr =3D end;
-> +		state.pgoff =3D pgoff_end;
-> +		state.nr_pages_mapped +=3D nr_pages;
-> +		state.nr_pages_remain -=3D nr_pages;
-> +	} while (state.addr < vma->vm_end);
-
-[Severity: High]
-Could this result in an infinite loop if nr_pages is 0?
-
-If a driver provides 0 pages (for instance, via
-discontig_kernel_map_page_range(..., 0)), end will equal state.addr.
-
-state.addr is then updated with a 0 increment, causing the
-while (state.addr < vma->vm_end) loop to execute infinitely and hang
-the kernel.
+Should we check the return value of fb_deferred_io_init() and handle the
+potential allocation failure so we don't proceed with a NULL
+info->fbdefio_state?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-b4-mmap-pr=
-epare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org?part=3D8
+epare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org?part=3D18
