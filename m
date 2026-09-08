@@ -1,117 +1,125 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 455193A7D91;
-	Tue,  8 Sep 2026 07:55:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AB9D4CB8C8;
+	Tue,  8 Sep 2026 09:03:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788854103; cv=none; b=E3DXmfdfwwzhRettOe1rH60ON7PmdYCgVCNieu3kIacjPp+SRxJttq072TEFAjO1wBC7WEGF1DHhvUHA2ZrrZuuif/uZuXiP6o63uW6tiIjRc5yh4CrqTK+ED82nr0gK/keyLqkxC2lGYUCloE+LpdVIJuVEQ7rCvr78QJmqz94=
+	t=1788858213; cv=none; b=Jeif8a1OmUj2fPTVIRbNUH6C+v9HsM5rwMquD9vGkQJzeZPAJAbhIo+SzonY0DlG0v2o4AMEvPnuQ8yXY0ZU38va++U8pIbnoVQAmtxoNPcrI3E9RJPeArjWb+eyAyoGUz7LKEAUvuw2AZL6AFwJjgO50SKinEwIgQUiCLdfMV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788854103; c=relaxed/simple;
-	bh=K4Ym8PN35SHvHL0GAvrvHj6kewxSNl1YjdzFppXSOug=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=HLInsAh2TyGJH591pPYPN5tSGPt6BdiHICV+9ftHYTZhCJYkz/FUmnpj2zr7gG3a+6p2azM07lEeisqsCupHJscIcyc9taS9JwVy8V2D+uWcHZSxgauwodN8TiY8C2vB/Y/3AE0b6La8RYhIgC5B5a/zENMM0xonYJCqS1ckPo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eh43IUjZ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788858213; c=relaxed/simple;
+	bh=d0BKpYQYyUXxmNO//sJDHXDYxWDloNJnwLbFh4ZAr9k=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=EcsbcbO09wiE80Rw/PtEFFfNH5AvuO/p7qUfpirTXLM2hWx2Yq9Qu1QHZ29zpLn+44PgLQSkrE+OKrtGtf7xr7w+xYE4GM58JxPoGhQPu5Mt2UAJ2WcV0+7H9SXa5GWHDTAc1LrDzXG6J1Yp2jll5hmd0Iz63HtYZOKBgGGwQyc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F0hdl/nO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eh43IUjZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66A4A1F00A3A;
-	Tue,  8 Sep 2026 07:55:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F0hdl/nO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41EB51F00A3E;
+	Tue,  8 Sep 2026 09:03:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788854101;
-	bh=/njaPGUC0UnsYXWiMdKzzdlRKyO+rfrsXkLm+Vj1DHU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eh43IUjZXawZbxgyCllrheup8Rsn+oZgk7Fs0pDvELBiw2JNMmDZBfs/Z43uMm2qf
-	 IeLv7qM9DgOyvs0iBoJV3+fyceCpT8Uozi51qA7FfQmOPTHu2n0x7+7dgF6ttDqkkh
-	 kAaS0awZybwK8rIzE7C7pFKuBsKLVpfJB+Yh5XPTg7HTyElKozdiwwo6AHI3dTV3Ga
-	 BwLwXZp9AOky30OqxxFP64sGZFq3y4CZfCpeMFPLfUFyZfnHBukqwI5NIMDpMB17fT
-	 T8OwqKIufe3pHcbRrW7u4RNdF8UUbHua/v1I31brXTFezZ1kdqyhh4HIgsa9/SXFMA
-	 vjuYCbuGTEWIQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
- driver
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yixun Lan" <dlan@kernel.org>
-Cc: devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260908-08-k3-ufs-support-v4-2-22aa2bd97d3b@kernel.org>
-References: <20260908-08-k3-ufs-support-v4-0-22aa2bd97d3b@kernel.org>
- <20260908-08-k3-ufs-support-v4-2-22aa2bd97d3b@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 07:55:00 +0000
-Message-Id: <20260908075501.66A4A1F00A3A@smtp.kernel.org>
+	s=k20260515; t=1788858206;
+	bh=jIegZQxuGFSajv7jyflim0CL+uooKIi0PxCUCQBYci8=;
+	h=From:To:Subject:Date:In-Reply-To:References;
+	b=F0hdl/nOB2j6Le485IujfueGDf/ZzTyRyGBgb/PbT5FA4mgpgzJoKfbUtPVaAhTeB
+	 QCkqGQ8bb5TKuJnMGJRPdbrwlT4teS6I5Pc9YDlTNSrglkda4XxKsHEfginhgHLqRx
+	 1WbBkrQ7xYsLmlziScd4i61JLkLLX4p7H0kXfUKs6eVYOqImAorULEvFKxT4+PK6B2
+	 AlOvncd2wo/mkQBEZu132FwLQu4EmM76RDSGWiTztmqBOgk6rzsLYY5E8SZziB9pJ/
+	 B72iYiaPHKYoInFteAt3LV8LbwnZN8X0s0AmfKWZKb/4l9KsmHB2iulyXDz60Z86ir
+	 LQTcD3LDYD2fA==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>,
+	linux-usb@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-s390@vger.kernel.org,
+	Heiko Carstens <hca@linux.ibm.com>
+Subject: [PATCH v6 03/40] scsi: constants: rename internal struct field names
+Date: Tue,  8 Sep 2026 18:02:31 +0900
+Message-ID: <20260908090308.1085097-4-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260908090308.1085097-1-dlemoal@kernel.org>
+References: <20260908090308.1085097-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Missing lane 1 configuration for M-PHY tuning attribute 0xe8.
-- [High] The SpacemiT UFS platform driver fails to configure PM (Power Mana=
-gement) operations, breaking system suspend/resume.
---
+To make the code more clear, rename the code12 field of struct error_info
+to the more natural name "code" and the fields code1, code2_min and
+code2_max of struct error_info2 to the more explicit asc, ascq_min and
+ascq_max.
 
-commit e432cf6faf83c7fe0612ce4cb8a3f5d0731598d9
-Author: Yixun Lan <dlan@kernel.org>
+No functional change intended.
 
-scsi: ufs: spacemit: k3: Add UFS Host Controller driver
-   =20
-SpacemiT K3 SoC consist of UFS (Universal Flash Storage) Host Controller
-which has features compatible with JEDEC UFS 2.2, MIPI UniPro v1.61 and
-M-PHY v3.0 standard.
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
+---
+ drivers/scsi/constants.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-> diff --git a/drivers/ufs/host/ufs-spacemit.c b/drivers/ufs/host/ufs-space=
-mit.c
-> new file mode 100644
-> index 0000000000000..9d037d90ac5e3
-> --- /dev/null
-> +++ b/drivers/ufs/host/ufs-spacemit.c
-[ ... ]
-> +static int ufs_spacemit_link_startup_post_change(struct ufs_hba *hba)
-> +{
-> +	/* Add 0xe8 make UFS2.1 run GEAR3 + 2Lane@409M */
-> +	static const struct ufshcd_dme_attr_val setup_attrs[] =3D {
-> +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x97 },
-> +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0xd7 },
-> +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x17 },
-> +		{ UIC_ARG_MIB(DL_AFC0REQTIMEOUTVAL), UFS_DL_AFC0REQTIMEOUTVAL_MAX },
-> +	};
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 340785536998..4b97f574fe8c 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -292,7 +292,7 @@ bool scsi_opcode_sa_name(int opcode, int service_action,
+ }
+ 
+ struct error_info {
+-	unsigned short code12;	/* 0x0302 looks better than 0x03,0x02 */
++	unsigned short code;	/* 0x0302 looks better than 0x03,0x02 */
+ 	unsigned short size;
+ };
+ 
+@@ -318,9 +318,11 @@ static const char *additional_text =
+ 	;
+ 
+ struct error_info2 {
+-	unsigned char code1, code2_min, code2_max;
+-	const char * str;
+-	const char * fmt;
++	u8		asc;
++	u8		ascq_min;
++	u8		ascq_max;
++	const char	*str;
++	const char	*fmt;
+ };
+ 
+ static const struct error_info2 additional2[] =
+@@ -377,20 +379,20 @@ EXPORT_SYMBOL(scsi_sense_key_string);
+ const char *
+ scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
+ {
+-	int i;
+-	unsigned short code = ((asc << 8) | ascq);
++	u16 code = scsi_sense_code(asc, ascq);
+ 	unsigned offset = 0;
++	int i;
+ 
+ 	*fmt = NULL;
+ 	for (i = 0; i < ARRAY_SIZE(additional); i++) {
+-		if (additional[i].code12 == code)
++		if (additional[i].code == code)
+ 			return additional_text + offset;
+ 		offset += additional[i].size;
+ 	}
+ 	for (i = 0; additional2[i].fmt; i++) {
+-		if (additional2[i].code1 == asc &&
+-		    ascq >= additional2[i].code2_min &&
+-		    ascq <= additional2[i].code2_max) {
++		if (additional2[i].asc == asc &&
++		    ascq >= additional2[i].ascq_min &&
++		    ascq <= additional2[i].ascq_max) {
+ 			*fmt = additional2[i].fmt;
+ 			return additional2[i].str;
+ 		}
+-- 
+2.55.0
 
-[Severity: High]
-Is Lane 1 tuning intentionally omitted here?
-
-The driver declares support for 2 TX lanes, and the comment mentions
-configuring "2Lane@409M". However, the M-PHY tuning attribute 0xe8 is
-only configured for Lane 0 via UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0).
-
-Operating in 2-lane mode without applying the same PHY tuning to the
-second lane can cause link instability or negotiation failures. Should
-this also configure Lane 1?
-
-[ ... ]
-> +static struct platform_driver ufs_spacemit_pltform =3D {
-> +	.probe	=3D ufs_spacemit_probe,
-> +	.remove	=3D ufs_spacemit_remove,
-> +	.driver	=3D {
-> +		.name	=3D "ufshcd-spacemit",
-> +		.of_match_table =3D of_match_ptr(ufs_spacemit_of_match),
-> +	},
-> +};
-> +module_platform_driver(ufs_spacemit_pltform);
-
-[Severity: High]
-Does this driver correctly configure power management?
-
-The platform driver structure does not initialize the pm field in its
-driver sub-structure. Without a valid dev_pm_ops structure, the platform
-bus will not invoke any PM callbacks for this device.
-
-This means the UFS host controller will not participate in system
-suspend/resume or runtime power management, which can lead to power
-drain or system crashes on resume if the power domain was gated by
-firmware. Should this assign standard UFS PM callbacks to the pm field?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908-08-k3-ufs-=
-support-v4-0-22aa2bd97d3b@kernel.org?part=3D2
