@@ -1,62 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D9A73290A5;
-	Tue,  8 Sep 2026 10:36:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5610374A1B
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Sep 2026 10:43:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788863813; cv=none; b=NwG1Ze5Tz/CvdUVzxciw7+RVsrEY47KVHSv+PWknHGhXUPjxMPTLZ6gLRHVcgkwKXQ4Fbne0Ny4c0Kbjjq2zMj6XXZ2OIzUCjycp4ZwEdF3qO/nq0o9YF+0r9JpEDMyJBUcaCubpRh4XwO8L2uvS3xw0KTNFC/3wxlapjk8/ftk=
+	t=1788864237; cv=none; b=jqA6B4yn4PMR41A3e8qDa6hezPF6N3YDQ5KLlg8428BXGqjL9K5n+wlXzWdQT6D1Xt9CBt9TheczJBCD6kX5PU/U6bXg54Rpplu4tGHL2IqbAlsjew7Vh/1O09Tl/50fGbp+zYqGeUB7qmC6AhGLlN1fqRtI9oz6q838THy/ZlM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788863813; c=relaxed/simple;
-	bh=CmAlehuN2ZZt4+bsRWtVcEMe/F4NIu3gGKw0xNTnxtc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=I2tOlcmLicpNYlTfBGF3dBDX0B6mhSbnFCvDtyBwG3I666KDOLfsTB5o1vaypNJj+wiM4pQJgiVbptSt3wa/3srMSXUzelqyKqkyA/Q9Ko0XDROQlorrCq7HoosukOt9kLb65KnQK10fBv8v4CYS1fiPqe4/9D+g+YXT1sJrBZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f022RY6l; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788864237; c=relaxed/simple;
+	bh=wJF87hAqw1DfV/G2Y8256aPe3GJWUQeIGK+xITMgWVU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sppkbQ80hA428OWex/1RDn8eXYDuvEh9qzQITloD+t3Te+XMu6z+vQ7ZS27ia53yK/2jEYT8N9uenFJBw9eQjoI6EaekcJaaqAFCSofrQJTpVgtSHBNFkIqFHCrjZuH4Z/Jz2fR/xkUjLSItLsX5owZWe78aa8MyH1OzS8GLcaY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YIT9i5/k; arc=none smtp.client-ip=209.85.216.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f022RY6l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A8EE1F00A3A;
-	Tue,  8 Sep 2026 10:36:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788863811;
-	bh=CmAlehuN2ZZt4+bsRWtVcEMe/F4NIu3gGKw0xNTnxtc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=f022RY6lbIUE8vwyO3w0LRnDsMi6S20NUd/4Viq9OfKK7DfXStGQIo/xGmyGptBIX
-	 dtxkVajVWFL+EswKBgRh3u86QFkQwHCjbV/Dgqo6113NZLu2ZZNNwuESUFyr/Fh79I
-	 8YXOCGynSOU5W7jbE1OVNy1EfHKtoFv5Fs23eaBInjnNu+lTuWVN/OCy7T0JwCYmXs
-	 wGWSz2MLpkiiEWW9B3LT6NhKGpj+JuQtfZigkc/CeFzXCdgNE6+bfts/eCeHZFDGHv
-	 PkUWJkH+e13Fl6sRA1nF7wZTUK16fCUNFMXRLyj3vhyinnK+zgNGtepbxkMZ4Gn8GS
-	 oI3GYu7sgAVLw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 39/40] scsi: cleanup scsi_proto.h
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: linux-s390@vger.kernel.org, "Heiko Carstens" <hca@linux.ibm.com>, cassel@kernel.org, "Vasily
- Gorbik" <gor@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, dlemoal@kernel.org
-In-Reply-To: <20260908090308.1085097-40-dlemoal@kernel.org>
-References: <20260908090308.1085097-1-dlemoal@kernel.org>
- <20260908090308.1085097-40-dlemoal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 10:36:50 +0000
-Message-Id: <20260908103651.6A8EE1F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YIT9i5/k"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-39682983a0fso4762278a91.3
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Sep 2026 03:43:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788864235; x=1789469035; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=qCqQB19M3/bVXTywLYLz0qY+EnHLX+YyNCe+Rh8rNHM=;
+        b=YIT9i5/kw5N5auLfv5NH0nf/MDl5T/DQ1ZBzuCJpf2bB7yImQBzh2v6Omb5Pjw0W5X
+         bKTahI3dT6FuLd7XYXWOsrtAlJoJqL5CdiR319B+V7CLatq2+tU2B6b7YgykCpl45ogT
+         Fw4ZYtkQ6wqqn2p4pVpuVe38DW7d7YpE0DD1NOYyounronK+XoajP5I42IM0q44grwH6
+         kpmeGiaRylvu5himvEl2VIxx5OPC/CVD2hcfvuRxcPJHrmnZIoxYkpNjsdhK67T5xhxN
+         j8l0UCKHLZHljeugKM5KCLZeMfVjtb2JvLXZ+YPJ4UAZLwek1/IRFHahcxciuvbjWDyr
+         4eQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788864235; x=1789469035;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=qCqQB19M3/bVXTywLYLz0qY+EnHLX+YyNCe+Rh8rNHM=;
+        b=QS80WcEV4tN7gvf/xN6S1Rba5paNyPmaxTf8m1ofgKVc/CX4l0zHv8QXNyKKjS5PKe
+         ZONL4dIUu3o5wRXkO7j5tSz5WAM5b5RBD9K1bBrQzEGT4rz3ImzgOXdBeA1+8beJ7sr/
+         WY8ETFnwyB/RkNF113KYvEMSICif/E6tYgvOI4OZlhx/iFhO8TjAmocRGhgxt0NMCInO
+         qtnfBfdUTl9gJoPhmiV8KZNGtJVzTVqbQWSzBr037m79uB/SC/8rCnIq5Tmp22icfbB3
+         mDfYfwUR6okaTmv8rnW2UXlQATWOe73YJksw1yBLsIrpTGE2rSGa9Xt1XbGASde+NQBb
+         k/tg==
+X-Gm-Message-State: AFuF++mBzzqpxoldhCU4/syjF7QIbnlWtOOHnhy4YGJ/T/cV33AK4b2a
+	g6trhIprFwI0LxmmQrxA8rfKAcDo0UTugn350KIyKnfyX463hyuj0A4e
+X-Gm-Gg: AYBFou04A1i71jeuZ2QEUE31iu2cAlX8urQda5Zsfe2BYewuXVQT/vmK7qasnlyENKF
+	XNPQHX69TP+ecJQW2jwxbLUz6Vg/oP0oCa0eRBIzV9QDNey97RN2X5SRekXYIxQadid2z+bBgPt
+	cCI6x4OCdJYc1NcoWLhYOyzbmyeDjPRwNNxXTg6KJBVomWRm8qYTohrxGehUuP5llB96hOgUpGx
+	97QGvjAdigSTrhx++J0Kft4pPvbXZ4ik2+4XYJlwxTTyRmW3eCTfNlcanIeYj3awSPRpcU4M6YS
+	tDafiVJ9Nne/Wq/yZ+Mq+G2Kva7+3NB0GuqT1cJfNMohOYV9WNGkxdAeDKv63Kh6v1GMi5N/pku
+	fWrkY8sliaY7R56//+AJjgLdNNitPCs3J4TtFx0TSzbT8QfSvu/3czLS6f8d+K+GNwcKMbm9ps4
+	CssJTX6ohJ5mg/EUFGAK90XFHNwwAA/md1YdMe+MpHAaBgAz2pLvcKoQEhYopWs7IrWTOP6QFPv
+	oVF9yBcOHec
+X-Received: by 2002:a17:90a:d646:b0:398:9bd5:490d with SMTP id 98e67ed59e1d1-39b26214798mr46686051a91.20.1788864234965;
+        Tue, 08 Sep 2026 03:43:54 -0700 (PDT)
+Received: from adminex-ThinkPad-E14-Gen-7.. ([14.97.7.198])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3396e7e477csm3595604eec.29.2026.09.08.03.43.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Sep 2026 03:43:54 -0700 (PDT)
+From: Mahantesh <mahantesh9789@gmail.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mahantesh <mahantesh9789@gmail.com>
+Subject: [PATCH] scsi: isci: Fix duplicate word in comment
+Date: Tue,  8 Sep 2026 16:13:42 +0530
+Message-ID: <20260908104342.30297-1-mahantesh9789@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-> Now that all users of SCSI sense codes have been modified to use macro
-> definitions and the 16-bits sense code instead of separate 8-bits ASC and
-> ASCQ, remove the now unused asc and ascq fields of struct scsi_failure and
-> struct scsi_sense_hdr, and the old (and incomplete) definitions of SCSI
-> additional sense codes and sense code qualifiers in scsi_proto.h.
->=20
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Remove the duplicate word "the" in a comment in task.c.
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+Signed-off-by: Mahantesh <mahantesh9789@gmail.com>
+---
+ drivers/scsi/isci/task.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908090308.1085=
-097-1-dlemoal@kernel.org?part=3D39
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index 3a25b1a2c52d..aeb2cda92465 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -67,7 +67,7 @@
+ /**
+ * isci_task_refuse() - complete the request to the upper layer driver in
+ *     the case where an I/O needs to be completed back in the submit path.
+-* @ihost: host on which the the request was queued
++* @ihost: host on which the request was queued
+ * @task: request to complete
+ * @response: response code for the completed task.
+ * @status: status code for the completed task.
+-- 
+2.43.0
 
