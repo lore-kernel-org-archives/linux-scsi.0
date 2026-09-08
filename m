@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E7B54D9916;
-	Tue,  8 Sep 2026 09:03:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6CDE4D90D4;
+	Tue,  8 Sep 2026 09:03:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788858220; cv=none; b=jpaNA0o/idcKacZwEOtbOsKjPv2XjTJJW4ILw86DmM1yzsqzcyLdTL6bkYsfSpAYNHjuT6ZJEdz9C8fkR+tSfNl4Ez5otClQd3tLdu5bozbnffxxzaYEevD5dQn78moSfAkI0QKFtDGY07XhIn8R0Q7hDSWPVdWdKSNo/Rh3xH8=
+	t=1788858220; cv=none; b=t2y8GXrip3DuHqRDsyEZcn86+VICAcPMdO+20rmcUIrXjQYn21WHjEfH//QFisAWeST4Ln3tM8fVcKPMH43ZEU5pAiK95yHvFlLj5xcKuGtfSWw3Dt5ULKrpOKGrxIZ9zEZcBOCCFlD3Z0Z/T20YHEVKGrRkXfD7Zy7wm7YeE+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788858220; c=relaxed/simple;
-	bh=e++0ubcaKmQCpVqIlLTGOEJ/TXnAljuz5JvNm1b/S6Q=;
+	bh=YNvoW1TM69SQaOJNqQ94p/rhTKCn2yBAcgG3i9O+4ug=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=eLhVH/wEgCos69cTmVi1JcH+B6NlzwCGsWnGLn70mjf8C7fyhcOZ0yv+yevf5jdpAUPQ9d/Yy2pkrrnQZ5q+PWcv1N2WnoGwra95vCqrJGlR2/2UZ7i/mqBZw+og5DgkF0DebCcwXphIPamZ1XJmTPhfpp0OZCzC4JbxgkhbpUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iPOo7wrc; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=SDZ54yEf/rCxJemD4T5SpRRXY3N/x7c5qfLWrhk6dCTA+x1qZy/ywQffxMyp/ecFhZvnhmTZHO0EgChFvaaco01Lx/W5+uD444xa/keSBKzVucCuJxM7vN7XFSmPJdHB481KdvX230yzUEfpHLpmEX49EDbhVPuRv+UYRgwA+Os=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aAkRbHx+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iPOo7wrc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96E831F00A3E;
-	Tue,  8 Sep 2026 09:03:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aAkRbHx+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD8811F00ACF;
+	Tue,  8 Sep 2026 09:03:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788858217;
-	bh=c4dObhCks11ZxE7Z7en5/wV9Vn1fIPMhBewM1In7EWM=;
+	s=k20260515; t=1788858210;
+	bh=yEjWC6IcSUH6v343tA5FYKImBbEY8Lrqq9qJw4Yb6I8=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=iPOo7wrcSM/AR3Layry+6yIgngrcpJGdANzCCfRq6mL++ekDPZxeVZBTvpyS4yxlQ
-	 SM5rTzF1DDVHppHXgXpuSqAsOhttYTNBPDDh6LeRHYYLnkuojhGiy1ne2sUZnDW10b
-	 xxci+m9bBoBGypQ0V/UAUtXTqILTnZb3M6/CjgFxOiD1ffkQ+PvSlOWdNVWHSrOmG2
-	 fkfSH3bzFusYOU7qtW/YSSFi1YfcLphFvSEmRpEebeEXl1h892z/SIHhFQEmJm2WgT
-	 fBzEwJJQCa9f7TkbofvIpgGZdGgO64eTWwGSNxXRu/1agY040gLlGkfl8T1J7hd4sr
-	 b+p4J55uQxHfQ==
+	b=aAkRbHx+aTTMqSiYEwxRqHKQFBVkF0T+xjg/3h9zmYwZ08VxQ9VTgSBo+NQrOJptg
+	 FFZc8tgOUhTd/jZWR2wi3YanEx9apwyJ7B+LYRCNf5dgX5TP0Rz3/bvZdh6Go7+oIP
+	 OmC9P5NF9IkARxFIk/AWkQVFWvMqLqfFmY/tPxdmzRDZeXfAxdBG0H1wnX53CerVLW
+	 5vlKoxhf2thFTf9Q3YYXduTddOYu/gvVNBd0AdEOd8ZcUM/LsmPjrwkRWZr/q0F1lA
+	 nYico1QtMvSicIyMV7cgSzEMkgvpW0R0cP6Vv+d25HTKOEJPhoUjhogyh6Jg50erjt
+	 oUSRqNimHYpow==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v6 09/40] scsi: sr: use 16-bits defined sense codes
-Date: Tue,  8 Sep 2026 18:02:37 +0900
-Message-ID: <20260908090308.1085097-10-dlemoal@kernel.org>
+Subject: [PATCH v6 05/40] scsi: prepare for using 16-bits defined sense codes
+Date: Tue,  8 Sep 2026 18:02:33 +0900
+Message-ID: <20260908090308.1085097-6-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260908090308.1085097-1-dlemoal@kernel.org>
 References: <20260908090308.1085097-1-dlemoal@kernel.org>
@@ -51,114 +51,156 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the SCSI CDROM driver to use the 16-bits sense_code field of
-struct scsi_sense_hdr and replace all hard-coded additional sense codes
-and additional sense code qualifiers with the enum values defined in
-include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
-being processed are easier to test and self-documented.
+In preparation for handling sense codes and their qualifiers as a single
+16-bits sense code field, with the values  defined as macros in
+include/scsi/scsi_sense.h, modify the definition of the structures
+scsi_failure and scsi_sense_hdr to introduce a 16-bits sense_code field
+as a union with the existing 8-bits asc and ascq fields.
 
-No functional change intended.
+This temporary modification allows accessing either the asc and ascq
+fields individually, or their combination as the 16-bits sense_code field.
+
+The helper functions scsi_sense_asc(), scsi_sense_ascq() are defined to
+allow accessing the 8-bits ASC and ASCQ values from the sense_code filed
+of struct scsi_sense_hdr. The helper functions scsi_failure_asc() and
+scsi_failure_ascq() provide the same for the sense code field of struct
+scsi_failure.
+
+The helper functions scsi_set_sense_buffer() and scsi_set_sense() are also
+added to wrap calls to scsi_build_sense_buffer() and scsi_build_sense()
+using a 16-bits sense code aregument instead of the 8-bits ASC and ASCQ
+arguments.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/sr.c       |  3 ++-
- drivers/scsi/sr_ioctl.c | 29 +++++++++++------------------
- 2 files changed, 13 insertions(+), 19 deletions(-)
+ include/scsi/scsi_cmnd.h   |  7 +++++++
+ include/scsi/scsi_common.h | 31 +++++++++++++++++++++++++++++--
+ include/scsi/scsi_device.h | 25 +++++++++++++++++++++++--
+ 3 files changed, 59 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index c36c54ecd354..4f2e8d1be6da 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -253,7 +253,8 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
- 	 * (ASC 0x3a).
- 	 */
- 	cd->media_present = scsi_status_is_good(ret) ||
--		(scsi_sense_valid(&sshdr) && sshdr.asc != 0x3a);
-+		(scsi_sense_valid(&sshdr) &&
-+		 scsi_sense_asc(&sshdr) != ASC_MEDIUM_NOT_PRESENT);
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 8ecfb94049db..bf6d69f0249f 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -394,6 +394,13 @@ static inline unsigned scsi_transfer_length(struct scsi_cmnd *scmd)
+ extern void scsi_build_sense(struct scsi_cmnd *scmd, int desc,
+ 			     u8 key, u8 asc, u8 ascq);
  
- 	if (last_present != cd->media_present)
- 		cd->device->changed = 1;
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index 089653018d32..e4ec0f63cdcc 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -226,9 +226,8 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 			err = -ENOMEDIUM;
- 			break;
- 		case NOT_READY:	/* This happens if there is no disc in drive */
--			if (sshdr->asc == 0x04 &&
--			    sshdr->ascq == 0x01) {
--				/* sense: Logical unit is in process of becoming ready */
-+			if (sshdr->sense_code ==
-+			    LU_IS_IN_PROCESS_OF_BECOMING_READY) {
- 				if (!cgc->quiet)
- 					sr_printk(KERN_INFO, cd,
- 						  "CDROM not ready yet.\n");
-@@ -250,9 +249,7 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 			break;
- 		case ILLEGAL_REQUEST:
- 			err = -EIO;
--			if (sshdr->asc == 0x20 &&
--			    sshdr->ascq == 0x00)
--				/* sense: Invalid command operation code */
-+			if (sshdr->sense_code == INVALID_COMMAND_OP_CODE)
- 				err = -EDRIVE_CANT_DO_THIS;
- 			break;
- 		default:
-@@ -303,9 +300,8 @@ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
- 	if (!scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr))
- 		return CDS_DISC_OK;
++static inline void scsi_set_sense(struct scsi_cmnd *scmd, int desc,
++				  u8 key, u16 code)
++{
++	scsi_build_sense(scmd, desc, key, scsi_sense_code_asc(code),
++			 scsi_sense_code_ascq(code));
++}
++
+ struct request *scsi_alloc_request(struct request_queue *q, blk_opf_t opf,
+ 				   blk_mq_req_flags_t flags);
  
--	/* SK/ASC/ASCQ of 2/4/1 means "unit is becoming ready" */
--	if (scsi_sense_valid(&sshdr) && sshdr.sense_key == NOT_READY
--			&& sshdr.asc == 0x04 && sshdr.ascq == 0x01)
-+	if (scsi_sense_valid(&sshdr) && sshdr.sense_key == NOT_READY &&
-+	    sshdr.sense_code == LU_IS_IN_PROCESS_OF_BECOMING_READY)
- 		return CDS_DRIVE_NOT_READY;
- 
- 	if (!cdrom_get_media_event(cdi, &med)) {
-@@ -318,18 +314,18 @@ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
- 	}
- 
- 	/*
--	 * SK/ASC/ASCQ of 2/4/2 means "initialization required"
- 	 * Using CD_TRAY_OPEN results in an START_STOP_UNIT to close
- 	 * the tray, which resolves the initialization requirement.
- 	 */
--	if (scsi_sense_valid(&sshdr) && sshdr.sense_key == NOT_READY
--			&& sshdr.asc == 0x04 && sshdr.ascq == 0x02)
-+	if (scsi_sense_valid(&sshdr) && sshdr.sense_key == NOT_READY &&
-+	    sshdr.sense_code == LU_NOT_READY_INITIALIZING_COMMAND_REQUIRED)
- 		return CDS_TRAY_OPEN;
- 
- 	/*
- 	 * 0x04 is format in progress .. but there must be a disc present!
- 	 */
--	if (sshdr.sense_key == NOT_READY && sshdr.asc == 0x04)
-+	if (sshdr.sense_key == NOT_READY &&
-+	    scsi_sense_asc(&sshdr) == ASC_LU_NOT_READY)
- 		return CDS_DISC_OK;
- 
- 	/*
-@@ -338,13 +334,10 @@ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
- 	 * any other way to detect this...
- 	 */
- 	if (scsi_sense_valid(&sshdr) &&
--	    /* 0x3a is medium not present */
--	    sshdr.asc == 0x3a)
-+	    scsi_sense_asc(&sshdr) == ASC_MEDIUM_NOT_PRESENT)
- 		return CDS_NO_DISC;
--	else
--		return CDS_TRAY_OPEN;
- 
--	return CDS_DRIVE_NOT_READY;
-+	return CDS_TRAY_OPEN;
+diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
+index 00c8a16d3cd2..6fb2c290ba33 100644
+--- a/include/scsi/scsi_common.h
++++ b/include/scsi/scsi_common.h
+@@ -71,8 +71,18 @@ extern u64 scsilun_to_int(struct scsi_lun *);
+ struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
+ 	u8 response_code;	/* permit: 0x0, 0x70, 0x71, 0x72, 0x73 */
+ 	u8 sense_key;
+-	u8 asc;
+-	u8 ascq;
++	union {
++		struct {
++#if defined(__BIG_ENDIAN)
++			u8 asc;
++			u8 ascq;
++#elif defined(__LITTLE_ENDIAN)
++			u8 ascq;
++			u8 asc;
++#endif
++		};
++		u16 sense_code;
++	};
+ 	u8 byte4;
+ 	u8 byte5;
+ 	u8 byte6;
+@@ -87,10 +97,27 @@ static inline bool scsi_sense_valid(const struct scsi_sense_hdr *sshdr)
+ 	return (sshdr->response_code & 0x70) == 0x70;
  }
  
- int sr_disk_status(struct cdrom_device_info *cdi)
++static inline u8 scsi_sense_asc(const struct scsi_sense_hdr *sshdr)
++{
++	return scsi_sense_code_asc(sshdr->sense_code);
++}
++
++static inline u8 scsi_sense_ascq(const struct scsi_sense_hdr *sshdr)
++{
++	return scsi_sense_code_ascq(sshdr->sense_code);
++}
++
+ extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+ 				 struct scsi_sense_hdr *sshdr);
+ 
+ extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
++
++static inline void scsi_set_sense_buffer(int desc, u8 *buf, u8 key, u16 code)
++{
++	scsi_build_sense_buffer(desc, buf, key, scsi_sense_code_asc(code),
++				scsi_sense_code_ascq(code));
++}
++
+ int scsi_set_sense_information(u8 *buf, int buf_len, u64 info);
+ int scsi_set_sense_field_pointer(u8 *buf, int buf_len, u16 fp, u8 bp, bool cd);
+ extern const u8 * scsi_sense_desc_find(const u8 * sense_buffer, int sb_len,
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index e321471e8ca2..11910142ac50 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -518,6 +518,7 @@ extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
+  * to match any sense key, ASC, and ASCQ value.
+  */
+ #define SCMD_FAILURE_SENSE_KEY_ANY	0xff
++#define SCMD_FAILURE_SENSE_CODE_ANY	0xffff
+ #define SCMD_FAILURE_ASC_ANY		0xff
+ #define SCMD_FAILURE_ASCQ_ANY		0xff
+ /* Always retry a matching failure. */
+@@ -526,8 +527,18 @@ extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
+ struct scsi_failure {
+ 	int result;
+ 	u8 sense_key;
+-	u8 asc;
+-	u8 ascq;
++	union {
++		struct {
++#if defined(__BIG_ENDIAN)
++			u8 asc;
++			u8 ascq;
++#elif defined(__LITTLE_ENDIAN)
++			u8 ascq;
++			u8 asc;
++#endif
++		};
++		u16 sense_code;
++	};
+ 	/*
+ 	 * Number of times scsi_execute_cmd will retry the failure. It does
+ 	 * not count for the total_allowed.
+@@ -537,6 +548,16 @@ struct scsi_failure {
+ 	s8 retries;
+ };
+ 
++static inline u8 scsi_failure_asc(const struct scsi_failure *failure)
++{
++	return scsi_sense_code_asc(failure->sense_code);
++}
++
++static inline u8 scsi_failure_ascq(const struct scsi_failure *failure)
++{
++	return scsi_sense_code_ascq(failure->sense_code);
++}
++
+ struct scsi_failures {
+ 	/*
+ 	 * If a scsi_failure does not have a retry limit setup this limit will
 -- 
 2.55.0
 
