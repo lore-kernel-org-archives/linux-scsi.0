@@ -1,94 +1,174 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C22255930C
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Sep 2026 14:36:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 554AB4F0538;
+	Tue,  8 Sep 2026 17:59:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788878195; cv=none; b=JCohCxgiilbdvoTrpPD1spuopdGpI5kLljXfmVqo/NA/B13yjNtnOoYHFcSjvULcvKR9vVR+aluGaCdnjpEoYjIB/okDoiSu3fHvm9rBM7vNteTrJjcrlGIXZ0f+E/yqRhfaFioSAB6ZyVHG6xF2eBhUNdY3Evr9KEPmbnMhZRM=
+	t=1788890361; cv=none; b=t+rCEBxqkgTcZwMcBV2+63SRbBC1/d5pUIA5FxBdxSTP1c8c0lMUBeUqsuHfepGiXUGL4SUYh1qibkDKaPoQUXefkGdTFG+VBhSD8fZszqK4QCtZcCKOFuqUXeEjh1VtUsu9Qudp+jje1KYam/XXZR0HZXWdAn2NGXAwZRtY8TI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788878195; c=relaxed/simple;
-	bh=uCQv/JPbj2UAl1fUOP3Qo2PfyF9548XXIZUCrJEouDg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=MzzpKfVbOdYvL5LoX7kYPlfDlgnOaZaSuRA0F3vpiIzQwfl0xIRYr0kAuns0RBNP4AB6DyA+IR3p44RYeAANtezWWdDTL15XsPFInsBZQ2CPoN4wd579/GavCXXwLhaSHqd/1NvydrBr5j1WsU/bjemxw8amoc5ZcV8/XihiUh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=P+rH3BBQ; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1788890361; c=relaxed/simple;
+	bh=GDYCE4PZTmcZfWehm7a5xohHYJ2AxhYAMjFzKQp8J54=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fRh6g2ukqHbxP6nbbYn1q/DntPgp/4/B+N++0pNl/9L77fBQWHWDVKIdFy9UP4X8/RhHSFKbdJ7w5XMisR2YHk/N2+64xtGTeMj3H9guJ8PVxxamLoPB+/tZRFjegvQTisHCTAARYARqP30xcBxuRclN4UhSsSwgIemKFXTQAEk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kbs4qpQx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="P+rH3BBQ"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20260908143617epoutp0273e692819d4601dc9057b57f11ea46ce~TXzlpPi_m0558605586epoutp02M
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Sep 2026 14:36:17 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20260908143617epoutp0273e692819d4601dc9057b57f11ea46ce~TXzlpPi_m0558605586epoutp02M
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1788878177;
-	bh=x5eQ4QWvTQMMsZQPhCLPBfxlH4gL0gok2xTNYH4eMJE=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=P+rH3BBQ52QQcZUTvB2qERaSxfdVos6YczXTSEROpmQR8uAYSpjLrN2eKFtxIVkdv
-	 /xBcMzcEci/o9+n1SxZgrCxgGnoScKpiFQ3KOCvLtTMx9CfFbVie3iJasXePJg1C60
-	 Jg2ScVdNWxySEL7ED9MQih2UVakvmgH3c2Mu4Ysg=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20260908143616epcas5p450e3cbd323cf9f442386b3e09f16bf0c~TXzk0_xXj2415024150epcas5p4I;
-	Tue,  8 Sep 2026 14:36:16 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.87]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4hfRMM49Yfz6B9m4; Tue,  8 Sep
-	2026 14:36:15 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20260908143615epcas5p494e0e1c946cc898dc276b444e2dabd4d~TXzjwbXaM1445514455epcas5p4c;
-	Tue,  8 Sep 2026 14:36:15 +0000 (GMT)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260908143614epsmtip2bff5a6122f5cb969c39203afff00ee28~TXzitZ0wX1706617066epsmtip27;
-	Tue,  8 Sep 2026 14:36:13 +0000 (GMT)
-Message-ID: <bf8ef20b-44ea-42ca-9629-fe75056491bc@samsung.com>
-Date: Tue, 8 Sep 2026 20:06:12 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kbs4qpQx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E98401F00A3D;
+	Tue,  8 Sep 2026 17:59:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788890359;
+	bh=nS58VD+9Q5pUHduSFMUnW1M4pyzzqHU28MfvtzrJtek=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=kbs4qpQxvXdX376nnnNxPuvV8rLbnpJ1kViaBYc652qP/5z3lpl3UkO3OmVmfxJRU
+	 0o9rApZyZuGN2KMCyW78xaiM8OguNwZAA04OZU2/2OeZLqXAmfTbPx3fUvY8ABvPTs
+	 iydkAhXo/Li8VHzzniNoA611yAUhT4/5ne98fZsDiptcnmOUuRHj+XZ07BDNyvmcLN
+	 /oAItnsbMJZgvRIUu3hRIYzh3cu/0Su2I8L9b4x/DgcQIr/kv1D8BWUZdjqui5NPp1
+	 bA9NgdQMGwiAgSP4RDEnJK5nZHYsjymNjS2moWCYM8f3LuoDqKHtPW+drHJX1Ftkuq
+	 nqSe1S6TQYJ/A==
+Date: Tue, 8 Sep 2026 18:59:13 +0100
+From: Conor Dooley <conor@kernel.org>
+To: Yixun Lan <dlan@kernel.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
+	Aurelien Jarno <aurelien@aurel32.net>,
+	Jennifer Berringer <jberring@redhat.com>,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] scsi: ufs: spacemit: dt-bindings: Add UFS
+ controller for K3 SoC
+Message-ID: <20260908-carnival-curve-5762bb5cdb92@spud>
+References: <20260908-08-k3-ufs-support-v4-0-22aa2bd97d3b@kernel.org>
+ <20260908-08-k3-ufs-support-v4-1-22aa2bd97d3b@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 6/6] generic: test corruption detection using T10
- protection information
-To: Christoph Hellwig <hch@lst.de>, Zorro Lang <zlang@kernel.org>
-Cc: fstests@vger.kernel.org, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Anuj Gupta <anuj20.g@samsung.com>, John Garry
-	<john.g.garry@oracle.com>, "Darrick J. Wong" <djwong@kernel.org>,
-	linux-scsi@vger.kernel.org
-Content-Language: en-US
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20260907075822.749818-7-hch@lst.de>
-Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20260908143615epcas5p494e0e1c946cc898dc276b444e2dabd4d
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260907075913epcas5p424ad3a711f971e1664c112eea4ba34bc
-References: <20260907075822.749818-1-hch@lst.de>
-	<CGME20260907075913epcas5p424ad3a711f971e1664c112eea4ba34bc@epcas5p4.samsung.com>
-	<20260907075822.749818-7-hch@lst.de>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="jQbfg5+DHEnMgPgg"
+Content-Disposition: inline
+In-Reply-To: <20260908-08-k3-ufs-support-v4-1-22aa2bd97d3b@kernel.org>
 
-On 9/7/2026 1:28 PM, Christoph Hellwig wrote:
-> +	local phys_sector=$(_get_file_extent_sector $testfile 0)
-> +	if [ -z "$phys_sector" ]; then
-> +		_fail "$test_name: failed to get physical block offset via fiemap"
-> +	fi
-> +
-> +	local dev=$(_short_dev $SCSI_DEBUG_DEV)
-> +	local debugfs_dir=$(ls/sys/block/$dev/device/scsi_device/)
-> +	local debugfs_file="/sys/kernel/debug/scsi_debug/$debugfs_dir/corrupt"
-> +
-> +	if [ ! -f "$debugfs_file" ]; then
-> +		_notrun "scsi_debug corruption injection not supported"
-> +	fi
-> +
-> +	if [ "$last" -eq 1 ]; then
-> +		echo "adding to $phys_sector" >> $seqres.full
-> +		phys_blk=$((phys_blk + (128 * blksz / 512) - 1))
+--jQbfg5+DHEnMgPgg
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Maybe you want this to be phys_sector and not phys_blk.
+On Tue, Sep 08, 2026 at 07:42:03AM +0000, Yixun Lan wrote:
+> Document the compatible for UFS (Universal Flash Storage) Host Controller
+> which found in SpacemiT K3 SoC chip. Its features are listed below:
+>=20
+> - Compliant with MIPI UniPro v1.61 specification.
+> - Compliant with M-PHY v3.0 specification.
+> - Compliant with UFS HCI v2.1 specification.
+> - Supports up to 2 Tx and 2 Rx lanes, up to HS-GEAR3 5.8 Gbps per lane.
+> - Supports standard low-power hibernate to reduce power consumption.
+>=20
+> Signed-off-by: Yixun Lan <dlan@kernel.org>
+> ---
+>  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml | 56 ++++++++++++++++=
+++++++
+>  1 file changed, 56 insertions(+)
+>=20
+> diff --git a/Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.yaml=
+ b/Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.yaml
+> new file mode 100644
+> index 000000000000..dda533c852e8
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/spacemit,k3-ufshc.yaml
+> @@ -0,0 +1,56 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ufs/spacemit,k3-ufshc.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: SpacemiT K3 SoC UFS Host Controller
+> +
+> +maintainers:
+> +  - Yixun Lan <dlan@kernel.org>
+> +
+> +properties:
+> +  compatible:
+> +    const: spacemit,k3-ufshc
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    maxItems: 2
+> +
+> +  clock-names:
+> +    items:
+> +      - const: aclk
+> +      - const: ref_clk
+
+It's the usual refrain here, about having "clk" in clock names.
+"axi" and "ref" perhaps?
+Otherwise, looks fine to me.
+
+pw-bot: changes-requested
+
+Thanks,
+Conor.
+
+> +
+> +  resets:
+> +    maxItems: 1
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - clocks
+> +  - clock-names
+> +  - resets
+> +
+> +allOf:
+> +  - $ref: ufs-common.yaml
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/clock/spacemit,k3-clocks.h>
+> +    #include <dt-bindings/reset/spacemit,k3-resets.h>
+> +    #include <dt-bindings/interrupt-controller/irq.h>
+> +    ufs@c0e00000 {
+> +        compatible =3D "spacemit,k3-ufshc";
+> +        reg =3D <0xc0e00000 0x40000>;
+> +        clocks =3D <&syscon_apmu CLK_APMU_UFS_ACLK>,
+> +                 <&syscon_apmu CLK_APMU_UFS_REFCLK>;
+> +        clock-names =3D "aclk", "ref_clk";
+> +        resets =3D <&syscon_apmu RESET_APMU_UFS_ACLK>;
+> +        interrupts =3D <135 IRQ_TYPE_LEVEL_HIGH>;
+> +        lanes-per-direction =3D <2>;
+> +    };
+>=20
+> --=20
+> 2.55.0
+>=20
+
+--jQbfg5+DHEnMgPgg
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaqBM8QAKCRB4tDGHoIJi
+0oK4AP938kdQirfMN6NRHa+lTPVj1DNNJ7TbVOQGbjOSg3a1FQEA/tuljdiVQH6H
+wm/nMVyuuDsuFyLk4tuZ9ZZ7EEwhwwk=
+=ZkPf
+-----END PGP SIGNATURE-----
+
+--jQbfg5+DHEnMgPgg--
