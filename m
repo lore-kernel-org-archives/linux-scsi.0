@@ -1,34 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8E954349B0;
-	Tue,  8 Sep 2026 20:05:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65863388369;
+	Tue,  8 Sep 2026 20:05:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788897921; cv=none; b=X60Jd3P5O8Y5LUa9aunYjvFquTl/hJNds6wmPgopVQa1wC17vgqXCASVyRb7DB8eMPCu/bq/4aEf4nzYAaQ5NyRt9F+1DNhLMdqUQMaKEzTxmWGXgQlE2bSXOG7xrrNuR2IsslRyR3LUL20f6YHsn+tCuzYRIVcwzHrdqTCQ7xM=
+	t=1788897950; cv=none; b=A1Iva2UJlB4ac5QBDYSdPDGFOeyYfT1P6YxeKHsqFsdDWchDKX2Vi1rIfib7E2wp0VoM7q1jnegWdQxXW/QJ4LpAJIn3Zwj2JE3bJnJZBJGm4zVnjaOUxi9za6+Mwn43m5CHtXgQvfzMPBSmR/TUH9QcJtpLSAcBp1A1Bjxd2DE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788897921; c=relaxed/simple;
-	bh=Bv4qXKOuaaNRzjtlcRyEKTvdZCxVUpR8GVW5J10sIxg=;
+	s=arc-20240116; t=1788897950; c=relaxed/simple;
+	bh=RVcXI/9kSHuUo8O2heRZlHSZv1OgtVQ9ABB55RKE5TI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=F8snPtcJNl/KiubP6RoUF26XEHp0l6W0pgc7z6RdgK/3Pba7gIMIjqEOre90vy8ehQD5lDt4sGGn3GfCBY3xRSFw0z30qdLRtMSbRhZpFf8Fkjml5CiN0EFmnYZlVJbuBip3en+rKis6Iz13m7WVs9ncGWs4V/bs7QP6LGLwiZ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ChV4bRWW; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=dFuJFN6YHG6ePkFH3p8AzsKqzHgHLIftJt8rQQZs2bz/Qb8t2m5ojgrMekcnX/R9p2Q3+/H8y3zNmJU9XrDdgrZerr7Bs5ck/R992302J8JRl8rA/q05Na9aQD/CtYaVf9rTLGokEjGGWRQA1KqdqhrFfIoijS59THR1FBVPOZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jc+25493; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ChV4bRWW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86F2B1F00A3D;
-	Tue,  8 Sep 2026 20:04:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jc+25493"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07C1F1F00A3A;
+	Tue,  8 Sep 2026 20:05:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788897919;
-	bh=U36DZGnKOUdxM7zJJhG5T3WAmK0mIYPM7XNxAdT+L68=;
+	s=k20260515; t=1788897948;
+	bh=iscL7XQ2qz+Nzy4lBqsV3dTnKv6z1UKwiafW35/dBb4=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=ChV4bRWWxR83B0qrk/BBBiY+oDL9aWo6ayFwYes5nSucV+Chp306BmAdi1w74jlQj
-	 SGsG2d0q4IfMdE2/dllKZ0UhcIbPH1Z1TR9DuV56PilgnBu/oLPJMYrua5iHuhxLIs
-	 CErXZ8fFRVcaj8nl/3Ta31HHrq9+mW2dn/Ps04f0XsX/rcUzbLjfbe852b9g55fqVM
-	 c/EWnmBrMopK5BilxfqBAy0UgCLsgprXc+CY9azvzmSJLUK0sVbMOITXAsT8log5UB
-	 Wg2xxTQ8fLfP9yL8TUOlBruIZhxAUG6ToyHN+/qw6GVQ9IPXBoClkpN0JoarU7OlIb
-	 I4V/LAtmYfXEg==
+	b=Jc+25493tsckTbWCOZP+Zyv7md+VlPGAmEn3On6Sc+eAYFaK+dxOenSmzWLxaAOv8
+	 i3nIqz8EUF8c80uLWntZ2aH9Lokq5iMJ74K7L9SPQTDc33lfTe5MZE/3gRynv7Y9JW
+	 Od6nbpeIIyAIOfstTWQdWkxXIeIQErrA+CfTpMp4DPftLLDpReZQ0x/FCFNigTagYU
+	 m78Su9hMxY5pV5va1RRv8CX4QDeKU3wEGpZI797elPK/sE2gaxlEp405CEO3TbJme1
+	 akL1BLZnCJhjae4iUstmbk8Shgs+1z8bevPlT8sngmYD4yFsXVXTY4rdXE3RXyOJiN
+	 X4RroRrlG5uvg==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Tue, 08 Sep 2026 21:01:10 +0100
-Subject: [PATCH 06/39] mm/vma: tidy up map kernel pages enum values
+Date: Tue, 08 Sep 2026 21:01:11 +0100
+Subject: [PATCH 07/39] mm: add mmap action for discontiguous kernel page
+ mapping
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-6-dacf19cce22b@kernel.org>
+Message-Id: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-7-dacf19cce22b@kernel.org>
 References: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org>
 In-Reply-To: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -121,123 +122,380 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3944; i=ljs@kernel.org;
- h=from:subject:message-id; bh=Bv4qXKOuaaNRzjtlcRyEKTvdZCxVUpR8GVW5J10sIxg=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIWZG7ckONmolgSWOfS7npbQePAQ49wAZ9i2wz2yYocG
- hsvrinvKGVhEONikBVTZHn+RXx/kEjYvM4L/m4wc1iZQIYwcHEKwESctBkZpt6apZK9aOfJhE1r
- 1gq22q8OMGJpvlrzdyJz9OEXYXF3PRj+51WFbDwuK7hqTxhXE/+R2bk9G1oVbq5N58hdvzl1lZE
- 4PwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=12539; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=RVcXI/9kSHuUo8O2heRZlHSZv1OgtVQ9ABB55RKE5TI=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIWZG4U2FvyUfRZ7qrcGX7ettfbfIQWMv3c5vsl01KS+
+ ZfSGYGjHaUsDGJcDLJiiizPv4jvDxIJm9d5wd8NZg4rE8gQBi5OAZjIotkM/9PrnrryT5T9JbHv
+ 7FUt4W8ihz56XkprWBZecM9Gab5lYT8jw/XSN3Zb3/VGtSsx1gq/ucS4tTJ3k4J33a4fkycVXNm
+ RwgwA
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-MMAP_MAP_KERNEL_PAGES is a mouthful, discard the MAP_ as that's implied by
-MMAP.
+The existing kernel page mapping mmap actions allow for partial and full
+mapping of an array of struct page pointers.
 
-Also while we're here delete useless comments for mmap actions whose names
-clearly indicate what they are for.
+However some drivers require the mapping of discontiguous ranges. Permit
+this by providing discontig_kernel_page_ops which allows a driver to
+specify how the operation should begin and how batches of pages should be
+retrieved.
 
-Also update the userland VMA tests to reflect this change.
+It uses the minimum exposed interface to do so, providing address, page
+offset and both vm_private_data state and a local private state object.
 
-No functional change intended.
+ops->init can establish state for the operation, and ops->get outputs the
+pages to map and their count. Should an error arise the core unmaps the
+VMA, invoking vm_ops->close, which is therefore where any state established
+by ops->init is released.
+
+The code carefully checks to ensure the user doesn't exceed VMA bounds. It
+intentionally allows mapping of less than the VMA range in case the driver
+wishes to allow the user to map an area larger than available data.
+
+To use it, users invoke mmap_action_map_discontig_kernel_pages() with
+initial local private state and a set of operations.
+
+Users can then use one of the provided helper functions to perform an
+action:
+
+* discontig_kernel_map_abort() - Abort and leave the mapping as it has
+  been accumulated so far.
+* discontig_kernel_map_page() - Map a single page, or a compound page given
+  its head page.
+* discontig_kernel_map_page_range() - Maps a struct page ** array of a
+  specified count.
+
+The enum copy in the userland VMA tests is updated accordingly.
 
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- include/linux/mm.h              | 2 +-
- include/linux/mm_types.h        | 8 ++++----
- mm/util.c                       | 8 ++++----
- tools/testing/vma/include/dup.h | 8 ++++----
- 4 files changed, 13 insertions(+), 13 deletions(-)
+ include/linux/mm.h              |  45 +++++++++++++++++
+ include/linux/mm_types.h        |  44 +++++++++++++++-
+ mm/internal.h                   |   3 ++
+ mm/memory.c                     | 108 ++++++++++++++++++++++++++++++++++++++--
+ mm/util.c                       |   7 +++
+ tools/testing/vma/include/dup.h |   5 +-
+ 6 files changed, 203 insertions(+), 9 deletions(-)
 
 diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 5709b03b6ed3..94b860b8c50a 100644
+index 94b860b8c50a..4604cd011ca4 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
-@@ -4623,7 +4623,7 @@ static inline void mmap_action_map_kernel_pages(struct vm_area_desc *desc,
- {
- 	struct mmap_action *action = &desc->action;
+@@ -4647,10 +4647,55 @@ static inline void mmap_action_map_kernel_pages_full(struct vm_area_desc *desc,
+ 				     vma_desc_pages(desc));
+ }
  
--	action->type = MMAP_MAP_KERNEL_PAGES;
-+	action->type = MMAP_KERNEL_PAGES;
- 	action->map_kernel.start = start;
- 	action->map_kernel.pages = pages;
- 	action->map_kernel.nr_pages = nr_pages;
++static inline
++void mmap_action_map_discontig_kernel_pages(struct vm_area_desc *desc,
++		void *init_private, const struct discontig_kernel_page_ops *ops)
++{
++	struct mmap_action *action = &desc->action;
++
++	action->type = MMAP_DISCONTIG_KERNEL_PAGES;
++	action->map_kernel_discontig.init_private = init_private;
++	action->map_kernel_discontig.ops = ops;
++}
++
+ int mmap_action_prepare(struct vm_area_desc *desc);
+ int mmap_action_complete(struct vm_area_struct *vma,
+ 			 struct mmap_action *action, bool is_compat);
+ 
++static inline void
++discontig_kernel_map_abort(struct discontig_kernel_page_state *state)
++{
++	state->action = DISCONTIG_KERNEL_PAGE_ABORT;
++}
++
++static inline void
++discontig_kernel_map_page(struct discontig_kernel_page_state *state,
++			  struct page *page)
++{
++	struct folio *folio = page_folio(page);
++
++	if (folio_test_large(folio)) {
++		VM_WARN_ON_ONCE(page != folio_page(folio, 0));
++		state->action = DISCONTIG_KERNEL_PAGE_MAP_COMPOUND_PAGE;
++		state->__folio = folio;
++		state->__nr_pages = min(state->nr_pages_remain,
++					folio_nr_pages(folio));
++	} else {
++		state->action = DISCONTIG_KERNEL_PAGE_MAP_PAGE;
++		state->__page = page;
++		state->__nr_pages = 1;
++	}
++}
++
++static inline void
++discontig_kernel_map_page_range(struct discontig_kernel_page_state *state,
++				struct page **page_arr, unsigned long nr_pages)
++{
++	state->action = DISCONTIG_KERNEL_PAGE_MAP_PAGE_RANGE;
++	state->__page_arr = page_arr;
++	state->__nr_pages = nr_pages;
++}
++
+ /* Look up the first VMA which exactly match the interval vm_start ... vm_end */
+ static inline struct vm_area_struct *find_exact_vma(struct mm_struct *mm,
+ 				unsigned long vm_start, unsigned long vm_end)
 diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
-index 5413bd10fff2..9ca2ea3664bc 100644
+index 9ca2ea3664bc..0cb4f9603956 100644
 --- a/include/linux/mm_types.h
 +++ b/include/linux/mm_types.h
-@@ -815,11 +815,11 @@ struct pfnmap_track_ctx {
- 
- /* What action should be taken after an .mmap_prepare call is complete? */
- enum mmap_action_type {
--	MMAP_NOTHING,		/* Mapping is complete, no further action. */
--	MMAP_REMAP_PFN,		/* Remap PFN range. */
--	MMAP_IO_REMAP_PFN,	/* I/O remap PFN range. */
-+	MMAP_NOTHING,
-+	MMAP_REMAP_PFN,
-+	MMAP_IO_REMAP_PFN,
- 	MMAP_SIMPLE_IO_REMAP,	/* I/O remap with guardrails. */
--	MMAP_MAP_KERNEL_PAGES,	/* Map kernel page range from array. */
-+	MMAP_KERNEL_PAGES,	/* Map kernel page range from array. */
+@@ -818,8 +818,44 @@ enum mmap_action_type {
+ 	MMAP_NOTHING,
+ 	MMAP_REMAP_PFN,
+ 	MMAP_IO_REMAP_PFN,
+-	MMAP_SIMPLE_IO_REMAP,	/* I/O remap with guardrails. */
+-	MMAP_KERNEL_PAGES,	/* Map kernel page range from array. */
++	MMAP_SIMPLE_IO_REMAP,		/* I/O remap with guardrails. */
++	MMAP_KERNEL_PAGES,		/* Map kernel page range from array. */
++	MMAP_DISCONTIG_KERNEL_PAGES,	/* Map kernel discontig page range. */
++};
++
++enum discontig_kernel_page_action {
++	DISCONTIG_KERNEL_PAGE_ABORT,
++	DISCONTIG_KERNEL_PAGE_MAP_PAGE,
++	DISCONTIG_KERNEL_PAGE_MAP_COMPOUND_PAGE,
++	DISCONTIG_KERNEL_PAGE_MAP_PAGE_RANGE,
++};
++
++struct discontig_kernel_page_state {
++	/* Map state. */
++	const unsigned long start;	/* Start address of VMA. */
++	const unsigned long end;	/* End address of VMA. */
++	unsigned long addr;		/* The current address to be mapped. */
++	pgoff_t pgoff;			/* The current pgoff to be mapped. */
++	unsigned long nr_pages_mapped;	/* The number of pages mapped. */
++	unsigned long nr_pages_remain;	/* The number of pages remaining. */
++
++	/* User-defined state. */
++	void *vm_private_data;		/* VMA private data. */
++	void *private;			/* Mapping private data. */
++
++	/* Users should not touch these, use discontig_kernel_map_*() helpers. */
++	enum discontig_kernel_page_action action;
++	union {
++		struct page *__page;
++		struct folio *__folio;
++		struct page **__page_arr;
++	};
++	unsigned long __nr_pages;
++};
++
++struct discontig_kernel_page_ops {
++	int (*init)(void *vm_private_data, void **private);
++	int (*get)(struct discontig_kernel_page_state *state);
  };
  
  /*
+@@ -844,6 +880,10 @@ struct mmap_action {
+ 			unsigned long nr_pages;
+ 			pgoff_t pgoff;
+ 		} map_kernel;
++		struct {
++			void *init_private;
++			const struct discontig_kernel_page_ops *ops;
++		} map_kernel_discontig;
+ 	};
+ 	enum mmap_action_type type;
+ 
+diff --git a/mm/internal.h b/mm/internal.h
+index fe93be1cea32..a86b9803a4c3 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -1520,6 +1520,9 @@ int simple_ioremap_prepare(struct vm_area_desc *desc);
+ int map_kernel_pages_prepare(struct vm_area_desc *desc);
+ int map_kernel_pages_complete(struct vm_area_struct *vma,
+ 			      struct mmap_action *action);
++int map_discontig_kernel_pages_prepare(struct vm_area_desc *desc);
++int map_discontig_kernel_pages_complete(struct vm_area_struct *vma,
++					struct mmap_action *action);
+ 
+ static inline int io_remap_pfn_range_prepare(struct vm_area_desc *desc)
+ {
+diff --git a/mm/memory.c b/mm/memory.c
+index dc38cad1dcb7..8c9675451d4b 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -2609,17 +2609,23 @@ int vm_insert_pages(struct vm_area_struct *vma, unsigned long addr,
+ }
+ EXPORT_SYMBOL(vm_insert_pages);
+ 
++static void __map_kernel_pages_prepare(struct vm_area_desc *desc)
++{
++	if (vma_desc_test(desc, VMA_MIXEDMAP_BIT))
++		return;
++
++	VM_WARN_ON_ONCE(mmap_read_trylock(desc->mm));
++	VM_WARN_ON_ONCE(vma_desc_test(desc, VMA_PFNMAP_BIT));
++	vma_desc_set_flags(desc, VMA_MIXEDMAP_BIT);
++}
++
+ int map_kernel_pages_prepare(struct vm_area_desc *desc)
+ {
+ 	const struct mmap_action *action = &desc->action;
+ 	const unsigned long addr = action->map_kernel.start;
+ 	unsigned long nr_pages, end;
+ 
+-	if (!vma_desc_test(desc, VMA_MIXEDMAP_BIT)) {
+-		VM_WARN_ON_ONCE(mmap_read_trylock(desc->mm));
+-		VM_WARN_ON_ONCE(vma_desc_test(desc, VMA_PFNMAP_BIT));
+-		vma_desc_set_flags(desc, VMA_MIXEDMAP_BIT);
+-	}
++	__map_kernel_pages_prepare(desc);
+ 
+ 	nr_pages = action->map_kernel.nr_pages;
+ 	end = addr + PAGE_SIZE * nr_pages;
+@@ -2640,6 +2646,98 @@ int map_kernel_pages_complete(struct vm_area_struct *vma,
+ 			    &nr_pages, vma->vm_page_prot);
+ }
+ 
++int map_discontig_kernel_pages_prepare(struct vm_area_desc *desc)
++{
++	const struct mmap_action *action = &desc->action;
++	const struct discontig_kernel_page_ops *ops =
++		action->map_kernel_discontig.ops;
++
++	/* At minimum need to be able to get pages. */
++	if (WARN_ON_ONCE(!ops->get))
++		return -EINVAL;
++
++	__map_kernel_pages_prepare(desc);
++	return 0;
++}
++
++static int apply_discontig_action(struct vm_area_struct *vma,
++				  struct discontig_kernel_page_state *state)
++{
++	unsigned long nr_pages = state->__nr_pages;
++	unsigned long addr = state->addr;
++	unsigned long i;
++
++	if (state->action == DISCONTIG_KERNEL_PAGE_MAP_PAGE)
++		return insert_page(vma, addr, state->__page,
++				   vma->vm_page_prot, /*mkwrite=*/false);
++	if (state->action == DISCONTIG_KERNEL_PAGE_MAP_PAGE_RANGE)
++		return insert_pages(vma, addr, state->__page_arr,
++				    &nr_pages, vma->vm_page_prot);
++
++	/* Compound folio - have to iterate through each page. */
++	for (i = 0; i < nr_pages; i++, addr += PAGE_SIZE) {
++		struct page *page = folio_page(state->__folio, i);
++		int err;
++
++		err = insert_page(vma, addr, page, vma->vm_page_prot,
++				  /*mkwrite=*/false);
++		if (err)
++			return err;
++	}
++	return 0;
++}
++
++int map_discontig_kernel_pages_complete(struct vm_area_struct *vma,
++					struct mmap_action *action)
++{
++	const struct discontig_kernel_page_ops *ops =
++		action->map_kernel_discontig.ops;
++	struct discontig_kernel_page_state state = {
++		.start = vma->vm_start,
++		.end = vma->vm_end,
++		.addr = vma->vm_start,
++		.pgoff = vma->vm_pgoff,
++		.nr_pages_mapped = 0,
++		.nr_pages_remain = vma_pages(vma),
++		.vm_private_data = vma->vm_private_data,
++		.private = action->map_kernel_discontig.init_private,
++	};
++	int err = 0;
++
++	if (ops->init)
++		err = ops->init(vma->vm_private_data, &state.private);
++	if (err)
++		return err;
++
++	do {
++		unsigned long end, pgoff_end;
++		unsigned long nr_pages;
++
++		/* Default to abort. */
++		state.action = DISCONTIG_KERNEL_PAGE_ABORT;
++		err = ops->get(&state);
++		if (err || state.action == DISCONTIG_KERNEL_PAGE_ABORT)
++			return err;
++		nr_pages = state.__nr_pages;
++
++		end = state.addr + PAGE_SIZE * nr_pages;
++		if (end > vma->vm_end)
++			return -EINVAL;
++		pgoff_end = state.pgoff + nr_pages;
++
++		err = apply_discontig_action(vma, &state);
++		if (err)
++			return err;
++
++		state.addr = end;
++		state.pgoff = pgoff_end;
++		state.nr_pages_mapped += nr_pages;
++		state.nr_pages_remain -= nr_pages;
++	} while (state.addr < vma->vm_end);
++
++	return 0;
++}
++
+ /**
+  * vm_insert_page - insert single page into user vma
+  * @vma: user vma to map to
 diff --git a/mm/util.c b/mm/util.c
-index a3cef493ed70..b6f1bec9da15 100644
+index b6f1bec9da15..5a1916d8fdc1 100644
 --- a/mm/util.c
 +++ b/mm/util.c
-@@ -1462,7 +1462,7 @@ int mmap_action_prepare(struct vm_area_desc *desc)
- 		return io_remap_pfn_range_prepare(desc);
- 	case MMAP_SIMPLE_IO_REMAP:
+@@ -1464,6 +1464,8 @@ int mmap_action_prepare(struct vm_area_desc *desc)
  		return simple_ioremap_prepare(desc);
--	case MMAP_MAP_KERNEL_PAGES:
-+	case MMAP_KERNEL_PAGES:
+ 	case MMAP_KERNEL_PAGES:
  		return map_kernel_pages_prepare(desc);
++	case MMAP_DISCONTIG_KERNEL_PAGES:
++		return map_discontig_kernel_pages_prepare(desc);
  	}
  
-@@ -1493,7 +1493,7 @@ int mmap_action_complete(struct vm_area_struct *vma,
- 	case MMAP_REMAP_PFN:
- 		err = remap_pfn_range_complete(vma, action);
- 		break;
--	case MMAP_MAP_KERNEL_PAGES:
-+	case MMAP_KERNEL_PAGES:
+ 	WARN_ON_ONCE(1);
+@@ -1496,6 +1498,9 @@ int mmap_action_complete(struct vm_area_struct *vma,
+ 	case MMAP_KERNEL_PAGES:
  		err = map_kernel_pages_complete(vma, action);
  		break;
- 	case MMAP_IO_REMAP_PFN:
-@@ -1516,7 +1516,7 @@ int mmap_action_prepare(struct vm_area_desc *desc)
- 	case MMAP_REMAP_PFN:
++	case MMAP_DISCONTIG_KERNEL_PAGES:
++		err = map_discontig_kernel_pages_complete(vma, action);
++		break;
  	case MMAP_IO_REMAP_PFN:
  	case MMAP_SIMPLE_IO_REMAP:
--	case MMAP_MAP_KERNEL_PAGES:
-+	case MMAP_KERNEL_PAGES:
+ 		/* Should have been delegated. */
+@@ -1517,6 +1522,7 @@ int mmap_action_prepare(struct vm_area_desc *desc)
+ 	case MMAP_IO_REMAP_PFN:
+ 	case MMAP_SIMPLE_IO_REMAP:
+ 	case MMAP_KERNEL_PAGES:
++	case MMAP_DISCONTIG_KERNEL_PAGES:
  		WARN_ON_ONCE(1); /* nommu cannot handle these. */
  		break;
  	}
-@@ -1537,7 +1537,7 @@ int mmap_action_complete(struct vm_area_struct *vma,
- 	case MMAP_REMAP_PFN:
+@@ -1538,6 +1544,7 @@ int mmap_action_complete(struct vm_area_struct *vma,
  	case MMAP_IO_REMAP_PFN:
  	case MMAP_SIMPLE_IO_REMAP:
--	case MMAP_MAP_KERNEL_PAGES:
-+	case MMAP_KERNEL_PAGES:
+ 	case MMAP_KERNEL_PAGES:
++	case MMAP_DISCONTIG_KERNEL_PAGES:
  		WARN_ON_ONCE(1); /* nommu cannot handle this. */
  
  		err = -EINVAL;
 diff --git a/tools/testing/vma/include/dup.h b/tools/testing/vma/include/dup.h
-index 2986ae6ca1e5..1098655a5f4a 100644
+index 1098655a5f4a..52eee05e6c32 100644
 --- a/tools/testing/vma/include/dup.h
 +++ b/tools/testing/vma/include/dup.h
-@@ -454,11 +454,11 @@ static __always_inline bool vma_flags_empty(const vma_flags_t *flags)
- 
- /* What action should be taken after an .mmap_prepare call is complete? */
- enum mmap_action_type {
--	MMAP_NOTHING,		/* Mapping is complete, no further action. */
--	MMAP_REMAP_PFN,		/* Remap PFN range. */
--	MMAP_IO_REMAP_PFN,	/* I/O remap PFN range. */
-+	MMAP_NOTHING,
-+	MMAP_REMAP_PFN,
-+	MMAP_IO_REMAP_PFN,
- 	MMAP_SIMPLE_IO_REMAP,	/* I/O remap with guardrails. */
--	MMAP_MAP_KERNEL_PAGES,	/* Map kernel page range from an array. */
-+	MMAP_KERNEL_PAGES,	/* Map kernel page range from array. */
+@@ -457,8 +457,9 @@ enum mmap_action_type {
+ 	MMAP_NOTHING,
+ 	MMAP_REMAP_PFN,
+ 	MMAP_IO_REMAP_PFN,
+-	MMAP_SIMPLE_IO_REMAP,	/* I/O remap with guardrails. */
+-	MMAP_KERNEL_PAGES,	/* Map kernel page range from array. */
++	MMAP_SIMPLE_IO_REMAP,		/* I/O remap with guardrails. */
++	MMAP_KERNEL_PAGES,		/* Map kernel page range from array. */
++	MMAP_DISCONTIG_KERNEL_PAGES,	/* Map kernel discontig page range. */
  };
  
  /*
