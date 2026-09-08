@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D9D54DBD67;
-	Tue,  8 Sep 2026 09:03:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B0A049CF3E;
+	Tue,  8 Sep 2026 09:03:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788858234; cv=none; b=gx+MzOsjeS4w0vmMLkyK06riaNK1JaeGNX6zKwrdvyqd4vRctTgmpKz5Q9anSBQEMTCDxIT44Kea5RGM8Cek5COZSdLaM1VCzMmO78evvlT83wr4QTQWzF4GfrZNMgd9EfP+bun3oWwtdIpU81tpNSKnIRnPa9th2YI1aFlHhDc=
+	t=1788858237; cv=none; b=W7Qi2jnZjBerzbGwq9gWa1LIeit3z8dtM+un9k0sWxneYBlGGaoV5MigPf7LvX37mfLLJxGFhRCC4ZPBTpz1yzMh3pd1VLrwK5loeqb3sYfHsfN7O2xEzQNbLvQxjhKttsne9hqMp/G9HUzxwTL7t7X7tdAOt8qJYmv3iQ2o5PI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788858234; c=relaxed/simple;
-	bh=lJ7QcF8iyi++0rrS+3ePCBNqNFPZvKGOrj2YZn53Gls=;
+	s=arc-20240116; t=1788858237; c=relaxed/simple;
+	bh=0cn86wSn1zWULOnMq21VvsaUdQgd6kIDUlgR6jWOwJo=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Eir44+Xa8ueqDmhlfPE6lTk6wFELsqPyK01hWqd97286tetwXaXufeVx+pPrWUoLsnZ7LQ59jLp9LZUKJzS8HY2ptJqKPOCT9nghJJJR0iejszZo41IpH4ZTvhEKxC9ugBplC2e5hYlFM7zxQAS1RbV8rG71ry6VLX2/ekjXzKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XhCT8b6V; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=X+ngEgf6efcgu5JKUhWxsutyK/iCBJvGyS1XcskI6K1fFGoACVPizggMEOYEVEoxZubVKomNyePjQBLd4ykjGyCLcHAr5la414h6srMD/UddZRLDSLB97yDsuaJr68FiGFrUURgwf1NCkigmsn5EjM35JG+imulLjRnGo/e/R8Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n4jTlOSR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XhCT8b6V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 652481F00A3D;
-	Tue,  8 Sep 2026 09:03:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n4jTlOSR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 201381F00A3F;
+	Tue,  8 Sep 2026 09:03:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788858230;
-	bh=DOc09aExi2k7Rj97PT733cP6a5EiWW+xqeg3mqXYOvo=;
+	s=k20260515; t=1788858232;
+	bh=cZhQgRlYToXCwUnKbTWfZj05dywr8Y+JMNe5ohsu1zQ=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=XhCT8b6VVWgSxRzVEVQe7dYYQCGTgRZ3yFmxNHyOKS3Sy5aEtLSFi11Bm8n72lzoz
-	 IfoYrRCKW2uAAAcpEjXWPy2lCZopuIPIr2x/9bpxZ034M+ixleAV+O8oPVZvFtmAq4
-	 adz0LRR476SP2lFEIePaLrOXjofUQG6vOhzQ11opOlb6bYGaOrwEpXxUO0S0R/vG7R
-	 aDebOTEV9Y9GKEKZ980CD9s/qupVo1cvMlVRYyeACItVZi4+YrkoGGEFnyIOXb8I5k
-	 Ajl9O0+kbhppgeX/nvJ89JQsx+j+7VSAtRR9LnohECpmDem4hTaaC9iON1Rs5xoukE
-	 ea83Za+CPgcsA==
+	b=n4jTlOSRWrbLLA8aCDOJNEMzD4D91+0bkt1Gnu3WL9if+mx6O3M7DsZYQy84gzwdW
+	 NEzqzZrf2Jc0SUtX+VoVEySfGBI2z6YLLeey63nML8dZrMVw/Hw7f3aBuvAQdkxNSy
+	 CkOXCA1lT856jLPyOFw+89yl5VzgYuDky/dt8HnkmjUPKqWvvd0Eop1hvc4l2faC2M
+	 rYNRP+HB0nkgUT8JMhS8xJOYUN3+fuC6XIUT3IGiktabvJz9BPQQwJwqkwgUxESt/T
+	 nOOWXWEW1+u14w+mzzd93Vpyy1IsormfABO3AwvbQDS/q+qyYIS/NQH1HGVDbMAhVs
+	 7NQipew5r63XA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v6 17/40] scsi: mpt3sas: use 16-bits defined sense codes
-Date: Tue,  8 Sep 2026 18:02:45 +0900
-Message-ID: <20260908090308.1085097-18-dlemoal@kernel.org>
+Subject: [PATCH v6 18/40] scsi: mpi3mr: use 16-bits defined sense codes
+Date: Tue,  8 Sep 2026 18:02:46 +0900
+Message-ID: <20260908090308.1085097-19-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260908090308.1085097-1-dlemoal@kernel.org>
 References: <20260908090308.1085097-1-dlemoal@kernel.org>
@@ -51,8 +51,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the mpt3sas driver to replace all hard-coded additional sense
-codes and additional sense code qualifiers with the enum values defined in
+Refactor the mpi3mr driver to use the 16-bits sense_code field of struct
+scsi_sense_hdr and replace all hard-coded additional sense codes and
+additional sense code qualifiers with the enum values defined in
 include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
 being processed are easier to test and self-documented.
 
@@ -62,30 +63,81 @@ Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 69 +++++++++++++++-------------
- 1 file changed, 36 insertions(+), 33 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |  3 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 50 +++++++++++++++++----------------
+ 2 files changed, 28 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 0e12009a87f6..085d4672db85 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5401,23 +5401,23 @@ _scsih_setup_eedp(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- static void
- _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 681868716ebd..ae4b531f3e37 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -404,7 +404,8 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
+ 				scsi_normalize_sense(sense_buf, sense_count,
+ 				    &sshdr);
+ 				mpi3mr_scsisense_trigger(mrioc, sshdr.sense_key,
+-				    sshdr.asc, sshdr.ascq);
++						scsi_sense_asc(&sshdr),
++						scsi_sense_ascq(&sshdr));
+ 			}
+ 		}
+ 		mpi3mr_reply_trigger(mrioc, masked_ioc_status, ioc_loginfo);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index f80a21ec161b..274af456b9c0 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -3304,8 +3304,7 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
+  * @desc: Sense type
+  * @buf: Sense buffer to populate
+  * @key: Sense key
+- * @asc: Additional sense code
+- * @ascq: Additional sense code qualifier
++ * @code: Additional sense code and its qualifier
+  *
+  * Maps the given sense information into either descriptor or
+  * fixed format sense data.
+@@ -3313,20 +3312,20 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
+  * Return: Nothing
+  */
+ static inline void mpi3mr_build_sense_buffer(int desc, u8 *buf, u8 key,
+-	u8 asc, u8 ascq)
++					     u16 code)
  {
--	u8 ascq;
+ 	if (desc) {
+ 		buf[0] = 0x72;	/* descriptor, current */
+ 		buf[1] = key;
+-		buf[2] = asc;
+-		buf[3] = ascq;
++		buf[2] = scsi_sense_code_asc(code);
++		buf[3] = scsi_sense_code_ascq(code);
+ 		buf[7] = 0;
+ 	} else {
+ 		buf[0] = 0x70;	/* fixed, current */
+ 		buf[2] = key;
+ 		buf[7] = 0xa;
+-		buf[12] = asc;
+-		buf[13] = ascq;
++		buf[12] = scsi_sense_code_asc(code);
++		buf[13] = scsi_sense_code_ascq(code);
+ 	}
+ }
+ 
+@@ -3343,25 +3342,25 @@ static inline void mpi3mr_build_sense_buffer(int desc, u8 *buf, u8 key,
+ static void mpi3mr_map_eedp_error(struct scsi_cmnd *scmd,
+ 	u16 ioc_status)
+ {
+-	u8 ascq = 0;
 +	u16 sense_code;
  
  	switch (ioc_status) {
- 	case MPI2_IOCSTATUS_EEDP_GUARD_ERROR:
+ 	case MPI3_IOCSTATUS_EEDP_GUARD_ERROR:
 -		ascq = 0x01;
 +		sense_code = LOGICAL_BLOCK_GUARD_CHECK_FAILED;
  		break;
- 	case MPI2_IOCSTATUS_EEDP_APP_TAG_ERROR:
+ 	case MPI3_IOCSTATUS_EEDP_APP_TAG_ERROR:
 -		ascq = 0x02;
 +		sense_code = LOGICAL_BLOCK_APPLICATION_TAG_CHECK_FAILED;
  		break;
- 	case MPI2_IOCSTATUS_EEDP_REF_TAG_ERROR:
+ 	case MPI3_IOCSTATUS_EEDP_REF_TAG_ERROR:
 -		ascq = 0x03;
 +		sense_code = LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED;
  		break;
@@ -94,113 +146,86 @@ index 0e12009a87f6..085d4672db85 100644
 +		sense_code = ID_CRC_OR_ECC_ERROR;
  		break;
  	}
--	scsi_build_sense(scmd, 0, ILLEGAL_REQUEST, 0x10, ascq);
-+	scsi_set_sense(scmd, 0, ILLEGAL_REQUEST, sense_code);
- 	set_host_byte(scmd, DID_ABORT);
+ 
+ 	mpi3mr_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+-	    0x10, ascq);
++				  sense_code);
+ 	scmd->result = (DID_ABORT << 16) | SAM_STAT_CHECK_CONDITION;
  }
  
-@@ -5474,7 +5474,8 @@ static enum scsi_qc_status scsih_qcmd(struct Scsi_Host *shost,
- 	if (handle == MPT3SAS_INVALID_DEVICE_HANDLE || sas_device_priv_data->block) {
- 		if (scsi_get_host_state(scmd->device->host) == SHOST_RECOVERY &&
- 		    scmd->cmnd[0] == TEST_UNIT_READY) {
--			scsi_build_sense(scmd, 0, UNIT_ATTENTION, 0x29, 0x07);
-+			scsi_set_sense(scmd, 0, UNIT_ATTENTION,
-+				       I_T_NEXUS_LOSS_OCCURRED);
- 			scsi_done(scmd);
- 			return 0;
+@@ -3446,7 +3445,8 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 		if (sense_buf) {
+ 			scsi_normalize_sense(sense_buf, sense_count, &sshdr);
+ 			mpi3mr_scsisense_trigger(mrioc, sshdr.sense_key,
+-			    sshdr.asc, sshdr.ascq);
++						 scsi_sense_asc(&sshdr),
++						 scsi_sense_ascq(&sshdr));
  		}
-@@ -5986,7 +5987,7 @@ _scsih_smart_predicted_fault(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	event_data = (Mpi2EventDataSasDeviceStatusChange_t *)
- 	    event_reply->EventData;
- 	event_data->ReasonCode = MPI2_EVENT_SAS_DEV_STAT_RC_SMART_DATA;
--	event_data->ASC = 0x5D;
-+	event_data->ASC = ASC_FAILURE_PREDICTION_THRESHOLD_EXCEEDED;
- 	event_data->DevHandle = cpu_to_le16(handle);
- 	event_data->SASAddress = cpu_to_le64(sas_target_priv_data->sas_address);
- 	mpt3sas_ctl_add_to_event_log(ioc, event_reply);
-@@ -6109,8 +6110,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 		    le32_to_cpu(mpi_reply->SenseCount));
- 		memcpy(scmd->sense_buffer, sense_data, sz);
- 		_scsih_normalize_sense(scmd->sense_buffer, &data);
--		/* failure prediction threshold exceeded */
--		if (data.asc == 0x5D)
-+		if (data.asc == ASC_FAILURE_PREDICTION_THRESHOLD_EXCEEDED)
- 			_scsih_smart_predicted_fault(ioc,
- 			    le16_to_cpu(mpi_reply->DevHandle));
- 		mpt3sas_trigger_scsi(ioc, data.skey, data.asc, data.ascq);
-@@ -6199,8 +6199,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 		else if (!xfer_cnt && scmd->cmnd[0] == REPORT_LUNS) {
- 			mpi_reply->SCSIState = MPI2_SCSI_STATE_AUTOSENSE_VALID;
- 			mpi_reply->SCSIStatus = SAM_STAT_CHECK_CONDITION;
--			scsi_build_sense(scmd, 0, ILLEGAL_REQUEST,
--					 0x20, 0);
-+			scsi_set_sense(scmd, 0, ILLEGAL_REQUEST,
-+				       INVALID_COMMAND_OP_CODE);
- 		}
+ 		mpi3mr_reply_trigger(mrioc, ioc_status, ioc_loginfo);
  		break;
- 
-@@ -7691,38 +7691,41 @@ _scsih_determine_disposition(struct MPT3SAS_ADAPTER *ioc,
- 
- 	if (check_sense) {
- 		_scsih_normalize_sense(transfer_packet->sense, &sense_info);
--		if (sense_info.skey == UNIT_ATTENTION)
-+		if (sense_info.skey == UNIT_ATTENTION) {
- 			rc = DEVICE_RETRY_UA;
--		else if (sense_info.skey == NOT_READY) {
--			/* medium isn't present */
--			if (sense_info.asc == 0x3a)
-+		} else if (sense_info.skey == NOT_READY) {
-+			if (sense_info.asc == ASC_MEDIUM_NOT_PRESENT) {
- 				rc = DEVICE_READY;
--			/* LOGICAL UNIT NOT READY */
--			else if (sense_info.asc == 0x04) {
--				if (sense_info.ascq == 0x03 ||
--				   sense_info.ascq == 0x0b ||
--				   sense_info.ascq == 0x0c) {
-+			} else if (sense_info.asc == ASC_LU_NOT_READY) {
-+				u16 scode = scsi_sense_code(sense_info.asc,
-+							    sense_info.ascq);
-+
-+				if (scode ==
-+				    LU_NOT_READY_MANUAL_INTERVENTION_REQUIRED ||
-+				    scode ==
-+				    LU_NOT_ACCESSIBLE_TARGET_PORT_IN_STANDBY_STATE ||
-+				    scode ==
-+				    LU_NOT_ACCESSIBLE_TARGET_PORT_IN_UNAVAILABLE_STATE)
- 					rc = DEVICE_ERROR;
--				} else
-+				else
- 					rc = DEVICE_START_UNIT;
--			}
--			/* LOGICAL UNIT HAS NOT SELF-CONFIGURED YET */
--			else if (sense_info.asc == 0x3e && !sense_info.ascq)
-+			} else if (sense_info.asc ==
-+				   ASC_LU_HAS_NOT_SELF_CONFIGURED_YET &&
-+				   !sense_info.ascq) {
- 				rc = DEVICE_START_UNIT;
-+			}
- 		} else if (sense_info.skey == ILLEGAL_REQUEST &&
--		    transfer_packet->cdb[0] == REPORT_LUNS) {
-+			   transfer_packet->cdb[0] == REPORT_LUNS) {
- 			rc = DEVICE_READY;
- 		} else if (sense_info.skey == MEDIUM_ERROR) {
--
--			/* medium is corrupt, lets add the device so
--			 * users can collect some info as needed
-+			/*
-+			 * medium is corrupt, lets add the device so users can
-+			 * collect some info as needed
- 			 */
--
--			if (sense_info.asc == 0x31)
-+			if (sense_info.asc == ASC_MEDIUM_FORMAT_CORRUPTED)
- 				rc = DEVICE_READY;
- 		} else if (sense_info.skey == HARDWARE_ERROR) {
--			/* Defect List Error, still add the device */
--			if (sense_info.asc == 0x19)
-+			if (sense_info.asc == ASC_DEFECT_LIST_ERROR)
- 				rc = DEVICE_READY;
+@@ -3633,7 +3633,8 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 			ioc_info(mrioc,
+ 			    "%s :sense_count 0x%x, sense_key 0x%x ASC 0x%x, ASCQ 0x%x\n",
+ 			    __func__, sense_count, sshdr.sense_key,
+-			    sshdr.asc, sshdr.ascq);
++			    scsi_sense_asc(&sshdr),
++			    scsi_sense_ascq(&sshdr));
  		}
+ 	}
+ out_success:
+@@ -5040,8 +5041,8 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 		    __func__, param_len);
+ 		scsi_print_command(scmd);
+ 		scmd->result = SAM_STAT_CHECK_CONDITION;
+-		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+-		    0x1A, 0);
++		scsi_set_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
++				      PARAMETER_LIST_LENGTH_ERROR);
+ 		scsi_done(scmd);
+ 		return true;
+ 	}
+@@ -5051,8 +5052,8 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 		    __func__, param_len, scsi_bufflen(scmd));
+ 		scsi_print_command(scmd);
+ 		scmd->result = SAM_STAT_CHECK_CONDITION;
+-		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+-		    0x1A, 0);
++		scsi_set_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
++				      PARAMETER_LIST_LENGTH_ERROR);
+ 		scsi_done(scmd);
+ 		return true;
+ 	}
+@@ -5060,8 +5061,8 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 	if (!buf) {
+ 		scsi_print_command(scmd);
+ 		scmd->result = SAM_STAT_CHECK_CONDITION;
+-		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+-		    0x55, 0x03);
++		scsi_set_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
++				      INSUFFICIENT_RESOURCES);
+ 		scsi_done(scmd);
+ 		return true;
+ 	}
+@@ -5074,8 +5075,8 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 		    __func__, desc_len);
+ 		scsi_print_command(scmd);
+ 		scmd->result = SAM_STAT_CHECK_CONDITION;
+-		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+-		    0x26, 0);
++		scsi_set_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
++				      INVALID_FIELD_IN_PARAMETER_LIST);
+ 		scsi_done(scmd);
+ 		kfree(buf);
+ 		return true;
+@@ -5175,7 +5176,8 @@ static enum scsi_qc_status mpi3mr_qcmd(struct Scsi_Host *shost,
+ 	if (scsi_get_host_state(scmd->device->host) == SHOST_RECOVERY &&
+ 		scmd->cmnd[0] == TEST_UNIT_READY &&
+ 		(stgt_priv_data->dev_removed || (dev_handle == MPI3MR_INVALID_DEV_HANDLE))) {
+-		scsi_build_sense(scmd, 0, UNIT_ATTENTION, 0x29, 0x07);
++		scsi_set_sense(scmd, 0, UNIT_ATTENTION,
++			       I_T_NEXUS_LOSS_OCCURRED);
+ 		scsi_done(scmd);
+ 		goto out;
  	}
 -- 
 2.55.0
