@@ -1,31 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AB9D4CB8C8;
-	Tue,  8 Sep 2026 09:03:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC3D4D98FB;
+	Tue,  8 Sep 2026 09:03:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788858213; cv=none; b=Jeif8a1OmUj2fPTVIRbNUH6C+v9HsM5rwMquD9vGkQJzeZPAJAbhIo+SzonY0DlG0v2o4AMEvPnuQ8yXY0ZU38va++U8pIbnoVQAmtxoNPcrI3E9RJPeArjWb+eyAyoGUz7LKEAUvuw2AZL6AFwJjgO50SKinEwIgQUiCLdfMV0=
+	t=1788858213; cv=none; b=gzP5zr9D/02zLfaFrdsemyU6sMUCWUEjpZcXQiidE8yWqX5Vv6AlC86PC+gfmlt2fquLbx4fDS5bUglnd5sgeCYMZ0Kv6052C9obyes/mFyojY+FJHm5fwG/bJTL9QNmBo3jn450eyuKqlcTIGR1kGMbup3h1Fsb0pXV5B8p+xc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1788858213; c=relaxed/simple;
-	bh=d0BKpYQYyUXxmNO//sJDHXDYxWDloNJnwLbFh4ZAr9k=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EcsbcbO09wiE80Rw/PtEFFfNH5AvuO/p7qUfpirTXLM2hWx2Yq9Qu1QHZ29zpLn+44PgLQSkrE+OKrtGtf7xr7w+xYE4GM58JxPoGhQPu5Mt2UAJ2WcV0+7H9SXa5GWHDTAc1LrDzXG6J1Yp2jll5hmd0Iz63HtYZOKBgGGwQyc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F0hdl/nO; arc=none smtp.client-ip=100.103.45.18
+	bh=e/ij1bHo8sI9yjGPL2+MAwWbBgY6lZXpWa68cJ0oBKY=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=DkpeN8b1uONPhkpKzcI5RP/LwQobXq8A5yWTTuy/1tpoaM+IZTQNeTsxsHysL8s/xW8Ae5otuUZqeXe1Kz+w8p3ejc0FvQ2OyZD6mG6Gth143M/FgS490klxkrmTyx/BzOewAUpZXOhDTkVbYImNoALqUUUxsMEWONNq6fSAXSc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fcReR6f+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F0hdl/nO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41EB51F00A3E;
-	Tue,  8 Sep 2026 09:03:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fcReR6f+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDCAE1F00A3D;
+	Tue,  8 Sep 2026 09:03:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788858206;
-	bh=jIegZQxuGFSajv7jyflim0CL+uooKIi0PxCUCQBYci8=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=F0hdl/nOB2j6Le485IujfueGDf/ZzTyRyGBgb/PbT5FA4mgpgzJoKfbUtPVaAhTeB
-	 QCkqGQ8bb5TKuJnMGJRPdbrwlT4teS6I5Pc9YDlTNSrglkda4XxKsHEfginhgHLqRx
-	 1WbBkrQ7xYsLmlziScd4i61JLkLLX4p7H0kXfUKs6eVYOqImAorULEvFKxT4+PK6B2
-	 AlOvncd2wo/mkQBEZu132FwLQu4EmM76RDSGWiTztmqBOgk6rzsLYY5E8SZziB9pJ/
-	 B72iYiaPHKYoInFteAt3LV8LbwnZN8X0s0AmfKWZKb/4l9KsmHB2iulyXDz60Z86ir
-	 LQTcD3LDYD2fA==
+	s=k20260515; t=1788858201;
+	bh=+QjR80V/Vz2l9XlfoaawYF5+QY82PGY0lNWwRTnTFiw=;
+	h=From:To:Subject:Date;
+	b=fcReR6f+13i1aFDpT2wEMBaALo98CiFEiviD/pVH+XiDQSaPqBkkwrmX8fFJvXnT7
+	 /fzbbFpRwZLDQx5DCDdNzQsRE7X9ZIQoOIDxAJZLYKspTe/I8pwGH/0R9v4tKcfG6L
+	 gvZogBdTynfjsnXbJFNKWjqBdxBoFcPrbvdJHjsPhsLMbi4bFfeDdDc057lJrp2s4l
+	 7AWa1+j/KWmEfjCMS7ORDs9RzZJyq5icHFjJvUPp3iEKUH0EsPfz/mgdIwPHLbihcx
+	 mEXGw5hsqN/xnFdRWXyobIgU0jW49l+4TV52vjTnp+br9CeqdB1U/+zxOgQcLpgbRS
+	 WqS1VlMavPFpg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,12 +36,10 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v6 03/40] scsi: constants: rename internal struct field names
-Date: Tue,  8 Sep 2026 18:02:31 +0900
-Message-ID: <20260908090308.1085097-4-dlemoal@kernel.org>
+Subject: [PATCH v6 00/40] Use defined 16-bits ASC/ASCQ combinations 
+Date: Tue,  8 Sep 2026 18:02:28 +0900
+Message-ID: <20260908090308.1085097-1-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260908090308.1085097-1-dlemoal@kernel.org>
-References: <20260908090308.1085097-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,75 +48,192 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-To make the code more clear, rename the code12 field of struct error_info
-to the more natural name "code" and the fields code1, code2_min and
-code2_max of struct error_info2 to the more explicit asc, ascq_min and
-ascq_max.
+Martin, James,
 
-No functional change intended.
+This patch series defines as macros all ASC/ASCQ combinations present in
+https://www.t10.org/lists/asc-num.txt and converts the SCSI core code and
+SCSI low level drivers to use these macros instead of hard-coded
+ASC/ASCQs. To do this, struct scsi_sense_hdr and struct scsi_failure are
+modified to replace the asc and ascq 8-bits fields with a 16-bits
+sense_code field.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
----
- drivers/scsi/constants.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+This cleans up the code in many places and makes it easier, and self
+documented, to test sense codes in the case of errors.
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 340785536998..4b97f574fe8c 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -292,7 +292,7 @@ bool scsi_opcode_sa_name(int opcode, int service_action,
- }
- 
- struct error_info {
--	unsigned short code12;	/* 0x0302 looks better than 0x03,0x02 */
-+	unsigned short code;	/* 0x0302 looks better than 0x03,0x02 */
- 	unsigned short size;
- };
- 
-@@ -318,9 +318,11 @@ static const char *additional_text =
- 	;
- 
- struct error_info2 {
--	unsigned char code1, code2_min, code2_max;
--	const char * str;
--	const char * fmt;
-+	u8		asc;
-+	u8		ascq_min;
-+	u8		ascq_max;
-+	const char	*str;
-+	const char	*fmt;
- };
- 
- static const struct error_info2 additional2[] =
-@@ -377,20 +379,20 @@ EXPORT_SYMBOL(scsi_sense_key_string);
- const char *
- scsi_extd_sense_format(unsigned char asc, unsigned char ascq, const char **fmt)
- {
--	int i;
--	unsigned short code = ((asc << 8) | ascq);
-+	u16 code = scsi_sense_code(asc, ascq);
- 	unsigned offset = 0;
-+	int i;
- 
- 	*fmt = NULL;
- 	for (i = 0; i < ARRAY_SIZE(additional); i++) {
--		if (additional[i].code12 == code)
-+		if (additional[i].code == code)
- 			return additional_text + offset;
- 		offset += additional[i].size;
- 	}
- 	for (i = 0; additional2[i].fmt; i++) {
--		if (additional2[i].code1 == asc &&
--		    ascq >= additional2[i].code2_min &&
--		    ascq <= additional2[i].code2_max) {
-+		if (additional2[i].asc == asc &&
-+		    ascq >= additional2[i].ascq_min &&
-+		    ascq <= additional2[i].ascq_max) {
- 			*fmt = additional2[i].fmt;
- 			return additional2[i].str;
- 		}
+Overall, there should be no functional chnages here.
+
+Note: this series currently applies cleanly only to the scsi-staging tree.
+It does not apply to Linus tree as commit 6d81700ad7c4 ("ata: libata-scsi:
+do not raise UA for storage element depopulation and restoration") creates
+a conflict with patch 37. The conflict is trivial to resolve, but this
+will create a conflict in linux-next. Could you maybe rebase scsi-staging
+on rc2 ?
+
+Also please note that sashiko did comment about several pre-existing
+issues for different drivers, but I am not addressing these issues in
+this series.
+
+Changes from v5:
+ - In patch 1, renamed the WARNING and WRITE_ERROR ASC with the SSC_
+   prefix to make these names less generic.
+ - Modified patch 2, 22 and 31 to accomodate for the renaming.
+ - Pass struct scsi_sense_hdr as a const pointer in patch 6.
+ - Added review tags.
+
+Changes from v4:
+ - Modified path 24 to add some conversions to using the macro that were
+   missed previously (from sashiko comment).
+ - Added review tags
+
+Changes from v3:
+ - Fixed patch 8 to test only the INVALID FIELD IN CDB ASC in
+   sd_zbc_complete().  Testing the full sense code for INVALID FIELD IN
+   CDB with a zero ASCQ is actually correct and as defined per ZBC
+   specifications for zone management operations issued to conventional
+   zones. But as Sashiko suggests, some devices may not strictly follow
+   that, so we keep to loosen test.
+ - Rebased on scsi-staging branch
+ - Added review and ack tags
+
+Changes from v2:
+ - Removed unintended duplication of KUNIT_EXPECT_EQ() call in patch 7
+   (Sashiko comment).
+ - Improved patch 38 to directly use 16-bits sense code instead of passing
+   only an ascq around (Sashiko comment).
+ - Added missing local variable initialization in
+   spc_emulate_request_sense() in patch 34 (Sashiko comment).
+ - Added review tags
+
+Changes from v1:
+ - Addressed Sashiko comments signaling missing "ASC_" prefix when using
+   the named macros for ASC codes.
+ - Fixed up patch 7 to correct trace event print of asc/ascq. Also
+   extended the use of scsi_set_sense() in place of scsi_build_sense().
+ - Modified patch 37 to extend the use of scsi_set_sense_buffer() in place
+   of scsi_build_sense_buffer().
+ - Added patch 34 and 38 to extend the use of scsi_set_sense() in place of
+   scsi_build_sense().
+ - Added patch 40 to remove scsi_build_sense() and
+   scsi_build_sense_buffer().
+
+Damien Le Moal (40):
+  scsi: define all additional sense codes and their qualifiers
+  scsi: constants: use defined sense codes
+  scsi: constants: rename internal struct field names
+  scsi: rename sense field of struct scsi_failure
+  scsi: prepare for using 16-bits defined sense codes
+  scsi: use struct scsi_sense_hdr to log sense keys and codes
+  scsi: core: use 16-bits defined sense codes
+  scsi: sd: use 16-bits defined sense codes
+  scsi: sr: use 16-bits defined sense codes
+  scsi: ses: use 16-bits defined sense codes
+  scsi: ch: use 16-bits defined sense codes
+  scsi: st: use 16-bits defined sense codes
+  scsi: device_handlers: hp_sw: use 16-bits defined sense codes
+  scsi: device_handlers: rdac: use 16-bits defined sense codes
+  scsi: device_handlers: emc: use 16-bits defined sense codes
+  scsi: device_handlers: alua: use 16-bits defined sense codes
+  scsi: mpt3sas: use 16-bits defined sense codes
+  scsi: mpi3mr: use 16-bits defined sense codes
+  scsi: 3w-xxxx: use 16-bits defined sense codes
+  scsi: leapraid: use 16-bits defined sense codes
+  scsi: megaraid: use 16-bits defined sense codes
+  scsi: myrX: use 16-bits defined sense codes
+  scsi: smartpqi: use 16-bits defined sense codes
+  scsi: qla2xxx: use 16-bits defined sense codes
+  scsi: ps3rom: use 16-bits defined sense codes
+  scsi: lpfc: use 16-bits defined sense codes
+  scsi: stex: use 16-bits defined sense codes
+  scsi: mvumi: use 16-bits defined sense codes
+  scsi: libiscsi: use 16-bits defined sense codes
+  scsi: ibmvscsi_tgt: use 16-bits defined sense codes
+  scsi: scsi_debug: use 16-bits defined sense codes
+  scsi: hpsa: use 16-bits defined sense codes
+  scsi: storvsc: use 16-bits defined sense codes
+  target: use 16-bits defined sense codes
+  usb: storage: use 16-bits defined sense codes
+  cdrom: use 16-bits defined sense codes
+  ata: libata: use 16-bits defined sense codes
+  s390: scsi: use 16-bits defined sense codes
+  scsi: cleanup scsi_proto.h
+  scsi: remove scsi_build_sense() and scsi_build_sense_buffer()
+
+ drivers/ata/libata-eh.c                      |   13 +-
+ drivers/ata/libata-sata.c                    |   20 +-
+ drivers/ata/libata-scsi.c                    |  346 ++-
+ drivers/ata/libata.h                         |    5 +-
+ drivers/cdrom/cdrom.c                        |   10 +-
+ drivers/s390/scsi/zfcp_ext.h                 |    2 +-
+ drivers/s390/scsi/zfcp_fsf.c                 |    9 +-
+ drivers/s390/scsi/zfcp_scsi.c                |    6 +-
+ drivers/scsi/3w-xxxx.c                       |    3 +-
+ drivers/scsi/ch.c                            |   55 +-
+ drivers/scsi/constants.c                     |   61 +-
+ drivers/scsi/device_handler/scsi_dh_alua.c   |   55 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c    |   28 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c  |   29 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c   |   55 +-
+ drivers/scsi/hpsa.c                          |   69 +-
+ drivers/scsi/hpsa_cmd.h                      |   23 -
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c     |    5 +-
+ drivers/scsi/leapraid/leapraid_func.h        |    7 -
+ drivers/scsi/leapraid/leapraid_os.c          |   15 +-
+ drivers/scsi/libiscsi.c                      |    3 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                |   18 +-
+ drivers/scsi/megaraid.c                      |    8 +-
+ drivers/scsi/megaraid/mega_common.h          |    2 -
+ drivers/scsi/megaraid/megaraid_mbox.c        |   12 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c              |    3 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c              |   50 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c         |   69 +-
+ drivers/scsi/mvumi.c                         |    2 +-
+ drivers/scsi/myrb.c                          |   67 +-
+ drivers/scsi/myrs.c                          |   23 +-
+ drivers/scsi/ps3rom.c                        |    5 +-
+ drivers/scsi/qla2xxx/qla_isr.c               |    9 +-
+ drivers/scsi/qla2xxx/qla_target.c            |   99 +-
+ drivers/scsi/qla2xxx/qla_target.h            |    3 -
+ drivers/scsi/scsi.c                          |    3 +-
+ drivers/scsi/scsi_common.c                   |   24 +-
+ drivers/scsi/scsi_debug.c                    |  332 +--
+ drivers/scsi/scsi_error.c                    |   94 +-
+ drivers/scsi/scsi_ioctl.c                    |    3 +-
+ drivers/scsi/scsi_lib.c                      |  133 +-
+ drivers/scsi/scsi_lib_test.c                 |   95 +-
+ drivers/scsi/scsi_logging.c                  |   22 +-
+ drivers/scsi/scsi_scan.c                     |   22 +-
+ drivers/scsi/scsi_transport_spi.c            |   12 +-
+ drivers/scsi/sd.c                            |  126 +-
+ drivers/scsi/sd_zbc.c                        |    2 +-
+ drivers/scsi/sense_codes.h                   | 2496 ++++++++++++------
+ drivers/scsi/ses.c                           |   23 +-
+ drivers/scsi/smartpqi/smartpqi_init.c        |   31 +-
+ drivers/scsi/sr.c                            |    3 +-
+ drivers/scsi/sr_ioctl.c                      |   29 +-
+ drivers/scsi/st.c                            |   35 +-
+ drivers/scsi/stex.c                          |    3 +-
+ drivers/scsi/storvsc_drv.c                   |   15 +-
+ drivers/target/target_core_spc.c             |   11 +-
+ drivers/target/target_core_transport.c       |   11 +-
+ drivers/target/target_core_ua.c              |   28 +-
+ drivers/target/target_core_ua.h              |    7 +-
+ drivers/usb/gadget/function/f_mass_storage.c |   34 +-
+ drivers/usb/gadget/function/storage_common.h |   71 +-
+ drivers/usb/storage/debug.c                  |   11 +-
+ drivers/usb/storage/debug.h                  |    4 +-
+ drivers/usb/storage/transport.c              |    7 +-
+ include/scsi/scsi_cmnd.h                     |    3 +-
+ include/scsi/scsi_common.h                   |   16 +-
+ include/scsi/scsi_dbg.h                      |    6 +-
+ include/scsi/scsi_device.h                   |   26 +-
+ include/scsi/scsi_proto.h                    |   71 +-
+ include/scsi/scsi_sense.h                    |  950 +++++++
+ include/trace/events/scsi.h                  |    4 +-
+ 71 files changed, 3887 insertions(+), 2065 deletions(-)
+ create mode 100644 include/scsi/scsi_sense.h
+
+
+base-commit: e83b47309f73313e75c3888d7839666aba5b2b2a
 -- 
 2.55.0
 
