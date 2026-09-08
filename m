@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E9F1513575;
-	Tue,  8 Sep 2026 09:04:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8776E517BB4;
+	Tue,  8 Sep 2026 09:04:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788858264; cv=none; b=VgiG9uDukQ2CKb24A6Zac7SleWKjeNqyExpLi15q8gKEDMkt0t6uVz1QzP084zx5ejmc0qXjLF7xB7v28m7KAvDZX6jEh9vpNzQU4+9wAOildzyq6l5F3jhL/kOmaTPqxcZV732p9+daTeNwjYOfh/qEiV8ib/hcksXz9VSw8mE=
+	t=1788858265; cv=none; b=ml4j2aVRslkiFpL+PKNZU1ieFfTSvTYBfp8gYkNXZcDVSb2t7fNpSMB70Q/DUtJWx3S0rUldLzI1HJhuVpTFHwiZ6BD03wtOC5kGA3gtRLTuJNbxY/Y8MpkKXFq1+BcfjbVVpCTzC4h7WiM7R8rlizlPGTnMdW6q2BRI6vWdDYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788858264; c=relaxed/simple;
-	bh=uVLmO1r0xYOdZC61+QED9jwrM8lBwOd1Mzw+Gb+l5cw=;
+	s=arc-20240116; t=1788858265; c=relaxed/simple;
+	bh=URXfVjXuJCRlwem2zLPwWCA+mlRaBNAhhgzB4l/EaM8=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=E+E2u1Z0NCVb7P1XHo8IOYXo45Y+tXgeDxBx5MTOhleB57mL5ZLqJMd7oyVg5Bn2iFc42niUv3Xc+YSCnyDTFlivOsdGGzW6l3noB4NvXFWxQZkz5bbpdOx7ou985qCF4B8K72LMxPuPJUyRD9xFBuhCWaYbTOQ43uVOL8gZ1rI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IWmSKeHn; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=FT1ISNFGL2/GKBHcGKfjIoI7Gy88exveH0dEywFUJo6Fc8N50LkJnedc792xJAyLLo3ujSLl1yLJ9NxwG0PRMv7Lh7gR4+CJ2+QI8uHk9SvEK0A6RlpqOaCbd5HUW0xdYXTz/mo7HUnE1FhSxc+tQM4J/sEczr4Dsnf3I8bXcZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VbtEVIFH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IWmSKeHn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D0191F00AC4;
-	Tue,  8 Sep 2026 09:04:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VbtEVIFH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A4461F00ACF;
+	Tue,  8 Sep 2026 09:04:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788858254;
-	bh=r4Tjd5N+eUwYFg+hKlwulZ7rteiBXxxe/UstfpOiktw=;
+	s=k20260515; t=1788858260;
+	bh=FPyGZRrezAAlUFuTzR0Qnq3LuSyZgXmhTVovBfEHv/g=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=IWmSKeHnvA7R2vrk7Ao8w6Z9FROvp6bH3rfW53dmNQ9mAyJ5Od0C7VWO3mMBy05Ws
-	 RKiGfTb7iUEgjIMNlUvCw4ppnLog3M90GhnkJDuwG3Wuv/p6Om2vdBDmhAYDxE0bMV
-	 Ibaljsho11jauskS6gH/yYGh4vwZFBZa57rc4doLUPIRFptbfq5zuM0E8QnLo972Zs
-	 mUyd6KQVOtGYmbgeBt+BP6kLqd9PBg5RUut+UlfSRQMIqTHbbwXhxLvTthzX9sXXM6
-	 mHPcObvRC70GcaGUTDu46akIL1vx+QfNR81it11G4GdMrgEDHic9VFISETJOTngbje
-	 diLDQ/uxNdc1A==
+	b=VbtEVIFHIDmEIKaZfBz3ZkKf/FsNMpUAOpjmxR+4LRwzoIMgt5ycdcaU9K3+RJUmg
+	 IKITRNDQjdK0VEqfuHr0yoygbSKkhl0sJSVU1AN5a6NQIRzuYCO/5e8zvBWZYHridB
+	 JUROfLc5/wGU9XLdaUDmtIUD9MrtTT6IpNPpRG6MBt6hrtsXDrSxdjhb41T5VtRYod
+	 8tqYoKOxtMt+qANKoV2ztsK+q3hxofVlkki/D5WLvR6D09DOlMhmqhjuT9tG96jh6x
+	 UVOo90ERtQbRWGLuhwDvUaT0cdJ30533qFcG7uFS2b6F6Tjgi2kBvfrqtWJvQQjTvq
+	 bV6uf5aTTJmEw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -37,9 +37,9 @@ To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-s390@vger.kernel.org,
 	Heiko Carstens <hca@linux.ibm.com>
-Subject: [PATCH v6 31/40] scsi: scsi_debug: use 16-bits defined sense codes
-Date: Tue,  8 Sep 2026 18:02:59 +0900
-Message-ID: <20260908090308.1085097-32-dlemoal@kernel.org>
+Subject: [PATCH v6 34/40] target: use 16-bits defined sense codes
+Date: Tue,  8 Sep 2026 18:03:02 +0900
+Message-ID: <20260908090308.1085097-35-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260908090308.1085097-1-dlemoal@kernel.org>
 References: <20260908090308.1085097-1-dlemoal@kernel.org>
@@ -51,13 +51,11 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the scsi_debug driver to replace hard-coded additional sense
-codes and additional sense code qualifiers with the enum values defined in
+Refactor the target core code to use the 16-bits sense codes for building
+sense and replace all hard-coded additional sense codes and additional
+sense code qualifiers with the enum values defined in
 include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
 being processed are easier to test and self-documented.
-
-The functions mk_sense_buffer() and mk_sense_info_tape() are modified to
-take a 16-bits sense code as argument.
 
 No functional change intended.
 
@@ -65,946 +63,187 @@ Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/scsi_debug.c | 332 ++++++++++++++++++++------------------
- 1 file changed, 171 insertions(+), 161 deletions(-)
+ drivers/target/target_core_spc.c       | 11 +++++-----
+ drivers/target/target_core_transport.c | 11 +++++-----
+ drivers/target/target_core_ua.c        | 28 ++++++++++----------------
+ drivers/target/target_core_ua.h        |  7 +++----
+ 4 files changed, 25 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 3346562275f8..32e0395ab7e3 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -67,9 +67,6 @@ static const char *sdebug_version_date = "20210520";
- 
- #define MY_NAME "scsi_debug"
- 
--/* Additional Sense Code Qualifier (ASCQ) */
--#define ACK_NAK_TO 0x3
--
- /* Default values for driver parameters */
- #define DEF_NUM_HOST   1
- #define DEF_NUM_TGTS   1
-@@ -1320,9 +1317,13 @@ static void mk_sense_invalid_fld(struct scsi_cmnd *scp,
- 		sdev_printk(KERN_ERR, scp->device, "sense_buffer is NULL\n");
- 		return;
- 	}
--	asc = c_d ? INVALID_FIELD_IN_CDB : INVALID_FIELD_IN_PARAM_LIST;
-+	if (c_d)
-+		asc = ASC_INVALID_FIELD_IN_CDB;
-+	else
-+		asc = ASC_INVALID_FIELD_IN_PARAMETER_LIST;
- 	memset(sbuff, 0, SCSI_SENSE_BUFFERSIZE);
--	scsi_build_sense(scp, sdebug_dsense, ILLEGAL_REQUEST, asc, 0);
-+	scsi_set_sense(scp, sdebug_dsense, ILLEGAL_REQUEST,
-+		       scsi_sense_code(asc, 0));
- 	memset(sks, 0, sizeof(sks));
- 	sks[0] = 0x80;
- 	if (c_d)
-@@ -1346,7 +1347,7 @@ static void mk_sense_invalid_fld(struct scsi_cmnd *scp,
- 			    my_name, asc, c_d ? 'C' : 'D', in_byte, in_bit);
- }
- 
--static void mk_sense_buffer(struct scsi_cmnd *scp, int key, int asc, int asq)
-+static void mk_sense_buffer(struct scsi_cmnd *scp, u8 key, u16 code)
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index f964a531e053..b70e81af867e 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -1226,9 +1226,9 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
  {
- 	if (!scp->sense_buffer) {
- 		sdev_printk(KERN_ERR, scp->device, "sense_buffer is NULL\n");
-@@ -1354,16 +1355,16 @@ static void mk_sense_buffer(struct scsi_cmnd *scp, int key, int asc, int asq)
- 	}
- 	memset(scp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 	unsigned char *cdb = cmd->t_task_cdb;
+ 	unsigned char *rbuf;
+-	u8 ua_asc = 0, ua_ascq = 0;
+ 	unsigned char buf[SE_SENSE_BUF];
+ 	bool desc_format = target_sense_desc_format(cmd->se_dev);
++	u16 sense_code = NO_ADDITIONAL_SENSE_INFORMATION;
  
--	scsi_build_sense(scp, sdebug_dsense, key, asc, asq);
-+	scsi_set_sense(scp, sdebug_dsense, key, code);
+ 	memset(buf, 0, SE_SENSE_BUF);
  
- 	if (sdebug_verbose)
- 		sdev_printk(KERN_INFO, scp->device,
--			    "%s:  [sense_key,asc,ascq]: [0x%x,0x%x,0x%x]\n",
--			    my_name, key, asc, asq);
-+			    "%s:  [sense_key,sense_code]: [0x%02x,0x%04x]\n",
-+			    my_name, key, code);
- }
+@@ -1242,11 +1242,12 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
+ 	if (!rbuf)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
  
- /* Sense data that has information fields for tapes */
--static void mk_sense_info_tape(struct scsi_cmnd *scp, int key, int asc, int asq,
-+static void mk_sense_info_tape(struct scsi_cmnd *scp, u8 key, u16 code,
- 			unsigned int information, unsigned char tape_flags)
- {
- 	if (!scp->sense_buffer) {
-@@ -1372,7 +1373,7 @@ static void mk_sense_info_tape(struct scsi_cmnd *scp, int key, int asc, int asq,
- 	}
- 	memset(scp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
- 
--	scsi_build_sense(scp, /* sdebug_dsense */ 0, key, asc, asq);
-+	scsi_set_sense(scp, /* sdebug_dsense */ 0, key, code);
- 	/* only fixed format so far */
- 
- 	scp->sense_buffer[0] |= 0x80; /* valid */
-@@ -1381,13 +1382,13 @@ static void mk_sense_info_tape(struct scsi_cmnd *scp, int key, int asc, int asq,
- 
- 	if (sdebug_verbose)
- 		sdev_printk(KERN_INFO, scp->device,
--			    "%s:  [sense_key,asc,ascq]: [0x%x,0x%x,0x%x]\n",
--			    my_name, key, asc, asq);
-+			    "%s:  [sense_key,sense_code]: [0x%02x,0x%04x]\n",
-+			    my_name, key, code);
- }
- 
- static void mk_sense_invalid_opcode(struct scsi_cmnd *scp)
- {
--	mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_OPCODE, 0);
-+	mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_COMMAND_OP_CODE);
- }
- 
- static int scsi_debug_ioctl(struct scsi_device *dev, unsigned int cmd,
-@@ -1484,46 +1485,43 @@ static int make_ua(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 
- 		switch (k) {
- 		case SDEBUG_UA_POR:
--			mk_sense_buffer(scp, UNIT_ATTENTION, UA_RESET_ASC,
--					POWER_ON_RESET_ASCQ);
-+			mk_sense_buffer(scp, UNIT_ATTENTION,
-+				POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED);
- 			if (sdebug_verbose)
- 				cp = "power on reset";
- 			break;
- 		case SDEBUG_UA_POOCCUR:
--			mk_sense_buffer(scp, UNIT_ATTENTION, UA_RESET_ASC,
--					POWER_ON_OCCURRED_ASCQ);
-+			mk_sense_buffer(scp, UNIT_ATTENTION, POWER_ON_OCCURRED);
- 			if (sdebug_verbose)
- 				cp = "power on occurred";
- 			break;
- 		case SDEBUG_UA_BUS_RESET:
--			mk_sense_buffer(scp, UNIT_ATTENTION, UA_RESET_ASC,
--					BUS_RESET_ASCQ);
-+			mk_sense_buffer(scp, UNIT_ATTENTION,
-+					SCSI_BUS_RESET_OCCURRED);
- 			if (sdebug_verbose)
- 				cp = "bus reset";
- 			break;
- 		case SDEBUG_UA_MODE_CHANGED:
--			mk_sense_buffer(scp, UNIT_ATTENTION, UA_CHANGED_ASC,
--					MODE_CHANGED_ASCQ);
-+			mk_sense_buffer(scp, UNIT_ATTENTION,
-+					MODE_PARAMETERS_CHANGED);
- 			if (sdebug_verbose)
- 				cp = "mode parameters changed";
- 			break;
- 		case SDEBUG_UA_CAPACITY_CHANGED:
--			mk_sense_buffer(scp, UNIT_ATTENTION, UA_CHANGED_ASC,
--					CAPACITY_CHANGED_ASCQ);
-+			mk_sense_buffer(scp, UNIT_ATTENTION,
-+					CAPACITY_DATA_HAS_CHANGED);
- 			if (sdebug_verbose)
- 				cp = "capacity data changed";
- 			break;
- 		case SDEBUG_UA_MICROCODE_CHANGED:
- 			mk_sense_buffer(scp, UNIT_ATTENTION,
--					TARGET_CHANGED_ASC,
--					MICROCODE_CHANGED_ASCQ);
-+					MICROCODE_HAS_BEEN_CHANGED);
- 			if (sdebug_verbose)
- 				cp = "microcode has been changed";
- 			break;
- 		case SDEBUG_UA_MICROCODE_CHANGED_WO_RESET:
- 			mk_sense_buffer(scp, UNIT_ATTENTION,
--					TARGET_CHANGED_ASC,
--					MICROCODE_CHANGED_WO_RESET_ASCQ);
-+				MICROCODE_HAS_BEEN_CHANGED_WITHOUT_RESET);
- 			if (sdebug_verbose)
- 				cp = "microcode has been changed without reset";
- 			break;
-@@ -1539,14 +1537,13 @@ static int make_ua(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 			if (sdebug_scsi_level >= 6)	/* SPC-4 and above */
- 				clear_luns_changed_on_target(devip);
- 			mk_sense_buffer(scp, UNIT_ATTENTION,
--					TARGET_CHANGED_ASC,
--					LUNS_CHANGED_ASCQ);
-+					REPORTED_LUNS_DATA_HAS_CHANGED);
- 			if (sdebug_verbose)
- 				cp = "reported luns data has changed";
- 			break;
- 		case SDEBUG_UA_NOT_READY_TO_READY:
--			mk_sense_buffer(scp, UNIT_ATTENTION, UA_READY_ASC,
--					0);
-+			mk_sense_buffer(scp, UNIT_ATTENTION,
-+				NOT_READY_TO_READY_CHANGE_MEDIUM_MAY_HAVE_CHANGED);
- 			if (sdebug_verbose)
- 				cp = "not ready to ready transition/media change";
- 			break;
-@@ -2184,14 +2181,14 @@ static int resp_requests(struct scsi_cmnd *scp,
- 		if (dsense) {
- 			arr[0] = 0x72;
- 			arr[1] = NOT_READY;
--			arr[2] = LOGICAL_UNIT_NOT_READY;
-+			arr[2] = ASC_LU_NOT_READY;
- 			arr[3] = (stopped_state == 2) ? 0x1 : 0x2;
- 			len = 8;
- 		} else {
- 			arr[0] = 0x70;
- 			arr[2] = NOT_READY;		/* NO_SENSE in sense_key */
- 			arr[7] = 0xa;			/* 18 byte sense buffer */
--			arr[12] = LOGICAL_UNIT_NOT_READY;
-+			arr[12] = ASC_LU_NOT_READY;
- 			arr[13] = (stopped_state == 2) ? 0x1 : 0x2;
- 		}
- 	} else if ((iec_m_pg[2] & 0x4) && (6 == (iec_m_pg[3] & 0xf))) {
-@@ -2199,14 +2196,14 @@ static int resp_requests(struct scsi_cmnd *scp,
- 		if (dsense) {
- 			arr[0] = 0x72;
- 			arr[1] = 0x0;		/* NO_SENSE in sense_key */
--			arr[2] = THRESHOLD_EXCEEDED;
-+			arr[2] = ASC_FAILURE_PREDICTION_THRESHOLD_EXCEEDED;
- 			arr[3] = 0xff;		/* Failure prediction(false) */
- 			len = 8;
- 		} else {
- 			arr[0] = 0x70;
- 			arr[2] = 0x0;		/* NO_SENSE in sense_key */
- 			arr[7] = 0xa;   	/* 18 byte sense buffer */
--			arr[12] = THRESHOLD_EXCEEDED;
-+			arr[12] = ASC_FAILURE_PREDICTION_THRESHOLD_EXCEEDED;
- 			arr[13] = 0xff;		/* Failure prediction(false) */
- 		}
- 	} else {	/* nothing to report */
-@@ -2457,8 +2454,7 @@ static int resp_rsup_opcodes(struct scsi_cmnd *scp,
- 		a_len = alloc_len;
- 	arr = kzalloc((a_len < 256) ? 320 : a_len + 64, GFP_ATOMIC);
- 	if (NULL == arr) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
--				INSUFF_RES_ASCQ);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFFICIENT_RESOURCES);
- 		return check_condition_result;
- 	}
- 	switch (reporting_opts) {
-@@ -2924,8 +2920,9 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
+-	if (!core_scsi3_ua_clear_for_request_sense(cmd, &ua_asc, &ua_ascq))
+-		scsi_build_sense_buffer(desc_format, buf, UNIT_ATTENTION,
+-					ua_asc, ua_ascq);
++	if (!core_scsi3_ua_clear_for_request_sense(cmd, &sense_code))
++		scsi_set_sense_buffer(desc_format, buf, UNIT_ATTENTION,
++				      sense_code);
  	else
- 		bd_len = 0;
- 	alloc_len = msense_6 ? cmd[4] : get_unaligned_be16(cmd + 7);
--	if (0x3 == pcontrol) {  /* Saving values not supported */
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, SAVING_PARAMS_UNSUP, 0);
-+	if (0x3 == pcontrol) {
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				SAVING_PARAMETERS_NOT_SUPPORTED);
- 		return check_condition_result;
- 	}
- 	target_dev_id = ((devip->sdbg_host->shost->host_no + 1) * 2000) +
-@@ -3174,7 +3171,7 @@ static int resp_mode_select(struct scsi_cmnd *scp,
- 		       (arr[off + 1] + 2);
- 	if ((pg_len + off) > param_len) {
- 		mk_sense_buffer(scp, ILLEGAL_REQUEST,
--				PARAMETER_LIST_LENGTH_ERR, 0);
-+				PARAMETER_LIST_LENGTH_ERROR);
- 		return check_condition_result;
- 	}
- 	switch (mpage) {
-@@ -3256,7 +3253,7 @@ static int resp_ie_l_pg(unsigned char *arr)
+-		scsi_build_sense_buffer(desc_format, buf, NO_SENSE, 0x0, 0x0);
++		scsi_set_sense_buffer(desc_format, buf, NO_SENSE,
++				      NO_ADDITIONAL_SENSE_INFORMATION);
  
- 	memcpy(arr, ie_l_pg, sizeof(ie_l_pg));
- 	if (iec_m_pg[2] & 0x4) {	/* TEST bit set */
--		arr[4] = THRESHOLD_EXCEEDED;
-+		arr[4] = ASC_FAILURE_PREDICTION_THRESHOLD_EXCEEDED;
- 		arr[5] = 0xff;
- 	}
- 	return sizeof(ie_l_pg);
-@@ -3413,7 +3410,8 @@ static int resp_locate(struct scsi_cmnd *scp,
- 			break;
- 	if (i < pos) {
- 		devip->tape_location[partition] = i;
--		mk_sense_buffer(scp, BLANK_CHECK, 0x05, 0);
-+		mk_sense_buffer(scp, BLANK_CHECK,
-+				LU_DOES_NOT_RESPOND_TO_SELECTION);
- 		return check_condition_result;
- 	}
- 	devip->tape_location[partition] = pos;
-@@ -3438,8 +3436,9 @@ static int resp_write_filemarks(struct scsi_cmnd *scp,
- 	for (i = 0, pos = devip->tape_location[partition]; i < count; i++, pos++) {
- 		if (pos >= devip->tape_eop[partition] - 1) { /* don't overwrite EOD */
- 			devip->tape_location[partition] = devip->tape_eop[partition] - 1;
--			mk_sense_info_tape(scp, VOLUME_OVERFLOW, NO_ADDITIONAL_SENSE,
--					EOP_EOM_DETECTED_ASCQ, count, SENSE_FLAG_EOM);
-+			mk_sense_info_tape(scp, VOLUME_OVERFLOW,
-+					   END_OF_PARTITION_MEDIUM_DETECTED,
-+					   count, SENSE_FLAG_EOM);
- 			return check_condition_result;
+ 	memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
+ 	transport_kunmap_data_sg(cmd);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index dcfe94594916..ba208def8cb5 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3555,7 +3555,8 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
+ 	const struct sense_detail *sd;
+ 	u8 *buffer = cmd->sense_buffer;
+ 	int r = (__force int)reason;
+-	u8 key, asc, ascq;
++	u16 code;
++	u8 key;
+ 	bool desc_format = target_sense_desc_format(cmd->se_dev);
+ 
+ 	if (r < ARRAY_SIZE(sense_detail_table) && sense_detail_table[r].key)
+@@ -3566,21 +3567,19 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
+ 
+ 	key = sd->key;
+ 	if (reason == TCM_CHECK_CONDITION_UNIT_ATTENTION) {
+-		if (!core_scsi3_ua_for_check_condition(cmd, &key, &asc,
+-						       &ascq)) {
++		if (!core_scsi3_ua_for_check_condition(cmd, &key, &code)) {
+ 			cmd->scsi_status = SAM_STAT_BUSY;
+ 			return;
  		}
- 		(devip->tape_blocks[partition] + pos)->fl_size = data;
-@@ -3540,31 +3539,28 @@ static int resp_space(struct scsi_cmnd *scp,
+ 	} else {
+ 		WARN_ON_ONCE(sd->asc == 0);
+-		asc = sd->asc;
+-		ascq = sd->ascq;
++		code = scsi_sense_code(sd->asc, sd->ascq);
+ 	}
  
- is_fm:
- 	devip->tape_location[partition] = pos;
--	mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
--			FILEMARK_DETECTED_ASCQ, count - i,
--			SENSE_FLAG_FILEMARK);
-+	mk_sense_info_tape(scp, NO_SENSE, FILEMARK_DETECTED,
-+			   count - i, SENSE_FLAG_FILEMARK);
- 	return check_condition_result;
+ 	cmd->se_cmd_flags |= SCF_EMULATED_TASK_SENSE;
+ 	cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
+ 	cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER;
+-	scsi_build_sense_buffer(desc_format, buffer, key, asc, ascq);
++	scsi_set_sense_buffer(desc_format, buffer, key, code);
+ 	if (sd->add_sense_info)
+ 		WARN_ON_ONCE(scsi_set_sense_information(buffer,
+ 							cmd->scsi_sense_length,
+diff --git a/drivers/target/target_core_ua.c b/drivers/target/target_core_ua.c
+index 4276690fb6cb..ea97b05d47ab 100644
+--- a/drivers/target/target_core_ua.c
++++ b/drivers/target/target_core_ua.c
+@@ -187,11 +187,10 @@ void core_scsi3_ua_release_all(
  
- is_eod:
- 	devip->tape_location[partition] = pos;
--	mk_sense_info_tape(scp, BLANK_CHECK, NO_ADDITIONAL_SENSE,
--			EOD_DETECTED_ASCQ, count - i,
--			0);
-+	mk_sense_info_tape(scp, BLANK_CHECK, END_OF_DATA_DETECTED,
-+			   count - i, 0);
- 	return check_condition_result;
+ /*
+  * Dequeue a unit attention from the unit attention list. This function
+- * returns true if the dequeuing succeeded and if *@key, *@asc and *@ascq have
++ * returns true if the dequeuing succeeded and if *@key and *@code have
+  * been set.
+  */
+-bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+-				       u8 *ascq)
++bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u16 *code)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_dev_entry *deve;
+@@ -214,8 +213,7 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+ 	if (!deve) {
+ 		rcu_read_unlock();
+ 		*key = ILLEGAL_REQUEST;
+-		*asc = 0x25; /* LOGICAL UNIT NOT SUPPORTED */
+-		*ascq = 0;
++		*code = LU_NOT_SUPPORTED;
+ 		return true;
+ 	}
+ 	*key = UNIT_ATTENTION;
+@@ -232,8 +230,7 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+ 		 * clearing it.
+ 		 */
+ 		if (!dev_ua_intlck_clear) {
+-			*asc = ua->ua_asc;
+-			*ascq = ua->ua_ascq;
++			*code = scsi_sense_code(ua->ua_asc, ua->ua_ascq);
+ 			break;
+ 		}
+ 		/*
+@@ -242,8 +239,7 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+ 		 * (head of the list) in the outgoing CHECK_CONDITION + sense.
+ 		 */
+ 		if (head) {
+-			*asc = ua->ua_asc;
+-			*ascq = ua->ua_ascq;
++			*code = scsi_sense_code(ua->ua_asc, ua->ua_ascq);
+ 			head = 0;
+ 		}
+ 		list_del(&ua->ua_nacl_list);
+@@ -258,15 +254,13 @@ bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key, u8 *asc,
+ 		nacl->se_tpg->se_tpg_tfo->fabric_name,
+ 		dev_ua_intlck_clear ? "Releasing" : "Reporting",
+ 		dev->dev_attrib.emulate_ua_intlck_ctrl,
+-		cmd->orig_fe_lun, cmd->t_task_cdb[0], *asc, *ascq);
++		cmd->orig_fe_lun, cmd->t_task_cdb[0],
++		scsi_sense_code_asc(*code), scsi_sense_code_ascq(*code));
  
- is_bop:
- 	devip->tape_location[partition] = 0;
--	mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
--			BEGINNING_OF_P_M_DETECTED_ASCQ, count - i,
--			SENSE_FLAG_EOM);
-+	mk_sense_info_tape(scp, NO_SENSE,
-+			   BEGINNING_OF_PARTITION_MEDIUM_DETECTED,
-+			   count - i, SENSE_FLAG_EOM);
- 	devip->tape_location[partition] = 0;
- 	return check_condition_result;
- 
- is_eop:
- 	devip->tape_location[partition] = devip->tape_eop[partition] - 1;
--	mk_sense_info_tape(scp, MEDIUM_ERROR, NO_ADDITIONAL_SENSE,
--			EOP_EOM_DETECTED_ASCQ, (unsigned int)i,
--			SENSE_FLAG_EOM);
-+	mk_sense_info_tape(scp, MEDIUM_ERROR, END_OF_PARTITION_MEDIUM_DETECTED,
-+			   (unsigned int)i, SENSE_FLAG_EOM);
- 	return check_condition_result;
+ 	return head == 0;
  }
  
-@@ -3852,8 +3848,7 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
- 		/* For host-managed, reads cannot cross zone types boundaries */
- 		if (zsp->z_type != zsp_end->z_type) {
- 			mk_sense_buffer(scp, ILLEGAL_REQUEST,
--					LBA_OUT_OF_RANGE,
--					READ_INVDATA_ASCQ);
-+					ATTEMPT_TO_READ_INVALID_DATA);
- 			return check_condition_result;
+-int core_scsi3_ua_clear_for_request_sense(
+-	struct se_cmd *cmd,
+-	u8 *asc,
+-	u8 *ascq)
++int core_scsi3_ua_clear_for_request_sense(struct se_cmd *cmd, u16 *code)
+ {
+ 	struct se_dev_entry *deve;
+ 	struct se_session *sess = cmd->se_sess;
+@@ -304,8 +298,7 @@ int core_scsi3_ua_clear_for_request_sense(
+ 	spin_lock(&deve->ua_lock);
+ 	list_for_each_entry_safe(ua, ua_p, &deve->ua_list, ua_nacl_list) {
+ 		if (head) {
+-			*asc = ua->ua_asc;
+-			*ascq = ua->ua_ascq;
++			*code = scsi_sense_code(ua->ua_asc, ua->ua_ascq);
+ 			head = 0;
  		}
- 		return 0;
-@@ -3861,8 +3856,8 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
+ 		list_del(&ua->ua_nacl_list);
+@@ -317,7 +310,8 @@ int core_scsi3_ua_clear_for_request_sense(
+ 	pr_debug("[%s]: Released UNIT ATTENTION condition, mapped"
+ 		" LUN: %llu, got REQUEST_SENSE reported ASC: 0x%02x,"
+ 		" ASCQ: 0x%02x\n", nacl->se_tpg->se_tpg_tfo->fabric_name,
+-		cmd->orig_fe_lun, *asc, *ascq);
++		cmd->orig_fe_lun, scsi_sense_code_asc(*code),
++		scsi_sense_code_ascq(*code));
  
- 	/* Writing into a gap zone is not allowed */
- 	if (zbc_zone_is_gap(zsp)) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE,
--				ATTEMPT_ACCESS_GAP);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				ATTEMPT_TO_ACCESS_GAP_ZONE);
- 		return check_condition_result;
- 	}
+ 	return (head) ? -EPERM : 0;
+ }
+diff --git a/drivers/target/target_core_ua.h b/drivers/target/target_core_ua.h
+index 76487c9be090..6b636c13fee2 100644
+--- a/drivers/target/target_core_ua.h
++++ b/drivers/target/target_core_ua.h
+@@ -37,9 +37,8 @@ extern sense_reason_t target_scsi3_ua_check(struct se_cmd *);
+ extern int core_scsi3_ua_allocate(struct se_dev_entry *, u8, u8);
+ extern void target_ua_allocate_lun(struct se_node_acl *, u32, u8, u8);
+ extern void core_scsi3_ua_release_all(struct se_dev_entry *);
+-extern bool core_scsi3_ua_for_check_condition(struct se_cmd *, u8 *, u8 *,
+-					      u8 *);
+-extern int core_scsi3_ua_clear_for_request_sense(struct se_cmd *,
+-						u8 *, u8 *);
++extern bool core_scsi3_ua_for_check_condition(struct se_cmd *cmd, u8 *key,
++					      u16 *code);
++extern int core_scsi3_ua_clear_for_request_sense(struct se_cmd *cmd, u16 *code);
  
-@@ -3870,8 +3865,7 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
- 	if (zbc_zone_is_conv(zsp)) {
- 		if (!zbc_zone_is_conv(zsp_end)) {
- 			mk_sense_buffer(scp, ILLEGAL_REQUEST,
--					LBA_OUT_OF_RANGE,
--					WRITE_BOUNDARY_ASCQ);
-+					WRITE_BOUNDARY_VIOLATION);
- 			return check_condition_result;
- 		}
- 		return 0;
-@@ -3881,21 +3875,19 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
- 		/* Writes cannot cross sequential zone boundaries */
- 		if (zsp_end != zsp) {
- 			mk_sense_buffer(scp, ILLEGAL_REQUEST,
--					LBA_OUT_OF_RANGE,
--					WRITE_BOUNDARY_ASCQ);
-+					WRITE_BOUNDARY_VIOLATION);
- 			return check_condition_result;
- 		}
- 		/* Cannot write full zones */
- 		if (zsp->z_cond == ZC5_FULL) {
- 			mk_sense_buffer(scp, ILLEGAL_REQUEST,
--					INVALID_FIELD_IN_CDB, 0);
-+					INVALID_FIELD_IN_CDB);
- 			return check_condition_result;
- 		}
- 		/* Writes must be aligned to the zone WP */
- 		if (lba != zsp->z_wp) {
- 			mk_sense_buffer(scp, ILLEGAL_REQUEST,
--					LBA_OUT_OF_RANGE,
--					UNALIGNED_WRITE_ASCQ);
-+					UNALIGNED_WRITE_COMMAND);
- 			return check_condition_result;
- 		}
- 	}
-@@ -3905,8 +3897,7 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
- 		if (devip->max_open &&
- 		    devip->nr_exp_open >= devip->max_open) {
- 			mk_sense_buffer(scp, DATA_PROTECT,
--					INSUFF_RES_ASC,
--					INSUFF_ZONE_ASCQ);
-+					INSUFFICIENT_ZONE_RESOURCES);
- 			return check_condition_result;
- 		}
- 		zbc_open_zone(devip, zsp, false);
-@@ -3923,17 +3914,18 @@ static inline int check_device_access_params
- 	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
- 
- 	if (lba + num > sdebug_capacity) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
- 		return check_condition_result;
- 	}
- 	/* transfer length excessive (tie in to block limits VPD page) */
- 	if (num > sdebug_store_sectors) {
- 		/* needs work to find which cdb byte 'num' comes from */
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		return check_condition_result;
- 	}
- 	if (write && unlikely(sdebug_wp)) {
--		mk_sense_buffer(scp, DATA_PROTECT, WRITE_PROTECTED, 0x2);
-+		mk_sense_buffer(scp, DATA_PROTECT, LU_SOFTWARE_WRITE_PROTECTED);
- 		return check_condition_result;
- 	}
- 	if (sdebug_dev_is_zoned(devip))
-@@ -4442,17 +4434,17 @@ static int resp_read_tape(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	     i++, pos++, blp++) {
- 		devip->tape_location[partition] = pos + 1;
- 		if (IS_TAPE_BLOCK_FM(blp->fl_size)) {
--			mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
--					FILEMARK_DETECTED_ASCQ, fixed ? num - i : size,
--					SENSE_FLAG_FILEMARK);
-+			mk_sense_info_tape(scp, NO_SENSE, FILEMARK_DETECTED,
-+					   fixed ? num - i : size,
-+					   SENSE_FLAG_FILEMARK);
- 			scsi_set_resid(scp, (num - i) * size);
- 			return check_condition_result;
- 		}
- 		/* Assume no REW */
- 		if (IS_TAPE_BLOCK_EOD(blp->fl_size)) {
--			mk_sense_info_tape(scp, BLANK_CHECK, NO_ADDITIONAL_SENSE,
--					EOD_DETECTED_ASCQ, fixed ? num - i : size,
--					0);
-+			mk_sense_info_tape(scp, BLANK_CHECK,
-+					   END_OF_DATA_DETECTED,
-+					   fixed ? num - i : size, 0);
- 			devip->tape_location[partition] = pos;
- 			scsi_set_resid(scp, (num - i) * size);
- 			return check_condition_result;
-@@ -4464,9 +4456,9 @@ static int resp_read_tape(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		if (fixed) {
- 			if (blp->fl_size != devip->tape_blksize) {
- 				scsi_set_resid(scp, (num - i) * size);
--				mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
--						0, num - i,
--						SENSE_FLAG_ILI);
-+				mk_sense_info_tape(scp, NO_SENSE,
-+						NO_ADDITIONAL_SENSE_INFORMATION,
-+						num - i, SENSE_FLAG_ILI);
- 				return check_condition_result;
- 			}
- 		} else {
-@@ -4474,18 +4466,19 @@ static int resp_read_tape(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 				if (blp->fl_size < size)
- 					scsi_set_resid(scp, size - blp->fl_size);
- 				if (!sili) {
--					mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
--							0, size - blp->fl_size,
--							SENSE_FLAG_ILI);
-+					mk_sense_info_tape(scp, NO_SENSE,
-+						NO_ADDITIONAL_SENSE_INFORMATION,
-+						size - blp->fl_size,
-+						SENSE_FLAG_ILI);
- 					return check_condition_result;
- 				}
- 			}
- 		}
- 	}
- 	if (pos >= devip->tape_eop[partition]) {
--		mk_sense_info_tape(scp, NO_SENSE, NO_ADDITIONAL_SENSE,
--				EOP_EOM_DETECTED_ASCQ, fixed ? num - i : size,
--				SENSE_FLAG_EOM);
-+		mk_sense_info_tape(scp, NO_SENSE,
-+				   END_OF_PARTITION_MEDIUM_DETECTED,
-+				   fixed ? num - i : size, SENSE_FLAG_EOM);
- 		devip->tape_location[partition] = pos - 1;
- 		return check_condition_result;
- 	}
-@@ -4572,8 +4565,7 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	if (unlikely((SDEBUG_OPT_MEDIUM_ERR & sdebug_opts) &&
- 		     (lba <= (sdebug_medium_error_start + sdebug_medium_error_count - 1)) &&
- 		     ((lba + num) > sdebug_medium_error_start))) {
--		/* claim unrecoverable read error */
--		mk_sense_buffer(scp, MEDIUM_ERROR, UNRECOVERED_READ_ERR, 0);
-+		mk_sense_buffer(scp, MEDIUM_ERROR, UNRECOVERED_READ_ERROR);
- 		/* set info field and valid bit for fixed descriptor */
- 		if (0x70 == (scp->sense_buffer[0] & 0x7f)) {
- 			scp->sense_buffer[0] |= 0x80;	/* Valid bit */
-@@ -4597,22 +4589,26 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		case 1: /* Guard tag error */
- 			if (cmd[1] >> 5 != 3) { /* RDPROTECT != 3 */
- 				sdeb_meta_read_unlock(sip);
--				mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 1);
-+				mk_sense_buffer(scp, ABORTED_COMMAND,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 				return check_condition_result;
- 			} else if (scp->prot_flags & SCSI_PROT_GUARD_CHECK) {
- 				sdeb_meta_read_unlock(sip);
--				mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, 1);
-+				mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 				return illegal_condition_result;
- 			}
- 			break;
- 		case 3: /* Reference tag error */
- 			if (cmd[1] >> 5 != 3) { /* RDPROTECT != 3 */
- 				sdeb_meta_read_unlock(sip);
--				mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 3);
-+				mk_sense_buffer(scp, ABORTED_COMMAND,
-+				      LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED);
- 				return check_condition_result;
- 			} else if (scp->prot_flags & SCSI_PROT_REF_CHECK) {
- 				sdeb_meta_read_unlock(sip);
--				mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, 3);
-+				mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				      LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED);
- 				return illegal_condition_result;
- 			}
- 			break;
-@@ -4630,16 +4626,18 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	if (unlikely((sdebug_opts & SDEBUG_OPT_RECOV_DIF_DIX) &&
- 		     atomic_read(&sdeb_inject_pending))) {
- 		if (sdebug_opts & SDEBUG_OPT_RECOVERED_ERR) {
--			mk_sense_buffer(scp, RECOVERED_ERROR, THRESHOLD_EXCEEDED, 0);
-+			mk_sense_buffer(scp, RECOVERED_ERROR,
-+					FAILURE_PREDICTION_THRESHOLD_EXCEEDED);
- 			atomic_set(&sdeb_inject_pending, 0);
- 			return check_condition_result;
- 		} else if (sdebug_opts & SDEBUG_OPT_DIF_ERR) {
--			/* Logical block guard check failed */
--			mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 1);
-+			mk_sense_buffer(scp, ABORTED_COMMAND,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 			atomic_set(&sdeb_inject_pending, 0);
- 			return illegal_condition_result;
- 		} else if (SDEBUG_OPT_DIX_ERR & sdebug_opts) {
--			mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, 1);
-+			mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 			atomic_set(&sdeb_inject_pending, 0);
- 			return illegal_condition_result;
- 		}
-@@ -4846,16 +4844,14 @@ static int resp_write_tape(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	blp->fl_size = TAPE_BLOCK_EOD_FLAG;
- 	if (pos >= devip->tape_eop[partition] - 1) {
- 		mk_sense_info_tape(scp, VOLUME_OVERFLOW,
--				NO_ADDITIONAL_SENSE, EOP_EOM_DETECTED_ASCQ,
--				fixed ? num - i : transfer,
--				SENSE_FLAG_EOM);
-+				   END_OF_PARTITION_MEDIUM_DETECTED,
-+				   fixed ? num - i : transfer, SENSE_FLAG_EOM);
- 		return check_condition_result;
- 	}
- 	if (ew) { /* early warning */
- 		mk_sense_info_tape(scp, NO_SENSE,
--				NO_ADDITIONAL_SENSE, EOP_EOM_DETECTED_ASCQ,
--				fixed ? num - i : transfer,
--				SENSE_FLAG_EOM);
-+				   END_OF_PARTITION_MEDIUM_DETECTED,
-+				   fixed ? num - i : transfer, SENSE_FLAG_EOM);
- 		return check_condition_result;
- 	}
- 
-@@ -4877,8 +4873,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	if (unlikely(sdebug_opts & SDEBUG_OPT_UNALIGNED_WRITE &&
- 		     atomic_read(&sdeb_inject_pending))) {
- 		atomic_set(&sdeb_inject_pending, 0);
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE,
--				UNALIGNED_WRITE_ASCQ);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, UNALIGNED_WRITE_COMMAND);
- 		return check_condition_result;
- 	}
- 
-@@ -4959,22 +4954,26 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		case 1: /* Guard tag error */
- 			if (scp->prot_flags & SCSI_PROT_GUARD_CHECK) {
- 				sdeb_meta_write_unlock(sip);
--				mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, 1);
-+				mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 				return illegal_condition_result;
- 			} else if (scp->cmnd[1] >> 5 != 3) { /* WRPROTECT != 3 */
- 				sdeb_meta_write_unlock(sip);
--				mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 1);
-+				mk_sense_buffer(scp, ABORTED_COMMAND,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 				return check_condition_result;
- 			}
- 			break;
- 		case 3: /* Reference tag error */
- 			if (scp->prot_flags & SCSI_PROT_REF_CHECK) {
- 				sdeb_meta_write_unlock(sip);
--				mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, 3);
-+				mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+					LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED);
- 				return illegal_condition_result;
- 			} else if (scp->cmnd[1] >> 5 != 3) { /* WRPROTECT != 3 */
- 				sdeb_meta_write_unlock(sip);
--				mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 3);
-+				mk_sense_buffer(scp, ABORTED_COMMAND,
-+					LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED);
- 				return check_condition_result;
- 			}
- 			break;
-@@ -5002,16 +5001,18 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	if (unlikely((sdebug_opts & SDEBUG_OPT_RECOV_DIF_DIX) &&
- 		     atomic_read(&sdeb_inject_pending))) {
- 		if (sdebug_opts & SDEBUG_OPT_RECOVERED_ERR) {
--			mk_sense_buffer(scp, RECOVERED_ERROR, THRESHOLD_EXCEEDED, 0);
-+			mk_sense_buffer(scp, RECOVERED_ERROR,
-+					FAILURE_PREDICTION_THRESHOLD_EXCEEDED);
- 			atomic_set(&sdeb_inject_pending, 0);
- 			return check_condition_result;
- 		} else if (sdebug_opts & SDEBUG_OPT_DIF_ERR) {
--			/* Logical block guard check failed */
--			mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 1);
-+			mk_sense_buffer(scp, ABORTED_COMMAND,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 			atomic_set(&sdeb_inject_pending, 0);
- 			return illegal_condition_result;
- 		} else if (sdebug_opts & SDEBUG_OPT_DIX_ERR) {
--			mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, 1);
-+			mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 			atomic_set(&sdeb_inject_pending, 0);
- 			return illegal_condition_result;
- 		}
-@@ -5074,7 +5075,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		if (sdebug_verbose)
- 			sdev_printk(KERN_INFO, scp->device,
- 				"%s: LB Data Offset field bad\n", my_name);
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		return illegal_condition_result;
- 	}
- 	lbdof_blen = lbdof * lb_size;
-@@ -5082,7 +5083,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		if (sdebug_verbose)
- 			sdev_printk(KERN_INFO, scp->device,
- 				"%s: LBA range descriptors don't fit\n", my_name);
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		return illegal_condition_result;
- 	}
- 	lrdp = kzalloc(lbdof_blen, GFP_ATOMIC | __GFP_NOWARN);
-@@ -5123,8 +5124,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 				sdev_printk(KERN_INFO, scp->device,
- 				    "%s: sum of blocks > data provided\n",
- 				    my_name);
--			mk_sense_buffer(scp, ILLEGAL_REQUEST, WRITE_ERROR_ASC,
--					0);
-+			mk_sense_buffer(scp, ILLEGAL_REQUEST, SSC_WRITE_ERROR);
- 			ret = illegal_condition_result;
- 			goto err_out_unlock;
- 		}
-@@ -5135,8 +5135,9 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 							 ei_lba);
- 
- 			if (prot_ret) {
--				mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10,
--						prot_ret);
-+				mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+					scsi_sense_code(ASC_ID_CRC_OR_ECC_ERROR,
-+							prot_ret));
- 				ret = illegal_condition_result;
- 				goto err_out_unlock;
- 			}
-@@ -5163,18 +5164,20 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		if (unlikely((sdebug_opts & SDEBUG_OPT_RECOV_DIF_DIX) &&
- 			     atomic_read(&sdeb_inject_pending))) {
- 			if (sdebug_opts & SDEBUG_OPT_RECOVERED_ERR) {
--				mk_sense_buffer(scp, RECOVERED_ERROR, THRESHOLD_EXCEEDED, 0);
-+				mk_sense_buffer(scp, RECOVERED_ERROR,
-+					FAILURE_PREDICTION_THRESHOLD_EXCEEDED);
- 				atomic_set(&sdeb_inject_pending, 0);
- 				ret = check_condition_result;
- 				goto err_out_unlock;
- 			} else if (sdebug_opts & SDEBUG_OPT_DIF_ERR) {
--				/* Logical block guard check failed */
--				mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, 1);
-+				mk_sense_buffer(scp, ABORTED_COMMAND,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 				atomic_set(&sdeb_inject_pending, 0);
- 				ret = illegal_condition_result;
- 				goto err_out_unlock;
- 			} else if (sdebug_opts & SDEBUG_OPT_DIX_ERR) {
--				mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, 1);
-+				mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
- 				atomic_set(&sdeb_inject_pending, 0);
- 				ret = illegal_condition_result;
- 				goto err_out_unlock;
-@@ -5393,8 +5396,7 @@ static int resp_comp_write(struct scsi_cmnd *scp,
- 	dnum = 2 * num;
- 	arr = kcalloc(lb_size, dnum, GFP_ATOMIC);
- 	if (NULL == arr) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
--				INSUFF_RES_ASCQ);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFFICIENT_RESOURCES);
- 		return check_condition_result;
- 	}
- 
-@@ -5410,7 +5412,8 @@ static int resp_comp_write(struct scsi_cmnd *scp,
- 	sdeb_data_write_lock(sip);
- 	sdeb_meta_write_lock(sip);
- 	if (!comp_write_worker(sip, lba, num, arr, false)) {
--		mk_sense_buffer(scp, MISCOMPARE, MISCOMPARE_VERIFY_ASC, 0);
-+		mk_sense_buffer(scp, MISCOMPARE,
-+				MISCOMPARE_DURING_VERIFY_OPERATION);
- 		retval = check_condition_result;
- 		goto cleanup_unlock;
- 	}
-@@ -5453,8 +5456,7 @@ static int resp_unmap(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 
- 	buf = kzalloc(scsi_bufflen(scp), GFP_ATOMIC);
- 	if (!buf) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
--				INSUFF_RES_ASCQ);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFFICIENT_RESOURCES);
- 		return check_condition_result;
- 	}
- 
-@@ -5592,7 +5594,8 @@ static int resp_sync_cache(struct scsi_cmnd *scp,
- 		num_blocks = get_unaligned_be32(cmd + 10);
- 	}
- 	if (lba + num_blocks > sdebug_capacity) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
- 		return check_condition_result;
- 	}
- 	if (!write_since_sync || (cmd[1] & 0x2))
-@@ -5630,7 +5633,8 @@ static int resp_pre_fetch(struct scsi_cmnd *scp,
- 		nblks = get_unaligned_be32(cmd + 10);
- 	}
- 	if (lba + nblks > sdebug_capacity) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
- 		return check_condition_result;
- 	}
- 	if (!fsp)
-@@ -5801,8 +5805,7 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 
- 	arr = kcalloc(lb_size, vnum, GFP_ATOMIC | __GFP_NOWARN);
- 	if (!arr) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
--				INSUFF_RES_ASCQ);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFFICIENT_RESOURCES);
- 		return check_condition_result;
- 	}
- 	/* Not changing store, so only need read access */
-@@ -5823,7 +5826,8 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	}
- 	ret = 0;
- 	if (!comp_write_worker(sip, lba, vnum, arr, true)) {
--		mk_sense_buffer(scp, MISCOMPARE, MISCOMPARE_VERIFY_ASC, 0);
-+		mk_sense_buffer(scp, MISCOMPARE,
-+				MISCOMPARE_DURING_VERIFY_OPERATION);
- 		ret = check_condition_result;
- 		goto cleanup;
- 	}
-@@ -5862,7 +5866,8 @@ static int resp_report_zones(struct scsi_cmnd *scp,
- 	partial = cmd[14] & 0x80;
- 
- 	if (zs_lba >= sdebug_capacity) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
- 		return check_condition_result;
- 	}
- 
-@@ -5873,8 +5878,8 @@ static int resp_report_zones(struct scsi_cmnd *scp,
- 
- 	arr = kzalloc(arr_len, GFP_ATOMIC | __GFP_NOWARN);
- 	if (!arr) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
--				INSUFF_RES_ASCQ);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				INSUFFICIENT_RESOURCES);
- 		return check_condition_result;
- 	}
- 
-@@ -5939,8 +5944,7 @@ static int resp_report_zones(struct scsi_cmnd *scp,
- 				continue;
- 			break;
- 		default:
--			mk_sense_buffer(scp, ILLEGAL_REQUEST,
--					INVALID_FIELD_IN_CDB, 0);
-+			mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 			ret = check_condition_result;
- 			goto fini;
- 		}
-@@ -6005,13 +6009,13 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
- 	if (sdebug_atomic_wr_align &&
- 	    do_div(lba_tmp, sdebug_atomic_wr_align)) {
- 		/* Does not meet alignment requirement */
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		return check_condition_result;
- 	}
- 
- 	if (sdebug_atomic_wr_gran && len % sdebug_atomic_wr_gran) {
- 		/* Does not meet alignment requirement */
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		return check_condition_result;
- 	}
- 
-@@ -6072,8 +6076,8 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		/* Check if all closed zones can be open */
- 		if (devip->max_open &&
- 		    devip->nr_exp_open + devip->nr_closed > devip->max_open) {
--			mk_sense_buffer(scp, DATA_PROTECT, INSUFF_RES_ASC,
--					INSUFF_ZONE_ASCQ);
-+			mk_sense_buffer(scp, DATA_PROTECT,
-+					INSUFFICIENT_ZONE_RESOURCES);
- 			res = check_condition_result;
- 			goto fini;
- 		}
-@@ -6085,19 +6089,20 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	/* Open the specified zone */
- 	z_id = get_unaligned_be64(cmd + 2);
- 	if (z_id >= sdebug_capacity) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
- 		res = check_condition_result;
- 		goto fini;
- 	}
- 
- 	zsp = zbc_zone(devip, z_id);
- 	if (z_id != zsp->z_start) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		res = check_condition_result;
- 		goto fini;
- 	}
- 	if (zbc_zone_is_conv(zsp)) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		res = check_condition_result;
- 		goto fini;
- 	}
-@@ -6107,8 +6112,7 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		goto fini;
- 
- 	if (devip->max_open && devip->nr_exp_open >= devip->max_open) {
--		mk_sense_buffer(scp, DATA_PROTECT, INSUFF_RES_ASC,
--				INSUFF_ZONE_ASCQ);
-+		mk_sense_buffer(scp, DATA_PROTECT, INSUFFICIENT_ZONE_RESOURCES);
- 		res = check_condition_result;
- 		goto fini;
- 	}
-@@ -6152,19 +6156,20 @@ static int resp_close_zone(struct scsi_cmnd *scp,
- 	/* Close specified zone */
- 	z_id = get_unaligned_be64(cmd + 2);
- 	if (z_id >= sdebug_capacity) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
- 		res = check_condition_result;
- 		goto fini;
- 	}
- 
- 	zsp = zbc_zone(devip, z_id);
- 	if (z_id != zsp->z_start) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		res = check_condition_result;
- 		goto fini;
- 	}
- 	if (zbc_zone_is_conv(zsp)) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		res = check_condition_result;
- 		goto fini;
- 	}
-@@ -6224,19 +6229,20 @@ static int resp_finish_zone(struct scsi_cmnd *scp,
- 	/* Finish the specified zone */
- 	z_id = get_unaligned_be64(cmd + 2);
- 	if (z_id >= sdebug_capacity) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
- 		res = check_condition_result;
- 		goto fini;
- 	}
- 
- 	zsp = zbc_zone(devip, z_id);
- 	if (z_id != zsp->z_start) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		res = check_condition_result;
- 		goto fini;
- 	}
- 	if (zbc_zone_is_conv(zsp)) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		res = check_condition_result;
- 		goto fini;
- 	}
-@@ -6303,19 +6309,20 @@ static int resp_rwp_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 
- 	z_id = get_unaligned_be64(cmd + 2);
- 	if (z_id >= sdebug_capacity) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+				LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
- 		res = check_condition_result;
- 		goto fini;
- 	}
- 
- 	zsp = zbc_zone(devip, z_id);
- 	if (z_id != zsp->z_start) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		res = check_condition_result;
- 		goto fini;
- 	}
- 	if (zbc_zone_is_conv(zsp)) {
--		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB);
- 		res = check_condition_result;
- 		goto fini;
- 	}
-@@ -7186,7 +7193,7 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 		cmnd->result = scsi_result;
- 	if (cmnd->result == 0 && unlikely(sdebug_opts & SDEBUG_OPT_TRANSPORT_ERR)) {
- 		if (atomic_read(&sdeb_inject_pending)) {
--			mk_sense_buffer(cmnd, ABORTED_COMMAND, TRANSPORT_PROBLEM, ACK_NAK_TO);
-+			mk_sense_buffer(cmnd, ABORTED_COMMAND, ACK_NAK_TIMEOUT);
- 			atomic_set(&sdeb_inject_pending, 0);
- 			cmnd->result = check_condition_result;
- 		}
-@@ -8979,7 +8986,8 @@ static int resp_not_ready(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 				return 0;
- 			}
- 		}
--		mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x1);
-+		mk_sense_buffer(scp, NOT_READY,
-+				LU_IS_IN_PROCESS_OF_BECOMING_READY);
- 		if (sdebug_verbose)
- 			sdev_printk(KERN_INFO, sdp,
- 				    "%s: Not ready: in process of becoming ready\n", my_name);
-@@ -8997,7 +9005,8 @@ static int resp_not_ready(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 			return check_condition_result;
- 		}
- 	}
--	mk_sense_buffer(scp, NOT_READY, LOGICAL_UNIT_NOT_READY, 0x2);
-+	mk_sense_buffer(scp, NOT_READY,
-+			LU_NOT_READY_INITIALIZING_COMMAND_REQUIRED);
- 	if (sdebug_verbose)
- 		sdev_printk(KERN_INFO, sdp, "%s: Not ready: initializing command required\n",
- 			    my_name);
-@@ -9194,7 +9203,8 @@ static int sdebug_fail_cmd(struct scsi_cmnd *cmnd, int *retval,
- out_handle:
- 	if (err->cnt < 0)
- 		err->cnt++;
--	mk_sense_buffer(cmnd, err->sense_key, err->asc, err->asq);
-+	mk_sense_buffer(cmnd, err->sense_key,
-+			scsi_sense_code(err->asc, err->asq));
- 	result = err->status_byte | err->host_byte << 16 | err->driver_byte << 24;
- 	*info = *err;
- 	*retval = schedule_resp(cmnd, devip, result, NULL, 0, 0);
+ #endif /* TARGET_CORE_UA_H */
 -- 
 2.55.0
 
