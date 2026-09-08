@@ -1,59 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE7551475F;
-	Tue,  8 Sep 2026 10:32:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D93D513570;
+	Tue,  8 Sep 2026 10:33:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788863555; cv=none; b=DfxD23z2DLHmoxZBgYhUXf9b/DrQNzs0ZTiMDAla7Jz9GJKXQPfaomDTe6Zsnk9makak6tka60deASFp9AbMbirOtW51jPT3yhe8XRYhy9BDMYVv/4ISnf/Js0Y87bZQzBlRF0IlSMYL9T3XSesgz7N7bnaiBuxhQxQBaq/PS7Q=
+	t=1788863606; cv=none; b=rOMJllzsz0XiVVc6OY1SMziDAn0DcBzLHpfX6+ZGEBKCRWA230uWxPENfZu1qdWxkiniTOsGHRKixmIln5S8X+rkFc2/5vJebw1av9OBnILMJuS9uo9VPj3WU3Y8VjJIVGySbSsXDMAN9xBftZ7xfAm/VEq5CJbe2TQzdY0KCB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788863555; c=relaxed/simple;
-	bh=Dfvs/2K7bMiIFmzKEiWR2RQ5xgJBrwIiNjEtOgOB0Kg=;
+	s=arc-20240116; t=1788863606; c=relaxed/simple;
+	bh=YfvmasnhZqaGc0XmNApt5mr0MT4NMorPtTobQDK5N7s=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EqNJL2iuKx5ErTc5pCVMb3pK+U+ZDKIEIfencBU+d/5aqXDm5PmRzDOYJQ3FF5O8M+fU/XByThiJhX7uC/wqBiS3Lj83baI3B8XTfL9h9LPCrSuXHOck77j3jsmXdr/hn1j+ll/0e62ryUpVI6dLtm8cj2VLdm5Asi+0Rgz46is=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gj+8cp/R; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=fwM43mZnTtcaIwHCCrwHn1phvshMohI/WCnDNpSwUWnV/iA3EbECx8YxdIKSzDLU374+nAztxrQZKnLcycBus1E6tw6Ud6RTkMhJQzGn6XMbw2uQVsp3ueXbDjZlIsvhwoEr30IolsfseK0MKCcZ92lwdrMFzwQvtZ5I8UK4mCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JXTxrusv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gj+8cp/R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 082141F00A3A;
-	Tue,  8 Sep 2026 10:32:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JXTxrusv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AD391F00A3A;
+	Tue,  8 Sep 2026 10:33:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788863553;
-	bh=j6YT3zC4YBAhmBxHVNqIMqv1uOu3cQpzGE9waj3m26A=;
+	s=k20260515; t=1788863604;
+	bh=YfvmasnhZqaGc0XmNApt5mr0MT4NMorPtTobQDK5N7s=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gj+8cp/RJJPzgvfPn64RKVHxl8cPSEbucIQzWhIiOkTUpI0luaKp+mBXn5GVh8vlU
-	 EgQOYABO8jx7vOeh7IYoGBf4DkM6PYXR9XZcVimyEShCP/IwU17z0xa1YDHllULLw7
-	 9jmvlzfOKQ3SV7ldkwIufU7CPlfJcpJMQVqn8bAADRAsOO8NGmnRdqXur8O4veFndS
-	 mZo/EdbxDpUh9kjPmuWXT+TB/guMEM7CK41rIowpTTiOJ9zzerg63q5N3zd8Oz+13E
-	 ngREHsFdRDyyXM7Iaz6Rt2F4iQGBXpkGFz9LOINqHb7AYeLnl4zkktPqIZXvfFT3LO
-	 0adEPTUZH2ajw==
+	b=JXTxrusvvcipD1rWWK9vISUA7hwxpZ4iP10ivfrgBrp3Wx/ccSQbkk9mjdKbOy5MD
+	 4L3QTUCTeLGNHwEP8mboTc5AdEtkStGOjpMyEQCssiDseDNJnXolEc0CIUtyxQ8S0Z
+	 V5FKV2stxHBsvgMBGq1rdzrPx94cRfwZFXW2MqVP0Wmk0H1ZeoGVNjp4SOR0wfD3XC
+	 MkzHX/ee61L6mx2dkVaDqq7hCB6KBwJ9UczGzNE8PtLNw6EIFy8PbfY0w7PNo9ZtbG
+	 KjbQM9GhZnMBRtToENF63uxrzbDiEOu1c88/ogpmUx7TOb2YcishP2fnPMFT48eagN
+	 2wvaGNsZrrIVQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 40/40] scsi: remove scsi_build_sense() and
- scsi_build_sense_buffer()
+Subject: Re: [PATCH v6 37/40] ata: libata: use 16-bits defined sense codes
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: dlemoal@kernel.org, linux-s390@vger.kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, "Vasily
- Gorbik" <gor@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>, linux-scsi@vger.kernel.org, "Heiko
+Cc: linux-ide@vger.kernel.org, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, cassel@kernel.org, linux-s390@vger.kernel.org, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, linux-scsi@vger.kernel.org, dlemoal@kernel.org, "Heiko
  Carstens" <hca@linux.ibm.com>
-In-Reply-To: <20260908090308.1085097-41-dlemoal@kernel.org>
+In-Reply-To: <20260908090308.1085097-38-dlemoal@kernel.org>
 References: <20260908090308.1085097-1-dlemoal@kernel.org>
- <20260908090308.1085097-41-dlemoal@kernel.org>
+ <20260908090308.1085097-38-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 08 Sep 2026 10:32:32 +0000
-Message-Id: <20260908103233.082141F00A3A@smtp.kernel.org>
+Date: Tue, 08 Sep 2026 10:33:23 +0000
+Message-Id: <20260908103324.1AD391F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> Now that all code has been converted to use 16-bits sense codes and to
-> initialize sense with scsi_set_sense() and scsi_set_sense_buffer(), remove
-> the inline definitions of these new functions, change scsi_build_sense()
-> and scsi_build_sense_buffer() to use a single 16-bits sense code as
-> argument (instead of separate arguments for the ASC and ASCQ), and
-> rename them to scsi_set_sense()  and scsi_set_sense_buffer().
+> Refactor libata core code to use the 16-bits sense_code field of
+> struct scsi_sense_hdr and replace all hard-coded additional sense codes
+> and additional sense code qualifiers with the enum values defined in
+> include/scsi/scsi_sense.h. This helps with code clarity as the sense codes
+> being processed are easier to test and self-documented.
+>=20
+> No functional change intended.
 >=20
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
@@ -61,5 +61,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260908090308.1085=
-097-1-dlemoal@kernel.org?part=3D40
+097-1-dlemoal@kernel.org?part=3D37
 
