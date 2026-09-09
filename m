@@ -1,28 +1,28 @@
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013045.outbound.protection.outlook.com [40.107.201.45])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012008.outbound.protection.outlook.com [52.101.43.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87FD5525A73;
-	Wed,  9 Sep 2026 10:42:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B9EF52BE2E;
+	Wed,  9 Sep 2026 10:42:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.8
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788950538; cv=fail; b=sCz14fXrJOiWzlYk2bv52q6IwTvIbpHIXwwttwJ+xqQL6jsJs/2b6wE0ln+Mirto6DJwGFhlL/MuYNJVjTmbeNEtbGutPzgCUf6DAcsyl68YAb14aZo/CmbqcS8SPY2ByaQkPo9vLgCAjrk4i+kT0QyH+y9WDFOQ68wVqAg1Oes=
+	t=1788950542; cv=fail; b=J3yJw4dfCFrh6ByuIjza8s1ZWuy8UP10Mg23OL6TxjvD5VjS7m158kDaL0XsXEE377pimYl9oN2T+SedCBN0ENjrKgX9OVLf+NX7DcCv35rDtxr+455j4h9D62v008zSwuH3Wp0kgsODCbQ+DOdM9D6VLVZj6m6aHvMSf2iFjS8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788950538; c=relaxed/simple;
-	bh=jfmrEDlLe8dwwm4KqaOudeSbvnnNCIlLTiMUEly5UJI=;
+	s=arc-20240116; t=1788950542; c=relaxed/simple;
+	bh=E7H+llcHhG57oqmNTC4OPep7Os9a8YtnhBGzki8X/dc=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=pj3DZYKedzzJFoS/IFy/fNHy6tmoif677oFogAfGK5Xx4GPNHzh+BwLNrkXQDdMhOm8NQx3Zx6wUpqwXQfsE3e8EWQ9xthNWiSxLSUeP+mS+nSUTlXij1FHoxans+g6ogIKfbVP3Ai+I9fu5KI24G3Q4lxR81hyWzimsdVT2chU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=e0eEaYid; arc=fail smtp.client-ip=40.107.201.45
+	 In-Reply-To:To:CC; b=sNDoDwSGXHdFPBfTNhgpSdYTsX+tWdkkjE2grjTy9Duy/r2T5R4uYl9FDSbIoB+LUOKlUkZs+hWkzw73OOafg9Md35HciZBXSZppFsWG8jPM623sfFPpmqbu33Ayblay5IuLy82gPwS3zo/O7Rt7KGTHhIHEnv9Q0LI3LH3xJoM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=nF22Zxv2; arc=fail smtp.client-ip=52.101.43.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="e0eEaYid"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="nF22Zxv2"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jUcf6n3WpTLXaiOID5/H14IGF87DEKwCydO7IWWsflJyD0ryOSd8xfbBCIrf9VgY2g8WPU5H0LfC36ut45Dv3zVlBmZMSQuBereAmo9VxuMToIKzQWo+FSe2aQjGI8NaW4IgVblAfzPVekMcKvRHAb/cidEZ0xYJ39Ee96FkYOYk/4fNrQAdxWv81drECI4u3rvCfTSB/6SsILkkwtlLpaLLWDUzPFFastVa4TFASQdNhFQHxWHtKADwav3DfCG+RRW1oZtCETc1CgO2Ctx4Xt2ZE/QtBf5t7GqssAnwPk6etkxHglUvWTSoRMEMJY2B6QXLy9MKUgT3OW0Bm5O5lg==
+ b=GAwNDXHlm0dFy3uzWci87ewO+zufRa7twPkYRaZKHs/VQOuqsySOwBBLhLjaQZ4X4Pp+ikBdKGKryCplQHhFHhOOQ8sVzYok/iISGgWbJZNtpzoGcaRp+3au1fDjR6DeWdcMtKRIY0cwup4AfClOfFvc75qkX1aUFsalA0nk4DmXmHlW5y8185a6MSVFegWYmX/JmaZCJaYPHrQwJeI+qZuMTnne70LkP+Z2gjuZ43zd3JyVDJ/gP8Bc7HjpQt7ymy1kNtYqVqZayUzWSYzgZtrx+mz05p1h9Q3TZjDgJM5A+4W3ILd71LJgFRUI/WRXGArKd2XyjSTCk1osl+MYtw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=o0ze9W3Pfi7GendXs7/339lP8Or1Ua0t4xBfTGakL3w=;
- b=GjFrpkfRCBNjPj56z7Mq/vjMO76Wd/XuUCkHeVH1mYVvGnvMLfYhZmgtRlUGUEedo3ZiUjrG/79SSmScXM+Noz4Ix/Atq2PW42FDU5V9+YGpoFrt6fgHE9YydK0r4SHBCnJHuZnPRqhIGTAyCFv6i3xf8gUuQKdNOrF27pRe0oExA1f+U9n+8YYKNn/Eoe0AXhFh6MpA9HxYCvim5i9xfFdggIOFjfQ6ThybVmMDJ+IgDlHgABKl9g0kgkMqg82SozACPTo2fao0IZkC60tjUOe1xwpFsWfNfN3eYRLq6S2RN8evqrBA9lggWI6o5hwojFg7N1cBAo03HPKp6eW+tQ==
+ bh=YLsL/ABhwmQIXr14ja8L3DyQfYcIsPEeYqKpVo6lwqo=;
+ b=KkWclfWHjfveqWkZbIxDD2ks9UMvfjKNLEAqbHiaafYUQLR6/2NV1vF9ufPRhAQ0JclrCNnSwu0AcuPnzJ2Kk+ZGn0pnpkItdQ1IXCkE31vCvZfgLlf84kwVNxjeDX5kGSn45kFbYXgrEFm8Hwvf9xxBxEGAjl9vNp/q/IZEbts3Is4QpiIWNCZnCNRDys35X9BerQJ0Q67Rf7fT4LzWnmAU/2fO8dja8vmKk+xQHxL2eU7kLtVliGOtm1a+3TuW+8pSSWVCT0R+7jQ6oFHcmTOH3rsGOB1xiQrczcjak2yW5Yso9LJOeHa+WA80o8os/1dnNl1l827UpOaS9AVn5Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.161) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=o0ze9W3Pfi7GendXs7/339lP8Or1Ua0t4xBfTGakL3w=;
- b=e0eEaYidRwN8nxwomTgVTyLU/yrgC7lg3KlMGQio2YudazeudvF3cUh8PCY3fQT6Hg2CK7wbSNLBEmCOq4UhNEY0kbWxs/4i767dlvAl0YpWEkdRn70TyV7pBWW2zRto1qLBPNBd1vYrFsPgeCvvFN4iFB661xvkvUeVZHy8u6b24698jbO1z4jbmSeeXdAO28F4I33veba5uFcXXeSGUtNHU1xbL5Sv6D64HDdqfF1ExiBLgrVDpmYNVxnZGDugCqt/ayQT0yVqarnGr8+r2heIYmQVj40/qUrxbAySyBaMAXMkyWzFirDXpqTUq5xzLxKpxUTBP8n3hsCH6hLBJQ==
-Received: from LV3P220CA0005.NAMP220.PROD.OUTLOOK.COM (2603:10b6:408:234::26)
- by PH0PR12MB5648.namprd12.prod.outlook.com (2603:10b6:510:14b::7) with
+ bh=YLsL/ABhwmQIXr14ja8L3DyQfYcIsPEeYqKpVo6lwqo=;
+ b=nF22Zxv2iGSgbdLcvnnFTlRhk2jJ9ZhEYumn1IhSPDeKm3wQ6+owGFeLVt7GzVdjnrBhyOmADjBGsZge0IzInpDsUsNit7rphHXW9zoSgwwSFYobDDj8WwT8Mur2s/gyeAIqHR/Zhj7Ohc4GztcPZRfI5WBkB8/UKT+Nq8e8nhwe7QXmyopGpHPjG3lULID8K07nL8TwPwds8lY1+/j52sP5leVtRfop3VA8llwJYQVVNrGzwFmOBox8b1KRhYI9FeQu5KB0ozeg4RIi3+2uuDLaaHy3LwH398YScrdWgOF9Q6ubI4ubwDNWxCTJegcxoVPxAEf5nTI3eD6TbLcehA==
+Received: from BN9PR03CA0722.namprd03.prod.outlook.com (2603:10b6:408:110::7)
+ by IA0PR12MB8748.namprd12.prod.outlook.com (2603:10b6:208:482::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.8; Wed, 9 Sep 2026
- 10:42:11 +0000
-Received: from BN2PEPF0000A88F.namprd04.prod.outlook.com
- (2603:10b6:408:234:cafe::55) by LV3P220CA0005.outlook.office365.com
- (2603:10b6:408:234::26) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.382.15 via Frontend Transport; Wed, 9
- Sep 2026 10:42:11 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.15; Wed, 9 Sep
+ 2026 10:42:16 +0000
+Received: from BN2PEPF0000A893.namprd04.prod.outlook.com
+ (2603:10b6:408:110:cafe::7d) by BN9PR03CA0722.outlook.office365.com
+ (2603:10b6:408:110::7) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.382.13 via Frontend Transport; Wed, 9
+ Sep 2026 10:42:16 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,23 +49,24 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.161 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.161) by
- BN2PEPF0000A88F.mail.protection.outlook.com (10.167.248.181) with Microsoft
+ BN2PEPF0000A893.mail.protection.outlook.com (10.167.248.185) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.406.5 via Frontend Transport; Wed, 9 Sep 2026 10:42:10 +0000
+ 15.21.406.5 via Frontend Transport; Wed, 9 Sep 2026 10:42:16 +0000
 Received: from rnnvmail203.nvidia.com (10.129.68.9) by mail.nvidia.com
  (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 9 Sep
- 2026 03:41:53 -0700
+ 2026 03:41:58 -0700
 Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail203.nvidia.com
  (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 9 Sep
- 2026 03:41:52 -0700
+ 2026 03:41:58 -0700
 Received: from [127.0.1.1] (10.127.8.13) by mail.nvidia.com (10.129.68.9) with
  Microsoft SMTP Server id 15.2.2562.46 via Frontend Transport; Wed, 9 Sep 2026
- 03:41:47 -0700
+ 03:41:53 -0700
 From: Kartik Rajput <kkartik@nvidia.com>
-Date: Wed, 9 Sep 2026 16:11:19 +0530
-Subject: [PATCH 1/4] dt-bindings: ufs: Add nvidia,tegra264-ufs
+Date: Wed, 9 Sep 2026 16:11:20 +0530
+Subject: [PATCH 2/4] scsi: ufs: Add UIC DEBUGSAVECONFIGTIME attribute and
+ its field masks
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,7 +75,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20260909-tegra264-ufs-v1-1-e4a9831702a0@nvidia.com>
+Message-ID: <20260909-tegra264-ufs-v1-2-e4a9831702a0@nvidia.com>
 References: <20260909-tegra264-ufs-v1-0-e4a9831702a0@nvidia.com>
 In-Reply-To: <20260909-tegra264-ufs-v1-0-e4a9831702a0@nvidia.com>
 To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
@@ -88,179 +89,84 @@ CC: Thierry Reding <treding@nvidia.com>, <linux-scsi@vger.kernel.org>,
 	<devicetree@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, Kartik Rajput <kkartik@nvidia.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1788950501; l=4065;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1788950501; l=1338;
  i=kkartik@nvidia.com; s=20260909; h=from:subject:message-id;
- bh=jfmrEDlLe8dwwm4KqaOudeSbvnnNCIlLTiMUEly5UJI=;
- b=XM/E+2YIdcVt/rqgJHL/DIDGLy9GGMYCofq/PudVimnP0IcXSnSqxrCQAw3XCbzyttBczbiM9
- sVIgMTSGpgSDeDCsciMgvY+Is2I9FiyRaJLpNvv9vNJhRcRCjIhefwD
+ bh=E7H+llcHhG57oqmNTC4OPep7Os9a8YtnhBGzki8X/dc=;
+ b=WXvVH6YE7r6LuQUUkMTelzFSFyhomKY1CQ2dVVBfMqyQ7Y0gJBOKEahFnyKb6L3XkKR8tQpHB
+ YU0bGIfKKZzCSyxqFIPr0RqzKqYvNHRUEjZ30gq9NBsYtAPT/D4FQvw
 X-Developer-Key: i=kkartik@nvidia.com; a=ed25519;
  pk=V+1YkJqxCruxUVxLXtAG3f5k8O5skT0X4/QIB75KZ64=
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN2PEPF0000A88F:EE_|PH0PR12MB5648:EE_
-X-MS-Office365-Filtering-Correlation-Id: aba08e74-fe07-465a-9823-08df0e5f00fc
+X-MS-TrafficTypeDiagnostic: BN2PEPF0000A893:EE_|IA0PR12MB8748:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0a850a06-f844-4af0-44bb-08df0e5f046a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|1800799024|82310400026|36860700016|376014|7416014|10067099003|3023799007|18002099003|22082099003|11063799006|56012099006|13003099007|921020;
+	BCL:0;ARA:13230040|1800799024|36860700016|82310400026|23010399003|7416014|376014|10067099003|6133799003|22082099003|18002099003|11063799006|56012099006|921020;
 X-Microsoft-Antispam-Message-Info:
-	lC7HswqTu37pbt6znSXn8czNQFZ2x860t5jk/5NDUx89IPq/OTQSrRwFE3R/HA7Guzmm7hnP3k4DirGwb0V6QWZHczDqInEqhb5Of7WrPetvMu5FkU50/W+BmZ6Gb0i/hKq1PFL0DJwyXXmSZqeAUTQVfvlxaUTdf/tGa+wQzH3LEeFWSFNybJEkjw/DPUfup71vHI1h397lDx36hNYv2g6uGc+dTtfSLGteiuGL0QEph7DySNElbe3O8p8VD45TEn3nV9N7BG7fr5QQtexLhAgvkhrYAO8I3xpDlnPTZNIsczeHes8kcC7hI2AxCKW7LUL+oIi25eyGK2Dvsf6CwX+A7VZg++arv0s2EAyeULy2d1x/dBFH+qlZMpH2qbmNyT8ibssttI4EYYmm82W6xSBmaN0EWvv6ysTyOCUjilMN2sdsGA74fZ74zABBDY3g2bwVpBZFKe6ZvYXgzzCpW3Mfbs4xAv8g27lhPSfNHyNp9ZgE4NUkrpA9s4nC7OQChXl25ZVrtC6ZkO6NFL26hkakPvAhOJLVxdufgrxdhyg6043uhYJqQanIbnPg8wDKIoNnxaCEuFhiQo/ZLY95z3eKPfzLcS1DWGT/sgNbuPfvNutfGSY35w53585xjPfsQCD9pXpHx4BTWwYMi7k9XHb6x2R914F52HG77u1vD5aiatwLGr2ItPmrcZgfFEN8RSFJhzWYzL7mW3WTvFGPc4RpqDRZFkY0aCgVx5jsXdqDEp0Tmymn9sF8KAPK0HWY
+	yqFGKAFzo+usNxrEaaVkvU5uxACsHa0VMdlYL3WGUZhbUH/yANo52NirGJNLt+/Tjk+dP8jlztp4XVRJUpjSUjFQq5B9lZlx+35AiK0WyWrB1/J4hnNVQuddsmIpE1ItrB8jU85JzSk799fEAhhh+ihUoDfYeL60TmY+dDqbrSYrxtHobfvEo+1adM5zbpk62y9PX42CDV2P2jdTcPeTJlxJGgX4mBSo4q3dSieBWwe0xeQwcp2yWZQAzmjMoaBDAU75as0Hs4IvI9hdX+rStu3D+BuKaNW2mkO47gw9jrD6nSF2m/thZ0xlS1EQKmfCMrXMw/hRQR20qENMJBSao7/VMklJS7jNGE6JelLDfMKIYshH+AttDzi45wkUBrvUevq1bUscGZq/Y36CWyxi+OEXNEQ4AKbetBmY0oaWVt/KYT8aCjnRc0cq2x7N7jvJVcOCIX7otxX+YL4iUlwwYl1s/J5mWO2x7syWHlyCm9Z1Xmf3bzCm8yTSoEhV8Zbk8CoS8pBlmxnDyqumpwQlKhx/iHxaGi5Ss/nIUsWtKkeT1Eg369pmGJSgYg8D29lRMeWC4TFlMo0Hv/O9OXiFBsJArP0Eot4MqKpRmumBB6gYZZgG8bkYnFDtorZke18mzyJiMrMt7/F9opA9iVjjQ8ESyVHgLMXgcMBrYUhSO0rTStt95WPOSMIxXA1MVcXIAnGpfISJfILod0Ihi1UGbpoEdTJYPg1UowMDnEC8HpmjHj0n5tSrtHclGi7NX46y
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(82310400026)(36860700016)(376014)(7416014)(10067099003)(3023799007)(18002099003)(22082099003)(11063799006)(56012099006)(13003099007)(921020);DIR:OUT;SFP:1101;
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(82310400026)(23010399003)(7416014)(376014)(10067099003)(6133799003)(22082099003)(18002099003)(11063799006)(56012099006)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	mFQMLkBXc7ckh7YtUODvd1pIgmz3RyBicWZUJ5leIxJjttvGSdMMoL9kpYZ4ofz9JW6Yhj6uh4bjO7O4p5k80iXNEXOJUTRHSp4t1fWPrB8wRR5Tc73K8wVDhawVnWkhzKoJu5gd5tufxI4opxCkHrECq4a8uKSpajBotmuSmo8l0rhfnIrx+hYoB/Ic2d5CW44inA/zg+hyt4VR7KP4k94CsEyQSlKVfLjAN7ZmvUlqk6p3aKz8/ErCsI7zgk/R7Pf6Qnh5FM4MfBAjHlnCXjb8CKGvgv1UixObtFAcKeIp8LtwaSmZV+hH44RA2jJJvFtC2voJM8VXBuuNvgSapI34SDgietUhxwaSVazsMPUj0b6wrgI3MbmAo2wJy1hAEpYFUEvUqCI9rqGBnXODlvxpNQOS0a74ms7e7KDL0hs9s336udW1oPi3+je+X5y5
+	vB9qv3FGKLs1BA1qOh8WOhL1Nq/oK3dLVixXsK6F5KRbsnDOhq7aL+0kcWnqS/QAzt6itXQ/gGwXqEID14vLmXr/y6Ogdpmwv2pFY5hfoLUZ3A+WdYwSUgzdfNwcmjYgIiAy5IbJBARt1RXNANnMHyhX40W32kE13V8jFgldX2KezojUcmr4j72m0dqiFmbd8Q8Rr8YuhBSSbO8JC1F7bCbBUkrugzqIqZKIsHcrkXjDiQNvFqBO4LEd1aV1M8reyJkoOlV8AzuQIv/8LFUm2PbiVQEh6M5wQOCC2QPoZBezEm89b+2XBk32qwZ3MLVs5T3nv8FR1JPJonh11JV87h063VrpGXY6jpgV4vqOFyniCR6HHXSCO0nVYM28fdnSHUr/xZ3oSEZkxacSlwijmIwcAe62NJHH6EriB2MjOSmcR4vJPIk0fcK+zbUq2ZAg
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Sep 2026 10:42:10.9357
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Sep 2026 10:42:16.6873
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: aba08e74-fe07-465a-9823-08df0e5f00fc
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0a850a06-f844-4af0-44bb-08df0e5f046a
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN2PEPF0000A88F.namprd04.prod.outlook.com
+	BN2PEPF0000A893.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB5648
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB8748
 
-Add binding for the UFS host controller on NVIDIA Tegra264 SoCs. The
-controller supports UFS 3.1 up to HS-G4B on two data lanes.
+Add the UniPro vendor-specific save-config-time attribute and masks for
+the two fields within it:
+
+  VS_DEBUGSAVECONFIGTIME       Save-config-time attribute (0xD0A0)
+  VS_DEBUGSAVECONFIGTIME_TREF  Field masks within that attribute, for
+  VS_DEBUGSAVECONFIGTIME_SCT   use with FIELD_PREP()
+
+ufs-hisi already writes this attribute by its literal address, so name
+it in the shared header rather than in the driver. Add it here in
+preparation for the Tegra264 UFS host controller driver, which also
+programs the two fields.
 
 Signed-off-by: Kartik Rajput <kkartik@nvidia.com>
 ---
- .../bindings/ufs/nvidia,tegra264-ufs.yaml          | 124 +++++++++++++++++++++
- 1 file changed, 124 insertions(+)
+ include/ufs/unipro.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ufs/nvidia,tegra264-ufs.yaml b/Documentation/devicetree/bindings/ufs/nvidia,tegra264-ufs.yaml
-new file mode 100644
-index 000000000000..5a9837cb43dd
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ufs/nvidia,tegra264-ufs.yaml
-@@ -0,0 +1,124 @@
-+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ufs/nvidia,tegra264-ufs.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/include/ufs/unipro.h b/include/ufs/unipro.h
+index 9c168703b104..f6d83878f2a6 100644
+--- a/include/ufs/unipro.h
++++ b/include/ufs/unipro.h
+@@ -6,6 +6,8 @@
+ #ifndef _UNIPRO_H_
+ #define _UNIPRO_H_
+ 
++#include <linux/bits.h>
 +
-+title: NVIDIA Tegra264 UFS Host Controller
+ /*
+  * M-TX Configuration Attributes
+  */
+@@ -232,8 +234,12 @@
+ #define VS_POWERSTATE		0xD083
+ #define VS_MPHYCFGUPDT		0xD085
+ #define VS_DEBUGOMC		0xD09E
++#define VS_DEBUGSAVECONFIGTIME	0xD0A0
+ #define VS_MPHYDISABLE		0xD0C1
+ 
++#define VS_DEBUGSAVECONFIGTIME_TREF	GENMASK(4, 2)
++#define VS_DEBUGSAVECONFIGTIME_SCT	GENMASK(1, 0)
 +
-+maintainers:
-+  - Kartik Rajput <kkartik@nvidia.com>
-+  - Thierry Reding <treding@nvidia.com>
-+
-+properties:
-+  compatible:
-+    const: nvidia,tegra264-ufs
-+
-+  reg:
-+    items:
-+      - description: UFS Host Controller registers
-+      - description: UFS auxiliary registers
-+
-+  reg-names:
-+    items:
-+      - const: ufs
-+      - const: aux
-+
-+  clocks:
-+    items:
-+      - description: UFS host controller functional clock
-+      - description: UFS host controller divider clock
-+      - description: UFS reference clock (PLLREFUFS output)
-+      - description: UFS device-side reference clock
-+      - description: M-PHY reference clock (UPHY0 PLL4 digital output)
-+
-+  clock-names:
-+    items:
-+      - const: ufs
-+      - const: div
-+      - const: ref
-+      - const: ref-dev
-+      - const: phy
-+
-+  resets:
-+    items:
-+      - description: UFS host controller reset
-+      - description: UFS host controller AXI-master reset
-+      - description: UFS host controller low-power sequencer reset
-+
-+  reset-names:
-+    items:
-+      - const: ufs
-+      - const: axi
-+      - const: lp
-+
-+  phys:
-+    items:
-+      - description: M-PHY lane 0 transmit
-+      - description: M-PHY lane 0 receive
-+      - description: M-PHY lane 1 transmit
-+      - description: M-PHY lane 1 receive
-+
-+  phy-names:
-+    items:
-+      - const: mphy-l0-tx
-+      - const: mphy-l0-rx
-+      - const: mphy-l1-tx
-+      - const: mphy-l1-rx
-+
-+  iommus:
-+    maxItems: 1
-+
-+  dma-coherent: true
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - clocks
-+  - clock-names
-+  - resets
-+  - reset-names
-+  - phys
-+  - phy-names
-+  - iommus
-+  - dma-coherent
-+
-+allOf:
-+  - $ref: ufs-common.yaml
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/nvidia,tegra264.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/phy/nvidia,tegra264-mphy.h>
-+    #include <dt-bindings/reset/nvidia,tegra264.h>
-+
-+    ufs@b8d0000 {
-+        compatible = "nvidia,tegra264-ufs";
-+        reg = <0xb8d0000 0x10000>,
-+              <0xb8e0000 0x8000>;
-+        reg-names = "ufs", "aux";
-+        interrupts = <GIC_SPI 951 IRQ_TYPE_LEVEL_HIGH>;
-+        clocks = <&bpmp TEGRA264_CLK_UFSHC_CG_SYS>,
-+                 <&bpmp TEGRA264_CLK_UFSHC_CG_SYS_DIV>,
-+                 <&bpmp TEGRA264_CLK_PLLREFUFS_CLKOUT624>,
-+                 <&bpmp TEGRA264_CLK_PLLREFUFS_UFSDEV_REFCLKOUT>,
-+                 <&bpmp TEGRA264_CLK_UPHY0_PLL4_XDIG>;
-+        clock-names = "ufs", "div", "ref", "ref-dev", "phy";
-+        resets = <&bpmp TEGRA264_RESET_UFSHC>,
-+                 <&bpmp TEGRA264_RESET_UFSHC_AXI_M>,
-+                 <&bpmp TEGRA264_RESET_UFSHC_LP_SEQ>;
-+        reset-names = "ufs", "axi", "lp";
-+        phys = <&mphy TEGRA_MPHY_L0_TX>,
-+               <&mphy TEGRA_MPHY_L0_RX>,
-+               <&mphy TEGRA_MPHY_L1_TX>,
-+               <&mphy TEGRA_MPHY_L1_RX>;
-+        phy-names = "mphy-l0-tx", "mphy-l0-rx",
-+                    "mphy-l1-tx", "mphy-l1-rx";
-+        iommus = <&smmu 0x20>;
-+        dma-coherent;
-+    };
-+...
+ #define PA_GRANULARITY_MIN_VAL	1
+ #define PA_GRANULARITY_MAX_VAL	6
+ 
 
 -- 
 2.43.0
