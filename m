@@ -1,86 +1,87 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39AC51397
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Sep 2026 02:48:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6941A2D24B7
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Sep 2026 05:05:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788922081; cv=none; b=gRaiAvYPFZQ+bAzesyMBesa3kFDWBpQXk4JWe+Qh/ocioJpK7I+U8UpEtdpYsiIpd4yuO90zSI9V/YMjULM/rrT7gVilfU0Se2tS5OKZtHWOm5vtg2+NtzzxHr+DUMoS/sUkLL2CkuKbxN36eqekb7d/2Vjm4THZcKhjY+gS1u0=
+	t=1788930308; cv=none; b=TiVfyB/SI/MdgjzZvmJOzqHkGKloP6PXOPCn7PcwhfS8ZmJ+FPZylVpysJihterwwaZUOSUyVJfRtCetaDUq8nN9bxvBh7ZtiiY4l3oQ4lyk39r1tr5jj6CB+NU6ext9j1CuZrVBhCfFu3hf/1jr9PrxEW+dyOH+ggs5KDFLhcw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788922081; c=relaxed/simple;
-	bh=9NyIx4dDN/n8SR7fgjVO6DYWyHiKLhy9HgV2Hm+621Q=;
+	s=arc-20240116; t=1788930308; c=relaxed/simple;
+	bh=CKdRM5fSMd2cujrUt2fuU6ccWuxsQFIGjUemrc2ZJmA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pA6GcFymIUer+L7Hb3v5Vo+uk1GjKUve64lqjlAeT8jSr7M/BJSL97eALDAcq5zCDukAOZf2nU1MGZcFORWCprVT2i/DekzsFe0tZGtfe1PfoAbfVFhPxfmzIbQN6j57vS0zu6k9a8db6Uvj7TXjrrz+ZcLvBbFxMUXerQgzzr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=pBHm0GR+; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Zwww++Jp; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:Content-Type; b=eRsCFoqfPOBA+RIQRjiZj/PwW/ZQ6VfuXPY8VuwfuhwYugc44T1yphh2T1EPi7jBsykZvoPzDDX+lPsY/RiyRGW0QNvPiNlCXJfZAakI9djaV+huaNfNGuHJC7n+JlVrMw1Tc1rI9v1AQ4PcwFdRJ66BirzMY3Jwxo1tf/yBHWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=JJHeJM9s; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=LeovFJLN; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="pBHm0GR+";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Zwww++Jp"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 688MgGjJ045467
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Sep 2026 02:47:59 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="JJHeJM9s";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="LeovFJLN"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 688Mg23B965220
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Sep 2026 05:05:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Rjawb3C4arzargqScoKB4y4HXxny+HjzJB7ieKfMXLw=; b=pBHm0GR+622PlG7b
-	FbCGqFHORCQwXcFHadDDYpB3bXSwHTrcEWARIaGtNfW/+sqcsEvt8KE4CViI/Axl
-	xzsRN/a714PJOPUckdwHfObcuRgUzTq6Jc82NfVZK0fWHL1bXPJDUJadoaGcJRXL
-	0fRWARHsqKMDmB2wn3Hp2R/g+Kyp1sXLeN8I7q1AIhlcfKVS03/1v7LqWT0LhrVz
-	oeU9Cpzfqkkxi497nKjZfXM0H4h3QhLX8HH3NRPSwHBnUWNN9VaQ9k6LTMfxuJuh
-	LRrGge5NFCUPC7c3r7QC0FNpjiPLNc3b4CkqUvFJz/i714zTBKbhkCfAqyZLK/3T
-	zE8XuQ==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gjqewhrcs-1
+	LZSTs+CvtHAB1mwHgOV7ZbDB5Nlf194yh6i3owJzkNU=; b=JJHeJM9sHMUTb7pk
+	RFPVbOQSGGTNLCG3o4Kv5JEXpZ4f8C8yXpBNusZyTtBDRPlgI72h7aFMKu82m35l
+	f0eXa55zJvF6wFvOj/qJ5mqoL/+TTiZdcAizujEyiztZhImzfDihW/F7LT5jh39K
+	1CNcqTFQMhieT3r8zwt1ZwFVJxM3lb9+P5g0DYqAon+txLeWN/tUOsdsJ88wnniz
+	S0riGdr0dUCysYLu/TJPNxeWMGVqEgwEDOwbhYk3wE4F+I9+zjjKi5DEAxF3U5eT
+	RPUKXZWatZEFTdrGjlFohxKpQVkGpJOZ0qYW2jePB+Y8Ga30NRfI38hiH9O1k8gy
+	jqeBEw==
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gjqha28bh-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 09 Sep 2026 02:47:58 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38e8e864ef0so9070876a91.0
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Sep 2026 19:47:58 -0700 (PDT)
+	for <linux-scsi@vger.kernel.org>; Wed, 09 Sep 2026 05:05:06 +0000 (GMT)
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cc1c18c775eso6415972a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Sep 2026 22:05:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788922078; x=1789526878; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1788930306; x=1789535106; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Rjawb3C4arzargqScoKB4y4HXxny+HjzJB7ieKfMXLw=;
-        b=Zwww++JpVSq+/3rqg3uymq32l+D4ANau8fFKksJL+E06924Huxa3OUE5Sb0dvJelsR
-         EV+8gtjVeAyrDfxc9fAjOsGbCCEw109jQSPcJ3HGaUr1ZFu8F9m17ptbEtoKv6g6ViHo
-         3t7Lh/2mUQKZOeD8J6s/tdNDxNHDqllJQ1mkx++8qVNUf/ojROnHS/jkaJXxeP28F4/F
-         7n0/oRG+3VHxj+0gVHAYkiRp3HYgB4LcW4aXk8f8YuuxqNFz0RQeSKsLA7gVAMIPw3Vp
-         NwSqWWp4lG1xXYQ+mDW0siqIik7asHCrGUFKqHvYUVL2Lend4abAxTLm6dLUxBKDjVgD
-         1zdw==
+        bh=LZSTs+CvtHAB1mwHgOV7ZbDB5Nlf194yh6i3owJzkNU=;
+        b=LeovFJLNWBgAN6pWQNT7AElzWZ5YNiznDDlzkgKLpNG1uwr6RmuRXTAAbiXf01UxMS
+         DenF5tnE81IwZXxM93rCTg06Co+FkY8t0D2pdjes71saEXjaH6Uh9ysu0sb1YFwMkPAx
+         KjuhSgAdPpZOoJ+OCyU9zsEJFBrOaq9G6ESMgaXTHFtpRHnSL8tCzrNn7br804BrWdMv
+         +KpyFP2vERzqCPlGOVe//9G2LyqnTdsDp/DTmuPBpxXkXS2VPdK7KPTxcrLPLu4mpj+J
+         NT0E4qEd3yNAo5LXw1+D6IXGcUnRSu5cHV/2BBzcKV4Rtu66dXXTZlhwJkvdl37iCz8r
+         OwRw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788922078; x=1789526878;
+        d=1e100.net; s=20251104; t=1788930306; x=1789535106;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Rjawb3C4arzargqScoKB4y4HXxny+HjzJB7ieKfMXLw=;
-        b=aupSDQRWfnRO0v6TBoFOc/XWQmX1QlGciYwKA9zFBnFJuFVGbkTdEX774Wwvl/H5qm
-         OdCoF0NoRh77NIwiPBpwNCFa0WhF5bxqZmKhgwcFQ8zsSW/w72kRICrCvF8M0rJIegSh
-         pp+THP/06/wxHjozlDHfbi9UDvSkk/GPBZ35lW/bccG9weNBxvdc63fKEiPX3Cjp0NnB
-         adWnk1QAsS7pBnnLe7rmWh9Om45OJEjTEa20BMF5NzP0b5N93vqMQfYQpECL7Uc92OxC
-         DEBLKc8bTOz1KWasmOH1OYn0tTTP0rx3+Ibp4kkyBYE6g6zqCGkjsu424smntfu3OWvd
-         f0lw==
-X-Gm-Message-State: AFuF++nc3rruzHjJCp7GZv14m6IV34R7zEp0mdZu7O7lMkGOJ+BbKSNe
-	GMTBMuIK8rH0siK5uyirb/qtwlVWTYZzvkyxKsex8hWUxiRYuGvwhrECp1pxDg8CzsH+P8KWRnq
-	hK4P609dRfefrY/H/1OIDt9fTS5Zrm/bhgNSWiErheXKysYgFWd8XvWZZeDULaeQU
-X-Gm-Gg: AYBFou1LQ1WWphSadmhfaKi57JLF2vVvS//b5B4UmWq8rAKuBdA/eW5DKHsFD0ojs8w
-	k+gSmNJRBv7eBdruCvDURv85kSuUEk+NrSRXq6T/cenHyh86iX/OuiveoHTHAKIK8HXEUoLduyV
-	B/JayUfZGucNvjF+OfHjymI82SeBuI43+M/JEJ54uNSHbD5yrHkjV4IpPYhhocAYck09Cds62MP
-	dO5l2PczB+6pxhm/nwzKIbh+/nBHrGJ50eMHMrgUkkSAIVh8COnveJUgmygsKnWcyyCPGf156n9
-	U1B+64CLJptFsuY8XwceMbe/G1tpC3IiqAgMQG0EDONnikWONnKXgbtGE9P0zzzwo0i18H5dEPB
-	aO5z7zxdFMTZewIXPeWMkEVf+Lqlh
-X-Received: by 2002:a17:90b:2d83:b0:381:6c5:3f63 with SMTP id 98e67ed59e1d1-39bac1976camr4182191a91.6.1788922077940;
-        Tue, 08 Sep 2026 19:47:57 -0700 (PDT)
-X-Received: by 2002:a17:90b:2d83:b0:381:6c5:3f63 with SMTP id 98e67ed59e1d1-39bac1976camr4182167a91.6.1788922077384;
-        Tue, 08 Sep 2026 19:47:57 -0700 (PDT)
+        bh=LZSTs+CvtHAB1mwHgOV7ZbDB5Nlf194yh6i3owJzkNU=;
+        b=FbOVloK2eOn+lYollLyd9AVT3Lfa634YKX+E9s0gDce0M0TOrvQTKRFboxtBtni3QO
+         0XQ4kGJYaACRakB/8MSryt4nScFmmF0P4+58yt3os/10TBYErcHsabKC9jAgAdn2gpKs
+         yTyT/5KhS9yyOKmiarSX0fjpDGX34J8gGjz/aOdjkAZTV8NHf0UkO85RIsXNR2YSQEEn
+         Xz1yR/1b2s0ubOk9pWeSiBvQfYzxUS/LSyL9GSK7aDfikI4GEklaL5AVc63DXsV3qTci
+         XEUMLcuQPIFXqdgWtIZvfpR2V/qgrXQWqd94VgTo8ADXIBX9mT71uKLbDN9JRJ97yhWN
+         1OqQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxgoIdcfnqqtdRwr21DBVwPP45ZhHE/P57XtRazewtFkrl84FPw4iI5sq5KPwa4P+TCkgnUmirhvUMm@vger.kernel.org
+X-Gm-Message-State: AFuF++meIsZJO8sBiHc0khWwgkS/VxrOrWeO7cZp+g9zjdyUZzmeAx46
+	GHtb+MA/NVFW2h7SQ/K9B1XrjACog9rKo0qQDoPWPvXBIbKuPVNcu6fUZA+uxWDk7BsJkvlnNA2
+	/E8pxu3Ul/+7QGydbQP3J6g6fBJJYeM/SrqOjdH/VR/eoZZEskBa/N+HFThyalmyoct8aDaAN
+X-Gm-Gg: AYBFou23oUNXt74OFay4T4oF/Q0ghiiR48id5KW7civ0M18L9yARUnClgFARjkOJVJU
+	VKPeKXsFvvPQwbgGTt2UG2fXr2WnhKnCZCD/QBNdKEq/smu4COnt2vpyhqSvZOTkNuvV7/jg1XM
+	3pymfft7M3vzEoVDjFAzL+Jt6oPvmfM5wSsTdQkjt/ZsaSjcORzw2W8O58anEEh0Oku/iEgE/xi
+	Yub5lSFYXa/YdRrrfVNoTnjRW6dThlObXXek4YVmgsqOJKKUY9znsg3S09yPUoWHNwWbkg2Y5NX
+	5w9/28y9JAvvUK0zlX5IarBFRd7J7qsNXA2Ixh6GHObKlpSg1CLNJKyoYAF1ZH/NYg7ZF87JT1S
+	7E2eN4/uOuFWxSPewD6k4hkDkyzW9
+X-Received: by 2002:a17:90b:538c:b0:398:9beb:a2b4 with SMTP id 98e67ed59e1d1-39b087992ddmr39690335a91.22.1788930305805;
+        Tue, 08 Sep 2026 22:05:05 -0700 (PDT)
+X-Received: by 2002:a17:90b:538c:b0:398:9beb:a2b4 with SMTP id 98e67ed59e1d1-39b087992ddmr39690273a91.22.1788930305342;
+        Tue, 08 Sep 2026 22:05:05 -0700 (PDT)
 Received: from [192.168.29.58] ([49.37.154.50])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-143243bfbe3sm37033346c88.11.2026.09.08.19.47.53
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-336c2571039sm20745950eec.25.2026.09.08.22.05.00
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Sep 2026 19:47:56 -0700 (PDT)
-Message-ID: <0f910397-f38c-4f14-894f-6b0f579a4d9a@oss.qualcomm.com>
-Date: Wed, 9 Sep 2026 08:17:51 +0530
+        Tue, 08 Sep 2026 22:05:04 -0700 (PDT)
+Message-ID: <50e348ef-2d9a-4197-84ca-99d3902cbc37@oss.qualcomm.com>
+Date: Wed, 9 Sep 2026 10:34:58 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -88,172 +89,180 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1] scsi: ufs: ufs-qcom: Enable only lane clocks in lane
- clock APIs
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, mani@kernel.org,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-References: <20260713173434.883386-1-nitin.rawat@oss.qualcomm.com>
- <f9abba69-7b0a-49f3-bd83-b38a7a451cd8@oss.qualcomm.com>
+Subject: Re: [PATCH V1 1/2] scsi: ufs: ufs-qcom: Add specified gear support
+ for multi gear scaling
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: krzk+dt@kernel.org, robh@kernel.org, conor+dt@kernel.org,
+        andersson@kernel.org, konradybcio@kernel.org,
+        James.Bottomley@hansenpartnership.com, mkp@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Ziqi Chen <ziqi.chen@oss.qualcomm.com>
+References: <20260829074355.946543-1-nitin.rawat@oss.qualcomm.com>
+ <20260829074355.946543-2-nitin.rawat@oss.qualcomm.com>
+ <stik7u2o6ydje6ws7cyrltmdw4wz6iyximnxeyegw2f562b2bv@4m2sueuuzisb>
 Content-Language: en-US
 From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-In-Reply-To: <f9abba69-7b0a-49f3-bd83-b38a7a451cd8@oss.qualcomm.com>
+In-Reply-To: <stik7u2o6ydje6ws7cyrltmdw4wz6iyximnxeyegw2f562b2bv@4m2sueuuzisb>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=cpirVV4i c=1 sm=1 tr=0 ts=6aa0c8df cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=FrNG0DaaYUTAIW4lgu81OA==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA5MDA1NSBTYWx0ZWRfXy8f1hK3E4JKf
+ VfYdDezdK/1Bk0yxgWTiBH3tkZllm1G8n/1VCe7ctsuz1M08MGu8ViDyIHSlnoXh1tN6zMgMIFi
+ scYKp7gcccwHZf5401nRu3bnlRamNEL+YXvk0I7JbgiAYKlkw4Z6PAjZGrqkvjoKvmkBdTeL/i2
+ y/FMBs2nardyThf23F1toBI8VsZZQ5nZfFG+V5VkasyRMb7vvCbxYtwEaRnTYSyFW2T2DuTUg2M
+ CZKnEhRwjJ1wWPrmvQkwh8GXDUF3sKDgIcb40JdBdzbGdivAb0ceW4cLiv3W4cNrxelp6GAl1dc
+ 1V0MrmVr3Ab5F8mmbBMNmDnPX6TUIaVNyMMpI+74nk3M8PXTcJk0tKEyyQ03iOa+y/8mXsXrpgf
+ TBeJjB1mLWb/40o5PF8pqfIVV3UySIfpc6c6R2YYL2Sb/UsdVUJj30BTaW7aKO0J0yE0OF2VCK0
+ wE1flDL3uiH+1RpWSzw==
+X-Authority-Analysis: v=2.4 cv=Z5Xc2nRA c=1 sm=1 tr=0 ts=6aa0e902 cx=c_pps
+ a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=FrNG0DaaYUTAIW4lgu81OA==:17
  a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
- a=EUspDBNiAAAA:8 a=ZbYmq58Ac-c8yyNXGIYA:9 a=QEXdDO2ut3YA:10
- a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-GUID: ZG-5H9bHWTdMpdxXmSALuP1n0y0D3Rl_
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTA5MDAzMCBTYWx0ZWRfX5gbAAEl+V4iC
- 59ciYN1Nvkg1MZLHAvu1YHYaSPPHLyQHjLDYSNuXdK3uaCg0sXvfMjDQ795coVKvCGYkF3hLw3W
- 0GP0R05KEOVcDKmrzbcXADsa9yPBi7XDWi/Wm0mt+hfX22rN4eo+1mA/WyupbykK3qt78gxeiqj
- wVVIxd84INWXZiqXPoqJBXtFxBCLr96rcHvkWyGvqqBUoBPHfMwPYTZOvUwx1GQLp/GM+iugyje
- s0lksxdt+KaBXKDUHWZaDRxSA38pLvZW20nEghD5D1iEVpvoMvrST9meE690K0uxLLIFx+S/ZFI
- fw6hXklyorvbzr25MtTvdEwkyS09+Stkpu9SjLa9DgTIi1xuu7SBUhsn5tNf2v7U+FsIrXxDf1B
- sknhMnwr41VDmRhihaXwZKCJ7WcfMfE2F6hrc9SgzeHt073icYJi+Fohz9X61lCpSi3wtiJ8yte
- FlQeYC0Wgc8tIjWM3ew==
-X-Proofpoint-ORIG-GUID: ZG-5H9bHWTdMpdxXmSALuP1n0y0D3Rl_
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA5MDAzMCBTYWx0ZWRfX1mnDtiH0ZwK7
- msAAUE04DCpoISRO8kYGYEdAusTn2enL919bpKRTwNNLd2y8zDKB/qEh37E5bgi7Hm0JP7CutRM
- okCbq/P9uYupUG5zbu87Oi8XbeMCLFc=
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=EUspDBNiAAAA:8 a=hgvoHBFRqoCwco_ImLEA:9 a=QEXdDO2ut3YA:10
+ a=x9snwWr2DeNwDh03kgHS:22
+X-Proofpoint-GUID: mclpANt3o86SsNQwHnsbs5OxeIGz4Cml
+X-Proofpoint-ORIG-GUID: mclpANt3o86SsNQwHnsbs5OxeIGz4Cml
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTA5MDA1NSBTYWx0ZWRfX3+A3oh9y92Sw
+ FSAxTuGC9RdyN1HpxfncvbUTlprCpxKXUM0dI6HeBxzs55oFuPLs32WYg5m992BRLZXtvvF47oF
+ Dq70IUqFvMxmOG6QUbQqz75NPrstv2M=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-08_03,2026-09-08_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 spamscore=0 lowpriorityscore=0 impostorscore=0 malwarescore=0
- phishscore=0 clxscore=1015 priorityscore=1501 adultscore=0 suspectscore=0
+ clxscore=1015 impostorscore=0 lowpriorityscore=0 bulkscore=0 malwarescore=0
+ adultscore=0 phishscore=0 priorityscore=1501 spamscore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609090030
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609090055
 
 
 
-On 7/14/2026 12:41 PM, Konrad Dybcio wrote:
-> On 7/13/26 7:34 PM, Nitin Rawat wrote:
->> ufs_qcom_enable_lane_clks() and ufs_qcom_disable_lane_clks() currently
->> use clk_bulk_prepare_enable()/clk_bulk_disable_unprepare() on the
->> entire host->clks array obtained from devm_clk_bulk_get_all(). This
->> array contains all device clocks, not just lane symbol clocks.
+On 9/2/2026 9:32 PM, Manivannan Sadhasivam wrote:
+> On Sat, Aug 29, 2026 at 01:13:54PM +0530, Nitin Rawat wrote:
+>> From: Ziqi Chen <ziqi.chen@oss.qualcomm.com>
 >>
->> Since the UFS core framework already manages the non-lane clocks via
->> the setup_clocks callback, the bulk enable/disable in the lane clock
->> APIs resulted in duplicate reference count increments on those shared
->> clocks. The extra enable counts were never balanced by a corresponding
->> disable from the framework's clock gating path, preventing the clock
->> reference counts from reaching zero and ultimately blocking CXO
->> shutdown during low-power states.
+>> The UFS clock frequency and gear speed do not necessarily have a strict
+>> one-to-one correspondence on all platforms. Introduce a device tree
+>> based configuration interface that allows specifying the HS gear
+>> speed for each supported operating frequency via the "opp-level"
+>> property in the OPP table. When this property is not configured, the
+>> driver falls back to the default frequency-to-gear mapping table.
 >>
->> Fix this by restricting the lane clock APIs to only prepare/enable
->> and disable/unprepare the three lane symbol clocks (tx_lane0_sync_clk,
->> rx_lane0_sync_clk, rx_lane1_sync_clk), leaving the handling of all
->> other clocks to the UFS core framewore.
-
-Apologies for the delayed response. Reviving this thread.
-
-
->>
+>> Signed-off-by: Ziqi Chen <ziqi.chen@oss.qualcomm.com>
 >> Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
 >> ---
->>   drivers/ufs/host/ufs-qcom.c | 41 ++++++++++++++++++++++++++++++++-----
->>   drivers/ufs/host/ufs-qcom.h |  3 +++
->>   2 files changed, 39 insertions(+), 5 deletions(-)
+>>   drivers/ufs/host/ufs-qcom.c | 30 ++++++++++++++++++++++++++----
+>>   1 file changed, 26 insertions(+), 4 deletions(-)
 >>
 >> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->> index 291c43448764..7ec1626704c6 100644
+>> index 0f2e083b04fd..aa2ac2cd2b69 100644
 >> --- a/drivers/ufs/host/ufs-qcom.c
 >> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -347,7 +347,9 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
->>   	if (!host->is_lane_clks_enabled)
->>   		return;
+>> @@ -2460,8 +2460,9 @@ static unsigned long ufs_qcom_opp_freq_to_clk_freq(struct ufs_hba *hba,
+>>   	bool found = false;
 >>
->> -	clk_bulk_disable_unprepare(host->num_clks, host->clks);
->> +	clk_disable_unprepare(host->rx_lane1_sync_clk);
->> +	clk_disable_unprepare(host->rx_lane0_sync_clk);
->> +	clk_disable_unprepare(host->tx_lane0_sync_clk);
+>>   	opp = dev_pm_opp_find_freq_exact_indexed(hba->dev, freq, 0, true);
+>> -	if (IS_ERR(opp)) {
+>> -		dev_err(hba->dev, "Failed to find OPP for exact frequency %lu\n", freq);
+>> +	if (IS_ERR_OR_NULL(opp)) {
+>> +		dev_err(hba->dev, "%s: Failed to find OPP for exact frequency %lu\n",
+>> +			__func__, freq);
 > 
-> I don't know if this matters (probably not since IIUC the controller
-> would be suspended already), but downstream disables them in the
-> following order:
-> 
-> TX_L1
-> TX_L0
-> RX_L1
-> RX_L0
+> Don't bring back the '__func__' marking please...
+Sure, will take in next patchset
 
-Yes, order shouldn't matter as controller is in suspend state.
 
 > 
+>>   		return 0;
+>>   	}
 >>
->>   	host->is_lane_clks_enabled = false;
->>   }
->> @@ -356,18 +358,35 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+>> @@ -2489,12 +2490,32 @@ static unsigned long ufs_qcom_opp_freq_to_clk_freq(struct ufs_hba *hba,
+>>
+>>   static u32 ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq)
 >>   {
->>   	int err;
->>
->> -	err = clk_bulk_prepare_enable(host->num_clks, host->clks);
->> +	if (host->is_lane_clks_enabled)
->> +		return 0;
->> +
->> +	err = clk_prepare_enable(host->tx_lane0_sync_clk);
->>   	if (err)
->> -		return err;
->> +		goto out;
->>
->> -	host->is_lane_clks_enabled = true;
->> +	err = clk_prepare_enable(host->rx_lane0_sync_clk);
->> +	if (err)
->> +		goto out_disable_tx_lane0;
->> +
->> +	err = clk_prepare_enable(host->rx_lane1_sync_clk);
->> +	if (err)
->> +		goto out_disable_rx_lane0;
->>
->> +	host->is_lane_clks_enabled = true;
->>   	return 0;
+>> -	u32 gear = UFS_HS_DONT_CHANGE;
+>> +	struct dev_pm_opp *opp;
+>>   	unsigned long unipro_freq;
+>> +	u32 gear = UFS_HS_DONT_CHANGE;
 > 
-> Let's keep the \n above return
-Sure, will take care in next patchset.
+> Nit: Preserve reverse Xmas order.
+Sure, will take in next patchset
+
 > 
->> +
->> +out_disable_rx_lane0:
->> +	clk_disable_unprepare(host->rx_lane0_sync_clk);
->> +out_disable_tx_lane0:
->> +	clk_disable_unprepare(host->tx_lane0_sync_clk);
->> +out:
->> +	return err;
->>   }
 >>
->>   static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
->>   {
->> -	int err;
->> +	int err, i;
->>   	struct device *dev = host->hba->dev;
+>>   	if (!hba->use_pm_opp)
+>>   		return gear;
 >>
->>   	if (has_acpi_companion(dev))
->> @@ -379,6 +398,18 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
->>
->>   	host->num_clks = err;
->>
->> +	for (i = 0; i < host->num_clks; i++) {
->> +		if (!host->clks[i].id)
->> +			continue;
->> +		if (!strcmp(host->clks[i].id, "tx_lane0_sync_clk"))
->> +			host->tx_lane0_sync_clk = host->clks[i].clk;
->> +		else if (!strcmp(host->clks[i].id, "rx_lane0_sync_clk"))
->> +			host->rx_lane0_sync_clk = host->clks[i].clk;
->> +		else if (!strcmp(host->clks[i].id, "rx_lane1_sync_clk"))
->> +			if (host->hba->lanes_per_direction > 1)
->> +				host->rx_lane1_sync_clk = host->clks[i].clk;
+>> +	opp = dev_pm_opp_find_freq_exact_indexed(hba->dev, freq, 0, true);
+>> +	if (IS_ERR_OR_NULL(opp)) {
+>> +		dev_err(hba->dev, "%s: Failed to find OPP for exact frequency %lu\n",
+>> +			__func__, freq);
+> 
+> Drop '__func__' here and below.
+Sure, will take in next patchset
+
+> 
+>> +		return gear;
 >> +	}
+>> +
+>> +	/* Get HS gear speed from 'opp-level' */
+>> +	gear = dev_pm_opp_get_level(opp);
+>> +	dev_pm_opp_put(opp);
+>> +
+>> +	/*
+>> +	 * Greater than max gear means that there is no specified gear configured in DT
+>> +	 * or the specified gear is invalid.
+>> +	 */
+>> +	if (gear <= hba->max_pwr_info.info.gear_rx)
+>> +		return gear;
 > 
-> This is technically probably a little faster than calling
-> clk_get() again, but please do that instead
+> Sashiko pointed out a valid concern with this check, please take a look.
 
-Sure, will take care in next patchset.
+I reviewed the bot's comment. The concern raised applies to the case 
+where the gear value provided through the device tree is higher (for 
+example, 5) than what a UFS 3.x device can support. After link startup 
+and negotiation, hba->max_pwr_info.info.gear_rx would be 4. In this 
+scenario, the condition below evaluates to false:
+
+
+ > +	if (gear <= hba->max_pwr_info.info.gear_rx)
+ > +		return gear;
+
+Execution then falls back to the switch-case logic. If the current 
+frequency does not match any of the predefined entries, the function 
+returns UFS_HS_DONT_CHANGE, which effectively maps to the minimum gear. 
+Shahiko's suggestion is to instead return the device's maximum 
+negotiated gear using:
+
+A couple of points to note:
+
+1. If the current frequency does not match any of the expected frequency 
+entries, that is already an existing issue. In such a case, simply 
+returning the maximum negotiated gear may not be correct because we do 
+not know the actual gear corresponding to the currently programmed 
+frequency.
+
+2. The patch under review does not change this existing behavior. It 
+only addresses the handling of gear values that are within the 
+negotiated device capabilities and does not alter the fallback path when 
+the frequency lookup fails.
+
+
+Considering the above points, I believe no changes are required for this 
+patch at this time.
+We can revisit this behavior separately and evaluate potential 
+optimizations in a future patch if needed.
+
+Please let me know your opinion.
+
+Thanks,
+Nitin
+
+
+
+
+
 
 > 
-> Konrad
+> - Mani
+> 
 
