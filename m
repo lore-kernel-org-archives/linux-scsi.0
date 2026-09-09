@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66CBD3D6692
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Sep 2026 09:23:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D2473D6CDF
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Sep 2026 09:25:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788945794; cv=none; b=DkpR4YEkxNV+1WwqyVkjIrV0zZp1Hbny5SUON4XOzjptuYTVO4coq5/W7giPCaIgEjTJPtuT4ENwmfqs/n3puSAMgGvxRdfyexDewykGReGv9gW1LSS5jrP2JAfGMoN3hoyQxEO1hznMKE9HSqCggeASrxKf8QRqLkSJVamRZgI=
+	t=1788945938; cv=none; b=Ktl0dxXb8rrdgUvYI+mqKdnDrVfhtpoxhJcZxzlIO1kzbap+ymxq3ETlCGWf2Xc/43dBtI6vSCAS7imHLgtXdu2PorzDBb6umT2nzIdxMyilSe5/Z67Fjf7uCeyaCoS7BtqU9AuB1HbuNknaNNYH/eRuIQF8qz17bolH6rFRSHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788945794; c=relaxed/simple;
-	bh=iOUBhSAwIPv7da2ivKRQEgEQhHOXeHY45jYjOhzHUfQ=;
+	s=arc-20240116; t=1788945938; c=relaxed/simple;
+	bh=2dKRtMRby/OWV4v+p56gfsmwPhTN1W3MHP1CA/NlZeU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mWv7e3DzbGxpLcf0J/HR2xo/6u7KLixkGtnAbIaewp7ucaOwLn64fBHOzUsiVQrcv49WmGFJpfxq5YENpz2bC9UJQVAMS1cwVySEIJsm6Mk5ZznbYJdnlFA3yvrwfGMyY+WLBEmw2jaoctA6vM9gOOi2TwWp/vrVRzz2qonuEyM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UX6/q1Dr; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=TSkrWFIZ9PIkk6c9fvv+bQW+k6T4Hjh7aMdHkEN05Qpf0PGhC50fWM9wfNxj7RlGXPiHVbia9b1ie3+E6YdOONLxmLPhOwRC6xL1hTOcaQI1JeADy2qSEnnXON+Sf+zD0D+rbrlS1fDLWk72CaN2RkhGyfaThx1U1tiryRy6UuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bt9Pezte; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UX6/q1Dr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE9861F0156E;
-	Wed,  9 Sep 2026 09:23:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bt9Pezte"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B78571F00A3D;
+	Wed,  9 Sep 2026 09:25:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788945789;
-	bh=6Dt3K4wqq1POY831b13yRy5W5cGO1ZNAUu9WUltQqoM=;
+	s=k20260515; t=1788945936;
+	bh=ntktzkCZD/zA62ovSbQdwWln3gpTQ1TAAbmlD+KiHiY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UX6/q1DrMA9ae38WOgyCw9vaP2DwadJSAquykm5rrDIIaPmd0WihyRnOGsYRzwNdU
-	 PTzphEHDvLwv854TQF5jF15T0Ak2SC8ksYOd0uPVOdeinM1RzhhlwXwA8rTDXtNi/d
-	 2uPrcH35fTi7lWzOcgTGEPxqow1XYZmJIIIdwmXcFb5Fr52/BXRFRbsuf6z9/6lxz1
-	 Fo/UimjKTMF82soxL0Cud0TGHnDIHuwwuME8KcCDaZqI9Uf+JkVUOAwObNKHCaa1Tb
-	 75ADFOecGm/bZSKNbbRfiBERNObNIySwFo2DV3qaX7fu4TYpnhR9BIKMLxh9TBKzrJ
-	 lkBnakAZHjEGw==
+	b=bt9Pezte1GLk6rZ89B4qOfYnIIuyHvVUnYz2mC4jqpNtfYGgIsEHmca0CWtnWfWqF
+	 uKrXs/DS8ymAwU5foMES82q/C2Sa9BZ2luf6zgof2Tfi+b0hJzCp8sIc9QVzGQ/pRr
+	 l+fY0yYC3FdZjM15rx3etuc8ZelSZZlR9idaV3OVF2JC+SzTvoTJfxTMqyxT8rLhQf
+	 JobZciJ4a+Fs+RcPAgdpSlG12+w/9JtoAJg2rdy+ecZILELcNDA7lcOOySApseOCds
+	 /YfdDlUdqQXPg+idVk6EP6RTVhZQje/jD/bdyfMEjfPG51ZslWcsURbTprYg6iN+SL
+	 NnzMbd4PC0bQQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1] ufs: core: serialize AHIT register access between
- sysfs and host driver
+Subject: Re: [PATCH v1] scsi: ufs: core: Hold a clock reference across the
+ probe
 Reply-To: sashiko-reviews@lists.linux.dev
-To: peter.wang@mediatek.com
+To: "Naomi Chu" <naomi.chu@mediatek.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260909091120.1134414-1-peter.wang@mediatek.com>
-References: <20260909091120.1134414-1-peter.wang@mediatek.com>
+In-Reply-To: <20260909091045.1134956-1-naomi.chu@mediatek.com>
+References: <20260909091045.1134956-1-naomi.chu@mediatek.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 09 Sep 2026 09:23:09 +0000
-Message-Id: <20260909092309.AE9861F0156E@smtp.kernel.org>
+Date: Wed, 09 Sep 2026 09:25:36 +0000
+Message-Id: <20260909092536.B78571F00A3D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,81 +46,70 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The `ahit_disable_depth` counter leaks when a DME power mode chang=
-e fails, permanently blocking sysfs AHIT updates.
+
+Pre-existing issues:
+- [Critical] Missing scsi_remove_host() on the ufshcd_init() error path lea=
+ves dangling sysfs references leading to use-after-free.
 --
 
-commit 1d1062f790f3ef8d13bc9cf9bc515eb73918a76f
-Author: Peter Wang <peter.wang@mediatek.com>
+commit a971113b5d6d58a777d3955df4f8947756e7eb86
+Author: Naomi Chu <naomi.chu@mediatek.com>
 
-ufs: core: serialize AHIT register access between sysfs and host driver
+scsi: ufs: core: Hold a clock reference across the probe
 
-This commit introduces a mutex and depth counter to serialize Auto-Hibernate
-Idle Timer (AHIT) register access between sysfs updates and power mode chan=
-ges.
-The counter suppresses sysfs writes while a host driver has forced AHIT off.
+This patch modifies the UFS core to take a clock reference as soon as clock
+gating is initialized and holds it until the probe finishes or fails. This
+ensures register accesses during the probe do not depend on the host state
+and prevents them from occurring without a held clock reference.
 
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-> index 541bbaf92c21c..b0ce134ec9cf1 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
-> @@ -1508,19 +1508,27 @@ static int ufs_mtk_pwr_change_notify(struct ufs_h=
-ba *hba,
->  				struct ufs_pa_layer_attr *dev_req_params)
->  {
->  	int ret =3D 0;
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index ee21388e74f5f..7d63287b5ca94 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+
+[ ... ]
+
+> @@ -11322,7 +11326,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
+ *mmio_base, unsigned int irq)
 > =20
->  	switch (stage) {
->  	case PRE_CHANGE:
->  		if (ufshcd_is_auto_hibern8_supported(hba)) {
-> -			reg =3D ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
-> +			/* Block sysfs AHIT writes while we force AHIT off */
-> +			mutex_lock(&hba->ahit_mutex);
-> +			hba->ahit_disable_depth++;
+>  	err =3D ufshcd_add_scsi_host(hba);
+>  	if (err)
+> -		goto out_disable;
+> +		goto out_release;
+> =20
+>  	/* Hold auto suspend until async scan completes */
+>  	pm_runtime_get_sync(dev);
 
-[Severity: High]
-Does this code leak the ahit_disable_depth counter if a power mode change
-fails?
+[ ... ]
 
-If ufshcd_dme_change_power_mode() fails after ufshcd_vops_pwr_change_notify=
-()
-has run for PRE_CHANGE, the POST_CHANGE notification is skipped:
+> @@ -11386,6 +11390,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
+ *mmio_base, unsigned int irq)
+>  	ufshcd_pm_qos_init(hba);
+>  	return 0;
+> =20
+> +out_release:
+> +	ufshcd_release(hba);
+>  out_disable:
+>  	hba->is_irq_enabled =3D false;
+>  	ufshcd_hba_exit(hba);
 
-drivers/ufs/core/ufshcd.c:ufshcd_change_power_mode() {
-    ...
-	ufshcd_vops_pwr_change_notify(hba, PRE_CHANGE, pwr_mode);
+[Severity: Critical]
+This is a pre-existing issue, but does this error path leave the SCSI host
+registered in sysfs if a failure occurs later in the initialization?
 
-	ret =3D ufshcd_dme_change_power_mode(hba, pwr_mode, pmc_policy);
+If ufshcd_init() fails after successfully calling ufshcd_add_scsi_host()
+(for example, if ufshcd_link_startup() or ufshcd_verify_dev_init() fails
+and jumps to out_release), the function returns an error without calling
+scsi_remove_host().
 
-	if (!ret)
-		ufshcd_vops_pwr_change_notify(hba, POST_CHANGE, pwr_mode);
-    ...
-}
+Since the driver probe fails, devres will free managed resources such as
+the MMIO region mappings and IRQs. However, the SCSI host would remain
+registered in sysfs.
 
-Because POST_CHANGE is never called on failure, the ahit_disable_depth
-counter is never decremented. This permanently blocks sysfs AHIT updates in
-ufshcd_auto_hibern8_update() until the device is reset or the system is
-rebooted.
-
-> +			mutex_unlock(&hba->ahit_mutex);
->  			ufs_mtk_auto_hibern8_disable(hba);
->  		}
->  		ret =3D ufs_mtk_pre_pwr_change(hba, dev_req_params);
->  		break;
->  	case POST_CHANGE:
-> -		if (ufshcd_is_auto_hibern8_supported(hba))
-> -			ufshcd_writel(hba, reg, REG_AUTO_HIBERNATE_IDLE_TIMER);
-> +		if (ufshcd_is_auto_hibern8_supported(hba)) {
-> +			mutex_lock(&hba->ahit_mutex);
-> +			/* re-enable only when the last disabler drops off */
-> +			if (!--hba->ahit_disable_depth)
-> +				ufshcd_writel(hba, hba->ahit,
-> +					      REG_AUTO_HIBERNATE_IDLE_TIMER);
-> +			mutex_unlock(&hba->ahit_mutex);
-> +		}
->  		break;
+Could a subsequent interaction with these orphaned sysfs nodes invoke SCSI
+callbacks that attempt to access the unmapped MMIO base and freed memory,
+potentially leading to a use-after-free and system crash?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909091120.1134=
-414-1-peter.wang@mediatek.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909091045.1134=
+956-1-naomi.chu@mediatek.com?part=3D1
