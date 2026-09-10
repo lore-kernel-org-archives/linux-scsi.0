@@ -1,47 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48F5A376466;
-	Thu, 10 Sep 2026 02:28:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A3603812C7;
+	Thu, 10 Sep 2026 02:31:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789007325; cv=none; b=uh/m9fSOxa29rSJM7sudbp33flYuGzVtxBSxTGX6GPXYOz+Ywrwx5VkvWlfMiniebygAz7yUFO6/m3NPW3Y44YHuBREWImlb026Y/xji8QPm/JezN2YOLAxdHwvs8KgACfTELk5QM15m7jKQX+PMoeQ9hQaJWZOBvvte0XTepfU=
+	t=1789007469; cv=none; b=MrhMQPencykFZrmqUjrs6BoPtJ05kvQZ1AWeKGoCQTkckC9xfOXcLcpnsOgjbh/wMc4Fi9wu+lfDs7Npyk44q8Bp7PHMUxX2+uEkGZMJweoqDVLnKlVe1tU2YuzTbUN5TSNt0mOSZevwo9zljJsDK4ukLNKk9GcSR6EO8Ivioj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789007325; c=relaxed/simple;
-	bh=TPwgu1FErKbIas7gxafPg8UxerOQ7Ekvk0PAW1SC+Z8=;
+	s=arc-20240116; t=1789007469; c=relaxed/simple;
+	bh=pXtof9x+XeZRcqnWRPf7ok3hRxcrE7dbIvn8iJIv8Q0=;
 	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 MIME-Version:Content-Type; b=fKOSEgZmL5pTRHmeGxoQzaKnsVArTH1fL5uyxMyBA7XXxfcvobSTJlJ3n2eXNxmtUZ31s7mkkGcIxLiuWAuvoLZ61fzfkSunkkmwLclRzDYy10may46WigoqXbc1YZHXOLOVgpOIfJ8DXUdQ0Lt63983f7WyK2IEyyoAmeBpb6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BXuS0zX6; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=bh/0170n0AqmcPR1I3kPs/+7z+7ilXzH97pm/Q1PQ4dmOon1ALiSfU2zLP/eitPDETgYj7iaodXnq+XmcnuAPjspydz/QA+ewe4W+QZACjYy/9iPRnpwTG5J7uzCKO94HEel75OUdxUcuPax1CdTz/E/jYJ2Sii39PX9yFg91Q4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CpeuCQoh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BXuS0zX6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9249B1F00893;
-	Thu, 10 Sep 2026 02:28:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CpeuCQoh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C4A21F00893;
+	Thu, 10 Sep 2026 02:31:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789007323;
-	bh=5lI1pfXv27hEAcXO9zU4jCeFqMc77ZvvDOYeI4roQZA=;
+	s=k20260515; t=1789007467;
+	bh=fnvEJ+YTWuOfxdkYCNV17QMjxIJWd4IjBCnevIkTrww=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=BXuS0zX6HyLe6h+0fdcuJUFRT8EEaXVnLiiFr5g/FO8nqcoqdTXUhwSmavjF94wkx
-	 8guFBL3TYcHxLaeZitiCjgEBhYurFDrqxBP5HEmUGHBjkcllZzsOJ5oZZuhMdLxMeD
-	 P+te1Q7nbioR4q0IxGbCd524rH22iTEzXE/jg/GLcl4ZdiPADTiPwBziXcT0yZEcXC
-	 t4b9MvqhNp83tcjua3YjFFcwBKcIkrIRqluEeSTWn0WQ0/N7XsjniL2Gixfn68JChT
-	 3gkiq5F8Yr5a2+8KcWTj+KRFR6xd5T44VejcuxQIODVBaFejIp65zwTa9QubgM4UzJ
-	 8r9os0r8m1b9Q==
-To: Bean Huo <beanhuo@iokpp.de>
-Cc: linux-pm@vger.kernel.org,  linux-scsi@vger.kernel.org,
-  linux-kernel@vger.kernel.org,  MyungJoo Ham <myungjoo.ham@samsung.com>,
-  Kyungmin Park <kyungmin.park@samsung.com>,  Chanwoo Choi
- <cw00.choi@samsung.com>,  "Martin K . Petersen" <mkp@kernel.org>,  "James
- E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,  Avri Altman
- <avri.altman@sandisk.com>,  Bart Van Assche <bvanassche@acm.org>,  Alim
- Akhtar <alim.akhtar@samsung.com>,  Stanley Jhu <stanleyjhu@google.com>
-Subject: Re: [PATCH v2 0/4] devfreq: check the get_cur_freq() return value
- and use it in ufshcd
+	b=CpeuCQohhsoMUdrZSw5mMnsARDv388MTTog+9VjkZB7TjyvXLBnm9z9fOKzgA/C87
+	 MkEZiaZk+LwvkJYXMtMSvl0FsfqTwg03sDtpJneL04BecyhsxyvgIIVnWYDmLODdEY
+	 TKp5ZKBUwUmllqqMpgMX9Dodrzx4o4PTHctO/LzicEix52k/edS9b02GeCvV+UqaS7
+	 qqE+g1eoj+FZSOmxwN5bWG0+EWkDoASPhIet1UkacKCJdIkIMUt1MvHxnkztL29DCC
+	 FavQeK2EfuS69nCm87qF8dJel1hHpmECDnhCWes4d0+o+3hKroOHIUZ8nZZCg8HZqY
+	 968uspUMQNXFw==
+To: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+Cc: mani@kernel.org,  James.Bottomley@HansenPartnership.com,
+  konrad.dybcio@linaro.org,  martin.petersen@oracle.com,
+  linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
+  linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH V2] scsi: ufs: ufs-qcom: Enable only lane clocks in lane
+ clock APIs
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-In-Reply-To: <20260907192140.2701755-1-beanhuo@iokpp.de> (Bean Huo's message
-	of "Mon, 7 Sep 2026 21:21:36 +0200")
-Message-ID: <yq1wlstalim.fsf@mail.kernel.org>
-References: <20260907192140.2701755-1-beanhuo@iokpp.de>
-Date: Wed, 09 Sep 2026 22:28:42 -0400
+In-Reply-To: <20260909053944.2827968-1-nitin.rawat@oss.qualcomm.com> (Nitin
+	Rawat's message of "Wed, 9 Sep 2026 11:09:44 +0530")
+Message-ID: <yq1qzj1alcy.fsf@mail.kernel.org>
+References: <20260909053944.2827968-1-nitin.rawat@oss.qualcomm.com>
+Date: Wed, 09 Sep 2026 22:31:06 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,14 +48,14 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Bean,
+Nitin,
 
-> The patches touch two subsystems. Patches 1 and 2 are for the devfreq
-> tree, patches 3 and 4 are for the SCSI tree. The two halves are
-> independent, at build time and at run time, and can be applied in either
-> order.
+> ufs_qcom_enable_lane_clks() and ufs_qcom_disable_lane_clks() currently
+> use clk_bulk_prepare_enable()/clk_bulk_disable_unprepare() on the
+> entire host->clks array obtained from devm_clk_bulk_get_all(). This
+> array contains all device clocks, not just lane symbol clocks.
 
-Patches 3 + 4 applied to 7.4/scsi-staging, thanks!
+Applied to 7.4/scsi-staging, thanks!
 
 -- 
 Martin K. Petersen
