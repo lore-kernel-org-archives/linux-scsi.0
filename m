@@ -1,127 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CFDF2931C1
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2026 02:09:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AAD136605D
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2026 02:10:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789006159; cv=none; b=ZWbeLda4MBI1Fn/v2vqp67OxIFNVxqsC3oFg0mh0Lskby+Gb+Jwk18kc9Qyk6dPoFBbzUDZcvcqpDtnZlXm+yW4W+FRgZdZr9+vmWw2zuFkdcbpC2iQhlTD+KuiVDD6saeMNX4AG7yxlAzfSoHLSqZUwrBXV0ujbs+SR6m5sUG8=
+	t=1789006236; cv=none; b=HB5BQhcQAzvQuPqG6D+5ps+6lok9wy2siY9NTdG5te8kwgKqQ+/LL3E99rFpDOVkOzsdAKKanm12U/Z9RGOk67/J9s99RmJ9JevV0x2yZfiq0SNoOWXVTQTKlDp/oj4M9Zpw1J+yTTe1/EgnZbHfzXfZeN6lpx+neb/UsvJW050=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789006159; c=relaxed/simple;
-	bh=l8zmk7012eKFZkmUvE27WmmbKBNk/Ki8uw2BxAVN668=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=O6G+e2QlfmGOIZrjk78LQhYmvlJIMISKrdbOit+hllElDWyflt4UBHVopaxAF6YPK0EpN1IWxxYMC+bjfw4fK+PkF9J0l1AoCz7ImXg5WXk7qmiKO/VksxbvGofyW0+YKVHdbLjZleLE8VujyftMGj3iNCdX0PZLcy/LHRItlD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQUiBtf7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789006236; c=relaxed/simple;
+	bh=vTaT4XC+fZEV825WQ62HOi7IMA3zBFYx6P8GvMSQzYI=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 MIME-Version:Content-Type; b=GtjKwt1veq7gNlBGS0OhBN6XxYtEHgJeiDUx7TKPvOvct/6zD2qxSc0B1PJypaADx6Sm9lz2zTO2YwW2ANljoMXEzhuo1NVuiyg1Iq2PLr3zx/eTb14R7q9HyGqnjMdRy0YIhrb9r/J3vqG3WxZJ7ZPgCDWvwGpMpQYWiBzmCio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GpUT5ZfB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQUiBtf7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C22961F000FF;
-	Thu, 10 Sep 2026 02:09:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GpUT5ZfB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB5411F000FF;
+	Thu, 10 Sep 2026 02:10:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789006158;
-	bh=4VUiefbUCx68js855eDd67qvMMfJp3aUcw5D8KQfIGo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hQUiBtf7PIhSwaf8QYEzWetImbYpQboCyEHDRNYUmi0kl6VMEfU2o9iDYbpSKyrFS
-	 HasrDYRXhBnt92M1KZ5cuzooNfYA3F6iyLCn7PrFB1lO05Mlq1WSH/N4eYnbODRODK
-	 rt5i5GGNoM9ig9WVghiD6/spwNlvvf7kAN/WmsedyOoGtyETVmXyXkzTAly3xwcs17
-	 XvJXcRsBj2zR4xKE6mBc5SXhHDxFWKGjqC5FaVf+BGUxI5A7Kd10AnkSJrdp4S2vZQ
-	 pUQRo52oLyzRUZG+L9Vkr6nLSUjFzOrnlMlSQ7autPrHsA1bnEhEhOVRVFUstdJg58
-	 J33/08R54E57g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/2] scsi: ufs: rpmb: Decouple device lifecycle from
- devres to avoid UAF
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Stanley Jhu" <stanleyjhu@google.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260910015503.1991119-3-stanleyjhu@google.com>
-References: <20260910015503.1991119-1-stanleyjhu@google.com>
- <20260910015503.1991119-3-stanleyjhu@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 02:09:17 +0000
-Message-Id: <20260910020917.C22961F000FF@smtp.kernel.org>
+	s=k20260515; t=1789006235;
+	bh=qHc6hC50yhkgjhZhZp1/gcna46dd/+0/sJ5L574C94I=;
+	h=To:Cc:Subject:From:In-Reply-To:References:Date;
+	b=GpUT5ZfBTPNcYemuVwa3SeRRH6oMrPefaf5iGtU/FCjAdUl1jZQRO9V5H6aHx+/cs
+	 4kaNaM9+iD4ti7yXo+ToPEXt/ITuroHClZJfnnQ3AWba16sIEM7ewlkfC+/TfKEIxc
+	 unN4kNsSr54Wd9antuEsyqWg5i97n1x8feS0Yi7QYt47RkKxb6kQ/S67Ga+laZEmGp
+	 sxVLlQ9rfb2rvfb7iy4ygwa1xfh9pev4QJ31/Nu51U0sIX60GpXaVjaULtG2SO4c+P
+	 Z9mccEfTo8cq8lxP0bo/EfM0Lo9ZLjapzYPGnaXgcUcgk3ZyAcqUaKE3UZh/D0/d70
+	 hZkB6J5d11jSQ==
+To: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Cc: linux-scsi@vger.kernel.org,  martin.petersen@oracle.com,
+  sathya.prakash@broadcom.com,  ranjan.kumar@broadcom.com,
+  sumit.saxena@broadcom.com,  sweeti.vandure@broadcom.com,
+  vishakhavc@google.com,  ipylypiv@google.com
+Subject: Re: [PATCH v2 00/17] scsi: mpi3mr: Fix out-of-bounds accesses and
+ reference leaks
+From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
+In-Reply-To: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
+	(Chandrakanth Patil's message of "Wed, 26 Aug 2026 02:33:54 +0530")
+Message-ID: <yq18q59c0wx.fsf@mail.kernel.org>
+References: <20260825210411.301535-1-chandrakanth.patil@broadcom.com>
+Date: Wed, 09 Sep 2026 22:10:33 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
 
-Pre-existing issues:
-- [Critical] This problem wasn't introduced by this patch, but the patch fa=
-ils to resolve the pre-existing Use-After-Free during device removal. The d=
-evice model's `device_del()` drops the parent reference, meaning `rdev->dev=
-.parent` becomes a dangling pointer if a consumer holds a reference to `rde=
-v`.
---
+Chandrakanth,
 
-commit 19c2abff2bd57dbeee481738657ea4d9e1123a19
-Author: Stanley Jhu <stanleyjhu@google.com>
+> This series contains a set of fixes for the mpi3mr driver:
 
-scsi: ufs: rpmb: Decouple device lifecycle from devres to avoid UAF
+Applied to 7.4/scsi-staging, thanks!
 
-This commit changes the allocation of the UFS RPMB device from devres to
-a reference-counted lifecycle. It also explicitly unregisters the RPMB
-child device during host removal before unregistering the parent device
-to prevent memory safety issues.
-
-Cc: stable@vger.kernel.org
-
-> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-> index c7aade96c823e..33b9a4a1b120e 100644
-> --- a/drivers/ufs/core/ufs-rpmb.c
-> +++ b/drivers/ufs/core/ufs-rpmb.c
-
-[ ... ]
-
-> @@ -252,14 +266,13 @@ void ufs_rpmb_remove(struct ufs_hba *hba)
-> =20
->  	/* Remove all registered RPMB devices */
->  	list_for_each_entry_safe(ufs_rpmb, tmp, &hba->rpmbs, node) {
-> -		dev_info(hba->dev, "Removing UFS RPMB region %d\n", ufs_rpmb->region_i=
-d);
-> -		/* Remove from list first */
-> -		list_del(&ufs_rpmb->node);
-> -		/* Unregister device */
-> +		list_del_init(&ufs_rpmb->node);
-> +		if (ufs_rpmb->rdev) {
-> +			rpmb_dev_unregister(ufs_rpmb->rdev);
-> +			ufs_rpmb->rdev =3D NULL;
-> +		}
->  		device_unregister(&ufs_rpmb->dev);
-
-[Severity: Critical]
-This isn't a bug introduced by this patch, but does this sequence still
-leave a use-after-free window during device removal?
-
-When rpmb_dev_unregister() is called, it internally calls device_del() on
-the child device, which immediately drops the reference to its parent device
-(ufs_rpmb->dev).
-
-If a consumer is actively holding a reference to the child device via
-rpmb_dev_get(), the child device itself remains allocated. However, the
-subsequent call to device_unregister() here drops the final reference to
-the parent ufs_rpmb structure, causing it to be freed.
-
-If the consumer then concurrently executes a request, the framework will
-pass the now-dangling parent pointer to the route_frames callback:
-
-drivers/ufs/core/ufs-rpmb.c:ufs_rpmb_route_frames() {
-    struct ufs_rpmb_dev *ufs_rpmb =3D dev_get_drvdata(dev);
-    ...
-}
-
-Could this dev_get_drvdata(dev) dereference the freed parent memory,
-resulting in a use-after-free despite the new lifecycle management?
-
->  	}
-> -
-> -	dev_info(hba->dev, "All UFS RPMB devices unregistered\n");
->  }
-> =20
->  MODULE_LICENSE("GPL v2");
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260910015503.1991=
-119-1-stanleyjhu@google.com?part=3D2
+-- 
+Martin K. Petersen
