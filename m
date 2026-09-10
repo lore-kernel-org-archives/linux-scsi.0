@@ -1,233 +1,251 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B90B391846
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2026 09:52:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789033930; cv=none; b=svrzJA2El0AARqcljlxKjl5SKCjXdtiPE8rlrKO5Y61vF/f9DJ9VQtiixUgURQXS7aV07QgCPwpShjGUXmnuWNpGsbbkaQHio4aq/Dhla7Qcb4JuPxeuqRLvLUrL6024q7PCPyq4ZdJXprUMYaNlNeyFpcieVZfu7/Xn4ZAS7oY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789033930; c=relaxed/simple;
-	bh=JFsAB37wWXHYWL6PNWhtTk1WSDSxW/NFZ41/vdgySrg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=thDNC4Dn6iWLchOY5C5DQgfL6OgYeDf4m+rOznAPp5QWFf93tB2xtrb5dSsiouxLa/YgEuSZgiOEi/tD1DlhCsnJebsMRu5XXfPQO0DYJ+m1Vhtp7P3HkBCCuIf3Sor7+HFXxcOE9AgoDZJMaxkP/JxhnG1+0y/Ss1aDu3irpFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Shd6Ggk3; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26F0A3B961A
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2026 10:17:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.168.131
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789035482; cv=pass; b=B6k0mOEqmy4R8AkDrRwRoCxQztglaV7bFWgq3xkNCNBQ/M8ehKdH7vJeb1+7w7YgshLxHFOdIpNSQakEuzpsTfRcbj0s55WVldil+v6rC/Ej+pFzPvCe+x24xwmkLWOl7xPeg0hzQIZHcu+PDpeonK8kc50yWo75fIemsVIfbnA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789035482; c=relaxed/simple;
+	bh=xJtlT+brubTDzcwB1LsQU2wH8jfhem1ycRIpQIZsMuc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Lf9fc/FBel3M1lNKrgAqGvVaIe1Cjy77J68oDtuVQrdKWWEtSTNd7gEbjiW6kbr1DyC1ZzU+Z8jtkhzj1wVXnlXD8g3wOCmAsnupvqzP2wNoYK3rO9+8M1Jb04Yd9fd/uW2WYdb735OhNl6U2+dUOfSNOBDrB2kP+nswzhdOKCE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=PGKqZv6u; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=YYG7PFlR; arc=pass smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Shd6Ggk3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D8261F000FF;
-	Thu, 10 Sep 2026 09:52:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789033928;
-	bh=oSHEQEf7VJj1l9ty3O0NeD3HwzUk9MAB0JcL6MPJ8/w=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Shd6Ggk3XTmPACAIgTHjHJjrXIyZMSAtNo464+zfVYEnmbOsJ9hyiUPFgfZOWYyMJ
-	 94pweRNAIqnu55bX0BQVwgIvc84DpFuBWLhgi9AmfZMkGXG0x1M/06VR7ca7HO9uei
-	 RedoNBMI2Asddl76TV32a4CQkFpGuMgPiGhBjtjwcW6EYugaP0vADCYZVlT1s0o4vZ
-	 I1w5tD+ZavBcQXJatg9tantoWsLH3ZYPe3NyJwn+FUt3jlIsn17lORERM0boE13VVV
-	 H5asOdkKjSlq+LZdVPTlMl1ki7BtkB6M2RAU8O5Q+JuWzqX10ZeevlyzJijsdwubIM
-	 +AsCpMgM49new==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: qedi: Initialize callback state before
- registration
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Runyu Xiao" <runyu.xiao@seu.edu.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260910092405.1300129-1-runyu.xiao@seu.edu.cn>
-References: <20260910092405.1300129-1-runyu.xiao@seu.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Sep 2026 09:52:07 +0000
-Message-Id: <20260910095208.6D8261F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="PGKqZv6u";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="YYG7PFlR"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68A8q61q4136852
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2026 10:17:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	5o0LQq2H5NyuqhWcIAsOhclTasLhXE6zFp16BztH0tM=; b=PGKqZv6uqTxJsb4V
+	yz/56PwDXoYI/+DTCIsMR3DS/Z1r3noojO+XzGn4dFF++mrEALLWcGYqgjyWe3WJ
+	ZHYBaIZghgOs2KV0ThF9P+XHnCRbNDHS5d/9EFsz6fhbSRUpiEfy/fBUN9IdRTOA
+	TW0teNVSH7BgXWyi7J4XQvW/RwS0u1vLSONrNTUqUcRTkuyenE4y8wVAhp7D12bc
+	YYaBUeeCvKRDcdXwi9yU0Sf8UBVOV/8PTrIKBN9qSXquo7+Dyvmf6QsOlNPpf2Yq
+	nah7yoUwbbBLZawcshuQMNKa5GbnhltI41cGg8CkvKkDjBxyHIp1j6SDVwjDSzKP
+	JBStIg==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gkcydua26-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2026 10:17:59 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-398fe469aa0so11629635a91.2
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2026 03:17:59 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789035478; cv=none;
+        d=google.com; s=arc-20260327;
+        b=PDiSdSytLDVqZgmUbtKuEC4VK89tWefrQ6zkOXt2xTWvYxsqLqDH77h6jLloYkTZQm
+         sNiVGP04Qzzb3lIeBStP2q7Br5VOiJruzcZXaJ3pPgFIuhhFH9KsZ1yuF7NDl3peHkFb
+         V6h5RqAJPvpQmhFW+OfFkiJbE/jsjtlK9bQP0bYuI7iluGuF1roVMkeSy4nbOADn0Ffg
+         HGXbnIjkGPxQUbr2ZEd5owSbzJ58FTEp0aWug+0aLfxf3tpGOft51sk4YPmUUIP7EPto
+         FPA2IWPXm3DpPOHjAsFqIqyDAqZyBCRTPDJXsAY7lsinxv4ckn5X6Ietn3tpZE9tV+eN
+         Oa+w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=5o0LQq2H5NyuqhWcIAsOhclTasLhXE6zFp16BztH0tM=;
+        fh=oDlnttstuQvslo8CVhFLpzS9j6ke+nnCGE/XUGqDS1k=;
+        b=sL8Cp2MKiKsnz8fw9ULMbVJXBzm8cTSKF3vvv9WZTYo8j5QyU99jQVP4XuZ66htLAH
+         Bm8mkIaIqtBPlx06+OVy+EjpyUs4MSRsg65+/7pLLP72fwnpFJcONoPenBGhhLeFQcqJ
+         hqt6quTv643kF+Lr5zqMx5fsczCkLPtIxAMSAaPlyKaCGcHA/hActGVmT5GcDLVO6B88
+         Jwh0SrZJ8P+C+r3ELG1hUPzFWe5PMqSKl1LuGGi/HIYI0nEev/T38wgV+F8OaQ5tVHMg
+         oPq/tiTjjvrxpu4yk8ECkYYYnUyckKH8KW+0NNz6wcsc9mewloup1yGvUB16O+PJbKxT
+         2mIQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1789035478; x=1789640278; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=5o0LQq2H5NyuqhWcIAsOhclTasLhXE6zFp16BztH0tM=;
+        b=YYG7PFlRv/m7RtW/2T+N2DJNrZXsXtWKhFJOa1UdQ68pEJDuw2oDtyLTbu+wQWJqvJ
+         ++i1ue1XoDSxWUvDyBIiYzS/frVNffrU9P9onZSrRwyVo6A3rY3Urmmj5kvDmf/X8W6i
+         ektBJtxE8Zl+w6+R9Xsixdh5tvaKkvwfpmLOiEQHgVvxBsQnb/4j+iaQtMAQeP21m+HQ
+         dZOmFs+ZhrWX0Rep3xscs+Worxc536G8Qt4fkbY/VeIxwx/6MmOr1WFKjnVDiHZnaj+P
+         ibWw/LjhdjXtk1z5Uq5qcaG+NMejXFHerT5KsK26vYHQ8H1gRZZ7f7tnR4YQw6y4QfJ9
+         N9qg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789035478; x=1789640278;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=5o0LQq2H5NyuqhWcIAsOhclTasLhXE6zFp16BztH0tM=;
+        b=Erz4XXxsexmgdie2HsMe1vQZsFtS70YAuxIUisheVEpidWjnjrcLNMtBJ1WSfo8fjR
+         7BoypAiVfGib8d38eJyzhs3A7VZEB2oHDLtN8ua/naI4hduGgajsrsZRVpsSnYqoqRhL
+         0os2dfB+/7CrURL1Yo1iA3kYb9bjiDHAfzHt21RswHpx30n7LwdFq2lU30275z2UhncA
+         cFV1vn9fSRIhTXhrkjEsQlkHfvr+V7d+2gqEuKNSkFomU54iOych1HUo8ojGPOHU3/ze
+         g0yHkgHYufyHbTaGg+xn1ywv2YNWANb/lw5TY4VHZHc1mg7X7fy9Oe2kPqlUmkcw/rXC
+         zCiw==
+X-Forwarded-Encrypted: i=1; AKwUvBxD0U6u0TmD7sG/QqPCUnmSlhh7bdnX0RxCeZlNAWOxy+VqzU3wmkQY78VYL8VwcTFKvIwf6Fvid78o@vger.kernel.org
+X-Gm-Message-State: AFuF++ntz0Cip2LL2ezVTFvFwkCSKCMkQ4tSX4SgTyHVgGzT4bUMhfHv
+	0389auIt9umySDDyqR5Q5QiKM9CeplofqfTerNgLqe9NN9VEXjL7zPjBfjtudVslExbNI95U6nQ
+	DmGQGyRY9+1pQHVTETckck7eKdHP+ZUgCfZrVTq7KWCyb7SdT2h2cBJVUFwCmCELu1twpwhpHRE
+	yFlL6pjRhzE0xFxujgH/CEfaH9hg4rbeiRbeeaYRg=
+X-Gm-Gg: AYBFou2XFgO66ATrhX4DBAOdL/TG3JMK7W3MOuSEBMuivTJA1i6DJ3iiNh+NJwg3j7Y
+	srglEa4IoK+/RX1OOI4djNqxtE/k3n1L8No3E5eNR5wx7I7WY9GtdTbjr7x7FSMQeFH5kkVaz58
+	Wt/zqkK1DAvM0VJ65BMl5/AlN9MFzwESsziSiYc7TSj3OqOgGodNRNUV+vZg==
+X-Received: by 2002:a17:90b:558c:b0:38e:57a3:f218 with SMTP id 98e67ed59e1d1-39d70ae1a5emr10579643a91.13.1789035478535;
+        Thu, 10 Sep 2026 03:17:58 -0700 (PDT)
+X-Received: by 2002:a17:90b:558c:b0:38e:57a3:f218 with SMTP id
+ 98e67ed59e1d1-39d70ae1a5emr10579584a91.13.1789035478102; Thu, 10 Sep 2026
+ 03:17:58 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260824-enable-ice-clock-scaling-v12-0-09271f583dc6@oss.qualcomm.com>
+ <20260824-enable-ice-clock-scaling-v12-3-09271f583dc6@oss.qualcomm.com>
+In-Reply-To: <20260824-enable-ice-clock-scaling-v12-3-09271f583dc6@oss.qualcomm.com>
+From: Ulf Hansson <ulf.hansson@oss.qualcomm.com>
+Date: Thu, 10 Sep 2026 12:17:46 +0200
+X-Gm-Features: AcwNN1VvsxYSlSneh1UTJxLDFcgkCYVDC7Rwi96BfcNazOVn_vX8zy2Sk9dMolo
+Message-ID: <CAPx+jO_Ltc6Q+VdUgOs81azTiM5Vx12GH1z+CXt6NW=M601THQ@mail.gmail.com>
+Subject: Re: [PATCH v12 3/6] mmc: sdhci-msm: Set ICE clk to TURBO at sdhci ICE init
+To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        Harshal Dev <harshal.dev@oss.qualcomm.com>,
+        Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Authority-Analysis: v=2.4 cv=IfsSymqa c=1 sm=1 tr=0 ts=6aa283d7 cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=_K5XuSEh1TEqbUxoQ0s3:22 a=EUspDBNiAAAA:8 a=QyXUC8HyAAAA:8
+ a=i-sMpDq2_rzAXM5hadQA:9 a=QEXdDO2ut3YA:10 a=uKXjsCUrEbL0IQVhDsJ9:22
+X-Proofpoint-GUID: 9spi4z0vmoLSw44n37WH3Ix2ZeyZL9sX
+X-Proofpoint-ORIG-GUID: 9spi4z0vmoLSw44n37WH3Ix2ZeyZL9sX
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTEwMDExOSBTYWx0ZWRfX7SVrkTzK5ueu
+ l007xMpIIC/SkXAGlYQWomBrhP/tZSDVMBqmA812ujJY+jxNazrAN/N14phL0bDv5FRqm3ugwe1
+ P/Gm9XNOh54tjZ/gSdIU66RQgN+cvrY=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTEwMDExOSBTYWx0ZWRfX4YC+KU7gfk4g
+ BM5m/tIIVbtUy7kWsGI88MPWVfR1jwuMhHNQYlzuFAb66X5v58xVXDDkpksl5LZqKfqgIZBVZPf
+ L1sFVj3pLA4xfOdnzchOovkFCVLUuZc+SEO4aS4ZEKslr00AzbDa6eUVO7TCp9xYWyO1NVLCGY/
+ WO+YeA1hi9j6+vVh+DRgBtPrpmxXSr1LSXtsDplC5WnhvWxv467TmevccBuN+b3AYcSO00oQ7cH
+ p3JjOivd6wNlSDQ58FfMHT6cs8mEHKiCjRvfOPsYIpUDfS6GAmsRysXWucEDhRybxDjaLVjSPVJ
+ fgHOjMiiWMOXnBIo+FOFSnl78ugVbunQwKcSXnmrTdhGG1OUTis4Zp1W9+heLhrWLttSUwHPVmF
+ 8mGxPxjzEpWjQBSdJRM8ty/2FHHogTs3txjTafyz0LIZobKZStoabXsnflfbLBTU8I92RBxTRzO
+ Jph21t2gnltL3yhXn0Q==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-10_03,2026-09-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 malwarescore=0 priorityscore=1501 lowpriorityscore=0
+ impostorscore=0 spamscore=0 adultscore=0 suspectscore=0 bulkscore=0
+ clxscore=1011 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
+ definitions=main-2609100119
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
-s) to consider:
+On Sun, Aug 23, 2026 at 9:48=E2=80=AFPM Abhinaba Rakshit
+<abhinaba.rakshit@oss.qualcomm.com> wrote:
+>
+> MMC controller lacks a clock scaling mechanism, unlike the UFS
+> controller. By default, the MMC controller is set to TURBO mode
+> during probe, but the ICE clock remains at XO frequency,
+> leading to read/write performance degradation on eMMC.
+>
+> To address this, set the ICE clock to TURBO during sdhci_msm_ice_init
+> to align it with the controller clock. This ensures consistent
+> performance and avoids mismatches between the controller
+> and ICE clock frequencies.
+>
+> For platforms where ICE is represented as a separate device,
+> use the OPP framework to vote for TURBO mode, maintaining
+> proper voltage and power domain constraints.
+>
+> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> Acked-by: Adrian Hunter <adrian.hunter@intel.com>
+> Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
+> Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
 
-Pre-existing issues:
-- [Critical] Network packet reception in `qedi_ll2_rx` lacks bounds checks,=
- allowing malformed packets to cause out-of-bounds reads or NULL pointer de=
-references.
-- [High] Race condition and missing error checks for `kthread_run()` return=
- value lead to invalid pointer dereferences during LL2 Rx processing or mod=
-ule teardown.
-- [High] The patch leaves `recovery_work` and `board_disable_work` uninitia=
-lized when registering `qedi_cb_ops` callbacks, exposing uninitialized work=
- structures to asynchronous hardware events.
-- [High] User-configured custom MTU settings are silently overwritten to de=
-faults during hardware recovery.
-- [High] `iscsi_host_add` exposes the device to userspace before crucial co=
-nnection structures (`ep_tbl`) are allocated, creating a race condition.
-- [High] The background LL2 receiver kthread and hardware subsystem are not=
- stopped on the `__qedi_probe` error path, leading to Use-After-Free.
-- [High] The error path for `iscsi_host_add` failure calls `iscsi_host_remo=
-ve`, which will crash when attempting to remove an un-added host.
---
+This looks good to me!
 
-commit 7badf30e1ff5d4629509a7cbca53b6e22f3d67df
-Author: Runyu Xiao <runyu.xiao@seu.edu.cn>
+Although I have a question - should we never drop the vote? Like at
+suspend and runtime suspend, at least?
 
-scsi: qedi: Initialize callback state before registration
+Kind regards
+Uffe
 
-This patch fixes a race condition where qedi_get_protocol_tlv_data() could
-be called asynchronously by QED before the stats_lock and ll2_mtu were
-initialized. It moves the callback registration to after these initializati=
-ons
-on the normal probe path.
-
-> diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-> index 227ff7bd1bdc9..f394fcbb97e7e 100644
-> --- a/drivers/scsi/qedi/qedi_main.c
-> +++ b/drivers/scsi/qedi/qedi_main.c
-> @@ -2652,8 +2652,6 @@ static int __qedi_probe(struct pci_dev *pdev, int m=
-ode)
->  	snprintf(host_buf, sizeof(host_buf), "host_%d", qedi->shost->host_no);
->  	qedi_ops->common->set_name(qedi->cdev, host_buf);
-> =20
-> -	qedi_ops->register_ops(qedi->cdev, &qedi_cb_ops, qedi);
-> -
->  	memset(&params, 0, sizeof(params));
->  	params.mtu =3D DEF_PATH_MTU + IPV6_HDR_LEN + TCP_HDR_LEN;
->  	qedi->ll2_mtu =3D DEF_PATH_MTU;
-
-[Severity: High]
-This is a pre-existing issue, but are user-configured custom MTU settings
-overwritten during hardware recovery here?
-
-During a hardware recovery event, __qedi_probe() is invoked with
-mode =3D=3D QEDI_MODE_RECOVERY. This unconditional assignment to DEF_PATH_M=
-TU
-discards any custom MTU size (such as a 9000-byte jumbo MTU) that the user
-may have configured.
-
-> @@ -2670,6 +2668,7 @@ static int __qedi_probe(struct pci_dev *pdev, int m=
-ode)
->  		spin_lock_init(&qedi->task_idx_lock);
->  		mutex_init(&qedi->stats_lock);
->  	}
-> +	qedi_ops->register_ops(qedi->cdev, &qedi_cb_ops, qedi);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but could registering the callba=
-cks
-here expose uninitialized work structures?
-
-The qedi_cb_ops expose callback functions like
-qedi_schedule_recovery_handler() to the QED core. This handler attempts to
-schedule qedi->recovery_work, but INIT_DELAYED_WORK(&qedi->recovery_work, .=
-..)
-is not called until much later in the probe sequence.
-
-If an asynchronous hardware event occurs in this window, it looks like
-schedule_delayed_work() could be invoked on zero-filled memory.
-
->  	qedi_ops->ll2->register_cb_ops(qedi->cdev, &qedi_ll2_cb_ops, qedi);
->  	qedi_ops->ll2->start(qedi->cdev, &params);
-
-[Severity: High]
-This is a pre-existing issue, but does starting the hardware packet recepti=
-on
-here introduce a race condition?
-
-If a packet arrives immediately, qedi_ll2_rx() calls
-wake_up_process(qedi->ll2_recv_thread) while the thread pointer is still NU=
-LL.
-
-Additionally, is it safe to ignore the return value of kthread_run() when it
-creates qedi->ll2_recv_thread shortly after this?
-
-If kthread_run() fails, it returns an ERR_PTR which is neither checked nor
-handled. This could cause subsequent packets or kthread_stop() during teard=
-own
-to dereference the ERR_PTR.
-
-
-[Severity: High]
-This is a pre-existing issue, but does exposing the device to userspace bef=
-ore
-crucial connection structures are allocated create a race condition?
-
-In drivers/scsi/qedi/qedi_main.c:__qedi_probe():
-
-    if (iscsi_host_add(qedi->shost, &pdev->dev)) {
-        ...
-    }
-
-    rc =3D qedi_alloc_uio_rings(qedi);
-    ...
-    rc =3D qedi_cm_alloc_mem(qedi);
-
-iscsi_host_add() registers the host with sysfs, emitting a uevent. If
-userspace responds by issuing a netlink command to create an endpoint,
-qedi_ep_connect() assigns the endpoint to qedi->ep_tbl[iscsi_cid].
-
-However, qedi_cm_alloc_mem() allocates qedi->ep_tbl after iscsi_host_add(),
-so qedi->ep_tbl would be NULL during this race.
-
-
-[Severity: High]
-This is a pre-existing issue, but is it possible the error path in
-__qedi_probe() fails to clean up the LL2 subsystem and kthread?
-
-If an initialization step fails after the hardware packet reception and
-receiver kthread are started:
-
-drivers/scsi/qedi/qedi_main.c:__qedi_probe():
-
-    ...
-stop_iscsi_func:
-    qedi_ops->stop(qedi->cdev);
-stop_slowpath:
-    qedi_ops->common->slowpath_stop(qedi->cdev);
-    ...
-
-The error handler frees the qedi structure but seems to completely omit
-stopping the hardware LL2 interface or killing the kthread, which could lead
-to a use-after-free when they access the freed qedi structure.
-
-
-[Severity: High]
-This is a pre-existing issue, but would the error path for iscsi_host_add()
-failure cause a crash?
-
-drivers/scsi/qedi/qedi_main.c:__qedi_probe():
-
-    if (iscsi_host_add(qedi->shost, &pdev->dev)) {
-        QEDI_ERR(&qedi->dbg_ctx,
-                 "Could not add iscsi host\n");
-        rc =3D -ENOMEM;
-        goto remove_host;
-    }
-
-If iscsi_host_add() fails, the code jumps to remove_host and unconditionally
-executes iscsi_host_remove(). Since the host was never successfully added to
-the driver core, won't this attempt to unregister an uninitialized device?
-
-
-[Severity: Critical]
-This is a pre-existing issue, but is there a missing bounds check during
-network packet reception in qedi_ll2_rx()?
-
-drivers/scsi/qedi/qedi_main.c:qedi_ll2_rx():
-
-    if (eh->h_proto =3D=3D htons(ETH_P_8021Q)) {
-        memmove((u8 *)eh + VLAN_HLEN, eh, ETH_ALEN * 2);
-        eh =3D (struct ethhdr *)skb_pull(skb, VLAN_HLEN);
-        skb_reset_mac_header(skb);
-    }
-
-    /* Filter out non FIP/FCoE frames here to free them faster */
-    if (eh->h_proto !=3D htons(ETH_P_ARP) && ...
-
-The code reads eh->h_proto without verifying skb->len >=3D ETH_HLEN. If the
-protocol is 802.1Q (VLAN), it invokes skb_pull(skb, VLAN_HLEN).
-
-If a malformed packet is smaller than VLAN_HLEN, skb_pull() returns NULL,
-which is then unconditionally dereferenced in the subsequent check.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260910092405.1300=
-129-1-runyu.xiao@seu.edu.cn?part=3D1
+> ---
+>  drivers/mmc/host/sdhci-msm.c | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+>
+> diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
+> index 0882ce74e0c9bdddd98341a67b97bcef74078e0c..1b4c276dce34d76dcbe75117d=
+e37e09ea2002633 100644
+> --- a/drivers/mmc/host/sdhci-msm.c
+> +++ b/drivers/mmc/host/sdhci-msm.c
+> @@ -1902,6 +1902,16 @@ static void sdhci_msm_set_clock(struct sdhci_host =
+*host, unsigned int clock)
+>
+>  static const struct blk_crypto_ll_ops sdhci_msm_crypto_ops; /* forward d=
+ecl */
+>
+> +static int sdhci_msm_ice_scale_clk(struct sdhci_msm_host *msm_host,
+> +                                  unsigned long target_freq,
+> +                                  bool round_ceil)
+> +{
+> +       if (msm_host->mmc->caps2 & MMC_CAP2_CRYPTO)
+> +               return qcom_ice_scale_clk(msm_host->ice, target_freq, rou=
+nd_ceil);
+> +
+> +       return 0;
+> +}
+> +
+>  static int sdhci_msm_ice_init(struct sdhci_msm_host *msm_host,
+>                               struct cqhci_host *cq_host)
+>  {
+> @@ -1959,6 +1969,11 @@ static int sdhci_msm_ice_init(struct sdhci_msm_hos=
+t *msm_host,
+>         }
+>
+>         mmc->caps2 |=3D MMC_CAP2_CRYPTO;
+> +
+> +       err =3D sdhci_msm_ice_scale_clk(msm_host, ULONG_MAX, false);
+> +       if (err && err !=3D -EOPNOTSUPP)
+> +               dev_warn(dev, "Unable to boost ICE clock to TURBO\n");
+> +
+>         return 0;
+>  }
+>
+> @@ -2149,6 +2164,13 @@ sdhci_msm_ice_suspend(struct sdhci_msm_host *msm_h=
+ost)
+>  {
+>         return 0;
+>  }
+> +
+> +static inline int
+> +sdhci_msm_ice_scale_clk(struct sdhci_msm_host *msm_host, unsigned long t=
+arget_freq,
+> +                       bool round_ceil)
+> +{
+> +       return 0;
+> +}
+>  #endif /* !CONFIG_MMC_CRYPTO */
+>
+>  /***********************************************************************=
+******\
+>
+> --
+> 2.34.1
+>
