@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77CE4414417;
-	Fri, 11 Sep 2026 10:13:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A85273CF1F0;
+	Fri, 11 Sep 2026 10:16:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789121634; cv=none; b=Lg/zhN32hLkvTlALdtKpez/njgpNduhAfla3RCstdoYG3T4dWPc+5quojVFaA7hxx0Kzdx2nuEQqPe2YHiFhSKxie63OowvN58BMmEDzDtpxfuaRr4bLH40NvUfaerm4oRvjZZRPHl94b+m7as74Si4mAqTFO9q/zi8Ik23RiqY=
+	t=1789121807; cv=none; b=iB1NN+Xle04CzXtYZV7Yrz51R90PYU9RFFF5qUBsYrwHcwZWPnKStc3sHfnBk+oewk2JJAXoOSsj7tiwExazvUs0D0gdOkJL3C3HuCFB6c/Bf+j47tqMX8OpNavVIRYw1EtAzqNABeLVtIPTXm9ZJaJaGvs+5+coISO+tBa7WjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789121634; c=relaxed/simple;
-	bh=AJ4osXGfnva+GsW9Xj6wSlPvmOYx8+Z4McGwoEWWU6k=;
+	s=arc-20240116; t=1789121807; c=relaxed/simple;
+	bh=vTsPXaHi8RAzBaWbL447Y7Wml4ZSeJ0BE4+oGF83XiM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z/nz25oijYbnMnGJnkIP22Ji/priNezxuNzHqV/HGdcXC2YGF4/GGefAm901p7tRfiIpzS7mmp6x23O2UkT3x4gr26gTiMjXh5MniY6vJupw5sTv/ethNyNlA7hxgZVrwWIITjbJaY2GnZNuaqkXbKF1zQscN3PhvsB0YbWJXKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VXiIsYXG; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=VfULfKtT0eEwotwelT327Y+zHp8Xx8rUQ9pIKLl4J/4EQygHBBSYlbgOrVnN363ru4tOxiaB1w0T8fcxepr8zf/Fb738AONethY+9NM/OO4aWTW+C3iPQbXMdJ/kgEJ6/b3jJMMAcyKtnlYX8v3sIEarQHXPAHFKmZIVMBV0gQo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bAW41siy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VXiIsYXG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88F4F1F000FF;
-	Fri, 11 Sep 2026 10:13:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bAW41siy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0B0E1F000FF;
+	Fri, 11 Sep 2026 10:16:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789121626;
-	bh=AJ4osXGfnva+GsW9Xj6wSlPvmOYx8+Z4McGwoEWWU6k=;
+	s=k20260515; t=1789121805;
+	bh=giLIDOVuGk3wU4sINvGbjDY5Co7tru0+JFiE0K9FPLI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=VXiIsYXGW7V+CUC2hoUUxshBtk//170ahXby5qOmnHCTEG6nprU1IS50u25G/fRQk
-	 sf9ytH2Ce2iGqonEAUfAmBNxEiX0H5gDZvz851NX8EhIuDaWSIQBlPZWYHnVma0aGj
-	 blDmI4LY1KM28dzcRxXSp3rNd+ml+k1Jf5jXcr5BNdmFsP+f0lE+KyInKD5utrTv18
-	 j0kWa0ZAaMlc3Pw4wRDO2h4SoWYRal6ZvW3YmHkVxX6gQf6/JqWhQp1QSVXE2Kca+2
-	 BYYLTVktrg9Xqy9CLQ0dyOX4enXiqnPzEjwUfsC5vJviK7A/gYwNlJA1GGOz2i3bhy
-	 SIFHvCnClRnig==
-Date: Fri, 11 Sep 2026 11:13:15 +0100
+	b=bAW41siy0jHTB1qfl3qn4gdNLwygOP92sxwRZ5j93bg2aVlvwhPZHWNQXCkbUnxC6
+	 9zk3b5mbI7ab2hw7oNcaGXVKHnNx1qFzqMm5NsCPo7iMQTWRRa4ga4/FYZMgemnHMR
+	 LUWR9RDzd1jBIAPZg7P5yYAnVdcGzlswz7uYblSZrI8mgcWzefXPuZrclq/aRa18mg
+	 UXHtcfHYeWzL2TMktPNfUxYpL9byrk5pz2SSOJ+Hi6IFxR8hMDvGKPZB2iRfKGLL8X
+	 ZmrHB9kpMAfbsIpyQlYJu0jR9aIkQQcmQfumaGM+wf3Q1dTyf8WnZzhQjhpzxy2VYs
+	 gbIALJ3tDM5qQ==
+Date: Fri, 11 Sep 2026 11:16:14 +0100
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Jann Horn <jannh@google.com>
+To: Stephen Smalley <stephen.smalley.work@gmail.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, 
 	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Pedro Falcato <pfalcato@suse.de>, David Hildenbrand <david@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
+	David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
 	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Paul Moore <paul@paul-moore.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
 	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
 	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
 	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
@@ -88,10 +87,10 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
 Subject: Re: [PATCH 11/39] selinux: reject writable opens of policy file,
  drop mmap shared/write check
-Message-ID: <aqPS_UHU3MotlchR@gremlin>
+Message-ID: <aqPUqU3eZeFrykj3@gremlin>
 References: <20260908-b4-mmap-prepare-vma-flag-sanify-v1-0-dacf19cce22b@kernel.org>
  <20260908-b4-mmap-prepare-vma-flag-sanify-v1-11-dacf19cce22b@kernel.org>
- <CAG48ez3Ucb8HyhjC1-fijFiYJsnWcTLYHvJjzMyU710mgegxnA@mail.gmail.com>
+ <CAEjxPJ7hXSi=oLtQPV+7GEvN+txfYwZ-u-v_EysNHM0gSGNrCw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -101,10 +100,11 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAG48ez3Ucb8HyhjC1-fijFiYJsnWcTLYHvJjzMyU710mgegxnA@mail.gmail.com>
+In-Reply-To: <CAEjxPJ7hXSi=oLtQPV+7GEvN+txfYwZ-u-v_EysNHM0gSGNrCw@mail.gmail.com>
 
-On Tue, Sep 08, 2026 at 10:22:20PM +0200, Jann Horn wrote:
-> On Tue, Sep 8, 2026 at 10:07 PM Lorenzo Stoakes (ARM) <ljs@kernel.org> wrote:
+On Thu, Sep 10, 2026 at 02:11:18PM -0400, Stephen Smalley wrote:
+> On Tue, Sep 8, 2026 at 4:07 PM Lorenzo Stoakes (ARM) <ljs@kernel.org> wrote:
+> >
 > > The policy file has no write method and is exposed read-only (S_IRUGO in
 > > selinux_files[]), yet sel_open_policy() performs no open mode check, so a
 > > CAP_DAC_OVERRIDE caller can open it O_RDWR. Reject FMODE_WRITE at open, as
@@ -113,26 +113,66 @@ On Tue, Sep 08, 2026 at 10:22:20PM +0200, Jann Horn wrote:
 > > The file can then never be mapped with FMODE_WRITE, so do_mmap() always
 > > clears VM_MAYWRITE and VM_SHARED for MAP_SHARED mappings and the VM_SHARED
 > > check in sel_mmap_policy() cannot be reached. Remove it.
->
-> You should also be able to remove the sel_mmap_policy_ops.page_mkwrite
-> handler, which is only for shared-writable faults, right?
-
-Yeah I think you're right, though I wonder if it's a bit out of scope for this
-change as it's focused on removing a VMA_MAYWRITE_BIT clearance for a
-non-kernel-owned VMA.
-
-So maybe one for a follow up?
-
->
+> >
 > > This also stops sel_mmap_policy() clearing VM_MAYWRITE on a mapping that is
 > > neither a PFN map nor a mixed map, ahead of the core enforcing that only
 > > such mappings may do so.
 > >
 > > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 >
-> Reviewed-by: Jann Horn <jannh@google.com>
+> We should likely do something similar for the other sel_open_*() and
+> sel_mmap_*() functions too.
+> In particular, truncation of the status file can bring down systemd
+> since it is mapped by libselinux.
+
+Yeah I think there's definitely more that can be done there.
+
+Though I think obviously that kind of stuff is better as a follow up as this
+patch is focused on eliminating a case where VMA_MAYWRITE_BIT is cleared
+incorrectly.
+
+>
+> Acked-by: Stephen Smalley <stephen.smalley.work@gmail.com>
 
 Thanks!
+>
+> > ---
+> >  security/selinux/selinuxfs.c | 11 +++--------
+> >  1 file changed, 3 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/security/selinux/selinuxfs.c b/security/selinux/selinuxfs.c
+> > index c7d91476971c..545a6f89f9e7 100644
+> > --- a/security/selinux/selinuxfs.c
+> > +++ b/security/selinux/selinuxfs.c
+> > @@ -340,6 +340,9 @@ static int sel_open_policy(struct inode *inode, struct file *filp)
+> >         struct policy_load_memory *plm = NULL;
+> >         int rc;
+> >
+> > +       if (filp->f_mode & FMODE_WRITE)
+> > +               return -EACCES;
+> > +
+> >         rc = avc_has_perm(current_sid(), SECINITSID_SECURITY,
+> >                           SECCLASS_SECURITY, SECURITY__READ_POLICY, NULL);
+> >         if (rc)
+> > @@ -424,14 +427,6 @@ static const struct vm_operations_struct sel_mmap_policy_ops = {
+> >
+> >  static int sel_mmap_policy(struct file *filp, struct vm_area_struct *vma)
+> >  {
+> > -       if (vma->vm_flags & VM_SHARED) {
+> > -               /* do not allow mprotect to make mapping writable */
+> > -               vm_flags_clear(vma, VM_MAYWRITE);
+> > -
+> > -               if (vma->vm_flags & VM_WRITE)
+> > -                       return -EACCES;
+> > -       }
+> > -
+> >         vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
+> >         vma->vm_ops = &sel_mmap_policy_ops;
+> >
+> >
+> > --
+> > 2.55.0
+> >
 
 --
 Cheers, Lorenzo
