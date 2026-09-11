@@ -1,142 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 088822D9EDB
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 06:06:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 398FC361977;
+	Fri, 11 Sep 2026 07:08:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789106820; cv=none; b=Zyrf6Ynflb4wgHL+0Idgqh3DOVFz8V98mas8Z9LqMkQ/bADsSR2V8N3/gpl60cc38ry2fuZODtiemwXGQQs2VmSrRTkXL/p2L6Z3wpCtqVpkTeUshPFhNxllg+YBlJqXgAm30D0izvuSxBB3E4f7ndolonZ0K7zYOOqaY0rVqhw=
+	t=1789110528; cv=none; b=SiqzyfP0PbnDdX6jbG++kI98Lq1dSFgT9tmLCO5HuXNsGkQr08ihsjkGO317mCoOeBnNftTbOWzxp5M+9sKDV0XAxV6rMruWisSOzXfhvtwlPM7eBkRYgSLd6X6N2RMylG1u31LDhJKPvIPiLDlp0QHdHVNEHEI6r60hPrczTO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789106820; c=relaxed/simple;
-	bh=f1tTgldxYU0H8sGZCt1Wo1p5HU6eCwTjw6b9erNINaU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CA/uVa8rTOXgXSlEL3Coil1Ea5mrDjZuzM/WNXNt5q+8e9pg77eSLhcQDUeM1ReAZuHxLCUmV8iaa5zahYCwrgu6V0pdLM5/Q5Gd2/jei8f0gC4B5W18Yd+bRuU+pfbmQRDFOgC5KI8NWRjUSnKwLIZhtzcNdXkH+3xug9uWhok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q7XyAPa8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789110528; c=relaxed/simple;
+	bh=D2cmpWMdolTGmdheb1XXnX23t8ExgvGYIzWRWC301+M=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=nuEbiH5YpUluwb5qKJzpRN7WYOAK1FeBpg49OvWla8+DwvFFLVEM7+2nt0WXLrLxoNwUs4pJjqUeCbrYHKq4JTuRhD5/y7Eh/NXD1fn7wA6PbG8xJUNX5aOTVAoT6hZx7wPvidNPOxRfCP7HDKevvaN7TF1Gn4hN++eUoVWk9sc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nbP6YcXF; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q7XyAPa8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68FDC1F000FF;
-	Fri, 11 Sep 2026 06:06:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789106818;
-	bh=uz9R0kYXX4RBu6vgv8RzA9gIIVYywEpQOhH8ZnYhIyg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Q7XyAPa8J0eNwsSr2Z2UmmYjCBbZtC/05gTudVhp38o0EpmuKTqf/paPRduo/YhlO
-	 HolbT+YcugRu8UTMUPhASiCCMzZ9NTH6QgGZQ9bhkMD6AQYeIUBPq4rIwkq9Auo4xH
-	 cuhuyvmltmFEAyDITET7STW+RCPnmxEivHiX57g2QeXjqJN2I4n3Ux73Alvcvv/Vfe
-	 BxdBXx0uU3CnvdWF3yUKCBylDJTUeaHDb0jGUwlxUnRREUAj6ZNqlcgRLhZPgQobRC
-	 OGyAIAEEZjMNKU8ixOfHc0KIn2YGTCT+2l3L2P1OCNl3XtXkAqyrsEFWTzgoeAc/TV
-	 fTT70hpAg7BfQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 1/9] scsi: ibmvfc: add basic FPIN support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260911054832.1311668-2-tyreld@linux.ibm.com>
-References: <20260911054832.1311668-1-tyreld@linux.ibm.com>
- <20260911054832.1311668-2-tyreld@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 06:06:57 +0000
-Message-Id: <20260911060658.68FDC1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nbP6YcXF"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=YdUqwO0ycFHlUFQYn391eLAQNyvTEogNU4HywfgCNwU=; b=nbP6YcXFrXaEjCnWzzTpdTxv2t
+	cxvexjJGuRXeQKOfqIyYC13LAxOrD57ERyC3DBKz4biJrfNKOFEwvxGwgEjZc2JXJENEEK470Dh4c
+	114Eo8c6uHFBoUIOFAOdYAlDx3dv3xoBusqS7xpxlS7I8h+bCxhONTbZn2inZrhp2uj+hc/9bTNxo
+	Dh1Qsd5hwkq6awur+pOftz3UqBuq5VIKyV44kAX4o0iEYrjIYayuhC+Fk3lnRAaoB5aL+DK+tzaEA
+	/7gAPsDldYosiJYDEw6G9qASAhbHOh6C9qHkC2HLEjrYkcLtEa2NeBpvNfo/caD1Y4d043qlANvEp
+	SgcmcEDA==;
+Received: from 2a02-8389-2301-9f00-b711-947d-6c5b-1af5.cable.dynamic.v6.surfer.at ([2a02:8389:2301:9f00:b711:947d:6c5b:1af5] helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1x4vNG-0000000G06v-1mjs;
+	Fri, 11 Sep 2026 07:08:38 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Zorro Lang <zlang@kernel.org>
+Cc: fstests@vger.kernel.org,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Anuj Gupta <anuj20.g@samsung.com>,
+	John Garry <john.g.garry@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH 1/6] common/scsi_debug: don't slow down I/O
+Date: Fri, 11 Sep 2026 09:08:19 +0200
+Message-ID: <20260911070831.1760646-2-hch@lst.de>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260911070831.1760646-1-hch@lst.de>
+References: <20260911070831.1760646-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Medium] The KUnit test `ibmvfc_async_fpin_test` leaks references to the =
-`Scsi_Host` and the `fc_rport` device on its successful completion path.
-- [Medium] Unordered workqueue allows FPIN events to be processed concurren=
-tly, causing data races in FC transport statistics and FPIN event reorderin=
-g.
---
+scsi_debug by defaults delays I/O and doesn't support multi-page I/O.
+Flipping these defaults speed up each test using scsi_debug by more than
+an order of magnitute on my test systems.
 
-commit 79377784bc96c798354f5b0f5ce5007a8d857d16
-Author: Dave Marquardt <davemarq@linux.ibm.com>
-   =20
-scsi: ibmvfc: add basic FPIN support
-   =20
-This commit implements support for a basic level of Fabric Performance Impa=
-ct
-Notifications (FPIN) in the ibmvfc driver. It adds an async event handler t=
-hat
-offloads FPIN processing to a dedicated workqueue and passes the converted
-messages to the FC transport layer. A KUnit test module is also introduced =
-to
-validate the FPIN event handling and statistics updates.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
+Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
+---
+ common/scsi_debug | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-core.c
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -3547,6 +3547,56 @@ static void ibmvfc_process_async_work(struct work_=
-struct *work)
-[ ... ]
-> +	if (fpin) {
-> +		fc_host_fpin_rcv(tgt->vhost->host,
-> +				 sizeof(*fpin) + be32_to_cpu(fpin->desc_len),
-> +				 (char *)fpin, 0);
-> +		kfree(fpin);
-> +	} else
-   =20
-[Severity: Medium]
-Can the lockless modifications to fpin_stats in the FC transport layer here
-cause data races and lost statistic counts?
-   =20
-Multiple FPIN events arriving rapidly from the adapter are queued to the
-fpin_workq. Because the workqueue is created below as WQ_UNBOUND with
-max_active=3D0, these events can be processed concurrently.
-   =20
-Furthermore, since FPIN events are stateful (e.g., congestion detected vs
-cleared), could concurrent processing deliver events out of order to the
-midlayer and userspace, leaving the system reflecting an incorrect state?
+diff --git a/common/scsi_debug b/common/scsi_debug
+index c3fe7be623fa..af51905dc4ba 100644
+--- a/common/scsi_debug
++++ b/common/scsi_debug
+@@ -59,9 +59,19 @@ _get_scsi_debug_dev()
+ 		let physical=physical/2
+ 		let phys_exp=phys_exp+1
+ 	done
+-	opts="sector_size=$logical physblk_exp=$phys_exp lowest_aligned=$unaligned dev_size_mb=$size $@"
+-	echo "scsi_debug options $opts" >> $seqres.full
+-	modprobe scsi_debug $opts
++
++	local opts=(
++		"sector_size=$logical"
++		"physblk_exp=$phys_exp"
++		"lowest_aligned=$unaligned"
++		"dev_size_mb=$size"
++		"delay=0"
++		"clustering=1"
++	)
++	opts+=("$@")
++
++	echo "scsi_debug options ${opts[*]}" >> $seqres.full
++	modprobe scsi_debug "${opts[@]}"
+ 	[ $? -eq 0 ] || _fail "scsi_debug modprobe failed"
+ 	$UDEV_SETTLE_PROG
+ 	device=`grep -wl scsi_debug /sys/block/sd*/device/model | awk -F / '{print $4}'`
+-- 
+2.53.0
 
-[ ... ]
-> @@ -7135,6 +7135,15 @@ static int ibmvfc_probe(struct vio_dev *vdev, cons=
-t struct vio_device_id *id)
-[ ... ]
-> +	vhost->fpin_workq =3D alloc_workqueue("%s-fpin-workq-%u", WQ_UNBOUND, 0,
-> +						 IBMVFC_NAME, shost->host_no);
-   =20
-[Severity: Medium]
-By setting the max_active parameter to 0, which defaults to 256 concurrent
-execution threads, does this allow the unordered processing that triggers
-the data races mentioned above?
-   =20
-[ ... ]
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
-/ibmvfc_kunit.c
-> --- /dev/null
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-> @@ -0,0 +1,148 @@
-[ ... ]
-> +static void ibmvfc_async_fpin_test(struct kunit *test)
-> +{
-[ ... ]
-> +	vhost =3D ibmvfc_get_first_vhost();
-> +	if (!vhost)
-[ ... ]
-> +	rport =3D tgt->rport;
-> +	get_device(&rport->dev);
-[ ... ]
-> +	KUNIT_EXPECT_EQ(test, pre[IBMVFC_AE_FPIN_CONGESTION_CLEARED],
-> +			post[IBMVFC_AE_FPIN_CONGESTION_CLEARED]);
-> +
-> +	kref_put(&tgt->kref, ibmvfc_release_tgt);
-> +}
-   =20
-[Severity: Medium]
-Does this code leak the references to the Scsi_Host and the fc_rport device
-on the successful completion path?
-   =20
-The setup code earlier in this test acquires references via
-ibmvfc_get_first_vhost (which takes the host reference) and get_device, but
-this success path fails to drop them before returning. This could potential=
-ly
-prevent the driver from unloading after running the KUnit test module.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911054832.1311=
-668-1-tyreld@linux.ibm.com?part=3D1
