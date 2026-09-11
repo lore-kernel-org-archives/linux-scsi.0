@@ -1,70 +1,71 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D38A335BDDB
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:39:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EAFE322B6D
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:40:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789094346; cv=none; b=gR+2ej7UP9Hi1FFkB6yGjYAb+o9qND6+lvbaAf7uxJURLcjMav7eQaGmUbDsvyO/NbhfWvZDoSu9mCrX+yK1HObhGc7WMs1swkA+N3S/PIZKwai5CWvViAfw7yOcp55ywPJ2TJYYogiZocUipk3jq4wHytjERa2ZejXL8avq/MM=
+	t=1789094431; cv=none; b=Vr6t3QluJTjXHRH0F0V/KqL/R+6LyCpNEnq9ZbGpJMwBA9b8G5MldcmeRRhs1lyINTVmxEmSB6WzC+bTlXr3cOCCf4i0eKJWLGE8sNp2DG+8opKqyo8N151zXMxxMTFZ9VEzCVabdzN1lqMxRT4/kmbxYhwoxj9GciJ5M6++7ZU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789094346; c=relaxed/simple;
-	bh=ZdUALVFojqTkiiBFs5QZXGBV2OIGWdRPR9miqvOFq2g=;
+	s=arc-20240116; t=1789094431; c=relaxed/simple;
+	bh=32jbBppu2fVU7XmUQkc7Zr6IX3ZeGpQdutHq+x6vKw8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Q5pcwoagA1i4gsfIPc5BAIUaN8+RCErpG4Ve36VbIav8b1YhJwItl7PEzVQga7Q/mlC1t8YIEL0WCU/kOxt6m0gvb+QK8dDOPsBTB5wSz3fZMyhlGtcnK41ZSCH0tLEW0IHxg1fTPV8l2jopfU/FszNxIgopsxa3KpticNgB45w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gH+wB4/z; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jUmB4mQ+cHFjR3CMwatFxUrUS2m1Y/ChzH7Rdj3C2B10WPyV1ngI270aZt2B9lpSkzoJUmnj1fjcNWofMPM6CgBwvipPc4idUIFq8mO43/+e55z1I6sjMSeJdLlq9vFPchucUr84UVq47ty47znz5Mxs7e+UncwvREFDv8VE5Hk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jvMhYBvE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gH+wB4/z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A1FE1F000FF;
-	Fri, 11 Sep 2026 02:39:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jvMhYBvE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AE271F000FF;
+	Fri, 11 Sep 2026 02:40:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789094344;
-	bh=kjKVx0jbbHwfsItm/Zhda6Y63ZQXucFRuktWM77GhDk=;
+	s=k20260515; t=1789094430;
+	bh=ZScrajSt5aneUBgu0HubfKw5MMNpzUTFWvk/Sy3IImk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gH+wB4/zhV9wc7CsBRu6dQhDeNKV2vJ+DA1fKEJl+pqJZWlQcph3tQHiOXyMkCNLl
-	 dJ3qHateGIW42xCZj5aDyKDU/O7J0jEhbbBUkpwwh+kw0nz0o6uSpAKHOEUwsOVmkP
-	 TzsAfwoTuZZN3ur/GF92QsGnB6Uq7kUGwuM10Mc+lDEqbpSQ0JdqqBpHlhP2dH6r8q
-	 rrVRBC/obZJA1b/nsHgqXL74fBn8aDJfO49/A/jDkFKXebpbRu0P4opVarDq3CA5X5
-	 IZ+TdhaWpl2FZezLdo3pY4/hFiMo9xjJUGf16mtKceAvTDvh0xMvQS+85UfgdWAJXo
-	 5uoAFJAOPzSZA==
+	b=jvMhYBvEGrup4VFdqxRCxGUe/h8KkbsvsO6UMYTcK55c9t9EJQewnHa1NdTVAYO8x
+	 CWUYtcgvWjicLGiBzqLn1cv+SYtt03iy+uFit92GzcGTNSkAJCChyYc7oUl60vvxFl
+	 SWh3AdPWx+H/dUHxmToA/21KH0DCzHN32k9HY3oVeuKcvR+pOIWDyown8oqXSFpEtI
+	 K918I3sWKJHKWIzMy/D6ZjQ+ahNr4o0K2eHrEeAa8fz9hfMBJLTRcanpcneEl+T6o5
+	 oehnDe7r0IVRFDaH6eNk6XZbHyYgvfhv55F7qE0Uof825XtgYsdbKTh0G/TG50STBU
+	 1gFpfitr5XsXg==
 From: sashiko-bot@kernel.org
 Subject: Re: [PATCH v9 4/9] scsi: ibmvfc: extend async event handlers for
  async sub-CRQ events
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260911021910.1038128-5-tyreld@linux.ibm.com>
-References: <20260911021910.1038128-1-tyreld@linux.ibm.com>
- <20260911021910.1038128-5-tyreld@linux.ibm.com>
+In-Reply-To: <20260911020817.1033789-4-tyreld@linux.ibm.com>
+References: <20260909-ibmvfc-fpin-support-v8-0-b27183b055af@linux.ibm.com>
+ <20260911020817.1033789-4-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 02:39:04 +0000
-Message-Id: <20260911023904.6A1FE1F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 02:40:29 +0000
+Message-Id: <20260911024030.2AE271F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] ibmvfc_find_target() incorrectly skips targets unless they support=
- BOTH SCSI and NVMe, causing FPIN events to be dropped.
-- [Medium] Missing scsi_id extraction for async sub-CRQ events.
-- [Medium] Incorrect WWPN populated in FPIN descriptor for async sub-CRQ ev=
-ents when subq->wwpn is 0.
-- [Low] Missing address-of operator '&' when passing host_lock to spin_lock=
-_irqsave() and spin_unlock_irqrestore(), causing a build failure.
+
+New issues:
+- [Medium] ibmvfc_full_fpin_to_desc() incorrectly relies on the CRQ event's=
+ WWPN rather than the resolved target's WWPN, risking zero-initialized FPIN=
+ descriptors.
+
+Pre-existing issues:
+- [High] ibmvfc_find_target() will always return NULL due to a faulty logic=
+al OR condition checking for both rport and nvme_remote_port.
 --
 
-commit 997e4bca2edfad65478e2c572b7c236ba500e1bb
+commit 944a7c8d64284dbbdeb6a30246074960364f88e5
 Author: Dave Marquardt <davemarq@linux.ibm.com>
-
 scsi: ibmvfc: extend async event handlers for async sub-CRQ events
 
-This patch refactors async event handling to support both traditional async
-CRQs and new asynchronous sub-queue CRQs using a tagged union. It also
-updates FPIN processing logic to extract identifiers from the appropriate
-event type.
+This commit refactors async event handling to support both traditional
+async CRQs and new asynchronous sub-queue CRQs using a tagged union.
+It also adds functionality to convert full FPIN messages from async
+sub-queue formats into fc_els_fpin structures.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
@@ -74,31 +75,66 @@ ibmvfc-core.c
 [ ... ]
 > @@ -3426,6 +3426,45 @@ ibmvfc_basic_fpin_to_desc(struct ibmvfc_async_crq =
 *crq, u64 wwpn)
+>  					  cpu_to_be32(1));
+>  }
+> =20
+> +/**
+> + * ibmvfc_full_fpin_to_desc(): allocate and populate a struct fc_els_fpi=
+n struct
+> + * containing a descriptor.
+> + * @ibmvfc_fpin: Pointer to async subq FPIN data
+> + *
+> + * Allocate a struct fc_els_fpin containing a descriptor and populate
+> + * based on data from *ibmvfc_fpin.
+> + *
+> + * Return:
+> + * NULL     - unable to allocate structure
+> + * non-NULL - pointer to populated struct fc_els_fpin
+> + */
 > +static struct fc_els_fpin *
 > +ibmvfc_full_fpin_to_desc(struct ibmvfc_async_sub_crq *ibmvfc_fpin)
 > +{
 > +	__be16 type;
-[ ... ]
+> +
+> +	switch (ibmvfc_fpin->fpin_status) {
+> +	case IBMVFC_AE_FPIN_LINK_CONGESTED:
+> +	case IBMVFC_AE_FPIN_PORT_CONGESTED:
+> +		type =3D cpu_to_be16(FPIN_CONGN_DEVICE_SPEC);
+> +		break;
+> +	case IBMVFC_AE_FPIN_PORT_CLEARED:
+> +	case IBMVFC_AE_FPIN_CONGESTION_CLEARED:
+> +		type =3D cpu_to_be16(FPIN_CONGN_CLEAR);
+> +		break;
+> +	case IBMVFC_AE_FPIN_PORT_DEGRADED:
+> +		type =3D cpu_to_be16(FPIN_LI_UNKNOWN);
+> +		break;
+> +	default:
+> +		return NULL;
+> +	}
+> +
 > +	return ibmvfc_common_fpin_to_desc(ibmvfc_fpin->fpin_status, ibmvfc_fpin=
 ->wwpn,
 > +					  type, cpu_to_be16(0),
+
+[Severity: Medium]
+Does this code risk generating FPIN descriptors with a zero-initialized
+attached_wwpn if the VIOS asynchronous sub-CRQ event lacks a populated WWPN?
+
+The legacy path (ibmvfc_basic_fpin_to_desc) explicitly accepts and uses the
+resolved target's WWPN, whereas this new function relies strictly on the CRQ
+payload (ibmvfc_fpin->wwpn). If targets are resolved primarily via node_name
+and the event payload's WWPN is zeroed, will we substitute an empty WWPN in=
+to
+the FPIN descriptor instead of using the known target WWPN?
+
 > +					  cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_THRESHOLD),
 > +					  cpu_to_be32(1));
 > +}
-
-[Severity: Medium]
-If the async sub-CRQ event arrives with a WWPN of 0 but the target is
-successfully matched via node_name, will this embed a WWPN of 0 into the
-FPIN descriptor?
-
-It looks like fc_host_fpin_rcv() would then fail to find the remote port by
-WWPN, silently dropping the FPIN and missing statistics updates. Would it be
-safer to pass in the matched tgt->wwpn here, similar to how it's done for
-standard CRQs?
-
+> +
 >  /**
 >   * ibmvfc_find_target - Search for a target in a target list
 >   * @target_list: list head of targets to search
+[ ... ]
 > @@ -3463,28 +3502,39 @@ static struct ibmvfc_target *ibmvfc_find_target(s=
 truct list_head *target_list,
 >   */
@@ -123,16 +159,6 @@ truct list_head *target_list,
 > +	if (aw->event.type =3D=3D IBMVFC_ASYNC_CRQ_SUB) {
 > +		subq =3D &aw->event.subq;
 > +		scsi_id =3D 0;
-
-[Severity: Medium]
-The commit message states we "extract WWPN, node_name, and scsi_id from the
-appropriate union member based on event type."
-
-However, for async sub-CRQ events here and in ibmvfc_handle_async(), scsi_id
-is hardcoded to 0 instead of extracting nport_id from the payload. Could th=
-is
-cause target lookup failures if WWPN and node_name happen to be 0?
-
 > +		wwpn =3D subq->wwpn;
 > +		node_name =3D (subq->flags & IBMVFC_ASYNC_ID_IS_ASSOC_ID) ? 0 : subq->=
 id.node_name;
@@ -152,43 +178,48 @@ id.node_name;
 > -				 crq->wwpn, crq->node_name);
 > +	tgt =3D ibmvfc_find_target(&vhost->scsi_scrqs.targets, scsi_id, wwpn, n=
 ode_name);
+>  	if (!tgt) {
+>  		/* Target not found in scsi_scrqs, search nvme_scrqs */
+> -		tgt =3D ibmvfc_find_target(&vhost->nvme_scrqs.targets,
+> -					 crq->scsi_id, crq->wwpn,
+> -					 crq->node_name);
+> +		tgt =3D ibmvfc_find_target(&vhost->nvme_scrqs.targets, scsi_id, wwpn, =
+node_name);
+>  	}
 
 [Severity: High]
-Does ibmvfc_find_target() incorrectly skip targets unless they support BOTH
-SCSI and NVMe?
+This isn't a bug introduced by this patch, but its presence completely brea=
+ks
+the FPIN functionality being extended here.
 
-Looking at the implementation of ibmvfc_find_target():
+The ibmvfc_find_target() function drops all valid targets because it checks:
 
     if (!tgt->rport || !tgt->nvme_remote_port)
         continue;
 
-Because a target represents a single endpoint for a specific protocol (SCSI=
- or
-NVMe), it will only ever have either tgt->rport or tgt->nvme_remote_port,
-never both.
+Since FCP and NVMe targets are kept in completely separate lists (scsi_scrqs
+vs nvme_scrqs), no target will ever have both an rport and an nvme_remote_p=
+ort
+simultaneously. Will this unconditionally return NULL for every async event
+and fail with "Invalid target for FPIN", dropping the notifications?
 
-Because of the logical OR, this condition always evaluates to true. Could t=
-his
-effectively break FPIN event handling by causing every target to be skipped?
-
-[ ... ]
-> @@ -3512,25 +3566,51 @@ static void ibmvfc_process_async_work(struct work=
-_struct *work)
 > =20
->  /**
->   * ibmvfc_handle_async - Handle an async event from the adapter
-[ ... ]
->  	if (ae->type =3D=3D IBMVFC_ASYNC_CRQ_SUB) {
-> -	switch (be64_to_cpu(crq->event)) {
-> +		subq =3D &ae->subq;
-> +		event =3D be16_to_cpu(subq->event);
-> +		link_state =3D subq->link_state;
-> +		scsi_id =3D 0;
-
-[Severity: Medium]
-Similarly, this hardcodes scsi_id to 0 for async sub-CRQ events instead of
-extracting it from the event payload.
+>  	if (tgt) {
+> @@ -3496,7 +3546,11 @@ static void ibmvfc_process_async_work(struct work_=
+struct *work)
+>  		goto free;
+>  	}
+> =20
+> -	fpin =3D ibmvfc_basic_fpin_to_desc(crq, tgt->wwpn);
+> +	if (crq)
+> +		fpin =3D ibmvfc_basic_fpin_to_desc(crq, tgt->wwpn);
+> +	else
+> +		fpin =3D ibmvfc_full_fpin_to_desc(subq);
+> +
+>  	if (fpin) {
+>  		fc_host_fpin_rcv(tgt->vhost->host,
+>  				 sizeof(*fpin) + be32_to_cpu(fpin->desc_len),
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911021910.1038=
-128-1-tyreld@linux.ibm.com?part=3D4
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909-ibmvfc-fpi=
+n-support-v8-0-b27183b055af@linux.ibm.com?part=3D4
