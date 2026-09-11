@@ -1,163 +1,248 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 325792EBDE9
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:34:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C2983E0220
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:38:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789094061; cv=none; b=imrR/2xOr2hEntrFxIEGahuj/9fC+Gie1BT53L0+aT95dPCAzpGG+vOSetz5rQ9dCkwPAezYTNKs4hzHI472QCCpmGBOREN8FTrLUH6oV+pQHPIeQYXnvyqNSLerZzePcAL1bVD3YLEd1REYxzWIQ8pkLeFQnkfiDbhzy69pdF0=
+	t=1789094335; cv=none; b=l85xlTe6m8ntjX+FhwAVAemUfNVaHE+Y+6QVFscIjiaN1CA9OKMbHPPzBfDEiqd7Gesb8UWbNlHlEoWSZlEjXI9UMYy6zEvk23dZ3pc9gPqnhFlmByA0NcgRIzn5K7w2wQVxLaLiObYqIygh/SGDf86Y42QqLEn9ahpGxEj+sxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789094061; c=relaxed/simple;
-	bh=bL2ZaUvU8WNkPQCs8Wz4rM6zZX99WRXMOhMQHJ9ZJU4=;
+	s=arc-20240116; t=1789094335; c=relaxed/simple;
+	bh=7Qpfdcw/7q6aRcnfw6Eq3RWB6z+VUEyCq5/CmnVRhdg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lAaDJU3CTLiA7Q/4cgkdLNQpfY9tTDGmwawOJsDaMxUY87JCNGL554xFDgxBKKsSg0fndnA0BYT2cpbUtrMVM/93/gdDTVNS6A9dFFzlDlcYIkB5Hea2nXu1W/NpwaTmdBKQCpK718S6jpPWHsw1+mR5LAdmoBaonzHBaknGN4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dGza4GLH; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=LgQoAnyTt0oSPbWzSVCD7a3S2DF5wcIr3AfJTcarFxXm6LdKTuDqzVqqXwvSvmRYWM7zm4v1r4+c5mwy5PhaFJe8xwyxaPj85HZCG7hLV2c3FVGhHd9UFl6g2fR/QNDBsKFhVhBDToluiqNQM/56XD2Mu/mGkwDyq1mL3Dio6Uo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Exi1ttTP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dGza4GLH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A464E1F000FF;
-	Fri, 11 Sep 2026 02:34:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Exi1ttTP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C190D1F000FF;
+	Fri, 11 Sep 2026 02:38:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789094059;
-	bh=wfO/HHMVv8nIcn31QO7XxUh9vpHKfxnCqzsdg4afzZg=;
+	s=k20260515; t=1789094333;
+	bh=09YAb03qwADuII5PVtYruKDEKZqCaM9DEbUnqsr2A/k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dGza4GLHP8eP24U27eEtKRMJVDFs/ljSpk63IJyb6CiT3SzqDM5VVamihe585fxgK
-	 FKNBaxBZno5fw2vEWaENb56lWT6KmbNu+J39+Upddmjx+1WFqgyCOwS0Nz28c29QmR
-	 gTdLkjVH+r0PN0KGZuN773KJXZEBtPtGgZ3ehDN6FUJBPdxazzRBE9imT6FJyEvTrm
-	 WwihJgpvDJjGYWQLZHS1TZGQVdTN6mR8+26xII5Nesrne+kDRdmhwGaYrWkrgyXwUx
-	 Fn8P5nrvVKNpxGfv7P/SD9jcenLMoFuqvMgUB24SpGWyh9bmTb0LPBW+vDGjvaN0cD
-	 AGbgGV9pWT2uA==
+	b=Exi1ttTPD/eLXNSFYyq5vgZaDH7iUOMCh2hWBGfhkwDxmEmeF56HO8FdB9JDZviMc
+	 IBHw+jZ0pvGd+FniyEqHciR8vQL4n+bbYyraIQICDLN3X67rM9IHHLSkWrnaMKhiVO
+	 +VMYc4jObfm+V8BRkqxHY66YVva0EL+FGmbhnFkdnxoZYYKA8fyXHQfVX+Q485gc6L
+	 akVS6p84tYUbSkxremcH7b5b7ZGI6yIrIUsguS97ym9UPTSBx6WTe9ErfrFCK/iAQu
+	 EJVVRzCH+h2qAqckcLinC4o3+/JgkJE0t+lC3+MnLEeJhSv5v6nWzCkNU6lNHaxRax
+	 0AwtTcC1YwG3Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 7/9] scsi: ibmvfc: fix IRQ leak and guard deregister
- on channel reg failure
+Subject: Re: [PATCH v9 1/9] scsi: ibmvfc: add basic FPIN support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260911021910.1038128-8-tyreld@linux.ibm.com>
+In-Reply-To: <20260911021910.1038128-2-tyreld@linux.ibm.com>
 References: <20260911021910.1038128-1-tyreld@linux.ibm.com>
- <20260911021910.1038128-8-tyreld@linux.ibm.com>
+ <20260911021910.1038128-2-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 02:34:19 +0000
-Message-Id: <20260911023419.A464E1F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 02:38:53 +0000
+Message-Id: <20260911023853.C190D1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Error code from request_irq failure is swallowed, causing initiali=
-zation functions to falsely return success.
-- [High] Unconditional execution of H_FREE_SUB_CRQ and failure to clear `sc=
-rq->cookie` leads to hypervisor double-free and use-after-free of sub-CRQs.
+- [High] ibmvfc_find_target incorrectly uses a logical OR condition, causin=
+g it to skip all valid targets and unconditionally return NULL.
+- [Medium] Reference count leak of the SCSI host and remote port devices in=
+ the `ibmvfc_async_fpin_test` KUnit test.
+- [Low] KUnit tests use undefined structures, macros, and incompatible func=
+tion signatures from a future patch, breaking the build.
+- [Low] Missing '&' operator when acquiring/releasing the host_lock, causin=
+g compilation to fail.
 --
 
-commit 2c9e0fcaebe0c140397143556c20f5137db7357d
+commit e20d55240604f534a630e6df915a24fb9e9b543b
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ibmvfc: fix IRQ leak and guard deregister on channel reg failure
+scsi: ibmvfc: add basic FPIN support
 
-This commit fixes an IRQ leak where the error path leaves scrq->irq
-populated, causing a subsequent deregister call to double-free the IRQ.
-It explicitly sets scrq->irq to 0 on failure and guards the teardown
-process against unregistered queues.
+Implement support for a basic level of Fabric Performance Impact
+Notifications (FPIN) in the ibmvfc driver to enable monitoring of
+fabric congestion and link integrity events.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index fa312a58471fa..8eeb125ee13b8 100644
+> index aa7ae81df41b1..5259a80958ce1 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -6891,6 +6891,7 @@ static int ibmvfc_register_channel(struct ibmvfc_ho=
-st *vhost,
->  		else
->  			dev_err(dev, "Couldn't register async sub-crq irq\n");
->  		irq_dispose_mapping(scrq->irq);
-> +		scrq->irq =3D 0;
->  		goto irq_failed;
->  	}
-> =20
-> @@ -6933,9 +6934,11 @@ static void ibmvfc_deregister_channel(struct ibmvf=
-c_host *vhost,
-> =20
->  	ENTER;
-> =20
-> -	free_irq(scrq->irq, scrq);
-> -	irq_dispose_mapping(scrq->irq);
-> -	scrq->irq =3D 0;
-> +	if (scrq->irq) {
-> +		free_irq(scrq->irq, scrq);
-> +		irq_dispose_mapping(scrq->irq);
-> +		scrq->irq =3D 0;
+
+[ ... ]
+
+> @@ -3411,6 +3450,25 @@ static struct fc_els_fpin *
+> +static struct ibmvfc_target *ibmvfc_find_target(struct list_head *target=
+_list,
+> +						__be64 scsi_id, __be64 wwpn,
+> +						__be64 node_name)
+> +{
+> +	struct ibmvfc_target *tgt;
+> +
+> +	list_for_each_entry(tgt, target_list, queue) {
+> +		if (scsi_id && cpu_to_be64(tgt->scsi_id) !=3D scsi_id)
+> +			continue;
+> +		if (wwpn && cpu_to_be64(tgt->ids.port_name) !=3D wwpn)
+> +			continue;
+> +		if (node_name && cpu_to_be64(tgt->ids.node_name) !=3D node_name)
+> +			continue;
+> +		if (!tgt->rport || !tgt->nvme_remote_port)
+> +			continue;
+
+[Severity: High]
+Should this check use a logical AND (&&) instead of a logical OR (||)?
+
+Since the target lists are separated into SCSI and NVMe, it seems every
+target will have either rport or nvme_remote_port set to NULL. Using
+a logical OR here evaluates to true for every target, causing the loop
+to unconditionally skip all valid targets and return NULL.
+
+> +		return tgt;
 > +	}
-> =20
->  	do {
->  		rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
+> +
+> +	return NULL;
+> +}
 
-[Severity: High]
-This is a pre-existing issue, but by clearing the irq here, should we also =
-be
-clearing scrq->cookie?
+[ ... ]
 
-If ibmvfc_reg_sub_crqs() fails, it triggers a rollback that calls
-ibmvfc_deregister_channel(), which executes H_FREE_SUB_CRQ but leaves
-scrq->cookie populated.
+> +static void ibmvfc_process_async_work(struct work_struct *work)
+> +{
+> +	struct ibmvfc_async_work *aw;
+> +	struct ibmvfc_async_crq *crq;
+> +	struct ibmvfc_target *tgt;
+> +	struct ibmvfc_host *vhost;
+> +	struct fc_els_fpin *fpin;
+> +	unsigned long flags;
+> +
+> +	aw =3D container_of_const(work, struct ibmvfc_async_work, async_work_s);
+> +	vhost =3D aw->vhost;
+> +	crq =3D &aw->crq;
+> +
+> +	if (!crq->scsi_id && !crq->wwpn && !crq->node_name)
+> +		goto free;
+> +
+> +	spin_lock_irqsave(vhost->host->host_lock, flags);
 
-Since ibmvfc_dereg_sub_crqs() unconditionally loops over channels->max_queu=
-es
-and calls H_FREE_SUB_CRQ on everything during teardown, couldn't this lead =
-to
-passing stale cookies to the hypervisor?
+[Severity: Low]
+Does this line cause a build failure due to a missing '&' operator?
 
-If those cookies were reused for NVMe queues, would this destroy active que=
-ues
-and cause use-after-free corruption?
+In struct Scsi_Host, host_lock is an inline spinlock_t rather than a
+pointer. Passing it by value to spin_lock_irqsave() causes the compiler
+to fail with an incompatible type error.
 
-Similarly, in ibmvfc_register_channel(), if request_irq() fails, the error
-path executes H_FREE_SUB_CRQ without clearing scrq->cookie:
+Should this be written as:
+	spin_lock_irqsave(&vhost->host->host_lock, flags);
 
-irq_failed:
-	do {
-		hcall_rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq-=
->cookie);
-	} while (hcall_rc =3D=3D H_BUSY || H_IS_LONG_BUSY(hcall_rc));
-reg_failed:
+> +	tgt =3D ibmvfc_find_target(&vhost->scsi_scrqs.targets, crq->scsi_id,
+> +				 crq->wwpn, crq->node_name);
 
+[ ... ]
 
-[Severity: High]
-This is a pre-existing issue, but while reviewing the initialization code,
-does ibmvfc_init_crq() swallow the error code from request_irq() failures?
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
+/ibmvfc_kunit.c
+> new file mode 100644
+> index 0000000000000..80e7f8e0fd700
+> --- /dev/null
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+> @@ -0,0 +1,408 @@
 
-In ibmvfc_init_crq(), retrc is set to 0 upon successful CRQ registration:
+[ ... ]
 
-	retrc =3D 0;
-	...
-	if ((rc =3D request_irq(vdev->irq, ibmvfc_interrupt, 0, IBMVFC_NAME, vhost=
-))) {
-		dev_err(dev, "Couldn't register irq 0x%x. rc=3D%d\n", vdev->irq, rc);
-		goto req_irq_failed;
-	}
-	...
-req_irq_failed:
-	tasklet_kill(&vhost->tasklet);
-	do {
-		rc =3D plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
-	} while (rc =3D=3D H_BUSY || H_IS_LONG_BUSY(rc));
-reg_crq_failed:
-	ibmvfc_free_queue(vhost, crq);
-	return retrc;
+> +static void ibmvfc_async_fpin_test(struct kunit *test)
+> +{
+> +	u64 post[IBMVFC_AE_FPIN_CONGESTION_CLEARED + 1];
+> +	u64 pre[IBMVFC_AE_FPIN_CONGESTION_CLEARED + 1];
+> +	struct ibmvfc_async_crq_event ae[IBMVFC_AE_FPIN_CONGESTION_CLEARED + 1]=
+ =3D {
+> +		[0 ... IBMVFC_AE_FPIN_CONGESTION_CLEARED] =3D { .type =3D IBMVFC_ASYNC=
+_CRQ_MAIN },
+> +	};
 
-Since retrc is already 0, the error path unconditionally returns success
-instead of propagating rc.
+[Severity: Low]
+Do these undefined types and macros break the build when compiling with
+CONFIG_SCSI_IBMVFC_KUNIT_TEST=3Dy?
 
-Could this cause the probe function to consider the adapter successfully
-initialized, even though it lacks a functional IRQ handler?
+struct ibmvfc_async_crq_event and IBMVFC_ASYNC_CRQ_MAIN are not defined
+in this commit, which prevents the tests from compiling. It appears they
+might have leaked from a subsequent patch in the series.
 
-Would this lead to a silent hang during IO operations since no completion
-interrupts will be processed?
+> +	enum ibmvfc_ae_fpin_status fs;
+> +	struct fc_host_attrs *fc_host;
+> +	struct ibmvfc_target *tgt;
+> +	struct ibmvfc_host *vhost;
+> +	struct fc_rport *rport;
+> +	unsigned long flags;
+> +
+> +	vhost =3D ibmvfc_get_first_vhost();
+> +	if (!vhost)
+> +		kunit_skip(test, "No ibmvfc devices available");
+> +
+> +	spin_lock_irqsave(vhost->host->host_lock, flags);
+
+[Severity: Low]
+This also seems to be missing the '&' operator before vhost->host->host_loc=
+k,
+resulting in the same build failure mentioned above.
+
+> +	if (vhost->scsi_scrqs.num_targets < 1) {
+
+[ ... ]
+
+> +		ae[fs].async_crq.node_name =3D cpu_to_be64(tgt->ids.node_name);
+> +		ibmvfc_handle_async(&ae[fs], vhost);
+
+[Severity: Low]
+Is there a signature mismatch here?
+
+ibmvfc_handle_async() is defined to take a struct ibmvfc_async_crq pointer
+as its first argument, but the test passes a struct ibmvfc_async_crq_event
+pointer instead.
+
+> +		ae[fs].async_crq.valid =3D 0;
+> +		wmb(); /* ensure valid bit clear is visible before checking stats */
+> +	}
+
+[ ... ]
+
+> +	KUNIT_EXPECT_EQ(test, pre[IBMVFC_AE_FPIN_CONGESTION_CLEARED],
+> +			post[IBMVFC_AE_FPIN_CONGESTION_CLEARED]);
+> +
+> +	kref_put(&tgt->kref, ibmvfc_release_tgt);
+> +}
+
+[Severity: Medium]
+Are we leaking device and host references in the successful exit path?
+
+The test acquires references via ibmvfc_get_first_vhost() and
+get_device(&rport->dev) during setup, but unlike the other tests in this
+file (e.g., ibmvfc_full_fpin_test), it does not call put_device(&rport->dev)
+and scsi_host_put(vhost->host) before returning. Leaking these references
+can prevent module unloading and device cleanup.
+
+> +
+> +/**
+> + * ibmvfc_full_fpin_test - unit test for IBMVFC_AE_FPIN parts of ibmvfc_=
+handle_async
+
+[ ... ]
+
+> +static void ibmvfc_extended_fpin_test(struct kunit *test)
+> +{
+> +	enum ibmvfc_ae_fpin_status fs;
+> +	struct ibmvfc_async_subq_fpin crq[IBMVFC_AE_FPIN_CONGESTION_CLEARED+1] =
+=3D {};
+
+[Severity: Low]
+Does this undefined structure break the build?
+
+struct ibmvfc_async_subq_fpin is not defined in this commit, causing a
+compilation error.
+
+> +	struct ibmvfc_async_subq_fpin
+> +		crqcn[IBMVFC_AE_FPIN_PORT_CONGESTED][FPIN_CONGN_DEVICE_SPEC+1] =3D {};
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911021910.1038=
-128-1-tyreld@linux.ibm.com?part=3D7
+128-1-tyreld@linux.ibm.com?part=3D1
