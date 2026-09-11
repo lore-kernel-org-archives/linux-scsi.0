@@ -1,130 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C64725B084
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 06:03:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 088822D9EDB
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 06:06:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789106613; cv=none; b=kNNFNiPNGAKU4VGa+I+0B0vXZQWz3bcDLehp8wFgwwbnLQJsVb68xIimkXwrBjnBWninIpqP2ncge13xQeqkeIAGqxqUf+g6eQYWF4Mkd0spCh6t5HNQqMRM9EqxEZ6XK8PE6MNKwpQzU8//p6UJHjIfECoxVsCKP7rel3s5hHo=
+	t=1789106820; cv=none; b=Zyrf6Ynflb4wgHL+0Idgqh3DOVFz8V98mas8Z9LqMkQ/bADsSR2V8N3/gpl60cc38ry2fuZODtiemwXGQQs2VmSrRTkXL/p2L6Z3wpCtqVpkTeUshPFhNxllg+YBlJqXgAm30D0izvuSxBB3E4f7ndolonZ0K7zYOOqaY0rVqhw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789106613; c=relaxed/simple;
-	bh=UB+SISbbesghW9fa3CIm/OBp7BhUaCIPTQLSfnZkndM=;
+	s=arc-20240116; t=1789106820; c=relaxed/simple;
+	bh=f1tTgldxYU0H8sGZCt1Wo1p5HU6eCwTjw6b9erNINaU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ftGvuuqvHdDvuFzc41FUhp35Gz8QFaOHgum/GejLMY2jG1mPr60+zE3F3xORoOLIENWEvFeh5YC+e9fAeNumWCBJ3ztBzhs9AnMEONrK2AapUqRy5LGkZTRXg+a2/0mlm0zTm7I60miZ+jPHJUDrxhCgcGtIC29Ma4+T9LgGjr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DcKTd4wp; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=CA/uVa8rTOXgXSlEL3Coil1Ea5mrDjZuzM/WNXNt5q+8e9pg77eSLhcQDUeM1ReAZuHxLCUmV8iaa5zahYCwrgu6V0pdLM5/Q5Gd2/jei8f0gC4B5W18Yd+bRuU+pfbmQRDFOgC5KI8NWRjUSnKwLIZhtzcNdXkH+3xug9uWhok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q7XyAPa8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DcKTd4wp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEAE71F000FF;
-	Fri, 11 Sep 2026 06:03:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q7XyAPa8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68FDC1F000FF;
+	Fri, 11 Sep 2026 06:06:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789106612;
-	bh=i1FxH5btFzjkQMm1H6wQcWHtKbiCpAHqTbTDabYsn70=;
+	s=k20260515; t=1789106818;
+	bh=uz9R0kYXX4RBu6vgv8RzA9gIIVYywEpQOhH8ZnYhIyg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DcKTd4wpfkdIw5hSqBZc18bV+V3HErG5REfmfYfRvnc88wEePjbeqTXnAgDcZMaJc
-	 Ndpjw8TfgDsIG1vw/0q9wH9kaNKFsMxFXoDyAPG2onBVTdVHeYpF3+ecFJbYxCWAPd
-	 QQfbfZAYBkZzS+81x5dG0JD9sUxk4c7ZeWYWeoqLWXazMEXv3C/CYyShyWe1u4T3D4
-	 tmifp06ZpRKFG37ZdLxYIterQZh9PCndBP0zkh+oeydON2I+NUSsrdtogfKGb6dJwM
-	 lxWRxl9QpPEa4KXzgHOQCqppH0HISn/rIQ7ZrX7Wbb4SkAnLlsThqXL/jF4kz09/yC
-	 Op56pPd5fUAVQ==
+	b=Q7XyAPa8J0eNwsSr2Z2UmmYjCBbZtC/05gTudVhp38o0EpmuKTqf/paPRduo/YhlO
+	 HolbT+YcugRu8UTMUPhASiCCMzZ9NTH6QgGZQ9bhkMD6AQYeIUBPq4rIwkq9Auo4xH
+	 cuhuyvmltmFEAyDITET7STW+RCPnmxEivHiX57g2QeXjqJN2I4n3Ux73Alvcvv/Vfe
+	 BxdBXx0uU3CnvdWF3yUKCBylDJTUeaHDb0jGUwlxUnRREUAj6ZNqlcgRLhZPgQobRC
+	 OGyAIAEEZjMNKU8ixOfHc0KIn2YGTCT+2l3L2P1OCNl3XtXkAqyrsEFWTzgoeAc/TV
+	 fTT70hpAg7BfQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 7/9] scsi: ibmvfc: fix IRQ leak and guard deregister
- on channel reg failure
+Subject: Re: [PATCH v10 1/9] scsi: ibmvfc: add basic FPIN support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260911054832.1311668-8-tyreld@linux.ibm.com>
+In-Reply-To: <20260911054832.1311668-2-tyreld@linux.ibm.com>
 References: <20260911054832.1311668-1-tyreld@linux.ibm.com>
- <20260911054832.1311668-8-tyreld@linux.ibm.com>
+ <20260911054832.1311668-2-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 06:03:31 +0000
-Message-Id: <20260911060331.CEAE71F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 06:06:57 +0000
+Message-Id: <20260911060658.68FDC1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Unguarded hypervisor cleanup in ibmvfc_deregister_channel() leads =
-to double-free of hypervisor resources and unconditional H_FREE_SUB_CRQ cal=
-ls.
+- [Medium] The KUnit test `ibmvfc_async_fpin_test` leaks references to the =
+`Scsi_Host` and the `fc_rport` device on its successful completion path.
+- [Medium] Unordered workqueue allows FPIN events to be processed concurren=
+tly, causing data races in FC transport statistics and FPIN event reorderin=
+g.
 --
 
-commit 6e9a49d8343f9077df9f1052cfd7a71c721c4b81
+commit 79377784bc96c798354f5b0f5ce5007a8d857d16
 Author: Dave Marquardt <davemarq@linux.ibm.com>
-
-scsi: ibmvfc: fix IRQ leak and guard deregister on channel reg failure
-
-This commit ensures scrq->irq is cleared to 0 after irq_dispose_mapping()
-and guards free_irq() and irq_dispose_mapping() with a check for scrq->irq
-in ibmvfc_deregister_channel() so unmapped or unregistered queues are
-safely skipped.
+   =20
+scsi: ibmvfc: add basic FPIN support
+   =20
+This commit implements support for a basic level of Fabric Performance Impa=
+ct
+Notifications (FPIN) in the ibmvfc driver. It adds an async event handler t=
+hat
+offloads FPIN processing to a dedicated workqueue and passes the converted
+messages to the FC transport layer. A KUnit test module is also introduced =
+to
+validate the FPIN event handling and statistics updates.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index a9cf1096e755d..c78e221f182a2 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -6890,6 +6890,7 @@ static int ibmvfc_register_channel(struct ibmvfc_ho=
-st *vhost,
->  		else
->  			dev_err(dev, "Couldn't register async sub-crq irq\n");
->  		irq_dispose_mapping(scrq->irq);
-> +		scrq->irq =3D 0;
+> @@ -3547,6 +3547,56 @@ static void ibmvfc_process_async_work(struct work_=
+struct *work)
+[ ... ]
+> +	if (fpin) {
+> +		fc_host_fpin_rcv(tgt->vhost->host,
+> +				 sizeof(*fpin) + be32_to_cpu(fpin->desc_len),
+> +				 (char *)fpin, 0);
+> +		kfree(fpin);
+> +	} else
+   =20
+[Severity: Medium]
+Can the lockless modifications to fpin_stats in the FC transport layer here
+cause data races and lost statistic counts?
+   =20
+Multiple FPIN events arriving rapidly from the adapter are queued to the
+fpin_workq. Because the workqueue is created below as WQ_UNBOUND with
+max_active=3D0, these events can be processed concurrently.
+   =20
+Furthermore, since FPIN events are stateful (e.g., congestion detected vs
+cleared), could concurrent processing deliver events out of order to the
+midlayer and userspace, leaving the system reflecting an incorrect state?
 
-[Severity: High]
-This isn't a bug introduced by this patch, but on the request_irq() error
-path, the hypervisor resource is freed but scrq->cookie is not cleared to 0:
-
-drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_register_channel() {
-    ...
-irq_failed:
-	do {
-		hcall_rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ,
-                                              vdev->unit_address, scrq->coo=
-kie);
-	} while (hcall_rc =3D=3D H_BUSY || H_IS_LONG_BUSY(hcall_rc));
-    ...
-}
-
-Could this cause a double-free when ibmvfc_deregister_channel() is later
-called?
-
->  		goto irq_failed;
->  	}
-> =20
-> @@ -6932,9 +6933,11 @@ static void ibmvfc_deregister_channel(struct ibmvf=
-c_host *vhost,
-> =20
->  	ENTER;
-> =20
-> -	free_irq(scrq->irq, scrq);
-> -	irq_dispose_mapping(scrq->irq);
-> -	scrq->irq =3D 0;
-> +	if (scrq->irq) {
-> +		free_irq(scrq->irq, scrq);
-> +		irq_dispose_mapping(scrq->irq);
-> +		scrq->irq =3D 0;
-> +	}
-> =20
->  	do {
->  		rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
-
-[Severity: High]
-This is a pre-existing issue, but does this leave the hypervisor call
-unguarded?
-
-It appears this hypervisor call is executed unconditionally using whatever
-stale cookie is present, even for queues that were never successfully
-registered or have already been freed.
-
-If the hypervisor reallocates the freed cookie to another queue or device,
-could the double-free maliciously or accidentally destroy a live queue?
+[ ... ]
+> @@ -7135,6 +7135,15 @@ static int ibmvfc_probe(struct vio_dev *vdev, cons=
+t struct vio_device_id *id)
+[ ... ]
+> +	vhost->fpin_workq =3D alloc_workqueue("%s-fpin-workq-%u", WQ_UNBOUND, 0,
+> +						 IBMVFC_NAME, shost->host_no);
+   =20
+[Severity: Medium]
+By setting the max_active parameter to 0, which defaults to 256 concurrent
+execution threads, does this allow the unordered processing that triggers
+the data races mentioned above?
+   =20
+[ ... ]
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
+/ibmvfc_kunit.c
+> --- /dev/null
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+> @@ -0,0 +1,148 @@
+[ ... ]
+> +static void ibmvfc_async_fpin_test(struct kunit *test)
+> +{
+[ ... ]
+> +	vhost =3D ibmvfc_get_first_vhost();
+> +	if (!vhost)
+[ ... ]
+> +	rport =3D tgt->rport;
+> +	get_device(&rport->dev);
+[ ... ]
+> +	KUNIT_EXPECT_EQ(test, pre[IBMVFC_AE_FPIN_CONGESTION_CLEARED],
+> +			post[IBMVFC_AE_FPIN_CONGESTION_CLEARED]);
+> +
+> +	kref_put(&tgt->kref, ibmvfc_release_tgt);
+> +}
+   =20
+[Severity: Medium]
+Does this code leak the references to the Scsi_Host and the fc_rport device
+on the successful completion path?
+   =20
+The setup code earlier in this test acquires references via
+ibmvfc_get_first_vhost (which takes the host reference) and get_device, but
+this success path fails to drop them before returning. This could potential=
+ly
+prevent the driver from unloading after running the KUnit test module.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911054832.1311=
-668-1-tyreld@linux.ibm.com?part=3D7
+668-1-tyreld@linux.ibm.com?part=3D1
