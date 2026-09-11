@@ -1,71 +1,71 @@
-Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFDC546C82B
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 09:10:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9315B46DFF4
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 09:10:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789117837; cv=none; b=jkVc8xCdrphIlrjqyb6YIa766ki0oDC93Qz45vYsaRExql4xc2xRqx7eV6HXPeW6gqO3hEPDv2MmT2RK48pQDJ+ErPvsNcAGvzJ1g/NvQ/NjaHuL0UjEVPIkdz/6bsP1t4TcQI5+1+Vn35kCjlpxfhkOywBn27zmzGrQyWbM974=
+	t=1789117844; cv=none; b=eK7sKjdxNcfrMPgFomt4UPeqp66eam49H+GihjfCM0pKju5rtNxTL2u+IF50OzwOOIvEX/90N/vquoc4axxbOnultcNorr8es5AU3wAuaIi94sDTs0BTMZk1V4Wr8kj2E2Kcvg2JSsmz7QWCPyNR+ybjEFCRErwyicEAFwl7OHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789117837; c=relaxed/simple;
-	bh=gfMKeptRIzf45FoSM4KSlLhXAPH0rkjAUFVje+uwEaA=;
+	s=arc-20240116; t=1789117844; c=relaxed/simple;
+	bh=23ALfxsYvotg77qqOZPp6b9Xvdun1Lsq1RkK9+oYvgU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aMoZzpj0FMqIZ1XQmg+CvQcVMkpQl2mhZiXgL6YeVmvQZiPMVMWe4daP1XOXpeK7SwdP62fytvvPZ8k3AAgNMxJvVOYHu3hRGwQJHQHGdwRPFX/wmFpdVq/zyrq+e8XWHeokxFqf8gYlVEUobgwB9JqM0DkDuUdUr24Z86WIHr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UaRrz8hd; arc=none smtp.client-ip=74.125.228.12
+	 MIME-Version; b=rS0BkL2EZDzR2rybXv5VK5OhtTZCz/mXQnvIxms8wmcn7h/o2FccAEFvyXtYF0AZ+hB3KzsOCSGJ18VnV23O0wH6OJzq6HFbctju8e7uvPltTSMD58FpvheITZ/PMo5pmJmsb9LURoR9edngZXDLHY21DDxDtiZ1GYvCUaDWVV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sY69i9A7; arc=none smtp.client-ip=209.85.210.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UaRrz8hd"
-Received: by mail-pz2-f12.google.com with SMTP id d2e1a72fcca58-85469d249c6so603140b3a.1
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:10:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sY69i9A7"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-86a46577018so933391b3a.2
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:10:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789117833; x=1789722633; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1789117835; x=1789722635; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=THUxflW+6Ol5aXdDjHqfoOqFQFqdrv6zzUkdGGX+MqU=;
-        b=UaRrz8hdmyqDBG0EqmR/cv6db7sHVyIiw/EIFpjYr8CV7z9tDyhV7BbGWx7efJO7Nu
-         vqyxVkGrEoYzVbcSXGzlVSlxu4/i7JGX1eaU3qesZDnhKkyxfrrFcaFbeW+Ev19j2miZ
-         I1+3TW8vpRqlF2djQzOonMNHLEcrZsvvSIIMjzLj6g3cFkUlfV2BdOmX5LpLmLQLD+D/
-         EAosaYlrZPcu87wpSltHjTnbtBFTGVA1uuV/wuGCTbIeJToh4nXeyo0jAoMAD+znKdhA
-         7QZz15o2HOUpqw8MWibf3XdPH4071kbgtO0BGdhoLL7CIJ0PtBFTWnV8mNz8pCd5PT2o
-         1AoQ==
+        bh=R1YKnHoIEP05svull0RsrAl0UwUUE7iMbBjY+AzRpi0=;
+        b=sY69i9A7+ZydRZG2a3HThFhSic/f3aX2sykYIiMbd1pC8/qdZuYT1Ubg7XotQ9bnCF
+         kOW4PzFzJ9NVx9xW5GglYjA/iGoQguaVsH0n5MJ6BHaxZ5fSlH3zEcKgkV5GtRl6W1Ba
+         XMHsJx2HEzwcK9utgzG/MFZspa167a966JXQgLosQ9UpbWUAn0ak4KNKdI+Vvi9cy4xn
+         IXjKj23lb9auenJTEmn4Jw6jlOQ2sscWKc5ie9ktaEpJLcdK+djaQR2my4H3NqrtnrxU
+         /8fs35k0740xKhCR/MF3GCKaZh+AMSig4TeXp+nfko9f4ngicXHhkoZAlFQ0k9aFGrFB
+         /qAA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789117833; x=1789722633;
+        d=1e100.net; s=20251104; t=1789117835; x=1789722635;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=THUxflW+6Ol5aXdDjHqfoOqFQFqdrv6zzUkdGGX+MqU=;
-        b=e6mEVNjuVQuzTL8xyjWwuTn3ZjKiawoRK+RZ8SRDF+eLnNu2N0spnuO5ER88x0uQiY
-         dVRruARNlpOdotq1p/qMm+bIJ3Jj/QxdwZWKlGDF63PyVTjcvf1aWIeUt5N5wh+Uym/t
-         OXJw1HX7jRAgD94YgmZCdYMVmd1RCvw5x2Qm9xR9qmFupWxVJVwHJxOdNLYFsfUsR0qK
-         Iu9K6D7iceDVdeF3YUzyupwHUa98Vh/gTnF7V2hlQ1pTSaW4koYEr4Oxwvxq/HcjyG2s
-         4uMldMf0BND7NTfLIhfOZVnOMJtyLOi9MxQi9ip+wPauWj03ltf5T0b1gbvm7MPrB4vk
-         hZqg==
-X-Gm-Message-State: AFuF++kxnDyGeZ0fDNTA6Ufck0X5K0xJJSM6Or+CTCm4miDj/GOVPn0K
-	CXAyy1PxcaFawmJqqUKQqQijcQMYHJMit4CLvWL4B2Ix2i8+PYHTrJ/4
-X-Gm-Gg: AYBFou2vG/bkHudssap7sS+FOfu7KNmkm8MfpautDiTiJXpOPbXjxcguWynqfhXy71f
-	HC1a80rtV/BLFE9IysLtI8qvDVnYIY6b3hSTTh30jSxIgjjGN9CCw/XPAD98UviFHGJl3fXcvy3
-	5SFYvJ0r2wDWakXSLBCT95cYnXftwuvZ49uwMY7DXvrtv4LOfODJr8OzcJpB9d5lMZt/Lg95fle
-	0w4K6iMpBNs5PULKyPeImlB1sIXvGEUvfidP+i+3WnoX957iYyIfKY0VMsA5vpQFf+fcVWhwCtc
-	zhXsIADsV+og08trz54jOTDYthnk/72xGCWcFuYIFGe4ddZauaXjUTRlJFtnHKpXyyThBfl8IdW
-	zCK/yJuyvxc3wiu1K2H+ZXoVW4DE/4mprRkVKuz5oMNp2O7015gmOLjytwcUfKp9UVTRKyxFOJ2
-	8P3qPyVJwmBr7L6yBUY+ZmD0MSlpKekWYIsLnQDgR5OngeDwrmMjcJ7M0RZRj94e0OEcN+UdhE+
-	vktFDdstijmfSSEbMPrWOkkyGTHfkqhu4iASWNqcg==
-X-Received: by 2002:a05:6a20:72a0:b0:3d0:88f5:f806 with SMTP id adf61e73a8af0-3daed31ad0cmr5756093637.15.1789117832851;
-        Fri, 11 Sep 2026 02:10:32 -0700 (PDT)
+        bh=R1YKnHoIEP05svull0RsrAl0UwUUE7iMbBjY+AzRpi0=;
+        b=KnYO2BpRgLajVsmjReddaBo1HYG3nBnrkXPgSOdn8ah+FvcB7Sd7fWi4xn0o14LfAl
+         zSfpeEH1kcB4jg50cpbsbtPLeTBN6GjwTEgNGvprntGMGcD8L0zKE4sQI8PHrVgL8TnP
+         5EXlBNV0na82LBQcjC25CFh5lU82AV20bW/Dhj2P8qayc28mxqeTyFKVSN8KwQt3i2WJ
+         MuGPAzzagtfDmRs3owlrQ/OW5P8VwMMsmalufrlVKQ7KJxicOsYJuLiCidhn64vo2JfT
+         JV+ne7qw3IoVmizX/YmTKFhMj28f1nO6CRyom1+TazRPmEAkOyqZBSbMIdXQao+RSjmv
+         YD7Q==
+X-Gm-Message-State: AFuF++lBRwDwT9B+c7ZtDX19YNh+fR+DmQgVr7+TTYLSQLDi3Q2INiup
+	p+ncWA/hUJqgiXnl4X3D5G4vBTGPgRNtoBxhwsxwUKUU44Xt/id/Dv0u
+X-Gm-Gg: AYBFou2PPlgHJoECbIJpLZPeEayl9xEC5lQ8qdq4zZ5VtfS7A2wdWvLi4hMyw9z6zs7
+	RJtkDJrStqvCOjrnCP7wYHywUZmP9l0OYyskCESUi+Goxd6MznSEitUqrWWg/dxsdgXGAN3BrGq
+	p1HLUD8YHUIGK0xi2CVBDOcMx2wP4IHmM0OW96TlJNG26wiiZ0GR5u9JS8DHEb5GFBa44XtvSnl
+	GphrgoNpTHF0vNQhD46fxdWmpFQBIbTVamhWyEE2U0/rTbZtqiX6KPkxKV+6lU+HdqXW93hN/SQ
+	0QgVVu3SCB4N+pTuHr+D+6sacpenq+p9Cgbg2jGM1McHDX+gdSaSvvbTVzn+t4YyglZc+EvG8IP
+	xxzo9D0QaAtKTmuACTsd2wsGpiSCoXf1uZnQmy5CLkLTBzSFWPghLbc8yKkcfbRWODJFgHR/UYp
+	y51x/JXYtO13W2WdgaFWYmDucGmIg4ogPZ5H0gR77afGQw6VI7LVOaRXIWamMJZhHqhBG919d2k
+	byt4UMmVX1SGUjwgaOrDmp0cdLGEjpNID2ifl+UQw==
+X-Received: by 2002:a05:6a20:9f8b:b0:3d1:9166:5c68 with SMTP id adf61e73a8af0-3daed592b5bmr6489013637.8.1789117835645;
+        Fri, 11 Sep 2026 02:10:35 -0700 (PDT)
 Received: from FLYINGPENG-MC2.tencent.com ([43.132.141.21])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc4c6572ecasm822522a12.22.2026.09.11.02.10.31
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc4c6572ecasm822522a12.22.2026.09.11.02.10.34
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 11 Sep 2026 02:10:32 -0700 (PDT)
+        Fri, 11 Sep 2026 02:10:35 -0700 (PDT)
 From: Peng Hao <flyingpenghao@gmail.com>
 X-Google-Original-From: Peng Hao <flyingpeng@tencent.com>
 To: jinpu.wang@cloud.ionos.com,
 	James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org
-Subject: [PATCH 1/4] scsi: pm8001: free IRQs when HBA allocation fails
-Date: Fri, 11 Sep 2026 17:10:08 +0800
-Message-ID: <20260911091011.94676-2-flyingpeng@tencent.com>
+Subject: [PATCH 2/4] scsi: pm8001: clean up resources on probe failure
+Date: Fri, 11 Sep 2026 17:10:09 +0800
+Message-ID: <20260911091011.94676-3-flyingpeng@tencent.com>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20260911091011.94676-1-flyingpeng@tencent.com>
 References: <20260911091011.94676-1-flyingpeng@tencent.com>
@@ -77,85 +77,71 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-pm8001_alloc() registers the interrupt handlers before allocating the MPI
-memory regions and device array. If one of those later allocations fails,
-pm8001_pci_alloc() frees the HBA while the IRQ handlers remain registered.
-A subsequent interrupt can therefore dereference the freed HBA or SAS host
-data.
+When pm8001_init_ccb_tag() fails, pm8001_pci_probe() jumps directly to
+the final return label. This bypasses teardown of the IRQs, tasklets,
+HBA, SCSI host, SAS host data, PCI regions and PCI device.
 
-Release the IRQs on every failure after successful registration. Let
-pm8001_free() perform the memory-region cleanup, and kill the initialized
-tasklets before freeing the HBA.
+Route the failure through the normal cleanup chain and reset the chip
+before tearing down an initialized controller, including when
+scsi_add_host() fails. Also release the separately allocated sas_phy and
+sas_port arrays on failures after SAS host preparation.
+
+Keep the earlier preparation-failure path separate because
+pm8001_prep_sas_ha_init() already frees those arrays on failure.
 
 Signed-off-by: Peng Hao <flyingpeng@tencent.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 25 +++++++------------------
- 1 file changed, 7 insertions(+), 18 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 54b35893261a..8ede1f1da415 100644
+index 8ede1f1da415..412079b5652c 100644
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -312,7 +312,7 @@ static void pm8001_free_irq(struct pm8001_hba_info *pm8001_ha);
- static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
- 			const struct pci_device_id *ent)
- {
--	int i, count = 0, rc = 0;
-+	int i, count = 0;
- 	u32 ci_offset, ib_offset, ob_offset, pi_offset;
- 	struct inbound_queue_table *ibq;
- 	struct outbound_queue_table *obq;
-@@ -323,9 +323,8 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
- 		   pm8001_ha->chip->n_phy);
- 
- 	/* Request Interrupt */
--	rc = pm8001_request_irq(pm8001_ha);
--	if (rc)
--		goto err_out;
-+	if (pm8001_request_irq(pm8001_ha))
-+		return 1;
- 
- 	count = pm8001_ha->max_q_num;
- 	/* Queues are chosen based on the number of cores/msix availability */
-@@ -446,27 +445,16 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
- 	/* Memory region for devices*/
- 	pm8001_ha->devices = kzalloc(PM8001_MAX_DEVICES
- 				* sizeof(struct pm8001_device), GFP_KERNEL);
--	if (!pm8001_ha->devices) {
--		rc = -ENOMEM;
--		goto err_out_nodev;
--	}
-+	if (!pm8001_ha->devices)
-+		goto err_out;
- 	for (i = 0; i < PM8001_MAX_DEVICES; i++) {
- 		pm8001_ha->devices[i].dev_type = SAS_PHY_UNUSED;
+@@ -1154,7 +1154,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+ 	pm8001_ha = pm8001_pci_alloc(pdev, ent, shost);
+ 	if (!pm8001_ha) {
+ 		rc = -ENOMEM;
+-		goto err_out_free;
++		goto err_out_free_sas_ha;
  	}
- 	pm8001_ha->flags = PM8001F_INIT_TIME;
- 	return 0;
  
--err_out_nodev:
--	for (i = 0; i < pm8001_ha->max_memcnt; i++) {
--		if (pm8001_ha->memoryMap.region[i].virt_ptr != NULL) {
--			dma_free_coherent(&pm8001_ha->pdev->dev,
--				(pm8001_ha->memoryMap.region[i].total_len +
--				pm8001_ha->memoryMap.region[i].alignment),
--				pm8001_ha->memoryMap.region[i].virt_ptr,
--				pm8001_ha->memoryMap.region[i].phys_addr);
--		}
--	}
- err_out:
+ 	PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
+@@ -1167,7 +1167,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+ 
+ 	rc = pm8001_init_ccb_tag(pm8001_ha);
+ 	if (rc)
+-		goto err_out_enable;
++		goto err_out_chip;
+ 
+ 
+ 	PM8001_CHIP_DISP->chip_post_init(pm8001_ha);
+@@ -1184,7 +1184,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+ 
+ 	rc = scsi_add_host(shost, &pdev->dev);
+ 	if (rc)
+-		goto err_out_ha_free;
++		goto err_out_chip;
+ 
+ 	PM8001_CHIP_DISP->interrupt_enable(pm8001_ha, 0);
+ 	if (pm8001_ha->chip_id != chip_8001) {
+@@ -1216,8 +1216,16 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+ 
+ err_out_shost:
+ 	scsi_remove_host(pm8001_ha->shost);
++err_out_chip:
++	PM8001_CHIP_DISP->interrupt_disable(pm8001_ha, 0xFF);
++	PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
+ err_out_ha_free:
 +	pm8001_free_irq(pm8001_ha);
- 	return 1;
- }
- 
-@@ -575,6 +563,7 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
- 	if (!pm8001_alloc(pm8001_ha, ent))
- 		return pm8001_ha;
- failed_pci_alloc:
 +	pm8001_kill_tasklet(pm8001_ha);
  	pm8001_free(pm8001_ha);
- 	return NULL;
- }
++err_out_free_sas_ha:
++	kfree(sha->sas_phy);
++	kfree(sha->sas_port);
+ err_out_free:
+ 	kfree(sha);
+ err_out_free_host:
 -- 
 2.43.7
 
