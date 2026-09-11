@@ -1,78 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB5A240A945;
-	Fri, 11 Sep 2026 20:28:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07C6C5AEC56
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 21:18:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789158534; cv=none; b=hh4zWtpDkEPweGJvYOy8k0aBMTZCd6dnwDwHMxA4y00aI8JhXaKVV9aEm+TANqfszzHR73VZ8fPlFQu1+1lZhCTV0M35hxy4LhPQbBLox6Q2Se8YZ6Ew0h2scVc/TsZdMMJkMnv2dRfjjjzD/Iys3Ly15RpNbAM2N5YWYSZcAAc=
+	t=1789161499; cv=none; b=AL0deLoNsuHyDGj4jP18yXFKQ+D0Wg1gzGdJFv2B+rhGzjSJCWQjJ7juTx7s6hQYEtCjBBTHe+gCBwSfhoUE4VdJ8nsLToZhvIUM8PX1YT5hyKk+R838VicHM9jTihIWCr4Ci5/4FHnaSrUkF+7UZnRYH3r76HVxHkmRZ4SwScs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789158534; c=relaxed/simple;
-	bh=posZRNGtXy2frZiYX5qhxcx6BncEzD+P8N1aN2Ie5aM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f5bzi9nOMHsE7jPLuWLkKO8MGrMwRDTkx2kKyXL2a40LOrB3C2J+K4xY7MkEnrF4lRQ6ttLqd8pKPxdddV/qMFKYpTsJQbQWCRely/ym6IdssgrZ6mo9aBCHQ/e9aXHyI2+Rp0xxOhQTiBADLU5wPlKMuTNasjuRIdJlFAxG/eE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=AVXbQPm7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789161499; c=relaxed/simple;
+	bh=vw009+LyrBWFHEvbYXW+8ponNLTRgD6CaHD+B+lHo0k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Qzo1wAoDzSUGPUUw0Envmdy+Y19iTSWlxUXsmUMDFrT13ZyFRCdYTTvVGjvT4+lkvvqGeIQcjs+VKU7XpCC9skJYq5JuNhOUYcx0KTo6hKYPwMAWyMfBVF0kCl4XytNCi4eCIZ3FWcIUr4/1cR2bLg0uNyRuKwffYilO5IK/IZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sAkGN7By; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="AVXbQPm7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FB631F000FF;
-	Fri, 11 Sep 2026 20:28:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1789158532;
-	bh=+5mzSpgILzHqr06GJbUTwa7c20pDz/QnXUmvQGKoMkU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=AVXbQPm7L0+754CrGe0f211fQ6sydBek9ZkqMY9Ci1uoXaN6Rz7cKivlJ13lO6Ee2
-	 qd/MZRW7s0ESXHDxjw1N4mJTbQm/jDNkTno7QB21Qt6GYOwBer80RKRWxPPESRswKL
-	 JQ6KQkax6pA78HIpsw/wovO+XuGJrtg+iToQLhxQ=
-Date: Fri, 11 Sep 2026 22:27:02 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: jaemyung.lee@samsung.com
-Cc: Andreas Hindborg <a.hindborg@kernel.org>,
-	Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>,
-	Gary Guo <gary@garyguo.net>,
-	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
-	Benno Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>,
-	Trevor Gross <tmgross@umich.edu>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Daniel Almeida <daniel.almeida@collabora.com>,
-	Tamir Duberstein <tamird@kernel.org>,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Onur =?iso-8859-1?Q?=D6zkan?= <work@onurozkan.dev>,
-	linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH RFC] drivers/rufs: add Rust UFS host controller driver
-Message-ID: <2026091124-treason-trickily-bc52@gregkh>
-References: <20260912-rufs-private-v1-1-716db733e655@samsung.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sAkGN7By"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hhS7p0Db3z1XM6JR;
+	Fri, 11 Sep 2026 21:18:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1789161492; x=1791753493; bh=VTkUJeqh5SkQTVbEgjVA46wJ
+	1slLATaU7VAnIKraDKc=; b=sAkGN7ByCQeSQhKe/V1hoi0onECmo0v2MfKE8kXb
+	VTN/kl2BN9fVJfY2cVzxtZrwe/Acc+KDf+yvp5O9opVncZQuC1ZEyQl4mZdWwrwD
+	jc5Cu46I572RXgoqMbpQn7SletM75syYSw+LafCuPjEBpDXoxPnLlXIpOTQn4EfI
+	KudUfCw3A49uWDXPpSMVh9WBEFL3IgDw+k2IM2pcr+oXycTloLz/Pr3KuFSiWZrf
+	jJ+d18ZiaTkFF8xvtgtB+0VxXtdE+buWOST43oayIASYlp6+70cN/9xwcjZb/hYE
+	4GqR/JD8xoIRY7CE4z1A2HOoXuWtI6FdrbCTq8lJHE/3WA==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id HIgIVeEbWuL4; Fri, 11 Sep 2026 21:18:12 +0000 (UTC)
+Received: from [100.80.231.125] (unknown [104.135.182.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hhS7l4J9mz1XM6JN;
+	Fri, 11 Sep 2026 21:18:10 +0000 (UTC)
+Message-ID: <270c3910-c474-47c8-81c2-4d1404a2243a@acm.org>
+Date: Fri, 11 Sep 2026 14:18:10 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260912-rufs-private-v1-1-716db733e655@samsung.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: core: Make SCSI host scan interruptible
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+References: <74786683eadc0a32ab335373ead8dd76a9d5a342.1789157339.git.bvanassche@acm.org>
+ <20260911202317.559491F000FF@smtp.kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260911202317.559491F000FF@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Sat, Sep 12, 2026 at 12:52:55AM +0900, Jaemyung Lee via B4 Relay wrote:
-> Comments on the decision to bypass the SCSI midlayer, the blk-mq model used
-> in its place, and the proposed prerequisite API boundaries would be
-> especially welcome.
+On 9/11/26 1:23 PM, sashiko-bot@kernel.org wrote:
+> [Severity: High]
+> Can this silently abort LUN scanning on non-fatal signals?
+> 
+> If a non-fatal signal (like SIGCHLD) or TIF_NOTIFY_SIGNAL (used by
+> io_uring or task work) is delivered to the thread performing the scan,
+> signal_pending() returns true. This causes the loop in
+> scsi_report_lun_scan() to break and return success, leaving devices
+> undiscovered without reporting an error.
 
-Many many years ago, the USB subsystem tried to bypass the SCSI midlayer
-for its storage driver, and while it was a "quick solution" at the time,
-in the end, it didn't work out and we dropped the driver as it just made
-no sense to keep duplicating all of the logic all the time.
+It doesn't make a difference how non-fatal signals are treated - if a
+scan is interrupted, the scan will be incomplete.
 
-So I wouldn't recommend it, as long as UFS builds on top of the SCSI
-commands and the like, you should not attempt to duplicate it in a
-separate driver, no matter how much "simpler" it initially seems to be.
+> [Severity: High]
+> This is a pre-existing issue, but transport-backed sysfs scans still seem
+> vulnerable to the original hung task issue this patch addresses.
+> 
+> Concurrent sysfs scans initiated by transport layers (FC, iSCSI, SAS) bypass
+> scsi_scan_host_selected() and block uninterruptibly in scsi_scan_target()
+> and __scsi_add_device():
+> 
+> drivers/scsi/scsi_scan.c:scsi_scan_target() {
+>      ...
+>      mutex_lock(&shost->scan_mutex);
+>      ...
+> }
+> 
+> Will tasks initiating these scans still exceed the hung task timeout if
+> fatal signals like SIGKILL are delivered while they wait on scan_mutex?
 
-But really:
+Transport layer scans not initiated from user space fall outside the
+scope of this patch.
 
->  30 files changed, 10005 insertions(+)
-
-30 files and 10000 lines doesn't seem that simple :)
-
-thanks,
-
-greg k-h
+Bart.
