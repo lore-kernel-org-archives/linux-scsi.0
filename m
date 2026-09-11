@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A473D891F
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:23:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 030BA3B38AD
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:26:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789093393; cv=none; b=FY5OxqQzrOcnfm+Z8KayJmlXp8Q2sHlFmxxmfX9rVcpcP5fswrcepOzAPegW5byxijzMrLce0ZPEQB3nf2olWUQP0tliL/pFpeoCn7Y/43K9NT8oxTixRnmVZNpXJvalUYARNmfxosN/FR98H8CtYiu/L1/6vghq/rytbJ+cy0s=
+	t=1789093581; cv=none; b=qbq/qm/g++DYfGM8/zlUIHlBXy3MAq6uOgQ85LSo70uQKy39kElFkvL3MLaZXwGrh2KdCttEErS/ovTSuKbzlFcyrLWR3KZ2uXnRj0Hq3kDkbapfcXeo0SrLaHX63N96pzS2dx/9FKs+DHmWoJdxgsyucSbPdkpd8xY39VgdPf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789093393; c=relaxed/simple;
-	bh=1x6d9L9gofJcyNPvxGct+gO/YJ7l+4ojrSu1LOa9bxk=;
+	s=arc-20240116; t=1789093581; c=relaxed/simple;
+	bh=K+JSxKfS2GUr2DRS6hgkqIIweYcYBixfeabHimx39hk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tE+LLCkin5i0tOKDG676/P91eK0vqxfEoZFfEreep+SORg4JCoMOT87XQwKZexT5nAw7gGOlxOJcUE9fykbl01+6CpGYlzr9T0X9HfHzZEUVsWOCZySal/knkpF8s5BPi3CJgdqkac2KZkVD5ci6RDVTQF8JN7VeYhHxL8Wkrsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kn/UloAN; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Ly0RvQwEyFq+Nk6ceue6c3N+R0DvXuOOxrdCz9YPUt/iFYjIBTNHmPiJSiOzMvNweLF4Z9XoGdXtPuncoW3cCbHWz5jDLQPeZkhV1/N+0jj/qEWQR48RufpitaStHQHLdiCsXDh6vuFbQ9IHdnvuKFK8xCpVfhDLu9F95Fw4/aA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D/qf/g/B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kn/UloAN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C18011F000FF;
-	Fri, 11 Sep 2026 02:23:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D/qf/g/B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B5CE1F000FF;
+	Fri, 11 Sep 2026 02:26:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789093392;
-	bh=bEO8FS9unOXMxS4SaVXh06P4IsMAHhii89t3Hb2Z2Kw=;
+	s=k20260515; t=1789093579;
+	bh=qs14n2l/ELo/EGwRfIRc5Lx3w1gxcJkUdBXPHUQlAxU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Kn/UloAN455REprAfxXHq2Z6kv486hcHSUCMCl6ZEQoKy1B1sjRMq4Enp0DVwcbQc
-	 OOCFdCxEnPbWjeePF5U5NHMXspRV58wkXyVWD7sdqMrTuKNW4L/rkyS11xWgZ484w5
-	 ALVUiUdhL7Hkw8jgB+GzE9Zx1GbjH9XDDmNKr7pct7zkc3T9Lpdzf3zS56nzd8vZtT
-	 jAucwhzF3F39f3GuMmzvXV75vKe9esAVy6X/zzPBK4lD7yzJ91ksiwkWEEmrod7pBe
-	 gcQd1uKZzNA29gkKV7gS9PId1dxik7fGcTUA1BavdSREGrz9V3STVBT4Iew6SN+CPM
-	 F4j/5yNKv+wyQ==
+	b=D/qf/g/BNFr1i9l2F6EcW9b8LU1DTE7DbqJaAXh66F6OPuZsB/tsgJWXLdkDbO+R5
+	 oSkfF6eoygy3Meqgvrzmf5/0dI7pIGSna2qAiICz93DNcHpFP/4w6R6vE/jJZZxvs/
+	 5rzDmrrIJUoS2h0U5eNBaF+3ezZLqL0ogCAekJ/6iOpUrFXLg1iL96naHrlMN/RemS
+	 QL3P1fK9AKuN5Fy1TY+pLSfiwtumaYJ5sqR9AdkN5Q2tbGfCw/M5JwjAftamC7Yofw
+	 CiPd2vKmxr8jLQGnz//NMA1pqRfZsLlkze4Px71jiSLQBnDWpKej4PuHtbyT+L8E08
+	 VuAS1yHX4JoWQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 8/9] scsi: ibmvfc: register and use asynchronous sub
- CRQ for events
+Subject: Re: [PATCH v9 9/9] scsi: ibmvfc: handle extended FPIN events
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260911020817.1033789-8-tyreld@linux.ibm.com>
+In-Reply-To: <20260911020817.1033789-9-tyreld@linux.ibm.com>
 References: <20260909-ibmvfc-fpin-support-v8-0-b27183b055af@linux.ibm.com>
- <20260911020817.1033789-8-tyreld@linux.ibm.com>
+ <20260911020817.1033789-9-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 02:23:11 +0000
-Message-Id: <20260911022311.C18011F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 02:26:18 +0000
+Message-Id: <20260911022619.5B5CE1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,78 +46,60 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Critical] Unconditional registration of `async_sub_crq` without checking=
- `vhost->mq_enabled` causes DMA Use-After-Free and memory corruption.
+
+Pre-existing issues:
+- [High] This problem wasn't introduced by this patch, but the target looku=
+p logic in `ibmvfc_find_target` contains a logical error that unconditional=
+ly skips every valid target, causing it to always return NULL and completel=
+y breaking FPIN asynchronous event processing.
 --
 
-commit 1e4cd6f7164c5e678537797bce437ddf017b1c4e
+commit 9ac7aa2b8bc80c6159248d07f474070225aca779
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ibmvfc: register and use asynchronous sub CRQ for events
+scsi: ibmvfc: handle extended FPIN events
 
-This commit wires the async sub-CRQ into the sub-CRQ lifecycle, so it is
-allocated, registered, and freed alongside the SCSI channel queues. It
-adds calls to register and deregister the async sub-CRQ in the reset and
-reenable paths.
+Implement support for extended FPIN messages received via the
+asynchronous sub-queue, completing full FPIN functionality.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
+> index 6eb299989724d..bd10c3fd5ccf5 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+
 [ ... ]
-> @@ -986,6 +989,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_ho=
-st *vhost)
->  	spin_unlock(vhost->crq.q_lock);
->  	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
-> =20
-> +	ibmvfc_register_channel(vhost, &vhost->scsi_scrqs, -1);
 
-[Severity: Critical]
-Does this code unconditionally register the async sub-CRQ without checking
-if vhost->mq_enabled is set?
+> @@ -3511,6 +3547,7 @@ static struct ibmvfc_target *ibmvfc_find_target(str=
+uct list_head *target_list,
+>  static void ibmvfc_process_async_work(struct work_struct *work)
+>  {
+>  	struct ibmvfc_async_sub_crq *subq =3D NULL;
+> +	struct ibmvfc_async_subq_fpin *sqfpin;
+>  	struct ibmvfc_async_work *aw;
 
-If mq_enabled is true initially but ibmvfc_init_sub_crqs() fails (for
-example, due to a channel allocation failure), async_sub_crq is freed via
-ibmvfc_free_queue(). This unmaps the DMA address and frees the page, but
-scrq->msg_token retains the stale DMA address, and vhost->mq_enabled is
-set to 0.
+[Severity: High]
+This isn't a bug introduced by this patch, but the target lookup logic in
+ibmvfc_find_target() in drivers/scsi/ibmvscsi/ibmvfc-core.c contains a
+logical error that unconditionally skips every valid target, completely
+breaking FPIN asynchronous event processing.
 
-When a queue re-enable or CRQ reset occurs, this unconditional call to
-ibmvfc_register_channel() passes the stale msg_token to the hypervisor:
+When an FPIN is received, ibmvfc_handle_async() queues
+ibmvfc_process_async_work(), which calls ibmvfc_find_target(). Inside
+ibmvfc_find_target(), there is this check:
 
-ibmvfc_register_channel() {
-    ...
-    rc =3D h_reg_sub_crq(vdev->unit_address, scrq->msg_token, PAGE_SIZE,
-                       &scrq->cookie, &scrq->hw_irq);
-    ...
-}
+	if (!tgt->rport || !tgt->nvme_remote_port)
+		continue;
 
-Can this cause the hypervisor to write async events into a freed memory pag=
-e,
-resulting in a DMA use-after-free regression? Furthermore, if mq_enabled was
-false from the start, could this pass a DMA address of 0 to the hypervisor,
-resulting in IOMMU faults or hypervisor errors?
+Since the lists of SCSI and NVMe targets are strictly separated, a target
+will only have either rport or nvme_remote_port populated, but never both.
+This causes the condition to always evaluate to true, skipping all valid
+targets and unconditionally returning NULL.
 
->  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
->  	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
-> =20
-[ ... ]
-> @@ -1042,6 +1047,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vho=
-st)
->  	spin_unlock(vhost->crq.q_lock);
->  	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
-> =20
-> +	ibmvfc_register_channel(vhost, &vhost->scsi_scrqs, -1);
-
-[Severity: Critical]
-This unconditional registration appears to raise the same DMA use-after-free
-concerns during a CRQ reset as noted in ibmvfc_reenable_crq_queue() above.
-Could this be guarded by checking vhost->mq_enabled?
-
->  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
->  	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
->
+Since all FPIN events from the fabric will be dropped due to the failed
+target lookup, does this make the extended FPIN functionality added by
+this patch completely unreachable in practice?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909-ibmvfc-fpi=
-n-support-v8-0-b27183b055af@linux.ibm.com?part=3D8
+n-support-v8-0-b27183b055af@linux.ibm.com?part=3D9
