@@ -1,108 +1,114 @@
-Received: from mta0.migadu.com (out-60.mta0.migadu.com [91.218.175.60])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EACC44F557
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 07:54:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.60
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0AB842C512;
+	Fri, 11 Sep 2026 08:11:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789113288; cv=none; b=rDjzb3KAuZEAGAuq24368lYVBW8mEhNWcdosmwiUF1yPn28e9yDQpa9ItOnP/4r/XM2JHU8usZGPDm/+9nPXnqNlS7XjLnnOoezSOK0mQW5u+HotUvtkzYiY7OHudjC6LbqgAmNpI9FbEF/8r+UIFGchuIp8IIIL+uJ4jEBdEaQ=
+	t=1789114318; cv=none; b=Tav9ZEKnjsksHaPxNCIjX0Pg4KcdnqShRm6QwRVHmGINzEWgH/saHJUlaLF4eNDaYw5BMPclmBPCpDcQHDScAJP3GAURTT3IuQ2OKQmc0hLobVWPP8Dc/BrjOoxJpNpVMdr+DY8lQE8ZmTNi3AjGpxu99vugiUVuASlqa4IuuWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789113288; c=relaxed/simple;
-	bh=egOw4vLABie73eGacUBq33g4WECXQSwyvK7mJNyI9wQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Thb3h7r9GheE6zc5eu7HLzVvM6iMLcAiV8Ws94xofLEcdeVuo1aR97O7yJpxda+zKlwEXuoC89+BAi99YJJ+iyvIp5t/EbfVDMXKObWDbslKsnVlOFWXAtmxwrr1C1KK+srWWauQZ3mbMre7s+DcK2hPpT7h7cDM/PZKpRSXTSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mht8uyH+; arc=none smtp.client-ip=91.218.175.60
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789114318; c=relaxed/simple;
+	bh=9stVxPJFwA4nYgL/nVRCOqs6BvJUN2hOdvXN93SFH3Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AlCfETicZLs5AE9yBtEyJnL4oprCDFPSGlXXRJ9JIIZ9feJyVGgFyWeBovVICWonvYRgHpCNUM6lEwx3cchMKNjFLNKWeIkKTs4B5y7hkRsRNEm0ZDqnR7kkk8YovizblrSTZ6wOFSQfqg4pYy9TxViMefHlwVdtSTns/D15fEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UoPfYuzH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mht8uyH+"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=egOw4vLABie73eGacUBq33g4WECXQSwyvK7mJNyI9wQ=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789113284; v=1; x=1789718084;
- b=mht8uyH+WPRRXfQyNUfKfiFuJvLa8JNgyBGGItV5BxTfrM8Uj7ytd8qr2HSK1zkVcmsMSTN0
- cwF6Ld2N+CTGhOD9AVTK02+U8LBglu9UJc4Wmszp8Jme1IGAVyOruPNbVbx6/CK5a1/FrRg4Aa7
- l7VMSdlFDRnpvbyHGk2/J3RY=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 8eaaa7b1d2be2cb2;
-	Fri, 11 Sep 2026 07:54:44 +0000
-X-Mizu-Trace-ID: 8eaaa7b1d2be2cb2
-X-Migadu-Flow: FLOW_OUT
-From: John Garry <john.garry@linux.dev>
-To: axboe@kernel.dk,
-	James.Bottomley@HansenPartnership.com,
-	mkp@kernel.org,
-	hch@lst.de,
-	tom.leiming@gmail.com,
-	bvanassche@acm.org
-Cc: linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	John Garry <john.garry@linux.dev>
-Subject: [PATCH] blk-mq: cleanup terminal request when it could not be queued
-Date: Fri, 11 Sep 2026 08:54:15 +0100
-Message-ID: <20260911075415.634921-1-john.garry@linux.dev>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UoPfYuzH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A89411F000FF;
+	Fri, 11 Sep 2026 08:11:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789114316;
+	bh=Zc4Unt3bjzr3i5aaZwtRw6i8u9jZtKgz5ZUh0uu/Xbw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=UoPfYuzHyyNVH+PdcLjFXukbTxLdf38NJfGRtPOPwPnDECvwlse72xehlLn1Vfr4Q
+	 YxWYvKhaJWyIvH/11oBBmH0HJT3dfW4YHeG/GrGl+j+kb/pD4jVc8MTEDuaC2b40G6
+	 n9uz5fr01vpJPP80/EXWQPwO5ZRBiM89WLhFPtcoaoobCYCV0mDEcqd2mB57imGX0i
+	 v2Ps8E3WSIQj+SryW6vZ8cZnHYpEKOKRxf2k+xEufMdg2osDAiKyt54DTaAoh7khy6
+	 nRugM7cKC7hmsR3dZPgX5sikQv3pgkIx4rh9raH9LK8nsYveaU1W46tZja+LlrElsG
+	 IlKNYryvTc0tw==
+Message-ID: <d6afb373-0e01-41e7-bc57-fb9cfc28600e@kernel.org>
+Date: Fri, 11 Sep 2026 17:11:53 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] scsi: sd_zbc: reject disks with too many zones
+To: ZHOU Jiaxiang <26066541r@connect.polyu.hk>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, "Martin K . Petersen" <mkp@kernel.org>,
+ linux-scsi@vger.kernel.org
+References: <20260911041129.128280-1-26066541r@connect.polyu.hk>
+ <20260911041129.128280-3-26066541r@connect.polyu.hk>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260911041129.128280-3-26066541r@connect.polyu.hk>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Sashiko points out that the SCSI midlayer error handling misses some
-cleanup for when a request could not be queued and won't be requeued [0].
-Specifically, clearing the SCSI cmd flags member is missing. Normally that
-would be cleared in the non-error path in scsi_end_request() (which also
-calls __blk_mq_end_request()).
+On 9/11/26 13:11, ZHOU Jiaxiang wrote:
+> sd_zbc_read_zones() computes the number of zones with 64-bit
+> arithmetic and stores the result in the unsigned int nr_zones field
+> of struct zoned_disk_info, silently truncating counts that exceed 32
+> bits. The truncated count is later used to size per-zone resources,
+> while the device may still report more zones than fit.
+> 
+> Reject such devices at scan time: more than 4 billion zones is not
+> realistic for any medium that exists today, and accepting the
+> truncated count produces inconsistent zone bookkeeping.
+> 
+> Signed-off-by: ZHOU Jiaxiang <26066541r@connect.polyu.hk>
+> ---
+>  drivers/scsi/sd_zbc.c | 11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> index 56e455fb5addd..446628cb3db02 100644
+> --- a/drivers/scsi/sd_zbc.c
+> +++ b/drivers/scsi/sd_zbc.c
+> @@ -589,6 +589,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+>  int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+>                 u8 buf[SD_BUF_SIZE])
+>  {
+> +       unsigned long long nr_zones64;
+>         unsigned int nr_zones;
 
-Callchain blk_mq_cleanup_rq() -> scsi_cleanup_rq() does all the necessary
-cleanup, so call that in blk_mq_dispatch_rq_list() for when there was an
-error in the dispatch and the rq will be ended.
+Keep the name nr_zones and drop the unsigned int nr_zones variable, it is not
+needed.
 
-Note that dm-rq code calls blk_mq_cleanup_rq() for a cloned rq (or SCSI rq)
-for when the clone could not be queued and will be retried, but that path
-does not use the sched code (and blk_mq_dispatch_rq_list()).
+>         u32 zone_blocks = 0;
+>         int ret;
+> @@ -620,7 +621,15 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+>         if (ret != 0)
+>                 goto err;
+> 
+> -       nr_zones = round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_blocks);
+> +       nr_zones64 = round_up(sdkp->capacity, zone_blocks) >>
+> +                    ilog2(zone_blocks);
+> +       if (nr_zones64 > UINT_MAX) {
+> +               sd_printk(KERN_ERR, sdkp, "Too many zones (%llu)\n",
+> +                         nr_zones64);
+> +               ret = -EINVAL;
+> +               goto err;
+> +       }
+> +       nr_zones = nr_zones64;
+>         sdkp->early_zone_info.nr_zones = nr_zones;
+>         sdkp->early_zone_info.zone_blocks = zone_blocks;
+> 
+> --
+> 2.34.1
+> 
+> [https://www.polyu.edu.hk/emaildisclaimer/PolyU_Email_Signature-v2.jpg]
+> 
+> Disclaimer:
+> 
+> This message (including any attachments) contains confidential information intended for a specific individual and purpose. If you are not the intended recipient, you should delete this message and notify the sender and The Hong Kong Polytechnic University (the University) immediately. Any disclosure, copying, or distribution of this message, or the taking of any action based on it, is strictly prohibited and may be unlawful.
+> 
+> The University specifically denies any responsibility for the accuracy or quality of information obtained through University E-mail Facilities. Any views and opinions expressed are only those of the author(s) and do not necessarily represent those of the University and the University accepts no liability whatsoever for any losses or damages incurred or caused to any party as a result of the use of such information.
 
-[0] https://lore.kernel.org/linux-scsi/20260729161243.C918D1F00A3A@smtp.kernel.org/
 
-Suggesested-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: John Garry <john.garry@linux.dev>
----
-Maybe SCSI should be doing this cleanup directly, as we now create some
-confusion on who should do the cleanup - blk-mq or the driver.
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index a26a11c73ee3..eb3a481211d0 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2126,6 +2126,7 @@ bool blk_mq_dispatch_rq_list(struct blk_mq_hw_ctx *hctx, struct list_head *list,
- 			blk_mq_handle_dev_resource(rq, list);
- 			goto out;
- 		default:
-+			blk_mq_cleanup_rq(rq);
- 			blk_mq_end_request(rq, ret);
- 		}
- 	} while (!list_empty(list));
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index af27fd3df8d4..1ea65b5eb25c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1960,13 +1960,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 			cmd->result = DID_NO_CONNECT << 16;
- 		else
- 			cmd->result = DID_ERROR << 16;
--		/*
--		 * Make sure to release all allocated resources when
--		 * we hit an error, as we will never see this command
--		 * again.
--		 */
--		if (req->rq_flags & RQF_DONTPREP)
--			scsi_mq_uninit_cmd(cmd);
-+		/* blk-mq will cleanup our resources as the rq will end */
- 		scsi_run_queue_async(sdev);
- 		break;
- 	}
 -- 
-2.43.0
-
+Damien Le Moal
+Western Digital Research
