@@ -1,226 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAB5F18787A
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:42:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6772C3E451B
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:43:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789094560; cv=none; b=cn08NvYqIJx6G+VGVK+QbaqYOZyhnwoFBmIQ+/ndHxcDtuwszLu6ov/hjkFc2rxLTsUl3UcHLvOD6NG7bVWhVHgG5drJ7VG1jua7cm3P3v647n5WvhriN/fu2v9Rx5hI049OcJuTL/Km3uP6uyCLDeE/CniXDMos1EP5lJ0fD50=
+	t=1789094603; cv=none; b=CXzwDb94loF5Tj6LASN72klP9T02HgWZsUxSBUKZcQEnX4fksrMngKF4mLt5UIqExTuqzX1Rfvs7yRoi2JSdTExXGlgvYMXSD93XgRQRNDktvp+1x1SAKFVxgCIvAIoaphsH87TVYKytZKrEARPSmkrsBkXPYzVW6KwJleMtQ3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789094560; c=relaxed/simple;
-	bh=y2fQZdkoqKuB7cmr3mRdqsTGDdu0Zx56l4kmhvLRN2o=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=apQp+bU5kJszDQctyZV1NwfHJuu42ChSLK+nsF0S5ls3EjQmNmAk3dtgDZ4I14S/AfVXeWPFQB9l4utkumVO3XULzw5TImC/NSc21ScKC6MIQsvrPXhpEI3XvI1jIqbxBtc2bbeyB2nkh+o0uskJtU8MzRxWLSjeqo9max6InpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d0tAz7fp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789094603; c=relaxed/simple;
+	bh=/j8zxAOgXfwVIkihoKCWYxsy6SGLDEogI8QwPoIgXAM=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=ECcIIEwlCs0a+nOUx5/IdDGRXw5z0PAckfFreo3m0z9KM1vbvLOdZaNZHEM3LxVyhBQH/4G35mrvHrewN+ybszNYZalt4FwXLU13IMXd67PdmZmv7JGM/GTQwsIpxD+Bn6z0+58NFCQIP0sMq2vgAaIGg9xYIEKA1bWuYcrYBDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=pmpxDsGM; arc=none smtp.client-ip=209.85.210.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d0tAz7fp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 355391F000FF;
-	Fri, 11 Sep 2026 02:42:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789094558;
-	bh=tgTRPirYgZv1vBYbuTwmt8nlpPRUvlt9NRmUog9bvuY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=d0tAz7fpiYhkvL3EIoEytT0jsK2H//zC2J681PZ0cha4W+ymL3XA0v0sNoTI+DVLv
-	 Xj1zfezk9xbui/AWPSyPsS80dB1vMkpqd7f7ie58AwdRU6SzdSr/NtSR9ESY1DH1Rk
-	 h3yRUxaA24hGaA2FAQd6Qu8dUn3nTw13P32/n1my6roPbTopT9F8gVfUqE0ocUhF0j
-	 HWwC6u8WvUqbMKl6mYPi2GBHbDbMyliho05nUut8Mo4erywNImWZUPGpyvpXhMPJA3
-	 7dxJxtL3NkW8bICInQRoXJvwNqGBJmnEitD5J1LaHEuKoqgyRJzYLuE95SO6qgEZT2
-	 q8iQFidu3hV8Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 1/9] scsi: ibmvfc: add basic FPIN support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260911020817.1033789-1-tyreld@linux.ibm.com>
-References: <20260909-ibmvfc-fpin-support-v8-0-b27183b055af@linux.ibm.com>
- <20260911020817.1033789-1-tyreld@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 02:42:37 +0000
-Message-Id: <20260911024238.355391F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pmpxDsGM"
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-855315ccb64so385729b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2026 19:43:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789094602; x=1789699402; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VIFobB/49RKC10K8JbhHdKLcDdcT1zlJJkKF9fMl4pE=;
+        b=pmpxDsGMsOqSpB4xZ/25bkVMQ9O4vIfjCF2z/uuxGjU5KfZ4kdXlzLaipDvpl3Izec
+         57agIqWu4NLIjU/MjVBMNWkX21eSz+qklIKEaiZpwqTPxLFcfR//0jIcfPetImZqTaIS
+         R5Y5LAzqx41foOvFwcR0/Q4PgxYOaLOWoFYZ5bIa9WMqEdoQAV281zGPUsTai44EIK2G
+         88OZGejnb3io7WS/umarHrO/5PZZYHSHVPO6FdLCoLkczRG+JiuOvtWl0VzmxO9kSJEx
+         dI9eyeFD2omU54XoW08lMTs8zsnZHxc/mTxlPpicOD16X2SEFP7cSmT5sR/Neg9fxSMX
+         VJ2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789094602; x=1789699402;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=VIFobB/49RKC10K8JbhHdKLcDdcT1zlJJkKF9fMl4pE=;
+        b=BwdE7sGBBVNPiaHeHxEORpz9wCa6QLXB3Uk59HPiTNOsssFEvnmDi3VfZj6Ztu1fqB
+         KETWN5SNqQKcNS5W9+8HvQuA0KXb2vrTCxaZTfbVadj0keYWGFVVXE9x4+xUS6r5uCoY
+         Rtly7Gt+nDjD1t1fU0jGB2B22n0LkPMQoIIJoun3m9WCWiMHj5UFeZbpJ8zifYpeRNu5
+         7I5erggx2qsH8kjlr6EMnYzOdZ01dd5MtJwGzNHntSwfk3k0bZU1WwuXdELoxgYnWv9x
+         Wjoj8OCUb8eAnpon3G55Kwmlmh5aEbZ6tgeJY6tIoRcDK6DtwthhAoQqMHKEfYbEfqlB
+         Gzzg==
+X-Gm-Message-State: AFuF++kn+7TVr+FygsQ66pW/5z+rGUG9F4Epo2E2Y+7ADWc8X4ZHNFra
+	mH54VAKvS4aqsBvq2qS5iLo6H4NYDbWI74i+Z8OF8r0Uskkxy8EZZYTFAsnaWre4gmMs/xBAoZk
+	LvkkIUWjaI+Wa1u/TOXpq4Q==
+X-Received: from pfbdr7.prod.google.com ([2002:a05:6a00:4a87:b0:863:66b8:b7d])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:aa7:8882:0:b0:847:9aa8:d3ce with SMTP id d2e1a72fcca58-86b2dd00270mr3038046b3a.2.1789094601474;
+ Thu, 10 Sep 2026 19:43:21 -0700 (PDT)
+Date: Fri, 11 Sep 2026 10:43:17 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.1007.g17ff1f9808-goog
+Message-ID: <20260911024319.1346706-1-stanleyjhu@google.com>
+Subject: [PATCH 0/2] scsi: ufs: core: Handle devices declining optional Query IDNs
+From: Stanley Jhu <stanleyjhu@google.com>
+To: mkp@kernel.org, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	bvanassche@acm.org, avri.altman@sandisk.com, alim.akhtar@samsung.com, 
+	Stanley Jhu <stanleyjhu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] The target search function `ibmvfc_find_target` incorrectly uses a=
- logical OR (`||`) when checking if a target has a remote port, causing it =
-to return NULL for all valid single-protocol targets and dropping all FPIN =
-events.
-- [Medium] The `ibmvfc_async_fpin_test` KUnit test leaks references to the =
-`rport` device and the SCSI host upon successful completion.
-- [Low] The KUnit tests rely on undeclared structures (`ibmvfc_async_crq_ev=
-ent` and `ibmvfc_async_subq_fpin`), leading to immediate compilation failur=
-e. This regression is fixed later in the patch series.
-- [Low] Missing address-of operator '&' when passing 'vhost->host->host_loc=
-k' to spinlock macros in `ibmvfc_process_async_work`, causing a compilation=
- error.
---
+JEDEC JESD220F specifies that a device which does not support an
+optional Query IDN returns QUERY_RESULT_INVALID_IDN (0xFD) in the
+Query Response UPIU.
 
-commit b979f5e231a6dc184c5b0656442cb752c9aa4313
-Author: Dave Marquardt <davemarq@linux.ibm.com>
+The driver maps every non-zero Query response to -EINVAL and logs
+dev_err(). A device declining an optional IDN is spec-compliant, so
+this reports a failure that did not happen and keeps the retry loops
+resending a request the device will never accept. On UFS 4.0 parts
+that omit the Timestamp attribute it repeats on every boot and every
+resume.
 
-scsi: ibmvfc: add basic FPIN support
+A third model was recently proposed for
+UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT; recognising the rejection at
+runtime avoids growing that table further.
 
-Implement support for a basic level of Fabric Performance Impact
-Notifications (FPIN) in the ibmvfc driver to enable monitoring of
-fabric congestion and link integrity events.
+Patch 1 decodes 0xFD as -EOPNOTSUPP across the query layer. Patch 2
+uses that to stop reissuing the Timestamp write on devices that
+reject it.
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-core.c
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-[ ... ]
-> @@ -3522,6 +3526,23 @@ static struct fc_els_fpin *
->  static struct ibmvfc_target *ibmvfc_find_target(struct list_head *target=
-_list,
->  						__be64 scsi_id, __be64 wwpn,
->  						__be64 node_name)
->  {
->  	struct ibmvfc_target *tgt;
-> =20
->  	list_for_each_entry(tgt, target_list, queue) {
->  		if (scsi_id && cpu_to_be64(tgt->scsi_id) !=3D scsi_id)
->  			continue;
->  		if (wwpn && cpu_to_be64(tgt->ids.port_name) !=3D wwpn)
->  			continue;
->  		if (node_name && cpu_to_be64(tgt->ids.node_name) !=3D node_name)
->  			continue;
->  		if (!tgt->rport || !tgt->nvme_remote_port)
->  			continue;
+Compile tested on arm64 (defconfig + SCSI_UFSHCD).
 
-[Severity: High]
-Does this skip all valid targets? A target is typically either a SCSI or NV=
-Me
-target, but not both simultaneously. Checking with a logical OR means we
-continue the loop whenever either one is NULL, causing ibmvfc_find_target()
-to always return NULL and subsequently drop all FPIN events.
+Stanley Jhu (2):
+  scsi: ufs: core: Fast-abort unsupported Query IDNs
+  scsi: ufs: core: Dynamically disable timestamp on unsupported devices
 
->  		return tgt;
->  	}
-> =20
->  	return NULL;
->  }
-[ ... ]
-> +static void ibmvfc_process_async_work(struct work_struct *work)
-> +{
-> +	struct ibmvfc_async_work *aw;
-> +	struct ibmvfc_async_crq *crq;
-> +	struct ibmvfc_target *tgt;
-> +	struct ibmvfc_host *vhost;
-> +	struct fc_els_fpin *fpin;
-> +	unsigned long flags;
-> +
-> +	aw =3D container_of_const(work, struct ibmvfc_async_work, async_work_s);
-> +	vhost =3D aw->vhost;
-> +	crq =3D &aw->crq;
-> +
-> +	if (!crq->scsi_id && !crq->wwpn && !crq->node_name)
-> +		goto free;
-> +
-> +	spin_lock_irqsave(vhost->host->host_lock, flags);
+ drivers/ufs/core/ufshcd.c | 39 ++++++++++++++++++++++++++++++---------
+ include/ufs/ufs.h         |  1 +
+ 2 files changed, 31 insertions(+), 9 deletions(-)
 
-[Severity: Low]
-Can this compile successfully? The spinlock macros expect a pointer, but
-vhost->host->host_lock is passed by value here, which will result in an
-incompatible type compilation error. Should this use the address-of operator
-(&vhost->host->host_lock)?
+-- 
+2.55.0.1007.g17ff1f9808-goog
 
-> +	tgt =3D ibmvfc_find_target(&vhost->scsi_scrqs.targets, crq->scsi_id,
-> +				 crq->wwpn, crq->node_name);
-> +	if (!tgt) {
-> +		/* Target not found in scsi_scrqs, search nvme_scrqs */
-> +		tgt =3D ibmvfc_find_target(&vhost->nvme_scrqs.targets,
-> +					 crq->scsi_id, crq->wwpn,
-> +					 crq->node_name);
-> +	}
-> +
-> +	if (tgt) {
-> +		kref_get(&tgt->kref);
-> +		spin_unlock_irqrestore(vhost->host->host_lock, flags);
-
-[Severity: Low]
-This is also missing the address-of operator and will cause a compilation
-error.
-
-> +	} else {
-> +		spin_unlock_irqrestore(vhost->host->host_lock, flags);
-
-[Severity: Low]
-This is also missing the address-of operator.
-
-> +		dev_err_ratelimited(vhost->dev, "Invalid target for FPIN\n");
-> +		goto free;
-> +	}
-> +
-[ ... ]
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
-/ibmvfc_kunit.c
-> new file mode 100644
-> index 0000000000000..80e7f8e0fd700
-> --- /dev/null
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-> @@ -0,0 +1,408 @@
-[ ... ]
-> +static void ibmvfc_async_fpin_test(struct kunit *test)
-> +{
-> +	u64 post[IBMVFC_AE_FPIN_CONGESTION_CLEARED + 1];
-> +	u64 pre[IBMVFC_AE_FPIN_CONGESTION_CLEARED + 1];
-> +	struct ibmvfc_async_crq_event ae[IBMVFC_AE_FPIN_CONGESTION_CLEARED + 1]=
- =3D {
-> +		[0 ... IBMVFC_AE_FPIN_CONGESTION_CLEARED] =3D { .type =3D IBMVFC_ASYNC=
-_CRQ_MAIN },
-> +	};
-
-[Severity: Low]
-Does this test rely on an undeclared structure? The struct
-ibmvfc_async_crq_event doesn't appear to be declared yet in this patch,
-which breaks the build if KUnit tests are enabled. I noticed this gets
-resolved in a subsequent commit, but it breaks the build here.
-
-> +	enum ibmvfc_ae_fpin_status fs;
-> +	struct fc_host_attrs *fc_host;
-> +	struct ibmvfc_target *tgt;
-> +	struct ibmvfc_host *vhost;
-> +	struct fc_rport *rport;
-> +	unsigned long flags;
-[ ... ]
-> +	KUNIT_EXPECT_EQ(test, pre[IBMVFC_AE_FPIN_CONGESTION_CLEARED],
-> +			post[IBMVFC_AE_FPIN_CONGESTION_CLEARED]);
-> +
-> +	kref_put(&tgt->kref, ibmvfc_release_tgt);
-> +}
-
-[Severity: Medium]
-Does this test leak device references? Early in ibmvfc_async_fpin_test(),
-scsi_host_get() and get_device(&rport->dev) are called to acquire reference=
-s,
-but they don't seem to have corresponding scsi_host_put(vhost->host) and
-put_device(&rport->dev) cleanup calls at the end of the test function.
-
-> +
-> +/**
-> + * ibmvfc_full_fpin_test - unit test for IBMVFC_AE_FPIN parts of ibmvfc_=
-handle_async
-[ ... ]
-> +static void ibmvfc_extended_fpin_test(struct kunit *test)
-> +{
-> +	enum ibmvfc_ae_fpin_status fs;
-> +	struct ibmvfc_async_subq_fpin crq[IBMVFC_AE_FPIN_CONGESTION_CLEARED+1] =
-=3D {};
-
-[Severity: Low]
-Similar to the ibmvfc_async_crq_event array above, this instantiates an arr=
-ay
-of struct ibmvfc_async_subq_fpin which is currently undeclared in this
-patchset, causing a build failure.
-
-> +	struct ibmvfc_async_subq_fpin
-> +		crqcn[IBMVFC_AE_FPIN_PORT_CONGESTED][FPIN_CONGN_DEVICE_SPEC+1] =3D {};
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260909-ibmvfc-fpi=
-n-support-v8-0-b27183b055af@linux.ibm.com?part=3D1
