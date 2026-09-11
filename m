@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97E0F1F1534
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 06:02:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C64725B084
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 06:03:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789106532; cv=none; b=QAbSf8LWNiuXxx8bHGVZ5sp8V9nmuO8+SJY8OvBOwvRFqxLllY+rXkWL8dTTyGyqrsf6Vc5mA+68HQosvR6xdRPtEmEFoWfM7twcrIRuGd5UPYfhcpScbKvR1wcXBRj6bb7qMnMds4pRKhho37v1akAhUnTCVCJYANP0Xl53C2k=
+	t=1789106613; cv=none; b=kNNFNiPNGAKU4VGa+I+0B0vXZQWz3bcDLehp8wFgwwbnLQJsVb68xIimkXwrBjnBWninIpqP2ncge13xQeqkeIAGqxqUf+g6eQYWF4Mkd0spCh6t5HNQqMRM9EqxEZ6XK8PE6MNKwpQzU8//p6UJHjIfECoxVsCKP7rel3s5hHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789106532; c=relaxed/simple;
-	bh=Pq4irEVvmzUvBazZAz+lw8xif58Yuc6APa+SZLSwJjo=;
+	s=arc-20240116; t=1789106613; c=relaxed/simple;
+	bh=UB+SISbbesghW9fa3CIm/OBp7BhUaCIPTQLSfnZkndM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=C8RpuymgOiaJVHbLuEFWwv0wjlb4FUoEun331CzMOCF0331pluAPHK34P8dpun7ls7PeJZX6GW3WY14iee+G/UBxYjT9N2GbUxwnDO/ZZNoA9sWDWWc15KPBd85GDh7txg15n1JteF3YBcnbnUto4vDMGF4Szw5LEIV9lc4UEeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gkCcN7Ih; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=ftGvuuqvHdDvuFzc41FUhp35Gz8QFaOHgum/GejLMY2jG1mPr60+zE3F3xORoOLIENWEvFeh5YC+e9fAeNumWCBJ3ztBzhs9AnMEONrK2AapUqRy5LGkZTRXg+a2/0mlm0zTm7I60miZ+jPHJUDrxhCgcGtIC29Ma4+T9LgGjr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DcKTd4wp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gkCcN7Ih"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0ECA91F000FF;
-	Fri, 11 Sep 2026 06:02:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DcKTd4wp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEAE71F000FF;
+	Fri, 11 Sep 2026 06:03:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789106531;
-	bh=f/9sf84G/gPlBRSooH1GXiFc7rb7EZCckTckdiZM3rs=;
+	s=k20260515; t=1789106612;
+	bh=i1FxH5btFzjkQMm1H6wQcWHtKbiCpAHqTbTDabYsn70=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gkCcN7IhsoeunCUjhyvk1sXQAyH00+hyxItrVSbLvSD+ohK3ZIjWxr/0T/NHCHGcB
-	 P1cUIQnYYX89TUziaSPoJce8XxBXYRFJVzobq8rBeLhcPyT9zMSJNDapKx7y9sqMiv
-	 1ixhYfu0KMTg2ScZD4vYprRMPMlvtfnQKRs2SYXgvkkTYUAOkAvUgbQEVKygJrpOzf
-	 kTkIvlsSWUAdmJcxlTSTprnDwkMhNM0O7nbBChpCnimlCeez/PoSlfh/eK/1DG2fif
-	 SSMoK25dQmf6kpHuYfK5z6XnFojsQVykglU/IEjiU2khnIqSXcRl7huIZHwHPlJHd7
-	 8FLzC3jTJfsag==
+	b=DcKTd4wpfkdIw5hSqBZc18bV+V3HErG5REfmfYfRvnc88wEePjbeqTXnAgDcZMaJc
+	 Ndpjw8TfgDsIG1vw/0q9wH9kaNKFsMxFXoDyAPG2onBVTdVHeYpF3+ecFJbYxCWAPd
+	 QQfbfZAYBkZzS+81x5dG0JD9sUxk4c7ZeWYWeoqLWXazMEXv3C/CYyShyWe1u4T3D4
+	 tmifp06ZpRKFG37ZdLxYIterQZh9PCndBP0zkh+oeydON2I+NUSsrdtogfKGb6dJwM
+	 lxWRxl9QpPEa4KXzgHOQCqppH0HISn/rIQ7ZrX7Wbb4SkAnLlsThqXL/jF4kz09/yC
+	 Op56pPd5fUAVQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 8/9] scsi: ibmvfc: register and use asynchronous sub
- CRQ for events
+Subject: Re: [PATCH v10 7/9] scsi: ibmvfc: fix IRQ leak and guard deregister
+ on channel reg failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260911054832.1311668-9-tyreld@linux.ibm.com>
+In-Reply-To: <20260911054832.1311668-8-tyreld@linux.ibm.com>
 References: <20260911054832.1311668-1-tyreld@linux.ibm.com>
- <20260911054832.1311668-9-tyreld@linux.ibm.com>
+ <20260911054832.1311668-8-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 06:02:10 +0000
-Message-Id: <20260911060211.0ECA91F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 06:03:31 +0000
+Message-Id: <20260911060331.CEAE71F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,112 +47,84 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Critical] Unconditional register, deregister, and free operations on `as=
-ync_sub_crq` without checking allocation status lead to double-frees, DMA A=
-PI violations, and invalid hypercalls.
+
+Pre-existing issues:
+- [High] Unguarded hypervisor cleanup in ibmvfc_deregister_channel() leads =
+to double-free of hypervisor resources and unconditional H_FREE_SUB_CRQ cal=
+ls.
 --
 
-commit d886488c1c2c33ee5e78bda51eefcf9391abe904
+commit 6e9a49d8343f9077df9f1052cfd7a71c721c4b81
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ibmvfc: register and use asynchronous sub CRQ for events
+scsi: ibmvfc: fix IRQ leak and guard deregister on channel reg failure
 
-Wire the async sub-CRQ into the sub-CRQ lifecycle so it is allocated,
-registered, and freed alongside the SCSI channel queues.
+This commit ensures scrq->irq is cleared to 0 after irq_dispose_mapping()
+and guards free_irq() and irq_dispose_mapping() with a check for scrq->irq
+in ibmvfc_deregister_channel() so unmapped or unregistered queues are
+safely skipped.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index c78e221f182a2..70a3046135c7b 100644
+> index a9cf1096e755d..c78e221f182a2 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -964,6 +966,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_ho=
-st *vhost)
->  	struct vio_dev *vdev =3D to_vio_dev(vhost->dev);
->  	unsigned long flags;
+> @@ -6890,6 +6890,7 @@ static int ibmvfc_register_channel(struct ibmvfc_ho=
+st *vhost,
+>  		else
+>  			dev_err(dev, "Couldn't register async sub-crq irq\n");
+>  		irq_dispose_mapping(scrq->irq);
+> +		scrq->irq =3D 0;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but on the request_irq() error
+path, the hypervisor resource is freed but scrq->cookie is not cleared to 0:
+
+drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_register_channel() {
+    ...
+irq_failed:
+	do {
+		hcall_rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ,
+                                              vdev->unit_address, scrq->coo=
+kie);
+	} while (hcall_rc =3D=3D H_BUSY || H_IS_LONG_BUSY(hcall_rc));
+    ...
+}
+
+Could this cause a double-free when ibmvfc_deregister_channel() is later
+called?
+
+>  		goto irq_failed;
+>  	}
 > =20
-> +	ibmvfc_deregister_channel(vhost, &vhost->scsi_scrqs, -1);
->  	ibmvfc_dereg_sub_crqs(vhost, &vhost->scsi_scrqs);
->  	ibmvfc_dereg_sub_crqs(vhost, &vhost->nvme_scrqs);
-
-[Severity: Critical]
-If multi-queue is disabled or failed to initialize, vhost->async_sub_crq
-won't be allocated.  Will this unconditionally deregister an unallocated qu=
-eue?
-
-[ ... ]
-> @@ -1042,6 +1047,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vho=
-st)
->  	spin_unlock(vhost->crq.q_lock);
->  	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
-> =20
-> +	ibmvfc_register_channel(vhost, &vhost->scsi_scrqs, -1);
->  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
->  	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
-
-[Severity: Critical]
-Will unconditionally registering the async queue here pass an uninitialized
-msg_token to the hypervisor if the queue was never allocated?
-
-[ ... ]
-> @@ -6953,8 +6964,10 @@ static void ibmvfc_deregister_channel(struct ibmvf=
+> @@ -6932,9 +6933,11 @@ static void ibmvfc_deregister_channel(struct ibmvf=
 c_host *vhost,
->  	}
 > =20
->  	/* Clean out the queue */
-> -	memset(scrq->msgs.crq, 0, PAGE_SIZE);
-> -	scrq->cur =3D 0;
-> +	if (scrq->msgs.handle) {
-> +		memset(scrq->msgs.crq, 0, PAGE_SIZE);
-> +		scrq->cur =3D 0;
-> +	}
-
-[Severity: Critical]
-The commit message notes this memset is guarded to prevent a NULL dereferen=
-ce
-when the queue was never allocated.  However, earlier in this function
-plpar_hcall_norets(H_FREE_SUB_CRQ, ...) is called using scrq->cookie.
-
-Does this hcall also need to be guarded to avoid passing an uninitialized
-cookie?
-
-[ ... ]
-> @@ -7046,6 +7071,15 @@ static void ibmvfc_init_sub_crqs(struct ibmvfc_hos=
-t *vhost)
->  	}
-> =20
->  	LEAVE;
-> +	return;
-> +
-> + deregister_async_sub_crq:
-> +	ibmvfc_deregister_channel(vhost, &vhost->scsi_scrqs, -1);
-> +free_async_sub_crq:
-> +	ibmvfc_free_queue(vhost, &vhost->async_sub_crq);
-
-[Severity: Critical]
-If ibmvfc_alloc_channels() fails, we deregister and free async_sub_crq
-here.  Later, won't ibmvfc_release_sub_crqs() attempt to unconditionally
-free it again?
-
-> +	vhost->do_enquiry =3D 0;
-> +	vhost->mq_enabled =3D 0;
-> +	return;
->  }
-> =20
->  static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
-> @@ -7069,6 +7103,9 @@ static void ibmvfc_release_channels(struct ibmvfc_h=
-ost *vhost,
->  static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
->  {
 >  	ENTER;
-> +	ibmvfc_deregister_channel(vhost, &vhost->scsi_scrqs, -1);
-> +	ibmvfc_free_queue(vhost, &vhost->async_sub_crq);
-> +
+> =20
+> -	free_irq(scrq->irq, scrq);
+> -	irq_dispose_mapping(scrq->irq);
+> -	scrq->irq =3D 0;
+> +	if (scrq->irq) {
+> +		free_irq(scrq->irq, scrq);
+> +		irq_dispose_mapping(scrq->irq);
+> +		scrq->irq =3D 0;
+> +	}
+> =20
+>  	do {
+>  		rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
 
-[Severity: Critical]
-Since async_sub_crq might not have been allocated (e.g., if mq_enabled
-is false) or might have been freed during a prior initialization failure,
-could this result in a double-free or freeing of uninitialized memory?
+[Severity: High]
+This is a pre-existing issue, but does this leave the hypervisor call
+unguarded?
+
+It appears this hypervisor call is executed unconditionally using whatever
+stale cookie is present, even for queues that were never successfully
+registered or have already been freed.
+
+If the hypervisor reallocates the freed cookie to another queue or device,
+could the double-free maliciously or accidentally destroy a live queue?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911054832.1311=
-668-1-tyreld@linux.ibm.com?part=3D8
+668-1-tyreld@linux.ibm.com?part=3D7
