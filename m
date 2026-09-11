@@ -1,130 +1,214 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC85C3DDAFB;
-	Fri, 11 Sep 2026 19:03:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9709759B66F
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 20:11:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789153412; cv=none; b=InGkIDPEW7JaRf+riPrNn/INJ3t4WPYJ3i/TB/DcDFsOw+S2dJmrjexmRKTNt320OxliYn5SvVzzntSxNBOcbUBkymBTssWNSzUqQVP/zpJ8Kr6EMU/MfR361b/aWF8WEVD+5baPR9n0gwuh0pvVi7osLTEcHh/MpXugADf39Eo=
+	t=1789157485; cv=none; b=fnhlC1wcKHSDKHqvi68Sx7Yll2q3ugI2RjThR/BceVEhLkxvhLnxjgd+tbWHf4WqD3DZnZHvrjvNw0PUriJP3QWR516w/3ctLp5bqTVmpBQwyl54JZwkYFVdhA53A3jziMScwU8D2g+3IcJ7bRmFrzf/r6shNVJsCgQ+BVOoezY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789153412; c=relaxed/simple;
-	bh=AAJxS1ZeWVorNTNsOrxKWTuYDxU3bdBsDIZpKFEvAmw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CLCq1/Lk9XICTyWDyG+EoqjExhNzXTeIGY89uIvnae+A9v4GXxspxJdvHQIVoISY+lvcBGcs56797amlhKCeRyfv1XA+RhABmWmEWSljNbZjhBam/tkpxDtQRMDO9f58plQKPVojxMvDo8OT0Z96jcPpz2kuo9XBWfDoBmxOPBE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=cvtq3BMS; arc=none smtp.client-ip=199.89.1.14
+	s=arc-20240116; t=1789157485; c=relaxed/simple;
+	bh=otub/RTcRli6N9pdOaZtULnS62I5z4+cerU/SaeIFEo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QPtgghAk8Ys9u2Tc/BFE/5clLcWSZij+GeugVcaZ0saI5ZFH67TUkSmDfNpppVr7l40ji2RC/1lPqDnQmfh6OF/BClKRFX5eWTAWlIQMThusxnpUjycLJ7Q2RU7xp6uULk8SD3fB2mIdgReLEazuMaU8XooQqmlsDXx7lkAVHDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=WT1yJTU3; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="cvtq3BMS"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="WT1yJTU3"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hhP8K6yzjz1XM6JN;
-	Fri, 11 Sep 2026 19:03:29 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hhQfg02yFzlfwHS;
+	Fri, 11 Sep 2026 20:11:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1789153394; x=1791745395; bh=HKB85OlUopoTlP2cYiFJXnK6
-	cXsUfRhylsdCN0AeosE=; b=cvtq3BMSIvQZr2O49qdJ6rlypEbTYIyBHGdXHuqv
-	zIQoCJdk6hmmw5EQ8jzvupgBakf1+/wLZ89T7v3w0Df7xOz5KW7YPY0X3o9ydnSj
-	CPRUrlf7SLM8jqy5fWIrjAHa7BxSWD3RK6/ju+f2klBF8xBun202aSqXZxvtzg6o
-	zLmS+GHWyIXINcaqUmyBwOkN/JgqhPnUR9B5GRFwVnuGQOZyfIHu0Ik1d/UdKHSZ
-	FNOpXXNQLRcYFEBsfyf+gZ3dZxQQScj7pAmki8+tGVzPSC6abnP7OG9en+86g7Dc
-	rpEaaypiB1JNtoZDKWHSA8uhSTBfyT5838f2QYxB1GsQTg==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1789157476; x=1791749477; bh=CYmr2OxH4RPebCGDQWDlcLhQNqPyiQjFzBR
+	+/ptAQoA=; b=WT1yJTU3xUDichILo5QxvS1j8L36MSqjiH/agnAGpqvw1yH0Phr
+	PAXHYSeZqdAWlS7gT57mto5ea6+CIIM9mtDTuuF7bGIekP4oSLvYt34xdkq9tV+U
+	q1X/9CA/WlBqx6bwXUTR2kTPfPbNZjYGITZ9QItJaXB8nnyIPeENq33kyxo2J7TF
+	SZJnm4fQlKuLSJBjeIVJqNnEPVsjdBS7SDI0r14BWAdYqjpQpthJQMN6JcNkb8Yl
+	4/b7qqEFXODJkafyS1wrzAZWmXTnz9g5KmwcfAMsiarLs/M2EM5VX6Q9pIa9JBlO
+	JJEhpvEFFkhiZPPbXfSC7vo4QgYnaonPfag==
 X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id qvovV8J3T_kX; Fri, 11 Sep 2026 19:03:14 +0000 (UTC)
-Received: from [100.80.231.125] (unknown [104.135.182.41])
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id sI2OfPnYELMU; Fri, 11 Sep 2026 20:11:16 +0000 (UTC)
+Received: from bvanassche.c.googlers.com.com (148.60.168.34.bc.googleusercontent.com [34.168.60.148])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hhP7t6bfRz1XM4Sx;
-	Fri, 11 Sep 2026 19:03:06 +0000 (UTC)
-Message-ID: <94ee6bd1-8126-4a99-9b9c-d58e16fd9d9e@acm.org>
-Date: Fri, 11 Sep 2026 12:03:05 -0700
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hhQfV1BQnzlfvqM;
+	Fri, 11 Sep 2026 20:11:13 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	John Garry <john.g.garry@oracle.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	syzbot+1f678bd2872aefb11d8a@syzkaller.appspotmail.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
+Subject: [PATCH] scsi: core: Make SCSI host scan interruptible
+Date: Fri, 11 Sep 2026 13:11:04 -0700
+Message-ID: <74786683eadc0a32ab335373ead8dd76a9d5a342.1789157339.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.55.0.1007.g17ff1f9808-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC] drivers/rufs: add Rust UFS host controller driver
-To: jaemyung.lee@samsung.com, Andreas Hindborg <a.hindborg@kernel.org>,
- Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>,
- Gary Guo <gary@garyguo.net>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>,
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
- Danilo Krummrich <dakr@kernel.org>,
- Daniel Almeida <daniel.almeida@collabora.com>,
- Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot
- <acourbot@nvidia.com>, =?UTF-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- James Bottomley <james.bottomley@hansenpartnership.com>,
- Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
- linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-arm-msm@vger.kernel.org
-References: <20260912-rufs-private-v1-1-716db733e655@samsung.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260912-rufs-private-v1-1-716db733e655@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 9/11/26 8:52 AM, Jaemyung Lee via B4 Relay wrote:
-> Add a Rust UFS host controller driver that exposes UFS logical units as
-> native blk-mq block devices without depending on the SCSI midlayer.
+Writing to the sysfs "scan" attribute serializes SCSI host scans via
+shost->scan_mutex. In virtualized environments such as virtio-scsi with
+256 target IDs, scanning non-existent targets repeatedly allocates and
+destroys temporary scsi_devices. Each iteration transitions the shared ta=
+g
+queue state and freezes request queues, causing a full bus scan to take
+tens of seconds.
 
-One of the goals in the Linux kernel is *not* to duplicate code.
-Decoupling the UFS driver from the SCSI mid-layer implies duplicating
-the functionality of the SCSI mid-layer. I do not agree with this.
+When multiple processes initiate host scans concurrently, waiter tasks
+sleep in TASK_UNINTERRUPTIBLE on shost->scan_mutex. If the waiting tasks
+receive signals such as SIGKILL, they cannot wake up until the mutex is
+acquired, easily exceeding the hung task timeout and triggering
+khungtaskd warnings ("INFO: task hung in scsi_scan_host_selected").
+Furthermore, once a task finally acquires the mutex, it continues to
+perform the full scan even if a fatal signal is already pending.
 
-> The driver is written in Rust.
+Fix this by:
+1. Use mutex_lock_interruptible() instead of mutex_lock() in
+   scsi_scan_host_selected(), allowing waiting tasks to sleep in
+   TASK_INTERRUPTIBLE and immediately wake up with -EINTR on signals.
+2. Check signal_pending(current) in scsi_scan_host_selected(),
+   scsi_scan_channel(), __scsi_scan_target(), scsi_report_lun_scan(),
+   and scsi_sequential_lun_scan() to abort scanning early when a signal
+   is delivered.
 
-Most UFS driver contributors are not familiar with Rust so I think the
-choice of Rust will make this driver unpopular.
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Reported-by: syzbot+1f678bd2872aefb11d8a@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=3D1f678bd2872aefb11d8a
+Assisted-by: Gemini
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_scan.c | 32 ++++++++++++++++++++++++++------
+ 1 file changed, 26 insertions(+), 6 deletions(-)
 
-> The existing UFS driver is built on the SCSI subsystem. That made sense
-> historically: UFS adopted the SCSI Architecture Model as its application
-> layer, so reusing the SCSI midlayer's command queuing, error handling,
-> power management, and logical-unit addressing let UFS reach Linux quickly
-> and reliably. ufshcd bridges the SCSI midlayer to UFS Protocol Information
-> Units.
-> 
-> That foundation has become a source of friction. The evolution of UFS is
-> governed by JEDEC and increasingly includes UFS-specific features outside
-> the SCSI command set standardized by T10.
-
-Huh? As long as I was attending JEDEC meetings I insisted on using
-commands already standardized by T10 and *not* introducing new commands.
-
-I do not want to give UFS vendors the freedom to introduce new commands
-without coordinating with a standards body that has more experience with
-the introduction of new commands, e.g. T10.
-
-Linux filesystems support the NVMe and SCSI command sets via the
-abstractions offered by the block layer. Introducing new types of
-storage commands would require that the block layer and all filesystems
-are modified. I have not yet seen an good example of a new command that
-warrants such changes.
-
-> On Intel UFS 2.1 hardware, 4 KiB direct io_uring at QD32/job gave
-> these optimized-mode ranges over 1/2/4 jobs (three samples):
-> 
->    Workload  Op     RUFS kIOPS   C kIOPS      Difference
->    --------  -----  -----------  -----------  ---------------
->    randread  read   48.91-61.26  41.56-41.60  +17.6% to +47.4%
->    randwrite write  8.19-8.30    8.21-8.22    -0.4% to +1.1%
->    randrw    read   5.26-5.34    5.28-5.38    -0.9% to -0.4%
->    randrw    write  5.27-5.34    5.29-5.37    -0.8% to -0.5%
-
-"Intel UFS 2.1" sounds weird to me since Intel never produced any UFS
-devices as far as I know. Did you perhaps want to write "Intel UFSHCI
-2.1"? If so, these measurements are not representative since UFSHCI
-2.1 does not support MCQ. Measurement results for legacy (SDB) mode
-are highly sensitive to whether or not the I/O submitter runs on the
-same CPU core as the completion interrupt.
-
-Bart.
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 96e4065ae8b5..ebe190f7e1c1 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -32,6 +32,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+ #include <linux/kthread.h>
++#include <linux/sched/signal.h>
+ #include <linux/spinlock.h>
+ #include <linux/async.h>
+ #include <linux/slab.h>
+@@ -1415,11 +1416,14 @@ static void scsi_sequential_lun_scan(struct Scsi_=
+Host *shost,
+ 	 * until we reach the max, or no LUN is found and we are not
+ 	 * sparse_lun.
+ 	 */
+-	for (lun =3D 1; lun < max_dev_lun; ++lun)
++	for (lun =3D 1; lun < max_dev_lun; ++lun) {
++		if (signal_pending(current))
++			break;
+ 		if (scsi_probe_and_add_lun(shost, starget, lun, NULL, NULL,
+ 				rescan, NULL) !=3D SCSI_SCAN_LUN_PRESENT &&
+ 		    !sparse_lun)
+ 			return;
++	}
+ }
+=20
+ /**
+@@ -1591,6 +1595,9 @@ static int scsi_report_lun_scan(struct Scsi_Host *s=
+host,
+ 	 * the header, so start at 1 and go up to and including num_luns.
+ 	 */
+ 	for (lunp =3D &lun_data[1]; lunp <=3D &lun_data[num_luns]; lunp++) {
++		if (signal_pending(current))
++			break;
++
+ 		lun =3D scsilun_to_int(lunp);
+=20
+ 		if (lun > sdev->host->max_lun) {
+@@ -1804,6 +1811,8 @@ static void __scsi_scan_target(struct Scsi_Host *sh=
+ost, struct device *parent,
+ 	 */
+ 	res =3D scsi_probe_and_add_lun(shost, starget, 0, &bflags, NULL, rescan=
+,
+ 				     NULL);
++	if (signal_pending(current))
++		goto out_reap;
+ 	if (res =3D=3D SCSI_SCAN_LUN_PRESENT || res =3D=3D SCSI_SCAN_TARGET_PRE=
+SENT) {
+ 		if (scsi_report_lun_scan(shost, starget, bflags, rescan) !=3D 0)
+ 			/*
+@@ -1876,6 +1885,8 @@ static void scsi_scan_channel(struct Scsi_Host *sho=
+st, unsigned int channel,
+=20
+ 	if (id =3D=3D SCAN_WILD_CARD)
+ 		for (id =3D 0; id < shost->max_id; ++id) {
++			if (signal_pending(current))
++				break;
+ 			/*
+ 			 * XXX adapter drivers when possible (FCP, iSCSI)
+ 			 * could modify max_id to match the current max,
+@@ -1895,7 +1906,7 @@ static void scsi_scan_channel(struct Scsi_Host *sho=
+st, unsigned int channel,
+ 			__scsi_scan_target(shost, &shost->shost_gendev, channel,
+ 					order_id, lun, rescan);
+ 		}
+-	else
++	else if (!signal_pending(current))
+ 		__scsi_scan_target(shost, &shost->shost_gendev, channel,
+ 				id, lun, rescan);
+ }
+@@ -1904,6 +1915,8 @@ int scsi_scan_host_selected(struct Scsi_Host *shost=
+, unsigned int channel,
+ 			    unsigned int id, u64 lun,
+ 			    enum scsi_scan_mode rescan)
+ {
++	int ret;
++
+ 	SCSI_LOG_SCAN_BUS(3, shost_printk (KERN_INFO, shost,
+ 		"%s: <%u:%u:%llu>\n",
+ 		__func__, channel, id, lun));
+@@ -1913,23 +1926,30 @@ int scsi_scan_host_selected(struct Scsi_Host *sho=
+st, unsigned int channel,
+ 	    ((lun !=3D SCAN_WILD_CARD) && (lun >=3D shost->max_lun)))
+ 		return -EINVAL;
+=20
+-	mutex_lock(&shost->scan_mutex);
++	ret =3D mutex_lock_interruptible(&shost->scan_mutex);
++	if (ret)
++		return ret;
++
+ 	if (!shost->async_scan)
+ 		scsi_complete_async_scans();
+=20
+-	if (scsi_host_scan_allowed(shost) && scsi_autopm_get_host(shost) =3D=3D=
+ 0) {
++	if (!signal_pending(current) && scsi_host_scan_allowed(shost) &&
++	    scsi_autopm_get_host(shost) =3D=3D 0) {
+ 		if (channel =3D=3D SCAN_WILD_CARD)
+ 			for (channel =3D 0; channel <=3D shost->max_channel;
+-			     channel++)
++			     channel++) {
++				if (signal_pending(current))
++					break;
+ 				scsi_scan_channel(shost, channel, id, lun,
+ 						  rescan);
++			}
+ 		else
+ 			scsi_scan_channel(shost, channel, id, lun, rescan);
+ 		scsi_autopm_put_host(shost);
+ 	}
+ 	mutex_unlock(&shost->scan_mutex);
+=20
+-	return 0;
++	return signal_pending(current) ? -EINTR : 0;
+ }
+=20
+ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
