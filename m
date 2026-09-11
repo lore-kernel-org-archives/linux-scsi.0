@@ -1,136 +1,217 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 982FF42BE93;
-	Fri, 11 Sep 2026 10:32:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DFF043DEB9;
+	Fri, 11 Sep 2026 10:37:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789122747; cv=none; b=hGJPsWPkVaSjAE1QeopbAkAbfWV9IcujNsR3oOX+sH3G9Nte3GOacL9ZX0qAew48nN34pK6G8gmwUR5GFRECZZoxLgpv+0c8wMA0APNzFV/LnpBUIyh3M6BxpKqBU7TK8XG7wIS8yS0gXW3LxYgDVOe/s0FGxMMS+Yi/exyBV00=
+	t=1789123051; cv=none; b=qEr8jmBNFnqKE3ngTizuWb1kWdXhjia82cFdrGf40yw6GQwS+1Jm2klBX+ajsF5f0gat2A9qglt13WmEAEXpiY6LWXeetspKVn08f0DfoBaC0+zupGClBQyZbYfpLitGNVQMYMOy1v8yv4FJC+VMkF8dYxSkfSVUh9OpbwiP0ds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789122747; c=relaxed/simple;
-	bh=kN9gJHl4VkFSGQWA2JGU9OcB1UKXNZIgZSdTBvEmYPo=;
+	s=arc-20240116; t=1789123051; c=relaxed/simple;
+	bh=VBC2lzKLOR0XBH4X68w1+Namvmclxm2TD0bZo0z6uVg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=gZojV73d+uHtIeQbrihIURfg44jakEVkFywhH3uvE/gJMNPeT/Pb+SoTgXLEqVyJec2b2+qlBt6eUMQP3n3gJguGmedP8NIiH/nAaXsF4Ixg6rFT282wW5kSc2ON192Sr/dUfDvpG6et6A33lvf4ersgq07wtb4SufZbSzAMXwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X3C4tqm6; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=VvckzAFTds20mIKkHi0A5MbSxgsqP+T07sSGL7JG6XMteOqnOYM5Fe6ucTHe57pdpN8dGDl3xinD9NNlxYA9YigB/5L7rMi6CB9jtsIHbIixeL7ShpoeZOtGbUeuI7jKr7TfHyf/nrlAPJrF2rfroNICpO3FwW6kc5wlMdZTzkk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B7SB8sD8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X3C4tqm6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFE2B1F000FF;
-	Fri, 11 Sep 2026 10:32:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B7SB8sD8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE4431F000FF;
+	Fri, 11 Sep 2026 10:37:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789122743;
-	bh=D2mCohtwDs2RHmlq+Zn7XQH2mpnU6V9J2n77p2wEC1A=;
+	s=k20260515; t=1789123041;
+	bh=FcdYHnAFD/EmO8GeMPtllmGFtL3bgqr3LjcGUzY0Yi0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=X3C4tqm6+RvNPmmwapIrPtDWJIC4gNv6d4ZxlFAzSfUe53nv9BQ1vasNx47QGepx0
-	 v1W3eUSXCy7wxDvOBiMXjHMWoppTUajvR7YYn9hvtbvX9ZNTmj0MPy5CJcG93Z1UIO
-	 ok35b0NzeHhw3CNS1Sc2o8m5x5GgtBHvoeQBUMW29V9x9YJW76ZMhG/mzvpUTcguEY
-	 VadH+bhe9Cw+SlJW97vpgN7RlHY0ZkfdCeXate9/xuBzjqhqweGYUQsOFwEYtFps0w
-	 8dLJqMRfayUv7MtQsUs5qGenNpOzKr1F9qZFoqEGw8y19iOwPEbGzqlEKjm1bmJe90
-	 A3L9sZcZLJBMQ==
+	b=B7SB8sD84yiC8jEPrf+LMq7zj7wFpEE5i/cGqM3eL9vBhWm8dMrQYLGm1zXrW6UsJ
+	 jVEFfz76/xx4q61Rdme5I/nWlAubnctj8PpyLDwpmIsX1TdnQCTqVZwIYTP5SSRv8s
+	 UZTQMsPTXfty0Nxoo39yxJOvx18wydkIXUz9br6BA21fxaoPTE/W7fNinJ90/NWiGM
+	 7+oXm/tUKJqOTCEGIPw0gXqcnPfOhKY8falHjhur/g0AAfJGKzu8y9fZBMd4aIYHwy
+	 SUPtN7q0Yf+A4REsecgel8VXtBrduwchXthTw23snOc9jCdgiYBdZboZ0BGxPDmUft
+	 S6Pemo89Y+7EQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/3] scsi: ufs: dwc: Rename amd-versal2 read/write
- PHY API and move to dwc common file
+Subject: Re: [PATCH v3 3/3] scsi: ufs: starfive: Add UFS support for
+ StarFive JHB100 SoC
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Minda Chen" <minda.chen@starfivetech.com>
-Cc: robh@kernel.org, conor+dt@kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
-In-Reply-To: <20260911102359.83288-3-minda.chen@starfivetech.com>
+Cc: linux-scsi@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260911102359.83288-4-minda.chen@starfivetech.com>
 References: <20260911102359.83288-1-minda.chen@starfivetech.com>
- <20260911102359.83288-3-minda.chen@starfivetech.com>
+ <20260911102359.83288-4-minda.chen@starfivetech.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 10:32:22 +0000
-Message-Id: <20260911103222.EFE2B1F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 10:37:20 +0000
+Message-Id: <20260911103720.AE4431F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Double disable and unprepare of the UFS clock (`ufs_clk`) during d=
+river teardown.
+- [High] Resource leak of the `phy_reset` line if PHY initialization fails.
+
 Pre-existing issues:
-- [High] Data race in `ufs_dwc_phy_reg_write` and `ufs_dwc_phy_reg_read` du=
-e to shared mutable `static` arrays
+- [High] Data race in `ufs_dwc_phy_reg_write` due to the use of an unprotec=
+ted static array.
 --
 
-commit 0483c36fe85ab166d063a9b9c880720ee52b5d3b
+commit 7e44e99d3adeb04d28f12e6d3a13f795f6d5cf86
 Author: Minda Chen <minda.chen@starfivetech.com>
 
-scsi: ufs: dwc: Rename amd-versal2 read/write PHY API and move to dwc commo=
-n file
+scsi: ufs: starfive: Add UFS support for StarFive JHB100 SoC
 
-This commit renames the AMD Versal2 UFS read/write PHY register APIs and mo=
-ves
-them to the common ufshcd-dwc.c file. This allows other designware UFS PHY
-vendors to reuse the PHY register read/write functions.
+Add support for the UFS host controller on JHB100 SoC, built on
+the Synopsys DWC UFS controller and using UFSHCD platform driver.
+This controller requires specific configurations like
+M-PHY/RMMI/UniPro
 
-> diff --git a/drivers/ufs/host/ufshcd-dwc.c b/drivers/ufs/host/ufshcd-dwc.c
-> index 21b1cf912dcc6..b057a78e151c4 100644
-> --- a/drivers/ufs/host/ufshcd-dwc.c
-> +++ b/drivers/ufs/host/ufshcd-dwc.c
-> @@ -15,6 +15,59 @@
->  #include "ufshcd-dwc.h"
->  #include "ufshci-dwc.h"
-> =20
-> +int ufs_dwc_phy_reg_write(struct ufs_hba *hba, u32 addr, u32 val)
+> diff --git a/drivers/ufs/host/ufs-starfive.c b/drivers/ufs/host/ufs-starf=
+ive.c
+> new file mode 100644
+> index 0000000000000..fab65da0507e8
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-starfive.c
+> @@ -0,0 +1,297 @@
+
+[ ... ]
+
+> +static int ufs_starfive_phy_config(struct ufs_hba *hba, struct ufs_starf=
+ive_host *host)
 > +{
-> +	static struct ufshcd_dme_attr_val phy_write_attrs[] =3D {
+> +	static struct ufs_dwc_phy_pair_data phy_data[] =3D {
+> +		{ RAWAONLANEN_DIG_MPLLA_COARSE_TUNE, 0x51},
+> +		{ MPLL_SKIPCAL_COARSE_TUNE, 0x51},
+> +		{ RX_AFE_ATT_IDAC(0), 0x8a},
+> +		{ RX_AFE_ATT_IDAC(1), 0xc2},
+> +		{ RX_AFE_CTLE_IDAC(0), 0x8e},
+> +		{ RX_AFE_CTLE_IDAC(1), 0x8b},
+> +		{ FAST_FLAGS(0), 0x0004 },
+> +		{ FAST_FLAGS(1), 0x0004 },
+> +		{ RX_ADAPT_DFE(0), 0xa00},
+> +		{ RX_ADAPT_DFE(1), 0xa00},
+> +	};
+> +	struct ufs_dwc_phy_pair_data *data;
+> +	int ret, i;
+> +
+> +	for (i =3D 0; i < ARRAY_SIZE(phy_data); i++) {
+> +		data =3D &phy_data[i];
+> +		ret =3D ufs_dwc_phy_reg_write(hba, data->addr, data->value);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but moving it from the specific
-versal2 driver to the generic ufshcd-dwc.c library makes it affect all DWC
-UFS controllers.
+This is a pre-existing issue, but calling ufs_dwc_phy_reg_write() here
+appears to expose a data race if multiple Synopsys DWC UFS host controllers
+are probed concurrently.
 
-Since the phy_write_attrs array in ufs_dwc_phy_reg_write() is declared stat=
-ic
-but is mutated on every function call below, could this cause a data race?
+Looking at ufs_dwc_phy_reg_write() in drivers/ufs/host/ufshcd-dwc.c:
 
-If multiple UFS host controllers in a system execute PHY configuration or
-power state changes concurrently (e.g., during asynchronous device probing),
-they could overwrite each other's attribute values in this globally shared
-array. This might result in writing incorrect values to the UFS PHY
-registers, potentially leading to link instability or storage failures.
+int ufs_dwc_phy_reg_write(struct ufs_hba *hba, u32 addr, u32 val)
+{
+	static struct ufshcd_dme_attr_val phy_write_attrs[] =3D {
+		{ UIC_ARG_MIB(CBCREGADDRLSB), 0, DME_LOCAL },
+        ...
+	phy_write_attrs[0].mib_val =3D (u8)addr;
 
-> +		{ UIC_ARG_MIB(CBCREGADDRLSB), 0, DME_LOCAL },
-> +		{ UIC_ARG_MIB(CBCREGADDRMSB), 0, DME_LOCAL },
-> +		{ UIC_ARG_MIB(CBCREGWRLSB), 0, DME_LOCAL },
-> +		{ UIC_ARG_MIB(CBCREGWRMSB), 0, DME_LOCAL },
-> +		{ UIC_ARG_MIB(CBCREGRDWRSEL), 1, DME_LOCAL },
-> +		{ UIC_ARG_MIB(VS_MPHYCFGUPDT), 1, DME_LOCAL }
-> +	};
+Because phy_write_attrs is declared as static and modified before being
+passed to ufshcd_dwc_dme_set_attrs(), concurrent invocations will clobber
+each other's configuration payloads.=20
+
+Can this cause undefined device behavior or link startup failures if multip=
+le
+controllers execute PHY initialization simultaneously?
+
+> +		if (ret)
+> +			return ret;
+> +	}
+
+[ ... ]
+
+> +static int ufs_starfive_phy_init(struct ufs_hba *hba)
+> +{
+
+[ ... ]
+
+> +	ret =3D reset_control_deassert(host->phy_reset);
+> +	if (ret) {
+> +		dev_err(hba->dev, "Failed to reset phy\n");
+> +		return ret;
+> +	}
 > +
-> +	phy_write_attrs[0].mib_val =3D (u8)addr;
-> +	phy_write_attrs[1].mib_val =3D (u8)(addr >> 8);
-> +	phy_write_attrs[2].mib_val =3D (u8)val;
-> +	phy_write_attrs[3].mib_val =3D (u8)(val >> 8);
+> +	ret =3D regmap_read_poll_timeout(host->syscon,
+> +				       SRAM_STATUS, val,
+> +				       (val & SRAM_INIT_DONE),
+> +				       MPHY_POLL_INTERVAL_US,
+> +				       MPHY_POLL_TIMEOUT_US);
+> +	if (ret) {
+> +		dev_err(hba->dev, "wait sram init done timeout\n");
+> +		return ret;
+> +	}
+
+[ ... ]
+
+> +	host->phy_init =3D 1;
 > +
-> +	return ufshcd_dwc_dme_set_attrs(hba, phy_write_attrs, ARRAY_SIZE(phy_wr=
-ite_attrs));
+> +	return 0;
 > +}
-> +EXPORT_SYMBOL(ufs_dwc_phy_reg_write);
-> +
-> +int ufs_dwc_phy_reg_read(struct ufs_hba *hba, u32 addr, u32 *val)
+
+[ ... ]
+
+> +static int ufs_starfive_init(struct ufs_hba *hba)
 > +{
-> +	u32 mib_val;
-> +	int ret;
-> +	static struct ufshcd_dme_attr_val phy_read_attrs[] =3D {
+
+[ ... ]
+
+> +	host->ufs_clk =3D devm_clk_get_enabled(&pdev->dev, "main");
+> +	if (IS_ERR(host->ufs_clk))
+> +		return dev_err_probe(dev, PTR_ERR(host->ufs_clk),
+> +				     "Failed to get ufs clock\n");
+
+[ ... ]
+
+> +static void ufs_starfive_exit(struct ufs_hba *hba)
+> +{
+> +	struct ufs_starfive_host *host =3D ufshcd_get_variant(hba);
+> +
+> +	if (host->phy_init) {
+> +		reset_control_assert(host->phy_reset);
+> +		host->phy_init =3D 0;
+> +	}
 
 [Severity: High]
-This is a pre-existing issue, but similar to the above, the phy_read_attrs
-array in ufs_dwc_phy_reg_read() is mutated on every function call.
+Could this leak the phy_reset line in a deasserted state if initialization
+fails partway through?
 
-Could multiple controllers executing concurrently overwrite each other's
-values here, leading to incorrect UFS PHY register reads?
+If ufs_starfive_phy_init() successfully deasserts host->phy_reset, but a
+subsequent operation (like regmap_read_poll_timeout()) fails, it returns
+early and leaves host->phy_init as 0.=20
 
-> +		{ UIC_ARG_MIB(CBCREGADDRLSB), 0, DME_LOCAL },
-> +		{ UIC_ARG_MIB(CBCREGADDRMSB), 0, DME_LOCAL },
-> +		{ UIC_ARG_MIB(CBCREGRDWRSEL), 0, DME_LOCAL },
-> +		{ UIC_ARG_MIB(VS_MPHYCFGUPDT), 1, DME_LOCAL }
-> +	};
+When the probe rollback path subsequently calls ufs_starfive_exit(), it sees
+host->phy_init =3D=3D 0 and skips asserting the reset line.=20
+
+Is it possible this leaves the hardware in an invalid state that prevents
+subsequent driver probe retries from succeeding?
+
+> +	clk_disable_unprepare(host->ufs_clk);
+
+[Severity: High]
+Will this result in an unbalanced clock disable during driver teardown?
+
+In ufs_starfive_init(), host->ufs_clk is acquired using
+devm_clk_get_enabled(). This API automatically registers a devres action th=
+at
+calls clk_disable_unprepare() when the driver is unbound.
+
+By explicitly calling clk_disable_unprepare(host->ufs_clk) here in
+ufs_starfive_exit(), it seems this might disable the clock a second time wh=
+en
+the devres framework fires its cleanup action, triggering a kernel warning.
+
 > +
-> +	phy_read_attrs[0].mib_val =3D (u8)addr;
-> +	phy_read_attrs[1].mib_val =3D (u8)(addr >> 8);
+> +	reset_control_assert(host->core_reset);
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911102359.8328=
-8-1-minda.chen@starfivetech.com?part=3D2
+8-1-minda.chen@starfivetech.com?part=3D3
