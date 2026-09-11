@@ -1,172 +1,198 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021113.outbound.protection.outlook.com [52.101.125.113])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B015C3876D5;
-	Fri, 11 Sep 2026 03:53:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789098823; cv=none; b=MdHmWj3NqAQ3+v9w5MlL/o8k6B+SNvII53jorwTFulprBwEMcJRYt36pFz3Z8fOXtrJm9xkFZk8umDqWIr7xFcRpf+roL8brwmtWNPySIzXKpKMm73kxnC5zutqHkMNSh2aUKdMS6K5BdgxQZFKHTdZnAKvw+ArGtmAEWCRZ4l8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789098823; c=relaxed/simple;
-	bh=1S0infcIJCSHpPOmP/AhiyT/XsJf4lehWJdk01Q3zMc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Lx8h5W3p9CexwFGWZrfSclCT803wp19Vhv6ktPlRdYgK6lQphMIXiie8Q4Jg1crlxhTT78G6tteyMlxnwqL7idJRNvX+f+nvKgutD4Ifh3xNVSQPL0qOB71g9Qciv26wZwGtt3dbBrncGFjVnILjqD0Py/WD2T99oFLGSdEClJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=AxtZHwIz; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF2673033E3;
+	Fri, 11 Sep 2026 04:11:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.113
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789099910; cv=fail; b=JMyf0kSJkU3DegRG4ZrquBgJ4cC4mUTdIRd12TDsLr55c3pIeJVPC2m/W08U0XMHqiLv2dgUKWuSPu1IAwbSPRzXw0GadgcFHdw6Vroln1O6UYAg4tknl0iZ4XyXbiYs+3YlHde4WDy/fET5Pws0E167aCZic3E5PVP1CJ5G6dA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789099910; c=relaxed/simple;
+	bh=fn4I3Gb3ZXjOafIqaBzFOOc0RRxvEyTEdlrBF9o3HX4=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=nm1oqjFvtkaUXenLX1BOeL5uOLeZJ6G/l+sfyrsyzqXo23Tz6OY+WYFgWRLLAx0uTA+IT5rA1q/AxIbzYGRSBL5/zWWeYKbl7TIc2LwrL80n0hZgx19X0WO3yMEBNp+SVcUZ96A1JUNyqAGORlHJBo/6RzBQVwt/Go10VZIsyCI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=connect.polyu.hk; spf=pass smtp.mailfrom=connect.polyu.hk; dkim=pass (1024-bit key) header.d=connect.polyu.hk header.i=@connect.polyu.hk header.b=ppdF/VdI; arc=fail smtp.client-ip=52.101.125.113
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=connect.polyu.hk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=connect.polyu.hk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="AxtZHwIz"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68B12JK72632217;
-	Fri, 11 Sep 2026 03:53:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=PEhpIH
-	FRWlvPF+yjVIMIHkPbfyd5purfG0FTWg5ZZ1g=; b=AxtZHwIzQyHtvXOx5RZBQy
-	ATFS23SQGL0YV/w82fq/+ktivNVEZVfau61OgydXuvIYs6uRaOILLmjl67W1VJkz
-	r79IvNv7+/EPr+fL6mm5f0RP4hJl28cgRayyHtTpgYLAq5fDR8u9iZgTuua9oKzL
-	IQRwUIPK0KrVjtFefIDofiALW+JcO4P7t/bhIFXyk2E90ll8SolBr8QyvfOghGMr
-	LJVs9IoPFfG78pWpgUKt6aXHwr/RVbS+gLia2ndgDxwHPlHiwjB40zye62w/frsN
-	qC0W+19BCUNbFU34iiO3390LxogTAn3qGFYWS9rWPvqJxjfX8dHO8WcY1Bu1s0lg
-	==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gkd8n948y-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 11 Sep 2026 03:53:40 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68B158PB872147;
-	Fri, 11 Sep 2026 03:53:39 GMT
-Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4gkvwk459k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 11 Sep 2026 03:53:39 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68B3rdZj25035358
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 11 Sep 2026 03:53:39 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1E29E58058;
-	Fri, 11 Sep 2026 03:53:39 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id DA6E058057;
-	Fri, 11 Sep 2026 03:53:38 +0000 (GMT)
-Received: from [9.61.103.123] (unknown [9.61.103.123])
-	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 11 Sep 2026 03:53:38 +0000 (GMT)
-Message-ID: <6db82d74-2251-416b-8a29-7caa9301c2c5@linux.ibm.com>
-Date: Thu, 10 Sep 2026 20:53:38 -0700
+	dkim=pass (1024-bit key) header.d=connect.polyu.hk header.i=@connect.polyu.hk header.b="ppdF/VdI"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=AGt1S98Bq5ChkiRy6aRanFbDTzUUyN3yYw94dhVRbQB8gsNw88PPjzqRw5hezreRtwKzJnn2+Nga/xnxqzE8KpUv7aTAufeoI9p9CFfpsov8R1+Ov08krWZ4lcuhRjKi5RMpz1CH1HWBDbt99U0DIcowMVf0ZJDtlaSDpqq7RtEcK9NQdJ+M+9PDcwuhsRYCsSgoJxtmXmXfJ4Oj3Jzi8OZOpEICN52+C9nbLDOtLNje5Gh/KMMVEigiJy/Jzst+C9zD74DMGFG65V8jTp1z6dkSGuEtwZ3tNq87mOLD3OudWNGIrlK+Zwdtdm3HyjB0FrB00nSv8inSS25YzSanyA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pB0IfzXw8RKFA7uge9HJVmoEk+3JKwH+dD1cASZVLM0=;
+ b=ekHbc6VD9+im9xVFgFSsh+p0lwweypJ35P4LH/ZBEDU30MFzTet5xFtn9Ih/0OEgd0P1OGmfzVZ7Z2cx3Cdm0+Sh8IVNMRx8gSW5XjoREgJBOr7ZtcNq462hZ5iUYMLE1NPk2ih+LNWm4dVI9n4tc+DoMEZUU9ECW5XQG8ORlKa8d/4Gu4m4dOe6WedwAF4J7B0orAr4O0hLw1zGXwSqdZRuzDnsGgUfx5TwdE07PPo8PgjYU47jr/DW4HuCZPXQ1mvAaNXqQDRUQ2gWIG7PBbiGAAVif06qquZleOwxyIRhVMVewrkxx+kn0CYm9LPM1JGWMGGRUARNAgSsStN7bA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=connect.polyu.hk; dmarc=pass action=none
+ header.from=connect.polyu.hk; dkim=pass header.d=connect.polyu.hk; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=connect.polyu.hk;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pB0IfzXw8RKFA7uge9HJVmoEk+3JKwH+dD1cASZVLM0=;
+ b=ppdF/VdIfjeqUHWO2QqrJr353j45rKHLFlYFcZEvRqbhr2p1QkwJ9Wa0t5feiyEL4LSMyUNL5tDK1EB127hSEajuxj4AIdFuKBntLGAu6IgTId3UAUkp93GYpi1BFJ1pgMeKv0oOQu95M1PL4cpiXFrYYDeiYPPvwgLqHVRZ0jo=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=connect.polyu.hk;
+Received: from OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:4c5::7)
+ by OS9P286MB6583.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:416::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.9; Fri, 11 Sep
+ 2026 04:11:45 +0000
+Received: from OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::e267:139c:d5e6:d4aa]) by OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::e267:139c:d5e6:d4aa%4]) with mapi id 15.21.0406.007; Fri, 11 Sep 2026
+ 04:11:44 +0000
+From: ZHOU Jiaxiang <26066541r@connect.polyu.hk>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH 0/2] block/scsi: fix zones_cond out-of-bounds write on zone report
+Date: Fri, 11 Sep 2026 04:11:27 +0000
+Message-Id: <20260911041129.128280-1-26066541r@connect.polyu.hk>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-ClientProxiedBy: TP0P295CA0023.TWNP295.PROD.OUTLOOK.COM
+ (2603:1096:910:5::19) To OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:604:4c5::7)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 5/9] scsi: ibmvfc: add interrupt routine for
- asynchronous sub CRQ
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-References: <20260911021910.1038128-1-tyreld@linux.ibm.com>
- <20260911021910.1038128-6-tyreld@linux.ibm.com>
- <20260911024419.047191F000FF@smtp.kernel.org>
-Content-Language: en-US
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-In-Reply-To: <20260911024419.047191F000FF@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=NMVAaE6g c=1 sm=1 tr=0 ts=6aa37b44 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=teEPZJ_9TZz4PRgMrrAA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: uu-qWeONm0HTpkVK3I6hDLfIUpBFj7_y
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTExMDA0NSBTYWx0ZWRfXyisOqxM2j71y
- mfZ5tvhYFqj3/LHp3hO6LUtcNZNSPyrPK8DaLO2w3Qn8NFqi3qpGVt9QwFymyW1yiiRBM7rpNTA
- cWCfTZeiKL9hoS9IFOvA7g26E35aINmfVSFV/yjg1JbSTHyorsBmrW12suURA7QK2cx/0c1hkrV
- xt1DHcRH09EM3sMnmkda9QkQTjDY/OxgaeYiVMHkMMKieWynigVTSyxmX9V2pZ5l1u4CLV+VZte
- +xnvyOMDu3iu1JM46AfstwW5zhN1o2I0XeB/c+qTe/+tLHllVYAAv3j6sH8b31Ru06R7mH/d4+c
- agcdsFdkyLTyI4JwyfazvAkCxVKQKvlMSRuplgmZ26NYmRqfIq0dTAb1LYZ60HSJwI1HPxu72Mn
- dO5LfJjuZ9fqUDH4OkyKrpiG4/xVACWPEvhBaCE1yaeozmkrgjkrpXoUxlq8SNMbs4eVHFNWr+b
- uC49tvxBBQS8RyrDb+w==
-X-Proofpoint-ORIG-GUID: uu-qWeONm0HTpkVK3I6hDLfIUpBFj7_y
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTExMDA0NSBTYWx0ZWRfX6wXUARvgF7/b
- hA6JBnfcWyfsBBxqo+fIkqgRdx6UIo+M7OJMGnGHRaVhPZG/+6idgcOON981Dam5juJkIh888+w
- xR1MvxG+ZXmO4XRuoaMsMGhoH8QkaGc=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-11_01,2026-09-09_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 bulkscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 adultscore=0 suspectscore=0 impostorscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609110045
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: OS7P286MB8049:EE_|OS9P286MB6583:EE_
+X-MS-Office365-Filtering-Correlation-Id: b7c5b029-0be4-47d4-d5dd-08df0fbacaa7
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|366016|1800799024|786006|52116014|376014|10067099003|6133799003|18002099003|56012099006|11063799006|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	iAiV577lpvTmMY/NfqlpcDgfDQ7x1c/Rd488q3eyHMC2eQnKry2HyazlkKgM/D46bNFP2yljUuKb9w825xlhb0ZZLF+cSz9HqYmJEeEeQramEfIsAno50wZlter3RwX6DHQFFtefAbjiVg6SIrrKnSbgsnVCJ1unp8NZyPGH15+cpGuxRcicvExVNhtnlNyKTXo0Xg+/3e9ttEYNVlvU4RsZw93P8HepsZKDDI+YT3E/mm9Qu61rIG9y8bDtJVH/6yHfhaRYMxY1PTGsLiYekVE7OZyLRB2M0L86n7VuVy5HZsZORUwDgz+oIL7GmXaQQ6pAKdqTmQcQKREESfusZRra1/9vgqmclCfUyemF45i8PYAL9djJpMK8ICPV1CnaY4amNcTFWooblbQtuAGp595hYRUfPEBYqH8UcD/B7GCKN7iUYGabMB2/DQqwMJIjk+LjNi8IFKA9NmO++ynIusXadFWwRJsUIHiJclJBFezVn7OmBintIlAxmkr0oDBjkq//ZNX6yy8tYb2DYkOJkK9k8U+4Em//tIDaNID50FWDcROgpenwX9AGD9+2WwHbDorfUa2uMdTWBY06jPQhegIqyV27LQHxtWoyiSCAViGoBzd4bHWVLKINL8QyWOfuMVHw+p8X3F9Wm+Asy+NcfDrOKkldar6hPvyhVtceV5KFT5pTQZ4jN7sX+8JZziIcE9YOOweKq9B2mMqW1JR/ioPpjXXYc4oWsjXkYbugUs4=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(786006)(52116014)(376014)(10067099003)(6133799003)(18002099003)(56012099006)(11063799006)(38350700014);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?qUCiIptQV/FbAYPrkbFoRIqxcEW/yEqANrYEB+pGY/lKhLyEtEzv0zxs5iwq?=
+ =?us-ascii?Q?O69GGDz7ozVXb0O8jI3OrWp0DilCv3L3oktVEw6EhBeaCfFX+PsNcKNOSaKd?=
+ =?us-ascii?Q?QncoqLgTy9PmYFagbiFuB7uod1LfMiGJ55naQdI7VLT3QuTQ3WQq/oCp16C3?=
+ =?us-ascii?Q?+tN3LTCE2dznGDjWHWZKS+WBOeGS5Xusb4djTnBbbcCqRVdbR5vyFFApowi7?=
+ =?us-ascii?Q?3i5ZdR91oTRu/YOmRteQ1nupAWq9CxfwGauugos5KeZs65iyesqoj4gi/Rrd?=
+ =?us-ascii?Q?3oFUJ+dE9AgdWsQEuLRYwQbmPqeIb6OriZKiymKpbjlbiyhCl+cFYr9XmKuM?=
+ =?us-ascii?Q?i8+/MMl2+5KMBBikRhrW5oKMhk0RsttCmambEXA/vOGLWmb6fdY4LdVWGKkj?=
+ =?us-ascii?Q?yTtopuLvUWwSfYZB6ky2PFu3v2nRuZnWrj9j9nqtNt/DeqSoGQNZ8lpqEpZo?=
+ =?us-ascii?Q?mc0NRv+Je8uK3v3Bq/CUSSkPXK1Z/Y8i5Rn8IejS7FRd8q1vPBwj44GAG06G?=
+ =?us-ascii?Q?wmLahH/dHpEf0pfcXOYv/YOEd2cFagGU4ZBvBcWUVJgUym7l/dnuImtqPZtN?=
+ =?us-ascii?Q?PFrO5H1WYzVZQy3Fp7+JX1p/6pBBxT8Y/DI2GpFh1pNL4De7ZlvrjT6fY7RS?=
+ =?us-ascii?Q?Rw0/N0xZhTJ/CMsOY4quMPLo8eI/tCKnTKjfJC+mhHQWjEQtt7qmPUw0cO09?=
+ =?us-ascii?Q?ZPnflURG7hYmzSBMTsAdAO1WNuFIMnucin6MSzKANne3kdedGfGnrQ/BYf9k?=
+ =?us-ascii?Q?T5FsfvdAcFRGIOuNMK1EBQFaeY0sNRfbaxrYxYLp5+AqS1WS0/7YCde3wHGa?=
+ =?us-ascii?Q?60Oy5lJi85TlVjP9DoaW5ZV7M2UuRKhqVlpHlBF519O4Vr7qz5bxpru3DJwX?=
+ =?us-ascii?Q?t39+R1mMPYnzfFSR7NyfWSt8JGW0yEjJ7M/V/LUkVbjEEH4AGnViCyum3NEP?=
+ =?us-ascii?Q?JBeVnoqoNkuzk8zhi0WL8kmoCyZXs121loV0jXHOLCPpdSUAj8Rj9lnJRlrG?=
+ =?us-ascii?Q?9oNGoL4V9iUPUERLDh6WaBLaKMMohsriPd9jd9NjyFOqzLJzK3SSL8Jgb2TV?=
+ =?us-ascii?Q?gShCKwHcmefPcsN8kcX3R+x7cOnLSTUzYGPx8sV7MClwdQnZ46tqLAo6QSLD?=
+ =?us-ascii?Q?SsnW5tcMgSMpPXT6ytkIr+OU+lCtvL36zUkFmAXP4MAWtpbn3EsqSOnQuSMc?=
+ =?us-ascii?Q?i5KBuqiqhVZcZ9HUzz+jbMLhBpJXWjP419RuWwplSfnx0HaB44sikb2B9lig?=
+ =?us-ascii?Q?LNwXyBT8GMzsuO2345MhJ6vXIYFpQ5rl0dusDTTHLVAGF0RmTmQN5twwPZaN?=
+ =?us-ascii?Q?NI+y9xDwTMQ6Q24AyqT+xAWkDhoPSs834ZFsbDFMHMdUMyZSEtNuH4TfjZ5z?=
+ =?us-ascii?Q?dGX1mQHzvFQgqHmlIe5kL7qMV9F8NusdKE3hXRS/BS9il04pjCDi1YP9+N8B?=
+ =?us-ascii?Q?gE4vlc5QNIm1uliX1d1+VWMrqgcEBtUecTkNtgzMfCA7rWAqryHww0D3zk8U?=
+ =?us-ascii?Q?el4ozzegVKJ0BDjSHmVke346rx7B8p3yfH3LNk41wqwRo3kSlSnkLe/rLIi+?=
+ =?us-ascii?Q?PJHpQik/gG2s0AJmPYAf6TsRYmMBGU7dcWNL2M4QUVMPodg9OJR07jn9FOMS?=
+ =?us-ascii?Q?Zn365e3iGXJsc/TO5fT5qRXhWMAHVHgILHs8SGpez4DEPDRadhlXjS2M7VSY?=
+ =?us-ascii?Q?tlfpPFXFwnSE5b5ZVDuMZ+fnjBjDYi4blGr39wv/CrDVQ5HxY448guLZamX4?=
+ =?us-ascii?Q?4r6SvzSAkwbBc82TjTQFbTkCG0vUe1A=3D?=
+X-OriginatorOrg: connect.polyu.hk
+X-MS-Exchange-CrossTenant-Network-Message-Id: b7c5b029-0be4-47d4-d5dd-08df0fbacaa7
+X-MS-Exchange-CrossTenant-AuthSource: OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Sep 2026 04:11:44.9019
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: ec09e4d7-3d0f-4eff-9c1e-7ba8060c5417
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: vyVCsxU+xHE5MAO9CINPOvBQL371nE7SjNmMg6dllLQfhc7S//MWUg+tO3txcpy9oniXFppoL0k1q3sfo8WMFAFy3fIBg8Q0KjU/Xf81Caw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS9P286MB6583
 
-On 9/10/26 7:44 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Low] Missing address-of operator (`&`) when referencing `Scsi_Host`'s `host_lock`, causing a fatal compilation error.
-> --
-> 
-> commit af3cb177b633d7c7bd704888c846393f549edaef
-> Author: Dave Marquardt <davemarq@linux.ibm.com>
-> Date:   Fri Sep 11 02:19:05 2026 +0000
-> 
->     scsi: ibmvfc: add interrupt routine for asynchronous sub CRQ
-> 
-> This commit adds an interrupt routine and a draining function for asynchronous
-> sub-CRQ events. It handles disabling and enabling IRQs to process entries
-> while holding the queue and host locks.
-> 
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> index daec81f48857d..553fca31cb3aa 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> 
-> [ ... ]
-> 
->> @@ -4376,6 +4376,60 @@ static struct ibmvfc_crq *ibmvfc_next_scrq(struct ibmvfc_queue *scrq)
->>  	return crq;
->>  }
->>  
->> +static void ibmvfc_drain_async_subq(struct ibmvfc_queue *scrq)
->> +{
->> +	struct ibmvfc_host *vhost = scrq->vhost;
->> +	unsigned long flags;
->> +	struct ibmvfc_crq *crq;
->> +	int done = 0;
->> +
->> +	spin_lock_irqsave(vhost->host->host_lock, flags);
-> 
-> [Severity: Low]
-> Does this code need an address-of operator for host_lock?
-> 
-> Since kernel 5.14, the Scsi_Host's host_lock field is an embedded spinlock_t
-> struct, so passing it directly to spin_lock_irqsave causes it to be passed
-> by value. This regression will result in a compilation error because the
-> lock function expects a pointer to a spinlock_t.
-> 
-> Would it make sense to also update ibmvfc_process_async_work, as well as
-> ibmvfc_async_fpin_test and ibmvfc_full_fpin_test in the KUnit tests, which
-> appear to have this same pattern introduced earlier in the series?
-> 
->> +	spin_lock(scrq->q_lock);
->> +	while (!done) {
-> 
-> [ ... ]
-> 
->> +		} else
->> +			done = 1;
->> +	}
->> +	spin_unlock(scrq->q_lock);
->> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-> 
-> [Severity: Low]
-> Similar to the lock acquisition above, does spin_unlock_irqrestore also
-> need an address-of operator to pass a pointer to host_lock?
-> 
->> +}
-> 
+blk_revalidate_disk_zones() sizes the zones_cond array from the disk
+capacity and zone size, but the per-zone index used by
+blk_revalidate_zone_cond() comes from the device-driven report_zones()
+walk and is never checked against the array size. A device that reports
+more zones than the array holds makes blk_zone_set_cond() write out of
+bounds, one byte per extra zone.
 
-Again, as noted in patch 1 this breaks the build. Will fix in v10.
+A concrete way to reach it is a zone count that does not fit 32 bits:
+both struct blk_revalidate_zone_args.nr_zones and struct
+zoned_disk_info.nr_zones are unsigned int, so a disk advertising
+2^32 + 1024 zones of one 512-byte logical block gets its count
+truncated to 1024; the array is allocated for 1024 zones while the
+report walk proceeds past index 1024.
 
--Tyrel
+This is structurally analogous to CVE-2025-40345 (a device-reported
+value exceeding a capacity-derived table corrupts kernel heap) and,
+like CVE-2024-47682, it is fed by target-supplied data in the sd
+revalidation path. As in that report, note that sd also sits on network
+transports (iSCSI/SRP/FCoE), so the malformed geometry can arrive from a
+remote target, not only from a physically attached device.
+
+Verified on commit 50d05c7c76c9 ("Merge tag 'landlock-7.3-rc3'
+of git://git.kernel.org/pub/scm/linux/kernel/git/mic/linux"), which
+is v7.3-rc2, using KASAN builds on x86_64 and arm64:
+
+  BUG: KASAN: slab-out-of-bounds in blk_revalidate_zone_cb
+  Write of size 1 ... 0 bytes to the right of allocated 1024-byte region
+  sd_probe -> sd_revalidate_disk -> sd_zbc_revalidate_zones
+    -> blk_revalidate_disk_zones -> sd_zbc_report_zones
+    -> blk_revalidate_zone_cb
+
+I have a working reproducer (dummy_hcd + raw-gadget ZBC device and a
+minimal initramfs) as well as a full privilege-escalation demonstration
+built on the primitive. As this report is the product of AI-assisted
+analysis I am treating it as public per
+Documentation/process/security-bugs.rst; both are available privately on
+request.
+
+Patch 1/2 fixes the write site and the block-layer truncation, which
+covers every blk_revalidate_disk_zones() caller (sd, nvme, virtio-blk,
+dm, null_blk, ublk, zloop). Patch 2/2 makes the SCSI path reject such
+devices cleanly at scan time, before the truncated count reaches the
+block layer.
+
+Before the series the reproducer triggers the KASAN report above and the
+escalation demonstration reaches a root shell from uid 1000. After the
+series the device is rejected ("Too many zones"), there is no KASAN
+report, and the demonstration no longer progresses. Each layer was also
+verified independently (block-layer guard alone, and the write-site
+check alone).
+
+ZHOU Jiaxiang (2):
+  block: fix zones_cond out-of-bounds write on zone report
+  scsi: sd_zbc: reject disks with too many zones
+
+ block/blk-zoned.c     | 15 +++++++++++++--
+ drivers/scsi/sd_zbc.c | 11 ++++++++++-
+ 2 files changed, 23 insertions(+), 3 deletions(-)
+
+--
+2.34.1
+
+[https://www.polyu.edu.hk/emaildisclaimer/PolyU_Email_Signature-v2.jpg]
+
+Disclaimer:
+
+This message (including any attachments) contains confidential information =
+intended for a specific individual and purpose. If you are not the intended=
+ recipient, you should delete this message and notify the sender and The Ho=
+ng Kong Polytechnic University (the University) immediately. Any disclosure=
+, copying, or distribution of this message, or the taking of any action bas=
+ed on it, is strictly prohibited and may be unlawful.
+
+The University specifically denies any responsibility for the accuracy or q=
+uality of information obtained through University E-mail Facilities. Any vi=
+ews and opinions expressed are only those of the author(s) and do not neces=
+sarily represent those of the University and the University accepts no liab=
+ility whatsoever for any losses or damages incurred or caused to any party =
+as a result of the use of such information.
