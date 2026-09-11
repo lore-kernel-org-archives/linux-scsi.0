@@ -1,139 +1,118 @@
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1135E3E63A3
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:43:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6AF1FBC8E
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 02:44:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789094607; cv=none; b=d3CsJw3CxgeAtJ4PEnM73aSETqct7r5DBx+oGpO4qaFgHfBW+2gSHSCJqVN618k+bgm3yikXAchDuUs7/DfnJLz6NGjigxvqfok9RizKbtTxM4P6jr3qxAB/TRp0iwo454zfkXwLECriAtBh2qMgBERE7anVgxVW4uBh2GZRimk=
+	t=1789094660; cv=none; b=rsoCIcRK1zpCIz5Ejq6QjYzDNFJd/pzP2O43/xCRDZEIl0bIvFLTPMsTlMPQXIcZloD+cdxHddToR+m0bGU4O46Ex3oC5d427NtDPp61ZY1EtdrzgVqIkBPUUCEvwNchgDQZDlvTL93AvYXQzKFV4A5cx4PS4kHeqszAvq4HAYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789094607; c=relaxed/simple;
-	bh=SE5RaLn3Dzf2vFzZ+yhriAZI3DsHt9x+u8rqlBaLDPQ=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=uIbic9VeiEv4ETktH01OL79q53pCKoTpBycN3c6APNcpkOoiAc9KU8sQEhsUhmsADRp/6loqCNbHKs2pFqN87S9i/1mafCzXd9+XJvUDrD3lpXw32HbexBRO+zL3fnQ1C1nsV750fqjf3ZgPy68Gy6cYGLkL0GXcFOqdEUa5ri8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=pXBvgsIW; arc=none smtp.client-ip=209.85.216.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1789094660; c=relaxed/simple;
+	bh=5Te4NPC8k87HjjtaoYK7QmI0zePzU3RAMdVtn0A8vgk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=q/KW3zFMMweNn7TPLvP/6jWPn0rXtiNRjyFh3eAjA7oc9179YEWcURb5iHvqk3tRBCxfZ39a+yxtx8u6DSa2R2Touaenpn2HtMsmXNFSzJpz8fN5TbfnVzDyi225biPZlp5CpjjfCVaKt7isc6D3UN25OUe5r60mcYXROdqPda0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kLZskYex; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pXBvgsIW"
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-396b9ef3070so715141a91.3
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Sep 2026 19:43:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789094605; x=1789699405; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=mq94d3vXnQQDg8NO9kMY4Qofd5oIq09gpYbdjVFAs2k=;
-        b=pXBvgsIWe9xr+KPNPSaIzw0w11ppsgqpn6V+2qCCvjKxfBju8JahySGrHRf1Qk5ary
-         BWkXL6NZLV+C44I8o37tNL+3g+fwbdbDko7agSQNjJqn2vH1a9r+w7gal8GZ66q8myJ1
-         mfV3GmXgNNoeSBqymeuyllD2QGnprES58ct7cR3/0SQzyzA4OftNkzzKlh+K877w4e2V
-         w4hJigax9X+XrlFq8C88eTPDLkO05rrJMcD/U3qeO6GotesymGEMhpJr9Amg6GdSuZ9f
-         e+dyfnd09Xmae+VXXa3+ymOjsscD2ktdJKDPYyU68E6WCsY0klco9Pg+KGiieiYGQp8L
-         n7Ig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789094605; x=1789699405;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=mq94d3vXnQQDg8NO9kMY4Qofd5oIq09gpYbdjVFAs2k=;
-        b=HE95jhqgP9A9P9FS13p5K3pFSJLtoob6Vozs1B8R3W2/HJGUezMk+vBf9Fb2SWtdfJ
-         9nYDD5x0VRxG9cA1oGlVTjFXOV5hysifDJndhDMTZTmS1B0tDf/PojZup4jwHA0ulYiI
-         gznynVtoQ5HShSJAnuiz3Gofhc51mtPsRHaxx9zAu/BNwu6vMmnchhGeKVZxZLXdll1B
-         C0CuD/7Oftbj2wro5+AUKcmk+iJ/9scZGJtnL0Sll1eVPzoSvxNi5jQ6FhSveDjoD9A+
-         feJf37K9fFpSB40ct29wRgNNftWYWt89nzHUDagUxxhq9ascJChIl7RUTyW/tywrbNX3
-         lmow==
-X-Gm-Message-State: AFuF++n7y3F3c3neFFXKBjlGC04bHiNJD9bUwu7RJkmZsaYkAuL1RTQ3
-	DQ/1FeuSGPbraH9qPA/B1GT9b7nrDexJPQNKRQCLr7NBC/h69L+cy2CF1K4x9LuDuy1F6JjNF6Z
-	9Qhn9kaXspnLeVkw8hLKUiA==
-X-Received: from pjrx15.prod.google.com ([2002:a17:90a:bc8f:b0:39d:9869:f742])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90a:d2cb:b0:37f:ed7e:7e42 with SMTP id 98e67ed59e1d1-39d9c234851mr2889048a91.14.1789094605291;
- Thu, 10 Sep 2026 19:43:25 -0700 (PDT)
-Date: Fri, 11 Sep 2026 10:43:19 +0800
-In-Reply-To: <20260911024319.1346706-1-stanleyjhu@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kLZskYex"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 047191F000FF;
+	Fri, 11 Sep 2026 02:44:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789094659;
+	bh=Irsg7xaYwdmV6mrH6oOo/u1vPC0vPP30tHLlXVkgJfM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kLZskYexbF/PMnyAowvpVhhhR9pVckwEA8gFIz0ugp0mOtNROu+m39UFDzc36aLcA
+	 GvBmNtE55FtFtDJLw/riLIOX+Ae56leylH4oT6TaDxFCcNYkWp0tzjW+2NKM8CfQ0T
+	 +RDxekXionZOQxfGYYP/ASmdK2hV8VLqRnJ0d2uT/vqV8hYoAW2v1f/r8GZMvO9IMf
+	 pzLLCHOsU5xQcuCnhqKen1YJgNJJ0hVBHeOmPjJi4smNJMgFd4FnVewRBSZxn9kzdu
+	 EqWDrpULdQyB5m2Vi/d6jdecOASVj3xz0nkrN8kl6Gg5QU9/Qnp8ymCKcScl41zKNy
+	 ySrcHBl3K+fqQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v9 5/9] scsi: ibmvfc: add interrupt routine for
+ asynchronous sub CRQ
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260911021910.1038128-6-tyreld@linux.ibm.com>
+References: <20260911021910.1038128-1-tyreld@linux.ibm.com>
+ <20260911021910.1038128-6-tyreld@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 11 Sep 2026 02:44:18 +0000
+Message-Id: <20260911024419.047191F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260911024319.1346706-1-stanleyjhu@google.com>
-X-Mailer: git-send-email 2.55.0.1007.g17ff1f9808-goog
-Message-ID: <20260911024319.1346706-3-stanleyjhu@google.com>
-Subject: [PATCH 2/2] scsi: ufs: core: Dynamically disable timestamp on
- unsupported devices
-From: Stanley Jhu <stanleyjhu@google.com>
-To: mkp@kernel.org, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	bvanassche@acm.org, avri.altman@sandisk.com, alim.akhtar@samsung.com, 
-	Stanley Jhu <stanleyjhu@google.com>
-Content-Type: text/plain; charset="UTF-8"
 
-JEDEC JESD220F specifies that the Timestamp attribute (qTimestamp) is
-an optional feature for UFS devices. Some compliant UFS 4.0 devices do
-not implement it and return QUERY_RESULT_INVALID_IDN (0xFD).
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] Missing address-of operator (`&`) when referencing `Scsi_Host`'s `h=
+ost_lock`, causing a fatal compilation error.
+--
 
-ufshcd_set_timestamp_attr() gates the write on wspecversion >= 0x400
-and the absence of UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT. Neither
-covers a device that advertises UFS 4.0 but declines the attribute, so
-the write is reissued on every boot and every resume.
+commit af3cb177b633d7c7bd704888c846393f549edaef
+Author: Dave Marquardt <davemarq@linux.ibm.com>
+Date:   Fri Sep 11 02:19:05 2026 +0000
 
-Record the capability in struct ufs_dev_info and clear it when the
-device answers -EOPNOTSUPP, so the write is not retried. -ETIMEDOUT
-and -EIO still reach dev_err(); they are transient and must not
-disable the attribute.
+    scsi: ibmvfc: add interrupt routine for asynchronous sub CRQ
 
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
----
- drivers/ufs/core/ufshcd.c | 10 +++++++---
- include/ufs/ufs.h         |  1 +
- 2 files changed, 8 insertions(+), 3 deletions(-)
+This commit adds an interrupt routine and a draining function for asynchron=
+ous
+sub-CRQ events. It handles disabling and enabling IRQs to process entries
+while holding the queue and host locks.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f01703c3825f..1964d0a23c17 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8962,6 +8962,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 
- 	ufs_fixup_device_setup(hba);
- 
-+	dev_info->timestamp_sup = dev_info->wspecversion >= 0x400 &&
-+		!(hba->dev_quirks & UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT);
-+
- 	ufshcd_wb_probe(hba, desc_buf);
- 
- 	ufshcd_temp_notif_probe(hba, desc_buf);
-@@ -9262,14 +9265,15 @@ static void ufshcd_set_timestamp_attr(struct ufs_hba *hba)
- 	u64 ts_ns;
- 	int err;
- 
--	if (dev_info->wspecversion < 0x400 ||
--	    hba->dev_quirks & UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT)
-+	if (!dev_info->timestamp_sup)
- 		return;
- 
- 	ts_ns = ktime_get_real_ns();
- 	err = ufshcd_query_attr_qword(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
- 				      QUERY_ATTR_IDN_TIMESTAMP, 0, 0, &ts_ns);
--	if (err)
-+	if (err == -EOPNOTSUPP)
-+		dev_info->timestamp_sup = false;
-+	else if (err)
- 		dev_err(hba->dev, "%s: failed to set timestamp %d\n",
- 			__func__, err);
- }
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index afbb32654fab..b0207e694911 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -662,6 +662,7 @@ struct ufs_dev_info {
- 	u8 rtt_cap; /* bDeviceRTTCap */
- 
- 	bool hid_sup;
-+	bool timestamp_sup;
- 
- 	/* Unique device ID string (manufacturer+model+serial+version+date) */
- 	char *device_id;
--- 
-2.55.0.1007.g17ff1f9808-goog
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> index daec81f48857d..553fca31cb3aa 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
 
+[ ... ]
+
+> @@ -4376,6 +4376,60 @@ static struct ibmvfc_crq *ibmvfc_next_scrq(struct =
+ibmvfc_queue *scrq)
+>  	return crq;
+>  }
+> =20
+> +static void ibmvfc_drain_async_subq(struct ibmvfc_queue *scrq)
+> +{
+> +	struct ibmvfc_host *vhost =3D scrq->vhost;
+> +	unsigned long flags;
+> +	struct ibmvfc_crq *crq;
+> +	int done =3D 0;
+> +
+> +	spin_lock_irqsave(vhost->host->host_lock, flags);
+
+[Severity: Low]
+Does this code need an address-of operator for host_lock?
+
+Since kernel 5.14, the Scsi_Host's host_lock field is an embedded spinlock_t
+struct, so passing it directly to spin_lock_irqsave causes it to be passed
+by value. This regression will result in a compilation error because the
+lock function expects a pointer to a spinlock_t.
+
+Would it make sense to also update ibmvfc_process_async_work, as well as
+ibmvfc_async_fpin_test and ibmvfc_full_fpin_test in the KUnit tests, which
+appear to have this same pattern introduced earlier in the series?
+
+> +	spin_lock(scrq->q_lock);
+> +	while (!done) {
+
+[ ... ]
+
+> +		} else
+> +			done =3D 1;
+> +	}
+> +	spin_unlock(scrq->q_lock);
+> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+
+[Severity: Low]
+Similar to the lock acquisition above, does spin_unlock_irqrestore also
+need an address-of operator to pass a pointer to host_lock?
+
+> +}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911021910.1038=
+128-1-tyreld@linux.ibm.com?part=3D5
