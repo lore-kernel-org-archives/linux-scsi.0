@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C30663947B5
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 09:25:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DDDA468C05
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 09:26:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789118751; cv=none; b=miHfmc94QvAnnhS0qukDi4bzWvHKgqnhp7wb44cG+fU+efvJ7QtbBFHgkC5DP17Y19Xsyi8Aalu4FRzghXJvP1EqO9YpqYrnZK1aLRgx6SsoMX1/7sCPfTWpFPXz6aMrYU8UIQ5g3pM39oYJ9xDVblyKcjPv0UrFnxCZsBw1tv0=
+	t=1789118768; cv=none; b=q1eKWSZedFMmu+dAKAsYtqqkrJv2z5E/306O1TfWcr7w+lGp34RfJr9sFSgbhRD65Oj89MpeOEQVxGdEQh90lok/VXfFF7GY2qZlUUoeA442lEFCXY6CZC+b6wkCBKXKJ9Bo+LxHqlgo/Dk2EFgNAUs1a4+ppmdIv51h62yGjUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789118751; c=relaxed/simple;
-	bh=cf3sBVSVrECw/XYh5/LKnZkcga85ypEBO2WnDGKYfIo=;
+	s=arc-20240116; t=1789118768; c=relaxed/simple;
+	bh=BxgcLHAU6lgZOkFIjwml4qvVlC7crHDKlRXLnDAY2dQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pVhjj/wGYcdGfh0uJ2ilNOv8oPxQIqDB4Eg2I5LEb2Oamj/akb2cbyOtm++vl4jAKfLQS0KldxENJaVH6YnsQrripfr/8jlGUH82qV/JBEtd7llw6TRUl/WAzoWnV1JUAPfJhwSRKJWKnB60RSWh90vNuVjk8TTAjSUow/HnGFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I3P6YyAQ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=hojmLU/WrpU7yF+wpZAB1e8ViObPKJXY8NzKKCCYbSEoQN7bSJbexw+72MKTMQx+/jBTZLw55pRccBa56YxNNuzy9WFNsMBwLPQJRw0OYSoGw24L1rGfVme/vwRlpYFuniHPmD22MLpY5BVxj16pPVyGEMGr9OaYYF6Jz8nayUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JATj3qZ8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I3P6YyAQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BE1F1F000FF;
-	Fri, 11 Sep 2026 09:25:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JATj3qZ8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF9771F000FF;
+	Fri, 11 Sep 2026 09:26:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789118750;
-	bh=UMAcuTAmeq9ndIa9vtcIuuhgAgCABXKcr/IzIrjViEA=;
+	s=k20260515; t=1789118766;
+	bh=PHoQyxQPqK7dWQd6JmtfjaOW604XanCMNl+2Btobc08=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=I3P6YyAQsjCbF+z8Ecm6hRbDXeVscAq8MgThI9GVvolMs5b5+/b4NmSIB2UpIOqh8
-	 WbfZ+9/z6U4O6gA+iO+aqqMj/DwauGubIiM0XxO7eEhJkJTH1Kde/Zpl8ZdCbX8yU8
-	 cLRSLKLg3zXQLb2wR9Gg9ZfGFvOzf6DIKVtX7ndVjZ+z6yc/PSr8kmU7JcLQYDfxPt
-	 dIbVPUTydzU7Oz+bgfOH8GbcjUVX/Qy3j+ZgG1Tt60n61IjTiAfstytlgTM9z7tCtb
-	 8Uzn1pi0YrMnnOxPVUS5QYBOuoiy2a+/Y8hABjPUw0RtJi8s0IAaDmMlb+L8goEd8r
-	 Fdr7HHIE1SULA==
+	b=JATj3qZ8TvkUjGgckli3R1Ys2cLpF9ywPZw9MYPEhih0FAy9lF9Ms4dawbXWHSvuT
+	 /k392Heubgc9WNdhFbAxK17rr6Y+XM9HYptPzftaPMEMDPct8ZD23OisxTbR/M0xzk
+	 B1ZMU8wJBb0vgS4KBIgeAFcPgizxQFSdHLzu0Js2B7OYEtY9EdtElbSxZa5tnHvmPj
+	 eT9E9RVjPbCpXGFi77jSWdA2B7je2HDIAFfgHuotG/HQp+bqtNkSX15IKYBcVhl5aj
+	 KI22CbrDes5PG/19pdieQrrgvEqrVUQ6S7sPFszpoTMz5kUY/UOMUiaBaBm/04PcjI
+	 XaPZ/IebKIZ0w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/4] scsi: pm8001: clean up resources on probe failure
+Subject: Re: [PATCH 1/4] scsi: pm8001: free IRQs when HBA allocation fails
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Peng Hao" <flyingpenghao@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260911091011.94676-3-flyingpeng@tencent.com>
+In-Reply-To: <20260911091011.94676-2-flyingpeng@tencent.com>
 References: <20260911091011.94676-1-flyingpeng@tencent.com>
- <20260911091011.94676-3-flyingpeng@tencent.com>
+ <20260911091011.94676-2-flyingpeng@tencent.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 11 Sep 2026 09:25:49 +0000
-Message-Id: <20260911092550.4BE1F1F000FF@smtp.kernel.org>
+Date: Fri, 11 Sep 2026 09:26:05 +0000
+Message-Id: <20260911092605.EF9771F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,89 +48,97 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Hardware soft reset is initiated before tearing down tasklets and =
-IRQs, allowing concurrent MMIO accesses during reset.
-- [High] Workqueue flushed after freeing DMA memory and unmapping MMIO regi=
-sters, leading to use-after-free and use-after-unmap.
+- [High] The IRQ handler is registered before queue initialization is compl=
+ete, causing a NULL pointer dereference on early/spurious interrupts.
+- [High] Invalid offset virtual address passed to dma_free_coherent() when =
+freeing MPI memory regions.
 --
 
-commit 701715eef41b511a0a6a9cbd9e7c8e9908bfcfc9
+commit 9749644d500951b76d7ccb7050664ddfe58c9592
 Author: Peng Hao <flyingpenghao@gmail.com>
-scsi: pm8001: clean up resources on probe failure
 
-This commit improves resource cleanup on probe failures in the pm8001 drive=
-r.
-It routes failures through the standard teardown chain and correctly resets
-the chip. It also adds logic to release SAS arrays when initialization fail=
-s.
+scsi: pm8001: free IRQs when HBA allocation fails
+
+pm8001_alloc() registers the interrupt handlers before allocating the MPI
+memory regions and device array. If one of those later allocations fails,
+pm8001_pci_alloc() frees the HBA while the IRQ handlers remain registered.
+This patch releases the IRQs on every failure after successful registration
+and kills the initialized tasklets before freeing the HBA.
 
 > diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm80=
 01_init.c
-> index d0e91ed09bbe9..20b02e63be8c9 100644
 > --- a/drivers/scsi/pm8001/pm8001_init.c
 > +++ b/drivers/scsi/pm8001/pm8001_init.c
-> [ ... ]
-> @@ -1216,8 +1216,16 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+> @@ -323,9 +323,8 @@ static int pm8001_alloc(struct pm8001_hba_info *pm800=
+1_ha,
+>  		   pm8001_ha->chip->n_phy);
 > =20
->  err_out_shost:
->  	scsi_remove_host(pm8001_ha->shost);
-> +err_out_chip:
-> +	PM8001_CHIP_DISP->interrupt_disable(pm8001_ha, 0xFF);
-> +	PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
->  err_out_ha_free:
-> +	pm8001_free_irq(pm8001_ha);
+>  	/* Request Interrupt */
+> -	rc =3D pm8001_request_irq(pm8001_ha);
+> -	if (rc)
+> -		goto err_out;
+> +	if (pm8001_request_irq(pm8001_ha))
+> +		return 1;
+
+[Severity: High]
+This is a pre-existing issue, but since we are modifying the IRQ registrati=
+on=20
+path here, is it safe to request the interrupt before the chip and memory=20
+queues are initialized?
+
+If an interrupt fires early (e.g., from an unquiesced device via kexec, or =
+a=20
+spurious interrupt on a shared INT-x line), the tasklet can be scheduled.=20
+The tasklet executes pm8001_chip_isr(), which calls process_oq().
+
+In drivers/scsi/pm8001/pm8001_hwi.c:process_oq():
+
+    circularQ->producer_index =3D
+        cpu_to_le32(pm8001_read_32(circularQ->pi_virt));
+
+This unconditionally dereferences circularQ->pi_virt, but pi_virt is not=20
+populated until much later in the initialization sequence. Could this cause=
+ a=20
+NULL pointer dereference on early or spurious interrupts?
+
+[ ... ]
+
+> @@ -575,6 +563,7 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struc=
+t pci_dev *pdev,
+>  	if (!pm8001_alloc(pm8001_ha, ent))
+>  		return pm8001_ha;
+>  failed_pci_alloc:
 > +	pm8001_kill_tasklet(pm8001_ha);
-
-[Severity: High]
-This is a pre-existing issue, but does this ordering allow concurrent MMIO
-accesses during the hardware soft reset?
-
-In the newly introduced err_out_chip error path of pm8001_pci_probe(),
-chip_soft_rst() is called before pm8001_free_irq() and pm8001_kill_tasklet(=
-).
-If an interrupt fires immediately before interrupt_disable(), a tasklet can
-be scheduled.
-
-This tasklet could then execute concurrently on another CPU during the leng=
-thy
-soft reset window, accessing chip MMIO registers via pm8001_chip_isr() and
-triggering PCI bus errors like a PCI Master Abort.
-
-Could we tear down the tasklets and IRQs before initiating the soft reset?
-
 >  	pm8001_free(pm8001_ha);
+>  	return NULL;
+>  }
 
 [Severity: High]
-This is also a pre-existing issue, but can this lead to a use-after-free
-or use-after-unmap if a delayed work item executes?
+This isn't a bug introduced by this patch, but does the memory-region clean=
+up=20
+in pm8001_free() violate the DMA API by passing an offset virtual address?
 
-When pm8001_free() is called here, it unmaps MMIO and frees memory before
-flushing the workqueue:
+During allocation in pm8001_mem_alloc() (in drivers/scsi/pm8001/pm8001_sas.=
+c),
+the virtual pointer is manually aligned:
 
-pm8001_free() {
-    ...
-    dma_free_coherent(...)
-    PM8001_CHIP_DISP->chip_iounmap(pm8001_ha);
-    flush_workqueue(pm8001_wq);
-}
+    *virt_addr =3D (void *)mem_virt_alloc + phys_align - *pphys_addr;
 
-Because interrupts are enabled earlier in pm8001_pci_probe() prior to
-pm8001_init_sas_add(), any work item queued by an interrupt during this
-window could execute concurrently with or after the unmapping.
+This modifies the virtual pointer away from the original value returned by=
+=20
+dma_alloc_coherent(). When pm8001_free() iterates over the memoryMap.region=
+=20
+array to free the memory, it unconditionally passes this shifted virt_ptr a=
+s=20
+the cpu_addr argument to dma_free_coherent().
 
-The delayed work item could then write to the now-freed DMA memory and acce=
-ss
-unmapped MMIO.
-
-Should the workqueue be flushed before freeing DMA memory and unmapping
-the MMIO registers?
-
-> +err_out_free_sas_ha:
-> +	kfree(sha->sas_phy);
-> +	kfree(sha->sas_port);
->  err_out_free:
->  	kfree(sha);
+The DMA API strictly requires the exact virtual address originally returned=
+ by=20
+dma_alloc_coherent() to be passed when freeing. Can passing this shifted=20
+pointer result in undefined behavior or a panic from the DMA allocator duri=
+ng=20
+driver unload or probe failure?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260911091011.9467=
-6-1-flyingpeng@tencent.com?part=3D2
+6-1-flyingpeng@tencent.com?part=3D1
