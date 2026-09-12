@@ -1,95 +1,112 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82F2847A872;
-	Sat, 12 Sep 2026 13:38:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5ADE32D7C7
+	for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2026 13:53:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789220294; cv=none; b=ijnb2nSLbAXK/xJxa8QMs7eDCB0+w6K1sPWL0auQtqw8tjRskv34Zajqdi9mzkAewsvXxAqttY59NkuE72gyp3lwWVBkHdmH+85d0WVrSPhQTNNU1sVkmb+Agpe5yKczaEHxnRHaa/5m0HSjMFAAlULuDQTU1+9CZJsgJorTkkw=
+	t=1789221190; cv=none; b=KjT4mInz3AfOWjCnHkTslztx+KpHwh+kY5OiIph5vMdZUgQgxEJ5xgSY/vJZTfXhirQM88D0Gdj94oOKpJ+uETseObxGlqc9la+0fTHiexoi0xKeu5ovmg7bqf01xPzwDZLzxgBgX/1Ubx7LvfnnNBzQXyXtJdFB09BgNy5kH74=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789220294; c=relaxed/simple;
-	bh=RTJWQPVnP2cOgXsP4ClBmG+cOVJE5siN7LC/E44GvyE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=e/yZc04xk0C+PJFHxdQXwSeAtE6qlcqkq/Py0rthuZrmTWFzWrUfQ8MA3EHZJu5pVuvUGwGiu7dunrz0jqXIHx6PyfDTT7qZrJbqJVOCx7F5n9kETO8geOuLDi+yNU9PFtzrHtrfN0qVuwNqbeaUyYzBAJ/TA1COwd70c4DNfdc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=kylMEAS/; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1789221190; c=relaxed/simple;
+	bh=pWCPBJc6T8fniLVcwXFEVxhbqki/n4fRVPggM3lSSGs=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=nSyf3DBBTjq7V08ixDcKcdeBxWn/MCTtepTN87DqbARCK1+4LoHGRRDQXYCGhIS47UupzTxHQ3BKRD42Gn9XuEcC6z/IHScAAd7yp4ubS3d3g0w4HnCcCAH1d5EBy9lkS+c8tmo37N0Enb8nqnc/3JbwcHVtI1YhueM3SS3Erc8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=VMTT/EZY; arc=none smtp.client-ip=209.85.216.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="kylMEAS/"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hhstW3k24z1XM4Tn;
-	Sat, 12 Sep 2026 13:38:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1789220282; x=1791812283; bh=RTJWQPVnP2cOgXsP4ClBmG+c
-	OVJE5siN7LC/E44GvyE=; b=kylMEAS/uohEmArHVY5mu2GljCVVBZEG8faduRUp
-	cv1Ez/x1NhcE7opQCNoneTYveQnTM6n4ivZJlYeCCi5MfApFihkf5Lv5arA8d+ua
-	5C9Zyua1Mdv3dKU03I7PsXGIUEBD0J5EEM0tzG74Jwv5pzaENkoMgl+oHfuncZ7l
-	+qTJTUUYnk3YbRi8gM6P7UQ9ED7uzWDfLnOSd8vKR9u2scuDkdYwqievv88QzQ6O
-	DBflHp3acTkqXHWkXZtYIZ+mQh71t7Ec9QJSHzms9YRyXCB1tYuOBN8X/I9UvTsW
-	3t0AZSBop7GqbkvbQMXa1oAzFnLqrzeCvdaBiBItIz3LXg==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 4OGwJAQrYKY2; Sat, 12 Sep 2026 13:38:02 +0000 (UTC)
-Received: from [192.168.51.14] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hhstC2kndz1XM4Sx;
-	Sat, 12 Sep 2026 13:37:54 +0000 (UTC)
-Message-ID: <fb1d0993-4349-406c-8721-41602e5fe5a7@acm.org>
-Date: Sat, 12 Sep 2026 06:37:53 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VMTT/EZY"
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-398fe469aa0so3255885a91.2
+        for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2026 06:53:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789221188; x=1789825988; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=yHvWcSHAlHOowIhqJT7+ry07TiDGlYeryl5wy+uutgg=;
+        b=VMTT/EZYAuKpvDI3YHZielR4IEJoFGGOd5pkQk3Wm+DS1JuOTQSZb/nXx+jc2UnMBy
+         ZkUdIQ9/IhxC39lMrIdECH3Ub1xrptCy9zJqIZwyL7+a8x4xNr9GavFkr2+lGvb4EL5e
+         CPW5kjB4Of3abnTwPxx9/T7QYy0GpoH1RH1v2pJOmt/WjEWZ+wm0zwb3m5ubFVtxJfun
+         nbpQKGpYBv2lEaCuLDfdfXcFifTwDOl8xe3PIKtZ61rhfejxEWzWvwy5vEeEAY74yYIs
+         u2UGjCEcPvBS+YvTdSwi/B+PscNpWF7s3do9py5vPj77BhKH+eAh/TC6ii+MYvryVQah
+         /KDg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789221188; x=1789825988;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=yHvWcSHAlHOowIhqJT7+ry07TiDGlYeryl5wy+uutgg=;
+        b=S+ll/WVrPYk+e6eOhGh1Lgn45VTTdhSmoIU3+E1spomtSCxE9FyeWPlq0rKpk8gIWh
+         2WdkQXBq7KpHos8FkLd+XZowP1v+3zNe1TfDOBSQxM4XtcoO4ma2qzmrKct6oa/vPGOl
+         GOvqfj0O3mRnxyt2e/zdik2B4koxtknqI6/sL+EoWdmqtvI9mpX6Zpi99vQWsif82oH7
+         D8C0tY7KSpjIAXlQv2ZjtsR4Fjv9iFYmB3dWmidAnoblVBd3w2aIYVzBixU3Qw8ZBQVQ
+         CREbea00R8rOmVmQSLSxrqJT/XVcH1lwDtoksLS+xow7QbnjU/jQlcsafYBMUqrI+gL/
+         4lLQ==
+X-Gm-Message-State: AFuF++lMzvIKqujt4UOISb0w3kK5DVrSXy+jyHYygmJpKM28tuMXEnX+
+	wth5FMWI0aPHiWcnhn1UNvtcirIhXGJmTmm/xF2H/tT/4nw0VDnweXDRPHIUk75o9+sgFTXJpy4
+	FXy+FRnO0Ilks5nL/8Akx7Q==
+X-Received: from pjkv9.prod.google.com ([2002:a17:90a:7789:b0:39d:a230:1b72])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:28d0:b0:398:9bd4:d18 with SMTP id 98e67ed59e1d1-39d9c3f2ba7mr17193393a91.23.1789221187744;
+ Sat, 12 Sep 2026 06:53:07 -0700 (PDT)
+Date: Sat, 12 Sep 2026 21:53:06 +0800
+In-Reply-To: <20260912133739.826361F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC] drivers/rufs: add Rust UFS host controller driver
-To: Andreas Hindborg <a.hindborg@kernel.org>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- Greg KH <gregkh@linuxfoundation.org>, jaemyung.lee@samsung.com
-Cc: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>,
- Gary Guo <gary@garyguo.net>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?=
- <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>,
- Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
- Danilo Krummrich <dakr@kernel.org>,
- Daniel Almeida <daniel.almeida@collabora.com>,
- Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot
- <acourbot@nvidia.com>, =?UTF-8?Q?Onur_=C3=96zkan?= <work@onurozkan.dev>,
- linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
- linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-arm-msm@vger.kernel.org
-References: <20260912-rufs-private-v1-1-716db733e655@samsung.com>
- <YKq4TcQM0v2dXF4wTHEvZKwASII6PDd_R7_UiHWe3NRnR4JsrC_ZS-x6jA_Kl7P6ONehU0REHYk7WaLz8Xv5gA==@protonmail.internalid>
- <2026091124-treason-trickily-bc52@gregkh> <87mrtmvioe.fsf@kernel.org>
- <6JMwZ4EuSfQ8V4TGaPwatQ31m30TceLJblORsuILQmy4VV8Fx2lHbihL8ARsRUuJmaSUqek8L54y4Nk6DuZMXQ==@protonmail.internalid>
- <bdcff6a168e6d4b8e9c9524bd598281817a7df2c.camel@HansenPartnership.com>
- <87eceyvdnv.fsf@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <87eceyvdnv.fsf@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+References: <20260912133739.826361F00893@smtp.kernel.org>
+X-Mailer: git-send-email 2.55.0.1007.g17ff1f9808-goog
+Message-ID: <20260912135306.2324266-1-stanleyjhu@google.com>
+Subject: Re: [PATCH v3] scsi: ufs: core: Keep internal commands dispatchable
+ during error handling
+From: Stanley Jhu <stanleyjhu@google.com>
+To: sashiko-bot@kernel.org
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, 
+	Brian Kao <powenkao@google.com>, Stanley Jhu <stanleyjhu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/12/26 5:48 AM, Andreas Hindborg wrote:
-> At any rate, the rationale for extracting the UFS driver is to make room
-> for features that fit poorly into the SCSI midlayer and which are not
-> standardized in T10 - without making additional work for scsi subsystem
-> maintainers.
+On Sat, 12 Sep 2026 13:37:39 +0000, sashiko-bot@kernel.org wrote:
+> Is it possible for hba->host->pseudo_sdev and its request_queue to be freed
+> before we access it here?
 
-This rationale is completely wrong. I have seen multiple proposals for
-the introduction of new SCSI commands in JEDEC that made me think
-"Yikes. This proposal shouldn't be accepted." Some of these commands
-were attempts to introduce ZBC-like functionality for traditional block
-devices. That is wrong - if ZBC-like functionality is needed, ZBC should
-be implemented. Other proposals were about the introduction of new copy
-offload commands. Copy offload commands should be standardized by T10
-instead of JEDEC.
+If that race is reachable, it is not reachable through the code this patch
+adds. The same function already dereferences a pointer that teardown frees
+earlier than pseudo_sdev, and it does so before the new code runs:
 
-Bart.
+drivers/ufs/core/ufshcd.c:ufshcd_err_handling_prepare() {
+	pm_runtime_get_sync(hba->dev);
+	ufshcd_rpm_get_sync(hba);
+	if (pm_runtime_status_suspended(&hba->ufs_device_wlun->sdev_gendev) ||   <-- existing
+	    hba->is_sys_suspended) {
+	...
+	blk_mq_quiesce_tagset(&hba->host->tag_set);
+	blk_mq_unquiesce_queue(hba->host->pseudo_sdev->request_queue);          <-- added here
+}
+
+And the pseudo device is freed last, by design:
+
+drivers/scsi/scsi_scan.c:scsi_forget_host() {
+	list_for_each_entry(sdev, &shost->__devices, siblings) {
+		if (scsi_device_is_pseudo_dev(sdev) ||
+		    sdev->sdev_state == SDEV_DEL)
+			continue;
+		__scsi_remove_device(sdev);            /* the UFS Device WLUN goes here */
+		...
+	}
+	/*
+	 * Remove the pseudo device last since it may be needed during removal
+	 * of other SCSI devices.
+	 */
+	if (shost->pseudo_sdev)
+		__scsi_remove_device(shost->pseudo_sdev);
+}
+
+So any error handler run that reaches the new line has already dereferenced
+ufs_device_wlun, which was freed first. The same holds for
+ufshcd_err_handling_unprepare(), which only runs after prepare().
+
+Thanks,
+Stanley Jhu
