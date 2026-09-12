@@ -1,201 +1,95 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9237B27EC7C;
-	Sat, 12 Sep 2026 10:25:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D1BB4718D7;
+	Sat, 12 Sep 2026 11:00:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789208755; cv=none; b=LCFguhx1sDRINV+gpoXykuubjOYFS1kAZsMUZVOMYI7rDVLr5McQRlLBCsn0H4Xy1xvPGTz0tEjuvnsNH7YgaaE8Fv8KMJFppuwMDxaQncxnQ0k4hy2KzZfE7MB23eWwZ+q8N7hULE6VuRo/BO1UcV4D+KQ3ZxTnld9Mn/+4EgU=
+	t=1789210812; cv=none; b=Hu5sBZALHfxJBkzk+bGw7hASeeLerCkFf704aASx3vwI2jPdSxYHdvGb0vmldfxFcuXTnMpmEYE2Vjo6E4Dg0exjPOfLpLWdPaLZmC2GNG29Mc3CuQoFJq+BR9OgJ4qghx7ZRTpA9DW42b1DPc1B6PyJZnEll1+YwGcbMLpk6ko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789208755; c=relaxed/simple;
-	bh=eqe+0oyBfwwiDPXBm6T1yEoyCTynnJXvTivRorgg22g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P2RAhMcUYSP8cn0DUsmkECMu1M7z3vsYj9YDw/0kKylHXzd3DUG9SXQR5eYvESdW4TC7MH538wIzpFbiY0XMRwNFLRrN8Gshge27vP4OGXW0OnBA2vHqnIpq5UfuBIRX6KYo6EYKlpWFQmy2Dsh8wDZApiJd6EzBmbQDh+6QlJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z+zNXvfx; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789210812; c=relaxed/simple;
+	bh=yMOmuHQZeZO2DYB4FecN+9SKHrlnAi9MIs6rM4dzN8Y=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=lPktYCZpcNDJIZFsZ1wwl+4UkwuK61iesiedcLu7R9mr41vYNgDYvgnjAez5do0JdxBLL0dQop4JEhF4tfWvLYFzJ8AGj7Mziwwv7E8A8uzU+9bDppOYSkITYwXysExsMlMmQZXPnqWe/v6eGEDnx91JtyWudj9/6x7DpJaflPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q8Yt7vt2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z+zNXvfx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6AEC1F00893;
-	Sat, 12 Sep 2026 10:25:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q8Yt7vt2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64C991F00893;
+	Sat, 12 Sep 2026 11:00:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789208754;
-	bh=suJ0uS71GsbfhhW6sx+FaUUox5/Huy7H+9ZmclYomm4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Z+zNXvfxYwdcwi+fNVkkIbEFOlOdsa2H6Z9v82HV3yqZQTntAMXfOzeUh1OJiLL4D
-	 JgKEvVtr0XBXVpYRJbY0CpEC4VPq5oHoo83EW7+EtDlO0L26igZ7xE9+jHPSUvXX9D
-	 Q5qwa5PMS0mgHaR2WXDM9BwyaO66ht9zWkWvtGFfIOkt5PH+akb0+J9iKhMF7Fw8co
-	 6jiopUYKBeCeW7XT126kbOCc1Lmg2cPe/YJPwGzaOicT0svJPD3Jnc3zcrPf10B5Dc
-	 ORDovhaMBzakCvvvldPllZ8xPkIhoJwZSxCpt8g30XAw+JhsF6ctKM3RlRod9UwVTI
-	 /NGMqEI46ltOQ==
-Date: Sat, 12 Sep 2026 11:25:48 +0100
-From: Conor Dooley <conor@kernel.org>
-To: Minda Chen <minda.chen@starfivetech.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
-	Ajay Neeli <ajay.neeli@amd.com>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] scsi: ufs: dt-bindings: starfive: Add UFS Host
- Controller for JHB100 soc
-Message-ID: <aqUorPJziAtWeSG0@squawk>
-References: <20260911102359.83288-1-minda.chen@starfivetech.com>
- <20260911102359.83288-2-minda.chen@starfivetech.com>
+	s=k20260515; t=1789210811;
+	bh=xLww4sKnxO9neFXT3j4RVAXakrCt95cYTPTrtUYkk4U=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=Q8Yt7vt2zA9T7oJXUqwgXtJl++1dWs9Wyc/txnDnArGbsa5Ltq9V8/4AHXcXUNzjb
+	 w0WfcKLqW3EuIAUHexWf8cP3DSCVH9I/+6WaKSNm0yA3NeqnazfVFmzVM/MNOYc1VE
+	 PJ3j3Kz79v8PNPBP+kgMI7s+bAFWb6CxTwmwwYWoz67/NAPRUZWmt3MbuT6pze1GPp
+	 LQi4dzfo3oyapfZpSzobdabTEo5s/KHikxd7i7UY+RZvXS0y5COysldbnsNK4mExzY
+	 BYymrz3Owr/as2YOhmAh5diPMEbr3zt2EZbvsRRBxtmZjMVLSebch5lrNzPRZwMVHf
+	 NPmPVz4Bytz9g==
+From: Andreas Hindborg <a.hindborg@kernel.org>
+To: Greg KH <gregkh@linuxfoundation.org>, jaemyung.lee@samsung.com
+Cc: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo
+ <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno
+ Lossin <lossin@kernel.org>, Alice
+ Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, Danilo
+ Krummrich <dakr@kernel.org>, Daniel Almeida <daniel.almeida@collabora.com>,
+ Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot
+ <acourbot@nvidia.com>, Onur =?utf-8?Q?=C3=96zkan?= <work@onurozkan.dev>,
+ linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH RFC] drivers/rufs: add Rust UFS host controller driver
+In-Reply-To: <2026091124-treason-trickily-bc52@gregkh>
+References: <20260912-rufs-private-v1-1-716db733e655@samsung.com>
+ <YKq4TcQM0v2dXF4wTHEvZKwASII6PDd_R7_UiHWe3NRnR4JsrC_ZS-x6jA_Kl7P6ONehU0REHYk7WaLz8Xv5gA==@protonmail.internalid>
+ <2026091124-treason-trickily-bc52@gregkh>
+Date: Sat, 12 Sep 2026 13:00:01 +0200
+Message-ID: <87mrtmvioe.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="E4vetuRmcDP9RnWo"
-Content-Disposition: inline
-In-Reply-To: <20260911102359.83288-2-minda.chen@starfivetech.com>
+Content-Type: text/plain
 
---E4vetuRmcDP9RnWo
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+"Greg KH" <gregkh@linuxfoundation.org> writes:
 
-On Fri, Sep 11, 2026 at 06:23:57PM +0800, Minda Chen wrote:
-> Add devicetree document for UFS Host Controller StarFive JHB100 SoC.
-> The UFS controller is based on the Synopsys DesignWare UFS controller.
->=20
-> Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-> ---
->  .../bindings/ufs/starfive,jhb100-ufs.yaml     | 71 +++++++++++++++++++
->  MAINTAINERS                                   |  5 ++
->  2 files changed, 76 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/starfive,jhb100=
--ufs.yaml
->=20
-> diff --git a/Documentation/devicetree/bindings/ufs/starfive,jhb100-ufs.ya=
-ml b/Documentation/devicetree/bindings/ufs/starfive,jhb100-ufs.yaml
-> new file mode 100644
-> index 000000000000..a65cc9455a85
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/starfive,jhb100-ufs.yaml
-> @@ -0,0 +1,71 @@
-> +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ufs/starfive,jhb100-ufs.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Starfive Universal Flash Storage (UFS) Controller
-> +
-> +maintainers:
-> +  - Minda Chen <minda.chen@starfivetech.com>
-> +
-> +allOf:
-> +  - $ref: ufs-common.yaml
-> +
-> +properties:
-> +  compatible:
-> +    const: starfive,jhb100-ufs
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  clocks:
-> +    maxItems: 1
-> +
-> +  clock-names:
-> +    items:
-> +      - const: main
-> +
-> +  resets:
-> +    items:
-> +      - description: UFS main reset
-> +      - description: UFS PHY reset
-> +
-> +  reset-names:
-> +    items:
-> +      - const: main
-> +      - const: phy
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +  starfive,syscon:
-> +    $ref: /schemas/types.yaml#/definitions/phandle
-> +    description:
-> +      The phandle to System Register Controller syscon node.
+> On Sat, Sep 12, 2026 at 12:52:55AM +0900, Jaemyung Lee via B4 Relay wrote:
+>> Comments on the decision to bypass the SCSI midlayer, the blk-mq model used
+>> in its place, and the proposed prerequisite API boundaries would be
+>> especially welcome.
+>
+> Many many years ago, the USB subsystem tried to bypass the SCSI midlayer
+> for its storage driver, and while it was a "quick solution" at the time,
+> in the end, it didn't work out and we dropped the driver as it just made
+> no sense to keep duplicating all of the logic all the time.
+>
+> So I wouldn't recommend it, as long as UFS builds on top of the SCSI
+> commands and the like, you should not attempt to duplicate it in a
+> separate driver, no matter how much "simpler" it initially seems to be.
 
-This should probably say "that contains xyz" where xyz is the thing that
-you need up access in your driver. The jhb100 has a large number of
-syscons, so knowing what to look for here is essential! (although
-realistically you'll set this in jhb100.dtsi and noone will have to look
-it up themselves)
+The scsi related code in this driver is less than 300 lines and is
+mostly struct packing/unpacking. I guess we could lift the struct
+definitions from the scsi layer via bindgen. But at 280 lines I am not
+sure it is worth it, and it hardly counts as duplication.
 
-Otherwise,
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+The ufshci driver is duplicated by this driver. Our suggestion is
+replacing it.
 
-pw-bot: changes-requested
+> But really:
+>
+>>  30 files changed, 10005 insertions(+)
+>
+> 30 files and 10000 lines doesn't seem that simple :)
 
-Thanks,
-Conor.
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - clocks
-> +  - clock-names
-> +  - resets
-> +  - reset-names
-> +  - interrupts
-> +  - starfive,syscon
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    ufs@11b10000 {
-> +        compatible =3D "starfive,jhb100-ufs";
-> +        reg =3D <0x11b10000 0x20000>;
-> +        interrupts =3D <105>;
-> +        clocks =3D <&syscrg 4>;
-> +        clock-names =3D "main";
-> +        resets =3D <&syscrg 10>,
-> +                 <&syscrg 7>;
-> +        reset-names =3D "main", "phy";
-> +        starfive,syscon =3D <&syscon>;
-> +    };
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index fc320b373656..10b0d0839ca4 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -28095,6 +28095,11 @@ L:	linux-scsi@vger.kernel.org
->  S:	Maintained
->  F:	drivers/ufs/host/ufs-renesas.c
-> =20
-> +UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER STARFIVE
-> +M:	Minda Chen <minda.chen@starfivetech.com>
-> +S:	Maintained
-> +F:	Documentation/devicetree/bindings/ufs/starfive,jhb100-ufs.yaml
-> +
->  UNIWILL LAPTOP DRIVER
->  M:	Armin Wolf <W_Armin@gmx.de>
->  L:	platform-driver-x86@vger.kernel.org
-> --=20
-> 2.17.1
->=20
+You can take a look and decide for yourself :) To each his own I guess.
+To me, reading this ufshci driver is much easier than reading the C
+ufshci driver along with the scsi subsystem.
 
---E4vetuRmcDP9RnWo
-Content-Type: application/pgp-signature; name=signature.asc
 
------BEGIN PGP SIGNATURE-----
+Best regards,
+Andreas Hindborg
 
-iHUEARYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaqUorAAKCRB4tDGHoIJi
-0gcdAQDsmQDTi5UxtOtDUn/z/tvkLPR6wxggvel0JcLarSftcAD/fTHQtqCGusgb
-UU3aWxTBuahJd+pECSS11GWWhR3Ewwc=
-=OKh5
------END PGP SIGNATURE-----
 
---E4vetuRmcDP9RnWo--
