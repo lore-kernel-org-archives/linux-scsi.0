@@ -1,187 +1,160 @@
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020102.outbound.protection.outlook.com [52.101.229.102])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA0C36BCDE;
-	Sat, 12 Sep 2026 08:03:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.102
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789200204; cv=fail; b=u7cbHiDDXQ+C/PGx2Obtee6KxuOyGIe6qsmMAOml+pYQxQJFb7ZzP6vNq663qpahquRkcJw9t/8Q5AmmTu9Mhi1YNVmEdl4KlXwR8VI/B9g/RPA5uAa2W1Dpa95hkRkQGpNNe1XjHJqiKEw4Jo5krrh0Z93NRWMl1SN1T/x1bMo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789200204; c=relaxed/simple;
-	bh=uxz2H58c63nB8lr3Y3IdvEjlc8ZO9DYOcPqq9bs4URQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=kt4NbM6t0fEIVRqNtwVzE0+vuP91nRm7CtT//Yj0LiFAPjtmdQQ9sX8dyUjO7pstO4kR+nnkQ98/gg0jzwAa9MbLoIDSDof3iIApaB1DobhabczoBf8a9XSmKZ5C4CzoUrX565EMjvwv7uVODwiO3bSHy274YCsILVUuCGAqEyg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=connect.polyu.hk; spf=pass smtp.mailfrom=connect.polyu.hk; dkim=pass (1024-bit key) header.d=connect.polyu.hk header.i=@connect.polyu.hk header.b=oLh5qSzI; arc=fail smtp.client-ip=52.101.229.102
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=connect.polyu.hk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=connect.polyu.hk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D306A4BEE54
+	for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2026 09:41:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789206072; cv=none; b=Pijyhx+zEc/kzm9SzlJiW1cdzLITHTGvssBkAbRnraR3E17B4em3T7IpWZ4S7Tk3WMka3J3AgYBm/0ZoR10VaELCOpMUg9jrX71pXRrQrQwRBsXz9N0l5tshSNFCSvq7PhZHEu2L/M1KAOckIeOFMNzAU5LBUwIPMVS2SSbn83o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789206072; c=relaxed/simple;
+	bh=fvzxqf7pM0EWszKj6MSRzE26zroEJddeoZwwP/wHf68=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=FKrxRW69KeV8d8EILEAI+oaZrevXLKExc4S2BjUvVEo3+fLZ5vvjxWZ6jXHetxFavw53H2t4yhtAvFXIG/oHdbjulAPaPxfvz8KOuKR24bXQecGIATOZfjEXZD0eZH+tLYgtkbzc3G+xaksACU5TvQw+Ij1GPuZtYdprAGFIIiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ZpsZfOPM; arc=none smtp.client-ip=209.85.215.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=connect.polyu.hk header.i=@connect.polyu.hk header.b="oLh5qSzI"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=bW7qzyfBmA1UvskdOUi42HSalpTMc1hK4ENI9PVDiah6DnGeci6JoIpXJ23VSneEZzhGdFPaF1pm3uFD7EKD/kpB96Yz9h0975r9NBwWDdI3gCPKk7SWuH+0Dt33SAGH9bqBn25Z3rGovJ/RBH6jFJ0q/NZQS73OP4dyX8zK6iF0uSyuE5HAn977VuJOwONmg2xQCQoL60UqdVBm9uVn/OoBpi6SC8G5FI4wU9iujMpB+BSZ0zHvXQtx4cFwvcCBe5fo7hKdDOGA92gRIAna2ss/FdB9fJdA8NYYS+9iYLDU5KW0jeXSiKxXOIQXHuvLtBGdDz1TzaScifORQnMgYg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=NwoFEmMCaRlUE/6t2bQw4n+5q09Zaf9m2akoKOvAk8w=;
- b=QkZAjzVeVDYMLAP8++eaR7tN/BieDgk0XxqH+pD8bg9NHPYfHJUpWmL+KhKIkY7leNgxXv6lLX3VfCBQw2uapZk5tgAwwSFhS2eCzoMR1ctXSczf09SV+QitmMa64qrjXQscJt+earJ7ADgi4tVBywjkO1zqqlz9JRWwlwtYa9AX0m4pQ5N+5SbSp8nwtQavuc2oqv+2ma1/74YRZDuafW7MtFZoFHnlYpqwZ8Y0LmiVecmwgSde0zAFLavKotefh15Jg2gTklFq15bGV3LGQvbJ3EVABQH+ldHBFH4bczVo8/yjsxccFsTtFYIKWUICOAvc3yUrzQ78KyPbT5/eXQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=connect.polyu.hk; dmarc=pass action=none
- header.from=connect.polyu.hk; dkim=pass header.d=connect.polyu.hk; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=connect.polyu.hk;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NwoFEmMCaRlUE/6t2bQw4n+5q09Zaf9m2akoKOvAk8w=;
- b=oLh5qSzIcif6sRGhFZR2Y6YDHhUy8TNE1xJ0Ab/DKjOXX5KZHTluoOsxgihc/JfimycOTvZCs+acijLCYrdhwcm0MLKgciPoc3y6eikeIc1fVzFhK6rVc3W1h4MUeiMas3R3Or02Awsz421018+kBhXOEU+RXwrm5n+Q5HTxNMs=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=connect.polyu.hk;
-Received: from OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:4c5::7)
- by OS7P286MB7475.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:43d::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.11; Sat, 12 Sep
- 2026 08:03:16 +0000
-Received: from OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
- ([fe80::e267:139c:d5e6:d4aa]) by OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
- ([fe80::e267:139c:d5e6:d4aa%4]) with mapi id 15.21.0406.007; Sat, 12 Sep 2026
- 08:03:16 +0000
-From: ZHOU Jiaxiang <26066541r@connect.polyu.hk>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v3 2/2] scsi: sd_zbc: reject disks with too many zones
-Date: Sat, 12 Sep 2026 16:03:04 +0800
-Message-ID: <20260912080304.78535-3-26066541r@connect.polyu.hk>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260912080304.78535-1-26066541r@connect.polyu.hk>
-References: <20260912080304.78535-1-26066541r@connect.polyu.hk>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain
-X-ClientProxiedBy: SI3PR02CA0004.apcprd02.prod.outlook.com
- (2603:1096:4:295::17) To OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:604:4c5::7)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZpsZfOPM"
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cb48f41343aso2572503a12.1
+        for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2026 02:41:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789206070; x=1789810870; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=MEw03QC+JSmM4SSD/Ogrqaba9N735GaiSihiR65530I=;
+        b=ZpsZfOPMuoAbor6qEtVbCOC0AZ9ot/XYm8/peLnSCkqVR0Yy2t2noNct2TOBLjKOMk
+         NTQaHso8bK7XoeEJtjZERyS24jqehc9ZLhCQTsKg5OR1TPoH+0ll9rwnW+ufFbfT2YaA
+         Ni8QM/xgkVyRu54qx7/3F1kF7u5EMus/mPjtePQYuQ+9psI7+UsmI/JqzxloC5m9Tapq
+         bPifiydJzgsTR9+QlSzKRTCWnsUukkxWZwIQCX8qt0LXz0uhsjuZkUd+T8UkDrot6D1T
+         FANKpzSdnsM1saao8nqp5pM3oApJD9qkSHC4WLobtVBVnV3pK9OkMVrTT+CMZ9Wq4ZiW
+         Xvlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789206070; x=1789810870;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=MEw03QC+JSmM4SSD/Ogrqaba9N735GaiSihiR65530I=;
+        b=lXypecVJWqcT4XqG9HNjd4b4WEnCFsUC2A2EXdQplMhcHXyrHUHFoRjBIstNQv7Xhe
+         y97liUMqFTrlOUougiE9Psy5M1tmROfy+ykFwVIiWWZTcedGueUztS+LQCP4cNWwAb8/
+         kyAajUaY/bSdhBaryY/AE6/1CL1Ji3LFEQKRsCsR/1ZJXiCiUoOz45bFYizsi+5PVC5P
+         y36r6y3gOS0FFa16ECdk3CODcwyspxzv0p6H5h9aDEiWt0jLxbv7lDpwD79Vte7pJ7Hv
+         sXwqg/MPvvpF0k0H872woqi73XCaWDjW9v5SGb3Dk/NUU6rgTzt3PXbdLiOuVWa0s9yY
+         dFQQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxCDSU+2TfDFqKPcKbJSytTGZwWu64HkPzEVuxl+fjm8YwtmsUALSHQ9GttCbc4hLZ5jpXCq6xF++Fx@vger.kernel.org
+X-Gm-Message-State: AFuF++mindV17GTbMS5W4A8bU5p2S/DVkvQg7Fnw3ESVtOF365Uh2r3C
+	5o8lBsFpO/hndj6+fy0yfnSxr0G7k2GB4J86JBfsObMkmQmQebrOStEwByaOvJq7aMc5Bqi3eA/
+	iqnfAD+aUE3iDyYSPyZS/Sw==
+X-Received: from pjbmv23.prod.google.com ([2002:a17:90b:1997:b0:39d:9080:e1e1])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90a:581:b0:39d:b4a8:92f3 with SMTP id 98e67ed59e1d1-39db4a89bf3mr2048256a91.1.1789206069981;
+ Sat, 12 Sep 2026 02:41:09 -0700 (PDT)
+Date: Sat, 12 Sep 2026 17:41:07 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: OS7P286MB8049:EE_|OS7P286MB7475:EE_
-X-MS-Office365-Filtering-Correlation-Id: ea983086-b05e-44e8-e6ba-08df10a44d28
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|23010399003|376014|52116014|1800799024|786006|38350700014|56012099006|11063799006|10067099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	7a7yCL8REd9ZpTFsQ/RwMDHavS5F2QiRZP+Yx1pDzUOUnd0MIST+wqmE6vkuNn3cIC++BE8YfsAECJXI8zuu3OXt+cRgIDz78TLcVkyDux03XWUUuf89MehcbwY2+Gu9KE/f7sXLgcphMfHAV8Fdt4PeZiXlikfQ6NyQpI0DgVvUNfGCRw9XWU50jpWs64z40ZsPp79aH716rwOGEr7WjM8Z5T3lKKbphtMXnaFYpJHOw4STVSzhaDdgieW+fbGMsMecB6PMDLYBnWYzNKr8wRqUUDJhihkSmGkfReischMCnhRxpD/oKOkVvHIvjuCBL+Fp58Ru1poN9hJVMgeQuQQU4U3VfA7bgJX3Fcgfmk0NFQehSoWMHr+bynZtuDLOTnkE4ouwF7CtaslshnUbEhkTYOMxQRcXH/tjrjqOkqrzR/8WoNpKljILGlepNuLNoWUYGZkxUkoVmJwYqA+QXwAwkKfW7DQfzpABXglFcC9zMjjD8W0BtM35FRRT2bbCRK6mDE4zBpo4n0dH2+z98MqDdKtieULeB5nVcBvWQm9T+MDBHtKNkq020vINBj3xq9gXEtaJ+bR0ZhxLSm0yMNaXW2sTz6VFJMWUVXxX5+4sBcieAG3QUbP0uZF6jsLT8FVsFcR43fAtFfrkWhBOjKISDDI/8bQqK5JX8QUaVccgJRW4lJwQd/geROkvBRyN+zdribtrDXYcrh+SSKJlElgF+bYInORoklQrpASurss=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(376014)(52116014)(1800799024)(786006)(38350700014)(56012099006)(11063799006)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?GWdauhQDEdnGrm30OjD1whHQTZmrFihuq9N+gAPa03lxJFAcD5wfk7WghBa+?=
- =?us-ascii?Q?2cDi26VsHDYDfCVpeqiFQWLktxyQNKD7HV2mrCy5ScVuR1tBQZcuy2bGQWHb?=
- =?us-ascii?Q?qMD/8KgfG/yGovQ5bBVJ80fZFz/j2WKwW9WH8DHnSf3x8tkEtTJ3B3pFBRI7?=
- =?us-ascii?Q?1Udqxl2loFZTBJw8KT3yyn/dvpqFj/NDi3G5CgNDu0SSAPVA500X+4rErBxB?=
- =?us-ascii?Q?zrobrHHU06ZRsWQcOfvtwIioTn90QDCauPjauVe3bpmketDY1EOxK4Gwk/Xs?=
- =?us-ascii?Q?JrEGnebyXiHIoTJzUg3vk6mu+NuCY33ieD5j4UXNmtjOYevg4YIv7fTNkQsv?=
- =?us-ascii?Q?VSKABjG339yS0ZYXD7OqGKzdwnxhHJq54b0sc+dBKw7n14Dn39S/Jl0TY4M9?=
- =?us-ascii?Q?nYqRCve9JuvaawtdSvx16KP31vg+ZfpoY02Iy4tWCUjma9XZ3n4wsGpjZQBL?=
- =?us-ascii?Q?irkXbGFwC6lFSpGgFnuoq/IBdVE+9WuV6xxVibrfvdvv/p+TLkd7EVfbp2lz?=
- =?us-ascii?Q?45LyCZECsTfpZFZkmGr61lwpANq1MbqrjUq0/iXRjG0bDbcg0eeACJlSQEHV?=
- =?us-ascii?Q?9qai7p493g027BG/+OEUg/qqXleY8TGQcx5nFDi3F7xGVFwpBbtQIT3vglkj?=
- =?us-ascii?Q?VJGXQXrlbyIDODbAwaInO21eIEk08Ru481JQspSZCmQ+Skgn47aEb4SHFSXE?=
- =?us-ascii?Q?UBTLjDsPZQfvFSKXut5RPtCe2NOVRdDfQTQCzBvQ/OeHj8zLJXMrTZa/NmQY?=
- =?us-ascii?Q?TstkWKMc0xmHgAqs+4DPg3E9ppXJSJr/68BJku06Tac8XVzE+b3MwTLXErOS?=
- =?us-ascii?Q?BqjVNYisYJMK2m5qOvgDQN5wBpo0d0OzFV9XDdZD6cn2etqVE1HBq4kBmoXp?=
- =?us-ascii?Q?1X5HYyCnFazcGRE+s0lMnzn1r5720linzOucYnbE+g6/xqLtKUm+1O9snmYV?=
- =?us-ascii?Q?mVrH6U27p8mT1Cc1/PwzjOm3Vgetamb9Fr3TiMDwmb6yPU2Urgp09XJlL6bd?=
- =?us-ascii?Q?e+XxWEIeXuua/ZrBGa76Jy/isrnI1Uc8m2jTTPdAUYHOBx8OVD49UskBd7/U?=
- =?us-ascii?Q?i39xBoWPVyJ+gjqnb5//asscUnA6GElUv5u0n1FRNbJVxBlk5n6D3GKe1Lhj?=
- =?us-ascii?Q?j3g3o7TC0Kjvz83/TSAmqJXXCxDKHFd3kDCMALmywedbt7olHE3dV1g29+as?=
- =?us-ascii?Q?LSusNR6NMSeXH9xZnlHwQHrUAUX9VgWQhpMjg6GjsDl6imQR22GUFg/1KHFo?=
- =?us-ascii?Q?6dkzJdUBsy9qPvSBpQmbolnnj7tY8lAjJu99hak0gMard/8TFW9DN7Z16FCT?=
- =?us-ascii?Q?KMA7KpAt9Ac3As/E60tmPwUDY4CJxWDSb9Gyt/a0tS9/p6z+H/PPLExlxLa5?=
- =?us-ascii?Q?rORJytqg+W8EUZMMkLLW8uhiyd3ap2s1YXwPIY6UvPbKgUG3EQ81452yDeTB?=
- =?us-ascii?Q?JwQaPlbrBY1a4kwCERuqTqL//71OOSrY7J2jdFl5nzKMxOq0L/R5PMS4Ux2E?=
- =?us-ascii?Q?4Ic4RAEQgow0pnavrChH3Us8MJv1Jw7jC76M2qP6loO/7Rs5Qh2DykN48dgg?=
- =?us-ascii?Q?Rmn4eiM9kvSFBIKBAox4tK3gA60QBuLYeWVppaQf9J9cKwcxmDUDmcqIl6eQ?=
- =?us-ascii?Q?I6zq92KzvcSwEBFnu9BCzBzOk/GFUs+s8i6K7iFcyagqwWAwTOh5KFW9G3z0?=
- =?us-ascii?Q?WAHWqeyBkVd6wiSUzUIH+10WYuYqw9x2T36Brkt+l6TlOwVl5uSvPUstKeQC?=
- =?us-ascii?Q?x3sPFXcJtQ=3D=3D?=
-X-OriginatorOrg: connect.polyu.hk
-X-MS-Exchange-CrossTenant-Network-Message-Id: ea983086-b05e-44e8-e6ba-08df10a44d28
-X-MS-Exchange-CrossTenant-AuthSource: OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Sep 2026 08:03:16.6232
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: ec09e4d7-3d0f-4eff-9c1e-7ba8060c5417
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: XDVvL92VkyI+7bXnl13JXbS4FbzDcPgQ1AlDqNP0kvoklTpe3RvgpHP9h+rnUmBr9GNcmmyXK61Thkqx8/VTr2FHs0rF0Wci+7RxaQAguPs=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS7P286MB7475
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.55.0.1007.g17ff1f9808-goog
+Message-ID: <20260912094107.2098303-1-stanleyjhu@google.com>
+Subject: [PATCH v2] scsi: ufs: core: Quiesce SCSI devices instead of host
+ tagset during error handling
+From: Stanley Jhu <stanleyjhu@google.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@sandisk.com>, Peter Wang <peter.wang@mediatek.com>, 
+	Brian Kao <powenkao@google.com>, stable@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-sd_zbc_read_zones() computes the number of zones with 64-bit
-arithmetic and stores the result in the unsigned int nr_zones field
-of struct zoned_disk_info, silently truncating counts that exceed 32
-bits. The truncated count is later used to size per-zone resources,
-while the device may still report more zones than fit.
+Commit 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
+switched UFS internal commands to allocate requests on
+hba->host->pseudo_sdev->request_queue, which shares the host tagset with
+regular LUNs.
 
-Reject such devices at scan time: more than 4 billion zones is not
-realistic for any medium that exists today, and accepting the
-truncated count produces inconsistent zone bookkeeping.
+During error recovery, ufshcd_err_handling_prepare() calls
+blk_mq_quiesce_tagset(&hba->host->tag_set), marking all queues in the
+tagset as quiesced, including pseudo_sdev->request_queue. When
+ufshcd_verify_dev_init() subsequently issues internal commands (e.g. NOP
+OUT UPIU) via blk_execute_rq(), blk_mq_run_hw_queue() skips running the
+quiesced queue, resulting in an unrecoverable circular wait deadlock.
 
-Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
-Signed-off-by: ZHOU Jiaxiang <26066541r@connect.polyu.hk>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Resolve this by quiescing only the logical units attached to the host via
+shost_for_each_device() during error handling. Because
+shost_for_each_device() skips pseudo SCSI devices (via
+scsi_device_is_pseudo_dev() in __scsi_iterate_devices()), pseudo_sdev
+stays unquiesced and internal commands can be dispatched and completed.
+
+Keeping the logical units quiesced preserves behaviour that predates the
+current call. Until commit 2a36646012fc ("scsi: ufs: core: Simplify
+ufshcd_err_handling_prepare()"), the prepare path called
+ufshcd_scsi_block_requests() to hold off new commands in addition to
+blk_mq_wait_quiesce_done() to wait for the ongoing ones; folding both
+into blk_mq_quiesce_tagset() kept that behaviour. Waiting without
+quiescing would drop the first half, so the queues stay quiesced here.
+
+Clock scaling and command pause (ufshcd_pause_command_processing) paths
+continue to use blk_mq_quiesce_tagset() as they require freezing all
+queues including internal commands.
+
+Fixes: 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
+Cc: stable@vger.kernel.org
+Link: https://lore.kernel.org/all/6f78c4bd-a70b-402d-abfd-599091b67674@acm.org/
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
 ---
- drivers/scsi/sd_zbc.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+v2:
+- Commit message only; no functional change.
+- Fix the Link: tag, which cited a Message-ID that is not in the archive.
+- Explain why the logical units stay quiesced, referring to the behaviour
+  that predates 2a36646012fc, instead of the vague claim about retry storms.
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 56e455fb5..f4570bd94 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -589,7 +589,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
- int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
-                u8 buf[SD_BUF_SIZE])
+ drivers/ufs/core/ufshcd.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index a25b6a0cb5c6..1ca731675ad1 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -6781,6 +6781,23 @@ static void ufshcd_clk_scaling_suspend(struct ufs_hba *hba, bool suspend)
+ 	}
+ }
+ 
++static void ufshcd_quiesce_all_sdevs(struct ufs_hba *hba)
++{
++	struct scsi_device *sdev;
++
++	shost_for_each_device(sdev, hba->host)
++		blk_mq_quiesce_queue_nowait(sdev->request_queue);
++	blk_mq_wait_quiesce_done(&hba->host->tag_set);
++}
++
++static void ufshcd_unquiesce_all_sdevs(struct ufs_hba *hba)
++{
++	struct scsi_device *sdev;
++
++	shost_for_each_device(sdev, hba->host)
++		blk_mq_unquiesce_queue(sdev->request_queue);
++}
++
+ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
  {
--       unsigned int nr_zones;
-+       u64 nr_zones;
-        u32 zone_blocks =3D 0;
-        int ret;
+ 	/*
+@@ -6816,13 +6833,13 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+ 		ufshcd_clk_scaling_allow(hba, false);
+ 	}
+ 	/* Wait for ongoing ufshcd_queuecommand() calls to finish. */
+-	blk_mq_quiesce_tagset(&hba->host->tag_set);
++	ufshcd_quiesce_all_sdevs(hba);
+ 	cancel_work_sync(&hba->eeh_work);
+ }
+ 
+ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+ {
+-	blk_mq_unquiesce_tagset(&hba->host->tag_set);
++	ufshcd_unquiesce_all_sdevs(hba);
+ 	ufshcd_release(hba);
+ 	if (ufshcd_is_clkscaling_supported(hba))
+ 		ufshcd_clk_scaling_suspend(hba, false);
+-- 
+2.55.0.1007.g17ff1f9808-goog
 
-@@ -621,6 +621,12 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct q=
-ueue_limits *lim,
-                goto err;
-
-        nr_zones =3D round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_bl=
-ocks);
-+       if (nr_zones > UINT_MAX) {
-+               sd_printk(KERN_ERR, sdkp, "Too many zones (%llu)\n",
-+                         nr_zones);
-+               ret =3D -EINVAL;
-+               goto err;
-+       }
-        sdkp->early_zone_info.nr_zones =3D nr_zones;
-        sdkp->early_zone_info.zone_blocks =3D zone_blocks;
-
---
-2.50.1 (Apple Git-155)
-
-[https://www.polyu.edu.hk/emaildisclaimer/PolyU_Email_Signature-v2.jpg]
-
-Disclaimer:
-
-This message (including any attachments) contains confidential information =
-intended for a specific individual and purpose. If you are not the intended=
- recipient, you should delete this message and notify the sender and The Ho=
-ng Kong Polytechnic University (the University) immediately. Any disclosure=
-, copying, or distribution of this message, or the taking of any action bas=
-ed on it, is strictly prohibited and may be unlawful.
-
-The University specifically denies any responsibility for the accuracy or q=
-uality of information obtained through University E-mail Facilities. Any vi=
-ews and opinions expressed are only those of the author(s) and do not neces=
-sarily represent those of the University and the University accepts no liab=
-ility whatsoever for any losses or damages incurred or caused to any party =
-as a result of the use of such information.
