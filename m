@@ -1,56 +1,56 @@
 Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11020102.outbound.protection.outlook.com [52.101.229.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0121A35C6BD;
-	Sat, 12 Sep 2026 08:03:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA0C36BCDE;
+	Sat, 12 Sep 2026 08:03:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.102
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789200202; cv=fail; b=TlMDLdziN0BcIkXZ949C/AJkIUzX8/Fjs/e8Y6m3s8Q6IfsQYqqKdeIUsvpHcCaKbQCNwJiaSXP4SYtYWjd9cIjuzI6dTx4w9ks9JAW6jaV9W27VQ4PipO/cyBJSdrreyX5kKjkxHEw0dpjWSocP74lBBMat4s3bUJwKoZJ++/M=
+	t=1789200204; cv=fail; b=u7cbHiDDXQ+C/PGx2Obtee6KxuOyGIe6qsmMAOml+pYQxQJFb7ZzP6vNq663qpahquRkcJw9t/8Q5AmmTu9Mhi1YNVmEdl4KlXwR8VI/B9g/RPA5uAa2W1Dpa95hkRkQGpNNe1XjHJqiKEw4Jo5krrh0Z93NRWMl1SN1T/x1bMo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789200202; c=relaxed/simple;
-	bh=oMXBhuzh64++8WZp8mSxyIo+uY9F4safUXbvfQLHA7k=;
+	s=arc-20240116; t=1789200204; c=relaxed/simple;
+	bh=uxz2H58c63nB8lr3Y3IdvEjlc8ZO9DYOcPqq9bs4URQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ae0KmKtwMbrYS/DD5nFbJ0MoZ2OLgdXsVHFrQ265V/m6wnht8TwiQ993/xzJEPvqEqUCjdOh7xm0/WpzJqBqbzkKwUroYdidsziJOeWikGt2XWCWuK4oJZVIwOjpt92p3M+t4TJlt7YkAMV1u6Kw1DyFkVfsfw/NmTA9F1jWiWc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=connect.polyu.hk; spf=pass smtp.mailfrom=connect.polyu.hk; dkim=pass (1024-bit key) header.d=connect.polyu.hk header.i=@connect.polyu.hk header.b=VeF44VpO; arc=fail smtp.client-ip=52.101.229.102
+	 Content-Type:MIME-Version; b=kt4NbM6t0fEIVRqNtwVzE0+vuP91nRm7CtT//Yj0LiFAPjtmdQQ9sX8dyUjO7pstO4kR+nnkQ98/gg0jzwAa9MbLoIDSDof3iIApaB1DobhabczoBf8a9XSmKZ5C4CzoUrX565EMjvwv7uVODwiO3bSHy274YCsILVUuCGAqEyg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=connect.polyu.hk; spf=pass smtp.mailfrom=connect.polyu.hk; dkim=pass (1024-bit key) header.d=connect.polyu.hk header.i=@connect.polyu.hk header.b=oLh5qSzI; arc=fail smtp.client-ip=52.101.229.102
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=connect.polyu.hk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=connect.polyu.hk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=connect.polyu.hk header.i=@connect.polyu.hk header.b="VeF44VpO"
+	dkim=pass (1024-bit key) header.d=connect.polyu.hk header.i=@connect.polyu.hk header.b="oLh5qSzI"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=LSRfmWdqM09L7u2WFf2T+iMQmEfJxTN1Spd32J2Vp5m10X14RAal/05xLrqws9wPex6IhagVNP1AuFH3gmHrsp8ArUr/GlPiDCvNhsqLBxwdthFWCGS2R6o8dXYOUJDRh3jjt2hcaSV9GM6d2aDrgPU05PoiDBvpnB5XGl3/Hxjarto9yTyiXLIUjy+b2znwP0t9gKYMk1yKmQwcaQVM2VpK+LpICOOxOTlN86geL0on4+jySGjxdu2O+N74apYl4vc51Ox7ygoqef7EWG6wE6udjgdM6oOCwnWkGYzaE8H90VQ5kU0bvWD8Ca4qFJi9D75o1oKVjuR+bsruit5Dkw==
+ b=bW7qzyfBmA1UvskdOUi42HSalpTMc1hK4ENI9PVDiah6DnGeci6JoIpXJ23VSneEZzhGdFPaF1pm3uFD7EKD/kpB96Yz9h0975r9NBwWDdI3gCPKk7SWuH+0Dt33SAGH9bqBn25Z3rGovJ/RBH6jFJ0q/NZQS73OP4dyX8zK6iF0uSyuE5HAn977VuJOwONmg2xQCQoL60UqdVBm9uVn/OoBpi6SC8G5FI4wU9iujMpB+BSZ0zHvXQtx4cFwvcCBe5fo7hKdDOGA92gRIAna2ss/FdB9fJdA8NYYS+9iYLDU5KW0jeXSiKxXOIQXHuvLtBGdDz1TzaScifORQnMgYg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aGYvKuAbBLuNqb89b5jy0qINqvHJx4iNhZgLJcSyUms=;
- b=tFY5nYnakAfApBl4vaVwRtYLkzbwUqf3SbfijG8uilwf1Iocaf5eBrRUTacfEQmqzIPwvIIZjUO7DHLpTU/NW/aUXl2PvHwDZM2DNrEkpnz8eDbz+SeV6qDU74NjnwNZjMNzBcHPXJni1KSNMAccM9OM4pV34v/tdvv1F86Qiq7ariW7Nqjyo7w4ZBHfmyYygJCJBEC5nalDLq5pW3LFtpzgC3az2jOhfwVbtImb5TjxTdBCUgHT16LBIV/pkgLQ9sABX9xNJiByrB5qq2rVEO2xUMkX4BMP35q24kLxWDUhJVlkf/dmqpu8Ju2gEkI2+MhBbDLno/S6qJFwbz5E2g==
+ bh=NwoFEmMCaRlUE/6t2bQw4n+5q09Zaf9m2akoKOvAk8w=;
+ b=QkZAjzVeVDYMLAP8++eaR7tN/BieDgk0XxqH+pD8bg9NHPYfHJUpWmL+KhKIkY7leNgxXv6lLX3VfCBQw2uapZk5tgAwwSFhS2eCzoMR1ctXSczf09SV+QitmMa64qrjXQscJt+earJ7ADgi4tVBywjkO1zqqlz9JRWwlwtYa9AX0m4pQ5N+5SbSp8nwtQavuc2oqv+2ma1/74YRZDuafW7MtFZoFHnlYpqwZ8Y0LmiVecmwgSde0zAFLavKotefh15Jg2gTklFq15bGV3LGQvbJ3EVABQH+ldHBFH4bczVo8/yjsxccFsTtFYIKWUICOAvc3yUrzQ78KyPbT5/eXQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=connect.polyu.hk; dmarc=pass action=none
  header.from=connect.polyu.hk; dkim=pass header.d=connect.polyu.hk; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=connect.polyu.hk;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aGYvKuAbBLuNqb89b5jy0qINqvHJx4iNhZgLJcSyUms=;
- b=VeF44VpOoa8S+PD0pSeKtq0f9j9BgT70Bb6aGd6w+HVYjFMekpCxp+8Ed7HJlPXET74EiYm0OeKwZuxg+mIscprREKCRqVRj00HxaNhe+Tk0alYJ7N3NvzxEEaDlxmqTFsaAd/M99+nzqsOIXM9DjKqsGT6ZA7utdisO59vea6A=
+ bh=NwoFEmMCaRlUE/6t2bQw4n+5q09Zaf9m2akoKOvAk8w=;
+ b=oLh5qSzIcif6sRGhFZR2Y6YDHhUy8TNE1xJ0Ab/DKjOXX5KZHTluoOsxgihc/JfimycOTvZCs+acijLCYrdhwcm0MLKgciPoc3y6eikeIc1fVzFhK6rVc3W1h4MUeiMas3R3Or02Awsz421018+kBhXOEU+RXwrm5n+Q5HTxNMs=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=connect.polyu.hk;
 Received: from OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:4c5::7)
  by OS7P286MB7475.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:43d::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.406.11; Sat, 12 Sep
- 2026 08:03:15 +0000
+ 2026 08:03:16 +0000
 Received: from OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
  ([fe80::e267:139c:d5e6:d4aa]) by OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
  ([fe80::e267:139c:d5e6:d4aa%4]) with mapi id 15.21.0406.007; Sat, 12 Sep 2026
- 08:03:15 +0000
+ 08:03:16 +0000
 From: ZHOU Jiaxiang <26066541r@connect.polyu.hk>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
 	"Martin K . Petersen" <mkp@kernel.org>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH v3 1/2] block: fix zones_cond out-of-bounds write on zone report
-Date: Sat, 12 Sep 2026 16:03:03 +0800
-Message-ID: <20260912080304.78535-2-26066541r@connect.polyu.hk>
+Subject: [PATCH v3 2/2] scsi: sd_zbc: reject disks with too many zones
+Date: Sat, 12 Sep 2026 16:03:04 +0800
+Message-ID: <20260912080304.78535-3-26066541r@connect.polyu.hk>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20260912080304.78535-1-26066541r@connect.polyu.hk>
 References: <20260912080304.78535-1-26066541r@connect.polyu.hk>
@@ -67,126 +67,104 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: OS7P286MB8049:EE_|OS7P286MB7475:EE_
-X-MS-Office365-Filtering-Correlation-Id: 92299c6c-cc6c-41a6-bcc8-08df10a44c76
+X-MS-Office365-Filtering-Correlation-Id: ea983086-b05e-44e8-e6ba-08df10a44d28
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|23010399003|376014|52116014|1800799024|786006|38350700014|56012099006|11063799006|10067099003|22082099003|18002099003|6133799003;
+	BCL:0;ARA:13230040|366016|23010399003|376014|52116014|1800799024|786006|38350700014|56012099006|11063799006|10067099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	7vBzlM7MgaZMLRNMRBlc3X1tobgDDfJ/wZ0/0RtJi6niS55mq9YcFDomwN8BeiKPmELBoZd4vFjpaPJ19nXrVX2BUv9Y0Yz7SbxWjvnb+oJXSgWCc+FdIOaVix1t1Wj0IL3+f/rk2qHuivIfu4ZsrR6cMnEDf25qH5hx4FH9i5BVQeALHtofPZ3qpL93YEyq5KS1oXzgG3Q1c9uRzbDrMsjdwOF3PRA+oLkFJaj51/HzG0yHd/fEshaDqX4zEXfmJEMzEJCkUHvXQTEWs7dDCSYzNlqDOhq/vpFOn3QK5nE3FnN4QVoPb1IMlz2aVusIOzIV0h6lfd/3b3forRhIX/RrW43gx09GqT7lq5KRDPv8VM1XzPeWyrY3R6p2ukO3EhHcMVhDjBkq3Kh3d5s3hx0/RpDND07LbW9W2/U2sj8uyGUprmK8ijEvpHlH6rQxf07g0phaTtZWHH6XPy8Q+6CptYrztkbVUIZqtlnsDwmwF1qvlhnmN8Kk7tHYEl+Z3SKmtuZZk/UlndvE0AFUS0FAyoRmPGtvRc+ETyZGkwenjvfi8tioMISzrz6gVvKtpew5r5zAiDARpWuACfu0d6boXksYvWFNHkUJh0jfW2/9iZaVdqDctQFVYF/fAoHF4Tn7idbh/J43OcDCxdqsE717bXJPpJ0bV9f9nlP77qUIhPE2QdtEUxVM+DDznsu9hWV2fTo3pTM55WVWBmpuxZ4LbDl7xjBAadR5g/7kSjc=
+	7a7yCL8REd9ZpTFsQ/RwMDHavS5F2QiRZP+Yx1pDzUOUnd0MIST+wqmE6vkuNn3cIC++BE8YfsAECJXI8zuu3OXt+cRgIDz78TLcVkyDux03XWUUuf89MehcbwY2+Gu9KE/f7sXLgcphMfHAV8Fdt4PeZiXlikfQ6NyQpI0DgVvUNfGCRw9XWU50jpWs64z40ZsPp79aH716rwOGEr7WjM8Z5T3lKKbphtMXnaFYpJHOw4STVSzhaDdgieW+fbGMsMecB6PMDLYBnWYzNKr8wRqUUDJhihkSmGkfReischMCnhRxpD/oKOkVvHIvjuCBL+Fp58Ru1poN9hJVMgeQuQQU4U3VfA7bgJX3Fcgfmk0NFQehSoWMHr+bynZtuDLOTnkE4ouwF7CtaslshnUbEhkTYOMxQRcXH/tjrjqOkqrzR/8WoNpKljILGlepNuLNoWUYGZkxUkoVmJwYqA+QXwAwkKfW7DQfzpABXglFcC9zMjjD8W0BtM35FRRT2bbCRK6mDE4zBpo4n0dH2+z98MqDdKtieULeB5nVcBvWQm9T+MDBHtKNkq020vINBj3xq9gXEtaJ+bR0ZhxLSm0yMNaXW2sTz6VFJMWUVXxX5+4sBcieAG3QUbP0uZF6jsLT8FVsFcR43fAtFfrkWhBOjKISDDI/8bQqK5JX8QUaVccgJRW4lJwQd/geROkvBRyN+zdribtrDXYcrh+SSKJlElgF+bYInORoklQrpASurss=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(376014)(52116014)(1800799024)(786006)(38350700014)(56012099006)(11063799006)(10067099003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(376014)(52116014)(1800799024)(786006)(38350700014)(56012099006)(11063799006)(10067099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?MGqE6pWwdOMTUHVCqo/ejcTTS6QZ0U8u1i2xLODS3PcXe5vokU1wu8EOW61B?=
- =?us-ascii?Q?YxDunjY9gyB0ZXjgmOhQ/cNdA/auOeE+WPW2keTkV9lLNceAQDh+2jpciF4o?=
- =?us-ascii?Q?5YvTiATgrPG4A7GuP2JPJzDYK2pC5FXbXTjFO+9g/xhXiSPf9Ohgj+2s3RSI?=
- =?us-ascii?Q?DdN4BUMYrs17xeQf6mQ2m6RiZtUqrS3lsdYLc6yS496fBHXM12ij7SqRJsYv?=
- =?us-ascii?Q?gF6xwmLuWZEDv35QxoQgAh/IZPgb3PxFyDSDupPCe29Xj0gpGJcqhydLWNcu?=
- =?us-ascii?Q?Ah5AOECNJtkp97OpdoCA+/bgPMJ/AyCnlWZj2u28/mBdZo7nUD5fc6QyBNsN?=
- =?us-ascii?Q?f1hdIvdKcy3Rdc2xcEfnJXQOELH2nEAeD4TQbfM12/qz++SZAxsYcYRLYRY0?=
- =?us-ascii?Q?2yI7ulvG7TqRe6AIRBw+rQiFKW1VU39y68JOwIclXJhRDOROtSCRYqz7n+aV?=
- =?us-ascii?Q?1/SfJ/torMp1Nhjm3yLgL9zqR7A7yo9ersFdbEJqtyhDlnm7c9qL64mHLq1r?=
- =?us-ascii?Q?2+JP5mUE3jK9GKuq6Dx44LurAoEDn1BU7HE5aHojyprp0yZ93Y4gfShgBQCA?=
- =?us-ascii?Q?T2xfWeKsO0iIWL/6APaOD/9s11D6jTotLxEpVHpXRfuuNi6wyaVcAwsMf4FF?=
- =?us-ascii?Q?+9mQ+Z3vV/hjwmJZrSYWl31Ur/aJJSW00AAYBIoHUsuocGhGIyBfYu4VZKgi?=
- =?us-ascii?Q?dc9K00562A0Wsy1aSjqr3Brs4rXJhSPCVVgoMxgZvSiABq9TrNsWl+XuVITT?=
- =?us-ascii?Q?4DmvGzd63PXLO9Pdp19Pg2/ZplCCBV6MbbIpM2yDRDhGfR77JoIXS8Qb/JGH?=
- =?us-ascii?Q?E7bYN+foxXFx59jOeOhGLlEZJ5DrO0emzdUx7a2RzCfRuLhnNpjtYqAajhN5?=
- =?us-ascii?Q?NBhYUg1nZiQ2DCwqreLtEtjZTae2A9AA6QGVNbG/f9cVabQkq7FVLLvZrPIt?=
- =?us-ascii?Q?JRGj6QRJD2chCXcGmy+UdO0kB42ZWEZCsNFgLQlqLCSCx5JNWHKn+MKyXYPE?=
- =?us-ascii?Q?TrbgdOJhWB6NhJSNQJ39mHGkgdrs3oWQvCrT4w43YkMzpTlgsQBI6FI63G/x?=
- =?us-ascii?Q?mfMi1P61xXSpsXQqgbcH02a86Ut9w+ZIKpBYR/Dyut/xae1pvDx4+QKBXYSl?=
- =?us-ascii?Q?ixBxRSB1CTg4QZTdtjJPx/VGNPew0uKx6DI4m3QOJC3usRUHoXdtU/KGoDJB?=
- =?us-ascii?Q?fNtxEtyrSpxaTmkhxWf+4+sqMGDKJvC5b8nEYesXhP2asQmGBVaBtJJpZtR9?=
- =?us-ascii?Q?5BbbYtBw8ATk1GnwmTpwR+uULgv8L3w8QJkImjXSN8KPMK2wpgxKY8vVRvzH?=
- =?us-ascii?Q?BCrVH/HbKpEbFdOWrufP48h1JODYF54h7luc2tvdNZn3IUiB2l+UZInX+vlv?=
- =?us-ascii?Q?Mo8ZttTrtD0Yq95Il1cFyjDEmoydAXYWpPxDAmJ6W7STvw6iXSo3Ewd+QDg8?=
- =?us-ascii?Q?3QoobzNrr9byKpGnffUoVKdi0qxOc5AZFhJWlreK39wVGcT3R8aYD6/GIMYc?=
- =?us-ascii?Q?F6SecPZ3IakVD6Jyyw0IznPIFOJnSOqO2xgLN3U9IJuPQpsk09klTxNKARIW?=
- =?us-ascii?Q?3kpIsKjUTLBzhBPBT8tS2pzmJaYgIQt1or8YYmbEBZI/8yuW8NF6alZgUQa1?=
- =?us-ascii?Q?TgFnIcHey3/Sk2LgcYVyJm9PeszHpK57rbr8RmFfwKH1KgYJTum/8Qc9xGQ5?=
- =?us-ascii?Q?GYLzNJZL+FWOSrkb2h8gnYrbZRzEvV901SP+l2c638Vg/dg/hJMD8/g9pJSc?=
- =?us-ascii?Q?6uprZ8nfvg=3D=3D?=
+	=?us-ascii?Q?GWdauhQDEdnGrm30OjD1whHQTZmrFihuq9N+gAPa03lxJFAcD5wfk7WghBa+?=
+ =?us-ascii?Q?2cDi26VsHDYDfCVpeqiFQWLktxyQNKD7HV2mrCy5ScVuR1tBQZcuy2bGQWHb?=
+ =?us-ascii?Q?qMD/8KgfG/yGovQ5bBVJ80fZFz/j2WKwW9WH8DHnSf3x8tkEtTJ3B3pFBRI7?=
+ =?us-ascii?Q?1Udqxl2loFZTBJw8KT3yyn/dvpqFj/NDi3G5CgNDu0SSAPVA500X+4rErBxB?=
+ =?us-ascii?Q?zrobrHHU06ZRsWQcOfvtwIioTn90QDCauPjauVe3bpmketDY1EOxK4Gwk/Xs?=
+ =?us-ascii?Q?JrEGnebyXiHIoTJzUg3vk6mu+NuCY33ieD5j4UXNmtjOYevg4YIv7fTNkQsv?=
+ =?us-ascii?Q?VSKABjG339yS0ZYXD7OqGKzdwnxhHJq54b0sc+dBKw7n14Dn39S/Jl0TY4M9?=
+ =?us-ascii?Q?nYqRCve9JuvaawtdSvx16KP31vg+ZfpoY02Iy4tWCUjma9XZ3n4wsGpjZQBL?=
+ =?us-ascii?Q?irkXbGFwC6lFSpGgFnuoq/IBdVE+9WuV6xxVibrfvdvv/p+TLkd7EVfbp2lz?=
+ =?us-ascii?Q?45LyCZECsTfpZFZkmGr61lwpANq1MbqrjUq0/iXRjG0bDbcg0eeACJlSQEHV?=
+ =?us-ascii?Q?9qai7p493g027BG/+OEUg/qqXleY8TGQcx5nFDi3F7xGVFwpBbtQIT3vglkj?=
+ =?us-ascii?Q?VJGXQXrlbyIDODbAwaInO21eIEk08Ru481JQspSZCmQ+Skgn47aEb4SHFSXE?=
+ =?us-ascii?Q?UBTLjDsPZQfvFSKXut5RPtCe2NOVRdDfQTQCzBvQ/OeHj8zLJXMrTZa/NmQY?=
+ =?us-ascii?Q?TstkWKMc0xmHgAqs+4DPg3E9ppXJSJr/68BJku06Tac8XVzE+b3MwTLXErOS?=
+ =?us-ascii?Q?BqjVNYisYJMK2m5qOvgDQN5wBpo0d0OzFV9XDdZD6cn2etqVE1HBq4kBmoXp?=
+ =?us-ascii?Q?1X5HYyCnFazcGRE+s0lMnzn1r5720linzOucYnbE+g6/xqLtKUm+1O9snmYV?=
+ =?us-ascii?Q?mVrH6U27p8mT1Cc1/PwzjOm3Vgetamb9Fr3TiMDwmb6yPU2Urgp09XJlL6bd?=
+ =?us-ascii?Q?e+XxWEIeXuua/ZrBGa76Jy/isrnI1Uc8m2jTTPdAUYHOBx8OVD49UskBd7/U?=
+ =?us-ascii?Q?i39xBoWPVyJ+gjqnb5//asscUnA6GElUv5u0n1FRNbJVxBlk5n6D3GKe1Lhj?=
+ =?us-ascii?Q?j3g3o7TC0Kjvz83/TSAmqJXXCxDKHFd3kDCMALmywedbt7olHE3dV1g29+as?=
+ =?us-ascii?Q?LSusNR6NMSeXH9xZnlHwQHrUAUX9VgWQhpMjg6GjsDl6imQR22GUFg/1KHFo?=
+ =?us-ascii?Q?6dkzJdUBsy9qPvSBpQmbolnnj7tY8lAjJu99hak0gMard/8TFW9DN7Z16FCT?=
+ =?us-ascii?Q?KMA7KpAt9Ac3As/E60tmPwUDY4CJxWDSb9Gyt/a0tS9/p6z+H/PPLExlxLa5?=
+ =?us-ascii?Q?rORJytqg+W8EUZMMkLLW8uhiyd3ap2s1YXwPIY6UvPbKgUG3EQ81452yDeTB?=
+ =?us-ascii?Q?JwQaPlbrBY1a4kwCERuqTqL//71OOSrY7J2jdFl5nzKMxOq0L/R5PMS4Ux2E?=
+ =?us-ascii?Q?4Ic4RAEQgow0pnavrChH3Us8MJv1Jw7jC76M2qP6loO/7Rs5Qh2DykN48dgg?=
+ =?us-ascii?Q?Rmn4eiM9kvSFBIKBAox4tK3gA60QBuLYeWVppaQf9J9cKwcxmDUDmcqIl6eQ?=
+ =?us-ascii?Q?I6zq92KzvcSwEBFnu9BCzBzOk/GFUs+s8i6K7iFcyagqwWAwTOh5KFW9G3z0?=
+ =?us-ascii?Q?WAHWqeyBkVd6wiSUzUIH+10WYuYqw9x2T36Brkt+l6TlOwVl5uSvPUstKeQC?=
+ =?us-ascii?Q?x3sPFXcJtQ=3D=3D?=
 X-OriginatorOrg: connect.polyu.hk
-X-MS-Exchange-CrossTenant-Network-Message-Id: 92299c6c-cc6c-41a6-bcc8-08df10a44c76
+X-MS-Exchange-CrossTenant-Network-Message-Id: ea983086-b05e-44e8-e6ba-08df10a44d28
 X-MS-Exchange-CrossTenant-AuthSource: OS7P286MB8049.JPNP286.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Sep 2026 08:03:15.4348
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Sep 2026 08:03:16.6232
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: ec09e4d7-3d0f-4eff-9c1e-7ba8060c5417
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: r+p/a1ZZAR2auNJ5rzc5T8si1PIi5pfTGJpNpGduywNJtTvTEUJa6mfTxA0lTohnwVZzEXVAn82TzzhK7Lkzz90MuZoMJ4eAp3LKlJ3KxpE=
+X-MS-Exchange-CrossTenant-UserPrincipalName: XDVvL92VkyI+7bXnl13JXbS4FbzDcPgQ1AlDqNP0kvoklTpe3RvgpHP9h+rnUmBr9GNcmmyXK61Thkqx8/VTr2FHs0rF0Wci+7RxaQAguPs=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS7P286MB7475
 
-blk_revalidate_disk_zones() sizes the zones_cond array from the disk
-capacity and zone size, but the index used by blk_revalidate_zone_cond()
-comes from the device-driven report_zones() walk and is never checked
-against the array size. A device reporting more zones than fit the
-array makes blk_zone_set_cond() write out of bounds.
+sd_zbc_read_zones() computes the number of zones with 64-bit
+arithmetic and stores the result in the unsigned int nr_zones field
+of struct zoned_disk_info, silently truncating counts that exceed 32
+bits. The truncated count is later used to size per-zone resources,
+while the device may still report more zones than fit.
 
-One way to reach this is a zone count exceeding 32 bits: both
-blk_revalidate_zone_args.nr_zones and struct zoned_disk_info.nr_zones
-are unsigned int, so a disk advertising more than UINT_MAX zones (e.g.
-2^32 + 1024 zones of one 512-byte logical block) gets its zone count
-truncated to a small value, undersizing the array while the report
-walk keeps counting upward.
+Reject such devices at scan time: more than 4 billion zones is not
+realistic for any medium that exists today, and accepting the
+truncated count produces inconsistent zone bookkeeping.
 
-Check the index against the array size before storing the zone
-condition, and refuse to revalidate when the zone count does not fit
-32 bits.
-
-Fixes: 6e945ffb6555 ("block: use zone condition to determine conventional z=
-ones")
+Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
 Signed-off-by: ZHOU Jiaxiang <26066541r@connect.polyu.hk>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- block/blk-zoned.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ drivers/scsi/sd_zbc.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index a5afb842b..475aa16bc 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -2018,12 +2018,17 @@ static int disk_revalidate_zone_resources(struct ge=
-ndisk *disk,
-                                struct blk_revalidate_zone_args *args)
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 56e455fb5..f4570bd94 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -589,7 +589,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+                u8 buf[SD_BUF_SIZE])
  {
-        struct queue_limits *lim =3D &disk->queue->limits;
-+       unsigned long long nr_zones;
-        unsigned int pool_size;
-        int ret =3D 0;
+-       unsigned int nr_zones;
++       u64 nr_zones;
+        u32 zone_blocks =3D 0;
+        int ret;
 
-        args->disk =3D disk;
--       args->nr_zones =3D
--               DIV_ROUND_UP_ULL(get_capacity(disk), lim->chunk_sectors);
-+       nr_zones =3D DIV_ROUND_UP_ULL(get_capacity(disk), lim->chunk_sector=
-s);
+@@ -621,6 +621,12 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct q=
+ueue_limits *lim,
+                goto err;
+
+        nr_zones =3D round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_bl=
+ocks);
 +       if (nr_zones > UINT_MAX) {
-+               pr_warn("%s: Too many zones (%llu)\n", disk->disk_name, nr_=
-zones);
-+               return -EINVAL;
++               sd_printk(KERN_ERR, sdkp, "Too many zones (%llu)\n",
++                         nr_zones);
++               ret =3D -EINVAL;
++               goto err;
 +       }
-+       args->nr_zones =3D nr_zones;
+        sdkp->early_zone_info.nr_zones =3D nr_zones;
+        sdkp->early_zone_info.zone_blocks =3D zone_blocks;
 
-        /* Cached zone conditions: 1 byte per zone */
-        args->zones_cond =3D kzalloc(args->nr_zones, GFP_NOIO);
-@@ -2131,6 +2136,12 @@ static int blk_revalidate_zone_cond(struct blk_zone =
-*zone, unsigned int idx,
- {
-        enum blk_zone_cond cond =3D zone->cond;
-
-+       if (idx >=3D args->nr_zones) {
-+               pr_warn("%s: Zone report index %u exceeds zone count %u\n",
-+                       args->disk->disk_name, idx, args->nr_zones);
-+               return -EINVAL;
-+       }
-+
-        /* Check that the zone condition is consistent with the zone type. =
-*/
-        switch (cond) {
-        case BLK_ZONE_COND_NOT_WP:
 --
 2.50.1 (Apple Git-155)
 
