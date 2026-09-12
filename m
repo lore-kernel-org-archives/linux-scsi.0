@@ -1,133 +1,201 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6E9D420898
-	for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2026 10:03:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9237B27EC7C;
+	Sat, 12 Sep 2026 10:25:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789207406; cv=none; b=PH0t1FNQm8Ksxff6xtwQEVmStqlDxOrsAh9neUtB+ugLcL2XOZHs+H01l69tayuC4FlX0Mo/M2TVonui25CvFsDzwuR0UNI1zSOKIXHUuIGqz5kmNwO6kgZ3NOkXpVE3iTVBPI3W0NVNrb24/BDWmHnZig/A6O2gcel0+ECBtfQ=
+	t=1789208755; cv=none; b=LCFguhx1sDRINV+gpoXykuubjOYFS1kAZsMUZVOMYI7rDVLr5McQRlLBCsn0H4Xy1xvPGTz0tEjuvnsNH7YgaaE8Fv8KMJFppuwMDxaQncxnQ0k4hy2KzZfE7MB23eWwZ+q8N7hULE6VuRo/BO1UcV4D+KQ3ZxTnld9Mn/+4EgU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789207406; c=relaxed/simple;
-	bh=xgjmU/KzfOnf9ogxfC2URlpWM+3AXnuU/fITS/ZI31w=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=G5suEZ4sRshFUF1tFxNc2W5Vm9uto7rD75Yk/w/lPbXIx7kO7Q7gkS3XYFyIFWbVs7crnDoKbsCQ/xRNX+vnN7cprFVi+EYXVPWOGH76qIyNra4ZQmTOgDAdaP51iOvLyXXE/JQTu6mwsONdSTnkEUK0hw/3o3L7gefTUPV/B/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j3jhOhGv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789208755; c=relaxed/simple;
+	bh=eqe+0oyBfwwiDPXBm6T1yEoyCTynnJXvTivRorgg22g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P2RAhMcUYSP8cn0DUsmkECMu1M7z3vsYj9YDw/0kKylHXzd3DUG9SXQR5eYvESdW4TC7MH538wIzpFbiY0XMRwNFLRrN8Gshge27vP4OGXW0OnBA2vHqnIpq5UfuBIRX6KYo6EYKlpWFQmy2Dsh8wDZApiJd6EzBmbQDh+6QlJU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z+zNXvfx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j3jhOhGv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4835B1F0089A;
-	Sat, 12 Sep 2026 10:03:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z+zNXvfx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6AEC1F00893;
+	Sat, 12 Sep 2026 10:25:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789207405;
-	bh=CbkkNO3H+9ZzOhv8dMOGW5FI3GAyu/f22naoLWExWuo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=j3jhOhGvmC+u9BqFogqE4g0uicU6SPVjW9XW+wV5xzXWB+WV0+PwWXgRLq0NUWC0U
-	 lvMn3jXQJb9yz75iUs688MZ+4HI6/alc5XibsFdAyQtADUsh48jlVAZdO56EkR2roO
-	 +92aDiUpQ7Y/mehMxtt6sknkGwCbsJ8uvNRZhG71rxuBZF9NiKn6S+X8UrDmD4JQ4a
-	 Wrf27XBobnjs/o3mHihhHMRInKH+CaipgGlr6kiW1grTpghUSNRORtDp714jde5x/t
-	 B4bQZRJCKlF6MlYH/fwlbd2ktXjz4WHQ1HyVgr+vZ8590ZMa/K7xCvfSt5LkB6TMrI
-	 jqjG1dK1b6EVA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: ufs: core: Quiesce SCSI devices instead of
- host tagset during error handling
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Stanley Jhu" <stanleyjhu@google.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260912094107.2098303-1-stanleyjhu@google.com>
-References: <20260912094107.2098303-1-stanleyjhu@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 12 Sep 2026 10:03:24 +0000
-Message-Id: <20260912100325.4835B1F0089A@smtp.kernel.org>
+	s=k20260515; t=1789208754;
+	bh=suJ0uS71GsbfhhW6sx+FaUUox5/Huy7H+9ZmclYomm4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Z+zNXvfxYwdcwi+fNVkkIbEFOlOdsa2H6Z9v82HV3yqZQTntAMXfOzeUh1OJiLL4D
+	 JgKEvVtr0XBXVpYRJbY0CpEC4VPq5oHoo83EW7+EtDlO0L26igZ7xE9+jHPSUvXX9D
+	 Q5qwa5PMS0mgHaR2WXDM9BwyaO66ht9zWkWvtGFfIOkt5PH+akb0+J9iKhMF7Fw8co
+	 6jiopUYKBeCeW7XT126kbOCc1Lmg2cPe/YJPwGzaOicT0svJPD3Jnc3zcrPf10B5Dc
+	 ORDovhaMBzakCvvvldPllZ8xPkIhoJwZSxCpt8g30XAw+JhsF6ctKM3RlRod9UwVTI
+	 /NGMqEI46ltOQ==
+Date: Sat, 12 Sep 2026 11:25:48 +0100
+From: Conor Dooley <conor@kernel.org>
+To: Minda Chen <minda.chen@starfivetech.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
+	Ajay Neeli <ajay.neeli@amd.com>,
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] scsi: ufs: dt-bindings: starfive: Add UFS Host
+ Controller for JHB100 soc
+Message-ID: <aqUorPJziAtWeSG0@squawk>
+References: <20260911102359.83288-1-minda.chen@starfivetech.com>
+ <20260911102359.83288-2-minda.chen@starfivetech.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="E4vetuRmcDP9RnWo"
+Content-Disposition: inline
+In-Reply-To: <20260911102359.83288-2-minda.chen@starfivetech.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Switching from blk_mq_unquiesce_tagset() to shost_for_each_device(=
-) permanently freezes queues of devices being removed, deadlocking the remo=
-val path.
---
+--E4vetuRmcDP9RnWo
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-commit b89bd79e56222f4a0cb23f7f3bd5ee7ab397b8c4
-Author: Stanley Jhu <stanleyjhu@google.com>
-
-scsi: ufs: core: Quiesce SCSI devices instead of host tagset during error h=
-andling
-
-This commit changes UFS error handling to quiesce only logical units instead
-of the entire host tagset. By iterating over active devices, it allows inte=
-rnal
-commands to be dispatched on the pseudo SCSI device during error recovery,
-preventing a circular wait deadlock.
-
-Link: https://lore.kernel.org/all/6f78c4bd-a70b-402d-abfd-599091b67674@acm.=
-org/
-
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 234e18b5078f2..b5c63e88af140 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-[ ... ]
-> @@ -6805,6 +6805,23 @@ static void ufshcd_clk_scaling_suspend(struct ufs_=
-hba *hba, bool suspend)
-[ ... ]
-> +static void ufshcd_unquiesce_all_sdevs(struct ufs_hba *hba)
-> +{
-> +	struct scsi_device *sdev;
+On Fri, Sep 11, 2026 at 06:23:57PM +0800, Minda Chen wrote:
+> Add devicetree document for UFS Host Controller StarFive JHB100 SoC.
+> The UFS controller is based on the Synopsys DesignWare UFS controller.
+>=20
+> Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+> ---
+>  .../bindings/ufs/starfive,jhb100-ufs.yaml     | 71 +++++++++++++++++++
+>  MAINTAINERS                                   |  5 ++
+>  2 files changed, 76 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/starfive,jhb100=
+-ufs.yaml
+>=20
+> diff --git a/Documentation/devicetree/bindings/ufs/starfive,jhb100-ufs.ya=
+ml b/Documentation/devicetree/bindings/ufs/starfive,jhb100-ufs.yaml
+> new file mode 100644
+> index 000000000000..a65cc9455a85
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/starfive,jhb100-ufs.yaml
+> @@ -0,0 +1,71 @@
+> +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ufs/starfive,jhb100-ufs.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
 > +
-> +	shost_for_each_device(sdev, hba->host)
-> +		blk_mq_unquiesce_queue(sdev->request_queue);
-
-[Severity: High]
-Will this loop skip devices that are in the process of being removed, leavi=
-ng
-their request queues permanently quiesced?
-
-Looking at __scsi_iterate_devices(), which is called by shost_for_each_devi=
-ce(),
-it uses scsi_device_get() to acquire a reference to the next device.
-
-If a device is in the SDEV_CANCEL state due to a concurrent removal event
-(such as sysfs or hot-unplug), scsi_device_get() returns a negative error.
-This causes __scsi_iterate_devices() to skip the device and continue search=
-ing:
-
-drivers/scsi/scsi.c:__scsi_iterate_devices() {
-    ...
-    if (!scsi_device_is_pseudo_dev(next) && !scsi_device_get(next))
-        break;
-    ...
-}
-
-If a device removal occurs concurrently with an error event,
-ufshcd_err_handling_prepare() might successfully quiesce the device's queue
-before or during its transition to SDEV_CANCEL.
-
-Later, when ufshcd_err_handling_unprepare() calls ufshcd_unquiesce_all_sdev=
-s(),
-the removed device is skipped, and its queue is never unquiesced.
-
-The device removal thread will eventually call device_del() -> sd_remove() =
-->
-sd_shutdown() -> sd_sync_cache(). This issues a SYNCHRONIZE CACHE command v=
-ia
-blk_execute_rq().
-
-Since the queue is permanently quiesced, the request is never dispatched and
-the block layer timeout timer never starts.
-
-Could this cause the removal thread to deadlock indefinitely in blk_wait_io=
-()
-waiting for the completion of the SYNCHRONIZE CACHE command?
-
-> +}
+> +title: Starfive Universal Flash Storage (UFS) Controller
 > +
->  static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
->  {
+> +maintainers:
+> +  - Minda Chen <minda.chen@starfivetech.com>
+> +
+> +allOf:
+> +  - $ref: ufs-common.yaml
+> +
+> +properties:
+> +  compatible:
+> +    const: starfive,jhb100-ufs
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    maxItems: 1
+> +
+> +  clock-names:
+> +    items:
+> +      - const: main
+> +
+> +  resets:
+> +    items:
+> +      - description: UFS main reset
+> +      - description: UFS PHY reset
+> +
+> +  reset-names:
+> +    items:
+> +      - const: main
+> +      - const: phy
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  starfive,syscon:
+> +    $ref: /schemas/types.yaml#/definitions/phandle
+> +    description:
+> +      The phandle to System Register Controller syscon node.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260912094107.2098=
-303-1-stanleyjhu@google.com?part=3D1
+This should probably say "that contains xyz" where xyz is the thing that
+you need up access in your driver. The jhb100 has a large number of
+syscons, so knowing what to look for here is essential! (although
+realistically you'll set this in jhb100.dtsi and noone will have to look
+it up themselves)
+
+Otherwise,
+Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+
+pw-bot: changes-requested
+
+Thanks,
+Conor.
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - clocks
+> +  - clock-names
+> +  - resets
+> +  - reset-names
+> +  - interrupts
+> +  - starfive,syscon
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    ufs@11b10000 {
+> +        compatible =3D "starfive,jhb100-ufs";
+> +        reg =3D <0x11b10000 0x20000>;
+> +        interrupts =3D <105>;
+> +        clocks =3D <&syscrg 4>;
+> +        clock-names =3D "main";
+> +        resets =3D <&syscrg 10>,
+> +                 <&syscrg 7>;
+> +        reset-names =3D "main", "phy";
+> +        starfive,syscon =3D <&syscon>;
+> +    };
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index fc320b373656..10b0d0839ca4 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -28095,6 +28095,11 @@ L:	linux-scsi@vger.kernel.org
+>  S:	Maintained
+>  F:	drivers/ufs/host/ufs-renesas.c
+> =20
+> +UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER STARFIVE
+> +M:	Minda Chen <minda.chen@starfivetech.com>
+> +S:	Maintained
+> +F:	Documentation/devicetree/bindings/ufs/starfive,jhb100-ufs.yaml
+> +
+>  UNIWILL LAPTOP DRIVER
+>  M:	Armin Wolf <W_Armin@gmx.de>
+>  L:	platform-driver-x86@vger.kernel.org
+> --=20
+> 2.17.1
+>=20
+
+--E4vetuRmcDP9RnWo
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaqUorAAKCRB4tDGHoIJi
+0gcdAQDsmQDTi5UxtOtDUn/z/tvkLPR6wxggvel0JcLarSftcAD/fTHQtqCGusgb
+UU3aWxTBuahJd+pECSS11GWWhR3Ewwc=
+=OKh5
+-----END PGP SIGNATURE-----
+
+--E4vetuRmcDP9RnWo--
