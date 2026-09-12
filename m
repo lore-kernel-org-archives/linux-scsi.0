@@ -1,160 +1,133 @@
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D306A4BEE54
-	for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2026 09:41:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6E9D420898
+	for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2026 10:03:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789206072; cv=none; b=Pijyhx+zEc/kzm9SzlJiW1cdzLITHTGvssBkAbRnraR3E17B4em3T7IpWZ4S7Tk3WMka3J3AgYBm/0ZoR10VaELCOpMUg9jrX71pXRrQrQwRBsXz9N0l5tshSNFCSvq7PhZHEu2L/M1KAOckIeOFMNzAU5LBUwIPMVS2SSbn83o=
+	t=1789207406; cv=none; b=PH0t1FNQm8Ksxff6xtwQEVmStqlDxOrsAh9neUtB+ugLcL2XOZHs+H01l69tayuC4FlX0Mo/M2TVonui25CvFsDzwuR0UNI1zSOKIXHUuIGqz5kmNwO6kgZ3NOkXpVE3iTVBPI3W0NVNrb24/BDWmHnZig/A6O2gcel0+ECBtfQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789206072; c=relaxed/simple;
-	bh=fvzxqf7pM0EWszKj6MSRzE26zroEJddeoZwwP/wHf68=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=FKrxRW69KeV8d8EILEAI+oaZrevXLKExc4S2BjUvVEo3+fLZ5vvjxWZ6jXHetxFavw53H2t4yhtAvFXIG/oHdbjulAPaPxfvz8KOuKR24bXQecGIATOZfjEXZD0eZH+tLYgtkbzc3G+xaksACU5TvQw+Ij1GPuZtYdprAGFIIiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ZpsZfOPM; arc=none smtp.client-ip=209.85.215.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1789207406; c=relaxed/simple;
+	bh=xgjmU/KzfOnf9ogxfC2URlpWM+3AXnuU/fITS/ZI31w=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=G5suEZ4sRshFUF1tFxNc2W5Vm9uto7rD75Yk/w/lPbXIx7kO7Q7gkS3XYFyIFWbVs7crnDoKbsCQ/xRNX+vnN7cprFVi+EYXVPWOGH76qIyNra4ZQmTOgDAdaP51iOvLyXXE/JQTu6mwsONdSTnkEUK0hw/3o3L7gefTUPV/B/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j3jhOhGv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZpsZfOPM"
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cb48f41343aso2572503a12.1
-        for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2026 02:41:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789206070; x=1789810870; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=MEw03QC+JSmM4SSD/Ogrqaba9N735GaiSihiR65530I=;
-        b=ZpsZfOPMuoAbor6qEtVbCOC0AZ9ot/XYm8/peLnSCkqVR0Yy2t2noNct2TOBLjKOMk
-         NTQaHso8bK7XoeEJtjZERyS24jqehc9ZLhCQTsKg5OR1TPoH+0ll9rwnW+ufFbfT2YaA
-         Ni8QM/xgkVyRu54qx7/3F1kF7u5EMus/mPjtePQYuQ+9psI7+UsmI/JqzxloC5m9Tapq
-         bPifiydJzgsTR9+QlSzKRTCWnsUukkxWZwIQCX8qt0LXz0uhsjuZkUd+T8UkDrot6D1T
-         FANKpzSdnsM1saao8nqp5pM3oApJD9qkSHC4WLobtVBVnV3pK9OkMVrTT+CMZ9Wq4ZiW
-         Xvlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789206070; x=1789810870;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=MEw03QC+JSmM4SSD/Ogrqaba9N735GaiSihiR65530I=;
-        b=lXypecVJWqcT4XqG9HNjd4b4WEnCFsUC2A2EXdQplMhcHXyrHUHFoRjBIstNQv7Xhe
-         y97liUMqFTrlOUougiE9Psy5M1tmROfy+ykFwVIiWWZTcedGueUztS+LQCP4cNWwAb8/
-         kyAajUaY/bSdhBaryY/AE6/1CL1Ji3LFEQKRsCsR/1ZJXiCiUoOz45bFYizsi+5PVC5P
-         y36r6y3gOS0FFa16ECdk3CODcwyspxzv0p6H5h9aDEiWt0jLxbv7lDpwD79Vte7pJ7Hv
-         sXwqg/MPvvpF0k0H872woqi73XCaWDjW9v5SGb3Dk/NUU6rgTzt3PXbdLiOuVWa0s9yY
-         dFQQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxCDSU+2TfDFqKPcKbJSytTGZwWu64HkPzEVuxl+fjm8YwtmsUALSHQ9GttCbc4hLZ5jpXCq6xF++Fx@vger.kernel.org
-X-Gm-Message-State: AFuF++mindV17GTbMS5W4A8bU5p2S/DVkvQg7Fnw3ESVtOF365Uh2r3C
-	5o8lBsFpO/hndj6+fy0yfnSxr0G7k2GB4J86JBfsObMkmQmQebrOStEwByaOvJq7aMc5Bqi3eA/
-	iqnfAD+aUE3iDyYSPyZS/Sw==
-X-Received: from pjbmv23.prod.google.com ([2002:a17:90b:1997:b0:39d:9080:e1e1])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90a:581:b0:39d:b4a8:92f3 with SMTP id 98e67ed59e1d1-39db4a89bf3mr2048256a91.1.1789206069981;
- Sat, 12 Sep 2026 02:41:09 -0700 (PDT)
-Date: Sat, 12 Sep 2026 17:41:07 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j3jhOhGv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4835B1F0089A;
+	Sat, 12 Sep 2026 10:03:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789207405;
+	bh=CbkkNO3H+9ZzOhv8dMOGW5FI3GAyu/f22naoLWExWuo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=j3jhOhGvmC+u9BqFogqE4g0uicU6SPVjW9XW+wV5xzXWB+WV0+PwWXgRLq0NUWC0U
+	 lvMn3jXQJb9yz75iUs688MZ+4HI6/alc5XibsFdAyQtADUsh48jlVAZdO56EkR2roO
+	 +92aDiUpQ7Y/mehMxtt6sknkGwCbsJ8uvNRZhG71rxuBZF9NiKn6S+X8UrDmD4JQ4a
+	 Wrf27XBobnjs/o3mHihhHMRInKH+CaipgGlr6kiW1grTpghUSNRORtDp714jde5x/t
+	 B4bQZRJCKlF6MlYH/fwlbd2ktXjz4WHQ1HyVgr+vZ8590ZMa/K7xCvfSt5LkB6TMrI
+	 jqjG1dK1b6EVA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] scsi: ufs: core: Quiesce SCSI devices instead of
+ host tagset during error handling
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Stanley Jhu" <stanleyjhu@google.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260912094107.2098303-1-stanleyjhu@google.com>
+References: <20260912094107.2098303-1-stanleyjhu@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 12 Sep 2026 10:03:24 +0000
+Message-Id: <20260912100325.4835B1F0089A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.55.0.1007.g17ff1f9808-goog
-Message-ID: <20260912094107.2098303-1-stanleyjhu@google.com>
-Subject: [PATCH v2] scsi: ufs: core: Quiesce SCSI devices instead of host
- tagset during error handling
-From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@sandisk.com>, Peter Wang <peter.wang@mediatek.com>, 
-	Brian Kao <powenkao@google.com>, stable@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 
-Commit 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
-switched UFS internal commands to allocate requests on
-hba->host->pseudo_sdev->request_queue, which shares the host tagset with
-regular LUNs.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Switching from blk_mq_unquiesce_tagset() to shost_for_each_device(=
+) permanently freezes queues of devices being removed, deadlocking the remo=
+val path.
+--
 
-During error recovery, ufshcd_err_handling_prepare() calls
-blk_mq_quiesce_tagset(&hba->host->tag_set), marking all queues in the
-tagset as quiesced, including pseudo_sdev->request_queue. When
-ufshcd_verify_dev_init() subsequently issues internal commands (e.g. NOP
-OUT UPIU) via blk_execute_rq(), blk_mq_run_hw_queue() skips running the
-quiesced queue, resulting in an unrecoverable circular wait deadlock.
+commit b89bd79e56222f4a0cb23f7f3bd5ee7ab397b8c4
+Author: Stanley Jhu <stanleyjhu@google.com>
 
-Resolve this by quiescing only the logical units attached to the host via
-shost_for_each_device() during error handling. Because
-shost_for_each_device() skips pseudo SCSI devices (via
-scsi_device_is_pseudo_dev() in __scsi_iterate_devices()), pseudo_sdev
-stays unquiesced and internal commands can be dispatched and completed.
+scsi: ufs: core: Quiesce SCSI devices instead of host tagset during error h=
+andling
 
-Keeping the logical units quiesced preserves behaviour that predates the
-current call. Until commit 2a36646012fc ("scsi: ufs: core: Simplify
-ufshcd_err_handling_prepare()"), the prepare path called
-ufshcd_scsi_block_requests() to hold off new commands in addition to
-blk_mq_wait_quiesce_done() to wait for the ongoing ones; folding both
-into blk_mq_quiesce_tagset() kept that behaviour. Waiting without
-quiescing would drop the first half, so the queues stay quiesced here.
+This commit changes UFS error handling to quiesce only logical units instead
+of the entire host tagset. By iterating over active devices, it allows inte=
+rnal
+commands to be dispatched on the pseudo SCSI device during error recovery,
+preventing a circular wait deadlock.
 
-Clock scaling and command pause (ufshcd_pause_command_processing) paths
-continue to use blk_mq_quiesce_tagset() as they require freezing all
-queues including internal commands.
+Link: https://lore.kernel.org/all/6f78c4bd-a70b-402d-abfd-599091b67674@acm.=
+org/
 
-Fixes: 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
-Cc: stable@vger.kernel.org
-Link: https://lore.kernel.org/all/6f78c4bd-a70b-402d-abfd-599091b67674@acm.org/
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
----
-v2:
-- Commit message only; no functional change.
-- Fix the Link: tag, which cited a Message-ID that is not in the archive.
-- Explain why the logical units stay quiesced, referring to the behaviour
-  that predates 2a36646012fc, instead of the vague claim about retry storms.
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 234e18b5078f2..b5c63e88af140 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+[ ... ]
+> @@ -6805,6 +6805,23 @@ static void ufshcd_clk_scaling_suspend(struct ufs_=
+hba *hba, bool suspend)
+[ ... ]
+> +static void ufshcd_unquiesce_all_sdevs(struct ufs_hba *hba)
+> +{
+> +	struct scsi_device *sdev;
+> +
+> +	shost_for_each_device(sdev, hba->host)
+> +		blk_mq_unquiesce_queue(sdev->request_queue);
 
- drivers/ufs/core/ufshcd.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+[Severity: High]
+Will this loop skip devices that are in the process of being removed, leavi=
+ng
+their request queues permanently quiesced?
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index a25b6a0cb5c6..1ca731675ad1 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6781,6 +6781,23 @@ static void ufshcd_clk_scaling_suspend(struct ufs_hba *hba, bool suspend)
- 	}
- }
- 
-+static void ufshcd_quiesce_all_sdevs(struct ufs_hba *hba)
-+{
-+	struct scsi_device *sdev;
-+
-+	shost_for_each_device(sdev, hba->host)
-+		blk_mq_quiesce_queue_nowait(sdev->request_queue);
-+	blk_mq_wait_quiesce_done(&hba->host->tag_set);
-+}
-+
-+static void ufshcd_unquiesce_all_sdevs(struct ufs_hba *hba)
-+{
-+	struct scsi_device *sdev;
-+
-+	shost_for_each_device(sdev, hba->host)
-+		blk_mq_unquiesce_queue(sdev->request_queue);
-+}
-+
- static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
- {
- 	/*
-@@ -6816,13 +6833,13 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
- 		ufshcd_clk_scaling_allow(hba, false);
- 	}
- 	/* Wait for ongoing ufshcd_queuecommand() calls to finish. */
--	blk_mq_quiesce_tagset(&hba->host->tag_set);
-+	ufshcd_quiesce_all_sdevs(hba);
- 	cancel_work_sync(&hba->eeh_work);
- }
- 
- static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
- {
--	blk_mq_unquiesce_tagset(&hba->host->tag_set);
-+	ufshcd_unquiesce_all_sdevs(hba);
- 	ufshcd_release(hba);
- 	if (ufshcd_is_clkscaling_supported(hba))
- 		ufshcd_clk_scaling_suspend(hba, false);
--- 
-2.55.0.1007.g17ff1f9808-goog
+Looking at __scsi_iterate_devices(), which is called by shost_for_each_devi=
+ce(),
+it uses scsi_device_get() to acquire a reference to the next device.
 
+If a device is in the SDEV_CANCEL state due to a concurrent removal event
+(such as sysfs or hot-unplug), scsi_device_get() returns a negative error.
+This causes __scsi_iterate_devices() to skip the device and continue search=
+ing:
+
+drivers/scsi/scsi.c:__scsi_iterate_devices() {
+    ...
+    if (!scsi_device_is_pseudo_dev(next) && !scsi_device_get(next))
+        break;
+    ...
+}
+
+If a device removal occurs concurrently with an error event,
+ufshcd_err_handling_prepare() might successfully quiesce the device's queue
+before or during its transition to SDEV_CANCEL.
+
+Later, when ufshcd_err_handling_unprepare() calls ufshcd_unquiesce_all_sdev=
+s(),
+the removed device is skipped, and its queue is never unquiesced.
+
+The device removal thread will eventually call device_del() -> sd_remove() =
+->
+sd_shutdown() -> sd_sync_cache(). This issues a SYNCHRONIZE CACHE command v=
+ia
+blk_execute_rq().
+
+Since the queue is permanently quiesced, the request is never dispatched and
+the block layer timeout timer never starts.
+
+Could this cause the removal thread to deadlock indefinitely in blk_wait_io=
+()
+waiting for the completion of the SYNCHRONIZE CACHE command?
+
+> +}
+> +
+>  static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+>  {
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260912094107.2098=
+303-1-stanleyjhu@google.com?part=3D1
