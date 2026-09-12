@@ -1,77 +1,34 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m49197.qiye.163.com (mail-m49197.qiye.163.com [45.254.49.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B87E3603C3
-	for <linux-scsi@vger.kernel.org>; Sat, 12 Sep 2026 06:28:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAFF2D8382;
+	Sat, 12 Sep 2026 07:48:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789194489; cv=none; b=lqHB79JEYJ2BTkWv105eD3yuqrKkcjASNOP8I87XWFuKnICLU7d5GbsZIKZBonPUdcoYRPA/SFih9j4xexR/aZyyxNOZcYkztoEs9H+ezgac7tpykLUMyRMALjmfjDMcQPjHGehQJRHqHKY9PKU9S5DxbSbvaQ+xNbq9x3Qnc5M=
+	t=1789199294; cv=none; b=T/dOAgX0RNoU+dw8W3SA4+xbbSzXf0Qv+gGo2OALMlWeIdg/CIATYpBgF+O6Bama/iJlMY2KwEIBLpZPITllf5wt4SIBA4DVxBep5loT+heAOetcq9lVx1ZEtLaKY6axpJGOd2L68cl8XdMSrWhXEGq7pg5szF8aOVAo4sEKxFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789194489; c=relaxed/simple;
-	bh=Tgfw+bR1PxAXAQBy+XRLskdLb5gIhfOBvMohuAAe0u0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ijqV8XdEgIQnwX1idAuIM9PD8ONyqwRDxBicc1L2W/BiKN8K4SpW+yhpuVDcwV6kQGCBFCR8dfQbZuNIhsOVUSI7tQxo/fbh6JBHF3kAjKFObZQhzTmZpL+KVadBEkIcRuZfoM9N+bYeBrh2phQ/CZilKKERe7CU2+oNT5wRlYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MsTur5kT; arc=none smtp.client-ip=74.125.225.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789199294; c=relaxed/simple;
+	bh=g+thXLaVzZeLKjj7wi7oagUK+H7sISWDAQKOPEGzHy0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ac8BrxQfW1UC2qY4KtWEWermGUy9nk0SLG1NKO1dn1e+Bm0AoUuNKY5H0I0MiRBeqQdaLw1EIfFxX4LFhNbYRkW5ip3tvk/0DDy5A5H1y2QmwV/8iHVZ5JdhXEyaJof1ccG3ACLgozjee6HAFk3+MtbRMihLGhVKw/sDbge8aV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tju.edu.cn; spf=pass smtp.mailfrom=tju.edu.cn; dkim=pass (1024-bit key) header.d=tju.edu.cn header.i=@tju.edu.cn header.b=liQu4yD7; arc=none smtp.client-ip=45.254.49.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tju.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MsTur5kT"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f6350f88so124129f8f.2
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2026 23:28:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789194486; x=1789799286; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=rsRnOmGwT1DNso6iLHvZBhAmNRKCLZB/9f/AeAbBVZg=;
-        b=MsTur5kTZCftDCgm8CUjh8Nf+KCP78wrj9TvPTfHJlH/0+EW7TVtfa/rgEbOJw5kHb
-         qkimqiIDXt1oPcpTKEkhw4AEUouFRNPhPNbKU4u5e7d4HuTtFn+wiXkF4CrKQW1jbT9t
-         ZcqcbYJU2Dg0RL5u5iX/QAVuUakZHdSLlWHgJih3Txw3kGmOjGkymE3jWXR8NFofnBeO
-         xWmoGbdGiLqP/t03jWSlkf5GHwji4wP77mjysG9vXkt8mySRd1BabRt9p6Ld/vhyD76d
-         SUBiMx/g2XusUIFRewxKfc/Fsc5nqxAN0wJkqFMWb/lLR18H9hqYqaKxndEBGUWFSAYA
-         125Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789194486; x=1789799286;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=rsRnOmGwT1DNso6iLHvZBhAmNRKCLZB/9f/AeAbBVZg=;
-        b=nx65w4pUy7acY2veVktoSSs3GIYrpI4/u/14WQlpRRZYCXT9N6dGW51tFDU+p7x0FJ
-         3AN/vSoEEfeN6z6gOmd8vZB24KIOvzeB66OE/Z/lzyE96dHLqxD8yGIMhyE0fDIizojQ
-         KyKs2xMpufpn/DJLqKLBuHEXz7o7531qwAUzMgr47DFAoHXZxym8YhdnsIPjoLymdRT2
-         Dhk2ZPbyYkNSabLARN8UkoB2JjWg4DJGKTPlZAU6hx1jMV4/6hJaVV9iXBxl07iwtq+6
-         bNsMAvTbRA+HI2bGo58Smpu/rWvbsnbONGREkY/V5shC0pNhvVCwGXCJi6f5SN4JcEBU
-         VCMA==
-X-Forwarded-Encrypted: i=1; AKwUvBxakNUj9o3MAv0jaFRIx+y+7q+cbHYk/bfxdKLDbUl2esbdQEXGYrS87MKFF8Syp04Pta6JOYxOr/L5@vger.kernel.org
-X-Gm-Message-State: AFuF++nnpHTg7hBWf2E3/CbY6gX5T9M3DJ8QWynZu8FPE7v1XxAZx5pt
-	LyyB409JCI/m4218ii3KgOgzk+CGIoGE+RjQK3FqUdUFeuKto9VWIsDMW9yNYXSj
-X-Gm-Gg: AYBFou0xj4tl/ERbpv3dbrrwVyvddvEwOJHgPCU5AEQZ/4HZTJXdGOXF9gZrxdufkyc
-	v5uj/05/Crx/JQwhm4Jtmyw0bBb6d8nd7mvjTK/ij9Frn0Gv9sv4umQmnKan3vK7gJOXVyIIzIS
-	hDBODWZ+3jsim/bAEc+DDGo52488UbgDx2SCphfUkXYAajo6DjgEocqk9VWDq5Wi34XPYy6q9zD
-	IDsPTYVrYFvU/iVek6Pp2mhuQrvad6wVx1yzeU2eVR+8+yXpht7vyYofyuErEvdVS/4jJdSGhEp
-	PYzfXZphUai6V8Ocny3tErxaVQLleukS6OFcl5ty/GJYGteh4E+1GjWFT67bZWvwxJLY0TPJj2j
-	5QyECLouy2sy2zU/7G4XRV+1IRmkFXHin2zQyTFab4I6cIw/xzo0XkdSRV/47b5znhjCSvRI7WR
-	wAmzdsbBzLEqhSpUxbvne6rv2SAdV22A4JTZegVp7GyaVFZ8ll+w+L4crgCKNEKzd6Jp6agOetg
-	RaAmfyZOXh+o5x7PEtMaGIbdeXxKjnE0Bqfsirh9fZ82U5UTORd5lrIZ5oCq27/c/+NX3Hu5mEN
-	fHOxzSbx77avrroc2K4hBQ0bdHp7DoC9vVMkr5S4oxizq9qFKwzKuBz2ysvYDHeSUCYyQgTWcWK
-	4qw==
-X-Received: by 2002:a05:600c:4713:b0:49e:6838:c813 with SMTP id 5b1f17b1804b1-49e6cc102ddmr12126115e9.33.1789194485973;
-        Fri, 11 Sep 2026 23:28:05 -0700 (PDT)
-Received: from localhost.localdomain (dynamic-2a02-3100-b260-f201-9983-e8c4-aff5-7a36.310.pool.telefonica.de. [2a02:3100:b260:f201:9983:e8c4:aff5:7a36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49e6af095d7sm45068765e9.0.2026.09.11.23.28.05
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 11 Sep 2026 23:28:05 -0700 (PDT)
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Hannes Reinecke <hare@suse.de>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	dkim=pass (1024-bit key) header.d=tju.edu.cn header.i=@tju.edu.cn header.b="liQu4yD7"
+Received: from tju.edu.cn (gy-adaptive-ssl-proxy-1-entmail-virt204.gy.ntes [183.242.150.9])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4d8263c19;
+	Sat, 12 Sep 2026 15:47:54 +0800 (GMT+08:00)
+From: Yibo Tan <lhfff@tju.edu.cn>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
-Cc: Karl Mehltretter <kmehltretter@gmail.com>,
-	Chris Leech <cleech@redhat.com>,
-	Robert Love <robert.w.love@intel.com>,
+Cc: Wenchao Hao <haowenchao2@huawei.com>,
+	Douglas Gilbert <dgilbert@interlog.com>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: fcoe: Fix the return value in fcoe_interface_create() kernel-doc
-Date: Sat, 12 Sep 2026 08:28:03 +0200
-Message-Id: <20260912062803.42969-1-kmehltretter@gmail.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH v1] scsi: scsi_debug: Drain RCU callbacks before module exit
+Date: Sat, 12 Sep 2026 15:47:37 +0800
+Message-Id: <20260912074737.972055-1-lhfff@tju.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -79,33 +36,62 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa0949650ab03a1kunmba0e1024207ae7
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCTRpJVkMfSh4ZSkhDHxgdSVYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlKQ0hVSU9JVUpOS1VCWVdZFhoPEhUdFFlBWU9LSFVKS0lPT0
+	9LVUpLS1VLWQY+
+DKIM-Signature: a=rsa-sha256;
+	b=liQu4yD7kKD/BFGg0wmr9vOjOc7ARkgsxlP+Wws7kR9jUtqNpqO5hDsXwpSMwDVYKRnKc2ywJkOMBlOXCACq11dARzu+lfBIATh4HKCW07/KbEkwTEsVHpaKPD4ZYXTKGLu8/mB1vWe2PARouBr5GYnx8/vpyFlVOjc1AsYYHVU=; c=relaxed/relaxed; s=default; d=tju.edu.cn; v=1;
+	bh=0HcXmb4vP4kcSsXp8HlCncD4DDQeBwH68MBh/XEiDwc=;
+	h=date:mime-version:subject:message-id:from;
 
-fcoe_interface_create() returns an ERR_PTR() on failure, but its
-kernel-doc still promises NULL on error. Its error paths switched to
-error pointers when FCoE module references were added for vports.
+Replacing or removing a debugfs error-injection rule queues
+sdebug_err_free() through call_rcu(). Device teardown also queues this
+callback for every remaining rule. The callback resides in scsi_debug
+module text, but scsi_debug_exit() does not wait for queued callbacks
+before returning.
 
-Update the return documentation to match the implementation.
+With lazy, offloaded RCU callbacks enabled, two runs replaced the same
+error-injection rule 16 times and successfully unloaded scsi_debug.
+Eleven seconds later rcuop/0 executed at the former module text base plus
+0x1f0, the exact ELF offset of sdebug_err_free(), and hit the module
+unload poison.
 
-Fixes: 7287fb911409 ("[SCSI] fcoe: Fix module reference count for vports")
-Assisted-by: LLM
-Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
+Call rcu_barrier() after teardown has stopped future callback submissions
+so that all queued callbacks finish before the module text is released.
+Two runs with the fix completed the 30-second post-unload observation
+without an Oops, KASAN report, warning or panic.
+
+The tested scsi_debug.c is byte-identical to the file in current mainline
+and the current SCSI for-next branch.
+
+A source reproducer, kernel configuration, complete serial logs and the
+vulnerable/fixed result table are available at:
+
+https://github.com/kimaiden1984-boop/linux-kernel-poc-collections/tree/main/cases/scsi-debug-rcu-callback-after-unload
+
+Fixes: a9996d722b11 ("scsi: scsi_debug: Add interface to manage error injection for a single device")
+Cc: stable@vger.kernel.org
+Assisted-by: Codex:GPT-5
+Signed-off-by: Yibo Tan <lhfff@tju.edu.cn>
 ---
- drivers/scsi/fcoe/fcoe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_debug.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 438ac7c3a9e3fd548a42779c4d753320ec79a854..2c86d8a06e410c99e02f5c7f2ab96a908dda199a 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -375,7 +375,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
-  * @netdev: The net device to create the FCoE interface on
-  * @fip_mode: The mode to use for FIP
-  *
-- * Returns: pointer to a struct fcoe_interface or NULL on error
-+ * Returns: pointer to a struct fcoe_interface or an ERR_PTR() on error
-  */
- static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
- 						    enum fip_mode fip_mode)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 3346562275f8..2fdb1cbe470b 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -8676,6 +8676,7 @@ static void __exit scsi_debug_exit(void)
+ 	sdebug_erase_all_stores(false);
+ 	xa_destroy(per_store_ap);
+ 	debugfs_remove(sdebug_debugfs_root);
++	rcu_barrier();
+ }
+ 
+ device_initcall(scsi_debug_init);
 -- 
-2.39.5 (Apple Git-154)
+2.39.5
 
