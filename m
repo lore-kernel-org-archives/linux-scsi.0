@@ -1,263 +1,157 @@
-Received: from mail-wr2-f12.google.com (mail-wr2-f12.google.com [74.125.225.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E58F42E1EFC
-	for <linux-scsi@vger.kernel.org>; Sun, 13 Sep 2026 13:21:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2A43EF0AA;
+	Sun, 13 Sep 2026 13:44:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789305682; cv=none; b=hnQV37lsVOqouiqVCIak/2XXmV+Xz5U0/ZHBkLLdCiI/1eehDNgOMrZqQuQ+HRhtA2TrkzHiOxfKTdGY872/blJegRpNQxbslQSoWu0WZa7reiKmwKktJS0eIPCbWyfJmEtWZOuvRiJAxtuc0/p/rP2d8Cw2PTtZKllpXtfuiZ8=
+	t=1789307086; cv=none; b=WQ+ju4xY/LWQ1oauEzxdbwtxy8bEBm7w103DibE+m2+B6hznjTZ8QUYyFYWyYycjZPuMkFFv/1GJ/fGSKgw5G4+BINXvQx4K2ow7jwRW9ZdJuPLvmOIJSNtUsXlezD2qmwFQFheZWqmb73z9uaXBH5lXac1mJ0rdByBp6eDDotI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789305682; c=relaxed/simple;
-	bh=Phi07PPMJdWHszbQDLkmYpvn2FXNZIvtH//ocNjPnZ8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=byuIdQMgKpEkp9DkL6FH1IwmBsJb+Sg+lEnRcc+6UTHWWZe49s131qNv62ZmRdamlnp6YReCicDha2DMoHoyVS9Vx7dRZu04qwWM0BAZOWd52ztJ0OPsahOcvs3510c0inriHyEIV1y0JPibs+LVbuIC/JYYvThOQD9j7S15t+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=HcrsK/JJ; arc=none smtp.client-ip=74.125.225.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
+	s=arc-20240116; t=1789307086; c=relaxed/simple;
+	bh=i2WGeqQH68Q4Ba86qdnwpKbZXbPbJYs0hfODq/KlDsU=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=Iggc+jpt35L5zEIhfzW3lZH4/EaI24FJSKgbYZKP8B3YGZIyGVXy7j23/Cgpnt35BnFAxsM21HlxJlmLU5u5OKlDz+ggmk+XTQF13sFRSTUw3WtO/jOlR+t6rn02TpWSvsN+jVdQeUdM2ydd+l6Vh6WxCTTYZsPnHhNZJzDeE90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OwtMfMHk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="HcrsK/JJ"
-Received: by mail-wr2-f12.google.com with SMTP id ffacd0b85a97d-482f6350f88so538376f8f.2
-        for <linux-scsi@vger.kernel.org>; Sun, 13 Sep 2026 06:21:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20251104; t=1789305678; x=1789910478; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from:references
-         :cc:to:content-language:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ilAntqs10N3cuZV3xb1rPgVYySTl8brlVvPmSH3oaLw=;
-        b=HcrsK/JJlOy+3d1BfEmJ/3QAuwI8070Hd64Rp8suFgB9uL00RBG+gGgHPElhsIbjli
-         F2qCbf/vAMj2qW5HwCgbpGrKd7iNPpPgFIyqRCjYrH05zB0rtYZq7FmHC4sNr5YUBkEe
-         vGkpP+Q00K9UZN5G7ql+6gI7V4XrxPfOmTugvk5TF+hzh06L27/aYHTAkBrX2WOcYZzL
-         4cNf686+LyzvvpzJ9yGmAf2A5z1oaMogo+zP7KQiWn3/s+ZI3VmV6k+H51YQPzNkYeer
-         iHFgXgfYVpTs7YJ655mHXeih0khG7n3JGGaiOHYOX0pgC8PxKnwwxMUsDfq2HZqoYz4o
-         tf+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789305678; x=1789910478;
-        h=content-transfer-encoding:content-type:in-reply-to:from:references
-         :cc:to:content-language:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ilAntqs10N3cuZV3xb1rPgVYySTl8brlVvPmSH3oaLw=;
-        b=LWBAYlm6hPKp8U5CevYtYJOO9oO/V5HHZn8f7qmQ9OwbqBPcCBTR7gWNM15/onvQ+4
-         lta8vx24jeWW22lnO1+pyaWMdXNA3+ZqT077XmFLk3iztzjgzoHic3V0+ase9AeHUfz4
-         WHrxuq/UKLLl87fpYFGpl/iqwPHzYVyxzxaaTq5dq5OuM/M9lzIU0gtoWNP7hgYf6cDW
-         zBn1tfZuDzjrixhkNtP2eZi8CQB6ZuGtdXOOkfJz7e2i9O4K92kg2w2Rxv2r+/Ya3H0E
-         8ZqlA6+mX+/p9HC30Zl4r6O5qVSzestcWBbX3brky2OKFZ02KUGpyI/jCfSnwm3wjhuD
-         uhsA==
-X-Forwarded-Encrypted: i=1; AKwUvBxxvPYqKphVB5vKFvfYk/z7EPxoZCW0MHueOdkL1YTxW3fiZRHsvcX+bPIJcdVA2RLQRbqCGANQ23Ox@vger.kernel.org
-X-Gm-Message-State: AFuF++n3o9hpnNftte03FTef/QDnjg9xso0+ib64BYSHc4h+IYjbZdAL
-	r6K9BzuLmyd2sJkajTg5SHfTAr75c2egiz3pLbVTWkJT5ITqHlWdg1o=
-X-Gm-Gg: AYBFou0dj7LG9O62ACz3tAprHTD7RHD7m/nVrogwMhV6lOrKdn9ajVTNBl7q9ffX5Oi
-	wuj4xGFVrXnfGjUC3vKnDG/Ch3Xo8yGlgH6TRrE0q2C7vrgS/x5H0OYq2TapnpG67JPJDdNq5Dg
-	VTjCxSys7qo9nYWbPMF4XM5HvYR+yV5E602+DKi+HvUoox4OGDCLvgPQtcVkP0MQcy4KMn+0mi+
-	c8arIaR2gTiwlw67gCSntwWn+GDT1ORHqN0EfClNJbS1PW1OV08uAOfyBbbJznRn9wycWXtyeuj
-	J7ziBVeeS3+HDxLqjTlhLpQcx0DON6rAUtmBMWASXiL7NrragwthNl8AzkLgdDaoVSqwVEnSuuL
-	eqQ0vrrmKRbiABFsgMuu/bH4N5Ya9/B/SooXYtpOtCIzWCKdtBduWXh7R4u11czHUtZkH6HpDqM
-	WFAHXdKFQiPljhIV9Rt1GqCjNW2vcFPBpWblZxPBW+dRk6ON/R6rVxz8HGi1rUEnbLyodqh7djy
-	XjYv08abHe12qhzBm7ts5XzNTRI408SgWLMmeVs7k6wvkTE
-X-Received: by 2002:a05:6000:2902:b0:486:f620:63bd with SMTP id ffacd0b85a97d-486f6a7d6d1mr6273755f8f.0.1789305677847;
-        Sun, 13 Sep 2026 06:21:17 -0700 (PDT)
-Received: from [192.168.1.3] (p5b2b4716.dip0.t-ipconnect.de. [91.43.71.22])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-486eb32d5f1sm20960810f8f.12.2026.09.13.06.21.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 13 Sep 2026 06:21:17 -0700 (PDT)
-Message-ID: <e6152171-5c2c-4243-8b64-0a619a0f44e3@googlemail.com>
-Date: Sun, 13 Sep 2026 15:21:16 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OwtMfMHk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BEEE1F000FF;
+	Sun, 13 Sep 2026 13:44:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789307084;
+	bh=i2WGeqQH68Q4Ba86qdnwpKbZXbPbJYs0hfODq/KlDsU=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date;
+	b=OwtMfMHkaeK8fzy6kMxd7McWxngHxwVyMbJomdrceij5d7CFaOoym9OYvBpu7+KIi
+	 gLA8FFrqhysldQgBcT5sSM6xGSbTsRl5cMjn7VyUGF4AAtlVvYco+L4NY8NQ8QrkFT
+	 TbR2/EBwb9nD+iJYpY5r1fylzLNPjw07Z7yolLH+np68kttOQhls7MwpInQ9VF31W0
+	 NO4n7gkhel3KMjmafMADvEwjHcHuEIgzHd07/LzVBRdvOKZaLQ14PcqZi16BnXNPgn
+	 PpnXSpTg++v5IXhJFafKPDfRM2q8mv/iJ0Jh7W3q5UeaDlibUwtgZwwn7dcis6zPw8
+	 yFCESRSN+1xHg==
+From: Andreas Hindborg <a.hindborg@kernel.org>
+To: Bean Huo <huobean@gmail.com>, Greg KH <gregkh@linuxfoundation.org>,
+ jaemyung.lee@samsung.com
+Cc: Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo
+ <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno
+ Lossin <lossin@kernel.org>, Alice
+ Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, Danilo
+ Krummrich <dakr@kernel.org>, Daniel Almeida <daniel.almeida@collabora.com>,
+ Tamir Duberstein <tamird@kernel.org>, Alexandre Courbot
+ <acourbot@nvidia.com>, Onur =?utf-8?Q?=C3=96zkan?= <work@onurozkan.dev>,
+ linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH RFC] drivers/rufs: add Rust UFS host controller driver
+In-Reply-To: <182679ae5437916095a4b04187e350c80235c088.camel@gmail.com>
+References: <20260912-rufs-private-v1-1-716db733e655@samsung.com>
+ <YKq4TcQM0v2dXF4wTHEvZKwASII6PDd_R7_UiHWe3NRnR4JsrC_ZS-x6jA_Kl7P6ONehU0REHYk7WaLz8Xv5gA==@protonmail.internalid>
+ <2026091124-treason-trickily-bc52@gregkh> <87mrtmvioe.fsf@kernel.org>
+ <raUHMVWl_mMP5ffB5hk9eDe5BVvmO01q_9zfZ4NqJ3CymLnRO3EL0_X_K044vKerqwrwXshEVE-o45MXSlGVbw==@protonmail.internalid>
+ <182679ae5437916095a4b04187e350c80235c088.camel@gmail.com>
+Date: Sun, 13 Sep 2026 15:44:26 +0200
+Message-ID: <87zexltged.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Windows)
-Subject: Re: [PATCH 6.12 0977/1376] scsi: core: sysfs: Make use of bus
- callbacks
-Content-Language: de-DE
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org
-Cc: patches@lists.linux.dev, =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?=
- <u.kleine-koenig@baylibre.com>, Peter Wang <peter.wang@mediatek.com>,
- Bart Van Assche <bvanassche@acm.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Sasha Levin <sashal@kernel.org>, Wentao Guan <guanwentao@uniontech.com>,
- linux-scsi@vger.kernel.org
-References: <20260912065607.535295758@linuxfoundation.org>
- <20260912065629.342165847@linuxfoundation.org>
-From: Peter Schneider <pschneider1968@googlemail.com>
-In-Reply-To: <20260912065629.342165847@linuxfoundation.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-Am 12.09.2026 um 08:56 schrieb Greg Kroah-Hartman:
-> 6.12-stable review patch.  If anyone has any objections, please let me know.
-> 
-> ------------------
-> 
-> From: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
-> 
-> [ Upstream commit f7d4f1bf5724e52de049c619beddd53c62206624 ]
-> 
-> Introduce a bus-specific probe, remove and shutdown function. For now
-> this only allows to get rid of a cast of the generic device to a SCSI
-> device in the drivers and changes the remove prototype to return
-> void---a non-zero return value is ignored anyhow.
-> 
-> The objective is to get rid of users of struct device_driver callbacks
-> .probe(), .remove() and .shutdown() to eventually remove these. Until
-> all SCSI drivers are converted, this results in a runtime warning about
-> the drivers needing an update because there is a bus probe function and
-> a driver probe function. The in-tree drivers are fixed by the following
-> commits.
-> 
-> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
-> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> Link: https://patch.msgid.link/a54e363a3fd2054fb924afd7df44bca7f444b5f1.1766133330.git.u.kleine-koenig@baylibre.com
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Stable-dep-of: bb31844d88b7 ("scsi: sd: Fix special_vec mempool leak when scsi_alloc_sgtables() fails")
-> Signed-off-by: Sasha Levin <sashal@kernel.org>
-> ---
->   drivers/scsi/scsi_sysfs.c  | 73 ++++++++++++++++++++++++++++++++++++--
->   include/scsi/scsi_driver.h |  3 ++
->   2 files changed, 74 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 7f69f0613c08c..0b29cbcbd7e1f 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -554,10 +554,48 @@ static int scsi_bus_uevent(const struct device *dev, struct kobj_uevent_env *env
->   	return 0;
->   }
->   
-> +static int scsi_bus_probe(struct device *dev)
-> +{
-> +	struct scsi_device *sdp = to_scsi_device(dev);
-> +	struct scsi_driver *drv = to_scsi_driver(dev->driver);
-> +
-> +	if (drv->probe)
-> +		return drv->probe(sdp);
-> +	else
-> +		return 0;
-> +}
-> +
-> +static void scsi_bus_remove(struct device *dev)
-> +{
-> +	struct scsi_device *sdp = to_scsi_device(dev);
-> +	struct scsi_driver *drv = to_scsi_driver(dev->driver);
-> +
-> +	if (drv->remove)
-> +		drv->remove(sdp);
-> +}
-> +
-> +static void scsi_bus_shutdown(struct device *dev)
-> +{
-> +	struct scsi_device *sdp = to_scsi_device(dev);
-> +	struct scsi_driver *drv;
-> +
-> +	if (!dev->driver)
-> +		return;
-> +
-> +	drv = to_scsi_driver(dev->driver);
-> +
-> +	if (drv->shutdown)
-> +		drv->shutdown(sdp);
-> +}
-> +
-> +
->   const struct bus_type scsi_bus_type = {
-> -        .name		= "scsi",
-> -        .match		= scsi_bus_match,
-> +	.name		= "scsi",
-> +	.match		= scsi_bus_match,
->   	.uevent		= scsi_bus_uevent,
-> +	.probe		= scsi_bus_probe,
-> +	.remove		= scsi_bus_remove,
-> +	.shutdown	= scsi_bus_shutdown,
->   #ifdef CONFIG_PM
->   	.pm		= &scsi_bus_pm_ops,
->   #endif
-> @@ -1609,6 +1647,30 @@ void scsi_remove_target(struct device *dev)
->   }
->   EXPORT_SYMBOL(scsi_remove_target);
->   
-> +static int scsi_legacy_probe(struct scsi_device *sdp)
-> +{
-> +	struct device *dev = &sdp->sdev_gendev;
-> +	struct device_driver *driver = dev->driver;
-> +
-> +	return driver->probe(dev);
-> +}
-> +
-> +static void scsi_legacy_remove(struct scsi_device *sdp)
-> +{
-> +	struct device *dev = &sdp->sdev_gendev;
-> +	struct device_driver *driver = dev->driver;
-> +
-> +	driver->remove(dev);
-> +}
-> +
-> +static void scsi_legacy_shutdown(struct scsi_device *sdp)
-> +{
-> +	struct device *dev = &sdp->sdev_gendev;
-> +	struct device_driver *driver = dev->driver;
-> +
-> +	driver->shutdown(dev);
-> +}
-> +
->   int __scsi_register_driver(struct scsi_driver *sdrv, struct module *owner)
->   {
->   	struct device_driver *drv = &sdrv->gendrv;
-> @@ -1616,6 +1678,13 @@ int __scsi_register_driver(struct scsi_driver *sdrv, struct module *owner)
->   	drv->bus = &scsi_bus_type;
->   	drv->owner = owner;
->   
-> +	if (!sdrv->probe && drv->probe)
-> +		sdrv->probe = scsi_legacy_probe;
-> +	if (!sdrv->remove && drv->remove)
-> +		sdrv->remove = scsi_legacy_remove;
-> +	if (!sdrv->shutdown && drv->shutdown)
-> +		sdrv->shutdown = scsi_legacy_shutdown;
-> +
->   	return driver_register(drv);
->   }
->   EXPORT_SYMBOL(__scsi_register_driver);
-> diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
-> index 40aba9a9349a6..249cea724abd1 100644
-> --- a/include/scsi/scsi_driver.h
-> +++ b/include/scsi/scsi_driver.h
-> @@ -12,6 +12,9 @@ struct request;
->   struct scsi_driver {
->   	struct device_driver	gendrv;
->   
-> +	int (*probe)(struct scsi_device *);
-> +	void (*remove)(struct scsi_device *);
-> +	void (*shutdown)(struct scsi_device *);
->   	int (*resume)(struct device *);
->   	void (*rescan)(struct device *);
->   	blk_status_t (*init_command)(struct scsi_cmnd *);
+"Bean Huo" <huobean@gmail.com> writes:
 
+> On Sat, 2026-09-12 at 13:00 +0200, Andreas Hindborg wrote:
+>> "Greg KH" <gregkh@linuxfoundation.org> writes:
+>>
+>> > On Sat, Sep 12, 2026 at 12:52:55AM +0900, Jaemyung Lee via B4 Relay wrote:
+>> > > Comments on the decision to bypass the SCSI midlayer, the blk-mq model
+>> > > used
+>> > > in its place, and the proposed prerequisite API boundaries would be
+>> > > especially welcome.
+>> >
+>> > Many many years ago, the USB subsystem tried to bypass the SCSI midlayer
+>> > for its storage driver, and while it was a "quick solution" at the time,
+>> > in the end, it didn't work out and we dropped the driver as it just made
+>> > no sense to keep duplicating all of the logic all the time.
+>> >
+>> > So I wouldn't recommend it, as long as UFS builds on top of the SCSI
+>> > commands and the like, you should not attempt to duplicate it in a
+>> > separate driver, no matter how much "simpler" it initially seems to be.
+>>
+>> The scsi related code in this driver is less than 300 lines and is
+>> mostly struct packing/unpacking. I guess we could lift the struct
+>> definitions from the scsi layer via bindgen. But at 280 lines I am not
+>> sure it is worth it, and it hardly counts as duplication.
+>
+> I agree the SCSI code in this RFC is small today. But I think it is small
+> because the hard parts are not ready in your RFC yet, not because UFS does not
+> need them.
+>
+> The SCSI logic is also not only in protocol/scsi.rs. upiu.rs decodes SAM status,
+> and queue.rs parses sense data and decides retries.
 
-As Wentao Guan pointed out, this is the patch that caused the dmesg warnings I encountered in boot-testing 6.12.110-rc1 
-and 6.18.52-rc1 on my machine:
+Yes, you are right. But it is still very minimal bits of logic. I
+definitely want to encapsulate all SCSI logic in a single place now, so
+it is more clear.
 
-[    2.397237] Driver 'sr' needs updating - please use bus_type methods
-...
-[   84.031323] Driver 'ses' needs updating - please use bus_type methods
+> And some things are already
+> missing because the driver does not use sd and the SCSI error handling:
+>
+> 1, VPD block limits are not read, and a discard of 4 GiB or more fails with
+> EOVERFLOW
+> 2, the cache mode page is not read, so FLUSH/FUA are likely never sent
+> 3, the residual count is ignored, so a short transfer completes as success
+> 4, UNIT ATTENTION and BUSY are requeued without a limit
+> 5, LUs are found by 0..bNumberLU, not REPORT LUNS, so sparse LUs are missed
+> 6, no START STOP UNIT at shutdown
+>
+> Each of these needs more SCSI code in your RUFS. For comparison, sd.c,
+> scsi_error.c, scsi_lib.c and scsi_scan.c are about 15000+ lines today, and
+> ufshcd uses all of them. Once RUFS has error handling, power management, RPMB
+> and SG_IO, I expect the SCSI part will be large, and it will be a second copy of
+> code we already have and maintain.
 
-Is this really stable material? I feel that a new stable release should not trigger new warning messages. Feels like a 
-regression, even if it does no harm... No?!
+I cannot counter this argument without proof of existence. But I don't think
+we will be anywhere near 15k lines extra to add these features.
 
-Or are there some driver patches missing that still need proper backports?
+> I suggest you samsung first works in JEDEC, together with the other UFS vendors
+> and host controller vendors, to remove scsi from the UFS spec as the application
+> layer.
 
-CC'ing linux-scsi list, too.
+I appreciate the input.
 
-Beste Grüße,
-Peter Schneider
+> As long as scsi is the UFS application layer, every UFS device must still
+> uses scsi, decode scsi in FW, and RUFS must still send SCSI commands and handle
+> SCSI status and sense data, as it does today. Moving this SCSI work out of the
+> SCSI midlayer and into a new driver does not make the whole ecosystem simpler.
 
--- 
-Climb the mountain not to plant your flag, but to embrace the challenge,
-enjoy the air and behold the view. Climb it so you can see the world,
-not so the world can see you.                    -- David McCullough Jr.
+It may not make the ecosystem simpler at first, but I do believe it will
+make the driver more simple.
 
-OpenPGP:  0xA3828BD796CCE11A8CADE8866E3A92C92C3FF244
-Download: https://www.peters-netzplatz.de/download/pschneider1968_pub.asc
-https://keys.mailvelope.com/pks/lookup?op=get&search=pschneider1968@googlemail.com
-https://keys.mailvelope.com/pks/lookup?op=get&search=pschneider1968@gmail.com
+> It only means the same SCSI work is done in two places, and it can even make
+> things worse.
+
+It's a very small part though, so it should be fairly easy to manage. I
+do acknowledge that our RFC driver has bits sprinkled about, and that
+making it feature complete will make these bits grow. I don't think it
+will grow as much as you hint at.
+
+> If the spec changes, then a new driver built on native UFS commands would make
+> much more sense. That is the first thing to do, not just post an RFC
+> patch.
+
+We did send this patch with the intention of starting this exact
+conversation, so there is that. I appreciate your input that you would
+prefer the conversation to be started in a different channel.
+
+> I
+> could send a Rust based UFS driver as well with AI assist, but that does not
+> make it sensible to change the base of our current UFS ecosystem.
+
+I am not sure what to read from this. I want to make it very clear that
+this patch is not some kind of vibe coded pile of AI slop. I'd love to
+discuss responsible and efficient use of LLMs for kernel work, but this
+thread is not the place for that conversation.
+
+Best regards,
+Andreas Hindborg
+
