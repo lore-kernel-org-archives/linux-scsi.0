@@ -1,124 +1,196 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A3633E2AD1;
-	Sun, 13 Sep 2026 13:11:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC33426ED41
+	for <linux-scsi@vger.kernel.org>; Sun, 13 Sep 2026 13:19:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789305068; cv=none; b=P+Uz7r5LdWdVX+IC6b50gJ52J/6EBNmTOz+CKiDe4gnZs9mIJCCg7b4sg1vv5rMksZb1Qi3zYCPw1k3S5ycXSsmxghA9x9lRynmdtcDR1ZHih1akuC58MZCfAtOBGbmf0iGiYWHdQnUypPR/oQ+Nf6S5FHdnEi69WbIaB5RlzQ4=
+	t=1789305597; cv=none; b=Fn2mQHqkhMdMDuMsZ+mskwyTeDEscT00iUZMsoFYR7jWpUaxR688Aw86HzgRSDX8b/S/igSJNJhhU4O0I5cvy+Rg3yPVrG5vu6LJ1/l9pQxbjF9UgfKNJPCiJ5vvkSGvaTfKZqRB2Trdf42gT/7wNjFcrCehYXBl0lrNtKiTM78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789305068; c=relaxed/simple;
-	bh=7LqoacasArToHW8EBZ+BbyUhaJRWJbi5UTgqUiX4QmU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=V/PawHcwWVWUSSP38+dWgQ7c8E7/y6eTtnzbC4bDdJlFaLiDQHygachdzy+SXlSUplyF4Ecg2rY699340roD5o7MDw3sBVssjKfpcZaEXotzZp04X6WaRryFLuhaVpOmK+ceYd9H4VB5OUVrlOKjdJu6gPn0G1HUp+mODNrSKaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K4WbhqY4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789305597; c=relaxed/simple;
+	bh=ZzJNHGyZkBkgGT6BMd5dolbZNA9Mx2RsGVL6sX7AbSA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=R5pa1djMN9GvO5Drmjsuys1nwXto+UX4YHKHNYWwhRsuwtfF6x2Vu8KZLHZTuN9jlIWEIVTJYMXrnNHa3QsVZklIlMEdS9rKsg2tDtHT9jbMLX3/MU66nhvEvSl1M0SGDy4LlfSolsy/5jS+R0DmQvYdYPWUn+j7V6fqNMxfwxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X0kWsoKK; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K4WbhqY4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0017A1F000FF;
-	Sun, 13 Sep 2026 13:11:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X0kWsoKK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D7241F000FF;
+	Sun, 13 Sep 2026 13:19:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789305066;
-	bh=FoXI7tUIwvAH0hgDQPDMq5KaxZw7gRoW9bqX5f5mb4w=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=K4WbhqY4/88Fn5sp1tjdFDjgPvDVnpiy3ybEMmYc9v5ByVwyK148jgeViEVG9Ns2V
-	 KawgqvZUc5vwlRAQcWRTeS9jcfpPnxXdo25HL31ZGjuDEMsFTyZvKQpSbqrw2bxkbf
-	 DN55P/K1YsKumYKDCap057M/eAXPgjXRoTejUUSrFcjFcM/6HGDTfW4GO6avW/Lzcc
-	 3rw19IjHPtOkUD9hVHPb19pHPRERGJmTpDhmrLu/q3oj/b0TPlrZu1d0D5G/ng9WEj
-	 I3n5N8+c4EqL8J9AYNgF2n/XhREIuVA4juB2Yk7yYUs+lOfwHBEDZ/k1Zy6JgVNLnF
-	 FAw2iSqe9uZrA==
-From: Andreas Hindborg <a.hindborg@kernel.org>
-To: Bean Huo <beanhuo@iokpp.de>, jaemyung.lee@samsung.com, Miguel Ojeda
- <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, Gary Guo
- <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6rn?= Roy Baron
- <bjorn3_gh@protonmail.com>, Benno
- Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>, Trevor
- Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, Daniel
- Almeida <daniel.almeida@collabora.com>, Tamir
- Duberstein <tamird@kernel.org>, Alexandre Courbot <acourbot@nvidia.com>,
- Onur =?utf-8?Q?=C3=96zkan?= <work@onurozkan.dev>
-Cc: linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
- linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH RFC] drivers/rufs: add Rust UFS host controller driver
-In-Reply-To: <01d56517261d397f5e17101f03554f91529e23f0.camel@iokpp.de>
-References: <20260912-rufs-private-v1-1-716db733e655@samsung.com>
- <8mLXEMDMxh8mZQqVywUYUeOiZPZIPmrVGRlOkDbHptW0NEJeszKVpff5h39MjUvD5yyivwY3Z7kCXIH5VlGoiw==@protonmail.internalid>
- <4c38f13af8f75020fefc35827463e9bc643b99f4.camel@iokpp.de>
- <87jyoqvhpm.fsf@kernel.org>
- <01d56517261d397f5e17101f03554f91529e23f0.camel@iokpp.de>
-Date: Sun, 13 Sep 2026 15:10:56 +0200
-Message-ID: <8733vduwin.fsf@kernel.org>
+	s=k20260515; t=1789305596;
+	bh=estTVy51L1KfvbdqgaFUwr0lSMKYxGSow3bCgT05yEQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=X0kWsoKKIHOWi6xggFIkDspwQddCAQ/AfWhrU0zsQsvxEN5YOTrpotx/MZbEYZfHm
+	 EM8ShvvNDM2jZCOJ5Flv0o8JV+FQG6sNoWcVJQdzF7RQC5P9BUNJZdZGL4hbbK0kHs
+	 9aZsdE4AC6Lwn4ssqDoEeWxrUiZS1q7af5fz+2SxYVB2dq+rt9TaFvC3XDBnB6Vk+r
+	 6HhBqy7+CZ8aoNugW/r1l/WGV13lGAm/aWERnuPFFpirGfu5ytBJdwbQBR+z0g5SIk
+	 AWB8feaqeRNmBAU5+L9EMEyJWGhE9oioWSNQpMAUOV4kY5hcxkEhEAgQu4RGgnipby
+	 ZZxWpne0uQxQg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: rdac: preserve controller allocation errors
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Slavin Liu" <bolin.liu@seu.edu.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260913125138.109871-1-bolin.liu@seu.edu.cn>
+References: <20260913125138.109871-1-bolin.liu@seu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 13 Sep 2026 13:19:55 +0000
+Message-Id: <20260913131956.5D7241F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
 
-Bean Huo <beanhuo@iokpp.de> writes:
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-> On Sat, 2026-09-12 at 13:20 +0200, Andreas Hindborg wrote:
+Pre-existing issues:
+- [High] Missing list removal and RCU synchronization in the error path of =
+`rdac_bus_attach()` leaves a dangling pointer in an RCU-protected list, lea=
+ding to a Use-After-Free.
+- [High] A TOCTOU race condition in `rdac_bus_detach()` locklessly checks `=
+ms_queued` and skips flushing the workqueue, leading to a use-after-free of=
+ both `h` and `h->ctlr` by the executing worker.
+- [High] Trusting an unvalidated device-provided length `array_uniq_id_len`=
+ causes a stack buffer overflow.
+--
 
-[cut]
+commit e14e62a313924b45dff06969688b649c337e4e48
+Author: Slavin Liu <bolin.liu@seu.edu.cn>
+Subject: scsi: rdac: preserve controller allocation errors
 
->
->> > I would also like to see the heavy and hard parts, because they are the
->> > parts
->> > that decide if this design worrks:
->> > 
->> > 1, error handling: abort, LU reset, retries with limits, sense decoding,
->> > this is
->> > the very hard part of UFS driver.
->> 
->> I agree. However, we decided to get the discussion going with a smaller
->> feature set. We can build an efficient feature complete driver, but we
->> would really like to talk to the community about it first.
->> 
->
-> I understand you want to start small. But error handling is not only a missing
-> feature. It decides the design. Things like getting a free tag for a device
-> command while I/O is stuck, abort, LU reset, and what happens when recovery
-> fails, are the parts the SCSI midlayer gives us today. In this RFC, when
-> recovery fails the queue stays quiesced and I/O hangs forever. So I would like
-> to see at least a design for this before we discuss the rest.
+This commit fixes an issue in initialize_controller() where an allocation
+failure was being overwritten with SCSI_DH_OK. It updates the logic to only
+set success after obtaining and linking the controller, ensuring the caller
+doesn't proceed with a NULL controller.
 
-I understand. I'd love to help flesh out the current draft if people are
-interested in seeing the result upstream. Maybe as an experimental
-driver for a while.
+> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/de=
+vice_handler/scsi_dh_rdac.c
+> index 88c8e36b221e2..ed02e1737bd79 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+> @@ -455,9 +455,9 @@ static int initialize_controller(struct scsi_device *=
+sdev,
+>  		else {
+>  			h->sdev =3D sdev;
+>  			list_add_rcu(&h->node, &h->ctlr->dh_list);
+> +			err =3D SCSI_DH_OK;
+>  		}
+>  		spin_unlock(&list_lock);
+> -		err =3D SCSI_DH_OK;
 
->
->> > 2, user-space tools interface: SG_IO and bsg (sg3_utils, ufs-utils, FFU with
->> > WRITE BUFFER), and the UFS sysfs tree..
->> 
->> On the account of this not being a scsi driver, some changes would have
->> to be made. But we should be able support
->> /sys/bus/platform/drivers/ufshcd/* just fine.
->> 
->
-> the host attributes in sysfs are only a small part. The per-LU attributes are
-> documented under /sys/class/scsi_device//device/unit_descriptor/, and ufs-bsg is
-> named after the SCSI host number. More important, FFU with WRITE BUFFER, RPMB
-> with SECURITY PROTOCOL, and vendor tools all use SG_IO through  /dev/sg. These
-> are user-space interfaces people use in products today, so "some changes" here
-> means breaking them. How do you plan to keep them working? Also, the sysfs path
-> contains "ufshcd", while RUFS registers as "rufs".
+[Severity: High]
+This is a pre-existing issue, but looking at how this node is published to
+the RCU list in initialize_controller(), could this lead to a use-after-free
+in the error path?
 
-Right. I don't think we should build a ufshci driver outside the scsi
-midlayer and still provide (linux) scsi compatible interfaces for it. I
-understand that userland tools need to be updated, and that carries
-cost. I don't imagine enabling a standalone ufshci driver being an over
-night switch. If we go down this road, I would assume the legacy driver
-and a new driver would coexist for some time.
+If a subsequent step like check_ownership() fails during rdac_bus_attach() =
+in
+drivers/scsi/device_handler/scsi_dh_rdac.c, the clean_ctlr error path is
+taken:
 
-When that is said, I do think we can provide efficient user space
-interfaces that would require minimal code changes for user space
-tooling.
+rdac_bus_attach() {
+    ...
+	err =3D initialize_controller(sdev, h, array_name, array_id);
+	if (err !=3D SCSI_DH_OK)
+		goto failed;
 
-For instance, `ufs-bsg` is not really scsi related, it is just a
-pass-through interface to the ufs host controller. How you find it would
-be the primary change.
+	err =3D check_ownership(sdev, h);
+	if (err !=3D SCSI_DH_OK)
+		goto clean_ctlr;
+    ...
+clean_ctlr:
+	spin_lock(&list_lock);
+	kref_put(&h->ctlr->kref, release_controller);
+	spin_unlock(&list_lock);
 
-Best regards,
-Andreas Hindborg
+failed:
+	kfree(h);
+	return err;
+}
 
+The clean_ctlr path drops the controller reference and frees h, but it
+doesn't call list_del_rcu(&h->node) or synchronize_rcu(). If the controller
+is shared and stays alive, h->node remains in ctlr->dh_list after h is free=
+d,
+leaving a dangling pointer in an RCU-protected list.
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is there a stack buffer
+overflow when parsing the VPD page in get_lun_info() inside
+drivers/scsi/device_handler/scsi_dh_rdac.c?
+
+The array_id buffer is allocated on the stack in rdac_bus_attach() with a
+fixed length of 16 bytes (UNIQUE_ID_LEN):
+
+rdac_bus_attach() {
+    ...
+	char array_id[UNIQUE_ID_LEN];
+    ...
+	err =3D get_lun_info(sdev, h, array_name, array_id);
+    ...
+}
+
+In get_lun_info(), the copy length is taken directly from the unvalidated
+hardware response:
+
+get_lun_info() {
+    ...
+		memset(array_id, 0, UNIQUE_ID_LEN);
+		memcpy(array_id, inqp->array_unique_id, inqp->array_uniq_id_len);
+    ...
+}
+
+If a malfunctioning or malicious SCSI device returns an array_uniq_id_len
+greater than 16 (up to 255), won't this memcpy() write past the bounds of
+the fixed-size stack buffer?
+
+[Severity: High]
+This is a pre-existing issue, but does rdac_bus_detach() in
+drivers/scsi/device_handler/scsi_dh_rdac.c have a race condition with
+send_mode_select() that could result in memory corruption?
+
+When queue_mode_select() starts a mode select operation, send_mode_select()
+clears ms_queued before executing the long-running command:
+
+send_mode_select() {
+    ...
+	spin_lock(&ctlr->ms_lock);
+	list_splice_init(&ctlr->ms_head, &list);
+	ctlr->ms_queued =3D 0;
+	ctlr->ms_sdev =3D NULL;
+	spin_unlock(&ctlr->ms_lock);
+    ...
+	rc =3D scsi_execute_cmd(sdev, cdb, opf, &h->ctlr->mode_select, data_size,
+    ...
+}
+
+If a device is removed concurrently, rdac_bus_detach() checks ms_queued
+locklessly to decide whether it needs to flush the workqueue:
+
+rdac_bus_detach() {
+    ...
+	if (h->ctlr && h->ctlr->ms_queued)
+		flush_workqueue(kmpath_rdacd);
+    ...
+	list_del_rcu(&h->node);
+	kref_put(&h->ctlr->kref, release_controller);
+    ...
+	kfree(h);
+}
+
+If rdac_bus_detach() runs after ms_queued is set to 0 but before the SCSI
+command completes, it skips flush_workqueue() and proceeds to free both h a=
+nd
+the controller. Won't the executing worker thread then dereference the freed
+handler data and controller?
+
+>  	}
+>  	return err;
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260913125138.1098=
+71-1-bolin.liu@seu.edu.cn?part=3D1
