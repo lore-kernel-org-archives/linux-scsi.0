@@ -1,185 +1,138 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f174.google.com (mail-vk1-f174.google.com [209.85.221.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6CCA4718F4
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 14:06:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77F0E469850
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 14:12:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789394804; cv=none; b=kHGpP9A/25fAtIY4Q4g4HsFveFM2Bq2gK+/qEKs+CmGwVh7xfLH4hsVhuym0zTqzWMjcGsk0U4R7iF4c/sKEp9gwLSSKCZZfRBcOfHDkSwZn22LCaVDDG+y95uvO8t+ztg/h1SLuPHytjujzCdqWwSHghE9WpvQuycL6SP/oFgU=
+	t=1789395143; cv=none; b=GjOQ8gMkJVn2xBWHq3XVk37kFX7GHPo9nozUKA/Ou62F5IcWf+M4FwQFM2dx0HSdmqP/DHu2UZfxTmeDw4j9o43UGno53KpOTAKg+EnyE1TNsdXcvjBVVViqDKkP12962KLpT8aASkJVHykh97k9pep/kBo7hydpyo4AyyG5HRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789394804; c=relaxed/simple;
-	bh=M1jhzEngeUQmZn4epgWhZIt5mhVknLgHn2qil+s31Nw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K2KMW0fNpXG4cUTBzLZJN7T4XB1PA5ENdeDp38K/McN/dRxYEP+J1pYLbxRW4cTzPSnwjrFswwmM2AUFJJzmny4ZDPGVUVk3XdOiu0n4+LwBzZ9F6EeC1/DTHA/DF6hinI1L9+oWeVXlaKKT+74r+I9QG4kYUzZ+O0IYsddx4Oo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=eqIGYLXY; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=a9Jn3cCr; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="eqIGYLXY";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="a9Jn3cCr"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68ED0PqP674411
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 14:06:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=Gnji4ta6O43OZz9qRSk1IXl6
-	BaqNTU48rGVf9Qgbt2Q=; b=eqIGYLXYh1Nrbcio2AowZkZ9hL1O7bP2EEQyJ99k
-	Hm01vqRYf/BPLVbXrx+QJMlWOsKsRycWjiILJBeKLBbiamFDONALt1GJnzPwPUb/
-	EEek1Zjl9uU/W7FIvbHmhRS2S9so8eH8UwDlMV+vxpz8E55y9jn0cBKqvrNf43mJ
-	GSNOWnQ94bNjLsGqG8yAYQMk+/StYthr3vy1tiNqQy6B5k5D/8w/qwHY4tf7ryf9
-	Js40TADRP59yyOo6rCUV7cNALp73oTnky/mWCCcRBybjXKX+9IvfWR9Zm/nv2Eit
-	NAr19HPKiRzrvB1rog0SKpa7k8TZsUt5KmwEAl9F4pPqRA==
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gpecs9258-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 14:06:40 +0000 (GMT)
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93a1d44c437so171387285a.1
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 07:06:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1789394800; x=1789999600; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Gnji4ta6O43OZz9qRSk1IXl6BaqNTU48rGVf9Qgbt2Q=;
-        b=a9Jn3cCrkyeE071B4+IVnlmTIMAD+jmzmDf6upC2/NDy8tucPU8iDqD61sTbgI07Nm
-         WbguLt2Plt/hqUNRney99FjFhGjZFNQqzui2Gn8O+6vqWU6mLq7lWGVbg9BBsReT0uGT
-         b4tmMmPYIZcXjjlV7E2PravhOhulZvsEzSuK33kw0tPBGqADGvRZaFmmtt7F+LOg3VkE
-         CdCpVDNRaLM5kDx+k3n5qPJp1EJxNkG/vS9YH+wHSHSPEiW0g15zUDIJKn6reCWlE10c
-         3oBhdiXhmqFsxGh+c2djuz5+xKLN93R0AT1ncKwzegFkhUEzUXww52aCf7jUhIheOvC7
-         3xDw==
+	s=arc-20240116; t=1789395143; c=relaxed/simple;
+	bh=8ceMByd673naR3PwEiJsfobu32L4XCtKVcpdbpqYa5Q=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=IdHN5LevoKXL7A5oDL+OMX4TYDjqijQMo71AMS3QJ/gwJ4oIJoenQ3Guix4rSrHpncS8ySK4DrQtZMkWvSI79q0uwElfRQzz9HsA+pBi+z14cjenvICL0r1+vKK0I+V7S4YTUtHfhvRNDwX1OpnL0nisgraf/DVLSvsECZrja7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f174.google.com with SMTP id 71dfb90a1353d-5c83fbd23a5so3002778e0c.1
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 07:12:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1789394800; x=1789999600;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Gnji4ta6O43OZz9qRSk1IXl6BaqNTU48rGVf9Qgbt2Q=;
-        b=YJL1j5ClRBw3YIflZScPDSF6czePendSzQBo2ejRcSoWPKfoZCdrsyKqcFwwMfjEqs
-         3wjmmnqaiZ9BL7h1veNPhJr7CoPNQbDAWAmsio9qGauvvaD9BY7EcYC03Q40kkd+NsDE
-         vgR8EFa+J6pVFnzScT1QgRoortE3x8zMJuDI1PCaHLJqXYLj80G4cQF4F9wNB4i7Smhe
-         EvV7iPZJLCZmpqqGEbxMhM7Sal6pyeS2ZgRHmSSohg/aMm6+vdNnt39Mku3HVT8JInhx
-         5+UBkaDwmkcBQuGQ7cEVGPDgrOzLsAHmFqRhw7Rh7B1xareHauOGfaQAo2HRtzs6ky+w
-         bQMg==
-X-Forwarded-Encrypted: i=1; AKwUvByH2mUfzWt8A83zVjqRag5MgfbKZW738CUZh06j9AAYjYW/gyTGTvsgfUC6+0WQzBLBz9daRAf5HtcQ@vger.kernel.org
-X-Gm-Message-State: AFuF++nCCWJFReBq4TtLhAsDg8k6DHq0NOAINswyNYULYhXVdLfx8H6m
-	/jTzDL+dC6m0MRKYsdwK1kCDfIideaexeojNSVsSvXjUXkqCZXKeRJBa6baVOn5CTpdnex9mq7Y
-	L5hPi3eEW5i0UAL7bsbD6ePlYkoTYI9GZ4ttoM44GNppdepd7OjWAOm2h3hOl7rNG
-X-Gm-Gg: AYBFou0oZcsZjHsiO4kSza18QqPAiA+mKi0LZgJaMg63VqydQuM72rxjmXPDGz14ipE
-	yifOY4LLi/QCBi7qCNTeUkUyuVx7HshRWk3RqhNlkIYO4sBboa8Yxsi4ywBwscjNgw9QQjYuX9U
-	0fnzLDjb8QQ/8Pr7TFR6DsvEbCB08JzP1bKQ7S6fK0/00I8ASCGABV6wYG48cYgVPzlm0SWsGag
-	2yKKz7k4NORI1lQSkhPJb7fIyRR9/PnD89kO5Afmf5vlT7trDMuLi0aYqqEuyOQzhOrMEznCxDv
-	ohtJ8I4Gs7Nd3nmx8NgHmWv9UM3f8vcqPHjCUgta5GkXdPWo8KGPcjeeKwbo0b4r0lx0pVvaQ0t
-	KauX9d430F61oIqU=
-X-Received: by 2002:a05:620a:640b:b0:939:6de6:9517 with SMTP id af79cd13be357-93a29a92a0bmr442389385a.46.1789394799410;
-        Mon, 14 Sep 2026 07:06:39 -0700 (PDT)
-X-Received: by 2002:a05:620a:640b:b0:939:6de6:9517 with SMTP id af79cd13be357-93a29a92a0bmr442377585a.46.1789394798784;
-        Mon, 14 Sep 2026 07:06:38 -0700 (PDT)
-Received: from oss.qualcomm.com ([86.121.170.232])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49d26c1bfb5sm432396285e9.5.2026.09.14.07.06.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2026 07:06:37 -0700 (PDT)
-Date: Mon, 14 Sep 2026 17:06:35 +0300
-From: Abel Vesa <abel.vesa@oss.qualcomm.com>
-To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
-Cc: Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@sandisk.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        gopikrishna.garmidi@oss.qualcomm.com, jagadeesh.kona@oss.qualcomm.com,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com,
-        sibi.sankar@oss.qualcomm.com, Taniya Das <taniya.das@oss.qualcomm.com>
-Subject: Re: [PATCH 3/5] arm64: dts: qcom: glymur: Add UFS nodes
-Message-ID: <chmhun7dqj5flvbkzpsoz3pdbjrcbplel5rqfvj3fc6ztaw2sa@4o55fods7yaf>
-References: <20260911-glymur_ufs_qcb_enablement-v1-0-b9fc5e2ee99a@oss.qualcomm.com>
- <20260911-glymur_ufs_qcb_enablement-v1-3-b9fc5e2ee99a@oss.qualcomm.com>
+        d=1e100.net; s=20251104; t=1789395133; x=1789999933;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=/0GO/2vfF/XubgIzu8oiJogl7L+f/XkIHsO6TluNVPc=;
+        b=llkcdjQGDdR/YNxDvIl3uwxYiMWLgvitYNy9fR2AovFREaorJJpPENObk5i2QDxOeA
+         yiTqqeY/28sG/tslmYC7GLZq3vmjJqJjygstkQsBkKoPv9AjnjKV9NvXYWFKUlPaqakK
+         lF3ou2LngN6tf0raj/VThetwr+DFap5+KpS9qG+4FBydZBHHU/BHPCtS9FA3OyIMrTku
+         /+FmR6+FuvRHL/ePFRRDXcgQi0HW0DMq91kVfU2oO9Kq04qRt2Sf3higFWdI4NOJOoqf
+         THZgo9uEa9tMNU9Qqth5skTEcFd7x9N3b0KXWAyPr29yLii3ieObyPzx4pmXx1/hij1z
+         HKww==
+X-Forwarded-Encrypted: i=1; AKwUvBzaXrM7Byu6+6pwlqpA7Rh2o17CU6GFXqgb2DRk0UvNyNpgB4SoBc4l/lT25EH3iqFNCdNtr98CUCjD@vger.kernel.org
+X-Gm-Message-State: AFuF++ld1DWMj952o48lyA7avxCEjU6hTgujuHoDtIG8xQExQJTRCd0E
+	/0p2KHWRq8ZZY4vuvth5nolAvRQxuiVE9qN6wVxguFxMUBS3RN+Smu6CyzCXjkgX
+X-Gm-Gg: AYBFou2obEpI08tWxAez4GhCc/cz2O0g2V6svLHPaLFPelZqQOit64CV8eTaZsfHrO2
+	yeIjCm0bNmEYtlEIdEeS5WiWIcKt+ng3+OiYHiF9VtiQKUbFR9TqCumxw3QSs9UzhfeZoVpxA2X
+	SaRHifmFuT2zKOV7JM36mwEJ/MNWk0kiCjKlJmeR0bqh4rS2QyvVA+BoS0UnfqlEgWXGN0GduSR
+	Nmq/a0uD/RrR+yrxhVzC5ZsS0clh2yrfvkqOWXRSJ+0EgQdYK2V1sMJniR01NUroVbw3xHuAqmg
+	/IXdUhNyE3fBLgw+YxST4sXB5Zf5NXd8/2bDPEoLAwhs3WrDgrysSxMrID8SzgoQQPpL3oo3065
+	YW1oWNKm8YcEJxEQbd32c/9lw4cWcL6Qy4QnT8ROKd8Dsqa4xVSm7lc57dkW4Oh1Z7hbGRBQNla
+	yWyK5uityWiitu2B7alep3JDarW4zdBP4+xZkRK8af373jIh8RWS7PmQK6h6LwhKsA6p5nvjtLb
+	N6u4219jOHsPdrDM8ChBQfa40cRa+UetjTFF7qRJQ6j4CcFSaY=
+X-Received: by 2002:a05:6122:f07:b0:5c2:a30a:1a08 with SMTP id 71dfb90a1353d-5c97499e4dfmr2601411e0c.2.1789395133406;
+        Mon, 14 Sep 2026 07:12:13 -0700 (PDT)
+Received: from mail-vk1-f177.google.com (mail-vk1-f177.google.com. [209.85.221.177])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5c84714c380sm11785960e0c.15.2026.09.14.07.12.13
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 14 Sep 2026 07:12:13 -0700 (PDT)
+Received: by mail-vk1-f177.google.com with SMTP id 71dfb90a1353d-5c83fbd23a5so3002770e0c.1
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 07:12:13 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBwnz+maQinniATTOuhBG97TDWB1YcdmvgfLVrV6P/18+ir5mvqDzQ4yZvrfYzqFuTv+Y0croPFh0MqP@vger.kernel.org
+X-Received: by 2002:a05:6122:5315:b0:5c6:65e5:99a8 with SMTP id
+ 71dfb90a1353d-5c9749fed16mr2500859e0c.3.1789395132980; Mon, 14 Sep 2026
+ 07:12:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260911-glymur_ufs_qcb_enablement-v1-3-b9fc5e2ee99a@oss.qualcomm.com>
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE0MDIwMiBTYWx0ZWRfXzLcFpWJuvdlZ
- m/Hl7UPj/t0w1efaq1BRJxp4kOh7SgGhSzskIOMfLeUVTylJqMDBRtMtXDfUOZCGC1Cen9xyW3V
- XdzNtLJfYMfCQa/Mp9tZpowp/c+p1bs=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE0MDIwMiBTYWx0ZWRfX50vyejgC5oJz
- zDJ/rgMKmQYlCT95ngaEM58WJ7Fv1OmFYA8sqzFkTFaP996DJNtb5SnMbsZuVBd6bI8O4xNQdg7
- xH2UhEwFDfiL05vrq0NHSRn6BsF3/p77XhRpnJu9Zoc7Ya7Plth/UaGfrq8Ay2sSX6O2TqPmrqW
- y3gisK0VCWHtFKbZPFu3SzuLdqsa7/NbtQ6Vno+Ck/GbBeft148VXfNih8pZiPtw05ZV/Jy5r80
- Xo20dQy1wmwm8TB2hmHz+Zfi4nI6pXIDzFR157GIPc8n8F4MAA7dbiY2B6zCB+1MW5y6ES5UV/G
- whPlNetoXZ7i+lTp+3/5BpYO6P9oqx7T5ydK25DcpMOUXPn1S/pRw3nNVfHnyZkgvQrtvskxTgr
- cfaWhCh0d7taTiVmCb4wJ6wASAsELoc5wBXzHoKQpWQPZJjJXC4mSb7PgbgY1ORWskeeOIMfFhV
- 5sDrjMUvUL3/Ouj6vSQ==
-X-Proofpoint-GUID: 3SVSnvwq1pyd2rk_EopwAGmNfSbpazKe
-X-Authority-Analysis: v=2.4 cv=b/cncdGx c=1 sm=1 tr=0 ts=6aa7ff70 cx=c_pps
- a=HLyN3IcIa5EE8TELMZ618Q==:117 a=po8fGBi+ks8MzcVQGuqtFQ==:17
- a=kj9zAlcOel0A:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
- a=EUspDBNiAAAA:8 a=ucACzhYzkOUm8HD49FUA:9 a=CjuIK1q_8ugA:10
- a=bTQJ7kPSJx9SKPbeHEYW:22
-X-Proofpoint-ORIG-GUID: 3SVSnvwq1pyd2rk_EopwAGmNfSbpazKe
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-14_03,2026-09-14_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 bulkscore=0 adultscore=0 priorityscore=1501 phishscore=0
- clxscore=1015 impostorscore=0 lowpriorityscore=0 suspectscore=0
- malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
- definitions=main-2609140202
+References: <20260911073058.253000-1-den@valinux.co.jp> <CAMuHMdVAFq4izexG=Sf2i9dZdMMNLnb85AVgBazAFMtTA2jwxg@mail.gmail.com>
+In-Reply-To: <CAMuHMdVAFq4izexG=Sf2i9dZdMMNLnb85AVgBazAFMtTA2jwxg@mail.gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 14 Sep 2026 16:12:02 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdWDJac0Soob+Cf-dgwWPBpGrfCwHDN_nWTyE84pXJSoGg@mail.gmail.com>
+X-Gm-Features: AcwNN1Uyp_yKSLQHdhola9oXjT2PLkCEjRN0YsdOH8kD2k3alY3_Suk4gIB3dpw
+Message-ID: <CAMuHMdWDJac0Soob+Cf-dgwWPBpGrfCwHDN_nWTyE84pXJSoGg@mail.gmail.com>
+Subject: Re: [PATCH] arm64: dts: renesas: r8a779f0: Set UFS lane count
+To: Koichiro Den <den@valinux.co.jp>
+Cc: Magnus Damm <magnus.damm@gmail.com>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Marek Vasut <marek.vasut@mailbox.org>, linux-renesas-soc@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Palash Kambar <palash.kambar@oss.qualcomm.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Shawn Lin <shawn.lin@rock-chips.com>, Manivannan Sadhasivam <mani@kernel.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>, scsi <linux-scsi@vger.kernel.org>, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 26-09-11 22:17:07, Pradeep P V K wrote:
-> Add UFS PHY and UFS host controller nodes for Glymur SoC.
-> 
-> Signed-off-by: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+On Fri, 11 Sept 2026 at 10:44, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+> On Fri, 11 Sept 2026 at 09:31, Koichiro Den <den@valinux.co.jp> wrote:
+> > Since commit e72323f3b09f ("scsi: ufs: core: Configure only active lanes
+> > during link"), the following error is observed on R-Car S4:
+> >
+> > ufshcd-renesas e6860000.ufs: Tx lane mismatch [config,reported] [2,1]
+> > ufshcd-renesas e6860000.ufs: link startup failed -67
+> > ufshcd-renesas e6860000.ufs: error -ENOLINK: Initialization failed with error -67
+> > ufshcd-renesas e6860000.ufs: probe with driver ufshcd-renesas failed with error -67
+>
+> This is very unfortunate...
+>
+> > R-Car S4 has one UFS lane per direction, as described in section 152.1
+> > of its hardware manual. Without lanes-per-direction, the UFS platform
+> > driver defaults to two lanes.
+> >
+> > Previously, the core used PA_CONNECTEDRXDATALANES and
+> > PA_CONNECTEDTXDATALANES to configure the link without checking them
+> > against lanes-per-direction, so the missing property did not prevent
+> > initialization.
+> >
+> > Explicitly set lanes-per-direction to 1, now that the validation is in
+> > place.
+>
+> Given this breaks backwards compatibility with existing DTBs, I think
+> this new check should be relaxed iff the DT property "lanes-per-direction" is
+> not present. Are any other platforms affected?
+> Possible solutions I see are:
+>   1. Skip the check completely, like commit 06a34d9c1f47b923 ("scsi:
+>      ufs: core: Skip link param validation when lanes_per_direction is
+>      unset") does for ufshcd-pci?
+>   2. Correct hba->lanes_per_direction based on the actual values of
+>      PA_CONNECTED[RT]XDATALANES?
 
-One nit below.
+Both solutions would modify the core, instead of the platform-specific
+driver.
 
-With Konrad's comments addressed, I think it looks good, so:
+> Alternatively, ufshcd_init_lanes_per_dir() could override
+> hba->lanes_per_direction to one if "lanes-per-direction" is missing
+> and the device is compatible with renesas,r8a779f0-ufs.  Or perhaps
+> hba->lanes_per_direction could be preset in ufs-renesas.c, and not
+> overwritten by UFSHCD_DEFAULT_LANES_PER_DIRECTION when non-zero?
 
-Reviewed-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
+As ufs-renesas.c does not have early access to hba, I went with
+handling the quirk in ufshcd_init_lanes_per_dir() in
+"[PATCH] scsi: ufs: pltfrm: Add quirk for R-Car S4 lacking lanes-per-direction"
+https://lore.kernel.org/ae0cc2bd764e6dfffce99db3d8b44a55887c508c.1789394185.git.geert+renesas@glider.be
 
-> ---
->  arch/arm64/boot/dts/qcom/glymur.dtsi | 114 ++++++++++++++++++++++++++++++++++-
->  1 file changed, 111 insertions(+), 3 deletions(-)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/glymur.dtsi b/arch/arm64/boot/dts/qcom/glymur.dtsi
-> index 624a9edd602c..7bbc804ed340 100644
-> --- a/arch/arm64/boot/dts/qcom/glymur.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/glymur.dtsi
-> @@ -812,9 +812,9 @@ gcc: clock-controller@100000 {
->  				 <0>,				/* QUSB4 1 PHY RX 1 */
->  				 <0>,				/* QUSB4 2 PHY RX 0 */
->  				 <0>,				/* QUSB4 2 PHY RX 1 */
-> -				 <0>,				/* UFS PHY RX Symbol 0 */
-> -				 <0>,				/* UFS PHY RX Symbol 1 */
-> -				 <0>,				/* UFS PHY TX Symbol 0 */
-> +				 <&ufs_mem_phy 0>,		/* UFS PHY RX Symbol 0 */
-> +				 <&ufs_mem_phy 1>,		/* UFS PHY RX Symbol 1 */
-> +				 <&ufs_mem_phy 2>,		/* UFS PHY TX Symbol 0 */
->  				 <&usb_0_qmpphy QMP_USB43DP_USB3_PIPE_CLK>,
->  				 <&usb_1_qmpphy QMP_USB43DP_USB3_PIPE_CLK>,
->  				 <&usb_2_qmpphy QMP_USB43DP_USB3_PIPE_CLK>,
-> @@ -4103,6 +4103,114 @@ rng: rng@10c3000 {
->  			reg = <0x0 0x010c3000 0x0 0x1000>;
->  		};
->  
-> +		ufs_mem_phy: phy@1d80000 {
-> +			compatible = "qcom,glymur-qmp-ufs-phy";
-> +			reg = <0x0 0x01d80000 0x0 0x2000>;
-> +
-> +			clocks = <&rpmhcc RPMH_CXO_CLK>,
-> +				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
-> +				 /* UFS and PCIE4 shares the same clkref on glymur */
+Gr{oetje,eeting}s,
 
-On top of Konrad's comment, I'd drop the "on glymur" part entirely here.
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
