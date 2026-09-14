@@ -1,70 +1,66 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A4A3E557A;
-	Mon, 14 Sep 2026 22:14:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03765414A17;
+	Mon, 14 Sep 2026 22:16:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789424092; cv=none; b=RvDRO46myvC+VWH5+IPvepm0VgWP2DdRGQwitA6hMqFo1mm3F2hrgCUTIQ/w7Ya6Pp6vF2bTfe00YLrIQd/vzJYcsnAjCQxHwnRtZf97jYSYcgde95g0W9mPC5CYSpstmK8xbFEMVLZtp2DBLYwOvEY2rlTce/ces/f2/amiEcM=
+	t=1789424179; cv=none; b=iYsH8JcqeaRdc7lbtPY0wT85Ix7iiT7NzuSBtHgxPsvnXgcgdQuT1i9dNB1wKDCPTJfwhJVsx1EUcIRDmEbPMwdjmsjKCwrCE7lmE9fubOeNQ9+oiY0ZuE+rGLsyTf5NIg2NlgQH+AocB6TeDioBnA6KY46ia+79v0FUyscuM74=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789424092; c=relaxed/simple;
-	bh=UeV2qKj6a5JiunFbkJWDa+hcg+Gm/8y1LH3SVrplud0=;
+	s=arc-20240116; t=1789424179; c=relaxed/simple;
+	bh=XamPDl9NXlZRtpllZkc5ElLHE++HgOKjnxkf4Fhft6A=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=a/prMp7G8OecnGGuchauKQ1pOn3FOVE9eLmigGs0K0HWMpzYuJh+2NOOr9RkwAAKQOyVDLg53sHkcjC9oFcSpRKwb38/wEo0vUa/QTaJq7qLs9MOoDn+1y7Dq26U8XEH5AS5V7HP4dn9e9JS/hziYUnMWCw5T3bOJvv9iB+DocQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a6S3ZhjS; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=NdK07NVseKkQihB1pFnxLuI5sWMm72SoHsqLRYiZunFimO+DiNz5YVfjZp4ZXG8gS63OuxWAmPb09Hea8su4xM2Z2SljLnpYxECJ4y2zCVVGbtMKV++oU0MAtE7fOJAe9rNS5UeUIVX9n8vsxS6rQP1ceBQ91aHjnCSAeSpcBDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CvoJgdSX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a6S3ZhjS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A33D1F000FF;
-	Mon, 14 Sep 2026 22:14:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CvoJgdSX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D57F11F000FF;
+	Mon, 14 Sep 2026 22:16:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789424091;
-	bh=UeV2qKj6a5JiunFbkJWDa+hcg+Gm/8y1LH3SVrplud0=;
+	s=k20260515; t=1789424177;
+	bh=XamPDl9NXlZRtpllZkc5ElLHE++HgOKjnxkf4Fhft6A=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=a6S3ZhjS4mQNpCgM64uTocjS2QuX4ZICv71v488xnZuYOyP7TK+WX6V1Z/9NTKUDj
-	 Pw23iOFNoGjnyuJbN23LBBlHr+i+PGEH7a+oTU0+ug/VyKCyIp3yCzsOAd7SO2Doc7
-	 S/90pyaz0Nfr4KtPg+XykNpg+Y4RzBVtRdbX7tb8U2sK8tO1tENJDjZDtTmFjb9aHb
-	 RkiA9UX2HddNCqoRXCCtm683kIRDtHRxnXGQP1qbuu98shbrSJJRaVJWBGZmVUarfu
-	 u//l4paZKMTFPyEpCWEQfDUxQ0bYQ4/YeLDjetF3LDSBMM1BRvoX90kpovmGnsS6t3
-	 jIod3/1TTyHsg==
+	b=CvoJgdSXfrot0Eqzk4UtAnIGExifHja0JllTayBjcyT6eWu8erwjsAt3Rlose/UYB
+	 lyNGDm7U1L1NDxiEyu2xM0YoCTVS6Qryy6hNRSfBBQvMfXE9fXop5P5XnOwIQIqnSB
+	 huWU82Zvf/cK08nAFvbPSjQWQ5ZtZl77bwkv4rlahqbFCxPqsWZQUTrhK0HIjwUbaN
+	 DcfgooTbIXdNK6cQJXY+7a4ghthtLVTa2tNsz7wL+ojGoSpu1zXllT3bhNiav2tqyC
+	 /Q5cBOdIkSQ5hnHRVizPKvFMYRawtoBHh1qFPOvyUcmA/aUUxCz4Lwrs9ldiRq6G0j
+	 s+15ujKGfQXzQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 30/40] mm/madvise: update is_valid_guard_vma() to use
- vma_can_merge()
+Subject: Re: [PATCH v2 32/40] mm/uffd: use predicates for userfaultfd checks
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
-Cc: linux-trace-kernel@vger.kernel.org, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-perf-users@vger.kernel.org, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>, linux-rdma@vger.kernel.org, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, dri-devel@lists.freedesktop.org, "Marc
- Zyngier" <maz@kernel.org>, bpf@vger.kernel.org, selinux@vger.kernel.org, "Heiko
- Carstens" <hca@linux.ibm.com>, kvmarm@lists.linux.dev, "Oliver Upton" <oupton@kernel.org>, "Vasily
- Gorbik" <gor@linux.ibm.com>, linux-s390@vger.kernel.org
-In-Reply-To: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-30-7d9781ed5361@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-trace-kernel@vger.kernel.org, "Oliver
+ Upton" <oupton@kernel.org>, "Heiko Carstens" <hca@linux.ibm.com>, "Marc
+ Zyngier" <maz@kernel.org>, selinux@vger.kernel.org, bpf@vger.kernel.org, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>, linux-rdma@vger.kernel.org, "Vasily
+ Gorbik" <gor@linux.ibm.com>, kvmarm@lists.linux.dev, linux-s390@vger.kernel.org, kvm@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-perf-users@vger.kernel.org
+In-Reply-To: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-32-7d9781ed5361@kernel.org>
 References: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org>
- <20260914-b4-mmap-prepare-vma-flag-sanify-v2-30-7d9781ed5361@kernel.org>
+ <20260914-b4-mmap-prepare-vma-flag-sanify-v2-32-7d9781ed5361@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 14 Sep 2026 22:14:49 +0000
-Message-Id: <20260914221450.4A33D1F000FF@smtp.kernel.org>
+Date: Mon, 14 Sep 2026 22:16:16 +0000
+Message-Id: <20260914221616.D57F11F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> We currently disallow the installation of lightweight guard regions in VM=
-As
-> whose flags intersect VMA_SPECIAL_FLAGS or VMA_HUGETLB_BIT, or
-> VMA_LOCKED_BIT unless allow_locked is set.
+> Rather than directly checking VMA flags, use the newly introduced
+> vma_is_kernel_owned() and vma_is_persistent() helpers in userfaultfd when
+> assessing VMA suitability for userfaultfd and UFFDIO_MOVE.
 >=20
-> hugetlb VMAs set VMA_DONTEXPAND_BIT so this was already redundant,
-> VMA_SPECIAL_FLAGS already sufficed.
+> Update vma_move_compatible() so it's expressed in terms of VMA
+> characteristics rather than arbitrary flags.
 >=20
-> However, now that VMA_IO_BIT is only set if VMA_PFNMAP or VMA_MIXEDMAP_BIT
-> is set, this check collapses to being the equivalent of
-> !vma_can_merge().
+> Additionally, update the use of the deprecated VMA flag API when checking
+> VMA_SHADOW_STACK_BIT.
 >=20
-> Update is_valid_guard_vma() to reflect this.
->=20
-> No functional change intended.
+> A VMA_IO_BIT check is no longer required but that is fine as a hard
+> invariant has been established that only kernel-owned mappings may set
+> VMA_IO_BIT so the check is now redundant.
 >=20
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 
@@ -72,5 +68,5 @@ Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260914-b4-mmap-pr=
-epare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org?part=3D30
+epare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org?part=3D32
 
