@@ -1,36 +1,67 @@
-Received: from mta0.migadu.com (out-240.mta0.migadu.com [91.218.175.240])
+Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A1803B05AF
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 07:26:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 059AC3F1045
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 08:00:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789370792; cv=none; b=jgq9OSjxt8qhX/+YzjqMZU0K8sfOSjZP5BzIdKbOxAmwOzZNPEOC9PF8hyTf4SBNnlBnfSU5FbA28qGKutVwV8AkRMnmB4ZiusLrI+/T/EJL5rgUvjVeAAwUCVeK6giHuxKeWcZSZvkMtx3JnwAsmfdhrFlKvHgiSS6iSTO1Z88=
+	t=1789372860; cv=none; b=M3dmWtM9adsT7W3eLTuMnZwXvYeEK5w+LAB11RuA9dK+MUUbh7SbDAMIzS08L3vVF22xjdvzBQ2WENKZt4RdaL4yD5jX73d7noIhnEgPMtBVTq3SB0nmCnAZRQkJo99tGI0Yi2ION639qYPh8ngqju6OXrWONLC26QgOSlomEJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789370792; c=relaxed/simple;
-	bh=p83/bTpKodwfCwHT6aBZfNiTrQbF2xQCeFxJ3zFR5Ag=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J+Wlj8GoSB1BK2xePbpxDUY87XJxAVrack0lwMe37VoLTDIbxLPfb/H9eejJtRoPcEb/C7q7scRCpYuyGaQnkzLLLGcQ6VuMJXo993lvNxDuUW3mJqao4Is+t0ZTBIEjWL/9aUQfdyQKpmzOfCT2rkabX4y08D0IOoSABhhX/5I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=schfPzJJ; arc=none smtp.client-ip=91.218.175.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789372860; c=relaxed/simple;
+	bh=EYQOeSNuOoXjqRUIdNe++z2p6T2udVShkfpEKbrrMj4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=syCvJ+ZAYfIjJpGBQdR6V8iPDIFvmjiBh5qxHpQz+7EEEWtreeWiDy6qjuQzWaYMkWrhz65fVR+Lshptmykf4PWfPXP0mBwR8twBLH+CGiONb5VyGjPhAqmOsxmZJcCkxH2hrJczHu4fx3vhBfHwXtwAdM8rjMCz6abdaKQZ/Bg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=OrVaSuRm; arc=none smtp.client-ip=74.125.225.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="schfPzJJ"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=p83/bTpKodwfCwHT6aBZfNiTrQbF2xQCeFxJ3zFR5Ag=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789370786; v=1; x=1789975586;
- b=schfPzJJTh79hukwE+5CC7bciH6OYM0aP5DfBDy1y0SVj1MR5v1dzpxXcnx4AXmRw8Jq6Lo4
- LR0z1glBExHNxC7vqb8Nqy18QiGDD1py/hnm0XhQ3t8oPrCBP47lpzv7aqfcQc/f4G54OVkciHZ
- 8xvXknJ2ztQHkViK59Lp1lqU=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id 52fcd64584e33814;
-	Mon, 14 Sep 2026 07:26:16 +0000
-X-Mizu-Trace-ID: 52fcd64584e33814
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <9230447a-77aa-4570-803e-ac62e9128e21@linux.dev>
-Date: Mon, 14 Sep 2026 08:26:10 +0100
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="OrVaSuRm"
+Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49cd5462b69so9718405e9.1
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 01:00:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1789372857; x=1789977657; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=cmYhlDLXbDHAFy+wmv5M6UosyGJ8HUUEwo3iL6kJsHg=;
+        b=OrVaSuRmJutYx2IOtNi9FcKxKApNX/a5HymYOCPyuYDUUNG2QXN90yXabvp0sPaJ5T
+         E630+E7uvsqsHQbU01F/mYqSNq7Bs8STzVFiD7SMRKOuwXj8jCYkxTZZ1PCXK7dEdic3
+         4FniaSLH/Bo9qygIlol0E1NkaBUa/5s8pH2k73vhs/wpkBRdmNdgzDasWcSI02Nrw4S2
+         SnBL5wdxDOofu6ZCr0ibj6DtTiEeFOgNg5/RSYh0SDRnxaNg/arggG3vQUPzk5QmggLv
+         yk9bE7uoIb8P1vRzI+C5SjAdwT+pEbuRo5wBtjWAHPlJ/Sqyrx1sdvAIPUIQ4uxv5yrU
+         fvpg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1789372857; x=1789977657;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=cmYhlDLXbDHAFy+wmv5M6UosyGJ8HUUEwo3iL6kJsHg=;
+        b=TSGLlWiVsaX9W+vP1geWxm02Rnd9uz1gVAbO13YxaL0E0AMoczZ1Z/ir6xFQig/Gb+
+         a1/d7vNwo4vEXR6i0eCG8SwXFNcWQ4m7RYsppDeK0YjvUiKyHdP4c7Qv9XrLQllnP4Kg
+         F3gRC+U4UMre3LItNB3f7Q9eSRGoVIt+LAXGxwU4Qh0OC4TXBxvmgV44TfOMZGmzDySO
+         zst8O7Lhf/+8PTvHDoxdvmeG+g/o70CxgLSoWIBxnwsDfZNAi8WNOZMcAY2YpVBzmMPy
+         0htOqXkRGXLenri6NKe/WO37FottWrvVQ64KagZ0wktplEP+Psz+yufy9TYZh+vlwcWA
+         VzKQ==
+X-Forwarded-Encrypted: i=1; AKwUvByhifqB0D2ExTnRO77vmEa8nVvnGoPJTHO5yT56p4Ei/qfXQRurXwqf+qw4JnZ1t1A+XaZC7tohN1BP@vger.kernel.org
+X-Gm-Message-State: AFuF++ll96zq7s+cvvsioJ2o6OiwgupN885rw6hzbhC0mzBnarNZbUuS
+	TTuW0PyInq/LyPNlablNaCSVYZRI3/EfTZJNzj4aw3jwZdsT0f5lUekpqBrTygKVh5M=
+X-Gm-Gg: AYBFou2akPpiXejwQVgjIUaW263wZbeUt73QvWqC5qkOt+xlPvHngEwxmtJG6jJp3o5
+	9jbiDrQNb7MOluuIw6uBhuMXVlZ9CZ1zG8xCbxmZe2N6tpVZ7vYlddHvMPqrUmLzOesdSEbviH6
+	oQ2pCQxNKFUA6i5+lW5Vh+wCjQDVyFN5zdsxGTUhv8cqNVdIkwZAa7VnMfpX60JidxY27qVBD9z
+	Dzc/zZD3s/DOfjZnAPEYgapBfzwRWo3pG71rldz/U74jQoEq3ugjYr1QojjbX3JxK2FMFmlRmg5
+	DMNn6bvyVsZGpZwj6MA1K+hPjJsi2JkoAnWtGddlCtXUaFK4y926ej5nA3v4nAVJC+61KmmHuwh
+	dCK3tDmViBM8hZzfPRG2ChkxgO3TXMsLEJk8T6TEY8B2KK6uRU77ucXhZO6ctMAkviZPY+SazC3
+	Ku17Uy6zegqXyGwXfCizugKUAIKwavs9EqeI8xyFb0xPe2vYr/ZA6jllVZNhpNWk8UFCnXii1xQ
+	gwiWgInIOebWK4vb/h/Z7aj/uQbXsn2Jz00qgAUX9A=
+X-Received: by 2002:a05:600c:4e45:b0:49e:6050:9fbe with SMTP id 5b1f17b1804b1-49e7a68cefdmr32722865e9.15.1789372856926;
+        Mon, 14 Sep 2026 01:00:56 -0700 (PDT)
+Received: from ?IPV6:2a02:3033:271:ff25:5180:f8d1:43d5:f6a0? ([2a02:3033:271:ff25:5180:f8d1:43d5:f6a0])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49e71e300f3sm201135275e9.7.2026.09.14.01.00.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 14 Sep 2026 01:00:56 -0700 (PDT)
+Message-ID: <c335085d-a824-4632-ad3a-c06715258c81@suse.com>
+Date: Mon, 14 Sep 2026 10:00:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,54 +69,29 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] blk-mq: cleanup terminal request when it could not be
- queued
-To: Bart Van Assche <bvanassche@acm.org>, axboe@kernel.dk,
- James.Bottomley@HansenPartnership.com, mkp@kernel.org, hch@lst.de,
- tom.leiming@gmail.com
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20260911075415.634921-1-john.garry@linux.dev>
- <eb86ffe1-db3d-4b52-b4a7-08c9524a0dae@acm.org>
+Subject: Re: [BUG] uas: JMS578 returns reproducibly incorrect data after host
+ reboot
+To: djraszit <djraszit@gmail.com>, Alan Stern <stern@rowland.harvard.edu>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <CAFKhL9eUM91rtywaz_7Mz+4mJH2b2csmOmc3+86ii3a0Ka3Q6g@mail.gmail.com>
 Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <eb86ffe1-db3d-4b52-b4a7-08c9524a0dae@acm.org>
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <CAFKhL9eUM91rtywaz_7Mz+4mJH2b2csmOmc3+86ii3a0Ka3Q6g@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 9/11/26 16:55, Bart Van Assche wrote:
-> On 9/11/26 12:54 AM, John Garry wrote:
->> Sashiko points out that the SCSI midlayer error handling misses some
->> cleanup for when a request could not be queued and won't be requeued [0].
->> Specifically, clearing the SCSI cmd flags member is missing. Normally 
->> that
->> would be cleared in the non-error path in scsi_end_request() (which also
->> calls __blk_mq_end_request()).
->>
->> Callchain blk_mq_cleanup_rq() -> scsi_cleanup_rq() does all the necessary
->> cleanup, so call that in blk_mq_dispatch_rq_list() for when there was an
->> error in the dispatch and the rq will be ended.
->>
->> Note that dm-rq code calls blk_mq_cleanup_rq() for a cloned rq (or 
->> SCSI rq)
->> for when the clone could not be queued and will be retried, but that path
->> does not use the sched code (and blk_mq_dispatch_rq_list()).
->>
->> [0] https://lore.kernel.org/linux- 
->> scsi/20260729161243.C918D1F00A3A@smtp.kernel.org/
->>
->> Suggesested-by: Bart Van Assche <bvanassche@acm.org>
->> Signed-off-by: John Garry <john.garry@linux.dev>
-> Does this patch need a Fixes: tag? Anyway:
+On 13.09.26 16:38, djraszit wrote:
+> The same correct value is also obtained when the enclosure and disk are connected to another Linux computer.
 
-I can imagine that whatever this fixes pre-dates blk_mq_cleanup_rq(), so 
-backporting is a concern. However, the oldest LTS today is 5.10, and 
-blk_mq_cleanup_rq() is present there.
+Hi,
 
-Anyway, I would like to get more opinion on whether this is the best 
-approach.
+thank you for this valuable and comprehensive bug report.
+Just to clarify, does the quote from above indicate that
+the device returns correct data on other systems after
+reboot or does it mean that you verified that the disk
+holds the correct content by attaching it to another system?
 
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-
-thanks
+	Regards
+		Oliver
 
