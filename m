@@ -1,167 +1,188 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BBFF383985;
-	Mon, 14 Sep 2026 19:44:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789415081; cv=none; b=LbkX+vu+h3T906LMTJDrDlK0keTSYnGugyuTCPR/OFfOU5soIqhMrPHqQcK9OFUY0rC0D8C2SpVxfbg0mZ5XTH9UhBMiJDbjJqyGrRA+8I7fg6aTHmgg61GRvvlCLjtn0bSKP0khkhCBwhN3CsHUdB+iIKH6Epa07kdWuv3AUJU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789415081; c=relaxed/simple;
-	bh=ctiiM6vJqJ++ghuOO2EvQkAwGIF6KNL58iWGR/JZBH8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UAxLIAwTXGq51HVw+6Ytza/RjrONvkPAuIuI8tpAfIaJ37Cj2ADHdwC+U0G0wrmsCM9z0SNkaUpXkO/TgsacL95rPkpU1OFgg2RIcz1od/s6va9qJ8/mDOHv8VibJFlBY0TmZxRCuM1tLOb3xdmnwAdPxWXqxDjBNr71+7IASyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Aa9RX4NE; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0130D49B1F3
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 19:57:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.12
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789415865; cv=pass; b=JnghqdIb93hsU9HMp/wUPBod01Z1fc86aGuphyCTDCBu9hTO3Z+WnyxNQYJwcNZouIWIc3F00+gR9f0p2qPBh+xDqPBTknJcFZn4eQdBdKhvXpjydrHGs+Tc8yaC1nXwoEjEiXswzIExSqB5fTpAEpHf6MFx/C51bqtGbipEtzc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789415865; c=relaxed/simple;
+	bh=rm+zdLu0LlzNfMP/vZrBYvi966p9ISS8d4XEb3JQ094=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=hzc0udI8PYlHnEX04yz+yl0sXonY4TustVZ/PmnE78hLi1oRAIMRilE5E08XKJO5dBuAMGNZLju8j3WARAlV3N0oC4Mw87JhAg8okNajIdG6ucux4ECvORKj/Zvg/E1mnMXkdDmJxa12OxItirZIaXGTgJlqip+4zNsmGp/SqOw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com; spf=pass smtp.mailfrom=paul-moore.com; dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b=VBYIS+ru; arc=pass smtp.client-ip=74.125.228.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paul-moore.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paul-moore.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Aa9RX4NE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 960DB1F000FF;
-	Mon, 14 Sep 2026 19:44:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789415076;
-	bh=dAIamB9o96xWXDBcRkq+/H0si90404IoSC8KyMPldZw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Aa9RX4NETC9n15P4OBlFDQsPzC9XjIuOtUHcYgFRMSR9QFgm0bbVVhxKu0M8wRgDj
-	 U2jklQLyh4IzZ0H+3MHP8kcHulROBBL5SZwu8TEoW3jsW8g12yWV9RV1BKlMNnWggX
-	 61WpUC3uZnkGyZO1jxhozUWpbMBwFodtfctbTbrphUE8/csJArkmbq2JQKLEZb/2nX
-	 OkARX43MWFEQV5bfl7ZQvpJl6JuaYXuD8O9OU6yXFnODyYK4vZ67Z/GCIHsn+IqLmO
-	 zF3LTrI9XHu+t2Df2uG5iq6n8dsxpNLvl/UPexqRY1SUgB4XV91cnHLp4Jaf/QLLWV
-	 /BU+iQDoVNOQg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 19/40] fbdev: defio: assert FBINFO_VIRTFB, drop
- VM_IO, add VM_MIXEDMAP
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
-Cc: linux-perf-users@vger.kernel.org, "Marc Zyngier" <maz@kernel.org>, dri-devel@lists.freedesktop.org, "Oliver
- Upton" <oupton@kernel.org>, kvm@vger.kernel.org, selinux@vger.kernel.org, "Vasily
- Gorbik" <gor@linux.ibm.com>, kvmarm@lists.linux.dev, "Heiko Carstens" <hca@linux.ibm.com>, bpf@vger.kernel.org, linux-rdma@vger.kernel.org, linux-s390@vger.kernel.org, linux-trace-kernel@vger.kernel.org, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, linux-scsi@vger.kernel.org, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-19-7d9781ed5361@kernel.org>
-References: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org>
- <20260914-b4-mmap-prepare-vma-flag-sanify-v2-19-7d9781ed5361@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 14 Sep 2026 19:44:35 +0000
-Message-Id: <20260914194435.960DB1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=paul-moore.com header.i=@paul-moore.com header.b="VBYIS+ru"
+Received: by mail-pz2-f12.google.com with SMTP id d2e1a72fcca58-86b90133ae8so1980676b3a.1
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 12:57:42 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789415862; cv=none;
+        d=google.com; s=arc-20260327;
+        b=pD1dCQiGaLYxP606OWwCiD8c75Ek4Rxa6NPQ8ZxuV28tjO+KzHmx0sTm0i94E4iIlo
+         iYR5WaVG6YDET0L500tfXT4cHUJcpar0ClqZdBr6/g24rpsf1+/4nUvKiB9w9nOHDq3/
+         /B32hDW/en5mYHVFYtKiKj0oNi7LDR4K1CZtNiZurxNow+iHXU2vp1RmjKqd6B3pPQdq
+         4htqwXhEuXVFyrFHH7NSQYayndJ/g2KBogpQ4u2kBU9vAZPQGeGlqZxymvuOieSEs3t+
+         3iq7bauOfnvofWZ6kv9MMD/KEQAu7mLA9w/4i7daSiHIG7xqkbV8YrUnlu1UY+haDlTN
+         t3OA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=iEa5EIpxI31VfZhRCWTdUVuFxMmPcLfnD5/j1cH2Le4=;
+        fh=MDGDmlvz2s5PVw5e4J9OWaKAAMWQl7Px+XC4zZhlI7w=;
+        b=kxTsSeuzLKM1bO4Ei7j9aTF01wXatNGqZqKlX70KrvcR+Y+gGkBc+72A7SxW1vS/GL
+         nqhk8pp6M47TjTg2x+cvZNNh0JXflw2iN/yvkjoi8o+uwMUYq/pkzx4UFreN/qyOwco2
+         Ce5CKae+ml88h7St82W7DrfSAMkAzA/ZrFOyoSlBPtEpJFxsvAtLfi8j+PkfGwEU+S49
+         jeRkbnchKfAd1fnz0E29pPAli5r/gXKYRvz6SwZJIasWzImQj5JxshrbElRyxtvtMIg+
+         SFlY4VhpTzt/64wzTHF+WtH2IWBE6UdEkcy8KGIqsdpuwoTqRaLLZzaHeNKFKKuEX4DG
+         kYQA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=paul-moore.com; s=google; t=1789415862; x=1790020662; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=iEa5EIpxI31VfZhRCWTdUVuFxMmPcLfnD5/j1cH2Le4=;
+        b=VBYIS+ruvec/YQ7NPDSavrBqZkup3jtMUSf2x9fg2vR4Q/ZYGnptCqM7UF9GBEk6Kb
+         pwYbAK2sJEZFDjRFht2ALhGnWfzEgxLd1W4Nqjf3iOyc3C9CQVwNzR9p52/m8eg00t3y
+         i3INHp65zySvAJlrkN0SKQiamBOPK/2OeoXHbM/ieIzmZObIDK9PzOChSRrcM8YAyS56
+         Wpk2JsgEsfietAppzsrHDi7c7Qi8vepD85wgaha++Drvrzfs42k7ryFVO4ohzIir1SFu
+         Dz5Af79neP1/ODat12UTHwq79Ug1vrjKu97+aj6V0fudJlIrOVtfB5xkOELTreMhvqOw
+         VVNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789415862; x=1790020662;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=iEa5EIpxI31VfZhRCWTdUVuFxMmPcLfnD5/j1cH2Le4=;
+        b=ESVVDgjAu5Lv4l4dQn3ABPxooZ6vT1AL1t88f5IWeH2jv9x0VCxzn0b6z6wZt1jIHv
+         Yp78qsnuMQtSvONmjBw0Oi2CONj+UTLpDz4feIvMXN0iTuAlOxqq21mqzvtKLEcJW21u
+         JgjCbI/G3tMA7Yr/JnGMuZ/0Y7TzyPRvvW6hajwntYNqGrInwJrjHkrbEw/h6xSW5IA5
+         MM6GC71+XZLZ9y230Ap9/jXNBIqN59hI1XcVfF1A2OlJqvZpvKwsuJAumw2FdgLtvfmK
+         AD45f2onKNfR8t+Xd9CNi3qMCMFbOrgIwOoVffuZ/UoeHPwXkob2Waj6z2hL7HOrco80
+         Mk7Q==
+X-Forwarded-Encrypted: i=1; AKwUvBxNKtKu9FqL1+IaDdVWqADU5xSI6lpXePt53mZ2X2jkaMZlWDoaAuC+hR+KgX9KxVEPD0Hl2GQrAf58@vger.kernel.org
+X-Gm-Message-State: AFuF++lSEnsSoPIjCV/1mLr8e6d2hg3SiMxDu35jMlGpKbLqXCUXdacu
+	iQyRLG02hjOkpV+DnpktC315EYkE6kbHJd34+8opNhD70ljP2xCVGjibCs1IuMR9PwGnvpyQ6Rg
+	SVlSP9FaD6pOiTTten1Pad7uuZPgvlA0A8uVndkZF
+X-Gm-Gg: AYBFou0kMv39fO/Hjs7z64lodibV3A/psL8YiORFdDtwfScUcOxGy9KimH0Zvf7UyXD
+	oO0N1QNPA8j9fvk/cnlceNCwvBGIU/zaqqemUUKa68p/7q8uyVa/hRD01nh68MMHF28BaCwFDaK
+	0Ir3rgGwrI1sTtpaAHhNXJm6B3QOnGr+kEUpBgUgwUbGUxo0iBfr3p4G+Lk3Sotwb0kfkJvI0Jr
+	6WG0bkD2uyoTOkIFV2gRcQYJ5hYugWXuoLcKztusI70AMNt5SfMNVbeS6JYNxFxH2pTIdrl0/XN
+	CvbWNRJF66z2itoMD7ozlb1XfuvM4HwScO5UnzcQb++qGZvRaI05Q893JA89ypwk3fm/blor95W
+	iHOsanGh2Tpg=
+X-Received: by 2002:a05:6a00:18a9:b0:858:b809:6ec0 with SMTP id
+ d2e1a72fcca58-86f869a920dmr8896742b3a.23.1789415862342; Mon, 14 Sep 2026
+ 12:57:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org>
+ <20260914-b4-mmap-prepare-vma-flag-sanify-v2-12-7d9781ed5361@kernel.org>
+In-Reply-To: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-12-7d9781ed5361@kernel.org>
+From: Paul Moore <paul@paul-moore.com>
+Date: Mon, 14 Sep 2026 15:57:29 -0400
+X-Gm-Features: AcwNN1XaLRK0KaZAmfcRvdaBSkZOdh14LF1fb-xWULoFVhBfqyRklsdKoWBmLag
+Message-ID: <CAHC9VhQ3TwdGGH6YtVyMqJX4avJwsadcRvRhAoUhCvJEHk=i=g@mail.gmail.com>
+Subject: Re: [PATCH v2 12/40] selinux: reject writable opens of policy file,
+ drop mmap shared/write check
+To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	Vlastimil Babka <vbabka@kernel.org>, Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
+	David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Leon Romanovsky <leon@kernel.org>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Alexei Starovoitov <ast@kernel.org>, 
+	Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, 
+	Eduard Zingerman <eddyz87@gmail.com>, Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, 
+	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
+	Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
+	Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>, Jaya Kumar <jayalk@intworks.biz>, Simona Vetter <simona@ffwll.ch>, 
+	Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, John Hubbard <jhubbard@nvidia.com>, 
+	Peter Xu <peterx@redhat.com>, Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
+	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
+	Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
+	Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, 
+	Mark Rutland <mark.rutland@arm.com>, Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, 
+	Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
+	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, 
+	Arnd Bergmann <arnd@arndb.de>, Muchun Song <muchun.song@linux.dev>, 
+	Oscar Salvador <osalvador@suse.de>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
+	Marc Zyngier <maz@kernel.org>, Oliver Upton <oupton@kernel.org>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Madhavan Srinivasan <maddy@linux.ibm.com>, 
+	Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
+	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
+	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
+	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
+	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
+	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
+	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, 
+	Byungchul Park <byungchul@sk.com>, Gregory Price <gourry@gourry.net>, 
+	Ying Huang <ying.huang@linux.alibaba.com>, Alistair Popple <apopple@nvidia.com>, 
+	Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Youngjun Park <youngjun.park@lge.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Qi Zheng <qi.zheng@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-usb@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	selinux@vger.kernel.org, linux-sound@vger.kernel.org, bpf@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
+	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org, 
+	kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
+	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
+	fuse-devel@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+On Mon, Sep 14, 2026 at 11:05=E2=80=AFAM Lorenzo Stoakes (ARM) <ljs@kernel.=
+org> wrote:
+>
+> The policy file has no write method and is exposed read-only (S_IRUGO in
+> selinux_files[]), yet sel_open_policy() performs no open mode check, so a
+> CAP_DAC_OVERRIDE caller can open it O_RDWR. Reject FMODE_WRITE at open, a=
+s
+> kernfs does.
+>
+> The file can then never be mapped with FMODE_WRITE, so do_mmap() always
+> clears VM_MAYWRITE and VM_SHARED for MAP_SHARED mappings and the VM_SHARE=
+D
+> check in sel_mmap_policy() cannot be reached. Remove it.
+>
+> This also stops sel_mmap_policy() clearing VM_MAYWRITE on a mapping that =
+is
+> neither a PFN map nor a mixed map, ahead of the core enforcing that only
+> such mappings may do so.
+>
+> Acked-by: Stephen Smalley <stephen.smalley.work@gmail.com>
+> Reviewed-by: Jann Horn <jannh@google.com>
+> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+> ---
+>  security/selinux/selinuxfs.c | 11 +++--------
+>  1 file changed, 3 insertions(+), 8 deletions(-)
 
-Pre-existing issues:
-- [Critical] The driver passes a virtual address to __free_pages(), causing=
- an out-of-bounds pointer dereference and kernel panic.
-- [High] Ignored return value of fb_deferred_io_init() leads to NULL pointe=
-r dereferences in mmap, open, and cleanup error paths.
-- [High] Missing .driver_data initialization in i2c_device_id array leads t=
-o NULL pointer dereference on sysfs instantiation.
---
-
-commit d46565518c57c096a66d45b42bbe529fae5740d7
-Author: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-
-fbdev: defio: assert FBINFO_VIRTFB, drop VM_IO, add VM_MIXEDMAP
-
-Currently all drivers which use defio allocate system memory. All of them
-also set FBINFO_VIRTFB, other than ssd1307fb, however this driver allocates
-system RAM, so simply failed to set this flag when it ought to.
-
-> diff --git a/drivers/video/fbdev/ssd1307fb.c b/drivers/video/fbdev/ssd130=
-7fb.c
-> index c4fdecafd8560..958514a354338 100644
-> --- a/drivers/video/fbdev/ssd1307fb.c
-> +++ b/drivers/video/fbdev/ssd1307fb.c
-> @@ -763,6 +763,8 @@ static int ssd1307fb_probe(struct i2c_client *client)
->  	info->fix.smem_start =3D __pa(vmem);
->  	info->fix.smem_len =3D vmem_size;
-> =20
-> +	info->flags =3D FBINFO_VIRTFB;
-> +
->  	fb_deferred_io_init(info);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but if memory allocation fails
-in fb_deferred_io_init(), it returns -ENOMEM but ssd1307fb_probe() ignores
-it, leaving info->fbdefio_state as NULL and info->deferred_work
-uninitialized.
-
-Subsequent probe failure or device removal calls fb_deferred_io_cleanup(),
-which can unconditionally call flush_delayed_work() on the uninitialized
-workqueue and then dereference the NULL fbdefio_state:
-
-drivers/video/fbdev/core/fb_defio.c:fb_deferred_io_cleanup() {
-	...
-	mutex_lock(&fbdefio_state->lock);
-	...
-}
-
-Additionally, userspace calling open() or mmap() could trigger NULL pointer
-dereferences in fb_deferred_io_open() and fb_deferred_io_mmap().
-
-Does the ignored return value of fb_deferred_io_init() lead to NULL pointer
-dereferences in mmap, open, and cleanup error paths?
-
-> =20
->  	i2c_set_clientdata(client, info);
-
-[Severity: Critical]
-This is a pre-existing issue, but the driver allocates video memory using
-__get_free_pages(), which returns a virtual address (void *).
-
-During probe failure, it passes this virtual address directly to
-__free_pages():
-
-drivers/video/fbdev/ssd1307fb.c:ssd1307fb_probe() {
-	...
-fb_defio_error:
-	__free_pages(vmem, get_order(vmem_size));
-	...
-}
-
-And during module unload, it does the same:
-
-drivers/video/fbdev/ssd1307fb.c:ssd1307fb_remove() {
-	...
-	__free_pages(__va(info->fix.smem_start), get_order(info->fix.smem_len));
-	...
-}
-
-Because C implicitly casts void * to struct page *, the kernel could treat
-the zeroed video memory as a page struct, reading garbage PFNs, corrupting
-the buddy allocator state, and crashing.
-
-Does passing a virtual address to __free_pages() in these paths cause an
-out-of-bounds pointer dereference and kernel panic? Should this be using
-free_pages() instead?
-
-
-[Severity: High]
-This isn't a bug introduced by this patch, but if the driver is instantiated
-via the legacy I2C sysfs interface, device_get_match_data() falls back to
-matching against ssd1307fb_i2c_id:
-
-drivers/video/fbdev/ssd1307fb.c:ssd1307fb_i2c_id[] =3D {
-	{ .name =3D "ssd1305fb" },
-	...
-};
-
-Because entries in this array omit the .driver_data field, it defaults to
-NULL. The probe function then unconditionally dereferences this NULL pointe=
-r:
-
-drivers/video/fbdev/ssd1307fb.c:ssd1307fb_probe() {
-	...
-	par->vcomh =3D par->device_info->default_vcomh;
-	...
-}
-
-Does the missing .driver_data initialization in the i2c_device_id array
-lead to a NULL pointer dereference on sysfs instantiation?
+Acked-by: Paul Moore <paul@paul-moore.com>
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260914-b4-mmap-pr=
-epare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org?part=3D19
+paul-moore.com
