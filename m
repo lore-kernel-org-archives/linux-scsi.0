@@ -1,179 +1,216 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 273BD41DDE1;
-	Mon, 14 Sep 2026 09:18:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26BB3420E98;
+	Mon, 14 Sep 2026 09:45:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789377484; cv=none; b=Ou2iY7ZO4oIm1xgx8XBf96wOvctJXR3nnohM4Y+IRAp5Hgcj+HvwfT+YVutb4Ll1IZoo0j2XMqcxOxkE7dU2rOeY32Ovvwbo1Ud1M0Eekg13dshMIdderZFqiGMNQnlV4okdb+fyNNyTUBaUOblikOaREIsnRUv+qgXCnpdH1kE=
+	t=1789379148; cv=none; b=IwYyKCGyH2nmE3YK/iwkIoj9Bl8I7Bmjdy9J+sqq1MSYUnUACgQZVx/4kNYPS35UmIOd6/TWce/BzouJyEFzaD+s2J/mFYp+mxeCifoG49mKXx6pySKK89NGM4oAwydeDOinhPQyX9XLsi7ZrlUzsDagjADEK2PaF7HGPO8ikZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789377484; c=relaxed/simple;
-	bh=1m+U1m5FNizso74tA+oB8cWR7xF3X6JH6AIdNVozOQc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GxNISClS+LJhjvNl3Vs9kqkyLPHCZiRuHN7K+3zcpJ6DotTI+n9kRqHl5s+6ytkCk+6hvGnSn7d03O0UfQ4zxsbgqAzzeIJAXTXwVrkhBshcP/fhzk1Uv+dKeK8W1FibDa1EhT2HCaLpUz/99cZA5TvpQQ4Y1WrjJhAHirx/wR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=QBBD1Ch6; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=xquDvs4X; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=j4vvTSt1; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=20JZrJDa; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1789379148; c=relaxed/simple;
+	bh=odYIDX4jCXYwxCdyrhSuvjU+Du7Mhw06F5wrY6FyKlA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GGdAdEEJyji++ODs3pcduBmRB8JierWC5cWBsRd+epjoWUzh+Z4mbhH6cMc4IsvWjg78RD5XmSbAvqoh6uO7QuvhuIGtzsBUYcGgLZXMIp5beBIH/YRrd5nk8d3R/K2/bjKdWX7ztUmGO2ckFzDgkLnsHdq+3AeApG/97Jl/ktQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=mYvTuOtn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="QBBD1Ch6";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="xquDvs4X";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="j4vvTSt1";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="20JZrJDa"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 0A8B91F848;
-	Mon, 14 Sep 2026 09:17:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1789377477; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pJoiPzJFbz/5ZchkpM/8m7FPSNUAGoIO5bwJam26yNE=;
-	b=QBBD1Ch6otKicYpxRMCRKP/C/LRIh1XfaGUiQM4aJk7FHyj6u1i79R4fttTVopgMp3T8om
-	qt2hv3Z8kTHLUM4JHwdGrY+7R5MpsSxW8Ri4mVqueAotcEK1gtozv2VAWkrtEucqhm0jIr
-	pRgogvgE5AbkL6n5GsL+OIno/t8tmOw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1789377477;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pJoiPzJFbz/5ZchkpM/8m7FPSNUAGoIO5bwJam26yNE=;
-	b=xquDvs4XJYhWeI+wIF7vo+VInbwvzF9fF3aRvQz6NGQ1nq0l/kswFG6YjNMnVM9vXFm27X
-	toco/RxcQeQhXdAw==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=j4vvTSt1;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=20JZrJDa
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1789377473; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pJoiPzJFbz/5ZchkpM/8m7FPSNUAGoIO5bwJam26yNE=;
-	b=j4vvTSt1zOFA5msdUyDh2kok70dkVLUmQvGBS+BbhG4oFk/jysePuKzZ2GWaPPF6rouNnS
-	iTG4PTGkn0LcVqc0AbCQ+7Aar2UMA39TkCizOOQZOp4NIw+CpaKm5gYe40MDjZX9hGzXeo
-	b9gK2RQc/lvyRn6yXa/6c+UY+7Zmuts=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1789377473;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=pJoiPzJFbz/5ZchkpM/8m7FPSNUAGoIO5bwJam26yNE=;
-	b=20JZrJDayxJSZ83CzmgzZjDFVNAaE9hAKEf5lDe3GRbwfY6256C0Q4PzwKwMlxIAO5j95z
-	CIXk1DPInU5z1XAg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C307E1368C;
-	Mon, 14 Sep 2026 09:17:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id h64pL8C7p2o7TAAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 14 Sep 2026 09:17:52 +0000
-Message-ID: <28865bba-ac60-4c6e-aec8-64b1fcdb1c8f@suse.de>
-Date: Mon, 14 Sep 2026 11:17:52 +0200
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="mYvTuOtn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AA971F000FF;
+	Mon, 14 Sep 2026 09:45:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1789379146;
+	bh=yMawZMkfuQw56UbgQ22U5fo/LYdGce1H55eI7RTHbKQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=mYvTuOtnMmjfmgQU04+QflA7yoaOvmjQlyYcu5mesOM5r6qF/ayWKMO7sry/VXEx7
+	 2anz8qiVFlHXrERHSU2OjP9gSFKQ7dvOvIowo6PzI2If2tQinz2sfs74+ZGAjimQs9
+	 /H39/MoDtiXJeCC5WvS0nH+hJXI9F9OL3tZhDY/8=
+Date: Mon, 14 Sep 2026 11:45:37 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Peter Schneider <pschneider1968@googlemail.com>
+Cc: stable@vger.kernel.org, patches@lists.linux.dev,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	Wentao Guan <guanwentao@uniontech.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 6.12 0977/1376] scsi: core: sysfs: Make use of bus
+ callbacks
+Message-ID: <2026091428-overlaid-omission-49cf@gregkh>
+References: <20260912065607.535295758@linuxfoundation.org>
+ <20260912065629.342165847@linuxfoundation.org>
+ <e6152171-5c2c-4243-8b64-0a619a0f44e3@googlemail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH] scsi: virtio_scsi: bound EH timer resets to avoid
- unkillable hang
-To: Nguyen Ngoc Thang <ngocthang2710.1999@gmail.com>, mst@redhat.com,
- jasowangio@gmail.com, mkp@kernel.org, James.Bottomley@HansenPartnership.com
-Cc: pbonzini@redhat.com, stefanha@redhat.com, eperezma@redhat.com,
- virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, sashiko-bot@kernel.org
-References: <20260911163509.684191F000FF@smtp.kernel.org>
- <20260911164417.33860-1-ngocthang2710.1999@gmail.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260911164417.33860-1-ngocthang2710.1999@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -3.01
-X-Rspamd-Queue-Id: 0A8B91F848
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Level: 
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	FREEMAIL_TO(0.00)[gmail.com,redhat.com,kernel.org,HansenPartnership.com];
-	TAGGED_RCPT(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[12];
-	MID_RHS_MATCH_FROM(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	RCVD_TLS_ALL(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:dkim,suse.de:email,suse.de:mid];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Flag: NO
+In-Reply-To: <e6152171-5c2c-4243-8b64-0a619a0f44e3@googlemail.com>
 
-On 9/11/26 6:44 PM, Nguyen Ngoc Thang wrote:
-> Thank you for the review -- the eh_host_reset_handler finding is correct,
-> and the underlying mechanism is worse than a stale read.
+On Sun, Sep 13, 2026 at 03:21:16PM +0200, Peter Schneider wrote:
+> Am 12.09.2026 um 08:56 schrieb Greg Kroah-Hartman:
+> > 6.12-stable review patch.  If anyone has any objections, please let me know.
+> > 
+> > ------------------
+> > 
+> > From: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
+> > 
+> > [ Upstream commit f7d4f1bf5724e52de049c619beddd53c62206624 ]
+> > 
+> > Introduce a bus-specific probe, remove and shutdown function. For now
+> > this only allows to get rid of a cast of the generic device to a SCSI
+> > device in the drivers and changes the remove prototype to return
+> > void---a non-zero return value is ignored anyhow.
+> > 
+> > The objective is to get rid of users of struct device_driver callbacks
+> > .probe(), .remove() and .shutdown() to eventually remove these. Until
+> > all SCSI drivers are converted, this results in a runtime warning about
+> > the drivers needing an update because there is a bus probe function and
+> > a driver probe function. The in-tree drivers are fixed by the following
+> > commits.
+> > 
+> > Signed-off-by: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
+> > Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+> > Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> > Link: https://patch.msgid.link/a54e363a3fd2054fb924afd7df44bca7f444b5f1.1766133330.git.u.kleine-koenig@baylibre.com
+> > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> > Stable-dep-of: bb31844d88b7 ("scsi: sd: Fix special_vec mempool leak when scsi_alloc_sgtables() fails")
+> > Signed-off-by: Sasha Levin <sashal@kernel.org>
+> > ---
+> >   drivers/scsi/scsi_sysfs.c  | 73 ++++++++++++++++++++++++++++++++++++--
+> >   include/scsi/scsi_driver.h |  3 ++
+> >   2 files changed, 74 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> > index 7f69f0613c08c..0b29cbcbd7e1f 100644
+> > --- a/drivers/scsi/scsi_sysfs.c
+> > +++ b/drivers/scsi/scsi_sysfs.c
+> > @@ -554,10 +554,48 @@ static int scsi_bus_uevent(const struct device *dev, struct kobj_uevent_env *env
+> >   	return 0;
+> >   }
+> > +static int scsi_bus_probe(struct device *dev)
+> > +{
+> > +	struct scsi_device *sdp = to_scsi_device(dev);
+> > +	struct scsi_driver *drv = to_scsi_driver(dev->driver);
+> > +
+> > +	if (drv->probe)
+> > +		return drv->probe(sdp);
+> > +	else
+> > +		return 0;
+> > +}
+> > +
+> > +static void scsi_bus_remove(struct device *dev)
+> > +{
+> > +	struct scsi_device *sdp = to_scsi_device(dev);
+> > +	struct scsi_driver *drv = to_scsi_driver(dev->driver);
+> > +
+> > +	if (drv->remove)
+> > +		drv->remove(sdp);
+> > +}
+> > +
+> > +static void scsi_bus_shutdown(struct device *dev)
+> > +{
+> > +	struct scsi_device *sdp = to_scsi_device(dev);
+> > +	struct scsi_driver *drv;
+> > +
+> > +	if (!dev->driver)
+> > +		return;
+> > +
+> > +	drv = to_scsi_driver(dev->driver);
+> > +
+> > +	if (drv->shutdown)
+> > +		drv->shutdown(sdp);
+> > +}
+> > +
+> > +
+> >   const struct bus_type scsi_bus_type = {
+> > -        .name		= "scsi",
+> > -        .match		= scsi_bus_match,
+> > +	.name		= "scsi",
+> > +	.match		= scsi_bus_match,
+> >   	.uevent		= scsi_bus_uevent,
+> > +	.probe		= scsi_bus_probe,
+> > +	.remove		= scsi_bus_remove,
+> > +	.shutdown	= scsi_bus_shutdown,
+> >   #ifdef CONFIG_PM
+> >   	.pm		= &scsi_bus_pm_ops,
+> >   #endif
+> > @@ -1609,6 +1647,30 @@ void scsi_remove_target(struct device *dev)
+> >   }
+> >   EXPORT_SYMBOL(scsi_remove_target);
+> > +static int scsi_legacy_probe(struct scsi_device *sdp)
+> > +{
+> > +	struct device *dev = &sdp->sdev_gendev;
+> > +	struct device_driver *driver = dev->driver;
+> > +
+> > +	return driver->probe(dev);
+> > +}
+> > +
+> > +static void scsi_legacy_remove(struct scsi_device *sdp)
+> > +{
+> > +	struct device *dev = &sdp->sdev_gendev;
+> > +	struct device_driver *driver = dev->driver;
+> > +
+> > +	driver->remove(dev);
+> > +}
+> > +
+> > +static void scsi_legacy_shutdown(struct scsi_device *sdp)
+> > +{
+> > +	struct device *dev = &sdp->sdev_gendev;
+> > +	struct device_driver *driver = dev->driver;
+> > +
+> > +	driver->shutdown(dev);
+> > +}
+> > +
+> >   int __scsi_register_driver(struct scsi_driver *sdrv, struct module *owner)
+> >   {
+> >   	struct device_driver *drv = &sdrv->gendrv;
+> > @@ -1616,6 +1678,13 @@ int __scsi_register_driver(struct scsi_driver *sdrv, struct module *owner)
+> >   	drv->bus = &scsi_bus_type;
+> >   	drv->owner = owner;
+> > +	if (!sdrv->probe && drv->probe)
+> > +		sdrv->probe = scsi_legacy_probe;
+> > +	if (!sdrv->remove && drv->remove)
+> > +		sdrv->remove = scsi_legacy_remove;
+> > +	if (!sdrv->shutdown && drv->shutdown)
+> > +		sdrv->shutdown = scsi_legacy_shutdown;
+> > +
+> >   	return driver_register(drv);
+> >   }
+> >   EXPORT_SYMBOL(__scsi_register_driver);
+> > diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+> > index 40aba9a9349a6..249cea724abd1 100644
+> > --- a/include/scsi/scsi_driver.h
+> > +++ b/include/scsi/scsi_driver.h
+> > @@ -12,6 +12,9 @@ struct request;
+> >   struct scsi_driver {
+> >   	struct device_driver	gendrv;
+> > +	int (*probe)(struct scsi_device *);
+> > +	void (*remove)(struct scsi_device *);
+> > +	void (*shutdown)(struct scsi_device *);
+> >   	int (*resume)(struct device *);
+> >   	void (*rescan)(struct device *);
+> >   	blk_status_t (*init_command)(struct scsi_cmnd *);
 > 
-> Once virtscsi_eh_timed_out() lets SCSI EH run to completion on an
-> unresponsive host, scsi_eh_bus_device_reset() leaves the command in
-> work_q (device reset fails the same way abort does, via the same bounded
-> virtscsi_tmf()), and since virtio_scsi implements neither
-> eh_target_reset_handler, eh_bus_reset_handler nor eh_host_reset_handler,
-> scsi_eh_target_reset()/scsi_eh_bus_reset()/scsi_eh_host_reset() all fail
-> immediately (scsi_try_*_reset() return FAILED when the handler pointer is
-> NULL) and the command falls through to scsi_eh_offline_sdevs(), which
-> calls scsi_eh_finish_cmd() and frees the tag back to the block layer.
 > 
-[ .. ]
+> As Wentao Guan pointed out, this is the patch that caused the dmesg warnings
+> I encountered in boot-testing 6.12.110-rc1 and 6.18.52-rc1 on my machine:
 > 
-> Happy to do the legwork on whichever direction you point at -- I have a
-> QEMU virtio-scsi repro harness already wired up for the original hang
-> (clearing PCI_COMMAND_MASTER mid-write) that I can extend to exercise
-> the recovery path too.
+> [    2.397237] Driver 'sr' needs updating - please use bus_type methods
+> ...
+> [   84.031323] Driver 'ses' needs updating - please use bus_type methods
 > 
-In short: you can't.
-The linux kernel lacks the ability to abort an outstanding I/O from 
-userspace; userspace (and that includes qemu) _has_ to wait for that
-I/O to return.
-Otherwise there is no guarantee that the DMA regions of that command
-are ever freed, and the kernel can happily scribble over memory which
-userspace already assumed to be free. As these DMA regions are mapped
-into the qemu guest you essentially allow the kernel to overwrite guest
-memory at any time.
-Not a good idea.
+> Is this really stable material? I feel that a new stable release should not
+> trigger new warning messages. Feels like a regression, even if it does no
+> harm... No?!
+> 
+> Or are there some driver patches missing that still need proper backports?
+> 
+> CC'ing linux-scsi list, too.
 
-In general: SCSI host_reset _is_ the bug hammer. If that doesn't work
-(for whatever reason) you system is hosed as you can _never_ get the
-memory and DMA regions of outstanding commands back to the system.
-So the better fix would be to implement a host_reset() callback for
-virtio-scsi which would reset the virtio setup, terminating all
-outstanding commands and reset the queues.
+I've dropped this now, thanks.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 NÃ¼rnberg
-HRB 36809 (AG NÃ¼rnberg), GF: I. Totev, A. McDonald, W. Knoblich
+greg k-h
