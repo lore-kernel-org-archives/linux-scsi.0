@@ -1,143 +1,112 @@
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-106117.protonmail.ch (mail-106117.protonmail.ch [79.135.106.117])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A87E6361DDC
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 11:45:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD22D3CAA3C;
+	Tue, 15 Sep 2026 12:25:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.117
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789472752; cv=none; b=YUL2M6wtQ4UWeDNewlqSZTgQY3gi1PV4lJD5A8ljbafRkc44rZ3yIzbPO+/5XhYrNcEFeLRrRGX6nDTo6AJraD8oV5uOtjF9xTJhX2oCGej6OerIvvZrFCOtnTzXfDZDVcZrfEft//7Ywvc3XhtdFBh4YOJD7BDEAbSTCju+JZQ=
+	t=1789475112; cv=none; b=YuAy50BCPs+/E+XJS5R+lwoxhBBnl8lI6uom/ny2Kt/O3QfgDC2oGHJPbTcTJx8aU/tmATOzk4l4Qw1zESUq116WzOYqBb6dU1paTyVjaYqAXz8D9bfat9PXUgM3Bwq2wbauoF7h1q54aixyXkxlWj6dZnM17AwpaSdFDMm5NdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789472752; c=relaxed/simple;
-	bh=/mUMqmTsmX2aUuRVI19DjRvT24Hk2w9WlfzFFKHoBjA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=PsY7wgLtQLfPxYYXNxptDWfz+x6D9B/aVFDbZf0wucslPEG7vc9DG3CJMriAUp1bC1EWlt6O198Xnojn57xKZvDi8qwCJyqvVXPb84j65MjkX1c77JVLlzUG3sVvcE+zSfBisnkmeDmAnmXfDU7W9WHQ5g5kviQ7rg7VA+nwuR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ggcircuit.com; spf=pass smtp.mailfrom=ggcircuit.com; dkim=pass (1024-bit key) header.d=ggcircuit.com header.i=@ggcircuit.com header.b=Sq/mGBBc; arc=none smtp.client-ip=209.85.160.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ggcircuit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ggcircuit.com
+	s=arc-20240116; t=1789475112; c=relaxed/simple;
+	bh=dQwY+fJdZSq7f2R1G4MVjrIF2+KddO9Z6wzUzNnLF84=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=u40iF9GLR6RUcDVjjeio1vmllT0krhq8tXpM0TMbFftIyg1xSKLVWnVyvYzUXGT5/62srQmbeVX2AB6uSatyzDDYOL0AJFNivQ8fBChBqijbRB1FQI+k5jyC+lYkISrGZhwwmh9fGFBxxkblSCz+A/3meSdmOVZWyxAyvFdU/ZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=danielfernau.com; spf=pass smtp.mailfrom=danielfernau.com; dkim=pass (2048-bit key) header.d=danielfernau.com header.i=@danielfernau.com header.b=FG9g4kVf; arc=none smtp.client-ip=79.135.106.117
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=danielfernau.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=danielfernau.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ggcircuit.com header.i=@ggcircuit.com header.b="Sq/mGBBc"
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-52ff0eea420so7352591cf.0
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 04:45:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ggcircuit.com; s=google; t=1789472749; x=1790077549; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=jkcb0RYR3iR2UL0lCLmkrfDemoqK24I77UVvd5NUglk=;
-        b=Sq/mGBBckeYwBffsA4XXEg8hk69O7J6j1sU0eXalcXpQdWLbuTw7H/iR4510Ze84YR
-         53Wnn0CgEUOretblCHT7gNOAAGi6NWfoeaDWft8jzZXh5FZ19i5vQZ4F+7U+nufk4Vef
-         Uu0drl7zO5xCEFNM+oTNGWdY5/o3e+Lxpyau8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789472749; x=1790077549;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=jkcb0RYR3iR2UL0lCLmkrfDemoqK24I77UVvd5NUglk=;
-        b=FdI4PN6DpYE9Wed4iM+qkWBuLcxjJJHbELnHvEgsWvrjDZ7DzQxcmDZY21E0Ba4rbo
-         5HdmpAd5gH9P9QleP1KY9hb29FvET03lCWnrDksEZF5WdMPU96aDfJwLvlr/TLHMi8vf
-         FsUyFyoAnsFuxqoNulSerbbduoXC1UBU0C2dUZwFtErdF3QSWJJoXrm8maHGBKrTxJ+y
-         d5vDCf+0WOXtr+AcSX4QDcMFHtpf+8zP09t/Cr7iPniNwsuo3DMBzlNR8UGhN+sW1llX
-         obVuaNliKawjH1QLoXS0DWxfLEyHQU/8fdNg40SOEY4BR3wd4c7Vg+TFCOHyAtfe8iIz
-         tNxw==
-X-Forwarded-Encrypted: i=1; AKwUvBzxZRYKM8ZJrEHn4YxzooumHVHFFUVwAB7ySRAC9BW1JaD5jJvq3w8sdIihdywqrNh5/yFXdQy63keW@vger.kernel.org
-X-Gm-Message-State: AFuF++n27fqroy5ok67Jq7zBNvi34XThwUYFGQvjJJD3IF2o/kg9BhI5
-	wCeaFUTRlydqxmlV3/e+tWmM8mD52/ds+RufjMJ5B2R/HXnTh6gz23j0FcPGKz9mHTs=
-X-Gm-Gg: AYBFou3ZAidxUfLt5Rz/wmcA6koyRvxzXv6img2/jFwssrVLAaxTexJciHlSggWI1qW
-	zH67O94YCLjqSKa7yuG8kBZuJ2yVTaAs9eEqMJeJIx0S9A9h14XhpEM09SFDuXXVNOaB03UlnE0
-	hBx0eTovCqZ0AhWGxpzj1VqSGffO9Ap6VcN35rUHJNVgCL7GTcjJu3orIkJs/KhBI1v6guJt0i8
-	4tljItbtzb4LJpToTM8TdT/p/U9ECGcKHoS5807toeZi3uKxcHE1zIYR95vMnIn/cVg0ofRObzY
-	1PrdyC3E9TtRjGiFfgL5s29mZ1Egoblu3ZkA+0X4j3qWvm0L1oSqBNgPjL13neVfftnqLWwwC7d
-	g0uRHPPmclWOJknE01sZpOxOXav16Ibrpgoa4F96bLWwz+wc3Xfi3dosVjSgRXBXIE3sK5ZK6om
-	G6CMSWSREMANaos2gl4uu+H7bDhO3FR/x1a4Bzfey6NJDOJ/Uaqz9kEmzUxl62RGEZyOrfVD2tF
-	z6h2BZ9qkVTGxWIHMoDoOkDSR2RZ+owu3JtWyfFvAGMYzyg6TWnJT4kIhnRJqMTHBrdJzUFMvFQ
-	B8KU4GE=
-X-Received: by 2002:a05:622a:1484:b0:530:fbd3:2038 with SMTP id d75a77b69052e-53119ee5d91mr46309071cf.26.1789472749450;
-        Tue, 15 Sep 2026 04:45:49 -0700 (PDT)
-Received: from 5eef7f0e50ac.ec2.internal (ec2-52-87-229-18.compute-1.amazonaws.com. [52.87.229.18])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9120f4b3dcesm118926926d6.31.2026.09.15.04.45.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2026 04:45:48 -0700 (PDT)
-From: Dmitriy Polomoshnov <dmitriy.polomoshnov@ggcircuit.com>
-To: stable@vger.kernel.org
-Cc: mlombard@redhat.com,
-	martin.petersen@oracle.com,
-	loberman@redhat.com,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	jonatan.rueda@ggcircuit.com,
-	jacob.pitcher@ggcircuit.com
-Subject: Re: [PATCH 6.1.y] scsi: target: iscsi: Fix hang for aborted WRITE_PENDING commands
-Date: Tue, 15 Sep 2026 11:45:21 +0000
-Message-Id: <20260915114521.8-1-dmitriy.polomoshnov@ggcircuit.com>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20260915091456.8-1-dmitriy.polomoshnov@ggcircuit.com>
-References: <20260915091456.8-1-dmitriy.polomoshnov@ggcircuit.com>
+	dkim=pass (2048-bit key) header.d=danielfernau.com header.i=@danielfernau.com header.b="FG9g4kVf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=danielfernau.com;
+	s=protonmail; t=1789475106; x=1789734306;
+	bh=92rny1zNwUdZet6IQ9calXezSfCPdzK7V6o7gfAiUqM=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=FG9g4kVfcjG/b9RtK29o2Gfd/KqWicum2xw1xYQLhEt6Q6SP+AmcgJDXWI67nuHXw
+	 MXN9CJ2gJ0IrBgLlBJE9r/eGgozkJwlRPoh72W/5e/JwwxMQk3A/Kr7/WzzBJx5P4Z
+	 qSHzsBKg6kJD8+Ud4CnTYHrWsU+UxovMwQI7ecNC9DrXNZLaoiIHRCHRzsM/Xq0ELC
+	 vTm4cwK1fzp/f1b0alqv+8XFq6gUkcwDc3MnufJDTgXZV4MKbSFHSpx11Q9MG0kyWG
+	 gwy/7siRdIcSMsM6G8AhFM1287BF6DPH8ygbMbUBUziU0ljTxA33zf/ZFNoJ+zbL1A
+	 pxrsegApParMQ==
+Date: Tue, 15 Sep 2026 12:24:58 +0000
+To: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
+From: Daniel Fernau <mail@danielfernau.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil <chandrakanth.patil@broadcom.com>, megaraidlinux.pdl@broadcom.com, Thomas Lamprecht <t.lamprecht@proxmox.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, Ranjan Kumar <ranjan.kumar@broadcom.com>, Thorsten Leemhuis <regressions@leemhuis.info>, regressions@lists.linux.dev, Lukasz Magiera <me@magik.net>, Mira Limbeck <m.limbeck@proxmox.com>, Mats Topstad <Mats.topstad@intility.no>, stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: megaraid_sas: Limit NVMe request size to the PRP chain frame
+Message-ID: <k5_uJWSlVpSwhVugTUyBfaq9oFVqFfpeuk_765JDKLtq_vKNO8mXI6TznKe4bX9WisARpHFxQYZ6i7W8YBT02KYaHL5d3LKSfyfCkNAh1jc=@danielfernau.com>
+In-Reply-To: <178840472610.670675.12272571379596581093.b4-ty@b4>
+References: <20260827175743.734593-1-t.lamprecht@proxmox.com> <178840472610.670675.12272571379596581093.b4-ty@b4>
+Feedback-ID: 131378921:user:proton
+X-Pm-Message-ID: cedc9534f7bd132ab88023fdca5b51ac4853a55e
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Follow-up to the 6.1.y patch I sent earlier today.
+Follow-up from our earlier note on pinning 6.8.12-4-pve.
 
-That mail said 6.12.94 did not hold the hang in 13 runs and that I had not
-identified why. I have now, and it changes what is worth asking for.
+We have now been running the HPE MR416i-o Gen11 cluster on Proxmox
+kernel 7.0.14-15-pve without the previous megasas_make_prp_nvme
+overflow.
 
-6.12 recovers because of a second, independent completion added by
+Hardware / firmware
+- HPE MR416i-o Gen11 (Broadcom PCI 0x1000:0x10e2)
+- HPE FW package 52.32.3-6333 / controller FW 5.320.03-4207
+- megaraid_sas 07.734.00.00-rc1
+- KIOXIA NVMe behind the controller
 
-  ea87981a0ee8 ("scsi: target: iscsi: Handle abort for WRITE_PENDING cmds")
+7.0.14-15-pve includes
+"scsi: megaraid_sas: Limit NVMe request size to the PRP chain frame"
+(pve-kernel 46a6f4f). That is the driver-side max_hw_sectors cap
+Martin suggested and the megaraid equivalent of Damien's
+04631f55afc5 ("scsi: mpt3sas: Limit NVMe request size to 2 MiB"),
+not Lukasz's original bounds check in megasas_make_prp_nvme().
 
-which landed in v6.4. It calls target_complete_cmd() from
-iscsit_release_commands_from_conn(), on the connection teardown path, rather
-than from the dataout path that d5869dae5080 fixes.
+On this hardware the cap is enough. We no longer need the
+max_sectors_kb udev workaround, and we do not see the page-boundary
+ptr_sgl fault (RAX=3D0x200 / 512th PRP slot) under production load.
 
-Presence in drivers/target/iscsi/iscsi_target.c, by count of
-target_complete_cmd call sites:
+Thanks,
+Daniel
+=20
 
-  linux-5.10.y   0
-  linux-6.1.y    0
-  linux-6.6.y    1   (ea87981a0ee8)
-  linux-6.12.y   1   (ea87981a0ee8)
 
-So 5.10.y and 6.1.y have no path at all by which an aborted WRITE_PENDING
-command can be completed from the iSCSI frontend. That is why they deadlock
-permanently.
 
-6.12 does not recover unconditionally either. It recovers only when the
-connection tears down. Holding the connection open makes the hang persistent
-on stock 6.12.94-1:
+On Thursday, September 3rd, 2026 at 5:10 AM, Martin K. Petersen (Oracle) <m=
+kp@kernel.org> wrote:
 
-  initiator answers NOP-In    blocked for the full 299 s hold, hung_task at
-                              242 s, cleared 1.2 to 3.2 s after socket close
-  initiator silent to NOP-In  torn down at 46 s, which is NA_NOPIN_TIMEOUT 15
-                              plus NA_NOPIN_RESPONSE_TIMEOUT 30
-
-One variable between those two runs. The report on 6.12.94:
-
-  INFO: task kworker/0:2:328 blocked for more than 120 seconds.
-        Not tainted 6.12.94+deb13-amd64 #1 Debian 6.12.94-1
-  Workqueue: events target_tmr_work [target_core_mod]
-   wait_for_completion+0x8a/0x160
-   target_put_cmd_and_wait+0x75/0xc0 [target_core_mod]
-   core_tmr_lun_reset+0x57e/0x7b0 [target_core_mod]
-   target_tmr_work+0xc3/0xf0 [target_core_mod]
-
-An initiator that keeps its session up while stalled therefore holds a target
-worker blocked indefinitely on current 6.12.y. In our case that is a Windows
-initiator on a diskless boot server; iSCSI boot firmware that ignores NOP-In
-pings hits the 46 s path instead.
-
-So d5869dae5080 is still wanted on 6.6.y and 6.12.y. It completes the command
-when the final DataOut arrives, with no dependency on the connection dying.
-
-And ea87981a0ee8 is worth considering for 6.1.y and 5.10.y alongside it. It
-carries no Fixes: tag and no Cc: stable either, which is why neither fix
-reached those trees. A tree with both matches mainline; a tree with only
-d5869dae5080 still lacks the teardown cleanup.
-
-Reproducer is the sequence from the earlier mail: Login, WRITE_10 with
-InitialR2T=Yes, ImmediateData=No, MaxOutstandingR2T=1, receive R2T, TMF
-LOGICAL UNIT RESET, DataOut with F=1, then either close the connection or hold
-it open and answer NOP-In.
+> On Thu, 27 Aug 2026 19:24:24 +0200, Thomas Lamprecht wrote:
+>=20
+> > megasas_make_prp_nvme() builds a command's PRP list in cmd->sg_frame, a
+> > DMA pool buffer of instance->max_chain_frame_sz bytes, spending one ent=
+ry
+> > per NVMe page of the transfer plus one per page of the buffer for the
+> > chain pointer. The loop runs until the transfer is described and never
+> > checks the buffer bound.
+> >
+> > max_hw_sectors comes straight from the MDTS the firmware reports for th=
+e
+> > drive. On drives with a large MDTS the only thing keeping the list insi=
+de
+> > the buffer was the block layer default of 1280 KiB, which needs 320
+> > entries, which fit into a 4 KiB frame as that holds 512. But since comm=
+it
+> > 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP") that default i=
+s
+> > 4 MiB, and such a transfer needs 1025 entries, so the list runs a full
+> > page past the end of the frame:
+> >
+> > [...]
+>=20
+> Applied to 7.3/scsi-fixes, thanks!
+>=20
+> [1/1] scsi: megaraid_sas: Limit NVMe request size to the PRP chain frame
+>       https://git.kernel.org/mkp/scsi/c/af8c27375733
+>=20
+> --
+> Martin K. Petersen
+> 
