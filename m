@@ -1,62 +1,64 @@
 Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA5DD2C11DF
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 01:02:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2CA2222597
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 01:02:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789434139; cv=none; b=AzpaXn+XR1W/ATtvB2eWH/Bw11ZDNoXi68dj8wqo7Rvh4MmWnkeYDUYzK+vRibq+BLfbs1e2DkKdvJguF5HEYhNeeecoxiszJn2sftS7jZYe/8nBsJcMM81PB8nEgbt2YOVUKDB/3l3RaPGXtXsAhbuUG+KifRtrgKwtJToAyTI=
+	t=1789434153; cv=none; b=auiEEnrAGr9F6AOlh7wMK8HYqOZS/+/oKl+bwI3aX3YgO4VHYZ6Aav5uBKOYpg4CdyYO570u8oQcQnNyt2g2vHgh8KZeko1MRSnM+SCIB6QD7ln1zE2G/uUUEbffLd7N2+d20wpARY2LlKbCeLKEQHM+1CxhqQJnkzmguaLBWHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789434139; c=relaxed/simple;
-	bh=cEPjvYmUpZzkbb1qaVYv5rKfnVTnkZ4bUmEcd21UiGM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L8hshILO1brUpSCXr8yymIn1jMD5BAuUElxqvac2/A1wbYHkZHIfeq5lJL8NDWe+MbG9/ONwVj3wUxUnvZvPAWIce5N7cO2BUmMy0z/L7uGOavwNw+luLmuWpXfh5W9AGEXKn6roIfazObpuY50NsXQIBFU4/7pZiQnRDAKXBCk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kZFe0V41; arc=none smtp.client-ip=74.125.230.140
+	s=arc-20240116; t=1789434153; c=relaxed/simple;
+	bh=3AjDIB7EWMAVyxipcTRH5OCK7onXDuyQbUsnnxBTwFs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=opsIq9vDjCNFTszczi1ZjrFVwxSRKRQNPzmgWgMym1GpKGAHbqusrYfa06l2IPCXFoI6ZWqS7nKuvglB2um6pjqypvAqORkLX2fNSMREPUbRtEoBDEnxYgwGLoxFHN2I56ymMGAdgoH9Ar4QzlbHKowunxTbgFC0ip2jPcGJ6Tg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FdkH8As1; arc=none smtp.client-ip=74.125.230.140
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kZFe0V41"
-Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-9104e54b1abso31374276d6.1
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 18:02:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FdkH8As1"
+Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-9121fe38733so26736766d6.2
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2026 18:02:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789434136; x=1790038936; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=t1LNCA2rVzMsb3MvU5q313bU41WDHWDxRU5eL4UYHU0=;
-        b=kZFe0V41S6X1LEVc4McSBjHP3wpzUjXEL07O9l27zbrDk69kwc0yOEctUmgN44ZvE3
-         Pqolor1qG5f6crA15wZ6vlNcYYIxnMEate1T54ab1Z2k2XMZoINdD7z2uKqMMDh0q1EC
-         qDep3QGhUvOniuJgvW4i1HgFm5r9z8dqXHTq+Jv5MznXHhWVq3jj8nX4noP3rYBY1QOe
-         ttl80keYxgRhFGK652oIdPcbe3yBsSaWsUR1GuI1+vMcXGygEH1zBEMdn67u8DqJMRFR
-         wI06g7XnPjwS3fgrn6rHzNoy4TsIDfS4BbrbKi9uU2zdNcUx6Q2XQDuvC5sw5Pn81Xv8
-         Q6ww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789434136; x=1790038936;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1789434150; x=1790038950; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=t1LNCA2rVzMsb3MvU5q313bU41WDHWDxRU5eL4UYHU0=;
-        b=lw7jfGidubOx4VfSrMMVPmrpACoFnOZ2np2GGVHT2tDsbnrP0w4qifV9VFKQIslmT2
-         Yib/XUJcmIT/L35VxGll4p1W/BRrk1e45uQIVH7l4FtniY39Dhbg56mR5Tkk1BYZjO/N
-         +cR/296TcrbR6vMToXnSCnSstxEQRmBYcIBmLyuP7Zl2Nc972LQtR06liP9V9NfwsXIu
-         PQ/1m/NovNcQPWyKYncLn4gFi1d6uUG1BTvLH0D6rRwo5CppNVKVdhhSLpIjx/5+msLx
-         b0qWBY+7fLJVvRl9Z2gt7YF2t18roymUUpBHrXoSu/to3oJtDgN9FBoKkPkEjiB0weo5
-         5kkw==
-X-Gm-Message-State: AFuF++mjia/mcN0ug/e7RDb5bQcBrt/Y9P6taGMRmBOHn+ns4hmBIXYP
-	5xAhHrbB6UC/2rXOhw8HEsCpxhQ2UJah+blvOY+TOMOwwkHKM0vjqqpiNWmt0kFFcQ==
-X-Gm-Gg: AYBFou1MOS7LhcTUjwIsABnz+LtqrFvAwNkjK4mKsKNieF2wYMhtnruBUplt3J1JkUU
-	+s+5iEzeamdrulJcLi7k/Rf3nUbOeKi7MQCR/wQQsgfNNJUm46kWEcZ5kbE7rmdr649kVR6uPZe
-	vS3Sjrpk1dfqrj4KUw3X3WBpM2JF/JhrdBq2rKlQKawMSjfgWU1UontlDrtrjabip7I3jCtqELz
-	Jl4/sOJ3YpF3jg5FJs93tAjKzXnXoxI2/eOsfveuYQL5EWw9gj+exMdJ2IOs4a8C36JflF9yD7h
-	rgFuJjjyoNh5jvnXiJw/0s8sXwh+zTul5wNQMr3BWgrdM0dPF8vhbZ+0EGPa0/Hp3g4u5RobtqF
-	SCWDuIE/ow2MHxjBR2urA+ousg4bW+g6hr827tH7iyOEz6p1W53RM6v5RvviV3q65j1KfYQDe0g
-	PViFh4m9wM7ZHdGHWH5NIwe7/l6LF5XdEmv72b7Z+zqq92HGhMLN4CPbvKCZnG1UrZ/2IwYxBf9
-	hMTSPeQ+upBMXJzTLQvVj6m2dKYBEW+PtxmXMi5r7HKNA/gyOFNjJ9JzlZ0o5dOXBqfxs+OSrzt
-	rfKcZutK2NKgzCrp4rCghNBY9N4jLhCBMZ1CSX57SRKBrGJXMt9rxti+DO7MDhzurSKcHQ==
-X-Received: by 2002:a05:6214:1942:b0:910:48eb:605c with SMTP id 6a1803df08f44-9122e676001mr87569056d6.28.1789434135881;
-        Mon, 14 Sep 2026 18:02:15 -0700 (PDT)
+        bh=VPCy7DFPSTAzIsYv8xVVBEwv2TCCDPqTTW4KAZaR2co=;
+        b=FdkH8As1b5Cp5neTY4ZJtVfRYAsIhf40UdVseCJS2LA1crSRqEcrY5B/+jKAXDIwj8
+         SJJRYahn0DFpTUKfOOfXH3dqwLd/h8atQiBiGh73yObTeaRPp9idNFIMEzCW36eoQH0C
+         tXFpLy3Xh3N7GyV94qSAz3DxbSDLyrlUvioaHlPhuAlDZan8DdxaDPgYre/sQ/uPkJ3m
+         AYqD3LyaPUmbGZBlHZy048Ies41AiODsPSgtaMVsxi1y6Q5QdHC2gQK8XD9IvMRN+uyL
+         YcBfi6Gqk+I2BRz/Pwb6Vi5nYMETLVvT81/dW1pKMc2yLYCrJapZN68Kl7+ibbR5KMTV
+         RvQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789434150; x=1790038950;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VPCy7DFPSTAzIsYv8xVVBEwv2TCCDPqTTW4KAZaR2co=;
+        b=fWY4KcrUIK1998KhdsyFWV6hOtyWjw2dekAp8wd0szmWocN1yZNS84PxFOqFOGBBh4
+         AmvP4QmcgOD95Itt/lEBtrGhsLLDK1Lt68e2jpZn5+/QTwmzFwhTDhDHPaqQdCH5ugPT
+         U2co9M5bsIIw3i5FQmB/dnQxkjuaE36qQxilNOklk6bONP3yG4P+5dwFI7gKr+Mfb+QL
+         kNthwrsycBWHJDzFSGtk7DSa6OSO5f7o0ZRwHNSqO7Azf43FNSxfWFlcArejga568Zpv
+         g43U8PFthEN072rp/vGIviGNd71Qy4cBEsvh/8iqLBHEDvkZY7LTeAf5HcA+7Pj2aKFf
+         AwVw==
+X-Gm-Message-State: AFuF++k15gDGBUn40jvnIs5IAvy2c9/Ri20wg1bYYIsOFF8LU6Udz/gq
+	OHCgUogZTz+YXXAkwfpFfcQuSxveKLYOQ3+7Z2AZW5crCN/lzfuCpBg=
+X-Gm-Gg: AYBFou23A4ZeQiW5K7Sy46yfesTzWba+T3MWOA1iwfjylay5MbJh5q7dkynfzQqzx1b
+	WPvFq5b6/G11S6b1Wno78kh85WoIyRlDM+mBUaBofdcsaQJ5V1OS0rJBtMduC45OZCOtljORwF3
+	r2zfXCG41MHHBBRwI5d6Md+I4RjyfkBp0iKrMSY3/+DvbaeLyDzt51VrUqu34Js49S3zUaZ2N3q
+	ce9YRzn/WL0fWeeP2/gW4N3qPhf2ks9OIXeI1LYXEQwZHaIad3SLhXSn3EghMPHNnjMQ7zh1dJ7
+	ariN3lLrecpEzQOt8SOoQVRLIFOPlAxGV08Y32GTpKXooPZNdZa7y1WNQjBwsEm4As/MzqC0F7+
+	yUYOn8HfXeQtNtpi1Y3eLAlDREV6zmBUGN835xFp36Q1MSPtHecVASGkKOORlfFzwb67BiF8nIn
+	XXpA26iLcy/hXP7q9tEBQtR9bMQ4NGT1+ljdCcUEUvGH8vEclrEnMVED4pKnccfm3bknCK+993P
+	S1xxayIHHsovN/+udgcb40bUCz06DezCxKmqwbBPQeFuWm6Iw2ZCnGtJhBVG/2VULtKYCrbS9US
+	0kk4YmSX14Bvc/gnNpQPUrtgRPPHlVur3iBs9XpU/JRE/kYCz/d2IOzspq4I6FhdRnsRGQ==
+X-Received: by 2002:ad4:5ae7:0:b0:90e:95d0:927a with SMTP id 6a1803df08f44-9122e4d4aecmr105329926d6.6.1789434149663;
+        Mon, 14 Sep 2026 18:02:29 -0700 (PDT)
 Received: from 6e-wmo5420-02.ad.psu.edu.net (6e-wmo5420-02.ad.psu.edu. [104.39.213.233])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9120f4d51ffsm110574986d6.45.2026.09.14.18.02.14
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9120f4d51ffsm110574986d6.45.2026.09.14.18.02.28
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 14 Sep 2026 18:02:15 -0700 (PDT)
+        Mon, 14 Sep 2026 18:02:29 -0700 (PDT)
 From: Myeonghun Pak <mhun512@gmail.com>
 To: Hannes Reinecke <hare@suse.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -64,10 +66,12 @@ To: Hannes Reinecke <hare@suse.com>,
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Subject: [PATCH 1/2] scsi: aic79xx: Disable the PCI device on removal
-Date: Mon, 14 Sep 2026 21:02:08 -0400
-Message-ID: <20260915010209.53250-1-mhun512@gmail.com>
+Subject: [PATCH 2/2] scsi: aic79xx: Disable PCI on configuration failure
+Date: Mon, 14 Sep 2026 21:02:09 -0400
+Message-ID: <20260915010209.53250-2-mhun512@gmail.com>
 X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20260915010209.53250-1-mhun512@gmail.com>
+References: <20260915010209.53250-1-mhun512@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -76,11 +80,13 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ahd_linux_pci_dev_probe() enables the PCI device, but removal leaves
-its enable reference outstanding. Disable it after ahd_free() has
-finished shutting down the controller and releasing its resources.
+ahd_linux_pci_dev_probe() enables the PCI device before calling
+ahd_pci_config(). If configuration fails, ahd_free() releases the
+controller resources but leaves the PCI enable reference outstanding.
+The remove callback is not called for a failed probe.
 
-The imbalance is already present in the initial Git import.
+Disable the PCI device after ahd_free() on this error path. The
+imbalance already exists in the initial Git import.
 
 This issue was identified during our ongoing static-analysis research
 while reviewing kernel code.
@@ -96,13 +102,14 @@ Signed-off-by: Myeonghun Pak <mhun512@gmail.com>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+index 5fba316..37f4395 100644
 --- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
 +++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-@@ -113,6 +113,7 @@ ahd_linux_pci_dev_remove(struct pci_dev *pdev)
- 	ahd_intr_enable(ahd, FALSE);
- 	ahd_unlock(ahd, &s);
- 	ahd_free(ahd);
-+	pci_disable_device(pdev);
- }
+@@ -189,6 +189,7 @@ ahd_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	error = ahd_pci_config(ahd, entry);
+ 	if (error != 0) {
+ 		ahd_free(ahd);
++		pci_disable_device(pdev);
+ 		return (-error);
+ 	}
  
- static void
