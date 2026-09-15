@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05C6A41A4F5;
-	Tue, 15 Sep 2026 18:25:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 216D643BDB0;
+	Tue, 15 Sep 2026 18:30:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789496721; cv=none; b=H9z9+A46kDrNU1dmgQUGEb3e72nXTnSwbP2wJXWBwOdRSsAYSXLIFXv6tgoFqX93e+iG630YEgUW1Nt0P38B8hvWE9wXXMZhZFZESSyxhA8r+F8axzDbqxyu2BRU8ZJ3hVSMoL4R4eL2xt7SYiHTBxq3AQT1HnVY/+0maPBH8Xw=
+	t=1789497023; cv=none; b=UrbuLHUZ/DWUitNC2KlhDW+TWonkBWZFuB2UDs3s3+1mnqscNoa7FBlWmzUqxW4iYlL/WVVsD8uarFny6RJLhosVi5veBMEZK5s1O61LPjAFODZA8E1xLuZzOHQbi/2x+veueZs/6Z7zvAk5n0zEmOKrcqB0xCGBjR0g+0xhhgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789496721; c=relaxed/simple;
-	bh=rPLWglI5Wlm9mIFu4gjr7+scAMhxrET8MSmLgiSFf/8=;
+	s=arc-20240116; t=1789497023; c=relaxed/simple;
+	bh=pKH8xO25YwnfpC2mXfUbhQkwTcYQqjJEajFuWg/A4u8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aaAwsf0h4WISv+4rXl0wVGkJDfXc5ZGgCXw/6m7P40gyfbMKAFFvI6nHMAgDJdztsZQO/R7137IGnCM19/fPLE7OGz250h/4w7QfsZGcVT3YBx992VYL4JiLlhCXv/Or+ZSK6F2iPoHueD3/NE1+A0VJyGMgvZ4Y3gd3YFZOgTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L8f94G9m; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=nQ+nuCzFOZKDcvdE/W2DtkdCK07ZQ9EOB7PXALXokMT9HzIlJBXxT/IyCvPHxHCEEiNXsM7hCCDg1Pw9IYFKz0ONc5yTNZFh/LYBT6qVQkKe7LblnsNkXqdFHd9pgXj/loAgW2Uyum8X98wS2Q9A6j3bQ7M6PiqnDWKBSnqn5Lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FtG1AIAh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L8f94G9m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 124D51F00893;
-	Tue, 15 Sep 2026 18:25:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FtG1AIAh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC7911F00893;
+	Tue, 15 Sep 2026 18:30:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789496719;
-	bh=hTpYvUrNZYIcwT2p8Kp9xxQTu0Fq/HJPfq19mi+/XYs=;
+	s=k20260515; t=1789497021;
+	bh=zCJx1lMoPaoDeiIN5oezRLV8MqYpA3JhuUg8Z+dhoag=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=L8f94G9mzSlNx9J6peH2jq3tNsTcUAybrSOzdJm5ksOR557E4eGHcMVdBvQoWXcMq
-	 oYUWohx4rX6UR3J8jBc8XVQjQr+ber6bJ2vp50tNPAhHXUhxRHLXdtKpPq0X+kq2PU
-	 gS7xFPkE8iTk1ZUf6F23/XNJ6TOWElkc+PU1etQ49xAX2Mcf5D6gOEjjFrhGeHYmwr
-	 quZO6YQ0w3g8MteVh8aIX9AaqG/9TfYwvtfMkvsA6bgIrhU7eO551to4fm0v6bfd4/
-	 BM4spkKqe45r4JjrhXiFS+HNsR69yIhfKoowbJLuXi0Q2cu8W8a4U8wu0elxPZcyTv
-	 CP6MLWz/FZBtQ==
-Date: Tue, 15 Sep 2026 11:25:18 -0700
+	b=FtG1AIAh8Ifu90TvPASnvJLKq/3hHoybYyG8CBtKd2A3Tko5EoQZmhxlykHybSWCY
+	 H6+cZEX9BUB3VzICpj+OZxPJ673u94nnolr9H+SDA6dBcoGGYAc9yHJcjV+Ep8BP0l
+	 el5biVBlyvnMpvBBdnmFKteUXHpcuI8Bb8Pu3nE8NtDNIpu6JJu8fFsiOvrLa3Qrgq
+	 NkHBRSaDsJkBM6eE9SQ++npMsQoPqmrvJCP6/7TZu7tvF19A4a5+2+kwcqpI8v/iuX
+	 YN51bg9WV0sHN4tZ47tD/7Vxl/N2tA6azTTrtrat6edEQApqlwzt/pVbGgznFVhGNY
+	 okL3wnYQoU9Ng==
+Date: Tue, 15 Sep 2026 11:30:21 -0700
 From: Kees Cook <kees@kernel.org>
 To: Bill Wendling <morbo@google.com>
 Cc: linux-kernel@vger.kernel.org, codemender-patching+linux@google.com,
@@ -114,11 +114,11 @@ Cc: linux-kernel@vger.kernel.org, codemender-patching+linux@google.com,
 	linux-gpio@vger.kernel.org, linux-scsi@vger.kernel.org,
 	linux-nfs@vger.kernel.org, devel@lists.orangefs.org,
 	linux-hardening@vger.kernel.org, linux-sound@vger.kernel.org
-Subject: Re: [PATCH 27/28] drm/xe/pf: Convert strlcat() to seq_buf in
- control_read()
-Message-ID: <202609151115.33A35B7098@keescook>
+Subject: Re: [PATCH 28/28] drm/xe/pf: Refactor strlcat() to seq_buf in
+ sched_group_engines_read()
+Message-ID: <202609151126.29464A5E1@keescook>
 References: <20260915081910.4142719-1-morbo@google.com>
- <20260915081910.4142719-28-morbo@google.com>
+ <20260915081910.4142719-29-morbo@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -127,50 +127,55 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260915081910.4142719-28-morbo@google.com>
+In-Reply-To: <20260915081910.4142719-29-morbo@google.com>
 
-On Tue, Sep 15, 2026 at 08:18:44AM +0000, Bill Wendling wrote:
+On Tue, Sep 15, 2026 at 08:18:45AM +0000, Bill Wendling wrote:
 > diff --git a/drivers/gpu/drm/xe/xe_gt_sriov_pf_debugfs.c b/drivers/gpu/drm/xe/xe_gt_sriov_pf_debugfs.c
-> index 0f242db775e1..5db7fc067c4d 100644
+
+This is the same file touched as
+https://lore.kernel.org/all/20260915081910.4142719-28-morbo@google.com/
+and doing the same thing, roughly? I think it'd be best to combine
+these, especially since one depends on the other's addition of seq_buf.h
+
+> index 5db7fc067c4d..548a50f74422 100644
 > --- a/drivers/gpu/drm/xe/xe_gt_sriov_pf_debugfs.c
 > +++ b/drivers/gpu/drm/xe/xe_gt_sriov_pf_debugfs.c
-> @@ -4,6 +4,7 @@
->   */
->  
->  #include <linux/debugfs.h>
-> +#include <linux/seq_buf.h>
->  
->  #include <drm/drm_print.h>
->  #include <drm/drm_debugfs.h>
-> @@ -663,15 +664,15 @@ static ssize_t control_write(struct file *file, const char __user *buf, size_t c
->  static ssize_t control_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
->  {
->  	char help[128];
+> @@ -377,8 +377,10 @@ static ssize_t sched_group_engines_read(struct file *file, char __user *buf,
+>  	struct xe_hw_engine *hwe;
+>  	enum xe_hw_engine_id id;
+>  	char engines[128];
 > +	struct seq_buf s;
->  	size_t n;
+> +	const char *s_str;
 >  
-> -	help[0] = '\0';
-> +	seq_buf_init(&s, help, sizeof(help));
->  	for (n = 0; n < ARRAY_SIZE(control_cmds); n++) {
-> -		strlcat(help, control_cmds[n].cmd, sizeof(help));
-> -		strlcat(help, "\n", sizeof(help));
-> +		seq_buf_printf(&s, "%s\n", control_cmds[n].cmd);
+> -	engines[0] = '\0';
+> +	seq_buf_init(&s, engines, sizeof(engines));
+
+As with the others, DECLARE_SEQ_BUF should be used.
+
+>  	if (group < num_groups) {
+>  		for_each_hw_engine(hwe, gt, id) {
+> @@ -386,15 +388,14 @@ static ssize_t sched_group_engines_read(struct file *file, char __user *buf,
+>  			u16 guc_logical_instance = xe_hwe_guc_logical_instance(hwe);
+>  			u32 mask = groups[group].engines[guc_class];
+>  
+> -			if (mask & BIT(guc_logical_instance)) {
+> -				strlcat(engines, hwe->name, sizeof(engines));
+> -				strlcat(engines, " ", sizeof(engines));
+> -			}
+> +			if (mask & BIT(guc_logical_instance))
+> +				seq_buf_printf(&s, "%s ", hwe->name);
+>  		}
+> -		strlcat(engines, "\n", sizeof(engines));
+> +		seq_buf_puts(&s, "\n");
 >  	}
-
-Yay seq_buf! I would tweak the 3 init stack variable lines into just
-using the single DECLARE_SEQ_BUF:
-
-DECLARE_SEQ_BUF(s, 128);
-
 >  
-> -	return simple_read_from_buffer(buf, count, ppos, help, strlen(help));
-> +	return simple_read_from_buffer(buf, count, ppos, help, seq_buf_used(&s));
+> -	return simple_read_from_buffer(buf, count, ppos, engines, strlen(engines));
+> +	s_str = seq_buf_str(&s);
+> +	return simple_read_from_buffer(buf, count, ppos, s_str, strlen(s_str));
 
-seq_buf_used() isn't correct in the case of full-buffer use. e.g. if
-the help buffer ends up filled with 127 chars and a NUL terminator,
-seq_buf_used() returns 128, but you want 127 here. Using strlen() ends up
-being redundant, though. I think we need to add seq_buf_strlen() which
-handles the same logic that seq_buf_str() does.
+While this is the correct length, it does illustrate why I think we need
+a new seq_buf helper to get the strlen result detected from NUL
+termination like seq_buf_str().
 
 -Kees
 
