@@ -1,139 +1,180 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3CDA23909C;
-	Tue, 15 Sep 2026 01:08:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9703D3D34A2;
+	Tue, 15 Sep 2026 05:27:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789434498; cv=none; b=eAeXtVci/shNTXsJXqUOSi2SH8Re4gVFXeQd7Rmm3Gc7A1/m/QMbzE46bcO28hcVA2Ye/BZZpv/Wz7zVqjU63MMHs7ArCobcKQ4YgjEsl1dvDTHbZ9bkY3pa498g7+UvAc3tRB2xET9UNh0/VGlyDPgVc/0mmOsvtJy4npGKorA=
+	t=1789450033; cv=none; b=lyPnbvXEbbwlB2t0IKhJs0zD6nFVBX3hoPrFXUgR+JWd/dUR+CkK3pa397kK+WkrFXn8BMJO9LmBQrhdFXSxjFx2F0EOMAhBLkxwO3bmPdnu+ZpR9F1GTt8m6vZxSWTUXVsLKrnANBpYHD7/dNd0KcL61w/X+Kh6QBPF0rdO4pA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789434498; c=relaxed/simple;
-	bh=mUsymsCuQS3SvFkPbdMe4P0yrNvNhFRlUiTaViL3wpk=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=B+Hb5mZVOoyryXHDedn9vFejF6KS/VIgSsh5bFueoD3v3vHA0BWkO0DfTUdusxYSterbKN4JMClimR8dVXE8vM1fVZIvKomCfGyUaTFYscoYGQkDKraZCm3BNSwFN+55joc3xBQI8Upi0lX/SCDYjw+zKb2HU7qIFjgaO6DQVpo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=JlZVB02S; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789450033; c=relaxed/simple;
+	bh=6s/CSeUmjV64vwCvJvpziBKmACQPr0g1iZdQ4UMa2HI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=tW9x8NYGzr4RtqSssoXlRgQBJi9ez3NX31zB4bNWorVZ0kPlqKAKKP9wXwLQO0NzgtyWaoawwfEVdjpd9j2anYtUrNbFVt5vJy6UIqW9oAfpJBolbnaMpvLSYxI1PqhI3fmYwYBOo9ROf3VL4h//FjafKlhXEDAnwVWuavpoG2A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=qCy8PznX; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="JlZVB02S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 648761F000FF;
-	Tue, 15 Sep 2026 01:08:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1789434496;
-	bh=1++7fS8iWKOMzhlKxfG6KZTpRByEnFekp/pb13YE7fg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=JlZVB02SRB8SlrjnhgKRH7erLp6/lF0bjE2LaEmvv4g/ygzNEN9Df4GzyzKOq1GRm
-	 MXZBeGQXDG+eEGW474o2elhJDXFweuH5LsbgShtKZ8tWHgw7BwYQ9PSDiWCSrWxS8a
-	 XDSL8c0/AB3jDnSpmNCqPc3psNggeGWzB7Ii5XXU=
-Date: Mon, 14 Sep 2026 18:08:11 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Cc: "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka
- <vbabka@kernel.org>, Jann Horn <jannh@google.com>, Pedro Falcato
- <pfalcato@suse.de>, David Hildenbrand <david@kernel.org>, Mike Rapoport
- <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko
- <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, Dennis Dalessandro
- <dennis.dalessandro@cornelisnetworks.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>,
- Stephen Smalley <stephen.smalley.work@gmail.com>, Jaroslav Kysela
- <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Alexei Starovoitov
- <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko
- <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, Kumar Kartikeya
- Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, Baolin Wang
- <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, Ryan
- Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song
- <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, Usama Arif
- <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert
- <dgilbert@interlog.com>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <mkp@kernel.org>, Jaya Kumar <jayalk@intworks.biz>, Simona Vetter
- <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, Sebastian Reichel
- <sre@kernel.org>, John Hubbard <jhubbard@nvidia.com>, Peter Xu
- <peterx@redhat.com>, Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov
- <oleg@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner
- <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov
- <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
- Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim
- <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Rik van Riel
- <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli
- <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard
- <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie
- <airlied@gmail.com>, Will Deacon <will@kernel.org>, "Aneesh Kumar K.V"
- <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann
- <arnd@arndb.de>, Muchun Song <muchun.song@linux.dev>, Oscar Salvador
- <osalvador@suse.de>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan
- Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, Oliver Upton
- <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, Madhavan
- Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul
- Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou
- <aou@eecs.berkeley.edu>, Christian Borntraeger <borntraeger@linux.ibm.com>,
- Janosch Frank <frankja@linux.ibm.com>, Claudio Imbrenda
- <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>,
- Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens
- <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller"
- <davem@davemloft.net>, Andreas Larsson <andreas@gaisler.com>, Alexander
- Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>,
- Matthew Brost <matthew.brost@intel.com>, Joshua Hahn
- <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park
- <byungchul@sk.com>, Gregory Price <gourry@gourry.net>, Ying Huang
- <ying.huang@linux.alibaba.com>, Alistair Popple <apopple@nvidia.com>, Chris
- Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, Kemeng Shi
- <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He
- <baoquan.he@linux.dev>, Youngjun Park <youngjun.park@lge.com>, Johannes
- Weiner <hannes@cmpxchg.org>, Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt
- <shakeel.butt@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Chengming
- Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, Miklos
- Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-usb@vger.kernel.org, linux-rdma@vger.kernel.org,
- selinux@vger.kernel.org, linux-sound@vger.kernel.org, bpf@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org,
- linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
- kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org,
- linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
- fuse-devel@lists.linux.dev, Takashi Iwai <tiwai@suse.de>
-Subject: Re: [PATCH v2 00/40] mm: make VMA flag semantics explicit,
- eliminate VM_SPECIAL
-Message-Id: <20260914180811.057cba8fcc48d6e0b53a2683@linux-foundation.org>
-In-Reply-To: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org>
-References: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="qCy8PznX"
+X-UUID: 1311e568b0c611f18dc8c9802ae25ab1-20260915
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=33cVQ5J4yhsyUS8HwbCV24xkwsxQdh7bjkPhas/popg=;
+	b=qCy8PznXjGVLGKiXuDTyHM1puJ33Jsr/CmFjwBaGPKjH9bj/hsSBFT1XWvDrd1fX9oNDxaRHA9tdPo7CUbcudBy13wkguzZ8eRaD5zSkBzQw7yq9aGB57luPbQjgFwJ+ljZnfRGG3PNWCenYaB8PMYmgwnWL7fQfFC+CMh93hBE=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:74493fa1-7f17-4e8a-9dfc-a6391bef3175,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:7db8b62,CLOUDID:d77dd9e2-72a5-4ba1-af40-18bbd6ea8ffd,B
+	ulkID:nil,BulkQuantity:0,SF:102|123|836|865|888|898,TC:-5,Content:0|15|50|
+	99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OS
+	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 1311e568b0c611f18dc8c9802ae25ab1-20260915
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
+	(envelope-from <alice.chao@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1096064766; Tue, 15 Sep 2026 13:26:59 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Tue, 15 Sep 2026 13:26:58 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Tue, 15 Sep 2026 13:26:58 +0800
+From: <alice.chao@mediatek.com>
+To: <stable@vger.kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>,
+	<bvanassche@acm.org>, <avri.altman@sandisk.com>, <alim.akhtar@samsung.com>,
+	<wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <tun-yu.yu@mediatek.com>,
+	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>
+Subject: [PATCH 6.18.y] scsi: ufs: core: Re-arm the device command completion before submitting
+Date: Tue, 15 Sep 2026 13:26:37 +0800
+Message-ID: <20260915052638.459390-1-alice.chao@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On Mon, 14 Sep 2026 15:57:20 +0100 "Lorenzo Stoakes (ARM)" <ljs@kernel.org> wrote:
+From: Alice Chao <alice.chao@mediatek.com>
 
-> The VM_SPECIAL / VMA_SPECIAL_FLAGS mask conflates several unrelated
-> properties:
-> 
-> ...
-> 
-> It's all rather a mess.
-> 
-> This series brings some order to things by both limiting what drivers can
-> do with VMA flags and switching to using predicates that describe
-> behaviour, not arbitrary flags.
+Commit 20b97acc4caf ("scsi: ufs: core: Fix a race condition related to
+device commands") moved the device management command completion into
+struct ufs_hba, initialized once by ufshcd_init(), and dropped the
 
-That's a lot of patches.
+	hba->dev_cmd.complete = NULL;
 
-Review is thin and I expect this won't improve a lot.  Lots of "no
-functional changes" changes.
+assignments that used to make ufshcd_compl_one_cqe() discard completions
+the submitter had already given up on. Nothing replaced them, so the
+completion is never reset between two device commands:
 
-Perhaps it would be helpful if you were to identify those patches which
-you'd like to see reviewers focus on?
+  Task A (device command submitter) IRQ (tag == hba->reserved_slot)
+  --------------------------------- ------------------------------
+  ufshcd_read_desc_param()
+   ufshcd_query_descriptor_retry()
+    __ufshcd_query_descriptor()
+     ufshcd_exec_dev_cmd()
+      ufshcd_issue_dev_cmd()
+       ufshcd_send_command()
+       ufshcd_wait_for_dev_cmd()
+        wait_for_completion_timeout()
+        /* times out, done == 0 */
+        ufshcd_clear_cmd()
+        /* returns 0, no effect */
+       return -EAGAIN
+                                    ufs_mtk_mcq_intr()
+                                     ufshcd_mcq_poll_cqe_lock()
+                                      ufshcd_mcq_process_cqe()
+                                       ufshcd_compl_one_cqe()
+                                        /* lrbp->cmd == NULL */
+                                        complete(&hba->dev_cmd.complete)
+                                        /* done: 0 -> 1 */
+  ufshcd_query_attr_retry()
+   ufshcd_query_attr()
+    ufshcd_exec_dev_cmd()
+     ufshcd_issue_dev_cmd()
+      ufshcd_send_command()
+      ufshcd_wait_for_dev_cmd()
+       wait_for_completion_timeout()
+       /* returns at once, done: 1 -> 0 */
+       ufshcd_dev_cmd_completion()
+       /* response UPIU not written yet */
+       return -EINVAL
 
->  1153 insertions(+), 582 deletions(-)
+Task A then rejects what it reads out of the response UPIU:
 
-It's funny how often cleanup patches do this.
+  ufshcd_dev_cmd_completion: Invalid device management cmd response: 0
+  ufshcd_dev_cmd_completion: unexpected response in Query RSP: ff
 
-All queued up, thanks.
+The skew does not self-correct. On a UFS 4.0 controller in MCQ mode it
+persisted across more than a thousand consecutive device commands,
+failing every descriptor and attribute read until the link was reset.
+
+The controller can still complete the timed-out command because in MCQ
+mode ufshcd_clear_cmd() only issues an SQ cleanup (SQRTC.ICU), which
+shows the command left the submission queue but not that a CQE is not
+already posted. The MCQ path also skips the hba->outstanding_reqs
+re-check that the SDB path does, so it returns -EAGAIN with the
+completion still armed.
+
+Re-arm the completion in ufshcd_issue_dev_cmd(), immediately before
+submitting. All submitters - ufshcd_exec_dev_cmd(),
+ufshcd_issue_devman_upiu_cmd() and ufshcd_advanced_rpmb_op() - reach it
+holding hba->dev_cmd.lock, so no extra serialization is needed.
+
+This narrows the window rather than closing it: the CQE only carries the
+tag and every device command uses hba->reserved_slot, so a late
+completion is still indistinguishable from the expected one. It no
+longer spans the idle time between two commands.
+
+No mainline commit: commit 08b12cda6c44 ("scsi: ufs: core: Switch to
+scsi_get_internal_cmd()") moved this path onto the block layer and
+removed struct ufs_dev_cmd::complete and ufshcd_wait_for_dev_cmd(). Each
+device command now waits on its own request via blk_execute_rq(), so
+mainline has no shared completion to skew. That refactor is not a
+reasonable stable backport; this is the minimal alternative.
+
+Affected versions: v6.15 through v6.18, i.e. the kernels that carry the
+commit named in the Fixes: tag but not the mainline rewrite above.
+
+Fixes: 20b97acc4caf ("scsi: ufs: core: Fix a race condition related to device commands")
+Cc: stable@vger.kernel.org
+Signed-off-by: Alice Chao <alice.chao@mediatek.com>
+---
+ drivers/ufs/core/ufshcd.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 87578e8824d2..003fa8af4f4d 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3312,6 +3312,15 @@ static int ufshcd_issue_dev_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ {
+ 	int err;
+ 
++	/*
++	 * A device command that timed out may still be completed by the
++	 * controller later on. hba->dev_cmd.complete is shared by all device
++	 * commands, so re-arm it here, immediately before submitting, to keep
++	 * such a late completion from being mistaken for the completion of
++	 * this command.
++	 */
++	reinit_completion(&hba->dev_cmd.complete);
++
+ 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+ 	ufshcd_send_command(hba, tag, hba->dev_cmd_queue);
+ 	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+-- 
+2.45.2
+
