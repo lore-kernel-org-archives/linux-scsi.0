@@ -1,413 +1,171 @@
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
+Received: from mail-qv2-f12.google.com (mail-qv2-f12.google.com [74.125.230.140])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B5FE4772A7
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 08:28:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31B147254A
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 09:15:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789460893; cv=none; b=s53fvRm7atRP2fNGauUQqiWIJTz7VnAzsFG9hrmYIF17v5VKzTKT2mwyrDxq7RfNEwxORc1QynNcQEq1FsBOI1yu25upj5FrUgqOVE/nFPnGuC4Oot6E/4So/aUdKIxUeh0ZKygAN21RYSST4pChTToc1qRa7UeiIzv0b647qHc=
+	t=1789463754; cv=none; b=QbAwe/6PM4oE+wU4WCrz/HTbGUKqnyCUxR+nooe36676X4sFnJPwVlmvmHNW2VNYE4WMtsQ4khiIFFDx1NqxrpvtICuGUwtORScUIkMmIWFVfo98ZPLvFFxBgsSUJP4VPhtIHzSaEwZjbAKqneTgLxrc3xbKuy0k7gHYb4pPk6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789460893; c=relaxed/simple;
-	bh=F9i32u7X67i3rjTFL62V2TeKyR+ixZjqL6I2EccGRRA=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=WUIeyZhOBJ7uMB9IpuThflvFK0bqoXBFBZ6IPuDbDWMKkpfblvSVv9x3M4no1ouiiaK0jq8hhZeaheEZRMc4xosweICN9dcY/SGXZbX3bWLxX3Nrb0aLDsAJIHzzy/IblP7Gw3zkhsOTqG8ag317bFkiGGNgCf/fNtiLKIT8AFo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Zc6rQuNH; arc=none smtp.client-ip=209.85.160.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com
+	s=arc-20240116; t=1789463754; c=relaxed/simple;
+	bh=Hlr9Ut/EovEIElNh/ZcSjW6ek2j9qSFL+qKjDzPgPE0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=tDBz2l5OuYxW0Yo5pHcaFyMMPjDXvVnA88hIWqwjUTgmAerYHE2LLh54UI6VPm5hFxjLm283DoI7r4r7K4KGpY17AnuG5JwfLJi9NfQLTmHs+P4hPv5LN2PEOrDoaLHG8T2I0S4kY42jJBBzHGT8yCGtk1VQwV7g3J/b9zHndr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ggcircuit.com; spf=pass smtp.mailfrom=ggcircuit.com; dkim=pass (1024-bit key) header.d=ggcircuit.com header.i=@ggcircuit.com header.b=ZxIDr+HQ; arc=none smtp.client-ip=74.125.230.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ggcircuit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ggcircuit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Zc6rQuNH"
-Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-53124d6a362so492581cf.0
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 01:28:10 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=ggcircuit.com header.i=@ggcircuit.com header.b="ZxIDr+HQ"
+Received: by mail-qv2-f12.google.com with SMTP id 6a1803df08f44-9106feddbdfso35316646d6.0
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 02:15:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789460890; x=1790065690; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=CSHzy5Fr+v+g78gtgBhpLtU/5VBe17dtS9vTkuvViHg=;
-        b=Zc6rQuNH8bTLcDyNMbu4cVveWJ+FSI4dUSWeLioPqf1r7vPWwQGttECcwoXrTQvicK
-         ojuizQeawr+VcRqNagtZ7r9PibSiiEfIz6GM/tJrd6+GSyoHdiv6zdBvv0LfeZkFtt/a
-         O3Fs7Qt1PET9BCFh9j2rkBRUIV7XGPWL+pKuU/aU4xqRGFfJkTek2rSnHVxG5V2l2e3s
-         K2YYqbxqSDdSjwY88ImAXLZXVDp0XScLKUFNmRbedvlPo+52t+JJeYNKfgZNeo/loWfn
-         caJqartcGbS1AbdIBe0hFUodOBf2bydxiWjrVut/ZLykOFpCv5evvr2eqaCTE8D7prlx
-         KvrA==
+        d=ggcircuit.com; s=google; t=1789463751; x=1790068551; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=iLK542vtUaly/RpbeUB/EH4PBRh7qkRiR6AHFszoPZg=;
+        b=ZxIDr+HQnoLwlj+DTWhlKIjsu0gm5LRR0iYr5bxOTRTwYzQd9cfr/HlpDet/fOAqQU
+         SbPmI2qZ4hR4BmNw56cZ21DfwF5tRB9CDHzLA4M3cCIy4++Cfod/YDvEbHY+O0rwneOv
+         8HymReQUZMy5+qMP6Gh6Z/fRVivOmmLJGy2r0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789460890; x=1790065690;
-        h=content-transfer-encoding:content-type:cc:to:from:subject
-         :message-id:references:mime-version:in-reply-to:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=CSHzy5Fr+v+g78gtgBhpLtU/5VBe17dtS9vTkuvViHg=;
-        b=mLl8sjb6AzFh9iPCDMZzUM1h1JkQD1xN3/bv/mRBzun7C13lVl7Kmj8yjfeAUH+NT8
-         E/jBMg1rzO1uWDB814yyTPHEcMPkdHv0+rBdSRw/a3CsBvzBCmiqL3Lyim2ra803gQYz
-         g/esIh5WmRrQ12oS133+WwQmevcy49QdGKIsQlv3hBTCDRVSVscTM/Cui6EcwRRuTkCc
-         RhaovVISGbDMxLLQEl59evFMC59g2apJC2G9MFkdaBQ6oWJFTQGAEM+G/woxtBPNL9hh
-         9d+K+w7+uMKyC4FblE58j4wa8u9W8xu5tUvGs0GsXEhFYI217GT3QXEvnWoLqPyTDuML
-         RZ0w==
-X-Forwarded-Encrypted: i=1; AKwUvBxNRC0v6i5rxCO3lYsLDSGcc/9a6accjHS0MV9OAhrydlt0xmNHWeoB+slt97N7orIfj3hlnRnP04KK@vger.kernel.org
-X-Gm-Message-State: AFuF++kdrThX72pe+69ut8Q4FDJsa3X0ZZsDkueyOr/fartuabm5tTxJ
-	H06dY8bmSjT6ndjBsmKh9R3hquUpQR0ULP0oNY+OCNcy6zCxoPjz61ubfz7AMBLtFzwe7Qk/3RE
-	Q
-X-Received: from plky9.prod.google.com ([2002:a17:902:7009:b0:2dd:3c92:b0a2])
- (user=morbo job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:8c5:b0:2c6:90ec:f601
- with SMTP id d9443c01a7336-2dd6c5f3422mr125997365ad.8.1789460416594; Tue, 15
- Sep 2026 01:20:16 -0700 (PDT)
-Date: Tue, 15 Sep 2026 08:18:42 +0000
-In-Reply-To: <20260915081910.4142719-1-morbo@google.com>
+        d=1e100.net; s=20260707; t=1789463751; x=1790068551;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=iLK542vtUaly/RpbeUB/EH4PBRh7qkRiR6AHFszoPZg=;
+        b=GLET2Guh05rw3EKOudr1iSlNqswEaoo2HTtM4KRJySxwokzkl9je69iJaCqBotWqnp
+         0pXEBB/1HG+tFOfghbA2NyyW0LDMulqKYAMDkAI5igKXrQAP7DnsP/FVhA832rm7CSom
+         +MVyQi7KyKYK9ydH9R1Pbrze57FUwRAeOmX3/Uf+w+3Lg/n/bKi50FJC2bxdq/dsaEO+
+         GM/XAp9cAkGJKc5nW1Z+VkH+YZQ4o8Ku+JiCZbCZyKN0m8y49VA3UxtHFapQdV/fMCP+
+         cR+vGthzF5p6EhZGaSd8QZXc/OcUwGXfhFxYyaiYMjr9NQjT9RIC/3aBGySoP/e3MDX1
+         TdRA==
+X-Forwarded-Encrypted: i=1; AKwUvBxgOM6kZMruBcSmNT+CCRvO+93BU+nmuiNFEmUd/dw5yr4HKkOn18WkZF5ePEiGhq3JWJzzZfTMH+Ud@vger.kernel.org
+X-Gm-Message-State: AFuF++ltcMZwuqWq79Np0vNiPaPcKzjLOze91VNw9RlDlrCJdC0gVwM1
+	ctkrLZ8z9c5v3E2Kn0gaLOGQzu9Akmhm52zLm3n04XNUlH0EtWqpendgBIFewD5LRzQ=
+X-Gm-Gg: AYBFou1JYxbFlYqizXK3Y0kbN8bS/xpAtTlAZ2/u4f29Jy8LG21YvSxptYYFq1s7GqO
+	Hye8uzOfbW1H6peT9JbV+mOPyRA9QeaFniZtZz0gWALTGgLh9LpvOigZK13zn99FOuAiIpLNddS
+	LiLA+2fJNBUZrtXKuXH1nXCb24Ko6eK7pYLRXiJM7VftiMB8avpO22+SorkK3N8JwVrhiSZKRRQ
+	W6H3jajbpfR7HdR1gX+uR7iHoXHUgoQ5SMUjj0vnM8guUn2vVFEitr5RXXCbZZVE4tUgozAduVl
+	zPQYf0+Bo3QNZrXgSnylDacszYoD0lE3fiC3ct47UOJXRQX4iXOmBIR6uNzljpw5La10zakiekm
+	buNV8HufbSj8J/wDz3+E54MskOU0DEYcQYFRBc7qHS13I6ncR2aLgzzwsCfvW9rGWFkD9czJkLu
+	m9Ljv6ved4b32KfMpRHcxNkxEpws7NYzFUViRQIWoTBSmVobvgtiE1PkwJenWuRRC+9TKUsi5iw
+	4IWbmv/RinhWmnF1OkOLvl8xOl8D/vXEg92KWE71zHGapxJRQxStEcbG5KsyIZ50fNrS6IYSjAY
+	1ucuCzL++2hv/u1dog==
+X-Received: by 2002:ac8:5a09:0:b0:52f:acf2:110c with SMTP id d75a77b69052e-5310cf1b729mr102021661cf.3.1789463750713;
+        Tue, 15 Sep 2026 02:15:50 -0700 (PDT)
+Received: from dcf96c429d24.ec2.internal (ec2-52-87-229-18.compute-1.amazonaws.com. [52.87.229.18])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9120f4d35a9sm116773406d6.41.2026.09.15.02.15.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Sep 2026 02:15:50 -0700 (PDT)
+From: Dmitriy Polomoshnov <dmitriy.polomoshnov@ggcircuit.com>
+To: stable@vger.kernel.org
+Cc: mlombard@redhat.com,
+	martin.petersen@oracle.com,
+	loberman@redhat.com,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	jonatan.rueda@ggcircuit.com,
+	jacob.pitcher@ggcircuit.com
+Subject: [PATCH 6.1.y] scsi: target: iscsi: Fix hang for aborted WRITE_PENDING commands
+Date: Tue, 15 Sep 2026 09:14:56 +0000
+Message-Id: <20260915091456.8-1-dmitriy.polomoshnov@ggcircuit.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260915081910.4142719-1-morbo@google.com>
-X-Mailer: git-send-email 2.55.0.1032.g73a4cd73de-goog
-Message-ID: <20260915081910.4142719-26-morbo@google.com>
-Subject: [PATCH 25/28] EDAC/thunderx: Replace strlcat() with seq_buf
-From: Bill Wendling <morbo@google.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bill Wendling <morbo@google.com>, codemender-patching+linux@google.com, 
-	Russell King <linux@armlinux.org.uk>, Huacai Chen <chenhuacai@kernel.org>, 
-	WANG Xuerui <kernel@xen0n.name>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Helge Deller <deller@gmx.de>, 
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
-	"H. Peter Anvin" <hpa@zytor.com>, Ian Abbott <abbotti@mev.co.uk>, 
-	H Hartley Sweeten <hsweeten@visionengravers.com>, Tony Luck <tony.luck@intel.com>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Matthew Brost <matthew.brost@intel.com>, 
-	"=?UTF-8?q?Thomas=20Hellstr=C3=B6m?=" <thomas.hellstrom@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>, Matthias Schwarzott <zzam@gentoo.org>, 
-	Mauro Carvalho Chehab <mchehab@kernel.org>, Tony Nguyen <anthony.l.nguyen@intel.com>, 
-	Przemek Kitszel <przemyslaw.kitszel@intel.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Arend van Spriel <arend.vanspriel@broadcom.com>, Rob Herring <robh@kernel.org>, 
-	Saravana Kannan <saravanak@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, 
-	Sylwester Nawrocki <s.nawrocki@samsung.com>, Peter Griffin <peter.griffin@linaro.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Linus Walleij <linusw@kernel.org>, 
-	Anil Gurumurthy <anil.gurumurthy@qlogic.com>, 
-	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
-	Mike Marshall <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>, Kees Cook <kees@kernel.org>, 
-	Jiri Pirko <jiri@resnulli.us>, Simon Horman <horms@kernel.org>, Chuck Lever <cel@kernel.org>, 
-	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, "Mike Rapoport (Microsoft)" <rppt@kernel.org>, 
-	Kanglong Wang <wangkanglong@loongson.cn>, Tiezhu Yang <yangtiezhu@loongson.cn>, 
-	Qiang Ma <maqianga@uniontech.com>, Randy Dunlap <rdunlap@infradead.org>, 
-	Pengpeng Hou <pengpeng@iscas.ac.cn>, Ard Biesheuvel <ardb@kernel.org>, Breno Leitao <leitao@debian.org>, 
-	Thorsten Blum <blum@kernel.org>, Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Lyude Paul <lyude@redhat.com>, 
-	Ashutosh Desai <ashutoshdesai993@gmail.com>, Imre Deak <imre.deak@intel.com>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, Johan Hovold <johan@kernel.org>, 
-	Johannes Berg <johannes.berg@intel.com>, 
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
-	Alexander Stein <alexander.stein@ew.tq-group.com>, 
-	Cryolitia PukNgae <cryolitia@uniontech.com>, Jiaming Zhang <r772577952@gmail.com>, 
-	Will Porter <mrwillporter@gmail.com>, Cen Zhang <zzzccc427@gmail.com>, 
-	"=?UTF-8?q?C=C3=A1ssio=20Gabriel?=" <cassiogabrielcontato@gmail.com>, Rong Zhang <i@rong.moe>, 
-	Arun Raghavan <arunr@valvesoftware.com>, linux-arm-kernel@lists.infradead.org, 
-	loongarch@lists.linux.dev, linux-mips@vger.kernel.org, 
-	linux-parisc@vger.kernel.org, linux-edac@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org, 
-	linux-input@vger.kernel.org, linux-media@vger.kernel.org, 
-	intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, 
-	brcm80211-dev-list.pdl@broadcom.com, devicetree@vger.kernel.org, 
-	linux-samsung-soc@vger.kernel.org, linux-gpio@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	devel@lists.orangefs.org, linux-hardening@vger.kernel.org, 
-	linux-sound@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-The threaded ISR handlers (thunderx_ocx_com_threaded_isr(),
-thunderx_ocx_lnk_threaded_isr(), and thunderx_l2c_threaded_isr()) build
-multi-line error reports by formatting register details into a scratch
-buffer and appending them to "msg" with strlcat().
+commit d5869dae5080e976d4b03cc33eb7ceb527f242bf upstream.
 
-In preparation for removing the deprecated strlcat() API[1], refactor the
-ISR handlers to construct error messages using struct seq_buf.
+When a LUN_RESET aborts a WRITE command that is in the
+TRANSPORT_WRITE_PENDING state, the target core sets CMD_T_ABORTED and
+waits for the frontend to finish processing.
 
-Additionally, fix two bugs in decode_register(): initialize "str[0] =3D '\0=
-'"
-so callers do not append stale buffer contents when no error bits match,
-and stop iterating if snprintf() truncates the buffer to avoid
-underflowing the remaining "size" counter.
+If the initiator subsequently sends the remaining dataout PDUs,
+__iscsit_check_dataout_hdr() catches the payload, stops the dataout
+timer if the sequence is final and finally dumps the data. However, the
+iSCSI target doesn't trigger the completion process for these aborted
+commands. Because of this, the abort path hangs indefinitely in
+target_put_cmd_and_wait(), leading to a deadlocked target worker thread.
 
-Link: https://github.com/KSPP/linux/issues/370 [1]
-Cc: codemender-patching+linux@google.com
-Assisted-by: AI:Claude-3-5-Sonnet [editor_update_file, shell_command_run]
-Signed-off-by: Bill Wendling <morbo@google.com>
+Fix this by explicitly calling target_complete_cmd() when the final
+dataout PDU is received for an aborted WRITE command.
+target_complete_cmd() detects the CMD_T_ABORTED flag and cleanly routes
+the command into target_abort_work, allowing the abort completion to
+successfully unblock.
+
+[ dpolomoshnov: 6.1 does not reach the target_complete_cmd() declaration
+  through the headers iscsi_target.c already includes, so a straight
+  cherry-pick fails to build with "implicit declaration of function
+  'target_complete_cmd'". Added the target_core_backend.h include.
+  No other change from upstream. ]
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Dmitriy Polomoshnov <dmitriy.polomoshnov@ggcircuit.com>
 ---
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Huacai Chen <chenhuacai@kernel.org>
-Cc: WANG Xuerui <kernel@xen0n.name>
-Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Helge Deller <deller@gmx.de>
-Cc: Thomas Gleixner <tglx@kernel.org>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: x86@kernel.org
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Ian Abbott <abbotti@mev.co.uk>
-Cc: H Hartley Sweeten <hsweeten@visionengravers.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-Cc: Maxime Ripard <mripard@kernel.org>
-Cc: Thomas Zimmermann <tzimmermann@suse.de>
-Cc: David Airlie <airlied@gmail.com>
-Cc: Simona Vetter <simona@ffwll.ch>
-Cc: Matthew Brost <matthew.brost@intel.com>
-Cc: "Thomas Hellstr=C3=B6m" <thomas.hellstrom@linux.intel.com>
-Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Matthias Schwarzott <zzam@gentoo.org>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Tony Nguyen <anthony.l.nguyen@intel.com>
-Cc: Przemek Kitszel <przemyslaw.kitszel@intel.com>
-Cc: Andrew Lunn <andrew+netdev@lunn.ch>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Eric Dumazet <edumazet@google.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Saravana Kannan <saravanak@kernel.org>
-Cc: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Sylwester Nawrocki <s.nawrocki@samsung.com>
-Cc: Peter Griffin <peter.griffin@linaro.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: Linus Walleij <linusw@kernel.org>
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
-Cc: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
-Cc: "Martin K. Petersen" <mkp@kernel.org>
-Cc: Trond Myklebust <trondmy@kernel.org>
-Cc: Anna Schumaker <anna@kernel.org>
-Cc: Mike Marshall <hubcap@omnibond.com>
-Cc: Martin Brandenburg <martin@omnibond.com>
-Cc: Kees Cook <kees@kernel.org>
-Cc: Jiri Pirko <jiri@resnulli.us>
-Cc: Simon Horman <horms@kernel.org>
-Cc: Chuck Lever <cel@kernel.org>
-Cc: Jeff Layton <jlayton@kernel.org>
-Cc: NeilBrown <neil@brown.name>
-Cc: Olga Kornievskaia <okorniev@redhat.com>
-Cc: Dai Ngo <Dai.Ngo@oracle.com>
-Cc: Tom Talpey <tom@talpey.com>
-Cc: Jaroslav Kysela <perex@perex.cz>
-Cc: Takashi Iwai <tiwai@suse.com>
-Cc: Bill Wendling <morbo@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Cc: Kanglong Wang <wangkanglong@loongson.cn>
-Cc: Tiezhu Yang <yangtiezhu@loongson.cn>
-Cc: Qiang Ma <maqianga@uniontech.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>
-Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>
-Cc: Ard Biesheuvel <ardb@kernel.org>
-Cc: Breno Leitao <leitao@debian.org>
-Cc: Thorsten Blum <blum@kernel.org>
-Cc: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Lyude Paul <lyude@redhat.com>
-Cc: Ashutosh Desai <ashutoshdesai993@gmail.com>
-Cc: Imre Deak <imre.deak@intel.com>
-Cc: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Cc: Johan Hovold <johan@kernel.org>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Cc: Alexander Stein <alexander.stein@ew.tq-group.com>
-Cc: Cryolitia PukNgae <cryolitia@uniontech.com>
-Cc: Jiaming Zhang <r772577952@gmail.com>
-Cc: Will Porter <mrwillporter@gmail.com>
-Cc: Cen Zhang <zzzccc427@gmail.com>
-Cc: "C=C3=A1ssio Gabriel" <cassiogabrielcontato@gmail.com>
-Cc: Rong Zhang <i@rong.moe>
-Cc: Arun Raghavan <arunr@valvesoftware.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Cc: loongarch@lists.linux.dev
-Cc: linux-mips@vger.kernel.org
-Cc: linux-parisc@vger.kernel.org
-Cc: linux-edac@vger.kernel.org
-Cc: dri-devel@lists.freedesktop.org
-Cc: intel-xe@lists.freedesktop.org
-Cc: linux-input@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: intel-wired-lan@lists.osuosl.org
-Cc: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211@lists.linux.dev
-Cc: brcm80211-dev-list.pdl@broadcom.com
-Cc: devicetree@vger.kernel.org
-Cc: linux-samsung-soc@vger.kernel.org
-Cc: linux-gpio@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-nfs@vger.kernel.org
-Cc: devel@lists.orangefs.org
-Cc: linux-hardening@vger.kernel.org
-Cc: linux-sound@vger.kernel.org
----
- drivers/edac/thunderx_edac.c | 64 ++++++++++++++++++++++--------------
- 1 file changed, 39 insertions(+), 25 deletions(-)
+Reproduced on Debian bookworm, kernel 6.1.187-1 (6.1.0-53-amd64), with a
+16 MB fileio backstore and a scripted initiator:
 
-diff --git a/drivers/edac/thunderx_edac.c b/drivers/edac/thunderx_edac.c
-index e7c335ca0c36..4e3781815b6d 100644
---- a/drivers/edac/thunderx_edac.c
-+++ b/drivers/edac/thunderx_edac.c
-@@ -20,6 +20,7 @@
- #include <linux/atomic.h>
- #include <linux/bitfield.h>
- #include <linux/circ_buf.h>
-+#include <linux/seq_buf.h>
-=20
- #include <asm/page.h>
-=20
-@@ -47,12 +48,17 @@ static void decode_register(char *str, size_t size,
- {
- 	int ret =3D 0;
-=20
-+	if (size > 0)
-+		str[0] =3D '\0';
-+
- 	while (descr->type && descr->mask && descr->descr) {
- 		if (reg & descr->mask) {
- 			ret =3D snprintf(str, size, "\n\t%s, %s",
- 				       descr->type =3D=3D ERR_CORRECTED ?
- 					 "Corrected" : "Uncorrected",
- 				       descr->descr);
-+			if (ret < 0 || ret >=3D size)
-+				break;
- 			str +=3D ret;
- 			size -=3D ret;
+  Login -> WRITE_10 8 KB (InitialR2T=Yes, ImmediateData=No,
+  MaxOutstandingR2T=1) -> receive R2T -> TMF LOGICAL UNIT RESET ->
+  DataOut with F=1
+
+Three tasks are then left in uninterruptible sleep and never recover:
+
+  kworker    target_tmr_work -> core_tmr_lun_reset -> target_put_cmd_and_wait
+  iscsi_ttx  iscsit_close_connection -> iscsit_free_cmd ->
+             transport_generic_free_cmd -> __transport_wait_for_tasks
+  iscsi_np   iscsi_target_do_login -> iscsi_check_for_session_reinstatement ->
+             iscsit_stop_session -> iscsit_cause_connection_reinstatement
+
+Only a reboot clears it; hung_task fires at 120 s.
+
+  stock 6.1.187-1 module                    5 of 5 runs hang
+  self-built unpatched, same srcversion     3 of 3 runs hang
+  self-built patched                        0 of 6 runs hang
+
+The unpatched rebuild has the same srcversion as Debian's shipped module,
+so only this patch differs between the last two rows.
+
+5.10.223-1 behaves the same, 5 of 5. 6.12.94-1 did not hold the hang in 13
+runs even though the completion call is missing there too, so something in
+6.12 appears to release the command by another path. I have not identified
+it.
+
+Hit in production on iSCSI diskless-boot servers, where it takes the machine
+out until rebooted.
+
+Please also consider the commit for the other longterm trees. 6.6.y and
+6.12.y already include target_core_backend.h, so the unmodified upstream
+commit applies there. 5.10.y and 5.15.y do not include it, so they need
+the same added include as this patch; I have only built 6.1.y and 6.12.y,
+so treat the other three as untested.
+
+ drivers/target/iscsi/iscsi_target.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -25,6 +25,7 @@
+ #include <scsi/scsi_tcq.h>
+ #include <target/target_core_base.h>
+ #include <target/target_core_fabric.h>
++#include <target/target_core_backend.h>
+ 
+ #include <target/iscsi/iscsi_target_core.h>
+ #include "iscsi_target_parameters.h"
+@@ -1568,8 +1569,10 @@
+ 		 */
+ 		if (se_cmd->transport_state & CMD_T_ABORTED) {
+ 			if (hdr->flags & ISCSI_FLAG_CMD_FINAL &&
+-			    --cmd->outstanding_r2ts < 1)
++			    --cmd->outstanding_r2ts < 1) {
+ 				iscsit_stop_dataout_timer(cmd);
++				target_complete_cmd(se_cmd, SAM_STAT_TASK_ABORTED);
++			}
+ 
+ 			return iscsit_dump_data_payload(conn, payload_length, 1);
  		}
-@@ -1115,35 +1121,37 @@ static irqreturn_t thunderx_ocx_com_threaded_isr(in=
-t irq, void *irq_id)
-=20
- 	while (CIRC_CNT(ocx->com_ring_head, ocx->com_ring_tail,
- 			ARRAY_SIZE(ocx->com_err_ctx))) {
-+		struct seq_buf s;
-+
- 		tail =3D ring_pos(ocx->com_ring_tail,
- 				ARRAY_SIZE(ocx->com_err_ctx));
- 		ctx =3D &ocx->com_err_ctx[tail];
-=20
--		snprintf(msg, OCX_MESSAGE_SIZE, "%s: OCX_COM_INT: %016llx",
--			ocx->edac_dev->ctl_name, ctx->reg_com_int);
-+		seq_buf_init(&s, msg, OCX_MESSAGE_SIZE);
-+
-+		seq_buf_printf(&s, "%s: OCX_COM_INT: %016llx",
-+			       ocx->edac_dev->ctl_name, ctx->reg_com_int);
-=20
- 		decode_register(other, OCX_OTHER_SIZE,
- 				ocx_com_errors, ctx->reg_com_int);
-=20
--		strlcat(msg, other, OCX_MESSAGE_SIZE);
-+		seq_buf_puts(&s, other);
-=20
- 		for (lane =3D 0; lane < OCX_RX_LANES; lane++)
- 			if (ctx->reg_com_int & BIT(lane)) {
--				snprintf(other, OCX_OTHER_SIZE,
--					 "\n\tOCX_LNE_INT[%02d]: %016llx OCX_LNE_STAT11[%02d]: %016llx",
--					 lane, ctx->reg_lane_int[lane],
--					 lane, ctx->reg_lane_stat11[lane]);
--
--				strlcat(msg, other, OCX_MESSAGE_SIZE);
-+				seq_buf_printf(&s,
-+					       "\n\tOCX_LNE_INT[%02d]: %016llx OCX_LNE_STAT11[%02d]: %016llx"=
-,
-+					       lane, ctx->reg_lane_int[lane],
-+					       lane, ctx->reg_lane_stat11[lane]);
-=20
- 				decode_register(other, OCX_OTHER_SIZE,
- 						ocx_lane_errors,
- 						ctx->reg_lane_int[lane]);
--				strlcat(msg, other, OCX_MESSAGE_SIZE);
-+				seq_buf_puts(&s, other);
- 			}
-=20
- 		if (ctx->reg_com_int & OCX_COM_INT_CE)
--			edac_device_handle_ce(ocx->edac_dev, 0, 0, msg);
-+			edac_device_handle_ce(ocx->edac_dev, 0, 0, seq_buf_str(&s));
-=20
- 		ocx->com_ring_tail++;
- 	}
-@@ -1196,25 +1204,28 @@ static irqreturn_t thunderx_ocx_lnk_threaded_isr(in=
-t irq, void *irq_id)
-=20
- 	while (CIRC_CNT(ocx->link_ring_head, ocx->link_ring_tail,
- 			ARRAY_SIZE(ocx->link_err_ctx))) {
-+		struct seq_buf s;
-+
- 		tail =3D ring_pos(ocx->link_ring_head,
- 				ARRAY_SIZE(ocx->link_err_ctx));
-=20
- 		ctx =3D &ocx->link_err_ctx[tail];
-=20
--		snprintf(msg, OCX_MESSAGE_SIZE,
--			 "%s: OCX_COM_LINK_INT[%d]: %016llx",
--			 ocx->edac_dev->ctl_name,
--			 ctx->link, ctx->reg_com_link_int);
-+		seq_buf_init(&s, msg, OCX_MESSAGE_SIZE);
-+
-+		seq_buf_printf(&s, "%s: OCX_COM_LINK_INT[%d]: %016llx",
-+			       ocx->edac_dev->ctl_name,
-+			       ctx->link, ctx->reg_com_link_int);
-=20
- 		decode_register(other, OCX_OTHER_SIZE,
- 				ocx_com_link_errors, ctx->reg_com_link_int);
-=20
--		strlcat(msg, other, OCX_MESSAGE_SIZE);
-+		seq_buf_puts(&s, other);
-=20
- 		if (ctx->reg_com_link_int & OCX_COM_LINK_INT_UE)
--			edac_device_handle_ue(ocx->edac_dev, 0, 0, msg);
-+			edac_device_handle_ue(ocx->edac_dev, 0, 0, seq_buf_str(&s));
- 		else if (ctx->reg_com_link_int & OCX_COM_LINK_INT_CE)
--			edac_device_handle_ce(ocx->edac_dev, 0, 0, msg);
-+			edac_device_handle_ce(ocx->edac_dev, 0, 0, seq_buf_str(&s));
-=20
- 		ocx->link_ring_tail++;
- 	}
-@@ -1880,22 +1891,25 @@ static irqreturn_t thunderx_l2c_threaded_isr(int ir=
-q, void *irq_id)
-=20
- 	while (CIRC_CNT(l2c->ring_head, l2c->ring_tail,
- 			ARRAY_SIZE(l2c->err_ctx))) {
-+		struct seq_buf s;
-+
- 		tail =3D ring_pos(l2c->ring_tail, ARRAY_SIZE(l2c->err_ctx));
- 		ctx =3D &l2c->err_ctx[tail];
-=20
--		snprintf(msg, L2C_MESSAGE_SIZE,
--			 "%s: %s: %016llx, %s: %016llx",
--			 l2c->edac_dev->ctl_name, reg_int_name, ctx->reg_int,
--			 ctx->reg_ext_name, ctx->reg_ext);
-+		seq_buf_init(&s, msg, L2C_MESSAGE_SIZE);
-+
-+		seq_buf_printf(&s, "%s: %s: %016llx, %s: %016llx",
-+			       l2c->edac_dev->ctl_name, reg_int_name, ctx->reg_int,
-+			       ctx->reg_ext_name, ctx->reg_ext);
-=20
- 		decode_register(other, L2C_OTHER_SIZE, l2_errors, ctx->reg_int);
-=20
--		strlcat(msg, other, L2C_MESSAGE_SIZE);
-+		seq_buf_puts(&s, other);
-=20
- 		if (ctx->reg_int & mask_ue)
--			edac_device_handle_ue(l2c->edac_dev, 0, 0, msg);
-+			edac_device_handle_ue(l2c->edac_dev, 0, 0, seq_buf_str(&s));
- 		else if (ctx->reg_int & mask_ce)
--			edac_device_handle_ce(l2c->edac_dev, 0, 0, msg);
-+			edac_device_handle_ce(l2c->edac_dev, 0, 0, seq_buf_str(&s));
-=20
- 		l2c->ring_tail++;
- 	}
---=20
-2.55.0.1032.g73a4cd73de-goog
-
