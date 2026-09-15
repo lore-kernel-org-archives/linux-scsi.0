@@ -1,151 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97A263B71B2;
-	Tue, 15 Sep 2026 13:00:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDBEB48F852;
+	Tue, 15 Sep 2026 14:45:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789477252; cv=none; b=i5gZMIWdGTUd8PL2jTZoVUfVBIZl5EcimvpLKup5ucZFAJQgvQza4Pz9FhhBmEHY2AJsC0ZVmXpE1M8abuAt3zdRyTkre2k9Kvb07HUYM5K+5H8DfHjubEtPdevop1WKpq0sgWoZ4lxOgbvy0pJqYEsn5ANq+URiXKEaFxpuCQ4=
+	t=1789483540; cv=none; b=kgbgIg6bkF6RMtXoFvGNp3qF0keIYTSU3BZlhD1yw4FzpzbV6Orz17h1/iS33MMGN0drMHoMewLvqUzpqftc4XkysFbD213fGL+YgCOSssQfOBjTWTOq5ByL7rNVnJ5wh3h4WdGLWoAqvK1hIkt7wlpb4IzXsVYkmi96jhElbOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789477252; c=relaxed/simple;
-	bh=yy7mA24WsKV2zO6NWo0I+xvQyK0K45KGWnKs/MXZI14=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CRCRgm+JOOdO4Pr826ijXo0/TBD8r+BljD/rCtRZGVT5cx0Tdz0JcU1YvGdvFmNCObPJQN4AtjChXs36QHlwtx9XrnkQ5eo2b8sgFPLPqt0rcI5EtWrZOi7zq+fjY5dPUJnXKzgr23i9hxZune0iMzw+YtS6kRAWtoy6ySXkTS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lz00xntp; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789483540; c=relaxed/simple;
+	bh=ngtFN2V7ULql4DUgNtKS4FIutat4Fea3e7vRM4yoZuo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AmZ/mk+UwnNtb3Xc33cYoWKLuEvfDpDtFtJUULRX/jeKZeq6nTm/l2dc1kmon76xpCbyOy2mi7yTCr6xg9VyeblAWxQn/He9s4QgQY3FA1tFxMl7BqOv9LuG7gtRuZCI0MOh514rlwl1Ay8k4BFfHYbsokGiXDTUNvGV1xcAWvQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tju.edu.cn; spf=pass smtp.mailfrom=tju.edu.cn; dkim=pass (1024-bit key) header.d=tju.edu.cn header.i=@tju.edu.cn header.b=vo9uy1po; arc=none smtp.client-ip=45.254.49.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tju.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lz00xntp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8CDB1F000FF;
-	Tue, 15 Sep 2026 13:00:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789477251;
-	bh=QDiSlZrYXo7lOf07/To81JeA6hEVSiQOx4NiBK4eBNo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Lz00xntpIlTnefRhqnXP6OqZ/Utk1Cd+lzOA1s+D+KBSV3rLWQ2S2yCAUtyDPF4QP
-	 RYC0ibzzsLPdklRALk+kN+Thcm04mPYCNWPoDX9MTTFnswGyyzyU5T2lRqy9zlfbWI
-	 tnm2XQRK2Yv0eoBBSXTLw59kDZz93uMsAX+e7M+leZEdBtVwqek7EA481v+oTTo4M+
-	 GHZbiy98BgEesdnpcwFyDaVyPRY/9FSQZBRMPNXZaJfnAV9Q66dYMeNohPXMdUkkee
-	 h984ESPcrIWAYtnwR8McpoucLwM4xW7Qrtf7/OEueZhuQfrstSNqWnyNet9oo+I+9n
-	 auxlw+lle9Ezg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC v4 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED
- driver for ROG NVMe enclosures
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Liang Haowen" <nbg2974@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-leds@vger.kernel.org, lee@kernel.org
-In-Reply-To: <202609152112.RFCv4-1.lhw@gmail.com>
-References: <202609152112.RFCv4-0.lhw@gmail.com>
- <202609152112.RFCv4-1.lhw@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 15 Sep 2026 13:00:50 +0000
-Message-Id: <20260915130050.E8CDB1F000FF@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=tju.edu.cn header.i=@tju.edu.cn header.b="vo9uy1po"
+Received: from tju.edu.cn (gy-adaptive-ssl-proxy-3-entmail-virt135.gy.ntes [183.242.150.9])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4ddceb51f;
+	Tue, 15 Sep 2026 22:45:25 +0800 (GMT+08:00)
+From: Yibo Tan <lhfff@tju.edu.cn>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
+Cc: Nick Cheng <nick.cheng@areca.com.tw>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v1] scsi: arcmsr: Flush message work after stopping IRQs
+Date: Tue, 15 Sep 2026 22:45:21 +0800
+Message-Id: <20260915144521.3464486-1-lhfff@tju.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa0a587a5c303a1kunme20085972df811
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCT09NVhkaTkJNTUhLSh1LQlYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlKQ0hVSU9JVUpOS1VCWVdZFhoPEhUdFFlBWU9LSFVKS0lCQ0
+	NMVUpLS1VLWQY+
+DKIM-Signature: a=rsa-sha256;
+	b=vo9uy1poMbqPZhfneFB4JBnF0i9dhN8ZM7S3D9XMk0JVpZXKmMsJt7rqt18W7ud+p+KNZr+O+96rqLWwXSnp5aTeGF6fSm98+OdkprtvIabkdp/ByLyk1N3kg8ZrtKPDuK4Zu90q2aU8wB7FRWLbdBV1F7jMBt+0AbEGg2veLUg=; c=relaxed/relaxed; s=default; d=tju.edu.cn; v=1;
+	bh=I8vSmh7Ds3qx5wd4jSnnaD0chD8RLu19OJ58Uz1XJDM=;
+	h=date:mime-version:subject:message-id:from;
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [Medium] leds: data race on subled_info array causes torn color updates
-- [Low] leds: build failure due to undefined macro kzalloc_obj
-- [Low] leds: build failure due to missing argument in blk_rq_map_kern()
---
+The adapter message interrupt handlers schedule
+arcmsr_do_message_isr_bh.  The work item is embedded in the adapter control
+block, which is released with the SCSI host.
 
-commit e6ce9b3b67cc2aa4897215acc2c62600810790a8
-Author: Liang Haowen <nbg2974@gmail.com>
+The probe error path, hot-disconnect path and normal remove path all
+flush this work before arcmsr_free_irq().  An interrupt can therefore
+queue it again after the flush.  The normal remove path can also call the
+interrupt handler while it waits for outstanding commands.  The SCSI
+host can then be freed while the new work is still pending.
 
-leds: asus-aura-scsi: Add ASUS Aura RGB LED driver for ROG NVMe enclosures
+KASAN reported a use-after-free in arcmsr_message_isr_bh_fn() in two
+unload tests.  Moving the flush after arcmsr_free_irq() made unload wait
+for the work to finish, and both tests completed without a kernel
+diagnostic.
 
-This commit introduces a driver for ASUS ROG external NVMe enclosures that
-exposes 4 independently addressable LEDs via the LED multicolor class. It
-uses a SCSI device handler matched by vendor INQUIRY to send custom ENE
-sequences over passthrough SCSI commands.
+Move the existing flush after arcmsr_free_irq() in all three paths.  This
+matches arcmsr_shutdown(): remove and synchronize the IRQ handlers, wait
+for the work to finish, and then free the SCSI host.
 
-> diff --git a/drivers/leds/leds-asus-aura-scsi.c b/drivers/leds/leds-asus-=
-aura-scsi.c
-> new file mode 100644
-> index 0000000000000..089cc3dcee105
-> --- /dev/null
-> +++ b/drivers/leds/leds-asus-aura-scsi.c
-[ ... ]
-> +static int ene_write(struct scsi_device *sdev, u16 reg,
-> +		     const void *data, u8 arg_count)
-> +{
-> +	struct request *rq;
-> +	struct scsi_cmnd *scmd;
-> +	u8 cdb[ENE_CDB_LEN];
-> +	int ret;
-> +
-> +	ene_build_cdb(cdb, reg, arg_count);
-> +
-> +	rq =3D scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_OUT, 0);
-> +	if (IS_ERR(rq))
-> +		return PTR_ERR(rq);
-> +
-> +	if (arg_count) {
-> +		ret =3D blk_rq_map_kern(rq, (void *)data, arg_count, GFP_NOIO);
+Fixes: 36b83ded062a ("[SCSI] arcmsr: Support HW reset for EH and polling scheme for scsi device")
+Cc: stable@vger.kernel.org
+Assisted-by: Codex:GPT-5
+Signed-off-by: Yibo Tan <lhfff@tju.edu.cn>
+---
+ drivers/scsi/arcmsr/arcmsr_hba.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-[Severity: Low]
-Does this cause a build failure? The kernel API blk_rq_map_kern() requires 5
-arguments, where the first parameter should be the struct request_queue *q,
-but it is called here with only 4 arguments.
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 8aa948f06cac..1a497de2a762 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1164,10 +1164,10 @@ static int arcmsr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (set_date_time)
+ 		timer_delete_sync(&acb->refresh_timer);
+ 	timer_delete_sync(&acb->eternal_timer);
+-	flush_work(&acb->arcmsr_do_message_isr_bh);
+ 	arcmsr_stop_adapter_bgrb(acb);
+ 	arcmsr_flush_adapter_cache(acb);
+ 	arcmsr_free_irq(pdev, acb);
++	flush_work(&acb->arcmsr_do_message_isr_bh);
+ scsi_host_remove:
+ 	scsi_remove_host(host);
+ free_ccb_pool:
+@@ -1685,12 +1685,12 @@ static void arcmsr_free_pcidev(struct AdapterControlBlock *acb)
+ 	host = acb->host;
+ 	arcmsr_free_sysfs_attr(acb);
+ 	scsi_remove_host(host);
+-	flush_work(&acb->arcmsr_do_message_isr_bh);
+ 	timer_delete_sync(&acb->eternal_timer);
+ 	if (set_date_time)
+ 		timer_delete_sync(&acb->refresh_timer);
+ 	pdev = acb->pdev;
+ 	arcmsr_free_irq(pdev, acb);
++	flush_work(&acb->arcmsr_do_message_isr_bh);
+ 	arcmsr_free_ccb_pool(acb);
+ 	if (acb->adapter_type == ACB_ADAPTER_TYPE_F)
+ 		arcmsr_free_io_queue(acb);
+@@ -1718,7 +1718,6 @@ static void arcmsr_remove(struct pci_dev *pdev)
+ 	}
+ 	arcmsr_free_sysfs_attr(acb);
+ 	scsi_remove_host(host);
+-	flush_work(&acb->arcmsr_do_message_isr_bh);
+ 	timer_delete_sync(&acb->eternal_timer);
+ 	if (set_date_time)
+ 		timer_delete_sync(&acb->refresh_timer);
+@@ -1750,6 +1749,7 @@ static void arcmsr_remove(struct pci_dev *pdev)
+ 		}
+ 	}
+ 	arcmsr_free_irq(pdev, acb);
++	flush_work(&acb->arcmsr_do_message_isr_bh);
+ 	arcmsr_free_ccb_pool(acb);
+ 	if (acb->adapter_type == ACB_ADAPTER_TYPE_F)
+ 		arcmsr_free_io_queue(acb);
+-- 
+2.39.5
 
-> +		if (ret)
-> +			goto out;
-> +	}
-[ ... ]
-> +static void asus_aura_set(struct led_classdev *cdev,
-> +			  enum led_brightness brightness)
-> +{
-> +	struct led_classdev_mc *mc =3D lcdev_to_mccdev(cdev);
-> +	struct asus_aura_led *led =3D
-> +		container_of(mc, struct asus_aura_led, mc_cdev);
-> +	struct asus_aura_zone *zone =3D led->zone;
-> +	unsigned long flags;
-> +
-> +	led_mc_calc_color_components(mc, brightness);
-> +
-> +	spin_lock_irqsave(&zone->lock, flags);
-
-[Severity: Medium]
-Could this lead to a data race on the subled_info array? The LED core allows
-concurrent brightness_set callbacks for the same LED (for instance, from
-sysfs and a hardware trigger). The helper led_mc_calc_color_components()
-modifies the shared mc->subled_info array locklessly before the driver
-acquires its spinlock. If multiple threads update the brightness
-concurrently, they might interleave their writes to the array, causing the
-winning thread to read a mix of old and new color components.
-
-> +	/* ENE colour register byte order is R, B, G. */
-> +	led->rgb[0] =3D led->subled[0].brightness;
-> +	led->rgb[1] =3D led->subled[2].brightness;
-> +	led->rgb[2] =3D led->subled[1].brightness;
-> +	zone->dirty |=3D BIT(led->index);
-> +	spin_unlock_irqrestore(&zone->lock, flags);
-> +
-> +	schedule_work(&zone->work);
-> +}
-[ ... ]
-> +static int asus_aura_attach(struct scsi_device *sdev)
-> +{
-> +	struct asus_aura_zone *zone;
-> +	int i, ret;
-> +
-> +	if (strncmp(sdev->vendor, ARION_INQ_VENDOR, strlen(ARION_INQ_VENDOR)) ||
-> +	    strncmp(sdev->model, ARION_INQ_MODEL, strlen(ARION_INQ_MODEL)))
-> +		return SCSI_DH_DEV_UNSUPP;
-> +
-> +	zone =3D kzalloc_obj(*zone, GFP_KERNEL);
-
-[Severity: Low]
-Does this code fail to compile? It looks like it invokes an undefined macro
-kzalloc_obj() instead of the standard kzalloc() function to allocate memory.
-
-> +	if (!zone)
-> +		return SCSI_DH_NOMEM;
-> +	zone->sdev =3D sdev;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/202609152112.RFCv4-=
-1.lhw@gmail.com?part=3D1
