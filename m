@@ -1,57 +1,57 @@
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AF663DAAC5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FEF343F4A3
 	for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 08:19:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.197
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789460428; cv=none; b=XopG44dUs2f/XYyAa1KghCsa/dfk3mogjnFZjlrqx35l+yl22ciQqmmUwHLhdz28zC+7aanXaGMdBiWKXmqiw4Qg9as3fS/4zqCC9N2tj/BOK5R7xVgO1TqOeb7Dn7L12Yg2ZDC8p5L9AbR/whF6xdskF2PDSli+oBulGBt/NIM=
+	t=1789460438; cv=none; b=l/MUOSZf65NH8p4nGR1JZKoqubhHOqbvirpBT8e7/8G2oQE5wn6HKDuuVZgsOjfHwkduwFMHNg/Brk9ax5c3/gwIIB7W7UNLgAn7GydRL8WaCxnVPtnNKk5SZURPsQNvkosMBC+2ZzQHLJtT57xfvWl1f2U991f1e2+InOixmWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789460428; c=relaxed/simple;
-	bh=D5RtdOVahxUZp/En82QAbknell8b9lspfIIgPFRsPMo=;
+	s=arc-20240116; t=1789460438; c=relaxed/simple;
+	bh=r5g1LIk48i14U2vfSIgapr+8j4d1ay+VHM72YHjOSgk=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=NEAwHdNpsMl8SJpHBcfigoj2sq2XEv67tlr4KRHw122rCEeycicbBH7N/mxzBei3sSveuFNFAw4MrGQOT8p/xd/qQZPkkiLlQ2usTh7aQO/98iVtiEuLOXuuA7ciayZFLRGfDm7eb8JQ30epwTbFxFoHu8VcIlw9sivwCzu71X8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=RdRiiyh9; arc=none smtp.client-ip=209.85.214.197
+	 To:Cc:Content-Type; b=VqIRpEnVGWw5+ETn9S80SjpCU00lFAKbzH5DrV9Q7PJ0z1ybkF/IKevfw/m+7sOnWiB1oXNRRfYexqLtkBVejziqQRBgoUstx/+RzT5r0A/dbKaJVspNAdNXRoEqwdh9yUSP39dirBK0LHPHZxRmPaB5zSUBR5LOhIS6ITm0fMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=pfCMhHC9; arc=none smtp.client-ip=209.85.215.197
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--morbo.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RdRiiyh9"
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2d6f80c76e6so78367365ad.3
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 01:19:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pfCMhHC9"
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cc1bbd7d6e6so3348270a12.3
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2026 01:19:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20251104; t=1789460395; x=1790065195; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:from:subject
          :message-id:references:mime-version:in-reply-to:date:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=GmOofVahuDrknmhehkkjM5BCV+g3cc9ELbAHUqasD2M=;
-        b=RdRiiyh9ZlV7ht4/LU5So1Sr6lzxFo9gNto5+ostevzXONqCmJBWBwE4EswY5Gsc/G
-         Q9uSlj6PgHyn6qJLBNRtZtc1IUl1g5LR+Q0RwLFc5elBeVq8yPyOvyGSHjCieqVM5Pd/
-         ISVYT6qPNZEwBsknhSBvArZ1s3yRBEP7EKdu8LxoSKOCqG1ZE7ev8rrKkVf0+BW/f9Ol
-         fjjrtyPvxqOEFPVeXNDOZsr0vLG+7jDNb2F7EcGlTBAe0WypnzSVYlKHSKClbQGGD7sc
-         KTWIP2cUW8H+691gA/26ixdwIIT0dpst3r4ZUX4u3ChT+RpFov8L9cNBPBubgGxEcja6
-         KzTg==
+        bh=eIty82Ymjj64Fl6mn4Z3/QHhmY1e0QRFUR4BQSE5AwY=;
+        b=pfCMhHC9ejy5QWj6kEG4G7FJpoBqoyNuGsvpYI8mV/Km8alBeuaIcq7YeCx1pVa6uF
+         NWlfblw+NmK5zx1DpdIZcbMD9JioKHsEhAmmbf5HeLvFA1Qc6oNJiFo/Cl8zlQO3Jz1e
+         qCNHr2VlFDViUE26nXLoY1ufbWe8Pbs4tR7Y1DHCdqW967sN+LMZxF7ADxAsxRa0xFUZ
+         wCdKL6pe/sa5k+UvnYCstigVumTisjy6p4/OB3Uz/0GnLC7z4D9TBtorJq1qftlnfcWd
+         RwUlljsJOpKAoFL4yxkwvpNra0QuK75AgFKhmMIXWuNN2TnyvSmurNW0VG4Zgu/TWYYL
+         xTyw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20260707; t=1789460395; x=1790065195;
         h=content-transfer-encoding:content-type:cc:to:from:subject
          :message-id:references:mime-version:in-reply-to:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=GmOofVahuDrknmhehkkjM5BCV+g3cc9ELbAHUqasD2M=;
-        b=Qd6l5SVpS5Q8e1Tv3K5pdhau6OsW9L6bWKVqi/ODuRSkOlNjFlqBW3wjg15CIjLe66
-         0Psu4oKZpOUL7/w29u1/9i5L6njidjVcTTQR6MoZUU5WcvXNEne9hFKIx9Zs1LMVv+M9
-         vXxXyIe6pyoqAAxwsmGT3QFIWMReBPRdelUMDUtRDGSm9NGXOjtp1n0cOnlOHdX9sIWe
-         NqgMQ7XSkEWu53OTpZxuqgO09tu/dmjncCqhWPUkhJOAkNxtx80WmCyPw/5OZ+4i26U8
-         bb2nQKg9FgwwhsHzo8+XCixsHKqfK+Yk6YClektj/eYeIGNh3Stn1RUvdpVPl7InvRV6
-         Odyw==
-X-Forwarded-Encrypted: i=1; AKwUvByNVEcksifVmGFFGBz7w+vuJWUM/aOoQePndoSJVUq+uNqxvBpvXLqDlt+YcZOv/9uIFRA3jOzJVfsl@vger.kernel.org
-X-Gm-Message-State: AFuF++lWOmFdsH391ECGydQCWkPW6o0rIn1K5l465ZZGSke9mCOrztLo
-	6Q/sfC+VSKyB12lyyyICY6vi2th+IzAI/iUjY/C0h3tU47GZn4pr80QqcGDFgKopIyJ/GxhXkI7
-	h
-X-Received: from plrq10.prod.google.com ([2002:a17:902:b10a:b0:2dc:ff56:3f4c])
- (user=morbo job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:db0e:b0:2d9:520c:38e7
- with SMTP id d9443c01a7336-2dd6c5c1330mr107218395ad.1.1789460394736; Tue, 15
- Sep 2026 01:19:54 -0700 (PDT)
-Date: Tue, 15 Sep 2026 08:18:24 +0000
+        bh=eIty82Ymjj64Fl6mn4Z3/QHhmY1e0QRFUR4BQSE5AwY=;
+        b=UHCcAyzGx6XUKcwKizpKDFaxLBHQJ854KrWeE5huGN2kNhRxlwFiKdE8WeOlMkiQfz
+         gs9Tz+usI175Tj4bKGh/judYk6z+/hIr1A9fAh7PGCgHddrMcpP0Cv8MYWETt/Db0PbU
+         Qs0k75/KkBO1NFhiED8Fy9zDLxksIx146w6W57/wlM777bXTCifPKTix0XyuK5vVlILx
+         XF4uSZimKbrWtGpKPqXXeI74AEnYehp1SyRzBuMSe9tR6MeEnI7c2201tIljyuGHXsDP
+         AqL9AQapT7HaDmeuoRSP5hZwlz3WdptkvAuS5mMK6nYyaiGWYTmni4c4K3Qmoq6u6T5z
+         X46g==
+X-Forwarded-Encrypted: i=1; AKwUvBxzXp4OW3mgk1PVe/S3+npPYlfrjQtYI7cV+UH3p68xoomNMmqBfcvujDwYMJpRvmqEkf0fw/UOifp1@vger.kernel.org
+X-Gm-Message-State: AFuF++mzgKXxLl4AHIXoekcT1qVAXoWYNu9f5GJWQK6uzVi4JD1BWAvC
+	/NMvGLtm+jKYhPL5kG7A0d7a7che1ZyRUsklAx5TPRbUZ2lo4sXGVMbQUspwp+pRYS0h0R7CnfC
+	k
+X-Received: from pghd13.prod.google.com ([2002:a63:fd0d:0:b0:cc4:37f6:e897])
+ (user=morbo job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:12c7:b0:3d3:ae1f:d7f4
+ with SMTP id adf61e73a8af0-3dd528bd7dbmr272615637.20.1789460393063; Tue, 15
+ Sep 2026 01:19:53 -0700 (PDT)
+Date: Tue, 15 Sep 2026 08:18:22 +0000
 In-Reply-To: <20260915081910.4142719-1-morbo@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -61,8 +61,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260915081910.4142719-1-morbo@google.com>
 X-Mailer: git-send-email 2.55.0.1032.g73a4cd73de-goog
-Message-ID: <20260915081910.4142719-8-morbo@google.com>
-Subject: [PATCH 07/28] scsi: bfa: Use snprintf() in bfa_fcs_fabric_psymb_init()
+Message-ID: <20260915081910.4142719-6-morbo@google.com>
+Subject: [PATCH 05/28] ALSA: usb-audio: Refactor usb_audio_make_longname() to
+ use seq_buf
 From: Bill Wendling <morbo@google.com>
 To: linux-kernel@vger.kernel.org
 Cc: Bill Wendling <morbo@google.com>, codemender-patching+linux@google.com, 
@@ -123,17 +124,18 @@ Cc: Bill Wendling <morbo@google.com>, codemender-patching+linux@google.com,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Similar to bfa_fcs_fabric_nsymb_init(), bfa_fcs_fabric_psymb_init()
-builds the port symbolic name using strscpy() and a chain of seven or
-eight strlcat() calls.
+usb_audio_make_longname() builds card->longname incrementally from the
+vendor/manufacturer name, shortname, USB device path, and USB speed using
+strscpy(), strlcat(), and manual buffer offset calculations for
+usb_make_path().
 
-In preparation for removing the deprecated strlcat() API[1], replace the
-chained strscpy() and strlcat() calls with a single snprintf() call.
+In preparation for removing the deprecated strlcat() API[1], refactor
+usb_audio_make_longname() to use struct seq_buf to track the buffer
+position and remaining space across these operations.
 
 Link: https://github.com/KSPP/linux/issues/370 [1]
 Cc: codemender-patching+linux@google.com
-Assisted-by: Gemini-3.5-Pro:20241215 [editor_update_file, make_kernel_build=
-_single_file]
+Assisted-by: Gemini:3.5-pro [git, make, checkpatch]
 Signed-off-by: Bill Wendling <morbo@google.com>
 ---
 Cc: Russell King <linux@armlinux.org.uk>
@@ -247,77 +249,114 @@ Cc: devel@lists.orangefs.org
 Cc: linux-hardening@vger.kernel.org
 Cc: linux-sound@vger.kernel.org
 ---
- drivers/scsi/bfa/bfa_fcs.c | 49 ++++++++++----------------------------
- 1 file changed, 13 insertions(+), 36 deletions(-)
+ sound/usb/card.c | 58 ++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 39 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
-index 7a4e0e8c7182..9fe0343c0b32 100644
---- a/drivers/scsi/bfa/bfa_fcs.c
-+++ b/drivers/scsi/bfa/bfa_fcs.c
-@@ -760,49 +760,26 @@ bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fa=
-bric)
+diff --git a/sound/usb/card.c b/sound/usb/card.c
+index 9307da95efbe..bdca8085fca6 100644
+--- a/sound/usb/card.c
++++ b/sound/usb/card.c
+@@ -25,6 +25,7 @@
+ #include <linux/list.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
++#include <linux/seq_buf.h>
+ #include <linux/ctype.h>
+ #include <linux/usb.h>
+ #include <linux/moduleparam.h>
+@@ -651,7 +652,9 @@ static void usb_audio_make_longname(struct usb_device *=
+dev,
+ 	struct snd_card *card =3D chip->card;
+ 	const struct usb_audio_device_name *preset;
+ 	const char *s =3D NULL;
+-	int len;
++	struct seq_buf sb;
++	char *buf;
++	size_t size;
 =20
- 	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
+ 	preset =3D lookup_device_name(chip->usb_id);
 =20
--	/* Model name/number */
--	strscpy(port_cfg->sym_name.symname, model,
--		BFA_SYMNAME_MAXLEN);
--	strlcat(port_cfg->sym_name.symname, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--		BFA_SYMNAME_MAXLEN);
--
--	/* Driver Version */
--	strlcat(port_cfg->sym_name.symname, driver_info->version,
--		BFA_SYMNAME_MAXLEN);
--	strlcat(port_cfg->sym_name.symname, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--		BFA_SYMNAME_MAXLEN);
--
--	/* Host machine name */
--	strlcat(port_cfg->sym_name.symname,
--		driver_info->host_machine_name,
--		BFA_SYMNAME_MAXLEN);
--	strlcat(port_cfg->sym_name.symname, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--		BFA_SYMNAME_MAXLEN);
--
- 	/*
- 	 * Host OS Info :
- 	 * If OS Patch Info is not there, do not truncate any bytes from the
- 	 * OS name string and instead copy the entire OS info string (64 bytes).
- 	 */
- 	if (driver_info->host_os_patch[0] =3D=3D '\0') {
--		strlcat(port_cfg->sym_name.symname,
--			driver_info->host_os_name,
--			BFA_SYMNAME_MAXLEN);
--		strlcat(port_cfg->sym_name.symname,
--			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--			BFA_SYMNAME_MAXLEN);
-+		snprintf(port_cfg->sym_name.symname, BFA_SYMNAME_MAXLEN,
-+			 "%s%s%s%s%s%s%s%s",
-+			 model, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+			 driver_info->version, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+			 driver_info->host_machine_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+			 driver_info->host_os_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR);
- 	} else {
--		strlcat(port_cfg->sym_name.symname,
--			driver_info->host_os_name,
--			BFA_SYMNAME_MAXLEN);
--		strlcat(port_cfg->sym_name.symname,
--			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
--			BFA_SYMNAME_MAXLEN);
--
--		/* Append host OS Patch Info */
--		strlcat(port_cfg->sym_name.symname,
--			driver_info->host_os_patch,
--			BFA_SYMNAME_MAXLEN);
-+		snprintf(port_cfg->sym_name.symname, BFA_SYMNAME_MAXLEN,
-+			 "%s%s%s%s%s%s%s%s%s",
-+			 model, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+			 driver_info->version, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+			 driver_info->host_machine_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+			 driver_info->host_os_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
-+			 driver_info->host_os_patch);
+@@ -667,44 +670,61 @@ static void usb_audio_make_longname(struct usb_device=
+ *dev,
+ 		s =3D preset->vendor_name;
+ 	else if (quirk && quirk->vendor_name)
+ 		s =3D quirk->vendor_name;
+-	*card->longname =3D 0;
+-	if (s && *s)
+-		strscpy(card->longname, s);
+-	else if (dev->manufacturer && *dev->manufacturer)
+-		strscpy(card->longname, dev->manufacturer);
+=20
+-	if (*card->longname) {
+-		strim(card->longname);
+-		if (*card->longname)
+-			strlcat(card->longname, " ", sizeof(card->longname));
++	seq_buf_init(&sb, card->longname, sizeof(card->longname));
++
++	if (s && *s)
++		seq_buf_puts(&sb, s);
++	else if (dev->manufacturer && *dev->manufacturer)
++		seq_buf_puts(&sb, dev->manufacturer);
++
++	if (seq_buf_used(&sb)) {
++		char *trimmed;
++
++		seq_buf_str(&sb);
++		trimmed =3D strim(card->longname);
++		if (trimmed !=3D card->longname)
++			memmove(card->longname, trimmed, strlen(trimmed) + 1);
++		sb.len =3D strlen(card->longname);
++		if (sb.len)
++			seq_buf_putc(&sb, ' ');
  	}
 =20
- 	/* null terminate */
+-	strlcat(card->longname, card->shortname, sizeof(card->longname));
++	seq_buf_puts(&sb, card->shortname);
+=20
+-	len =3D strlcat(card->longname, " at ", sizeof(card->longname));
++	seq_buf_puts(&sb, " at ");
+=20
+-	if (len < sizeof(card->longname))
+-		usb_make_path(dev, card->longname + len, sizeof(card->longname) - len);
++	size =3D seq_buf_get_buf(&sb, &buf);
++	if (size > 0) {
++		int path_len =3D usb_make_path(dev, buf, size);
++
++		if (path_len >=3D 0)
++			seq_buf_commit(&sb, path_len);
++		else
++			seq_buf_set_overflow(&sb);
++	}
+=20
+ 	switch (snd_usb_get_speed(dev)) {
+ 	case USB_SPEED_LOW:
+-		strlcat(card->longname, ", low speed", sizeof(card->longname));
++		seq_buf_puts(&sb, ", low speed");
+ 		break;
+ 	case USB_SPEED_FULL:
+-		strlcat(card->longname, ", full speed", sizeof(card->longname));
++		seq_buf_puts(&sb, ", full speed");
+ 		break;
+ 	case USB_SPEED_HIGH:
+-		strlcat(card->longname, ", high speed", sizeof(card->longname));
++		seq_buf_puts(&sb, ", high speed");
+ 		break;
+ 	case USB_SPEED_SUPER:
+-		strlcat(card->longname, ", super speed", sizeof(card->longname));
++		seq_buf_puts(&sb, ", super speed");
+ 		break;
+ 	case USB_SPEED_SUPER_PLUS:
+-		strlcat(card->longname, ", super speed plus", sizeof(card->longname));
++		seq_buf_puts(&sb, ", super speed plus");
+ 		break;
+ 	default:
+ 		break;
+ 	}
++
++	seq_buf_str(&sb);
+ }
+=20
+ static void snd_usb_init_quirk_flags(int idx, struct snd_usb_audio *chip)
 --=20
 2.55.0.1032.g73a4cd73de-goog
 
