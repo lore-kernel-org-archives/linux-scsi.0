@@ -1,186 +1,174 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ua2-f12.google.com (mail-ua2-f12.google.com [74.125.226.204])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16AE5478E28;
-	Wed, 16 Sep 2026 21:34:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789594466; cv=none; b=lwfEtBiQxwo2KDxMyPa4ChHSwCGk6uA0ti46RSuneupkyXGV1c2ZDYw15vcFuu+HWHIFc0yZMrYFC43Wetfh/y6t4QcmbMj3iw1U7ggtn4yMDtItdGIWxen6X0HlJKVe1DvZIRMvbSMudDKPNkFlNyD4cW6B7ATH8QsAjfEhUn4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789594466; c=relaxed/simple;
-	bh=+1R3Y+rDmNHm7YVHcpcjivPn9VcWwEuVetwHOS+dTV8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=X3XOW2b0R6jnFO6BgRkWqLoA9Xp7+cRzoIv9roWjX50jTormC3Mrvf/AiU7lw9yOIMAzsGNRZ14uxdYEKB7nvEw2LPaUK2JWfl/7Sal1k3OWj9+U43Y3/Mf8S5BA7A8YZJgsKevH9L3oEYk/U6yXAcG1AJtQLAJMeqj6JlMi9n0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=EdTlr2QT; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 098204D37BE
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 21:44:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.226.204
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789595085; cv=pass; b=GXbRi270UdCxNgx5yUPCdnSsSn8MSZ33XPMoeLzOT8DrPIhs0B0u5XcaS6i/++sCj4Slb0DMHDrSaK4BLA8iT3k87lNmeCmLNKbljC/PjCoVijF3YbB2ZifUzC8X/it7O0L+995qY6QnTKK8DANltS+rbF4FyWF5rXnoeHNI3gE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789595085; c=relaxed/simple;
+	bh=+TMWi8xF1c/GpLGSJWBDMGttEHh102/5Ofx0+5TAWdU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=WaFNBMQACW+gu6Lqcm/mSeRdFukLxj259aJ4mvqpQAqLzGsKb5ngdFdtGQcojcFFr7eJAovLckj22v8ypDaPXuM7yKlki3bzmMdclFHnwt+lexJPWMN+wF3ZILk+Ce92JX8zdAg4I6SMbyzOuPlzZEOgyX9Qnl8+mp1yjMkd0gA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PhRvxyDc; arc=pass smtp.client-ip=74.125.226.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="EdTlr2QT"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68GG1bV24057211;
-	Wed, 16 Sep 2026 21:34:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=pp1; bh=KRTmOBlFb5PnG2UtR1c1GIyvDSdf9/2ZPk1hlGtbc
-	nY=; b=EdTlr2QTFqt30bldgejduAkdsfWu89Wph4BnNPlfDyRtKrbOOG8fQPBrV
-	BpPPRaX6Q/eV6xI0NNsWNTnHJCsYmUkdbFPu0iMylOvLAPfp9FWBJ4Se42IwcOak
-	FyK7bhI0ufuiMY2IcYxNn80fX9rCaCCiG1XyQOl8IbwiAVV5DPTO9V4UwZQ6z/JJ
-	LRUQURJo3rZnlZZKVe6zhxzPREXit0kZtfGoN2XbvjS1+juFvO3GJt+YDOWT5hnT
-	hLvLhW/g9RRW4vYZNV81XdB2KEqbFxHpHAEg6+JIkoG6BC2cC/qeWGrHrCfWtG3T
-	8du3BZqhc8zAsQtxKj8keO73yGWFw==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gmv5hy1a5-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 16 Sep 2026 21:34:04 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68GIvlCx2599802;
-	Wed, 16 Sep 2026 21:34:03 GMT
-Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gpw6d955d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 16 Sep 2026 21:34:03 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68GLY1Or16777960
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 16 Sep 2026 21:34:01 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7FF2E58059;
-	Wed, 16 Sep 2026 21:34:01 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D556858057;
-	Wed, 16 Sep 2026 21:34:00 +0000 (GMT)
-Received: from li-4c4c4544-0054-3910-8039-c3c04f423534.ibm.com.com (unknown [9.61.141.190])
-	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 16 Sep 2026 21:34:00 +0000 (GMT)
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-To: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org, brking@linux.ibm.com,
-        davemarq@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH v2] ibmvscsi: implement vio driver shutdown call back to quiesce ibmvscsi
-Date: Wed, 16 Sep 2026 14:33:59 -0700
-Message-ID: <20260916213359.2144094-1-tyreld@linux.ibm.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PhRvxyDc"
+Received: by mail-ua2-f12.google.com with SMTP id a1e0cc1a2514c-97e80579b7dso49677241.1
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 14:44:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1789595057; cv=none;
+        d=google.com; s=arc-20260327;
+        b=AKJqV3g5iHp4nkQsfgFY4C+Z/fOn4o0M6mLDyrKiy/HbmRYGtpUeHXEzXLwyspyqpU
+         Go9hq+/gNFUM1293C2GC/1xU6rHng17Q8YZmFEHwbpMFHSn49Ya3QBI2jubwAHV7X94b
+         pxXtAGTj/1S88ucJLlNxLfbR5L1Na3aLe18ij/KA0LdisC+3Wbwcij06lZB2tFOHKGrB
+         zFca2BKPkFLVwbKNrSabfssMwWtBf7ItxjSD9QiuAJbiXqV1akADuIpjIySkcxJ5O48Z
+         1lZSSXoQjIyMBUKId+xmr9WexUJkwV3AreVMnFEoojXqDUScSKXi+uhi2SLo5H+lbAyu
+         Gklw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=+TMWi8xF1c/GpLGSJWBDMGttEHh102/5Ofx0+5TAWdU=;
+        fh=d2YQFy7QJBlAWgiZgOhyXB9umHHpxTMqrDJBsiJWqRI=;
+        b=gWXJFP1EGi4FAngtra+7c0Df4EYJHtB8kpGPugQWAT3UQMijKN6R0HuJxQpF3hiGdY
+         +3y7x7EGUb4CUIU70XbZzv6HNBNWB4pGkJ2kf89JG9rU4BkioRP/8QMqvSOnGehk6kLA
+         2hfGkufCGlJZeCO+B921ViM9jgn5l505bR5g7n8hJOZi65IRRrza4/7pGNB6tlQMSHvm
+         fGOQLyJGPgY6wfxecsJB/JWuTD7GACLU1zbYOssfK8SOBnxQsbOvMWjSUV9OBdV2X4FA
+         31Pz//qEfUrD/BKPlqQAHui9YZwRLQgezmiT8nuQTu2zmBXUx8n5ZiTnvMC/wf0qws0t
+         QSag==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789595057; x=1790199857; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=+TMWi8xF1c/GpLGSJWBDMGttEHh102/5Ofx0+5TAWdU=;
+        b=PhRvxyDcEKpo82rz7bjO1wDQ8uBdzgmqFw/6qMLJ6ysl579NXOSm57qPRzt39pD3oV
+         RQb6cdMJNN/Ek0B5W2zGNfO0RqIoSKMqtIpUc7eAhIfyNHQGufGBDtCJwInLu+pX9hxn
+         J9cpThCkU1tmfCxsOJRLdZFf8wYm3kRlo/yoPwYzsu2PbhjQqcSKR20KyEdhLP8618yJ
+         5CmZfZeIm2+Na8mFl/ktZ3dXA1iPW6HhEYtD+ujAGpNgWXor7U3Ki4cMIqiM6LMBSHL9
+         ktggN+6MCwK15bvCxc3iBeUikkFZwpbRMOG0Pyt60U5y0YJFcb8fm4EhJ+LQPrX9SbDv
+         Tdmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789595057; x=1790199857;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=+TMWi8xF1c/GpLGSJWBDMGttEHh102/5Ofx0+5TAWdU=;
+        b=GntdU/6dYoSt6UdCmuw3e1SnxvDL8oTGoaHTeNvhVnsxJ8mvBLKTa/8hSUaMd1jCoG
+         QYzrTZ1XSX5HWJclI0Isa300DDAHosE/DcX2emeHzTh3mS3DWIpMwSNCqzRhr8omeLE5
+         M90JLXNZs/qhRH2KGbgtVrQCsvdMq02kLzMxw4KwsxZMIlZyiz7R6zw+OkqZbd+Z5TMM
+         ny7vTrchTFvLNL9gQwln8/p9vTLpLRGB75WOSHF0ZumXe3HdyRqjjJX1yQnY0q2PS1+5
+         zwbR70jbLHhrUYSu5WcYW7ljVYK+249J7Bpeqi0CSXdzVSsWsK7jZj3BR5O4C4udiDNQ
+         4SeA==
+X-Forwarded-Encrypted: i=1; AKwUvByf/epf3t4aZI+Kurul5DP/5T6u2R6dEXtUE+5xybk3ORRLU5iEI2IlZttm25XTJqROsquz8G44D8TQ@vger.kernel.org
+X-Gm-Message-State: AFuF++lzv8KqWEwMBqrzZWTp6cGUEax33EH6R1YCSSIg8iLWQzuPw31X
+	F0ikvJhza0XS0QuGqfxDg3xCdj64ABO7TbSWsTYxhq7Zs+DW4ksQY8UFs5cm7aSYgCHBbKMsJxP
+	xzmMOpi6myc5wP0ZA594Yvq9R8Mxw4ZLfVRsgGNo=
+X-Gm-Gg: AYBFou1rKWuygO/cLkQxHppkMXXCt/cuHQi3y4cTAzY962FPW7vcwDZzXPpxzZ/MzM/
+	vHMZdTdT+QmIVtsabmK8Nr+Sp2OIeIK8Z4cPRlOpTrCzHCmhoSpVl6u8vtpLQvK7yUl31OTs0Ea
+	URSizxCco+AmYmg3ycAl44xCwCFvCTPZmHP3lpNrjJPrg37WrD9dU4/qmHGwydUa0Akl8EZ5uUJ
+	aSeLi+waiEVBDZQjhJF+5l+Iu9sked9fElMnoR/kbc0NxVvCcS650R4BC5kDW+Htmc43vLWQEhk
+	xOB72v2T+LNdmYQtIgN87+ZyAZDVHOB1OGJd2z7o66WyipuWHCjcmsMLF7CiiuJkl9u0DAMrN5D
+	CSk1/J59M0A2ywmVx/ncx
+X-Received: by 2002:a05:6102:a85:b0:7a2:2a6b:e7b4 with SMTP id
+ ada2fe7eead31-7a22a6be8efmr62586137.2.1789595055938; Wed, 16 Sep 2026
+ 14:44:15 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE2MDMwMCBTYWx0ZWRfX70MMBHqlXHtR
- dSQP6GEo2zRU5Ag6whfVyoRg76xckBxcO6/XXEEdisbKDRclDV6dzQAGY28Z8NK8wvuJmfkFl7h
- qB/TcvlaO3UtjO/zdljBKdpfkC2kiuWkiMIgDZXXu7aBqIVjpUdX35SiWBvDNbBjsZaTjpqSnZg
- Dph1bugnFqgCAoUBB3A6Goek7keLy6SNXXLqy+MZnn27Z7CBomwFjqVlosYhfPoJLwXAjkdfplg
- xddvpKiXsyfvfsUkNoQDByYqxb6SsFiK+cfJ1d3mgZcUhxtvJZwhnIBtZSU2rjpTiei21g4Cvzb
- xpFHhVAL2Hbxntf87Gl8x+vkkfelhqGvnq1Q4hu4q/tGFxPOYAmhTG20CKqdJI3KfYHpzncPRYw
- FfRSjrVpCdsM3ffooQy5L9J/rUoncmRF5vbo00lbjtmpVrMBJ9MzSV2vjN842HvE7lcBI6xhnnw
- m25GSVmTxkiYbDmENug==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE2MDMwMCBTYWx0ZWRfX6JKwF4RMy0dP
- HfOmelmL2EkiZ7/k9F1Mf/mMgBmh7CU/bV9XZhOAf2jPd0z1fWrju7fHCjyvqUHQ/W4Reym63Kx
- wELCCzDc5t65MZ3nn8FCdhV0/ZUR8uU=
-X-Authority-Analysis: v=2.4 cv=Zsx4uN7G c=1 sm=1 tr=0 ts=6aab0b4c cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8 a=_VdnjSN4jw3ftuXtCEsA:9
- a=0bXxn9q0MV6snEgNplNhOjQmxlI=:19
-X-Proofpoint-ORIG-GUID: zuNtIMdzWg7aAO1LCBZIoD_WaUnjlI_V
-X-Proofpoint-GUID: zuNtIMdzWg7aAO1LCBZIoD_WaUnjlI_V
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-16_03,2026-09-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 impostorscore=0 clxscore=1015 priorityscore=1501
- lowpriorityscore=0 bulkscore=0 adultscore=0 phishscore=0 spamscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
- definitions=main-2609160300
+References: <20260915081910.4142719-1-morbo@google.com> <20260915081910.4142719-26-morbo@google.com>
+ <202609151258.5FC01072@keescook> <20260916010945.GEaqnsWSZ-DTMyTO25@fat_crate.local>
+In-Reply-To: <20260916010945.GEaqnsWSZ-DTMyTO25@fat_crate.local>
+From: Bill Wendling <morbo@google.com>
+Date: Wed, 16 Sep 2026 14:43:59 -0700
+X-Gm-Features: AcwNN1XbboPOY3deKY79Gty15vkSErYIT9HTgeQdVXaDzFhBvm8_kiOA449bIqU
+Message-ID: <CAGG=3QVZRCJ94+DOfSsSDhsrXVYf-ec01NZBy299nYiCAYfXKg@mail.gmail.com>
+Subject: Re: [PATCH 25/28] EDAC/thunderx: Replace strlcat() with seq_buf
+To: Borislav Petkov <bp@alien8.de>
+Cc: Kees Cook <kees@kernel.org>, linux-kernel@vger.kernel.org, 
+	codemender-patching+linux@google.com, Russell King <linux@armlinux.org.uk>, 
+	Huacai Chen <chenhuacai@kernel.org>, WANG Xuerui <kernel@xen0n.name>, 
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Helge Deller <deller@gmx.de>, 
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
+	"H. Peter Anvin" <hpa@zytor.com>, Ian Abbott <abbotti@mev.co.uk>, 
+	H Hartley Sweeten <hsweeten@visionengravers.com>, Tony Luck <tony.luck@intel.com>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Matthew Brost <matthew.brost@intel.com>, 
+	=?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
+	Rodrigo Vivi <rodrigo.vivi@intel.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+	Matthias Schwarzott <zzam@gentoo.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, 
+	Tony Nguyen <anthony.l.nguyen@intel.com>, Przemek Kitszel <przemyslaw.kitszel@intel.com>, 
+	Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Arend van Spriel <arend.vanspriel@broadcom.com>, Rob Herring <robh@kernel.org>, 
+	Saravana Kannan <saravanak@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, 
+	Sylwester Nawrocki <s.nawrocki@samsung.com>, Peter Griffin <peter.griffin@linaro.org>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Linus Walleij <linusw@kernel.org>, 
+	Anil Gurumurthy <anil.gurumurthy@qlogic.com>, 
+	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "Martin K. Petersen" <mkp@kernel.org>, 
+	Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
+	Mike Marshall <hubcap@omnibond.com>, Martin Brandenburg <martin@omnibond.com>, Jiri Pirko <jiri@resnulli.us>, 
+	Simon Horman <horms@kernel.org>, Chuck Lever <cel@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+	NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, Dai Ngo <Dai.Ngo@oracle.com>, 
+	Tom Talpey <tom@talpey.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, "Mike Rapoport (Microsoft)" <rppt@kernel.org>, 
+	Kanglong Wang <wangkanglong@loongson.cn>, Tiezhu Yang <yangtiezhu@loongson.cn>, 
+	Qiang Ma <maqianga@uniontech.com>, Randy Dunlap <rdunlap@infradead.org>, 
+	Pengpeng Hou <pengpeng@iscas.ac.cn>, Ard Biesheuvel <ardb@kernel.org>, Breno Leitao <leitao@debian.org>, 
+	Thorsten Blum <blum@kernel.org>, Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Lyude Paul <lyude@redhat.com>, 
+	Ashutosh Desai <ashutoshdesai993@gmail.com>, Imre Deak <imre.deak@intel.com>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, Johan Hovold <johan@kernel.org>, 
+	Johannes Berg <johannes.berg@intel.com>, 
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
+	Alexander Stein <alexander.stein@ew.tq-group.com>, 
+	Cryolitia PukNgae <cryolitia@uniontech.com>, Jiaming Zhang <r772577952@gmail.com>, 
+	Will Porter <mrwillporter@gmail.com>, Cen Zhang <zzzccc427@gmail.com>, 
+	=?UTF-8?Q?C=C3=A1ssio_Gabriel?= <cassiogabrielcontato@gmail.com>, 
+	Rong Zhang <i@rong.moe>, Arun Raghavan <arunr@valvesoftware.com>, 
+	linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev, 
+	linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org, 
+	linux-edac@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	intel-xe@lists.freedesktop.org, linux-input@vger.kernel.org, 
+	linux-media@vger.kernel.org, intel-wired-lan@lists.osuosl.org, 
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
+	devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-nfs@vger.kernel.org, devel@lists.orangefs.org, 
+	linux-hardening@vger.kernel.org, linux-sound@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Currently during kexec the vio driver implementation calls a drivers
-remove function as a big hammer when shutdown isn't implemented. This
-results in filesystem errors in the log as a result of the block device
-being removed while the filesystem is still mounted. Rectify this noise
-by quiescing the ibmvscsi driver and stopping short of tearing down the
-full host.
+On Tue, Sep 15, 2026 at 6:11=E2=80=AFPM Borislav Petkov <bp@alien8.de> wrot=
+e:
+>
+> On Tue, Sep 15, 2026 at 01:00:00PM -0700, Kees Cook wrote:
+> > Seems like seq_buf would be better her? But yes, at the very least, thi=
+s
+> > needs to be scnprintf, not snprintf (or add the checks as you have
+> > here).
+> >
+> > The rest of the seq_buf conversions look right.
+>
+> This driver has been an orphan for a while now (we just made it official)=
+ so
+> I'd prefer it if we don't do anything here.
+>
+I'll remove those changes from future emails.
 
-Move quiesce calls to their own helper function. Add a driver shutdown
-call back and implement with call to ibmvscsi_quiesce such that any
-outstanding commands are purged and failed back to the midlayer with
-DID_REQUEUE. Update ibmvscsi_remove to also use the new ibmvscsi_quiesce
-and failback outstanding commands with DID_ERROR prior to full transport
-teardown.
+> And yes, that mega CC list is just gross.
+>
+Apologies. :-(
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
----
-Changes since v1:
-- Only call scsi_block_requests in ibmvscsi_shutdown
-- set_request_limit to 0 during quiesce to fail any new submissions
-
- drivers/scsi/ibmvscsi/ibmvscsi.c | 33 +++++++++++++++++++++++---------
- 1 file changed, 24 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 4ecd3db08875..576f784b6677 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -2341,26 +2341,40 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
- 	return -1;
- }
- 
--static void ibmvscsi_remove(struct vio_dev *vdev)
-+static void ibmvscsi_quiesce(struct ibmvscsi_host_data *hostdata, int scsi_error_code)
- {
--	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
--
--	srp_remove_host(hostdata->host);
--	scsi_remove_host(hostdata->host);
--
--	purge_requests(hostdata, DID_ERROR);
--	release_event_pool(&hostdata->pool, hostdata);
-+	ibmvscsi_set_request_limit(hostdata, 0);
-+	kthread_stop(hostdata->work_thread);
- 
- 	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata,
- 					max_events);
- 
--	kthread_stop(hostdata->work_thread);
-+	purge_requests(hostdata, scsi_error_code);
-+
-+	release_event_pool(&hostdata->pool, hostdata);
- 	unmap_persist_bufs(hostdata);
-+}
-+
-+static void ibmvscsi_shutdown(struct vio_dev *vdev)
-+{
-+	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
-+
-+	scsi_block_requests(hostdata->host);
-+	ibmvscsi_quiesce(hostdata, DID_REQUEUE);
-+}
-+
-+static void ibmvscsi_remove(struct vio_dev *vdev)
-+{
-+	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
-+
-+	ibmvscsi_quiesce(hostdata, DID_ERROR);
- 
- 	spin_lock(&ibmvscsi_driver_lock);
- 	list_del(&hostdata->host_list);
- 	spin_unlock(&ibmvscsi_driver_lock);
- 
-+	srp_remove_host(hostdata->host);
-+	scsi_remove_host(hostdata->host);
- 	scsi_host_put(hostdata->host);
- }
- 
-@@ -2398,6 +2412,7 @@ static struct vio_driver ibmvscsi_driver = {
- 	.id_table = ibmvscsi_device_table,
- 	.probe = ibmvscsi_probe,
- 	.remove = ibmvscsi_remove,
-+	.shutdown = ibmvscsi_shutdown,
- 	.get_desired_dma = ibmvscsi_get_desired_dma,
- 	.name = "ibmvscsi",
- 	.pm = &ibmvscsi_pm_ops,
--- 
-2.55.0
-
+-bw
