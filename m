@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 439A949A3CA
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 23:33:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C87A34B5150
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 23:39:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789601626; cv=none; b=DNn9lpGf42tR3UBqeyuFairaCUa5iYgrJbh33SXdWFhM+SrlZ29gB66Alin3fhmqKD6s8/pUvXT8X0thHuTrUYUmPoN17FVyDtdK6hU1FxetenBs/Ei/5FA9Hp9O8IEqQJFIwTnjFDPSfPsfYMeLnWkinKHdiyL+ZGgxFND5GEc=
+	t=1789601954; cv=none; b=ldka/caZ5Pw1uLy/rp/bVSLbWOZKXqhlTXh+ZSdJcVPAVusS6Qi+5VZ7v+lAaWX6afaBRZRsMXJcKhYQqrZGgBU2fhpduKUsSVlXp00tJmW0Cpn2na2LQtDPocmy+SIlzXBL2qSibwOajN07KT61SGEuyyX6vWUljCClyBUOHco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789601626; c=relaxed/simple;
-	bh=WVEpkeZDkUvGZyGT6/l1Pg2kqxpkeCJpNBTcIA41GWo=;
+	s=arc-20240116; t=1789601954; c=relaxed/simple;
+	bh=uPzts3ELUI6k9SKgbbpiCXFPNxYtJfrh2Ofzh1uefVw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ZYgtPinTUSBzD/nACkvvG9ahNoOVzjLAbVWJ3gIYmWzqgr/HPNPNzE1JCeV5TF8PXkc8J3OPU02yz2HuriGopoKCVWwRU5VI8eLOo8xwq1jxQ3SrpYYn7XiFlMmIqTA0T5Qluxh0bi/VKZtbw61uAfF4ESzaT9TSGCkOOKyHh+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ie/N8IXZ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=dLX4Z/+gJ4pMDb9PuxO9/6W9noYY3VwfYuDr4/N/aBeneefVI9+AzpziizQBL2sKUbn6+Ju8ElDnSR2oLs+12/Al2QTuP6gdkhmqaKCElciJ1fPNxvvHLUM8+kI8E9RRrIIuxAVTjm8Rf0mu73BqCBV6UAFxxa1KPrvfdOps+Kg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Se6KQDFi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ie/N8IXZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A37991F000FF;
-	Wed, 16 Sep 2026 23:33:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Se6KQDFi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC38F1F000FF;
+	Wed, 16 Sep 2026 23:39:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789601624;
-	bh=wwPd7FYUJyh6u8oenfUQ0rrcCowV6Es2g687GMumPRw=;
+	s=k20260515; t=1789601950;
+	bh=Bd66oiTHtXy2YWHAS/kbYYUnWhyh+y/Hay2Gh/Vc2Eo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ie/N8IXZjbOC2MJbXwfOFaVbo7qG6DPZoX7JRqwZeNAq8J/JDluQvwrCKPpPt7eLX
-	 Z8H2q3MNafMg4b5zNiqOxGg8VSgcZtcjauVRRvxYTnQzIDP7Ip1FYjX16Dmz9BngM2
-	 /MAIC1QaDsPS2pKPkFLjAIs0GMzOUhhM9MD8AiZz3SDnpjcSXZz7ZJgn0zGDX9i5rB
-	 56Nwpx3+nGwKzLCfKyWpzKnxjK0tNrETCNCO26iMgPIVeHSqJThuGQlF/GW87ihYjl
-	 NjnjVw9RhWNF5trRxxd0Yfnh3n03mIcvMelWeGoEAMgkmDtUTlZ/7ewGc52WiAmoHV
-	 0d6Sz/Z7kW8dA==
+	b=Se6KQDFimLxN7t4HwzOj24ec+1wUnIJ3nEWE441vnvdOOp4PwGUl4Wpm03ExwTaQW
+	 gsgRCV2MEn5ZvFFsaZOWGVPynF6cWwkrLitXRgfARKbSPGuLXJFE+bQJoVIGueTikn
+	 ZMT13lORvRsZdml2XZLvl+uw1rsGykAzx4tewJ+slucokH9PzIXy4CR3drKlymZmYI
+	 mHdMAWN8CUK3z32zJ/bbXZKoMOb/J2yvkNkomOlk0PzjgBMGBc7iqQ/ipZzhBfCM29
+	 SAJG4M0mQgYqILT/HGLnMjQM/Ljv7pWQjDHV3XaKWHgRVPShsCizJeAzmj9Sv/So9R
+	 yRQkm5qL1/EUw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/20] scsi: ibmvfc: fix uninitialized _done dereference
- for TMF events on send failure
+Subject: Re: [PATCH 18/20] scsi: ibmvfc: fix NVMe sub-queue registration
+ failure disabling SCSI multiqueue
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260916230921.2204729-6-tyreld@linux.ibm.com>
+In-Reply-To: <20260916230921.2204729-19-tyreld@linux.ibm.com>
 References: <20260916230921.2204729-1-tyreld@linux.ibm.com>
- <20260916230921.2204729-6-tyreld@linux.ibm.com>
+ <20260916230921.2204729-19-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 16 Sep 2026 23:33:44 +0000
-Message-Id: <20260916233344.A37991F000FF@smtp.kernel.org>
+Date: Wed, 16 Sep 2026 23:39:09 +0000
+Message-Id: <20260916233909.BC38F1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,60 +47,68 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: ibmvfc: FCP TMF send failures silently report false success
+- [High] ibmvfc: permanent loss of NVMe MQ after transient registration fai=
+lure
 --
 
-commit c0038842ca930b0a5898cd284c6625f6e31cea8f
+commit 3196ff84a81b6364f0d8e7add637cd7dce662d03
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-scsi: ibmvfc: fix uninitialized _done dereference for TMF events on send fa=
-ilure
+scsi: ibmvfc: fix NVMe sub-queue registration failure disabling SCSI multiq=
+ueue
 
-This commit fixes a wild function-pointer dereference in ibmvfc_send_event()
-by restricting the _done reassignment to IBMVFC_MAD_FORMAT events only. FCP
-Task Management Function (TMF) events will no longer reach this branch.
+This commit modifies ibmvfc_reg_sub_crqs() to check the channel protocol
+during registration failure. It clears vhost->do_enquiry for SCSI failures
+and vhost->nvme_enabled for NVMe failures, preventing NVMe registration
+failures from silently disabling SCSI multiqueue support.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
+> index 93189692191e3..d79a6ae278a2c 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -1859,7 +1859,7 @@ int ibmvfc_send_event(struct ibmvfc_event *evt,
->  			evt->done =3D ibmvfc_vfc_eh_done;
->  		} else if (evt->fcp_req || evt->ls_req) {
->  			evt->done =3D ibmvfc_vfc_eh_done;
-> -		} else {
-> +		} else if (evt->crq.format =3D=3D IBMVFC_MAD_FORMAT) {
->  			evt->xfer_iu->mad_common.status =3D cpu_to_be16(IBMVFC_MAD_CRQ_ERROR);
->  			evt->done =3D evt->_done;
->  		}
+> @@ -6527,7 +6527,10 @@ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host=
+ *vhost,
+>  		if (ibmvfc_register_channel(vhost, channels, i)) {
+>  			for (j =3D i; j > 0; j--)
+>  				ibmvfc_deregister_channel(vhost, channels, j - 1);
+> -			vhost->do_enquiry =3D 0;
+> +			if (channels->protocol =3D=3D IBMVFC_PROTO_SCSI)
+> +				vhost->do_enquiry =3D 0;
+> +			else
+> +				vhost->nvme_enabled =3D 0;
 
 [Severity: High]
-Does skipping this branch for FCP TMF events (which use IBMVFC_CMD_FORMAT)
-inadvertently cause send failures to be reported as successes?
+Does this permanently disable NVMe multiqueue support if an NVMe sub-queue
+registration failure is transient?
 
-If ibmvfc_send_event() fails and we bypass this assignment, the
-zero-initialized FCP command status in evt->xfer_iu->cmd.status remains
-unmodified before evt->done(evt) is called.
+When an NVMe registration fails, vhost->nvme_enabled is now set to 0.
+The host will eventually reset and retry registration, for example via
+ibmvfc_reset_crq() or ibmvfc_reenable_crq_queue().
 
-Callers like ibmvfc_reset_device() appear to check this zero status and
-falsely assume the operation succeeded:
+Unlike vhost->do_enquiry which is explicitly restored to 1 during reset:
 
-ibmvfc_reset_device()
-    ...
-    if (rsp_iu.cmd.status)
-        rsp_code =3D ibmvfc_get_err_result(vhost, &rsp_iu.cmd);
+ibmvfc_reset_crq() {
+	...
+	vhost->do_enquiry =3D 1;
+	vhost->using_channels =3D 0;
+	vhost->do_scsi_login =3D 0;
+	vhost->do_nvme_login =3D 0;
+	...
+}
 
-The same pattern appears in ibmvfc_eh_abort_handler(), which also checks
-the unmodified status:
+vhost->nvme_enabled is never restored.
 
-ibmvfc_eh_abort_handler()
-    ...
-    if (rsp_iu.cmd.status)
-        rsp_code =3D ibmvfc_get_err_result(vhost, &rsp_iu.cmd);
+If the subsequent registration retry succeeds, the NVMe channels are
+successfully registered with the hypervisor, but nvme_enabled remains 0.
+Could this prevent the driver from advertising IBMVFC_YES_NVMEOF during
+NPIV login, leaving the newly registered channels permanently unused by the
+VIOS and breaking the multiqueue recovery mechanism?
 
-Will this lead to the SCSI midlayer receiving false success reports when
-TMF resets or aborts fail to send during SAN error conditions?
+>  			return;
+>  		}
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260916230921.2204=
-729-1-tyreld@linux.ibm.com?part=3D5
+729-1-tyreld@linux.ibm.com?part=3D18
