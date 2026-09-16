@@ -1,142 +1,161 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D05A486640;
-	Wed, 16 Sep 2026 09:00:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 681DB4EE85E;
+	Wed, 16 Sep 2026 10:43:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789549227; cv=none; b=FBe0LIN0bWf0A53BfxRcS8+k9VtOlfGKxZji9+G/9UTLI0hcNIkhK53xkWsGp2H7aylHhQykj53hiHOVtXIMRwB9u6Pgjz8PUXQ1UFIk1nG5p0sTSROFsIOg0qLhjtD/u+K2CG/2jjnS78J8s7m9jUA03juQ0IH9CTiSuNoFFVA=
+	t=1789555409; cv=none; b=C5YDv7mpMZVgyjkFFjsunTILTg0ZtxjfgCchLs4CNc47Lfzr3vXMBzx00WKUWLfgVFsKcyXSgJRsW6FboZD09TTd1zVHF++EKm53ePcjdFJMCd2c71VsCizvwchtP2xQrylrx9q7LCBzOOFhbAG2OPvXmFiD58kaW21JKj88i24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789549227; c=relaxed/simple;
-	bh=7hjShUH8oG2qiOcGYyNttSxIxKlulyMkTIff6p+A8No=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Pm7nfTFgVN7Xw4ZsHP4VNls0P2mDxhDjw6SZEpXLfzb7NAfBCwMm0OZH9iSwORkJZY1FVEuj1G9bOecsRD2g8DfSG2WsW6fHKsAV/yDkfARxCOAa5Us7Ua7FfBM060gLgaVoQRh8jr71Ci7cPIBvYgwvOy6no3BTkJI+Ssea1MA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NAU/WoCy; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789555409; c=relaxed/simple;
+	bh=pNF/fYZKvcKlZCJNJy4Ik87MUKWeVC4PAUAyo2PWQB0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bz81jzssjlkdsMBcJH40PlDyZmNeKulS5vDYVVVHJcZp22eaB34tpqYbTuItL3fXYhY76MdyYRc9mMDqZ9GGzLjCGrX/Iyr3uWOG3/bjpucMGHFdNfvJbnKUyW6S1TRhRgfkfl0zxCzJ+Oz4S1gDKhQkduaRSVb7wYwMO6MVREw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=huxaqQI2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NAU/WoCy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C7111F00899;
-	Wed, 16 Sep 2026 09:00:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="huxaqQI2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 767AB1F0089D;
+	Wed, 16 Sep 2026 10:43:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789549211;
-	bh=Ng0BJe/IEPoeGD8s9AGF/YjESKtaslK1oYhKm/z5OrY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NAU/WoCy+PNyHbj+OQ3WPb8JznVEIh0ORecyxVEfiQE+KWyB7zI93UFwrzCAxZPvy
-	 QPzJ6I5qIGgC5OWw3sIspJ632/RpvUZjFj38CSwgHf3u7J7Yd4X+xp/SmClpbxavk7
-	 Kg121fNnqrjkDGtdhcsOrGlOhKXnTWjCemQM744xcmslmWQAyfdo643lBxqZOvufDa
-	 dLCqWHOYaw2ZFmPTxIBXUfcHJdl83r1nRlAgqvAYfP3tagvtelBLFYZAWdo1YLGwNb
-	 BdP3s6ZsX+hVeQ5wCybYdBdSGtOUTGRUIodhS6ST4qTdwC7qaEL6Ti8cpG/yjFGxWC
-	 g2khCgdEq4u3A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 07/10] scsi: ufs: Add NXP S32N79 UFS host controller
- driver
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Larisa Grigore" <larisa.grigore@oss.nxp.com>
-Cc: conor+dt@kernel.org, robh@kernel.org, Frank.Li@kernel.org, imx@lists.linux.dev, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260916084411.941297-8-larisa.grigore@oss.nxp.com>
-References: <20260916084411.941297-1-larisa.grigore@oss.nxp.com>
- <20260916084411.941297-8-larisa.grigore@oss.nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 16 Sep 2026 09:00:09 +0000
-Message-Id: <20260916090010.6C7111F00899@smtp.kernel.org>
+	s=k20260515; t=1789555389;
+	bh=/UGygQGXhuhDnAfhN574yKe4CYpKDrynLUaMeDlvo5U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=huxaqQI2TwNroiRMo7UjM/+rKuW2mlKdf7v57qzlMcWhE0jthgS9TjiY4+kKxXoSq
+	 rS3XGxZJj0vj4XSxGsx3dvGxSWBvLSkMtmqnxk4gy7EPNBuFiQf1iHmE92Wh+e3h0q
+	 +BkYS2MJwFfM6A8zgGgrUp+DnlgUFSxDRMDLbuxZLi/chvTvcJtz6bwVraJxNd03zI
+	 JMr9tXFxycEv2d6My8ACQbRfl8vRNd5j6XwSZz+/rrO7xunXrgswzsHnGNgwHyJ844
+	 2SnHZ9wtVvSD0Mc1HgliTNNp78ORg4SQtXU+RK1V1kbzzicqhDHg2MInzUVYHYX7jF
+	 wxtL5EVEMzVBA==
+Date: Wed, 16 Sep 2026 11:43:05 +0100
+From: Lee Jones <lee@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: Liang Haowen <nbg2974@gmail.com>, linux-scsi@vger.kernel.org,
+	linux-leds@vger.kernel.org
+Subject: Re: [PATCH RFC v4 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED
+ driver for ROG NVMe enclosures
+Message-ID: <20260916104305.GM11487@google.com>
+References: <202609152112.RFCv4-0.lhw@gmail.com>
+ <202609152112.RFCv4-1.lhw@gmail.com>
+ <20260915130050.E8CDB1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260915130050.E8CDB1F000FF@smtp.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] pm: positive return in ufs_s32n7_link_startup_notify() causes uncl=
-ocked access
-- [Low] pm: missing pm_sleep_ptr() wrapper for .prepare and .complete callb=
-acks
---
+On Tue, 15 Sep 2026, sashiko-bot@kernel.org wrote:
 
-commit 774c9ff68bb8216bae4f82205ba8ce70b0364e59
-Author: Larisa Grigore <larisa.grigore@oss.nxp.com>
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+> - [Medium] leds: data race on subled_info array causes torn color updates
+> - [Low] leds: build failure due to undefined macro kzalloc_obj
+> - [Low] leds: build failure due to missing argument in blk_rq_map_kern()
 
-scsi: ufs: Add NXP S32N79 UFS host controller driver
+Please review, explain or fix the Sashiko review(s).
 
-This commit adds support for the UFS host controller on the NXP S32N79 SoC,
-built on the Synopsys DesignWare (DWC) UFS architecture. It implements
-S32N79-specific initialization sequences before link startup and applies
-post-link calibration for HS operation.
+If this is a set, this request includes the other patches too.
 
-> diff --git a/drivers/ufs/host/ufs-nxp-s32n7.c b/drivers/ufs/host/ufs-nxp-=
-s32n7.c
-> new file mode 100644
-> index 0000000000000..4f9a001562024
-> --- /dev/null
-> +++ b/drivers/ufs/host/ufs-nxp-s32n7.c
+> --
+> 
+> commit e6ce9b3b67cc2aa4897215acc2c62600810790a8
+> Author: Liang Haowen <nbg2974@gmail.com>
+> 
+> leds: asus-aura-scsi: Add ASUS Aura RGB LED driver for ROG NVMe enclosures
+> 
+> This commit introduces a driver for ASUS ROG external NVMe enclosures that
+> exposes 4 independently addressable LEDs via the LED multicolor class. It
+> uses a SCSI device handler matched by vendor INQUIRY to send custom ENE
+> sequences over passthrough SCSI commands.
+> 
+> > diff --git a/drivers/leds/leds-asus-aura-scsi.c b/drivers/leds/leds-asus-aura-scsi.c
+> > new file mode 100644
+> > index 0000000000000..089cc3dcee105
+> > --- /dev/null
+> > +++ b/drivers/leds/leds-asus-aura-scsi.c
+> [ ... ]
+> > +static int ene_write(struct scsi_device *sdev, u16 reg,
+> > +		     const void *data, u8 arg_count)
+> > +{
+> > +	struct request *rq;
+> > +	struct scsi_cmnd *scmd;
+> > +	u8 cdb[ENE_CDB_LEN];
+> > +	int ret;
+> > +
+> > +	ene_build_cdb(cdb, reg, arg_count);
+> > +
+> > +	rq = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_OUT, 0);
+> > +	if (IS_ERR(rq))
+> > +		return PTR_ERR(rq);
+> > +
+> > +	if (arg_count) {
+> > +		ret = blk_rq_map_kern(rq, (void *)data, arg_count, GFP_NOIO);
+> 
+> [Severity: Low]
+> Does this cause a build failure? The kernel API blk_rq_map_kern() requires 5
+> arguments, where the first parameter should be the struct request_queue *q,
+> but it is called here with only 4 arguments.
+> 
+> > +		if (ret)
+> > +			goto out;
+> > +	}
+> [ ... ]
+> > +static void asus_aura_set(struct led_classdev *cdev,
+> > +			  enum led_brightness brightness)
+> > +{
+> > +	struct led_classdev_mc *mc = lcdev_to_mccdev(cdev);
+> > +	struct asus_aura_led *led =
+> > +		container_of(mc, struct asus_aura_led, mc_cdev);
+> > +	struct asus_aura_zone *zone = led->zone;
+> > +	unsigned long flags;
+> > +
+> > +	led_mc_calc_color_components(mc, brightness);
+> > +
+> > +	spin_lock_irqsave(&zone->lock, flags);
+> 
+> [Severity: Medium]
+> Could this lead to a data race on the subled_info array? The LED core allows
+> concurrent brightness_set callbacks for the same LED (for instance, from
+> sysfs and a hardware trigger). The helper led_mc_calc_color_components()
+> modifies the shared mc->subled_info array locklessly before the driver
+> acquires its spinlock. If multiple threads update the brightness
+> concurrently, they might interleave their writes to the array, causing the
+> winning thread to read a mix of old and new color components.
+> 
+> > +	/* ENE colour register byte order is R, B, G. */
+> > +	led->rgb[0] = led->subled[0].brightness;
+> > +	led->rgb[1] = led->subled[2].brightness;
+> > +	led->rgb[2] = led->subled[1].brightness;
+> > +	zone->dirty |= BIT(led->index);
+> > +	spin_unlock_irqrestore(&zone->lock, flags);
+> > +
+> > +	schedule_work(&zone->work);
+> > +}
+> [ ... ]
+> > +static int asus_aura_attach(struct scsi_device *sdev)
+> > +{
+> > +	struct asus_aura_zone *zone;
+> > +	int i, ret;
+> > +
+> > +	if (strncmp(sdev->vendor, ARION_INQ_VENDOR, strlen(ARION_INQ_VENDOR)) ||
+> > +	    strncmp(sdev->model, ARION_INQ_MODEL, strlen(ARION_INQ_MODEL)))
+> > +		return SCSI_DH_DEV_UNSUPP;
+> > +
+> > +	zone = kzalloc_obj(*zone, GFP_KERNEL);
+> 
+> [Severity: Low]
+> Does this code fail to compile? It looks like it invokes an undefined macro
+> kzalloc_obj() instead of the standard kzalloc() function to allocate memory.
+> 
+> > +	if (!zone)
+> > +		return SCSI_DH_NOMEM;
+> > +	zone->sdev = sdev;
+> 
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/202609152112.RFCv4-1.lhw@gmail.com?part=1
 
-[ ... ]
-
-> +static int ufs_s32n7_link_startup_notify(struct ufs_hba *hba,
-> +			     enum ufs_notify_change_status status)
-> +{
-> +	int err;
-> +
-> +	if (status =3D=3D PRE_CHANGE) {
-> +		err =3D ufs_s32n7_link_startup_pre_change(hba);
-> +		if (err) {
-> +			dev_err(hba->dev, "MPHY setup failed (%d).\n", err);
-> +			return err;
-> +		}
-> +		return 0;
-> +	}
-> +
-> +	/* POST_CHANGE */
-> +	err =3D ufshcd_dwc_link_is_up(hba);
-> +	if (err) {
-> +		dev_err(hba->dev, "Link is not up.\n");
-> +		return err;
-
-[Severity: High]
-Could this propagate a positive return value on failure?
-
-When ufshcd_dwc_link_is_up() fails, it returns 1. If this positive value is
-returned here, it will propagate up through ufshcd_link_startup() and
-ufshcd_resume() to ufshcd_runtime_resume().
-
-The PM core's rpm_resume() will treat the positive return value as a failur=
-e,
-marking the device as RPM_SUSPENDED, but will propagate the positive 1
-back to callers of pm_runtime_get_sync().
-
-Since callers typically check for failure using a ret < 0 condition, they
-will assume the device successfully resumed and proceed to access unclocked
-or powered-off hardware registers. This can cause a system crash or bus han=
-g.
-
-> +	}
-> +
-> +	err =3D ufs_s32n7_link_startup_post_change(hba);
-
-[ ... ]
-
-> +static const struct dev_pm_ops ufs_s32n7_pm_ops =3D {
-> +	SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
-> +	RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
-> +	.prepare	=3D ufshcd_suspend_prepare,
-> +	.complete	=3D ufshcd_resume_complete,
-
-[Severity: Low]
-Should these sleep callbacks be wrapped with pm_sleep_ptr()?
-
-The power management subsystem guidelines require sleep callbacks like
-.prepare and .complete to be wrapped in pm_sleep_ptr() to prevent them
-from becoming dead code when CONFIG_PM_SLEEP is disabled.
-
-Assigning them unconditionally can cause minor memory bloat and potential
-compiler warnings due to unused symbols being retained.
-
-> +};
-> +
-> +static struct platform_driver ufs_s32n7_driver =3D {
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260916084411.9412=
-97-1-larisa.grigore@oss.nxp.com?part=3D7
+-- 
+Lee Jones
