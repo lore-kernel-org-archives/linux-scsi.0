@@ -1,145 +1,148 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FBB7530DEA;
-	Wed, 16 Sep 2026 23:09:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82E124A7CA1
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 23:21:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789600197; cv=none; b=QzGEJFPTB1pMEfS12UeMMSDpZdsl3DRYs0VCAYF1pmYfJFHYfUDaZe+pjazvhZApPLoU7+g4SMXIlbuLWMISty+7Dsk/IgF5H4b9zc7T9snbkna5XDooUfAaGY3/r/NjQMuZG+QLOeXfQnod96JcBuqZIpXhNUsp+gfHOelMZ5w=
+	t=1789600919; cv=none; b=NYkcptXzrmghjKXYJcx0o4bQUP6ugXH8A6gvutZUKHQQgxON2ai86VEtnrzB+9tax5NkzmGOQs3vnasfvIC5tPzkRy3n1V3A5tGiRPwm9e6Zt3svN8KOc582lkcb2ql0SkPvyxCyYuogK3vAAmvbFC+iSgnDusUHmw47NhOUWYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789600197; c=relaxed/simple;
-	bh=rgVT3wN05mtR0wVmodPRJgzZeltxN2x8DeHhU3FVo7Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YzZ7A4KdD9sGBE2w+LDBRUXGfO7avdALC0h+qjEnalPzvGzmo3TcpIgtNzPepIfhs/ZBBNnsi872RHE6yDOdtpTga+/bc9H9hG/M3RY1RVngSXSnHb6fHnr80Su2cIZsx+CSBKTFVnJGj4ePNPKvjiMvfQPu+2Fa2zqHahYdUq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Ia3PeJ0k; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1789600919; c=relaxed/simple;
+	bh=3cFC7B6asiReNnZGxEv61BqOatKwbKA16CYApydeKLA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=MYs8gDnabuVwT/F8WHv2UA0iT7I40tDVnAfz7UL3r74839Eetspt7f6NfIQZh96SWXe0T9r/cZUYoxg9UGWE/2ojOwjAH1n3O030eY1WyWj66d93e/58D2LgsIbsNuAjx8zHNNUArUfS/yzl1mIlF3cMyDKMe6xmP41L6nxYBaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JvnPtVQ6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Ia3PeJ0k"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68GG1bMS4057200;
-	Wed, 16 Sep 2026 23:09:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=CUWkOg
-	NJs+S2I9guIEGrq4RU0vb6psXCglD3/VkXnr4=; b=Ia3PeJ0k3dnqRnXLmHi+wc
-	hwFT9LxrOnmEvUw/bnaCsIZSQYz8vLeU5n9wEXIgc82JSGhpA8BCz2H9mDI5Qcy4
-	YT+zcqlBgjm0GLiSjihHzvUE3K37Fk6MiUfczq/rHaWQ4cLFFS0ibcYMSW5ajnke
-	DEaHcbta1DCGnXQWe9Hqfm+S3vnt6KFSsmeqkVRSTY9D82sFwT3XOjAR5/xeY5Pe
-	pReoBUFG70mnOMTwBz5hrP1Adxy5963tVy8YvpGb0U0qice9DjK1/6w1WqBXpqWJ
-	xwMSIKd+rwryB/TTnYXxQwhmdRYP9m6NuEU2SU3cjH2iRAyH3HNjk2D3/OkIEy/A
-	==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gmv5hy9vj-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 16 Sep 2026 23:09:49 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68GN2IAV1699595;
-	Wed, 16 Sep 2026 23:09:48 GMT
-Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gq03vgug6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 16 Sep 2026 23:09:48 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
-	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68GN9lDJ24117778
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 16 Sep 2026 23:09:47 GMT
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 57B2C58054;
-	Wed, 16 Sep 2026 23:09:47 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6CAAA5804E;
-	Wed, 16 Sep 2026 23:09:46 +0000 (GMT)
-Received: from li-4c4c4544-0054-3910-8039-c3c04f423534.ibm.com.com (unknown [9.61.141.190])
-	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 16 Sep 2026 23:09:46 +0000 (GMT)
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-To: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org, brking@linux.ibm.com,
-        davemarq@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH 18/20] scsi: ibmvfc: fix NVMe sub-queue registration failure disabling SCSI multiqueue
-Date: Wed, 16 Sep 2026 16:09:19 -0700
-Message-ID: <20260916230921.2204729-19-tyreld@linux.ibm.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260916230921.2204729-1-tyreld@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JvnPtVQ6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A35761F000FF;
+	Wed, 16 Sep 2026 23:21:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789600917;
+	bh=3h70KfW3VAjRKIG9HzUr29ksOGCX/9pTXGKa9qI6ZXo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=JvnPtVQ6ZV/b6EPK0VU+swOvkRQoMNxMFEXTb/QNvphfv2UrkcmkSaOcJGIYgH5//
+	 BEwMeGMwp2rllJoZnL4fi974ASOLZxU2JHC56do/YmBvDkVVwfYzsiGsMnyywAP9ls
+	 PYZOU1lKxpOKZsTh+lFFHcTb2Cu14VaFeJR46Unp7GAHf8iRwu4atxtt0jF8Xt5nd/
+	 w6voETbYF8XjY5yTICuyq9nskjFHfjLmembBuwEuoKEfFSAoLNSSVwv/cXFNMHvTR6
+	 F6jkb9Jhsw9opDoL8gXlgtVkjpMYUzIwLsALkQ/41ZAwvXDqwTaLRnFZeVkWgSplZ1
+	 xoO83QkG7NXHw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 02/20] scsi: ibmvfc: fix trace logging for NVMe FCP
+ commands
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260916230921.2204729-3-tyreld@linux.ibm.com>
 References: <20260916230921.2204729-1-tyreld@linux.ibm.com>
+ <20260916230921.2204729-3-tyreld@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 16 Sep 2026 23:21:57 +0000
+Message-Id: <20260916232157.A35761F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE2MDMyMiBTYWx0ZWRfX2mRyg3CP3mu9
- Llbq6bokMo0MQmI4+jqWZNlYmegVdsBRGZMKhfhO6qnEMhVTGs3F7U91EKF9VDzMOQKImhYCGWw
- oksmMYlmauCYi+1cxpmPz6Yyvcln7mAlnAKc1ewUl5R7ZSXmtnFqexQhaka49W5sWpqWtuybdxj
- smz9RlrRaUVfMD21e2AWc+sS9pkikTGwXfjc/GoPLqMHqON2r/HEck+dKCkZcg3X6pjN+UDiiWy
- 2n81p5habBT6uk3sykxYCK4Zi1MMxGajUZdQVVif2qo45jYaRwKOyr+QQo+3dbqEygVryS5+Dhb
- OHvNdDO5nEEjI2ehOYITUl4mdrEgq8kKnqPK675F7/sEPusNeP3n/nMk65NFl1BNiOQjFxZBzJr
- nyo8uudjRcASqHSlRPXpy/0IxAbtLx6A3hdxmUHcUekT+a8+3GODMJ+LUjsdxn1SKu/z/++TdKo
- ZoPHPex55OeKTmxwraA==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE2MDMyMiBTYWx0ZWRfXxY5Vdo/emS4H
- 8uYs9phZnO+X+CXfA6S6JxqR51DZJFwJPzrQDZFJ90OyvsCH06AmJ8fREXxz09EO0/mztKXjc8v
- TmbBUUskxEAuQm9eL2RJEcGU/JZ45eM=
-X-Authority-Analysis: v=2.4 cv=Zsx4uN7G c=1 sm=1 tr=0 ts=6aab21bd cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8
- a=To5To57u1w-uQxo1Mx4A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: oqtPaZAwKHanj0Mqrz0476d9XTXaaxtk
-X-Proofpoint-GUID: oqtPaZAwKHanj0Mqrz0476d9XTXaaxtk
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-16_03,2026-09-16_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 impostorscore=0 clxscore=1015 priorityscore=1501
- lowpriorityscore=0 bulkscore=0 adultscore=0 phishscore=0 spamscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
- definitions=main-2609160322
 
-ibmvfc_reg_sub_crqs() clears vhost->do_enquiry unconditionally when any
-channel registration fails.  The function is called for SCSI channels
-first and then for NVMe channels (in ibmvfc_init_sub_crqs(),
-ibmvfc_reset_crq(), and ibmvfc_reenable_crq_queue()).  If the NVMe
-channel registration fails, do_enquiry is cleared even though SCSI
-channels registered successfully, preventing the IBMVFC_CHANNEL_ENQUIRY
-MAD from being sent and silently disabling multiqueue support for SCSI.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] scsi: ibmvfc: trace corruption due to uninitialized ring buffer =
+fields
+- [Medium] scsi: ibmvfc: incorrect xfer_len logged for NVMe commands
+--
 
-ibmvfc_init_sub_crqs() already handles NVMe *allocation* failure
-correctly — it only clears nvme_enabled without touching do_enquiry.
-The same logic needs to apply when NVMe *registration* fails.
+commit 1aea7045df7aa168a5c3d098c49f569b870a3fa5
+Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-Fix ibmvfc_reg_sub_crqs() to check channels->protocol in the failure
-path: clear do_enquiry only for a SCSI channel failure (preserving
-existing behaviour), and clear nvme_enabled instead for an NVMe channel
-failure.  This covers all three call sites in one place.
+scsi: ibmvfc: fix trace logging for NVMe FCP commands
+   =20
+This commit fixes trace logging for NVMe FCP commands in ibmvfc_trc_start()
+and ibmvfc_trc_end(). It adds gating on evt->cmnd and evt->fcp_req to preve=
+nt
+reading SCSI-specific fields from an NVMe IU, which was producing garbage
+trace entries.
 
-Fixes: bf86ac3ca0d2 ("scsi: ibmvfc: alloc/dealloc sub-queues for nvme channels")
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> index aa7ae81df41b1..6c243b2a84d7a 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> @@ -257,11 +257,16 @@ static void ibmvfc_trc_start(struct ibmvfc_event *e=
+vt)
+> =20
+>  	switch (entry->fmt) {
+>  	case IBMVFC_CMD_FORMAT:
+> -		entry->op_code =3D iu->cdb[0];
+>  		entry->scsi_id =3D be64_to_cpu(vfc_cmd->tgt_scsi_id);
+> -		entry->lun =3D scsilun_to_int(&iu->lun);
+> -		entry->tmf_flags =3D iu->tmf_flags;
+> -		entry->u.start.xfer_len =3D be32_to_cpu(iu->xfer_len);
+> +		if (evt->cmnd) {
+> +			entry->op_code =3D iu->cdb[0];
+> +			entry->lun =3D scsilun_to_int(&iu->lun);
+> +			entry->tmf_flags =3D iu->tmf_flags;
+> +			entry->u.start.xfer_len =3D be32_to_cpu(iu->xfer_len);
+> +		} else if (evt->fcp_req) {
+> +			entry->op_code =3D vfc_cmd->v3nvme.iu.sqe.common.opcode;
+> +			entry->u.start.xfer_len =3D be32_to_cpu(vfc_cmd->payload_len);
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 93189692191e..d79a6ae278a2 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -6527,7 +6527,10 @@ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
- 		if (ibmvfc_register_channel(vhost, channels, i)) {
- 			for (j = i; j > 0; j--)
- 				ibmvfc_deregister_channel(vhost, channels, j - 1);
--			vhost->do_enquiry = 0;
-+			if (channels->protocol == IBMVFC_PROTO_SCSI)
-+				vhost->do_enquiry = 0;
-+			else
-+				vhost->nvme_enabled = 0;
- 			return;
- 		}
- 	}
--- 
-2.55.0
+[Severity: Medium]
+Does this regression log the command frame size instead of the intended data
+transfer length for NVMe commands? It appears to be using
+vfc_cmd->payload_len (initialized from fcp_req->cmdlen) rather than
+fcp_req->payload_length.
 
+[Severity: Medium]
+Could this regression leak stale data from previous trace events in the
+vhost->trace ring buffer? Since the ring buffer fields are not zeroed before
+reuse, NVMe commands will bypass setting entry->lun and entry->tmf_flags
+without clearing them.
+
+Additionally, TMF and NVMe LS commands have neither evt->cmnd nor
+evt->fcp_req, bypassing this logic entirely and skipping initialization of
+all these fields in ibmvfc_trc_start().
+
+> +		}
+>  		break;
+>  	case IBMVFC_MAD_FORMAT:
+
+[ ... ]
+
+> @@ -294,15 +299,19 @@ static void ibmvfc_trc_end(struct ibmvfc_event *evt)
+> =20
+>  	switch (entry->fmt) {
+>  	case IBMVFC_CMD_FORMAT:
+> -		entry->op_code =3D iu->cdb[0];
+>  		entry->scsi_id =3D be64_to_cpu(vfc_cmd->tgt_scsi_id);
+> -		entry->lun =3D scsilun_to_int(&iu->lun);
+> -		entry->tmf_flags =3D iu->tmf_flags;
+>  		entry->u.end.status =3D be16_to_cpu(vfc_cmd->status);
+>  		entry->u.end.error =3D be16_to_cpu(vfc_cmd->error);
+> -		entry->u.end.fcp_rsp_flags =3D rsp->flags;
+> -		entry->u.end.rsp_code =3D rsp->data.info.rsp_code;
+> -		entry->u.end.scsi_status =3D rsp->scsi_status;
+> +		if (evt->cmnd) {
+> +			entry->op_code =3D iu->cdb[0];
+> +			entry->lun =3D scsilun_to_int(&iu->lun);
+> +			entry->tmf_flags =3D iu->tmf_flags;
+> +			entry->u.end.fcp_rsp_flags =3D rsp->flags;
+> +			entry->u.end.rsp_code =3D rsp->data.info.rsp_code;
+> +			entry->u.end.scsi_status =3D rsp->scsi_status;
+> +		} else if (evt->fcp_req) {
+> +			entry->op_code =3D vfc_cmd->v3nvme.iu.sqe.common.opcode;
+
+[Severity: Medium]
+Does the same regression apply here during event completion tracing? It loo=
+ks
+like completion response fields could contain stale trace data for TMF, LS,
+and NVMe FCP commands in ibmvfc_trc_end() since they are skipped without
+being zeroed.
+
+> +		}
+>  		break;
+>  	case IBMVFC_MAD_FORMAT:
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260916230921.2204=
+729-1-tyreld@linux.ibm.com?part=3D2
