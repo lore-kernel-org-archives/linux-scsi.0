@@ -1,180 +1,186 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63A7B45041C
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 19:42:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16AE5478E28;
+	Wed, 16 Sep 2026 21:34:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789587749; cv=none; b=ivstuD/cCYkYzKVC6RE6om86WOwqIVE/UCLynDB3+vBp6HCh7Xm8LSK21u4IKACcHyz/5JTqezXKQEWc+snGf1PZS3ZEevtg5svjSVfoT14Ek0HWodOwMiJI8lr7y8svDu0Ud6+GLZ+oFq/1F6v/BxRI6w5/YJ2zOyaoFBUgXZo=
+	t=1789594466; cv=none; b=lwfEtBiQxwo2KDxMyPa4ChHSwCGk6uA0ti46RSuneupkyXGV1c2ZDYw15vcFuu+HWHIFc0yZMrYFC43Wetfh/y6t4QcmbMj3iw1U7ggtn4yMDtItdGIWxen6X0HlJKVe1DvZIRMvbSMudDKPNkFlNyD4cW6B7ATH8QsAjfEhUn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789587749; c=relaxed/simple;
-	bh=Dnc237LIK+dq38YOjzWu9j3d1wYHrJ3GApeY3U2aFec=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K/CQMlC7DVBUG8hOoqWimI/xIfR286xrRXow8UkAReHULjOHisCkOor97lUD7mi6GLA5/U8Q2iJLCV18Fcvw9XTY05LgnB+3/uHvgfNNUoEelO7AQiITlRoI9q081lYh7oPHovYk/8fQJYM9rUETq/YYO2oNVToZBL9Gfr1oN2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XMmYyhGs; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=BLOEBxQK; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1789594466; c=relaxed/simple;
+	bh=+1R3Y+rDmNHm7YVHcpcjivPn9VcWwEuVetwHOS+dTV8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=X3XOW2b0R6jnFO6BgRkWqLoA9Xp7+cRzoIv9roWjX50jTormC3Mrvf/AiU7lw9yOIMAzsGNRZ14uxdYEKB7nvEw2LPaUK2JWfl/7Sal1k3OWj9+U43Y3/Mf8S5BA7A8YZJgsKevH9L3oEYk/U6yXAcG1AJtQLAJMeqj6JlMi9n0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=EdTlr2QT; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XMmYyhGs";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="BLOEBxQK"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68GFeU661855070
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 19:42:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	irXsHZsnq2RJrG3HTJ0y9LXBcNkU5BE62K/lbfYKMow=; b=XMmYyhGso8YkV4VM
-	fu/IahjwpGRkRkM6s1OPr+xa83UkQrLKEqEx/ph3PFBDcSAjWEO8o6slxUtSiaIs
-	LmUJjTse1lUlxaO91G/eoVKpOi9qL40qliNU0DH8Qsnu1gyEkz/i/hVb/yYyuV4c
-	3M/b6RjS2gDGHE9hxA3Nn8NHYJ8iua3nRHhWH0gUKDP9dbr2+o7Ng2IAQ2WiuRLx
-	2j+h0k4GlB4yUUQ/FUtpoyhXNbRQZCRoZao7RiEBdDLXGlZsuV1sSpoSTlC5KCFz
-	UNp9MnAiJBGgvxh+xcN4QgntV4qSVVKyupH85DcBHXdrd1Ei/SGTuPLJYgC5wY8X
-	W2zTjA==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gqqp3txsj-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 19:42:07 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-396901263b6so79658a91.2
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 12:42:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1789587727; x=1790192527; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=irXsHZsnq2RJrG3HTJ0y9LXBcNkU5BE62K/lbfYKMow=;
-        b=BLOEBxQK8eDcDB5bj8E7qEakRfrGmLaj5Tkss0+Ezuv74xZ1VqJozyOSLuCBe/Uaet
-         Xb9X9kHktZVQfHV3zKhymG0UACf//G5Oa8+I49cDAKQ+iQpOgJXdrnmvgWjn0Mu1F5SY
-         JxR4/t4epgSYn0ojjG2n5qg9GCkvY4qLdLPIfRo3qYTX6A7zV8HBCCAKh425w5wyYz7u
-         5UQ4RMPNgEUpeZFdD7Xf/JEt1P+rLlxOedWaBSReQ2GPq60XrVYkOmS7X+/xaQnlJPE3
-         qHfhPt/WFK4IMOK9JdprPd0Qs86ynx2mHt15CW93DPNymydGDT61Dzr79UDyeEsDkCDV
-         pU7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789587727; x=1790192527;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=irXsHZsnq2RJrG3HTJ0y9LXBcNkU5BE62K/lbfYKMow=;
-        b=aZ29k+s2O/yahAcMqm2ggPdevy04l1QvLq4flVyBoLV8Wtq9xeGAer7Tiv7IEM2ll2
-         yXHNdWGMOz0srrbDl/IAPmlbZIV0eoaW36lpQhmrvZVsEYYFPnhsZmFyG2aOFnVoGnWX
-         M18nSa9d36TafEWPhtH625ixFZflfyYlM7lrKzhCoxRmE0yGMvK7H9TvcGr/aH7Ijn1j
-         K/Fyk8mrsdPK6aDhbXlvo5W2lRJhX8EWMYOUkZIR0b4b8+Y7yjzHgk5CJZRmgTB/EMxl
-         aSJZzDMY19BYpkX6GSNkZQTeY/wUoWHyqL2w0NrNFZMypj+iTYbnSGn8oLX6CqWQ9fkK
-         F/0w==
-X-Forwarded-Encrypted: i=1; AKwUvBzUMAKvue6yewEXkVg9EzS83mYXesYaZECSJqtDZtlYgajy90DPur2NxfjwXAkjJj1A63p+Fwz2jbG7@vger.kernel.org
-X-Gm-Message-State: AFuF++kNZsAE3qcrplGItStOwrvve6fYYezRtD1atIYmplvGD7/l+nDu
-	34YKWgMpOQ59vDF6eehTDRCGI3tYxAJ7faKzHqXTQoeUGQhDwq3hEQZ3id7j/uf+kPXKuU660i9
-	OZHv1zQRWDgEzTVjj0WA9z2EPr1KB5tbIuULQLE48OV8VPG4+DtPa3HIj14Lh+JV2
-X-Gm-Gg: AYBFou3TWPjvYA3XOuQOe7i37JxEB7GtzhW8GmA76UJp4cnifC1xniwPDyCARKijqs0
-	v3CcYKxcMnIndAOaHHXDemAMH3JhiyBn/U20QSQSwgLmc/BvTBbZ0dDthnu7q9iIWWbObKq7la4
-	FZHOJ+kE0P91BhUV87G4Z+zbPsge2wLU1bZgLhbr/PgqrRPEfbKXTH3RY5Y4kV+prwykNcQjM61
-	jwQrA2F7pws+Dhas+u3p6Fo3hzo6FntYr1Q6C9lzmDl8ifCvnOo9MpU5cP08mkC8UAUWNRsK36W
-	ocIObUnvZ16X87nUrOaeM+u+JyPUEqK4t0jVBk2BgLM/6a+k8BNLeu8T0boNPRe+tNNbDgndjNb
-	4FqR3koWRBmorOO/7CqBmlPyfbYUK+oYELwBoKA==
-X-Received: by 2002:a17:90a:d646:b0:39e:3554:4d0c with SMTP id 98e67ed59e1d1-39e35545ae5mr3665564a91.2.1789587726579;
-        Wed, 16 Sep 2026 12:42:06 -0700 (PDT)
-X-Received: by 2002:a17:90a:d646:b0:39e:3554:4d0c with SMTP id 98e67ed59e1d1-39e35545ae5mr3665448a91.2.1789587726046;
-        Wed, 16 Sep 2026 12:42:06 -0700 (PDT)
-Received: from hu-arakshit-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bf5af6593sm9174704eec.25.2026.09.16.12.41.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Sep 2026 12:42:05 -0700 (PDT)
-Date: Thu, 17 Sep 2026 01:11:57 +0530
-From: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-To: Ulf Hansson <ulf.hansson@oss.qualcomm.com>
-Cc: Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
-        Harshal Dev <harshal.dev@oss.qualcomm.com>,
-        Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v12 3/6] mmc: sdhci-msm: Set ICE clk to TURBO at sdhci
- ICE init
-Message-ID: <aqrxBSw8OupqItDR@hu-arakshit-hyd.qualcomm.com>
-References: <20260824-enable-ice-clock-scaling-v12-0-09271f583dc6@oss.qualcomm.com>
- <20260824-enable-ice-clock-scaling-v12-3-09271f583dc6@oss.qualcomm.com>
- <CAPx+jO_Ltc6Q+VdUgOs81azTiM5Vx12GH1z+CXt6NW=M601THQ@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="EdTlr2QT"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68GG1bV24057211;
+	Wed, 16 Sep 2026 21:34:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=KRTmOBlFb5PnG2UtR1c1GIyvDSdf9/2ZPk1hlGtbc
+	nY=; b=EdTlr2QTFqt30bldgejduAkdsfWu89Wph4BnNPlfDyRtKrbOOG8fQPBrV
+	BpPPRaX6Q/eV6xI0NNsWNTnHJCsYmUkdbFPu0iMylOvLAPfp9FWBJ4Se42IwcOak
+	FyK7bhI0ufuiMY2IcYxNn80fX9rCaCCiG1XyQOl8IbwiAVV5DPTO9V4UwZQ6z/JJ
+	LRUQURJo3rZnlZZKVe6zhxzPREXit0kZtfGoN2XbvjS1+juFvO3GJt+YDOWT5hnT
+	hLvLhW/g9RRW4vYZNV81XdB2KEqbFxHpHAEg6+JIkoG6BC2cC/qeWGrHrCfWtG3T
+	8du3BZqhc8zAsQtxKj8keO73yGWFw==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gmv5hy1a5-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 16 Sep 2026 21:34:04 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68GIvlCx2599802;
+	Wed, 16 Sep 2026 21:34:03 GMT
+Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gpw6d955d-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 16 Sep 2026 21:34:03 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68GLY1Or16777960
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 16 Sep 2026 21:34:01 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 7FF2E58059;
+	Wed, 16 Sep 2026 21:34:01 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id D556858057;
+	Wed, 16 Sep 2026 21:34:00 +0000 (GMT)
+Received: from li-4c4c4544-0054-3910-8039-c3c04f423534.ibm.com.com (unknown [9.61.141.190])
+	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 16 Sep 2026 21:34:00 +0000 (GMT)
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+To: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org, brking@linux.ibm.com,
+        davemarq@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH v2] ibmvscsi: implement vio driver shutdown call back to quiesce ibmvscsi
+Date: Wed, 16 Sep 2026 14:33:59 -0700
+Message-ID: <20260916213359.2144094-1-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAPx+jO_Ltc6Q+VdUgOs81azTiM5Vx12GH1z+CXt6NW=M601THQ@mail.gmail.com>
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE2MDI3MiBTYWx0ZWRfXxaeFSJmiA0GY
- 4knCXcTkhy431cCOwRELFn+uQOtVtDZp2JwSNJpNgujGy1mR492pegqpfRNHq3exV3WU7NxS7+J
- 8bu0G5Mj9l6BnDNbFt3LY5LDVF9Bl45WobOz7mcTL+FmlVbo1De3G4CuDNW/OBj5SiGerzn/C0X
- SSF5iunWL5Ro+b+CC8JHFOQVlvU+As2GwrbSiutd1yl7O7LLXm9HxUevA7GNvetJYoGGaCRrHcQ
- bFeFlMMmGfOOelYACKRE2HMBcC8mK45rRcMiOhMKsFoNuP7WLucvhOmc6X1dUJsKKgyfgtjEOPh
- MSSm1qXC1+5gtZt9YjDCkdl5Jflynz++h74EVrNGEUwws0Pgy9E9j5dRgVLI5qXcMwnwS0klQw+
- WR/IoRPr3XtWj3UiBxetBMyBXagd2O2M5ZiVQtIzi3nF3bA4OgaJ/6RFkztdOfJVfepeiAUtnkT
- gfIVUr//+RX2GKDJYjQ==
-X-Proofpoint-GUID: crxN3MVNKKPVGIos1WXpoLtQFxrxKQl7
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE2MDI3MiBTYWx0ZWRfX1eZnJ/EDyqMM
- AWXkzqjSZ0ClPGEXV1Ezn/tajd5rZy7itmfuFfFw9MXkJJ2yLCWwxrqh26RDe+fQBzJuelioljB
- 33XuoqNTffWgt5KSVqqQrY12hOKUuOo=
-X-Proofpoint-ORIG-GUID: crxN3MVNKKPVGIos1WXpoLtQFxrxKQl7
-X-Authority-Analysis: v=2.4 cv=F/DC5ahN c=1 sm=1 tr=0 ts=6aaaf10f cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=QyXUC8HyAAAA:8 a=M7-gVhU5_WYnB0XQLAAA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=uKXjsCUrEbL0IQVhDsJ9:22
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE2MDMwMCBTYWx0ZWRfX70MMBHqlXHtR
+ dSQP6GEo2zRU5Ag6whfVyoRg76xckBxcO6/XXEEdisbKDRclDV6dzQAGY28Z8NK8wvuJmfkFl7h
+ qB/TcvlaO3UtjO/zdljBKdpfkC2kiuWkiMIgDZXXu7aBqIVjpUdX35SiWBvDNbBjsZaTjpqSnZg
+ Dph1bugnFqgCAoUBB3A6Goek7keLy6SNXXLqy+MZnn27Z7CBomwFjqVlosYhfPoJLwXAjkdfplg
+ xddvpKiXsyfvfsUkNoQDByYqxb6SsFiK+cfJ1d3mgZcUhxtvJZwhnIBtZSU2rjpTiei21g4Cvzb
+ xpFHhVAL2Hbxntf87Gl8x+vkkfelhqGvnq1Q4hu4q/tGFxPOYAmhTG20CKqdJI3KfYHpzncPRYw
+ FfRSjrVpCdsM3ffooQy5L9J/rUoncmRF5vbo00lbjtmpVrMBJ9MzSV2vjN842HvE7lcBI6xhnnw
+ m25GSVmTxkiYbDmENug==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE2MDMwMCBTYWx0ZWRfX6JKwF4RMy0dP
+ HfOmelmL2EkiZ7/k9F1Mf/mMgBmh7CU/bV9XZhOAf2jPd0z1fWrju7fHCjyvqUHQ/W4Reym63Kx
+ wELCCzDc5t65MZ3nn8FCdhV0/ZUR8uU=
+X-Authority-Analysis: v=2.4 cv=Zsx4uN7G c=1 sm=1 tr=0 ts=6aab0b4c cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8 a=_VdnjSN4jw3ftuXtCEsA:9
+ a=0bXxn9q0MV6snEgNplNhOjQmxlI=:19
+X-Proofpoint-ORIG-GUID: zuNtIMdzWg7aAO1LCBZIoD_WaUnjlI_V
+X-Proofpoint-GUID: zuNtIMdzWg7aAO1LCBZIoD_WaUnjlI_V
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-16_03,2026-09-16_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 malwarescore=0 adultscore=0 bulkscore=0 clxscore=1015
- spamscore=0 phishscore=0 impostorscore=0 suspectscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609160272
+ malwarescore=0 impostorscore=0 clxscore=1015 priorityscore=1501
+ lowpriorityscore=0 bulkscore=0 adultscore=0 phishscore=0 spamscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2609040000
+ definitions=main-2609160300
 
-On Thu, Sep 10, 2026 at 12:17:46PM +0200, Ulf Hansson wrote:
-> On Sun, Aug 23, 2026 at 9:48 PM Abhinaba Rakshit
-> <abhinaba.rakshit@oss.qualcomm.com> wrote:
-> >
-> > MMC controller lacks a clock scaling mechanism, unlike the UFS
-> > controller. By default, the MMC controller is set to TURBO mode
-> > during probe, but the ICE clock remains at XO frequency,
-> > leading to read/write performance degradation on eMMC.
-> >
-> > To address this, set the ICE clock to TURBO during sdhci_msm_ice_init
-> > to align it with the controller clock. This ensures consistent
-> > performance and avoids mismatches between the controller
-> > and ICE clock frequencies.
-> >
-> > For platforms where ICE is represented as a separate device,
-> > use the OPP framework to vote for TURBO mode, maintaining
-> > proper voltage and power domain constraints.
-> >
-> > Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-> > Acked-by: Adrian Hunter <adrian.hunter@intel.com>
-> > Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
-> > Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-> 
-> This looks good to me!
-> 
-> Although I have a question - should we never drop the vote? Like at
-> suspend and runtime suspend, at least?
+Currently during kexec the vio driver implementation calls a drivers
+remove function as a big hammer when shutdown isn't implemented. This
+results in filesystem errors in the log as a result of the block device
+being removed while the filesystem is still mounted. Rectify this noise
+by quiescing the ibmvscsi driver and stopping short of tearing down the
+full host.
 
-This point is already discussed with Konrad on earlier patchseries:
-https://lore.kernel.org/all/d1232243-2f23-423b-84ac-4463eac79f9a@oss.qualcomm.com/
+Move quiesce calls to their own helper function. Add a driver shutdown
+call back and implement with call to ibmvscsi_quiesce such that any
+outstanding commands are purged and failed back to the midlayer with
+DID_REQUEUE. Update ibmvscsi_remove to also use the new ibmvscsi_quiesce
+and failback outstanding commands with DID_ERROR prior to full transport
+teardown.
 
-Since, as the device goes to suspend and power will be turned down,
-PM runtime will drop the votes and hence having it in suspend resume
-is redundent.
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+Changes since v1:
+- Only call scsi_block_requests in ibmvscsi_shutdown
+- set_request_limit to 0 during quiesce to fail any new submissions
 
-Abhinaba Rakshit
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 33 +++++++++++++++++++++++---------
+ 1 file changed, 24 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 4ecd3db08875..576f784b6677 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -2341,26 +2341,40 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	return -1;
+ }
+ 
+-static void ibmvscsi_remove(struct vio_dev *vdev)
++static void ibmvscsi_quiesce(struct ibmvscsi_host_data *hostdata, int scsi_error_code)
+ {
+-	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
+-
+-	srp_remove_host(hostdata->host);
+-	scsi_remove_host(hostdata->host);
+-
+-	purge_requests(hostdata, DID_ERROR);
+-	release_event_pool(&hostdata->pool, hostdata);
++	ibmvscsi_set_request_limit(hostdata, 0);
++	kthread_stop(hostdata->work_thread);
+ 
+ 	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata,
+ 					max_events);
+ 
+-	kthread_stop(hostdata->work_thread);
++	purge_requests(hostdata, scsi_error_code);
++
++	release_event_pool(&hostdata->pool, hostdata);
+ 	unmap_persist_bufs(hostdata);
++}
++
++static void ibmvscsi_shutdown(struct vio_dev *vdev)
++{
++	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
++
++	scsi_block_requests(hostdata->host);
++	ibmvscsi_quiesce(hostdata, DID_REQUEUE);
++}
++
++static void ibmvscsi_remove(struct vio_dev *vdev)
++{
++	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
++
++	ibmvscsi_quiesce(hostdata, DID_ERROR);
+ 
+ 	spin_lock(&ibmvscsi_driver_lock);
+ 	list_del(&hostdata->host_list);
+ 	spin_unlock(&ibmvscsi_driver_lock);
+ 
++	srp_remove_host(hostdata->host);
++	scsi_remove_host(hostdata->host);
+ 	scsi_host_put(hostdata->host);
+ }
+ 
+@@ -2398,6 +2412,7 @@ static struct vio_driver ibmvscsi_driver = {
+ 	.id_table = ibmvscsi_device_table,
+ 	.probe = ibmvscsi_probe,
+ 	.remove = ibmvscsi_remove,
++	.shutdown = ibmvscsi_shutdown,
+ 	.get_desired_dma = ibmvscsi_get_desired_dma,
+ 	.name = "ibmvscsi",
+ 	.pm = &ibmvscsi_pm_ops,
+-- 
+2.55.0
+
