@@ -1,161 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 681DB4EE85E;
-	Wed, 16 Sep 2026 10:43:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F8374A3F2A
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 12:15:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789555409; cv=none; b=C5YDv7mpMZVgyjkFFjsunTILTg0ZtxjfgCchLs4CNc47Lfzr3vXMBzx00WKUWLfgVFsKcyXSgJRsW6FboZD09TTd1zVHF++EKm53ePcjdFJMCd2c71VsCizvwchtP2xQrylrx9q7LCBzOOFhbAG2OPvXmFiD58kaW21JKj88i24=
+	t=1789560929; cv=none; b=Ia4V46NHMUIuhuo2R1336H0uTu05TiOnF9k4Zs1UTkMFVtg2Y2OvqvQ1rMQmaFWWbIuArw75vBnGITUVlVhrTn9FyclzgB2HUuMy6+Gr3lAE4/8PnkmlmJ+1LjxSOwig8UtnTWuBHiCH6llWSL44bWItvkFVQUhdw0aDQjwu9nM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789555409; c=relaxed/simple;
-	bh=pNF/fYZKvcKlZCJNJy4Ik87MUKWeVC4PAUAyo2PWQB0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bz81jzssjlkdsMBcJH40PlDyZmNeKulS5vDYVVVHJcZp22eaB34tpqYbTuItL3fXYhY76MdyYRc9mMDqZ9GGzLjCGrX/Iyr3uWOG3/bjpucMGHFdNfvJbnKUyW6S1TRhRgfkfl0zxCzJ+Oz4S1gDKhQkduaRSVb7wYwMO6MVREw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=huxaqQI2; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789560929; c=relaxed/simple;
+	bh=DqlshfivEwgnrB+qkDvakP7pvIL7ZOxMkNNV0cMvHsk=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=jRaVgb83Wvb9VP/WAfOLdApWVzOEdZXIyXlcvRFC0usq3dZrgG/uv+Ec4nTDmc9jhGRz8NK19mM+WFIiluuaJdkCYMdtNAHzqArGL/L6eEjC0vf3KCy83+cvwFLrT1qtliCPTB1Rkjaq4gnfH49QP63BnepE+ZX97ZiLjjAkfQw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HUkD+v9L; arc=none smtp.client-ip=74.125.228.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="huxaqQI2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 767AB1F0089D;
-	Wed, 16 Sep 2026 10:43:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789555389;
-	bh=/UGygQGXhuhDnAfhN574yKe4CYpKDrynLUaMeDlvo5U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=huxaqQI2TwNroiRMo7UjM/+rKuW2mlKdf7v57qzlMcWhE0jthgS9TjiY4+kKxXoSq
-	 rS3XGxZJj0vj4XSxGsx3dvGxSWBvLSkMtmqnxk4gy7EPNBuFiQf1iHmE92Wh+e3h0q
-	 +BkYS2MJwFfM6A8zgGgrUp+DnlgUFSxDRMDLbuxZLi/chvTvcJtz6bwVraJxNd03zI
-	 JMr9tXFxycEv2d6My8ACQbRfl8vRNd5j6XwSZz+/rrO7xunXrgswzsHnGNgwHyJ844
-	 2SnHZ9wtVvSD0Mc1HgliTNNp78ORg4SQtXU+RK1V1kbzzicqhDHg2MInzUVYHYX7jF
-	 wxtL5EVEMzVBA==
-Date: Wed, 16 Sep 2026 11:43:05 +0100
-From: Lee Jones <lee@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: Liang Haowen <nbg2974@gmail.com>, linux-scsi@vger.kernel.org,
-	linux-leds@vger.kernel.org
-Subject: Re: [PATCH RFC v4 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED
- driver for ROG NVMe enclosures
-Message-ID: <20260916104305.GM11487@google.com>
-References: <202609152112.RFCv4-0.lhw@gmail.com>
- <202609152112.RFCv4-1.lhw@gmail.com>
- <20260915130050.E8CDB1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HUkD+v9L"
+Received: by mail-pz2-f12.google.com with SMTP id 41be03b00d2f7-cc4bdf8abaaso693195a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 05:15:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789560928; x=1790165728; darn=vger.kernel.org;
+        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aayfnjV5p3GQV2kJBDU3d+V6F7p/7t4V6z/4sqcizKw=;
+        b=HUkD+v9LvPy+cCczmd/P1suhuDlH2yanOK46C+XKmg4doVR/eI2Pwbx4IioenIP+rR
+         QMegF6Cj65xc1fAcq2iAdJwhsgwA/cYRS4d1/gCtBix6v4xAAP4ik0aSJfnNUvXg5aXe
+         l0TiRh048htCYnQBG4xJJjtwhL9qfCYy1XrA8OW53VaoZ/NvTZuoWzYox/Cg6s2qMaAF
+         aPz5usg9kMCw4rmmS3KpWA3c+PT3dR7s2+t363LYrQPwLknsdAehM4QiTCQybJrtax8S
+         vGZHinoqzh2VTA0pfEhbubi2bmR1pNeWpqLBHAAO1BehgESbJxz+jTFioWa7jyjD/gvq
+         Zy3w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789560928; x=1790165728;
+        h=message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aayfnjV5p3GQV2kJBDU3d+V6F7p/7t4V6z/4sqcizKw=;
+        b=PNsNbBQyETjtHV2HaWQkR2PIvB9KXgDVJMLueaozWoydt6XzwoE5PIaeD/MdXyaSjk
+         JuiBiQN+hvduzqnGt5H5h+5XXbb3anZwwHVuWBL0MeZinW/bp/QpGsJ5mYiL4M+YJyFL
+         bxG4fqty9cRIu4C8pPrIKxKjEJk+Lu5VxPfxhrg2KhMvuo3V8uu9edm9Np+lytexq9FC
+         l8s9EyUxs2wlxITycY8VfpJX1/eUpAYadJVotwdEKbdK28oFqaaXiu31A81OhZnwG3Ss
+         CBKJv428vADe5TDAgjxT6Goqbgf+7JYZXFNNL0AKN1Dn97uf7E2syACocgtZ6s9r/Kww
+         LmiA==
+X-Forwarded-Encrypted: i=1; AKwUvBzxJx1Ye9yPAMoLuxWVf5NirOh3D60755ivWcxoz2em+w5fV6cNif2KkBEMk0vfw5UB60xYZC83wv6g@vger.kernel.org
+X-Gm-Message-State: AFuF++naqrb9qlVwtnvaDWhg+rEnbjJWbGw7Mxx4/O7hMI7858Rnx8P9
+	K4DORCbFeXNTiHn8RfmgUCGnboczCY/MxJ9DR/og464d8ICHsr+2GjQ8
+X-Gm-Gg: AYBFou1QEQPcHobxC3/FRZsGf10bjP6zcH7/wDT2Keu/DNEMtWejnzqKvDqcP6IbHHy
+	OIHPDi33tFRbbpvIFdGx2wYa8QmOrD+zxi3KMKTd7wbSp7G+TaH/e6/FPiGVFRzSR4lToZCx/sQ
+	AfwCqk2Hsg7zrUrE/wNMy7a3AnrfPaTSefLL/lDA5SAVH3AR6jlTdUpRGvEO5vtr81zVo4f98fI
+	Iv7uK6pAl3enTaET103SKSjC9BvaidS7HeY+eELzbAUyCHvzWgKHQ1g2T32XE2iWvgkGWJsHfa7
+	Ony79txvym5bAM0FNBuFj15MeLOoSk83B9/zCoISxClcqgWjHpIod4rgR4XHJTQRt537XcaaBQr
+	bMpgB9QYH5kOQ0lE31a3kI71uw8ouWL8KtmHdPCRVs9COPKew9OMyH27gcgoK/0OJGbsgzbgXEP
+	898x4cNiI6EJdaIr8foSfk7bcMBcilzjRnOhbwJCsARvW7IvD1IFZBnPabWeaKWqmKGsHrjA==
+X-Received: by 2002:a05:6a20:e290:b0:3d3:aec2:4dcd with SMTP id adf61e73a8af0-3dd5f7a9ca3mr5599543637.25.1789560927153;
+        Wed, 16 Sep 2026 05:15:27 -0700 (PDT)
+Received: from [127.0.1.1] ([240e:b8f:977f:f400:ec2a:b15e:fef8:70a])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc50ab8ae01sm1512489a12.18.2026.09.16.05.15.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2026 05:15:26 -0700 (PDT)
+From: Liang Haowen <nbg2974@gmail.com>
+To: linux-leds@vger.kernel.org
+Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
+ Martin K. Petersen <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+ platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Denis Benato <denis.benato@linux.dev>, Armin Wolf <W_Armin@gmx.de>,
+ Hans de Goede <hansg@kernel.org>,
+ Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH RFC v5 0/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED driver
+ for ROG NVMe enclosures
+Date: Wed, 16 Sep 2026 12:15:22 -0000
+Message-Id: <202609162015.RFCv5-0.lhw@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260915130050.E8CDB1F000FF@smtp.kernel.org>
 
-On Tue, 15 Sep 2026, sashiko-bot@kernel.org wrote:
+Hello,
 
-> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
-> - [Medium] leds: data race on subled_info array causes torn color updates
-> - [Low] leds: build failure due to undefined macro kzalloc_obj
-> - [Low] leds: build failure due to missing argument in blk_rq_map_kern()
+v5, as its own thread, addressing the fourth sashiko round (one real
+Medium, the same two Low false positives).
 
-Please review, explain or fix the Sashiko review(s).
+Changes since v4:
 
-If this is a set, this request includes the other patches too.
+- led_mc_calc_color_components() now runs under the zone spinlock.
+  It writes the shared subled_info array, and the LED core allows
+  concurrent brightness_set callbacks for the same LED: sysfs stores
+  are serialized with led_access, but trigger events call
+  led_set_brightness() without it, so two concurrent setters could
+  interleave their component writes and the thread winning the lock
+  would cache a mix of their colours.
 
-> --
-> 
-> commit e6ce9b3b67cc2aa4897215acc2c62600810790a8
-> Author: Liang Haowen <nbg2974@gmail.com>
-> 
-> leds: asus-aura-scsi: Add ASUS Aura RGB LED driver for ROG NVMe enclosures
-> 
-> This commit introduces a driver for ASUS ROG external NVMe enclosures that
-> exposes 4 independently addressable LEDs via the LED multicolor class. It
-> uses a SCSI device handler matched by vendor INQUIRY to send custom ENE
-> sequences over passthrough SCSI commands.
-> 
-> > diff --git a/drivers/leds/leds-asus-aura-scsi.c b/drivers/leds/leds-asus-aura-scsi.c
-> > new file mode 100644
-> > index 0000000000000..089cc3dcee105
-> > --- /dev/null
-> > +++ b/drivers/leds/leds-asus-aura-scsi.c
-> [ ... ]
-> > +static int ene_write(struct scsi_device *sdev, u16 reg,
-> > +		     const void *data, u8 arg_count)
-> > +{
-> > +	struct request *rq;
-> > +	struct scsi_cmnd *scmd;
-> > +	u8 cdb[ENE_CDB_LEN];
-> > +	int ret;
-> > +
-> > +	ene_build_cdb(cdb, reg, arg_count);
-> > +
-> > +	rq = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_OUT, 0);
-> > +	if (IS_ERR(rq))
-> > +		return PTR_ERR(rq);
-> > +
-> > +	if (arg_count) {
-> > +		ret = blk_rq_map_kern(rq, (void *)data, arg_count, GFP_NOIO);
-> 
-> [Severity: Low]
-> Does this cause a build failure? The kernel API blk_rq_map_kern() requires 5
-> arguments, where the first parameter should be the struct request_queue *q,
-> but it is called here with only 4 arguments.
-> 
-> > +		if (ret)
-> > +			goto out;
-> > +	}
-> [ ... ]
-> > +static void asus_aura_set(struct led_classdev *cdev,
-> > +			  enum led_brightness brightness)
-> > +{
-> > +	struct led_classdev_mc *mc = lcdev_to_mccdev(cdev);
-> > +	struct asus_aura_led *led =
-> > +		container_of(mc, struct asus_aura_led, mc_cdev);
-> > +	struct asus_aura_zone *zone = led->zone;
-> > +	unsigned long flags;
-> > +
-> > +	led_mc_calc_color_components(mc, brightness);
-> > +
-> > +	spin_lock_irqsave(&zone->lock, flags);
-> 
-> [Severity: Medium]
-> Could this lead to a data race on the subled_info array? The LED core allows
-> concurrent brightness_set callbacks for the same LED (for instance, from
-> sysfs and a hardware trigger). The helper led_mc_calc_color_components()
-> modifies the shared mc->subled_info array locklessly before the driver
-> acquires its spinlock. If multiple threads update the brightness
-> concurrently, they might interleave their writes to the array, causing the
-> winning thread to read a mix of old and new color components.
-> 
-> > +	/* ENE colour register byte order is R, B, G. */
-> > +	led->rgb[0] = led->subled[0].brightness;
-> > +	led->rgb[1] = led->subled[2].brightness;
-> > +	led->rgb[2] = led->subled[1].brightness;
-> > +	zone->dirty |= BIT(led->index);
-> > +	spin_unlock_irqrestore(&zone->lock, flags);
-> > +
-> > +	schedule_work(&zone->work);
-> > +}
-> [ ... ]
-> > +static int asus_aura_attach(struct scsi_device *sdev)
-> > +{
-> > +	struct asus_aura_zone *zone;
-> > +	int i, ret;
-> > +
-> > +	if (strncmp(sdev->vendor, ARION_INQ_VENDOR, strlen(ARION_INQ_VENDOR)) ||
-> > +	    strncmp(sdev->model, ARION_INQ_MODEL, strlen(ARION_INQ_MODEL)))
-> > +		return SCSI_DH_DEV_UNSUPP;
-> > +
-> > +	zone = kzalloc_obj(*zone, GFP_KERNEL);
-> 
-> [Severity: Low]
-> Does this code fail to compile? It looks like it invokes an undefined macro
-> kzalloc_obj() instead of the standard kzalloc() function to allocate memory.
-> 
-> > +	if (!zone)
-> > +		return SCSI_DH_NOMEM;
-> > +	zone->sdev = sdev;
-> 
-> -- 
-> Sashiko AI review · https://sashiko.dev/#/patchset/202609152112.RFCv4-1.lhw@gmail.com?part=1
+The two low-severity items are the same false positives as in the
+previous three rounds:
 
--- 
-Lee Jones
+- kzalloc_obj() exists in include/linux/slab.h since v7.0 (Kees
+  Cook's overflow-refactor series); this driver builds against 7.2.
+
+- blk_rq_map_kern() takes four arguments on current kernels
+  (rq, buf, len, gfp); drivers/scsi/scsi_lib.c calls it exactly this
+  way from scsi_execute_cmd(). The five-argument form with the
+  request_queue first parameter is from older trees.
+
+v5 was re-verified on hardware: per-LED colours, 100 sequential
+updates, concurrent same-LED updates, concurrent four-writer updates,
+and unplug under load (zero splats, zero leaked LED nodes, clean
+rmmod).
+
+Everything else is unchanged: the hardware description, the
+scsi_device_handler that does not claim the sdev, the multicolor LED
+interface, the protocol handling and the known caveats (manual attach
+until a notifier lands; SAVE on every update writes the enclosure
+flash, wear uncharacterized; NULL-parent LED registration to avoid
+the sdev reference cycle).
+
+The open question from v3 and v4 stands: the driver is deliberately
+not wired into Kconfig/Makefile/MAINTAINERS yet, because the agreed
+direction with the SCSI side is a split into a SCSI transport helper
+and a shared ASUS Aura LED interface, and the wiring would follow
+that shape. Is deferring the wiring to that split acceptable for an
+RFC, or would you rather have the driver buildable in-tree from this
+series already?
+
+Comments on the interface shape and on folding this into the shared
+Aura work with Denis remain very welcome.
+
+Signed-off-by: Liang Haowen <nbg2974@gmail.com>
