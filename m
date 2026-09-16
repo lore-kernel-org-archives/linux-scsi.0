@@ -1,152 +1,204 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A8AD34E74D;
-	Wed, 16 Sep 2026 03:00:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A1F41F09A5;
+	Wed, 16 Sep 2026 03:10:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789527629; cv=none; b=dyiRzHVvnohq/ltN5q0izUGIVDeE9fdtVUyDBwVBf3jSTqPHFagiu3ZwlNFlNSYaHIiWLpbofI4V69Cz/jNwgnNpxkbvYoL9wmYpPHStigdgYUanBBSj/Rz/U4+SLo+xw5kctvO914Zjw432lnUr3d1qlLc3VGouvz2HgFE83Oo=
+	t=1789528210; cv=none; b=rhGvdj4jUl6fa4IJ0Ig4KaxK2qXiRnpVxGAXdrLSQDibe49AakxdCvX4EdnaOue9j1lJJUyCZgj7OjGDgCHS+5L1yBRWRJV8KNzAQ1lbegOVuF9ZZd9WyVui4MdXLBJO+Jag+qHGK3cFja64Cnbu4DR47+R5Iu4tLewcWUl4icg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789527629; c=relaxed/simple;
-	bh=vt89jht2m3Ep0liti7ZE9hLLPYbn/0dky2+jXcoj8zg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=notg+P/1/0pQycLglIbCIY7DxPTJjrdQVYkJIiEywVeqlRdNfiMGZPoZUTG9pKaCnH0WYfBXlzIje/qY5mx38OvI0c4YxKont+jODvtbvCy7hJnRCjxvwaGC8m+vZnCES/8H/26hK2CXfUafvFDrVk6hgOVqgGfGVoI2Zw8Yzbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F05s4Wrx; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789528210; c=relaxed/simple;
+	bh=A3+/rbsqKR7uyrC+ty6K3ON6HUETkndJj/oAdr+2P1c=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=eiJ+WWaKyvTjaPjpx3IvxoexEXPmBoq76tPJY7iv4OhCZXOlnHU5RY90EJq+ODTFVA5AygOjr5tBupiA7YPBd1HuY229NE5a5AzbKqvlGm+dDF6Tx/wSNH0ad+JyF8JfBu1rUVAh8vPROMr4YmI4Gm8jB6+lpv+UQIHcsq2smTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SAB+aFfs; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F05s4Wrx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58DB71F00899;
-	Wed, 16 Sep 2026 03:00:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SAB+aFfs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C1911F000FF;
+	Wed, 16 Sep 2026 03:10:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789527627;
-	bh=hkmhqw9n6hp7sJoT22gikIyabRyx9UwfObiWsFoBFds=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=F05s4WrxIFaTZF6s5CnqIn5uxmeC8BlLL8wQyUHgHlWYj68s8SBh/Ql5LM9+VYqAL
-	 3AhfwIQqZyTKBpRNTS2y4WcyXA+ESk2/ZZ6OneydD2zc2PLNt2YagO5ZSNplLXbaUt
-	 7dXj/XXpT4TcY4ocKJwlXYV5GmStnettK1AOA1+ugW5Kp1Sh0h4K+HtxLJ5DtjZNkk
-	 7Yiq7KX9pbqdTDHG90wqwTWoAyoN8LQs1a6VONdqU/mJ2PE6UCk1lThLj3EWAUsdze
-	 xCHrFFoeuIOG2A/eSZNKykMr6E3HOqtD6n/CDlxfi+WTxPXQi+6vr20hQL2zS+oA6m
-	 7EKTxf8ttFBIg==
-From: Yixun Lan <dlan@kernel.org>
-Date: Wed, 16 Sep 2026 02:59:55 +0000
-Subject: [PATCH v5 3/3] riscv: dts: spacemit: k3: Add UFS support
+	s=k20260515; t=1789528208;
+	bh=TknKwtlWsFQj7+LwVRSwf0nAlzdsKSg5CHrR34asjXE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=SAB+aFfs7UUn6IS4l0uk73y3qzLmgbVsE4zY1uGJv1NHoNkpGFB994bPt5w961vN4
+	 q8YHjkXHFKNzYu5DBAPccffTbyvTBGUR1t88Lfm7PwvbS4qpf6kvjLAJuIz+g6huLC
+	 +7v9iMCDkBU10ulg1TENm8TZoyJo9w+TZHeIvO39q6SmiNUC0WiQa4yCuecTQncmAc
+	 NESxiLD2L8iEQkaMWFiKw+EoRijVRQMY9r2FzdiTBk4WHvNbVdkJL4NPD7XKXcbOIR
+	 0HZl5TPWqlYCxtyJnsMei5/8DDoyv5WzRghETdx7qT7fiD3GCq/U0PYVg3OmGaC2Rb
+	 2hB7TDuE1/W1g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
+ driver
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yixun Lan" <dlan@kernel.org>
+Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260916-08-k3-ufs-support-v5-2-1f5d71f1027d@kernel.org>
+References: <20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org>
+ <20260916-08-k3-ufs-support-v5-2-1f5d71f1027d@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 16 Sep 2026 03:10:07 +0000
+Message-Id: <20260916031008.5C1911F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260916-08-k3-ufs-support-v5-3-1f5d71f1027d@kernel.org>
-References: <20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org>
-In-Reply-To: <20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org>
-To: Alim Akhtar <alim.akhtar@samsung.com>, 
- Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- Philipp Zabel <p.zabel@pengutronix.de>, Paul Walmsley <pjw@kernel.org>, 
- Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
- Alexandre Ghiti <alex@ghiti.fr>, "Martin K. Petersen" <mkp@kernel.org>
-Cc: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, 
- Aurelien Jarno <aurelien@aurel32.net>, 
- Jennifer Berringer <jberring@redhat.com>, linux-scsi@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-riscv@lists.infradead.org, 
- spacemit@lists.linux.dev, linux-kernel@vger.kernel.org, 
- Yixun Lan <dlan@kernel.org>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2352; i=dlan@kernel.org;
- h=from:subject:message-id; bh=vt89jht2m3Ep0liti7ZE9hLLPYbn/0dky2+jXcoj8zg=;
- b=owEB6QIW/ZANAwAKATGq6kdZTbvtAcsmYgBqqgY1xxCzoIyq7a+5nPPaArvuDeChhiDxQf3l/
- hIP4UbAu5+JAq8EAAEKAJkWIQS1urjJwxtxFWcCI9wxqupHWU277QUCaqoGNRsUgAAAAAAEAA5t
- YW51MiwyLjUrMS4xMiwyLDJfFIAAAAAALgAoaXNzdWVyLWZwckBub3RhdGlvbnMub3BlbnBncC5
- maWZ0aGhvcnNlbWFuLm5ldEI1QkFCOEM5QzMxQjcxMTU2NzAyMjNEQzMxQUFFQTQ3NTk0REJCRU
- QACgkQMarqR1lNu+29dg//ZYip3V26PLUcmI1IEYPO1shkw/wDL21rJ7EIp4ofs8bmQ01IXl5DQ
- VjaSJ30tsnUH3Yafip/L/fbkE3CKdJtcU5lPzgqL7qgULQMVrNVCL8VENbU+BW9nQ7hHVUFiaXA
- vpq78DsdqP19rZalScaTXW00S19bIe6YNA4U+v/QWIsB5W4e+diaXKKyjyaGnrqkFv9n/EZG+Hr
- luGHsQ8pvNppeglXVt9yAudNW//BxqxB93XodtiNHeC5fwIThCRnquoptjc0JyNA+ZrnRCV9wUT
- fRIb8qS4voFvkyb2xCMTmAZpyCMQzeKHV9dFkR8VTEeu/jpwBjT5KsNjJLxlozrMc4cdkknnd1L
- MHuVFHRqOnaq3ZVFdRNGGQ3ZqYA+ND1ujcgT73xkES6V1g/dEZ5hzoApvGsIJbCZx54vEFfqhCo
- xQgU0+zDM0Dbn9hRSFg4RDDCeNGWi8CzqQmtMVNaBRBIwQcYdTQkWLli68m9IR5YStanRDHAx2A
- JPB9tZM7QwkLxb2oKKHQB+5aNHEnDLCTlW/hUFt1UYVsewXhmzOASyWEEUB5oVRuA16uKRl1Op2
- T4wJ6xnEaV+/RObqHE0h1EcLS4m5yE9Fj1fQLgzFwJoZGNfrPrPJOKAadK9wmSGhuUKRfzLG3gU
- D7wzpAQsNkiaEOXkqCCisSuQKwPOxg=
-X-Developer-Key: i=dlan@kernel.org; a=openpgp;
- fpr=50B03A1A5CBCD33576EF8CD7920C0DBCAABEFD55
 
-Add UFS Host Controller support for SpacemiT K3 SoC, and enable
-it both on Pico-ITX and CoM260-IFX boards.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] scsi: ufs: missing M-PHY attributes configuration for lane 1
+- [Low] scsi: ufs: dead code via unused struct ufs_spacemit_host
+- [Low] scsi: ufs: unused macros and magic numbers in M-PHY config
+--
 
-Tested-by: Aurelien Jarno <aurelien@aurel32.net>
-Tested-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-Signed-off-by: Yixun Lan <dlan@kernel.org>
----
- arch/riscv/boot/dts/spacemit/k3-com260.dtsi  |  4 ++++
- arch/riscv/boot/dts/spacemit/k3-pico-itx.dts |  4 ++++
- arch/riscv/boot/dts/spacemit/k3.dtsi         | 22 ++++++++++++++++++++++
- 3 files changed, 30 insertions(+)
+commit 82db4e922a94ed053811c2ea8440617bd6a94d08
+Author: Yixun Lan <dlan@kernel.org>
+Subject: scsi: ufs: spacemit: k3: Add UFS Host Controller driver
 
-diff --git a/arch/riscv/boot/dts/spacemit/k3-com260.dtsi b/arch/riscv/boot/dts/spacemit/k3-com260.dtsi
-index 37627963a649..3251ee8405de 100644
---- a/arch/riscv/boot/dts/spacemit/k3-com260.dtsi
-+++ b/arch/riscv/boot/dts/spacemit/k3-com260.dtsi
-@@ -220,3 +220,7 @@ &uart0 {
- 	pinctrl-0 = <&uart0_0_cfg>;
- 	status = "okay";
- };
-+
-+&ufshc {
-+	status = "okay";
-+};
-diff --git a/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts b/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
-index b084a35aa00e..6369602e81da 100644
---- a/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
-+++ b/arch/riscv/boot/dts/spacemit/k3-pico-itx.dts
-@@ -307,6 +307,10 @@ &uart0 {
- 	status = "okay";
- };
- 
-+&ufshc {
-+	status = "okay";
-+};
-+
- &usb2_host {
- 	#address-cells = <1>;
- 	#size-cells = <0>;
-diff --git a/arch/riscv/boot/dts/spacemit/k3.dtsi b/arch/riscv/boot/dts/spacemit/k3.dtsi
-index c3f2dce0969c..436e98f1a17b 100644
---- a/arch/riscv/boot/dts/spacemit/k3.dtsi
-+++ b/arch/riscv/boot/dts/spacemit/k3.dtsi
-@@ -513,6 +513,28 @@ usb2_phy: phy@c0a20000 {
- 			status = "disabled";
- 		};
- 
-+		ufshc: ufshc@c0e00000 {
-+			compatible = "spacemit,k3-ufshc";
-+			reg = <0x0 0xc0e00000 0x0 0x40000>;
-+			clocks = <&syscon_apmu CLK_APMU_UFS_ACLK>,
-+				 <&syscon_apmu CLK_APMU_UFS_REFCLK>;
-+			clock-names = "axi", "ref";
-+			resets = <&syscon_apmu RESET_APMU_UFS_ACLK>;
-+			interrupts = <135 IRQ_TYPE_LEVEL_HIGH>;
-+			lanes-per-direction = <2>;
-+			operating-points-v2 = <&ufs_opp_table>;
-+			status = "disabled";
-+
-+			ufs_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				opp-1 {
-+					opp-hz = /bits/ 64 <491520000>,
-+						 /bits/ 64 <19200000>;
-+				};
-+			};
-+		};
-+
- 		eth0: ethernet@cac80000 {
- 			compatible = "spacemit,k3-dwmac", "snps,dwmac-5.40a";
- 			reg = <0x0 0xcac80000 0x0 0x2000>;
+This commit adds the UFS Host Controller driver for the SpacemiT K3 SoC.
+The hardware features are compatible with JEDEC UFS 2.2, MIPI UniPro v1.61,=
+=20
+and M-PHY v3.0 standards.
 
--- 
-2.55.0
+> diff --git a/drivers/ufs/host/ufs-spacemit.c b/drivers/ufs/host/ufs-space=
+mit.c
+> index 0000000000000..179e6edb2ac25
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-spacemit.c
 
+[ ... ]
+
+> +static int ufs_spacemit_uniprov1p6_init(struct ufs_hba *hba)
+> +{
+> +	static const struct ufshcd_dme_attr_val setup_attrs[] =3D {
+> +		{ UIC_ARG_MIB(0x1552), 0x4f }, /* PA_TXHSG1SYNCLENGTH */
+> +		{ UIC_ARG_MIB(0x1553), 0xf }, /* PA_TXHSG1PREPARELENGTH */
+> +		{ UIC_ARG_MIB(0x1554), 0x4f }, /* PA_TXHSG2SYNCLENGTH */
+> +		{ UIC_ARG_MIB(0x1555), 0xf }, /* PA_TXHSG2PREPARELENGTH */
+
+[Severity: Low]
+Is there a reason the raw hex literals are used here instead of the
+macros like PA_TXHSG1SYNCLENGTH and PA_TXHSG1PREPARELENGTH that were
+explicitly defined at the top of the file?
+
+[ ... ]
+
+> +		/* TX HB8_TIME CAP */
+> +		{ UIC_ARG_MIB_SEL(0x000F, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x64 },
+> +		{ UIC_ARG_MIB_SEL(0x000F, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(1)), 0x64 },
+> +		/* RX HB8_TIME CAP */
+> +		{ UIC_ARG_MIB_SEL(0x0092, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)), 0x64 },
+> +		{ UIC_ARG_MIB_SEL(0x0092, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(1)), 0x64 },
+> +		/* TX EQ 3DB */
+> +		{ UIC_ARG_MIB_SEL(0x00CD, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),  0x5 },
+> +		/* RX garbage cnt =3D 32 SI */
+
+[Severity: High]
+Should the TX EQ 3DB attribute also be configured for lane 1 here? The
+surrounding attributes (like TX/RX HB8_TIME CAP and RX garbage cnt) properly
+target both lanes 0 and 1.=20
+
+If lane 1 is left asymmetrically configured, could this lead to PHY link
+instability, CRC errors, or failure to maintain high-speed gears in a 2-lane
+setup?
+
+> +		{ UIC_ARG_MIB_SEL(0x00F2, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)), 0x9F },
+> +		{ UIC_ARG_MIB_SEL(0x00F2, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(1)), 0x9F },
+> +	};
+> +
+> +	return ufs_spacemit_dme_set(hba, setup_attrs, ARRAY_SIZE(setup_attrs));
+> +}
+
+[ ... ]
+
+> +static int ufs_spacemit_link_startup_post_change(struct ufs_hba *hba)
+> +{
+> +	/* Add 0xe8 make UFS2.1 run GEAR3 + 2Lane@409M */
+> +	static const struct ufshcd_dme_attr_val setup_attrs[] =3D {
+> +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x97 },
+> +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0xd7 },
+> +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x17 },
+> +		{ UIC_ARG_MIB(DL_AFC0REQTIMEOUTVAL), UFS_DL_AFC0REQTIMEOUTVAL_MAX },
+> +	};
+
+[Severity: High]
+Does this workaround need to be applied to lane 1 as well? The inline comme=
+nt
+explicitly documents this as a "2Lane" workaround, but the configuration is
+only applied to lane 0 via UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0).
+
+[ ... ]
+
+> +static int ufs_spacemit_pwr_change_notify(struct ufs_hba *hba,
+> +					  enum ufs_notify_change_status status,
+> +					  struct ufs_pa_layer_attr *dev_req_params)
+> +{
+> +	struct ufs_spacemit_host *host =3D ufshcd_get_variant(hba);
+> +	int ret =3D 0;
+> +
+> +	if (!dev_req_params) {
+> +		dev_err(hba->dev, "Invalid Parameters\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	switch (status) {
+> +	case PRE_CHANGE:
+> +		break;
+> +	case POST_CHANGE:
+> +		/* Cache the power mode parameters to use internally */
+> +		memcpy(&host->dev_req_params, dev_req_params, sizeof(*dev_req_params));
+
+[Severity: Low]
+Are the cached power mode parameters used elsewhere in the driver? We are
+copying dev_req_params into host->dev_req_params here, but the structure
+field doesn't appear to be read anywhere else.
+
+[ ... ]
+
+> +static int ufs_spacemit_init(struct ufs_hba *hba)
+> +{
+> +	struct device *dev =3D hba->dev;
+> +	struct ufs_spacemit_host *host;
+> +	struct reset_control *rst;
+> +
+> +	host =3D devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+> +	if (!host)
+> +		return -ENOMEM;
+
+[Severity: Low]
+Since the ufs_spacemit_host structure is only written to and never read, do
+we need to allocate this memory during initialization, or is there some
+planned functionality missing that was supposed to consume it?
+
+> +
+> +	rst =3D devm_reset_control_get_exclusive_deasserted(dev, NULL);
+
+[ ... ]
+
+> diff --git a/drivers/ufs/host/ufs-spacemit.h b/drivers/ufs/host/ufs-space=
+mit.h
+> index 0000000000000..5e459f6ba243c
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-spacemit.h
+
+[ ... ]
+
+> +/* ATOP base*/
+> +#define UFS_ATOP_BASE			0x1C00
+> +
+> +#define UFS_SYSCLK			499
+
+[Severity: Low]
+Is this UFS_SYSCLK macro intended to be used? It doesn't appear to be
+referenced anywhere in the implementation.
+
+> +#define UFS_TX_SYMBO_CLK		0x800
+> +#define UFS_MAX_LINKSTARTUP_TIMER	0xFFFFFFFF
+> +#define UFS_DL_AFC0REQTIMEOUTVAL_MAX	0xFFFF
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260916-08-k3-ufs-=
+support-v5-0-1f5d71f1027d@kernel.org?part=3D2
