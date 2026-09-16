@@ -1,92 +1,326 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f225.google.com (mail-vk1-f225.google.com [209.85.221.225])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EE30448B93
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 07:21:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94B2846C82E
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 08:23:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789543331; cv=none; b=Ud2UxmcOLK2ssmgDzaWMVltylZ22iDCkHYnEyfnzI4HihLrK0pV3fTC2IRcuk93oyN6JKxcImRhvo/Cz1eWU2IeW5k3qQ0wP/gUSF016hHupoOcu/RCON7l4LzYYRmpZe3fwW/HUbwn9sKrfd1jQGRjMeX2PT8AlyUCrkvWq+70=
+	t=1789547031; cv=none; b=IPPkSLac6uhBFdcoPBgqEO+0BAuJUDrex4XM0+D5odgGjAQ8SFzXLEHeY2ihWMe+fnU9TP4I908X9fRb/DFO5n3mBbKGDAa7a8DRR9s/qZ+X2B1bvm3h3lrgOS9BqIDHJsOImw+f6XrtvedhYeBiWruyYqDomMAwJFw2VAVCrhw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789543331; c=relaxed/simple;
-	bh=310U+E0ecQy91rjW2iV32h32UpEgNx0LGFBaGJg/IzA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ETjIgmF6gthvrrjn5PBeYDcS3FWwCODrhOekhU6gZP5L2S1JzFr4vhhEC3dO5bkdkDlkn1wjiP+/AZdqte/o6c4zpiHMsPE4PuRI/zvAWZxZn0pZTAWXX+5vi4AToBeL1X2x/YuIeuVFiDC5GOoX2exiBlXWnv/ZO8jvYMBIbfY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=e8gE0sPa; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1789547031; c=relaxed/simple;
+	bh=2glyBSOxF4Ny7bTXQBw/QHBqYrz/0YQ0h2qe/Pg1gTY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gnINrxrWPYltmZT26gKywLqn7QrW4rVXXZwwzOqwc1dI0hPHrqvtLhnh5WQEFOyCDLaCc8lQug53/O0m8A4U4lkqtvRxzcuMIjrNbYr+Tr+Vuuqsy/n8NRnYdBfJWpJdF15U4hQpyJhVDGhDNgZuRLDP1vqjkh7ZjUD2k/Clbo4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=LeJYkiDz; arc=none smtp.client-ip=209.85.221.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="e8gE0sPa"
-X-UUID: 28ee4280b19f11f1b1788b6acf885367-20260916
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=310U+E0ecQy91rjW2iV32h32UpEgNx0LGFBaGJg/IzA=;
-	b=e8gE0sPaSahyB4iRy+yxvHI95yOQ43XvsmWmWwNkCWQS57Fa4b5RwvxIWkLt5pnCKZSKNwYqFeRxCmRjVxNT6FDbf9tq4EQpmEy7VpVjEBSNXIv9WZs1XVhL7JCEoFN6BiDlXc8Y6ciasict2sPJfxD21nzwINGiq33p5sfnUqQ=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:cc506787-b39f-4792-bf02-1fff45749d7c,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:7db8b62,CLOUDID:9ff9f36c-9dd5-4555-834a-4f1343344a9f,B
-	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|836|865|888|898,TC:-5,Content:
-	0|15|50|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,
-	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 28ee4280b19f11f1b1788b6acf885367-20260916
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
-	(envelope-from <naomi.chu@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1822374606; Wed, 16 Sep 2026 15:20:56 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Wed, 16 Sep 2026 15:20:55 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Wed, 16 Sep 2026 15:20:55 +0800
-From: Naomi Chu <naomi.chu@mediatek.com>
-To: <sashiko-reviews@lists.linux.dev>
-CC: <linux-scsi@vger.kernel.org>, <mkp@kernel.org>, <avri.altman@sandisk.com>,
-	<alim.akhtar@samsung.com>, <James.Bottomley@HansenPartnership.com>,
-	<bvanassche@acm.org>
-Subject: Re: [PATCH v1] scsi: ufs: core: Hold a clock reference across the probe
-Date: Wed, 16 Sep 2026 15:20:55 +0800
-Message-ID: <20260916072055.1346914-1-naomi.chu@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20260909092536.B78571F00A3D@smtp.kernel.org>
-References: <20260909092536.B78571F00A3D@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LeJYkiDz"
+Received: by mail-vk1-f225.google.com with SMTP id 71dfb90a1353d-5c7bf03c4d0so1626489e0c.0
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 01:23:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789547021; x=1790151821;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:dkim-signature:x-gm-gg:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=01Zo8ietPDVP6l2iDMp03AzDsPYnwkXRZJ7bGxDIdNU=;
+        b=QOR0F+QU2LH9BOGQyvDvc0omcx9pGc0x1FXcVYYvLVLKjHd7nRS6FzoE6gEAI4YDKM
+         rWZgdVr6lQR9wif5zYAF/6VzBoI+08THNMytKQDzykvlcawh15wwUds9z2IxRrhYT5aV
+         09n8MydHXo7mG4Mr1mWgXglkvIW4ex1zxS759uDebVqbrZW44WoerkL6NOMV3l4TtLHb
+         6RqWgp58iYCi76ExbKeTD+N35fAJuUJj5WS1zDJi6q4LqIYXXaf5VY7y6RdPj6GaH98w
+         rEdTS2B7aGJqC50q/3D2I3TNKBsimshMrSLBfl2uU4PoQmACYXI3X2Bh0IGljgEEOOic
+         gs+g==
+X-Gm-Message-State: AFuF++m6SFVsIHBA5afKjpne7+dTJC5PX3TaY1VHP8PtxR22pbRMdLsK
+	EhTeoJfCUvA+CYOyF9ofdvmJVNK3mpiKH1AgDjBQImPt075wS1l21Z/+4s56BCeuRu+Q2mcuUam
+	ULRqIeSOVIK5+3dgR/ms6w+Ko+4FQOCt3YRoHxvnqT3XgqhqWoUrrjyzkoUor2rtPnL4rnLPF8P
+	2rR9FflU/xLgKRy/7a09d0dFf6nTdgczyDNXQOrE5xIxC1gNV3mHONGxb77NyRu9FiQlpsn9bwt
+	uCuYx0P+RCNR0+X
+X-Gm-Gg: AYBFou2xoAVYUzdag7SvFlPpkQRinFmfRVJFVQQRETQkB3v9uYKPeiOBrZ1xpRUZkzx
+	k+fpNNLLx8wGYziSMyHZy0hAha82A+9RjnP1Vjtal2U86IXNCEK+ALg5i5c2hojXF/2NjdEZnDI
+	OfZQldr6FiJaobQIpPbVyAaWqeJ7QZdhTZNLb4nDeUoKv6x4z9cJoFBmzkR/ut8rtibJQzbmJZM
+	aXImDB5DjLb1vlnRdCtYNwiUMMHiO1HVZGcnO5zD6WXfGiASiDJkq/EdWVx2OXTVo2bPIhdIcgj
+	vEt3bRaI2CMxQ43Jfn1fu8ZrBrDdt3Tan48Zw4SqmppPGpAl3Qo3ZOlTc7L7QztOKmOaeyuSmfH
+	wVNGwAjCgSOkNso4VWizJewypBy+SQfKkK9MF7QmIx4ppUrcQfvMETfDgVFune1Drqej3ZMZMqh
+	W5aFUKlQA9hWcKciRCGc/3WxEekzqBk2hLeo8=
+X-Received: by 2002:a05:6122:288f:b0:5c6:6189:c756 with SMTP id 71dfb90a1353d-5c99ab6f120mr1159511e0c.2.1789547020980;
+        Wed, 16 Sep 2026 01:23:40 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-25.dlp.protect.broadcom.com. [144.49.247.25])
+        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5c998a4a64dsm867739e0c.7.2026.09.16.01.23.40
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 16 Sep 2026 01:23:40 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-6a9b3c3de3aso7378776a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Sep 2026 01:23:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1789547019; x=1790151819; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=01Zo8ietPDVP6l2iDMp03AzDsPYnwkXRZJ7bGxDIdNU=;
+        b=LeJYkiDztpakNafGdglkiHJ9LGK9xx611g1+bQnFBIGQIgzIohpZ7oC2xLD+qylidn
+         BrExzNZpUL77dvijjjYSusKbBW5W9Q6ymKNEAhf6DTlRzqeyWxPoEhCtsM5bWSmRGccK
+         hzU/VNkUDQpuWAS5bGEiFZdS1lgUGwv1jt0pE=
+X-Received: by 2002:a05:6402:46c3:b0:6a9:b520:5d63 with SMTP id 4fb4d7f45d1cf-6aa2244cff3mr864494a12.40.1789547019281;
+        Wed, 16 Sep 2026 01:23:39 -0700 (PDT)
+X-Received: by 2002:a05:6402:46c3:b0:6a9:b520:5d63 with SMTP id
+ 4fb4d7f45d1cf-6aa2244cff3mr864470a12.40.1789547018728; Wed, 16 Sep 2026
+ 01:23:38 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+References: <20260805110634.346670-1-ranjan.kumar@broadcom.com>
+ <20260805110634.346670-2-ranjan.kumar@broadcom.com> <20260805113322.993BA1F000E9@smtp.kernel.org>
+In-Reply-To: <20260805113322.993BA1F000E9@smtp.kernel.org>
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Date: Wed, 16 Sep 2026 13:53:26 +0530
+X-Gm-Features: AcwNN1W9aPZ5JN-MSUs0A9u6UxH8leWeOsnanYSmQBZT6Rsyv0qKTVq8UZSiYI8
+Message-ID: <CAMFBP8NxDqKzyC_tUSAnAs6XEHQ0x4wGb3p9X=-M6u99u0WmjA@mail.gmail.com>
+Subject: Re: [PATCH v4 01/10] mpi3mr: Skip device shutdown during unload per
+ controller configuration
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+	boundary="0000000000006b37e5065b9562d4"
 
-On Wed, Sep 09, 2026 at 09:25:36AM +0000, sashiko-bot@kernel.org wrote:
-> Pre-existing issues:
-> - [Critical] Missing scsi_remove_host() on the ufshcd_init() error path
-> leaves dangling sysfs references leading to use-after-free.
-[...]
-> If ufshcd_init() fails after successfully calling ufshcd_add_scsi_host()
-> (for example, if ufshcd_link_startup() or ufshcd_verify_dev_init() fails
-> and jumps to out_release), the function returns an error without calling
-> scsi_remove_host().
+--0000000000006b37e5065b9562d4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the report. As the bot itself notes, this is a pre-existing
-issue, and this patch neither introduces nor changes it.
+Thank you for the review.
 
-The new out_release label only drops the clock reference taken earlier in
-ufshcd_init() and then falls through to out_disable. Every goto that this
-patch retargets used to jump to out_disable directly, so the set of
-failures that leaves ufshcd_init() without calling scsi_remove_host() is
-exactly the same before and after this patch.
-
-Fixing that error path is independent of the clock reference problem
-addressed here, so it should be fixed by a completely separate patch
-rather than folded into this one.
+Both findings are pre-existing issues in mpi3mr_alloc_trace_buffer(),
+unrelated to the changes in this patch. I will address them in a
+separate follow-up patch after further analysis and testing.
 
 Thanks,
-Naomi
+Ranjan
+
+
+On Wed, Aug 5, 2026 at 5:03=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+>
+> Thank you for your contribution! Sashiko AI review found 2 potential issu=
+e(s) to consider:
+>
+> Pre-existing issues:
+> - [High] The driver rounds down the trace buffer size internally when all=
+ocating segmented buffer entries, but passes the original unrounded size to=
+ the firmware, which can cause the firmware to read past the end of the seg=
+ment list and DMA write to arbitrary physical memory.
+> - [Medium] A trace buffer size smaller than 4KB results in a 0-byte DMA a=
+llocation, triggering a WARN_ON_ONCE within the kernel DMA API.
+> --
+>
+> --- Patch [1]: [PATCH v4 01/10] mpi3mr: Skip device shutdown during unloa=
+d per controller configuration ---
+> commit 9ac255a070f5df8da5fb46e54b2787eacb0b7c7c
+> Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
+>
+> mpi3mr: Skip device shutdown during unload per controller configuration
+>
+> This commit caches Driver Page 1 settings to suppress device shutdown dur=
+ing
+> driver unload. It adds endianness conversions for the diagnostic buffer s=
+izes
+> read from Driver Page 1 and hardens the allocation retry loops against in=
+valid
+> decrement sizes provided by the firmware.
+>
+> Closes: https://sashiko.dev/#/patchset/20260626114109.43685-1-ranjan.kuma=
+r@broadcom.com?part=3D1
+> Closes: https://sashiko.dev/#/patchset/20260708183305.244485-1-ranjan.kum=
+ar@broadcom.com?part=3D1
+> Closes: https://sashiko.dev/#/patchset/20260724102505.115136-1-ranjan.kum=
+ar@broadcom.com?part=3D1
+>
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi=
+3mr_app.c
+> > index 1353a8ff9c85d..fca5357a515d1 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+> [ ... ]
+> > @@ -179,6 +181,12 @@ void mpi3mr_alloc_diag_bufs(struct mpi3mr_ioc *mri=
+oc)
+> >                   mpi3mr_alloc_trace_buffer(mrioc, trace_size)) {
+> >
+> >                       retry =3D true;
+> > +
+> > +                     if (!trace_dec_size || trace_dec_size > trace_siz=
+e) {
+> > +                             retry =3D false;
+> > +                             goto retry_fw;
+> > +                     }
+> > +
+> >                       trace_size -=3D trace_dec_size;
+>
+> [Severity: High]
+> This is a pre-existing issue, but does this lead to firmware reading
+> out-of-bounds and potentially corrupting physical memory?
+>
+> The driver rounds down the trace buffer size internally when allocating
+> segmented buffer entries in mpi3mr_alloc_trace_buffer():
+>
+>     seg_count =3D (trace_size) / MPI3MR_PAGE_SIZE_4K;
+>     trace_size =3D seg_count * MPI3MR_PAGE_SIZE_4K;
+>
+> However, it does not update the caller's trace_size. Thus, the original
+> unrounded trace_size is stored in mpi3mr_alloc_diag_bufs():
+>
+>     diag_buffer->size =3D trace_size;
+>
+> When posting the buffer to firmware in mpi3mr_issue_diag_buf_post():
+>
+>     diag_buf_post_req.length =3D le32_to_cpu(diag_buffer->size);
+>
+> The firmware calculates the required number of segments using the unround=
+ed
+> size (e.g., ceil(5120/4096) =3D 2), but only 1 segment was allocated (siz=
+e 8
+> bytes for the segment list). The firmware will read past the end of the
+> segment list (16 bytes), leading to an out-of-bounds DMA read. It will th=
+en
+> use the arbitrary out-of-bounds value as a physical address to DMA-write
+> trace data, leading to memory corruption.
+>
+> [Severity: Medium]
+> This is a pre-existing issue, but can this retry loop cause a 0-byte DMA
+> allocation warning?
+>
+> If the firmware-provided host_diag_trace_max_size (or the size after retr=
+y
+> decrements) is less than 4KB, trace_size will be less than 4096. When pas=
+sed
+> to mpi3mr_alloc_trace_buffer(), it calculates seg_count =3D trace_size / =
+4096
+> which evaluates to 0.
+>
+> This results in a 0-byte allocation in mpi3mr_alloc_trace_buffer():
+>
+>     diag_buffer_list =3D dma_alloc_coherent(&mrioc->pdev->dev,
+>                                           sizeof(u64) * seg_count,
+>                                           &diag_buffer_list_dma, GFP_KERN=
+EL);
+>
+> Calling the DMA API with a 0 size triggers a WARN_ON_ONCE(!size) splat in
+> dma_alloc_attrs(), which can crash systems with panic_on_warn enabled.
+>
+> >                       dprint_init(mrioc, "trace diag buffer allocation =
+failed\n"
+> >                       "retrying smaller size %dKB\n", trace_size / 1024=
+);
+> >                       goto retry_trace;
+> >               } else
+> >                       diag_buffer->size =3D trace_size;
+>
+> --
+> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260805110634.34=
+6670-1-ranjan.kumar@broadcom.com?part=3D1
+
+--0000000000006b37e5065b9562d4
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+zZSItX49nLoa4TBbzuCzoINrv59QeSCVlVdAYussUS3840ZjvcYHSQx3tqYcBN+an07lDASmGEM5
+7PEXJPVInjl/Fva3ksL3r8anR4PWc3Xz5jLD8Xg6BU4zmIcR/t1GlqWuz8uTWmQtm40C9m91Q9a+
+2alIIV6BTs8IG2ELtt4EfcVvi5af+Hu878sGeBtMx6Z9ljoKl3MfvDdtUNO4bkJ97a7PXy/CKxiy
+TApQj4qg9SKQcsH0xzQan67XeXjkvk4frNDhRikCAwEAAaOCAd0wggHZMA4GA1UdDwEB/wQEAwIF
+oDAMBgNVHRMBAf8EAjAAMIGTBggrBgEFBQcBAQSBhjCBgzBGBggrBgEFBQcwAoY6aHR0cDovL3Nl
+Y3VyZS5nbG9iYWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyNnNtaW1lY2EyMDIzLmNydDA5BggrBgEF
+BQcwAYYtaHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyNnNtaW1lY2EyMDIzMGUGA1Ud
+IAReMFwwCQYHZ4EMAQUDAzALBgkrBgEEAaAyASgwQgYKKwYBBAGgMgoDAjA0MDIGCCsGAQUFBwIB
+FiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzBBBgNVHR8EOjA4MDagNKAy
+hjBodHRwOi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjZzbWltZWNhMjAyMy5jcmwwJAYDVR0R
+BB0wG4EZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBQAKTaeXHq6D68tUC3boCOFGLCgkjAdBgNVHQ4EFgQUfLdm66N7GfDsoL8cYp3s4YdO
+isMwDQYJKoZIhvcNAQELBQADggIBAA/lnAxDb9jbesclnBxWIKUSxAMIrq4XKO5WKHUYIOOzd2sL
+o59fH9AWg1AfVONfWIUNdWDrmNNLs0+drSKaZbGx2RWMbaL9ubo7+BTQV33ZRBxnnkmc9QszlOo5
+m6FB9uPOGB9LvJMCkJ8S7hNc9G/p7dB79s1IKc8JGEDIrsgX3s4xSCJA20WdePHY5rLh5ySwXyI2
+3sVTUC+oK0HJFRo+TpdMMtdpOetWzIkUbGceiOA2ur8372+0KOmvlIHA/jEnW3BRfmB2vmdk+raY
+C/xbXY9JEfS6D881+X/90w+cCQ7nuA1OELebS1RbSdXT6YkRDPWYA/DPFhOYCAiMwVAPRaAH1AQc
+8J8yTDigwRUCq4qKCYU9YnqQh3YZRbUYnW+i3+rAO2SUbKl0VM5y0tq+GOGLC7w+v6yGossZmy+6
+3w72qp/Colr4r5ZaROb+L2FXqk4tL/HfkRhliyPPPNIjre2mIkvFuShk5A5FcvQYCzDtejAz9JHq
+ZVJ1ZD+auQDbIUxT+Dn9bI5XkQnWJ9KrlcORtztdYTDafN8VQuweS3JY0X/VCNBNZkiYXd7fzOza
+hvkw/S+v8cIfiakLKBREtiBHqWLdVf5CNDVYpd17yz0LGz0TKARbfuK/EiKflA10pnnnOB33Ru9D
+WPp9aHW3szGYr3+H9AHS6IDwkIxyMYICVzCCAlMCAQEwYjBSMQswCQYDVQQGEwJCRTEZMBcGA1UE
+ChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xvYmFsU2lnbiBHQ0MgUjYgU01JTUUgQ0Eg
+MjAyMwIMDcMaKRu9LrbAxERoMA0GCWCGSAFlAwQCAQUAoIHHMC8GCSqGSIb3DQEJBDEiBCAsnh+O
+m+AiKiugFqaQmiVgRhm72upBm5e9gpqY9NFrIDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwG
+CSqGSIb3DQEJBTEPFw0yNjA5MTYwODIzMzlaMFwGCSqGSIb3DQEJDzFPME0wCwYJYIZIAWUDBAEq
+MAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCG
+SAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDCIoyKN78/x0CXuuoc7Lr+bvG4cfysxLUQiiMjSSZi
+zqBGRKPiv1Iy0QFi8NF21wFOmIW6k3jyxTr+trDTnfGSAd2sZL3aFzyG5KAs2rRaZBX275qVVIUp
+flynYClgb8Xtmpk4BQXtA0jnlv6kaCD+MzmOACphuVk+Z/cIHNPoJU3dIbwVgJfaNW4BELsUffxb
+jbSNuTYEhi1DYFx4V5hj7IdwSDbNkgosrrbx1qW/dcIyau4LrPBdawh+YS53ZXjiAhL/ubX24CBD
+qSFnP2egWzTPUVCbugMAXtVLkWq9l6RhjUdZ+mee6GkbOdJmSMjAQfMrrAtcqkDXyCUnkf/9
+--0000000000006b37e5065b9562d4--
