@@ -1,76 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D258E3AFAE7;
-	Wed, 16 Sep 2026 01:52:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26CDF3AC0ED;
+	Wed, 16 Sep 2026 02:01:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789523568; cv=none; b=nWUleN8p+y4fc89Zg1LIm3HWgKbyUZl89qDeotypIMzX57NTnJt/YBqvIHIlxzQg7bEJvViAh71mvtw2B/Bps37WfRh+hA8yHCNwUvs8nRaZUf+CiLPekc0UPX8pPWO+ytRx4BnyPRlFUpTrA8ysBpliwgrvQIpN3+JKlXjnew0=
+	t=1789524102; cv=none; b=kVYfdvsKmCQSyod0EEMqT9Kdwk2zVNjVLXMpXIoHrdeYQiV8N91TnevinY3MhCTR0P78H/WSiJnzXfy5/Yc3Ijgj1JKGbY5Jxt3mcVsSdWPwgFh1wzulDK0ZiTCKhHw8g46dW5epRu6mgaW+facgJyfkeWB7neR8ZGY4o1qfDVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789523568; c=relaxed/simple;
-	bh=fw5N7UTTOqA2ZxGkE2lphOfSgzsaoDxiIa+r4VWJT2I=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iGsByvUOspoM1cidRJDcF4Z05zIOOrw2VOJxXbx2MY80nQRwYDDHYJ4aYNdEYfdJ3KZa120LIyz38357DkA0NK8+YxhGIRDHRKX+BDzPOlfgMz2HrFajIqHGU56cCpUXBce+ZZK6ymOUx5ylNtPRYoJ/4xVf/Ivuk+WL6SJ+PUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oOnCJVYI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789524102; c=relaxed/simple;
+	bh=CXJfK6etui4TiBXgYCdN8ScM8cI596TwjEn8ECns7tc=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 MIME-Version:Content-Type; b=OosRD00JIdFa8oyBQW3uXhDOfudnuh5Okiv6k5CPtvvVxQGIdMVkYnHVJAAc3HzSX0ePmhI3CR95ROf0MncfhYQROkxL/gt0xfHy2EClEt9I57I7gCQXVZawZ0iROfOq82nL3H4LLh4zsnGsRImUmo+jBxt+kp2eNY+gxSH6+Wg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jic5obL8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oOnCJVYI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8FBC1F00899;
-	Wed, 16 Sep 2026 01:52:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jic5obL8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A74601F000FF;
+	Wed, 16 Sep 2026 02:01:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789523553;
-	bh=5q5KE8fUs+8ODPhfMajWOCRm4Na5oZFgYV9W9yAhSs8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=oOnCJVYITmVBvRALLoaSLsGGfEfrslH4IRByKYg7ekzx56HZmO8CMFwSp/55ZGVzn
-	 iy4AJy6G48kQiaaDUwP0A4okz+dlqSvCihCKwubHZ3xjcJWUpgwKZmu9zT6BRK0igb
-	 XCvrZ/AwstTt634Ltrs0TPFLgooFV3Xf+k+oJfJfSKjCHYoF3AGjEVK76U/uNymu4x
-	 BIA9hrN59g4pwku+2LdTd02ncTI/oiDsanYQfBldlIwMuxtChE7/7IWYRs0/VBXyWi
-	 3ppOvrtJOX5OAH9SYT8YmzXvoPkTaO0ZlzMghGTea9sgirFEa9RdJud21IuoM6OtVa
-	 T96e7GN11J27w==
-From: Sasha Levin <sashal@kernel.org>
-To: stable@vger.kernel.org
-Cc: Sasha Levin <sashal@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com,
-	bvanassche@acm.org,
-	avri.altman@sandisk.com,
-	alim.akhtar@samsung.com,
-	wsd_upstream@mediatek.com,
-	linux-mediatek@lists.infradead.org,
-	peter.wang@mediatek.com,
-	chun-hung.wu@mediatek.com,
-	alice.chao@mediatek.com,
-	cc.chou@mediatek.com,
-	chaotian.jing@mediatek.com,
-	tun-yu.yu@mediatek.com,
-	naomi.chu@mediatek.com,
-	ed.tsai@mediatek.com
-Subject: Re: [PATCH 6.18.y] scsi: ufs: core: Re-arm the device command completion before submitting
-Date: Tue, 15 Sep 2026 21:52:13 -0400
-Message-ID: <daily-reply-20260915-0008-re-ufs-dev-cmd-completion@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260915052638.459390-1-alice.chao@mediatek.com>
-References: <20260915052638.459390-1-alice.chao@mediatek.com>
+	s=k20260515; t=1789524083;
+	bh=fDfNPHZO3x8dpGAaCN/R8DkmbDFw6clCnx9JRbiMMOM=;
+	h=To:Cc:Subject:From:In-Reply-To:References:Date;
+	b=jic5obL8NaXsPEipUexGY+VTT7No6k3tMecjDcdACQaTIH7yLl5VR+4dKrZhJVKmh
+	 6PZrqerE2Ts6o/mAE1vGUYr5jw1NsvGmZtvERK/MajVoc+ATsAZHWWaMne3CB//NOR
+	 N37lkomojUaaTdApykKmAp0G8BQOOCIQGcM2MuOP0yEBq/05l1YojDFOkijeBwmP0R
+	 ehnqs/CSmFW0apKGOE+UkleXBuDLLRmBjlH93Ca/q1Hi+V0b61+fszNn91m6BpN4Kw
+	 AYcIHix68KXeb5Zgj6YiEDBvnN5U4HpLX6PKP2ByFptmqJGELhnJXixtFffqzFocRB
+	 BsqziDaR3A0bw==
+To: Daniel Fernau <mail@danielfernau.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>,  Sumit Saxena
+ <sumit.saxena@broadcom.com>,  Shivasharan S
+ <shivasharan.srikanteshwara@broadcom.com>,  Chandrakanth patil
+ <chandrakanth.patil@broadcom.com>,  megaraidlinux.pdl@broadcom.com,
+  Thomas Lamprecht <t.lamprecht@proxmox.com>,  "James E . J . Bottomley"
+ <James.Bottomley@HansenPartnership.com>,  linux-scsi@vger.kernel.org,
+  linux-kernel@vger.kernel.org,  Damien Le Moal <dlemoal@kernel.org>,  Jens
+ Axboe <axboe@kernel.dk>,  Keith Busch <kbusch@kernel.org>,  Ranjan Kumar
+ <ranjan.kumar@broadcom.com>,  Thorsten Leemhuis
+ <regressions@leemhuis.info>,  regressions@lists.linux.dev,  Lukasz Magiera
+ <me@magik.net>,  Mira Limbeck <m.limbeck@proxmox.com>,  Mats Topstad
+ <Mats.topstad@intility.no>,  stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: megaraid_sas: Limit NVMe request size to the PRP
+ chain frame
+From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
+In-Reply-To: <k5_uJWSlVpSwhVugTUyBfaq9oFVqFfpeuk_765JDKLtq_vKNO8mXI6TznKe4bX9WisARpHFxQYZ6i7W8YBT02KYaHL5d3LKSfyfCkNAh1jc=@danielfernau.com>
+Message-ID: <yq1tsnqvtsu.fsf@mail.kernel.org>
+References: <20260827175743.734593-1-t.lamprecht@proxmox.com>
+	<178840472610.670675.12272571379596581093.b4-ty@b4>
+	<k5_uJWSlVpSwhVugTUyBfaq9oFVqFfpeuk_765JDKLtq_vKNO8mXI6TznKe4bX9WisARpHFxQYZ6i7W8YBT02KYaHL5d3LKSfyfCkNAh1jc=@danielfernau.com>
+Date: Tue, 15 Sep 2026 22:01:22 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-> Re-arm the completion in ufshcd_issue_dev_cmd(), immediately before
-> submitting. All submitters - ufshcd_exec_dev_cmd(),
-> ufshcd_issue_devman_upiu_cmd() and ufshcd_advanced_rpmb_op() - reach it
-> holding hba->dev_cmd.lock, so no extra serialization is needed.
 
-The analysis reads correct to me and the patch is clean against 6.18, but
-this is a stable only change in the UFS core completion path with no
-mainline counterpart, since 08b12cda6c44 ("scsi: ufs: core: Switch to
-scsi_get_internal_cmd()") deleted this code outright. I would like a
-subsystem ack before queueing it.
+Daniel,
+
+> On this hardware the cap is enough. We no longer need the
+> max_sectors_kb udev workaround, and we do not see the page-boundary
+> ptr_sgl fault (RAX=0x200 / 512th PRP slot) under production load.
+
+Great, thanks for testing!
 
 -- 
-Thanks,
-Sasha
+Martin K. Petersen
