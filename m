@@ -1,94 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5A314D596D
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 11:03:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECCE33AB26B
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 11:17:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789643037; cv=none; b=GVjEIG/h929CZkKLHUOhs6iBb0DRAmJ9yQjCw3u1Kbw/rad/ZUOkw76ClWE+Mir8addqro9kJX4sJokFnYUDEhJkweNxJkajKUsE7h2ZG3u+xJoDPX4AAX+fPi/ITg/U3xHOn6P0hXpGETe5qIGUF0HKWVEDZkxf3jESOTnAft8=
+	t=1789643866; cv=none; b=HKNGAG1f76RcIVcAfVkMtxIdfkn5ZxZm8QopGPA+w2ZOwfJf+8n+i22n6PN9czNvl5PliQIzCCYL55WyUGPuiUAbjPVjH7FZ2J0qHSPhslf0NjGsHo4qBM2gR+EUEr97ldQVGm4twDB9pQkcrX8Q8e0bIU7xAhLJdIhU1SYTGkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789643037; c=relaxed/simple;
-	bh=5IaUV2lWnKrviNUvjPsP666+dNsvjpNeBaPusln/JaY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MayTjaFyIatJ1/t1lVT/222WUEbQjaH6t+MNdfPOBfvTotR6CJPgngu6GHHrLFRBtqXShLgJ/Oj91lYtR2WfygW6FuEwG46tzdjkffAFBkDdhGUrOE+B8D10mQ3fRkHaZDT64V47J7Qo5+SzFyJEiHIbkfPhwa40XZKYwQ7eask=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l9b1zxEn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789643866; c=relaxed/simple;
+	bh=7B1sMkE/hk3cskMBzckmdKT/vXmvOQiiDcO60spH958=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=mu2s9RHqxAIrmnQJK8TVkyMMliEMe96Lf7p4N6139dd/Rao/MQlGpSp3Zd7d1HUZzONr03OwOZf7zkUbKeP6eYcDCM6juQ0h/IcH2+9fOg1Nmv+RD39+HozllFRWGw+rpQans4j04mRsvcKAQi88vVJde4W4s8ubrT6I4d4Mra8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eawl6eIV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l9b1zxEn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5CFF1F000FF;
-	Thu, 17 Sep 2026 11:03:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eawl6eIV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFFE91F00893;
+	Thu, 17 Sep 2026 11:17:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789643026;
-	bh=MCNHqpWrDRF4tlfdGHKk0Wa3/EwAv4y7SKbFYEA7LMQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=l9b1zxEnbqnVNb/KyA/XRGE9PkCGP/1GHNJWGdAyzVgsVrguOxE/p5J1Zlh8rIBLN
-	 ZX7exdzXITEAXEju3Ub9JEzklll+YpR4AZV0Yx0y1urtIYVQ6mSn4yFelaxnDBXh5J
-	 BFV/ToUx/zanRHNNTRPviW2FrPCslzVNcvU6DdKuPlnD8yhZMoMTBmlIfRYXjkHt98
-	 Du1NaNdJgjbzcP3TPJr240AVDgCqUCDptdiE3EdS9iyj9jZ1isj7geSQEJH4QCIe9N
-	 N87McNOyddlIv6nBbB+B7Lva5qyoBPh+jgvmuPBMON/309WGmJAihyDygfXxQN5fmY
-	 zk4uds35zJiQQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	John Garry <john.garry@linux.dev>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v2 3/4] scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
-Date: Thu, 17 Sep 2026 13:03:20 +0200
-Message-ID: <20260917110316.1104863-9-cassel@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260917110316.1104863-6-cassel@kernel.org>
+	s=k20260515; t=1789643859;
+	bh=wU/s0m/VLNj8OmvJANMU2Wxq/enQsOBVBG3oWnfzn7Y=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Eawl6eIV9WnYizJIgIvDmYJgi2N1e+XrrwmQ+IXBjjOtYm6yGlFDALxVxSpoV80il
+	 ScgXaAxodgS5gLjMLFBhiDiSUx7ZWg/a/n1Qvn8gBQaudaIe/MRNsn7m2E9pffsvwR
+	 LB/JlrERXbT9rHgns9NL66nCIPNnWTVauWpvBpHkICGjZSyNyeBSNco+y6UQuG/+NZ
+	 9KQfq1SqLKyCpV4v/h56L/mLMDoLdPNH26UuHgWJy8IR7J3lcz061IdgwFHCY8IPVR
+	 e1gwu7sqCnJUntcsdb2drxLqRI3omb4/IRCz+GqPwaHLSFWnAGbReU9UkUaW2RqZtI
+	 HMhLoQrrWvEkA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 1/4] scsi: scsi_debug: Do not advance the write
+ pointer of a failed write
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Niklas Cassel" <cassel@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260917110316.1104863-7-cassel@kernel.org>
 References: <20260917110316.1104863-6-cassel@kernel.org>
+ <20260917110316.1104863-7-cassel@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 17 Sep 2026 11:17:38 +0000
+Message-Id: <20260917111738.DFFE91F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1687; i=cassel@kernel.org; h=from:subject; bh=5IaUV2lWnKrviNUvjPsP666+dNsvjpNeBaPusln/JaY=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJWn/gx86yece+qUNaM16b+d8TvPp8TsdTKR7NQoO2DJ tPash0rOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCRMFOGf4a5+1kFTPmXSXqe +Ljt/tdLZ7kF482ENX6t37rz20EnCVaGv6INTUXbtfRi521QFH144dusnskPE9xn5vzffu9MTmb kQU4A
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
 
-When logical block provisioning is enabled, a command that writes user
-data marks the region that it wrote in the provisioning map, so that
-GET LBA STATUS reports the region as mapped. resp_write_dt0(),
-resp_write_scat() and resp_write_same() all call map_region() for that.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] scsi: scsi_debug: ZBC specification violation by returning GOOD st=
+atus without advancing WP
+- [Medium] scsi: scsi_debug: integer overflow in short write check allows i=
+ncorrect WP advancement
+--
 
-resp_atomic_write() does not, so a WRITE ATOMIC (16) leaves the
-provisioning map untouched, and GET LBA STATUS keeps reporting the
-region as deallocated after it has been written. map_state(), which
-GET LBA STATUS uses, is the only reader of the map, so that is the whole
-of the effect.
+commit 2b6fea07514157218eac4ea45ff1ba17e05b5125
+Author: Niklas Cassel <cassel@kernel.org>
 
-Call map_region() the way resp_write_dt0() does.
+scsi: scsi_debug: Do not advance the write pointer of a failed write
 
-Assisted-by: LLM
-Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
-Tested with lbpu=1 added to the configuration used for the rest of the
-series. GET LBA STATUS reports a region that has never been written as
-deallocated, and reports eight blocks as mapped after either an ordinary
-WRITE(16) or a WRITE ATOMIC(16) of eight blocks at the same LBA. Only
-the WRITE(16) case did so before this patch.
----
- drivers/scsi/scsi_debug.c | 3 +++
- 1 file changed, 3 insertions(+)
+This commit modifies the write pointer advancement logic for ZBC sequential
+write required zones. It ensures the write pointer is only incremented when
+all requested data is successfully written.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index ddcc7a920089..5a08f02130ef 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -6213,6 +6213,9 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
- 	}
- 
- 	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
-+	if (unlikely(scsi_debug_lbp()))
-+		map_region(sip, lba, len);
-+
- 	if (unlikely(ret == -1))
- 		return DID_ERROR << 16;
- 	if (unlikely(ret != len * sdebug_sector_size))
--- 
-2.55.0
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 6941809dfdb75..3ce2dbdff177c 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -5150,8 +5150,8 @@ static int resp_write_dt0(struct scsi_cmnd *scp, st=
+ruct sdebug_dev_info *devip)
+>  	if (unlikely(scsi_debug_lbp()))
+>  		map_region(sip, lba, num);
+> =20
+> -	/* If ZBC zone then bump its write pointer */
+> -	if (sdebug_dev_is_zoned(devip))
+> +	/* If ZBC zone then bump its write pointer, if all data was written */
+> +	if (sdebug_dev_is_zoned(devip) && ret =3D=3D num * sdebug_sector_size)
 
+[Severity: Medium]
+Could the multiplication num * sdebug_sector_size overflow 32-bit arithmetic
+for large num? If the module is loaded with a capacity >=3D 4GB, an extreme=
+ly
+large num and an empty data-out buffer might cause do_device_access() to
+safely return 0. If the multiplication overflows and evaluates to 0, this
+check might erroneously pass and incorrectly advance the write pointer.
+
+[Severity: High]
+If do_device_access() returns a short count due to a small data-out buffer,
+this check prevents advancing the write pointer. However, the function then
+proceeds to return 0 (GOOD status) without calling scsi_set_resid(). Does
+this violate the ZBC specification, which requires that if a write terminat=
+es
+with GOOD status, the write pointer must be advanced by the transfer length?
+
+Could this lead to silent data corruption or UNALIGNED WRITE COMMAND errors
+on subsequent sequential writes?
+
+>  		zbc_inc_wp(devip, lba, num);
+>  	if (meta_data_locked)
+>  		sdeb_meta_write_unlock(sip);
+
+[ ... ]
+
+> @@ -5314,8 +5314,8 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+>  		 * writes behaviour as possible.
+>  		 */
+>  		ret =3D do_device_access(sip, scp, sg_off, lba, num, group, true, true=
+);
+> -		/* If ZBC zone then bump its write pointer */
+> -		if (sdebug_dev_is_zoned(devip))
+> +		/* If ZBC zone then bump its write pointer, if all data was written */
+> +		if (sdebug_dev_is_zoned(devip) && ret =3D=3D num_by)
+
+[Severity: Medium]
+Does the num_by variable suffer from a similar 32-bit overflow issue?
+
+Earlier in resp_write_scat(), num_by is calculated as num * lb_size. If
+this truncates to 0 on a massive transfer, could this condition falsely
+match a 0-byte return from do_device_access(), tricking the driver into
+advancing the write pointer anyway?
+
+[Severity: High]
+Similar to resp_write_dt0(), if this skips the write pointer advancement for
+scattered writes on short buffers, it still continues and eventually returns
+0 (GOOD status) at the end of the function. Should this set a residual count
+when skipping the write pointer increment to avoid ZBC specification
+violations?
+
+>  			zbc_inc_wp(devip, lba, num);
+>  		if (unlikely(scsi_debug_lbp()))
+>  			map_region(sip, lba, num);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917110316.1104=
+863-6-cassel@kernel.org?part=3D1
