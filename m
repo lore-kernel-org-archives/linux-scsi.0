@@ -1,51 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37E6C363C5A;
-	Thu, 17 Sep 2026 02:28:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B5C0392C20;
+	Thu, 17 Sep 2026 02:28:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789612127; cv=none; b=NfsQa+YYhS9EB2PvtmsVvF9VGEQakg1EH3EnL8BgeChMov7mG8RFyRbbMoeKuLxGm1+8ihqq4RTxfrDIYehORd+ODc1sFO0ngeGXCcABRrwv8KmrSA/KxDjJtVrWHqhRWBL5GOxsZoAQSayxLYC7B9QXKH7k8X05XPUdchaa+OI=
+	t=1789612134; cv=none; b=AmNivtHVphow4Q34rAlWE2VL8W+lBjMZlwPvz6qwJpfDyoJtOQl6CAIW8nkvXeOqYrEjmf/53HWSaKrHV1NclTPn0uwvW/WIcnOC3yv2uSwchUJB/VA6FgvXCVmXiFJSOHle2hK3iFhRvMpsWovjmoieZ4D78hreezw/T2LAU3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789612127; c=relaxed/simple;
-	bh=+h/6BUa2JTzU0H09cFmdvh5pstXh9+A0yD4FHi9Ga7w=;
+	s=arc-20240116; t=1789612134; c=relaxed/simple;
+	bh=QAmGo5ya1lEzgebcyO2c25lvgrfDOlaC7TkM1OT6KBU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=E9krVCVjZrkETBMdbBe8FlUlui2rBYvEpOjjc7b0PfptGCt2yM348neRwNcpW13Yz5uj5Ksqiogu7lqR620SiWivLlEMxOnKC/Xf75fY0VQ2YQPL9urMABiw765P8WRaQF+EvsRVq0tzH35yGI78ijCtqhla6ZP5kD2Upf4sQFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bYYZ6bkL; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=SIhZ59KOneINMPkkdWjpjem4OmkL8f7DSnDZ3SmMWYuoSUU2+cxzDrq5CsHc+CgVJQq20KoWeXaDidu1I1WhMJTAHcoQdZUzc7/eZk/9A2hnX6KyEomBm14BxWvbG2QQ/QCV9DeC27LzSPecv096vxmQTNQMrkAjsQ+kNkA3W7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fDgyvGX0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bYYZ6bkL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BB451F0089C;
-	Thu, 17 Sep 2026 02:28:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fDgyvGX0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0154C1F0089F;
+	Thu, 17 Sep 2026 02:28:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789612115;
-	bh=emXmYOuF+tfT5M625pdnqLmTtGeJrrfh6Bt6ARP8fAE=;
+	s=k20260515; t=1789612118;
+	bh=K3oyNZntK8zxhJ9bZu28xpBS5eax1KW4PDBFgPVykOA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=bYYZ6bkLViN9LUPUwnTyDIRDIHVFKFQUI8Gt13igU21Hcgry6WSKE2HLbtBIOihi9
-	 us69HxMtLePSKJeM2XplMLyaZMFnCPgnJybYNcJvqGTU4TllKht5m2P8Xs9vRpoVgD
-	 P1kQaZjMtFBo4gJk0BFYiLrGgNoj1KrdJKu8jRsE7jD9jXbKwtni0CTrWE+dez+pX2
-	 cVqmDxczkxfq4XtS+9LTshsOhyU9Bn7SEvW5dAabdUN7dmpQ2cqTqKUFK76rw+iulj
-	 2cFkNXu0idoYdYy9fu2FCphVX54zDlqoHiLa0XCqd0RMF8Av4BTSCyn9lOsy9oSLRk
-	 zdh3XkLBbj7aQ==
+	b=fDgyvGX0BIVTsOSbHB2zkr6qz/sUztLLTyoJBmkE3OdbKmiCa4N2N1rWH2agrdlWY
+	 aFoDTf8EoHk/dDfTT0JhXO7HoKk7Grw8T57he8eB2FiI35EhH+dUTONYnA7SP07/d7
+	 thSrrqBmKOR63wKCYFQyAsM4JI69RyWPxdl7NE5m7rrtuhy/hHKsGSx8a1dp+IRP8f
+	 QVfG3SHWJk1Oj6ayWqwNl01kbmTCiGZI1PGQ0lNIuprTQL9SWJFxs37QRoCVD0MQe2
+	 H9SlMcqYw/DCh8BO7hQoIWmSeTCQscX1wIaDoYHYoUQp0fhKvTugqVF2N2EEoNsTRu
+	 T4nGRluCnp0yQ==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Palash Kambar <palash.kambar@oss.qualcomm.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Koichiro Den <den@valinux.co.jp>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	ZHOU Jiaxiang <me@fxti.xyz>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: pltfrm: Add quirk for R-Car S4 lacking lanes-per-direction
-Date: Wed, 16 Sep 2026 22:28:17 -0400
-Message-ID: <178961190590.3672510.13511823061890997194.b4-ty@b4>
+	linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v4 1/2] block: fix zones_cond out-of-bounds write on zone report
+Date: Wed, 16 Sep 2026 22:28:20 -0400
+Message-ID: <178961190604.3672510.18119102289310587808.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <ae0cc2bd764e6dfffce99db3d8b44a55887c508c.1789394185.git.geert+renesas@glider.be>
-References: <ae0cc2bd764e6dfffce99db3d8b44a55887c508c.1789394185.git.geert+renesas@glider.be>
+In-Reply-To: <7815D1B293A8F55E+20260916135822.32584-2-me@fxti.xyz>
+References: <7815D1B293A8F55E+20260916135822.32584-2-me@fxti.xyz>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,22 +48,29 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Mon, 14 Sep 2026 16:00:01 +0200, Geert Uytterhoeven wrote:
+On Wed, 16 Sep 2026 21:58:21 +0800, ZHOU Jiaxiang wrote:
 
-> Since commit e72323f3b09f ("scsi: ufs: core: Configure only active lanes
-> during link"), the following error is observed on R-Car S4:
+> blk_revalidate_disk_zones() sizes the zones_cond array from the disk
+> capacity and zone size, but the index used by blk_revalidate_zone_cond()
+> comes from the device-driven report_zones() walk and is never checked
+> against the array size. A device reporting more zones than fit the
+> array makes blk_zone_set_cond() write out of bounds.
 > 
->     ufshcd-renesas e6860000.ufs: Tx lane mismatch [config,reported] [2,1]
->     ufshcd-renesas e6860000.ufs: link startup failed -67
->     ufshcd-renesas e6860000.ufs: error -ENOLINK: Initialization failed with error -67
->     ufshcd-renesas e6860000.ufs: probe with driver ufshcd-renesas failed with error -67
+> One way to reach this is a zone count exceeding 32 bits: both
+> blk_revalidate_zone_args.nr_zones and struct zoned_disk_info.nr_zones
+> are unsigned int, so a disk advertising more than UINT_MAX zones (e.g.
+> 2^32 + 1024 zones of one 512-byte logical block) gets its zone count
+> truncated to a small value, undersizing the array while the report
+> walk keeps counting upward.
 > 
 > [...]
 
 Applied to 7.3/scsi-fixes, thanks!
 
-[1/1] scsi: ufs: pltfrm: Add quirk for R-Car S4 lacking lanes-per-direction
-      https://git.kernel.org/mkp/scsi/c/c9ee65113326
+[1/2] block: fix zones_cond out-of-bounds write on zone report
+      https://git.kernel.org/mkp/scsi/c/7c431d61b69a
+[2/2] scsi: sd_zbc: reject disks with too many zones
+      https://git.kernel.org/mkp/scsi/c/b6ec0f797459
 
 -- 
 Martin K. Petersen
