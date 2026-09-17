@@ -1,108 +1,83 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9714F48BD56;
-	Thu, 17 Sep 2026 12:21:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A35E24DD3D7
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 12:55:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789647723; cv=none; b=lTjAD56yTU12NtAR5wKidOuh6GB0QWzj1aJp9YFnEHYocIjiYqlL7N8vKFiRJ7WWAn+0DbMJkni6S3m6JAVBrVYw40rxQtBwkIjxk8N+0NdOaLjN7m5Bu04OFHWdngganaJ3JDOip/IuhGk05TScCPs+osu5LSCbuGL/k+Pfl9Q=
+	t=1789649748; cv=none; b=FNkwKZid+KHkc0qc8WKwogyyeN7F2ZEkxyfjHD9veCTFbRLebINJdZm2pvsunOUAQLbhS24y4nXYXBphKVfGLGg7rvMJKAxTx7mTEMyJAD1xBYavaBJ6QeLaevp3f2OK5YPKoenshIY2KrDqRSELzFHJh8rVjnW4zUHqX05Gx2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789647723; c=relaxed/simple;
-	bh=hLpiB+Zr3Wowt6GaSTPFTKiva3aPokHyMtteJL9vqls=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BZSKKildIzlxWseosASL9gFJjWs/utMx6bIu257zJi69Z2Xb4IP4IpaNiJ2diHpAq4nuKlX58hdRPcTmYr3S+FbFdtHgpEqBSfdrhgvjOnx2v1uJTgp10UjJU5W9nhvYFRzhrso56OaBVKkjH6qtzycK7J5yVHrfo/RtoMgHMaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d2X040gz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789649748; c=relaxed/simple;
+	bh=JStOVV72gwAWPMsgqW8w3ukIH/rrvhmORnk3QcNTYps=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IZY7mFNOQH3+Evt5oosEx7xEY+tqJoz7Us/HTeBAT+hzZUw5ylzRvCUrr99kHwwLTsfvQuQc2Vuxq6FFGc+TA/RcJbFYhT8p+cSoQztUzsdH0P+r3u/ltUDWXmADjW/NsYPY95aer0g5Pp4TJ3zbeS7eFnMnh+GgxHX9wLfDphY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dUDe8MqA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d2X040gz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BA1A1F000FF;
-	Thu, 17 Sep 2026 12:21:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dUDe8MqA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBF1A1F00893;
+	Thu, 17 Sep 2026 12:55:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789647713;
-	bh=ksCDE8weSJynTp0IPYpbkRfvarE9ZWweigxoOoY6y+0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=d2X040gz+inturUewT2ZUtyxrLQV5McPiBPwdEgBd83J6H3qFcTX31IKfF+24PxJL
-	 TYlAaabpBHQ/L4Z8qBrs2LEKRAhDj6ME3E7bnF+nqs+cacDNjMwC4rl3e/Q9bEp9pd
-	 xVLfsjYzZr5I9jsEa10oZkynAb2RvcWN3LbQYlON3SwmA6H7h+KKv5J/AUGRkHKm/i
-	 CG5+51dQW4XIhcth3aIjzfJnQO+k7Cm3mu1cfBVO1/1ypFC3HBXOKhTnNtHSrw2JlJ
-	 XNIfZ95Sx3KfKlhzpyfsh6+XuAMfpxOjBhfU2jdbrHnr/ELUfjlsRw1XiGbqI9gNhP
-	 x+JR4kS5yVjgQ==
-Date: Thu, 17 Sep 2026 14:21:50 +0200
+	s=k20260515; t=1789649743;
+	bh=tCU4DKnynve/gZTg+19POBmZSkp2WWEg8KJKX/NGKlQ=;
+	h=From:To:Cc:Subject:Date;
+	b=dUDe8MqAsTOD5MdhHcbgw/Z+i1Au0RBwpB8Z1nSg1rjMLhYrcwEoSimo0jdZ0p8hV
+	 FidplE5VX8+WuIhBnTp9GPEdSDgLC6Q/7CL5OkAAz6FcaC/jJ2hUMD+Hd7hpLR1Boi
+	 naltw3uSOfRLZODsscSlctHmjDqV7Rp0vhyfh53Uhyc+N4e1hmzNABInZlBwRb5EyI
+	 P9N3+SKmnHSoMCSJKhDHQvumz2YUvjZ4b2b3XyuRXllHb55n4e1ZBEVkCF1OrMYx5N
+	 vUWboQzLNLtxbhf8UNHA6UcWX3hFI/auggxX/VE/HBMxWYfRkUX9fwR+en+ysfWxcp
+	 4JnsUPnecCd5Q==
 From: Niklas Cassel <cassel@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] scsi: scsi_debug: Do not advance the write
- pointer of a failed write
-Message-ID: <aqvbXpJrgQ60OM-y@ryzen>
-References: <20260917110316.1104863-6-cassel@kernel.org>
- <20260917110316.1104863-7-cassel@kernel.org>
- <20260917111738.DFFE91F00893@smtp.kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.garry@linux.dev>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v3 0/6] scsi: scsi_debug: fix zoned write validation
+Date: Thu, 17 Sep 2026 14:54:46 +0200
+Message-ID: <20260917125445.1376493-8-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260917111738.DFFE91F00893@smtp.kernel.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1485; i=cassel@kernel.org; h=from:subject; bh=JStOVV72gwAWPMsgqW8w3ukIH/rrvhmORnk3QcNTYps=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJWPxb1OpOUKGnhMGlaQnbwRKaWWS+2HCtKfZup6rCYs XN1/9UPHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZhIlgTDf/cio/ULPY6+apLy 6/DZ71qy/S/ng0XSzqodhW2NS3xNqhgZ9ljP5U5b+DGlJ4uv3XTLvz/R4qcSluw4c4x3vcXKusm 5PAA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Thu, Sep 17, 2026 at 11:17:38AM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] scsi: scsi_debug: ZBC specification violation by returning GOOD status without advancing WP
-> - [Medium] scsi: scsi_debug: integer overflow in short write check allows incorrect WP advancement
-> --
-> 
-> commit 2b6fea07514157218eac4ea45ff1ba17e05b5125
-> Author: Niklas Cassel <cassel@kernel.org>
-> 
-> scsi: scsi_debug: Do not advance the write pointer of a failed write
-> 
-> This commit modifies the write pointer advancement logic for ZBC sequential
-> write required zones. It ensures the write pointer is only incremented when
-> all requested data is successfully written.
-> 
-> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> > index 6941809dfdb75..3ce2dbdff177c 100644
-> > --- a/drivers/scsi/scsi_debug.c
-> > +++ b/drivers/scsi/scsi_debug.c
-> > @@ -5150,8 +5150,8 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
-> >  	if (unlikely(scsi_debug_lbp()))
-> >  		map_region(sip, lba, num);
-> >  
-> > -	/* If ZBC zone then bump its write pointer */
-> > -	if (sdebug_dev_is_zoned(devip))
-> > +	/* If ZBC zone then bump its write pointer, if all data was written */
-> > +	if (sdebug_dev_is_zoned(devip) && ret == num * sdebug_sector_size)
-> 
-> [Severity: Medium]
-> Could the multiplication num * sdebug_sector_size overflow 32-bit arithmetic
-> for large num? If the module is loaded with a capacity >= 4GB, an extremely
-> large num and an empty data-out buffer might cause do_device_access() to
-> safely return 0. If the multiplication overflows and evaluates to 0, this
-> check might erroneously pass and incorrectly advance the write pointer.
-> 
-> [Severity: High]
-> If do_device_access() returns a short count due to a small data-out buffer,
-> this check prevents advancing the write pointer. However, the function then
-> proceeds to return 0 (GOOD status) without calling scsi_set_resid(). Does
-> this violate the ZBC specification, which requires that if a write terminates
-> with GOOD status, the write pointer must be advanced by the transfer length?
-> 
-> Could this lead to silent data corruption or UNALIGNED WRITE COMMAND errors
-> on subsequent sequential writes?
+This series fixes scsi_debug with regards to writes to a ZBC drive.
 
-So it turns out that this driver is missing calls to:
-scsi_set_resid() in:
+The series is based on 7.4/scsi-staging rather than 7.3/scsi-fixes (as
+Damien suggested on v1) to avoid a build warning that would have happened
+if this series was simply merged with linux-next (7.4/scsi-staging):
 
-resp_write_dt0(), resp_write_scat(), resp_atomic_write().
+  error: too many arguments to function 'mk_sense_buffer'
 
-Interestingly, the driver does correctly call scsi_set_resid()
-for read commands.
+Tested on a zoned scsi_debug device with 512 byte logical blocks and a
+4096 byte physical block.
 
-Will fix in v3, and will improve the WP advancement code to only
-advance the blocks that was actually written (rather than leaving
-the WP alone when not all blocks were written).
+Changes since v2:
+- Added patch 1, to that write paths correctly report the residual.
+- Added patch 2, so that do_device_access() will always write a
+  multiple of physical block size. (Reads are unchanged.)
+- Patch 3 changed to advance the WP by how much that was actually written
+  (rather than leaving the WP alone when not all blocks were written).
+- Patch 5 changed to take the meta write lock if scsi_debug_lbp() is set.
+
+Niklas Cassel (6):
+  scsi: scsi_debug: Report the residual of a write
+  scsi: scsi_debug: Do not write a partial physical block
+  scsi: scsi_debug: Advance the write pointer over the data written
+  scsi: scsi_debug: Enforce physical block alignment of zoned writes
+  scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
+  scsi: scsi_debug: Validate zone access for WRITE ATOMIC (16)
+
+ drivers/scsi/scsi_debug.c | 66 +++++++++++++++++++++++++++++++++++----
+ 1 file changed, 60 insertions(+), 6 deletions(-)
 
 
-Kind regards,
-Niklas
+base-commit: c3cff7fac01638ab58e85fe7df41a04fa25c5bae
+-- 
+2.55.0
+
