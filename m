@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F35714A43F0
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:21:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D5C14A8FEC
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:22:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789683662; cv=none; b=fGuQPy4k3yhPAcWrksKnnsesh+et4tmmCAjmiOu7+31+H2ISUdDO2v16aBZ2oHi0pDfnHWnAssypyTZXnyV+6UNpoZGTelp3Qy3FUhUK4C+KQfPTps37sjo4d3OTpBGowK2BTGNhH4k3QSEYkeL9l/F0w1qkoVwQyNNi/OnLeu0=
+	t=1789683752; cv=none; b=QJCA0dxU4gDc1Ffwi/jXjM6n5KFAwej7NYGMI3toZ7bPj1mHAyqSBo8Be0ppjmimodY6AOMNx362Vwi5kwMEtnBq9DmjLgSSm5hJf6EWPQot1JkWt2rEPiw7cq0+OY/cZ2aVprA5ai0EvXOHUYWQR9iOO6dGmPC4qbYENoDpl3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789683662; c=relaxed/simple;
-	bh=VKJ4bjDGSb5MIlpGUAtbnYAZVDwEyLMfSg8HsFWK3w0=;
+	s=arc-20240116; t=1789683752; c=relaxed/simple;
+	bh=s6piugh/xWMJyEDtNcqMFGqC3xFaWNIBnZlr1CZeJ/4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hLSzOMDKMcCztCiod38AR77I0Qa7nqPfYzUFQQckP0o4Eh7Fusf4MrerNoOxWk6GCf8AuWWw6VedERyUKqafWntYvCSEYiXd9X6d1IcQ0s20ch6sJIVcv/P7xkZkCCkM/2Lm6bP84eK8ckkfIvCYCi9Nso/+Iu4ZJCckbh/mZRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=edja3S+N; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=e7HGENAqBi5hI2HZHGp+GMU0n1dh0UlUppyZbhg5Q3kuCZhQHUG30fSrIC3SCvnXLdgEajHVP7sWRzOPGMG6q2Cq3ov0OpR0rkdK1ZujtfN+OLZyKRW16XhrsX7Y932WlTq34Fm2I6uPVq1EC5j3vwfovUXokzLfymb7hgMaD1o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JQrnbWoW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="edja3S+N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ABEB1F000FF;
-	Thu, 17 Sep 2026 22:21:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JQrnbWoW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 292DB1F000FF;
+	Thu, 17 Sep 2026 22:22:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789683660;
-	bh=mzSrjEojcG5lae/9bgd2Z8U48LXLw5EI3A42C78T7V0=;
+	s=k20260515; t=1789683751;
+	bh=BvIooYl46fkLp3UAfTe3rrCZhYGya8lyzHNJhojjrH4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=edja3S+NlkbJKd/PQpIMli71GAbAK+cWlRYlmjR+4EvZXwSHhSqpR0VjPXp9eitHy
-	 /3tIzHdBqMz8eARsL1uboABuD27Rs3lYqeP/fhH5fh2GPCWjjsugj9J9Zj+UG2CmUY
-	 M9h/5qTjD2Xu8C6tInIcjR57PdMTLX+QMQoY2ocEP0fc9JbDUU3x5GNQt/70sOyRK/
-	 Djgrt6qvKF5XnrAL87wFdHZCMmx6Fa/x0tnPCMOSIiaEHMuHnjrG3q+PSkvg8Me4jx
-	 DDce2chL6M1Mjp/Cqo0ODflXvPX6Q7f0Wo9yHfPJlAFy44MIe/sfsowTeTNYpQzv4u
-	 gM2sU+w2+Z+FQ==
+	b=JQrnbWoWJ3ZKcxaGJxmxL+t6bvgT+ci6mtF2rwptYQiE0GmjloGYxbptXtIEpxqCX
+	 2ocnoF+8ZKf2zGd5S1pAOq9G4c8u9/zG6YMrFWL1dthXPF3ue/AUIf9GKV36S83Jtt
+	 BDqSBJvYaT0eX+zbDjdI3DJqCSLKJt00sy4AX8k1DD6MhVgOB781b5PdUF4jBfhxJo
+	 m/VWaPqKkBkF3TwkulCbvb41AB8DAEPnhNSA/0kNdeLKJ+RqhFPXdd1w/6sOxImJlw
+	 WgZKc1QaZl74cU5TVn8VjdrhMrCfqvqawWLOb74rykCYr/64jmL4JMp9m9nRZ1ksUw
+	 AkA570cesRZ6g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 10/14] lpfc: Remove slowpath cqe process limiter in
- slow ring event handler
+Subject: Re: [PATCH v4 12/14] lpfc: Update ELS ACC logging for diagnostic
+ troubleshooting
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nigel Kirkland" <nkirkland2304@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260917222015.61053-11-nkirkland2304@gmail.com>
+In-Reply-To: <20260917222015.61053-13-nkirkland2304@gmail.com>
 References: <20260917222015.61053-1-nkirkland2304@gmail.com>
- <20260917222015.61053-11-nkirkland2304@gmail.com>
+ <20260917222015.61053-13-nkirkland2304@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 17 Sep 2026 22:20:59 +0000
-Message-Id: <20260917222100.5ABEB1F000FF@smtp.kernel.org>
+Date: Thu, 17 Sep 2026 22:22:30 +0000
+Message-Id: <20260917222231.292DB1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,98 +47,86 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: lpfc: CPU soft lockup in lpfc_sli_handle_slow_ring_event_s4()
+- [High] scsi: lpfc: UAF in lpfc_els_rsp_acc() error path due to concurrent=
+ RSCN flush
 --
 
-commit 2c325e87e41c5052e2704f826b9f808f153d5397
+commit 47dddef465d8869f241a192661f8107a7fb86c19
 Author: Nigel Kirkland <nkirkland2304@gmail.com>
 
-lpfc: Remove slowpath cqe process limiter in slow ring event handler
+    lpfc: Update ELS ACC logging for diagnostic troubleshooting
+   =20
+    Currently, there are ELS ACC routines that lack debug log messages to
+    indicate when ACC frame transmission run into issues.  The generic
+    lpfc_els_rsp_acc and more specific ACC routines are updated to log when
+    there is an issue with transmitting the frame.  The routines are also
+    updated to return different return codes when encountering various
+    transmission issues and their function comment header is updated.
 
-This commit removes the 64 CQE limit in the slow path event handler
-to ensure the slow path CQ is drained completely. It also adds logging=20
-when the CQE count reaches a full ELS WQ wrap.
-
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 10d9030a1e883..06dc01c9539ed 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+> index bf71b5a3e55e5..cb06dbc9edfab 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
 [ ... ]
-
-> @@ -4562,22 +4562,39 @@ lpfc_sli_handle_slow_ring_event_s4(struct lpfc_hb=
-a *phba,
->  			if (irspiocbq)
->  				lpfc_sli_sp_handle_rspiocb(phba, pring,
->  							   irspiocbq);
-> -			count++;
->  			break;
->  		case CQE_CODE_RECEIVE:
->  		case CQE_CODE_RECEIVE_V1:
->  			dmabuf =3D container_of(cq_event, struct hbq_dmabuf,
->  					      cq_event);
->  			lpfc_sli4_handle_received_buffer(phba, dmabuf);
-> -			count++;
->  			break;
->  		default:
-> +			lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
-> +					"7771 Unknown WCQE completion code "
-> +					"x%x, ignoring.\n",
-> +					bf_get(lpfc_wcqe_c_code,
-> +					       &cq_event->cqe.wcqe_cmpl));
->  			break;
->  		}
-> =20
-> -		/* Limit the number of events to 64 to avoid soft lockups */
-> -		if (count =3D=3D 64)
-> -			break;
+> @@ -6055,6 +6065,17 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_=
+t flag,
+>  			 ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_state,
+>  			 ndlp->nlp_rpi, vport->fc_flag, kref_read(&ndlp->kref));
+>  	return 0;
+> +
+> +err_out:
+> +	if (oldiocb->cmd_dmabuf && oldiocb->cmd_dmabuf->virt)
+> +		old_opcode =3D *(uint32_t *)oldiocb->cmd_dmabuf->virt;
 
 [Severity: High]
-Could removing this limit cause a CPU soft lockup under certain failure
-conditions?
+Can this dereference a freed pointer?
 
-When an MDS loopback or unsolicited data frame is received (CQE_CODE_RECEIV=
-E),
-and the driver's IOCBQ pool is momentarily empty,
-lpfc_sli4_handle_mds_loopback() fails to allocate an iocbq via
-lpfc_sli_get_iocbq() and adds the event back to the sp_queue_event list:
+In lpfc_els_rcv_rscn(), setting vport->fc_rscn_flush =3D 0 publishes the bu=
+ffer
+for concurrent processing. If a parallel thread processes and frees this bu=
+ffer,
+and lpfc_els_rsp_acc() takes this new error path, oldiocb->cmd_dmabuf->virt
+would point to freed memory.
 
-lpfc_sli4_handle_mds_loopback() {
-    ...
-    list_add_tail(&dmabuf->cq_event.list,
-                  &phba->sli4_hba.sp_queue_event);
-    ...
-}
-
-Since this patch removes the 64-iteration limit, this while loop no
-longer yields. It will immediately dequeue the same event and retry the
-allocation in a tight spin loop. Without the loop break, the worker
-thread can no longer reach wait_event_interruptible() to yield the CPU,
-resulting in a 100% CPU lockup.
-
-Is there another mechanism to prevent the loop from spinning infinitely=20
-when events are requeued?
-
-> +		/* This loop runs until the ELS/CT CQ is empty.  Post a one
-> +		 * time message for debug support when ELS WQ ecount
-> +		 * completions are processed - this represent 1 full ELS WQ
-> +		 * wrap.
-> +		 */
-> +		if (++count =3D=3D LPFC_WQE_DEF_COUNT) {
-> +			lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
-> +					"7772 %s SP CQE count %d\n",
-> +					__func__, count);
-> +		}
-> +	}
 > +
-> +	/* Log a final message to note how many CQEs were processed. */
-> +	if (count > LPFC_WQE_DEF_COUNT) {
-> +		lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
-> +				"7773 %s SP CQEs complete, count %d\n",
-> +				__func__, count);
->  	}
+> +	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+> +			 "1027 Xmit ELS ACC Unsuccessful: "
+> +			 "cmd: x%x, error_code: %d "
+> +			 "S_ID: x%x\n", old_opcode, err,
+> +			 vport->fc_myDID);
+> +	return err;
 >  }
+[ ... ]
+> @@ -8489,14 +8570,14 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struc=
+t lpfc_iocbq *cmdiocb,
+>  	vport->fc_rscn_id_list[vport->fc_rscn_id_cnt++] =3D pcmd;
+>  	/* Indicate we are done walking fc_rscn_id_list on this vport */
+>  	vport->fc_rscn_flush =3D 0;
+> +	/* Send back ACC */
+> +	lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
+
+[Severity: High]
+Does moving this lpfc_els_rsp_acc() call introduce a use-after-free risk?
+
+By calling lpfc_els_rsp_acc() here, cmdiocb->cmd_dmabuf has been published =
+by
+clearing vport->fc_rscn_flush, but is not yet set to NULL. A concurrent thr=
+ead
+could free cmdiocb->cmd_dmabuf before the error path in lpfc_els_rsp_acc()
+attempts to read from it.
+
+>  	/*
+>  	 * If we zero, cmdiocb->cmd_dmabuf, the calling routine will
+>  	 * not try to free it.
+>  	 */
+>  	cmdiocb->cmd_dmabuf =3D NULL;
+>  	lpfc_set_disctmo(vport);
+> -	/* Send back ACC */
+> -	lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
+>  	/* send RECOVERY event for ALL nodes that match RSCN payload */
+>  	lpfc_rscn_recovery_check(vport);
+>  	return lpfc_els_handle_rscn(vport);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917222015.6105=
-3-1-nkirkland2304@gmail.com?part=3D10
+3-1-nkirkland2304@gmail.com?part=3D12
