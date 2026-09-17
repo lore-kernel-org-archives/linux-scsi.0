@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D72BF4D7D27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31E754D9F84
 	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 12:55:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789649758; cv=none; b=Ye1j6Ug0MJh8Ve1C74rsoLGH/PkUd9QpWwoMpj2MExPlDbxKk00oHcJJ3HF5C8d7RTiO0TvFZAOV4qzc2uLmbPgXBycd/lKWAL9a6FUlbdtt6sHxT7jo8vm6yxj7ECqHlv0ozUAWiK2y3feqrBiLqtFFIsB8GD/3pyFqftStAcI=
+	t=1789649758; cv=none; b=syC+Pnt9rzTJ52KsoG3N1SFI1iklIG/RSODlLbaDebJQrvMKR5U/o0nZT+Tjb/5X0Z4XrX0zdH1YKwLAPvo+IQJwux/LDXQdQgEPRyq2jnNRSp2mebG+8+DGWGsrTucsCDy9o/YbkWmzVbuqinJE12JwqMTyxP8COjfGxa+3IZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789649758; c=relaxed/simple;
-	bh=ZHvDeW8I4CdyqVYsaIRlE1XxBHRiYFlI/qb41DWJzfU=;
+	bh=N3jNfeFLA3bL8cgAzEHop5xLOM2pHxmPoXC+SVJSp7c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dlaXWv1ejaJ3gdj3pP32zInGvfpBPyk+8wK78XAbDc3ViEbrAwC1TuXgaeW0grciVfSio/j6rSWXz8Xu8/jDIXV8qTakdFKd2FRZMZCLpGEh59mrT8kpZifV2Zyb1F8a/hQebv0PaYqYQHFC07SkGL76wyTdJ2IYt78jnC6coE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PE53wdyu; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=K6mUVY1qMoiI+iS6M+R9U3galkO20SgZplytWw0bENf8mrCvZqVXxbXURp+eRBdSza6CY55Y4OQRbbml8kn520xmgll54DAiJt6N9wN9V0nMZF48TQK7RSnoSWF9uO5tBb7WQ8ETc0i0Zi80xsWv8at5lyegMcnzazsu7Ay/czk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BTlrQ4K3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PE53wdyu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 787551F00893;
-	Thu, 17 Sep 2026 12:55:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BTlrQ4K3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EF041F00899;
+	Thu, 17 Sep 2026 12:55:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789649750;
-	bh=4S1m0Jt7uGcZT91gII2QAbZptNHkXRbBZuyjEd1xgmA=;
+	s=k20260515; t=1789649752;
+	bh=d7xiY2xPld2yTeOAK5ThlvT7yt5caArc9ZEQwyLJqC0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=PE53wdyuSbHAHWY2rBsRwJXMm5nGVD2q6CiLUOBpMN2CQQpvwVna13IVmUb/mkMKD
-	 N8w5CGI3B0LCq+GY1JbBN9b4uUvkDlFPYA8Ebz5nCIOuSf39MZaNmzqlfOI3DNXyo3
-	 8L0ATNAQ0LTRgyfcejoQnVoUU8pnl0j0u8iIiWyC9o0WrDFlriiyWbxNpjjoVct7fg
-	 Ar7DRBD6jdTajAm8Dz2JMYjm7UK0qWDODGS/HbY9r3eKYa00KQPvX1x8+1F8php+12
-	 1E6bgQ+1/CbN3UHbUHYPGwDyszz1AhoOBP7kf8vo0sh/0qB4+7cEWqn9H048KIc5kA
-	 Nbtf/5aT1fYnw==
+	b=BTlrQ4K3PWi9bR96FiSJAdO4Pf6iGP7VTW0OFA7FphZyOfLeXVL7b9y9yiUFO28j4
+	 whPXud1/Z9iO1bb5E6nwu4SDKXaz23FPbgZ79zDU2gOkl8MMdI4TcVoUBp/a4wMP1s
+	 TpzBeg2WvpMwg6kbfz8a9VdTu9JbfRGgmKAKO/QvUBWIFDwSgU1rQZP5cBXxh8na06
+	 mC6cmvgJZbSmW6oS4X9LHRKVgqd21ac6SaOjI9CW4kKBrj4aufx1Rc5KEqeFQli2jG
+	 TE2v72gFHG/UWss6ktdTa8RsT7pYUQfPCP3M3Ga1r1ZH2zYCNa30uSCPJ4WjZ6jrpb
+	 0rbKxoLzmQF6w==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -33,9 +33,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 4/6] scsi: scsi_debug: Enforce physical block alignment of zoned writes
-Date: Thu, 17 Sep 2026 14:54:50 +0200
-Message-ID: <20260917125445.1376493-12-cassel@kernel.org>
+Subject: [PATCH v3 5/6] scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
+Date: Thu, 17 Sep 2026 14:54:51 +0200
+Message-ID: <20260917125445.1376493-13-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260917125445.1376493-8-cassel@kernel.org>
 References: <20260917125445.1376493-8-cassel@kernel.org>
@@ -45,87 +45,67 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3586; i=cassel@kernel.org; h=from:subject; bh=ZHvDeW8I4CdyqVYsaIRlE1XxBHRiYFlI/qb41DWJzfU=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJWP5Zauuj32//HLV88zDd/JXVX+npvGusEVQum9sCzM ZE7jzmt7yhlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBENvozMvx3kXsxV8QxX3Bi 1WKOe9kZSRJvRRhc83VPi/lN6XxW/I/hnzaj39L+rKj/LvVt+Y/cJ3rcnn0u5/4nty3FN+osLff L8QMA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2140; i=cassel@kernel.org; h=from:subject; bh=N3jNfeFLA3bL8cgAzEHop5xLOM2pHxmPoXC+SVJSp7c=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJWP5aarVrSo1rOorl4p5phY4B7AL9YmuUzP0GBsxzP7 /ru5czsKGVhEONikBVTZPH94bK/uNt9ynHFOzYwc1iZQIYwcHEKwER27GJkeH/g3LGLfFMccqdf qZax2nPHcOm8GW2xG/U7GPX9lt//18LIsOTqr702MuIH/3BEXt+V8/xe13f34MWq2zltuZ582HP hPC8A
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-ZBC-3 r06 (T10/BSR INCITS 579), 4.5.3.3.2 Write access pattern
-requirements for sequential write required zones, states:
+When logical block provisioning is enabled, a command that writes user
+data marks the region that it wrote in the provisioning map, so that
+GET LBA STATUS reports the region as mapped. resp_write_dt0(),
+resp_write_scat() and resp_write_same() all call map_region() for that.
 
-  The device server terminates with CHECK CONDITION status, with the
-  sense key set to ILLEGAL REQUEST, and the additional sense code set
-  to UNALIGNED WRITE COMMAND a write command, other than an entire
-  medium write same command, that specifies:
-    a) the starting LBA in a sequential write required zone set to a
-       value that is not equal to the write pointer for that sequential
-       write required zone; or
-    b) an ending LBA that is not equal to the last logical block within
-       a physical block (see SBC-5).
+resp_atomic_write() does not, so a WRITE ATOMIC (16) leaves the
+provisioning map untouched, and GET LBA STATUS keeps reporting the
+region as deallocated after it has been written. map_state(), which
+GET LBA STATUS uses, is the only reader of the map, so that is the whole
+of the effect.
 
-That is why sd_zbc_read_zones() sets the zone_write_granularity queue
-limit to the physical block size of a host-managed device, exposing the
-constraint to user space.
-
-check_zbc_access_params() implements condition a) but not condition b):
-it verifies that a write to a sequential write required zone starts at
-the write pointer of the zone, but never validates the ending LBA. As a
-consequence, when scsi_debug emulates a host-managed device whose
-physical block size is larger than its logical block size, for instance
-with zbc=managed sector_size=512 physblk_exp=3, a write of a single
-logical block at the write pointer of a sequential zone is accepted and
-advances the write pointer by one logical block. The write pointer is
-then no longer a multiple of the zone_write_granularity reported for the
-device, so nothing can write at it at the granularity that was
-advertised, and the zone can only be used again after being reset.
-
-Implement condition b) as well, with the same sense data as the write
-pointer check, as the standard gives both conditions the same sense key
-and additional sense code. The exclusion of an entire medium write same
-command needs no special case: such a command spans the whole medium, so
-it is already terminated with WRITE BOUNDARY VIOLATION by the preceding
-check.
-
-The check is placed in check_zbc_access_params(), which every command
-that advances a zone write pointer reaches first: WRITE, WRITE SCATTERED
-and WRITE SAME. Reads return earlier in the function and are unaffected.
-
-Sequential write preferred zones, which are emulated for host-aware
-devices with zbc=aware, are left alone: writes to them are not required
-to be sequential, and Linux does not restrict the write granularity of
-host-aware devices.
-
-With the default physblk_exp=0, the physical block size equals the
-logical block size and the new check is a no-op.
+Call map_region() the way resp_write_dt0() does, and take the zone
+metadata write lock across the access as it does when logical block
+provisioning is enabled. That lock is what serialises the provisioning
+map against resp_unmap(), which holds it while unmap_region() clears map
+bits and zeroes the data that they cover. resp_unmap() does nothing
+unless logical block provisioning is enabled, so the lock is only needed
+in that case.
 
 Assisted-by: LLM
-Fixes: f0d1cf9378bd ("scsi: scsi_debug: Add ZBC zone commands")
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/scsi/scsi_debug.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/scsi_debug.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 41c8d958f445..64f32d97455d 100644
+index 64f32d97455d..33f2df26e5af 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -3980,6 +3980,16 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
- 					UNALIGNED_WRITE_COMMAND);
- 			return check_condition_result;
+@@ -6184,6 +6184,7 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+ 	u8 *cmd = scp->cmnd;
+ 	u16 boundary, len;
+ 	u64 lba, lba_tmp;
++	bool meta_data_locked = false;
+ 	int ret;
+ 
+ 	if (!scsi_debug_atomic_write()) {
+@@ -6228,7 +6229,18 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
  		}
-+		/*
-+		 * Writes must end on a physical block boundary, that is, the
-+		 * transfer length must be a multiple of the physical block
-+		 * size.
-+		 */
-+		if (!IS_ALIGNED(lba + num, 1U << sdebug_physblk_exp)) {
-+			mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+					UNALIGNED_WRITE_COMMAND);
-+			return check_condition_result;
-+		}
  	}
  
- 	/* Handle implicit open of closed and empty zones */
++	if (scsi_debug_lbp()) {
++		sdeb_meta_write_lock(sip);
++		meta_data_locked = true;
++	}
++
+ 	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
++	if (unlikely(scsi_debug_lbp()))
++		map_region(sip, lba, len);
++
++	if (meta_data_locked)
++		sdeb_meta_write_unlock(sip);
++
+ 	if (unlikely(ret == -1))
+ 		return DID_ERROR << 16;
+ 	if (unlikely(ret != len * sdebug_sector_size))
 -- 
 2.55.0
 
