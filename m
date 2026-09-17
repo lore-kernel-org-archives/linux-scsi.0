@@ -1,126 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39A42628D;
-	Thu, 17 Sep 2026 08:04:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFE9D492E2C
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 08:46:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789632275; cv=none; b=JNC3MRLLgNACjQDsZ7jCcsiYK3pAVFIrruj2+nLaaaZBrB11CoQBe65rPU9pzoxA6d19PNw01ClK2YvoCbJQdBylRLN3leZIqmvq02b5fU1cio2LuNJabCguG5XVz/254INbe8IF2ia3Dm3I0cUlMgx2OxzuKxd5VYY2CrNSpmE=
+	t=1789634780; cv=none; b=sm6NM/tXvKDZXYLwFIYpZ5dcAg6oypLB9//x6Y52IN/0mbkQAGqPIR/AF44d4T27MGNPg6Jf1h9U4C5qhQaUtV8wL/L6mGibO63mLv2MxXTcD/dolMKftOklCnkp8tBKJ3JjIpWTEC3J9A+s8Ietv+V36FfM+qIAFnGmTM2aWwg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789632275; c=relaxed/simple;
-	bh=ou/nevU3zQKfabX0KKwn1JcJFXk3b5jOGwor5+mK2fY=;
-	h=From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:Date; b=h7nURVDgSpZAH7UiwdLiukn1TeXEHgBwDcYRA4eqOBGROrA4Vjw9RoZZKrT+nTCZiIjCHiqNArUpY4eZQzXvZQymteq+WX95qg5YN/kj6MeGVpOL1TTuQX6IvvJ/YQiq8mljRXFm4ZRuOJszi4kyW1VlTlrTK+7G3LsHLMtWJ3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GCIwEF46; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789634780; c=relaxed/simple;
+	bh=MoXvIgLODbjdiQn6PQQJLbqaSW7KoszTJ5Uedi6dtiI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=FOzBW+hE3+aexFTtuuQDxrC0oPvHPugH1Qp1cm+O+mJaY9JbUNChUtiN7zPAc8qa/MPVYdZFkjJAqkx51aKLFp/+WUN08PkzUhPlVRzV7O6AMduKpIS+Jw2q1DWcowT3Jf6rlEfuafcu9yvgo+SnBSS+1p7Bl6eeQuLTX3Hee+k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YcXPizkf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GCIwEF46"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id CCF851F00893;
-	Thu, 17 Sep 2026 08:04:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YcXPizkf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5624D1F00893;
+	Thu, 17 Sep 2026 08:46:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789632274;
-	bh=wosywDew5N+JCGuAr/8q3TYlO7vCGyn1j6CRNBjhqYQ=;
-	h=From:To:Cc:Subject:Date;
-	b=GCIwEF46q7A04pJ/SK/OlBzfbYTDJ5ranVWm1ZyvkACERK/SwKvH7FXSgxydmmE+/
-	 DDRiB4qxXg3jl3dSFc9oZmiwvIiRthMB53R7QhDOwmNSU7xv/KtHKeq6kfRSdElfnr
-	 2M0JKCvDhbLcn2b7jMrt4wHVhznnllFBSS8gRGjJaskHFRgo3ymse4LC4pEF0H8VZ5
-	 KitCQWxmphvZNhM1gxECQgm9zrZ7ksE83/juAbCO97aDfwPRTor5zDbTS/Xigwxd4t
-	 gziK3yl3HRIHK5sbhyGaVLzJxu2PMjhA4PiCc4+U8Epm3qrYnVlb/OVbhitrfpXMXT
-	 0pD95HiXfM/fg==
-From: "syzbot" <syzbot@kernel.org>
-To: syzkaller-bugs@googlegroups.com, Krystian Kaniewski <krystianmkaniewski@gmail.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Doug Gilbert" <dgilbert@interlog.com>, <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@kernel.org>, "FUJITA Tomonori" <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-kernel@vger.kernel.org, syzbot@lists.linux.dev
-Subject: [PATCH] scsi: sg: Fix shift-out-of-bounds in sg_build_indirect()
-Message-ID: <e68a2050-dc97-4531-95e2-29f4d1a109cb@mail.kernel.org>
+	s=k20260515; t=1789634763;
+	bh=xLShsW+8Y1Jyw3GxI6GxWzFff1RByqfIC0Uf4v45czs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=YcXPizkfSv31cB4wnDfV8Yz2kzaIcsVXKQ4xybw5ttkDD+uC+EcuiG9LvcbnBfWyQ
+	 SH1H16QsuJJJqOcC9AH6AkuVXF6HRMtqhjhZMnIHgVG9VWQ9lbwLnXuZZMx1m1iLmT
+	 yq7wpw4b2uEOHVPmxUs2KVb1LaGAkZwEGN8zrs45iASgFrwtXLHywQKkMKJ0HAgAxU
+	 seUR35lt5gcU1MIUME3lQIbT/9/6cXRU3LzJXTgKdFsk4qUcMaapL312loVXiCJqP/
+	 Tqxn6rWntXyqDpK2mEe/iL0Trqu+T+/9Rv10wVxVFkeFplx9BU+olHgprPUZmqRd+j
+	 AnMbEatiSAfEA==
+From: Niklas Cassel <cassel@kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.garry@linux.dev>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH 2/2] scsi: scsi_debug: Validate zone access for WRITE ATOMIC (16)
+Date: Thu, 17 Sep 2026 10:45:56 +0200
+Message-ID: <20260917084553.559765-6-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260917084553.559765-4-cassel@kernel.org>
+References: <20260917084553.559765-4-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3217; i=cassel@kernel.org; h=from:subject; bh=MoXvIgLODbjdiQn6PQQJLbqaSW7KoszTJ5Uedi6dtiI=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJWrzj4RYjp4EQpjQWLF3y4X+zxbsXPiPurtNysshOlU y+k2sUc6ChlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBEZCwZGSYwbBY0ON/MUN3e 1FOsWdhztikxc5KSdvn12V4Zd99NXsHI0DV7oudRp4LiQHnbC4JhjVaGD7n3d+rrzqyvmrvcwUG bGQA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
-Date: Thu, 17 Sep 2026 08:04:33 +0000 (UTC)
 
-From: Krystian Kaniewski <krystianmkaniewski@gmail.com>
+WRITE ATOMIC (16) is a write command, so on a zoned device it is subject
+to the access requirements of the zone that it addresses, and it advances
+the write pointer of a sequential write required zone. See ZBC-3 r06
+(T10/BSR INCITS 579), 4.5.3.3.2 Write access pattern requirements for
+sequential write required zones.
 
-Writing an invalid value such as 0 or a negative number to
-/sys/module/sg/parameters/scatter_elem_sz, or setting it at module load
-time, causes a shift-out-of-bounds bug during subsequent device operations.
-In init_sg(), scatter_elem_sz is checked against PAGE_SIZE, but because
-PAGE_SIZE is unsigned, the comparison is unsigned and bypasses negative
-values. When opening a device via sg_open(), the driver calls
-sg_build_indirect() to allocate scatter-gather buffers. In
-sg_build_indirect(), scatter_elem_sz is read into the local snapshot
-variable num. Because PAGE_SIZE is unsigned, comparing num against
-PAGE_SIZE also results in an unsigned comparison that bypasses negative
-values. Furthermore, even if the condition is met, the code updates the
-global scatter_elem_sz and scatter_elem_sz_prev variables but leaves the
-local snapshot variable num unupdated before get_order(). As a result, an
-invalid value such as 0 remains in num and is passed to order =
-get_order(num). Calling get_order(0) is undefined and underflows to 52 on
-64-bit systems, causing ret_sz = 1 << (PAGE_SHIFT + order) to compute 1 <<
-64. Shifting a 32-bit int by 64 bits triggers a UBSAN shift-out-of-bounds
-warning:
+resp_atomic_write() calls do_device_access() directly, without calling
+check_device_access_params() first and without advancing the write
+pointer afterwards. It is the only command that writes user data which
+does not; WRITE, WRITE SCATTERED and WRITE SAME all go through
+check_device_access_params(), which validates zone access for a zoned
+device.
 
-UBSAN: shift-out-of-bounds in drivers/scsi/sg.c:1887:13
-shift exponent 64 is too large for 32-bit type 'int'
-Call Trace:
- <TASK>
- dump_stack_lvl+0xe8/0x150 lib/dump_stack.c:120
- ubsan_epilogue+0xa/0x30 lib/ubsan.c:233
- __ubsan_handle_shift_out_of_bounds+0x36d/0x400 lib/ubsan.c:494
- sg_build_indirect+0x559/0x870 drivers/scsi/sg.c:1887
- sg_build_reserve drivers/scsi/sg.c:1997 [inline]
- sg_add_sfp drivers/scsi/sg.c:2177 [inline]
- sg_open+0x1128/0x18a0 drivers/scsi/sg.c:349
- chrdev_open+0x4d9/0x600 fs/char_dev.c:411
- do_dentry_open+0x816/0x1380 fs/open.c:996
- vfs_open+0x3b/0x340 fs/open.c:1101
- </TASK>
+As a consequence, with zbc=managed atomic_wr=1, a WRITE ATOMIC (16) can
+write anywhere within a sequential write required zone regardless of its
+write pointer and zone condition, into a gap zone, or across a zone
+boundary, and none of it is reflected in the zone state. The write
+pointer is left where it was, so a subsequent REPORT ZONES does not
+describe the data on the medium, and the next write at that write
+pointer overwrites data that was written without error.
 
-Fix this by casting PAGE_SIZE to int in both init_sg() and
-sg_build_indirect() so that the comparisons are signed and negative values
-do not bypass the check, and by updating the local snapshot variable num to
-PAGE_SIZE when num < (int)PAGE_SIZE in sg_build_indirect() before
-get_order() is called.
+Validate the access and advance the write pointer the way
+resp_write_dt0() does, holding the zone metadata write lock across both,
+since the write pointer has to be read and updated atomically with
+respect to other commands.
 
-Fixes: 10db10d144c0 ("sg: convert the indirect IO path to use the block layer")
-Assisted-by: Gemini:gemini-3.8-flash syzbot
-Reported-by: syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=270f1c719ee7baab9941
-Link: https://syzkaller.appspot.com/ai_job?id=1d412b83-5bbc-4d73-b690-4c798d45cee4
-Signed-off-by: Krystian Kaniewski <krystianmkaniewski@gmail.com>
-
+Assisted-by: LLM
+Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 5408f002e..46117d1a1 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1667,7 +1667,7 @@ init_sg(void)
- {
- 	int rc;
- 
--	if (scatter_elem_sz < PAGE_SIZE) {
-+	if (scatter_elem_sz < (int)PAGE_SIZE) {
- 		scatter_elem_sz = PAGE_SIZE;
- 		scatter_elem_sz_prev = scatter_elem_sz;
- 	}
-@@ -1875,9 +1875,10 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 
- 	num = scatter_elem_sz;
- 	if (unlikely(num != scatter_elem_sz_prev)) {
--		if (num < PAGE_SIZE) {
-+		if (num < (int)PAGE_SIZE) {
- 			scatter_elem_sz = PAGE_SIZE;
- 			scatter_elem_sz_prev = PAGE_SIZE;
-+			num = PAGE_SIZE;
- 		} else
- 			scatter_elem_sz_prev = num;
- 	}
+Tested with:
 
+  modprobe scsi_debug zbc=managed sector_size=512 physblk_exp=3 \
+      zone_size_mb=8 dev_size_mb=128 zone_nr_conv=2 atomic_wr=1
 
-base-commit: df2908090cda368b01ff43709f51890076c56157
+issuing WRITE ATOMIC (16) with sg_raw. Before this patch, an eight block
+atomic write at the write pointer of an empty sequential write required
+zone completes with GOOD status and leaves the write pointer unchanged,
+and one issued past the write pointer is accepted as well. After it, the
+former advances the write pointer by eight blocks and the latter is
+terminated with ILLEGAL REQUEST / UNALIGNED WRITE COMMAND.
+
+A two block atomic write at the write pointer, which satisfies
+atomic_wr_gran and atomic_wr_align but is smaller than the 4096 byte
+physical block, is now rejected by the check added in the previous
+patch. An atomic write to a conventional zone is unaffected.
+---
+ drivers/scsi/scsi_debug.c | 13 +++++++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -6043,7 +6043,24 @@
+ 		}
+ 	}
+ 
++	if (sdebug_dev_is_zoned(devip))
++		sdeb_meta_write_lock(sip);
++
++	ret = check_device_access_params(scp, lba, len, true);
++	if (ret) {
++		if (sdebug_dev_is_zoned(devip))
++			sdeb_meta_write_unlock(sip);
++		return ret;
++	}
++
+ 	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
++
++	/* If ZBC zone then bump its write pointer */
++	if (sdebug_dev_is_zoned(devip)) {
++		zbc_inc_wp(devip, lba, len);
++		sdeb_meta_write_unlock(sip);
++	}
++
+ 	if (unlikely(ret == -1))
+ 		return DID_ERROR << 16;
+ 	if (unlikely(ret != len * sdebug_sector_size))
 -- 
-See https://goo.gle/syzbot-ai-patches for information about AI-generated patches.
-The person who has signed off on the patch is responsible for
-addressing comments.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+2.55.0
+
