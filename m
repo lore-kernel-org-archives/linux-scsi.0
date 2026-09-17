@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3B54F5E09;
-	Thu, 17 Sep 2026 16:27:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B19BD49D59D;
+	Thu, 17 Sep 2026 16:28:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789662457; cv=none; b=c4Fk9Vauf4uC63EnkCTZGtnlo+gbyh/T5bTs2ukQ0BpSYhU+H51Y0o/mR/UOCTHszfeQXPPwN41qvLDO0oupbcQz8FoAgg/30LjyVSbhj6HQxTz7mLlH7Mvaff82R2aVWSYBc1WvNlHkLDh6ax33HwzbQ7dolx3Yz0XNU1s309M=
+	t=1789662487; cv=none; b=ee7tpvL9WMtjrksg367+41odsWGrE5V+YnVfYoOu2GyzzaoYef/Yta0/84jbbDV208c5DvKOFDVEXBCRw0M5iqTNY59SAgSXgS09ocMVuBmoB9UFTh2YZO3uLGnFdMhLRl+FbH7l352aKOQUEJHdoyeFvVoYw3+hwYcUbosxl0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789662457; c=relaxed/simple;
-	bh=ku45FxaXB5jDrWF7xzKWcksoG8pHB6sirZFvJa9Q21A=;
+	s=arc-20240116; t=1789662487; c=relaxed/simple;
+	bh=GUpTHNxmxWarSVjd88RVgsA6FQygd+NcCuy3YFJiswg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=JZ3WVz0z1UNkn4fQzn99T7C0z6wvPVuiKWMzDjxbkkTVPPkiKch/ATW6Zv8JWyeWJpygGLpmH3/qiV6tqnFxI74gluEpY3vg9y3inDDJhbYvBFmUdX+9TCTG48aOl3ezHW/2u7+KdAF9n1xxrsJ83PxCaAdUv9wokAL9mcy5TjM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IcORuJ3n; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=Y9asXCtwIQQaxPWya3iUGbNFZwlpSZxV7z5MvdUeB2HWXjMJhepPS0cYt0fbw7KRWzu3IP/ICq6iiTzSFDCC4B+CGu1arKCzdjlVt945VT34K3RvtX7QMXpN2M62kqK+wOz9p/t+OO1RidS3WXNQO61ZwpXtBUHfrFp+Jy8sHCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gpom1URc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IcORuJ3n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46FEC1F00893;
-	Thu, 17 Sep 2026 16:27:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gpom1URc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9094D1F0089C;
+	Thu, 17 Sep 2026 16:27:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789662455;
-	bh=CxJPdlL4ukdxMfUTmFq0FMtswRM14QRAmb+14GeHlio=;
+	s=k20260515; t=1789662485;
+	bh=3NscFRoiSw0VLcsrcN7WIQlCyh4L7cg6MA64F9Bvckc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=IcORuJ3nMChpo6WU1uYF0OWevbealV2BPcixTtf3CtI3dNgsKKnp/D9A4ivvGpGFn
-	 C7wgPTeh92c8FDFeVvp4dhmfd9rUGrhrnjMqeqUh8Ze2yYdUxGUXUdo2TwPG/h7i6H
-	 H24iTxqyQkl4K0YudfAb4Z7aYdAjA9VNW8gJdri0ngtUbo3tMPRG58gS0n6YIG6PUO
-	 iDtiW14oRQszjZQYD1A+6RXPu66NieVaI8hm1FRPe4DIa6TfN3XCzMNnil9CCRoAPX
-	 oOAM0OWsG3cxddEO85vcTLA/NXPpdSq3P9iOkLKfBGG735m87sEDFRIz7eg6UQn0JD
-	 h9pJautmI4lPw==
+	b=gpom1URcjhFec5GNJSWz2yyDLLYnwAgtINCYT4ASOKSNgDUA2U5NGLUDvUCT3d1Tu
+	 pgFR2SXBCRJ1BCNKhQfvqLjsElhjUXKrW55em/ykgDOlRMieGQCdgOnnJ7bF59E+L1
+	 mObQ14Jn5cD7jF8TBA/hswysZuTzg8pcrcswbqqqsaXhkp2eyva7zZU68tU6CryrI7
+	 9awNVvOq3bPCHNSQiORKYxqxKChSoVbbEwIha05qEa0eVCUqs8S2rnYXSPh/W0DdHo
+	 I4s8ITwoQUgDID8yXBKg/E5yDdeL9M9Mp9pAaRPZc9qODWQUDsHAy5st2QmImSRgD/
+	 67A1IFXiTl7SQ==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Thu, 17 Sep 2026 17:22:18 +0100
-Subject: [PATCH v3 09/40] docs: filesystems: update mmap_prepare docs for
- discontig kernel pgs
+Date: Thu, 17 Sep 2026 17:22:19 +0100
+Subject: [PATCH v3 10/40] drivers/usb/mon: update to use mmap_prepare + map
+ kernel pages
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-9-4583d8a23bca@kernel.org>
+Message-Id: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-10-4583d8a23bca@kernel.org>
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
 In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -122,117 +122,193 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4561; i=ljs@kernel.org;
- h=from:subject:message-id; bh=ku45FxaXB5jDrWF7xzKWcksoG8pHB6sirZFvJa9Q21A=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLWCO9/I77qciHTtLypd/9UFVzY1s3Zzzdfvn83B3cMd
- 7H70oblHaUsDGJcDLJiiizPv4jvDxIJm9d5wd8NZg4rE8gQBi5OAZiIXAIjw/sMni1XVcoePFZ6
- 8OLDvt+vW+8ovv1SfeUEN2ez4533nvoM/8xkZ6fej8t9/n6z2yqDhOuVsZM/Hy7q5X1rwZa7MY7
- 9Ih8A
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6221; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=GUpTHNxmxWarSVjd88RVgsA6FQygd+NcCuy3YFJiswg=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLWCB/4Yb3zwPQsD4dTiz/vrOc6aHZEMO23doKjhW9oi
+ 7206Fb3jlIWBjEuBlkxRZbnX8T3B4mEzeu84O8GM4eVCWQIAxenAEykeSkjQ3vElJvhtZsns7zx
+ kl3CpLxg0t9TjKorTDzXeiw0uyox8R7DH55lzsfs9Qyqcvw2CxtETdsVZCjmmWjB8Il98i+V+dy
+ tbAA=
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-Describe the newly introduced discontiguous kernel page mapping mechanism,
-detailing how to use it sensibly and how the API looks.
+Replace the deprecated .mmap hook with its replacement .mmap_prepare. As
+part of this change, additionally take the approach of mapping pages upon
+mmap rather than providing a fault handler.
 
-Explicitly detail the various discontiguous actions available and how to
-use them.
+The page span cannot be mutated when an mmap mapping is in place, so this
+is safe to do in advance (the MON_IOCT_RING_SIZE ioctl operation exits
+-EBUSY if it's attempted, gated by the rp->mmap_active reference count).
 
+Utilise the newly introduced mmap_action_map_discontig_kernel_pages() to do
+this, which allows for iteration over pages in mon_bin_discontig_get().
+
+mon_bin_discontig_init() increments the rp->mmap_active reference count to
+stabilise page spans. Should an error arise the core unmaps the VMA and
+mon_bin_vma_close() drops the reference again.
+
+The vm_ops->close hook implemented in mon_bin_vma_close() will ensure
+correct reference count arithmetic upon unmap (with mon_bin_vma_open()
+accounting for splitting).
+
+The existing semantics are all retained, including not mapping past the
+range of available pages, with a SIGBUS being raised in a userland process
+that attempts to access past this point.
+
+Ultimately insert_page() is invoked to insert each page, which increments
+the reference count on each mapped page. This mimics what was being done
+previously, only we pre-map the entire range rather than doing so on
+demand.
+
+The existing fault handler did nothing that required demand paging, and was
+presumably implemented this way for historical reasons.
+
+One behavioural difference: pages are no longer faulted in on demand, so a
+page discarded with MADV_DONTNEED is not repopulated and a subsequent
+access raises SIGBUS, as with other pre-populated kernel mappings.
+
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- Documentation/filesystems/mmap_prepare.rst | 81 ++++++++++++++++++++++++++++++
- 1 file changed, 81 insertions(+)
+ drivers/usb/mon/mon_bin.c | 82 ++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 53 insertions(+), 29 deletions(-)
 
-diff --git a/Documentation/filesystems/mmap_prepare.rst b/Documentation/filesystems/mmap_prepare.rst
-index 82c99c95ad85..a476e1006bf1 100644
---- a/Documentation/filesystems/mmap_prepare.rst
-+++ b/Documentation/filesystems/mmap_prepare.rst
-@@ -164,5 +164,86 @@ pointer. These are:
-   sufficient entries in the page array to cover the entire range of the
-   described VMA.
+diff --git a/drivers/usb/mon/mon_bin.c b/drivers/usb/mon/mon_bin.c
+index 687f6a8981f3..9d00b21a8153 100644
+--- a/drivers/usb/mon/mon_bin.c
++++ b/drivers/usb/mon/mon_bin.c
+@@ -1219,6 +1219,15 @@ mon_bin_poll(struct file *file, struct poll_table_struct *wait)
+ 	return mask;
+ }
  
-+* mmap_action_map_discontig_kernel_pages() - Maps a discontiguous range of
-+  `struct page` pointers over the VMA. They must span from the start of the VMA,
-+  but may terminate prior to the end (leaving the remainder unmapped).
++static void __mon_bin_vma_open(struct mon_reader_bin *rp)
++{
++	unsigned long flags;
 +
- **NOTE:** The ``action`` field should never normally be manipulated directly,
- rather you ought to use one of these helpers.
++	spin_lock_irqsave(&rp->b_lock, flags);
++	rp->mmap_active++;
++	spin_unlock_irqrestore(&rp->b_lock, flags);
++}
 +
-+Discontiguous Actions
-+=====================
+ /*
+  * open and close: just keep track of how many times the device is
+  * mapped, to use the proper memory allocation function.
+@@ -1226,64 +1235,79 @@ mon_bin_poll(struct file *file, struct poll_table_struct *wait)
+ static void mon_bin_vma_open(struct vm_area_struct *vma)
+ {
+ 	struct mon_reader_bin *rp = vma->vm_private_data;
+-	unsigned long flags;
+ 
+-	spin_lock_irqsave(&rp->b_lock, flags);
+-	rp->mmap_active++;
+-	spin_unlock_irqrestore(&rp->b_lock, flags);
++	__mon_bin_vma_open(rp);
+ }
+ 
+-static void mon_bin_vma_close(struct vm_area_struct *vma)
++static void __mon_bin_vma_close(struct mon_reader_bin *rp)
+ {
+ 	unsigned long flags;
+ 
+-	struct mon_reader_bin *rp = vma->vm_private_data;
+ 	spin_lock_irqsave(&rp->b_lock, flags);
+ 	rp->mmap_active--;
+ 	spin_unlock_irqrestore(&rp->b_lock, flags);
+ }
+ 
+-/*
+- * Map ring pages to user space.
+- */
+-static vm_fault_t mon_bin_vma_fault(struct vm_fault *vmf)
++static void mon_bin_vma_close(struct vm_area_struct *vma)
+ {
+-	struct mon_reader_bin *rp = vmf->vma->vm_private_data;
++	struct mon_reader_bin *rp = vma->vm_private_data;
 +
-+Some actions can be performed across discontiguous ranges.
++	__mon_bin_vma_close(rp);
++}
 +
-+Map kernel pages
-+----------------
++static const struct vm_operations_struct mon_bin_vm_ops = {
++	.open =     mon_bin_vma_open,
++	.close =    mon_bin_vma_close,
++};
 +
-+To map kernel pages discontiguously, you must provide hooks using ``struct
-+discontig_kernel_page_ops``:
++static int mon_bin_discontig_init(void *vm_private_data, void **private)
++{
++	struct mon_reader_bin *rp = vm_private_data;
 +
-+.. code-block:: C
++	/* Dropped by mon_bin_vma_close() on unmap, including on error. */
++	__mon_bin_vma_open(rp);
++	return 0;
++}
 +
-+    struct discontig_kernel_page_ops {
-+        int (*init)(void *vm_private_data, void **private);
-+        int (*get)(struct discontig_kernel_page_state *state);
-+    };
++static int mon_bin_discontig_get(struct discontig_kernel_page_state *state)
++{
++	struct mon_reader_bin *rp = state->vm_private_data;
+ 	unsigned long offset, chunk_idx;
+-	struct page *pageptr;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&rp->b_lock, flags);
+-	offset = vmf->pgoff << PAGE_SHIFT;
 +
-+The ``init`` hook is optional and allows state to be established before the
-+operation starts, for instance taking a reference count. Nothing is invoked
-+after the operation, so ``init`` must not leave locks held, and state that must
-+be released once the mapping goes away should be released in
-+``vm_ops->close``.
++	offset = state->pgoff << PAGE_SHIFT;
+ 	if (offset >= rp->b_size) {
+ 		spin_unlock_irqrestore(&rp->b_lock, flags);
+-		return VM_FAULT_SIGBUS;
++		discontig_kernel_map_abort(state);
++		return 0;
+ 	}
+ 	chunk_idx = offset / CHUNK_SIZE;
+-	pageptr = rp->b_vec[chunk_idx].pg;
+-	get_page(pageptr);
+-	vmf->page = pageptr;
++	discontig_kernel_map_page(state, rp->b_vec[chunk_idx].pg);
 +
-+The ``init`` hook, if provided, is invoked prior to the operation starting. It
-+may update what is pointed to by ``vm_private_data`` and/or ``private``. If an
-+error is returned, then the operation is aborted. The ``private`` field can be
-+reassigned.
+ 	spin_unlock_irqrestore(&rp->b_lock, flags);
+ 	return 0;
+ }
+ 
+-static const struct vm_operations_struct mon_bin_vm_ops = {
+-	.open =     mon_bin_vma_open,
+-	.close =    mon_bin_vma_close,
+-	.fault =    mon_bin_vma_fault,
++static const struct discontig_kernel_page_ops mon_discontig_ops = {
++	.init = mon_bin_discontig_init,
++	.get = mon_bin_discontig_get,
+ };
+ 
+-static int mon_bin_mmap(struct file *filp, struct vm_area_struct *vma)
++static int mon_bin_mmap_prepare(struct vm_area_desc *desc)
+ {
+-	/* don't do anything here: "fault" will set up page table entries */
+-	vma->vm_ops = &mon_bin_vm_ops;
++	const struct file *filp = desc->file;
+ 
+-	if (vma->vm_flags & VM_WRITE)
++	if (vma_desc_test(desc, VMA_WRITE_BIT))
+ 		return -EPERM;
+ 
+-	vm_flags_mod(vma, VM_DONTEXPAND | VM_DONTDUMP, VM_MAYWRITE);
+-	vma->vm_private_data = filp->private_data;
+-	mon_bin_vma_open(vma);
++	desc->vm_ops = &mon_bin_vm_ops;
++	vma_desc_clear_flags(desc, VMA_MAYWRITE_BIT);
++	vma_desc_set_flags(desc, VMA_DONTEXPAND_BIT, VMA_DONTDUMP_BIT);
++	desc->private_data = filp->private_data;
 +
-+**NOTE:** The operation may sleep between invocations of ``get``, so locks
-+needed to stabilise state must be taken and released within each hook.
-+
-+The ``get`` handler is the key means through which the operation is
-+executed. The current state of the operation is provided through ``struct
-+discontig_kernel_page_state``:
-+
-+.. code-block:: C
-+
-+    struct discontig_kernel_page_state {
-+        /* Map state. */
-+        unsigned long start;            /* Start address of VMA. */
-+        unsigned long end;              /* End address of VMA. */
-+        unsigned long addr;             /* The current address to be mapped. */
-+        pgoff_t pgoff;                  /* The current pgoff to be mapped. */
-+        unsigned long nr_pages_mapped;  /* The number of pages mapped. */
-+        unsigned long nr_pages_remain;  /* The number of pages remaining. */
-+
-+        /* User-defined state. */
-+        void *vm_private_data;          /* VMA private data. */
-+        void *private;                  /* Mapping private data. */
-+
-+        /* Users should not touch these, use discontig_kernel_map_*() helpers. */
-+        ... internal fields ...
-+    };
-+
-+With ``private`` being an additional user-controllable state variable,
-+initialised via ``mmap_action_map_discontig_kernel_pages()``, and
-+``vm_private_data`` being equal to the ``desc->private_data`` field set in
-+the ``mmap_prepare()`` hook.
-+
-+In the ``get`` hook, the user must choose how to map kernel pages:
-+
-+* ``discontig_kernel_map_abort()`` - Call this to abort the operation, whatever
-+  has been mapped so far will be retained, the rest of the mapping will SIGBUS
-+  if accessed.
-+* ``discontig_kernel_map_page()`` - Maps a single page, correctly handling
-+  compound pages (if the compound page is bigger than the remaining pages in the
-+  VMA, then only those pages that fit will be mapped). For a compound page, the
-+  head page must be passed.
-+* ``discontig_kernel_map_page_range()`` - Map an array of pages of a specified
-+  size. Note that if the number of pages specified exceeds the VMA size then an
-+  error will arise.
-+
-+If an error arises after ``init`` succeeded, the core unmaps the VMA, invoking
-+``vm_ops->close`` if set, which is therefore the place to release any state
-+that ``init`` established.
++	mmap_action_map_discontig_kernel_pages(desc, NULL, &mon_discontig_ops);
+ 	return 0;
+ }
+ 
+@@ -1298,7 +1322,7 @@ static const struct file_operations mon_fops_binary = {
+ 	.compat_ioctl =	mon_bin_compat_ioctl,
+ #endif
+ 	.release =	mon_bin_release,
+-	.mmap =		mon_bin_mmap,
++	.mmap_prepare = mon_bin_mmap_prepare,
+ };
+ 
+ static int mon_bin_wait_event(struct file *file, struct mon_reader_bin *rp)
 
 -- 
 2.55.0
