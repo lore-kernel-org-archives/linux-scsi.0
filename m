@@ -1,130 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 472D138F638;
-	Thu, 17 Sep 2026 11:40:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B2F34D7D48
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 11:49:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789645249; cv=none; b=gz16T8rTcOUVnnehN6bLPd9B+f5WeU6E8gMfZGS4E8TWhA2ueWM2eYvIliaJoVDnNKys3539tLjSqBXRWDO8OhnX3bs3qh/1PW2P6ukJa4aF8/f19zfy/LvNs2Y6GKY3bJn1w8KUejyQbZ6pjz73IeKSZ1y32/3Rgk1HJR1kydo=
+	t=1789645765; cv=none; b=ZG3SsLsPBXeTQys0YsfDvdaQdVVRN7gMDFYd4V8nSAeCVoAN+qvQoHa2xjoyeKXK+BipTcBhOBQF7dOOZMyNyjckVwBtrH0H8NUP4hNHqNBChIPZnmlPUU7aWwITTTm/9k+rjrvuiJ9WcY3ZJJYnfurh0N+RdyeETMfhH9Edb+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789645249; c=relaxed/simple;
-	bh=BApzGHIqAjiErWcRlmmivBGBfFVBONt4ktRgWMUzDCk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ksfZ0YXW8SbGflRHkz7BYirbdjoKwlsZnAW1q/kIU3Pht6wmvE9yQWOekEj0U9v/MWeaO+0DP52RO7BQ47DkE+FrRZqg5n1GZCqJN6NHBVZ3HGIbMrvlwIZUNMbbI2vFphAAeFld2nyUAzzocVZP7GKADOyZ7z0ZtFZsSO8c9RI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mDBBHK/I; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789645765; c=relaxed/simple;
+	bh=x+mSIjNwwPWCAJ+fSw8AqoOhMOv22uDk+npErG+nkUo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=LbLxn5u2Zb9UvOuRPFbsrOOf/auX9xG0zqnobknEGT/hlAv6f2AydNR2sOwT9mdLNqWDqYKDhSP93GMsos+1Z5U6EURSBDIhtVjCWkNBugDpHfUOeaWtWG4NPT8TK3/N/afmPmpXYhYMuXUv0Mt1vfBPd7w6p449w5T4jcC4qbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G9T1fHeq; arc=none smtp.client-ip=74.125.227.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mDBBHK/I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A09061F000FF;
-	Thu, 17 Sep 2026 11:40:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789645243;
-	bh=BApzGHIqAjiErWcRlmmivBGBfFVBONt4ktRgWMUzDCk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mDBBHK/IhHEPd17SZQYudlv622AFtJid39i0LAeTPe5KX2n4jjfEibNrHMdEGP/lt
-	 eUgQ97JZr9jtSS+gOZV9ctH5mVpR5Wezp3sekSSbMJ5cOeo6kdk0KT15/6B49AIGEy
-	 W3xTRN8TOmbFo/L3aM1LzCnmwuDCeyPl4is4tqU7CxU3Ioxbh6x+wbfLlNfNi4Nbut
-	 a7/lNdUCvCwU4aCE2PFX04HuH+W5hEeEwQfpeBZl00atZiv1MQM4dBxsjASoERsnQh
-	 U2zQOve9t2ri7i6jgJuS/I7mx5ZPVMsb+fxhyacjpxeRyQ3wCmjEdg7jvg80HHafvW
-	 7dUndTZsEPJPw==
-Date: Thu, 17 Sep 2026 12:40:08 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Mike Rapoport <rppt@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	David Hildenbrand <david@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
-	Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	Jaya Kumar <jayalk@intworks.biz>, Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, 
-	Sebastian Reichel <sre@kernel.org>, John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
-	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
-	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
-	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v2 01/40] mm/vma: fix mmap_prepare file handling, remove
- file_doesnt_need_get
-Message-ID: <aqvRKarObW1Zy-QD@gremlin>
-References: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org>
- <20260914-b4-mmap-prepare-vma-flag-sanify-v2-1-7d9781ed5361@kernel.org>
- <aquz9Z9JrK_H_E0g@kernel.org>
- <aqu5jtMV2gyZFrSe@gremlin>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G9T1fHeq"
+Received: by mail-pj2-f13.google.com with SMTP id 98e67ed59e1d1-396ccb652d7so625274a91.0
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 04:49:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789645762; x=1790250562; darn=vger.kernel.org;
+        h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=x+mSIjNwwPWCAJ+fSw8AqoOhMOv22uDk+npErG+nkUo=;
+        b=G9T1fHeqBOUEsUwv3l1dPHfBiO8S8BBCxTVbu/ubqglD6ictKxG3kur9h/fUMNvHX5
+         NLfZtOJkwWauOPOIGZmpEpZ0xUT4LKyAqRHAzz6+FFsbdeBu3+wDGdUPAkTBQBCV9yOH
+         pWkVhffMFPjSRwt7zFX8J+0ZfdYqUAkiPN+P6LB5VxZD/NJ53AvVthbK0CKwsa7xMQOy
+         ED+RIKsJ7BGfcJf+uiHLBnEWODtFmuwVX6/t+KIjNr0p3JiTbViFNotX1TsvQz0eO9Gz
+         KSA8rEYn6gEaYCjyzViEcU7ba8sJIxfoa0pBVW5f+42qmLUWvmUYzydwllBdK+oEzJfq
+         GvBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789645762; x=1790250562;
+        h=references:in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=x+mSIjNwwPWCAJ+fSw8AqoOhMOv22uDk+npErG+nkUo=;
+        b=Nkh/zg18DS2pdP34CqxNZ5rl6m7rOzxV8fMuFOq1XRx5zi3aOiVRtxZgIczaS5ud8h
+         Ozkgpk0yOuArIt27AnFlSlZDyybdOM8rjcDStf7uzxZGu85+FYgpf+S5u7lQXAibEuyW
+         inkwBlecee8WxTSZF5/c6C9QfotbTw5a3p1xaBrA/4GfPZkWk8+LsOh54TRgT7GDVmRr
+         HeQGxjA12HDul+MDcMgsPtj+dqZQ/T9jueJbLe8j1lTtOpH+hUoeOIKpceViAbaLlsKo
+         cQWgyTEuEN4eskB1EJ2whOVgtxkUm7pD3wRDEMgRMCad+2ckRL08uCb894BFonMDdYJu
+         crsw==
+X-Forwarded-Encrypted: i=1; AKwUvBzghwUi44USDFWYZzkkO7ZW8NjRZ6VKrQLcwi0CMd0zsTyKrcEQxWCqIGpEnw1ipPr9JJ64OvhqKcXr@vger.kernel.org
+X-Gm-Message-State: AFuF++kbCPW0E/eg+9VI8DynifsJs2pbQaKrTPeW0vNaDjYlh8c5jxEL
+	ggpvLY3V7IoppboHDQzXoNI2k4ossZjGF6YK6qjnDKp/IRBCoJA4+KO+6eSdMDrWMYo=
+X-Gm-Gg: AYBFou1EM3Q6MxFONiN5DNLzU6q7hv6Sr88abEF792eZh/ZmCmO+3Vq1aQoap9qULim
+	J4hDkZMu3omrPlIOaKsid5dtqlZypeXVq+Y/D80eqVc2Eq7a+uLq5frJkxWe2/aISzxF1SrKNM6
+	EujklrxgBtFaWz+1oCFGLnY1oJ6RtvwsseFFCJzU7vHbPYyXPqdVn9qxEIMR/TGbNv3Wa62DWZb
+	QCtudG/c51avfYPkL1MreWr5ScWg+GAMun+SPhzQw6NZc/ddilyB+wa6CSbg+EfgLWsvMn4IjaH
+	ipQ4JQNfX2VL/PToy1oysxPl4cwCGHhYIxI6Qxy8GZDHEKE4vTEQmiup8avOFkiIotsIfDlnocK
+	wMwLeJEr/2lA6PhzbglDk0IAxvXKy0jUbZ9Eq3kVu7+ew9dHpVn81MPaSDgxKP0xQwSR7i1aCJt
+	We4g7KDsZFdhs00Sp6/gzRwPLZPop8tDgPKF7SJhjYgNyz7O080QVehFLgtVsH3g2gEPv5Yg==
+X-Received: by 2002:a17:90b:2249:b0:398:c3c9:d0ae with SMTP id 98e67ed59e1d1-39e1df7d64bmr13875098a91.0.1789645762177;
+        Thu, 17 Sep 2026 04:49:22 -0700 (PDT)
+Received: from [127.0.1.1] ([240e:b8f:977f:f400:ec2a:b15e:fef8:70a])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e39b0399bsm1178502a91.2.2026.09.17.04.49.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Sep 2026 04:49:21 -0700 (PDT)
+From: Liang Haowen <nbg2974@gmail.com>
+To: Lee Jones <lee@kernel.org>
+Cc: linux-leds@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, sashiko-reviews@lists.linux.dev
+Subject: Re: [PATCH RFC v6 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED
+ driver for ROG NVMe enclosures
+Date: Thu, 17 Sep 2026 11:49:18 -0000
+Message-Id: <202609172115.ReplyLeeR6.lhw@gmail.com>
+In-Reply-To: <20260917112840.GJ1605367@google.com>
+References: <202609012200.RFC0.lhw@gmail.com>
+ <202609012200.RFC1.lhw@gmail.com>
+ <20260901145204.2BF551F000E9@smtp.kernel.org>
+ <202609032000.RFCv2-0.lhw@gmail.com> <202609032000.RFCv2-1.lhw@gmail.com>
+ <20260903122408.3CA6B1F00A3A@smtp.kernel.org>
+ <20260903161357.GX2133376@google.com> <202609042000.RFCv3-0.lhw@gmail.com>
+ <202609042030.RFCv3-1.lhw@gmail.com>
+ <20260904131503.355C41F00A3E@smtp.kernel.org>
+ <20260910093232.GO2133376@google.com> <202609152112.RFCv4-0.lhw@gmail.com>
+ <202609152112.RFCv4-1.lhw@gmail.com>
+ <20260915130050.E8CDB1F000FF@smtp.kernel.org>
+ <20260916104305.GM11487@google.com> <202609162015.RFCv5-0.lhw@gmail.com>
+ <202609162015.RFCv5-1.lhw@gmail.com>
+ <20260916122740.921E51F000FF@smtp.kernel.org>
+ <20260916130602.GS11487@google.com> <202609162200.RFCv6-0.lhw@gmail.com>
+ <202609162200.RFCv6-1.lhw@gmail.com>
+ <20260916143832.520721F000FF@smtp.kernel.org>
+ <20260917112840.GJ1605367@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aqu5jtMV2gyZFrSe@gremlin>
 
-On Thu, Sep 17, 2026 at 10:57:57AM +0100, Lorenzo Stoakes (ARM) wrote:
-> On Thu, Sep 17, 2026 at 12:33:41PM +0300, Mike Rapoport wrote:
-> > But the patch iteslf needs to be fixed :)
-> >
-> > It seems to be the change that broke the CI.
-> >
-> > The rest is from LLM, take it with a grain of salt :)
->
-> Ack will assess + respin
+This one is the same false positive as in every round so far:
+kzalloc_obj() has been in include/linux/slab.h since v7.0 (line 1152
+in the 7.2.4 tree this driver builds against), so the bot's reference
+tree simply predates it. Nothing to fix.
 
-Apologies to everybody's inbox but this will need a respin to resolve a conflict
-in a subsequent commit.
+I considered switching to plain kzalloc() to end the loop, but
+checkpatch on 7.2.4 flags that form with "Prefer kzalloc_obj over
+kzalloc with sizeof", so the two tools disagree and I would rather
+keep the checkpatch-clean one. Happy to switch if you prefer
+kzalloc().
 
-This was to fix a sashiko report (not a bug anywhere in production, but could
-lead to bugs in future by accident), and got sashiko + [another AI]-reviewed
-before sending all of which missed it :)) the robot overloads are not quite in
-charge yet ;)
-
-Fix is simple - update flags at the right time. The error was pre-empting
-setting everything rather than just map->vm_file.
-
-Will look through other sashiko stuff then respin a bit later.
-
---
-Cheers, Lorenzo
+Both questions from the v6 cover letter are still open, by the way:
+whether deferring the Kconfig/Makefile/MAINTAINERS wiring to the
+agreed SCSI transport split is acceptable for an RFC, and whether
+"led" should become a LED_FUNCTION_* value or the plain ordinal
+function is fine.
