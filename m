@@ -1,98 +1,82 @@
-Received: from mta0.migadu.com (out-119.mta0.migadu.com [91.218.175.119])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04A2E4FDA6F
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 16:45:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 536113A963E;
+	Thu, 17 Sep 2026 16:46:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789663555; cv=none; b=hzseGs8F8+5RJROllqhjoOGtNdia0M/3qh6W9ouH+y/BHuXoNToZBZzZwaNLfYb3LCRqgw39KMhEWGNsmIuS6P7T+j30zpfUMk7gOJo/y1myErV9XgONBSBig7GYEwaKA45aZ6xp9UdOZZJBM0RD63oZYmCrHSy2sBy7P5f/Dto=
+	t=1789663576; cv=none; b=jUVqt/RYZjnOzLyLPyd6pMer9MfRn5NcnkQ4MPHah5Bk6/Dc6pKGA0NLMdrz75fe5zZtEYuS61DTk8JDz4J4fG4HI4s6HqietWfQdeiiU5lXfhKKcOj7bbrZ/6CheYhjhaQc8PrJnL/xHPE6M+M1DFs+ikZlIO0m30aEtB//faQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789663555; c=relaxed/simple;
-	bh=V5INTN8RuWwRwwnNDHAyBiXr8TPXJ7fn99txaxZ+ahE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MDG+xxrwbvKS3vgxLx7iNfbpQMP42FZtSbvM40QfpmSZC6CFKc/29eNlyaOiKWWNj7nTBqVVVVkfWf6Znejs2kYdnOupE7I0Bndz2ArWX9P5iEpkAB1lnpPpAejwFxZErHTaNtr8yu4u87B6rHULz4ceplSFCHtnl05m0C9Q8NU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=OAPOHPX+; arc=none smtp.client-ip=91.218.175.119
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789663576; c=relaxed/simple;
+	bh=+/6dP/tc8y91FwlyDopq/x0v1dZoVJ2RxSzY2tr973M=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=a5GyV+Us5aiWjuoiycnJ/u3Zy/xzukcYYkr/lUHjw3RuetDXd6J3Ffzg+Q6oscGY04ROoOVEkSqgf6wYwwJE6iTHWuHjmUJxF4z31zGPcYDD1jPoXw93rLzXJVMvLC8B530NN0ba8LAcngnYlM0cKoDeu6rF/t2lPW9OdWmNSf0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hfVPjIK7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="OAPOHPX+"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=V5INTN8RuWwRwwnNDHAyBiXr8TPXJ7fn99txaxZ+ahE=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789663550; v=1; x=1790268350;
- b=OAPOHPX+raBVgDiTxlBRJpeAO/c0D2hJhq8U2xcGg7UIu2tyYWfSpYhmemW94eX37lSHPmLE
- At+KwCgGfCW3tEubzxGJ64NRsTTVFEya6nbRLgEBcWCalSY1IJ5PZ+iiHYlpIIiw3YA+NQ5zHiQ
- xrTyJYRSX3PMi3W8LAiqrkk0=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 378d3e8deb789c20;
-	Thu, 17 Sep 2026 16:45:50 +0000
-X-Mizu-Trace-ID: 378d3e8deb789c20
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <b0e2de23-7421-4217-bd37-e98e59bef873@linux.dev>
-Date: Thu, 17 Sep 2026 17:45:48 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hfVPjIK7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F15051F000FF;
+	Thu, 17 Sep 2026 16:46:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789663574;
+	bh=+/6dP/tc8y91FwlyDopq/x0v1dZoVJ2RxSzY2tr973M=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=hfVPjIK7tdl76eXtbjTQGTByiYpiKtjOZ6BvEqbmvXBTGbJO2wpOdjEdk69c8Avt9
+	 Mi60UA6VEUd7EbQiCHt5nRLC+zEg8F1xoTkBVZu6cxKM+IZx6xbWZs2Pz4aQSthlLX
+	 W8Gqbidtg4ALKChnqHSlg9da3YTAH/nB/b07zJTRpstCBoqRv5xpqKQ4Vsa4QUWq7q
+	 HxZcvy9q7GwEmpZLmeLJCPryqOPmSINbThzAV37FRTinsmnEK8Phod2aLwS5+dl0ql
+	 Zs55RiqrqjYRIf2ZVE3BFFWmxCJIFsAmRhkO4pt15XargE2NVzzzQ6mpfzZUV1pmjV
+	 b+MSXv1sctw8g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 2/9] driver core: prevent device_add() during system
+ shutdown
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Danilo Krummrich" <dakr@kernel.org>, driver-core@lists.linux.dev, "Rafael
+ J. Wysocki" <rafael@kernel.org>, "David Jeffery" <djeffery@redhat.com>
+Cc: linux-pci@vger.kernel.org, "Pasha Tatashin" <tatashin@google.com>, "Bjorn
+ Helgaas" <helgaas@kernel.org>, "John Meneghini" <jmeneghi@redhat.com>, linux-scsi@vger.kernel.org, "John
+ Garry" <john.g.garry@oracle.com>, Maurizio <mlombard@redhat.com>, "Jeremy
+ Allison" <jallison@ciq.com>, linux-kernel@vger.kernel.org, "Martin K .
+ Petersen" <martin.petersen@oracle.com>, "Stuart Hayes" <stuart.w.hayes@gmail.com>, "Bart
+ Van Assche" <bvanassche@acm.org>, "Ewan Milne" <emilne@redhat.com>, "Tarun
+ Sahu" <tarunsahu@google.com>, kexec@lists.infradead.org, "Laurence Oberman" <loberman@redhat.com>
+In-Reply-To: <20260917163744.191748-3-djeffery@redhat.com>
+References: <20260917163744.191748-1-djeffery@redhat.com>
+ <20260917163744.191748-3-djeffery@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 17 Sep 2026 16:46:12 +0000
+Message-Id: <20260917164612.F15051F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: libsas: Fix use-after-free in sas_suspend_devices()
-To: Wentao Liang <vulab@iscas.ac.cn>, JBottomley@Parallels.com
-Cc: James.Bottomley@HansenPartnership.com, djbw@kernel.org,
- jacek.danecki@intel.com, john.g.garry@oracle.com,
- linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, stern@rowland.harvard.edu, yanaijie@huawei.com,
- stable@vger.kernel.org
-References: <20260917143800.2157286-1-vulab@iscas.ac.cn>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260917143800.2157286-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 9/17/26 15:38, Wentao Liang wrote:
-> sas_suspend_devices() walks port->dev_list with list_for_each_entry()
-> while sas_notify_lldd_dev_gone() may drop the last reference 
+> From: Tarun Sahu <tarunsahu@google.com>
+>=20
+> In Async device shutdown, device_kset->list lock is released to handle
+> asynchronisation and hold again to get entry from device_kset->list.
+> Which will leave window when device_add can try to add the device to
+> device_kset list and temper with ongoing shutdown process. New added
+> device can be async type or sync type and might also introduce new
+> dependency which can cause device_shutdown path to deadlock. S is
+> waiting C to finish but C is never scheduled as it was added recently
+> from device_add path. And C can only be scheduled when main loops
+> continue to reach to C which is waiting on S.
+>=20
+> So, When a system enters shutdown (SYSTEM_HALT, SYSTEM_POWER_OFF, or
+> SYSTEM_RESTART), new devices should not be allowed to be added.
+> Adding system_state check (system_is_shutting_down()) to avoid
+> device_add incase of these states of the system. And use srcu so the
+> device shutdown operation can synchronize device_add and ensure any
+> device_add in progress is finished.
+>=20
+> Signed-off-by: Tarun Sahu <tarunsahu@google.com>
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
 
-The low-level device driver should not keep (nor put) a reference to the 
-domain device.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-Notice how sas_put_device() is in sas_internal.h ?
-
-> and free
-> the current device, so the next iteration dereferences freed memory.
-> 
-> Use list_for_each_entry_safe() to keep the next entry around.
-> 
-> Fixes: 303694eeee5e ("[SCSI] libsas: suspend / resume support")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
-> ---
->   drivers/scsi/libsas/sas_discover.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> index b07062db50b2..91045966612e 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -231,7 +231,7 @@ static void sas_probe_devices(struct asd_sas_port *port)
->   static void sas_suspend_devices(struct work_struct *work)
->   {
->   	struct asd_sas_phy *phy;
-> -	struct domain_device *dev;
-> +	struct domain_device *dev, *n;
->   	struct sas_discovery_event *ev = to_sas_discovery_event(work);
->   	struct asd_sas_port *port = ev->port;
->   	struct Scsi_Host *shost = port->ha->shost;
-> @@ -245,7 +245,7 @@ static void sas_suspend_devices(struct work_struct *work)
->   	 * suspension, we force the issue here to keep the reference
->   	 * counts aligned
->   	 */
-> -	list_for_each_entry(dev, &port->dev_list, dev_list_node)
-> +	list_for_each_entry_safe(dev, n, &port->dev_list, dev_list_node)
->   		sas_notify_lldd_dev_gone(dev);
->   
->   	/* we are suspending, so we know events are disabled and
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917163744.1917=
+48-1-djeffery@redhat.com?part=3D2
 
