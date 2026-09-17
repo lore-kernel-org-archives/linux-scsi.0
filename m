@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA25244C4FF
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:10:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7955456E0B
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:12:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789683054; cv=none; b=Ejs9SJ/TfsPUJZOCECPwaMP5dTzLaMXiMj70s4rWl1wvIssWmnUvqqL8eKsTEFqswtmOBGU9cAagkJSTI8hIoh4jLLx4y5yxVQUgHXep0vSVPueoZ2a6JtS3E7mGADhk7uCFWiQAnt6DeJiX1WNJ4bL/siLxk9pxIiiJvABOMtc=
+	t=1789683175; cv=none; b=Yr2T3gjTpesv/vS8PCQgUxd7ZaqgasDIMmbX14sFbVekeGH6/tFp+UPb2Liw7fzcHNh3KNnVUwzXudUd9KVgnHx/FFeSIUzy6bUDbsyqeioe008XtqjtHbUu7AktE4roMyrXxSaYH8/4IHW2hJVvoQHjydtCAbnsOs/YK74Fo6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789683054; c=relaxed/simple;
-	bh=Gp7rE0E+549dajlKFQIDmbANgSQPxyxg17DFLRc7RjE=;
+	s=arc-20240116; t=1789683175; c=relaxed/simple;
+	bh=rchfa/LYpRmRvrcdlX0sEA8mlNUZfU5ddypiNEjn6OY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=M2Uk2vCmi09ApNVSbEQ6uxXK99JkoajbbR4Wm8TzUxf7/+BoRD7DIYhwiP7AfzgZopuHol4hZUIWnQ1JAwD0wT5cqRBNZshvU8cDAE96ySvFSCMBITdaYpXKzYOrxquCXZxogzV8lbB3LnXLwCxZNzFxc4MK2QjRi0o5uuAxts0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UwRFDM1+; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=osrIjmLwPEZtuQ0v7j70F/GwJ272yWLaviDijQJvflxKxWy+qCi3Ssk4rzPIlIYD2Ix8Xy2kYTWbUGKLGal2OVYGN2fonSGAIElKOyJIDjeUrJ2mpNjoUbGYuPPZrl2dVDcfm8Rp65Q6g66L7+HDC80Oi47fAQsx73ZaD1j/O9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GHidVZkN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UwRFDM1+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 250F11F000FF;
-	Thu, 17 Sep 2026 22:10:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GHidVZkN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B2C41F000FF;
+	Thu, 17 Sep 2026 22:12:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789683053;
-	bh=D+8igVe5h6uHQtUsB46Pnk0kvLzdlD5m47+N1jVuynI=;
+	s=k20260515; t=1789683174;
+	bh=VB7WowP8g8OJ7BZADVg8lli/65RVJVxxdbtjZE/BvEA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UwRFDM1+VIMqfjyoOEn8L80h5OkY3QADlSpd5nN6Pi2U2PSpYCo2XCQH6VaV8XMYO
-	 Rt4iGqSnDW4O3v52HYNRvCb4ZEgTDS68Cq1UuE7RjmWGY7+XQN1tcRuKZd/0RQJIP3
-	 VOd4wbDWOxWCbg9xueGZ7egwiDRSqn0o6tTCNJw3PH/eyOAxjVtedh5RRIvRjWsREC
-	 KUu/WNO56TX/iF28umAuO91BNTqqdAe6oLqqACKT6D9tKPJqdju/idlTBdK52hz3iy
-	 dY8HZpy3B3ZlWpLRx4FyoCG3FFUOBfEl+Nv+JaMHzbOl+L+37skcsoMHCwAhxNSKC2
-	 +awkCxWNZxmAQ==
+	b=GHidVZkNXHO6X/985O9HSJsWZkBO39EpABPUyVodhppQNU/3eYXnE27ucXvdJKlir
+	 zAnhjPWJV19swteeBzO8b/B2CXc+lvp1z7NesJRA9/utOU0J64PeO1GodVKiZ7Sf/E
+	 wc7iINvcDlDLZbVzxUG46ed31hHHnrx8G1kzXtbaAe5ztSzAuP8jRmTz8rTO2CULqi
+	 aPmomA9U8dcF/EHLrDwcbNMr2H4YU2rKtvfVQO7avGDN1YauuPLYXCjtH9xEUPGWKU
+	 qFy2gn95GWbKhcmMiD6NXd9XbduZEAs/v+T5Bmjfz1DmpjfnrfKlZSQBia+s7Fxviw
+	 vbX0dKfld5+bA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 06/14] lpfc: Fix ndlp use-after-free during repeated
- RSCN and rediscovery sequence
+Subject: Re: [PATCH v4 08/14] lpfc: Improve PLOGI retry handling for large
+ SAN configurations
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nigel Kirkland" <nkirkland2304@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260917222015.61053-7-nkirkland2304@gmail.com>
+In-Reply-To: <20260917222015.61053-9-nkirkland2304@gmail.com>
 References: <20260917222015.61053-1-nkirkland2304@gmail.com>
- <20260917222015.61053-7-nkirkland2304@gmail.com>
+ <20260917222015.61053-9-nkirkland2304@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 17 Sep 2026 22:10:52 +0000
-Message-Id: <20260917221053.250F11F000FF@smtp.kernel.org>
+Date: Thu, 17 Sep 2026 22:12:53 +0000
+Message-Id: <20260917221254.2B2C41F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,106 +47,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] scsi: lpfc: Use-after-free in NVMe unregistration due to missing s=
-erialization
-- [High] scsi: lpfc: ndlp memory leak due to concurrent registration race
+- [High] lpfc: Deferred PLOGIs are erroneously rejected in lpfc_nlp_logo_un=
+reg due to state check
+- [Medium] lpfc: TOCTOU race in NLP_PLOGI_SND flag tracking allows multiple=
+ PLOGIs in flight
 --
 
-commit 6da5a3b652f8d5c08807e25e9db6e426dc7022ff
+commit 3d16993b649c134340e20dec0bd637799a114aff
 Author: Nigel Kirkland <nkirkland2304@gmail.com>
 
-lpfc: Fix ndlp use-after-free during repeated RSCN and rediscovery sequence
+lpfc: Improve PLOGI retry handling for large SAN configurations
 
-This commit refactors how registration state is tracked by separating the S=
-CSI
-and NVME transport registration flags. It introduces new wait flags to track
-unregistration and a new flag for NVMET target nodes to address use-after-f=
-ree
-issues during target port failovers and RSCN storms.
-
-> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hb=
-adisc.c
-> index 4c673dffa671b..b4a5c7d5c2a0b 100644
-> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-[ ... ]
-> @@ -4623,7 +4632,10 @@ lpfc_nlp_reg_node(struct lpfc_vport *vport, struct=
- lpfc_nodelist *ndlp)
->  	lpfc_check_nlp_post_devloss(vport, ndlp);
-> =20
->  	spin_lock_irqsave(&ndlp->lock, iflags);
-> -	if (ndlp->fc4_xpt_flags & NLP_XPT_REGD) {
-> +	if (((ndlp->fc4_xpt_flags & SCSI_XPT_REGD) &&
-> +	     !(ndlp->fc4_xpt_flags & SCSI_XPT_UNREG_WAIT)) ||
-> +	    ((ndlp->fc4_xpt_flags & NVME_XPT_REGD) &&
-> +	     !(ndlp->fc4_xpt_flags & NVME_XPT_UNREG_WAIT))) {
->  		/* Already registered with backend, trigger rescan */
->  		spin_unlock_irqrestore(&ndlp->lock, iflags);
-
-[ ... ]
-
-> -	ndlp->fc4_xpt_flags |=3D NLP_XPT_REGD;
->  	spin_unlock_irqrestore(&ndlp->lock, iflags);
-
-[Severity: High]
-Does removing the atomic test-and-set of the registration flag here introdu=
-ce=20
-an ndlp memory leak?
-
-If multiple threads execute lpfc_nlp_reg_node() concurrently (e.g., from
-repeated RSCNs), they can all pass the registration check above while the f=
-lags
-are still cleared. All threads will drop the lock and proceed to call
-lpfc_register_remote_port(), which will unconditionally increment the ndlp
-reference count via lpfc_nlp_get().
-
-During unregistration, the SCSI path correctly prevents double unregistrati=
+In large SAN configurations with link perturbations, rediscovery of target
+ports is problematic due to PLOGI retry race conditions. This patch improves
+target rediscovery by ensuring PLOGI retries are serialized in unregistrati=
 on
-by checking SCSI_XPT_UNREG_WAIT, so it will only drop one reference. The ex=
-tra
-references taken during the concurrent registrations will permanently leak.
+and retry handler paths.
 
-> =20
->  	if (lpfc_valid_xpt_node(ndlp)) {
-
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+> index cd431c7bd9f08..3e26654a8286a 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
 [ ... ]
+> @@ -2329,17 +2331,43 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, ui=
+nt32_t did, uint8_t retry)
+[ ... ]
+> +	if (test_bit(NLP_PLOGI_SND, &ndlp->nlp_flag)) {
+> +		lpfc_printf_vlog(vport, KERN_INFO,
+> +				 LOG_ELS | LOG_NODE | LOG_DISCOVERY,
+> +				 "4113 Reject PLOGI issue, PLOGI in-flight "
+> +				 "x%px, DID x%x nflag x%lx\n",
+> +				 ndlp, ndlp->nlp_DID, ndlp->nlp_flag);
+> +		return 1;
+> +	}
 
-> @@ -4706,16 +4728,11 @@ lpfc_nlp_unreg_node(struct lpfc_vport *vport, str=
-uct lpfc_nodelist *ndlp)
->  				 kref_read(&ndlp->kref));
+[Severity: Medium]
+Can concurrent worker threads race on this lockless flag check?
+
+If two threads execute lpfc_issue_els_plogi() simultaneously (for example,
+from an unregistration completion and a timer), both could evaluate
+test_bit(NLP_PLOGI_SND, &ndlp->nlp_flag) as false.
+
+Both threads would then continue executing, allocate their IOCBs, and reach
+the set_bit(NLP_PLOGI_SND, &ndlp->nlp_flag) call at the end of the function.
+This sequence would issue duplicate PLOGI commands to the same NPort.
+
+> +
+> +	if (ndlp->nlp_state > NLP_STE_PLOGI_ISSUE &&
+> +	    ndlp->nlp_state <=3D NLP_STE_MAPPED_NODE) {
+> +		lpfc_printf_vlog(vport, KERN_INFO,
+> +				 LOG_ELS | LOG_NODE | LOG_DISCOVERY,
+> +				 "4114 Reject PLOGI issue, Node in "
+> +				 "unexpected state x%px, DID x%x nflag x%lx "
+> +				 "in State x%x\n",
+> +				 ndlp, ndlp->nlp_DID,
+> +				 ndlp->nlp_flag, ndlp->nlp_state);
+> +		return 1;
 >  	}
-> =20
-> -	if (ndlp->fc4_xpt_flags & NVME_XPT_REGD) {
-> +	if ((ndlp->fc4_xpt_flags & (NVME_XPT_REGD | NVME_XPT_UNREG_WAIT)) =3D=3D
-> +	    NVME_XPT_REGD) {
 
 [Severity: High]
-Can this lockless flag check cause a use-after-free on the ndlp object?
+Will this strict state check inadvertently drop deferred PLOGIs during LOGO
+unregistration?
 
-Because the flag check happens outside of ndlp->lock in lpfc_nlp_unreg_node=
-(),
-multiple threads can concurrently pass this check and call
-lpfc_nvme_unregister_port().
+During target recovery after a LOGO storm or link toggle, the unregistration
+handler lpfc_nlp_logo_unreg() uses lpfc_issue_els_logo() to transition the
+node state to NLP_STE_LOGO_ISSUE.=20
 
-Unlike the SCSI unregistration path, lpfc_nvme_unregister_port()
-unconditionally sets the NVME_XPT_UNREG_WAIT flag under the lock without
-verifying if a concurrent thread has already set it. Both threads will then
-call nvme_fc_unregister_remoteport() and lpfc_nlp_put(). Since the ndlp
-reference was only incremented once during NVMe registration, the double
-lpfc_nlp_put() could result in a use-after-free.
+When the deferred PLOGI is subsequently issued via lpfc_issue_els_plogi(),
+this new check (ndlp->nlp_state > NLP_STE_PLOGI_ISSUE &&
+ndlp->nlp_state <=3D NLP_STE_MAPPED_NODE) evaluates to true because
+NLP_STE_LOGO_ISSUE (0x5) falls between 0x1 and 0x7. This causes the deferred
+PLOGI to be erroneously rejected, potentially stalling the target discovery
+process.
 
->  		vport->phba->nport_event_cnt++;
-> -		if (vport->phba->nvmet_support =3D=3D 0) {
-> -			lpfc_nvme_unregister_port(vport, ndlp);
-> -		} else {
-> -			/* NVMET has no upcall. */
-> -			lpfc_nlp_put(ndlp);
-> -		}
-> +		lpfc_nvme_unregister_port(vport, ndlp);
+[ ... ]
+> @@ -2410,11 +2438,26 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, ui=
+nt32_t did, uint8_t retry)
+[ ... ]
+>  		lpfc_els_free_iocb(phba, elsiocb);
+>  		lpfc_nlp_put(ndlp);
+>  		return 1;
 >  	}
-> -
+> =20
+> +	set_bit(NLP_PLOGI_SND, &ndlp->nlp_flag);
+>  	return 0;
 >  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917222015.6105=
-3-1-nkirkland2304@gmail.com?part=3D6
+3-1-nkirkland2304@gmail.com?part=3D8
