@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A35E24DD3D7
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 12:55:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68BF44FECD7
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 12:55:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789649748; cv=none; b=FNkwKZid+KHkc0qc8WKwogyyeN7F2ZEkxyfjHD9veCTFbRLebINJdZm2pvsunOUAQLbhS24y4nXYXBphKVfGLGg7rvMJKAxTx7mTEMyJAD1xBYavaBJ6QeLaevp3f2OK5YPKoenshIY2KrDqRSELzFHJh8rVjnW4zUHqX05Gx2w=
+	t=1789649753; cv=none; b=Z0GX5jda0TO7ajjLnGBDsGpH/mBQr2ZLNjVT7opXnT6DtvCTVl4Q3IuTbwojQPVj7/+wfhx2HjcmIGtX0Hx7xZSRDf/WBBDzbgWtMIpo/F/SfgoQyUxViighsAI+PgpZRr0Msl9PT8iSmhhAhwKj5VPD+hgvTATbIyrhR6YMHDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789649748; c=relaxed/simple;
-	bh=JStOVV72gwAWPMsgqW8w3ukIH/rrvhmORnk3QcNTYps=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IZY7mFNOQH3+Evt5oosEx7xEY+tqJoz7Us/HTeBAT+hzZUw5ylzRvCUrr99kHwwLTsfvQuQc2Vuxq6FFGc+TA/RcJbFYhT8p+cSoQztUzsdH0P+r3u/ltUDWXmADjW/NsYPY95aer0g5Pp4TJ3zbeS7eFnMnh+GgxHX9wLfDphY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dUDe8MqA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789649753; c=relaxed/simple;
+	bh=8fSSR0cPOjH99xno13mYz0ccyW0EWjLe5aOQYR080CA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ePGRLxv0iNK/k3r3ZBwKkZZUFAyDED4ciF6UWwojNNJKzEuOzU6nSwk8O1cRLz7G6/5l2Xwe4cKDj1hrTPofYBGbzxF3W7HV//iN4QOR7QVvUJY1ZZ29EqTghO8EriJZvp5FaQMz5EaGlamp156z0n2pnUORbJdCwiQX2hrjVfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IDqvyzic; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dUDe8MqA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBF1A1F00893;
-	Thu, 17 Sep 2026 12:55:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IDqvyzic"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA5B71F00898;
+	Thu, 17 Sep 2026 12:55:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789649743;
-	bh=tCU4DKnynve/gZTg+19POBmZSkp2WWEg8KJKX/NGKlQ=;
-	h=From:To:Cc:Subject:Date;
-	b=dUDe8MqAsTOD5MdhHcbgw/Z+i1Au0RBwpB8Z1nSg1rjMLhYrcwEoSimo0jdZ0p8hV
-	 FidplE5VX8+WuIhBnTp9GPEdSDgLC6Q/7CL5OkAAz6FcaC/jJ2hUMD+Hd7hpLR1Boi
-	 naltw3uSOfRLZODsscSlctHmjDqV7Rp0vhyfh53Uhyc+N4e1hmzNABInZlBwRb5EyI
-	 P9N3+SKmnHSoMCSJKhDHQvumz2YUvjZ4b2b3XyuRXllHb55n4e1ZBEVkCF1OrMYx5N
-	 vUWboQzLNLtxbhf8UNHA6UcWX3hFI/auggxX/VE/HBMxWYfRkUX9fwR+en+ysfWxcp
-	 4JnsUPnecCd5Q==
+	s=k20260515; t=1789649747;
+	bh=ElLI+IuJMvGmGqI3ZnEhO/c257k0RsljNU2LpfSetks=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=IDqvyzic3ejylOVK7d7f8lv1+D9h0UjbrG47k99tnuJFnJM5gRcE8g8wpPGwc4YRW
+	 XSUuuneHyk3FhMUT5b9u5uPO/G/Na9TUSW4lndKKxC4mrgAlY7lCUtRuavdS56K4NI
+	 dSYNp1OQEN7hX3+LbhQFQXR4xn0/J/JuLDr+qubzN1dPrUfE4YxX4puTod8bFlU4wJ
+	 WGa+zXp/LMIfEkBs7coaSJLgpWMvCUm4tAQFIBbVLYZkWY0OEUtyiXYcmYZe8M5F5H
+	 UobtQff9m/7urlEcxy2QIY3fVIq9mAm+nviiF0kjTjY41Gxy/RnQO+D/Meee4usS4/
+	 O9/sHCZz6yaRA==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -32,52 +33,72 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 0/6] scsi: scsi_debug: fix zoned write validation
-Date: Thu, 17 Sep 2026 14:54:46 +0200
-Message-ID: <20260917125445.1376493-8-cassel@kernel.org>
+Subject: [PATCH v3 2/6] scsi: scsi_debug: Do not write a partial physical block
+Date: Thu, 17 Sep 2026 14:54:48 +0200
+Message-ID: <20260917125445.1376493-10-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260917125445.1376493-8-cassel@kernel.org>
+References: <20260917125445.1376493-8-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1485; i=cassel@kernel.org; h=from:subject; bh=JStOVV72gwAWPMsgqW8w3ukIH/rrvhmORnk3QcNTYps=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJWPxb1OpOUKGnhMGlaQnbwRKaWWS+2HCtKfZup6rCYs XN1/9UPHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZhIlgTDf/cio/ULPY6+apLy 6/DZ71qy/S/ng0XSzqodhW2NS3xNqhgZ9ljP5U5b+DGlJ4uv3XTLvz/R4qcSluw4c4x3vcXKusm 5PAA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2107; i=cassel@kernel.org; h=from:subject; bh=8fSSR0cPOjH99xno13mYz0ccyW0EWjLe5aOQYR080CA=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJWP5aaLeEc/syx0DdoiZlB8dT6p0y5PYquVrPd81Xu1 zacOsneUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgIl4tDD8j8kx4EkyXOHZuX1z 7CWLaVrP+qpXt/LXtuVNmpKz+pO9BSPDqZVeBeLPby8PEDzEuOW96Zpb+4wO3tDLc3bXLTzSbf+ BCwA=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-This series fixes scsi_debug with regards to writes to a ZBC drive.
+do_device_access() copies one logical block at a time and stops at the
+first short copy, so when the data-out buffer is smaller than the
+transfer length of the command it can write part of a physical block.
+An initiator can arrange that with SG_IO.
 
-The series is based on 7.4/scsi-staging rather than 7.3/scsi-fixes (as
-Damien suggested on v1) to avoid a build warning that would have happened
-if this series was simply merged with linux-next (7.4/scsi-staging):
+A device writes whole physical blocks, and ZBC-3 r06 (T10/BSR INCITS
+579), 4.5.3.3.2, requires a write to a sequential write required zone to
+end on a physical block boundary, so a partly written physical block is
+not a state that a device can be left in.
 
-  error: too many arguments to function 'mk_sense_buffer'
+Stop at the last whole physical block that the buffer holds. The bytes
+that are left over are not written, and are reported to the initiator as
+part of the residual.
 
-Tested on a zoned scsi_debug device with 512 byte logical blocks and a
-4096 byte physical block.
+With the default physblk_exp=0 the physical block size equals the
+logical block size and this changes nothing. Nothing changes either when
+the buffer holds all of the data that the command asks for, so a command
+that transfers fewer logical blocks than a physical block, which is
+legal outside a sequential write required zone, is unaffected.
 
-Changes since v2:
-- Added patch 1, to that write paths correctly report the residual.
-- Added patch 2, so that do_device_access() will always write a
-  multiple of physical block size. (Reads are unchanged.)
-- Patch 3 changed to advance the WP by how much that was actually written
-  (rather than leaving the WP alone when not all blocks were written).
-- Patch 5 changed to take the meta write lock if scsi_debug_lbp() is set.
+Assisted-by: LLM
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/scsi/scsi_debug.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-Niklas Cassel (6):
-  scsi: scsi_debug: Report the residual of a write
-  scsi: scsi_debug: Do not write a partial physical block
-  scsi: scsi_debug: Advance the write pointer over the data written
-  scsi: scsi_debug: Enforce physical block alignment of zoned writes
-  scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
-  scsi: scsi_debug: Validate zone access for WRITE ATOMIC (16)
-
- drivers/scsi/scsi_debug.c | 66 +++++++++++++++++++++++++++++++++++----
- 1 file changed, 60 insertions(+), 6 deletions(-)
-
-
-base-commit: c3cff7fac01638ab58e85fe7df41a04fa25c5bae
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 641dd6f93791..8ed7d5cd0ae0 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4290,6 +4290,19 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
+ 
+ 	fsp = sip->storep;
+ 
++	/*
++	 * A data-out buffer that does not hold all of the data that the
++	 * command asks for is written up to the last whole physical block
++	 * that it does hold, so that a partial physical block is never
++	 * written. The bytes that are left over are reported as a residual.
++	 */
++	if (do_write) {
++		u32 avail = (sdb->length - sg_skip) / sdebug_sector_size;
++
++		if (avail < num)
++			num = round_down(avail, 1U << sdebug_physblk_exp);
++	}
++
+ 	block = do_div(lba, sdebug_store_sectors);
+ 
+ 	/* Only allow 1x atomic write or multiple non-atomic writes at any given time */
 -- 
 2.55.0
 
