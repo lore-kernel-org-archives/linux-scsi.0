@@ -1,35 +1,35 @@
 Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB02D4D7D2F;
-	Thu, 17 Sep 2026 14:39:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDFBF519907;
+	Thu, 17 Sep 2026 14:41:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789656008; cv=none; b=i7QwPGf/e9F95+O9rfORfES9mxdoA+B2AXLL//n/ravnzwiavFASu2Wl1kHKCgM80/M+SadWnE7fu/FXIYJzS49ZLtJowSR+AX+zITQuQKoTs4c/P5xfMkm1d3HymwtG4TDduC+siNRYWFF7u5i+dT0GMz3pmsa5FpIARvSkNDI=
+	t=1789656127; cv=none; b=QsTmvYQc2hEs0uL/ZKllrznmP2bq1NUZUwsjjCFLVSj21KsvYblrjJl2xwd/XnIkVMLxTCRUS/VkG7rDX30FQmIi52WwBbAp0XrQdP6CG7xBUFnWq5PXXFYYv5GcXWqiCYkhiCBuKQxJ3JPxS0XFMZ50Htsz/ZZrohR0CPmJCEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789656008; c=relaxed/simple;
-	bh=UQd++g2MZYKtVFFn9rNTlYGYNrpBrPJep7M7ltcYHxg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=X5mq0+XAwA8u0DfSe97kaPwwcVyd4CihOFw31fxDB/FoSJN/q+pI5ZGMMO9h8AMFUWXiDPY2znZ8qbRDE94M9eppll3nqP/mz55YQ5Crvg2fYh7/8LWBeaNihVUSx6l928dDYetVaRs6S+tBWf7GXxyBzARX/qmuXkX+7VcmwOQ=
+	s=arc-20240116; t=1789656127; c=relaxed/simple;
+	bh=L930Mfkz+kif9m+OicriBXL1vAqKskwt+Rbk9Pred4E=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AFyJI3fLb9+Zu+ZlH5jCXA9kcCinukytrdBXH4xuAqdDH3U8+DYm+WdadXS0TE1sOP4lW11vbBRf+k0dDaAv+HTp0duUJd6dm++5IoJPQFgZhrGwA/xeXIt6Of/DlJR3e7kP0K3b+n0/Et/D90UUEwEydUuY0sbDipLRTM4qbsY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-05 (Coremail) with SMTP id zQCowACXADuy+6tqwq+CCA--.4889S2;
-	Thu, 17 Sep 2026 22:39:46 +0800 (CST)
+	by APP-05 (Coremail) with SMTP id zQCowADnF0Io_KtqB7mCCA--.5021S2;
+	Thu, 17 Sep 2026 22:41:45 +0800 (CST)
 From: Wentao Liang <vulab@iscas.ac.cn>
-To: JBottomley@Parallels.com
-Cc: James.Bottomley@HansenPartnership.com,
-	djbw@kernel.org,
-	john.g.garry@oracle.com,
+To: James.Bottomley@HansenPartnership.com
+Cc: dick.kennedy@broadcom.com,
+	james.smart@broadcom.com,
+	justin.tee@broadcom.com,
 	linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com,
-	yanaijie@huawei.com,
+	paul.ely@broadcom.com,
 	Wentao Liang <vulab@iscas.ac.cn>,
 	stable@vger.kernel.org
-Subject: [PATCH] scsi: libsas: Fix use-after-free in sas_eh_handle_resets()
-Date: Thu, 17 Sep 2026 14:39:46 +0000
-Message-Id: <20260917143946.2157366-1-vulab@iscas.ac.cn>
+Subject: [PATCH] scsi: lpfc: Fix ndlp reference leak in lpfc_issue_ct_rsp()
+Date: Thu, 17 Sep 2026 14:41:44 +0000
+Message-Id: <20260917144144.2157444-1-vulab@iscas.ac.cn>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -38,61 +38,52 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowACXADuy+6tqwq+CCA--.4889S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr17CF17GryfXry3Ww1rWFg_yoW8Gr1Dpr
-	Z5Jay3CFW8Gw4vganruw1FgFyYvan2g348GFWfKay8G3WrX34YvrW8CFWjqFy8Jry8CFZ0
-	vr47t3yrW3WUArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPvb7Iv0xC_tr1lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
-	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
-	AK021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
-	6r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI
-	0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2Wl
-	Yx0E2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE14v26F4UJVW0owAm72CE4IkC6x0Yz7
-	v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0E0s8F02x267IIx4CEVc8vx2IErcIFxwAC
-	I402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrw
-	CF04k20xvE74AGY7Cv6cx26r48ZrWUJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E
-	5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtV
-	W8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY
-	1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14
-	v26r4UJVWxJr1lIxAIcVC2z280aVCY1x0267AKxVW0oVCq3bIYCTnIWIevJa73UjIFyTuY
-	vjxUFsjjDUUUU
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBgUNA2qr888SPwABsc
+X-CM-TRANSID:zQCowADnF0Io_KtqB7mCCA--.5021S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7Wr4DXw1DAr4UuF48AF4fXwb_yoWkXwb_ur
+	40yr4xJ3ykCF1kG3WUAr17A39Fka1jq3Z7CrnFv3yfu3yIvF1j9r98Ar45uw17uwsxWwnx
+	Ga10qr9Yy343ZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbgxYjsxI4VWDJwAYFVCjjxCrM7CY07I20VC2zVCF04k26cxKx2IY
+	s7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4
+	kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_
+	Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxV
+	W0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
+	7VC0I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_Cr1j6rxdMcvjeVCFs4IE7xkEbV
+	WUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VAI37AI020EjII2zVCS5cI20VAGYxC7M4II
+	rI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMx
+	AIw28IcVCjz48v1sIEY20_Gr43Wr1UJr1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
+	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r
+	43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF
+	7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
+	0_Gr1j6F4UJwCI42IY6I8E87Iv6xkF7I0E14v26rxl6s0DYxBIdaVFxhVjvjDU0xZFpf9x
+	07UC38nUUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAMNA2qr9nANwgAAsJ
 
-sas_eh_handle_resets() drops the reference it took on the domain device
-with sas_put_device() and then accesses dev->state again while holding
-ha->lock. The put may release the last reference, so the clear_bit()
-can touch freed memory.
+lpfc_issue_ct_rsp() stores the reference returned by lpfc_nlp_get() in
+dd_data so that the completion handler can drop it, but when lpfc_readl()
+fails the function bails out to issue_ct_rsp_exit and frees dd_data
+without dropping that reference, leaking the node.
 
-Clear the pending flag first and drop the reference last.
+Release the node on that error path too.
 
-Fixes: 5db45bdc87ce ("[SCSI] libsas: enforce eh strategy handlers only in eh context")
+Fixes: 4430f7fd09ec ("scsi: lpfc: Rework locations of ndlp reference taking")
 Cc: stable@vger.kernel.org
 Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 ---
- drivers/scsi/libsas/sas_scsi_host.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_bsg.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index c83282733ec4..14ca19c93c32 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -680,10 +680,15 @@ static void sas_eh_handle_resets(struct Scsi_Host *shost)
- 		if (test_and_clear_bit(SAS_DEV_RESET, &dev->state))
- 			i->dft->lldd_I_T_nexus_reset(dev);
- 
--		sas_put_device(dev);
- 		spin_lock_irq(&ha->lock);
- 		clear_bit(SAS_DEV_EH_PENDING, &dev->state);
- 		ha->eh_active--;
-+		spin_unlock_irq(&ha->lock);
-+
-+		/* dev->state is no longer used, this may be the last reference */
-+		sas_put_device(dev);
-+
-+		spin_lock_irq(&ha->lock);
- 	}
- 	spin_unlock_irq(&ha->lock);
- }
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 7406dfa60016..f9e9896c348b 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -1545,6 +1545,7 @@ lpfc_issue_ct_rsp(struct lpfc_hba *phba, struct bsg_job *job, uint32_t tag,
+ 	if (phba->cfg_poll & DISABLE_FCP_RING_INT) {
+ 		if (lpfc_readl(phba->HCregaddr, &creg_val)) {
+ 			rc = -IOCB_ERROR;
++			lpfc_nlp_put(dd_data->context_un.iocb.ndlp);
+ 			goto issue_ct_rsp_exit;
+ 		}
+ 		creg_val |= (HC_R0INT_ENA << LPFC_FCP_RING);
 -- 
 2.34.1
 
