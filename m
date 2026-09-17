@@ -1,123 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67CCC4C10F4
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 15:19:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE89C4D4876;
+	Thu, 17 Sep 2026 15:21:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789658364; cv=none; b=Oa7gFD7QlwP0TVBBHTRwvUmAATEcP9Q8ScofsDmJdik7RSrvMLcnMUmT7uZPdEGIcRyOhlotfWfJ6TFoRJqCXd/4q/ul5RGJGA/VNXI3NEUM4hWP8cuqWxDDQSBegQtl+pRiroWAN5FRHmLfhmToE5Yaofaw7H/08i+7CiuO+/M=
+	t=1789658498; cv=none; b=mYKOtU0cRvqBvtZeDqnulxC0GGCJURTTetDUUmeSesxD7IaPVZ6y8bJZoKt4p7FwJNN0NH/3W7dfQXX4Snp9+Bv6jwcaPikhI7K6HkIuJYK5qnVNr9WlFoz4CKYfqMTkq7LhSH2DPQb4Jw9XTpZxq7jnag92xgIFd/u6AujJWhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789658364; c=relaxed/simple;
-	bh=noUVGUQYTaUwGyCJJ0YumK6UHA1In2urpk1i2ug3dTY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FCKg7KBYo81YWSDJJ2clwUacRcOrO4Fhz1kW3ovgSVnqAG59dcqwFml6AEWGjHNJylLEK2Qna1uSqAvtNKlN21ru0BopNyCOJljWpW0VmK9CBMYR0pGTwMN5so0eEQA/xDqc/Uxequx+xj32PepO9FRKll0j+9AUtx/XZY9TS0E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ncA69vZ4; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ncA69vZ4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBCBE1F000FF;
-	Thu, 17 Sep 2026 15:19:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789658351;
-	bh=s3Zz7EARhGbeAQ0sw7v7lzOikIwzlmv4cBBoAu1qIIM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ncA69vZ4ZKzCrybyaoTKLfnlg5CnwKIH2ywRAgULFV10IWKnMSjb1Fvx3QhEFHHT/
-	 WlZgZVLuKQqvsDEneYEAO5nIoZDSPddF6fzDciUTEKrhj7hNFvqyTs5etB+3oq9CwN
-	 xi0TanLKIlmGZuQiCFK7Bubv0VPDIMRDjyIfk8F/5R/yVRrn4BtHf5OjyNjlXjEnFz
-	 QtDTaCei7PFe9JWXhzFq11rvDCk4nlhU3yUNBQZh0viOrubTwpXwlDfZ1oLm80BaNG
-	 3N9OnsyFv+VlXDydczpDPT0/Fv+nSWw/iz/v0KnJo3gsRwmK011vjDDRBBXQ/R3zHH
-	 OuA0UnEMA/Y6Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: mpi3mr: Fix tgtdev reference count in
- mpi3mr_pcietopochg_evt_bh()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Wentao Liang" <vulab@iscas.ac.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260917150301.2158080-1-vulab@iscas.ac.cn>
-References: <20260917150301.2158080-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 17 Sep 2026 15:19:10 +0000
-Message-Id: <20260917151910.DBCBE1F000FF@smtp.kernel.org>
+	s=arc-20240116; t=1789658498; c=relaxed/simple;
+	bh=RYV7HFAVRXdmPMRYMY4FxY232zrON1v+knz7Z3599QQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FSMZlg5iPBhMNRMfEDpU0J3rPbea8ewmr0xrQE2dDRIWZ3hlD+Levu1SxoVxxWT2ez63rHbmBNQj2PRiQoQwxNVsk/okeFOMfNQhnN55mfC6L/acr7jfJL+wdHjflH7rjSt5Cxg054FipVGWmfvJy4KFouIIsmmvTHnK3YRwBHE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
+	by APP-05 (Coremail) with SMTP id zQCowABn0TtwBaxqlG6DCA--.5660S2;
+	Thu, 17 Sep 2026 23:21:20 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: GR-QLogic-Storage-Upstream@marvell.com
+Cc: James.Bottomley@HansenPartnership.com,
+	andrewv@marvell.com,
+	hmadhani@marvell.com,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com,
+	njavali@marvell.com,
+	Wentao Liang <vulab@iscas.ac.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: qla2xxx: Fix cs84xx reference leak in qla2x00_initialize_adapter()
+Date: Thu, 17 Sep 2026 15:21:20 +0000
+Message-Id: <20260917152120.2158829-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zQCowABn0TtwBaxqlG6DCA--.5660S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7JFWruFWUCFyktryUAryDtrb_yoWkKFbEgF
+	4UW34Igr1UuFs29w1Iqr13A392ya1kXw109w4Fy343CrWfW3W7Xrn0g39xua4xur40yFWD
+	Cw4ruryFvw129jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbgxYjsxI4VWkKwAYFVCjjxCrM7CY07I20VC2zVCF04k26cxKx2IY
+	s7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4
+	kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_
+	Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxV
+	W0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
+	7VC0I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_Cr1j6rxdMcvjeVCFs4IE7xkEbV
+	WUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VAI37AI020EjII2zVCS5cI20VAGYxC7M4II
+	rI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMx
+	AIw28IcVCjz48v1sIEY20_Gr43Wr1UJr1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
+	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r
+	43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF
+	7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
+	0_Gr1j6F4UJwCI42IY6I8E87Iv6xkF7I0E14v26rxl6s0DYxBIdaVFxhVjvjDU0xZFpf9x
+	07bbXocUUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAINA2qr9nAjRAABsh
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] scsi: mpi3mr: memory leak of tgtdev on PCIe removal due to removed=
- kref put
-- [High] scsi: mpi3mr: incomplete fix leaves double-put UAF vulnerability i=
-n SAS and status handlers
---
+qla84xx_get_chip() takes a reference on the shared 84xx chip state, but
+the early return taken when qla2x00_init_rings() fails does not release
+it. The reference is only dropped on the 84xx init failure and on
+driver removal, which never runs after a failed probe, so the chip
+state is leaked.
 
-commit a438077929efbcec320166774a755489ffa128b2
-Author: Wentao Liang <vulab@iscas.ac.cn>
+Drop the reference before returning on this error path.
 
-scsi: mpi3mr: Fix tgtdev reference count in mpi3mr_pcietopochg_evt_bh()
+Fixes: 26a77799195f ("scsi: qla2xxx: Correct error handling during initialization failures")
+Cc: stable@vger.kernel.org
+Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-This patch drops an extra put in the PCIe topology change event handler
-that previously dropped the reference twice. This is intended to fix a
-premature release of the target device kref.
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index e746c9274cde..b5bffe561735 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2853,8 +2853,11 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ 		rval = qla2x00_init_rings(vha);
+ 
+ 	/* No point in continuing if firmware initialization failed. */
+-	if (rval != QLA_SUCCESS)
++	if (rval != QLA_SUCCESS) {
++		if (IS_QLA84XX(ha))
++			qla84xx_put_chip(vha);
+ 		return rval;
++	}
+ 
+ 	ha->flags.chip_reset_done = 1;
+ 
+-- 
+2.34.1
 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
-_os.c
-> index 991e29a8d382f..d6414d0186183 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -2053,7 +2053,6 @@ static void mpi3mr_pcietopochg_evt_bh(struct mpi3mr=
-_ioc *mrioc,
->  			if (tgtdev->host_exposed)
->  				mpi3mr_remove_tgtdev_from_host(mrioc, tgtdev);
->  			mpi3mr_tgtdev_del_from_list(mrioc, tgtdev, false);
-> -			mpi3mr_tgtdev_put(tgtdev);
-
-[Severity: High]
-Does removing this explicit put leak the tgtdev structure?
-
-The device structure tgtdev is initialized with a refcount of 1 upon
-allocation, and a second reference is taken when it is added to the internal
-list. In mpi3mr_pcietopochg_evt_bh(), mpi3mr_tgtdev_del_from_list() drops t=
-he
-list reference.
-
-By removing this explicit put, doesn't the object end up with a stranded
-refcount of 1 after the event handler drops its loop-local handle reference
-at the end of the iteration? This appears to result in a permanent memory
-leak on standard hardware hotplug paths.
-
->  			break;
->  		default:
->  			break;
-
-[Severity: High]
-Does this fix leave the same double-put vulnerability in the SAS and status
-handlers?
-
-The patch aims to fix a premature reference release by removing the explicit
-put in the PCIe topology handler. However, looking at the source, the exact
-same reference-dropping sequence remains in mpi3mr_sastopochg_evt_bh() and
-mpi3mr_devstatuschg_evt_bh(). For example:
-
-mpi3mr_devstatuschg_evt_bh() {
-    ...
-    if (cleanup) {
-        mpi3mr_tgtdev_del_from_list(mrioc, tgtdev, false);
-        mpi3mr_tgtdev_put(tgtdev);
-    }
-    ...
-}
-
-If a device fails to be removed from the list (e.g., state is not
-MPI3MR_DEV_REMOVE_HS_STARTED), these handlers unconditionally drop the base
-reference while the object remains in the list.
-
-Later, when the device is actually removed from the list (such as during
-mpi3mr_refresh_tgtdevs()), wouldn't the refcount drop to 0 prematurely,
-causing a use-after-free during the subsequent put? Should these other
-equivalent handlers be updated to properly address this sequence as well?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917150301.2158=
-080-1-vulab@iscas.ac.cn?part=3D1
