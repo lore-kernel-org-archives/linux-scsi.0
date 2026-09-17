@@ -1,132 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05A74511E89
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 13:15:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F41B451FCB3
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 13:17:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789650914; cv=none; b=cHKuIEMlMO+ndI8hrhpwdTtKBjkmBefGtBHu7BpKym8LJdSES4Mul8aSso5sRGPTePAxgkZu5ELGqsQ1VKndAkKw2vAbW7pcVpV3T2/pjIJYdi230vtnBwmukCrA1X4ngxxteDpdYSaTZvJWIJ6Lfmb3paWQz2Is3mjGi530icg=
+	t=1789651080; cv=none; b=t86F1mxLj1A+FLUArg+Njk9ioTjjIRGCSyGQwO1AWoq5Ue3otAouKj4fPs66wn2TgNpnPV+QHQbVZsW02Jj7zag1p8Q+wNzp8Brhu4P4pgYmtg/ZbFjNDLdQy3+BnwZO75hj0HBkoNhMT+SCbPA06K02XyAJpaI/JLa3Awhr4kU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789650914; c=relaxed/simple;
-	bh=tkM+pE+4mgnBoIb28fM8Qq6oHN40T/L1P5DOBbSAOMY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=D7OUThRoZq8WxRCwJnWmg4umLUEmnSmqki8LdxY2RzhEXxzJ6Bg0r3iW4ntBFfNBVUaUpPLfJO3m3p/cxkkTbEthR6Ro6sWgR4BvhDGx2D+UNJXGuorQZ58rVn1j4QTvtSBtIdxeWiwUIeKRNWSmp9XqSuor3sV7GLXzeZ6o5dk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OeRLP89z; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789651080; c=relaxed/simple;
+	bh=A9sUwoh777zOCS1Se+rPt2ZLCKCFxam7Udjjd/qOq94=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ktgLk932pa0aZuT4RV+BccWAQdqm1QOoNSr/e1ihzmfh7RTdsV75/x3Ma9TSy3bg7NkuLZfcGFpPed+qXCHO3lnFzKImrNkBXkKJulPdgxEu344Ps8CgQ+mfTzpjAvj+JZ1ap/y6a28Y+OeAKDVxmXzJfNtFgyhzzlQqJJH0/YA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DKx3HECz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OeRLP89z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A05AB1F000FF;
-	Thu, 17 Sep 2026 13:15:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DKx3HECz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2F4A1F000FF;
+	Thu, 17 Sep 2026 13:17:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789650908;
-	bh=XLwA5QE7uErNvhZ6MbOrvDWKS99lJhTnJPSgKjPJPKg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=OeRLP89zcUs4eESeqXh4xuZ4mZ3IiYrFcIkCovf8wZcnCgDe9E4WrsbCorN4jE/jm
-	 ph8fOfNQVxJHq0Uya/xp0bkxvMU/WoTh5WZKkrclyGkByOnbSxcZO8KnccdQrkaCjh
-	 thI5Y4h9+VtG3caBNGmt0yV4fHYN32wmeGJxEsqKnPdamgCZ8TkfXOPnHxSrbC1r0Y
-	 Aw5GVyidfdPb/wraoMFHkDgInilakpZ898KjoKEVlh/euR3eanq7M281Qq2LQKbuNM
-	 3ay4/+/dBBlYRnSbtCLa+bwR30pWDEQ5Ga7FdpE7TcvkWqxAwHL4EGm6cbtrgd28gK
-	 n9PwC7cP0D/Rw==
-Message-ID: <5cd95afa-b9d6-4993-a221-1560df8978dc@kernel.org>
-Date: Thu, 17 Sep 2026 20:15:05 +0700
+	s=k20260515; t=1789651078;
+	bh=f0H3C/PXI2v2BKGrGpgKC/VjKjokQRh81hrt7hgGNh4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=DKx3HECzRIB6OL6xjcTSunuwpR94TJqXAdxn4Wgj/OC8FHEghHLFWqSv3g6Y5f90g
+	 cS6RqVi89bQ3irnWq3HvwnJxUQ/8kaU+TxwugrJT66bfLPl8YdEoYXkBxmhvhudygG
+	 G2v+18BubW3ZeOD8Aa0cBuH27HNwOwfhKqPOUJ+sMu9fe9E8V5GcHSD0Ywqjiu4XD4
+	 6m6fCYNDEnIR1ocT5r1AgpbzDca2oQrdc/OwRG3VAizNGe91GNMcPUIYvzQZx2wYwL
+	 ZJRhLK5/9WJ/V2EeJK946HJrRCxE/SWPpr2OTCsgVL+RhOLpsFEqNWgXcWi3nIvthR
+	 fECH5wivjNmzw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] scsi: libsas: Fix SMP IO deadlock during HA resume
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Xingui Yang" <yangxingui@huawei.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260917130642.1796231-1-yangxingui@huawei.com>
+References: <20260917130642.1796231-1-yangxingui@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 17 Sep 2026 13:17:58 +0000
+Message-Id: <20260917131758.A2F4A1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 6/6] scsi: scsi_debug: Validate zone access for WRITE
- ATOMIC (16)
-To: Niklas Cassel <cassel@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@linux.dev>
-References: <20260917125445.1376493-8-cassel@kernel.org>
- <20260917125445.1376493-14-cassel@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20260917125445.1376493-14-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 2026/09/17 19:54, Niklas Cassel wrote:
-> WRITE ATOMIC (16) is a write command, so on a zoned device it is subject
-> to the access requirements of the zone that it addresses, and it advances
-> the write pointer of a sequential write required zone. See ZBC-3 r06
-> (T10/BSR INCITS 579), 4.5.3.3.2 Write access pattern requirements for
-> sequential write required zones.
-> 
-> resp_atomic_write() calls do_device_access() directly, without calling
-> check_device_access_params() first and without advancing the write
-> pointer afterwards. It is the only command that writes user data which
-> does not; WRITE, WRITE SCATTERED and WRITE SAME all go through
-> check_device_access_params(), which validates zone access for a zoned
-> device.
-> 
-> As a consequence, with zbc=managed atomic_wr=1, a WRITE ATOMIC (16) can
-> write anywhere within a sequential write required zone regardless of its
-> write pointer and zone condition, into a gap zone, or across a zone
-> boundary, and none of it is reflected in the zone state. The write
-> pointer is left where it was, so a subsequent REPORT ZONES does not
-> describe the data on the medium, and the next write at that write
-> pointer overwrites data that was written without error.
-> 
-> Validate the access and advance the write pointer the way
-> resp_write_dt0() does. The zone metadata write lock is already taken
-> across the access for the provisioning map; take it for a zoned device
-> too, as the write pointer has to be read and updated atomically with
-> respect to other commands. Unlike an ordinary write, the write pointer
-> is advanced only when all of the data was written, as an atomic write
-> either completes or has no effect.
-> 
-> Assisted-by: LLM
-> Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] libsas: missed PM autosuspend in smp_execute_task_sg()
+--
 
-See my comment on v2.
+commit 8e09b6455fc925eb255f96d9d3584cbd10d1bdaa
+Author: Xingui Yang <yangxingui@huawei.com>
 
-> ---
->  drivers/scsi/scsi_debug.c | 16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 33f2df26e5af..b57d25d7214c 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -6229,15 +6229,29 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+scsi: libsas: Fix SMP IO deadlock during HA resume
+
+This commit fixes a deadlock during controller resume by using
+pm_runtime_get_noresume() and pm_runtime_put_noidle() when
+SAS_HA_RESUMING is set. Outside of the resume window, it converts
+pm_runtime_get_sync() to pm_runtime_resume_and_get() to handle
+runtime resume failures.
+
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas=
+_expander.c
+> index 811c9eb4fef11..a17b938cd3b7c 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+
+[ ... ]
+
+> @@ -135,7 +150,10 @@ static int smp_execute_task_sg(struct domain_device =
+*dev,
 >  		}
 >  	}
->  
-> -	if (scsi_debug_lbp()) {
-> +	if (sdebug_dev_is_zoned(devip) || scsi_debug_lbp()) {
->  		sdeb_meta_write_lock(sip);
->  		meta_data_locked = true;
->  	}
->  
-> +	ret = check_device_access_params(scp, lba, len, true);
-> +	if (ret) {
-> +		if (meta_data_locked)
-> +			sdeb_meta_write_unlock(sip);
-> +		return ret;
-> +	}
-> +
->  	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
->  	if (unlikely(scsi_debug_lbp()))
->  		map_region(sip, lba, len);
->  
-> +	/*
-> +	 * If ZBC zone then bump its write pointer, but only if all of the data
-> +	 * was written: an atomic write either completes or has no effect.
-> +	 */
-> +	if (sdebug_dev_is_zoned(devip) && ret == len * sdebug_sector_size)
-> +		zbc_inc_wp(devip, lba, len);
-> +
->  	if (meta_data_locked)
->  		sdeb_meta_write_unlock(sip);
->  
+>  	mutex_unlock(&dev->ex_dev.cmd_mutex);
+> -	pm_runtime_put_sync(ha->dev);
+> +	if (ha_resuming)
+> +		pm_runtime_put_noidle(ha->dev);
 
+[Severity: Medium]
+Does this leave the device permanently in the RPM_ACTIVE state if this
+thread outlives the host resume?
 
--- 
-Damien Le Moal
-Western Digital Research
+If an independent thread starts an SMP IO while SAS_HA_RESUMING is set,
+it increments the PM usage count via pm_runtime_get_noresume(). If the
+host resume process finishes before this SMP IO completes, the PM core
+drops its own reference and performs an idle check, which fails because
+this independent thread still holds a reference.
+
+When this thread finishes and calls pm_runtime_put_noidle(), the usage
+count drops to 0 but the idle check is explicitly skipped. This means
+no autosuspend will be queued, and the device might leak its active
+state, preventing the controller from autosuspending and leading to
+higher power consumption.
+
+> +	else
+> +		pm_runtime_put_sync(ha->dev);
+> =20
+>  	BUG_ON(retry =3D=3D 3 && task !=3D NULL);
+>  	sas_free_task(task);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917130642.1796=
+231-1-yangxingui@huawei.com?part=3D1
