@@ -1,41 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CA2E3921C8
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 02:28:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68597361DD5
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 02:28:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789612119; cv=none; b=DleRr95iJ67jKnxSJnWNyuBCiH1Vlw0cp9Bz8avvc/6TqoZw1uQn9Op1Q5rCOesN+7q0eH+kipSvDKBdFwLT0ABDGvxfXP1JwLPsADupwiufqgLdF7/mbPJX6vaiZC64kX4SbGKnTKOylzwu22w1LN2tQxh2e+/512NrscTOsrw=
+	t=1789612122; cv=none; b=Y1YyE9pXqYWd5GhTTKHdki6AznGc0DMvHAtRerid4+L82tI1Rqi91YzbzH1/Sh8853B5eJyqaVINlEiwXdAm75Ah5MG7Nvm1fL6QNblJzANmzorWexUYgX1fEAemBUrTXZPsayT4StkoSwLxVR3ofINhAo85K/Pt2azFULO8tUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789612119; c=relaxed/simple;
-	bh=sAyun5VAQQI0vvxMOhdcSrpBCB+0IrIenm9LrrFw4Ak=;
+	s=arc-20240116; t=1789612122; c=relaxed/simple;
+	bh=VoB6em2UL0AKZEuShmaK6XlsYd2wsXNS33kH4rr2/m4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bdghIdvCmZKa2ZaWORbwzot1kB4yU3+V+PtGNqbWZRAXgrJpbEHP62i7m4uQ7f5z1bFB2jZb+g+UHfy2e4XFhZ1BmHPdFIBZWu7uuKXU85t+lWQeyIipLPCYCuDu2RN4Qf0jR55GRu7i2F9yx7xRA1IxC8MJiLRWYhpWVIV9Jjo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eeUq2uMk; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=sK682UiObSZ0KtrZgKfPEf+h/r773VBldXQFebfsLt4ZhqIosDuuGiEdTd/hitajeWzig9UHCPbrDLYL80E4A3w8tqxG4ai89S8++hRFrifmXJj7eo+meOGE3/iU1XG+kEu+9n2ivAuGtjpVCXb/PW94qpMJ6SqoG4ivH+HgihI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PfpoFLiG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eeUq2uMk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D9FA1F0089B;
-	Thu, 17 Sep 2026 02:28:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PfpoFLiG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02D421F00893;
+	Thu, 17 Sep 2026 02:28:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789612114;
-	bh=RguZCz1EsMEN6rCKB1NUfXv5ocdYz3x8qkPAgooCIeU=;
+	s=k20260515; t=1789612110;
+	bh=EG3KDLARYh+yEhwLBXDxYcUVdnU3zQPoVFZ+t6Y6jnw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=eeUq2uMkej/Bv0dRwWPImdaKKqNN6xBu3KKeND17tRPUrriRY/R4TFU+nZWMeH1eA
-	 SZeAKyHOTkdxeIoSfJ3kSt9m9cOfbMw+wqNzBC5bQaIOYbHowTp8SMheb9Fk4OieHF
-	 Y2T7ZSbi4/orUAJEL0bZmCOv8n3WaDtOCnHIotuop1e/A6GgK1lRJz32pMUiPhx1nK
-	 +sD8E1RCL+S+m+frPbzYD9AEQJOwKTIpo40YapIqQv4dN6x89PwGkVd6/vxmh7eriI
-	 qV46Ww7G49ZXxgPddh4bw+CGGFHHTWGtyyqXDyFqSMqfOoe45XB1hnRRYRLiMUctmZ
-	 uUZHrkL1RBo8g==
+	b=PfpoFLiGbgfUvw7eORG6uzpZu2xaHam1+Jxfdv7I1CuqgmnGSP0KWVo9FZqSuceur
+	 bwLR9Y2Zzil8AC0X1RafD1y7LNY2erknqv68zwOVakuOpFz1T84i6NQ/EuPhtGewAc
+	 lNJJMyo2juDOnwViPyosShzYhNlEre7sKOTuLO+vbC4DRFMr7QXLvijt19XB9hNvVp
+	 CWDw8B8+qwqUySqbHMQY4VzfnA9MP15RoJT57NzLt2N8bmJEWvT+P87ghYgw0oCOga
+	 7Kvj0xVu5oBNW+FlwuiZKN5DPUqQL45r2/PS/KISyJ83/2jMgxxVSjvqdOMsauAHgU
+	 FwcDLVBzBfsKA==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: linux-scsi@vger.kernel.org,
-	"Ewan D. Milne" <emilne@redhat.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>
-Subject: Re: [PATCH] scsi: devinfo: add BLIST_SKIP_IO_HINTS for EMC Symmetrix
-Date: Wed, 16 Sep 2026 22:28:16 -0400
-Message-ID: <178961190600.3672510.13129632944035702697.b4-ty@b4>
+To: sebaddel@cisco.com,
+	Arun Easi <aeasi@cisco.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	arulponn@cisco.com,
+	djhawar@cisco.com,
+	gcboffa@cisco.com,
+	mkai2@cisco.com,
+	satishkh@cisco.com,
+	kartilak@cisco.com,
+	jejb@linux.ibm.com,
+	linux-scsi@vger.kernel.org,
+	jmeneghi@redhat.com,
+	revers@redhat.com,
+	loberman@redhat.com,
+	adakopou@redhat.com,
+	lduncan@suse.com
+Subject: Re: [PATCH] scsi: fnic: Fix missed link-up when a critical IRQ targets an offline CPU
+Date: Wed, 16 Sep 2026 22:28:13 -0400
+Message-ID: <178961190582.3672510.16879030014737848098.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260915173800.39117-1-emilne@redhat.com>
-References: <20260915173800.39117-1-emilne@redhat.com>
+In-Reply-To: <20260903175547.57971-1-aeasi@cisco.com>
+References: <20260903175547.57971-1-aeasi@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,21 +58,23 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Tue, 15 Sep 2026 13:38:00 -0400, Ewan D. Milne wrote:
+On Thu, 03 Sep 2026 10:55:47 -0700, Arun Easi wrote:
 
-> EMC Symmetrix returns an error on MODE SENSE for page 0Ah subpage 05h
-> because it does not implement the SBC-5 I/O hints.  These commands
-> began to be sent as a result of commit 4f53138fffc2 ("scsi: sd: Translate
-> data lifetime information").  Add BLIST_SKIP_IO_HINTS to avoid sending
-> these commands because in large configurations the failed commands are
-> displacing other useful information in internal error logs.
+> When CPU Hyper-Threading is disabled, sibling CPUs remain present but
+> are reported offline. Managed MSI-X IRQs can still receive affinity
+> masks that include those offline CPUs. If a driver-critical vector is
+> managed, it can be parked on an offline CPU and the driver may miss
+> critical events such as link-up.
+> 
+> Keep driver-critical vectors unmanaged so they can be migrated by the
+> IRQ core when their target CPU is offlined.
 > 
 > [...]
 
 Applied to 7.3/scsi-fixes, thanks!
 
-[1/1] scsi: devinfo: add BLIST_SKIP_IO_HINTS for EMC Symmetrix
-      https://git.kernel.org/mkp/scsi/c/f06a44e235ef
+[1/1] scsi: fnic: Fix missed link-up when a critical IRQ targets an offline CPU
+      https://git.kernel.org/mkp/scsi/c/0cb1fd924126
 
 -- 
 Martin K. Petersen
