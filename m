@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7955456E0B
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:12:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C712A49F123
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:15:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789683175; cv=none; b=Yr2T3gjTpesv/vS8PCQgUxd7ZaqgasDIMmbX14sFbVekeGH6/tFp+UPb2Liw7fzcHNh3KNnVUwzXudUd9KVgnHx/FFeSIUzy6bUDbsyqeioe008XtqjtHbUu7AktE4roMyrXxSaYH8/4IHW2hJVvoQHjydtCAbnsOs/YK74Fo6Q=
+	t=1789683343; cv=none; b=mK9qG/4F8viY9etX+F2YGG6vnLZHSl3g0Fq0Id3Ey3S+MxRP/wfJ369D+RnAy3cKztzaVGJ7wJVTFaGC6jnJcaBHG4ldJ45+F+UOvH/FTwvKa/SVeEdeIP8IQx+59mLAj9DRCoFsG4UcxbhNAJRK+LsOCJxxPlYzr6wgO3Ytlho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789683175; c=relaxed/simple;
-	bh=rchfa/LYpRmRvrcdlX0sEA8mlNUZfU5ddypiNEjn6OY=;
+	s=arc-20240116; t=1789683343; c=relaxed/simple;
+	bh=Qu1ANGjzKlf8v4fsEtyO2bvQusrvjHWJS+cWe9ndtgo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=osrIjmLwPEZtuQ0v7j70F/GwJ272yWLaviDijQJvflxKxWy+qCi3Ssk4rzPIlIYD2Ix8Xy2kYTWbUGKLGal2OVYGN2fonSGAIElKOyJIDjeUrJ2mpNjoUbGYuPPZrl2dVDcfm8Rp65Q6g66L7+HDC80Oi47fAQsx73ZaD1j/O9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GHidVZkN; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=huHlAOFgn9OuZEAFUmJ7rSGdJoL7SVkjEuIYEL0Z6vbxQBMC4aaSkIzuxfw5ba4Z5xG6rw7KR0zdQqf52sPDPEfzID8i5GplWsM77keHmfIUrEhjlPUTTD0yaYRWr1yyiWjtcYM0S1Qx7b++aIaNfhx0vEQZtRioGSygaMsWpjw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BSz513i6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GHidVZkN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B2C41F000FF;
-	Thu, 17 Sep 2026 22:12:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BSz513i6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 247251F000FF;
+	Thu, 17 Sep 2026 22:15:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789683174;
-	bh=VB7WowP8g8OJ7BZADVg8lli/65RVJVxxdbtjZE/BvEA=;
+	s=k20260515; t=1789683341;
+	bh=vioQrKO3tMdHggWfdrXdUXIqPwGdVJn5lma+EBpF2CA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GHidVZkNXHO6X/985O9HSJsWZkBO39EpABPUyVodhppQNU/3eYXnE27ucXvdJKlir
-	 zAnhjPWJV19swteeBzO8b/B2CXc+lvp1z7NesJRA9/utOU0J64PeO1GodVKiZ7Sf/E
-	 wc7iINvcDlDLZbVzxUG46ed31hHHnrx8G1kzXtbaAe5ztSzAuP8jRmTz8rTO2CULqi
-	 aPmomA9U8dcF/EHLrDwcbNMr2H4YU2rKtvfVQO7avGDN1YauuPLYXCjtH9xEUPGWKU
-	 qFy2gn95GWbKhcmMiD6NXd9XbduZEAs/v+T5Bmjfz1DmpjfnrfKlZSQBia+s7Fxviw
-	 vbX0dKfld5+bA==
+	b=BSz513i6ZVTrQA/80yg+OtTULo8PNTojPDVsJW/YbcyyFEKbzunPDwxjLgglYLzE8
+	 76fY+PAtXAd2e1/j6R0Hjy1tFxR2/gFlALrwPFdxle0A4BXpCEwMwX8WLTq4hzUZ9t
+	 6AxQPgQ+vhGxGOEH6AfrkWLat+LdOcP2HqgW/ZMgm6htjlceu2rLqIr5nmPthKDuU7
+	 W9jpiOQmryZ0OHmRzEQHfbWqOcMjbhyraT28mx9FjBlErxuLAoS6K2KYPTRkU+KvkH
+	 lFERPY5ZImsy8SVi3nOBWhscEnqo9nHw6yicVXv22XkUMohVrXmz4YAgsFykd4Smx2
+	 XHB+rWDLmj3sA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 08/14] lpfc: Improve PLOGI retry handling for large
- SAN configurations
+Subject: Re: [PATCH v4 09/14] lpfc: Send inhibited ABORT_WQE when PLOGI CQE
+ SEQUENCE_TMO is received
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nigel Kirkland" <nkirkland2304@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260917222015.61053-9-nkirkland2304@gmail.com>
+In-Reply-To: <20260917222015.61053-10-nkirkland2304@gmail.com>
 References: <20260917222015.61053-1-nkirkland2304@gmail.com>
- <20260917222015.61053-9-nkirkland2304@gmail.com>
+ <20260917222015.61053-10-nkirkland2304@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 17 Sep 2026 22:12:53 +0000
-Message-Id: <20260917221254.2B2C41F000FF@smtp.kernel.org>
+Date: Thu, 17 Sep 2026 22:15:40 +0000
+Message-Id: <20260917221541.247251F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,92 +47,95 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] lpfc: Deferred PLOGIs are erroneously rejected in lpfc_nlp_logo_un=
-reg due to state check
-- [Medium] lpfc: TOCTOU race in NLP_PLOGI_SND flag tracking allows multiple=
- PLOGIs in flight
+- [High] scsi: lpfc: txcmplq list corruption in lpfc_sli_abort_iocb_ring()
+- [High] scsi: lpfc: unintended abort of reused XRI/IoTag in lpfc_els_retry=
+()
 --
 
-commit 3d16993b649c134340e20dec0bd637799a114aff
+commit d8f6ae5839dc18257873d48c2e2262ffa79b7bec
 Author: Nigel Kirkland <nkirkland2304@gmail.com>
+Subject: lpfc: Send inhibited ABORT_WQE when PLOGI CQE SEQUENCE_TMO is rece=
+ived
 
-lpfc: Improve PLOGI retry handling for large SAN configurations
-
-In large SAN configurations with link perturbations, rediscovery of target
-ports is problematic due to PLOGI retry race conditions. This patch improves
-target rediscovery by ensuring PLOGI retries are serialized in unregistrati=
-on
-and retry handler paths.
+This commit modifies the LPFC driver to explicitly set the Inhibit Abort (I=
+A)
+bit when sending an ABORT_WQE for a timed-out PLOGI CQE. It introduces a
+boolean argument to lpfc_sli_issue_abort_iotag to control this behavior.
 
 > diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index cd431c7bd9f08..3e26654a8286a 100644
 > --- a/drivers/scsi/lpfc/lpfc_els.c
 > +++ b/drivers/scsi/lpfc/lpfc_els.c
 [ ... ]
-> @@ -2329,17 +2331,43 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, ui=
-nt32_t did, uint8_t retry)
+> @@ -4921,7 +4925,38 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_=
+iocbq *cmdiocb,
+>  				/* Reset the Link */
+>  				link_reset =3D 1;
+>  				break;
+> +			} else if (cmd =3D=3D ELS_CMD_PLOGI) {
 [ ... ]
-> +	if (test_bit(NLP_PLOGI_SND, &ndlp->nlp_flag)) {
-> +		lpfc_printf_vlog(vport, KERN_INFO,
-> +				 LOG_ELS | LOG_NODE | LOG_DISCOVERY,
-> +				 "4113 Reject PLOGI issue, PLOGI in-flight "
-> +				 "x%px, DID x%x nflag x%lx\n",
-> +				 ndlp, ndlp->nlp_DID, ndlp->nlp_flag);
-> +		return 1;
-> +	}
-
-[Severity: Medium]
-Can concurrent worker threads race on this lockless flag check?
-
-If two threads execute lpfc_issue_els_plogi() simultaneously (for example,
-from an unregistration completion and a timer), both could evaluate
-test_bit(NLP_PLOGI_SND, &ndlp->nlp_flag) as false.
-
-Both threads would then continue executing, allocate their IOCBs, and reach
-the set_bit(NLP_PLOGI_SND, &ndlp->nlp_flag) call at the end of the function.
-This sequence would issue duplicate PLOGI commands to the same NPort.
-
-> +
-> +	if (ndlp->nlp_state > NLP_STE_PLOGI_ISSUE &&
-> +	    ndlp->nlp_state <=3D NLP_STE_MAPPED_NODE) {
-> +		lpfc_printf_vlog(vport, KERN_INFO,
-> +				 LOG_ELS | LOG_NODE | LOG_DISCOVERY,
-> +				 "4114 Reject PLOGI issue, Node in "
-> +				 "unexpected state x%px, DID x%x nflag x%lx "
-> +				 "in State x%x\n",
-> +				 ndlp, ndlp->nlp_DID,
-> +				 ndlp->nlp_flag, ndlp->nlp_state);
-> +		return 1;
->  	}
+> +				pring =3D lpfc_phba_elsring(phba);
+> +				spin_lock_irqsave(&phba->hbalock, iflags);
+> +				lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb,
+> +							   true, NULL);
+> +				spin_unlock_irqrestore(&phba->hbalock, iflags);
 
 [Severity: High]
-Will this strict state check inadvertently drop deferred PLOGIs during LOGO
-unregistration?
+Could this inadvertently abort an unrelated command?
 
-During target recovery after a LOGO storm or link toggle, the unregistration
-handler lpfc_nlp_logo_unreg() uses lpfc_issue_els_logo() to transition the
-node state to NLP_STE_LOGO_ISSUE.=20
+Because lpfc_els_retry() schedules a retry, the completion handler
+lpfc_cmpl_els_plogi() will immediately free cmdiocb locally, returning the
+XRI/IoTag to the free pool.
 
-When the deferred PLOGI is subsequently issued via lpfc_issue_els_plogi(),
-this new check (ndlp->nlp_state > NLP_STE_PLOGI_ISSUE &&
-ndlp->nlp_state <=3D NLP_STE_MAPPED_NODE) evaluates to true because
-NLP_STE_LOGO_ISSUE (0x5) falls between 0x1 and 0x7. This causes the deferred
-PLOGI to be erroneously rejected, potentially stalling the target discovery
-process.
+Since the abort is issued here without validating if the hardware actually
+kept the exchange busy (LPFC_EXCHANGE_BUSY) or checking if this is SLI-4
+hardware, another CPU could concurrently allocate the freed tag, issue a new
+command, and have it erroneously aborted.
 
+>  			}
+> +
+>  			retry =3D 1;
+>  			delay =3D 100;
+>  			break;
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
 [ ... ]
-> @@ -2410,11 +2438,26 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, ui=
-nt32_t did, uint8_t retry)
-[ ... ]
->  		lpfc_els_free_iocb(phba, elsiocb);
->  		lpfc_nlp_put(ndlp);
->  		return 1;
+> @@ -4620,12 +4621,19 @@ lpfc_sli_abort_iocb_ring(struct lpfc_hba *phba, s=
+truct lpfc_sli_ring *pring)
+>  			iocb->cmd_flag &=3D ~LPFC_IO_ON_TXCMPLQ;
+>  		list_splice_init(&pring->txcmplq, &tx_completions);
+>  		pring->txcmplq_cnt =3D 0;
+> +		spin_unlock_irqrestore(plock, iflag);
+>  	} else {
+> +		/* lpfc_sli_issue_abort_iotag expects the hba_lock held, but not
+> +		 * the ring_lock.
+> +		 */
+> +		spin_unlock_irqrestore(plock, iflag);
+> +		spin_lock_irqsave(&phba->hbalock, iflag);
+>  		/* Issue ABTS for everything on the txcmplq */
+>  		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
+> -			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
+> +			lpfc_sli_issue_abort_iotag(phba, pring, iocb, false,
+> +						   NULL);
+> +		spin_unlock_irqrestore(&phba->hbalock, iflag);
+
+[Severity: High]
+Does this code risk list corruption on the txcmplq list?
+
+In lpfc_sli_abort_iocb_ring(), plock (which aliases ring_lock for SLI-4
+hardware) is dropped, leaving txcmplq unprotected against concurrent remova=
+ls
+by completion handlers.
+
+While list_for_each_entry_safe() protects against the current element being
+removed, it is not thread-safe if a concurrent interrupt handler removes
+next_iocb.
+
+Could this lead to poisoned or corrupted list pointers during host reset or
+link down events?
+
 >  	}
-> =20
-> +	set_bit(NLP_PLOGI_SND, &ndlp->nlp_flag);
->  	return 0;
->  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917222015.6105=
-3-1-nkirkland2304@gmail.com?part=3D8
+3-1-nkirkland2304@gmail.com?part=3D9
