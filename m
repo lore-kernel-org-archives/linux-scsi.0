@@ -1,34 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2414C4DEC3C;
-	Thu, 17 Sep 2026 16:33:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02C45A0AD3;
+	Thu, 17 Sep 2026 16:34:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789662822; cv=none; b=RIadkphV4FyrGDrR9ERJeIXINxgFFIr8MrG2V3g6eqR5xxnMY4vVurMj1dEGAlRRDcd95j9A3JyrxF5ek9Xa0P8m32tnDvOQ28fuzUpkom7x4JEBe5KuVQjAsu4ya7nFJFPb+ZXQ0Jlk4cj7zFZGe8FD8g4tYmO2US3rJu0KEyA=
+	t=1789662854; cv=none; b=YEus6NRr4fUYo2VT5dvh23AMT9sMxG9TJBxPTH6OiqYybUo8zPjCybzSymlCFAlDeHZu8SysawROGdGmQlkxARZbMGSIRH5NXz9Ro5iW3LgadMf2ENJIupyWXt3QrmeDZ+xrsljTA4GV+LaCv+PnAISYvZEBxYO0wZW9aHUW8MQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789662822; c=relaxed/simple;
-	bh=NwkWQQ7fmwzL5QGJDJ/xCgQWUhs8DQGRd4wM7Vj8ofA=;
+	s=arc-20240116; t=1789662854; c=relaxed/simple;
+	bh=joQXUjvjM3OjL+Ta6QEJ1w5g7Vsv4M79ot1AULAZKpk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ZTN/biBZHtOmhkODtLXCgWCm8DA+N3lqVY80vLhc0OU8p12NKmXlqqIQcrVD2EWQWOiRwY99UovUWKJAky0EBT6hT7mtdxlNFlQk1d4NhylRDMGRX5kBi6NI3/AsQg2mg8CCI9wIRAe1VWwQVSgQLEn4qgghpMpfhOHJvQvLavw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jL/N+nAe; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=GXEgOtLKoSUQkoBRiz4UIItSgHwuB4pDpi0vLhNGMJ33bmEJCvWvxnum9uj+/rumMvBuLmqZBG/1eWleOKFuPMR4CoBSlnAGvhqoTpFnepOI8s2DLWVMboq6N0VZvqdja1wDXcmWZPETZFxbqgqpWfyZd67JYRDU9wirsGj0Vc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pyt7zq3w; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jL/N+nAe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09D2F1F000FF;
-	Thu, 17 Sep 2026 16:33:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pyt7zq3w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5968D1F00893;
+	Thu, 17 Sep 2026 16:33:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789662820;
-	bh=rtYEyCC7VKqkqWelOuwt2okny02CJhbQpnc+ekNFEso=;
+	s=k20260515; t=1789662852;
+	bh=GfRJzELhUA3zmjv637fDp+tblD+oWrGBxslIXX4F7cw=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=jL/N+nAedFIcy7gClq40Pni5TcpDiYU3W6lU6py709+elTP01tPRn59duEgHxLXX0
-	 kgCAUZfQP8LDRJaXC0n/N71unVUr4ytyGLpgajOR1/c4YelJsh50RSEglvq6YMlAKH
-	 biv1yaVW5dePVs5g/Hv/jlVM0hOEtIb8Jag/bYYIcYGUqIDRRHHq0XdtEgAa+WCKje
-	 /aLWPXFVlrCjlliJACtNcUtFXB+xYLlGB8XPAz53hZJeOTI9CTWK/FHjTV9mVLJ8+S
-	 0aZkLZiwRcEq1Xk/+ULQ+CCWEkFgHVPGycWzsZevF4lLL2VqFx1YNlnabo+3m6UhqH
-	 SZaK2+UVVwY+g==
+	b=Pyt7zq3wVrUAhNpXFXSuMVbDH6B9z27BuC4N5wSlqvK2YZ+YYcE38ItXJSygGLBUo
+	 jAOODUNiB8Hl2Z9TIS2vNbKclQyw54/sJwA+VbvsXDn0TD6r5o228/oBdRI3ZVNXtE
+	 Vn6qrdsda/Xfpp6xcB32G5ie9VvVYF6zK2oGcw7N0Tr0KugM/8h8+9skPGKu81Fu1v
+	 dUTlbWz+k5DmldJr+jaFMBP1ti+JPFxPgg1webbI7hC3+m22mXIypG2Kegwu62ONHh
+	 IphxagghomlS1XLWIPjchqsW+MqR5DhD81KyMXcMv4/F4ESQ4UCrMz8qtzU5tzkm2V
+	 9qfYZxVjVZdRw==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Thu, 17 Sep 2026 17:22:30 +0100
-Subject: [PATCH v3 21/40] mm/gup: error out early on !VMA_MAYREAD_BIT VMAs
+Date: Thu, 17 Sep 2026 17:22:31 +0100
+Subject: [PATCH v3 22/40] uprobes: remove VM_IO, set VM_MIXEDMAP for mapped
+ kernel pages
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-21-4583d8a23bca@kernel.org>
+Message-Id: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-22-4583d8a23bca@kernel.org>
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
 In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -121,53 +122,71 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1289; i=ljs@kernel.org;
- h=from:subject:message-id; bh=NwkWQQ7fmwzL5QGJDJ/xCgQWUhs8DQGRd4wM7Vj8ofA=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLWCB96M+ncMv0Z517wyC/y7rrGInXUMERpxZ9un+9eS
- ca/pBtPd5SyMIhxMciKKbI8/yK+P0gkbF7nBX83mDmsTCBDGLg4BWAiG00Z/tclL5u+8ccfuY17
- fiz013R5ciLNuW2/7fq51ryiNWtXXapn+O/gpmbwXolVdG+JNs8Gjq3zWM8cSOs76LXyVfXh8/y
- uF/gA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2070; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=joQXUjvjM3OjL+Ta6QEJ1w5g7Vsv4M79ot1AULAZKpk=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLWCB/q4Fj8329FrtbDMiFFC29ptVwduSnTb/sdWLDt6
+ EPNQz15HaUsDGJcDLJiiizPv4jvDxIJm9d5wd8NZg4rE8gQBi5OAZhIjAYjQysXc4jOXOkLizqe
+ C2g/vP3cILJezzj8ioBasHvjo9+dNYwMOz/GLnqz6VVSzVbf/sX67g2LDpjmmxbucpy7/tS7Rzs
+ a2AE=
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-When populating a VMA range via the aptly named populate_vma_page_range()
-an unreadable VMA will always eventually fail with -EFAULT.
+These are not MMIO pages so VMA_IO_BIT is an inappropriate flag to set.
 
-That a VMA is accessible is always checked, however VMA_MAYREAD_BIT is not.
+Instead, set them VMA_MIXEDMAP_BIT as they are kernel mappings and this is
+the appropriate flag to set for those.
 
-All user mappings always have VMA_MAYREAD_BIT set, so this check only
-impacts kernel mappings.
+This provides the semantics required - no VMA merging is permitted, but
+does not prevent GUP.
 
-It is implemented specifically to disallow population of uprobes XOL
-mappings which are exec-only.
+However this has no meaningful impact as these are refcounted and thus can
+be GUPed.
 
-A nasty interaction with these mappings may occur if they are mlocked, so
-actively disallow this early.
+A previous commit already prevented __mm_populate() from being invoked on
+XOL areas, which VMA_IO_BIT was previously relied upon to do, so that is no
+longer required.
 
-This allows a subsequent commit to remove the VM_IO check in
-__mm_populate() which otherwise requires non-MMIO mappings to be wrongly
-flagged simply as a workaround.
+Both VMAs set a VMA name, so always_dump_vma() returns true before
+vma_dump_size() reaches its VMA_IO_BIT check, and thus there is no change
+in core dump behaviour.
+
+Change this for both the core xol_add_vma() function and the x86-specific
+get_uprobe_trampoline() function.
 
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- mm/gup.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ arch/x86/kernel/uprobes.c | 2 +-
+ kernel/events/uprobes.c   | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/mm/gup.c b/mm/gup.c
-index c2dfcb4744bc..e6310a7cc05b 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -1836,6 +1836,10 @@ long populate_vma_page_range(struct vm_area_struct *vma,
- 	if (!vma_is_accessible(vma))
- 		return -EFAULT;
+diff --git a/arch/x86/kernel/uprobes.c b/arch/x86/kernel/uprobes.c
+index 65a2de82ecd2..0f60c0d076b6 100644
+--- a/arch/x86/kernel/uprobes.c
++++ b/arch/x86/kernel/uprobes.c
+@@ -715,7 +715,7 @@ static struct vm_area_struct *get_uprobe_trampoline(struct mm_struct *mm, unsign
  
-+	/* Unreadable VMAs also cannot be faulted in. */
-+	if (!vma_test(vma, VMA_MAYREAD_BIT))
-+		return -EFAULT;
-+
- 	gup_flags = FOLL_TOUCH;
- 	/*
- 	 * We want to touch writable mappings with a write fault in order
+ 	*new_mapping = true;
+ 	return _install_special_mapping(mm, vaddr, PAGE_SIZE,
+-				VM_READ|VM_EXEC|VM_MAYEXEC|VM_MAYREAD|VM_IO,
++				VM_READ|VM_EXEC|VM_MAYEXEC|VM_MAYREAD|VM_MIXEDMAP,
+ 				&tramp_mapping);
+ }
+ 
+diff --git a/kernel/events/uprobes.c b/kernel/events/uprobes.c
+index 7709ea882477..b89cc5cee002 100644
+--- a/kernel/events/uprobes.c
++++ b/kernel/events/uprobes.c
+@@ -1726,8 +1726,8 @@ static int xol_add_vma(struct mm_struct *mm, struct xol_area *area)
+ 	}
+ 
+ 	vma = _install_special_mapping(mm, area->vaddr, PAGE_SIZE,
+-				VM_EXEC|VM_MAYEXEC|VM_DONTCOPY|VM_IO|
+-				VM_SEALED_SYSMAP,
++				VM_EXEC|VM_MAYEXEC|VM_DONTCOPY|
++				VM_MIXEDMAP|VM_SEALED_SYSMAP,
+ 				&xol_mapping);
+ 	if (IS_ERR(vma)) {
+ 		ret = PTR_ERR(vma);
 
 -- 
 2.55.0
