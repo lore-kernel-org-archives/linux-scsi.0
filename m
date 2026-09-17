@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6873F50E5AB;
-	Thu, 17 Sep 2026 16:31:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8D1851FCBD;
+	Thu, 17 Sep 2026 16:31:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789662670; cv=none; b=mr2lE9wdasA6DN4ilaynFFnbeOLSfUxBMHaEFnAm0HyjUMpwOWhCrhhXHC8Zv1NB8dbOrJWmB4vpkHhZu7BeqC/V3P6HWpDQEUujFeY0oDbpnvlDZBYtA4QJXdqZjdj76pZTpX6vBs1Cg/Fi4UhwHQ4R85GNd8YogWH5MiKFYLQ=
+	t=1789662701; cv=none; b=tphL2iUa7I8eo6pzT8bWDks8mt9tvTRkUUHCKc1mBiX9rhuTKZAJqF2oAOC3F8/1p3Rscq5aEi/a5CQ3dST96pRXmwhpmjcYo0j7MoB1LyduynlOVGxTvF3D/HupHnLyRmr65XuM9W+bNfk7nOTvVka+VLXHVV2t2diVeq09RiU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789662670; c=relaxed/simple;
-	bh=AQdN68/spfXtpTeKBaZ+Me0gdfgYIcDdx+d6akTD8vU=;
+	s=arc-20240116; t=1789662701; c=relaxed/simple;
+	bh=CGrRM0X4xfz5KjQLNJ8DloCWWdgxK3gfJkwtQtlAo4A=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=AE8zbzPb1chiO7KfNqJgMxZfY9ZwIDDNDx/WJOaXXDWz1ZMU9sw76pZeCcWEnxvuooNuugnX7IdU47IzvheET+uvl7wUa3dKB14ZL+QkDF1xhUfNp92ozy9+bz7MYoSoE5Xj1wEdj4qvRUlYGTT3et9cLYHYTc3xVzpkLy4Xzco=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V0PXlPCx; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=sskqfMPU0IjSQG6nv1tIZ3NYXqhaZ1PKDi8DHzsrj12E4JaBex1wN6tw2ufcFDkFbe7yRk+Qh6wJ0rpYdRcVeU76UeOV6LtUk5uxAUvRz0iFt57IhodyxHviazg2IXs0ZjDYEeoU7p4L9xoItJp6Pc6SRN8unQ7TEHdqAE76jRQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hvWGxTwP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V0PXlPCx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 474621F00898;
-	Thu, 17 Sep 2026 16:30:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hvWGxTwP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A25AD1F00893;
+	Thu, 17 Sep 2026 16:31:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789662669;
-	bh=L7jaJ3XNIQiKLT5qkSlMCmmbkCuTcTW6Guk4wu+FJrg=;
+	s=k20260515; t=1789662699;
+	bh=J93IefE6R7bnCPulaKM+ijl/FGhARLRmiup15HlMn+w=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=V0PXlPCx7005iUwQIzRn8WrFZyyFxtVLov03zt/j4Cb9KmBmrLJgrmIpFAyfapLrd
-	 H+8UUkC5mv9ThnEPdrIeBvRjIZCRkR6q8+DWj+26jr/U/1bc099Dt09f3XbstGf0tB
-	 GPF/qledlC6JuLnn7ZKiMvsnyi5RO8rzGZHKayPV0lImzjxMdDbwLfhcGBqXR6uGVW
-	 sVoxSfdhF2FyDVHTK+GQKY24DJ87K2yGos/VWGWHmcjL23ivX7hPCN7F87RaumZo8V
-	 n08M5BJ2yk7qRbIrAGbhKLJVnMQk6AD7IM19ETyOl35+W21+u+ROFzCF9UfcNa1wD3
-	 hUJk1gDPbvIzQ==
+	b=hvWGxTwPbL/0y9ufvfrDERbVeXjXo3aoZIB10YSJrTS8MkFVudd31KyZ0me7D6CKV
+	 v8MPABnXhm5bFydQm+c9Bc6WjOh5tvi0rJJR7brSEO2YC2qQ5rbcvTqS3l/wQM/wds
+	 LP1lWhDX4Nho9nUMv8cFnzIJ2lbt37zMJcSpSszEjoLY0p6hqhcf1Gkuse+hX8lNu9
+	 O9wvRJ/aTO5pCrRJr0roLnDiPI6n/AT7t3eg4apzoU8VOCn8Is6njfXpTZK1XnxYcr
+	 +Y4DomJ/rkREqe3GVD6Dg2EyVmVfBhyny8WTcmatQUJuQRtNjnwyNtIE5Rx6vzun3g
+	 eMpzLndJiKcmg==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Thu, 17 Sep 2026 17:22:25 +0100
-Subject: [PATCH v3 16/40] mm/vma: only allow mmap to clear VMA_MAYWRITE_BIT
- if kernel-owned
+Date: Thu, 17 Sep 2026 17:22:26 +0100
+Subject: [PATCH v3 17/40] mm/vma: add and use vma_[flags]_is_fixed_mapping
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-16-4583d8a23bca@kernel.org>
+Message-Id: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-17-4583d8a23bca@kernel.org>
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
 In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -122,76 +121,192 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2269; i=ljs@kernel.org;
- h=from:subject:message-id; bh=AQdN68/spfXtpTeKBaZ+Me0gdfgYIcDdx+d6akTD8vU=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLWCB+U/XmtbGsK473bjdP6GHabnKk7IeVwVcs4JsDOL
- zjlgPHCjlIWBjEuBlkxRZbnX8T3B4mEzeu84O8GM4eVCWQIAxenAExkki3DP3WRy9bveDdY/uc7
- LPb+sUuFZsGHpirJ2GS33v1dZbxT9BgZttZGce3vv72WZ5veMwbrRweunnzCVMCUcfVzwm2X7hc
- tjAA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6504; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=CGrRM0X4xfz5KjQLNJ8DloCWWdgxK3gfJkwtQtlAo4A=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLWCB9UL1NO3L9llvkhy4JF579KOp2dlSjtcWJjJtMVh
+ 7O//xkd7yhlYRDjYpAVU2R5/kV8f5BI2LzOC/5uMHNYmUCGMHBxCsBEXmkx/BViW/R4VcGp3Vfz
+ nt89nHAh5sXRvi0Mfs3T5gRxc+3PXfeS4b/3uWN5rmu+FWXmTVZ59mc/p6u1RjqL5nr1W8ta64X
+ OKTMBAA==
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-For ordinary files the only way the VMA_MAYWRITE_BIT flag is cleared is if
-the underlying file is itself read-only.
+This determines whether a VMA cannot be expanded or merged because what
+they mapped was determined to be a set size at mmap time.
 
-This means that mprotect() cannot mark a shared mapping of a read-only file
-as read/write, as doing so would violate the read only attribute, and
-permit writes.
+This typically refers to kernel-owned mappings, however VMA_DONTEXPAND_BIT
+is not reliably set alongside VMA_PFNMAP_BIT or VMA_MIXEDMAP_BIT, so we
+must explicitly test for this for now.
 
-In general, we do not want file systems to be able to do this for
-read/write files.
+We also explicitly test for VMA_PFNMAP_BIT as VMA_DONTEXPAND_BIT may not be
+set for VMA_PFNMAP_BIT's despite the one implying the other.
 
-Doing so would violate fundamental user expectation of file attributes and
-likely break userspace.
+Use this predicate in vma_flags_can_merge() and in check_prep_vma() in the
+mremap logic testing to see if mremap() can expand the VMA. The criteria
+for khugepaged and MADV_COLLAPSE eligibility in
+__thp_vma_allowable_orders() are precisely those for mergeability, so use
+vma_can_merge() there (with an expanded comment).
 
-However, drivers pose a tricky problem here - the /dev/xxx file may be
-read/write but provide access to a resource which is fundamentally
-read-only.
+This obviates the need for the VM_NO_KHUGEPAGED mask, so remove it.
 
-Therefore we must allow drivers to be able to clear VMA_MAYWRITE_BIT.
+Hugetlb VMAs remain excluded from khugepaged as hugetlbfs always sets
+VMA_DONTEXPAND_BIT.
 
-To achieve both of these things, restrict this ability to kernel-owned
-mappings as identified by vma_flags_is_kernel_owned().
+Also update the userland VMA tests to reflect the change.
 
-This constrains this ability to drivers which own the mapping's contents,
-whether memory-mapped I/O, kernel-allocated pages, or ordinary pages they
-map themselves, and so define its semantics.
-
-Every in-tree mmap hook which clears VMA_MAYWRITE_BIT, some twenty sites
-across drivers, filesystems and bpf, establishes a kernel-owned mapping,
-with usbmon and the ALSA PCM status page converted earlier in this series
-to do so.
-
-Note that drivers may, if they do not gate on VMA_SHARED_BIT, be able to
-disable MAP_PRIVATE-file-backed mapping CoW semantics.
-
-This is perhaps not always intended, but we retain this capacity to
-maintain existing behaviour.
-
-As all drivers which clear VMA_MAYWRITE_BIT establish kernel-owned
-mappings, no functional change is intended.
+No functional change intended.
 
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- mm/vma.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ include/linux/mm.h              | 39 +++++++++++++++++++++++++++++++++++----
+ mm/huge_memory.c                | 11 +++++++----
+ mm/mremap.c                     |  5 ++---
+ tools/testing/vma/include/dup.h | 16 +++++++++++++++-
+ 4 files changed, 59 insertions(+), 12 deletions(-)
 
-diff --git a/mm/vma.c b/mm/vma.c
-index 62f2ce1ad5a1..1dec10946918 100644
---- a/mm/vma.c
-+++ b/mm/vma.c
-@@ -2795,6 +2795,11 @@ static int mmap_validate(unsigned long prev_start, unsigned long prev_end,
- 	if (WARN_ON_ONCE(!was_maywrite && is_maywrite))
- 		return -EINVAL;
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index cab29d6e15c1..ca598e5f9715 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -600,9 +600,6 @@ enum {
+ #define VMA_REMAP_FLAGS mk_vma_flags(VMA_IO_BIT, VMA_PFNMAP_BIT,	\
+ 				     VMA_DONTEXPAND_BIT, VMA_DONTDUMP_BIT)
  
-+	/* Only kernel-owned mappings may clear VMA_MAYWRITE_BIT. */
-+	if (!vma_flags_is_kernel_owned(curr_flags) &&
-+	    WARN_ON_ONCE(was_maywrite && !is_maywrite))
-+		return -EINVAL;
-+
- 	return mmap_validate_vma_flags(curr_flags);
+-/* This mask prevents VMA from being scanned with khugepaged */
+-#define VM_NO_KHUGEPAGED (VM_SPECIAL | VM_HUGETLB)
+-
+ /* This mask defines which mm->def_flags a process can inherit its parent */
+ #define VM_INIT_DEF_MASK	VM_NOHUGEPAGE
+ 
+@@ -1650,6 +1647,40 @@ static inline bool vma_is_kernel_owned(const struct vm_area_struct *vma)
+ 	return vma_flags_is_kernel_owned(&vma->flags);
  }
  
++/**
++ * vma_flags_is_fixed_mapping() - Do the specified VMA flags indicate that this
++ * is a fixed mapping that cannot be expanded or merged?
++ * @flags: The VMA flags to test.
++ *
++ * Fixed mappings are those whose size is set at the point of mmap (for
++ * instance, a kernel-owned mapping of a fixed range of memory), and thus
++ * cannot be expanded or merged.
++ *
++ * Returns: true if the flags indicate a fixed mapping.
++ */
++static inline bool vma_flags_is_fixed_mapping(const vma_flags_t *flags)
++{
++	/*
++	 * VMA_PFNMAP_BIT should imply VMA_DONTEXPAND_BIT, but some callers set
++	 * only the former.
++	 */
++	return vma_flags_test_any(flags, VMA_PFNMAP_BIT, VMA_DONTEXPAND_BIT);
++}
++
++/**
++ * vma_is_fixed_mapping() - Is this VMA a fixed mapping that cannot be
++ * expanded or merged?
++ * @vma: The VMA to test.
++ *
++ * See vma_flags_is_fixed_mapping() for a description of this property.
++ *
++ * Returns: true if the VMA maps a fixed mapping.
++ */
++static inline bool vma_is_fixed_mapping(const struct vm_area_struct *vma)
++{
++	return vma_flags_is_fixed_mapping(&vma->flags);
++}
++
+ /**
+  * vma_flags_can_merge() - Do the specified VMA flags permit the VMA to be
+  * merged with another?
+@@ -1671,7 +1702,7 @@ static inline bool vma_flags_can_merge(const vma_flags_t *flags)
+ 	if (vma_flags_is_kernel_owned(flags))
+ 		return false;
+ 	/* VMA explicitly marked as being unmergeable. */
+-	if (vma_flags_test(flags, VMA_DONTEXPAND_BIT))
++	if (vma_flags_is_fixed_mapping(flags))
+ 		return false;
+ 
+ 	return true;
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 4cd917f77f3f..4d0acd9a1099 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -212,11 +212,14 @@ unsigned long __thp_vma_allowable_orders(struct vm_area_struct *vma,
+ 		return in_pf ? orders : 0;
+ 
+ 	/*
+-	 * khugepaged special VMA and hugetlb VMA.
+-	 * Must be checked after dax since some dax mappings may have
+-	 * VM_MIXEDMAP set.
++	 * khugepaged moves data from VMAs once collapsed, after they have been
++	 * faulted in, relying on refaulting for file-backed memory.
++	 *
++	 * Kernel-owned mappings cannot be reliably reconstructed from page
++	 * faults, and fixed mappings (including hugetlb) may not be marked as
++	 * kernel-owned - precisely the mappings which cannot be merged.
+ 	 */
+-	if (!in_pf && !smaps && (vm_flags & VM_NO_KHUGEPAGED))
++	if (!in_pf && !smaps && !vma_can_merge(vma))
+ 		return 0;
+ 
+ 	/*
+diff --git a/mm/mremap.c b/mm/mremap.c
+index 7c368440fafe..ed19b47c2caf 100644
+--- a/mm/mremap.c
++++ b/mm/mremap.c
+@@ -1788,8 +1788,7 @@ static int check_prep_vma(struct vma_remap_struct *vrm)
+ 		return -EINVAL;
+ 	}
+ 
+-	if ((vrm->flags & MREMAP_DONTUNMAP) &&
+-	    vma_test_any(vma, VMA_DONTEXPAND_BIT, VMA_PFNMAP_BIT))
++	if ((vrm->flags & MREMAP_DONTUNMAP) && vma_is_fixed_mapping(vma))
+ 		return -EINVAL;
+ 
+ 	/*
+@@ -1827,7 +1826,7 @@ static int check_prep_vma(struct vma_remap_struct *vrm)
+ 	if (pgoff + (new_len >> PAGE_SHIFT) < pgoff)
+ 		return -EINVAL;
+ 
+-	if (vma_test_any(vma, VMA_DONTEXPAND_BIT, VMA_PFNMAP_BIT))
++	if (vma_is_fixed_mapping(vma))
+ 		return -EFAULT;
+ 
+ 	if (!mlock_future_ok(mm, vma_test(vma, VMA_LOCKED_BIT), vrm->delta))
+diff --git a/tools/testing/vma/include/dup.h b/tools/testing/vma/include/dup.h
+index d09148ce2305..b8b1462ca710 100644
+--- a/tools/testing/vma/include/dup.h
++++ b/tools/testing/vma/include/dup.h
+@@ -1676,6 +1676,20 @@ static inline bool vma_is_kernel_owned(const struct vm_area_struct *vma)
+ 	return vma_flags_is_kernel_owned(&vma->flags);
+ }
+ 
++static inline bool vma_flags_is_fixed_mapping(const vma_flags_t *flags)
++{
++	/*
++	 * VMA_PFNMAP_BIT should imply VMA_DONTEXPAND_BIT, but some callers set
++	 * only the former.
++	 */
++	return vma_flags_test_any(flags, VMA_PFNMAP_BIT, VMA_DONTEXPAND_BIT);
++}
++
++static inline bool vma_is_fixed_mapping(const struct vm_area_struct *vma)
++{
++	return vma_flags_is_fixed_mapping(&vma->flags);
++}
++
+ static inline bool vma_flags_can_merge(const vma_flags_t *flags)
+ {
+ 	/*
+@@ -1691,7 +1705,7 @@ static inline bool vma_flags_can_merge(const vma_flags_t *flags)
+ 	if (vma_flags_is_kernel_owned(flags))
+ 		return false;
+ 	/* VMA explicitly marked as being unmergeable. */
+-	if (vma_flags_test(flags, VMA_DONTEXPAND_BIT))
++	if (vma_flags_is_fixed_mapping(flags))
+ 		return false;
+ 
+ 	return true;
 
 -- 
 2.55.0
