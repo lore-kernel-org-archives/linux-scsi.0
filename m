@@ -1,145 +1,159 @@
-Received: from mail-pl1-f228.google.com (mail-pl1-f228.google.com [209.85.214.228])
+Received: from mail-ot1-f99.google.com (mail-ot1-f99.google.com [209.85.210.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A93C24F68C9
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 17:53:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CFD63B1ED1
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 18:24:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789667629; cv=none; b=sfTb7Ifm9zM960sW6874+VOuwdycRpikVy2gwktBF0IRiamzxHXiywdy7HH0sap11/GwBiBcSQEEZLnA8MoS3K2yUcWKNlM7Zu2mSxNSklwbKxaKY+rU7EFWMZLrrszzgcJ2ksiwC2yyQb/yaIThPqXyWYhKL8mbdB7dpAUXtbE=
+	t=1789669475; cv=none; b=u68pYDBoqh8EOlnqdqvh1OsNAA/jewlQ6k3Z+cgfNZfXSfdApQQIF6PgbwZ9SJEVOw5pFF8/t6NF7enRp3+uacEdvlVeDRRu/yo+T9l79fc78KobEZ5f1gI6oZmNH6QisaBMgTFuL79e5vxIlZNClspuQL316wR5wwoyyhxsvEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789667629; c=relaxed/simple;
-	bh=5hmd10FwXB8zE3aN1tY3REf5RmKqUGyqWJpWFttEG0Y=;
+	s=arc-20240116; t=1789669475; c=relaxed/simple;
+	bh=/XqbITDW3HCOIs2R9Zo+ahjWzKUCgs0TtJRa8Eu6Y/I=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=bDzTHCTxa/K4XilYXV2KPcFwkwdrs3ZQJx65ItqAAylAZWRd8p7j1qoKRUl5ap/rs5NlJJEkZ/RaMr/1961sl4aGxmn7KXm3j3fEpIWdQHzeS0h3NxfXGsb74ut3OQgZn0LaoXwq92ATJ7rJvP3PR49Ar3BN2THNePwUttF+xQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=E4zKgOsa; arc=none smtp.client-ip=209.85.214.228
+	 To:Cc:Content-Type; b=Ekh3CqcmjfagLVdtITHQV6MVDpue1HMhUXkZbxc6TIQ008J+waBc6MQYpet6XPO9sA+t/d5JyNaSGQIEZqRACAxMcUV71dnB1y9EbM1mFrMGhrG2QLdX1k+kAGizJkB4EYj9Phn5wImDTMmoXjAKtd49CgL0XHocv28d9bVrrck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=SDO01+wA; arc=none smtp.client-ip=209.85.210.99
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="E4zKgOsa"
-Received: by mail-pl1-f228.google.com with SMTP id d9443c01a7336-2dd665f341aso3992655ad.2
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 10:53:47 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="SDO01+wA"
+Received: by mail-ot1-f99.google.com with SMTP id 46e09a7af769-7f84a55cc06so247002a34.2
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 11:24:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789667627; x=1790272427;
+        d=1e100.net; s=20260707; t=1789669472; x=1790274272;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:dkim-signature:x-gm-gg:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=v5FYjX5MS5+2bXfhcJe4JwiDOrRRG7zEtMiMz6iO0F0=;
-        b=UhViUp6mg8adNPZU0JIfzh8CB4dshutZ7MpMVQjXtp+1rUXucwCNk3XXlP49itRoOk
-         NxgAeQUsJ71K1aQouAtaZmfaRrEuJ2IErox1og3buRbfvGfgnPirFJ5RxJN8dyP4vYDn
-         FL/fuWw41ATMD0QJeBQEng18bIPoxzLVD91mvPA00Vr/ZQT34ZVxZTiEDG/dKG7cXHlS
-         Z0PReL/M7Kw6ifl4A30ijsygS3PopFIhCYJX8we6jEkbn25xFenSKR9RB7JkK4PFrYdX
-         COTiPh+wVSvKYbKs2cj5bmfwbadl+YDmYCd2YH5VVxQ+RLa6CIH+OtjMfGyZn+484vcc
-         GSvw==
-X-Forwarded-Encrypted: i=1; AKwUvBxEgDgaWGAJUntyHJaT1RekMOp6KUsPHgnuAtY5Fx7YkZj6bCS/4L8A9+FxV1hcXKYk7svqYOg7Muet@vger.kernel.org
-X-Gm-Message-State: AFuF++kopaiJyR/NcTOZKXzNcCc1ClKbfEN+GEBSRDkxQNmML7E6g3yM
-	RKcQKthmRJiKpR0VueEssf8eAT1Z2Hc6xlOYNyvezExIqteoGp+kLYzb2yU5mXA/KeCZbpfht/1
-	3xEZ9+RS7R744/8omNXbjhk3KpU+odKcpbd0YvMgBljibEu7kdMoY8C1h0LEBI7JhpRmzZ2QLh8
-	g55hQ8fYnBqmu/x48SLvSJ7PR+8AQwu/0Goy3RLtY7J5cCE7Zd6KqNtcrP6xOI26stNaklC7Fpq
-	J1ZnOy9xGs=
-X-Gm-Gg: AYBFou2YsqdVuFShxGWRkG8XHgfsMQInqbek9Myp310/fEgdt1QniiOIekTJahNlN5I
-	RDveJiWM3UjMXEtq6B4Q0hWNBtkVMH3Qk/+i+7LT0hfVn+WRQp588QbGIvl0zUZt0nHW6QBWtHB
-	BPjfqjrOjXOPFG+85Olll2Ovp1723JAHw+5UKl/o6DWyH3MvaeedWBH+FYcoRYWfCLYMU2dMrUd
-	dTOV2qrAG6qi7i/Ppx8e5IzMFjxgN5dj4PW6afHm9mznMUzd/mD8JqCrGCX1LSPH3hHo1fPHGR+
-	u0Y4x1JxfNqfnfK4Q/fYWKXm+f70IWuAxnd/1Ysy3zL6gsXTpZ9TbVVv1xNpzP6cY/4km0TbGGu
-	1fJrCtyh57+8f+tRCBxPmghGsblJFSbrUKFZEZRgKbjZBFw3ObJn2rMuf8i8LvEtu8lRXmuKHX9
-	PJoIMVtOe1em/NOkS4oVIKaipWiabebg==
-X-Received: by 2002:a17:90b:5105:b0:39d:eca3:e296 with SMTP id 98e67ed59e1d1-39e1e49a1e1mr16404551a91.17.1789667626683;
-        Thu, 17 Sep 2026 10:53:46 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-25.dlp.protect.broadcom.com. [144.49.247.25])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39e35d7c196sm1924963a91.2.2026.09.17.10.53.46
+        bh=vISMg5YITWHhV5lEgM91t36EAMMobqPmVCv67mUkzFE=;
+        b=erz3ZNfJnTy/IIH7YUHlMmSsZYLBt287ej/QQl9rbRzl6whF85sLhBTzKWWHz35ABt
+         gLiLPVLDJc1/3vDoUVyG4UYbtfxeIctDCNFazwpXcJ1Ixkh9TB4Z9JSHl1BASCrwWV5L
+         JU+TQCV6GpWie1FW0PVDLLRdsxWuvzgtbHlQaBx5QNAqXC9qzQgYHiCq30YeWYNQCFTS
+         lyr+FzMYBkgQwWqa6hNatcepTXFdSxLOZSUDCnLNPuzuTNChGdlMIXYCzI5INidAIlQT
+         y5xE/osG5NCnXwNdcdf+X2P1c7bVOYmm0pmFhtW9FgfoEnvbWeb89jh+Ci14gg6IKQRi
+         M9Zg==
+X-Forwarded-Encrypted: i=1; AKwUvBzY9ygBTqyzhodixioyOo6KJJo4v/shrVsaA6gi1Ts8SxSL/Wuv2eCGuMk0CvS0OmCnLVeWzsfqijeP@vger.kernel.org
+X-Gm-Message-State: AFuF++lz9pUES7IByKcDnuM0FFYBTihwL9u1PnOyp4ybSScp4XNtnpOO
+	PYZ63x+tiylIEhg7q9GBHEdYs27OusVfag6kRLpSrQPPdLrMdFCAVeyH997I0uSXnugUAdjs85a
+	BryLPIkYQL8hmhmN8+pefe9YZyUHLkkHpX5PcC63DUKBkwXXBTfwKNBEaESAEM51YWvvBRPlgRi
+	LWIeOOGd6DS9IXVm5av9BfwIlyiYR1AMQHEGS6xt793kVYxQ9R0egrl/dh99mKlYsHo2vGcKp0K
+	qCIjapaKOc=
+X-Gm-Gg: AYBFou1tNXhisnV0GMrrunDUCJ53jBFSlEAJ+M+1xzFT4eOkJhjiv3wyXsjZjC7Gmqz
+	nbYH1t+XRyeL245aouYs3dmBQ/vS2NNW4M0l61iWSEM3GcZgqq1Un5AmW7Kgg7PZYAJRM/LR5c+
+	ie1yv+/+aCshfhmzcJo6clNBdGvy3cvBfDdIjXDCvx1F7CsSn816VcH09czkg/lRgknWE5YaE45
+	w4W4mYOFPnGQLtnIV7oQEsHVM2QVfb6pkmpDUGH72/RjGQLTkUsFn2Ooq9SOylVZ4lLiXB2eh2G
+	tMO99q8dTIiG+BENxHD3CjmqxAt8sJqFiNhC/2AxmdLcqUlQKO1gQkAlYXmw8FhEYPbPJSCD+Uz
+	VrLbGFQdhNuYhJ1LG/O7FUFeN25UmOVUZTXvBOjWX8z8rsR5OI6udD/hsZgcMh85W1j5A4GvrzR
+	5sF6eoQasi/BfblqcloQDbgLZo3EB+HAxf
+X-Received: by 2002:a05:6830:4708:b0:7f4:edd8:b7eb with SMTP id 46e09a7af769-80b2c181868mr8489251a34.6.1789669471825;
+        Thu, 17 Sep 2026 11:24:31 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
+        by smtp-relay.gmail.com with ESMTPS id 46e09a7af769-80c46fb719asm1858150a34.7.2026.09.17.11.24.31
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Sep 2026 10:53:46 -0700 (PDT)
+        Thu, 17 Sep 2026 11:24:31 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-yx1-f71.google.com with SMTP id 956f58d0204a3-66ce3040ea9so1081474d50.2
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 10:53:45 -0700 (PDT)
+Received: by mail-yx1-f70.google.com with SMTP id 956f58d0204a3-6711a336db0so1369118d50.2
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 11:24:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1789667625; x=1790272425; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1789669471; x=1790274271; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=v5FYjX5MS5+2bXfhcJe4JwiDOrRRG7zEtMiMz6iO0F0=;
-        b=E4zKgOsanUt3AvV1xRUjdekxa9j7pfErCcHliCiTD9j4hYflPuhK7orcLqV1chLYr6
-         ZmHpZQMd1bivNFUqlvxwemZHAAUIRnif/zFY/QklphbaOJpicbdjDm9iBozNZCTtgTZ9
-         aqZZOnzSg7f1NiiLhc6vsQ3BPV2VGez6aulSQ=
-X-Forwarded-Encrypted: i=1; AKwUvByPwwcTYaWLLgNaGgyPelK76BG/Z9HupxqQFhkrrUKnOZ07obJFI4Uexjx1nM1uKDFI3yMyXTNo/RSf@vger.kernel.org
-X-Received: by 2002:a05:690e:11c9:b0:671:2eed:f6e2 with SMTP id 956f58d0204a3-6716e67b2e2mr1641442d50.89.1789667625300;
-        Thu, 17 Sep 2026 10:53:45 -0700 (PDT)
-X-Received: by 2002:a05:690e:11c9:b0:671:2eed:f6e2 with SMTP id
- 956f58d0204a3-6716e67b2e2mr1641424d50.89.1789667624859; Thu, 17 Sep 2026
- 10:53:44 -0700 (PDT)
+        bh=vISMg5YITWHhV5lEgM91t36EAMMobqPmVCv67mUkzFE=;
+        b=SDO01+wApLoNcquM4MXzU/eAnD/4g0WbMZYlm+CKy+BnJI9m0B1WEJszO1dYuy7BwQ
+         ZUG3cW+9Qk9bxPnBcTKS112OJ/dLPq/VWr8d2omxMbS1H1IEPx1vgNM7gYLgCI8liIKA
+         INrdma9MxT6ioqtZO411QcOSZYWCZgORBgL/k=
+X-Forwarded-Encrypted: i=1; AKwUvByFcw4RGNOzA9U/7BUybqChbyAFy1TC95giWdjvejbpb8PiTV2H2vrdDyp4rYDHjArAbNG49zuexQL1@vger.kernel.org
+X-Received: by 2002:a05:690e:4006:b0:671:1fe8:857 with SMTP id 956f58d0204a3-67163200c49mr2419151d50.28.1789669470823;
+        Thu, 17 Sep 2026 11:24:30 -0700 (PDT)
+X-Received: by 2002:a05:690e:4006:b0:671:1fe8:857 with SMTP id
+ 956f58d0204a3-67163200c49mr2419135d50.28.1789669470409; Thu, 17 Sep 2026
+ 11:24:30 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260917144144.2157444-1-vulab@iscas.ac.cn>
-In-Reply-To: <20260917144144.2157444-1-vulab@iscas.ac.cn>
+References: <20260917144543.2157614-1-vulab@iscas.ac.cn>
+In-Reply-To: <20260917144543.2157614-1-vulab@iscas.ac.cn>
 From: Paul Ely <paul.ely@broadcom.com>
-Date: Thu, 17 Sep 2026 13:53:33 -0400
-X-Gm-Features: AcwNN1XhR9hLdZum0kChzoBiVLekPzh5f-zyg-qvxD07X9ScTna8L9o5vqVJVrg
-Message-ID: <CAEQnVQnqdFCLqdA+zPOrcLhG+AWb-Tuqj3OKD3X4141FidQ1bw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: Fix ndlp reference leak in lpfc_issue_ct_rsp()
+Date: Thu, 17 Sep 2026 14:24:18 -0400
+X-Gm-Features: AcwNN1VMhDZ1_EmxVgkc7yX7JJxmLKdMeZXKRCKFJwbgA26mdzPFZ77RhjFQqCw
+Message-ID: <CAEQnVQnhp4HR862=-CdB9P9aAor=i2ATaNyKF71q6MiiVRi_7g@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: Fix ndlp reference leak in lpfc_nlp_reg_node()
 To: Wentao Liang <vulab@iscas.ac.cn>
-Cc: James.Bottomley@hansenpartnership.com, james.smart@broadcom.com, 
+Cc: James.Bottomley@hansenpartnership.com, jsmart2021@gmail.com, 
 	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
 	martin.petersen@oracle.com, stable@vger.kernel.org
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000182946065bb17782"
+	boundary="00000000000019e95d065bb1e5a1"
 
---000000000000182946065bb17782
+--00000000000019e95d065bb1e5a1
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 Hello Wentao,
 
 Broadcom has already fixed this issue via an AI security scan.  We
-plan to release the patchset very soon.
+will be pushing the patch very soon.
 
-Thanks for finding it.
+BTW:  using NVME_XPT_REGD is wrong for lpfc when in NVMET mode.  As
+you correctly noted, When in NVMET mode, lpfc does not register NVME
+rports with the nvme transport.  That flag is reserved for initiator
+mode that does register nvme rports with the nvme_fc transport.
 
-Paul
+Thanks
 
-
-On Thu, Sep 17, 2026 at 10:42=E2=80=AFAM Wentao Liang <vulab@iscas.ac.cn> w=
+On Thu, Sep 17, 2026 at 10:46=E2=80=AFAM Wentao Liang <vulab@iscas.ac.cn> w=
 rote:
 >
-> lpfc_issue_ct_rsp() stores the reference returned by lpfc_nlp_get() in
-> dd_data so that the completion handler can drop it, but when lpfc_readl()
-> fails the function bails out to issue_ct_rsp_exit and frees dd_data
-> without dropping that reference, leaking the node.
+> In the NVMET case the driver takes a node reference in
+> lpfc_nlp_reg_node() because the target does not register rports, but
+> lpfc_nlp_unreg_node() only releases that reference when the
+> NVME_XPT_REGD flag is set, and the NVMET path never sets it, so the
+> reference is leaked until the node is torn down.
 >
-> Release the node on that error path too.
+> Set NVME_XPT_REGD when the reference is taken so the existing put in
+> lpfc_nlp_unreg_node() balances it.
 >
-> Fixes: 4430f7fd09ec ("scsi: lpfc: Rework locations of ndlp reference taki=
-ng")
+> Fixes: 0614568361b0 ("scsi: lpfc: Delay unregistering from transport unti=
+l GIDFT or ADISC completes")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 > ---
->  drivers/scsi/lpfc/lpfc_bsg.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/scsi/lpfc/lpfc_hbadisc.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
 >
-> diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-> index 7406dfa60016..f9e9896c348b 100644
-> --- a/drivers/scsi/lpfc/lpfc_bsg.c
-> +++ b/drivers/scsi/lpfc/lpfc_bsg.c
-> @@ -1545,6 +1545,7 @@ lpfc_issue_ct_rsp(struct lpfc_hba *phba, struct bsg=
-_job *job, uint32_t tag,
->         if (phba->cfg_poll & DISABLE_FCP_RING_INT) {
->                 if (lpfc_readl(phba->HCregaddr, &creg_val)) {
->                         rc =3D -IOCB_ERROR;
-> +                       lpfc_nlp_put(dd_data->context_un.iocb.ndlp);
->                         goto issue_ct_rsp_exit;
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hb=
+adisc.c
+> index f3a85f6c796e..9e920eaff9ef 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> @@ -4664,9 +4664,15 @@ lpfc_nlp_reg_node(struct lpfc_vport *vport, struct=
+ lpfc_nodelist *ndlp)
+>                         }
+>                 } else {
+>                         /* Just take an NDLP ref count since the
+> -                        * target does not register rports.
+> +                        * target does not register rports. Mark it as
+> +                        * an NVME transport ref so that
+> +                        * lpfc_nlp_unreg_node() releases it.
+>                          */
+>                         lpfc_nlp_get(ndlp);
+> +
+> +                       spin_lock_irqsave(&ndlp->lock, iflags);
+> +                       ndlp->fc4_xpt_flags |=3D NVME_XPT_REGD;
+> +                       spin_unlock_irqrestore(&ndlp->lock, iflags);
 >                 }
->                 creg_val |=3D (HC_R0INT_ENA << LPFC_FCP_RING);
+>         }
+>  }
 > --
 > 2.34.1
 >
 
---000000000000182946065bb17782
+--00000000000019e95d065bb1e5a1
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -232,13 +246,13 @@ jAMkNKrfvV7NxS9AfcFu4fvxuBJc+t2FN1zBc8VyVyn9ZBeJ2DYS9uQ2x00QPXMHqVlAT5fBanmS
 n1fgcSTdHEy1fzVZIAtM1XMIWy03bJKNBwUebgxHKHSUCZ7VSMHE4jyERMCqkvTxU6h4JJ7YzRrU
 jhXYo8oxggJXMIICUwIBATBiMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52
 LXNhMSgwJgYDVQQDEx9HbG9iYWxTaWduIEdDQyBSNiBTTUlNRSBDQSAyMDIzAgx9OiWw8dVRSIkn
-L+YwDQYJYIZIAWUDBAIBBQCggccwLwYJKoZIhvcNAQkEMSIEIIhjctkzj2CkZGJJf7f6RRc9btwZ
-0Y7XtKACKqJoTNWwMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI2
-MDkxNzE3NTM0NVowXAYJKoZIhvcNAQkPMU8wTTALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+L+YwDQYJYIZIAWUDBAIBBQCggccwLwYJKoZIhvcNAQkEMSIEII+hlAZ6QR6yxeELhsuwkdsz+K8E
+4uRxdr/JOy0aZTa8MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI2
+MDkxNzE4MjQzMVowXAYJKoZIhvcNAQkPMU8wTTALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQcwCwYJYIZIAWUDBAIBMA0GCSqGSIb3
-DQEBAQUABIIBACNt+Bfa46ustc7u+XQJJcXhMmcIMneyaQyOGGkrIBGP0ks99JUOFl7hPUKcnq3C
-S2M0XAcEihdleJObixB32Hp11neOOjFzz5UHDetUFBH1FYYYIXJfKR+vKx4FTRgJLChjA+yjyPwL
-rOIsf805D5z5VgAZj6mIyjrAlrE01nFWgtFbRzY48QvkHa79AAq+gC99IVT+KZi8gDCDDrTMcsUF
-A7mZz08GQhgqC+wpyd6XHjxYi0dj+G7a1hu7ne7Nhk1gD5UoBvFfmPJ30MRGy4nJZqhCIWoPFHIv
-jruj3eEJJF2jjIs3uG2wVpUB+yFG1O1XH1i7y4vuOGNU3M0RfPM=
---000000000000182946065bb17782--
+DQEBAQUABIIBAHQYHaKpe0Z+PZB3vOdabzz9Nrb+YjQRRx6EXw64L3e9TyFQSzFUmf1oZRf7p3Q0
+2JhXDT/6L+80YkBNpcz1VCNHIp8uu3h6mK6rfGlgiEip3T2SI5rUDMAQ95sC+wYp9Rksh9zvuP0l
+zjWFKGwbhvPo7QmnI6jXzoAP7Cg0ZRRpLs2cwp5O1v1PSX7wRnBjE/oHpzEw5m8WrGo0ijhQYqXj
+Mi8neGCdFz2a+nJ/9zquFeTsqgkJW4dvZCxz+MUvJEpFOC2Q3h4ZMoCK3iVErHTwOHUy/hoFaVFL
+aTcbnKHD5l+fQyrPzJ0dkfJi6ivWKLIAgnQkIPIBHhET4ncGPZc=
+--00000000000019e95d065bb1e5a1--
