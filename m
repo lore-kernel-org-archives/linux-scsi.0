@@ -1,132 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sender5-op-o15.zoho.com (sender5-op-o15.zoho.com [165.173.182.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D5C14A8FEC
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:22:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789683752; cv=none; b=QJCA0dxU4gDc1Ffwi/jXjM6n5KFAwej7NYGMI3toZ7bPj1mHAyqSBo8Be0ppjmimodY6AOMNx362Vwi5kwMEtnBq9DmjLgSSm5hJf6EWPQot1JkWt2rEPiw7cq0+OY/cZ2aVprA5ai0EvXOHUYWQR9iOO6dGmPC4qbYENoDpl3A=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789683752; c=relaxed/simple;
-	bh=s6piugh/xWMJyEDtNcqMFGqC3xFaWNIBnZlr1CZeJ/4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=e7HGENAqBi5hI2HZHGp+GMU0n1dh0UlUppyZbhg5Q3kuCZhQHUG30fSrIC3SCvnXLdgEajHVP7sWRzOPGMG6q2Cq3ov0OpR0rkdK1ZujtfN+OLZyKRW16XhrsX7Y932WlTq34Fm2I6uPVq1EC5j3vwfovUXokzLfymb7hgMaD1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JQrnbWoW; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2509B372EE4;
+	Thu, 17 Sep 2026 23:21:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=165.173.182.15
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1789687289; cv=pass; b=WhGXvxNys2QDLBWT9b/K02dhTV2dcMnI7fmq2Uz1fKEfhICZImSODDBQYMB92AuKqRegP+SxsYVw0ocaZVmcn58rY3c9KpxGk2dGghdiPjl10UHPNP+ESw2Gd/+EW1TZxlH2Bgm0fo+0bKJCNHVHcGGmO109oWfYghItM11d9Ds=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1789687289; c=relaxed/simple;
+	bh=LkK2pFSWkVKdoqi6VQoP7k8BLHvLrWGp7jYouKvh8Fs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PVz7tMaBfeC97YxqpLOOLkEp22mvhwzw1+NdSc0zWSiX5ugfl8qvxvo3rAp2gxpUkb+EVHE1xRi4wJlTU+O/BHHEEMLsFdd6yl+0bnBW9c57wnSC0NqFQWo/ViXRF/K12QQaB6npJcNBJtLVvjgPCfEv5XbtXqKdGlXrxIYkSM4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=chanakanlabs.com; spf=pass smtp.mailfrom=chanakanlabs.com; dkim=pass (1024-bit key) header.d=chanakanlabs.com header.i=me@chanakanlabs.com header.b=N7ngPiSM; arc=pass smtp.client-ip=165.173.182.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=chanakanlabs.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chanakanlabs.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JQrnbWoW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 292DB1F000FF;
-	Thu, 17 Sep 2026 22:22:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789683751;
-	bh=BvIooYl46fkLp3UAfTe3rrCZhYGya8lyzHNJhojjrH4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JQrnbWoWJ3ZKcxaGJxmxL+t6bvgT+ci6mtF2rwptYQiE0GmjloGYxbptXtIEpxqCX
-	 2ocnoF+8ZKf2zGd5S1pAOq9G4c8u9/zG6YMrFWL1dthXPF3ue/AUIf9GKV36S83Jtt
-	 BDqSBJvYaT0eX+zbDjdI3DJqCSLKJt00sy4AX8k1DD6MhVgOB781b5PdUF4jBfhxJo
-	 m/VWaPqKkBkF3TwkulCbvb41AB8DAEPnhNSA/0kNdeLKJ+RqhFPXdd1w/6sOxImJlw
-	 WgZKc1QaZl74cU5TVn8VjdrhMrCfqvqawWLOb74rykCYr/64jmL4JMp9m9nRZ1ksUw
-	 AkA570cesRZ6g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 12/14] lpfc: Update ELS ACC logging for diagnostic
- troubleshooting
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nigel Kirkland" <nkirkland2304@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260917222015.61053-13-nkirkland2304@gmail.com>
-References: <20260917222015.61053-1-nkirkland2304@gmail.com>
- <20260917222015.61053-13-nkirkland2304@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 17 Sep 2026 22:22:30 +0000
-Message-Id: <20260917222231.292DB1F000FF@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=chanakanlabs.com header.i=me@chanakanlabs.com header.b="N7ngPiSM"
+ARC-Seal: i=1; a=rsa-sha256; t=1789687275; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=LFiIhtm4oPVKXTty5qLjk9Q2X8cwuWje0rIU3q+mf5LqfjRB+oK541E7Lb4eKH5j8X1dwnU3i/wDN6QwgDauvRSk9M6iPqdGgZ1BS2S1mID/86EtXWGSCoBPD83hfjPQR61WBtuKvEWdg0uWSGajrvKq36BkP5VIFv5OUWtCh7Y=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1789687275; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=QFWV3MLLCIO5BlrPbqnOm469lr1dLRDnafWCOeZnAPs=; 
+	b=kxiF4oYVs10mDgRt/qe3Vme6a0UigG0W+Om8EBmdG6yamHNMg8S55MqSP81hmLqlw78GGn4pgaZfhBbViFxYvnuUtx2M27umUNXlIyeFSp2LSKKhIR6PGJzXHZ0u1qvU4GsLBqF3t5ub1RJwd3edSxn+o2OyIxbz+2FvPiMUa6E=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=chanakanlabs.com;
+	spf=pass  smtp.mailfrom=me@chanakanlabs.com;
+	dmarc=pass header.from=<me@chanakanlabs.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1789687275;
+	s=zmail; d=chanakanlabs.com; i=me@chanakanlabs.com;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=QFWV3MLLCIO5BlrPbqnOm469lr1dLRDnafWCOeZnAPs=;
+	b=N7ngPiSM/c0A+lItT5o/wYI0ecpUl/lX/47L5Obn6iOv89lBYdNt3jYvJiSWS6HY
+	3IC+KQRf9H2WQz7DWgV7LCg/DrPiFdzBXIHO7uyU9cBtsApoRF4IWnhVQnWQP0MNdne
+	8CdxQdwYbxpsAbdHroRzrTGRtaeSOOftV04g2law=
+Received: by smtp.zohomail.com with SMTPS id 1789687272578948.040234208764;
+	Thu, 17 Sep 2026 16:21:12 -0700 (PDT)
+From: Chanakan Moongthin <me@chanakanlabs.com>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	mkp@kernel.org,
+	johannes.thumshirn@wdc.com,
+	bvanassche@acm.org,
+	Chanakan Moongthin <me@chanakanlabs.com>
+Subject: [PATCH] scsi: Honor TRY_VPD_PAGES during initial scan
+Date: Fri, 18 Sep 2026 06:20:27 +0700
+Message-ID: <20260917232027.4265-1-me@chanakanlabs.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi: lpfc: UAF in lpfc_els_rsp_acc() error path due to concurrent=
- RSCN flush
---
+The scsi_device_supports_vpd() helper treats try_vpd_pages as an
+explicit override for the device SCSI level. However, scsi_add_lun()
+only calls scsi_attach_vpd() when the reported SCSI level is at least
+SCSI_3.
 
-commit 47dddef465d8869f241a192661f8107a7fb86c19
-Author: Nigel Kirkland <nkirkland2304@gmail.com>
+This prevents VPD pages from being cached during initial discovery for
+devices that report SCSI-2 but are explicitly flagged with
+TRY_VPD_PAGES. The sd driver then cannot read the cached Block Device
+Characteristics VPD page, leaving such disks marked rotational until a
+manual SCSI rescan.
 
-    lpfc: Update ELS ACC logging for diagnostic troubleshooting
-   =20
-    Currently, there are ELS ACC routines that lack debug log messages to
-    indicate when ACC frame transmission run into issues.  The generic
-    lpfc_els_rsp_acc and more specific ACC routines are updated to log when
-    there is an issue with transmitting the frame.  The routines are also
-    updated to return different return codes when encountering various
-    transmission issues and their function comment header is updated.
+Call scsi_attach_vpd() unconditionally from scsi_add_lun(). The existing
+scsi_device_supports_vpd() check remains responsible for deciding whether
+VPD pages may be queried.
 
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index bf71b5a3e55e5..cb06dbc9edfab 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-[ ... ]
-> @@ -6055,6 +6065,17 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_=
-t flag,
->  			 ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_state,
->  			 ndlp->nlp_rpi, vport->fc_flag, kref_read(&ndlp->kref));
->  	return 0;
-> +
-> +err_out:
-> +	if (oldiocb->cmd_dmabuf && oldiocb->cmd_dmabuf->virt)
-> +		old_opcode =3D *(uint32_t *)oldiocb->cmd_dmabuf->virt;
+On a VMware PVSCSI guest with
+scsi_mod.default_dev_flags=0x10000000, the baseline kernel reported
+rotational=1 at boot and changed to rotational=0 after rescan. With this
+change, rotational=0 was reported during initial discovery.
 
-[Severity: High]
-Can this dereference a freed pointer?
+Fixes: 7fb019c46eee ("scsi: sd: Switch to using scsi_device VPD pages")
+Assisted-by: LLM
+Signed-off-by: Chanakan Moongthin <me@chanakanlabs.com>
+---
+ drivers/scsi/scsi_scan.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-In lpfc_els_rcv_rscn(), setting vport->fc_rscn_flush =3D 0 publishes the bu=
-ffer
-for concurrent processing. If a parallel thread processes and frees this bu=
-ffer,
-and lpfc_els_rsp_acc() takes this new error path, oldiocb->cmd_dmabuf->virt
-would point to freed memory.
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 0f0f243c2561..a9264a3acaf1 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1122,8 +1122,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (hostt->sdev_configure)
+ 		scsi_realloc_sdev_budget_map(sdev, sdev->queue_depth);
+ 
+-	if (sdev->scsi_level >= SCSI_3)
+-		scsi_attach_vpd(sdev);
++	scsi_attach_vpd(sdev);
+ 
+ 	scsi_cdl_check(sdev);
+ 
 
-> +
-> +	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-> +			 "1027 Xmit ELS ACC Unsuccessful: "
-> +			 "cmd: x%x, error_code: %d "
-> +			 "S_ID: x%x\n", old_opcode, err,
-> +			 vport->fc_myDID);
-> +	return err;
->  }
-[ ... ]
-> @@ -8489,14 +8570,14 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struc=
-t lpfc_iocbq *cmdiocb,
->  	vport->fc_rscn_id_list[vport->fc_rscn_id_cnt++] =3D pcmd;
->  	/* Indicate we are done walking fc_rscn_id_list on this vport */
->  	vport->fc_rscn_flush =3D 0;
-> +	/* Send back ACC */
-> +	lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
+base-commit: 238650ef6c7c7cca08e032527329424c9fbd70e5
+-- 
+2.47.3
 
-[Severity: High]
-Does moving this lpfc_els_rsp_acc() call introduce a use-after-free risk?
-
-By calling lpfc_els_rsp_acc() here, cmdiocb->cmd_dmabuf has been published =
-by
-clearing vport->fc_rscn_flush, but is not yet set to NULL. A concurrent thr=
-ead
-could free cmdiocb->cmd_dmabuf before the error path in lpfc_els_rsp_acc()
-attempts to read from it.
-
->  	/*
->  	 * If we zero, cmdiocb->cmd_dmabuf, the calling routine will
->  	 * not try to free it.
->  	 */
->  	cmdiocb->cmd_dmabuf =3D NULL;
->  	lpfc_set_disctmo(vport);
-> -	/* Send back ACC */
-> -	lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
->  	/* send RECOVERY event for ALL nodes that match RSCN payload */
->  	lpfc_rscn_recovery_check(vport);
->  	return lpfc_els_handle_rscn(vport);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917222015.6105=
-3-1-nkirkland2304@gmail.com?part=3D12
