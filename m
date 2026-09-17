@@ -1,48 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC1936F91F;
-	Thu, 17 Sep 2026 02:28:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAAA8367295
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 02:28:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789612142; cv=none; b=D2iDVinms+59MtCmizKPx44Fzru7c8XdTC4Q+d7rNuBf81ARVy/gI/AUdEEeAswMdloLvwNbVpnePXyNkoMePF5Sujdipd5JZD9IVqs90Nyqu+xbB+TnkxkLfpVki07pqwU0QUbEzw9+wE+ZVCpazaYuSYSJqcf9TJaF4c7tf0I=
+	t=1789612142; cv=none; b=ukgup1RwvXl6wXQ57i0q5isXl4QXI+jFcka+zKANBwTSblXYBuqRUD3MgxPaaiLGgPW2+ZJyIVNl/Zq0MFZGedN2J5uersGdB29eG6ztEHrYv5FSv+5kp5UiQrfJIR6VlSvcIVL7QfCqJzdGKddkG7bUWuN5IFLEnyZIv+5vnqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1789612142; c=relaxed/simple;
-	bh=6T0htSUKggTZSOVYP5NupG0kBLY0eJqrRFVzqPEVOgU=;
+	bh=eqzKbbmV77Aah72ej0wfW94eFu5tw1f8DgVFPnXuMwo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f2y0YMLUBoAbRiJiEa++Ivye1+hD462XllMbqWPgOvmS5J6FHvVQbDKSCcxCgJoaZ0sf3MX1FdDZU1X12Ntw/MXEK9lhQDMOkEPm9Wxcz77Ok1M+o5V4fEnqEykvxvDom3n62tVMq69vZoutocSxlWGFzc66J44nUvljny0O+Ng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XIwgSBng; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=HCobckyIFVGXTaA7N1X2/rmZmIXahpK8thcfVk97rw5XlHRKOfY1K3Jd4qVGfagQkDTy+eg1IbTZc3WkJApj341zA17A28Y7j2uvs6tSrABvFBPGk2snui8bNRE+02s814W7fl7TLQOs8+DKpFnASHW5R1oeNr1OQuXJeRPt3xs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BBU1Cfm0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XIwgSBng"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDDA01F008A1;
-	Thu, 17 Sep 2026 02:28:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BBU1Cfm0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 517EC1F0089A;
+	Thu, 17 Sep 2026 02:28:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789612120;
-	bh=hIpu4x3R6eS/r998XLlVkZd76MGS2NwC15636aNwGtY=;
+	s=k20260515; t=1789612113;
+	bh=1HWPEA+5CqWtOnsnZep+r+0qwHgc88lBEdjtvCHg+dU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=XIwgSBng5ahUjY8A0tk/E828hYUSrb1nfg3x66f1s2hOOSvkCGHMY4oqDqc2CvsUc
-	 4Uhh2Iu1VRPuAhcG8LX4n8KLplMqbIYM9LEr9GbZSrJ+1RZlebUZ96uwicxzjkAJzf
-	 CWjwXQzTeoBhOl26RPHRyO08sW3juh8Uu/SIU0QuL/N6Xxuaaax4o6Uo9FWIn/4SQ8
-	 go2JdvnbLYtZWI0QOw/Ao0BHpr+lIsOXDgsf4unqs8yZZklLZAW02dN60Tm3fx7a5q
-	 MRubnMNL6A9iSLPCd7CFTg2hrcGmUH/A+cQ4iJdT/8GPLRuTj1I0Tcz6DrH8QHJbCv
-	 XkvNtzz3kVmuQ==
+	b=BBU1Cfm0309jwsXql+MsYppnEuZrUH9RwmzpN/J+CnXUgWMomnuWB5PPYV5LVKXsq
+	 KT4SwNY374qRzrcd6Cc+LBnrxzkPqDDoedvxBnavfbSLNNFE0FvrYe+yuZboM5RsY8
+	 L1D1tXVEBUSdcBODRzzzakrCy4jQ38lBmen6SSb9qzsNCihdGU7opwaLwORS501lIU
+	 CDTKn2BwiY4WYp58ZHvRzTOv8li/G3TRm1P7JbvDHSnEkrQYus0xOCoxVMcxNAkzgc
+	 Gg5tDz34yKKD72W9W8EeCha4xEnrIZ8SRkzH/sQe3UJq1UXh+/4q4IRPHIXwxmUCNy
+	 wAVYueNuEEWSw==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: linux-scsi@vger.kernel.org,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Stanley Jhu <stanleyjhu@google.com>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Brian Kao <powenkao@google.com>,
-	stable@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] scsi: ufs: core: Keep internal commands dispatchable during error handling
-Date: Wed, 16 Sep 2026 22:28:21 -0400
-Message-ID: <178961190588.3672510.10414436987166637617.b4-ty@b4>
+To: "Martin K. Petersen" <mkp@kernel.org>,
+	Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2] scsi: megaraid_sas: Protect megasas_get_ctrl_info() in megasas_resume()
+Date: Wed, 16 Sep 2026 22:28:15 -0400
+Message-ID: <178961190606.3672510.12229874119838839211.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260912131625.2301486-1-stanleyjhu@google.com>
-References: <20260912131625.2301486-1-stanleyjhu@google.com>
+In-Reply-To: <f06b5ee432b21cf293f0663e15b64f75a84b9fd5.1788204406.git.bvanassche@acm.org>
+References: <f06b5ee432b21cf293f0663e15b64f75a84b9fd5.1788204406.git.bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,26 +50,21 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Sat, 12 Sep 2026 21:16:25 +0800, Stanley Jhu wrote:
+On Mon, 31 Aug 2026 12:27:20 -0700, Bart Van Assche wrote:
 
-> Commit 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
-> switched UFS internal commands to allocate requests on
-> hba->host->pseudo_sdev->request_queue, which shares the host tagset with
-> regular LUNs.
+> Protect the megasas_get_ctrl_info() call in megasas_resume() with
+> instance->reset_mutex using scoped_guard().
 > 
-> During error recovery, ufshcd_err_handling_prepare() calls
-> blk_mq_quiesce_tagset(&hba->host->tag_set), marking all queues in the
-> tagset as quiesced, including pseudo_sdev->request_queue. When
-> ufshcd_verify_dev_init() subsequently issues internal commands (e.g. NOP
-> OUT UPIU) via blk_execute_rq(), blk_mq_run_hw_queue() skips running the
-> quiesced queue, resulting in an unrecoverable circular wait deadlock.
+> megasas_get_ctrl_info() may release and reacquire instance->reset_mutex.
+> Hence, calling this function without holding instance->reset_mutex is not
+> safe.
 > 
 > [...]
 
 Applied to 7.3/scsi-fixes, thanks!
 
-[1/1] scsi: ufs: core: Keep internal commands dispatchable during error handling
-      https://git.kernel.org/mkp/scsi/c/b52d695d0620
+[1/1] scsi: megaraid_sas: Protect megasas_get_ctrl_info() in megasas_resume()
+      https://git.kernel.org/mkp/scsi/c/42d1221d321e
 
 -- 
 Martin K. Petersen
