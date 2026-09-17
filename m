@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B5C0392C20;
-	Thu, 17 Sep 2026 02:28:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E7E13914F0
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 02:28:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789612134; cv=none; b=AmNivtHVphow4Q34rAlWE2VL8W+lBjMZlwPvz6qwJpfDyoJtOQl6CAIW8nkvXeOqYrEjmf/53HWSaKrHV1NclTPn0uwvW/WIcnOC3yv2uSwchUJB/VA6FgvXCVmXiFJSOHle2hK3iFhRvMpsWovjmoieZ4D78hreezw/T2LAU3s=
+	t=1789612137; cv=none; b=MzFz3lvwQse920O9/eXIO9mludIt9po0kLlingJ/DSzs/jiJE8mtBn/2lECjQ/09WljSb+f1pClqTaHEreZ+YmZlXVjVHw86CtJvAyngy/B1ZbXbga069n8IuKZaPAc5AOYt4vqqMIKR8X0Vc4XUwShJIAohJtyVrlNeu0J0LRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789612134; c=relaxed/simple;
-	bh=QAmGo5ya1lEzgebcyO2c25lvgrfDOlaC7TkM1OT6KBU=;
+	s=arc-20240116; t=1789612137; c=relaxed/simple;
+	bh=7hOo6Dy1x7KohJstyLqmsMPSjBrGuaFkI2asOuzq/fQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SIhZ59KOneINMPkkdWjpjem4OmkL8f7DSnDZ3SmMWYuoSUU2+cxzDrq5CsHc+CgVJQq20KoWeXaDidu1I1WhMJTAHcoQdZUzc7/eZk/9A2hnX6KyEomBm14BxWvbG2QQ/QCV9DeC27LzSPecv096vxmQTNQMrkAjsQ+kNkA3W7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fDgyvGX0; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=V1xpQlqGX5ICAnQLwwBX1KQ2jsf55J0VXNnjt/NWpOj+RPBuKlasBXaUYn+mY+Gkgzmt9ECmbEy0XjN8qt2f/CVGKmc7VKwJrsE23YEI0MLNPdNuzA8Xle3E6KMTx6d7RUMEph3oowGtR6uQFMQk7DgCJwrh7sjZI8M0yuSZpQ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V+mMNXmt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fDgyvGX0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0154C1F0089F;
-	Thu, 17 Sep 2026 02:28:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V+mMNXmt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBD3C1F0089E;
+	Thu, 17 Sep 2026 02:28:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789612118;
-	bh=K3oyNZntK8zxhJ9bZu28xpBS5eax1KW4PDBFgPVykOA=;
+	s=k20260515; t=1789612117;
+	bh=myVhqPmu8F72OKJTpqxjGHHLMEVxoBB4pwp0dykOBHE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fDgyvGX0BIVTsOSbHB2zkr6qz/sUztLLTyoJBmkE3OdbKmiCa4N2N1rWH2agrdlWY
-	 aFoDTf8EoHk/dDfTT0JhXO7HoKk7Grw8T57he8eB2FiI35EhH+dUTONYnA7SP07/d7
-	 thSrrqBmKOR63wKCYFQyAsM4JI69RyWPxdl7NE5m7rrtuhy/hHKsGSx8a1dp+IRP8f
-	 QVfG3SHWJk1Oj6ayWqwNl01kbmTCiGZI1PGQ0lNIuprTQL9SWJFxs37QRoCVD0MQe2
-	 H9SlMcqYw/DCh8BO7hQoIWmSeTCQscX1wIaDoYHYoUQp0fhKvTugqVF2N2EEoNsTRu
-	 T4nGRluCnp0yQ==
+	b=V+mMNXmtvn7I8HKPbB5BKQuu5+YfVhv9FTWpRsK/qHIzAcFX0RqsBlICNqYucHs+R
+	 6OA5HZOOFIoUjhgtyF5CfDm721nn9hvwPnWKESxHWbX2weM6kmqPGeMz4OPuoPPt/z
+	 GJaNeLspgRS5toizEHPSy7t8qhPrJRnR3JHxAKCd4gKbu4E8Bhjmuzu6Xb+AJPCkoz
+	 oi4zBVH6bl7Yv5nqcVVC8fv0zJc0ZsIR3A8N91iMxEC8CAINRF8NalBLLxNpNJ7jSe
+	 vztt1RPYoXMq0NszyjOd6mVLXKu/n5JFWZN5UHZZFfAJg8HeeE/py/FbkXDsZtTsbm
+	 H7O6m0GjYsFpg==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	ZHOU Jiaxiang <me@fxti.xyz>
+To: Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Karl Mehltretter <kmehltretter@gmail.com>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 1/2] block: fix zones_cond out-of-bounds write on zone report
-Date: Wed, 16 Sep 2026 22:28:20 -0400
-Message-ID: <178961190604.3672510.18119102289310587808.b4-ty@b4>
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	linux-scsi@vger.kernel.org,
+	Daniel Wagner <wagi@kernel.org>
+Subject: Re: [PATCH] scsi: qla2xxx: Fix the ql2xfc2target parameter description
+Date: Wed, 16 Sep 2026 22:28:19 -0400
+Message-ID: <178961190574.3672510.9517140388257581437.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <7815D1B293A8F55E+20260916135822.32584-2-me@fxti.xyz>
-References: <7815D1B293A8F55E+20260916135822.32584-2-me@fxti.xyz>
+In-Reply-To: <20260906171009.2560-1-kmehltretter@gmail.com>
+References: <20260906171009.2560-1-kmehltretter@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,29 +49,21 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Wed, 16 Sep 2026 21:58:21 +0800, ZHOU Jiaxiang wrote:
+On Sun, 06 Sep 2026 19:10:09 +0200, Karl Mehltretter wrote:
 
-> blk_revalidate_disk_zones() sizes the zones_cond array from the disk
-> capacity and zone size, but the index used by blk_revalidate_zone_cond()
-> comes from the device-driven report_zones() walk and is never checked
-> against the array size. A device reporting more zones than fit the
-> array makes blk_zone_set_cond() write out of bounds.
+> The module parameter is ql2xfc2target, but its MODULE_PARM_DESC() names
+> qla2xfc2target, so modinfo describes a parameter that does not exist and
+> shows no description for the real one.
 > 
-> One way to reach this is a zone count exceeding 32 bits: both
-> blk_revalidate_zone_args.nr_zones and struct zoned_disk_info.nr_zones
-> are unsigned int, so a disk advertising more than UINT_MAX zones (e.g.
-> 2^32 + 1024 zones of one 512-byte logical block) gets its zone count
-> truncated to a small value, undersizing the array while the report
-> walk keeps counting upward.
+> Use the parameter name in the description.
+> 
 > 
 > [...]
 
 Applied to 7.3/scsi-fixes, thanks!
 
-[1/2] block: fix zones_cond out-of-bounds write on zone report
-      https://git.kernel.org/mkp/scsi/c/7c431d61b69a
-[2/2] scsi: sd_zbc: reject disks with too many zones
-      https://git.kernel.org/mkp/scsi/c/b6ec0f797459
+[1/1] scsi: qla2xxx: Fix the ql2xfc2target parameter description
+      https://git.kernel.org/mkp/scsi/c/779f202a92ef
 
 -- 
 Martin K. Petersen
