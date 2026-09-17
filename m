@@ -1,45 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E7E13914F0
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 02:28:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B7053932D4;
+	Thu, 17 Sep 2026 02:28:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789612137; cv=none; b=MzFz3lvwQse920O9/eXIO9mludIt9po0kLlingJ/DSzs/jiJE8mtBn/2lECjQ/09WljSb+f1pClqTaHEreZ+YmZlXVjVHw86CtJvAyngy/B1ZbXbga069n8IuKZaPAc5AOYt4vqqMIKR8X0Vc4XUwShJIAohJtyVrlNeu0J0LRY=
+	t=1789612136; cv=none; b=pqMt5G8ysttIRU7XY6mDfjunlie1MikkplMCbBe8+GP6a/GFEEmn4cgLs8pchMR82Q1+XRqHsxncdblnCcdW4vISP73/cVrjukdQQYVD+5z1+OpvLQD2/RD4R2F7eUt39tJkeSQkmE3ybchHj6IWd0NOMXDo19FDK0BCuzLtyxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789612137; c=relaxed/simple;
-	bh=7hOo6Dy1x7KohJstyLqmsMPSjBrGuaFkI2asOuzq/fQ=;
+	s=arc-20240116; t=1789612136; c=relaxed/simple;
+	bh=NL6yxE/O7YW6mC8w5oTQzUiNz5Lqsvc4kPzEpOeztcs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V1xpQlqGX5ICAnQLwwBX1KQ2jsf55J0VXNnjt/NWpOj+RPBuKlasBXaUYn+mY+Gkgzmt9ECmbEy0XjN8qt2f/CVGKmc7VKwJrsE23YEI0MLNPdNuzA8Xle3E6KMTx6d7RUMEph3oowGtR6uQFMQk7DgCJwrh7sjZI8M0yuSZpQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V+mMNXmt; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=I5ZSheJLLw5z3Log6AvMm420A61NAiK/ZD/Et+iEKKFZjrRXbIAGctPRJreCXc8AFt20j8p6C+tNwRtWEG5FZSiVdjGvbtN6e7CvvhqEHJgrQ3PAm8VAbVXbDeiRU5kVVcv+Lrcg+VEHdcqrZOhs2DiIm1+9E+/qOIGTXVzhlGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bqYGnizp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V+mMNXmt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBD3C1F0089E;
-	Thu, 17 Sep 2026 02:28:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bqYGnizp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BC991F00898;
+	Thu, 17 Sep 2026 02:28:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789612117;
-	bh=myVhqPmu8F72OKJTpqxjGHHLMEVxoBB4pwp0dykOBHE=;
+	s=k20260515; t=1789612121;
+	bh=CMua3TyWlvr3nWYiarskUz8W5kiV577yocMbTDBqi+8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=V+mMNXmtvn7I8HKPbB5BKQuu5+YfVhv9FTWpRsK/qHIzAcFX0RqsBlICNqYucHs+R
-	 6OA5HZOOFIoUjhgtyF5CfDm721nn9hvwPnWKESxHWbX2weM6kmqPGeMz4OPuoPPt/z
-	 GJaNeLspgRS5toizEHPSy7t8qhPrJRnR3JHxAKCd4gKbu4E8Bhjmuzu6Xb+AJPCkoz
-	 oi4zBVH6bl7Yv5nqcVVC8fv0zJc0ZsIR3A8N91iMxEC8CAINRF8NalBLLxNpNJ7jSe
-	 vztt1RPYoXMq0NszyjOd6mVLXKu/n5JFWZN5UHZZFfAJg8HeeE/py/FbkXDsZtTsbm
-	 H7O6m0GjYsFpg==
+	b=bqYGnizpXYyRIPZBc6DA30+Wa3mJUoTuiaTLfDu95Bf8rZuRO0JQOMnFwyfU3BGb7
+	 nCVMRBOAclRBKp7Kyy0cs6MltkFkAybaB4u1vybB5mUTqLrLikBZrZh/sKLG72dT+n
+	 zDTC8+C7WuyTi/yDvxjfOGdzl4v9T3nGLqrlZuKa2laBDwMrDwoploY/0MhN5x7DHk
+	 A3ItbJNvvm3TYSMWuSFPTHb3yHtylggJLJ7Z17z0xY3w8wa+tJ/e1yv3QWHhHE2fci
+	 IXsKdrrVfZwzHuOTpVvY+bfvi8IrycevIMKkmUoYRIlEprGZW/CcM3dAaj38s7PO+2
+	 VAxnBjUUuMVDA==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	Karl Mehltretter <kmehltretter@gmail.com>
+To: James.Bottomley@HansenPartnership.com,
+	tyreld@linux.ibm.com,
+	Venkat Rao Bagalkote <venkat88@linux.ibm.com>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	linux-scsi@vger.kernel.org,
-	Daniel Wagner <wagi@kernel.org>
-Subject: Re: [PATCH] scsi: qla2xxx: Fix the ql2xfc2target parameter description
-Date: Wed, 16 Sep 2026 22:28:19 -0400
-Message-ID: <178961190574.3672510.9517140388257581437.b4-ty@b4>
+	linux-kernel@vger.kernel.org,
+	pavrampu@linux.ibm.com,
+	brking@linux.ibm.com,
+	davemarq@linux.ibm.com,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH] scsi: ibmvfc: Add Kconfig dependency to fix link failure when NVME_FC=m
+Date: Wed, 16 Sep 2026 22:28:22 -0400
+Message-ID: <178961190577.3672510.9039790246882718532.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260906171009.2560-1-kmehltretter@gmail.com>
-References: <20260906171009.2560-1-kmehltretter@gmail.com>
+In-Reply-To: <20260903074329.6705-1-venkat88@linux.ibm.com>
+References: <20260903074329.6705-1-venkat88@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,21 +52,23 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Sun, 06 Sep 2026 19:10:09 +0200, Karl Mehltretter wrote:
+On Thu, 03 Sep 2026 13:13:29 +0530, Venkat Rao Bagalkote wrote:
 
-> The module parameter is ql2xfc2target, but its MODULE_PARM_DESC() names
-> qla2xfc2target, so modinfo describes a parameter that does not exist and
-> shows no description for the real one.
+> Building with CONFIG_SCSI_IBMVFC=y and CONFIG_NVME_FC=m results in a
+> link failure:
 > 
-> Use the parameter name in the description.
-> 
+>   ibmvfc-nvme.o: undefined reference to `nvme_fc_register_localport'
+>   ibmvfc-nvme.o: undefined reference to `nvme_fc_register_remoteport'
+>   ibmvfc-nvme.o: undefined reference to `nvme_fc_unregister_localport'
+>   ibmvfc-nvme.o: undefined reference to `nvme_fc_unregister_remoteport'
+>   ibmvfc-core.o: undefined reference to `nvme_fc_rescan_remoteport'
 > 
 > [...]
 
 Applied to 7.3/scsi-fixes, thanks!
 
-[1/1] scsi: qla2xxx: Fix the ql2xfc2target parameter description
-      https://git.kernel.org/mkp/scsi/c/779f202a92ef
+[1/1] scsi: ibmvfc: Add Kconfig dependency to fix link failure when NVME_FC=m
+      https://git.kernel.org/mkp/scsi/c/1274045b0eda
 
 -- 
 Martin K. Petersen
