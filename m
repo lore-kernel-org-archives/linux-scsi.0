@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 975C252F29E;
-	Thu, 17 Sep 2026 16:42:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4BE5544D5A;
+	Thu, 17 Sep 2026 16:43:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789663353; cv=none; b=clOCdwEX/BV0cAbKOhHZS1fM5Sg6DshGboKq6Na3CoWGqWdOEVF7V0I9hWMlKTjPKGl+xbifH/XnrZohEGwSqpamRIp8cuoxxFbnqC797xNUC9BNktnNrIhrFtnLh8iyYJ/TwMKn4h9BY2glSclAOvR1UaHB/X3eF6MANY7KPMk=
+	t=1789663382; cv=none; b=IIKUKix2NSF5yB/dmygOPidLRAFVv4l8zM/gQOJDLW1Qp4vI2Vn+1gjsXI+E6stKQoxaBWRKFvxuMkRI65ucNZNKXLqvHA1yOq/5NlrTIU5nT1T34z1UPaCUkWXLEp4yhSBbeVlGZryTj0Kiy11BLnpLFfuMLfWHy3oz4vvbHwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789663353; c=relaxed/simple;
-	bh=RCEYQjEW6MHyrFoJLHJtSFluFNRdmgFFgjkTdNXkXXM=;
+	s=arc-20240116; t=1789663382; c=relaxed/simple;
+	bh=2A3Cmsn/41H3VCQe0yUXH8gcl1gq+lw+YTsrD11Z3Vo=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=qZfHLntIZsH3gJqBurlEBC1bBqeDSMSlzGZSWW5ZCRZMXpYrc9aqHkNGZZx8CTtwfXaOn1SSPqRwdcR7SYuUOXnKqa4MjpgFZ+XBhsIQOllo6HkTgxE+r+RMqgIlY4+S/Y1RdZkMEbAxwrizATlxmk35stbdrSaMOUMal3j/zxs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cmb/ysU7; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=jceuS2rpoCCL8+MH2aJfqRqqQnF6f6Zz7AGBPhUJMxPWBD4VLqppFA65QOWAv6fi3IcssCswnk4XtMH09zdTq6V/M73xvoqP8+K/juiOJtdwhABbB44v6sWGRMcjh83P2y7v76blJ+eOg6pB0Ew5Kpth8yPEFzW7gHE3O9/6Zdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VX8sd0/6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cmb/ysU7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 468B11F00898;
-	Thu, 17 Sep 2026 16:42:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VX8sd0/6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A367C1F00893;
+	Thu, 17 Sep 2026 16:42:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789663350;
-	bh=XwIdZujBqtKUK3euRg5palCjbTo4zKXqAqucXZZYP/8=;
+	s=k20260515; t=1789663380;
+	bh=6Dab/JGj5h11GJwmfZC2qp9KBu5kIrwqs5kjA45qPyk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=Cmb/ysU7A2bqkrjcmYKGtzkObQFsqsQPqhrTeACuT7E6udtT1VtRCokjSgZIP3veQ
-	 c32KYE7Q9DbF8zaMyxdAW9fKam9QLmC03ZSyK4ksj3idJnuVXs/oNjziwcFItF2LLw
-	 UXTD0GRBCuUWyaaHwFU7V9V2R0kh1sCwhloi6sboQXKT62VT9XyL4F7yz1mQIDjL8k
-	 LACvKsTACex+CrxisqCI3kiHS0TusrT3njwlV7H9m09g07nLEqTRxyiI41CBhhw8KS
-	 E4K17K11KDA0M3WOz6mIGN9sK1RDTsxG0KWWwfBABdD+kmBzfIknYzcl9f3xb2eAKv
-	 UHCLP/xRjqYsQ==
+	b=VX8sd0/66chGwBSXTRN6xewgRxbkdbYKvu8TXFtU97j1gbO5MtY4GA3FuN4pxa8kQ
+	 sJFEbTFNFVlyAMa8Na6QNMRSq4oSA2gdS7Gui7OgLAi4IQQEmsyqhalKYGXl/bRxNX
+	 D/3ycl79FQ5ht15gqYWhPEtIXytHr54JCpZjtE74fYeYcilBPDWfVgMKr2V1oU/68Z
+	 G8QA8UvvCFGiQf+kJvlF9KEewMqtI6KFQNL2DNfh1SCDpC9shan+s0AyJYsTXjtS55
+	 kKPDtzbkzQHcQvlV0ZfbpqeyZW2rJ1hQkTlYasEVZKlfMcTqdFSz8jOjTnyvV7i/MB
+	 wwiohy6LPq+FQ==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Thu, 17 Sep 2026 17:22:47 +0100
-Subject: [PATCH v3 38/40] fuse: dax: do not set VM_MIXEDMAP
+Date: Thu, 17 Sep 2026 17:22:48 +0100
+Subject: [PATCH v3 39/40] mm/huge_memory: remove vma_is_special_huge()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-38-4583d8a23bca@kernel.org>
+Message-Id: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-39-4583d8a23bca@kernel.org>
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
 In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -121,54 +121,92 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1455; i=ljs@kernel.org;
- h=from:subject:message-id; bh=RCEYQjEW6MHyrFoJLHJtSFluFNRdmgFFgjkTdNXkXXM=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLWCB9tal54zilG6a9/eXzYJZmViV0XHrHWeHJK7Ly4O
- N+crdq8o5SFQYyLQVZMkeX5F/H9QSJh8zov+LvBzGFlAhnCwMUpABO5/IDhnzHXzvycdY9vvjhf
- ZcHj3XHM+C97xXHnLRW/LW0fMVv8LmBk6K2oFzgzw6ltR9/uvf1lv9v9fgYkZEu+2axxyPD2Ip1
- sXgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2897; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=2A3Cmsn/41H3VCQe0yUXH8gcl1gq+lw+YTsrD11Z3Vo=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLWCB9lesOuX7ti9tWy2c9VHG+vaQz+v+5YpsmCpzf36
+ +yddNxVv6OUhUGMi0FWTJHl+Rfx/UEiYfM6L/i7wcxhZQIZwsDFKQATSSxiZPgjojDnQIHWZ/7i
+ 7KigVRu+qSZ3zDwz3WZ1X3jD3fN2uzkY/tdPWPJHbRnXvkl3jv1m+3NH3lmwI/DhuRfzVp0wPNM
+ WvJEDAA==
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-Commit e1fb4a086495 ("dax: remove VM_MIXEDMAP for fsdax and device dax")
-prevented fsdax and device-dax from setting VM_MIXEDMAP, as DAX no longer
-relies on it to direct core mm paths.
+vma_is_special_huge() tests whether either the VMA_PFNMAP_BIT or
+VMA_MIXEDMAP_BIT is set (i.e. whether the VMA is a kernel-owned mapping),
+but with a DAX carve-out.
 
-The fuse DAX implementation, added later, copied the old pattern and still
-sets it.
+DAX however no longer sets VMA_MIXEDMAP_BIT, so this carve-out is no longer
+required.
 
-Fuse DAX maps pages the same way fsdax does, via dax_iomap_fault() and
-ultimately vmf_insert_page_mkwrite() and vmf_insert_folio_pmd(), which
-insert ordinary refcounted pages and so do not require VM_MIXEDMAP.
+Therefore test for vma_is_kernel_owned() instead and also drop the
+VMA_IO_BIT check, as it is now redundant since it is enforced that only
+kernel-owned mappings can set this flag.
 
-Setting it only serves to mark the mapping as kernel-owned, making fuse DAX
-the sole DAX implementation whose mappings are unmergeable, cannot be
-mlock()'d, eagerly copy page tables on fork and reject MADV_DOFORK and
-MADV_DODUMP.
+This also eliminates another overloaded use of 'special' within mm.
 
-It also requires vma_is_special_huge() in mm/huge_memory.c to carve DAX out
-of its kernel-owned check explicitly.
-
-There is no reason for fuse DAX to keep on using this flag so drop it.
+No functional change intended.
 
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- fs/fuse/dax.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/huge_memory.c | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
 
-diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
-index 85cdf0199bc0..a5994f1c637d 100644
---- a/fs/fuse/dax.c
-+++ b/fs/fuse/dax.c
-@@ -826,7 +826,7 @@ int fuse_dax_mmap(struct file *file, struct vm_area_struct *vma)
- {
- 	file_accessed(file);
- 	vma->vm_ops = &fuse_dax_vm_ops;
--	vm_flags_set(vma, VM_MIXEDMAP | VM_HUGEPAGE);
-+	vma_set_flags(vma, VMA_HUGEPAGE_BIT);
- 	return 0;
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index c3c98ea672c3..3cb8e2d4d65c 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -110,14 +110,6 @@ static inline bool file_thp_enabled(const struct vm_area_struct *vma)
+ 	return S_ISREG(inode->i_mode);
  }
  
+-/* If returns true, we are unable to access the VMA's folios. */
+-static bool vma_is_special_huge(const struct vm_area_struct *vma)
+-{
+-	if (vma_is_dax(vma))
+-		return false;
+-	return vma_test_any(vma, VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT);
+-}
+-
+ static bool vma_file_bypass_thp_tuneables(const struct vm_area_struct *vma,
+ 		enum tva_type type)
+ {
+@@ -192,7 +184,7 @@ unsigned long __thp_vma_allowable_orders(struct vm_area_struct *vma,
+ 	/* Check the intersection of requested and supported orders. */
+ 	if (vma_is_anonymous(vma))
+ 		supported_orders = THP_ORDERS_ALL_ANON;
+-	else if (vma_is_dax(vma) || vma_is_special_huge(vma))
++	else if (vma_is_dax(vma) || vma_is_kernel_owned(vma))
+ 		supported_orders = THP_ORDERS_ALL_SPECIAL_DAX;
+ 	else
+ 		supported_orders = THP_ORDERS_ALL_FILE_DEFAULT;
+@@ -3066,7 +3058,7 @@ int zap_huge_pud(struct mmu_gather *tlb, struct vm_area_struct *vma,
+ 	orig_pud = pudp_huge_get_and_clear_full(vma, addr, pud, tlb->fullmm);
+ 	arch_check_zapped_pud(vma, orig_pud);
+ 	tlb_remove_pud_tlb_entry(tlb, pud, addr);
+-	if (vma_is_special_huge(vma)) {
++	if (vma_is_kernel_owned(vma)) {
+ 		spin_unlock(ptl);
+ 		/* No zero page support yet */
+ 	} else {
+@@ -3222,7 +3214,7 @@ static void __split_huge_pmd_locked(struct vm_area_struct *vma, pmd_t *pmd,
+ 		 */
+ 		if (arch_needs_pgtable_deposit())
+ 			zap_deposited_table(mm, pmd);
+-		if (vma_is_special_huge(vma))
++		if (vma_is_kernel_owned(vma))
+ 			return;
+ 		if (unlikely(pmd_is_migration_entry(old_pmd))) {
+ 			const softleaf_t old_entry = softleaf_from_pmd(old_pmd);
+@@ -4765,9 +4757,7 @@ static inline bool vma_not_suitable_for_thp_split(struct vm_area_struct *vma)
+ {
+ 	if (vma_is_dax(vma))
+ 		return true;
+-	if (vma_is_special_huge(vma))
+-		return true;
+-	if (vma_test(vma, VMA_IO_BIT))
++	if (vma_is_kernel_owned(vma))
+ 		return true;
+ 	if (vma_is_hugetlb(vma))
+ 		return true;
 
 -- 
 2.55.0
