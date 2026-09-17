@@ -1,245 +1,402 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013011.outbound.protection.outlook.com [40.107.162.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A03F594803
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 16:02:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EF2E4E4C5A;
+	Thu, 17 Sep 2026 16:04:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.11
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789660936; cv=pass; b=Hk6+VjQ4NlLUAffJn+s1YHZCd0J2ctdbZ7AZx04+tCs28iqCBZPFF8NfxicvRhzSqoe5vkKkg8Zy/qr1QW6BNz2qb/S0QvpW7W9Pw/hWIL87SJUVlp6GOjSYD3mO9amHIRQ5pGUrWL0P157DUpBN9rHPz+EmlPR4+TwhGRl7hTw=
+	t=1789661044; cv=fail; b=lVzkjJwtsgqtSL+X6F2th7qKjKupFL5gp47Ecuy19ZMfWHAdSI15k1aqPkTshLIFTysXy+Ssk6pjFFHZ0AnNVWrB2k22sq0idEPOHS2P2FiDxicqat07GLXEXhybQNGD5OEvSxBgaLicRxnUylrsbHGEZEpNNAZa/t1s7IHHQtc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789660936; c=relaxed/simple;
-	bh=i4K+5KhGBGJWLxBIyIr7wJw9x6n50uvQZnOpxd2u9YY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Ju5ZJRnyw+25G4s4G7Zb7m+98ep6Zp3Ufar/JJ3FqCF7giIFgtKedkMZjYlrJF1hxNhrC+wiDMbARG5mZdozA3RCE6zqoJiztyngEtC+I7fTxCdt/uF+S0KvenMkHpwHDq+M7knpe0UB87yo75NTP6r8FPZuhKb419kdOjzmyUQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WI/iH9eR; arc=pass smtp.client-ip=74.125.227.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789661044; c=relaxed/simple;
+	bh=A+MtAbFH8dSljJDOMQCNyo8tBJ/EZ/AobCxaPFHoOiY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=JUvIirYoLIhqjBn540Gs7/n2Kpdni/FsZDw4Gh9/T+Gi6IXKTk56L4D20bGztNjtG1G6WSU6M/rYplTYwDqgKezPcrXOeytm+cZVHOPZyZ6WOqHmex8iAJpTtxwnFuEaHl+/HEMR9FKLg0Prj7MnleiyXxiawFhQ+SUDkbresu4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=UNhpCiy3; arc=fail smtp.client-ip=40.107.162.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WI/iH9eR"
-Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2d6ff2f2c4dso1268165ad.0
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 09:02:14 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1789660933; cv=none;
-        d=google.com; s=arc-20260327;
-        b=XPIG5isS6m7zeMIy0Mt8oLPhT8yCSgavo10yaA24Q08jspQU5T7NUidkOZg1a8MmQy
-         YEGyKo6LxxrvhIhvuktEFbaOqzEcvrJvXlEvj4GZ0AFA8KXEW18kJzc2Y+jcQSlftAu9
-         hRNxnHLkbo0wZtTPk4NwF3k/45UgkcTCModYvGK+j5D6+5ocds2QZ/7E/F92LTDybWhw
-         FppHTxGaWgswq0l+BFsbH5upm98VI0rkUSpBOOcJxrWMlI/6rUbG355XZstCm8JgKXoO
-         m9z2SjD8ThNKAKsxKlwK7zgIdKuKyc4521IhjTCyeHAodbYgwbAzaaP7so5eLWJGGHkR
-         EK3g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=5op0DI6glq/fYPn+RYqD1t4s04bhJa1IYdAG6JQXKT4=;
-        fh=q041PPLwKbwUTM8LcSV6N9I58SS6hW7k+daW/Fxg8aY=;
-        b=JdjvYpGoIQWI1Qr1zF4AIg/vKK+Hxwc8exKaL9nlzCiiIi4Gt+hPls2L0We8pBWvqi
-         J9jaKkX8xyy/D/UVVWyap6cNGaBMuEfQ4rfs1DrowJPpM2/iahVw6GeVVbKao8R/kEbT
-         +eDA1Gb6HvUIrrX30/dKcN6diTdMl2bS4JCgxzVcPPxvbMStOwGaZ9a0vqqica96AN1+
-         Aqjyq/o6JY/T9fqaUaFG5ylPOyic6Ack6749eXOD2CeMo1gbhi7iryOL0o052pjcJ4Jc
-         H9BGgA96pD/N34du+UB2hT3sjvRNwnyzLDRAzBrRmYB3uez6LUVKTyaG4jfbdM8XgLrt
-         iUcQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789660933; x=1790265733; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=5op0DI6glq/fYPn+RYqD1t4s04bhJa1IYdAG6JQXKT4=;
-        b=WI/iH9eRc3nS7qk7dwV/WyeQYLZPyo4gH2Vpb7N9eEafSxm6P9O0Tfsq+NxhyPpn5r
-         KyCw9WKvCeOhKgkbYmfc/h+8pvz9RRbF/Lchd+ZPfs7ICzpJt9SKPIN6BWf0IHZIKzFT
-         kq4YSk8DQyduuYw6fwFd8xkrKyswCjFYkgsx99T8av7D78x5Ai6QB48XrML+Ypywy/zW
-         9EyhWAQsAOFp2TcmBMIh8ZXjo748TrBQb8lPVfVV5w6E8V4nV3b09hadl1MBkci7Gy9h
-         g8AqfzLUFjb0tZgoMizof3RMaJioHz/qDF/GkugW91dWY6M+3EucH9JWJ2Jf22+lvOeg
-         ytPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789660933; x=1790265733;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=5op0DI6glq/fYPn+RYqD1t4s04bhJa1IYdAG6JQXKT4=;
-        b=zrbgpOE99jEZbgGJrc1xjCXz4HinPmCg3urvHIUW8qUTI7DTLgqEDf9QkxZtkprBpe
-         2UEC8N7QW36aHCvXDMPImSjorHVON1omLJfiCPt5SmOyC7rDD5JXqjMkohOt1/we1kmI
-         S5FgSRf8DVWns4CKDSeoegm2Z0Z2dcuOcYpepyCaEmybRjCll8m4rjSw+kToXVEDa0j/
-         5bZncK1bC2ow6awEpVPVt0ke23nqvVP0GvS1vOtkTx5CzHF/CCl75aVqA9PIYHB8BFpl
-         9nwGATLmaYEGjLs4+rj7KAniVQNPzo3xHUGkxH/x4PRB/ikVV7ST1K0/sjHW61R0wtzz
-         01NQ==
-X-Forwarded-Encrypted: i=1; AKwUvBycYh5DH3HqPU01K1Ma0CcGhL8vNWp5glDBbTbeFLr7IYpnvjPfsMxcID55Ax2V4ApCHd0LpD6jfAjM@vger.kernel.org
-X-Gm-Message-State: AFuF++mbMnfwqPMG+a0fv1mAjoGp+qmIGn9ddYBtnxy6EVFEKrtCybmW
-	i6iecrdsb7lxf0tMWXqlVqEdTz6xUtn1hxrArDooh38osCHpo6EQVLy2YcQ7SF7XBRocOi2sBa/
-	cNuaWXDrMg9zv0NjbYlvCAVkZ00IULTo=
-X-Gm-Gg: AYBFou0evq9V7v/JVuUD/jCxkD/vZusn2YmWi6JR5Msp25st6NDYCDmFAQgLvTWlZTU
-	srJnm6jwOCdxIdMxeoBk13CgZfb1UyIgNF9flF5p0HtWfkKVgwTjianEMZDpYpRKzeQFQ6eKdQx
-	cJKbFx2Ss1t5rRJOAY5bXTjBwTve6LTspz91U+9sRu6dRjxdHe9VhLRlQiDtmjZjJK83eioUeQE
-	qwnXe99sz7Hlkulll7D+7XFZlw2SYYidHZDIuD7A/2Wi8Gu8txu0ZKsQunWJl1N7eYHGyNW9OFV
-	Vzc/YQoQG5NNTd1Myz9Gtk21bV0YOgjUOFLpfUJ3X6Y1AS2foe5Px/RWg8ZpohRyan0i
-X-Received: by 2002:a17:90a:281:b0:39e:2f57:67c0 with SMTP id
- 98e67ed59e1d1-39e2f58489bmr5447407a91.0.1789660933213; Thu, 17 Sep 2026
- 09:02:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="UNhpCiy3"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=VEOZXICsd8MwhWXqzMp/wfher43TmDxi0thfTn9ctqpoS2/10URXHUEogqadPD0bth6A94ykzuaD+HPv2z4cnMjz0Lz6pAwVFX5Nu3aWb0VrlEZzEp8uAaKiuiewV+6/jmOjFjC63C5avXfImPflqlfNA/14809aLQNTXf0SqH+GjikunM1Z8gamwAds31Pd9Tazg7pdh2ENl0GBQ0eBZgRnog1vFOPjG/90V5sYhWfC1OX0NZxMFBO6sPVl1BBkBjtOEFrA1giegAjgYui9I6Zbkz6SAWNsX477hiol1io8U/SaYb0iv92+VUfhpCdLNJoL1b4m40X7fo8mi/qmeA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3pVuUX6eWjeFkXe2CNgyoAyvhETAc5N0ln0OmGsf5bI=;
+ b=NeRovmchWR06msF5WcJlvePy3+/p5ZVNQv1fhvpKHYHCsO0btpPC73OZi3k84TlNq9I/PmvKG2IJsRACs2Syu5/fgr0XeA8t45DVbKtunH1TDsNe9N6DY5TR9cbidDGLRuprwt42OUoPzcaww/AloPopA5DADuY9RDHqKVlzxaPyfFBeSNh0R/QFM6ytU83zFaDPUkS5qbXAk7kiIKWFDY+sWEbPG6gqGQ4kwmvO9sc35CBlBa41gEP/4+VNM4lNJeXBJQ+HOOnP9SQfozQOWAQr2JKe49p4vgaYvnn+i3v2T9SevKdGe6WIifZhDEg/Fl6IxBEEIJhFT+f1WaPSrg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3pVuUX6eWjeFkXe2CNgyoAyvhETAc5N0ln0OmGsf5bI=;
+ b=UNhpCiy3PmfNWO7S6cslgSzw08kVUdbc3PGC7YTeTepQvC/QjZhn/uHDqwElDjMBI+P58GxbSTTRmzX73cA9rTjlp7+QfThzZxY4k0Adq1pVA/QQ2vxgyS3+7282VLStzJJF5T43zQShVw8lS6Xh0CANsqOPlvq2frBmMYNWFHy4WU+8EL6TvPgS1JEU/ToJJZR++0bI3LW+VXAJlB4BZ2lZF6HyQSnjG1CgiOctL+fgN9zidRjmS6l2yyICN20qs1tzZBQpIpTV9mPSHShGsWPZBJqqEBRIzi8nohTaBaiPg+Pl4RICj9CnlV87xbn+uTtuJVDpbKCUOxK8NtVHkQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by GV2PR04MB12338.eurprd04.prod.outlook.com (2603:10a6:150:321::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.428.9; Thu, 17 Sep
+ 2026 16:03:57 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0406.012; Thu, 17 Sep 2026
+ 16:03:57 +0000
+Date: Thu, 17 Sep 2026 11:03:44 -0500
+From: Frank Li <Frank.li@oss.nxp.com>
+To: Larisa Grigore <larisa.grigore@oss.nxp.com>
+Cc: NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
+	Ajay Neeli <ajay.neeli@amd.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Pedro Sousa <pedrom.sousa@synopsys.com>, linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org, clizzi@redhat.com,
+	aruizrui@redhat.com, eballetb@redhat.com, echanude@redhat.com
+Subject: Re: [PATCH v4 04/11] ufs: host: Add common Hibern8 TX FSM polling
+ helper
+Message-ID: <aqwPYEvGiamxNW3T@SMW015318>
+References: <20260917091555.1443076-1-larisa.grigore@oss.nxp.com>
+ <20260917091555.1443076-5-larisa.grigore@oss.nxp.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260917091555.1443076-5-larisa.grigore@oss.nxp.com>
+X-ClientProxiedBy: PH8PR22CA0012.namprd22.prod.outlook.com
+ (2603:10b6:510:2d1::8) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAFKhL9eUM91rtywaz_7Mz+4mJH2b2csmOmc3+86ii3a0Ka3Q6g@mail.gmail.com>
- <c335085d-a824-4632-ad3a-c06715258c81@suse.com> <CAFKhL9f6aLZgerw_7bohbQWvzMxSfd-m-LFcuNP1_p1vWkN4=Q@mail.gmail.com>
- <1320caa3-85b5-47dc-aa2d-56d3b003c6ef@neukum.org> <CAFKhL9eTD7DxtxMSMuUVP9cDG7Nq4jvrkTCjYfwr9puZfuC4Gg@mail.gmail.com>
- <20260915233818.5881ad97.michal.pecio@gmail.com> <CAFKhL9fL++S1xh+aUCuYbk6EkLQnfUn95y7TBoWaGnPAVP1gYA@mail.gmail.com>
- <20260916204713.22c4f575.michal.pecio@gmail.com> <6041fdad-78b9-4310-a86b-f9931563de19@suse.com>
-In-Reply-To: <6041fdad-78b9-4310-a86b-f9931563de19@suse.com>
-From: djraszit <djraszit@gmail.com>
-Date: Thu, 17 Sep 2026 18:02:02 +0200
-X-Gm-Features: AcwNN1VnwTEA9sNUOyKxD60uTHpvM859aFoRCQViZh5E58kNvu3w-RtmTNPul_o
-Message-ID: <CAFKhL9dmR1KDaBQGta=X5xDCGirzJ8t7u0rH4HUgBoFqN152DA@mail.gmail.com>
-Subject: Re: [BUG] uas: JMS578 returns reproducibly incorrect data after host reboot
-To: Oliver Neukum <oneukum@suse.com>
-Cc: Michal Pecio <michal.pecio@gmail.com>, Oliver Neukum <oliver@neukum.org>, 
-	Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|GV2PR04MB12338:EE_
+X-MS-Office365-Filtering-Correlation-Id: 299f4c8b-b0ee-4444-0835-08df14d54792
+X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+ BCL:0;ARA:13230040|7416014|1800799024|19092799006|376014|366016|23010399003|11063799006|18002099003|22082099003|10067099003|4143699003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+ c6KYmnsYBEyMGLmrgsdUXvaDo78yuJmy4rfIp4h7qgzWNiiwd21ylXvgUclRcSRLSEo69qGgbqPofLNu1Z8PpXbNFOPwXqOTpr19UAJ1WYNWbFlOVww9zaJAWTmI/kGu5zIIBn0BjnDY+Z15RVrnoe3RklXjgtzDHCQRD59rA8yqBqzMRdQYuVllm3Sw6+7wxpb/VBfWDedvIqR6qvVwzH2/VLXL6kMhz1C+HEnY8ICgZQtFAsKsX9PiVbaY2fGXK7Oh9hCC175oM9sBaAwalYOmBNwqA8phs3bEw3d1gtu+ArV/B/ek1wmowvJ3x0Qh+ea/xf6T2jFtStvd/pZCg8bAVB0JnH3GC68fTBuEhR9g+b5VKcgE05nDVuhhff92amD1H+ppRZKFEnCWE3PGIjGkmGfANgMSm1PEAzrwefaPjrDR7XqM+DktwRsNLy7YZmEfUdbzW9Gvd0zfVW2PiE4RJIdqiYw5fzZRlk5FKFpLQ2hY9jZ0CuTJH199VrH2PvO2ckSXFl9Pq/hz0VFj54PM+ykRY7XJdGmFp5Iui3uR5vhv4cdZN39cFdBAgaf8Q19zj0khbUG3VbQZC4DmpnjxbenHckDvLEhYRjqLdduVZYeZDEenRw3u3rKleKjfB8vAV5LsiEtwJjklVOMw3nqPS60icSUyk/YGvoVrIRM=
+X-Forefront-Antispam-Report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(19092799006)(376014)(366016)(23010399003)(11063799006)(18002099003)(22082099003)(10067099003)(4143699003)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+ =?us-ascii?Q?vgll2SUJiEDORxpvk4GaHWau4VRQCnkjGA19TuILvijJmZm8r4v5mK9+kLN0?=
+ =?us-ascii?Q?xt1J1QG0/STJPyaM92xx1Pn/lVD5d62TZBX90rsMk6zemjVxb+/nkwfarooX?=
+ =?us-ascii?Q?jyhayK+x3fdxSNC8vbMUgZAO3jEirdTTHY0XghjSwH1zqyAJ/uSQZJYfsnNG?=
+ =?us-ascii?Q?vMeEPZxqxKqFDwe+nNzU7ncZHm7MmMGqo5KEWqlOYUIG/Ps6pz/PzRRRX+Yn?=
+ =?us-ascii?Q?ZeN5Ugk7B5EzS+rFIiJgoYuL+Ek/byf1lM8fKy0G2eNVzolV5kv2hw48Uktq?=
+ =?us-ascii?Q?Pbba2UKfqcLh5ar1qsNZwPZEHqDjqtdDufmKU/+2DNyjYr0CRta4rKE0sPRF?=
+ =?us-ascii?Q?O/8cM/1NXXglaIqxOSvnqEylzxuKvHNs+VyCKhiYxuuAK7EQGt68UW8G+6nu?=
+ =?us-ascii?Q?/i+vFYtvPIgM8mqPq4/kITfxeH6s8c2cmDjo7nbKltp4HsR3h+qIL3h1Nqp4?=
+ =?us-ascii?Q?Ufey3zmvjzqmiM4sgdRB6ZBy51MRMVfnS5Xz07NGNpoGdIHgTFa8LUf8kvLq?=
+ =?us-ascii?Q?NAVyUuqfeFhaVbZqfJ/Hi28TlKB+5LpcJT7bHk6lAPS/+FAY52fY4jv/EYu6?=
+ =?us-ascii?Q?RSHGaMIfJeEAzhzTRQl+ZiCeCFcbuXOPN/j6aLCqEQp1Xa1XdyIphmapuDm6?=
+ =?us-ascii?Q?xNHjXHzcSgZF9VcB8ipaHDzzl2MUIgwhrvUYgGxY326+TRC8bQyO7DmdPoGG?=
+ =?us-ascii?Q?w+1v2t78rbtjGtgRTxI2cKDLKBYFsjtnuga4/Gp6TSA/+2ioY4eb81uox679?=
+ =?us-ascii?Q?fD91R7KJpm5YU1oFgPMpmVed4ZBjpuTvJsyEyEYEKRA8egGsN7Su1CMTij0X?=
+ =?us-ascii?Q?ZKU3PTmMIdoKnuRFTzCJXCCXyV9pHyAh9PRm2h0rx9Em8NyNuhggEeldBzXX?=
+ =?us-ascii?Q?JBqh/pHphyA8JU4L7DudGMMefFiS8gEswoX+FH/fUon6tseIKBMSnnTrz14x?=
+ =?us-ascii?Q?AEx7ODXwyFm3Pfk4kFbgloH8lPmdJrmj+PdFK2Vc4W+uDPtAHkF8UBoqASFj?=
+ =?us-ascii?Q?aPtUIzpuIj0u9vgmyt5uJMUIPZCkt2hPapu6xQp7jQMvUE5tSG5IFA9TQL1L?=
+ =?us-ascii?Q?26P8WMlQe8QzJjt5xqvjAIQ92FWLki+yh3mRM2e5ywTxLgc8ju0R/yT9BRsU?=
+ =?us-ascii?Q?4pyUM3NqMrWc4MdKWRGJ5WHn8tYFXF77qq5T0sJt0A1CtKgC8+Nu9Y/jlI7k?=
+ =?us-ascii?Q?5oUvSTu/QjmRDt2gB9LhNLkPCmnqRJoIRlFGVHLSQg5fxskvLi7sq8MMrI1e?=
+ =?us-ascii?Q?/Wyc88ibnMMmLaSAJRHlsvUgp5TXi6mjtozvp133UppTuJV5ZayeAfywTD9M?=
+ =?us-ascii?Q?mKQRTSx03O2uMq1OGX2HkB4HyjRE1CuhEEJ6ikhwp6OFUxrjavJY3DXBCOrr?=
+ =?us-ascii?Q?NHCtvZBeD17toAmmA80rq3Tv0jjHnHx+oQ+HH7411YE3RGiOhXAtcpQVfenZ?=
+ =?us-ascii?Q?WeSSAdiIIDptZCN0bnh3+XQyJ3CGxYMgKOqZ5SyVqwCGxPKLtEP7i2NXiwgq?=
+ =?us-ascii?Q?t9qbqFMlRx+Uj8BEln192KR3WtHXXumcreWU2+nSDGKnBUsks6lhU3T1K8W8?=
+ =?us-ascii?Q?1/qyP4YufKvR3BgWzguR3YpuAJcRLgFdrPgCDDtxP07OqzJk/FN7/Yq+Nt/b?=
+ =?us-ascii?Q?bMYIdsvRhJhR05M4sKKV65AEYZlAvSkEjdzeiyhPRDK7BWpwPy+jdl7tIlC9?=
+ =?us-ascii?Q?LFa8vHDgKFnK64WDoxX7Rrk4q+Y0B/uCAjtXR2sgnV6mdCTQgI/8fSxVN6MU?=
+ =?us-ascii?Q?ySMOjCl3TsuY9BcRwGsS6BQehc0dJP139ekyGsqayWCFJnNnPYpo?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 299f4c8b-b0ee-4444-0835-08df14d54792
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Sep 2026 16:03:57.4363
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: sQ8HRffxVBK1yqCNDyIa3io5EwtJLjgVWRf0fkxG6qj3sroInDDUYTcUIeC325t8Mi+9vj/bpxpWSN68OD69hrFz93tFR/lwCbnZpUAT+0e5IYf4F06e5hv1q57S3uBr
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB12338
 
-Hi Michal, Oliver,
-
-I performed the two shutdown/boot separation tests suggested by
-Michal. All tests started with the enclosure in a known GOOD state.
-
-First:
-
-shutdown Pi with the enclosure connected
--> disconnect USB after shutdown
--> boot the Pi without the enclosure
--> wait for Linux to boot completely
--> reconnect USB
-
-I repeated this three times. All three tests were GOOD: no "Alternate
-GPT is invalid" message and the test block had the correct hash.
-
-Then I tested:
-
-disconnect USB while the Pi is running
--> shutdown the Pi
--> connect USB while the Pi is off
--> boot
-
-The first attempt was GOOD. On the second attempt the enclosure failed
-during USB initialization with:
-
-Cannot enable. Maybe the USB cable is bad?
-
-I also tested consecutive normal reboots with the enclosure connected.
-This was repeatable: the first reboot was GOOD, while the second
-reboot resulted in "Cannot enable".
-
-There is another interesting and repeatable difference depending on
-the Raspberry Pi bootloader setting USB_MSD_PWR_OFF_TIME.
-
-With:
-
-USB_MSD_PWR_OFF_TIME=3D0
-
-I do not currently reproduce the state where the enclosure enumerates
-successfully but returns incorrect data. Instead, after consecutive
-reboots I reproducibly get the "Cannot enable" failure described
-above.
-
-After changing it back to:
-
-USB_MSD_PWR_OFF_TIME=3D1000
-
-I repeated the test twice, starting from a known GOOD state each time.
-A reboot reproducibly resulted in the enclosure enumerating normally,
-but:
-
-Alternate GPT is invalid, using primary GPT.
-
-and the previously tested block returned the BAD hash.
-
-Interestingly, in this BAD-data state it is sufficient to switch the
-enclosure off and on using its power switch, with USB still connected.
-After that, the data are correct again.
-
-I also observed the USB VBUS during reboot with an oscilloscope. With
-USB_MSD_PWR_OFF_TIME=3D1000, the VBUS sequence is not simply an off
-period followed by power being restored. During reboot I observe
-approximately:
-
-VBUS off for several seconds
--> VBUS on for about 130 ms
--> VBUS off again for about 1 second
--> VBUS on
-
-The timings are approximate oscilloscope measurements, but the short
-~130 ms VBUS-on interval between the two off periods is clearly
-visible and repeatable.
-
-I do not know whether this sequence is related to the JMS578 failure,
-but it may be relevant given that changing USB_MSD_PWR_OFF_TIME
-changes the failure mode reproducibly.
-
-So at the moment I appear to have at least two reproducible failure modes:
-
-USB_MSD_PWR_OFF_TIME=3D0
--> after consecutive reboots: USB enumeration failure ("Cannot enable")
-
-USB_MSD_PWR_OFF_TIME=3D1000
--> enclosure enumerates, but UAS reads incorrect data
-(invalid alternate GPT and BAD hash)
-
-The tests where the enclosure participated in shutdown but was absent
-during the subsequent boot were consistently GOOD (3/3). Conversely,
-it can fail when it was disconnected before shutdown but connected
-again before boot. This seems to make the boot sequence more
-suspicious than the shutdown sequence.
-
-Regarding Oliver's suggestion to abruptly remove power from the
-running Pi: I would prefer not to perform that test on this particular
-system at the moment. This Raspberry Pi 4 is also my router and file
-server and has several other disks attached, so an uncontrolled power
-loss would introduce a risk of filesystem damage to the system or the
-other storage devices. If this test turns out to be important, I can
-consider preparing a separate/minimal setup for it rather than doing
-it on the production system.
-
-Regarding the Raspberry Pi 5 test: yes, the enclosure was connected to
-USB 3.0/SuperSpeed. The Pi 5 uses the RP1 southbridge rather than the
-VL805 used by the Pi 4. On my Pi 5 Linux exposes two xHCI controllers,
-xhci-hcd.0 and xhci-hcd.1, each with a SuperSpeed bus at 5000M. I can
-reconnect the enclosure and provide the exact lsusb -t output with the
-JMS578 attached if useful.
-
-Regards,
-djraszit
-
-czw., 17 wrz 2026 o 12:23 Oliver Neukum <oneukum@suse.com> napisa=C5=82(a):
+On Thu, Sep 17, 2026 at 11:15:48AM +0200, Larisa Grigore wrote:
+> Factor out the common logic used to poll TX_FSM_STATE until the TX lanes
+> enter Hibern8 into ufshcd_check_hibern8().
 >
+> The HiSilicon and Qualcomm drivers currently implement similar checks
+> using the UniPro TX_FSM_STATE attribute after link/PHY bring-up. Move
+> this logic to a common helper in ufshcd so it can be shared across host
+> controller drivers.
 >
+> Switch the HiSilicon and Qualcomm drivers to use the new helper and drop
+> their local implementations. While at it, normalize the "TX lane failed to
+> reach Hibern8" error path to return -ETIMEDOUT instead of the raw
+> TX_FSM_STATE value (qcom) or -1 (hisi), so all callers get a proper errno.
+> This is an intentional, harmless change of the returned error value; the
+> pass/fail behaviour at the call sites is unchanged.
 >
-> On 16.09.26 20:47, Michal Pecio wrote:
-> > On Wed, 16 Sep 2026 19:56:25 +0200, djraszit wrote:
+> Unlike the initial implementation, the timeout error is now reported only
+> once by ufshcd_dme_check_tx_hibern8() after its final check, instead of
+> per lane.
 >
-> > Looks like JMS578 doesn't like being connected to a booting Pi 4.
-> >
-> > Or maybe it's shutdown? What happens if you:
-> >
-> > - disconnect, shutdown, connect, boot
-> > - shutdown, disconnect, boot, connect
+> This also prepares for reusing the same UniPro-specific Hibern8 check in
+> a subsequent commit.
 >
-> Maybe it would be worthwhile to shut the RPi down the hard
-> way, that is by suddenly depriving it of power.
+> Signed-off-by: Larisa Grigore <larisa.grigore@oss.nxp.com>
+> ---
+>  drivers/ufs/core/ufshcd.c   | 73 +++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-hisi.c | 48 +-----------------------
+>  drivers/ufs/host/ufs-qcom.c | 42 +--------------------
+>  include/ufs/ufshcd.h        |  3 ++
+>  4 files changed, 78 insertions(+), 88 deletions(-)
 >
-> > If the problem is boot (second case works, first case fails), then
-> > I wonder if it's the firmware or the kernel. Maybe you could plug
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 2ba244cf40ac..c1c61377e28a 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -4448,6 +4448,79 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+>  }
+>  EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
 >
-> But then why does it work at all? You'd have to assume that
-> the second boot crashes the device.
+> +/**
+> + * ufshcd_poll_tx_hibern8_lanes - Check TX_FSM_STATE of all TX lanes once
+> + * @hba: host controller instance
+> + * @num_lanes: number of TX lanes to check
+> + *
+> + * Read TX_FSM_STATE for every lane and verify it reached Hibern8.
+> + *
+> + * Return: 0 if all lanes are in Hibern8, -EAGAIN if any lane is not (yet)
+> + * in Hibern8, or a negative errno (e.g. -ETIMEDOUT from a hard UIC command
+> + * timeout) if the attribute read fails.
+> + */
+> +static int ufshcd_poll_tx_hibern8_lanes(struct ufs_hba *hba,
+> +					unsigned int num_lanes)
+> +{
+> +	u32 tx_fsm_val = 0;
+> +	unsigned int i;
+> +	int err;
+> +
+> +	for (i = 0; i < num_lanes; i++) {
+> +		err = ufshcd_dme_get(hba,
+> +				UIC_ARG_MIB_SEL(TX_FSM_STATE,
+> +					UIC_ARG_MPHY_TX_GEN_SEL_INDEX(i)),
+> +				&tx_fsm_val);
+> +		if (err) {
+> +			dev_err(hba->dev,
+> +				"%s: unable to get TX_FSM_STATE for lane %u, err %d\n",
+> +				__func__, i, err);
+> +			return err;
+> +		}
+> +
+> +		if (tx_fsm_val != TX_STATE_HIBERN8)
+> +			return -EAGAIN;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * ufshcd_dme_check_tx_hibern8 - Check if all TX lanes entered Hibern8 state
+> + * @hba: host controller instance
+> + * @num_lanes: number of TX lanes to check
+> + * @timeout_ms: overall timeout in milliseconds shared by all lanes
+> + *
+> + * Return: 0 on success, negative errno on failure.
+> + */
+> +int ufshcd_dme_check_tx_hibern8(struct ufs_hba *hba, unsigned int num_lanes,
+> +				unsigned int timeout_ms)
+> +{
+> +	int err, ret;
+> +
+> +	if (!num_lanes)
+> +		return -EINVAL;
+> +
+> +	/*
+> +	 * Poll every lane until ufshcd_poll_tx_hibern8_lanes() stops returning
+> +	 * -EAGAIN, i.e. all lanes reached HIBERN8 (err == 0) or a real error
+> +	 * was hit.
+> +	 */
+> +	ret = read_poll_timeout(ufshcd_poll_tx_hibern8_lanes, err,
+> +				err != -EAGAIN, 200,
+> +				(u64)timeout_ms * USEC_PER_MSEC, false,
+> +				hba, num_lanes);
+> +	if (ret) {
+> +		dev_err(hba->dev,
+> +			"%s: timeout waiting for TX lanes to enter HIBERN8\n",
+> +			__func__);
+> +		return -ETIMEDOUT;
+
+nit: return ret;
+
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+
+> +	}
+> +
+> +	return err;
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_dme_check_tx_hibern8);
+> +
+>  /**
+>   * ufshcd_dme_rmw - get modify set a DME attribute
+>   * @hba: per adapter instance
+> diff --git a/drivers/ufs/host/ufs-hisi.c b/drivers/ufs/host/ufs-hisi.c
+> index bd223bda1ce2..b84075dfe00d 100644
+> --- a/drivers/ufs/host/ufs-hisi.c
+> +++ b/drivers/ufs/host/ufs-hisi.c
+> @@ -22,50 +22,6 @@
+>  #include <ufs/ufshci.h>
+>  #include <ufs/ufs_quirks.h>
 >
-> > the disk after the kernel beigns booting, but before xhci_hcd loads?
-> > You could blacklist it if it's a module, or bind pci-stub to VL805
-> > to prevent automatic xhci_hcd activation and widen the time window.
+> -static int ufs_hisi_check_hibern8(struct ufs_hba *hba)
+> -{
+> -	int err = 0;
+> -	u32 tx_fsm_val_0 = 0;
+> -	u32 tx_fsm_val_1 = 0;
+> -	unsigned long timeout = jiffies + msecs_to_jiffies(HBRN8_POLL_TOUT_MS);
+> -
+> -	do {
+> -		err = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(TX_FSM_STATE, 0),
+> -				      &tx_fsm_val_0);
+> -		err |= ufshcd_dme_get(hba,
+> -		    UIC_ARG_MIB_SEL(TX_FSM_STATE, 1), &tx_fsm_val_1);
+> -		if (err || (tx_fsm_val_0 == TX_STATE_HIBERN8 &&
+> -			tx_fsm_val_1 == TX_STATE_HIBERN8))
+> -			break;
+> -
+> -		/* sleep for max. 200us */
+> -		usleep_range(100, 200);
+> -	} while (time_before(jiffies, timeout));
+> -
+> -	/*
+> -	 * we might have scheduled out for long during polling so
+> -	 * check the state again.
+> -	 */
+> -	if (time_after(jiffies, timeout)) {
+> -		err = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(TX_FSM_STATE, 0),
+> -				     &tx_fsm_val_0);
+> -		err |= ufshcd_dme_get(hba,
+> -		 UIC_ARG_MIB_SEL(TX_FSM_STATE, 1), &tx_fsm_val_1);
+> -	}
+> -
+> -	if (err) {
+> -		dev_err(hba->dev, "%s: unable to get TX_FSM_STATE, err %d\n",
+> -			__func__, err);
+> -	} else if (tx_fsm_val_0 != TX_STATE_HIBERN8 ||
+> -			 tx_fsm_val_1 != TX_STATE_HIBERN8) {
+> -		err = -1;
+> -		dev_err(hba->dev, "%s: invalid TX_FSM_STATE, lane0 = %d, lane1 = %d\n",
+> -			__func__, tx_fsm_val_0, tx_fsm_val_1);
+> -	}
+> -
+> -	return err;
+> -}
+> -
+>  static void ufs_hisi_clk_init(struct ufs_hba *hba)
+>  {
+>  	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+> @@ -224,9 +180,7 @@ static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
 >
->         Regards
->                 Oliver
+>  	/* Unipro VS_mphy_disable */
+>  	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD0C1, 0x0), 0x0);
+> -	err = ufs_hisi_check_hibern8(hba);
+> -	if (err)
+> -		dev_err(hba->dev, "ufs_hisi_check_hibern8 error\n");
+> +	err = ufshcd_dme_check_tx_hibern8(hba, 2, HBRN8_POLL_TOUT_MS);
+>
+>  	if (!(host->caps & UFS_HISI_CAP_PHY10nm))
+>  		ufshcd_writel(hba, UFS_HCLKDIV_NORMAL_VALUE, UFS_REG_HCLKDIV);
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 1e492dac8d93..815ca82a0878 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -382,46 +382,6 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+>  	return 0;
+>  }
+>
+> -static int ufs_qcom_check_hibern8(struct ufs_hba *hba)
+> -{
+> -	int err;
+> -	u32 tx_fsm_val;
+> -	unsigned long timeout = jiffies + msecs_to_jiffies(HBRN8_POLL_TOUT_MS);
+> -
+> -	do {
+> -		err = ufshcd_dme_get(hba,
+> -				UIC_ARG_MIB_SEL(TX_FSM_STATE,
+> -					UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),
+> -				&tx_fsm_val);
+> -		if (err || tx_fsm_val == TX_STATE_HIBERN8)
+> -			break;
+> -
+> -		/* sleep for max. 200us */
+> -		usleep_range(100, 200);
+> -	} while (time_before(jiffies, timeout));
+> -
+> -	/*
+> -	 * we might have scheduled out for long during polling so
+> -	 * check the state again.
+> -	 */
+> -	if (time_after(jiffies, timeout))
+> -		err = ufshcd_dme_get(hba,
+> -				UIC_ARG_MIB_SEL(TX_FSM_STATE,
+> -					UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),
+> -				&tx_fsm_val);
+> -
+> -	if (err) {
+> -		dev_err(hba->dev, "%s: unable to get TX_FSM_STATE, err %d\n",
+> -				__func__, err);
+> -	} else if (tx_fsm_val != TX_STATE_HIBERN8) {
+> -		err = tx_fsm_val;
+> -		dev_err(hba->dev, "%s: invalid TX_FSM_STATE = %d\n",
+> -				__func__, err);
+> -	}
+> -
+> -	return err;
+> -}
+> -
+>  static void ufs_qcom_select_unipro_mode(struct ufs_qcom_host *host)
+>  {
+>  	ufshcd_rmwl(host->hba, QUNIPRO_SEL, QUNIPRO_SEL, REG_UFS_CFG1);
+> @@ -607,7 +567,7 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+>  		break;
+>  	case POST_CHANGE:
+>  		/* check if UFS PHY moved from DISABLED to HIBERN8 */
+> -		err = ufs_qcom_check_hibern8(hba);
+> +		err = ufshcd_dme_check_tx_hibern8(hba, 1, HBRN8_POLL_TOUT_MS);
+>  		ufs_qcom_enable_hw_clk_gating(hba);
+>  		ufs_qcom_ice_enable(host);
+>  		ufs_qcom_config_ice_allocator(host);
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index dfd302f2dc7c..0d9d0a26eb20 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -1556,6 +1556,9 @@ extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+>  			       u8 attr_set, u32 mib_val, u8 peer);
+>  extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+>  			       u32 *mib_val, u8 peer);
+> +extern int ufshcd_dme_check_tx_hibern8(struct ufs_hba *hba,
+> +				       unsigned int num_lanes,
+> +				       unsigned int timeout_ms);
+>  extern int ufshcd_change_power_mode(struct ufs_hba *hba,
+>  				    struct ufs_pa_layer_attr *pwr_mode,
+>  				    enum ufshcd_pmc_policy pmc_policy);
+> --
+> 2.43.0
+>
 >
