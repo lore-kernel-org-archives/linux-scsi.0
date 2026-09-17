@@ -1,566 +1,152 @@
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A3DB4A4986
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 21:57:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA25244C4FF
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:10:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789682269; cv=none; b=AV9ZWpRWJ6/d1fnK3FsKX+z1aWSbu5zLZot2/VR3dqWytHFVC2RYJuD3yhdjd3/bvw7+H9YRjUUtYqjSkLY6ioryetWvHngeLsjHuSzByh0KajaX7X4XMhccpQ7nBsFFR37Ntw/kAQwhqkWNzRvjUwv5/jOBYsyP8tD02lZyoFU=
+	t=1789683054; cv=none; b=Ejs9SJ/TfsPUJZOCECPwaMP5dTzLaMXiMj70s4rWl1wvIssWmnUvqqL8eKsTEFqswtmOBGU9cAagkJSTI8hIoh4jLLx4y5yxVQUgHXep0vSVPueoZ2a6JtS3E7mGADhk7uCFWiQAnt6DeJiX1WNJ4bL/siLxk9pxIiiJvABOMtc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789682269; c=relaxed/simple;
-	bh=nDdglWLi2r1R6Q4PJaMMQpmMS7nHf8EVyJq8NT+6kQg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=O4KbMjp0njQpLo7sVEIHWt7zZgM5C5o9MW88dxlbawOGmn+9DbyQE8zhGK75RFOO2L2TE10leBACrCjajoWTUhrOFp+spX2llAi7O0azFeKAA5elnUbp+1Ey5NtZuHYQS+8P60ilAQmt3el9YsAmEdwddNTx1y4abg6owXU1FKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CBnLpUJm; arc=none smtp.client-ip=209.85.215.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789683054; c=relaxed/simple;
+	bh=Gp7rE0E+549dajlKFQIDmbANgSQPxyxg17DFLRc7RjE=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=M2Uk2vCmi09ApNVSbEQ6uxXK99JkoajbbR4Wm8TzUxf7/+BoRD7DIYhwiP7AfzgZopuHol4hZUIWnQ1JAwD0wT5cqRBNZshvU8cDAE96ySvFSCMBITdaYpXKzYOrxquCXZxogzV8lbB3LnXLwCxZNzFxc4MK2QjRi0o5uuAxts0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UwRFDM1+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CBnLpUJm"
-Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-cbe6295f05bso1011606a12.1
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 14:57:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789682266; x=1790287066; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=mlFvM4moR7qOovqoBufsUQd10RbNWMLGNcISgaxpHzY=;
-        b=CBnLpUJmM8YZtT290i8lajVLGVq8u6+Yg+Jdw5bHyR/iegmdwXw2F2jER1VAFY9LJi
-         OHb53iwPgOmK6Z+s1fueFp4GdFu3C/k3uKSYgl9ncQGuvTlNYH3p3PLlYvxPJoUBKdE7
-         9jqLMMmIbw3327jWlKfJvCwALQoYXvdL8Z7S6a/N2wGtirNQw7rrpHmIs3sCXT4sW2j9
-         esX8UdypO10qJWJV3s7lFWwb+D9eKV2N87NF4u5hIMc6opC4LOL8QPAfdqXcyyeOMo4/
-         jpbo2fXtsIwJIT5Y1GCkFZDQ0ZBN1RLuUiInoPvyU6RYF7dHPRR3H1WTOVaTtbGp1cl1
-         9b+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789682266; x=1790287066;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=mlFvM4moR7qOovqoBufsUQd10RbNWMLGNcISgaxpHzY=;
-        b=j0+yOxZxUHyBY/2xoOWMseb+k7H+tE5JLTMqE5gieyFgAucgJTrImfYMjAzPZJ7Y21
-         I/tiaMfuBFMM5mbDhMGVo9YNElU/CQzr9MZnqGI78avKqe0zIDAXv0kDLX33lxCsRlwS
-         jGzV7vp/rVsyFzBSrjWvlhBuGV18T9nOlKn1/2uFV8PqSG3ZyNiKowjjrqDcy/VQ6lTx
-         tbEwAM7mN/JJVUZ/zAdZVeMJrMatAyrvRs2lcjZsKNRDxNPfAbFxJEyLrPgoFdtUkOmd
-         qGaW1Y6tzLhPCK2mAnU3KSs5HsCjJFn/hgsQXpeeYxINcfuqzYd+bqULligL+OVWWJ+Y
-         RxDQ==
-X-Gm-Message-State: AFuF++lMSTLHeEwV9L8BpZYUASaNkxo5oFdY7W3zdyPYJAUbb0sPdnSr
-	1Z86o/SXtpBzEc+Ox9XqqB+de9Gh3n62Xh7o35jAlreBvSx0RT7Ibr8l5S2mD9Ef
-X-Gm-Gg: AYBFou1jUFp43zP2eaP3BFQNKQC9uIG3yBQPGSuiHjj7szwzTb1pFdjLw0gLZJY3u2V
-	nIjLon75UAEsMgaw67RRZLVFiANf7vTRHRytyjqSMd5t2HwE6lD6JMtRHlmFddJYoJhpnWQ+WNi
-	cKA8h3JJQQNoncMRWBayU2vFS7bTwPJ0F/R9GZrKruTJepu7B2lD6POymIQ0JTq5QuOwkmDyWWF
-	5aqy+F1BcdydXytjTmHQSlTcHZGVlpQroP/fKQgx+0tHTvtg5/wFfb//EqgHIRXN41kyDlXOi1f
-	keKUvMW20ZN4tOhoKWWUN8QQL+MJmitbgOrkbhImH+0NH7YC/929msLQKRMB2Tu3MPX95PT00pD
-	aEPwsHwa19dokgI3c5Za8hB2bOjmWidL8d6W7/FKchZbERBxz53YiTZqfC7JKUK7Zqyjyt70xiX
-	a4pchfQaOz/J7tmuv0bhqH8vDYQYJADC31BMi0Acfv2bsSWWzwR936HqPcp/eRk4yYdNXahY94D
-	LDKuAG9kvmT0KuvSmLdqEstJK2l7kb063oCAGzaLNTi024RxdUi5K9AoXedzJN9rhdTaQ==
-X-Received: by 2002:a17:90b:57e6:b0:39e:58d8:f899 with SMTP id 98e67ed59e1d1-39e58d8fa69mr184a91.35.1789682264703;
-        Thu, 17 Sep 2026 14:57:44 -0700 (PDT)
-Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-33bfb19f8cesm24166254eec.2.2026.09.17.14.57.43
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Sep 2026 14:57:44 -0700 (PDT)
-From: Nigel Kirkland <nkirkland2304@gmail.com>
-To: linux-scsi@vger.kernel.org,
-	nigel.kirkland@broadcom.com
-Cc: paul.ely@broadcom.com,
-	nkirkland2304@gmail.com
-Subject: [PATCH v4 12/14] lpfc: Update ELS ACC logging for diagnostic troubleshooting
-Date: Thu, 17 Sep 2026 15:20:13 -0700
-Message-Id: <20260917222015.61053-13-nkirkland2304@gmail.com>
-X-Mailer: git-send-email 2.38.0
-In-Reply-To: <20260917222015.61053-1-nkirkland2304@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UwRFDM1+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 250F11F000FF;
+	Thu, 17 Sep 2026 22:10:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789683053;
+	bh=D+8igVe5h6uHQtUsB46Pnk0kvLzdlD5m47+N1jVuynI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=UwRFDM1+VIMqfjyoOEn8L80h5OkY3QADlSpd5nN6Pi2U2PSpYCo2XCQH6VaV8XMYO
+	 Rt4iGqSnDW4O3v52HYNRvCb4ZEgTDS68Cq1UuE7RjmWGY7+XQN1tcRuKZd/0RQJIP3
+	 VOd4wbDWOxWCbg9xueGZ7egwiDRSqn0o6tTCNJw3PH/eyOAxjVtedh5RRIvRjWsREC
+	 KUu/WNO56TX/iF28umAuO91BNTqqdAe6oLqqACKT6D9tKPJqdju/idlTBdK52hz3iy
+	 dY8HZpy3B3ZlWpLRx4FyoCG3FFUOBfEl+Nv+JaMHzbOl+L+37skcsoMHCwAhxNSKC2
+	 +awkCxWNZxmAQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 06/14] lpfc: Fix ndlp use-after-free during repeated
+ RSCN and rediscovery sequence
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nigel Kirkland" <nkirkland2304@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260917222015.61053-7-nkirkland2304@gmail.com>
 References: <20260917222015.61053-1-nkirkland2304@gmail.com>
+ <20260917222015.61053-7-nkirkland2304@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 17 Sep 2026 22:10:52 +0000
+Message-Id: <20260917221053.250F11F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Currently, there are ELS ACC routines that lack debug log messages to
-indicate when ACC frame transmission run into issues.  The generic
-lpfc_els_rsp_acc and more specific ACC routines are updated to log when
-there is an issue with transmitting the frame.  The routines are also
-updated to return different return codes when encountering various
-transmission issues and their function comment header is updated.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] scsi: lpfc: Use-after-free in NVMe unregistration due to missing s=
+erialization
+- [High] scsi: lpfc: ndlp memory leak due to concurrent registration race
+--
 
-Signed-off-by: Nigel Kirkland <nkirkland2304@gmail.com>
----
- drivers/scsi/lpfc/lpfc_els.c | 187 ++++++++++++++++++++++++++---------
- 1 file changed, 141 insertions(+), 46 deletions(-)
+commit 6da5a3b652f8d5c08807e25e9db6e426dc7022ff
+Author: Nigel Kirkland <nkirkland2304@gmail.com>
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index bf71b5a3e55e..cb06dbc9edfa 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -4053,13 +4053,8 @@ lpfc_els_rcv_rdf(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	int rc;
- 
- 	rc = lpfc_els_rsp_acc(vport, ELS_CMD_RDF, cmdiocb, ndlp, NULL);
--	/* Send LS_ACC */
--	if (rc) {
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_CGN_MGMT,
--				 "1623 Failed to RDF_ACC from x%x for x%x Data: %d\n",
--				 ndlp->nlp_DID, vport->fc_myDID, rc);
-+	if (rc)
- 		return -EIO;
--	}
- 
- 	rc = lpfc_issue_els_rdf(vport, 0);
- 	/* Issue new RDF for reregistering */
-@@ -5793,7 +5788,10 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
-  *
-  * Return code
-  *   0 - Successfully issued acc response
-- *   1 - Failed to issue acc response
-+ *   -ENOMEM - IOCB not prepped successfully
-+ *   -EIO - The IOCB failed to issue successfully
-+ *   -ENODEV - No associated node for IOCB
-+ *   -EACCES - ACC unhandled for this command
-  **/
- int
- lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
-@@ -5812,6 +5810,8 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 	int rc;
- 	ELS_PKT *els_pkt_ptr;
- 	struct fc_els_rdf_resp *rdf_resp;
-+	int err;
-+	uint32_t old_opcode = 0;
- 
- 	switch (flag) {
- 	case ELS_CMD_ACC:
-@@ -5820,7 +5820,8 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 					     ndlp, ndlp->nlp_DID, ELS_CMD_ACC);
- 		if (!elsiocb) {
- 			clear_bit(NLP_LOGO_ACC, &ndlp->nlp_flag);
--			return 1;
-+			err = -ENOMEM;
-+			goto err_out;
- 		}
- 
- 		if (phba->sli_rev == LPFC_SLI_REV4) {
-@@ -5855,8 +5856,10 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 		cmdsize = (sizeof(struct serv_parm) + sizeof(uint32_t));
- 		elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry,
- 					     ndlp, ndlp->nlp_DID, ELS_CMD_ACC);
--		if (!elsiocb)
--			return 1;
-+		if (!elsiocb) {
-+			err = -ENOMEM;
-+			goto err_out;
-+		}
- 
- 		if (phba->sli_rev == LPFC_SLI_REV4) {
- 			wqe = &elsiocb->wqe;
-@@ -5933,8 +5936,10 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 		cmdsize = sizeof(uint32_t) + sizeof(PRLO);
- 		elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry,
- 					     ndlp, ndlp->nlp_DID, ELS_CMD_PRLO);
--		if (!elsiocb)
--			return 1;
-+		if (!elsiocb) {
-+			err = -ENOMEM;
-+			goto err_out;
-+		}
- 
- 		if (phba->sli_rev == LPFC_SLI_REV4) {
- 			wqe = &elsiocb->wqe;
-@@ -5971,8 +5976,10 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 		cmdsize = sizeof(*rdf_resp);
- 		elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry,
- 					     ndlp, ndlp->nlp_DID, ELS_CMD_ACC);
--		if (!elsiocb)
--			return 1;
-+		if (!elsiocb) {
-+			err = -ENOMEM;
-+			goto err_out;
-+		}
- 
- 		if (phba->sli_rev == LPFC_SLI_REV4) {
- 			wqe = &elsiocb->wqe;
-@@ -6007,7 +6014,8 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 		rdf_resp->lsri.rqst_w0.cmd = ELS_RDF;
- 		break;
- 	default:
--		return 1;
-+		err = -EACCES;
-+		goto err_out;
- 	}
- 	if (test_bit(NLP_LOGO_ACC, &ndlp->nlp_flag)) {
- 		if (!test_bit(NLP_RPI_REGISTERED, &ndlp->nlp_flag) &&
-@@ -6022,7 +6030,8 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 	elsiocb->ndlp = lpfc_nlp_get(ndlp);
- 	if (!elsiocb->ndlp) {
- 		lpfc_els_free_iocb(phba, elsiocb);
--		return 1;
-+		err = -ENODEV;
-+		goto err_out;
- 	}
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
-@@ -6043,7 +6052,8 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		lpfc_nlp_put(ndlp);
--		return 1;
-+		err = -EIO;
-+		goto err_out;
- 	}
- 
- 	/* Xmit ELS ACC response tag <ulpIoTag> */
-@@ -6055,6 +6065,17 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 			 ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_state,
- 			 ndlp->nlp_rpi, vport->fc_flag, kref_read(&ndlp->kref));
- 	return 0;
-+
-+err_out:
-+	if (oldiocb->cmd_dmabuf && oldiocb->cmd_dmabuf->virt)
-+		old_opcode = *(uint32_t *)oldiocb->cmd_dmabuf->virt;
-+
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "1027 Xmit ELS ACC Unsuccessful: "
-+			 "cmd: x%x, error_code: %d "
-+			 "S_ID: x%x\n", old_opcode, err,
-+			 vport->fc_myDID);
-+	return err;
- }
- 
- /**
-@@ -6269,7 +6290,9 @@ lpfc_issue_els_edc_rsp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
-  *
-  * Return code
-  *   0 - Successfully issued acc adisc response
-- *   1 - Failed to issue adisc acc response
-+ *   -ENOMEM - IOCB not prepped successfully
-+ *   -EIO - The IOCB failed to issue successfully
-+ *   -ENODEV - No associated node for IOCB
-  **/
- int
- lpfc_els_rsp_adisc_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
-@@ -6284,12 +6307,15 @@ lpfc_els_rsp_adisc_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
- 	uint16_t cmdsize;
- 	int rc;
- 	u32 ulp_context;
-+	int err;
- 
- 	cmdsize = sizeof(uint32_t) + sizeof(ADISC);
- 	elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry, ndlp,
- 				     ndlp->nlp_DID, ELS_CMD_ACC);
--	if (!elsiocb)
--		return 1;
-+	if (!elsiocb) {
-+		err = -ENOMEM;
-+		goto err_out;
-+	}
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		wqe = &elsiocb->wqe;
-@@ -6336,17 +6362,26 @@ lpfc_els_rsp_adisc_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
- 	elsiocb->ndlp = lpfc_nlp_get(ndlp);
- 	if (!elsiocb->ndlp) {
- 		lpfc_els_free_iocb(phba, elsiocb);
--		return 1;
-+		err = -ENODEV;
-+		goto err_out;
- 	}
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
- 	if (lpfc_iocb_failed(rc)) {
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		lpfc_nlp_put(ndlp);
--		return 1;
-+		err = -EIO;
-+		goto err_out;
- 	}
- 
- 	return 0;
-+
-+err_out:
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "1025 Xmit ADISC ACC Unsuccessful: "
-+			 "error_code: %d S_ID: x%x\n",
-+			 err, vport->fc_myDID);
-+	return err;
- }
- 
- /**
-@@ -6366,7 +6401,10 @@ lpfc_els_rsp_adisc_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
-  *
-  * Return code
-  *   0 - Successfully issued acc prli response
-- *   1 - Failed to issue acc prli response
-+ *   -ENOMEM - IOCB not prepped successfully
-+ *   -EIO - The IOCB failed to issue successfully
-+ *   -ENODEV - No associated node for IOCB
-+ *   -EACCES - Acc not needed for this command
-  **/
- int
- lpfc_els_rsp_prli_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
-@@ -6386,6 +6424,7 @@ lpfc_els_rsp_prli_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
- 	struct lpfc_dmabuf *req_buf;
- 	int rc;
- 	u32 elsrspcmd, ulp_context;
-+	int err;
- 
- 	/* Need the incoming PRLI payload to determine if the ACC is for an
- 	 * FC4 or NVME PRLI type.  The PRLI type is at word 1.
-@@ -6407,13 +6446,16 @@ lpfc_els_rsp_prli_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
- 		cmdsize = sizeof(uint32_t) + sizeof(struct lpfc_nvme_prli);
- 		elsrspcmd = (ELS_CMD_ACC | (ELS_CMD_NVMEPRLI & ~ELS_RSP_MASK));
- 	} else {
--		return 1;
-+		err = -EACCES;
-+		goto err_out;
- 	}
- 
- 	elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry, ndlp,
- 				     ndlp->nlp_DID, elsrspcmd);
--	if (!elsiocb)
--		return 1;
-+	if (!elsiocb) {
-+		err = -ENOMEM;
-+		goto err_out;
-+	}
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		wqe = &elsiocb->wqe;
-@@ -6528,17 +6570,28 @@ lpfc_els_rsp_prli_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
- 	elsiocb->ndlp =  lpfc_nlp_get(ndlp);
- 	if (!elsiocb->ndlp) {
- 		lpfc_els_free_iocb(phba, elsiocb);
--		return 1;
-+		err = -ENODEV;
-+		goto err_out;
- 	}
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
- 	if (lpfc_iocb_failed(rc)) {
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		lpfc_nlp_put(ndlp);
--		return 1;
-+		err = -EIO;
-+		goto err_out;
- 	}
- 
- 	return 0;
-+
-+err_out:
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "1026 Xmit PRLI ACC Unsuccessful: "
-+			 "cmd: x%x, error_code: %d "
-+			 "S_ID: x%x\n",
-+			 *(uint32_t *)oldiocb->cmd_dmabuf->virt, err,
-+			 vport->fc_myDID);
-+	return err;
- }
- 
- /**
-@@ -6559,7 +6612,9 @@ lpfc_els_rsp_prli_acc(struct lpfc_vport *vport, struct lpfc_iocbq *oldiocb,
-  *
-  * Return code
-  *   0 - Successfully issued acc rnid response
-- *   1 - Failed to issue acc rnid response
-+ *   -ENOMEM - IOCB not prepped successfully
-+ *   -EIO - The IOCB failed to issue successfully
-+ *   -ENODEV - No associated node for IOCB
-  **/
- static int
- lpfc_els_rsp_rnid_acc(struct lpfc_vport *vport, uint8_t format,
-@@ -6574,6 +6629,7 @@ lpfc_els_rsp_rnid_acc(struct lpfc_vport *vport, uint8_t format,
- 	uint16_t cmdsize;
- 	int rc;
- 	u32 ulp_context;
-+	int err;
- 
- 	cmdsize = sizeof(uint32_t) + sizeof(uint32_t)
- 					+ (2 * sizeof(struct lpfc_name));
-@@ -6582,8 +6638,10 @@ lpfc_els_rsp_rnid_acc(struct lpfc_vport *vport, uint8_t format,
- 
- 	elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry, ndlp,
- 				     ndlp->nlp_DID, ELS_CMD_ACC);
--	if (!elsiocb)
--		return 1;
-+	if (!elsiocb) {
-+		err = -ENOMEM;
-+		goto err_out;
-+	}
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		wqe = &elsiocb->wqe;
-@@ -6642,17 +6700,26 @@ lpfc_els_rsp_rnid_acc(struct lpfc_vport *vport, uint8_t format,
- 	elsiocb->ndlp = lpfc_nlp_get(ndlp);
- 	if (!elsiocb->ndlp) {
- 		lpfc_els_free_iocb(phba, elsiocb);
--		return 1;
-+		err = -ENODEV;
-+		goto err_out;
- 	}
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
- 	if (lpfc_iocb_failed(rc)) {
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		lpfc_nlp_put(ndlp);
--		return 1;
-+		err = -EIO;
-+		goto err_out;
- 	}
- 
- 	return 0;
-+
-+err_out:
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "1028 Xmit RNID ACC Unsuccessful: "
-+			 "error_code: %d S_ID: x%x\n",
-+			 err, vport->fc_myDID);
-+	return err;
- }
- 
- /**
-@@ -6712,7 +6779,9 @@ lpfc_els_clear_rrq(struct lpfc_vport *vport,
-  *
-  * Return code
-  *   0 - Successfully issued acc echo response
-- *   1 - Failed to issue acc echo response
-+ *   -ENOMEM - IOCB not prepped successfully
-+ *   -EIO - The IOCB failed to issue successfully
-+ *   -ENODEV - No associated node for IOCB
-  **/
- static int
- lpfc_els_rsp_echo_acc(struct lpfc_vport *vport, uint8_t *data,
-@@ -6726,6 +6795,7 @@ lpfc_els_rsp_echo_acc(struct lpfc_vport *vport, uint8_t *data,
- 	uint16_t cmdsize;
- 	int rc;
- 	u32 ulp_context;
-+	int err;
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		cmdsize = oldiocb->wcqe_cmpl.total_data_placed;
-@@ -6739,8 +6809,10 @@ lpfc_els_rsp_echo_acc(struct lpfc_vport *vport, uint8_t *data,
- 		cmdsize = LPFC_BPL_SIZE;
- 	elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry, ndlp,
- 				     ndlp->nlp_DID, ELS_CMD_ACC);
--	if (!elsiocb)
--		return 1;
-+	if (!elsiocb) {
-+		err = -ENOMEM;
-+		goto err_out;
-+	}
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		wqe = &elsiocb->wqe;
-@@ -6776,17 +6848,26 @@ lpfc_els_rsp_echo_acc(struct lpfc_vport *vport, uint8_t *data,
- 	elsiocb->ndlp =  lpfc_nlp_get(ndlp);
- 	if (!elsiocb->ndlp) {
- 		lpfc_els_free_iocb(phba, elsiocb);
--		return 1;
-+		err = -ENODEV;
-+		goto err_out;
- 	}
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
- 	if (lpfc_iocb_failed(rc)) {
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		lpfc_nlp_put(ndlp);
--		return 1;
-+		err = -EIO;
-+		goto err_out;
- 	}
- 
- 	return 0;
-+
-+err_out:
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "1029 Xmit ECHO ACC Unsuccessful: "
-+			 "error_code: %d S_ID: x%x\n",
-+			 err, vport->fc_myDID);
-+	return err;
- }
- 
- /**
-@@ -8489,14 +8570,14 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	vport->fc_rscn_id_list[vport->fc_rscn_id_cnt++] = pcmd;
- 	/* Indicate we are done walking fc_rscn_id_list on this vport */
- 	vport->fc_rscn_flush = 0;
-+	/* Send back ACC */
-+	lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
- 	/*
- 	 * If we zero, cmdiocb->cmd_dmabuf, the calling routine will
- 	 * not try to free it.
- 	 */
- 	cmdiocb->cmd_dmabuf = NULL;
- 	lpfc_set_disctmo(vport);
--	/* Send back ACC */
--	lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
- 	/* send RECOVERY event for ALL nodes that match RSCN payload */
- 	lpfc_rscn_recovery_check(vport);
- 	return lpfc_els_handle_rscn(vport);
-@@ -9296,7 +9377,9 @@ lpfc_send_rrq(struct lpfc_hba *phba, struct lpfc_node_rrq *rrq)
-  *
-  * Return code
-  *   0 - Successfully issued ACC RPL ELS command
-- *   1 - Failed to issue ACC RPL ELS command
-+ *   -ENOMEM - IOCB not prepped successfully
-+ *   -EIO - The IOCB failed to issue successfully
-+ *   -ENODEV - No associated node for IOCB
-  **/
- static int
- lpfc_els_rsp_rpl_acc(struct lpfc_vport *vport, uint16_t cmdsize,
-@@ -9310,12 +9393,15 @@ lpfc_els_rsp_rpl_acc(struct lpfc_vport *vport, uint16_t cmdsize,
- 	struct lpfc_iocbq *elsiocb;
- 	uint8_t *pcmd;
- 	u32 ulp_context;
-+	int err;
- 
- 	elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry, ndlp,
- 				     ndlp->nlp_DID, ELS_CMD_ACC);
- 
--	if (!elsiocb)
--		return 1;
-+	if (!elsiocb) {
-+		err = -ENOMEM;
-+		goto err_out;
-+	}
- 
- 	ulp_context = get_job_ulpcontext(phba, elsiocb);
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
-@@ -9358,17 +9444,26 @@ lpfc_els_rsp_rpl_acc(struct lpfc_vport *vport, uint16_t cmdsize,
- 	elsiocb->ndlp = lpfc_nlp_get(ndlp);
- 	if (!elsiocb->ndlp) {
- 		lpfc_els_free_iocb(phba, elsiocb);
--		return 1;
-+		err = -ENODEV;
-+		goto err_out;
- 	}
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
- 	if (lpfc_iocb_failed(rc)) {
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		lpfc_nlp_put(ndlp);
--		return 1;
-+		err = -EIO;
-+		goto err_out;
- 	}
- 
- 	return 0;
-+
-+err_out:
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "1030 Xmit ELS RPL ACC Unsuccessful: "
-+			 "error_code: %d S_ID: x%x\n",
-+			 err, vport->fc_myDID);
-+	return err;
- }
- 
- /**
-@@ -9603,7 +9698,7 @@ lpfc_els_rcv_fan(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
-  * @ndlp: pointer to a node-list data structure.
-  *
-  * Return code
-- *   0 - Successfully processed echo iocb (currently always return 0)
-+ *   0 - Successfully processed edc iocb (currently always return 0)
-  **/
- static int
- lpfc_els_rcv_edc(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
--- 
-2.38.0
+lpfc: Fix ndlp use-after-free during repeated RSCN and rediscovery sequence
 
+This commit refactors how registration state is tracked by separating the S=
+CSI
+and NVME transport registration flags. It introduces new wait flags to track
+unregistration and a new flag for NVMET target nodes to address use-after-f=
+ree
+issues during target port failovers and RSCN storms.
+
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hb=
+adisc.c
+> index 4c673dffa671b..b4a5c7d5c2a0b 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+[ ... ]
+> @@ -4623,7 +4632,10 @@ lpfc_nlp_reg_node(struct lpfc_vport *vport, struct=
+ lpfc_nodelist *ndlp)
+>  	lpfc_check_nlp_post_devloss(vport, ndlp);
+> =20
+>  	spin_lock_irqsave(&ndlp->lock, iflags);
+> -	if (ndlp->fc4_xpt_flags & NLP_XPT_REGD) {
+> +	if (((ndlp->fc4_xpt_flags & SCSI_XPT_REGD) &&
+> +	     !(ndlp->fc4_xpt_flags & SCSI_XPT_UNREG_WAIT)) ||
+> +	    ((ndlp->fc4_xpt_flags & NVME_XPT_REGD) &&
+> +	     !(ndlp->fc4_xpt_flags & NVME_XPT_UNREG_WAIT))) {
+>  		/* Already registered with backend, trigger rescan */
+>  		spin_unlock_irqrestore(&ndlp->lock, iflags);
+
+[ ... ]
+
+> -	ndlp->fc4_xpt_flags |=3D NLP_XPT_REGD;
+>  	spin_unlock_irqrestore(&ndlp->lock, iflags);
+
+[Severity: High]
+Does removing the atomic test-and-set of the registration flag here introdu=
+ce=20
+an ndlp memory leak?
+
+If multiple threads execute lpfc_nlp_reg_node() concurrently (e.g., from
+repeated RSCNs), they can all pass the registration check above while the f=
+lags
+are still cleared. All threads will drop the lock and proceed to call
+lpfc_register_remote_port(), which will unconditionally increment the ndlp
+reference count via lpfc_nlp_get().
+
+During unregistration, the SCSI path correctly prevents double unregistrati=
+on
+by checking SCSI_XPT_UNREG_WAIT, so it will only drop one reference. The ex=
+tra
+references taken during the concurrent registrations will permanently leak.
+
+> =20
+>  	if (lpfc_valid_xpt_node(ndlp)) {
+
+[ ... ]
+
+> @@ -4706,16 +4728,11 @@ lpfc_nlp_unreg_node(struct lpfc_vport *vport, str=
+uct lpfc_nodelist *ndlp)
+>  				 kref_read(&ndlp->kref));
+>  	}
+> =20
+> -	if (ndlp->fc4_xpt_flags & NVME_XPT_REGD) {
+> +	if ((ndlp->fc4_xpt_flags & (NVME_XPT_REGD | NVME_XPT_UNREG_WAIT)) =3D=3D
+> +	    NVME_XPT_REGD) {
+
+[Severity: High]
+Can this lockless flag check cause a use-after-free on the ndlp object?
+
+Because the flag check happens outside of ndlp->lock in lpfc_nlp_unreg_node=
+(),
+multiple threads can concurrently pass this check and call
+lpfc_nvme_unregister_port().
+
+Unlike the SCSI unregistration path, lpfc_nvme_unregister_port()
+unconditionally sets the NVME_XPT_UNREG_WAIT flag under the lock without
+verifying if a concurrent thread has already set it. Both threads will then
+call nvme_fc_unregister_remoteport() and lpfc_nlp_put(). Since the ndlp
+reference was only incremented once during NVMe registration, the double
+lpfc_nlp_put() could result in a use-after-free.
+
+>  		vport->phba->nport_event_cnt++;
+> -		if (vport->phba->nvmet_support =3D=3D 0) {
+> -			lpfc_nvme_unregister_port(vport, ndlp);
+> -		} else {
+> -			/* NVMET has no upcall. */
+> -			lpfc_nlp_put(ndlp);
+> -		}
+> +		lpfc_nvme_unregister_port(vport, ndlp);
+>  	}
+> -
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917222015.6105=
+3-1-nkirkland2304@gmail.com?part=3D6
