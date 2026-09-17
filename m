@@ -1,86 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D734F30216D
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 13:06:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCA78514773;
+	Thu, 17 Sep 2026 13:06:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789650392; cv=none; b=r+pwTQPcVQ3ThUxQ63DyiynjHWB7vB4QOEhEmFabsNkmfy+NJrtPZTGEiGqMYtzYUNLfEDKTul0nmhP6wmfoJaFvZPul3hlJDHVD5LyLk12z5znkHNIiTBvxRfzLlP1yFWFZxRuEQfteVGdnt0CNBnLsCDpTzjZHSc83eFF4ybc=
+	t=1789650414; cv=none; b=UgK4D1Yt8h4kHl+s4htecmZyi3KjAuxReWQSQyq4Eyqki5ilcuJ7Gb+pgvBZSO03M/13BYsMHgkb3BIi2cUz1pcEqZeM9+pZQAqWtrep09baMbz7xCrtDPu/KaRLuZOZexgjfrCTJ+aoNtDd5GvpxdODBWrlbbCQR0gufBnWHpA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789650392; c=relaxed/simple;
-	bh=vgBdzLL/ZfcUw/fDiS1+ZEKxmUoaNTEpE0+G4YMpDwo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ABKvRGj1V7bUOKWuMn7qB9cYK9vp+jrL665HJSDwFgm5NWC/bspM8+I2kdqL6CX4dGDCnpWfzyCd9/H40X66NC5BZA6PSHyL8S8ckevSdQbCr0om0qvadQXj5xnYIGqGM5/v/SJdNGHcdbV7OHA5QTO0nceWZRj4x8THhiP0jL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M3A+afEi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789650414; c=relaxed/simple;
+	bh=6fjy9ZBmXn0UPSK1BLLKsFzED6I434bUX3EwUrM41tE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RpHr5oqF/qOCmIqvdzjYa/X37R6ZL7vaMlBY4a1T1CY8G6qgv/XTgutZXdyygsPavF8gFe6DIxCbBEYZpPHalAIprxKp0vjVwLFQKfUmmSvneELYqS0rLCY0d0tVg1+am7KCEq7oIuyixb/bt5FDSbBjgMgHHqbXDFw0T5FRnfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=eBxZRgdn; arc=none smtp.client-ip=113.46.200.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M3A+afEi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADFCA1F00893;
-	Thu, 17 Sep 2026 13:06:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789650385;
-	bh=6SRwejQl7W/4EfNno9evF4ZGvzo9FdukuLyqRkrwaOw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=M3A+afEiRI+q05ObsVzGn9TGIrrQWmeITimckL5w5W+d7nbkZ3q8poavwU0mhsqKU
-	 V5OPk0yfQ6Rs964+C00EkueQXYu1bYWh0p14fKEMRBad1L35xcBkkrJ7PLHI7ihkNV
-	 TFcpWCI43kHACwqla1Rxaxes5H553n5wcTkNyn2h9HaLR/D06SkXIwVASqxPy8jpxU
-	 e10QnIJoJBhaS4kgsSYciiHImfbhrZIx3PAOSSEorOVEE89g2s4PGAD5jXV4yOMU9O
-	 TQhWnTmXHR7kFX2PQMRBoNesDmEa+tSqxKUb6I5Af5FrcuQ3wZ1rRvx5gikFnWpt/i
-	 NrxEfpOOm4jgA==
-Message-ID: <44588dbd-8940-4fad-8ea3-407ac182515b@kernel.org>
-Date: Thu, 17 Sep 2026 20:06:21 +0700
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="eBxZRgdn"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=4l+0/KB5shywkowpBJPfrdIhgydMAX7BiWEFJvhsp7Y=;
+	b=eBxZRgdnZIvmrxcH13n4208C4A/NcXSIVfuRIfXFtY7fKXd+iRRsCkyA8O75EpA8zgd7ohdOD
+	Rq+12qgLZ+kQFJPI3JeRuFw/uO4UXeWDD3M269NrieNcyBq3sBPy/83JkTk2a7qmWXfBcBv61CV
+	fNrheYk9hpTnwYYiPZDQXAA=
+Received: from mail.maildlp.com (unknown [172.19.163.15])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4hlwj829qtzKm5t;
+	Thu, 17 Sep 2026 20:55:40 +0800 (CST)
+Received: from kwepemp200012.china.huawei.com (unknown [7.202.194.234])
+	by mail.maildlp.com (Postfix) with ESMTPS id 5B7F340586;
+	Thu, 17 Sep 2026 21:06:43 +0800 (CST)
+Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
+ kwepemp200012.china.huawei.com (7.202.194.234) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 17 Sep 2026 21:06:43 +0800
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 17 Sep 2026 21:06:42 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <john.garry@linux.dev>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<mkp@kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+Subject: [PATCH v2] scsi: libsas: Fix SMP IO deadlock during HA resume
+Date: Thu, 17 Sep 2026 21:06:42 +0800
+Message-ID: <20260917130642.1796231-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/6] scsi: scsi_debug: Report the residual of a write
-To: Niklas Cassel <cassel@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@linux.dev>
-References: <20260917125445.1376493-8-cassel@kernel.org>
- <20260917125445.1376493-9-cassel@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20260917125445.1376493-9-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemp500015.china.huawei.com (7.202.195.9)
 
-On 2026/09/17 19:54, Niklas Cassel wrote:
-> A command transfers the number of logical blocks that it asks for,
-> bounded by the data buffer that the initiator provided. When the buffer
-> is larger than that, the bytes beyond are not transferred, and the
-> difference is a residual that the initiator is entitled to be told
-> about.
-> 
-> resp_read_dt0() reports it, as does resp_write_tape(), but the write
-> paths for a disk do not: scsi_get_resid() keeps the zero that
-> scsi_debug_queuecommand() initialised it with, so a write with an
-> oversized buffer completes with GOOD status and a residual of zero, as
-> though the whole buffer had been consumed. A READ of the same length
-> into the same buffer reports the residual correctly, so the two
-> directions disagree.
-> 
-> Report it in resp_write_dt0(), resp_write_scat() and
-> resp_atomic_write().
-> 
-> resp_write_scat() needs a different expression from the other two. Its
-> data-out buffer holds the parameter list header and the LBA range
-> descriptors as well as the data, and sg_off walks over all of it, from
-> the offset at which the data begins to the end of the last range that
-> was written, so what the command consumed is sg_off and not the number
-> of bytes that the last range transferred.
-> 
-> Assisted-by: LLM
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+When the controller resumes, sas_resume_ha() -> sas_drain_work()
+processes the DISCE_RESUME work, which restores the ATA ports through
+the libata error handler (ata_sas_port_resume() requests ATA_EH_RESET)
+and waits for it in sas_ata_flush_pm_eh(). For an expander-attached
+ATA device the hard reset in that recovery is an SMP PHY CONTROL
+command sent to the expander:
 
-Yes. That goes with my comment about partial writes on v2.
+  ata_eh_recover() -> ata_eh_reset() -> sas_ata_hard_reset()
+    -> lldd_I_T_nexus_reset() -> sas_phy_reset()
+      -> sas_smp_phy_control() -> smp_execute_task_sg()
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+For a runtime resume ha->dev is still RPM_RESUMING while the callback
+runs, so the pm_runtime_get_sync() in smp_execute_task_sg() blocks
+waiting for the resume to complete, but the resume is blocked in
+sas_drain_work() waiting for that very SMP IO — a deadlock.
 
+Use pm_runtime_get_noresume()/pm_runtime_put_noidle() when
+SAS_HA_RESUMING is set: the usage counter stays elevated for the whole
+duration of the IO, so the controller cannot autosuspend underneath an
+in-flight SMP IO issued by a thread which the drain does not wait on,
+while avoiding the wait for the already ongoing resume. The hardware
+is already initialized by the LLDD before sas_resume_ha() runs.
+SAS_HA_RESUMING is also set during a system sleep resume, where
+ha->dev is RPM_ACTIVE and the noresume variants are harmless.
+
+Outside of the resume window, convert the pm_runtime_get_sync() call
+to pm_runtime_resume_and_get() and check the result, so that an SMP IO
+is not submitted to a host whose runtime resume failed (the return
+value was previously ignored).
+
+Only hisi_sas enables runtime PM among libsas LLDDs, so other drivers
+(pm8001, isci, aic94xx, mvsas) are unaffected.
+
+Fixes: 0da7ca4c4fd9 ("scsi: libsas: Resume host while sending SMP I/Os")
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+Changes since v1:
+
+- Use pm_runtime_get_noresume()/put_noidle() during HA resume instead
+  of skipping the PM reference entirely, so an in-flight SMP IO always
+  keeps autosuspend away.
+- Convert pm_runtime_get_sync() to pm_runtime_resume_and_get() and
+  check the result (pre-existing issue flagged by sashiko).
+
+ drivers/scsi/libsas/sas_expander.c | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 811c9eb4fef1..43cb90188f44 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -61,8 +61,23 @@ static int smp_execute_task_sg(struct domain_device *dev,
+ 	struct sas_internal *i =
+ 		to_sas_internal(dev->port->ha->shost->transportt);
+ 	struct sas_ha_struct *ha = dev->port->ha;
+-
+-	pm_runtime_get_sync(ha->dev);
++	bool ha_resuming = test_bit(SAS_HA_RESUMING, &ha->state);
++
++	/*
++	 * While the host is resuming, ha->dev may be RPM_RESUMING and
++	 * the resume blocked in sas_drain_work() waiting for this very
++	 * SMP IO, so waiting for the host to resume here would deadlock.
++	 * Use the noresume/noidle variants to still hold a PM reference
++	 * for the duration of the IO, the hardware is already initialized
++	 * by the LLDD before sas_resume_ha() runs.
++	 */
++	if (ha_resuming) {
++		pm_runtime_get_noresume(ha->dev);
++	} else {
++		res = pm_runtime_resume_and_get(ha->dev);
++		if (res)
++			return res;
++	}
+ 	mutex_lock(&dev->ex_dev.cmd_mutex);
+ 	for (retry = 0; retry < 3; retry++) {
+ 		if (test_bit(SAS_DEV_GONE, &dev->state)) {
+@@ -135,7 +150,10 @@ static int smp_execute_task_sg(struct domain_device *dev,
+ 		}
+ 	}
+ 	mutex_unlock(&dev->ex_dev.cmd_mutex);
+-	pm_runtime_put_sync(ha->dev);
++	if (ha_resuming)
++		pm_runtime_put_noidle(ha->dev);
++	else
++		pm_runtime_put_sync(ha->dev);
+ 
+ 	BUG_ON(retry == 3 && task != NULL);
+ 	sas_free_task(task);
 -- 
-Damien Le Moal
-Western Digital Research
+2.43.0
+
