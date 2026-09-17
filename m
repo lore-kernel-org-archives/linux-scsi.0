@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68BF44FECD7
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 12:55:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F1283812DA
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 12:55:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789649753; cv=none; b=Z0GX5jda0TO7ajjLnGBDsGpH/mBQr2ZLNjVT7opXnT6DtvCTVl4Q3IuTbwojQPVj7/+wfhx2HjcmIGtX0Hx7xZSRDf/WBBDzbgWtMIpo/F/SfgoQyUxViighsAI+PgpZRr0Msl9PT8iSmhhAhwKj5VPD+hgvTATbIyrhR6YMHDA=
+	t=1789649751; cv=none; b=iTqHgRKtzUO75+lkW40t/9mC7L/Wf8Se3S3M/zdiY2sinyG0rSLMDWl8AmINcvLbMuRIcPsO1Jo4KPDGFjiQwQ3eseT6sgVGjzrk5XoZh18rAIcASCZ4uO+ZBSioAV7gSK17GmZhNOhdMMjxEbu6/gPQMsjwnXYyib0Ivy4zIaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789649753; c=relaxed/simple;
-	bh=8fSSR0cPOjH99xno13mYz0ccyW0EWjLe5aOQYR080CA=;
+	s=arc-20240116; t=1789649751; c=relaxed/simple;
+	bh=JcZTqBRVPB1NnDNIXXZOjcHyGtcbVJMaCOWIisS1u3g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ePGRLxv0iNK/k3r3ZBwKkZZUFAyDED4ciF6UWwojNNJKzEuOzU6nSwk8O1cRLz7G6/5l2Xwe4cKDj1hrTPofYBGbzxF3W7HV//iN4QOR7QVvUJY1ZZ29EqTghO8EriJZvp5FaQMz5EaGlamp156z0n2pnUORbJdCwiQX2hrjVfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IDqvyzic; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=cze2ytqo8OUs4nOz9X5y1steHmkOb3dCQ685GLfa/jYrTkCbhDp8M7TUiHvTW2MQ6t0gabULR4R0b/Aw/545SaH0xkmXgT+ZqpJCl7XkPwZ4qI01cJ3sAd2BQWSwsOW7yzltXlxzuN1RuuIOz7lclC85IOqT0W5UK0ErIxC2hMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZXvKfcfO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IDqvyzic"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA5B71F00898;
-	Thu, 17 Sep 2026 12:55:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZXvKfcfO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C373E1F000FF;
+	Thu, 17 Sep 2026 12:55:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789649747;
-	bh=ElLI+IuJMvGmGqI3ZnEhO/c257k0RsljNU2LpfSetks=;
+	s=k20260515; t=1789649745;
+	bh=asulv6oCOvr7XYF3aUr2C4fMui2THAxgYDAeUIKJvZ4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=IDqvyzic3ejylOVK7d7f8lv1+D9h0UjbrG47k99tnuJFnJM5gRcE8g8wpPGwc4YRW
-	 XSUuuneHyk3FhMUT5b9u5uPO/G/Na9TUSW4lndKKxC4mrgAlY7lCUtRuavdS56K4NI
-	 dSYNp1OQEN7hX3+LbhQFQXR4xn0/J/JuLDr+qubzN1dPrUfE4YxX4puTod8bFlU4wJ
-	 WGa+zXp/LMIfEkBs7coaSJLgpWMvCUm4tAQFIBbVLYZkWY0OEUtyiXYcmYZe8M5F5H
-	 UobtQff9m/7urlEcxy2QIY3fVIq9mAm+nviiF0kjTjY41Gxy/RnQO+D/Meee4usS4/
-	 O9/sHCZz6yaRA==
+	b=ZXvKfcfOkzI5cIeVJ4fg3JqPbwnvLuapBeZbt3ossCpVO+PggUn2o0gA/iQEjFUug
+	 KqgbjaIAQ48uQ5cj9vzDcC7fTQ+oRcXQSrz65DmauPJmU4UAspg3qPPVcMtW3itqx3
+	 eRVFI7iXdPEnfmHAu6n6hbKzLq3sAKsm3Pdtr+JPe0hGeYfH4WH4cDAKkr6nokBoJa
+	 fJ7YKAuPaQCSxLfXfnmGiLoPyHtXqGBSw906hjsHQvYCN+Ole5JIix2ZEIXFvNZjOs
+	 DHpK6mTj7tQgj71n/ukcxFDYTkzBvFNwClsIpVSUbEZLprFcvBhzYP+mGIQ9P20NoK
+	 tdnA5syfvk+9Q==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -33,9 +33,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 2/6] scsi: scsi_debug: Do not write a partial physical block
-Date: Thu, 17 Sep 2026 14:54:48 +0200
-Message-ID: <20260917125445.1376493-10-cassel@kernel.org>
+Subject: [PATCH v3 1/6] scsi: scsi_debug: Report the residual of a write
+Date: Thu, 17 Sep 2026 14:54:47 +0200
+Message-ID: <20260917125445.1376493-9-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260917125445.1376493-8-cassel@kernel.org>
 References: <20260917125445.1376493-8-cassel@kernel.org>
@@ -45,60 +45,70 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2107; i=cassel@kernel.org; h=from:subject; bh=8fSSR0cPOjH99xno13mYz0ccyW0EWjLe5aOQYR080CA=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJWP5aaLeEc/syx0DdoiZlB8dT6p0y5PYquVrPd81Xu1 zacOsneUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgIl4tDD8j8kx4EkyXOHZuX1z 7CWLaVrP+qpXt/LXtuVNmpKz+pO9BSPDqZVeBeLPby8PEDzEuOW96Zpb+4wO3tDLc3bXLTzSbf+ BCwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2441; i=cassel@kernel.org; h=from:subject; bh=JcZTqBRVPB1NnDNIXXZOjcHyGtcbVJMaCOWIisS1u3g=; b=kA0DAAoWyWQxo5nGTXIByyZiAGqr4xqgztJ4OAnlqzU3bfwuRVYFusvoXk2kXNDZz7aY8SAXx oh1BAAWCgAdFiEETfhEv3OLR5THIdw8yWQxo5nGTXIFAmqr4xoACgkQyWQxo5nGTXKUXgD+P9ht joXE0+MgmX7jj4lG0zgZhg+pVS4kbKjvaXsGA3EBAOi1OPhcpybmfeFg4bSs34WY8qRU25AxSad afjZPT8MM
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-do_device_access() copies one logical block at a time and stops at the
-first short copy, so when the data-out buffer is smaller than the
-transfer length of the command it can write part of a physical block.
-An initiator can arrange that with SG_IO.
+A command transfers the number of logical blocks that it asks for,
+bounded by the data buffer that the initiator provided. When the buffer
+is larger than that, the bytes beyond are not transferred, and the
+difference is a residual that the initiator is entitled to be told
+about.
 
-A device writes whole physical blocks, and ZBC-3 r06 (T10/BSR INCITS
-579), 4.5.3.3.2, requires a write to a sequential write required zone to
-end on a physical block boundary, so a partly written physical block is
-not a state that a device can be left in.
+resp_read_dt0() reports it, as does resp_write_tape(), but the write
+paths for a disk do not: scsi_get_resid() keeps the zero that
+scsi_debug_queuecommand() initialised it with, so a write with an
+oversized buffer completes with GOOD status and a residual of zero, as
+though the whole buffer had been consumed. A READ of the same length
+into the same buffer reports the residual correctly, so the two
+directions disagree.
 
-Stop at the last whole physical block that the buffer holds. The bytes
-that are left over are not written, and are reported to the initiator as
-part of the residual.
+Report it in resp_write_dt0(), resp_write_scat() and
+resp_atomic_write().
 
-With the default physblk_exp=0 the physical block size equals the
-logical block size and this changes nothing. Nothing changes either when
-the buffer holds all of the data that the command asks for, so a command
-that transfers fewer logical blocks than a physical block, which is
-legal outside a sequential write required zone, is unaffected.
+resp_write_scat() needs a different expression from the other two. Its
+data-out buffer holds the parameter list header and the LBA range
+descriptors as well as the data, and sg_off walks over all of it, from
+the offset at which the data begins to the end of the last range that
+was written, so what the command consumed is sg_off and not the number
+of bytes that the last range transferred.
 
 Assisted-by: LLM
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/scsi/scsi_debug.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/scsi/scsi_debug.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 641dd6f93791..8ed7d5cd0ae0 100644
+index 6941809dfdb7..641dd6f93791 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -4290,6 +4290,19 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
+@@ -5164,6 +5164,8 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 			    "%s: write: cdb indicated=%u, IO sent=%d bytes\n",
+ 			    my_name, num * sdebug_sector_size, ret);
  
- 	fsp = sip->storep;
- 
-+	/*
-+	 * A data-out buffer that does not hold all of the data that the
-+	 * command asks for is written up to the last whole physical block
-+	 * that it does hold, so that a partial physical block is never
-+	 * written. The bytes that are left over are reported as a residual.
-+	 */
-+	if (do_write) {
-+		u32 avail = (sdb->length - sg_skip) / sdebug_sector_size;
++	scsi_set_resid(scp, scsi_bufflen(scp) - ret);
 +
-+		if (avail < num)
-+			num = round_down(avail, 1U << sdebug_physblk_exp);
-+	}
+ 	if (unlikely((sdebug_opts & SDEBUG_OPT_RECOV_DIF_DIX) &&
+ 		     atomic_read(&sdeb_inject_pending))) {
+ 		if (sdebug_opts & SDEBUG_OPT_RECOVERED_ERR) {
+@@ -5352,6 +5354,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 		sg_off += num_by;
+ 		cum_lb += num;
+ 	}
++	scsi_set_resid(scp, scsi_bufflen(scp) - sg_off);
+ 	ret = 0;
+ err_out_unlock:
+ 	sdeb_meta_write_unlock(sip);
+@@ -6207,6 +6210,8 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+ 		return DID_ERROR << 16;
+ 	if (unlikely(ret != len * sdebug_sector_size))
+ 		return DID_ERROR << 16;
 +
- 	block = do_div(lba, sdebug_store_sectors);
++	scsi_set_resid(scp, scsi_bufflen(scp) - ret);
+ 	return 0;
+ }
  
- 	/* Only allow 1x atomic write or multiple non-atomic writes at any given time */
 -- 
 2.55.0
 
