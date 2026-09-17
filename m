@@ -1,127 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92B693093C1;
-	Thu, 17 Sep 2026 03:14:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B657446074;
+	Thu, 17 Sep 2026 07:38:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789614869; cv=none; b=ouBUwHP/ogSHII4qFAwF8TXXrvjAmPJCMePP2GvN3wgjkWMi5Za7YpOyYwIwo+QSc3LMDejAqr1ewFCdBBJSiJa+ylEtqUPa4k8neMD8b1Hh/ucwUqMmOUpoh5SbF7alWt8Kyg39HjGOVEZGauWdyMOK2wvvl7Q6dmOFjsHlenY=
+	t=1789630697; cv=none; b=PeGY1ksHvCVeRDKQe2suCJh13L0lRUtJYDb7FrAA5Hlxp/yFcCRv/AgkvcVwqOJo9rbTpin+T0YawtsRR/yLBiv3LowjDz52d94He+hlKjTR6Oiw4R7Pt3gMUYZ85CyNkaFib8nbh2wfzLGzI4nkimZDlbFByu06LdYtVq/sjjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789614869; c=relaxed/simple;
-	bh=VEdmEHU4HRcFLiSrkc2qsVN8mU3sz6fIJalnefhVTs8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aJgOqa4TpOYYHQz4+/CxinFmuYNGqv1lsOKHQYaqdmIjL+PXKuwvCXLd/K7RJJR9CdZQ0tCbzQHyxbRx+fGkqgVXZPHdbxXMF4cHpM1JKclFh+HO7M/SfTbHZcW96ReViqmM/CR2OgDTBOS8Fjf7gIjSAmku4aD1nrkThpgOLWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dd7KyGlP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789630697; c=relaxed/simple;
+	bh=QJgWa+K3JX8e0ydZ2zLcvNAU41TcRSVkvveVdU/At2s=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=O4XRVD66z2HVskl/EfKmgXF9W9MwDz2qW1qEx/pkW8fvQyyKJ9JcCAB5BuGiKNIXX0eCNV6uqkvf2XkNUz74AjMgWuYbRT2en1Tz6B4P9b3mWkFXcU4CVI93lycGQFbipjAjPEf/75XoKVHsSs79DMVZiU2OkO31MvPjQfFxS6Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pr5epCPz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dd7KyGlP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E36041F000FF;
-	Thu, 17 Sep 2026 03:14:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pr5epCPz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 652801F000FF;
+	Thu, 17 Sep 2026 07:38:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789614868;
-	bh=cIZz2g8Pz+PxuDxpdtRY73qiC4kxknpNb+WL0xDIPYU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Dd7KyGlPaqCchTDzmDg4Fv2fL8zWmddUEFrPpesp5b3684t0Oox1e7rZ4iT9K/c31
-	 zAy7sx94VHWO1a3XTYo7xGRVLIWb2mwHN4lTHCwWN94nz8V2/m0Vn7PlsodrHnPYgx
-	 M13jk+udCl9YWbLL5Jt/5l6OdX+ddNtlHp+NJEuOl+6NvWKqIhYqb7LkWP12um39g7
-	 gjWdZl+LxlUTwD1jQHEONoTO95OulZKSffNqtd5dBmmJkmchzx9LYSZuf2XY1f55vI
-	 /rFsvFX0L4NW3j75R2eDu51SXcEUoNo1jhQUQfpdSawwrXXGac4hVEkUY2ZivU4rSc
-	 pJxVqqjCusEKg==
-Message-ID: <f3ab4b89-627d-4711-84b0-85b887256ccf@kernel.org>
-Date: Thu, 17 Sep 2026 10:14:24 +0700
+	s=k20260515; t=1789630696;
+	bh=1za/h1JqMSh8ydtjD6biW2XlouFz44i3Cz4r59QO71k=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Pr5epCPzMYZ6XSf+JImspZtbZuHwdfMEYWYDnSbgz7Rc5PRbOUl2XEa6nyzlahdK1
+	 IUXTdZ/Rt6anzSYHnZdP/X8triKOoAao8+I441SyPmcwG3XLyvJ6nrbMYJfEVkDg3k
+	 fzWUD47zu69gD2sJM40+D2j+Sqlni/4K1eK1BCevg7uX5d/bD6hjC+x75Ij0w2q0+M
+	 3/lcWI5d4vRfmHpSVO0tutalOHlmfQZtLn2iJVSzd//6SM48V7fWLFco6bgs39YMml
+	 9nDTpze0BkXbX2YIIG5L3rFyC+wZWL/MbQzZtIFXTideIXGYAAl+iUgSmRgLj1iqzJ
+	 XbC4a5nWxfGpw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 12/28] fortify: Convert strlcat() to snprintf() in
+ strcat()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Bill Wendling" <morbo@google.com>
+Cc: robh@kernel.org, dri-devel@lists.freedesktop.org, devicetree@vger.kernel.org, intel-xe@lists.freedesktop.org, media-ci@linuxtv.org, "Jeff
+ Layton" <jlayton@kernel.org>, conor+dt@kernel.org, linux-scsi@vger.kernel.org, dmitry.torokhov@gmail.com, "Chuck
+ Lever" <cel@kernel.org>, "Anna Schumaker" <anna@kernel.org>, linux-input@vger.kernel.org
+In-Reply-To: <20260915081910.4142719-13-morbo@google.com>
+References: <20260915081910.4142719-1-morbo@google.com>
+ <20260915081910.4142719-13-morbo@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 17 Sep 2026 07:38:14 +0000
+Message-Id: <20260917073815.652801F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/37] scsi: st: use 16-bits defined sense codes
-To: Laurence Oberman <loberman@redhat.com>, sashiko-reviews@lists.linux.dev
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org
-References: <20260831020451.585944-1-dlemoal@kernel.org>
- <20260831020451.585944-13-dlemoal@kernel.org>
- <20260831021927.90FD21F00A3D@smtp.kernel.org>
- <2ff511fa29b801ab74ce9ee60e1257c47918c1db.camel@redhat.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <2ff511fa29b801ab74ce9ee60e1257c47918c1db.camel@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-On 2026/09/16 22:29, Laurence Oberman wrote:
-> On Mon, 2026-08-31 at 02:19 +0000, sashiko-bot@kernel.org wrote:
->> Thank you for your contribution! Sashiko AI review found 1 potential
->> issue(s) to consider:
->> - [Medium] Incorrectly assigning ASC value to ASCQ in SCSI
->> tracepoint.
->> --
->>
->> commit c1f7c0aa9501c3562bd45de8a85431d940fa338b
->> Author: Damien Le Moal <dlemoal@kernel.org>
->> Subject: scsi: st: use 16-bits defined sense codes
->>
->> This commit refactors the SCSI tape driver to use the 16-bit
->> sense_code
->> field of struct scsi_sense_hdr. It replaces hard-coded additional
->> sense
->> codes and qualifiers with enum values defined in
->> include/scsi/scsi_sense.h
->> to improve code clarity.
->>
->> While reviewing this patch series, I noticed an issue introduced in
->> the
->> related change to include/trace/events/scsi.h:
->>
->>> diff --git a/include/trace/events/scsi.h
->>> b/include/trace/events/scsi.h
->>> --- a/include/trace/events/scsi.h
->>> +++ b/include/trace/events/scsi.h
->>> @@ -303,8 +303,8 @@
->>> DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
->>>  		if (cmd->sense_buffer && SCSI_SENSE_VALID(cmd) &&
->>>  		    scsi_command_normalize_sense(cmd, &sshdr)) {
->>>  			__entry->sense_key = sshdr.sense_key;
->>> -			__entry->asc = sshdr.asc;
->>> -			__entry->ascq = sshdr.ascq;
->>> +			__entry->asc = scsi_sense_asc(&sshdr);
->>> +			__entry->ascq = scsi_sense_asc(&sshdr); <-
->>> --- here
->>                                         ^^^^^^^^^^^^^^
->>
->> [Severity: Medium]
->> Is there a typo in this assignment?
->>
->> In the scsi_cmd_done_timeout_template tracepoint, __entry->ascq is
->> being
->> assigned scsi_sense_asc(&sshdr) instead of the ASCQ value. This
->> appears to
->> log the Additional Sense Code for both the asc and ascq fields, which
->> will
->> result in lost diagnostic data when userspace tools analyze SCSI
->> errors via
->> tracepoints.
->>
->> Should this use scsi_sense_ascq(&sshdr) for the ascq field instead?
-> 
-> Hello Damien
-> This seems to be real issue here that sashiko found
-> 
-> We assign the same for __entry->ascq  as we do for __entry->asc i.e.
-> scsi_sense_asc(&sshdr)
-> 
-> We need to have it as
-> 
-> +			__entry->asc = scsi_sense_asc(&sshdr);
-> +			__entry->ascq = scsi_sense_ascq(&sshdr); <--
-> 
-> Otherwise we will miss the ASCQ
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] fortify: strcat using snprintf causes major performance regression
+- [High] fortify: snprintf in strcat bypasses FORTIFY_READ bounds on source
+--
 
-Yes. That was fixed in later versions. The series that Martin queued up has this
-fix :)
+commit d5360c3f44eeb8b6f9cd8cc195950107cbfe6556
+Author: Bill Wendling <morbo@google.com>
 
+fortify: Convert strlcat() to snprintf() in strcat()
 
+Replaces the strlcat() implementation inside strcat() with
+__builtin_snprintf() when the destination size is known, and falls back to
+__underlying_strcat() otherwise. This prepares for the removal of the
+deprecated strlcat() API.
 
--- 
-Damien Le Moal
-Western Digital Research
+Link: https://github.com/KSPP/linux/issues/370 [1]
+
+> diff --git a/include/linux/fortify-string.h b/include/linux/fortify-strin=
+g.h
+> index cf841dc71feff..0b489124bfcb8 100644
+> --- a/include/linux/fortify-string.h
+> +++ b/include/linux/fortify-string.h
+> @@ -363,7 +363,12 @@ __FORTIFY_INLINE __diagnose_as(__builtin_strcat, 1, =
+2)
+>  char *strcat(char * const POS p, const char *q)
+>  {
+>  	const size_t p_size =3D __member_size(p);
+> -	const size_t wanted =3D strlcat(p, q, p_size);
+> +
+> +	if (p_size =3D=3D SIZE_MAX)
+> +		return __underlying_strcat(p, q);
+
+[Severity: High]
+Does falling back to the unfortified __underlying_strcat() directly here sk=
+ip
+the FORTIFY_READ bounds checks on the source string q?
+
+The previous strlcat() fallback delegated to __fortify_strlen(q), which saf=
+ely
+bounded the read and triggered a panic if q was not NUL-terminated within i=
+ts
+allocation. Could this bypass allow unbounded reads if q lacks a NUL
+terminator?
+
+> +
+> +	const size_t p_len =3D __fortify_strlen(p);
+> +	const size_t wanted =3D p_len + __builtin_snprintf(p + p_len, p_size - =
+p_len, "%s", q);
+
+[Severity: High]
+Will injecting __builtin_snprintf() for a fundamental string primitive like
+strcat() cause a significant performance regression and stack bloat?
+
+Because the size parameter is dynamic, the compiler cannot optimize this aw=
+ay,
+meaning this will call into the heavy vsnprintf() format parsing engine.
+
+Given that vsnprintf() has a notoriously large stack footprint, could this
+increase the risk of kernel stack overflows in deep call chains?
+
+Additionally, does passing q as an opaque variadic argument to snprintf()
+defeat the compiler's __builtin_object_size() tracking?
+
+Since the vsnprintf() engine will process "%s" using an unbounded strlen(q),
+could this bypass the intended FORTIFY_READ mitigation and leak information
+or crash if q is missing a NUL terminator?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260915081910.4142=
+719-1-morbo@google.com?part=3D12
