@@ -1,119 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9C0B511E92
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 13:11:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6FB4D7D5F
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 13:12:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789650706; cv=none; b=KCmGwNnSRshYABFLHLJhiIX3IuuwRNX0NRYJ1/XO7nHh2VUqucuI9m5kEbQmXOuG/+RwG0HTBw1Lv2ij3eqHekc4SBYqytizqrCPV9+bgLB3XmVCo2P2vcQIFZLdva+NXBFrmZplg3yGyReSKTqGMHuI3lrifobIx7lMFPqC8yk=
+	t=1789650772; cv=none; b=addvFs/Uf0m3idxXJGnSFcva+QBPwHb4Ol+P5hSXLpoC2Hx4jvOuJS9hF3cugpVYeixx7l41Cn74cSbNwEC9EcPb1TmasOEoeo9YzeD1cd6G86uBPjkQ4PQ7PxoHIrMfFHDnqx21ll1ZyBenFIH4YMJt+KvzI7GhqmNBU+ZbKwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789650706; c=relaxed/simple;
-	bh=FFvLjpTMRUDJorNq6uBrh7GEEjl5OkgU9jtfEYYn300=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qu85Tu2aG2jSLCU4B+OH5JsCGp5VOKjXT8EFDwBcStACET5uwEtfKJR8Agk+rEfRW58eXbvObIugjRPbhdNlIgRBWwepi+gbKbvza83cCEmw2F9CudZ5JeXAp3D9JDb221hhJsvP1bgKfYdfhfBOayxC3VlL+PpB1rbfCAq55+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CFOuIBUu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789650772; c=relaxed/simple;
+	bh=HmX0q5c651o5pUNi+Gvxswc4t9HwAij0rANwXByERHk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=rjWQaW5BJ97xpsK9xJgoEIu+n2oVJBw8gTV9nstWiSmdFn9g3bl2W0QVjMmFUPu1pkYp1gn/jM3oSr9kEsUWqltRSflLkhXfrNnL1eoJCr92/I6jVUUm02w3QbX1KL6XBwM8531iPP4SFTmoa5L1JAWaFM2PWfrzGuD/83ilUlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ffogQLzE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CFOuIBUu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DBF51F000FF;
-	Thu, 17 Sep 2026 13:11:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ffogQLzE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 445AC1F000FF;
+	Thu, 17 Sep 2026 13:12:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789650703;
-	bh=o+LkK8neWBW/WzsP4jfaDbJsHrYeQKIgvwQkc9SQRd8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=CFOuIBUug7tSmsgTqE56I4AnSVirISRJapry494J+6FoXTdXKfX5P4pJgfEoOnoRy
-	 Qpw+XGrtjMFYAkGjfflQJvF6CNcEVTRuHZCK6ENj+m/k6NbktCUdOYBAliGNvBzuZ3
-	 /NR7haBJMt916r1pKLqMoLSRxiJl6nv2L5zDk3u6ERJ+MQy38oMSbX1qnWyh5uwkKB
-	 JcjpIWh1N6MIAQ5P5kcLgrPTLZptbA+bSPjZqL1s37LbFhjhasMTLW6kt+rRrqWFj2
-	 1m0n5ebYaUmYiqIcFYgNSJ2AuyvHmyVyc0xemkqcJ42slpS96qYJ0sLg5PjGgA3hH6
-	 wgj84MCXwokXg==
-Message-ID: <72659c27-3742-4760-8a5f-46d65ccf4012@kernel.org>
-Date: Thu, 17 Sep 2026 20:11:39 +0700
+	s=k20260515; t=1789650771;
+	bh=stT5z7xXMQZZ55AUCWjY0JrcYXPPShk7SzBm2irJH9A=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ffogQLzEOT2tXqI5b3uRf3hUidJ817AHRKpinOWbBf04rU/4IEd5ULk5943lPGAJI
+	 eEmPwnsA2JHIAHHw8bB2xU5nuHtwPtrBMjXVkkDPhrsugNJU7q1rjXeEyPTkV47XWe
+	 GBihe9P0CBGEeFpTt9gPGT9n7GboEVTDQ2sl5pZzAP53Wv0uJVY2ThxqPeXrKEb+Lq
+	 S+K4J0YsXZn4Kebv9gvYA/7REk7+Zfu3zBncXoqyo1yhfvHYnDFAO8fnSOuR2EnxuE
+	 4qaUQcrZX7j6JMbHqVufDP6ztGTs6TwmyW+SWhCy5c50BZKuSbY8r/rKysGiyb09FO
+	 UD9nQUWEFRiwg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 5/6] scsi: scsi_debug: Map the region written by
+ WRITE ATOMIC (16)
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Niklas Cassel" <cassel@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260917125445.1376493-13-cassel@kernel.org>
+References: <20260917125445.1376493-8-cassel@kernel.org>
+ <20260917125445.1376493-13-cassel@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 17 Sep 2026 13:12:50 +0000
+Message-Id: <20260917131251.445AC1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/6] scsi: scsi_debug: Do not write a partial physical
- block
-To: Niklas Cassel <cassel@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@linux.dev>
-References: <20260917125445.1376493-8-cassel@kernel.org>
- <20260917125445.1376493-10-cassel@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20260917125445.1376493-10-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 2026/09/17 19:54, Niklas Cassel wrote:
-> do_device_access() copies one logical block at a time and stops at the
-> first short copy, so when the data-out buffer is smaller than the
-> transfer length of the command it can write part of a physical block.
-> An initiator can arrange that with SG_IO.
-> 
-> A device writes whole physical blocks, and ZBC-3 r06 (T10/BSR INCITS
-> 579), 4.5.3.3.2, requires a write to a sequential write required zone to
-> end on a physical block boundary, so a partly written physical block is
-> not a state that a device can be left in.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] scsi_debug: ABBA deadlock between resp_atomic_write() and resp_com=
+p_write()
+- [Medium] scsi_debug: TOCTOU race in resp_atomic_write() via double evalua=
+tion
+--
 
-Physical block aligned writes are mandated only with ZBC for wries to sequential
-zones. Unaligned writes to conventional zones are accepted, like they are with
-regular drives (though not recommended due to potential performance issues with
-read-modify-write cycles).
+commit d00845f77d0b11824b6bd723b3a99d9e2026b838
+Author: Niklas Cassel <cassel@kernel.org>
 
-> 
-> Stop at the last whole physical block that the buffer holds. The bytes
-> that are left over are not written, and are reported to the initiator as
-> part of the residual.
-> 
-> With the default physblk_exp=0 the physical block size equals the
-> logical block size and this changes nothing. Nothing changes either when
-> the buffer holds all of the data that the command asks for, so a command
-> that transfers fewer logical blocks than a physical block, which is
-> legal outside a sequential write required zone, is unaffected.
-> 
-> Assisted-by: LLM
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/scsi/scsi_debug.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
+scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
+
+When logical block provisioning is enabled, commands that write user data m=
+ark
+the region in the provisioning map. WRITE ATOMIC (16) leaves the map untouc=
+hed,
+so this patch calls map_region() and takes the metadata write lock across t=
+he
+access.
+
 > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 641dd6f93791..8ed7d5cd0ae0 100644
+> index 64f32d97455d6..33f2df26e5af7 100644
 > --- a/drivers/scsi/scsi_debug.c
 > +++ b/drivers/scsi/scsi_debug.c
-> @@ -4290,6 +4290,19 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
->  
->  	fsp = sip->storep;
->  
-> +	/*
-> +	 * A data-out buffer that does not hold all of the data that the
-> +	 * command asks for is written up to the last whole physical block
-> +	 * that it does hold, so that a partial physical block is never
-> +	 * written. The bytes that are left over are reported as a residual.
-> +	 */
-> +	if (do_write) {
-> +		u32 avail = (sdb->length - sg_skip) / sdebug_sector_size;
-> +
-> +		if (avail < num)
-> +			num = round_down(avail, 1U << sdebug_physblk_exp);
-
-Nope, that is not correct. physical sector unaligned writes are OK with regular
-disks. They are not for ZBC, but we should check that in
-check_zbc_access_params() I think.
-
+[ ... ]
+> @@ -6228,7 +6229,18 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+>  		}
+>  	}
+> =20
+> +	if (scsi_debug_lbp()) {
+> +		sdeb_meta_write_lock(sip);
+> +		meta_data_locked =3D true;
 > +	}
 > +
->  	block = do_div(lba, sdebug_store_sectors);
->  
->  	/* Only allow 1x atomic write or multiple non-atomic writes at any given time */
+>  	ret =3D do_device_access(sip, scp, 0, lba, len, 0, true, true);
 
+[Severity: High]
+Does this code introduce a lock inversion deadlock with resp_comp_write()?
 
--- 
-Damien Le Moal
-Western Digital Research
+Here in resp_atomic_write(), the metadata lock is acquired before calling
+do_device_access(), which acquires the data lock:
+
+resp_atomic_write()
+  sdeb_meta_write_lock(sip);
+  do_device_access()
+    sdeb_data_lock(sip, true)
+      sdeb_data_write_lock(sip);
+
+However, in resp_comp_write(), the locks are acquired in the reverse order:
+
+resp_comp_write()
+  sdeb_data_write_lock(sip);
+  sdeb_meta_write_lock(sip);
+
+Could concurrent execution of write atomic (16) and compare and write
+commands to the same target cause the scsi processing kworkers to deadlock?
+
+> +	if (unlikely(scsi_debug_lbp()))
+> +		map_region(sip, lba, len);
+
+[Severity: Medium]
+Could this result in a race condition due to evaluating scsi_debug_lbp() tw=
+ice?
+
+If an administrator modifies /sys/bus/pseudo/drivers/scsi_debug/fake_rw whi=
+le
+a write atomic (16) command is executing, the first evaluation could return
+false, bypassing the lock acquisition. If the second evaluation then returns
+true, map_region() would be executed without the metadata lock being held.
+
+Could this be fixed by caching the result of the first evaluation,
+or checking meta_data_locked instead?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917125445.1376=
+493-8-cassel@kernel.org?part=3D5
