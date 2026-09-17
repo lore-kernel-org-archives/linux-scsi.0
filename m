@@ -1,97 +1,97 @@
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 207984A2046;
-	Thu, 17 Sep 2026 10:32:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 009C142E400
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 10:35:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789641160; cv=none; b=GhCF5DdDDobHs8w6qgT/Xhirl8zMvrExmdVrjlhRmsTkx6ACYNyWp5QaH6NVTeCrcNKkuC7eFqKjFP2QnGHR/+eFe1jxc3yxCPPk/EpfUhukoVuAQYS4GbT5vod9t6bFueg+dJMu4IzmI3R8qzyuf2UK2DPrZ0DEQTJpQgL74fs=
+	t=1789641350; cv=none; b=pr/QH3MRtEjTwVEnrfN95nGw5DSxe8sIp7YYwrRDkMPM1YRoW0NzLsN6tqR/YVKRVVg3X74s2baT7N3gZAMysW6E/yfM9lfeYEEbofOyYtj+hvr3EtJ93c5CPRVbVCqoux7IkaygOjNosEgVFbccjnWoZ0VHtbvJx68uxGGLYac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789641160; c=relaxed/simple;
-	bh=f2kr8PmdCVWr86p1NW2i3K28lMuauysr3sb4zu+meQY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=p44tlyrozN8o0TtaHh6PhcjvRB/Dd+dTe4b7Sgg+4YUIZOv46ohVZ8T8FLpzgD8lmZoAyCD809fzUhcli7S0R7BGoCY2tWvpvqotr9sNUXtpFtLychx6rkNO+vxLpBqMiufs8rp6BA0E/Wt7+JKpHE07yrCt4ETMjYV2IpSnSL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-05 (Coremail) with SMTP id zQCowACH8z27watqobB+CA--.787S2;
-	Thu, 17 Sep 2026 18:32:27 +0800 (CST)
-From: Wentao Liang <vulab@iscas.ac.cn>
-To: James.Bottomley@suse.de
-Cc: MPT-FusionLinux.pdl@broadcom.com,
-	kashyap.desai@lsi.com,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	ranjan.kumar@broadcom.com,
-	sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com,
-	Wentao Liang <vulab@iscas.ac.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: message: fusion: Fix scsi_device reference leak in mptspi_write_spi_device_pg1()
-Date: Thu, 17 Sep 2026 10:32:27 +0000
-Message-Id: <20260917103227.2147120-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1789641350; c=relaxed/simple;
+	bh=+Vl46CTOMoT3CH9DfXpCA+9O3ahxXdMjkueNwJa3NT4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ItGQB2LHCg0r30Th+4v8RX6Zdcj19w3bj75AV9/0/JoZeuFosR6B+Bl/qZ/WVjnBFCY4P3thAsFxs6+aEt2ZObsHg+reZwEzq4SxMzWwK6LJ6zTkLrK9odh8RQcYwQVRYzIgwvtQLzwGKxMo1rbKM8LXVmifXMS51pLgVAdOcFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eBAtx9YN; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eBAtx9YN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36C351F000FF;
+	Thu, 17 Sep 2026 10:35:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789641342;
+	bh=7Xe+rjhW8M2kaQLStKB9Wee31/J/Xyz8kAy6OCwc5jE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=eBAtx9YNH/cuJs1xDb8t5vGQbYmJtMVMn9qa9qZJ6xpJ3a894P+jRcktZckFEGTDg
+	 boMnbd3/QkTyMtvH2r2EEfFumcMhOSL7h+cU9yhLXbxZDG7gW0r3tbOZPeiVi3PWob
+	 HRHTUbfECyH6qT3lVLIoVI4IS5OIYvl/d/xgooPSKGqnZsiwyZ9k4azJbxNt8omIC5
+	 +vxdbAqMgXghX7kUs8CyhuxKIEE1s6XM2Q9tTjJaYGmZ6UN1fdaDwS+3QzVCROcBDl
+	 pckO4D05/kuWukFOmJcKPQ7yF1aa/cmGk1Q69y1j45952Y5dTYKJcn93fD1Hb5Y9iV
+	 KR27YPj/n8Oog==
+Date: Thu, 17 Sep 2026 12:35:38 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: John Garry <john.garry@linux.dev>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2] scsi: scsi_debug: Validate zone access for WRITE
+ ATOMIC (16)
+Message-ID: <aqvCeq9IsbjSJIEx@ryzen>
+References: <20260917084553.559765-4-cassel@kernel.org>
+ <20260917084553.559765-6-cassel@kernel.org>
+ <f1c5db8b-2c99-4c5f-bb1a-3da8f2c5413b@linux.dev>
+ <aqu5Q_6EvfY7iRmk@ryzen>
+ <0acc0a4d-b532-4f69-8fcc-1d4eef7549c0@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowACH8z27watqobB+CA--.787S2
-X-Coremail-Antispam: 1UD129KBjvdXoWruF18KryxKr1UAw4fXFW5Wrg_yoWktFX_uF
-	1FvFn7X348WF1Iva4fZr9I9ryfKFsrW392qa4IqFs3trWUZry8Xr1fZFZ8Cw4DuF48ur13
-	C3WkAayrGw15GjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbgkYjsxI4VWkCwAYFVCjjxCrM7CY07I20VC2zVCF04k26cxKx2IY
-	s7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4
-	kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_
-	Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxV
-	W0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
-	7VC0I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x0Yz7
-	v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0E0s8F02x267IIx4CEVc8vx2IErcIFxwAC
-	I402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrw
-	CF04k20xvE74AGY7Cv6cx26r48ZrWUJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E
-	5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtV
-	W8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY
-	1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14
-	v26r4UJVWxJr1lIxAIcVC2z280aVCY1x0267AKxVW0oVCq3bIYCTnIWIevJa73UjIFyTuY
-	vjxU7WE_DUUUU
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAANA2qrrJpLFwAAsp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0acc0a4d-b532-4f69-8fcc-1d4eef7549c0@linux.dev>
 
-scsi_device_lookup_by_target() returns the scsi_device with an extra
-reference that the caller has to drop with scsi_device_put().  The
-loop that looks for a tape device to enable inline data padding
-never releases that reference, neither when it breaks out on a
-match nor when it keeps iterating over the other target ids, so a
-reference is leaked on every write of the device page.
+On Thu, Sep 17, 2026 at 11:26:45AM +0100, John Garry wrote:
+> On 9/17/26 10:56, Niklas Cassel wrote:
+> > On Thu, Sep 17, 2026 at 10:38:30AM +0100, John Garry wrote:
+> > > On 9/17/26 09:45, Niklas Cassel wrote:
+> > > 
+> > > So far we have not considered atomic writes for zoned devices
+> > > - do devices which support both technologies exist? Or is
+> > > this just hypothetical?
+> > If the specs allow it, someone might build it.
+> 
+> Sure, but do they (allow it)? atomic writes have specific
+> alignment and granularity rules - how does that play with
+> zoned devices?
+> 
+> I would need to check the specs more on this..
 
-Drop the reference in both cases.
+I haven't been able to find anything that disallows it.
 
-Fixes: 19fff154e7ee ("[SCSI] mptfusion: Adding inline data padding support for TAPE drive.")
-Cc: stable@vger.kernel.org
-Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
----
- drivers/message/fusion/mptspi.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Trying to parse the specs with the help of LLM:
 
-diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-index 56892b1f3de2..89d6beba08ca 100644
---- a/drivers/message/fusion/mptspi.c
-+++ b/drivers/message/fusion/mptspi.c
-@@ -914,8 +914,12 @@ static int mptspi_write_spi_device_pg1(struct scsi_target *starget,
- 				nego_parms |= MPI_SCSIDEVPAGE1_RP_IDP;
- 				pg1->RequestedParameters =
- 				    cpu_to_le32(nego_parms);
-+				scsi_device_put(sdev);
- 				break;
- 			}
-+
-+			if (sdev)
-+				scsi_device_put(sdev);
- 		}
- 	}
- 
--- 
-2.34.1
+""
+WRITE ATOMIC (16) is a write command as far as ZBC is concerned, so on a
+zoned device it is subject to the access requirements of the zone that it
+addresses, and it advances the write pointer of a sequential write
+required zone.
+Neither standard says so directly, but the definitions leave no room for
+anything else. SBC-6 r02 defines an atomic write operation as a "process
+by which a device server performs a write operation that is either
+completed in its entirety or has no effects on stored logical block
+data" (3.1.9), and an atomic write command as a "command that performs
+one or more atomic write operations" (3.1.8). ZBC-3 r06 in turn defines
+a write operation as a "write operation as described in SBC-5 with the
+additional requirements described in this standard" (3.1.62), and a
+write command as a "command that requests write operations" (3.1.61).
+WRITE ATOMIC (16) therefore falls under 4.5.3.3.2 Write access pattern
+requirements for sequential write required zones, exactly as WRITE (16)
+does.
+""
 
+Right now, I don't see why WRITE ATOMIC should not be allowed on a ZBC
+drive.
+
+
+Kind regards,
+Niklas
