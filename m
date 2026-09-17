@@ -1,141 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C712A49F123
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:15:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F35684A13A6
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:20:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789683343; cv=none; b=mK9qG/4F8viY9etX+F2YGG6vnLZHSl3g0Fq0Id3Ey3S+MxRP/wfJ369D+RnAy3cKztzaVGJ7wJVTFaGC6jnJcaBHG4ldJ45+F+UOvH/FTwvKa/SVeEdeIP8IQx+59mLAj9DRCoFsG4UcxbhNAJRK+LsOCJxxPlYzr6wgO3Ytlho=
+	t=1789683621; cv=none; b=NRg9yJlXxutbqimlDT6Io9JSE6LSTGWffSIfbh0UbH1he13XPyKPiUiCHR1TjOn09O/K53H0LtpOM34QKYxpJKm4MMB3CkQGRiSCuT+SWnVa4nE3E6hDKhGEEK5dgZg49K9Zph2VhHdyZfm2rExb5/I20hVqnlTq4vewFxxFzMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789683343; c=relaxed/simple;
-	bh=Qu1ANGjzKlf8v4fsEtyO2bvQusrvjHWJS+cWe9ndtgo=;
+	s=arc-20240116; t=1789683621; c=relaxed/simple;
+	bh=2jq3hg8f2M0W7coBca7pp9wK5rxxgSbldWUYRu2Gw+s=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=huHlAOFgn9OuZEAFUmJ7rSGdJoL7SVkjEuIYEL0Z6vbxQBMC4aaSkIzuxfw5ba4Z5xG6rw7KR0zdQqf52sPDPEfzID8i5GplWsM77keHmfIUrEhjlPUTTD0yaYRWr1yyiWjtcYM0S1Qx7b++aIaNfhx0vEQZtRioGSygaMsWpjw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BSz513i6; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=auPu/Xwb2V6i3DdxHXsHdDRUezbnn7NcJXosNs0KjeX1yJmFeCak21LFV5KgMZmKIBNPHfUOR3VYaBX9kc8NOJXU341emzVpV4osoy0mWqZsh+J9pK761yfv/RDecyTRERb/hoJgwSujC1S+2+2JgoEWrvKNSS8Dq5eS6EkKaOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nSOaivVA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BSz513i6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 247251F000FF;
-	Thu, 17 Sep 2026 22:15:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nSOaivVA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E22A1F000FF;
+	Thu, 17 Sep 2026 22:20:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789683341;
-	bh=vioQrKO3tMdHggWfdrXdUXIqPwGdVJn5lma+EBpF2CA=;
+	s=k20260515; t=1789683619;
+	bh=iSy39TUuxy6/V7yLOUoS9i7Cdc0+mj82+g7err70Pwg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BSz513i6ZVTrQA/80yg+OtTULo8PNTojPDVsJW/YbcyyFEKbzunPDwxjLgglYLzE8
-	 76fY+PAtXAd2e1/j6R0Hjy1tFxR2/gFlALrwPFdxle0A4BXpCEwMwX8WLTq4hzUZ9t
-	 6AxQPgQ+vhGxGOEH6AfrkWLat+LdOcP2HqgW/ZMgm6htjlceu2rLqIr5nmPthKDuU7
-	 W9jpiOQmryZ0OHmRzEQHfbWqOcMjbhyraT28mx9FjBlErxuLAoS6K2KYPTRkU+KvkH
-	 lFERPY5ZImsy8SVi3nOBWhscEnqo9nHw6yicVXv22XkUMohVrXmz4YAgsFykd4Smx2
-	 XHB+rWDLmj3sA==
+	b=nSOaivVA9DqusKXOT1FUIfNHtN05SS7Swuu8XpOCtPdiuWAqs7O5Wu3IrF8pjBROb
+	 FFZdwsLWnop5kOFrOeIjLjyq/67P5LNkkmTyogBJeQdCtqfcv7T3we32+T8zC2/86B
+	 96L+gxnxt2xdWSEgulzeruhzLc64g2QxpAex1AkXriCih2bW/czIC5qvdUQXXz7s9j
+	 Pap9VeIIpoud36ZiUBOpTbBBSa7D+0aqlq8zKYaxub3a6b63UdXcMybrgJhFyJdPyD
+	 ICAAFPYaY6s9G/MIsWU3EJMM4mCVAGaHpl53PudjYTjvzqNSYcY+E37Yr13ZdE+96f
+	 oGE70nxsT9iWw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 09/14] lpfc: Send inhibited ABORT_WQE when PLOGI CQE
- SEQUENCE_TMO is received
+Subject: Re: [PATCH v4 11/14] lpfc: Put iocbq on phba->txq when ELS WQ is
+ full or ELS SGL unavailable
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nigel Kirkland" <nkirkland2304@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260917222015.61053-10-nkirkland2304@gmail.com>
+In-Reply-To: <20260917222015.61053-12-nkirkland2304@gmail.com>
 References: <20260917222015.61053-1-nkirkland2304@gmail.com>
- <20260917222015.61053-10-nkirkland2304@gmail.com>
+ <20260917222015.61053-12-nkirkland2304@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 17 Sep 2026 22:15:40 +0000
-Message-Id: <20260917221541.247251F000FF@smtp.kernel.org>
+Date: Thu, 17 Sep 2026 22:20:18 +0000
+Message-Id: <20260917222019.4E22A1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: lpfc: txcmplq list corruption in lpfc_sli_abort_iocb_ring()
-- [High] scsi: lpfc: unintended abort of reused XRI/IoTag in lpfc_els_retry=
-()
+- [Medium] scsi: lpfc: txq list churning in lpfc_drain_txq due to missing S=
+LI_IOCB_RET_IOCB flag
 --
 
-commit d8f6ae5839dc18257873d48c2e2262ffa79b7bec
+commit 8b96ef178c664b569b564d0486b1112a8fe88e10
 Author: Nigel Kirkland <nkirkland2304@gmail.com>
-Subject: lpfc: Send inhibited ABORT_WQE when PLOGI CQE SEQUENCE_TMO is rece=
-ived
 
-This commit modifies the LPFC driver to explicitly set the Inhibit Abort (I=
-A)
-bit when sending an ABORT_WQE for a timed-out PLOGI CQE. It introduces a
-boolean argument to lpfc_sli_issue_abort_iotag to control this behavior.
+lpfc: Put iocbq on phba->txq when ELS WQ is full or ELS SGL unavailable
 
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-[ ... ]
-> @@ -4921,7 +4925,38 @@ lpfc_els_retry(struct lpfc_hba *phba, struct lpfc_=
-iocbq *cmdiocb,
->  				/* Reset the Link */
->  				link_reset =3D 1;
->  				break;
-> +			} else if (cmd =3D=3D ELS_CMD_PLOGI) {
-[ ... ]
-> +				pring =3D lpfc_phba_elsring(phba);
-> +				spin_lock_irqsave(&phba->hbalock, iflags);
-> +				lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb,
-> +							   true, NULL);
-> +				spin_unlock_irqrestore(&phba->hbalock, iflags);
+This commit adds logic to queue ELS/CT commands to the head or tail of the
+txq for retry when the ELS WQ is full or SGLs are unavailable. It updates
+lpfc_drain_txq to handle these retry scenarios.
 
-[Severity: High]
-Could this inadvertently abort an unrelated command?
-
-Because lpfc_els_retry() schedules a retry, the completion handler
-lpfc_cmpl_els_plogi() will immediately free cmdiocb locally, returning the
-XRI/IoTag to the free pool.
-
-Since the abort is issued here without validating if the hardware actually
-kept the exchange busy (LPFC_EXCHANGE_BUSY) or checking if this is SLI-4
-hardware, another CPU could concurrently allocate the freed tag, issue a new
-command, and have it erroneously aborted.
-
->  			}
-> +
->  			retry =3D 1;
->  			delay =3D 100;
->  			break;
 > diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
 > --- a/drivers/scsi/lpfc/lpfc_sli.c
 > +++ b/drivers/scsi/lpfc/lpfc_sli.c
 [ ... ]
-> @@ -4620,12 +4621,19 @@ lpfc_sli_abort_iocb_ring(struct lpfc_hba *phba, s=
-truct lpfc_sli_ring *pring)
->  			iocb->cmd_flag &=3D ~LPFC_IO_ON_TXCMPLQ;
->  		list_splice_init(&pring->txcmplq, &tx_completions);
->  		pring->txcmplq_cnt =3D 0;
-> +		spin_unlock_irqrestore(plock, iflag);
->  	} else {
-> +		/* lpfc_sli_issue_abort_iotag expects the hba_lock held, but not
-> +		 * the ring_lock.
+> @@ -10819,12 +10866,19 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba,=
+ uint32_t ring_number,
+>  			if (!sglq) {
+>  				if (!(flag & SLI_IOCB_RET_IOCB)) {
+>  					__lpfc_sli_ringtx_put(phba,
+>  							pring,
+> -							piocb);
+> +							piocb, false);
+>  					return IOCB_SUCCESS;
+>  				} else {
+>  					return IOCB_BUSY;
+>  				}
+
+[Severity: Medium]
+If lpfc_drain_txq() passes 0 for the flag, won't it trigger this block?
+
+When SLI_IOCB_RET_IOCB is omitted, this path places the IOCB at the tail of
+the txq and returns IOCB_SUCCESS. This defeats the newly added back-off
+mechanism in lpfc_drain_txq() which relies on receiving an IOCB_BUSY status
+to execute its retry logic and push the failing IOCB to the head.
+
+[ ... ]
+> @@ -21301,12 +21355,15 @@ lpfc_drain_txq(struct lpfc_hba *phba)
+>  		}
+>  		txq_cnt--;
+> =20
+> +		/* Capture the return values that indicate an error during IO
+> +		 * submit and cannot be retried. Prefix message 2822.
 > +		 */
-> +		spin_unlock_irqrestore(plock, iflag);
-> +		spin_lock_irqsave(&phba->hbalock, iflag);
->  		/* Issue ABTS for everything on the txcmplq */
->  		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
-> -			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
-> +			lpfc_sli_issue_abort_iotag(phba, pring, iocb, false,
-> +						   NULL);
-> +		spin_unlock_irqrestore(&phba->hbalock, iflag);
+>  		ret =3D __lpfc_sli_issue_iocb(phba, pring->ringno, piocbq, 0);
 
-[Severity: High]
-Does this code risk list corruption on the txcmplq list?
+[Severity: Medium]
+Does this missing flag cause txq list churning during resource exhaustion?
 
-In lpfc_sli_abort_iocb_ring(), plock (which aliases ring_lock for SLI-4
-hardware) is dropped, leaving txcmplq unprotected against concurrent remova=
-ls
-by completion handlers.
+Because the flag is passed as 0 here (instead of SLI_IOCB_RET_IOCB), the
+underlying __lpfc_sli_issue_iocb() call will not return IOCB_BUSY when SGL
+resources are exhausted. Since IOCB_SUCCESS is returned instead, the loop
+below won't break early and will continuously pop and push items back to the
+tail of the txq.
 
-While list_for_each_entry_safe() protects against the current element being
-removed, it is not thread-safe if a concurrent interrupt handler removes
-next_iocb.
-
-Could this lead to poisoned or corrupted list pointers during host reset or
-link down events?
-
->  	}
+> -
+> -		if (ret && ret !=3D IOCB_BUSY) {
+> +		if (ret && ret !=3D IOCB_BUSY && ret !=3D IOCB_FAILED_PUT) {
+>  			fail_msg =3D " - Cannot send IO ";
+>  			piocbq->cmd_flag &=3D ~LPFC_DRIVER_ABORTED;
+>  		}
+> +
+>  		if (fail_msg) {
+>  			piocbq->cmd_flag |=3D LPFC_DRIVER_ABORTED;
+>  			/* Failed means we can't issue and need to cancel */
+> @@ -21319,9 +21376,35 @@ lpfc_drain_txq(struct lpfc_hba *phba)
+>  			list_add_tail(&piocbq->list, &completions);
+>  			fail_msg =3D NULL;
+>  		}
+> -		spin_unlock_irqrestore(&pring->ring_lock, iflags);
+> -		if (txq_cnt =3D=3D 0 || ret =3D=3D IOCB_BUSY)
+> +
+> +		if (txq_cnt =3D=3D 0 || ret =3D=3D IOCB_BUSY ||
+> +		    ret =3D=3D IOCB_FAILED_PUT) {
+> +			/* IOCB_FAILED_PUT is unique to SLI4 and means SGL/XRI
+> +			 * resources are allocated.  For this case, set the
+> +			 * in retry flag.  For SLI3 and 4, push the IO to the
+> +			 * txq for retry.
+> +			 */
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260917222015.6105=
-3-1-nkirkland2304@gmail.com?part=3D9
+3-1-nkirkland2304@gmail.com?part=3D11
