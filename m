@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B97A4A4848
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 13:03:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57E4C4FECD5
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 13:04:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789650214; cv=none; b=WXJh7a2zwwLYbKTFgm1Khe6UWf606SYlj3hpNM7tmOVO1j5CjX9OO0ptaqx3dSJwz/RTc+olf31uEJEftyV9p8bsrCqQdVDHIueJVn3vpwtL95nosK0AZZUu86AZ0FqANMhCldVefd3PIX9MICibuBrF6CarxW+c+9fZDlYkRNw=
+	t=1789650265; cv=none; b=vFgXa9/+Sw9ijjpwESuq8C4LodZGfG0s0/ASsVkF9UscKa1Th5jPp64ODSoSbHUfcLUrXPEMc6iCeBy4utBuY7Ub7LYIJV+o/TYjYjqqeXgBapvLqEx/ellHIivJIZYTRmP5sSmzz8AQbLSErPwbCXnkB22fKVWszf31wW17KSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789650214; c=relaxed/simple;
-	bh=0yjOWK3afiHrSu0i7PLZeNPp+9ahJVhyhvSeT/fpSNc=;
+	s=arc-20240116; t=1789650265; c=relaxed/simple;
+	bh=bscUQyMuiS2iF9PFyE4V4XDtjt5hZc/DtTlLl9RtgoY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p0lbuW8JFP5f1GRwNnMe/YkmCgm3yxzuDvtG2mN1vAsbP2SrR85TfTl6VOOF3cuHTMyoUtrMfldB0xhhId8fIGmvzKnls5SE3npz3hh/Fz/DSDzdg4J42bk3zALkY3oHlrXBm+8mSDEggfKnr/X5Msz2FTX1eSuU8i6hb/PFkSM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f67XNc/I; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=RQA+hbzNkpuSeVk1hPRuTvP1je4fSP6jWTmNzqDkPD/LNLGV325wtClWu5IyTIIVQzZoVe7QYT4KSkBlWTIsngyifmK7IUXXxdUVERe2A6/wBsZ8X9JUf7UzufZl/xHkbhk9cwiYdQ+7TTCzEjixlNE5JdgODVhX2n57CMRhvZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FReWbnqz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f67XNc/I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 728FE1F000FF;
-	Thu, 17 Sep 2026 13:03:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FReWbnqz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE1411F00893;
+	Thu, 17 Sep 2026 13:04:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789650203;
-	bh=0m3bhuy6+3CGnuSN5P2iA5sGLspLRD4oiE7bMiBS1Lw=;
+	s=k20260515; t=1789650258;
+	bh=vMjqbqs5JAQvWI7qTmiaXL3fFfpjEWGoTtSTHzrVtOc=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=f67XNc/I4gOH7A8xxzxUmymrdcWDv3c2uoye3oP3DODslqRXLDZb4PAwpCnl6I+18
-	 oJMDwHPYBbk9IAxrpHZJV70EpLAvsOuExaGStrWw7T0gtdoMc9n0AF0HF8ByVRiFCD
-	 /gtkO4ZegtXYwn/HRPdB47iVhU/qh9JGdMyRi/flpTwUqBobJYyHAqMbNx3WNmX94P
-	 E/ehTkju/VAlQN2fTm45D2lQMCTP6qvBtLPrkufCYR4etFBcBZ9EguTcVNSeqDMgYx
-	 vLFZh4PDgBbHAVKWX4uMoGGFNWpby1uI3C1AUnkrAcBqx0JwtgPO4Je5Jv9jPhjBr2
-	 F8YLPLKPp/48w==
-Message-ID: <2f577b79-8c5b-4d61-9adc-22b607231b97@kernel.org>
-Date: Thu, 17 Sep 2026 20:03:20 +0700
+	b=FReWbnqzu1ugDtNgF6s4kS9T9uPmiB5o+4NzLDN4iD/AKMjmFyc8D6mi37ITMiEOk
+	 f4mPjfCra6UMcB9LCKT7CdeGVM+wzTf6P+t17Boij0bUOg/TOuiC826yrk11VLKd8R
+	 sB8ixNlFfRPrrsKaWbbkn7whGfiXADywshdFTfPMH8Eojejq/kHbQBvFkLkvOIlAq9
+	 XyHQJ/TaJ6lp7M4uJY6YvYijDtwzpu/GXnek5rXnXforIBCghG2j7Ts5gBVyI+hW44
+	 P20rAjjoL/KvjyoouDF+ZSJX7Zrhq1qs3F+BjDBKZAzS8A4WapV/Qiun1ZrtjRiPm1
+	 W4+zjeMtrHd7g==
+Message-ID: <1345da61-5f5b-4c69-b376-ed8e25df436f@kernel.org>
+Date: Thu, 17 Sep 2026 20:04:14 +0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,82 +35,42 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 4/4] scsi: scsi_debug: Validate zone access for WRITE
+Subject: Re: [PATCH v2 3/4] scsi: scsi_debug: Map the region written by WRITE
  ATOMIC (16)
 To: Niklas Cassel <cassel@kernel.org>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K. Petersen" <mkp@kernel.org>
 Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@linux.dev>
 References: <20260917110316.1104863-6-cassel@kernel.org>
- <20260917110316.1104863-10-cassel@kernel.org>
+ <20260917110316.1104863-9-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20260917110316.1104863-10-cassel@kernel.org>
+In-Reply-To: <20260917110316.1104863-9-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 2026/09/17 18:03, Niklas Cassel wrote:
-> WRITE ATOMIC (16) is a write command, so on a zoned device it is subject
-> to the access requirements of the zone that it addresses, and it advances
-> the write pointer of a sequential write required zone. See ZBC-3 r06
-> (T10/BSR INCITS 579), 4.5.3.3.2 Write access pattern requirements for
-> sequential write required zones.
+> When logical block provisioning is enabled, a command that writes user
+> data marks the region that it wrote in the provisioning map, so that
+> GET LBA STATUS reports the region as mapped. resp_write_dt0(),
+> resp_write_scat() and resp_write_same() all call map_region() for that.
 > 
-> resp_atomic_write() calls do_device_access() directly, without calling
-> check_device_access_params() first and without advancing the write
-> pointer afterwards. It is the only command that writes user data which
-> does not; WRITE, WRITE SCATTERED and WRITE SAME all go through
-> check_device_access_params(), which validates zone access for a zoned
-> device.
+> resp_atomic_write() does not, so a WRITE ATOMIC (16) leaves the
+> provisioning map untouched, and GET LBA STATUS keeps reporting the
+> region as deallocated after it has been written. map_state(), which
+> GET LBA STATUS uses, is the only reader of the map, so that is the whole
+> of the effect.
 > 
-> As a consequence, with zbc=managed atomic_wr=1, a WRITE ATOMIC (16) can
-> write anywhere within a sequential write required zone regardless of its
-> write pointer and zone condition, into a gap zone, or across a zone
-> boundary, and none of it is reflected in the zone state. The write
-> pointer is left where it was, so a subsequent REPORT ZONES does not
-> describe the data on the medium, and the next write at that write
-> pointer overwrites data that was written without error.
-> 
-> Validate the access and advance the write pointer the way
-> resp_write_dt0() does, holding the zone metadata write lock across both,
-> since the write pointer has to be read and updated atomically with
-> respect to other commands, and advancing it only when all of the data
-> was written.
+> Call map_region() the way resp_write_dt0() does.
 > 
 > Assisted-by: LLM
 > Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
-> Tested with:
-> 
->   modprobe scsi_debug zbc=managed sector_size=512 physblk_exp=3 \
->       zone_size_mb=8 dev_size_mb=128 zone_nr_conv=2 atomic_wr=1
-> 
-> issuing WRITE ATOMIC (16) with sg_raw. Before this patch, an eight block
-> atomic write at the write pointer of an empty sequential write required
-> zone completes with GOOD status and leaves the write pointer unchanged,
-> and one issued past the write pointer is accepted as well. After it, the
-> former advances the write pointer by eight blocks and the latter is
-> terminated with ILLEGAL REQUEST / UNALIGNED WRITE COMMAND.
-> 
-> A two block atomic write at the write pointer, which satisfies
-> atomic_wr_gran and atomic_wr_align but is smaller than the 4096 byte
-> physical block, is now rejected by the physical block alignment check
-> added earlier in this series. An atomic write to a conventional zone is
-> unaffected.
-> 
-> A WRITE ATOMIC (16) of eight blocks with a data-out buffer of one leaves
-> the write pointer where it was, as an atomic write that does not
-> complete has no effect.
 
-Given that there are no SMR drives that support atomic writes that I know of, I
-think we should not allow this at all, to mimic what user can actually encouter
-instead of emulating the "perfect SMR drives that supports everything".
-So rather the write pointer fix, I think we should have atomic write support and
-ZBC emulation be mutually exclusive.
+Looks OK to me.
 
-We can change that later if SMR drives supporting atomic writes ever become a thing.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
