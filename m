@@ -1,99 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-45.mta0.migadu.com [91.218.175.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C7924A4836
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 07:28:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3639213D51E
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 07:29:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789716498; cv=none; b=rLPVWToaJ0KXKdZbBMmBxsghUDRDjafANsXlGyAFDNktGYdiRihKqLdE6865a+trSsjzI31cqbeA1pXxsdfY1Ncp+qw0zNoiyKQMBy8UOzxCJ6kXi58WEn7Z78iyoQMrrJ0mxV2P9j6gIwUYvTrWh8pF0yGMCdRBOyR8Ow2ySfE=
+	t=1789716574; cv=none; b=BZk553EIxqLsqyFGIHPwoqeQg2lGeqjBYe4cNEkMezbzT2QK7mbjRw4+PTpYobAYD5RYLvtkkiBmMiPbckkIit8O3p4V0UBDqMJDDnA1CiZMyVq51Jv70aZfYzAzOd+ryDj/ETu/2w+OW36Io0fvR3Vdi3tdidD2WHhCDktQqz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789716498; c=relaxed/simple;
-	bh=T4UeetZ4LzSzUtPa7KYHxRfhGCZazjSsbY3KEUzadic=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EtvGYVeKmgyiPzQeRc5Zn1ite+PPzK0kMMsGmy/pLpUKkscWPDz4egsR6595wFYLUtja5whLaGo3uQFueTCCrLynXhrpf5gF/wcyO1ptFgvDeRrbjvfgWkC5UPTheLSQj1p4H6YCvIo9IF6u9OUdESMyGauLIPLUyx05XMpOYuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JhVnTtju; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789716574; c=relaxed/simple;
+	bh=1vtu0Ca88wzRbZC53hoZAycAzD92Zh4Axz53RVwrID4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LGFAO/cJJHZJAT9pmchS1hOQxGJtopb2GTwpbOUUzo8+pMGlFUrDlks8M7YQ+ilxk8QXQVPk2Fdrmbm/7DZ9zSIFop7lW4ooe35hShAaWvRc9Kz10RVdsNd31gH9/GlI6kmwWIXRm4+H5Ui7H1AS8zwfv0gx7TK7JoklAbNRvyw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=G5BNinuh; arc=none smtp.client-ip=91.218.175.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JhVnTtju"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 397EC1F00893;
-	Fri, 18 Sep 2026 07:28:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789716483;
-	bh=fZ6IJoGMBgJYNkNJp9+YjuEl3mkvQ2GIziZadcedjCw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JhVnTtjucAeMzCqaEpXce4Cbj1tbP0YhZBt2laws8ri29S7BBCH8gYGrtGtijjTiM
-	 azRlDV8l2pKqPVRzCwfkE53W3LsC7MZLy32Sv8yBJFtiyfG55enS7SedQr6MjrzhdF
-	 t0oyjhX1ZiPb8mvSaCXp6VmepwPQHjzkLG5S40cLcazL8TpKWvMx+q5Jdc9W80bZxN
-	 Hk3onXaQStALD3oaQMpv4untWrIRXDaW9GGiWQ+lULdsk7WikqrIzBKlKodGtcc3tK
-	 WmsDVLy21SUnlCozBomJ+HsZg4chXFzLOmMV+GoomzrfjG9zqg3yVYUlGDkC/GQWUW
-	 yjZyUNUn3mdEg==
-Date: Fri, 18 Sep 2026 09:27:59 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>, John Garry <john.garry@linux.dev>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 2/2] scsi: scsi_debug: Validate zone access for WRITE
- ATOMIC (16)
-Message-ID: <aqzn_y5A0w3KQiFh@ryzen>
-References: <aqu5Q_6EvfY7iRmk@ryzen>
- <0acc0a4d-b532-4f69-8fcc-1d4eef7549c0@linux.dev>
- <aqvCeq9IsbjSJIEx@ryzen>
- <35ad0b9c-06bb-4ccd-8e58-fde4d859b85e@linux.dev>
- <3709D24B-4D27-44CC-92C5-59DC66309931@kernel.org>
- <aqwlS-_pWMWL238o@ryzen>
- <d4640976-7cfe-4d29-8a3f-cfb91b474110@kernel.org>
- <aqzOBedKG6JPbn3C@ryzen>
- <153761e3-b288-44bc-96d0-ddfb323f7428@kernel.org>
- <20260918070641.GA10655@lst.de>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="G5BNinuh"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=1vtu0Ca88wzRbZC53hoZAycAzD92Zh4Axz53RVwrID4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789716567; v=1; x=1790321367;
+ b=G5BNinuh+QsCnctJBwU1VJP3sTj9sa6UtVP4JlJovAdD56wR/lJ9UJxYKSyWCoU3IKkpv/PK
+ L4MomtdwRnDEOxRKXMppYRfGrVGJVl1oNtdmzLeLnx1EBZYfmqZCMqkIE53Uz6s+4i7eHm2/ubg
+ h4A3mby3o5woU0IeaWrVpraQ=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta11.migadu.com with ESMTPS id 2c627144f1e79fbe;
+	Fri, 18 Sep 2026 07:29:17 +0000
+X-Mizu-Trace-ID: 2c627144f1e79fbe
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <9838197a-4c2f-477c-b4bb-648f13922e19@linux.dev>
+Date: Fri, 18 Sep 2026 08:29:15 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260918070641.GA10655@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 09/10] scsi: scsi_debug: Map the region written by
+ WRITE ATOMIC (16)
+To: Niklas Cassel <cassel@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
+References: <20260918062910.1709791-12-cassel@kernel.org>
+ <20260918062910.1709791-21-cassel@kernel.org>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20260918062910.1709791-21-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hello Christoph,
-
-On Fri, Sep 18, 2026 at 09:06:41AM +0200, Christoph Hellwig wrote:
-> On Fri, Sep 18, 2026 at 01:15:36PM +0700, Damien Le Moal wrote:
-> > Sure, but it may not be that simple in practice because achieving atomic writes
-> > on HDD is not that simple: even though most modern HDDs do have some form of
-> > atomicity for single sector writes (e.g. on EPO events), even that is not
-> > guaranteed at all. So let's not assume anything that may end up being different
-> > than what a real implementation may do.
+On 9/18/26 07:29, Niklas Cassel wrote:
+> When logical block provisioning is enabled, a command that writes user
+> data marks the region that it wrote in the provisioning map, so that
+> GET LBA STATUS reports the region as mapped. resp_write_dt0(),
+> resp_write_scat() and resp_write_same() all call map_region() for that.
 > 
-> Besides that the whole concept of atomic writes on sequential write
-> required zones does not make much sense.
+> resp_atomic_write() does not, so a WRITE ATOMIC (16) leaves the
+> provisioning map untouched, and GET LBA STATUS keeps reporting the
+> region as deallocated after it has been written. map_state(), which
+> GET LBA STATUS uses, is the only reader of the map, so that is the whole
+> of the effect.
 > 
-> Atomic writes are about atomic updates of multiple sectors, but
-> sequential write required zoned never update existing data.  So the best
-> they could provide is to guarantee that either all or nothing of a single
-> command is appended at the write pointer.  It is very hard to find a way
-> to use this feature, as zoned writes all require metadata updates to
-> point to the current location, and without this the data won't be
-> reached.  There are some schemes to optimizes this by doing a zoned write
-> with a header containing the location as a sort of distributed log (zenfs
-> in userspace would be the canonical example), but even with that a torn
-> write would invalidate the recovery of this header.
+> Call map_region() the way resp_write_dt0() does, and take the zone
+> metadata write lock across the access as it does when logical block
+> provisioning is enabled. That lock is what serialises the provisioning
+> map against resp_unmap(), which holds it while unmap_region() clears map
+> bits and zeroes the data that they cover. resp_unmap() does nothing
+> unless logical block provisioning is enabled, so the lock is only needed
+> in that case.
 > 
-> In other words, there really is no point in supporting atomic writes on
-> ZBC.  So we should not implement it in scsi_debug, and disable the
-> feature in sd.  If we ever see real hardware and a real use case we can
-> reconsider, but I doubt it is going to happen.
+> Assisted-by: LLM
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+> Tested with:
+> 
+>    modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=128 \
+>        atomic_wr=1 lbpu=1
+> 
+> GET LBA STATUS reports a region that has never been written as
+> deallocated, and reports it as mapped after a WRITE ATOMIC (16) of eight
+> blocks. Only an ordinary WRITE did so before this patch.
+> ---
+>   drivers/scsi/scsi_debug.c | 13 +++++++++++++
+>   1 file changed, 13 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index cdea21b570c4..5243401701f9 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -6200,6 +6200,8 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+>   	u8 *cmd = scp->cmnd;
+>   	u16 boundary, len;
+>   	u64 lba, lba_tmp;
+> +	bool meta_data_locked = false;
+> +	bool lbp = scsi_debug_lbp();
+>   	int ret;
+>   
+>   	if (!scsi_debug_atomic_write()) {
+> @@ -6244,7 +6246,18 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+>   		}
+>   	}
+>   
+> +	if (lbp) {
+> +		sdeb_meta_write_lock(sip);
+> +		meta_data_locked = true;
+> +	}
+> +
+>   	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
+> +	if (unlikely(lbp))
+ > +		map_region(sip, lba, len);> +
+> +	if (meta_data_locked)
 
-I have just sent out a new version of this series, and in this patch:
-https://lore.kernel.org/linux-scsi/20260918062910.1709791-14-cassel@kernel.org/
+Do we really need meta_data_locked variable? why not:
+	if (lbp)
+		sdeb_meta_write_unlock(sip);
 
-a combination of ZBC and atomic writes is rejected by scsi_debug.
+> +		sdeb_meta_write_unlock(sip);
+> +
+>   	if (unlikely(ret == -1))
+>   		return DID_ERROR << 16;
+>   	if (unlikely(ret != len * sdebug_sector_size))
 
-
-This series does not touch sd.c, so changes to sd.c should be a separate patch.
-From you reply, it is obvious that you would be able to write a sd.c patch with
-a better motivation than anything that I would attempt to cook up.
-
-
-Kind regards,
-Niklas
