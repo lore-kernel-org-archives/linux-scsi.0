@@ -1,148 +1,66 @@
-Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB7FD31E857;
-	Fri, 18 Sep 2026 07:03:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A966238D014
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 07:06:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789715001; cv=none; b=mUL+U0BCavimihbinuJgX8UUTppY3cVmPL9Ln9nEZ5cythvKOfaWksRf9HCL54C/m5utUHbgsvq/jPY5zVuJL7iU5FU60HCootDRoQK7B46lNSd3Wodpogfw9D0gUz3cL/5KXc8AWvBkySwkqcq7ayY4NjQMVMsHxNVehG0PVU0=
+	t=1789715217; cv=none; b=MUb/ZFq26qCthIqS3GGt6UdlO1hGBfZPDcjqmJTP5iWV33KGv13CdbT+ZJX+W+9SrAA9MHJXMN1RaBAeTnsanO6CrEq2YAqmbrmfHjgk5t94dXGusrbWyp3pBfFuRScUjZs6Dk76bS1ADCNtg5FmSqsDZmzvT0fvkzrxuIJoQGY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789715001; c=relaxed/simple;
-	bh=2LOaQR4JlbZn7aLRdToMdL5mIjIcL/5xMPl+nMEXaXI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MFRnMGXbBLGSz/6bIy8VVpmXDy+G+lqagcD7dnEOvA+YWQHxFfykeuVy88W7BemXpmJvVXOQsw667SG0wF7zg/WgE1p43NNug6afIntYYpz451WSrWFetdG9pY9uAEak1njtzN5zNAuLvS8Q/nIxhwsCm7OwMIAqdiHFk0MEJ7Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=p2aFhi4g; arc=none smtp.client-ip=113.46.200.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="p2aFhi4g"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=N1GcyRNtHdRTu5TiGzPOCZQaPlbdEFhtfkpRCs5i7/M=;
-	b=p2aFhi4ggavAOZ3bqL0jkYt1kQya1PvPUQsCTbO1Y0P115gA1rnq9zLZV9HcsPj2r3DaSlaTz
-	rdOHZlWHTeAMUELlg8cCe5GIPdHDulMVQsFpUMYh9n0CFGGgTf+1VEsu1xdNWq2nZDyIjVDV8cV
-	rYaWJekt9Qs7bvUp7mATsWM=
-Received: from mail.maildlp.com (unknown [172.19.163.214])
-	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4hmNb86wgXzKm8V;
-	Fri, 18 Sep 2026 14:52:04 +0800 (CST)
-Received: from kwepemp100010.china.huawei.com (unknown [7.202.195.10])
-	by mail.maildlp.com (Postfix) with ESMTPS id 7BFFB4057C;
-	Fri, 18 Sep 2026 15:03:08 +0800 (CST)
-Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
- kwepemp100010.china.huawei.com (7.202.195.10) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 18 Sep 2026 15:03:08 +0800
-Received: from localhost.localdomain (10.50.163.32) by
- kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 18 Sep 2026 15:03:07 +0800
-From: Xingui Yang <yangxingui@huawei.com>
-To: <john.garry@linux.dev>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<mkp@kernel.org>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>
-Subject: [PATCH v3] scsi: libsas: Fix SMP IO deadlock during HA resume
-Date: Fri, 18 Sep 2026 15:03:07 +0800
-Message-ID: <20260918070307.381207-1-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1789715217; c=relaxed/simple;
+	bh=/52L/1stFFn+XzKZCwrSF8fl4+KBTqM1teAOA+trINY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=onHbbiXZpTaOLazB0T8uT+tHG87o7IKsOt/+VBTrSwIncG4B3/5PewIDmTWbEws2XRVtmIDaUaVw1XdQCdWfmLZcWjLx+v6PMI71KOW7QEJjuDDleQxDECvkizhEIC8uKw4OIJzAEbI2hkAV6TjheCXOTNAS4mlT+nVOoYiaRCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 2763168C4E; Fri, 18 Sep 2026 09:06:42 +0200 (CEST)
+Date: Fri, 18 Sep 2026 09:06:41 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>, John Garry <john.garry@linux.dev>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2] scsi: scsi_debug: Validate zone access for WRITE
+ ATOMIC (16)
+Message-ID: <20260918070641.GA10655@lst.de>
+References: <f1c5db8b-2c99-4c5f-bb1a-3da8f2c5413b@linux.dev> <aqu5Q_6EvfY7iRmk@ryzen> <0acc0a4d-b532-4f69-8fcc-1d4eef7549c0@linux.dev> <aqvCeq9IsbjSJIEx@ryzen> <35ad0b9c-06bb-4ccd-8e58-fde4d859b85e@linux.dev> <3709D24B-4D27-44CC-92C5-59DC66309931@kernel.org> <aqwlS-_pWMWL238o@ryzen> <d4640976-7cfe-4d29-8a3f-cfb91b474110@kernel.org> <aqzOBedKG6JPbn3C@ryzen> <153761e3-b288-44bc-96d0-ddfb323f7428@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemp500015.china.huawei.com (7.202.195.9)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153761e3-b288-44bc-96d0-ddfb323f7428@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-When the controller resumes, sas_resume_ha() -> sas_drain_work()
-processes the DISCE_RESUME work, which restores the ATA ports through
-the libata error handler (ata_sas_port_resume() requests ATA_EH_RESET)
-and waits for it in sas_ata_flush_pm_eh(). For an expander-attached
-ATA device the hard reset in that recovery is an SMP PHY CONTROL
-command sent to the expander:
+On Fri, Sep 18, 2026 at 01:15:36PM +0700, Damien Le Moal wrote:
+> Sure, but it may not be that simple in practice because achieving atomic writes
+> on HDD is not that simple: even though most modern HDDs do have some form of
+> atomicity for single sector writes (e.g. on EPO events), even that is not
+> guaranteed at all. So let's not assume anything that may end up being different
+> than what a real implementation may do.
 
-  ata_eh_recover() -> ata_eh_reset() -> sas_ata_hard_reset()
-    -> lldd_I_T_nexus_reset() -> sas_phy_reset()
-      -> sas_smp_phy_control() -> smp_execute_task_sg()
+Besides that the whole concept of atomic writes on sequential write
+required zones does not make much sense.
 
-For a runtime resume ha->dev is still RPM_RESUMING while the callback
-runs, so the pm_runtime_get_sync() in smp_execute_task_sg() blocks
-waiting for the resume to complete, but the resume is blocked in
-sas_drain_work() waiting for that very SMP IO — a deadlock.
+Atomic writes are about atomic updates of multiple sectors, but
+sequential write required zoned never update existing data.  So the best
+they could provide is to guarantee that either all or nothing of a single
+command is appended at the write pointer.  It is very hard to find a way
+to use this feature, as zoned writes all require metadata updates to
+point to the current location, and without this the data won't be
+reached.  There are some schemes to optimizes this by doing a zoned write
+with a header containing the location as a sort of distributed log (zenfs
+in userspace would be the canonical example), but even with that a torn
+write would invalidate the recovery of this header.
 
-Use pm_runtime_get_noresume() to take the reference while
-SAS_HA_RESUMING is set, and pm_runtime_put() to drop it. The hardware
-is already initialized by the LLDD before sas_resume_ha() runs.
-SAS_HA_RESUMING is also set during a system sleep resume, where the
-usage counter is still held from the sleep prepare and the put is
-harmless.
-
-Outside of the resume window, convert the pm_runtime_get_sync() call
-to pm_runtime_resume_and_get() and check the result, so that an SMP IO
-is not submitted to a host whose runtime resume failed (the return
-value was previously ignored).
-
-Only hisi_sas enables runtime PM among libsas LLDDs, so other drivers
-(pm8001, isci, aic94xx, mvsas) are unaffected.
-
-Fixes: 0da7ca4c4fd9 ("scsi: libsas: Resume host while sending SMP I/Os")
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
-Changes since v2:
-- Drop the reference with pm_runtime_put() instead of
-  pm_runtime_put_noidle().
-
-Changes since v1:
-- Use pm_runtime_get_noresume()/put_noidle() during HA resume instead
-  of skipping the PM reference entirely, so an in-flight SMP IO always
-  keeps autosuspend away.
-- Convert pm_runtime_get_sync() to pm_runtime_resume_and_get() and
-  check the result (pre-existing issue flagged by sashiko).
-
- drivers/scsi/libsas/sas_expander.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 811c9eb4fef1..5a8cdd3682fe 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -61,8 +61,22 @@ static int smp_execute_task_sg(struct domain_device *dev,
- 	struct sas_internal *i =
- 		to_sas_internal(dev->port->ha->shost->transportt);
- 	struct sas_ha_struct *ha = dev->port->ha;
--
--	pm_runtime_get_sync(ha->dev);
-+	bool ha_resuming = test_bit(SAS_HA_RESUMING, &ha->state);
-+
-+	/*
-+	 * While the host is resuming, ha->dev may be RPM_RESUMING and
-+	 * the resume blocked in sas_drain_work() waiting for this very
-+	 * SMP IO, so waiting for the host to resume here would deadlock.
-+	 * Hold the reference without resuming, the hardware is already
-+	 * initialized by the LLDD before sas_resume_ha() runs.
-+	 */
-+	if (ha_resuming) {
-+		pm_runtime_get_noresume(ha->dev);
-+	} else {
-+		res = pm_runtime_resume_and_get(ha->dev);
-+		if (res)
-+			return res;
-+	}
- 	mutex_lock(&dev->ex_dev.cmd_mutex);
- 	for (retry = 0; retry < 3; retry++) {
- 		if (test_bit(SAS_DEV_GONE, &dev->state)) {
-@@ -135,7 +149,7 @@ static int smp_execute_task_sg(struct domain_device *dev,
- 		}
- 	}
- 	mutex_unlock(&dev->ex_dev.cmd_mutex);
--	pm_runtime_put_sync(ha->dev);
-+	pm_runtime_put(ha->dev);
- 
- 	BUG_ON(retry == 3 && task != NULL);
- 	sas_free_task(task);
--- 
-2.43.0
+In other words, there really is no point in supporting atomic writes on
+ZBC.  So we should not implement it in scsi_debug, and disable the
+feature in sd.  If we ever see real hardware and a real use case we can
+reconsider, but I doubt it is going to happen.
 
