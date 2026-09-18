@@ -1,79 +1,85 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A99703AC0DE
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 22:20:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75310547067;
+	Fri, 18 Sep 2026 23:03:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789770009; cv=none; b=VDsaSbv7amRHSDsyZYlahqKj27xxwvq7QKJIlqbAZsYT3wEuS6lziuia8ufQPZ5G2cHHc8Epj+Sc9gypvAPjPaLo7aE3lWWbKoqjrLngXhKmVUxVRs/nGebVN5rPXs3wS0NSDsFZ6tcBT4pbIPXJg7oEUYnfU/EPUnRUz46izgM=
+	t=1789772583; cv=none; b=BfKV6XHnOkpqjNnUDOKJA4CBHxFeSayDwdLYvDXCDsP0TBFtgtx4M3AuIE+Rmm/xjES0PG1hrKQz4CcBru0pExXC54Xr+X61J0onAasdQ2uaurW5gAPvGuBTcyShuNA7ST5YzsVqawLOAlHf+Tbe7UslTLpfJP5Tkxc87NEQHyY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789770009; c=relaxed/simple;
-	bh=y9YClzRam+EZ0ikVvID/IImjSk2g7AD0/1ncVqaBtFY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VUZPSSNcsVfwIKNjhlGMW934wBp+GfGv3gUc9EBQFpsIcfhVp0X56K05nMQKS7PRpx1i5vLMbem7bIW1jhO6fIu/1PfvnAg6kfZ2XUjFEgl7GCgmq8D3SW3X4/KEU5mpHWQnPdB83EQrRNlJDNVEVFUnu9TxBD9WMNf32VuICJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=gwrZ8eKf; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1789772583; c=relaxed/simple;
+	bh=fBqBc3Jy443rwJVSlTXTHQbto0sf3nymtAcrMra4A+4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=G+zhm9WtTRsQFUuTajh2+suT1sbrTchKZjwUOUktjBvFyIrYOVNHZ+LT32M7P9beCu4NZHEb/hfLECcUMsDtqKJYG1NY+TP/SWvPW1HSX9SWikTuB+bN2HssSeky9g6Od8/FW9zJGCCVri1MNmzKYkq/rEHhxIUJ441DOwP7/a0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rip47fgo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="gwrZ8eKf"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hmn9t3NX2zlfvqS;
-	Fri, 18 Sep 2026 22:20:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1789769999; x=1792362000; bh=y9YClzRam+EZ0ikVvID/IImj
-	Sk2g7AD0/1ncVqaBtFY=; b=gwrZ8eKfjp/v/FpFFNe3CFtJji1Ti9ELy1T7Y1Kv
-	51nMEfwXpDeg6qFcQOAiAPG3FryPE6pLf1hpg92diw3DN5inow3k6/Xl5BzXH/xO
-	ytOBLysIwq/CU5amtt/YRwoQvW52X01tnTiELr547luOp0cCWzcZOBl+uoJYNwup
-	q3yjIKznsG1PWMMlGIoXhgTgnNAqhfOx3VmV9IZlvSnAcSy2esR/zf1nMcGZhVCC
-	PZ4OV1Ygp5zNYu6IaoYvT/4tzRkrCsgkS4L10LAWJzRGLVN1LBGcj9eCnx4YVkNp
-	BbeLSI3YYyOuPmvT4C7r1WauFFyS6TBi4hatEMcC5WZWxQ==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id EaPiWCLL1imn; Fri, 18 Sep 2026 22:19:59 +0000 (UTC)
-Received: from [IPV6:2a00:79e0:2ed2:d:9130:c9d9:dd94:6232] (unknown [104.135.182.42])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hmn9n1WJBzlfvpc;
-	Fri, 18 Sep 2026 22:19:56 +0000 (UTC)
-Message-ID: <e3351cd2-b788-417f-8942-ad85e6998be4@acm.org>
-Date: Fri, 18 Sep 2026 15:19:56 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rip47fgo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94F621F00898;
+	Fri, 18 Sep 2026 23:03:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789772582;
+	bh=jHNs6AiLAnXjxOSEL4ZlVQ0PBlGJFDV35U3GfJhTtpY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Rip47fgogMqlbmNb1qqYNEe1XC8JTQFskqccQH4DQ3hrtax39/kAK5gQ8Q56UI6FL
+	 sQJH+YDyD8kMcis7lAibglrAjR4s/saQiI243scxL+bvbj+WRw3wGk+EGvnls25qfT
+	 isCEYLfiMsuyJvHExcULWwGwGWTYKzqYipnNxAkSCl/Po8ZROss4DXGL7H+WurwH5/
+	 5w7Sqx+Hxab9L/LEULxkYCwwzG+EQxvhd1ge7iWilmgb2kZ2AV/1g1mt9wEBQN5Xbn
+	 ZsP+unnf2M+BBSbgb8wVRqRpQmHEbPYXI4wK5fsNwzH9t97EVMM8PGINSOlWQuNZFm
+	 ramiBSZCkLo5A==
+Date: Fri, 18 Sep 2026 23:03:00 +0000
+From: Yixun Lan <dlan@kernel.org>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
+	Aurelien Jarno <aurelien@aurel32.net>,
+	Jennifer Berringer <jberring@redhat.com>,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 3/3] riscv: dts: spacemit: k3: Add UFS support
+Message-ID: <20260918230300-GKD297024@kernel.org>
+References: <20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org>
+ <20260916-08-k3-ufs-support-v5-3-1f5d71f1027d@kernel.org>
+ <20260918-belligerent-succinct-kraken-7fa592@quoll>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: core: Make SCSI host scan interruptible
-To: Stanley Jhu <stanleyjhu@google.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- "Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
- John Garry <john.g.garry@oracle.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- syzbot+1f678bd2872aefb11d8a@syzkaller.appspotmail.com
-References: <74786683eadc0a32ab335373ead8dd76a9d5a342.1789157339.git.bvanassche@acm.org>
- <18d5f6f60e9c36fd.3137322e31362e3131332e313435.397753.0000sendgmr@google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <18d5f6f60e9c36fd.3137322e31362e3131332e313435.397753.0000sendgmr@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260918-belligerent-succinct-kraken-7fa592@quoll>
 
-On 9/16/26 6:19 PM, Stanley Jhu wrote:
-> Both issues arise because signal_pending(current) cannot distinguish a
-> user-initiated rescan from driver probe enumeration. Would passing an
-> explicit flag or scan mode from user-initiated entry points
-> (store_scan() and procfs) be cleaner than inspecting current?
+Hi Krzysztof,
 
-I'm waiting for others (long-time SCSI contributors) to comment on
-whether or not they agree with making SCSI scanning interruptible.
+On 11:07 Fri 18 Sep     , Krzysztof Kozlowski wrote:
+> On Wed, Sep 16, 2026 at 02:59:55AM +0000, Yixun Lan wrote:
+> > Add UFS Host Controller support for SpacemiT K3 SoC, and enable
+> > it both on Pico-ITX and CoM260-IFX boards.
+> > 
+> > Tested-by: Aurelien Jarno <aurelien@aurel32.net>
+> > Tested-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
+> > Signed-off-by: Yixun Lan <dlan@kernel.org>
+> > ---
+> >  arch/riscv/boot/dts/spacemit/k3-com260.dtsi  |  4 ++++
+> >  arch/riscv/boot/dts/spacemit/k3-pico-itx.dts |  4 ++++
+> >  arch/riscv/boot/dts/spacemit/k3.dtsi         | 22 ++++++++++++++++++++++
+> >  3 files changed, 30 insertions(+)
+> 
+> Please do not combine DTS in UFS patchset, because it might end up taken
+> by SCSI/UFS folks and it should go via soc tree instead.
+> 
+Ok, will do in next version and send DT in separate series
 
-Thanks,
-
-Bart.
+-- 
+Yixun Lan (dlan)
