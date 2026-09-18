@@ -1,117 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D10449A3AB
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 08:55:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 694393AE6FA;
+	Fri, 18 Sep 2026 09:07:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789721759; cv=none; b=QL3R83CWZm76U7TS9rb2ew42HaipbhXSeDJFU0cK9pnAnGr6QrFWBsZyCVru3/5jKt6Syawv4qoVy27UGJCkXoT+qOWK7+/Gtg/q+GLrl7YXaEcyYAjWOynYi27CaDHoYNgF9hpMEm9SupvUnB8ax/FKrNl3Jc2qYKnorSHSNis=
+	t=1789722466; cv=none; b=AAGSLrJhae1Zgqcv+4zZBnCkHEWjxFEakUmUvSOqFqPoXiBxzxhAFeGn6MJZdYGcMi2Ym20EBU9uJNkqXqfqzTYZONWlpIZApvrN3gJ5PDafkfu9bvmbtI0T6aiV+VzcItinsqfBDQjTPX/ELklsUJX+GSyTKMESXFZc4zhXw6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789721759; c=relaxed/simple;
-	bh=+NDNDxTfJEYnZ+NCOl6ju37K5VjjwIE9xszPJpYpRlo=;
+	s=arc-20240116; t=1789722466; c=relaxed/simple;
+	bh=6y6bLzRoaZiGpSaea4CWtqMdOzZraHqLzVyABx69wqk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k+Wed2SX9Dm9m8WneEPK3MOv24eju42cT6DFs1FOJ78blzLPKC7zYYibbDLwgDH+7g5qEqN0wWrqo9CeeUFw7Obx9V413fnqEOZtgiajvXms2mgp5RIgAk3i8yMjmr7KN+zPcqW9/qJ66EO4cInVag3PY8K7NHjLIaaMb/w7Ucs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZAOKYVch; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=lzG3KwUl68Rhe2RrGH9QrG0h8cPG+t5scoZUN9oxqvALmTfhV4zdFZ9mHu6UMBPwgxjCiFU8sVeCWbV42CQPUUAxe44fvfIeLh/aFqF6HLw4bbcIqcitIrOhHA1wjML16O6+XmB+ZHwvheWmyQulLj3MJCzAgD44guJdcjn6CWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HMaBZ9TE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZAOKYVch"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0946C1F00898;
-	Fri, 18 Sep 2026 08:55:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HMaBZ9TE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26A001F000FF;
+	Fri, 18 Sep 2026 09:07:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789721757;
-	bh=XK+L3stjqWEGRUipzeigBKbgJtP49SiKU3bDxcnCgFc=;
+	s=k20260515; t=1789722465;
+	bh=dOVqpqan0xf3awI8+3T+cWwtyOXJou4D9LjGXtl8pC0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZAOKYVchGUFcKh2DDlvgiJfHc7SNNO+4+6+uixTzGIbRE40j1TOqi9McFg2fUbhAH
-	 H5spnhDBYfZK5AmhSOb7lQcyFyHWmqIkvH+CAj4uBRDaCbD6HJkhgRr9zv9LotvEZN
-	 7kOf2fHvakprs9UKppywD+pFDmdqOvPzesmJ/XFq+QBZaHoBsZN6rftzQIqCPfWTuw
-	 oTsx5ekrUDjBe1cOAI3Cz0GoBDB4eVhatM5WzclB5PWNb4xT68eZsthIoNvQNsupVH
-	 h522WbQu/gNc6fI5M40kH458iFcS7iEhSiiLzM/25YdCz1ZMi0svTgy/CAHKlCpNrI
-	 f/CslXrjYopOA==
-Date: Fri, 18 Sep 2026 10:55:53 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: John Garry <john.garry@linux.dev>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [PATCH v4 10/10] scsi: scsi_debug: Validate the access
- parameters of WRITE ATOMIC (16)
-Message-ID: <aqz8mZ_ilQhaqgyA@ryzen>
-References: <20260918062910.1709791-12-cassel@kernel.org>
- <20260918062910.1709791-22-cassel@kernel.org>
- <d9971f1c-6e8c-4e6b-889e-bb8d6449b451@linux.dev>
- <aqzuE6cV8TpVxJ5L@ryzen>
- <84ad8a55-1bd1-415f-a60f-fc0c00a1a545@linux.dev>
+	b=HMaBZ9TEg+yhwwYqza+dLBctDcY80Ya7CW4bTCp6GIdirnqRLGpdGevy4KlJb6j/B
+	 Lec1reZYQ3lh60CbH1aN526gyrZAhZhsBpVqqPCs+Co0lR2NYvHpSQjrF8COXH9K1B
+	 u27qCUejlrqJxgVEC37/YW17DmqyxXO16mLZK9pI+7f0FE8nUNJiTt3asbm5kZv3OF
+	 lRnDniAZcHOUaip1J1SP1eq5AQV3YmInHR6+QXsOamRvjYHl/vI6MARrzcwE06c+zk
+	 h2Tr89/Rs49EggZgPTlPPQ856RlCWLDuX9FQ6gcBsSv8cV4KqHgYFQfLxiJu+u8dwW
+	 ekrYR+wtSmzdA==
+Date: Fri, 18 Sep 2026 11:07:40 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Yixun Lan <dlan@kernel.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, Paul Walmsley <pjw@kernel.org>, 
+	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+	Alexandre Ghiti <alex@ghiti.fr>, "Martin K. Petersen" <mkp@kernel.org>, 
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, Aurelien Jarno <aurelien@aurel32.net>, 
+	Jennifer Berringer <jberring@redhat.com>, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 3/3] riscv: dts: spacemit: k3: Add UFS support
+Message-ID: <20260918-belligerent-succinct-kraken-7fa592@quoll>
+References: <20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org>
+ <20260916-08-k3-ufs-support-v5-3-1f5d71f1027d@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <84ad8a55-1bd1-415f-a60f-fc0c00a1a545@linux.dev>
+In-Reply-To: <20260916-08-k3-ufs-support-v5-3-1f5d71f1027d@kernel.org>
 
-On Fri, Sep 18, 2026 at 09:19:30AM +0100, John Garry wrote:
-> On 9/18/26 08:53, Niklas Cassel wrote:
-> > > > Call check_device_access_params(). The zone checks that it ends with are
-> > > > unreachable, as atomic writes and ZBC emulation are mutually exclusive.
-> > > These are quite verbose commit messages ... LLM-generated, by chance?
-> > Yes, hence the Assisted-by tag just a few lines further down:
+On Wed, Sep 16, 2026 at 02:59:55AM +0000, Yixun Lan wrote:
+> Add UFS Host Controller support for SpacemiT K3 SoC, and enable
+> it both on Pico-ITX and CoM260-IFX boards.
 > 
-> I didn't know which part was :)
-> 
-> > 
-> > > > Assisted-by: LLM
-> > > > Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
-> > > > Signed-off-by: Niklas Cassel<cassel@kernel.org>
-> > The commit message does point out two actual problems resulting from the
-> > missing check_device_access_params() call in resp_atomic_write() (which
-> > exists in all other resp_write_*() functions):
-> > 
-> > - Fails to repect the write protect module parameter, so resp_atomic_write()
-> >    fails to generate the proper sense data in this case.
-> > 
-> > - Fails to check if the command will write past that device capacity, so
-> >    resp_atomic_write() fails to generate the proper sense data in this case.
-> > 
-> > The generated sense data differs in the two cases.
-> > 
-> > I suppose we could drop:
-> > 
-> >    As a consequence a WRITE ATOMIC (16) past the end of the device is not
-> >    terminated with LOGICAL BLOCK ADDRESS OUT OF RANGE. do_device_access()
-> >    reduces the LBA modulo the size of the store, so the command writes
-> >    somewhere else on the medium instead. A WRITE ATOMIC (16) also writes to
-> >    a device whose wp module parameter is set, which every other write
-> >    refuses with DATA PROTECT.
-> > 
-> > 
-> >  From the commit message, as I suppose it might be a bit overly verbose to
-> > mention the exact sense data that each missing check would generate.
-> > If someone cares about that, they can just look at the mk_sense_buffer()
-> > calls in check_device_access_params().
-> 
-> I don't really care too much. I personally just find these LLM-generated
-> commit messages laborious to read.
+> Tested-by: Aurelien Jarno <aurelien@aurel32.net>
+> Tested-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
+> Signed-off-by: Yixun Lan <dlan@kernel.org>
+> ---
+>  arch/riscv/boot/dts/spacemit/k3-com260.dtsi  |  4 ++++
+>  arch/riscv/boot/dts/spacemit/k3-pico-itx.dts |  4 ++++
+>  arch/riscv/boot/dts/spacemit/k3.dtsi         | 22 ++++++++++++++++++++++
+>  3 files changed, 30 insertions(+)
 
-I do also often find LLM-generated commit messages very verbose.
+Please do not combine DTS in UFS patchset, because it might end up taken
+by SCSI/UFS folks and it should go via soc tree instead.
 
-But at the same time, I often find commit messages written by (most) humans
-way too sparse.
+Best regards,
+Krzysztof
 
-Linus himself is a big fan of very verbose commit messages:
-https://lore.kernel.org/all/20150314075357.GA8319@gmail.com/
-
-But of course, there is a difference between very verbose commit messages
-written by a human, and very verbose commit messages written by an LLM.
-
-I doubt that LLM-generated commit messages are going away (and for non-native
-speakers, I very much think that they are an improvement to what we were used
-to), but as AI models get better and better, hopefully, they will eventually
-learn how to write more concise commit messages by default.
-
-I can imagine that it is already possible with an AI kernel skill.md that
-instructs the agent to write commit messages more concise than their default.
-
-
-Kind regards,
-Niklas
