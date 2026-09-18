@@ -1,36 +1,36 @@
-Received: from mta0.migadu.com (out-45.mta0.migadu.com [91.218.175.45])
+Received: from mta0.migadu.com (out-226.mta0.migadu.com [91.218.175.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3639213D51E
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 07:29:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2659530B53E
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 07:33:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789716574; cv=none; b=BZk553EIxqLsqyFGIHPwoqeQg2lGeqjBYe4cNEkMezbzT2QK7mbjRw4+PTpYobAYD5RYLvtkkiBmMiPbckkIit8O3p4V0UBDqMJDDnA1CiZMyVq51Jv70aZfYzAzOd+ryDj/ETu/2w+OW36Io0fvR3Vdi3tdidD2WHhCDktQqz4=
+	t=1789716792; cv=none; b=bF0hqBZvN9C3EHc+EmxrccFSPzPLhEkfxcrv0V0S1lZYXMPt6TyeMkOBl2bl6FUxM7ezkLW/B6g3rXFcqg09IolKZY4NMJra6/4V2oW35Mnf/aAFMoJuANKyRhkMR20hDL3KImZE3mrNRWGTk1CYValP2DBjdFGVy/Saidnx3iw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789716574; c=relaxed/simple;
-	bh=1vtu0Ca88wzRbZC53hoZAycAzD92Zh4Axz53RVwrID4=;
+	s=arc-20240116; t=1789716792; c=relaxed/simple;
+	bh=Lyy+JlHgNsa2ne1vIG6DxkonhoJwwRQlVKM+kMpvRgA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LGFAO/cJJHZJAT9pmchS1hOQxGJtopb2GTwpbOUUzo8+pMGlFUrDlks8M7YQ+ilxk8QXQVPk2Fdrmbm/7DZ9zSIFop7lW4ooe35hShAaWvRc9Kz10RVdsNd31gH9/GlI6kmwWIXRm4+H5Ui7H1AS8zwfv0gx7TK7JoklAbNRvyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=G5BNinuh; arc=none smtp.client-ip=91.218.175.45
+	 In-Reply-To:Content-Type; b=EN6W6Ax1Oz2e/EhZZHtb5Rfgu2xa4SP1pWOiAK18+sQWnM2wIkGJ+8BnqHHWZv4w/bzNXe8EfI+MEMyfJQtrxdzTGg3ApcH1BXd2UDwmZw0n5DpHhajuNn3No7OVrZ7Ahy5pR5QpT2sjnvU0JPseSlxlia0CUdBXzAJZ72mbRKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Ddc7/qRo; arc=none smtp.client-ip=91.218.175.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="G5BNinuh"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Ddc7/qRo"
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=1vtu0Ca88wzRbZC53hoZAycAzD92Zh4Axz53RVwrID4=;
+DKIM-Signature: a=rsa-sha256; bh=Lyy+JlHgNsa2ne1vIG6DxkonhoJwwRQlVKM+kMpvRgA=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789716567; v=1; x=1790321367;
- b=G5BNinuh+QsCnctJBwU1VJP3sTj9sa6UtVP4JlJovAdD56wR/lJ9UJxYKSyWCoU3IKkpv/PK
- L4MomtdwRnDEOxRKXMppYRfGrVGJVl1oNtdmzLeLnx1EBZYfmqZCMqkIE53Uz6s+4i7eHm2/ubg
- h4A3mby3o5woU0IeaWrVpraQ=
+ t=1789716789; v=1; x=1790321589;
+ b=Ddc7/qRoU+N0YPxx7XYM9MRnScAglRqSKg95VVT+0lHDyMKvRxFlDiJB0iczX8jlM28hs5lr
+ jeIlLIuDN3APeCHDoBXo+m6pW0LnSlFcNpQ60YydVFrKKenP+h8Bd/2f8LcUaEtY8rJTcY7JkQl
+ yMyhkVWglA4wIw1ZE/b2SbXw=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id 2c627144f1e79fbe;
-	Fri, 18 Sep 2026 07:29:17 +0000
-X-Mizu-Trace-ID: 2c627144f1e79fbe
+Received: by mta11.migadu.com with ESMTPS id e759b086abbb3931;
+	Fri, 18 Sep 2026 07:33:09 +0000
+X-Mizu-Trace-ID: e759b086abbb3931
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <9838197a-4c2f-477c-b4bb-648f13922e19@linux.dev>
-Date: Fri, 18 Sep 2026 08:29:15 +0100
+Message-ID: <d9971f1c-6e8c-4e6b-889e-bb8d6449b451@linux.dev>
+Date: Fri, 18 Sep 2026 08:33:07 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,91 +38,80 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 09/10] scsi: scsi_debug: Map the region written by
- WRITE ATOMIC (16)
+Subject: Re: [PATCH v4 10/10] scsi: scsi_debug: Validate the access parameters
+ of WRITE ATOMIC (16)
 To: Niklas Cassel <cassel@kernel.org>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K. Petersen" <mkp@kernel.org>
 Cc: linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
 References: <20260918062910.1709791-12-cassel@kernel.org>
- <20260918062910.1709791-21-cassel@kernel.org>
+ <20260918062910.1709791-22-cassel@kernel.org>
 Content-Language: en-US
 From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260918062910.1709791-21-cassel@kernel.org>
+In-Reply-To: <20260918062910.1709791-22-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 9/18/26 07:29, Niklas Cassel wrote:
-> When logical block provisioning is enabled, a command that writes user
-> data marks the region that it wrote in the provisioning map, so that
-> GET LBA STATUS reports the region as mapped. resp_write_dt0(),
-> resp_write_scat() and resp_write_same() all call map_region() for that.
+> resp_atomic_write() validates the fields that are specific to an atomic
+> write, the alignment and granularity of the transfer, the atomic
+> boundary and the maximum transfer length, but it never validates the
+> range that the command addresses. Every other command that writes user
+> data calls check_device_access_params() first, which rejects a transfer
+> that ends beyond the capacity of the device, one whose length exceeds
+> the size of the store, and any write to a write protected device.
 > 
-> resp_atomic_write() does not, so a WRITE ATOMIC (16) leaves the
-> provisioning map untouched, and GET LBA STATUS keeps reporting the
-> region as deallocated after it has been written. map_state(), which
-> GET LBA STATUS uses, is the only reader of the map, so that is the whole
-> of the effect.
+> As a consequence a WRITE ATOMIC (16) past the end of the device is not
+> terminated with LOGICAL BLOCK ADDRESS OUT OF RANGE. do_device_access()
+> reduces the LBA modulo the size of the store, so the command writes
+> somewhere else on the medium instead. A WRITE ATOMIC (16) also writes to
+> a device whose wp module parameter is set, which every other write
+> refuses with DATA PROTECT.
 > 
-> Call map_region() the way resp_write_dt0() does, and take the zone
-> metadata write lock across the access as it does when logical block
-> provisioning is enabled. That lock is what serialises the provisioning
-> map against resp_unmap(), which holds it while unmap_region() clears map
-> bits and zeroes the data that they cover. resp_unmap() does nothing
-> unless logical block provisioning is enabled, so the lock is only needed
-> in that case.
+> Call check_device_access_params(). The zone checks that it ends with are
+> unreachable, as atomic writes and ZBC emulation are mutually exclusive.
+
+These are quite verbose commit messages ... LLM-generated, by chance?
+
 > 
 > Assisted-by: LLM
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 > Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+
+Reviewed-by: John Garry <john.garry@linux.dev>
+
 > ---
 > Tested with:
 > 
 >    modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=128 \
->        atomic_wr=1 lbpu=1
+>        atomic_wr=1
 > 
-> GET LBA STATUS reports a region that has never been written as
-> deallocated, and reports it as mapped after a WRITE ATOMIC (16) of eight
-> blocks. Only an ordinary WRITE did so before this patch.
+> The device has a capacity of 262144 logical blocks. A WRITE ATOMIC (16)
+> of eight blocks at LBA 262140 is now terminated with ILLEGAL REQUEST /
+> LOGICAL BLOCK ADDRESS OUT OF RANGE; before this patch it completed with
+> GOOD status, having written eight blocks at LBA 0 instead.
+> 
+> With the wp module parameter set to 1, a WRITE ATOMIC (16) is now
+> terminated with DATA PROTECT / LOGICAL UNIT SOFTWARE WRITE PROTECTED,
+> which is what an ordinary WRITE(16) has always returned; before this
+> patch it completed with GOOD status and wrote the data.
 > ---
->   drivers/scsi/scsi_debug.c | 13 +++++++++++++
->   1 file changed, 13 insertions(+)
+>   drivers/scsi/scsi_debug.c | 4 ++++
+>   1 file changed, 4 insertions(+)
 > 
 > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index cdea21b570c4..5243401701f9 100644
+> index 5243401701f9..5ae1241e4d8b 100644
 > --- a/drivers/scsi/scsi_debug.c
 > +++ b/drivers/scsi/scsi_debug.c
-> @@ -6200,6 +6200,8 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
->   	u8 *cmd = scp->cmnd;
->   	u16 boundary, len;
->   	u64 lba, lba_tmp;
-> +	bool meta_data_locked = false;
-> +	bool lbp = scsi_debug_lbp();
->   	int ret;
->   
->   	if (!scsi_debug_atomic_write()) {
-> @@ -6244,7 +6246,18 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+> @@ -6246,6 +6246,10 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
 >   		}
 >   	}
 >   
-> +	if (lbp) {
-> +		sdeb_meta_write_lock(sip);
-> +		meta_data_locked = true;
-> +	}
+> +	ret = check_device_access_params(scp, lba, len, true);
+> +	if (ret)
+> +		return ret;
 > +
->   	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
-> +	if (unlikely(lbp))
- > +		map_region(sip, lba, len);> +
-> +	if (meta_data_locked)
-
-Do we really need meta_data_locked variable? why not:
-	if (lbp)
-		sdeb_meta_write_unlock(sip);
-
-> +		sdeb_meta_write_unlock(sip);
-> +
->   	if (unlikely(ret == -1))
->   		return DID_ERROR << 16;
->   	if (unlikely(ret != len * sdebug_sector_size))
+>   	if (lbp) {
+>   		sdeb_meta_write_lock(sip);
+>   		meta_data_locked = true;
 
