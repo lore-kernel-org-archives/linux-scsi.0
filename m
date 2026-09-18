@@ -1,113 +1,108 @@
-Received: from mail-pz2-f42.google.com (mail-pz2-f42.google.com [74.125.228.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 715DC3659FB
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 05:26:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF6337E5C5
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 05:37:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789709211; cv=none; b=e6ioa6M4TyxvN0Xzch8vYdLdROdWp04YAISc2l1I7ubAYCbbfWiEeuFaD7BO73BRKxsSRDff1T908N+KhQZb8kLYXiB2sSM+P9BbBVnS9tdsSrc9UwopFKzGQiTagSgp/FRFXwjJXqsGsOP1/T7xagq/CR1RGBrXxpBXTvxRj5w=
+	t=1789709834; cv=none; b=a1rGkQYvtNmAzT6AZe3QIw653CE7CIdlV0VPVRVu2/GTgT4wRSDhs03iFnw1uSGC/3t02A/yetGug3y7+O6hyiPEHOC5tkdE3ieoudW9kp+nowl5fjQVGmw5Mv0JpxllKrO8mGyt2CZOg7SYc6ic/U30Ug+y7bVyePu5344ZgvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789709211; c=relaxed/simple;
-	bh=APIgKbxej4lf31CklN2zWuAdmNbzeNaPEvKH6ti1slg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Pl0XcKYucLBGOnyFTrtaiHVsMTzAVUgRoVVoW5qo715Ld/UPSfayelssr9RThrV8jmx3ObePnP1YSMluVfq3gPnfx3bm7c6lP0otLbj/fWyyV9Mkp56eQR+oybyROBVF1t7LtZla+vAODNMhpNxspsQexvXA0Lf7pHDySM/mQXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MYOCBI2Q; arc=none smtp.client-ip=74.125.228.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1789709834; c=relaxed/simple;
+	bh=Cb1bAmiayZ7JXuByC8jdNnkLt6cjOFw4mPB0mbaXbMI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fAbhboZaNBoexdbOZ3nZLHfLRJrODJ9JvaieZWn9zbaXWN5AhPTdbS8Mq04dhLyUnivS2Jcuq8vvmw13qWFxzJZ/eFMC0MIYCxQDLYwXj6/W/dEuAVefL4mIEkCZ2AQUYiBbyWLi3WSC3GxLaSmX6bj9sNPnudU3bhAEdZBqBrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQP2QYdv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MYOCBI2Q"
-Received: by mail-pz2-f42.google.com with SMTP id 41be03b00d2f7-cc50b9e8a45so138785a12.2
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2026 22:26:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789709210; x=1790314010; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=k9bbOXpbT7yDHFisaEGsDMS03xBQbY8+Apl0sWLLpxk=;
-        b=MYOCBI2QRt0rwlyB/skNe6H3fRl6jFqn5o5jq6j4/4mLuBIZDVLps2CDwSD7XgVtyh
-         fRPiFrhFSnSJorhegAiNG1aekhnhdPWeq/FpxM9umpgToQqvlSCqN3wo5KriY0OLKco+
-         2bEbv+Gc1K/GRLEs7G8Ef/aofjrD6RKPeV8BfvkmODh6xKNMiIODpHk/Hnh2fzLA0NGd
-         vh/xAP6ENddXC6xZsscaJiWLk8DJLW3Z8GY9ki6izX5rJAaj7J83vzD2SuQPkAzH6QlN
-         0jjmuwmdOsaJoeH4wDKLN6HnR7/0N8D86bOKQ8v0UHj8HTIshl/2F2Md2hlytsG6myct
-         rYOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789709210; x=1790314010;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=k9bbOXpbT7yDHFisaEGsDMS03xBQbY8+Apl0sWLLpxk=;
-        b=VY813WcVH7iYTh1Nx9/WFhnRd39VcItj35Mkgbr0XTviVsgNioypdocA/V7jvgHeln
-         0ZXArYzjnTHXfkp2N18mSpZhUPnvtcfX0bM/M0W0SrMPXIQimlO4K2LmMIS1zWAiMQzS
-         zeda9qlvk/lG7Kmhp16DiCUysqvx3A0vDcxsemO6qTtP/7DXQGefwwcVZgURNF9f3L4A
-         AFQtOqb5INaCKmA2dJDXfp/bYPVW+/clgEmc8xotsih/aLwChQtpWTJ0LDxLDcxZEvhU
-         4F5IsOUrKxTxWq4BYmn9UuA8kpu4mYsoN/21Os5yrcAk36GWlulel3Dh08qNkxo+6wR0
-         pZAg==
-X-Forwarded-Encrypted: i=1; AKwUvBxWbI5M2rAgQpuHqDj2D/wsFwFXBSFkH1vEDAKuguFZSqCzbjt9iw9WEUZfj0OtBaiEzjb1yMpbmUqF@vger.kernel.org
-X-Gm-Message-State: AFuF++nJ1WRQ1tGUqW1uPCk3vfGMwLthmsvDVtU1kCqFlWUhhWX+vuFc
-	SFsjTK5mfTdpajjMBpZxA6UbyhVubO5DZNtguhXpQEJW1fli/w9JeMcy
-X-Gm-Gg: AYBFou1n72z5sWW5TWhNIEDnEBW0aA0eQVAstQ4d3PcW/3uIxMTI+nGQvjFLltoKckK
-	d9wj2jc5G0BHVKGYVG/4VKUIMUQN7zj4dbAopItPPLOscj+lWYsO0YPJxFZlmFsGFyX/zveJ80h
-	kIezsZQTEWq584B6RUEKqzqtn91/dOsVSBWNT4pGvjfJ1yUT2kn0oUNz/J4xGQanacLrXUUjgDX
-	yhohRpxWTBXU4EJw4bqeeoER4NeJXApKCbaCbBCdjWKThi6l9vHAcFCHNWJBFKByotRQGU1WF6U
-	ueGsWlcfZ/xQ+eZXYh01oyyhpZl5N4u4sRvWgOjfvT/cLzd3rt4rOWPuD7aswPxMfQLI2dj1XWs
-	eW2oayIKmChOLQ8tbCJTX6B5tRlaXdlJqHVC6si7IKfr/FU1uO9WTzHyBgX0+YzvAD0eQTknSG/
-	bKLwIlRVhF83o64quR7AAL18jyT+xkaLV/Vo+f2JKIQr2ydXx/s3MBkQ==
-X-Received: by 2002:a17:90b:3909:b0:39e:359f:8539 with SMTP id 98e67ed59e1d1-39e54f35cf7mr4830569a91.15.1789709209775;
-        Thu, 17 Sep 2026 22:26:49 -0700 (PDT)
-Received: from lgs.. ([2001:250:5800:1002::de93])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e59e4a508sm1304091a91.0.2026.09.17.22.26.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Sep 2026 22:26:49 -0700 (PDT)
-From: Guangshuo Li <lgs201920130244@gmail.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	James Bottomley <James.Bottomley@SteelEye.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Guangshuo Li <lgs201920130244@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: bvme6000: put SCSI host on remove
-Date: Fri, 18 Sep 2026 13:26:33 +0800
-Message-ID: <20260918052633.3555452-1-lgs201920130244@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQP2QYdv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4E181F000FF;
+	Fri, 18 Sep 2026 05:37:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789709833;
+	bh=nXyIiO4+pgTF4q1Pjy//cij9U7oApQnM0qfkJBWW69g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=hQP2QYdv44u41zDEWP+MJr8k3412H6ccLD+cIhYT7ZqqPElsoNm9D7G+gBuWx4oyA
+	 V/pteCN2nFjI3CAPAqsbTSsdULrtg9vnOdganDFsGbZ89zoeKT96LE//GurIhFzVTK
+	 pHvpalRKmBo1DNi96zrKs/zWGieMC0BwqxWIoiFXBnMHls0YsHARv8JCaTzjWk7rAp
+	 c5IE4KRJWuG6VQKSWHGqemIc1fhrst1dTnIrN4YJRllqpHYndkBSHx9laKFxSXjxEW
+	 lJJzmjP4TJUflVqlmAAb0VnD/bs7bLNnGvK8NnTuDuyiNtwXUbhtPJlX3vAZzSquUW
+	 kJVwVJ1SKr+cg==
+Date: Fri, 18 Sep 2026 07:37:09 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: John Garry <john.garry@linux.dev>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2] scsi: scsi_debug: Validate zone access for WRITE
+ ATOMIC (16)
+Message-ID: <aqzOBedKG6JPbn3C@ryzen>
+References: <20260917084553.559765-4-cassel@kernel.org>
+ <20260917084553.559765-6-cassel@kernel.org>
+ <f1c5db8b-2c99-4c5f-bb1a-3da8f2c5413b@linux.dev>
+ <aqu5Q_6EvfY7iRmk@ryzen>
+ <0acc0a4d-b532-4f69-8fcc-1d4eef7549c0@linux.dev>
+ <aqvCeq9IsbjSJIEx@ryzen>
+ <35ad0b9c-06bb-4ccd-8e58-fde4d859b85e@linux.dev>
+ <3709D24B-4D27-44CC-92C5-59DC66309931@kernel.org>
+ <aqwlS-_pWMWL238o@ryzen>
+ <d4640976-7cfe-4d29-8a3f-cfb91b474110@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d4640976-7cfe-4d29-8a3f-cfb91b474110@kernel.org>
 
-bvme6000_probe() obtains a SCSI host through NCR_700_detect(). The
-probe failure path drops the host reference with scsi_host_put(), but
-the normal remove path does not perform the corresponding cleanup.
+On Fri, Sep 18, 2026 at 09:27:10AM +0700, Damien Le Moal wrote:
+> > The above is true for sequential write required zones.
+> > For SWR zones: The write pointer will always be aligned to the physical block
+> > size. (Regardless if physical block size > logical block size, or PBS == LBS).
+> > 
+> > For conventional zones, when physical block size > logical block size:
+> > The write pointer can be aligned to logical block size.
+> > Since for conventional zones, the write is implemented using a read modify
+> > write.
+> > 
+> > 
+> > Thus for conventional zones, if the WP is aligned to LBS, but not PBS,
+> > I think it would make sense that a WRITE ATOMIC would fail with:
+> > 
+> > ""
+> > If the starting LBA of an atomic write command does not meet the requirements
+> > of the ATOMIC ALIGNMENT field (see 6.6.4), then the device server shall
+> > terminate the command with CHECK CONDITION status with the sense key set to
+> > ILLEGAL REQUEST and the additional sense code set to INVALID FIELD IN CDB.
+> > ""
+> > 
+> > Considering that a write < physical block size is implemented as a RMW on
+> > conventional zones, so the write cannot be done atomically.
+> > 
+> > Yet, a normal (non-atomic) write, at the same WP, would succeed (because it
+> > would do a RMW).
+> > 
+> > But this is just me stating what I think would be the logical implementation.
+> 
+> As I commented already, I think we should *not* allow for atomic write on ZBC in
+> scsi_debug. The reason is that as discussed here, implementation of the combined
+> features is not as simple as it seems, and since there are no SMR drives out
+> there supporting atomic writes, I do not want to give users false hopes with
+> scsi debug :)
+> 
+> Let's make atomic writes and ZBC emulation mutually exclusive.
 
-As a result, the SCSI host reference remains allocated after the
-driver is removed.
+Sure, I will do that, with your Suggested-by tag.
 
-Call scsi_host_put() after the IRQ has been released to drop the host
-reference acquired during probe.
 
-This issue was found by manual code inspection.
+I do want to note that, for the absolutely most common case, HM-SMR where
+logical block size == physical block size, I don't see a problem of these
+features being combined.
 
-Fixes: 8276b58af4dd ("[SCSI] 53c700: m68k BVME6000 NCR53C710 SCSI")
-Cc: stable@vger.kernel.org
-Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
----
- drivers/scsi/bvme6000_scsi.c | 1 +
- 1 file changed, 1 insertion(+)
+The drive vendor just needs to set the atomic alignment to something that
+makes sense (e.g. equal to the physical block size) with regards to ZBC.
 
-diff --git a/drivers/scsi/bvme6000_scsi.c b/drivers/scsi/bvme6000_scsi.c
-index 23301edf100d..0beb4a2e5a23 100644
---- a/drivers/scsi/bvme6000_scsi.c
-+++ b/drivers/scsi/bvme6000_scsi.c
-@@ -99,6 +99,7 @@ bvme6000_device_remove(struct platform_device *dev)
- 	NCR_700_release(host);
- 	kfree(hostdata);
- 	free_irq(host->irq, host);
-+	scsi_host_put(host);
- }
- 
- static struct platform_driver bvme6000_scsi_driver = {
--- 
-2.43.0
 
+Kind regards,
+Niklas
