@@ -1,96 +1,166 @@
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 406213B9DA7
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 13:26:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7542B4FC8D1
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 13:45:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789737996; cv=none; b=BIWV5oIcya7Ky8H/QVoQTtRMRjTG0edLbTkoPGKFLApJZBFs2XUfssznPuZ1iPRvSGWiHSoRbEvRDNrM4MyKO7YEjAOPSXN2FAT+scMlkyA2soRrrsnKSAe8wmbSNTBi2KuRzO13Q21ed3i1wWC9Odf3o3bSrkEgQTMLTVT8BLM=
+	t=1789739106; cv=none; b=j+/qqo6iqt+7aBy9rAecwD2KCTchNb5R70w6NaO+UQJPtix+Uin8LnCqW257s+KbpZQRxxDg0VHAPUK1IBQZENTWwUNp08cQWv5lsy/11s9WxFyvkGQXwzHTii3vC2TdEpfuA1KadoYIdHEO9UIj4E5QvZ7Xjj8WBlDdL5sUcJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789737996; c=relaxed/simple;
-	bh=MPIiOP8JjfTxn7ieweKgdc6dB45b+oMxnVdHZU8cI7g=;
-	h=MIME-Version:In-Reply-To:References:Message-ID:Date:Subject:From:
-	 To:Cc:Content-Type; b=Ev0mXQNk5Am7gvEZgn42ntC2QPinaei8uHrlvBB4upD276PYJEUXhbwH8SnAKEO+eK94Nxs1/dfM233vXHdPs6vCz4OaN488WKvTL5vfjsiIyPutMR9k8nUxOX9IBxQDGxoI29LT/q1trr7Tn7BtFQRYCA4hlKDgUPgqhF4cF24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=P2LLuS2N; arc=none smtp.client-ip=209.85.215.199
+	s=arc-20240116; t=1789739106; c=relaxed/simple;
+	bh=RpJXRlGpRaN8FjcMr2y5WfKyuPAPxYuToIb7LiFIlQk=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=NldbLrtvIAr31Xq1vQ2Rrd63XCbA2zIPHDXG3GTT26q8yNgbadUUBX1Ck/N2L40iPU1k7MNhbcCo1k+930MLeSnbbT0WGVWnN1xG3GFFm3XpxCJkfwtkEk79WOZpiXGCOLLRsVGfLJvmsrqckn31JFUquhsm/Fb42ptVFRH13V8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Q6ieOk4J; arc=none smtp.client-ip=209.85.210.200
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="P2LLuS2N"
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cb11535e6a1so590817a12.0
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 06:26:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Q6ieOk4J"
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-86917d18880so1371420b3a.0
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 06:45:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1789737995; x=1790342795; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:from:subject:date
-         :message-id:references:in-reply-to:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=MPIiOP8JjfTxn7ieweKgdc6dB45b+oMxnVdHZU8cI7g=;
-        b=P2LLuS2NgQtJFckk3JLFohWq+GEQeLYVBTwSSug6j+oFQ23sMEOUTlyeto1VIQveNj
-         SIj8mhgWbsWvVg59p7+FTGZsFFw2/DMTb9afjOn8uS6HhHHW3+EoDpofGwcUVR5BqKdT
-         KXQO6VlVwx5Q2ppsK/ahly2M8+EgsLL/oJbDNK9+K4G6asYZmE7yK0+vlxu4CbGJAUch
-         RB37VwCNbJjERQN/dNAxGl8ouf9PPT1pxohbto0vdMsKKrENBEVqXmRVHtDiLqC+f5yw
-         li3AL7o/lC64x8H5DbGMMjBXCVGneKuQXp3F+wPKufOmv19e+5rCePwcTWlzj+7Htmq+
-         FqEg==
+        d=google.com; s=20251104; t=1789739105; x=1790343905; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=eSHtfc76F2JZKCB9I4hSn94KsItsv68pYgoXJRLd5Bs=;
+        b=Q6ieOk4JdvBcyx1xlr6JjfVHGYiQ7CtuPgnOJwLZNPkl1R4uy6QFL7If4o57B/wnjj
+         9Nd8PbwIi2DWF5ohYMmV1yM2m5y6v7Gqq4i69GBJHPJPOEMej94K/gewR5vvf8gSP4eY
+         BPXEi7keZMXVmsSlb8WD6eG6rYk/5XwE6fEp1J17OFiqyikKfMWpLwQan2wpG+4WSk7+
+         I+IhOQuBg94seMufOEde2zgjZVqbg+Z7iTebUMuQsoW3NY2eyfadJ0F0PdMxovB4utur
+         Ic2gpWyRqTkg1ejnBdalNhSA0+mFz2EMh4VH7qyXzQ264Ka+5K53mTjwCt3lmjolbcug
+         S90w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789737995; x=1790342795;
-        h=content-transfer-encoding:content-type:cc:to:from:subject:date
-         :message-id:references:in-reply-to:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=MPIiOP8JjfTxn7ieweKgdc6dB45b+oMxnVdHZU8cI7g=;
-        b=Psa4a0zU53DoEONzWISsamt8GI78YsjNPttpDCJA1fwuUb3cMs+iiVQ+JEJhOMtVbC
-         MMa5U9YgJKYsn+yqEvY7SeG+Hc0Ec2SKk5LpM6G/aKClWjiJy8EW9M4sxwXEEg3NQd/P
-         BojkXq3awT42LssBAbUoVPqOu/5KXM9Uvkpdz3/NReXPebcPejgxY8v3ns3s2gF3jxCv
-         7mjLatMz4FaDWARqBpfdCFhnybbki8BE9QJG3auzp0QtYyIqVF43Cs5/+8dtuL6nb6Hm
-         42fmCBMHxmu8/guOfMqXVsBR4bDjRKB3z1TJsV+pyDyosTVexOUnhI232aL/H5+pJfPt
-         oq7w==
-X-Forwarded-Encrypted: i=1; AKwUvByfVowJZvWoc/LI4ErK+YKLH7gAxYJ5nv/kmXeMJ5ZLmISCVQXK7X4T8dtK6bruiAIZc4XQx/ZPwUZJ@vger.kernel.org
-X-Gm-Message-State: AFuF++mbZJYMgrLm4fSB5y3yTZw6DmE/slJaIxl+IzHpTCDm5lmZnkcV
-	R2+9NtV/On+DzzkpQ1RAVmA8UtVquUhe9AL65eSzMMVW2hg3d/+yG7Q7p4iJc+JyRlZgWDaFKCt
-	YHZDH4yp9aiT1ADggazgZ2Q==
+        d=1e100.net; s=20260707; t=1789739105; x=1790343905;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=eSHtfc76F2JZKCB9I4hSn94KsItsv68pYgoXJRLd5Bs=;
+        b=RdpyTv7Xnz3TyvVcIzNsyGie02EMRhjkOd8v0g/wVeymoDlJnWQITpYm1ZV5mIscp3
+         EgIfY1wLUNztGC7nSPTC0BM1n6o3vysUgHY6VhI0QaNBqacP3OuzAh045/69o3j0LZHd
+         cLkuO92j2XyXYlRqzbZKtKOjP6aV8M0VQibuYxibkqPxBJSg1q/7ZBuJK+Tm42IROXic
+         G8lOru0a34w5N0aDrnlhNNGYoyrRR72jNTYoEwZ0KTojFwO9Fc7nfhn+eGI3qgUcZi06
+         YyrmGxpmRnATOVhXOmS0rMDbRP/IX0dc4NS2btaadoXw/bInx+KRwzNpV2qHsf27JNeu
+         0M+Q==
+X-Forwarded-Encrypted: i=1; AKwUvByU3fIGZ01D6wbtVU8Ng+GQkUjoIYJaDJDh60bDSffrcHUQBQRb921rh+OdKYz2tNYTuBmGAeY17HkE@vger.kernel.org
+X-Gm-Message-State: AFuF++kIX/dWVt+gnu12MQbIL5NOf2x+/CC2Yv6tL6HL5xRmQAxLKMEE
+	ywpipOzmzZ+TpBkYRrWCXlDpqVm/HOIhy7sNz/4LhGPZNx1N7x95QKLt7nZ0w/tJbzK0/h9PORx
+	G8XPjx38HH84C3dnVpQnsmA==
+X-Received: from pfw3.prod.google.com ([2002:a05:6a00:a263:b0:873:37e4:3d09])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a00:400a:b0:85c:2d83:bbf1 with SMTP id d2e1a72fcca58-874dd5f0f21mr6085259b3a.20.1789739104629;
+ Fri, 18 Sep 2026 06:45:04 -0700 (PDT)
+Date: Fri, 18 Sep 2026 21:45:02 +0800
+In-Reply-To: <20260903031344.3740524-1-stanleyjhu@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Received: from pgbcf5.prod.google.com ([2002:a05:6a02:845:b0:cc5:2af1:69a5])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a21:1f87:b0:3d3:ad3c:49a8 with SMTP id adf61e73a8af0-3dd8c515670mr7347239637.22.1789737994530;
- Fri, 18 Sep 2026 06:26:34 -0700 (PDT)
-In-Reply-To: <20260903235308.1240963-1-stanleyjhu@google.com>
-References: <20260903235308.1240963-1-stanleyjhu@google.com>
-Message-ID: <18d66d39392b460c.3137322e31362e3131332e313435.2b1112.0000sendgmr@google.com>
-Date: Fri, 18 Sep 2026 13:26:34 +0000
-Subject: Re: [PATCH] scsi: ufs: core: Add fault injection for task abort failures
+Mime-Version: 1.0
+References: <20260903031344.3740524-1-stanleyjhu@google.com>
+X-Mailer: git-send-email 2.55.0.1082.g2b9226bbc0-goog
+Message-ID: <20260918134502.2876440-1-stanleyjhu@google.com>
+Subject: [PATCH v2] scsi: ufs: core: Prevent MMIO access and drain in-flight
+ commands during shutdown
 From: Stanley Jhu <stanleyjhu@google.com>
-To: Peter Wang <peter.wang@mediatek.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@sandisk.com>, Bean Huo <beanhuo@micron.com>, 
-	Can Guo <can.guo@oss.qualcomm.com>, Hyeoncheol Jeong <hyenc.jeong@samsung.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
-Content-Transfer-Encoding: base64
+To: mkp@kernel.org, James.Bottomley@HansenPartnership.com, 
+	linux-scsi@vger.kernel.org
+Cc: bvanassche@acm.org, sh8267.baek@samsung.com, alim.akhtar@samsung.com, 
+	avri.altman@sandisk.com, peter.wang@mediatek.com, can.guo@oss.qualcomm.com, 
+	beanhuo@micron.com, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-T24gOS8xOC8yNiA2OjA4IFBNLCBQZXRlciBXYW5nICjnjovkv6Hlj4spIHdyb3RlOg0KPiBUaGUg
-dGFzay1hYm9ydC1mYWlsIGluamVjdGlvbiBieXBhc3NlcyB1ZnNoY2RfaXNzdWVfdG1fY21kLg0K
-PiBIb3dldmVyLCB1ZnNoY2RfaXNzdWVfdG1fY21kIGNhbiByZXR1cm4gZGlmZmVyZW50IHJlc3Vs
-dHMgdGhhdA0KPiBpbnZvbHZlIHRoZSBkZXZpY2UgYW5kIHRoZSB1bmRlcmx5aW5nIGhhcmR3YXJl
-LiBCZWNhdXNlIGVhY2ggcmVzdWx0DQo+IG1heSByZXF1aXJlIGEgZGlmZmVyZW50IGhhbmRsaW5n
-IGZsb3csIGEgcHVyZSBpbmplY3Rpb24gY2Fubm90IGNvdmVyDQo+IGFsbCBvZiB0aGVzZSBlcnJv
-ciBwYXRocz8NCg0KQWdyZWVkLiBTaG9ydC1jaXJjdWl0aW5nIHVmc2hjZF90cnlfdG9fYWJvcnRf
-dGFzaygpIHdpdGggLUVJTyBieXBhc3Nlcw0KdWZzaGNkX2lzc3VlX3RtX2NtZCgpIGVudGlyZWx5
-IGFuZCBkb2VzIG5vdCBleGVyY2lzZSB0aGUgZGlzdGluY3QgVE1SDQpyZXNwb25zZSBjb2RlcyBv
-ciBoYXJkd2FyZSB0aW1lb3V0IHBhdGhzLg0KDQpXaGVuIHJlLWNoZWNraW5nIHRoZSBjYWxsIGdy
-YXBoIG9uIGFuIHVubW9kaWZpZWQgdXBzdHJlYW0ga2VybmVsLCB0aGVyZQ0KaXMgYW4gZXZlbiBt
-b3JlIGZ1bmRhbWVudGFsIHByb2JsZW0gd2l0aCBob29raW5nDQp1ZnNoY2RfdHJ5X3RvX2Fib3J0
-X3Rhc2soKToNCi0gdWZzX2ZhaWxfY29tcGxldGlvbigpIGlzIG9ubHkgY2FsbGVkIGluIHVmc2hj
-ZF90cmFuc2Zlcl9yZXFfY29tcGwoKQ0KICAgKHRoZSBsZWdhY3kgc2luZ2xlLWRvb3JiZWxsIGNv
-bXBsZXRpb24gcGF0aCkgYW5kIG5ldmVyIGluIHRoZSBNQ1ENCiAgIGNvbXBsZXRpb24gcGF0aCAo
-dWZzaGNkX21jcV9wb2xsX2NxZV9sb2NrKCkpLCBzbyB0aW1lb3V0X2luamVjdA0KICAgY2Fubm90
-IHRyaWdnZXIgdWZzaGNkX21jcV9hYm9ydCgpIHVuZGVyIE1DUS4NCi0gVW5kZXIgc2luZ2xlLWRv
-b3JiZWxsIG1vZGUsIHRoZSBjb250cm9sbGVyIGhhcyBhbHJlYWR5IGNsZWFyZWQgdGhlDQogICBk
-b29yYmVsbCBiaXQgYnkgdGhlIHRpbWUgdGhlIGJsb2NrLWxheWVyIHRpbWVvdXQgZmlyZXMsIHNv
-DQogICB1ZnNoY2RfYWJvcnQoKSBoaXRzICEocmVnICYgKDEgPDwgdGFnKSksIGNvbXBsZXRlcyB0
-aGUgY29tbWFuZCwgYW5kDQogICByZXR1cm5zIGJlZm9yZSBldmVyIHJlYWNoaW5nIHVmc2hjZF90
-cnlfdG9fYWJvcnRfdGFzaygpLg0KDQpUaGFua3MsDQpTdGFubGV5DQo=
+Commit 19a198b67767 ("scsi: ufs: core: Set SDEV_OFFLINE when UFS is
+shut down") replaced scsi_device_quiesce() with
+scsi_device_set_state(sdev, SDEV_OFFLINE) in ufshcd_wl_shutdown() to
+avoid unbounded blk_mq_freeze_queue() deadlocks when a reboot occurs
+early during boot. However, unlike scsi_device_quiesce(), setting
+SDEV_OFFLINE is a state write only and does not wait for in-flight or
+currently dispatching requests to drain.
+
+As a result, ufshcd_wl_shutdown() immediately sends START STOP UNIT
+(PowerDown) and powers off the UFS controller (is_powered = false,
+regulators disabled, clocks gated) while regular LUNs may still have
+commands outstanding or threads preempted between scsi_queue_rq() and
+ufshcd_queuecommand(). Writing to MMIO registers of a power-gated or
+clock-gated controller triggers hardware bus errors, system hangs, or
+kernel panics.
+
+Close this window without reintroducing the unbounded freeze deadlock:
+1. In ufshcd_wl_shutdown(), invoke ufshcd_wait_for_pending_cmds() with a
+   bounded 1-second timeout after marking regular LUNs SDEV_OFFLINE so
+   in-flight transfer and task management requests drain before the
+   device enters powerdown mode and controller clocks/regulators are
+   disabled.
+2. In ufshcd_queuecommand(), check hba->shutting_down and reject any
+   stray non-WLUN / non-PM requests with DID_NO_CONNECT before touching
+   MMIO registers, covering threads preempted across the bounded drain
+   window.
+
+Fixes: 19a198b67767 ("scsi: ufs: core: Set SDEV_OFFLINE when UFS is shut down")
+Cc: stable@vger.kernel.org
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+---
+Changes since v1:
+- Correct the commit subject in the Fixes: tag and clarify why a bounded
+  drain is used instead of restoring scsi_device_quiesce().
+- Collect Reviewed-by from Peter Wang (sent off-list due to mail gateway
+  headers). No code changes.
+
+ drivers/ufs/core/ufshcd.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 2ba244cf40ac..6d78e34a19b2 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3105,6 +3105,25 @@ static enum scsi_qc_status ufshcd_queuecommand(struct Scsi_Host *host,
+ 	int err = 0;
+ 	struct ufs_hw_queue *hwq = NULL;
+ 
++	/*
++	 * During host shutdown, fail any incoming regular I/O commands
++	 * immediately. This prevents stray requests that bypassed SCSI queue
++	 * offline checks from writing to MMIO doorbells after the controller
++	 * is power-gated (causing fatal bus errors / panics).
++	 *
++	 * Note: Checking !hba->is_powered is not needed here because:
++	 * 1. During shutdown, hba->shutting_down is set prior to cutting
++	 *    controller power, so shutting_down alone fully covers the
++	 *    unpowered window.
++	 * 2. During module removal, scsi_remove_host() freezes and destroys
++	 *    all request queues before hba->is_powered is set to false in
++	 *    ufshcd_hba_exit().
++	 */
++	if (unlikely(READ_ONCE(hba->shutting_down))) {
++		if (!is_device_wlun(cmd->device) ||
++		    !(scsi_cmd_to_rq(cmd)->rq_flags & RQF_PM)) {
++			set_host_byte(cmd, DID_NO_CONNECT);
++			scsi_done(cmd);
++			return 0;
++		}
++	}
++
+ 	switch (hba->ufshcd_state) {
+ 	case UFSHCD_STATE_OPERATIONAL:
+ 		break;
+@@ -10931,6 +10950,14 @@ static void ufshcd_wl_shutdown(struct scsi_device *sdev)
+ 		scsi_device_set_state(sdev, SDEV_OFFLINE);
+ 		mutex_unlock(&sdev->state_mutex);
+ 	}
++
++	/*
++	 * Drain all in-flight transfer and task management requests before
++	 * putting the device into low power and turning off controller power.
++	 */
++	if (ufshcd_wait_for_pending_cmds(hba, USEC_PER_SEC))
++		dev_warn(hba->dev,
++			 "timed out waiting for in-flight commands during shutdown\n");
++
+ 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+ 
+ 	/*
+-- 
+2.55.0.1082.g2b9226bbc0-goog
