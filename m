@@ -1,113 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-67.mta0.migadu.com [91.218.175.67])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CE3E369D53
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 07:15:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6A8255F2D
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Sep 2026 07:21:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.67
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789715725; cv=none; b=rFoOoC3UCxtc0BzuaHio1x1tr2GsCmvH/LumGXHu/JBhCinp+WZ7jAPMHjTSeayASWco73H1LGS00SlXSCq+TOAvgQQJHOG1i20qR4r7Rg+wH5b5tNMGpfbVC6n0l8qVfFO/LgnPbaFoXLBCwULegtbZX/s+S+FLEnAa7T6h3YU=
+	t=1789716070; cv=none; b=F9xM6YC86X+HeeiDwjy+0ueALo0nv3xaNxu+hlT/ek67t4VVvaOGknw7f0RkRE6CWS3dQz+tCqoXD/COvvc2K8C9q35CWl3zb/e/5RhZ8I4Ktl/KEKXTEtb2iPHnT+Jr79ur9eLbF+X0DrYvKpkYT9U9N2X9Fi2Cigz0NYWUHsQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789715725; c=relaxed/simple;
-	bh=13wQ2GnPCykBzEyEh/hVLKwyNaskWPTjZxbhUueAgUk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FBlsTpkvIOvyQpDTjnnPxR2Um4bMmfKU2Ulj3P8sJeMUhE00YMP4NrwAWzoMvm6MoZpHJIPVxD+Lxp7yE8mxcoBGcJLkDSGgUU9/5zzAMgB+Dk5fU0KPf2ZxVlYKeaMsPcG7NCIwMz6uSxnADzjJcffHMFGu988o2JiVPr1XDeE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DwNGTpnU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789716070; c=relaxed/simple;
+	bh=NwlwwzFL76DRJQz+DCrZH40xeXNPA9XtJ9Cyrca0bLY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=eMIxyaOt5vkESwP/Z8rxQ6tw3bZvX3ptf2SonkATNi0ZjyNuo5ufEMVnnKQK631WY3D0Wism3rduUE8lTU01elI8zMuBlIKWRhQjjd5Ks/IqTiSIrHl/V5ubcDJpW999FMfW3yE1FGTPCzWxE70ZO0oCSC4fuxT1zhFxkS18Wvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=GryEmTav; arc=none smtp.client-ip=91.218.175.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DwNGTpnU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD35B1F000FF;
-	Fri, 18 Sep 2026 07:15:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789715718;
-	bh=qB6DN7L37ICXfXkZKNW17OYkdlmqEjLwW5bl9weaC44=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DwNGTpnU7WLU71XdfA1dCAgfRqNoH+wB9IlLhy3GIH0hZAh+bHegbt1/YCJ58yyqv
-	 3+ZBxwXLCIfyhZgXUHg96xpGZbXsbdnbrQ33Y0xFyRroOX/r4D3+PtYgr83AVKb+5Q
-	 Q8b3pIv1Xx38r9Cl/CydZ5aPkkGT7zXHkBrXhf8O8RUy5Rd9DUEXFuHeaeYQNzTk7w
-	 zS1L/Qqkl4sgh/t5qwmQg8iAl/TJYxMkMjCuUQKMIiLH28npeBQkis0LztLvwj1S2J
-	 1BbhTj4LTd4X2kYFq0MFptMUoX1q5O/Gfesub9so0Iq2EcKudbNftWPSfeANPF1gXb
-	 8IpiiPYMPUU7A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] scsi: libsas: Fix SMP IO deadlock during HA resume
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Xingui Yang" <yangxingui@huawei.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260918070307.381207-1-yangxingui@huawei.com>
-References: <20260918070307.381207-1-yangxingui@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 18 Sep 2026 07:15:18 +0000
-Message-Id: <20260918071518.BD35B1F000FF@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="GryEmTav"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=NwlwwzFL76DRJQz+DCrZH40xeXNPA9XtJ9Cyrca0bLY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789716066; v=1; x=1790320866;
+ b=GryEmTavoDQyZrdRXzpuJ/nm2YhIr95V2s/X5MYmhaP3EJ7zkcCZ1tqXMzH4nxE+SUKP9uWj
+ N+Z8cdxzms65VdRI82SQPOHyydmTdvR1yDOePibEcDJAawnwMMteYsG3uCiWR17spPraTMzd300
+ mYjZ7upgWCT4/Eq8TaHQSVLQ=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta11.migadu.com with ESMTPS id 1288202be22fd169;
+	Fri, 18 Sep 2026 07:21:06 +0000
+X-Mizu-Trace-ID: 1288202be22fd169
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <f2f03175-63a2-4077-8c11-970dad2896de@linux.dev>
+Date: Fri, 18 Sep 2026 08:21:00 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 02/10] scsi: scsi_debug: Make atomic writes and ZBC
+ emulation mutually exclusive
+To: Niklas Cassel <cassel@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
+References: <20260918062910.1709791-12-cassel@kernel.org>
+ <20260918062910.1709791-14-cassel@kernel.org>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20260918062910.1709791-14-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi: libsas: concurrent SMP IO to uninitialized hardware during P=
-M resume
---
+On 9/18/26 07:29, Niklas Cassel wrote:
+> There are no SMR drives that support atomic writes. Emulating a device
+> that supports both is emulating something that a user cannot encounter,
+> rather than the drives that exist, and it means maintaining the zone
+> handling of a command that no zoned device implements.
+> 
+> Nothing in the standards forbids the combination. For what would be by
+> far the most common case, a host managed SMR drive whose logical block
+> size equals its physical block size, there is no problem in the two
+> features being combined: the drive vendor only has to give atomic
+> writes an alignment that makes sense with regards to ZBC, for instance
+> equal to the physical block size. This is therefore a choice not to
+> complicate scsi_debug, rather than a restriction that the standards
+> impose.
+> 
+> Refuse the combination at initialisation. If SMR drives that support
+> atomic writes ever become a thing, this can be changed back.
+> 
+> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+> Assisted-by: LLM
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-commit 2357f5bc7ff2aaf7e480b366cb3ce830c9f21616
-Author: Xingui Yang <yangxingui@huawei.com>
+Reviewed-by: John Garry <john.garry@linux.dev>
 
-scsi: libsas: Fix SMP IO deadlock during HA resume
-   =20
-This commit replaces pm_runtime_get_sync() with a conditional
-pm_runtime_get_noresume() during HA resume to prevent an SMP IO deadlock.
-Outside the resume window, it converts to pm_runtime_resume_and_get() and
-checks the result.
-
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas=
-_expander.c
-> index 811c9eb4fef11..5a8cdd3682fe7 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -61,8 +61,22 @@ static int smp_execute_task_sg(struct domain_device *d=
-ev,
->  	struct sas_internal *i =3D
->  		to_sas_internal(dev->port->ha->shost->transportt);
->  	struct sas_ha_struct *ha =3D dev->port->ha;
-> -
-> -	pm_runtime_get_sync(ha->dev);
-> +	bool ha_resuming =3D test_bit(SAS_HA_RESUMING, &ha->state);
-> +
-> +	/*
-> +	 * While the host is resuming, ha->dev may be RPM_RESUMING and
-> +	 * the resume blocked in sas_drain_work() waiting for this very
-> +	 * SMP IO, so waiting for the host to resume here would deadlock.
-> +	 * Hold the reference without resuming, the hardware is already
-> +	 * initialized by the LLDD before sas_resume_ha() runs.
-> +	 */
-> +	if (ha_resuming) {
-> +		pm_runtime_get_noresume(ha->dev);
-
-[Severity: High]
-Does this disjoint check of the global state flag followed by
-pm_runtime_get_noresume() bypass power management synchronization,
-potentially enabling concurrent I/Os to race with host hardware
-initialization?
-
-For instance, if userspace submits concurrent SMP I/Os via bsg, could
-they race with the driver actively resetting the hardware? In
-hisi_sas_v3_resume(), scsi_unblock_requests() is called before
-sas_prep_resume_ha(). Could this allow concurrent requests to observe
-ha_resuming =3D=3D true and bypass the pm_runtime_resume_and_get() sync,
-resulting in I/O submission to uninitialized hardware?
-
-Also, is there a time-of-check to time-of-use race here? If a thread
-reads ha_resuming =3D=3D true, gets preempted while the device resumes and
-autosuspends back to RPM_SUSPENDED, could it wake up and use
-pm_runtime_get_noresume() to submit I/O to a powered-off device?
-
-> +	} else {
-> +		res =3D pm_runtime_resume_and_get(ha->dev);
-> +		if (res)
-> +			return res;
+> ---
+> Tested by loading the module with each combination:
+> 
+>    zbc=managed atomic_wr=1    refused, -EINVAL
+>    zbc=aware   atomic_wr=1    refused, -EINVAL
+>    zbc=managed                loads
+>    atomic_wr=1                loads
+> ---
+>   drivers/scsi/scsi_debug.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index c664966e95cb..8e45a57ae406 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -8739,6 +8739,11 @@ static int __init scsi_debug_init(void)
+>   		return -EINVAL;
+>   	}
+>   
+> +	if (sdeb_zbc_in_use && sdebug_atomic_wr) {
+> +		pr_err("atomic_wr is not supported by a zoned device\n");
+> +		return -EINVAL;
 > +	}
->  	mutex_lock(&dev->ex_dev.cmd_mutex);
+> +
+>   	if (sdebug_dev_size_mb == DEF_DEV_SIZE_PRE_INIT)
+>   		sdebug_dev_size_mb = DEF_DEV_SIZE_MB;
+>   	if (sdebug_dev_size_mb < 1)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260918070307.3812=
-07-1-yangxingui@huawei.com?part=3D1
