@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 302F01DB95E
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 01:51:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF7A3C8C71
+	for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 01:54:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789782675; cv=none; b=mByuITaCI5lFrgPn/CV6kmgnazoJapit69EWpGwpBz0FMs13JXzXLRtsg6FL+dohYPzSaESbU+fLcjv/EWW+DrtghhvlwqBxfGv5NKH/2Wwh42wpgddkbOOEVFFteGUiYTjO4TfwyklQe1/ry+hsQrfP8jeSTUoFwGDdpEdZNnI=
+	t=1789782841; cv=none; b=ZJvRY4BXFMoHalsEvpSP04eucDHZXAMkmLyL1Xiahk6K5jRVOOzWlPNSKAuDH74/K9HU3QNCnMeXs/+qFTSwczm1kap1cyIb9L8Qkc+dtrLXw8LVG5JY99RtYLKImShdMmhjbM9tjSrGf72JnHsspNzghVeXmM1LeXxB+Otd5oQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789782675; c=relaxed/simple;
-	bh=zGHqxXGgbvhORZ6vuqVDW1pgzODUbZC4kKJ+I+BzYdY=;
+	s=arc-20240116; t=1789782841; c=relaxed/simple;
+	bh=tOmKz12DUrZuN4FCn/C+ha+6npn8QrLDkPBFmzgEkDo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=iq+e0XNBee5P1py0TjdlSYhW4JQ0exDwTCXlMaDnwpA5si+lKh1Uuk3l8Bv2zeVLFXmMEyEtzHcp7ZNkKvw7sOvxeJ2Ehtd8/D5Oq+nORlUe/P44W5nuszQpWdWHPadS9qMA6iaUC/FkBjG27qJ4D97+yKxLJ01dcgmueL+a1N8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZRfB0XU1; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=CnVLUkSSodU/hLT0m7hog6RT6zdSelsB7vlF9mHn3RY82w8rffWcsMaO5WZYNEZfO2xH2Aj8wBuhl4TknHJtRq0Ocu6luN/zo41eW6hZu8vpzaB9AZOUwLKrrmIBDhWN/uBZg2DDxNgu8R5NLCYdoTer2lr23/Q74sZQRoo5rcU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FrL3dJqv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZRfB0XU1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92B691F000FF;
-	Sat, 19 Sep 2026 01:51:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FrL3dJqv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EDCC1F000FF;
+	Sat, 19 Sep 2026 01:54:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789782673;
-	bh=oexh3bBqhT+JCEVRZs90lJD7TH0H4p5W60ARJB3qXMI=;
+	s=k20260515; t=1789782840;
+	bh=P0MDEqldweXaOim3DXEorXrtjMtEe84CtwTHlNQQtfk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZRfB0XU1le0rMyMCtdx+45I/nG+77Kmc/ollfOEA+xKTfqvLFBm2TwKIImg+Y53ck
-	 n38nrbcuc3ctyhrlHI36VdliySW4pZbisi+syhA7PA/nfgY8TAUUgqaVLtSVY7oZu8
-	 OPgcvY/Xt8t4x5LiDtJENjkoj/Qj0GGx7tIYETiWXzR3jZZq9rbMxw8YfmwPyLe81x
-	 daD4JMHEl8EIN3AYgz7++0U+dfacOB7dxWMUnHnK024ecbWBxC/nFN0uN70gOtaVnF
-	 jLudnoUCzTsySJsQHcPcZrTVn1UIJdxDsDl4yT9rMT/6lPKljyAruD3Shtr55NkDeX
-	 0A5lO3zsN1m2g==
+	b=FrL3dJqv+VCUUOprLvgJlKSeqINgB82AMnBB+xOmygqPPG0mOdQotuoTFHMj9hD/c
+	 Xj0IWe4366oxst2+cPZWnt9RNbkrVD5KTrSLnumjGBOrxGInglTheJBFu7udsGHUJL
+	 Fpnz1XmABgMbEsoXc3R+mzeQ1kb7n55XvZgT7A9Fz45hQ4xcacFetjgL3eTjUEbCH8
+	 dv028QCUUVGI03YpAv3ZKTRUI+WX+Czb9IL7Nnw3XSu/tDg5RJavOzggSsCRJtHG6M
+	 KpTdAE9Yy9XTPfzK5l8fIAuVvwWyIHgtTMfl3YskqP6AsOaHSNpOUTWctgj4QRRXr4
+	 3HGT2PkPC0rjQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 01/20] scsi: ibmvfc: initialize evt->tgt for NVMe FCP
- commands
+Subject: Re: [PATCH v2 14/20] scsi: ibmvfc: fix UAF and stall in NVMe LS
+ abort callback
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260919013306.2948028-2-tyreld@linux.ibm.com>
+In-Reply-To: <20260919013306.2948028-15-tyreld@linux.ibm.com>
 References: <20260919013306.2948028-1-tyreld@linux.ibm.com>
- <20260919013306.2948028-2-tyreld@linux.ibm.com>
+ <20260919013306.2948028-15-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 19 Sep 2026 01:51:13 +0000
-Message-Id: <20260919015113.92B691F000FF@smtp.kernel.org>
+Date: Sat, 19 Sep 2026 01:53:59 +0000
+Message-Id: <20260919015400.0EDCC1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,56 +47,77 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: ibmvfc: data race on fcp_req->private assignment can cause s=
-tale pointer dereference
+- [High] scsi: ibmvfc: ls_abort validity check defeated by stale ls_req
 --
 
-commit 76065f9b570dd8183dec90d4771dd155a1cacca2
+commit 0d745a9ce0a68c1aa95c0283c60b12feb6ac43d9
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-scsi: ibmvfc: initialize evt->tgt for NVMe FCP commands
+scsi: ibmvfc: fix UAF and stall in NVMe LS abort callback
 
-ibmvfc_nvme_fcp_io() submits NVMe FCP requests without setting evt->tgt
-on the allocated event. ibmvfc_init_event() does not initialize this
-field, so it retains whatever value was left in the pool-allocated event
-structure. Fix this by assigning evt->tgt =3D rport->private.
+This commit fixes a use-after-free and a blocking wait in the NVMe LS abort
+callback. It moves event validation inside the host_lock and replaces the
+synchronous wait with an asynchronous callback.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-nvme.c
-> index 9ac2671a3567d..9ed6522c2e9e3 100644
+> index d23e5f31f8b51..475177cda103a 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
-> @@ -359,6 +359,7 @@ static int ibmvfc_nvme_fcp_io(struct nvme_fc_local_po=
-rt *lport,
->  	ibmvfc_dbg(vhost, "vfc-nvme-mq-%d\n", evt->hwq);
-> =20
->  	ibmvfc_init_event(evt, ibmvfc_nvme_done, IBMVFC_CMD_FORMAT);
-> +	evt->tgt =3D rport->private;
->  	evt->fcp_req =3D fcp_req;
->  	fcp_req->private =3D evt;
+[ ... ]
+> @@ -202,34 +204,36 @@ static void ibmvfc_nvme_ls_abort(struct nvme_fc_loc=
+al_port *lport,
+>  {
+>  	struct ibmvfc_host *vhost =3D lport->private;
+>  	struct ibmvfc_target *tgt =3D rport->private;
+> -	struct ibmvfc_event *evt;
+> -	union ibmvfc_iu rsp;
+> +	struct ibmvfc_event *evt, *abt_evt;
+>  	unsigned long flags;
+> -	u16 status =3D IBMVFC_MAD_CRQ_ERROR;
+> +
+> +	spin_lock_irqsave(&vhost->host->host_lock, flags);
+> +
+> +	/*
+> +	 * If the original LS has already completed naturally, abt_evt will
+> +	 * have been freed back to the pool (evt->free set to 1 under
+> +	 * host_lock by ibmvfc_free_event()).  Nothing left to cancel.
+> +	 */
+> +	abt_evt =3D ls_abort->private;
+> +	if (!abt_evt || atomic_read(&abt_evt->free) || abt_evt->ls_req !=3D ls_=
+abort) {
 
 [Severity: High]
-Can a concurrent timeout read an uninitialized or stale tgt pointer here?
+If an LS request fails during send, ibmvfc_vfc_eh_done() frees the event wi=
+thout
+clearing evt->ls_req:
 
-The assignment fcp_req->private =3D evt is performed locklessly and without
-memory barriers. On weakly ordered architectures like POWER, this allows the
-new evt pointer to be visible to other CPUs before the initialization
-evt->tgt =3D rport->private is committed to memory.
+drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_vfc_eh_done() {
+	...
+	} else if (ls_req) {
+		ls_req->done(ls_req, -EIO);
+		kref_put(&evt->tgt->kref, ibmvfc_release_tgt);
+	}
 
-The block layer starts the timeout timer before invoking the driver's
-.queue_rq callback, meaning the timer can fire concurrently with submission.
-If a timeout occurs, the concurrent ibmvfc_nvme_fcp_abort() handler reads
-abort_req->private locklessly and accesses abt_evt->tgt to build the TMF
-payload.
+	ibmvfc_free_event(evt);
+}
 
-Observing an uninitialized or stale tgt pointer could result in a NULL
-pointer dereference or use-after-free.
+If this event is subsequently reallocated for a new command, evt->free
+becomes 0 but evt->ls_req remains stale.
 
-Would it be better to use smp_store_release() for fcp_req->private =3D evt
-and smp_load_acquire() in the abort path to ensure the handler sees the ful=
-ly
-initialized event object?
+If the NVMe core then calls ibmvfc_nvme_ls_abort() concurrently
+(before the new command calls ibmvfc_init_event()), wouldn't this
+validation bypass the check since abt_evt->ls_req still matches
+ls_abort?
+
+If the check is bypassed, the abort path will dereference abt_evt->tgt
+which was already released by the error path, potentially causing a
+use-after-free or sending an unintended abort MAD for an active command.
+
+> +		spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+> +		return;
+> +	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260919013306.2948=
-028-1-tyreld@linux.ibm.com?part=3D1
+028-1-tyreld@linux.ibm.com?part=3D14
