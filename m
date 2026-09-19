@@ -1,71 +1,71 @@
-Received: from mail-pj2-f43.google.com (mail-pj2-f43.google.com [74.125.227.171])
+Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D70437C10C
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 20:48:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8010C391513
+	for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 22:26:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789850897; cv=none; b=BNIYAobYtvP8LVpT96f8GBo6O/sACsY2ZwYzQRVPPQm7Plfz2Cz4ils5L6HkD8BckWJQssgje2d2oW4NFQCSO1e9vUA6aHRq/KFi0dbtxQWDrVlhYq2aUVciV77iIbxHxOHQeGoIsVTYbqCNudw4nMbkDtAua7C/Dz+NnHc9Sww=
+	t=1789856790; cv=none; b=H2dq+1Vc3kX6SFk1QSujb2aItSOBQxy+tEK4tRhsRfKzhhN4y7HqJ8idLcTZMUdWTz/NcFWfXi4ZmLV/DyKTqNRFthb3qy8grI9ugFiUDnRZwcGhOW+KDpVxePqI5hzOXTIK7Wx1BW0CFcO22H7u5w1b+xON+VR/0E36MX1gZbI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789850897; c=relaxed/simple;
-	bh=Wb09/JqlWJCK0aAKjwbDIwW16IbDVzkKuvcsiDzrVaA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kQoax1xBiAkJt9kE1iWoo0PwE4IE7gik5yGcLUw3htMCiL7jfOUzj4GeXbGZLCfPWGxlCZWiBt9fR6VSqWE/6dBbUKLUdHekKrdqNs/1KRw1oEuOFiNyi2JAz+VVWilSpyneL5VVtSOGGRIc4HPjmEOSnIH1V08OKrgvXYMvHdA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MsNnZKnb; arc=none smtp.client-ip=74.125.227.171
+	s=arc-20240116; t=1789856790; c=relaxed/simple;
+	bh=gU93zAzsOoQ1roR6T6OlNqwkUWFuikccQakX9808gFA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Kj6miZqvrld1StKcDKmP3U1DGfxYw/GXciT5WQxnfUPx8cosUtArm/B1Tiub/UD4Hn+vC+/fOp36oRQcTkQTuvWgKSuQ9zGJ/FABos6aiKAl0V2NOsrpfH12UTsZtYce/6gGcpsEqq55IuIhHDNSuEoG2V9EN2X3GlfSFFgmlns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ldAToeH7; arc=none smtp.client-ip=74.125.227.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MsNnZKnb"
-Received: by mail-pj2-f43.google.com with SMTP id 98e67ed59e1d1-396ccc02279so1472877a91.1
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 13:48:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ldAToeH7"
+Received: by mail-pj2-f13.google.com with SMTP id 98e67ed59e1d1-396cccbba92so1716256a91.0
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 15:26:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789850896; x=1790455696; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1789856788; x=1790461588; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=YHVLNPODpQem+e5CBn4rhBgJZPtKTuV2DsJXEMmdlks=;
-        b=MsNnZKnbYtalo6VLRyRHf3QUCt+035GNQIieseHs9wA0n8C5Sz33THd204rMzJB07K
-         e47GgVVxch6QiVm/6m9N6dB+SN5PXB7Um0UkDc32VhjFSlpZFaeVoPXdBlUnIn9zS1ni
-         /IkM/OxgD+6Fv4Z+BoL2D2xC+0E8vwtOnEp2pK1AhmlxfwU+OMllKfHSDsZ2pwTLr+3u
-         OUYXMEdcyM9Z7/7wdrLrQko2uB4niWC88Fe4kbe3/kqneaoEaNdMegcI557YeACUCtnE
-         O1l/wDvjuY3+UWntSEZpfQI4wHigWAsBHX4vZNKvOSpmHzNnDj53wfvoaSSxODyKS5E1
-         5GWA==
+        bh=AHexZoASrrLFUeP2m4HCenY6Z1qSfaQk6YYJHltbZIA=;
+        b=ldAToeH7rvrAqYS/pCUkXqOI0Qmyk8GeEgaYYUkixo3QFHN7Sx2MhcE0CbXnpPBhkI
+         Ypif5eZYRPt+rfG3P9wztKZPAd4c8Rqc1ITZN68JXlVjMBxDkOTBXieD23SvwXep0ZC7
+         qrd6MUQhcnXAZk9QI1uZX+/VdGhdg39lVAXnthtJo2eRmdGFqz+/btK3OqBRaT1q9PkF
+         XqOKo00/XRLYItFKvR4wGx2JwuT7SAYJDNUkk+n3sdkUJTZsnDeR60LOQ6p8bZ9aInMS
+         7rwcW/OQ8Sw0fF/OvWE/baYGv8Q3wso3U/0WHYNBHwKW1cw2Pozcha73UeExAhgunQPc
+         Zzeg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789850896; x=1790455696;
+        d=1e100.net; s=20260707; t=1789856788; x=1790461588;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=YHVLNPODpQem+e5CBn4rhBgJZPtKTuV2DsJXEMmdlks=;
-        b=aJ1RE4z7sInEUC2dkIKUq/N3VwsTyMcfGybkqyBpgcApKLB2ag4w6J8FV1O2FGYcbX
-         fHWXWPXf1aBscoF3ToYgNZazHj6YNT4iZC7VFM+TDnJBsh+sg6GsqNTiF/NssC1N2PzQ
-         spywxBgtn0Mf1duObdTJ9lyJM5gzusiU8nXBls3a7kIf/66GGe9cHmf7oQpG802Gnixv
-         wpKJ/UapG1keXsA9/lyHFjlDoeNe6Fwp4fuEz0BnCYOnE3oIGgShdo9dRthxEgPw+G0R
-         aTH0mx86+jhz8qxO9suAk1IiuIzSwVbzBSZNm/hh0ZNeeEU9e+ZJ/X8Nm6DK+SEXmLKc
-         QjMQ==
-X-Gm-Message-State: AFuF++mYOaUNYyVEbCTqjxfJrhfpKyPX76PoioUI5jLdm2i3LI3QmsWB
-	xduqdsl5pUuTXqOj8FoeskEbAx0f6TJogs8nnkjGg6gtsh12VOsLGSBW
-X-Gm-Gg: AYBFou2rhbKiPmQ51VvwS2zhZxCL6e2NjcQ3OaP/au8abiu60tvhkvvshBmJJCQvVYN
-	sAKkOKPxZaOwdEUw9vM2Pd9JHvcPUtXJQdciDbSOLL/wznk4g73hhCONMRTxV26GI3Z4pXwgw6/
-	+WR/TzlU6S+kJc7N4Hx8iRpLfl1SSFCmXeUEPkg0Rkii5uA9UJCEMR9MM60QBpzUIyTVG8OSG+t
-	SpdWKsLdbg11CX+Ggfww18fVqVpauw2+4ZFItrYVX2ULMyYngCbxIgoFHFyCUL1vvNFyyYANtnm
-	Z60BLr5/X+0wWZqXMaQA7xWoQ5UIQdpgkALvG8A2jPn3xdGukObI98xV/zZihF1n6lWLUDbjtLa
-	8X0Frb9J9AsLB14Dq+ClJy1lFfD3jfFiY4wDKeT8fypndDRdYmLpkqs9MRrJmx0Q7z0J2WbJauU
-	32PfgFx5nRzxXLq/XMkW22wGDdD320/iDMIUujw1QFb9Cpde5A6EKhfd32zsJImIRutWWepy8pd
-	g01Hb1WDIciTWoOVDMz0/y+o8WypxMMWdatUnva2Vju7XaTtMDIpGPfw3cwYCdUXFM2WONKygq3
-	K9IZqt5dYpFpA2hriIP+
-X-Received: by 2002:a17:90b:2e0b:b0:39e:6c68:c78a with SMTP id 98e67ed59e1d1-39e6c68ca60mr4717671a91.64.1789850895619;
-        Sat, 19 Sep 2026 13:48:15 -0700 (PDT)
+        bh=AHexZoASrrLFUeP2m4HCenY6Z1qSfaQk6YYJHltbZIA=;
+        b=D8IW5Zqc7ximoKpa/gt73lJyirJgIuGjOk2PlVIqHeewsFI5Y38PQ54txVwgs1Cdcu
+         UEqoNjIwnmKzYtWIjQXjsGxBpQCk4w0PCaU4uBDx5gU5Bj2EGJerK1UGXhh2FoAOSzKN
+         RgLd2/fJxX3osiyiwScRNmHtMcPHp2v71vkn+/wpJHlpHxO/u8qeaMdDHEcVzpdehlMd
+         tl6UNOinzWzr3CFeszuK2SH/QfZGHwbiu8H1ejrlsDovRpYi+OkCTM/bXvFYkS/bdgCJ
+         IVTYTxGj1KkIjNmtFc71UsSfMHxaG1zu30l+CzdghBYwoZXbRMBNScgzJkgcNOYjiRec
+         5lxg==
+X-Gm-Message-State: AFuF++mANwOTSEfm2CBX1c98BTfhfqhjPEGGsy8NSmDONeXEMjBrU4ot
+	+1jCQgvVUskuIeEU4ZmDv3K2PhHeBpyOT0eS09aNd/xEIyujQsn3Ujr9Fy3Nm60Q
+X-Gm-Gg: AYBFou3nekk/xK7P+9e93Fmrgw9h6+zCCeKF3UTRUzpKs592qKqJ9whG3X6OrM/n2rN
+	U9wIYq9ilEz84dgzI8tq3dWnvPlBUOVj4BwYsuqVr9Qq2Yhf9UQYKB/+sNqb6Up5FZmcaczM3bQ
+	mZPFMOuheBZYqC8pWxhllbGZkwaOw5jJ3xmXUQ0qjg9aVlevWgohVM9+sSzHcxTzHFTpCwVOJNA
+	BmT0Y6PI8FXqprYOXcCQow16M8+X7JOmirXxcKqjH1HjDrWPdsZSdVQRFemmh0P5dGzWzr3fasJ
+	fnD51kRPdPhVe30NL0xOK8d4xFftsoNVyanr+biJ0doXAkJRcSzhvhVkqjZLvmcBaLskaJwcpof
+	3lrGvLetbhYJsxATgrWahCWY4LOsGcrLKNeJn/4iImv3uSlus957ZLAn0OpvX/EYP648SAkiI1s
+	EGRe6YOAfHkGNngbNLDygDHyTH/oU5lRAUiTe2LJ1YlBVjHV9t+hE4igvij8z2/3cMB42C2nQDN
+	1h6ZyHafie4DK+S6uPO51Obpb9a0vu8WVyPxb2tpC35483Q8vvXSP8+mbap3FIGR70fcutGMq2q
+	4EB1tEeIgw==
+X-Received: by 2002:a17:90b:2d03:b0:39e:1c03:14c2 with SMTP id 98e67ed59e1d1-39e54baa3f1mr10887430a91.11.1789856787653;
+        Sat, 19 Sep 2026 15:26:27 -0700 (PDT)
 Received: from phui-2.c.googlers.com.com (78.123.83.34.bc.googleusercontent.com. [34.83.123.78])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a02738654csm4043944a91.3.2026.09.19.13.48.15
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e6c3145e5sm6614629a91.5.2026.09.19.15.26.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 19 Sep 2026 13:48:15 -0700 (PDT)
+        Sat, 19 Sep 2026 15:26:27 -0700 (PDT)
 From: Hui Peng <benquike@gmail.com>
-To: Doug Gilbert <dgilbert@interlog.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <mkp@kernel.org>
+To: dgilbert@interlog.com,
+	James.Bottomley@HansenPartnership.com,
+	mkp@kernel.org
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: sg: clean up request on error paths in sg_read()
-Date: Sat, 19 Sep 2026 20:48:14 +0000
-Message-ID: <20260919204814.2815374-1-benquike@gmail.com>
+Subject: [PATCH] scsi: sg, sr: fix stale scatter_elem_sz in sg_build_indirect() and OOB read in sr_is_xa()
+Date: Sat, 19 Sep 2026 22:26:26 +0000
+Message-ID: <20260919222626.3797788-1-benquike@gmail.com>
 X-Mailer: git-send-email 2.55.0.1082.g2b9226bbc0-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -75,25 +75,23 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In sg_read(), once sg_get_rq_mark() locates a completed Sg_request and
-transitions srp->done from 1 to 2, an allocation failure in kzalloc() or
-a user-copy fault (-EFAULT) in copy_to_user() / sg_read_oxfer() returns
-or jumps to free_old_hdr without calling sg_finish_rem_req(srp) and
-sg_remove_request(sfp, srp).
+Fix two issues in drivers/scsi/sg.c and drivers/scsi/sr_ioctl.c:
 
-Because srp->done is already 2, subsequent sg_read() calls skip the
-request, permanently leaking srp->bio and keeping sfp->res_in_use = 1
-(blocking SG_SET_RESERVED_SIZE with -EBUSY and wedging non-SG_FLAG_NO_DXFER
-writes with -EDOM) until the file descriptor is closed.
+1. In sg_build_indirect() (drivers/scsi/sg.c), snapshot scatter_elem_sz
+   into a local variable and clamp it to [PAGE_SIZE, SG_SCATTER_SZ] so a
+   concurrent SG_SET_RESERVED_SIZE ioctl cannot cause inconsistent page
+   order calculations or unbounded order-10 allocations.
+2. In sr_is_xa() (drivers/scsi/sr_ioctl.c), allocate at least 2048 bytes
+   (or CD_FRAMESIZE_RAW) before calling sr_read_sector() so reading
+   sector data at offset + 14 does not read or write past the kmalloc
+   buffer.
 
-Always call sg_finish_rem_req(srp) and sg_remove_request(sfp, srp) under
-the free_old_hdr cleanup label, matching sg_new_read().
-
-Fixes: cb59e8408381 ("[PATCH] sg.c: update")
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 Assisted-by: LLM
 Signed-off-by: Hui Peng <benquike@gmail.com>
 ---
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 5408f002e6c0..5d635349e06e 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
 @@ -480,8 +480,10 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
@@ -122,5 +120,46 @@ diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
  	kfree(old_hdr);
  	return retval;
  }
--- 
-2.43.0
+@@ -1667,9 +1669,12 @@ init_sg(void)
+ {
+ 	int rc;
+ 
+-	if (scatter_elem_sz < PAGE_SIZE) {
++	if (scatter_elem_sz < (int)PAGE_SIZE) {
+ 		scatter_elem_sz = PAGE_SIZE;
+ 		scatter_elem_sz_prev = scatter_elem_sz;
++	} else if (scatter_elem_sz > (int)(PAGE_SIZE << MAX_PAGE_ORDER)) {
++		scatter_elem_sz = PAGE_SIZE << MAX_PAGE_ORDER;
++		scatter_elem_sz_prev = scatter_elem_sz;
+ 	}
+ 
+ 	rc = register_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0), 
+@@ -1875,9 +1880,14 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
+ 
+ 	num = scatter_elem_sz;
+ 	if (unlikely(num != scatter_elem_sz_prev)) {
+-		if (num < PAGE_SIZE) {
++		if (num < (int)PAGE_SIZE) {
++			num = PAGE_SIZE;
+ 			scatter_elem_sz = PAGE_SIZE;
+ 			scatter_elem_sz_prev = PAGE_SIZE;
++		} else if (num > (int)(PAGE_SIZE << MAX_PAGE_ORDER)) {
++			num = PAGE_SIZE << MAX_PAGE_ORDER;
++			scatter_elem_sz = PAGE_SIZE << MAX_PAGE_ORDER;
++			scatter_elem_sz_prev = PAGE_SIZE << MAX_PAGE_ORDER;
+ 		} else
+ 			scatter_elem_sz_prev = num;
+ 	}
+diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+index 089653018d32..2a3ce6a460ed 100644
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -582,7 +582,7 @@ int sr_is_xa(Scsi_CD *cd)
+ 	if (!xa_test)
+ 		return 0;
+ 
+-	raw_sector = kmalloc(2048, GFP_KERNEL);
++	raw_sector = kmalloc(CD_FRAMESIZE_RAW1, GFP_KERNEL);
+ 	if (!raw_sector)
+ 		return -ENOMEM;
+ 	if (0 == sr_read_sector(cd, cd->ms_offset + 16,
