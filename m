@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDBF919CD0A;
-	Sat, 19 Sep 2026 15:06:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EEEE282F0C;
+	Sat, 19 Sep 2026 15:09:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789830390; cv=none; b=segRBTkTWZltSw5vnkNjq2iS3LD9cDdNndWXPAjmRbQ2Z2cML7u1xmaB6eNhXyR64haOWswX/Q7lGMDnM7vogOAOa5x1vVHRvJ9iwAmZzegzHOMPOdESmVLU0bML5uvfXQ0XzoQaHIdL2u6xTLgPsoIlEIp9KzjvgGki0rUun4I=
+	t=1789830585; cv=none; b=lPrRvT/rJFvIxPMmMWuoChD9rLVo0qx4vvzQQsYLogWW1Jex3P4Gy9X0138g/otju7I7u8p1QBmFP66hixvOBuCjvznMHZpuD1bM/7CF5jUffI9lIDlrqAeAQ4A9kI82NsjPbrP3g8O4GpRg5304+edl5naSlObjkFRo0TcFchc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789830390; c=relaxed/simple;
-	bh=NpUWm8hyKk1UnzYiX/6WSmpR37UXuUGnDVdN3XjCOQE=;
+	s=arc-20240116; t=1789830585; c=relaxed/simple;
+	bh=azssGbIdM4Y1JziqhDwyHh5esWmOHusgmI9xAme2UaY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KBpYTlsZkfKm9X3A0IVOridj2t30Hd9Zw8wP+gIWxnfundslfdPeqmnUVcvn4MLaj4BuN+iZWgLX53ksxsIXwJ2RLQnNvlcIrhYJul9sUDvhikV6Yc8KxPKgneyaxuII64y0FzTqIiD/KNuATmu5gStGHMNgmLQPl2CJ+iacxZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mZ7NEov0; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=RK9W4jfa7rjxiJpB1sIbAM+H4AeVQm1IuzdYB+aS6xuB0cT3O0pyiQApYQANq7xvJhrnfpTb76eBO/HOzyRC9BxC8WcJn2TnDNE19oqmeFhgDk/8MdIItvaMaj8o6hvzWDasnykQ100BIRjfUCCnmjDCSTiuReN1xQkDIz0GK14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EAnlGaZ3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mZ7NEov0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8E8F1F000FF;
-	Sat, 19 Sep 2026 15:05:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EAnlGaZ3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48AD71F000FF;
+	Sat, 19 Sep 2026 15:09:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789830388;
-	bh=6E/2ltl35xPsVBq7dCp8kX3P3iYtwP2nwvmHYrMGiao=;
+	s=k20260515; t=1789830584;
+	bh=ItRljA0QTwt97l+Rzb+oBvHOLkSySW1764bZK9I66Ok=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mZ7NEov07DW0ZDR9skjWGGxQUM0tilYV9cJ7x872u31P1qu1yVnwdU0E77jSYzczU
-	 Rq0n7dEgh+A9eWTU+kdQxDU5tKshnvcxTa3XN1JDv7zPJ7mxY5KgfDql95Wg5316wn
-	 kqxgLNkCZWg1I6A6O0IhltPcOlOLcVqsjbFRvGscwxEQOwDG8XewmgyU6Ujr9SqTuc
-	 zEYCMum6E9yTv2amUuljbVi6GJTLEO9nOY5NLyIChsn3u7MRozdIRj+bylE4/Ua89o
-	 aFiTM/yy7p1O+kilDkoW7RGJH5LX4eZ8RZkWZXZPSrDaZInSmA804tyjxuFh+fgV9t
-	 5tO9QHfxFsFFQ==
-Date: Sat, 19 Sep 2026 16:05:57 +0100
+	b=EAnlGaZ3PvA3eD4EGY8ScsYSSfOA3NuPg0sDbUCPy6ciztb4OpKHPUKVNCsw3yYTK
+	 F5dXTbBszFDFMx49SBhL74XFEgpDqePel1QPLlEnRPCZHmhKtc3C3Y8QRt4P8RTfDW
+	 /Nifcw76qMRhxrrojdmckuYvA7/eR4f0CHw7r1Z9eFzAmLIrY6jMLOX5tLpcIAlRYI
+	 ZnXzDASidh8ez3yCFBhWrxVUS9oGdssza/jSZ3fPN118zuj4eAdMjnma5SzA3PTmn0
+	 c3g/zkLkVjWHOMPyaaZFTkyX4384FbCqHcB4Ayw2h8F62iRMWX893EQKdX2S78phRH
+	 PhATKi1qYFryA==
+Date: Sat, 19 Sep 2026 16:09:13 +0100
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 To: Suren Baghdasaryan <surenb@google.com>
 Cc: "David Hildenbrand (Arm)" <david@kernel.org>, 
@@ -88,11 +88,12 @@ Cc: "David Hildenbrand (Arm)" <david@kernel.org>,
 	Takashi Iwai <tiwai@suse.de>
 Subject: Re: [PATCH v2 00/40] mm: make VMA flag semantics explicit, eliminate
  VM_SPECIAL
-Message-ID: <aq6kzpK7wPl3iFGe@gremlin>
+Message-ID: <aq6lW9FvL69QeA9H@gremlin>
 References: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org>
  <20260914180811.057cba8fcc48d6e0b53a2683@linux-foundation.org>
  <0b064fe6-ddb3-4f26-a1f2-2e9dd88d590f@kernel.org>
  <CAJuCfpFBichJH4OcmSHTb1rOuQBT6k5pXeua9_KgpWjDBKvsYw@mail.gmail.com>
+ <aq6kzpK7wPl3iFGe@gremlin>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -102,43 +103,53 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJuCfpFBichJH4OcmSHTb1rOuQBT6k5pXeua9_KgpWjDBKvsYw@mail.gmail.com>
+In-Reply-To: <aq6kzpK7wPl3iFGe@gremlin>
 
-On Fri, Sep 18, 2026 at 01:31:24PM -0700, Suren Baghdasaryan wrote:
-> On Fri, Sep 18, 2026 at 1:21 PM David Hildenbrand (Arm)
-> <david@kernel.org> wrote:
+On Sat, Sep 19, 2026 at 04:05:57PM +0100, Lorenzo Stoakes (ARM) wrote:
+> On Fri, Sep 18, 2026 at 01:31:24PM -0700, Suren Baghdasaryan wrote:
+> > On Fri, Sep 18, 2026 at 1:21 PM David Hildenbrand (Arm)
+> > <david@kernel.org> wrote:
+> > >
+> > > On 9/15/26 03:08, Andrew Morton wrote:
+> > > > On Mon, 14 Sep 2026 15:57:20 +0100 "Lorenzo Stoakes (ARM)" <ljs@kernel.org> wrote:
+> > > >
+> > > >> The VM_SPECIAL / VMA_SPECIAL_FLAGS mask conflates several unrelated
+> > > >> properties:
+> > > >>
+> > > >> ...
+> > > >>
+> > > >> It's all rather a mess.
+> > > >>
+> > > >> This series brings some order to things by both limiting what drivers can
+> > > >> do with VMA flags and switching to using predicates that describe
+> > > >> behaviour, not arbitrary flags.
+> > > >
+> > > > That's a lot of patches.
+> > > >
+> > > > Review is thin and I expect this won't improve a lot.  Lots of "no
+> > > > functional changes" changes.
+> > >
+> > > I'll expect to go through all of them. Might just take a bit ;)
 > >
-> > On 9/15/26 03:08, Andrew Morton wrote:
-> > > On Mon, 14 Sep 2026 15:57:20 +0100 "Lorenzo Stoakes (ARM)" <ljs@kernel.org> wrote:
-> > >
-> > >> The VM_SPECIAL / VMA_SPECIAL_FLAGS mask conflates several unrelated
-> > >> properties:
-> > >>
-> > >> ...
-> > >>
-> > >> It's all rather a mess.
-> > >>
-> > >> This series brings some order to things by both limiting what drivers can
-> > >> do with VMA flags and switching to using predicates that describe
-> > >> behaviour, not arbitrary flags.
-> > >
-> > > That's a lot of patches.
-> > >
-> > > Review is thin and I expect this won't improve a lot.  Lots of "no
-> > > functional changes" changes.
-> >
-> > I'll expect to go through all of them. Might just take a bit ;)
+> > ditto
 >
-> ditto
+> Thanks guys!
 
-Thanks guys!
+Note v3 has been posted to fix a stupid bug in 1/40 + attack some very trivial
+sashiko stuff
+
+https://lore.kernel.org/linux-mm/20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org/
 
 >
 > >
-> > --
-> > Cheers,
-> >
-> > David
+> > >
+> > > --
+> > > Cheers,
+> > >
+> > > David
+>
+> --
+> Cheers, Lorenzo
 
 --
 Cheers, Lorenzo
