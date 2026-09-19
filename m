@@ -1,148 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 429DE372673
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 01:59:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8B302DB780
+	for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 07:12:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789783142; cv=none; b=MDAdsVajHw1BCvjTGy4uKL/ZZSFjwDXeCmUWXqHTNUB7ytwcucprmSas/UfvjOF+DYYk5hFYRtpqrAHN0xJqYEIgW6sxNhE6cg/6ok4yaWcSvrfprI/BU1V5JspSwX9k719yngt5caZkEEXqeVKK6KEezMi7PkJzLU3GN11/xhE=
+	t=1789801976; cv=none; b=XPST8iBUKyNnpxYV17uhhMBQcKWyJeS0XuLjbBW4eLJuAx4B1VDkdKF+cCHaIrj3Rh8HyRat5dbheFHMOHEyI61tKLiRprkYmcUTe0rD5B/jBgivDHHBlM6rstIaMoUs9bRjZu6sNZ01lxE7zofhXDLc4Hn3DGAuqtia9bdV5Qo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789783142; c=relaxed/simple;
-	bh=OxllwI52KUaL1eZS77lozUcwgkmOWgtS+OirWxqy624=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=D7U8HN1qewuJygp+PQ4BVdy0T7Wf9ZICO0bPY7X5metl8tA/34vwsOQFTwbu++Eu6ULU7jTxwZndOh/uKfRKVuF7SuO0kZUNyU/K7tstPYQiRLnDqnxIGrccfidWfEO5a6BPqcbhZCc2to+943TCiboI+6puBfa5LXXUuD+JkGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vt+nlL7F; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789801976; c=relaxed/simple;
+	bh=auMKvpG/aFQeEB2t4EW2J13ert3aXm3gp/4X6atSyzk=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=QSWIaLSJK7i4tm52f4vb8tGNb8UUJEHrlbrE50CI6mhf+JXwS2wcqhDBwd6l916XC7146WIp1uYHRMQznZIj4vMN2e6iENNeoj445B2avCd58J6I1JDFRwlzQmBzp4d/53omfAGDCjKok+PtVs7szdAD6Xg1Om4vPO3JzJZp/8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IHkD/JrG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vt+nlL7F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8E421F000FF;
-	Sat, 19 Sep 2026 01:58:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789783139;
-	bh=xhgG78CKQeP78opBA2QPICwBAnDX9IPRIJMEnMwTos8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Vt+nlL7FcvyD92Vwm9VSCADI+lI2XwM0PeAUdiljnLLT4c2+6JpFOGIwutOu5ko5g
-	 a8ZEKWaLIrukPnVt6nT7i2J3AjgPvXsmqaseoFLDm2yWH4JpKdKNyViL8hkMQca9ur
-	 PHtgdfMYhSF4v/RM7DXi87YEzKJy0n4rNi3qsCOdnF9Z+bhWy0k+VAmNZqaQEz5u46
-	 1npGUGFTpCbbq7oMgDfh2lLV2tP/cf5daKSS5icPpvZfRJH7jt9Fgg7xoTD9lIBwE3
-	 YNX7CCjgLm36x6SiuwbjM6tXEOinc8dzFbvDmj/nxE76A7KguGAkx4BYD5vMg/gJfL
-	 ALOYmfiP99ucw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 15/20] scsi: ibmvfc: unregister NVMe local port on
- adapter removal
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260919013306.2948028-16-tyreld@linux.ibm.com>
-References: <20260919013306.2948028-1-tyreld@linux.ibm.com>
- <20260919013306.2948028-16-tyreld@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IHkD/JrG"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5011BC2BCF7
+	for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 07:12:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1789801976;
+	bh=auMKvpG/aFQeEB2t4EW2J13ert3aXm3gp/4X6atSyzk=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=IHkD/JrGBzT4CjI5CbH3ievQXTnE7ajN+8/1S4bDDQpTxwazyn7Rkk7ME0VkHcx0k
+	 zMZMz/tbRxDHwPQvPIPg5lUQML1MwOKwmjAOy6vQlZkltxpo2ZhAYfbxKEywWlR4YV
+	 zVa2PknKA2vM/qHRB9W0ViDN7MZkFmVoP9v3GbK2KKVNqnBC8oOOfzrRDy0WVDS0xW
+	 /DHEkZ9vS6nwL/cHG6vDvC4mj6GGIx5ZjCodTdvtChdQxhSChoF+MPw1G9wvZOFEcf
+	 ZcqW82V9SPNjQqxxXMpBhPke8tXYanyAUAm3qyozWcWlrz/8ThMGMUeOU7SEwAEk7B
+	 uXcjsqe/Q7l2g==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 37259C53BC5; Sat, 19 Sep 2026 07:12:56 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 222016] kernel 5.15.221 does not recognize mbr partitions  and
+ therefore does not boot
+Date: Sat, 19 Sep 2026 07:12:55 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: aros@gmx.com
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: CODE_FIX
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_status resolution
+Message-ID: <bug-222016-11613-LS8saZ7SlD@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-222016-11613@https.bugzilla.kernel.org/>
+References: <bug-222016-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 19 Sep 2026 01:58:59 +0000
-Message-Id: <20260919015859.A8E421F000FF@smtp.kernel.org>
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] scsi: ibmvfc: lockless list modification in ibmvfc_remove() races =
-with tasklet
-- [High] scsi: ibmvfc: use-after-free on rport in ibmvfc_remove()
---
+https://bugzilla.kernel.org/show_bug.cgi?id=3D222016
 
-commit 64ca41cc44b400a863417867ee490f75b432ff92
-Author: Tyrel Datwyler <tyreld@linux.ibm.com>
+Artem S. Tashkinov (aros@gmx.com) changed:
 
-scsi: ibmvfc: unregister NVMe local port on adapter removal
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEEDINFO                    |RESOLVED
+         Resolution|---                         |CODE_FIX
 
-This commit ensures the NVMe local port is unregistered during adapter remo=
-val
-to prevent a use-after-free when the transport subsequently touches the por=
-t.
-It does this by adding teardown calls for targets and the local port before
-host memory is freed.
+--- Comment #14 from Artem S. Tashkinov (aros@gmx.com) ---
+Queued for 5.15.222:
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-core.c
-> index 080312ff0a93d..e68ed5e79e58c 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -6976,6 +6976,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const=
- struct vio_device_id *id)
->  static void ibmvfc_remove(struct vio_dev *vdev)
->  {
->  	struct ibmvfc_host *vhost =3D dev_get_drvdata(&vdev->dev);
-> +	struct ibmvfc_target *tgt, *tgt_tmp;
->  	LIST_HEAD(purge);
->  	unsigned long flags;
-> =20
-[ ... ]
-> @@ -6992,6 +6993,22 @@ static void ibmvfc_remove(struct vio_dev *vdev)
->  	fc_remove_host(vhost->host);
->  	scsi_remove_host(vhost->host);
-> =20
-> +	list_for_each_entry_safe(tgt, tgt_tmp, &vhost->nvme_scrqs.targets, queu=
-e) {
-> +		if (tgt->nvme_remote_port)
-> +			ibmvfc_nvme_unregister_remoteport(tgt);
-> +		list_del(&tgt->queue);
-
-[Severity: High]
-Does this list_del() race with concurrent list traversals in the tasklet?
-
-Because this loop modifies the list locklessly without holding vhost->host_=
-lock,
-and the CRQ is not torn down until ibmvfc_release_crq_queue() is called lat=
-er
-in this function, an incoming asynchronous event (like IBMVFC_AE_ELS_LOGO)
-could trigger the ibmvfc_tasklet.
-
-The tasklet handles the event by locking host_lock and traversing the same =
-list:
-
-drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_handle_async() {
-    ...
-    list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
-    ...
-}
-
-Will this concurrent lockless modification lead to list corruption and a ke=
-rnel
-panic during the traversal?
-
-> +		timer_delete_sync(&tgt->timer);
-> +		kref_put(&tgt->kref, ibmvfc_release_tgt);
-> +	}
-> +
-> +	list_for_each_entry_safe(tgt, tgt_tmp, &vhost->scsi_scrqs.targets, queu=
-e) {
-> +		if (tgt->rport)
-> +			fc_remote_port_delete(tgt->rport);
-
-[Severity: High]
-Is it possible this dereferences a freed rport?
-
-Right before this loop, fc_remove_host(vhost->host) and
-scsi_remove_host(vhost->host) are called. fc_remove_host() synchronously
-deletes all remote ports, and scsi_remove_host() removes all SCSI targets,
-dropping their final references to the rport structures and causing them to
-be freed.
-
-Will dereferencing tgt->rport here (such as reading rport->dev_loss_tmo ins=
-ide
-fc_remote_port_delete) result in a use-after-free?
-
-> +		list_del(&tgt->queue);
-> +		timer_delete_sync(&tgt->timer);
-> +		kref_put(&tgt->kref, ibmvfc_release_tgt);
-> +	}
-> +
->  	spin_lock_irqsave(&vhost->host->host_lock, flags);
->  	ibmvfc_purge_requests(vhost, DID_ERROR);
->  	list_splice_init(&vhost->purge, &purge);
+https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git/tre=
+e/queue-5.15/revert-scsi-core-register-sysfs-attributes-earlier.patch
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260919013306.2948=
-028-1-tyreld@linux.ibm.com?part=3D15
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
