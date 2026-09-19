@@ -1,66 +1,65 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9AAA3DB30F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8B0394496;
 	Sat, 19 Sep 2026 01:33:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789781612; cv=none; b=CepdXYWFiz1HFNZCwAcBtXbeEIsf5c9quIjtPmS0fzaQLOHTCpGfDeEfxfnsYzVaEC6brZx6qrbXWg2sYvCxb8KZvryf8jb9aHa/JXIP2paKAIOWvmi6dnK2G0/yN/7ATDYsFwvxfr0QcjxmaDNwo0K2GFXxF/jErsOfF3b7fZQ=
+	t=1789781613; cv=none; b=U29kSSU9LYT1C61SvYzjN5rVc1nF2h7D9Uus2bmSSKkITqZEsxqJCT57wNwSkmn9HNRGiXXv2hcxh21A6Qkv7tVAv4lC6DcGnGRjA8SiC1KfSSqrq68++go5tarBDCl1GeAA2GsFstRXq3F7PXeeyFfDQ8NM36PNn+/iUYScwYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789781612; c=relaxed/simple;
-	bh=jF/c9abIGS2WOxJEiChggo2tJpujLfVQKRcWuay9c80=;
+	s=arc-20240116; t=1789781613; c=relaxed/simple;
+	bh=iwOmATHz6ecG7y6QB9H5IKmbp1v4HCBU86o018GqdGc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tv7E3OlNwcpLuTCId8erce3K5A+9xTIER56P20CYCGj7L7rFXFULg4/fmPbxze1nV48vEvC98mmdaOFQxWnE+GAkBiF6iS5hIzc18jWmyX14/ySem5C0XHxoDLmEU9ZlXOJ3Icp1bcDTH/aA/npEAm5eTMMuISWzgGy6z3RtkCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=BjPR+Zfp; arc=none smtp.client-ip=148.163.156.1
+	 MIME-Version; b=r1M+zpjgmMAdY1iArJUmQNJevUSRvrGn4TBLgQTCpUYRNKXWiwmV6KhnKmYc5TC2nhyMZ6U5fxSCIAEaIKwlxGIAS5L+As6HeSC2KYmsZrUxS80LHCrIR4zg++AXBuvnVGMiddsThnBPaJtfKzwd6BBiCbj/t8Q1k4hsG1kuauc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=EcACn6EK; arc=none smtp.client-ip=148.163.158.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="BjPR+Zfp"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68J01YgG2662346;
-	Sat, 19 Sep 2026 01:33:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=310Q0A
-	U+M7NgMF0sYKFvE8ZmxNTxAi3GC1xzvNzQwwc=; b=BjPR+ZfpOb3NRSwZ8tfaep
-	1tC8mEBZM5LIxW9K1DYtFQ6TeOnqpUso+589XixUHBz+MLWe4UNSaI4TickkXrTW
-	PBagZn6dhUjnQdwXLYCUakhi7VvisCde5qBhV7TNpb48Yw+KZyfJs6Vyaoce+jWK
-	KCVf0qrwN85k2lXSKyzvOQWOOBvjx2rU6mQa7rFHFNhjHbKPgxRIrBduQSLWZvQG
-	OTwc9bwm1KwZrWhPLPxli/AzUI9EwOsEJwlJI9QdrhlQqJfp4vmPgae6FITctF0F
-	CK/M+x6iJ6tDZEMzZfM7GZ+t9jz9pBtykqrE7E1LSAfhhnt1mA6jYMbpG4Mf07rg
-	==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gmx84b0jc-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Sat, 19 Sep 2026 01:33:24 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68J1SRM71608298;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="EcACn6EK"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68J01otQ2706961;
 	Sat, 19 Sep 2026 01:33:23 GMT
-Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4gsgrx00aj-1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=pp1; bh=fgHc9VzWY7mw63AsN
+	Par+mYGs4tBOAd2KXAXORTkIt0=; b=EcACn6EK6A8ezQP3BMqEhXCYJX5nYctNq
+	07oa+Sy7Oi1Fm3pypFe71EVMke5rlU78QlLjK+kQZi4Cq48yp6j3TKc6ODziF0A7
+	5TDM9H5G8MS4dZP4XG8sAHH067Y8Q+v4n0qOO92HPWovp8di64/QCdyd+7tglh5K
+	r3ihAvrro1+QCM4eJc2I8nqBiNsUluXiCs8mhWhaXW/S4KtZ13wmkKDdHkBfkCMT
+	i9RdZCl2oJhxtowsxzN73n/CWKZRPvlDn4C/0H1tBtBbxh6l+e4qTJtKnicCp2cw
+	9dMeWJgOugpEqoSHqTh0KUT1d6qsrU+Oi1HlYfsl0ksTPvr5XPIzw==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gmxcvj9mn-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Sat, 19 Sep 2026 01:33:23 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68J1QdYb1584450;
+	Sat, 19 Sep 2026 01:33:23 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4gsgr2r0ey-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Sat, 19 Sep 2026 01:33:23 +0000 (GMT)
 Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
-	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68J1XMq932244444
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68J1XLXn31720138
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Sat, 19 Sep 2026 01:33:22 GMT
 Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4A96558051;
-	Sat, 19 Sep 2026 01:33:22 +0000 (GMT)
-Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id B57945805A;
+	by IMSVA (Postfix) with ESMTP id 986E158051;
 	Sat, 19 Sep 2026 01:33:21 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id F044A5805C;
+	Sat, 19 Sep 2026 01:33:20 +0000 (GMT)
 Received: from li-4c4c4544-0054-3910-8039-c3c04f423534.ibm.com.com (unknown [9.61.101.145])
 	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Sat, 19 Sep 2026 01:33:21 +0000 (GMT)
+	Sat, 19 Sep 2026 01:33:20 +0000 (GMT)
 From: Tyrel Datwyler <tyreld@linux.ibm.com>
 To: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
         linux-kernel@vger.kernel.org, brking@linux.ibm.com,
         davemarq@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH v2 15/20] scsi: ibmvfc: unregister NVMe local port on adapter removal
-Date: Fri, 18 Sep 2026 18:33:01 -0700
-Message-ID: <20260919013306.2948028-16-tyreld@linux.ibm.com>
+Subject: [PATCH v2 14/20] scsi: ibmvfc: fix UAF and stall in NVMe LS abort callback
+Date: Fri, 18 Sep 2026 18:33:00 -0700
+Message-ID: <20260919013306.2948028-15-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260919013306.2948028-1-tyreld@linux.ibm.com>
 References: <20260919013306.2948028-1-tyreld@linux.ibm.com>
@@ -70,101 +69,186 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE5MDAxOCBTYWx0ZWRfX/FqsA9kZCGV5
- yutD1ntOLAzn0KWA+21JUspHF+LIYrq0PSJvuInj5HiKHFw4e4YSEd0XGZc0CFujXb1k9pHRjV8
- mEAKpa8c4VmYQlw/tA+JW7kq70bkOiXh3ye4bbD9ljh2W6pINdCF4jCUJTCVYBdmEPPwks3ZyqX
- eiHSlb4+PgwFF7r4KDl3LXsCDB+MrCI82+vekYEg3qoQRgt0gW7LMU3nFvqZQb9LuccrD9BzyVN
- W0h77hD5XukvdvKxgQGqKaiArAIuqNw1K0eG2vfmrN/TtLwEV0fyrzO8TEyRD95WSfhPzaUUwmC
- z7hGqzTnXR3qwicX6+AYs3nH9VVyrODO3ms3InyOtEHJldHt6iVliFXWIndD5WJJ8a+gjzVsHfd
- bqW2A6SBE8Up5UXBPC23jjkvIx3RKLzgpdGc2/6V7Lt0PdWd8pb+7AYc5EOjoVHxjmfjPCkaCPu
- DU40xxVjTekK5H0iQBQ==
-X-Proofpoint-ORIG-GUID: 4PerKHZR_iOQ9sHzWzK6yRKUHRNtvq6a
-X-Proofpoint-GUID: 4PerKHZR_iOQ9sHzWzK6yRKUHRNtvq6a
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE5MDAxOCBTYWx0ZWRfX+RkkVwc2/Epb
- pYTeNEvRQig0lBgsZvpHL2GV4OQkjXOUs6zBsGG3KhdPnS02OlHSH5lOwIhy+FLoiTIXEqbXWcd
- iIRA/bx/rxb5EEH3Avedi1NTHdlGbQQ=
-X-Authority-Analysis: v=2.4 cv=cY9HPXDM c=1 sm=1 tr=0 ts=6aade664 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
- a=ETEOwY9weeunu4j8P0UA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTE5MDAxOCBTYWx0ZWRfX0Nn8DJ1qVtxX
+ uSR2NJ9+Sdf9yr1ErXOaEJ5U0rqsKSmbSQ2+OT85uSGoF1IGQWs4JEXOVbmmlztu83WqkO4woDi
+ eqx/Dn/OzX3FOdB/9TpyUw3n9TsGjmM=
+X-Proofpoint-ORIG-GUID: f7VTWwovgNZgqxy_iXGEOIKrxyTWpP1A
+X-Proofpoint-GUID: f7VTWwovgNZgqxy_iXGEOIKrxyTWpP1A
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTE5MDAxOCBTYWx0ZWRfX5sQJGXTKXIex
+ a5/0GsVNV4Uo3vYHdA8TF3RQxjnxUeaLC/fMDCpJPIYNX/7jdHLUcUeOb5RqbtApOcBmm27xQ0F
+ 306JNkucecyYG3aF2EwQS65D8XOUp8AKDFeU6DRYZpjiVC6iRlwICs+3HikLWU1YeGHEyYVQ9cf
+ VmY31wlRdoVUXMdiDt3e+tcrLcTJo8TXiq8aOckbjbw+rbRSOLLeMNYFdZwLgUfPgiud1gyQ5XB
+ fv7RUdURGuLxulML096+VdW+sKP/tbvWvk/qvkOeJv0m/+BuR49YVU0cndmspeU5Bh/YkBVRgM1
+ U0NIpXHV75OkgmFRSJnZRxljocLxsUBzQPZrbn2VciJhYY3etslPEs4aDLxVpbyMT6QkrDrJlUz
+ lPSINyPcL2WzfsEmw484/iqe8NVDcMj2lWdZEbG33cKrmD0VdgK9gSHAYwK6o9Coo9yOcVfFYWs
+ SFYDjkzMvveNa4jHHpA==
+X-Authority-Analysis: v=2.4 cv=F+7C5ahN c=1 sm=1 tr=0 ts=6aade663 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8 a=bf3VTdwimHnaYT9JOUcA:9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-18_07,2026-09-16_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 spamscore=0 bulkscore=0 clxscore=1015 suspectscore=0
- impostorscore=0 malwarescore=0 phishscore=0 adultscore=0 lowpriorityscore=0
+ priorityscore=1501 suspectscore=0 phishscore=0 clxscore=1015 malwarescore=0
+ lowpriorityscore=0 bulkscore=0 spamscore=0 impostorscore=0 adultscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609190018
 
-ibmvfc_remove() tears down the CRQ and frees all host memory but never
-calls ibmvfc_nvme_unregister().  The NVMe-FC transport therefore retains
-a live reference to the local port whose private pointer points into the
-now-freed ibmvfc_host, leading to a use-after-free whenever the transport
-subsequently touches the port (queue creation, port scanning, etc.).
+Two problems in ibmvfc_nvme_ls_abort():
 
-ibmvfc_nvme_unregister() is already called from the NPIV logout and host
-reset paths during normal operation; driver removal simply missed it.
+1. Use-after-free / stale pointer dereference.
+   ibmvfc_init_ls_abort() reads abt_evt = ls_abort->private and
+   immediately dereferences abt_evt->tgt.  ibmvfc_ls_req_done() calls
+   ibmvfc_free_event() under host_lock, which returns the event slot to
+   the pool.  If the LS completes naturally just before ls_abort is
+   called, abt_evt points to a freed (and potentially reused) event,
+   making the dereference a UAF.
 
-Add the call after ibmvfc_release_crq_queue() — at which point the CRQ
-is torn down so no further completions can arrive — and before
-ibmvfc_free_mem(), so host memory is still valid while
-nvme_fc_unregister_localport() runs and waits for the
-localport_delete callback to complete.
+   Fix by taking host_lock before reading ls_abort->private and checking
+   evt->free (set to 1 by ibmvfc_free_event() under host_lock) to detect
+   whether the original LS has already completed.  If so, there is
+   nothing to cancel and we return early.  ibmvfc_get_event() is also
+   moved inside the lock so the validity check and event allocation are
+   atomic with respect to the completion path.
 
-Fixes: 86e495358096 ("scsi: ibmvfc: implement LLDD callbacks for mapping nvme-fc queues")
+2. Blocking wait on timeout workqueue (same class as the FCP abort fix).
+   The original code called wait_for_completion() from ls_abort, which
+   is invoked by the NVMe-FC transport from a context that must not
+   block.
+
+   Fix by replacing ibmvfc_sync_nvme_completion with a dedicated async
+   callback ibmvfc_nvme_ls_abort_done() that logs any non-zero MAD
+   status, drops the target kref, and frees the event.
+   ibmvfc_send_event() guarantees the callback fires on both success and
+   failure paths, so ibmvfc_nvme_ls_abort() returns immediately after
+   ibmvfc_send_event().
+
+ibmvfc_sync_nvme_completion is now unused and is removed.
+ibmvfc_init_ls_abort() is updated to take the validated abt_evt pointer
+directly instead of deriving it from ls_abort->private.
+
+Fixes: 20bec08f0208 ("scsi: ibmvfc: implement nvme-fc LS abort handling callback")
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvfc-nvme.c | 68 +++++++++++++++--------------
+ 1 file changed, 36 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 080312ff0a93..e68ed5e79e58 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -6976,6 +6976,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
- static void ibmvfc_remove(struct vio_dev *vdev)
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c b/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
+index d23e5f31f8b5..475177cda103 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
+@@ -103,6 +103,7 @@ static void ibmvfc_ls_req_done(struct ibmvfc_event *evt)
+ 		rc = -EIO;
+ 
+ 	evt->ls_req->done(evt->ls_req, rc);
++	evt->ls_req = NULL;
+ 
+ 	kref_put(&tgt->kref, ibmvfc_release_tgt);
+ 	ibmvfc_free_event(evt);
+@@ -164,21 +165,12 @@ static int ibmvfc_nvme_ls_req(struct nvme_fc_local_port *lport,
+ 	return 0;
+ }
+ 
+-static void ibmvfc_sync_nvme_completion(struct ibmvfc_event *evt)
++static void ibmvfc_init_ls_abort(struct ibmvfc_event *evt,
++				 struct ibmvfc_event *abt_evt)
  {
- 	struct ibmvfc_host *vhost = dev_get_drvdata(&vdev->dev);
-+	struct ibmvfc_target *tgt, *tgt_tmp;
- 	LIST_HEAD(purge);
+-	/* copy the response back */
+-	if (evt->sync_iu)
+-		*evt->sync_iu = *evt->xfer_iu;
+-
+-	complete(&evt->comp);
+-}
+-
+-static void ibmvfc_init_ls_abort(struct ibmvfc_event *evt, struct nvmefc_ls_req *ls_abort)
+-{
+-	struct ibmvfc_tmf *tmf;
+-	struct ibmvfc_event *abt_evt = ls_abort->private;
+ 	struct ibmvfc_target *tgt = abt_evt->tgt;
+ 	struct ibmvfc_host *vhost = evt->vhost;
++	struct ibmvfc_tmf *tmf;
+ 
+ 	tmf = &evt->iu.tmf;
+ 	memset(tmf, 0, sizeof(*tmf));
+@@ -192,8 +184,18 @@ static void ibmvfc_init_ls_abort(struct ibmvfc_event *evt, struct nvmefc_ls_req
+ 	tmf->cancel_key = cpu_to_be32((u64)abt_evt);
+ 	tmf->my_cancel_key = cpu_to_be32((u64)evt);
+ 	tmf->assoc_id = cpu_to_be64(tgt->assoc_id);
++}
++
++static void ibmvfc_nvme_ls_abort_done(struct ibmvfc_event *evt)
++{
++	u16 status = be16_to_cpu(evt->xfer_iu->mad_common.status);
++
++	if (status)
++		ibmvfc_dbg(evt->vhost, "ls_abort: cancel MAD failed with rc=%x\n",
++			   status);
+ 
+-	init_completion(&evt->comp);
++	kref_put(&evt->tgt->kref, ibmvfc_release_tgt);
++	ibmvfc_free_event(evt);
+ }
+ 
+ static void ibmvfc_nvme_ls_abort(struct nvme_fc_local_port *lport,
+@@ -202,34 +204,36 @@ static void ibmvfc_nvme_ls_abort(struct nvme_fc_local_port *lport,
+ {
+ 	struct ibmvfc_host *vhost = lport->private;
+ 	struct ibmvfc_target *tgt = rport->private;
+-	struct ibmvfc_event *evt;
+-	union ibmvfc_iu rsp;
++	struct ibmvfc_event *evt, *abt_evt;
  	unsigned long flags;
- 
-@@ -6992,6 +6993,22 @@ static void ibmvfc_remove(struct vio_dev *vdev)
- 	fc_remove_host(vhost->host);
- 	scsi_remove_host(vhost->host);
- 
-+	list_for_each_entry_safe(tgt, tgt_tmp, &vhost->nvme_scrqs.targets, queue) {
-+		if (tgt->nvme_remote_port)
-+			ibmvfc_nvme_unregister_remoteport(tgt);
-+		list_del(&tgt->queue);
-+		timer_delete_sync(&tgt->timer);
-+		kref_put(&tgt->kref, ibmvfc_release_tgt);
+-	u16 status = IBMVFC_MAD_CRQ_ERROR;
++
++	spin_lock_irqsave(&vhost->host->host_lock, flags);
++
++	/*
++	 * If the original LS has already completed naturally, abt_evt will
++	 * have been freed back to the pool (evt->free set to 1 under
++	 * host_lock by ibmvfc_free_event()).  Nothing left to cancel.
++	 */
++	abt_evt = ls_abort->private;
++	if (!abt_evt || atomic_read(&abt_evt->free) || abt_evt->ls_req != ls_abort) {
++		spin_unlock_irqrestore(&vhost->host->host_lock, flags);
++		return;
 +	}
-+
-+	list_for_each_entry_safe(tgt, tgt_tmp, &vhost->scsi_scrqs.targets, queue) {
-+		if (tgt->rport)
-+			fc_remote_port_delete(tgt->rport);
-+		list_del(&tgt->queue);
-+		timer_delete_sync(&tgt->timer);
-+		kref_put(&tgt->kref, ibmvfc_release_tgt);
-+	}
-+
- 	spin_lock_irqsave(&vhost->host->host_lock, flags);
- 	ibmvfc_purge_requests(vhost, DID_ERROR);
- 	list_splice_init(&vhost->purge, &purge);
-@@ -7000,6 +7017,8 @@ static void ibmvfc_remove(struct vio_dev *vdev)
- 	ibmvfc_release_sub_crqs(vhost);
- 	ibmvfc_release_crq_queue(vhost);
  
-+	ibmvfc_nvme_unregister(vhost);
-+
- 	ibmvfc_free_mem(vhost);
- 	spin_lock(&ibmvfc_driver_lock);
- 	list_del(&vhost->queue);
+ 	evt = ibmvfc_get_event(&vhost->crq);
+-	if (!vhost->logged_in || !evt)
++	if (!vhost->logged_in || !evt) {
++		spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+ 		return;
++	}
+ 
+-	spin_lock_irqsave(&vhost->host->host_lock, flags);
+ 	kref_get(&tgt->kref);
+-	ibmvfc_init_event(evt, ibmvfc_sync_nvme_completion, IBMVFC_MAD_FORMAT);
+-	ibmvfc_init_ls_abort(evt, ls_abort);
+-	evt->sync_iu = &rsp;
++	ibmvfc_init_event(evt, ibmvfc_nvme_ls_abort_done, IBMVFC_MAD_FORMAT);
++	ibmvfc_init_ls_abort(evt, abt_evt);
++	evt->tgt = tgt;
+ 
+ 	if (ibmvfc_send_event(evt, vhost, default_timeout))
+-		goto out;
+-
+-	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+-
+-	wait_for_completion(&evt->comp);
+-	status = be16_to_cpu(rsp.mad_common.status);
+-	spin_lock_irqsave(&vhost->host->host_lock, flags);
+-	ibmvfc_free_event(evt);
+-out:
++		kref_put(&tgt->kref, ibmvfc_release_tgt);
+ 	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+-	ibmvfc_dbg(vhost, "ls_abort: cancel failed with rc=%x\n", status);
+-	kref_put(&tgt->kref, ibmvfc_release_tgt);
+ }
+ 
+ static void ibmvfc_nvme_done(struct ibmvfc_event *evt)
 -- 
 2.55.0
 
