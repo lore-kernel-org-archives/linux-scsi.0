@@ -1,155 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f43.google.com (mail-pj2-f43.google.com [74.125.227.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EEEE282F0C;
-	Sat, 19 Sep 2026 15:09:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98646282F0C
+	for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 17:34:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789830585; cv=none; b=lPrRvT/rJFvIxPMmMWuoChD9rLVo0qx4vvzQQsYLogWW1Jex3P4Gy9X0138g/otju7I7u8p1QBmFP66hixvOBuCjvznMHZpuD1bM/7CF5jUffI9lIDlrqAeAQ4A9kI82NsjPbrP3g8O4GpRg5304+edl5naSlObjkFRo0TcFchc=
+	t=1789839292; cv=none; b=Z2C3IPA0DdYLeQDpBHpU+l8W5Epk91N+GowAcDHhdiMw8jqkLRLRG5nwfOuRTlDTPTBw6c7PzYncl/ksAnTS8YP8zXsanZH8+xpbl24DDo4OfJDrsfCRWZTMAxczfmi3d7FLyI6UOh9BK7pwL2kOxChKyEl5IJtUc+TwcDyefUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789830585; c=relaxed/simple;
-	bh=azssGbIdM4Y1JziqhDwyHh5esWmOHusgmI9xAme2UaY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RK9W4jfa7rjxiJpB1sIbAM+H4AeVQm1IuzdYB+aS6xuB0cT3O0pyiQApYQANq7xvJhrnfpTb76eBO/HOzyRC9BxC8WcJn2TnDNE19oqmeFhgDk/8MdIItvaMaj8o6hvzWDasnykQ100BIRjfUCCnmjDCSTiuReN1xQkDIz0GK14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EAnlGaZ3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1789839292; c=relaxed/simple;
+	bh=tXPMv/Z528AzLwHoqZJSLZNkBxU0ltXfHPgB+kUGM0I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TKYBMJL6BSXFS7pg8YPGStFDpZAoxVJhyTDCMNno6naEqApJzqXWh5oGvWt7Iyuk/luqV9V0v2qSO0KDm8G5aYQpAArdrTqEIZ0ZTw+s35sQ3agTURAm/ZbWla8divv69a2NSon2GTXgZVkmWfOJK2Wzo2zwC4lPXb3g4/++KkM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aCoFo3lF; arc=none smtp.client-ip=74.125.227.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EAnlGaZ3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48AD71F000FF;
-	Sat, 19 Sep 2026 15:09:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1789830584;
-	bh=ItRljA0QTwt97l+Rzb+oBvHOLkSySW1764bZK9I66Ok=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=EAnlGaZ3PvA3eD4EGY8ScsYSSfOA3NuPg0sDbUCPy6ciztb4OpKHPUKVNCsw3yYTK
-	 F5dXTbBszFDFMx49SBhL74XFEgpDqePel1QPLlEnRPCZHmhKtc3C3Y8QRt4P8RTfDW
-	 /Nifcw76qMRhxrrojdmckuYvA7/eR4f0CHw7r1Z9eFzAmLIrY6jMLOX5tLpcIAlRYI
-	 ZnXzDASidh8ez3yCFBhWrxVUS9oGdssza/jSZ3fPN118zuj4eAdMjnma5SzA3PTmn0
-	 c3g/zkLkVjWHOMPyaaZFTkyX4384FbCqHcB4Ayw2h8F62iRMWX893EQKdX2S78phRH
-	 PhATKi1qYFryA==
-Date: Sat, 19 Sep 2026 16:09:13 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: "David Hildenbrand (Arm)" <david@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	Vlastimil Babka <vbabka@kernel.org>, Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
-	Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	Jaya Kumar <jayalk@intworks.biz>, Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, 
-	Sebastian Reichel <sre@kernel.org>, John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
-	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
-	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
-	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev, 
-	Takashi Iwai <tiwai@suse.de>
-Subject: Re: [PATCH v2 00/40] mm: make VMA flag semantics explicit, eliminate
- VM_SPECIAL
-Message-ID: <aq6lW9FvL69QeA9H@gremlin>
-References: <20260914-b4-mmap-prepare-vma-flag-sanify-v2-0-7d9781ed5361@kernel.org>
- <20260914180811.057cba8fcc48d6e0b53a2683@linux-foundation.org>
- <0b064fe6-ddb3-4f26-a1f2-2e9dd88d590f@kernel.org>
- <CAJuCfpFBichJH4OcmSHTb1rOuQBT6k5pXeua9_KgpWjDBKvsYw@mail.gmail.com>
- <aq6kzpK7wPl3iFGe@gremlin>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aCoFo3lF"
+Received: by mail-pj2-f43.google.com with SMTP id 98e67ed59e1d1-396cccbba92so1632684a91.0
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 10:34:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1789839291; x=1790444091; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=E3sjbzhb8LLlJu3Xq4nSK1HUp2gy9IN+rCu4DEVUfQU=;
+        b=aCoFo3lFTKMrg7PIcA1ejGDI13I3vmHJBmZnC8El2K/sCTwSTghub9PQNrVm3hIzPH
+         zE91qUQTHGt+8hP1wjX0wJ6p02E6neQ4IActu8nvkh50uU44QbP7FN3ApDSpIDUH5QgJ
+         n8ReyfqBrdL0GMSrmXp4my3nW6LGdKXxuXC2ttTnT8VD9B1dCEHXj4cpGxW7XFZnfz/O
+         kIMAr9bqHrz1WQ0sy0//sk/uumvk0YjDluST7jUh95HELb/m4lTa0UGAUrqG81uoVlHe
+         BJtDY8BbuSBo9aL1o80wIQLCeEkVbUNc0MvIhuMmAGR467maNOrQk3JeFPL8osGhgGYw
+         08TA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789839291; x=1790444091;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=E3sjbzhb8LLlJu3Xq4nSK1HUp2gy9IN+rCu4DEVUfQU=;
+        b=q4SSnwd9Kt6Hb3MAaWmtfH0HjbAfqYFnvW1WUCOnPP8E8w2e9UzLfZuvOvKFPqqvIC
+         5PMb3cwD3XV+drnnhU3sjDTdZNfWOmkgx+DZdca8eC0lru9XonYA2EAWCgVhEEjJb3wQ
+         itNNNboXACJCntOlv70CmDByY54PyEIYOVo3P4bcl6NhfmfsOxLbrBzdeEMWMW2lsFW1
+         QOaQqUHniv7tangoP+2o+H/xxDA98ONPhBTZJM+mjKvfff8mRHMFVZUShZK4gqChjMIG
+         ywrotqWghkMVFDRhK5gyCtqayo9hurlFjghmndoYRYHEDW/QTvNL0w4dbGhBvGdFjChP
+         IpFg==
+X-Forwarded-Encrypted: i=1; AKwUvByeB6w/Z2hNreTKpX4JawMFOoEhTFCHqVZo1fOm6cQo+1OV37Dkk1Ra7/ZU3zNuN78lx8noDGc7yKkd@vger.kernel.org
+X-Gm-Message-State: AFuF++mvIoU5h3FvhU9GKltX73tNAW18vkmtQMEpWpwf2XXotIqC5C/W
+	AaVyYHd/WVWUG6lNRgGYljDhK8aYCKfQI1XK00Vo4Lymv7ucz8eKAxYF
+X-Gm-Gg: AYBFou1YVQ6WjJ0gkVnZuqW6ME+kzN/4ogL5F1VpF7PeyDpChMLevwFXcdk4qDdBEnq
+	Exi9o26XH4Oo0jeGzF50AtEoZ65o2KnjadRtjM8O8Ln4NXLk+GPL/b5VysMbciqo5sIOuQBIhjJ
+	MYx56Ubi7DmIo8QFXdTOkR1FU4OjMpWdQeiOppv11Gf3tFBtBRpqS3XofuzGZIwYLNUOZuX3CYx
+	p6zuOUOvWbJZm/I0fbb4Bk/L9WtVlkUnXAeOMUYKWGJpApB8xd9d792g3E3FmiJfOFs1Cut37CV
+	C5QnfOj3+O86NMNC9lOetrvot0bvRJfDneXMwH0TAcOVY1JaIg0N0/qpmISgkZ2XzjXRilwHc/a
+	Bvvlsjs1xTG1sFb2KkLdEmk+aQ5My5DixgkClKMpStJ+syWPN0pfWNnsXaX6IBMlhrnIaWeKOFa
+	YWBCPVqYqxGElcP4/XZoe8GbQwd7Q6EuY4Mcx9PFo1WspMZ39yrF8n2Q==
+X-Received: by 2002:a17:90b:1dce:b0:39e:6a80:dda3 with SMTP id 98e67ed59e1d1-39e6a810c76mr4792250a91.42.1789839290805;
+        Sat, 19 Sep 2026 10:34:50 -0700 (PDT)
+Received: from lgs.. ([2001:250:5800:1002::de93])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a026898b76sm3234229a91.16.2026.09.19.10.34.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 19 Sep 2026 10:34:50 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Robert Love <robert.w.love@intel.com>,
+	James Bottomley <James.Bottomley@suse.de>,
+	Joe Eykholt <jeykholt@cisco.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Guangshuo Li <lgs201920130244@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: libfc: fix directory server rport memory leak
+Date: Sun, 20 Sep 2026 01:34:05 +0800
+Message-ID: <20260919173405.3718408-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <aq6kzpK7wPl3iFGe@gremlin>
 
-On Sat, Sep 19, 2026 at 04:05:57PM +0100, Lorenzo Stoakes (ARM) wrote:
-> On Fri, Sep 18, 2026 at 01:31:24PM -0700, Suren Baghdasaryan wrote:
-> > On Fri, Sep 18, 2026 at 1:21 PM David Hildenbrand (Arm)
-> > <david@kernel.org> wrote:
-> > >
-> > > On 9/15/26 03:08, Andrew Morton wrote:
-> > > > On Mon, 14 Sep 2026 15:57:20 +0100 "Lorenzo Stoakes (ARM)" <ljs@kernel.org> wrote:
-> > > >
-> > > >> The VM_SPECIAL / VMA_SPECIAL_FLAGS mask conflates several unrelated
-> > > >> properties:
-> > > >>
-> > > >> ...
-> > > >>
-> > > >> It's all rather a mess.
-> > > >>
-> > > >> This series brings some order to things by both limiting what drivers can
-> > > >> do with VMA flags and switching to using predicates that describe
-> > > >> behaviour, not arbitrary flags.
-> > > >
-> > > > That's a lot of patches.
-> > > >
-> > > > Review is thin and I expect this won't improve a lot.  Lots of "no
-> > > > functional changes" changes.
-> > >
-> > > I'll expect to go through all of them. Might just take a bit ;)
-> >
-> > ditto
->
-> Thanks guys!
+fc_rport_recv_plogi_req() creates an rport before allocating the frame
+used for the PLOGI LS_ACC response.
 
-Note v3 has been posted to fix a stupid bug in 1/40 + attack some very trivial
-sashiko stuff
+fc_rport_create() does not add FC_FID_DIR_SERV rports to the discovery
+rport list. If fc_frame_alloc() fails while handling a PLOGI from the
+directory server, the function returns without starting the rport state
+machine or dropping the initial rport reference.
 
-https://lore.kernel.org/linux-mm/20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org/
+Since the directory server rport is not present in the discovery list,
+there is no later teardown path that can find the object and release
+that reference. The allocated fc_rport_priv is therefore leaked.
 
->
-> >
-> > >
-> > > --
-> > > Cheers,
-> > >
-> > > David
->
-> --
-> Cheers, Lorenzo
+Record when the failed frame allocation leaves an unlisted directory
+server rport behind and drop its initial reference after releasing the
+rport mutex. Keep the existing lifetime unchanged for ordinary rports,
+which remain owned by the discovery list.
 
---
-Cheers, Lorenzo
+The issue was identified by a static analysis tool I developed and
+confirmed by manual review.
+
+Fixes: 3ac6f98f4113 ("[SCSI] libfc: correctly handle incoming PLOGI request.")
+Cc: stable@vger.kernel.org
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+---
+ drivers/scsi/libfc/fc_rport.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index c25979d96808..884b233c2f72 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1848,6 +1848,7 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
+ 	struct fc_els_flogi *pl;
+ 	struct fc_seq_els_data rjt_data;
+ 	u32 sid;
++	bool drop_rdata = false;
+ 
+ 	lockdep_assert_held(&lport->lp_mutex);
+ 
+@@ -1940,8 +1941,10 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
+ 	 * Send LS_ACC.	 If this fails, the originator should retry.
+ 	 */
+ 	fp = fc_frame_alloc(lport, sizeof(*pl));
+-	if (!fp)
++	if (!fp) {
++		drop_rdata = sid == FC_FID_DIR_SERV;
+ 		goto out;
++	}
+ 
+ 	fc_plogi_fill(lport, fp, ELS_LS_ACC);
+ 	fc_fill_reply_hdr(fp, rx_fp, FC_RCTL_ELS_REP, 0);
+@@ -1949,6 +1952,8 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
+ 	fc_rport_enter_prli(rdata);
+ out:
+ 	mutex_unlock(&rdata->rp_mutex);
++	if (drop_rdata)
++		kref_put(&rdata->kref, fc_rport_destroy);
+ 	fc_frame_free(rx_fp);
+ 	return;
+ 
+-- 
+2.43.0
+
