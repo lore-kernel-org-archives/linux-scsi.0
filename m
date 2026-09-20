@@ -1,72 +1,50 @@
-Received: from mail-pj2-f13.google.com (mail-pj2-f13.google.com [74.125.227.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8010C391513
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 22:26:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57A3417B50F;
+	Sun, 20 Sep 2026 01:24:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789856790; cv=none; b=H2dq+1Vc3kX6SFk1QSujb2aItSOBQxy+tEK4tRhsRfKzhhN4y7HqJ8idLcTZMUdWTz/NcFWfXi4ZmLV/DyKTqNRFthb3qy8grI9ugFiUDnRZwcGhOW+KDpVxePqI5hzOXTIK7Wx1BW0CFcO22H7u5w1b+xON+VR/0E36MX1gZbI=
+	t=1789867487; cv=none; b=VlEFI3+54wPeEj4Ceg7SFHDcEOE/RMQARR50zjN20j0QQPFNep6lKn2S5BdaK48xYChydB338xkBtLJzlfMVkGa5/+KdFcSOIg2Mtbd20k9X94Pxt6JilFDksi0Gfc3B0k9O2Wd0Y3KHwwmINi11tN9+DL/uIvP4MfyhXTkM6OM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789856790; c=relaxed/simple;
-	bh=gU93zAzsOoQ1roR6T6OlNqwkUWFuikccQakX9808gFA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Kj6miZqvrld1StKcDKmP3U1DGfxYw/GXciT5WQxnfUPx8cosUtArm/B1Tiub/UD4Hn+vC+/fOp36oRQcTkQTuvWgKSuQ9zGJ/FABos6aiKAl0V2NOsrpfH12UTsZtYce/6gGcpsEqq55IuIhHDNSuEoG2V9EN2X3GlfSFFgmlns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ldAToeH7; arc=none smtp.client-ip=74.125.227.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ldAToeH7"
-Received: by mail-pj2-f13.google.com with SMTP id 98e67ed59e1d1-396cccbba92so1716256a91.0
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Sep 2026 15:26:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1789856788; x=1790461588; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=AHexZoASrrLFUeP2m4HCenY6Z1qSfaQk6YYJHltbZIA=;
-        b=ldAToeH7rvrAqYS/pCUkXqOI0Qmyk8GeEgaYYUkixo3QFHN7Sx2MhcE0CbXnpPBhkI
-         Ypif5eZYRPt+rfG3P9wztKZPAd4c8Rqc1ITZN68JXlVjMBxDkOTBXieD23SvwXep0ZC7
-         qrd6MUQhcnXAZk9QI1uZX+/VdGhdg39lVAXnthtJo2eRmdGFqz+/btK3OqBRaT1q9PkF
-         XqOKo00/XRLYItFKvR4wGx2JwuT7SAYJDNUkk+n3sdkUJTZsnDeR60LOQ6p8bZ9aInMS
-         7rwcW/OQ8Sw0fF/OvWE/baYGv8Q3wso3U/0WHYNBHwKW1cw2Pozcha73UeExAhgunQPc
-         Zzeg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1789856788; x=1790461588;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=AHexZoASrrLFUeP2m4HCenY6Z1qSfaQk6YYJHltbZIA=;
-        b=D8IW5Zqc7ximoKpa/gt73lJyirJgIuGjOk2PlVIqHeewsFI5Y38PQ54txVwgs1Cdcu
-         UEqoNjIwnmKzYtWIjQXjsGxBpQCk4w0PCaU4uBDx5gU5Bj2EGJerK1UGXhh2FoAOSzKN
-         RgLd2/fJxX3osiyiwScRNmHtMcPHp2v71vkn+/wpJHlpHxO/u8qeaMdDHEcVzpdehlMd
-         tl6UNOinzWzr3CFeszuK2SH/QfZGHwbiu8H1ejrlsDovRpYi+OkCTM/bXvFYkS/bdgCJ
-         IVTYTxGj1KkIjNmtFc71UsSfMHxaG1zu30l+CzdghBYwoZXbRMBNScgzJkgcNOYjiRec
-         5lxg==
-X-Gm-Message-State: AFuF++mANwOTSEfm2CBX1c98BTfhfqhjPEGGsy8NSmDONeXEMjBrU4ot
-	+1jCQgvVUskuIeEU4ZmDv3K2PhHeBpyOT0eS09aNd/xEIyujQsn3Ujr9Fy3Nm60Q
-X-Gm-Gg: AYBFou3nekk/xK7P+9e93Fmrgw9h6+zCCeKF3UTRUzpKs592qKqJ9whG3X6OrM/n2rN
-	U9wIYq9ilEz84dgzI8tq3dWnvPlBUOVj4BwYsuqVr9Qq2Yhf9UQYKB/+sNqb6Up5FZmcaczM3bQ
-	mZPFMOuheBZYqC8pWxhllbGZkwaOw5jJ3xmXUQ0qjg9aVlevWgohVM9+sSzHcxTzHFTpCwVOJNA
-	BmT0Y6PI8FXqprYOXcCQow16M8+X7JOmirXxcKqjH1HjDrWPdsZSdVQRFemmh0P5dGzWzr3fasJ
-	fnD51kRPdPhVe30NL0xOK8d4xFftsoNVyanr+biJ0doXAkJRcSzhvhVkqjZLvmcBaLskaJwcpof
-	3lrGvLetbhYJsxATgrWahCWY4LOsGcrLKNeJn/4iImv3uSlus957ZLAn0OpvX/EYP648SAkiI1s
-	EGRe6YOAfHkGNngbNLDygDHyTH/oU5lRAUiTe2LJ1YlBVjHV9t+hE4igvij8z2/3cMB42C2nQDN
-	1h6ZyHafie4DK+S6uPO51Obpb9a0vu8WVyPxb2tpC35483Q8vvXSP8+mbap3FIGR70fcutGMq2q
-	4EB1tEeIgw==
-X-Received: by 2002:a17:90b:2d03:b0:39e:1c03:14c2 with SMTP id 98e67ed59e1d1-39e54baa3f1mr10887430a91.11.1789856787653;
-        Sat, 19 Sep 2026 15:26:27 -0700 (PDT)
-Received: from phui-2.c.googlers.com.com (78.123.83.34.bc.googleusercontent.com. [34.83.123.78])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39e6c3145e5sm6614629a91.5.2026.09.19.15.26.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 19 Sep 2026 15:26:27 -0700 (PDT)
-From: Hui Peng <benquike@gmail.com>
-To: dgilbert@interlog.com,
-	James.Bottomley@HansenPartnership.com,
-	mkp@kernel.org
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: sg, sr: fix stale scatter_elem_sz in sg_build_indirect() and OOB read in sr_is_xa()
-Date: Sat, 19 Sep 2026 22:26:26 +0000
-Message-ID: <20260919222626.3797788-1-benquike@gmail.com>
-X-Mailer: git-send-email 2.55.0.1082.g2b9226bbc0-goog
+	s=arc-20240116; t=1789867487; c=relaxed/simple;
+	bh=wVa29BDPgTaFLYu+82Pfq27S9e/BxvnQ1dFAU97nMCk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KcUVSddokJV3mICixep16QIUfpCALJMukMse/+A0TAp/3FvqNNhbs7fqc2mmjmbB7uwALwmKYmA3E290KyWOmibAM09tTDf+MBRrfEqa2hoNKrhytuIyWhI5OmWIuC8swll8rEnTmPQNyStVfWQ2fAeReC+sl0Fi4ZBBpCTAMA4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 04bf767cb49211f19a56ed5b684f684d-20260920
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:3b028417-4ef9-471f-b76d-d874774c7354,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:ee5bbe308ca2b855adfb34d9bf7f7fc1,BulkI
+	D:nil,BulkQuantity:0,SF:102|865|898,TC:nil,Content:0|15|50|99,EDM:-3,IP:ni
+	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 04bf767cb49211f19a56ed5b684f684d-20260920
+X-User: lijiayi@kylinos.cn
+Received: from thinksys.tail1c7620.ts.net [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lijiayi@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1051692619; Sun, 20 Sep 2026 09:24:26 +0800
+From: Jiayi Li <lijiayi@kylinos.cn>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	linux-kernel@vger.kernel.org,
+	Jiayi Li <lijiayi@kylinos.cn>
+Subject: [RFC PATCH] usb: uas: quiesce SCSI before stopping endpoints on driver unbind
+Date: Sun, 20 Sep 2026 09:23:58 +0800
+Message-Id: <20260920012358.3362053-1-lijiayi@kylinos.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,91 +53,207 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Fix two issues in drivers/scsi/sg.c and drivers/scsi/sr_ioctl.c:
+A driver-only unbind of uas while reads are in flight can leave the
+storage device unusable after the driver is rebound.
 
-1. In sg_build_indirect() (drivers/scsi/sg.c), snapshot scatter_elem_sz
-   into a local variable and clamp it to [PAGE_SIZE, SG_SCATTER_SZ] so a
-   concurrent SG_SET_RESERVED_SIZE ioctl cannot cause inconsistent page
-   order calculations or unbounded order-10 allocations.
-2. In sr_is_xa() (drivers/scsi/sr_ioctl.c), allocate at least 2048 bytes
-   (or CD_FRAMESIZE_RAW) before calling sr_read_sector() so reading
-   sector data at offset + 14 does not read or write past the kmalloc
-   buffer.
+Test environment:
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Assisted-by: LLM
-Signed-off-by: Hui Peng <benquike@gmail.com>
+  - Device: VIA Labs USB storage bridge, VID:PID 2109:0715, product SO1,
+    with a ZX1 512 GB SSD
+  - Link: SuperSpeed 5 Gbit/s, UAS interface 2-4:1.0
+  - System: Ubuntu 24.04.3 LTS
+  - Kernel: 7.0.0-31-generic
+
+Reproduction steps:
+
+  1. Unmount every mounted partition on the test disk.  In this setup
+     only /dev/sda1 was mounted:
+
+       udisksctl unmount -b /dev/sda1
+
+  2. Start 32 concurrent O_DIRECT readers at different offsets:
+
+       disk=/dev/sda
+       pids=
+       for i in $(seq 0 31); do
+               while dd if="$disk" of=/dev/null bs=1M \
+                       skip=$((i * 4096)) count=4096 iflag=direct \
+                       status=none 2>/dev/null; do :; done &
+               pids="$pids $!"
+       done
+
+  3. Wait until at least eight reads are in flight:
+
+       while :; do
+               read -r reads writes < /sys/class/block/sda/inflight
+               [ "$reads" -ge 8 ] && break
+               sleep 0.005
+       done
+
+  4. Unbind uas, wait two seconds, and bind it again:
+
+       intf=2-4:1.0
+       echo "$intf" > /sys/bus/usb/drivers/uas/unbind
+       sleep 2
+       echo "$intf" > /sys/bus/usb/drivers/uas/bind
+       kill $pids 2>/dev/null || true
+
+  5. Check dmesg and lsblk for UAS/SCSI errors and disk recovery.
+The two-second delay deliberately separates teardown from reprobe.  It
+did not prevent the failure.  Additional recovery checks on the same
+bridge showed that waiting alone does not clear the failed state:
+
+  - the failed device remained unusable after more than 12 minutes;
+  - UAS unbind/reset followed by a 5-second wait did not recover it;
+  - unbinding xHCI, waiting 10 seconds and binding it again did not
+    recover it;
+  - USB device reset and authorized 0 -> 1 did not recover it.
+
+The device recovered only after it was physically unplugged and reconnected.
+
+Observed failure:
+
+  - 30 READ commands were in flight when unbind started;
+  - the old commands completed with DID_NO_CONNECT during teardown;
+  - after the two-second delay, the new UAS instance created a SCSI
+    host, but the first INQUIRY Data IN completed with -EOVERFLOW;
+  - error handling initially reported a successful USB device reset, but
+    the following READ(10) still timed out;
+  - xHCI reported completion events for unknown stream rings, a later
+    device reset failed with -ENODEV, and SCSI offlined the device;
+  - the USB device then disconnected and re-enumerated, but the new UAS
+    instance again timed out on INQUIRY and TEST UNIT READY and was
+    offlined.
+
+Representative log from the steps above:
+
+  [ 5138.886447] sd 0:0:0:0: [sda] tag#0 uas_zap_pending 0 uas-tag 1 inflight: CMD
+  [ 5138.886674] sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK cmd_age=0s
+  [ 5138.886682] I/O error, dev sda, sector 75497472 op 0x0:(READ) flags 0x4800 phys_seg 128 prio class 2
+  [ 5139.077259] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK
+  [ 5141.100631] scsi host0: uas
+  [ 5141.103134] scsi 0:0:0:0: tag#12 data cmplt err -75 uas-tag 1 inflight: CMD
+  [ 5141.103160] scsi 0:0:0:0: tag#12 CDB: Inquiry 12 00 00 00 24 00
+  [ 5161.649075] scsi 0:0:0:0: tag#12 uas_eh_abort_handler 0 uas-tag 1 inflight: CMD
+  [ 5161.653963] xhci_hcd 0000:00:12.0: Transfer event 26 for unknown stream ring slot 4 ep 14
+  [ 5162.682379] scsi host0: uas_eh_device_reset_handler success
+  [ 5192.884624] sd 0:0:0:0: [sda] tag#16 uas_eh_abort_handler 0 uas-tag 1 inflight: CMD IN
+  [ 5192.884659] sd 0:0:0:0: [sda] tag#16 CDB: Read(10) 28 00 00 00 00 00 00 00 01 00
+  [ 5193.023329] scsi host0: uas_eh_device_reset_handler success
+  [ 5223.084816] xhci_hcd 0000:00:12.0: Transfer event 26 for unknown stream ring slot 4 ep 10
+  [ 5227.160590] usb usb2-port4: Cannot enable. Maybe the USB cable is bad?
+  [ 5227.160712] scsi host0: uas_eh_device_reset_handler FAILED err -19
+  [ 5227.160732] sd 0:0:0:0: Device offlined - not ready after error recovery
+  [ 5227.627367] usb 2-4: USB disconnect, device number 5
+  [ 5232.135739] usb 2-4: new SuperSpeed USB device number 6 using xhci_hcd
+  [ 5232.157674] scsi host0: uas
+  [ 5252.783442] scsi 0:0:0:0: tag#16 CDB: Inquiry 12 00 00 00 24 00
+  [ 5252.783644] xhci_hcd 0000:00:12.0: Transfer event 26 for unknown stream ring slot 4 ep 10
+  [ 5253.815690] scsi 0:0:0:0: tag#16 CDB: Test Unit Ready 00 00 00 00 00 00
+  [ 5254.841412] scsi 0:0:0:0: Device offlined - not ready after error recovery
+Why it fails:
+
+  - usbcore disables an interface's endpoints before ->disconnect unless
+    the driver sets soft_unbind;
+  - the command URB may already have delivered a SCSI command when the
+    data and status URBs are killed;
+  - uas_disconnect() removes the SCSI host only after killing its anchored
+    URBs, so SCSI teardown cannot first quiesce those accepted commands;
+  - the new UAS instance can then encounter residual transport state.
+
+The failure survived xHCI unbind/rebind and a USB device reset.  Since only
+physically unplugging and reconnecting the device recovered it, the residual
+state is most likely retained by the storage bridge rather than the host
+controller, and is not cleared by a USB reset.
+
+What this patch does:
+
+  - set soft_unbind so endpoints remain available during driver-only
+    unbind;
+  - cancel pending scanning before removing the SCSI host;
+  - for driver-only unbind, remove the SCSI host before setting resetting,
+    killing the anchored URBs and freeing streams;
+  - for physical disconnect, retain the existing kill-first order because
+    the endpoints are no longer usable.
+
+This follows the broad ordering used by usb-storage, which sets
+soft_unbind and removes its SCSI host before releasing transport
+resources.
+
+Test results:
+
+  - Unmodified driver: the steps above, including the
+    two-second delay, reproduced on the first iteration.
+  - Patched driver: 10 of 10 zero-delay iterations reattached the disk and
+    completed the post-bind O_DIRECT read.
+  - Each patched iteration had 30 reads in flight at unbind.
+  - Patched unbind took 82 to 109 ms.
+  - No UAS completion error or command timeout occurred after rebind.
+
+Signed-off-by: Jiayi Li <lijiayi@kylinos.cn>
 ---
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 5408f002e6c0..5d635349e06e 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -480,8 +480,10 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 
- 	hp = &srp->header;
- 	old_hdr = kzalloc(SZ_SG_HEADER, GFP_KERNEL);
--	if (!old_hdr)
--		return -ENOMEM;
-+	if (!old_hdr) {
-+		retval = -ENOMEM;
-+		goto free_old_hdr;
+Open questions for RFC discussion:
+
+The change above fixes the reproduced failure, but it is not clear whether
+this is the best way to handle driver-only unbind in uas.
+
+  1. Is enabling soft_unbind and moving scsi_remove_host() ahead of URB
+     teardown acceptable for driver-only unbind?
+  2. Is there a more appropriate way to quiesce SCSI commands and UAS
+     streams before endpoint teardown?
+  3. If this ordering is acceptable, does the driver-only unbind path need
+     a bounded fallback when scsi_remove_host() encounters a nonresponsive
+     device or ongoing SCSI error handling?
+
+Base: linux-next next-20260915
+base-commit: e6e35979777d646fe3c7c94dca7dd32fb25d45f4
+
+---
+ drivers/usb/storage/uas.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 8655edbd66b16..b64048083cb02 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -1215,7 +1215,14 @@ static void uas_disconnect(struct usb_interface *intf)
+ {
+ 	struct Scsi_Host *shost = usb_get_intfdata(intf);
+ 	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
++	struct usb_device *udev = interface_to_usbdev(intf);
+ 	unsigned long flags;
++	bool driver_unbind = udev->state != USB_STATE_NOTATTACHED;
++
++	if (driver_unbind) {
++		cancel_work_sync(&devinfo->scan_work);
++		scsi_remove_host(shost);
 +	}
  
- 	old_hdr->reply_len = (int) hp->timeout;
- 	old_hdr->pack_len = old_hdr->reply_len; /* old, strange behaviour */
-@@ -543,10 +545,10 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 		}
- 	} else
- 		count = (old_hdr->result == 0) ? 0 : -EIO;
--	sg_finish_rem_req(srp);
--	sg_remove_request(sfp, srp);
- 	retval = count;
- free_old_hdr:
-+	sg_finish_rem_req(srp);
-+	sg_remove_request(sfp, srp);
- 	kfree(old_hdr);
- 	return retval;
+ 	spin_lock_irqsave(&devinfo->lock, flags);
+ 	devinfo->resetting = 1;
+@@ -1227,13 +1234,10 @@ static void uas_disconnect(struct usb_interface *intf)
+ 	usb_kill_anchored_urbs(&devinfo->data_urbs);
+ 	uas_zap_pending(devinfo, DID_NO_CONNECT);
+ 
+-	/*
+-	 * Prevent SCSI scanning (if it hasn't started yet)
+-	 * or wait for the SCSI-scanning routine to stop.
+-	 */
+-	cancel_work_sync(&devinfo->scan_work);
+-
+-	scsi_remove_host(shost);
++	if (!driver_unbind) {
++		cancel_work_sync(&devinfo->scan_work);
++		scsi_remove_host(shost);
++	}
+ 	uas_free_streams(devinfo);
+ 	scsi_host_put(shost);
  }
-@@ -1667,9 +1669,12 @@ init_sg(void)
- {
- 	int rc;
- 
--	if (scatter_elem_sz < PAGE_SIZE) {
-+	if (scatter_elem_sz < (int)PAGE_SIZE) {
- 		scatter_elem_sz = PAGE_SIZE;
- 		scatter_elem_sz_prev = scatter_elem_sz;
-+	} else if (scatter_elem_sz > (int)(PAGE_SIZE << MAX_PAGE_ORDER)) {
-+		scatter_elem_sz = PAGE_SIZE << MAX_PAGE_ORDER;
-+		scatter_elem_sz_prev = scatter_elem_sz;
- 	}
- 
- 	rc = register_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0), 
-@@ -1875,9 +1880,14 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 
- 	num = scatter_elem_sz;
- 	if (unlikely(num != scatter_elem_sz_prev)) {
--		if (num < PAGE_SIZE) {
-+		if (num < (int)PAGE_SIZE) {
-+			num = PAGE_SIZE;
- 			scatter_elem_sz = PAGE_SIZE;
- 			scatter_elem_sz_prev = PAGE_SIZE;
-+		} else if (num > (int)(PAGE_SIZE << MAX_PAGE_ORDER)) {
-+			num = PAGE_SIZE << MAX_PAGE_ORDER;
-+			scatter_elem_sz = PAGE_SIZE << MAX_PAGE_ORDER;
-+			scatter_elem_sz_prev = PAGE_SIZE << MAX_PAGE_ORDER;
- 		} else
- 			scatter_elem_sz_prev = num;
- 	}
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index 089653018d32..2a3ce6a460ed 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -582,7 +582,7 @@ int sr_is_xa(Scsi_CD *cd)
- 	if (!xa_test)
- 		return 0;
- 
--	raw_sector = kmalloc(2048, GFP_KERNEL);
-+	raw_sector = kmalloc(CD_FRAMESIZE_RAW1, GFP_KERNEL);
- 	if (!raw_sector)
- 		return -ENOMEM;
- 	if (0 == sr_read_sector(cd, cd->ms_offset + 16,
+@@ -1267,6 +1271,7 @@ static struct usb_driver uas_driver = {
+ 	.suspend = uas_suspend,
+ 	.resume = uas_resume,
+ 	.reset_resume = uas_reset_resume,
++	.soft_unbind = 1,
+ 	.shutdown = uas_shutdown,
+ 	.id_table = uas_usb_ids,
+ };
