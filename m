@@ -1,84 +1,225 @@
-Received: from mta1.migadu.com (out-16.mta1.migadu.com [95.215.58.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1E79403EB5
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 08:50:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39C8147CC71;
+	Mon, 21 Sep 2026 09:41:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789980651; cv=none; b=A5QByrrgFN5a/SOBOWtcuLRITHIjhub4Jzz40uVHqwuwzLeFvHADqRGvFrIazLQOhJGtWZbLbzpfC+gMEjE7FSzdAgKe7WoOkUSC+0yVyR3rkSGztf/fHchm6/81bVb7FLQBv0VPg4kL9wXxp0A/EVaVd/DitE88guA7Y5rNhX0=
+	t=1789983698; cv=none; b=eeuoDW+sS6N8ccgRCjXkFnF9oJxEFBr6noJR4fUxpp4e8aA0W5hRAZ4yNUg+bKTKpO20dlNvyZf/HvtZMnFWS1uHfwzaEEhWe2VH174NeicmGRHhRUhY4kUMna8ON1xfvu0MDLoQ9Wr+aq/kzN3jBegm5IsA8M3qyzxRg40Lz4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789980651; c=relaxed/simple;
-	bh=8Li9ukqpPaIcwue8T5e6RB4FFaFuvrWVlBskY4JQMUY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rr8Pcay0AT15mNHifIIf5dNResIyjaPk7oqc/NOroQf/KiSS8dWzYV9qDmJOi/3TG0coa/f9NB/vNjjeCKKcejA8oNorvGDZY5/A9Ep+toEinjTFgLEmhVoOwmKtmEIJCHDwJFdNw2J7xFgUi12W2GmbObYAiR07OqTLNKgqzAY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=v59JyEKw; arc=none smtp.client-ip=95.215.58.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789983698; c=relaxed/simple;
+	bh=MJ+xEW52TjywRhwxyFDVIBqFTTQfEIN7C8X1wWow78M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TlUZxUeNg7nmbybJy9DUyzas6naB7uWLWECuux6qYTtnsSBUl90KHfqWPlU1STmYzvGErZB8U4raa/JiDHCANn/VPPeUliiXTGEiaMD8h1jrna9gcOPCZcphPjxl3U5EXGN5iXRTSFdHeWhf6zVOdy03/snqAe5zPGIACtF5PR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z4eLRehz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="v59JyEKw"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=8Li9ukqpPaIcwue8T5e6RB4FFaFuvrWVlBskY4JQMUY=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789980646; v=1; x=1790585446;
- b=v59JyEKw3siAawKAOeGfx/Rvl3oAHeDyBLpV3eYmmIHid6WnEEEVsQal6sfeVd1s4sjz2Fgx
- jlSIyxKXG5Pi5C0QHFLNunEQR+14BTvynpHxD/7mU0A+5EoUzYsONpRvM6IOAWkSvlrrAx/ETD5
- 17iqAmZJUkehZnqbX6l5knxQ=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id d15056592cc9689c;
-	Mon, 21 Sep 2026 08:50:31 +0000
-X-Mizu-Trace-ID: d15056592cc9689c
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <b0768abb-8ecf-4622-bbf3-1b3d8f926ef5@linux.dev>
-Date: Mon, 21 Sep 2026 09:50:30 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z4eLRehz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 600441F00893;
+	Mon, 21 Sep 2026 09:41:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1789983696;
+	bh=QHZ7RZbtDUTSVET/tmRibcujY6+y4hUCkc+X3EXjmpk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Z4eLRehzEveBRSIUWvxhkJcFhB8j26avtsaeKTp70gepwopW+7LJYdxscWWFaBYPs
+	 P0VRkLypOQxlrEVFCcerntaJnTe5JOpMYnsRbyfJNaVjyY0TRXiWW5MCVK+2R1KUN+
+	 VWESH0A/IWIZehS8jrSyLxIY5bOGaDnl58gJGmQWEtPrOKSn0+VTP4MYMlb/mtAKz0
+	 grH0T/no3PHZMJ4tbgODSxDVSYan9VD4+0cTNguWF3x4eProe2PvKyJ/vRkuEZUtPN
+	 7as4Y6z5TFzLZ/b5V9axILY5wtaoE0ahp9Gg49ljjO64zLJG9kJdTwRe6BvmVYzR1F
+	 5nRNdcPvYk57A==
+Date: Mon, 21 Sep 2026 09:41:34 +0000
+From: Yixun Lan <dlan@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v5 2/3] scsi: ufs: spacemit: k3: Add UFS Host Controller
+ driver
+Message-ID: <20260921094134-GKB292047@kernel.org>
+References: <20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org>
+ <20260916-08-k3-ufs-support-v5-2-1f5d71f1027d@kernel.org>
+ <20260916031008.5C1911F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: core: Make SCSI host scan interruptible
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
- syzbot+1f678bd2872aefb11d8a@syzkaller.appspotmail.com,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>
-References: <74786683eadc0a32ab335373ead8dd76a9d5a342.1789157339.git.bvanassche@acm.org>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <74786683eadc0a32ab335373ead8dd76a9d5a342.1789157339.git.bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260916031008.5C1911F000FF@smtp.kernel.org>
 
-On 9/11/26 21:11, Bart Van Assche wrote:
-> Writing to the sysfs "scan" attribute serializes SCSI host scans via
-> shost->scan_mutex. In virtualized environments such as virtio-scsi with
-> 256 target IDs, scanning non-existent targets repeatedly allocates and
-> destroys temporary scsi_devices. Each iteration transitions the shared tag
-> queue state and freezes request queues, causing a full bus scan to take
-> tens of seconds.
+Hi ALL,
 
-So does this scan use all wildcard "- - -"?
-
+On 03:10 Wed 16 Sep     , sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+> - [High] scsi: ufs: missing M-PHY attributes configuration for lane 1
+> - [Low] scsi: ufs: dead code via unused struct ufs_spacemit_host
+> - [Low] scsi: ufs: unused macros and magic numbers in M-PHY config
+> --
 > 
-> When multiple processes initiate host scans concurrently, waiter tasks
-> sleep in TASK_UNINTERRUPTIBLE on shost->scan_mutex. If the waiting tasks
-> receive signals such as SIGKILL, they cannot wake up until the mutex is
-> acquired, easily exceeding the hung task timeout and triggering
-> khungtaskd warnings ("INFO: task hung in scsi_scan_host_selected").
-> Furthermore, once a task finally acquires the mutex, it continues to
-> perform the full scan even if a fatal signal is already pending.
+> commit 82db4e922a94ed053811c2ea8440617bd6a94d08
+> Author: Yixun Lan <dlan@kernel.org>
+> Subject: scsi: ufs: spacemit: k3: Add UFS Host Controller driver
 > 
-> Fix this by:
-> 1. Use mutex_lock_interruptible() instead of mutex_lock() in
->     scsi_scan_host_selected(), allowing waiting tasks to sleep in
->     TASK_INTERRUPTIBLE and immediately wake up with -EINTR on signals.
-> 2. Check signal_pending(current) in scsi_scan_host_selected(),
->     scsi_scan_channel(), __scsi_scan_target(), scsi_report_lun_scan(),
->     and scsi_sequential_lun_scan() to abort scanning early when a signal
->     is delivered.
+> This commit adds the UFS Host Controller driver for the SpacemiT K3 SoC.
+> The hardware features are compatible with JEDEC UFS 2.2, MIPI UniPro v1.61, 
+> and M-PHY v3.0 standards.
+> 
+> > diff --git a/drivers/ufs/host/ufs-spacemit.c b/drivers/ufs/host/ufs-spacemit.c
+> > index 0000000000000..179e6edb2ac25
+> > --- /dev/null
+> > +++ b/drivers/ufs/host/ufs-spacemit.c
+> 
+> [ ... ]
+> 
+> > +static int ufs_spacemit_uniprov1p6_init(struct ufs_hba *hba)
+> > +{
+> > +	static const struct ufshcd_dme_attr_val setup_attrs[] = {
+> > +		{ UIC_ARG_MIB(0x1552), 0x4f }, /* PA_TXHSG1SYNCLENGTH */
+> > +		{ UIC_ARG_MIB(0x1553), 0xf }, /* PA_TXHSG1PREPARELENGTH */
+> > +		{ UIC_ARG_MIB(0x1554), 0x4f }, /* PA_TXHSG2SYNCLENGTH */
+> > +		{ UIC_ARG_MIB(0x1555), 0xf }, /* PA_TXHSG2PREPARELENGTH */
+> 
+> [Severity: Low]
+> Is there a reason the raw hex literals are used here instead of the
+> macros like PA_TXHSG1SYNCLENGTH and PA_TXHSG1PREPARELENGTH that were
+> explicitly defined at the top of the file?
+> 
+I found there are some macros defined in incude/ufs/unipro.h already
+I will use them while leave others unchanged which not defined in global
 
-If you want to be able to cancel a scan which is in progress, then why 
-run it in the first place? I don't understand how this helps.
+I will also drop local macros from this drivers for now, it's probably
+better to promote them into global header, but I'd prefer to do it in
+a separate patch
+
+> [ ... ]
+> 
+> > +		/* TX HB8_TIME CAP */
+> > +		{ UIC_ARG_MIB_SEL(0x000F, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x64 },
+> > +		{ UIC_ARG_MIB_SEL(0x000F, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(1)), 0x64 },
+> > +		/* RX HB8_TIME CAP */
+> > +		{ UIC_ARG_MIB_SEL(0x0092, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)), 0x64 },
+> > +		{ UIC_ARG_MIB_SEL(0x0092, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(1)), 0x64 },
+> > +		/* TX EQ 3DB */
+> > +		{ UIC_ARG_MIB_SEL(0x00CD, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),  0x5 },
+> > +		/* RX garbage cnt = 32 SI */
+> 
+> [Severity: High]
+> Should the TX EQ 3DB attribute also be configured for lane 1 here? The
+> surrounding attributes (like TX/RX HB8_TIME CAP and RX garbage cnt) properly
+> target both lanes 0 and 1. 
+> 
+> If lane 1 is left asymmetrically configured, could this lead to PHY link
+> instability, CRC errors, or failure to maintain high-speed gears in a 2-lane
+> setup?
+> 
+false report, the configuration will actually apply to lane 1 too, so ignore
+
+> > +		{ UIC_ARG_MIB_SEL(0x00F2, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)), 0x9F },
+> > +		{ UIC_ARG_MIB_SEL(0x00F2, UIC_ARG_MPHY_RX_GEN_SEL_INDEX(1)), 0x9F },
+> > +	};
+> > +
+> > +	return ufs_spacemit_dme_set(hba, setup_attrs, ARRAY_SIZE(setup_attrs));
+> > +}
+> 
+> [ ... ]
+> 
+> > +static int ufs_spacemit_link_startup_post_change(struct ufs_hba *hba)
+> > +{
+> > +	/* Add 0xe8 make UFS2.1 run GEAR3 + 2Lane@409M */
+> > +	static const struct ufshcd_dme_attr_val setup_attrs[] = {
+> > +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x97 },
+> > +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0xd7 },
+> > +		{ UIC_ARG_MIB_SEL(0xe8, UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)), 0x17 },
+> > +		{ UIC_ARG_MIB(DL_AFC0REQTIMEOUTVAL), UFS_DL_AFC0REQTIMEOUTVAL_MAX },
+> > +	};
+> 
+> [Severity: High]
+> Does this workaround need to be applied to lane 1 as well? The inline comment
+> explicitly documents this as a "2Lane" workaround, but the configuration is
+> only applied to lane 0 via UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0).
+> 
+ditto, wil ignore 
+
+> [ ... ]
+> 
+> > +static int ufs_spacemit_pwr_change_notify(struct ufs_hba *hba,
+> > +					  enum ufs_notify_change_status status,
+> > +					  struct ufs_pa_layer_attr *dev_req_params)
+> > +{
+> > +	struct ufs_spacemit_host *host = ufshcd_get_variant(hba);
+> > +	int ret = 0;
+> > +
+> > +	if (!dev_req_params) {
+> > +		dev_err(hba->dev, "Invalid Parameters\n");
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	switch (status) {
+> > +	case PRE_CHANGE:
+> > +		break;
+> > +	case POST_CHANGE:
+> > +		/* Cache the power mode parameters to use internally */
+> > +		memcpy(&host->dev_req_params, dev_req_params, sizeof(*dev_req_params));
+> 
+> [Severity: Low]
+> Are the cached power mode parameters used elsewhere in the driver? We are
+> copying dev_req_params into host->dev_req_params here, but the structure
+> field doesn't appear to be read anywhere else.
+> 
+it's true, I will drop this cache parameters ..
+
+> [ ... ]
+> 
+> > +static int ufs_spacemit_init(struct ufs_hba *hba)
+> > +{
+> > +	struct device *dev = hba->dev;
+> > +	struct ufs_spacemit_host *host;
+> > +	struct reset_control *rst;
+> > +
+> > +	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+> > +	if (!host)
+> > +		return -ENOMEM;
+> 
+> [Severity: Low]
+> Since the ufs_spacemit_host structure is only written to and never read, do
+> we need to allocate this memory during initialization, or is there some
+> planned functionality missing that was supposed to consume it?
+>
+I think this due to massive cleanup from vendor driver, but I would keep
+it as is for now, for easy to implement vendor specific feature.
+
+> > +
+> > +	rst = devm_reset_control_get_exclusive_deasserted(dev, NULL);
+> 
+> [ ... ]
+> 
+> > diff --git a/drivers/ufs/host/ufs-spacemit.h b/drivers/ufs/host/ufs-spacemit.h
+> > index 0000000000000..5e459f6ba243c
+> > --- /dev/null
+> > +++ b/drivers/ufs/host/ufs-spacemit.h
+> 
+> [ ... ]
+> 
+> > +/* ATOP base*/
+> > +#define UFS_ATOP_BASE			0x1C00
+> > +
+> > +#define UFS_SYSCLK			499
+> 
+> [Severity: Low]
+> Is this UFS_SYSCLK macro intended to be used? It doesn't appear to be
+> referenced anywhere in the implementation.
+> 
+will drop it
+
+> > +#define UFS_TX_SYMBO_CLK		0x800
+> > +#define UFS_MAX_LINKSTARTUP_TIMER	0xFFFFFFFF
+> > +#define UFS_DL_AFC0REQTIMEOUTVAL_MAX	0xFFFF
+> 
+> [ ... ]
+> 
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org?part=2
+
+-- 
+Yixun Lan (dlan)
