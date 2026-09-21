@@ -1,36 +1,36 @@
-Received: from mta1.migadu.com (out-156.mta1.migadu.com [95.215.58.156])
+Received: from mta1.migadu.com (out-204.mta1.migadu.com [95.215.58.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B327B369D6F
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 15:50:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.156
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E60664BB27C
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 15:53:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790005850; cv=none; b=LiZecZWSywvbPyP63bQycOH8/f8JExfvMeepwB0nITtyCLGfbt9Rfreq77LVcGv6jd5p3qpVzZg1Kzx0KUQUykN7tlSq7+8f2FIR17BZtNsEOl6E2hBlleKuwrcI0F91pC1Zafj7UN3X/MvbMX3XZUJulVQkHbc7uY/6/DAsSxw=
+	t=1790006018; cv=none; b=ZTNxu+ZdG+JQNpYqdw4LkQv5LIvzY0pPz4xUTUaVwdLysmOYE8oshxZfZlSKljR4dsib0vBumk9mWhMEPedwjXdIOeaGaPmOb2buoKY0dw20no9T4wP4t4w/YU2aWGmJmcuRpvRcmMJdTfFgKGZbWPUnprFU1hd95rogh3IXmWs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790005850; c=relaxed/simple;
-	bh=lCEWlk6vP9nwICOOWRNGYwdO5Cs+d8wClyGbrj/nTWo=;
+	s=arc-20240116; t=1790006018; c=relaxed/simple;
+	bh=S6t3qBE0znctNUR2xaTvaZJMssPcku1SWqhMKcTBEH8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U1BpL854E8W0i4T5BnmI2vgDp9RxXMTkUG38h0XcqqFnkZpAftsFW6YKLLxVoQ5FMAvk0ZsXXsN/zZ6/PUa6pKwUrbrnNh1r0YicAk+/0ihogHvO+je7RTjfBRUyNfobD1jBvVx10Ietw/0BVflZXusPIrc28uooJ/aPr6TdNQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=BCu84SV2; arc=none smtp.client-ip=95.215.58.156
+	 In-Reply-To:Content-Type; b=I6b2bKW644PRgY51CwPMU2ahqT/oqtrhh1aYaKzL8j2R6o4ZNuxvpzQ2zKXOF0zW0biNOr7pgXHjAs1wwM99Ef0sszdS4zg0bhgPH3XGu8BpUlXbUQW+TxA5MGCQNYoqSzU9/XWY57KC9NQvd/MyQL9ElxsS6L0Nh3dk+DvAeR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=KkUJwNB3; arc=none smtp.client-ip=95.215.58.204
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="BCu84SV2"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="KkUJwNB3"
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=lCEWlk6vP9nwICOOWRNGYwdO5Cs+d8wClyGbrj/nTWo=;
+DKIM-Signature: a=rsa-sha256; bh=S6t3qBE0znctNUR2xaTvaZJMssPcku1SWqhMKcTBEH8=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790005842; v=1; x=1790610642;
- b=BCu84SV2+EpI9OFp5JQ8tXw6RJUzdcOFV3PzTXo6EyewLJNhjqu01EefnYd/1fJRrHSXac5H
- Cu6+Qx1Bg7yu+kuqR+bE7LLjlT0XvEW91s4bahVTcrAq1/woZmDJPRGhTWLAmbDpEGzglaacNAW
- s9DHwF4SUjAEJp5mFQEkjwQE=
+ t=1790006013; v=1; x=1790610813;
+ b=KkUJwNB3DAliuf16QLDxKWKUEqxERBoo7pIBdn2Qt/s8PYtB+BoAvNtm5jdFaIn1rdKwm3xk
+ DXeZAoe75w+ReU+df7Pz2Fp4/XAqDdnL9BUsp4m913J2D5uGxEFND9lIuju+iOcD/VA5k+ex8P/
+ nArBWSLdAEztvIaoY3sCcYlk=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id fcf3e9721d2308c3;
-	Mon, 21 Sep 2026 15:50:31 +0000
-X-Mizu-Trace-ID: fcf3e9721d2308c3
+Received: by mta12.migadu.com with ESMTPS id 18c8d8d5de123420;
+	Mon, 21 Sep 2026 15:53:33 +0000
+X-Mizu-Trace-ID: 18c8d8d5de123420
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <3049af11-b93e-4849-8cf6-463a27792ae5@linux.dev>
-Date: Mon, 21 Sep 2026 16:50:31 +0100
+Message-ID: <d460d0ef-d182-44ca-82d3-dd29afbce565@linux.dev>
+Date: Mon, 21 Sep 2026 16:53:33 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,91 +38,149 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 09/10] scsi: scsi_debug: Map the region written by
- WRITE ATOMIC (16)
+Subject: Re: [PATCH v5 04/10] scsi: scsi_debug: Evaluate scsi_debug_lbp() only
+ once
 To: Niklas Cassel <cassel@kernel.org>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K. Petersen" <mkp@kernel.org>
 Cc: linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
 References: <20260921154015.2971990-12-cassel@kernel.org>
- <20260921154015.2971990-21-cassel@kernel.org>
+ <20260921154015.2971990-16-cassel@kernel.org>
 Content-Language: en-US
 From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260921154015.2971990-21-cassel@kernel.org>
+In-Reply-To: <20260921154015.2971990-16-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 9/21/26 16:40, Niklas Cassel wrote:
-> When logical block provisioning is enabled, a command that writes user
-> data marks the region that it wrote in the provisioning map, so that
-> GET LBA STATUS reports the region as mapped. resp_write_dt0(),
-> resp_write_scat() and resp_write_same() all call map_region() for that.
+> corrupt_lbas(), resp_write_dt0() and resp_write_same() call
+> scsi_debug_lbp() to decide whether to take the zone metadata lock, and
+> then call it again to decide whether to read or write the provisioning
+> map that the lock protects.
 > 
-> resp_atomic_write() does not, so a WRITE ATOMIC (16) leaves the
-> provisioning map untouched, and GET LBA STATUS keeps reporting the
-> region as deallocated after it has been written. map_state(), which
-> GET LBA STATUS uses, is the only reader of the map, so that is the whole
-> of the effect.
+> The result is not a constant. scsi_debug_lbp() is false while the
+> fake_rw module parameter is set, and fake_rw can be written at any time,
+> both as a module parameter and through its driver attribute in sysfs.
+> The two calls can therefore disagree, and the later one can decide to
+> touch the provisioning map after the earlier one decided not to take the
+> lock that protects it.
 > 
-> Call map_region() the way resp_write_dt0() does, and take the zone
-> metadata write lock across the access as it does when logical block
-> provisioning is enabled. That lock is what serialises the provisioning
-> map against resp_unmap(), which holds it while unmap_region() clears map
-> bits and zeroes the data that they cover. resp_unmap() does nothing
-> unless logical block provisioning is enabled, so the lock is only needed
-> in that case.
+> Call it once and use the result throughout.
 > 
 > Assisted-by: LLM
 > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+
+Reviewed-by: John Garry <john.garry@linux.dev>
+
 > ---
 > Tested with:
 > 
->    modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=128 \
->        atomic_wr=1 lbpu=1
+>    modprobe scsi_debug sector_size=512 dev_size_mb=128 lbpu=1 lbpws=1
 > 
-> GET LBA STATUS reports a region that has never been written as
-> deallocated, and reports it as mapped after a WRITE ATOMIC (16) of eight
-> blocks. Only an ordinary WRITE did so before this patch.
+> A WRITE(16) completes and GET LBA STATUS then reports the region as
+> mapped, which covers resp_write_dt0(). A WRITE SAME and a WRITE SAME
+> with the UNMAP bit set complete, and GET LBA STATUS reports the first
+> region as mapped and the second as deallocated, which covers all three
+> uses of the result in resp_write_same().
+> 
+> corrupt_lbas() is not covered. It is reached by writing to the corrupt
+> file in debugfs, and that interface rejected the requests that were
+> tried, for a reason that has nothing to do with this patch.
+> 
+> The window that the change closes was not reproduced. It needs fake_rw
+> to be written between two calls, and was found by review.
 > ---
-> 
-> Changes since v4: the meta_data_locked variable is gone, as suggested.
->   drivers/scsi/scsi_debug.c | 10 ++++++++++
->   1 file changed, 10 insertions(+)
+>   drivers/scsi/scsi_debug.c | 17 ++++++++++-------
+>   1 file changed, 10 insertions(+), 7 deletions(-)
 > 
 > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index d07f6f891951..2e1a02c383a3 100644
+> index 18aefe83b7b6..c68dba6dbbdd 100644
 > --- a/drivers/scsi/scsi_debug.c
 > +++ b/drivers/scsi/scsi_debug.c
-> @@ -6202,6 +6202,7 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
->   	u8 *cmd = scp->cmnd;
->   	u16 boundary, len;
->   	u64 lba, lba_tmp;
+> @@ -4953,12 +4953,13 @@ static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
+>   {
+>   	struct sdeb_store_info *sip = devip2sip(devip, false);
+>   	bool meta_data_locked = false;
 > +	bool lbp = scsi_debug_lbp();
->   	int ret;
+>   	u32 block, num_mapped, b, i;
+>   	int error = 0;
 >   
->   	if (!scsi_debug_atomic_write()) {
-> @@ -6246,7 +6247,16 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
->   		}
+>   	if (sdebug_dev_is_zoned(devip) ||
+>   	    sdebug_dix ||
+> -	    scsi_debug_lbp())  {
+> +	    lbp)  {
+>   		sdeb_meta_write_lock(sip);
+>   		meta_data_locked = true;
+>   	}
+> @@ -4975,7 +4976,7 @@ static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
+>   		goto out_unlock;
 >   	}
 >   
-> +	if (lbp)
-> +		sdeb_meta_write_lock(sip);
-> +
->   	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
+> -	if (scsi_debug_lbp() &&
+> +	if (lbp &&
+>   	    (!map_state(sip, lba, &num_mapped) || num > num_mapped)) {
+
+combine lines? Please consider elsewhere in this patch. However I think 
+that we still like to enforce the 80 character line limit... well, some do.
+
+Thanks
+
+>   		pr_err("can't modify unmapped logical blocks: %llu:%u",
+>   			lba, num);
+> @@ -5035,6 +5036,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+>   	struct sdeb_store_info *sip = devip2sip(devip, true);
+>   	u8 *cmd = scp->cmnd;
+>   	bool meta_data_locked = false;
+> +	bool lbp = scsi_debug_lbp();
+>   
+>   	if (unlikely(sdebug_opts & SDEBUG_OPT_UNALIGNED_WRITE &&
+>   		     atomic_read(&sdeb_inject_pending))) {
+> @@ -5102,7 +5104,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+>   
+>   	if (sdebug_dev_is_zoned(devip) ||
+>   	    (sdebug_dix && scsi_prot_sg_count(scp)) ||
+> -	    scsi_debug_lbp())  {
+> +	    lbp)  {
+>   		sdeb_meta_write_lock(sip);
+>   		meta_data_locked = true;
+>   	}
+> @@ -5147,7 +5149,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+>   	}
+>   
+>   	ret = do_device_access(sip, scp, 0, lba, num, group, true, false);
+> -	if (unlikely(scsi_debug_lbp()))
 > +	if (unlikely(lbp))
-
-Is this supposed to be called if ret <= 0?
-
-> +		map_region(sip, lba, len);
-> +
+>   		map_region(sip, lba, num);
+>   
+>   	/* If ZBC zone then bump its write pointer */
+> @@ -5374,8 +5376,9 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+>   	u8 *fs1p;
+>   	u8 *fsp;
+>   	bool meta_data_locked = false;
+> +	bool lbp = scsi_debug_lbp();
+>   
+> -	if (sdebug_dev_is_zoned(devip) || scsi_debug_lbp()) {
+> +	if (sdebug_dev_is_zoned(devip) || lbp) {
+>   		sdeb_meta_write_lock(sip);
+>   		meta_data_locked = true;
+>   	}
+> @@ -5384,7 +5387,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+>   	if (ret)
+>   		goto out;
+>   
+> -	if (unmap && scsi_debug_lbp()) {
+> +	if (unmap && lbp) {
+>   		unmap_region(sip, lba, num);
+>   		goto out;
+>   	}
+> @@ -5414,7 +5417,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+>   		block = do_div(lbaa, sdebug_store_sectors);
+>   		memmove(fsp + (block * lb_size), fs1p, lb_size);
+>   	}
+> -	if (scsi_debug_lbp())
 > +	if (lbp)
-
-Ignoring comment above, why not combine into a single if statement?
-
-> +		sdeb_meta_write_unlock(sip);
- > +>   	if (unlikely(ret == -1))
->   		return DID_ERROR << 16;
->   	if (unlikely(ret != len * sdebug_sector_size))
+>   		map_region(sip, lba, num);
+>   	/* If ZBC zone then bump its write pointer */
+>   	if (sdebug_dev_is_zoned(devip))
 
