@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EBB84A499C;
-	Mon, 21 Sep 2026 15:13:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 751114B3364;
+	Mon, 21 Sep 2026 15:15:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790003597; cv=none; b=LN3Fe7Ir8WhnK53txV9JtJ/aySd5a+/inN89edRswSdTTsP62viqWSOGg47HcQQcz82KEYES+ZbRW9c5mq32tmXWtPsdvzi3JsJv+BKtBy4PGAnvAZ8i+ZnwRLbnfyHj3bZX5RHeNN6QDpVdFjbMWbk5aJKlvfT9ifm2soGt1Og=
+	t=1790003749; cv=none; b=CsZ57i9VTJe2YaPOj7tRyhMq57pFZK/tCvravBSLF30iqZzIiFRaXVmTma/h/UV0L53ksFwmcsLL+E7q6kU7VF84Zr1LFPA38Dzv+c/bSWMEYC+OMS/bMAHpLIzWN4x+WMciYWbNykyaN8RG1Z27+lZkWr1RWEYWQZbwq9V7Dww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790003597; c=relaxed/simple;
-	bh=EWjQVAQIylvSG9W3zLdlfdbytmEt7s0TUvEcL8Wt6lU=;
+	s=arc-20240116; t=1790003749; c=relaxed/simple;
+	bh=3h2Vf7MQ6gbPIAHlTb6Tf0jJ1oiG9fyeFNnXc+/BghA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EelJvwZMMTux0CAdkggV43XcM1bm+hOTN42xqC5uKEiUKN448vYN6uGWw8X2ngmto69dLPb6qHgpJLxddw1mTdLNj8GdgQ7A0/gIpBLBhXzmB2jDSOvvX/8EU9u265Vtns/hLp4eJ5chI2bM7QftRruprwBr5c4PXLc4U9eWzFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hfvZUyqc; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vvbwl1yk9JVxx3dCGO+kG9OV6CDyx3m0pCSGbSmH1CHmFc09hiKdn3GMNAVVs7sagShGkoUbSmhbyATL1UqVz+SUctdO1Ny+6WrmEI665pWiHA3b69od7Y1cUknhiUIfZdGU9eBCQNFICLtEQRIH8D6V+A9Fdsy9Yh7DjO5NTh0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gAp0/rUu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hfvZUyqc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DF311F00898;
-	Mon, 21 Sep 2026 15:13:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gAp0/rUu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30F711F000FF;
+	Mon, 21 Sep 2026 15:15:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790003596;
-	bh=IYANU/J0xdZa4loaPIsfvyi041uqY/e4r1IDgIdSdOU=;
+	s=k20260515; t=1790003747;
+	bh=q9yFLU7Unm1OdMVHZt4OUgFFo5ERQU/PMsBOuAHW9rA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=hfvZUyqct5TkwpktLSJ8dfMTRCw2WKFhvEWPozX2ygHr2VwTaTVfCSPUs+BcfSmbw
-	 N2kR1PCC7vlyIp+woiOyszf6b1MC6dCiGId/NF5n9e5dR9TfNgiAzKG+59Pu0dtPt7
-	 +WsmNtrdBQlPAny09uMuoDvTOyFRN1XtD+awRRB2Y8hAvcIHF+SAyg94lfOYdhnkDj
-	 kgywdHpIUPDOhrnHq7LxOdZjOhNXXpkn2M6CsLPjJj1RX1lJQyP2xnEd43yM8f07NW
-	 IektM0ujog3ccc/lbq469bFpBBqAFwh/gic9B5zMsjfgV6VAXs7TiH/w9KPH5VmDXl
-	 lI3eTVnuTtyDg==
-Date: Mon, 21 Sep 2026 17:13:13 +0200
+	b=gAp0/rUuz54gT2hKVndjcni1Hod4P0YhEmuKoK3Dz0Y0xT+siz4EQfqiAqlbeiBPE
+	 l6CApescfzkefaBt+jmRVsemHIh14aSUkUxkXRW0JS7Wy5AzQT2UzoiyNinOpkZzib
+	 +Pp7Kwk7MsEet7SMmbNf/99ya5xx7mhSYigrM2g5xMvkX7v8gug+bFDX6O6sfWfZ6O
+	 cyRwE1NGYo9cpsPXiNdVxPjqLRMvwJri2iqIzDl19D27nrlR7y4G3Bg/Fx5fscfLWP
+	 CUHsP2gZPqmsLdFeS3zQ7ay4utLVlXmXHvhDRU2V9pGHBk4JqN9K764rj/JP5Go4zh
+	 kdh8HjE0ZRYXQ==
+Date: Mon, 21 Sep 2026 17:15:45 +0200
 From: krzk@kernel.org
 To: Guangshuo Li <lgs201920130244@gmail.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Ram Vegesna <ram.vegesna@broadcom.com>, Kees Cook <kees@kernel.org>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Daniel Wagner <dwagner@suse.de>, 
-	James Smart <jsmart2021@gmail.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
-	Thomas Gleixner <tglx@kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	Hannes Reinecke <hare@suse.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: [PATCH] scsi: efct: clear MWI on remove
-Message-ID: <arFJiC1JGB0KpoLn@quoll>
-References: <20260918181326.3633765-1-lgs201920130244@gmail.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, Joe Eykholt <jeykholt@cisco.com>, 
+	Robert Love <robert.w.love@intel.com>, James Bottomley <James.Bottomley@suse.de>, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: libfc: fix directory server rport memory leak
+Message-ID: <arFKHueZaSQAOSbc@quoll>
+References: <20260919173405.3718408-1-lgs201920130244@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,29 +45,36 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260918181326.3633765-1-lgs201920130244@gmail.com>
+In-Reply-To: <20260919173405.3718408-1-lgs201920130244@gmail.com>
 
 
-On Sat, 19 Sep 2026 02:13:26 +0800, Guangshuo Li wrote:
-> efct_pci_probe() enables PCI Memory-Write-Invalidate with pci_set_mwi().
-> The probe failure path clears this state with pci_clear_mwi(), but the
-> normal remove path does not perform the corresponding cleanup.
+On Sun, 20 Sep 2026 01:34:05 +0800, Guangshuo Li wrote:
+> fc_rport_recv_plogi_req() creates an rport before allocating the frame
+> used for the PLOGI LS_ACC response.
 > 
-> pci_disable_device() only disables PCI bus mastering and does not clear
-> the PCI_COMMAND_INVALIDATE bit. As a result, the MWI configuration can
-> remain enabled after the driver is removed.
+> fc_rport_create() does not add FC_FID_DIR_SERV rports to the discovery
+> rport list. If fc_frame_alloc() fails while handling a PLOGI from the
+> directory server, the function returns without starting the rport state
+> machine or dropping the initial rport reference.
 > 
-> Call pci_clear_mwi() in efct_pci_remove(), matching the probe error
-> path.
+> Since the directory server rport is not present in the discovery list,
+> there is no later teardown path that can find the object and release
+> that reference. The allocated fc_rport_priv is therefore leaked.
 > 
-> This issue was found by manual code inspection.
+> Record when the failed frame allocation leaves an unlisted directory
+> server rport behind and drop its initial reference after releasing the
+> rport mutex. Keep the existing lifetime unchanged for ordinary rports,
+> which remain owned by the discovery list.
 > 
-> Fixes: 4df84e8466242 ("scsi: elx: efct: Driver initialization routines")
+> The issue was identified by a static analysis tool I developed and
+> confirmed by manual review.
+> 
+> Fixes: 3ac6f98f4113 ("[SCSI] libfc: correctly handle incoming PLOGI request.")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
 > ---
->  drivers/scsi/elx/efct/efct_driver.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/scsi/libfc/fc_rport.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 > 
 
 
