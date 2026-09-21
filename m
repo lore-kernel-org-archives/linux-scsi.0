@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F4114B5CD0
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 15:41:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 122384B5CD0
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 15:41:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790005275; cv=none; b=g3XfKSqyc5++IzvaSJzLJ0O1IoZDMu0gXUCrTvVdJ/b5MQpnUaX8BqH0YDZmX96i1ou6MdGPJUnIvRKnfAGpyY/fxNrPzCNRlMZpoiu+doE1uJBZmCuau+vlkyfUZGdQ7gFz3fh9kb7pid5y7oeMg9N2Y2R8CcUbS3utwLD2dEI=
+	t=1790005277; cv=none; b=sJm7Rd/sjDjGMmLwV4IbJzx1rlMu6WoQw6ZE071S40t9B8Ei83I5Pc5ujbMIGnKrOGmGFo4o6+UV8p85AuazULzY/bmXSEn9LtHApMXqMLq3+vheapN5CIpgE8A2TmKzgsgXaauAW2YK/nf3pIFMisjRifyYgfndc7pL0NGQ6Ic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790005275; c=relaxed/simple;
-	bh=+f25S+PZfMdlJ8Xk1Aie9ve2ruviURhWIqYzWlazu3A=;
+	s=arc-20240116; t=1790005277; c=relaxed/simple;
+	bh=DO/ijweBuDVvHl0rRNw0MsftkaQk8zEsKsLBgwvRCqs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UBff2QvzOVM0tG5fDAnNPlFIU2JPOomKYppcNBP9THaZrv+brYnybWEuqSDGzLIQIoWrXL0kpX1R4nEaumxKgH/IK84H8GChKnHAQHe2u2IGdKU2iGv5RiDMfD9bzryrRkv6KdTH9ZhKeXtlJ+C4+aqrhpVcI+Fk5a/IN9eogI0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CYv/nG+p; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=Wmpx2j4zng+U9lu0ZiKQApVuX4BX7Br5grgp+kDpL5RXVybSxMfYh/gMJohIZAxFb/pqzLzA+AIebTXBU2fp/yFF5v54vx8439oXyYCIl/hgs7mtXsNBqzNtM+RBXn+3Z4aX1Prgh8xM3ldtAV4id5uU9kgoaYzlKsf5kpWTYD4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nockTtbi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CYv/nG+p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5377F1F00893;
-	Mon, 21 Sep 2026 15:41:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nockTtbi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B0EE1F000FF;
+	Mon, 21 Sep 2026 15:41:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790005273;
-	bh=RhK3ZSBaY8sX9m3irkk8OS4CC+5GbpCeqcjnraT98/A=;
+	s=k20260515; t=1790005275;
+	bh=jfxxAIiDnExdBHj1aN8KBaa2PWOAKePCtQY1p4XxwiY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=CYv/nG+poPfhKGm3h6QlKNfya4XuMBBxGAl2qIdKK1GdR4PgosIBsLzP0oFeKD+9U
-	 QoFRvAkc7b6ZHpQrbYKDZFt1ma14LYggFYqNbmIBZinPVKTtW4SIZBr+C1WMEbsesp
-	 ZyB/ali4tFkw58Lzk4hfBgDVkQJa/jFAwQ+ot6FPSZrlfNG3KuFHazudTeUUacVwOV
-	 hCDy+qufMdB4uDoJ+6NS2sV3TNjO1G6dHhDzX/9eIXFH4Wly/T3v2j1ESZU2ZwbFC6
-	 hcd1sWPURYUb7i5XcIaR72vfV0jEqPgcFI0VSMHMWSDEUnGv/hEr7iU5AMN9wSghCP
-	 JyDW/u+Bf95pw==
+	b=nockTtbi4w5nDn9+tWCW2lmSVYMzajSq9VgvvHA46mmIiTCk9hXdG0IHOgtIwQ5GD
+	 /zi013wKD2hwEn07KbhLYQZ0Va4cMZmWlZCmp2Nf5sXDHB3BQVaeRbmCvenSGPrWsM
+	 Ocbb5C9us5QeXXD1B8HruXpinQ6kh5HLPKjaux5CU7nUa0m5mWMKpORp89H1XqyvLO
+	 EpFMAsPl59OOu6Mi0m7xXGvNZTy+hB+gvx/O1xZL3QrsxcjBk36OgNJOTDW4o2Kkqi
+	 EKBtQ2KeaSZr+ubsYBmcKa5tIGRVyRVT/MrZwwI3XG/TmVpjJdqsg9560xilD7tNdU
+	 xQ8Yq06CRrM7w==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -33,9 +33,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v5 04/10] scsi: scsi_debug: Evaluate scsi_debug_lbp() only once
-Date: Mon, 21 Sep 2026 17:40:20 +0200
-Message-ID: <20260921154015.2971990-16-cassel@kernel.org>
+Subject: [PATCH v5 05/10] scsi: scsi_debug: Report the residual of a write
+Date: Mon, 21 Sep 2026 17:40:21 +0200
+Message-ID: <20260921154015.2971990-17-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260921154015.2971990-12-cassel@kernel.org>
 References: <20260921154015.2971990-12-cassel@kernel.org>
@@ -45,23 +45,40 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4501; i=cassel@kernel.org; h=from:subject; bh=+f25S+PZfMdlJ8Xk1Aie9ve2ruviURhWIqYzWlazu3A=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLI2+j87ftSPycRtRVggv9iCA+rLbSbfmiAguP9dhUT3j dairuV7O0pZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjARS31GhuOyjyqPvNi6QHfm EaH/lmdy1WrmTzrwzlDHJlPN2KHgZTMjw5Yr8z7dYWQ7anfA6jiDx6HJWj0nJpZ3+Gx82H1lS6G ZMTMA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4049; i=cassel@kernel.org; h=from:subject; bh=DO/ijweBuDVvHl0rRNw0MsftkaQk8zEsKsLBgwvRCqs=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLI2+j+7aR2+SEeL96vhIab1ZQevnCm+ncccuypTz7rg7 YknxfPOdpSyMIhxMciKKbL4/nDZX9ztPuW44h0bmDmsTCBDGLg4BWAiRhcYGT63tE+LkS/YpxlY 9vNS93GvPzbWHLbflDRaSvsjb3HPWMTwT5snTmhVQJ74iu4f6uLMZ1nymh5+3yVUFOT4efJ/t/N KbAA=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-corrupt_lbas(), resp_write_dt0() and resp_write_same() call
-scsi_debug_lbp() to decide whether to take the zone metadata lock, and
-then call it again to decide whether to read or write the provisioning
-map that the lock protects.
+A command transfers the number of logical blocks that it asks for,
+bounded by the data buffer that the initiator provided. When the buffer
+is larger than that, the bytes beyond are not transferred, and the
+difference is a residual that the initiator is entitled to be told
+about.
 
-The result is not a constant. scsi_debug_lbp() is false while the
-fake_rw module parameter is set, and fake_rw can be written at any time,
-both as a module parameter and through its driver attribute in sysfs.
-The two calls can therefore disagree, and the later one can decide to
-touch the provisioning map after the earlier one decided not to take the
-lock that protects it.
+resp_read_dt0() reports it, as does resp_write_tape(), but the write
+paths for a disk do not: scsi_get_resid() keeps the zero that
+scsi_debug_queuecommand() initialised it with, so a write with an
+oversized buffer completes with GOOD status and a residual of zero, as
+though the whole buffer had been consumed. A READ of the same length
+into the same buffer reports the residual correctly, so the two
+directions disagree.
 
-Call it once and use the result throughout.
+Report it in resp_write_dt0(), resp_write_scat() and
+resp_atomic_write().
+
+resp_write_scat() needs a different expression from the other two. Its
+data-out buffer holds the parameter list header and the LBA range
+descriptors as well as the data, and sg_off walks over all of it, from
+the offset at which the data begins to the end of the last range that
+was written, so what the command consumed is sg_off and not the number
+of bytes that the last range transferred.
+
+It also needs a guard that the other two do not. sg_off counts what the
+command asked for rather than what was transferred: lbdof is not
+validated against the length of the buffer, and a range is counted in
+full even when do_device_access() copied less of it, so sg_off can
+exceed the buffer. The other two subtract the number of bytes that were
+copied, which the buffer bounds.
 
 Assisted-by: LLM
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
@@ -69,107 +86,62 @@ Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
 Tested with:
 
-  modprobe scsi_debug sector_size=512 dev_size_mb=128 lbpu=1 lbpws=1
+  modprobe scsi_debug zbc=managed sector_size=512 physblk_exp=3 \
+      zone_size_mb=8 dev_size_mb=128 zone_nr_conv=2
 
-A WRITE(16) completes and GET LBA STATUS then reports the region as
-mapped, which covers resp_write_dt0(). A WRITE SAME and a WRITE SAME
-with the UNMAP bit set complete, and GET LBA STATUS reports the first
-region as mapped and the second as deallocated, which covers all three
-uses of the result in resp_write_same().
+An eight logical block WRITE(16) with a 5000 byte buffer reports
+resid=904, having transferred 4096. A READ(16) of the same length into
+the same buffer reported that before this patch and the WRITE reported
+0. A buffer of exactly 4096 bytes reports 0, as does a 512 byte buffer,
+which is consumed in its entirety. WRITE ATOMIC (16) behaves like the
+WRITE, on a device that is not zoned.
 
-corrupt_lbas() is not covered. It is reached by writing to the corrupt
-file in debugfs, and that interface rejected the requests that were
-tried, for a reason that has nothing to do with this patch.
-
-The window that the change closes was not reproduced. It needs fake_rw
-to be written between two calls, and was found by review.
+WRITE SCATTERED (16) with one LBA range descriptor of eight blocks and a
+5632 byte buffer reports resid=1024, having consumed 512 bytes of
+parameter list and 4096 bytes of data. The same command with a 1024 byte
+buffer completes and reports resid=0: sg_off reaches 4608, past the end
+of the buffer, and without the guard the residual would have been
+reported as 4294963712.
 ---
- drivers/scsi/scsi_debug.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+ drivers/scsi/scsi_debug.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 18aefe83b7b6..c68dba6dbbdd 100644
+index c68dba6dbbdd..170d5c944b61 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -4953,12 +4953,13 @@ static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
- {
- 	struct sdeb_store_info *sip = devip2sip(devip, false);
- 	bool meta_data_locked = false;
-+	bool lbp = scsi_debug_lbp();
- 	u32 block, num_mapped, b, i;
- 	int error = 0;
+@@ -5166,6 +5166,8 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 			    "%s: write: cdb indicated=%u, IO sent=%d bytes\n",
+ 			    my_name, num * sdebug_sector_size, ret);
  
- 	if (sdebug_dev_is_zoned(devip) ||
- 	    sdebug_dix ||
--	    scsi_debug_lbp())  {
-+	    lbp)  {
- 		sdeb_meta_write_lock(sip);
- 		meta_data_locked = true;
- 	}
-@@ -4975,7 +4976,7 @@ static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
- 		goto out_unlock;
- 	}
- 
--	if (scsi_debug_lbp() &&
-+	if (lbp &&
- 	    (!map_state(sip, lba, &num_mapped) || num > num_mapped)) {
- 		pr_err("can't modify unmapped logical blocks: %llu:%u",
- 			lba, num);
-@@ -5035,6 +5036,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	struct sdeb_store_info *sip = devip2sip(devip, true);
- 	u8 *cmd = scp->cmnd;
- 	bool meta_data_locked = false;
-+	bool lbp = scsi_debug_lbp();
- 
- 	if (unlikely(sdebug_opts & SDEBUG_OPT_UNALIGNED_WRITE &&
++	scsi_set_resid(scp, scsi_bufflen(scp) - ret);
++
+ 	if (unlikely((sdebug_opts & SDEBUG_OPT_RECOV_DIF_DIX) &&
  		     atomic_read(&sdeb_inject_pending))) {
-@@ -5102,7 +5104,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 
- 	if (sdebug_dev_is_zoned(devip) ||
- 	    (sdebug_dix && scsi_prot_sg_count(scp)) ||
--	    scsi_debug_lbp())  {
-+	    lbp)  {
- 		sdeb_meta_write_lock(sip);
- 		meta_data_locked = true;
+ 		if (sdebug_opts & SDEBUG_OPT_RECOVERED_ERR) {
+@@ -5354,6 +5356,13 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 		sg_off += num_by;
+ 		cum_lb += num;
  	}
-@@ -5147,7 +5149,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	}
++	/*
++	 * sg_off counts what the command asked for, which can exceed the
++	 * buffer: lbdof is not validated against it, and a range is counted
++	 * in full even if do_device_access() copied less.
++	 */
++	if (scsi_bufflen(scp) > sg_off)
++		scsi_set_resid(scp, scsi_bufflen(scp) - sg_off);
+ 	ret = 0;
+ err_out_unlock:
+ 	sdeb_meta_write_unlock(sip);
+@@ -6210,6 +6219,8 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+ 		return DID_ERROR << 16;
+ 	if (unlikely(ret != len * sdebug_sector_size))
+ 		return DID_ERROR << 16;
++
++	scsi_set_resid(scp, scsi_bufflen(scp) - ret);
+ 	return 0;
+ }
  
- 	ret = do_device_access(sip, scp, 0, lba, num, group, true, false);
--	if (unlikely(scsi_debug_lbp()))
-+	if (unlikely(lbp))
- 		map_region(sip, lba, num);
- 
- 	/* If ZBC zone then bump its write pointer */
-@@ -5374,8 +5376,9 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
- 	u8 *fs1p;
- 	u8 *fsp;
- 	bool meta_data_locked = false;
-+	bool lbp = scsi_debug_lbp();
- 
--	if (sdebug_dev_is_zoned(devip) || scsi_debug_lbp()) {
-+	if (sdebug_dev_is_zoned(devip) || lbp) {
- 		sdeb_meta_write_lock(sip);
- 		meta_data_locked = true;
- 	}
-@@ -5384,7 +5387,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
- 	if (ret)
- 		goto out;
- 
--	if (unmap && scsi_debug_lbp()) {
-+	if (unmap && lbp) {
- 		unmap_region(sip, lba, num);
- 		goto out;
- 	}
-@@ -5414,7 +5417,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
- 		block = do_div(lbaa, sdebug_store_sectors);
- 		memmove(fsp + (block * lb_size), fs1p, lb_size);
- 	}
--	if (scsi_debug_lbp())
-+	if (lbp)
- 		map_region(sip, lba, num);
- 	/* If ZBC zone then bump its write pointer */
- 	if (sdebug_dev_is_zoned(devip))
 -- 
 2.55.0
 
