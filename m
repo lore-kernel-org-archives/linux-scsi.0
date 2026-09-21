@@ -1,36 +1,48 @@
-Received: from mta1.migadu.com (out-204.mta1.migadu.com [95.215.58.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E60664BB27C
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 15:53:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 858C34AF169;
+	Mon, 21 Sep 2026 16:52:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790006018; cv=none; b=ZTNxu+ZdG+JQNpYqdw4LkQv5LIvzY0pPz4xUTUaVwdLysmOYE8oshxZfZlSKljR4dsib0vBumk9mWhMEPedwjXdIOeaGaPmOb2buoKY0dw20no9T4wP4t4w/YU2aWGmJmcuRpvRcmMJdTfFgKGZbWPUnprFU1hd95rogh3IXmWs=
+	t=1790009531; cv=none; b=E5S5JJC7KGtJJe5WBNXsPc9nz0n0jwipNJB6/7x187fcY28kbR3JPHmQ5IYx0EqMHf22IV0IpCLwz3aF3nOuU4IiIgwQCyWoQAria21SmG1XUc67EKLuyK/AmK3seoXQOKbb8M7EQDckzRdDt5/wEigN5s7Qj6jh6d+F/2+mywY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790006018; c=relaxed/simple;
-	bh=S6t3qBE0znctNUR2xaTvaZJMssPcku1SWqhMKcTBEH8=;
+	s=arc-20240116; t=1790009531; c=relaxed/simple;
+	bh=66giKM6an+EtXnssTX6fwOPNfR7K1yRyBSvhdC6zF6Q=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=I6b2bKW644PRgY51CwPMU2ahqT/oqtrhh1aYaKzL8j2R6o4ZNuxvpzQ2zKXOF0zW0biNOr7pgXHjAs1wwM99Ef0sszdS4zg0bhgPH3XGu8BpUlXbUQW+TxA5MGCQNYoqSzU9/XWY57KC9NQvd/MyQL9ElxsS6L0Nh3dk+DvAeR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=KkUJwNB3; arc=none smtp.client-ip=95.215.58.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 In-Reply-To:Content-Type; b=kOQORynq56y7brXw3/YAas6zgVwcJzNhaJh2f8R65aTRJAxmseo3tNCKx43Y5I8qRm4lV1FwmxlX9HB2TSSKeNs0m4bUpSRDfvwxZxSuazF/Y81TZrMLtlK3aUfYTq3xfwUXxWBYiTEBiDqGdpBAF4RQeFcfSvpFlqA8UqCzjQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=rFre91vU; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="KkUJwNB3"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=S6t3qBE0znctNUR2xaTvaZJMssPcku1SWqhMKcTBEH8=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790006013; v=1; x=1790610813;
- b=KkUJwNB3DAliuf16QLDxKWKUEqxERBoo7pIBdn2Qt/s8PYtB+BoAvNtm5jdFaIn1rdKwm3xk
- DXeZAoe75w+ReU+df7Pz2Fp4/XAqDdnL9BUsp4m913J2D5uGxEFND9lIuju+iOcD/VA5k+ex8P/
- nArBWSLdAEztvIaoY3sCcYlk=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 18c8d8d5de123420;
-	Mon, 21 Sep 2026 15:53:33 +0000
-X-Mizu-Trace-ID: 18c8d8d5de123420
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <d460d0ef-d182-44ca-82d3-dd29afbce565@linux.dev>
-Date: Mon, 21 Sep 2026 16:53:33 +0100
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="rFre91vU"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hpTm85Q5rz1XM5kW;
+	Mon, 21 Sep 2026 16:52:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1790009520; x=1792601521; bh=46LIWJijHQO9jyZJlG498yjm
+	rMQ1c94F2Ko1vshe11o=; b=rFre91vUejHM2N0ObrdfyNeKKWQXzhbzQiCbVT8Y
+	jwGkv2oo3xJq5mPf1U96IIA3IGMRciv4wzGE13dHb7ckkDZ0Be/F/4vlIQ2CBIRU
+	fed0uRky26BGqtvcqCoWI9NW4jkGF9uM3WigHFj3E0AIlJLraBnsv4bHumSLxpRy
+	uoBR/mqyMXdbl04UaVt0hGWBUfi/Y29wUVMjJDLbC2jb7S+rRsOsSUxHva3ezK0h
+	ZlBtn7NmkgOzugrA/PcIpeglDgGJqCD+im/Pirdsl36abZQ4FApYezBTsIYGSoTT
+	hqP7QMRR7exeCCIGtT+mgOBwvZfvUm6e1+BVLQV9wqdEfg==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id FouSPSgioO13; Mon, 21 Sep 2026 16:52:00 +0000 (UTC)
+Received: from [100.80.231.125] (unknown [104.135.182.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hpTlw0tkXz1XM4TB;
+	Mon, 21 Sep 2026 16:51:55 +0000 (UTC)
+Message-ID: <16af6539-24f8-425e-b411-f191897acfce@acm.org>
+Date: Mon, 21 Sep 2026 09:51:54 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,149 +50,51 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 04/10] scsi: scsi_debug: Evaluate scsi_debug_lbp() only
- once
-To: Niklas Cassel <cassel@kernel.org>,
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Release command resources instead of
+ force-completing
+To: Stanley Jhu <stanleyjhu@google.com>
+Cc: "Martin K. Petersen" <mkp@kernel.org>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
-References: <20260921154015.2971990-12-cassel@kernel.org>
- <20260921154015.2971990-16-cassel@kernel.org>
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
+ <avri.altman@sandisk.com>, Bean Huo <beanhuo@micron.com>,
+ Can Guo <can.guo@oss.qualcomm.com>, Peter Wang <peter.wang@mediatek.com>,
+ Manivannan Sadhasivam <mani@kernel.org>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260920143319.3659543-1-stanleyjhu@google.com>
+ <20260920143319.3659543-2-stanleyjhu@google.com>
+ <fee250ea-8e0b-4320-880e-8e2627e7b103@acm.org>
+ <20260921043755.1689675-1-stanleyjhu@google.com>
 Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20260921154015.2971990-16-cassel@kernel.org>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260921043755.1689675-1-stanleyjhu@google.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 9/21/26 16:40, Niklas Cassel wrote:
-> corrupt_lbas(), resp_write_dt0() and resp_write_same() call
-> scsi_debug_lbp() to decide whether to take the zone metadata lock, and
-> then call it again to decide whether to read or write the provisioning
-> map that the lock protects.
+On 9/20/26 9:37 PM, Stanley Jhu wrote:
+> On 9/20/26 5:41 PM, Bart Van Assche wrote:
+>> Regarding (3), the UFS driver is a SCSI LLD (low-level driver) and hence
+>> should only do what is specific to the UFS driver. Completing commands
+>> after .eh_host_reset_handler() has been called is the responsibility of
+>> the SCSI core and should not be done by the UFS driver.
 > 
-> The result is not a constant. scsi_debug_lbp() is false while the
-> fake_rw module parameter is set, and fake_rw can be written at any time,
-> both as a module parameter and through its driver attribute in sysfs.
-> The two calls can therefore disagree, and the later one can decide to
-> touch the provisioning map after the earlier one decided not to take the
-> lock that protects it.
+> Agreed for the path where SCSI EH drove the reset. The case I am unsure
+> about is the other caller: ufshcd_err_handler() also runs from
+> hba->eh_work, scheduled by ufshcd_check_errors() on UIC and controller
+> errors. Those commands have not timed out and are not on
+> shost->eh_cmd_q, so SCSI EH never finishes them, and the handler leaves
+> them to the reset path on purpose:
 > 
-> Call it once and use the result throughout.
+> 	/*
+> 	 * if host reset is required then skip clearing the pending
+> 	 * transfers forcefully because they will get cleared during
+> 	 * host reset and restore
+> 	 */
 > 
-> Assisted-by: LLM
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> Should those simply wait for the block layer timeout and come back
+> through SCSI EH?
 
-Reviewed-by: John Garry <john.garry@linux.dev>
+That sounds good to me.
 
-> ---
-> Tested with:
-> 
->    modprobe scsi_debug sector_size=512 dev_size_mb=128 lbpu=1 lbpws=1
-> 
-> A WRITE(16) completes and GET LBA STATUS then reports the region as
-> mapped, which covers resp_write_dt0(). A WRITE SAME and a WRITE SAME
-> with the UNMAP bit set complete, and GET LBA STATUS reports the first
-> region as mapped and the second as deallocated, which covers all three
-> uses of the result in resp_write_same().
-> 
-> corrupt_lbas() is not covered. It is reached by writing to the corrupt
-> file in debugfs, and that interface rejected the requests that were
-> tried, for a reason that has nothing to do with this patch.
-> 
-> The window that the change closes was not reproduced. It needs fake_rw
-> to be written between two calls, and was found by review.
-> ---
->   drivers/scsi/scsi_debug.c | 17 ++++++++++-------
->   1 file changed, 10 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 18aefe83b7b6..c68dba6dbbdd 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -4953,12 +4953,13 @@ static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
->   {
->   	struct sdeb_store_info *sip = devip2sip(devip, false);
->   	bool meta_data_locked = false;
-> +	bool lbp = scsi_debug_lbp();
->   	u32 block, num_mapped, b, i;
->   	int error = 0;
->   
->   	if (sdebug_dev_is_zoned(devip) ||
->   	    sdebug_dix ||
-> -	    scsi_debug_lbp())  {
-> +	    lbp)  {
->   		sdeb_meta_write_lock(sip);
->   		meta_data_locked = true;
->   	}
-> @@ -4975,7 +4976,7 @@ static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
->   		goto out_unlock;
->   	}
->   
-> -	if (scsi_debug_lbp() &&
-> +	if (lbp &&
->   	    (!map_state(sip, lba, &num_mapped) || num > num_mapped)) {
+Thanks,
 
-combine lines? Please consider elsewhere in this patch. However I think 
-that we still like to enforce the 80 character line limit... well, some do.
-
-Thanks
-
->   		pr_err("can't modify unmapped logical blocks: %llu:%u",
->   			lba, num);
-> @@ -5035,6 +5036,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
->   	struct sdeb_store_info *sip = devip2sip(devip, true);
->   	u8 *cmd = scp->cmnd;
->   	bool meta_data_locked = false;
-> +	bool lbp = scsi_debug_lbp();
->   
->   	if (unlikely(sdebug_opts & SDEBUG_OPT_UNALIGNED_WRITE &&
->   		     atomic_read(&sdeb_inject_pending))) {
-> @@ -5102,7 +5104,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
->   
->   	if (sdebug_dev_is_zoned(devip) ||
->   	    (sdebug_dix && scsi_prot_sg_count(scp)) ||
-> -	    scsi_debug_lbp())  {
-> +	    lbp)  {
->   		sdeb_meta_write_lock(sip);
->   		meta_data_locked = true;
->   	}
-> @@ -5147,7 +5149,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
->   	}
->   
->   	ret = do_device_access(sip, scp, 0, lba, num, group, true, false);
-> -	if (unlikely(scsi_debug_lbp()))
-> +	if (unlikely(lbp))
->   		map_region(sip, lba, num);
->   
->   	/* If ZBC zone then bump its write pointer */
-> @@ -5374,8 +5376,9 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
->   	u8 *fs1p;
->   	u8 *fsp;
->   	bool meta_data_locked = false;
-> +	bool lbp = scsi_debug_lbp();
->   
-> -	if (sdebug_dev_is_zoned(devip) || scsi_debug_lbp()) {
-> +	if (sdebug_dev_is_zoned(devip) || lbp) {
->   		sdeb_meta_write_lock(sip);
->   		meta_data_locked = true;
->   	}
-> @@ -5384,7 +5387,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
->   	if (ret)
->   		goto out;
->   
-> -	if (unmap && scsi_debug_lbp()) {
-> +	if (unmap && lbp) {
->   		unmap_region(sip, lba, num);
->   		goto out;
->   	}
-> @@ -5414,7 +5417,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
->   		block = do_div(lbaa, sdebug_store_sectors);
->   		memmove(fsp + (block * lb_size), fs1p, lb_size);
->   	}
-> -	if (scsi_debug_lbp())
-> +	if (lbp)
->   		map_region(sip, lba, num);
->   	/* If ZBC zone then bump its write pointer */
->   	if (sdebug_dev_is_zoned(devip))
-
+Bart.
