@@ -1,252 +1,141 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f78.google.com (mail-oo1-f78.google.com [209.85.161.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C410A1B808;
-	Mon, 21 Sep 2026 00:41:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19BFB22B8AB
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 02:19:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789951306; cv=none; b=cdddisz1LFxSzuYvI+W2oYQ5dIlMQgYPhFswxcZ3mOXJ+Pf81lIIJS9RIpS5LMybHvK7hESZXiO/RBd0rDNjBkTv9RAKYTmoqd5Jc5f3Zjo7jx4bYQ40nzjNd3Q5lepDlD4p4SVlSRUTKhcj9lBUBbARl6v/g5XlEYDrtCCP3GY=
+	t=1789957182; cv=none; b=YohO/X7CdxxaSHGlfOZfIPfo6Xbp3FLfitZMqonGBY8d4Z7mf6XpRbkZECcz9W8h6yB2AHDe3a0SlduO5dI5QvsdMpnUXtxs12rBpvxataUzxrtt7iam/64tqrYoMVMFcIaWAKzuOEqyc+d1HIcv5BYItV5sZERhFPXb/fccrtQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789951306; c=relaxed/simple;
-	bh=k232noItsvsDTGc7EcQiwd/ArG5FiV1WOl9HfMmUFyc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=etWtJmgXSq39iScfH8+MukFzfOvvZpOM5U9rHpnkxqz05Azvot5i9UDV+hFD6SyahM4LxsPRck3HnpRWMk/ef7LBRJiIQvc6nUWViQ24lGSCkiH1j+FhWZjkegUhsPCgBDM0HQqc95Z+imeZxT+j5Eg3td+V03c47DP7CBUqZdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JUNQXOnx; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JUNQXOnx"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hp4DS1BkKzlfvpn;
-	Mon, 21 Sep 2026 00:41:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1789951289; x=1792543290; bh=T+Qb4ClbUy/JfG4PeBG+uluS
-	UoqnWAEs9jVUvG/+pgY=; b=JUNQXOnx79iU7a5bJ0bMTwFaozpXS8/qQ2TKNRnZ
-	vwzBSjmipPoKw+060tKcoFPmT6ViuNsVcm9AZJt+Of+0MFO85oLoI3Rf0cg1/+zU
-	6F51z6ixe/3uT8ERu7WXc3FUJqVQNmN7/3GPxm7WAPd3/DcnJ8ZC0JsnO4GVoYVv
-	1RSLWfOZYLhYZ6o+azdluv1nhTBsLOlOSL/ZTK9jWxO8KTbVBfTNp6jZIdtms5R1
-	xuIQy+lyM69OzWiBy+883CVicL8dEIizadep6ZxHkv8J9EpP9RICGqmfoiF+WIub
-	2T6FHDXnO+GMt9izFpFWP76p/bWgecTRbdoJscwDKb1/0A==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id lU6tRyxQKEMV; Mon, 21 Sep 2026 00:41:29 +0000 (UTC)
-Received: from [192.168.0.215] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hp4D54GLQzlfvpN;
-	Mon, 21 Sep 2026 00:41:25 +0000 (UTC)
-Message-ID: <fee250ea-8e0b-4320-880e-8e2627e7b103@acm.org>
-Date: Sun, 20 Sep 2026 17:41:24 -0700
+	s=arc-20240116; t=1789957182; c=relaxed/simple;
+	bh=BAsIUQ1nVkUgpzwJBCmVe0ojZCDOZnN7HyCcAiuT6So=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=BW6zjYi9lQKuJWvkNX1CsM24Mh+T9pyyE4ihVMH3Xs57kmSViNRmXaO0FIY9uu1oJibl4Kygo2iPWCbZ2NqzE1HeuqzcHMPlkSG7Q6FI/zD2JF3k5J9YAz6kb/RHLO2Ki6RFst1GpKTdh5Or2DhLIsIUfxf1vmJLs/+6xGkFn7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f78.google.com with SMTP id 006d021491bc7-6c18e7d53b9so5687085eaf.1
+        for <linux-scsi@vger.kernel.org>; Sun, 20 Sep 2026 19:19:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789957180; x=1790561980;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=rPYuXaERi/jrwZ0INi/v5/jDFp/Y0zqC2P4+v3xDKMA=;
+        b=wYC9bqaSJmF72cC+ez5hzEB/GB96ag8LOrVsz/NQOkNv5cL4UH3k28RVBj9M7mDiCT
+         3KSgjqwwFDEk5K6xv3XaGkTyg5ay3y/us5MzcaT2FzuInfJifaj1aGgV5w86xRLE5jdr
+         rSfjrfcz5NeoZExbJrXSzWMGSe3QZpKhadM+yvaXpblqUY2Tz4nTSKTtEHeXxsUpgz7Z
+         MMAjv6thng6jvkXDPLp9dS23DCLNWh718y2f8+6usM3hC87ZHw91R7CbnGkafFDU36hz
+         XTK2D3lIVFfjqPfxYZqtKRea9YmGPho1dfjtWeae7RemixJuy2d99Ux5l43ozR7uTpTF
+         Roqw==
+X-Forwarded-Encrypted: i=1; AKwUvBzp1a0Cj/pdbkghA8XvmxeXI0eMwUg19v12gDe43DLptXxNnE8Oloojy+oznNu8McslvxiTrJzq/cxT@vger.kernel.org
+X-Gm-Message-State: AFuF++kBU+cCbIW9NkDE6MZLZ0C+BLKIM8VjhSWjZ85IKMx8IwiaHFUk
+	3iXJ9C9MQOSjZ2lGfhF7WOPahwX2LEt7UpeZWVFRy8SB1zE5MH829WQ6QgheptFtXorECUyR4J4
+	xBJd6ZThn/5qBhX/B6+6GaPPjZIO+KI3i1KuqPx2oPLiodNpB/mW3p/XAzVs=
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: ufs: core: Release command resources instead of
- force-completing
-To: Stanley Jhu <stanleyjhu@google.com>, "Martin K . Petersen"
- <mkp@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@sandisk.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- Peter Wang <peter.wang@mediatek.com>, Bean Huo <beanhuo@micron.com>,
- "Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
- Can Guo <can.guo@oss.qualcomm.com>, Manivannan Sadhasivam <mani@kernel.org>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260920143319.3659543-1-stanleyjhu@google.com>
- <20260920143319.3659543-2-stanleyjhu@google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260920143319.3659543-2-stanleyjhu@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6820:4cc9:b0:6ba:34ea:ab69 with SMTP id
+ 006d021491bc7-6c8ffa2ca25mr10838622eaf.40.1789957180033; Sun, 20 Sep 2026
+ 19:19:40 -0700 (PDT)
+Date: Sun, 20 Sep 2026 19:19:40 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6ab0943c.514bccd6.255447.000a.GAE@google.com>
+Subject: [syzbot] [target?] WARNING in rd_configure_device
+From: syzbot <syzbot+fa495e1497c48a6ed885@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mkp@kernel.org, 
+	syzkaller-bugs@googlegroups.com, target-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/20/26 7:33 AM, Stanley Jhu wrote:
-> In ufshcd_host_reset_and_restore(), ufshcd_complete_requests(hba, true)
-> couples LLD resource release (ufshcd_release_scsi_cmd()) with command
-> completion (scsi_done()) right after ufshcd_hba_stop():
-> 
-> 1. EH-owned SCSI commands (SCMD_STATE_COMPLETE set): skipping
->     scsi_done() in ufshcd_mcq_force_compl_one() also skips
->     ufshcd_release_scsi_cmd(), leaking DMA mappings and
->     clk_gating.active_reqs whenever ufshcd_abort() fails.
-> 2. Non-EH SCSI commands (!SCMD_STATE_COMPLETE): calling scsi_done()
->     right after ufshcd_hba_stop() completes them before link recovery
->     finishes.
-> 
-> To fix this, enforce a strict ownership boundary between LLD hardware
-> resources and SCSI command completion:
-> 
-> - LLD resources (DMA mappings, crypto PRDT, clk_gating.active_reqs) are
->    tied to controller execution and must be released whenever the
->    hardware stops executing a command, regardless of whether SCSI EH
->    owns the command.
-> - Command completion (scsi_done()) belongs exclusively to SCSI EH once
->    SCMD_STATE_COMPLETE is set. However, for commands where
->    SCMD_STATE_COMPLETE is not set, UFS cannot delegate completion to
->    SCSI EH because UFS also performs autonomous resets
->    (ufshcd_err_handler() on UIC/controller errors) outside of
->    scsi_error_handler(). Since ufshcd_hba_stop() (HCE = 0) wipes all
->    in-flight hardware transfers while SCSI EH is inactive, the driver
->    itself must requeue halted non-EH commands with DID_REQUEUE after
->    recovery finishes, or else they stall for the 30s block timeout.
-> 
-> Implement this in three steps:
-> 
-> 1. Track controller resource ownership with lrbp->in_flight so
->     ufshcd_release_scsi_cmd() is idempotent across normal completion,
->     successful task abort, and host reset teardown.
-> 2. At controller stop (ufshcd_release_stopped_reqs()), release LLD
->     resources for all halted commands without calling scsi_done(), clear
->     any uncompleted reserved dev_cmd, and mark halted non-EH commands
->     with lrbp->pending_requeue.
-> 3. After host and link recovery finish (ufshcd_requeue_non_eh_cmds()),
->     requeue pending commands that remain non-EH (!SCMD_STATE_COMPLETE)
->     with DID_REQUEUE while leaving EH-owned commands on shost->eh_cmd_q.
-> 
-> Fixes: ab248643d3d6 ("scsi: ufs: core: Add error handling for MCQ mode")
-> Suggested-by: Bart Van Assche <bvanassche@acm.org>
+Hello,
 
-No, this is not what I suggested. Additionally, I see multiple steps in
-the wrong direction.
+syzbot found the following issue on:
 
-The text above says "implement this in three steps". Hence, this patch
-should have been three patches instead of one because of the "one change
-per patch" rule in the Linux kernel community.
+HEAD commit:    9d80aa4617b3 Add linux-next specific files for 20260903
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=13c1dbf9580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=b370c26fb58c72f0
+dashboard link: https://syzkaller.appspot.com/bug?extid=fa495e1497c48a6ed885
+compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
 
-Regarding (1), why a new member variable? Why isn't rq->state
-sufficient?
+Unfortunately, I don't have any reproducer for this issue yet.
 
-Regarding (3), the UFS driver is a SCSI LLD (low-level driver) and hence
-should only do what is specific to the UFS driver. Completing commands
-after .eh_host_reset_handler() has been called is the responsibility of
-the SCSI core and should not be done by the UFS driver.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/84a12994f553/disk-9d80aa46.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/2329deeb3b2b/vmlinux-9d80aa46.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/689910d8c695/bzImage-9d80aa46.xz
 
-(2) seems wrong to me. The caller of ufshcd_hba_stop() should take care
-of pending commands instead of ufshcd_hba_stop() itself.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+fa495e1497c48a6ed885@syzkaller.appspotmail.com
 
->   int ufshcd_link_recovery(struct ufs_hba *hba)
->   {
->   	int ret;
-> @@ -4692,6 +4721,8 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
->   	ufshcd_clear_eh_in_progress(hba);
->   	spin_unlock_irqrestore(&hba->host->host_lock, flags);
->   
-> +	ufshcd_requeue_non_eh_cmds(hba);
-> +
->   	if (ret)
->   		dev_err(hba->dev, "%s: link recovery failed, err %d",
->   			__func__, ret);
+------------[ cut here ]------------
+1
+WARNING: mm/slub.c:5347 at ___kmalloc_large_node+0x10c/0x170 mm/slub.c:5347, CPU#1: syz.3.40/5899
+Modules linked in:
+CPU: 1 UID: 0 PID: 5899 Comm: syz.3.40 Tainted: G             L      syzkaller #0 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/24/2026
+RIP: 0010:___kmalloc_large_node+0x10c/0x170 mm/slub.c:5347
+Code: 41 c7 46 30 00 00 00 f8 eb 03 45 31 ff 4c 89 ff 48 89 de 89 ea 5b 41 5c 41 5e 41 5f 5d e9 8c a0 0b 00 c6 05 8e e4 58 0e 01 90 <0f> 0b 90 31 c0 5b 41 5c 41 5e 41 5f 5d c3 cc cc cc cc cc 89 ef 89
+RSP: 0018:ffffc90004b7fa88 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000008000000 RCX: ffff8880237eddc0
+RDX: 00000000ffffffff RSI: 0000000000000dc0 RDI: 0000000008000000
+RBP: 0000000000000dc0 R08: ffffc90004b7fb47 R09: 1ffff9200096ff68
+R10: dffffc0000000000 R11: ffffffff869fe6a0 R12: dffffc0000000000
+R13: ffffffff869fe7a9 R14: 0000000008000000 R15: 1ffff1100eff52c3
+FS:  00007f0d2de8e6c0(0000) GS:ffff88812495b000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000000110c470003 CR3: 0000000036170000 CR4: 00000000003526f0
+Call Trace:
+ <TASK>
+ __kmalloc_large_node_noprof+0x18/0x90 mm/slub.c:5390
+ __do_kmalloc_node mm/slub.c:5407 [inline]
+ __kmalloc_noprof+0x3f6/0x710 mm/slub.c:5444
+ _kmalloc_noprof include/linux/slab.h:995 [inline]
+ _kzalloc_noprof include/linux/slab.h:1312 [inline]
+ rd_build_device_space drivers/target/target_core_rd.c:194 [inline]
+ rd_configure_device+0x109/0x730 drivers/target/target_core_rd.c:294
+ target_configure_device+0x13c/0xa70 drivers/target/target_core_device.c:988
+ target_dev_enable_store+0x3e/0x80 drivers/target/target_core_configfs.c:2484
+ flush_write_buffer fs/configfs/file.c:207 [inline]
+ configfs_write_iter+0x337/0x430 fs/configfs/file.c:229
+ new_sync_write fs/read_write.c:595 [inline]
+ vfs_write+0x612/0xba0 fs/read_write.c:687
+ ksys_write+0x150/0x270 fs/read_write.c:739
+ do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
+ do_syscall_64+0x166/0x520 arch/x86/entry/syscall_64.c:84
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f0d2cf9e159
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f0d2de8e028 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007f0d2d225fa0 RCX: 00007f0d2cf9e159
+RDX: 0000000000000002 RSI: 0000200000000280 RDI: 0000000000000004
+RBP: 00007f0d2d03506b R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f0d2d226038 R14: 00007f0d2d225fa0 R15: 00007ffe861d7d28
+ </TASK>
 
-This is a behavior change that should be in a separate patch and not in
-a patch for releasing command resources.
 
-> @@ -5937,6 +5968,17 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
->   /* Release the resources allocated for processing a SCSI command. */
->   void ufshcd_release_scsi_cmd(struct ufs_hba *hba, struct scsi_cmnd *cmd)
->   {
-> +	struct ufshcd_lrb *lrbp = scsi_cmd_priv(cmd);
-> +
-> +	lrbp->pending_requeue = false;
-> +	if (!lrbp->in_flight)
-> +		return;
-> +	lrbp->in_flight = false;
-> +
-> +	/* Device management commands do not own any of the below. */
-> +	if (!ufshcd_is_scsi_cmd(cmd))
-> +		return;
-> +
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-Did you read this code before you posted it? As its name suggests,
-ufshcd_release_scsi_cmd() is only called for SCSI commands. No device
-management command code should be added in this function.
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
->   	scsi_dma_unmap(cmd);
->   	ufshcd_crypto_clear_prdt(hba, cmd);
->   	ufshcd_release(hba);
-> @@ -5968,8 +6010,9 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
->   		if (unlikely(ufshcd_should_inform_monitor(hba, cmd)))
->   			ufshcd_update_monitor(hba, cmd);
->   		ufshcd_add_command_trace(hba, cmd, UFS_CMD_COMP);
-> -		cmd->result = ufshcd_transfer_rsp_status(hba, cmd, cqe);
-> -		ufshcd_release_scsi_cmd(hba, cmd);
-> +		if (!test_bit(SCMD_STATE_COMPLETE, &cmd->state))
-> +			cmd->result =
-> +				ufshcd_transfer_rsp_status(hba, cmd, cqe);
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
 
-Why has this if-condition been added? ufshcd_compl_one_cqe() should only
-be called if SCMD_STATE_COMPLETE has not yet been set.
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
 
-> @@ -5981,8 +6024,17 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
->   			hba,
->   			ocs == OCS_SUCCESS ? UFS_QUERY_COMP : UFS_QUERY_ERR,
->   			(struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
-> -		cmd->result = 0;
-> +		if (!test_bit(SCMD_STATE_COMPLETE, &cmd->state))
-> +			cmd->result = 0;
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
 
-Same question for this new if-condition.
-
-> @@ -7930,7 +7984,11 @@ static bool ufshcd_clear_lu_cmds(struct request *req, void *priv)
->   		return true;
->   	}
->   
-> -	ufshcd_compl_one_cqe(hba, tag, NULL);
-> +	spin_lock_irqsave(&hba->outstanding_lock, flags);
-> +	outstanding = __test_and_clear_bit(tag, &hba->outstanding_reqs);
-> +	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-> +	if (outstanding)
-> +		ufshcd_compl_one_cqe(hba, tag, NULL);
->   	return true;
->   }
-
-Why has ufshcd_clear_lu_cmds() been modified? This function is only
-called for pending commands so checking &hba->outstanding_reqs is not
-necessary.
-
-> @@ -8087,6 +8145,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->   	u32 reg;
->   
->   	ufshcd_hold(hba);
-> +	lrbp->pending_requeue = false;
->   
->   	if (!hba->mcq_enabled) {
->   		reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> @@ -8153,6 +8212,16 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->   	if (hba->mcq_enabled) {
->   		/* MCQ mode. Branch off to handle abort for mcq mode */
->   		err = ufshcd_mcq_abort(cmd);
-> +		if (err == SUCCESS) {
-> +			struct ufs_hw_queue *hwq =
-> +				ufshcd_mcq_req_to_hwq(hba, rq);
-> +
-> +			if (hwq) {
-> +				spin_lock_irqsave(&hwq->cq_lock, flags);
-> +				ufshcd_release_scsi_cmd(hba, cmd);
-> +				spin_unlock_irqrestore(&hwq->cq_lock, flags);
-> +			}
-> +		}
-
-This is also wrong because this change will trigger a use-after-free in
-scmd_eh_abort_handler() if it decides to retry or finish a SCSI command.
-
-> @@ -8231,13 +8365,11 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
->   	int err;
->   
->   	/*
-> -	 * Stop the host controller and complete the requests
-> -	 * cleared by h/w
-> +	 * Stop the host controller and release driver resources for
-> +	 * requests cleared by h/w
-
-This is wrong. The SCSI core error handler is responsible for releasing
-resources. The UFS driver must not do this from its host reset handler.
-
-Bart.
+If you want to undo deduplication, reply with:
+#syz undup
