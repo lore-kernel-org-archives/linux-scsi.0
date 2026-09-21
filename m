@@ -1,144 +1,82 @@
-Received: from mta1.migadu.com (out-180.mta1.migadu.com [95.215.58.180])
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95C334A3D5D
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 14:05:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDA28486439
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 14:08:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789999557; cv=none; b=Z+aGaRKSEs84JWKgdlQnM0RlzpJeVpx6LpQDaXb9bsdiP9so7UvzfMHAql4zBqsNLsovWypX7HP/IvfzUBUmBajgKSo7rz7hbf6P/mkwNtSyn9AwZ4rRULgKBzGnyO3A+v9RNY1n5gbLIsXu6q+iYkLXmIJxbNtiXcG+sxTYNPs=
+	t=1789999688; cv=none; b=T+OfhvfAw2bLixrYx9bCyfmAGH2/7eaanzEEdeTdIqcSOwxkkJONIMI5ULejPZTI1Eiv5rFO3fv8gOPbdhmDmAsfWu9avTRVBPVwTZIVDjeuHFHUxkbsHK6gTxmlhzl5FxqAQkPIzXtpq+dU6eD/kq3VNxsYqsZLpbWEHxMZdMQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789999557; c=relaxed/simple;
-	bh=sv5IypIgEI13ebg5/SpkNFBLXvflcqcFz54Dum5Wb+E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ulea4i7SeXaN7sGmkFoy39W6EK7PkPMsQwrSVjUuBJ5SiRrWLkBTqLXLXXTJFCZ66H6J2pLXOosKHtKXWuGNl/+Erh15U9d5ajpodrohq/looq2pqnU7L+JyxLAr6NRHT/eUdacYUNOi98b7GoaX/IOS8oZvzBUrlWx2sMsW4jc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=uKZ5dpER; arc=none smtp.client-ip=95.215.58.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1789999688; c=relaxed/simple;
+	bh=NHBznU/RKpQgFAQzB7weutwQS0p5qU29+fazNItsqXQ=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=iwdaIjDaN3NhoQtO/NCX0PaJxo9QQo+miZCRUTg24Bh7S6MkUfKjE5FfsyjzOkb7xZGoqnNZKneLj+5u6qs6b1ZzDEWSx66D5i1YPm5Gccqa0thZht473RTBfpzFtWcv1SUya+ZZJEGoZBhGCU7s3CTHdIL38kGA2FdD+fmF7ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=VIN/dXc+; arc=none smtp.client-ip=209.85.214.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="uKZ5dpER"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=sv5IypIgEI13ebg5/SpkNFBLXvflcqcFz54Dum5Wb+E=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1789999553; v=1; x=1790604353;
- b=uKZ5dpERP6wlwP8wM3rTQgQNk1SXr5MqbeOQIzfB0wCzTEZ1VXVrQCHtgisvk82uPCVqDTRG
- MkZacrBAkHJxRqqegiUu9ZIio8Keup4NySVVGVLakTfsXkSQgI910bJbdG4rWLT9J32ACQytLvI
- B2iSWC5e5cQpTltVWPm8oQL8=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 2392f7eb4c68b734;
-	Mon, 21 Sep 2026 14:05:53 +0000
-X-Mizu-Trace-ID: 2392f7eb4c68b734
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <627a27fc-b025-4bc1-8601-b0fca0e1c4e1@linux.dev>
-Date: Mon, 21 Sep 2026 15:05:48 +0100
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VIN/dXc+"
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2db8e9fe9c7so41855015ad.0
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 07:08:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1789999686; x=1790604486; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=NHBznU/RKpQgFAQzB7weutwQS0p5qU29+fazNItsqXQ=;
+        b=VIN/dXc+3mfctB58u0v6Mi2hpvvnHHwQ7Huu8Ql+dxEI7tIGv9ykgDA6ERDm/Nt2eX
+         c871t6y+tXoq2KWOeUE2LBpw9B9vhLPaOYcCb0NwQ5Om7Pxlr5bawN5newyE7Pe6pR7P
+         gRdmLVkziTeaPLdrjWDYemNbtHAPdbHiCkOHPPkSJsnhw9tqr2NbmgLe6L2/K+bAMstO
+         fexm6ucuTBAvzDvw6s8yQfFDn84Ry9ongK+Iqc3IGha3hJAFSp1EELZEDB/hWj6Cvvfy
+         Bu8i22FMqtHmp8z5f7/qlQPjZ/SjbVuoJNHarDY9dFVpIJKXnrcOJkeX2/owIuyCj4Vx
+         FbJA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1789999686; x=1790604486;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=NHBznU/RKpQgFAQzB7weutwQS0p5qU29+fazNItsqXQ=;
+        b=cukDpm/8dknyeuLthM/eUu9bKIgNE+OIXm/s4McbIFg+GKgWhF4qxWFgu2tF9BH3jd
+         cqJIOuDGz7JcrGW692hP4uymn55ZB9mjKsgoRJ6uRowcYuI490u3uAZHyy3jhHWZHl/7
+         kGV1o2y+/P3gCGfsWPalr9a5ndzu6aKjINGkaZNDw89T3BLsCXq8wZLLEqQTwG4SrGuZ
+         ZPeEujcLUOvpofA12q2kos8cqq3RAIRrK+mfzWuUxTNvjCBOjSb2dTjKYfR/PT5srfh1
+         uT+C4Fs3whgSkbtnbctULmBimrNsNQMY5EpXSj4imIqcvMqh4Y7+sfnubGmM0Zw8xZz9
+         Ospw==
+X-Forwarded-Encrypted: i=1; AKwUvBysNc1IB/g6nnFG8BWPQyy42+3lYI4MzNU7ZrU3rr/h0XHLm+gEjgR+dCNYEEqOPrwVriKwzNCVuCE7@vger.kernel.org
+X-Gm-Message-State: AFuF++kT2gghIkFgHawPZ3xonALSrajkNI1mWuA1TYUMcZZLV6Tc5yto
+	PXGoZ4jK8/RJ7Y7oTkiQSZLudBskZQAdy6y7yFg7pBDyQiSPypRBy6EygD/JdIWNkJ8IwTBAgew
+	wHrL15vKkUL3yA1AL0ow1KA==
+X-Received: from plrr1.prod.google.com ([2002:a17:902:c601:b0:2df:3de3:9186])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:903:1844:b0:2dd:c100:942f with SMTP id d9443c01a7336-2ddc1009bf7mr110453315ad.45.1789999685875;
+ Mon, 21 Sep 2026 07:08:05 -0700 (PDT)
+Date: Mon, 21 Sep 2026 22:08:03 +0800
+In-Reply-To: <20260920034953.19535-1-hppiscas@163.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] scsi: libsas: Fix SMP IO deadlock during HA resume
-To: yangxingui <yangxingui@huawei.com>, yanaijie@huawei.com,
- jejb@linux.ibm.com, mkp@kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linuxarm@huawei.com, liuyonglong@huawei.com, kangfenglong@huawei.com
-References: <20260918070307.381207-1-yangxingui@huawei.com>
- <9a72eeb3-ca32-4241-9e21-74cf894a9bf1@linux.dev>
- <bab95bba-3091-30e5-91ba-0fd459db0101@huawei.com>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <bab95bba-3091-30e5-91ba-0fd459db0101@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+References: <20260920034953.19535-1-hppiscas@163.com>
+X-Mailer: git-send-email 2.55.0.1082.g2b9226bbc0-goog
+Message-ID: <20260921140803.3210439-1-stanleyjhu@google.com>
+Subject: Re: [PATCH v2] scsi: ufs: mediatek: handle mPHY power-on failures
+From: Stanley Jhu <stanleyjhu@google.com>
+To: Pengpeng Hou <hppiscas@163.com>, Peter Wang <peter.wang@mediatek.com>
+Cc: Stanley Jhu <stanleyjhu@google.com>, chaotian.jing@mediatek.com, 
+	chu.stanley@gmail.com, james.bottomley@hansenpartnership.com, mkp@kernel.org, 
+	linux-scsi@vger.kernel.org, linux-mediatek@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, martin.petersen@oracle.com, 
+	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com, 
+	linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/21/26 13:21, yangxingui wrote:
-> Hi, John
-> 
-> On 2026/9/21 19:37, John Garry wrote:
->> On 9/18/26 08:03, Xingui Yang wrote:
->>> When the controller resumes, sas_resume_ha() -> sas_drain_work()
->>> processes the DISCE_RESUME work, which restores the ATA ports through
->>> the libata error handler (ata_sas_port_resume() requests ATA_EH_RESET)
->>> and waits for it in sas_ata_flush_pm_eh(). For an expander-attached
->>> ATA device the hard reset in that recovery is an SMP PHY CONTROL
->>> command sent to the expander:
->>>
->>>    ata_eh_recover() -> ata_eh_reset() -> sas_ata_hard_reset()
->>>      -> lldd_I_T_nexus_reset() -> sas_phy_reset()
->>>        -> sas_smp_phy_control() -> smp_execute_task_sg()
->>
->> This seems like an obvious issue. How come it was not found earlier? 
->> It is apparently fixing a patch which is 5 years old.
-> 
-> The deadlock was not reachable for most of those 5 years - it is a
-> regression of 3dbbbf656b85 ("scsi: libsas: Fix HA resume deadlock and
-> hisi_sas disk-wake race"), which restored the draining sas_resume_ha()
-> in hisi_sas.
-> 
-> 0da7ca4c4fd9 was part of the same 2021 series as fbefe22811c3 ("Don't
-> always drain event workqueue for HA resume"), which switched hisi_sas
-> to the non-draining sas_resume_ha_no_sync(). The two were designed
-> together: without the drain, nothing in the resume path waits on the
-> ATA error handling, so the pm_runtime_get_sync() in
-> smp_execute_task_sg() could at most delay the EH until the resume
-> callback returned - no circular wait.
-> 
-> 3dbbbf656b85 restored the drain to fix the disk-wake race (the
-> controller autosuspending while disks were still waking up), which for
-> the first time made the resume wait on the ATA EH - and with it the
-> SMP PHY CONTROL for an expander-attached ATA device. So the deadlock
-> window is really since 3dbbbf656b85, not since 0da7ca4c4fd9.
-> 
-> It is also a narrow trigger: a directly-attached ATA device resets its
-> phy via lldd_control_phy() (no SMP IO), so it needs an expander-
-> attached ATA device whose EH lands inside the drain of a runtime
-> resume - which is why the testing of 3dbbbf656b85, whose scenario was
-> the disk-wake race, did not catch it.
+On Sun, 20 Sep 2026 11:49:53 +0800, Pengpeng Hou wrote:
+> Check phy_power_on(), attempt to unwind VA09 on failure, and leave the
+> state flag unchanged. Propagate the helper result from host
+> initialization as well as its existing resume caller. Keep the original
+> PHY error if the supply rollback also fails, and report that rollback
+> separately.
 
-uh, the expander-attached SATA disk scenario would be a very common 
-scenario - do you test this always when developing this code?
-
-> 
-> Given that, should Fixes: point at 3dbbbf656b85 instead? I kept
-> 0da7ca4c4fd9 as that is where the pm_runtime_get_sync() being fixed
-> comes from, but the deadlock itself only exists where 3dbbbf656b85
-> is.
-> 
-I am just wondering why this needs to be fixed so many times...
-
-
-diff --git a/drivers/scsi/libsas/sas_expander.c 
-b/drivers/scsi/libsas/sas_expander.c
-index 811c9eb4fef1..5a8cdd3682fe 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -61,8 +61,22 @@ static int smp_execute_task_sg(struct domain_device *dev,
-  	struct sas_internal *i =
-  		to_sas_internal(dev->port->ha->shost->transportt);
-  	struct sas_ha_struct *ha = dev->port->ha;
--
--	pm_runtime_get_sync(ha->dev);
-+	bool ha_resuming = test_bit(SAS_HA_RESUMING, &ha->state);
-+
-+	/*
-+	 * While the host is resuming, ha->dev may be RPM_RESUMING and
-+	 * the resume blocked in sas_drain_work() waiting for this very
-+	 * SMP IO, so waiting for the host to resume here would deadlock.
-+	 * Hold the reference without resuming, the hardware is already
-+	 * initialized by the LLDD before sas_resume_ha() runs.
-+	 */
-+	if (ha_resuming) {
-+		pm_runtime_get_noresume(ha->dev);
-+	} else {
-+		res = pm_runtime_resume_and_get(ha->dev);
-
-why change from pm_runtime_get_sync() to pm_runtime_resume_and_get()?
-
-+		if (res)
-+			return res;
-+	}
-
-So when is it required to really do pm_runtime_resume_and_get() (and not 
-pm_runtime_get_noresume())? I mean, when is this called such that we 
-need to resume the ha->dev?
+Reviewed-by: Stanley Jhu <stanleyjhu@google.com>
