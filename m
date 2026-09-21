@@ -1,75 +1,89 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AE71244667;
-	Mon, 21 Sep 2026 02:58:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FF7D343D9D
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 04:19:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789959540; cv=none; b=pTfUAm8rCuw+fg0skwA79dY8Uh66qYLveEoUa5gVRoZK4IULeDP2/Oi8NrT3w9ZVqGOqGBbbIGm5UJ5ZPzYRXD8fZy94ZDKTjcDAPwa/XfPTxgyViOwb/5D0oE1xCdX7JNXfxmukOyU5XtkrddzhO0hl9UU2ni3xh0RkXc3Z+hk=
+	t=1789964373; cv=none; b=pB7twqZO6f2ZWXdtQDUOC4gHlIzueMla2JsQ4AMZNwV4gD0kQl3o7i2aFWNx9T0wYOFn7Fm7I0AF0HsOEK5HpUUFBqZAKnZuwhNwSLhaLyy4TyvCMia/FsndT/i/vpgqRdUiEQLraf87AcUEzRyNttmEsqoCWpN6/TCRvBNhpVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789959540; c=relaxed/simple;
-	bh=qq/HrIxA/bL6/wJjEKuTI/VAopTwbzecn/dAsqEIv20=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=I6L2kvhjcE5HbK95MNh8lJ+Ndom1MeMCycWDIdDl9Q9BrmsDV+AGE4YzicCJPCdkI/VQLsLqSJ8023nVR5JSNpNw7c8kVNBzO9dtG5QyuUd5mnB1pMeDfqZtyMJRvov60Cv9HblFCpWLvY4+NXXUQPHdSXMUg3iHxqZ6H6HL/d4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 5dec6558b56811f19a56ed5b684f684d-20260921
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:1a93c21b-53ac-496b-9bb0-fd3d18fea442,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:7db8b62,CLOUDID:605a76c4cd180f63604284486b04e2f6,BulkI
-	D:nil,BulkQuantity:0,SF:80|81|82|83|102|865|898,TC:nil,Content:0|15|50|99,
-	EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OS
-	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 5dec6558b56811f19a56ed5b684f684d-20260921
-X-User: lijiayi@kylinos.cn
-Received: from [172.25.120.57] [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <lijiayi@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_128_GCM_SHA256 128/128)
-	with ESMTP id 1694522496; Mon, 21 Sep 2026 10:58:48 +0800
-Message-ID: <3e392e3e-ec27-43b5-a361-bebca45ce087@kylinos.cn>
-Date: Mon, 21 Sep 2026 10:58:43 +0800
+	s=arc-20240116; t=1789964373; c=relaxed/simple;
+	bh=h6nQrNpsC2SPsf3g4KDElWL4WOWUQsl/By1ui4Dyx+4=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=LfrooXrhg6dQiXTnCIMdhlqLQWowgOf1QD4waCA6A8dzhVz1oUhEjql6Ne8D+AcAdGP4NTURPKRgnXq2+K0qT8wPeqIfUdAFAWAAPxDJZ8uji2oBoRlVbNfT4lJ1oEr99FREWaYYP/uhU7pBx1L6AW3WRTu/65Rw8LwVjpotKZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MngaA47F; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MngaA47F"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 754A5C2BCFC
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 04:19:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1789964372;
+	bh=h6nQrNpsC2SPsf3g4KDElWL4WOWUQsl/By1ui4Dyx+4=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=MngaA47FkM4/kA9VLbhdhm9X1+RTwNYc/DBTU4fUelv+j63Q1CMT5t+6PXACmzqWB
+	 1L+iySGjYfP7AWD3h4aa4hcGnzmMjjJfJwXjj7gnQqN8tgAH7mN0zaQIjjT3wrol/M
+	 R1U2V5RUxrcij4n+3TGyy6Mqqh9nP80hMpAIRva81NizYLtaU/i7nKRXeCxSX7MfXK
+	 JLyAmVqA8LHOUgiIJqiEe29GsW/RIr3xe8bIg1aDWSlIEue1rmVydcHCAO5U5Wtm1u
+	 K1Efc2CkUTYQV3IzDTj45tNzItErlwmkb8cAVW4kk+8prpNK+YborWZmSu4h02ABlB
+	 T7vSGiBzmwQ3Q==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 60FCBC53BC5; Mon, 21 Sep 2026 04:19:32 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 198923] Linux 4.15.4+: Write on Ext4 causes system block
+Date: Mon, 21 Sep 2026 04:19:31 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: lindabonds836@hotmail.com
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: DUPLICATE
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-198923-11613-mM9cTfxJwa@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-198923-11613@https.bugzilla.kernel.org/>
+References: <bug-198923-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Jiayi Li <lijiayi@kylinos.cn>
-Subject: Re: [RFC PATCH] usb: uas: quiesce SCSI before stopping endpoints on
- driver unbind
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oneukum@suse.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
- linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
- linux-kernel@vger.kernel.org
-References: <20260920012358.3362053-1-lijiayi@kylinos.cn>
- <98374a38-eb18-44c7-8da4-d5e34944e72f@rowland.harvard.edu>
-In-Reply-To: <98374a38-eb18-44c7-8da4-d5e34944e72f@rowland.harvard.edu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
-Hi Alan,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D198923
 
-Thank you for the clarification.
-> In general, a class driver like uas shouldn't care whether an unbind is
-> what you call "driver-only".  It should take the same steps whether it
-> can communicate with the device or not.  (Note that the patch's test for
-> USB_STATE_NOTATTACHED isn't fully reliable -- there is a window after a
-> device is unplugged before the state gets updated.)
-I understand that uas should not distinguish a driver-only unbind from a
-physical disconnect based on USB_STATE_NOTATTACHED.  I will remove that
-test and use the same teardown ordering for all disconnect paths.
+Anne C. Flores (lindabonds836@hotmail.com) changed:
 
-I will retest the revised patch and send v2 after allowing some time for
-the uas maintainers to comment.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |lindabonds836@hotmail.com
 
-Thanks,
-Jiayi
+--- Comment #22 from Anne C. Flores (lindabonds836@hotmail.com) ---
+This is an interesting issue to follow, especially because kernel problems =
+like
+this can depend on specific hardware and system configurations. The additio=
+nal
+details in the discussion are useful for narrowing down the cause and
+understanding whether the problem is related to the kernel itself or the
+surrounding setup. Hopefully, the information shared here can help lead to a
+reliable fix. After all the technical troubleshooting,
+[url=3Dhttps://geometrydashs.com]geometry dash online[/url] is a fun way to=
+ take
+a short break with fast-paced levels and challenging obstacles.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
