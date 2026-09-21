@@ -1,123 +1,144 @@
-Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-180.mta1.migadu.com [95.215.58.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 948BE489FCF;
-	Mon, 21 Sep 2026 14:04:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95C334A3D5D
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 14:05:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1789999480; cv=none; b=SBvl+jUX0xs4UC5/DV7y+lNjAZcNvPMb6hO6L4V3Sbo0wVQPqxdvtPVUcei3xokoPEE1PSeIrQYmteho3CqC2yBT0RhNiIWvbswqAFdM+0iC0wUOxy3xek/J6kti5Y/tLTEf32fo8LOhmCx6VjeCziGhu03wtqiO0jwIgLx9aiM=
+	t=1789999557; cv=none; b=Z+aGaRKSEs84JWKgdlQnM0RlzpJeVpx6LpQDaXb9bsdiP9so7UvzfMHAql4zBqsNLsovWypX7HP/IvfzUBUmBajgKSo7rz7hbf6P/mkwNtSyn9AwZ4rRULgKBzGnyO3A+v9RNY1n5gbLIsXu6q+iYkLXmIJxbNtiXcG+sxTYNPs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1789999480; c=relaxed/simple;
-	bh=gzJY6OGTFyEJObmEW5YFsD3UN6ByF7WKJSOatE72Zoc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NPAflBjhkQTwCOntg4wB4XL+3lQ3oVMy2/PbD1TmrkGWwEPR3ldiz0HHUmy8hBP9L2+lWi6uyrhkQN9vGJSNQExZdMThNR62RJ0F3mQim+MCrWjNewWeOm7HZOEbtE1bucEuyDblFZGKPTdDEz7CmmVnECcpVGt1kj2nGPK0qNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=FyxqUK9H; arc=none smtp.client-ip=45.254.49.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	s=arc-20240116; t=1789999557; c=relaxed/simple;
+	bh=sv5IypIgEI13ebg5/SpkNFBLXvflcqcFz54Dum5Wb+E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ulea4i7SeXaN7sGmkFoy39W6EK7PkPMsQwrSVjUuBJ5SiRrWLkBTqLXLXXTJFCZ66H6J2pLXOosKHtKXWuGNl/+Erh15U9d5ajpodrohq/looq2pqnU7L+JyxLAr6NRHT/eUdacYUNOi98b7GoaX/IOS8oZvzBUrlWx2sMsW4jc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=uKZ5dpER; arc=none smtp.client-ip=95.215.58.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="FyxqUK9H"
-Received: from PC-202605011814.localdomain (unknown [222.191.246.242])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4e967d614;
-	Mon, 21 Sep 2026 22:04:23 +0800 (GMT+08:00)
-From: Runyu Xiao <runyu.xiao@seu.edu.cn>
-To: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Runyu Xiao <runyu.xiao@seu.edu.cn>,
-	Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: [PATCH] scsi: mptfusion: avoid freeing an unregistered IRQ
-Date: Mon, 21 Sep 2026 22:04:18 +0800
-Message-Id: <20260921140418.170920-1-runyu.xiao@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="uKZ5dpER"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=sv5IypIgEI13ebg5/SpkNFBLXvflcqcFz54Dum5Wb+E=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1789999553; v=1; x=1790604353;
+ b=uKZ5dpERP6wlwP8wM3rTQgQNk1SXr5MqbeOQIzfB0wCzTEZ1VXVrQCHtgisvk82uPCVqDTRG
+ MkZacrBAkHJxRqqegiUu9ZIio8Keup4NySVVGVLakTfsXkSQgI910bJbdG4rWLT9J32ACQytLvI
+ B2iSWC5e5cQpTltVWPm8oQL8=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta10.migadu.com with ESMTPS id 2392f7eb4c68b734;
+	Mon, 21 Sep 2026 14:05:53 +0000
+X-Mizu-Trace-ID: 2392f7eb4c68b734
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <627a27fc-b025-4bc1-8601-b0fca0e1c4e1@linux.dev>
+Date: Mon, 21 Sep 2026 15:05:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] scsi: libsas: Fix SMP IO deadlock during HA resume
+To: yangxingui <yangxingui@huawei.com>, yanaijie@huawei.com,
+ jejb@linux.ibm.com, mkp@kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxarm@huawei.com, liuyonglong@huawei.com, kangfenglong@huawei.com
+References: <20260918070307.381207-1-yangxingui@huawei.com>
+ <9a72eeb3-ca32-4241-9e21-74cf894a9bf1@linux.dev>
+ <bab95bba-3091-30e5-91ba-0fd459db0101@huawei.com>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <bab95bba-3091-30e5-91ba-0fd459db0101@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa0c4483b4503a1kunm9d10e2f450ea7
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZHh5NVkIfShgaSR0dGE1DT1YeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSE
-	pPSExVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=FyxqUK9H6wEhchwyvZObM2RFlULMfeFwUWJhDyQffCXfosYO9CMU4tNzfxUkhcO6YomKFEx8ESxo2zbc0Em/Vy51gQaiFYrchGobD0/5wHW4EyolizsV+GmR/Jz6qKWixz1rIcYloepCjRx/v5PPaAt1+Jt5MR3GH5ThMw0k+8g=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
-	bh=GfoMtLLWM8pqWzSgFJweDQ1Z4Ltg6d17nIEGy43G6wQ=;
-	h=date:mime-version:subject:message-id:from;
 
-mpt_do_ioc_recovery() can successfully request an IRQ during IOC bringup
-and fail later. The recovery cleanup frees the IRQ but leaves pci_irq
-pointing at the released IRQ. A later adapter disposal can then attempt to
-free it again.
+On 9/21/26 13:21, yangxingui wrote:
+> Hi, John
+> 
+> On 2026/9/21 19:37, John Garry wrote:
+>> On 9/18/26 08:03, Xingui Yang wrote:
+>>> When the controller resumes, sas_resume_ha() -> sas_drain_work()
+>>> processes the DISCE_RESUME work, which restores the ATA ports through
+>>> the libata error handler (ata_sas_port_resume() requests ATA_EH_RESET)
+>>> and waits for it in sas_ata_flush_pm_eh(). For an expander-attached
+>>> ATA device the hard reset in that recovery is an SMP PHY CONTROL
+>>> command sent to the expander:
+>>>
+>>>    ata_eh_recover() -> ata_eh_reset() -> sas_ata_hard_reset()
+>>>      -> lldd_I_T_nexus_reset() -> sas_phy_reset()
+>>>        -> sas_smp_phy_control() -> smp_execute_task_sg()
+>>
+>> This seems like an obvious issue. How come it was not found earlier? 
+>> It is apparently fixing a patch which is 5 years old.
+> 
+> The deadlock was not reachable for most of those 5 years - it is a
+> regression of 3dbbbf656b85 ("scsi: libsas: Fix HA resume deadlock and
+> hisi_sas disk-wake race"), which restored the draining sas_resume_ha()
+> in hisi_sas.
+> 
+> 0da7ca4c4fd9 was part of the same 2021 series as fbefe22811c3 ("Don't
+> always drain event workqueue for HA resume"), which switched hisi_sas
+> to the non-draining sas_resume_ha_no_sync(). The two were designed
+> together: without the drain, nothing in the resume path waits on the
+> ATA error handling, so the pm_runtime_get_sync() in
+> smp_execute_task_sg() could at most delay the EH until the resume
+> callback returned - no circular wait.
+> 
+> 3dbbbf656b85 restored the drain to fix the disk-wake race (the
+> controller autosuspending while disks were still waking up), which for
+> the first time made the resume wait on the ATA EH - and with it the
+> SMP PHY CONTROL for an expander-attached ATA device. So the deadlock
+> window is really since 3dbbbf656b85, not since 0da7ca4c4fd9.
+> 
+> It is also a narrow trigger: a directly-attached ATA device resets its
+> phy via lldd_control_phy() (no SMP IO), so it needs an expander-
+> attached ATA device whose EH lands inside the drain of a runtime
+> resume - which is why the testing of 3dbbbf656b85, whose scenario was
+> the disk-wake race, did not catch it.
 
-mpt_suspend() also unconditionally calls free_irq() when the bringup path
-did not register an IRQ and left pci_irq at -1. Guard the suspend cleanup
-and clear pci_irq after recovery cleanup so the field reflects whether the
-handler is registered.
+uh, the expander-attached SATA disk scenario would be a very common 
+scenario - do you test this always when developing this code?
 
-Reproducer:
-Build both kernels with a test-only hook that makes the first
-SendIocInit() call during resume recovery return -EIO after the IRQ has
-been registered. Boot an x86_64 guest in QEMU with an mptsas1068 device:
+> 
+> Given that, should Fixes: point at 3dbbbf656b85 instead? I kept
+> 0da7ca4c4fd9 as that is where the pm_runtime_get_sync() being fixed
+> comes from, but the deadlock itself only exists where 3dbbbf656b85
+> is.
+> 
+I am just wondering why this needs to be fixed so many times...
 
-    -device mptsas1068,id=scsi0
 
-As root in the guest, run:
+diff --git a/drivers/scsi/libsas/sas_expander.c 
+b/drivers/scsi/libsas/sas_expander.c
+index 811c9eb4fef1..5a8cdd3682fe 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -61,8 +61,22 @@ static int smp_execute_task_sg(struct domain_device *dev,
+  	struct sas_internal *i =
+  		to_sas_internal(dev->port->ha->shost->transportt);
+  	struct sas_ha_struct *ha = dev->port->ha;
+-
+-	pm_runtime_get_sync(ha->dev);
++	bool ha_resuming = test_bit(SAS_HA_RESUMING, &ha->state);
++
++	/*
++	 * While the host is resuming, ha->dev may be RPM_RESUMING and
++	 * the resume blocked in sas_drain_work() waiting for this very
++	 * SMP IO, so waiting for the host to resume here would deadlock.
++	 * Hold the reference without resuming, the hardware is already
++	 * initialized by the LLDD before sas_resume_ha() runs.
++	 */
++	if (ha_resuming) {
++		pm_runtime_get_noresume(ha->dev);
++	} else {
++		res = pm_runtime_resume_and_get(ha->dev);
 
-    printf mem > /sys/power/state
-    printf mem > /sys/power/state
-    dmesg | grep 'Trying to free already-free IRQ'
+why change from pm_runtime_get_sync() to pm_runtime_resume_and_get()?
 
-The unfixed kernel reports the warning during the second suspend, while
-the fixed kernel completes both suspend/resume cycles without it. The
-failure injection is test-only and does not claim that SendIocInit()
-fails spontaneously during normal operation.
-
-Fixes: 9bf0a28c9a24 ("[SCSI] kdump: mpt fusion driver initialization failure fix")
-Fixes: 4d4109d0eb69 ("[SCSI] mpt fusion: Power Management fixes for MPT SAS PCI-E controllers")
-Cc: stable@vger.kernel.org
-
-Assisted-by: LLM Codex
-Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
----
- drivers/message/fusion/mptbase.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 3a431ffd3e2eb..79e0cb8fa5c56 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -2160,10 +2160,12 @@ mpt_suspend(struct pci_dev *pdev, pm_message_t state)
- 	/* Clear any lingering interrupt */
- 	CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
- 
--	free_irq(ioc->pci_irq, ioc);
--	if (ioc->msi_enable)
--		pci_disable_msi(ioc->pcidev);
--	ioc->pci_irq = -1;
-+	if (ioc->pci_irq != -1) {
-+		free_irq(ioc->pci_irq, ioc);
-+		if (ioc->msi_enable)
-+			pci_disable_msi(ioc->pcidev);
-+		ioc->pci_irq = -1;
++		if (res)
++			return res;
 +	}
- 	pci_save_state(pdev);
- 	pci_disable_device(pdev);
- 	pci_release_selected_regions(pdev, ioc->bars);
-@@ -2615,6 +2617,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
-  out:
- 	if ((ret != 0) && irq_allocated) {
- 		free_irq(ioc->pci_irq, ioc);
-+		ioc->pci_irq = -1;
- 		if (ioc->msi_enable)
- 			pci_disable_msi(ioc->pcidev);
- 	}
--- 
-2.34.1
 
+So when is it required to really do pm_runtime_resume_and_get() (and not 
+pm_runtime_get_noresume())? I mean, when is this called such that we 
+need to resume the ha->dev?
