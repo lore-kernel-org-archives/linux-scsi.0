@@ -1,79 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-4.mta0.migadu.com [91.218.175.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66E524A6885
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 14:38:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5919431A5C
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 14:47:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790001503; cv=none; b=UGJXBHRQZchr9L3prWaTg4l6cnpJqxNqQfX1xtnB5CqnKouJsbC9eY6stP2pTsjNAoMLtEQKeUKSOy64MTi3jMu5Ikz9BnavQUc9N8lRk4pglnba7HhuBqjXGB8FrEf59XrC5qvvBfjUYayzadBAAi9gd0OfWcAtjEcJTKvxStE=
+	t=1790002075; cv=none; b=sVZE/u3m5SIgKk0u883aYwbWRzPTSNiKZEXVi4zdlQUjqF1qNmtNAscM0Wv+Q5I+qZZtW2+8EzqDZy3AjBsBjWQtvZqJJvZvibpXtg86A6Qn1k0phNQ2W6/9SncM5DdlsD5y4FYPG1ZFRZDeGcemzbrjSZaVv2BZoovZ/6S61OQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790001503; c=relaxed/simple;
-	bh=UwD2ayMM/4zZurIIxUjhNY/81VC/tfcLG03zM/jIEBM=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=T818YkQAS/vI9VP1fBMWrpgLmSAcnzfsbUsGcLvZYERIN9r+Jy6QSVbs72+Ceqe9GUQzVyywEO4/6NJHC2Y+PRbw+SfLcucyN8ODQpYccSaU82gvTnZspbNsYEDlMmP+55RMHpbDO4VgWrh0zmol/VLzrqGkqERFoo5E5AzNhw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=miMVH7UI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1790002075; c=relaxed/simple;
+	bh=e9WM4rzZg05MFYQKfKbZiGk/o3dn3vwUGCuQuS6yn6c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fgWu1ANptNITrm8eUpJDy+5zyrRMKcu/tJP/x38xnf6GVFtdXY34sEK5iQbYRJmdhK7sqbC8KFLCIjrf3lBfDUlcwUYj9cGauI3BJsq4AC4A4j4FySdd04zPlh+VncH58wD2vrvF+K+k7h7Ek3MUo8S4na/0iKrF1XXraABB1U8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ld3sRngL; arc=none smtp.client-ip=91.218.175.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="miMVH7UI"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F3272C2BCB3
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 14:38:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1790001503;
-	bh=UwD2ayMM/4zZurIIxUjhNY/81VC/tfcLG03zM/jIEBM=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=miMVH7UILo6UviPxHaNWeKpAz1sAB58PFG0L+cSp19JbShV8R9N9XF1tPGvGHCTlT
-	 M5l5qkzVblr5mVuDCezLD9rOULglVWFKUSxLXJMeQngdJ+J+YGN9r+wPFkkqQ/CVMO
-	 pfcGFhItlXpBrIQ934Fy0wQ0CTr/05BDep0+5aTfj7IC3XACNmpWGMzqLn10w/mBKz
-	 l412cwhz3i+fqEoxXI+9JJeFSZKfl6Jk0o08ogruaKPV8dgrjC6Wh2BUUVl4dkZ7Su
-	 s6GqpmDSoKCa6mj6SesHN1BtWOY3S2PHoCqHLAOODx3GYNMtELaiFAqg1IJI2EeKm2
-	 29+wHEWuRWYdQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id C6623C433E1; Mon, 21 Sep 2026 14:38:22 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 198923] Linux 4.15.4+: Write on Ext4 causes system block
-Date: Mon, 21 Sep 2026 14:38:22 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: tytso@mit.edu
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: DUPLICATE
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: longdescs.isprivate
-Message-ID: <bug-198923-11613-hY5jCKwkTJ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-198923-11613@https.bugzilla.kernel.org/>
-References: <bug-198923-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ld3sRngL"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=e9WM4rzZg05MFYQKfKbZiGk/o3dn3vwUGCuQuS6yn6c=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790002071; v=1; x=1790606871;
+ b=ld3sRngLEFY83WYVb4DcyWRAtCHOBmgczKxT1zVDmbcS4HiayOqHamvFn68pWlY+kmO3mrWn
+ k9UL8VgJMaZNoPsYe8pmcb4jBpmsTxqiZ2pN/eNMKeJGKZNMDZwk/WH0ildte/JOfQGNBNSV8RC
+ jXt3dbnKPrvLOkraj/z3OHfg=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id 87632ad2fc37c4e0;
+	Mon, 21 Sep 2026 14:47:41 +0000
+X-Mizu-Trace-ID: 87632ad2fc37c4e0
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <69218179-d750-4880-8be0-2ccab7d76a6d@linux.dev>
+Date: Mon, 21 Sep 2026 15:47:41 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sg: clean up request on error paths in sg_read()
+To: Hui Peng <benquike@gmail.com>, Doug Gilbert <dgilbert@interlog.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260919204814.2815374-1-benquike@gmail.com>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20260919204814.2815374-1-benquike@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D198923
+On 9/19/26 21:48, Hui Peng wrote:
+> In sg_read(), once sg_get_rq_mark() locates a completed Sg_request and
+> transitions srp->done from 1 to 2, an allocation failure in kzalloc() or
+> a user-copy fault (-EFAULT) in copy_to_user() / sg_read_oxfer() returns
+> or jumps to free_old_hdr without calling sg_finish_rem_req(srp) and
+> sg_remove_request(sfp, srp).
+> 
+> Because srp->done is already 2, subsequent sg_read() calls skip the
+> request, permanently leaking srp->bio and keeping sfp->res_in_use = 1
+> (blocking SG_SET_RESERVED_SIZE with -EBUSY and wedging non-SG_FLAG_NO_DXFER
+> writes with -EDOM) until the file descriptor is closed.
+> 
+> Always call sg_finish_rem_req(srp) and sg_remove_request(sfp, srp) under
+> the free_old_hdr cleanup label, matching sg_new_read().
+> 
+> Fixes: cb59e8408381 ("[PATCH] sg.c: update")
+> Assisted-by: LLM
+> Signed-off-by: Hui Peng <benquike@gmail.com>
 
-Theodore Tso (tytso@mit.edu) changed:
+How was this tested?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-     Comment #22 is|0                           |1
-            private|                            |
-     Comment #23 is|0                           |1
-            private|                            |
+> ---
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -480,8 +480,10 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+>   
+>   	hp = &srp->header;
+>   	old_hdr = kzalloc(SZ_SG_HEADER, GFP_KERNEL);
+> -	if (!old_hdr)
+> -		return -ENOMEM;
+> +	if (!old_hdr) {
+> +		retval = -ENOMEM;
+> +		goto free_old_hdr;
+> +	}
+>   
+>   	old_hdr->reply_len = (int) hp->timeout;
+>   	old_hdr->pack_len = old_hdr->reply_len; /* old, strange behaviour */
+> @@ -543,10 +545,10 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+>   		}
+>   	} else
+>   		count = (old_hdr->result == 0) ? 0 : -EIO;
+> -	sg_finish_rem_req(srp);
+> -	sg_remove_request(sfp, srp);
+>   	retval = count;
+>   free_old_hdr:
 
---=20
-You may reply to this email to add a comment.
+This is no longer a fully appropriate label name
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+> +	sg_finish_rem_req(srp);
+> +	sg_remove_request(sfp, srp);
+>   	kfree(old_hdr);
+>   	return retval;
+>   }
+
