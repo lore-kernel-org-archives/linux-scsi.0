@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E49833A1696
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2026 23:32:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB1F047668A
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2026 23:37:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790119948; cv=none; b=De2cqj8lZBMyl9pjeRVTowNRSY2BJQeI0q72+nvcfEbYU4n3A+X32xG3QKgo9Cv2am+qGN0FKEEH6rv70qJ4M5r6t/RfOnAxFuVBQi0du/cvNQM0YB33k77qAil9Nzx5jYZ1zfDK6dph5rUv1wFz9FHTj3hv1/lUlvyXPN6doec=
+	t=1790120238; cv=none; b=l9VoS50RQEsXEa6VglKgks/G6bMcJYLyC7mwTPXyvQ6tYJQNYqW9WKukTELpdAkCHxY1aFgmV/JA3sAnzEcy3GvQPvxviUraxjmBoWB/MR0yXUn8JzQf+8yENn1eEA4+GeSJYJF/04GLuS9R4FrQbBSQVgSENOfEdehlajNFtWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790119948; c=relaxed/simple;
-	bh=R25W10VCXSU4dqYJJsxs3a4dOIJG1CpqsRa8brIrirs=;
+	s=arc-20240116; t=1790120238; c=relaxed/simple;
+	bh=igqsapnhL/N4oKq3hWJ8cvdQ0bqcB+W8IPOk0p0s38o=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=sVD0cTmmKWXUUZM8Us1g2VuPO+2z76XC7NAjJIgrxU1FxT0xZAGp2iMJ0fIj8kx13tkDKyrkEN773qgTwb6grWYzBQ/SFJH7TtumN2cwBJVgCJRydFB4jdmRUG3dGREJfkuU1bmxfGrmSmhTbUbuK3NoOOwNW+X+MO36yiMJdoc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NEbLh81f; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=BKAAyTt4M5emooDcD10XDGOL8palg8TytzndRSasJ7In36DC+dPT7QsI3oJpy5TDEaj+54xsnjEYiaQ9eRGI/9vlUZgrh06PUD9eQNHYUjsfj6yeqbcth8vIFZeGrzPe6+NRr2SXBrBkvRIeAf2oz4jTFG6+SmiDq5O/us5vhms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y8zgi9bv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NEbLh81f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26CEB1F000FF;
-	Tue, 22 Sep 2026 23:32:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y8zgi9bv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DE7B1F000FF;
+	Tue, 22 Sep 2026 23:37:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790119946;
-	bh=JXMa2Z/G20lJon2+t525CY44SfmqGhMmvmbj/mmgk+U=;
+	s=k20260515; t=1790120225;
+	bh=fQTZIMe0zA4MqzsWtSXEH9Z1ehjWL6yvOEt84KkXvRs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NEbLh81fgvSW55MqrkMb6v54IXoIragpXN0Ckhhv6dUUNLX90EChh4MsfKayNyGFm
-	 bL/Re8RDyU+/HpDlhuD0UagdZwqXvBFSC2VcT3qGrwUgdssoGlvlwj576SnNVf6zX0
-	 DQZer2yTzDDUFSZ/OktKRoyF3q4af+tMDxNUcB+Y0nIdDcs33twkPygJezYKiP6JnT
-	 4+Lj9QENfFnkT2A+1SKOW9TwPeRJD7HJdSfVzs4s8IzfmlI2ZUEBO4UGuQS+3TcKfT
-	 gCD9ZOMwAS9IA6HV3GS36YB3r+UUezF6SAMJT42lHeeR+L4WMdAga+85hf49lvcQae
-	 Jen5IbjLu7Fjw==
+	b=Y8zgi9bvkr+t5TNEUcMqyTbyOnWuH96iwPUntuD/snfDZKlslqfXgv1nVU4/giXwT
+	 WAdao3vdRxIwqW46WOF1dSV4h+4WBAD4A06gRJ5hihimH7vZmCSyyYhJwDyMKWKbMF
+	 N61UKXvGqDoJphDLB81WYDXtDCFKNezArnLYIGjcCjCz+DGvugDatL7bO6cqD7LJ+F
+	 rJT1A2Pt8cBDI2t7vZMPWsIewP/1anKRT/KGkfAbSGjV7vklF6UoH8C7NYUHoNsC1D
+	 vqw1AYgpUHeOOr6Pr+to4WHL+SLdAWX4VHJ4rq4AUxIG6PGvzHBLqrdApHAF19vENT
+	 2p1Mbmf7A8HwQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/7] scsi: scsi_debug: Fix a locking bug in
- resp_write_same()
+Subject: Re: [PATCH 4/7] scsi: scsi_debug: Split resp_read_dt0()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <295c14b6d2d011597284f09f7a3de42a49e08863.1790119506.git.bvanassche@acm.org>
+In-Reply-To: <bcc45fcd315feaec1b033496444573723a5f081b.1790119506.git.bvanassche@acm.org>
 References: <cover.1790119506.git.bvanassche@acm.org>
- <295c14b6d2d011597284f09f7a3de42a49e08863.1790119506.git.bvanassche@acm.org>
+ <bcc45fcd315feaec1b033496444573723a5f081b.1790119506.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 22 Sep 2026 23:32:25 +0000
-Message-Id: <20260922233226.26CEB1F000FF@smtp.kernel.org>
+Date: Tue, 22 Sep 2026 23:37:04 +0000
+Message-Id: <20260922233705.4DE7B1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,56 +46,101 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] scsi: scsi_debug: error masked in resp_write_same()
+- [High] scsi_debug: early return of byte count in resp_read_dt0 fails IO
 --
 
-commit 9e547db0a77591a35683cc5b28aeb6cb6d633c73
+commit 17ea9421189072b59343f9ec94fa5ff956adb17f
 Author: Bart Van Assche <bvanassche@acm.org>
 
-scsi: scsi_debug: Fix a locking bug in resp_write_same()
+scsi: scsi_debug: Split resp_read_dt0()
 
-This commit fixes a missing lock release in resp_write_same() when
-fetch_to_dev_buffer() fails. It redirects the error path to a new
-unlock label to ensure sdeb_data_write_unlock() is called.
+This commit splits the `resp_read_dt0()` function to eliminate conditional
+locking and prepare the code for context analysis.
 
 > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index fcfb49df9ee17..ac3b9bfa7e634 100644
 > --- a/drivers/scsi/scsi_debug.c
 > +++ b/drivers/scsi/scsi_debug.c
-> @@ -5402,7 +5402,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u=
-64 lba, u32 num,
+> @@ -4577,6 +4577,42 @@ static int resp_read_tape(struct scsi_cmnd *scp, s=
+truct sdebug_dev_info *devip)
+>  	return 0;
+>  }
 > =20
->  	if (-1 =3D=3D ret) {
->  		ret =3D DID_ERROR << 16;
-> -		goto out;
-> +		goto unlock;
->  	} else if (sdebug_verbose && !ndob && (ret < lb_size))
+> +static int __resp_read_dt0(struct scsi_cmnd *scp, struct sdeb_store_info=
+ *sip,
+> +			   u64 lba, u32 num, u32 ei_lba)
+> +{
+> +	u8 *cmd =3D scp->cmnd;
+> +
+> +	/* DIX + T10 DIF */
+> +	if (unlikely(sdebug_dix && scsi_prot_sg_count(scp))) {
+> +		switch (prot_verify_read(scp, lba, num, ei_lba)) {
 
 [ ... ]
 
-> @@ -5419,6 +5419,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u=
-64 lba, u32 num,
->  	/* If ZBC zone then bump its write pointer */
->  	if (sdebug_dev_is_zoned(devip))
->  		zbc_inc_wp(devip, lba, num);
-> +unlock:
->  	sdeb_data_write_unlock(sip);
->  	ret =3D 0;
+> +		}
+> +	}
+> +
+> +	return do_device_access(sip, scp, 0, lba, num, 0, false, false);
+> +}
 
-[Severity: Medium]
-Does this unconditionally overwrite the error code?
+[Severity: High]
+Does returning the output of do_device_access() here cause successful reads
+to return their byte count instead of zero?
 
-By jumping to the new unlock label when fetch_to_dev_buffer() fails, ret
-is initially set to DID_ERROR << 16, but then it appears ret =3D 0 is
-executed unconditionally right below the unlock label.
+Looking at do_device_access(), it returns the positive number of bytes copi=
+ed
+on success. Before this patch, the positive byte count was returned into
+'ret', but it was ignored for successful reads.
 
-Could this silently mask I/O failures by returning 0 on the error path?
+>  static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *=
+devip)
+>  {
+>  	bool check_prot;
+> @@ -4668,46 +4703,17 @@ static int resp_read_dt0(struct scsi_cmnd *scp, s=
+truct sdebug_dev_info *devip)
+>  	}
+> =20
+>  	if (sdebug_dev_is_zoned(devip) ||
+> -	    (sdebug_dix && scsi_prot_sg_count(scp)))  {
+> +	    (sdebug_dix && scsi_prot_sg_count(scp))) {
+>  		sdeb_meta_read_lock(sip);
+> -		meta_data_locked =3D true;
+> +		ret =3D __resp_read_dt0(scp, sip, lba, num, ei_lba);
+> +		sdeb_meta_read_unlock(sip);
+> +	} else {
+> +		ret =3D __resp_read_dt0(scp, sip, lba, num, ei_lba);
+>  	}
+> =20
+> +	if (ret > 0)
+> +		return ret;
 
->  out:
->  	if (meta_data_locked)
->  		sdeb_meta_write_unlock(sip);
->  	return ret;
->  }
+[Severity: High]
+Could this new check inadvertently cause successful IOs to fail?
+
+Since __resp_read_dt0() returns the positive byte count on success
+(e.g., 65536 bytes), this condition will evaluate to true. The function
+will then return 65536 (0x10000) directly to the caller, bypassing
+scsi_set_resid().
+
+The SCSI midlayer appears to interpret a positive return value like 0x10000
+as a SCSI result where the host byte is DID_NO_CONNECT (1), leading to a
+complete failure of the IO operation.
+
+(I verified that this issue remains present in the final commit of the seri=
+es,
+and the subsequent patch for writes also introduces the identical behavior =
+in
+resp_write_dt0().)
+
+> =20
+> -	ret =3D do_device_access(sip, scp, 0, lba, num, 0, false, false);
+> -	if (meta_data_locked)
+> -		sdeb_meta_read_unlock(sip);
+>  	if (unlikely(ret =3D=3D -1))
+>  		return DID_ERROR << 16;
+>
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790119506.gi=
-t.bvanassche@acm.org?part=3D1
+t.bvanassche@acm.org?part=3D4
