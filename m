@@ -1,160 +1,93 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADECD39FCB4
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2026 16:34:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790094875; cv=pass; b=b1fwI14jZZJGpCl9m0iFZt5I+rJ+I4sTt171hQhBkrcjpaFLYCl+JJluL9gJ2GhcHEUozj9SG7TtcDY6zMGIUH4FHlhA/D5Vhp9Mo0q5jxPEsQpI0xg49R2gzAGc9VCY3XMJvKg+uJuNuSzPzBuZ+5vSkqBGzGQ+oyWCP5tgQms=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790094875; c=relaxed/simple;
-	bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XntiBYBH9Xa/8KL8kswZzkS5pTuExIvGBvVYUyaCxzOb88kRopBdMaHUyOhBrxevFK+1UhY1qfUTmWWZze0YFRSmH0n34UBPnegGGZ6muY4IOm52ykSkwqn1piKS/2L+W4eBysxGQOHHqFZ1UEX65dAgh6Gyqx9Ur8WolxdJE7c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AB0zXoy1; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=JFcMYyPe; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AC6D569F04;
+	Tue, 22 Sep 2026 16:34:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790094900; cv=none; b=laz0l1cag1TAxokDe72o5CEX7Z8owmQRtzSmO+GlPUnJhTnc0TpAmQmsaXlDPg5+JTr0fZQMcaE3Uzona+yQxxFZVYzIe6tmRAJA5EeVhCP+F25xd6Qq7NEP0OfiFFOVy+cVvWiqcjy35Dw76ywPrh+hqOc4ssmro2hEns0X3W4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790094900; c=relaxed/simple;
+	bh=JH8bUHoMVtekCvm62x0h6O584h/v3A/r8+Qpzy03oA8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LDrWyhPxEDdFP19zmMlup4UI5OGtafXc8P7cATF+lfr8sir+ptc6rOiU67eamKdqyFzzbavbuNcM+jQjadohy5NIeIOiXc+KpGJFWHwvdgq297IMnuIx0fYdIR+KABy0VaeQrIjSFhMZDjKlCRUWJ/xErCU/sxw8CR4jSukdq3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=wz4vBzen; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AB0zXoy1";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="JFcMYyPe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790094872;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
-	b=AB0zXoy1Yvcm012ebd22g93OJbpurDQn8u1uHe5d8RzsT3ZMpvCxh+yo0EUJqXz7bfpG5G
-	PKjxa7qRnG1F6zZ1ph085yF6pgjNLW2brVmm5iZ6VKBRiBZG/P9YOQ0hCC7epr0C7KjsEH
-	+G6OYZB0KHfZrCFF7neyM9Bu0OgJUss=
-Received: from mail-vk1-f198.google.com (mail-vk1-f198.google.com
- [209.85.221.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-27-na90CnymOSevVY5le1Yppg-1; Tue, 22 Sep 2026 12:34:31 -0400
-X-MC-Unique: na90CnymOSevVY5le1Yppg-1
-X-Mimecast-MFC-AGG-ID: na90CnymOSevVY5le1Yppg_1790094871
-Received: by mail-vk1-f198.google.com with SMTP id 71dfb90a1353d-5c8323b8464so21835e0c.3
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2026 09:34:31 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790094871; cv=none;
-        d=google.com; s=arc-20260327;
-        b=YAL+XevOKxoTHEe0nUpW/gCB0KOcJHWqGrHuDDjbuNyARNFWIORPlCeIi4hwnv7Ccl
-         EQZqpgX8NdfZBsjACm53NYUSELDRWgWusORog909CpGbD/fi7087y7yd1/M9zYRF8YU9
-         xM1f9xPPLG1NemrYmcWRrbCIE7CdFhRkxPFdEPZPbwg7ZtvK6WhUnKCoTxowf3ZKqP5j
-         tZy8/rqvbun8GtsfWM87W64zoIP9rxAV3IvjLhew8g7lT3985LGXe/D3R1f4oDzZzq6O
-         hiG9daKPaMr3G8coxpe0VJA/FpKRtez0un6T/UTHmD7wAqZLos3Q4VOk0XD8lNpwLL1r
-         Sw6g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
-        fh=ogH+oXRPbrx78UZxd2AQf9OuANeIQ77hD6FCmj2yG2w=;
-        b=HLg+n0aeGtKxRexl02YJ9BnJRFM9Wl6jIzJQdgc3dPekCp5iueFFJ/LRLbHZbGbV2m
-         XtBSzxveQiVi+zfq/hgYmrwyBeN9I69NrTocJZBQWpOv6est8GY7qa1VuEbAx/gr9/lW
-         4qU3J/WNOZjmL6LwNcNWdwzB1Ce9WIui1dDb0DOcXmdLxLsUy2RBh7FeO9tHxwWQn11F
-         ZHdHFWMxKS9MJg/gc6xD7Ambv0K60bfVMqlskavawevgi56iGj0ceeOgcKveNfKZdXqC
-         uiNZh6xlKPG4oMafo+qZbJuOBCaFvnypROD8XTaHJmlJUFPAL2+gWL9ylkHnkcm9q1wa
-         MASA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1790094871; x=1790699671; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
-        b=JFcMYyPeetOC3hyTIz7DST7NcJm/TD2yslUQK+hCqUdwvXUmtVKbN0d+zpIZeZgn8Y
-         jXJI+fN2UNvqdUyxVn82tW+X7LeTaGQk2lMEzdOb/qnOt/P/zs8ekhAR709/DXu2pqbI
-         tmypp0UV46TG+3QOXq02/QrBB0TCpP3ijZ4kuNt+t4Ky2k0V9/AO1KOX2ny4Hh+LpU7w
-         8LVC9qZOG2XvIbt0hv2hPKHhDP3p3gU3eu7iSzsdHwJZmgol+OPguRIknGmsvd6tKN/I
-         Mm1dFUaIxmYowaQ7hFLa0F6kZAVKr1BxRqBUSMFHRbARJJb9sZCozHRdRNvxpJP83tJM
-         5jnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790094871; x=1790699671;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=cKbRWUWUNFCMJjKOH3yHgRtEpoahj/lRVoNkkOfXTsg=;
-        b=qTqUfCKsI6kzSBVznztheH51MoiVe+c1YaOMbh/6Qiz7WRuoOm+4eT7/j8BJfwclzg
-         yBDkNPhfAiFJpD+Qcq2ZSOi+8nTubaVC9kzqOsx9MnWmlCUMNKTc5v7vBF2fPwSYen+O
-         gnEq3/HseSP3sHvgQeHczfVh5mxgGxohIae+WrtXyKjHuy/+xY077Bib8JsOVyAAc/Gj
-         zlBIE2bX25ViESlQWPK68/nQ2HliBSQ1/4uQek8knWzdz86ZEeHGsDCdhdXRPtqxglcj
-         ws3cJkEB6FJbOYKWGtS+nNdrSXFAPSl7CSa9dSbq5a/SbPhmrL3T2tHo/EHWI2uBfPVJ
-         2V3A==
-X-Forwarded-Encrypted: i=1; AKwUvByvfK4SfWBKdYNv/Fe9gSgqhRb6OOEAyHpBBGkXKa+mbzJt5C8bxZLU7ShM7ehC34yJyCY3MJ7RhEjk@vger.kernel.org
-X-Gm-Message-State: AFuF++l/FkWXEQWM/3etDTwAyS5WvYEi5JlAFeQ2fd1KmDB/cSvccj+p
-	6ejqLh72VJ/p6RwWg2TXcomVQ4llIpvCFvmy3gFl7LaR4l7EMPJluv/549+XSPxyA6pEdds1up3
-	cnbFvzF/muYGxDX6hexNs00odK/ekt+qq0fR+cIH4coKNCppaQXJEPKKXXh3bxoeTvxjWjKWKAB
-	fr9rNGgIatngYBfU/zb31EslycselLgzEzzoYprg==
-X-Gm-Gg: AYBFou0+xKN4wxDQDdLya59KfKH7Q2vIQ6OHD9oloYjGpZSVihM5AeTmsEVxFA/k2QH
-	cGBHMRaj/1fV/wOsezyC54XIr76GYDEEb7I5wtnQzAV1gw/GMRnCJK3AewsdCVh83YJfP2zDbDk
-	j9ma8S+f8foaOSJh/72DLIAvQnyUDUElodHr7ayibDbWJsqFN9G7jcGacsLFGVHMpBq+6mrpDAo
-	fzI/iqcDKOvwVh1OHwUXVRSRVqpG6I3Dt/BaL/K/Ai+OQaJTDoBjCiCmFOO9E1kKQ7zBpaqw2E=
-X-Received: by 2002:a05:6122:4d01:b0:5c2:b01f:e503 with SMTP id 71dfb90a1353d-5c9f15bb2a3mr57784e0c.7.1790094870728;
-        Tue, 22 Sep 2026 09:34:30 -0700 (PDT)
-X-Received: by 2002:a05:6122:4d01:b0:5c2:b01f:e503 with SMTP id
- 71dfb90a1353d-5c9f15bb2a3mr57708e0c.7.1790094870278; Tue, 22 Sep 2026
- 09:34:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="wz4vBzen"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hq5Kt4D98z1XM5kW;
+	Tue, 22 Sep 2026 16:34:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1790094892; x=1792686893; bh=JH8bUHoMVtekCvm62x0h6O58
+	4h/v3A/r8+Qpzy03oA8=; b=wz4vBzenxEznkgNx1G7KYo1lmZ6IraqGwOPKjgcB
+	QUkSARJTf2bmnk1etD/x9+kY6bASX932xrW2jKSs4yKttmNzZMsiuFnmk1rxFcv/
+	IAn/xsseYpfHWbKiTcL18FhAEpOhHhFv5ob1hjoQkw29uBZxDHWn+zTSkSkZSOuj
+	VQJv5uABOUl78/yTXbZ/jrYbU72MUB9ePL17eytjJlbuyDhWigSITL0LUUfSJ69t
+	lACXZKLLQlM0WQM0AmCKL37VlOvz91ZaDuW88GbnEuz2K1+oEXYBPbEJfqwS6rOO
+	UwiXovraWBL+rGbyyB7ggZ/5LYvcQ8H4wuhQb2/gEbZSxw==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id rdmk7zB-djfj; Tue, 22 Sep 2026 16:34:52 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2ed2:d:1f32:8c6:3a87:d280] (unknown [104.135.182.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hq5Kj2TKKz1XM4Sx;
+	Tue, 22 Sep 2026 16:34:48 +0000 (UTC)
+Message-ID: <89e1ae39-dc01-46c6-b126-a7175847910d@acm.org>
+Date: Tue, 22 Sep 2026 09:34:48 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260917163744.191748-1-djeffery@redhat.com>
-In-Reply-To: <20260917163744.191748-1-djeffery@redhat.com>
-From: David Jeffery <djeffery@redhat.com>
-Date: Tue, 22 Sep 2026 12:34:19 -0400
-X-Gm-Features: AclHuK_gOIIAGH-J9mfA_6kGZQPoZd_UXxbRIgUMsQf82GPy6D8kJfhp32jIMog
-Message-ID: <CA+-xHTE65H=WSU4kavq7dC=FkaMVKuEZiNw5-o5DekRpgRkDeA@mail.gmail.com>
-Subject: Re: [PATCH v22 0/9] shut down devices asynchronously
-To: driver-core@lists.linux.dev, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, Tarun Sahu <tarunsahu@google.com>, 
-	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
-	Bjorn Helgaas <helgaas@kernel.org>, kexec@lists.infradead.org, 
-	Ewan Milne <emilne@redhat.com>, John Meneghini <jmeneghi@redhat.com>, 
-	"Lombardi, Maurizio" <mlombard@redhat.com>, Bart Van Assche <bvanassche@acm.org>, 
-	John Garry <john.g.garry@oracle.com>, Jeremy Allison <jallison@ciq.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Pasha Tatashin <tatashin@google.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Release command resources instead of
+ force-completing
+To: Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <stanleyjhu@google.com>
+Cc: "Martin K. Petersen" <mkp@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
+ <avri.altman@sandisk.com>, Bean Huo <beanhuo@micron.com>,
+ Can Guo <can.guo@oss.qualcomm.com>, Manivannan Sadhasivam <mani@kernel.org>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260920143319.3659543-1-stanleyjhu@google.com>
+ <20260920143319.3659543-2-stanleyjhu@google.com>
+ <fee250ea-8e0b-4320-880e-8e2627e7b103@acm.org>
+ <20260921043755.1689675-1-stanleyjhu@google.com>
+ <16af6539-24f8-425e-b411-f191897acfce@acm.org>
+ <6288ff21af758e0f3739edb6c33abe3bfbdba3dd.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <6288ff21af758e0f3739edb6c33abe3bfbdba3dd.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Sep 17, 2026 at 12:37=E2=80=AFPM David Jeffery <djeffery@redhat.com=
-> wrote:
->
-> These patches are rebased against the driver-core tree's driver-core-next
-> branch and should also apply against recent linux-next. Changes for v18 a=
-re
-> contained in patch 3.
->
-> This patchset allows the kernel to shutdown devices asynchronously and
-> unrelated async devices to be shut down in parallel to each other.
->
-> Only devices which explicitly enable it are shut down asynchronously. The
-> default is for a device to be shut down from the synchronous shutdown loo=
-p.
->
-> This can dramatically reduce system shutdown/reboot time on systems that
-> have multiple devices that take many seconds to shut down (like certain
-> NVMe drives). On one system tested, the shutdown time went from 11 minute=
-s
-> without this patch to 55 seconds with the patch. And on another system fr=
-om
-> 80 seconds to 11.
->
-> And thank you to everyone who has spent some of their valuable time
-> providing reviews, suggestions, criticisms, or tests on the various
-> iterations of this patchset.
->
-> Changes from V21:
-> - Check a device is alive before accessing its bus pointer
->
+On 9/21/26 8:03 PM, Peter Wang wrote:
+> It appears unreasonable to wait for the entire 30 second timeout,
+> as many UIC errors recover promptly. The resulting 30 second stall
+> would manifest as a noticeable UI freeze. Maybe we shouldn=E2=80=99t le=
+t
+> eh_host_reset_handler call the EH handler at all?
+The default SCSI disk timeout is 30 seconds. That default timeout was
+chosen when hard disks were the most widely used persistent storage
+medium and before NAND storage became widespread. Isn't that default
+timeout too big for UFS devices?
 
-And this has resolved Sashiko's last complaint. Sashiko found no
-issues with the v22 patchset.
+As mentioned in another email, .eh_host_reset_handler() must abort
+all pending commands and must terminate all ongoing task management
+functions. This implies resetting both the UFS device and the UFS
+host controller. I'm not sure how to do that without calling
+ufshcd_host_reset_and_restore()?
 
-David Jeffery
+Thanks,
 
+Bart.
