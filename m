@@ -1,129 +1,125 @@
-Received: from mail-yx2-f13.google.com (mail-yx2-f13.google.com [74.125.224.141])
+Received: from mail-yx2-f43.google.com (mail-yx2-f43.google.com [74.125.224.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A0153803F1
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2026 02:50:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 381883403E8
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2026 02:57:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.171
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790045449; cv=pass; b=ZwtvHDOhpHsqsQMDsQPdmmRCoIpSNVx/P+HP+wYXTbcXfccllJGlLPx1fG1mR0D+ytLl6aORoGn13Xxg+faENyUFpjxneN9pKz6xeluKtHVCSFuRJspDaiYeLnUSJ6L3WnL1MwtP9Tpzte31ScsSJqJ+sX18JJoitnQymzPYBx4=
+	t=1790045859; cv=pass; b=lqZnKqu95YYleqET+NcihtmbFNaImE7/rQwFglV2kpS5hsU0DqpMs2Q0GxhWrQdm6T8FlDxmvvRKNuO0ScB6I4tgdI/kuwIDX7WvyJmyetEQrzGg2nYc52ufH5n+GMOBrluqGxzJh6vdR2aDR4SNX5WsVD01Jz9h8JDf6CyYdqI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790045449; c=relaxed/simple;
-	bh=9seE7DdQbFb9HiabltP2bn/Px47uFUhhhOnC7opdhaE=;
+	s=arc-20240116; t=1790045859; c=relaxed/simple;
+	bh=LWETzvLTCLpPXKSTvQYhK8hYMXbjqA0M3tNN958ouT0=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=J3xKoqhp7tT+UywV8aCvOYom1qhtNGgHZtFoIM1uVauPATjzrUdUpY5iEAIGiDKSx0LR5xpf0Tb/XWa0c+xCGE2W8YmoxUOcFhYIlZe8DAT4lOxGK7S7z1P9Q2G46652AZQx871C2HcmU15u7RHADwdpm/SrV0lCzHKllCG8T1c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hQwaIh6g; arc=pass smtp.client-ip=74.125.224.141
+	 To:Cc:Content-Type; b=mmC/c+2T/+gGw6cuh6khuS6unW/XPZt56KNfZIYobp8dKlfZcImIJ+tyDtU7I0/Dl3H/uNFztO20RMUePFvtUHNcg095NWsQ0v9KzvCJTmRkiNZXHSpkoJW52kwgAhaZT9NmRcp1QIes+ghiJSg2w8Yv97GNOenVfLHu0VGyhGE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KBcGzg+t; arc=pass smtp.client-ip=74.125.224.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hQwaIh6g"
-Received: by mail-yx2-f13.google.com with SMTP id 956f58d0204a3-66e56a1b327so2811815d50.0
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 19:50:48 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790045447; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KBcGzg+t"
+Received: by mail-yx2-f43.google.com with SMTP id 956f58d0204a3-66f943b286fso3288784d50.2
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Sep 2026 19:57:38 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790045857; cv=none;
         d=google.com; s=arc-20260327;
-        b=ccm4fgAKGXqJk2Z/8c7zWBJrn2VwuqsWgjCYMdjrA9Ri0Wp/MGKG3PPd46gJNWz+Kb
-         Z9rSa7Uq8oXql/USGWKDe8YQH0XWgDI5JAhgWxahMd5EwR23NyFTkX1cC/qrga9jgqzS
-         TtZfXPXQc2hBJfB3+WOfWxZhqPfmOVY2LY6njBwAIVZiFO2/9tUhDbKbxSHgtCyRHohT
-         Uvdbtq9uC0P5wGbPFDQSvkmcH9vrS+RTVktfpUJ/UcSFXa99zSpuJQHNd35zamnYKuA8
-         DV08tbHaFHXbc4BsEaS55K8xrrLba065G64GSRHEqu0zKU89ZzrWafAePMa7k1BJzF0n
-         vMxg==
+        b=SBDC+hqKtui7yXYpmEl2cq3g7XGeLwxFtYf8RBxpZAO/7k5tk7XKpJHDOvPkHBeQVX
+         b2bmHTFXkej+L0VuUtGb0VzbZ6kHLf4mJdIrtziguK89VAvA4y3mNMPLQ9i9THe5ptti
+         xgpJCdP8oJWo0XZnY7gOjM9RZsl8bpYTGYEC0hExQrvpgFJWEZeyGJsnVdsvg8rrlyMA
+         6YvRSDtfmt/cC1P3i6cWdOi7+kJqFikzfYz5t2YeeVRVwSfeRAXcKKVOHqUMJk+dmIWJ
+         78Rq1oG3dW+k0HtgSZrV0grDJveSsJ/wH6GmzMAPA1bxefRBSxvRBi+SRrDKu5M9rYNp
+         C78w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature;
-        bh=PuG/mOTULDlFBdQPJWs+1DVH0LGf45HnPczNNq/pztc=;
-        fh=rJnfX1T+/PqVNm/U/O0OriCjxpo5GO9w9ANAm35Ytg8=;
-        b=qFIf9yFpYSCbW0V5U2XaOms0vzd9wNjojYosE1BB6Hfbrv4DkkdK7M8aZospqRHJ09
-         cbVMzBdZ5NnDII91D6ZXIkrEvS+XA4PwcLjO5YhWCsICmmYihx4AZaNrSqQv0vLOdWg/
-         Khmq7FpvZP7AqBHW+0Qg+Kn6gtW3Jc4Ig7hfu2iqDYUrQfjo1seVyWixQZWGJ7gHss+u
-         jNo3uD457rjqImwuuwv18Aqajw/+uTsImicjyWpSsUuYEn24wdEMdNdPZOCyfUoy/0RO
-         E2CojlxI1ebcwcXNDVkD4gTXUciKrR4ikVpxE8BdElbVY55NeSyfhxjPEeh/iS77HakM
-         rIZQ==;
+        bh=Oaszatv7+i7Q6ieygPW8etkdqnoGVO2BWSusRaJsgvI=;
+        fh=6Qf7mkwZttJUQf/hphn8ZE9MVdbNMDbtrYRjJ5sBabY=;
+        b=eS9j8n7ZS1kKE8S3SjdArNi0GHCwe7MCpX7Wx77vcx9Z9d6WaFlpsku5BmhJ0/qvXq
+         xQL2HtD9gSPM+lssVMQNSTjPm4W/ctpf7JTc3lZWU9wOdca99fpXTxJc+L8ZL0Fn3fvj
+         AXXsVMZh38i7Jto+uezrAmwcXO7MMtU+IWovFDYW7CvbKpkScplzYRDouBWk/x+3PZR4
+         uol0Pl2bUX2p2htKITG8EnZKa8J4/EjQRd7B0yQOtrGqn8ubIeSxE1SCNIdzlDNkgEol
+         quIzT6Sw10M4fjsxR1sdTNJthjRW0diuVv6isYcpOq00TEFZlHdO8iLIQ1ayhdTyDHgB
+         hsag==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790045447; x=1790650247; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1790045857; x=1790650657; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=PuG/mOTULDlFBdQPJWs+1DVH0LGf45HnPczNNq/pztc=;
-        b=hQwaIh6gJZv0U3Pc0WcTl3biDBwWXnovJwhS420V1vgGJRxdzkeZ1EuDk04OQkh3O3
-         EW55N0B9NP5fiB2rZ37fQoRGRKVPE5ppPLIVgwy38P5VKM9c9X51S5SmvfFq1ep7HZic
-         B/3BIWVepPEhGsEvOUWuyW/C5Cp79VW8kuVuAu0b/KfixQgr8fiIxB6/wzEA9TYZMYP5
-         J/jZiChLpM26ek5Fv3CsH4E7ZYUSbH1v2pEu69nKhSSpu9+B3BDDLt9qm8Z2IwkAsmY8
-         rHIs0f471PPnmPxwwaUhNJdsZkZU9ZAMpXIS/sXmn/cBndjlcEEec1NigufxTDyIJPWe
-         CwSA==
+        bh=Oaszatv7+i7Q6ieygPW8etkdqnoGVO2BWSusRaJsgvI=;
+        b=KBcGzg+tSPV1kXKRJ7Ki3qa/sIAEVBGoDqXXoz80fPkCiDirEYFlSSmK10YPbxOrTH
+         2xqrAxaZbEhLtEUe6zWlS4Q2jLFu0J3Q8OY+w1Nfp94WG2PmRuK8lVABm5Zn2lg6ueAj
+         d3lDW5aFY5D70bRO7jJeV6/JKUxo9y9lldrROmHU+ompccDnJpPuNLClnb1zUhkRfuQV
+         3kncOst+RIDpHpIrTs+DII2SEE0izlHLJEI0q/afQwXfZQ2pGpS6U7qenYso6WHE8X0n
+         lH9QbKAizVhmNvrDHxf60nIwLBmW6/FFM6JSO7sZj3V4L/VFkyajWLWn25kU7YxLNyKZ
+         qpGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790045447; x=1790650247;
+        d=1e100.net; s=20260707; t=1790045857; x=1790650657;
         h=content-type:cc:to:subject:message-id:date:from:in-reply-to
          :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=PuG/mOTULDlFBdQPJWs+1DVH0LGf45HnPczNNq/pztc=;
-        b=slx4mk/7B0JJNIPxicLUhLWsWq7AR4fB3Et9kKP7fyh9iiyIthTrI+gX1yYD755Gtl
-         YiZReOxfh4HGkAAz40lwg6muUi6rvkXAO08AuaXFtEwADZ7YwrMGI4QaPyXUQdFaeyto
-         /uBMDY1iOhkwLOvZImuxry/h29lOudWYu73gzTmYGueSdHE9foFNiP3jphZx5pNNrDOM
-         aIWgeAN4BSJRaMdGrupsjSNcjoTkfJ8BAzaP3lOER0i1a6QaudBhTY5nxo+gWlDA4NMD
-         frKOuEjf7TwAyjT6SdceNaT1RVKdCPYg0laoQztGnWpw7wHVYQZ9snPVWbztGY3XeXLF
-         k4tw==
-X-Forwarded-Encrypted: i=1; AKwUvByJ3huzA5RgmKrkbbr31vTeGgBm97wlYRNUW8tU/bVPOx2IQH4eg43o9AVHonDKYhlKM5KkQLUqk7Am@vger.kernel.org
-X-Gm-Message-State: AFuF++k/aAb3h0CMyooY4CCJPDvPqqwC+0r7T0YjCxphNQlZNSnc0KFc
-	5bCzPiiwKtJUfFujMhiGfuIzsELenxPJJzOKWzLECr/S5sS68AIgOd1bGfmtLoV970ArkNreg16
-	UiS9tBU9ASrOhT7tUm8Sfu/TNTNTcf9k=
-X-Gm-Gg: AYBFou1p1gNDjbBxMCpiGlEUPzkwXnjMml5m1BkZ57IIQ9iFRfjSgSdYqdZ+bDh9ay6
-	13g60nrIA5wFLR3zZ0fvGVB/5ZqXeXfSAyV/7xchYhQmLsWw4sPEPpiakd0WRCofzb2cpfOjn8y
-	CcczyKLvCX204w+rdj5/a0IFnF2EeBZpjvhHacUGJvqFhbwl2aE3zdbkBaUul0JFmZRpsr9rHeZ
-	lhQUreG8D/31OqNIfA8DlDVUJrqvUnU1734wIc5k3sh+74PvjZfmEi52QZ1DSIq9nn/GimrJWQU
-	sgJqNcCNEW4dQhfKw3BLndjEZYCA5NPeqo7Ai8j0Oqm+YWufo5qOJyAsmQ==
-X-Received: by 2002:a05:690e:4385:b0:671:c5e:6d5 with SMTP id
- 956f58d0204a3-6717fcb6779mr2611942d50.4.1790045447318; Mon, 21 Sep 2026
- 19:50:47 -0700 (PDT)
+        bh=Oaszatv7+i7Q6ieygPW8etkdqnoGVO2BWSusRaJsgvI=;
+        b=c3iQdioIW6kH0qV5CgroiFtDEDVbJYoFo2umrjR2RwkLnmoAPc6iHDhZBeY4kK3Qt2
+         /Saoac32QFjbtv+Gjnsv6HCduWX+4h8q3FKxjP0XWJb91qTNta6LbS/Khf5/+/UQTs+y
+         pKdlT7fSlCctFdkm04KuQRvBDp56vlQUlZIB+Du0N4IQZDejZqDNtRSAuIotuuMvqEb9
+         7t6fPW7jqQT/gv1Vgbm3dichLcQ70NSC6184HW2FUyLSwK+xrWob8wF41DuqlC85OQld
+         NxKVGOmrAsh2WhfcSMSgYUSTLaBdi2iLJKns06aLIEnG6UkHkgSCnHKtyauvNin8sO68
+         RcRA==
+X-Forwarded-Encrypted: i=1; AKwUvBxVZhhVhz8Gy+oWpZRwN2n0izhdlgrN1j+xHst+q/cyvYi+I1L85qCP1Om0ZtZKlR7AwuS/UR3s2WYc@vger.kernel.org
+X-Gm-Message-State: AFuF++lo7vMTSM7qg/JpJCFJHM/+laPBDlRygGLqaP5kKZs4ikFuJEQK
+	LcDmWzg/6/01EfvVoXgVEPxVb88hcv9BMgd2UAvP8YPryatbsAXcABKBk8cqZBNecuwKMeAYe9o
+	lYYkNOoai7J6zIu0b1oMwZZXnOSqSZdJvzklPjFe0oB9Q
+X-Gm-Gg: AYBFou2VklyBMxqHwwgQn726fNMDt17LUtyehdFR4Hfas0ENYMqfktDQRCznB706yuQ
+	planqKoLOSPThv/VNliOwdG8adsmpPMoX1O8WsXAVi5F8WbDxaPrsRbwqwFMYgKmyUdxXWklKHy
+	RwbxD348sJxiyhs76jLXkzxm/yz6oVkaWBrqXhmb11BklPop/2JL2SbM3vYFMr0e6Tei+lOxXo5
+	YUdtijYDMtwXxD+f0W2njkrFPPfVM3LxySz21fb07tG1FiGlq8V7wZ6ZttMkw3hNwstaEYgGhlB
+	cs8udj2UW3NRfGeTK2AMZ4KZd8Y1WYpsBt/1djRQYVJBfrGFIh1X50hG0g==
+X-Received: by 2002:a53:d006:0:b0:671:3b1b:997d with SMTP id
+ 956f58d0204a3-672c54d38a1mr331322d50.88.1790045857248; Mon, 21 Sep 2026
+ 19:57:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260918181326.3633765-1-lgs201920130244@gmail.com> <arFJiC1JGB0KpoLn@quoll>
-In-Reply-To: <arFJiC1JGB0KpoLn@quoll>
+References: <20260918180201.3624568-1-lgs201920130244@gmail.com> <arFKj506cRh4H_z6@quoll>
+In-Reply-To: <arFKj506cRh4H_z6@quoll>
 From: Guangshuo Li <lgs201920130244@gmail.com>
-Date: Tue, 22 Sep 2026 10:50:33 +0800
-X-Gm-Features: AcwNN1W51HQHgqXq96H1vY74mor976BD85GOPWHnSJHN_BwJ54ajJuhACadQQO0
-Message-ID: <CANUHTR9JgmyoCp3hcTbBn-NnUzjKFW_LaRHcrsY9qZbGvxAcNg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: efct: clear MWI on remove
+Date: Tue, 22 Sep 2026 10:57:23 +0800
+X-Gm-Features: AcwNN1UNJV-7RuK0vc2B42wvjUNKiAuWoNgu3YBpAo8NLf9Va9n2bdK2fcb_odo
+Message-ID: <CANUHTR-zXzW1b9oajnzrxEQxC65mWNhaijfdhu51XyV3DrySNg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: zorro7xx: put SCSI host on remove
 To: krzk@kernel.org
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Ram Vegesna <ram.vegesna@broadcom.com>, Kees Cook <kees@kernel.org>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Daniel Wagner <dwagner@suse.de>, 
-	James Smart <jsmart2021@gmail.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
-	Thomas Gleixner <tglx@kernel.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, 
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org, 
+	James Bottomley <James.Bottomley@steeleye.com>, Geert Uytterhoeven <geert@linux-m68k.org>
 Content-Type: text/plain; charset="UTF-8"
 
 Hi Krzysztof,
 
 Thank you for your feedback.
 
-On Mon, 21 Sept 2026 at 23:13, <krzk@kernel.org> wrote:
+On Mon, 21 Sept 2026 at 23:17, <krzk@kernel.org> wrote:
 >
 >
-> On Sat, 19 Sep 2026 02:13:26 +0800, Guangshuo Li wrote:
-> > efct_pci_probe() enables PCI Memory-Write-Invalidate with pci_set_mwi().
-> > The probe failure path clears this state with pci_clear_mwi(), but the
-> > normal remove path does not perform the corresponding cleanup.
+> On Sat, 19 Sep 2026 02:02:01 +0800, Guangshuo Li wrote:
+> > zorro7xx_init_one() obtains a SCSI host through NCR_700_detect(). The
+> > probe failure path drops the host reference with scsi_host_put(), but
+> > the normal remove path does not perform the corresponding cleanup.
 > >
-> > pci_disable_device() only disables PCI bus mastering and does not clear
-> > the PCI_COMMAND_INVALIDATE bit. As a result, the MWI configuration can
-> > remain enabled after the driver is removed.
+> > As a result, the SCSI host reference remains allocated after the
+> > device is removed.
 > >
-> > Call pci_clear_mwi() in efct_pci_remove(), matching the probe error
-> > path.
+> > Call scsi_host_put() after all users of the SCSI host have been torn
+> > down to release the reference acquired during probe.
 > >
 > > This issue was found by manual code inspection.
 > >
-> > Fixes: 4df84e8466242 ("scsi: elx: efct: Driver initialization routines")
+> > Fixes: 45804fbb00ee ("[SCSI] 53c700: Amiga Zorro NCR53c710 SCSI")
 > > Cc: stable@vger.kernel.org
 > > Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
 > > ---
-> >  drivers/scsi/elx/efct/efct_driver.c | 1 +
+> >  drivers/scsi/zorro7xx.c | 1 +
 > >  1 file changed, 1 insertion(+)
 > >
 >
@@ -156,7 +152,6 @@ On Mon, 21 Sept 2026 at 23:13, <krzk@kernel.org> wrote:
 >
 >
 >
-
 I would like to clarify that these patches were manually reviewed and
 audited by us; they were not simply generated and submitted by an LLM.
 However, I understand why the recent submission pattern may have given
