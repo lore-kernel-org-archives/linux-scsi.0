@@ -1,162 +1,102 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09C03548562;
-	Tue, 22 Sep 2026 16:27:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B4F35650F1;
+	Tue, 22 Sep 2026 16:30:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790094481; cv=none; b=dwV2LoSc4mrY/eguV3RBc/w3CIMuwBizWnGpGCJg6+oGIltsocsFVvkXowN7LdQfkvbszER+iIzZH31KcrxWQblinIH5Q0qUAoNBhyjlHJTj8N2n2sWhAjTTOkPUYkaZJf383fyFmGTQe3za6NkKZHqNTvNN9djk1JfXefxFZpE=
+	t=1790094650; cv=none; b=hw+cdnBPf+8vGPpjonjtriFwT+7gySFdpWq1j+P9ZB10o94tSM7dj1kJ8k8JovC2tYWJY1LEf+dgyRoxpPO1ukPWZ/LJ5TRQavDqTIjKkVUBzflTJYKoz/4HaCrYPJhiiWsB6aK+uB3tKQjOVIMJkeFN2cZLyGOMAshtpbklAu0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790094481; c=relaxed/simple;
-	bh=3r6iyEz6pbl5FVpyIgXnFRukS+LrtFJ0V6izVERaRno=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=kS6GR54nhfTVRiY/X7Yt+R8W+A2I3PqN7pv98ko2q4k4UoaG4OtDLCH0tzt2kS7OcGE7NOoLulqB1ZkQAR0yKmUZOuk7c9iEJAxWlaFQeeHasfvQcqIs8oMuqEcJN5KPbK/Tgyg/3b5mRHqtEO2w4hq9KFN3wbsjPYjhx3oVhBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ImbB//S5; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1790094650; c=relaxed/simple;
+	bh=n0i9pglkjtDPlCZXO9mMSC3fpC5+97b7K6QwPl600kw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=at1SxfBhiaaIOBpHCJE2mPDStt8LeIQO7YJLXI6dlMcrW/hBhyGlGKMjhfEH9nvlZr4RHckj9+3Bqda5F3Ys3twLwPrtknkMoVkIpTuOpwGgeXbqvApv6YEBOtaVYbwWMXcbXnqc5uI3+BJbE++TuXF5/vkp57f6mQIj13I5PMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=YE+Rh2cP; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ImbB//S5"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68MF5PCH752347;
-	Tue, 22 Sep 2026 16:27:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=DHFYMJEW6ccj4GaEFRCOBqqtuwDJVJ
-	0Kb0PdNxmhw/w=; b=ImbB//S5GzstI/GyMDDRB0Wo+ZQLCrt+seWsU+espPazIm
-	eREH5Mlvh/AateRChqarMQTFN3kZNT6fLK6z6fzM507vkKVYCD2z+a6xb2TYZREW
-	BpI71Vw1VXxFbqao+i27RkXNiVdljw8D1t9JvOgpGP0Xju1edwxc9e2UG0YLwUZ4
-	iO/ClP/x2xEyanGLivqv40xaE/8QY1OFYiocteolrkmcLyNDFOSfGfOdiihJciDe
-	z4KsunIdR6MWW1zjJBdisGm+u5tH2b4t6J1QQOSeAwryBvYwb13le1jUCxBnsRsD
-	NjSCvQJ/yDMP9TBJlIP4ZWzxudy9l5eGhbJlGupw==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gskgs6vgm-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 22 Sep 2026 16:27:59 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68MElVeS3046781;
-	Tue, 22 Sep 2026 16:27:58 GMT
-Received: from smtprelay07.dal12v.mail.ibm.com ([172.16.1.9])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gt4qqaqt5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 22 Sep 2026 16:27:58 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
-	by smtprelay07.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68MGRvYn29819474
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 22 Sep 2026 16:27:57 GMT
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AE03B58056;
-	Tue, 22 Sep 2026 16:27:57 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9399A58052;
-	Tue, 22 Sep 2026 16:27:57 +0000 (GMT)
-Received: from d (unknown [9.61.84.130])
-	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue, 22 Sep 2026 16:27:57 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v10 1/9] scsi: ibmvfc: add basic FPIN support
-In-Reply-To: <c53d3fa9-3e66-4010-87a4-e9cd61789381@linux.ibm.com>
-References: <20260911054832.1311668-1-tyreld@linux.ibm.com>
-	<20260911054832.1311668-2-tyreld@linux.ibm.com>
-	<20260911060658.68FDC1F000FF@smtp.kernel.org>
-	<c53d3fa9-3e66-4010-87a4-e9cd61789381@linux.ibm.com>
-Date: Tue, 22 Sep 2026 11:27:57 -0500
-Message-ID: <878q4tz1wy.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="YE+Rh2cP"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hq5Dt5mXnz1XM4TB;
+	Tue, 22 Sep 2026 16:30:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1790094630; x=1792686631; bh=5wudMcqllVoD5NwPxCCiMaye
+	Ueh3clA79hQ7lUy4QLU=; b=YE+Rh2cPPhXSa54yKO04vuTwFZr63CYukbzWRehT
+	SNpD+Nc1VvpS19XO/NhrskYmPtKYoPSXdfQmRMTqtcwEkPMHL2KZuxB5Ia4S6obh
+	UciyUWtB/P/cBKamlfNJxN9vMWH0Jk258oXzowFUlHmwADkJjeutYYcfp+otOq8p
+	Skqpul2ViO/uKcaX4NoowXZms+mP1lkw4PNvlSA5obe/7Y/mei4nUZKaF71W7GQC
+	T+BlGxUEjm1rcC0yYPvYPX/zVVANfv4uQveDwqu8jSkgCUXQdPKirDpCX0ndoT/3
+	+Y6ZEUjShVRdmZlfbrbrnTdJ/jkpQRh6Igh2LxuajKveEA==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ZLdxj2FYuNy9; Tue, 22 Sep 2026 16:30:30 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2ed2:d:1f32:8c6:3a87:d280] (unknown [104.135.182.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hq5Dd6v2vz1XM4Sx;
+	Tue, 22 Sep 2026 16:30:25 +0000 (UTC)
+Message-ID: <df31eb82-7211-415a-9ec1-53ecbc3e39b0@acm.org>
+Date: Tue, 22 Sep 2026 09:30:24 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=V/XoQuni c=1 sm=1 tr=0 ts=6ab2ac8f cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8 a=VwQbUJbxAAAA:8
- a=BuaCO-MwPhrfmhY2Sl0A:9
-X-Proofpoint-ORIG-GUID: FHJbkOAaBLZX4Z6GtCadWqBd_B1gkVVP
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIyMDIzNSBTYWx0ZWRfX9VR32s1cn1QJ
- kCAUyfNabCrAbQsR91mNKdB5rzMNHV8jy9qH+R6G2tGbTf/W5s8klxv3hpQ7ULlxVgJGUZo8DeJ
- U+Gjc7bcBQVulia2SEGo1uI/b18N2VNkwUEHfoysw/SStYvSs3JKisJQg4DtXWBsGCFtJDRcXd+
- Spp2IcGMzIN9fc/+KvBUUNdHEloIG0ZJF4cIgsEjz0uxVeYnYO7o4J4X6lRJ1ai3r1d+JFbJ9HM
- P2mDw95oV7bgaefFqTWIEVHlzJkvPl9yoR2ks+WMNBHj3HN+nBg42jWnBgxi+TLpzHzjG7+ia8b
- /DZin4ZeWpesp5eGXtD1ivwooMdJxnb8O4QUJ/jdzZZcFVfmUDCFjZiiTJYmVgptgXehndvQedr
- R+sZoLqcSNmzOAwHlDCQQhs9lEqVeZPGAjxWy4oLsoklCgqFidqVxCtPnCQOUWMs7NsOl0FDatK
- 5s7mfKuh0H5sRsbCJjQ==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIyMDIzNSBTYWx0ZWRfX4nUHc2ugVmUp
- WBI2QF7U6P2Y6Oqg4DW2MhoVcK0C0j8xredTkfkgFBCRIshhQoW+wg/N0OJcLyWPDRYFEWyjfDc
- qz+hws+m5PStXLeY7c4zXZicFW2VdvM=
-X-Proofpoint-GUID: FHJbkOAaBLZX4Z6GtCadWqBd_B1gkVVP
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-22_02,2026-09-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 spamscore=0 malwarescore=0 clxscore=1015 phishscore=0
- bulkscore=0 adultscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609220235
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Decouple CQ sweep from request
+ iterator in MCQ
+To: Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <stanleyjhu@google.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
+ <avri.altman@sandisk.com>, Bean Huo <beanhuo@micron.com>,
+ "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ Can Guo <can.guo@oss.qualcomm.com>, Manivannan Sadhasivam <mani@kernel.org>,
+ linux-kernel@vger.kernel.org
+References: <CAE14pdek6ynze+muDZrK+yNX-3ioe3vprxOA4W22qokg352tJQ@mail.gmail.com>
+ <20260918143809.3034592-1-stanleyjhu@google.com>
+ <20260918143809.3034592-3-stanleyjhu@google.com>
+ <1ddc5181-f547-465c-bfbe-dbf14a91493e@acm.org>
+ <20260920135014.3528082-1-stanleyjhu@google.com>
+ <e3538f10-fb9e-48ce-b48f-bca25c8f3d6c@acm.org>
+ <bab059b9a2dfed258db23993b5a6b4aceca2da49.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <bab059b9a2dfed258db23993b5a6b4aceca2da49.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Tyrel Datwyler <tyreld@linux.ibm.com> writes:
+On 9/22/26 12:37 AM, Peter Wang wrote:
+> On Mon, 2026-09-21 at 10:13 -0700, Bart Van Assche wrote:
+>> In SDB mode, clearing UTRLDBR will cause all pending commands to be
+>> requeued because the OCS member is initialized to
+>> OCS_INVALID_COMMAND_STATUS and because ufshcd_transfer_rsp_status()
+>> translates this status value into DID_REQUEUE << 16. I'm concerned
+>> that this approach may cause the deadlines for SCSI commands to be
+>> exceeded. Hence my proposal for MCQ mode not to requeue pending SCSI
+>> commands but instead to let the SCSI error handler decide what to do
+>> with these commands.
+> 
+> The current MCQ flow is similar to SDB. We discussed this two years
+> ago.
+> Aborted commands will be requeued immediately, just like in SDB mode
+A SCSI host controller reset must abort all pending commands. Requeuing
+SCSI commands during a host controller reset violates the API contract
+between the SCSI error handler and SCSI LLDs. I'm not aware of any other
+SCSI LLD than the UFS host controller driver that requeues pending
+commands upon a host controller reset instead of aborting these.
 
-> On 9/10/26 11:06 PM, sashiko-bot@kernel.org wrote:
->> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
->> - [Medium] The KUnit test `ibmvfc_async_fpin_test` leaks references to the `Scsi_Host` and the `fc_rport` device on its successful completion path.
->> - [Medium] Unordered workqueue allows FPIN events to be processed concurrently, causing data races in FC transport statistics and FPIN event reordering.
->> --
->> 
->> commit 79377784bc96c798354f5b0f5ce5007a8d857d16
->> Author: Dave Marquardt <davemarq@linux.ibm.com>
->>     
->> scsi: ibmvfc: add basic FPIN support
->>     
->> This commit implements support for a basic level of Fabric Performance Impact
->> Notifications (FPIN) in the ibmvfc driver. It adds an async event handler that
->> offloads FPIN processing to a dedicated workqueue and passes the converted
->> messages to the FC transport layer. A KUnit test module is also introduced to
->> validate the FPIN event handling and statistics updates.
->> 
->>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->>> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->>> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->>> @@ -3547,6 +3547,56 @@ static void ibmvfc_process_async_work(struct work_struct *work)
->> [ ... ]
->>> +	if (fpin) {
->>> +		fc_host_fpin_rcv(tgt->vhost->host,
->>> +				 sizeof(*fpin) + be32_to_cpu(fpin->desc_len),
->>> +				 (char *)fpin, 0);
->>> +		kfree(fpin);
->>> +	} else
->>     
->> [Severity: Medium]
->> Can the lockless modifications to fpin_stats in the FC transport layer here
->> cause data races and lost statistic counts?
->>     
->> Multiple FPIN events arriving rapidly from the adapter are queued to the
->> fpin_workq. Because the workqueue is created below as WQ_UNBOUND with
->> max_active=0, these events can be processed concurrently.
->
-> Makes sense. See response below.
->>     
->> Furthermore, since FPIN events are stateful (e.g., congestion detected vs
->> cleared), could concurrent processing deliver events out of order to the
->> midlayer and userspace, leaving the system reflecting an incorrect state?
->> 
->> [ ... ]
->>> @@ -7135,6 +7135,15 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
->> [ ... ]
->>> +	vhost->fpin_workq = alloc_workqueue("%s-fpin-workq-%u", WQ_UNBOUND, 0,
->>> +						 IBMVFC_NAME, shost->host_no);
->>     
->> [Severity: Medium]
->> By setting the max_active parameter to 0, which defaults to 256 concurrent
->> execution threads, does this allow the unordered processing that triggers
->> the data races mentioned above?
->
-> I think max_active should be set to 1 here to enforce ordered processing.
+.eh_host_reset_handler() is expected to reset all logical units and the
+host controller. The SCSI architecture manual (SAM) mentions explicitly
+that resetting logical units involves aborting all commands.
 
-Or use alloc_ordered_workqueue() here instead.
+Thanks,
 
--Dave
+Bart.
