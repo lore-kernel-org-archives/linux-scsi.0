@@ -1,101 +1,121 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69A313A1A3F;
-	Tue, 22 Sep 2026 07:37:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B85F2DC79B;
+	Tue, 22 Sep 2026 07:47:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790062652; cv=none; b=OHvbDiHISMyjQQ164bqa9AkyCPqrGSBEpcyBTqaARiL0Edeg5qTVMaI86O7RrfqCmxttjV6cFu7YXJI2MkbC1olicp7PoL76LMwIB+hDjPASctVfW/pdnG1VG2I/Shxt7KCYhNMT+TgrBdhAHWZKhfTSkAMM4ya9RQOGwMpwejM=
+	t=1790063283; cv=none; b=Rx6aIKeslgmHrSJUTNwjFwXT9/wx72HXFgjZ3xrS0TV5twN1i0x0GzZKcmFWdvUhZraB2k9AWHg1O/v95vUw1I7DqZbo/+HeFxe5Cr+7DKkvZiOlp9SiwwBPzOY2eHFHYBXd9C4Gqkrfuuykz6UbRr3SutWP4kYrumsWEiG/vWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790062652; c=relaxed/simple;
-	bh=xMrolzxkJSTeToNK0mKX1495tYpkMHcupo/dfp8kyg0=;
-	h=Message-ID:Subject:From:To:CC:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=bImRdiuQOZG8O16JAZ4ecvmONQ5rpGgti0x/R0DtdHPCGc4v8KNg9wupi3yM0R0Gq92H5VZ8W1hu0XU1b9Z1EQgAn4+6S2Uo66mIkHxWDF5MmxUp1xXB4CLssK7o9aKdbRWN83ojiCkiSbA9Or6OZAdmWS1nOUCEvT22R8grazw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=T36QLDxg; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1790063283; c=relaxed/simple;
+	bh=lQsPYsbAPQ5pDzOqviHpFXvEmk6EvwmhbDS5PIp+ylM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=nN6/Gc0lrPCIYbwK6k2JVo3ULQEquKgPsKNlWiMwUNWfp3wOQ+nizmDOk+JTbyfTXIcheC30o1Jz0UE/iHAW6DHF4NQr4TuQQOo1Ekw8CaAQHwWqqQXGTVBrQRBODvEfFzQZmNoCs582G8OtYQxWt6hHYLVr7Dd+qYNHNfRFTRE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CpJwJ95R; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="T36QLDxg"
-X-UUID: 70e8fe32b65811f1b1788b6acf885367-20260922
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=xMrolzxkJSTeToNK0mKX1495tYpkMHcupo/dfp8kyg0=;
-	b=T36QLDxgDPKQCzmwo3/HprjjAybRulUfaTh7KGZAmZOlt+Np2yq0yX8TfUgcMwsky25TaIcmUeruka4qLrSqX+Rzq9XdzvXVWN6LKJjYv5dT24vFHAVLG94jjs3q5OF2VuL5dx/+S3dmGm1SG0/j0oyi8iUtCxpylzXrtVqK7/0=;
-X-CID-CACHE: Type:Local,Time:202609221536+08,HitQuantity:2
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:aa78755c-2088-4993-aa13-4411278c8a0c,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:7db8b62,CLOUDID:b76fa028-9ebf-4787-bb42-3cd26eee85aa,B
-	ulkID:nil,BulkQuantity:0,SF:81|82|83|102|136|836|865|888|898,TC:-5,Content
-	:0|15|50|99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,
-	COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 70e8fe32b65811f1b1788b6acf885367-20260922
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 210178657; Tue, 22 Sep 2026 15:37:19 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Tue, 22 Sep 2026 15:37:18 +0800
-Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n1.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
- Transport; Tue, 22 Sep 2026 15:37:18 +0800
-Message-ID: <bab059b9a2dfed258db23993b5a6b4aceca2da49.camel@mediatek.com>
-Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Decouple CQ sweep from request
- iterator in MCQ
-From: Peter Wang <peter.wang@mediatek.com>
-To: Bart Van Assche <bvanassche@acm.org>, Stanley Jhu <stanleyjhu@google.com>
-CC: <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <mkp@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Alim Akhtar
-	<alim.akhtar@samsung.com>, Avri Altman <avri.altman@sandisk.com>, Bean Huo
-	<beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, Can Guo
-	<can.guo@oss.qualcomm.com>, Manivannan Sadhasivam <mani@kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Date: Tue, 22 Sep 2026 15:37:18 +0800
-In-Reply-To: <e3538f10-fb9e-48ce-b48f-bca25c8f3d6c@acm.org>
-References: <CAE14pdek6ynze+muDZrK+yNX-3ioe3vprxOA4W22qokg352tJQ@mail.gmail.com>
-	 <20260918143809.3034592-1-stanleyjhu@google.com>
-	 <20260918143809.3034592-3-stanleyjhu@google.com>
-	 <1ddc5181-f547-465c-bfbe-dbf14a91493e@acm.org>
-	 <20260920135014.3528082-1-stanleyjhu@google.com>
-	 <e3538f10-fb9e-48ce-b48f-bca25c8f3d6c@acm.org>
-Content-Type: text/plain; charset="UTF-8"
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CpJwJ95R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 264A51F000FF;
+	Tue, 22 Sep 2026 07:47:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790063277;
+	bh=71BnTTBfDHUjWPKQkT4aD/X5LnAp5WIflUcNL5vzZuA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=CpJwJ95RVd8Nj3Kb59r5Cj/9R19uj5XmD8hy40byF3h8SkL0b08jwriUrhhs2H+0p
+	 yIZs4sn81BtCu0dIzkIrK7QeLCd6t0gplU/Koe+LUeCczb+BmD3a221eUzBtPGqaT1
+	 e3Tsg/Y/fzeYGuO4HRYGV/Vpf22R2c7Vcl+gWxBYT2XcuP7Lz1LEKG4oiYpbdkbcG5
+	 zhKzJ8ztiT8A4f4s2Qq2UuRlnFAByGVQu5EQi+RqyW0+D4h07cHv7b+2b41Lle13MH
+	 2SlRML0CaNOoV9l7BVzJkgfxAHhoXuH/splGzdzOm1KKOiTAFlhP0ixfXwuWgQF71v
+	 fngyMkxY/TlLA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 01/12] scsi: ufs: dwc: Return a negative error if the
+ link is down
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Larisa Grigore" <larisa.grigore@oss.nxp.com>
+Cc: robh@kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, imx@lists.linux.dev, Frank.Li@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260922073009.1449688-2-larisa.grigore@oss.nxp.com>
+References: <20260922073009.1449688-1-larisa.grigore@oss.nxp.com>
+ <20260922073009.1449688-2-larisa.grigore@oss.nxp.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.3-0ubuntu1.1 
+Date: Tue, 22 Sep 2026 07:47:56 +0000
+Message-Id: <20260922074757.264A51F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MTK: N
 
-On Mon, 2026-09-21 at 10:13 -0700, Bart Van Assche wrote:
-> In SDB mode, clearing UTRLDBR will cause all pending commands to be
-> requeued because the OCS member is initialized to
-> OCS_INVALID_COMMAND_STATUS and because ufshcd_transfer_rsp_status()
-> translates this status value into DID_REQUEUE << 16. I'm concerned
-> that this approach may cause the deadlines for SCSI commands to be
-> exceeded. Hence my proposal for MCQ mode not to requeue pending SCSI
-> commands but instead to let the SCSI error handler decide what to do
-> with these commands.
->=20
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] scsi: ufs: dwc: ufshcd_dwc_link_is_up() propagates positive error v=
+alues
+--
 
-Hi Bart,
+commit bbaf6092d07a94b81e19b83041bbd45bc5f8771f
+Author: Larisa Grigore <larisa.grigore@oss.nxp.com>
 
-The current MCQ flow is similar to SDB. We discussed this two years
-ago.
-Aborted commands will be requeued immediately, just like in SDB mode
-https://patchwork.kernel.org/project/linux-scsi/list/?series=3D894411&state=
-=3D*
+scsi: ufs: dwc: Return a negative error if the link is down
 
-Thanks
-Peter
-=20
+This commit updates ufshcd_dwc_link_is_up() to return -ENOLINK when the link
+is down, rather than returning 1. It also propagates any errors returned by
+ufshcd_dme_get() to the caller.
 
+> diff --git a/drivers/ufs/host/ufshcd-dwc.c b/drivers/ufs/host/ufshcd-dwc.c
+> index 21b1cf912dcc6..ccf785fce6cc6 100644
+> --- a/drivers/ufs/host/ufshcd-dwc.c
+> +++ b/drivers/ufs/host/ufshcd-dwc.c
+> @@ -48,20 +48,23 @@ static void ufshcd_dwc_program_clk_div(struct ufs_hba=
+ *hba, u32 divider_val)
+>   * ufshcd_dwc_link_is_up() - check if link is up.
+>   * @hba: private structure pointer
+>   *
+> - * Return: 0 on success, non-zero value on failure.
+> + * Return: 0 on success, a negative errno value on failure.
+>   */
+>  static int ufshcd_dwc_link_is_up(struct ufs_hba *hba)
+>  {
+>  	int dme_result =3D 0;
+> +	int ret;
+> =20
+> -	ufshcd_dme_get(hba, UIC_ARG_MIB(VS_POWERSTATE), &dme_result);
+> +	ret =3D ufshcd_dme_get(hba, UIC_ARG_MIB(VS_POWERSTATE), &dme_result);
+> +	if (ret)
+> +		return ret;
 
+[Severity: Low]
+Are we propagating a positive error code here?
+
+Looking at ufshcd_wait_for_uic_cmd() in drivers/ufs/core/ufshcd.c, when a D=
+ME
+hardware command fails, it extracts the positive error code from the UIC
+registers:
+
+	ret =3D uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
+
+Since this value propagates up through ufshcd_dme_get(), returning it direc=
+tly
+means ufshcd_dwc_link_is_up() can still return positive error codes. Does t=
+his
+violate the updated API contract to return a negative errno value on failur=
+e?
+
+While upstream callers evaluate the result as a truthy value (if (err)) and=
+ the
+probe safely fails without crashing, returning positive error codes violates
+standard Linux driver conventions.
+
+> =20
+>  	if (dme_result =3D=3D UFSHCD_LINK_IS_UP) {
+>  		ufshcd_set_link_active(hba);
+>  		return 0;
+>  	}
+> =20
+> -	return 1;
+> +	return -ENOLINK;
+>  }
+> =20
+>  /**
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260922073009.1449=
+688-1-larisa.grigore@oss.nxp.com?part=3D1
