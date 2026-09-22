@@ -1,268 +1,328 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2B75522F0D
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2026 20:47:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E75C73769F0;
+	Tue, 22 Sep 2026 23:17:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790110078; cv=none; b=bXcJoGt5HCf36DrI/K5aNx4OtBSH3ac197y52ZZf+QzfGKa4VvmiczwBXms5m2pSF4KDnObtXkPUSkcoSn34Ebexyf6FOrI7DV6HiUrmMogwMyzeOhnsk42KEfUEUWe1YX9rxyMFo3774TJNfXi2psuEP/iECk46+nysubSLaAc=
+	t=1790119052; cv=none; b=YtcW2Yi3w+BUTSlA0yi4gwfWpOQ2JGp0CQkYb6rf8u3Vxhn+qLtkcGASnh8jSfU6ON6g5ffbveH7qY3a3joG1zq2CKCHNAlxwFWLheep4SGsgEv+D91rlRAcI46GzCb15Kfr5akfrsTPl8v0PBHKcJP8OJBiGhaR3KX5Jm2FIGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790110078; c=relaxed/simple;
-	bh=xhyODQm86laf+3unqW9y6ULHm2xp1ql8dTsMrFgx8PU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=nr7Kc4VAFNuamXuKeXW+bx2eQGJCdEkHuLwCt/gW2ARbN27M0Lqgri6ReYLrJiMOx7d494AcNAlm8JqGf6CxE0nYdV7vlWy8xeyZ9877Qa2i/azNU8+rrkmbKroDB8a5y0Nt5H4JzQ1i/eM6XW9WLuo5/n5SfX72PHCNin81a/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iP/AYZYn; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=sUGrVxBC; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1790119052; c=relaxed/simple;
+	bh=SB8k2soM+RpvTYoU56sRqAMYXqKTRMffQri+OLSmCK4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nWsKVGheLTvRCeBpmM4SrODqaN4hGVbtBHZv4eQemFnLusBOAY9SN5Sg89DSLOW1Ru/eDT2gH+F7QBh4GTE9IrMMwlB0SFtrdYU1m0hRo29y2Fclqbf/Dk3tIyrWEPhRRuH8A+yzLQkZPuwQVOKBG0tz/gsCnRObIk1yNKO4sd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=XvNtXpGF; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iP/AYZYn";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="sUGrVxBC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790110060;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LjUnO/bpAmFNey3AyRKms6QEPQJOD+dVVnok8Jb/HrE=;
-	b=iP/AYZYn4CwdHX7xQOl2C5yfI8BgKsEeNnHOInDVfgvxa2Xsr/eiYPYqX9PyxohbIG8tzz
-	VViVwiOpObCJo2lPrxU+xSBVsyk4zZzk6RDShGd+hVmpZV+pgU+4BuvCka/0ytgssL8Izr
-	vVrlkeJ4C2hehTcV/drPHAGNSTMux5s=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-376-12TRUK1KNCW7VGLaKfEInw-1; Tue, 22 Sep 2026 16:47:39 -0400
-X-MC-Unique: 12TRUK1KNCW7VGLaKfEInw-1
-X-Mimecast-MFC-AGG-ID: 12TRUK1KNCW7VGLaKfEInw_1790110059
-Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-91256a7b7b3so4879736d6.2
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Sep 2026 13:47:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1790110059; x=1790714859; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=LjUnO/bpAmFNey3AyRKms6QEPQJOD+dVVnok8Jb/HrE=;
-        b=sUGrVxBCHIq1UcptUWjvSice3DxJ35pk9oSkxf2bnybOUGL0BSE3lwsMwjNGjCLxYm
-         JYBn0ZVycrl3UM1dBVJhmWRUJzKtw1FdUAWkKK9HSXroUeWnab+2AhkQB9ZKTVSVn6Eg
-         zaKl6dq8sQd39Hj9Xq5z0Cxng01MO5C64qT6TF7hlHYIXyJLR+67MjF8XmKlC8/Fmk2J
-         VYrf2hNfybRzTuMiyINxrZOHcpn8ECMTqWG8o7l2X0LqQZq4QR+Mpis2GTvN+RxHV+x3
-         NIbdt3jJ+30nmMG5J73yC6WnDg9T02r1NM/5WYGivVvfBs1kvkiaCSh10dfQ4S7rK7pU
-         Q+Lw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790110059; x=1790714859;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=LjUnO/bpAmFNey3AyRKms6QEPQJOD+dVVnok8Jb/HrE=;
-        b=Khd5wPVX7IPVCCnLYz22fHGo3/tTjlB9dtrjlBTo7U0ByQsgj/pq6Jxn0nVlelhNT8
-         axOGoixEPsSVZT9rfjVQ9zORuxA2ZocsXexn2o/DsbPDm2QhBx4xfuFE3j4uDR3+ty81
-         c8ef5mxn08H4e3sArMS1AHE+0J0apejLJS3PWRLCIc8l9AtyzPbfLYRr8x78D6O5367U
-         0nfBwQFE4eEuyECVwSdO4j7y/Jim/M8th4zaDroxdcfdMBR8RgINCQNMYwdkTVaxOFK0
-         aJe9s97akZk6g5fyUZoldPZ2iA38w2oRbS+MMTHshZN3UgUZwEZSnQ+IrhVZ5xH4VM0H
-         Ullg==
-X-Gm-Message-State: AFuF++l5Bok5cfnR2gXs6loxiKK0jzCMxkurNcyW2BZodE8qkixdr1pv
-	ZLSTAHVfN9H95m9uGcbqKbVcTyvKk0F1EysJhtxjA2L38D6oCKAk2V7Swa8RACDWwzXjtja2761
-	er5JJOr3Db3Jv0KmLZxdo96CnOyHdjnQmnl5oDztyu2B/kQFqEepsu/4RkIJ31Se6EOK5lYo=
-X-Gm-Gg: AYBFou1yXAEdQGnhHGRDpFvoPrhILO4wT4Q19sb79nf9HucMll/TkgyoX/smIWQ6Llx
-	OfYO3EGbYAq95bJpw99cfi8iH/i4SUQHFyJARMiZBzxckMJRz8DKmX5CG9QwTcq3tsb0DLjNQrs
-	tJbcIs7gUQiN+qcvm21A6HjS9oNGUm/oNeUs+9Qm6fppJLIV4p8HuTsGlrEwVLSpCkUQtnbmV1/
-	H0bj99/LUJA2tLV7IfaXTlHWBvSR5LDGOgJ5XMexv4Odixo2MMtmCHKZhIsoebZRxY3Q16cvDRp
-	VPS88jnpy6vWuaFoKLGFEqebcsNSGfVjM+Yxo7JsWn7Ogn1rjftYK/F/We0bq7+QX0WYbCwhi2i
-	5Kb/4T1XvISc+tYq3Hk/BrE2dpTV7bU4=
-X-Received: by 2002:a05:6214:4a03:b0:912:517b:9754 with SMTP id 6a1803df08f44-9140c4a386dmr13185126d6.46.1790110058866;
-        Tue, 22 Sep 2026 13:47:38 -0700 (PDT)
-X-Received: by 2002:a05:6214:4a03:b0:912:517b:9754 with SMTP id 6a1803df08f44-9140c4a386dmr13184716d6.46.1790110058424;
-        Tue, 22 Sep 2026 13:47:38 -0700 (PDT)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([47.14.98.102])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9140c4104a2sm6139346d6.18.2026.09.22.13.47.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Sep 2026 13:47:37 -0700 (PDT)
-Message-ID: <c6613315f615ee20076b0082a80d953fd489e949.camel@redhat.com>
-Subject: Re: [PATCH] scsi: ch: Do not keep references to data transfer
- element devices
-From: Laurence Oberman <loberman@redhat.com>
-To: ahmedhal@gmail.com, "James E.J. Bottomley"	
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Yang Hao
-	 <yanghao_ht@163.com>, stable@vger.kernel.org
-Date: Tue, 22 Sep 2026 16:47:06 -0400
-In-Reply-To: <20260922-ch-dt-leak-v1-1-2b2e40bf1624@gmail.com>
-References: <20260922-ch-dt-leak-v1-1-2b2e40bf1624@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="XvNtXpGF"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68MI76P61129513;
+	Tue, 22 Sep 2026 23:17:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=W4mOqa
+	Tr+peJFTZUrXoQ6lkkEWD+g7T5avZDT3doYhc=; b=XvNtXpGFI7M64GmAM0eKOn
+	Ez9YDnSv+8dHfplWXHdbNINKuesoJgcF07cTREqDEUyvTLscPEU4GzT7WG7dRXzV
+	ph+FRYjvCMW38fScAIoExiGbL20KnGMXeGNRy77tzhZlzNmz21B9PCkjzbWNvmny
+	H+oWp5g4Ql1ibDax9SDpmQXGpBS5/uSMmr1lphUt0l+uV/5bDcZhyAmK8jxabLTj
+	8SrVCsc92PwFakbkC/S0n479H3v6PTgGpu+k8yYImpcERn7PbJHuHr29I7iaC6mG
+	54McP5uf5ev+Sj4GnYLRd2LHKBr33fbpbtPV/G1ksugTy3V3P6eM714YF49wQuOw
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gskg2gdd9-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Tue, 22 Sep 2026 23:17:23 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68MN4GB43239754;
+	Tue, 22 Sep 2026 23:17:22 GMT
+Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4gt67gutg8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 22 Sep 2026 23:17:22 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
+	by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68MNHLs831851082
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 22 Sep 2026 23:17:21 GMT
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DFD0558063;
+	Tue, 22 Sep 2026 23:17:20 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 19FFC5804B;
+	Tue, 22 Sep 2026 23:17:20 +0000 (GMT)
+Received: from [9.61.81.35] (unknown [9.61.81.35])
+	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 22 Sep 2026 23:17:19 +0000 (GMT)
+Message-ID: <0c5c6aa9-04d4-41fa-8cb4-f5ac55a8f63a@linux.ibm.com>
+Date: Tue, 22 Sep 2026 16:19:06 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 8/9] scsi: ibmvfc: register and use asynchronous sub
+ CRQ for events
+To: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org, brking@linux.ibm.com,
+        davemarq@linux.ibm.com
+References: <20260911054832.1311668-1-tyreld@linux.ibm.com>
+ <20260911054832.1311668-9-tyreld@linux.ibm.com>
+Content-Language: en-US
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+In-Reply-To: <20260911054832.1311668-9-tyreld@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: p0jD9hk_-aHqMM7OPqq7qPO1cDHNsAMA
+X-Authority-Analysis: v=2.4 cv=I43w19gg c=1 sm=1 tr=0 ts=6ab30c83 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
+ a=dxymRrk4hePnmNfmlPsA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTIyMDMwNSBTYWx0ZWRfX3E7qb+r7RQ6L
+ q3ZCUsY8CRvX5Nunsz1N6aVoJGIqLVlCzcWSZ33QYmo8V30/yGzPZJhuFkkbetDiZHkKhCzJbjV
+ x96JShds+DF76h91jp5ZaSJH1bNFRSEldH+2dtEY95SC9gVLQ1e9wlRA8GjlfLblVJP1566IxXL
+ XoIAbbaZKmNPWhnOzc9hDQCmDSFunJcONZsT+hkDsIjBPV5j4ODgVqkOVkEhITIekrJ/YzPV0Vr
+ 13Vx4Bn2UJ3bEC4NjzoHan/xrQTcnSKJE6OhAwQ9R3aPq9gITip9ZZeqC+mIMSJb+x1TPqT7ENN
+ cocjj/duD70PfpxG6AHtmRbOcneS3pQ/kVYgxZ8vSjajbCnRf14+F/KCRXXPTWT3jgyKyjjfQIp
+ qP+oRoEZmv4Ovj50rCotunX1J2T0Ek822sIHWnsgYkxR563Ih3tq0KpEF6mZKFZN8iC0y9h+hiW
+ xKt95m795J7I62nkJEQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTIyMDMwNSBTYWx0ZWRfX0rzbB+lbtywZ
+ Q1IGzmOfUpGwN7Ocl5paQ6TowgX+6UcDPjPASZzt40xZcM8bqN82cilBaJMRbcoP1tbLs5Ri/Bd
+ fpkM/D/UJG426Bd4lc9s3A0n/v142YQ=
+X-Proofpoint-GUID: p0jD9hk_-aHqMM7OPqq7qPO1cDHNsAMA
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-22_03,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 clxscore=1015 adultscore=0 suspectscore=0 impostorscore=0
+ lowpriorityscore=0 bulkscore=0 phishscore=0 priorityscore=1501 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609220305
 
-On Tue, 2026-09-22 at 15:46 +0000, Ahmed Abdelhaleem Ahmed via B4 Relay
-wrote:
-> From: Ahmed Abdelhaleem Ahmed <ahmedhal@gmail.com>
->=20
-> ch_readconfig() looks up the scsi_device of every data transfer
-> element
-> whose SCSI id the changer reports in READ ELEMENT STATUS, and stores
-> it
-> in ch->dt[]. scsi_device_lookup() takes a reference, and nothing ever
-> drops it: ch_destroy() frees the array with kfree(). ch->dt[] is read
-> nowhere else - it only supplies the vendor, model and revision
-> printed
-> in the same loop.
->=20
-> Once such a drive is removed, its scsi_device can never be released.
-> It
-> stays on the host's device list at its address, so a new device there
-> is
-> refused by anything that walks the list - target_core_pscsi reports
-> "scsi_device_get() failed for H:C:T:L" - and the low-level driver's
-> module can no longer be unloaded. Only a reboot recovers.
->=20
-> It shows with any changer that reports its drives' ids; with the
-> mhvtl
-> virtual library (IBM 3573-TL personality), each create and remove of
-> a
-> library with four drives leaves four references behind, counted by
-> the
-> module's use count in lsmod. With ch not bound the count is
-> unchanged,
-> and with this patch applied it is unchanged too.
->=20
-> Drop the reference as soon as the name has been printed, and remove
-> the
-> now unused dt[] array. That also removes the array leaked when
-> ch_probe() fails after ch_readconfig().
->=20
-> The same leak was reported with an RFC patch in 2022, which was not
-> merged.
->=20
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Cc: stable@vger.kernel.org
-> Link:
-> https://lore.kernel.org/linux-scsi/20220719075442.6215-1-yanghao_ht@163.c=
-om/
-> Signed-off-by: Ahmed Abdelhaleem Ahmed <ahmedhal@gmail.com>
+On 9/10/26 10:48 PM, Tyrel Datwyler wrote:
+> From: Dave Marquardt <davemarq@linux.ibm.com>
+> 
+> Wire the async sub-CRQ into the sub-CRQ lifecycle so it is allocated,
+> registered, and freed alongside the SCSI channel queues.
+> 
+> In ibmvfc_init_sub_crqs(), allocate the async sub-CRQ queue buffer via
+> ibmvfc_alloc_queue() before allocating the SCSI channels. Register it
+> with the VIOS by calling ibmvfc_register_channel() with index -1 (the
+> negative-index sentinel introduced in the previous commit). Either
+> failure disables multi-queue and aborts init.
+> 
+> In ibmvfc_release_sub_crqs(), ibmvfc_reenable_crq_queue(), and
+> ibmvfc_reset_crq(), deregister and re-register the async sub-CRQ
+> alongside the SCSI channel queues.
+> 
+> In ibmvfc_channel_setup_done(), capture the async sub-CRQ handle
+> returned by the VIOS in the channel setup response and store it in
+> vhost->async_sub_crq.vios_cookie.
+> 
+> In ibmvfc_set_login_info(), advertise IBMVFC_USE_ASYNC_SUBQ,
+> IBMVFC_CAN_HANDLE_FPIN, and IBMVFC_YES_SCSI capabilities whenever
+> multi-queue channels are enabled. IBMVFC_YES_SCSI was previously only
+> set for NVMe-enabled configurations; move it to the common multi-queue
+> path so it is always advertised when channels are in use.
+> 
+> Fix a variable-shadowing bug in ibmvfc_register_channel() where the
+> irq_failed cleanup loop reused rc for the H_FREE_SUB_CRQ hcall result,
+> clobbering the error code returned to the caller. Introduce hcall_rc
+> for the cleanup loop instead.
+
+I think this should be its own patch.
+
+> 
+> Guard the memset() in ibmvfc_deregister_channel() behind a check of
+> scrq->msgs.handle to prevent a NULL dereference when the function is
+> called on a queue that was never allocated, such as async_sub_crq when
+> multi-queue is disabled or initialization failed before
+> ibmvfc_alloc_queue() was reached.
+
+Same with this chunk.
+
+-Tyrel
+
+> 
+> Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
+> Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 > ---
-> Reproduced and tested on RHEL 9 (5.14.0-687.47.1.el9_8) with mhvtl,
-> IBM 3573-TL personality, four ULT3580-HHA drives, library created and
-> removed; mhvtl module use count leaked:
->=20
-> =C2=A0 stock ch.ko:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 4
-> =C2=A0 ch.ko with this fix:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0
-> =C2=A0 ch.ko with this fix, changer daemon
-> =C2=A0 restarted twice while it existed:=C2=A0=C2=A0=C2=A0=C2=A0 0
->=20
-> Build-tested on mkp/scsi.git for-next.
-> ---
-> =C2=A0drivers/scsi/ch.c | 29 +++++++++--------------------
-> =C2=A01 file changed, 9 insertions(+), 20 deletions(-)
->=20
-> diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-> index 87e51e50a..b2c9fb71c 100644
-> --- a/drivers/scsi/ch.c
-> +++ b/drivers/scsi/ch.c
-> @@ -112,7 +112,6 @@ typedef struct {
-> =C2=A0	int=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 minor;
-> =C2=A0	char=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 name[8];
-> =C2=A0	struct scsi_device=C2=A0 *device;
-> -	struct scsi_device=C2=A0 **dt;=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 /* ptrs to data transfer
-> elements */
-> =C2=A0	u_int=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 firsts[CH_TYPES];
-> =C2=A0	u_int=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 counts[CH_TYPES];
-> =C2=A0	u_int		=C2=A0=C2=A0=C2=A0 voltags;
-> @@ -354,15 +353,10 @@ ch_readconfig(scsi_changer *ch)
-> =C2=A0			vendor_labels[i]);
-> =C2=A0	}
-> =C2=A0
-> -	/* look up the devices of the data transfer elements */
-> -	ch->dt =3D kzalloc_objs(*ch->dt, ch->counts[CHET_DT]);
-> -
-> -	if (!ch->dt) {
-> -		kfree(buffer);
-> -		return -ENOMEM;
-> -	}
-> -
-> +	/* report the devices of the data transfer elements */
-> =C2=A0	for (elem =3D 0; elem < ch->counts[CHET_DT]; elem++) {
-> +		struct scsi_device *sdev;
+>  drivers/scsi/ibmvscsi/ibmvfc-core.c | 51 +++++++++++++++++++++++++----
+>  1 file changed, 44 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> index c78e221f182a..70a3046135c7 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> @@ -192,6 +192,8 @@ static void ibmvfc_tgt_move_login(struct ibmvfc_target *);
+>  
+>  static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *, struct ibmvfc_channels *);
+>  static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *, struct ibmvfc_channels *);
+> +static void ibmvfc_deregister_channel(struct ibmvfc_host *, struct ibmvfc_channels *, int);
+> +static int ibmvfc_register_channel(struct ibmvfc_host *, struct ibmvfc_channels *, int);
+>  
+>  static const char *unknown_error = "unknown error";
+>  
+> @@ -964,6 +966,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
+>  	struct vio_dev *vdev = to_vio_dev(vhost->dev);
+>  	unsigned long flags;
+>  
+> +	ibmvfc_deregister_channel(vhost, &vhost->scsi_scrqs, -1);
+>  	ibmvfc_dereg_sub_crqs(vhost, &vhost->scsi_scrqs);
+>  	ibmvfc_dereg_sub_crqs(vhost, &vhost->nvme_scrqs);
+>  
+> @@ -986,6 +989,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
+>  	spin_unlock(vhost->crq.q_lock);
+>  	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+>  
+> +	ibmvfc_register_channel(vhost, &vhost->scsi_scrqs, -1);
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+>  
+> @@ -1006,6 +1010,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
+>  	struct vio_dev *vdev = to_vio_dev(vhost->dev);
+>  	struct ibmvfc_queue *crq = &vhost->crq;
+>  
+> +	ibmvfc_deregister_channel(vhost, &vhost->scsi_scrqs, -1);
+>  	ibmvfc_dereg_sub_crqs(vhost, &vhost->scsi_scrqs);
+>  	ibmvfc_dereg_sub_crqs(vhost, &vhost->nvme_scrqs);
+>  
+> @@ -1042,6 +1047,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
+>  	spin_unlock(vhost->crq.q_lock);
+>  	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+>  
+> +	ibmvfc_register_channel(vhost, &vhost->scsi_scrqs, -1);
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+>  
+> @@ -1584,9 +1590,11 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+>  
+>  	if (vhost->mq_enabled || vhost->using_channels) {
+>  		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
+> +		login_info->capabilities |= cpu_to_be64(IBMVFC_USE_ASYNC_SUBQ);
+> +		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_HANDLE_FPIN);
+> +		login_info->capabilities |= cpu_to_be64(IBMVFC_YES_SCSI);
+>  		if (vhost->nvme_enabled) {
+>  			login_info->capabilities |= cpu_to_be64(IBMVFC_YES_NVMEOF);
+> -			login_info->capabilities |= cpu_to_be64(IBMVFC_YES_SCSI);
+>  			login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_WWPN_ALL);
+>  		}
+>  	}
+> @@ -5811,6 +5819,7 @@ static void ibmvfc_channel_setup_done(struct ibmvfc_event *evt)
+>  		for (i = 0; i < nvme->active_queues; i++)
+>  			nvme->scrqs[i].vios_cookie =
+>  				be64_to_cpu(setup->channel_handles[scsi->active_queues + i]);
+> +		vhost->async_sub_crq.vios_cookie = be64_to_cpu(setup->async_sub_crq_handle);
+>  
+>  		ibmvfc_dbg(vhost, "Using %u SCSI channels\n",
+>  			   scsi->active_queues);
+> @@ -5870,6 +5879,7 @@ static void ibmvfc_channel_setup(struct ibmvfc_host *vhost)
+>  		for (i = 0; i < nvme_channels; i++)
+>  			setup_buf->channel_handles[scsi_channels + i] =
+>  				cpu_to_be64(nvme->scrqs[i].cookie);
+> +		setup_buf->async_sub_crq_handle = cpu_to_be64(vhost->async_sub_crq.cookie);
+>  	}
+>  
+>  	ibmvfc_init_event(evt, ibmvfc_channel_setup_done, IBMVFC_MAD_FORMAT);
+> @@ -6834,6 +6844,7 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+>  	bool is_async = index < 0;
+>  	struct ibmvfc_queue *scrq = !is_async ? &channels->scrqs[index] : &vhost->async_sub_crq;
+>  	int rc = -ENOMEM;
+> +	int hcall_rc;
+>  
+>  	ENTER;
+>  
+> @@ -6902,8 +6913,8 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+>  
+>  irq_failed:
+>  	do {
+> -		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
+> -	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
+> +		hcall_rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
+> +	} while (hcall_rc == H_BUSY || H_IS_LONG_BUSY(hcall_rc));
+>  reg_failed:
+>  	LEAVE;
+>  	return rc;
+> @@ -6953,8 +6964,10 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+>  	}
+>  
+>  	/* Clean out the queue */
+> -	memset(scrq->msgs.crq, 0, PAGE_SIZE);
+> -	scrq->cur = 0;
+> +	if (scrq->msgs.handle) {
+> +		memset(scrq->msgs.crq, 0, PAGE_SIZE);
+> +		scrq->cur = 0;
+> +	}
+>  
+>  	LEAVE;
+>  }
+> @@ -6971,7 +6984,9 @@ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
+>  	for (i = 0; i < channels->max_queues; i++) {
+>  		if (ibmvfc_register_channel(vhost, channels, i)) {
+>  			for (j = i; j > 0; j--)
+> -				ibmvfc_deregister_channel(vhost, channels, j - 1);
+> +				ibmvfc_deregister_channel(
+> +					vhost, channels, j - 1);
 > +
-> =C2=A0		id=C2=A0 =3D -1;
-> =C2=A0		lun =3D 0;
-> =C2=A0		if (elem < CH_DT_MAX=C2=A0 &&=C2=A0 -1 !=3D dt_id[elem]) {
-> @@ -378,10 +372,8 @@ ch_readconfig(scsi_changer *ch)
-> =C2=A0			VPRINTK(KERN_INFO, "dt 0x%x: ",elem+ch-
-> >firsts[CHET_DT]);
-> =C2=A0			if (data[6] & 0x80) {
-> =C2=A0				VPRINTK(KERN_CONT, "not this SCSI
-> bus\n");
-> -				ch->dt[elem] =3D NULL;
-> =C2=A0			} else if (0 =3D=3D (data[6] & 0x30)) {
-> =C2=A0				VPRINTK(KERN_CONT, "ID/LUN
-> unknown\n");
-> -				ch->dt[elem] =3D NULL;
-> =C2=A0			} else {
-> =C2=A0				id=C2=A0 =3D ch->device->id;
-> =C2=A0				lun =3D 0;
-> @@ -391,18 +383,16 @@ ch_readconfig(scsi_changer *ch)
-> =C2=A0		}
-> =C2=A0		if (-1 !=3D id) {
-> =C2=A0			VPRINTK(KERN_CONT, "ID %i, LUN %i,
-> ",id,lun);
-> -			ch->dt[elem] =3D
-> -				scsi_device_lookup(ch->device->host,
-> -						=C2=A0=C2=A0 ch->device-
-> >channel,
-> -						=C2=A0=C2=A0 id,lun);
-> -			if (!ch->dt[elem]) {
-> +			sdev =3D scsi_device_lookup(ch->device->host,
-> +						=C2=A0 ch->device-
-> >channel,
-> +						=C2=A0 id, lun);
-> +			if (!sdev) {
-> =C2=A0				/* should not happen */
-> =C2=A0				VPRINTK(KERN_CONT, "Huh? device not
-> found!\n");
-> =C2=A0			} else {
-> =C2=A0				VPRINTK(KERN_CONT, "name: %8.8s
-> %16.16s %4.4s\n",
-> -					ch->dt[elem]->vendor,
-> -					ch->dt[elem]->model,
-> -					ch->dt[elem]->rev);
-> +					sdev->vendor, sdev->model,
-> sdev->rev);
-> +				scsi_device_put(sdev);
-> =C2=A0			}
-> =C2=A0		}
-> =C2=A0	}
-> @@ -566,7 +556,6 @@ static void ch_destroy(struct kref *ref)
-> =C2=A0	scsi_changer *ch =3D container_of(ref, scsi_changer, ref);
-> =C2=A0
-> =C2=A0	ch->device =3D NULL;
-> -	kfree(ch->dt);
-> =C2=A0	kfree(ch);
-> =C2=A0}
-> =C2=A0
->=20
-> ---
-> base-commit: c3cff7fac01638ab58e85fe7df41a04fa25c5bae
-> change-id: 20260922-ch-dt-leak-c2181b6dfda8
->=20
-> Best regards,
-> --=C2=A0=20
-> Ahmed Abdelhaleem Ahmed <ahmedhal@gmail.com>
->=20
->=20
-Looks good, not seeing any issues here.
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+>  			vhost->do_enquiry = 0;
+>  			return;
+>  		}
+> @@ -7026,16 +7041,26 @@ static int ibmvfc_alloc_channels(struct ibmvfc_host *vhost,
+>  
+>  static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
+>  {
+> +	int rc = 0;
+> +
+>  	ENTER;
+>  	if (!vhost->mq_enabled)
+>  		return;
+>  
+> -	if (ibmvfc_alloc_channels(vhost, &vhost->scsi_scrqs)) {
+> +	rc = ibmvfc_alloc_queue(vhost, &vhost->async_sub_crq, IBMVFC_SUB_CRQ_FMT);
+> +	if (rc) {
+>  		vhost->do_enquiry = 0;
+>  		vhost->mq_enabled = 0;
+>  		return;
+>  	}
+>  
+> +	/* register async_sub_crq channel */
+> +	if (ibmvfc_register_channel(vhost, &vhost->scsi_scrqs, -1))
+> +		goto free_async_sub_crq;
+> +
+> +	if (ibmvfc_alloc_channels(vhost, &vhost->scsi_scrqs))
+> +		goto deregister_async_sub_crq;
+> +
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+>  
+>  	if (vhost->nvme_enabled) {
+> @@ -7046,6 +7071,15 @@ static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
+>  	}
+>  
+>  	LEAVE;
+> +	return;
+> +
+> + deregister_async_sub_crq:
+> +	ibmvfc_deregister_channel(vhost, &vhost->scsi_scrqs, -1);
+> +free_async_sub_crq:
+> +	ibmvfc_free_queue(vhost, &vhost->async_sub_crq);
+> +	vhost->do_enquiry = 0;
+> +	vhost->mq_enabled = 0;
+> +	return;
+>  }
+>  
+>  static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
+> @@ -7069,6 +7103,9 @@ static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
+>  static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
+>  {
+>  	ENTER;
+> +	ibmvfc_deregister_channel(vhost, &vhost->scsi_scrqs, -1);
+> +	ibmvfc_free_queue(vhost, &vhost->async_sub_crq);
+> +
+>  	if (!vhost->scsi_scrqs.scrqs)
+>  		return;
+>  
 
