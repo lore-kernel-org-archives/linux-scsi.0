@@ -1,343 +1,171 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B6463E0226;
-	Tue, 22 Sep 2026 19:01:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D48FF4343F2;
+	Tue, 22 Sep 2026 19:09:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790103699; cv=none; b=BCi8IeyMAW9IWhtryZZmFBqT/yYvqmtNSFIhEg4XuXlQJe+NPqVlgLGYjm2A3HoUOj67lhJ2WIlJTp420eOHO3+BWayrF0EMlamPP9G8Bbe5uMcL3Y3yctja53FuPLxCf25QXNWfGdIhd+MhgwdPMNWle60Pz6TSnPhU5KChJ5Q=
+	t=1790104190; cv=none; b=q5hR2XvnDJz685Xbu8d/5pMqBE7BaWm7xhTaO4bFSFDTGqjzhLn3InDavNP/PAFJnwylKwpZEhf2vzfS9BpBdT4BtGmliv324PO7LIghA443CleJF90dCnmCMIHmnseKRNY1IcGclvn6zd/bvBrBZWgYnUdUpXNt/K1dvdVUZ1E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790103699; c=relaxed/simple;
-	bh=ZypAdKU9ztEd9WlOIeasjADJcpqyf3nuwIs39cGV5lM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=b/2ZBeWKgKZZxCj8hTQFIqbC18X1Br/QfHEpBrWGrC1pDaLVM0AtO4dU0gITZX507Zk7NadS0HeAif/F+1/mKugpNxr9hP8GptcpfR1oF/xDG2yd+jw9MNHmryVat+3AwEp0D/DDKuiCY5EnkgTMfeaRVbwEZSdQpsFISXmwIdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z1DAMEIq; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790104190; c=relaxed/simple;
+	bh=o4LTPiGny/gQ54itCrnf/+2scV1HhZzTPTmYjzKNIaY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=gwa8xH0lt4X9fVKO2kQGNxzYvg0YDiGt7S7Rct6mZM67BkRCxfwdif0zAITiV7vcLlwdP9KTeMYkp1x+kOK/MQpjGI2ecoFbPoTLZD+zy8I4d4qoyjJvUvjDVfw4IvgiWb7zXGGr1kLHQmeiQ3hRZiY6w6CHACq9ezNeH7WrOc8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CkBkpvjV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z1DAMEIq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0172F1F000FF;
-	Tue, 22 Sep 2026 19:01:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CkBkpvjV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B1231F000FF;
+	Tue, 22 Sep 2026 19:09:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790103695;
-	bh=vAVHumlkK0ABFvtZjYlorg8i763zannTsc2itVQi1js=;
-	h=From:To:Cc:Subject:Date;
-	b=Z1DAMEIqI3Eg57FyA/upLExdAFwuIdz4cdDnluOP8YT5rO8Rc4QA7kOXsloFO0Nn2
-	 KyXbtSL+bw5LgjjKfAAzcHWbxR8lwqz174TIU6zzT5PaLcv45xrJbOyTsIiqrWFJVg
-	 nWumImmfTKuLb9onwMg+LvTwf/2aonyRU8+btNrgRG52VD4JhoRhs+/3oNzDaarUJR
-	 kJKr3pnNG2WtqD7i55kgBzwr7egDQdcygu1lzqo6BPQ9BjTnOeIIJT5g1QEffScnn4
-	 6/faipOzQt4ZYGsaLgLWlT1AJ2QiUK7/nyz0zuNuP2Aizchwlfs7HgcCV/CMmhfqh6
-	 1WjuEqCewAwaQ==
-From: "Rob Herring (Arm)" <robh@kernel.org>
-To: Xingui Yang <yangxingui@huawei.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] dt-bindings: scsi: Convert hisilicon,hip05-sas-v1 to DT schema
-Date: Tue, 22 Sep 2026 14:01:26 -0500
-Message-ID: <20260922190128.376072-1-robh@kernel.org>
-X-Mailer: git-send-email 2.53.0
+	s=k20260515; t=1790104188;
+	bh=ekpHOi7JoTsBh//XCYnRrkLv216Gg4X6V3DMZ/y0xeU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=CkBkpvjVd9jRtJhRmHjUDPVasWjUYDp70Tvh3yqQSxtbKZF2hMO580+6Spqg260Oa
+	 N3LVJtun74Pvshfw2X9BSHiUctYoCNzRZ6JQ2GWRgkF2cDptZiDaqCIlyRbSYoQeBd
+	 k8fyVkFXKtuQnOxuDBIjcWJKCxgOXtGa/yatFwmY58bFsssbsGeQWXj/VIIwURAfzG
+	 nx+gVv4VAxK6A26HaVJMQtI8qCkafcXUsByUUejvfR/eruVh6rVIDWLmOweZUVduJ/
+	 QwwsKiTcv9JU2MOizTMr/u+TvaK8nk2HRhEsXeqCX71UcaT6Cas1e5zLny3MCwbn50
+	 mc+wPtbEmax6A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] dt-bindings: scsi: Convert hisilicon,hip05-sas-v1 to DT
+ schema
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?Um9iIEhlcnJpbmcgKEFybSk=?= <robh@kernel.org>
+Cc: linux-scsi@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260922190128.376072-1-robh@kernel.org>
+References: <20260922190128.376072-1-robh@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 22 Sep 2026 19:09:47 +0000
+Message-Id: <20260922190948.2B1231F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] dt-bindings: hisi_sas: incorrect minItems and truncated example =
+for interrupts
+- [Low] dt-bindings: hisi_sas: incorrect description for syscon offset regi=
+sters
+--
+
+commit df864f7524bed6f8dd806c6c738b770b5097c904
+Author: Rob Herring (Arm) <robh@kernel.org>
+
+dt-bindings: scsi: Convert hisilicon,hip05-sas-v1 to DT schema
 
 Convert the HiSilicon SAS controller binding to DT schema. It's a
 straight forward conversion.
 
-Assisted-by: LLM
-Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
----
- .../bindings/scsi/hisilicon,hip05-sas-v1.yaml | 156 ++++++++++++++++++
- .../bindings/scsi/hisilicon-sas.txt           |  98 -----------
- MAINTAINERS                                   |   2 +-
- 3 files changed, 157 insertions(+), 99 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
- delete mode 100644 Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+> diff --git a/Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v=
+1.yaml b/Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
+> new file mode 100644
+> index 0000000000000..847d90018243f
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
 
-diff --git a/Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml b/Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
-new file mode 100644
-index 000000000000..847d90018243
---- /dev/null
-+++ b/Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
-@@ -0,0 +1,156 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/scsi/hisilicon,hip05-sas-v1.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: HiSilicon SAS controller
-+
-+maintainers:
-+  - Xingui Yang <yangxingui@huawei.com>
-+
-+properties:
-+  compatible:
-+    items:
-+      - enum:
-+          - hisilicon,hip05-sas-v1
-+          - hisilicon,hip06-sas-v2
-+          - hisilicon,hip07-sas-v2
-+
-+  reg:
-+    minItems: 1
-+    items:
-+      - description: SAS registers
-+      - description: CPLD SGPIO control registers
-+
-+  clocks:
-+    minItems: 1
-+    maxItems: 2
-+
-+  dma-coherent: true
-+
-+  interrupts:
-+    description: >
-+      Interrupt specifiers for PHY, SATA, and completion queues; ordering and
-+      number depend on controller version.
-+
-+      For v1 hw: Interrupts for phys, completion queues, and fatal
-+      sources; the interrupts are ordered in 3 groups, as follows:
-+
-+        - Phy interrupts - Each phy has 3 interrupt sources:
-+            - broadcast
-+            - phyup
-+            - abnormal
-+          The phy interrupts are ordered into groups of 3 per phy
-+          (broadcast, phyup, and abnormal) in increasing order.
-+        - Completion queue interrupts - each completion queue has 1 interrupt
-+          source.
-+        - Fatal interrupts - the fatal interrupts are ordered as follows:
-+            - ECC
-+            - AXI bus
-+
-+      For v2 hw: Interrupts for phys, Sata, and completion queues;
-+      the interrupts are ordered in 3 groups, as follows:
-+
-+        - Phy interrupts - Each controller has 2 phy interrupts:
-+            - phy up/down
-+            - channel interrupt
-+        - Sata interrupts - Each phy on the controller has 1 Sata interrupt.
-+        - Completion queue interrupts - each completion queue has 1 interrupt
-+          source
-+
-+    minItems: 53
-+    maxItems: 128
-+
-+  ctrl-reset-reg:
-+    description: Offset to controller reset register in SAS register region.
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+
-+  ctrl-reset-sts-reg:
-+    description: Offset to controller reset status register in SAS register region.
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+
-+  ctrl-clock-ena-reg:
-+    description: Offset to controller clock enable register in SAS register region.
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+
-+  hip06-sas-v2-quirk-amt:
-+    description:
-+      Indicates that the v2 controller has the "am-max-transmissions" limitation.
-+    type: boolean
-+
-+  hisilicon,sas-syscon:
-+    description: Phandle of syscon used for SAS control.
-+    $ref: /schemas/types.yaml#/definitions/phandle
-+
-+  hisilicon,signal-attenuation:
-+    description:
-+      De-emphasis, preshoot, and boost attenuation readings for the board,
-+      used to calculate signal attenuation (y = (x-10000)/10000).
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+    minItems: 3
-+    maxItems: 3
-+    items:
-+      minimum: 7600
-+      maximum: 12400
-+
-+  phy-count:
-+    description: Number of PHYs accessible by the controller.
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+
-+  queue-count:
-+    description: Number of delivery and completion queues in the controller.
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+
-+  sas-addr:
-+    description: SAS address, array of 8 bytes representing host SAS address.
-+    $ref: /schemas/types.yaml#/definitions/uint8-array
-+    minItems: 8
-+    maxItems: 8
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+  - ctrl-reset-reg
-+  - ctrl-reset-sts-reg
-+  - ctrl-clock-ena-reg
-+  - hisilicon,sas-syscon
-+  - phy-count
-+  - queue-count
-+  - sas-addr
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    sas@c1000000 {
-+        compatible = "hisilicon,hip05-sas-v1";
-+        sas-addr = [50 01 88 20 16 00 00 0a];
-+        reg = <0x0 0xc1000000 0x0 0x10000>;
-+        hisilicon,sas-syscon = <&pcie_sas>;
-+        ctrl-reset-reg = <0xa60>;
-+        ctrl-reset-sts-reg = <0x5a30>;
-+        ctrl-clock-ena-reg = <0x338>;
-+        queue-count = <32>;
-+        phy-count = <8>;
-+        dma-coherent;
-+        interrupts = <259 4>, <263 4>, <264 4>,
-+                     <269 4>, <273 4>, <274 4>,
-+                     <279 4>, <283 4>, <284 4>,
-+                     <289 4>, <293 4>, <294 4>,
-+                     <299 4>, <303 4>, <304 4>,
-+                     <309 4>, <313 4>, <314 4>,
-+                     <319 4>, <323 4>, <324 4>,
-+                     <329 4>, <333 4>, <334 4>,
-+                     <339 1>, <340 1>, <341 1>,
-+                     <342 1>, <343 1>, <344 1>,
-+                     <345 1>, <346 1>, <347 1>,
-+                     <348 1>, <349 1>, <350 1>,
-+                     <351 1>, <352 1>, <353 1>,
-+                     <354 1>, <355 1>, <356 1>,
-+                     <357 1>, <358 1>, <359 1>,
-+                     <360 1>, <361 1>, <362 1>,
-+                     <363 1>, <364 1>, <365 1>,
-+                     <366 1>, <367 1>;
-+    };
-diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-deleted file mode 100644
-index 8c6659ed2cfc..000000000000
---- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-+++ /dev/null
-@@ -1,98 +0,0 @@
--* HiSilicon SAS controller
--
--The HiSilicon SAS controller supports SAS/SATA.
--
--Main node required properties:
--  - compatible : value should be as follows:
--	(a) "hisilicon,hip05-sas-v1" for v1 hw in hip05 chipset
--	(b) "hisilicon,hip06-sas-v2" for v2 hw in hip06 chipset
--	(c) "hisilicon,hip07-sas-v2" for v2 hw in hip07 chipset
--  - sas-addr : array of 8 bytes for host SAS address
--  - reg : Contains two regions. The first is the address and length of the SAS
--          register. The second is the address and length of CPLD register for
--          SGPIO control. The second is optional, and should be set only when
--          we use a CPLD for directly attached disk LED control.
--  - hisilicon,sas-syscon: phandle of syscon used for sas control
--  - ctrl-reset-reg : offset to controller reset register in ctrl reg
--  - ctrl-reset-sts-reg : offset to controller reset status register in ctrl reg
--  - ctrl-clock-ena-reg : offset to controller clock enable register in ctrl reg
--  - queue-count : number of delivery and completion queues in the controller
--  - phy-count : number of phys accessible by the controller
--  - interrupts : For v1 hw: Interrupts for phys, completion queues, and fatal
--		sources; the interrupts are ordered in 3 groups, as follows:
--			- Phy interrupts
--			- Completion queue interrupts
--			- Fatal interrupts
--		Phy interrupts : Each phy has 3 interrupt sources:
--			- broadcast
--			- phyup
--			- abnormal
--		The phy interrupts are ordered into groups of 3 per phy
--		(broadcast, phyup, and abnormal) in increasing order.
--		Completion queue interrupts : each completion queue has 1
--			interrupt source.
--			The interrupts are ordered in increasing order.
--		Fatal interrupts : the fatal interrupts are ordered as follows:
--			- ECC
--			- AXI bus
--		For v2 hw: Interrupts for phys, Sata, and completion queues;
--		the interrupts are ordered in 3 groups, as follows:
--			- Phy interrupts
--			- Sata interrupts
--			- Completion queue interrupts
--		Phy interrupts : Each controller has 2 phy interrupts:
--			- phy up/down
--			- channel interrupt
--		Sata interrupts : Each phy on the controller has 1 Sata
--			interrupt. The interrupts are ordered in increasing
--			order.
--		Completion queue interrupts : each completion queue has 1
--			interrupt source. The interrupts are ordered in
--			increasing order.
--
--Optional main node properties:
-- - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
--			    "am-max-transmissions" limitation.
-- - hisilicon,signal-attenuation : array of 3 32-bit values, containing de-emphasis,
--		preshoot, and boost attenuation readings for the board. They
--		are used to describe the signal attenuation of the board. These
--		values' range is 7600 to 12400, and used to represent -24dB to
--		24dB.
--		The formula is "y = (x-10000)/10000". For example, 10478
--		means 4.78dB.
--
--Example:
--	sas0: sas@c1000000 {
--		compatible = "hisilicon,hip05-sas-v1";
--		sas-addr = [50 01 88 20 16 00 00 0a];
--		reg = <0x0 0xc1000000 0x0 0x10000>;
--		hisilicon,sas-syscon = <&pcie_sas>;
--		ctrl-reset-reg = <0xa60>;
--		ctrl-reset-sts-reg = <0x5a30>;
--		ctrl-clock-ena-reg = <0x338>;
--		queue-count = <32>;
--		phy-count = <8>;
--		dma-coherent;
--		interrupt-parent = <&mbigen_dsa>;
--		interrupts =    <259 4>,<263 4>,<264 4>,/* phy0 */
--				<269 4>,<273 4>,<274 4>,/* phy1 */
--				<279 4>,<283 4>,<284 4>,/* phy2 */
--				<289 4>,<293 4>,<294 4>,/* phy3 */
--				<299 4>,<303 4>,<304 4>,/* phy4 */
--				<309 4>,<313 4>,<314 4>,/* phy5 */
--				<319 4>,<323 4>,<324 4>,/* phy6 */
--				<329 4>,<333 4>,<334 4>,/* phy7 */
--				<336 1>,<337 1>,<338 1>,/* cq0-2 */
--				<339 1>,<340 1>,<341 1>,/* cq3-5 */
--				<342 1>,<343 1>,<344 1>,/* cq6-8 */
--				<345 1>,<346 1>,<347 1>,/* cq9-11 */
--				<348 1>,<349 1>,<350 1>,/* cq12-14 */
--				<351 1>,<352 1>,<353 1>,/* cq15-17 */
--				<354 1>,<355 1>,<356 1>,/* cq18-20 */
--				<357 1>,<358 1>,<359 1>,/* cq21-23 */
--				<360 1>,<361 1>,<362 1>,/* cq24-26 */
--				<363 1>,<364 1>,<365 1>,/* cq27-29 */
--				<366 1>,<367 1>/* cq30-31 */
--				<376 4>,/* fatal ecc */
--				<381 4>;/* fatal axi */
--	};
-diff --git a/MAINTAINERS b/MAINTAINERS
-index dccddc99ac9a..9cae1650167b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11997,7 +11997,7 @@ HISILICON SAS Controller
- M:	Xingui Yang <yangxingui@huawei.com>
- S:	Supported
- W:	http://www.hisilicon.com
--F:	Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-+F:	Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
- F:	drivers/scsi/hisi_sas/
- 
- HISILICON SECURITY ENGINE V2 DRIVER (SEC2)
--- 
-2.53.0
+[ ... ]
 
+> +  interrupts:
+> +    description: >
+> +      Interrupt specifiers for PHY, SATA, and completion queues; orderin=
+g and
+> +      number depend on controller version.
+> +
+> +      For v1 hw: Interrupts for phys, completion queues, and fatal
+> +      sources; the interrupts are ordered in 3 groups, as follows:
+
+[ ... ]
+
+> +    minItems: 53
+> +    maxItems: 128
+
+[Severity: Medium]
+Does this enforce an artificially low minimum bound based on a corrupted
+example?=20
+
+The YAML conversion drops 5 interrupts from the example (3 CQ interrupts an=
+d 2
+fatal interrupts), artificially reducing the array size to 53, and then
+erroneously sets minItems: 53 to match.=20
+
+If a developer uses this example as a template, the resulting device tree w=
+ill
+pass schema validation but fail during driver probe. The hisi_sas_v1_hw.c
+driver's interrupt_init_v1_hw() function sequentially requests exactly 58
+interrupts (phy-count * 3 + queue-count + 2) via platform_get_irq(). For the
+example configuration (8 PHYs, 32 queues), it will fail with an error when =
+it
+attempts to fetch index 53, aborting the probe sequence.
+
+> +
+> +  ctrl-reset-reg:
+> +    description: Offset to controller reset register in SAS register reg=
+ion.
+> +    $ref: /schemas/types.yaml#/definitions/uint32
+> +
+> +  ctrl-reset-sts-reg:
+> +    description: Offset to controller reset status register in SAS regis=
+ter region.
+> +    $ref: /schemas/types.yaml#/definitions/uint32
+> +
+> +  ctrl-clock-ena-reg:
+> +    description: Offset to controller clock enable register in SAS regis=
+ter region.
+> +    $ref: /schemas/types.yaml#/definitions/uint32
+
+[Severity: Low]
+Are these descriptions accurate?=20
+
+They incorrectly state these are offsets in the "SAS register region". This
+misinforms hardware integrators about which memory space these registers re=
+side
+in.
+
+The kernel driver (hisi_sas_main.c and hisi_sas_v1_hw.c) correctly retrieve=
+s a
+syscon regmap using the hisilicon,sas-syscon phandle and applies these offs=
+ets
+to the syscon region, not the SAS register region defined by the reg proper=
+ty.
+This is a documentation error introduced during the text-to-YAML conversion
+(the original text binding correctly said "ctrl reg").
+
+[ ... ]
+
+> +examples:
+> +  - |
+> +    sas@c1000000 {
+> +        compatible =3D "hisilicon,hip05-sas-v1";
+> +        sas-addr =3D [50 01 88 20 16 00 00 0a];
+> +        reg =3D <0x0 0xc1000000 0x0 0x10000>;
+> +        hisilicon,sas-syscon =3D <&pcie_sas>;
+> +        ctrl-reset-reg =3D <0xa60>;
+> +        ctrl-reset-sts-reg =3D <0x5a30>;
+> +        ctrl-clock-ena-reg =3D <0x338>;
+> +        queue-count =3D <32>;
+> +        phy-count =3D <8>;
+> +        dma-coherent;
+> +        interrupts =3D <259 4>, <263 4>, <264 4>,
+> +                     <269 4>, <273 4>, <274 4>,
+> +                     <279 4>, <283 4>, <284 4>,
+> +                     <289 4>, <293 4>, <294 4>,
+> +                     <299 4>, <303 4>, <304 4>,
+> +                     <309 4>, <313 4>, <314 4>,
+> +                     <319 4>, <323 4>, <324 4>,
+> +                     <329 4>, <333 4>, <334 4>,
+> +                     <339 1>, <340 1>, <341 1>,
+
+[Severity: Medium]
+Is this example missing entries?
+
+It appears to be missing CQ 0-2 and the two fatal interrupts, yielding only=
+ 53
+interrupts despite specifying a queue-count of 32.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260922190128.3760=
+72-1-robh@kernel.org?part=3D1
