@@ -1,108 +1,349 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E18DC40B11A;
-	Wed, 23 Sep 2026 17:34:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50F7B48FF8C;
+	Wed, 23 Sep 2026 19:15:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790184851; cv=none; b=OvrCg9QRtCNP5VVucGnbdPpUmUEak6jNzi6BClclV4USFZU+733FDCc4cZr1OwruFoGZoJyR/4Z6ULWVOUcBm43Qn3mNZMf6SKzXR17q2GFDrbUgCAhIfq4ITr3i0z2+HAJOOfG5I4/seJ+aCilOqmdJYlAITCKYgi/jbRrOFYQ=
+	t=1790190917; cv=none; b=l9ZvlQsy44L9JAoy6e3wKXBiWafhaIQYwZtnfbpji+bJ0tDUCt+njk2cOb/CIBO2RV8wsUKQBkG+Zx52F90Y62DLeby192xbTlzdpqnH4orLRiZ1yRMxnPQ6ze/Oy5/zALN5oyIheCI8sUdhkR7zvAQoqSG3kGgvR3n0CsCTHBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790184851; c=relaxed/simple;
-	bh=kPlu2H6XNVNAm+eyKaf+KNtcUOLDMiz/SdRoD9k3csw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ELTwYuIr+aAzPO3Hku+6VyqsXqOKOKD1EIfW+ic5GBH106PoueFufjSLK4ocKA+S1f8ZgH6FPFCLquTAhVLU/XH4YblZio1C1JoFS0yTp1AiNSFzhR52X+8SEOO3HiK1ROETyoc50x9caOSqo9fF+F0TwV3srI3g+IAoCcmGPr0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oIPXhDnn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790190917; c=relaxed/simple;
+	bh=XK6kTKxoEhbWk0ruiXDuOzrQVZRw4qw9TJ7CxZ1/Rkw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YgsaxbLK7kq0GmsktLAWhzWnRmBKB7GMSHwf/slqilQTjnodXNPPTzh/Ia9lMsN6Zczc5LSgOhxaZ2vZnNfcjUm6douqo2QZdWHaCrHypLebz9IRVNZgVTc5UgNZBqwOH201PXbtCS66jGFlE4tH28/LR0YgozXOhYW3OFsk/yA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VYJZhenP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oIPXhDnn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7578A1F00898;
-	Wed, 23 Sep 2026 17:33:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VYJZhenP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A090D1F00893;
+	Wed, 23 Sep 2026 19:15:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790184849;
-	bh=kPlu2H6XNVNAm+eyKaf+KNtcUOLDMiz/SdRoD9k3csw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=oIPXhDnn6KrbHUdB8J3HtxFj0acE8ktVqJkOruOhJCvNG5tAAVxIsyoHMYMRieHKt
-	 Is5+S1MolM3HFRsMb1jGHJLJBKDKhutQW6ZfXT/uIcKRR1r6PUVXazNarmpYGmlPd0
-	 DrVxZDA5/RDFBx7/03GL1IZtxQpOt/AyuqUyDXzSfV+fX36mqbt0ecrQoeMZoKoF4P
-	 +Cw4hzzM0pyksIgfNEY/yt9LZw5XVPHz+WoNZuUa2xzYl1ssIwnutkaiQTvVstnnbO
-	 sloaQyC80Sym14M1BLGJIqAR7U69u/36OLTFb2LZOlo2vRK66xJr47KsIDUd4H3N/u
-	 MIh65qBa71P4g==
-Date: Wed, 23 Sep 2026 18:33:37 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
-	Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	Jaya Kumar <jayalk@intworks.biz>, Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, 
-	Sebastian Reichel <sre@kernel.org>, John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
-	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
-	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
-	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, linux-rdma@vger.kernel.org, 
-	selinux@vger.kernel.org, linux-sound@vger.kernel.org, bpf@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, 
-	linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, 
-	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
-	fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 02/40] mm/vma: predicate setting mmap_prepare VMA
- fields on new vma alloc
-Message-ID: <arQNTibMdh6x_T04@gremlin>
-References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-2-4583d8a23bca@kernel.org>
+	s=k20260515; t=1790190915;
+	bh=3Y1y4VrTKcT8bGuAKsLBgtA9V/g9miBITIm9ZUJW3gU=;
+	h=From:To:Cc:Subject:Date;
+	b=VYJZhenPiIOv+y6cCVWb0WF5eZSB6CQWXTK/4lp54Jr1RGX5y/CMrH3/hGV3+esLE
+	 RLSVmFYyL7Fri/PADGnXueJ1dNP8hZx8y2i+kKnWoIlyO9cTXLAX4/4tSj7keJ1IAw
+	 LXckAHcDbKE/TZnlvbUhu4n4SfXhCzeDlBPkISFLTEg8V8tzGjaRHbs2gS365dWVeG
+	 ajLvU6YFgACG7ms7ozB0xuXQ8Wj5/uPw02B7W8H62xgbmgD4XpySK/ZuB+ISrz+ml5
+	 Q5ichN54V4rGrz3JzAYXlNIkjiVRezwp1vVvAqcjKR00z50pCFXJlypQE1DfLsEu5m
+	 PTQjK6iFxca9A==
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Xingui Yang <yangxingui@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] dt-bindings: scsi: Convert hisilicon,hip05-sas-v1 to DT schema
+Date: Wed, 23 Sep 2026 14:15:10 -0500
+Message-ID: <20260923191511.2205564-1-robh@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-2-4583d8a23bca@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-Andrew - please drop this patch from the series, I will send a separate fix for
-this to go into an RC.
+Convert the HiSilicon SAS controller binding to DT schema. It's a
+straight forward conversion.
 
---
-Cheers, Lorenzo
+Assisted-by: LLM
+Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+---
+v2:
+ - Fix truncated interrupts and add back descriptions
+ - Fix syscon offset descriptions
+---
+ .../bindings/scsi/hisilicon,hip05-sas-v1.yaml | 158 ++++++++++++++++++
+ .../bindings/scsi/hisilicon-sas.txt           |  98 -----------
+ MAINTAINERS                                   |   2 +-
+ 3 files changed, 159 insertions(+), 99 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
+ delete mode 100644 Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+
+diff --git a/Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml b/Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
+new file mode 100644
+index 000000000000..27d4cf5078e6
+--- /dev/null
++++ b/Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
+@@ -0,0 +1,158 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/scsi/hisilicon,hip05-sas-v1.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: HiSilicon SAS controller
++
++maintainers:
++  - Xingui Yang <yangxingui@huawei.com>
++
++properties:
++  compatible:
++    items:
++      - enum:
++          - hisilicon,hip05-sas-v1
++          - hisilicon,hip06-sas-v2
++          - hisilicon,hip07-sas-v2
++
++  reg:
++    minItems: 1
++    items:
++      - description: SAS registers
++      - description: CPLD SGPIO control registers
++
++  clocks:
++    minItems: 1
++    maxItems: 2
++
++  dma-coherent: true
++
++  interrupts:
++    description: >
++      Interrupt specifiers for PHY, SATA, and completion queues; ordering and
++      number depend on controller version.
++
++      For v1 hw: Interrupts for phys, completion queues, and fatal
++      sources; the interrupts are ordered in 3 groups, as follows:
++
++        - Phy interrupts - Each phy has 3 interrupt sources:
++            - broadcast
++            - phyup
++            - abnormal
++          The phy interrupts are ordered into groups of 3 per phy
++          (broadcast, phyup, and abnormal) in increasing order.
++        - Completion queue interrupts - each completion queue has 1 interrupt
++          source.
++        - Fatal interrupts - the fatal interrupts are ordered as follows:
++            - ECC
++            - AXI bus
++
++      For v2 hw: Interrupts for phys, Sata, and completion queues;
++      the interrupts are ordered in 3 groups, as follows:
++
++        - Phy interrupts - Each controller has 2 phy interrupts:
++            - phy up/down
++            - channel interrupt
++        - Sata interrupts - Each phy on the controller has 1 Sata interrupt.
++        - Completion queue interrupts - each completion queue has 1 interrupt
++          source
++    minItems: 58
++    maxItems: 128
++
++  ctrl-reset-reg:
++    description: Offset to controller reset register in SAS syscon region.
++    $ref: /schemas/types.yaml#/definitions/uint32
++
++  ctrl-reset-sts-reg:
++    description: Offset to controller reset status register in SAS syscon region.
++    $ref: /schemas/types.yaml#/definitions/uint32
++
++  ctrl-clock-ena-reg:
++    description: Offset to controller clock enable register in SAS syscon region.
++    $ref: /schemas/types.yaml#/definitions/uint32
++
++  hip06-sas-v2-quirk-amt:
++    description:
++      Indicates that the v2 controller has the "am-max-transmissions" limitation.
++    type: boolean
++
++  hisilicon,sas-syscon:
++    description: Phandle of syscon used for SAS control.
++    $ref: /schemas/types.yaml#/definitions/phandle
++
++  hisilicon,signal-attenuation:
++    description:
++      De-emphasis, preshoot, and boost attenuation readings for the board,
++      used to calculate signal attenuation (y = (x-10000)/10000).
++    $ref: /schemas/types.yaml#/definitions/uint32-array
++    minItems: 3
++    maxItems: 3
++    items:
++      minimum: 7600
++      maximum: 12400
++
++  phy-count:
++    description: Number of PHYs accessible by the controller.
++    $ref: /schemas/types.yaml#/definitions/uint32
++
++  queue-count:
++    description: Number of delivery and completion queues in the controller.
++    $ref: /schemas/types.yaml#/definitions/uint32
++
++  sas-addr:
++    description: SAS address, array of 8 bytes representing host SAS address.
++    $ref: /schemas/types.yaml#/definitions/uint8-array
++    minItems: 8
++    maxItems: 8
++
++required:
++  - compatible
++  - reg
++  - interrupts
++  - ctrl-reset-reg
++  - ctrl-reset-sts-reg
++  - ctrl-clock-ena-reg
++  - hisilicon,sas-syscon
++  - phy-count
++  - queue-count
++  - sas-addr
++
++additionalProperties: false
++
++examples:
++  - |
++    sas@c1000000 {
++        compatible = "hisilicon,hip05-sas-v1";
++        reg = <0xc1000000 0x10000>;
++        dma-coherent;
++        interrupts = <259 4>, <263 4>, <264 4>, /* phy0 */
++                     <269 4>, <273 4>, <274 4>, /* phy1 */
++                     <279 4>, <283 4>, <284 4>, /* phy2 */
++                     <289 4>, <293 4>, <294 4>, /* phy3 */
++                     <299 4>, <303 4>, <304 4>, /* phy4 */
++                     <309 4>, <313 4>, <314 4>, /* phy5 */
++                     <319 4>, <323 4>, <324 4>, /* phy6 */
++                     <329 4>, <333 4>, <334 4>, /* phy7 */
++                     <336 1>, <337 1>, <338 1>, /* cq0-2 */
++                     <339 1>, <340 1>, <341 1>, /* cq3-5 */
++                     <342 1>, <343 1>, <344 1>, /* cq6-8 */
++                     <345 1>, <346 1>, <347 1>, /* cq9-11 */
++                     <348 1>, <349 1>, <350 1>, /* cq12-14 */
++                     <351 1>, <352 1>, <353 1>, /* cq15-17 */
++                     <354 1>, <355 1>, <356 1>, /* cq18-20 */
++                     <357 1>, <358 1>, <359 1>, /* cq21-23 */
++                     <360 1>, <361 1>, <362 1>, /* cq24-26 */
++                     <363 1>, <364 1>, <365 1>, /* cq27-29 */
++                     <366 1>, <367 1>,          /* cq30-31 */
++                     <376 4>,                   /* fatal ecc */
++                     <381 4>;                   /* fatal axi */
++        ctrl-reset-reg = <0xa60>;
++        ctrl-reset-sts-reg = <0x5a30>;
++        ctrl-clock-ena-reg = <0x338>;
++        hisilicon,sas-syscon = <&pcie_sas>;
++        queue-count = <32>;
++        phy-count = <8>;
++        sas-addr = [50 01 88 20 16 00 00 0a];
++    };
+diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+deleted file mode 100644
+index 8c6659ed2cfc..000000000000
+--- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
++++ /dev/null
+@@ -1,98 +0,0 @@
+-* HiSilicon SAS controller
+-
+-The HiSilicon SAS controller supports SAS/SATA.
+-
+-Main node required properties:
+-  - compatible : value should be as follows:
+-	(a) "hisilicon,hip05-sas-v1" for v1 hw in hip05 chipset
+-	(b) "hisilicon,hip06-sas-v2" for v2 hw in hip06 chipset
+-	(c) "hisilicon,hip07-sas-v2" for v2 hw in hip07 chipset
+-  - sas-addr : array of 8 bytes for host SAS address
+-  - reg : Contains two regions. The first is the address and length of the SAS
+-          register. The second is the address and length of CPLD register for
+-          SGPIO control. The second is optional, and should be set only when
+-          we use a CPLD for directly attached disk LED control.
+-  - hisilicon,sas-syscon: phandle of syscon used for sas control
+-  - ctrl-reset-reg : offset to controller reset register in ctrl reg
+-  - ctrl-reset-sts-reg : offset to controller reset status register in ctrl reg
+-  - ctrl-clock-ena-reg : offset to controller clock enable register in ctrl reg
+-  - queue-count : number of delivery and completion queues in the controller
+-  - phy-count : number of phys accessible by the controller
+-  - interrupts : For v1 hw: Interrupts for phys, completion queues, and fatal
+-		sources; the interrupts are ordered in 3 groups, as follows:
+-			- Phy interrupts
+-			- Completion queue interrupts
+-			- Fatal interrupts
+-		Phy interrupts : Each phy has 3 interrupt sources:
+-			- broadcast
+-			- phyup
+-			- abnormal
+-		The phy interrupts are ordered into groups of 3 per phy
+-		(broadcast, phyup, and abnormal) in increasing order.
+-		Completion queue interrupts : each completion queue has 1
+-			interrupt source.
+-			The interrupts are ordered in increasing order.
+-		Fatal interrupts : the fatal interrupts are ordered as follows:
+-			- ECC
+-			- AXI bus
+-		For v2 hw: Interrupts for phys, Sata, and completion queues;
+-		the interrupts are ordered in 3 groups, as follows:
+-			- Phy interrupts
+-			- Sata interrupts
+-			- Completion queue interrupts
+-		Phy interrupts : Each controller has 2 phy interrupts:
+-			- phy up/down
+-			- channel interrupt
+-		Sata interrupts : Each phy on the controller has 1 Sata
+-			interrupt. The interrupts are ordered in increasing
+-			order.
+-		Completion queue interrupts : each completion queue has 1
+-			interrupt source. The interrupts are ordered in
+-			increasing order.
+-
+-Optional main node properties:
+- - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
+-			    "am-max-transmissions" limitation.
+- - hisilicon,signal-attenuation : array of 3 32-bit values, containing de-emphasis,
+-		preshoot, and boost attenuation readings for the board. They
+-		are used to describe the signal attenuation of the board. These
+-		values' range is 7600 to 12400, and used to represent -24dB to
+-		24dB.
+-		The formula is "y = (x-10000)/10000". For example, 10478
+-		means 4.78dB.
+-
+-Example:
+-	sas0: sas@c1000000 {
+-		compatible = "hisilicon,hip05-sas-v1";
+-		sas-addr = [50 01 88 20 16 00 00 0a];
+-		reg = <0x0 0xc1000000 0x0 0x10000>;
+-		hisilicon,sas-syscon = <&pcie_sas>;
+-		ctrl-reset-reg = <0xa60>;
+-		ctrl-reset-sts-reg = <0x5a30>;
+-		ctrl-clock-ena-reg = <0x338>;
+-		queue-count = <32>;
+-		phy-count = <8>;
+-		dma-coherent;
+-		interrupt-parent = <&mbigen_dsa>;
+-		interrupts =    <259 4>,<263 4>,<264 4>,/* phy0 */
+-				<269 4>,<273 4>,<274 4>,/* phy1 */
+-				<279 4>,<283 4>,<284 4>,/* phy2 */
+-				<289 4>,<293 4>,<294 4>,/* phy3 */
+-				<299 4>,<303 4>,<304 4>,/* phy4 */
+-				<309 4>,<313 4>,<314 4>,/* phy5 */
+-				<319 4>,<323 4>,<324 4>,/* phy6 */
+-				<329 4>,<333 4>,<334 4>,/* phy7 */
+-				<336 1>,<337 1>,<338 1>,/* cq0-2 */
+-				<339 1>,<340 1>,<341 1>,/* cq3-5 */
+-				<342 1>,<343 1>,<344 1>,/* cq6-8 */
+-				<345 1>,<346 1>,<347 1>,/* cq9-11 */
+-				<348 1>,<349 1>,<350 1>,/* cq12-14 */
+-				<351 1>,<352 1>,<353 1>,/* cq15-17 */
+-				<354 1>,<355 1>,<356 1>,/* cq18-20 */
+-				<357 1>,<358 1>,<359 1>,/* cq21-23 */
+-				<360 1>,<361 1>,<362 1>,/* cq24-26 */
+-				<363 1>,<364 1>,<365 1>,/* cq27-29 */
+-				<366 1>,<367 1>/* cq30-31 */
+-				<376 4>,/* fatal ecc */
+-				<381 4>;/* fatal axi */
+-	};
+diff --git a/MAINTAINERS b/MAINTAINERS
+index dccddc99ac9a..9cae1650167b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11997,7 +11997,7 @@ HISILICON SAS Controller
+ M:	Xingui Yang <yangxingui@huawei.com>
+ S:	Supported
+ W:	http://www.hisilicon.com
+-F:	Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
++F:	Documentation/devicetree/bindings/scsi/hisilicon,hip05-sas-v1.yaml
+ F:	drivers/scsi/hisi_sas/
+ 
+ HISILICON SECURITY ENGINE V2 DRIVER (SEC2)
+-- 
+2.53.0
+
