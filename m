@@ -1,216 +1,241 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-167.mta0.migadu.com [91.218.175.167])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D9804E73C5;
-	Wed, 23 Sep 2026 17:07:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 526501E5B88
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2026 17:16:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.167
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790183262; cv=none; b=SOwvH2oE3tovfm/f8JEsL/awomwhyiF+QQs3fYAVBrTQxq+zLubAJX99peLQ+NGTqniYri8lwzQOp6zwOpo+A20VisY2vJqn0EJqJVuzfHOchxXHNFE+CsUXql8uvRz2QS0z2BF3K73deKudOhHOYcNPnt5XU8POgAAEnWcwblY=
+	t=1790183796; cv=none; b=qvolcZx3ZmVTXRpVawU8uimu6kzMTCas0yr0BApE0AMgTT44QdCPLl7wW0XEzxZDTcrDYtSn7GbV1Qd+MVIVRDalgipKRTYy4m+BJMPiHZVILTDhfDHmpCbIsbwSighOisMk9MwubT5qR0J6kLFNuEyFXIr+hsUDO2C7fflbxnA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790183262; c=relaxed/simple;
-	bh=dY5VEKC+MHSoJK6lwGGGvjwFMDTn23WTI6Yxn6zXOoA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ql7lUO1RySwXq0AAwVruFx/wOT5lkzo+sXn5RMPhFhxgTz5qNQm1hdZchA8XiLfjaRqQmQMgSRgGRIeKnoQzui/otgKHBbVAhyds0l3zum+SN+xxlwVPL+yNCqvJ0KXEcISstCqwKlxc65DgG6eNxlSFkp/49OuV465XzfAf+sY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i12XGUT+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790183796; c=relaxed/simple;
+	bh=OZWCIjfQvJGYe9SmrpS0lHhTXSEFx29Lz36+6DEDDE0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MeIfL/uq6sl5V7gw3t97kPod2RFNSsQpb8vK04nVDII2oYsvq0oRztyQ7rAhSES6AQ5K47WpWhS5eOo3hbZBWBpUHk1hAOHB3CXdmTwRLVL3P2tKpcD/2TTHKi38iySL548fnYzVOREyYx1aAsrA/LDIh9qhsY5yDhDxDuvcrGc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=TWL4hcvw; arc=none smtp.client-ip=91.218.175.167
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i12XGUT+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 370A61F000FF;
-	Wed, 23 Sep 2026 17:07:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790183260;
-	bh=DPNB6bW0x8y7Uu11BgHcG7CSR1tZ//UGOmZllbw9Ljw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=i12XGUT+ELGTRJSrycRVzqTit3D2pyM9ZR0ZSTlIa0mojim7gB9yUZwmIu+wgWYZK
-	 Ybyv+CV/Yh7wSmglW9QNbCpnx18TWoVPczcRHqo0Q/mnJsqjZQ3eFn2cP25qIt7fM9
-	 +POE/rp3vRI+Oxpo8QK9N4EfOTJ5jI0dLtJ432mM7IKfaNA3MKzBEomsWln5bFOqPN
-	 PxFbALYbyklQCFhfUINibcEvNCNrhcGgRwqd9F7gXGPywV48eYeWHkrJqezKwBbst0
-	 GSXVIWXaPeEYe4X28qZjKKxCsy9Q0ESN1tzaw+iT6CqBpO8zm4Si1SUtWVa2wxKSZ8
-	 vegFjunsRBTBA==
-Date: Wed, 23 Sep 2026 18:07:07 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, 
-	Stephen Smalley <stephen.smalley.work@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
-	Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	Jaya Kumar <jayalk@intworks.biz>, Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, 
-	Sebastian Reichel <sre@kernel.org>, John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
-	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
-	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
-	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 02/40] mm/vma: predicate setting mmap_prepare VMA
- fields on new vma alloc
-Message-ID: <arQCCzmMARX81-3y@gremlin>
-References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-2-4583d8a23bca@kernel.org>
- <CAJuCfpEa8tUmYJBjx-cRdAE8y-jcKY0C81kAOa1QZS7F6tKdfQ@mail.gmail.com>
- <arP0oJgrgZlgtrb6@gremlin>
- <CAJuCfpFPPGaK-grNx9qiQOhzAXbxU+SO+95Fht1571TGREx2oQ@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="TWL4hcvw"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=OZWCIjfQvJGYe9SmrpS0lHhTXSEFx29Lz36+6DEDDE0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790183792; v=1; x=1790788592;
+ b=TWL4hcvw4LU9ylfwV8bL0yNFy5DJkoI+5KqwK+mBfH4kvKZJ0ew5pPTKA95IEWd92d3FpjOc
+ 7ys8MkTJ5vtAKTWhhfCwInPhIIR10Eq3KYDeMWS15jGpDnPornS52zJhJgOQoycjMnKsLfYKKC/
+ 6e5qAnQ1/rE03mnv1RVKtwzQ=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta11.migadu.com with ESMTPS id 12e675c5567fe32c;
+	Wed, 23 Sep 2026 17:16:21 +0000
+X-Mizu-Trace-ID: 12e675c5567fe32c
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <94253b72-0c93-4560-8a96-b2ec1e8b1fa3@linux.dev>
+Date: Wed, 23 Sep 2026 18:16:17 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJuCfpFPPGaK-grNx9qiQOhzAXbxU+SO+95Fht1571TGREx2oQ@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 00/27] Native SCSI Multipath support
+To: John Garry <john.g.garry@oracle.com>,
+ james.bottomley@hansenpartnership.com, hare@suse.com, mkp@kernel.org
+Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, michael.christie@oracle.com, snitzer@kernel.org,
+ bmarzins@redhat.com, dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org,
+ nilay@linux.ibm.com, hch@lst.de, kbusch@kernel.org, sagi@grimberg.me
+References: <20260907105021.1763236-1-john.g.garry@oracle.com>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <20260907105021.1763236-1-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Sep 23, 2026 at 09:09:38AM -0700, Suren Baghdasaryan wrote:
-> On Wed, Sep 23, 2026 at 8:54 AM Lorenzo Stoakes (ARM) <ljs@kernel.org> wrote:
-> >
-> > On Wed, Sep 23, 2026 at 08:32:43AM -0700, Suren Baghdasaryan wrote:
-> > > On Thu, Sep 17, 2026 at 9:24 AM Lorenzo Stoakes (ARM) <ljs@kernel.org> wrote:
-> > > >
-> > > > It only makes sense to manipulate VMA fields if we allocated a new VMA,
-> > > > rather than merged it.
-> > > >
-> > > > VMA merging does not compare vm_ops or vm_private_data, so a merged VMA
-> > > > keeps its own, which is also what the legacy f_op->mmap path does since it
-> > > > never touches an existing VMA. Previously set_vma_user_defined_fields()
-> > > > overwrote the merged VMA's fields with those set for the new mapping. In
-> > > > practice these are the same values, with rare exceptions such as shmem
-> > > > selecting vm_ops based on whether the file has been unlinked, so no
-> > > > user-visible change is expected.
-> > > >
-> > > > Make this dependency explicit, and additionally constify have_mmap_prepare
-> > > > while we're here.
-> > >
-> > > The fact that we might be overriding attributes of an existing VMA
-> > > that we merged with is technically a bug even if we never hit it,
-> > > right? If so, should we have:
-> > >
-> > > Fixes: c84bf6dd2b83 ("mm: introduce new .mmap_prepare() file callback")
-> >
-> > It's not a bug, it is an in-built assumption that the state used to assess
-> > mergeability implies the same properties.
->
-> Hmm. What prevents two VMAs with different vm_private_data members to
-> be merged? IIUC is_mergeable_vma() does not check vm_private_data. In
-> such a case set_vma_user_defined_fields() would override
-> vm_private_data of an existing VMA, no?
+On 9/7/26 11:49, John Garry wrote:
+> NATIVE SCSI MULTIPATH:
+> 
 
-I think you're right that it should be a fix patch, I'll put it out of the
-series and send it as one.
+JFYI, this passes a sanity test on mkp scsi 7.4 queue after all the 
+recent sense codes changes, as would be expected.
 
-The issue here is more so vm_private_data than vm_ops. And really it's that
-vm_ops->mapped() wasn't called so you could have a refcount go to zero and
-stay at zero when it shouldn't have been, for instance.
+> This series introduces native SCSI multipath support. It is intended as
+> an alternative to dm-mpath.
+> 
+> This support aims to provide a multipath-enabled SCSI block device/
+> gendisk.
+> 
+> For a SCSI device to support native multipath, either of the following
+> conditions must be satisfied:
+> a. unique ID in VPD page 83 and ALUA support and scsi_multipath modparam
+>     enabled
+> b. unique ID in VPD page 83 and scsi_multipath_always modparam enabled
+> 
+> This series relies on reading sdev->access_state to get path information.
+> This path information would be provided by ALUA. ALUA support which does
+> not rely on device handlers has already been discussed at
+> https://lore.kernel.org/linux-scsi/7755e98f-5619-48ba-bcfc-b64eec930c40@oracle.com/
+> and support will be added in the next phase.
+> 
+> New classes of devices are added:
+> - scsi_mpath_device
+> - scsi_mpath_disk
+> 
+> These are required since a multipath scsi_device has no common scsi host.
+> An example of the sysfs files and directories for these new classes is as
+> follows:
+> 
+> $ ls -l /sys/class/scsi_mpath_device/scsi_mpath_device0/
+> total 0
+> -rw-r--r--    1 root     root          4096 Feb 25 11:59 iopolicy
+> drwxr-xr-x    2 root     root             0 Feb 25 11:59 multipath
+> drwxr-xr-x    2 root     root             0 Feb 25 11:59 power
+> lrwxrwxrwx    1 root     root             0 Feb 25 11:59 subsystem ->
+> ../../../../class/scsi_mpath_device
+> -rw-r--r--    1 root     root          4096 Feb 25 11:58 uevent
+> -r--r--r--    1 root     root          4096 Feb 25 11:59 vpd_id
+> $ ls -l /sys/class/scsi_mpath_device/scsi_mpath_device0/multipath/
+> total 0
+> lrwxrwxrwx    1 root     root             0 Feb 25 11:59 8:0:0:0 ->
+> ../../../../platform/host8/session1/target8:0:0/8:0:0:0
+> lrwxrwxrwx    1 root     root             0 Feb 25 11:59 9:0:0:0 ->
+> ../../../../platform/host9/session2/target9:0:0/9:0:0:0
+> $ cat /sys/class/scsi_mpath_device/scsi_mpath_device0/vpd_id
+> naa.600140505200a986f0043c9afa1fd077
+> $ cat /sys/class/scsi_mpath_device/scsi_mpath_device0/iopolicy
+> numa
+> $
+> 
+> $ ls -l /sys/class/scsi_mpath_disk/scsi_mpath_disk0/
+> total 0
+> drwxr-xr-x    2 root     root             0 Feb 25 12:00 power
+> drwxr-xr-x   11 root     root             0 Feb 25 11:58 sdc
+> lrwxrwxrwx    1 root     root             0 Feb 25 11:58 subsystem ->
+> ../../../../class/scsi_mpath_disk
+> -rw-r--r--    1 root     root          4096 Feb 25 11:58 uevent
+> $ ls -l /sys/class/scsi_mpath_disk/scsi_mpath_disk0/sdc/multipath/
+> total 0
+> lrwxrwxrwx    1 root     root             0 Feb 25 12:00 sdc:0 ->
+> ../../../../../platform/host8/session1/target8:0:0/8:0:0:0/block/sdc:0
+> lrwxrwxrwx    1 root     root             0 Feb 25 12:00 sdc:1 ->
+> ../../../../../platform/host9/session2/target9:0:0/9:0:0:0/block/sdc:1
+> 
+> $ ls -l /dev/sdc
+> brw-rw----    1 root     disk        8,  32 Feb 25 11:58 /dev/sdc
+> 
+> The scsi_device and scsi_disk classes otherwise remain unmodified.
+> However, the per-path block device is hidden in /dev/. Furthermore,
+> multipathed block devices have a new naming scheme, sdX:Y, where
+> X is the scsi multipath device index and Y is the path index.
+> 
+> No multipath sg support is added. We still have a per-path sg device.
+> Since the SCSI block device is multipath enabled, we can access
+> multipathed scsi_ioctl() through that block device.
+> 
+> For failover, we take the approach of cloning bio's and re-submitting them
+> in full (for failover errors).
+> 
+> LIBMULTIPATH:
+> 
+> This series introduces also libmultipath. It is essentially a refactoring
+> of NVME multipath support, so we can have a common library to also support
+> native SCSI multipath.
+> 
+> Much of the code is taken directly from the NVMe multipath code. However,
+> NVMe specifics are removed. A template structure is provided so the driver
+> -may provide callbacks for driver specifics, like ANA support for NVMe.
+> 
+> Important new structures introduced include:
+> 
+> - mpath_head
+> These contain much of the multipath-specific functionality from
+> nvme_ns_head, including a pointer to the gendisk structure and
+> a path SRCU-based array.
+> 
+> - mpath_device
+> This is the per-path structure, and contains much the same
+> multipath-specific functionality in nvme_ns
+> 
+> libmultipath provides functionality for path management, path selection,
+> data path, and failover handling.
+> 
+> Full series also available at
+> https://github.com/johnpgarry/linux/commits/scsi-multipath-v7.3-v8/
+> 
+> Differences to v7:
+> - rebase
+> - simplify scsi_mpath_clone_end_io() (sashiko)
+> - rename bio_list_add_clone() -> bio_list_add_master()
+> - rework checks in mpath_alloc_disk_head() (sashiko)
+> 
+> Differences to v6:
+> - rebase
+> - add scsi_mpath_get_head()
+> 
+> Differences to v5:
+> - deal with issues sashiko found in libmultipath:
+>   - include wait_bit.h
+>   - don't store error in mpath_head->disk
+>   - use check_mul_overflow() in mpath_can_remove_head()
+>   - use -ENOTTY in mpath_bdev_ioctl()
+> - deal with issues sashiko found in scsi mpath support:
+>   - check 0 returned from scsi_vpd_lun_id()
+>   - call flush_work() in scsi_mpath_device_iopolicy_store()
+>   - clear SCMD_MPATH_IO_STATS for !bio in scsi_mpath_start_request()
+>   - add checks for calling scsi_mpath_{start,end}_request()
+>   - tweak sd_mpath_dev_show()
+> 
+> John Garry (27):
+>    libmultipath: Add initial framework
+>    libmultipath: Add basic gendisk support
+>    libmultipath: Add path selection support
+>    libmultipath: Add bio handling
+>    libmultipath: Add support for mpath_device management
+>    libmultipath: Add delayed removal support
+>    libmultipath: Add sysfs helpers
+>    libmultipath: Add support for block device IOCTL
+>    libmultipath: Add mpath_bdev_getgeo()
+>    libmultipath: Add mpath_bdev_get_unique_id()
+>    scsi-multipath: introduce basic SCSI device support
+>    scsi-multipath: introduce scsi_device head structure
+>    scsi-multipath: provide sysfs link from to scsi_device
+>    scsi-multipath: support iopolicy
+>    scsi-multipath: clone each bio
+>    scsi-multipath: clear path when device is blocked
+>    scsi-multipath: revalidate paths upon device unblock
+>    scsi-multipath: failover handling
+>    scsi-multipath: provide callbacks for path state
+>    scsi-multipath: add scsi_mpath_{start,end}_request()
+>    scsi-multipath: add delayed disk removal support
+>    scsi: sd: add multipath disk class
+>    scsi: sd: add multipath disk attr groups
+>    scsi: sd: support multipath disk
+>    scsi: sd: add mpath_dev file
+>    scsi: sd: add mpath_numa_nodes dev attribute
+>    scsi: sd: add mpath_queue_depth dev attribute
+> 
+>   drivers/scsi/Kconfig          |  10 +
+>   drivers/scsi/Makefile         |   1 +
+>   drivers/scsi/scsi.c           |   8 +-
+>   drivers/scsi/scsi_lib.c       |  13 +-
+>   drivers/scsi/scsi_multipath.c | 664 ++++++++++++++++++++++++
+>   drivers/scsi/scsi_scan.c      |   4 +
+>   drivers/scsi/scsi_sysfs.c     |  10 +
+>   drivers/scsi/sd.c             | 611 +++++++++++++++++++++-
+>   drivers/scsi/sd.h             |   3 +
+>   include/linux/multipath.h     | 156 ++++++
+>   include/scsi/scsi_cmnd.h      |   9 +-
+>   include/scsi/scsi_device.h    |   2 +
+>   include/scsi/scsi_driver.h    |   4 +
+>   include/scsi/scsi_host.h      |   4 +
+>   include/scsi/scsi_multipath.h | 124 +++++
+>   lib/Kconfig                   |   6 +
+>   lib/Makefile                  |   2 +
+>   lib/multipath.c               | 947 ++++++++++++++++++++++++++++++++++
+>   18 files changed, 2554 insertions(+), 24 deletions(-)
+>   create mode 100644 drivers/scsi/scsi_multipath.c
+>   create mode 100644 include/linux/multipath.h
+>   create mode 100644 include/scsi/scsi_multipath.h
+>   create mode 100644 lib/multipath.c
+> 
 
-But in general though if you remove mmap_prepare and ask the same question:
-
-What prevents a merge of 2 existing VMAs that were mapped using the
-traditional mmap hook which somehow have entirely distinct vm_private_data
-and vm_ops but the same file?
-
-The answer is nothing prevents that, but there's an underlying assumption
-that this state is fungible for a VMA over a given range given the same
-file.
-
-In that case, for anything where an allocation or e.g. refcount change
-occurred, then vm_ops->close() will handle the decrement, and the original
-VMA's state should suffice.
-
-But here it's a problem because you overwrite it + don't call
-vm_ops->mapped()...
-
->
-> >
-> > And if it was, it'd need fixing a different way (check the field for instance)
-> > and would apply to the legacy mmap hook also.
-> >
-> > This change is needed for the series though.
-> >
-> > >
-> > > >
-> > > > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-> > >
-> > > Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-> >
-> > Thanks!
-> >
-> > >
-> > > > ---
-> > > >  mm/vma.c | 4 ++--
-> > > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > > >
-> > > > diff --git a/mm/vma.c b/mm/vma.c
-> > > > index fa784f069da4..4b74b48c29b7 100644
-> > > > --- a/mm/vma.c
-> > > > +++ b/mm/vma.c
-> > > > @@ -2894,7 +2894,7 @@ static unsigned long __mmap_region(struct file *file, unsigned long addr,
-> > > >  {
-> > > >         struct mm_struct *mm = current->mm;
-> > > >         struct vm_area_struct *vma = NULL;
-> > > > -       bool have_mmap_prepare = file && file->f_op->mmap_prepare;
-> > > > +       const bool have_mmap_prepare = file && file->f_op->mmap_prepare;
-> > > >         VMA_ITERATOR(vmi, mm, addr);
-> > > >         const pgoff_t anon_pgoff = addr >> PAGE_SHIFT;
-> > > >         MMAP_STATE(map, mm, &vmi, addr, len, pgoff, anon_pgoff, vma_flags, file);
-> > > > @@ -2937,7 +2937,7 @@ static unsigned long __mmap_region(struct file *file, unsigned long addr,
-> > > >                 allocated_new = true;
-> > > >         }
-> > > >
-> > > > -       if (have_mmap_prepare && !map_is_anon(&map))
-> > > > +       if (have_mmap_prepare && allocated_new && !map_is_anon(&map))
-> > > >                 set_vma_user_defined_fields(vma, &map);
-> > > >
-> > > >         __mmap_complete(&map, vma);
-> > > >
-> > > > --
-> > > > 2.55.0
-> > > >
-> >
-> > --
-> > Cheers, Lorenzo
-
---
-Cheers, Lorenzo
