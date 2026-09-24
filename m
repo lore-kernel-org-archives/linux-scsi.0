@@ -1,107 +1,237 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14267391822
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2026 06:05:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60AF838D406;
+	Thu, 24 Sep 2026 10:03:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790229903; cv=none; b=I5+/O/AN2vsMLEJwxEkqtiliID0eoeAZZXFKK+7C6TbG20bvQhU+luQGrWLrAJG1i/F3FuZmAMEaoqVKVD1HuBzRYmPEMEmtV2toXwUsoYHa/0LcbOj+26qNTdLEfNPDsq96iuVNADtsOM4EZDUWn58GnRgNoGwsogCVCCleqzI=
+	t=1790244251; cv=none; b=Xu6ATFNCvoAx2GDfD3bZ6ZklpHvT4dVaTkscCC4FzeR+fwG9wA3Sim6OT76EO5gC04HdfTfeSjy27RmM0cHZbIfPAIxvcnsTJXSWUuZ61i6JjBxHaA07VXIn7NKvkZXTEaW467lPqGGqS1OK092emfjU7+tWX/0eC5E+bGyyzhY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790229903; c=relaxed/simple;
-	bh=5hZLI/kIQpbikAHkHpMD5b6GN/lBgqrwDhltNEQCbYQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Xp3EkG4CehxZ94aaD0N+BqWNGbNGhWn+D7WyQh1SMoq04pShVGPyDAbHDTmlJ2I2NQZ/lQjlCSiSfGgGwDnKmEGWIRbBOAJYuMwDL8eI/OaUpPgBvIsIgfYdpqXDGP6cC2aDRB+jCUYIbsManOlXEvGg3GKK7+gaKDwtMzRv8iU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LQAOdMYz; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790244251; c=relaxed/simple;
+	bh=vbbMFj8U5zQ0DLQ+H49dKoTliQh3lrv6oisq4q6G+00=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CS9IPY4FtTkjCQDMTbzEQI+R8Zgi9BRXu6IqYUYmAmLXmA6E66nealO4ulPqg5i9fQ8g+pggC5U+EtAEZJCAyxuyibKsuFsmpw3XZIPIMo6rFs4rlDYtETQ3x58/VWCbw1iDdcYxUDUXcRr0LEcYVnqvrJx9fDN1FlFA5rO4Wss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DMbxskam; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LQAOdMYz"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49b91369d18so11247725e9.0
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Sep 2026 23:05:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790229900; x=1790834700; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=n0MllcKz8m82n4vcEekbO0+kdiwKRbPnFxBUUcpz3O0=;
-        b=LQAOdMYzM5PHZ3Rv4IBidx0WBUpOP66/10x8GIalQlejYwKP16mFmkUwgSadrzC2Zm
-         JsOKgmGo+s20Ls4/a53zC4PMnmjPzJVPzbvgCzhm+bOEjgxbqz4Rhk0LFj3ZRcjiPJoB
-         FHu6nWqf0C81HW+wEY2nLhTFh9acz1xZWQ0yEoDPLQtYgRW1VChK5keO8gUuFWX2RAxT
-         /VcaEZGVm+I4AJc00ySP+qmuyH8OnoYTukkijirJVGu+4+go/e5mf6wI7HEfWHggfNvF
-         90pG3nq1eXxAniYJs2Wby+othan43OOSBja4OW9nzgtuyxil4sFJyYdqccuCsxRcMFj0
-         gE4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790229900; x=1790834700;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=n0MllcKz8m82n4vcEekbO0+kdiwKRbPnFxBUUcpz3O0=;
-        b=YsCIesp2pjPyqIJecNiZg0wariKBG2GU4p7GQYQjeLq6HGsrvahdcWzdBvbWy3JJoO
-         OTFnqEG6zXDVOKuM3siM55sGkOWmq3k89l04gxud8REOj0MVwmZr8TJd9SwWu0Gg7tWa
-         39t6OHRpaVAxZpcrQZ7fMhfHy2Fs3QwJ4lH55bKZOPELpU7TIOWgiOrA0kkwexci0Rf1
-         51GxjnzuDxaBYgTFvA7MB4cMakPa6TDAnIREXJCWlnU1oqH94PVd6C21AXbwxmbkz/5O
-         L7NGavLBSKa4xIInvI7sHDKcD4WbN6a55N9Hmplik8qQacK3dMQvWBGorgO65d9Pzy9c
-         usEQ==
-X-Gm-Message-State: AFuF++l9mtbp85Ii5RdcgYe8fp0GcbcChsEmb9gcrZF3XzSvWxqHa+C9
-	uqHpgAKFk1ZvSbXITQJqayHrXhjGWcugA2Q66Noln1q9PuyHIprZBmzg
-X-Gm-Gg: AYBFou2eHqgBHLHuvn5SVa3Lu805Ql0AlGVO5K0OuoARJDRqbAt3pNy4pwg3ckAVq75
-	t+CH06JGnkjaa8aQ6pvfm2SrFBPu3ds753teZHhPirg2iY66KvDWw+PRAgdkfn9FpffoiPfNKZj
-	35KuCJDjqOK6wCM9XhS8mvM3h2BCOTPyJpJ8gDaXeBjDqSicBi9EQQQmfQHRuO6jKHouou/YNuF
-	UFl2BZ/iNEZM8rQzU31i4uyejsC2ALUzdguIo68ISvXrpLEDr1fulfwwn3TyHlO/1IZtzjDsQ9B
-	E2Ik75U1HyRzZPaFSYwfImOfI9bX0JfHKXcQWggYYi9H+aWveO+0491E1tzbcQ4hQ+bkkjfhMtM
-	GGKuij5zYMRANXdp8f24JJPp1ZzwFLpNNZdMqBFG5afLwDDTVP/RkngAsml9bdlMgardfxGWLBw
-	oFgM59X/0+k9sdrjCYK1FmkdryTtW7HW4pZivOcIQ9sSAc5ihjLgnE9Z9b2J5Y07uV2pv9125LB
-	SdFFysyM6dkeFWhVMQFohnmg7Z2yp+EOlE=
-X-Received: by 2002:a05:600c:468f:b0:49d:1df8:156d with SMTP id 5b1f17b1804b1-49fe66e6438mr22822725e9.18.1790229899991;
-        Wed, 23 Sep 2026 23:04:59 -0700 (PDT)
-Received: from githubb (bba-86-97-124-202.alshamil.net.ae. [86.97.124.202])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49fe5de4de4sm43099825e9.8.2026.09.23.23.04.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Sep 2026 23:04:59 -0700 (PDT)
-From: Ahmed Abdelhaleem Ahmed <ahmedhal@gmail.com>
-To: James.Bottomley@HansenPartnership.com,
-	mkp@kernel.org
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	loberman@redhat.com,
-	yanghao_ht@163.com
-Subject: Re: [PATCH] scsi: ch: Do not keep references to data transfer element devices
-Date: Thu, 24 Sep 2026 06:04:40 +0000
-Message-ID: <20260924060440.33252-1-ahmedhal@gmail.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260922-ch-dt-leak-v1-1-2b2e40bf1624@gmail.com>
-References: <20260922-ch-dt-leak-v1-1-2b2e40bf1624@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DMbxskam"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 097291F000FF;
+	Thu, 24 Sep 2026 10:03:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790244234;
+	bh=Q6qe1GeJ9XQcp2Qtuu+QjoS116ZDPXf6D3ecAVzIRhY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=DMbxskamLqIuQ517s1qWGAAn1E+xsD1IWLYGPnumbRx6pTv8bCwHJNooLP/0Y9MmF
+	 ewyfTQFlrtMHi0vbNbmoGXeP02wTiKXQwMUnfW6BJPnwha3F6zTor4G266x5NCtrLZ
+	 UINk2FfnnrWpmI4AgQSRtCEaaer/qXtOU6XcHLmcrADLmAXvRTfOudurStBkH10L0j
+	 cHXvTwq8BsOo1ESnuzegeDjHk5jwPxjbI7VL3VpDQNaTCWwI1ExYzT3hhqIHmtSCUY
+	 phCcWTevzoeBg5AakjX55gtjhS7DlK4HJYPRuO/TGOEmjyYP86Mnf1i03HAWs2ule+
+	 sZHwPnp+ZmfYA==
+Date: Thu, 24 Sep 2026 11:03:23 +0100
+From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+To: Zi Yan <ziy@nvidia.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
+	David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, 
+	Barry Song <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, 
+	Usama Arif <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, 
+	Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>, Jaya Kumar <jayalk@intworks.biz>, 
+	Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
+	John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
+	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
+	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
+	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
+	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
+	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
+	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
+	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
+	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
+	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
+	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
+	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
+	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
+	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
+	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
+	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
+	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
+	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
+	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
+	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
+	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
+	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
+	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
+Subject: Re: [PATCH v3 01/40] mm/vma: fix mmap_prepare file handling, remove
+ file_doesnt_need_get
+Message-ID: <arTvHhdoxZi_LslN@gremlin>
+References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-1-4583d8a23bca@kernel.org>
+ <26EB9785-2909-4D49-A755-09A72BA94BD0@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <26EB9785-2909-4D49-A755-09A72BA94BD0@nvidia.com>
 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+On Wed, Sep 23, 2026 at 10:20:43PM -0400, Zi Yan wrote:
+> On 17 Sep 2026, at 12:22, Lorenzo Stoakes (ARM) wrote:
+>
+> > The map->file_doesnt_need_get flag is confusing and the existing
+> > implementation has holes.
+> >
+> > Drivers are permitted to change the owning file of a mapping. If they do
+> > so, they are required to take a reference on that file.
+> >
+> > The mmap() operation which ultimately invokes __mmap_region() is guaranteed
+> > to drop the refcount for the original file the mapping was made under, but
+> > this is not true for the replaced file.
+> >
+> > This has been addressed so far by tracking map->file_doesnt_need_get, which
+> > is rather poorly named and unfortunately fails to correctly track whether
+> > or not an additional put were needed in a number of cases.
+> >
+> > Make life easier by removing this flag, and instead drop the reference for
+> > both mmap_prepare and the deprecated mmap callback in a new function
+> > put_map().
+> >
+> > Track whether this needs to be done by aligning mmap_state with
+> > vm_area_desc and store the original file in the map->file field, keeping
+> > the updated file in map->vm_file.
+> >
+> > In order to have the same behaviour for both types of hooks, only drop the
+> > reference __mmap_new_file_vma() itself took in its error path, deferring
+> > the replaced file's reference to put_map().
+> >
+> > To make this work correctly, map->vm_file has to be updated before any
+> > error handling, so update __mmap_new_file_vma() and call_mmap_prepare() to
+> > set this field first.
+> >
+> > Also when mmap_prepare() changes the file and is then merged, the reference
+> > count also must be decremented, so update the logic to call put_map() in
+> > this case too.
+> >
+> > Also update __compat_vma_mmap() to manually perform this step for stacked
+> > file systems using the compatibility layer, and update
+> > compat_set_vma_from_desc() to replace vma_set_file() with a correct
+> > refcount/file update.
+> >
+> > No in-tree driver is impacted by the incorrect implementation of this
+> > currently (no driver that does this is mergeable for one), so this does not
+> > need to be a fix.
+> >
+> > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+> > ---
+> >  mm/internal.h |  1 +
+> >  mm/util.c     |  5 +++-
+> >  mm/vma.c      | 83 +++++++++++++++++++++++++++++++++++------------------------
+> >  mm/vma.h      |  6 +++--
+> >  4 files changed, 59 insertions(+), 36 deletions(-)
+> >
+> > diff --git a/mm/internal.h b/mm/internal.h
+> > index 0dca33db068f..fe576d468af4 100644
+> > --- a/mm/internal.h
+> > +++ b/mm/internal.h
+> > @@ -7,6 +7,7 @@
+> >  #ifndef __MM_INTERNAL_H
+> >  #define __MM_INTERNAL_H
+> >
+> > +#include <linux/file.h>
+> >  #include <linux/fs.h>
+> >  #include <linux/khugepaged.h>
+> >  #include <linux/mm.h>
+> > diff --git a/mm/util.c b/mm/util.c
+> > index bf0513d1d3d0..016932780925 100644
+> > --- a/mm/util.c
+> > +++ b/mm/util.c
+> > @@ -1228,8 +1228,11 @@ int __compat_vma_mmap(struct vm_area_desc *desc,
+> >
+> >  	/* Perform any preparatory tasks for mmap action. */
+> >  	err = mmap_action_prepare(desc);
+> > -	if (err)
+> > +	if (err) {
+> > +		if (desc->vm_file != vma->vm_file)
+> > +			fput(desc->vm_file);
+> >  		return err;
+> > +	}
+> >  	/* Update the VMA from the descriptor. */
+> >  	compat_set_vma_from_desc(vma, desc);
+> >  	/* Complete any specified mmap actions. */
+> > diff --git a/mm/vma.c b/mm/vma.c
+> > index 55917d097933..fa784f069da4 100644
+> > --- a/mm/vma.c
+> > +++ b/mm/vma.c
+> > @@ -24,7 +24,8 @@ struct mmap_state {
+> >  		vm_flags_t vm_flags;
+> >  		vma_flags_t vma_flags;
+> >  	};
+> > -	struct file *file;
+> > +	struct file *file;	/* mmap()-specified file. */
+>
+> IIUC, file is never assigned other than MMAP_STATE() and should not
+> change after mmap(). Could it be made const to prevent any change?
+> I assume mmap_state will not need to handle the nesting issue like
+> vm_area_desc, so file can be const.
 
-Self-correction: that Fixes tag is wrong. drivers/scsi/ch.c is not part of
-the initial git import; it was added a month later, already containing the
-lookup into ch->dt[] and the kfree() that drops nothing:
+Oh I had assumed that this couldn't be const and I thought I'd checked that, but
+seems not, it can be :)
 
-  $ git cat-file -t v2.6.12-rc2:drivers/scsi/ch.c
-  fatal: Not a valid object name v2.6.12-rc2:drivers/scsi/ch.c
+Will fix that up for v4 thanks!
 
-  $ git log --diff-filter=A --oneline -- drivers/scsi/ch.c
-  daa6eda65a53 [SCSI] add scsi changer driver
+>
+> > +	struct file *vm_file;	/* May be updated by mmap_prepare. */
+> >  	pgprot_t page_prot;
+> >
+> >  	/* User-defined fields, perhaps updated by .mmap_prepare(). */
+> > @@ -43,8 +44,6 @@ struct mmap_state {
+> >
+> >  	/* Determine if we can check KSM flags early in mmap() logic. */
+> >  	bool check_ksm_early :1;
+> > -	/* If .mmap_prepare changed the file, we don't need to pin. */
+> > -	bool file_doesnt_need_get :1;
+> >  };
+> >
+> >  #define MMAP_STATE(name, mm_, vmi_, addr_, len_, pgoff_, anon_pgoff_, vma_flags_, file_) \
+> > @@ -58,6 +57,7 @@ struct mmap_state {
+> >  		.pglen = PHYS_PFN(len_),				\
+> >  		.vma_flags = vma_flags_,				\
+> >  		.file = file_,						\
+> > +		.vm_file = file_,					\
+> >  		.page_prot = vma_flags_to_page_prot(vma_flags_),	\
+> >  	}
+> >
+>
+>
+> Best Regards,
+> Yan, Zi
 
-So the correct tag is
-
-Fixes: daa6eda65a53 ("[SCSI] add scsi changer driver")
-
-first released in v2.6.13-rc1. Nothing since has touched the ch->dt[]
-reference handling: the only other commits mentioning scsi_device_put() or
-ch->dt in this file are 66167283c21e ("scsi: ch: fixup refcounting imbalance
-for SCSI devices"), which does not touch dt[], a2cf8a6306c8 ("[SCSI] ch:
-Check NULL for kmalloc() return") and 85bc081f44d5 (kmalloc -> kcalloc).
-
-Please amend when applying, or say the word and I will send a v2.
-
-Thanks,
-Ahmed
+--
+Cheers, Lorenzo
