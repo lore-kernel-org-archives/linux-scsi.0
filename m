@@ -1,62 +1,62 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CB89403E9C;
-	Thu, 24 Sep 2026 15:26:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 002DF49F127;
+	Thu, 24 Sep 2026 15:27:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790263590; cv=none; b=iVJeVpTd19mzOg20fTYNffch13EffJgYT8NTfd5a+oenZxtsr2YFf5CxNXkfXZnvNOQDYDMaZYhj0en7TigjqXuxy0XD+7AP/RHcCnV1J+NRxBr703Yu5aUxUFrMYvNtLO+agZppWUOw3DFWKqefwYl4DKCy8IAKAIao4H+yhu4=
+	t=1790263628; cv=none; b=jMMFDUkZmsva88u8Y98CE7/Du3I4w5wsC/10oyYsUefEEdw4M2pJz0rXjOA0BtMNt1YJOzVPpP29x/gg1+PABNHwKPkhfHpSJjG3DVS4ZJbEX/yFa3y4HaFk7N1/8NbgwqdyfjzWw4FaNR9C0gLfla3/4z3tI1VPxpg8ysFQHXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790263590; c=relaxed/simple;
-	bh=sqa6heNwqq82HXn3ZvSdMB3JNnhMkau2Y8tXg0FJADs=;
+	s=arc-20240116; t=1790263628; c=relaxed/simple;
+	bh=8T+UNkzsMwwowRrOcEQQAEsxiHQ7E7NXDy9aJLksLaE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=e6YgXkZaAh+hjbDjhQZAydIMQG5FeanYYuYHcGbUcn5ZPp22n7KzZjqM7t9Syi/5ZE/x6QbVoBSEaWnK7BC9TOakgVsqGJb8ZmyqokYCFCTj7l+vT1rKDcljvTgj1iDozDcgtgDkTDYJgg14BaYJ2gY/JuQgpZ5Hc7Y3glfxE40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZmWeZ3ud; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=knb6V0IHvHnyl9w5Og0Yy1ifBmcns7OdU61RVnvdASm66kZaCeAP8a8Iz23wGdYk7l6H1f9SGlKhthRb5PXxXjyslwjoNlwO6MYAmXL4bGU38dS379ryLPQUH87DoT0+YofMiT7BQ0Avvo95aEfF8S6aCT+5KVDmksBp4f6exvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a5dqRwRL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZmWeZ3ud"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E0631F000FF;
-	Thu, 24 Sep 2026 15:26:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a5dqRwRL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D0431F00893;
+	Thu, 24 Sep 2026 15:27:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790263588;
-	bh=BtNwmCpwlATZL6+yLaXsqKa6VUJAOpqf/gk0N1LtqfM=;
+	s=k20260515; t=1790263626;
+	bh=zBgNSeAKy3V9+glxTJ9u0MSNETvwYObNm1rdwrrdkBY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZmWeZ3udhfVDwkbdG7hmbVUamlOdwN1xRN6b1DIAHjkrRNINpNAEntqN2/gYcb6+c
-	 DNyY5UcnsTtJXa4wSzaKR+XVzMSK/YPdatgbzLblwj05a82siMPo+H9MBFRXq0Muam
-	 eMgLhELKWHIhSpr7ysCvDQi8XRfD3XKwJfozlir0/9nzPNNDpXYlC4pRB4nhZWrI6s
-	 h7dti4Co9Cr9IQI+b/4fsC+pahOTduY/nbbYLzEBYHvhGp3XEuUUKq8utqAbOGLLBy
-	 cR842xGOsLypHmxaSz5ICKPqqSruMiz9dMI7BjjRzP62l641nWHjsBIcXIXEb5Sxdj
-	 n4v2zzcv9buTA==
-Date: Thu, 24 Sep 2026 10:26:26 -0500
+	b=a5dqRwRL93QqwgSHbhAUOu0m78/vPnTDAi1chRy/CZASJetpaK0ln2X/uA6nAQEGT
+	 I6dqVGptKhE4GHYQE87CvdqAESw8/56C81+kdUytU7UweHHXRH5yiARqKM7BYH3n2J
+	 g6s7/zuIakZpPv3k518q2O7MdoVwP6cINUxbsf33tPPl8Mrm1134kY92zahoMwdA4t
+	 elbQGOLDh+7+VqaWR9xVRZdVcPDx8DP7jxt98ujI2mr8Y2gCqvTIHNeOOfpMCQpcoM
+	 UO7Ey57hD1iUhSRoIDaau/31H87iRlrLIUOGGBX3qIYnhQzuDIOFWBwWl+xsLXkreu
+	 Oj1FchTVG1Wng==
+Date: Thu, 24 Sep 2026 10:27:04 -0500
 From: "Rob Herring (Arm)" <robh@kernel.org>
 To: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
-Cc: Avri Altman <avri.altman@sandisk.com>,
+Cc: "Martin K. Petersen" <mkp@kernel.org>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
-	linux-arm-kernel@lists.infradead.org,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	Liam Girdwood <lgirdwood@gmail.com>, linux-phy@lists.infradead.org,
 	Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Conor Dooley <conor+dt@kernel.org>, linux-scsi@vger.kernel.org,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Mark Brown <broonie@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Chaotian Jing <chaotian.jing@mediatek.com>, kernel@collabora.com,
-	"Martin K. Petersen" <mkp@kernel.org>,
+	Avri Altman <avri.altman@sandisk.com>,
 	Chunfeng Yun <chunfeng.yun@mediatek.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Mark Brown <broonie@kernel.org>, linux-phy@lists.infradead.org,
+	devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Conor Dooley <conor+dt@kernel.org>, linux-kernel@vger.kernel.org,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Liam Girdwood <lgirdwood@gmail.com>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v12 02/24] dt-bindings: ufs: mediatek,ufs: Complete the
- binding
-Message-ID: <179026358626.149119.4739305859668993061.robh@kernel.org>
+	Chaotian Jing <chaotian.jing@mediatek.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
+	linux-mediatek@lists.infradead.org, kernel@collabora.com,
+	linux-arm-kernel@lists.infradead.org,
+	Peter Wang <peter.wang@mediatek.com>
+Subject: Re: [PATCH v12 03/24] dt-bindings: ufs: mediatek,ufs: Add mt8196
+ variant
+Message-ID: <179026362398.156393.9411770952322426875.robh@kernel.org>
 References: <20260914-mt8196-ufs-v12-0-9279d7ef814d@collabora.com>
- <20260914-mt8196-ufs-v12-2-9279d7ef814d@collabora.com>
+ <20260914-mt8196-ufs-v12-3-9279d7ef814d@collabora.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -65,64 +65,26 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260914-mt8196-ufs-v12-2-9279d7ef814d@collabora.com>
+In-Reply-To: <20260914-mt8196-ufs-v12-3-9279d7ef814d@collabora.com>
 
 
-On Mon, 14 Sep 2026 13:38:48 +0200, Louis-Alexis Eyraud wrote:
+On Mon, 14 Sep 2026 13:38:49 +0200, Louis-Alexis Eyraud wrote:
 > From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 > 
-> As it stands, the mediatek,ufs.yaml binding is startlingly incomplete.
-> Its one example, which is the only real "user" of this binding in
-> mainline, uses the deprecated freq-table-hz property.
+> The MediaTek MT8196 SoC's UFS controller uses a different set of supplies.
+> It is therefore not compatible with the MT8195. It also have an additional
+> 0.9V supply pin (AVDD09_UFS_1), that is specific to this SoC, thus not
+> currently described in the binding.
 > 
-> The resets, of which there are three optional ones, are completely
-> absent.
-> 
-> The clock description for MT8195 is incomplete, as is the one for
-> MT8192. It's not known if the one clock binding for MT8183 is even
-> correct, but I do not have access to the necessary code and
-> documentation to find this out myself.
-> 
-> The power supply situation is not much better; the binding describes one
-> required power supply, but it's the UFS card supply, not any of the
-> supplies feeding the controller silicon.
-> 
-> No second example is present in the binding, making verification
-> difficult.
-> 
-> Disallow freq-table-hz and move to operating-points-v2. It's fine to
-> break compatibility here, as the binding is currently unused and would
-> be impossible to correctly use in its current state.
-> 
-> Add the three resets and the corresponding reset-names property. These
-> resets appear to be optional, i.e. not required for the functioning of
-> the device.
-> 
-> Move the list of clock names out of the if condition, and expand it for
-> the confirmed clocks I could find by cross-referencing several clock
-> drivers. For MT8195, increase the minimum number of clocks to include
-> the rx_symbol ones, as they're internal to the SoC and should always
-> be present, and should therefore not be omitted.
-> 
-> MT8192 gets to have at least 3 clocks, as these were the ones I could
-> quickly confirm from a glance at various trees. I can't say this was an
-> exhaustive search though, but it's better than the current situation.
-> 
-> Properly document all supplies, with which pin name on the SoCs they
-> supply. Complete the example with them.
-> 
-> Also add a MT8195 example to the binding, using supply labels that I am
-> pretty sure would be the right ones for e.g. the Radxa NIO 12L.
-> 
-> Finally, remove the 'ufs_' prefix from all clock names containing it
-> and rename 'ufs' clock to 'main'.
+> Add a compatible for this SoC and new property for the additional supply,
+> and modify the binding correspondingly.
 > 
 > Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 > Reviewed-by: Chaotian Jing <chaotian.jing@mediatek.com>
 > Signed-off-by: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
 > ---
->  .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 115 +++++++++++++++++----
->  1 file changed, 96 insertions(+), 19 deletions(-)
+>  .../devicetree/bindings/ufs/mediatek,ufs.yaml       | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
 > 
 
 Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
