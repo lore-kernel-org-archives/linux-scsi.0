@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60AF838D406;
-	Thu, 24 Sep 2026 10:03:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BAEF389111;
+	Thu, 24 Sep 2026 10:06:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790244251; cv=none; b=Xu6ATFNCvoAx2GDfD3bZ6ZklpHvT4dVaTkscCC4FzeR+fwG9wA3Sim6OT76EO5gC04HdfTfeSjy27RmM0cHZbIfPAIxvcnsTJXSWUuZ61i6JjBxHaA07VXIn7NKvkZXTEaW467lPqGGqS1OK092emfjU7+tWX/0eC5E+bGyyzhY=
+	t=1790244426; cv=none; b=WAK3f+UPmfhIe+iFYK+N0VyDAIFIMi/8gCuxFyvfjXiahNwaOTR3bW3Pz81Fdklyd7ihKmFDoKBGRIyQj3RlXzhPL204rfWx2jnnHyPuSlFa2FXffAdWbw8COVCOGjzY9tJsgxOqJG7htr2k6L0+h9EjHJaAJ2F9rEkKbMjBL3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790244251; c=relaxed/simple;
-	bh=vbbMFj8U5zQ0DLQ+H49dKoTliQh3lrv6oisq4q6G+00=;
+	s=arc-20240116; t=1790244426; c=relaxed/simple;
+	bh=3BdFtZaQx/hN1F8B7NWjXGwFzEqYe+EiIIZXC/z69vI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CS9IPY4FtTkjCQDMTbzEQI+R8Zgi9BRXu6IqYUYmAmLXmA6E66nealO4ulPqg5i9fQ8g+pggC5U+EtAEZJCAyxuyibKsuFsmpw3XZIPIMo6rFs4rlDYtETQ3x58/VWCbw1iDdcYxUDUXcRr0LEcYVnqvrJx9fDN1FlFA5rO4Wss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DMbxskam; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Dy7kV6WcyzC+RPhPDp8Z+ppMFtXxCI9seff01cMnschqi0aoK+bc0pA+Q584fgFoyW6W+vCKH7SEyDAPukkjZRkGWVfVYKES6yRzHNPfv7DbRh5eyxaDFBLCI4gMvcC0FgBZxtsy7LmassO1EE8cK1vhQaREznCKooR2knDS/Jg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PLQwBAOG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DMbxskam"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 097291F000FF;
-	Thu, 24 Sep 2026 10:03:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PLQwBAOG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2C321F00893;
+	Thu, 24 Sep 2026 10:06:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790244234;
-	bh=Q6qe1GeJ9XQcp2Qtuu+QjoS116ZDPXf6D3ecAVzIRhY=;
+	s=k20260515; t=1790244413;
+	bh=Tmln/mtpzj8HRD3oGhB2G+T5+fAuKHxHe9EIDa4XupE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DMbxskamLqIuQ517s1qWGAAn1E+xsD1IWLYGPnumbRx6pTv8bCwHJNooLP/0Y9MmF
-	 ewyfTQFlrtMHi0vbNbmoGXeP02wTiKXQwMUnfW6BJPnwha3F6zTor4G266x5NCtrLZ
-	 UINk2FfnnrWpmI4AgQSRtCEaaer/qXtOU6XcHLmcrADLmAXvRTfOudurStBkH10L0j
-	 cHXvTwq8BsOo1ESnuzegeDjHk5jwPxjbI7VL3VpDQNaTCWwI1ExYzT3hhqIHmtSCUY
-	 phCcWTevzoeBg5AakjX55gtjhS7DlK4HJYPRuO/TGOEmjyYP86Mnf1i03HAWs2ule+
-	 sZHwPnp+ZmfYA==
-Date: Thu, 24 Sep 2026 11:03:23 +0100
+	b=PLQwBAOGo9zDSHvR7HKzryQ/BMyFMtzGN+nCViQmJtAxtR/cVtie3h8+uTfYAAuqI
+	 031IL8YiCRbRgN3Lu0GdOWHF3up1c5eAkeUhEPdxuJ9q/SthtjUJM4e5DTQk3971Cv
+	 +R/NIvQEe5TAium5bmdEyB/qSUVvrKQ3N2k6WtmzwCU8Hw7KqZ3HuHqonUNceqtFUI
+	 gkBAcKeGMzG5vw33mskB8GCIprFrs11XV7eTU1DX4P4aEFuLfxG1bzkZcra4RB+dUr
+	 UBz/croW/YGWjUjo9iUnRJL3m1e4m9BS//Qzg5nKK/0JyOftW1GHHLTSp3iQSWnW2G
+	 YCgs9xZC0a5iw==
+Date: Thu, 24 Sep 2026 11:06:21 +0100
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 To: Zi Yan <ziy@nvidia.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, 
@@ -86,12 +86,12 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
 	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
 	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 01/40] mm/vma: fix mmap_prepare file handling, remove
- file_doesnt_need_get
-Message-ID: <arTvHhdoxZi_LslN@gremlin>
+Subject: Re: [PATCH v3 04/40] mm: consistently validate VMA state after
+ mmap[_prepare] hooks
+Message-ID: <arT1xJpWlFlRHUFY@gremlin>
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-1-4583d8a23bca@kernel.org>
- <26EB9785-2909-4D49-A755-09A72BA94BD0@nvidia.com>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-4-4583d8a23bca@kernel.org>
+ <DLN7FLRJGS5Y.1T8T274W2NS6L@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -100,138 +100,112 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <26EB9785-2909-4D49-A755-09A72BA94BD0@nvidia.com>
+In-Reply-To: <DLN7FLRJGS5Y.1T8T274W2NS6L@nvidia.com>
 
-On Wed, Sep 23, 2026 at 10:20:43PM -0400, Zi Yan wrote:
-> On 17 Sep 2026, at 12:22, Lorenzo Stoakes (ARM) wrote:
->
-> > The map->file_doesnt_need_get flag is confusing and the existing
-> > implementation has holes.
+On Wed, Sep 23, 2026 at 10:52:06PM -0400, Zi Yan wrote:
+> On Thu Sep 17, 2026 at 12:22 PM EDT, Lorenzo Stoakes (ARM) wrote:
+> > When the f_op->mmap_prepare or deprecated f_op->mmap hooks are invoked, the
+> > driver might have done something crazy that is not permitted by the kernel.
 > >
-> > Drivers are permitted to change the owning file of a mapping. If they do
-> > so, they are required to take a reference on that file.
+> > Currently we check for three such cases in __mmap_new_file_vma(), but only
+> > if the legacy f_op->mmap hook is used:
 > >
-> > The mmap() operation which ultimately invokes __mmap_region() is guaranteed
-> > to drop the refcount for the original file the mapping was made under, but
-> > this is not true for the replaced file.
+> > * Did sparc ADI result in invalid flags?
 > >
-> > This has been addressed so far by tracking map->file_doesnt_need_get, which
-> > is rather poorly named and unfortunately fails to correctly track whether
-> > or not an additional put were needed in a number of cases.
+> > * Did the driver alter vma->vm_start?
 > >
-> > Make life easier by removing this flag, and instead drop the reference for
-> > both mmap_prepare and the deprecated mmap callback in a new function
-> > put_map().
+> > * Did the driver make a file-backed mapping on a read-only file writable?
 > >
-> > Track whether this needs to be done by aligning mmap_state with
-> > vm_area_desc and store the original file in the map->file field, keeping
-> > the updated file in map->vm_file.
+> > Generalise these checks for both mmap_prepare and mmap and apply to all
+> > invocations of mmap_file(), the f_op->mmap and f_op->mmap_prepare handling
+> > in the core VMA code and the mmap_prepare compatibility layer.
 > >
-> > In order to have the same behaviour for both types of hooks, only drop the
-> > reference __mmap_new_file_vma() itself took in its error path, deferring
-> > the replaced file's reference to put_map().
+> > Also extend the vm_start check to vm_end also - drivers must not change the
+> > VMA range at all.
 > >
-> > To make this work correctly, map->vm_file has to be updated before any
-> > error handling, so update __mmap_new_file_vma() and call_mmap_prepare() to
-> > set this field first.
+> > We also WARN_ON_ONCE() on these conditions as they are things that should
+> > simply not occur in the kernel and it's important to call it out when it
+> > does.
 > >
-> > Also when mmap_prepare() changes the file and is then merged, the reference
-> > count also must be decremented, so update the logic to call put_map() in
-> > this case too.
+> > We invoke mmap_prepare_validate() after mmap_action_prepare(), as mmap
+> > actions often manipulate state in the descriptor thus providing the final
+> > state the VMA will be derived from.
 > >
-> > Also update __compat_vma_mmap() to manually perform this step for stacked
-> > file systems using the compatibility layer, and update
-> > compat_set_vma_from_desc() to replace vma_set_file() with a correct
-> > refcount/file update.
+> > Also call mmap_validate_vma_flags() in insert_vm_struct() to ensure that
+> > special regions which are inserted (such as a VDSO or VVAR) also satisfy
+> > the sanity checks.
 > >
-> > No in-tree driver is impacted by the incorrect implementation of this
-> > currently (no driver that does this is mergeable for one), so this does not
-> > need to be a fix.
+> > This way every VMA established through an mmap hook, whether via mmap() or
+> > the compatibility layer, or inserted via insert_vm_struct(), has been
+> > validated. brk() VMAs never pass through a driver hook and so need no such
+> > check.
+> >
+> > While we're here, also fixup a couple disjoint blocks of #ifdef CONFIG_MMU.
+> >
+> > Finally, update the VMA userland tests to reflect the change.
 > >
 > > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > > ---
-> >  mm/internal.h |  1 +
-> >  mm/util.c     |  5 +++-
-> >  mm/vma.c      | 83 +++++++++++++++++++++++++++++++++++------------------------
-> >  mm/vma.h      |  6 +++--
-> >  4 files changed, 59 insertions(+), 36 deletions(-)
+> >  mm/internal.h                   |  51 ++++++++++++--------
+> >  mm/util.c                       |  19 ++++++--
+> >  mm/vma.c                        | 100 ++++++++++++++++++++++++++++++++++------
+> >  mm/vma.h                        |  25 ++++++++--
+> >  tools/testing/vma/include/dup.h |  10 ++++
+> >  5 files changed, 163 insertions(+), 42 deletions(-)
 > >
-> > diff --git a/mm/internal.h b/mm/internal.h
-> > index 0dca33db068f..fe576d468af4 100644
-> > --- a/mm/internal.h
-> > +++ b/mm/internal.h
-> > @@ -7,6 +7,7 @@
-> >  #ifndef __MM_INTERNAL_H
-> >  #define __MM_INTERNAL_H
-> >
-> > +#include <linux/file.h>
-> >  #include <linux/fs.h>
-> >  #include <linux/khugepaged.h>
-> >  #include <linux/mm.h>
-> > diff --git a/mm/util.c b/mm/util.c
-> > index bf0513d1d3d0..016932780925 100644
-> > --- a/mm/util.c
-> > +++ b/mm/util.c
-> > @@ -1228,8 +1228,11 @@ int __compat_vma_mmap(struct vm_area_desc *desc,
-> >
-> >  	/* Perform any preparatory tasks for mmap action. */
-> >  	err = mmap_action_prepare(desc);
-> > -	if (err)
-> > +	if (err) {
-> > +		if (desc->vm_file != vma->vm_file)
-> > +			fput(desc->vm_file);
-> >  		return err;
-> > +	}
-> >  	/* Update the VMA from the descriptor. */
-> >  	compat_set_vma_from_desc(vma, desc);
-> >  	/* Complete any specified mmap actions. */
-> > diff --git a/mm/vma.c b/mm/vma.c
-> > index 55917d097933..fa784f069da4 100644
-> > --- a/mm/vma.c
-> > +++ b/mm/vma.c
-> > @@ -24,7 +24,8 @@ struct mmap_state {
-> >  		vm_flags_t vm_flags;
-> >  		vma_flags_t vma_flags;
-> >  	};
-> > -	struct file *file;
-> > +	struct file *file;	/* mmap()-specified file. */
+> <snip>
+> > +
+> > +/* Check to ensure a driver hasn't done something crazy. */
+> > +static int mmap_validate(unsigned long prev_start, unsigned long prev_end,
+> > +			 unsigned long curr_start, unsigned long curr_end,
+> > +			 const vma_flags_t *prev_flags,
+> > +			 const vma_flags_t *curr_flags)
+> > +{
+> > +	bool was_maywrite, is_maywrite;
+> > +
+> > +	/* Drivers cannot alter the range of the VMA. */
+> > +	if (WARN_ON_ONCE(prev_start != curr_start || prev_end != curr_end))
+> > +		return -EINVAL;
+> > +
+> > +	was_maywrite = vma_flags_test(prev_flags, VMA_MAYWRITE_BIT);
+> > +	is_maywrite = vma_flags_test(curr_flags, VMA_MAYWRITE_BIT);
+> > +
+> > +	/* A driver may not make a previously unwritable mapping writable. */
+> > +	if (WARN_ON_ONCE(!was_maywrite && is_maywrite))
 >
-> IIUC, file is never assigned other than MMAP_STATE() and should not
-> change after mmap(). Could it be made const to prevent any change?
-> I assume mmap_state will not need to handle the nesting issue like
-> vm_area_desc, so file can be const.
+> Is it driver specific or generally applicable to all mmap(_preppare)
+> operations? Is the comment too specific?
+>
+> During my LLM quiz, making memfd write seals writable via a
+> hypothetically wrong shmem_mmap_prepare() implementation is an example
+> for this WARN_ON_ONCE. It is not driver related. Let me know if I get it
+> wrong.
 
-Oh I had assumed that this couldn't be const and I thought I'd checked that, but
-seems not, it can be :)
+Driver is taken to mean anything with an mmap or mmap_prepare hook, like a
+general term for that.
 
-Will fix that up for v4 thanks!
+If we start getting into calling it different if it's a file system or memfd or
+something then it becomes quite hard to talk about it.
+
+And yeah I hate that it's not a good name because driver makes you think
+something in drivers/* or an OOT one or something but the kernel makes it vague
+:)
+
+Naming is hard...
 
 >
-> > +	struct file *vm_file;	/* May be updated by mmap_prepare. */
-> >  	pgprot_t page_prot;
-> >
-> >  	/* User-defined fields, perhaps updated by .mmap_prepare(). */
-> > @@ -43,8 +44,6 @@ struct mmap_state {
-> >
-> >  	/* Determine if we can check KSM flags early in mmap() logic. */
-> >  	bool check_ksm_early :1;
-> > -	/* If .mmap_prepare changed the file, we don't need to pin. */
-> > -	bool file_doesnt_need_get :1;
-> >  };
-> >
-> >  #define MMAP_STATE(name, mm_, vmi_, addr_, len_, pgoff_, anon_pgoff_, vma_flags_, file_) \
-> > @@ -58,6 +57,7 @@ struct mmap_state {
-> >  		.pglen = PHYS_PFN(len_),				\
-> >  		.vma_flags = vma_flags_,				\
-> >  		.file = file_,						\
-> > +		.vm_file = file_,					\
-> >  		.page_prot = vma_flags_to_page_prot(vma_flags_),	\
-> >  	}
-> >
+> Otherwise, LGTM.
+>
+> Reviewed-by: Zi Yan <ziy@nvidia.com>
+
+Thanks!
+
 >
 >
+> --
 > Best Regards,
 > Yan, Zi
+>
 
 --
 Cheers, Lorenzo
