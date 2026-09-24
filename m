@@ -1,307 +1,120 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3702E428475
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2026 22:55:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A1F83BED2D
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2026 23:53:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790290514; cv=none; b=LVxJ5DqChnfqQ4aN62bFRhgI+7HyJIYPhBIZCY/XgM5hAdwwHWFKRHDUasAmqW4K0yl0ciJRGmFlVtqBNsNZvNibwOyXIuRji2S4qmTohqpgLEgPdSlEScFIbnmyIe6CQcOva9DtsW2zTEsnOdAExZlEfR8ZkjI5vZeb+RmITAI=
+	t=1790294004; cv=none; b=Kcpr8xhxZDXA0IIIcydR7frNMHMmozeuKm9cea7aImhPW+sRHaTKROv+tQhG5YhTmrR7XV0kb71fGf/bhTZZu/hxgrbJweC4fI27m9B36OveI3c9l9Nzbc24BEUHsxAtW99O1pJRcDRQlTshLSDfH02e+/6oOcYzGrPWlsCcTDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790290514; c=relaxed/simple;
-	bh=hbwVDdI6iDtkpowOkUZbMTrIM76Xx+JJFfXXrH9BRDQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JF9EzfLliaRmXPmh5Vpvbeu2ejgSNf0d5BCyk2D3aBylwW0pe/CUZV6SltcpQEAcMYNRwjGbOk8JHAd5CRBVHkQ8ww/eXP8mxjnfKNRGmlFltAa3T1TUqfs4ke/gABXi/GknFUwc4OJJKFVOBVRL9u/MAg+jXGdXJ0SiDTuD9c4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=f64uint5; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1790294004; c=relaxed/simple;
+	bh=ScpycZMlXIZiFNeKHxZq1vF26XZiCVrdlURUx5sxg1M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jX5EFgQJmzdHL56fyqXD7DZOEENyAzsbBIcNUqyZ7KS4rU8r1E3tkA4xdb5/u85KK2inEFNxoeeUX6OOiPJMkNpZnYinAOhiPxYMlgdkZhPD5MhxLQKE0kX6PrUabOKgflL8+of0iuv8tufzH5InQTfL0rcdbh9tZEi6iDz7iyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FgzGym2Z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="f64uint5"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4hrTgh5PfjzlfvpN;
-	Thu, 24 Sep 2026 22:55:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1790290506; x=1792882507; bh=2DiuO
-	FQBMvIEYaZmRNWf6KrMB9/UO3gNLJIcOpA9cz8=; b=f64uint5lCg4wnaFq1Tkc
-	AExPaN5pNSmPx0ROYvzJbGj8P0gZd45F2c1pF603lttIfqdkVsQVJrEG7S+GFWof
-	fVfn2neM3rWrGUK4UbhLx3qCp6IFmtKvoPR5ZYSrFA6UzxtcABTfkLzhV8eKDgSa
-	dM4ETnkCLwWPPHk6I4/o1QsfH6bGaAIWzti1lqLtQXMXeKKmKS0U44GwZl2bTF9R
-	EkgKcdKdM8HQJgI/mJzegTtckSMQrxuJkdpaIawDJlNQa0V2VZ76s5x1qNpn0/zl
-	U57TRfniftrSFD47G7oITLin0iFocIJIVCpvJNKg5/vanA329E1uxZOEMFEbx3oQ
-	A==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id yLM39gmCTgl0; Thu, 24 Sep 2026 22:55:06 +0000 (UTC)
-Received: from bvanassche.c.googlers.com.com (148.60.168.34.bc.googleusercontent.com [34.168.60.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4hrTgY1qbHzlfvpG;
-	Thu, 24 Sep 2026 22:55:04 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	John Garry <john.g.garry@oracle.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v2 6/7] scsi: scsi_debug: Improve lock context annotations
-Date: Thu, 24 Sep 2026 15:54:42 -0700
-Message-ID: <68c72eed87c663b4b99f63af71971c718166d3c8.1790290090.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-In-Reply-To: <cover.1790290089.git.bvanassche@acm.org>
-References: <cover.1790290089.git.bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FgzGym2Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFD0A1F000FF;
+	Thu, 24 Sep 2026 23:53:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790294002;
+	bh=qBwAlHvrFYvuUfB84NpTXgaYAJ5C2bQhX4x+rHaxsEA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=FgzGym2ZMS7w2uJBy5Y8jxgQLEtBm9VbFrEto9nTfKtW3DXXnOkyIttIuaWZi3kAY
+	 qDqSUNlod3lyMhqJiNoWcHkM/4z/DFLdDIogXe+B8EYigwbCORFyCl23//4sudX2vf
+	 rnDvYzPV5cm40DHnjACpfHlDMWnX0niDg4kfLLUbK9q8WtVWQuxAMTMDZHQK64p8id
+	 Xmkpgkruf3NlSUwPqwDiioZ64ZcwBCBhWMhL7QKJBzrMcA76kv8FAER7Ts8cFWkYg4
+	 KBOcTVfhTiesfVCgxomcKco+NfEp8bto5bRsU3UMRWx4g/kl6QD3Jm6rNANJay941d
+	 ld869GmL7Ry1A==
+Message-ID: <e543b623-6d31-47b9-a052-22dc00d2db42@kernel.org>
+Date: Fri, 25 Sep 2026 08:53:20 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 09/11] scsi: scsi_debug: Refuse a short WRITE ATOMIC
+ (16) before writing it
+To: Niklas Cassel <cassel@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@linux.dev>
+References: <20260924112127.3815255-13-cassel@kernel.org>
+ <20260924112127.3815255-22-cassel@kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260924112127.3815255-22-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Prepare the scsi_debug driver for enabling compiler-based lock context
-analysis:
+On 9/24/26 20:21, Niklas Cassel wrote:
+> A write whose data-out buffer is shorter than its transfer length is
+> short. An ordinary write transfers what the buffer holds and reports the
+> rest as a residual, but an atomic write cannot be short: SBC-6 r02
+> (T10/BSR INCITS 587), 4.28.1, requires each atomic write operation to
+> write either all of its data or none of it, and 4.28.2 requires one that
+> cannot complete to leave the LBAs that it specifies unaltered.
+> 
+> resp_atomic_write() does fail a short WRITE ATOMIC (16) with DID_ERROR,
+> but only after do_device_access() has returned, and do_device_access()
+> copies one logical block at a time, so by then the blocks that the
+> buffer did hold have been written. An eight block WRITE ATOMIC (16) with
+> a buffer of four fails having overwritten the first four.
+> 
+> Check the length of the buffer before writing anything, and fail the
+> command with the same DID_ERROR as before.
+> 
+> Assisted-by: LLM
+> Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+> Tested with:
+> 
+>   modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=128 \
+>       atomic_wr=1 lbpu=1
+> 
+> issuing a WRITE ATOMIC (16) of eight blocks through SG_IO with a buffer
+> of four blocks of 0xaa. It fails with DID_ERROR before and after this
+> patch, but before it the first four blocks read back as 0xaa afterwards,
+> and after it all eight read back as they were. A WRITE ATOMIC (16) with
+> a full buffer writes all eight blocks, as before.
+> 
+> New in v6.
+> ---
+>  drivers/scsi/scsi_debug.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index af1b27b48867..3b112ad58489 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -6242,6 +6242,10 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+>  		}
+>  	}
+>  
+> +	/* A failed atomic write must not have written any of its data */
 
-- Annotate the lock and unlock helper functions with __acquires,
-  __releases, __acquires_shared, and __releases_shared.
+At this point, the write was not yet done, right? So this comment seems
+incorrect, and does not really match the commit message explanation. What about
+simply:
 
-- Remove sparse __acquire() and __release() calls from the helper
-  functions since these mislead the lock context analyzer.
+	/* Short atomic writes are not allowed. */
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_debug.c | 76 ++++++++++++++++++++-------------------
- 1 file changed, 40 insertions(+), 36 deletions(-)
+With that fixed,
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 229f35262382..4329a0c4e137 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -4042,42 +4042,43 @@ static inline struct sdeb_store_info *devip2sip(s=
-truct sdebug_dev_info *devip,
-=20
- static inline void
- sdeb_read_lock(rwlock_t *lock)
-+	__acquires_shared(lock)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock)
--		__acquire(lock);
--	else
-+	if (!sdebug_no_rwlock)
- 		read_lock(lock);
- }
-=20
- static inline void
- sdeb_read_unlock(rwlock_t *lock)
-+	__releases_shared(lock)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock)
--		__release(lock);
--	else
-+	if (!sdebug_no_rwlock)
- 		read_unlock(lock);
- }
-=20
- static inline void
- sdeb_write_lock(rwlock_t *lock)
-+	__acquires(lock)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock)
--		__acquire(lock);
--	else
-+	if (!sdebug_no_rwlock)
- 		write_lock(lock);
- }
-=20
- static inline void
- sdeb_write_unlock(rwlock_t *lock)
-+	__releases(lock)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock)
--		__release(lock);
--	else
-+	if (!sdebug_no_rwlock)
- 		write_unlock(lock);
- }
-=20
- static inline void
- sdeb_data_read_lock(struct sdeb_store_info *sip)
-+	__acquires_shared(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4086,6 +4087,7 @@ sdeb_data_read_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_read_unlock(struct sdeb_store_info *sip)
-+	__releases_shared(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4094,6 +4096,7 @@ sdeb_data_read_unlock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_write_lock(struct sdeb_store_info *sip)
-+	__acquires(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4102,6 +4105,7 @@ sdeb_data_write_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_write_unlock(struct sdeb_store_info *sip)
-+	__releases(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4110,6 +4114,7 @@ sdeb_data_write_unlock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_sector_read_lock(struct sdeb_store_info *sip)
-+	__acquires_shared(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4118,6 +4123,7 @@ sdeb_data_sector_read_lock(struct sdeb_store_info *=
-sip)
-=20
- static inline void
- sdeb_data_sector_read_unlock(struct sdeb_store_info *sip)
-+	__releases_shared(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4126,6 +4132,7 @@ sdeb_data_sector_read_unlock(struct sdeb_store_info=
- *sip)
-=20
- static inline void
- sdeb_data_sector_write_lock(struct sdeb_store_info *sip)
-+	__acquires(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4134,6 +4141,7 @@ sdeb_data_sector_write_lock(struct sdeb_store_info =
-*sip)
-=20
- static inline void
- sdeb_data_sector_write_unlock(struct sdeb_store_info *sip)
-+	__releases(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4155,6 +4163,8 @@ sdeb_data_sector_write_unlock(struct sdeb_store_inf=
-o *sip)
-=20
- static inline void
- sdeb_data_lock(struct sdeb_store_info *sip, bool atomic)
-+	__acquires(&sip->macc_data_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
- 	if (atomic)
- 		sdeb_data_write_lock(sip);
-@@ -4164,6 +4174,8 @@ sdeb_data_lock(struct sdeb_store_info *sip, bool at=
-omic)
-=20
- static inline void
- sdeb_data_unlock(struct sdeb_store_info *sip, bool atomic)
-+	__releases(&sip->macc_data_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
- 	if (atomic)
- 		sdeb_data_write_unlock(sip);
-@@ -4174,6 +4186,8 @@ sdeb_data_unlock(struct sdeb_store_info *sip, bool =
-atomic)
- /* Allow many reads but only 1x write per sector */
- static inline void
- sdeb_data_sector_lock(struct sdeb_store_info *sip, bool do_write)
-+	__acquires(&sip->macc_sector_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
- 	if (do_write)
- 		sdeb_data_sector_write_lock(sip);
-@@ -4183,6 +4197,8 @@ sdeb_data_sector_lock(struct sdeb_store_info *sip, =
-bool do_write)
-=20
- static inline void
- sdeb_data_sector_unlock(struct sdeb_store_info *sip, bool do_write)
-+	__releases(&sip->macc_sector_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
- 	if (do_write)
- 		sdeb_data_sector_write_unlock(sip);
-@@ -4192,13 +4208,10 @@ sdeb_data_sector_unlock(struct sdeb_store_info *s=
-ip, bool do_write)
-=20
- static inline void
- sdeb_meta_read_lock(struct sdeb_store_info *sip)
-+	__acquires_shared(&sip->macc_meta_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__acquire(&sip->macc_meta_lck);
--		else
--			__acquire(&sdeb_fake_rw_lck);
--	} else {
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			read_lock(&sip->macc_meta_lck);
- 		else
-@@ -4208,13 +4221,10 @@ sdeb_meta_read_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_meta_read_unlock(struct sdeb_store_info *sip)
-+	__releases_shared(&sip->macc_meta_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__release(&sip->macc_meta_lck);
--		else
--			__release(&sdeb_fake_rw_lck);
--	} else {
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			read_unlock(&sip->macc_meta_lck);
- 		else
-@@ -4224,13 +4234,10 @@ sdeb_meta_read_unlock(struct sdeb_store_info *sip=
-)
-=20
- static inline void
- sdeb_meta_write_lock(struct sdeb_store_info *sip)
-+	__acquires(&sip->macc_meta_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__acquire(&sip->macc_meta_lck);
--		else
--			__acquire(&sdeb_fake_rw_lck);
--	} else {
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			write_lock(&sip->macc_meta_lck);
- 		else
-@@ -4240,13 +4247,10 @@ sdeb_meta_write_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_meta_write_unlock(struct sdeb_store_info *sip)
-+	__releases(&sip->macc_meta_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__release(&sip->macc_meta_lck);
--		else
--			__release(&sdeb_fake_rw_lck);
--	} else {
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			write_unlock(&sip->macc_meta_lck);
- 		else
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
+> +	if (scsi_bufflen(scp) < len * sdebug_sector_size)
+> +		return DID_ERROR << 16;
+> +
+>  	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
+>  	if (unlikely(ret == -1))
+>  		return DID_ERROR << 16;
+
+
+-- 
+Damien Le Moal
+Western Digital Research
