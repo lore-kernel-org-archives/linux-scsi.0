@@ -1,120 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A1F83BED2D
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2026 23:53:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDA643C4B8E;
+	Fri, 25 Sep 2026 04:48:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790294004; cv=none; b=Kcpr8xhxZDXA0IIIcydR7frNMHMmozeuKm9cea7aImhPW+sRHaTKROv+tQhG5YhTmrR7XV0kb71fGf/bhTZZu/hxgrbJweC4fI27m9B36OveI3c9l9Nzbc24BEUHsxAtW99O1pJRcDRQlTshLSDfH02e+/6oOcYzGrPWlsCcTDg=
+	t=1790311710; cv=none; b=Usix2wEYL3BlRt2iRf2NUZ1cDt96wcHrBzbWJSMn4zbYzzo+/RDF9yaLwYOZYtf+icflWKmptbxkNFJlw1Gc1dg32pKzkVmeqoFC++Kz32y++DGWtBbLhiRIpb45xNGsc+6UGlXB/ldYor+AveWQXYU/zaZ5GLiimG1KEkmXFn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790294004; c=relaxed/simple;
-	bh=ScpycZMlXIZiFNeKHxZq1vF26XZiCVrdlURUx5sxg1M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jX5EFgQJmzdHL56fyqXD7DZOEENyAzsbBIcNUqyZ7KS4rU8r1E3tkA4xdb5/u85KK2inEFNxoeeUX6OOiPJMkNpZnYinAOhiPxYMlgdkZhPD5MhxLQKE0kX6PrUabOKgflL8+of0iuv8tufzH5InQTfL0rcdbh9tZEi6iDz7iyk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FgzGym2Z; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790311710; c=relaxed/simple;
+	bh=uyvnMpQAHJaBQ6DkGdidSoyZQ2PA/9DGwRg0DwZSma8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=l+lCK2FN7Np2+8iwDGHX0ohn1j9ZL72onYVKzUASw46BNLkyLmnTAnYhZnbILQKCiXg4p2ednTnPnAV0MUWbgvOYCH02EZPe2TtzJNx1/g03RO/d528RYqRk4bTEdMlI5tAzFvSXgXZJH/MDl9fcIqZLE/khYYc/yJBQY1INcxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=hIVmE1VC; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FgzGym2Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFD0A1F000FF;
-	Thu, 24 Sep 2026 23:53:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790294002;
-	bh=qBwAlHvrFYvuUfB84NpTXgaYAJ5C2bQhX4x+rHaxsEA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=FgzGym2ZMS7w2uJBy5Y8jxgQLEtBm9VbFrEto9nTfKtW3DXXnOkyIttIuaWZi3kAY
-	 qDqSUNlod3lyMhqJiNoWcHkM/4z/DFLdDIogXe+B8EYigwbCORFyCl23//4sudX2vf
-	 rnDvYzPV5cm40DHnjACpfHlDMWnX0niDg4kfLLUbK9q8WtVWQuxAMTMDZHQK64p8id
-	 Xmkpgkruf3NlSUwPqwDiioZ64ZcwBCBhWMhL7QKJBzrMcA76kv8FAER7Ts8cFWkYg4
-	 KBOcTVfhTiesfVCgxomcKco+NfEp8bto5bRsU3UMRWx4g/kl6QD3Jm6rNANJay941d
-	 ld869GmL7Ry1A==
-Message-ID: <e543b623-6d31-47b9-a052-22dc00d2db42@kernel.org>
-Date: Fri, 25 Sep 2026 08:53:20 +0900
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="hIVmE1VC"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68P4aKdV061566;
+	Fri, 25 Sep 2026 04:48:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=pp1; bh=7LHvZ+fwN6je3uxuu
+	7gw0xpGsCqTv27Dq/zDhA/7oFo=; b=hIVmE1VCCyYM2Iggt+Xwce6I5MML/tMcZ
+	9v3T53w+dCYorPlg+PTs8RwASr48Bx0YwPi4aKFUFSYzR+vnx+THonq+kOdq8RiH
+	asO5VjDhYMdxuwoBfuSL9S3sZqh7nLFQScxCetH3LPZpHz7nHikgzDGZ/RIvumaM
+	8SyPNSwjuCSHnIVzgBhP6MVB5mU752RA0pEsLKj/9Qbivlxw+BuIgtUEYZA3cTLK
+	U6OWwl47lh+qzCvI6KldGrftE6XKVjUGPgGOMDswEvkXzen2eae+ydQILf0q4YtN
+	hWOECk2i8rmPvpJ2oTlTwy4PjcPIUncfZSSmk+QLbN9oOTCnNDTUg==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gskgsn45e-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 25 Sep 2026 04:48:23 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68P4lXlC3244919;
+	Fri, 25 Sep 2026 04:48:22 GMT
+Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4gvbu90xq0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 25 Sep 2026 04:48:22 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+	by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68P4mLWg25297484
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 25 Sep 2026 04:48:21 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 00C2C58051;
+	Fri, 25 Sep 2026 04:48:21 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0AAA45805A;
+	Fri, 25 Sep 2026 04:48:20 +0000 (GMT)
+Received: from li-4c4c4544-0054-3910-8039-c3c04f423534.ibm.com.com (unknown [9.61.142.241])
+	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 25 Sep 2026 04:48:19 +0000 (GMT)
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+To: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org, brking@linux.ibm.com,
+        davemarq@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH v11 01/11] scsi: ibmvfc: fix IRQ leak and guard deregister on channel reg failure
+Date: Thu, 24 Sep 2026 21:48:50 -0700
+Message-ID: <20260925044900.414340-2-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260925044900.414340-1-tyreld@linux.ibm.com>
+References: <20260925044900.414340-1-tyreld@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 09/11] scsi: scsi_debug: Refuse a short WRITE ATOMIC
- (16) before writing it
-To: Niklas Cassel <cassel@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@linux.dev>
-References: <20260924112127.3815255-13-cassel@kernel.org>
- <20260924112127.3815255-22-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260924112127.3815255-22-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=V/XoQuni c=1 sm=1 tr=0 ts=6ab5fd17 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8 a=acainBHvso6FeXtkDgYA:9
+X-Proofpoint-ORIG-GUID: Ve6OsW7uUbWBUmRZB8EQ4whU-6oHGzyJ
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI1MDAxOCBTYWx0ZWRfX7RRWCHuJKhv+
+ XalXzbjwtlx3swoFPFM8lj/XcYFwj1YyZ9mJREZkrLzkXo0unZ844VfL/trr5i0p2Mnn+u1sdIm
+ hxp4FkbqdbMIYHhtPqxyQWSz8AVZZs7yTejDbait82LeaPhVbXuhGfUqIPICVmoFeykxI3Mcov8
+ MtTVoCGDF8WFvlVyufhrylXZd0kUd6RbX3RdXwd3On73IafKcpjUQG2yOx/kQvk587nSHTZz+KJ
+ jfEMeRjZ3H/TzK3uD/Ndk+Wz0v/ADNE3hVfJQpfin3mQPtwBbDL+tHibohvhX3zVHNMgWs3XpNl
+ Am7wfzp7zrVxseVGzMiC/lvCtFUyHdHkq1NgGgm/BsRiXPHxvPE8ETWQrpAVvpks//vXliqnscI
+ /XsdgV1YFoB2qhRu1wOQDRcw7wMafvIF8c26hOm0JM7gSBcArKAHuxm49XgG1XdWCy3Vu7/pFhX
+ hS+JHjfGZnvZo4yD5EQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI1MDAxOCBTYWx0ZWRfX+kR0OcNrxatm
+ 0PwzbWd/IkfXbRA8j3I1mvwB8Rth2LF1FQ259I8GUKMq0XzB7qOi7M+LJA1uz0eqxjkEu1sA9il
+ 6ZRYNfIlVoepzE7mfn2Q90nJLnCzmLE=
+X-Proofpoint-GUID: Ve6OsW7uUbWBUmRZB8EQ4whU-6oHGzyJ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-25_02,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 spamscore=0 malwarescore=0 clxscore=1015 phishscore=0
+ bulkscore=0 adultscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609250018
 
-On 9/24/26 20:21, Niklas Cassel wrote:
-> A write whose data-out buffer is shorter than its transfer length is
-> short. An ordinary write transfers what the buffer holds and reports the
-> rest as a residual, but an atomic write cannot be short: SBC-6 r02
-> (T10/BSR INCITS 587), 4.28.1, requires each atomic write operation to
-> write either all of its data or none of it, and 4.28.2 requires one that
-> cannot complete to leave the LBAs that it specifies unaltered.
-> 
-> resp_atomic_write() does fail a short WRITE ATOMIC (16) with DID_ERROR,
-> but only after do_device_access() has returned, and do_device_access()
-> copies one logical block at a time, so by then the blocks that the
-> buffer did hold have been written. An eight block WRITE ATOMIC (16) with
-> a buffer of four fails having overwritten the first four.
-> 
-> Check the length of the buffer before writing anything, and fail the
-> command with the same DID_ERROR as before.
-> 
-> Assisted-by: LLM
-> Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
-> Tested with:
-> 
->   modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=128 \
->       atomic_wr=1 lbpu=1
-> 
-> issuing a WRITE ATOMIC (16) of eight blocks through SG_IO with a buffer
-> of four blocks of 0xaa. It fails with DID_ERROR before and after this
-> patch, but before it the first four blocks read back as 0xaa afterwards,
-> and after it all eight read back as they were. A WRITE ATOMIC (16) with
-> a full buffer writes all eight blocks, as before.
-> 
-> New in v6.
-> ---
->  drivers/scsi/scsi_debug.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index af1b27b48867..3b112ad58489 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -6242,6 +6242,10 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
->  		}
->  	}
->  
-> +	/* A failed atomic write must not have written any of its data */
+From: Dave Marquardt <davemarq@linux.ibm.com>
 
-At this point, the write was not yet done, right? So this comment seems
-incorrect, and does not really match the commit message explanation. What about
-simply:
+If request_irq() fails during ibmvfc_register_channel(), the error path
+disposes of the IRQ mapping via irq_dispose_mapping() but leaves scrq->irq
+populated with the stale virq number. A subsequent call to
+ibmvfc_deregister_channel() during teardown or reset cleanup then
+unconditionally invokes free_irq() and irq_dispose_mapping() on the stale
+IRQ descriptor, triggering kernel warnings.
 
-	/* Short atomic writes are not allowed. */
+Fix this by:
+1. Explicitly setting scrq->irq to 0 after irq_dispose_mapping() in the
+   ibmvfc_register_channel() error path.
+2. Guarding free_irq() and irq_dispose_mapping() with a check for scrq->irq
+   in ibmvfc_deregister_channel() so unmapped or unregistered queues are
+   safely skipped.
 
-With that fixed,
+Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-> +	if (scsi_bufflen(scp) < len * sdebug_sector_size)
-> +		return DID_ERROR << 16;
-> +
->  	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
->  	if (unlikely(ret == -1))
->  		return DID_ERROR << 16;
-
-
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+index 3534ac45e9b8..c4dc48ef1ec8 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+@@ -6436,6 +6436,7 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+ 	if (rc) {
+ 		dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
+ 		irq_dispose_mapping(scrq->irq);
++		scrq->irq = 0;
+ 		goto irq_failed;
+ 	}
+ 
+@@ -6464,9 +6465,11 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+ 
+ 	ENTER;
+ 
+-	free_irq(scrq->irq, scrq);
+-	irq_dispose_mapping(scrq->irq);
+-	scrq->irq = 0;
++	if (scrq->irq) {
++		free_irq(scrq->irq, scrq);
++		irq_dispose_mapping(scrq->irq);
++		scrq->irq = 0;
++	}
+ 
+ 	do {
+ 		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
 -- 
-Damien Le Moal
-Western Digital Research
+2.55.0
+
