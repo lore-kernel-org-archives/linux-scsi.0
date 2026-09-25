@@ -1,170 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pz2-f39.google.com (mail-pz2-f39.google.com [74.125.228.39])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0121E3DA7E4;
-	Fri, 25 Sep 2026 09:55:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8377E470421
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 12:22:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790330134; cv=none; b=E+5LTsWscHyD+Pq9GzS/Gi5cprSe8Ujqoy6Rj9E30vHdzk0MWfnhOpIJkRTuMvZP3GiS1tVSzh4jvRVI6bx0GIzazO+loQBxryLG6VQAtbKw9ssrNVBmp2K0px7PTNbrrZXsaYrtNkJK6GuaW0lSeu+SLVi7HRMlbD8a6opCPBQ=
+	t=1790338937; cv=none; b=Tw7P5NyLmdrq9zaiiGMZNGHXsTOJQ13jZXbMGIiC400p73pEM4Flg3z7w3T2DE+Q/SO/ByjYRB5eB94AalznUkvuQoT7U34dvN/+egSCSugMxTMUKRamAKSCfReEnZ7kiS36L2+DFT1P7RrH+p1k6xH5TOU9kK9fmv+W6aTML/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790330134; c=relaxed/simple;
-	bh=bbikqsSea9vW+pe3Cgq2a9QL95dQasb87hlFKxy08F8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dkV5/EYkCBQn5pyz+cwsaZfrThofldme4FpFbE6QHNrboKZdxAcFm6jzBRqRdGyd7+GP6QhT6/5EGl46uexq9HfCZRa6bzDCITrX9l9/qVru9cxvoYfj1Df6j8SHtB+oZBE0PE7Erij3fXOAXQezL4GvSfw0VAFA0Ph9kP6JW2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HxJQcEvn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790338937; c=relaxed/simple;
+	bh=s/PvtkNVZ4YIzTo0qHBPvGUkdcNJ0VSkXZVSnkH2sMo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=qafA+Az44Hi4smP70ZJ75f07J7qrbSQuFbp1tTjki4rzvrVIeRgDczjOvKVaINNtnjwh9J+3vv+3TCq9L+SSVhPH+BqUn9PpLA1bpj6sb199GPg7O3ZhKADKiFDllSFiCQXSNSdsBhNjFjMTvhC59j7OWRTjy5DNdqpu30m+mcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nz5ctX+J; arc=none smtp.client-ip=74.125.228.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HxJQcEvn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C76A1F000FF;
-	Fri, 25 Sep 2026 09:55:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790330132;
-	bh=wHcL5jPNS47s6Ul8XnEo1uFsA8Y0TKv8vyd/Iuc4jW8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=HxJQcEvnuhUOHH3Z6mzmWye1CE1PjDtpVrPBVFbcNDGyG6yBkjOShg1wXTRxmQKyc
-	 TCJMHEkTxA8Sxw4HyLR7LdXQhRJb+9udY3QgV8ET7cug6AZBPLxgIFx/TdmYGQ8bVU
-	 ptEgwP56FVQ2pJrDbYSWaP8xyRORQKPPWrshPWAAjxwWnAwT2YIoJgfyo9wv4EO7c3
-	 7ozDd+omlnSWJmwSq3s1563JOKXMeNxa13jAxu5Ee20miDdmPGzcEIeZWGgnBBy5y6
-	 eWzAFHQy56s+qgvvgTG8xUGQUmf5tQzyaZcP9CgdenUpWl9R2UycwCgDON1sf75KvU
-	 KkanjhxFaUGcw==
-Date: Fri, 25 Sep 2026 10:55:01 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Zi Yan <ziy@nvidia.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, 
-	Barry Song <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, 
-	Usama Arif <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, 
-	Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>, Jaya Kumar <jayalk@intworks.biz>, 
-	Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
-	John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
-	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
-	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
-	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 05/40] mm/vma: ensure mmap_prepare doesn't set actions
- on a mergeable vma
-Message-ID: <arZE4aXD0yIbXVFU@gremlin>
-References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-5-4583d8a23bca@kernel.org>
- <DLNSM8R8JS9A.1850RMXAG9NSR@nvidia.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nz5ctX+J"
+Received: by mail-pz2-f39.google.com with SMTP id 41be03b00d2f7-cc78d59bb02so165413a12.1
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 05:22:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790338936; x=1790943736; darn=vger.kernel.org;
+        h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=uwHCeFBiFb/S6cPK4uw5VdO3mz9Lko0oibblDJPiB/Y=;
+        b=nz5ctX+J3OVKx9MQBql1lE5Qn2CiS7jpv2Q0gsc2lC8rBtTZv8dmYJbXctRn0iZfW8
+         yAGJXiJccGPyrSUenWrhoyhh2RGMNpaTfxwBU24+/LZvQnCFQYLw7ppah3SHy1zc7Ygm
+         tLxPEBtplx7u3yn/+WcTu6zsNAfrjp8cKEqJ/srcsijmfAbtXOxThmzuSFxQH1oK0yyx
+         hEBJ1ex1u+rcKTwQ+gz7fR8ltZJYXJMGOT1XISNV53BcNyylkbQVMiS8UlKdxjY6IZPf
+         VJ+U6Rvp8pgbtfHlj4jxlQVF4s7WTORAodC1XpAlgZ1wkI1ni7P7zZIe1BJ2fxuIuru8
+         Z5xQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790338936; x=1790943736;
+        h=references:in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=uwHCeFBiFb/S6cPK4uw5VdO3mz9Lko0oibblDJPiB/Y=;
+        b=wL90PwRN7sf1rb9a9mjOgq6DbFnLjzZytsQmRJ8kzPqdi6cpLezTlRbQ2x+aAOLMYB
+         1oz/bvEcggK9KRfH4BdByZOB2LThmMEk9AnRujAP8I4M30Omg0DuQ0ciquk4+8Ce3lRl
+         OLj+9zjog+3MHdb/bJdCVg0MCFhfbF7b1Znk8VHDBJ+Yq4BdmXFhe25DifgLYef+nzNU
+         Hd3ZNkrCMiVsXw6Mhr620+C4dtaAm3yV1SE8jU1ikmgmxavrEufVWq8OFuOSgIiH+zVP
+         s0PVlQXj5UEI3/hd/03lo437kpCPK9t0xa7umq/ILCrjghdMHnhV5YK5tJvDolWVtcJM
+         louQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwwGxAwqn3PHIdRBt+lMHZwCaQKP6ulr8HySq8pVOjFRPt6vbYcHgs4w4aCtdMMiqKXtUCYFrEz6cYb@vger.kernel.org
+X-Gm-Message-State: AFuF++mJfyikguCCVruvqYOhywN/tmauoyXSioVIjt5TX3YsN0CeOC4e
+	FKSIVs82HqwdY/rh5Fm4Y7Pz3AYTK19MHnAkGyYgNDCWnBJyJ4eLFb/x
+X-Gm-Gg: AYBFou16jP7UL5lcNsaWXpdHR/r0rTB6s4dwgEoO58sK+60nViFEV1jnqVz1kigeeQ7
+	82i66fgvjBBQD3MRnvhCZ7WGKxL75s1Ljbfcyga5eTLQgxnVx6EzAjWeZE2SiSYhrpZo9pYYhtf
+	OmOn8cWgxQ+kq9HVoRq83qq+Rqd0fVjKYm+DQJRLvablpOOlrQa3yvDl7XTPIhq/Vz3167KRGRm
+	PR/88a6kV9MMX6RkY7ROUioVHOEZVA6LafdLD5ZOKp+yqYEpYLeFJX93L1GX67FrxTjR1vlLNFm
+	3euTPVOigyr5o+yJTG4JOQFfrbdTRZckEU0FKrApf5+VSDUocllPbVGUzhhnsCuf/upDX0fkG+6
+	0MBHW+re1z/VqOK5TCt4V+E+FZyaI1JwD5CCqAhziy7ZtiYN5/C5aeeHSLY6ARlZAftz7x7Ir1Q
+	neNF4GBSQmrHgFgtPRbkWncsWEWkstdgLeFYuiMFkEWWfmV+NcLcJ+TXbY2Zw9Xi84YIh3l9bDN
+	a5iTpIn
+X-Received: by 2002:a17:90a:38e4:b0:3a0:b223:6830 with SMTP id 98e67ed59e1d1-3a0b2236c1dmr1533648a91.7.1790338931135;
+        Fri, 25 Sep 2026 05:22:11 -0700 (PDT)
+Received: from [127.0.1.1] ([240e:b8f:977f:f400:ec2a:b15e:fef8:70a])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a0b9feddd0sm1229303a91.2.2026.09.25.05.22.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Sep 2026 05:22:10 -0700 (PDT)
+From: Liang Haowen <nbg2974@gmail.com>
+To: Marco Scardovi <scardracs@disroot.org>,
+ Denis Benato <denis.benato@linux.dev>,
+ Ilpo =?utf-8?q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: linux-leds@vger.kernel.org, Lee Jones <lee@kernel.org>,
+ Pavel Machek <pavel@kernel.org>, Martin K. Petersen <mkp@kernel.org>,
+ linux-scsi@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Armin Wolf <W_Armin@gmx.de>,
+ Hans de Goede <hansg@kernel.org>, Derek J. Clark <derekjohn.clark@gmail.com>,
+ Marco Scardovi <scardracs@disroot.org>, Ahmed Yaseen <yaseen@ghoul.dev>
+Subject: Re: [RFC v7 0/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED driver
+ for ROG NVMe enclosures
+Date: Fri, 25 Sep 2026 12:22:03 -0000
+Message-Id: <202609251958.ReplyMarco.lhw@gmail.com>
+In-Reply-To: <UuqOxFagT_OBL0l5ZYtfKg@disroot.org>
+References: <UuqOxFagT_OBL0l5ZYtfKg@disroot.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DLNSM8R8JS9A.1850RMXAG9NSR@nvidia.com>
 
-On Thu, Sep 24, 2026 at 03:28:10PM -0400, Zi Yan wrote:
-> On Thu Sep 17, 2026 at 12:22 PM EDT, Lorenzo Stoakes (ARM) wrote:
-> > When a user requests an mmap_action be performed in mmap_prepare, this
-> > involves populating the VMA range with data.
-> >
-> > However, if the VMA is mergeable, it might then mistakenly be merged with
-> > another VMA without having populated the range.
-> >
-> > Every mmap action currently available sets VMA flags such that the VMA
-> > cannot be merged.
-> >
-> > However, to ensure that no future mmap action falls foul of this, assert
-> > that this is the case upon mmap_prepare validation.
-> >
-> > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-> > ---
-> >  mm/vma.c | 9 +++++++++
-> >  1 file changed, 9 insertions(+)
-> >
-> > diff --git a/mm/vma.c b/mm/vma.c
-> > index d6ed10cefc8f..62f2ce1ad5a1 100644
-> > --- a/mm/vma.c
-> > +++ b/mm/vma.c
-> > @@ -2809,6 +2809,15 @@ static int mmap_validate(unsigned long prev_start, unsigned long prev_end,
-> >  int mmap_prepare_validate(const struct vm_area_desc *prev_desc,
-> >  			  const struct vm_area_desc *desc)
-> >  {
-> > +	/*
-> > +	 * It is not valid to execute mmap actions for VMAs which can be merged,
->
-> Is it better to say "for VMAs ... after mmap_action_prepare()"? When I
-> first read this, I wonder why the check is done after
-> mmap_action_prepare(), which does some work based on action.type. Then,
-> I realize mmap_action_prepare() changes desc->vma_flags and affect its
-> mergeablitiy.
+Hi Marco,
 
-Ack, good point will update!
+I went through your SCSI version in PR #17 against what the hardware
+told us while developing this series. The class layout fits the
+device well: the ENE mode register is the hardware effect offload,
+and direct streaming as table write + apply-without-save matches
+what the controller does.
 
->
-> > +	 * as any such merge would leave portions of the mapping incorrectly
-> > +	 * unmapped.
-> > +	 */
-> > +	if (vma_flags_can_merge(&desc->vma_flags) &&
-> > +	    WARN_ON_ONCE(desc->action.type != MMAP_NOTHING))
-> > +		return -EINVAL;
-> > +
-> >  	return mmap_validate(prev_desc->start, prev_desc->end,
-> >  			     desc->start, desc->end,
-> >  			     &prev_desc->vma_flags, &desc->vma_flags);
->
->
-> Otherwise, LGTM.
->
-> Reviewed-by: Zi Yan <ziy@nvidia.com>
+A few things our hardware testing can add:
 
-Thanks!
+- ene_write() maps the caller's buffer with blk_rq_map_kern(); your
+  call sites pass stack buffers (colors[12] in direct_write). That
+  is the VMAP_STACK DMA issue Lee caught in my v8: the payload needs
+  a DMA-safe buffer in the device struct.
 
->
->
-> --
-> Best Regards,
-> Yan, Zi
->
+- asus_aura_brightness_set_blocking() will never run on the current
+  LED core: brightness_set_blocking is superseded by the fast-path
+  brightness_set there, verified with a test module on 7.2. The
+  callback to use is brightness_set plus deferred work.
 
---
-Cheers, Lorenzo
+- The firmware effect numbers from register probing here are
+  1 Static, 3 Strobe, 4 the rainbow flow (all verified on device);
+  2 looks like Breathing but was not confirmed. Your mapping sends
+  Spectrum Cycle to 4 and Rainbow to 5: on this enclosure 4 is the
+  rainbow flow, so those two need on-device confirmation, and
+  mode 0 for OFF is plausible but unverified.
+
+- If the class core serializes the ops with led_access, sysfs ops
+  cannot race each other, but trigger events reach the LED core
+  without that lock, so a trigger-driven brightness update can
+  still interleave with an ops sequence. The device ignores a
+  sequence that loses its leading MODE write; one work item owning
+  the sequence, like in this series, closes that too.
+
+The 12-byte block write to both colour tables in one go is verified
+working, so your direct_write shape is fine once the buffer is
+DMA-safe.
+
+Whatever survives your rebase, the verified SCSI core in this series
+is yours to reuse; happy to rebase my side onto the class once it
+settles.
