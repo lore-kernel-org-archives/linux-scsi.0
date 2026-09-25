@@ -1,242 +1,329 @@
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013019.outbound.protection.outlook.com [40.93.196.19])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EA30361667;
-	Fri, 25 Sep 2026 21:02:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.19
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790370127; cv=fail; b=C9yaH2ia3xHSB/mLXlbqXD06lrmAi6sLHmJdHI9eaXDUXdVDj0ZxBcqSF8EgEEloq2nlydZEkHHlTKsmOHw3HF0SUBGr8zpG31mQZ+lceQ2nuYLT2A8K4c8P3Mc49kTf1SuYR8cUBjjDRHfS4UcxFk/8cIeqEQcyY8cYFNeuSpg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790370127; c=relaxed/simple;
-	bh=SUMlbruU9xfNrYZ36GVGpU1Ez/0NmVG8drGcjKXKPZw=;
-	h=Content-Type:Date:Message-Id:Subject:Cc:To:From:References:
-	 In-Reply-To:MIME-Version; b=WOEA3nQ1P6Z0M+CknV+vwV+gGV5DXJZAf7ZPvAHsU/zC6ZD1VOReerISUqJqSdfEV9poXs5RF1nC7cGjqd/vbaFfEcgrP79L8SiQAH4vTFJMGGx5l8gmB8mRrVfTBy4C4BOdnUs0XzsyI2u30ntzyh00/oLi/9o4MTTgSmVD/Do=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=qU6hRrBN; arc=fail smtp.client-ip=40.93.196.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FB094FC8ED;
+	Fri, 25 Sep 2026 21:22:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790371376; cv=none; b=WIj6MRtafjcD8v598VEuOSALxzVUVaKiQlCqWDbUyGmvPy93xO3cxYRZgNFYO6rskmrlcWAeM/V/zyoHNZGZ85FtYSzWw///8B94Te/P9EIrbbi9vBuOALaO7UoEnak1ZSu3CFFEtD25l4z0ZaFRcgOli9U+bGAl3K4MHLs6aV4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790371376; c=relaxed/simple;
+	bh=1jjx419xuWeOE0eWSXfxs94Ts7PrWqRp59TJUaHT/io=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=Ude50+2KPW1vewjCKBNIJQcJZ4XWduXtmiQ52cxmMbWtB/PNoQRV/Z30sAn+FGBmmrFzwqACVHAbU6nfDi4sewSzNc42clDf7KRb44AJml481XK6JgaMIljnJWNn+MRPukSxdp7geD5gdG3XKwUKP2zrf9hDIkOuQw61ke4xBkw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=NyDkqU69; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="qU6hRrBN"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=BSN1YvUeJz8JZ7+rYvwHguK61Z5DVBjm4pJakGf8J39leaBgGauyVS5hf1XEACCglSuQ8Djk4CEJUvFuaIDQmSmV355GmZZqlhmJJmMoXvPgid1pK5183whysIjaH+3Jta+LFceqdMH4thLAquh1vbn/a4GuojkSbmSf3C0i3SG70WSDdgdGNfcv3X3jrnijLR8zHDs/tdSiMDhxajbGy/pWpEUZVgmxUHdL2oLoa3o5ZRCiqELLNG2GiMTgVV3kh5dvfeU6W33GrNpRQe4AgLjAiZhJfo+cep0qhVsluxZZC8QKDlw56YsBDe+wjnNR5/636huWK3Tv/g4YcwQUpg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jcqA/8ravJEVTJI6stmpYCqH+repWWqzPh8/7ZJwres=;
- b=uzINNDfH2f/WBhyUywzk9PbTOY/65E23ZtWYxT7fDi+khiP+CVwB606A/+zF2Q84862akhCbmjRToA6Vv2cZLJJb7CnrygibgY28jPYeh35h115r7PNNNCJ+SB9xdmzxQQZsgYq1MlQ3iwgvrBQEEST19Yz97SPLEMVb2GXD5m3L1RbxxAl7iQgPjJNMXgnsOlqVeByY/TcfO5XIyFRO9T/4vAkHHVhQWk43L9kP5WezVqawRQYEhBlj5ZIWwJb+VDAYinuW0FBtTuap/EhitC52pN7bH/R9Fl4ZRYUqcY81q5sXSR1iG996TmMEWF2NjQcquk1iXSu1T0dTX3aQQg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jcqA/8ravJEVTJI6stmpYCqH+repWWqzPh8/7ZJwres=;
- b=qU6hRrBNrpfqQxArV95wP+qUev44jq4pSajvpzCr21DsBnfcmDh/idv1k7N1yFCBbWeZqv3VY4T5zyr2l0ecEKVYeWjdU28TRhKHdAoIC3cU523/i81AEMc1gqjZBZPQWLMeWtqDV21XtzupbL0AIGZ0O2MetyWOEf1OgqCjg3ULQpzXEZxYFnbEFl67qqtM+NJyBa6YrTLqRxwaZtJNZBMQHHWnvoIyALrxe5zHW3uwJcBzAKPf8KY8Ox/8SMWwnLhgdlTIExwRJ1URFhHwRoMAoGrKlWvSQ0ladp4f7EZmfYotDQTg8A/UGld+FAQekKI6iyYwb2VpBs1IXvcTLg==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from IA0PR12MB8374.namprd12.prod.outlook.com (2603:10b6:208:40e::7)
- by LV3PR12MB9353.namprd12.prod.outlook.com (2603:10b6:408:21b::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.451.19; Fri, 25 Sep
- 2026 21:01:57 +0000
-Received: from IA0PR12MB8374.namprd12.prod.outlook.com
- ([fe80::d85f:4c87:ae84:3f16]) by IA0PR12MB8374.namprd12.prod.outlook.com
- ([fe80::d85f:4c87:ae84:3f16%6]) with mapi id 15.21.0451.014; Fri, 25 Sep 2026
- 21:01:57 +0000
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="NyDkqU69"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1790371372;
+	bh=1jjx419xuWeOE0eWSXfxs94Ts7PrWqRp59TJUaHT/io=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=NyDkqU69Bq3EEhRsifL5FSEN3Km3XtoY/SRlng2CToPh25/h15kyacnaIyK1t0nNQ
+	 FiVNvuPMF8TTcoxICzTdCLjVVU8Wi3WO0N4vBvR6GRg3kZFXcLtP76uliVFfUaQ+w1
+	 G6MYjfJRpiT7vp3Ymp/41e3OximlbWJhN00MKTC4=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::8309])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 095DC1C0350;
+	Fri, 25 Sep 2026 17:22:52 -0400 (EDT)
+Message-ID: <ea8f769b49f7d1185f588cf5b9202f300c280af7.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 7.3-rc4+
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Fri, 25 Sep 2026 17:22:51 -0400
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNE
+ lecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn
+ 1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHU
+ RfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8
+ X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvd
+ HRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGw
+ MGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAml2ZBI
+ FCS3GUMIACgkQgUrkfCFIVNZKjQf/deRzlXZClKxTC/Ee2yEPqqS7mm/INUA49KdQQ5oIhSxkUBy0
+ 9J4qjMIo5F8ZFkFTqikBqeL35LKu7O7rn8WETfX8Bxvos3HUsl3jHo34DES4MUFIpoQPgtiLRGwLb
+ K0cVCAArR2u2qj4ABmTRrs1I1kvdjEw6gatOuXtEe/j5O2fvfzTq9GBr0Q3n2IAsFXi4hLlx6VPE8
+ tyWUZ8BWJKtih3JAeUiXFvASL3McV0rV9RnU0VbjEQEhSE7PMYhWpnDC9AyBb0lXJllQRvC3NSkUB
+ 8KVQgNNxRPss0WE/nBoZ4dFA42jTyzTz8lNylxZoAWV7WJb3QxVg4oCodRVrxxrQhSmFtZXMgQm90
+ dG9tbGV5IDxqZWpiQGtlcm5lbC5vcmc+iQFVBBMBCAA/AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeA
+ QIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mYBQkbNYS9AAoJEIFK5HwhSFTWBpwIAL5Bk3
+ 5FB34U6iHmDzzgdCbxLTs43T/YQyJpcGIvopBvnI/fDY8oSG6Df64/O6B+1R+A8TDp6ZG5ysUWnCC
+ 6GuIaEHemBYkitMPglR6+sGCMQY7O0mlsPvdssvKK1KI9Bno4VU6ogaF2qVzefSqg1Djmf/DcsxWP
+ rI/jdJ8FB5AYR2rjIdDFc+zRdAJuavo1/anyY2wgpFh/3R8IOYAEfWV9nGgYkf9+tA4EIn1sxE0I3
+ L5oW2N3mbyRrkzuBwO8ztMCwqEPk7moWzhokcZqMXiAIahaZdkashJC+s2X2RZSGCy+g+pvY5NN4B
+ BVG5XwLgVBqbHMTcxE0fbmPqz+q6O0LEphbWVzIEJvdHRvbWxleSA8amVqYkBoYW5zZW5wYXJ0bmV
+ yc2hpcC5jb20+iQFXBBMBCABBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmODZ5ACGwMFCRs1hL0F
+ CwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQgUrkfCFIVNZu0Af/TzvL2/NdgAcw9uN3x60H8
+ jc4QUq14VpxcFEFEMpcj1morkX/G93V+56HBBaXZj+yK8PhxIA/SIz+sU7C/0YvKuvzakP8ZX/7WJ
+ e32SOUtjfr/VTaqjIBzNj6OxLvZpmNbBw7s6DwhhNpHOWqJ/1ml+PtDRDV71IB58yVqQjp1xlNKVl
+ ZppcJ5908EJzsFnRIVjiQiDSKoppqB2BCibBbrWcln7CiWMyOC/cco6SIn6twH+f7+aivJ3xGcOE2
+ a9gBKF5rNi9TBoX9oyPmshv/TDmnohsVrH7AYXlGYfZTk15SWEiROh1QX8/uD9wl/gcIv5EDUpT/F
+ L2jzOsA5663bw==
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 25 Sep 2026 17:01:51 -0400
-Message-Id: <DLOP8IH392ZU.2X2GPOP2NYK4X@nvidia.com>
-Subject: Re: [PATCH v3 09/40] docs: filesystems: update mmap_prepare docs
- for discontig kernel pgs
-Cc: <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
- <linux-doc@vger.kernel.org>, <linux-usb@vger.kernel.org>,
- <linux-rdma@vger.kernel.org>, <selinux@vger.kernel.org>,
- <linux-sound@vger.kernel.org>, <bpf@vger.kernel.org>,
- <linux-scsi@vger.kernel.org>, <linux-fbdev@vger.kernel.org>,
- <dri-devel@lists.freedesktop.org>, <linux-trace-kernel@vger.kernel.org>,
- <linux-perf-users@vger.kernel.org>, <linux-arch@vger.kernel.org>,
- <linux-fsdevel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <kvmarm@lists.linux.dev>, <linuxppc-dev@lists.ozlabs.org>,
- <kvm@vger.kernel.org>, <kvm-riscv@lists.infradead.org>,
- <linux-riscv@lists.infradead.org>, <linux-s390@vger.kernel.org>,
- <sparclinux@vger.kernel.org>, <fuse-devel@lists.linux.dev>
-To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>, "Andrew Morton"
- <akpm@linux-foundation.org>, "Liam R. Howlett" <liam@infradead.org>,
- "Vlastimil Babka" <vbabka@kernel.org>, "Jann Horn" <jannh@google.com>,
- "Pedro Falcato" <pfalcato@suse.de>, "David Hildenbrand" <david@kernel.org>,
- "Mike Rapoport" <rppt@kernel.org>, "Suren Baghdasaryan"
- <surenb@google.com>, "Michal Hocko" <mhocko@suse.com>, "Jonathan Corbet"
- <corbet@lwn.net>, "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
- "Dennis Dalessandro" <dennis.dalessandro@cornelisnetworks.com>, "Jason
- Gunthorpe" <jgg@ziepe.ca>, "Leon Romanovsky" <leon@kernel.org>, "Paul
- Moore" <paul@paul-moore.com>, "Stephen Smalley"
- <stephen.smalley.work@gmail.com>, "Jaroslav Kysela" <perex@perex.cz>,
- "Takashi Iwai" <tiwai@suse.com>, "Alexei Starovoitov" <ast@kernel.org>,
- "Daniel Borkmann" <daniel@iogearbox.net>, "Andrii Nakryiko"
- <andrii@kernel.org>, "Eduard Zingerman" <eddyz87@gmail.com>, "Kumar
- Kartikeya Dwivedi" <memxor@gmail.com>, "Baolin Wang"
- <baolin.wang@linux.alibaba.com>, "Nico Pache" <nico.pache@linux.dev>, "Ryan
- Roberts" <ryan.roberts@arm.com>, "Dev Jain" <dev.jain@arm.com>, "Barry
- Song" <baohua@kernel.org>, "Lance Yang" <lance.yang@linux.dev>, "Usama
- Arif" <usama.arif@linux.dev>, "Kiryl Shutsemau" <kas@kernel.org>, "Doug
- Gilbert" <dgilbert@interlog.com>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <mkp@kernel.org>, "Jaya Kumar" <jayalk@intworks.biz>, "Simona Vetter"
- <simona@ffwll.ch>, "Helge Deller" <deller@gmx.de>, "Sebastian Reichel"
- <sre@kernel.org>, "John Hubbard" <jhubbard@nvidia.com>, "Peter Xu"
- <peterx@redhat.com>, "Masami Hiramatsu" <mhiramat@kernel.org>, "Oleg
- Nesterov" <oleg@redhat.com>, "Peter Zijlstra" <peterz@infradead.org>,
- "Thomas Gleixner" <tglx@kernel.org>, "Ingo Molnar" <mingo@redhat.com>,
- "Borislav Petkov" <bp@alien8.de>, "Dave Hansen"
- <dave.hansen@linux.intel.com>, <x86@kernel.org>, "Arnaldo Carvalho de Melo"
- <acme@kernel.org>, "Namhyung Kim" <namhyung@kernel.org>, "Mark Rutland"
- <mark.rutland@arm.com>, "Rik van Riel" <riel@surriel.com>, "Harry Yoo"
- <harry@kernel.org>, "Juri Lelli" <juri.lelli@redhat.com>, "Vincent Guittot"
- <vincent.guittot@linaro.org>, "Maarten Lankhorst"
- <maarten.lankhorst@linux.intel.com>, "Maxime Ripard" <mripard@kernel.org>,
- "Thomas Zimmermann" <tzimmermann@suse.de>, "David Airlie"
- <airlied@gmail.com>, "Will Deacon" <will@kernel.org>, "Aneesh Kumar K.V"
- <aneesh.kumar@kernel.org>, "Nick Piggin" <npiggin@gmail.com>, "Arnd
- Bergmann" <arnd@arndb.de>, "Muchun Song" <muchun.song@linux.dev>, "Oscar
- Salvador" <osalvador@suse.de>, "Matthew Wilcox (Oracle)"
- <willy@infradead.org>, "Jan Kara" <jack@suse.cz>, "Marc Zyngier"
- <maz@kernel.org>, "Oliver Upton" <oupton@kernel.org>, "Catalin Marinas"
- <catalin.marinas@arm.com>, "Madhavan Srinivasan" <maddy@linux.ibm.com>,
- "Anup Patel" <anup@brainfault.org>, "Paul Walmsley" <pjw@kernel.org>,
- "Palmer Dabbelt" <palmer@dabbelt.com>, "Albert Ou" <aou@eecs.berkeley.edu>,
- "Christian Borntraeger" <borntraeger@linux.ibm.com>, "Janosch Frank"
- <frankja@linux.ibm.com>, "Claudio Imbrenda" <imbrenda@linux.ibm.com>,
- "Alexander Gordeev" <agordeev@linux.ibm.com>, "Gerald Schaefer"
- <gerald.schaefer@linux.ibm.com>, "Heiko Carstens" <hca@linux.ibm.com>,
- "Vasily Gorbik" <gor@linux.ibm.com>, "David S. Miller"
- <davem@davemloft.net>, "Andreas Larsson" <andreas@gaisler.com>, "Alexander
- Viro" <viro@zeniv.linux.org.uk>, "Christian Brauner" <brauner@kernel.org>,
- "Matthew Brost" <matthew.brost@intel.com>, "Joshua Hahn"
- <joshua.hahnjy@gmail.com>, "Rakie Kim" <rakie.kim@sk.com>, "Byungchul Park"
- <byungchul@sk.com>, "Gregory Price" <gourry@gourry.net>, "Ying Huang"
- <ying.huang@linux.alibaba.com>, "Alistair Popple" <apopple@nvidia.com>,
- "Chris Li" <chrisl@kernel.org>, "Kairui Song" <kasong@tencent.com>, "Kemeng
- Shi" <shikemeng@huaweicloud.com>, "Nhat Pham" <nphamcs@gmail.com>, "Baoquan
- He" <baoquan.he@linux.dev>, "Youngjun Park" <youngjun.park@lge.com>,
- "Johannes Weiner" <hannes@cmpxchg.org>, "Qi Zheng" <qi.zheng@linux.dev>,
- "Shakeel Butt" <shakeel.butt@linux.dev>, "Axel Rasmussen"
- <axelrasmussen@google.com>, "Yuanchu Xie" <yuanchu@google.com>, "Wei Xu"
- <weixugc@google.com>, "Chengming Zhou" <chengming.zhou@linux.dev>, "Michal
- Hocko" <mhocko@kernel.org>, "Miklos Szeredi" <miklos@szeredi.hu>, "Xu Xin"
- <xu.xin@linux.dev>
-From: "Zi Yan" <ziy@nvidia.com>
-X-Mailer: aerc 0.22.0
-References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org> <20260917-b4-mmap-prepare-vma-flag-sanify-v3-9-4583d8a23bca@kernel.org>
-In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-9-4583d8a23bca@kernel.org>
-X-ClientProxiedBy: YQBPR0101CA0090.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:c01:4::23) To IA0PR12MB8374.namprd12.prod.outlook.com
- (2603:10b6:208:40e::7)
+User-Agent: Evolution 3.56.2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA0PR12MB8374:EE_|LV3PR12MB9353:EE_
-X-MS-Office365-Filtering-Correlation-Id: edf265e5-c947-4645-88d2-08df1b483c68
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|23010399003|376014|7416014|921020|10067099003|11063799006|4143699003|56012099006|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	FLtaJ9ZALhQwBsRFcwzKy9Kd8SxHnIIhzOQ8HriAP9dpabnDLWKsGYRowv0fjoYUxwJCaMRFzrIfUDLr5N1P/kvxXSsqXdm4SToGyG14VSqQOl1mIVJ2MeAarZ+54ejCYdnMshw9AREQzKC/su/8bkJ480VpxGK0rmrv5Qnzigpbj9Cfmc2c4C90qGbarsdIlccH4JsOe0pKYiTmPi7cn0ybqWeeAC1FWJzqPFJdZBqdvZ2kR4nVq6tXc/9hh9VQcaFz26L54FSEiOG6ZGVlyjf3o5lW/Lk7l3KVV47jQtsOz4gY359Rovoicr3eTx2NglgLKGg9Hdr5PWWuzerLzvIF9S1jHJaQzlpn6jx3O4N81fC6NS4vzx0NJU3PDL7mX0Kg+jjNUUuIJbjtt8TMJHujV8GgCwClFc/4h+GcbEmFIRhgqeLGcpCceZGnt95ptDWS8P6oN6MYdzfIvHeP55GD0RiAa49YKBW9ccm7vK5B/S+dJmfmG4LFS8BRfAoevDVlLAvZQocQUm8Zps58jCwISlELvek36MXn/aCVp6u7xdXo6wEhe4i/GdmZ2Ow8FGbWUYucFqL3UHnF6Mim1x8Hai5EQh/sTqvhnqciCaLnhqPZL+jQLRuJt+uagZxvFyQkLvpHjAD4P6skHW0Arb/FoLz3gIzM3QERf/941OekSNSWBEIgLvVgYySqfw1eAxg+dFvwoA6YFf7XHIg2qQ==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA0PR12MB8374.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(23010399003)(376014)(7416014)(921020)(10067099003)(11063799006)(4143699003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Q2tRYitWYnJMc1dRQUQ3QStxOGkyNXd3eVFJSnFXSE9QRXVQVGpJZ1pBQytx?=
- =?utf-8?B?ZC9nUUJzUTlvcnM3blROZUJQY2Zwd3NVS0VUVjNkeWkzekNIVExVdjRWNU9Z?=
- =?utf-8?B?dFUrTGxiK2c1bnUyWWYwOFEzS3ozcnpVaUZadWwzKzNjbkVnYlJyOHZDdEJi?=
- =?utf-8?B?RU13eXFidW95b1VWaFNHdW1DWVNmZUxrdzNvbG02ZFdGb29qb1FYb1dxbFg2?=
- =?utf-8?B?OGZaaXpjQ0JvelBnUFlhQUQ1WDlISUhCWFlSNi9uVDg5TTJZN2U2aGdqR0g1?=
- =?utf-8?B?eTF4NUljUXorZ09Wc29sNHczRE8yZ0xycEkrOTI3YmF6akQremFFZFkyRE1G?=
- =?utf-8?B?UEhFRFUwLzNOVzhVdmE4N0gxalRpb2xtOVEydWVzRlRHN01NWDlnZ0UvbmJE?=
- =?utf-8?B?Uk5BOTVldWpwVEp0WlBOUnBGbkhsb1dGT1hTSDlJS0taWnExc1dqbjdyN01z?=
- =?utf-8?B?Q01NRG4vN1lSOFBEY0hSeTBnZUI0OVZkM0FKVkxINkY4TnovblBlSldHb25m?=
- =?utf-8?B?R0lQV01IS3Q2ZEJ0UUpyakt1Tnh6aHZ4OHpQM2UwWTB3SkJFU3hIOWpCak4w?=
- =?utf-8?B?UU5rVXNXVno1ajJOWURTcmM0WTEwdDBxTHBQM0M0V0JUK0d4T0Z0bWM1NTl6?=
- =?utf-8?B?UWk5dFkzREZJb2pPS2VKTVF2Rng3ZWVJTlFnNVEzTGRTaHhXdGUwUlQ1Mjg2?=
- =?utf-8?B?Uy9qNEtSdTFMMDZXZ1QvQ08xUW5aOVAzalc5V2hYc1BVOUFvS0dVcjQyVlNM?=
- =?utf-8?B?K1hDSnNxbUEzMUtTWVI0Yno5UVZSblNoK0JzRjIwZ3ZsSXk1OStSaktVdVNw?=
- =?utf-8?B?SEJEMjB4bklaNWkvYkVpVDltdG1JRGkvRXJpYjFocTNNZndCRnc2d3paMmVX?=
- =?utf-8?B?ZlFCakk2dGNRcHNkRjYzeVAvcFNTenpmV2RYejUya0JacFNRQm5CM3RVM3ZO?=
- =?utf-8?B?KzNYcWZXUUk1ckcrWWJOdlpXNTBoRS81eTEvdC8yYm9oUzZ2VUhGRmR6bGtS?=
- =?utf-8?B?ZERqUVovZENLbmR4V0RiZjVzNmhLOXR2bUVLczdONWI1ajE1c3BpYWtyNlY0?=
- =?utf-8?B?SEVsNTU5UUZNUVBHVHorQlcxN2VpZ1lGbWxBRlR3TVJjcTBaTW1yOTg2OU5q?=
- =?utf-8?B?dEpsVExWVHBVQVNCZ0JDMk1sU1dkV05QT0xuWkh0VDdpTko5cFlQTGFvNDNn?=
- =?utf-8?B?ODJVanJGNFlIbTF5QkJpUXg2aERIaUFKaDBsYk01L3VzOS9HZmZqcjNidkZD?=
- =?utf-8?B?Q01pNW15UlRuZEtVak9TemJoUi9JUCtUaVRpaVliN25CZ0NxK1hjMGJXSVh5?=
- =?utf-8?B?dnlPNGJOVVdxVEJoYXJ4MnZtYlV3MTY4Y0Zva1hZdzJTc1Q3aDBLd2hhNll5?=
- =?utf-8?B?ZnJ5R2x6RlVhcUd2M3dxVmJJTFVKcHlFMjZpSk1YZDFHU0RiY296aFErYjNu?=
- =?utf-8?B?NFJYVjhKWDY5a3FBMEJSWGgzNDNuQms4cUl0dUoxTWI4ZFpVa2p5QkZVYndi?=
- =?utf-8?B?MWxOc2xxSEhCakhvOW9yb3B6VTNGNlFWTEVCU3V2TG1RekFuUUhMNmpySEVk?=
- =?utf-8?B?YVNJeUQxSVFiaUFQZWNWdFBXWWxYKzM3cWhCV1N3b3VnQkFEenc0bDZVeTZ4?=
- =?utf-8?B?ZitvVFk4d3A5R2k5MHZESFFtcE05cktIUmhNOHJSNGtjSmt1NkpmbzJTRnQ3?=
- =?utf-8?B?dC9ZNyttWXc3UCtZOCtJRjNzeTU5NGxnbnBFOGUrbFNsa1grQk80NVd1MTN2?=
- =?utf-8?B?ZXp3RGc0c0hrMTVibk5tWCtqeVp5TWsrMmE1UlI2TUJodEx2UW9UM3dWNWhI?=
- =?utf-8?B?OGVWY0dLUHpiakNYZmp2RUI2OVZ1T2RMNUY2dncrSndyY3ErZlBqSzFmaGFl?=
- =?utf-8?B?aHk3NXBXdU1tWG5ETHhQVmMxSFhNMmF5WlpVNkF1YkpEWjRORW93dkQzZjFO?=
- =?utf-8?B?OStlRXFRVlE5R2d2c3ZqbmIzSlA1SC8yTXltS2dIQU1xQ0d3OGg1N1p1cnZW?=
- =?utf-8?B?UGEvemwySHhpdk50cXdPbXJhQkR6L3JuSkhSSjdYaDhYR1kzVE1NREIyQXI4?=
- =?utf-8?B?TExkVmpCZTNYTFBseGtnaEJ4UE1wQ3VCMHpVTGxnT01WWUlaTzB0MlNJTjh6?=
- =?utf-8?B?YmxacmlxSHAvQ0hNdDIvTlJtRlV1QlY5VStON1dXbUlidVdGMWlkazB3K3c2?=
- =?utf-8?B?V09lVXpQemY3VGVkZnlkZzBSWXRzUHIzWHJXdytwSVROUng1bTV3bUtkRmo3?=
- =?utf-8?B?bXpUSUhVM1pCc0ZMYzV0ZVpqb1hXUENXYnlWWVFxZnFrMW5YRVdaY2VpdTRk?=
- =?utf-8?Q?omsE94nfnfBSyzrqtw?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: edf265e5-c947-4645-88d2-08df1b483c68
-X-MS-Exchange-CrossTenant-AuthSource: IA0PR12MB8374.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Sep 2026 21:01:57.7097
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xEqkynh4TwubVa662mfBuxGxlo66Ffe0nJf8ROqgloPDEP1qMa83mZpLKehx6Pig
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR12MB9353
 
-On Thu Sep 17, 2026 at 12:22 PM EDT, Lorenzo Stoakes (ARM) wrote:
-> Describe the newly introduced discontiguous kernel page mapping mechanism=
-,
-> detailing how to use it sensibly and how the API looks.
->
-> Explicitly detail the various discontiguous actions available and how to
-> use them.
->
-> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-> ---
->  Documentation/filesystems/mmap_prepare.rst | 81 ++++++++++++++++++++++++=
-++++++
->  1 file changed, 81 insertions(+)
->
-<snip>
+The following changes since commit 3d676e458fe0c566f5a62753dc696b6a862fc412=
+:
 
-> +* ``discontig_kernel_map_page()`` - Maps a single page, correctly handli=
-ng
-> +  compound pages (if the compound page is bigger than the remaining page=
-s in the
-> +  VMA, then only those pages that fit will be mapped). For a compound pa=
-ge, the
-> +  head page must be passed.
-> +* ``discontig_kernel_map_page_range()`` - Map an array of pages of a spe=
-cified
-> +  size. Note that if the number of pages specified exceeds the VMA size =
-then an
-> +  error will arise.
+  scsi: core: Validate MODE SENSE lengths in scsi_cdl_enable() (2026-09-09 =
+22:23:00 -0400)
 
-Why do mapping a compound page and a page range have different behaviors
-on the bound? Either both do partial mappings or give errors when a
-given input cannot be mapped as a whole in the VMA.
+are available in the Git repository at:
 
+  https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-=
+fixes
 
+for you to fetch changes up to 42d1221d321e55afc7bba9109a77aaf5a817c8a3:
 
---=20
-Best Regards,
-Yan, Zi
+  scsi: megaraid_sas: Protect megasas_get_ctrl_info() in megasas_resume() (=
+2026-09-16 21:33:30 -0400)
 
+----------------------------------------------------------------
+Mostly small driver fixes.  The biggest fix is the one to the block zone
+handling which might trip for real or virtual hardware if the number of
+zones is > 2^32.
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      scsi: leapraid: Avoid -Wformat-security warning
+
+Bart Van Assche (1):
+      scsi: megaraid_sas: Protect megasas_get_ctrl_info() in megasas_resume=
+()
+
+Ewan D. Milne (1):
+      scsi: devinfo: Add BLIST_SKIP_IO_HINTS for EMC Symmetrix
+
+Geert Uytterhoeven (1):
+      scsi: ufs: pltfrm: Add quirk for R-Car S4 lacking lanes-per-direction
+
+Stanley Jhu (1):
+      scsi: ufs: core: Keep internal commands dispatchable during error han=
+dling
+
+Yehyeong Lee (1):
+      scsi: libiscsi_tcp: Check the data direction of a Data-In PDU
+
+ZHOU Jiaxiang (2):
+      scsi: block: Fix zones_cond out-of-bounds write on zone report
+      scsi: sd_zbc: Reject disks with too many zones
+
+ block/blk-zoned.c                         | 15 +++++++++++++--
+ drivers/scsi/leapraid/leapraid_func.h     |  2 --
+ drivers/scsi/leapraid/leapraid_os.c       |  8 +++-----
+ drivers/scsi/libiscsi_tcp.c               |  3 +++
+ drivers/scsi/megaraid/megaraid_sas_base.c |  4 +++-
+ drivers/scsi/scsi_devinfo.c               |  2 +-
+ drivers/scsi/sd_zbc.c                     |  8 +++++++-
+ drivers/ufs/core/ufshcd.c                 |  6 ++++++
+ drivers/ufs/host/ufshcd-pltfrm.c          |  6 +++++-
+ 9 files changed, 41 insertions(+), 13 deletions(-)
+
+---
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index a5afb842bf35..475aa16bc41a 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -2018,12 +2018,17 @@ static int disk_revalidate_zone_resources(struct ge=
+ndisk *disk,
+ 				struct blk_revalidate_zone_args *args)
+ {
+ 	struct queue_limits *lim =3D &disk->queue->limits;
++	unsigned long long nr_zones;
+ 	unsigned int pool_size;
+ 	int ret =3D 0;
+=20
+ 	args->disk =3D disk;
+-	args->nr_zones =3D
+-		DIV_ROUND_UP_ULL(get_capacity(disk), lim->chunk_sectors);
++	nr_zones =3D DIV_ROUND_UP_ULL(get_capacity(disk), lim->chunk_sectors);
++	if (nr_zones > UINT_MAX) {
++		pr_warn("%s: Too many zones (%llu)\n", disk->disk_name, nr_zones);
++		return -EINVAL;
++	}
++	args->nr_zones =3D nr_zones;
+=20
+ 	/* Cached zone conditions: 1 byte per zone */
+ 	args->zones_cond =3D kzalloc(args->nr_zones, GFP_NOIO);
+@@ -2131,6 +2136,12 @@ static int blk_revalidate_zone_cond(struct blk_zone =
+*zone, unsigned int idx,
+ {
+ 	enum blk_zone_cond cond =3D zone->cond;
+=20
++	if (idx >=3D args->nr_zones) {
++		pr_warn("%s: Zone report index %u exceeds zone count %u\n",
++			args->disk->disk_name, idx, args->nr_zones);
++		return -EINVAL;
++	}
++
+ 	/* Check that the zone condition is consistent with the zone type. */
+ 	switch (cond) {
+ 	case BLK_ZONE_COND_NOT_WP:
+diff --git a/drivers/scsi/leapraid/leapraid_func.h b/drivers/scsi/leapraid/=
+leapraid_func.h
+index 4c0b9ca728d8..e8a0815bf95f 100644
+--- a/drivers/scsi/leapraid/leapraid_func.h
++++ b/drivers/scsi/leapraid/leapraid_func.h
+@@ -554,7 +554,6 @@ struct leapraid_fw_evt_work {
+ /**
+  * struct leapraid_fw_evt_struct - Firmware event handling structure
+  *
+- * @fw_evt_name: Name of the firmware event.
+  * @fw_evt_thread: Workqueue used for processing firmware events.
+  * @fw_evt_lock: Spinlock protecting access to the firmware event list.
+  * @fw_evt_list: Linked list of pending firmware events.
+@@ -565,7 +564,6 @@ struct leapraid_fw_evt_work {
+  */
+ struct leapraid_fw_evt_struct {
+ 	u32 leapraid_evt_masks[4];
+-	char fw_evt_name[48];
+ 	struct workqueue_struct *fw_evt_thread;
+ 	spinlock_t fw_evt_lock; /* protects firmware event */
+ 	struct list_head fw_evt_list;
+diff --git a/drivers/scsi/leapraid/leapraid_os.c b/drivers/scsi/leapraid/le=
+apraid_os.c
+index ee3242779dfd..507f11862276 100644
+--- a/drivers/scsi/leapraid/leapraid_os.c
++++ b/drivers/scsi/leapraid/leapraid_os.c
+@@ -2054,12 +2054,10 @@ static int leapraid_probe(struct pci_dev *pdev, con=
+st struct pci_device_id *id)
+ 	shost->transportt =3D leapraid_transport_template;
+ 	shost->unique_id =3D adapter->adapter_attr.id;
+=20
+-	snprintf(adapter->fw_evt_s.fw_evt_name,
+-		 sizeof(adapter->fw_evt_s.fw_evt_name),
+-		 "fw_event_%s%d", LEAPRAID_DRIVER_NAME,
+-		 adapter->adapter_attr.id);
+ 	adapter->fw_evt_s.fw_evt_thread =3D
+-		alloc_ordered_workqueue(adapter->fw_evt_s.fw_evt_name, 0);
++		alloc_ordered_workqueue("fw_event_%s%d", 0,
++					LEAPRAID_DRIVER_NAME,
++					adapter->adapter_attr.id);
+ 	if (!adapter->fw_evt_s.fw_evt_thread) {
+ 		dev_err(&adapter->pdev->dev,
+ 			"%s: Failed to create fw event workqueue\n", __func__);
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index 7223bb18b048..d35f93451ee9 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -480,6 +480,9 @@ static int iscsi_tcp_data_in(struct iscsi_conn *conn, s=
+truct iscsi_task *task)
+ 	int datasn =3D be32_to_cpu(rhdr->datasn);
+ 	unsigned total_in_length =3D task->sc->sdb.length;
+=20
++	if (task->sc->sc_data_direction !=3D DMA_FROM_DEVICE)
++		return ISCSI_ERR_PROTO;
++
+ 	/*
+ 	 * lib iscsi will update this in the completion handling if there
+ 	 * is status.
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megar=
+aid/megaraid_sas_base.c
+index b95f187297ae..4f9a53769966 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -7886,7 +7886,9 @@ megasas_resume(struct device *dev)
+ 			goto fail_init_mfi;
+ 	}
+=20
+-	if (megasas_get_ctrl_info(instance) !=3D DCMD_SUCCESS)
++	scoped_guard(mutex, &instance->reset_mutex)
++		rval =3D megasas_get_ctrl_info(instance);
++	if (rval !=3D DCMD_SUCCESS)
+ 		goto fail_init_mfi;
+=20
+ 	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 15ffbe93ac72..88a911b35c94 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -161,7 +161,7 @@ static struct {
+ 	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* EMC CLARiiON, no storage on LU=
+N 0 */
+ 	{"EMC",  "Invista", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN |
+-	 BLIST_REPORTLUN2 | BLIST_RETRY_ITF},
++	 BLIST_REPORTLUN2 | BLIST_RETRY_ITF | BLIST_SKIP_IO_HINTS},
+ 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
+ 	{"easyRAID", "16P", NULL, BLIST_NOREPORTLUN},
+ 	{"easyRAID", "X6P", NULL, BLIST_NOREPORTLUN},
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 56e455fb5add..456beaf2e769 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -589,7 +589,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+ 		u8 buf[SD_BUF_SIZE])
+ {
+-	unsigned int nr_zones;
++	u64 nr_zones;
+ 	u32 zone_blocks =3D 0;
+ 	int ret;
+=20
+@@ -621,6 +621,12 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct q=
+ueue_limits *lim,
+ 		goto err;
+=20
+ 	nr_zones =3D round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_blocks);
++	if (nr_zones > INT_MAX) {
++		sd_printk(KERN_ERR, sdkp, "Too many zones (%llu)\n",
++			  nr_zones);
++		ret =3D -EINVAL;
++		goto err;
++	}
+ 	sdkp->early_zone_info.nr_zones =3D nr_zones;
+ 	sdkp->early_zone_info.zone_blocks =3D zone_blocks;
+=20
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 2ba244cf40ac..54f4e7d7de02 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -6817,11 +6817,17 @@ static void ufshcd_err_handling_prepare(struct ufs_=
+hba *hba)
+ 	}
+ 	/* Wait for ongoing ufshcd_queuecommand() calls to finish. */
+ 	blk_mq_quiesce_tagset(&hba->host->tag_set);
++	/*
++	 * Internal commands are submitted on the pseudo SCSI device. Let them
++	 * through so that the error handler can recover the link.
++	 */
++	blk_mq_unquiesce_queue(hba->host->pseudo_sdev->request_queue);
+ 	cancel_work_sync(&hba->eeh_work);
+ }
+=20
+ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+ {
++	blk_mq_quiesce_queue_nowait(hba->host->pseudo_sdev->request_queue);
+ 	blk_mq_unquiesce_tagset(&hba->host->tag_set);
+ 	ufshcd_release(hba);
+ 	if (ufshcd_is_clkscaling_supported(hba))
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-plt=
+frm.c
+index 5ac7afe75934..169dbc1a75fe 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -206,7 +206,11 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *=
+hba)
+ 		dev_dbg(hba->dev,
+ 			"%s: failed to read lanes-per-direction, ret=3D%d\n",
+ 			__func__, ret);
+-		hba->lanes_per_direction =3D UFSHCD_DEFAULT_LANES_PER_DIRECTION;
++		/* Old R-Car S4 DTBs lack "lanes-per-direction =3D <1>" */
++		if (of_device_is_compatible(dev->of_node, "renesas,r8a779f0-ufs"))
++			hba->lanes_per_direction =3D 1;
++		else
++			hba->lanes_per_direction =3D UFSHCD_DEFAULT_LANES_PER_DIRECTION;
+ 	}
+ }
+=20
