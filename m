@@ -1,41 +1,60 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 337734A4832;
-	Fri, 25 Sep 2026 14:21:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E5DD4AB1C5
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 14:29:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790346113; cv=none; b=MlgBLzPHG0osmVlYkcdYSX38UjDGp5x5aq+sa99V2FMGCrjq95bos5fNP8Fss1XRBD2IhsW5GbHwZviBPzizf8vJttHgVYXHHIX/bWb+Q639gwILQwTPLh0gJmIi7ZfjTTawhnYgsJB9AoezZex9YBWW7dOhnMYxH3v9zvEFKgw=
+	t=1790346586; cv=none; b=iUZTuDgb2l5gkS9rvF/wacKS1Ynwbc2q2+qbVfx/4Q1Oq9E9rGk7t2gnVECMDioVCMB781w+pNYGgT5C+scoP4S9pgsPEC1/BX9sRPRIlrcZrk++Xr0HwlXJl43bq2HP2zRX21JNpgz6TT02K6XyQtBIyARkBKP3HZA/5eZqWAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790346113; c=relaxed/simple;
-	bh=znabeNVR3AGepeCsA1EnxA5x4xL1xP957GJyIN1seys=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Jh4saw5x14ucylBOZoO9fiAUpu6BrtsApykAJJkF8xdqdUBUkansnUZDC+O5lSV/YOpcWeydo6tpY9bU0Am2CqbV7gzKGUfXYgbQek5pFlvbSEE9JzvmkfuPsRpSQKZRegnVIBfeY4b8j6EbzQsen8y2GNQ5xOSwsSp/PSD4koI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=RCOMbVpW; arc=none smtp.client-ip=220.197.31.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1790346586; c=relaxed/simple;
+	bh=PWZvnkYk4j5lxDWm8Nz3civdTN+Qjc+xt8P1Jw8bG4s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hcCuODMDgNMMlleKv0UosyM4Bn3zzGd9Va/h4jBo8OEljlzgLsDNof+hRnyM6la2nbLxuHa6bP6uMo7MGld6cWBbrMcppAoa+KmEp2/67Ho6ZISEw6Qfn8is2A2vquXkoQkHgFf/k7NvMcT5r5Y63GcP6gygzcCcTodR047I9f0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ib1Zley9; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="RCOMbVpW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=bI
-	vTjCdR8QBh40bXwP6YddIJiZylzjt30RVaHWiRRic=; b=RCOMbVpWAOnHoMIElp
-	b7MsiAjWPdQCE8uBfHZdGyliK4jaWJsxImdMFHVpWql/K2f4K3UDFalIzyQhBL2p
-	/Wd8AF26E0iMheLbuP4DbQHT6OlANgpbO+54yLdxuQoWprXRaF9M9I95vZY0XSTK
-	3CUc3NLgTjKP/7MBknhagA0iY=
-Received: from pc.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgA39tRcg7ZqXmxsBQ--.50533S2;
-	Fri, 25 Sep 2026 22:21:17 +0800 (CST)
-From: Jiale Yao <yaojiale02@163.com>
-To: Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ib1Zley9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790346584;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=p0801dME+Nec+aIbveYMnaYOUO+rYxmuXL3X0xbe0kQ=;
+	b=ib1Zley91EYDNI3QSxdBt9maWuQJdA8cO2mZw5T6faeOnIjQJfTTZy/gasf20IswC0yM8E
+	cKIKtNB5Ys1narsjQ9AoZb3XS41y+wqNij3ulmD/P1WBQCMipB4VIkfUpgvZOtI9ytlw/r
+	78q2OtywPHcT1X2/gMqTdFhfDSwJsfo=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-694-ATmn_pKBPUKIv2Xa5K1VnA-1; Fri,
+ 25 Sep 2026 10:29:43 -0400
+X-MC-Unique: ATmn_pKBPUKIv2Xa5K1VnA-1
+X-Mimecast-MFC-AGG-ID: ATmn_pKBPUKIv2Xa5K1VnA_1790346581
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 974CD1953979;
+	Fri, 25 Sep 2026 14:29:41 +0000 (UTC)
+Received: from jtaubepe-thinkpadx1carbongen12.ibmlowe.csb (unknown [10.22.88.172])
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3B371418;
+	Fri, 25 Sep 2026 14:29:39 +0000 (UTC)
+From: Jesse Taube <jtaubepe@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	Chris Leech <cleech@redhat.com>,
+	Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Jiale Yao <yaojiale02@163.com>
-Subject: [PATCH] scsi: qla2xxx: Protect VPD aux image query with optrom mutex
-Date: Fri, 25 Sep 2026 22:21:15 +0800
-Message-Id: <20260925142115.2265572-1-yaojiale02@163.com>
-X-Mailer: git-send-email 2.34.1
+	Nimal Prabudoss I <nprabudo@redhat.com>,
+	Jesse Taube <jtaubepe@redhat.com>
+Subject: [PATCH] scsi: bnx2fc: Drop unesseary call to skb_transport_header
+Date: Fri, 25 Sep 2026 10:29:37 -0400
+Message-ID: <20260925142937.2051868-1-jtaubepe@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -43,58 +62,36 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgA39tRcg7ZqXmxsBQ--.50533S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ZFWfXFyfGrWxXw13Ar1xGrg_yoW8Ww15pa
-	4rKryakryrJrs7Xry8u3WxuFyYkFnrKFWUG3yrta4a93WkXF9I9rWUAr98uFn7C3s3Jr4v
-	vF4kXrZ5JayYyr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0p_FApUUUUUU=
-X-CM-SenderInfo: x1dryxhdohiji6rwjhhfrp/xtbC8B1Aemq2g12EbQAA38
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-qla2x00_sysfs_read_vpd() calls qla28xx_get_aux_images() before taking
-optrom_mutex. That helper reads flash directly, so it can overlap with
-other flash operations that hold optrom_mutex. The resulting image
-selection can be based on corrupted auxiliary image status and cause the
-wrong VPD region to be read.
+The result of `skb_transport_header` was unused, previously it had no
+side effects.
+commit 66e4c8d95008 ("net: warn if transport header was not set")
+Added a check to prevent accesses to an uninitialized transport header
+under a CONFIG_DEBUG_NET environment. Sence `skb_transport_header` was
+called with an uninitialized transport header, it triggered a warning
+case and a subsequent system panic.
 
-Take optrom_mutex before querying the auxiliary images and keep it held
-until the selected VPD region has been read, matching the locking order
-used by qla2x00_sysfs_read_nvram().
+Remove the unesseary call to `skb_transport_header` eliminating the
+warning assertion and prevent the subsequent system panic.
 
-Signed-off-by: Jiale Yao <yaojiale02@163.com>
+Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index a4ca22024ede..03feade738e2 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -560,6 +560,12 @@ qla2x00_sysfs_read_vpd(struct file *filp, struct kobject *kobj,
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index c95b084cad69..3bff781d0531 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -533,7 +533,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
  
- 	faddr = ha->flt_region_vpd << 2;
- 
-+	mutex_lock(&ha->optrom_mutex);
-+	if (qla2x00_chip_is_down(vha)) {
-+		mutex_unlock(&ha->optrom_mutex);
-+		return -EAGAIN;
-+	}
-+
- 	if (IS_QLA28XX(ha)) {
- 		qla28xx_get_aux_images(vha, &active_regions);
- 		if (active_regions.aux.vpd_nvram == QLA27XX_SECONDARY_IMAGE)
-@@ -571,12 +577,6 @@ qla2x00_sysfs_read_vpd(struct file *filp, struct kobject *kobj,
- 		    "primary" : "secondary");
- 	}
- 
--	mutex_lock(&ha->optrom_mutex);
--	if (qla2x00_chip_is_down(vha)) {
--		mutex_unlock(&ha->optrom_mutex);
--		return -EAGAIN;
--	}
--
- 	ha->isp_ops->read_optrom(vha, ha->vpd, faddr, ha->vpd_size);
- 	mutex_unlock(&ha->optrom_mutex);
+ 	/* Pull the header */
+ 	hp = (struct fcoe_hdr *) skb_network_header(skb);
+-	fh = (struct fc_frame_header *) skb_transport_header(skb);
+ 	skb_pull(skb, sizeof(struct fcoe_hdr));
+ 	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
  
 -- 
-2.34.1
+2.55.0
 
