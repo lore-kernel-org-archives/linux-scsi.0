@@ -1,59 +1,56 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8F4F31ED93
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 18:31:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61DD82D63E5
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 18:31:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790361080; cv=none; b=hjlGOLVYpjjXQWaTjjORl56Css3cwpvOgLoY8sSZvITe+b1QagheYVzdNABVZcru9y5yq4TFj9b0TSL28PC0sov6ZU5N/wJDiuw5Qh+gq0GGECrHB0X7NfE3GwCUjbyUdTWVpxzWvN0HU9932n8cROJJe9a/asaD3XgEUud/t4Q=
+	t=1790361083; cv=none; b=nxA78zw7fnqNXz7wffi3RjG3mLIDjojgQOXg9pgiJWWX19X22gV/9SiFMVH5DTwGVD6CFoYOppl2/VuGOjFJQgOsLYEmuWsCO7FFRuVpqWQMrLbCYpp+zevsxufNp185oOyGLE/Mfx7V1jY19BCoCxMFIF6475q1Bgdypytm2K4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790361080; c=relaxed/simple;
-	bh=MBEz+k+F8Itc7CZ4vnq4BAddJdoN4bF4v0+cjerQv38=;
+	s=arc-20240116; t=1790361083; c=relaxed/simple;
+	bh=2om6jKff0Y+lXsdkFN+e6BYIucyJVYELMZwMI8v5pL0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dWo27IEzw53sqjVzM1fwl5+Pa7eq4B2VpShVr4GoTT/+x1vrlKhFfozS0y2v4Gygrbuu91su2W1+myAB6jyWRmrP53kLMqV0NFBuVBKLnluDkKGaMkY7+VDflEnAq+H/pavUTkqtfrTAZyUQiAqGXVomurQATXNxKXtU0v8+A8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=RCTGvN5Y; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=TIqH5OBgIWDreCmPsA6ApUtCPjoNyBPZ/uTWeDG0tF+Eiya42oSp6a/5jYs31In7rtl+uH48sA7aXDqDXGVW2j810EsRbMmU0poL84DRWO4rfRvldyCBPYTBfcrIOCDY9FdMFXAz3zD7bW9t0+B9oVztm0+VZtuu7f52w51Pnqw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=qSQnoVKM; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="RCTGvN5Y"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="qSQnoVKM"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hrzmk2rPNz1XM30j;
-	Fri, 25 Sep 2026 18:31:18 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hrzmp0xPTz1XM4Sx;
+	Fri, 25 Sep 2026 18:31:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1790361065; x=1792953066; bh=utvUC
-	UIG08rCTk7heeeWz9XWcVrA2aAMmiBT3+Nql1o=; b=RCTGvN5YmcpTj7FkrJoTV
-	SryOd81S6bJN0KUkCMtAigoNQm7sZgTL7uoBAWbjx5s34EyBJFivJlzLbxmCozWP
-	exLbLI+YSmkq4x42wFwqIOf1EB8untJMrw0c9sbYrdplF5sYmKGtwwvdv4uVnIH2
-	4UBxjGFzS4a/4tHPixLN47mwTeyA1sQgNgbgzOTAoAqki4SLr9t/PzoEjtwpzALi
-	WIzmNUj5IMSmqgGy0uog1OeKUGmEnWzh/xFkgb7JvJRvLYLPnTGgUAjGtAoMEPV/
-	AMHvZ7jPDtNFPXgB1TEAxCusxnA5VIhlgf0yOkuX/uG2hZboJ35f38EGGX4vTO4S
-	g==
+	:received:received; s=mr01; t=1790361072; x=1792953073; bh=eugcc
+	x3oNusKK6Oe/fIiadfAu0t7Q9+pI5TANtO59Ng=; b=qSQnoVKMotvAQwYYNbvPp
+	5J1m8ju+4s3H5laRWHca+JxaQzn0sl8EOm4yNXkM8PdrPMaMrVqN9+6ov2ZnzbwJ
+	ED15/TRyTSaiBSqtqs8S+Jl9zWBfSfBTVH3nQyPDgSPXbA7uCS0cZAtA+rKTG/jj
+	60qyIaDPzGNPmfSyS/V+2ch3O9bD3Vw5t6OqeH70fPUtYR4RsjEDQOLo0ljVa9Wa
+	NGxzITP4py9WHqlbu3qlDG2wrLKldtyXim8WE9Yn/buH55fyqOtoOdjJmFh6iZEK
+	xo3f+jbEggr/Tq8z5iGPmucLG/hwLGVLrRQA88hW1XAlZQrLJMtV7x3LV1SoeWh6
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id puOmzYBksO8f; Fri, 25 Sep 2026 18:31:05 +0000 (UTC)
+ id p7NHAGofK8vu; Fri, 25 Sep 2026 18:31:12 +0000 (UTC)
 Received: from bvanassche.c.googlers.com.com (148.60.168.34.bc.googleusercontent.com [34.168.60.148])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hrzmQ0WPwz1XM5kW;
-	Fri, 25 Sep 2026 18:31:01 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hrzmZ58LHz1XM5kY;
+	Fri, 25 Sep 2026 18:31:10 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
+	Hannes Reinecke <hare@suse.de>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Hannes Reinecke <hare@kernel.org>,
-	Colin Ian King <colin.i.king@gmail.com>,
-	John Garry <john.garry@linux.dev>
-Subject: [PATCH v4 21/54] scsi: csiostor: Enable lock context analysis
-Date: Fri, 25 Sep 2026 11:25:59 -0700
-Message-ID: <214dee25ec4dab987380b8bd9d296303f9399691.1790360262.git.bvanassche@acm.org>
+	"Martin K. Petersen" <mkp@kernel.org>
+Subject: [PATCH v4 24/54] scsi: fcoe: Enable lock context analysis
+Date: Fri, 25 Sep 2026 11:26:02 -0700
+Message-ID: <61dba0e839bc3522ff74224278159dcfe4e6488c.1790360262.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
 In-Reply-To: <cover.1790360262.git.bvanassche@acm.org>
 References: <cover.1790360262.git.bvanassche@acm.org>
@@ -65,277 +62,321 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Document locking requirements across the csiostor driver by annotating
-functions in csio_hw.c, csio_lnode.c, csio_rnode.c, and csio_scsi.c with
-__must_hold(). Enable lock context analysis by setting CONTEXT_ANALYSIS
-in the Makefile.
+Pass the FCoE controller pointer to all functions that are called with on=
+e or
+more locks held. Document locking requirements by adding __must_hold()
+annotations. Enable lock context analysis in the Makefile.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/csiostor/Makefile     |  2 ++
- drivers/scsi/csiostor/csio_hw.c    | 14 +++++++++++++-
- drivers/scsi/csiostor/csio_lnode.c |  3 +++
- drivers/scsi/csiostor/csio_rnode.c |  6 ++++++
- drivers/scsi/csiostor/csio_scsi.c  |  4 ++++
- 5 files changed, 28 insertions(+), 1 deletion(-)
+ drivers/scsi/fcoe/Makefile    |  3 +++
+ drivers/scsi/fcoe/fcoe_ctlr.c | 50 +++++++++++++++++++++++++++--------
+ 2 files changed, 42 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/Makefile b/drivers/scsi/csiostor/Makef=
-ile
-index d047e22eac0d..a19031efa7c4 100644
---- a/drivers/scsi/csiostor/Makefile
-+++ b/drivers/scsi/csiostor/Makefile
-@@ -4,6 +4,8 @@
- #
- ##
-=20
+diff --git a/drivers/scsi/fcoe/Makefile b/drivers/scsi/fcoe/Makefile
+index 1183e80a09e7..5e7121231801 100644
+--- a/drivers/scsi/fcoe/Makefile
++++ b/drivers/scsi/fcoe/Makefile
+@@ -1,4 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
++
 +CONTEXT_ANALYSIS :=3D y
 +
- ccflags-y +=3D -I$(srctree)/drivers/net/ethernet/chelsio/cxgb4
+ obj-$(CONFIG_FCOE) +=3D fcoe.o
+ obj-$(CONFIG_LIBFCOE) +=3D libfcoe.o
 =20
- obj-$(CONFIG_SCSI_CHELSIO_FCOE) +=3D csiostor.o
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio=
-_hw.c
-index d8ed326dc602..b5a36615a22b 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -92,7 +92,7 @@ static void csio_hw_mbm_cleanup(struct csio_hw *);
- static void csio_hws_uninit(struct csio_hw *, enum csio_hw_ev);
- static void csio_hws_configuring(struct csio_hw *, enum csio_hw_ev);
- static void csio_hws_initializing(struct csio_hw *, enum csio_hw_ev);
--static void csio_hws_ready(struct csio_hw *, enum csio_hw_ev)
-+static void csio_hws_ready(struct csio_hw *hw, enum csio_hw_ev)
- 	__must_hold(&hw->lock);
- static void csio_hws_quiescing(struct csio_hw *, enum csio_hw_ev);
- static void csio_hws_quiesced(struct csio_hw *, enum csio_hw_ev);
-@@ -915,6 +915,7 @@ csio_hw_dev_ready(struct csio_hw *hw)
-  */
- static int
- csio_do_hello(struct csio_hw *hw, enum csio_dev_state *state)
-+	__must_hold(&hw->lock)
- {
- 	struct csio_mb	*mbp;
- 	int	rv =3D 0;
-@@ -2051,6 +2052,7 @@ csio_hw_flash_config(struct csio_hw *hw, u32 *fw_cf=
-g_param, char *path)
-  */
- static int
- csio_hw_use_fwconfig(struct csio_hw *hw, int reset, u32 *fw_cfg_param)
-+	__must_hold(&hw->lock)
- {
- 	struct csio_mb	*mbp =3D NULL;
- 	struct fw_caps_config_cmd *caps_cmd;
-@@ -2476,6 +2478,7 @@ static int csio_hw_check_fwver(struct csio_hw *hw)
-  */
- static void
- csio_hw_configure(struct csio_hw *hw)
-+	__must_hold(&hw->lock)
- {
- 	int reset =3D 1;
- 	int rv;
-@@ -2605,6 +2608,7 @@ csio_hw_configure(struct csio_hw *hw)
-  */
- static void
- csio_hw_initialize(struct csio_hw *hw)
-+	__must_hold(&hw->lock)
- {
- 	struct csio_mb	*mbp;
- 	enum fw_retval retval;
-@@ -2779,6 +2783,7 @@ csio_hw_fatal_err(struct csio_hw *hw)
-  */
- static void
- csio_hws_uninit(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -2804,6 +2809,7 @@ csio_hws_uninit(struct csio_hw *hw, enum csio_hw_ev=
- evt)
-  */
- static void
- csio_hws_configuring(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -2990,6 +2996,7 @@ csio_hws_quiescing(struct csio_hw *hw, enum csio_hw=
-_ev evt)
-  */
- static void
- csio_hws_quiesced(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -3015,6 +3022,7 @@ csio_hws_quiesced(struct csio_hw *hw, enum csio_hw_=
-ev evt)
-  */
- static void
- csio_hws_resetting(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -3076,6 +3084,7 @@ csio_hws_removing(struct csio_hw *hw, enum csio_hw_=
-ev evt)
-  */
- static void
- csio_hws_pcierr(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -3765,6 +3774,7 @@ csio_hw_mb_timer(struct timer_list *t)
-  */
- static void
- csio_hw_mbm_cleanup(struct csio_hw *hw)
-+	__must_hold(&hw->lock)
- {
- 	LIST_HEAD(cbfn_q);
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.=
+c
+index 496ddd45f74d..bf92293a0ef0 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -42,7 +42,8 @@ static void fcoe_ctlr_timer_work(struct work_struct *);
+ static void fcoe_ctlr_recv_work(struct work_struct *);
+ static int fcoe_ctlr_flogi_retry(struct fcoe_ctlr *);
 =20
-@@ -3885,6 +3895,7 @@ csio_free_evt(struct csio_hw *hw, struct csio_evt_m=
-sg *evt_entry)
+-static void fcoe_ctlr_vn_start(struct fcoe_ctlr *);
++static void fcoe_ctlr_vn_start(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex);
+ static int fcoe_ctlr_vn_recv(struct fcoe_ctlr *, struct sk_buff *);
+ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *);
+ static int fcoe_ctlr_vn_lookup(struct fcoe_ctlr *, u32, u8 *);
+@@ -154,13 +155,14 @@ EXPORT_SYMBOL(fcoe_ctlr_init);
 =20
- void
- csio_evtq_flush(struct csio_hw *hw)
-+	__must_hold(&hw->lock)
+ /**
+  * fcoe_sysfs_fcf_add() - Add a fcoe_fcf{,_device} to a fcoe_ctlr{,_devi=
+ce}
++ * @fip: The FCoE controller
+  * @new: The newly discovered FCF
+  *
+  * Called with fip->ctlr_mutex held
+  */
+-static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
++static int fcoe_sysfs_fcf_add(struct fcoe_ctlr *fip, struct fcoe_fcf *ne=
+w)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	uint32_t count;
- 	count =3D 30;
-@@ -4144,6 +4155,7 @@ csio_mgmt_tmo_handler(struct timer_list *t)
+-	struct fcoe_ctlr *fip =3D new->fip;
+ 	struct fcoe_ctlr_device *ctlr_dev;
+ 	struct fcoe_fcf_device *temp, *fcf_dev;
+ 	int rc =3D -ENOMEM;
+@@ -227,13 +229,14 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
 =20
- static void
- csio_mgmtm_cleanup(struct csio_mgmtm *mgmtm)
-+	__must_hold(&mgmtm->hw->lock)
+ /**
+  * fcoe_sysfs_fcf_del() - Remove a fcoe_fcf{,_device} to a fcoe_ctlr{,_d=
+evice}
++ * @fip: The FCoE controller
+  * @new: The FCF to be removed
+  *
+  * Called with fip->ctlr_mutex held
+  */
+-static void fcoe_sysfs_fcf_del(struct fcoe_fcf *new)
++static void fcoe_sysfs_fcf_del(struct fcoe_ctlr *fip, struct fcoe_fcf *n=
+ew)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	struct csio_hw *hw =3D mgmtm->hw;
- 	struct csio_ioreq *io_req;
-diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/c=
-sio_lnode.c
-index 78d5ecd14f65..161973957976 100644
---- a/drivers/scsi/csiostor/csio_lnode.c
-+++ b/drivers/scsi/csiostor/csio_lnode.c
-@@ -872,6 +872,7 @@ csio_ln_read_fcf_entry(struct csio_lnode *ln,
- static void
- csio_handle_link_up(struct csio_hw *hw, uint8_t portid, uint32_t fcfi,
- 		    uint32_t vnpi)
-+	__must_hold(&hw->lock)
- {
- 	struct csio_lnode *ln =3D NULL;
+-	struct fcoe_ctlr *fip =3D new->fip;
+ 	struct fcoe_ctlr_device *cdev;
+ 	struct fcoe_fcf_device *fcf_dev;
 =20
-@@ -1165,6 +1166,7 @@ csio_lns_uninit(struct csio_lnode *ln, enum csio_ln=
-_ev evt)
+@@ -268,13 +271,14 @@ static void fcoe_sysfs_fcf_del(struct fcoe_fcf *new=
+)
+  * Called with &fcoe_ctlr lock held.
   */
- static void
- csio_lns_online(struct csio_lnode *ln, enum csio_ln_ev evt)
-+	__must_hold(&csio_lnode_to_hw(ln)->lock)
+ static void fcoe_ctlr_reset_fcfs(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
+ 	struct fcoe_fcf *fcf;
+ 	struct fcoe_fcf *next;
 =20
-@@ -1216,6 +1218,7 @@ csio_lns_online(struct csio_lnode *ln, enum csio_ln=
-_ev evt)
-  */
- static void
- csio_lns_ready(struct csio_lnode *ln, enum csio_ln_ev evt)
-+	__must_hold(&csio_lnode_to_hw(ln)->lock)
- {
- 	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
+ 	fip->sel_fcf =3D NULL;
+ 	list_for_each_entry_safe(fcf, next, &fip->fcfs, list) {
+-		fcoe_sysfs_fcf_del(fcf);
++		fcoe_sysfs_fcf_del(fip, fcf);
+ 	}
+ 	WARN_ON(fip->fcf_count);
 =20
-diff --git a/drivers/scsi/csiostor/csio_rnode.c b/drivers/scsi/csiostor/c=
-sio_rnode.c
-index 46d82802a5d4..fe985836c15c 100644
---- a/drivers/scsi/csiostor/csio_rnode.c
-+++ b/drivers/scsi/csiostor/csio_rnode.c
-@@ -546,6 +546,7 @@ csio_rn_verify_rparams(struct csio_lnode *ln, struct =
-csio_rnode *rn,
+@@ -316,6 +320,8 @@ EXPORT_SYMBOL(fcoe_ctlr_destroy);
+  * Called with neither ctlr_mutex nor ctlr_lock held.
+  */
+ static void fcoe_ctlr_announce(struct fcoe_ctlr *fip)
++	__must_not_hold(&fip->ctlr_mutex)
++	__must_not_hold(&fip->ctlr_lock)
+ {
+ 	struct fcoe_fcf *sel;
+ 	struct fcoe_fcf *fcf;
+@@ -476,6 +482,7 @@ EXPORT_SYMBOL(fcoe_ctlr_link_up);
+  * @fip:       The FCoE controller to reset
+  */
+ static void fcoe_ctlr_reset(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	fcoe_ctlr_reset_fcfs(fip);
+ 	timer_delete(&fip->timer);
+@@ -817,6 +824,7 @@ EXPORT_SYMBOL(fcoe_ctlr_els_send);
+  * Returns the time in jiffies for the next call.
+  */
+ static unsigned long fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	struct fcoe_fcf *fcf;
+ 	struct fcoe_fcf *next;
+@@ -866,7 +874,7 @@ static unsigned long fcoe_ctlr_age_fcfs(struct fcoe_c=
+tlr *fip)
 =20
- static void
- __csio_reg_rnode(struct csio_rnode *rn)
-+	__must_hold(&csio_lnode_to_hw(csio_rnode_to_lnode(rn))->lock)
- {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
-@@ -563,6 +564,7 @@ __csio_reg_rnode(struct csio_rnode *rn)
+ 	list_for_each_entry_safe(fcf, next, &del_list, list) {
+ 		/* Removes fcf from current list */
+-		fcoe_sysfs_fcf_del(fcf);
++		fcoe_sysfs_fcf_del(fip, fcf);
+ 	}
 =20
- static void
- __csio_unreg_rnode(struct csio_rnode *rn)
-+	__must_hold(&csio_lnode_to_hw(csio_rnode_to_lnode(rn))->lock)
- {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
-@@ -601,6 +603,7 @@ __csio_unreg_rnode(struct csio_rnode *rn)
+ 	if (sel_time && !fip->sel_fcf && !fip->sel_time) {
+@@ -1049,7 +1057,7 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fi=
+p, struct sk_buff *skb)
+=20
+ 		memcpy(fcf, &new, sizeof(new));
+ 		fcf->fip =3D fip;
+-		rc =3D fcoe_sysfs_fcf_add(fcf);
++		rc =3D fcoe_sysfs_fcf_add(fip, fcf);
+ 		if (rc) {
+ 			printk(KERN_ERR "Failed to allocate sysfs instance "
+ 			       "for FCF, fab %16.16llx mac %pM\n",
+@@ -1612,6 +1620,7 @@ static int fcoe_ctlr_recv_handler(struct fcoe_ctlr =
+*fip, struct sk_buff *skb)
+  * Called with lock held.
   */
- static void
- csio_rns_uninit(struct csio_rnode *rn, enum csio_rn_ev evt)
-+	__must_hold(&csio_rnode_to_lnode(rn)->hwp->lock)
+ static struct fcoe_fcf *fcoe_ctlr_select(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	int ret =3D 0;
-@@ -641,6 +644,7 @@ csio_rns_uninit(struct csio_rnode *rn, enum csio_rn_e=
-v evt)
+ 	struct fcoe_fcf *fcf;
+ 	struct fcoe_fcf *best =3D fip->sel_fcf;
+@@ -1664,6 +1673,8 @@ static struct fcoe_fcf *fcoe_ctlr_select(struct fco=
+e_ctlr *fip)
+  * Caller must verify that fip->sel_fcf is not NULL.
   */
- static void
- csio_rns_ready(struct csio_rnode *rn, enum csio_rn_ev evt)
-+	__must_hold(&csio_rnode_to_lnode(rn)->hwp->lock)
+ static int fcoe_ctlr_flogi_send_locked(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
++	__must_hold(&fip->ctlr_lock)
  {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	int ret =3D 0;
-@@ -726,6 +730,7 @@ csio_rns_ready(struct csio_rnode *rn, enum csio_rn_ev=
- evt)
+ 	struct sk_buff *skb;
+ 	struct sk_buff *skb_orig;
+@@ -1733,6 +1744,7 @@ static int fcoe_ctlr_flogi_retry(struct fcoe_ctlr *=
+fip)
+  * Called with ctlr_mutex held.  The caller must not hold ctlr_lock.
   */
- static void
- csio_rns_offline(struct csio_rnode *rn, enum csio_rn_ev evt)
-+	__must_hold(&csio_rnode_to_lnode(rn)->hwp->lock)
+ static void fcoe_ctlr_flogi_send(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	int ret =3D 0;
-@@ -785,6 +790,7 @@ csio_rns_offline(struct csio_rnode *rn, enum csio_rn_=
-ev evt)
+ 	struct fcoe_fcf *fcf;
+=20
+@@ -2012,6 +2024,7 @@ static inline struct fcoe_rport *fcoe_ctlr_rport(st=
+ruct fc_rport_priv *rdata)
+ static void fcoe_ctlr_vn_send(struct fcoe_ctlr *fip,
+ 			      enum fip_vn2vn_subcode sub,
+ 			      const u8 *dest, size_t min_len)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	struct sk_buff *skb;
+ 	struct fip_vn2vn_probe_frame {
+@@ -2152,11 +2165,14 @@ static struct fc_rport_operations fcoe_ctlr_vn_rp=
+ort_ops =3D {
+=20
+ /**
+  * fcoe_ctlr_disc_stop_locked() - stop discovery in VN2VN mode
++ * @fip: The FCoE controller
+  * @lport: The local port
+  *
+  * Called with ctlr_mutex held.
   */
- static void
- csio_rns_disappeared(struct csio_rnode *rn, enum csio_rn_ev evt)
-+	__must_hold(&csio_rnode_to_lnode(rn)->hwp->lock)
+-static void fcoe_ctlr_disc_stop_locked(struct fc_lport *lport)
++static void fcoe_ctlr_disc_stop_locked(struct fcoe_ctlr *fip,
++				       struct fc_lport *lport)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	int ret =3D 0;
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/cs=
-io_scsi.c
-index b1473e1f514f..d81d10603fcc 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -1156,6 +1156,7 @@ csio_scsi_cmpl_handler(struct csio_hw *hw, void *wr=
-, uint32_t len,
-  * Called with lock held. Has to exit with lock held.
+ 	struct fc_rport_priv *rdata;
+=20
+@@ -2183,7 +2199,7 @@ static void fcoe_ctlr_disc_stop(struct fc_lport *lp=
+ort)
+ 	struct fcoe_ctlr *fip =3D lport->disc.priv;
+=20
+ 	mutex_lock(&fip->ctlr_mutex);
+-	fcoe_ctlr_disc_stop_locked(lport);
++	fcoe_ctlr_disc_stop_locked(fip, lport);
+ 	mutex_unlock(&fip->ctlr_mutex);
+ }
+=20
+@@ -2208,11 +2224,12 @@ static void fcoe_ctlr_disc_stop_final(struct fc_l=
+port *lport)
+  * Called with fcoe_ctlr lock held.
   */
- void csio_scsi_cleanup_io_q(struct csio_hw *hw, struct list_head *q)
-+	__must_hold(&hw->lock)
+ static void fcoe_ctlr_vn_restart(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	struct csio_scsim *scm =3D csio_hw_to_scsim(hw);
- 	struct csio_ioreq *ioreq;
-@@ -1230,6 +1231,7 @@ csio_abrt_cls(struct csio_ioreq *ioreq, struct scsi=
-_cmnd *scmnd)
+ 	unsigned long wait;
+ 	u32 port_id;
+=20
+-	fcoe_ctlr_disc_stop_locked(fip->lp);
++	fcoe_ctlr_disc_stop_locked(fip, fip->lp);
+=20
+ 	/*
+ 	 * Get proposed port ID.
+@@ -2246,6 +2263,7 @@ static void fcoe_ctlr_vn_restart(struct fcoe_ctlr *=
+fip)
+  * Called with fcoe_ctlr lock held.
   */
- static int csio_scsi_abort_io_q(struct csio_hw *hw, struct list_head *q,
- 				uint32_t tmo)
-+	__must_hold(&hw->lock)
+ static void fcoe_ctlr_vn_start(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	struct list_head *tmp, *next;
- 	int count =3D DIV_ROUND_UP(tmo, CSIO_SCSI_ABORT_Q_POLL_MS);
-@@ -1268,6 +1270,7 @@ static int csio_scsi_abort_io_q(struct csio_hw *hw,=
- struct list_head *q,
-  * Can sleep when waiting for I/Os to complete.
+ 	fip->probe_tries =3D 0;
+ 	prandom_seed_state(&fip->rnd_state, fip->lp->wwpn);
+@@ -2387,6 +2405,7 @@ static int fcoe_ctlr_vn_parse(struct fcoe_ctlr *fip=
+,
+  * Called with ctlr_mutex held.
   */
- int csio_scsim_cleanup_io(struct csio_hw *hw, bool abort)
-+	__must_hold(&hw->lock)
+ static void fcoe_ctlr_vn_send_claim(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	struct csio_scsim *scm =3D csio_hw_to_scsim(hw);
- 	int rv =3D 0;
-@@ -1312,6 +1315,7 @@ int csio_scsim_cleanup_io(struct csio_hw *hw, bool =
-abort)
-  * Can sleep (with dropped lock) when waiting for I/Os to complete.
+ 	fcoe_ctlr_vn_send(fip, FIP_SC_VN_CLAIM_NOTIFY, fcoe_all_vn2vn, 0);
+ 	fip->sol_time =3D jiffies;
+@@ -2401,6 +2420,7 @@ static void fcoe_ctlr_vn_send_claim(struct fcoe_ctl=
+r *fip)
   */
- int csio_scsim_cleanup_io_lnode(struct csio_hw *hw, struct csio_lnode *l=
-n)
-+	__must_hold(&hw->lock)
+ static void fcoe_ctlr_vn_probe_req(struct fcoe_ctlr *fip,
+ 				   struct fcoe_rport *frport)
++	__must_hold(&fip->ctlr_mutex)
  {
- 	struct csio_scsim *scm =3D csio_hw_to_scsim(hw);
- 	struct csio_scsi_level_data sld;
+ 	if (frport->rdata.ids.port_id !=3D fip->port_id)
+ 		return;
+@@ -2452,6 +2472,7 @@ static void fcoe_ctlr_vn_probe_req(struct fcoe_ctlr=
+ *fip,
+  */
+ static void fcoe_ctlr_vn_probe_reply(struct fcoe_ctlr *fip,
+ 				     struct fcoe_rport *frport)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	if (frport->rdata.ids.port_id !=3D fip->port_id)
+ 		return;
+@@ -2481,6 +2502,7 @@ static void fcoe_ctlr_vn_probe_reply(struct fcoe_ct=
+lr *fip,
+  * Called with ctlr_mutex held.
+  */
+ static void fcoe_ctlr_vn_add(struct fcoe_ctlr *fip, struct fcoe_rport *n=
+ew)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	struct fc_lport *lport =3D fip->lp;
+ 	struct fc_rport_priv *rdata;
+@@ -2564,6 +2586,7 @@ static int fcoe_ctlr_vn_lookup(struct fcoe_ctlr *fi=
+p, u32 port_id, u8 *mac)
+  */
+ static void fcoe_ctlr_vn_claim_notify(struct fcoe_ctlr *fip,
+ 				      struct fcoe_rport *new)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	if (new->flags & FIP_FL_REC_OR_P2P) {
+ 		LIBFCOE_FIP_DBG(fip, "send probe req for P2P/REC\n");
+@@ -2619,6 +2642,7 @@ static void fcoe_ctlr_vn_claim_notify(struct fcoe_c=
+tlr *fip,
+  */
+ static void fcoe_ctlr_vn_claim_resp(struct fcoe_ctlr *fip,
+ 				    struct fcoe_rport *new)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	LIBFCOE_FIP_DBG(fip, "claim resp from from rport %x - state %s\n",
+ 			new->rdata.ids.port_id, fcoe_ctlr_state(fip->state));
+@@ -2635,6 +2659,7 @@ static void fcoe_ctlr_vn_claim_resp(struct fcoe_ctl=
+r *fip,
+  */
+ static void fcoe_ctlr_vn_beacon(struct fcoe_ctlr *fip,
+ 				struct fcoe_rport *new)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	struct fc_lport *lport =3D fip->lp;
+ 	struct fc_rport_priv *rdata;
+@@ -2688,6 +2713,7 @@ static void fcoe_ctlr_vn_beacon(struct fcoe_ctlr *f=
+ip,
+  * Returns the soonest time for next age-out or a time far in the future=
+.
+  */
+ static unsigned long fcoe_ctlr_vn_age(struct fcoe_ctlr *fip)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	struct fc_lport *lport =3D fip->lp;
+ 	struct fc_rport_priv *rdata;
+@@ -2890,6 +2916,7 @@ static int fcoe_ctlr_vlan_parse(struct fcoe_ctlr *f=
+ip,
+ static void fcoe_ctlr_vlan_send(struct fcoe_ctlr *fip,
+ 			      enum fip_vlan_subcode sub,
+ 			      const u8 *dest)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	struct sk_buff *skb;
+ 	struct fip_vlan_notify_frame {
+@@ -2951,6 +2978,7 @@ static void fcoe_ctlr_vlan_send(struct fcoe_ctlr *f=
+ip,
+  */
+ static void fcoe_ctlr_vlan_disc_reply(struct fcoe_ctlr *fip,
+ 				      struct fcoe_rport *frport)
++	__must_hold(&fip->ctlr_mutex)
+ {
+ 	enum fip_vlan_subcode sub =3D FIP_SC_VL_NOTE;
+=20
