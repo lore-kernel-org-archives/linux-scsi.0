@@ -1,131 +1,149 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pz2-f12.google.com (mail-pz2-f12.google.com [74.125.228.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49765470E84;
-	Fri, 25 Sep 2026 12:51:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2627D49EC71
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 13:40:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790340679; cv=none; b=cbxUAt+Bj52HXNmqJdDpnNAZRsjj5Dgd/O161WRAo+DMTGbQdVXlm8ejnc2WCCOLb4Gapqz4iG/ciFfmYUzH3Fb6yyHLPlRKR4mLVMmSNvjuKwgfA7TJfhpfmucvwIfQFGEHOxwGkHf1IfITQQUtKPLI/jwraTzFblbmRySvdxY=
+	t=1790343620; cv=none; b=VFw+X4hoVgC0B+nOI9S7bKETX+XZHS59a9VMVqWHBNW7NabODb/huBZ2B3oJqa9F/At5m3+5kIc75jRj2DwoTrkI7HQ4p8CfzmKyxeU0GH7NR0aGTY+C4zPeIGz5EYNU5C4ljiPJdYXFTV2YuBxq385NtaKhEaONYHhe5xuqDJc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790340679; c=relaxed/simple;
-	bh=KO2TEy9loU8QK2IS8vmNyCcNin1HMfXr4zTewREYrSQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=na5ry8jNWA+1ZLoi1PtEmAHCFLXpUmeM9lbYdrEhjxGX2OMefczwPmCcKo4Fg/FErgUc9yy27ZLUMGenMb6leAUGwCQ45L2mdjgn34/0FLQS58ub8XJ49V55pFXdiCPQknizWltOxPMGh53WPKJfH1lYSckFVWoQphxnrWQKeFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y53djdWl; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790343620; c=relaxed/simple;
+	bh=ykf8iMJpAcatbima4Jd11GNPsy9PpqpBQ9DAP19u9qc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ess0jX4OZHieMchAjNbGe5mmmqf1y5R4Dz69qNCIKmrTzB6vTEL4sL4aHJZbEpYafm8P696pQHHXB1N89+0wJLti8v6umtQ4B74ebNZGxVNzwfN005Djy1baZCoFyy8FwYzkuAzvgJE5c91KLQH4hTyzj7TolJ16NjcUom/QvGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=e8gmGdSj; arc=none smtp.client-ip=74.125.228.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y53djdWl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47E621F00898;
-	Fri, 25 Sep 2026 12:51:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790340678;
-	bh=D3elFlAcGaZH0VbYl18NIe5+45MZxJu3tV5JyNgmc1k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Y53djdWlLd4diT/AvrOcXi2GrVkUMfZOD6dmk5wrBuqGrapZjitCvRDfrBfg9d5x0
-	 BnTKh4bxCfiX0tMKCdrW8JtFurhbBTQYO3LW88thuG01Cb/ZYE7hw59evarzLYTO38
-	 7wZU6lEFZdgk6ZZ7hHn/Dp2Lao89/ocNv/c66cAQXdIQWZDLRciBbhbYw+b5WFshwd
-	 SgfnG/v9weC791zQC+pDBEFG7GNZuzILu4ouO1eex0u514XgRGL7lU1F1WRmmHIXhs
-	 yqzMlC0qHyJaHLn+n3KPUNM1XrW75NKKVif7jm3AOyuuULaCC+82pdP6bc1SuqvtsJ
-	 b7HBLAWBmeiCg==
-Date: Fri, 25 Sep 2026 13:51:09 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Gregory Price <gourry@gourry.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 04/40] mm: consistently validate VMA state after
- mmap[_prepare] hooks
-Message-ID: <arZriK1tyOC7DjBw@gremlin>
-References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-4-4583d8a23bca@kernel.org>
- <arVW5i8pvySq6Co2@gourry-fedora-PF4VCD3F>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e8gmGdSj"
+Received: by mail-pz2-f12.google.com with SMTP id 41be03b00d2f7-cc1cebad4adso262150a12.1
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 06:40:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790343618; x=1790948418; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=a47bZYCTvp0bK7riN+3+5iqiQ4xgjbaSVoQw1BXJcB8=;
+        b=e8gmGdSjw9fDaZMOlVWjxG9jjzssUyKZ1AJcSmsQHqEM8s0BkkfkYcEua3NvEG/E+8
+         up8xe4m3skuN7b8JYbLX3iROJMp6Tt4OjWX6OZTGeUzUcOpHYV6Q/kczms652QlXCz6A
+         ZkeuCi6S+3tsgM2ipIm0KpaFy42DnWG/7csQD9EhmJSxHo6Q0vi2IXQy7BLuLHjjUmxC
+         2KT1jEqKz1wjcJk50Se3bd+TaTc69t/DLuP7E/dwnxG5TUR/g1lWPEJDMbYnxE5kN46d
+         jNrEgksxxTK5SZTKC0TVCfysl8Mk7b2bAlfOlqLh0Ui6gALWb2/3bm9PfxVdtZhnX6rw
+         2maw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790343618; x=1790948418;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=a47bZYCTvp0bK7riN+3+5iqiQ4xgjbaSVoQw1BXJcB8=;
+        b=W83j2ptQYsNZ1DFitWnkTcI5pf63whcJurN/Fi7lb6wBeRyhORPb04dSUSqmDv9Jm5
+         zXUEdXokG0OSFogcOFALXW/ZObdEBqf10Yx24h0xOW4qMFlYK2mF1CuFTRfpOQSXHnQc
+         yA1J1Zd3n/PwMt3VO29GWV8qpPggPNm1LQrMwQYe3qwfQkF7OIAj32N/u9igv2rQULn3
+         TDOyPxi6u1OD1pg/AswR6gAIRUKolgUhYFSjDfxBROodrc86bqQDhwcstxlnAIN0IApg
+         8Fpw8gYqGxxYKMM2K5kPvGYBmX7qj5t+uGKe6qwzFDQLjDJKM70m73jerOX5b5xOmkWI
+         DE7g==
+X-Forwarded-Encrypted: i=1; AKwUvBxPoru2FJoBFMfxzIiT2mtZUawKOnqoIVKtqudd8sweGCTQl+hv+Eo/otC+T6Jh/OoIzdBEgY7+iHbm@vger.kernel.org
+X-Gm-Message-State: AFuF++kPC5kgjET0zTQRRpdVed+A89Zw82fm+KBqp2T6lROVo3r2s2qh
+	xruPpx8q/3XGF4wsGmVt2WwNFENWr4oqSkuqpz/P8JDWtkbNBotaDy7Z
+X-Gm-Gg: AYBFou3Pa8niUOBvmnuO3yaHVKEqxFAA+dDWvKjoDYyV2Z8v491fquKgLAnagqR8PWf
+	mU+/D1nux1UMRzm5Wl1gru4BOoyOCHk7MwEzBmbxOEFrnLE5FA5qbUztf8JITkMdeSaNP7MSK/K
+	e0hcJ4eM5kTsA+1m7n6Dpcb2o/G2zz/VAEd+Q5Z7VeXw2GhhM+78t61Yj6JLK+HwunhycTfXi6/
+	+neisPA/F2hrbeHX5w1MMjJJg4tcAi3wTlXaB2TQw5bK4bgt32VXAyNwqLErwKHreWGGWUuYxz/
+	fa5dtzH6dFkb9Z+n1F4lSbKoX6iDKj8UwKrKpDYZlaJ4FaYZ/8+euN/34XVQiZD2q+dmeqqfmAS
+	fHDA/8AvL740FwZqyf6o0l8EMTMD3iC3rJndUUkA/ANBsCEeTLwiLYRqvfceOHQ1pNbRU/KyQEc
+	6/hdDGOgB1nH7pBEJ2wcT4L61NhDIoyYuCGKz7dsZprJFNAe4icAzNuCvBLYzOqUGQ4Pg9b+Hlb
+	/TBuQ==
+X-Received: by 2002:a05:6a21:2c01:b0:3dd:85a8:4c64 with SMTP id adf61e73a8af0-3de0e894361mr4873068637.43.1790343617712;
+        Fri, 25 Sep 2026 06:40:17 -0700 (PDT)
+Received: from ROGZephyrusG16Air ([240e:b8f:977f:f400:ec2a:b15e:fef8:70a])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc787943cc9sm1269673a12.21.2026.09.25.06.40.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Sep 2026 06:40:17 -0700 (PDT)
+From: Liang Haowen <nbg2974@gmail.com>
+To: linux-leds@vger.kernel.org
+Cc: Lee Jones <lee@kernel.org>,
+	Pavel Machek <pavel@kernel.org>,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Denis Benato <denis.benato@linux.dev>,
+	Armin Wolf <W_Armin@gmx.de>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
+	Marco Scardovi <scardracs@disroot.org>
+Subject: [RFC v9 0/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED driver for ROG NVMe enclosures
+Date: Fri, 25 Sep 2026 21:40:09 +0800
+Message-ID: <20260925134010.2815025-1-nbg2974@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <arVW5i8pvySq6Co2@gourry-fedora-PF4VCD3F>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Sep 24, 2026 at 01:17:28PM -0400, Gregory Price wrote:
-> On Thu, Sep 17, 2026 at 05:22:13PM +0100, Lorenzo Stoakes (ARM) wrote:
-> >  static inline int mmap_file(struct file *file, struct vm_area_struct *vma)
-> >  {
-> ...
-> > +	err = mmap_hook_validate(prev_start, prev_end, &prev_flags, vma);
-> > +	if (unlikely(err)) {
-> > +		vma->vm_start = prev_start;
-> > +		vma->vm_end = prev_end;
-> > +		vma_close(vma);
-> >  	}
-> > +
-> > +	return err;
-> >  }
-> >
->
-> I indepdeantly validated the sashiko report on this chunk.  Seems like
-> close() should be deferred until after __map_new_file_vma() calls
-> unmap_region().
+Hello,
 
-Ack perhaps too quickly dismissed that one...!
+v9, as its own thread, addressing Ilpo's line review of v8 and the
+one real sashiko item. This time the full pass over the code was
+done.
 
->
-> suggested fix is to drop vma_close() from mmap_file()  and update the
-> cleanup in __mmap_new_file_vma()
->
-> if (error) {
-> 	UNMAP_STATE(unmap, vmi, vma, vma->vm_start, vma->vm_end,
-> 		    map->prev, map->next);
-> 	vma_iter_set(vmi, vma->vm_end);
-> 	unmap_region(&unmap);
->
-> 	/* Release driver state only after its mappings are gone. */
-> 	vma_close(vma);
->
-> 	if (map_same_file(map))
-> 		fput(map->vm_file);
-> 	vma->vm_file = NULL;
->
-> 	return error;
-> }
->
-> Example race:
->
->   Thread A                              Thread B
->
->   mmap(MAP_FIXED, address A)
->     driver remap_pfn_range(A, page P)
->                                          load/store at known address A
->                                          hardware finds the new present PTE
->     validation fails
->     ->close() frees page P
->                                          UAF
->     unmap_region()
->     TLB shootdown
->
-> With that fix
+Changes since v8:
 
-Ack, yeah. It's kind of a situation that should never happen, but if validation
-is supposed to actually be run against things then we should keep the kernel
-stable when we do it :)
+- The DMA staging buffer is cacheline-aligned now, so an
+  invalidation on non-coherent architectures cannot clobber the
+  rest of struct asus_aura (the sashiko High).
 
-Will apply for the respin.
+- One pass over the code for includes, per Ilpo's comment: the
+  explicit set is array_size.h, blk-mq.h, blk_types.h, blkdev.h,
+  build_bug.h, byteorder/generic.h, cache.h, compiler.h,
+  compiler_attributes.h, container_of.h, dev_printk.h, err.h,
+  jiffies.h, the led headers, module.h, slab.h, sprintf.h,
+  spinlock.h, string.h, workqueue.h and the scsi ones; unused ones
+  (bits.h, kernel.h) dropped.
 
->
-> Reviewed-by: Gregory Price (Meta) <gourry@gourry.net>
+- ENE_OPCODE and ENE_TIMEOUT are defines again, the timeout value
+  stays 5 s (Ilpo).
 
-Thanks!
+- The container_of() declarations are single lines (Lee's v6
+  comment, Ilpo's reminder), and every loop over the LED array
+  uses ARRAY_SIZE() (Ilpo).
 
->
-> ~Gregory
->
+- The MODE/APPLY writes pass named locals with sizeof() instead of
+  compound literals (Ilpo).
 
---
-Cheers, Lorenzo
+- The driver now applies without saving. The controller flash only
+  changes on an explicit save command, which this driver never
+  sends: the LED class interface is runtime state and does not
+  promise persistence across power cycles, and a save on every
+  update would wear the flash. This drops the flash-wear caveat
+  from the previous versions.
+
+Everything else is unchanged from v8: the multicolor LED
+interface, the SCSI device handler attachment, the protocol
+handling and the remaining caveats. On the interface direction:
+the LED side will move onto Marco's Dynamic Lighting class
+(OpenGamingCollective/linux-unstable#17) once that settles; he has
+removed his draft SCSI driver from the series and says the SCSI
+part will be added by its maintainer, so the two efforts are
+aligned on the same split.
+
+v9 was verified on hardware again, including a visual check of the
+per-LED colours: the four LEDs, sequential updates, unplug under
+load (zero splats, zero leaked nodes, clean rmmod).
+
+Liang Haowen (1):
+  leds: asus-aura-scsi: Add ASUS Aura RGB LED driver for ROG NVMe
+    enclosures
+
+-- 
+2.55.0
+
+
+Liang Haowen (1):
+  leds: asus-aura-scsi: Add ASUS Aura RGB LED driver for ROG NVMe
+    enclosures
+
+-- 
+2.55.0
+
