@@ -1,330 +1,189 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx2-f42.google.com (mail-yx2-f42.google.com [74.125.224.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0C713A782B
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 18:33:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790361199; cv=none; b=ATswS3+Z5eSh+ONGwxJIctaZqNnSpUF5xtL/lLkYC9y83FM7YBeun9NIhpj6iBGbKPrnP+YLY1Adb09NXjAMldiAsTvTBiMCogATOmht6q50hYugzyAbvs7jkH7+XASfvqpz34tBDS+ZPqZBkAf5EsLUBfdOgV91UjzK6wvcvTI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790361199; c=relaxed/simple;
-	bh=A8yrtAMH4FO7lLZ1lN3spPan1Aen/bd6ugNJAhUUHcg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EsI7ku4M3YbTshcQSfxOdRybDlNQgOJCBFXM15NLkB4MH2heR2EblL1AWLSkjsh0y6LMa8dIz/CYONGflxHRbv+dLdNTkqqEI3up8W8qPH9ApVvHnJvOpfB2haN7sNFIhWeFbU9yS4CqS9Zyr/hoSh06gCB4DmYQcBgU9wNANHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Wx+Drm/M; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F45E31F98D
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 19:00:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.170
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790362827; cv=pass; b=upmqOvZvDUImVtqYkwL52KR1ljt24+anrnXqGMh1Szz9H18P9JTZM59Tm4OPuun+cfAAl02a0n1BnxGTu6LRCB6AxUFN3qer9K7Cq6NbX3/Yd/kkUFCdu0aLqzTnMYj8vz/RVhB5uywew0A29mI/m+FZhrX/je3C6mFKO0A8BKk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790362827; c=relaxed/simple;
+	bh=IBS//BdClcbt4jjfSzDHkVQw0yjeipX8TTaDpnjc8l0=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=T1072mfSYA53FkeaSO6ZbG+C4wzh9qYxYkqccOBOACs47iTFQ5Wo2+2mkeCn1khIvQnjjyqgHYmYTLCO5Zild6QeIMEdR9jvvgcSWSf/EC3K+NNG1xBT3poMM77T2Kyan/K3/FwC9fBw5qv79C4ITpXw4I3pC5lV0RuqdBwHk/A=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org; spf=pass smtp.mailfrom=ieee.org; dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b=TaaxFaTQ; arc=pass smtp.client-ip=74.125.224.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ieee.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ieee.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Wx+Drm/M"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hrzq13B2Bz1XM4Tl;
-	Fri, 25 Sep 2026 18:33:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1790361185; x=1792953186; bh=eI5W0
-	pTdgERPwOAys4aZQCt5L7Pq+LxA5M7f9sx6XlU=; b=Wx+Drm/MA6KDvhdF6WKCx
-	vFX5nJkhZmfIVooj20Peon/8/SOnVZxC2+IGexYzvzxE31yYelHlrUC8yr6AD9Pr
-	yWV5wXg/b+YISPTE4od0JtzPZe/c2/wJ+1oy9Dt9ixHe76r1nrMJxwlH1sqxHVF6
-	RqYWwPJVE8lPEIjYXGBUCWQwBLKPc0OAA7gKiH2MKv9XhQ6kRg2v2lCQ9gmskmbQ
-	PZl5NMV3llMBWJCOiAmpLmPfMLVxiTvPcsxh+G4ZYt48/btDhhONPVL2HpvUw2WG
-	/eZj4wPDnAqSV8yXVpAFB7p3WNkU23hvi9K6g1qwV4BZTG9nuJlgKKAvCfKYpSpA
-	w==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id zFv-swEm_fl2; Fri, 25 Sep 2026 18:33:05 +0000 (UTC)
-Received: from bvanassche.c.googlers.com.com (148.60.168.34.bc.googleusercontent.com [34.168.60.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hrzpl4gPnz1XM30g;
-	Fri, 25 Sep 2026 18:33:03 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Tomas Henzl <thenzl@redhat.com>,
-	Don Brace <don.brace@microchip.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Subject: [PATCH v4 51/54] scsi: smartpqi: Enable lock context analysis
-Date: Fri, 25 Sep 2026 11:26:29 -0700
-Message-ID: <4fd694d95bafa1b09d4e3ff997b10dcd04bc8f8e.1790360262.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-In-Reply-To: <cover.1790360262.git.bvanassche@acm.org>
-References: <cover.1790360262.git.bvanassche@acm.org>
+	dkim=pass (1024-bit key) header.d=ieee.org header.i=@ieee.org header.b="TaaxFaTQ"
+Received: by mail-yx2-f42.google.com with SMTP id 956f58d0204a3-672ce86b21aso1511962d50.3
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 12:00:25 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790362824; cv=none;
+        d=google.com; s=arc-20260327;
+        b=A3b1gj4GiZ7v/3a9xetMRtkItZaaQKsycB6xucS2IzwmV4W9WHN+klIrqi+NqbBq9O
+         1hzCCTqJQXc6ewTpfJZ2+GFMRX7ssHD28+Dtww9RkNaEWXOje/8AxoY7AW8LlBAfVIVJ
+         gSY0owC0xZYIoTYMH3tuBF6s8FtOn4s90J06cOJOzcOfGRnJXkFamIb2qIBHikD476uU
+         jg9FNLbQdfOtzXqQ+pD1JewE790e/BAEkGjxNuIBWTpzIuY+fIQcSQrm86ezgQYjtrYl
+         m+6QsgtqOmG382PBOhez8IKjCxKty+5HqVSkKWQUcC+R+KMi7ramSqCP7YcLruWrtLCe
+         gc/A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=XNEuaj3C2zPyx4uLD/ycI3R+udOOhjmo0BFRM3k7mn0=;
+        fh=+01239l+IJZgpVKKeQa7ZplxXT4xsrN+ZDxGe+Bec8E=;
+        b=epm2lPJqugFhSg3XLhxl4UxNsjTvXHGcOkv/tfMTsE19mgRxXs4S9sEE47dYKTi670
+         c9ehN5zt64+DcBdq5yl+JRuyPHR1hFtetlo9AFUW5tjNaDxzLUeWrN5uYJptHn4f/zNT
+         dCq8UUBOXRVRdgU0/kifOO3YL3baWhEaFm9cBzkkRMML1oiGfe/kkEGzoaUlG/fILfvo
+         2emAiCP+r2RER4cVsvHQIBIbWwOJl5ipFH/XlToj0puSCMkF0va+ssFTDY81E7kOJ3Th
+         caouL+y4453Gh5ufj218K/k2kT9B/ckk6FMUdxNOanxy8ipUWz1udpt3vn8n6LHOYAqY
+         ITlw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ieee.org; s=google; t=1790362824; x=1790967624; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=XNEuaj3C2zPyx4uLD/ycI3R+udOOhjmo0BFRM3k7mn0=;
+        b=TaaxFaTQz1kF5uG2jqXhatuZMloPwy1NklwLO3XEMBIRNv5eI6hsrtg/tNJoD2h9l1
+         bz1wbJoLHSkzDBfR8yKC5NkgNDqdRf4Gv7pBE9Rk5swoJ6mzqSFkvz5NK+d+rKD2bcCV
+         g3hx1igajAVIJF0oyYHn0LarVBls2mxDTPhxQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790362824; x=1790967624;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=XNEuaj3C2zPyx4uLD/ycI3R+udOOhjmo0BFRM3k7mn0=;
+        b=PcbpoNjWhYB2N7+aya9oAfJ1JYys7TDe+yp20AeCT3wyhE8c+lfAn4Qma1/emUz4pe
+         7luNy9cV7yTcUazYka6wbSRZgK2/Nw7CtBgQqpOaxqt2sDJ7nnTFOK5HAim9hjJhS8kV
+         mwwyigoPZRAgu1TR6hbBXWyIe17cq5Hn7fk9kD8F6IgtwOUEXOw+1AIXHV3GuqtTVrDy
+         GUIuyNjniXQtDFOOp8NwOkzVEFlltGZBFIO7ZqXhLdxfGhpPUVrC95AAirCBg42zM7DZ
+         kTSJOaqz5vAPIS9qeMd8qLAvUzfaNjIra9WX38DPHnbTUuxXE8Q7UnEetlJCjMZdhxty
+         ybnQ==
+X-Gm-Message-State: AFuF++nAw6RfrKUdvgUlPTbiMg9RAZ8rkIxtgQ600WD8kZ1zCET9U6Dy
+	kpyJiCpMRHGDE/nEDHLCCozUySZfiQQo9oVHcAPzPJUTU5lNO4odKfKtiL3wZIQJxlohtUValVu
+	GmK8wrjsk06dplBWii4NPnqFG4w40YHuV7hmslSnzIuxX4a5GN6o+W7yPD4w=
+X-Gm-Gg: AYBFou1cRnlzaz7QtJTiDNGBsBAIUIHkLIbeMyHknPq0ZrxxtyzxfxbyoEsf/FYKPBE
+	dvRX5iOhDJ6QhQn4csqTvFiK7+44/NmlEbRdXCDgwrfda+MF4fuS8GS0PkiF9g2G51UqRtWyco0
+	XU+//wm0wNzjrTvu8PEjarc5+PXet0z1pPftaQMHNDZLB/klOyJoFlS8rufQUraGr/x1MNRxpZL
+	iFEbFmtWT93wbsR2m2468vKwnwWvkdSir3WeFX6NsZYQxvW5t9pkDlZE6dUCHmJlazQBdMoziyG
+	cP4phgmcwtNl4ZMa2szAfx0c67rnAnCNz9fRZMBonSaECZZTFKXHAJVGinDiiRoaraOgY8bSijj
+	n1DQzGM90+R7HqlAXwyR2SuyDn79SIMjddzekFgRWr0hq8JMo/azXxmxcJqyEeOOC8iGNJtfB/U
+	V7T1OMwnUm4w+xb8x3pc9jObx2KXvIHA==
+X-Received: by 2002:a05:690e:d0a:b0:674:9cc:4127 with SMTP id
+ 956f58d0204a3-67411464979mr803543d50.140.1790362824087; Fri, 25 Sep 2026
+ 12:00:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+From: "Pluess, Tobias" <tpluess@ieee.org>
+Date: Fri, 25 Sep 2026 21:00:12 +0200
+X-Gm-Features: AclHuK8dbhumSL3Zpeq8yQjRveVvf292Gh3anihlZ17P8f90AM2x-jEInxBllx8
+Message-ID: <CAB4Wsm8AM3h19yLR26XQOtKX78ynQu-pC2H-gECvNtvJi58gwQ@mail.gmail.com>
+Subject: 
+To: linux-scsi@vger.kernel.org
+Cc: sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com, 
+	suganath-prabu.subramani@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
 
-Document locking requirements with __acquires(), __releases() and
-__cond_releases(). Suppress context analysis complaints with __acquire()
-annotations. This approach has been chosen because this driver uses the
-mutex API incorrectly. Fixing this driver falls outside the scope of this
-patch series.
+Hi,
 
-Cc: Tomas Henzl <thenzl@redhat.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/smartpqi/Makefile        |  3 ++
- drivers/scsi/smartpqi/smartpqi_init.c | 67 ++++++++++++++++++++++-----
- 2 files changed, 59 insertions(+), 11 deletions(-)
+I am seeing a problem with the mpt3sas driver when using an
+LSI/Broadcom SAS9207-8e connected to an external tape drive (HP
+Ultrium 6650).
+This setup worked without issues with older kernels. I cannot 100%
+sure identify at which date the problem started to occur, but I would
+say it started to occur around April or May this year.
 
-diff --git a/drivers/scsi/smartpqi/Makefile b/drivers/scsi/smartpqi/Makef=
-ile
-index 28985e508b5c..71db5cd96284 100644
---- a/drivers/scsi/smartpqi/Makefile
-+++ b/drivers/scsi/smartpqi/Makefile
-@@ -1,3 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
-+
-+CONTEXT_ANALYSIS :=3D y
-+
- obj-$(CONFIG_SCSI_SMARTPQI) +=3D smartpqi.o
- smartpqi-objs :=3D smartpqi_init.o smartpqi_sis.o smartpqi_sas_transport=
-.o
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpq=
-i/smartpqi_init.c
-index d8d0fe915805..9401d9347404 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -97,8 +97,12 @@ static int pqi_aio_submit_r56_write_io(struct pqi_ctrl=
-_info *ctrl_info,
- 	struct scsi_cmnd *scmd, struct pqi_queue_group *queue_group,
- 	struct pqi_encryption_info *encryption_info, struct pqi_scsi_dev *devic=
-e,
- 	struct pqi_scsi_dev_raid_map_data *rmd);
--static void pqi_ofa_ctrl_quiesce(struct pqi_ctrl_info *ctrl_info);
--static void pqi_ofa_ctrl_unquiesce(struct pqi_ctrl_info *ctrl_info);
-+static void pqi_ofa_ctrl_quiesce(struct pqi_ctrl_info *ctrl_info)
-+	__acquires(&ctrl_info->scan_mutex)
-+	__acquires(&ctrl_info->lun_reset_mutex);
-+static void pqi_ofa_ctrl_unquiesce(struct pqi_ctrl_info *ctrl_info)
-+	__releases(&ctrl_info->lun_reset_mutex)
-+	__releases(&ctrl_info->scan_mutex);
- static int pqi_ofa_ctrl_restart(struct pqi_ctrl_info *ctrl_info, unsigne=
-d int delay_secs);
- static void pqi_host_setup_buffer(struct pqi_ctrl_info *ctrl_info, struc=
-t pqi_host_memory_descriptor *host_memory_descriptor, u32 total_size, u32=
- min_size);
- static void pqi_host_free_buffer(struct pqi_ctrl_info *ctrl_info, struct=
- pqi_host_memory_descriptor *host_memory_descriptor);
-@@ -312,12 +316,14 @@ static inline void pqi_save_fw_triage_setting(struc=
-t pqi_ctrl_info *ctrl_info, b
- }
-=20
- static inline void pqi_ctrl_block_scan(struct pqi_ctrl_info *ctrl_info)
-+	__acquires(&ctrl_info->scan_mutex)
- {
- 	ctrl_info->scan_blocked =3D true;
- 	mutex_lock(&ctrl_info->scan_mutex);
- }
-=20
- static inline void pqi_ctrl_unblock_scan(struct pqi_ctrl_info *ctrl_info=
-)
-+	__releases(&ctrl_info->scan_mutex)
- {
- 	ctrl_info->scan_blocked =3D false;
- 	mutex_unlock(&ctrl_info->scan_mutex);
-@@ -329,11 +335,13 @@ static inline bool pqi_ctrl_scan_blocked(struct pqi=
-_ctrl_info *ctrl_info)
- }
-=20
- static inline void pqi_ctrl_block_device_reset(struct pqi_ctrl_info *ctr=
-l_info)
-+	__acquires(&ctrl_info->lun_reset_mutex)
- {
- 	mutex_lock(&ctrl_info->lun_reset_mutex);
- }
-=20
- static inline void pqi_ctrl_unblock_device_reset(struct pqi_ctrl_info *c=
-trl_info)
-+	__releases(&ctrl_info->lun_reset_mutex)
- {
- 	mutex_unlock(&ctrl_info->lun_reset_mutex);
- }
-@@ -436,11 +444,13 @@ static inline bool pqi_device_offline(struct pqi_sc=
-si_dev *device)
- }
-=20
- static inline void pqi_ctrl_ofa_start(struct pqi_ctrl_info *ctrl_info)
-+	__acquires(&ctrl_info->ofa_mutex)
- {
- 	mutex_lock(&ctrl_info->ofa_mutex);
- }
-=20
- static inline void pqi_ctrl_ofa_done(struct pqi_ctrl_info *ctrl_info)
-+	__releases(&ctrl_info->ofa_mutex)
- {
- 	mutex_unlock(&ctrl_info->ofa_mutex);
- }
-@@ -2305,6 +2315,8 @@ static void pqi_update_device_list(struct pqi_ctrl_=
-info *ctrl_info,
- 	 * requests before removal.
- 	 */
- 	if (pqi_ofa_in_progress(ctrl_info)) {
-+		/* What guarantees that &ctrl_info->lun_reset_mutex is held here? */
-+		__acquire(&ctrl_info->lun_reset_mutex);
- 		list_for_each_entry_safe(device, next, &delete_list, delete_list_entry=
-)
- 			if (pqi_is_device_added(device))
- 				pqi_device_remove_start(device);
-@@ -3672,6 +3684,8 @@ static void pqi_process_soft_reset(struct pqi_ctrl_=
-info *ctrl_info)
- 		pqi_save_ctrl_mode(ctrl_info, SIS_MODE);
- 		rc =3D pqi_ofa_ctrl_restart(ctrl_info, delay_secs);
- 		pqi_host_free_buffer(ctrl_info, &ctrl_info->ofa_memory);
-+		/* What guarantees that &ctrl_info->ofa_mutex is held here? */
-+		__acquire(&ctrl_info->ofa_mutex);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		dev_info(&ctrl_info->pci_dev->dev,
- 				"Online Firmware Activation: %s\n",
-@@ -3683,6 +3697,10 @@ static void pqi_process_soft_reset(struct pqi_ctrl=
-_info *ctrl_info)
- 		if (ctrl_info->soft_reset_handshake_supported)
- 			pqi_clear_soft_reset_status(ctrl_info);
- 		pqi_host_free_buffer(ctrl_info, &ctrl_info->ofa_memory);
-+		/* What guarantees that these mutexes are held here? */
-+		__acquire(&ctrl_info->lun_reset_mutex);
-+		__acquire(&ctrl_info->ofa_mutex);
-+		__acquire(&ctrl_info->scan_mutex);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		pqi_ofa_ctrl_unquiesce(ctrl_info);
- 		break;
-@@ -3693,6 +3711,10 @@ static void pqi_process_soft_reset(struct pqi_ctrl=
-_info *ctrl_info)
- 			"unexpected Online Firmware Activation reset status: 0x%x\n",
- 			reset_status);
- 		pqi_host_free_buffer(ctrl_info, &ctrl_info->ofa_memory);
-+		/* What guarantees that these mutexes are held here? */
-+		__acquire(&ctrl_info->lun_reset_mutex);
-+		__acquire(&ctrl_info->ofa_mutex);
-+		__acquire(&ctrl_info->scan_mutex);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		pqi_ofa_ctrl_unquiesce(ctrl_info);
- 		pqi_take_ctrl_offline(ctrl_info, PQI_OFA_RESPONSE_TIMEOUT);
-@@ -3700,25 +3722,32 @@ static void pqi_process_soft_reset(struct pqi_ctr=
-l_info *ctrl_info)
- 	}
- }
-=20
--static void pqi_ofa_memory_alloc_worker(struct work_struct *work)
-+static inline struct pqi_ctrl_info *alloc_work_to_ctrl_info(struct work_=
-struct *work)
- {
--	struct pqi_ctrl_info *ctrl_info;
-+	return container_of(work, struct pqi_ctrl_info, ofa_memory_alloc_work);
-+}
-=20
--	ctrl_info =3D container_of(work, struct pqi_ctrl_info, ofa_memory_alloc=
-_work);
-+static void pqi_ofa_memory_alloc_worker(struct work_struct *work)
-+	__acquires(&alloc_work_to_ctrl_info(work)->ofa_mutex)
-+{
-+	struct pqi_ctrl_info *ctrl_info =3D alloc_work_to_ctrl_info(work);
-=20
- 	pqi_ctrl_ofa_start(ctrl_info);
- 	pqi_host_setup_buffer(ctrl_info, &ctrl_info->ofa_memory, ctrl_info->ofa=
-_bytes_requested, ctrl_info->ofa_bytes_requested);
- 	pqi_host_memory_update(ctrl_info, &ctrl_info->ofa_memory, PQI_VENDOR_GE=
-NERAL_OFA_MEMORY_UPDATE);
- }
-=20
--static void pqi_ofa_quiesce_worker(struct work_struct *work)
-+static inline struct pqi_ctrl_info *quiesce_work_to_ctrl_info(struct wor=
-k_struct *work)
- {
--	struct pqi_ctrl_info *ctrl_info;
--	struct pqi_event *event;
--
--	ctrl_info =3D container_of(work, struct pqi_ctrl_info, ofa_quiesce_work=
-);
-+	return container_of(work, struct pqi_ctrl_info, ofa_quiesce_work);
-+}
-=20
--	event =3D &ctrl_info->events[pqi_event_type_to_event_index(PQI_EVENT_TY=
-PE_OFA)];
-+static void pqi_ofa_quiesce_worker(struct work_struct *work)
-+	__acquires(&quiesce_work_to_ctrl_info(work)->scan_mutex)
-+	__acquires(&quiesce_work_to_ctrl_info(work)->lun_reset_mutex)
-+{
-+	struct pqi_ctrl_info *ctrl_info =3D quiesce_work_to_ctrl_info(work);
-+	struct pqi_event *event =3D &ctrl_info->events[pqi_event_type_to_event_=
-index(PQI_EVENT_TYPE_OFA)];
-=20
- 	pqi_ofa_ctrl_quiesce(ctrl_info);
- 	pqi_acknowledge_event(ctrl_info, event);
-@@ -3749,6 +3778,8 @@ static bool pqi_ofa_process_event(struct pqi_ctrl_i=
-nfo *ctrl_info,
- 			"received Online Firmware Activation cancel request: reason: %u\n",
- 			ctrl_info->ofa_cancel_reason);
- 		pqi_host_free_buffer(ctrl_info, &ctrl_info->ofa_memory);
-+		/* What guarantees that &ctrl_info->ofa_mutex is held here? */
-+		__acquire(&ctrl_info->ofa_mutex);
- 		pqi_ctrl_ofa_done(ctrl_info);
- 		break;
- 	default:
-@@ -8893,6 +8924,8 @@ static int pqi_ctrl_init_resume(struct pqi_ctrl_inf=
-o *ctrl_info)
- 	}
-=20
- 	if (pqi_ofa_in_progress(ctrl_info)) {
-+		/* What guarantees that &ctrl_info->scan_mutex is held here? */
-+		__acquire(&ctrl_info->scan_mutex);
- 		pqi_ctrl_unblock_scan(ctrl_info);
- 		if (ctrl_info->ctrl_logging_supported) {
- 			if (!ctrl_info->ctrl_log_memory.host_memory)
-@@ -9653,7 +9686,11 @@ static inline enum bmic_flush_cache_shutdown_event=
- pqi_get_flush_cache_shutdown_
- 	return SUSPEND;
- }
-=20
-+#define TO_CTRL_INFO(dev) ((struct pqi_ctrl_info *)pci_get_drvdata(to_pc=
-i_dev(dev)))
-+
- static int pqi_suspend_or_freeze(struct device *dev, bool suspend)
-+	__acquires(&TO_CTRL_INFO(dev)->scan_mutex)
-+	__acquires(&TO_CTRL_INFO(dev)->lun_reset_mutex)
- {
- 	struct pci_dev *pci_dev;
- 	struct pqi_ctrl_info *ctrl_info;
-@@ -9687,11 +9724,15 @@ static int pqi_suspend_or_freeze(struct device *d=
-ev, bool suspend)
- }
-=20
- static __maybe_unused int pqi_suspend(struct device *dev)
-+	__acquires(&TO_CTRL_INFO(dev)->scan_mutex)
-+	__acquires(&TO_CTRL_INFO(dev)->lun_reset_mutex)
- {
- 	return pqi_suspend_or_freeze(dev, true);
- }
-=20
- static int pqi_resume_or_restore(struct device *dev)
-+	__cond_releases(0, &TO_CTRL_INFO(dev)->lun_reset_mutex)
-+	__cond_releases(0, &TO_CTRL_INFO(dev)->scan_mutex)
- {
- 	int rc;
- 	struct pci_dev *pci_dev;
-@@ -9715,11 +9756,15 @@ static int pqi_resume_or_restore(struct device *d=
-ev)
- }
-=20
- static int pqi_freeze(struct device *dev)
-+	__acquires(&TO_CTRL_INFO(dev)->scan_mutex)
-+	__acquires(&TO_CTRL_INFO(dev)->lun_reset_mutex)
- {
- 	return pqi_suspend_or_freeze(dev, false);
- }
-=20
- static int pqi_thaw(struct device *dev)
-+	__cond_releases(0, &TO_CTRL_INFO(dev)->lun_reset_mutex)
-+	__cond_releases(0, &TO_CTRL_INFO(dev)->scan_mutex)
- {
- 	int rc;
- 	struct pci_dev *pci_dev;
+What happens:
+a) the external tape drive is connected to the HBA using a SAS 8088 cable.
+b) the tape drive is switched on and is detected normally and works as
+expected, backups can be made.
+c) after the backup finishes, the tape is ejected and the drive is
+idle, it is switched off.
+
+Here begins the interesting story. In the dmesg, I see the following errors:
+
+[Fri Sep 25 20:02:40 2026] mpt2sas_cm6: detecting: handle(0x0009),
+                           sas_address(0x50014380353cba70), phy(3)
+[Fri Sep 25 20:02:40 2026] mpt2sas_cm6: REPORT_LUNS: handle(0x0009),
+                           retries(0)
+[Fri Sep 25 20:02:40 2026] TEST_UNIT_READY: handle(0x0009) lun(0)
+[Fri Sep 25 20:02:41 2026] mpt2sas_cm6: detecting: handle(0x0009),
+                           sas_address(0x50014380353cba70), phy(3)
+[Fri Sep 25 20:02:41 2026] mpt2sas_cm6: REPORT_LUNS: handle(0x0009),
+                           retries(0)
+[Fri Sep 25 20:02:41 2026] TEST_UNIT_READY: handle(0x0009) lun(0)
+[Fri Sep 25 20:02:41 2026] START_UNIT: handle(0x0009), lun(0)
+[Fri Sep 25 20:02:45 2026] TEST_UNIT_READY: handle(0x0009) lun(0)
+[Fri Sep 25 20:02:46 2026] mpt2sas_cm6: detecting: handle(0x0009),
+                           sas_address(0x50014380353cba70), phy(3)
+[Fri Sep 25 20:02:46 2026] mpt2sas_cm6: REPORT_LUNS: handle(0x0009),
+                           retries(0)
+[Fri Sep 25 20:02:46 2026] TEST_UNIT_READY: handle(0x0009) lun(0)
+[Fri Sep 25 20:02:46 2026] START_UNIT: handle(0x0009), lun(0)
+[Fri Sep 25 20:02:49 2026] TEST_UNIT_READY: handle(0x0009) lun(0)
+[Fri Sep 25 20:02:52 2026] mpt2sas_cm6: log_info(0x31130000):
+originator(PL), code(0x13), sub_code(0x0000)
+[Fri Sep 25 20:02:53 2026] mpt2sas_cm6: handle(0x0009),
+ioc_status(0x0022) failure at
+drivers/scsi/mpt3sas/mpt3sas_transport.c:228/_transport_set_identify()!
+[Fri Sep 25 20:02:53 2026] mpt2sas_cm6: failure at
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8407/_scsih_add_device()!
+[Fri Sep 25 20:02:54 2026] mpt2sas_cm6: handle(0x0009),
+ioc_status(0x0022) failure at
+drivers/scsi/mpt3sas/mpt3sas_transport.c:228/_transport_set_identify()!
+[Fri Sep 25 20:02:54 2026] mpt2sas_cm6: failure at
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:8407/_scsih_add_device()!
+[Fri Sep 25 20:02:55 2026] mpt2sas_cm6: handle(0x0009),
+ioc_status(0x0022) failure at
+drivers/scsi/mpt3sas/mpt3sas_transport.c:228/_transport_set_identify()!
+
+Here, the last 2 lines are printed to dmesg approximately every
+second, ad infinitum until the system is rebooted; the error never
+stops. I am certain this did not occur with older versions of mpt3sas,
+but as I said, I cannot pinpoint exactly when the change happened.
+
+Powering up the tape drive again fixes the error, but as soon as the
+tape drive is switched off again, the error reappears.
+
+However, the error doesn't occur every time the drive is switched off.
+Sometimes the mpt3sas driver seems to be happy and no errors are
+reported. I think it has to do with some kind of timing, i.e. in which
+internal state the mpt3sas driver is when the external drive is
+disconnected.
+
+Hardware:
+* Serial Attached SCSI controller: Broadcom / LSI SAS2308 PCI-Express
+Fusion-MPT SAS-2 (rev 05)
+* external tape drive HP Ultrium 6650
+* Linux pve0 7.0.14-12-pve #1 SMP PREEMPT_DYNAMIC PMX 7.0.14-12
+(2026-08-11T11:05Z) x86_64 GNU/Linux
+* mpt3sas
+
+
+I wonder why this problem occurs and how it could be prevented. I have
+to say, my hot swap HDDs are connected to
+
+Serial Attached SCSI controller: Broadcom / LSI SAS3416 Fusion-MPT
+Tri-Mode I/O Controller Chip (IOC) (rev 01)
+
+and here, I never have the issue, it only appears with the 9207-8e.
+
+I made my own "fix" to stop the driver from filling up my dmesg with
+errors; using a little bash script with these commands
+
+echo "0000:51:00.0" > /sys/bus/pci/drivers/mpt3sas/unbind
+echo "0000:51:00.0" > /sys/bus/pci/drivers/mpt3sas/bind
+
+resets the driver and it then stops printing errors. However I think
+this is not a true solution to the problem, it just fixes the symptom.
+
+
+Any ideas how to proceed?
+Unfortunately I don't quickly have another system handy where I could
+test older versions of the driver.
+
+Thanks,
+Greetings
+Tobias
