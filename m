@@ -1,55 +1,55 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33B913BE178
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 18:29:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35ECD3FFAA4
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 18:29:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790360971; cv=none; b=Jg7Xe/9UalzwDoR1INLhsqvWMth9zrkxYZf1SE2qiPhX5NiPWlgJ/qVn0jj00vfnqvwRvx1gX/yxtwtNx7DWHVKlSIDGarsR5/QA5ScunreQW93T/R2Cz2Zr5vW7IFaIL3KL96/vod4mQkQJas+tbqcTDQzaRmewemUpH5m5kEo=
+	t=1790360978; cv=none; b=hsQV8xy9EuMZPwX3z9lxjeYw1/3uel0z3l6RwlQr6MmWgezzCEVYRD5buJz/Ak+rUxhYGLBde5gDD76zfyGQWqTsItU1jW6D2mr4BFxcFIGhpFZSULVBkvMxImJMNIYvUwCSiW6dA97aw39LQR2MWrj1/V4p0lLbIbBSg6Bz4o8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790360971; c=relaxed/simple;
-	bh=vVHxKg/CcHvIDsO2xzGwGN5dyt7ejLDBb/8mLOkUXrs=;
+	s=arc-20240116; t=1790360978; c=relaxed/simple;
+	bh=eR+lxdrj9h43hWxvPvQYuh4o4+yZXm2dLUA5q7qAUCI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qm+iyiBVYaMcKmJS1dLmMwjS/w6ckBxXZaL2Wc84LiHOBj5felm70uEMPkTjhkJURckTtEAQheOTU8m8AmqREZ0D/v2VADRqZNRqe1M8Ry0J1yQ3X+BXkziDSGsAGSXNIINUYj+RcQg0As/UUuA9SG3YKQDXu+O3ahTPoQ1PVz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Gr3sD//b; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=kNbxwTXJgZ5ChEs2k+UwSSRSCl0pQrFObhGNPSCUOsntXNsKcaB8VhU3PhgaU5Sr6GGtvllZ5iyzs/3YbJJDMPYYHGq49Fya74WTA/nImDx+IvRbXm54tCma8TwJ6EpqacDkyHR8aZkXT0wJIHPSLlwlEF1Z7LiCRG/C1xGTwWY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=H0U+MOUL; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Gr3sD//b"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="H0U+MOUL"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hrzkd6fs4z1XM4Tl;
-	Fri, 25 Sep 2026 18:29:29 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4hrzkm6G7nz1XM4Tl;
+	Fri, 25 Sep 2026 18:29:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1790360967; x=1792952968; bh=vVHxK
-	g/CcHvIDsO2xzGwGN5dyt7ejLDBb/8mLOkUXrs=; b=Gr3sD//bBwImYwhXvv8y6
-	68C7EYf92zt2vzem1URzOUEa6Y+G6ZpPOV1okvnDRC9XWRc1kiGCCng+vdYwMqEE
-	DTm3fmKvAf6SSoGIEaW3rnEQit5yMd8dPR3Zn+hxuesLgl5SjKqyuFH/mD/Bcmqg
-	ICbvwgsB4KiTrXUNrX9nddXC2wiMdYvD/JxgmDwaUx2fLB8s6/e9FjRLI9snieoH
-	LyKVpXJTkuWBnFa0+//Jm9zCs3bP1k74xFUuyqa5dzq6hcGoAIQwOUnXc+mqpFt/
-	RAtrortGmqA7jixPNYE7cZ5qDpy8qIaGuAD4uXHtUBk8/FWDh8N7GYLHtMa7xky6
+	:received:received; s=mr01; t=1790360973; x=1792952974; bh=eR+lx
+	drj9h43hWxvPvQYuh4o4+yZXm2dLUA5q7qAUCI=; b=H0U+MOULLqYnXrQjJgtwu
+	ViE8SLbHYmiWtjbkUYBr5s41UGUvODel9/+JODCv92fk0hu5gKyDWgVJqb1d6JBQ
+	IAPkYb4hXasx8rnSMgdAhjD2Hf8ohoAbPyXDeSVYZGhQO34ZCD6bd9htu66zo3/i
+	PzS8kBeitAstDEoFiZPJ63hP5Q4yfTvBaFOXQWg8wXngjdroUPFMhJ7ImcvOfxyv
+	plh+3jhoQimfyZBoZ0tYTH4F3Kn3SmimkAHyC1fO6Wx3zbkwWbss0ScPeCOkTnhv
+	+tl+5s8sMrscGzVYoKkmcPaAlW8cl0N0ADpmRXYTglIkV6ptrOliorluHS1Pa1a0
 	A==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id p8dquUD5-aM8; Fri, 25 Sep 2026 18:29:27 +0000 (UTC)
+ id Yw6uWdWDLX7p; Fri, 25 Sep 2026 18:29:33 +0000 (UTC)
 Received: from bvanassche.c.googlers.com.com (148.60.168.34.bc.googleusercontent.com [34.168.60.148])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hrzkY0PgLz1XM5kW;
-	Fri, 25 Sep 2026 18:29:24 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4hrzkh1f98z1XM4Sx;
+	Fri, 25 Sep 2026 18:29:31 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
-Subject: [PATCH v4 10/54] scsi: aic94xx: Enable lock context analysis
-Date: Fri, 25 Sep 2026 11:25:48 -0700
-Message-ID: <ad452cff7f934476d9bdadd22d2ff6c73eedb0f7.1790360262.git.bvanassche@acm.org>
+Subject: [PATCH v4 11/54] scsi: arcmsr: Enable lock context analysis
+Date: Fri, 25 Sep 2026 11:25:49 -0700
+Message-ID: <98a213b9a65dab8bdd73eb1f9317844f35502498.1790360262.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
 In-Reply-To: <cover.1790360262.git.bvanassche@acm.org>
 References: <cover.1790360262.git.bvanassche@acm.org>
@@ -63,20 +63,20 @@ Content-Transfer-Encoding: quoted-printable
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/aic94xx/Makefile | 2 ++
+ drivers/scsi/arcmsr/Makefile | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/aic94xx/Makefile b/drivers/scsi/aic94xx/Makefil=
-e
-index db9fbe3a8e4c..4ab04ce6edf2 100644
---- a/drivers/scsi/aic94xx/Makefile
-+++ b/drivers/scsi/aic94xx/Makefile
-@@ -6,6 +6,8 @@
- # Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
- #
+diff --git a/drivers/scsi/arcmsr/Makefile b/drivers/scsi/arcmsr/Makefile
+index 9051f66cae36..6c12d36994da 100644
+--- a/drivers/scsi/arcmsr/Makefile
++++ b/drivers/scsi/arcmsr/Makefile
+@@ -2,6 +2,8 @@
+ # File: drivers/arcmsr/Makefile
+ # Makefile for the ARECA PCI-X PCI-EXPRESS SATA RAID controllers SCSI dr=
+iver.
 =20
 +CONTEXT_ANALYSIS :=3D y
 +
- ccflags-$(CONFIG_AIC94XX_DEBUG) :=3D -DASD_DEBUG -DASD_ENTER_EXIT
+ arcmsr-objs :=3D arcmsr_attr.o arcmsr_hba.o
 =20
- obj-$(CONFIG_SCSI_AIC94XX) +=3D aic94xx.o
+ obj-$(CONFIG_SCSI_ARCMSR) :=3D arcmsr.o
