@@ -1,191 +1,86 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA3DD33F8AA;
-	Fri, 25 Sep 2026 16:36:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0354233943;
+	Fri, 25 Sep 2026 16:43:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790354216; cv=none; b=jrzLKqC6ZoU+gRP0NU/chB6eZ5nPzOvarUnGSFuS/Dpc/kAQfHAefVMdMANXeP+Ubnq7RoNK1YF6F4b/xjDvFqkjJBP79ufIxQS0huY4cJQ543F1Hj3Jy4svjLgZWVrMzq6nLb186gVr8jA9V/Sbkm3a9S1fOtPDPSm5RlcJm8g=
+	t=1790354599; cv=none; b=iW20VfJ6++dYf9idpVu3qEo/AmoT++I99jTaiQikN3GdJE2SH0thUbWGikUVICRPijFtzOY+VH05IgCKI8KGq54VVfFmxeDivoLnfcQBexETWKHWHmdHZxTNE4jDNE+2ub2pG+Qq5Mv8YMepfClOEsbqtsR3Llh06scv0wQlIpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790354216; c=relaxed/simple;
-	bh=DBbaOC65r7+Dgxfq2B06H/Tjz/ApSVA3lOC0US27Vhg=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=gb56LtB/XJdDKJi6PABRaMZQl2isipFSutyET/wvg5qigzuoWqwM9y5cOKTsuXelLyjmWzUz2DXRUOIIhpqNyTPOUcC6IWZqJzf9FNamq/+3lRDcx/NpccmOc+WeCpPafqjrHEmgxFCaMlLp0zrdj1gSz7F6gOagQIYL/Ljgc48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=e3Y1G8CS; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1790354599; c=relaxed/simple;
+	bh=C0VoGDzcMAmv6Or+++plvdMsJr8cWNXzmxPzoPDA5cs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GDoNYNY1eyf0wHYni4Is5AO2fgU8E9huLHviAgxjvap1LdTOYcHphW1Gm+xoJA9rBma2zr/FEaDTAHvIbyXBiKKeHphPq5ZsenUAGtc3ZEmHbrt0kOLqldhihmJAghpZkdp771tb2YyVcJKgopqSg8hJhkmPXoZYKXOOfDV+3Ek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZC9r9L3i; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="e3Y1G8CS"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68PG5L1r3853761;
-	Fri, 25 Sep 2026 16:36:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=GC41UHDpoaje/A8ZJCU6uWD8vJTVAF
-	A8F56NYVISa4I=; b=e3Y1G8CSG15a8O1FNyyr9FE00dXIyyQ68i1so8MxLKJ322
-	ly4PFUAgnjASCO8OP0TFQweDFjjUe3lREfhvgWP3AEc4qLH4CVKjuI6Plc1+fALP
-	ePi8t/SZhudqgCsFOdThzLx64lI5x2CQj0cyaazo7jhXgOP0T1ZunEGrEQM8MsYZ
-	J2QH9/aQ8tFcWY2WzZm8UPDogD/Kn1vPuBlXDg1snGkvSPRzUc7a0bsh49ptBWqT
-	jTDOQpNa3luHz811ghSJSfXvI/lgl7+4uR7KI3HU5mpx10CKdfZuFRgcY2/KY9Uz
-	KE3sRXJ11josr4HWi8s3OI2d1Yxyd9mlM0Z5WSxg==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gske283ng-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 25 Sep 2026 16:36:52 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68PG37a14192011;
-	Fri, 25 Sep 2026 16:36:51 GMT
-Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gvb8k35s0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Sep 2026 16:36:51 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-	by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68PGapKQ2425598
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 25 Sep 2026 16:36:51 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4648C5805E;
-	Fri, 25 Sep 2026 16:36:51 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 3608858055;
-	Fri, 25 Sep 2026 16:36:51 +0000 (GMT)
-Received: from d (unknown [9.16.59.154])
-	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri, 25 Sep 2026 16:36:51 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: sashiko-bot@kernel.org
-Cc: "Tyrel Datwyler" <tyreld@linux.ibm.com>, sashiko-reviews@lists.linux.dev,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v11 04/11] scsi: ibmvfc: add basic FPIN support
-In-Reply-To: <87tsnd1f2r.fsf@linux.ibm.com> (Dave Marquardt's message of "Fri,
-	25 Sep 2026 11:16:44 -0500")
-References: <20260925044900.414340-1-tyreld@linux.ibm.com>
-	<20260925044900.414340-5-tyreld@linux.ibm.com>
-	<20260925050305.6F20E1F000FF@smtp.kernel.org>
-	<87tsnd1f2r.fsf@linux.ibm.com>
-Date: Fri, 25 Sep 2026 11:36:50 -0500
-Message-ID: <87o6dl1e59.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZC9r9L3i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8697B1F00893;
+	Fri, 25 Sep 2026 16:43:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790354593;
+	bh=C0VoGDzcMAmv6Or+++plvdMsJr8cWNXzmxPzoPDA5cs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ZC9r9L3ipKqdS4ni6DqvA4ARifkGSw3WL51f2A9NTR8yWW3oXp7kmpJ+2TUce3Uj7
+	 7xo4sU9RrDyA5uUkuJi3bTrxMUrh0ygYjCX8UVIUwC6TOj1uk2fLT5Vtf8BrJtiI6I
+	 HnZQZk0dN8jJJMZRQtPMc4aXQyd6h+j2jDZiJMQH4aqmdpayDnYfWHczqPw9RpyYr3
+	 3KVRGwckY9cwViH9/0ZAJgJbvQdSuYLjWxuf6aR1CUelxCzwzd3Wurkpefw0jHxECU
+	 sHT4X60LzL+/eDFST9Nxpe4mtszcg4jPEBcSLrjp55c7JeGsfBld+PNflsCTVCJSeD
+	 57aXjMA9rW1mA==
+Date: Fri, 25 Sep 2026 17:43:05 +0100
+From: Conor Dooley <conor@kernel.org>
+To: Larisa Grigore <larisa.grigore@oss.nxp.com>
+Cc: NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Frank Li <Frank.Li@nxp.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
+	Ajay Neeli <ajay.neeli@amd.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Pedro Sousa <pedrom.sousa@synopsys.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Hannes Reinicke <hare@suse.de>, linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org, clizzi@redhat.com,
+	aruizrui@redhat.com, eballetb@redhat.com, echanude@redhat.com
+Subject: Re: [PATCH v6 07/12] dt-bindings: ufs: Add NXP S32N79 UFS host
+ controller
+Message-ID: <20260925-afoot-tinsel-096f8efd16d3@spud>
+References: <20260925143534.3298540-1-larisa.grigore@oss.nxp.com>
+ <20260925143534.3298540-8-larisa.grigore@oss.nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: Fmb7QWFynqiNjjYNkXpJn7A45cICDkqq
-X-Authority-Analysis: v=2.4 cv=EOCTQFZC c=1 sm=1 tr=0 ts=6ab6a324 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8 a=VwQbUJbxAAAA:8
- a=9MSN80hXFWM00mvxam4A:9
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI1MDA2NiBTYWx0ZWRfXxaB+wiNlSFxJ
- cichYIque6VKZDi5HQqlR1J7nab8pCKxC0//w6yyierpleV/3ujhpD+Up3Qvttid3xbO/mSd8Oo
- sk/tzYHo4WZFosst2Kf4FeGsxs/D0yc=
-X-Proofpoint-GUID: Fmb7QWFynqiNjjYNkXpJn7A45cICDkqq
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI1MDA2NiBTYWx0ZWRfX+9QaTu7dZTr1
- Mc4yuGAU4ZIvmZEVGv1tz6pL9cC9ksynJxeAN358YTrKNoY9xNIX3uFDU70DBPCetg5gPFULAWR
- wD7z0QY2eXdufvhqe1mAHiBaaqBIRNiCdNYz2qv6/wJ9F72ZkDqd+SPEK3EXdfgba/RUotS1Kfe
- WrqBSTmdByJKZ7swsi6DAPY52CfmTs4+OcWWKGSZjuGV/r7O0K72AFaoZHprgl2RbZTo/hdkr/m
- tDWOarO1Tfai05fPvbncGEltpWufLZ/Qhh7xPsZCGirAPcqV8H9cmxQv7pq8OxPjsbnH07y/sEq
- jyfPcxpk9CGI/4KXWSIXrX1zFxCME4ufukn9mhjjmhC4hoCpFIGnOd3uXPwAzx2/2L3n/7nFEqp
- o1DIqvZsgs12p8KdZDyN4nl6et93uyq4j3IP83UwsE/bcX634g7oHQnTP2oJL04m+/SJ8bvnOgw
- 7kTIusoRdYDJro6fIBQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-25_03,2026-09-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 phishscore=0 priorityscore=1501 clxscore=1015 spamscore=0
- adultscore=0 impostorscore=0 lowpriorityscore=0 suspectscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609250066
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="Dh1WmLbrcdsVY8Bn"
+Content-Disposition: inline
+In-Reply-To: <20260925143534.3298540-8-larisa.grigore@oss.nxp.com>
 
-Dave Marquardt <davemarq@linux.ibm.com> writes:
+--Dh1WmLbrcdsVY8Bn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> sashiko-bot@kernel.org writes:
->
->> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
->> - [Medium] scsi: ibmvfc: missing scsi_host_put() in test success path
->> - [Medium] scsi: ibmvfc: missing host_lock around ibmvfc_handle_async() in KUnit test
->> --
->>
->> commit 29ab8a9a78c94679b8187ae357d2978336830599
->> Author: Dave Marquardt <davemarq@linux.ibm.com>
->>
->> scsi: ibmvfc: add basic FPIN support
->>
->> Implement support for a basic level of Fabric Performance Impact
->> Notifications (FPIN) in the ibmvfc driver to enable monitoring of
->> fabric congestion and link integrity events. This includes async event
->> handling and KUnit test infrastructure.
->>
->>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
->>> new file mode 100644
->>> index 0000000000000..ec52285b0aa22
->>> --- /dev/null
->>> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
->>> @@ -0,0 +1,149 @@
->> [ ... ]
->>> +static void ibmvfc_async_fpin_test(struct kunit *test)
->>> +{
->> [ ... ]
->>> +	vhost = ibmvfc_get_first_vhost();
->>> +	if (!vhost)
->>> +		kunit_skip(test, "No ibmvfc devices available");
->> [ ... ]
->>> +	for (fs = IBMVFC_AE_FPIN_LINK_CONGESTED; fs <= IBMVFC_AE_FPIN_CONGESTION_CLEARED; fs++) {
->>> +		ae[fs].valid = 0x80;
->>> +		ae[fs].link_state = IBMVFC_AE_LS_LINK_UP;
->>> +		ae[fs].fpin_status = fs;
->>> +		ae[fs].event = cpu_to_be64(IBMVFC_AE_FPIN);
->>> +		ae[fs].scsi_id = cpu_to_be64(tgt->scsi_id);
->>> +		ae[fs].wwpn = cpu_to_be64(tgt->wwpn);
->>> +		ae[fs].node_name = cpu_to_be64(tgt->ids.node_name);
->>> +		ibmvfc_handle_async(&ae[fs], vhost);
->>
->> [Severity: Medium]
->> Does this invocation of ibmvfc_handle_async() need to be protected by
->> the host_lock?
->>
->> If a concurrent device removal via ibmvfc_remove() sets vhost->state to
->> IBMVFC_HOST_OFFLINE and destroys fpin_workq just before this handles the
->> async event, could queue_work() be called on a freed workqueue?
->
-> Yes, this routine should acquire the host_lock before calling ibmvfc_handle_async.
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+pw-bot: not-applicable
 
-So, the host_lock is taken early in the routine and held in this case.
-I'm getting mixed messages in my research on whether return or something
-like KUNIT_FAIL() is required after kunit_skip(). I will add return
-statements.
+--Dh1WmLbrcdsVY8Bn
+Content-Type: application/pgp-signature; name=signature.asc
 
->>> +		ae[fs].valid = 0;
->>> +		wmb(); /* ensure valid bit clear is visible before checking stats */
->>> +	}
->>> +	flush_workqueue(vhost->fpin_workq);
->> [ ... ]
->>> +	ae[0].valid = 0x80;
->>> +	ae[0].link_state = IBMVFC_AE_LS_LINK_UP;
->>> +	ae[0].fpin_status = 0; /* bad value */
->>> +	ae[0].event = cpu_to_be64(IBMVFC_AE_FPIN);
->>> +	ae[0].scsi_id = cpu_to_be64(tgt->scsi_id);
->>> +	ae[0].wwpn = cpu_to_be64(tgt->wwpn);
->>> +	ae[0].node_name = cpu_to_be64(tgt->ids.node_name);
->>> +	ibmvfc_handle_async(&ae[0], vhost);
->>
->> [Severity: Medium]
->> Is the host_lock similarly required around this call to
->> ibmvfc_handle_async() to prevent a use-after-free if the device is
->> concurrently unbound?
->
-> Yes.
->
->>> +	ae[0].valid = 0;
->>> +	wmb(); /* ensure valid bit clear is visible before checking stats */
->>> +	flush_workqueue(vhost->fpin_workq);
->> [ ... ]
->>> +	kref_put(&tgt->kref, ibmvfc_release_tgt);
->>> +	put_device(&rport->dev);
->>> +}
+-----BEGIN PGP SIGNATURE-----
 
--Dave
+iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCarakmQAKCRB4tDGHoIJi
+0rwoAP0dM83jHfdNPJ071+EP930GYRzZ/9MxGHj9aiDL/l2yaAEA72eN8EreupVH
++nObbELyyrwyJ6xSnymW3QYolOyVhAk=
+=8Spa
+-----END PGP SIGNATURE-----
+
+--Dh1WmLbrcdsVY8Bn--
