@@ -1,134 +1,155 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CF1930E0EE
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 05:03:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA525397930
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Sep 2026 05:05:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790312587; cv=none; b=sDgLr33Nke8vUqzuC9o99BXWNW6c3Phw/ElHa51wx9VKnEQXWgIk232uEIz7lFLgNP4vxZsZ2vU8FGCXtPFM8It8vjW51AxsxyxlgbTvhPZTdQwGyKkc5ib9B/2x9g3Rwnwb5ofGoDUuNwq9OAoF/kw3ohguFy3d7K21d7AVS18=
+	t=1790312734; cv=none; b=faEfv9B2NFsR5RgcbFIFcUZNjYAxoZj+g5uQs2cMmbQ3umZOttVCuxWXacO8LzJdMG5ye4mAqP8OuYog/HLH2tgsq2ftiMaVtYMFO9nVbT9gYCcV3YMMaiNV/qaM/7AYRT3oEUQ8LCx3aUgf/zHxuh01GiWK7SdBecHrnLEOP70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790312587; c=relaxed/simple;
-	bh=U+ossEQ7+QdN36XUPxhjOaee2wSM6W+PPD/RxqHjrQA=;
+	s=arc-20240116; t=1790312734; c=relaxed/simple;
+	bh=umDjRv89+lb/7a0fpqwsSUGPZBmgX13QCxatnprwcho=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ex2Cb8VESGNfm8QHV6G6sr8mm6nGgBk4c5JDSodOB+Vj7vwXGdZ3pe4wR6zdnh9yGbR6jhvGaKgHjumEN1J5Usb4mp2NRK91xUthNgedEjyPeIqllt7OI4LjVI3mclVIVxv2r9/MWwkZvJi/wRXU2uRvgqDgtALlLJOK15kBR6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AMlWKdIn; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=q2fNwFnAyKftEq4xD/w/3k3Z8bOWMqVl9hG58qr9qemAv5VGc4aqj7C2HFlbKgR+PapN21EuSHo2Ja220k2LGeanSNQ+QP1QS3HrxL3l/Ys5O4CDNrzChmGIDtqZMruRhu4KzSyP3yqUrEBzyvG4TPT6DMiqs53ugzffo40KpIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YiyLLXqQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AMlWKdIn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F20E1F000FF;
-	Fri, 25 Sep 2026 05:03:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YiyLLXqQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FCBC1F000FF;
+	Fri, 25 Sep 2026 05:05:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790312585;
-	bh=LvplY4Y0eXNaaeXRGy2smURAMDSpOBBZY8VgD2BzJAA=;
+	s=k20260515; t=1790312733;
+	bh=U6j98hyupmi/Xk4Ph+rjfTRmE55n4kR0pKlpdLava1g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=AMlWKdIncJfJI7Ka01OQLC/dY+4s6lTcDSQLuerNOBzuTzUK+thjeR8AziD1d8HSn
-	 z0r0mZ8yUQ5B4CfpKH3+dw6bmkOR7LKI7l6s4cRwKrrru529Lx5IspR/mdkVYDPJ1I
-	 Zn2Wh+qOBYEVQ/d3s6dnHaCHO77GuhKFQiA+boanSB6Vtqr7Uyx8N8eX8wlq6EE9kv
-	 exLMOxhZAFxd4AD7CnZCfbPxI3uq2TJSdSpm/6dZF4Ars/JETUuSj8V9UQ5DUztx4/
-	 dFk0UX5HCtkoaL9NKjFYWb/QX5POPCJK+lHfC2t4OQGIDkl8yRZFqNJNF/IZkDlC1M
-	 b51B5pHDbGZwQ==
+	b=YiyLLXqQQWmxZHAr0xolbfumEnGNJTZSYQKb7W0g5k5IrpalUUdNkDw7Jbr4Muu+Y
+	 JddhiN3ZQ71v4Qfr+L4kWDjH96yYs8P8rEE9Telm8D5AibPGZoDX1nAs4eBfUlcdQ3
+	 QDM8W0SpUHBC6Ns2Ux6N+4P6awQYtLKDsKn2HhmCp2DnmcKwlcpVSFkgoJoaTMYal3
+	 nY32ArDNjxzvPBTYfX6+IlkL5QbpwFSUbJdab8PV0EdisCENq/mevhHJLHILKA2zeQ
+	 lnJaviAX6wxKHXAasrqgaA+fjKq6TuwtpyBN4OEoMdeL6OoO1hxUQlq+bK6phUZi05
+	 2mooMk20PFlCw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v11 04/11] scsi: ibmvfc: add basic FPIN support
+Subject: Re: [PATCH v11 09/11] scsi: ibmvfc: extend channel reg/dereg
+ helpers for async sub-CRQ
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260925044900.414340-5-tyreld@linux.ibm.com>
+In-Reply-To: <20260925044900.414340-10-tyreld@linux.ibm.com>
 References: <20260925044900.414340-1-tyreld@linux.ibm.com>
- <20260925044900.414340-5-tyreld@linux.ibm.com>
+ <20260925044900.414340-10-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 25 Sep 2026 05:03:04 +0000
-Message-Id: <20260925050305.6F20E1F000FF@smtp.kernel.org>
+Date: Fri, 25 Sep 2026 05:05:32 +0000
+Message-Id: <20260925050533.1FCBC1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] scsi: ibmvfc: missing scsi_host_put() in test success path
-- [Medium] scsi: ibmvfc: missing host_lock around ibmvfc_handle_async() in =
-KUnit test
+- [Low] scsi: ibmvfc: kernel-doc incorrectly instructs passing negative ind=
+ex
 --
 
-commit 29ab8a9a78c94679b8187ae357d2978336830599
+commit 6798e7ba7398cb1f91e10a6432ae9b3192653f37
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ibmvfc: add basic FPIN support
+scsi: ibmvfc: extend channel reg/dereg helpers for async sub-CRQ
 
-Implement support for a basic level of Fabric Performance Impact
-Notifications (FPIN) in the ibmvfc driver to enable monitoring of
-fabric congestion and link integrity events. This includes async event
-handling and KUnit test infrastructure.
+ibmvfc_register_channel() and ibmvfc_deregister_channel() previously only
+handled SCSI and NVMe sub-CRQ channels identified by the channel protocol.
+The async sub-CRQ had no registration path through these helpers, requiring
+separate handling. This commit adds IBMVFC_PROTO_ASYNC to extend both
+functions to handle the async sub-CRQ.
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
-/ibmvfc_kunit.c
-> new file mode 100644
-> index 0000000000000..ec52285b0aa22
-> --- /dev/null
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-> @@ -0,0 +1,149 @@
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> index b354bfb1a9b67..b967c82e99430 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
 [ ... ]
-> +static void ibmvfc_async_fpin_test(struct kunit *test)
-> +{
+> @@ -6812,6 +6812,21 @@ static int ibmvfc_init_crq(struct ibmvfc_host *vho=
+st)
+>  	return retrc;
+>  }
+> =20
+> +/**
+> + * ibmvfc_register_channel - Register a sub-CRQ channel with the hypervi=
+sor
+> + * @vhost:	ibmvfc host struct
+> + * @channels:	ibmvfc channels struct containing the channel array and pr=
+otocol
+> + * @index:	index into the channels array for the queue to register, or
+> + *		a negative value to register the async sub-CRQ
+> + *
+> + * Register a sub-CRQ with the hypervisor via h_reg_sub_crq, map its har=
+dware
+> + * IRQ to a Linux IRQ, and bind an interrupt handler to it. The handler =
+is
+> + * selected based on the channel protocol (SCSI or NVMe) for normal queu=
+es, or
+> + * set to the async sub-CRQ handler when @index is negative.
+> + *
+> + * Return value:
+> + *	0 on success / non-zero on failure
+> + **/
+>  static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+>  				   struct ibmvfc_channels *channels,
+>  				   int index)
+
+[Severity: Low]
+Does this kernel-doc correctly document the expected index values?
+
+The documentation explicitly directs the caller to pass a negative index for
+async sub-CRQs, but ibmvfc_register_channel() begins with an unconditional
+array access:
+
+    struct ibmvfc_queue *scrq =3D &channels->scrqs[index];
+
+If a developer follows the documentation and passes a negative index, would=
+n't
+this result in an immediate out-of-bounds array access? Currently, callers
+pass 0 for the async sub-CRQ, so this crash isn't reachable today, but the
+comment could mislead future users.
+
 [ ... ]
-> +	vhost =3D ibmvfc_get_first_vhost();
-> +	if (!vhost)
-> +		kunit_skip(test, "No ibmvfc devices available");
-[ ... ]
-> +	for (fs =3D IBMVFC_AE_FPIN_LINK_CONGESTED; fs <=3D IBMVFC_AE_FPIN_CONGE=
-STION_CLEARED; fs++) {
-> +		ae[fs].valid =3D 0x80;
-> +		ae[fs].link_state =3D IBMVFC_AE_LS_LINK_UP;
-> +		ae[fs].fpin_status =3D fs;
-> +		ae[fs].event =3D cpu_to_be64(IBMVFC_AE_FPIN);
-> +		ae[fs].scsi_id =3D cpu_to_be64(tgt->scsi_id);
-> +		ae[fs].wwpn =3D cpu_to_be64(tgt->wwpn);
-> +		ae[fs].node_name =3D cpu_to_be64(tgt->ids.node_name);
-> +		ibmvfc_handle_async(&ae[fs], vhost);
+> @@ -6883,6 +6905,18 @@ static int ibmvfc_register_channel(struct ibmvfc_h=
+ost *vhost,
+>  	return rc;
+>  }
+> =20
+> +/**
+> + * ibmvfc_deregister_channel - Deregister a sub-CRQ channel with the hyp=
+ervisor
+> + * @vhost:	ibmvfc host struct
+> + * @channels:	ibmvfc channels struct containing the sub-CRQ array
+> + * @index:	index into the sub-CRQ array, or -1 to deregister the
+> + *		asynchronous sub-CRQ
+> + *
+> + * Frees the IRQ, disposes of the IRQ mapping, and calls H_FREE_SUB_CRQ =
+to
+> + * release the sub-CRQ with the hypervisor. On success the queue message
+> + * buffer is zeroed and the current index is reset. If H_FREE_SUB_CRQ fa=
+ils,
+> + * an error is logged but the channel resources are cleaned up regardles=
+s.
+> + */
+>  static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+>  				      struct ibmvfc_channels *channels,
+>  				      int index)
 
-[Severity: Medium]
-Does this invocation of ibmvfc_handle_async() need to be protected by
-the host_lock?
+[Severity: Low]
+Is this the same documentation issue as above?
 
-If a concurrent device removal via ibmvfc_remove() sets vhost->state to
-IBMVFC_HOST_OFFLINE and destroys fpin_workq just before this handles the
-async event, could queue_work() be called on a freed workqueue?
+The kernel-doc for ibmvfc_deregister_channel() directs using -1 for the
+asynchronous sub-CRQ, but similar to ibmvfc_register_channel(), it accesses
+the array unconditionally:
 
-> +		ae[fs].valid =3D 0;
-> +		wmb(); /* ensure valid bit clear is visible before checking stats */
-> +	}
-> +	flush_workqueue(vhost->fpin_workq);
-[ ... ]
-> +	ae[0].valid =3D 0x80;
-> +	ae[0].link_state =3D IBMVFC_AE_LS_LINK_UP;
-> +	ae[0].fpin_status =3D 0; /* bad value */
-> +	ae[0].event =3D cpu_to_be64(IBMVFC_AE_FPIN);
-> +	ae[0].scsi_id =3D cpu_to_be64(tgt->scsi_id);
-> +	ae[0].wwpn =3D cpu_to_be64(tgt->wwpn);
-> +	ae[0].node_name =3D cpu_to_be64(tgt->ids.node_name);
-> +	ibmvfc_handle_async(&ae[0], vhost);
+    struct ibmvfc_queue *scrq =3D &channels->scrqs[index];
 
-[Severity: Medium]
-Is the host_lock similarly required around this call to
-ibmvfc_handle_async() to prevent a use-after-free if the device is
-concurrently unbound?
-
-> +	ae[0].valid =3D 0;
-> +	wmb(); /* ensure valid bit clear is visible before checking stats */
-> +	flush_workqueue(vhost->fpin_workq);
-[ ... ]
-> +	kref_put(&tgt->kref, ibmvfc_release_tgt);
-> +	put_device(&rport->dev);
-> +}
-
-[Severity: Medium]
-Does this successful exit path leak the Scsi_Host reference?
-
-The call to ibmvfc_get_first_vhost() at the beginning of the test acquires
-a reference via scsi_host_get(), but unlike the error return paths, there
-doesn't appear to be a corresponding scsi_host_put() call here.
+Could this lead to an out-of-bounds array access if someone passes -1 as
+documented?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260925044900.4143=
-40-1-tyreld@linux.ibm.com?part=3D4
+40-1-tyreld@linux.ibm.com?part=3D9
