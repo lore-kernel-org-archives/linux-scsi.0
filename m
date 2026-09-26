@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CA24547059;
-	Sat, 26 Sep 2026 10:03:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 241823A1A38;
+	Sat, 26 Sep 2026 10:07:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790417016; cv=none; b=uu2D19DxbAUcENHCDlx+IczkzyGLhTjCvcEa/OIGbBxcYmBMIxBOzAzieUOA6UR/Imd7KBI3d/V8NT4/Ox5TcU7wMHpnyia2XKyP7XAQN72rnPSl+3s9Jk2qL2AnYbcICRM3EeD8Iy+GTqLw7U3jQuLIveSdTN2HMuSHrZiT3hI=
+	t=1790417229; cv=none; b=DiItVDYPIdlQO2j7ILEl4ZExDAFUtCWCvv0GJlarLqkdTwPsf/QAPx9MtzhsUrPrNusgHZDx9rWw1hMmtz8c9zxMLpVlSgZUaDi019mupqm9dxscdMLWeVMzeA3k5BTUsJgRsg09e7nIwpIW3ySBZKWwWJIItBpNf+/sgN8qoh8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790417016; c=relaxed/simple;
-	bh=/OPHDkikK/SdUy/GZ5Mi0tR1Kqvo5SEVKTdbVKGcyD8=;
+	s=arc-20240116; t=1790417229; c=relaxed/simple;
+	bh=nFzGKAUSkNx37tBECUQQrQceuqFYcg9Do4dTj3c9+7Y=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h+N4TYgZxqYKz6BH89uihikg82mX8cJ3DxdkAyhASOu6829NCsSZDvSL+4RL3ugDyOE0t/knLv9ZuRNrEgFCroPtu5A0yJk6drJmP0TISzDD+21IN2ZM6ZNYStfiewgh9XtTVmTripMZE6WVdS5bBvANlwt2sf6SG3HPWhDa2+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PotPzrZ5; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Dgeo6MvOV4Mk/jRpl4UC6rdrBDwefcv1I7BUcp1H6nzYUGimMLck4TmzUlS62BODLhaXXs6LBuWY52GgMRPYgI2mtIVWEyswzdaLgjp3LM8XwSqf/Z3/Re8Oc/G8fu+IrzyQvuj1Bk/LUR2awdzemxxMDCSoCqABxC/2a/fCMpw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PP6PZ9bM; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PotPzrZ5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76F031F000FF;
-	Sat, 26 Sep 2026 10:03:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PP6PZ9bM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F8511F000FF;
+	Sat, 26 Sep 2026 10:06:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790417014;
-	bh=Ti2172MLMPIXoYLD6wBNBUuG1vVW74lvR3yPAsyJ4Mw=;
+	s=k20260515; t=1790417227;
+	bh=cx2CIfJJRJI8nlg/LkJLWm6mTZk+oyqA+tLDKMt8K64=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=PotPzrZ5JhDcKjnjPPw4xklb2BV2GvKf2hehW5Y+mTu9Ze/h0GvM2oipY5M9D+/cd
-	 NRSteOJJVQwOgJ/Vk7qXpUvq2TlOQEyc8ylr6ggIIRLBObKxZ+LGlahTeOSiW1DP9A
-	 NCr80n3Ix3unBLfTdBkNTu/U313Twxe7BdIULH0hZv4+HKf9SLfgwohoZjpf9YbuDb
-	 pM/4foaBcqD6tdDoCnbsIxQUPKUzkTKJ14OcpqpL1z9ouoHn3tA5tZPlu8aWNsTXWH
-	 kG0V3eJydf9/vQZMEDvq3aPanED3H3sJB4bqO1nejPbFwjDnaIc7Dx5neGDSzNUBqo
-	 N5OxElMlwQ0bg==
-Date: Sat, 26 Sep 2026 11:03:02 +0100
+	b=PP6PZ9bMZs7e/duxeo/+vo5CsbMP1Rz2+y31gRT9a+0I5x57hx+X0qV3VH6ZT4U4G
+	 yJbOFXBGKOb0K1/wzI/4ZVK66vC39At0uE2uwbtQ83oA2SlyEAWclRJagc3OIbbqHm
+	 aGWgANkkLmApMwDJ2U+Pphh/en/LxpO06qIoOaCTuD43Ohhox87eyXx7fdho5yNs5A
+	 YUbNxgBjyK8Pa4hT+QXLxoaUyk9M5Ul4my8apPo6NoSv0IFMgCIjYXvQDeUqZfUlWm
+	 gpsK8pBYkPTzDaunC56zp3EElzUI0dA/SJCNUEjE1vnEPzCd1n7uEW6cQm5qDqJMYE
+	 NMKaLYXBxLBUQ==
+Date: Sat, 26 Sep 2026 11:06:35 +0100
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 To: Zi Yan <ziy@nvidia.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, 
@@ -86,11 +86,13 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
 	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
 	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 17/40] mm/vma: add and use vma_[flags]_is_fixed_mapping
-Message-ID: <areX8JFWf2gJLVcf@gremlin>
+Subject: Re: [PATCH v3 16/40] mm/vma: only allow mmap to clear
+ VMA_MAYWRITE_BIT if kernel-owned
+Message-ID: <areYqRfd7mss9KQG@gremlin>
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-17-4583d8a23bca@kernel.org>
- <DLOW5O2LS4KC.7BAL5Q24VJL@nvidia.com>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-16-4583d8a23bca@kernel.org>
+ <DLOVQMACWLZ5.1WFOTGRG8ZG92@nvidia.com>
+ <DLOVXY4VFCXE.1RI7ZSD30VHH5@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -99,86 +101,86 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <DLOW5O2LS4KC.7BAL5Q24VJL@nvidia.com>
+In-Reply-To: <DLOVXY4VFCXE.1RI7ZSD30VHH5@nvidia.com>
 
-On Fri, Sep 25, 2026 at 10:27:15PM -0400, Zi Yan wrote:
-> On Thu Sep 17, 2026 at 12:22 PM EDT, Lorenzo Stoakes (ARM) wrote:
-> > This determines whether a VMA cannot be expanded or merged because what
-> > they mapped was determined to be a set size at mmap time.
-> >
-> > This typically refers to kernel-owned mappings, however VMA_DONTEXPAND_BIT
-> > is not reliably set alongside VMA_PFNMAP_BIT or VMA_MIXEDMAP_BIT, so we
-> > must explicitly test for this for now.
-> >
-> > We also explicitly test for VMA_PFNMAP_BIT as VMA_DONTEXPAND_BIT may not be
-> > set for VMA_PFNMAP_BIT's despite the one implying the other.
-> >
-> > Use this predicate in vma_flags_can_merge() and in check_prep_vma() in the
-> > mremap logic testing to see if mremap() can expand the VMA. The criteria
-> > for khugepaged and MADV_COLLAPSE eligibility in
-> > __thp_vma_allowable_orders() are precisely those for mergeability, so use
-> > vma_can_merge() there (with an expanded comment).
-> >
-> > This obviates the need for the VM_NO_KHUGEPAGED mask, so remove it.
-> >
-> > Hugetlb VMAs remain excluded from khugepaged as hugetlbfs always sets
-> > VMA_DONTEXPAND_BIT.
-> >
-> > Also update the userland VMA tests to reflect the change.
-> >
-> > No functional change intended.
-> >
-> > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-> > ---
-> >  include/linux/mm.h              | 39 +++++++++++++++++++++++++++++++++++----
-> >  mm/huge_memory.c                | 11 +++++++----
-> >  mm/mremap.c                     |  5 ++---
-> >  tools/testing/vma/include/dup.h | 16 +++++++++++++++-
-> >  4 files changed, 59 insertions(+), 12 deletions(-)
-> >
-> <snip>
-> > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> > index 4cd917f77f3f..4d0acd9a1099 100644
-> > --- a/mm/huge_memory.c
-> > +++ b/mm/huge_memory.c
-> > @@ -212,11 +212,14 @@ unsigned long __thp_vma_allowable_orders(struct vm_area_struct *vma,
-> >  		return in_pf ? orders : 0;
-> >
-> >  	/*
-> > -	 * khugepaged special VMA and hugetlb VMA.
-> > -	 * Must be checked after dax since some dax mappings may have
-> > -	 * VM_MIXEDMAP set.
-> > +	 * khugepaged moves data from VMAs once collapsed, after they have been
-> > +	 * faulted in, relying on refaulting for file-backed memory.
-> > +	 *
-> > +	 * Kernel-owned mappings cannot be reliably reconstructed from page
-> > +	 * faults, and fixed mappings (including hugetlb) may not be marked as
-> > +	 * kernel-owned - precisely the mappings which cannot be merged.
-> >  	 */
-> > -	if (!in_pf && !smaps && (vm_flags & VM_NO_KHUGEPAGED))
-> > +	if (!in_pf && !smaps && !vma_can_merge(vma))
+On Fri, Sep 25, 2026 at 10:17:10PM -0400, Zi Yan wrote:
+> On Fri Sep 25, 2026 at 10:07 PM EDT, Zi Yan wrote:
+> > On Thu Sep 17, 2026 at 12:22 PM EDT, Lorenzo Stoakes (ARM) wrote:
+> >> For ordinary files the only way the VMA_MAYWRITE_BIT flag is cleared is if
+> >> the underlying file is itself read-only.
+> >>
+> >> This means that mprotect() cannot mark a shared mapping of a read-only file
+> >> as read/write, as doing so would violate the read only attribute, and
+> >> permit writes.
+> >>
+> >> In general, we do not want file systems to be able to do this for
+> >> read/write files.
+> >>
+> >> Doing so would violate fundamental user expectation of file attributes and
+> >> likely break userspace.
+> >>
+> >> However, drivers pose a tricky problem here - the /dev/xxx file may be
+> >> read/write but provide access to a resource which is fundamentally
+> >> read-only.
+> >>
+> >> Therefore we must allow drivers to be able to clear VMA_MAYWRITE_BIT.
 >
-> I wonder if a function alias would improve the code readability.
-> Basically,
->
-> #define vma_no_khugepaged vma_can_merge
->
-> or just make vma_no_khugepaged static inline. And move the comment to
-> the function.
+> IIUC, a file's FMODE_* bear both fd and mmap permissions, e.g.,
+> FMODE_WRITE means fd is writable and mmap is writable. At least for
+> normal files. But a driver fd might not fit the same pattern. Would a
+> new FMODE_MAP_READ and a new FMODE_MAP_WRITE help? Not trying to propose
+> anything, but just thinking out load.
 
-Hmm yeah, I'm not sure, I think given it's here and commented it's OK and
-avoids having to have a special snowflake entry for khugepaged, so unless
-it were referenced again elsewhere it's ok like this?
+Hmm I don't think that's necessarily at the right level of abstraction
+though, and these drivers need to do the same thing even if the file is R/W
+regardless.
 
-If it gets used elsewhere in the THP code it could be relocated then maybe?
+So I'm not so sure that's the right path.
+
+Then again, if the driver could somehow specify these modes at inode
+creation or some means of doing that it could help avoid the driver ever
+doing this, I'd really prefer us to disallow such changes in the hook in
+general.
+
+But I think definitely one for a follow up :)
 
 >
-> Regardless, this patch makes sense to me.
+> >>
+> >> To achieve both of these things, restrict this ability to kernel-owned
+> >> mappings as identified by vma_flags_is_kernel_owned().
+> >>
+> >> This constrains this ability to drivers which own the mapping's contents,
+> >> whether memory-mapped I/O, kernel-allocated pages, or ordinary pages they
+> >> map themselves, and so define its semantics.
+> >>
+> >> Every in-tree mmap hook which clears VMA_MAYWRITE_BIT, some twenty sites
+> >> across drivers, filesystems and bpf, establishes a kernel-owned mapping,
+> >> with usbmon and the ALSA PCM status page converted earlier in this series
+> >> to do so.
+> >>
+> >> Note that drivers may, if they do not gate on VMA_SHARED_BIT, be able to
+> >> disable MAP_PRIVATE-file-backed mapping CoW semantics.
+> >>
+> >> This is perhaps not always intended, but we retain this capacity to
+> >> maintain existing behaviour.
+> >>
+> >> As all drivers which clear VMA_MAYWRITE_BIT establish kernel-owned
+> >> mappings, no functional change is intended.
+> >>
+> >> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+> >> ---
+> >>  mm/vma.c | 5 +++++
+> >>  1 file changed, 5 insertions(+)
+> >>
+> >
+> > Makes sense.
+> >
+> > Acked-by: Zi Yan <ziy@nvidia.com>
+
+Thanks!
+
 >
-> Reviewed-by: Zi Yan <ziy@nvidia.com>
-
-Thanks! :)
-
+>
 >
 >
 > --
