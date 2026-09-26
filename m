@@ -1,90 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38C7823A99F
-	for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2026 18:03:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CB872DCBE3
+	for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2026 18:17:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790445788; cv=none; b=lI/8qmb/vMnKPLblYLOW0uPtxSrViXBIFcwlKXPsaU+dNaLE4AG316rs8C4daCncKKgXJjd09/ecN+5iAmYoPzwMqwoeeCDiARfrz7g7SQjT9ngqwdGn83Q0NHNz8yoiQwtgfEhB4VOldPQ0L9J3x2QgyQYHxzVWLMz2uGTffxM=
+	t=1790446630; cv=none; b=lTsPhYItRU3Qjt4dcDSwWiGBPIUQ/gk4wdotlFACaLAI3nFj1YEgBRrycg6EFX7pm8zTmTvDV+8B/w2JIYNzThX8ns7CONHtK1Ilz+OmCFVveQDZhhBXjRc1mImzhGdCp8Vc/ME+IzeZwS+c2cpbznNXE7yRemJB/qt/nbghnQk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790445788; c=relaxed/simple;
-	bh=PleGiJsiVojBzWe0vTGyghogv1SzUvyglPyTbjW4nqg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pvMWu8KiuIOTlRVxYfXi4xFocU8+1AYaJjVyzxEydJwK+qjmw36Ljhd2VRWeCHjx76GU5+WuLcZRGE1QJPMGN3UGPsl90D5s73I2AS8cdmAd3peu0BcAZBzG8zMbK3pvDsTMUbfs+XgzfKrp2i+5tG0Z/T5cGQfJckHqz5PrxlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g5QAuYbG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790446630; c=relaxed/simple;
+	bh=x4yBjruf298l/dt759XMqJm7e6xyvBc/kDFB1kZODhw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kPKwUd3590fYe+goqyEoB7758un5nNx+zQuhvJrgqoeCMXXKRybDTKBoHNrQbR9eV88UQqVO08x3ewwmJXNIO5N11Zp/0lN5s5kBbL73DMJNutBsGJyuYLZCLekHS3al//ZiteZtYE4e4FjodphEtgC0YI+O0SHfGFTSIp6MAqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QgjZlQiW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g5QAuYbG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 813041F000FF;
-	Sat, 26 Sep 2026 18:03:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QgjZlQiW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B4F61F000FF;
+	Sat, 26 Sep 2026 18:17:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790445786;
-	bh=djbgl0N/7SYxF5EavywWRvr/CN96IU4ujqacJIwI7MA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=g5QAuYbGzyspS2GvFkDUEeh6UgYRpQMPgtbTT3AKIsAdEC2hCf490L7yfqLCYZCMa
-	 1IGgPERk122BA3goA0QMbbXBVeWF9TqwkfJq2nqZXrOh+t4vORORKZp1E1tyVwXvvy
-	 nSMfiVuYcb3IYRlbl+1SmoZyPEF7QUVihsDrDBbTvWEmqJL7NeWzMaMtQca+vgvpvl
-	 TXvBvaQkMsn4030J/kz3PjEaf3eAxqxc0SzbbeM0xnPNoxqzTEp1otqwfCGH7KfuCy
-	 ocUEVewHIO2yT5W3iJ82pKf2jm9hF72LmtlVMH8FadDSYQYGDyxDQ6M8Cq2qFGezkm
-	 8GXQFOXhccHVw==
-Date: Sat, 26 Sep 2026 20:03:03 +0200
+	s=k20260515; t=1790446629;
+	bh=93QoXoqW51DqzOF2sWPW5fM44P1tSggXxpWaMK3ZFog=;
+	h=From:To:Cc:Subject:Date;
+	b=QgjZlQiWuOlvLWb1N2LZ/AS+YaA7R+ODi13NrJTjuxMtg/BMHQqMQE7Q3iCBc+869
+	 jZ4WmrDBGtXEqCjP3wAjhCXjnttWlV3IdALqn9EeBe5dp2KlDSkgBBoQPYptYhfy9S
+	 6pwkILaVQoLnXadNl6VMOzrGpu4pXt5/CyHdPjKxtfcBwC5WkhhR8dtOGrcPvQn6Qy
+	 mbo4Bwo1OkmxT7v2fiRrPDu2CnmDlWcHjDZq3Ab2lneSFmN9cDufxLw4EwsPQH1deO
+	 qcQJEM3xIGiQSaH8M7qtdnub3n+bzjZYNnch4bUDoPDHA6ajNvPA5UhQh+GftWOK6j
+	 br+NttOxU5PzQ==
 From: Niklas Cassel <cassel@kernel.org>
-To: John Garry <john.garry@linux.dev>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [PATCH v7 09/11] scsi: scsi_debug: Refuse a short WRITE ATOMIC
- (16) before writing it
-Message-ID: <argI11P7AhIlfKXa@ryzen>
-References: <20260925071726.140915-13-cassel@kernel.org>
- <20260925071726.140915-22-cassel@kernel.org>
- <3fc3aab6-9eca-4d3e-81ea-92ee56de2af5@linux.dev>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.garry@linux.dev>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v8 00/11] scsi: scsi_debug: fix zoned write validation
+Date: Sat, 26 Sep 2026 20:17:03 +0200
+Message-ID: <20260926181702.508975-13-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3fc3aab6-9eca-4d3e-81ea-92ee56de2af5@linux.dev>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2419; i=cassel@kernel.org; h=from:subject; bh=x4yBjruf298l/dt759XMqJm7e6xyvBc/kDFB1kZODhw=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ28MitXHeuva5NzEZk5/srS17+S5jyN9RxkUZSoJdkQ 3dD2NWdHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjIZwmGf5rJJ5raH/Zc3OOY uk7kff6ReY1bV9n/+irMdal5yS+J7fKMDL0HzlluzRQ7KPY9ctlHaVMOmyj1103W05Y2sdqv+Lc mjQkA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-Hello John,
+This series fixes scsi_debug with regards to writes to a ZBC drive, and
+to WRITE ATOMIC (16). Each patch describes the problem that it fixes.
 
-On Fri, Sep 25, 2026 at 10:30:11AM +0100, John Garry wrote:
-> > ---
-> > Tested with:
-> >
-> >    modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=128 \
-> >        atomic_wr=1 lbpu=1
-> >
-> > issuing a WRITE ATOMIC (16) of eight blocks through SG_IO with a buffer
-> > of four blocks of 0xaa. It fails with DID_ERROR before and after this
-> > patch, but before it the first four blocks read back as 0xaa afterwards,
-> > and after it all eight read back as they were. A WRITE ATOMIC (16) with
-> > a full buffer writes all eight blocks, as before.
-> >
->
-> What is the command which you use?
+Two configurations are refused rather than emulated, and those two
+patches come first, as the rest of the series relies on what they
+exclude: a zoned device whose lowest aligned LBA is not zero, which no
+host writing in units of the reported zone write granularity could ever
+write, and atomic writes on a zoned device, which no drive supports.
 
-SG_IO, with a CDB for eight blocks and a buffer of four:
-sg_raw -s 2048 -i aa4 /dev/sdX 9c 00 00 00 00 00 00 00 00 40 00 00 00 08 00 00
+Little of this is reachable in a default configuration. Most of it needs
+physblk_exp, atomic_wr or logical block provisioning to be set, or an
+initiator that does not provide a data buffer matching the transfer
+length of the command.
+
+The series is based on 7.4/scsi-staging rather than 7.3/scsi-fixes (as
+Damien suggested on v1) to avoid a build failure that would have
+happened if this series was simply merged with linux-next:
+
+  error: too many arguments to function 'mk_sense_buffer'
+
+Tested on a zoned scsi_debug device with 512 byte logical blocks and a
+4096 byte physical block, and on a device that is not zoned for the
+WRITE ATOMIC (16) patches. The notes below each patch describe what was
+observed before and after it.
+
+Changes since v7:
+- Patch 10 adds a comment above map_region() explaining why its callers
+  may map more than was written, as John suggested. Picked up his
+  Reviewed-by.
+
+Niklas Cassel (11):
+  scsi: scsi_debug: Refuse a zoned device with a non-zero lowest aligned
+    LBA
+  scsi: scsi_debug: Make atomic writes and ZBC emulation mutually
+    exclusive
+  scsi: scsi_debug: Take the zone metadata lock before the data lock
+  scsi: scsi_debug: Evaluate scsi_debug_lbp() only once
+  scsi: scsi_debug: Report the residual of a write
+  scsi: scsi_debug: Enforce physical block alignment of zoned writes
+  scsi: scsi_debug: Do not write a partial physical block to a zoned
+    device
+  scsi: scsi_debug: Advance the write pointer over the data written
+  scsi: scsi_debug: Refuse a short WRITE ATOMIC (16) before writing it
+  scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
+  scsi: scsi_debug: Validate the access parameters of WRITE ATOMIC (16)
+
+ drivers/scsi/scsi_debug.c | 121 +++++++++++++++++++++++++++++++-------
+ 1 file changed, 100 insertions(+), 21 deletions(-)
 
 
->
-> I am just wondering if this check should go into sd_setup_atomic_cmnd() or
-> somewhere else higher up. I mean, this check is not really specific to
-> scsi_debug, right?
+base-commit: f09d2c7485b32adb82336d0d748935c8237a649e
+-- 
+2.55.0
 
-sd can't produce a short atomic write: sd_setup_read_write_cmnd() derives
-nr_blocks from blk_rq_sectors(), and the data buffer is the same request,
-so the transfer length and the buffer always match.
-
-A mismatch is only possible through SG_IO, where the caller supplies both.
-
-SBC-6 4.28.2 puts the requirement on the device server: a failed atomic
-write must leave the LBAs unaltered. scsi_debug is the device server here,
-so I think this is the right place for it.
-
-
-Kind regards,
-Niklas
