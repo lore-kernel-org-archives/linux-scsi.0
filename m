@@ -1,24 +1,22 @@
 Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 737BC3ACA42;
-	Sat, 26 Sep 2026 09:22:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 25C733AD50B;
+	Sat, 26 Sep 2026 09:22:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790414543; cv=none; b=XSitJOX4dqGJrbdu932mn9rmh+dqjhQ7a+V2oTXiy/BuOZqzlk9tka9mKxZbmfCQz2EfBfSIeh1JS2VSHNfca/XiE9AorVG/aoY/h52UbgRKK/L3EDLnMv/E9yzM1MTOxyw9SEFVr++QThbl2b0nUEB8RB+h5VYR0yzlpUpm6vc=
+	t=1790414551; cv=none; b=a6ZVu+687R3Cf6xlwqS0eoAljN+awXUZ6ZWwLr3tumSAo1hTfbU3FytiAu1kHdD7qbqXVnfY1BozBpeIWWl1Syb63a2huuzOG4hbJnCRLvGbPs4qxGQh15qyvd0m0t5pbupoqlPx9SSiC9aCPbDzPDvUn/EDSdn0WfRKdkoQSWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790414543; c=relaxed/simple;
-	bh=gwbthItRhuypYUcH713iH/hnNoRFDlBtn4qTU9lz7/M=;
+	s=arc-20240116; t=1790414551; c=relaxed/simple;
+	bh=6ZxI2uq3/Zdrw8YOFkyzf6CQQfI+or4nqVou7H/qG5c=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=XqQ3PoX06eJv5WZ52SWcYtbNpXEYvlkhe0sd2jGEK+3+ddFgqRfX4M8/XUNozFkk+VE3lEhjc2qrg5Zsud3bpvQlafZ8oiiN5FfBDs9R2xmSexU5TALwEB3F/90oqkPQl+ZCXad+2br6FK/F8968pkF7iN/7gM6YrO6t31ho2Gs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=nhe3qNpX; arc=none smtp.client-ip=101.71.155.101
+	 MIME-Version; b=iZeF8+kUnxleGv86bh0qs1l7E1zFZ6PDxilaKcPhALtFH6isEqKxkwjPlBoT8UnqtYOnEmd3i9OSmJGGdqwhzmnZhWUPaegF6Ws3T1YAADqGaahEuMfjyjsxzsdyfSVVubRz+hgqJPH3BMrrGeYslK8WW9B39+P5vNSoIN/k1hQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=hyFL+os7; arc=none smtp.client-ip=101.71.155.101
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="nhe3qNpX"
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="hyFL+os7"
 Received: from PC-202605011814.localdomain (unknown [222.191.246.242])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4f2ff7124;
-	Sat, 26 Sep 2026 17:21:59 +0800 (GMT+08:00)
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4f2ff7122;
+	Sat, 26 Sep 2026 17:21:56 +0800 (GMT+08:00)
 From: Runyu Xiao <runyu.xiao@seu.edu.cn>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Breno Leitao <leitao@debian.org>,
@@ -38,9 +36,9 @@ Cc: Breno Leitao <leitao@debian.org>,
 	stable@vger.kernel.org,
 	Runyu Xiao <runyu.xiao@seu.edu.cn>,
 	Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: [PATCH v6 3/4] nvmet: avoid recursive configfs open for passthru
-Date: Sat, 26 Sep 2026 17:21:47 +0800
-Message-Id: <20260926092148.128937-4-runyu.xiao@seu.edu.cn>
+Subject: [PATCH v6 1/4] fs: configfs: add helpers for opening non-configfs paths
+Date: Sat, 26 Sep 2026 17:21:45 +0800
+Message-Id: <20260926092148.128937-2-runyu.xiao@seu.edu.cn>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260926092148.128937-1-runyu.xiao@seu.edu.cn>
 References: <20260926092148.128937-1-runyu.xiao@seu.edu.cn>
@@ -51,57 +49,125 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa0dd057d8403a1kunmac953e9e17aa28
+X-HM-Tid: 0aa0dd05717e03a1kunmac953e9e17aa24
 X-HM-MType: 10
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCGk1CVh4dTUJKT0pKHhlLH1YeHw
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZS0lPVkwaQ08dQkkaQxgaSFYeHw
 	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSE
 	pPSExVSktLVUpCS0tZBg++
 DKIM-Signature: a=rsa-sha256;
-	b=nhe3qNpXgDUMS3kn2OffuxQfVSDATnAw3eHki1sI8zzfv9M9lvdtNz2KJ8zQEqwq1JycETPsNWX5Y+ZbPlD3tsOCwJe2Z47mtH5n8sZRPEom1P6lDQRSqqA4QQrr5R8mJqiDwZxe3d/eKIaMbEyUDsHjWYE8ZfEWsigBnrT/i1A=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
-	bh=/H/LFwbci3Eh6MNU8eJOEho61nt5VkkYkF/xMDqVmas=;
+	b=hyFL+os741eMXAWAXvGZBqScxm5JXqKOxJeZ7xm99Bqj/rC3b6nodOG1/lRJB2xoOlq2KSEE1StzqkXBHrXplT0nW6NSDgc2nyVAs5QnyzM83iKJRJEkBlrSX3n85O2gMlgLdHHvDANDzxzWYZdgKNqpyboliP0ontqvVNzpFA4=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=1vMLLP4ZyZxRv4arS6g92BBNchtr6oK5Gki/E2MpdK4=;
 	h=date:mime-version:subject:message-id:from;
 
-nvmet_passthru_enable_store() runs as a configfs store callback while
-configfs holds the item frag_sem. Passthru enable used filp_open() on the
-configured controller path, so a path into configfs could re-enter
-__configfs_open_file() and try to acquire the same semaphore again.
+Configfs store callbacks hold frag_sem while they run.  Reopening a path
+that resolves to configfs from such a callback can acquire the same
+non-recursive semaphore again.
 
-Use configfs_file_open() so the path is resolved before opening,
-configfs-backed paths are rejected, and the resolved path is opened with
-file_open_root() while retaining the normal open-time permission and
-security checks.
+Add configfs_file_open() for configured pathnames and configfs_open_root()
+for paths relative to a resolved root.  Reject configfs roots before using
+file_open_root() so the normal open checks remain in place.
 
-Fixes: cae5b01a2afc ("nvmet: introduce the passthru configfs interface")
-Cc: stable@vger.kernel.org
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Assisted-by: LLM Codex
 Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
 ---
- drivers/nvme/target/passthru.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/configfs/mount.c      | 50 ++++++++++++++++++++++++++++++++++++++++
+ include/linux/configfs.h |  5 ++++
+ 2 files changed, 58 insertions(+)
 
-diff --git a/drivers/nvme/target/passthru.c b/drivers/nvme/target/passthru.c
-index fa6527c537e26..d60256004e6cf 100644
---- a/drivers/nvme/target/passthru.c
-+++ b/drivers/nvme/target/passthru.c
-@@ -9,6 +9,7 @@
-  */
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+diff --git a/fs/configfs/mount.c b/fs/configfs/mount.c
+index d8cac1cbf3bd5..8d3c809676640 100644
+--- a/fs/configfs/mount.c
++++ b/fs/configfs/mount.c
+@@ -13,6 +13,7 @@
  #include <linux/module.h>
-+#include <linux/configfs.h>
+ #include <linux/mount.h>
+ #include <linux/fs_context.h>
++#include <linux/namei.h>
+ #include <linux/pagemap.h>
+ #include <linux/init.h>
+ #include <linux/slab.h>
+@@ -118,6 +119,58 @@ static struct file_system_type configfs_fs_type = {
+ };
+ MODULE_ALIAS_FS("configfs");
  
- #include "../host/nvme.h"
- #include "nvmet.h"
-@@ -602,7 +603,7 @@ int nvmet_passthru_ctrl_enable(struct nvmet_subsys *subsys)
- 		goto out_unlock;
- 	}
++/**
++ * configfs_open_root - open a path below a non-configfs root
++ * @root: resolved root path
++ * @name: path relative to @root
++ * @flags: open flags
++ * @mode: mode for a newly created file
++ *
++ * Use this from configfs store callbacks with a resolved non-configfs root
++ * to avoid re-entering configfs while the callback holds its fragment
++ * semaphore.
++ *
++ * Return: opened file, or an ERR_PTR() value.  Returns -EINVAL if @root
++ * is on configfs.
++ */
++struct file *configfs_open_root(const struct path *root, const char *name,
++				int flags, umode_t mode)
++{
++	if (root->dentry->d_sb->s_type == &configfs_fs_type)
++		return ERR_PTR(-EINVAL);
++
++	return file_open_root(root, name, flags, mode);
++}
++EXPORT_SYMBOL_GPL(configfs_open_root);
++
++/**
++ * configfs_file_open - open an existing non-configfs pathname
++ * @filename: pathname to open; it must already exist
++ * @flags: open flags for the existing pathname
++ * @mode: unused; creation is not supported
++ *
++ * Resolve @filename and reject configfs paths.  Use this from configfs
++ * store callbacks for existing configured paths.
++ *
++ * Return: opened file, or an ERR_PTR() value.  Returns -EINVAL if the
++ * resolved path is on configfs.
++ */
++struct file *configfs_file_open(const char *filename, int flags, umode_t mode)
++{
++	struct file *file;
++	struct path path;
++	int ret;
++
++	ret = kern_path(filename, LOOKUP_FOLLOW, &path);
++	if (ret)
++		return ERR_PTR(ret);
++
++	file = configfs_open_root(&path, "", flags, mode);
++	path_put(&path);
++	return file;
++}
++EXPORT_SYMBOL_GPL(configfs_file_open);
++
+ struct dentry *configfs_pin_fs(void)
+ {
+ 	int err = simple_pin_fs(&configfs_fs_type, &configfs_mount,
+diff --git a/include/linux/configfs.h b/include/linux/configfs.h
+index ef65c75beeaad..2a803bb836b4d 100644
+--- a/include/linux/configfs.h
++++ b/include/linux/configfs.h
+@@ -34,6 +34,8 @@ struct configfs_group_operations;
+ struct configfs_attribute;
+ struct configfs_bin_attribute;
+ struct configfs_subsystem;
++struct file;
++struct path;
  
--	file = filp_open(subsys->passthru_ctrl_path, O_RDWR, 0);
-+	file = configfs_file_open(subsys->passthru_ctrl_path, O_RDWR, 0);
- 	if (IS_ERR(file)) {
- 		ret = PTR_ERR(file);
- 		goto out_unlock;
+ struct config_item {
+ 	char			*ci_name;
+@@ -243,6 +245,9 @@ void configfs_unregister_subsystem(struct configfs_subsystem *subsys);
+ int configfs_register_group(struct config_group *parent_group,
+ 			    struct config_group *group);
+ void configfs_unregister_group(struct config_group *group);
++struct file *configfs_open_root(const struct path *root, const char *name,
++				int flags, umode_t mode);
++struct file *configfs_file_open(const char *filename, int flags, umode_t mode);
+ 
+ void configfs_remove_default_groups(struct config_group *group);
+ 
 -- 
 2.34.1
-
