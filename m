@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CB872DCBE3
-	for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2026 18:17:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AB372DCBE3
+	for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2026 18:17:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790446630; cv=none; b=lTsPhYItRU3Qjt4dcDSwWiGBPIUQ/gk4wdotlFACaLAI3nFj1YEgBRrycg6EFX7pm8zTmTvDV+8B/w2JIYNzThX8ns7CONHtK1Ilz+OmCFVveQDZhhBXjRc1mImzhGdCp8Vc/ME+IzeZwS+c2cpbznNXE7yRemJB/qt/nbghnQk=
+	t=1790446632; cv=none; b=bJmTiie433RrL/dFT80GA5DSZ11/93YYji+hD0SuFAuEU2PyX6ynycg++9Px2dpiOF4D/wFoQ4Fa5WKRDH2h2R/bVwn9bbMHYD+qdP9faRKsZQxY68Ub2MQ3rKN/WCrelB9pe1c7Dhlb+Vo4C7Jiwb+3fOcGZYM1hnXxG+vJ6mU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790446630; c=relaxed/simple;
-	bh=x4yBjruf298l/dt759XMqJm7e6xyvBc/kDFB1kZODhw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kPKwUd3590fYe+goqyEoB7758un5nNx+zQuhvJrgqoeCMXXKRybDTKBoHNrQbR9eV88UQqVO08x3ewwmJXNIO5N11Zp/0lN5s5kBbL73DMJNutBsGJyuYLZCLekHS3al//ZiteZtYE4e4FjodphEtgC0YI+O0SHfGFTSIp6MAqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QgjZlQiW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790446632; c=relaxed/simple;
+	bh=4SOu81yTRppMjmvYzStwz/4XSobf5kfsWdTXYk3JlgY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=orzSP8QUYFYw1Dqo051Y38Xk+6ziXkflfTN21h3HaEaumGTlkPTHn3x29M+C5lp4rJnOAijMb5xyaz8unyzIbOUQMxrgbuq4EfPSoWgypJCs7GIK5DNYKBB8gTqgRhxQr6QidfHIV8u5iubB1dZGEG4xhuYAhWtsHoxvjoyTYwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gs8R+qtN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QgjZlQiW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B4F61F000FF;
-	Sat, 26 Sep 2026 18:17:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gs8R+qtN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 935D61F00893;
+	Sat, 26 Sep 2026 18:17:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790446629;
-	bh=93QoXoqW51DqzOF2sWPW5fM44P1tSggXxpWaMK3ZFog=;
-	h=From:To:Cc:Subject:Date;
-	b=QgjZlQiWuOlvLWb1N2LZ/AS+YaA7R+ODi13NrJTjuxMtg/BMHQqMQE7Q3iCBc+869
-	 jZ4WmrDBGtXEqCjP3wAjhCXjnttWlV3IdALqn9EeBe5dp2KlDSkgBBoQPYptYhfy9S
-	 6pwkILaVQoLnXadNl6VMOzrGpu4pXt5/CyHdPjKxtfcBwC5WkhhR8dtOGrcPvQn6Qy
-	 mbo4Bwo1OkmxT7v2fiRrPDu2CnmDlWcHjDZq3Ab2lneSFmN9cDufxLw4EwsPQH1deO
-	 qcQJEM3xIGiQSaH8M7qtdnub3n+bzjZYNnch4bUDoPDHA6ajNvPA5UhQh+GftWOK6j
-	 br+NttOxU5PzQ==
+	s=k20260515; t=1790446631;
+	bh=ey0gyz67TSo2myMlN7dPMXp4he7umj2+wNfXxNtkXX8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=Gs8R+qtNQf757gw6F7I5xYtDJSaExvUor1fOh9uL0N7qrx/zUVQnM5mI/QS6szuqD
+	 IJowLIYKkUQalEDBw0nd/WbXXLVmH00ycyP3D/iEpi7gNE++Bma0V5xgpuOwC2Z6dr
+	 sq6WRX/UAIl6hFQh/DYv8Ba97XzQX5UAl1k5VTY90AY0Gm4VmCsoFvt7dOq0LbTL/s
+	 McV5ZKvDIwybCY+SDkefBVEcqZtmKiOwk/Kh0IiyzxRo/YYfwzz6xh2AnqyExZfFFt
+	 m3lf8uX2tsv3ho+Ck6+zya7nxbxmR/d5jgHaM/nEDrMxZHzYfKIWl8lNalIrr7opIh
+	 xNN3HXDBO5c0g==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -32,71 +33,64 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v8 00/11] scsi: scsi_debug: fix zoned write validation
-Date: Sat, 26 Sep 2026 20:17:03 +0200
-Message-ID: <20260926181702.508975-13-cassel@kernel.org>
+Subject: [PATCH v8 01/11] scsi: scsi_debug: Refuse a zoned device with a non-zero lowest aligned LBA
+Date: Sat, 26 Sep 2026 20:17:04 +0200
+Message-ID: <20260926181702.508975-14-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260926181702.508975-13-cassel@kernel.org>
+References: <20260926181702.508975-13-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2419; i=cassel@kernel.org; h=from:subject; bh=x4yBjruf298l/dt759XMqJm7e6xyvBc/kDFB1kZODhw=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ28MitXHeuva5NzEZk5/srS17+S5jyN9RxkUZSoJdkQ 3dD2NWdHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjIZwmGf5rJJ5raH/Zc3OOY uk7kff6ReY1bV9n/+irMdal5yS+J7fKMDL0HzlluzRQ7KPY9ctlHaVMOmyj1103W05Y2sdqv+Lc mjQkA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1627; i=cassel@kernel.org; h=from:subject; bh=4SOu81yTRppMjmvYzStwz/4XSobf5kfsWdTXYk3JlgY=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ28MjZnT5taLC3spZB+vwd/vyTYkdlXdmV7sy8YqhTs +GekExbRykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACYSqMnwPz9Hb9sLqZeFP/Ka b+/dsMy8aFqjbmT7o6pgp/9tG5e3XmH477vhZcOpuE/hyVemv3rIKt3osGNmBMtDhk0Nv1dtXZz wmh0A
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-This series fixes scsi_debug with regards to writes to a ZBC drive, and
-to WRITE ATOMIC (16). Each patch describes the problem that it fixes.
+scsi_debug reports the lowest_aligned module parameter in the LOWEST
+ALIGNED LOGICAL BLOCK ADDRESS field, see SBC-6 r02 (T10/BSR INCITS 587),
+5.20.2, but nothing else in the driver acts on it.
 
-Two configurations are refused rather than emulated, and those two
-patches come first, as the rest of the series relies on what they
-exclude: a zoned device whose lowest aligned LBA is not zero, which no
-host writing in units of the reported zone write granularity could ever
-write, and atomic writes on a zoned device, which no drive supports.
+On a zoned device a non-zero value puts the start of every zone in the
+middle of a physical block. ZBC requires a write to a sequential write
+required zone to end on a physical block boundary, so a host writing in
+units of the reported zone write granularity could never write such a
+zone at all.
 
-Little of this is reachable in a default configuration. Most of it needs
-physblk_exp, atomic_wr or logical block provisioning to be set, or an
-initiator that does not provide a data buffer matching the transfer
-length of the command.
+Refuse the combination rather than emulate a device that cannot be used.
 
-The series is based on 7.4/scsi-staging rather than 7.3/scsi-fixes (as
-Damien suggested on v1) to avoid a build failure that would have
-happened if this series was simply merged with linux-next:
+Assisted-by: LLM
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+Tested by loading the module with each combination:
 
-  error: too many arguments to function 'mk_sense_buffer'
+  zbc=managed lowest_aligned=8    refused, -EINVAL
+  zbc=aware   lowest_aligned=8    refused, -EINVAL
+  zbc=managed lowest_aligned=0    loads
+  lowest_aligned=8                loads, as the device is not zoned
+---
+ drivers/scsi/scsi_debug.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Tested on a zoned scsi_debug device with 512 byte logical blocks and a
-4096 byte physical block, and on a device that is not zoned for the
-WRITE ATOMIC (16) patches. The notes below each patch describe what was
-observed before and after it.
-
-Changes since v7:
-- Patch 10 adds a comment above map_region() explaining why its callers
-  may map more than was written, as John suggested. Picked up his
-  Reviewed-by.
-
-Niklas Cassel (11):
-  scsi: scsi_debug: Refuse a zoned device with a non-zero lowest aligned
-    LBA
-  scsi: scsi_debug: Make atomic writes and ZBC emulation mutually
-    exclusive
-  scsi: scsi_debug: Take the zone metadata lock before the data lock
-  scsi: scsi_debug: Evaluate scsi_debug_lbp() only once
-  scsi: scsi_debug: Report the residual of a write
-  scsi: scsi_debug: Enforce physical block alignment of zoned writes
-  scsi: scsi_debug: Do not write a partial physical block to a zoned
-    device
-  scsi: scsi_debug: Advance the write pointer over the data written
-  scsi: scsi_debug: Refuse a short WRITE ATOMIC (16) before writing it
-  scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
-  scsi: scsi_debug: Validate the access parameters of WRITE ATOMIC (16)
-
- drivers/scsi/scsi_debug.c | 121 +++++++++++++++++++++++++++++++-------
- 1 file changed, 100 insertions(+), 21 deletions(-)
-
-
-base-commit: f09d2c7485b32adb82336d0d748935c8237a649e
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 6941809dfdb7..c664966e95cb 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -8734,6 +8734,11 @@ static int __init scsi_debug_init(void)
+ 			sdebug_dev_size_mb = DEF_ZBC_DEV_SIZE_MB;
+ 	}
+ 
++	if (sdeb_zbc_in_use && sdebug_lowest_aligned) {
++		pr_err("lowest_aligned is not supported by a zoned device\n");
++		return -EINVAL;
++	}
++
+ 	if (sdebug_dev_size_mb == DEF_DEV_SIZE_PRE_INIT)
+ 		sdebug_dev_size_mb = DEF_DEV_SIZE_MB;
+ 	if (sdebug_dev_size_mb < 1)
 -- 
 2.55.0
 
