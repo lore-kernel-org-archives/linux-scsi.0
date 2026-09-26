@@ -1,103 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82C3435C6A1
-	for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2026 18:17:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86A323932EE
+	for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2026 18:29:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790446652; cv=none; b=LwoNPnTr3QDXrP1JEXnR2vWRRTLBz/OTk5SqpBiH7vawGGk27NByOZcFq+EGa32eEaCpGFM+yU9pg1gO5Q1gMGiOOCs9jfzO6m0vC19/UE85uvmhYec4v+MegCKTVMoqEeHDhvrJfgDBvvi02c3TzftE0SrOWTsZUSM7tTNi6PA=
+	t=1790447361; cv=none; b=Gd7YXh2mMGf1Dmi68qhOfGjJu3C7Y/JHPPgt2l8BKJfyTWpnG8nazW4VYqovsVeungdSn92Ub6gA7+AFUPxDgsJHwWQFLc0EXlCR5oZZmwMTedzCv33ye1H8EuIQf1126kmM1RsOnTGQDmDErgMTPcSmNNfa67/p+vWaRvYNAYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790446652; c=relaxed/simple;
-	bh=vu3cm1mUibIa7BybWuIYaFtAY4Fzl1F0eupn0E43yos=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HVW+sk6gvrb8ONKNT8qiJ/o+LX2O+/DmThwHp2ip+bh/szsY4KA02HToa4lpJ3GhmoWv70wKL1CJGCrFHpYUEBrvf6mWmyhJ0f8QHZTLq/rhaVwj/tisxol/rdWAER+nKuUJb6CIeMNtkgSrTGOp9a+aChQBAKqtOruXBUnexpU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B/R82/15; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790447361; c=relaxed/simple;
+	bh=1cUdgyY27Sf98/poy2Bmd1O4IqlJXjmMzbUg/Uq82/E=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Xc7pLpR0f9lLW8b3NhRNB8Sb1VuuA39gvh/nw1buoDsTIJ2II1KEIsH1o0J2ruox1LSXP7TrudzXWCMpS9wWGqXzMNEK4gF/XdwapBFs8pPPB0GwE9dMJT+KDT5a3bzhyOwt00MVVeE/3JAoVje0Q6isVDXZ4PIIaiXJeJmXmdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C3aPAR50; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B/R82/15"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D97DB1F00893;
-	Sat, 26 Sep 2026 18:17:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C3aPAR50"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46FDF1F000FF;
+	Sat, 26 Sep 2026 18:29:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790446651;
-	bh=Qg9jbtMSc1jH34Y1/Z493AK4QWjhz3ZtlcuLTFiz0bI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=B/R82/15anIYZ7NwX2nmWFDj7AKY9qDmfhNujIOCgFUu452430uGSv0dyEYISvPfs
-	 fApCNcIzoaRDmXdw4rRZZuzpmDZFFqWt5+QNHCAfmahDngP2XddaRV8YkOAkqJurvN
-	 T+kOml5kg8lj31XgPObxuYzVhGzvyOtFr8rQpfbhf3ub7S0mVKYDqXj7XweK+M5ZcF
-	 5as8+aF35pSUtonJV7rewwh6B7EuJ8aWbj2HMvqIAexHHObT71tIAz1Ne/T3knoYX1
-	 Yw/LR1Df57AhYgNXki+tiUiYRzm9JFez25c7fxQGoJemg5ErRAo94Z1bK87llHO85H
-	 nrF49HQD6+hDw==
-From: Niklas Cassel <cassel@kernel.org>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	John Garry <john.garry@linux.dev>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v8 11/11] scsi: scsi_debug: Validate the access parameters of WRITE ATOMIC (16)
-Date: Sat, 26 Sep 2026 20:17:14 +0200
-Message-ID: <20260926181702.508975-24-cassel@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260926181702.508975-13-cassel@kernel.org>
+	s=k20260515; t=1790447360;
+	bh=CpMpdiFULrkLNzn/dXL4hrjFYHrcfVX+Zb23Ol0NrOM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=C3aPAR50yY+ZU98pir/uOrIj+MeqTZFTY21E2NmoH0ej73J7POYPm4EpiYzw7pXLq
+	 H2aGHGPj5LZDeaGdx7+bHJG1yM7i+9wGstyW+8Y3z2KzRQx61q7wo5tqj1smQCUy3+
+	 1UocSx3a4+neoO2N2ffBiQQzIFpFTcc9QV4/5C7rKZN1QvMiogOskoP/9Uu5f+HlNj
+	 1uTe55XNqN7mqk15f8LHNfU6924+x2Oci0HXOzto6J+NQ3hljPcPVXyXw4yVvynPGf
+	 MYx3NEOT7+XhxhOOudOhcTSRcxg4od7rHmy1fzWXWE7SiLTvPorHWRdSkcshagsk/i
+	 AB+3CnfQw4oSA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 05/11] scsi: scsi_debug: Report the residual of a
+ write
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Niklas Cassel" <cassel@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260926181702.508975-18-cassel@kernel.org>
 References: <20260926181702.508975-13-cassel@kernel.org>
+ <20260926181702.508975-18-cassel@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 26 Sep 2026 18:29:19 +0000
+Message-Id: <20260926182920.46FDF1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1989; i=cassel@kernel.org; h=from:subject; bh=vu3cm1mUibIa7BybWuIYaFtAY4Fzl1F0eupn0E43yos=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ28Mg/n8li80ZX+sS1FINy5QkXz7A8ddhwNNzI69Qm5 YDqzQFfOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCRD2EM/0v/Pvrk2M3Zmjoz 721mqQrTQrvmFpduj2M5lmr9OlZphxkZ3sT1RUo2fnwa9kn3ZMO0mgQ7m+q1x4T+L2t1Xp2SZLy LFwA=
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
 
-resp_atomic_write() validates the fields that are specific to an atomic
-write, but never the range that the command addresses. Every other
-command that writes user data calls check_device_access_params() first,
-which rejects a transfer that ends beyond the capacity of the device,
-one whose length exceeds the size of the store, and any write to a write
-protected device.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] scsi: scsi_debug: residual reporting bypassed on error paths in =
+resp_write_scat
+--
 
-Call check_device_access_params(). The zone checks that it ends with are
-unreachable, as atomic writes and ZBC emulation are mutually exclusive.
+commit 3c508959885d7806b55921f3734fa6ad6ca1e100
+Author: Niklas Cassel <cassel@kernel.org>
 
-Assisted-by: LLM
-Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: John Garry <john.garry@linux.dev>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
-Tested with:
+scsi: scsi_debug: Report the residual of a write
 
-  modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=128 \
-      atomic_wr=1
+This commit adds residual reporting for writes in the scsi_debug driver. It
+ensures that commands whose data buffer is larger than their transfer length
+report the unconsumed portion as a residual, making writes behave consisten=
+tly
+with reads.
 
-The device has a capacity of 262144 logical blocks. A WRITE ATOMIC (16)
-of eight blocks at LBA 262140 is now terminated with ILLEGAL REQUEST /
-LOGICAL BLOCK ADDRESS OUT OF RANGE; before this patch it completed with
-GOOD status, having written eight blocks at LBA 0 instead.
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index b64ae3ad300d8..9220758bb8017 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
 
-With the wp module parameter set to 1, a WRITE ATOMIC (16) is now
-terminated with DATA PROTECT / LOGICAL UNIT SOFTWARE WRITE PROTECTED,
-which is what an ordinary WRITE(16) has always returned; before this
-patch it completed with GOOD status and wrote the data.
----
- drivers/scsi/scsi_debug.c | 4 ++++
- 1 file changed, 4 insertions(+)
+[ ... ]
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 0ae0a6ac3baa..ef2daef1b599 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -6253,6 +6253,10 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
- 		}
- 	}
- 
-+	ret = check_device_access_params(scp, lba, len, true);
-+	if (ret)
-+		return ret;
-+
- 	/* Short atomic writes are not allowed. */
- 	if (scsi_bufflen(scp) < len * sdebug_sector_size)
- 		return DID_ERROR << 16;
--- 
-2.55.0
+> @@ -5350,6 +5357,13 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+>  		sg_off +=3D num_by;
+>  		cum_lb +=3D num;
+>  	}
+> +	/*
+> +	 * sg_off counts what the command asked for, which can exceed the
+> +	 * buffer: lbdof is not validated against it, and a range is counted
+> +	 * in full even if do_device_access() copied less.
+> +	 */
+> +	if (scsi_bufflen(scp) > sg_off)
+> +		scsi_set_resid(scp, scsi_bufflen(scp) - sg_off);
+>  	ret =3D 0;
+>  err_out_unlock:
+>  	sdeb_meta_write_unlock(sip);
 
+[Severity: Medium]
+Does placing the err_out_unlock label after the residual reporting logic
+cause error exits to bypass it?
+
+If a write scattered command processes the first LBA range successfully but
+fails on a subsequent range (for example, if the second range exceeds
+device capacity and check_device_access_params() fails), the code in
+resp_write_scat() jumps directly to err_out_unlock:
+
+		ret =3D check_device_access_params(scp, lba, num, true);
+		if (ret)
+			goto err_out_unlock;
+
+This bypasses the new residual reporting logic at the end of the function,
+leaving the residual incorrectly at 0 instead of reflecting the unwritten
+data. Should the residual also be updated before returning from these error
+paths?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260926181702.5089=
+75-13-cassel@kernel.org?part=3D5
