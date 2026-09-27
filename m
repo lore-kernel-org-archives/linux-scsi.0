@@ -1,264 +1,214 @@
-Received: from outbound.easymail.ca (outbound.easymail.ca [64.68.200.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl2-f12.google.com (mail-dl2-f12.google.com [74.125.229.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A2FD256C87
-	for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2026 20:11:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.68.200.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3613435AC07
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 05:17:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.140
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790453463; cv=none; b=sE4vsLEby2N336Gr/fl2cDx+kASN8KRu3xhOOczuu/mIX63Smf4PboYktEtMQCfLl6mDX3p1VtPX3k/uZUEbDXi/KIR7UviLNmqudQxniYdrHdDrTrH9iDw4J9w+k5VDSOJKc1x6H+G2+xOnRCw7eo27Q7QaU44PAt6hea4f1gY=
+	t=1790486246; cv=none; b=s9+i3MeUdjaSswLgs8RQCpmGzFKcKOb5xEJme2Sujj6KdnaLkc/XWWZU+HxGX3Ct8+RzQsXZE8MxT/WvGOvOk4LC/SlLpHCkPtPrGZcEYcuPYhYqD2+ak9wl1vqQ73R5tOnoY2fPSphXb6tDySD57S8prto9MCNFLTo1zzi81zw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790453463; c=relaxed/simple;
-	bh=K3R6d07wjw7x1Ai2thzEDSDYXK9yy1KWYIYMSDYWhxc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KnvVRj12bKTadS5rtZRZwDHj9dH/5rNuMYUraI9mjIGR8JI1AIBhQxnc2nOmrZtg+LytmQtfCb2p3Zn4MpP/H5oMrT9Q2bf2Fl2W27yVFF0/FyvmFoGiG6nQ47TtzDoCgM7WLflG6JouqOF0DgTHlJFqC/GYHqs1ArB5HLO5Oio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gonehiking.org; spf=pass smtp.mailfrom=gonehiking.org; dkim=pass (2048-bit key) header.d=gonehiking.org header.i=@gonehiking.org header.b=AAdwDORT; dkim=pass (2048-bit key) header.d=gonehiking.org header.i=@gonehiking.org header.b=mMARH68n; arc=none smtp.client-ip=64.68.200.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gonehiking.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gonehiking.org
+	s=arc-20240116; t=1790486246; c=relaxed/simple;
+	bh=nWYyEn3FlxnbDE5hfPTdOkEDIO47hQrt3IWc+5iB0G0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AAjjmnVC8rLL1JexCPmkxo6fsAq+aN8lan+1fL1b1bNYE4CAhUu6upXU7E6GHj4zHwqvq5Vs/vIGX1j1nQDz4cFHc51UrlvqzwJRJNrHsHjsQxK/wpmPYqvDGwLHyK6eKks8iiUHwemkp79JGQ/rotZShcO5NgnZziuzvv445jA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pc15xYtH; arc=none smtp.client-ip=74.125.229.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gonehiking.org header.i=@gonehiking.org header.b="AAdwDORT";
-	dkim=pass (2048-bit key) header.d=gonehiking.org header.i=@gonehiking.org header.b="mMARH68n"
-Received: from mailout.easymail.ca (pco.easydns.net [64.68.203.197])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by outbound.easymail.ca (Postfix) with ESMTPS id 4412D20BAD;
-	Sat, 26 Sep 2026 20:02:39 +0000 (UTC)
-Received: from localhost (localhost [127.0.0.1])
-	by mailout.easymail.ca (Postfix) with ESMTP id 3049861048;
-	Sat, 26 Sep 2026 20:02:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gonehiking.org;
-	s=easymail; t=1790452959;
-	bh=B6lIHc5mw1C+4unqP42VKEQvtWxLSqeaUS+W/+l84ZI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AAdwDORTp+bAQb9EI3tmmC407SvL2fcpsmOqWRfO2MMs8TA/GHeC+hoAcjv2zBHJh
-	 ZknDie51Z0wohBEI90l5tSg24Zg8t3sNsPzCmK1C3HixRKV7woI0iXhwtCkboF4s44
-	 jVOBDjsO1C6yQ91DmSJlw4Z/lpZ3zdhUC0RGFRV/qprN9UaCPg+3DThO1mXQx9+Dan
-	 2YlSi2T/fOWWGRFXxMSKKqXYfqOTGjyGZAG2mkMyT0dSdtGW+cTaLIxWTZiqwB8Ain
-	 T8+kx3AzHgAmAQ76cYqrYlEE9aCOuO2C8KRAuWmSF29QHbsH7NGauP8LqUP41szCer
-	 JJRR8qNHPIHRQ==
-X-Virus-Scanned: Debian amavisd-new at emo09-pco.easydns.vpn
-Received: from mailout.easymail.ca ([127.0.0.1])
-	by localhost (emo09-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id eI5m10kyBMLo; Sat, 26 Sep 2026 20:02:38 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by mailout.easymail.ca (Postfix) with ESMTPSA
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gonehiking.org;
-	s=easymail; t=1790452958;
-	bh=B6lIHc5mw1C+4unqP42VKEQvtWxLSqeaUS+W/+l84ZI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mMARH68nLiPkT3Jn6PG+KoM62sXHIfWm62oUwWg+vdQhStDE73dEyfsWH/XO3ph0I
-	 aNwxLk0jbaWK0ZaOk74qbnzTSds6Mkv6YJ3/t1nxuhTzT6RzWiQZSzDWVg5s2Nd59g
-	 LZGhkAuDzB2lqIAtYrbu9d++I8pu+Rbi3gkjyK25TzXi+xaY3qfke/nX2iyMRNDrM0
-	 Lc+/VPsYszSQWEChBTFUSP2ncc5EcIzQidraH8rn8miXHv32+51dOIHis3Ed7jjU0h
-	 iNZiI62CPfuUOEakuYN8bQLPdHYRAOVyJ51nSyBzargTujtAJyyrydcJwVlV0pkeZ3
-	 95X+lu3XY2tDw==
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by mailout.easymail.ca (Postfix) with ESMTPSA
-Received: by rhapsody (Postfix, from userid 1000)
-	id 058EC1E043D; Sat, 26 Sep 2026 14:02:37 -0600 (MDT)
-Date: Sat, 26 Sep 2026 14:02:36 -0600
-From: Khalid Aziz <khalid@gonehiking.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pc15xYtH"
+Received: by mail-dl2-f12.google.com with SMTP id a92af1059eb24-142dd025d06so1398918c88.1
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2026 22:17:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790486244; x=1791091044; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=fYllJEMjqSI9dmThGcCAG+WXxe2fhi4B+5VSXcbhrlk=;
+        b=pc15xYtHMkXyln8PLqM50TBJpeK8NQI1vbmHUZ9vKdY6G7P3LJhAUzrEh6D+kSplJR
+         NQMgfhFab+awep1voN/hVZ4/Q84K6oj9yAi8neT/i4kLyZ0lKeU16uInYmxRC35duhgL
+         ULAW5+Jro6HaqHslL5V/sUPyPQ4kuOPL6gfrurocq7LhFul6eaYf5g3fKavmp7SsHjco
+         +XGQ4me41b1WTZIgKyqG3+r37W+AeVspTyv62+t9XHFVudBZL58kE4KwzJwGo9a0k1kn
+         VXaB+01nzQXdATLH2OJ61uZSyH+RsBuKacuUpqkKMQAvcp39CDEpquRv/6zuw2ctiZRn
+         RIlw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790486244; x=1791091044;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=fYllJEMjqSI9dmThGcCAG+WXxe2fhi4B+5VSXcbhrlk=;
+        b=dLoLY6wEc3Nr84LHzAwksQSPcSOSoH7MUEN2x3Bv//YdZoHn2uzqPATtmzO/N+I/4Y
+         FSKGuHSnr+WAs7uNBDerUWVrqAAoRUNpy/WecpZ6Je6c5B+2hyirQCgGk9U0pWog2NhL
+         DRbqLacjODIji1Q6WQxTmOdPEaMXTXjcRsU2MjltnAbcdf5ovdxquz/4A3Y2G/aJvTG6
+         8mXbtLF562PUkOiBEt9GqRerG+Nkoj9b48vmY0prtIkofVWrBjanXK/Y1j3s277WUBhe
+         G+x8URC/pzZEXAPuRugQ68nO48thZ5UsJ6p5wC0FLJCBJ/CcN3SGmOLLyZKjCIDJ2BWc
+         t2iQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzmQ/uXuiUKieV4zli+OGhDyryo5YaIZiHQOsfHTQDlL7S48iXq19IHhIMLtuUzXrIZew0P/TJY5gG7@vger.kernel.org
+X-Gm-Message-State: AFq9FYLwUGMYRTC9aHvSkTFOO+bXUEWK3YGFdwORFpZaZbjGP74zmVar
+	JUoWuBjhOYy7ODxPw1H+Ckm+Mlw9FYd/a5XujbbZxTctoce7mmuaHEdN
+X-Gm-Gg: AYBFou292ZkSJHPrQHI4dlv/swD41mOw0MnJj5GLvyy9Y1J2AVR2dbgZTzhYvXWLRyQ
+	qfpV172CExvy2Go7dvV70u9w/dApW1QwNRqBH0fgqE0ObwIJwu8ml1iTm5GJCLlz1EAk2f7GSVk
+	Vl5JeWqgAN+LapoerGCwK+Hf/J45xd+GVZQOq9oEhp0NzrngmKQVyjqpPzWVXNpVm1xaud+GzFy
+	cQeemF+WXtQgdFD5m8JjG+DYBbB8hkhPSGGEUuEoYlessxgSG49P/eWRlncbHbO+vILUGQqPUGN
+	ZISaodzMwd+z7oxUnQxfdPf/CImzCw4Fs9vcf+hCdgmueu3/cwcqSelF+13SEJtwQpXplRbweu0
+	AhQrLTlqVGV/wHv2LtF9YEFbmdEbIEDE3Mg86RppPdZC4gi6QhwoNVBKDlYLAwBGVm6Al9w2yHV
+	BW2vzgEb1emF7xa1vZC9z8hcYr5CitvH/IgL+F+LYDgG5+/x7guoZUKUHEdEQtQO2h0D0WZdnWr
+	istdCKy8iONcPkKgTI3ug+760A+nkoa4isaap6oRcj6uaeKGTtgSuHHvg8cp3mCsNLtIp2x1bJG
+	2kXIXLIgtKIQH4DNCz9yVUInlrrRz4Gk6SASM1TEj+k8lJZLV+o2l4LqBwsTm6boMTdB1VXhXw=
+	=
+X-Received: by 2002:a05:693c:824c:b0:346:7c2c:1d0c with SMTP id 5a478bee46e88-3467c2c2549mr424577eec.17.1790486243877;
+        Sat, 26 Sep 2026 22:17:23 -0700 (PDT)
+Received: from FT6N242TWK ([223.181.116.210])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-341459234a1sm18410338eec.24.2026.09.26.22.17.20
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sat, 26 Sep 2026 22:17:23 -0700 (PDT)
+From: Shashank Mohan Jain <jain.sm@gmail.com>
+To: "Martin K . Petersen" <mkp@kernel.org>
+Cc: Mike Christie <michael.christie@oracle.com>,
+	James Bottomley <James.Bottomley@HansenPartnership.com>,
+	Bart Van Assche <bvanassche@acm.org>,
 	linux-scsi@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Subject: Re: [PATCH v4 04/54] scsi: BusLogic: Pass the host pointer directly
- to several functions
-Message-ID: <argk3DLMl_YSDOsV@gonehiking.org>
-References: <cover.1790360262.git.bvanassche@acm.org>
- <09e99ec9c6fa24ee5fe3c47110c88a1be076e01a.1790360262.git.bvanassche@acm.org>
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: target: rd: Check the return value of match_int()
+Date: Sun, 27 Sep 2026 10:47:17 +0530
+Message-ID: <20260927051717.71269-1-jain.sm@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <09e99ec9c6fa24ee5fe3c47110c88a1be076e01a.1790360262.git.bvanassche@acm.org>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Sep 25, 2026 at 11:25:42AM -0700, Bart Van Assche wrote:
-> Pass the struct Scsi_Host pointer directly to multiple functions. This
-> prepares the BusLogic driver for enabling compiler-based lock context
-> analysis. No functionality has been changed.
-> 
-> Cc: Khalid Aziz <khalid@gonehiking.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/BusLogic.c | 93 +++++++++++++++++++++++------------------
->  drivers/scsi/BusLogic.h |  2 +-
->  2 files changed, 54 insertions(+), 41 deletions(-)
-> 
-> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-> index 27b446c0c5d0..75aaf35383a9 100644
-> --- a/drivers/scsi/BusLogic.c
-> +++ b/drivers/scsi/BusLogic.c
-..... snip.....
->  
-> @@ -2878,11 +2883,11 @@ static int blogic_hostreset(struct scsi_cmnd *SCpnt)
->    Outgoing Mailbox for execution by the associated Host Adapter.
->  */
->  
-> -static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
-> +static enum scsi_qc_status blogic_qcmd_lck(struct Scsi_Host *shost, struct scsi_cmnd *command)
+rd_set_configfs_dev_params() ignores the return value of match_int()
+for the rd_pages=, rd_nullio= and rd_dummy= options and then uses 'arg'
+anyway.
 
-Buslogic.c defines blogic_qcmd() usind "DEF_SCSI_QCMD(blogic_qcmd)" which in turn will call
-blogic_qcmd_lck() with just struct *scsi_cmd as a single parameter as defined in 
-include/scsi/scsi_host.h. I did not see an update to DEF_SCSI_QCMD in patches 1-3. With this
-change, callers are not being updated and that will not work. Can you double check this?
+match_token() only matches these options if the value is a number with
+nothing after it, but match_int() can still fail with -ERANGE: when the
+value is 24 characters or longer, on any architecture, and on 64-bit for
+most values outside the range of an int.  'arg' is then not written.  It
+still holds the value parsed for an earlier option in the same write, or
+is uninitialized if no number was parsed yet.  The write succeeds, and
+for rd_pages= that value becomes the page count and RDF_HAS_PAGE_COUNT
+is set.  On 64-bit, for example, "rd_nullio=1,rd_pages=4294967296"
+configures a one page device, and "rd_pages=4294967296" alone uses an
+uninitialized page count (0 with CONFIG_INIT_STACK_ALL_ZERO, which is
+only rejected when the device is enabled).  A stale 1 also turns on
+RDF_NULLIO or RDF_DUMMY for an invalid rd_nullio= or rd_dummy= value.
 
-Thanks,
-Khalid
+Return the error from match_int(), as the fileio and pscsi backends do
+for their match_int() options.  As there, options that come before the
+invalid one in the same write have already been applied.
 
->  {
->  	void (*comp_cb)(struct scsi_cmnd *) = scsi_done;
->  	struct blogic_adapter *adapter =
-> -		(struct blogic_adapter *) command->device->host->hostdata;
-> +		(struct blogic_adapter *) shost->hostdata;
->  	struct blogic_tgt_flags *tgt_flags =
->  		&adapter->tgt_flags[command->device->id];
->  	struct blogic_tgt_stats *tgt_stats = adapter->tgt_stats;
-> @@ -2913,12 +2918,12 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
->  	   probably hung so signal an error as a Host Adapter Hard Reset
->  	   should be initiated soon.
->  	 */
-> -	ccb = blogic_alloc_ccb(adapter);
-> +	ccb = blogic_alloc_ccb(shost);
->  	if (ccb == NULL) {
-> -		spin_unlock_irq(&adapter->scsi_host->host_lock);
-> +		spin_unlock_irq(&shost->host_lock);
->  		blogic_delay(1);
-> -		spin_lock_irq(&adapter->scsi_host->host_lock);
-> -		ccb = blogic_alloc_ccb(adapter);
-> +		spin_lock_irq(&shost->host_lock);
-> +		ccb = blogic_alloc_ccb(shost);
->  		if (ccb == NULL) {
->  			command->result = DID_ERROR << 16;
->  			comp_cb(command);
-> @@ -3046,7 +3051,7 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
->  	if (dma_mapping_error(&adapter->pci_device->dev, sense_buf)) {
->  		blogic_err("DMA mapping for sense data buffer failed\n",
->  				adapter);
-> -		blogic_dealloc_ccb(ccb, 0);
-> +		blogic_dealloc_ccb(shost, ccb, 0);
->  		return SCSI_MLQUEUE_HOST_BUSY;
->  	}
->  	ccb->sensedata = sense_buf;
-> @@ -3061,15 +3066,15 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
->  		   so signal an error as a Host Adapter Hard Reset should
->  		   be initiated soon.
->  		 */
-> -		if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START, ccb)) {
-> -			spin_unlock_irq(&adapter->scsi_host->host_lock);
-> +		if (!blogic_write_outbox(shost, BLOGIC_MBOX_START, ccb)) {
-> +			spin_unlock_irq(&shost->host_lock);
->  			blogic_warn("Unable to write Outgoing Mailbox - Pausing for 1 second\n", adapter);
->  			blogic_delay(1);
-> -			spin_lock_irq(&adapter->scsi_host->host_lock);
-> -			if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START,
-> +			spin_lock_irq(&shost->host_lock);
-> +			if (!blogic_write_outbox(shost, BLOGIC_MBOX_START,
->  						ccb)) {
->  				blogic_warn("Still unable to write Outgoing Mailbox - Host Adapter Dead?\n", adapter);
-> -				blogic_dealloc_ccb(ccb, 1);
-> +				blogic_dealloc_ccb(shost, ccb, 1);
->  				command->result = DID_ERROR << 16;
->  				scsi_done(command);
->  			}
-> @@ -3089,12 +3094,20 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
->  		   pending.
->  		 */
->  		if (ccb->status == BLOGIC_CCB_COMPLETE)
-> -			blogic_process_ccbs(adapter);
-> +			blogic_process_ccbs(shost);
->  	}
->  	return 0;
->  }
->  
-> -static DEF_SCSI_QCMD(blogic_qcmd)
-> +static enum scsi_qc_status blogic_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-> +{
-> +	enum scsi_qc_status rc;
-> +
-> +	spin_lock_irq(&shost->host_lock);
-> +	rc = blogic_qcmd_lck(shost, cmd);
-> +	spin_unlock_irq(&shost->host_lock);
-> +	return rc;
-> +}
->  
->  #if 0
->  /*
-> @@ -3103,9 +3116,8 @@ static DEF_SCSI_QCMD(blogic_qcmd)
->  
->  static int blogic_abort(struct scsi_cmnd *command)
->  {
-> -	struct blogic_adapter *adapter =
-> -		(struct blogic_adapter *) command->device->host->hostdata;
-> -
-> +	struct Scsi_Host *const shost = command->device->host;
-> +	struct blogic_adapter *adapter = (void *) shost->hostdata;
->  	int tgt_id = command->device->id;
->  	struct blogic_ccb *ccb;
->  	blogic_inc_count(&adapter->tgt_stats[tgt_id].aborts_request);
-> @@ -3144,7 +3156,7 @@ static int blogic_abort(struct scsi_cmnd *command)
->  				adapter->fw_ver[0] < '5') {
->  			blogic_warn("Unable to Abort CCB #%ld to Target %d - Abort Tag Not Supported\n", adapter, ccb->serial, tgt_id);
->  			return FAILURE;
-> -		} else if (blogic_write_outbox(adapter, BLOGIC_MBOX_ABORT,
-> +		} else if (blogic_write_outbox(shost, BLOGIC_MBOX_ABORT,
->  					ccb)) {
->  			blogic_warn("Aborting CCB #%ld to Target %d\n",
->  					adapter, ccb->serial, tgt_id);
-> @@ -3169,7 +3181,7 @@ static int blogic_abort(struct scsi_cmnd *command)
->  		   may still be pending.
->  		 */
->  		if (ccb->status == BLOGIC_CCB_COMPLETE)
-> -			blogic_process_ccbs(adapter);
-> +			blogic_process_ccbs(shost);
->  		return SUCCESS;
->  	}
->  	return SUCCESS;
-> @@ -3181,8 +3193,9 @@ static int blogic_abort(struct scsi_cmnd *command)
->    currently executing SCSI Commands as having been Reset.
->  */
->  
-> -static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
-> +static int blogic_resetadapter(struct Scsi_Host *host, bool hard_reset)
->  {
-> +	struct blogic_adapter *adapter = (void *)host->hostdata;
->  	struct blogic_ccb *ccb;
->  	int tgt_id;
->  
-> @@ -3203,7 +3216,7 @@ static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
->  
->  	for (ccb = adapter->all_ccbs; ccb != NULL; ccb = ccb->next_all)
->  		if (ccb->status == BLOGIC_CCB_ACTIVE)
-> -			blogic_dealloc_ccb(ccb, 1);
-> +			blogic_dealloc_ccb(host, ccb, 1);
->  	/*
->  	 * Wait a few seconds between the Host Adapter Hard Reset which
->  	 * initiates a SCSI Bus Reset and issuing any SCSI Commands.  Some
-> @@ -3212,9 +3225,9 @@ static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
->  	 */
->  
->  	if (hard_reset) {
-> -		spin_unlock_irq(&adapter->scsi_host->host_lock);
-> +		spin_unlock_irq(&host->host_lock);
->  		blogic_delay(adapter->bus_settle_time);
-> -		spin_lock_irq(&adapter->scsi_host->host_lock);
-> +		spin_lock_irq(&host->host_lock);
->  	}
->  
->  	for (tgt_id = 0; tgt_id < adapter->maxdev; tgt_id++) {
-> diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
-> index 24697a5bedc8..6ace3c307a90 100644
-> --- a/drivers/scsi/BusLogic.h
-> +++ b/drivers/scsi/BusLogic.h
-> @@ -1279,7 +1279,7 @@ static int blogic_sdev_configure(struct scsi_device *,
->  				 struct queue_limits *lim);
->  static void blogic_qcompleted_ccb(struct blogic_ccb *);
->  static irqreturn_t blogic_inthandler(int, void *);
-> -static int blogic_resetadapter(struct blogic_adapter *, bool hard_reset);
-> +static int blogic_resetadapter(struct Scsi_Host *host, bool hard_reset);
->  static void blogic_msg(enum blogic_msglevel, char *, struct blogic_adapter *, ...);
->  static int __init blogic_setup(char *);
->  
+Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
+Assisted-by: LLM
+Signed-off-by: Shashank Mohan Jain <jain.sm@gmail.com>
+---
+This patch was prepared with Claude Code (Anthropic), model Claude Opus 5.5
+(claude-opus-5-5): the analysis, the fix, the changelog and the throwaway
+test described below. The trailer only says "Assisted-by: LLM", as
+Documentation/process/coding-assistants.rst describes.
+
+Earlier attempts at this fix were not merged:
+https://lore.kernel.org/r/1528779148-42485-1-git-send-email-jiazhouyang09@gmail.com
+https://lore.kernel.org/r/20190112053159.99406-1-kjlu@umn.edu
+This version follows the review comments there: it returns the error
+from match_int() instead of -EINVAL, does not leak 'orig', covers
+rd_nullio= (and rd_dummy=, added later), and goes through a single exit
+path as the fileio backend does.  James Bottomley suggested
+ignoring an invalid option instead of failing the write; I went with
+returning the error so that a mistyped size is not silently replaced by
+a stale or uninitialized one, but ignoring it (a 'break' instead of
+'goto out') would also fix the bug.
+
+Dependencies: none. The patch is correct on its own on current mainline.
+It is related to "lib: parser: reject out-of-range values in
+match_number()", sent to Andrew Morton:
+https://lore.kernel.org/r/20260926012718.15675-1-jain.sm@gmail.com
+With that patch, out-of-range values also fail on 32-bit (today they
+wrap there, for example rd_pages=4294967296 gives 0 pages), and this
+patch then turns that failure into an error instead of a stale value.
+
+Testing done:
+- W=1 build of drivers/target/target_core_rd.o with allmodconfig for
+  x86_64 and i386: no warnings.
+- A throwaway KUnit test (not part of this patch) called
+  rd_set_configfs_dev_params() under UML (x86_64 and i386 subarch).
+  Without the patch, on x86_64:
+  "rd_nullio=1,rd_pages=4294967296" returns success with 1 page and
+  RDF_HAS_PAGE_COUNT set; "rd_pages=4294967296" gives 0 pages with
+  CONFIG_INIT_STACK_ALL_ZERO and 0xfefefefe pages with
+  CONFIG_INIT_STACK_ALL_PATTERN; a 24-character rd_nullio= or rd_dummy=
+  value of 0 after "rd_pages=1" sets RDF_NULLIO or RDF_DUMMY (also on
+  i386).  With the patch all of these writes fail with -ERANGE, and valid
+  values (rd_pages=8, rd_pages=0x10, "rd_pages=8,rd_nullio=1,rd_dummy=1",
+  rd_pages=2147483647) are unchanged, on x86_64 and i386.
+
+Not tested: writing to the configfs control file of a real rd_mcp device
+with targetcli, and enabling such a device.
+
+Not changed: a negative rd_pages= value still parses and becomes a huge
+u32 page count, as before.
+
+ drivers/target/target_core_rd.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 092d9fe0d4e3..32762199e742 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -545,7 +545,7 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
+ 	struct rd_dev *rd_dev = RD_DEV(dev);
+ 	char *orig, *ptr, *opts;
+ 	substring_t args[MAX_OPT_ARGS];
+-	int arg, token;
++	int ret = 0, arg, token;
+ 
+ 	opts = kstrdup(page, GFP_KERNEL);
+ 	if (!opts)
+@@ -560,14 +560,18 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
+ 		token = match_token(ptr, tokens, args);
+ 		switch (token) {
+ 		case Opt_rd_pages:
+-			match_int(args, &arg);
++			ret = match_int(args, &arg);
++			if (ret)
++				goto out;
+ 			rd_dev->rd_page_count = arg;
+ 			pr_debug("RAMDISK: Referencing Page"
+ 				" Count: %u\n", rd_dev->rd_page_count);
+ 			rd_dev->rd_flags |= RDF_HAS_PAGE_COUNT;
+ 			break;
+ 		case Opt_rd_nullio:
+-			match_int(args, &arg);
++			ret = match_int(args, &arg);
++			if (ret)
++				goto out;
+ 			if (arg != 1)
+ 				break;
+ 
+@@ -575,7 +579,9 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
+ 			rd_dev->rd_flags |= RDF_NULLIO;
+ 			break;
+ 		case Opt_rd_dummy:
+-			match_int(args, &arg);
++			ret = match_int(args, &arg);
++			if (ret)
++				goto out;
+ 			if (arg != 1)
+ 				break;
+ 
+@@ -587,8 +593,9 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
+ 		}
+ 	}
+ 
++out:
+ 	kfree(orig);
+-	return count;
++	return (!ret) ? count : ret;
+ }
+ 
+ static ssize_t rd_show_configfs_dev_params(struct se_device *dev, char *b)
+-- 
+2.43.0
+
