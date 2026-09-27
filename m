@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ABF354707C
-	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 05:27:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E7254707C
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 05:27:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790486829; cv=none; b=pjgDQCXpYXNmjEXHb25wa+nnfWM7waB45dshYXs6inHwoks9PoRDLD71F+0pxzZpmCJb07ai8M87PxGt1xH4cc0uYEfzzoGYaOfm2LREMY7sNXiPzz7JW48dCxkPOOqZtJHQrkTu67PO6Klx/SVjMtolUSYmHpgjlrf1aOBV4+U=
+	t=1790486831; cv=none; b=tHIRLaES9gwRdeZVoaFZWo+GeVJ6aBsY3UAOafcs2iYhsyPtvjSMNN960EKzERS43bf0F6mbbNjriCjINcwoixlGKOsHrMpD5GN5K0QrnzXYzbgpzHhqEBkuD2n4BoIq3DRHqyL3ZHlUwPpTKwd5vymNWgAVMCheHSeYSE3vMkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790486829; c=relaxed/simple;
-	bh=2uL53PN8nRBmDFz9Ye4q9pqAvQphs6Vq/vcCDB+LCSg=;
+	s=arc-20240116; t=1790486831; c=relaxed/simple;
+	bh=nmjuZFO0BBFM5JvVGrYoomOd2fuI7TM3QkSgOhiuq0s=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dIXrdppHdFbgF8vPOxnyttNS1vJsoIOrzhlje4JfUuLZ9OU/3JPF5DsnRig6hStpRs9FzfMV+VrI73Cl2dQjXJ0mWXZa8QMvtLkPnqHN958xxU/RLQvVb0xzeLu0v7Pi3WJa2sjSahre8gRnRu+HSLHt1/3My5JCOrStXS5G4b0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kj3+8RaM; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=juuDsaRh7Kfz2mEqHOK+2Ba6UjExpoPaPWbqlMEJLvzlidLM8IyptaG0m100cF62YOIXehGTPfG9+XrH0U6tqy8ze5YQEH55L/MvxTAN0LUmU0WUiZueraLYAXkz3ENJEL6Jx3lEfMAq/mPrbViaCUw8XUK8m5BnskUvuJxj7kU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TjBOE9ey; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kj3+8RaM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D9081F000FF;
-	Sun, 27 Sep 2026 05:27:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TjBOE9ey"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BAE21F00893;
+	Sun, 27 Sep 2026 05:27:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790486827;
-	bh=sDMQrqsKoHkEj5RoyZniz6L4Gsq6cY8ESlhyMYlUWpY=;
+	s=k20260515; t=1790486829;
+	bh=QhOtyp16dNvAdT5Q2z+76wjxjhZTGlHPBTMwV1uyT0s=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Kj3+8RaMpU1WPtzMp7O0A3YddHfmQUDavfDW46KBSoBxbMdkHsF+oPvBsgTEUZ1KV
-	 0OP9hHkZ3E9tzOvTh/5rZdf/RyIvJ6fO5w5kS4sRwC9k2qMPqOqB9YnHDsi30nOtSZ
-	 R1ck4U39feASyjKgFeDkRzd/1ca8bvxOoCbnWGxYSnO+0ZkdbTAPfp2uiJzbVWR9Do
-	 TNsTptTKG5bGnWDiRBmH0TQfOVsLO+73MZdhNkXZVG+MyDrLFi+tSq8yqEPDkGS2aG
-	 xirgI1dyEwYFqyWnsAigqb225D5i57L3ljgduDATRD3s36XUrIwijVGK7ecr/cfBxw
-	 JVkpII3WRnyKA==
+	b=TjBOE9eynHc7yov00OlFwtEuq4R1toCmmuGZGmly8kUEzOLbT9bAFVwEWLdMdOBCm
+	 2MmcfQtWSwNVV1/2wxhIHcqW1HrZiwHksknBknq7jGqKFf3mUnbJqOt+Cp9pFCX6X/
+	 Vk/VxeAKg8wnxbmbTqHs5ItsG7WtL2I3XASXobWiWAuxJiAwzKtU8ryJnLwM1rpSsK
+	 MVY569Hvs8ytHVrm3H+QcecVfH8t7NHewSjbNXWtQ0298s+DEC5rhussxTWVrb3/xb
+	 FbtnGw56HQSEAGsTsRJazV5ig20KesOrbVgZWvvYPP9g2mH9EzrT3XTYiY3xF+H2pi
+	 va7Xjr9duodkA==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -33,9 +33,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v9 02/11] scsi: scsi_debug: Make atomic writes and ZBC emulation mutually exclusive
-Date: Sun, 27 Sep 2026 07:26:53 +0200
-Message-ID: <20260927052650.567035-15-cassel@kernel.org>
+Subject: [PATCH v9 03/11] scsi: scsi_debug: Take the zone metadata lock before the data lock
+Date: Sun, 27 Sep 2026 07:26:54 +0200
+Message-ID: <20260927052650.567035-16-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260927052650.567035-13-cassel@kernel.org>
 References: <20260927052650.567035-13-cassel@kernel.org>
@@ -45,56 +45,71 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1696; i=cassel@kernel.org; h=from:subject; bh=2uL53PN8nRBmDFz9Ye4q9pqAvQphs6Vq/vcCDB+LCSg=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2rJSfvvzs16rVivPFDt3ddP6YW/v8TdnXax4Z1vA0L bC5oWsS2lHKwiDGxSArpsji+8Nlf3G3+5TjindsYOawMoEMYeDiFICJdAQz/LN72feKP2/Zk6mh Dg0/9in/Ol6q7DmD867QvWrft+sMLRoZ/udvv/mgjjPAMHF3zE/G7BUv/wb4TWZeaPnexehwROa mRbwA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2333; i=cassel@kernel.org; h=from:subject; bh=nmjuZFO0BBFM5JvVGrYoomOd2fuI7TM3QkSgOhiuq0s=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2rFTYnrVNy6lIJNp+wgPmSbr1uUteap059XLKRN1/l 0W4LaJtO0pZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCR2UwM/2tCbEREnxTnrf13 adeNuXb39zx+mGmz7sJNNrWlvbPy/low/BVZHfmqIe/+0R8L/hVznLi8VbJJ0PzHHPFlyZIWW9i C93EAAA==
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-There are no SMR drives that support atomic writes, so emulating a
-device with both emulates something a user cannot encounter, and means
-maintaining the zone handling of a command that no zoned device
-implements.
+resp_comp_write() takes the data lock and then the zone metadata lock,
+while every other command that takes both takes the metadata lock first
+and reaches the data lock through do_device_access(). A COMPARE AND
+WRITE and any other write to the same store can therefore deadlock each
+other.
 
-Nothing in the standards forbids the combination, and for a host managed
-drive whose logical block size equals its physical block size there is
-no problem in it either: the vendor only has to give atomic writes an
-alignment that makes sense with regards to ZBC. This is a choice not to
-complicate scsi_debug.
+Take the locks in the same order as everywhere else.
 
-Refuse the combination at initialisation. It can be changed back if such
-drives ever appear.
+Correct the comment above map_region() while here: the provisioning map
+is covered by the metadata lock rather than the data lock, which is why
+resp_unmap() takes only the metadata lock.
 
-Suggested-by: Damien Le Moal <dlemoal@kernel.org>
 Assisted-by: LLM
+Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: John Garry <john.garry@linux.dev>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
-Tested by loading the module with each combination:
+Tested with:
 
-  zbc=managed atomic_wr=1    refused, -EINVAL
-  zbc=aware   atomic_wr=1    refused, -EINVAL
-  zbc=managed                loads
-  atomic_wr=1                loads
+  modprobe scsi_debug sector_size=512 dev_size_mb=128 lbpu=1 lbpws=1
+
+COMPARE AND WRITE completes, and a READ(16) of the block that it wrote
+returns, so the reordered locks are still taken and released correctly.
+
+The deadlock itself was not reproduced. This kernel is built without
+lockdep, and the window needs a COMPARE AND WRITE and another write to
+the same store to interleave between the two acquisitions. Found by
+review.
 ---
- drivers/scsi/scsi_debug.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/scsi_debug.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index c664966e95cb..8e45a57ae406 100644
+index 8e45a57ae406..18aefe83b7b6 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -8739,6 +8739,11 @@ static int __init scsi_debug_init(void)
- 		return -EINVAL;
+@@ -5575,8 +5575,8 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+ 			    "indicated=%u, IO sent=%d bytes\n", my_name,
+ 			    dnum * lb_size, ret);
+ 
+-	sdeb_data_write_lock(sip);
+ 	sdeb_meta_write_lock(sip);
++	sdeb_data_write_lock(sip);
+ 	if (!comp_write_worker(sip, lba, num, arr, false)) {
+ 		mk_sense_buffer(scp, MISCOMPARE,
+ 				MISCOMPARE_DURING_VERIFY_OPERATION);
+@@ -5584,12 +5584,12 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+ 		goto cleanup_unlock;
  	}
  
-+	if (sdeb_zbc_in_use && sdebug_atomic_wr) {
-+		pr_err("atomic_wr is not supported by a zoned device\n");
-+		return -EINVAL;
-+	}
-+
- 	if (sdebug_dev_size_mb == DEF_DEV_SIZE_PRE_INIT)
- 		sdebug_dev_size_mb = DEF_DEV_SIZE_MB;
- 	if (sdebug_dev_size_mb < 1)
+-	/* Cover sip->map_storep (which map_region()) sets with data lock */
++	/* Cover sip->map_storep (which map_region() sets) with the meta lock */
+ 	if (scsi_debug_lbp())
+ 		map_region(sip, lba, num);
+ cleanup_unlock:
+-	sdeb_meta_write_unlock(sip);
+ 	sdeb_data_write_unlock(sip);
++	sdeb_meta_write_unlock(sip);
+ cleanup_free:
+ 	kfree(arr);
+ 	return retval;
 -- 
 2.55.0
 
