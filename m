@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3117523D7DC
-	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 05:27:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5EEB350298
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 05:27:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790486837; cv=none; b=c8il0Jzj9buX0M9UhtHEPd8C3iISjT5d+fQWsbvZXvbQ/LbHY3zhPS8fdzGn51kns/6mQIYaKbkL9nTAZb7wFnpK0xINLTCAWGTgqF3ge3RxUv5/C7Kp90z3yovvs31XHvTUAqGmkZ0Jeho6VxdOqZtvqvZ8SgHm6x5npP5qFxo=
+	t=1790486838; cv=none; b=KR8IQT2DcgKuWe4BzQwHGTXNXWOWYKZWScnCfleDXMv5T+PJ+IXfKla8ZFJ0HY/bOE2Z5Byi1K3E2GDmlIuziJn6mhWsaKUI5YDeGplqQsed5zBmV584tT2E5pmK7u20usBOpk7/5iyqbhG/ZC6eDzUe/qBNaZOtSFgORmsteik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790486837; c=relaxed/simple;
-	bh=vQR9sgPNWQDmtgkED84OjVo4rVaPA4w09hXhR7BHM5Y=;
+	s=arc-20240116; t=1790486838; c=relaxed/simple;
+	bh=TytZKARi0ma7retEd/l+DG5Lt2GB/ReVeO1yPtfysMQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=A40E16K4iOoyzvLrSsbzYBTEmuWKJ9npAlEitRGIcHNr3RRcQ1BIUhZQ9uYfMTGo+q9br3xHYLGhuO6cFM2D+8tjLCTJRegMzd8MKgNoWgseg8qn0iHYRBiajspxrkDfHxHHanztdcvlhhuGRjE92Uo+e5/8pY1wnhmUKRnz6ys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eflb56Ny; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=TXnYQcFnS5sca429dB0PEcj4BEexII3LCQV69M+1odC42WBch5gk/0tOFJIptKf/JxkCy/zgy3lzXih2gGho8Ro0GWAnx5//xwDkLQZes6yVAJdbhcBWmN4CKpsozeHYuxASy0W7+Qk/EwN0JmKAE72Qg4aKHMfk/EMN3ql6jQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ATqsnwub; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eflb56Ny"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04D611F000FF;
-	Sun, 27 Sep 2026 05:27:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ATqsnwub"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E69EE1F00893;
+	Sun, 27 Sep 2026 05:27:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790486835;
-	bh=BVWbBOR5lPWbIvPOwV8i9kI6T0nYT3jdtittOmrPHos=;
+	s=k20260515; t=1790486837;
+	bh=EnEFEFZG8gQjK83Jd6EceDGr1jgFWJoC3V1fPdjCDNw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=eflb56Nyk/EQPrBkooe58/H5PR24Jvnh9T517EDJOhvL6Y8K6eXRW1JsaNjtrb+0K
-	 qd49gdRXfrMvko3XXVpGd8tpX9rc9f3hZVJzlkiXTtMA5rAjtbuT/LHb6NeHjRFXhd
-	 WZ/dU27fCYYFKI86LC9pDGk5gHxz2oCs2RX9I+qOQQrFnsrt8vq7ymWOrP4vNFhKTt
-	 yM5iEbMf++oUlFgd2/Xvy8kZYnTl/Lx2x+w0CuBl+VgIg34Dw49kRjQ23OKSfb1aIi
-	 Xi8boVVHQSi6mbJEulvsPm7NUjP+dZUBu8lv8VH6bLKTnOaBdPLoPCeMebKy+32PiX
-	 9sWZlDlAGHP7Q==
+	b=ATqsnwublSnAh1oi330nP676gljqBNtY9NfFWJADarjboM4TlXGff+ipr5iv3toE0
+	 CnQS0AKNTbYNE/8M+Ck6iXaj3HyghCJ8bT1nuMGegBcMeNG6Qz1ctmQrCyv59Le2oF
+	 eCjy5ZwNe3gaedeXnsO7G9Mo0iioOq/ppTRkyoDN0Fc6m/iTnne3mptgu4oiQhgbvL
+	 FlJqL8ByIRNGAv+G1LofN1GMjnz6k7XgSXo2MgV/pMK/4JpWuNedS0Z/6PNZLEkhZS
+	 IY8I3jbrx58vyfkLqcw1a47pOZSHDY5FElpwsWdEsH93jZ56LE1YQIF5NlZ5WDLlIW
+	 PVxVKHN1XibKA==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -33,9 +33,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v9 06/11] scsi: scsi_debug: Enforce physical block alignment of zoned writes
-Date: Sun, 27 Sep 2026 07:26:57 +0200
-Message-ID: <20260927052650.567035-19-cassel@kernel.org>
+Subject: [PATCH v9 07/11] scsi: scsi_debug: Do not write a partial physical block to a zoned device
+Date: Sun, 27 Sep 2026 07:26:58 +0200
+Message-ID: <20260927052650.567035-20-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260927052650.567035-13-cassel@kernel.org>
 References: <20260927052650.567035-13-cassel@kernel.org>
@@ -45,33 +45,24 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2828; i=cassel@kernel.org; h=from:subject; bh=vQR9sgPNWQDmtgkED84OjVo4rVaPA4w09hXhR7BHM5Y=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2rFSYafM43UF1kttyyyy9rl69csl72ulTYtzUTIx3x K6SOhzXUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgInwXWBk+B3rLzPZeKL7ydpi EwPXyL6Fe2s3zLM95GlpXHS2/hb7H4b/boq5SUlPbbY7tiQ2rd3PZuf7aXXCoutXhGJq58l/eT6 XGQA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2895; i=cassel@kernel.org; h=from:subject; bh=TytZKARi0ma7retEd/l+DG5Lt2GB/ReVeO1yPtfysMQ=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2rFRQLc+Zvuv960XCt/yf760wWbRY/7tW/Axt3+Blg TwaUt3hHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZhIUxgjw/3Tut/W737gxRAu vzNTOv1j7ifHhz8CCq6clotT/mOdKMnI8DZIYdIJzw43qXlTDA4sF/D5ciNnbvMGa/8Vp3jWZXp MYwAA
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-ZBC-3 r06 (T10/BSR INCITS 579), 4.5.3.3.2, requires a write to a
-sequential write required zone to be terminated with ILLEGAL REQUEST /
-UNALIGNED WRITE COMMAND both when it does not start at the write pointer
-and when it does not end on a physical block boundary. That is why
-sd_zbc_read_zones() sets the zone_write_granularity queue limit to the
-physical block size of a host-managed device.
+do_device_access() copies one logical block at a time and stops at the
+first short copy, so a data-out buffer smaller than the transfer length
+of the command can leave part of a physical block written. An initiator
+can arrange that with SG_IO.
 
-check_zbc_access_params() implements the first condition but not the
-second. So with zbc=managed sector_size=512 physblk_exp=3, a write of a
-single logical block at the write pointer is accepted and advances the
-write pointer by one logical block, leaving it off the granularity that
-was advertised: nothing can write at it any more, and the zone can only
-be used again after being reset.
+That is acceptable everywhere but a sequential write required zone,
+where ZBC-3 r06 (T10/BSR INCITS 579), 4.5.3.3.2, requires a write to end
+on a physical block boundary.
 
-Check the ending LBA as well, with the same sense data, as the standard
-gives both conditions the same. An entire medium write same command,
-which the standard excludes, needs no special case: the preceding check
-already terminates it with WRITE BOUNDARY VIOLATION. Sequential write
-preferred zones are left alone, as writes to them need not be
-sequential, and with the default physblk_exp=0 the check is a no-op.
+For such a zone, stop at the last whole physical block that the buffer
+holds. The bytes left over are not written, and are reported to the
+initiator as part of the residual.
 
 Assisted-by: LLM
-Fixes: f0d1cf9378bd ("scsi: scsi_debug: Add ZBC zone commands")
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
@@ -80,38 +71,57 @@ Tested with:
   modprobe scsi_debug zbc=managed sector_size=512 physblk_exp=3 \
       zone_size_mb=8 dev_size_mb=128 zone_nr_conv=2
 
-Before this patch, a one logical block WRITE(16) at the write pointer of
-an empty sequential write required zone completes with GOOD status and
-leaves the write pointer at LBA 0x18001, which is not a multiple of the
-4096 byte zone_write_granularity reported for the device. After it, the
-same command is terminated with ILLEGAL REQUEST / UNALIGNED WRITE
-COMMAND and the zone is left EMPTY, while an aligned eight block write
-is still accepted.
+issuing a sixteen logical block WRITE(16) through SG_IO with a buffer of
+twelve blocks. To a sequential write required zone it now transfers
+eight blocks, one whole physical block, and reports the remaining 2048
+bytes as the residual; before this patch it transferred twelve. To a
+conventional zone it still transfers all twelve and reports no residual.
+
+With physblk_exp=0 an eight block write with a buffer of one block still
+transfers one block, wherever it is addressed.
 ---
- drivers/scsi/scsi_debug.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/scsi_debug.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 0c66a3118ee8..82f93c63923c 100644
+index 82f93c63923c..904a3e5952e4 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -3980,6 +3980,16 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
- 					UNALIGNED_WRITE_COMMAND);
- 			return check_condition_result;
- 		}
-+		/*
-+		 * Writes must end on a physical block boundary, that is, the
-+		 * transfer length must be a multiple of the physical block
-+		 * size.
-+		 */
-+		if (!IS_ALIGNED(lba + num, 1U << sdebug_physblk_exp)) {
-+			mk_sense_buffer(scp, ILLEGAL_REQUEST,
-+					UNALIGNED_WRITE_COMMAND);
-+			return check_condition_result;
-+		}
- 	}
+@@ -4273,6 +4273,8 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
+ 	u64 block;
+ 	enum dma_data_direction dir;
+ 	struct scsi_data_buffer *sdb = &scp->sdb;
++	struct scsi_device *sdp = scp->device;
++	struct sdebug_dev_info *devip = (struct sdebug_dev_info *)sdp->hostdata;
+ 	u8 *fsp;
+ 	int i, total = 0;
  
- 	/* Handle implicit open of closed and empty zones */
+@@ -4300,6 +4302,25 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
+ 
+ 	fsp = sip->storep;
+ 
++	/*
++	 * A write to a sequential write required zone has to end on a physical
++	 * block boundary, so if the data-out buffer does not hold all of the
++	 * data that the command asks for, write up to the last whole physical
++	 * block that it does hold. What is left over is reported as part of
++	 * the residual.
++	 */
++	if (do_write && sdebug_dev_is_zoned(devip)) {
++		struct sdeb_zone_state *zsp = zbc_zone(devip, lba);
++
++		if (zsp->z_type == ZBC_ZTYPE_SWR) {
++			u32 avail = (sdb->length - sg_skip)
++				>> ilog2(sdebug_sector_size);
++
++			if (avail < num)
++				num = round_down(avail, 1U << sdebug_physblk_exp);
++		}
++	}
++
+ 	block = do_div(lba, sdebug_store_sectors);
+ 
+ 	/* Only allow 1x atomic write or multiple non-atomic writes at any given time */
 -- 
 2.55.0
 
