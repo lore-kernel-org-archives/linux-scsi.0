@@ -1,75 +1,53 @@
-Received: from mail-pz2-f39.google.com (mail-pz2-f39.google.com [74.125.228.39])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED83E3A1D14
-	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 09:13:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.228.39
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46AE33EEAF9
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 13:10:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790500422; cv=none; b=hzw8OArYcuw6s4gyJ28WtYVxiJRKFsvoSoPwljGtCr9PL/EetxQicKwJvEfroMKDr4QUC4szsB8AigEe5t+BTWGz399hYKkdK3AlguAY3Z0miy8+hksmvMhLXisW9FJ4pRiPRgAPV/fFnwj3ILVdXIKyB4MU2cHw9aAXabGtiwQ=
+	t=1790514638; cv=none; b=h5slehl/W2v3YF1VsMOHccydI8W9qGtFuczpVq09eWc3KssD5ujA+mgI/nC14DVQ7trUyweczhTFjNTRXZZkhuHnu+Y2+w3E0zITYb/bksWKyTPdnaqdQflcGKaD6clE5HWNIRVveoKtlnsTXY6+eQeuNsXR0cD2PCmfTRUSMV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790500422; c=relaxed/simple;
-	bh=mYK3aTJFBHM6xRB867W9xv3//FgmlLtPjoZruC0BXSo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VPdtSr9sRmPamPvGwvsAhxHBS+Bxr8kmhtKk8/G81za0v50pZd+2XrFDArSsv/xlG23dCkXkJvpQPWFal9DPxekXVh4t1Wa1tw1AOzlhs1j7lk30hbzokhSWDwEg1Rap3/6B6tMP2BlRiuhgWrrD20GxtICL4OMq7vUJTcX7qIk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pNl2Hieg; arc=none smtp.client-ip=74.125.228.39
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790514638; c=relaxed/simple;
+	bh=W725X9lwweF4muneSKFfTgsCyumyb35zOXcNpd5sgcs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aGpdifGnui0/p4UD9cm+AoNjgi6PV3nOVmICbv5C0sfBZUWges2/NKzD8Z/per/KbuiWiJPD7lyaUMI8+rnNRSLk8Ll5Tq4HmyOdnKS2gAm/+mW3zydn1A5Hcnf27ZuicgZ0uE7sq7pYkX34ZpmzOL/QGrqx8GoaSRnN2cB6Xco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ljx+mVr/; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pNl2Hieg"
-Received: by mail-pz2-f39.google.com with SMTP id 41be03b00d2f7-cc79223bcfbso1028554a12.1
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 02:13:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790500420; x=1791105220; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=NTbM9diThuu6Z5mJhXi7/OrqdMjxxh1T13jqFXBOHu4=;
-        b=pNl2Hiegx3x8xpwOJmuMVARNI4aRu10sR1BkTobfzt6zTBOinGACmXmIU8sZXZGAA9
-         H2gIlN0lkRxKFq+gnluHADM0valR/2mpczF1OEOK3TPjwbA/AvhMJI5UPm4E3R+c21gu
-         xChRAXd8Fwr8PSjod2o12wEG+OjBB0te2L3pc4wd4PRybRVam1xt7ycvnXnUBjDRcSJ0
-         2NMm4/KEF+gRUnOkZMopiSEMD9fdVWKlTGahb20W3Ic4wLrLfyPm3hLyRWVUtZ2b7uak
-         Ezq6JdUuhtFyJUQgvh50jRhITsESnHdUgiYou55YAgHZWn29m1h6ujUGMz1izYtBO6UG
-         Zi1w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790500420; x=1791105220;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=NTbM9diThuu6Z5mJhXi7/OrqdMjxxh1T13jqFXBOHu4=;
-        b=kc3bIynrulbPkj3c5VxD2+v+psjENnlf5qBcqU4LdueMCTLfP31mJb2DACQVpKztrb
-         TPwqZmJ0/nW9bPjkPANqF4I8HCDc/+01A/LRubVYx43fH6wEg3vn69C4/rv0X4jPyqcD
-         IJULGfC/OEJRf/w2EFsUN/VqH5fvPLCiPdqFsfSWY9jRtqlVH9+EwVPus5lfwxFOBk5O
-         LQGoZk3xQXuqE35EvAI9qgcYViu7RlqAQVoHeC0VYZgW0cpMQIhxJPgiB6A9EshcEFwX
-         B0+dzwJU7cYhvoZzQ464aJZ+16hbPCnm7rLY8bsaX1H6J0MBs2uvemXxI2bOY2rsKmoh
-         pbQQ==
-X-Forwarded-Encrypted: i=1; AKwUvByjCyJTuXcysmGo8AR8QHMMfEPY0mHNB+EVfG3oAhItGowAaslAZKp4lXANFZNltVijGVSEMtHd3Tt/@vger.kernel.org
-X-Gm-Message-State: AFq9FYJe+jAyp2Aze2ZcssKmyu7pK3pajTyX6T4UyBKOa2z34N93Zloe
-	w4snTBocj4o1qntjOaqICuJpA9dEsUxPs0A1lmDDzsrF1GZQMfgbuEb2
-X-Gm-Gg: AYBFou3Ct4Y1FHI7iGvMh2N1SkeyR5y95tvD2MES1uMrC3qclIP6JGwYrg4h0iOCWR1
-	2OTcUGSvYS413KQTzifKaldEnzQlaE/wXaQmMUIvlRix9ytb79NU0yb7Ut54w3+TBbJxhLyJKTZ
-	whLuSuM3EqzES5Z2STrjlpUn0HqtijonjTkoqr1inJpDIrYDqeirlrZIQin89m8WB715mbXu6JN
-	8t0Y7l5RE3bkYR5dVJiYGS8UdaHK8oWImSghhWp0uRb+++FXuBhoAJPlOrzEAsYezPJjkhPnhwU
-	tBEMoQjJFDeW2ayLbLkT+PL3S2ecIp0SZBPDA1ns42WdzYsx2meDp/8M43vb/6KPmCc6bRWUk8c
-	dGWAA0eH2lgJ0VnuWPowaQqFG2U6z1sJ6+CAqQCaaCdC5PdsXnzq6EuHTTkw135RFxVMwM4pRyj
-	mI/k0BHQ1LwV45qpY2KLqkeU7iLGr1FNZk7BfXcjCpab5N6ZrokqB5Ftjyc6UsEA5LNIRkJj00w
-	0ijm6JGnp5UlzKvy0A8I4vncj3lapc2Ngwv9Fh7iGMD1w9m0WivO6X/cidVhxVFhcsNAbAH/RyW
-	TN3ctQx/HB1rx1MMVwLE3P0SG1FUGW4dpr3KebAWXmP9mdhr
-X-Received: by 2002:a17:90b:2604:b0:3a0:d9ee:a2e9 with SMTP id 98e67ed59e1d1-3a0d9eeb955mr3228998a91.45.1790500420124;
-        Sun, 27 Sep 2026 02:13:40 -0700 (PDT)
-Received: from EAIT-H54D9Q2FJQ.eait.uq.edu.au ([130.102.10.103])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2df91475206sm26986425ad.82.2026.09.27.02.13.36
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 27 Sep 2026 02:13:39 -0700 (PDT)
-From: Yu Zhang <yuz08559@gmail.com>
-To: mkp@kernel.org
-Cc: michael.christie@oracle.com,
-	d.bogdanov@yadro.com,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Yu Zhang <yuz08559@gmail.com>
-Subject: [PATCH] scsi: target: Disable interrupts while holding delayed_cmd_lock
-Date: Sun, 27 Sep 2026 19:13:29 +1000
-Message-ID: <20260927091329.13482-1-yuz08559@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ljx+mVr/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1790514633;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=a9sg3sornMILCtBtAqhBokpdcwg2Qs8tbu+4UT4js9o=;
+	b=Ljx+mVr//ipg5DM4oy/xeVA+ET+TqKnGU4L7H4moym0mgujIvXaC031m65m9eUtyljWKId
+	a/CMAm7yjogzGKUnPAxB23IjoY+5rDS8/jHpQpZZ9OBUD5wbMHKeN5bD2zL55/BX/zY3jD
+	lDWqBJMTlydjd82MgLwcPPWts8HXQA8=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-567-Xjf5n3ETN4i6UZZ5tSclqA-1; Sun,
+ 27 Sep 2026 09:10:31 -0400
+X-MC-Unique: Xjf5n3ETN4i6UZZ5tSclqA-1
+X-Mimecast-MFC-AGG-ID: Xjf5n3ETN4i6UZZ5tSclqA_1790514631
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 22D131955DB8
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 13:10:31 +0000 (UTC)
+Received: from loberman-thinkpadp16gen3.redhat.corp (headnet03.pony-001.prod.iad2.dc.redhat.com [10.2.32.114])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3C0D3180036E;
+	Sun, 27 Sep 2026 13:10:30 +0000 (UTC)
+From: Laurence Oberman <loberman@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: jmeneghi@redhat.com,
+	emilne@redhat.com,
+	bgurney@redhat.com
+Subject: [PATCH 0/2] scsi: st: Fix drive settings and position after reset recovery with MTLOAD/MTRETEN
+Date: Sun, 27 Sep 2026 09:10:17 -0400
+Message-ID: <20260927131019.4188777-1-loberman@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -77,100 +55,84 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-target_do_delayed_work() takes dev->delayed_cmd_lock with a plain
-spin_lock(). It runs from system_percpu_wq, so interrupts stay enabled
-while the lock is held. Every other acquisition of that lock uses
-spin_lock_irqsave(): target_handle_task_attr() and
-transport_complete_ordered_sync() in target_core_transport.c, and
-target_non_ordered_release() in target_core_device.c.
+After a device reset st blocks tape access until one of MTREW, MTOFFL,
+MTLOAD, MTRETEN, MTERASE, MTSEEK or MTEOM clears the reset condition.
+Testing the reset handling on scsi_debug and on IBM LTO drives found two
+problems when the condition is cleared with MTLOAD or MTRETEN.
 
-That was safe while every caller of transport_complete_task_attr() ran
-in process context: target_complete_ok_work() from
-target_completion_wq, transport_complete_qf() from dev->qf_work_queue,
-and transport_generic_request_failure() from the submit and execute
-paths.
+1. Changed block size and density are silently lost
 
-Since commit 06933066d88a ("scsi: target: Add support for completing
-commands from backend context") that is no longer true. With
-complete_type=1 on a fabric that sets direct_compl_supp,
-target_complete() runs target_complete_ok_work() inline in the
-backend's completion context, which target_complete_cmd_with_sense()
-documents as "May be called from interrupt context". For iblock that
-is the bio end_io.
+   A reset returns the drive's block size and density to their defaults.
+   Commit 7081dc75df79 ("scsi: st: Restore some drive settings after
+   reset") re-applies the values set by the user, but only for MTREW,
+   MTSEEK and MTEOM.  Because check_tape() reads the drive's block size
+   with MODE SENSE on every open, the driver follows the drive back to
+   its default after the reset.  An application that set fixed-block
+   mode with MTSETBLK and recovers with MTLOAD or MTRETEN keeps writing
+   without any error, but in variable-length blocks.
 
-target_complete_ok_work() starts with transport_complete_task_attr(),
-which takes delayed_cmd_lock in two ways:
+   Patch 1 restores the changed settings for MTLOAD and MTRETEN as well.
+   Both may make the drive report a new medium, and the new session
+   started by check_tape() clears the "changed" flags and applies the
+   mode defaults.  The values are therefore saved before the operation
+   and re-applied after check_tape() has run.  scsi_debug reports a new
+   medium after MTRETEN and MTLOAD; the IBM drives do not.  The series
+   was tested against both behaviours.
 
- - Every ORDERED command is put on dev->delayed_cmd_list by
-   target_handle_task_attr() and dispatched from there by
-   target_do_delayed_work(), which marks it SCF_TASK_ORDERED_SYNC.
-   Its completion therefore goes through
-   transport_complete_ordered_sync().
+2. MTIOCGET reports file/block -1 at BOT after reset + MTLOAD
 
- - A SIMPLE command that completes while an ORDERED command is pending
-   drops the last reference to the killed dev->non_ordered, and
-   percpu_ref_put() then runs target_non_ordered_release() in the
-   completing context.
+   Commit 0b120edb37dc ("scsi: st: Add MTIOCGET and MTLOAD to ioctls
+   allowed after device reset") allows MTLOAD because the tape location
+   is known after it, but the position is not recorded:
+   reset_state() sets -1/-1, and do_load_unload() leaves it there unless
+   check_tape() starts a new session.  With drives that do not report a
+   new medium for an already loaded cartridge (IBM LTO), MTIOCGET keeps
+   reporting -1/-1 and no BOT.
 
-Both take the lock and, if commands are waiting, call
-schedule_work(&dev->delayed_cmd_work), which queues on
-system_percpu_wq, i.e. on the CPU that took the completion. Further
-completions for the same queue are typically delivered there too, so
-one arriving while the work holds the lock spins on it forever.
+   Patch 2 records file/block 0 after a successful load when the current
+   partition is 0.
 
-Reaching this needs complete_type=1, which is not the default
-(vhost-scsi, the only fabric with direct_compl_supp, defaults to
-TARGET_QUEUE_COMPL), a backend whose I/O completes from interrupt
-context, and ORDERED commands from the initiator. Linux virtio_scsi
-guests send only VIRTIO_SCSI_S_SIMPLE and never take the ordered path;
-any guest that uses the ORDERED task attribute, which vhost-scsi
-accepts, does.
+MTOFFL is deliberately not changed: the medium is unloaded, and a
+different one may be loaded next, for which the mode defaults should
+apply.
 
-target_do_delayed_work() is a work item and always runs in process
-context, so spin_lock_irq() is sufficient.
+Immediate mode: with MT_ST_NOWAIT, MTRETEN returns before the
+retension completes, so patch 1 does not restore the settings there
+rather than waiting for the drive.
 
-Found by inspection; no runtime report. A single ORDERED command goes
-through both acquisitions, so with CONFIG_PROVE_LOCKING the first one
-completed through direct completion should produce an inconsistent
-lock state report on delayed_cmd_lock (hardirq or softirq, depending on
-where the backend completes).
+Testing (v7.3-rc2, scsi_debug and IBM LTO drives on FC):
 
-Fixes: 06933066d88a ("scsi: target: Add support for completing commands from backend context")
-Signed-off-by: Yu Zhang <yuz08559@gmail.com>
----
- drivers/target/target_core_transport.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+                            R03.load       R04.load      R04.retension  R04.offline
+                            (pos. after    (MTSETBLK     (MTSETBLK      (MTSETBLK
+                             reset+LOAD)    after LOAD)   after RETEN)   after OFFL)
+unpatched:
+  scsi_debug                ok (0:0)       discarded     discarded      discarded
+  IBM ULTRIUM-TD5 (LTO-5)   -1:-1          discarded     discarded      discarded
+  IBM ULT3580-TDA           -1:-1          discarded     discarded      discarded
+patched:
+  scsi_debug (2 hosts)      ok             restored      restored       discarded (*)
+  IBM ULTRIUM-TD5 (LTO-5)   ok             restored      restored       discarded (*)
+  IBM ULT3580-TDA           ok             restored      restored       discarded (*)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index dcfe945..67c0465 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2359,7 +2359,7 @@ void target_do_delayed_work(struct work_struct *work)
- 	struct se_device *dev = container_of(work, struct se_device,
- 					     delayed_cmd_work);
- 
--	spin_lock(&dev->delayed_cmd_lock);
-+	spin_lock_irq(&dev->delayed_cmd_lock);
- 	while (!dev->ordered_sync_in_progress) {
- 		struct se_cmd *cmd;
- 
-@@ -2380,12 +2380,12 @@ void target_do_delayed_work(struct work_struct *work)
- 		dev->ordered_sync_in_progress = true;
- 
- 		list_del(&cmd->se_delayed_node);
--		spin_unlock(&dev->delayed_cmd_lock);
-+		spin_unlock_irq(&dev->delayed_cmd_lock);
- 
- 		__target_execute_cmd(cmd, true);
--		spin_lock(&dev->delayed_cmd_lock);
-+		spin_lock_irq(&dev->delayed_cmd_lock);
- 	}
--	spin_unlock(&dev->delayed_cmd_lock);
-+	spin_unlock_irq(&dev->delayed_cmd_lock);
- }
- 
- static void transport_complete_ordered_sync(struct se_cmd *cmd)
--- 
-2.43.0
+(*) unchanged by design, see above.
+
+For the position test, "ok" on patched kernels means that MTIOCPOS
+returns 0 and the first block read without repositioning is block 0 of
+file 0; it is not based on MTIOCGET alone.  The restore after
+MTREW/MTSEEK/MTEOM from 7081dc75df79 is unaffected on all devices.
+Every test ends with a byte-exact read-back of the whole tape.
+
+The tests are part of a tape validation harness (reset detection, the
+blocked-operation matrix, recovery operations, interrupted I/O, SCSI EH
+via scsi_debug error injection):
+https://gitlab.com/loberman/tapetest (developed with AI assistance)
+
+Laurence Oberman (2):
+  scsi: st: Restore changed drive settings after reset also for MTLOAD and MTRETEN
+  scsi: st: Record the tape position after a successful MTLOAD
+
+ drivers/scsi/st.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
 
