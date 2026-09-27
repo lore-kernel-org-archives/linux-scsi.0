@@ -1,214 +1,103 @@
-Received: from mail-dl2-f12.google.com (mail-dl2-f12.google.com [74.125.229.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3613435AC07
-	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 05:17:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D20254707C
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 05:27:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790486246; cv=none; b=s9+i3MeUdjaSswLgs8RQCpmGzFKcKOb5xEJme2Sujj6KdnaLkc/XWWZU+HxGX3Ct8+RzQsXZE8MxT/WvGOvOk4LC/SlLpHCkPtPrGZcEYcuPYhYqD2+ak9wl1vqQ73R5tOnoY2fPSphXb6tDySD57S8prto9MCNFLTo1zzi81zw=
+	t=1790486825; cv=none; b=gS9muyg2/C1le6K0shvES+JoslWSU0sWVpzRewduxVqJ0X3fFHyFhQbFUR0Blq213WxIuSuVC1RKAE0EY0pxAavL8bAosTSiS8V0gMexWY/yRJCRAs2BSQFUu1Aha08u3rjsR6q/ETNq/LOTiIXKfO7mKeu23Tb01me1UfGTnTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790486246; c=relaxed/simple;
-	bh=nWYyEn3FlxnbDE5hfPTdOkEDIO47hQrt3IWc+5iB0G0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AAjjmnVC8rLL1JexCPmkxo6fsAq+aN8lan+1fL1b1bNYE4CAhUu6upXU7E6GHj4zHwqvq5Vs/vIGX1j1nQDz4cFHc51UrlvqzwJRJNrHsHjsQxK/wpmPYqvDGwLHyK6eKks8iiUHwemkp79JGQ/rotZShcO5NgnZziuzvv445jA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pc15xYtH; arc=none smtp.client-ip=74.125.229.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790486825; c=relaxed/simple;
+	bh=TwZeIcFtbcoZvU23tSkWcx7idLes57je0hM5uRzT7f0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AqzmCmGinrI5gq+M+BnQZ1ixKldgprSU+gzSAAuE2B8riKspjVN96iXisKy1arcgMadGvubv9vuQuDmW6gpbzETTM3nsS9QQqklZM+e7b//IVTWdXUrJd/YadELKa4xacAL2qvsekXf3e00D+yvJmLbZnzQkWBQiG1q9WcbkGsE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P+fctmEE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pc15xYtH"
-Received: by mail-dl2-f12.google.com with SMTP id a92af1059eb24-142dd025d06so1398918c88.1
-        for <linux-scsi@vger.kernel.org>; Sat, 26 Sep 2026 22:17:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790486244; x=1791091044; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=fYllJEMjqSI9dmThGcCAG+WXxe2fhi4B+5VSXcbhrlk=;
-        b=pc15xYtHMkXyln8PLqM50TBJpeK8NQI1vbmHUZ9vKdY6G7P3LJhAUzrEh6D+kSplJR
-         NQMgfhFab+awep1voN/hVZ4/Q84K6oj9yAi8neT/i4kLyZ0lKeU16uInYmxRC35duhgL
-         ULAW5+Jro6HaqHslL5V/sUPyPQ4kuOPL6gfrurocq7LhFul6eaYf5g3fKavmp7SsHjco
-         +XGQ4me41b1WTZIgKyqG3+r37W+AeVspTyv62+t9XHFVudBZL58kE4KwzJwGo9a0k1kn
-         VXaB+01nzQXdATLH2OJ61uZSyH+RsBuKacuUpqkKMQAvcp39CDEpquRv/6zuw2ctiZRn
-         RIlw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790486244; x=1791091044;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=fYllJEMjqSI9dmThGcCAG+WXxe2fhi4B+5VSXcbhrlk=;
-        b=dLoLY6wEc3Nr84LHzAwksQSPcSOSoH7MUEN2x3Bv//YdZoHn2uzqPATtmzO/N+I/4Y
-         FSKGuHSnr+WAs7uNBDerUWVrqAAoRUNpy/WecpZ6Je6c5B+2hyirQCgGk9U0pWog2NhL
-         DRbqLacjODIji1Q6WQxTmOdPEaMXTXjcRsU2MjltnAbcdf5ovdxquz/4A3Y2G/aJvTG6
-         8mXbtLF562PUkOiBEt9GqRerG+Nkoj9b48vmY0prtIkofVWrBjanXK/Y1j3s277WUBhe
-         G+x8URC/pzZEXAPuRugQ68nO48thZ5UsJ6p5wC0FLJCBJ/CcN3SGmOLLyZKjCIDJ2BWc
-         t2iQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzmQ/uXuiUKieV4zli+OGhDyryo5YaIZiHQOsfHTQDlL7S48iXq19IHhIMLtuUzXrIZew0P/TJY5gG7@vger.kernel.org
-X-Gm-Message-State: AFq9FYLwUGMYRTC9aHvSkTFOO+bXUEWK3YGFdwORFpZaZbjGP74zmVar
-	JUoWuBjhOYy7ODxPw1H+Ckm+Mlw9FYd/a5XujbbZxTctoce7mmuaHEdN
-X-Gm-Gg: AYBFou292ZkSJHPrQHI4dlv/swD41mOw0MnJj5GLvyy9Y1J2AVR2dbgZTzhYvXWLRyQ
-	qfpV172CExvy2Go7dvV70u9w/dApW1QwNRqBH0fgqE0ObwIJwu8ml1iTm5GJCLlz1EAk2f7GSVk
-	Vl5JeWqgAN+LapoerGCwK+Hf/J45xd+GVZQOq9oEhp0NzrngmKQVyjqpPzWVXNpVm1xaud+GzFy
-	cQeemF+WXtQgdFD5m8JjG+DYBbB8hkhPSGGEUuEoYlessxgSG49P/eWRlncbHbO+vILUGQqPUGN
-	ZISaodzMwd+z7oxUnQxfdPf/CImzCw4Fs9vcf+hCdgmueu3/cwcqSelF+13SEJtwQpXplRbweu0
-	AhQrLTlqVGV/wHv2LtF9YEFbmdEbIEDE3Mg86RppPdZC4gi6QhwoNVBKDlYLAwBGVm6Al9w2yHV
-	BW2vzgEb1emF7xa1vZC9z8hcYr5CitvH/IgL+F+LYDgG5+/x7guoZUKUHEdEQtQO2h0D0WZdnWr
-	istdCKy8iONcPkKgTI3ug+760A+nkoa4isaap6oRcj6uaeKGTtgSuHHvg8cp3mCsNLtIp2x1bJG
-	2kXIXLIgtKIQH4DNCz9yVUInlrrRz4Gk6SASM1TEj+k8lJZLV+o2l4LqBwsTm6boMTdB1VXhXw=
-	=
-X-Received: by 2002:a05:693c:824c:b0:346:7c2c:1d0c with SMTP id 5a478bee46e88-3467c2c2549mr424577eec.17.1790486243877;
-        Sat, 26 Sep 2026 22:17:23 -0700 (PDT)
-Received: from FT6N242TWK ([223.181.116.210])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-341459234a1sm18410338eec.24.2026.09.26.22.17.20
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sat, 26 Sep 2026 22:17:23 -0700 (PDT)
-From: Shashank Mohan Jain <jain.sm@gmail.com>
-To: "Martin K . Petersen" <mkp@kernel.org>
-Cc: Mike Christie <michael.christie@oracle.com>,
-	James Bottomley <James.Bottomley@HansenPartnership.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: target: rd: Check the return value of match_int()
-Date: Sun, 27 Sep 2026 10:47:17 +0530
-Message-ID: <20260927051717.71269-1-jain.sm@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P+fctmEE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 682EE1F000FF;
+	Sun, 27 Sep 2026 05:27:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790486823;
+	bh=1nmBLVP5c+q0ILMAhu3QlCxxVJ8qsHGJIyrSn2scAaA=;
+	h=From:To:Cc:Subject:Date;
+	b=P+fctmEEUEUj+s5GquXj5VuYO5BOzWAyeYhCrM7u/RcMbjoa4cyXuT7ItOOdZm2dj
+	 FdjeO6Pks3u99uY91sg1yvxZvtOs3ebwulLPuxjp0qv8sUYeMzo6/CCRmc0czcedGN
+	 YLzswv0vClZbPr+6A7VTlwJbBZudQKXGxgbchkOFN2dMOp2M+ShITjvTekQu2U8rzl
+	 jYnPta9RDUwNsZvnKyttW5Spb5EnWFQLXe7vwgndRB6mmebyvKL4RXK2+/qmEFD2g4
+	 h3TevhV2s6S76hYNiWsiJt884vidMQEM7cwI7PQ7E/OtoStEy6941Lm4oMQxoH5p+Z
+	 UYw5X1RYtDFiw==
+From: Niklas Cassel <cassel@kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.garry@linux.dev>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v9 00/11] scsi: scsi_debug: fix zoned write validation
+Date: Sun, 27 Sep 2026 07:26:51 +0200
+Message-ID: <20260927052650.567035-13-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2517; i=cassel@kernel.org; h=from:subject; bh=TwZeIcFtbcoZvU23tSkWcx7idLes57je0hM5uRzT7f0=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2rJQS7SopUtotaKTL7Cq2YEdySTV30/RDjFxvQvPCL MOe/M/rKGVhEONikBVTZPH94bK/uNt9ynHFOzYwc1iZQIYwcHEKwETkzzL8lSpKrll9b9qhw78X daYoVL1fI7z/w/OMe6tMbN4ttpEwfM3IsOQ5xz7n1m9r1l3PP6g7w3zZRatN7VpXvS9z1OlNnWc hxgUA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-rd_set_configfs_dev_params() ignores the return value of match_int()
-for the rd_pages=, rd_nullio= and rd_dummy= options and then uses 'arg'
-anyway.
+This series fixes scsi_debug with regards to writes to a ZBC drive, and
+to WRITE ATOMIC (16). Each patch describes the problem that it fixes.
 
-match_token() only matches these options if the value is a number with
-nothing after it, but match_int() can still fail with -ERANGE: when the
-value is 24 characters or longer, on any architecture, and on 64-bit for
-most values outside the range of an int.  'arg' is then not written.  It
-still holds the value parsed for an earlier option in the same write, or
-is uninitialized if no number was parsed yet.  The write succeeds, and
-for rd_pages= that value becomes the page count and RDF_HAS_PAGE_COUNT
-is set.  On 64-bit, for example, "rd_nullio=1,rd_pages=4294967296"
-configures a one page device, and "rd_pages=4294967296" alone uses an
-uninitialized page count (0 with CONFIG_INIT_STACK_ALL_ZERO, which is
-only rejected when the device is enabled).  A stale 1 also turns on
-RDF_NULLIO or RDF_DUMMY for an invalid rd_nullio= or rd_dummy= value.
+Two configurations are refused rather than emulated, and those two
+patches come first, as the rest of the series relies on what they
+exclude: a zoned device whose lowest aligned LBA is not zero, which no
+host writing in units of the reported zone write granularity could ever
+write, and atomic writes on a zoned device, which no drive supports.
 
-Return the error from match_int(), as the fileio and pscsi backends do
-for their match_int() options.  As there, options that come before the
-invalid one in the same write have already been applied.
+Little of this is reachable in a default configuration. Most of it needs
+physblk_exp, atomic_wr or logical block provisioning to be set, or an
+initiator that does not provide a data buffer matching the transfer
+length of the command.
 
-Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
-Assisted-by: LLM
-Signed-off-by: Shashank Mohan Jain <jain.sm@gmail.com>
----
-This patch was prepared with Claude Code (Anthropic), model Claude Opus 5.5
-(claude-opus-5-5): the analysis, the fix, the changelog and the throwaway
-test described below. The trailer only says "Assisted-by: LLM", as
-Documentation/process/coding-assistants.rst describes.
+The series is based on 7.4/scsi-staging rather than 7.3/scsi-fixes (as
+Damien suggested on v1) to avoid a build failure that would have
+happened if this series was simply merged with linux-next:
 
-Earlier attempts at this fix were not merged:
-https://lore.kernel.org/r/1528779148-42485-1-git-send-email-jiazhouyang09@gmail.com
-https://lore.kernel.org/r/20190112053159.99406-1-kjlu@umn.edu
-This version follows the review comments there: it returns the error
-from match_int() instead of -EINVAL, does not leak 'orig', covers
-rd_nullio= (and rd_dummy=, added later), and goes through a single exit
-path as the fileio backend does.  James Bottomley suggested
-ignoring an invalid option instead of failing the write; I went with
-returning the error so that a mistyped size is not silently replaced by
-a stale or uninitialized one, but ignoring it (a 'break' instead of
-'goto out') would also fix the bug.
+  error: too many arguments to function 'mk_sense_buffer'
 
-Dependencies: none. The patch is correct on its own on current mainline.
-It is related to "lib: parser: reject out-of-range values in
-match_number()", sent to Andrew Morton:
-https://lore.kernel.org/r/20260926012718.15675-1-jain.sm@gmail.com
-With that patch, out-of-range values also fail on 32-bit (today they
-wrap there, for example rd_pages=4294967296 gives 0 pages), and this
-patch then turns that failure into an error instead of a stale value.
+Tested on a zoned scsi_debug device with 512 byte logical blocks and a
+4096 byte physical block, and on a device that is not zoned for the
+WRITE ATOMIC (16) patches. The notes below each patch describe what was
+observed before and after it.
 
-Testing done:
-- W=1 build of drivers/target/target_core_rd.o with allmodconfig for
-  x86_64 and i386: no warnings.
-- A throwaway KUnit test (not part of this patch) called
-  rd_set_configfs_dev_params() under UML (x86_64 and i386 subarch).
-  Without the patch, on x86_64:
-  "rd_nullio=1,rd_pages=4294967296" returns success with 1 page and
-  RDF_HAS_PAGE_COUNT set; "rd_pages=4294967296" gives 0 pages with
-  CONFIG_INIT_STACK_ALL_ZERO and 0xfefefefe pages with
-  CONFIG_INIT_STACK_ALL_PATTERN; a 24-character rd_nullio= or rd_dummy=
-  value of 0 after "rd_pages=1" sets RDF_NULLIO or RDF_DUMMY (also on
-  i386).  With the patch all of these writes fail with -ERANGE, and valid
-  values (rd_pages=8, rd_pages=0x10, "rd_pages=8,rd_nullio=1,rd_dummy=1",
-  rd_pages=2147483647) are unchanged, on x86_64 and i386.
+Changes since v8:
+- Patch 5 reports the residual of WRITE SCATTERED (16) on every exit once
+  the parameter list has been fetched, including an error on a later
+  range, as Sashiko pointed out. Dropped Damien's Reviewed-by, as the
+  patch has changed since he gave it.
 
-Not tested: writing to the configfs control file of a real rd_mcp device
-with targetcli, and enabling such a device.
+Niklas Cassel (11):
+  scsi: scsi_debug: Refuse a zoned device with a non-zero lowest aligned
+    LBA
+  scsi: scsi_debug: Make atomic writes and ZBC emulation mutually
+    exclusive
+  scsi: scsi_debug: Take the zone metadata lock before the data lock
+  scsi: scsi_debug: Evaluate scsi_debug_lbp() only once
+  scsi: scsi_debug: Report the residual of a write
+  scsi: scsi_debug: Enforce physical block alignment of zoned writes
+  scsi: scsi_debug: Do not write a partial physical block to a zoned
+    device
+  scsi: scsi_debug: Advance the write pointer over the data written
+  scsi: scsi_debug: Refuse a short WRITE ATOMIC (16) before writing it
+  scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
+  scsi: scsi_debug: Validate the access parameters of WRITE ATOMIC (16)
 
-Not changed: a negative rd_pages= value still parses and becomes a huge
-u32 page count, as before.
+ drivers/scsi/scsi_debug.c | 120 +++++++++++++++++++++++++++++++-------
+ 1 file changed, 99 insertions(+), 21 deletions(-)
 
- drivers/target/target_core_rd.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 092d9fe0d4e3..32762199e742 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -545,7 +545,7 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
- 	struct rd_dev *rd_dev = RD_DEV(dev);
- 	char *orig, *ptr, *opts;
- 	substring_t args[MAX_OPT_ARGS];
--	int arg, token;
-+	int ret = 0, arg, token;
- 
- 	opts = kstrdup(page, GFP_KERNEL);
- 	if (!opts)
-@@ -560,14 +560,18 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
- 		token = match_token(ptr, tokens, args);
- 		switch (token) {
- 		case Opt_rd_pages:
--			match_int(args, &arg);
-+			ret = match_int(args, &arg);
-+			if (ret)
-+				goto out;
- 			rd_dev->rd_page_count = arg;
- 			pr_debug("RAMDISK: Referencing Page"
- 				" Count: %u\n", rd_dev->rd_page_count);
- 			rd_dev->rd_flags |= RDF_HAS_PAGE_COUNT;
- 			break;
- 		case Opt_rd_nullio:
--			match_int(args, &arg);
-+			ret = match_int(args, &arg);
-+			if (ret)
-+				goto out;
- 			if (arg != 1)
- 				break;
- 
-@@ -575,7 +579,9 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
- 			rd_dev->rd_flags |= RDF_NULLIO;
- 			break;
- 		case Opt_rd_dummy:
--			match_int(args, &arg);
-+			ret = match_int(args, &arg);
-+			if (ret)
-+				goto out;
- 			if (arg != 1)
- 				break;
- 
-@@ -587,8 +593,9 @@ static ssize_t rd_set_configfs_dev_params(struct se_device *dev,
- 		}
- 	}
- 
-+out:
- 	kfree(orig);
--	return count;
-+	return (!ret) ? count : ret;
- }
- 
- static ssize_t rd_show_configfs_dev_params(struct se_device *dev, char *b)
+base-commit: f09d2c7485b32adb82336d0d748935c8237a649e
 -- 
-2.43.0
+2.55.0
 
