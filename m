@@ -1,95 +1,84 @@
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC01B4CB8A3
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 13:45:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E5234D2ED9
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 13:52:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790603109; cv=none; b=pNBAQQWnAMrJ7yAMduSh0CL/PXvNOpP3k+Pdn1MJV4QU2Xs9FprBL4o5aLKSxZTLYg1aAltYNAywTow++xKcmtcHNueLL3vHOwR6q8UPpt2eFRxorKMxv6uy0fcxWPIuZyLVlF96KjjplGwJR2A6sRj0N/JZtpJqcTIy5bEiKZg=
+	t=1790603568; cv=none; b=avkF4yZcEubf8UqP3r8fVewODtAIhec0Cn2tfDYrWkf1PbQmPqpQeu9VBT51bHLGXmrGRDei5+iJRXkE7XTLsJF5EZTryyGwZvhY5JJStsmHDjxi00gPcgDlXOPgk6IjYeCa9u6tGi/4h9SQ01I9FjbtmPgLQpZJ4eje3KoEVIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790603109; c=relaxed/simple;
-	bh=qYUMU2yU5Ab5aNsjdWZjLUABg4FDEpiN/FkMxkjySQA=;
+	s=arc-20240116; t=1790603568; c=relaxed/simple;
+	bh=xDWN1yu0fuk+0avinIpkMwbDoJFHqL0/a2WlbWba9EI=;
 	h=MIME-Version:In-Reply-To:References:Message-ID:Date:Subject:From:
-	 To:Cc:Content-Type; b=FUFltRJWmS3IGTS2xn0JqAunOo1yxgwq67EwduMPy+7AK15Sx1SwjPxgfAOi3Lbfl6EL/lT/El15b/QDFpgLyxB0Hw3al6lktVAlWsEV9d9pfkGsqEFBQ129XQAdb2uQ3goHOfCkHu+ufWEVGv1LotGK+9iJ+KEIDXIsAS7CrGw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Z6mzkiuN; arc=none smtp.client-ip=209.85.216.70
+	 To:Cc:Content-Type; b=THJ0iMNJzAlSLz1gXmXQ4enFnRBTgDtDgWKjzfw1YdPX6CZ37fkvQCxtdtZLarrKUWnpkcMi0jEbKrQMqBgnf/4XYQ8hbxE0hs4VfPQnhzZbygFglUYVMiyhSSTp0+9pIGivPNA9gPB/oCi+seN7iJ2v/bKZ4Fpq2o9iRa+fx2A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=FCo3NaTK; arc=none smtp.client-ip=209.85.214.197
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Z6mzkiuN"
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3968bb86fb7so3101871a91.2
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 06:45:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="FCo3NaTK"
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2d55d8cd938so51140875ad.1
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 06:52:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790603107; x=1791207907; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1790603566; x=1791208366; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:date:message-id:references
          :in-reply-to:mime-version:from:to:cc:subject:date:message-id
          :reply-to:content-type;
-        bh=S1KYRH67PD9FrW4ZeFo9IsLLz3F03dvo59mUhKVkld4=;
-        b=Z6mzkiuNCBjnmfWHkXVj+ox+mqnhCmPBbk5ip6RJvdf7/yqvrvbJgH7tUxCOTXENRv
-         oiBc8aRDpu4NXT0jKXkPVECLfJbZ5chtJL9vhgKsrwnMGHRtgwKBFIDmEjnDSl3sHmIh
-         jxamFdfd+aLj05Ytt2hwED1QnGt9VW+bRnsQL8bt1qo9UqWjzHjcLcXKCts2dBJq0VRk
-         UJcFK94iOrRofctXGxB9rV795Hx8Jbpy8uIjfwdxg6zkWt9wqYOEvj+/D/oipKktppSq
-         fXfHeSrevt2adkWUoF4NgnL1J87kNoOkm1AGWLuQr2upWWBQBRuyen5DSXG4sIdcvVMT
-         qWxA==
+        bh=xDWN1yu0fuk+0avinIpkMwbDoJFHqL0/a2WlbWba9EI=;
+        b=FCo3NaTK7ZrXgWEXnZ7RIhhWhHvN308KwrexgTLvaWR/4QdUtxpjd/SUMdid89Wk64
+         HwxtaHfBVAWr8aAonZzgfLBlxUqBqbg25RPkbE4Zb9lX7QE5e3miYPHzayBEVQ4qjgq3
+         pKFvdKZnGJa17sN8+sbr0NjaLlbCBAj8kkyZezC+EolA9nz73j2CFuJBG7aiog6Vjk2T
+         AlurFpdp0YsKR1+eFGoQoFGUqxFwpgDDGUhwxLDVPZ3RcVrBVjpTiqtQlh1VlDybcDev
+         tjOKAzgXVl+EkOA1M8EzOTeOtJEV95NJ+42H2lqsWDHAfee4va5OwZ1gPsqcqvbM/0tl
+         EEXg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790603107; x=1791207907;
+        d=1e100.net; s=20260707; t=1790603566; x=1791208366;
         h=content-type:cc:to:from:subject:date:message-id:references
          :in-reply-to:mime-version:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=S1KYRH67PD9FrW4ZeFo9IsLLz3F03dvo59mUhKVkld4=;
-        b=ssVdkGhwAuZ4bf5J9jSyVpGtHqK9UqJusJEWshQQ0hWcbkGN2jdXNg0O39K3wmAJbm
-         gbZor9Hig2BARp997J/Gff8Mie8A+DwtTvPoKCw/aVS64Yom61yq0Y1YQAhNuESbFPcG
-         TQSensYkOhQGqi02lEuqjerIvpGlKgPWW4bBCVR8QFwwHqRtfqqgM1BEr22ej448Q3T4
-         kw9Q92wsBa+8tHDq7ZbQR1MK2syvGQjlvOOIFdgNICkokcBhkkGEmius3AZ0Y1rhC6bb
-         uob5brFrJW3mVxLphhWVzZvsEpsc+e6aX4P1R0GDfoDcxg4s/78f1Be6zHt455Np5STQ
-         0p1w==
-X-Forwarded-Encrypted: i=1; AKwUvByV71U9K0pj8ZYrWKF4JfxBhwEwugwhe+bcJaE49pwnTUUa7l6bQVmY1BfB2ps5nHoMuqzveiwiUbso@vger.kernel.org
-X-Gm-Message-State: AFq9FYISkrSHsd8dg54SO21LwRnRevtjoWZODQDh1mJT0fHRbOABx05h
-	hHu6uyZYXDM52b+eZhZ6NcXIZLnvJBpuV3hae5r2BI23DlgRtJwDAuITWgyglL43KZ+ub8LCQrf
-	ZZyq3/aBc7baozRdNPvG3lA==
+        bh=xDWN1yu0fuk+0avinIpkMwbDoJFHqL0/a2WlbWba9EI=;
+        b=rR0pN+CWycXRdvB2OrFVihQrFbvSyS0t2Ym9g2DgYB752rDOsPDzPb0FRWtGG5hewv
+         Xuo0V2SsaKlf13RUKExTc18Xn6tBqoT9Ts/d2j+DnlXwTWag+598fgtMeiT9BIdnwFB5
+         Y0wugPasgY874lwjj/vgTn7QsoxEyfZBL2m9Bh0pM+tSOJ3Vrd+zo6j5bt+thUUEGBKR
+         01w6i0wzKrQnfbPpodlByKdZRxcOElgyBc+DO3HAk5It5GC8Sihg/cQPeF7irJvL+mRD
+         uKWb7XPLpmgwp4N8dkK5WfRL9BhCymKcEe0v3eQCh1Coq2pHrphxmXQv2WZ5O2ZcD7/X
+         t6hA==
+X-Forwarded-Encrypted: i=1; AKwUvByymMctmOc9yYiOdQ7/PYhoz1k32EcQvrZ8+VTGvISGlX5fXgqcEyccQ8Dx0SAx4kppEie7hgaCyheC@vger.kernel.org
+X-Gm-Message-State: AFq9FYIv/ZjtVTfis96HmHZT7H1HyO9QhrTahpsN2D6shzZf98LdcSic
+	/VbMYqPhyKYI5RCtLkf0dNx2gehN2p72lD0MrEO7ewohHUf92E6ZNt3mkT6mqkEB3lnoR8dAngv
+	1ey/e/e29h68Phau2qKEDog==
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: from pgww21.prod.google.com ([2002:a05:6a02:2c95:b0:cc7:b5cc:f08c])
+X-Received: from plcx17.prod.google.com ([2002:a17:903:d1:b0:2db:60a3:afae])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:1f90:b0:39e:6c69:f47b with SMTP id 98e67ed59e1d1-3a098d4085dmr11127590a91.58.1790603106971;
- Mon, 28 Sep 2026 06:45:06 -0700 (PDT)
-In-Reply-To: <yq14ifovdyw.fsf@mail.kernel.org>
-References: <20260908090308.1085097-1-dlemoal@kernel.org> <yq14ifovdyw.fsf@mail.kernel.org>
-Message-ID: <18d98009e8d5679e.3137322e31362e3131332e313435.256270.0000sendgmr@google.com>
-Date: Mon, 28 Sep 2026 13:45:07 +0000
-Subject: Re: [PATCH v6 00/40] Use defined 16-bits ASC/ASCQ combinations
+ 2002:a17:902:f2ce:b0:2df:8d19:4fda with SMTP id d9443c01a7336-2df94b92c9fmr54878645ad.36.1790603565973;
+ Mon, 28 Sep 2026 06:52:45 -0700 (PDT)
+In-Reply-To: <20260914144910.931518-1-stanleyjhu@google.com>
+References: <20260914144910.931518-1-stanleyjhu@google.com>
+Message-ID: <18d98074c73f90db.3137322e31362e3131332e313435.266ebc.0000sendgmr@google.com>
+Date: Mon, 28 Sep 2026 13:52:46 +0000
+Subject: Re: [PATCH v5 0/3] rpmb: Fix request serialisation and teardown races
 From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>, Bean Huo <beanhuo@micron.com>, 
-	linux-scsi@vger.kernel.org
+To: jenswi@kernel.org, Jens Wiklander <jens.wiklander@oss.qualcomm.com>
+Cc: mkp@kernel.org, gregkh@linuxfoundation.org, arnd@arndb.de, 
+	bvanassche@acm.org, avri.altman@sandisk.com, alim.akhtar@samsung.com, 
+	beanhuo@micron.com, can.guo@oss.qualcomm.com, ulfh@kernel.org, 
+	linusw@kernel.org, shyamsaini@linux.microsoft.com, alex.bennee@linaro.org, 
+	James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 
-Hi Martin,
+Hi Jens,
 
-The merge resolution in 670f07403f7c [1] converted the UFS RPMB entry
-added by a8a34238e5e6 ("scsi: ufs: rpmb: Retry power-on UNIT ATTENTION
-on the RPMB WLUN") to:
+Gentle ping on this series. All three patches carry Bean's
+Reviewed-by.
 
-	.sense_code = POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED,
-
-The original entry used .ascq = SCMD_FAILURE_ASCQ_ANY. With the
-combined code the ASCQ is now 00h, so scsi_check_passthrough() retries
-29h/00h only and no longer the other 29h ASCQs, e.g. 29h/01h POWER ON
-OCCURRED. Following the convention used in sd.c, the equivalent would
-be:
-
-	.sense_code = POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED |
-		      SCMD_FAILURE_ASCQ_ANY,
-
-Could you fold that into the merge, or would you prefer a separate
-patch?
-
-[1] https://git.kernel.org/mkp/scsi/c/670f07403f7c
+1/3 touches drivers/misc/rpmb-core.c and 2/3-3/3 depend on it. Are
+you OK with Martin taking the whole series through the SCSI tree, or
+would you prefer to pick up 1/3 yourself?
 
 Thanks,
 Stanley
