@@ -1,162 +1,171 @@
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EC0F3546D6
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 03:58:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A17FA3C1A;
+	Mon, 28 Sep 2026 04:02:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790567904; cv=none; b=QslKO+DT4JTD1hmIvABmJu1YpcnIk7flR4vIxEKkD+L0UTUQvJu/KjlHQhYXRWjR8yD7Pc8VSwOJWI5UYAUqeAY4EckdSTPkGAYmUrPfdQhZhGY06Jb5bHk3KPXB8k1r3uS58ui4fXQiu/EujqbDlApkcB7jg/VNF4gt3ByJ/eA=
+	t=1790568167; cv=none; b=LVae/2dvVZeobnKMohoJDZEsQ4gh0lm7G2xRwqlPZve1s0cHHSyS+KlMDvRGSFERrJkf7XmYdReFA0Fy7mxFWDc/IUPmDGd7nWzLpssT1LdE2cdsv/StdRHGcuRBs37OwRRhfq8Y5qRd4oKEExvNHu2G6xIJYleQA+1lrBikSD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790567904; c=relaxed/simple;
-	bh=bwJeEo0fFkN69DKRkhPJmYcCsx6w+GE5NQ1kWaHula4=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=IELK0mKpQRfQ6vT8mi5OvbXtEpDutj9cCJWk69QeevJNVOaI+qz2EyOGWCMGIU9ot3AOpt3PpWWR6EXgHIRfDgj1vdXG8DsDeW02rcCk1a16ePLBgJuoIz0RySP+XX9R5PYIYaaLq/spe9FprHOGVYOE4KiQFWfYSvNdQZnayHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=p5Cbhmci; arc=none smtp.client-ip=209.85.215.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1790568167; c=relaxed/simple;
+	bh=Z+mvgAlTWve9a34B6geQMtcolETCJQL5RW6eymR/JJ4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MnKAcGzbd3KSB72E/ZBEY1uzYLwag3RoDFGpoaEIhBFU5Yzpa9ebkHIN2B7MQIJ3hmj/jjNSxsMWAHmx+nIyzTWCeeVun/gZf1qg6oyojeU1JiFb4007Qe2N1p0wlnoiKT9V7y3LimK/sqeJpu3mniL6usDLdAJIfZSmEP0EqFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=aNZYwyBR; arc=none smtp.client-ip=113.46.200.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="p5Cbhmci"
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc1b8088202so1778431a12.3
-        for <linux-scsi@vger.kernel.org>; Sun, 27 Sep 2026 20:58:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790567902; x=1791172702; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=n2JLL5e+F1wlkRjH+6wUiOfkjZbO3ZdGYtj4jVl+vcw=;
-        b=p5CbhmcihITwnviX46bLhrgMNQ0YAF8uNx9PDjPkYqLtv7y1VtXLL4FQ7LhWcB7QCD
-         owLTHHG8myGGfnXYQ+q1D4PM2xdIZK6g/s2XH7+cxHOd51HSolUIZjmiX2l1tv9queEJ
-         imA2ZQW02Y+ZWldQ8fFf91N9TJR66fWgtFtQkkuH/ymUKRgQXDu5mLb5IptSI92iycJh
-         gP/joIqvo23MERgiSWS2mfxyqJCDqbS8g1MPFwjF6Dom4tgGp7XzsUCNgVdO0hoQnEdv
-         +ULrI2GWQJrq2aVXTLpVD6ZiDWdM2BOp9ejs3K00J0v5eW4ah6m49f6cxE+frXk/2K8e
-         RmIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790567902; x=1791172702;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=n2JLL5e+F1wlkRjH+6wUiOfkjZbO3ZdGYtj4jVl+vcw=;
-        b=qTARXsiAn3/u8tT4wPRiluFaIC8P7THfgAP/T5IU4EZccf1CWMuQ11NsPqyRuLIGRq
-         whzwlCiP4SxVto4JcmOlkzkgiXO3AnhjZafVU1Nd+A0DxASmBMyrlSPktriJK5F/Z0zs
-         XFcT46dm0TFjmYkFVyAJO81UFH2WS8atuI7dFZayHtMTQaWOwPEKVKBYVB/vvMqB0LUe
-         9u9P7wsHFpSNJLilMnlmLaf+poIg8cy41oazZ6K9jXsqpTYf0Pu3H2ZVidd8kDu65v6J
-         rSjVDj/Hiethyo1qJq8rqi2CjhJFIMRppKeLS+0GD8RR9DktGU3moxLsyPJMm186KCNS
-         tDlg==
-X-Forwarded-Encrypted: i=1; AKwUvBzoB09gwVQlwTY7UOjlIqeLxwu+/klz5U86vRNJ7jMwEkif20cPUkcxx3AqyRunTbqelh+9aeGVbL+H@vger.kernel.org
-X-Gm-Message-State: AFuF++nGMfEysa8DBbJSqbMSULRdkqBwQeHERG56ZewkO/M52h0DfLtV
-	VAPOcrIWnOtEh2xArW13ORyhz8tEwuncBaOrqOQ6tVkDV619B4WtnVUkYXaxfek+y//za2Ptz0P
-	ngob62EMLej6YVNF4WbKUwA==
-X-Received: from pgbcv12.prod.google.com ([2002:a05:6a02:420c:b0:cc7:a60d:9b55])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a21:9218:b0:3de:3e4a:c102 with SMTP id adf61e73a8af0-3de4d646b60mr3694877637.14.1790567902171;
- Sun, 27 Sep 2026 20:58:22 -0700 (PDT)
-Date: Mon, 28 Sep 2026 11:58:16 +0800
-In-Reply-To: <20260928035816.1294326-1-stanleyjhu@google.com>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="aNZYwyBR"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=xc3XtV6XQDfYDs7/ceu14FTonZTK2jB4QtyFIuz0B6A=;
+	b=aNZYwyBRXbb1+PMNuewJGKap7oVa5Gv3jW+h/k0tmGihCShRu0VKT0GKofYa6P8aifAMqyx7j
+	MLDe17AN9i4UpC8P88iESqnPcKW4SNIPu+vXfb0oAoahRr+/bGKD1UawbIZwb0WLPpS/88GIV5K
+	NQX38oVQzPMKo0ENIoviiQc=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4htS4x5kmwz1prlG;
+	Mon, 28 Sep 2026 11:50:25 +0800 (CST)
+Received: from kwepemp100001.china.huawei.com (unknown [7.202.195.79])
+	by mail.maildlp.com (Postfix) with ESMTPS id CC7CE4057D;
+	Mon, 28 Sep 2026 12:02:35 +0800 (CST)
+Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
+ kwepemp100001.china.huawei.com (7.202.195.79) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Mon, 28 Sep 2026 12:02:35 +0800
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Mon, 28 Sep 2026 12:02:35 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <john.garry@linux.dev>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<mkp@kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+Subject: [PATCH v4] scsi: libsas: Fix SMP IO deadlock during HA resume
+Date: Mon, 28 Sep 2026 12:02:34 +0800
+Message-ID: <20260928040234.992912-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260928035816.1294326-1-stanleyjhu@google.com>
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20260928035816.1294326-3-stanleyjhu@google.com>
-Subject: [PATCH v3 2/2] scsi: ufs: core: Decouple CQ sweep from request
- iterator in MCQ
-From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, Bean Huo <beanhuo@micron.com>, 
-	Bart Van Assche <bvanassche@acm.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Peter Wang <peter.wang@mediatek.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Stanley Jhu <stanleyjhu@google.com>, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemp500015.china.huawei.com (7.202.195.9)
 
-In MCQ mode, ufshcd_mcq_compl_pending_transfer() uses
-blk_mq_tagset_busy_iter() to iterate over busy requests during error
-recovery and host reset. However, both iterator callbacks perform
-whole-queue operations redundantly for each visited request:
+smp_execute_task_sg() calls pm_runtime_get_sync() on the host before
+issuing an SMP command. When that command is itself issued from the
+HA resume path, the get_sync() deadlocks: it waits for the ongoing
+resume (the device is RPM_RESUMING), while the resume is blocked in
+sas_drain_work() waiting for that same SMP IO to complete.
 
-- force_compl == true: ufshcd_mcq_force_compl_one() calls
-  ufshcd_mcq_compl_all_cqes_lock() on every busy request, sweeping the
-  entire completion ring (hwq->max_entries slots) once per active
-  request under spin_lock_irqsave even though the first sweep already
-  cleared all completion entries.
-- force_compl == false: ufshcd_mcq_compl_one() acquires cq_lock and
-  polls CQTPy over MMIO via ufshcd_mcq_poll_cqe_lock() for every busy
-  request without doing any per-request work.
+The deadlock needs an expander-attached SATA disk. During
+sas_resume_ha() -> sas_drain_work(), DISCE_RESUME ->
+sas_resume_sata() -> ata_sas_port_resume() requests ATA_EH_RESET,
+and the hard reset for such a disk is done via SMP PHY CONTROL
+(sas_ata_hard_reset() -> sas_phy_reset() -> sas_smp_phy_control() ->
+smp_execute_task_sg()). Direct-attached SATA resets through
+lldd_control_phy() and SSP devices use TMFs, so neither hits this.
 
-Sweep or poll each hardware queue (hba->uhq[i]) once at the start of
-ufshcd_mcq_compl_pending_transfer(). When force_compl is true, run
-blk_mq_tagset_busy_iter() afterward to complete residual in-flight
-requests with DID_REQUEUE, and remove the now-unused
-ufshcd_mcq_compl_one() callback.
+Replace the get_sync()/put_sync() pair with
+pm_runtime_get_noresume()/pm_runtime_put(). smp_execute_task_sg()
+only needs to hold off autosuspend while the SMP is in flight, and it
+must not try to resume the host: a sync resume issued from the HA
+resume path itself is what deadlocks, and by the time sas_resume_ha()
+runs, hw_init has already reinitialized the hardware, so the device
+is accessible without one.
 
-Fixes: ab248643d3d6 ("scsi: ufs: core: Add error handling for MCQ mode")
-Cc: stable@vger.kernel.org
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+The usage reference is still required. Discovery work normally runs
+inside an event worker's PM reference, taken at
+sas_notify_port_event() notify time and held until the handler has
+flushed the disco queue. sas_rediscover_ex_phy() however requeues
+DISCE_REVALIDATE_DOMAIN from within the revalidation worker itself,
+and flush_workqueue() does not wait for work items queued during
+execution, so that chained revalidation runs with no outer PM
+reference - without the get_noresume(), its SMP could race
+autosuspend.
+
+For the BSG path, sas_smp_handler() is the only caller which may
+find the host autosuspended: expander SMP requests do not go through
+any SCSI device request queue, so nothing else in that path holds
+the host awake. Resume it there with pm_runtime_resume_and_get()
+and check the result.
+
+Fixes: 3dbbbf656b850 ("scsi: libsas: Fix HA resume deadlock and hisi_sas disk-wake race")
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
 ---
- drivers/ufs/core/ufshcd.c | 31 ++++++++++++-------------------
- 1 file changed, 12 insertions(+), 19 deletions(-)
+Changes since v3:
+- Move the host resume to sas_smp_handler(), the only caller which may
+  find the host autosuspended, as suggested by John Garry
+- Replace get_sync()/put_sync() with get_noresume()/put() in
+  smp_execute_task_sg(): a blocking resume issued from the HA resume
+  path itself is what deadlocks
+- Drop the racy SAS_HA_RESUMING check
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 234e18b5078f..f50431f35e58 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6068,8 +6068,6 @@ static bool ufshcd_mcq_force_compl_one(struct request *rq, void *priv)
- 	if (blk_mq_is_reserved_rq(rq) || !hwq)
- 		return true;
+Changes since v2:
+- Drop the reference with pm_runtime_put() instead of
+  pm_runtime_put_noidle().
+
+Changes since v1:
+- Use pm_runtime_get_noresume()/put_noidle() during HA resume instead
+  of skipping the PM reference entirely, so an in-flight SMP IO always
+  keeps autosuspend away.
+- Convert pm_runtime_get_sync() to pm_runtime_resume_and_get() and
+  check the result (pre-existing issue flagged by sashiko).
+
+ drivers/scsi/libsas/sas_expander.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 811c9eb4fef1..26c2099c28b9 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -62,7 +62,11 @@ static int smp_execute_task_sg(struct domain_device *dev,
+ 		to_sas_internal(dev->port->ha->shost->transportt);
+ 	struct sas_ha_struct *ha = dev->port->ha;
  
--	ufshcd_mcq_compl_all_cqes_lock(hba, hwq);
--
- 	/*
- 	 * For those cmds of which the cqes are not present in the cq, complete
- 	 * them explicitly.
-@@ -6085,19 +6083,6 @@ static bool ufshcd_mcq_force_compl_one(struct request *rq, void *priv)
- 	return true;
- }
+-	pm_runtime_get_sync(ha->dev);
++	/*
++	 * Non-blocking: a sync resume here would deadlock against
++	 * sas_drain_work() during HA resume.
++	 */
++	pm_runtime_get_noresume(ha->dev);
+ 	mutex_lock(&dev->ex_dev.cmd_mutex);
+ 	for (retry = 0; retry < 3; retry++) {
+ 		if (test_bit(SAS_DEV_GONE, &dev->state)) {
+@@ -135,7 +139,7 @@ static int smp_execute_task_sg(struct domain_device *dev,
+ 		}
+ 	}
+ 	mutex_unlock(&dev->ex_dev.cmd_mutex);
+-	pm_runtime_put_sync(ha->dev);
++	pm_runtime_put(ha->dev);
  
--static bool ufshcd_mcq_compl_one(struct request *rq, void *priv)
--{
--	struct scsi_device *sdev = rq->q->queuedata;
--	struct Scsi_Host *shost = sdev->host;
--	struct ufs_hba *hba = shost_priv(shost);
--	struct ufs_hw_queue *hwq = ufshcd_mcq_req_to_hwq(hba, rq);
--
--	if (!blk_mq_is_reserved_rq(rq) && hwq)
--		ufshcd_mcq_poll_cqe_lock(hba, hwq);
--
--	return true;
--}
--
- /**
-  * ufshcd_mcq_compl_pending_transfer - MCQ mode function. It is
-  * invoked from the error handler context or ufshcd_host_reset_and_restore()
-@@ -6112,10 +6097,18 @@ static bool ufshcd_mcq_compl_one(struct request *rq, void *priv)
- static void ufshcd_mcq_compl_pending_transfer(struct ufs_hba *hba,
- 					      bool force_compl)
- {
--	blk_mq_tagset_busy_iter(&hba->host->tag_set,
--				force_compl ? ufshcd_mcq_force_compl_one :
--					      ufshcd_mcq_compl_one,
--				NULL);
-+	int i;
+ 	BUG_ON(retry == 3 && task != NULL);
+ 	sas_free_task(task);
+@@ -2222,6 +2226,11 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 		goto out;
+ 	}
+ 
++	/* The host may have autosuspended, resume it here. */
++	ret = pm_runtime_resume_and_get(dev->port->ha->dev);
++	if (ret)
++		goto out;
 +
-+	for (i = 0; i < hba->nr_hw_queues; i++) {
-+		if (force_compl)
-+			ufshcd_mcq_compl_all_cqes_lock(hba, &hba->uhq[i]);
-+		else
-+			ufshcd_mcq_poll_cqe_lock(hba, &hba->uhq[i]);
-+	}
-+
-+	if (force_compl)
-+		blk_mq_tagset_busy_iter(&hba->host->tag_set,
-+					ufshcd_mcq_force_compl_one, NULL);
- }
+ 	ret = smp_execute_task_sg(dev, job->request_payload.sg_list,
+ 			job->reply_payload.sg_list);
+ 	if (ret >= 0) {
+@@ -2229,6 +2238,7 @@ void sas_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 		rcvlen = job->reply_payload.payload_len - ret;
+ 		ret = 0;
+ 	}
++	pm_runtime_put(dev->port->ha->dev);
  
- /**
+ out:
+ 	bsg_job_done(job, ret, rcvlen);
 -- 
-2.56.0.rc1.315.gc6ed9934b7-goog
+2.43.0
 
