@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D66673822AB
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 18:17:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B4A3822A1
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 18:18:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790619426; cv=none; b=Eh9F/cUbyWLQtuIAwhnfo1V/AWeSUbCHjQ908Ib4CVGaR3a2AeNemWSmGKvdcqX07O5qPdvvf8k/2/aADL6gQiRDJ3oOzu6Mbb7jWBlcviy8q3cagr3/J+IVAwiyu3/UIDNzTFdJR5aSEmd8yO5ibfBiSDiy5SbSfcoiuEO9f+U=
+	t=1790619516; cv=none; b=sJ5xodneQZkDDIMDxsX5TLLOBhEV2vztzQZY2RRoWK7o8GBGB5cCDydeRswyZgH55K7rp04fkhophkVRuQmmPtLoeebgt00E/ZcdHJqUrjtO/RDSLoaQrLiOIII1ZzXmtN9qXRt/gA40dKQU3Fh3MawccZ/ONfQwwCtlAvgf/20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790619426; c=relaxed/simple;
-	bh=ywQln+8hB64SpzarDwFRFyX/XpaoO1LigU7VQBMBpBk=;
+	s=arc-20240116; t=1790619516; c=relaxed/simple;
+	bh=vCSwISVKLHa407/dCliejLRYv8DgjdMBQmC3JnnjXrs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aFjOE1+96mLh4TRiJVf43Eqg1T4WgC1RtoiEdJtwT1l9PObLhXV5JlDRjbZR62oL24v7GL8Q45Mqi6yO3WfIFSK2UrZBg7Sln7oyq8EvbDo6wu6nBccOBm8OmJHfL4uYk9588oitSUO4W9yfh4aYdO4o/2RAt0+J854a8WEWVJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DC8x/w08; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=rB+22tiYCKur/g8jarCtVwIaavMcu1hIbaHJKXaWi7T28gfOFEADQRoNJ6aXlXt3cl4AVaDVfm9g7PLuj5lwgWXeSe3lqvZxchOtWk5/84Slrr4EPrB7TAJiJZ55P5X//3N2GAn4n4v+bOzBeU1jB+WDkSzW91mR/PEUZY5qkyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ePjBpSht; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DC8x/w08"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15C721F000FF;
-	Mon, 28 Sep 2026 18:17:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ePjBpSht"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD4C01F000FF;
+	Mon, 28 Sep 2026 18:18:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790619424;
-	bh=aZetK73qPsihqq8smp3yfB+nEm2HfPOwo/bpyEjH4c0=;
+	s=k20260515; t=1790619515;
+	bh=UZY3EFLxbWwmS59gF5DoGmXcrgAZl2IF4kkOFLW8L38=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DC8x/w08RtaWaZZfUmEXDmyFv+bPuz8xw02pSDGaknqmj/uCz+7WTXxUTDba8bb3k
-	 Q5GQHyKAysQlWNOyMm9OX7o6Kod2oYMO81SQQIRIPklIjhZC+gzk2YbLvv5xDbuhR5
-	 B6l7THDk3mrhvbIS1OzaWD/NhelkB5Nn5CH+2E5dB4aXMt4iAiYwBqmRoOOO/MFJgs
-	 w9uEpAe3RNl9w0VZu/6A3AthWTXNVS4tbMjoVOK1BbXrXeSFxWBddCpUKO5TH0334l
-	 coGficJYvSdQDH8LljnsYnQDhy7Jgy1xM9kiWrA0u7XOn6JB91cYMWUno3zkZmrJrY
-	 Z3THg8mYoG9fw==
+	b=ePjBpShtMSQa605DGt1hFMvjI4I2tbZwYTE7HSkNjrqI91VUyMGR+Hl3MEYANcFZB
+	 bzonLPO8GB6xxFNEUnMJkXFZjBpHZNWGhrZHGQ3oPK5xczTeVQueSZlvaJpO3jQWZC
+	 ePJIxeDTLZEk0lhHh4Ub+S2hLaewMuDFS48djw8sw3RGun6BYXFSVK70i552rYh3Z1
+	 8PNyYZSYieTDrWjQl8HW5sKZ4AjacMyRUJpKDUCSCT/K4H90nYyG3RfYpcS+SEYYcB
+	 /KS9Dfkhpe2KTT4g4Qb84TC1o9EoiOTUX2vE9co+rxNOwEBdw3HZgSEtKmH4n4A6WB
+	 l+2kpp9jDfZmw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 05/10] lpfc: Add handling for when PLOGI or PRLI is
- dropped during link failure
+Subject: Re: [PATCH v5 07/10] lpfc: Rework I/O flush ordering when unloading
+ driver
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nigel Kirkland" <nkirkland2304@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260928181757.21959-6-nkirkland2304@gmail.com>
+In-Reply-To: <20260928181757.21959-8-nkirkland2304@gmail.com>
 References: <20260928181757.21959-1-nkirkland2304@gmail.com>
- <20260928181757.21959-6-nkirkland2304@gmail.com>
+ <20260928181757.21959-8-nkirkland2304@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 18:17:03 +0000
-Message-Id: <20260928181704.15C721F000FF@smtp.kernel.org>
+Date: Mon, 28 Sep 2026 18:18:34 +0000
+Message-Id: <20260928181834.CD4C01F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,43 +47,83 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] lpfc: clear_bit(NLP_PLOGI_SND) is a no-op since flag is never set
+- [Medium] scsi: lpfc: memory leak of iocbq left on txcmplq during unload
 --
 
-commit 0b98cf6de331fab63e77fe03e2cd19be5c4624b1
+commit 0147a0023ef276c5ea7aa246240c55db9bc5ed52
 Author: Nigel Kirkland <nkirkland2304@gmail.com>
 
-lpfc: Add handling for when PLOGI or PRLI is dropped during link failure
+lpfc: Rework I/O flush ordering when unloading driver
 
-This commit adds handling for dropped PLOGI or PRLI during link failures by
-clearing their respective send flags and decrementing counters in
-lpfc_cmpl_els_link_down(). This is intended to prevent logistical mixups and
-allow the login session to recover correctly.
+This commit reworks I/O flush ordering during driver unload by avoiding
+cancelling IOCB_ABORTING returns in lpfc_els_abort() and flushing the
+PHBA WQ prior to resource unset.
 
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 45aad4cd2dc80..cd431c7bd9f08 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 6460127bcc7b0..7352cb6e584bf 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -13514,6 +13514,9 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
+>  	/* Stop the SLI4 device port */
+>  	if (phba->pport)
+>  		phba->pport->work_port_events =3D 0;
+> +
+> +	/* All IO completed and queues released. Free the IOCBs. */
+> +	lpfc_free_iocb_list(phba);
+>  }
+
 [ ... ]
-> @@ -1237,17 +1239,40 @@ lpfc_cmpl_els_link_down(struct lpfc_hba *phba, st=
-ruct lpfc_iocbq *cmdiocb,
+
+> diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_=
+nportdisc.c
+> index 2c8d995a45bf8..f917a5bcfd025 100644
+> --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
 [ ... ]
-> +	if (cmd =3D=3D ELS_CMD_PLOGI) {
-> +		/* A PLOGI ELS IO needs to clear the PLOGI_SND flag to
-> +		 * acknowledge the ELS completion and allow recovery. Otherwise
-> +		 * a subsequent PLOGI gets rejected as a duplicate.
+> @@ -271,7 +272,13 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_no=
+delist *ndlp)
+>  		retval =3D lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
+>  		spin_unlock_irq(&phba->hbalock);
+> =20
+> -		if (retval && test_bit(FC_UNLOADING, &phba->pport->load_flag)) {
+> +		/* An abort that fails here is just cancelled when the driver is
+> +		 * going offline.  However, if the abort failure is because the
+> +		 * IOCB is already getting aborted, don't cancel.  Just let it
+> +		 * complete.
 > +		 */
-> +		clear_bit(NLP_PLOGI_SND, &ndlp->nlp_flag);
+> +		if (test_bit(FC_UNLOADING, &phba->pport->load_flag) &&
+> +		    retval && retval !=3D IOCB_ABORTING) {
 
 [Severity: Medium]
-Is the NLP_PLOGI_SND flag still being actively used by this state machine?
+If an ELS abort returns IOCB_ABORTING during driver unload, this explicitly
+leaves the IOCB on the ring's txcmplq to complete naturally.
 
-It appears that this flag is never set anywhere in the lpfc driver codebase.
-If NLP_PLOGI_SND is never set, this clear_bit() operation is a silent no-op.
+However, does the unload path guarantee this will complete? In lpfc_init.c,
+lpfc_sli4_hba_unset() calls lpfc_sli4_xri_exchange_busy_wait() which checks
+abts_* lists, but does not wait for txcmplq to empty before calling
+lpfc_sli4_disable_intr() to disable interrupts.
 
-Could this mean the intended PLOGI recovery mechanism is non-functional, and
-subsequent PLOGIs might still get rejected?
+When lpfc_sli4_hba_unset() finally calls lpfc_free_iocb_list(), it only fre=
+es
+the available IOCBs in phba->lpfc_iocb_list:
+
+lpfc_init.c:lpfc_free_iocb_list() {
+    ...
+    list_for_each_entry_safe(iocbq_entry, iocbq_next,
+                             &phba->lpfc_iocb_list, list) {
+        list_del(&iocbq_entry->list);
+        kfree(iocbq_entry);
+    ...
+}
+
+Because the pending IOCB is still linked in txcmplq and hasn't been returned
+to the free list, does this result in a memory leak of the lpfc_iocbq
+structure?
+
+>  			list_del_init(&iocb->list);
+>  			list_add_tail(&iocb->list, &drv_cmpl_list);
+>  		}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928181757.2195=
-9-1-nkirkland2304@gmail.com?part=3D5
+9-1-nkirkland2304@gmail.com?part=3D7
