@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B4A3822A1
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 18:18:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B1BD36A37B
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 18:19:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790619516; cv=none; b=sJ5xodneQZkDDIMDxsX5TLLOBhEV2vztzQZY2RRoWK7o8GBGB5cCDydeRswyZgH55K7rp04fkhophkVRuQmmPtLoeebgt00E/ZcdHJqUrjtO/RDSLoaQrLiOIII1ZzXmtN9qXRt/gA40dKQU3Fh3MawccZ/ONfQwwCtlAvgf/20=
+	t=1790619552; cv=none; b=tL9Zmfla5XlQZkGeifBpJohLUtNs1n8u6DwDE8Uc2bndlELbPX6xs0KvJX6KrLXdtjV4+EqoDGgUUFc9s5OSTMCO8opu9O7B71zaJ5eH+BQJu4XXdV5f+3WAuzVPxvgv4nG5QXP/jiWyZ+hxZJHz/8ylmHF9FU7ylUsM9SCE6v8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790619516; c=relaxed/simple;
-	bh=vCSwISVKLHa407/dCliejLRYv8DgjdMBQmC3JnnjXrs=;
+	s=arc-20240116; t=1790619552; c=relaxed/simple;
+	bh=M/i3Ds4NATKR+ryE2ZEqp6abBIbMgc/2eKbR9e9qqi0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rB+22tiYCKur/g8jarCtVwIaavMcu1hIbaHJKXaWi7T28gfOFEADQRoNJ6aXlXt3cl4AVaDVfm9g7PLuj5lwgWXeSe3lqvZxchOtWk5/84Slrr4EPrB7TAJiJZ55P5X//3N2GAn4n4v+bOzBeU1jB+WDkSzW91mR/PEUZY5qkyk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ePjBpSht; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Th5fioMpEgSXvCtbIvJUQt3ibhzi1NFGAVpXkkpb4eEi0k8GjYHa8GvwV3C3S6vi+Rby+gjj/9b208FAJfuWleYX/yPmiTCsBmfOAoqHJGAEfDmjZkxaIQz+t7NkUuzyUrBKTuHKu2VbsQemx5OQ8xb0ykq+Uctnimu726xsAS0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BUWz+CXe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ePjBpSht"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD4C01F000FF;
-	Mon, 28 Sep 2026 18:18:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BUWz+CXe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B127C1F000FF;
+	Mon, 28 Sep 2026 18:19:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790619515;
-	bh=UZY3EFLxbWwmS59gF5DoGmXcrgAZl2IF4kkOFLW8L38=;
+	s=k20260515; t=1790619550;
+	bh=yM1GUFuofJM+596vtUb3T6DX22dO/TARyDLH9zMUQO0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ePjBpShtMSQa605DGt1hFMvjI4I2tbZwYTE7HSkNjrqI91VUyMGR+Hl3MEYANcFZB
-	 bzonLPO8GB6xxFNEUnMJkXFZjBpHZNWGhrZHGQ3oPK5xczTeVQueSZlvaJpO3jQWZC
-	 ePJIxeDTLZEk0lhHh4Ub+S2hLaewMuDFS48djw8sw3RGun6BYXFSVK70i552rYh3Z1
-	 8PNyYZSYieTDrWjQl8HW5sKZ4AjacMyRUJpKDUCSCT/K4H90nYyG3RfYpcS+SEYYcB
-	 /KS9Dfkhpe2KTT4g4Qb84TC1o9EoiOTUX2vE9co+rxNOwEBdw3HZgSEtKmH4n4A6WB
-	 l+2kpp9jDfZmw==
+	b=BUWz+CXe4Q1nIwYfjUeSOMX8K6J4IigNYahe1S8bKES5lKtCGQ2rNqUcCFOqg9Ipk
+	 rM+nutXmemmGOsaXx2Q79DQX91KsInvJnfT6etuW4UsbY57Z1aQtADW/GI01dvc7IL
+	 8j6vPejg29ysda/19m8sbpX+p1IOr8T1P3T6j6VOD2g6bDJImpoerULYRVUVqW9wYV
+	 aN0q2c5B2Fozu351vZB2fiOUZbXoUR7lUgYwZCghB7kaB8DJZWS4l5SetpaK430AEE
+	 CFI4+ha4WyWXZ70O5A385pt/SbrlO24fz1/h0GgSxLauhxW7dI76D+B6Ot/48Z6g51
+	 8g3QkVyWvIhkA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 07/10] lpfc: Rework I/O flush ordering when unloading
- driver
+Subject: Re: [PATCH v5 04/10] lpfc: Check fc4_xpt_flags before decrementing
+ ndlp kref on FDISC error
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nigel Kirkland" <nkirkland2304@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260928181757.21959-8-nkirkland2304@gmail.com>
+In-Reply-To: <20260928181757.21959-5-nkirkland2304@gmail.com>
 References: <20260928181757.21959-1-nkirkland2304@gmail.com>
- <20260928181757.21959-8-nkirkland2304@gmail.com>
+ <20260928181757.21959-5-nkirkland2304@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 18:18:34 +0000
-Message-Id: <20260928181834.CD4C01F000FF@smtp.kernel.org>
+Date: Mon, 28 Sep 2026 18:19:10 +0000
+Message-Id: <20260928181910.B127C1F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,83 +47,67 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] scsi: lpfc: memory leak of iocbq left on txcmplq during unload
+- [High] lpfc: TOCTOU race in lpfc_cmpl_els_fdisc() leads to Use-After-Free
 --
 
-commit 0147a0023ef276c5ea7aa246240c55db9bc5ed52
+commit 46ec54ed5cbeb514e9e9362594a41ca2f9b3aa3d
 Author: Nigel Kirkland <nkirkland2304@gmail.com>
 
-lpfc: Rework I/O flush ordering when unloading driver
+lpfc: Check fc4_xpt_flags before decrementing ndlp kref on FDISC error
 
-This commit reworks I/O flush ordering during driver unload by avoiding
-cancelling IOCB_ABORTING returns in lpfc_els_abort() and flushing the
-PHBA WQ prior to resource unset.
+The current initial kref count drop logic for an ndlp that fails FDISC
+assumes that the ndlp has never registered with transport layer and thus
+the lpfc_dev_loss_tmo_callbk never called.  However, a failed FDISC can
+occur after a successful transport layer registration too.  So,
+lpfc_dev_loss_tmo_callbk can occur and there is a potential use-after-free
+on the ndlp.
 
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 6460127bcc7b0..7352cb6e584bf 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -13514,6 +13514,9 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
->  	/* Stop the SLI4 device port */
->  	if (phba->pport)
->  		phba->pport->work_port_events =3D 0;
-> +
-> +	/* All IO completed and queues released. Free the IOCBs. */
-> +	lpfc_free_iocb_list(phba);
->  }
-
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+> index 6f6394a0047c2..45aad4cd2dc80 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
 [ ... ]
-
-> diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_=
-nportdisc.c
-> index 2c8d995a45bf8..f917a5bcfd025 100644
-> --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-> +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+> @@ -11427,11 +11426,22 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phba, stru=
+ct lpfc_iocbq *cmdiocb,
 [ ... ]
-> @@ -271,7 +272,13 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_no=
-delist *ndlp)
->  		retval =3D lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
->  		spin_unlock_irq(&phba->hbalock);
-> =20
-> -		if (retval && test_bit(FC_UNLOADING, &phba->pport->load_flag)) {
-> +		/* An abort that fails here is just cancelled when the driver is
-> +		 * going offline.  However, if the abort failure is because the
-> +		 * IOCB is already getting aborted, don't cancel.  Just let it
-> +		 * complete.
+> -		/* drop initial reference */
+> -		if (!test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag))
+> +		/* If have not previously registered with transport layer and no
+> +		 * LPFC_EVT_DEV_LOSS work pending, then drop initial reference.
+> +		 * Otherwise, let the dev_loss_tmo_callbk drop the initial
+> +		 * reference.
 > +		 */
-> +		if (test_bit(FC_UNLOADING, &phba->pport->load_flag) &&
-> +		    retval && retval !=3D IOCB_ABORTING) {
+> +		if (!(ndlp->fc4_xpt_flags & (SCSI_XPT_REGD | NVME_XPT_REGD)) &&
+> +		    !test_bit(NLP_IN_DEV_LOSS, &ndlp->nlp_flag) &&
+> +		    !test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag))
+>  			lpfc_nlp_put(ndlp);
 
-[Severity: Medium]
-If an ELS abort returns IOCB_ABORTING during driver unload, this explicitly
-leaves the IOCB on the ring's txcmplq to complete naturally.
+[Severity: High]
+Does this lockless check introduce a time-of-check to time-of-use race
+condition that could lead to a use-after-free?
 
-However, does the unload path guarantee this will complete? In lpfc_init.c,
-lpfc_sli4_hba_unset() calls lpfc_sli4_xri_exchange_busy_wait() which checks
-abts_* lists, but does not wait for txcmplq to empty before calling
-lpfc_sli4_disable_intr() to disable interrupts.
+If an FDISC error occurs concurrently with a devloss timeout for the same
+ndlp, lpfc_dev_loss_tmo_callbk() could execute on another CPU:
 
-When lpfc_sli4_hba_unset() finally calls lpfc_free_iocb_list(), it only fre=
-es
-the available IOCBs in phba->lpfc_iocb_list:
+CPU1 in lpfc_dev_loss_tmo_callbk():
+    set_bit(NLP_IN_DEV_LOSS, &ndlp->nlp_flag);
 
-lpfc_init.c:lpfc_free_iocb_list() {
-    ...
-    list_for_each_entry_safe(iocbq_entry, iocbq_next,
-                             &phba->lpfc_iocb_list, list) {
-        list_del(&iocbq_entry->list);
-        kfree(iocbq_entry);
-    ...
-}
+    spin_lock_irqsave(&ndlp->lock, iflags);
+    /* ... */
+    ndlp->fc4_xpt_flags &=3D ~SCSI_XPT_REGD;
 
-Because the pending IOCB is still linked in txcmplq and hasn't been returned
-to the free list, does this result in a memory leak of the lpfc_iocbq
-structure?
+Because set_bit() lacks a full memory barrier and spin_lock() provides only
+an ACQUIRE barrier, could the clearing of SCSI_XPT_REGD become visible to
+CPU2 before NLP_IN_DEV_LOSS is seen?
 
->  			list_del_init(&iocb->list);
->  			list_add_tail(&iocb->list, &drv_cmpl_list);
->  		}
+If CPU2 is executing this new check in lpfc_cmpl_els_fdisc() locklessly and
+without read barriers, it might see both SCSI_XPT_REGD =3D=3D 0 and
+NLP_IN_DEV_LOSS =3D=3D 0.
+
+Could this cause CPU2 to erroneously evaluate the condition as true, execute
+lpfc_nlp_put(ndlp), and prematurely drop the initial reference, leading to a
+use-after-free when CPU1 later tries to use the ndlp pointer?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928181757.2195=
-9-1-nkirkland2304@gmail.com?part=3D7
+9-1-nkirkland2304@gmail.com?part=3D4
