@@ -1,61 +1,63 @@
-Received: from mail-dy2-f42.google.com (mail-dy2-f42.google.com [74.125.229.42])
+Received: from mail-dy2-f43.google.com (mail-dy2-f43.google.com [74.125.229.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B63D034DCD2
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 09:00:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 863B2486436
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 09:00:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790586040; cv=none; b=opFZsP1Q4ATI8sQAztoXNP66g2HfZaLjF00ufjP4ld6DSkOiJsH7SqtCta+8BvVeba89iOveR/fkQS7VvqiR6nu0TQ2j23bLmymE9jCiwNsvaAClfXqLFYDoDAJF9yUbGhKU5iLrDEBS8C67v0YMYG06RPOLZGDr0MhIBqSERzg=
+	t=1790586045; cv=none; b=Y4lCtQ+FFiVJ9XWXG6PoFViMXHJRfkgIQIWGLhMDVXNPHp6QP5pbnsfmxwwr5WB4/ONw0zq16BrFXJqPM0Ie2AVnDh8m/aU9eeWlUHzURJLd9oS/SqTGrlkHz6J89a3/ldnsXBjM0XLcbXkoB1Y89ZTmBnexxlA/2ey1ncvyfyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790586040; c=relaxed/simple;
-	bh=Vwt5jRUFUNWUzFh6wGFDqhtk+9yWoFR7/PjgmMHhp9c=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=m/MyyPk+sgTB3FwJCpC5aO7yQAD881IYTzesswyM69NdsdHjpuU/DZUmBfVK8fn32y/VCgmUG18qyK+wyssXHPX8JVUMgERKFkYTs4Uw0B80lkKQAHD0V3lsIWvQib4oi+Tb/7EXi9xtF/2ubB/ZOtjhtHvAAVSu+5yFUCtqSoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZFAhpOc5; arc=none smtp.client-ip=74.125.229.42
+	s=arc-20240116; t=1790586045; c=relaxed/simple;
+	bh=LKlCoviJ12VgG5jnRcP5Hso1CrjmmA02TTiTGOaT5l8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=dV5a0k2IdhTaf5vmusJ+nUbUoKRxgj971nGOyxW67lLOXp2dEkVdXrXlKV9yKuGAzdrpmBX9EiOVFtrP/AtUfAG9eiNUmUnzyKEkZEutBMR2CWITOowSL6V7cpA1jQUNTKaVRHXyDixBBGTHt90+IUymoBXHN7xY0okd7In4FT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D07nw3re; arc=none smtp.client-ip=74.125.229.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZFAhpOc5"
-Received: by mail-dy2-f42.google.com with SMTP id 5a478bee46e88-34182b58c7eso2390199eec.0
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 02:00:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D07nw3re"
+Received: by mail-dy2-f43.google.com with SMTP id 5a478bee46e88-33c24422d4dso3353121eec.2
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 02:00:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790586037; x=1791190837; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=peWtFw7a//NXoz+TblS/D+EGwqrleEVQ+goT3kgpwso=;
-        b=ZFAhpOc5rD1XJSPl1v3i8pGMpdW2V3lbC8VUSl2u4vvF+pEvCnvcg+cHbvOBXDyMaq
-         9e/1csHosxwKlVwUW6lJMX0VaLYOyuHgsSXWlO3d1zT3KquaC9pfnw42c+dPFj92434a
-         jkpx+pTStBJfT3Fh3waZN54n2KOaHwc7I5fdhlYjwY1CF7SaKc34aszBLElKhzsU/w2L
-         jNwpb2OGC3mwu8dLbUbViStt4EJ/n8bj4GBbuWdWM7pAdhPUPPltyx4ojYlBzj0jx9gi
-         ZqwaFJvZEuKQ1Y+FkWU5Opu7jl6M3QA2jnCBGPRYoZ3LKJk4OJWDHjr5Ic3I1ydd1wkz
-         2Zfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790586037; x=1791190837;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1790586042; x=1791190842; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=peWtFw7a//NXoz+TblS/D+EGwqrleEVQ+goT3kgpwso=;
-        b=Hpkt2N89hitT4Y3ZHPM/Wh4J1ubAZtJ1kVV0okt1JOhxIdD93ZC8xPv4IgpOkbYbH5
-         TPkTqknrqM0qjc8VfEJHT3YswyfMJSqjW7a/eD+9zTlkPjjqxAWbbac0WiVgdz3MIghG
-         BxXB/Jtsznx+2cIXFh6zKrxH7RXHBPqjAbu8FqgCjwsC59r7utF4z4pPlM56nk54QsHi
-         k/qco7auLq5Z09pFsD7TfJ9tode5vythWmGhij4omLz5MmBkoqIDl+2FTKjGaAQ5Bmf5
-         ZpYniSXyc63ttdhHsQXQYt0Hh9E3zYipuIFTXbvfUQNW02XqY0L9PgwCEA7ctNa6+uTp
-         23XA==
-X-Gm-Message-State: AFq9FYJsKfZ95CmMtieOBR+rKJLm4cOESJngZ3yEac3IdwAejr9zvpzt
-	MJm7jBh7WJsZy6lLTL9lrkC7qIcI57ETWNLlx31xIXMlTNaqh1KcOM2/
-X-Gm-Gg: AYBFou0D5fukbigRaGocD0SNM5/WxWAPvtwUEPDs/SMRj+62gXB9oDxkQSqr7a9MUws
-	RC4VnAityQPbbjNKirjLkhSA9nAzCtvM7k1y/hvlSBJyovvms2Ny/e1YS0nWQyxcuCKmz/1I4po
-	165D5G4N0SI95coD3PfJbA+qjy7vwjHgdc0x5HEnN/OpQggo62eGGKutoV+QtKY43MvdJnHxWJZ
-	Hc2TkwYmCp9Ss53QXrMg6XlcfTGNnY/AtyD/4bBD1N+AOsuBZoS8IRkAXU9TKQXhVtl0oaUX5x5
-	Tl+aAGMWqzE66eMxejAk6MCMNDcgUhhMHmgSWUP4pvwg3Ea73bkV1FLc6WmRCiph1oe34ztnW1B
-	36UFaBSfYNlhW1OxiHqOvZ5yRqaJ8Wc4WcZNTKD4RhO3g/5P4SwDic1eqVkvImeQIN8CiDOW5yL
-	ET34hCXQi6fhw2stugCmjNQ2cuO0prrgYxseBvFw24P5/NATxlZP1CCp6osWCcNmDv/nh4hgiTq
-	ge+P+HwB+rk7z+ZooZ9tr8AnULS
-X-Received: by 2002:a05:693c:41ca:b0:33b:fc17:e691 with SMTP id 5a478bee46e88-34a63cad7d7mr375711eec.2.1790586035905;
-        Mon, 28 Sep 2026 02:00:35 -0700 (PDT)
+        bh=B4As3nxVg8g8B3dLip3XefSLbWFq/mZSzoIcZeIzSfg=;
+        b=D07nw3reiH69EjzEim6t0FoUB0kuO8Ntc/ZYaWRhvyG1BEsYBZhtjGN1TzYjMZWxqt
+         E6JfKJQ/8UwzkWRsxo5YsjleoHjO9v5ru6FXUKrI83WWKPc34MdKVaqX3BXraObYyK4t
+         1qRvdKoRTvkIDHifXQBOoidhe9vBSktiMR3eItJyWcezkuObT03GK+lT/Wbn1z1dlww3
+         7zVNImKzDVKL8kpFTK1o3kDTsGzg5U2yOJju+QOjvky7OXBHxAFII03PbV5UM94uXk0o
+         +SzE/GJ6npDB26DOUnriQni6S15X6CjvtKf5lzkEgGBgWkVI+dsC02JYyKBZNTtam2CM
+         RgwQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790586042; x=1791190842;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=B4As3nxVg8g8B3dLip3XefSLbWFq/mZSzoIcZeIzSfg=;
+        b=bqa5Kj6BjKQv39gIaACTNHnTH0+TkfWwp4l5NEeavz3DGMU9YZeXB+2/Mf4YXXmwxV
+         ca2WfFyGUOsqwnfFxoXaGzMTGzlUyv35i/mB2vRCHusKDBso2mLtEj7iYHzOXRWohB6Q
+         7h0fKJDfql2QcgL0B7j2qfzHOwl2r5EyRGwgt4MOSDLUt0+8tGdk7F+YUUoPxCYqnasG
+         VjY4Q0UaGW9bqfUPcNcmz2aXKSwwnqQJWk3MMZ5m6NP53O6sq50qtevG1LvzuJSSi571
+         6xW+Jl9kU/nmZuLHp0Ot8B8Po8AvwgiwD5Arkqh5Zu6JMXqx9ZuxjIUtxTpTpNvJjU79
+         HXKg==
+X-Gm-Message-State: AFq9FYKxtL1yvjGtqe4RtPZZMwpcxvkbTXKeU/jR2KyioXfUPmGBSm9K
+	WOSixt0ddSjtHiRbbKzbOfvNKN3nBBIOB+3E31TcnNNWu6ohQsgZ/SeX
+X-Gm-Gg: AYBFou1oddwDWsN1e/0ztxcKeGvGq0UctZYSHEt8hXN0vPwt3tFgGCCJI+lpctFlo4v
+	k8KFAD1f/NR//TmXUCQbehtWz+zOAUTbfznUnlUzI2vHiR5uixCghMWKw5oy7BUzqadPC1mM1ci
+	HQ4Q68IoSZRdyssLZ7ul/Mt6BOG4jUNn16CTyCPzQCb6z+NZOh2nGoPynJIAxf6cjDGIVqqfLeW
+	lm7wnGpWkIPX9GD5GcLN15XtYVo/9Wg7FotgfKa2VPzscvM6h0T5gSYsbsxLpoFw+ZhbC2800bm
+	1/oLVnNRfXFYmhD1g3O2XDVl5lUQYD9RchRSw1tk118IlCtSUWyMkEESDNSezFw/+xfN7JRsW07
+	5talCBsIr2iqRENBXpli4ahCL5arf9wWx/MNVNQ2emTPAUua01JWs5pNKorImBux3haAcuqxU2c
+	F487aBIyuyAurBdbAnSnKlsTsbMysMgUIF9buhlagAWt3m459Tih6BCDv0DXmgiI+xFy64kUTcU
+	76kl2Hkby7T7Hwmn/vxWjGSLTyM
+X-Received: by 2002:a05:7300:8250:b0:342:94ae:98f8 with SMTP id 5a478bee46e88-34294ae9cd0mr9071212eec.33.1790586041380;
+        Mon, 28 Sep 2026 02:00:41 -0700 (PDT)
 Received: from homik.search.charter.net ([2603:8002:ad40:56f0:3430:2ac1:d99f:94d7])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-34144172de6sm43351473eec.9.2026.09.28.02.00.34
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-34144172de6sm43351473eec.9.2026.09.28.02.00.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Sep 2026 02:00:35 -0700 (PDT)
+        Mon, 28 Sep 2026 02:00:40 -0700 (PDT)
 From: Mariia Nikitash <nikitash.mariiaw@gmail.com>
 To: anil.gurumurthy@qlogic.com,
 	sudarsana.kalluru@qlogic.com,
@@ -69,10 +71,12 @@ Cc: linux-scsi@vger.kernel.org,
 	justinstitt@google.com,
 	codemender-patching+linux@google.com,
 	Mariia Nikitash <nikitash.mariiaw@gmail.com>
-Subject: [PATCH v2 0/2] scsi: bfa: Replace strlcat() in symbolic name construction
-Date: Mon, 28 Sep 2026 02:00:28 -0700
-Message-ID: <20260928090031.712418-1-nikitash.mariiaw@gmail.com>
+Subject: [PATCH v2 1/2] scsi: bfa: Use snprintf() in bfa_fcs_fabric_nsymb_init()
+Date: Mon, 28 Sep 2026 02:00:29 -0700
+Message-ID: <20260928090031.712418-2-nikitash.mariiaw@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260928090031.712418-1-nikitash.mariiaw@gmail.com>
+References: <20260928090031.712418-1-nikitash.mariiaw@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,32 +85,65 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series replaces the strlcat() uses in BFA symbolic name
-construction with snprintf().
+From: Bill Wendling <morbo@google.com>
 
-Patch 1 converts bfa_fcs_fabric_nsymb_init().
-Patch 2 converts bfa_fcs_fabric_psymb_init().
+bfa_fcs_fabric_nsymb_init() constructs the node symbolic name using
+strscpy() followed by five strlcat() calls and explicit NUL-termination.
 
+In preparation for removing the deprecated strlcat() API[1], replace the
+chained string copies with a single snprintf() call.
+
+Link: https://github.com/KSPP/linux/issues/370 [1]
+Cc: codemender-patching+linux@google.com
+Assisted-by: LLM
+Signed-off-by: Bill Wendling <morbo@google.com>
+Signed-off-by: Mariia Nikitash <nikitash.mariiaw@gmail.com>
 ---
+ drivers/scsi/bfa/bfa_fcs.c | 31 +++++++------------------------
+ 1 file changed, 7 insertions(+), 24 deletions(-)
 
-Changes since v1:
-- Split the BFA changes out of the original cross-subsystem series.
-- Patch 1: no code changes.
-- Patch 2: use a single snprintf() call for both host_os_patch cases
-  and drop the explicit final NUL assignment.
-
-Original series:
-https://lore.kernel.org/all/20260915081910.4142719-1-morbo@google.com/
-
-Original bfa_fcs_fabric_psymb_init() patch:
-https://lore.kernel.org/all/20260915081910.4142719-8-morbo@google.com/
-
-Bill Wendling (2):
-  scsi: bfa: Use snprintf() in bfa_fcs_fabric_nsymb_init()
-  scsi: bfa: Use snprintf() in bfa_fcs_fabric_psymb_init()
-
- drivers/scsi/bfa/bfa_fcs.c | 88 ++++++++------------------------------
- 1 file changed, 17 insertions(+), 71 deletions(-)
-
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index 9b57312f43f5..7a4e0e8c7182 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -821,30 +821,13 @@ bfa_fcs_fabric_nsymb_init(struct bfa_fcs_fabric_s *fabric)
+ 
+ 	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
+ 
+-	/* Model name/number */
+-	strscpy(port_cfg->node_sym_name.symname, model,
+-		BFA_SYMNAME_MAXLEN);
+-	strlcat(port_cfg->node_sym_name.symname,
+-			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
+-			BFA_SYMNAME_MAXLEN);
+-
+-	/* Driver Version */
+-	strlcat(port_cfg->node_sym_name.symname, (char *)driver_info->version,
+-		BFA_SYMNAME_MAXLEN);
+-	strlcat(port_cfg->node_sym_name.symname,
+-			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
+-			BFA_SYMNAME_MAXLEN);
+-
+-	/* Host machine name */
+-	strlcat(port_cfg->node_sym_name.symname,
+-		driver_info->host_machine_name,
+-		BFA_SYMNAME_MAXLEN);
+-	strlcat(port_cfg->node_sym_name.symname,
+-			BFA_FCS_PORT_SYMBNAME_SEPARATOR,
+-			BFA_SYMNAME_MAXLEN);
+-
+-	/* null terminate */
+-	port_cfg->node_sym_name.symname[BFA_SYMNAME_MAXLEN - 1] = 0;
++	/* Model name/number, Driver Version, Host machine name */
++	snprintf(port_cfg->node_sym_name.symname, BFA_SYMNAME_MAXLEN,
++		 "%s" BFA_FCS_PORT_SYMBNAME_SEPARATOR
++		 "%s" BFA_FCS_PORT_SYMBNAME_SEPARATOR
++		 "%s" BFA_FCS_PORT_SYMBNAME_SEPARATOR,
++		 model, (char *)driver_info->version,
++		 driver_info->host_machine_name);
+ }
+ 
+ /*
 -- 
 2.43.0
+
