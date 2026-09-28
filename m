@@ -1,36 +1,36 @@
-Received: from mta0.migadu.com (out-252.mta0.migadu.com [91.218.175.252])
+Received: from mta0.migadu.com (out-133.mta0.migadu.com [91.218.175.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9370E48665E
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 08:52:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.252
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4DBA4854F0
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 08:58:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790585537; cv=none; b=hlWoDzHXiFBzdoqckMLoYvDLNT5ySHl4hbLGIx4ZqXbl2/tAXRg8EnHvCX0jKZnWF+1xTN8bg9NpNXToe9f8UqaNeJs3fIyoy/8Zt4PXEWhQzFIasdMyoMpt7Gee3xFNJm6qT1qanc1LcgX3Vm6de5WRU1iPthsc30z27hVPfZE=
+	t=1790585936; cv=none; b=PvDGITu26GZ0hxgPXEMnAdBD87EZBaqAbPg//g5+CDxYOfBFsey/mjPglSA3j2P/lONxhRI4Jv6CMR1nQ19B3UVwvgV+a1n0PtaqGFE5mbzzK05cY1fNn2GMjXD38UPFCTwM/wF8WnLuuFzS6kCHwhiD9VbH1KhGDwtvA6DuCU0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790585537; c=relaxed/simple;
-	bh=4PSajfsQQKe3Vpi3dWcKVVNKFGRdlMRqvlycjNk5fmY=;
+	s=arc-20240116; t=1790585936; c=relaxed/simple;
+	bh=popaA2eJZE7q1shMgpb97Jp1klj3o6YeyNYJntzFVDU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tlcwaLP47l26eM9nSr1oBUHXLJ7x+NEUV3hT59tTPlWztutdNZfDJgdtBldMKVLgLuDE/Q413ZFReFHi3V5C59TAbm9HO86GzQhhwcWpaPsJD1/xXB1fNXx6knbAKFRe+X/HvjarihyHfjQWfDP3+kRaMIJfZFz5RloMOx4V8dI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fRVgYGIp; arc=none smtp.client-ip=91.218.175.252
+	 In-Reply-To:Content-Type; b=f3RX4Knsjs5oZqLsBGo7SOosNg29Cxn/BHVkC80JkNZaSgCZYHeBeYeBkQQ7N3sBITUh0hCSWHE7TR9knWu0NN2mzhG8A1ebtDGJvG2aSYIbu0bxN5gxB6Z+9YE8KzMuL+/9qvteT20N03Pm8FCMnI9iMLIR59YLGhmpbKKhXO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=onU3s6NJ; arc=none smtp.client-ip=91.218.175.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fRVgYGIp"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="onU3s6NJ"
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=4PSajfsQQKe3Vpi3dWcKVVNKFGRdlMRqvlycjNk5fmY=;
+DKIM-Signature: a=rsa-sha256; bh=popaA2eJZE7q1shMgpb97Jp1klj3o6YeyNYJntzFVDU=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790585533; v=1; x=1791190333;
- b=fRVgYGIpVDYNCxmFmmMM6Oj1y+suOV2yi+Xg0JWjIcRFgl6WDM/lVvZZjXtXFUL9wCMCgb/J
- xzKSITHsg0x9Aj2qH5/KwXtUKeMFAaoZOeOD6rHwo1j3JnKYT7YzY9Zf2J0/ncOqp36GXHiDfGv
- JJIeJye0t7vPCu9Wn9k5wP7w=
+ t=1790585932; v=1; x=1791190732;
+ b=onU3s6NJ9jxItxxb/10xlPSFWFaXTT+437ZknrEAYiOb7k8a+0HMOLZ5kyi0tjcMnAtwsqE5
+ /HwSorc4ubYDDMAZAtrJAeECJT426tzOdqGIP7c6zrpfIEb/Hn5lQGlAiRZ4rwYWr3YCSeCLH1a
+ ulj3+Crb6E76KNRiEpbqjvmk=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 2fee077ae45f3eec;
-	Mon, 28 Sep 2026 08:52:13 +0000
-X-Mizu-Trace-ID: 2fee077ae45f3eec
+Received: by mta10.migadu.com with ESMTPS id f4ad1df72025bc89;
+	Mon, 28 Sep 2026 08:58:52 +0000
+X-Mizu-Trace-ID: f4ad1df72025bc89
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <962b3eed-9721-4f7d-b6e6-bc942ba48820@linux.dev>
-Date: Mon, 28 Sep 2026 09:52:12 +0100
+Message-ID: <a7faf316-b2a0-4c82-98bd-157fe3187cc5@linux.dev>
+Date: Mon, 28 Sep 2026 09:58:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,61 +38,76 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 09/11] scsi: scsi_debug: Refuse a short WRITE ATOMIC
- (16) before writing it
-To: Niklas Cassel <cassel@kernel.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
- Damien Le Moal <dlemoal@kernel.org>
-References: <20260925071726.140915-13-cassel@kernel.org>
- <20260925071726.140915-22-cassel@kernel.org>
- <3fc3aab6-9eca-4d3e-81ea-92ee56de2af5@linux.dev> <argI11P7AhIlfKXa@ryzen>
+Subject: Re: [PATCH] scsi: core: Micro-optimize the hot path
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@kernel.org>
+References: <1ac0d4d0c06e55943e188d0dee9b6f2475715f21.1790359761.git.bvanassche@acm.org>
 Content-Language: en-US
 From: John Garry <john.garry@linux.dev>
-In-Reply-To: <argI11P7AhIlfKXa@ryzen>
+In-Reply-To: <1ac0d4d0c06e55943e188d0dee9b6f2475715f21.1790359761.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 9/26/26 19:03, Niklas Cassel wrote:
-> Hello John,
-> 
-> On Fri, Sep 25, 2026 at 10:30:11AM +0100, John Garry wrote:
->>> ---
->>> Tested with:
->>>
->>>     modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=128 \
->>>         atomic_wr=1 lbpu=1
->>>
->>> issuing a WRITE ATOMIC (16) of eight blocks through SG_IO with a buffer
->>> of four blocks of 0xaa. It fails with DID_ERROR before and after this
->>> patch, but before it the first four blocks read back as 0xaa afterwards,
->>> and after it all eight read back as they were. A WRITE ATOMIC (16) with
->>> a full buffer writes all eight blocks, as before.
->>>
->>
->> What is the command which you use?
-> 
-> SG_IO, with a CDB for eight blocks and a buffer of four:
-> sg_raw -s 2048 -i aa4 /dev/sdX 9c 00 00 00 00 00 00 00 00 40 00 00 00 08 00 00
-> 
-> 
->>
->> I am just wondering if this check should go into sd_setup_atomic_cmnd() or
->> somewhere else higher up. I mean, this check is not really specific to
->> scsi_debug, right?
-> 
-> sd can't produce a short atomic write: sd_setup_read_write_cmnd() derives
-> nr_blocks from blk_rq_sectors(), and the data buffer is the same request,
-> so the transfer length and the buffer always match.
-> 
-> A mismatch is only possible through SG_IO, where the caller supplies both.
-> 
-> SBC-6 4.28.2 puts the requirement on the device server: a failed atomic
-> write must leave the LBAs unaltered. scsi_debug is the device server here,
-> so I think this is the right place for it.
-> 
-OK, I think that the important information is "4.28.2 requires one that 
-cannot complete to leave the LBAs that it specifies unaltered", so maybe 
-add a small comment for that.
+On 9/25/26 19:09, Bart Van Assche wrote:
 
+nit: I think that the subject can be more specific, like "don't 
+unnecessarily init scmd->eh_entry"
+
+> Every code path that inserts scmd->eh_entry into a list uses
+> list_add_tail() (see also scsi_abort_command() and scsi_eh_scmd_add()).
+> list_add_tail() overwrites the next and prev pointers. Hence, the only
+> code that depends on the initialization of scmd->eh_entry is the
+> BUG_ON(!list_empty(&scmd->eh_entry)) statement in scsi_abort_command().
+> Remove this statement because scsi_timeout() already prevents
+> scsi_abort_command() from being called twice for the same command by
+> setting SCMD_STATE_COMPLETE. Remove the scmd->eh_entry initialization
+> because the only statement that relied on this initialization has been
+> removed.
+> 
+> Cc: John Garry <john.garry@linux.dev>
+> Cc: Hannes Reinecke <hare@kernel.org>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+
+Seems fine, so:
 Reviewed-by: John Garry <john.garry@linux.dev>
+
+> ---
+>   drivers/scsi/scsi_error.c | 1 -
+>   drivers/scsi/scsi_lib.c   | 3 ---
+>   2 files changed, 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 2e0b1909dc69..75442d60c30e 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -270,7 +270,6 @@ scsi_abort_command(struct scsi_cmnd *scmd)
+>   	spin_lock_irqsave(&shost->host_lock, flags);
+>   	if (shost->eh_deadline != -1 && !shost->last_reset)
+>   		shost->last_reset = jiffies;
+> -	BUG_ON(!list_empty(&scmd->eh_entry));
+>   	list_add_tail(&scmd->eh_entry, &shost->eh_abort_list);
+>   	spin_unlock_irqrestore(&shost->host_lock, flags);
+>   
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index db64470f5229..f695a6605815 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1322,7 +1322,6 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+>   	}
+>   
+>   	cmd->device = dev;
+> -	INIT_LIST_HEAD(&cmd->eh_entry);
+>   	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
+>   }
+>   
+> @@ -1590,8 +1589,6 @@ static void scsi_complete(struct request *rq)
+>   		return;
+>   	}
+>   
+> -	INIT_LIST_HEAD(&cmd->eh_entry);
+> -
+>   	atomic_inc(&cmd->device->iodone_cnt);
+>   	if (cmd->result)
+>   		atomic_inc(&cmd->device->ioerr_cnt);
+
