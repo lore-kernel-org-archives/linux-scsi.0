@@ -1,51 +1,69 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71F76547046;
-	Mon, 28 Sep 2026 05:12:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 706C3374A14
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 06:25:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790572344; cv=none; b=rCnfjjFgmIHt2TlDVKMlc7g+AXgIf4STenACVvLMz9rW6X9OhDyvZV23ejmxrqWRj/kOiRnll5e4n5oL1lD7m3jW6ij/qIC3i5tBlfozMW5bl26Re0YA02DO/lyvpSXOf90hnwbR4oSsll+8xsCSekHYnZrs+bolEyeJIv/BKCU=
+	t=1790576729; cv=none; b=JqpYZeOc1F7i8uWmAm7tHasHXCK4UkcPyDYCvDrDkW7SjUJr9/MqAbqZtLM0sZ+DzROKaIjD4a7eqcSSgncrsmrMX0VD/Il6Aly6EjQ8PFFiaS9jrlt8dc6WY8bcH4mOQObJ/hh2aaPJ+xjD8Lw2q5A3pBN4rrtToOUumDgP1PA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790572344; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eXPiHu0HvaPyRucXT6K/27dWrqZF0VXB2PFNJ4U4YJuHmbbXckAfWgXDHR6kPylstTQnlOtsh0JykWELXJzvXe2AnMhiP7ebTImhNM2ramcRhf+FlfazhimTpl0gJc/zE0Zn3mYhN41Y9zD3gPKuU8eJ6zDjYAxWC++VdxASjP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9607668B05; Mon, 28 Sep 2026 07:12:09 +0200 (CEST)
-Date: Mon, 28 Sep 2026 07:12:09 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Runyu Xiao <runyu.xiao@seu.edu.cn>
-Cc: Christoph Hellwig <hch@lst.de>, Breno Leitao <leitao@debian.org>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Keith Busch <kbusch@kernel.org>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	Lee Duncan <lduncan@suse.com>, Hannes Reinecke <hare@suse.com>,
-	Nicholas Bellinger <nab@linux-iscsi.org>,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: Re: [PATCH v7 0/4] nvmet: avoid recursive configfs open
-Message-ID: <20260928051209.GB18753@lst.de>
-References: <20260927082011.638723-1-runyu.xiao@seu.edu.cn>
+	s=arc-20240116; t=1790576729; c=relaxed/simple;
+	bh=TMvRzD8ctcZZmISDPutNliMcQgceaKSIsuisJBG6eoM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BA176k3++rwZaiGRz8d1ZL1UDC5MXQtpbNfqWx3XrwZXTsvJwJwArXQD+t3F76kb1Vuo0ZV1/YlSekD4By8XF1xDZyx/1ouHZJsagtfZatTh3fRGwHVWzFMAneFoYAS71aMi36aCnj5Mtv0ql61de3jFRtZiigU8cFfoRd2sKQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h9wOf28D; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h9wOf28D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA0181F000FF;
+	Mon, 28 Sep 2026 06:25:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790576728;
+	bh=R7D/aeI1MkN373MeoIvM6NE0VGLjyiKwcH5C6fn7zgQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=h9wOf28DQW9QqWYqgCR9io9KJrKY6aAw8H0NBKLTZx27lH4UF2rqF6YyfGOJ2EIVm
+	 vDHrHm6jgMCCipK+EBdU0gBWd7wpNBVBbIiKv4RuuXiSD5DUKE+0fRTeJPHco0eEHL
+	 tliQt+rYeDHDf9NIIaZB6bmoe3xPG8vjQCISedohK5fzLRPOshkByL5R5B3HpCzOUn
+	 Wy+2TCEJ204sGz5Yi8YeTbJF5b3SHZbq5XgFB/Y+9UNl8aJE6K2TUIUhdd27MgcxXL
+	 dlfoLy1c0NhuuxO1Wl5rj+tJeil87A7VQoMyxegwaFwyJGvsSivShEdi0UfpZKspiM
+	 51UlnRD1GFq0A==
+Message-ID: <cc4e69bc-38ec-42d8-94d1-b3e56db52bec@kernel.org>
+Date: Mon, 28 Sep 2026 08:25:25 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260927082011.638723-1-runyu.xiao@seu.edu.cn>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: core: Fix scsi_done() documentation
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@linux.dev>,
+ Hannes Reinecke <hare@kernel.org>, Jonathan Corbet <corbet@lwn.net>
+References: <9d10e1068d75c1a708b3a56e85782d651411fe06.1790359673.git.bvanassche@acm.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <9d10e1068d75c1a708b3a56e85782d651411fe06.1790359673.git.bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Looks good:
+On 2026/09/25 20:08, Bart Van Assche wrote:
+> Commit 11b68e36b167 ("scsi: core: Call scsi_done directly") changed
+> scsi_done from a function pointer member into a regular function.
+> 
+> Replace all references to the scsi_done function pointer member
+> with references to the scsi_done() function.
+> 
+> Cc: John Garry <john.garry@linux.dev>
+> Cc: Hannes Reinecke <hare@kernel.org>
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: Jonathan Corbet <corbet@lwn.net>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
+
+-- 
+Damien Le Moal
+Western Digital Research
