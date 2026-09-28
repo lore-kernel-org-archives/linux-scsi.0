@@ -1,146 +1,203 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej2-f43.google.com (mail-ej2-f43.google.com [74.125.228.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C50B439F83
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 16:52:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790614375; cv=none; b=opH7Tg1bPaKbb1FeGZuohxRe2Lt0C71RGyT42eku9812kUmFtscq9UA/pgWU31HDrJb78WrHnvH9WYonh/ZC5vTVOAXowvQ41TFPAkOa5n8tU8UKDXCEfhYybFPkkQwMO3fKWS0xByytklmmXsBIQQwEaTBzof/dVO27mKhHt8M=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790614375; c=relaxed/simple;
-	bh=OzTmZmDs9YIyQS/MKM1e1ti3elTfYopzAfjynKR5Jfc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hIxSb1rvxLCrC2ekU6tOmgEQvoAmH6JIb5rg1bA2SBoy1SDPLR0uUkC9wW6NXDJAwqXqQRB74iuxB5nvC34jEayYnP/VXCpEjU7HtjkAAyl6ANvn8WzF5gopgt5/lHiXsb86pGR44jQec/LTKitjQU75ySEBjaYTA7gVLZ/JQHI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cKn86GC/; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34C634F0537
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 17:13:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.171
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790615621; cv=pass; b=b5c5wO5ViI6cYVRG0YUAetG7B1K7bH046QZ0JeCC7os+oceBbozHA65ZV0napmTsJKuDL9CNThSSItC9SULdrnzvel4fQYje/FNfIiiwiVo7UCTNuhkFWQPKLOIRXHCoUGas/ozcN8xF6J3YxKOmW4HFBsRmgDwlLdl2NwHDpfY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790615621; c=relaxed/simple;
+	bh=gmc7Pc0metHyIRWYyxOLtpRi0OKsTB8KcyEk2TkyMaY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=c4jBDYZyxH4c5krTAnzj5Ox/o9bHNZ104xtE66/ec33EkMWDSi4/xhzYSvi8YF3yhhAac9yTfCYYRN5i8AAwDE7DvlJECNoe0ENtyNmUcwUhzcDNhKHYmcti/IvwuyBM2nwOdkaRE24uFIBVRwCV/6zzXLHzKG3DJYkqyDeZc5M=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=flHk9qMx; arc=pass smtp.client-ip=74.125.228.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cKn86GC/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0FFE1F000FF;
-	Mon, 28 Sep 2026 16:52:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790614374;
-	bh=CsCWbMhQ3gPaqEGzNZKJEYml9Y3yIjYDN3a7vN7SGNs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cKn86GC/eiMxYQ/ivYZ08fE24svPbVEDuQSO07XCoYPG7ZDrRodGARHprAxLPSple
-	 VEezcor+I4IgXO5jIPgznLEeOCLOr8AoPtwqD2/5x7TE2dIYKYhnAH1IbxKxO+VpZZ
-	 gyp5AwUcLVBVMdLn1WR4C+QPa3VpsRASLmud5iTSm+HA+zO5HEJ9/ULo24mV9K358H
-	 t1mSDduI1t9s30EovSUE2SOr5BseElEkTf9NkVF1PTqMvgaGN3XEUApqi98HxJl4tj
-	 93bIMzdBybx+L//OlaUJLtUaV0r4w8BJcBqgpmiy1WSVAMDWvMgP4usUvlG1jZnlAx
-	 9s1det4iFmB4Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/1] scsi: lpfc: defer SCSI rport node put until
- devloss callback
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Dai Ngo" <dai.ngo@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260928163433.2086184-1-dai.ngo@oracle.com>
-References: <20260928163433.2086184-1-dai.ngo@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 16:52:53 +0000
-Message-Id: <20260928165253.C0FFE1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="flHk9qMx"
+Received: by mail-ej2-f43.google.com with SMTP id a640c23a62f3a-c2af43c5b0cso402997966b.1
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 10:13:39 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1790615618; cv=none;
+        d=google.com; s=arc-20260327;
+        b=DUhcJcZJFHy9P9z2wEU8wGY0M4eWWVOPJziZh8ubQM0QtSB68f6GdLmSt2WmuK4uLX
+         E98zl3P6gla7bEX7V8wUGzPf8c0zsxJzaxGxFgmtL5/ccUIK+b/1n4eKPD8fCkOsQbX7
+         8KrdK6nSP/4L9edoAaG18hf9rZx4n7yHRZ3EQUoHKA0S8PTFzvcNhM13o6Xsddw7yV8O
+         r/1WRcatDsh1IgcLl7ntvkVtlEOIYLrvcUXOC6FmgcphC1Las0sR43o0z+QaEHK2fZd9
+         GZx4SMoVpnw80/ixTges1v+DmYIExMYCOLwWJ0S5LtPw9wHaOs9Ge2UxJWnZp0NwV6rl
+         sGZA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=q5c/Mh1KIdWOYND7CZ3pWQaMV70vYz5Z5e9OrbANVNM=;
+        fh=EmhP1HCqta23iwc1un51CtNb/ZNNmxToI7M4twW/mzk=;
+        b=pmuJ48LI5IVqfQ9CJLc4+TD3lDZIdnEe51Chv1dv1KoxdxS1wulDYOA/sIz9QNoUMW
+         YTP0KyaNkfr7Bbn74X564LdD8FMCUECcA2udPJvC3vuO+JcUw+hQR1YZZAOOMjP+Zybn
+         fFzQHbclinOZXau7klQSDloImjD8c1VIrtEaYNQ2CO8jQLv1jfrLDqz3XMxticUTGDvl
+         LM1lSMXro4N83Q7/aeA5DsrJNC3EAWX4dFIPiOnx9zqB6htIZY1sKtFPtD7GAZfUUlO4
+         YEbmI+EiBlel+TjiPacFWXZdlcQbCGyEKs4ooxrUP6U16kxxBftk7WBdzVgsNJMPmD6/
+         Oqtw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1790615618; x=1791220418; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=q5c/Mh1KIdWOYND7CZ3pWQaMV70vYz5Z5e9OrbANVNM=;
+        b=flHk9qMxws8BpGNxe99yBwCyCt0iJ3t7a+XwpghsDjRy/ChGrUq3GFyRhegg0jb8YP
+         bffYhKvJTRFqGvkvTeV8W/nYp+N0IWd7Ex6fb06vSwaexFcsmkSEfDwWKOp3Gn9vfZvZ
+         cnAZ1KxsS3WxZP7MSv0A/bwnAKw6zgd9jmf4Uc2FW7U85zO4lqGZt2aKGRZm9p+gSMwS
+         373LgPXWI1zXqotQ44BksJslJ0ECj8//Ux9qQPDSQ+jQWD7UhiOtWZhSpRVH2CCialVl
+         XrGegC7phKS9rE9Gfv9xlCa60nS2leR+0cOXgh8ZkXW5ezc8jfGjU7vM9X0cHgJdikc5
+         Vqcg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790615618; x=1791220418;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=q5c/Mh1KIdWOYND7CZ3pWQaMV70vYz5Z5e9OrbANVNM=;
+        b=zLnoIyn7fiQW1ikZ0mcQ1u8u7fFjGBMeuzt09J21D7TkhQ7Wx9A3QhUEdBf0+Wfa5v
+         tMXLEbh7gO67DwXM1syElGpXcIaJaVtZMSi89QkWdFsOlvLmxQSdtHFBqXU1WouJ90jX
+         hl+SkusVK2ZM4O3Zheva4V5r0uLZkhoUbqh0mSzj5vo4VGODvnrL5RT9IafbxeOzRvXj
+         sBjZqvE5hAV53WodqzyhPDbwy6743XBYBaWQ9w5RXm2DCNgf9WFyJj92+ctWEaq5cOTJ
+         RVJhTyG5bQwGEKjxXqZYCmMjW1DBnwLprkIQwSsft6m4ZC6G5dryKnQPtupvPlh8yd8u
+         +Q0Q==
+X-Gm-Message-State: AFuF++n3cHtSad5jl/db5Ma4oOXRMupf4Dv7zxFeNiUoQrVYVqJ4E97/
+	p6hGwVSEvNArZpVd4NtJjDZeZUcEath7TZJPTQEmAzAjv0bbqyn64n1S6VjcngXD/eJUAFTArii
+	1l2x+03zY2d2pzX2rHTRvvYSEwmS5HRxv1K/S
+X-Gm-Gg: AYBFou0exbJWCDhsJPnWZ2ZYx4bMQC3WjFXdtpIN4qdY4WFYJ/Fisti5pXvNF1/yvlC
+	w6kehGmBTzChm1bOEpnafT2DJqxbFfxCl+E2+nJECd49JmbeBjTJkd6BFOJDVW4xH8wuzVdmB8Y
+	m+8ma01KUFRrcPiZgKBiPezJFKF7+yGK/4Maprl2drhkFzDrVRiON4x+7su0YChjqU0iNH3zpQX
+	C2ZqrID35Uzzrdak0dmE/sW7DHz0o4W0LbRFELseHJY5nGpN78e79F3rSdIOBEqJ1bhEMrVIJiK
+	T4rWm32Nd/yXPxjWA4mar1L/oAWfbeTuifCHDFPq/Q1yJ0TA2RNgKx2w
+X-Received: by 2002:a17:907:c60d:20b0:c2d:b9b4:f4d1 with SMTP id
+ a640c23a62f3a-c2db9b4f61bmr347612266b.6.1790615618145; Mon, 28 Sep 2026
+ 10:13:38 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260917222015.61053-1-nkirkland2304@gmail.com> <CACnqm79AfmdHbJZ-hDNsrbeDBXVBuq2A8uwdPKzKu+W7YzrJDg@mail.gmail.com>
+In-Reply-To: <CACnqm79AfmdHbJZ-hDNsrbeDBXVBuq2A8uwdPKzKu+W7YzrJDg@mail.gmail.com>
+From: Nigel Kirkland <nkirkland2304@gmail.com>
+Date: Mon, 28 Sep 2026 10:13:23 -0700
+X-Gm-Features: AclHuK8V62zx36PwIWGl-BgbKMrirYwLnGoCHDJTitYVnon-txvDDFPZ_w4EhsE
+Message-ID: <CACnqm7_grKUi9sq4a+p3ODYSqqboZGHYtxSmXzjOzNEwoqnBLw@mail.gmail.com>
+Subject: Re: [PATCH v4 00/14] Update lpfc to revision 15.0.0.1
+To: linux-scsi@vger.kernel.org, nigel.kirkland@broadcom.com
+Cc: paul.ely@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] lpfc: memory leak of lpfc_nodelist on rport reconnect or early ret=
-urn
---
+On Sat, Sep 19, 2026 at 12:45=E2=80=AFAM Nigel Kirkland <nkirkland2304@gmai=
+l.com> wrote:
+>
+> On Thu, Sep 17, 2026 at 2:57=E2=80=AFPM Nigel Kirkland <nkirkland2304@gma=
+il.com> wrote:
+> >
+> > Update lpfc to revision 15.0.0.1
+> >
+> > This patch set contains bug fixes related to cleanup handling in both
+> > normal and error paths, discovery rework for large SAN configurations, =
+and
+> > refactoring of duplicate code.
+> >
+> > The patches were cut against Martin's 7.4/scsi-queue tree.
+> >
+> > Nigel Kirkland (14):
+> >   lpfc: Fix use-after-free in lpfc_cmpl_ct_cmd_vmid
+> >   lpfc: Early return out of lpfc_els_abort when HBA_SETUP flag is not s=
+et
+> >   lpfc: Fix kernel oops when unmapping scsi dma buffers for an aborted =
+cmd
+> >   lpfc: Check fc4_xpt_flags before decrementing ndlp kref on FDISC erro=
+r
+> >   lpfc: Add handling for when PLOGI or PRLI is dropped during link fail=
+ure
+> >   lpfc: Fix ndlp use-after-free during repeated RSCN and rediscovery se=
+quence
+> >   lpfc: Rework I/O flush ordering when unloading driver
+> >   lpfc: Improve PLOGI retry handling for large SAN configurations
+> >   lpfc: Send inhibited ABORT_WQE when PLOGI CQE SEQUENCE_TMO is receive=
+d
+> >   lpfc: Remove slowpath cqe process limiter in slow ring event handler
+> >   lpfc: Put iocbq on phba->txq when ELS WQ is full or ELS SGL unavailab=
+le
+> >   lpfc: Update ELS ACC logging for diagnostic troubleshooting
+> >   lpfc: Refactor calls on fc_disctmo to lpfc_set_disctmo in RSCN handle=
+r
+> >   lpfc: Update lpfc version to 15.0.0.1
+> >
+>
+> Preliminary response regarding Sashiko findings.
+>
+> Patch #6: Sashiko pointed out 2 [high] issues that appear valid in
+> theory, but appear
+> highly improbably in the real world. We are reviewing these findings
+> and whether to
+> address in a v5 drop or a future patch set.
+>
+> Patch #8: Sashiko pointed out 1 [medium] and 1 [high] issue. We are
+> evaluating if
+> these are a real concern.
+>
+> Patch #9: Sashiko pointed out 2 [high] issues. We are evaluating if
+> these are a real
+> concern.
+>
+> Patch #10: Sashiko pointed out 1 [high] issue. Whilst valid in theory,
+> the patch eliminates
+> a real world "silent-drop/delayed-reschedule" bug. Removal of the
+> maximum processing
+> count does introduce a theoretical concern in the event of a sustained
+> flood of slow
+> path CQEs. However, the original issue that prompted addition of the
+> processing limit was
+> related to loopback testing. Loopback processing was subsequently
+> moved away from the
+> slow path, eliminating that as a producer. Removal of the processing
+> limit was overlooked at
+> that time.
+>
+> Patch #11: Sashiko pointed out 1 [medium] issue. We are reviewing
+> these findings to
+> determine whether this should be addressed in a v5 patch set.
+>
+> Patch #12: Sashiko pointed out 1 [high] theoretical concern, but in
+> our analysis the race is
+> unlikely. If seen, the worst case outcome appears to be reporting of
+> an incorrect cmd code
+> value in log message 1027.  Closing this theoretical window is
+> something we plan to address
+> in a future patch set.
+>
+> In summary: Analysis of the findings is ongoing with a complete
+> response anticipated
+> in a few days.
+>
 
-commit 55116da6dbf444daa1282aba1d53431f3bfd853f
-Author: Dai Ngo <dai.ngo@oracle.com>
-Date:   Mon Sep 28 16:31:48 2026 +0000
+Out of an abundance of caution, we will be submitting a v5 patch set.
 
-scsi: lpfc: defer SCSI rport node put until devloss callback
-
-This commit defers dropping the SCSI rport node reference in the lpfc driver
-until the devloss callback detaches it. It removes the immediate reference =
-drop
-after fc_remote_port_delete() to prevent use-after-free conditions.
-
-> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hb=
-adisc.c
-> index 4c673dffa671b..7a6f80ca92746 100644
-> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-
-[ ... ]
-
-> @@ -271,6 +272,7 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
->  	 * rport. Remove the association between rport and ndlp.
->  	 */
->  	ndlp->fc4_xpt_flags &=3D ~SCSI_XPT_REGD;
-> +	drop_scsi_node_ref =3D true;
->  	((struct lpfc_rport_data *)rport->dd_data)->pnode =3D NULL;
->  	ndlp->rport =3D NULL;
->  	spin_unlock_irqrestore(&ndlp->lock, iflags);
-
-[Severity: High]
-This is a pre-existing issue, but by not reaching this cleanup block on ear=
-ly
-returns, could we leave a dangling pointer?
-
-If lpfc_dev_loss_tmo_callbk() exits early, such as when ndlp->nlp_state is
-NLP_STE_MAPPED_NODE or a dev_loss_evt is already pending, it bypasses clear=
-ing
-the SCSI_XPT_REGD flag and ndlp->rport.
-
-When the SCSI transport later deletes and frees the fc_rport, wouldn't
-ndlp->rport be left dangling? Then, if lpfc_nlp_unreg_node() is called:
-
-lpfc_nlp_unreg_node() {
-    ...
-    if (ndlp->rport &&
-        ndlp->fc4_xpt_flags & SCSI_XPT_REGD) {
-        vport->phba->nport_event_cnt++;
-        lpfc_unregister_remote_port(ndlp);
-    ...
-}
-
-Will it pass the freed rport to fc_remote_port_delete() and cause a
-use-after-free?
-
-[ ... ]
-
-> @@ -4577,7 +4583,6 @@ lpfc_unregister_remote_port(struct lpfc_nodelist *n=
-dlp)
->  			 kref_read(&ndlp->kref));
-> =20
->  	fc_remote_port_delete(rport);
-> -	lpfc_nlp_put(ndlp);
->  }
-> =20
->  static void
-
-[Severity: High]
-By deferring this cleanup to lpfc_dev_loss_tmo_callbk(), could we leak the
-node reference?
-
-If the remote port reconnects before the dev_loss_tmo expires, the SCSI
-transport calls fc_remote_port_add(), which cancels the pending
-dev_loss_work timer and bypasses the devloss callback. It then clears
-rport->dd_data.
-
-When lpfc_register_remote_port() executes, it will overwrite rdata->pnode
-with a new lpfc_nlp_get(ndlp) reference, permanently leaking the original
-node reference.
-
-Also, what happens if lpfc_dev_loss_tmo_callbk() does run but takes an early
-return?
-
-lpfc_dev_loss_tmo_callbk() {
-    ...
-    if (ndlp->nlp_state =3D=3D NLP_STE_MAPPED_NODE)
-        return;
-    ...
-}
-
-Does this skip the newly deferred lpfc_nlp_put() cleanup, resulting in the
-same leak of the node reference?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928163433.2086=
-184-1-dai.ngo@oracle.com?part=3D1
+>
+> >  drivers/scsi/lpfc/lpfc_bsg.c       |   7 +-
+> >  drivers/scsi/lpfc/lpfc_crtn.h      |  12 +-
+> >  drivers/scsi/lpfc/lpfc_ct.c        |  23 +-
+> >  drivers/scsi/lpfc/lpfc_disc.h      |   5 +-
+> >  drivers/scsi/lpfc/lpfc_els.c       | 503 ++++++++++++++++++++++-------
+> >  drivers/scsi/lpfc/lpfc_hbadisc.c   | 130 ++++----
+> >  drivers/scsi/lpfc/lpfc_init.c      |  21 +-
+> >  drivers/scsi/lpfc/lpfc_nportdisc.c | 100 +++++-
+> >  drivers/scsi/lpfc/lpfc_nvme.c      |   2 +-
+> >  drivers/scsi/lpfc/lpfc_scsi.c      |   2 +-
+> >  drivers/scsi/lpfc/lpfc_sli.c       | 227 ++++++++++---
+> >  drivers/scsi/lpfc/lpfc_sli.h       |  18 ++
+> >  drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+> >  13 files changed, 812 insertions(+), 240 deletions(-)
+> >
+> > --
+> > 2.38.0
+> >
