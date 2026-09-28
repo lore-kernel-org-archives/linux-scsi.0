@@ -1,113 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from outbound.easymail.ca (outbound.easymail.ca [64.68.200.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B1BD36A37B
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 18:19:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65F8937AA9C
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 18:55:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.68.200.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790619552; cv=none; b=tL9Zmfla5XlQZkGeifBpJohLUtNs1n8u6DwDE8Uc2bndlELbPX6xs0KvJX6KrLXdtjV4+EqoDGgUUFc9s5OSTMCO8opu9O7B71zaJ5eH+BQJu4XXdV5f+3WAuzVPxvgv4nG5QXP/jiWyZ+hxZJHz/8ylmHF9FU7ylUsM9SCE6v8=
+	t=1790621730; cv=none; b=CrPMQmHShHUYRpirBXHqEPvCqxieMdEYH7qpQUy7u4a0/dlD4VgKM5iJHRZtf2qEIFgPphvD/8gl3UjfixZeRTMOMKsdUYxR7cQsEhzXDcikbdS/zJs9K8FHSR5B+VATpT2EqCUNQHpr2Z53zk7E4RB1Do01F0PXur/TLkOYUZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790619552; c=relaxed/simple;
-	bh=M/i3Ds4NATKR+ryE2ZEqp6abBIbMgc/2eKbR9e9qqi0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Th5fioMpEgSXvCtbIvJUQt3ibhzi1NFGAVpXkkpb4eEi0k8GjYHa8GvwV3C3S6vi+Rby+gjj/9b208FAJfuWleYX/yPmiTCsBmfOAoqHJGAEfDmjZkxaIQz+t7NkUuzyUrBKTuHKu2VbsQemx5OQ8xb0ykq+Uctnimu726xsAS0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BUWz+CXe; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790621730; c=relaxed/simple;
+	bh=coENoMSuIkzsez6ygxHJ5CQyS7ug4CU+Z0oRPxhCyu8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o6HXPLdJGB9FMEz7SFNYJll+sj7zSun7/rpjTZRXrfEZCrtH8IgULM2kAur0pOm4c/6QVWYOVO8cuBt8vdfkpFH2nhhP622dgetd5aM7yIPfw6N0GgZNBdyvZt/m4UocU4fsGtJUTrFZwZmi7DlkPW9uOO8OXnDeRJyKALmorC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gonehiking.org; spf=pass smtp.mailfrom=gonehiking.org; dkim=pass (2048-bit key) header.d=gonehiking.org header.i=@gonehiking.org header.b=GtHtDvSi; dkim=pass (2048-bit key) header.d=gonehiking.org header.i=@gonehiking.org header.b=GtHtDvSi; arc=none smtp.client-ip=64.68.200.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gonehiking.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gonehiking.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BUWz+CXe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B127C1F000FF;
-	Mon, 28 Sep 2026 18:19:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790619550;
-	bh=yM1GUFuofJM+596vtUb3T6DX22dO/TARyDLH9zMUQO0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BUWz+CXe4Q1nIwYfjUeSOMX8K6J4IigNYahe1S8bKES5lKtCGQ2rNqUcCFOqg9Ipk
-	 rM+nutXmemmGOsaXx2Q79DQX91KsInvJnfT6etuW4UsbY57Z1aQtADW/GI01dvc7IL
-	 8j6vPejg29ysda/19m8sbpX+p1IOr8T1P3T6j6VOD2g6bDJImpoerULYRVUVqW9wYV
-	 aN0q2c5B2Fozu351vZB2fiOUZbXoUR7lUgYwZCghB7kaB8DJZWS4l5SetpaK430AEE
-	 CFI4+ha4WyWXZ70O5A385pt/SbrlO24fz1/h0GgSxLauhxW7dI76D+B6Ot/48Z6g51
-	 8g3QkVyWvIhkA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 04/10] lpfc: Check fc4_xpt_flags before decrementing
- ndlp kref on FDISC error
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nigel Kirkland" <nkirkland2304@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260928181757.21959-5-nkirkland2304@gmail.com>
-References: <20260928181757.21959-1-nkirkland2304@gmail.com>
- <20260928181757.21959-5-nkirkland2304@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 28 Sep 2026 18:19:10 +0000
-Message-Id: <20260928181910.B127C1F000FF@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gonehiking.org header.i=@gonehiking.org header.b="GtHtDvSi";
+	dkim=pass (2048-bit key) header.d=gonehiking.org header.i=@gonehiking.org header.b="GtHtDvSi"
+Received: from mailout.easymail.ca (pco.easydns.net [64.68.203.197])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by outbound.easymail.ca (Postfix) with ESMTPS id BC12320B78;
+	Mon, 28 Sep 2026 18:55:21 +0000 (UTC)
+Received: from localhost (localhost [127.0.0.1])
+	by mailout.easymail.ca (Postfix) with ESMTP id A969061139;
+	Mon, 28 Sep 2026 18:55:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gonehiking.org;
+	s=easymail; t=1790621721;
+	bh=i984+zcrJMYqsZIQ8iNcwpvF9rDs4VvR74KKi7j0tF0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GtHtDvSiMQ/SIdNWQvENjY1v1h3d80A6dEjaie3TSXpRlLw2BJalT/I/l35gY9Y0U
+	 NMvGX8TzhuviuSV7Bu5dcAaka4DVz0fsmWMn7NAjOy7am+fAjXOTphTl5frcNtycZv
+	 P4ftxUPiOSq6CKq2vk9TxK4tksbiEspAaB0xv+jnlxE1PtpxYpzfkSNC76ZLYL8x0L
+	 00HOsw13X3QIxy5vk908qkQi7GX6ph8YRIg7+s2ydKr22GpnwBE+8s/myA5eT8E4VI
+	 o9IfOjfmA2e6NjaKVSlGgozb7RfrFVdiuc+l9irkR9kx5l/VaEGGFqGVZYoUOOJ7a3
+	 TmObgtvW/z4Tg==
+X-Virus-Scanned: Debian amavisd-new at emo07-pco.easydns.vpn
+Received: from mailout.easymail.ca ([127.0.0.1])
+	by localhost (emo07-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id RIPSYKjxtIMO; Mon, 28 Sep 2026 18:55:21 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by mailout.easymail.ca (Postfix) with ESMTPSA
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gonehiking.org;
+	s=easymail; t=1790621721;
+	bh=i984+zcrJMYqsZIQ8iNcwpvF9rDs4VvR74KKi7j0tF0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GtHtDvSiMQ/SIdNWQvENjY1v1h3d80A6dEjaie3TSXpRlLw2BJalT/I/l35gY9Y0U
+	 NMvGX8TzhuviuSV7Bu5dcAaka4DVz0fsmWMn7NAjOy7am+fAjXOTphTl5frcNtycZv
+	 P4ftxUPiOSq6CKq2vk9TxK4tksbiEspAaB0xv+jnlxE1PtpxYpzfkSNC76ZLYL8x0L
+	 00HOsw13X3QIxy5vk908qkQi7GX6ph8YRIg7+s2ydKr22GpnwBE+8s/myA5eT8E4VI
+	 o9IfOjfmA2e6NjaKVSlGgozb7RfrFVdiuc+l9irkR9kx5l/VaEGGFqGVZYoUOOJ7a3
+	 TmObgtvW/z4Tg==
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by mailout.easymail.ca (Postfix) with ESMTPSA
+Received: by rhapsody (Postfix, from userid 1000)
+	id 9718E1E05BB; Mon, 28 Sep 2026 12:55:20 -0600 (MDT)
+Date: Mon, 28 Sep 2026 12:55:20 -0600
+From: Khalid Aziz <khalid@gonehiking.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
+Subject: Re: [PATCH v4 04/54] scsi: BusLogic: Pass the host pointer directly
+ to several functions
+Message-ID: <arq4GHK0OLyusPBh@gonehiking.org>
+References: <cover.1790360262.git.bvanassche@acm.org>
+ <09e99ec9c6fa24ee5fe3c47110c88a1be076e01a.1790360262.git.bvanassche@acm.org>
+ <argk3DLMl_YSDOsV@gonehiking.org>
+ <97ab2119-2067-4c6c-9edf-286666f94e40@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <97ab2119-2067-4c6c-9edf-286666f94e40@acm.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] lpfc: TOCTOU race in lpfc_cmpl_els_fdisc() leads to Use-After-Free
+On Mon, Sep 28, 2026 at 10:41:38AM -0700, Bart Van Assche wrote:
+> On 9/26/26 1:02 PM, Khalid Aziz wrote:
+> > On Fri, Sep 25, 2026 at 11:25:42AM -0700, Bart Van Assche wrote:
+> > > -static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
+> > > +static enum scsi_qc_status blogic_qcmd_lck(struct Scsi_Host *shost, struct scsi_cmnd *command)
+> > 
+> > Buslogic.c defines blogic_qcmd() usind "DEF_SCSI_QCMD(blogic_qcmd)" which in turn will call
+> > blogic_qcmd_lck() with just struct *scsi_cmd as a single parameter as defined in
+> > include/scsi/scsi_host.h. I did not see an update to DEF_SCSI_QCMD in patches 1-3. With this
+> > change, callers are not being updated and that will not work. Can you double check this?
+> 
+> [ ... ]
+> 
+> > > -static DEF_SCSI_QCMD(blogic_qcmd)
+> > > +static enum scsi_qc_status blogic_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+> > > +{
+> > > +	enum scsi_qc_status rc;
+> > > +
+> > > +	spin_lock_irq(&shost->host_lock);
+> > > +	rc = blogic_qcmd_lck(shost, cmd);
+> > > +	spin_unlock_irq(&shost->host_lock);
+> > > +	return rc;
+> > > +}
+> Hi Khalid,
+> 
+> Please take a look at the above changes. It seems like these have been
+> overlooked.
+
+Yes, that change does modify caller. I prefer not to pull in macro definitions from
+header files into the driver code. This opens up possibility for API inconsistencies if the
+macro in header file is ever updated. Why not extract struct *scsi_host in blogic_qcmd_lck() from
+struct *scsi_cmd instead and continue to use DEF_SCSI_QCMD()?
+
 --
-
-commit 46ec54ed5cbeb514e9e9362594a41ca2f9b3aa3d
-Author: Nigel Kirkland <nkirkland2304@gmail.com>
-
-lpfc: Check fc4_xpt_flags before decrementing ndlp kref on FDISC error
-
-The current initial kref count drop logic for an ndlp that fails FDISC
-assumes that the ndlp has never registered with transport layer and thus
-the lpfc_dev_loss_tmo_callbk never called.  However, a failed FDISC can
-occur after a successful transport layer registration too.  So,
-lpfc_dev_loss_tmo_callbk can occur and there is a potential use-after-free
-on the ndlp.
-
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 6f6394a0047c2..45aad4cd2dc80 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-[ ... ]
-> @@ -11427,11 +11426,22 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phba, stru=
-ct lpfc_iocbq *cmdiocb,
-[ ... ]
-> -		/* drop initial reference */
-> -		if (!test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag))
-> +		/* If have not previously registered with transport layer and no
-> +		 * LPFC_EVT_DEV_LOSS work pending, then drop initial reference.
-> +		 * Otherwise, let the dev_loss_tmo_callbk drop the initial
-> +		 * reference.
-> +		 */
-> +		if (!(ndlp->fc4_xpt_flags & (SCSI_XPT_REGD | NVME_XPT_REGD)) &&
-> +		    !test_bit(NLP_IN_DEV_LOSS, &ndlp->nlp_flag) &&
-> +		    !test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag))
->  			lpfc_nlp_put(ndlp);
-
-[Severity: High]
-Does this lockless check introduce a time-of-check to time-of-use race
-condition that could lead to a use-after-free?
-
-If an FDISC error occurs concurrently with a devloss timeout for the same
-ndlp, lpfc_dev_loss_tmo_callbk() could execute on another CPU:
-
-CPU1 in lpfc_dev_loss_tmo_callbk():
-    set_bit(NLP_IN_DEV_LOSS, &ndlp->nlp_flag);
-
-    spin_lock_irqsave(&ndlp->lock, iflags);
-    /* ... */
-    ndlp->fc4_xpt_flags &=3D ~SCSI_XPT_REGD;
-
-Because set_bit() lacks a full memory barrier and spin_lock() provides only
-an ACQUIRE barrier, could the clearing of SCSI_XPT_REGD become visible to
-CPU2 before NLP_IN_DEV_LOSS is seen?
-
-If CPU2 is executing this new check in lpfc_cmpl_els_fdisc() locklessly and
-without read barriers, it might see both SCSI_XPT_REGD =3D=3D 0 and
-NLP_IN_DEV_LOSS =3D=3D 0.
-
-Could this cause CPU2 to erroneously evaluate the condition as true, execute
-lpfc_nlp_put(ndlp), and prematurely drop the initial reference, leading to a
-use-after-free when CPU1 later tries to use the ndlp pointer?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928181757.2195=
-9-1-nkirkland2304@gmail.com?part=3D4
+Khalid
