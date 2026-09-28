@@ -1,203 +1,203 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E8294D5997;
-	Mon, 28 Sep 2026 15:55:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 070624E4324
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 16:34:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790610931; cv=none; b=A9JUcZhsLXx1365ocy8HFAsv4bVcncV0gKdFkCfvTsek0bJCK3ONL8XNX8PflHRz/16fNU0pcCjcGGmKf6i0bUFZQWrc37juAh6HJyQgzTIbcs7E27fgWdLB0gds3I0OucRBoQcroLeorQ/e8l/JZ3lEpqN9UOcP6Nov7jir5Wg=
+	t=1790613302; cv=none; b=pepN7znFTee+koezcajvdbM3eMRUgrbajt5bg0qjZNvm+U2oCccy2g6CGXe2HkAUyUqTCE3/JbIEva6mbyQjVpVwoeDa/x8f1gEvmDGf8tos5xhn7xmdPPmVMKu0JuanuXx0Vg9lsk2EN0Ie+RUbkUAfE8IevqHdeuHfkZtOPKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790610931; c=relaxed/simple;
-	bh=gbKK6twKD80vkxHTj9mN7CXY8CPn4Ih5iuyqE8WENnI=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=pBQPOgF2dQ8pEtoMMn2SYTSjkGwGNU5h/WbCwfwxIfxjqtNUw6SsYjo6JJnPPms7qhYYBT/7gXh5uix5/pTKyFCzhRaUxjkgywQbLd/X19j0gXJsOeWz9IwMWvHeN0I4j7Wj68KTU32GZJwWAfn+mvE/YETNbBwuDn39cOFy0LU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=DVMLktpZ; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1790613302; c=relaxed/simple;
+	bh=KtaRUORBG54LlZQGqMIbeLVnE4bVP9k3Y6rz4SzzJSM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=I+x6NglbHHWlWwzrAeFTqCzD6PNmdMMG0pALu8Q36o0eJdTByARmdvK8m7JXQnFejNcov/BqXCfUW6t/MxyAfMrxXEqSAUoZisa+5jdcYjZoqs3aAoFGjnuuFLRAx2d20wEqZfcJeWxt3B+JGwBWPT36Ax/mmGqVj6YcJt1h8IU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=shWNQVkA; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="DVMLktpZ"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68SF5VEf1460751;
-	Mon, 28 Sep 2026 15:55:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=wWnA9sE8be8l6BDors2ktcKmyWDHBU
-	mGxD9qE4i9pkI=; b=DVMLktpZih3+57VsH5pL86XNsdchnCsatWoh+JtEMpi6c3
-	ZxaO0vHy4QSh27qSxH4aTd/O89jzqH+zANkIcO6U7ZpEDsNKiu0dHJGZWWmBXwot
-	RpbCHzPeHgUj8OeuGu8oIcwiYk6oPPPRn6HXx/P2l5g4Q19X/IK+6ZpHU+yrLLAy
-	3EPfdZjalXYICOvMq5qQmcuYe+3v1FlpWBDy4AAP2/dl0r/FXS/1GMzeNvMcZDmM
-	37nJLcc1+38Bsu0/ciqpyoz2eZQpsNF4ggyAzZTqiCVsF9CQBh0pQ6BmssMEaqOQ
-	KS3lf6ISCO9NDv8YLCUjUZ7jG32wJis+d7hC2SUw==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gx5s52evj-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 28 Sep 2026 15:55:28 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68SElUXj3181789;
-	Mon, 28 Sep 2026 15:55:27 GMT
-Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gxtkg5ssm-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 28 Sep 2026 15:55:27 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68SFtRBg28967314
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 28 Sep 2026 15:55:27 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E09DC58066;
-	Mon, 28 Sep 2026 15:55:26 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 92E0658064;
-	Mon, 28 Sep 2026 15:55:26 +0000 (GMT)
-Received: from d (unknown [9.61.160.252])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
-	Mon, 28 Sep 2026 15:55:26 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: sashiko-bot@kernel.org
-Cc: "Tyrel Datwyler" <tyreld@linux.ibm.com>, sashiko-reviews@lists.linux.dev,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v11 09/11] scsi: ibmvfc: extend channel reg/dereg
- helpers for async sub-CRQ
-In-Reply-To: <20260925050533.1FCBC1F000FF@smtp.kernel.org>
-	(sashiko-bot@kernel.org's message of "Fri, 25 Sep 2026 05:05:32
-	+0000")
-References: <20260925044900.414340-1-tyreld@linux.ibm.com>
-	<20260925044900.414340-10-tyreld@linux.ibm.com>
-	<20260925050533.1FCBC1F000FF@smtp.kernel.org>
-Date: Mon, 28 Sep 2026 10:55:25 -0500
-Message-ID: <87eced5q1e.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="shWNQVkA"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68SDjAJx1697684;
+	Mon, 28 Sep 2026 16:34:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=corp-2025-04-25; bh=Tx2wUIbBjSH4ZzbWFQImDgPmD7QLv
+	h+mFv8RPnp2MCU=; b=shWNQVkAsWB4whyHbYDkr1veArxSUtqMI8RArx0wPdSNg
+	96l9v+/oZhUNxm3PGC6n5+0+Kvhp2L0CmKw4+aHHFebnBmuk7+rl75DtEDjmXbkN
+	4Jj0rZUMqxMVaXK3VGcwKaJ1uYXyTTYga7EzcVjOdpiNzD0o5h9qOKIeb/Mc9qm0
+	pYMBuNaQ4za6EBEn+KV7YtTUs2V9buU+pnJxXBSbHU24VcdWaGbgNSdz+L6MEZoY
+	wcJt7QgLvzi7OGEupnxseO5FSqaxPs0RigQ61xVVAiSK33wSno7KdID6qWSudvXw
+	8++m8WH7kCQU3Pn0HU8f7Cwkrj2GTnsdNqClhnpzg==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4gx4fbb6ca-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 28 Sep 2026 16:34:57 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 68SGYqqC026789;
+	Mon, 28 Sep 2026 16:34:56 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4gx4ga8k2n-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 28 Sep 2026 16:34:56 +0000 (GMT)
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 68SGYrmt026846;
+	Mon, 28 Sep 2026 16:34:53 GMT
+Received: from labops-common-sca-01.us.oracle.com (labops-common-sca-01.us.oracle.com [10.132.26.161])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4gx4ga8jyp-1;
+	Mon, 28 Sep 2026 16:34:53 +0000 (GMT)
+From: Dai Ngo <dai.ngo@oracle.com>
+To: james.smart@broadcom.com, dick.kennedy@broadcom.com, paul.ely@broadcom.com
+Cc: linux-scsi@vger.kernel.org, dai.ngo@oracle.com
+Subject: [PATCH v3 1/1] scsi: lpfc: defer SCSI rport node put until devloss callback
+Date: Mon, 28 Sep 2026 09:31:48 -0700
+Message-ID: <20260928163433.2086184-1-dai.ngo@oracle.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI4MDA2MiBTYWx0ZWRfX8yumfrFQQvtS
- r7xwMEU053KiwpHxcoaV2WzkshOa0xIMfNj1niSAaH5/dOSSTTeJ/WIuFzpwHItWuy8PMU/GBra
- X9KZMjJJuT+4ahwM0Uol1h0MDyKBgOw=
-X-Authority-Analysis: v=2.4 cv=HJ5WhYtv c=1 sm=1 tr=0 ts=6aba8df0 cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=U7nrCbtTmkRpXpFmAIza:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=jB3ii0AURvSd5AnP4dwA:9
-X-Proofpoint-GUID: 0vv7_baaFRQY8Zfxn9B0k307Qp8T65hq
-X-Proofpoint-ORIG-GUID: 0vv7_baaFRQY8Zfxn9B0k307Qp8T65hq
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI4MDA2MiBTYWx0ZWRfXxhBcy/vUnr16
- mUlW+aGZbcC3dF/coSqplCC4rFnusICmjuk3AB0trpt0ra+MyQrGQ+z6v3PpePypNCg/8b7MW0Z
- ih+fbVxnuWArglJNe+3a9g1VuZQ7LZaxIWcfhGB2ZjugH3VVnfJAxb8qxFVTsxkMRcc3CUa0PJy
- Dd3S8aAh63Wlo9jAQPcIigrmv5kD3DPKN93EgySa6OnJCc8c4Iao3K0vVKiJORJhgR2Wzcr0B0J
- 5z2GRKr89d9UHNIexgTwH1Uv+c1n1bhkF18CC0y3lzJPJZFKlF2qEjWpJcHpzaY67AxYts7qPNv
- VwlH/sPAVDd6shKQRtm0nym6Uudlpr/IIoKnl1eRuLHH47IVER5cOhbdWS/wKGQF/yvndSJAiSE
- 9jbIxG4Y/Fn/0rmo7H98vF6inla/QIn/IDt5GsuFL2t3L8uWP9p81dcWL5eiuoUik98EKxZtHTH
- F2QjVpUj8AMEpoS2E+g==
+Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-09-28_04,2026-09-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 suspectscore=0 bulkscore=0 clxscore=1015 lowpriorityscore=0
- spamscore=0 impostorscore=0 phishscore=0 priorityscore=1501 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609280062
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
+ mlxlogscore=999 lowpriorityscore=0 malwarescore=0 phishscore=0 suspectscore=0
+ mlxscore=0 spamscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2609040000 definitions=main-2609280066
+X-Proofpoint-ORIG-GUID: 9Fd5wzJ9_eAqkjT7lZweXS5FwhcpqSDO
+X-Proofpoint-GUID: 9Fd5wzJ9_eAqkjT7lZweXS5FwhcpqSDO
+X-Authority-Analysis: v=2.4 cv=eJCGH3p1 c=1 sm=1 tr=0 ts=6aba9731 b=1 cx=c_pps
+ a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
+ a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22 a=jiCTI4zE5U7BLdzWsZGv:22
+ a=x4eqshVgHu-cdnggieHk:22 a=yPCof4ZbAAAA:8 a=RL9bYjTrTEiENRjtfgEA:9
+ a=WmVTiCyuxqgg3mnwYu6p:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI4MDA2NSBTYWx0ZWRfXwaGVdvH+jNlH
+ G8ao42aAhLJXh42XCKCxMCmyn63O3V2WQ8Xm/qvU1cY3qmuiDT/1ISEKAmAvSUxfLxrkxgxWTRH
+ 5KoMruwzoANyZX4m7QuIGFvlB2tMGqMpbG6zBRltQbSDC7Rdd5L7
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI4MDA2NSBTYWx0ZWRfX6DAbov/NEg6J
+ qQsVaw5ymOVo6X0/va2qMBZc/b2KfeWPPGgmQOPZtPVmpinQ76b3oPZgCZNpQbm8i21yWRYfSCV
+ BMk1YqDsmOVp4DEUYZkG+GOYQlfGb7LqGvtEcasKMpC+CYl9nPO8MkA6RU2hX4tyzfkcToNtUML
+ bdEjRjkt54V1vsCuq1tD5oxgpzklBwrteT8PfT4UJOFUpE9eQB7R0sCX/fgo53Y9eFjOUgz1JzO
+ Fk3R4MdNPRjOpWXzmp0u8cPr/sGjwBT31c6tqLGssHCDRKP2LbplAwfvP80AZcxLg1U9E6bLfv2
+ efDLtsndwIKmJRLk080ADtgFhQr1IkDa5nSUbg7NMUhVLTBbUagUL6GhPnERcaf+zSm2PlONUGf
+ YNOcnmdN8CtYBjYF2sqP23ngKmUGg9RV3h3JxYiWWZnxGkzhIfDu78CfjTXQ5gTJ4N5MZ3N+bQe
+ f62qaTXHCenWrfwQXlw==
 
-sashiko-bot@kernel.org writes:
+lpfc_register_remote_port() stores an lpfc_nodelist pointer in the
+SCSI transport rport private data and takes a node reference for that
+association.
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Low] scsi: ibmvfc: kernel-doc incorrectly instructs passing negative index
-> --
->
-> commit 6798e7ba7398cb1f91e10a6432ae9b3192653f37
-> Author: Dave Marquardt <davemarq@linux.ibm.com>
->
-> scsi: ibmvfc: extend channel reg/dereg helpers for async sub-CRQ
->
-> ibmvfc_register_channel() and ibmvfc_deregister_channel() previously only
-> handled SCSI and NVMe sub-CRQ channels identified by the channel protocol.
-> The async sub-CRQ had no registration path through these helpers, requiring
-> separate handling. This commit adds IBMVFC_PROTO_ASYNC to extend both
-> functions to handle the async sub-CRQ.
->
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> index b354bfb1a9b67..b967c82e99430 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> [ ... ]
->> @@ -6812,6 +6812,21 @@ static int ibmvfc_init_crq(struct ibmvfc_host *vhost)
->>  	return retrc;
->>  }
->>  
->> +/**
->> + * ibmvfc_register_channel - Register a sub-CRQ channel with the hypervisor
->> + * @vhost:	ibmvfc host struct
->> + * @channels:	ibmvfc channels struct containing the channel array and protocol
->> + * @index:	index into the channels array for the queue to register, or
->> + *		a negative value to register the async sub-CRQ
->> + *
->> + * Register a sub-CRQ with the hypervisor via h_reg_sub_crq, map its hardware
->> + * IRQ to a Linux IRQ, and bind an interrupt handler to it. The handler is
->> + * selected based on the channel protocol (SCSI or NVMe) for normal queues, or
->> + * set to the async sub-CRQ handler when @index is negative.
->> + *
->> + * Return value:
->> + *	0 on success / non-zero on failure
->> + **/
->>  static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
->>  				   struct ibmvfc_channels *channels,
->>  				   int index)
->
-> [Severity: Low]
-> Does this kernel-doc correctly document the expected index values?
->
-> The documentation explicitly directs the caller to pass a negative index for
-> async sub-CRQs, but ibmvfc_register_channel() begins with an unconditional
-> array access:
->
->     struct ibmvfc_queue *scrq = &channels->scrqs[index];
->
-> If a developer follows the documentation and passes a negative index, wouldn't
-> this result in an immediate out-of-bounds array access? Currently, callers
-> pass 0 for the async sub-CRQ, so this crash isn't reachable today, but the
-> comment could mislead future users.
+On remote-port unregister, lpfc_unregister_remote_port() calls
+fc_remote_port_delete(), which starts SCSI transport devloss handling.
+The rport is not fully finished at that point.  The SCSI transport may
+still call back into the driver through lpfc_terminate_rport_io() and
+lpfc_dev_loss_tmo_callbk(), both of which use rport->dd_data->pnode to
+find the lpfc node.
 
-Right. This suggestion to use a negative index is an artifact of older
-implementation choices and was missed in more recent patch
-revisions. I'll fix it in v12.
+Dropping the node reference immediately after fc_remote_port_delete()
+can therefore free the lpfc_nodelist while the rport still points to
+it. A cable pull can hit this window and report a KASAN use-after-free
+from lpfc_terminate_rport_io(), followed by stale-node access in
+lpfc_dev_loss_tmo_callbk().
 
-> [ ... ]
->> @@ -6883,6 +6905,18 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
->>  	return rc;
->>  }
->>  
->> +/**
->> + * ibmvfc_deregister_channel - Deregister a sub-CRQ channel with the hypervisor
->> + * @vhost:	ibmvfc host struct
->> + * @channels:	ibmvfc channels struct containing the sub-CRQ array
->> + * @index:	index into the sub-CRQ array, or -1 to deregister the
->> + *		asynchronous sub-CRQ
->> + *
->> + * Frees the IRQ, disposes of the IRQ mapping, and calls H_FREE_SUB_CRQ to
->> + * release the sub-CRQ with the hypervisor. On success the queue message
->> + * buffer is zeroed and the current index is reset. If H_FREE_SUB_CRQ fails,
->> + * an error is logged but the channel resources are cleaned up regardless.
->> + */
->>  static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
->>  				      struct ibmvfc_channels *channels,
->>  				      int index)
->
-> [Severity: Low]
-> Is this the same documentation issue as above?
->
-> The kernel-doc for ibmvfc_deregister_channel() directs using -1 for the
-> asynchronous sub-CRQ, but similar to ibmvfc_register_channel(), it accesses
-> the array unconditionally:
->
->     struct ibmvfc_queue *scrq = &channels->scrqs[index];
->
-> Could this lead to an out-of-bounds array access if someone passes -1 as
-> documented?
+Keep the SCSI rport node reference until lpfc_dev_loss_tmo_callbk()
+detaches the rport from the lpfc node.  Drop that reference after
+clearing SCSI_XPT_REGD and removing the rport/dd_data association,
+so the node remains valid for the SCSI transport devloss callbacks.
 
-I'll fix this also.
+Signed-off-by: Dai Ngo <dai.ngo@oracle.com>
+---
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
--Dave
+V2:
+. in lpfc_unregister_remote_port(), snapshot ndlp->rport under
+ndlp->lock, clear rdata->pnode, clear ndlp->rport, and clear the
+SCSI transport registration flag while holding the ndlp->lock.
+
+. in lpfc_dev_loss_tmo_callbk, check rport's private data before
+using it and and use READ_ONCE() / WRITE_ONCE() for the lockless
+pnode handoff.
+
+V3:
+. Redo the patch based on Paul's review.
+Delay dropping the SCSI rport node reference until
+lpfc_dev_loss_tmo_callbk() detaches the rport from the lpfc node.
+
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 4f68038789b5..04f56c2f69dc 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -162,6 +162,7 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 	struct lpfc_work_evt *evtp;
+ 	unsigned long iflags;
+ 	bool drop_initial_node_ref = false;
++	bool drop_scsi_node_ref = false;
+ 
+ 	ndlp = ((struct lpfc_rport_data *)rport->dd_data)->pnode;
+ 	if (!ndlp)
+@@ -202,6 +203,7 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 		 */
+ 		if (ndlp->fc4_xpt_flags & SCSI_XPT_REGD) {
+ 			ndlp->fc4_xpt_flags &= ~SCSI_XPT_REGD;
++			drop_scsi_node_ref = true;
+ 
+ 			/* If NLP_XPT_REGD was cleared in lpfc_nlp_unreg_node,
+ 			 * unregister calls were made to the scsi and nvme
+@@ -213,9 +215,6 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 				if (!(ndlp->fc4_xpt_flags & NVME_XPT_REGD))
+ 					ndlp->fc4_xpt_flags &= ~NLP_XPT_REGD;
+ 				spin_unlock_irqrestore(&ndlp->lock, iflags);
+-
+-				/* Release scsi transport reference */
+-				lpfc_nlp_put(ndlp);
+ 			} else {
+ 				spin_unlock_irqrestore(&ndlp->lock, iflags);
+ 			}
+@@ -223,6 +222,8 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 			spin_unlock_irqrestore(&ndlp->lock, iflags);
+ 		}
+ 
++		if (drop_scsi_node_ref)
++			lpfc_nlp_put(ndlp);
+ 		if (drop_initial_node_ref)
+ 			lpfc_nlp_put(ndlp);
+ 		return;
+@@ -271,6 +272,7 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 	 * rport. Remove the association between rport and ndlp.
+ 	 */
+ 	ndlp->fc4_xpt_flags &= ~SCSI_XPT_REGD;
++	drop_scsi_node_ref = true;
+ 	((struct lpfc_rport_data *)rport->dd_data)->pnode = NULL;
+ 	ndlp->rport = NULL;
+ 	spin_unlock_irqrestore(&ndlp->lock, iflags);
+@@ -287,6 +289,8 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 			list_add_tail(&evtp->evt_listp, &phba->work_list);
+ 			spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 			lpfc_worker_wake_up(phba);
++			if (drop_scsi_node_ref)
++				lpfc_nlp_put(ndlp);
+ 			return;
+ 		}
+ 		spin_unlock_irqrestore(&phba->hbalock, iflags);
+@@ -304,6 +308,8 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 						NLP_EVT_DEVICE_RM);
+ 		}
+ 	}
++	if (drop_scsi_node_ref)
++		lpfc_nlp_put(ndlp);
+ }
+ 
+ /**
+@@ -4570,7 +4576,6 @@ lpfc_unregister_remote_port(struct lpfc_nodelist *ndlp)
+ 			 kref_read(&ndlp->kref));
+ 
+ 	fc_remote_port_delete(rport);
+-	lpfc_nlp_put(ndlp);
+ }
+ 
+ static void
+-- 
+2.47.3
+
