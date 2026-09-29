@@ -1,83 +1,83 @@
-Received: from mail-pg1-f227.google.com (mail-pg1-f227.google.com [209.85.215.227])
+Received: from mail-pf1-f227.google.com (mail-pf1-f227.google.com [209.85.210.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27AA235AC12
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 23:15:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEE0935AC12
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 23:15:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790723713; cv=none; b=YoxyxwGvdKRZyeFY7/ruLHztih/XbG2G11punEi1cYRSmtU0GtZNOeR3T6D0DgedulaeU6QcJbjufVQlRBnHoRRwhaOJlxa8gzuyFOcxNCTazYi3mw8DAjX5tFluh2Xsx07SPHk3TC544FS7MsUNR/ArV141i3DzVKbBV1WtcoM=
+	t=1790723751; cv=none; b=d239TxRoJAXEHv6e748J3gsEJiNuEdDA8QmiLgmyXCFxRMOJZlDN6Z+MN+/OZ1BqIFIP8wFa8pKr2kntw3Lx8+SSh/mptpVnHbBidETf2zy5IRj79ww6w9Sc044ZTtCOJE7FGzxJCax7x7/5iQUpz8EGl/LYlsV9WM4NkKzWtUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790723713; c=relaxed/simple;
-	bh=U9gDFEFDzdGj4kMNgz23Fk6nUAULbdkRWVUrxCN/aUw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LgRgeEl7sj/H7iStiVR2BV8pvC75pwT2LIybKsCWzICdCfkpmCor2usdHdlCa2EGHOh6n60MIxNdmUzTRocG/UtoW/vsNnohWBnKDshn5lVuOIs74aKhTMTZ+fY7KxsKiRG17mIxHW/qKC3PWwyHtWKcHW5me21PA7CgdaQr8UA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Wk4q2Mmr; arc=none smtp.client-ip=209.85.215.227
+	s=arc-20240116; t=1790723751; c=relaxed/simple;
+	bh=k/tXTXbO7IiKtw2AaFqQLU7gf/Q604o+tCj5shm3tbA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IfyFhUY4+cKvm8q18UuZKbWIloyC9+9x+bYzNRD7VGA4W4K3fS7xUT4+wE7ZrI8ZKcSruTT4lQhBMmxgx4M5Fu41qL1V9nIXmpfYgUmt81davIyB0kXCAUenPB870o+KAaxBNEPEChcy04ncV3QX0JP09DekimhFQ0SFNEgla2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=I7Ne3GEa; arc=none smtp.client-ip=209.85.210.227
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Wk4q2Mmr"
-Received: by mail-pg1-f227.google.com with SMTP id 41be03b00d2f7-cc7baeea5ffso313894a12.1
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 16:15:11 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="I7Ne3GEa"
+Received: by mail-pf1-f227.google.com with SMTP id d2e1a72fcca58-8819033dbadso1090964b3a.0
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 16:15:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790723711; x=1791328511;
+        d=1e100.net; s=20260707; t=1790723749; x=1791328549;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=gPiE3QWjmwTsVpl3XFuxTwOhK5xMwryQhv8LE68/7Gw=;
-        b=zZcjTDFn/Mz9s0843fPamhjsQi5ghwqiM6A13L5fKXHoTCLxfOLIwMSKQSke6lLchW
-         XSq2HjP28vSyghBHgOwW7lg4S6M1+o5r+2Gd08ep+vRVsFwAwq1rBsEUVWAj1ZQrRzMK
-         vpfpAsuTYAtih6K3hlwhyXUOjNWjAuVERH64B3BKoqPgI1gmR5uQZ7NeiZsWavM+uCBl
-         6CbuTkZ5Env97Tgvp6Wv3RJ1gQJ0w/XTzsdRpIpw+BkOBlr0XbNWW2noKRjTVqcL3VCP
-         RmzbSrI+eB3jORofWLf5XrRNXc2BGqyP0WDSyGFnMpEOStJNh4WRlm7ArytIyzore0KU
-         IBhA==
-X-Forwarded-Encrypted: i=1; AKwUvBw9PhPqJ4+g8A5QDscEZTmgJIJqbPt9LMQ03Stp8Og7kay/Lon55zsguj6GKPb8w1Lz7pYDbLA1/WPl@vger.kernel.org
-X-Gm-Message-State: AFuF++mP4GgQ+nF/u0+N937Hl0w/KFupyrU75JuK8jwscuBVr1fVGp85
-	Fr0xPZY3g6Wx7g5cwxu4Qnf0z1SAra/amDKJMChR/+BJFsCF8jSNNRgLTvkiWxcnkZToJ48FuDI
-	bu9RYssuc8xu3i/RjpX+Q6bMBgVIYeKf4R/Xif4m92rtBuIX2LC2QiAeMt86uqeTYmdgwGospjy
-	01DH3cG0E3F8Zc9JQXUCih62kxK+apYNLy6QxCClvZfiRTIt1IDHjRqrW+dBGXdbnEnqSYl/41P
-	LwkZS1ZjThR
-X-Gm-Gg: AYBFou2PiVQIngI62rk3mUgtY33g629TY93LxrCJnc2ZKGCodB3B8+5WwmUZT1dzdeX
-	0VbMil4Ltk5kDwMKXjP9EzFceITk4syHaiN648VonXimKNK1ksHZ66QN1hQBVmPgtiOuZP2NZcU
-	TEHQCjdptfhyDKnoFyjfOxVH96CR2kWjMTLGdlSpo5Rdo01KLEFxHRTyd3oRXTbeU6UPE2SZoF7
-	bn82tNoJQRMeAbQTxK5rakxV5zelhwNabxDiPOml5t2LonS31BtzV5umlz2Th/Q92Ggq6IIy2MX
-	o/7pOEm2kqkJgNAHYOLVdP6KVj7ufx1XSk5dIPO+QDcPWNntwnnT7qaz7BzytzqIChJMxLX1Rck
-	4gQF79OMVZ/KU0DPpWXAdgvINXl4wsFJwikPC4XEx+5xD0Nq7ZkKio3PwE47fqW8SlFqsE7YjqZ
-	CUvVVpJgdiQCzEscmAVfpN0tauNxyNkXqyOA==
-X-Received: by 2002:a05:6a21:700a:b0:3dd:a197:735b with SMTP id adf61e73a8af0-3de952fe794mr432900637.52.1790723711315;
-        Tue, 29 Sep 2026 16:15:11 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
-        by smtp-relay.gmail.com with ESMTPS id 41be03b00d2f7-cc7d2d54b8asm499639a12.5.2026.09.29.16.15.10
+        bh=mb0Xuw2hsRE9Rh0sEojEm3qW3tIg9er9OBi3tNQNZUc=;
+        b=M85kIhPfwOdga3pNAfQXH+vbfF8GRuLVjQ/7asf/iP8nGksI1UhDKyxvr17KVV6VJ8
+         FM+LR1gW56M//HgU0J5fCGEGMXtG6N+UpxfEroelWysQ8O36U4nYihjcGz5LfZETZOQl
+         srUCvjsM2A8i72KO2yF7242v928LgGKsiz/i8AmpH1JhxjffjZKbudcCXo5nupFOoCNB
+         9RzNklsYZfcI/pD+l02zG/MSM8jJMehoVmkQM/nYfDaHTkiszjBowR95L0lnMjRtodgS
+         v2lVKX+2ncnvgecZPmvnwGO5QtDhv0zfsvtPYgEunDkeNEaPRggIz80JdL8kkb6oRd8Q
+         8Xsw==
+X-Forwarded-Encrypted: i=1; AKwUvByFOGo4PyUaQ4/5xqra6Zx2sVkzjMZg1WPfLQGKmKkesUrW9a6TBcFZTP+IBII2ZY+tYgwigv6jy+K5@vger.kernel.org
+X-Gm-Message-State: AFuF++leBRxeoRilUKnIEBgdCkJ9WMWUAQ7Ur5r9Z/QOwpLgd7W6Yxnw
+	mrtc4V4PeAxUONUhme1eT0R2sZf30DbvjZ7EnzWdoQHqF4CGocC5TPG/MeyGjCWTiHgUEVv3P1O
+	IxOEyGvUbzO3gsvI5xNUqtSHPL4DGjTWHIaYUzO19z4WVdIi03XAQuCA/9dzJ9vo+Glp2k/nrtg
+	+Rp1vYXHB6q93oOKd3oRsM3woZmVFhSCvMkViS+9+cfaJaZx4jGxU4zv9/teoD/NYYB380lm0Cd
+	Hv7gjUrfgvB
+X-Gm-Gg: AYBFou1VSqoT2EML8bdFMvMfmUSXq+TXX+44BZQl4qO9ApR0AZxbZ8mBTwDjO4Bu/LJ
+	cdwtwc+4BMEHX8ScI0FkI111Hbl4YykC+5jWV6+gtupzgYLfA0yF/f+Zwh3NpwRYb6rLWwYd0Tm
+	iCs81ponRrS7tJg022bmqgX1BlgZ1HvDP2KAwPws4SyXrFG9/jIlqI4yrn07xKiBpg+qgTBKMUZ
+	gFCGHzNcmScpRMm02WOX5+0sHuWPhGvvLgdmktea5sDo6fSDYszlWlIsTlhjuGSCaAxKppLq+nL
+	d9GNrvRM5UlhxJGvM6lEqokb3P372lUr33c4x5lvD5xzKdCrYO2hjdHjrWGHsrDjk7HOY+/Mj/p
+	T4q5GkpIR5KKnqCwdj+ugVAbIXo5YTp1yp2skKKzO9ukazsq5YIkdaaD1W8WkfkCdBnhtig1fa1
+	tY5c55DhlMiuCO5DqIy60ck9YP1ieo59S7hQ==
+X-Received: by 2002:a05:6a21:9216:b0:3de:6cc7:6533 with SMTP id adf61e73a8af0-3de9538b557mr446190637.52.1790723748842;
+        Tue, 29 Sep 2026 16:15:48 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-120.dlp.protect.broadcom.com. [144.49.247.120])
+        by smtp-relay.gmail.com with ESMTPS id 41be03b00d2f7-cc7d2d54b8asm500653a12.5.2026.09.29.16.15.48
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 29 Sep 2026 16:15:11 -0700 (PDT)
+        Tue, 29 Sep 2026 16:15:48 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-8861a49f2bdso744961b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 16:15:10 -0700 (PDT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38ecc48b3c2so10184141a91.1
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 16:15:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1790723709; x=1791328509; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1790723747; x=1791328547; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=gPiE3QWjmwTsVpl3XFuxTwOhK5xMwryQhv8LE68/7Gw=;
-        b=Wk4q2MmrzNeT8oOiMUKYHxKy1Ei2eVjaC4s8Rfgb+ke/KEiawTVSDnhRX08iRZJ5Sl
-         FCgi41Q6usE761atr3xJqgOaCbZGqcVejQS07BmWQBujYLV53SQ/6+JuL5lqeZ7KRa0Y
-         ma+GlXNul4+A1F+ky8vFGfAkihaX+Nph/IT5A=
-X-Forwarded-Encrypted: i=1; AKwUvBwcjZHueQrrOJ1WKGy/vJ0q1O1Fz5T7a90xE/VbvVyDC77JlcpGuLR664kEmeoPlGaK9FojRSQSdQPu@vger.kernel.org
-X-Received: by 2002:a05:6a00:759b:b0:886:cbcf:b431 with SMTP id d2e1a72fcca58-886cbcfb6b3mr481119b3a.14.1790723709423;
-        Tue, 29 Sep 2026 16:15:09 -0700 (PDT)
-X-Received: by 2002:a05:6a00:759b:b0:886:cbcf:b431 with SMTP id d2e1a72fcca58-886cbcfb6b3mr481100b3a.14.1790723708876;
-        Tue, 29 Sep 2026 16:15:08 -0700 (PDT)
+        bh=mb0Xuw2hsRE9Rh0sEojEm3qW3tIg9er9OBi3tNQNZUc=;
+        b=I7Ne3GEaWWxejTiKWAFPnjS8wqJF6NJJKbB+JflzS1bpDKhbPqEf22WmNBmUSd9YtR
+         UxaznW6G2aALaC5CqVakifTlssm3PyzWC3qdnLUTSTjnE6zA/AJ6GW1hNIDXWn/kn9K1
+         UQtyhZ1Rty5PGl09LWT8+e0WVKYJtiMCCgE8U=
+X-Forwarded-Encrypted: i=1; AKwUvBxvZMc9nIOnKUQucLITcWLfFekAUpcGirTlHyX06rUcdKAZPO193r5LN42J0KZtK+cqa5AozYO5Zffv@vger.kernel.org
+X-Received: by 2002:a17:90b:4aca:b0:39e:4c80:44be with SMTP id 98e67ed59e1d1-3a4bfe52dcamr673036a91.33.1790723746872;
+        Tue, 29 Sep 2026 16:15:46 -0700 (PDT)
+X-Received: by 2002:a17:90b:4aca:b0:39e:4c80:44be with SMTP id 98e67ed59e1d1-3a4bfe52dcamr673021a91.33.1790723746358;
+        Tue, 29 Sep 2026 16:15:46 -0700 (PDT)
 Received: from matt-workstation.dhcp.broadcom.net ([192.19.38.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-88685653bacsm565675b3a.0.2026.09.29.16.15.06
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a4cb1919ecsm67743a91.1.2026.09.29.16.15.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Sep 2026 16:15:08 -0700 (PDT)
+        Tue, 29 Sep 2026 16:15:45 -0700 (PDT)
 From: Matt Wang <matt.wang@broadcom.com>
 To: vishal.bhakta@broadcom.com,
 	bcm-kernel-feedback-list@broadcom.com,
 	linux-scsi@vger.kernel.org
 Cc: Matt Wang <matt.wang@broadcom.com>
-Subject: scsi: vmw_pvscsi: add boundary check for cmd_map access.
-Date: Wed, 30 Sep 2026 07:14:59 +0800
-Message-ID: <20260929231459.630938-1-matt.wang@broadcom.com>
+Subject: scsi: vmw_pvscsi: clamp on e->dataLen in pvscsi_complete_request
+Date: Wed, 30 Sep 2026 07:15:39 +0800
+Message-ID: <20260929231539.630963-1-matt.wang@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -88,42 +88,48 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-The context value provided by the device in a completion is used to
-index into cmd_map to find the command that was completed. To prevent
-out of bounds access or completion of an inactive context, check that
-the context value is in-bounds and that it maps to an active context.
+When calculating the residual bytes, clamp dataLen to the buffer length
+before the subtraction. This prevents an overflow if the device sends a
+larger value than expected.
 
 Signed-off-by: Matt Wang <matt.wang@broadcom.com>
 ---
- drivers/scsi/vmw_pvscsi.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/vmw_pvscsi.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 151cac9f9..49d1950a7 100644
+index 151cac9f9..8e2c1b20f 100644
 --- a/drivers/scsi/vmw_pvscsi.c
 +++ b/drivers/scsi/vmw_pvscsi.c
-@@ -201,6 +201,9 @@ static u64 pvscsi_map_context(const struct pvscsi_adapter *adapter,
- static struct pvscsi_ctx *
- pvscsi_get_context(const struct pvscsi_adapter *adapter, u64 context)
- {
-+	if (unlikely(context == 0 || context > adapter->req_depth)) {
-+		return NULL;
-+	}
- 	return &adapter->cmd_map[context - 1];
- }
- 
-@@ -550,6 +553,11 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
+@@ -548,6 +548,8 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
+ 	struct completion *abort_cmp;
+ 	u32 btstat = e->hostStatus;
  	u32 sdstat = e->scsiStatus;
++	u64 data_len = e->dataLen;
++	u32 data_trans = 0;
  
  	ctx = pvscsi_get_context(adapter, e->context);
-+	if (ctx == NULL || ctx->cmd == NULL) {
-+		dev_err_ratelimited(&adapter->dev->dev,
-+				    "Can not find mapping for context %llu", e->context);
-+		return;
-+	}
  	cmd = ctx->cmd;
- 	abort_cmp = ctx->abort_cmp;
- 	pvscsi_unmap_buffers(adapter, ctx);
+@@ -590,15 +592,16 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
+ 			 * returns zero dataLen with non zero data - do not set
+ 			 * residual count in that case.
+ 			 */
+-			if (e->dataLen && (e->dataLen < scsi_bufflen(cmd)))
+-				scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
++			if (data_len && (data_len < scsi_bufflen(cmd)))
++				scsi_set_resid(cmd, scsi_bufflen(cmd) - data_len);
+ 			cmd->result = (DID_OK << 16);
+ 			break;
+ 
+ 		case BTSTAT_DATARUN:
+ 		case BTSTAT_DATA_UNDERRUN:
+ 			/* Report residual data in underruns */
+-			scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
++			data_trans = min_t(u64, data_len, scsi_bufflen(cmd));
++			scsi_set_resid(cmd, scsi_bufflen(cmd) - data_trans);
+ 			cmd->result = (DID_ERROR << 16);
+ 			break;
+ 
 -- 
 2.52.0
 
