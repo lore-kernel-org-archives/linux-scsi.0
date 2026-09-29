@@ -1,47 +1,45 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05D3250B8CB
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05C7A47140A
 	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 19:28:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790710115; cv=none; b=Gu1KKqk6QP3YuUw8oe+aGJKqLh/UH1HEHt8GMJQjihc4JRsy5eMijx+naMZgA9ca6kTAWxoV7pHIVU9PHHk536nBBRFCjEHpSZ4hf0AArIirVbQUFPUVBq0S9BJu5hq12llZD5g2z00QskF7vQ7Tk5duWOdcKbvpiivHvIv0jyo=
+	t=1790710115; cv=none; b=gPBpLSQzwjYadvxEE6N1RdCQwhkmSgcfbrk5PdrAXG7xOvIzxg+481C5JXnMwYWoS4SeoURCBgPYh8KBFb+BcbksVFGZclLSN2LBWBzHhukx7qypEjyoeSbN99GC8dUQ2nmIlx6eh9CMkJ5PRiSMyqA1b4NtQ9Z308ZRVl82To8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790710115; c=relaxed/simple;
-	bh=TjPU0rAii5ZMoWoOpKbwEtYJffJr/f6n2c70o3RKqzc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ewoeTc2WDflko3bsSy6beO9qIWRO86nGoeg1kcO8/RKRimWwUDpDqQi+3vMYvLGjI777KZJCBw6Khlen8VGlHYdvmXXVfVYMlDWMH+yCc7k8MZ/gsQYzHiG9xGfVNfcbmgSmbdWJjHXBz98uf4BmaPD1x897bJdOJPZumPzBhCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F+UHU7B0; arc=none smtp.client-ip=170.10.129.124
+	bh=TiegHJwwxhzWjt9SMlUohYicvg6UJIVonUrDjgGkFGc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=D1+lqhtdrnIrpygIYR8ApJTUqiVDymgFPlL3K9QFFvjUHQ7l6FDCjjvS2+qLYW22XNkhcXvh8ZiCU0m1YDNgXB0rgl++Ivdkf52xTJgQgy5uw6aoh/V9a7OqghPqRIRst5pV09Da8A8ys9vN+JHJqFF0vPncPHn3BW7jn6t4WZc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=D70xlob7; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F+UHU7B0"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="D70xlob7"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790710113;
+	s=mimecast20190719; t=1790710112;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jN3XZoWRURRJbxzcMBlKZ1R2Mls8IiDgM2mEgy08ZtM=;
-	b=F+UHU7B0SFW2myH5Yb6GQkjBFMPIM/RUrT8t0xvfQenJsCJGyzuRm6YPxJDOfOslRD+hJs
-	/W0kWXnqrnYfkL3KFNdr1rsXsGDpo5B1fgqxQASGYhsu7lK510UUk2IGKIK1ddPE7W2U2N
-	kYtSnehLlxbtb/J+sCGT3rkstlisihg=
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=8W1olaZDgPfWNVtDQdONFCLWVZatw8E+bJ2rpEHMqyo=;
+	b=D70xlob7KDM1GgdLV1mhaGuToI7jLiX32d/5AL1kd4SggDoPiIx7cnm0CTcWfcU41fAZ/A
+	a6WCBLDkdY0Hw3IHPgvzaZFyI+6Qe1l80A90ltbWZMukEppSd16RCcGA5y3wOR9KvZ4J8B
+	GMVIOrRnuftNUheWuksuhpEb2U6wHdQ=
 Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-653-WE4PW_wmPBGCW7xKRHWljA-1; Tue,
- 29 Sep 2026 15:28:29 -0400
-X-MC-Unique: WE4PW_wmPBGCW7xKRHWljA-1
-X-Mimecast-MFC-AGG-ID: WE4PW_wmPBGCW7xKRHWljA_1790710108
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-427-3-SnAKGXPW2KF0Qj0dH_6g-1; Tue,
+ 29 Sep 2026 15:28:27 -0400
+X-MC-Unique: 3-SnAKGXPW2KF0Qj0dH_6g-1
+X-Mimecast-MFC-AGG-ID: 3-SnAKGXPW2KF0Qj0dH_6g_1790710106
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 63F3A1944F0F;
-	Tue, 29 Sep 2026 19:28:28 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 32EC819540E3;
+	Tue, 29 Sep 2026 19:28:26 +0000 (UTC)
 Received: from loberman-thinkpadp16gen3.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 37F101956047;
-	Tue, 29 Sep 2026 19:28:27 +0000 (UTC)
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 954C31956047;
+	Tue, 29 Sep 2026 19:28:24 +0000 (UTC)
 From: Laurence Oberman <loberman@redhat.com>
 To: linux-scsi@vger.kernel.org
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
@@ -50,152 +48,198 @@ Cc: "Martin K . Petersen" <mkp@kernel.org>,
 	John Meneghini <jmeneghi@redhat.com>,
 	emilne@redhat.com,
 	bgurney@redhat.com
-Subject: [PATCH v4 1/4] scsi: st: Restore changed drive settings after reset also for MTLOAD and MTRETEN
-Date: Tue, 29 Sep 2026 15:28:18 -0400
-Message-ID: <20260929192821.997675-2-loberman@redhat.com>
-In-Reply-To: <20260929192821.997675-1-loberman@redhat.com>
-References: <20260929192821.997675-1-loberman@redhat.com>
+Subject: [PATCH v4 0/4] scsi: st: Restore drive settings and state after reset and MTLOAD
+Date: Tue, 29 Sep 2026 15:28:17 -0400
+Message-ID: <20260929192821.997675-1-loberman@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-A device reset returns the drive's density and block size to their
-defaults.  Commit 7081dc75df79 ("scsi: st: Restore some drive settings
-after reset") re-applies values changed by the user when the position is
-recovered with MTREW, MTSEEK or MTEOM.  MTLOAD and MTRETEN are also
-allowed to clear the reset condition and also leave the same medium at
-BOT, but they restore nothing.
+After a device reset st blocks tape access until one of MTREW, MTOFFL,
+MTLOAD, MTRETEN, MTERASE, MTSEEK or MTEOM clears the reset condition.
+Testing the reset handling on scsi_debug and on IBM LTO drives found that
+several settings and parts of the driver state do not survive the reset
+or an MTLOAD.
 
-Because check_tape() reads the drive's block size with MODE SENSE on
-every open, the driver silently switches to the drive default after the
-reset.  An application that set fixed-block mode with MTSETBLK and
-recovers with MTLOAD or MTRETEN keeps writing, but variable-length
-blocks, without any error.
+1. Changed block size and density are lost after MTLOAD or MTRETEN
 
-Restore the changed density and block size for MTLOAD and MTRETEN as
-well.  Both operations may make the drive report a new medium, and the
-new session started by check_tape() clears the "changed" flags and
-applies the mode defaults.  So save the values before the operation, let
-check_tape() run first (do_load_unload() already calls it for MTLOAD;
-call it after MTRETEN), and then re-apply them.  Retry the restore once
-in case a unit attention is still pending.  Only restore when the drive is
-ready after the operation: with an immediate-mode load and O_NONBLOCK,
-check_tape() does not wait and the drive may still be loading.
-In immediate mode (MT_ST_NOWAIT) MTRETEN may return before the
-retension has finished; do not wait for it there.
+   A reset returns the drive's block size and density to their defaults.
+   Commit 7081dc75df79 ("scsi: st: Restore some drive settings after
+   reset") re-applies the values set by the user, but only for MTREW,
+   MTSEEK and MTEOM.  Because check_tape() reads the drive's block size
+   with MODE SENSE on every open, the driver follows the drive back to
+   its default after the reset.  An application that set fixed-block
+   mode with MTSETBLK and recovers with MTLOAD or MTRETEN keeps writing
+   without any error, but in variable-length blocks.
 
-MTOFFL is not changed: the medium is unloaded and a different one may be
-loaded next, for which the mode defaults apply.
+   Patch 1 restores the changed settings for MTLOAD and MTRETEN as well.
+   Both may make the drive report a new medium, and the new session
+   started by check_tape() clears the "changed" flags and applies the
+   mode defaults.  The values are therefore saved before the operation
+   and re-applied after check_tape() has run.  scsi_debug reports a new
+   medium after MTRETEN and MTLOAD; the IBM drives do not.  The series
+   was tested against both behaviours.
 
-Reproduced with scsi_debug (which reports a new medium after MTRETEN and
-MTLOAD) and with IBM LTO drives on FC (which do not).
+2. Tape state is not reset after MTLOAD of an already loaded medium
 
-Fixes: 7081dc75df79 ("scsi: st: Restore some drive settings after reset")
-Assisted-by: Claude sashiko
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
----
-v4: restore after MTLOAD and MTRETEN only when the drive is ready
-    (Sashiko).
-v2, v3: no changes.
+   A LOAD positions the medium at the beginning of partition 0.
+   check_tape() records that only when it starts a new session, which
+   requires a new-medium unit attention.  Drives that do not report one
+   for an already loaded cartridge (IBM LTO) are left with the state from
+   before the load:
 
- drivers/scsi/st.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+   - After a reset, MTIOCGET keeps reporting file/block -1 and no BOT,
+     although commit 0b120edb37dc ("scsi: st: Add MTIOCGET and MTLOAD to
+     ioctls allowed after device reset") allows MTLOAD because the tape
+     location is known after it.
+   - After reading to EOD, a read following MTLOAD fails with EIO.
+   - If partition 1 was selected, st still records partition 1, so a
+     later MTSETPART 1 is not performed and I/O goes to partition 0.
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index f1c3c49..6e5e6f6 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3586,6 +3586,23 @@ out:
- 	return retval;
- }
- 
-+/*
-+ * Re-apply a density and block size that were changed by the user before a
-+ * device reset (a negative value means "not changed").  A unit attention
-+ * still pending after the operation (e.g. new medium after a load) fails the
-+ * first MODE SELECT, so retry each once.  As in the other post-reset restore
-+ * path, errors are ignored and one setting failing does not prevent
-+ * restoring the other.
-+ */
-+static void st_restore_changed_settings(struct scsi_tape *STp, int density,
-+					int blksize)
-+{
-+	if (density >= 0 && st_int_ioctl(STp, MTSETDENSITY, density))
-+		st_int_ioctl(STp, MTSETDENSITY, density);
-+	if (blksize >= 0 && st_int_ioctl(STp, MTSETBLK, blksize))
-+		st_int_ioctl(STp, MTSETBLK, blksize);
-+}
-+
- /* The ioctl command */
- static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- {
-@@ -3594,6 +3611,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 	int retval = 0;
- 	unsigned int blk;
- 	bool cmd_mtiocget;
-+	int restore_density = -1, restore_blksize = -1;
- 	struct scsi_tape *STp = file->private_data;
- 	struct st_modedef *STm;
- 	struct st_partstat *STps;
-@@ -3740,6 +3758,17 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 					st_int_ioctl(STp, MTSETDENSITY, STp->changed_density);
- 				if (STp->blksize_changed)
- 					st_int_ioctl(STp, MTSETBLK, STp->changed_blksize);
-+			} else if (mtc.mt_op == MTLOAD || mtc.mt_op == MTRETEN) {
-+				/*
-+				 * The same medium ends up at BOT, so the settings
-+				 * apply as with MTREW.  The operation may start a
-+				 * new session, which clears the "changed" flags:
-+				 * save the values and restore them afterwards.
-+				 */
-+				if (STp->density_changed)
-+					restore_density = STp->changed_density;
-+				if (STp->blksize_changed)
-+					restore_blksize = STp->changed_blksize;
- 			}
- 		}
- 
-@@ -3819,6 +3848,14 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 
- 		if (mtc.mt_op == MTLOAD) {
- 			retval = do_load_unload(STp, file, max(1, mtc.mt_count));
-+			/*
-+			 * Restore only if the drive is ready: after an
-+			 * immediate-mode load with O_NONBLOCK, check_tape()
-+			 * does not wait and the drive may still be loading.
-+			 */
-+			if (!retval && STp->ready == ST_READY)
-+				st_restore_changed_settings(STp, restore_density,
-+							    restore_blksize);
- 			goto out;
- 		}
- 
-@@ -3837,6 +3874,20 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 			retval = st_compression(STp, (mtc.mt_count & 1));
- 		else
- 			retval = st_int_ioctl(STp, mtc.mt_op, mtc.mt_count);
-+		if (!retval && mtc.mt_op == MTRETEN && !STp->immediate &&
-+		    (restore_density >= 0 || restore_blksize >= 0)) {
-+			/*
-+			 * Retension reloads the medium and the drive may
-+			 * report a new medium.  Let check_tape() start the new
-+			 * session (applying the mode defaults) now, as for
-+			 * MTLOAD; otherwise it happens at the next open and
-+			 * overrides the restored settings.
-+			 */
-+			if (check_tape(STp, file) >= 0 &&
-+			    STp->ready == ST_READY)
-+				st_restore_changed_settings(STp, restore_density,
-+							    restore_blksize);
-+		}
- 		goto out;
- 	}
- 	if (!STm->defined) {
+   Patch 2 resets the partition and the state of all partitions after a
+   successful load, as the new-session path in check_tape() does:
+   partition 0, position at BOT, EOF state cleared and no pending write.
+   Resetting all partitions matters: a partition switch done by read()
+   or write() (in rw_checks()) leaves the rw state of the partition that
+   is left, and a stale ST_WRITING state would make st_flush() write a
+   filemark at the beginning of partition 0 when the device is closed.
+
+3. The drive buffering mode is lost after a reset
+
+   A reset also returns the drive's buffered mode to its default, and
+   check_tape() reads it back on every open, so a mode set with
+   MTSETDRVBUFFER is lost - with every recovery operation, including
+   MTREW.  Unlike density and block size there was no "changed" state to
+   restore it from.  Patch 3 records the value set with MTSETDRVBUFFER
+   and restores it in both restore paths, before density and block size.
+
+4. The door is not locked again after a reset
+
+   With auto-lock, st locks the door at the first read or write.  A reset
+   clears the drive's medium removal prevention, but st kept its locked
+   state and never locked the door again.  Patch 4 marks the door
+   unlocked when a reset is recognized, so the next access locks it.
+
+MTOFFL is deliberately not changed: the medium is unloaded, and a
+different one may be loaded next, for which the mode defaults should
+apply.
+
+Immediate mode: with MT_ST_NOWAIT, MTRETEN returns before the
+retension completes, so patch 1 does not restore the settings there
+rather than waiting for the drive.  After MTLOAD and MTRETEN the
+settings are only restored when the drive is ready: with an
+immediate-mode load and O_NONBLOCK, check_tape() does not wait and the
+drive may still be loading.
+
+The SCSI tape driver is currently marked Orphan in MAINTAINERS.
+
+Testing (v7.3-rc2, scsi_debug and IBM LTO drives on FC):
+
+Block size after reset + recovery (patch 1):
+
+                            R04.load       R04.retension  R04.offline
+unpatched:
+  scsi_debug                discarded      discarded      discarded
+  IBM ULTRIUM-TD5 (LTO-5)   discarded      discarded      discarded
+  IBM ULT3580-TDA           discarded      discarded      discarded
+patched:
+  scsi_debug                restored       restored       discarded (*)
+  IBM ULTRIUM-TD5 (LTO-5)   restored       restored       discarded (*)
+  IBM ULT3580-TDA           restored       restored       discarded (*)
+
+(*) unchanged by design, see above.
+
+State after MTLOAD (patch 2):
+
+  R03.load: position after reset + MTLOAD
+    IBM LTO-5 and ULT3580-TDA  unpatched: MTIOCGET -1:-1    v3: ok (0:0)
+    scsi_debug                 unpatched and v3: ok (new session)
+  B09: read after MTLOAD at EOD, no reset
+    IBM ULT3580-TDA            v1: read() fails with EIO    v2, v3: ok
+    scsi_debug                 v1, v2, v3: ok (new session)
+  X04: MTLOAD while in partition 1, then MTSETPART 1 and read
+    IBM ULTRIUM-TD5 (LTO-5)    v2: MTIOCGET still reports partition 1,
+                                   MTSETPART 1 not performed, read in
+                                   partition 0 fails with EIO
+                               v3: ok
+    scsi_debug                 v2, v3, v4: ok (new session)
+  X05: one open file: write in partition 0, MTSETPART 1, read()
+       (switches in rw_checks() without resetting partition 0's state),
+       MTLOAD, close; then read partition 0
+    IBM ULTRIUM-TD5 (LTO-5)    v3: close wrote a filemark at BOT of
+                                   partition 0, the file there is lost
+                               v4: ok, partition 0 intact
+    scsi_debug                 v4: ok
+
+Drive buffering mode after reset (patch 3), read from the drive with
+MODE SENSE through the sg node, mode 0 set with MTSETDRVBUFFER:
+
+  R15: reset + MTREW / MTLOAD / MTRETEN
+    IBM ULTRIUM-TD5 (LTO-5)    patches 1-2: drive back in mode 1
+                               v3:          mode 0 restored
+    scsi_debug                 does not implement buffered mode
+
+Door lock after reset (patch 4), auto-lock on, same open file:
+
+  R16: read (locks), reset, recover, read
+    IBM ULTRIUM-TD5 (LTO-5)    patches 1-2: door not locked again
+                               v3:          locked again
+    scsi_debug                 v3:          locked again
+
+For the position tests, "ok" means that MTIOCPOS returns 0 and the
+first block read without repositioning is block 0 of file 0; it is not
+based on MTIOCGET alone.  The restore after MTREW/MTSEEK/MTEOM from
+7081dc75df79 is unaffected on all devices.  Every test ends with a
+byte-exact read-back of the whole tape.
+
+The tests are part of a tape validation harness (reset detection, the
+blocked-operation matrix, recovery operations, interrupted I/O, SCSI EH
+via scsi_debug error injection); B09, X04, X05, R15 and R16 were added
+for the review comments on v1 to v3:
+https://gitlab.com/loberman/tapetest (developed with AI assistance)
+
+Changes since v3:
+- Patch 1: restore after MTLOAD and MTRETEN only when the drive is
+  ready (Sashiko).
+- Patch 2: reset the state of all partitions after the load, as a new
+  session does; a stale ST_WRITING state made st_flush() write a
+  filemark at BOT of partition 0 (Sashiko).
+- Patches 3 and 4: unchanged.
+
+Changes since v2:
+- Patch 2: after a successful load, set the partition to 0 for all
+  partitions, not only when the current partition is 0 (Kai Mäkisara).
+- New patch 3: restore the drive buffering mode after reset (Kai
+  Mäkisara).
+- New patch 4: relock the door after reset (Kai Mäkisara).
+- Patch 1: unchanged.
+
+Changes since v1:
+- Patch 2: also reset the EOF state (and at_sm, last_block_valid) after
+  the load, as MTREW does (found by Sashiko).
+
+v3: https://marc.info/?l=linux-scsi&m=179070241545955&w=2
+v2: https://marc.info/?l=linux-scsi&m=179060186958028&w=2
+v1: https://marc.info/?l=linux-scsi&m=179051462299046&w=2
+
+
+Laurence Oberman (4):
+  scsi: st: Restore changed drive settings after reset also for MTLOAD
+    and MTRETEN
+  scsi: st: Record the tape position after a successful MTLOAD
+  scsi: st: Restore the drive buffering mode after reset
+  scsi: st: Relock the door after a reset
+
+ drivers/scsi/st.c | 97 +++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/st.h |  2 +
+ 2 files changed, 96 insertions(+), 3 deletions(-)
+
 -- 
-2.43.0
+2.55.0
 
