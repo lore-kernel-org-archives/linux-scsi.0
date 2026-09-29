@@ -1,107 +1,116 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail-m32113.qiye.163.com (mail-m32113.qiye.163.com [220.197.32.113])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EA114EBAE0;
-	Tue, 29 Sep 2026 10:21:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF4A450B8DA
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 10:26:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.113
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790677304; cv=none; b=PN1hU+uMeIv5bF/Hn0UUNODzP5a+5b7T4Zsom+EefBqbsMvKNfoxSTbhk6+IN9wHs02FndAuWYzrHFKV+o+DfHI1Uq8zvXQS2QbdIg8Mfa1K5O3WX0/d0S7FtUPYntfeZlj0nVlLAZHgmF4TYnEmjuDPbpdgUYyrZpFxcKIVjHI=
+	t=1790677588; cv=none; b=ey3hYjj5Yy0GZmtwOMPHJZ6dLFamOMbs2VIriYIXi0gIACU/ros15SIO4NVZg+2P2SxKpmrIf1E85NWlS2s2iSiCL1odum7cwsUASuOagyuT0+9EktGEmwedOCOqjrOBJ0wD91j/iX+Poi+NOPNuaHUi8slqKjETxYbIInOqz5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790677304; c=relaxed/simple;
-	bh=mxf/hWbAS/t6nBfEDUIR0gDfSn1DX6nZ4eirA7URNIk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CjzUKNflvLkZMwEvw+OrDHbieQn9SAeJE0a+n68Nth7BqxqlIEuoDsWgXaC5u2RVMIicPSTw7RJR4f64Xv6fn7YQ4zkgMH5czLj7Lk/qETnwzkN2p9LBvYLKAjhc7d3X3nq4mADQcIqre59/sRRjjZDCwfAv6HFP1pe0XTl08F4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SZxx21c4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790677588; c=relaxed/simple;
+	bh=Keddl27BVUnCg122FvQYEerZSG2Gr1w6vrE7lq1+Vyk=;
+	h=Content-Type:Message-ID:To:Cc:Subject:MIME-Version:From:Date; b=Je5GofdQrvvJHe3jHkj1k0JOT+wA9Wdrl7n5kG1pZuMYQGcNv5eUPiGyA3YIs/buGx3NFLEdCyYGxb6CU2q6chzxAAqH4SyTAmvdy437dHPEM/xuG7yZnPABUO4aStAgKByl5tb6X7xx9AX9K8w9dtUTy5ImIz+tRQFwRBwhEl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hdu.edu.cn; spf=pass smtp.mailfrom=hdu.edu.cn; dkim=pass (1024-bit key) header.d=hdu.edu.cn header.i=@hdu.edu.cn header.b=fIWkqKHd; arc=none smtp.client-ip=220.197.32.113
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hdu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hdu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SZxx21c4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A35F71F00893;
-	Tue, 29 Sep 2026 10:21:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790677303;
-	bh=JAgXzEH3RCvnF1tk8UjPrVitXFc0UPEOfuFk6xIpceM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SZxx21c4XNdDMRQA9bIBzWjtjTTKH9lJ0XlkJ+AiVTfz1/8rivVqBtPI/CasCmrhd
-	 v6I/NxmSsY1v6q6BiLwnYRDeaM9LdgrVHwQ4ihIJrcz1oUsHYrte7Rn5n6baguf+b5
-	 sy7ltbia44gijqw4qqFRst/BejRSbBruS2FNTTZIVCSSVXOtLZrCnan/QwnTf3B+vC
-	 vOL8EyYmaM+o+FBq1JKtZdinYoTsXOShazfdEFG2GtLUVHpHh1EniZO/1aUvslUiZq
-	 GCjeAm+tP7UbwMZvyht+IwGaeZqtRuSBZqYEsU+0ACOMTjsn2oVv+3LWYTJ6Y3hcEA
-	 uweJN9hyz1a9Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 09/12] scsi: ufs: Add NXP S32N79 UFS host controller
- driver
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Larisa Grigore" <larisa.grigore@oss.nxp.com>
-Cc: conor+dt@kernel.org, linux-scsi@vger.kernel.org, Frank.Li@kernel.org, robh@kernel.org, devicetree@vger.kernel.org, imx@lists.linux.dev
-In-Reply-To: <20260929100946.693962-10-larisa.grigore@oss.nxp.com>
-References: <20260929100946.693962-1-larisa.grigore@oss.nxp.com>
- <20260929100946.693962-10-larisa.grigore@oss.nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 29 Sep 2026 10:21:42 +0000
-Message-Id: <20260929102142.A35F71F00893@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=hdu.edu.cn header.i=@hdu.edu.cn header.b="fIWkqKHd"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+Message-ID: <ALIABAASK2nU8CSi3jfrSapc.1.1790677263034.Hmail.252270051@hdu.edu.cn>
+To: mkp@kernel.org, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, lixiao0@hdu.edu.cn, yzeng@hdu.edu.cn, 
+	yanzhaoshen@126.com
+Subject: =?UTF-8?B?W1BBVENIXSBzY3NpOiBkZXZpY2VfaGFuZGxlcjogcmRhYzogZml4IHVzZS1hZnRlci1mcmVlIGluIHNlbmRfbW9kZV9zZWxlY3QoKQ==?=
+X-Priority: 3
+X-Mailer: HMail Webmail Server V2.0 Copyright (c) 2016-163.com web
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Received: from 252270051@hdu.edu.cn( [183.157.177.89] ) by ajax-webmail ( [127.0.0.1] ) ; Tue, 29 Sep 2026 18:21:03 +0800 (GMT+08:00)
+From: =?UTF-8?B?5p2O6aqB?= <lixiao0@hdu.edu.cn>
+Date: Tue, 29 Sep 2026 18:21:03 +0800 (GMT+08:00)
+X-HM-Tid: 0aa0ecadf057d458kusy0792de8bdefd
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaGUgZVksYTE0ZSBpNQh1KTFYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlKQ0hVSk5MVUpMTFVDQllXWRYaDxIVHRRZQVlPS0hVSk
+	tISk9ITFVKS0tVSkJLS1kG
+DKIM-Signature: a=rsa-sha256;
+	b=fIWkqKHdM7B3MJa6zIvK2tgYfEaIWx97ZCkMfhN0eSGKn33aw4dx866V/00/vIntJ2i3GDZPq3N4bHq2Tbakslcf3GndysO9bc/hSu98NWvqjRjQPxMNQqom2OWziG7A5QzMBn2Hn7eC/VM22yQbmgUgbpgf875ePR+B04BorAA=; c=relaxed/relaxed; s=default; d=hdu.edu.cn; v=1;
+	bh=Keddl27BVUnCg122FvQYEerZSG2Gr1w6vrE7lq1+Vyk=;
+	h=date:mime-version:subject:message-id:from;
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] ufs: core_clk remains permanently enabled during PM suspend stat=
-es
---
-
-commit aea859e7e22ef8d785ddf1572d56548e903ae544
-Author: Larisa Grigore <larisa.grigore@oss.nxp.com>
-scsi: ufs: Add NXP S32N79 UFS host controller driver
-
-This commit adds support for the UFS host controller on the NXP S32N79 SoC,
-built on the Synopsys DesignWare architecture. It introduces platform glue
-and specific initialization routines for clock scaling, M-PHY calibration,
-and device hibernation transitions.
-
-> diff --git a/drivers/ufs/host/ufs-nxp-s32n7.c b/drivers/ufs/host/ufs-nxp-=
-s32n7.c
-> new file mode 100644
-> index 0000000000000..5374662763b6e
-> --- /dev/null
-> +++ b/drivers/ufs/host/ufs-nxp-s32n7.c
-[ ... ]
-> +static int ufs_s32n7_init(struct ufs_hba *hba)
-> +{
-[ ... ]
-> +	/*
-> +	 * The core reference clock is not managed by the UFS core (the DT node
-> +	 * has no clock-names/freq-table-hz, so it is never added to
-> +	 * hba->clk_list_head).
-> +	 */
-> +	ufs->core_clk =3D devm_clk_get_enabled(dev, NULL);
-> +	if (IS_ERR(ufs->core_clk))
-> +		return dev_err_probe(dev, PTR_ERR(ufs->core_clk),
-> +				     "Failed to get and enable core clock.\n");
-> +
-> +	ufshcd_set_variant(hba, ufs);
-> +
-> +	return 0;
-> +}
-[ ... ]
-> +static const struct dev_pm_ops ufs_s32n7_pm_ops =3D {
-> +	SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
-> +	RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
-> +	.prepare	=3D pm_sleep_ptr(ufshcd_suspend_prepare),
-> +	.complete	=3D pm_sleep_ptr(ufshcd_resume_complete),
-> +};
-
-[Severity: Medium]
-Because the core clock is unconditionally enabled via devm_clk_get_enabled()
-in ufs_s32n7_init() and is explicitly excluded from the UFS core's PM logic,
-will this clock remain permanently enabled across all low-power states?
-
-Since these power management ops map directly to the generic UFS core hooks
-and the UFS variant ops don't implement suspend or resume callbacks, there
-does not appear to be a mechanism to disable ufs->core_clk during system
-suspend or runtime idle. Could this lead to unnecessary power consumption?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260929100946.6939=
-62-1-larisa.grigore@oss.nxp.com?part=3D9
+cmRhY19idXNfZGV0YWNoKCkgY2FuIGZyZWUgdGhlIHBlci1kZXZpY2UgcmRhY19kaF9kYXRhIHdo
+aWxlCnNlbmRfbW9kZV9zZWxlY3QoKSBpcyBzdGlsbCB1c2luZyBpdC4KCnF1ZXVlX21vZGVfc2Vs
+ZWN0KCkgcXVldWVzIGN0bHItPm1zX3dvcmsgYW5kIHNldHMgY3Rsci0+bXNfcXVldWVkLCBidXQK
+c2VuZF9tb2RlX3NlbGVjdCgpIGNsZWFycyBtc19xdWV1ZWQgbmVhciB0aGUgYmVnaW5uaW5nIG9m
+IHRoZSB3b3JrZXI6CgoJc3Bpbl9sb2NrKCZjdGxyLT5tc19sb2NrKTsKCWxpc3Rfc3BsaWNlX2lu
+aXQoJmN0bHItPm1zX2hlYWQsICZsaXN0KTsKCWN0bHItPm1zX3F1ZXVlZCA9IDA7CgljdGxyLT5t
+c19zZGV2ID0gTlVMTDsKCXNwaW5fdW5sb2NrKCZjdGxyLT5tc19sb2NrKTsKClRoZSB3b3JrZXIg
+Y29udGludWVzIHRvIHVzZSBjdGxyIGFuZCB0aGUgcmRhY19kaF9kYXRhIG9iamVjdHMgcmVmZXJl
+bmNlZApieSB0aGUgc3BsaWNlZCByZGFjX3F1ZXVlX2RhdGEgbGlzdCBhZnRlciB0aGF0IHBvaW50
+LiAgSW4gcGFydGljdWxhciwKcmRhY19mYWlsb3Zlcl9nZXQoKSBkZXJlZmVyZW5jZXMgdGhlIHF1
+ZXVlZCBoIG9iamVjdHMsIHRoZSBNT0RFIFNFTEVDVApjb21tYW5kIHVzZXMgJmgtPmN0bHItPm1v
+ZGVfc2VsZWN0IGFzIGl0cyBkYXRhIGJ1ZmZlciwgYW5kIHRoZSB3b3JrZXIKdXBkYXRlcyBoLT5z
+dGF0ZSBhbmQgY29tcGxldGVzIHRoZSBxdWV1ZWQgYWN0aXZhdGlvbnMgYWZ0ZXJ3YXJkcy4KCnJk
+YWNfYnVzX2RldGFjaCgpIGN1cnJlbnRseSBzeW5jaHJvbml6ZXMgd2l0aCB0aGUgd29ya3F1ZXVl
+IG9ubHkgd2hpbGUKbXNfcXVldWVkIGlzIG5vbi16ZXJvOgoKCWlmIChoLT5jdGxyICYmIGgtPmN0
+bHItPm1zX3F1ZXVlZCkKCQlmbHVzaF93b3JrcXVldWUoa21wYXRoX3JkYWNkKTsKCklmIGEgZGV2
+aWNlIGlzIGRldGFjaGVkIGFmdGVyIHNlbmRfbW9kZV9zZWxlY3QoKSBoYXMgY2xlYXJlZCBtc19x
+dWV1ZWQKYnV0IGJlZm9yZSB0aGUgd29ya2VyIGhhcyBmaW5pc2hlZCwgdGhlIGZsdXNoIGlzIHNr
+aXBwZWQgYW5kIGggY2FuIGJlCmZyZWVkIHdoaWxlIHRoZSB3b3JrZXIgc3RpbGwgcmVmZXJlbmNl
+cyBpdC4KCktBU0FOIG9uIHg4Nl82NCBhdCBjb21taXQKNjJmNGM5OThiMjk3Y2YyMzM5OTdhMmI0
+Y2Q2ZmMyZDJkZjAzMTljOSwgd2l0aCBDT05GSUdfS0FTQU49eSBhbmQKQ09ORklHX0tBU0FOX0dF
+TkVSSUM9eSwgcmVwb3J0czoKCglCVUc6IEtBU0FOOiBzbGFiLXVzZS1hZnRlci1mcmVlIGluIHNl
+bmRfbW9kZV9zZWxlY3QrMHhjY2UvMHhlYjAKCVdyaXRlIG9mIHNpemUgMSBhdCBhZGRyIGZmZmY4
+ODgxMDIyYjc0MjUgYnkgdGFzayBrd29ya2VyL3UxNjoyLzUzCglXb3JrcXVldWU6IGttcGF0aF9y
+ZGFjZCBzZW5kX21vZGVfc2VsZWN0CglBbGxvY2F0ZWQgYnkgdGFzayAxOiAgIHJkYWNfYnVzX2F0
+dGFjaCgpIDwtIHNjc2lfZGhfaGFuZGxlcl9hdHRhY2goKQoJRnJlZWQgYnkgdGFzayA5NjogICAg
+ICBrZnJlZSgpIDwtIHNjc2lfZGhfcmVsZWFzZV9kZXZpY2UoKQoJICAgICAgICAgICAgICAgICAg
+ICAgICA8LSBzY3NpX2RldmljZV9kZXZfcmVsZWFzZSgpCgkgICAgICAgICAgICAgICAgICAgICAg
+IDwtIHNjc2lfZGV2aWNlX3B1dCgpCgkgICAgICAgICAgICAgICAgICAgICAgIDwtIHNkZXZfc3Rv
+cmVfZGVsZXRlKCkKCVRoZSBidWdneSBhZGRyZXNzIGlzIGxvY2F0ZWQgMzcgYnl0ZXMgaW5zaWRl
+IG9mIGEgZnJlZWQgNTEyLWJ5dGUgcmVnaW9uCgpPZmZzZXQgMzcgaXMgb2Zmc2V0b2Yoc3RydWN0
+IHJkYWNfZGhfZGF0YSwgc3RhdGUpLCBtYXRjaGluZyB0aGUgaC0+c3RhdGUKc3RvcmUgaW4gc2Vu
+ZF9tb2RlX3NlbGVjdCgpIGFmdGVyIGggaGFzIGJlZW4gZnJlZWQuCgpGaXggdGhpcyBieSB1bmNv
+bmRpdGlvbmFsbHkgZmx1c2hpbmcgdGhpcyBjb250cm9sbGVyJ3MgbXNfd29yayBiZWZvcmUKcmVt
+b3ZpbmcgYW5kIGZyZWVpbmcgaC4gIG1zX3F1ZXVlZCBjYW5ub3QgaW5kaWNhdGUgY29tcGxldGlv
+biBiZWNhdXNlCnRoZSB3b3JrZXIgY2xlYXJzIGl0IGJlZm9yZSBpdCBzdG9wcyB1c2luZyB0aGUg
+cXVldWVkIHJkYWNfZGhfZGF0YQpvYmplY3RzLgoKVXNlIGZsdXNoX3dvcmsoKSBpbnN0ZWFkIG9m
+IGZsdXNoX3dvcmtxdWV1ZSgpIHNvIHRoYXQgZGV0YWNoIHdhaXRzIG9ubHkKZm9yIHRoZSBhZmZl
+Y3RlZCBjb250cm9sbGVyIHJhdGhlciB0aGFuIHVucmVsYXRlZCBjb250cm9sbGVycyBvbgprbXBh
+dGhfcmRhY2QuICBVc2UgZmx1c2hfd29yaygpIHJhdGhlciB0aGFuIGNhbmNlbF93b3JrX3N5bmMo
+KSBiZWNhdXNlCnRoZSBxdWV1ZWQgTU9ERSBTRUxFQ1Qgd29yayBvd25zIHJkYWNfcXVldWVfZGF0
+YSBlbnRyaWVzIHdob3NlIGFjdGl2YXRpb24KY2FsbGJhY2tzIHN0aWxsIG5lZWQgdG8gYmUgY29t
+cGxldGVkLgoKVmVyaWZpZWQgd2l0aCBhIHRlc3Qtb25seSByZXByb2R1Y2VyIHVzaW5nIFFFTVUg
+YW5kIHNjc2lfZGVidWcgdG8gZW11bGF0ZQp0aGUgUkRBQyBWUEQgcGFnZXMgYW5kIGRlbGF5IE1P
+REUgU0VMRUNULCB3aXRoIHRoZSBSREFDIGRyaXZlciBvdGhlcndpc2UKdW5tb2RpZmllZC4gIFdp
+dGhvdXQgdGhpcyBjaGFuZ2UsIEtBU0FOIHRyaWdnZXJlZCByZXByb2R1Y2libHkgaW4gYm90aAp0
+ZXN0IHJ1bnMsIHByb2R1Y2luZyA1OCBhbmQgNzggcmVwb3J0cy4gIFdpdGggdGhlIGNoYW5nZSwg
+bm8gS0FTQU4gcmVwb3J0CndhcyBvYnNlcnZlZCwgaW5jbHVkaW5nIGEgdGVzdCB3aXRoIHR3byBw
+YXRocyBzaGFyaW5nIG9uZSBjb250cm9sbGVyLgoKSSBkbyBub3QgaGF2ZSBhY2Nlc3MgdG8gcmVh
+bCBSREFDIGhhcmR3YXJlLiAgTXkgcmVwcm9kdWNlciB0cmlnZ2VycwpkZXZpY2UgcmVtb3ZhbCB0
+aHJvdWdoIHByaXZpbGVnZWQgc3lzZnMgYWNjZXNzLiAgSSBoYXZlIG5vdCBlc3RhYmxpc2hlZAph
+biB1bnByaXZpbGVnZWQgdHJpZ2dlci4gIFRoZSByZXByb2R1Y2VyIGlzIG5vdCBpbmNsdWRlZCBo
+ZXJlIGFuZCBpcwphdmFpbGFibGUgb24gcmVxdWVzdC4KCkZpeGVzOiAzNTY5ZTUzNzRkZjYgKCJb
+U0NTSV0gc2NzaV9kaF9yZGFjOiBGaXggZm9yIHVuYmFsYW5jZWQgcmVmZXJlbmNlIGNvdW50IikK
+UmVwb3J0ZWQtYnk6IFlpbmdwZWkgWmVuZyA8eXplbmdAaGR1LmVkdS5jbj4KUmVwb3J0ZWQtYnk6
+IFlhbnpoYW8gU2hlbiA8eWFuemhhb3NoZW5AMTI2LmNvbT4KQXNzaXN0ZWQtYnk6IExMTQpDYzog
+c3RhYmxlQHZnZXIua2VybmVsLm9yZwpTaWduZWQtb2ZmLWJ5OiBMSSBYaWFvIDxsaXhpYW8wQGhk
+dS5lZHUuY24+CgotLS0KCiBkcml2ZXJzL3Njc2kvZGV2aWNlX2hhbmRsZXIvc2NzaV9kaF9yZGFj
+LmMgfCA3ICsrKysrLS0KIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDIgZGVsZXRp
+b25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhf
+cmRhYy5jIGIvZHJpdmVycy9zY3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhfcmRhYy5jCmluZGV4
+IDg4YzhlMzZiMi4uZTI0MzYwMTQ4IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvZGV2aWNlX2hh
+bmRsZXIvc2NzaV9kaF9yZGFjLmMKKysrIGIvZHJpdmVycy9zY3NpL2RldmljZV9oYW5kbGVyL3Nj
+c2lfZGhfcmRhYy5jCkBAIC03ODUsOCArNzg1LDExIEBAIHN0YXRpYyB2b2lkIHJkYWNfYnVzX2Rl
+dGFjaCggc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2ICkKIHsKIAlzdHJ1Y3QgcmRhY19kaF9kYXRh
+ICpoID0gc2Rldi0+aGFuZGxlcl9kYXRhOwogCi0JaWYgKGgtPmN0bHIgJiYgaC0+Y3Rsci0+bXNf
+cXVldWVkKQotCQlmbHVzaF93b3JrcXVldWUoa21wYXRoX3JkYWNkKTsKKwkvKgorCSAqIG1zX3F1
+ZXVlZCBpcyBjbGVhcmVkIGJlZm9yZSBtc193b3JrIHN0b3BzIHVzaW5nIGguCisJICovCisJaWYg
+KGgtPmN0bHIpCisJCWZsdXNoX3dvcmsoJmgtPmN0bHItPm1zX3dvcmspOwogCiAJc3Bpbl9sb2Nr
+KCZsaXN0X2xvY2spOwogCWlmIChoLT5jdGxyKSB7Ci0tIAoyLjM0LjE=
