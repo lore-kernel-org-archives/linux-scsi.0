@@ -1,117 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fgw21-4.mail.saunalahti.fi (fgw21-4.mail.saunalahti.fi [62.142.5.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3792519DEC;
-	Tue, 29 Sep 2026 11:56:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D07F65218B9
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 12:39:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790682969; cv=none; b=fmacO2BNIhVuKggoslJ5Am1fwGznit12Mh/NO64CJNT8ZdWrGdaYGX/Tmvka9RULdDcHxEEPiYaGbUCCYxSqnlAudsAnNfUcLq6T+pK12NVeJrN8VyRbPiR0uBq+HCUKmDrYVNM1YqMr8gwKaMtBJA9xvRWYqNpBZ1ZEhvK1F8o=
+	t=1790685577; cv=none; b=QGUfkPADNNdER6lnUOJgajdEBt2Xdqg+IuqjqQg/XdN/b7ShJ7Ji3gaWK9r0JvaXGjJpPmX5GE7W8ezKu8aoyx+qSc2xZWM5PgXLGbbTlq1OGYChVuWRMiXh0H+Q7YVBUpnyBdr+SrAkzd2IFYmhlGACi9c/I0AW3gcGN9L6Vrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790682969; c=relaxed/simple;
-	bh=oi4ecmrtRPGyQ9zN1UpyGc3XPw7K3CaoMg48WodFQB0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pQx3zlk2lcjH0xxNBbP1E8pXw8jhg+MVPTqYOsGM2T3+ZeHCueghIK5Oq/XKpmzR+w84LJemJyHXwvbusirHJzKa6oNKvVDr4c7XcoPDOkaBZvB3uXfxc+vHndLoLh5DwNdivucPoaiVsgesqz+714DLUva4Nr3OOaRZ1OnkA18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aAfRGdMc; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790685577; c=relaxed/simple;
+	bh=JXh3UxCUENjzB9RcziP/cip1YB5dAdzSfmswftXO1DM=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=WOoFgD8Wag/9QXyoz1DLW9/1pQVStTQzqsMIWtmfEZ82BD36YupNNwSQIuyVdfxlCMZ0X+eUKSAzhwtKFyWu4EDfU/x15NlHa/QABTn+fb+kcpF3LzgoeKaFZ+liyirNguO0BTh8ArAetWsQJvOf70nWX6yx971EIY/gD+50Vj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=AyjrtImp; arc=none smtp.client-ip=62.142.5.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aAfRGdMc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71CE31F00893;
-	Tue, 29 Sep 2026 11:56:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790682968;
-	bh=zAcr7k1VFSj0FxGnV2wZTgaTAlECtx8NAJwasJV5ywQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=aAfRGdMcWvekHavm3q/uHYK7Ej0wO8vA5AtpIPBUdP4gtxA2dErTsPrWW+Fjb83+I
-	 c2Gs8W0TBEQKMyytzDSlLl5gnaexK6kTt2SCecoJjmzDg9JXtQhj7Tio71pYf6e65t
-	 QFfditMrnvBbf4LiD23zX70P8flC8+78Kp3I6UZCxZaDZltCVPC7XlOwz+faE860lN
-	 UTl5y4EJhNS+BeEgBKH/PjRzQa2QCVv2M5d3HOxOh9XFsBatlfykjyhsmwjCE2bgee
-	 JAANKijL4mMkTi1BPEWHjr9hLU4e9EeH1QGhtaxq7ecHueELulevrmQteCucLlIXqF
-	 E9q8Qv65nf4sw==
-Date: Tue, 29 Sep 2026 13:56:03 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: hengyul@cs.unc.edu
-Cc: dlemoal@kernel.org, mkp@kernel.org, ipylypiv@google.com,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-scsi: do not lose CHECK CONDITION for failed
- ATAPI commands
-Message-ID: <arunU96ilIfG7Gt5@ryzen>
-References: <20260924180414.2102946-1-hengyul@cs.unc.edu>
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="AyjrtImp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=u7HU19h5lbzGtU1iqNIQFKdGJ7qlUITz6hmAwOpJCWo=;
+	b=AyjrtImpoZbG4CAH30k9YRvnEGTjn4LRs5jt8klL4Vz03cOyaeFwxQqJLeJLS8iBwHaEpeU7UAVWE
+	 Kg8Wr5JMi3LMDUI8aMwqjKNZ50uRlGkoa/xp3BO28p+YyF275f59c9AYlLB1suCRaoqElXUu0AN53C
+	 S7Vyrmld72lSTCJUvZQICBc5cHlDQfsUfEow8TmxtQhzLkHt0KImk7AJAiuvWtmv1LF1f1y55CwIKc
+	 r0HBR699lUKYcFjhVV5lsNHRZbQr+5SGbvKOAfHQUhRQWbG+5lmNGJSIeNh0f4uM2q1vIJ+ec/ibCo
+	 aEgAghHI1gpBbjHyJzx+Kob64gnzZWw==
+Received: from smtpclient.apple (91-158-174-119.elisa-laajakaista.fi [91.158.174.119])
+	by fgw22.mail.saunalahti.fi (Halon) with ESMTPSA
+	id d02b89fd-bc02-11f1-8e9b-005056bdf889;
+	Tue, 29 Sep 2026 15:39:30 +0300 (EEST)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260924180414.2102946-1-hengyul@cs.unc.edu>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
+Subject: Re: [PATCH v2 2/2] scsi: st: Record the tape position after a
+ successful MTLOAD
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <20260928132539.56876-3-loberman@redhat.com>
+Date: Tue, 29 Sep 2026 15:39:19 +0300
+Cc: linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <mkp@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ John Meneghini <jmeneghi@redhat.com>,
+ emilne@redhat.com,
+ bgurney@redhat.com
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <DACF75C2-73E1-4906-AAAA-A0C21CC0B859@kolumbus.fi>
+References: <20260928132539.56876-1-loberman@redhat.com>
+ <20260928132539.56876-3-loberman@redhat.com>
+To: Laurence Oberman <loberman@redhat.com>
+X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
-Hello Hengyu,
 
-On Thu, Sep 24, 2026 at 02:04:14PM -0400, hengyul@cs.unc.edu wrote:
-> From: Hengyu Liang <hengyul@cs.unc.edu>
-> 
-> Since commit 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands
-> on time out"), atapi_qc_complete() sets SAM_STAT_CHECK_CONDITION for a
-> failed command only if cmd->result is zero, so that the DID_TIME_OUT or
-> DID_REQUEUE host byte of a terminated command is preserved.
-> 
-> However, cmd->result can also be non-zero for a regular failed ATAPI
-> command completed through libata EH: ata_eh_analyze_tf() calls
-> ata_eh_decide_disposition(), that is, scsi_check_sense(), on the sense
-> data obtained with REQUEST SENSE, and scsi_check_sense() sets the SCSI
-> midlayer internal byte of the result for some sense codes, e.g.
-> SCSIML_STAT_TGT_FAILURE for ILLEGAL REQUEST with ASC 0x20 (INVALID
-> COMMAND OPERATION CODE) or 0x24 (INVALID FIELD IN CDB), or
-> SCSIML_STAT_MED_ERROR for MEDIUM ERROR with ASC 0x11 (UNRECOVERED READ
-> ERROR). For such commands, atapi_qc_complete() keeps the result as is and
-> the command completes with a GOOD status byte, even though it failed and
-> valid sense data is available.
-> 
-> As a result, passthrough users see these failed ATAPI commands as
-> successful. For example, with the emulated IDE CD-ROM drive of QEMU and
-> no medium loaded, a PLAY AUDIO MSF command issued with SG_IO completes
-> with status 0x00 (and no DRIVER_SENSE) instead of 0x02 (CHECK CONDITION)
-> with sense key ILLEGAL REQUEST, ASC/ASCQ 0x20/0x00, and the CDROM ioctls
-> CDROMPLAYTRKIND, CDROMSUBCHNL, CDROMPAUSE, CDROMRESUME, CDROMPLAYMSF and
-> CDROM_GET_MCN return 0 instead of -ENOMEDIUM or -EOPNOTSUPP.
-> 
-> Fix this by preserving the result only if its host byte is set, and by
-> otherwise completing the command with SAM_STAT_CHECK_CONDITION, as was
-> done before that commit.
-> 
-> Fixes: 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands on time out")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
+> On 28. Sep 2026, at 16.25, Laurence Oberman <loberman@redhat.com> =
+wrote:
+>=20
+> Commit 0b120edb37dc ("scsi: st: Add MTIOCGET and MTLOAD to ioctls =
+allowed
+> after device reset") allows MTLOAD to clear the reset condition =
+because
+> the tape location is known after MTLOAD.  But the driver does not =
+record
+> it: reset_state() sets the file and block numbers to -1, and
+> do_load_unload() leaves them there.  check_tape() sets them to 0 only =
+for
+> a new session, which requires a new-medium unit attention.  Drives =
+that
+> do not report one when the medium was already loaded (seen with IBM =
+LTO
+> drives) keep reporting file/block -1 in MTIOCGET and no BOT, although =
+the
+> tape is at the beginning.
+>=20
+> Set the file and block numbers to 0 after a successful load when the
+> current partition is 0, where LOAD positions the medium, and reset the
+> EOF state as MTREW does; otherwise a read after loading at EOD fails
+> with EIO.
+>=20
+> Fixes: 0b120edb37dc ("scsi: st: Add MTIOCGET and MTLOAD to ioctls =
+allowed after device reset")
+> Assisted-by: Claude sashiko
+> Signed-off-by: Laurence Oberman <loberman@redhat.com>
 > ---
+> drivers/scsi/st.c | 14 ++++++++++++++
+> 1 file changed, 14 insertions(+)
+>=20
+> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> index 0a4263bef9cb..f4393a8e8fb1 100644
+> --- a/drivers/scsi/st.c
+> +++ b/drivers/scsi/st.c
+> @@ -2686,6 +2686,20 @@ static int do_load_unload(struct scsi_tape =
+*STp, struct file *filp, int load_cod
+> else {
+> STp->rew_at_close =3D STp->autorew_dev;
+> retval =3D check_tape(STp, filp);
+> + /*
+> + * LOAD leaves the medium at the beginning of partition
+> + * 0.  check_tape() records that only for a new session;
+> + * without a new-medium unit attention (the medium was
+> + * already loaded) the position and the EOF state would
+> + * be left as before the load.  Set them as MTREW does.
+> + */
 
-I think it is better if you set only the status byte with set_status_byte()
-instead of overwriting cmd->result, so that the SCSI midlayer byte set by
-scsi_check_sense() is kept.
+Should the following be done for all values of STp->partition?
+And the code should set STp->partition =3D STp->new_partition =3D 0
+to match the LOAD behaviour. (Usually
+STp->partition =3D=3D STp-> new_partition
+and the partition would not be changed even if STp->partition
+is not correct. But if later the partition is changed to the wrong =
+value,
+the change does not occur.)
 
-Something like:
+> + if (retval =3D=3D CHKRES_READY && STp->partition =3D=3D 0) {
+> + STps =3D &(STp->ps[0]);
+> + STps->drv_file =3D STps->drv_block =3D 0;
+> + STps->eof =3D ST_NOEOF;
+> + STps->at_sm =3D 0;
+> + STps->last_block_valid =3D 0;
+> + }
+> if (retval > 0)
+> retval =3D 0;
+> }
+> --=20
+> 2.55.0
+>=20
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 8f9aa97a519d..fb5517d51095 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3059,10 +3059,15 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
-                if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
-                        qc->dev->sdev->locked = 0;
- 
--               if (cmd->result)
--                       ata_scsi_qc_done(qc, false, 0);
--               else
--                       ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
-+               /*
-+                * Report CHECK CONDITION unless the command was terminated
-+                * with a host byte set. Only set the status byte, so that the
-+                * SCSI midlayer internal byte, which scsi_check_sense() may
-+                * have set from the sense data, is preserved.
-+                */
-+               if (get_host_byte(cmd) == DID_OK)
-+                       set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
-+               ata_scsi_qc_done(qc, false, 0);
-                goto schedule_deferred;
-        }
- 
+Thanks, Kai=
