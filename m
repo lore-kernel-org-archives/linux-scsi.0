@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 757D03E5EC5
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 08:26:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E82963CBE8F
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 08:26:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790670369; cv=none; b=cK580kvkXaJxcxTZvO0L1yclUZIC2CwHNRr7nUzh/87CxNB2AZRxQ5fmV9+uqLhiJPyITY074Dm6RAwwyRauq1S1VqET/54yUcWtBonBUBXSgoUVh2Z0OBXamLMQgtb45xHWY7gH82rFo+7vxOoH7Y1KanzGlQ0J62wWZ2OCHfE=
+	t=1790670371; cv=none; b=PSI9bGEniza9JDQeUSKZHh89B8EteRK1PegD7LlaOuT2sM8GFizclZd3BD+GESm4zWsfPe+MqnXJZUO0SnwZ0cF8b9RZfgtHSz9pQ6QWdtiJhh+zC+mPEC/WwhFMQ9Tj2M8mGbjTHnP3E9LhlnlemhCmT5ONmJGdPz5w2QrOVRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790670369; c=relaxed/simple;
-	bh=li0RPIr2uE2T+AaD++AItuCFLtznquCaLs4d3WwV0BY=;
+	s=arc-20240116; t=1790670371; c=relaxed/simple;
+	bh=meC+Yf+jND1Ry7KR8aGwrzV+50UG/X28NG7WBlbt6ew=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FdqwekhtZk/3xjS3U0KmEPEqkyborqyzGiCLUc0t7MgxtEGGbHnLFny6IClyXZnOXFRoWejcYnObbhxCBJhMgyG2hGdwPUsUTba9Gp+BFTba9yaZZL4S3gd8gAtI1JOedP8CFEdHdT8UK0Q1UfaeaEJtgtlWjDLort0MEpx1oRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KboLjBJz; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=hgKPYmfGtFg4q3FbitPVFzvuv4hjVOEjq5JyQU5HBdd8+809RZp+GWozF5+G4hi89RIjPzTeXsE9TFrxKduZL/b82OjTo3lKvH5gqKDQ5oSVPcdsh0tVhEZj3vOw5mQ7mTwl/wF5zbOwf+ybZYfh6fmWIfrz8HKIPH1eyhwvBrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f2a7Rjem; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KboLjBJz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAE471F0089A;
-	Tue, 29 Sep 2026 08:26:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f2a7Rjem"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FCF61F000FF;
+	Tue, 29 Sep 2026 08:26:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790670368;
-	bh=Jy7OjMQYDG+fpamlFUeqjo9sCy5VTOwiod38mYAK8QQ=;
+	s=k20260515; t=1790670369;
+	bh=55lILNisBURWrAj+FASYeY/4QHC2Fm6juyqB1mxv1i0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=KboLjBJzz6fsh2MZzpOQRRycr7Z/KQH/fHBwvHvsGn4xvtFaulrIOGCA9oNTGIQYb
-	 71KpGukT+yNN1vQAwUL1Pzslet3A7bpJRYFeHGW3UNE2rOPazC4iJ0FGeoGaPFh8tQ
-	 KalZZQyKZc/AJtGdMdepuNjXj0GwPLgG02G/+ZysuVNfc5eNaEKbYmLM6NBdWI1RpX
-	 L/cKvwNfgFlUQM7C1rjIP8sIQ6eFaDoO81lCb0IatDSGvPUKN1FAS1Ohr8oYaF4rqv
-	 pESTobo3WDgiY/9oR7pjuD9Q3iV5X+t+Z0uzfoVg/JTNmB83v5RqZmqwoG7yEMABsn
-	 5TIC3rtK0SpZg==
+	b=f2a7RjemMO7eOrbKAWB5Z6F+lM15/Mz77y1ofkkb2K/4IUVZJ1xlEESGCZLQCaAo0
+	 8G6t9Mnmxq+AurQRZGyF9pdT3P2H+E2WfWWwXE0pvkzzqWOkP7q7n7HokqfCcg9W6G
+	 YTtWPi+QrCaPzIwq668br9fdF6dtCAmG+PRJFWL1HOUchepjQI0yzQBlmKDZw00aXN
+	 JpHyF7UzWtOyilxPZnTOvzV1TSysoMOygKRJecNhWPhWQUCZ1MBsz5bEi2nxLnqOqb
+	 zWmcfYTmxdiOmWYNNtPPyENOyvlw2QDrR9EnOvoUHySCIu0UHzAUgFGGSlVF0cL70u
+	 xE9u7to6d+alg==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -33,9 +33,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v11 04/13] scsi: scsi_debug: Take the zone metadata lock before the data lock
-Date: Tue, 29 Sep 2026 10:25:01 +0200
-Message-ID: <20260929082456.857423-19-cassel@kernel.org>
+Subject: [PATCH v11 05/13] scsi: scsi_debug: Evaluate scsi_debug_lbp() only once
+Date: Tue, 29 Sep 2026 10:25:02 +0200
+Message-ID: <20260929082456.857423-20-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260929082456.857423-15-cassel@kernel.org>
 References: <20260929082456.857423-15-cassel@kernel.org>
@@ -45,71 +45,132 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2333; i=cassel@kernel.org; h=from:subject; bh=li0RPIr2uE2T+AaD++AItuCFLtznquCaLs4d3WwV0BY=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2l74xuL1X8s9ZMR31hOUvOT4e2lK1XrPT/nilyXPJo Ej7AgfOjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEwkZBrDP3X37HXxG0osl9Y1 tE+aFP6GxXW6ri23qOmehi+ip7dv4GNkWBudzzXz5r29jW9VG0zNI9sPWafJ7znGc/HyJR/+2HB BFgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4597; i=cassel@kernel.org; h=from:subject; bh=meC+Yf+jND1Ry7KR8aGwrzV+50UG/X28NG7WBlbt6ew=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2l77Z/7J6e8natauDoxbt+8ClUb7oVsqeZXLCl2Knt 6xVWrhsUkcpC4MYF4OsmCKL7w+X/cXd7lOOK96xgZnDygQyhIGLUwAmYjuFkWH7xFNiAjrKxu6z TnR4/d5qahd39pHG5vbX67nSWOd1bc5m+J80ZVtvxfwpfY2tfuxLzstu8Vvl2hK6fBlnjHdU3Ny r3qwA
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-resp_comp_write() takes the data lock and then the zone metadata lock,
-while every other command that takes both takes the metadata lock first
-and reaches the data lock through do_device_access(). A COMPARE AND
-WRITE and any other write to the same store can therefore deadlock each
-other.
+corrupt_lbas(), resp_write_dt0() and resp_write_same() call
+scsi_debug_lbp() to decide whether to take the zone metadata lock, and
+call it again to decide whether to touch the provisioning map that the
+lock protects.
 
-Take the locks in the same order as everywhere else.
+The result is not constant: scsi_debug_lbp() is false while fake_rw is
+set, and fake_rw is writable at runtime, both as a module parameter and
+through its driver attribute. The second call can therefore touch the
+map after the first decided not to take the lock.
 
-Correct the comment above map_region() while here: the provisioning map
-is covered by the metadata lock rather than the data lock, which is why
-resp_unmap() takes only the metadata lock.
+Call it once and use the result throughout.
 
 Assisted-by: LLM
-Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: John Garry <john.garry@linux.dev>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
 Tested with:
 
   modprobe scsi_debug sector_size=512 dev_size_mb=128 lbpu=1 lbpws=1
 
-COMPARE AND WRITE completes, and a READ(16) of the block that it wrote
-returns, so the reordered locks are still taken and released correctly.
+A WRITE(16) completes and GET LBA STATUS then reports the region as
+mapped, which covers resp_write_dt0(). A WRITE SAME and a WRITE SAME
+with the UNMAP bit set complete, and GET LBA STATUS reports the first
+region as mapped and the second as deallocated, which covers all three
+uses of the result in resp_write_same().
 
-The deadlock itself was not reproduced. This kernel is built without
-lockdep, and the window needs a COMPARE AND WRITE and another write to
-the same store to interleave between the two acquisitions. Found by
-review.
+corrupt_lbas() is not covered. It is reached by writing to the corrupt
+file in debugfs, and that interface rejected the requests that were
+tried, for a reason that has nothing to do with this patch.
+
+The window that the change closes was not reproduced. It needs fake_rw
+to be written between two calls, and was found by review.
 ---
- drivers/scsi/scsi_debug.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_debug.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index f7c71fcc53fd..7152496952da 100644
+index 7152496952da..92458bf1568b 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -5575,8 +5575,8 @@ static int resp_comp_write(struct scsi_cmnd *scp,
- 			    "indicated=%u, IO sent=%d bytes\n", my_name,
- 			    dnum * lb_size, ret);
+@@ -4953,12 +4953,11 @@ static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
+ {
+ 	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 	bool meta_data_locked = false;
++	bool lbp = scsi_debug_lbp();
+ 	u32 block, num_mapped, b, i;
+ 	int error = 0;
  
--	sdeb_data_write_lock(sip);
- 	sdeb_meta_write_lock(sip);
-+	sdeb_data_write_lock(sip);
- 	if (!comp_write_worker(sip, lba, num, arr, false)) {
- 		mk_sense_buffer(scp, MISCOMPARE,
- 				MISCOMPARE_DURING_VERIFY_OPERATION);
-@@ -5584,12 +5584,12 @@ static int resp_comp_write(struct scsi_cmnd *scp,
- 		goto cleanup_unlock;
+-	if (sdebug_dev_is_zoned(devip) ||
+-	    sdebug_dix ||
+-	    scsi_debug_lbp())  {
++	if (sdebug_dev_is_zoned(devip) || sdebug_dix || lbp) {
+ 		sdeb_meta_write_lock(sip);
+ 		meta_data_locked = true;
+ 	}
+@@ -4975,8 +4974,7 @@ static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
+ 		goto out_unlock;
  	}
  
--	/* Cover sip->map_storep (which map_region()) sets with data lock */
-+	/* Cover sip->map_storep (which map_region() sets) with the meta lock */
- 	if (scsi_debug_lbp())
+-	if (scsi_debug_lbp() &&
+-	    (!map_state(sip, lba, &num_mapped) || num > num_mapped)) {
++	if (lbp && (!map_state(sip, lba, &num_mapped) || num > num_mapped)) {
+ 		pr_err("can't modify unmapped logical blocks: %llu:%u",
+ 			lba, num);
+ 		error = -EINVAL;
+@@ -5035,6 +5033,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	struct sdeb_store_info *sip = devip2sip(devip, true);
+ 	u8 *cmd = scp->cmnd;
+ 	bool meta_data_locked = false;
++	bool lbp = scsi_debug_lbp();
+ 
+ 	if (unlikely(sdebug_opts & SDEBUG_OPT_UNALIGNED_WRITE &&
+ 		     atomic_read(&sdeb_inject_pending))) {
+@@ -5101,8 +5100,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	}
+ 
+ 	if (sdebug_dev_is_zoned(devip) ||
+-	    (sdebug_dix && scsi_prot_sg_count(scp)) ||
+-	    scsi_debug_lbp())  {
++	    (sdebug_dix && scsi_prot_sg_count(scp)) || lbp) {
+ 		sdeb_meta_write_lock(sip);
+ 		meta_data_locked = true;
+ 	}
+@@ -5147,7 +5145,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	}
+ 
+ 	ret = do_device_access(sip, scp, 0, lba, num, group, true, false);
+-	if (unlikely(scsi_debug_lbp()))
++	if (unlikely(lbp))
  		map_region(sip, lba, num);
- cleanup_unlock:
--	sdeb_meta_write_unlock(sip);
- 	sdeb_data_write_unlock(sip);
-+	sdeb_meta_write_unlock(sip);
- cleanup_free:
- 	kfree(arr);
- 	return retval;
+ 
+ 	/* If ZBC zone then bump its write pointer */
+@@ -5374,8 +5372,9 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ 	u8 *fs1p;
+ 	u8 *fsp;
+ 	bool meta_data_locked = false;
++	bool lbp = scsi_debug_lbp();
+ 
+-	if (sdebug_dev_is_zoned(devip) || scsi_debug_lbp()) {
++	if (sdebug_dev_is_zoned(devip) || lbp) {
+ 		sdeb_meta_write_lock(sip);
+ 		meta_data_locked = true;
+ 	}
+@@ -5384,7 +5383,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ 	if (ret)
+ 		goto out;
+ 
+-	if (unmap && scsi_debug_lbp()) {
++	if (unmap && lbp) {
+ 		unmap_region(sip, lba, num);
+ 		goto out;
+ 	}
+@@ -5414,7 +5413,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ 		block = do_div(lbaa, sdebug_store_sectors);
+ 		memmove(fsp + (block * lb_size), fs1p, lb_size);
+ 	}
+-	if (scsi_debug_lbp())
++	if (lbp)
+ 		map_region(sip, lba, num);
+ 	/* If ZBC zone then bump its write pointer */
+ 	if (sdebug_dev_is_zoned(devip))
 -- 
 2.55.0
 
