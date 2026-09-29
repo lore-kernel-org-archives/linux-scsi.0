@@ -1,101 +1,155 @@
-Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
+Received: from mail-qk2-f43.google.com (mail-qk2-f43.google.com [74.125.230.235])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE3A466AE1
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 15:59:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D23A263F4A
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 16:42:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.235
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790697565; cv=none; b=J8H2f0C155s+iH0m9/UTiWsNsyOV8ylQpf4Cqn8mPeYQ1yxVq324dGEuVW63+xNrKXGsQ7gjZs8PheIPCY/ftxQ3viMhTve3RhSeNPWj8S8mvVmDsfituq9ub/sucV4C0xT2uqz0qjYp878Jagy6negHoL4Xwq18JV/wNtt4/UI=
+	t=1790700139; cv=none; b=CGPHOfRB1p2r3uMD4FLPP1YVNNe8teQKphYRl5DC4ez13u+lkNBfY9uLlDebqyplhMYslmd5Por+PqvpeI5wpUFsyDMJvxrLIqDC27M9P6yw9/dU1noa0Re0Gw8gclXzJsGIiDCgybWc1q1PkcHl5qb+3SWGTfEbpzn6C/OeKCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790697565; c=relaxed/simple;
-	bh=bwnWYK80nFfKr3iwUcfFe3FiEOIbobSQBQGXAMlfsws=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZRnHqVEQoh8zFipxVO1FvhSEcdn+eq/TqCA5dJhzJ8ZBOcmhtsKJMy7xMJhwYg7R7XykoirhuH8a1zOcAcGFX4u8/bkvr3YK55htaSUHndYEDdsH56YN1cWbfBpgFjQReVGmJ4RhoHKthyNCtRAx+pa70erCX9nYUOG9egR2UIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=nYBYdIxr; arc=none smtp.client-ip=74.125.225.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+	s=arc-20240116; t=1790700139; c=relaxed/simple;
+	bh=4oNNBVrx7iWlKCs0k9aLCLQO+dCsFhb60Z7Vs+mKWdk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YR6EfqLOc4EdhPK7IFoU4Wv0ZtlpoALNiahIvSbLxjHE6HA3WgZ5DT7SbRcRKHrU5e02gTItTiP6CcbkTEK1OV1VACY2ZxmzeWVSX6lTO+yoN55PDh4v9X9mkFRQEd6Bq6mzj6Ik73jymejxV9MVPlX1P8QuooAR9Q5Jmhkhuss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cs.unc.edu; spf=pass smtp.mailfrom=cs.unc.edu; dkim=pass (2048-bit key) header.d=cs.unc.edu header.i=@cs.unc.edu header.b=TIAigef5; arc=none smtp.client-ip=74.125.230.235
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cs.unc.edu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cs.unc.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="nYBYdIxr"
-Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49e66390995so24796325e9.2
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 08:59:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=cs.unc.edu header.i=@cs.unc.edu header.b="TIAigef5"
+Received: by mail-qk2-f43.google.com with SMTP id d75a77b69052e-52fb766bfd3so38835631cf.0
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 09:42:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gourry.net; s=google; t=1790697560; x=1791302360; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=3j1GsvDFG4oGBkWvUsNYUZ4jWPGCGdM9fhJMq32ExyQ=;
-        b=nYBYdIxrDawbXfSaFe7w3OFYOIJlQrI7qz59yDzNoP/mpoddTQw11jDpz8fIdtFR8U
-         Znr8Mf9igyXtWKyhX9oMfdAJDqgBGoGjvHJ6igkkprc58F97zd5CcoCsAlzLvRI3ylim
-         m1hLqtLjxW1ZBq19GMmUHaYSFSOffW8bLP3K3qMkDov5FsMy3S3x/irgsjS1eOVIRxq+
-         mTxoNRrvS3DP/l/GGQcl6eQRSamNLt1PpjT8Td4ULW0LxMOaLDCJ+NvWfW4h18DY5Ss0
-         azhkGRaDxXPuY2FEehlaV3VB2aS/wbvlM5l1jOZ2enaChDZdM1x+J0h36wzrNkROlZrg
-         6rYw==
+        d=cs.unc.edu; s=google; t=1790700135; x=1791304935; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Qkmc9HSMYXuGuOTX21xyysxiwNQV626wcdXoxNjH/r4=;
+        b=TIAigef5/fRo3DQh1ApmGh8ZNqLC/2sdOW/k1yVBYRMU8FzToEKFWJBY7+Xk8DU8r0
+         6ke/fHBgWWjPDPMyzGymFLnEKdVbzwSQKGbfpHf8r1mJKYDGCj60TZBOSwg7/qg7bxRW
+         ZN4/h785w6evL1B6sqc4K1A7MdkZ6aEdQirN0J3QnU8EnWriS1DDWxKoUjApAL7Zmwxk
+         JDD98ViSGpLHdC2z16UbA8jTdtFBQBl1RFTnWVdiaaqyPHbr2P2wFr2lU8jCBzCZw9hs
+         FdqPDrHyqX3RQqSHIJYGajaFFzgsGS6rTNwsfh7r7D4a9u55d9Gdh7ng6u6SBpJUCiCg
+         aQ8g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790697560; x=1791302360;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=3j1GsvDFG4oGBkWvUsNYUZ4jWPGCGdM9fhJMq32ExyQ=;
-        b=xtEHbMTH3LdVewH/UKRg1ZpZhN2btusWSTzyg8keAUKIu6Mbm+DTwM5/4bWGFQIXCr
-         bLkW8AyfRENdR+qnTRWKifT9d2T3JOgyG+8uWrmmSDWd+Tvb2Q4HZCdbwlok2Qhxipbd
-         Sa7+GaC6PcDznzLeXtFo96dHpPN+Bcdq+mjURkEUFNOPgpWTCoMCFXB+dM+74RZIS/wA
-         Ow+dWdWiZGT0QwAm028P9nAe9Wcopib43cv1fQsNJQC1brJQecMIzrX7tO0x1eLvd/Yc
-         q9bN71/AkB2pd4mfaWzYGDJZQ96xwxswJAVpGqrVaTdOSHUGQGHRl+juWaURNqn5MTKv
-         7BFQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwjQsl+C2EZY+bNXCJRHwW6ITAYihpHW62LLt+TWP5be3mVBFuK7CTx8Etas+t05lurhVeLDzPY13zq@vger.kernel.org
-X-Gm-Message-State: AFuF++nURy6hpkJxRyAzyjNzGAh9SBzOxHyB0mYTn3U2QrHTmPxTW/cf
-	T8P6JwiymM6ygmRyf7mRBpeio+IOQX8kAdHBLeLEHWWqAT0WBB0CStPg6IPWUAurLus=
-X-Gm-Gg: AYBFou0ERmewo8FXIUCwwkqJDaJ9Mzfb+t6tE1iNf5n57KEf8fGB2F2m3oJFOtnL22C
-	Wolz6ishRpgXKOBTkGpLKxtCh0PWEnVedcGkS56FVvYOg2L5E3asTANyIdWxw5IWbshq0T8EywC
-	nW1+zWEzX3un3rnRe49YRtLCG4m52o773bPkJxoh7DcZEHs/bmuJxVtcLTKYbWd+1EgRWl5I/7y
-	1dgQF0+9t8bW+QMSh3twl3lw2v3agHoXMyTb7tupreR6BbfMFYY3zes+g2sj2DZs9Rk2EaAifdG
-	nYLrXTUjzSMw1nqLJ0Utdmjf0bNM1RPjVJ16Pu/yPkpdpWGLTzx/XC76n38Y2E9JkqgS4meKCsI
-	6XxfTDf5RX9siFxda720uNYZY80o60YfA8EjPcF93Zessa91SaKEm6fdzGmy4Gube/KQBfWfaxr
-	7ms/yafLHIbMinsKyJIM8kNa1Dfp88zkZadfSdRJz3urkN6tFBfQ3wPV4UFJ+4NElzcg==
-X-Received: by 2002:a05:600c:46d4:b0:49f:ec98:f030 with SMTP id 5b1f17b1804b1-49ff06f839dmr227620145e9.33.1790697559827;
-        Tue, 29 Sep 2026 08:59:19 -0700 (PDT)
-Received: from gourry-fedora-PF4VCD3F ([2620:10d:c092:500::5:5c0])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a013c6f295sm7062155e9.0.2026.09.29.08.59.18
+        d=1e100.net; s=20260707; t=1790700135; x=1791304935;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Qkmc9HSMYXuGuOTX21xyysxiwNQV626wcdXoxNjH/r4=;
+        b=0TmbESbhKEI7O0oAeA1YUR3UmTO5Zw5qLxDDkAnBxWXaqILnQ9SkSCEHawsFk5S/Fh
+         /1Yz0cFCk5mj58X+fP1iNgkozpcKJ6smfLmA0IOyeyC4T03J8KNJpOzgsamsOlbKATk0
+         VmbPHqAADOLKKrTsKh9yOoLOMSoPbbcR4hd0thDZqrQKsPplvp3LiLoir9I4l8ydPRhO
+         f7wYLmIrwT3uB+rYTYaEC+xJsI/ICqcvoypfdy/Bu9tBOzwzw9YBYwNCA5509rKhVxWO
+         ZARuJFWTHYKcHwYi3IUIN/OUGg0YNTNMm2T7YfonBZNX5WA09aBFOJ426nZet8d6gHpk
+         AaBA==
+X-Forwarded-Encrypted: i=1; AKwUvBwLdoTiUe9S39YDYDGDRZ7L7rUdUClA9HljQkBFLGsKq64EeHtm+qHhFfkXw4yZyC+45nO6ld2G924R@vger.kernel.org
+X-Gm-Message-State: AFuF++lzGLs6CxFLfKdoVOXhOxVtniTNPrnYJ9vY/o2Q+a44pCg/6vqE
+	+XVLhfa84OhgGv0zJA1zRgnwtqKCXeJUJtJdBJK9Y8OUVB0kE/lu/QmeVJz+gp+eBA==
+X-Gm-Gg: AYBFou3XiFMybOQXYsBOnr4jcdBNVy0nSU+TTdctoDDWBc9x1ek+SSAL/VijxxYnc0x
+	13BEY4+QHt1OBXbtEHVjr343rdgnFE1A1jZ4TUwGQSs6pecZJrUi+4cm3VL3gbw4ptLnfZ7T96f
+	Br4TaR/gJS4ecteVIXgjulER1ZUAs5J30xhI/SRaD9iHtjHhn0iSadCyMp04MpURqs1FpGAYSxy
+	RcGDF4eyNXceHGukcBa1fmc88ldqKBAddKdyLTuSUs0PnMpl8zxbqYYmPs/SNko3PcW8zC0yyBq
+	b8Nyx89fmdZFqFA6FERWBIXqWINklk5J4p7XLKxtN/7qFeISOwVtmSw3CYVJtYMqjVaj30Rsc8a
+	Q83acDaKYpwKe87M8JylkWl1OYieCVRHOeM8BuV/5Hqinb46Fjj/cFxU8sk2rSpTccnKXpJUoov
+	qpCPdl/Do+JKgn8u/PGKKQEHAh4hFYUy6HMUeUsYjXRSH8ejDNfdbB/VeQRWqyi+kvRXqEB1gLO
+	Vv8TMYPjFixR7Wzzy09Yg==
+X-Received: by 2002:a05:622a:2d6:b0:533:360f:e753 with SMTP id d75a77b69052e-533360ff66cmr172909001cf.35.1790700134841;
+        Tue, 29 Sep 2026 09:42:14 -0700 (PDT)
+Received: from cobra01.cs.unc.edu (cobra01.cs.unc.edu. [152.2.130.143])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-533223efcc4sm90377781cf.25.2026.09.29.09.42.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Sep 2026 08:59:19 -0700 (PDT)
-Date: Tue, 29 Sep 2026 11:59:17 -0400
-From: Gregory Price <gourry@gourry.net>
-To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 07/40] mm/vma: tidy up map kernel pages enum values
-Message-ID: <arvgNTUgcO0nPh-V@gourry-fedora-PF4VCD3F>
-References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-7-4583d8a23bca@kernel.org>
+        Tue, 29 Sep 2026 09:42:14 -0700 (PDT)
+From: hengyul@cs.unc.edu
+To: dlemoal@kernel.org,
+	cassel@kernel.org
+Cc: mkp@kernel.org,
+	ipylypiv@google.com,
+	linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hengyu Liang <hengyul@cs.unc.edu>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] ata: libata-scsi: do not lose CHECK CONDITION for failed ATAPI commands
+Date: Tue, 29 Sep 2026 12:41:35 -0400
+Message-ID: <20260929164135.266708-1-hengyul@cs.unc.edu>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-7-4583d8a23bca@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Sep 17, 2026 at 05:22:16PM +0100, Lorenzo Stoakes (ARM) wrote:
-> MMAP_MAP_KERNEL_PAGES is a mouthful, discard the MAP_ as that's implied by
-> MMAP.
-> 
-> Also while we're here delete useless comments for mmap actions whose names
-> clearly indicate what they are for.
-> 
-> Also update the userland VMA tests to reflect this change.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+From: Hengyu Liang <hengyul@cs.unc.edu>
 
-Reviewed-by: Gregory Price (Meta) <gourry@gourry.net>
+Since commit 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands
+on time out"), atapi_qc_complete() sets SAM_STAT_CHECK_CONDITION for a
+failed command only if cmd->result is zero, so that the DID_TIME_OUT or
+DID_REQUEUE host byte of a terminated command is preserved.
+
+However, cmd->result can also be non-zero for a regular failed ATAPI
+command completed through libata EH: ata_eh_analyze_tf() calls
+ata_eh_decide_disposition(), that is, scsi_check_sense(), on the sense
+data obtained with REQUEST SENSE, and scsi_check_sense() sets the SCSI
+midlayer internal byte of the result for some sense codes, e.g.
+SCSIML_STAT_TGT_FAILURE for ILLEGAL REQUEST with ASC 0x20 (INVALID
+COMMAND OPERATION CODE) or 0x24 (INVALID FIELD IN CDB), or
+SCSIML_STAT_MED_ERROR for MEDIUM ERROR with ASC 0x11 (UNRECOVERED READ
+ERROR). For such commands, atapi_qc_complete() keeps the result as is and
+the command completes with a GOOD status byte, even though it failed and
+valid sense data is available.
+
+As a result, passthrough users see these failed ATAPI commands as
+successful. For example, with the emulated IDE CD-ROM drive of QEMU and
+no medium loaded, a PLAY AUDIO MSF command issued with SG_IO completes
+with status 0x00 (and no DRIVER_SENSE) instead of 0x02 (CHECK CONDITION)
+with sense key ILLEGAL REQUEST, ASC/ASCQ 0x20/0x00, and the CDROM ioctls
+CDROMPLAYTRKIND, CDROMSUBCHNL, CDROMPAUSE, CDROMRESUME, CDROMPLAYMSF and
+CDROM_GET_MCN return 0 instead of -ENOMEDIUM or -EOPNOTSUPP.
+
+Fix this by setting the status byte to SAM_STAT_CHECK_CONDITION whenever
+the host byte is not set. Use set_status_byte() rather than overwriting
+the whole result, so that the SCSI midlayer internal byte set by
+scsi_check_sense() is preserved, as ata_scsi_qc_complete() already does
+for ATA commands.
+
+Fixes: 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands on time out")
+Cc: stable@vger.kernel.org
+Suggested-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
+---
+Changes in v2:
+- Only set the status byte with set_status_byte() instead of overwriting
+  cmd->result, so that the SCSI midlayer internal byte set by
+  scsi_check_sense() is preserved (suggested by Niklas).
+- Link to v1: https://lore.kernel.org/r/20260924180414.2102946-1-hengyul@cs.unc.edu
+
+ drivers/ata/libata-scsi.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 8f9aa97a519d..fb5517d51095 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3059,10 +3059,15 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
+ 		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
+ 			qc->dev->sdev->locked = 0;
+ 
+-		if (cmd->result)
+-			ata_scsi_qc_done(qc, false, 0);
+-		else
+-			ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
++		/*
++		 * Report CHECK CONDITION unless the command was terminated
++		 * with a host byte set. Only set the status byte, so that the
++		 * SCSI midlayer internal byte, which scsi_check_sense() may
++		 * have set from the sense data, is preserved.
++		 */
++		if (get_host_byte(cmd) == DID_OK)
++			set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
++		ata_scsi_qc_done(qc, false, 0);
+ 		goto schedule_deferred;
+ 	}
+ 
+-- 
+2.53.0
+
