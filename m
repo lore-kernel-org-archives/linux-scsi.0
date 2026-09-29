@@ -1,120 +1,162 @@
-Received: from mail-lr2-f34.google.com (mail-lr2-f34.google.com [74.125.230.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EB0A5187CF
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 14:45:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E3A93D7D94;
+	Tue, 29 Sep 2026 15:33:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790693151; cv=none; b=tUGcmgId4VYxrdfD8pt8PnxWHagLoJh9P0xk9Lnl8ENoC2/Ex9N2D74RSAKEmrqdZVfuPBuq800Qu65T0jRkHde8JXUQlqpcZudlVzhtYsMZB29+Gcu93yRgJPGgieJXC/yEcXpUKzyc484i7QNplC6yEGYSMRpBj1nOWkQKzP4=
+	t=1790696008; cv=none; b=pQWUF9/mRfdGrhS12wCGrTJurtBNEre401j/gP8l/NO+qddphUKhAfMnSZrLAHpL5ykFunaEQnmjB4l3pyI77U2fQNEp+ksXT44MXge3NAywQncHLP8CVzGDvJlQ19cTZirFx31MKS47/IgdowC+Pz/wS26rzbbXWo5ErTlxKjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790693151; c=relaxed/simple;
-	bh=lZuVot7YJ0juctes4qSdCcPkywuCSsLMsB43wu1Y4Lc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=m8Z/bUKwLLvbsP6ssUoLUeYL/U/Lt/m9eqwnpR7XV/H2nmKQZTOHJifUrwMc6BO5BDDUuNkg+5aMj1QYh7TLXQGTuK8T/iZTQwV4txxmkfHGD0m4o/FCgvmC03bdJRCODhTm88q9oLfs5stN1oATLQAmznk4ODi2l676Q91GFYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nqgispDF; arc=none smtp.client-ip=74.125.230.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1790696008; c=relaxed/simple;
+	bh=cigZ80+8+q+9BMKi9FwSNiC3z3eLiNZDSw6eUBsoWTY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mzTBWVsLTTLToVKqjtOcoa7l9wxYlDl69f/ZU7+XpygDpjDyxCzUfHhEiXA/0Kc6SxRSlL/jW91XUhr5fsQKrdksVl0h/ntumUvtEHrtECFkTeOoOr5qIhgYEaYP/TiZoOjHbTgJ3Qpx+eMgFJ3x6g6W1KnV+nb/rQ44ZvSVNxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=c1izC6k1; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nqgispDF"
-Received: by mail-lr2-f34.google.com with SMTP id 38308e7fff4ca-3a75ff20a6eso13778951fa.0
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 07:45:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1790693139; x=1791297939; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=0wpjYz1EI0tVyJi7cV3YZm2AdOrxjkB1FR92T/0Hu80=;
-        b=nqgispDF/NxzpqhPmGefFnf/NFQgvpbtPUlCbIz04VpNHLX7FFoXXaSx1IRrw9MY9q
-         LfJtZusvMySWjkYsGXpwdlOgEk8D/hyPP8S8zdohZ9tkw27nrNbWI8jRBNgIzbvGNYDT
-         67BtSefuqnWQ3Ov5NmBuTPnrPQQ4hib8BKjC23a1zR0mrb+VX7EiBNFMuuzuhabET715
-         Wfl7VRCc/FnIIBXWe5DUgeGYu7Q1CRrRhkG3cDDEQC0ZbSsd3gNxzllK1IDwn8kW4roC
-         0oYvoIVRFxLT2JDtDyMhDQon0G7KC3H0syjIbwDQbKeQCVJLkcSwE2RTvtV+U/5vmpPx
-         moaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790693139; x=1791297939;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=0wpjYz1EI0tVyJi7cV3YZm2AdOrxjkB1FR92T/0Hu80=;
-        b=FY8d3hi2vWRRCgvm34rQe9pEsxIhlU1LxwFA9oYZpVY9jT6DkBJAhvqu10G+sGJHXk
-         9kDWtDMA+le637Xzr3ZQz6pND4NwosyaZ4XKUIfDCbdVUPB84pckEXEoj29+6komjMox
-         G8p5pmOUZdi89NClNTZyXEgbDxmfrIrdX2SfnNXnqddCnGwav7mQHxKDldaPUjYZv6AX
-         amfEUM/wCao8b52M5QoIo5+RPzxgcABMwxL3anUnMoqQgFi2GKd3Er0H5yBk+eCtAi40
-         ZCoyDMGhRyygkJHTesKLPnwMDZF/4GOa5ZUot3QoSup5ZHF4fSbEl6x4/bS+lLA0+hJD
-         rO2w==
-X-Gm-Message-State: AFq9FYK0fS20uRUcM374pFFsxk3p42K8Xm/TVaFdeH+TmAimTk2rtd+K
-	V6aEFcdhD7eqyUWHG4AdvJmMIkeSZnGjr1p9zkaaVibu3tkjGTfEec9fQXyGPLU=
-X-Gm-Gg: AYBFou1m5zRszzMikBMmXhgUGOPEgG5qVL5wpvNEs2DhNlsQcjHbAQVmMq3igZTjK4+
-	86NVtKx5nSgQ8SE4Fi/i4X/zdjsz4d7TrzOO+KWny64BQsOm6MNfKYxyzJWta1cZ67ikAZpBs6u
-	JJdFcaT5QRCeaw5S062kAltdMxIzCZErfMjqyao00m6WSUdWbGZL92UDtx2WweLkkDj8QoX2bpW
-	IT7P9HZWnWOFPsSxKdOserLpJSExwfwSnBedy+pY16BdZdZGyyUmi3uXfzm57T3IAOvR2IoX28b
-	LT86uYce9qnxAMXrnymFGT1X5Zbx0JhOrI+eXonAFljEkCPTaX04NhG5nfPTWPA3m3EVPUW0ui0
-	R4NFfw86I2HUqFF65mn1q+FANjZ38/Op7KXMC6vxTOjrCcPRNuibgdc8vykKhUXOfsuzTadQxPQ
-	UepL3AL48U03dn0CkjbRHJSBxbMcvQZLRrotjm+lsmLlKqzvnn5iqcufni/Vg7B7MIoNVoN54D/
-	vWX+MAab0e++GUKMTYpFBmhLRqzMtcWd/KKxl4NXyNgds5xaLTLCsFP8HfF4DzXeV4+HY4RyeTj
-	SReVUGy8dpdOMOJ1ZFBeFXPfNkuqHSQoof7wx9cj8pd8DNFHCAwGjzVEXEpjUkqWomnkYGbmDnG
-	yeFSuO+3TT1yhKg==
-X-Received: by 2002:a2e:a593:0:b0:3a6:3741:987c with SMTP id 38308e7fff4ca-3a64c7e9c2cmr34390991fa.27.1790693138834;
-        Tue, 29 Sep 2026 07:45:38 -0700 (PDT)
-Received: from gentoo ([98.10.102.237])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a64c2fa412sm41874421fa.22.2026.09.29.07.45.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Sep 2026 07:45:38 -0700 (PDT)
-From: Matthew Whitehead <tedheadster@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: tedheadster@gmail.com,
-	mkp@kernel.org,
-	James.Bottomley@hansenpartnership.com,
-	loberman@redhat.com,
-	emilne@redhat.com
-Subject: [PATCH] scsi: aha1542: Remove unneeded scsi_dma_unmap() call
-Date: Tue, 29 Sep 2026 10:45:28 -0400
-Message-ID: <20260929144528.7061-1-tedheadster@gmail.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="c1izC6k1"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68TB5d9t4017642;
+	Tue, 29 Sep 2026 15:33:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=5AclAy
+	en8c5KNNg7Ubb6G80Gn1XHE6FWHqe/kKE9Wzs=; b=c1izC6k1g/QqfdxHhqQ580
+	fHTT5mkZAOP15+0nK5MdZ4RnIAWdna8fDguRra/Dcqf4UAd+L0eexInAZypRSXS5
+	txhi3pf50zGSWfue9nUzie2yiC5HSsp0lCaw5cbcZNV9k3dr8prHJHarog+8M9ab
+	r+SGWaQIDfxSaV9a9rDjDEhSLkQy35Mlwqt66a0i6sseaDLceAaAzqHqWlixg+0B
+	h5lqollpYn/BAi/bjVgL+oXdPZuzyht+HgQQAAHwoaL5qZL/1gJZxhreB3jsABdZ
+	tDS3ZwLGGBHXmlbq1UfayPicbvlV7DeGY0eSy0Flymc2egxzrzdJ3AlPkcAdl5Kw
+	==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gx5pt72wc-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Tue, 29 Sep 2026 15:33:24 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 68TF1xYP1657703;
+	Tue, 29 Sep 2026 15:33:23 GMT
+Received: from smtprelay07.dal12v.mail.ibm.com ([172.16.1.9])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4gxrcptgfd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 29 Sep 2026 15:33:23 +0000 (GMT)
+Received: from smtpav04.wdc07v.mail.ibm.com (smtpav04.wdc07v.mail.ibm.com [10.39.53.231])
+	by smtprelay07.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 68TFXN5Y22807072
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 29 Sep 2026 15:33:23 GMT
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 435EE58056;
+	Tue, 29 Sep 2026 15:33:23 +0000 (GMT)
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id BBE835805E;
+	Tue, 29 Sep 2026 15:33:22 +0000 (GMT)
+Received: from [9.61.145.13] (unknown [9.61.145.13])
+	by smtpav04.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 29 Sep 2026 15:33:22 +0000 (GMT)
+Message-ID: <2c024860-4799-4410-ac57-f67a434cb5ee@linux.ibm.com>
+Date: Tue, 29 Sep 2026 08:33:21 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v11 10/11] scsi: ibmvfc: register and use asynchronous sub
+ CRQ for events
+To: Dave Marquardt <davemarq@linux.ibm.com>, sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
+References: <20260925044900.414340-1-tyreld@linux.ibm.com>
+ <20260925044900.414340-11-tyreld@linux.ibm.com>
+ <20260925050903.EEEC21F000FF@smtp.kernel.org> <87a4p157r6.fsf@linux.ibm.com>
+Content-Language: en-US
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+In-Reply-To: <87a4p157r6.fsf@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: svXTy-bW_Ge31vp4N3IGwyxtR0IRTqyL
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTI5MDA2MCBTYWx0ZWRfX3fDSwhUurHhH
+ 0hACeq9Sw0Hf4czK3fhsaU3jbi+vu2pg138eSA6avfwTPI1msF+S09VINmRMo5W14uoSnYz4EmW
+ YBh+C57IdMiQWO+uSF/maCnkU5Jaijp7y9maC1nyP8nLCZ9s4ikaD1xtP5v7foCuBSQxKm2eiHJ
+ ks8hB7e697i5ZhISx2CbHpqpXtLf3NGR8DqErDPggzs5pGvinKeYtQUaBTDxd8BTGz+prWSl4V4
+ d5y3U0qkuEK5f+C/LTmWxrGEhdjpmcgIsgXObGHDeISip7KnLvF21cTmu5xihzgNR16PEf3Mb6S
+ 9vaLK7cmTgpLPyj/5dM8NbXzQscmOFlQ7FEr6JzhadDFt7pvYiPkUgEdKpzYQrEVgzoDEH0o2hV
+ mpyt5wpHABjnbfYa2gQVx5oXzBatVEfnyr65qBUO04OjatOPwj9woaCKFTy0ZuYZWnBmcDkdUTL
+ haN+m9Gq91k/PBJZN7w==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTI5MDA2MCBTYWx0ZWRfX5hQoN49BH+ip
+ VtwcNyLlC8s41j+ktMk9wo7x4io1aSU1TpQthQ/BVPxeERC37UQKKxd4IHcaANqnQOsIOksTfef
+ ntTnlJizpjL0Cfo9BOKSd/QYFm1zyGA=
+X-Authority-Analysis: v=2.4 cv=EY5d0/mC c=1 sm=1 tr=0 ts=6abbda44 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=BAGDUCPmOm5mR4Ag3-sA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: svXTy-bW_Ge31vp4N3IGwyxtR0IRTqyL
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-29_04,2026-09-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 priorityscore=1501 suspectscore=0 adultscore=0 clxscore=1011
+ malwarescore=0 impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2609290060
 
-aha1542 never DMA maps the command's scatterlist. Data is bounced
-through a per-command buffer allocated with dma_alloc_coherent() in
-aha1542_init_cmd_priv(), the adapter is programmed with
-acmd->data_buffer_handle, and the payload is copied to and from the
-request segments in aha1542_queuecommand() and aha1542_free_cmd().
+On 9/28/26 3:30 PM, Dave Marquardt wrote:
+> sashiko-bot@kernel.org writes:
+> 
+>> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+>> - [High] scsi: ibmvfc: double registration of scsi_scrqs and missing async_scrqs registration
+>> --
+>>
+>> commit d44dbe8300fc3639dbfcef8f1950443462606f5b
+>> Author: Dave Marquardt <davemarq@linux.ibm.com>
+>>
+>> scsi: ibmvfc: register and use asynchronous sub CRQ for events
+>>
+>> This commit wires the async sub-CRQ into the sub-CRQ lifecycle so it is
+>> allocated, registered, and freed alongside the SCSI channel queues.
+>>
+>>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>>> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>>> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> [ ... ]
+>>> @@ -986,6 +987,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
+>>>  	spin_unlock(vhost->crq.q_lock);
+>>>  	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+>>>  
+>>> +	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+>>>  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+>>>  	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+>>>  
+>>
+>> [Severity: High]
+>> Could this introduce a regression where scsi_scrqs is accidentally registered
+>> twice instead of registering async_scrqs?
+>>
+>> Because the first call was added as ibmvfc_reg_sub_crqs(vhost,
+>> &vhost->scsi_scrqs), it appears to skip the async sub-CRQ registration
+>> entirely. This leaves the async sub-CRQ permanently disabled after a CRQ
+>> re-enablement, which could prevent asynchronous event handling (like FPINs)
+>> after recovery.
+> 
+> Yes, this is broken. The added call should be
+> 
+> 	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
 
-The scsi_dma_unmap() call left in aha1542_free_cmd() therefore unmaps
-a scatterlist that was never mapped. With CONFIG_DMA_API_DEBUG enabled
-this results in:
+Still wrong. s/scsi_scrqs/async_scrqs
 
-  device driver tries to free DMA memory it has not allocated
-    [device address=0x0000000000000000] [size=0 bytes]
+-Tyrel
 
-Remove the call.
-
-Verified by testing on real hardware.
-
-Fixes: 2f2fef022c3e ("aha1542: use a local bounce buffer")
-Suggested-by: Laurence Oberman <loberman@redhat.com>
-Assisted-by: LLM
-Signed-off-by: Matthew Whitehead <tedheadster@gmail.com>
----
- drivers/scsi/aha1542.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-index fd766282d4a4..a197b3d0b26b 100644
---- a/drivers/scsi/aha1542.c
-+++ b/drivers/scsi/aha1542.c
-@@ -271,8 +271,6 @@ static void aha1542_free_cmd(struct scsi_cmnd *cmd)
- 			buf += bv.bv_len;
- 		}
- 	}
--
--	scsi_dma_unmap(cmd);
- }
- 
- static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
--- 
-2.52.0
+> 
+> and will be fixed in v12.
+> 
+>> Also, wouldn't the double registration of scsi_scrqs cause
+>> ibmvfc_register_channel() to fail? If H_REG_SUB_CRQ returns an error for an
+>> already registered channel, this will abort the registration and clear
+>> vhost->do_enquiry = 0, functionally breaking multi-queue capabilities during
+>> standard operational recovery paths.
+> 
+> -Dave
+> 
 
