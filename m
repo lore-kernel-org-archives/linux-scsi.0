@@ -1,108 +1,99 @@
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fgw22-4.mail.saunalahti.fi (fgw22-4.mail.saunalahti.fi [62.142.5.109])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7070E4F4043
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 14:08:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E66F1891A9
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 14:16:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.109
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790690891; cv=none; b=nuyzOObIHxi8AfXcr4cc3LciM+UUboSigGer3cpif4Rff9KsjlrBg4npNGKLbG2fleQzSeT1urWv5T7mdKGL/8gd+A/b05ULl+zx+JNm+75Td9wG72pOk+i3vYzoVSzheozKvedruDCtEeYSd24oNuJ2MD14lehHAYVqUcGX0wk=
+	t=1790691398; cv=none; b=cdN8O01jB9QufNboBkUUbYuKlm8IXoQJBF+RciXFaj+eU2bEdScdhl1HKDr3qrOLUnwYm5vvcsBlbRwCvfb1a+M0I3jXSY0AgoZcpPbRsteeb2a8M2VFTY6CUYlEvcvnLB0yGMONa7tgZHvrPmJ1AE3Nt0z3OOB94M2b/2pl0Us=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790690891; c=relaxed/simple;
-	bh=zRmSSpx7pOpIVgGMPJbmxUydIOWy8dcYMe0BfTr5YCU=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=QiNM8lfXfqFHsIVxB2Q8+HYo6DEpvhgTFme1LjHx2svqGqkg4o30lkRzsVLuXSGjXjq30uy1uFm1YECYpUUuaZB7fDgwDndnbhLuX1+9+1TyPmbqW18vB6v0zavRMpcqAEqt0g2gEqC1JgNsFJXZjb+vYNbb7CNzw92o6fJtYiY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MIALrTS3; arc=none smtp.client-ip=209.85.215.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1790691398; c=relaxed/simple;
+	bh=nLlebNhMpmgF6mtbEV6iJ2Fz0XQ1EGx/3Y0LLOolihw=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=oqd3x/8wyXvKeD2tVEKzvpSonc5mc9Ov0s2jP0phq3elXfjF7FMj24c0sZFvMA8E1h9Qaq9ug1du0hLlS1FxgFDgHE5Ow3FBVCT423slvVWkp9SjZbK617vvrPVRSXX6SGLs6RVAiTibpUpPQaAryNc6Ot8DEgF6NuegQe/TipI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=fxHqy20K; arc=none smtp.client-ip=62.142.5.109
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MIALrTS3"
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc489e7a701so5254134a12.2
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 07:08:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="fxHqy20K"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790690889; x=1791295689; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9E1G8+1SAy708zksU5Axe7JTCFgve+ogorVJl8uDEi8=;
-        b=MIALrTS3rLZHeMyXCk6Mz1vM0DDg2elk44mDH37l5cqCKkmLMzTqrfyKyXTwiH5zH6
-         +VrCXt3UD77U/rWIun9OLQ65fRuEOsEmDnnAwFvoR2DfHjMSG0RmngWy33FWq8MQcACE
-         MoElO1xchMnSNvNKlbyZlJ/wOWI2qP/RlUFLI/fA2gVyDDyDi4I8f8Nr/HZa3+lzVWtc
-         /PH8sC2oDcIDYzj6o4cyu9Me9/Ilxo0aurlrvGwTS0XA/nWQVkW6qViwpx44YcQ959VX
-         P7o1C3JSFdLo0LfcsalM2cugoGlZ//Vbqll7pZU7MtcrZ/0PaW5KgNTX8GpleqRW62h8
-         vVlw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790690889; x=1791295689;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=9E1G8+1SAy708zksU5Axe7JTCFgve+ogorVJl8uDEi8=;
-        b=tujbgVoG9GH6p6VubKVjXjRX+esLtS+TU7cF8mV1sXeR1uHye3jgAtdkbHVEnQcBjA
-         Dk72nvaboMeRvWfH8PDK/fo/tAjmdcpyum8gb3A9H2lv2nCdaOIR8hmQ1t5WdFb6i8Lr
-         uwGMbLpTUBHXXiabTpk2BXXkHTCwJyyH3jda5XyTh8w8wPDQeO1qY0PZ0JSYf7pFPNXP
-         zgnyw1iqIY6a2le9SzL47i5weFHhiuL8XKkeXfl3YGdqOfHAhw9Pikw/fAZMwK6rVLsH
-         YNb5Pjj1cfa0BNHb25QW5jqrZ1OPpG7ygmJQy0buGbpjflaRhDaZ2/LL4uLebjR8K8/n
-         RkdA==
-X-Forwarded-Encrypted: i=1; AKwUvBysaHtDDSGC/19M1V/7UmYKzuiwjACN9gixffAMmQWrRe5ZyTg/s/Nh8lhz2WUVfrjvFskIn3qhu7l5@vger.kernel.org
-X-Gm-Message-State: AFuF++mEBIBSqSc2TKOBmNtRknELiUul5PRBtsIa9kvrWQk+FTA2xOM8
-	vM3B1/DmT3giZ8JsneXTa9pjK484snaUEGXmpiDzEuEVRMXCWZ2LT6kH4cBqm2dI4m5xIqJTgtD
-	2unJf4h2zgV708xpqs8aH0Q==
-X-Received: from pgdj13.prod.google.com ([2002:a05:6a02:520d:b0:cc7:9c2f:bcca])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a20:6f07:b0:3cc:8f53:26c0 with SMTP id adf61e73a8af0-3de0e73d922mr15677870637.17.1790690888675;
- Tue, 29 Sep 2026 07:08:08 -0700 (PDT)
-Date: Tue, 29 Sep 2026 22:08:06 +0800
-In-Reply-To: <20260929031352.1355691-1-stanleyjhu@google.com>
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=M6NxeG2A+/eETfx7hU++sN6LXelkVA7gNeSxobGN7B8=;
+	b=fxHqy20KUEpGtfIpufRSfDGKc9Cx4Vm3BrjCwF4os4Hk9Jm+cqqj5xZrsDQYyqEQcPaUCdngvAu05
+	 vmyTFc7YY565TdLo1lPvPeP5yVI+xMeijazxlL6FCFcPbEg06+cOGwEgOc2IFVTuMA/ON0XDAF0W99
+	 RhAjLCqxI8AH5C57aqBwBL/PGe2+OdknAoP6MJbIoxBCh+yIqw/7WPrSVcldsA38+WL27rs5KpmM60
+	 xHlcU3e/P7dKqeH2Oru9yxG40fBNyK88ug/kUrj2SJhf/IxiQFpaI8B5FJdspoZ4v0WFwq03l26daS
+	 8SQ0Itkz8+mhxC1AUgra8YQBKLMhukA==
+Received: from smtpclient.apple (91-158-174-119.elisa-laajakaista.fi [91.158.174.119])
+	by fgw22.mail.saunalahti.fi (Halon) with ESMTPSA
+	id 35a5b6b3-bc10-11f1-8e9b-005056bdf889;
+	Tue, 29 Sep 2026 17:15:23 +0300 (EEST)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260929031352.1355691-1-stanleyjhu@google.com>
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20260929140806.2859367-1-stanleyjhu@google.com>
-Subject: [PATCH v2] scsi: ufs: rpmb: Fix power-on UNIT ATTENTION retry
-From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@sandisk.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
-	Damien Le Moal <dlemoal@kernel.org>, Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
+Subject: Re: [PATCH v2 1/2] scsi: st: Restore changed drive settings after
+ reset also for MTLOAD and MTRETEN
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <20260928132539.56876-2-loberman@redhat.com>
+Date: Tue, 29 Sep 2026 17:15:12 +0300
+Cc: linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <mkp@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ John Meneghini <jmeneghi@redhat.com>,
+ emilne@redhat.com,
+ bgurney@redhat.com
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <2ABF6AD2-97F0-4373-A47D-1444B27A9593@kolumbus.fi>
+References: <20260928132539.56876-1-loberman@redhat.com>
+ <20260928132539.56876-2-loberman@redhat.com>
+To: Laurence Oberman <loberman@redhat.com>
+X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
-A merge conflict resolution dropped SCMD_FAILURE_ASCQ_ANY from the
-retry added by commit a8a34238e5e6 ("scsi: ufs: rpmb: Retry power-on
-UNIT ATTENTION on the RPMB WLUN"), so only 29h/00h is retried, not
-the other 29h ASCQs.
 
-Link: https://lore.kernel.org/linux-scsi/yq1jyo4onqe.fsf@mail.kernel.org/
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
----
-v2: Use scsi_sense_code() (Damien)
 
-Tested in QEMU on top of "scsi: ufs: rpmb: Drop the unregistered
-ufs_rpmb bus" (RPMB v5 3/3).
+> On 28. Sep 2026, at 16.25, Laurence Oberman <loberman@redhat.com> =
+wrote:
+>=20
+> A device reset returns the drive's density and block size to their
+> defaults.  Commit 7081dc75df79 ("scsi: st: Restore some drive settings
+> after reset") re-applies values changed by the user when the position =
+is
+> recovered with MTREW, MTSEEK or MTEOM.  MTLOAD and MTRETEN are also
+> allowed to clear the reset condition and also leave the same medium at
+> BOT, but they restore nothing.
+>=20
+> Because check_tape() reads the drive's block size with MODE SENSE on
+> every open, the driver silently switches to the drive default after =
+the
+> reset.  An application that set fixed-block mode with MTSETBLK and
+> recovers with MTLOAD or MTRETEN keeps writing, but variable-length
+> blocks, without any error.
 
- drivers/ufs/core/ufs-rpmb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Reset also returns the drive buffering mode (STp->drv_buffer) to the =
+default.
+This should also be restored. It might be possible to use the same logic =
+than
+with density and block size. check_tape() reads the possibly damaged =
+drv_buffer
+value. So the old value should be saved before check_tape() and restored =
+if
+the value after check_tape() differs from the saved value (and the saved
+value !=3D 1). (I may have overlooked somthing.)
 
-diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-index 50ef63afd528..65f2d71cf073 100644
---- a/drivers/ufs/core/ufs-rpmb.c
-+++ b/drivers/ufs/core/ufs-rpmb.c
-@@ -47,7 +47,8 @@ static int ufs_sec_submit(struct ufs_hba *hba, u16 spsp, void *buffer, size_t le
- 		{
- 			.sense_key = UNIT_ATTENTION,
- 			.sense_code =
--				POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED,
-+				scsi_sense_code(ASC_POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED,
-+						SCMD_FAILURE_ASCQ_ANY),
- 			.allowed = UFS_RPMB_UA_RETRIES,
- 			.result = SAM_STAT_CHECK_CONDITION,
- 		},
+Another thing is the auto_lock mode. It should be enough to set
+STp->door_locked =3D ST_UNLOCKED when reset is recognized. The door wiil
+then be locked at first read or write.
 
-base-commit: f09d2c7485b32adb82336d0d748935c8237a649e
--- 
-2.56.0.rc1.315.gc6ed9934b7-goog
+Otherwise I did not find any issues.
+
+Thanks, Kai
 
