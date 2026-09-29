@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 474D13CBE8F
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 08:26:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 146CC3E51D3
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 08:26:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790670383; cv=none; b=XPuuZowJro7jK0KIc14tObvr8+VDmQ6zChVs1zRzln3DEZhQAm6JLzA0oAXWbezVF1UWHag6PcmJdXROMMQED3Oy+DtQRx6gAMtfLE/wGaLEwIbyJ3ansX9hNpVNeU+XvMUJ0YRUlv8lumDnVA1zoWJo+JDx68zq8/tu5MP7wvQ=
+	t=1790670385; cv=none; b=IEc4gQtyobh2v708VFpi7gTZHmMIwEsmfxZa7TxybX72RY+6W7V0v76tGZuzV8eSWgW8Vt6YHtyX9gxF0Jsw8sonQTg6YTcn3pSXzKu2Hmv6oPDbCk7Ds9sXQCohcMcuoCfun43p1IB7tpFCPXSdEL88nLzixTszUQg4uz6BGnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790670383; c=relaxed/simple;
-	bh=bpJ0zrsgbZLRJ7Y9VnR+2NAvhh2czUaT2EfxfTiqRrk=;
+	s=arc-20240116; t=1790670385; c=relaxed/simple;
+	bh=kNn8aGGsldIU/id/2VOvdBYXiObUGFtNgBNkFkhlqVg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y6c4UK9jRmBlCFskd+czrRQ4mff26F29LpcLlVcDEZU6vVfglra75FdPQkoFwEe4azAiZVDGTGb+E6R+I3Y4odr4y8zwfetaCB3rAevFr8hrnZtM+rMeoUhQ9AK1WuV453LLmdKX7fvxyEh4BpWrqQRbm768x07eSwV/pimKgIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iPuJlADU; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=DpiSozOZ3FNXPEOK3cke2yLpZLTEylVkjERnzImqiwJW79IJfX0zl6wML23ksPygoIxjUe/H+W/jYa30CHRfHMM/KwDTj4ZTylr+yJmCHeiudoC1DGqyO1PnAkFHou+bj9lG1tIom7/sKvoq735bSQQqNSeS44jiPClxaP2xY+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JIhiTgON; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iPuJlADU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C33541F00893;
-	Tue, 29 Sep 2026 08:26:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JIhiTgON"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85E141F000FF;
+	Tue, 29 Sep 2026 08:26:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790670382;
-	bh=E+5FBr9++1Wn5W7mlVQ7Fx4pom+zXeXCPIQ5cqZbC94=;
+	s=k20260515; t=1790670383;
+	bh=NO1BpzEoXDsRYtCyLvzHwo85LEGSXSKwgeMMPzUsuE0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=iPuJlADUb4yQnAKcpUhajFfJ11QMH9uqUl7TNqz+OUcXHuvig+7+0Gm5j4bNSF0Eh
-	 OCIgOwTRMAvasSspqyU/6T9d4pvscDmjIK2c002EkXKrqsUGUYyyeRdHD4IvB5AxRU
-	 hsmK83W4Fo5k4JzPE3q5ewRtL3jv4vaWt8Ndptth5q/I/Me+773yCSAuuLzykkGtXi
-	 39mrzHPopbzlo6KHMJanlxakEVNd2RtSafjYwMydg3RyUjMS0bhzUNkF7csdhSyVqz
-	 5aSlZWWlVKvNQiSICpVOmoqeO0Z4jjWDZjVUy9YMPD5HRwIeFCBQO/sMB8YfnkO1hZ
-	 y7yR1e29V9Tng==
+	b=JIhiTgONkODp4oZmH41h0ZbKbuCzOXCOeu7HRz75QjdAmIA2oCnriyEHl4VD2IKR1
+	 HVrJzkERk3A2gf+ta6fFVYtaRAie4p11YHTDwXirKXa8wYKqPjUkY/i35SfMVRZZw7
+	 eBgu21GEfCYhqJODb28XZep9hFOxHqeQISaGtZRbLh/EbNg6fSh50Xsohk3cR8LDFF
+	 EvOmlboygdUm0cARbBBhIFu6L0tfvbjtlGnhVI16Pa3viF52rTrfcRp15Lqtn0ORjL
+	 R5L8dIUUUpP+zSpNiTGRAXwM9p527SJX6/CAW13ybiMxRTyYiCWbfwUBPZF4tHfRfH
+	 czz74Te12oAQg==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -33,9 +33,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v11 12/13] scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
-Date: Tue, 29 Sep 2026 10:25:09 +0200
-Message-ID: <20260929082456.857423-27-cassel@kernel.org>
+Subject: [PATCH v11 13/13] scsi: scsi_debug: Validate the access parameters of WRITE ATOMIC (16)
+Date: Tue, 29 Sep 2026 10:25:10 +0200
+Message-ID: <20260929082456.857423-28-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260929082456.857423-15-cassel@kernel.org>
 References: <20260929082456.857423-15-cassel@kernel.org>
@@ -45,79 +45,59 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2501; i=cassel@kernel.org; h=from:subject; bh=bpJ0zrsgbZLRJ7Y9VnR+2NAvhh2czUaT2EfxfTiqRrk=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2l75tnJXfr7zt+8YHu7uDkj1erg5T4L2x5e4rlxVvC sum/InL7ShlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBEvhcyMkxhDyvcfNDt++xr 4TeF2aQYtQS+79fYWmgzw1CReeE6ZmOGPzxPAr9Ks2+dn7Zb6nW+gXRx4uuOlUe6Hze2XH1ryyk ZwQ8A
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2009; i=cassel@kernel.org; h=from:subject; bh=kNn8aGGsldIU/id/2VOvdBYXiObUGFtNgBNkFkhlqVg=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2l751WCYscXcV37uLDqrcjJFzn13J/7FMvfZxuBvjN /0tz2slOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCRKXsZ/hnyRvme33v9oYz7 nnrbbcwvJM59azaZzNYu+KouZ+mGCBlGhsVe0y64HK5w/SFhZSPVZ51WHiOXJWEcpxD9d/KFGQU ruQE=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-When logical block provisioning is enabled, every command that writes
-user data calls map_region() so that GET LBA STATUS reports the region
-as mapped. resp_atomic_write() does not, so GET LBA STATUS keeps
-reporting a region as deallocated after a WRITE ATOMIC (16) has written
-it.
+resp_atomic_write() validates the fields that are specific to an atomic
+write, but never the range that the command addresses. Every other
+command that writes user data calls check_device_access_params() first,
+which rejects a transfer that ends beyond the capacity of the device,
+one whose length exceeds the size of the store, and any write to a write
+protected device.
 
-Call map_region() the way resp_write_dt0() does, holding the zone
-metadata write lock across the access. That lock is what serialises the
-map against resp_unmap(), which does nothing unless logical block
-provisioning is enabled.
+Call check_device_access_params(). The zone checks that it ends with are
+unreachable, as atomic writes and ZBC emulation are mutually exclusive.
 
 Assisted-by: LLM
+Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: John Garry <john.garry@linux.dev>
-Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
 Tested with:
 
   modprobe scsi_debug sector_size=512 physblk_exp=3 dev_size_mb=128 \
-      atomic_wr=1 lbpu=1
+      atomic_wr=1
 
-GET LBA STATUS reports a region that has never been written as
-deallocated, and reports it as mapped after a WRITE ATOMIC (16) of eight
-blocks. Only an ordinary WRITE did so before this patch.
+The device has a capacity of 262144 logical blocks. A WRITE ATOMIC (16)
+of eight blocks at LBA 262140 is now terminated with ILLEGAL REQUEST /
+LOGICAL BLOCK ADDRESS OUT OF RANGE; before this patch it completed with
+GOOD status, having written eight blocks at LBA 0 instead.
+
+With the wp module parameter set to 1, a WRITE ATOMIC (16) is now
+terminated with DATA PROTECT / LOGICAL UNIT SOFTWARE WRITE PROTECTED,
+which is what an ordinary WRITE(16) has always returned; before this
+patch it completed with GOOD status and wrote the data.
 ---
- drivers/scsi/scsi_debug.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/scsi/scsi_debug.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 41239ca364b3..87ef71f18f2a 100644
+index 87ef71f18f2a..e679df1993aa 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -4876,6 +4876,11 @@ static unsigned int map_state(struct sdeb_store_info *sip, sector_t lba,
- 	return mapped;
- }
+@@ -6256,6 +6256,10 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+ 		}
+ 	}
  
-+/*
-+ * Callers may map the whole range of a write without checking how much of
-+ * it was written. SBC-6 4.7.4.6.2 allows a deallocated LBA to become mapped
-+ * at any time, and only requires an LBA that was written to be mapped.
-+ */
- static void map_region(struct sdeb_store_info *sip, sector_t lba,
- 		       unsigned int len)
- {
-@@ -6206,6 +6211,7 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
- 	u8 *cmd = scp->cmnd;
- 	u16 boundary, len;
- 	u64 lba, lba_tmp;
-+	bool lbp = scsi_debug_lbp();
- 	int ret;
- 
- 	if (!scsi_debug_atomic_write()) {
-@@ -6258,7 +6264,15 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
- 	if (scsi_bufflen(scp) < len * sdebug_sector_size)
- 		return DID_ERROR << 16;
- 
-+	if (lbp)
-+		sdeb_meta_write_lock(sip);
++	ret = check_device_access_params(scp, lba, len, true);
++	if (ret)
++		return ret;
 +
- 	ret = do_device_access(sip, scp, 0, lba, len, 0, true, true);
-+	if (lbp) {
-+		map_region(sip, lba, len);
-+		sdeb_meta_write_unlock(sip);
-+	}
-+
- 	if (unlikely(ret == -1))
- 		return DID_ERROR << 16;
- 	if (unlikely(ret != len * sdebug_sector_size))
+ 	/*
+ 	 * Short atomic writes are not allowed: SBC-6 4.28.2 requires an
+ 	 * atomic write that cannot complete to leave its LBAs unaltered, and
 -- 
 2.55.0
 
