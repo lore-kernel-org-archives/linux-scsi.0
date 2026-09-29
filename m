@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5377A53C3D7
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 17:18:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6FEE542EEA
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 17:18:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790702313; cv=none; b=hVSJogaSsN5RGNOZ7ljuOMGyrD5+Kd0LE4+YQPaSQxX37jhAZLtNqLjqzRFtcH+cvBaz+3pLFiVOoDnp0pAhsCYbBX0e1QFhj77dDn90l292gZDqKcS9cMpkPwsbn0qFfPEz/8nXMTbA+mCMXL1Bn7W09mlwtzaW4nb4KZqZKuM=
+	t=1790702314; cv=none; b=EGuUWed84s9YNw7efMQ/4PbxncFt3Muvx6dMjSwClg0dBpAOhWv5SJIAsRBro+hmyUW5HhD0OGaNfuUKNwq4nw8lrFz+Z4LtXMI3xfc2wOGGNUBihrcMrbSiJZX6p5YRMbDDnfa50GvnbX60o8G9+b0hu5QXlOEBkBHkDMur8fU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790702313; c=relaxed/simple;
-	bh=LkY/cDROxYb54yWwJyGF2csSpDyQt8ZL2xq7DnCeXCk=;
+	s=arc-20240116; t=1790702314; c=relaxed/simple;
+	bh=11zx41lroigUaR/xm3ZdQxMsGeS2vMP+sTReupyBGyg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ICFBcOUkA4kssFJia83ndA8glnFhy2A7Z4cQsaRamPMTCx6kQwXpHwK1x4A4fHs5zbNRp2oE41SxU9v0zFESNmTTWzXxE62U7W62vIHlilHATcDTeuZYVISE5Mn1p8MIKR1ll7LjLNvUTJSx+zi0zkPChqnEB1vwyotZ39V2wVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ib/08ukm; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version:Content-Type; b=iS91o1lLrleZuAFEQ5FIcPU5lX1NBK7UJQENYvSJSGvVCbfDwkuN31hradDSahWon+AySxBioLQgEO38mcC7K119TSbITOKM4NB6lWyzqjvr8CDhNjxa7pzApV7idi9186rRDdtNz4Nrj8zvRl7MdUa6mLG+fsnaSJlRB3RaKkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QFjni/Hc; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ib/08ukm"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QFjni/Hc"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790702309;
+	s=mimecast20190719; t=1790702310;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=gdon/V/Bd+ipJYWfV46BBiv32l2Yz4ceMphOTXGcSbw=;
-	b=ib/08ukmHSvVdAfMVWmSyR558EUzzv5D3I5UrsxYv4zKeFxmkYRZvlw9T8LjL2cwqQoxGU
-	qF0HbkKyFLQwx7LbmWrAJ6P9QUzfawsT76O5MfVetfWE//9rrr7loqedP32b1FJpmdT1+o
-	Yegc4y922hnlP/DKFkWazfS2Z6cM9zc=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=F5RYpqT/SrWBMi7qgvZOdHwU1QG7anJfZCALhAKYbzY=;
+	b=QFjni/HcRO6ONowyunop7ZGbSj/4zIjQzcy1/cdxFoDjDAHFSXRjE3/pgIsnD4YmODpHEU
+	vwvbdJEXQU8nAFOPVflreNo6jpe9ATBiNczWhFJw+FN8cPTC6Azc1iJ5/pyi6c7QMUVVH3
+	HM+BRA23Sc4m/I2o94zyk8DD1J1m9dA=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-13-y3L1wXicNsWcwSLnZmQxow-1; Tue,
- 29 Sep 2026 13:18:24 -0400
-X-MC-Unique: y3L1wXicNsWcwSLnZmQxow-1
-X-Mimecast-MFC-AGG-ID: y3L1wXicNsWcwSLnZmQxow_1790702303
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-458-QGD_3lwrNSyzvtSiOWLTVg-1; Tue,
+ 29 Sep 2026 13:18:27 -0400
+X-MC-Unique: QGD_3lwrNSyzvtSiOWLTVg-1
+X-Mimecast-MFC-AGG-ID: QGD_3lwrNSyzvtSiOWLTVg_1790702306
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9C6731828B0E;
-	Tue, 29 Sep 2026 17:18:23 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C8B641933B60;
+	Tue, 29 Sep 2026 17:18:25 +0000 (UTC)
 Received: from loberman-thinkpadp16gen3.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 55D7C1800473;
-	Tue, 29 Sep 2026 17:18:22 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7C6DE180057E;
+	Tue, 29 Sep 2026 17:18:24 +0000 (UTC)
 From: Laurence Oberman <loberman@redhat.com>
 To: linux-scsi@vger.kernel.org
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
@@ -50,9 +50,9 @@ Cc: "Martin K . Petersen" <mkp@kernel.org>,
 	John Meneghini <jmeneghi@redhat.com>,
 	emilne@redhat.com,
 	bgurney@redhat.com
-Subject: [PATCH v3 2/4] scsi: st: Record the tape position after a successful MTLOAD
-Date: Tue, 29 Sep 2026 13:18:11 -0400
-Message-ID: <20260929171813.844733-3-loberman@redhat.com>
+Subject: [PATCH v3 3/4] scsi: st: Restore the drive buffering mode after reset
+Date: Tue, 29 Sep 2026 13:18:12 -0400
+Message-ID: <20260929171813.844733-4-loberman@redhat.com>
 In-Reply-To: <20260929171813.844733-1-loberman@redhat.com>
 References: <20260929171813.844733-1-loberman@redhat.com>
 Precedence: bulk
@@ -65,61 +65,162 @@ Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Commit 0b120edb37dc ("scsi: st: Add MTIOCGET and MTLOAD to ioctls allowed
-after device reset") allows MTLOAD to clear the reset condition because
-the tape location is known after MTLOAD.  But the driver does not record
-it: reset_state() sets the file and block numbers to -1, and
-do_load_unload() leaves them there.  check_tape() sets them to 0 only for
-a new session, which requires a new-medium unit attention.  Drives that
-do not report one when the medium was already loaded (seen with IBM LTO
-drives) keep reporting file/block -1 in MTIOCGET and no BOT, although the
-tape is at the beginning.
+A device reset also returns the drive's buffered mode to its default.
+check_tape() reads the buffered mode with MODE SENSE on every open, so
+st follows the drive and a mode set by the user with MTSETDRVBUFFER is
+lost without any indication.  The value is also written back by every
+later MODE SELECT, including the one that restores a changed block size.
 
-After a successful load, set the partition to 0, the position to BOT and
-reset the EOF state, as the new-session path in check_tape() and MTREW
-do.  Otherwise the driver may still record the previous partition, so
-that a later MTSETPART to that partition is not performed, and a read
-after loading at EOD fails with EIO.
+Unlike density and block size, the buffered mode has no "changed" state
+that could be used to restore it.  Record the value set with
+MTSETDRVBUFFER and restore it after a reset together with density and
+block size: when MTREW, MTSEEK or MTEOM clear the reset condition, and
+after MTLOAD and MTRETEN.  It is restored first, so that the MODE SELECTs
+for density and block size carry the right value.
 
-Fixes: 0b120edb37dc ("scsi: st: Add MTIOCGET and MTLOAD to ioctls allowed after device reset")
+The buffered mode is a drive setting, not a property of the medium, so
+it is not cleared when a new session starts.
+
 Suggested-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 Assisted-by: Claude sashiko
 Signed-off-by: Laurence Oberman <loberman@redhat.com>
 ---
-v3: set the partition to 0 for all partitions, not only when the current
-partition is 0 (Kai Mäkisara).
-v2: also reset the EOF state after the load, as MTREW does (Sashiko).
+v3: new patch (Kai Mäkisara).
 
- drivers/scsi/st.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/scsi/st.c | 43 ++++++++++++++++++++++++++++---------------
+ drivers/scsi/st.h |  2 ++
+ 2 files changed, 30 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 0a4263bef9cb..e5b2e2d4872d 100644
+index e5b2e2d4872d..efb8c6792c2c 100644
 --- a/drivers/scsi/st.c
 +++ b/drivers/scsi/st.c
-@@ -2686,6 +2686,22 @@ static int do_load_unload(struct scsi_tape *STp, struct file *filp, int load_cod
- 		else {
- 			STp->rew_at_close = STp->autorew_dev;
- 			retval = check_tape(STp, filp);
-+			/*
-+			 * LOAD leaves the medium at the beginning of partition
-+			 * 0.  check_tape() records that only for a new session;
-+			 * without a new-medium unit attention (the medium was
-+			 * already loaded) the partition, position and EOF state
-+			 * would be left as before the load.  Set them as a new
-+			 * session and MTREW do.
-+			 */
-+			if (retval == CHKRES_READY) {
-+				STp->partition = STp->new_partition = 0;
-+				STps = &(STp->ps[0]);
-+				STps->drv_file = STps->drv_block = 0;
-+				STps->eof = ST_NOEOF;
-+				STps->at_sm = 0;
-+				STps->last_block_valid = 0;
-+			}
- 			if (retval > 0)
- 				retval = 0;
+@@ -2955,9 +2955,11 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
+ 		direction = DMA_TO_DEVICE;
+ 
+ 		memset((STp->buffer)->b_data, 0, 12);
+-		if (cmd_in == MTSETDRVBUFFER)
++		if (cmd_in == MTSETDRVBUFFER) {
+ 			(STp->buffer)->b_data[2] = (arg & 7) << 4;
+-		else
++			STp->drv_buffer_changed = 1;	/* At least we tried ;-) */
++			STp->changed_drv_buffer = arg & 7;
++		} else
+ 			(STp->buffer)->b_data[2] =
+ 			    STp->drv_buffer << 4;
+ 		(STp->buffer)->b_data[3] = 8;	/* block descriptor length */
+@@ -3603,16 +3605,19 @@ static long st_common_ioctl(struct scsi_tape *STp, struct st_modedef *STm,
+ }
+ 
+ /*
+- * Re-apply a density and block size that were changed by the user before a
+- * device reset (a negative value means "not changed").  A unit attention
+- * still pending after the operation (e.g. new medium after a load) fails the
+- * first MODE SELECT, so retry each once.  As in the other post-reset restore
+- * path, errors are ignored and one setting failing does not prevent
+- * restoring the other.
++ * Re-apply a drive buffering mode, density and block size that were changed
++ * by the user before a device reset (a negative value means "not changed").
++ * The buffering mode goes first: the other MODE SELECTs send the current
++ * STp->drv_buffer.  A unit attention still pending after the operation
++ * (e.g. new medium after a load) fails the first MODE SELECT, so retry each
++ * once.  As in the other post-reset restore path, errors are ignored and one
++ * setting failing does not prevent restoring the others.
+  */
+-static void st_restore_changed_settings(struct scsi_tape *STp, int density,
+-					int blksize)
++static void st_restore_changed_settings(struct scsi_tape *STp, int drv_buffer,
++					int density, int blksize)
+ {
++	if (drv_buffer >= 0 && st_int_ioctl(STp, MTSETDRVBUFFER, drv_buffer))
++		st_int_ioctl(STp, MTSETDRVBUFFER, drv_buffer);
+ 	if (density >= 0 && st_int_ioctl(STp, MTSETDENSITY, density))
+ 		st_int_ioctl(STp, MTSETDENSITY, density);
+ 	if (blksize >= 0 && st_int_ioctl(STp, MTSETBLK, blksize))
+@@ -3627,7 +3632,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 	int retval = 0;
+ 	unsigned int blk;
+ 	bool cmd_mtiocget;
+-	int restore_density = -1, restore_blksize = -1;
++	int restore_drv_buffer = -1, restore_density = -1, restore_blksize = -1;
+ 	struct scsi_tape *STp = file->private_data;
+ 	struct st_modedef *STm;
+ 	struct st_partstat *STps;
+@@ -3770,6 +3775,9 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 					STp->partition = 0;
+ 					switch_partition(STp);
+ 				}
++				if (STp->drv_buffer_changed)
++					st_int_ioctl(STp, MTSETDRVBUFFER,
++						     STp->changed_drv_buffer);
+ 				if (STp->density_changed)
+ 					st_int_ioctl(STp, MTSETDENSITY, STp->changed_density);
+ 				if (STp->blksize_changed)
+@@ -3781,6 +3789,8 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 				 * new session, which clears the "changed" flags:
+ 				 * save the values and restore them afterwards.
+ 				 */
++				if (STp->drv_buffer_changed)
++					restore_drv_buffer = STp->changed_drv_buffer;
+ 				if (STp->density_changed)
+ 					restore_density = STp->changed_density;
+ 				if (STp->blksize_changed)
+@@ -3865,7 +3875,8 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 		if (mtc.mt_op == MTLOAD) {
+ 			retval = do_load_unload(STp, file, max(1, mtc.mt_count));
+ 			if (!retval)
+-				st_restore_changed_settings(STp, restore_density,
++				st_restore_changed_settings(STp, restore_drv_buffer,
++							    restore_density,
+ 							    restore_blksize);
+ 			goto out;
  		}
+@@ -3886,7 +3897,8 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 		else
+ 			retval = st_int_ioctl(STp, mtc.mt_op, mtc.mt_count);
+ 		if (!retval && mtc.mt_op == MTRETEN && !STp->immediate &&
+-		    (restore_density >= 0 || restore_blksize >= 0)) {
++		    (restore_drv_buffer >= 0 || restore_density >= 0 ||
++		     restore_blksize >= 0)) {
+ 			/*
+ 			 * Retension reloads the medium and the drive may
+ 			 * report a new medium.  Let check_tape() start the new
+@@ -3895,7 +3907,8 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 			 * overrides the restored settings.
+ 			 */
+ 			if (check_tape(STp, file) >= 0)
+-				st_restore_changed_settings(STp, restore_density,
++				st_restore_changed_settings(STp, restore_drv_buffer,
++							    restore_density,
+ 							    restore_blksize);
+ 		}
+ 		goto out;
+@@ -4503,7 +4516,7 @@ static int st_probe(struct scsi_device *SDp)
+ 	tpnt->modes[0].defined = 1;
+ 
+ 	tpnt->density_changed = tpnt->compression_changed =
+-	    tpnt->blksize_changed = 0;
++	    tpnt->blksize_changed = tpnt->drv_buffer_changed = 0;
+ 	mutex_init(&tpnt->lock);
+ 
+ 	idr_preload(GFP_KERNEL);
+diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
+index 0d7c4b8c2c8a..c580024880c3 100644
+--- a/drivers/scsi/st.h
++++ b/drivers/scsi/st.h
+@@ -162,10 +162,12 @@ struct scsi_tape {
+ 	unsigned char in_use;
+ 	unsigned char blksize_changed;
+ 	unsigned char density_changed;
++	unsigned char drv_buffer_changed;
+ 	unsigned char compression_changed;
+ 	unsigned char drv_buffer;
+ 	unsigned char density;
+ 	unsigned char changed_density;
++	unsigned char changed_drv_buffer;
+ 	unsigned char door_locked;
+ 	unsigned char autorew_dev;   /* auto-rewind device */
+ 	unsigned char rew_at_close;  /* rewind necessary at close */
 -- 
 2.55.0
 
