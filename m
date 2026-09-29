@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C047A3E5EF8
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 08:26:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A725739B94F
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 08:26:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790670372; cv=none; b=BDKp3WO9c3KoEXONEQUah00IbkFkmSZjL5s5vBoVL+642j87bTyfqQbvfCYoQY/+RxoBo3/UpZ4DwjjLvdqGj5whecRMaRLmE9vvvNAQ5c5Eo32Osuqp9+Tx6hyb8bX2JYbLUSZ8vMt2q6M+B/bTa9L7LyzRSiPEP7a6RYfe7tQ=
+	t=1790670374; cv=none; b=Uwk9zsofemBFbrjXMnRCvEdPF0ajpIv2ukWFt+rkqJG3Cm0D6Y9XYWI1YE4ybgHuoD+l5GqPYXFn0qhEj6yPtyuGcDqAS6sGrjwo0j9EQF0vIdU4SWCfSOpns4OuY5NWOGpbOUdrgfFanRHos+JrvJHq+TGspd3UjTzyNhQMZQE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790670372; c=relaxed/simple;
-	bh=ayBoz8bsdZUu6ThdqA/vL2AXSaVCmXAM8SuNnWJZKeQ=;
+	s=arc-20240116; t=1790670374; c=relaxed/simple;
+	bh=KIFH+0W2+j/aa6z58OUGgX6rAYY2XpBUI5PmEcSNK08=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Bn8Dd3T43NVQbFhX1ntb7h7sqxopp9Gw4v5ZA+rkg7mGtAHRTH3aKMzvSRnjctc9z7Av5GTZvLLEjWKoeTlCU4bm6YHhv/7kJeFre/DS76V+wftKJYvA6+JQW3w/9wA6z/KrF7KoKjbhAWcVoriqj4pQn4uohsaoZHDEW0T+h3Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iSu8eXCB; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=Il9Jo2mTcLzlsmYr6N7PGGEiw7pjOd1VNIo4IPw4CKoZl5XehB4Q4exIVnV6Ib8Q9/Ah+2/KerTZacUu9BvYmEvXy31wqbbspmCnjZcm8KeCMfT7eEXG4yMT6pe6U64rXhNhUrLpZFf1sr+NtL3nbATkksBZ7SUWwLPbzmTbjuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IYp0VWTF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iSu8eXCB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 431601F00898;
-	Tue, 29 Sep 2026 08:26:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IYp0VWTF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0964C1F000FF;
+	Tue, 29 Sep 2026 08:26:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790670371;
-	bh=B7mEXBSrXYAr4kAI+u3P+FU/tQOwSTCjfx7OJ0JVe3c=;
+	s=k20260515; t=1790670373;
+	bh=HUZxkjnuEweAh+TKVPdJU4xA/UBmceUBWej/b3DWi48=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=iSu8eXCB9wh7BQGWzyxwjvYd/dTLghZ+I8wzgZnw5e7F8jiw7N/QA77JKbrBdRKJs
-	 c1EdC+pSxLXz9r1u5pihS9grB5J2BvEzPb6zs0IL/KhhYFbuMEAkIB7irRxLPNy2rz
-	 HVpPeZD1ZFhi0ZG1pnpCJki+x5tE1qjMicBDNoNQUXJn7oF6WmNAy63wrHtG9LtxOO
-	 zRY8j0Y41iuE6EAi59Xo1zfdRpGEJnmpuThyh6R2TF3OgQ3v57DvLN1I3KV1SDZ/82
-	 9rGLnO+74zOjfwNQ371yaG0vppqaHuvyANhav6fENXx9ukKpWVoAA184J7hqYVndku
-	 Erlqf5wYMBfnA==
+	b=IYp0VWTFxbDX+U1a6SLMbEaQXTWbO/4HGOV2k7XF9AYesQdsr1dvogytKZZqYrAN7
+	 ErzVkM7tuHzq77mPGEmPX2Wc7r4Nxt/R/mpEY5uYSRIeD/WR/nOcj6nardCJtZi5kw
+	 PeA8e7CxebxNxKgbkdQPcX+OIVqrenOXU4A3acClaSPLh2lz9Wr0Yhzph0QhumoeuI
+	 lL24wbAP5+S7WfGC7OGogxhyGvOEj9TlMlZS9B0CcA4VDnHwBpVjkqwLqS6XHpTx/7
+	 IxhsjpC7sZUCMpA3V2xBt3z9ojzLWyfTF6gCAh/9wa+Xl7BX5wYcx7b1iCrm3qkFPy
+	 AeH9+DmxZYUoA==
 From: Niklas Cassel <cassel@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -33,9 +33,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.garry@linux.dev>,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v11 06/13] scsi: scsi_debug: Avoid 32-bit overflow in WRITE SCATTERED offsets
-Date: Tue, 29 Sep 2026 10:25:03 +0200
-Message-ID: <20260929082456.857423-21-cassel@kernel.org>
+Subject: [PATCH v11 07/13] scsi: scsi_debug: Report the residual of a write
+Date: Tue, 29 Sep 2026 10:25:04 +0200
+Message-ID: <20260929082456.857423-22-cassel@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260929082456.857423-15-cassel@kernel.org>
 References: <20260929082456.857423-15-cassel@kernel.org>
@@ -45,97 +45,119 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3790; i=cassel@kernel.org; h=from:subject; bh=ayBoz8bsdZUu6ThdqA/vL2AXSaVCmXAM8SuNnWJZKeQ=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2l769Gdju1/hModR4e/myAxuqWfsCm3dYeD6auoNT9 M3Gu+LvOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCRXXaMDM8Zqt4JrbIUPbf3 i+kmu6NPOKdVt6/7eeYrp9KnEKHQjdoM/7PNfKqFL0iJ+y80Wjkn2atpF6PvrMrL/J/S/jy7Irf OhRkA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4656; i=cassel@kernel.org; h=from:subject; bh=KIFH+0W2+j/aa6z58OUGgX6rAYY2XpBUI5PmEcSNK08=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2l76NTWPa5brc5NISuwBPBptfThE5GWstTi2NvRf5X +8Bw7zSjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEzkXhbDP7UOgy5HjnL/x2rR GvP/u95o/znfps9VXuHIv9pdh1X0NzL8D5/9wsnOo04zqPHvnS3c2xdeE11mXSJn3vB7opGLrW8 KNwA=
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-resp_write_scat() computes the length of an LBA range in bytes as a
-32-bit product, num_by = num * lb_size, and adds it to sg_off, the
-32-bit offset of the next range in the data-out buffer. The product
-wraps for a range of 4 GiB or more, which check_device_access_params()
-allows once the store is that large, and sg_off wraps once the ranges
-add up to 4 GiB, which neither their number nor their overlap prevents.
-The ranges that follow are then written from the wrong offset in the
-buffer.
+Documentation/scsi/scsi_mid_low_api.rst defines the residual as the
+length of the data buffer less the number of bytes actually transferred,
+so a write whose data buffer is larger than its transfer length leaves
+one. resp_read_dt0() and resp_write_tape() report it, but the write
+paths for a disk do not, so such a write completes with GOOD status and
+a residual of zero while a READ of the same length into the same buffer
+reports it correctly.
 
-Make num_by and sg_off 64-bit, and pass do_device_access() sg_off
-capped at the length of the buffer. An offset at the end of the buffer
-copies nothing, and sg_copy_buffer(), which takes it as an off_t, is
-never given one larger than the buffer that it copies.
+Report it in resp_write_dt0(), resp_write_scat() and resp_atomic_write().
+
+resp_write_scat() differs twice over. Its data-out buffer also holds the
+parameter list header and the LBA range descriptors, so what the command
+consumed is sg_off rather than the bytes that the last range
+transferred; and sg_off counts what was asked for rather than what was
+transferred, so it can exceed the buffer and needs a guard. A command
+with no LBA range descriptors or a buffer transfer length of zero
+transfers nothing, so the whole buffer is residual. An error, real or
+injected, can end the command after some ranges have been written, so
+the residual is reported on every exit once the parameter list has been
+fetched.
 
 Assisted-by: LLM
-Fixes: 481b5e5c7949 ("scsi: scsi_debug: add resp_write_scat function")
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
 Tested with:
 
-  modprobe scsi_debug sector_size=512 dev_size_mb=128
+  modprobe scsi_debug zbc=managed sector_size=512 physblk_exp=3 \
+      zone_size_mb=8 dev_size_mb=128 zone_nr_conv=2
 
-issuing a WRITE SCATTERED (16) through SG_IO with 33 LBA range
-descriptors: 32 of 262144 blocks at LBA 0, which add up to 4 GiB, and
-one of 8 blocks at LBA 200000. The 9728 byte buffer holds the parameter
-list and 16 blocks, so the first range consumes all of it. Before this
-patch the offset wrapped, and the last range was written with the data
-of the first; after it the last range is left as it was.
+An eight logical block WRITE(16) with a 5000 byte buffer reports
+resid=904, having transferred 4096. A READ(16) of the same length into
+the same buffer reported that before this patch and the WRITE reported
+0. A buffer of exactly 4096 bytes reports 0, as does a 512 byte buffer,
+which is consumed in its entirety. WRITE ATOMIC (16) behaves like the
+WRITE, on a device that is not zoned.
 
-Changes since v10: sg_off is capped at the length of the buffer rather
-than at U32_MAX, which becomes -1 as an off_t on 32-bit architectures,
-and the commit message no longer claims that the store has to be 4 GiB.
+WRITE SCATTERED (16) with one LBA range descriptor of eight blocks and a
+5632 byte buffer reports resid=1024, having consumed 512 bytes of
+parameter list and 4096 bytes of data. The same command with a 1024 byte
+buffer completes and reports resid=0: sg_off reaches 4608, past the end
+of the buffer, and without the guard the residual would have been
+reported as 4294963712.
+
+Changes since v10: the residual is only set when it is non-zero in
+resp_write_dt0() and resp_atomic_write(), as Damien suggested.
 ---
- drivers/scsi/scsi_debug.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_debug.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 92458bf1568b..879746c2ed7d 100644
+index 879746c2ed7d..2f828820cbea 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -5197,7 +5197,8 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 	struct sdeb_store_info *sip = devip2sip(devip, true);
- 	u8 wrprotect;
- 	u16 lbdof, num_lrd, k;
--	u32 num, num_by, bt_len, lbdof_blen, sg_off, cum_lb;
-+	u32 num, bt_len, lbdof_blen, cum_lb;
-+	u64 num_by, sg_off;
- 	u32 lb_size = sdebug_sector_size;
- 	u32 ei_lba;
- 	u64 lba;
-@@ -5273,14 +5274,14 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		num = get_unaligned_be32(up + 8);
+@@ -5162,6 +5162,9 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 			    "%s: write: cdb indicated=%u, IO sent=%d bytes\n",
+ 			    my_name, num * sdebug_sector_size, ret);
+ 
++	if (ret < scsi_bufflen(scp))
++		scsi_set_resid(scp, scsi_bufflen(scp) - ret);
++
+ 	if (unlikely((sdebug_opts & SDEBUG_OPT_RECOV_DIF_DIX) &&
+ 		     atomic_read(&sdeb_inject_pending))) {
+ 		if (sdebug_opts & SDEBUG_OPT_RECOVERED_ERR) {
+@@ -5234,8 +5237,10 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 					    "Unprotected WR to DIF device\n");
+ 		}
+ 	}
+-	if ((num_lrd == 0) || (bt_len == 0))
++	if (num_lrd == 0 || bt_len == 0) {
++		scsi_set_resid(scp, scsi_bufflen(scp));
+ 		return 0;       /* T10 says these do-nothings are not errors */
++	}
+ 	if (lbdof == 0) {
  		if (sdebug_verbose)
  			sdev_printk(KERN_INFO, scp->device,
--				"%s: k=%d  LBA=0x%llx num=%u  sg_off=%u\n",
-+				"%s: k=%d  LBA=0x%llx num=%u  sg_off=%llu\n",
- 				my_name, k, lba, num, sg_off);
- 		if (num == 0)
- 			continue;
- 		ret = check_device_access_params(scp, lba, num, true);
- 		if (ret)
- 			goto err_out_unlock;
--		num_by = num * lb_size;
-+		num_by = (u64)num * lb_size;
- 		ei_lba = is_16 ? 0 : get_unaligned_be32(up + 12);
- 
- 		if ((cum_lb + num) > bt_len) {
-@@ -5311,7 +5312,9 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		 * Write ranges atomically to keep as close to pre-atomic
- 		 * writes behaviour as possible.
- 		 */
--		ret = do_device_access(sip, scp, sg_off, lba, num, group, true, true);
-+		ret = do_device_access(sip, scp,
-+				       min_t(u64, sg_off, scsi_bufflen(scp)),
-+				       lba, num, group, true, true);
- 		/* If ZBC zone then bump its write pointer */
- 		if (sdebug_dev_is_zoned(devip))
- 			zbc_inc_wp(devip, lba, num);
-@@ -5322,7 +5325,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 			goto err_out_unlock;
- 		} else if (unlikely(sdebug_verbose && (ret < num_by)))
- 			sdev_printk(KERN_INFO, scp->device,
--			    "%s: write: cdb indicated=%u, IO sent=%d bytes\n",
-+			    "%s: write: cdb indicated=%llu, IO sent=%d bytes\n",
- 			    my_name, num_by, ret);
+@@ -5330,6 +5335,8 @@ static int resp_write_scat(struct scsi_cmnd *scp,
  
  		if (unlikely((sdebug_opts & SDEBUG_OPT_RECOV_DIF_DIX) &&
+ 			     atomic_read(&sdeb_inject_pending))) {
++			/* This range has been written */
++			sg_off += num_by;
+ 			if (sdebug_opts & SDEBUG_OPT_RECOVERED_ERR) {
+ 				mk_sense_buffer(scp, RECOVERED_ERROR,
+ 					FAILURE_PREDICTION_THRESHOLD_EXCEEDED);
+@@ -5355,6 +5362,13 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 	}
+ 	ret = 0;
+ err_out_unlock:
++	/*
++	 * sg_off counts what the command asked for, which can exceed the
++	 * buffer: lbdof is not validated against it, and a range is counted
++	 * in full even if do_device_access() copied less.
++	 */
++	if (scsi_bufflen(scp) > sg_off)
++		scsi_set_resid(scp, scsi_bufflen(scp) - sg_off);
+ 	sdeb_meta_write_unlock(sip);
+ err_out:
+ 	kfree(lrdp);
+@@ -6209,6 +6223,9 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+ 		return DID_ERROR << 16;
+ 	if (unlikely(ret != len * sdebug_sector_size))
+ 		return DID_ERROR << 16;
++
++	if (ret < scsi_bufflen(scp))
++		scsi_set_resid(scp, scsi_bufflen(scp) - ret);
+ 	return 0;
+ }
+ 
 -- 
 2.55.0
 
