@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7141253FD4E
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 17:33:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6D863DB964
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 17:41:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790703216; cv=none; b=muBL3rfmkOcrM2cHlLpu7tDU8Dbl7HU1cq5eYVpnfQJp/fecX/ia9bpf2opoqjrsPGP4AO6dHh6lQnvFcAVuF2yQXkJBCXP4hidwXTA9q5ljhjUBtWYzayQf6Gyzz3JyqnSEbSVYA9KmTJbhiVWw4HZXj5O85cBbdi8pwdoEp2U=
+	t=1790703703; cv=none; b=uUwx3mkduTj74WyYqejGPJEOKTg9qPEzkfn1q2qJ/9Yk8P59lgp6DA6ilBBaj1HU4ujzt5JxrngmWwzXYwz29w7ChgcapT/ZYYQvxRbKshEJ1xAz/9VcBag++OYcGZU9i+up6Iyu1oQFlIDyiderpFPDcGUOT3GTRRRBVGr2fK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790703216; c=relaxed/simple;
-	bh=ymWSU/u6h/3P0pOh4FfzpkH9dwtswMMc7dAYpPmaYGQ=;
+	s=arc-20240116; t=1790703703; c=relaxed/simple;
+	bh=eIO4seTJYt5bycDnZVovXZxGj0hUGwb/YT9qrN9AIxw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nPU9rnNUxx3ngYuDGcwMzy2CdIRb5ztJWTCBz6bubYuScV5f1kkiKuIQk8t0PV1eWF0lHbbqajiBzawL9ewV+V76vZ1++jNukg0ciY6rZ3L/sC2NGWpJteLwi08uiwQLkIfdJkFE6QN5Eb+MZAdSuAwgRkeuIzhVMZj4c8+20vI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UvmH7kQG; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=DapndoGBm9LiGdBnzB/V1mZTJBA/nqnyNASUaBkQ2vBZY7RQNnpG3nNK2+IjiCc4bd1dVMKFAmhAfT69V1XBW9MUpjINFEoFRdTRj9IgO2DMAyKeIu/UFMusCWKZfZP2w6dReptRBUUpWzKVhzhuZP4wSIyxLhqa5rL76RdQJhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U8AjGuzf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UvmH7kQG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0562F1F000FF;
-	Tue, 29 Sep 2026 17:33:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U8AjGuzf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 172051F000FF;
+	Tue, 29 Sep 2026 17:41:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790703215;
-	bh=186dVEq935Po/7EN7KLg1Ha9Mn3d6U2caB7ywNbDM/M=;
+	s=k20260515; t=1790703702;
+	bh=gk6kBTyiYIxB/pd8MJTHhlQZwvoCb6Pnq8gXmpqbhoM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UvmH7kQGe/l0H2GF5T3FhyDnsxysJdCWWy4Y1qOYxnL40dbEnv5bJS59Y5KZQPhEV
-	 cD/XszE6lcw7furOjpyhq3oeOdAMxGfkSxAB1GK0l9IML4Z5NxLPuVJat2ziWc8SHA
-	 Ka0NRMmpKs8lYbqParJgY8I60XLNqZBm6rAY48LtwpukHXVVN3uKQbkAVrjB8pBZBq
-	 g1PE16n8UhZhqm1R5fWvhO5+2mehqU2w1kyVcdsl/l2a8P4o3fMJcEIjN2Hz3PQ2OZ
-	 g2wp62XYQ9GIo+hs9rMiMaRqn9h6TAfg6DBDbB5eokC+X3AQQ+sJOITJ8fp6sPWegF
-	 T05Du3D+6F+0A==
+	b=U8AjGuzfxqqat6jf8Uo07iw+E4OkSmHvPWqLdgIuwI7GqHydSf6it8yeIZHLb4r79
+	 RlO8C7T5ayk9AZDF4bveDFrFckybH/NRWKXK/4wvZmsWVjeo9HHVbPmuThkpL9wXO5
+	 yNm2T2FZajVzOiYjK4RPBjZ2cCpl9Ft2muSdf88tvdifDUClIeUsyOaqIXoz0CetN7
+	 fQ76aiYoadG4+3nOdDq/tD2Hm1tFA16G0m9tD9bfznjSSggUdLTOP0+vqSnXvfC7uZ
+	 +76m/DyD5hI0DTfxaRx/1t+Lb9ZiPZEdVzvgRR+APUU/YTRgjSJ7GEwDS8ERZyFpUl
+	 2Ai+HCErU8H8Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/4] scsi: st: Restore changed drive settings after
- reset also for MTLOAD and MTRETEN
+Subject: Re: [PATCH v3 2/4] scsi: st: Record the tape position after a
+ successful MTLOAD
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Laurence Oberman" <loberman@redhat.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260929171813.844733-2-loberman@redhat.com>
+In-Reply-To: <20260929171813.844733-3-loberman@redhat.com>
 References: <20260929171813.844733-1-loberman@redhat.com>
- <20260929171813.844733-2-loberman@redhat.com>
+ <20260929171813.844733-3-loberman@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 29 Sep 2026 17:33:34 +0000
-Message-Id: <20260929173335.0562F1F000FF@smtp.kernel.org>
+Date: Tue, 29 Sep 2026 17:41:41 +0000
+Message-Id: <20260929174142.172051F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,68 +47,71 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: st: MTLOAD in immediate mode attempts premature settings res=
-tore
+- [High] scsi: st: data corruption via rogue filemarks after MTLOAD
 --
 
-commit 17d984b3de3a58216a78afa696892ddd4aea0bbd
+commit fa623b9485fe23a48925ee926b259a954fdd216e
 Author: Laurence Oberman <loberman@redhat.com>
 
-scsi: st: Restore changed drive settings after reset also for MTLOAD and MT=
-RETEN
+scsi: st: Record the tape position after a successful MTLOAD
 
-A device reset returns the drive's density and block size to their defaults.
-This patch attempts to re-apply values changed by the user when recovering
-with MTLOAD or MTRETEN.
+This commit records the tape partition, position, and EOF state after a
+successful MTLOAD, similar to how check_tape() does for a new session.
+This fixes an issue where the driver would incorrectly report file/block
+as -1 because drives didn't report a new-medium unit attention when
+already loaded.
 
 > diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index f1c3c49466379..0a4263bef9cbb 100644
+> index 0a4263bef9cbb..e5b2e2d4872d3 100644
 > --- a/drivers/scsi/st.c
 > +++ b/drivers/scsi/st.c
-[ ... ]
-> @@ -3819,6 +3848,9 @@ static long st_ioctl(struct file *file, unsigned in=
-t cmd_in, unsigned long arg)
-> =20
->  		if (mtc.mt_op =3D=3D MTLOAD) {
->  			retval =3D do_load_unload(STp, file, max(1, mtc.mt_count));
-> +			if (!retval)
-> +				st_restore_changed_settings(STp, restore_density,
-> +							    restore_blksize);
+> @@ -2686,6 +2686,22 @@ static int do_load_unload(struct scsi_tape *STp, s=
+truct file *filp, int load_cod
+>  		else {
+>  			STp->rew_at_close =3D STp->autorew_dev;
+>  			retval =3D check_tape(STp, filp);
+> +			/*
+> +			 * LOAD leaves the medium at the beginning of partition
+> +			 * 0.  check_tape() records that only for a new session;
+> +			 * without a new-medium unit attention (the medium was
+> +			 * already loaded) the partition, position and EOF state
+> +			 * would be left as before the load.  Set them as a new
+> +			 * session and MTREW do.
+> +			 */
+> +			if (retval =3D=3D CHKRES_READY) {
+> +				STp->partition =3D STp->new_partition =3D 0;
+> +				STps =3D &(STp->ps[0]);
+> +				STps->drv_file =3D STps->drv_block =3D 0;
+> +				STps->eof =3D ST_NOEOF;
+> +				STps->at_sm =3D 0;
+> +				STps->last_block_valid =3D 0;
 
 [Severity: High]
-Does this code attempt a premature settings restore if MTLOAD is called
-in immediate mode?
+Does this code risk data corruption by omitting a reset of the rw state?
 
-If a user application issues MTLOAD with O_NONBLOCK and STp->immediate
-set to recover after a drive reset, do_load_unload() will issue the load
-command and return immediately. This unconditional call to
-st_restore_changed_settings() would then cause MODE SELECT commands to
-fail because the drive is still asynchronously loading.
+If a user writes data to partition 0 (setting ps[0].rw =3D ST_WRITING), iss=
+ues
+MTSETPART 1, and then switches to partition 1, ps[0].rw remains ST_WRITING.
 
-Later, when the drive is accessed, check_tape() detects the new session
-and clears the changed flags, causing the drive to silently revert to
-its default density and block size. Subsequent writes might then produce
-incorrectly formatted tapes without errors.
+If the user then issues MTLOAD, the ioctl clears the rw state for the curre=
+nt
+partition (ps[1]), but do_load_unload() then forces STp->partition =3D 0 wi=
+thout
+clearing ps[0].rw.
 
-For MTRETEN, this patch correctly checks for !STp->immediate before restori=
-ng
-the settings:
+Upon closing the device, st_flush() would see ps[0].rw =3D=3D ST_WRITING and
+unconditionally execute WRITE_FILEMARKS at the beginning of the tape (BOT),
+overwriting and destroying previously recorded data.
 
->  			goto out;
+Should STps->rw =3D ST_IDLE; be added to this block to prevent rogue filema=
+rk
+writes at BOT?
+
+> +			}
+>  			if (retval > 0)
+>  				retval =3D 0;
 >  		}
-[ ... ]
-> @@ -3837,6 +3869,19 @@ static long st_ioctl(struct file *file, unsigned i=
-nt cmd_in, unsigned long arg)
->  			retval =3D st_compression(STp, (mtc.mt_count & 1));
->  		else
->  			retval =3D st_int_ioctl(STp, mtc.mt_op, mtc.mt_count);
-> +		if (!retval && mtc.mt_op =3D=3D MTRETEN && !STp->immediate &&
-> +		    (restore_density >=3D 0 || restore_blksize >=3D 0)) {
-
-Should MTLOAD also verify !STp->immediate before calling
-st_restore_changed_settings() in st_ioctl()? Note that follow-up patches
-in this series do not correct this omission.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260929171813.8447=
-33-1-loberman@redhat.com?part=3D1
+33-1-loberman@redhat.com?part=3D2
