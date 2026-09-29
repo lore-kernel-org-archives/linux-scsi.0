@@ -1,103 +1,110 @@
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD2FB33F394
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 03:13:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71B053A6EE6
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 08:26:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790651641; cv=none; b=KJRjqW8YrO+HaaNemwT6rLj+hkeSJbZCdToXoW5bQqIPnuzqb/J+hw2LZkJYpyF5TaLTTOVUEVwHM5/jMUQi1NQs2g2tOeeqXv3yBCnHAcjqvpEHIldoU6iGUNhnBH53e16rge2mTshgHrVMI0j5/R6rLiJktjDRzMjDCZGAk+w=
+	t=1790670362; cv=none; b=IxqkTUIp1SOgzsy3CnRYCCbG9ufOBLK4YW/5GGvWEkV1/nhJi4dn7pZsJIzc3EXvn/eV9f0r+o94b3njhhiI/mFd6HHCBfJutEAGBCoS31Gj2ZEga+JGl/Moyah8O0M3iYXQdSuX26G1Io2+KekFmk0DSjVrYEI+BM20CChdMHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790651641; c=relaxed/simple;
-	bh=2vfPUlJ9QuD5zVqreMFjCUsWeeE/7HPHd4gRkma4Hyw=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=Rv0kvzOBXO/pHHskR4ePOAwLnhID6n6A0oMGd+G1n9Icug/VBDRBEFl0lkmSMBjOv5nmfrBjRzrXTzFZMF/0TR+npqoQGk5ake7/X1hWzI0/tprnGzG1Z5qxW3gMgEZSRE5Crc3sTIZISwtxHF1tKQGQvnLz/w8H+LVwBKz1wRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=IkjVMT5k; arc=none smtp.client-ip=209.85.215.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1790670362; c=relaxed/simple;
+	bh=K49wfNbT6iHprL/xSeO29tbPdCbhwGi1dKnsuPKX5V4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WH30/z9JMIgPLWCYdgKhxsAVE1EthoqOiILml2fpxHz3pnHJDPqboYCZ1vfbX5ZmKHr9WTS1eex7UvyOpkF6hHc2yorE3GIbCsdIB471C6Dsj9e/qWGx94s4Tlf7vufBTGsiaXLdpK8p2yMguWOlJ5g5dritsIG5YgtfMKyrIn4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jYlq/n/H; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IkjVMT5k"
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc7695f6a30so3914028a12.0
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Sep 2026 20:13:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790651635; x=1791256435; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=d06E3RJ83rKJqFl5RbOdW9hfiekgl+b6M3WlzGTpcCo=;
-        b=IkjVMT5k5kZzGVSUKa8bYAmFmyfKE55dzMV7Pl3C6ZhlxC4dPYbDA5t8bSjF2ErpPx
-         IyZ70WlSnteZumAidFdsWVXY2k/U8Nj194JtjPyJrHF0b2By326dTM//o/UGo/VqHQY7
-         2lNsFA4KvCD2Dt/Ba/0F7kTG0ORw45tSptDw6YLiXjYzHt4zJajpsrq9tO2tU4TlSgd6
-         vmKjMcsWyn0+Cn2Jw2m7ITptsse9kpX9fqocIx4YbCPcQOMF/UVdLY1eBouaFUkfZRhd
-         i25ULDU+hj9+Ulp9BtY379G3ZtEDcT8ohtgnYIry+NwVVWB2UIE54YiJ2C19k+Ksskw6
-         b4KQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790651635; x=1791256435;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=d06E3RJ83rKJqFl5RbOdW9hfiekgl+b6M3WlzGTpcCo=;
-        b=kMgEZKm38HMA/poHrgf2dXIXsFQl2tNyr8USdcGRMpiTMoaeJFO3+NmlRTALEf0gvt
-         vHKnLEJZW60ZBup2X1Y2IlBgNP4wHaV/D1wS842mXcc6Q8KobWDhE3dfQ3cIPFeF+gKu
-         RhpeQs+NiR/B+dmZiwuwSK4umRgKeunKdQqLW2Ln2mw3PW0ik/od65N+K6mZyrM7mnnG
-         KLA4iY5oJ4tiaFuh6KHHuisWan/+ZMuQEN6lKMn/A4I5Rpz6Y78bX4OtCnqAsmAxpzqy
-         issE4r+wbVLb+zUKklowqGFMN1/i/OwWOML9Hea9pJIOxQEaMcuKJ2UnkeVIk59WKZ3i
-         YWZQ==
-X-Forwarded-Encrypted: i=1; AKwUvBy+gLRuxqfowVWmeWSxxO1N+ARCkcNfUd3Av5YHGOqdOUaPwvFj01yOKK37f5FlBE/PgF8WiELbUgRC@vger.kernel.org
-X-Gm-Message-State: AFuF++lDXMhUlqrgU9xaPbs9mG5+jJwR1L+8JxtkyMhMxl2HgClz37AY
-	kia7xXwKAgc1sSNeW6C/qiKutQnJ30OragbxVYCosBij5eJ8YqG9QhEo3Cdai19X3pmDLa6BLGx
-	mQkqz1BVQSqbAdnPBuRwG9g==
-X-Received: from pfhc1.prod.google.com ([2002:a05:6a00:cbc1:b0:883:a484:b2de])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a21:4eab:b0:3dd:a196:539c with SMTP id adf61e73a8af0-3de0e960800mr13032389637.62.1790651635019;
- Mon, 28 Sep 2026 20:13:55 -0700 (PDT)
-Date: Tue, 29 Sep 2026 11:13:52 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jYlq/n/H"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A592B1F00893;
+	Tue, 29 Sep 2026 08:25:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790670361;
+	bh=2e9j/iao5CPcczW4a8v5S2z9iM9GLw58DwKAYaQwRiI=;
+	h=From:To:Cc:Subject:Date;
+	b=jYlq/n/HKfJR2HYuKB/FHEr+cZ46EBYHwhBT21mtgTHvsQa+NoR12UKRgN25vudT+
+	 kpeY491aasGxCMLtk+wfO8tFHTBo+5Vg63oxWUopl/q7C8n82jr/bf3HlAYPgLjsES
+	 bTh7fes1Drh2d/XNne+xaRocrGZwFo3kunocJaYGsvgU2kEBJnuyRZssVDaBM9tfbf
+	 6LHSf7CySbNuzUSZzH63hUXmGhjAq3G1OjYOpk8F6Bn1ViHc1MDCptmRXtQh+t53yN
+	 8JoPHa7HUHKAwGtWzvOhqAa5Us/KjZy0rTm2NYtYbY4PzaPpHdb95kwqxEFy39RuxD
+	 FxxzoSOTlethA==
+From: Niklas Cassel <cassel@kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.garry@linux.dev>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v11 00/13] scsi: scsi_debug: fix zoned write validation
+Date: Tue, 29 Sep 2026 10:24:57 +0200
+Message-ID: <20260929082456.857423-15-cassel@kernel.org>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20260929031352.1355691-1-stanleyjhu@google.com>
-Subject: [PATCH] scsi: ufs: rpmb: Fix power-on UNIT ATTENTION retry
-From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
-	Damien Le Moal <dlemoal@kernel.org>, Jorge Ramirez-Ortiz <jorge.ramirez@oss.qualcomm.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Stanley Jhu <stanleyjhu@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2879; i=cassel@kernel.org; h=from:subject; bh=K49wfNbT6iHprL/xSeO29tbPdCbhwGi1dKnsuPKX5V4=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLJ2l97I/3rirsfzB1HBnrM+rHoSXv7vhm9C/EzRlKRDT y9GBh+d2VHKwiDGxSArpsji+8Nlf3G3+5TjindsYOawMoEMYeDiFICJfDNgZNgWVbEgL/jz6VN1 ldG/5vqvbPjNGVjGsms+6/PSlTsSze8w/OHxP84WKpD3uMVicex9TX+xe3f4vkY432mTyKjbbX3 9JjMA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-A merge conflict resolution dropped SCMD_FAILURE_ASCQ_ANY from the
-retry added by commit a8a34238e5e6 ("scsi: ufs: rpmb: Retry power-on
-UNIT ATTENTION on the RPMB WLUN"), so only 29h/00h is retried, not
-the other 29h ASCQs.
+This series fixes scsi_debug with regards to writes to a ZBC drive, and
+to WRITE ATOMIC (16). Each patch describes the problem that it fixes.
 
-Link: https://lore.kernel.org/linux-scsi/yq1jyo4onqe.fsf@mail.kernel.org/
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
----
-Tested in QEMU on top of "scsi: ufs: rpmb: Drop the unregistered
-ufs_rpmb bus" (RPMB v5 3/3).
+Two configurations are refused rather than emulated, and those two
+patches come first, as the rest of the series relies on what they
+exclude: a zoned device whose lowest aligned LBA is not zero, which no
+host writing in units of the reported zone write granularity could ever
+write, and atomic writes on a zoned device, which no drive supports.
 
- drivers/ufs/core/ufs-rpmb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Little of this is reachable in a default configuration. Most of it needs
+physblk_exp, atomic_wr or logical block provisioning to be set, or an
+initiator that does not provide a data buffer matching the transfer
+length of the command.
 
-diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-index 50ef63afd528..7b9b59c9e968 100644
---- a/drivers/ufs/core/ufs-rpmb.c
-+++ b/drivers/ufs/core/ufs-rpmb.c
-@@ -47,7 +47,8 @@ static int ufs_sec_submit(struct ufs_hba *hba, u16 spsp, void *buffer, size_t le
- 		{
- 			.sense_key = UNIT_ATTENTION,
- 			.sense_code =
--				POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED,
-+				POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURRED |
-+				SCMD_FAILURE_ASCQ_ANY,
- 			.allowed = UFS_RPMB_UA_RETRIES,
- 			.result = SAM_STAT_CHECK_CONDITION,
- 		},
+The series is based on 7.4/scsi-staging rather than 7.3/scsi-fixes (as
+Damien suggested on v1) to avoid a build failure that would have
+happened if this series was simply merged with linux-next:
+
+  error: too many arguments to function 'mk_sense_buffer'
+
+Tested on a zoned scsi_debug device with 512 byte logical blocks and a
+4096 byte physical block, and on a device that is not zoned for the
+WRITE ATOMIC (16) patches. The notes below each patch describe what was
+observed before and after it.
+
+Changes since v10:
+- Patch 3 is new. A negative physblk_exp was accepted, and the driver
+  shifts by it. Sashiko pointed this out.
+- Patch 6 caps the offset at the length of the buffer rather than at
+  U32_MAX, which is -1 as an off_t on 32-bit architectures, as Sashiko
+  pointed out.
+- Patch 7 only sets the residual when it is non-zero, as Damien
+  suggested. Picked up his Reviewed-by.
+- Patch 11 cites SBC-6 4.28.2 in the comment above the new check, as
+  John suggested. Picked up his Reviewed-by.
+
+Niklas Cassel (13):
+  scsi: scsi_debug: Refuse a zoned device with a non-zero lowest aligned
+    LBA
+  scsi: scsi_debug: Make atomic writes and ZBC emulation mutually
+    exclusive
+  scsi: scsi_debug: Refuse a negative physblk_exp
+  scsi: scsi_debug: Take the zone metadata lock before the data lock
+  scsi: scsi_debug: Evaluate scsi_debug_lbp() only once
+  scsi: scsi_debug: Avoid 32-bit overflow in WRITE SCATTERED offsets
+  scsi: scsi_debug: Report the residual of a write
+  scsi: scsi_debug: Enforce physical block alignment of zoned writes
+  scsi: scsi_debug: Do not write a partial physical block to a zoned
+    device
+  scsi: scsi_debug: Advance the write pointer over the data written
+  scsi: scsi_debug: Refuse a short WRITE ATOMIC (16) before writing it
+  scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
+  scsi: scsi_debug: Validate the access parameters of WRITE ATOMIC (16)
+
+ drivers/scsi/scsi_debug.c | 143 ++++++++++++++++++++++++++++++--------
+ 1 file changed, 115 insertions(+), 28 deletions(-)
+
 
 base-commit: f09d2c7485b32adb82336d0d748935c8237a649e
 -- 
-2.56.0.rc1.315.gc6ed9934b7-goog
+2.55.0
 
