@@ -1,97 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBB001B4F0A;
-	Tue, 29 Sep 2026 11:21:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3792519DEC;
+	Tue, 29 Sep 2026 11:56:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790680919; cv=none; b=W1itpTjoP8RL4MxFML9jGF+zMEzoho4alShnOgXKjwyOv2LoMYlOHcXQWkmhXNaZggs+UMQFsAVgrMqbHhiP9L54k4h7XgvQiX5WMxYOqyBWA4C39uiOto2ku/OdOb5uwnhDfeP8YTsuCtYPo2qK/UyNzqBTMcVOgK4vtDlKAFE=
+	t=1790682969; cv=none; b=fmacO2BNIhVuKggoslJ5Am1fwGznit12Mh/NO64CJNT8ZdWrGdaYGX/Tmvka9RULdDcHxEEPiYaGbUCCYxSqnlAudsAnNfUcLq6T+pK12NVeJrN8VyRbPiR0uBq+HCUKmDrYVNM1YqMr8gwKaMtBJA9xvRWYqNpBZ1ZEhvK1F8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790680919; c=relaxed/simple;
-	bh=0tGRycjpiixLeY+PMc8Qd7H5Nd0F7yLxzp9vsJVm2so=;
+	s=arc-20240116; t=1790682969; c=relaxed/simple;
+	bh=oi4ecmrtRPGyQ9zN1UpyGc3XPw7K3CaoMg48WodFQB0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=er16aexfYAxunUHCjRUGq3e9PBScTphIalUfja9EoSQS3p3U181trxu+MIok+RKYpi3k5X9/JThrpgBgsDr50GFYqDMs1e2MYnga8sEZpI8oaQW6qfbGr6d+DsZycd7aGHF0XNIt7ElxQnwZo6PZ3RO5uwz4wQlIzpNWVP4Do0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R7ZIalgU; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=pQx3zlk2lcjH0xxNBbP1E8pXw8jhg+MVPTqYOsGM2T3+ZeHCueghIK5Oq/XKpmzR+w84LJemJyHXwvbusirHJzKa6oNKvVDr4c7XcoPDOkaBZvB3uXfxc+vHndLoLh5DwNdivucPoaiVsgesqz+714DLUva4Nr3OOaRZ1OnkA18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aAfRGdMc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R7ZIalgU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3D1B1F000FF;
-	Tue, 29 Sep 2026 11:21:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aAfRGdMc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71CE31F00893;
+	Tue, 29 Sep 2026 11:56:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790680917;
-	bh=2fPL1r0q3ZFaPVm8LMil7KkezedSBA8/3rMeLvpxPeA=;
+	s=k20260515; t=1790682968;
+	bh=zAcr7k1VFSj0FxGnV2wZTgaTAlECtx8NAJwasJV5ywQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=R7ZIalgU2YxoignykHVl41GbwXVq+ymjE2Si4HRcFErNll2DzNwd43/xyUICNL9Gh
-	 ZKbhOo6icKbcmsuOqmHY4vcYGDVk0I9HhEjHuNVoiCF/g/yVcf+z3KLnyerzZ1MiXd
-	 W5Z9bZBV7t1tkUZVxlpq6Ci9stfsy0TAMMeCuz+nSAiebkXEgWtguADRz3DWyBpZ+H
-	 mIWJYnCrwO2dvpBgpuGcPLGHOAHxCMNlWV4hSF1En76lTAsSQsZ+wBOPbyH1ksC26r
-	 xgTJ+Vceyq3XFJSuuzXLjQ/8jCstGixi8blBDf2nxCsI5axooCKVBfsc28vfxzNygJ
-	 YWOKPhtuzPNAg==
-Date: Tue, 29 Sep 2026 12:21:22 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Zi Yan <ziy@nvidia.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, 
-	Barry Song <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, 
-	Usama Arif <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, 
-	Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>, Jaya Kumar <jayalk@intworks.biz>, 
-	Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
-	John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
-	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
-	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
-	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 09/40] docs: filesystems: update mmap_prepare docs for
- discontig kernel pgs
-Message-ID: <arudePFfTLNBMKzQ@gremlin>
-References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-9-4583d8a23bca@kernel.org>
- <DLOP8IH392ZU.2X2GPOP2NYK4X@nvidia.com>
+	b=aAfRGdMcWvekHavm3q/uHYK7Ej0wO8vA5AtpIPBUdP4gtxA2dErTsPrWW+Fjb83+I
+	 c2Gs8W0TBEQKMyytzDSlLl5gnaexK6kTt2SCecoJjmzDg9JXtQhj7Tio71pYf6e65t
+	 QFfditMrnvBbf4LiD23zX70P8flC8+78Kp3I6UZCxZaDZltCVPC7XlOwz+faE860lN
+	 UTl5y4EJhNS+BeEgBKH/PjRzQa2QCVv2M5d3HOxOh9XFsBatlfykjyhsmwjCE2bgee
+	 JAANKijL4mMkTi1BPEWHjr9hLU4e9EeH1QGhtaxq7ecHueELulevrmQteCucLlIXqF
+	 E9q8Qv65nf4sw==
+Date: Tue, 29 Sep 2026 13:56:03 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: hengyul@cs.unc.edu
+Cc: dlemoal@kernel.org, mkp@kernel.org, ipylypiv@google.com,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] ata: libata-scsi: do not lose CHECK CONDITION for failed
+ ATAPI commands
+Message-ID: <arunU96ilIfG7Gt5@ryzen>
+References: <20260924180414.2102946-1-hengyul@cs.unc.edu>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -100,26 +44,74 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <DLOP8IH392ZU.2X2GPOP2NYK4X@nvidia.com>
+In-Reply-To: <20260924180414.2102946-1-hengyul@cs.unc.edu>
 
-On Fri, Sep 25, 2026 at 05:01:51PM -0400, Zi Yan wrote:
-> On Thu Sep 17, 2026 at 12:22 PM EDT, Lorenzo Stoakes (ARM) wrote:
+Hello Hengyu,
 
-> >  Documentation/filesystems/mmap_prepare.rst | 81 ++++++++++++++++++++++++++++++
+On Thu, Sep 24, 2026 at 02:04:14PM -0400, hengyul@cs.unc.edu wrote:
+> From: Hengyu Liang <hengyul@cs.unc.edu>
+> 
+> Since commit 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands
+> on time out"), atapi_qc_complete() sets SAM_STAT_CHECK_CONDITION for a
+> failed command only if cmd->result is zero, so that the DID_TIME_OUT or
+> DID_REQUEUE host byte of a terminated command is preserved.
+> 
+> However, cmd->result can also be non-zero for a regular failed ATAPI
+> command completed through libata EH: ata_eh_analyze_tf() calls
+> ata_eh_decide_disposition(), that is, scsi_check_sense(), on the sense
+> data obtained with REQUEST SENSE, and scsi_check_sense() sets the SCSI
+> midlayer internal byte of the result for some sense codes, e.g.
+> SCSIML_STAT_TGT_FAILURE for ILLEGAL REQUEST with ASC 0x20 (INVALID
+> COMMAND OPERATION CODE) or 0x24 (INVALID FIELD IN CDB), or
+> SCSIML_STAT_MED_ERROR for MEDIUM ERROR with ASC 0x11 (UNRECOVERED READ
+> ERROR). For such commands, atapi_qc_complete() keeps the result as is and
+> the command completes with a GOOD status byte, even though it failed and
+> valid sense data is available.
+> 
+> As a result, passthrough users see these failed ATAPI commands as
+> successful. For example, with the emulated IDE CD-ROM drive of QEMU and
+> no medium loaded, a PLAY AUDIO MSF command issued with SG_IO completes
+> with status 0x00 (and no DRIVER_SENSE) instead of 0x02 (CHECK CONDITION)
+> with sense key ILLEGAL REQUEST, ASC/ASCQ 0x20/0x00, and the CDROM ioctls
+> CDROMPLAYTRKIND, CDROMSUBCHNL, CDROMPAUSE, CDROMRESUME, CDROMPLAYMSF and
+> CDROM_GET_MCN return 0 instead of -ENOMEDIUM or -EOPNOTSUPP.
+> 
+> Fix this by preserving the result only if its host byte is set, and by
+> otherwise completing the command with SAM_STAT_CHECK_CONDITION, as was
+> done before that commit.
+> 
+> Fixes: 2e1d2e65e773 ("ata: libata-scsi: terminate deferred commands on time out")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Hengyu Liang <hengyul@cs.unc.edu>
+> ---
 
-> > +* ``discontig_kernel_map_page()`` - Maps a single page, correctly handling
-> > +  compound pages (if the compound page is bigger than the remaining pages in the
-> > +  VMA, then only those pages that fit will be mapped). For a compound page, the
-> > +  head page must be passed.
-> > +* ``discontig_kernel_map_page_range()`` - Map an array of pages of a specified
-> > +  size. Note that if the number of pages specified exceeds the VMA size then an
-> > +  error will arise.
->
-> Why do mapping a compound page and a page range have different behaviors
-> on the bound? Either both do partial mappings or give errors when a
-> given input cannot be mapped as a whole in the VMA.
+I think it is better if you set only the status byte with set_status_byte()
+instead of overwriting cmd->result, so that the SCSI midlayer byte set by
+scsi_check_sense() is kept.
 
-Ack, yeah similar to Suren's point on patch 8, will clamp for both.
+Something like:
 
---
-Cheers, Lorenzo
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 8f9aa97a519d..fb5517d51095 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3059,10 +3059,15 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
+                if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
+                        qc->dev->sdev->locked = 0;
+ 
+-               if (cmd->result)
+-                       ata_scsi_qc_done(qc, false, 0);
+-               else
+-                       ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
++               /*
++                * Report CHECK CONDITION unless the command was terminated
++                * with a host byte set. Only set the status byte, so that the
++                * SCSI midlayer internal byte, which scsi_check_sense() may
++                * have set from the sense data, is preserved.
++                */
++               if (get_host_byte(cmd) == DID_OK)
++                       set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
++               ata_scsi_qc_done(qc, false, 0);
+                goto schedule_deferred;
+        }
+ 
