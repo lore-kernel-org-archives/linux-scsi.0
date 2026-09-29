@@ -1,109 +1,130 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E1CF47140A
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 19:28:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9463A55294B;
+	Tue, 29 Sep 2026 19:32:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790710119; cv=none; b=s635+Q/yhk51hp+E9oPnM6uomlYyy+m3v369/Jd1Ih1s5602IxCCJ4Y7QPt6Ktu6nfVj05mBgbdy1X4bfvsDpNPhYaMhdj6HrzwGUckP5wW7a+KkbSd5A6c26F+AzdWjMSkBv9fRw4Vll4WZb5pvDzCUB4wlDNF2jwVNaJ8kUmo=
+	t=1790710366; cv=none; b=dhSIK1cOWPOCP4SHc7TNh66kcCgg7ym00Eew1qqdHpN+l/clvYOWJ7+i+oEUVGx3nsh30iZY7XN2yKQzUHtRUO5JNnrno9UbyxsjZ54zSm0FXGzLDHn00Aeov/3sAx6prem9N6dbAKIKcXddqxbfd3zflp9tuiQaQnvt0l8+L1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790710119; c=relaxed/simple;
-	bh=iPmzYAF2wjtRw8FfPjwvE9Lc7Lu+hGwstgpcktW4gs0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XXJ2hbUbp+H8Qll1dCHZLN4H2ihiA/TShQdVWQM4BtJjXSKYqzW2/mcu+swtOS1FecISJNIpgRr8l8CVjxEm4eHtyBVnCEjGBoWLrU8W9XDQKZKDCbK7P87vTnSuFGvY5MEt+gIKmEb8lOeqUX7e5BGctdO7mDkhQ7Z3N42A1GA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eDgexTL3; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1790710366; c=relaxed/simple;
+	bh=Fn4MPbxI+JJCAvX0AAkAD9uyazR2zHDgsv3pW6Q0Lqk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=B8C6LVt0cCxjohEMaxKuCJzCplRzC1JfqpJHrhO10JJgtaXJ0d90eUTslewjb0TgoszFD5J+2hxxeupeUshQCrHyWfsQ+5MIlWaMCEH7uDt4XGZK52juEpNQBPEnVmqMlycX1/XokADWS0V/rvcgMN+PPR970sA1Fsx+61wt9NM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PBMBkbXD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eDgexTL3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1790710117;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XMcJ65RbTE9CDBl0rHSBHrsMoxBXQLG5vKm57180Opg=;
-	b=eDgexTL39o930X8nLVgjp8vP6rzx8klbIY3ytsdVsT8q8ltHpDJ1C8dC8yF31ulSIMIFY6
-	K/+FUZ8nXlhGL8ny58CM95kDqQ09MgTrWt6EZw5NJsIjwAr8uBPMOFDTO9r/i6PG+6lYkY
-	GOVyAL3r7XxNegWP0gh7KpznEcWo1+c=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-111-mIjHn1pQPseLzOQ9URMsuA-1; Tue,
- 29 Sep 2026 15:28:36 -0400
-X-MC-Unique: mIjHn1pQPseLzOQ9URMsuA-1
-X-Mimecast-MFC-AGG-ID: mIjHn1pQPseLzOQ9URMsuA_1790710115
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B180B1977582;
-	Tue, 29 Sep 2026 19:28:34 +0000 (UTC)
-Received: from loberman-thinkpadp16gen3.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 76EBF1956047;
-	Tue, 29 Sep 2026 19:28:33 +0000 (UTC)
-From: Laurence Oberman <loberman@redhat.com>
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Kai Makisara <Kai.Makisara@kolumbus.fi>,
-	John Meneghini <jmeneghi@redhat.com>,
-	emilne@redhat.com,
-	bgurney@redhat.com
-Subject: [PATCH v4 4/4] scsi: st: Relock the door after a reset
-Date: Tue, 29 Sep 2026 15:28:21 -0400
-Message-ID: <20260929192821.997675-5-loberman@redhat.com>
-In-Reply-To: <20260929192821.997675-1-loberman@redhat.com>
-References: <20260929192821.997675-1-loberman@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PBMBkbXD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90FF01F000FF;
+	Tue, 29 Sep 2026 19:32:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790710364;
+	bh=HZtibm6wLNY3C3qTYpBig2hjrFtePeC9eV4kCyAr5kk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=PBMBkbXDwVUZDdWjT7rS5KJdKcI3WcPLdaGiv0mGoM8mOWUIez5KcDyQuJDKYconx
+	 0AmBoli61qd2jVKbOaa6HRODoEUA8xU8abZZBHSndeS/0o32MDvPrD1UMw+HyjJzMa
+	 5UuqfqCFSU985LqHm72wG5wJ5RhCvm2U+J3uEe8cJvdx0bzVGwBZjXo5SYCwktq6ZT
+	 ymtXXHsvx+uth+8+nCVRJUonHnd06oxoX7bvvbVg5LZiZd2sgxUEjXzcF/P1TQM6Lj
+	 il66dHPgFR6OexyHL/FGVqD2xxB2ThleAXInFqamp+uEaAWuEcj2pSxs+rE3AjbV1i
+	 e+PXbnKfJSOjA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 01/16 net-next v2] ipv4: introduce CONFIG_IPV4 to
+ decouple the IPv4 stack
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Fernando Fernandez Mancera" <fmancera@suse.de>
+Cc: antonio@mandelbit.com, sw@simonwunderlich.de, linux-scsi@vger.kernel.org, "Jeff
+ Layton" <jlayton@kernel.org>, sven@narfation.org, linux-security-module@vger.kernel.org, "Anna
+ Schumaker" <anna@kernel.org>, "Chuck Lever" <cel@kernel.org>, marek.lindner@mailbox.org, mptcp@lists.linux.dev, linux-rdma@vger.kernel.org
+In-Reply-To: <20260928193046.6698-2-fmancera@suse.de>
+References: <20260928193046.6698-1-fmancera@suse.de>
+ <20260928193046.6698-2-fmancera@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 29 Sep 2026 19:32:43 +0000
+Message-Id: <20260929193243.90FF01F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-With auto-lock enabled, st locks the door at the first read or write and
-records ST_LOCKED_AUTO.  A device reset clears the drive's medium removal
-prevention, but st keeps its state, so it never locks the door again and
-the medium can be removed from the drive while it is in use.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] kconfig: core dual-stack and IPv6 features are forcibly disabled w=
+ithout IPv4
+--
 
-Set the lock state to ST_UNLOCKED when a reset is recognized.  The door
-is then locked again at the next read or write.
+commit e9e0ffe00541dede8370017851b597f6f3e1cfa2
+Author: Fernando Fernandez Mancera <fmancera@suse.de>
 
-Suggested-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
-Assisted-by: Claude sashiko
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
----
-v4: no changes.
-v3: new patch (Kai Mäkisara).
+ipv4: introduce CONFIG_IPV4 to decouple the IPv4 stack
 
- drivers/scsi/st.c | 3 +++
- 1 file changed, 3 insertions(+)
+This commit introduces the CONFIG_IPV4 symbol to decouple the IPv4 stack,
+currently defaulting it to yes. It adjusts multiple networking subsystems
+across tunnels, drivers, and filesystems to depend on this new IPv4
+configuration symbol.
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index f548197..e089d3a 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -368,6 +368,8 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
- 	if (ctr != STp->por_ctr) {
- 		STp->por_ctr = ctr;
- 		STp->pos_unknown = 1; /* ASC => power on / reset */
-+		/* The reset allowed medium removal; relock at next access */
-+		STp->door_locked = ST_UNLOCKED;
- 		st_printk(KERN_WARNING, STp, "Power on/reset recognized.");
- 	}
- 
-@@ -426,6 +428,7 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
- 	if (cmdstatp->have_sense && scode == UNIT_ATTENTION &&
- 		cmdstatp->sense_hdr.asc == 0x29 && !STp->pos_unknown) {
- 		STp->pos_unknown = 1; /* ASC => power on / reset */
-+		STp->door_locked = ST_UNLOCKED;
- 		st_printk(KERN_WARNING, STp, "Power on/reset recognized.");
- 	}
- 
--- 
-2.43.0
+> diff --git a/net/Kconfig b/net/Kconfig
+> index 76ab44aa439a6..ca86f20540dd1 100644
+> --- a/net/Kconfig
+> +++ b/net/Kconfig
+[ ... ]
+> @@ -232,6 +235,7 @@ config BRIDGE_NETFILTER
+>  	depends on BRIDGE
+>  	depends on NETFILTER && INET
+>  	depends on NETFILTER_ADVANCED
+> +	depends on IPV4
+>  	select NETFILTER_FAMILY_BRIDGE
 
+[Severity: High]
+Does adding this dependency force bridge netfilter to be unavailable on
+kernels without IPv4?
+
+Bridge netfilter handles both IPv4 and IPv6 bridged traffic. Tying it
+exclusively to CONFIG_IPV4 under config BRIDGE_NETFILTER might prevent
+filtering IPv6 traffic on an IPv6-only kernel.
+
+[ ... ]
+> diff --git a/net/ipv6/Kconfig b/net/ipv6/Kconfig
+> index c3806c6ac96f9..f83efc1505cc4 100644
+> --- a/net/ipv6/Kconfig
+> +++ b/net/ipv6/Kconfig
+[ ... ]
+> @@ -256,7 +265,7 @@ config IPV6_SUBTREES
+> =20
+>  config IPV6_MROUTE
+>  	bool "IPv6: multicast routing"
+> -	depends on IPV6
+> +	depends on IPV4 && IPV6
+>  	select IP_MROUTE_COMMON
+
+[Severity: High]
+Does this change break IPv6 multicast routing when CONFIG_IPV4 is disabled?
+
+IPv6 multicast routing under config IPV6_MROUTE does not inherently require
+IPv4. Adding this dependency disables purely IPv6 functionality on an
+IPv6-only kernel.
+
+[ ... ]
+> diff --git a/net/xfrm/Kconfig b/net/xfrm/Kconfig
+> index 4a62817a88f8f..203188b05be40 100644
+> --- a/net/xfrm/Kconfig
+> +++ b/net/xfrm/Kconfig
+> @@ -4,7 +4,7 @@
+>  #
+>  config XFRM
+>  	bool
+> -	depends on INET
+> +	depends on INET && IPV4
+>  	select GRO_CELLS
+
+[Severity: High]
+Will adding this dependency disable the global IPsec subsystem for IPv6-only
+kernels?
+
+Tying config XFRM entirely to CONFIG_IPV4 restricts dual-stack infrastructu=
+re,
+making it impossible to use IPsec with IPv6 if IPv4 is disabled.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260928193046.6698=
+-1-fmancera@suse.de?part=3D1
