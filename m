@@ -1,52 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44F3E502561;
-	Tue, 29 Sep 2026 11:12:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBB001B4F0A;
+	Tue, 29 Sep 2026 11:21:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790680339; cv=none; b=PiM1WO/DknW/97aa//ftGdnlxjR9k8iU50WF/aCGKM5djXC/BAh1IeJoWVXfrD97ukg4d0mr/fI6PwdJ4FKx1CzZEhySA45f/2tPTyuEkpCgQQaaI2ynSkJrVJKR6aZT95YlEb+1IfAbucL2GNZHbxgR7DCgOhz1oaiKlooLXF0=
+	t=1790680919; cv=none; b=W1itpTjoP8RL4MxFML9jGF+zMEzoho4alShnOgXKjwyOv2LoMYlOHcXQWkmhXNaZggs+UMQFsAVgrMqbHhiP9L54k4h7XgvQiX5WMxYOqyBWA4C39uiOto2ku/OdOb5uwnhDfeP8YTsuCtYPo2qK/UyNzqBTMcVOgK4vtDlKAFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790680339; c=relaxed/simple;
-	bh=Oa+fncOJqLBSPNYLEUbP6b6zgvqPNXaiiMRC+IOlcgE=;
+	s=arc-20240116; t=1790680919; c=relaxed/simple;
+	bh=0tGRycjpiixLeY+PMc8Qd7H5Nd0F7yLxzp9vsJVm2so=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ovKic9+gueVbh4fO04M1oX+aAE2S1f3x4oyQpFSc+pRXYnsQClhXX56IaPpKbYuZJtl/Fo632RDoRBuO/SdIYjgNw2zhIxa+qvMYYkNlXqVa+MPhk/CUnxP4J4RBbt1BfbapF3kwdRui/xKuknsdJBVeFx5jFh7AQJRxi14+188=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BV88qyIr; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=er16aexfYAxunUHCjRUGq3e9PBScTphIalUfja9EoSQS3p3U181trxu+MIok+RKYpi3k5X9/JThrpgBgsDr50GFYqDMs1e2MYnga8sEZpI8oaQW6qfbGr6d+DsZycd7aGHF0XNIt7ElxQnwZo6PZ3RO5uwz4wQlIzpNWVP4Do0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R7ZIalgU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BV88qyIr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD0241F000FF;
-	Tue, 29 Sep 2026 11:11:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R7ZIalgU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3D1B1F000FF;
+	Tue, 29 Sep 2026 11:21:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790680337;
-	bh=OtKLzSVjKPRZshz2AefRxKxu1viQOmmc/Cl7ueutcPM=;
+	s=k20260515; t=1790680917;
+	bh=2fPL1r0q3ZFaPVm8LMil7KkezedSBA8/3rMeLvpxPeA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BV88qyIrUdemgCTc7/Nc1a5HencKOCtUUeQF/4yuDOy+E9lTQJTXaqexwwEa+KENc
-	 IHnvm++5OlPA7wQp78zpEfhb13SxfqeGtE8x0Tr4lJuOODJoVnitMUth71d8TyI8FL
-	 qF9QPvRMYORpyuleZ9gBZ9acR1tOtNY6T0V0l2wM3DCoWKv97l9wnJfOLBz3QVXNcf
-	 zuCeflofP0AyEaKrVdS0ufY5NE8KthdOm5n6A3n0TzkRrDI50QFp3WVuF5iK4VLw/2
-	 /u7yd0WDEAicCMf2zjaEZ1eoZuTrAugZMtLq/8C7LYHaANp8hLzVqESeam3NBy6sPL
-	 fqbmJ7n5T9GCg==
-Date: Tue, 29 Sep 2026 12:11:42 +0100
+	b=R7ZIalgU2YxoignykHVl41GbwXVq+ymjE2Si4HRcFErNll2DzNwd43/xyUICNL9Gh
+	 ZKbhOo6icKbcmsuOqmHY4vcYGDVk0I9HhEjHuNVoiCF/g/yVcf+z3KLnyerzZ1MiXd
+	 W5Z9bZBV7t1tkUZVxlpq6Ci9stfsy0TAMMeCuz+nSAiebkXEgWtguADRz3DWyBpZ+H
+	 mIWJYnCrwO2dvpBgpuGcPLGHOAHxCMNlWV4hSF1En76lTAsSQsZ+wBOPbyH1ksC26r
+	 xgTJ+Vceyq3XFJSuuzXLjQ/8jCstGixi8blBDf2nxCsI5axooCKVBfsc28vfxzNygJ
+	 YWOKPhtuzPNAg==
+Date: Tue, 29 Sep 2026 12:21:22 +0100
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: Suren Baghdasaryan <surenb@google.com>
+To: Zi Yan <ziy@nvidia.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, 
 	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
 	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, 
-	Stephen Smalley <stephen.smalley.work@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
 	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
 	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
-	Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	Jaya Kumar <jayalk@intworks.biz>, Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, 
-	Sebastian Reichel <sre@kernel.org>, John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, 
+	Barry Song <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, 
+	Usama Arif <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, 
+	Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>, Jaya Kumar <jayalk@intworks.biz>, 
+	Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
+	John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
 	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
 	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
 	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
@@ -85,43 +86,40 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
 	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
 	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 08/40] mm: add mmap action for discontiguous kernel
- page mapping
-Message-ID: <aruboNztyLjlrXiG@gremlin>
+Subject: Re: [PATCH v3 09/40] docs: filesystems: update mmap_prepare docs for
+ discontig kernel pgs
+Message-ID: <arudePFfTLNBMKzQ@gremlin>
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-8-4583d8a23bca@kernel.org>
- <CAJuCfpEawD2NUO9EoqKnR6YR59XMdYrtUrj8KEwJVwO8AOk8Lw@mail.gmail.com>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-9-4583d8a23bca@kernel.org>
+ <DLOP8IH392ZU.2X2GPOP2NYK4X@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJuCfpEawD2NUO9EoqKnR6YR59XMdYrtUrj8KEwJVwO8AOk8Lw@mail.gmail.com>
+In-Reply-To: <DLOP8IH392ZU.2X2GPOP2NYK4X@nvidia.com>
 
-On Sun, Sep 27, 2026 at 02:44:18PM -0700, Suren Baghdasaryan wrote:
-> On Thu, Sep 17, 2026 at 9:27 AM Lorenzo Stoakes (ARM) <ljs@kernel.org> wrote:
+On Fri, Sep 25, 2026 at 05:01:51PM -0400, Zi Yan wrote:
+> On Thu Sep 17, 2026 at 12:22 PM EDT, Lorenzo Stoakes (ARM) wrote:
 
-> > diff --git a/include/linux/mm.h b/include/linux/mm.h
-> > index a1f2d375cf7d..2a92193ac6a5 100644
-> > --- a/include/linux/mm.h
-> > +++ b/include/linux/mm.h
+> >  Documentation/filesystems/mmap_prepare.rst | 81 ++++++++++++++++++++++++++++++
 
-> > +static inline void
-> > +discontig_kernel_map_page_range(struct discontig_kernel_page_state *state,
-> > +                               struct page **page_arr, unsigned long nr_pages)
-> > +{
-> > +       state->action = DISCONTIG_KERNEL_PAGE_MAP_PAGE_RANGE;
-> > +       state->__page_arr = page_arr;
-> > +       state->__nr_pages = nr_pages;
+> > +* ``discontig_kernel_map_page()`` - Maps a single page, correctly handling
+> > +  compound pages (if the compound page is bigger than the remaining pages in the
+> > +  VMA, then only those pages that fit will be mapped). For a compound page, the
+> > +  head page must be passed.
+> > +* ``discontig_kernel_map_page_range()`` - Map an array of pages of a specified
+> > +  size. Note that if the number of pages specified exceeds the VMA size then an
+> > +  error will arise.
 >
-> Shouldn't we cap state->__nr_pages at state->nr_pages_remain like you
-> do in discontig_kernel_map_page()?
+> Why do mapping a compound page and a page range have different behaviors
+> on the bound? Either both do partial mappings or give errors when a
+> given input cannot be mapped as a whole in the VMA.
 
-Ack yeah good point, will do!
+Ack, yeah similar to Suren's point on patch 8, will clamp for both.
 
 --
 Cheers, Lorenzo
