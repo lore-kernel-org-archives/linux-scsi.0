@@ -1,81 +1,121 @@
-Received: from fgw20-4.mail.saunalahti.fi (fgw20-4.mail.saunalahti.fi [62.142.5.107])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBAA44E73B2
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2026 15:59:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.107
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB46651C058;
+	Wed, 30 Sep 2026 18:23:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790783987; cv=none; b=S3d+s214srLuKjHFhPIaiIhA3Hfr4WeDB3tA2vfUIOqARJT0UJVHhAv26omZhpV2hu3GpUeX1+9V4c1EQL65YHSwRrreyhlp8XMUKdSI+WqJMKtSJvB9FsuMKLDfkItlqejsP8LGsqtHcufrqQbB2/DRyBZ+7zmNvf9fQ1BhClU=
+	t=1790792617; cv=none; b=audkyzAHA0fflGvvPboYocXEtF2EfpOby5XH2SQHeFN4/c3slLNmbFxLSbKEM81juYiO40vNnu12T6Eob8RSUPKiIkunJbRCXmc55hSI8wItuMR0MWtCBK0ueYnOi6FWsw7wKEEremnHtb3XhPB1hyb6Uk2aMwwHR9zYILKdUtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790783987; c=relaxed/simple;
-	bh=g7Picei7NVF5yRnJ9+++aOz1/JYCC0VksuNv8ysk790=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=VrCrPCYQm1Gnb40O7mLX9MYr/VgQ7pBmiIlLmVivGanY3fsul2V5hzwS41DEGMRsVI0ibEiXNMXXIfggmoK0Ay5ihJr8xqB2+Y8Uia3lzDpd7FePOSkBFf4BOPG2d3APDQ/QW0KdX/was1fSC0tlMfO803r/WILzgOJyLpngoEs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=cJ62/vo+; arc=none smtp.client-ip=62.142.5.107
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
+	s=arc-20240116; t=1790792617; c=relaxed/simple;
+	bh=BOShqBMpn6WLtqFgaUcQndUcGxKEzjfXZvTdhjIDg7c=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=ZtCWFri3QGyOO0coVJ3WjZkmieh0BUqdHzdHRzS5QM9f6jcSor/RpQzlFcH0T8d8vaz/o6GhhYY18Gb6y75Ak5hqvBt+Ceboesg1nlAhgPJi1CMGJ8F71GoAeJr/zxUTZoN8bU3iAzOAoDRpizA/otZvobkIqFdB32cZaFLWX/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T5XjTJvW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="cJ62/vo+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
-	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
-	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
-	 content-transfer-encoding:message-id;
-	bh=g7Picei7NVF5yRnJ9+++aOz1/JYCC0VksuNv8ysk790=;
-	b=cJ62/vo+LZPZqSCQt6C+DunIq+5hzcABs7/iGrJx9We6QkxhrVeS++lmwDjWgvdSMIOi03f2thWrh
-	 tcu0yu/SoGvQVE2dcO+fEntp5crLd4JFDmQLHZdZ93QkjTXObYaBGuPKskOumXfvc/FY2kNb7OAtNS
-	 50etqRuV62gLyU/J10KDVYqWIChA7u1NBU4x0g5b/WLE9LyM0TFxyS0LbM9hzf4bgNWx26wgmLxA24
-	 RyhAbaT0fVYHEcJJ8Kj5NFTZclapXsscEmyhTzD0WUg58jayWI5Y1nS86M5bJYnK0hmh32P6+PfAC/
-	 NpFqCKAeS7v2Z12j76A42dNv71aze3w==
-Received: from smtpclient.apple (91-158-174-119.elisa-laajakaista.fi [91.158.174.119])
-	by fgw20.mail.saunalahti.fi (Halon) with ESMTPSA
-	id c3bd98ff-bce7-11f1-9563-005056bd6ce9;
-	Wed, 30 Sep 2026 18:58:23 +0300 (EEST)
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T5XjTJvW"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5B480C2BCB9;
+	Wed, 30 Sep 2026 18:23:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1790792617;
+	bh=BOShqBMpn6WLtqFgaUcQndUcGxKEzjfXZvTdhjIDg7c=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=T5XjTJvWOYmK/00k/kXzYdw57eOPRDalt7WGWVIDgvPSbq0WE8LcYagPoNFdCQypj
+	 yV0rhrJcn2ZkORHCVKau4UhkFoOCRdc99gZGyHmkUQ9uVAzqM4lUkDiqWevYBuBflC
+	 tgN/bCdiaXvF4KLszvTy/F7CPN8UdSXz+wiq+Ub2Dr9a+H1IIUjrttPEcXACoqOb7r
+	 zgHuCqFIaThLR5pzRYzX7COvre9m23Lls8ekaEK4r80mhr8qK9E+nY6dS5IdR+YiiT
+	 lszhtTKOSFHWcRlKj4iwvH8fTmVpKEYiVqXUFJBFPfR6awU29w3a2kZMgRmrfUERUe
+	 9LbvrTCl9lxAA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B6F7CA5FC5;
+	Wed, 30 Sep 2026 18:23:37 +0000 (UTC)
+From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
+Date: Wed, 30 Sep 2026 13:23:29 -0500
+Subject: [PATCH v12 01/11] scsi: ibmvfc: fix IRQ leak and guard deregister
+ on channel reg failure
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
-Subject: Re: [PATCH v4 0/4] scsi: st: Restore drive settings and state after
- reset and MTLOAD
-From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
-In-Reply-To: <20260929192821.997675-1-loberman@redhat.com>
-Date: Wed, 30 Sep 2026 18:58:13 +0300
-Cc: linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <mkp@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- John Meneghini <jmeneghi@redhat.com>,
- emilne@redhat.com,
- bgurney@redhat.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <E85E5AC9-9162-41AC-9536-0D98843A96BB@kolumbus.fi>
-References: <20260929192821.997675-1-loberman@redhat.com>
-To: Laurence Oberman <loberman@redhat.com>
-X-Mailer: Apple Mail (2.3901.100.1.1.12)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260930-ibmvfc-fpin-support-v12-1-53a3fff7d77b@linux.ibm.com>
+References: <20260930-ibmvfc-fpin-support-v12-0-53a3fff7d77b@linux.ibm.com>
+In-Reply-To: <20260930-ibmvfc-fpin-support-v12-0-53a3fff7d77b@linux.ibm.com>
+To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+ linux-kernel@vger.kernel.org, Tyrel Datwyler <tyreld@linux.ibm.com>, 
+ Dave Marquardt <davemarq@linux.ibm.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1790792616; l=1764;
+ i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
+ bh=fV+o0wT8doUXVY3i6OM5YZhGutYlLzEIfwvRfhNooRw=;
+ b=WzYkzLOUT2A5AMgtRdcKdZJqzuxKBQPqA2dTn082MdQufFSAQD6W0Y38YfTIJ78OvZNrkVp3Y
+ ii2LEKtQcTjDxNqIF8ODdYoyTR+TbT5fAGadFl9yHfIhMOh0tvWFWoS
+X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
+ pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
+X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
+ auth_id=689
+X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
+Reply-To: davemarq@linux.ibm.com
 
+From: Dave Marquardt <davemarq@linux.ibm.com>
 
+If request_irq() fails during ibmvfc_register_channel(), the error path
+disposes of the IRQ mapping via irq_dispose_mapping() but leaves scrq->irq
+populated with the stale virq number. A subsequent call to
+ibmvfc_deregister_channel() during teardown or reset cleanup then
+unconditionally invokes free_irq() and irq_dispose_mapping() on the stale
+IRQ descriptor, triggering kernel warnings.
 
-> On 29. Sep 2026, at 22.28, Laurence Oberman <loberman@redhat.com> =
-wrote:
->=20
-> After a device reset st blocks tape access until one of MTREW, MTOFFL,
-> MTLOAD, MTRETEN, MTERASE, MTSEEK or MTEOM clears the reset condition.
-> Testing the reset handling on scsi_debug and on IBM LTO drives found =
-that
-> several settings and parts of the driver state do not survive the =
-reset
-> or an MTLOAD.
-...
+Fix this by:
+1. Explicitly setting scrq->irq to 0 after irq_dispose_mapping() in the
+   ibmvfc_register_channel() error path.
+2. Guarding free_irq() and irq_dispose_mapping() with a check for scrq->irq
+   in ibmvfc_deregister_channel() so unmapped or unregistered queues are
+   safely skipped.
 
-Looks good. For the whole series:
+Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Reviewed-by: Kai M=C3=A4kisara <kai.makisara@kolumbus.fi =
-<mailto:kai.makisara@kolumbus.fi>>
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+index b3bc3ce872d6..1cd0f80cc9df 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+@@ -6435,6 +6435,7 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+ 	if (rc) {
+ 		dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
+ 		irq_dispose_mapping(scrq->irq);
++		scrq->irq = 0;
+ 		goto irq_failed;
+ 	}
+ 
+@@ -6463,9 +6464,11 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+ 
+ 	ENTER;
+ 
+-	free_irq(scrq->irq, scrq);
+-	irq_dispose_mapping(scrq->irq);
+-	scrq->irq = 0;
++	if (scrq->irq) {
++		free_irq(scrq->irq, scrq);
++		irq_dispose_mapping(scrq->irq);
++		scrq->irq = 0;
++	}
+ 
+ 	do {
+ 		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
 
-Thanks,
-Kai
+-- 
+2.55.0
+
 
