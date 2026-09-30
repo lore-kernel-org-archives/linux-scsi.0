@@ -1,93 +1,101 @@
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
+Received: from mta1.migadu.com (out-2.mta1.migadu.com [95.215.58.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 388A84FB9C0
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2026 13:59:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CE694D4890
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2026 14:56:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790776804; cv=none; b=uWG0oNaEXvWbQk3xjQetdYj1/Lre+cV4JpzW6L6DlOAi4I53wgFvMurCWNXaADvSCUICAzktqO252ni2xh5Pz96aguc54tpDrFhTjaDgTdX9BNIOFjLS4/bFDg5NOfdBMlPuS4+IQ1g4K9tsCglsy00RrTN0Wsw9l6tm85E9YOQ=
+	t=1790780184; cv=none; b=PTTmYARKgpAXv9Kov3WMeg/ECYwdojqsU/pFNR2Sf67Oys2KV2oL3XixSndhyDsR79QabVOwzfTSaMBQ0V54e0OlibNrVg161eKKDBa+u5xRUrkS8rxr9lDOMLGx7LcjEmovlDfiyPkBD8DKaqRQMLVTxekF126rUMH7fGuwuQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790776804; c=relaxed/simple;
-	bh=7xCBHb06wAnDpFFA66OoUSe2oo0M+BmVYkxhUmhENsI=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=GLGoIAtwBlaB3tjH3h1tF07s/I4a6TckKceN2eO5YCjFSCo0v+MOx+NhX4SedZv5EWT6V86FXd0hb3Am75/dZPCoWrB8p437Y9Z7IVJ3hnWpq3tTcRTv/xvnsj+2GWLSnqOET+3kZO9htZ8Ll3yLdtHL8nIYPE4h+SG1c/3lAZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=WF75rtx/; arc=none smtp.client-ip=209.85.210.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1790780184; c=relaxed/simple;
+	bh=Diglc94M4WCrKqEp4aPrdGIGbGLwCtTAZra85TtSeZM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=qRVhMtU3haNCpMvYWmErNQdCeWgs5IsN5lQ1bx5LaVMKQTDmYuI31QTfy1VAxkqriH6cgfj+x/IqOUq/cmqq/98NlN3WD1R1FPknHvdqRD+cU/lPJViBPm+/xO7wpy/cozMsqLx28XToEudOISX9cRIHzzTIQqsPc8F4d98s4eg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Y34TTkKr; arc=none smtp.client-ip=95.215.58.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WF75rtx/"
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-86261e66700so4039438b3a.3
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2026 06:59:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790776790; x=1791381590; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=gPgPKBbr/ny2GVIIGOROpYD1joItJkDdIDRxnCyhbVY=;
-        b=WF75rtx/jp/1AFtQ8Y01pZXTLGJjsG6F91AkfAcw671m6PQ+RZT6Vtb5CM6p7TDwaX
-         DZeh0iYakPE5t45HjL7bTqQvK3eetBEobUAAK7UDNZx4//+zo8MI2Z6wjDH7hmiIDZ39
-         31vMU3Iz0K7LxXS+oqpV5EQqoxeGmISZAy6d5TWznbRjokzQAN3G/59wxiAe4bktynmz
-         adXQ+HoaCsV1XTAL2MQ0yZIMUkuAGbRL8eX81N3jhfjtsfza5NjfwhqgdjqrnXb4ktni
-         Id76sIOEQSqd6+ippqaAxL+p0fTe6Zey8bF5Du/V5yzl9FuwHZ4P+5FhQ6gbam7nQIMx
-         vyPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790776790; x=1791381590;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=gPgPKBbr/ny2GVIIGOROpYD1joItJkDdIDRxnCyhbVY=;
-        b=b1dk1d1fbcPqbPGZBdfp2UH9mbP/3URV5N+r+Lgtqw0TWRTT1vgFIUaLFl4pX8xkcY
-         DgppJ93v1wA2aSY724NMfZFt82HQ/a5Rw+FRTu81lJt1NyLiUK+nHOFMWDroCazTC2zZ
-         HKAniqWoYBU0pzdLglOiQlQt0w9uvAKcW2/SvCxiHO5IgICFAkeJ4kfa9kn27pvHUu41
-         ryolLBVSndzPUu9DhbprqNXBnu+a+W3xaQHtwEa1aaP8lqUu8w1fE3Q2rOR47hJaeYVy
-         R9tiFwt+yzzNNm5lKu+zrKD2mHj+ELkdEysphnztsCsnPUC/cNpo+Qd0mN+MFNXC4ZuY
-         q7+Q==
-X-Forwarded-Encrypted: i=1; AKwUvBzM4eM+ZfEGdtz1VfZTf/q1qSHYb/BOjwoibaePEEHxvMcOPiglnXJx8wslpPdU23SLRjstjljgwhLl@vger.kernel.org
-X-Gm-Message-State: AFuF++l2f9yTCX98NmqlGbzJoNkq2W8k98JebIY7W0I6Zb7tp1mEFf8N
-	JyA27vWCzC4cbgL/tuUWGYURSufIcWb35llyLXb+0d8g+tI3JvzqmCUNFimRqLXW04sg4czD+PX
-	b7C+qPRa5BciSpeCLwQKYYQ==
-X-Received: from pfblu1.prod.google.com ([2002:a05:6a00:7481:b0:883:42ce:9d90])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:9296:b0:886:61e5:cfbd with SMTP id d2e1a72fcca58-8874c8d331bmr1062690b3a.45.1790776789171;
- Wed, 30 Sep 2026 06:59:49 -0700 (PDT)
-Date: Wed, 30 Sep 2026 21:59:47 +0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Y34TTkKr"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Diglc94M4WCrKqEp4aPrdGIGbGLwCtTAZra85TtSeZM=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790780171; v=1; x=1791384971;
+ b=Y34TTkKrqUlYw8SDqecAAy7U5q4jjvB1wa3jym5jGyn36nsiCA4Tkt4hvJrF1DruwkWW5Gy0
+ +39mcWZdHAymaqJf+LTqmrFHBCiBT4e4aMUBJK9ek/kaQA8C3v1XCiF8F2bywtFarL0wq+KriL2
+ MnVBziekYgy9kDzE0Ec+e2Ws=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta11.migadu.com with ESMTPS id 3012bf07ec3973ec;
+	Wed, 30 Sep 2026 14:56:11 +0000
+X-Mizu-Trace-ID: 3012bf07ec3973ec
+X-Migadu-Flow: FLOW_OUT
+From: Usama Arif <usama.arif@linux.dev>
+To: mkp@kernel.org,
+	sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	ranjan.kumar@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	thenzl@redhat.com,
+	hare@suse.de,
+	himanshu.madhani@oracle.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Usama Arif <usama.arif@linux.dev>
+Subject: [PATCH 1/2] scsi: mpi3mr: Poll a reply queue that an interrupt found busy
+Date: Wed, 30 Sep 2026 07:55:48 -0700
+Message-ID: <20260930145606.2632749-2-usama.arif@linux.dev>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260930145606.2632749-1-usama.arif@linux.dev>
+References: <20260930145606.2632749-1-usama.arif@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20260930135947.2339918-1-stanleyjhu@google.com>
-Subject: [PATCH] MAINTAINERS: Remove Avri Altman as UFS reviewer
-From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Avri Altman <avri.altman@sandisk.com>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Bart Van Assche <bvanassche@acm.org>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-At Avri's request, remove him as a reviewer of the UFS host
-controller driver. The listed wdc.com address also bounces.
+mpi3mr_process_op_reply_q() returns without looking at the queue when
+another context owns it. Task management polls all reply queues with
+interrupts enabled, and a submitter drains the reply queue when the request
+queue is full, so either can own the queue when an interrupt comes in. If
+the owner made its last check just before the reply arrived, the handler
+finds the queue busy and, unless enable_irq_poll happens to be set,
+returns. Nobody looks at the reply until the next interrupt on that queue
+or the command timeout.
 
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+Let's set enable_irq_poll when the queue is busy, so that mpi3mr_isr()
+hands over to the IRQ thread, which polls until it has processed the
+reply. The flag cannot be cleared before mpi3mr_isr() reads it, as the
+thread only writes it while the interrupt is disabled.
+
+Fixes: 463429f8dd5c ("scsi: mpi3mr: Add support for threaded ISR")
+Signed-off-by: Usama Arif <usama.arif@linux.dev>
 ---
- MAINTAINERS | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6215fcb07770..7b5c27c68e5d 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -28041,7 +28041,6 @@ F:	lib/union_find.c
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index f0d3cd398dd00..102f84667a5cf 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -588,8 +588,11 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
  
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER
- R:	Alim Akhtar <alim.akhtar@samsung.com>
--R:	Avri Altman <avri.altman@wdc.com>
- R:	Bart Van Assche <bvanassche@acm.org>
- L:	linux-scsi@vger.kernel.org
- S:	Supported
-
-base-commit: f09d2c7485b32adb82336d0d748935c8237a649e
+ 	reply_qidx = op_reply_q->qid - 1;
+ 
+-	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1))
++	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1)) {
++		/* The owner may have missed a reply, let the thread poll */
++		WRITE_ONCE(op_reply_q->enable_irq_poll, true);
+ 		return 0;
++	}
+ 
+ 	exp_phase = op_reply_q->ephase;
+ 	reply_ci = op_reply_q->ci;
 -- 
-2.56.0.rc1.315.gc6ed9934b7-goog
+2.53.0-Meta
 
