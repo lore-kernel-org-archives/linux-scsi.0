@@ -1,94 +1,128 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7661A49B457;
-	Wed, 30 Sep 2026 10:44:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC2D0499F28;
+	Wed, 30 Sep 2026 10:45:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790765078; cv=none; b=LuwcePwskzuP/n2XAa+imrPvSbCKq32ntOyBA5ZyEuOe21xfl+naRpwsN+xT1oHCekrHrm1DH5OOzUL/PK0PHD57GrvWMD0ljCF618cququehDxNmWgt2E25tVo2CVBuAHXLIIOTWAhdGjam5UO9/RwjwqDaWItbMo4XLkHgJOM=
+	t=1790765147; cv=none; b=H1S+7htKVPC8OZ+/tCEp2tjn9iQBjwvvZ9iYy/jARRtKuQ/KhQ5dhOqxRAbkQSN573OELXyZ7UVCSW878uN1W4yMp1TrDRsRjufBHfFIjh4ePeBi+7ODcMhRntxDo5J6miSnhw4z4MJ+hf/+VJw3KT8cqCLmp72sXD7UrnUNKhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790765078; c=relaxed/simple;
-	bh=9b9FXd2Dsvtv7SjFTgYz9u9wdklIXRKhI7M3MVczEG4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BoBxGbrNNxGEn/ne4Rk6Nsvh5AhBXU93qGDYqZDg+wF9VMuSmGP8T8GGP9dG3cIqsI6tCvHyKk3OO6Jk453zTbDsp1MECQUGjMrCGxQCBuBConQY9FMMmoQyvfu3ZAx+fmSuyzOHwsmukcqD953wQhphI0xS7TAGmJb+oe33D1Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bMxD8GDE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790765147; c=relaxed/simple;
+	bh=LSWoCbhL4SVOLhnbW0ezmzlU9iMJ7IFaEY4QVKgzBbw=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=TOyqMlsMzaJbRqBjZXclPBtTGxKvT+61yFb9roL5FJiQmK/Lgp9Vx0MRPIcF8OtWrZ+a5kt1BONs37RomB8pKkkPwU/3b5ESBHOapPMRF27TxZBbaixsUTUUmd14HHW5clkETyVjdtr4cM7ru0VrzFOZ8HFD9b+mwJArEx4twFw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nt8tPUD+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bMxD8GDE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EB381F0089A;
-	Wed, 30 Sep 2026 10:44:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nt8tPUD+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 762A91F00899;
+	Wed, 30 Sep 2026 10:45:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790765071;
-	bh=lCz2+PCUXm0HJA+PW6kXsFNSKj+UYr06WTU06j5a4bA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=bMxD8GDEHXc0imS5O4o6vwp3hVDXxlmK9cm/0FNa7ot6LNUjB7lsWkGlENh0oBBl6
-	 8M4MoehUk9JXlD9RQo7Vdml+U27I7FeJKx01bydyStz6cC+PjEEyOm1/l8Un/+U5HZ
-	 1vMUuiFtLmdilK0rRxDPF5x+dNoN435/3dRfv5Ljgnl7slEMU5X9M+A69HQgjKly+F
-	 SDq/3VHomhOjktZ/gqQrNOFOJ+MaI22G6jNW3ysUr9bBxW+axALw/awtRCUKwFZiAO
-	 rPk3SDdfpaHk0VLLgYcwsYxq45I3NsJYO3D8evK3GioNjNbAx/5x0OPtKKwrcem0Vf
-	 HlhLWkvbqp6aw==
-Date: Wed, 30 Sep 2026 12:44:27 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Kartik Rajput <kkartik@nvidia.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Thierry Reding <thierry.reding@kernel.org>, 
-	Jonathan Hunter <jonathanh@nvidia.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
-	Thierry Reding <treding@nvidia.com>, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 4/4] scsi: ufs: tegra: Add Tegra264 UFS host
- controller driver
-Message-ID: <20260930-peach-slug-of-strength-ec0db8@quoll>
-References: <20260929-tegra264-ufs-v2-0-f0467b9c503e@nvidia.com>
- <20260929-tegra264-ufs-v2-4-f0467b9c503e@nvidia.com>
+	s=k20260515; t=1790765125;
+	bh=j0WozzzKqOJdrRpUdZDM11hfYBuM7XIqRgnTq6gs38s=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To;
+	b=nt8tPUD+fPH/onie+6IMZc5OV7Y+KIcIyK9gIpoWPgp9SVEcny9qxSIp0TDz8nduj
+	 xAEIXJxzQRUH2qDUyV+ck3Ie19sP3vS4aY9qP7Pa4ucTzG5LZ8wImQfaBt9GAx8s1v
+	 3NkWRWVXpboIyLBm7ZTLBpQlZh532yOsjxSSoBuxYe5m0VPmP9u3owkNDFv3B4r43w
+	 RfAzQg6NUmFjMQX2gUyUoHLa4KDmZEfhhOZ4dhnpkLx3upUBdUKzwpwW3+Xqz1Y5I4
+	 7fkdaeJWHmCm5ppj4kgOS/V9wbOEflgVx+AMPT8GjEc38yY6IdqUVipQe1ztnaBOCw
+	 1/Svq+QSk5NrA==
+Message-ID: <9ca8cf3e-6d44-46a7-b269-d687db708401@kernel.org>
+Date: Wed, 30 Sep 2026 12:45:17 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260929-tegra264-ufs-v2-4-f0467b9c503e@nvidia.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/4] dt-bindings: ufs: Add nvidia,tegra264-ufs
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Kartik Rajput <kkartik@nvidia.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+ Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Thierry Reding <thierry.reding@kernel.org>,
+ Jonathan Hunter <jonathanh@nvidia.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>, Philipp Zabel
+ <p.zabel@pengutronix.de>, Thierry Reding <treding@nvidia.com>,
+ linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260929-tegra264-ufs-v2-0-f0467b9c503e@nvidia.com>
+ <20260929-tegra264-ufs-v2-1-f0467b9c503e@nvidia.com>
+ <20260930-hopeful-hasty-eagle-052982@quoll>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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
+In-Reply-To: <20260930-hopeful-hasty-eagle-052982@quoll>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Sep 29, 2026 at 03:15:10PM +0530, Kartik Rajput wrote:
-> Add a driver for the UFS host controller found on NVIDIA Tegra264 SoCs.
-> The controller has Tegra-specific auxiliary registers, clocks and resets,
-> and it drives the four M-PHY lane directions exposed by the Tegra264
-> M-PHY driver.
+On 30/09/2026 12:43, Krzysztof Kozlowski wrote:
+> On Tue, Sep 29, 2026 at 03:15:07PM +0530, Kartik Rajput wrote:
+>> Add binding for the UFS host controller on NVIDIA Tegra264 SoCs. The
+>> controller supports UFS 3.1 up to HS-G4B on two data lanes.
+>>
+>> Signed-off-by: Kartik Rajput <kkartik@nvidia.com>
 > 
-> Co-developed-by: Thierry Reding <treding@nvidia.com>
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> Signed-off-by: Kartik Rajput <kkartik@nvidia.com>
-> ---
->  drivers/ufs/host/Kconfig     |  14 +
->  drivers/ufs/host/Makefile    |   1 +
->  drivers/ufs/host/ufs-tegra.c | 686 +++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 701 insertions(+)
+> I do not understand why you added dependency on the phy in this
+> patchset. Looks like fake/not real dependency, so you only stall your
+> work and raise questions.
 > 
-> diff --git a/drivers/ufs/host/Kconfig b/drivers/ufs/host/Kconfig
-> index ff170c0b6da0..7ca317d25251 100644
-> --- a/drivers/ufs/host/Kconfig
-> +++ b/drivers/ufs/host/Kconfig
-> @@ -168,3 +168,17 @@ config SCSI_UFS_AMD_VERSAL2
->  
->  	  Select this if you have UFS controller on AMD Versal Gen 2 SoC.
->  	  If unsure, say N.
-> +
-> +config SCSI_UFS_TEGRA
-> +	tristate "NVIDIA Tegra264 UFS controller platform driver"
-> +	depends on SCSI_UFSHCD_PLATFORM
-> +	depends on ARCH_TEGRA_264_SOC || (COMPILE_TEST && 64BIT)
-> +	select PHY_TEGRA_MPHY
+> Cover letter mentions "the binding references
+> the M-PHY provider" but this is simply NOT TRUE.
+> 
+> Patch itself is correct but I suggest to be careful what you send, to
+> avoid questions on trivial stuff.
 
-Nope.
+Forgot the tag:
 
-There is nothing here which depends on the phy. If there is, you wrote
-this wrong and did not use proper Linux interfaces (the Generic PHY).
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
-Also, you must NOT select user-visible symbols, that's basic rules now.
+But honestly, this fake dependency is a no-go and I commented on driver
+patch regarding it.
 
 Best regards,
 Krzysztof
-
