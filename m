@@ -1,33 +1,32 @@
-Received: from mta1.migadu.com (out-2.mta1.migadu.com [95.215.58.2])
+Received: from mta0.migadu.com (out-17.mta0.migadu.com [91.218.175.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CE694D4890
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2026 14:56:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E00A4E36D0
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2026 14:56:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790780184; cv=none; b=PTTmYARKgpAXv9Kov3WMeg/ECYwdojqsU/pFNR2Sf67Oys2KV2oL3XixSndhyDsR79QabVOwzfTSaMBQ0V54e0OlibNrVg161eKKDBa+u5xRUrkS8rxr9lDOMLGx7LcjEmovlDfiyPkBD8DKaqRQMLVTxekF126rUMH7fGuwuQU=
+	t=1790780181; cv=none; b=B77yBTWFibxs7qPa/pvDcxr5oWAOIseB7VMh0kuf4Zj6/WWX41K2EYO8ylOdAJ1bpICcSOVqsWnljJn8NnjzHF9T30jwvEuKJ2+AGTLdXwZMJCxlpLFeC9PAbyeMP8vyzZsN7FRIY6IluagmJHHFZzzecREHyi/A3HXrKGnMKQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790780184; c=relaxed/simple;
-	bh=Diglc94M4WCrKqEp4aPrdGIGbGLwCtTAZra85TtSeZM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qRVhMtU3haNCpMvYWmErNQdCeWgs5IsN5lQ1bx5LaVMKQTDmYuI31QTfy1VAxkqriH6cgfj+x/IqOUq/cmqq/98NlN3WD1R1FPknHvdqRD+cU/lPJViBPm+/xO7wpy/cozMsqLx28XToEudOISX9cRIHzzTIQqsPc8F4d98s4eg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Y34TTkKr; arc=none smtp.client-ip=95.215.58.2
+	s=arc-20240116; t=1790780181; c=relaxed/simple;
+	bh=1ZhA08mF8Ah2Lwc9DAcLEBJfj//8Kx71iQyWaq74mY8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UEU6/prtVycYVHs8tKjy+YNESIYba9zMTNJ5cvsKECKUi+TAVy+/Db7DNM4VfVb9B2GkI2BJd3h0XYTa3q2Uj5RqwgJs+gRCBJnRQlOaAm+uaatT6ER7f3IGKlF80K+KedlRiGXz/srHhAbwJi1vkPeEG3juf+sr9Rkm5/kJjUg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vDWOCCmZ; arc=none smtp.client-ip=91.218.175.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Y34TTkKr"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vDWOCCmZ"
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Diglc94M4WCrKqEp4aPrdGIGbGLwCtTAZra85TtSeZM=;
+DKIM-Signature: a=rsa-sha256; bh=1ZhA08mF8Ah2Lwc9DAcLEBJfj//8Kx71iQyWaq74mY8=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790780171; v=1; x=1791384971;
- b=Y34TTkKrqUlYw8SDqecAAy7U5q4jjvB1wa3jym5jGyn36nsiCA4Tkt4hvJrF1DruwkWW5Gy0
- +39mcWZdHAymaqJf+LTqmrFHBCiBT4e4aMUBJK9ek/kaQA8C3v1XCiF8F2bywtFarL0wq+KriL2
- MnVBziekYgy9kDzE0Ec+e2Ws=
+ t=1790780169; v=1; x=1791384969;
+ b=vDWOCCmZv9CFFKUU7r1aGohKX1qHCQEzVt+MB9yHuJ9BTMUdJwrrW29Bq7LNEDos81UGuQ3l
+ VAHc5hU+2zlAD8G+4wOCwwp8VSeusGFXgWZTvjqMOMkfr6w6XcW7u+ff5IdGSFbK1ahmj9IE9+I
+ SNzlMMsLvWhAaq7sBnAx35wQ=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id 3012bf07ec3973ec;
-	Wed, 30 Sep 2026 14:56:11 +0000
-X-Mizu-Trace-ID: 3012bf07ec3973ec
+Received: by mta11.migadu.com with ESMTPS id e4d7d53d04f53449;
+	Wed, 30 Sep 2026 14:56:08 +0000
+X-Mizu-Trace-ID: e4d7d53d04f53449
 X-Migadu-Flow: FLOW_OUT
 From: Usama Arif <usama.arif@linux.dev>
 To: mkp@kernel.org,
@@ -45,12 +44,10 @@ To: mkp@kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Usama Arif <usama.arif@linux.dev>
-Subject: [PATCH 1/2] scsi: mpi3mr: Poll a reply queue that an interrupt found busy
-Date: Wed, 30 Sep 2026 07:55:48 -0700
-Message-ID: <20260930145606.2632749-2-usama.arif@linux.dev>
+Subject: [PATCH 0/2] scsi: mpi3mr: Stop IRQ polling when no reply is ready
+Date: Wed, 30 Sep 2026 07:55:47 -0700
+Message-ID: <20260930145606.2632749-1-usama.arif@linux.dev>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260930145606.2632749-1-usama.arif@linux.dev>
-References: <20260930145606.2632749-1-usama.arif@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -59,43 +56,39 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mpi3mr_process_op_reply_q() returns without looking at the queue when
-another context owns it. Task management polls all reply queues with
-interrupts enabled, and a submitter drains the reply queue when the request
-queue is full, so either can own the queue when an interrupt comes in. If
-the owner made its last check just before the reply arrived, the handler
-finds the queue busy and, unless enable_irq_poll happens to be set,
-returns. Nobody looks at the reply until the next interrupt on that queue
-or the command timeout.
+Once a reply queue has more than 8 I/Os pending, mpi3mr's IRQ thread
+polls it every ~20us until nothing is pending or it has processed
+max_host_ios replies. On busy HDDs that means about 45 seconds of
+polling at a time, with nearly every wakeup finding nothing. On Meta's
+HDD storage hosts, these threads used about 15% of the non-idle CPU
+on polling.
 
-Let's set enable_irq_poll when the queue is busy, so that mpi3mr_isr()
-hands over to the IRQ thread, which polls until it has processed the
-reply. The flag cannot be cleared before mpi3mr_isr() reads it, as the
-thread only writes it while the interrupt is disabled.
+Patch 2 goes back to interrupts once a poll finds the queue empty while
+owning it. It relies on patch 1: an interrupt that finds the queue owned
+by another context now hands it to the thread, instead of leaving a
+reply until the next interrupt or a command timeout.
 
-Fixes: 463429f8dd5c ("scsi: mpi3mr: Add support for threaded ISR")
-Signed-off-by: Usama Arif <usama.arif@linux.dev>
----
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+On a machine configured like those hosts (36 SATA HDDs behind a SAS40xx
+HBA), HDD random reads now wake the threads twice per I/O instead of 236
+times, and a co-located CPU-bound task loses 0.6% instead of 30%.
+Drive-cache reads still reach 270K IOPS, and a single reply queue whose
+CPU is saturated loses about 5%. With a kthread injected to hold a reply
+queue, replies waited up to 50ms, and timed out under light load,
+without patch 1, and at most 233us with it.
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index f0d3cd398dd00..102f84667a5cf 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -588,8 +588,11 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+Based on mkp/scsi 7.4/scsi-staging (f09d2c7485b32).
  
- 	reply_qidx = op_reply_q->qid - 1;
- 
--	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1))
-+	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1)) {
-+		/* The owner may have missed a reply, let the thread poll */
-+		WRITE_ONCE(op_reply_q->enable_irq_poll, true);
- 		return 0;
-+	}
- 
- 	exp_phase = op_reply_q->ephase;
- 	reply_ci = op_reply_q->ci;
+Usama Arif (2):
+  scsi: mpi3mr: Poll a reply queue that an interrupt found busy
+  scsi: mpi3mr: Stop IRQ polling when no reply is ready
+
+ drivers/scsi/mpi3mr/mpi3mr.h    |  2 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 65 ++++++++++++++++++++++++---------
+ drivers/scsi/mpi3mr/mpi3mr_os.c |  2 +-
+ 3 files changed, 50 insertions(+), 19 deletions(-)
+
+
+base-commit: f09d2c7485b32adb82336d0d748935c8237a649e
 -- 
 2.53.0-Meta
 
