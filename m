@@ -1,128 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDBE551EDFD;
-	Wed, 30 Sep 2026 18:23:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A842723D7FF
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2026 18:36:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790792617; cv=none; b=D2/sKSEHWxTfsp9VNhvcO9it/WwsF407AuD0TwaFEerNrMHzg6orYd4oOPcWtIYcNcKlLyeN3NgAwrxXUQ3Jhry3y6ceeU0mNEUgzaSqSt/BRyOpj7yQuiw7lUrwIstZg2Eyk8nhqwsAjH5E9O3evu//KeE8WwM5OwFH0hQeJIU=
+	t=1790793408; cv=none; b=Twh+u85k9crNWRA6lQ+iH01BZXsnoD6ZpMQqhssTWmAC0Y6NYQ9Gfd4L7N4l/7pSy9oDeJ5Z1PBT5eX1a+yBgVOLvkWZf/rMU4ThlQCsODC/JcN0TQDVvLQhnhETogF87OtlQv+4vm3bJ0R5mxCQy6pFBsNti9MG+hq3gr9YqwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790792617; c=relaxed/simple;
-	bh=3dR3bQhbVFD6CaK4nkwyg+M1MY6kVwlo9U5P9pkztfE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Q6LK3HA7UEJDAmGpksDzlBUEEiuZ77MlcLFY0QOmbu9Q7O8RKjkiySoFzXXim7D/0i64jj0w/ACd5gvpIm+qCJlhRNS6OmihhU5S5kdxGwOSVCau2LdXo189isKwwVHfjfEvaPR7njIbVvPrQWp3DYjFHw+KwsJQZSEvHyGy9FU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eWJWvEso; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1790793408; c=relaxed/simple;
+	bh=5lIlqa7wUFqY8KmimjuPBrS1larhbSDeSSAVGss4eFY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ZRAa9iS1c0YbpBWQvr1y0dXnZEjnb8oYJiogZdvWIjgyC54AaVZuAPX6V8TDzQ/2ArL4s3qwe0Ko7ovHRZoMeJ2DSD0X7an8yPhyEJsFc6Pq4Hc154PO+wyvfMZXXp/f2AqJxMDKK1QTE/54cKrU4aHXDdSx+kRfGEuqU4poO14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LblW5XAz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eWJWvEso"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 99DEFC4AF1A;
-	Wed, 30 Sep 2026 18:23:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1790792617;
-	bh=3dR3bQhbVFD6CaK4nkwyg+M1MY6kVwlo9U5P9pkztfE=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=eWJWvEsoaZBYW0Le70dA+8IiQr4vhJCB9rfPy5m4OriO8AgOCVNBbwq7U1QK7rfDF
-	 MzSkoexxiiJwz7Ew1MwIA0MPiQFUPtl8mRMHOa9sIDmQV7G/xNo+yN/HJ6PE1Wx3kc
-	 BC2OkKTywSK978ZX2fOScdNIdWQLstBtOElBJ2eYxX+AzuMChoW4WfhMv1qjT4sNU7
-	 vE39Gljk3MFzOgaeOYJ3cP5PvNFj7B3pOtEJP6344jfTNHmS+pdHoL/pEItpOZtXmd
-	 MjfR9V1nOzRBYbt4VPtqYN/t7Gz+h+KiWpteLwG3SavEyQ7YWhciEAwd1SKj8YqjZm
-	 k9fAR9LZuWVcQ==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BF6CA5FCC;
-	Wed, 30 Sep 2026 18:23:37 +0000 (UTC)
-From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Date: Wed, 30 Sep 2026 13:23:34 -0500
-Subject: [PATCH v12 06/11] scsi: ibmvfc: add FPIN extended flag and async
- sub-CRQ queue handle
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LblW5XAz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E54C1F00898;
+	Wed, 30 Sep 2026 18:36:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790793407;
+	bh=KFl8Yd156fI3lChAfJqGUkLSdLohucHdi9Fk5slHCIk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=LblW5XAza5uZL6u053dHe1NQzcUo/iFC98rRDaO8G/Uz5Y4YuQ1KbMzvYnA9NPYH3
+	 fVA1IC0Op1anYZL/lbwRfO0Zk5DsJpuWCZDGNhM9oz3RVRRDkR1ysSrT2WG6NoVbKL
+	 hrA/30ZCxTUs8S4hbE0/MdZolNsbfKmuYBPq9pGAwzP1XO2e/v6uo3PGePEK/zVANl
+	 4ivroGK2DpKET/fHT2vtPYEce7EOIV2gT7hVGBahz3WGQx6PVOkZ8E3tQdcvLwCI0N
+	 pgWKK1SoeNwCxjlaCTjwijP3rkPhpYVbGoV29nv4USHWcvx0ayfvaZJoBtXmuTdtSS
+	 Wbax46lK5LYyw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v12 11/11] scsi: ibmvfc: handle extended FPIN events
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Dave Marquardt" <davemarq@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260930-ibmvfc-fpin-support-v12-11-53a3fff7d77b@linux.ibm.com>
+References: <20260930-ibmvfc-fpin-support-v12-0-53a3fff7d77b@linux.ibm.com>
+ <20260930-ibmvfc-fpin-support-v12-11-53a3fff7d77b@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 30 Sep 2026 18:36:46 +0000
+Message-Id: <20260930183647.5E54C1F00898@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260930-ibmvfc-fpin-support-v12-6-53a3fff7d77b@linux.ibm.com>
-References: <20260930-ibmvfc-fpin-support-v12-0-53a3fff7d77b@linux.ibm.com>
-In-Reply-To: <20260930-ibmvfc-fpin-support-v12-0-53a3fff7d77b@linux.ibm.com>
-To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
- linux-kernel@vger.kernel.org, Tyrel Datwyler <tyreld@linux.ibm.com>, 
- Dave Marquardt <davemarq@linux.ibm.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1790792616; l=1878;
- i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=4tDRYGPOdalcjrcQxoWbj2Q6l6Bvzp5u1GG4s8VoVCQ=;
- b=aKDjAR6jHaXPJ/2bcjqZrZTUX5N7QzpkQG8MSRe7wgaJENRff9fVYsVQwPVF5Cu53xaZhssSp
- Ik5tW3UU6+ZBnocweq6BTYpzAJR329ZlemdPUciLA8toKQeMc4hOd/Z
-X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
- pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
-X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
- auth_id=689
-X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
-Reply-To: davemarq@linux.ibm.com
 
-From: Dave Marquardt <davemarq@linux.ibm.com>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] scsi: ibmvfc: unprocessed FPIN severity in extended FPIN events
+- [Medium] scsi: ibmvfc: KUnit tests for extended FPIN silently lack assert=
+ions and bypass core logic
+--
 
-Add IBMVFC_ASYNC_IS_FPIN_EXT flag bit (0x02) to ibmvfc_async_sub_crq.flags
-to distinguish extended FPIN events from standard ones.
+commit ed8465cac668f337315cf039e8fff2bc929555e8
+Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-Add async_scrqs field of type ibmvfc_channels to ibmvfc_host to hold the
-channel set for the asynchronous sub-CRQ, alongside the existing scsi_scrqs
-and nvme_scrqs channels. This uses the same ibmvfc_channels infrastructure
-as the SCSI and NVMe channel queues.
+scsi: ibmvfc: handle extended FPIN events
 
-Add IBMVFC_ASYNC_SUB_CRQ_FMT to enum ibmvfc_msg_fmt and a corresponding
-async_scrq pointer to union ibmvfc_msgs to support the new async sub-CRQ
-message format.
+This commit implements support for extended FPIN messages received via the
+asynchronous sub-queue. It adds conversion logic to populate complete
+descriptor information and includes KUnit tests to exercise the extended
+event handling.
 
-Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc.h | 4 ++++
- 1 file changed, 4 insertions(+)
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+[ ... ]
+> @@ -3471,6 +3472,41 @@ ibmvfc_full_fpin_to_desc(struct ibmvfc_async_sub_c=
+rq *ibmvfc_fpin, u64 wwpn)
+> +static struct fc_els_fpin *
+> +ibmvfc_ext_fpin_to_desc(struct ibmvfc_async_subq_fpin *ibmvfc_fpin)
+> +{
+> +	u8 flags =3D ibmvfc_fpin->fpin_data.flags;
+> +	__be32 threshold =3D cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_THRESHOLD);
+> +	__be16 modifier =3D 0;
+> +	__be32 count =3D cpu_to_be32(1);
+> +	__be16 type =3D 0;
+> +
+> +	if (flags & IBMVFC_FPIN_EVENT_TYPE_VALID)
+> +		type =3D ibmvfc_fpin->fpin_data.event_type;
+> +	if (flags & IBMVFC_FPIN_MODIFIER_VALID)
+> +		modifier =3D ibmvfc_fpin->fpin_data.event_type_modifier;
+> +	if (flags & IBMVFC_FPIN_THRESHOLD_VALID)
+> +		threshold =3D ibmvfc_fpin->fpin_data.event_threshold;
+> +	if (flags & IBMVFC_FPIN_EVENT_COUNT_VALID)
+> +		count =3D ibmvfc_fpin->fpin_data.event_data.event_count;
+> +
+> +	return ibmvfc_common_fpin_to_desc(ibmvfc_fpin->fpin_status,
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index d7a30e7a4a28..df2f312fd7b9 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -773,6 +773,7 @@ struct ibmvfc_async_sub_crq {
- 	volatile u8 valid;
- 	u8 flags;
- #define IBMVFC_ASYNC_ID_IS_ASSOC_ID	0x01
-+#define IBMVFC_ASYNC_IS_FPIN_EXT	0x02
- 	u8 link_state;
- 	u8 fpin_status;
- 	__be16 event;
-@@ -893,6 +894,7 @@ enum ibmvfc_msg_fmt {
- 	IBMVFC_CRQ_FMT = 0,
- 	IBMVFC_ASYNC_FMT,
- 	IBMVFC_SUB_CRQ_FMT,
-+	IBMVFC_ASYNC_SUB_CRQ_FMT,
- };
- 
- union ibmvfc_msgs {
-@@ -900,6 +902,7 @@ union ibmvfc_msgs {
- 	struct ibmvfc_crq *crq;
- 	struct ibmvfc_async_crq *async;
- 	struct ibmvfc_sub_crq *scrq;
-+	struct ibmvfc_async_sub_crq *async_scrq;
- };
- 
- struct ibmvfc_queue {
-@@ -992,6 +995,7 @@ struct ibmvfc_host {
- 	struct ibmvfc_queue async_crq;
- 	struct ibmvfc_channels scsi_scrqs;
- 	struct ibmvfc_channels nvme_scrqs;
-+	struct ibmvfc_channels async_scrqs;
- 	struct ibmvfc_npiv_login login_info;
- 	union ibmvfc_npiv_login_data *login_buf;
- 	dma_addr_t login_buf_dma;
+[Severity: Medium]
+Does this code intentionally discard the event severity?
 
--- 
-2.55.0
+The extended FPIN payload can specify severity when the
+IBMVFC_FPIN_SEVERITY_VALID flag is set, but that flag appears to be ignored
+during this unpacking process.
 
+Furthermore, looking at the existing ibmvfc_common_fpin_to_desc() function
+that this calls, it hardcodes the generated severity:
 
+static struct fc_els_fpin *
+ibmvfc_common_fpin_to_desc(...)
+{
+...
+        cdesc->severity =3D FPIN_CONGN_SEVERITY_WARNING;
+...
+}
+
+Will this cause higher severity events sent by the VIOS to be permanently
+downgraded and incorrectly reported to the FC transport layer?
+
+[ ... ]
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi=
+/ibmvfc_kunit.c
+> --- a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+[ ... ]
+> @@ -266,9 +267,147 @@ static void ibmvfc_full_fpin_test(struct kunit *tes=
+t)
+> +#define IBMVFC_TEST_FPIN_EXT(fs, ev, stat, crq) {				\
+> +	struct ibmvfc_async_crq_event ae =3D { .type =3D IBMVFC_ASYNC_CRQ_SUB }=
+;	\
+> +	(crq).valid =3D 0x80;							\
+> +	(crq).flags =3D IBMVFC_ASYNC_IS_FPIN_EXT;					\
+> +	(crq).link_state =3D IBMVFC_AE_LS_LINK_UP;				\
+> +	(crq).fpin_status =3D (fs);						\
+> +	(crq).event =3D cpu_to_be16(IBMVFC_AE_FPIN);				\
+> +	(crq).wwpn =3D cpu_to_be64(tgt->wwpn);					\
+> +	(crq).fpin_data.flags =3D IBMVFC_FPIN_EVENT_TYPE_VALID;			\
+> +	(crq).fpin_data.event_type =3D cpu_to_be16((ev));				\
+> +	ae.subq =3D *(struct ibmvfc_async_sub_crq *)&(crq);			\
+> +	pre =3D READ_ONCE(rport->fpin_stats.stat);				\
+> +	spin_lock_irqsave(vhost->host->host_lock, flags);			\
+> +	ibmvfc_handle_async(&ae, vhost);					\
+> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);			\
+> +	flush_workqueue(vhost->fpin_workq);					\
+> +	post =3D READ_ONCE(rport->fpin_stats.stat);				\
+> +}
+
+[Severity: Medium]
+Are we missing the KUnit assertions in this macro?
+
+The test records the pre and post statistics, but there are no checks
+(such as KUNIT_EXPECT_GT(test, post, pre)) to verify the statistics actually
+incremented.
+
+Because this test uses a live global vhost via ibmvfc_get_first_vhost()
+without mocking the IBMVFC_SUPPORT_FPIN_EXT capability, a test run on an
+adapter lacking this capability will silently fall through to this bypass p=
+ath
+in ibmvfc_process_async_work():
+
+    } else if (!ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_FPIN_EXT)) {
+            dev_err_ratelimited(vhost->dev,
+                                "Unexpected extended FPIN event received\n"=
+);
+    }
+
+Since there are no assertions, does this mean the test still reports a pass
+despite completely failing to process the events?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930-ibmvfc-fpi=
+n-support-v12-0-53a3fff7d77b@linux.ibm.com?part=3D11
