@@ -1,165 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29A783B19AF
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2026 23:35:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75C3F24293C;
+	Wed, 30 Sep 2026 01:33:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790724932; cv=none; b=PH1oh+ITnBksCUp1JEGAgXQHhdQiFQccQXwEVtZCZ8gvyMA/gfTh07snt4eogbVFLYh8FPrTHVAwn1U8CFAVwyDoeWYjk9S2zc4Z96xtf79TXxozX0beIB2mYzdTa3iXBAB3eX/leO1AyUBbFNWZHjg0SSE5luAL60PT48DCIkQ=
+	t=1790732042; cv=none; b=ADpexkeEZA26wAQ8AyoPPvl/p+WmNeR4KYK9DDzMliLMRmJTAR0UIblcjbBP+yE7/wMc/MgQ51LTkakHdGniV1ARehF8Qx56v3DMb6CEbX549A3nmmfJEDHI95AXOQJlwC0QJbkVw5B9zdQKSRRXajlEbPK46CKb2YiKJsHaDDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790724932; c=relaxed/simple;
-	bh=z/XfLnxSAIgKcJ6tsiWUwvmRl31g0g13SA0bYLysuBU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=punukxzgJcklfffNdGE0tok3NCMS+e6yKVtyaxF8WPGmwK1tts2ReuVRC0eKyQjm3B8Z2e91Chety55gms7hSb051fMmFW7M5FEJZkjcIb96aDvEGYT2Ww+B+VzHqyFkcznCOkMuIadMxVhDF1Ni46vP4N1oohOzYp9VJ8pp1uA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=htiGCpa7; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="htiGCpa7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CD061F000FF;
-	Tue, 29 Sep 2026 23:35:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790724930;
-	bh=IhENTVjlNjCKlkpBUKaoMsp6SPDCxWUp8dgSwNSW67s=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=htiGCpa7tzHDOFwKbXSozyk2Y0cIyfxl5+C8t0p4rCJl66odhJxSSjlmul+qk0okC
-	 UBaKq9KAz9zqUU1il5JVAyYIvV6l9tPGgC7FhGC+HusMqvGyr2s/3CTUm8QJbEYiEJ
-	 0nKoMlObcUiJwLvdiMzieKImoZAE0wbSXY0Tc2KwHYXz7+VrMrwIjcJ0o6XxBH+UST
-	 x8sKRhQ15+cU0Em/E8wo18FMpUWmkSSkSOffKaJHvhAyw0rrqRKMVJ95/XxGRQuQGP
-	 ia3zaxwt+3hv53yXCnsQQ3yhlvL3ej/ECh04BJmcY7C6iQ+gXjHyHUJlnv4B5DRWch
-	 O+Y+1fbkRe+QA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 6/7] scsi: scsi_debug: Improve lock context
- annotations
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bart Van Assche" <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <c0546935640ceffd1b0513753dd469833e767c5e.1790723966.git.bvanassche@acm.org>
-References: <cover.1790723966.git.bvanassche@acm.org>
- <c0546935640ceffd1b0513753dd469833e767c5e.1790723966.git.bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 29 Sep 2026 23:35:30 +0000
-Message-Id: <20260929233530.7CD061F000FF@smtp.kernel.org>
+	s=arc-20240116; t=1790732042; c=relaxed/simple;
+	bh=WzAJoXByfb/43keDF84D/KoQoJqBQqvgNlQotgpNEvs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=CudfzdLxjuBSW/s+B36DSLTAKcTKFo212Z1CFrAE+pCsDAKy6vFAffKLXSiBkbDjBE++UywQzWPAIPUD9SMAcW3QMGoN5qgD+Ofu2KUmafgeFbeb04QZfeggAz2gUhMTeEFvAXvDeqeilDEcFerBQd0nqWKiAAOY3nEmuKbSS8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: fd6e79cebc6e11f19a56ed5b684f684d-20260930
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:e4cfc11f-6381-4532-8cfe-b714fead1edb,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:20
+X-CID-META: VersionHash:7db8b62,CLOUDID:5d51a313428181ed0221b01c248a505e,BulkI
+	D:nil,BulkQuantity:0,SF:81|82|83|102|865|898,TC:nil,Content:0|15|50|99,EDM
+	:5,IP:nil,URL:99|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA
+	:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: fd6e79cebc6e11f19a56ed5b684f684d-20260930
+X-User: lijiayi@kylinos.cn
+Received: from thinksys.tail1c7620.ts.net [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lijiayi@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1348360087; Wed, 30 Sep 2026 09:33:50 +0800
+From: Jiayi Li <lijiayi@kylinos.cn>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Michal Pecio <michal.pecio@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] usb: uas: quiesce SCSI before stopping endpoints on unbind
+Date: Wed, 30 Sep 2026 09:33:32 +0800
+Message-Id: <20260930013332.829717-1-lijiayi@kylinos.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <d3639d68-0213-4b70-a771-aa5dc3ec9767@suse.com>
+References: <d3639d68-0213-4b70-a771-aa5dc3ec9767@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Low] scsi_debug: unconditional exclusive lock annotation for conditional=
- lock
-- [Low] scsi_debug: omitted fallback lock tracking in lock annotations
---
+Hi Oliver,
 
-commit 2f1a5cf89b239b8a5043e8baea7eb6d404bcc911
-Author: Bart Van Assche <bvanassche@acm.org>
+> Acked-by: Oliver Neukum <oneukum@suse.com>
 
-scsi: scsi_debug: Improve lock context annotations
+Thank you for the Acked-by. Subsequent testing found a regression in
+v2: physically unplugging the device with UAS commands in flight can
+cause an approximately 30-second SCSI timeout. I described the failure
+in my reply to the Sashiko review:
 
-This commit prepares the scsi_debug driver for enabling compiler-based lock
-context analysis. It annotates lock and unlock helper functions with
-acquires and releases macros while removing sparse acquire/release calls
-that mislead the analyzer.
+https://lore.kernel.org/linux-scsi/20260922100542.164047-1-lijiayi@kylinos.cn/
 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 44840ba0c5b58..a6cd958855411 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
+I have a local candidate that keeps the unified teardown order.
+When URB submission or completion returns -ENODEV or -ESHUTDOWN,
+it marks the transport dead, stops further submissions, clears
+COMMAND_INFLIGHT and sets DID_NO_CONNECT for pending commands.
+It drains the remaining URBs in work context, allowing the commands
+to complete through uas_try_complete().
 
-[ ... ]
+Does this approach seem reasonable, or would you suggest a simpler
+way to handle the physical-disconnect case?
 
-> @@ -4155,6 +4163,8 @@ sdeb_data_sector_write_unlock(struct sdeb_store_inf=
-o *sip)
-> =20
->  static inline void
->  sdeb_data_lock(struct sdeb_store_info *sip, bool atomic)
-> +	__acquires(&sip->macc_data_lck)
-> +	__context_unsafe(/*conditional locking*/)
->  {
->  	if (atomic)
->  		sdeb_data_write_lock(sip);
->  	else
->  		sdeb_data_read_lock(sip);
->  }
-
-[Severity: Low]
-Does unconditionally declaring an exclusive lock capability here cause=20
-incorrect compile-time static analysis tracking?=20
-
-When atomic is false, sdeb_data_read_lock() is called which acquires a=20
-shared lock, but the __acquires() annotation marks it as exclusively=20
-locked. Could this suppress valid compile-time warnings for data races=20
-by tracking shared locks as exclusive?
-
-[ ... ]
-
->  /* Allow many reads but only 1x write per sector */
->  static inline void
->  sdeb_data_sector_lock(struct sdeb_store_info *sip, bool do_write)
-> +	__acquires(&sip->macc_sector_lck)
-> +	__context_unsafe(/*conditional locking*/)
->  {
->  	if (do_write)
->  		sdeb_data_sector_write_lock(sip);
->  	else
->  		sdeb_data_sector_read_lock(sip);
->  }
-
-[Severity: Low]
-Similar to sdeb_data_lock() above, does this annotation incorrectly track
-a shared lock as an exclusive lock when do_write is false?
-
-[ ... ]
-
->  static inline void
->  sdeb_meta_read_lock(struct sdeb_store_info *sip)
-> +	__acquires_shared(&sip->macc_meta_lck)
-> +	__context_unsafe(/*conditional locking*/)
->  {
-> -	if (sdebug_no_rwlock) {
-> -		if (sip)
-> -			__acquire(&sip->macc_meta_lck);
-> -		else
-> -			__acquire(&sdeb_fake_rw_lck);
-> -	} else {
-> +	if (!sdebug_no_rwlock) {
->  		if (sip)
->  			read_lock(&sip->macc_meta_lck);
->  		else
->  			read_lock(&sdeb_fake_rw_lck);
-
-[Severity: Low]
-Does the annotation completely omit tracking for the fallback=20
-sdeb_fake_rw_lck?
-
-If sip is NULL, the lock tracking seems to fall back to a dummy=20
-capability rather than the actual sdeb_fake_rw_lck. Could this=20
-prevent the analyzer from properly tracking accesses to data=20
-protected by the fallback lock?
-
-[ ... ]
-
->  static inline void
->  sdeb_meta_write_lock(struct sdeb_store_info *sip)
-> +	__acquires(&sip->macc_meta_lck)
-> +	__context_unsafe(/*conditional locking*/)
->  {
-> -	if (sdebug_no_rwlock) {
-> -		if (sip)
-> -			__acquire(&sip->macc_meta_lck);
-> -		else
-> -			__acquire(&sdeb_fake_rw_lck);
-> -	} else {
-> +	if (!sdebug_no_rwlock) {
->  		if (sip)
->  			write_lock(&sip->macc_meta_lck);
->  		else
->  			write_lock(&sdeb_fake_rw_lck);
-
-[Severity: Low]
-Does this also omit tracking for the sdeb_fake_rw_lck when sip is NULL?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1790723966.gi=
-t.bvanassche@acm.org?part=3D6
+Thanks,
+Jiayi
