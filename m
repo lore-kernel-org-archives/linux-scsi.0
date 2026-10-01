@@ -1,147 +1,140 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 010EF4908AC;
-	Thu,  1 Oct 2026 08:34:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9686F448B9B;
+	Thu,  1 Oct 2026 08:38:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790843642; cv=none; b=qJSlmFVnkNIO/0ZX1pBTl36txmnfADS5BEy8C/knyptTIuE52gNTuI86To72DZQ2mh+6HD6HXVt2tUO1y1sUAJPewC0B6mpnnnS1iltA00Em2KxGF9HJQPiVYvPPPk01JyehKe8dWchnMQ8wV/aj8i3p6q4/Ou2BphFqbLVYNow=
+	t=1790843910; cv=none; b=T/gerJACpxV6CdZE47M5X7ONOeUxiF7rtugEXJfUL5Mz05txAwWPsnQjB1hX8mly3bYMtEqVwEEI8xIa5wB/DCRFMboOhxLvPls7yNkt21nZ+vK+NClgU4iTib+71E2LWNrhYNKhIlPm26ueJrjd9Wj8XADtifX7IlqHXwUOyy8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790843642; c=relaxed/simple;
-	bh=y9jUgVbYeeynPwWsmZrk3B+I9zZclwaMUbelyHDp4sA=;
+	s=arc-20240116; t=1790843910; c=relaxed/simple;
+	bh=5D/jyZSHpIoSL6Y3LMLCGrRtqV1KRi+XEvEJYWOqxHc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NVTPwuprkvBo/oRZ+src556QGuW536YLtuSssMXVdAYLk6H/lIwftnTB4ItgQ0XKDDd1TsCNJRJXC5BxLG0mgbSYVuDGdVJP09RIIrUGXDDN6FUaYiNp5yykgfDtx8nTVvy3Y2TpBIKn6qfJtbo3EItXGD5AaXIeCzcZ2epeG+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hCQ/5+Js; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=lxxCtgkxNewPsWGLLAhiu7z3BIzRl4IWdLM1czcKTU6OAi298niEsEEq4ccfAjD/PjxavJGkSbCU76ryu2yh70/yGe4gsyhDuwqX5KL3C0RbKEbf/UzZf8jwsOdsUqX/lpbFyoRWb2QbJNhPN4iH1fWGCCBz1l62kKeCPqqKETQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=haGz6lgB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hCQ/5+Js"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B69411F000FF;
-	Thu,  1 Oct 2026 08:33:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="haGz6lgB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCB461F008A4;
+	Thu,  1 Oct 2026 08:38:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790843640;
-	bh=5+cdwiD3eCkQyUYa5ri7RsiBtsgtzMxedchp/Eo4UUI=;
+	s=k20260515; t=1790843909;
+	bh=VDZyHyKdoQxaDtb/4DumozyI5n+Wmf+3IrC7bJy9wcM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hCQ/5+Js7tHbMFqAC5cI8Dp1jZlusD4ZPNMVzJMK4GPBxCVSe0V8RpaakDzWKz9uC
-	 aBvjldaicI35wkRrqlbD1L7AA79K1t39iwA7YOfK6DHhWU8KDKlYPqh6dfqP+DVj0f
-	 sPqa4fTFEGNjqQB46S9lNWDt51piT4OnWc8y6f6yA6Cf0BXodCCv+AUA73Rt5yinqC
-	 e7LjiARrMAoh16Xg5k5zcfZnz5kANO+/rdTQ16g9BSWY6fYjk1Dw19NaNVwTiKkDfU
-	 8IvQRTMmDfXEDHdSgPjA/pH7Fmz+epXlKdckYLrh4AkoJOjOFVgUdjfSqGwmZ9rAKo
-	 emoeVgmcEGEdg==
+	b=haGz6lgBsR36TWj3gMtv15tsydDrCAMMtbWAvYJd0EVQB5QXwPBMev7l5G3dUj9zr
+	 FZMqc6vmXyIfWxbVXheqRENXPBXOrwRkeCz3GYsuqPG4chs2WsAo9WADDDVu/WWNZ+
+	 so3JOWSXiwwZfzehWVYYaY2Iyjal5j7XAduZBwJ3iWlrEjyePIR0m2Gw83kyrXdaL0
+	 iIruvGZEr9Cm5U7or1gGdFAjsUmwpg7rYXaYizKb48GtuUGyQQOeeF11IdjgBsr2cV
+	 NVDETEz641YgnrWSlQDaKCZCFM2ghi2mPpSIxDHX+DfwLbJmJWavjA/XN2B+LTSCft
+	 h011/0Iksibkw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v13 14/24] scsi: ufs: mediatek: Use the common PHY
- framework
+Subject: Re: [PATCH v13 02/24] dt-bindings: ufs: mediatek,ufs: Complete the
+ binding
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Louis-Alexis Eyraud" <louisalexis.eyraud@collabora.com>
-Cc: devicetree@vger.kernel.org, linux-phy@lists.infradead.org, olteanv@gmail.com, robh@kernel.org, neil.armstrong@linaro.org, conor+dt@kernel.org, vkoul@kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20261001-mt8196-ufs-v13-14-60854adab6d9@collabora.com>
+Cc: vkoul@kernel.org, olteanv@gmail.com, linux-phy@lists.infradead.org, conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org, neil.armstrong@linaro.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20261001-mt8196-ufs-v13-2-60854adab6d9@collabora.com>
 References: <20261001-mt8196-ufs-v13-0-60854adab6d9@collabora.com>
- <20261001-mt8196-ufs-v13-14-60854adab6d9@collabora.com>
+ <20261001-mt8196-ufs-v13-2-60854adab6d9@collabora.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 01 Oct 2026 08:33:59 +0000
-Message-Id: <20261001083359.B69411F000FF@smtp.kernel.org>
+Date: Thu, 01 Oct 2026 08:38:28 +0000
+Message-Id: <20261001083828.DCB461F008A4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] ufs: PM state mismatch on PHY power off failure in suspend
-- [Medium] ufs: MTCMOS power leak on PHY power on failure in resume
+- [Low] dt-bindings: ufs: mediatek: brittle schema constraint misrepresents=
+ hardware clocks
 --
 
-commit 9793309b55b85fbb5631e6f681c0c84e2da2dd42
+commit 52701a7e111f7103b8f873c8ff58dfce872a6586
 Author: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
-scsi: ufs: mediatek: Use the common PHY framework
+dt-bindings: ufs: mediatek,ufs: Complete the binding
 
-This commit switches the Mediatek UFS driver to use the common PHY framework
-instead of manually parsing the OF tree for the PHY node. It updates the
-initialization, resume, and suspend paths to power the PHY on and off using
-the framework's APIs.
+This commit updates the Mediatek UFS binding to make it more complete,
+removing deprecated properties and updating the clocks and resets lists.
+It attempts to set clock constraints for different SoC generations such as
+MT8183, MT8192, and MT8195.
 
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-> index e4b41de4de3a2..6d5687f5e7558 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
+> diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Do=
+cumentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> index 15c347f5e6604..945cb986b06b7 100644
+> --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
 
 [ ... ]
 
-> @@ -2502,9 +2447,8 @@ static int ufs_mtk_system_resume(struct device *dev)
->  static int ufs_mtk_runtime_suspend(struct device *dev)
->  {
->  	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> -	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
->  	struct arm_smccc_res res;
-> -	int ret =3D 0;
-> +	int ret;
-> =20
->  	ret =3D ufshcd_runtime_suspend(dev);
->  	if (ret)
-> @@ -2515,8 +2459,11 @@ static int ufs_mtk_runtime_suspend(struct device *=
-dev)
->  	if (ufs_mtk_is_rtff_mtcmos(hba))
->  		ufs_mtk_mtcmos_ctrl(false, res);
-> =20
-> -	if (host->phy_dev)
-> -		pm_runtime_put_sync(host->phy_dev);
-> +	ret =3D ufs_mtk_mphy_power_on(hba, false);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to power off PHY: %pe\n", ERR_PTR(ret));
-> +		return ret;
+> @@ -54,29 +96,41 @@ allOf:
+>        properties:
+>          compatible:
+>            contains:
+> -            enum:
+> -              - mediatek,mt8195-ufshci
+> +            const: mediatek,mt8183-ufshci
+>      then:
+>        properties:
+>          clocks:
+> -          minItems: 8
+> +          maxItems: 1
 
-[Severity: High]
-Does returning the error directly here leave the PM state mismatched?
+[Severity: Low]
+Does this arbitrarily restrict MT8183 to a single clock, ignoring its UniPro
+and AES clocks? Because the global items list enforces positional ordering,
+if a device tree attempts to add the physically present UFS-related clocks
+for this SoC, schema validation will reject the changes due to this maxItems
+limit.
 
-If ufs_mtk_mphy_power_on() fails, this returns early without rolling back t=
-he
-already suspended UFS hardware (suspended via ufshcd_runtime_suspend()
-earlier in this function).
+>          clock-names:
+>            items:
+> -            - const: ufs
+> -            - const: ufs_aes
+> -            - const: ufs_tick
+> -            - const: unipro_sysclk
+> -            - const: unipro_tick
+> -            - const: unipro_mp_bclk
+> -            - const: ufs_tx_symbol
+> -            - const: ufs_mem_sub
+> -    else:
+> +            - const: main
+> +        avdd12-ckbuf-supply: false
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: mediatek,mt8192-ufshci
+> +    then:
+>        properties:
+>          clocks:
+> -          maxItems: 1
+> +          minItems: 3
+> +          maxItems: 3
 
-The PM core may mark the device as RPM_ACTIVE because the callback failed,
-despite the hardware physically being suspended. Could this cause subsequent
-I/O to assume the device is active and hang?
+[Severity: Low]
+Does this restrict MT8192 to 3 clocks, explicitly blocking proper hardware
+representation? Since the newly introduced global items list strictly
+enforces positional ordering, a device with maxItems: 3 is forced to provide
+specifically "main", "aes", and "tick".
 
-> +	}
-> =20
->  	return 0;
->  }
-> @@ -2524,14 +2471,17 @@ static int ufs_mtk_runtime_suspend(struct device =
-*dev)
->  static int ufs_mtk_runtime_resume(struct device *dev)
->  {
->  	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> -	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
->  	struct arm_smccc_res res;
-> +	int ret;
-> =20
->  	if (ufs_mtk_is_rtff_mtcmos(hba))
->  		ufs_mtk_mtcmos_ctrl(true, res);
-> =20
-> -	if (host->phy_dev)
-> -		pm_runtime_get_sync(host->phy_dev);
-> +	ret =3D ufs_mtk_mphy_power_on(hba, true);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to power on PHY: %pe\n", ERR_PTR(ret));
-> +		return ret;
+If MT8192 hardware actually implements UFS UniPro clocks, as evidenced by
+this clock definition in drivers/clk/mediatek/clk-mt8192.c:
 
-[Severity: Medium]
-Can this leak the MTCMOS power state if ufs_mtk_mphy_power_on() fails?
+infra_clks:
+    GATE_INFRA2(CLK_INFRA_UNIPRO_SYS, "infra_unipro_sys", "ufs_sel", 11),
 
-If ufs_mtk_mphy_power_on() fails, the function returns early without rolling
-back the MTCMOS power state that was just enabled via
-ufs_mtk_mtcmos_ctrl(true, res).
+wouldn't this rule prevent accurately describing these clocks in the device
+tree?
 
-Does this leave the MTCMOS domain powered on indefinitely after a failed
-resume attempt?
-
-> +	}
-> =20
->  	ufs_mtk_dev_vreg_set_lpm(hba, false);
->
+>          clock-names:
+> -          items:
+> -            - const: ufs
+> +          minItems: 3
+> +          maxItems: 3
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261001-mt8196-ufs=
--v13-0-60854adab6d9@collabora.com?part=3D14
+-v13-0-60854adab6d9@collabora.com?part=3D2
