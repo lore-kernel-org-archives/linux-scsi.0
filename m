@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3069937F311;
-	Thu,  1 Oct 2026 12:04:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 336F848F009;
+	Thu,  1 Oct 2026 12:11:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790856268; cv=none; b=AZzdE97v4hfamqJsAz/eGUoqlL1zPJSZs+95/hmcN0dOyVn3UFoAKV0euZvLkRaKiPXNWNouF6YzuMhFPXlTl+DbHTBS35wBeCV+tHTzsATOAL2yJRRRRlgwvQouGqwJ5RuD0ZXWpBDDVUtghQFISQBdnx2D8Fjvl69umK7RGx0=
+	t=1790856737; cv=none; b=i1j/eejOtCkp9701yIyoMpxSWyZz1qNfhLTEs/Rmep3Ah7/FqtfwYSZ3wOq48qDTgipnpAxgLFTlRsvR12ICks3gaw4BSmK0yY8ehHnxIMveoEx20tr9Y9NVUM6SlEGpDNxDb1njB0CCdx3/4Pa3MbAgf7zemMnhbWiI5kGEdzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790856268; c=relaxed/simple;
-	bh=CBvToYd/GEB02L8taC6XmYYZMLPqiqIVafuNtu1j4nc=;
+	s=arc-20240116; t=1790856737; c=relaxed/simple;
+	bh=WOJ3esNsSkw53UIahrsEElL3cpWrWqo025ce1m4b3v4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=m2yzLZIxjA2vPdzrdlPfkcoL8XYSmVnGsw/HM+Pk/ux1Yalmdy7cm+3dK3eblxSj/P7xyRSzJJNoOs9a3bU9j2gdVUSyuUWnyTza8dYLbAM6dwOt3tlH74v4tQ868br6H4f4IltoqUH+nrOYQX4a9FjnV2ukfKnvQ8ccgLoi03o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jzEc16Qp; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=rU9tSFkwjMtxjFZYVez4+U+899ldrwGCV9/dgRK/ud1dCL1dkbQfMoc8T8A1ZQr9DYeqtcIvu3Fa8pEEDA2XDOSlbtoNMbpoEFzV9qfosRQynGqIQv+gSsHMPGU1Bl8+cK02zIKwPC/sOg04x5pGoKJxPR84hM4Y3MyGCaaXC80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aTTG82Se; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jzEc16Qp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B39C71F00898;
-	Thu,  1 Oct 2026 12:03:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aTTG82Se"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D21261F000FF;
+	Thu,  1 Oct 2026 12:11:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790856267;
-	bh=16tuaIAAfr4wGiFPpZL2QS3b7vOItbJPvdfgt9EFjWY=;
+	s=k20260515; t=1790856714;
+	bh=KUH7OP4iWerRy/EG23fSkrllMLjJHrglwjsFo+POc+k=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=jzEc16QpT6y5z85CoNqayXJTgj/zcV8+4j43vVNREEjYgKaYaARNlkINFh+o2cgFo
-	 sN3NMoR6fbvOc+m/lxGiWC6qUmK/W2sqF5PMeqx+QkX9s3sVMnzDWZ/M2mm0MYJz41
-	 S3cSgkKzqx/7bn79m4vmUxCXlXwbjLyAsEIqKIlF/mizbYzyQzRqhlcK0ve8U5iSJn
-	 jaobTqj+k1b/C4rk1yKhopNUeonw8tSEDLii1LybOClMulCnzymBzlP7Dt9SdjRJKW
-	 6NQE2pAYnLiSAfrqMon7C3+Tw8a0f45b0g+nJiXE+3PnL55rzlVV8mocIqh7q0QmOr
-	 ffT/Y1YtPvXzw==
-Message-ID: <14bb5577-ee28-4770-8566-f586f3840a8d@kernel.org>
-Date: Thu, 1 Oct 2026 14:03:45 +0200
+	b=aTTG82SemKTBXalZAmyFggcAXHDZ3Rsp4Cmfpknx90oZs6SjaSeN6xwh0MitYl62A
+	 KbssxTzqFSUEaggtmL6jMvB86LHa2jnsZFHU/xrFBjAVC+9Vtp/rgHsKyXKeBH1VQF
+	 9FeHXun8+ubEbhMVwacSZzjlGMqbT+bDhQDFsP36vzpqNZmSFxVhkJxegmT5trTh2S
+	 WTJrAzj4QhQv4yAGrgeBv/EjE3x6hX29NRXk7FHaMci8pJd/RkHk6Oi6wu97anKLlR
+	 xjZeUVyQJ4+Imjtns2I7vZIcC7bQJHhg68rEr35+FgQQDLatQ4Ka6FVZa7YRWF+qhX
+	 EShwAA+rZgLzQ==
+Message-ID: <119abf62-6fd8-424f-ad26-18fda1bea269@kernel.org>
+Date: Thu, 1 Oct 2026 14:11:14 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,14 +35,15 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 03/40] mm/vma: introduce and use
- vma_[flags_]can_merge()
+Subject: Re: [PATCH v3 05/40] mm/vma: ensure mmap_prepare doesn't set actions
+ on a mergeable vma
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
+ Suren Baghdasaryan <surenb@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
  Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>,
- Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
- Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>,
+ Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>,
+ Jonathan Corbet <corbet@lwn.net>,
  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
  Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
  Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
@@ -57,7 +58,7 @@ To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>,
  Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>,
  Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
  "Martin K. Petersen" <mkp@kernel.org>, Jaya Kumar <jayalk@intworks.biz>,
  Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>,
  Sebastian Reichel <sre@kernel.org>, John Hubbard <jhubbard@nvidia.com>,
@@ -104,8 +105,7 @@ To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
  Wei Xu <weixugc@google.com>, Chengming Zhou <chengming.zhou@linux.dev>,
  Michal Hocko <mhocko@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
- Xu Xin <xu.xin@linux.dev>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-doc@vger.kernel.org, linux-usb@vger.kernel.org,
  linux-rdma@vger.kernel.org, selinux@vger.kernel.org,
  linux-sound@vger.kernel.org, bpf@vger.kernel.org,
@@ -118,7 +118,9 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
  fuse-devel@lists.linux.dev
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-3-4583d8a23bca@kernel.org>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-5-4583d8a23bca@kernel.org>
+ <CAJuCfpF2U9rgHmhaDoXX1hxsuuS=s-oWK9Nk19TDQ6CLpjhFVA@mail.gmail.com>
+ <arZEKkLGpHNQX3Jg@gremlin>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -165,27 +167,70 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-3-4583d8a23bca@kernel.org>
+In-Reply-To: <arZEKkLGpHNQX3Jg@gremlin>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 9/17/26 18:22, Lorenzo Stoakes (ARM) wrote:
-> Replace the open-coded VMA_SPECIAL_FLAGS check in the VMA merge logic with
-> two new functions vma_flags_can_merge() and vma_can_merge() and update the
-> merge logic to use the former.
+On 9/25/26 11:53, Lorenzo Stoakes (ARM) wrote:
+> On Fri, Sep 25, 2026 at 12:28:49AM -0700, Suren Baghdasaryan wrote:
+>> On Thu, Sep 17, 2026 at 9:25 AM Lorenzo Stoakes (ARM) <ljs@kernel.org> wrote:
+>>>
+>>> When a user requests an mmap_action be performed in mmap_prepare, this
+>>> involves populating the VMA range with data.
+>>>
+>>> However, if the VMA is mergeable, it might then mistakenly be merged with
+>>> another VMA without having populated the range.
+>>>
+>>> Every mmap action currently available sets VMA flags such that the VMA
+>>> cannot be merged.
+>>>
+>>> However, to ensure that no future mmap action falls foul of this, assert
+>>> that this is the case upon mmap_prepare validation.
+>>>
+>>> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+>>
+>> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 > 
-> This abstracts the check and expresses it in terms of the desired behaviour
-> rather than an arbitrary and confusing VMA flag.
+> Thanks!
 > 
-> This also lays the groundwork for making further improvements in VMA flag
-> usage.
+>>
+>>> ---
+>>>  mm/vma.c | 9 +++++++++
+>>>  1 file changed, 9 insertions(+)
+>>>
+>>> diff --git a/mm/vma.c b/mm/vma.c
+>>> index d6ed10cefc8f..62f2ce1ad5a1 100644
+>>> --- a/mm/vma.c
+>>> +++ b/mm/vma.c
+>>> @@ -2809,6 +2809,15 @@ static int mmap_validate(unsigned long prev_start, unsigned long prev_end,
+>>>  int mmap_prepare_validate(const struct vm_area_desc *prev_desc,
+>>>                           const struct vm_area_desc *desc)
+>>>  {
+>>> +       /*
+>>> +        * It is not valid to execute mmap actions for VMAs which can be merged,
+>>> +        * as any such merge would leave portions of the mapping incorrectly
+>>> +        * unmapped.
+>>> +        */
+>>> +       if (vma_flags_can_merge(&desc->vma_flags) &&
+>>> +           WARN_ON_ONCE(desc->action.type != MMAP_NOTHING))
+>>
+>> Any reason you chose this "if (A && WARN_ON_ONCE(B))" pattern instead
+>> of a simpler "if (WARN_ON_ONCE(A && B))"? Unless there are races
+>> between A and B updates, I think these would be equivalent, right?
 > 
-> Also update the userland VMA tests to reflect the change.
+> They are equivalent yes!
 > 
-> No functional change intended.
+> So it's more of a style thing, as that reads less clearly to me:
 > 
-> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-> ---
+> 	if (WARN_ON_ONCE(vma_flags_can_merge(&desc->vma_flags) &&
+> 			 desc->action.type != MMAP_NOTHING))
+> 
+> And this version highlights what is the broken thing here (action type set) a
+> little more clearly though obviously that's only if mergeable so arguable.
+> 
+> I don't have a really strong opinion though I can change it if you prefer?
+
+Looks clearer to me like that
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
