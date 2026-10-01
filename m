@@ -1,72 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 982BB51A127;
-	Thu,  1 Oct 2026 13:52:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1D1A37A831;
+	Thu,  1 Oct 2026 14:05:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790862771; cv=none; b=oFI5xXBZwlTHBUaE7ze4GIL36oqFSnqZ1G0yTrOPjN+NmC890/N73RJWJf2ZmH5Y/yCk0AeFcy/MM4Zl/okIh4oYBzgwgcFAfhjc5+wEHpTIvfbC9rXtK07TMuzcF5pCfOxSnsQpdn12XNFIZoE0050jJHiYeQy7FVA/wGCAS5A=
+	t=1790863508; cv=none; b=l1WuGTUOOVXYWeiNhr73M6dw9OKrsrMVCE+nxt/grtNJi/2P4wuO/FREpdiLiP80pDv0rTE1NuhSVWi6mHndt1LP4MordD7MZb4bWYVHvN3eJhl9T6TrHE62vCWHfxh1kzBDuQanxSpUauVXRk3XGdRyorSJzo5LRbWxod2bPkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790862771; c=relaxed/simple;
-	bh=XU2wuKZeWAvpPq3kobbsvRuw7oo6O90onnwNfKQsOBw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gy/N/Q/kNXbPLqew9TM1yuqFuQT69umwTzWvDgYl7dVUImFGNcf52wq5Wr4a18Qrd62lyLgr31HyLWXWlUN7vBavwITp/t+s1pxalxBXpliAMYBOn9LdH2cvUqrz2E49PRZnxrZ4HxLDoFGuv1EqIETA31EoKfEE7BNjKoYrohU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DEbt9lV6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790863508; c=relaxed/simple;
+	bh=yEkfXVyikNbfBpB3dU23rKZPO5u8aqRm2BcxhHbymvo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Upw04Fcw0MM+b/4jKyhMgXUhxlxoFPm0tLDR2aClzOXLdkXjsnnxXMc0GuvpmFfMlR9S+Myctwj8vzr6HK2uAjtlBOF7IYgJUqbBfrVRA94g7lvR45h8CEfqZNwKKuyzXEYRxPphh4CBTafrgDMwAPwRLOBnf1R3/nE7FBTK20M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R1F+aqM2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DEbt9lV6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B56251F0089A;
-	Thu,  1 Oct 2026 13:52:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R1F+aqM2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 845D41F000FF;
+	Thu,  1 Oct 2026 14:05:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790862767;
-	bh=zyLFSqOjQoPPiUwlvecs+4oH/DxVxBAbrITLp9N7bzg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=DEbt9lV6lJUmyhOOhHDvCmU/0bsBNN47ZTXK5A1d1blgTHVLULTsiBcsaNpHk2jES
-	 PS91t2Alw8f8I7+oBBbNYJBI1nG5XJmasZympbP12A67B/mJH/JAWYYlUFMkAQ92ZR
-	 6CzzNsIN0paNHPJ85hFZpfi7DuFO6BjgzVs4/x4/bcyasLxmv3iM7M0Nb0ZN62Gf5a
-	 rul//8gVhT/ksKsjthDKaRI0afeL/HK5tcaqRWDtV4jApL2EgxACgsJ4QN4Nbf0WqX
-	 sBcgG+8PpUtu8IkdjB0KPh3a3yjG4mX4H7lq4hzWK+XGF2Tyl1jbJ/VY+wa0TxYGoR
-	 0T+ucIfAm2Aww==
-From: Sasha Levin <sashal@kernel.org>
-To: stable@vger.kernel.org
-Cc: Sasha Levin <sashal@kernel.org>,
-	Artem Dinaburg <artem@trailofbits.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Justin Tee <justin.tee@broadcom.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	James Smart <james.smart@broadcom.com>,
-	Dick Kennedy <dick.kennedy@broadcom.com>,
-	"James E.J. Bottomley" <james.bottomley@hansenpartnership.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Paul Ely <paul.ely@broadcom.com>,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com
-Subject: Re: [PATCH 6.6.y] scsi: lpfc: Handle mailbox timeouts in lpfc_get_sfp_info
-Date: Thu,  1 Oct 2026 09:52:18 -0400
-Message-ID: <2026-09-30-1-daily-reply-0014-lpfc-sfp-info-mbox-timeout-6-6@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260930024505.96440-1-artem@trailofbits.com>
-References: <20260930024505.96440-1-artem@trailofbits.com>
+	s=k20260515; t=1790863507;
+	bh=yEkfXVyikNbfBpB3dU23rKZPO5u8aqRm2BcxhHbymvo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=R1F+aqM2gB+CNQa4L3qqt1A3QFm1sOF0PpSs0/o46T9hYnp7cbSOKPecPjwI+IdVF
+	 vYjQOtodAzC4upul4pKTSiNCPntQEaUrzxFJ/+lw4jMXIZce+Aa6B4w423EGQkqIvb
+	 FNXcMJAXkN0K/WbN2KYLDFJRiTeU2Thi2Pbn6keJ0baAwQEVN5xa5/U7WOAnxsJKc0
+	 dW1X3GI1kikXIVusjMtvvqzHT59ipQFsbP//bSS0cZm3JzDtYcr3fGPBusIpI8qSlM
+	 2HNSwP1qYPWHjdhTaQ+w8dY84E6tkuewxXQ7XH/HIUQFMSx6ILjnNgA/gSu/hun5hG
+	 X0ZgMUtu6Qwuw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 01/16 net-next v3] ipv4: introduce CONFIG_IPV4 to
+ decouple the IPv4 stack
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Fernando Fernandez Mancera" <fmancera@suse.de>
+Cc: "Christian Borntraeger" <borntraeger@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>, antonio@mandelbit.com, sven@narfation.org, sw@simonwunderlich.de, linux-rdma@vger.kernel.org, marek.lindner@mailbox.org, linux-scsi@vger.kernel.org, "Heiko
+ Carstens" <hca@linux.ibm.com>, "Anna Schumaker" <anna@kernel.org>, mptcp@lists.linux.dev, "Jeff
+ Layton" <jlayton@kernel.org>, "Chuck Lever" <cel@kernel.org>, "Vasily
+ Gorbik" <gor@linux.ibm.com>, linux-s390@vger.kernel.org, linux-security-module@vger.kernel.org
+In-Reply-To: <20260930135334.4739-2-fmancera@suse.de>
+References: <20260930135334.4739-1-fmancera@suse.de>
+ <20260930135334.4739-2-fmancera@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 01 Oct 2026 14:05:05 +0000
+Message-Id: <20261001140505.845D41F000FF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-> [ Backport to 6.6.y: v6.6 predates ext_buf and uses ctx_buf for the SLI3
->   raw payload. Restore ctx_buf to the saved struct lpfc_dmabuf before
->   testing LPFC_MBX_WAKE so a timed-out mailbox's late default completion
->   sees the DMA descriptor rather than payload bytes. ]
+> Historically, the IPv4 protocol has been linked to the core INET
+> subsystem. Because shared infrastructure like the TCP/UDP engine,
+> routing or INET hashtables live inside net/ipv4/, it has been impossible
+> to compile a kernel with only IPv6 support.
+>=20
+> This patch introduces the CONFIG_IPV4 Kconfig symbol, which is set to
+> 'def_bool y' for now. This does not allow to completely disable the
+> IPv4 stack yet but it lays the necessary build-system work for that
+> goal.
+>=20
+> In addition, multiple subsystems Kconfig symbols across networking
+> features like tunnels, drivers and filesystems have been adjusted to
+> depend on IPv4. Keep on mind that follow-up work is required to convert
+> the Kconfig symbol to bool and remove the dependency on IPv4 where it
+> makes sense.
+>=20
+> Acked-by: Chuck Lever <cel@kernel.org>
+> Signed-off-by: Fernando Fernandez Mancera <fmancera@suse.de>
 
-This isn't safe on SLI3 HBAs. When the new 60s wait times out, ctx_buf
-is pointed back at mpsave, a 40-byte struct lpfc_dmabuf, while
-out_ext_byte_len is still 256. If the firmware completes between 60s and
-the 300s mailbox timeout, the SLI3 interrupt handler copies those 256
-bytes into the dmabuf. That is a slab overflow, and lpfc_mbuf_free() then
-runs on the corrupted virt/phys.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
--- 
-Thanks,
-Sasha
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260930135334.4739=
+-1-fmancera@suse.de?part=3D1
+
