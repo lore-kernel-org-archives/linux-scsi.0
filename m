@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBCBC469851;
-	Thu,  1 Oct 2026 12:12:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDA2049365C;
+	Thu,  1 Oct 2026 12:13:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790856775; cv=none; b=cFyAQwQUmHtMONwcLjb5sb+dxa2mT9MMVu93E9x9oSdX+/5DK+OOw0rGhS/GzuBvyq/GEYk3ifxasaEJ1Nsnc+2+Whp3ZR/FeNWkuqyJY442FgELQDlcvndz9AlHDlxBXNeUnOYJaBS5KLDBlVycFn7Kh/QpFNwtGZqLNND/Ns4=
+	t=1790856806; cv=none; b=ciyME4JxZC4vnp8CssH0u7sfMQcrFr8Xp4TPaKkqXtEDvm3A9pX+uPzT9Slk4X86BsdVq1VPQ8HwNybL2s76QZ1pHSJ7i8nAyZuxGl6uknJ3KxeaMCdTEPdIyOATsaEWkey/fj9Vzpege8zs/S3Fd2g9QJvBKRJDD4lTcdO7Hgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790856775; c=relaxed/simple;
-	bh=4xb3p41kyYi8vMssLV16e7uQm0TXoJo3LVwQN6ksLiM=;
+	s=arc-20240116; t=1790856806; c=relaxed/simple;
+	bh=qw6F0agE9fweMokxSa6xJ4PUNWhsi0HPTcBYm3uZdTA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oAcf7JE2thGk6ZBYcPolpL2cHqedbuJJe5aGt+P4QoFtuskNE+gyxDhUUGQCVR6yfgjUOCxqAZXZGFmC7eK2gxehq25AB4GVhcZxxdXtgWjVwQ5zJu4dGFIYvH8hu8JdVUFKIfg/dfPE2tMz+hY+N+Mmtt6GtLcn2f4JZDqgUKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a6JQiI+U; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=ZJlzexWSAQDF9bA9zX8bLVwioxDnA09exd+C1a9ogHgJaunhR1OYakk6APJXYV7Xv8fhTf3THYN3CW58+N1iFTzaSaLFeYzcugaQ3Xc+lzf3avZk1aZ/j4oO/xilyJjuyHzIEDIXb5nA8oBvy84HKyBdrwPAKp/4/d6Bri+fBEw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xl7mxiDq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a6JQiI+U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF4C61F00898;
-	Thu,  1 Oct 2026 12:11:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xl7mxiDq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 011231F000FF;
+	Thu,  1 Oct 2026 12:12:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790856756;
-	bh=+WuLX9m+MUB02xFfiB7r8uc2jWJ3VIsViWvPxF/gKXc=;
+	s=k20260515; t=1790856804;
+	bh=B3He6dk1lv+d03oE0kIODLca8X0OJPESUHdmrBphA8c=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=a6JQiI+UQIzMl45ztdh9uVgWHqK25rClvFAUSVH/KUZNvFkPB3bG1rky6339Luyl1
-	 zOWs5xEMeX6VfUPSWlhUTmmZwzDnf4Rf26t+kP4OE9JwamSSrkxaJJ2eWWh7KAq92m
-	 M89qXetR73MFvWZBe1nj6tVajq5QTvqaW+AikI+cWfsCNb3Y1UCP59VVozVC8H59Vm
-	 JihRmE+IxTQs7eAU2uOqjm3UVIp1oRJM2ZSUEAuaZU/0fzUzQtQMVao5/BjGnbp0NN
-	 1BV8Ss73hxCOiI+3Cu2EJghOJElqgArLG1XTMFwpGPUf4Wf4f4wXS6IiheEryjkhul
-	 QbUvcY/YDsLCQ==
-Message-ID: <45af678d-6e13-4b9c-b953-41d1feb0d0de@kernel.org>
-Date: Thu, 1 Oct 2026 14:11:53 +0200
+	b=Xl7mxiDqPEStYHDqrgoerrLfkr1hPhZttyBeFQhA2Dmp3Rdc8p9y/gWN9OO3br7Yl
+	 Zhwo0lzgeYoHcJDhIuV5NtOgDP1YH0Cdbyz1p9nV6Qg3uHFEL75hK8fN1Q8b5cZFbC
+	 8Va1ZkkNv+tkZPD3lHW8F70EV4JF6LkqYx6mczjqOcb7fDxanM+pHHtDWaz99bGpfi
+	 A4ZYUtois7DLpVA0ZtPURvYcWxxhdiRnKBgo/2ZXKB/fWOU0h9m7YG25OOgRn6N5Mh
+	 mNadmlupayCLQJ9NhlkOhnqz+14JtL9advdUirIXqmhDSI6/l01PjDbKIcVoIbiYtZ
+	 A7BapymuqJu4w==
+Message-ID: <62e903c4-46fc-4647-b173-3797b2a77865@kernel.org>
+Date: Thu, 1 Oct 2026 14:12:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 06/40] mm: make map_kernel_pages_[prepare,complete]
- internal and unexported
+Subject: Re: [PATCH v3 07/40] mm/vma: tidy up map kernel pages enum values
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -118,7 +117,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
  fuse-devel@lists.linux.dev
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-6-4583d8a23bca@kernel.org>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-7-4583d8a23bca@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -165,17 +164,18 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-6-4583d8a23bca@kernel.org>
+In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-7-4583d8a23bca@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/17/26 18:22, Lorenzo Stoakes (ARM) wrote:
-> There's no reason to export the symbols for these functions which are only
-> called from internal mm logic, additionally there's no reason for them to
-> be declared in mm.h.
+> MMAP_MAP_KERNEL_PAGES is a mouthful, discard the MAP_ as that's implied by
+> MMAP.
 > 
-> This patch therefore removes the exports and moves the declarations to
-> mm/internal.h.
+> Also while we're here delete useless comments for mmap actions whose names
+> clearly indicate what they are for.
+> 
+> Also update the userland VMA tests to reflect this change.
 > 
 > No functional change intended.
 > 
