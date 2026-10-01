@@ -1,142 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 914C1489FD8;
-	Thu,  1 Oct 2026 08:38:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FA163F5BFC
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2026 08:41:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790843937; cv=none; b=A1ACACzaDueUF1n4zg1nyGVrrCfrnXbd/aSfsS+Z3OrAINGQoR1X846X+6lDZFURodVZ/E1//V54+Fs3dFyqqf0fgOwrSgaHohcKaguJuOwv5G8I2GqreDCIrYx9XwIui12n+YSHKS/H5nqWu5UWkGcWUtYdIW0Y0LkFgP9ECac=
+	t=1790844094; cv=none; b=PFdHcyEvSIUx8qx+IuOH7Ij4GIHzVhLuAErno/UbWL7n62SFfwZVyRdyG6OJQGBNShY9WOFBHRLYEbJaIzPda6HlFAmsmZRC8eEJ20Xz5uDjX7byR/qzIw3LilTV3cbtZnnVBHIzt7FCLjKThdZ68qCy4aubHrccek5w+XZOZCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790843937; c=relaxed/simple;
-	bh=itxGLdQmidTzoKyxRWvQuz2NS5WbJkqX9Y8ui6CrqBA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FVnrhZEDkjtJDfS+PytPtYri0w6GrR/BQ+i6olld4dytsup4sUWykhaRlL893071lxvJxLvP6YFT0U1np9gtyp79pov+BHxjxG9PcbReNAzoGGa42UGYPaeNBOjToSOPBOBbk28Scasyp3poDayztY832NvW1vDzVgMp8O8KZXo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UrBvg0mb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790844094; c=relaxed/simple;
+	bh=jIEy5cT5mmkkVcGKdpbeH8K331ZFV/0IWVEdNWVBdcc=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=sWiT8QpPv7iBLPeZlRntV9lUCSHwYpXJHdrDRWAIXVFM6rtrLMINWrXVtKelUhyKBsU2f/DU9qGvBdWl9EP+HWiIsPG9mpZgGGkoJQIxV9bvOtOIuIUDM106ZMLIfwPq8s8wXay47bjgIBFLa/nFQu+IxoWxil0VHVrZ8OPFzRM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=GXWMbK1K; arc=none smtp.client-ip=209.85.215.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UrBvg0mb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE44A1F0089E;
-	Thu,  1 Oct 2026 08:38:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790843935;
-	bh=Jb7hOi/gVtdfFV1e2VDg6t2YGXHGD52QPs/n1x58YTU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UrBvg0mbg3KNtEWHs1Bd1BMHDtdeoCcvvqhX8Y8CRaSA8pUfRZFhjFKHJgLALmwlC
-	 CErLdLJWI7qT0xMBIUp8Oxc5yo+Gh6Term20Tz11fmB/ZZggFP6a3k+F8aoDPyJNr6
-	 vknJLTwGO3z4EmFgmN57uR45dJVZKEMToZe+QdLIAR5I1/scv0HfWq7TLK9KAIqXFs
-	 K3t7x4td2q/2/hKtPoADdoAAEbbyzvBph/k9k+Xy3V0/8ZdRSkaqExXevCblOQwaq/
-	 u9aVKbYifqx5IGSmd1W+gdP7aDSwbeTE6yHh5ThfKGyh55L+onwjJqi9sPLMyQ87/L
-	 QUmJBg9O/CgpA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v13 05/24] phy: mediatek: ufs: Add support for resets
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Louis-Alexis Eyraud" <louisalexis.eyraud@collabora.com>
-Cc: devicetree@vger.kernel.org, robh@kernel.org, linux-scsi@vger.kernel.org, conor+dt@kernel.org, neil.armstrong@linaro.org, vkoul@kernel.org, olteanv@gmail.com, linux-phy@lists.infradead.org
-In-Reply-To: <20261001-mt8196-ufs-v13-5-60854adab6d9@collabora.com>
-References: <20261001-mt8196-ufs-v13-0-60854adab6d9@collabora.com>
- <20261001-mt8196-ufs-v13-5-60854adab6d9@collabora.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 01 Oct 2026 08:38:54 +0000
-Message-Id: <20261001083854.CE44A1F0089E@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="GXWMbK1K"
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-ca8aee88725so3491721a12.3
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Oct 2026 01:41:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1790844091; x=1791448891; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jIEy5cT5mmkkVcGKdpbeH8K331ZFV/0IWVEdNWVBdcc=;
+        b=GXWMbK1Kv62x+ZZoITp0Ot7q1ybxLRMceh2wjq9i/v6fAQMQ2EWZBNcMgfHuEiMYfD
+         qMYHydBHlQRcFBVxKGQYKk8KEoCgISNCk8KS609wWbkXOIKysa7WmOjPEM/IUsvh9BGK
+         XN2FPykKFP7j8Qc3OhnXuUTyZuCkLI59fjN8nQTFjNA4vE8yFNupWZaHNCsCjSU3pXLF
+         MojyivZbU8lXry8xF5nPMNniqbIlxHzUHinPBLsnFmGDD0Hjt1jVP5cfj7pGiOuuy8HO
+         AoqsvulUkHEzFu59us/NG7H87CqZDGL4etwnXSUBqrVPYpRCgOb6Cit97wHE8np4Yqkz
+         TsOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1790844091; x=1791448891;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=jIEy5cT5mmkkVcGKdpbeH8K331ZFV/0IWVEdNWVBdcc=;
+        b=fcrz1roLiFxDKPnnBHfKicLChnPUzoAzjkmIKPWzdTElasoK3SiHlENOT7DpfPh3zy
+         Bqi64K3wZHT5U2SBdwS0W4sezCEcKnhGT77DgvH6gTC26zs5fhQCx+3V8FOIQLoYbZwi
+         r7XFJQeX17Qa/ir9UckvvqjQV8OSWNpZYd9JlivlDfBe6cgJNjvIGp9Z9tkMR8IE2xjP
+         cgkpJvm4Uz2IbqChb8C/kk8mDXsCpv2hcktMNeMaCecLarCrFWLDC087XNJX3u2eBAsx
+         faQDqH5fbUkyoIIHyk80o9+6fFWiV8bMOlF5BMmrVczXqiJS4dfD1dmf6i0Dk5t2Z/NX
+         pCkA==
+X-Gm-Message-State: AFuF++mRa9xkG5Y+woA0fc2GkMuF+xaH9UZvhlMrLfciIqcPHlq/PXZO
+	gWqvNvBDOgvf01p5iKJtVSoNKvTzvxksmpWpUF7rpCUeiBiWGm2KzNvcVvdtBdL0T05xw8YKqk3
+	UwMgW1vd7qtBhjyXwz1pWZA==
+X-Received: from pfnn21.prod.google.com ([2002:a05:6a00:2b95:b0:886:fe91:dd9e])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a20:7d8b:b0:3de:55ce:75d1 with SMTP id adf61e73a8af0-3de9e86af8dmr4024094637.92.1790844091336;
+ Thu, 01 Oct 2026 01:41:31 -0700 (PDT)
+Date: Thu,  1 Oct 2026 16:41:29 +0800
+In-Reply-To: <20260909091045.1134956-1-naomi.chu@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+References: <20260909091045.1134956-1-naomi.chu@mediatek.com>
+X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
+Message-ID: <20261001084129.499805-1-stanleyjhu@google.com>
+Subject: Re: [PATCH v1] scsi: ufs: core: Hold a clock reference across the probe
+From: Stanley Jhu <stanleyjhu@google.com>
+To: Naomi Chu <naomi.chu@mediatek.com>
+Cc: linux-scsi@vger.kernel.org, mkp@kernel.org, avri.altman@sandisk.com, 
+	alim.akhtar@samsung.com, James.Bottomley@HansenPartnership.com, 
+	bvanassche@acm.org, wsd_upstream@mediatek.com, peter.wang@mediatek.com, 
+	alice.chao@mediatek.com, chun-hung.wu@mediatek.com, 
+	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	ed.tsai@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Strict probe failure when firmware lacks optional MPHY backup SMC
-- [Medium] Unhandled firmware error codes are silently treated as success i=
-n ufs_mtk_phy_ctrl()
---
-
-commit 9009c477dc0a8eefd792f29d6be7589214adb09e
-Author: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-
-phy: mediatek: ufs: Add support for resets
-
-The MediaTek UFS PHY supports PHY resets. Until now, they've been
-implemented in the UFS host driver. This commit migrates the MPHY reset log=
-ic
-into the PHY driver using the PHY subsystem's reset op.
-
-> diff --git a/drivers/phy/mediatek/phy-mtk-ufs.c b/drivers/phy/mediatek/ph=
-y-mtk-ufs.c
-> index fc19e0fa8ed55..4439a9eb6b7ad 100644
-> --- a/drivers/phy/mediatek/phy-mtk-ufs.c
-> +++ b/drivers/phy/mediatek/phy-mtk-ufs.c
-[ ... ]
-> @@ -140,9 +151,59 @@ static int ufs_mtk_phy_power_off(struct phy *generic=
-_phy)
->  	return 0;
->  }
-> =20
-> +static int ufs_mtk_phy_ctrl(struct ufs_mtk_phy *phy, enum ufs_mtk_mphy_o=
-p op)
-> +{
-> +	struct arm_smccc_res res;
-> +
-> +	arm_smccc_smc(MTK_SIP_UFS_CONTROL, UFS_MTK_SIP_MPHY_CTRL, op,
-> +		      0, 0, 0, 0, 0, &res);
-> +
-> +	switch (res.a0) {
-> +	case SMCCC_RET_NOT_SUPPORTED:
-> +		return -EOPNOTSUPP;
-> +	case SMCCC_RET_INVALID_PARAMETER:
-> +		return -EINVAL;
-> +	default:
-> +		return 0;
-> +	}
-
-[Severity: Medium]
-Does this default case mask unhandled firmware error codes?
-
-If the firmware encounters a failure during PHY backup and restore operatio=
-ns
-and returns an error code other than SMCCC_RET_NOT_SUPPORTED or
-SMCCC_RET_INVALID_PARAMETER, it seems it will fall through to the default
-case and return 0 (success).
-
-Could this cause the driver to silently ignore hardware or firmware failures
-and proceed with potentially corrupted state?
-
-> +}
-[ ... ]
-> @@ -162,8 +223,18 @@ static int ufs_mtk_phy_probe(struct platform_device =
-*pdev)
->  	if (IS_ERR(phy->mmio))
->  		return PTR_ERR(phy->mmio);
-> =20
-> +	phy->reset =3D devm_reset_control_get_optional_exclusive(dev, NULL);
-> +	if (IS_ERR(phy->reset))
-> +		return dev_err_probe(dev, PTR_ERR(phy->reset), "Failed to get reset\n"=
-);
-> +
->  	phy->dev =3D dev;
-> =20
-> +	if (phy->reset) {
-> +		ret =3D ufs_mtk_phy_ctrl(phy, UFS_MPHY_BACKUP);
-> +		if (ret)
-> +			return dev_err_probe(dev, ret, "Failed to back up MPHY\n");
-
-[Severity: High]
-Does this create a strict probe failure on systems with older firmware?
-
-If a Device Tree accurately describing the hardware includes the reset line,
-but the system is running an older ATF firmware that lacks the
-UFS_MPHY_BACKUP SMC call, ufs_mtk_phy_ctrl() returns -EOPNOTSUPP.
-
-Could this cause the driver probe to fail entirely, rendering the PHY and
-dependent UFS host non-functional? Might it be better to degrade
-gracefully if the optional firmware backup command is unsupported?
-
-> +	}
-> +
->  	ret =3D ufs_mtk_phy_clk_init(phy);
->  	if (ret)
->  		return ret;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261001-mt8196-ufs=
--v13-0-60854adab6d9@collabora.com?part=3D5
+Reviewed-by: Stanley Jhu <stanleyjhu@google.com>
