@@ -1,42 +1,42 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEEF54AF140;
-	Thu,  1 Oct 2026 08:22:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA84F49CF30;
+	Thu,  1 Oct 2026 08:22:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790842955; cv=none; b=TbJSc2z99svzOqONO9ChbTSfEe0tshrxcaENVSzF665bj8LZU3JQ+Rs7XZx3lBlTGgAdGScAARwGBVoWQDoxXpYM0ZCTHZ2thyRxeOO4bDufJuZjzV2aX3xdRkkwGKC5dSlJ5bBEbApb8TrpQ199pupwmDEKe22qnvoEKMH0/2o=
+	t=1790842955; cv=none; b=IAEltZ6HmULlhgKH/hg4Y+xq0d5vpDZLVcpTNDkmKirxc6Al9fr4Q2A1D4GQIKzRSH2E2MivlsduqzLZn2/Ab9cF5sETFKx5gb7cCW86Yy074BjcmQn7Fxs0RQ4hYy1k4YucSJHAvr3KTeG9lmxSUHHIe7bOwL/HHpR3/7cECr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1790842955; c=relaxed/simple;
-	bh=J6f0srwmGzJjS5BHUnfs5ByYpyH9AEj0skSsF1n9XbA=;
+	bh=OoG8DcoWYkHd4rMrCqNcUY/Mr3jj62xBaazOhgwyR9A=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=dp06RJpsgfsZBXitK7HnWx6+NKID5/pXdAyvOaf/aQTYza0OIz7nrbjT/8scdOG7N25aztCK5XuuozKh3GBKlMYpok94JBsoahfzD9ti2mqGAyi6PaRK8n7oHGcNdNF/hwmjxQOfwTGCYnqfTYq/KudLPTgUtAL0sw9xwpCO7hU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=hvCwqi6A; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:To:Cc; b=TbbT9cb76zee5nQ1dejHciUeyB0heivtTfPr7T6CKOtl8iC4TFPKGqpX0dXRiusmOEGfbmsQVrycMq1AChQu9pyRvnfE8tsYLsErXPHcVF/MAZX8evlDhFymBRTI9HohvLFwaMrQIGmBDsG9SYfPGHnrCPzsOx45UEkbqILhaCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=W+pbCHRd; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="hvCwqi6A"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="W+pbCHRd"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1790842936;
-	bh=J6f0srwmGzJjS5BHUnfs5ByYpyH9AEj0skSsF1n9XbA=;
+	s=mail; t=1790842935;
+	bh=OoG8DcoWYkHd4rMrCqNcUY/Mr3jj62xBaazOhgwyR9A=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=hvCwqi6At5iNROXPULzPXkRMRbrKZb5Lmpn24cFs8LIdzKUCyvdC+erfmZrTj1n9V
-	 qCm7CZQBfN+kW3MhG0G0RxvF3GpPhF8dXs0FzanDd4QUBxuvWwbF0zizXErZ/P4GUI
-	 cM1//hBO2USWTuZLl3qbI69GcGkI+mKequTRz+M+J2Kxngnm+MwX++FykWU9R4/rBm
-	 TsfIva2P70cquRGSSH/mB+8SAUZMSX+mbUNemY0Xyvc9ixVK1AtCgvYrWZvIzo1e69
-	 9LZrK0wrB/fFC6VMk51VtnST7umW7ZMEVpvEEp2tOKIKBoajIVug2jtS+4mw9KmGrv
-	 F5fpjmPAWcx2w==
+	b=W+pbCHRdLtFKumB6HdakmEjgsQt+JToo+vQKHbstb2ztAdn6ts8qjYrZ3sfWYZiU4
+	 nwApgT73FLGt7EmYz7Ajs1P+RCCvGbRjYXykslbc3dZPzzS6iIPVJSuN+M67gCehnO
+	 /BdQo04gndvw1yZ4emCnj2SZWvFgkoH5Tm6TMucAIRTmFqm4jZ/OK6xRmjptlNPl6z
+	 JtFaHRTsCVbwYRHtLSJdinJPza9ipCSzRdPVwjvKIiIC9V4xPlsFm7sTRXoTI1B0dC
+	 lM4VuPOoE87vXN4l+J1ckyKKWV+3KrZslDDZv5tNp7ScNQ/idvgLkvGfx7PbGJ7/A6
+	 LO1DkyEayEG2w==
 Received: from yukiji.home (unknown [100.64.0.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: laeyraud)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id 972A417E056B;
-	Thu, 01 Oct 2026 10:22:15 +0200 (CEST)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 83A2D17E0524;
+	Thu, 01 Oct 2026 10:22:14 +0200 (CEST)
 From: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
-Date: Thu, 01 Oct 2026 10:21:48 +0200
-Subject: [PATCH v13 16/24] scsi: ufs: mediatek: Rework _ufs_mtk_clk_scale
- error paths
+Date: Thu, 01 Oct 2026 10:21:47 +0200
+Subject: [PATCH v13 15/24] scsi: ufs: mediatek: Remove
+ mediatek,ufs-broken-rtc property
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,7 +45,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261001-mt8196-ufs-v13-16-60854adab6d9@collabora.com>
+Message-Id: <20261001-mt8196-ufs-v13-15-60854adab6d9@collabora.com>
 References: <20261001-mt8196-ufs-v13-0-60854adab6d9@collabora.com>
 In-Reply-To: <20261001-mt8196-ufs-v13-0-60854adab6d9@collabora.com>
 To: Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
@@ -70,124 +70,70 @@ Cc: kernel@collabora.com, linux-arm-kernel@lists.infradead.org,
  Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
  Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1790842918; l=3592;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1790842918; l=2134;
  i=louisalexis.eyraud@collabora.com; s=20250113; h=from:subject:message-id;
- bh=7iF7Ng8HZ6g8jDXhFKvtGw4P7pMOE0nuv+k8G+Pt/us=;
- b=LL5ohV8Y/CQ9FvrOCuz/8hyQXvPsc1SyTAdxoLuWyUsogplnwdhHBEGXkE1/iKPV/mktg+ptl
- IJu04hdsBdFChPtD8lUSeFN7vOpAtwwxd+KDjVEbYFiwVqD9VnakB7t
+ bh=gJmljSnDpg7nQXEtJ3IcEoXQRarnJ8g/0lmfhRaCJjM=;
+ b=X81O0C1oXV/9dd+9bmaJVF/CnfG90ltpBzU00nK42z4xkj/qynJDIQ+z0zINxwGIhSw6OYREl
+ nZySbxNfySCA0VNQfuGxgvITXO9KkCqKQ0itEVOGI2V77zHxwwXcJKT
 X-Developer-Key: i=louisalexis.eyraud@collabora.com; a=ed25519;
  pk=CHFBDB2Kqh4EHc6JIqFn69GhxJJAzc0Zr4e8QxtumuM=
 
 From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
-Errors should be printed at the correct log level. Additionally, it
-looks like some "goto out"'s were omitted in the scale up case, which
-looks like a mistake, as the scale down branch of the code does use
-them.
+This flag property was never described in the binding, and its
+capability wrapper seems pointless.
 
-Rework the error messages to make them nicer and at the correct
-verbosity, and add the missing gotos.
+If one of the MediaTek SoCs needs the ufshcd quirk applied, then this
+can be done per-compatible, without needing to give the device tree
+author the option to forget to set it.
+
+Remove it and the associated capability flag wrapping code.
 
 Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 Signed-off-by: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 41 +++++++++++++++++++----------------------
- 1 file changed, 19 insertions(+), 22 deletions(-)
+ drivers/ufs/host/ufs-mediatek.c | 5 -----
+ drivers/ufs/host/ufs-mediatek.h | 2 --
+ 2 files changed, 7 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index f3c87ed68ac7..2edfa8bd877a 100644
+index 6d5687f5e755..f3c87ed68ac7 100644
 --- a/drivers/ufs/host/ufs-mediatek.c
 +++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -2025,16 +2025,16 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
+@@ -696,9 +696,6 @@ static void ufs_mtk_init_host_caps(struct ufs_hba *hba)
+ 	if (of_property_read_bool(np, "mediatek,ufs-rtff-mtcmos"))
+ 		host->caps |= UFS_MTK_CAP_RTFF_MTCMOS;
  
- 	ret = clk_prepare_enable(clki->clk);
- 	if (ret) {
--		dev_info(hba->dev,
--			 "clk_prepare_enable() fail, ret: %d\n", ret);
-+		dev_err(hba->dev, "%s: Failed to enable clock: %pe\n", __func__, ERR_PTR(ret));
- 		return;
- 	}
+-	if (of_property_read_bool(np, "mediatek,ufs-broken-rtc"))
+-		host->caps |= UFS_MTK_CAP_MCQ_BROKEN_RTC;
+-
+ 	dev_info(hba->dev, "caps: 0x%x", host->caps);
+ }
  
- 	if (clk_fde_scale) {
- 		ret = clk_prepare_enable(fde_clki->clk);
- 		if (ret) {
--			dev_info(hba->dev,
--				 "fde clk_prepare_enable() fail, ret: %d\n", ret);
-+			dev_err(hba->dev, "%s: Failed to enable FDE clock: %pe\n",
-+				__func__, ERR_PTR(ret));
-+			clk_disable_unprepare(clki->clk);
- 			return;
- 		}
- 	}
-@@ -2043,51 +2043,48 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 		if (clk_bind_vcore) {
- 			ret = regulator_set_voltage(reg, volt, INT_MAX);
- 			if (ret) {
--				dev_info(hba->dev,
--					"Failed to set vcore to %d\n", volt);
-+				dev_err(hba->dev, "Failed to set vcore to %d\n", volt);
- 				goto out;
- 			}
- 		}
+@@ -1239,8 +1236,6 @@ static int ufs_mtk_init(struct ufs_hba *hba)
+ 	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
  
- 		ret = clk_set_parent(clki->clk, mclk->ufs_sel_max_clki->clk);
- 		if (ret) {
--			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
--				ret);
-+			dev_err(hba->dev, "%s: Failed to set clock mux: %pe\n",
-+				__func__, ERR_PTR(ret));
-+			goto out;
- 		}
+ 	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_INTR;
+-	if (host->caps & UFS_MTK_CAP_MCQ_BROKEN_RTC)
+-		hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_RTC;
  
- 		if (clk_fde_scale) {
--			ret = clk_set_parent(fde_clki->clk,
--				mclk->ufs_fde_max_clki->clk);
-+			ret = clk_set_parent(fde_clki->clk, mclk->ufs_fde_max_clki->clk);
- 			if (ret) {
--				dev_info(hba->dev,
--					"Failed to set fde clk mux, ret = %d\n",
--					ret);
-+				dev_err(hba->dev, "%s: Failed to set fde clock mux: %pe\n",
-+					__func__, ERR_PTR(ret));
-+				goto out;
- 			}
- 		}
- 	} else {
- 		if (clk_fde_scale) {
--			ret = clk_set_parent(fde_clki->clk,
--				mclk->ufs_fde_min_clki->clk);
-+			ret = clk_set_parent(fde_clki->clk, mclk->ufs_fde_min_clki->clk);
- 			if (ret) {
--				dev_info(hba->dev,
--					"Failed to set fde clk mux, ret = %d\n",
--					ret);
-+				dev_err(hba->dev, "%s: Failed to set fde clock mux: %pe\n",
-+					__func__, ERR_PTR(ret));
- 				goto out;
- 			}
- 		}
+ 	hba->vps->wb_flush_threshold = UFS_WB_BUF_REMAIN_PERCENT(80);
  
- 		ret = clk_set_parent(clki->clk, mclk->ufs_sel_min_clki->clk);
- 		if (ret) {
--			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
--				ret);
-+			dev_err(hba->dev, "%s: Failed to set clock mux: %pe\n",
-+				__func__, ERR_PTR(ret));
- 			goto out;
- 		}
+diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
+index bde2b53f5798..d97951ee1f4e 100644
+--- a/drivers/ufs/host/ufs-mediatek.h
++++ b/drivers/ufs/host/ufs-mediatek.h
+@@ -138,8 +138,6 @@ enum ufs_mtk_host_caps {
+ 	UFS_MTK_CAP_DISABLE_MCQ                = 1 << 8,
+ 	/* Control MTCMOS with RTFF */
+ 	UFS_MTK_CAP_RTFF_MTCMOS                = 1 << 9,
+-
+-	UFS_MTK_CAP_MCQ_BROKEN_RTC             = 1 << 10,
+ };
  
- 		if (clk_bind_vcore) {
- 			ret = regulator_set_voltage(reg, 0, INT_MAX);
- 			if (ret) {
--				dev_info(hba->dev,
--					"failed to set vcore to MIN\n");
-+				dev_err(hba->dev, "%s: Failed to set vcore to minimum: %pe\n",
-+					__func__, ERR_PTR(ret));
- 			}
- 		}
- 	}
+ struct ufs_mtk_crypt_cfg {
 
 -- 
 2.55.0
