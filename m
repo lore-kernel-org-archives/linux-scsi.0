@@ -1,139 +1,107 @@
-Received: from mta0.migadu.com (out-74.mta0.migadu.com [91.218.175.74])
+Received: from mta0.migadu.com (out-102.mta0.migadu.com [91.218.175.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F5033FF884
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2026 10:50:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B1AF4052A4
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2026 10:52:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790851827; cv=none; b=cFQJpa6m9NuHEGXt3bgvRqPu8tmDOwI1LTESUQ12jsyKA5CEUT9Jhx9lDVEPTeHVMnkm7mVvfsEF8+xr4ni7vDrWBD8H53tL745/TnG+mLot7M6o05vHMNPcXHvmAEir/48cDdCYdILnHIGzLSaEAf0uAvNHopq2eaA/YujwSOA=
+	t=1790851930; cv=none; b=VAQLDt/uiuiLQZqJxYlz13V4ERdR8qJCmQw5Hj0J862CK2Ql92RNIo/cvGQKgvu6x5FRouZk5mESju0pynNVpDYa0sMFjKR3VdZxsMvXeLgojzGDhHcEjthnzdXlCvwOK4Fqs5+LZufhIVi3AsoN9tnkcM1VKOU1Vg09arAZO/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790851827; c=relaxed/simple;
-	bh=oUz6waLYg1/eEtKeCREvs7l2iCLaIUvR2pRHE5Jf0RU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nIq2PsJbIoELH96Tpsp4dRT1VNjksKZjJU78Ojl1wFFr7ZRV4asUsLHDusOP0+QB9E4k1iCwLihZ7AXeOmQCVALq28Ycf4g6//MWZSyA0Bq1obrfqqq3ebFDn1FX6jt+9hVuNCEqgDT0SHQbGW6/nmdXTELha+uWxltpinOcHPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ivttPynR; arc=none smtp.client-ip=91.218.175.74
+	s=arc-20240116; t=1790851930; c=relaxed/simple;
+	bh=F7/0Xze85k9s1voAnMLsmJkH6CTMb8VD14ZOkRUh8Js=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=rHENI2YTJ7OQGyfmfuJ4y24ZlJEToOwQ5LAiKvUdIR9ux2ufSeJAf8afdA+KXIrZf34VL2DEg3XoqnVMCUGMRjrtQh5Q8rjAXDpLnXCfDSnVelIiK2TBBoxcr5XURGfgrh5o3bO/kNZB0p0dx6/zGYbe5Dxm4QFLaVCXjJ5Qfak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iCPu8ben; arc=none smtp.client-ip=91.218.175.102
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ivttPynR"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iCPu8ben"
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=oUz6waLYg1/eEtKeCREvs7l2iCLaIUvR2pRHE5Jf0RU=;
+DKIM-Signature: a=rsa-sha256; bh=F7/0Xze85k9s1voAnMLsmJkH6CTMb8VD14ZOkRUh8Js=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1790851819; v=1; x=1791456619;
- b=ivttPynRprh5Wuz+JM8jZWW6SWMSt8OMjOJAKipo3fusvW2hXAJy7nKlkk9k7/RIg0aTGWX3
- ibOEFBDN+d0k/u1cnggmefuUExAqQtR/IYAgtRQsE0j+5nTLzHaTkYWAOPbY0oHKaWGOoXY271l
- xp3ULTI+dr9ZAX8ka5wKTuME=
+ t=1790851926; v=1; x=1791456726;
+ b=iCPu8benDN4QFFe+JgStna1GPWcI8VxQ5IxwXnOvpHKBZhbnYreJILZ4xT+N5TxCUmiNCUM5
+ Xu5LSkMSysMoEpcw8LqNH2AYlBVE/AB8HpCQVk28SjlomrGWGKB6swHXnJJwdpnrxgAP4u4Qu1c
+ hpzfqtsXMcmqnYKM3NP2fva0=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 03b9e662ccb6b2b8;
-	Thu, 01 Oct 2026 10:50:19 +0000
-X-Mizu-Trace-ID: 03b9e662ccb6b2b8
+Received: by mta11.migadu.com with ESMTPS id 4dfc51004a80d778;
+	Thu, 01 Oct 2026 10:52:05 +0000
+X-Mizu-Trace-ID: 4dfc51004a80d778
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <0b1bb7ce-4720-4d12-96ff-ab04cd1b85bc@linux.dev>
-Date: Thu, 1 Oct 2026 11:50:15 +0100
+From: Usama Arif <usama.arif@linux.dev>
+To: Usama Arif <usama.arif@linux.dev>
+Cc: mkp@kernel.org,
+	sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	ranjan.kumar@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	thenzl@redhat.com,
+	hare@suse.de,
+	himanshu.madhani@oracle.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] scsi: mpi3mr: Stop IRQ polling when no reply is ready
+Date: Thu,  1 Oct 2026 03:51:57 -0700
+Message-ID: <20261001105158.3456162-1-usama.arif@linux.dev>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260930145606.2632749-1-usama.arif@linux.dev>
+References: 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: mpi3mr: Stop IRQ polling when no reply is ready
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-References: <20260930145606.2632749-1-usama.arif@linux.dev>
- <20260930145606.2632749-3-usama.arif@linux.dev>
- <20260930152032.BDA8F1F000FF@smtp.kernel.org>
-Content-Language: en-US
-From: Usama Arif <usama.arif@linux.dev>
-In-Reply-To: <20260930152032.BDA8F1F000FF@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+On Wed, 30 Sep 2026 07:55:47 -0700 Usama Arif <usama.arif@linux.dev> wrote:
 
+> Once a reply queue has more than 8 I/Os pending, mpi3mr's IRQ thread
+> polls it every ~20us until nothing is pending or it has processed
+> max_host_ios replies. On busy HDDs that means about 45 seconds of
+> polling at a time, with nearly every wakeup finding nothing. On Meta's
+> HDD storage hosts, these threads used about 15% of the non-idle CPU
+> on polling.
+> 
+> Patch 2 goes back to interrupts once a poll finds the queue empty while
+> owning it. It relies on patch 1: an interrupt that finds the queue owned
+> by another context now hands it to the thread, instead of leaving a
+> reply until the next interrupt or a command timeout.
+> 
+> On a machine configured like those hosts (36 SATA HDDs behind a SAS40xx
+> HBA), HDD random reads now wake the threads twice per I/O instead of 236
+> times, and a co-located CPU-bound task loses 0.6% instead of 30%.
+> Drive-cache reads still reach 270K IOPS, and a single reply queue whose
+> CPU is saturated loses about 5%. With a kthread injected to hold a reply
+> queue, replies waited up to 50ms, and timed out under light load,
+> without patch 1, and at most 233us with it.
 
-On 30/09/2026 16:20, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] scsi: mpi3mr: dropped IRQ poll trigger causes hard-IRQ storm
-> --
-> 
-> commit a00593b528c873a4c3ec905f3fa02c054a4e3bf0
-> Author: Usama Arif <usama.arif@linux.dev>
-> Subject: scsi: mpi3mr: Stop IRQ polling when no reply is ready
-> 
-> This commit modifies the IRQ polling logic in the mpi3mr driver to stop
-> polling when a post-sleep check finds the queue empty. It introduces a
-> barrier and a recheck of pend_ios to avoid losing wakeups from concurrent
-> submitters.
-> 
->> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
->> index 102f84667a5cf..6f113d8625bb4 100644
->> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
->> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> [ ... ]
->> @@ -819,17 +829,34 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
->>  
->>  		if (!midx)
->>  			mpi3mr_process_admin_reply_q(mrioc);
->> -		num_op_reply +=
->> -		    mpi3mr_process_op_reply_q(mrioc, op_reply_q);
->> +		num_op_reply += mpi3mr_process_op_reply_q(mrioc, op_reply_q,
->> +							  &checked_empty);
->> +		/* Stop only on an empty check made while owning the queue */
->> +		if (slept && checked_empty) {
->> +			idle = true;
->> +			break;
->> +		}
->>  		if (!atomic_read(&op_reply_q->pend_ios))
->>  			break;
->>  
->>  		usleep_range(MPI3MR_IRQ_POLL_SLEEP, 10 * MPI3MR_IRQ_POLL_SLEEP);
->> +		slept = true;
->>  
->>  	} while (num_op_reply < mrioc->max_host_ios);
->>  
->> -	if (op_reply_q)
->> -		op_reply_q->enable_irq_poll = false;
->> +	if (op_reply_q) {
->> +		WRITE_ONCE(op_reply_q->enable_irq_poll, false);
->> +		if (idle) {
->> +			/*
->> +			 * Recheck after clearing, pairs with atomic_inc_return()
->> +			 * in mpi3mr_op_request_post().
->> +			 */
->> +			smp_mb();
->> +			if (atomic_read(&op_reply_q->pend_ios) >
->> +			    MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT)
->> +				WRITE_ONCE(op_reply_q->enable_irq_poll, true);
->> +		}
->> +	}
-> 
-> [Severity: Medium]
-> Could this unconditional clearing of the flag combined with gating the recheck
-> behind if (idle) allow a concurrent submitter's trigger to be overwritten and
-> lost?
-> 
-> If the polling thread processes all replies and pend_ios drops to 0, it breaks
-> the loop with idle = false.
-> 
-> If a concurrent submitter in mpi3mr_op_request_post() then posts a burst of
-> I/Os, surpasses the trigger threshold, and sets enable_irq_poll = true, the
-> polling thread will subsequently execute WRITE_ONCE(op_reply_q->enable_irq_poll, false).
-> 
-> Because idle is false, the thread skips the smp_mb() barrier and the pend_ios
-> recheck. Doesn't this blindly overwrite the submitter's flag and leave
-> enable_irq_poll disabled, forcing all completions into the hard IRQ handler?
-> 
+I believe all of the sashiko reviews are pre-existing conditions and not
+introduced by these patches. I have replied in [1] and [2]
 
-Yes, it can be overwritten on those exits, but that is not new: before
-this patch the thread cleared the flag on its exits without a recheck,
-and those exits are unchanged. The recheck is only added to the idle
-exit this patch introduces, which stops polling while I/Os can still be
-pending.
+[1] https://lore.kernel.org/all/bdf2781e-fbcb-4356-b1eb-ccdbfb39c1b9@linux.dev/
+[2] https://lore.kernel.org/all/0b1bb7ce-4720-4d12-96ff-ab04cd1b85bc@linux.dev/
 
-It also only lasts until the next submission: mpi3mr_op_request_post()
-sets the flag on every submission that leaves more than
-MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT I/Os pending, not just on the one that
-crosses it. Until then the hard IRQ handler processes the replies, as it
-does below the trigger or with threaded_isr_poll=0, so no reply is lost.
-
+> 
+> Based on mkp/scsi 7.4/scsi-staging (f09d2c7485b32).
+>  
+> Usama Arif (2):
+>   scsi: mpi3mr: Poll a reply queue that an interrupt found busy
+>   scsi: mpi3mr: Stop IRQ polling when no reply is ready
+> 
+>  drivers/scsi/mpi3mr/mpi3mr.h    |  2 +-
+>  drivers/scsi/mpi3mr/mpi3mr_fw.c | 65 ++++++++++++++++++++++++---------
+>  drivers/scsi/mpi3mr/mpi3mr_os.c |  2 +-
+>  3 files changed, 50 insertions(+), 19 deletions(-)
+> 
+> 
+> base-commit: f09d2c7485b32adb82336d0d748935c8237a649e
+> -- 
+> 2.53.0-Meta
+> 
+> 
