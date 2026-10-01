@@ -1,74 +1,127 @@
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+Received: from mta0.migadu.com (out-54.mta0.migadu.com [91.218.175.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FA163F5BFC
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2026 08:41:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D998C3CE4B5
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Oct 2026 10:49:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790844094; cv=none; b=PFdHcyEvSIUx8qx+IuOH7Ij4GIHzVhLuAErno/UbWL7n62SFfwZVyRdyG6OJQGBNShY9WOFBHRLYEbJaIzPda6HlFAmsmZRC8eEJ20Xz5uDjX7byR/qzIw3LilTV3cbtZnnVBHIzt7FCLjKThdZ68qCy4aubHrccek5w+XZOZCU=
+	t=1790851769; cv=none; b=grsJUe5Ws9E1R3xOKkq+llcyMKghYC/noSSs9DBI2524hxH359Pbbbf2Q0qevYMOUQciEVM9+CN4hTXEoVjSmam+3JrL+ReQ0VoGqz5GjLXhNaxby2AuNh0Zm7s1N0zvf/AEgHq1VGYmsossorZZhBn/bjn9k+SjtlymmPT61Bo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790844094; c=relaxed/simple;
-	bh=jIEy5cT5mmkkVcGKdpbeH8K331ZFV/0IWVEdNWVBdcc=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=sWiT8QpPv7iBLPeZlRntV9lUCSHwYpXJHdrDRWAIXVFM6rtrLMINWrXVtKelUhyKBsU2f/DU9qGvBdWl9EP+HWiIsPG9mpZgGGkoJQIxV9bvOtOIuIUDM106ZMLIfwPq8s8wXay47bjgIBFLa/nFQu+IxoWxil0VHVrZ8OPFzRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=GXWMbK1K; arc=none smtp.client-ip=209.85.215.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1790851769; c=relaxed/simple;
+	bh=XIyWcUSwko0u86khIC0kb9UOX0Et5JBm+9AF/1opBZs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=uBaqenBGcdpUSj3XvkxDL7vo2Qx5AlqeGuCehKMg0WfKf/4H4vZg4JnvQt8tOJCQENzh27VLzbmKK8wjUfK2LLgWW1mfOBzg8YtsvXWRlKSCOzPHzU4qQOCYKLEKazDY7YoQbLk5XMwS9k8SiZ6TVzYj8ewLiWlKgiViQ9GkB2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CdSwidd4; arc=none smtp.client-ip=91.218.175.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="GXWMbK1K"
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-ca8aee88725so3491721a12.3
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Oct 2026 01:41:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1790844091; x=1791448891; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=jIEy5cT5mmkkVcGKdpbeH8K331ZFV/0IWVEdNWVBdcc=;
-        b=GXWMbK1Kv62x+ZZoITp0Ot7q1ybxLRMceh2wjq9i/v6fAQMQ2EWZBNcMgfHuEiMYfD
-         qMYHydBHlQRcFBVxKGQYKk8KEoCgISNCk8KS609wWbkXOIKysa7WmOjPEM/IUsvh9BGK
-         XN2FPykKFP7j8Qc3OhnXuUTyZuCkLI59fjN8nQTFjNA4vE8yFNupWZaHNCsCjSU3pXLF
-         MojyivZbU8lXry8xF5nPMNniqbIlxHzUHinPBLsnFmGDD0Hjt1jVP5cfj7pGiOuuy8HO
-         AoqsvulUkHEzFu59us/NG7H87CqZDGL4etwnXSUBqrVPYpRCgOb6Cit97wHE8np4Yqkz
-         TsOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790844091; x=1791448891;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=jIEy5cT5mmkkVcGKdpbeH8K331ZFV/0IWVEdNWVBdcc=;
-        b=fcrz1roLiFxDKPnnBHfKicLChnPUzoAzjkmIKPWzdTElasoK3SiHlENOT7DpfPh3zy
-         Bqi64K3wZHT5U2SBdwS0W4sezCEcKnhGT77DgvH6gTC26zs5fhQCx+3V8FOIQLoYbZwi
-         r7XFJQeX17Qa/ir9UckvvqjQV8OSWNpZYd9JlivlDfBe6cgJNjvIGp9Z9tkMR8IE2xjP
-         cgkpJvm4Uz2IbqChb8C/kk8mDXsCpv2hcktMNeMaCecLarCrFWLDC087XNJX3u2eBAsx
-         faQDqH5fbUkyoIIHyk80o9+6fFWiV8bMOlF5BMmrVczXqiJS4dfD1dmf6i0Dk5t2Z/NX
-         pCkA==
-X-Gm-Message-State: AFuF++mRa9xkG5Y+woA0fc2GkMuF+xaH9UZvhlMrLfciIqcPHlq/PXZO
-	gWqvNvBDOgvf01p5iKJtVSoNKvTzvxksmpWpUF7rpCUeiBiWGm2KzNvcVvdtBdL0T05xw8YKqk3
-	UwMgW1vd7qtBhjyXwz1pWZA==
-X-Received: from pfnn21.prod.google.com ([2002:a05:6a00:2b95:b0:886:fe91:dd9e])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a20:7d8b:b0:3de:55ce:75d1 with SMTP id adf61e73a8af0-3de9e86af8dmr4024094637.92.1790844091336;
- Thu, 01 Oct 2026 01:41:31 -0700 (PDT)
-Date: Thu,  1 Oct 2026 16:41:29 +0800
-In-Reply-To: <20260909091045.1134956-1-naomi.chu@mediatek.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CdSwidd4"
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=XIyWcUSwko0u86khIC0kb9UOX0Et5JBm+9AF/1opBZs=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1790851764; v=1; x=1791456564;
+ b=CdSwidd4YMDBbDOXNHNB9M9E6hsmsriXb53YQVcSlK+iPJLBYnQo1fgtVjavMmTc0yD/udqR
+ lpRWaZClFlye8QV6CfPDWkQ5DE15NjR9uBOlDrji55nkxlAwl/utiLYeGfKjAUsssc+zr3IC6He
+ hzJNkpnPPjGnMl1TGk/O2ghA=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 9189637c840d8b77;
+	Thu, 01 Oct 2026 10:49:24 +0000
+X-Mizu-Trace-ID: 9189637c840d8b77
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <bdf2781e-fbcb-4356-b1eb-ccdbfb39c1b9@linux.dev>
+Date: Thu, 1 Oct 2026 11:49:17 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260909091045.1134956-1-naomi.chu@mediatek.com>
-X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
-Message-ID: <20261001084129.499805-1-stanleyjhu@google.com>
-Subject: Re: [PATCH v1] scsi: ufs: core: Hold a clock reference across the probe
-From: Stanley Jhu <stanleyjhu@google.com>
-To: Naomi Chu <naomi.chu@mediatek.com>
-Cc: linux-scsi@vger.kernel.org, mkp@kernel.org, avri.altman@sandisk.com, 
-	alim.akhtar@samsung.com, James.Bottomley@HansenPartnership.com, 
-	bvanassche@acm.org, wsd_upstream@mediatek.com, peter.wang@mediatek.com, 
-	alice.chao@mediatek.com, chun-hung.wu@mediatek.com, 
-	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	ed.tsai@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] scsi: mpi3mr: Poll a reply queue that an interrupt
+ found busy
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+References: <20260930145606.2632749-1-usama.arif@linux.dev>
+ <20260930145606.2632749-2-usama.arif@linux.dev>
+ <20260930151039.F23801F000FF@smtp.kernel.org>
+Content-Language: en-US
+From: Usama Arif <usama.arif@linux.dev>
+In-Reply-To: <20260930151039.F23801F000FF@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Reviewed-by: Stanley Jhu <stanleyjhu@google.com>
+
+
+On 30/09/2026 16:10, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] scsi: mpi3mr: unhandled missed reply race under PREEMPT_RT
+> --
+> 
+> commit c0b0a317901b4ce93a734871bf41b604287947d5
+> Author: Usama Arif <usama.arif@linux.dev>
+> 
+> scsi: mpi3mr: Poll a reply queue that an interrupt found busy
+> 
+> This patch sets a flag to trigger a thread wakeup when an interrupt finds a
+> reply queue busy. It aims to prevent missed replies when another context
+> owns the queue.
+> 
+>> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+>> index f0d3cd398dd00..102f84667a5cf 100644
+>> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
+>> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> [ ... ]
+>> @@ -588,8 +588,11 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mrioc,
+>>  
+>>  	reply_qidx = op_reply_q->qid - 1;
+>>  
+>> -	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1))
+>> +	if (!atomic_add_unless(&op_reply_q->in_use, 1, 1)) {
+>> +		/* The owner may have missed a reply, let the thread poll */
+>> +		WRITE_ONCE(op_reply_q->enable_irq_poll, true);
+> 
+> [Severity: High]
+> When this code executes in mpi3mr_process_op_reply_q() under PREEMPT_RT,
+> does it leave missed IO replies stranded?
+> 
+> Under CONFIG_PREEMPT_RT, the interrupt handler is mpi3mr_isr_primary(),
+> which exits without checking the enable_irq_poll flag or returning
+> IRQ_WAKE_THREAD.
+> 
+> Additionally, looking at how the interrupt is requested:
+> 
+> drivers/scsi/mpi3mr/mpi3mr_fw.c:mpi3mr_request_irq() {
+>     ...
+> #else
+> 	retval = request_threaded_irq(pci_irq_vector(pdev, index), mpi3mr_isr_primary,
+> 	    NULL, IRQF_SHARED, intr_info->name, intr_info);
+> #endif
+>     ...
+> }
+> 
+> Because the polling thread handler is explicitly NULL under PREEMPT_RT,
+> there is no polling thread to wake up to process the missed replies.
+> Could this cause SCSI command timeouts and host resets during concurrent
+> IO under PREEMPT_RT?
+
+
+This patch doesn't change how PREEMPT_RT behaves. Nothing reads
+enable_irq_poll there, so a handler that loses the in_use try-lock
+returns just as it did before, and the same goes for
+threaded_isr_poll=0.
+
+So the race remains on those configurations, but it is not new. The
+reply waits for the next interrupt on that queue, or for the command
+timeout if none comes. Fixing it without the polling thread needs a
+different approach, which I'd rather keep out of this series.
+
+
+> 
+>>  		return 0;
+>> +	}
+>>  
+>>  	exp_phase = op_reply_q->ephase;
+>>  	reply_ci = op_reply_q->ci;
+> 
+
