@@ -1,145 +1,122 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-dy2-f43.google.com (mail-dy2-f43.google.com [74.125.229.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 959B03A1688
-	for <linux-scsi@vger.kernel.org>; Fri,  2 Oct 2026 17:51:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790963481; cv=pass; b=c8pWyPIzCLeyAmyKH3Y3bEbc6iG5gZn67q9UqLmq6qnToBX0GA9v0c7Buuj3ecj493sEWfM1vXCjXDPr6XUXjxxzz/Hp1zS1n2iKtouIGlXSEKWiRJSGkZDnxJJeS745MTcadNTR+ndp9tJ4GQOlcbVOJ76IrmJ7JP0ayjIN1bM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790963481; c=relaxed/simple;
-	bh=nZzkVN4E9BSqcDIHvzqxmjz4QVuzVLP/YMY/poyCrxY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uaENhW09oY34v2CbcV1M64J4wxjS5PuXdnGqcBH2ko4vHR2YYlGcGuxF6kShL8z6EzKtWRpu3DCxj2GliAvohHQT5wQDY5gnlaZhzT5ql9BK1N0/xWrm1xhvPgjrgmOe8nU2WnltA7u+mm8oD3F89JZzGTx6qCphn1QiKRokZJs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=fZBnIU+n; arc=pass smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E13373431E6
+	for <linux-scsi@vger.kernel.org>; Fri,  2 Oct 2026 18:22:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.43
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1790965333; cv=none; b=iDJ+JsRikQ4/xrQwh4uKNnOuRZqe15Ie0JnJ4juHv2mEITA3Hp5/kM0QXiUTXBJBdfQdxXqgZrBIJyL6kLqAULMi1wzz0YwlkOVha1OSNBkGb4tkcIwLm046Z2hhEHnFcbXNyo0Zt5tVWaXUALWupz4iouoSvKBr/Ksa/xv9hD0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1790965333; c=relaxed/simple;
+	bh=OmZ056pmE8+XuTrAcBI80z+F4NvkY+1WYs3uFfA6dFc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DGjX9K2m+VHZU3cKBfpHxhRo3QX+iQ+gzy7pfK4gB12+jD1oy2HfqPEr2qnnErzsihvcbP5uydPiFWjUsmF2LBVWtmqZvNYHnY6/GIM0aK6pJOuMR5pClAkaUmujEjC419DWYqn+Q7HI1ODhJmiirTfprUjX/gZoq47HzIBxn1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=YUaS7erp; arc=none smtp.client-ip=74.125.229.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="fZBnIU+n"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4a166199820so376175e9.1
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Oct 2026 10:51:14 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1790963471; cv=none;
-        d=google.com; s=arc-20260327;
-        b=LTTy2EzpqNp8lfdsQ5G5w51Xj0Q9pxrWjdiXc2J8uXy8uHt2hFG9PDVNjyR9fdVHCy
-         X3dejs1irLYkg8b0mgm61r2YM54Ls3r33GDJCjgnqqtgK6OqVPQaHAFbRJVqv9FB4OFw
-         Vz10boo/3kn5GVDYn7saeAVwV7GZ+Zw2MowCtwHr5h3+0DIqashI9E1fJ98jAkdmI3Zj
-         PmuKhdMPcQ1acOdZRd0E+X6oW8P7arh/eboX81WYTTrwFOEICfOctkTWfxwphRrDnxOA
-         Hin7QIK35BA+OINWFruL6I2KM/qY0h2dTdJJrJlw36T8icW7MsZNQhYpHL2oCFSUyUk6
-         YCZQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=IjRLkdydNH/3hEGomUeQ+SayV25kXcztDM+0WcU6ndM=;
-        fh=3eFDZttVerugfno6g/Q9nhhMwgSWYvrqdqaU8fq0SQ0=;
-        b=c6ZsDleDpPkgsVob8hp05AiBSz40lvKzRKTQNfWprrTXWszXXVG9UgQGI+uf5av8p+
-         e2nqKVQsWLyPV7rgKHg3dE6L0UtENTMSRvh4qjAni7sLAq5DJw/BtHiRKTG3bLMy8rUx
-         1aJYNF51B2XClxono1GvTtej9b7wgCbLi1BIQQU4KajRAGaAhqiwkNwxv4Kl56meiwww
-         yDqlYwZ9TpfIm4q5a9Y0mcYxvbjyvE0X9zqUABjYeV1jPBHbcDtaNYVExh9yvOQAuPQt
-         GECSgLTYJ4TZKILO/TfVMNlsmNaQwNcUAEcwmsF5Wu5TbtVSznXDVQP4J/Geh0SHDdrN
-         mJrg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="YUaS7erp"
+Received: by mail-dy2-f43.google.com with SMTP id 5a478bee46e88-33c24422d4dso9748621eec.2
+        for <linux-scsi@vger.kernel.org>; Fri, 02 Oct 2026 11:22:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1790963471; x=1791568271; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=IjRLkdydNH/3hEGomUeQ+SayV25kXcztDM+0WcU6ndM=;
-        b=fZBnIU+n11krhpzVwUJTdIeMx48YQOoasgu11dWqDQSBeFutdTsb6BFXfmi5oojz6q
-         kbR7VnmynxieKV/K1dL2jnNqoCJP/ILDktjVVdsQdK84JQpgkc7QbpVJWKa22WoZibfO
-         uoCuzRw+QzryPoS7edqVT4vVod5Z+Fe3muAcoUfEaDJSjMX9NZSBolm5eiBa33KAywWf
-         FzLBi6w/2vIV1l0MRjtmP2Dbs/E6JlVKPXw3j4+Sn+S9Sz/0PjKy4b8PcPxyXQkGDttt
-         D+JIlIbqmTOU5mIyzufleCuZvvO5y6aQrQxZokF5LEhvlIUiFpgtH0BiZvwMlHeCkPxo
-         pB3w==
+        d=trailofbits.com; s=google; t=1790965330; x=1791570130; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1c+AY9BIFo0QsNiuYQN2LRK0yYw3P5G1Duk5ldfMSDA=;
+        b=YUaS7erp4DjEMTmicFflWCIkZt2ku3n9hmYKBIBMcaNhMd9TdOyHqga/yYBu+iDjBs
+         zt1I10CopicUzE1SBbEuiac7/daL/rMCOjpEjmMab8/rlvAhYUTdHPhJFvgcu5a9KQAE
+         vL19bZKXGVz/0+TL52Lg69Uw4KrA85GjdZ8GSzee2IgZ3v8iVkm0CPT1FVtLfr9+nczB
+         yPrbROREOK2bqc6gI+EaNnyjcmVXmb/n3aiyrNyyo8wwgHd8t3nFRlTVIU04ESio/vQY
+         Mbx9KHWOoQfuV8D/i8X0iE6KLhqMdz2h6dq3YVFmxEj5E27QE+hodmoWd7NDzYVK1OA1
+         nl2w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1790963471; x=1791568271;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=IjRLkdydNH/3hEGomUeQ+SayV25kXcztDM+0WcU6ndM=;
-        b=l9VLQX+p4lbNzPk1hYgvErBfzmcZT7hWo9QRQ5ZhZ7y4XXusDZpMbRbEGLAjlUXJKd
-         5NprP87pkRnFizWgXRQrQrlMC8HWEgA5uRGeKYmuscN+thXfYi/IDyOdE2h3NX3bsrUZ
-         dqvPNly0w/92ilr2CvXQx0i2tZxGGXw1trSC/KcCUNqmqHtXPt1e7avteBSYD8ku36Tg
-         OF8rNRd7kIn7EwUTmepNVkp0dbqCx1PyRzRNYBSXj078wjQ48GWzxpVJaGrYS2y9VDXH
-         UQFFvHGPrUOtrxtsGWh6IfehI2w1QnzL2740DrxowIipu2tqXq7Eu2Jee4Gdm8t1p02e
-         dvaw==
-X-Forwarded-Encrypted: i=1; AKwUvBwB7sVGsAyNrxtU/hGFwS3Rb7YL9UbvFmeH3GI3dFvGOu3NdnS5Np66guCljih0s/rZg30+16Ot8/JF@vger.kernel.org
-X-Gm-Message-State: AFuF++mHialLoO5ymjjVtTl2fh1MIDCFrQPgvsEQZjilxXRhWiS4sANB
-	puT3kb4RDtriAUJ6bRis5ArUazZnwfHfD1JXOHkxRCS2Itj/kWpYySC9pJb2ACvLZdAcO+y9cEo
-	WpSZcAZEP/CYwK3XDoFir6pgKEcPPIM6UNmhOjkEqWw==
-X-Gm-Gg: AYBFou1oC63SJT1xJCLwmCENhQ+kqB6nZtXAwPVXZLZZjjRTFsvRfEI7vtiqLNuzgsd
-	Rp9l0kVw2bZ7nWp39PR2tppjV44ZtSv3sgcsi/5k7cAmFphKedwH1szRQQ3vmCyMnCYxDhd+BTG
-	a8DHu5zEknQtIalkvogn2nKS+5CAFd45BeyL99bMMvSfoQolRLnSxyoZGrVHf+/bnBkWvf+x0qA
-	Vs0RI0QgBPEblyuT0b0MYKFB4wMQiPcRk0l6uJIk0QUXydZQ77HS5JQc5/1S+0j8MNCD8wgny71
-	2tdu5OTGS2TRPfrPA5wthaZVCrdXyOAYZidnWpm5H1YIF33NIs7/Bemhh54+SrEOmGHeEuWAML6
-	8WO1er9dL2zATocv7edxBoBerbjCrQMc/WPuJ9B1qafuGuw==
-X-Received: by 2002:a05:600c:5888:b0:49f:d742:97ea with SMTP id
- 5b1f17b1804b1-4a01eab3237mr108637715e9.0.1790963470511; Fri, 02 Oct 2026
- 10:51:10 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1790965330; x=1791570130;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=1c+AY9BIFo0QsNiuYQN2LRK0yYw3P5G1Duk5ldfMSDA=;
+        b=iEl6rm0le25z3E3ytp5km5I5MS0pV3Dw7vyCZtp9nk/Tfz4GPouvjLZhuR0jAvApNj
+         7UjZ3BqbyBiYZ0OquZb00LgCDzV0ZM9ZApLWqSPEmF2JP9QON8Sbw6KYhvc4YZIxd974
+         zKqoohSuksSrD2Q8mxrUHx05MYL6RwkAEHHbZmfZ3FtUByAsYJU4ReqU4QbPD1belMqe
+         SFt3BVImG+iGAZqTeGf4lSr9foE4d6wFN8fVWCgiUXQqT6GZrH2PmcYIjkOEG6gVVy9E
+         8goq2h4RcGv0rmztcbCQj1NGXg43wjd/p2+Emmpt02jo4dsUHyg0Oe4cEStbwmtzMPir
+         u4Hw==
+X-Forwarded-Encrypted: i=1; AKwUvBwDgC4AhnkNopfmmZv+NILotbqqi+H+II0hYrpWi4uXwjN2Q2B4Q02t7JaQGCX7wuNe0a6lp4yr8v1n@vger.kernel.org
+X-Gm-Message-State: AFuF++m1i6XvR0AXm3AuogQ5w9OWcXjZ+dzHlajLN8v8W8YD7VQ1e02a
+	+PzSpQ0NVLdJyO6NadRAJDaoVAdWIzuWI6GHL3PjDKBGpuenTAGI9sISC6lAfG3Bzlk=
+X-Gm-Gg: AYBFou0Ms0X36z2itUbVdV/uVJ2MBryvGiSSofmorTvdV7MLwU8AMzCZyWDHMWsAzly
+	8+A1wN190vmyQwwzFan41IYPzrL0Pk0hSdBAZc2HWl5ZCQ/O//RuEDDa/YcwBNieVNASfvb5w7E
+	lUoTsacZlXmYw4ke364BbsDTYl95oUiuJL73+gBFOogk/s08X69+Lp3u8Wle8cC9QQu+sA0mlH/
+	unZeJWimolKKW88wg7RM2OGsA57w7WCEx5yrru17DC/j6Jn48PFmIE/si1tQQUtZ8VHtqfXpLP0
+	GUKUEWRB5TfoLjshd+YJkRpoMw8w/3sBk6oJPxphFaBvXRJUGVOztSoD8haw5YcvXtuQABb8HXr
+	5+qziPCPW0TEtPEG2dL835GzTAonZx2m8SFAO1Td5IKQ6cP1uEVVa8gmpTDRF7G3S7XDHnuWH34
+	CliBFhXTr8UoJFaRKdOV3D/j5pil2j40sftkvjq/36pKNqipWoBmNRhPPnS2uigGNpdAjWWNm7L
+	2YqDDotTQ6u4Z6cnmzOlMd5GCrxlFV+T+6R0Dc9RzsyCVxNLJKrzODTSg2DiYnHDqPvG211
+X-Received: by 2002:a05:693c:87d5:10b0:34b:e2cf:43b6 with SMTP id 5a478bee46e88-34f14f2b9edmr3878021eec.2.1790965329727;
+        Fri, 02 Oct 2026 11:22:09 -0700 (PDT)
+Received: from localhost.localdomain ([2603:8001:5f01:8bab:bcf9:6140:24a9:d1e7])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-34f0672c2d1sm10551449eec.4.2026.10.02.11.22.08
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 02 Oct 2026 11:22:09 -0700 (PDT)
+From: Artem Dinaburg <artem@trailofbits.com>
+To: stable@vger.kernel.org
+Cc: Artem Dinaburg <artem@trailofbits.com>,
+	Sasha Levin <sashal@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Justin Tee <justin.tee@broadcom.com>,
+	Paul Ely <paul.ely@broadcom.com>,
+	James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	James Bottomley <jejb@linux.ibm.com>,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	Martin Petersen <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 6.6.y v2 0/2] scsi: lpfc: Backport SFP mailbox timeout handling
+Date: Fri,  2 Oct 2026 14:22:01 -0400
+Message-ID: <20261002182205.11550-1-artem@trailofbits.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260930024505.96440-1-artem@trailofbits.com> <2026-09-30-1-daily-reply-0014-lpfc-sfp-info-mbox-timeout-6-6@kernel.org>
-In-Reply-To: <2026-09-30-1-daily-reply-0014-lpfc-sfp-info-mbox-timeout-6-6@kernel.org>
-From: Artem Dinaburg <artem@trailofbits.com>
-Date: Fri, 2 Oct 2026 13:50:34 -0400
-X-Gm-Features: AclHuK97lTiqaebg1I8sTjOuQdYcc3iS6N5jctNtVuQ2foq17QpUfDpnDgfMSbA
-Message-ID: <CAP3zxaCrgUA4tAtd2nS=b5sn3xSQ3LBiRRFwsRMeCGvHrhgprg@mail.gmail.com>
-Subject: Re: [PATCH 6.6.y] scsi: lpfc: Handle mailbox timeouts in lpfc_get_sfp_info
-To: Sasha Levin <sashal@kernel.org>
-Cc: stable@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Justin Tee <justin.tee@broadcom.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, 
-	"James E.J. Bottomley" <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Paul Ely <paul.ely@broadcom.com>, jejb@linux.ibm.com, 
-	martin.petersen@oracle.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi Sasha,
+Hi Sasha and lpfc maintainers,
 
-Thanks for catching this.
+Thanks for catching the SLI3 overflow in v1.
 
-I'm working on, and will send, a v2 addressing the issues.
+This v2 takes the ext_buf portion of upstream commit 115d137aa918 first.
+That leaves the SLI3 response in the existing 1,024-byte DMA buffer while
+ctx_buf continues to point to the descriptor used by cleanup. Patch 2 then
+backports the original CVE-2024-46842 fix from ede596b1434b.
 
-While working on a fix, I also found what appears to be a separate
-mailbox timeout/completion ownership race in both 6.6.y and current
-mainline.
+Could you please queue these two patches for 6.6.y?
 
-I do not have proper hardware to validate certainty, and can't emulate
-it in QEMU, but I do have a hardware-independent KUnit test that
-reproduces one of the failing interleavings. I'll send that separately
-as an RFC to the LPFC/SCSI maintainers.
+Changes in v2:
+- replace the unsafe ctx_buf restoration with the ext_buf prerequisite;
+- send the prerequisite and CVE fix as a two-patch series;
+- keep the generic upstream ownership race out of this backport; and
+- rebase and rebuild after the current 6.6 stable queue.
 
-To be clear, v2 will not attempt to fix this newly identified
-potential race. It will remain scoped to the existing backport and the
-6.6-specific problems. If the RFC is accepted upstream, I can submit
-its stable backport separately.
+v1: https://lore.kernel.org/r/20260930024505.96440-1-artem@trailofbits.com
+Review: https://lore.kernel.org/r/2026-09-30-1-daily-reply-0014-lpfc-sfp-info-mbox-timeout-6-6@kernel.org
 
 Thanks,
 Artem Dinaburg
 
-On Thu, Oct 1, 2026 at 9:52=E2=80=AFAM Sasha Levin <sashal@kernel.org> wrot=
-e:
->
-> > [ Backport to 6.6.y: v6.6 predates ext_buf and uses ctx_buf for the SLI=
-3
-> >   raw payload. Restore ctx_buf to the saved struct lpfc_dmabuf before
-> >   testing LPFC_MBX_WAKE so a timed-out mailbox's late default completio=
-n
-> >   sees the DMA descriptor rather than payload bytes. ]
->
-> This isn't safe on SLI3 HBAs. When the new 60s wait times out, ctx_buf
-> is pointed back at mpsave, a 40-byte struct lpfc_dmabuf, while
-> out_ext_byte_len is still 256. If the firmware completes between 60s and
-> the 300s mailbox timeout, the SLI3 interrupt handler copies those 256
-> bytes into the dmabuf. That is a slab overflow, and lpfc_mbuf_free() then
-> runs on the corrupted virt/phys.
->
-> --
-> Thanks,
-> Sasha
+Justin Tee (2):
+  scsi: lpfc: Define lpfc_dmabuf type for ctx_buf ptr
+  scsi: lpfc: Handle mailbox timeouts in lpfc_get_sfp_info
+
+ drivers/scsi/lpfc/lpfc_bsg.c |  2 +-
+ drivers/scsi/lpfc/lpfc_els.c | 21 +++++++++++++--------
+ drivers/scsi/lpfc/lpfc_sli.c | 20 ++++++++++----------
+ drivers/scsi/lpfc/lpfc_sli.h |  1 +
+ 4 files changed, 25 insertions(+), 19 deletions(-)
+
+base-commit: 79643295eba17affbd16ca97f3ef04c90266b28c
+-- 
+2.39.5
