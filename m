@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63CA7414430;
-	Fri,  2 Oct 2026 07:08:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35122415B8C;
+	Fri,  2 Oct 2026 07:08:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790924884; cv=none; b=POQbwmNgIdWHn2eSwMTsse6xLGGqoh+9WIvCoIC43Z4P77SESnm+rl3JPGFetp9LzSOxeb+wP9UdxfxUCC3lLfNTXCrGbJPCAXl7Zf1feSOv6uyrjWTSxACKadyaCJnTV6S1BeZNYwU6b66VeLkeKo8Gqvezl57EYAyCOIcAhjg=
+	t=1790924930; cv=none; b=RdCAsXJajbkPF0G3hkF/y76Sr5JNzV2q7aOB4cEWPZsB2i5NgOOgOa21C8MLGrBhCAyAEBhROOLdURyTrpwWsyvEdYrsujynsHFN4VfYmGvqbi2j2ypNvMnk2jit0kwe5wxwinAiWGh0Lzn+EP572rcfALe9yn7b1hnkbRYk5aA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790924884; c=relaxed/simple;
-	bh=eaYlK5bA6suqPISDsEYJMrsUU4hPYkUHykJKVx/WMn0=;
+	s=arc-20240116; t=1790924930; c=relaxed/simple;
+	bh=NGOxMRjJi/vklJnIak3JlxGfBfLGfjM5T9DBl2PSwVQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AJ2BKPPPWmmL4aS13s15DrI8Zmq2D1PaZfLTEfXtcgm9JFwHf9O0LmDnj1ysB2NIMUOrA9uHkxHBJvZtf/ZdRsX3j3Cr0TRIvq+lt2rXL2NHMQgT9qy/WijJ9MTAonuWRFF1dFKQXlTNkukENWgpPd2Hvk/pMcCCTuJo9I2+E1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V65N4TMT; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=HfTLma7yQ0KjTwpsAQPZgZsoyLLGR+TynkLSD50TE9smqBLzO8mfWyanC6AUk8jSZnt+PAwBW2WO+Px3TDQI8gP+72cQkNvbzJgeXnPe16lzQl3Hu0u2DuQgC/oCKuYwDSGeAU6NRuhO8/fzh7ewDzNEb8ky6Nip5Hrbq5qSXp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L0Ii+owA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V65N4TMT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6895C1F000FF;
-	Fri,  2 Oct 2026 07:07:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L0Ii+owA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52FD71F000FF;
+	Fri,  2 Oct 2026 07:08:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790924882;
-	bh=gBWGWnycwnNdtBcxWaH2SknpSKu+rT+gCbl7PdEjrNQ=;
+	s=k20260515; t=1790924925;
+	bh=E1yIhF4y93luJBvo++ntgk02PM9naHAGHJiTxi+AQxI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=V65N4TMTsBdVODK4V3MQsVqocEvbPZczo89mZqdp1CE3E7Cq2EjUntB1O8wX3FvQm
-	 Fu+kek5ypkFI5A/DlAHPJy/OpokIe4E/QWatJT+eMH/kOaLwQ6clrIcPqg5+8qINbf
-	 J0jS/SWAjYeORDKHJi7zkoxdEoA9iHFpNbA9tCoVoH/P15MLoPE8RtOJybliqwCvxj
-	 CftdkI9ecROuf84j064ySy1e9ix4G+XadOwRi84hTu+F40tXQinSD4LXIJNnmWgqN0
-	 bcRcxzSz1artystIqvSGszUQSskJ8FjqWZ6POh7rRVQJeBI4VBQLI94EQwXcy6afad
-	 GeuplIkMqvM8g==
-Message-ID: <e07e95f1-5e24-405c-aa46-b727d1bfbfd8@kernel.org>
-Date: Fri, 2 Oct 2026 09:07:20 +0200
+	b=L0Ii+owAiMIKjEnXtHRGG0fivqXyvm7Omcwl10tfIvuyUXuWIJ8zzcRm10ppXiGFl
+	 nGZQf/Ag81LdOTsX0yKoPSrTms9RZ60WX2PqNiDDA/BU6uMDqxUB54Fr1F9z2zpihH
+	 AMEJ6uTLl6LJs/eUGk9+dcQ/77gS3Ghs5oDjCkvpBIBMGyX3LbGod/U7eVcVuFJmBF
+	 wRLKeEcTeCXwWXLdqU/4ugShns3nhEv0/y/SR3UmflTmCTdFCKZwDPiJ5soL8sVlQG
+	 L7XHtmJvC7UOChs6SWb8XontDWIlnRB0iFnOyl2yy5GEt8Rmif0pPTe2e0teyqfRiA
+	 Kl09cc+aM+pYA==
+Message-ID: <651c8852-39d1-4351-b899-80f54077b494@kernel.org>
+Date: Fri, 2 Oct 2026 09:07:49 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 36/40] mm: avoid use of VMA_SPECIAL_FLAGS in
- migrate_vma_setup()
+Subject: Re: [PATCH v3 37/40] mm: eliminate VM_SPECIAL, VMA_SPECIAL_FLAGS
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -118,7 +117,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
  fuse-devel@lists.linux.dev
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-36-4583d8a23bca@kernel.org>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-37-4583d8a23bca@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -165,59 +164,27 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-36-4583d8a23bca@kernel.org>
+In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-37-4583d8a23bca@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/17/26 18:22, Lorenzo Stoakes (ARM) wrote:
-> Now we have the expressive vma_is_kernel_owned() and vma_is_fixed_mapping()
-> predicates, use them to determine whether to proceed with migration. This
-> drops the VMA_IO_BIT test, which is safe as only kernel-owned mappings may
-> set it.
+> Every user of the VM_SPECIAL or VMA_SPECIAL_FLAGS has now been converted to
+> predicates which explicitly express what is actually being checked for
+> rather than the nebulous concept of possessing 'special' VMA flags.
 > 
-> hugetlb mappings remain excluded, as they are fixed mappings.
+> In any case 'special' is not so special a term of art in mm - it includes
+> VDSO/VVAR mappings, special in the sense of vm_normal_folio() and probably
+> other cases too.
+> 
+> Therefore make things less special by eliminating these now unused flags.
 > 
 > No functional change intended.
 > 
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > ---
->  mm/migrate_device.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/mm/migrate_device.c b/mm/migrate_device.c
-> index b9c453c28795..b74c0ae42768 100644
-> --- a/mm/migrate_device.c
-> +++ b/mm/migrate_device.c
-> @@ -739,19 +739,21 @@ static void migrate_vma_unmap(struct migrate_vma *migrate)
->   */
->  int migrate_vma_setup(struct migrate_vma *args)
->  {
-> +	const struct vm_area_struct *vma = args->vma;
->  	long nr_pages = (args->end - args->start) >> PAGE_SHIFT;
->  
->  	args->start &= PAGE_MASK;
->  	args->end &= PAGE_MASK;
-> -	if (!args->vma || vma_test_any_mask(args->vma, VMA_SPECIAL_FLAGS) ||
-> -	    vma_is_dax(args->vma))
-> +	if (!vma)
-> +		return -EINVAL;
-> +	if (vma_is_kernel_owned(vma) || vma_is_fixed_mapping(vma) ||
-> +	    vma_is_dax(vma))
->  		return -EINVAL;
->  	if (nr_pages <= 0)
->  		return -EINVAL;
-> -	if (args->start < args->vma->vm_start ||
-> -	    args->start >= args->vma->vm_end)
-> +	if (args->start < vma->vm_start || args->start >= vma->vm_end)
->  		return -EINVAL;
-> -	if (args->end <= args->vma->vm_start || args->end > args->vma->vm_end)
-> +	if (args->end <= vma->vm_start || args->end > vma->vm_end)
->  		return -EINVAL;
->  	if (!args->src || !args->dst)
->  		return -EINVAL;
-> 
 
-Much better, thanks!
+Awesome, thanks for doing that!
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
