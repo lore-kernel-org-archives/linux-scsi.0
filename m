@@ -1,112 +1,210 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1D7B2F9D82;
-	Fri,  2 Oct 2026 16:11:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B1EF4F68A4;
+	Fri,  2 Oct 2026 16:35:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790957509; cv=none; b=O/hWpWkp2uelyDL39JcFFn5OnvgZBY3sUWAHbHjz+6TdvSy4zRArUvBs5NLfzWZQpNYzovJ3w4bzMnsoWCOzSF8sByD0n2xQCuBDclXleIsqnmSkPV3kagt7Xcty7ZuWIIS32Oy4Y+AIZrxa/RHtcOOyxhJI+sQgz8gGSOqR8iY=
+	t=1790958946; cv=none; b=arHMWmTcUmfiO++wkgSj41w6si8q8DIYsGdQ1+v2Uq4A9+y0MPgSbEJTdHB3v3RJUHH1hjlLZsa2zFeaKoE7rSplpjKKhmkp1sS+bKpuYlqBURbgFsIhmPEIsTRgcHGpcpLm70yDqmOAaY6JOpPuh0dWtdJIgy1d2JHvnotdJqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790957509; c=relaxed/simple;
-	bh=d/BWqh3I+o1TpqkOrGVewyRNzXZFs+ZGIdSCNuZrwAQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qm1wylZNTeriuWHvsqSax35Sg4/rAczcIkWofNAwmsK808FEkYeeRy1ygMRe5Sfo++2i2I+LgcRSBBSp7irr0UCC6b4/xBdPRX/FNbAGoH+Nnrcrc+y0RTYQ4NQhtlSqG8yMgOkWOWY38hf2lKbyDN0rI3pna+8GO4D4vwUK6O4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KlPBNFEO; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790958946; c=relaxed/simple;
+	bh=yGSkJxMy18/Bz7NclYc/G318ghg8b2tq9oF+Zp+IeB0=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=KiIieiSn9+ShbXG3FI+P8OrtJNz+uBmHYSHEH1OeOPnTyTTT4i/6+qerBOJMHprCvahxS988ALLBqAu8P+tD2jRBAIaL53qzj3rzWnmVAKHjzcXFkZ2z0SjXWWWExDOFexmhzgsVOiMpR6M79kUzXpTAnhhsRpBJxUn5ERI+hQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=GoxBAoN+; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KlPBNFEO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8488D1F000FF;
-	Fri,  2 Oct 2026 16:11:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790957508;
-	bh=d/BWqh3I+o1TpqkOrGVewyRNzXZFs+ZGIdSCNuZrwAQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=KlPBNFEOE0gGia6RZAPeBTgVB7HNktDmiscBZ7dS/dxuvyJV5qZ4EBnMmKRqBWf+p
-	 NlxsjCUCHTgzOy14NdmetFcItytYbmQN/W1Cz9uNprrziSxnI2AwI/H7kvg7pcE0Th
-	 apHw1PmIMxp0r8Tb82ZsCAY6CdcYuqB/iILLMgb+Hd9L8Z04owEifByqirNGM+qtq7
-	 tnLVDa9jv/B19Ic1romkl3FQeHLFBdffX1K2/Z3MGzjcMTPK1VcbUS2u0EawxZYH+y
-	 GpQjr2jGxvYJz4PqGTUmJEW1o60Sr6vup0HAlwN8d+g/2nFyPIqzdSzcGp8to062lR
-	 qxk5wHC7LEjbQ==
-Date: Fri, 2 Oct 2026 17:11:18 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
-	Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	Jaya Kumar <jayalk@intworks.biz>, Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, 
-	Sebastian Reichel <sre@kernel.org>, John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
-	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
-	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
-	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev
-Subject: Re: [PATCH v3 40/40] mm/vma: introduce and use vma[_flags]_can_gup()
-Message-ID: <ar_WousLPxpyMozt@gremlin>
-References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-40-4583d8a23bca@kernel.org>
- <202033a0-ea65-44de-8119-689e0df0b78e@kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="GoxBAoN+"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 692FZUAA880981;
+	Fri, 2 Oct 2026 16:35:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=D1VmDFKMDJ3bouc+8VsNpf1x62Y3Xq
+	zNPPvfiP/wSDQ=; b=GoxBAoN+7yTAm0vmZwXa3m4xHHCeuzFdcI1dWG8B2eWBzK
+	3+m4VDXwWTfEfz2Ig16zh47qoevlARh0jXEEd0VBcjONVfENbLC7kPIZlnhsItAg
+	XS9m8QhNNuFZPUkE3l/qinzCSk580nxzns4QgX+vI1FQYbedRtYiQaWz8aUgRCh6
+	mcwOmrwayGCgQKpf4AyFgMJ5v/K1YtdlofUQX7BJCpxbin5/p5L6EqQHpA6q8Tat
+	zYaV1UjFlO7s9Qi9zev3yHEhb8ihAUbvwnO5ECZV3+3QPs3zCzZ+o/FjwiY/imeS
+	f++EoYINhUwN/7BuhVozxi3rinQPVEzAXNGRIkHA==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4gx5ptru87-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 02 Oct 2026 16:35:37 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 692FHfgJ2708230;
+	Fri, 2 Oct 2026 16:35:36 GMT
+Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4h21nu2vbm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 02 Oct 2026 16:35:36 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
+	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 692GZZE625035418
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 2 Oct 2026 16:35:35 GMT
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id AAEEA58066;
+	Fri,  2 Oct 2026 16:35:35 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 5B0B45804B;
+	Fri,  2 Oct 2026 16:35:35 +0000 (GMT)
+Received: from d (unknown [9.61.92.40])
+	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
+	Fri,  2 Oct 2026 16:35:35 +0000 (GMT)
+From: Dave Marquardt <davemarq@linux.ibm.com>
+To: sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v12 11/11] scsi: ibmvfc: handle extended FPIN events
+In-Reply-To: <20260930183647.5E54C1F00898@smtp.kernel.org>
+	(sashiko-bot@kernel.org's message of "Wed, 30 Sep 2026 18:36:46
+	+0000")
+References: <20260930-ibmvfc-fpin-support-v12-0-53a3fff7d77b@linux.ibm.com>
+	<20260930-ibmvfc-fpin-support-v12-11-53a3fff7d77b@linux.ibm.com>
+	<20260930183647.5E54C1F00898@smtp.kernel.org>
+Date: Fri, 02 Oct 2026 11:35:34 -0500
+Message-ID: <87fqyohxgp.fsf@linux.ibm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202033a0-ea65-44de-8119-689e0df0b78e@kernel.org>
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: T_n6XwhZp3VkwkGGB2vus8ikeFr8QdtP
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDAyMDA2NiBTYWx0ZWRfX0WAMu8f9cO81
+ kDa2t1LNcn1RVuUdBwFUWkgeSJnCEoYaIxpnzhj3voJpP4ucV1WILDZDwByIcYq5eh7i/QgQZai
+ 1MgfZObBBGxz7uu6GkdeiNfWRzYBpT/zc5K8bpWWxPc2i9FggVb8M5tJ5FCCDXWX3863hYR+Msm
+ p6QKTRmzbUsDBw4v+6rgSdXwwf5Qe7+TqKdBUsxHZaa/tJ0+MsL4p+C2tCkVJbdVjr8b8CPJwLd
+ /JPRDbYSu+EXpOD6MdIlUENf330Oeguu5BP8RGXtNnMvVSEtaiKjK/61KBPxBZ33hrMUXoaJtsQ
+ vHgdr9QnhB1qWQLQtRZFy4RZFEr4L72PkSKNxXSwtCYpd4KghlZgN8GbyaqeMJ95nxscF6uHiSq
+ Lhz3S5oFWhy/ZR3J3AgPgIWzybIJjLVJbxYMQXH9NG+mUVATuBqiw2SY09YKjrEMHh/M9wDmk2B
+ mW81r+8lNboCtYjS0AA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDAyMDA2NiBTYWx0ZWRfX8cyJkYOqyfOV
+ c2kIShT4scJtkvwx1jx5iua9DKQe3HKaXup2Ctw16SpulGEdKqiLrs1voOS1UVaDRYQfwIPkiNj
+ opu/8n2McQTSqD57pUUMoYhjSislYLQ=
+X-Authority-Analysis: v=2.4 cv=EY5d0/mC c=1 sm=1 tr=0 ts=6abfdd59 cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8 a=MeOU1Y3gxzQrp_QwQ0kA:9
+X-Proofpoint-GUID: T_n6XwhZp3VkwkGGB2vus8ikeFr8QdtP
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-02_04,2026-10-02_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 priorityscore=1501 suspectscore=0 adultscore=0 clxscore=1015
+ malwarescore=0 impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2610020066
 
-On Fri, Oct 02, 2026 at 09:48:14AM +0200, David Hildenbrand (Arm) wrote:
-> Long story short: I wonder whether vma[_flags]_can_gup() is the right
-> abstraction, especially for users that don't actually *use* gup but just want
-> slightly similar semantics (no VM_IO|VM_PFNMAP).
+sashiko-bot@kernel.org writes:
 
-OK confirmed off-list that you would prefer this be dropped for now.
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> - [Medium] scsi: ibmvfc: unprocessed FPIN severity in extended FPIN events
+> - [Medium] scsi: ibmvfc: KUnit tests for extended FPIN silently lack assertions and bypass core logic
 
---
-Cheers, Lorenzo
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> [ ... ]
+>> @@ -3471,6 +3472,41 @@ ibmvfc_full_fpin_to_desc(struct ibmvfc_async_sub_crq *ibmvfc_fpin, u64 wwpn)
+>> +static struct fc_els_fpin *
+>> +ibmvfc_ext_fpin_to_desc(struct ibmvfc_async_subq_fpin *ibmvfc_fpin)
+>> +{
+>> +	u8 flags = ibmvfc_fpin->fpin_data.flags;
+>> +	__be32 threshold = cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_THRESHOLD);
+>> +	__be16 modifier = 0;
+>> +	__be32 count = cpu_to_be32(1);
+>> +	__be16 type = 0;
+>> +
+>> +	if (flags & IBMVFC_FPIN_EVENT_TYPE_VALID)
+>> +		type = ibmvfc_fpin->fpin_data.event_type;
+>> +	if (flags & IBMVFC_FPIN_MODIFIER_VALID)
+>> +		modifier = ibmvfc_fpin->fpin_data.event_type_modifier;
+>> +	if (flags & IBMVFC_FPIN_THRESHOLD_VALID)
+>> +		threshold = ibmvfc_fpin->fpin_data.event_threshold;
+>> +	if (flags & IBMVFC_FPIN_EVENT_COUNT_VALID)
+>> +		count = ibmvfc_fpin->fpin_data.event_data.event_count;
+>> +
+>> +	return ibmvfc_common_fpin_to_desc(ibmvfc_fpin->fpin_status,
+>
+> [Severity: Medium]
+> Does this code intentionally discard the event severity?
+>
+> The extended FPIN payload can specify severity when the
+> IBMVFC_FPIN_SEVERITY_VALID flag is set, but that flag appears to be ignored
+> during this unpacking process.
+>
+> Furthermore, looking at the existing ibmvfc_common_fpin_to_desc() function
+> that this calls, it hardcodes the generated severity:
+>
+> static struct fc_els_fpin *
+> ibmvfc_common_fpin_to_desc(...)
+> {
+> ...
+>         cdesc->severity = FPIN_CONGN_SEVERITY_WARNING;
+> ...
+> }
+>
+> Will this cause higher severity events sent by the VIOS to be permanently
+> downgraded and incorrectly reported to the FC transport layer?
+
+For the next revision I'm updating ibmvfc_common_fpin_to_desc() to have
+a __u8 severity parameter, and its wrappers to pass either
+FPIN_CONGN_SEVERITY_WARNING as a default or in the case of
+ibmvfc_ext_fpin_to_desc() using the passed severity if
+the severity passed in the ibmvfc_async_subq_fpin data is set.
+
+> [ ... ]
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+>> --- a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+> [ ... ]
+>> @@ -266,9 +267,147 @@ static void ibmvfc_full_fpin_test(struct kunit *test)
+>> +#define IBMVFC_TEST_FPIN_EXT(fs, ev, stat, crq) {				\
+>> +	struct ibmvfc_async_crq_event ae = { .type = IBMVFC_ASYNC_CRQ_SUB };	\
+>> +	(crq).valid = 0x80;							\
+>> +	(crq).flags = IBMVFC_ASYNC_IS_FPIN_EXT;					\
+>> +	(crq).link_state = IBMVFC_AE_LS_LINK_UP;				\
+>> +	(crq).fpin_status = (fs);						\
+>> +	(crq).event = cpu_to_be16(IBMVFC_AE_FPIN);				\
+>> +	(crq).wwpn = cpu_to_be64(tgt->wwpn);					\
+>> +	(crq).fpin_data.flags = IBMVFC_FPIN_EVENT_TYPE_VALID;			\
+>> +	(crq).fpin_data.event_type = cpu_to_be16((ev));				\
+>> +	ae.subq = *(struct ibmvfc_async_sub_crq *)&(crq);			\
+>> +	pre = READ_ONCE(rport->fpin_stats.stat);				\
+>> +	spin_lock_irqsave(vhost->host->host_lock, flags);			\
+>> +	ibmvfc_handle_async(&ae, vhost);					\
+>> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);			\
+>> +	flush_workqueue(vhost->fpin_workq);					\
+>> +	post = READ_ONCE(rport->fpin_stats.stat);				\
+>> +}
+>
+> [Severity: Medium]
+> Are we missing the KUnit assertions in this macro?
+>
+> The test records the pre and post statistics, but there are no checks
+> (such as KUNIT_EXPECT_GT(test, post, pre)) to verify the statistics actually
+> incremented.
+
+Yes. Adding KUNIT_EXPECT_GT here.
+
+> Because this test uses a live global vhost via ibmvfc_get_first_vhost()
+> without mocking the IBMVFC_SUPPORT_FPIN_EXT capability, a test run on an
+> adapter lacking this capability will silently fall through to this bypass path
+> in ibmvfc_process_async_work():
+>
+>     } else if (!ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_FPIN_EXT)) {
+>             dev_err_ratelimited(vhost->dev,
+>                                 "Unexpected extended FPIN event received\n");
+>     }
+>
+> Since there are no assertions, does this mean the test still reports a pass
+> despite completely failing to process the events?
+
+I've added the same check in ibmvfc_extended_fpin_test() and will skip
+the test if IBMVFC_SUPPORT_FPIN_EXT is not set.
+
+-Dave
