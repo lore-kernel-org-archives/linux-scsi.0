@@ -1,154 +1,160 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 561C642F709
-	for <linux-scsi@vger.kernel.org>; Fri,  2 Oct 2026 08:47:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 931F4472543;
+	Fri,  2 Oct 2026 09:14:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790930862; cv=none; b=WKBPGUuwjkt1FWlwR8YYjhqbOTVW4U2IjRWNBQAoieltEfGGQPjbi/UfUVPOseaGyjvSJm9ASi3mpbE8k3dgpPoIOnJ+BesYSa+dmwLYXKMlkQP7FvDq2Jz/nQd+i/gLWTiGAL4tct3ZA9wSyvKzzhMgg96Nk4et5G/nc1VZxl8=
+	t=1790932469; cv=none; b=FitQTPiOf6Fo2xpy6yEzeLBpFaIWYgsoYJvs85FHHQivL20ZbK3YMAUG1sYumvIH6H/I0DXqqa9twM5tmlwmRv2+BvNnHb0TpIZH6xk1KdSOK8tFAaybW9ysgmH37Pk0ZAY8XMmDb5w6YO9ZBWpL031OjxcztxRvIjlP6n18UVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790930862; c=relaxed/simple;
-	bh=GSyELx9dwvoB/sio1I193Cn2G0vHc0XKaNmn/ELWTXI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ulXX4oSHIxQxcROdmOxHCYBjpuLZrLPU2GuFyqDTZS1Bsc66/WLNAU8fSZdBGVnL2J0PCGRmwOF3PMaGRHmsJvn2ZA7Dai2mY4xT6mInBNxsHK7wMwM5ITX8satuapQNxANKINUA1ttc7fqVw0rg/ewbWmJ3OC3iyWgO1P9usqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=au6lywzG; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=kzwtsmNF; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=moOi0BkU; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=xgP5hvSI; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1790932469; c=relaxed/simple;
+	bh=8a5M2UzdE9erIc40zaFKfBubjXN33wBfKyZk5Y+CYQU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Fr47NbPFsPA/HPoLs+nb/ArdykGN/WGji8EP2NihUvXAVjWCzgXesOMwUVJ1ofnT4NGm7StkorncRH1Aihilyi6Q/vJcpvcMd4ZJfrfPL+i2V3RxjzFsZrOjLPkIkp3MCoNM1B3VVyZyjjyA6l7fuFljfApx7MsobgMnypJmNwg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WsPaLk1Q; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="au6lywzG";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="kzwtsmNF";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="moOi0BkU";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="xgP5hvSI"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 759731FE40;
-	Fri,  2 Oct 2026 08:47:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1790930849; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MJo+UVIUuiw6x3E4O2tfRmRePHyzUv16/nNBM6hDb70=;
-	b=au6lywzGxsnTbCTSsh/FJCoUZ9tIo0nhBKyICTpsOSKoHK7yTI0JCVexgO2g48mBu5TP5n
-	CwGd6Mu2pw/KYGT3XE3RAlAemKMpCAue4sz5DQ4B2F3ufZ7VDertxQMxeah5bDcZ3mHzzB
-	2n0VVrmguvBSYwN/INuqTWGpzU5hEx8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1790930849;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MJo+UVIUuiw6x3E4O2tfRmRePHyzUv16/nNBM6hDb70=;
-	b=kzwtsmNFVcCIO1hZ05buWk5wmi/WOVM3TsO133PbkdZkFQzSS3Svl0OJVA1r6qh6U9WmBF
-	R0gjLNYzxoYVkuDA==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=moOi0BkU;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=xgP5hvSI
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1790930845; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MJo+UVIUuiw6x3E4O2tfRmRePHyzUv16/nNBM6hDb70=;
-	b=moOi0BkU7xIbycGKqKOzGIEm6lrZvVT/PyZCXUEB+fAFULwltDw9EbLQI5jBO5y7iCX1A7
-	JiDnN7AYDn08AH+zFuoWaSkROpZBzQWL5QfszUyB+U/qIPYVXR2Q7A+Oorq2Y/R6PCdH5J
-	40c545l1EiMre45TEGZp2xadW/XrZgA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1790930845;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MJo+UVIUuiw6x3E4O2tfRmRePHyzUv16/nNBM6hDb70=;
-	b=xgP5hvSIT7gp25j5vkdmC8CJRoytMWN+CxKYINqaGljdPoJw8aGY2L/CGMW4avxrJhV7GW
-	t2aBEhmz7/x8UpDA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3FB3C133CF;
-	Fri,  2 Oct 2026 08:47:25 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id HzMiB51vv2o3UAAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 02 Oct 2026 08:47:25 +0000
-Message-ID: <41b417e9-9bb4-4de7-bcd2-3ff99c30229a@suse.de>
-Date: Fri, 2 Oct 2026 10:47:24 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WsPaLk1Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35D671F0089B;
+	Fri,  2 Oct 2026 09:14:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1790932468;
+	bh=PLiMLe5i2c7cYYrJ2ruLw0LhUXzOc1w4t4yCcfmU7RQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=WsPaLk1QQ3kwK/sFZwnLg22osTL8PmYuaUwr4Ryv9/rIwnutVBWBCOdZ4ivRUl9Wl
+	 wYYZhP7Qze5e6BGfgrmDIxffImPtuenny1ChTXOmBZkoLgZ8DuHqv+kBRqm5H1fjUD
+	 gZwaFLusBOWjFV6sh1ndbEAyvsHzsdmrmrZBaP1v1x3iG6VKYAqU+I7blle/PvFjWN
+	 O++PGbd0JDlW+7M2aa6ElBLNnUbo1jTeiZT4sQAZTw5VmU7BV8cMa3qldbNnC0UNg+
+	 j991YtR+QTj42KwQ4GlySvHlrvuSPEKgmeWuXtppwwqwHk7qFgJ5+Z8Lq2KliAd/UI
+	 bRWZiC4e897vw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 2/2] scsi: ufs: spacemit: k3: Add UFS Host Controller
+ driver
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yixun Lan" <dlan@kernel.org>
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20261002-08-k3-ufs-support-v7-2-bb39007ff9ae@kernel.org>
+References: <20261002-08-k3-ufs-support-v7-0-bb39007ff9ae@kernel.org>
+ <20261002-08-k3-ufs-support-v7-2-bb39007ff9ae@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 02 Oct 2026 09:14:27 +0000
+Message-Id: <20261002091428.35D671F0089B@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: core: Fix scsi_done() documentation
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@linux.dev>,
- Hannes Reinecke <hare@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
- Jonathan Corbet <corbet@lwn.net>
-References: <9d10e1068d75c1a708b3a56e85782d651411fe06.1790359673.git.bvanassche@acm.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <9d10e1068d75c1a708b3a56e85782d651411fe06.1790359673.git.bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 759731FE40
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[7];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,linux.dev:email,suse.de:mid,suse.de:email,suse.de:dkim];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:mid,suse.de:email,suse.de:dkim,linux.dev:email];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Flag: NO
-X-Spam-Score: -4.51
-X-Spam-Level: 
 
-On 9/25/26 8:08 PM, Bart Van Assche wrote:
-> Commit 11b68e36b167 ("scsi: core: Call scsi_done directly") changed
-> scsi_done from a function pointer member into a regular function.
-> 
-> Replace all references to the scsi_done function pointer member
-> with references to the scsi_done() function.
-> 
-> Cc: John Garry <john.garry@linux.dev>
-> Cc: Hannes Reinecke <hare@kernel.org>
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Jonathan Corbet <corbet@lwn.net>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   Documentation/scsi/scsi_mid_low_api.rst | 24 ++++++++++++------------
->   1 file changed, 12 insertions(+), 12 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [Medium] scsi: ufs: spacemit: 100ms timeout on 1-lane UFS devices during =
+hibern8
+- [Medium] scsi: ufs: spacemit: bRefClkGatingWaitTime violation after hiber=
+n8 enter
+- [Medium] scsi: ufs: spacemit: simultaneous ref clock enable and reset de-=
+assertion
+--
 
-Cheers,
+commit efcda2c96a818b5a53e91fa2558654c937a9ba68
+Author: Yixun Lan <dlan@kernel.org>
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+scsi: ufs: spacemit: k3: Add UFS Host Controller driver
+
+This commit introduces the UFS Host Controller driver for the SpacemiT K3
+SoC. It implements support for features compatible with JEDEC UFS 2.2, MIPI
+UniPro v1.61, and the M-PHY v3.0 standard.
+
+> diff --git a/drivers/ufs/host/ufs-spacemit.c b/drivers/ufs/host/ufs-space=
+mit.c
+> new file mode 100644
+> --- /dev/null
+> +++ b/drivers/ufs/host/ufs-spacemit.c
+
+[ ... ]
+
+> +static int ufs_spacemit_check_hibern8(struct ufs_hba *hba)
+> +{
+> +	u32 tx_fsm_val_0 =3D 0;
+> +	u32 tx_fsm_val_1 =3D 0;
+> +	int retries =3D DIV_ROUND_UP(HBRN8_POLL_TOUT_MS * 1000, 100);
+> +	int err =3D 0;
+> +
+> +	do {
+> +		err =3D ufshcd_dme_get(hba,
+> +				     UIC_ARG_MIB_SEL(MPHY_TX_FSM_STATE,
+> +						     UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),
+> +				     &tx_fsm_val_0);
+> +		if (err)
+> +			break;
+> +
+> +		err =3D ufshcd_dme_get(hba,
+> +				     UIC_ARG_MIB_SEL(MPHY_TX_FSM_STATE,
+> +						     UIC_ARG_MPHY_TX_GEN_SEL_INDEX(1)),
+> +				     &tx_fsm_val_1);
+> +		if (err || (tx_fsm_val_0 =3D=3D TX_FSM_HIBERN8 &&
+> +			    tx_fsm_val_1 =3D=3D TX_FSM_HIBERN8))
+> +			break;
+
+[Severity: Medium]
+Will this loop always hit its 100ms timeout on 1-lane UFS devices?
+
+It appears that on a 1-lane device, the state for lane 1 will not reach
+TX_FSM_HIBERN8, causing the do-while condition to wait until retries run out
+before proceeding.
+
+[ ... ]
+
+> +static int ufs_spacemit_device_reset(struct ufs_hba *hba)
+> +{
+> +	/* Disable reference clock & asserted ufs device reset */
+> +	ufshcd_writel(hba, 0x000, UFS_PHY_MNG_BASE + UFS_DEVICE_IO_CTRL);
+> +	usleep_range(10, 15);
+> +
+> +	/* Enable reference clock & deassert ufs device reset */
+> +	ufshcd_writel(hba, MPHY_DEVICE_REFCLK_OE | MPHY_DEVICE_HW_RESET,
+> +		      UFS_PHY_MNG_BASE + UFS_DEVICE_IO_CTRL);
+
+[Severity: Medium]
+Could toggling the reference clock output enable and device reset
+de-assertion in a single MMIO write cause device initialization failures?
+
+The UFS specification (e.g., JESD220C 5.3.1.2) typically requires the
+reference clock to be valid and stable before RST_n is de-asserted. Writing
+MPHY_DEVICE_REFCLK_OE and MPHY_DEVICE_HW_RESET simultaneously might violate
+this sequential stability requirement.
+
+[ ... ]
+
+> +static void ufs_spacemit_post_hibern8(struct ufs_hba *hba, enum uic_cmd_=
+dme cmd)
+> +{
+
+[ ... ]
+
+> +	if (cmd =3D=3D UIC_CMD_DME_HIBER_ENTER) {
+> +		err =3D ufs_spacemit_check_hibern8(hba);
+> +		if (err)
+> +			dev_err(hba->dev, "ufs_spacemit_check_hibern8 error\n");
+> +
+> +		ufs_spacemit_dme_set(hba, setup_attrs, ARRAY_SIZE(setup_attrs));
+> +
+> +		/* Power down M-PHY */
+> +		ufshcd_writel(hba, 0x0, UFS_PHY_MNG_BASE + UFS_MPHY_PU_CTRL);
+> +
+> +		/* Disable reference clock, keep device reset deasserted */
+> +		ufshcd_writel(hba, MPHY_DEVICE_HW_RESET,
+> +			      UFS_PHY_MNG_BASE + UFS_DEVICE_IO_CTRL);
+> +	}
+> +}
+
+[Severity: Medium]
+Does disabling the reference clock immediately after confirming HIBERN8
+enter violate the device's clock gating wait time?
+
+By not waiting for hba->dev_info.clk_gating_wait_us (bRefClkGatingWaitTime)
+before disabling the clock, this could potentially cause strict UFS devices
+to hang or fail internal state transitions during hibernation.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261002-08-k3-ufs-=
+support-v7-0-bb39007ff9ae@kernel.org?part=3D2
