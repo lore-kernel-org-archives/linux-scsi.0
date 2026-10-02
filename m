@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35122415B8C;
-	Fri,  2 Oct 2026 07:08:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A4A41F3BAC;
+	Fri,  2 Oct 2026 07:10:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790924930; cv=none; b=RdCAsXJajbkPF0G3hkF/y76Sr5JNzV2q7aOB4cEWPZsB2i5NgOOgOa21C8MLGrBhCAyAEBhROOLdURyTrpwWsyvEdYrsujynsHFN4VfYmGvqbi2j2ypNvMnk2jit0kwe5wxwinAiWGh0Lzn+EP572rcfALe9yn7b1hnkbRYk5aA=
+	t=1790925021; cv=none; b=Wq85NXnn6Uycbee3md1PkdY8QIDfPihUHLVoDe4jmURLYtNU2EEY3abhmsP+cUi2vnaWab5+rOWfT4PxjW5zMx+y9Ylvp1EwYaCwdJHVfyomrZP82/ZLkHL9kJjkN/pquu2KPsllvf0PuvrwUxUNY9EIPPDks8r5gQQvX2vq660=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790924930; c=relaxed/simple;
-	bh=NGOxMRjJi/vklJnIak3JlxGfBfLGfjM5T9DBl2PSwVQ=;
+	s=arc-20240116; t=1790925021; c=relaxed/simple;
+	bh=w+GY/U/JSmX5ueN5iKlv8uWlxfzRV5oi9goMluhgDm8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HfTLma7yQ0KjTwpsAQPZgZsoyLLGR+TynkLSD50TE9smqBLzO8mfWyanC6AUk8jSZnt+PAwBW2WO+Px3TDQI8gP+72cQkNvbzJgeXnPe16lzQl3Hu0u2DuQgC/oCKuYwDSGeAU6NRuhO8/fzh7ewDzNEb8ky6Nip5Hrbq5qSXp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L0Ii+owA; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=kfl/HCpJYrgU4IMhQNUwqu891e+Iv6LNrZQ3Cs+jqB9rh5FiEGI2acqfEjXKo16EgiDSznzJajg53k6IpyBSFWIM7ffKXnd3xOrTz/3uoy6/4Hz8NY/xauT7REccA0/aZ+mG6AMhDk191fY1GZngsjXXT3iCIyaxggohjcND+/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jAQYjN8c; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L0Ii+owA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52FD71F000FF;
-	Fri,  2 Oct 2026 07:08:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jAQYjN8c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 986B21F000FF;
+	Fri,  2 Oct 2026 07:09:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790924925;
-	bh=E1yIhF4y93luJBvo++ntgk02PM9naHAGHJiTxi+AQxI=;
+	s=k20260515; t=1790925019;
+	bh=z0R+AFuLfT7LW4bS8vfoemEDpRx0M25PpnJ7rizmkeQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=L0Ii+owAiMIKjEnXtHRGG0fivqXyvm7Omcwl10tfIvuyUXuWIJ8zzcRm10ppXiGFl
-	 nGZQf/Ag81LdOTsX0yKoPSrTms9RZ60WX2PqNiDDA/BU6uMDqxUB54Fr1F9z2zpihH
-	 AMEJ6uTLl6LJs/eUGk9+dcQ/77gS3Ghs5oDjCkvpBIBMGyX3LbGod/U7eVcVuFJmBF
-	 wRLKeEcTeCXwWXLdqU/4ugShns3nhEv0/y/SR3UmflTmCTdFCKZwDPiJ5soL8sVlQG
-	 L7XHtmJvC7UOChs6SWb8XontDWIlnRB0iFnOyl2yy5GEt8Rmif0pPTe2e0teyqfRiA
-	 Kl09cc+aM+pYA==
-Message-ID: <651c8852-39d1-4351-b899-80f54077b494@kernel.org>
-Date: Fri, 2 Oct 2026 09:07:49 +0200
+	b=jAQYjN8cqx2Chonfaa3UgRC+q9FNer11ZTc3ym7gN4EzSUnN9yctP+HSUzPW7Na8T
+	 XhXLG91INpSlxd1n8jme4BLqq8xlMmw9OyKrnwO/SeJSsiJsgHVqyQYRHY8JwXl4W1
+	 JBfwx5JRCqHlYGZTghTyJgnt+WhRxlmjtx1r5DTj0z3Wkm0FuPnE6IssCOmqCWX0WN
+	 i018WlOPFgg2mhJfBffqsM+y+RA+yPh22TTQPO3V2PJS5zyGxn2clBuLnsYWtkLEwW
+	 Azz54A0Xm+rXoq6gG2ZN1AUO3VP2I2JSQJCTgseE8QLMDwldkpQMvF1Okha2kXwxVR
+	 /ImSq7OK+twiw==
+Message-ID: <799f9f13-1462-468a-a6e6-6b8bd06c0fb8@kernel.org>
+Date: Fri, 2 Oct 2026 09:09:36 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 37/40] mm: eliminate VM_SPECIAL, VMA_SPECIAL_FLAGS
+Subject: Re: [PATCH v3 38/40] fuse: dax: do not set VM_MIXEDMAP
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -117,7 +117,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
  fuse-devel@lists.linux.dev
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-37-4583d8a23bca@kernel.org>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-38-4583d8a23bca@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -164,27 +164,49 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-37-4583d8a23bca@kernel.org>
+In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-38-4583d8a23bca@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/17/26 18:22, Lorenzo Stoakes (ARM) wrote:
-> Every user of the VM_SPECIAL or VMA_SPECIAL_FLAGS has now been converted to
-> predicates which explicitly express what is actually being checked for
-> rather than the nebulous concept of possessing 'special' VMA flags.
+> Commit e1fb4a086495 ("dax: remove VM_MIXEDMAP for fsdax and device dax")
+> prevented fsdax and device-dax from setting VM_MIXEDMAP, as DAX no longer
+> relies on it to direct core mm paths.
 > 
-> In any case 'special' is not so special a term of art in mm - it includes
-> VDSO/VVAR mappings, special in the sense of vm_normal_folio() and probably
-> other cases too.
+> The fuse DAX implementation, added later, copied the old pattern and still
+> sets it.
 > 
-> Therefore make things less special by eliminating these now unused flags.
+> Fuse DAX maps pages the same way fsdax does, via dax_iomap_fault() and
+> ultimately vmf_insert_page_mkwrite() and vmf_insert_folio_pmd(), which
+> insert ordinary refcounted pages and so do not require VM_MIXEDMAP.
 > 
-> No functional change intended.
+> Setting it only serves to mark the mapping as kernel-owned, making fuse DAX
+> the sole DAX implementation whose mappings are unmergeable, cannot be
+> mlock()'d, eagerly copy page tables on fork and reject MADV_DOFORK and
+> MADV_DODUMP.
+> 
+> It also requires vma_is_special_huge() in mm/huge_memory.c to carve DAX out
+> of its kernel-owned check explicitly.
+> 
+> There is no reason for fuse DAX to keep on using this flag so drop it.
 > 
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > ---
+>  fs/fuse/dax.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
+> index 85cdf0199bc0..a5994f1c637d 100644
+> --- a/fs/fuse/dax.c
+> +++ b/fs/fuse/dax.c
+> @@ -826,7 +826,7 @@ int fuse_dax_mmap(struct file *file, struct vm_area_struct *vma)
+>  {
+>  	file_accessed(file);
+>  	vma->vm_ops = &fuse_dax_vm_ops;
+> -	vm_flags_set(vma, VM_MIXEDMAP | VM_HUGEPAGE);
+> +	vma_set_flags(vma, VMA_HUGEPAGE_BIT);
 
-Awesome, thanks for doing that!
+Yes, I think I stumbled over that in the past as well:
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
