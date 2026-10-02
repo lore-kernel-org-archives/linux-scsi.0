@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B8A7371043;
-	Fri,  2 Oct 2026 06:55:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45556306D2A;
+	Fri,  2 Oct 2026 06:58:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790924127; cv=none; b=KrLzLwCq4I/300PHRTyg0QhfwF5AuZBJsQob6iH5lwfIgnYlX6L9Gw3vfIc0atN+LObl/NRBXgWPAbqDOweAhxifZJrWf90YvJpMwQzSF2aBovo4NWXZUsF/uBFRI9u4BTLucxtWeInRNBPWFiRoL1EPppGXxRA87fSDFc3ZMNY=
+	t=1790924289; cv=none; b=S5kVWg77Kcmf22WVD9Y+L3VhHG8TeGWNrlyOzVDUzThRX5qJSFivLG6x62uh2djhRO855LFtMlCjTX6YGSYEnAxyFZa7+vKwWvhi/LIm8FuA7rAG43wsJI9shqKsoGX1uGN8VVh0MxdcSMuqjfmQ77QGU0uwg+f6JXqmzKwR510=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790924127; c=relaxed/simple;
-	bh=tkpS5L1DJu8I/Bkev6uheTjHp02x/O7Dx6kQqlGoqOQ=;
+	s=arc-20240116; t=1790924289; c=relaxed/simple;
+	bh=1FwyMzRIfK7Ak6DK38YImnsVWX1Yt2IDGNS+cgQ79Ng=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IzJfk6oSivb3/nVaroLJ/Q2/YUpOZz32Ch/Oc/vRjnutCBl1TPwe6mIR0yeriM0KdSRZ0efH/IQvaAayjWZ6wZ1q5nNVyF48RSiBuGpJjL0uWZe6Dg8FcJeC/2HwTKYbkbmB13L5F0gQLaUFoX0nr6WfuX58xl78pEmorAaAJq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jcg3T8Lt; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=IA+MkQlPvSFRIw01DeAmS7DjXglTEiaKMpSOBKCLo5LFzprPOQMeFGDRNQIir9/DL5Tx0R43uB+eTZGsoAZ0JcyLcElP4wED7IxwEygIPIw4kN1wMR6BhmPhWuj+ngJLgwQhmrSL4KLgLd5Z0h1YyJCjGV8a5b/51zMAQ0OGaWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QZEml77Q; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jcg3T8Lt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA2B81F000FF;
-	Fri,  2 Oct 2026 06:54:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QZEml77Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45A201F000FF;
+	Fri,  2 Oct 2026 06:57:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790924125;
-	bh=ISzeg/djpEJgZuQfNd3fqeQR/RcIoDTgRKI00G7Zcuw=;
+	s=k20260515; t=1790924287;
+	bh=Fu3Iu/gEhueAyG3mvEvskapgxrTQuPV0qPl2NW4TdO0=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=jcg3T8LtVGFeCP22PjJ5Kmv9ARB/xlyzs+V7VKXWrcGliXXGU0CUjthFJOOOSg0Hx
-	 6CU6htfWrkq8uVkwnyN4p20qhOGNewwRU/UbFZx50g58zMqo9rZghxxOXE5Sgn4Byk
-	 cCtePOS4ForF7OdoDSH4CGhjCIkqhnRDQcxizGY2lVyeFq5pdQhwHHIXJGGnnpU5c5
-	 f0rMdqdkNfLNmT6GRUD7iuUwxWsVvZ303YXTDcZkh980uO2TEGwYTNmDpVxNp4xXDJ
-	 MbMPkkMYN3WygH1pwmvSsevDkxgASGDEHdWFY8ljYW0NPayHu1k6zMXETsr4Yf+YHO
-	 xBkzjLjRmFNXA==
-Message-ID: <2c01f806-0428-4a96-85de-6a853605a537@kernel.org>
-Date: Fri, 2 Oct 2026 08:54:42 +0200
+	b=QZEml77Q9r2sTAkkCtBoHvaT+mj+1tDODZUrLGqwvtSwG246NM65eA1dzYWxf7YW8
+	 FsZHsJ5bHXSNrjOMhjIn7vxhTfqBxb5BbIaCq3FhBRTvTnT4cgJaMPpemcORNqu7us
+	 KZ5vOERy+jet9qfghjrMSxipKIy8nSINWZMt8JI0W/EcqAmuf1XL8JBjreMbrM0wcX
+	 Ag2ygVqLrNx0bed/Uo3rgTOX0dyCxzypBaFxKiNkqAIo5H6yaLty1QyOMTBxvr6K3J
+	 7fZhyvWOcYx5fyoMuZSOY9MxO7T8zpbMzKLeD7GAZRKRiD63ibsiIJtYCY3a/tMxPp
+	 zCope7IsHy9eg==
+Message-ID: <c832c064-15b2-41c7-b785-bff1bad5977b@kernel.org>
+Date: Fri, 2 Oct 2026 08:57:25 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 29/40] mm: drop some redundant checks around hugetlb
- VMAs
+Subject: Re: [PATCH v3 30/40] mm/madvise: update is_valid_guard_vma() to use
+ vma_can_merge()
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -118,7 +118,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
  fuse-devel@lists.linux.dev
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-29-4583d8a23bca@kernel.org>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-30-4583d8a23bca@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -165,31 +165,62 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-29-4583d8a23bca@kernel.org>
+In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-30-4583d8a23bca@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/17/26 18:22, Lorenzo Stoakes (ARM) wrote:
-> Adjust code which inadvertently perform redundant checks on hugetlb VMAs
-> and clean them up:
+> We currently disallow the installation of lightweight guard regions in VMAs
+> whose flags intersect VMA_SPECIAL_FLAGS or VMA_HUGETLB_BIT, or
+> VMA_LOCKED_BIT unless allow_locked is set.
 > 
-> * hugetlb VMAs have VMA_DONTEXPAND_BIT set so a VMA_SPECIAL_FLAGS check
->   suffices. (migrate_vma_setup() regains an explicit hugetlb test later in
->   the series, once VMA_SPECIAL_FLAGS is removed.)
+> hugetlb VMAs set VMA_DONTEXPAND_BIT so this was already redundant,
+> VMA_SPECIAL_FLAGS already sufficed.
 > 
-> * hugetlb VMAs unconditionally set vma->vm_ops, so they are never
->   anonymous.
+> However, now that VMA_IO_BIT is only set if VMA_PFNMAP or VMA_MIXEDMAP_BIT
+> is set, this check collapses to being the equivalent of
+> !vma_can_merge().
 > 
-> * hugetlb VMAs do not set VMA_PFNMAP_BIT so checking for this is redundant.
-> 
-> While we're here also drop a VM_BUG_ON() which the simplified check above
-> makes unreachable, and use the new VMA flag API.
+> Update is_valid_guard_vma() to reflect this.
 > 
 > No functional change intended.
 > 
-> Acked-by: Marc Zyngier <maz@kernel.org>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > ---
+>  mm/madvise.c | 20 +++++++++++++-------
+>  1 file changed, 13 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/madvise.c b/mm/madvise.c
+> index 467601a8525b..0922d5f07a12 100644
+> --- a/mm/madvise.c
+> +++ b/mm/madvise.c
+> @@ -1221,19 +1221,25 @@ static long madvise_remove(struct madvise_behavior *madv_behavior)
+>  	return error;
+>  }
+>  
+> -static bool is_valid_guard_vma(struct vm_area_struct *vma, bool allow_locked)
+> +static bool is_valid_guard_vma(const struct vm_area_struct *vma,
+> +			       bool allow_locked)
+>  {
+> -	vm_flags_t disallowed = VM_SPECIAL | VM_HUGETLB;
+> -
+>  	/*
+> -	 * A user could lock after setting a guard range but that's fine, as
+> +	 * A user could lock after setting a guard range but that's fine as
+>  	 * they'd not be able to fault in. The issue arises when we try to zap
+>  	 * existing locked VMAs. We don't want to do that.
+>  	 */
+> -	if (!allow_locked)
+> -		disallowed |= VM_LOCKED;
+> +	if (!allow_locked && vma_test(vma, VMA_LOCKED_BIT))
+> +		return false;
+> +	/*
+> +	 * Guard regions require a VMA whose page tables are managed solely by
+> +	 * the core, which is also what merging requires, so disallow any flags
+> +	 * that would prevent a merge.
+> +	 */
+> +	if (!vma_can_merge(vma))
+> +		return false;
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
