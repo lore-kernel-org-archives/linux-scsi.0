@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 334DF40E8C5;
-	Fri,  2 Oct 2026 07:05:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B089D181334;
+	Fri,  2 Oct 2026 07:07:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790924759; cv=none; b=RrPSZuUxZoJB2qgCbg/tMLdnThIs1xmsQnGzSYoCCcx1Tvpg8LhgtsYssISoiEV0gbl98yeu7t8wIDGb/dtHLthmgZpJO+kk9c3rfGkWIdBFB37gkz6vIX2T7E2sJXE+th0ZFX9Avk9DDyEclHKLUtqEzeMWb/uBfvyVd689InQ=
+	t=1790924826; cv=none; b=VHCYvs3w0BzFMJBjUWuYkfGTUnaLuUdVjr5rFMJfKhuMd0Srm8i8zuI+pav3Opk3vo9ydoulPMVIUSjh+erTPfMwl3XugpyyatvDryh3uVD2CylNW842YpPbO625lVTXPxMCQqh/2jMAsJ3AJ38sf11XBe+mswkueGnVhH+cLEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790924759; c=relaxed/simple;
-	bh=PqB4BefQKB+N9c4UoRFQMwHiB6grwC9vxUrHb3rB8hI=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=iukQs5E++UMq2eqj7XSZEnSyA8B5Sr1XIGyukZ4Gv/9EMe2UDEx9GTd4N7JNlirwPcmJAKd0K1EQYhwOdj58GgtEJMWrEhN2ySOar6JoNy2n78Bdsceu/h8aCVhOaBZBA7w4wohhFpDGzW0nbJOmcZHLpuaMaboySbo/Ls4+q2U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JBPHev7d; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1790924826; c=relaxed/simple;
+	bh=CbNIWfwNrr5r64TP4bbtir4KpMfuf66zENudqWXyGaY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=S2Lltt0ZiR7e+HMmc0xDXXweuIHuWQkFZ/HJZip0nXKZo93UFX9WmLrCIEf/icoHjYWOZG9t2T2VNVbGObpNaRDNOQ5Jt6rG2pgGFLP6LYX8MzP+CA7BPb2OL1H5W8g+WDaV/ShWpKkUaJvcFkKvDPJ8Ro/fXC0JkFQEdDTWDLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hCp+2fkS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JBPHev7d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CDDD1F000FF;
-	Fri,  2 Oct 2026 07:05:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hCp+2fkS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F6261F000FF;
+	Fri,  2 Oct 2026 07:06:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790924757;
-	bh=q+RvJ5qQrWBaQpl+ZByeC1Yxk5dq3iA4mzzIbyaM97Q=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To;
-	b=JBPHev7dzw5KD3Do2o8jF2ClqL/VcD0yCkArauPDfrzaWNjSv0XIlRwHjQBeniken
-	 NuNKmbo1MBwL69yqS5Sd8ywgt1EEYGe/6Wj7zcDEOhAnrr1K3MC70BRFm7u9B4iM1N
-	 4I03aUKcH1MBgVKhfTFIKagNUEA0JPLd9zbULjK3Db7lYftI6JNGvu1ciQ80IVvVG5
-	 EgGTQrKbozWbbm+kwXtj74BDBhrPgfQoXRujJt4scdrIStbreYpXI2f1hrMueTIlQF
-	 rEwp9zrdvfowaI03UERnsKaFeZl0IaxTOFnnbweIZS/4kslHiNxS3xEO94PnbKiKho
-	 TgLz7N0kwYc9Q==
-Message-ID: <81e1e5ae-0aab-4584-81e6-3fc9c2634d07@kernel.org>
-Date: Fri, 2 Oct 2026 09:05:15 +0200
+	s=k20260515; t=1790924825;
+	bh=w0hWcnJnpydfH/GKmmOH7T4iJhQmbefzXV8L2WDslX0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=hCp+2fkS7OxRcZij2y6mBt2E3fDjEzOc8eHQJhsPx6m3He/HdHGtPW8k/6BALSnES
+	 it9LIVVbOqRgF48rSD4m4wkZr4hRQPc326H3ja1QY80lqE6iDoDqoZY08TD6Vm4Yes
+	 4JPqjTXiinMSYZN9WiIVnXy9fwCU+AhW+ZvjF+G+XIeE3rg8a8zPNSdbxV/F/NnBVe
+	 yHFUXl/91pMJM4tYtl2NVWacIZgiVwfPtWjYJeDkPfVagJjZ/YB8wc2ATnaZvC5PST
+	 VLDbqudcowc61gUKiq9yWqil67iFcoNVjQuPuSzPeWpzp8TUN4jjZAsuXZKXY9oCTW
+	 54TzUxJRCkj8A==
+Message-ID: <f4b5f7ee-4324-4340-a938-752815d9924f@kernel.org>
+Date: Fri, 2 Oct 2026 09:06:22 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 31/40] mm/vma: introduce vma[_flags]_is_persistent()
-From: "David Hildenbrand (Arm)" <david@kernel.org>
+Subject: Re: [PATCH v3 35/40] mm: eliminate VMA_SPECIAL_FLAGS check in
+ lru_gen_look_around()
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -118,9 +118,8 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
  fuse-devel@lists.linux.dev
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-31-4583d8a23bca@kernel.org>
- <9bbdf4e8-6984-4477-a183-f0b236047381@kernel.org>
- <3557015d-23dd-41ef-9832-78b58587f3f4@kernel.org>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-35-4583d8a23bca@kernel.org>
+From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
  xsFNBFXLn5EBEAC+zYvAFJxCBY9Tr1xZgcESmxVNI/0ffzE/ZQOiHJl6mGkmA1R7/uUpiCjJ
@@ -166,34 +165,41 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <3557015d-23dd-41ef-9832-78b58587f3f4@kernel.org>
+In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-35-4583d8a23bca@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 10/2/26 09:02, David Hildenbrand (Arm) wrote:
-> On 10/2/26 08:59, David Hildenbrand (Arm) wrote:
->> On 9/17/26 18:22, Lorenzo Stoakes (ARM) wrote:
->>> Introduce vma[_flags]_is_persistent() for the purposes of identifying
->>> mappings that are persistent in the sense that bytes to the mapping stay
->>> there, and bytes read from the mapping are the same unless changed by
->>> actions taken by userland.
->>
->> That's extremely confusing, sorry. We have to find a better name for that.
->>
->> Is this really all about user pages (pagecache, anon) that we would find through
->> the rmap?
->>
+On 9/17/26 18:22, Lorenzo Stoakes (ARM) wrote:
+> A kernel-owned or fixed mapping is one which sets VMA_PFNMAP_BIT,
+> VMA_MIXEDMAP_BIT or VMA_DONTEXPAND_BIT, which is precisely what
+> VMA_SPECIAL_FLAGS tests for other than VMA_IO_BIT, which is safe to drop as
+> only kernel-owned mappings may set it.
 > 
-> It's also about droppable mappings AFAIKs. How many more users will we have for
-> that function?
+> Using these predicates rather than VMA_SPECIAL_FLAGS makes the check
+> self-documenting and helps eliminate the confusion around 'special' flags.
 > 
-> If it's "no others" then please don't add a helper function with misleading
-> names for it and just keep the special "dumpable" check in the new form in
-> madvise_vma_behavior().
+> No functional change intended.
+> 
+> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+> ---
+>  mm/vmscan.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 09ff20c3df5b..001f8b760266 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -4418,8 +4418,8 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+>  	if (spin_is_contended(pvmw->ptl))
+>  		return true;
+>  
+> -	/* exclude special VMAs containing anon pages from COW */
+> -	if (vma->vm_flags & VM_SPECIAL)
+> +	/* exclude kernel-owned and fixed VMAs containing anon pages from COW */
+> +	if (vma_is_kernel_owned(vma) || vma_is_fixed_mapping(vma))
+>  		return true;
 
-Talking to myself ... the more usage I see of the vma_is_persistent() the more I
-think this shouldn't be a helper at all. Especially not one with such a
-confusing name :P
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
 -- 
 Cheers,
