@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B089D181334;
-	Fri,  2 Oct 2026 07:07:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63CA7414430;
+	Fri,  2 Oct 2026 07:08:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1790924826; cv=none; b=VHCYvs3w0BzFMJBjUWuYkfGTUnaLuUdVjr5rFMJfKhuMd0Srm8i8zuI+pav3Opk3vo9ydoulPMVIUSjh+erTPfMwl3XugpyyatvDryh3uVD2CylNW842YpPbO625lVTXPxMCQqh/2jMAsJ3AJ38sf11XBe+mswkueGnVhH+cLEs=
+	t=1790924884; cv=none; b=POQbwmNgIdWHn2eSwMTsse6xLGGqoh+9WIvCoIC43Z4P77SESnm+rl3JPGFetp9LzSOxeb+wP9UdxfxUCC3lLfNTXCrGbJPCAXl7Zf1feSOv6uyrjWTSxACKadyaCJnTV6S1BeZNYwU6b66VeLkeKo8Gqvezl57EYAyCOIcAhjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1790924826; c=relaxed/simple;
-	bh=CbNIWfwNrr5r64TP4bbtir4KpMfuf66zENudqWXyGaY=;
+	s=arc-20240116; t=1790924884; c=relaxed/simple;
+	bh=eaYlK5bA6suqPISDsEYJMrsUU4hPYkUHykJKVx/WMn0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=S2Lltt0ZiR7e+HMmc0xDXXweuIHuWQkFZ/HJZip0nXKZo93UFX9WmLrCIEf/icoHjYWOZG9t2T2VNVbGObpNaRDNOQ5Jt6rG2pgGFLP6LYX8MzP+CA7BPb2OL1H5W8g+WDaV/ShWpKkUaJvcFkKvDPJ8Ro/fXC0JkFQEdDTWDLk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hCp+2fkS; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=AJ2BKPPPWmmL4aS13s15DrI8Zmq2D1PaZfLTEfXtcgm9JFwHf9O0LmDnj1ysB2NIMUOrA9uHkxHBJvZtf/ZdRsX3j3Cr0TRIvq+lt2rXL2NHMQgT9qy/WijJ9MTAonuWRFF1dFKQXlTNkukENWgpPd2Hvk/pMcCCTuJo9I2+E1c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V65N4TMT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hCp+2fkS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F6261F000FF;
-	Fri,  2 Oct 2026 07:06:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V65N4TMT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6895C1F000FF;
+	Fri,  2 Oct 2026 07:07:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1790924825;
-	bh=w0hWcnJnpydfH/GKmmOH7T4iJhQmbefzXV8L2WDslX0=;
+	s=k20260515; t=1790924882;
+	bh=gBWGWnycwnNdtBcxWaH2SknpSKu+rT+gCbl7PdEjrNQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=hCp+2fkS7OxRcZij2y6mBt2E3fDjEzOc8eHQJhsPx6m3He/HdHGtPW8k/6BALSnES
-	 it9LIVVbOqRgF48rSD4m4wkZr4hRQPc326H3ja1QY80lqE6iDoDqoZY08TD6Vm4Yes
-	 4JPqjTXiinMSYZN9WiIVnXy9fwCU+AhW+ZvjF+G+XIeE3rg8a8zPNSdbxV/F/NnBVe
-	 yHFUXl/91pMJM4tYtl2NVWacIZgiVwfPtWjYJeDkPfVagJjZ/YB8wc2ATnaZvC5PST
-	 VLDbqudcowc61gUKiq9yWqil67iFcoNVjQuPuSzPeWpzp8TUN4jjZAsuXZKXY9oCTW
-	 54TzUxJRCkj8A==
-Message-ID: <f4b5f7ee-4324-4340-a938-752815d9924f@kernel.org>
-Date: Fri, 2 Oct 2026 09:06:22 +0200
+	b=V65N4TMTsBdVODK4V3MQsVqocEvbPZczo89mZqdp1CE3E7Cq2EjUntB1O8wX3FvQm
+	 Fu+kek5ypkFI5A/DlAHPJy/OpokIe4E/QWatJT+eMH/kOaLwQ6clrIcPqg5+8qINbf
+	 J0jS/SWAjYeORDKHJi7zkoxdEoA9iHFpNbA9tCoVoH/P15MLoPE8RtOJybliqwCvxj
+	 CftdkI9ecROuf84j064ySy1e9ix4G+XadOwRi84hTu+F40tXQinSD4LXIJNnmWgqN0
+	 bcRcxzSz1artystIqvSGszUQSskJ8FjqWZ6POh7rRVQJeBI4VBQLI94EQwXcy6afad
+	 GeuplIkMqvM8g==
+Message-ID: <e07e95f1-5e24-405c-aa46-b727d1bfbfd8@kernel.org>
+Date: Fri, 2 Oct 2026 09:07:20 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 35/40] mm: eliminate VMA_SPECIAL_FLAGS check in
- lru_gen_look_around()
+Subject: Re: [PATCH v3 36/40] mm: avoid use of VMA_SPECIAL_FLAGS in
+ migrate_vma_setup()
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -118,7 +118,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
  fuse-devel@lists.linux.dev
 References: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-0-4583d8a23bca@kernel.org>
- <20260917-b4-mmap-prepare-vma-flag-sanify-v3-35-4583d8a23bca@kernel.org>
+ <20260917-b4-mmap-prepare-vma-flag-sanify-v3-36-4583d8a23bca@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -165,39 +165,59 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-35-4583d8a23bca@kernel.org>
+In-Reply-To: <20260917-b4-mmap-prepare-vma-flag-sanify-v3-36-4583d8a23bca@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 9/17/26 18:22, Lorenzo Stoakes (ARM) wrote:
-> A kernel-owned or fixed mapping is one which sets VMA_PFNMAP_BIT,
-> VMA_MIXEDMAP_BIT or VMA_DONTEXPAND_BIT, which is precisely what
-> VMA_SPECIAL_FLAGS tests for other than VMA_IO_BIT, which is safe to drop as
-> only kernel-owned mappings may set it.
+> Now we have the expressive vma_is_kernel_owned() and vma_is_fixed_mapping()
+> predicates, use them to determine whether to proceed with migration. This
+> drops the VMA_IO_BIT test, which is safe as only kernel-owned mappings may
+> set it.
 > 
-> Using these predicates rather than VMA_SPECIAL_FLAGS makes the check
-> self-documenting and helps eliminate the confusion around 'special' flags.
+> hugetlb mappings remain excluded, as they are fixed mappings.
 > 
 > No functional change intended.
 > 
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > ---
->  mm/vmscan.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  mm/migrate_device.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
 > 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 09ff20c3df5b..001f8b760266 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -4418,8 +4418,8 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
->  	if (spin_is_contended(pvmw->ptl))
->  		return true;
+> diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+> index b9c453c28795..b74c0ae42768 100644
+> --- a/mm/migrate_device.c
+> +++ b/mm/migrate_device.c
+> @@ -739,19 +739,21 @@ static void migrate_vma_unmap(struct migrate_vma *migrate)
+>   */
+>  int migrate_vma_setup(struct migrate_vma *args)
+>  {
+> +	const struct vm_area_struct *vma = args->vma;
+>  	long nr_pages = (args->end - args->start) >> PAGE_SHIFT;
 >  
-> -	/* exclude special VMAs containing anon pages from COW */
-> -	if (vma->vm_flags & VM_SPECIAL)
-> +	/* exclude kernel-owned and fixed VMAs containing anon pages from COW */
-> +	if (vma_is_kernel_owned(vma) || vma_is_fixed_mapping(vma))
->  		return true;
+>  	args->start &= PAGE_MASK;
+>  	args->end &= PAGE_MASK;
+> -	if (!args->vma || vma_test_any_mask(args->vma, VMA_SPECIAL_FLAGS) ||
+> -	    vma_is_dax(args->vma))
+> +	if (!vma)
+> +		return -EINVAL;
+> +	if (vma_is_kernel_owned(vma) || vma_is_fixed_mapping(vma) ||
+> +	    vma_is_dax(vma))
+>  		return -EINVAL;
+>  	if (nr_pages <= 0)
+>  		return -EINVAL;
+> -	if (args->start < args->vma->vm_start ||
+> -	    args->start >= args->vma->vm_end)
+> +	if (args->start < vma->vm_start || args->start >= vma->vm_end)
+>  		return -EINVAL;
+> -	if (args->end <= args->vma->vm_start || args->end > args->vma->vm_end)
+> +	if (args->end <= vma->vm_start || args->end > vma->vm_end)
+>  		return -EINVAL;
+>  	if (!args->src || !args->dst)
+>  		return -EINVAL;
+> 
+
+Much better, thanks!
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
