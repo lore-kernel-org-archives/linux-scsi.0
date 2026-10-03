@@ -1,41 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E163313E03
-	for <linux-scsi@vger.kernel.org>; Sat,  3 Oct 2026 14:23:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79EB0351C0B
+	for <linux-scsi@vger.kernel.org>; Sat,  3 Oct 2026 14:25:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791037419; cv=none; b=GIXvUBY/HmTCbZ7OnfyhZQ7ludEL29HSlmBJHLCbNAHtX9ABjyvk6h6vbc2XeyuzkyCKHUabvluC+S4654KpMGDTY2xC6zo5PXNCQmUloRHob5sujEJE41jH2Ai+WzTcp3VaBye+UNivzoOGsp8lUpfWkkE2+ahzOXpT04TXdgo=
+	t=1791037506; cv=none; b=kXDLtPsoO7LArn+c7QW+oZ9Wu69ccG0/f+YEZHr++ng4tgxPpAkoZRteL5cPSo4vrAQUUh+nx7LF8KudLnR0BDPOH2gRFBIZJUi0N35Ode3m9eM+soj60hwUls8yzvTjGRnzkwOPG2wGnjK2b7gIvOLrDhtBNFjLAYJ1/Fh7CkE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791037419; c=relaxed/simple;
-	bh=9Hi69buQpU5lBEkm6eflgwggAf9w6QPnYpbMzZily5g=;
+	s=arc-20240116; t=1791037506; c=relaxed/simple;
+	bh=XVJGuY88HnKqnyR2bOU0ZVMNbAp0hd7Jk8MVCp+Ijrc=;
 	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 MIME-Version:Content-Type; b=Tx2Y61m2EX+SxsDxdh7P2bS8cdRDsElOnLDD44wd8VNk7o9v9HZKNw5Z8+eWBRBhyOS4YbCffGDxLldZ+LEuTt+0OSpH7BVLRYhyCU6aZvTmzuBOxasjjQ6qoNiv78rtqNsCwz79+/j5TeTyXTC7nDbmbyFJFyuNvBEPjYWqI9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VTmGZ1HT; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Hcj1/S2KH9NHWlQnWaXLffwqAMDDr5GYBJS3UIdpZKBn7027jOlFI4FzMF+IB1fEdWvF1nY2vzQxh/2Nc1wi8e2QzDZXhv+V/jlmTZYtI2VlYCPgzD7jLCaBKkv4q0OtUGZ+HVSo5SPAi7vim8BB7hG/neWZK2lkvysGSKehRT0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m1vKdVF4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VTmGZ1HT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 693651F0089B;
-	Sat,  3 Oct 2026 14:23:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m1vKdVF4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41C311F0089B;
+	Sat,  3 Oct 2026 14:24:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791037417;
-	bh=NdCEXmLha3vvFmN15VBFKXKnCxqhyFC2XYrs8imQE88=;
+	s=k20260515; t=1791037499;
+	bh=LJ+g/0Px1EsabRp6fYWPy5ZSQ4jMVJlUmyzxQXVTnZQ=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=VTmGZ1HTHoUC70tuY0b7WgV0pnPQzSQoMOON5DGpHJ6XASs4c7MP66giSpSqJ5ZpA
-	 KJIFGCXyf01jbDk+8/qs7ez7JzXxnbgFy8HoxxGKymZfC5nV6RPeqRPIE2II9Q5hhb
-	 IeWRDDNWL+Ucll1Nx5G6zoVGFyCT5++xWPeyKVdrFFF6KL78i9JCGIJZwo6CossZJG
-	 Amvzh4uxbX/P3RXMItLvfb89B/7UgTt4DZ/QqexJj58vlXF0e5y68hN78YNTO8lUX2
-	 u359qUomvz8yC39jb31vgBC0E8540Wjcg6Lvqubl14mBE+/3StaXsGoQXG89YACjdw
-	 Q5KvoVi6NGSYQ==
-To: Niklas Cassel <cassel@kernel.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,  "Martin
- K. Petersen" <mkp@kernel.org>,  linux-scsi@vger.kernel.org,  Damien Le
- Moal <dlemoal@kernel.org>,  John Garry <john.garry@linux.dev>
-Subject: Re: [PATCH v11 00/13] scsi: scsi_debug: fix zoned write validation
+	b=m1vKdVF4VuSc1vyFUu+mX08EwSc6bc24v7iiAgjORU13qdfacN5frEAJNv6PwRzd3
+	 7EbtMWHnsY2c0SgbtRDq9NCYXZn4aG17jgpTzHa9MoSs5cFSBkRTUwEgCKlYC/Ppmc
+	 zoroxZUoi3Ee6e4rulHH3kV5Mz0HtI0CE9yJGMM2LwIojOvpVtaP0NTBfwgJzQ10l3
+	 LXkAAUSwmTdXA2l5A4F7euvI0v+u1QASpYZmoVj26MYcaTyAiTprMeEwXicSfAtqGX
+	 4ie6OTY6skoURDEx4VbzKmi74scch7Eei4DGYFtPyp3Yf3QiCEFlnLWW0KtvtsQd8D
+	 VAjwn4lkEG4Iw==
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+  linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3 0/7] scsi_debug: Enable lock context analysis
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-In-Reply-To: <20260929082456.857423-15-cassel@kernel.org>
-Message-ID: <yq1fqymlv6q.fsf@mail.kernel.org>
-References: <20260929082456.857423-15-cassel@kernel.org>
-Date: Sat, 03 Oct 2026 10:23:36 -0400
+In-Reply-To: <cover.1790723966.git.bvanassche@acm.org>
+Message-ID: <yq1a4oulv5e.fsf@mail.kernel.org>
+References: <cover.1790723966.git.bvanassche@acm.org>
+Date: Sat, 03 Oct 2026 10:24:58 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,13 +44,15 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Niklas,
+Hi Bart!
 
-> This series fixes scsi_debug with regards to writes to a ZBC drive,
-> and to WRITE ATOMIC (16). Each patch describes the problem that it
-> fixes.
+> This patch series fixes a locking bug in the scsi_debug driver and
+> enables lock context analysis.
+>
+> Please consider this patch series for the next merge window.
 
-Applied to 7.4/scsi-staging, thanks!
+There are several conflicts wrt. Niklas' zoned write series. Please
+rebase, thanks!
 
 -- 
 Martin K. Petersen
