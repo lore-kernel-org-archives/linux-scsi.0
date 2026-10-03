@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46A0F480DD5;
-	Sat,  3 Oct 2026 16:39:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D75D54908BB;
+	Sat,  3 Oct 2026 16:39:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791045570; cv=none; b=Br1L7/5G93At4GnK7hXhq4AH9UJyJ05olW/QdYqPpRDosQdh/u0W3K079amfV2Y7jDBXoNfVpET4OUaPgbN0S3om+GE062EcXMuDFXc6O1Sns7bkK+Z4bj671Ndb835F6jpyxoccQiXw4pBM1W5lcPOx92EGqJ6n/WKbZptwv/c=
+	t=1791045592; cv=none; b=dZWIrppEkjQvQvkTe6s5+UJAGZhK+Z5RQYifo11I+Qp1HOZexkuthUhwNQOdGCaSpmio1gzmTYrV0JrSsgsF0+n/9tTxwzZostklM1JvnTkh5+EKWYaGgTUI8sdsftFDcCtQ9IaioYZ8I7QYK1HGrCMDnUZnQEM/oMlu24bk+iI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791045570; c=relaxed/simple;
-	bh=In9WHX8b1sLbbe6jUcP+2i7LCzJ4p//dj4w0OtHuz9I=;
+	s=arc-20240116; t=1791045592; c=relaxed/simple;
+	bh=GNn4/WHo/gNb5sHnp4BEq122HpiBRxK72Bb5u1n+58g=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=YF8pVTA7MgyMdqJDoV/sN74mpJ0XsQSHQKezQ1WwyGMcpNIqsOb6idiRhkYrbLnSsiVzEa/DffOj3nOIhr0y/QbdM4+3GjNO8MsIciooLgYH6eIOUwtCYsCURDSc5/ef6tBdOcecEazHE3yIjOxE678Mnj5emdOCetUrEm2KqPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CnFaDqTN; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=gMyFQsajudPgNigV2XoL4nzlMKaW/JidFnaER9w32ga8PCUfJVv2yoSKy3VE008/zUCUHkhHcJ0veB1FiYg2PfxUO2jzWzjrdK2gBcbilQHBhMIZmQllS1x9QZS8ALuffXV4cpE+iPUZXYnj5JupPQgQUJAn1vRVBjQPNtSpq8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eb4zke4Q; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CnFaDqTN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A00F1F0089C;
-	Sat,  3 Oct 2026 16:39:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eb4zke4Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89A3C1F0089E;
+	Sat,  3 Oct 2026 16:39:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791045569;
-	bh=R1TTFxJqK2JOmLB4wxg0hlSgvzQnwmSO7NGWVXFT9S4=;
+	s=k20260515; t=1791045590;
+	bh=FhSwIhda5SwYvYTkOqlzzzYcm2yovY5S5sJ87DUE+qE=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=CnFaDqTNs28+YrjDWIpiskEJ6rTpmDO6CuCJA/tcAMkT0oG8NPdeSljHbbSjuMz0d
-	 eDy0eUOh54+NmxC7w/6XHmbLZJ6rRNWLOZv/2gKoGCbYsjPGBRzCA7PPD5hah2AO1f
-	 nzzNgS2uMfIqjYC83YeQKD/s6gO3DueDDYId4Tx3OylhgBJAsz5pU2BC/nc5VTny+U
-	 QYOWGb2o0AakJQoZ48lp1b9TeKOhOELsHB8aR+StwV+Eu0XiPHcuqWpBmvwLB3j0XH
-	 Z8aVVy6FHM2lHUCYtabJMYxKKRYif/GwXxXU7WvbfNuUM7dyeKEe3z5XECJ9Kq1cOb
-	 lfSVezkeoGM6w==
+	b=Eb4zke4Q9Qn6CRUc6WUxmkGaik5XGPQQB3DGUSAqaZINP8oiCy0hTc6caTGrqaPUC
+	 KEmNHJk1wdKBcDKWft+LsfjFGip5E/CPkShMomriDAgys/rp3Oo4iLqIOttofHBTSo
+	 B5JWTvoxy21Zj5MLEWqH01sqMoKDQHoJlALTYgLlHYXvgBDJHEW0Gnr0IOqJtDfHiW
+	 f6exisuCZMOFzUOIfHESn4G92PdiwIquASbx2xeXrZqOoQHB2FmMKYMHCR8kkO83Va
+	 cf1KfU9U/+z/3GA4QxdYbCTlHuZ4YM6cJLeRuqMWVI6oslp0KiIqphuMfI39tGgp5k
+	 w1o/LtHnirGvg==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Sat, 03 Oct 2026 17:32:49 +0100
-Subject: [PATCH v4 18/38] fbdev: defio: assert FBINFO_VIRTFB, drop VM_IO,
- add VM_MIXEDMAP
+Date: Sat, 03 Oct 2026 17:32:50 +0100
+Subject: [PATCH v4 19/38] HSI: cmt_speech: convert mmap hook to
+ mmap_prepare, refactor
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-18-a1f052500fd7@kernel.org>
+Message-Id: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-19-a1f052500fd7@kernel.org>
 References: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
 In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -122,72 +122,94 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2362; i=ljs@kernel.org;
- h=from:subject:message-id; bh=In9WHX8b1sLbbe6jUcP+2i7LCzJ4p//dj4w0OtHuz9I=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIO6mkG6V+tVPmYbjbvQ7ZzpYfAdeb6I5eq/hbs3sqkv
- sBzp/vSjlIWBjEuBlkxRZbnX8T3B4mEzeu84O8GM4eVCWQIAxenAEzkcQnDP8vZ7uHiht2JnMr6
- YhZZfS8+tjKem/fqadb2m8pNvcVBTgz/jE68/pR6USiI0/C/30PFovMZEesECssElgVl38r68aS
- eHQA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2632; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=GNn4/WHo/gNb5sHnp4BEq122HpiBRxK72Bb5u1n+58g=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIO6mm+rWSpibv2fBJnzXH27aUCq702Gh/L9dc5t3t/Y
+ nOXxrZTHaUsDGJcDLJiiizPv4jvDxIJm9d5wd8NZg4rE8gQBi5OAZjIIz+G/1lf16lKXWfId7rh
+ lJdw/Uliw9ZTQuKF/50veIVfvBlYPYXhf4n1F50Wq8l5f8pvC7ksPrPc7W9WeUzDdC4nmd83fiT
+ dYgYA
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-Currently all drivers which use defio allocate system memory. All of them
-also set FBINFO_VIRTFB, other than ssd1307fb, however this driver allocates
-system RAM, so simply failed to set this flag when it ought to.
+Use the mmap_prepare in favour of the deprecated mmap hook as part of the
+work to convert one to another.
 
-This patch sets FBINFO_VIRTFB on ssd1307fb probe, then drops setting VM_IO
-in fb_deferred_io_mmap() and instead requires FBINFO_VIRTFB to be set,
-erroring out with a kernel warning if not.
+Since this is simply a refcounted kernel page that has been allocated, it
+should not be marked VM_IO and should be inserted using the kernel page
+insertion mechanism, so convert it to do this instead.
 
-The logic requires a page from the driver and since commit 1ecbc7dd2902
-("fbdev/deferred-io: Always call get_page() for framebuffer pages") has
-always required it to be refcounted, so this was implicitly already the
-case.
+Use the VMA descriptor's private data field as a scratch buffer to store
+the page in - this stays valid throughout the kernel page mapping
+operation.
 
-Finally this patch sets VM_MIXEDMAP, as the logic is mapping
-kernel-allocated memory so this is appropriate.
-
-Reviewed-by: Thomas Zimmermann <tzimmermann@suse.de>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- drivers/video/fbdev/core/fb_defio.c | 6 +++---
- drivers/video/fbdev/ssd1307fb.c     | 2 ++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/hsi/clients/cmt_speech.c | 33 +++++++++------------------------
+ 1 file changed, 9 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/video/fbdev/core/fb_defio.c b/drivers/video/fbdev/core/fb_defio.c
-index fd00b86e1ae6..fb359ecc3966 100644
---- a/drivers/video/fbdev/core/fb_defio.c
-+++ b/drivers/video/fbdev/core/fb_defio.c
-@@ -366,13 +366,13 @@ int fb_deferred_io_mmap(struct fb_info *info, struct vm_area_struct *vma)
- {
- 	vma->vm_page_prot = pgprot_decrypted(vma->vm_page_prot);
+diff --git a/drivers/hsi/clients/cmt_speech.c b/drivers/hsi/clients/cmt_speech.c
+index 7226677ebde7..801697b74d4f 100644
+--- a/drivers/hsi/clients/cmt_speech.c
++++ b/drivers/hsi/clients/cmt_speech.c
+@@ -1084,22 +1084,6 @@ static void cs_hsi_stop(struct cs_hsi_iface *hi)
+ 	kfree(hi);
+ }
  
-+	if (WARN_ON_ONCE(!(info->flags & FBINFO_VIRTFB)))
-+		return -EINVAL;
- 	if (!try_module_get(THIS_MODULE))
+-static vm_fault_t cs_char_vma_fault(struct vm_fault *vmf)
+-{
+-	struct cs_char *csdata = vmf->vma->vm_private_data;
+-	struct page *page;
+-
+-	page = virt_to_page((void *)csdata->mmap_base);
+-	get_page(page);
+-	vmf->page = page;
+-
+-	return 0;
+-}
+-
+-static const struct vm_operations_struct cs_char_vm_ops = {
+-	.fault	= cs_char_vma_fault,
+-};
+-
+ static int cs_char_fasync(int fd, struct file *file, int on)
+ {
+ 	struct cs_char *csdata = file->private_data;
+@@ -1256,18 +1240,19 @@ static long cs_char_ioctl(struct file *file, unsigned int cmd,
+ 	return r;
+ }
+ 
+-static int cs_char_mmap(struct file *file, struct vm_area_struct *vma)
++static int cs_char_mmap_prepare(struct vm_area_desc *desc)
+ {
+-	if (vma->vm_end < vma->vm_start)
+-		return -EINVAL;
++	struct file *file = desc->file;
++	struct cs_char *csdata = file->private_data;
++	struct page **pages = (struct page **)&desc->private_data;
+ 
+-	if (vma_pages(vma) != 1)
++	if (vma_desc_pages(desc) != 1)
  		return -EINVAL;
  
- 	vma->vm_ops = &fb_deferred_io_vm_ops;
--	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
--	if (!(info->flags & FBINFO_VIRTFB))
--		vm_flags_set(vma, VM_IO);
-+	vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND | VM_DONTDUMP);
- 	vma->vm_private_data = info->fbdefio_state;
+-	vm_flags_set(vma, VM_IO | VM_DONTDUMP | VM_DONTEXPAND);
+-	vma->vm_ops = &cs_char_vm_ops;
+-	vma->vm_private_data = file->private_data;
++	vma_desc_set_flags(desc, VMA_DONTDUMP_BIT, VMA_DONTEXPAND_BIT);
  
- 	fb_deferred_io_state_get(info->fbdefio_state); /* released in vma->vm_ops->close() */
-diff --git a/drivers/video/fbdev/ssd1307fb.c b/drivers/video/fbdev/ssd1307fb.c
-index c4fdecafd856..958514a35433 100644
---- a/drivers/video/fbdev/ssd1307fb.c
-+++ b/drivers/video/fbdev/ssd1307fb.c
-@@ -763,6 +763,8 @@ static int ssd1307fb_probe(struct i2c_client *client)
- 	info->fix.smem_start = __pa(vmem);
- 	info->fix.smem_len = vmem_size;
++	*pages = virt_to_page((void *)csdata->mmap_base);
++	mmap_action_map_kernel_pages_full(desc, pages);
+ 	return 0;
+ }
  
-+	info->flags = FBINFO_VIRTFB;
-+
- 	fb_deferred_io_init(info);
- 
- 	i2c_set_clientdata(client, info);
+@@ -1353,7 +1338,7 @@ static const struct file_operations cs_char_fops = {
+ 	.write		= cs_char_write,
+ 	.poll		= cs_char_poll,
+ 	.unlocked_ioctl	= cs_char_ioctl,
+-	.mmap		= cs_char_mmap,
++	.mmap_prepare	= cs_char_mmap_prepare,
+ 	.open		= cs_char_open,
+ 	.release	= cs_char_release,
+ 	.fasync		= cs_char_fasync,
 
 -- 
 2.55.0
