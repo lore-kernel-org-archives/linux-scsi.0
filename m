@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA9D48AE04;
-	Sat,  3 Oct 2026 16:45:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2101649BD6A;
+	Sat,  3 Oct 2026 16:45:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791045911; cv=none; b=J0OXamV47Bk+nblkD1ONKfyWIal8QaEPstNNnsybDcnjv8d5DGk5Z24eljroajF+fBEjlZbqmYx/IrbHnx4RXVzG1PBhY80f7euQVy+JIAJHph42nlVPva/FB2tWAYrwNHxeC0sXWG0Jv5H7ShBadn9+zVl5X4M2I0xby/P2pjc=
+	t=1791045932; cv=none; b=WeaA71GYSSG9iCfh4gkAOuDMycDjdXZCmAAAnaRlRjCHVGVm6hSSHlWFDtBukXI6KbRV96w5ybJsOX2t4aej71JEI5/JfkPYOka22QjBdWrlia7d161Ip7Lbr4jHLlKnKv0ZsdtyiiHs8oQeBTs3FrvqmfB4X+SLaTmiXLhWWt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791045911; c=relaxed/simple;
-	bh=HkTbLGiMaDy9mSSm1Y8681jTpkwBcd1ymOGev1wsVuw=;
+	s=arc-20240116; t=1791045932; c=relaxed/simple;
+	bh=iFGL+FHCILhy9SDbSepqrBsRxsucMM51zxGaU7Q5a2U=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=FIo6bx8BVRwveVGJYlKqCWFtl9SaqbsjXt91FOIOoIT/zOYqpqe5BOkaj4hFCK4R1ymL9/7Kavgci127Hfn9qdTUn7W3GjpMS+930EulO2D2sVfMYTaPbBoUyFxt0yM0+NJZ/y+y6Ye3XiJLaM8gysG4qa4z4ursiikrVzq3kS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j4qRGtsg; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=rRaIkCmtgfkUeLwkAvv1XAtjqFmcJYTqLKroyPiUsnh62Cwixlz+dKERCIReevA3kKHOIUxIsRh0K5aVbGiYccGNIlrEugVHaXAgK+ox4Q81cTVOxETc4gpB5AyqPHcAXL2AyUXC1kvzRJwKFUnBrPjrVabgXZl1XI+Tod3wJiw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G5/FVDQf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j4qRGtsg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77FEF1F0089B;
-	Sat,  3 Oct 2026 16:44:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G5/FVDQf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BED621F0089E;
+	Sat,  3 Oct 2026 16:45:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791045909;
-	bh=sNxRxaa4FCG/PyGcafpOW4Vhq6S2764syPChNm7Rjt0=;
+	s=k20260515; t=1791045930;
+	bh=25TcrP5NPlHeICyKz/Dt0wvN5LMoYnpbWYR4UkDCBe8=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=j4qRGtsgQ6djuzuqvyz2e+E3pUboFJ2dXQg/TM+LFKeGrf5EC7S+Qh79x8Kzbzt39
-	 FAvqIqzpxFJQ8yWN2Ei+6/Oo44KI5T5pKh2dJyAeOEeLIwY2FwcsiJDJLHnF8fwAqJ
-	 iKlroW8hXtPnUSLqT/VrWzy2gwBTOjP7KsnB+XvO7vgWHX0sO7S+oXJOQioWFroHum
-	 89rKRcvqhT2hBQQOv80p2OH9OQHNZ58MRDJbSPuyuktSQZSVoALgeDcKTb0Ge0LvoD
-	 MrOB9gPqrdDZwS2aI1Hdga1wR14e3gk9cVjWPOl0j1johf5duE1vU/GN3XP3cNY2Qi
-	 KyVoCz591UnbQ==
+	b=G5/FVDQfvoYTJCzTLSVTkfA3W7zXwd0+P4TlSS4Sakw98qwGsNVohk4KgR0qpap7R
+	 JEGJY2oaV9CBwe5J/PSnX+GFlZK9j5jfYWwRkMG6jzhslO0Jw/wiyzHIvhI9WmHQOw
+	 NRkKO8oW0oTqXH/QYUTClfraylv3NBBqB1N+T4LiRhScknf1BO0dspa1JHNXeq2NKv
+	 EAWaDillk4LcTTAkJqVEp+IZblnJndxzr+akIJ0VdMAAhNwawII50EBZJo4hLQkHnJ
+	 VqZRmJ12Pf75sQWqOZFILOO7IGTYBAwkSHV+QlvXBG7xLkzEC/uDx9xWnCQa3pQxzI
+	 n4zT3xlJUuI8g==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Sat, 03 Oct 2026 17:33:05 +0100
-Subject: [PATCH v4 34/38] mm: eliminate VMA_SPECIAL_FLAGS check in
- lru_gen_look_around()
+Date: Sat, 03 Oct 2026 17:33:06 +0100
+Subject: [PATCH v4 35/38] mm: avoid use of VMA_SPECIAL_FLAGS in
+ migrate_vma_setup()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-34-a1f052500fd7@kernel.org>
+Message-Id: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-35-a1f052500fd7@kernel.org>
 References: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
 In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -122,22 +122,21 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1268; i=ljs@kernel.org;
- h=from:subject:message-id; bh=HkTbLGiMaDy9mSSm1Y8681jTpkwBcd1ymOGev1wsVuw=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIO6unEc7tciRfd9ceU3zWGI9r8WtxsuaTp73ensM4q1
- Qo1CcztKGVhEONikBVTZHn+RXx/kEjYvM4L/m4wc1iZQIYwcHEKwERs/jP8z3okcOup257oHGXf
- ZmaVJytX3jknkzyjebfwYvf0z+3fvjD8j13nqOBXz+/Ix7lw37qKbesWvJf6yVyt9j7KfXvClmR
- jRgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1717; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=iFGL+FHCILhy9SDbSepqrBsRxsucMM51zxGaU7Q5a2U=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIO6ukU3YubcDL78qIwe4d98U4MB2oO3N5t5zhBNjV7/
+ uMNBz7yd5SyMIhxMciKKbI8/yK+P0gkbF7nBX83mDmsTCBDGLg4BWAi/U4M/+NvfD6g8uz+5tWq
+ okdq+fc/1f5/71xWzM9lb7LmGwY/0nrPyLAmyr8/4Y/fhKqpSgeq5uS98lS0YFwQsEBZe2O2vfC
+ Gy/wA
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-A fixed or non-mm-managed mapping is one which sets VMA_PFNMAP_BIT,
-VMA_MIXEDMAP_BIT or VMA_DONTEXPAND_BIT, which is precisely what
-VMA_SPECIAL_FLAGS tests for other than VMA_IO_BIT, which is safe to drop as
-mm-managed mappings may not set it.
+Now we have the expressive vma_is_mm_managed() and vma_is_fixed_mapping()
+predicates, use them to determine whether to proceed with migration. This
+drops the VMA_IO_BIT test, which is safe as mm-managed mappings may not set
+it.
 
-Using these predicates rather than VMA_SPECIAL_FLAGS makes the check
-self-documenting and helps eliminate the confusion around 'special' flags.
+hugetlb mappings remain excluded, as they are fixed mappings.
 
 No functional change intended.
 
@@ -145,24 +144,40 @@ Reviewed-by: Zi Yan <ziy@nvidia.com>
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- mm/vmscan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ mm/migrate_device.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 3b318efa2916..7adffe8182b3 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -4418,8 +4418,8 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 	if (spin_is_contended(pvmw->ptl))
- 		return true;
+diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+index b9c453c28795..289d7b08ace4 100644
+--- a/mm/migrate_device.c
++++ b/mm/migrate_device.c
+@@ -739,19 +739,21 @@ static void migrate_vma_unmap(struct migrate_vma *migrate)
+  */
+ int migrate_vma_setup(struct migrate_vma *args)
+ {
++	const struct vm_area_struct *vma = args->vma;
+ 	long nr_pages = (args->end - args->start) >> PAGE_SHIFT;
  
--	/* exclude special VMAs containing anon pages from COW */
--	if (vma->vm_flags & VM_SPECIAL)
-+	/* exclude fixed and non-mm-managed VMAs containing anon pages from COW */
-+	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma))
- 		return true;
- 
- 	/* avoid taking the LRU lock under the PTL when possible */
+ 	args->start &= PAGE_MASK;
+ 	args->end &= PAGE_MASK;
+-	if (!args->vma || vma_test_any_mask(args->vma, VMA_SPECIAL_FLAGS) ||
+-	    vma_is_dax(args->vma))
++	if (!vma)
++		return -EINVAL;
++	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma) ||
++	    vma_is_dax(vma))
+ 		return -EINVAL;
+ 	if (nr_pages <= 0)
+ 		return -EINVAL;
+-	if (args->start < args->vma->vm_start ||
+-	    args->start >= args->vma->vm_end)
++	if (args->start < vma->vm_start || args->start >= vma->vm_end)
+ 		return -EINVAL;
+-	if (args->end <= args->vma->vm_start || args->end > args->vma->vm_end)
++	if (args->end <= vma->vm_start || args->end > vma->vm_end)
+ 		return -EINVAL;
+ 	if (!args->src || !args->dst)
+ 		return -EINVAL;
 
 -- 
 2.55.0
