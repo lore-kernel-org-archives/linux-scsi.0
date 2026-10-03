@@ -1,78 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE7933AF675;
-	Sat,  3 Oct 2026 17:56:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40E27490C0C;
+	Sat,  3 Oct 2026 17:56:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791050216; cv=none; b=sJcTnp6fxp/URriIBnS3pTMFfrK5+dhtrXIkY1uZV/JdXl8oDG2RUoC4cFzdvSjj//U1LVBMKeMXg2KWlPCaWzK9eizL/H9rLTPvf0F1YjkONaqlD96wosgqd4ZFMXltXpQI/6ihBZLdIhGXEy3sA6/zfM/GYj7nA0HAh7E6HbM=
+	t=1791050217; cv=none; b=snaFmR0N7MQM0J9KJluQsaq9EO4ntJvpw/pZo9uMEB56zVMJVfNuNRuxaBKF25nhIxti1qtHBePPzdUs1E3ihLlwK21xcakZZwsHvekbvcYxIkXQeM/QRrlyul2O8UNHGOkRf1yeKPULeiVoQhxX8KPLj83x/HK355l5aSrCQVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791050216; c=relaxed/simple;
-	bh=FYSeoaYKVtU0vhuuj0pQEHfWbUwBZqIQzddec+ndTR0=;
+	s=arc-20240116; t=1791050217; c=relaxed/simple;
+	bh=xZeSacpFvuoxtACYfDAMbNx6dn6Xo2hSDFgMYcvRIe8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FejLQOjZpR3MnbshiaUqjeazxahIKWDFMjDaYPEITKFVmPFydhtubicjU0RcaXoJ2Nt/p69X8RWzYKdFsdYPgyRFXAVdjRDo9cJ7WiIlpKU2jXVbSohkFoiN90zNTCuJS5hd5oi8Ads6QLObHSM2VBxf/7oNt5vJVRdnExzJsTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PQRQuIMP; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=k0ZBlQzT41JC5j8qscyNEbnZ9lBE+Dg4m7qXKKb5s/pd+LfLOdnOYUXDNqK0raGkUs2dTUNVjMfDj5V+RI5p6V3EhtJFpwSjkzaB6GTr9w3FdwVgr9XlLMX/o56ZkpDnoQdAH+ylHaF318P9ohCrCGc0ioX8JzyXa4FrcwS7YtY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hRa7JBbv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PQRQuIMP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3B931F0089C;
-	Sat,  3 Oct 2026 17:56:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hRa7JBbv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52A911F0089D;
+	Sat,  3 Oct 2026 17:56:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791050214;
-	bh=FYSeoaYKVtU0vhuuj0pQEHfWbUwBZqIQzddec+ndTR0=;
+	s=k20260515; t=1791050216;
+	bh=xZeSacpFvuoxtACYfDAMbNx6dn6Xo2hSDFgMYcvRIe8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PQRQuIMPJX1lqsvSVopu7aRxwaUpt3azpHRSHWtW78CHPAIYk6FgD+fvt1iiMvmDY
-	 Z3g9zFQLLP+3uW7LWcLs0kfn3eKr1V+2JtdJONweVFUTxVrpEzP9pJAHCLNzxKEXyP
-	 ZwFYFgf1YyhoA+G66tGoxSvkdMyz6fsKZicbD2V4KU+MBN6ZZmPV52iSwsB+EUzgfD
-	 k3Ds9dV8+CLDZB9vj0Y0GufX46udfzsSBdsT7fCRvvnhyLNCfPJk/urONV0fDq0Uqo
-	 wRf1xa15Wbxrt+zKs0L+vhF1eEnPzRNIWSvK0JT1tcjZG1bKw3rZY6ElVAYivPsW5i
-	 aDRriPKtr9K+A==
+	b=hRa7JBbvzW2K9kmHBHvislYSaomh9ADFd1watbyWUpE7lAu5ESpTTDucBS91OpuWi
+	 gUCmhfSTG2Qo7QyuxzOzaMQFzM7b/wXx5oS13O3gUFzktcnljaihkaNAy9MGJ2+P7J
+	 wY+xMFPeq5MTHgdBFrNOHxP3J9MpUgl7cgpy5jYtyyG3iokmaR+sHbSLoehTUEnplj
+	 Mw0hrAOUCKSBa4wwRZ7krg/R/caun59mFaCSCzH0u1VBHv38N7BtFiVUvCEzB+14i5
+	 gtAY8kuAc3GoL2jtl+lN3R8QzhP8cxIBGEarvV1W5wdjrfXpXm4HhB6REdsot0vadp
+	 r+DFXVmc809PA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 20/38] mm/gup: error out early on !VMA_MAYREAD_BIT
- VMAs
+Subject: Re: [PATCH v4 24/38] mm/vma: enforce that mm-managed mappings may
+ not set VMA_IO_BIT
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
-Cc: "Christian Borntraeger" <borntraeger@linux.ibm.com>, linux-s390@vger.kernel.org, selinux@vger.kernel.org, dri-devel@lists.freedesktop.org, kvmarm@lists.linux.dev, "Heiko
- Carstens" <hca@linux.ibm.com>, "Marc Zyngier" <maz@kernel.org>, linux-trace-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, "Oliver
- Upton" <oupton@kernel.org>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, kvm@vger.kernel.org, linux-perf-users@vger.kernel.org, bpf@vger.kernel.org
-In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-20-a1f052500fd7@kernel.org>
+Cc: linux-s390@vger.kernel.org, selinux@vger.kernel.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, "Vasily
+ Gorbik" <gor@linux.ibm.com>, linux-trace-kernel@vger.kernel.org, linux-rdma@vger.kernel.org, "Oliver
+ Upton" <oupton@kernel.org>, kvm@vger.kernel.org, "Marc Zyngier" <maz@kernel.org>, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, "Heiko Carstens" <hca@linux.ibm.com>, kvmarm@lists.linux.dev, bpf@vger.kernel.org, linux-perf-users@vger.kernel.org, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>
+In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-24-a1f052500fd7@kernel.org>
 References: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
- <20261003-b4-mmap-prepare-vma-flag-sanify-v4-20-a1f052500fd7@kernel.org>
+ <20261003-b4-mmap-prepare-vma-flag-sanify-v4-24-a1f052500fd7@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 03 Oct 2026 17:56:53 +0000
-Message-Id: <20261003175653.F3B931F0089C@smtp.kernel.org>
+Date: Sat, 03 Oct 2026 17:56:54 +0000
+Message-Id: <20261003175655.52A911F0089D@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> When populating a VMA range via the aptly named populate_vma_page_range()
-> an unreadable VMA will always eventually fail with -EFAULT.
+> It makes no sense for a mapping whose contents the kernel does not own to
+> specify that the range is MMIO.
 >=20
-> That a VMA is accessible is always checked, however VMA_MAYREAD_BIT is no=
-t.
+> Prior to this patch, all in-tree drivers which did so have been updated
+> such that they are marked as not being mm-managed. The check WARNs and
+> fails the mmap for any out-of-tree driver that still sets VMA_IO_BIT
+> without a kernel mapping.
 >=20
-> All user mappings always have VMA_MAYREAD_BIT set, so this check only
-> impacts kernel mappings.
+> No functional change intended for in-tree code.
 >=20
-> It is implemented specifically to disallow population of uprobes XOL
-> mappings which are exec-only.
->=20
-> A nasty interaction with these mappings may occur if they are mlocked, so
-> actively disallow this early.
->=20
-> This allows a subsequent commit to remove the VM_IO check in
-> __mm_populate() which otherwise requires non-MMIO mappings to be wrongly
-> flagged simply as a workaround.
->=20
-> Acked-by: Zi Yan <ziy@nvidia.com>
+> Reviewed-by: Zi Yan <ziy@nvidia.com>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261003-b4-mmap-pr=
-epare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org?part=3D20
+epare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org?part=3D24
 
