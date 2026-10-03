@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A7F489FDD;
-	Sat,  3 Oct 2026 16:40:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A65248E0E9;
+	Sat,  3 Oct 2026 16:40:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791045634; cv=none; b=UGk4NcYJW3JWKRvohM0yJw6TVRsetzwx6VL951L9KRvosZm/Jip9UgD1d3MBBHhpR73Pm1vAe8g/AIdwMYQhDS3Eo0CVSz2Z5LWnRfvnhwnhZLTXYz+K+fUnhC+oXU3CNOEi/iMnzwaWM0GayUgu0IoM1KR4If5ZLX8VLuR75uA=
+	t=1791045655; cv=none; b=YuaSB5kPD6mtaZQqeB9/jjGCG7tG8JXea5T7Qk28UThZB31qxdvOzw0lzfhIy54BEAVnGY60RGdYYNySLJqduTReluOSKD3AIbKbAdupTbGqlnw7LF3iy/3oVWG5q0u/1sJG4SGc3j1YUn/QKM7r8ZBDgjioYqbQPR/qD8RItHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791045634; c=relaxed/simple;
-	bh=joQXUjvjM3OjL+Ta6QEJ1w5g7Vsv4M79ot1AULAZKpk=;
+	s=arc-20240116; t=1791045655; c=relaxed/simple;
+	bh=U+Fvh21D6vVW1j7ZGcVbD3eppigVIEPnTy9IGbcU8z8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=lP8aQURAXZJADA6oKjU5OE3a2dUjIdY5iFCkTEB+892GJOIbgHpYBrip1F6opa/v8xu1ZoW4q//oJrI+BcI2NvwUZFFjKeGsfAGX9sffyUJtvDlHurGV36S7b0+h4q/N9hN3GC7knhbKFTwOWilpn2LXUQ3KcqWhteWsM+w2m7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MzEw4ieF; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=dUj2bzmC03OMto+BRYUCP7nvmMeaP/NISj//emp2yp1E6vpjaP+osDKHXGTU1MrkuydfPpBj3jA6bys9AGnvhLf/EpU3E8n8f6LtfnNYsgS9HFN3EGDLS9u3izsCobu+IUoPYa+jXU619fdcA3S1luOr4onbICh17gFKkGD/ztY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SrbuwHRI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MzEw4ieF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 557FE1F0089B;
-	Sat,  3 Oct 2026 16:40:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SrbuwHRI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77A8C1F0089E;
+	Sat,  3 Oct 2026 16:40:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791045633;
-	bh=GfRJzELhUA3zmjv637fDp+tblD+oWrGBxslIXX4F7cw=;
+	s=k20260515; t=1791045654;
+	bh=cd51q0YqcZD3kMNPNmwWlRDjTampzb3TxekAjjezTro=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=MzEw4ieFr11M5xHt2StEg6ORuVCD4VqADro6fX5jY4Ta3/+dMmpHToQqa+TKOvHpb
-	 IPMFcq6S5OlnoYGqd3tbx+zczcLOwZ049eISw3ZbGqinvJ8vB8TIJGSH+89hLlIyuu
-	 GCrEkGdm8lminJ7UdcjQx2rHVh67gDPTW89nGvvEVK3rMD2O+y61f7DyKG+EBBGv+9
-	 zNYh7D7+yvaw5+NF90qj3Wv17VO1v4AOYerCJx6Q4MN5gWC4inUQq3kshfEyJtFUv/
-	 iYdkzvnAfDCraTTT++jWofvtKAF0IvVBTVyyBbsZejJe3ay7nMmyB10uba1kwfaht9
-	 P/kq77Leo4ktg==
+	b=SrbuwHRIYxEfxoNA73Hc9aLwxpyO4wa3VytMnrKKT0ogwAMXDtOcEd19ResTM9evh
+	 yq5zbxBaBXi4w4cCUkCIPQU6jnd6mfb6oZrE8whBUSdIBVdXnqgB/u0yWefOEseUCp
+	 ZI5pT/RUHPnj0Wki5mXTPGBFUMS+bJD4xQnkqWOBy5nCEG7LbZb6D5FWVEDttEhON/
+	 SgQlzGs0R0HaskTbefGB6ngjaKnf7gJl54GfusIWWMNUdFpfrbVvVCJezbRmFyZzoV
+	 gt1vuNt/Tw1iZ7QDCJCz0yOBCZF0zrV7lFrE/nZ7OHCn5iA5A8b3cKiMMFVLbsZe+1
+	 V1Snn76bVDpIg==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Sat, 03 Oct 2026 17:32:52 +0100
-Subject: [PATCH v4 21/38] uprobes: remove VM_IO, set VM_MIXEDMAP for mapped
- kernel pages
+Date: Sat, 03 Oct 2026 17:32:53 +0100
+Subject: [PATCH v4 22/38] mm/mlock: clear VMA_LOCKED_MASK over mmap
+ callback
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-21-a1f052500fd7@kernel.org>
+Message-Id: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-22-a1f052500fd7@kernel.org>
 References: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
 In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -122,71 +122,96 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2070; i=ljs@kernel.org;
- h=from:subject:message-id; bh=joQXUjvjM3OjL+Ta6QEJ1w5g7Vsv4M79ot1AULAZKpk=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIO6mnpVu/bE3Fl5sa7KacdG3OWXlVbcOqVV+eyO1eK7
- 2YF5n1421HKwiDGxSArpsjy/Iv4/iCRsHmdF/zdYOawMoEMYeDiFICJSN9jZPhZf5i391D042MR
- MUZhsy7sc1b9yPr2Xruu0dtrt2b2HvVjZDi1/1bGz761fdtPvhNmnZ/7f+37frOIO3sa56ibMKs
- 4+bEDAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2804; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=U+Fvh21D6vVW1j7ZGcVbD3eppigVIEPnTy9IGbcU8z8=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIO6mmtev068JDVxMsPvhqHFxZOXLvIN28Tq7hr/dm6L
+ ysWvU6/2FHKwiDGxSArpsjy/Iv4/iCRsHmdF/zdYOawMoEMYeDiFICJOJsx/DNmcNGddk1p1975
+ j3VVPm69PVGUc5vab4uwlPbdm6dEZ31k+O95Kfn7DQ5ljRxeszbfM9u7X30sCrbcszR7wtuj9to
+ vy5kA
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-These are not MMIO pages so VMA_IO_BIT is an inappropriate flag to set.
+Currently there's a confusing mess around VMA_LOCKED_BIT and
+VMA_LOCKONFAULT_BIT.
 
-Instead, set them VMA_MIXEDMAP_BIT as they are kernel mappings and this is
-the appropriate flag to set for those.
+It is permitted for drivers to set any flags they like, with the VMA
+already possessing lock flags.
 
-This provides the semantics required - no VMA merging is permitted, but
-does not prevent GUP.
+This results in the absurd situation of a VMA possessing both
+VMA_SPECIAL_FLAGS and VMA_LOCKED_MASK flags, which is not permitted.
 
-However this has no meaningful impact as these are refcounted and thus can
-be GUPed.
+This has resulted in mlock_vma_folio() having a very silly check for this
+scenario to work around it.
 
-A previous commit already prevented __mm_populate() from being invoked on
-XOL areas, which VMA_IO_BIT was previously relied upon to do, so that is no
-longer required.
+There is no need for this - just clear the flags before invoking the hook
+and reinstate them afterwards if they are required.
 
-Both VMAs set a VMA name, so always_dump_vma() returns true before
-vma_dump_size() reaches its VMA_IO_BIT check, and thus there is no change
-in core dump behaviour.
+Nothing relies upon this being set during the mmap operation.
 
-Change this for both the core xol_add_vma() function and the x86-specific
-get_uprobe_trampoline() function.
+mmap_prepare is unaffected by this so requires no fix.
 
+Reviewed-by: Zi Yan <ziy@nvidia.com>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- arch/x86/kernel/uprobes.c | 2 +-
- kernel/events/uprobes.c   | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ mm/internal.h |  9 +--------
+ mm/vma.c      | 17 +++++++++++++++++
+ 2 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/arch/x86/kernel/uprobes.c b/arch/x86/kernel/uprobes.c
-index 65a2de82ecd2..0f60c0d076b6 100644
---- a/arch/x86/kernel/uprobes.c
-+++ b/arch/x86/kernel/uprobes.c
-@@ -715,7 +715,7 @@ static struct vm_area_struct *get_uprobe_trampoline(struct mm_struct *mm, unsign
- 
- 	*new_mapping = true;
- 	return _install_special_mapping(mm, vaddr, PAGE_SIZE,
--				VM_READ|VM_EXEC|VM_MAYEXEC|VM_MAYREAD|VM_IO,
-+				VM_READ|VM_EXEC|VM_MAYEXEC|VM_MAYREAD|VM_MIXEDMAP,
- 				&tramp_mapping);
+diff --git a/mm/internal.h b/mm/internal.h
+index 557e629db8c5..4ae08fedffff 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -970,14 +970,7 @@ void mlock_folio(struct folio *folio);
+ static inline void mlock_vma_folio(struct folio *folio,
+ 				struct vm_area_struct *vma)
+ {
+-	/*
+-	 * The VM_SPECIAL check here serves two purposes.
+-	 * 1) VM_IO check prevents migration from double-counting during mlock.
+-	 * 2) Although mmap_region() and mlock_fixup() take care that VM_LOCKED
+-	 *    is never left set on a VM_SPECIAL vma, there is an interval while
+-	 *    file->f_op->mmap() is using vm_insert_page(s), when VM_LOCKED may
+-	 *    still be set while VM_SPECIAL bits are added: so ignore it then.
+-	 */
++	/* The VM_IO check prevents migration from double-counting during mlock. */
+ 	if (unlikely((vma->vm_flags & (VM_LOCKED|VM_SPECIAL)) == VM_LOCKED))
+ 		mlock_folio(folio);
  }
+diff --git a/mm/vma.c b/mm/vma.c
+index 90fe6f0ee3b1..df2efdfa3805 100644
+--- a/mm/vma.c
++++ b/mm/vma.c
+@@ -2607,6 +2607,11 @@ static int __mmap_new_file_vma(struct mmap_state *map,
+ 	if (!map->vm_file->f_op->mmap)
+ 		return 0;
  
-diff --git a/kernel/events/uprobes.c b/kernel/events/uprobes.c
-index 7709ea882477..b89cc5cee002 100644
---- a/kernel/events/uprobes.c
-+++ b/kernel/events/uprobes.c
-@@ -1726,8 +1726,8 @@ static int xol_add_vma(struct mm_struct *mm, struct xol_area *area)
++	/*
++	 * Driver-specified flags may make the lock flags invalid, so clear
++	 * VMA_LOCKED_MASK and reinstate it afterwards if appropriate.
++	 */
++	vma_clear_flags_mask(vma, VMA_LOCKED_MASK);
+ 	error = mmap_file(vma->vm_file, vma);
+ 	map->vm_file = vma->vm_file;
+ 
+@@ -2626,6 +2631,18 @@ static int __mmap_new_file_vma(struct mmap_state *map,
+ 		return error;
  	}
  
- 	vma = _install_special_mapping(mm, area->vaddr, PAGE_SIZE,
--				VM_EXEC|VM_MAYEXEC|VM_DONTCOPY|VM_IO|
--				VM_SEALED_SYSMAP,
-+				VM_EXEC|VM_MAYEXEC|VM_DONTCOPY|
-+				VM_MIXEDMAP|VM_SEALED_SYSMAP,
- 				&xol_mapping);
- 	if (IS_ERR(vma)) {
- 		ret = PTR_ERR(vma);
++	/*
++	 * If the VMA is still eligible for mlock(), reinstate any original
++	 * VMA_LOCKED_BIT and/or VMA_LOCKONFAULT_BIT flags.
++	 */
++	if (vma_supports_mlock(vma)) {
++		const vma_flags_t mask =
++			vma_flags_and_mask(&map->vma_flags,
++					   VMA_LOCKED_MASK);
++
++		vma_set_flags_mask(vma, mask);
++	}
++
+ 	map->vma_flags = vma->flags;
+ 
+ 	return 0;
 
 -- 
 2.55.0
