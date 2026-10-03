@@ -1,187 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B4E6489FDA;
-	Sat,  3 Oct 2026 16:37:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from fraori-sdnproxy-3.icoremail.net (fraori-sdnproxy-3.icoremail.net [132.226.202.154])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B141A48C8AE;
+	Sat,  3 Oct 2026 16:37:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=132.226.202.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791045464; cv=none; b=uJNiwuKVnMy4QpYMi6CgA6M6NFDpAhvpeyiYHkUImqaXMXa4cTzzBbFgRL+lwS2ln1SfEiJISb3oQ4UslXqpRhg6D19a3KOql+8SKX9ExyEEcOLfh1oebZ/ANg9SDQ/80OMRNHEFzLBMu0mntbW7EmaA+vBSmJRVdyeoPBOaDns=
+	t=1791045483; cv=none; b=kbvdixh2sTKaTWUjiBl2rMAadcv+42viSgeuwuWqqNxs9NR198uwk9ER8BSRJhyP7vtaXgfap6gG+Dxr6sWEy8htAtHE3w6N9GGuC+R9WIIlxVOxmicxdvpJcttQqCUECPvuiEDuqUt+2GjoJXYAJOdFAmghq5tFiXvTOFmmOVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791045464; c=relaxed/simple;
-	bh=ODXQMwEU9PihiteDGZJqvreyAaBC04iCZqq/OAqYwcw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=MmAlniXMqZXeTHe0WbmetdSy8WCAzXJKUSXXWC2ZaEvIT2gnAA3J4s+VEfsvhb19ZB4RiaRaZ7ls1wHoByEbSQW7FrjbUJNRg9QjCRaHVwDpMpZ5gmiUzTve0U+VACpmsEAu6Z+vdf3UtMpNaIPRqjnYDgvEpJkvHfyeco33ryA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KxtxLILh; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KxtxLILh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D0111F0089D;
-	Sat,  3 Oct 2026 16:37:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791045463;
-	bh=pBCUNumavtqCDVMDKQI7JmbidEurxJXLhbUCZn7VyHI=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=KxtxLILhV/BXVO/E4G1U/KkjUp3D6RCxdjVhS+7A0flJgGGXb9fWGk553mMK/UTzb
-	 1gDjs3C85k1WMglX/qI36NtzltXNjWUTg4fLPavUnG6zTOFOPwKr1WX4C0U0vPxF0l
-	 ElvorMBTiY/lkUjR8lNKgv3fJQt6P4QOrIAQhMHMb/iUK4RHMeakTYQE8VpkORJBkf
-	 giovwZ9RbZ7qzMiEr4BKCPehFPi8/l/Qte/KVsN0ynapJTHTcel7Uzu5UKsQDcC18F
-	 4NQ/A70rYtY/GDcWG73WZyOqdRk1QPuJ7T0NOPPTWQXvI+ISG80fV0Fh9g+CSaMrS1
-	 B+ytDoHw70cPA==
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Sat, 03 Oct 2026 17:32:44 +0100
-Subject: [PATCH v4 13/38] bpf: arena: mark arena_map_mmap() mappings
- VM_MIXEDMAP
+	s=arc-20240116; t=1791045483; c=relaxed/simple;
+	bh=h1muT0Oof54z4gNYKese5yy/Bn31JeDCsEvrXb6mZf8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gg/Wh7efn9NaWBFJWEvmEGIIOA8KdShgcZQt7OY8L5MMEaHK490czn4nk6Tct3EFLyovT7YuaLZkE46GQDayxnKC16Sav1euaFUexgHrBI4lh16938+oP7U3UGJpB/n47+p9FXmNv18+h3RAH1rtU5EHBW19HVZENLkbQXrwQgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=132.226.202.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.98.66.117])
+	by mtasvr (Coremail) with SMTP id _____wD3SGRcL8Fqz79VAQ--.14292S3;
+	Sun, 04 Oct 2026 00:37:49 +0800 (CST)
+Received: from localhost.localdomain (unknown [10.98.66.117])
+	by mail-app3 (Coremail) with UTF8SMTPA id zS_KCgDHiaVbL8Fq33g9AA--.13836S2;
+	Sun, 04 Oct 2026 00:37:48 +0800 (CST)
+From: Fan Wu <fanwu01@zju.edu.cn>
+To: Brian King <brking@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Fan Wu <fanwu01@zju.edu.cn>,
+	stable@vger.kernel.org,
+	Song Li <songl@zju.edu.cn>
+Subject: [PATCH] scsi: ipr: Fix use-after-free in __ipr_remove()
+Date: Sat,  3 Oct 2026 16:36:52 +0000
+Message-Id: <20261003163652.187399-1-fanwu01@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-13-a1f052500fd7@kernel.org>
-References: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
-In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>, 
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
- Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
- David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
- Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
- Jonathan Corbet <corbet@lwn.net>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
- Paul Moore <paul@paul-moore.com>, 
- Stephen Smalley <stephen.smalley.work@gmail.com>, 
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
- Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
- Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
- Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
- Baolin Wang <baolin.wang@linux.alibaba.com>, 
- Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, 
- Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
- Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
- Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <mkp@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
- Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
- John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
- Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
- Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
- Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
- Arnaldo Carvalho de Melo <acme@kernel.org>, 
- Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
- Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, 
- Juri Lelli <juri.lelli@redhat.com>, 
- Vincent Guittot <vincent.guittot@linaro.org>, 
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
- David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
- "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, 
- Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
- Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
- "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
- Marc Zyngier <maz@kernel.org>, Oliver Upton <oupton@kernel.org>, 
- Catalin Marinas <catalin.marinas@arm.com>, 
- Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, 
- Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
- Albert Ou <aou@eecs.berkeley.edu>, 
- Christian Borntraeger <borntraeger@linux.ibm.com>, 
- Janosch Frank <frankja@linux.ibm.com>, 
- Claudio Imbrenda <imbrenda@linux.ibm.com>, 
- Alexander Gordeev <agordeev@linux.ibm.com>, 
- Gerald Schaefer <gerald.schaefer@linux.ibm.com>, 
- Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
- "David S. Miller" <davem@davemloft.net>, 
- Andreas Larsson <andreas@gaisler.com>, 
- Alexander Viro <viro@zeniv.linux.org.uk>, 
- Christian Brauner <brauner@kernel.org>, 
- Matthew Brost <matthew.brost@intel.com>, 
- Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, 
- Byungchul Park <byungchul@sk.com>, Gregory Price <gourry@gourry.net>, 
- Ying Huang <ying.huang@linux.alibaba.com>, 
- Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, 
- Kairui Song <kasong@tencent.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
- Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
- Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
- Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
- Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
- Wei Xu <weixugc@google.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
- Michal Hocko <mhocko@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, 
- Xu Xin <xu.xin@linux.dev>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
- linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
- linux-rdma@vger.kernel.org, selinux@vger.kernel.org, 
- linux-sound@vger.kernel.org, bpf@vger.kernel.org, 
- linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
- dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
- linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org, 
- kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
- linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
- fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>, 
- Emil Tsalapatis <emil@etsalapatis.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2126; i=ljs@kernel.org;
- h=from:subject:message-id; bh=ODXQMwEU9PihiteDGZJqvreyAaBC04iCZqq/OAqYwcw=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIO6mk09Z0tdJ14bS/37R2L+PkDQ6osrvgEZ8SpfTmuy
- ih1wGpBRykLgxgXg6yYIsvzL+L7g0TC5nVe8HeDmcPKBDKEgYtTACZilMjI0Ch560K/Ge9xu023
- 1zJou5hebzjhPqf3bBfP5rmJYedY9Bn+SrFc0bwtd+Ofes9/taLP15rmaWcWO00wz2XdeitnvcF
- UVgA=
-X-Developer-Key: i=ljs@kernel.org; a=openpgp;
- fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zS_KCgDHiaVbL8Fq33g9AA--.13836S2
+X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
+X-CM-DELIVERINFO: =?B?cywzawXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
+	sfnbfYAegEspJ+qccDMUwRuttRH+UVATiXC0vLd3HNj7ON/KBO/pYz7NXR6PMM5oc0Vttd
+	2CqvsQAj/JedJodnkLmp9E6mavGmQbzmcFsnzP86
+X-Coremail-Antispam: 1Uk129KBj93XoW7trWxJF43AFykZrWUAFyfZrc_yoW8Cr13pr
+	sxJrW5uay8GF12ka1DA3ySvF15Cw4xWayjgFW7W3y3ua15AFW3Ka4akFyjvFWUAr4kAFsr
+	tFZIy3yrur4DCFcCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUU9mb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6r1j6r4UM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6x
+	kI12xvs2x26I8E6xACxx1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v2
+	6r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2
+	Ij64vIr41lF7xvr2IYc2Ij64vIr40E4x8a64kEw24l42xK82IYc2Ij64vIr41l4I8I3I0E
+	4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGV
+	WUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_
+	Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rV
+	WUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4U
+	YxBIdaVFxhVjvjDU0xZFpf9x07jnKsUUUUUU=
 
-The bpf_map->ops->map_mmap callback invoked by bpf_map_mmap() can be set to
-one of ringbuf_map_mmap_kern(), ringbuf_map_mmap_user(), array_map_mmap()
-or arena_map_mmap().
+__ipr_remove() flushes ioa_cfg->work_q and reset_work_q but never
+drains scsi_add_work_q. Whenever scanning is enabled, ipr_worker_thread()
+queues that work, so ipr_add_remove_thread() can still be pending or
+running while __ipr_remove() proceeds to ipr_free_all_resources(), which
+drops the last reference to the SCSI host via scsi_host_put() and frees
+ioa_cfg. ipr_add_remove_thread() then dereferences the freed ioa_cfg,
+including ioa_cfg->host->host_lock and ioa_cfg->used_res_q.
 
-It is convention in mm to mark mappings whose pages the kernel manages
-itself with VM_MIXEDMAP, so core mm knows not to treat them as ordinary
-page cache or anonymous memory.
+Fix this by cancelling scsi_add_work_q with cancel_work_sync() after the
+existing flushes and before any resource is freed. ipr_worker_thread() is
+the only scheduler of this work and reset completion can re-queue work_q,
+so both flushes must precede the cancel.
 
-The map_mmap callbacks ringbuf_map_mmap_kern() and ringbuf_map_mmap_user()
-use remap_vmalloc_range(), which ultimately invokes vm_insert_page() and so
-marks the ranges VM_MIXEDMAP, and array_map_mmap() sets VM_MIXEDMAP
-explicitly.
+The cancel is safe: ipr_add_remove_thread() never re-queues itself or
+work_q, and __ipr_remove() holds no lock at that point.
 
-However, the exception to this is arena_map_mmap(), which doesn't set the
-flag.
+This issue was found by an in-house static analysis tool.
 
-This patch corrects this and updates the comment to reflect it.
-
-The pages are refcounted and vm_normal_page() finds them regardless of the
-flag, and VM_DONTEXPAND remains set (marking the memory as VM_SPECIAL and
-thus unmergeable). The one effect is that NUMA balancing now skips these
-VMAs, as it already does for the other bpf map mappings, which is the
-reason array_map_mmap() gives for setting the flag.
-
-The intent of this patch is to be able to establish the invariant that only
-PFN-mapped or mixed map ranges may clear the VM_MAYWRITE flag, as is done
-in bpf_map_mmap().
-
-Reviewed-by: Emil Tsalapatis <emil@etsalapatis.com>
-Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+Fixes: 318ddb34b205 ("scsi: ipr: System hung while dlpar adding primary ipr adapter back")
+Cc: stable@vger.kernel.org
+Co-developed-by: Song Li <songl@zju.edu.cn>
+Signed-off-by: Song Li <songl@zju.edu.cn>
+Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
 ---
- kernel/bpf/arena.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/ipr.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/kernel/bpf/arena.c b/kernel/bpf/arena.c
-index 7b6847200b43..b69fe5e34339 100644
---- a/kernel/bpf/arena.c
-+++ b/kernel/bpf/arena.c
-@@ -620,8 +620,9 @@ static int arena_map_mmap(struct bpf_map *map, struct vm_area_struct *vma)
- 	 * clears VM_MAYEXEC. Set VM_DONTEXPAND to avoid potential change
- 	 * of user_vm_start. Set VM_DONTCOPY to prevent arena VMA from
- 	 * being copied into the child process on fork.
-+	 * This is a kernel page so set VM_MIXEDMAP.
- 	 */
--	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTCOPY);
-+	vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND | VM_DONTCOPY);
- 	vma->vm_ops = &arena_vm_ops;
- 	return 0;
- }
-
--- 
-2.55.0
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index d207e5e..be2e46b 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -9700,6 +9700,7 @@ static void __ipr_remove(struct pci_dev *pdev)
+ 	flush_work(&ioa_cfg->work_q);
+ 	if (ioa_cfg->reset_work_q)
+ 		flush_workqueue(ioa_cfg->reset_work_q);
++	cancel_work_sync(&ioa_cfg->scsi_add_work_q);
+ 	INIT_LIST_HEAD(&ioa_cfg->used_res_q);
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, host_lock_flags);
+ 
 
