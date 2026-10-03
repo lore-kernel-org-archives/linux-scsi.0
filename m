@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2101649BD6A;
-	Sat,  3 Oct 2026 16:45:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2189948EC72;
+	Sat,  3 Oct 2026 16:45:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791045932; cv=none; b=WeaA71GYSSG9iCfh4gkAOuDMycDjdXZCmAAAnaRlRjCHVGVm6hSSHlWFDtBukXI6KbRV96w5ybJsOX2t4aej71JEI5/JfkPYOka22QjBdWrlia7d161Ip7Lbr4jHLlKnKv0ZsdtyiiHs8oQeBTs3FrvqmfB4X+SLaTmiXLhWWt0=
+	t=1791045953; cv=none; b=OoA/QiIus0IzhuFGkonfgAj13RSwJh1HUDMBXrdeb7iJcIVPqTWHflBzZM+2igQiwjtEbb4d3oBkg4VrslgYvIysFmyzYE8zR8HS04/AbHEy6/SmzCHI8CSj1LDbp/wfeiEh3XOUBvSki+MEZ/0vjY4+LOqrEerqlJw9XzTChnU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791045932; c=relaxed/simple;
-	bh=iFGL+FHCILhy9SDbSepqrBsRxsucMM51zxGaU7Q5a2U=;
+	s=arc-20240116; t=1791045953; c=relaxed/simple;
+	bh=D4Bktmj1CFdgrn8TjfxCWBpiKXIl0qBVGlP1ttOp62E=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=rRaIkCmtgfkUeLwkAvv1XAtjqFmcJYTqLKroyPiUsnh62Cwixlz+dKERCIReevA3kKHOIUxIsRh0K5aVbGiYccGNIlrEugVHaXAgK+ox4Q81cTVOxETc4gpB5AyqPHcAXL2AyUXC1kvzRJwKFUnBrPjrVabgXZl1XI+Tod3wJiw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G5/FVDQf; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=B7c1gKh7V2htzZlaO+fjUZQ4p/FXIVZejTBR89LE/zPQZX976O0I0jxgZUm+4zuwhNnAWx+pfNMDfsN4iKlhe1piCJisZK8SQdUGSCHb3eOoW342ZoGuOEulyfAtna9AvnipbeMDTL2lUNjtTsIWLBfdv3/BdejOvr8xtiyj3YI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h2Dsfg1X; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G5/FVDQf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BED621F0089E;
-	Sat,  3 Oct 2026 16:45:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h2Dsfg1X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB0211F0089B;
+	Sat,  3 Oct 2026 16:45:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791045930;
-	bh=25TcrP5NPlHeICyKz/Dt0wvN5LMoYnpbWYR4UkDCBe8=;
+	s=k20260515; t=1791045951;
+	bh=36Kk9cCfrs+K/ZkPenTGstnZo1LIkvSMm4GHKa8AJS8=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=G5/FVDQfvoYTJCzTLSVTkfA3W7zXwd0+P4TlSS4Sakw98qwGsNVohk4KgR0qpap7R
-	 JEGJY2oaV9CBwe5J/PSnX+GFlZK9j5jfYWwRkMG6jzhslO0Jw/wiyzHIvhI9WmHQOw
-	 NRkKO8oW0oTqXH/QYUTClfraylv3NBBqB1N+T4LiRhScknf1BO0dspa1JHNXeq2NKv
-	 EAWaDillk4LcTTAkJqVEp+IZblnJndxzr+akIJ0VdMAAhNwawII50EBZJo4hLQkHnJ
-	 VqZRmJ12Pf75sQWqOZFILOO7IGTYBAwkSHV+QlvXBG7xLkzEC/uDx9xWnCQa3pQxzI
-	 n4zT3xlJUuI8g==
+	b=h2Dsfg1Xql747wZrXI3+/fz+4Y+deOBQpJgW4qxqntXMyJIAE2gecb3qiFuHuXvd+
+	 voif1GZgA7UUtM0vblPSsNPjNQDh007WtJxzNKXuJJmlWKpUzw2tnVJ9qgiQPBmEV8
+	 /KVzqVkx+NRAzVGPz7fMFbNn8ZnZgIP0r0ErqwsLluheJjglZbyJsVBdmasrHRGE4P
+	 6Pq1MEmJdPiKAYiq6X7WUP7FQrKS1ygoauY3kSAe+KyFRs+sH7NmCBzkGjvS5CwQJA
+	 a/SBJmbkZ0EKfc4synBXhjltgsKTDX7nydodQN9HWpicB+1/PaZ7llQz1G7dJeMRog
+	 umWRkuiKGNkLw==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Sat, 03 Oct 2026 17:33:06 +0100
-Subject: [PATCH v4 35/38] mm: avoid use of VMA_SPECIAL_FLAGS in
- migrate_vma_setup()
+Date: Sat, 03 Oct 2026 17:33:07 +0100
+Subject: [PATCH v4 36/38] mm: eliminate VM_SPECIAL, VMA_SPECIAL_FLAGS
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-35-a1f052500fd7@kernel.org>
+Message-Id: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-36-a1f052500fd7@kernel.org>
 References: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
 In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -122,62 +121,73 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
  fuse-devel@lists.linux.dev, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1717; i=ljs@kernel.org;
- h=from:subject:message-id; bh=iFGL+FHCILhy9SDbSepqrBsRxsucMM51zxGaU7Q5a2U=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIO6ukU3YubcDL78qIwe4d98U4MB2oO3N5t5zhBNjV7/
- uMNBz7yd5SyMIhxMciKKbI8/yK+P0gkbF7nBX83mDmsTCBDGLg4BWAi/U4M/+NvfD6g8uz+5tWq
- okdq+fc/1f5/71xWzM9lb7LmGwY/0nrPyLAmyr8/4Y/fhKqpSgeq5uS98lS0YFwQsEBZe2O2vfC
- Gy/wA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2224; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=D4Bktmj1CFdgrn8TjfxCWBpiKXIl0qBVGlP1ttOp62E=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLIO6unornY/vrR45rV+j2uBywp8dvvNmSxU7+n9/NWs3
+ aJ+svP+d5SyMIhxMciKKbI8/yK+P0gkbF7nBX83mDmsTCBDGLg4BWAiYh8YGebu/HL6nv7eWw39
+ GyuW/VrPzaW79K14dimT2lbWJtGUiukMv5i8wo8cZas3Zl5++fGUqQvXCFf+/z1F/2tr5tngzWr
+ 7U3kB
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-Now we have the expressive vma_is_mm_managed() and vma_is_fixed_mapping()
-predicates, use them to determine whether to proceed with migration. This
-drops the VMA_IO_BIT test, which is safe as mm-managed mappings may not set
-it.
+Every user of the VM_SPECIAL or VMA_SPECIAL_FLAGS has now been converted to
+predicates which explicitly express what is actually being checked for
+rather than the nebulous concept of possessing 'special' VMA flags.
 
-hugetlb mappings remain excluded, as they are fixed mappings.
+In any case 'special' is not so special a term of art in mm - it includes
+VDSO/VVAR mappings, special in the sense of vm_normal_folio() and probably
+other cases too.
+
+Therefore make things less special by eliminating these now unused flags.
 
 No functional change intended.
 
-Reviewed-by: Zi Yan <ziy@nvidia.com>
+Acked-by: Zi Yan <ziy@nvidia.com>
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- mm/migrate_device.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ include/linux/mm.h              | 8 --------
+ tools/testing/vma/include/dup.h | 8 --------
+ 2 files changed, 16 deletions(-)
 
-diff --git a/mm/migrate_device.c b/mm/migrate_device.c
-index b9c453c28795..289d7b08ace4 100644
---- a/mm/migrate_device.c
-+++ b/mm/migrate_device.c
-@@ -739,19 +739,21 @@ static void migrate_vma_unmap(struct migrate_vma *migrate)
-  */
- int migrate_vma_setup(struct migrate_vma *args)
- {
-+	const struct vm_area_struct *vma = args->vma;
- 	long nr_pages = (args->end - args->start) >> PAGE_SHIFT;
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 55320cf2c525..7ada0da24d0c 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -576,14 +576,6 @@ enum {
+ #define VM_ACCESS_FLAGS (VM_READ | VM_WRITE | VM_EXEC)
+ #define VMA_ACCESS_FLAGS mk_vma_flags(VMA_READ_BIT, VMA_WRITE_BIT, VMA_EXEC_BIT)
  
- 	args->start &= PAGE_MASK;
- 	args->end &= PAGE_MASK;
--	if (!args->vma || vma_test_any_mask(args->vma, VMA_SPECIAL_FLAGS) ||
--	    vma_is_dax(args->vma))
-+	if (!vma)
-+		return -EINVAL;
-+	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma) ||
-+	    vma_is_dax(vma))
- 		return -EINVAL;
- 	if (nr_pages <= 0)
- 		return -EINVAL;
--	if (args->start < args->vma->vm_start ||
--	    args->start >= args->vma->vm_end)
-+	if (args->start < vma->vm_start || args->start >= vma->vm_end)
- 		return -EINVAL;
--	if (args->end <= args->vma->vm_start || args->end > args->vma->vm_end)
-+	if (args->end <= vma->vm_start || args->end > vma->vm_end)
- 		return -EINVAL;
- 	if (!args->src || !args->dst)
- 		return -EINVAL;
+-/*
+- * Special vmas that are non-mergable, non-mlock()able.
+- */
+-
+-#define VMA_SPECIAL_FLAGS mk_vma_flags(VMA_IO_BIT, VMA_DONTEXPAND_BIT, \
+-				       VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT)
+-#define VM_SPECIAL vma_flags_to_legacy(VMA_SPECIAL_FLAGS)
+-
+ /*
+  * Physically remapped pages are special. Tell the
+  * rest of the world about it:
+diff --git a/tools/testing/vma/include/dup.h b/tools/testing/vma/include/dup.h
+index 94bf818ad0e1..7a6d99ad5303 100644
+--- a/tools/testing/vma/include/dup.h
++++ b/tools/testing/vma/include/dup.h
+@@ -352,14 +352,6 @@ enum {
+ #define VM_ACCESS_FLAGS (VM_READ | VM_WRITE | VM_EXEC)
+ #define VMA_ACCESS_FLAGS mk_vma_flags(VMA_READ_BIT, VMA_WRITE_BIT, VMA_EXEC_BIT)
+ 
+-/*
+- * Special vmas that are non-mergable, non-mlock()able.
+- */
+-#define VM_SPECIAL (VM_IO | VM_DONTEXPAND | VM_PFNMAP | VM_MIXEDMAP)
+-
+-#define VMA_SPECIAL_FLAGS mk_vma_flags(VMA_IO_BIT, VMA_DONTEXPAND_BIT, \
+-				       VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT)
+-
+ #define VMA_REMAP_FLAGS mk_vma_flags(VMA_IO_BIT, VMA_PFNMAP_BIT,	\
+ 				     VMA_DONTEXPAND_BIT, VMA_DONTDUMP_BIT)
+ 
 
 -- 
 2.55.0
