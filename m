@@ -1,65 +1,64 @@
 Received: from mail-dy2-f43.google.com (mail-dy2-f43.google.com [74.125.229.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 303AB3E716F
-	for <linux-scsi@vger.kernel.org>; Sun,  4 Oct 2026 03:41:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E45EB3E92B7
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Oct 2026 03:41:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.229.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791085291; cv=none; b=qkyuTLh3UTGudPPVvSByt+jpBfdJitddiB8STMAuA/0Na0N7KcP2RLbnRKujXDoT6+BykFPpB9n2IdiOPiMWFzViUCrcYsLVOjtHDrzNwjFOUlNiVeQp9kU+/zR1jeUAaPiSHU994hIA+cyBtYneBaD0AbE6rP0nWhTH7FNxLfc=
+	t=1791085300; cv=none; b=M3EQ5IREKwKzAHx/i/7ntWFddwQnWCm7tYz/kIe9GGnAJkVeU7yQWx6UxyCagSm0pfYU4wUQ0AldlWWoL4ktL4Rz8Xcp9dNoJMI/TTgbL0jxj6lx2c2iQZnh4QI6mj81cM+r32/hetIuqHow3fdQj7HjdwYlAGiR0Kq1Nkwl7K4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791085291; c=relaxed/simple;
-	bh=mtXZMLqLr5g9veYiMJstL74hAVNmvU1gSaLw2qIGZS4=;
+	s=arc-20240116; t=1791085300; c=relaxed/simple;
+	bh=fhR73NhC9+vNuwHlbmh1kyAcAjMvzf/ZTywGsRy2//0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mTGtabYwtp1KDFmFWSauaMSH3ZipLAD57mLFOSBtz1Jxifsk1YF3JbYTZaoIWTlesv7osMzxcqTxsKAzmbFU09fyxqBtcVXuueLTYYEfLCQslEO8zzcsP+yPNFsY3scm2RgJ60j8kU2/3aVhP3EBLjCZmhVrlfPOXSkuMMTGT2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=XOA3SIMY; arc=none smtp.client-ip=74.125.229.43
+	 MIME-Version; b=chd952AVg0aR5v776J3P4qvYKitwhNbhpso4bF0ld28qFOkpn7TS3jw31XxduL1j1gFGyIjD/3Qrz4x+LujREN5M0JqShPHdJVoUFLSNKryE98l5mk3gwfK/bGz2quRO02VaXOidAcj3N9T+p2QpEYZXrHsqZU0F9jxNyTzr8uY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=KC6jiuWX; arc=none smtp.client-ip=74.125.229.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="XOA3SIMY"
-Received: by mail-dy2-f43.google.com with SMTP id 5a478bee46e88-33c11ef641aso943767eec.1
-        for <linux-scsi@vger.kernel.org>; Sat, 03 Oct 2026 20:41:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="KC6jiuWX"
+Received: by mail-dy2-f43.google.com with SMTP id 5a478bee46e88-3396cec93b6so775568eec.3
+        for <linux-scsi@vger.kernel.org>; Sat, 03 Oct 2026 20:41:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1791085289; x=1791690089; darn=vger.kernel.org;
+        d=trailofbits.com; s=google; t=1791085298; x=1791690098; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=n1YLIVr1Fakqkl2VaF1GTuGfoGj0C72l92imytXWUw0=;
-        b=XOA3SIMYiVCC6rfHzq6B/EwfTmqtlfWW2aa3LJb9Vd6Het7eGcPWK0bDVBjcuZZmZT
-         0mWUpb1faIbuI/cY34QyN7++oMN9oZKQ7bkYcqDUBcHV4x21c1dmsoMhmIKmp4/9pb9K
-         IiZ+zdqiAGIdvZr86xtErD4eww8kXLmBPJFvoqEXAcxvrVoRF8YkUS7F7nl6EyqtYRDs
-         s4+LiBXQW7YAWKLDfmScNalkv08CBIBASXh8Q3O2U/f1fh0Ow6ttfxCk+waySsgKDh2x
-         5g22j4gC55njT1CAkwoN1tb2gCJD6CuVnI9u30yOGcVx94xaLvs84RhFZgapxr9TbCHj
-         JiWQ==
+        bh=MGayYLSpo+HONIxnPrP/qqWGzQP0aiWVlT8XEDLeFKY=;
+        b=KC6jiuWXgXiS5S2eGib2N12itxKTHdUOO5tGuswvNC7ihtVdIogS6i6QJS928e2Rzh
+         6Rekp/ODKvtHUrwhkqtvmrDuwTT2h+tVfq5rV7kgIcrVabfRoPiDSBO8UBzcxXFJfnSC
+         awIfhMF3H7Mh5A4ZDUVa/EqAfDXCoUEbZqy/S55ui2dfPuabypo+FTpimM0OlKANlHl2
+         yaE70YagJiiA8zOhj0AIlA5vZTUd8pWsLEXouJIvzzDxZSIm6M9PmnWFfycaaBVFHSiY
+         oblCZ3rh+fWMvvPBZ2ixsQA8Hydoc0MjkPFKS2A9lUwJ3zbvdCtcT971ganyDHgW4RmU
+         YdqQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791085289; x=1791690089;
+        d=1e100.net; s=20260707; t=1791085298; x=1791690098;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=n1YLIVr1Fakqkl2VaF1GTuGfoGj0C72l92imytXWUw0=;
-        b=hT0zsdBkeQsSN6xvKvFrL10du7sytlHgHjf0wJ60PT9jUchgmyV1f0ZOdt72tAGBSy
-         w89ulYoFfnLVXSEgjB7oezWcreQvG+REgFfUtsy7qxT6rAg6b3RruLoK0vAJt0tGjxir
-         jW1UueEcyvPC7qmOO4BPgridpp7vsY9FatXtofCYbA8ZeIt29+6AuMCmPtKVvWAO1ETJ
-         mHYqDst5lpG0sCQkG4vVWV/z7y6q5s/n4tko766uFbD4xwhiLEer/YAaJSICmYnXD23C
-         Casz+YvoREQNW5I+9Gy69kFC84j4kf7ipkJhxlU67gIORcDug8z1Y0vYdaWNAWTlmTg+
-         mL1Q==
-X-Forwarded-Encrypted: i=1; AKwUvBxZ0U66Zy4iHBHwD/aIdoVQR5nxwbHA8tbVA8O7yCRf9ROa1LLDQCxx8SUqNk5L5xvS9+NI97t/h9jv@vger.kernel.org
-X-Gm-Message-State: AFuF++nU6Z6TsOUFwWhd57dNkv+/0dh45BiKvTEaERQDVDTTkv31fFgI
-	u/IcFCpSU7vNqP4jW7KHn9Y9bzWBwZURhwecfyJMUwrEgMpk7YWQsznGAoo4QzSKv2zpM/okA8I
-	gwEHFNN1ofw==
-X-Gm-Gg: AYBFou1V4/qNr6PjT1X9uVMT0cYs9/te6kptww5kr9ATQdEAFUutYUcz0HFo2T0DY2M
-	b0bORGe4L+7CFdoP2uXUMF/zPcTQFzVDSm7G31wRFaR8Vfo2tUgYlkg9uUvJ8QzGa+wvKkvnWl/
-	7tbo4CtUlR5ie4qWCZMkR2wJuTTredLfBH1pHDXRHjf0KcUHBlj/9qKCAXrIuwpO60gRROH6dmh
-	/rkGrW+01HtHUOUL5L4aYzS+nXsF9StMRMDmlsBmuD8fFOPy0XHrJEKbsu8nVocbGjRJSc9Wtbf
-	ymfPo+lf9UdsENt+CyctsXJNyYcywny0pHVgmOUREVD8kr9BpOpcartaHCe41fJMMk1Vidd8Fce
-	1TDEjab04z586OgJRlqc13DWUZsifc8RpNIJPMBHDYe9sedmRKiiPnPjK+G0wRobTA7wllDzCy5
-	wKJPXIgJItqAsdoY0M4IUOomKLZeq2aF7zhRaSaYnBWKaCywFd/XsgxxAC47vZ4bqw3Iu6FFl9C
-	bHFe4W6R7LUdxkdmVGhbg04W2qKBxJ4htEHP8jjbhFB0NpnCq26BA2PwRGI5Pv3x7ZK59M=
-X-Received: by 2002:a05:7300:f818:b0:33c:14c9:c79d with SMTP id 5a478bee46e88-34f1506643emr8632451eec.9.1791085289071;
-        Sat, 03 Oct 2026 20:41:29 -0700 (PDT)
+        bh=MGayYLSpo+HONIxnPrP/qqWGzQP0aiWVlT8XEDLeFKY=;
+        b=ivNxHKWxboe5CuqTEH3LtxuusmOFojQ4sZfeToaXkv7SzqNHDgmkNO2esBnaL90DFA
+         J2cG4la5rgUI4iX/A8/0AzwJQu8aVpcW8OoeXQt/TnnOTaN/OiJilUgfbZLu+QrcGUUz
+         +7w/EGUCF0oGqRi9FYGYdcAD6gutkMxaXCm5Wr8axlxmBUPE0mraAF3xQlY0ULTxup23
+         3RuysYDii9aCw57JO5nNhqdN4C1zKxC8zR4m+uuuKS4Az6AgfDFkCIduNdbKHuuAEBpI
+         Ysgg2n6J8iPF+cvj91HuneQNAUjJuH5OlkqE4sBTp94g+Pvm3D2ZdEZchT0IgVuPjcc/
+         vhZw==
+X-Forwarded-Encrypted: i=1; AKwUvBzHnuI3gYN/f6zn/CEPOffoTw8TOnBMWPPRcX5b4lZbMOUEwB2uJu8bKFgPwXJVhZN5PLjN8fM0WiEr@vger.kernel.org
+X-Gm-Message-State: AFq9FYLKP6/cOsiMf2XkHJNTZfalfsNUbGW6t5nyzWHjfzxbBJG6qHXl
+	AtQZptRwq/eRCyjoAr+eS06NUkB++gXyAaM0u/ss6yNh9kvpdErd5HvaTnzXM3TO+dA=
+X-Gm-Gg: AYBFou1JHhULX4vAfGcOddtTDVHd0VrQP+iSIuRMGbIGqgl6B1aeB6NAK7PKYei4bN8
+	J2QdvD2CeHBNwSZT8+DayGKY9SHFC6YcAJlt67UqGsfFn+NcYR59qDxYz51uo88QM9vHH2YZp/4
+	7mRD0cdK/0ataAu+pNkQfe2uPHqyWQXs+5xnInbInQOVQSuklNaU70UpOsnGtLOjOTQNG7gzraL
+	RdF+jKj9ehc42V7K9Ucx/rGlVZg2Z31yc6DCRa6X/dYCfen07T/kenq3nemFbZ0/Fk7G+cSXzb5
+	UneI7hEsjGv0cs4LARZLfjo6ShDePt9xfCIRfKyiLNR4CeKIiD6/4c3KBBrCiwNV8YtJxGTFumh
+	I9ee7fEvxN+vefyAaw0Ji6hWL0qMeQRk79uzkJoJ1piFTFaCcMhpLE7fKEUIkQGt1WNsszsx4Vo
+	Sj3HIHEKYo2eWyAR+cMEzbQVl/KpFyGQQptbbV8i/T9P19oamAUuw70SZvFnpmxkXrvLvgJH9ix
+	8LbhdkBGOsiUedsP7Vz5BLhweDXi3MZ3TNLZnNWCNX7R1hv3SNcPYn2jlPAPmDKyjR78/U=
+X-Received: by 2002:a05:7301:618d:10b0:34a:e7ba:863c with SMTP id 5a478bee46e88-34f150d227emr8378610eec.18.1791085297893;
+        Sat, 03 Oct 2026 20:41:37 -0700 (PDT)
 Received: from localhost.localdomain ([2603:8001:5f01:8bab:a817:e330:2fc8:fa47])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35127023cc6sm1122416eec.2.2026.10.03.20.41.28
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3512718a18esm1308920eec.17.2026.10.03.20.41.37
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sat, 03 Oct 2026 20:41:28 -0700 (PDT)
+        Sat, 03 Oct 2026 20:41:37 -0700 (PDT)
 From: Artem Dinaburg <artem@trailofbits.com>
 To: Justin Tee <justin.tee@broadcom.com>,
 	Paul Ely <paul.ely@broadcom.com>
@@ -71,9 +70,9 @@ Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	linux-kernel@vger.kernel.org,
 	Artem Dinaburg <artem@trailofbits.com>,
 	stable@vger.kernel.org
-Subject: [RFC PATCH 1/3] scsi: lpfc: Do not touch the SFP mailbox after a wait timeout
-Date: Sat,  3 Oct 2026 23:41:25 -0400
-Message-ID: <b65e363ff0c63b745de9dba1c1b9e0c988b2dda2.1790968549.git.artem@trailofbits.com>
+Subject: [RFC PATCH 2/3] scsi: lpfc: Resolve synchronous mailbox wait ownership under hbalock
+Date: Sat,  3 Oct 2026 23:41:35 -0400
+Message-ID: <f6aba409fd4bf25e833d72bc943ca2788854985d.1790968549.git.artem@trailofbits.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <cover.1790968549.git.artem@trailofbits.com>
 References: <cover.1790968549.git.artem@trailofbits.com>
@@ -85,73 +84,95 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit ede596b1434b ("scsi: lpfc: Handle mailbox timeouts in
-lpfc_get_sfp_info") made the mailbox cleanup in lpfc_get_sfp_info_wait()
-conditional on LPFC_MBX_WAKE, so that a timed-out mailbox is left for
-its late completion.
+lpfc_sli_issue_mbox_wait() detaches the waiter under hbalock and, on
+timeout, switches mbox_cmpl to lpfc_sli_def_mbox_cmpl() so that a late
+completion frees the mailbox. The completion side does not make its
+decision under the same lock. lpfc_sli_wake_mbox_wait() sets
+LPFC_MBX_WAKE before taking hbalock, and the mailbox worker and the
+flush path load mbox_cmpl without hbalock (lpfc_sli_handle_mb_event(),
+lpfc_sli_mbox_sys_flush()). A completion that loaded the wake callback
+before the waiter timed out then finds no waiter, wakes nobody and leaks
+the mailbox. Because LPFC_MBX_WAKE is set before hbalock is taken, a
+waiter that times out in that window also returns MBX_SUCCESS, and its
+caller can free the mailbox before the wake handler reads it. This
+affects every caller of lpfc_sli_issue_mbox_wait().
 
-Once lpfc_sli_issue_mbox_wait() returns MBX_TIMEOUT, the mailbox belongs
-to the late completion, whose default handler frees it together with its
-DMA buffer. Reading mbox_flag at the error label after a timeout is
-therefore a use-after-free if the completion has already run.
+Decide ownership in lpfc_sli_wake_mbox_wait() under hbalock. If a waiter
+is still attached, set LPFC_MBX_WAKE and complete it. Otherwise run
+lpfc_sli_def_mbox_cmpl() after dropping the lock.
 
-The LPFC_MBX_WAKE test is also wrong when issuing fails immediately.
-lpfc_sli_issue_mbox_wait() clears the flag before issuing, so the caller
-still owns the mailbox but skips the cleanup, leaking the mailbox and its
-DMA buffer. The A2 page dump does not check for an issue failure at all,
-so it can report success with a zeroed page.
+The wake callback now handles the detached case itself, so the timeout
+path no longer switches mbox_cmpl, and the waiter no longer writes it
+while the completion side may be reading it without the lock.
 
-Never touch the mailbox after MBX_TIMEOUT, and treat every other
-non-success return from either dump as a failure that the caller cleans
-up.
-
-Fixes: ede596b1434b ("scsi: lpfc: Handle mailbox timeouts in lpfc_get_sfp_info")
+Fixes: 858c9f6c19c6 ("[SCSI] lpfc: bug fixes")
 Cc: stable@vger.kernel.org
 Assisted-by: LLM
 Signed-off-by: Artem Dinaburg <artem@trailofbits.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 29 +++++++++++++----------------
+ 1 file changed, 13 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 52fc50589..ea8835515 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -7410,12 +7410,12 @@ int lpfc_get_sfp_info_wait(struct lpfc_hba *phba,
- 	}
- 	mbox->vport = phba->pport;
- 	rc = lpfc_sli_issue_mbox_wait(phba, mbox, LPFC_MBOX_SLI4_CONFIG_TMO);
--	if (rc == MBX_NOT_FINISHED) {
-+	if (rc == MBX_TIMEOUT)
-+		goto error;
-+	if (rc != MBX_SUCCESS) {
- 		rc = 1;
- 		goto error;
- 	}
--	if (rc == MBX_TIMEOUT)
--		goto error;
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		mp = mbox->ctx_buf;
- 	else
-@@ -7472,6 +7472,10 @@ int lpfc_get_sfp_info_wait(struct lpfc_hba *phba,
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index cfa437116..c2086f331 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2814,9 +2814,9 @@ lpfc_sli_chk_mbx_command(uint8_t mbxCommand)
+  *
+  * This is completion handler function for mailbox commands issued from
+  * lpfc_sli_issue_mbox_wait function. This function is called by the
+- * mailbox event handler function with no lock held. This function
+- * will wake up thread waiting on the wait queue pointed by context1
+- * of the mailbox.
++ * mailbox event handler function with no lock held. If the waiter is
++ * still attached, wake it; otherwise the caller timed out and the
++ * callback owns the mailbox resources.
+  **/
+ void
+ lpfc_sli_wake_mbox_wait(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
+@@ -2824,17 +2824,18 @@ lpfc_sli_wake_mbox_wait(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
+ 	unsigned long drvr_flag;
+ 	struct completion *pmbox_done;
  
- 	if (rc == MBX_TIMEOUT)
- 		goto error;
-+	if (rc != MBX_SUCCESS) {
-+		rc = 1;
-+		goto error;
+-	/*
+-	 * If pmbox_done is empty, the driver thread gave up waiting and
+-	 * continued running.
+-	 */
+-	pmboxq->mbox_flag |= LPFC_MBX_WAKE;
++	/* Decide who owns the mailbox under the same lock as waiter detach. */
+ 	spin_lock_irqsave(&phba->hbalock, drvr_flag);
+ 	pmbox_done = pmboxq->ctx_u.mbox_wait;
+-	if (pmbox_done)
+-		complete(pmbox_done);
++	if (!pmbox_done) {
++		spin_unlock_irqrestore(&phba->hbalock, drvr_flag);
++		lpfc_sli_def_mbox_cmpl(phba, pmboxq);
++		return;
 +	}
- 	if (bf_get(lpfc_mqe_status, &mbox->u.mqe)) {
- 		rc = 1;
- 		goto error;
-@@ -7482,7 +7486,7 @@ int lpfc_get_sfp_info_wait(struct lpfc_hba *phba,
- 			     DMP_SFF_PAGE_A2_SIZE);
++
++	pmboxq->mbox_flag |= LPFC_MBX_WAKE;
++	complete(pmbox_done);
+ 	spin_unlock_irqrestore(&phba->hbalock, drvr_flag);
+-	return;
+ }
  
- error:
--	if (mbox->mbox_flag & LPFC_MBX_WAKE) {
-+	if (rc != MBX_TIMEOUT) {
- 		mbox->ctx_buf = mpsave;
- 		lpfc_mbox_rsrc_cleanup(phba, mbox, MBOX_THD_UNLOCKED);
+ /**
+@@ -13313,15 +13314,11 @@ lpfc_sli_issue_mbox_wait(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq,
+ 
+ 		spin_lock_irqsave(&phba->hbalock, flag);
+ 		pmboxq->ctx_u.mbox_wait = NULL;
+-		/*
+-		 * if LPFC_MBX_WAKE flag is set the mailbox is completed
+-		 * else do not free the resources.
+-		 */
++		/* The callback owns cleanup if it has not woken the waiter. */
+ 		if (pmboxq->mbox_flag & LPFC_MBX_WAKE) {
+ 			retval = MBX_SUCCESS;
+ 		} else {
+ 			retval = MBX_TIMEOUT;
+-			pmboxq->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
+ 		}
+ 		spin_unlock_irqrestore(&phba->hbalock, flag);
  	}
 -- 
 2.43.0
