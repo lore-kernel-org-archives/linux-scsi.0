@@ -1,81 +1,81 @@
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B77C046EF90
-	for <linux-scsi@vger.kernel.org>; Sun,  4 Oct 2026 17:18:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E6B53CD8CC
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Oct 2026 17:19:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.178
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791134312; cv=pass; b=UDbi74Rx0sa8vt+zvBJKaJz07eQQhsSXfjNs71wCAPKx1P/1Vqp16qlxCSzj2uhySnzeJh3hD3GFVkTyV5fsx+4jBiGbFia0D3M/v+Hbj8jgDVLX/gyzpeHXzYROIJv+bYGCTxDONmSrdDng+W8dJL1Gjn4JlhiVhPx5Hlj03Jc=
+	t=1791134366; cv=pass; b=lkyhPRFxAKW2Co6LlY6ut/8ED+4VaDr/e+irdKeXpOnuonXcDp/qJUKK+ZlGiGjcs00aUkbDhJF/6+h91rwGsoccCQytZmd64YV/t14+Nb4YHCtxAnrpE8qSs1gmIenb9iOaT0uEBMYzmFqwoFmhDkcVyuN7wvCZBbVdHt9PHf4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791134312; c=relaxed/simple;
-	bh=Og6qpLhWHly4IoZcNfYZyEY8s5xN9sYAkBks0QnUI28=;
+	s=arc-20240116; t=1791134366; c=relaxed/simple;
+	bh=Xs3FYb65sS4Mlx/21+kwkOlIJXqlGZcwdZaObIOhQD8=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YcMXumWo/9KfP/kAaQ5D+77k9q6pYt9hMehz+/saqQDRdV/bmPtnJQfn+81nkVZpO/CzrOurqDeS4xaURg6pjwyDOtFOiqh2CEft7eMVctdcyPFrR1kPNutoRJhPmRhed6NWNmAWJSVNzSB8u9/sTwbkjYQ5hO0o9a6j6jV50CE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=IeOZJMDE; arc=pass smtp.client-ip=209.85.160.177
+	 To:Cc:Content-Type; b=KP/E6QI5bW2ObIihyrA3Glb92DbDzLIjrXRJS9fTZ+4cez23Uow0lZDZAfXy32bQDMDLPXNr1Qtorywf4EqoyuQhXZnGIqAttGPsZbVpGWreTsk6MdQ/ysLtx7MhUlXaHojWtwLqkDCsYfSlwtEmVPVE9X/6o5t9+79YgwoXkds=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mjrczGUU; arc=pass smtp.client-ip=209.85.160.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IeOZJMDE"
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-533202fe429so245841cf.0
-        for <linux-scsi@vger.kernel.org>; Sun, 04 Oct 2026 10:18:28 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791134308; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mjrczGUU"
+Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-5337c7b9937so258941cf.0
+        for <linux-scsi@vger.kernel.org>; Sun, 04 Oct 2026 10:19:23 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791134362; cv=none;
         d=google.com; s=arc-20260327;
-        b=nclLrVDcpKt7dB3v1dK11Ms1saqp+MRiaKec4nPgtEMBSgcTA9/mR2pN2KBdh5ndan
-         SCuqPUli6q7iFExxq9H4wCMo3kKBsT3y8+WaSo/N3yXwD3Bjz4BPpz6pBk4eOwGA2xid
-         osgOXA6XCeowypliuCqwtZxPDYEIAWwD0DZKTLE5xYs4vHSn9TCt7sYkBMWMzBexIO/o
-         gtD6ejY6pJN3tsy/vXocE4s6ZZz9jKcYiT/eFeOYwLr7HaVn8Wos96kXUK3Cacr2k37v
-         Ne7ELmow1zI0jynleKiGGE8n5w/Ldjwpjd+0x78cBujdsNlnskJHYjWmFHC8/cijEqj/
-         OsQg==
+        b=Bmr57XPJf/Im0nem5wIyLP7KxrMOz8lAfTXbzhyQ00Aa8KUzPtXp0dfF/GIpZQUFsW
+         2alPPYt4odAeo9x1jtoB4TSBE9q2O39glPaL6YPcwcocyMYYxkEW1IXvNIYNiM+yU6zA
+         iVr1yW6+CTbIigTD3jKjTNCp1Xek8GNP194lmTVXmkUh1WE251wqW20S4AD9tZZoibbC
+         CcRNyCCUmgEFt7PD5P09J35j3pWSOzxb2sfehx1ohRK8x/bZsUsR5MvUOFyHxITG/LNO
+         JILlQ4xsm+Ry84TaW7v2VEdxepOV4uK6QlsGowQH1zozbtHHmtQ8dyAZ4OPyHDbER4Qz
+         mADg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=QinBTGgc4+2Xq3VgxIpbr+CWC5UMzdARKszuxAv87KA=;
-        fh=SjMFj7A3dBBWg36+OYcd3UznwGAbC+k+aHQWQqzNAGU=;
-        b=BC0keMZv1v2LkekhsAKr3ElM9w9TIhoobv5IY/NA8+0lPDWHTa4A1rAwQgrSBMrbp9
-         tsyzZS5g+ulq/s8Jt18aHJGEiTN8qztHA8cJOnD/QnAX8x7knNZR4ZKFqrRhOk8veEx+
-         gG+RXhAKinKFIAdrQMjVUKMIjNHk2EeiBh72gUdWC7epwUEcNA4Ehgrsxf+tlPMrJMp7
-         2ISPf4CMNBh0VtLQ597FyBln0vrTwPDD3KXY5ZfDgJyzUPQEEjm1D5QRdXfUqgOWyyZH
-         1tJGyhna2Pmk6FlSdqXs8lzViVRRvaO70qRNP7gNJ9X8DPVx0Rny9eHbFQxBois+fEV9
-         mjtA==;
+        bh=LB9YQVahVaEWF6zZVDiq8xpdl9rxBex8+tzU6TEVUNY=;
+        fh=xBltGi5JsKEOVcLBMByz9eEn9YGAfZGf4fmdz/opCEw=;
+        b=DRWTQz6AG9+f2W3FT4GB8O3XJEFCCLsUJgytuLtAZkp+xL0WsCCBtzLzj8U0tkL5SW
+         gTXMDtaQpRMXCiyVQ5HWOWL4AWGGIS7wL6G5vc/qPwDfb7gltOKyQo0UiWthMoRnnr9w
+         fG6yBXCGsumw8H0xs1+U7hr70zEr5MRUmeeIZSl21V85KIIPuNdqHAVRNGf4LESNUQnI
+         H/eAFAq2WRK0A0ub3FvDEp7xCYNPgixsMwmQqoxBHjF2M64wlDVVOz8P4xM5rQ11Zo8h
+         6pOmzS+J1EXSU0zMOr/OeZePXeZnS0aNuywH3Fm5SiiA/bcp/rAIKVg/vWF57WaoP+sc
+         TWVA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791134308; x=1791739108; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1791134362; x=1791739162; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=QinBTGgc4+2Xq3VgxIpbr+CWC5UMzdARKszuxAv87KA=;
-        b=IeOZJMDEt2qL247lMuxc+jIqy4zsxjPTwxleAIFut5mj8G2+fn0ALfayxMwtNTebBL
-         RJbU8GAtzBUM9tsUheu/An8aItKMV0/OD1HywoDP1i5ZuCAEBPfK0+6p8DEX0iH9xnQh
-         60NDAP5forHGc7dvpDofgIb+d7yo0My6bjDErncBm9VubHiQskbmc0eNguE4WNxyNEtX
-         4EbzRviiNSaJPR8RjIii7dCQOXrUEwckaME4JawxCPYdD4zGpSOVO1IGM/3PERojKv3v
-         K3jp1b6IlKprglTroQUMUhkx2M9m+VCLWlPW3xjJvdkP9/cNYbia77DYs/L7VzmOzU/g
-         113A==
+        bh=LB9YQVahVaEWF6zZVDiq8xpdl9rxBex8+tzU6TEVUNY=;
+        b=mjrczGUUQ9qIw+a6lIyMo7+v4ZR4bOTHEQIXcE52tNEmK+YCOyOhmjWJ6za+B72FiM
+         btNp7NOqAX+Z9tmD2Eog/Sz6+oDJcx3oKZ2A+O6sOdgcz2pjDIuzLCUKqJU1ixe8TcqK
+         JNiIgq1FZWF1dG20M2HV8J5S8mNqsuBH3gDOu1B6gd+v5RrlenqRRnKY8wh3Hw0yaWHH
+         N4xTZ2MNuH+/p6LB6ZiQompDz9pRTrzalf71wvcsTnEvAGqXoZCNpzX9izbsigL3d6Hq
+         aUHjjv/3GEXe5tzZJ6gHNC2Ky2p3A4nMREFq/qXO3EIkuhuTKM25AL3ArZ/b1M+N68rS
+         6RyA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791134308; x=1791739108;
+        d=1e100.net; s=20260707; t=1791134362; x=1791739162;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=QinBTGgc4+2Xq3VgxIpbr+CWC5UMzdARKszuxAv87KA=;
-        b=UGLcLyYMEukiZzOOPDs+IeVR5BvLRI6B09CpVkzSA1zvrFdmuLjWUcT+O34Q6ZNhMR
-         HBylmsR+Zy6SZlVgUduKo4xUG5NTje6MJI0/VPtNraHeSDEJjhi+DgwjOFtcqFIGA0b4
-         f20Lpt6ny5zQeNQP9xYUojXNEyK0HajbTu2l0fBCECSRFZYyadpsdjDXyAl2Kuu/9HFA
-         ySNBTVqa694ALj1UbTXWBn1I6vgtyYV5VWu2sRS2ubXkMvAORHO8BYUCWvZDYg4op3zw
-         jwfBaniieCnuPyFh2RRIIsF4mBBsIdIMtPSPL3RGFgXhT9vaDyRNztS8q40lkbbXj75O
-         Aqfw==
-X-Forwarded-Encrypted: i=1; AKwUvByz2Na/7OlWOOS3eBVZQNTxwz0pDc35htPtuAkEBA6SlJO5XCpuWJK8ZyTSY+9VQDJGlFK+XoN/0rRF@vger.kernel.org
-X-Gm-Message-State: AFuF++k/tFWO4MjtuPiA0Il/g5Vbwc5eHXN4TqGbi+Vd4ZNdOc41LPUL
-	+7Bqeia0mQNrnx2pYdDjOkdHU0HC4vwAIAGnc4657eKsQZA71A0UFSyrHv7bvxGlVM/vQCJlc6k
-	3S5M+0wpHVAz6p0P6NeHNIsqtrlLwnmOyZCsOhknr
-X-Gm-Gg: AYBFou3g1mzQX2UCY775Cb5NzhnVz1DPBnM9kME+ZQbLB5I4oebCbGXqOyLg4uCO6/o
-	VRsG7tsiSxjYn2YkVBVoXlV/IN/BInB59VzOE/K8VccsnK+cokTBCfG0/mKooX3mV73XAP0rpm+
-	xXvWXFNxCIMVeqp6Lrz1ZfHVOFvLilx2VUQLIXz9CleoFtBDtqo7EdSiC1Vnb0IT8hZsEDQIC/e
-	MQun460scLuAEonNtRyYrhPCccXrf/2W0fuTc/dYm6+S1boFZwuxgILecPvg8IgsNcN8suYk3PQ
-	RakZ98Wq7GBav06nciKGj2QYmIeeXoyX6jACe/5pUnVtPHCaGnpoVriU
-X-Received: by 2002:a05:622a:1b91:b0:531:34b9:2532 with SMTP id
- d75a77b69052e-535146ce3e1mr16649101cf.4.1791134306600; Sun, 04 Oct 2026
- 10:18:26 -0700 (PDT)
+        bh=LB9YQVahVaEWF6zZVDiq8xpdl9rxBex8+tzU6TEVUNY=;
+        b=0378zk0O/JJoO8tv14NL4J2IRLF8+DIMSq988QnwqOFEeRvVVI+1xGJAxAqKkGeTBy
+         lJ5OY24qiV48R3NaCCoixkzU3dwgrmnMMOrjx2YPuo1lWfRKlCq8H/QFeeV1OP0EFMVI
+         gADrSLIHPGEFiaHpJwL6ScSD4dX8M8QjEmdUpMmUhDSqEvIHnRoiE3Rai985/KvRdBNh
+         nZdWjMZnc90vtDLxAPViUTE5ytXu9wI5K8V+dSJY//chWP8/M4/DyFYkyu9nutDyxZeo
+         dwH7WRDuYFuS/G92MZfdDqudsh31DV1eWWS81GDvTo2h4D7XNnEw43+flk7u7iG/T2Mv
+         ZoJw==
+X-Forwarded-Encrypted: i=1; AKwUvBxEgJsVqBPUgHu62ufRjUXVBCmV/xDVogMyzpySxVaXGKqow808AGn+UaPHmHmZQJzfqNGgZT4hLpx6@vger.kernel.org
+X-Gm-Message-State: AFuF++lOHHGilZH1UTdJCwm4P3c41XMu6vPwuKAYviec4ZWo8PBum+F3
+	0g2m3HP6Jpfbr50Oi2v6WuOs6qFehyijbIPXzPvl/21iHCfJ4EIwU8E8JgiAVHeLDSSpBfr4ZwN
+	mhus97Hyk14LjHYLD0OANEAOMRhN9Z/4wqSHI+eRO
+X-Gm-Gg: AYBFou2LpBYwv4JyY3wVNJEEvfnIYq71Jx8J9/KQqJ4mrCh6OqMDkGqgXPNC05DIl+M
+	LolzTtTdkgN0rHx97zbGBCW/8ft/1mhN090sf4nP22nXFThhnlPwNnaVfyYQ3FGwGma1948Drq8
+	cfgQRf2l2LeJbxFcwOkCmHFg1XJ6iQj8i0evcoVZk5BpfNEF0t2XQFEoT/F9ttR2DT9h3uFeH6r
+	P8t0TBuF1EOv1IaIWZpZta8A0S3xolEXkollh69TrL0eW0KjrYkZ9GmHByi5EMvat1ellKiEMve
+	WShZpgirlHyAra2JYdTAgWjFUcsQdE+oXOdSctdeTMms0oSEFvLdQ/ubEA==
+X-Received: by 2002:ac8:5e4d:0:b0:532:8423:1e78 with SMTP id
+ d75a77b69052e-535131e75aemr16242571cf.10.1791134361196; Sun, 04 Oct 2026
+ 10:19:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -83,14 +83,14 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
- <20261003-b4-mmap-prepare-vma-flag-sanify-v4-9-a1f052500fd7@kernel.org>
-In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-9-a1f052500fd7@kernel.org>
+ <20261003-b4-mmap-prepare-vma-flag-sanify-v4-11-a1f052500fd7@kernel.org>
+In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-11-a1f052500fd7@kernel.org>
 From: Suren Baghdasaryan <surenb@google.com>
-Date: Sun, 4 Oct 2026 10:18:15 -0700
-X-Gm-Features: AclHuK_AcqqolMBhSGAldWSHQHOOTkitmvHnvL2po1Vgiun02DenXRmiOZ3VQUs
-Message-ID: <CAJuCfpFkfK4gvBPVoSiSdKs_3LR-0-dw_08BVxs-NqCvQK0-Mg@mail.gmail.com>
-Subject: Re: [PATCH v4 09/38] drivers/usb/mon: update to use mmap_prepare +
- map kernel pages
+Date: Sun, 4 Oct 2026 10:19:09 -0700
+X-Gm-Features: AclHuK8q5domRMZg3DAHzMyB2slG297Lp1_L7hWmlqEUWco5tu_MI_s_DzFbhWI
+Message-ID: <CAJuCfpGdJM=J+6tkzid_Mu+7nevdhFaTW0E9tbKXoLmzC951Fw@mail.gmail.com>
+Subject: Re: [PATCH v4 11/38] selinux: reject writable opens of policy file,
+ drop mmap shared/write check
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, "Liam R. Howlett" <liam@infradead.org>, 
 	Vlastimil Babka <vbabka@kernel.org>, Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
@@ -155,205 +155,70 @@ Cc: Andrew Morton <akpm@linux-foundation.org>, "Liam R. Howlett" <liam@infradead
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Oct 3, 2026 at 6:36=E2=80=AFPM Lorenzo Stoakes (ARM) <ljs@kernel.or=
+On Sat, Oct 3, 2026 at 6:37=E2=80=AFPM Lorenzo Stoakes (ARM) <ljs@kernel.or=
 g> wrote:
 >
-> Replace the deprecated .mmap hook with its replacement .mmap_prepare. As
-> part of this change, additionally take the approach of mapping pages upon
-> mmap rather than providing a fault handler.
->
-> The page span cannot be mutated when an mmap mapping is in place, so this
-> is safe to do in advance (the MON_IOCT_RING_SIZE ioctl operation exits
-> -EBUSY if it's attempted, gated by the rp->mmap_active reference count).
->
-> Utilise the newly introduced mmap_action_map_discontig_kernel_pages() to =
-do
-> this, which allows for iteration over pages in mon_bin_discontig_get().
->
-> mon_bin_discontig_init() increments the rp->mmap_active reference count t=
-o
-> stabilise page spans. Should an error arise the core unmaps the VMA and
-> mon_bin_vma_close() drops the reference again.
->
-> The vm_ops->close hook implemented in mon_bin_vma_close() will ensure
-> correct reference count arithmetic upon unmap (with mon_bin_vma_open()
-> accounting for splitting).
->
-> The existing semantics are all retained, including not mapping past the
-> range of available pages, with a SIGBUS being raised in a userland proces=
+> The policy file has no write method and is exposed read-only (S_IRUGO in
+> selinux_files[]), yet sel_open_policy() performs no open mode check, so a
+> CAP_DAC_OVERRIDE caller can open it O_RDWR. Reject FMODE_WRITE at open, a=
 s
-> that attempts to access past this point.
+> kernfs does.
 >
-> Ultimately insert_page() is invoked to insert each page, which increments
-> the reference count on each mapped page. This mimics what was being done
-> previously, only we pre-map the entire range rather than doing so on
-> demand.
+> The file can then never be mapped with FMODE_WRITE, so do_mmap() always
+> clears VM_MAYWRITE and VM_SHARED for MAP_SHARED mappings and the VM_SHARE=
+D
+> check in sel_mmap_policy() cannot be reached. Remove it.
 >
-> The existing fault handler did nothing that required demand paging, and w=
-as
-> presumably implemented this way for historical reasons.
+> This also stops sel_mmap_policy() clearing VM_MAYWRITE on a mapping that =
+is
+> neither a PFN map nor a mixed map, ahead of the core enforcing that only
+> such mappings may do so.
 >
-> One behavioural difference: pages are no longer faulted in on demand, so =
-a
-> page discarded with MADV_DONTNEED is not repopulated and a subsequent
-> access raises SIGBUS, as with other pre-populated kernel mappings.
->
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Acked-by: Stephen Smalley <stephen.smalley.work@gmail.com>
+> Reviewed-by: Jann Horn <jannh@google.com>
+> Acked-by: Paul Moore <paul@paul-moore.com>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 
 Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 
 
 > ---
->  drivers/usb/mon/mon_bin.c | 82 ++++++++++++++++++++++++++++++-----------=
-------
->  1 file changed, 53 insertions(+), 29 deletions(-)
+>  security/selinux/selinuxfs.c | 11 +++--------
+>  1 file changed, 3 insertions(+), 8 deletions(-)
 >
-> diff --git a/drivers/usb/mon/mon_bin.c b/drivers/usb/mon/mon_bin.c
-> index 687f6a8981f3..9d00b21a8153 100644
-> --- a/drivers/usb/mon/mon_bin.c
-> +++ b/drivers/usb/mon/mon_bin.c
-> @@ -1219,6 +1219,15 @@ mon_bin_poll(struct file *file, struct poll_table_=
-struct *wait)
->         return mask;
->  }
+> diff --git a/security/selinux/selinuxfs.c b/security/selinux/selinuxfs.c
+> index c7d91476971c..545a6f89f9e7 100644
+> --- a/security/selinux/selinuxfs.c
+> +++ b/security/selinux/selinuxfs.c
+> @@ -340,6 +340,9 @@ static int sel_open_policy(struct inode *inode, struc=
+t file *filp)
+>         struct policy_load_memory *plm =3D NULL;
+>         int rc;
 >
-> +static void __mon_bin_vma_open(struct mon_reader_bin *rp)
-> +{
-> +       unsigned long flags;
+> +       if (filp->f_mode & FMODE_WRITE)
+> +               return -EACCES;
 > +
-> +       spin_lock_irqsave(&rp->b_lock, flags);
-> +       rp->mmap_active++;
-> +       spin_unlock_irqrestore(&rp->b_lock, flags);
-> +}
-> +
->  /*
->   * open and close: just keep track of how many times the device is
->   * mapped, to use the proper memory allocation function.
-> @@ -1226,64 +1235,79 @@ mon_bin_poll(struct file *file, struct poll_table=
-_struct *wait)
->  static void mon_bin_vma_open(struct vm_area_struct *vma)
+>         rc =3D avc_has_perm(current_sid(), SECINITSID_SECURITY,
+>                           SECCLASS_SECURITY, SECURITY__READ_POLICY, NULL)=
+;
+>         if (rc)
+> @@ -424,14 +427,6 @@ static const struct vm_operations_struct sel_mmap_po=
+licy_ops =3D {
+>
+>  static int sel_mmap_policy(struct file *filp, struct vm_area_struct *vma=
+)
 >  {
->         struct mon_reader_bin *rp =3D vma->vm_private_data;
-> -       unsigned long flags;
+> -       if (vma->vm_flags & VM_SHARED) {
+> -               /* do not allow mprotect to make mapping writable */
+> -               vm_flags_clear(vma, VM_MAYWRITE);
+> -
+> -               if (vma->vm_flags & VM_WRITE)
+> -                       return -EACCES;
+> -       }
+> -
+>         vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
+>         vma->vm_ops =3D &sel_mmap_policy_ops;
 >
-> -       spin_lock_irqsave(&rp->b_lock, flags);
-> -       rp->mmap_active++;
-> -       spin_unlock_irqrestore(&rp->b_lock, flags);
-> +       __mon_bin_vma_open(rp);
->  }
->
-> -static void mon_bin_vma_close(struct vm_area_struct *vma)
-> +static void __mon_bin_vma_close(struct mon_reader_bin *rp)
->  {
->         unsigned long flags;
->
-> -       struct mon_reader_bin *rp =3D vma->vm_private_data;
->         spin_lock_irqsave(&rp->b_lock, flags);
->         rp->mmap_active--;
->         spin_unlock_irqrestore(&rp->b_lock, flags);
->  }
->
-> -/*
-> - * Map ring pages to user space.
-> - */
-> -static vm_fault_t mon_bin_vma_fault(struct vm_fault *vmf)
-> +static void mon_bin_vma_close(struct vm_area_struct *vma)
->  {
-> -       struct mon_reader_bin *rp =3D vmf->vma->vm_private_data;
-> +       struct mon_reader_bin *rp =3D vma->vm_private_data;
-> +
-> +       __mon_bin_vma_close(rp);
-> +}
-> +
-> +static const struct vm_operations_struct mon_bin_vm_ops =3D {
-> +       .open =3D     mon_bin_vma_open,
-> +       .close =3D    mon_bin_vma_close,
-> +};
-> +
-> +static int mon_bin_discontig_init(void *vm_private_data, void **private)
-> +{
-> +       struct mon_reader_bin *rp =3D vm_private_data;
-> +
-> +       /* Dropped by mon_bin_vma_close() on unmap, including on error. *=
-/
-> +       __mon_bin_vma_open(rp);
-> +       return 0;
-> +}
-> +
-> +static int mon_bin_discontig_get(struct discontig_kernel_page_state *sta=
-te)
-> +{
-> +       struct mon_reader_bin *rp =3D state->vm_private_data;
->         unsigned long offset, chunk_idx;
-> -       struct page *pageptr;
->         unsigned long flags;
->
->         spin_lock_irqsave(&rp->b_lock, flags);
-> -       offset =3D vmf->pgoff << PAGE_SHIFT;
-> +
-> +       offset =3D state->pgoff << PAGE_SHIFT;
->         if (offset >=3D rp->b_size) {
->                 spin_unlock_irqrestore(&rp->b_lock, flags);
-> -               return VM_FAULT_SIGBUS;
-> +               discontig_kernel_map_abort(state);
-> +               return 0;
->         }
->         chunk_idx =3D offset / CHUNK_SIZE;
-> -       pageptr =3D rp->b_vec[chunk_idx].pg;
-> -       get_page(pageptr);
-> -       vmf->page =3D pageptr;
-> +       discontig_kernel_map_page(state, rp->b_vec[chunk_idx].pg);
-> +
->         spin_unlock_irqrestore(&rp->b_lock, flags);
->         return 0;
->  }
->
-> -static const struct vm_operations_struct mon_bin_vm_ops =3D {
-> -       .open =3D     mon_bin_vma_open,
-> -       .close =3D    mon_bin_vma_close,
-> -       .fault =3D    mon_bin_vma_fault,
-> +static const struct discontig_kernel_page_ops mon_discontig_ops =3D {
-> +       .init =3D mon_bin_discontig_init,
-> +       .get =3D mon_bin_discontig_get,
->  };
->
-> -static int mon_bin_mmap(struct file *filp, struct vm_area_struct *vma)
-> +static int mon_bin_mmap_prepare(struct vm_area_desc *desc)
->  {
-> -       /* don't do anything here: "fault" will set up page table entries=
- */
-> -       vma->vm_ops =3D &mon_bin_vm_ops;
-> +       const struct file *filp =3D desc->file;
->
-> -       if (vma->vm_flags & VM_WRITE)
-> +       if (vma_desc_test(desc, VMA_WRITE_BIT))
->                 return -EPERM;
->
-> -       vm_flags_mod(vma, VM_DONTEXPAND | VM_DONTDUMP, VM_MAYWRITE);
-> -       vma->vm_private_data =3D filp->private_data;
-> -       mon_bin_vma_open(vma);
-> +       desc->vm_ops =3D &mon_bin_vm_ops;
-> +       vma_desc_clear_flags(desc, VMA_MAYWRITE_BIT);
-> +       vma_desc_set_flags(desc, VMA_DONTEXPAND_BIT, VMA_DONTDUMP_BIT);
-> +       desc->private_data =3D filp->private_data;
-> +
-> +       mmap_action_map_discontig_kernel_pages(desc, NULL, &mon_discontig=
-_ops);
->         return 0;
->  }
->
-> @@ -1298,7 +1322,7 @@ static const struct file_operations mon_fops_binary=
- =3D {
->         .compat_ioctl =3D mon_bin_compat_ioctl,
->  #endif
->         .release =3D      mon_bin_release,
-> -       .mmap =3D         mon_bin_mmap,
-> +       .mmap_prepare =3D mon_bin_mmap_prepare,
->  };
->
->  static int mon_bin_wait_event(struct file *file, struct mon_reader_bin *=
-rp)
 >
 > --
 > 2.55.0
