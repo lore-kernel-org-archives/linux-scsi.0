@@ -1,81 +1,81 @@
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F64471402
-	for <linux-scsi@vger.kernel.org>; Sun,  4 Oct 2026 17:23:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 924F9470117
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Oct 2026 17:24:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.170
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791134588; cv=pass; b=fQe7ANV2n6clRCRs27Q/g3KgdVNxGHMPRUNMT6vv+eTAetz8K8A7VVWqRiedNhwCcItXYY2IWp/3TzaNOsjoJv8BzJJBYGEKdLQBZMnAtejEBdLep+DgsSJssXv5XZh+ZGDEwgFFPcivJXWxyKERzNzBDyL6sqgJtM//b2Ibyh4=
+	t=1791134679; cv=pass; b=msTviiqCRkFhleiw97UkC/MnvgS8ngD5mxBXX/+wqvxUcBUe2hXuc9a4BsNxfVuz3jJ1dEj0sbsVtNNXv3Sz1UeO6nqMJQDSPXXOZ6387Qq/N96RzmXFaYBYezG3MvQ30cggYU/pqJLm+7k2yuUamLvD5Fn6FDzD6c2oaniN+RA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791134588; c=relaxed/simple;
-	bh=5YwE6gm7wg0FWDw+d5L2a31cmRORmzOWrTnpytOvhqM=;
+	s=arc-20240116; t=1791134679; c=relaxed/simple;
+	bh=4B6T8K8eUucXVsVxRTncDC2MG3zHAWjPPggaTDLiRRk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=d6oVScixDGmA2EGyCh01BU/rj5pVBHiLaFbJiWRwlPwFACKJizM0My2pE6A3+3nlfiWWTg52qj1iFW7uqJdMhy7rHEq0pc3Ck5eEvDPs9vHOj1gDVup1EQgLIIlLOHKV9gfkZwwS7t+XpxaWKzEZY9J0UdJkvrBC9pNygRJAlOw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ev/NnSUV; arc=pass smtp.client-ip=209.85.160.173
+	 To:Cc:Content-Type; b=OtzFeM6VVQywuVebTmS7I6n2qqEEIv/ca5DmEO1dWU32iq1LC5yDNKPtVYXQ4XLQMPbvWEHz0INt5j/+RHPhKcMEdmDq/nLhByBTFcLlPnGFc/OokRFcmNTjxtEBUyS0gstpBUamo1SxxXXWnCIsDCgcHaKkPhly0Qj3Gdktcik=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=LTu4m/1d; arc=pass smtp.client-ip=209.85.160.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ev/NnSUV"
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-5337c7b9937so260001cf.0
-        for <linux-scsi@vger.kernel.org>; Sun, 04 Oct 2026 10:23:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791134583; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LTu4m/1d"
+Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-5337c7b9937so260361cf.0
+        for <linux-scsi@vger.kernel.org>; Sun, 04 Oct 2026 10:24:35 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1791134674; cv=none;
         d=google.com; s=arc-20260327;
-        b=bCn5xcaOG0wYCdrSpb9ck4VTtoNJ4DadN+OcBUjXXL5YooCwOTExhjAFs+V99DxR1F
-         4hiXT4fdM3uveztaTJEwtWhO2uAa0383m+E90pUo0CIjaUDtKLxl3446TT4RLFJTA1wt
-         t+oJn50XaNt2U545S6uD3IDicD7G9/Yx/kBARuuIF1RRAef6e/urZr6rLuDd3egipOfi
-         6KaJELUT612X1QtiXNswbf7B4fkpzHymwQ8biEumPC7Sh3243ZGl4GyH37UL9kb2UO+d
-         uofPsknYRIJaLqFKY9wnXhO7XuR2U4i7/tHfSAi0u7c70LF2I65lDOUYLW9ZT+qAQxBh
-         1PPw==
+        b=Aw40idF2t8aXJWw6sPgwVMxhYBh84YXG8LnplTxOx/zra/LLYImIpmIuiGyarBVREq
+         2r1iXuCA633LpHbmQasjKPpMojaXvpe/9l8lVOl7TEcXNRbodFt4xnRFM+VXh7kWHvah
+         Lp3zDIZR8ljrdEv72AKWWsTgCa1GEXD3xvr+csLFf8gSQ0HWsKT8xsk4fPFzfB2ASvvO
+         SvrMJMR9ZvzCBFU9uO9saUU4HPHa14IYotshREY9Qrc+d86kkVAnbDtkTeacFHdQHxje
+         YiP+80xIO43pNc6o7e2ybOg4BYYn2ZPNfBoHePdjPukimzc3ul9Kov8y0S9VGU8AJlux
+         bu0Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=bqiCaT+6hB/MlQ3EgaRNQmjR57IQALnN7KoYl50i5vw=;
-        fh=m2PNAZNdI3VjsP5wv8IBr6gAvbq/zk7zEcWqTOa25xc=;
-        b=J2w8UpLF7S6C0ugbDQThhu9QEye3A2LM3hA4aW9adFhRRmH1wkf7ua4QRET7qrnhDr
-         uU4ONSskx7D390z/gZideS/No6f2AMh/05OwmCtJL0990G6KCcB+FEzog6QICJgSET/1
-         wcI02V8vV45lmr9Asaj0YK64om956kHKPnT5yFkENARWTup3Yimp5K3arJ7+zuFHu4DW
-         vX5EJHzhZrytQOxGswZ/AP1mYgJUN054ioUhJ2WEZC8JdXs7GzVjfe9gCJtPen23+a0Y
-         0P0nYkgrh7nHQwczbEjJAuWl+a+xhBWIFWrT22UKR0bTN2Mmv7JuD2+vAmL3Kd0WHf0X
-         lLzg==;
+        bh=c+M84/MVcGEHYdv8UiC0womKlZljWSjBnuX6fRyYL/I=;
+        fh=z27QgJX16g1rwB7FtIi+wp6sNcHER6xMA614IlAgxnE=;
+        b=e4NtYBX53ZAA60LiWbpqVjPglolmYCeCVW0wvZV1HuhaQtAUe/9BDOXkUAs516ANn7
+         InuzKg0fU6kWbVHifgb41HE9l+a6WtQWW9zDaJqlxW4uJFCaEI92JD4RAoHRfVJArEfv
+         vqsX5KNvcg9BfGhQCW410o8qrt1OMta3JGQAfNxN9B3Qmb1zsBd/jJJy+C6oO2EADCOa
+         dxuPn4GMYrtrMafnEQmtqZ8yWGOsJTgcT1V1sK5SUot2bzF8euj0/Gqv9IhXgXXbcE6W
+         D7+Yko2B67W/8yM3hYsmBVfXp8cP9xhhW3jU+cR9VHpgnlLMw681Jl+jbJZf91cptgc+
+         qLtg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791134583; x=1791739383; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1791134674; x=1791739474; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=bqiCaT+6hB/MlQ3EgaRNQmjR57IQALnN7KoYl50i5vw=;
-        b=ev/NnSUViOZ+ATajuN/BHEOpjCgrxKI1nt1o2XQCuN5h7KpRGDTtqS2IKJN37vT8R6
-         IbuBrgwBCixnrX5DYs5zuSpVaN0v5SBvJXggFwQVQeKiRmVp7c0/zqEuo+mf9hQYE+ap
-         XREirLdhnpqRqpG6A+D5jtBOZgfp+zeKZylZAZ4yJTfDpftaH0fV8uU4OqxMdwqT+x/O
-         aKbyGDnO34Q8OmZXgttyU3B7s5pjk9WcC2we5ktK5gynifeEucE6Om6Sq6OSysMfD75o
-         AjLX4rLLg4//L2FGOrssLIPqc+S2KZ2Y7d9tVn4emORbQv0AmSNSfDGfDi5GXB6+4Vjj
-         Ym5g==
+        bh=c+M84/MVcGEHYdv8UiC0womKlZljWSjBnuX6fRyYL/I=;
+        b=LTu4m/1davKLoUNKr6Uy6tIgim1fKNGo5e273mXMTbhp+NMSr4rca9qK4ug6PNyHnd
+         UjGZ2IvJP8SNUFIk1lnppsqn1KxS1Yah3mt3RFw+P6ehmACj7FqCqwPN2hen5rZqXiv+
+         vR7tVQmN985GIGs22scrgxRvH+V7iads4ZarxZ5hbzwg7qU4gStOclaAsmGpOkNR0Fkw
+         a50oT32/ZBNwn2+nEPSFkjFGRHVqB9umb7IXSo5ZW/zcuIYl7I4hB11FTQ6DqZMlVZtx
+         eK18i8lzbUNqkAibhKB7obz2YWKH1wx9wJoa2PDEBRCf+JouNbsTnM1hdOC8e6L/97nR
+         44HQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791134583; x=1791739383;
+        d=1e100.net; s=20260707; t=1791134674; x=1791739474;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=bqiCaT+6hB/MlQ3EgaRNQmjR57IQALnN7KoYl50i5vw=;
-        b=eg3etMLUjB0qATKDAnHbO4vCC3j9MwE41ZzI9tOfCVJDC+s9vg0eDGgzVwS6tTSdCA
-         h9bACblSQLz+ahZeExZhE5p0ymWx8jv67Mo8Wh7jF0nc/6xpwTpj+GS5iRMMJnWVu9Ng
-         +uKtWL+U1FAVWgbOPAbAa3RUHwLn0ib6c5RsK+HMcQ/aOc4C9g/w3CSk8meNhNT2i96e
-         lPZy0y9bVyAqqwXT7wVaf0S052n+NhXR9/QKTOP9bDuVdefXLAxkCcWT9lB1Cs6jvFaw
-         t+ssz5cHsJcx+r0XOtK8rR+IlBm06NSiCjwb7k1HvLL3Fw3fcrJ8STzjLxXCMt0Fjgrc
-         Cg8w==
-X-Forwarded-Encrypted: i=1; AKwUvBy1jAO2dgn9STWbjjLFsf7O1kbrgkR396UjApeKX8g14w2rAA8ZzZXKbeHW4ibwuBSrG/2EK1sZthqH@vger.kernel.org
-X-Gm-Message-State: AFuF++l6I2FH8yz5DmMpvZYIHetiByMeIbGgdjXEfeNBXigHkQBEG9PJ
-	JuC5tdDkN2ShVVtBsiYnePxt+hpdNPCXf1cYhzwUvsWpIfdsfnJybMfLODzI9pSiizmwQh17sUn
-	LG2Sl095W4JRk0Ht80OvplBm31aW/3Sy/8ohRkYA6
-X-Gm-Gg: AYBFou1wFiKoepI4zVKbYmPm1OEmrByz8leTQeIupfpja8HbFK5pGEpZ09r/8+Snj58
-	gzajM/KRfrZgpkDRPdJlEN6wqgZl6gaeDXVglUuKIxGLqgjjNCg5P5cpTydgh1YIYzmwUNXDa0w
-	4ZVEvqg+a3H4qwKPqA8+KY803ZoDd7AkBnIthHy1lPatnBCVmnVoPKIpN0P2sHfVAtDzafLUDle
-	R8nGREoui5CdBv1VU1zHRxQN3XqVNw/u7H9lluj7bIfNn9IHyAb7gjPnME0wwVYJdyw+KEkHMd3
-	vB+nAkrtjT8de1UmF8LFLdZAXyvD/5weDAjCLgibQGPfP2Z6wDzm2kXbjJhuG3S+IvY=
-X-Received: by 2002:ac8:574c:0:b0:531:475:4ce6 with SMTP id
- d75a77b69052e-535131b2b85mr16362481cf.9.1791134581910; Sun, 04 Oct 2026
- 10:23:01 -0700 (PDT)
+        bh=c+M84/MVcGEHYdv8UiC0womKlZljWSjBnuX6fRyYL/I=;
+        b=k+M/TSKfpbj1mVroJU6h/A0hfLf1xegyxsaGVmk1f1a/hIGMBtEcPdtq1hrAEjJj6w
+         44wZeH5j1eQZH1glHWtHBG1f0Eu5VXSEvvN9iH2koAmImq8mpd7fHJy5pEjZt8WY6gzx
+         wPCCPZCeF5nRR+PcRwIm5Wn0xZzhl9ptpg5n23Xsd1i7BuSJOBn8kNOLOUHAM6Uj0p/H
+         Tr0hptC16B9KcyOnTYXptOLcIypkTCak6BCd+hgdKMLTwTrLqD2NAeuVzLYoRtd/JIOY
+         zmkExWADAqf8y3w2eyaCyxxjcw4IdNVy0M+Pep46o72gGMHf744PSuqXIwAZuhID6SIA
+         jwbg==
+X-Forwarded-Encrypted: i=1; AKwUvBwAuxQXPn+9cUd83H3HT2G41RXjRHhmwToQGkg6H2Z0rwaKN70Y8bzB/HIE82M8DG4Zk59l7g8fAX+v@vger.kernel.org
+X-Gm-Message-State: AFuF++l6d5PlQXJkN2HWXk5iWEJdCGkTAdEoN9JdQzLygvVNX+5HQNHA
+	l+fS1OwOZWUtzGgVl682HJkbxhOE1SNPRJOuFtEDhjc6GWrdYXhsJuN2NhmRHOoXamjo5CiDoCS
+	BQ+kTGhCH+s9vdP8ZsGVsrIMzeChmay2b9Mh765/k
+X-Gm-Gg: AYBFou2yMqdGtg/Vhx2sGAc0DgWrq8fLyTl3OLyImfT9nWsQ15e7AN0LB1Q9XPze8yY
+	WHUPAQplmN/NS3afKO6rs8gWKjRUXrzYcOvzbldzRKP0HUmG/8wzzjxnYBsdYd8eCbiskW6ocSv
+	6gF/KrHMQImnXdDVDyYA4v1f/+IBIOi4XljD+UfHkjuMPh5CMDriYH4voytA5FhvzxYc6wum/pM
+	SGIpCC3BENgwwLQV3AT6uyH4lBynTZFwyAPL61vk63ucoNf6xJmJNj0F+Lg3qXmEXfb3x0ldEuY
+	OUzm93tOnlgARYse9aP6A1/gOatNEETzLiWto9Dk2Ld5svevDvqRs0ma
+X-Received: by 2002:a05:622a:606:b0:532:84d3:abb with SMTP id
+ d75a77b69052e-535131b5a84mr14345371cf.7.1791134673403; Sun, 04 Oct 2026
+ 10:24:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -83,14 +83,13 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-0-a1f052500fd7@kernel.org>
- <20261003-b4-mmap-prepare-vma-flag-sanify-v4-12-a1f052500fd7@kernel.org>
-In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-12-a1f052500fd7@kernel.org>
+ <20261003-b4-mmap-prepare-vma-flag-sanify-v4-13-a1f052500fd7@kernel.org>
+In-Reply-To: <20261003-b4-mmap-prepare-vma-flag-sanify-v4-13-a1f052500fd7@kernel.org>
 From: Suren Baghdasaryan <surenb@google.com>
-Date: Sun, 4 Oct 2026 10:22:50 -0700
-X-Gm-Features: AclHuK9b8f-m7wgF2pmH0VTlVxkwioKHBPR714nLjuu-GaXS_Vt3fJyAlsba0Do
-Message-ID: <CAJuCfpH8GeLKqFtfC_a5i08dQ2ZyyROSrYqYP6Btq03xbF_nXA@mail.gmail.com>
-Subject: Re: [PATCH v4 12/38] ALSA: pcm: use vm_insert_page() to map PCM
- status page
+Date: Sun, 4 Oct 2026 10:24:22 -0700
+X-Gm-Features: AclHuK9jHlOUV2ZRb5fsxUCRxMZ3OpnGbWN3MVyf3rU51TqoB71rd8PxNlF0WhY
+Message-ID: <CAJuCfpE7W7uFZfztCHRCouc9z49wPV96usW2QewJNZwprK7bRw@mail.gmail.com>
+Subject: Re: [PATCH v4 13/38] bpf: arena: mark arena_map_mmap() mappings VM_MIXEDMAP
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, "Liam R. Howlett" <liam@infradead.org>, 
 	Vlastimil Babka <vbabka@kernel.org>, Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
@@ -151,105 +150,72 @@ Cc: Andrew Morton <akpm@linux-foundation.org>, "Liam R. Howlett" <liam@infradead
 	kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org, 
 	kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
 	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
-	fuse-devel@lists.linux.dev, Takashi Iwai <tiwai@suse.de>
+	fuse-devel@lists.linux.dev, Emil Tsalapatis <emil@etsalapatis.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 On Sat, Oct 3, 2026 at 6:37=E2=80=AFPM Lorenzo Stoakes (ARM) <ljs@kernel.or=
 g> wrote:
 >
-> There's no need to keep a fault handler around for this, instead map on
-> mmap.
+> The bpf_map->ops->map_mmap callback invoked by bpf_map_mmap() can be set =
+to
+> one of ringbuf_map_mmap_kern(), ringbuf_map_mmap_user(), array_map_mmap()
+> or arena_map_mmap().
 >
-> While we're here, rename area to vma to be consistent.
+> It is convention in mm to mark mappings whose pages the kernel manages
+> itself with VM_MIXEDMAP, so core mm knows not to treat them as ordinary
+> page cache or anonymous memory.
 >
-> This correctly makes the mapping a mixed map mapping.
+> The map_mmap callbacks ringbuf_map_mmap_kern() and ringbuf_map_mmap_user(=
+)
+> use remap_vmalloc_range(), which ultimately invokes vm_insert_page() and =
+so
+> marks the ranges VM_MIXEDMAP, and array_map_mmap() sets VM_MIXEDMAP
+> explicitly.
 >
-> This works towards establishing the invariant that only PFN mapped or mix=
-ed
-> map mappings may clear the VM_MAYWRITE flag. The status page mapping clea=
-rs
-> VM_MAYWRITE, so it must not be mm-managed; the control page mapping remai=
-ns
-> writable and is left fault-based.
+> However, the exception to this is arena_map_mmap(), which doesn't set the
+> flag.
 >
-> The assumption is made that the struct pcm_mmap_status structure is at mo=
-st
-> a page in size, which is asserted as a build bug.
+> This patch corrects this and updates the comment to reflect it.
 >
-> This is safe to assume, as the size of the structure is 56 bytes at most.
+> The pages are refcounted and vm_normal_page() finds them regardless of th=
+e
+> flag, and VM_DONTEXPAND remains set (marking the memory as VM_SPECIAL and
+> thus unmergeable). The one effect is that NUMA balancing now skips these
+> VMAs, as it already does for the other bpf map mappings, which is the
+> reason array_map_mmap() gives for setting the flag.
 >
-> Acked-by: Takashi Iwai <tiwai@suse.de>
+> The intent of this patch is to be able to establish the invariant that on=
+ly
+> PFN-mapped or mixed map ranges may clear the VM_MAYWRITE flag, as is done
+> in bpf_map_mmap().
+>
+> Reviewed-by: Emil Tsalapatis <emil@etsalapatis.com>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 
 Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 
 
 > ---
->  sound/core/pcm_native.c | 38 +++++++++++++-------------------------
->  1 file changed, 13 insertions(+), 25 deletions(-)
+>  kernel/bpf/arena.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 >
-> diff --git a/sound/core/pcm_native.c b/sound/core/pcm_native.c
-> index 62324282fcae..c98fb3df14f3 100644
-> --- a/sound/core/pcm_native.c
-> +++ b/sound/core/pcm_native.c
-> @@ -3760,39 +3760,27 @@ static __poll_t snd_pcm_poll(struct file *file, p=
-oll_table *wait)
->  /*
->   * mmap status record
->   */
-> -static vm_fault_t snd_pcm_mmap_status_fault(struct vm_fault *vmf)
-> +static int snd_pcm_mmap_status(struct snd_pcm_substream *substream, stru=
-ct file *file,
-> +                              struct vm_area_struct *vma)
->  {
-> -       struct snd_pcm_substream *substream =3D vmf->vma->vm_private_data=
-;
-> +       const unsigned long size =3D vma->vm_end - vma->vm_start;
->         struct snd_pcm_runtime *runtime;
-> -
-> -       if (substream =3D=3D NULL)
-> -               return VM_FAULT_SIGBUS;
-> -       runtime =3D substream->runtime;
-> -       vmf->page =3D virt_to_page(runtime->status);
-> -       get_page(vmf->page);
-> -       return 0;
-> -}
-> +       struct page *page;
->
-> -static const struct vm_operations_struct snd_pcm_vm_ops_status =3D
-> -{
-> -       .fault =3D        snd_pcm_mmap_status_fault,
-> -};
-> +       BUILD_BUG_ON(sizeof(struct snd_pcm_mmap_status) > PAGE_SIZE);
->
-> -static int snd_pcm_mmap_status(struct snd_pcm_substream *substream, stru=
-ct file *file,
-> -                              struct vm_area_struct *area)
-> -{
-> -       long size;
-> -       if (!(area->vm_flags & VM_READ))
-> +       if (!(vma->vm_flags & VM_READ))
->                 return -EINVAL;
-> -       size =3D area->vm_end - area->vm_start;
-> -       if (size !=3D PAGE_ALIGN(sizeof(struct snd_pcm_mmap_status)))
-> +       if (size !=3D PAGE_SIZE)
->                 return -EINVAL;
-> -       area->vm_ops =3D &snd_pcm_vm_ops_status;
-> -       area->vm_private_data =3D substream;
-> -       vm_flags_mod(area, VM_DONTEXPAND | VM_DONTDUMP,
-> +
-> +       vm_flags_mod(vma, VM_DONTEXPAND | VM_DONTDUMP,
->                      VM_WRITE | VM_MAYWRITE);
-> +       vma->vm_page_prot =3D vm_get_page_prot(vma->vm_flags);
->
-> -       return 0;
-> +       runtime =3D substream->runtime;
-> +       page =3D virt_to_page(runtime->status);
-> +       return vm_insert_page(vma, vma->vm_start, page);
+> diff --git a/kernel/bpf/arena.c b/kernel/bpf/arena.c
+> index 7b6847200b43..b69fe5e34339 100644
+> --- a/kernel/bpf/arena.c
+> +++ b/kernel/bpf/arena.c
+> @@ -620,8 +620,9 @@ static int arena_map_mmap(struct bpf_map *map, struct=
+ vm_area_struct *vma)
+>          * clears VM_MAYEXEC. Set VM_DONTEXPAND to avoid potential change
+>          * of user_vm_start. Set VM_DONTCOPY to prevent arena VMA from
+>          * being copied into the child process on fork.
+> +        * This is a kernel page so set VM_MIXEDMAP.
+>          */
+> -       vm_flags_set(vma, VM_DONTEXPAND | VM_DONTCOPY);
+> +       vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND | VM_DONTCOPY);
+>         vma->vm_ops =3D &arena_vm_ops;
+>         return 0;
 >  }
->
->  /*
 >
 > --
 > 2.55.0
