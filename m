@@ -1,62 +1,62 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C28337C112;
-	Mon,  5 Oct 2026 20:49:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23DF53E4109;
+	Mon,  5 Oct 2026 21:42:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791233356; cv=none; b=OX1URAVHlTpQgfM2HSGV+5YJ545GAV+Zwn0ugEnG5CBuUjCElqF/lbTvSqin+sH0n4TVibpbVEmtWJFbSTbv3jKhMPQvxzBwpI1MPKIimkUNCtZ0A2x0h5ATaMnvMufsH1Mf8FtSYjgMBT4081XTSdcv+NgVGkEykLYqD0ODx0U=
+	t=1791236538; cv=none; b=CXN1Vxm0s7nXzxYNWfbFQhrvHVpQWD1tCvNjgLlnVAnS91DdYlghHDRwSGzeBm9eSEU20hN06HYojmU2KepNnl0d9kiA2/vFSAWu1DQleKJTFYyrK6GaKun2r6b2x0t8bIbDTVAEGuN7no2HqIJjlI71XoS4dxr5G8BwoHqK7T4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791233356; c=relaxed/simple;
-	bh=b5eO6cu/x2LURXsfvcknrPjDXFK/Ia5yCd9i79Wafws=;
+	s=arc-20240116; t=1791236538; c=relaxed/simple;
+	bh=d0p63z1XCpSBm9OwrW68pYfgxFLv7BQ75z9Kpd9NBsI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pZ/SObVPMW89QDR2fh3kfU6NtYd0O5GoLaNZBfN69nhRmBLoC/mRyfM95vSAaxal6KcoksslC5if2mxcYzKRxE4I9wM8IlUoLrKNoSxSNYpYoTI9E8XJUm7vMQfbMyGFNMhjkZqA8Nb59H9GG8GRVEAcywW8H5LvviQm2NSa1ZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TZ9d8orD; arc=none smtp.client-ip=192.198.163.15
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q7HHsmpdow/ekcqHrbc1yNfqNXo/6MN/Q1/PCcIkEF7NxEwF9VKHRZkWxnxDZlXfIQCip8K5vWQsrnKB0ZNtjOBr/R0p6fwsMFV5oaHyQt4ptsP5NarulPRIqSjZxtHUOCRatO/9xx5vR4IpWWPaZgjcDyKq6eOjRji6TK7YTcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ft7lBNuc; arc=none smtp.client-ip=198.175.65.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TZ9d8orD"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ft7lBNuc"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791233354; x=1822769354;
+  t=1791236536; x=1822772536;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=b5eO6cu/x2LURXsfvcknrPjDXFK/Ia5yCd9i79Wafws=;
-  b=TZ9d8orD1lfmLxUkabt//8sE1lYoY9A6ZSz8GNTVwP92P4XfeNl49hTl
-   ttVedSTbIHF0Wjs4t1P/tqUm+W8MjeRJ1Drv4Z4LjWHXGL/+obn7u8pur
-   Fg3yS/JfmcbqrhqZ8vYiY8zKL4WEyOwQ4753566jY/IxMhzpAs85o6vLt
-   TpL/ycy+s+jcTQK0MAMtzNCjjfBEOJKg13SerRphACvex+nwvocfAvVHp
-   ppHRA+RAkDc9LJ9OJpOw2VqoXabefKCXMfu3Lg4RPPPKBRdN21CGoqoCV
-   bqT0Uo9avXGF7ZuxZWBNzjMOe/ZJup4tTOHRSs0qnCdmwsalXtMH8BXkQ
-   g==;
-X-CSE-ConnectionGUID: 0aoYTR4nQAGtBEfWRKc1iA==
-X-CSE-MsgGUID: 89lCgMUWSVODcLj2hk2N5Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11926"; a="92025882"
+  bh=d0p63z1XCpSBm9OwrW68pYfgxFLv7BQ75z9Kpd9NBsI=;
+  b=ft7lBNuchB7fFujNjXgIU27YSiF6yoOg4dVc7LyYaCMm/NDuLE+0QCKt
+   sr+8X8LqVH4wXRnZNq8M8dvYdV9ElcUStuBwjle2e+SfeLt4EJPO2TqwO
+   MqSNa6AA3Er4Se75pXoWeqF1SIyfzqq82yq+W7VQDByPbqEab6r4izTlg
+   3FeEFoYZlDKMIIA/t74ijB8VHmahg7MCOTF7VvWQEW1sy9lqjeHaMiSpO
+   RLNxb/DMy3SjtZo1Re6UyX+RmKbf69byO9zSWw1AXKVQP3FoSSZGp7QTx
+   /2Y5ce5ezwsc1LugTYoH5YXydZvbroofTXDgze1I4gFWfcdaz41xG8gWT
+   A==;
+X-CSE-ConnectionGUID: L19Fehj8T1+my4CcyPzA2g==
+X-CSE-MsgGUID: 8ezyq/RjR1mddmmABTXD+g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11926"; a="101240880"
 X-IronPort-AV: E=Sophos;i="6.27,142,1787036400"; 
-   d="scan'208";a="92025882"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2026 13:49:13 -0700
-X-CSE-ConnectionGUID: ePiNLwHJTSeZCJ/q+1n7UA==
-X-CSE-MsgGUID: JbVKTsJhSvOTL8cjoVt8Hw==
+   d="scan'208";a="101240880"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2026 14:42:15 -0700
+X-CSE-ConnectionGUID: HaWRJfgQRiaH7vaSc63+Cw==
+X-CSE-MsgGUID: rI0nLmMOSi+a9+LZOhvGQg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,142,1787036400"; 
-   d="scan'208";a="274712953"
+   d="scan'208";a="303197126"
 Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa006.jf.intel.com with ESMTP; 05 Oct 2026 13:49:12 -0700
+  by fmviesa002.fm.intel.com with ESMTP; 05 Oct 2026 14:42:14 -0700
 Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1xDpcT-000000000pg-0eow;
-	Mon, 05 Oct 2026 20:49:09 +0000
-Date: Tue, 6 Oct 2026 04:48:47 +0800
+	id 1xDqRn-000000000sa-0D5A;
+	Mon, 05 Oct 2026 21:42:11 +0000
+Date: Tue, 6 Oct 2026 05:41:55 +0800
 From: kernel test robot <lkp@intel.com>
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: oe-kbuild-all@lists.linux.dev
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev
 Subject: Re: [PATCH 7/7] scsi: sd_zbc: define storage element management
  operations
-Message-ID: <202610060413.UQ1Jyndv-lkp@intel.com>
+Message-ID: <202610060512.08JQbDV4-lkp@intel.com>
 References: <20261005094632.580753-8-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -83,20 +83,21 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Damien-Le-Moal/block-fail
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux.git for-next
 patch link:    https://lore.kernel.org/r/20261005094632.580753-8-dlemoal%40kernel.org
 patch subject: [PATCH 7/7] scsi: sd_zbc: define storage element management operations
-config: sparc-defconfig (https://download.01.org/0day-ci/archive/20261006/202610060413.UQ1Jyndv-lkp@intel.com/config)
-compiler: sparc-linux-gcc (GCC) 16.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261006/202610060413.UQ1Jyndv-lkp@intel.com/reproduce)
+config: sparc64-defconfig (https://download.01.org/0day-ci/archive/20261006/202610060512.08JQbDV4-lkp@intel.com/config)
+compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 80cd965b6323b208519f8ab1d5ee86e4ea9862f4)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261006/202610060512.08JQbDV4-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202610060413.UQ1Jyndv-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202610060512.08JQbDV4-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
->> drivers/scsi/sd.c:3940:35: error: lvalue required as unary '&' operand
+>> drivers/scsi/sd.c:3940:14: error: cannot take the address of an rvalue of type 'void *'
     3940 |         .se_ops                 = &sd_zbc_se_ops,
-         |                                   ^
+         |                                   ^~~~~~~~~~~~~~
+   1 error generated.
 
 
 vim +3940 drivers/scsi/sd.c
