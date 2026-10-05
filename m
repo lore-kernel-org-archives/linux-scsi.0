@@ -1,182 +1,124 @@
-Received: from mail-wm2-f12.google.com (mail-wm2-f12.google.com [74.125.225.140])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D31F4D4868
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Oct 2026 18:54:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C28337C112;
+	Mon,  5 Oct 2026 20:49:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791226457; cv=none; b=lE7F9paFujUkstjSsiwo+gJAeNssHzdLYyfbNT2VKi4xtnz4Ac5XRl4sUBOzrDcoJzHp5p1XCiVwQDU6IELL3z1MpfCSTPiFvHgBVb1ZXMp2g8ssLPllzkkqHa2hVAWZaQtY+3+KLUuKGVA5WWlf/Pfo1NMPGLF7z5paZNaHcvg=
+	t=1791233356; cv=none; b=OX1URAVHlTpQgfM2HSGV+5YJ545GAV+Zwn0ugEnG5CBuUjCElqF/lbTvSqin+sH0n4TVibpbVEmtWJFbSTbv3jKhMPQvxzBwpI1MPKIimkUNCtZ0A2x0h5ATaMnvMufsH1Mf8FtSYjgMBT4081XTSdcv+NgVGkEykLYqD0ODx0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791226457; c=relaxed/simple;
-	bh=JqbdXiNj+1x2KIBSRHaZMkJ5f/vKrl6ix5aX6QZUvBc=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lwdhZ23TWOz9gyJ0Zfde5acKoZ7k81q1hFCT10qUxdQ3glMSsSOkH8yo6Z6SbhV5VFnKtT9pfeUXlrJ2PXwkH8GTV1gqjl5u+oasd/Mcz6N82kbuBIKXMzejaui3FtRc3LflsMo8aL6ncwc9ECYqTtfRYkti8fOk5EaEoV8xQq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GRCqqMwG; arc=none smtp.client-ip=74.125.225.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791233356; c=relaxed/simple;
+	bh=b5eO6cu/x2LURXsfvcknrPjDXFK/Ia5yCd9i79Wafws=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pZ/SObVPMW89QDR2fh3kfU6NtYd0O5GoLaNZBfN69nhRmBLoC/mRyfM95vSAaxal6KcoksslC5if2mxcYzKRxE4I9wM8IlUoLrKNoSxSNYpYoTI9E8XJUm7vMQfbMyGFNMhjkZqA8Nb59H9GG8GRVEAcywW8H5LvviQm2NSa1ZM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TZ9d8orD; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GRCqqMwG"
-Received: by mail-wm2-f12.google.com with SMTP id 5b1f17b1804b1-49cd5462b69so13747315e9.1
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Oct 2026 11:54:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791226453; x=1791831253; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=YSppTa1u/xUXXfMqFKbmpz8w8GUfT7lFF5B6YtHgZns=;
-        b=GRCqqMwGio24omLD1gIyIBxOsvgYN8IUnuO1FSqHuH1b+fPTo4NJ8LL2zyKv+gfbii
-         SY6OVmESQ3Wy9Iqj9eTYO/zW8cdfr6Y6jl3B2aFRdrP98nfhvOyWuslV8KUzgbZ2isPV
-         xBqC/gYEO2FQa0pCCJfgZD1bLRoKy20S/zuwsJbSsEFLOcmp09OWAvcNIhED3arDyVXM
-         R8/yppMjiWWtRE8oGQ6LdeQWhXy3RgM6E7MzS9cUOXXF7q4PCpSKwX8WUpJCh+TaSEuo
-         FON4MOsF1DGKD87wNLpp4y+Ga0XKghT4uOSfeUwkSpjaYzMn49BoV8Mh8kZiTyXDo8pJ
-         S1Aw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791226453; x=1791831253;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=YSppTa1u/xUXXfMqFKbmpz8w8GUfT7lFF5B6YtHgZns=;
-        b=OhHtBTjjwogpPvqwH0jaxgTmeK5/qdaAan76Rxvilv/sQXcscQY1DBxtxie0w5KtKj
-         IiD3LRlNsTaEoWL1Kkmt/zbg+Oc6JhOkkEFtBcKc5E1dd88seK05rftExAil5MQLtSkH
-         MMeOJtKjr/rYYV7UbLNS12xqc5juyK8CWbVuarWoJOPyEBlMXbHkESa/f3Kdxkx8kZQc
-         0ksJzQQCf39mddDV1aztLHzq4wGN8br0gcgVqNSbRjrK8W/BgVjQt63fYakQRrgheM9V
-         Ylqy3mxp8+5nCmkoRb+tnArkDzmAblwHrI+ZVJBR0ORINlU2GSi5k1pnQVUCkn6N/fsK
-         R/vQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxTk9wqGqZk0hn3n+8TLRbbpKrh59cwh8xWqege30glP13cIBvoGDsvKKB/0w3rDASPYzvZz8E10nfq@vger.kernel.org
-X-Gm-Message-State: AFuF++nL74jcgjwuZ2whkYnI4dgsJj9G+od25foligzr7icoXhra3gx0
-	vEm/RKuvp1ZQi6eSutZUf7yEz2UYOeGyAx1VZSuw5hjo36OoxpV9Nv9D
-X-Gm-Gg: AYBFou3IQEhhuH5gwqv+TBF7KRR1vAdftq6oaOz+qmbIg8sdV2rxjXo5XzZ/H+Czwdk
-	zXiDe0xHWQuMuyzXVPE6vcgTATlJSsyIo7Eqcw8CNH3jFugvRuRsz4X6q4zYAdOGSS/zlf7w8Ol
-	SLAbX9l8uDXczD95T2QLLiu3dx4xvaf1QaaBzJeoWbrkpnKYGHrt1CQ85fIlQ/GSCWKuO9JpcwK
-	dghLBrz2pUrya8tP/GOnl0VfQG/xSnJ5+9S0+x3zL7YQbq/ki3vJ9qSzEH3QQLMevmQj0D5uGHV
-	y5ZavvbJekMkD9zUotRj2ERV80Nkn+FVTs3S1HYhurOojml8J5KsVODLK2DXH4rB0RtPDWrObIA
-	BZ8byCRXmuHnQtJ6GmVZODs4ujErvD0xwfgZEMEKJS8pqGau8TkfDwhlFXv38PW1mcDk5x8xMQ4
-	vqm/4w6ifNCBGuI+EkmAd0P5R6OR7yXf46gPffo/jL3vIqLgrBxdCAo3SeNM0KHx4pUpB2lOKy1
-	b3Ku8GTehJ8Hfnf82JFivLR8GiAVO7ykwQ=
-X-Received: by 2002:a05:600c:4f8e:b0:49f:f0bd:1e40 with SMTP id 5b1f17b1804b1-4a02769cf66mr195041635e9.23.1791226453264;
-        Mon, 05 Oct 2026 11:54:13 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48c622affadsm5117770f8f.40.2026.10.05.11.54.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Oct 2026 11:54:13 -0700 (PDT)
-Date: Mon, 5 Oct 2026 19:54:11 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Kees Cook <kees@kernel.org>
-Cc: Bill Wendling <morbo@google.com>, Ian Bridges <icb@fastmail.org>, Justin
- Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>, "James
- E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K.
- Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v5 03/12] scsi: lpfc: Print rx monitor records straight
- into the seq_buf
-Message-ID: <20261005195411.3e09bc8e@pumpkin>
-In-Reply-To: <20261005155708.1471260-3-kees@kernel.org>
-References: <20261005155653.late.426-kees@kernel.org>
-	<20261005155708.1471260-3-kees@kernel.org>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TZ9d8orD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1791233354; x=1822769354;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=b5eO6cu/x2LURXsfvcknrPjDXFK/Ia5yCd9i79Wafws=;
+  b=TZ9d8orD1lfmLxUkabt//8sE1lYoY9A6ZSz8GNTVwP92P4XfeNl49hTl
+   ttVedSTbIHF0Wjs4t1P/tqUm+W8MjeRJ1Drv4Z4LjWHXGL/+obn7u8pur
+   Fg3yS/JfmcbqrhqZ8vYiY8zKL4WEyOwQ4753566jY/IxMhzpAs85o6vLt
+   TpL/ycy+s+jcTQK0MAMtzNCjjfBEOJKg13SerRphACvex+nwvocfAvVHp
+   ppHRA+RAkDc9LJ9OJpOw2VqoXabefKCXMfu3Lg4RPPPKBRdN21CGoqoCV
+   bqT0Uo9avXGF7ZuxZWBNzjMOe/ZJup4tTOHRSs0qnCdmwsalXtMH8BXkQ
+   g==;
+X-CSE-ConnectionGUID: 0aoYTR4nQAGtBEfWRKc1iA==
+X-CSE-MsgGUID: 89lCgMUWSVODcLj2hk2N5Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11926"; a="92025882"
+X-IronPort-AV: E=Sophos;i="6.27,142,1787036400"; 
+   d="scan'208";a="92025882"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2026 13:49:13 -0700
+X-CSE-ConnectionGUID: ePiNLwHJTSeZCJ/q+1n7UA==
+X-CSE-MsgGUID: JbVKTsJhSvOTL8cjoVt8Hw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,142,1787036400"; 
+   d="scan'208";a="274712953"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by orviesa006.jf.intel.com with ESMTP; 05 Oct 2026 13:49:12 -0700
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xDpcT-000000000pg-0eow;
+	Mon, 05 Oct 2026 20:49:09 +0000
+Date: Tue, 6 Oct 2026 04:48:47 +0800
+From: kernel test robot <lkp@intel.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: oe-kbuild-all@lists.linux.dev
+Subject: Re: [PATCH 7/7] scsi: sd_zbc: define storage element management
+ operations
+Message-ID: <202610060413.UQ1Jyndv-lkp@intel.com>
+References: <20261005094632.580753-8-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261005094632.580753-8-dlemoal@kernel.org>
 
-On Mon,  5 Oct 2026 08:56:53 -0700
-Kees Cook <kees@kernel.org> wrote:
+Hi Damien,
 
-> lpfc_rx_monitor_report() formats each record into a stack buffer, then
-> appends it with seq_buf_puts(), relying on seq_buf_puts() appending
-> nothing when a string does not fit: the debugfs output then ends at the
-> last whole record, and the record left out is read in full next time.
-> The next patch makes seq_buf_puts() copy as much as fits instead, as
-> seq_buf_printf() and strlcat() do.
-> 
-> Print each record with seq_buf_printf(), and when it does not fit, end
-> the string where the record began, since the reader takes the buffer up
-> to its NUL. This also takes the DBG_LOG_STR_SZ buffer off the stack.
-> 
-> Build tested ARCH=x86_64 with GCC 16.2.0, CONFIG_SCSI_LPFC=m and W=1.
-> 
-> Assisted-by: LLM
-> Signed-off-by: Kees Cook <kees@kernel.org>
-> ---
->  drivers/scsi/lpfc/lpfc_sli.c | 45 +++++++++++++++++++++---------------
->  1 file changed, 27 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index cfa4371169f1..a7b1ea67ed98 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -8108,7 +8108,6 @@ u32 lpfc_rx_monitor_report(struct lpfc_hba *phba,
->  	spinlock_t *ring_lock = &rx_monitor->lock;
->  	u32 ring_size = rx_monitor->entries;
->  	u32 cnt = 0;
-> -	char tmp[DBG_LOG_STR_SZ] = {0};
->  	bool log_to_kmsg = (!buf || !buf_len) ? true : false;
->  	struct seq_buf s;
->  
-> @@ -8133,27 +8132,37 @@ u32 lpfc_rx_monitor_report(struct lpfc_hba *phba,
->  
->  		/* Read out this entry's data. */
->  		if (!log_to_kmsg) {
-> +			unsigned int len;
-> +
-> +			/* A header that did not fit leaves no room. */
-> +			if (seq_buf_has_overflowed(&s))
-> +				break;
-> +			len = seq_buf_used(&s);
-> +
-> +			seq_buf_printf(&s,
-> +				       "%03d:\t%-16llu%-16llu%-16llu%-16llu%-8llu%-8llu%-8llu%-8u%-8u%-8u%u(%u)\n",
-> +				       *head_idx,
-> +				       entry->max_bytes_per_interval,
-> +				       entry->cmf_bytes,
-> +				       entry->total_bytes,
-> +				       entry->rcv_bytes,
-> +				       entry->avg_io_latency,
-> +				       entry->avg_io_size,
-> +				       entry->max_read_cnt,
-> +				       entry->cmf_busy, entry->io_cnt,
-> +				       entry->cmf_info,
-> +				       entry->timer_utilization,
-> +				       entry->timer_interval);
-> +
->  			/*
->  			 * Drop a record whole if it does not fit, without
-> -			 * consuming its ring entry.
-> +			 * consuming its ring entry: the reader takes the
-> +			 * string up to its NUL.
->  			 */
-> -			scnprintf(tmp, sizeof(tmp),
-> -				  "%03d:\t%-16llu%-16llu%-16llu%-16llu%-8llu%-8llu%-8llu%-8u%-8u%-8u%u(%u)\n",
-> -				  *head_idx,
-> -				  entry->max_bytes_per_interval,
-> -				  entry->cmf_bytes,
-> -				  entry->total_bytes,
-> -				  entry->rcv_bytes,
-> -				  entry->avg_io_latency,
-> -				  entry->avg_io_size,
-> -				  entry->max_read_cnt,
-> -				  entry->cmf_busy, entry->io_cnt,
-> -				  entry->cmf_info,
-> -				  entry->timer_utilization,
-> -				  entry->timer_interval);
-> -
-> -			if (seq_buf_puts(&s, tmp) < 0)
-> +			if (seq_buf_has_overflowed(&s)) {
-> +				buf[len] = '\0';
+kernel test robot noticed the following build errors:
 
-There should probably be a seq_buf_truncate() to do that.
-Then a request for the length will be correct.
+[auto build test ERROR on axboe/for-next]
+[also build test ERROR on next-20261005]
+[cannot apply to mkp-scsi/for-next jejb-scsi/for-next linus/master v7.3-rc6]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-David 
+url:    https://github.com/intel-lab-lkp/linux/commits/Damien-Le-Moal/block-fail-reads-to-offline-zones-early/20261005-184626
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux.git for-next
+patch link:    https://lore.kernel.org/r/20261005094632.580753-8-dlemoal%40kernel.org
+patch subject: [PATCH 7/7] scsi: sd_zbc: define storage element management operations
+config: sparc-defconfig (https://download.01.org/0day-ci/archive/20261006/202610060413.UQ1Jyndv-lkp@intel.com/config)
+compiler: sparc-linux-gcc (GCC) 16.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261006/202610060413.UQ1Jyndv-lkp@intel.com/reproduce)
 
->  				break;
-> +			}
->  		} else {
->  			lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
->  					"4410 %02u: MBPI %llu Xmit %llu "
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202610060413.UQ1Jyndv-lkp@intel.com/
 
+All errors (new ones prefixed by >>):
+
+>> drivers/scsi/sd.c:3940:35: error: lvalue required as unary '&' operand
+    3940 |         .se_ops                 = &sd_zbc_se_ops,
+         |                                   ^
+
+
+vim +3940 drivers/scsi/sd.c
+
+  3926	
+  3927	static const struct block_device_operations sd_fops = {
+  3928		.owner			= THIS_MODULE,
+  3929		.open			= sd_open,
+  3930		.release		= sd_release,
+  3931		.ioctl			= sd_ioctl,
+  3932		.getgeo			= sd_getgeo,
+  3933		.compat_ioctl		= blkdev_compat_ptr_ioctl,
+  3934		.check_events		= sd_check_events,
+  3935		.unlock_native_capacity	= sd_unlock_native_capacity,
+  3936		.report_zones		= sd_zbc_report_zones,
+  3937		.get_unique_id		= sd_get_unique_id,
+  3938		.free_disk		= scsi_disk_free_disk,
+  3939		.pr_ops			= &sd_pr_ops,
+> 3940		.se_ops			= &sd_zbc_se_ops,
+  3941	};
+  3942	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
