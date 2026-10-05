@@ -1,121 +1,115 @@
-Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
+Received: from mail-wm2-f13.google.com (mail-wm2-f13.google.com [74.125.225.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED8847F787
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Oct 2026 12:36:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38DC9499F15
+	for <linux-scsi@vger.kernel.org>; Mon,  5 Oct 2026 14:09:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791203769; cv=none; b=nAVnkqbFw3EoO8MwOTom4e4sA+fF7hmbzPW4mEatYlam6Or5bR2mpcIqBZCUXe1HwzxC5UwGtm4quVgBLN+qP881nrNXwjPcLFhBCXCeuuzYA6AlWsRvSpl9D1jheNtv/xaLvipX22/lTARvZq8YmLdMZF0cPZ3goXWK9umPWAY=
+	t=1791209386; cv=none; b=bN5HbzK2VF63vUj4XNghH8iPun/7yVWKRyNFY4E9G985AqLztk4asumKasOWZGFu3+4tnzMaOhiMVUDetiSj6dxBUxZe6Tpgon8n647/lhQSrmi4QaxHAnj/xU2D10sL4FS3Q96F4XXmyc365HoxsGupcpctbfgl8sboPe4raIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791203769; c=relaxed/simple;
-	bh=QQ//D5UNEFrMdGNsE0x2XqrDjRfkmbQnZlSDOkPsLjM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Sl8ncra3zBpmjF3Ec+48shSHG8jHXpnrdjV8Eq7clofkT8SYzLPyoY4SIIec93NAxgHq4fyMWmb0CveqGBSt+gDXQvjJa+iGVFKHlHKe45VXYmadS8cqqDdPVdQA2Et96S4q+awEr8JBgJoKtx7nhX+ZjJHVJwez9juPwqEJ9x0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=LRrDNRz0; arc=none smtp.client-ip=74.125.227.140
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1791209386; c=relaxed/simple;
+	bh=0y2EFnWLqY4sRDLWt+zvNH4eikkE6qZYmGsErTpNqf0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nMqY6hf/7TrMBZ+fc/NMu1/2/G4fc8iDS2OfMs70uzMRxF93xdRIubMVBspBFi8yDbfWJVVnL0tjSnA9X3rNeb7t6PBxvhPPRq0jcjtrLUpglOYdAOKc2M0cJZCT3/5g/J3+7C9NzS3c5oMxYd24K2oWHQKDngNSDGSRSdVxge0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=bllkZWF1; arc=none smtp.client-ip=74.125.225.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="LRrDNRz0"
-Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2db1ca069c8so7008695ad.3
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Oct 2026 05:36:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="bllkZWF1"
+Received: by mail-wm2-f13.google.com with SMTP id 5b1f17b1804b1-49b912d822dso15655005e9.2
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Oct 2026 07:09:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791203765; x=1791808565; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=4jU8vbkoMdpm/iDka5HS8l6OLmahdMWqgTkrbnwvknU=;
-        b=LRrDNRz0pHvIpLpLE2H9qGw9RxTzk6KPEJByVvSTdcI1tFZDoj7i+fjzwbHLVVRtD3
-         gpxJcOa4kN5oAMIlIIjX1aH+s8EW5f2m+zEsQ0s0JRIef8mYDo7iUh3DyU5lxbT6Pz/2
-         VaDBzU9Zm50NzDVD66drpFqOyuGdNHTdU+qlxAPuLgVheNowU5BjxlMs7iSq4mNQBw+F
-         2P33Z9u4PwhNUfLS7hEM5vv8FstSBsKehuH2jAuPUTI1YONbm59kB2rWd+BWBf1PMNOi
-         wOKSm2Afa2Xi9OR/yzXxBQekswq5Y2sTrn8y/56E2bCtDBDH/RxV01xpAnDMSqw/89me
-         c4bw==
+        d=suse.com; s=google; t=1791209383; x=1791814183; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=vq5Hi5+WboGt8dWZLLlgdEJdIoq3FZnGz5TdS8VWTXc=;
+        b=bllkZWF1Q9P0E6hnc3R/KFYN0STv2ATrYZLCGS88JHqNx1xhfV/f5/tzQV9dCZ6DOG
+         p5Dg+THuJlmyIZqwNBNk6qvxPizSXhwBUCzHaqi+VTsJBlVEmaHp55Xxk1NV/aWeqB4G
+         iu9sr1Qnsf+RnusYk0ALSN9ON8yn7u6zQh/uMRx/u2YKT3zHqdgHpAtJCV+2aOIuHo9K
+         3vWUQNeIITexRGXGl71uluiUblb2fUkNLpviL73wQNMDa2tp2ltEXIAsHh9wfMiuDQc2
+         w6FflQXxeYSBRlLkoMRLuYJ2rlZAb8j9esSHn3cF20Fz0603tySabRVjoB8PBUyuuYAL
+         6M6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791203765; x=1791808565;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1791209383; x=1791814183;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=4jU8vbkoMdpm/iDka5HS8l6OLmahdMWqgTkrbnwvknU=;
-        b=2GI6D3jXLIWvxQwYXXPQn3v0Xs/xyIGCyTdK6LpynMQG67mfbvDeR07lV6HiPe0AOe
-         NOwQj1Seu+AVkioWxR3KtwhaFn+UJJbenOKK1UBxIQbb/7pF81tXJx4l/ln4z7DxTOCZ
-         JDs2sA9J2irnW5nNC44jc4qE2FMfLgmoGTW1eMSArYDOOkwPd6MKMnWm9l6Cr9+osN6s
-         92I+mQYYPmdqxbmWPckUmOvBZ3zlVoPmSOG0X+I2KNcgd52y5bbotYB29zwJmynJMcQb
-         +qQ5L5XDkg92p0Mk+pWQvY3pH4mSOcD2lEGW+G8N/9LRVT+VmdKgpehqzSyq2Icc3+TP
-         Z7vg==
-X-Forwarded-Encrypted: i=1; AKwUvBxfVb/E5TBugk3rHaOnjgudcdVOOPx9i1oHhndEa1lh6I/pwLg4CEDX6Q+8JV2Kybsecmz8PwK/3oxm@vger.kernel.org
-X-Gm-Message-State: AFq9FYIzHhbrXE0QSa4VJXN67AhhLXn0NNbVv7/b0vQAXnsmdl5dcfy6
-	ikzWTSRk03wv2CrMtJ0fFttgnnVefPnJ/TOnDKj8SfD9hjmuprEWWIJiisnBf1I6AAo=
-X-Gm-Gg: AYBFou0Mit31kmYmW5TrwM//TfMUByxLkYzFzXruM7ARjJVf+Wuz/jN2/0ernlpZJTm
-	6+ZjT9z8Ww33gofBGKCcs/jxzs3m1RAvqGSiHNF7FOeVCk2YDhu61G4E22UuzKj+kPKRCVnBArL
-	pie5JSkwVjmYkab7ONeqQn3IVs11EZ5RO7opYcBsvsWr5AtrF0TjZyeorm9Kp2cZo45FpGI1bIu
-	jvH2QMlWy1tREwSlbu8F6GysGs/bKi5XNUQnKRJxCc0BTiBfJ9hxROvT+IfnWIHPmDFhPhKRQRX
-	gFNN/7GQlnMqPl7x+Boi7REH45Tc6nLY5qOegqYoRtbGpGUswVlxpJLDYYXAzWOZMDStLvcHxgR
-	AjoPWwvl9lXdC9QFqRg81BSTlPsVAZJrkIAeBFSHJX+8rmjtVR8XHjxpMHaUC/RuyZFDxUYk9BU
-	jPGxziYtirF4y6ZNEyLpQVUGFpHMUHyE6GR7AbotXjrA5RTvTghB53k8OuTcXyaMUBxYkz1MBwh
-	sSHl1EkLZtDrSWotXoojw==
-X-Received: by 2002:a17:903:186:b0:2dd:c053:c209 with SMTP id d9443c01a7336-2e49b6df076mr106567665ad.37.1791203765331;
-        Mon, 05 Oct 2026 05:36:05 -0700 (PDT)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:5364:bba9:2adf:d611])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e5a5caea48sm6542495ad.14.2026.10.05.05.36.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Oct 2026 05:36:04 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	xen-devel@lists.xenproject.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org
-Subject: [PATCH] xen/scsifront: check for a NULL shadow entry on a backend response
-Date: Mon,  5 Oct 2026 21:35:54 +0900
-Message-ID: <20261005123555.253995-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
+        bh=vq5Hi5+WboGt8dWZLLlgdEJdIoq3FZnGz5TdS8VWTXc=;
+        b=0GxYtH+mlCoc06dKB/J1LE9iagjgM/th9539ysmUoLeLE9BoAkMHdcPcF4yVeIBKHS
+         mAzjyAeD6cye6Bc41X4YZgUe/XkyT5Ukuk2yVKccjDs09ukXmUlo+P3eguLmgnpttwX2
+         vDMWs9aHaRIwRf/xwsIziIgRMgIPr18jkonUvBIXPr3CWXdw67iDdmsxj8UzTRr2Kgrl
+         StXxrQJQSNF1MK9C70apcte1XmxgN4ZKenRL1tEuar/046atIMWexmDHqUBAZ41jU7DF
+         V/S/6xDD3/aL9ZogKYB0MSOBvJPFs71+ygShHzq829tdl0GbY9ia79ULykrCVO+EuQGW
+         hr4A==
+X-Forwarded-Encrypted: i=1; AKwUvBzQks5stMyyA6zXEuvzb6SHwj6gX9zDgb5d+kF0ayM7qovjHFT27zJXTsK5Gjn+U8APDvM4sS88AGCx@vger.kernel.org
+X-Gm-Message-State: AFuF++lgdTU2hjh7tqV4PjRagseevOqzHqf6Ao72a3YHEdA55ORKs7oq
+	XXbO8zM8IEvTM1lFHj1mIUhf1ukzdoWQfi5TLbJuCbINtSqVi6W5o924avsmPjVOmVs=
+X-Gm-Gg: AYBFou1dZlHLGVU3ScM5cqLHs016UjqzKbhf5pw1tBgfOkkh2RhUVZxf05SjsvnA8C4
+	SRWZRuktif9egJN9sv/VEKJe9LAMZm0y9cXvnX3TOnA6etlaytIsqo0Kj3orRqqc+45XPaKrI4M
+	XXWxAR1avCE4/g/01NaXUGtAc71hOXMZ1ASP5GV2s/1RCJCr81Dlc43+e2tm8qcAESI4naXn4Yi
+	BBw1xZGmGYrUAFLJTPC/ZeX2edv5w7eiUiPjekKp7yWVj9/T/VapH0h57DsHDqbElCySYk1L/qH
+	najL0csIuMDeudmVEuC2+TD9Di9g/9dQWOyEV6x/okZeDRyWDqEq2EbopGHMVk8ZOdLTlngscag
+	t3uCvrKTA38JN/vncqNXSN/4l+xOWCVFFwA6WfZbCy0ERnkSiAUOZqwwOTpctM8DxZZ9LMess4g
+	UAKf76yGdSCloNanXzAqbW9mYL5zBxEhtfL5Y0WPo1Usws7LOLXK9eNR3QH+vkAx8McObP1aNnq
+	pDd9FQ+FMEZ/CkbR0bhUzHbZ3YEtjiAo4db+t01Mg==
+X-Received: by 2002:a05:600c:37cd:b0:49d:1840:4fd2 with SMTP id 5b1f17b1804b1-4a0275a1d84mr192922805e9.23.1791209383347;
+        Mon, 05 Oct 2026 07:09:43 -0700 (PDT)
+Received: from ?IPV6:2001:a61:139b:3801:fa57:89a5:c5ae:c89c? ([2001:a61:139b:3801:fa57:89a5:c5ae:c89c])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a0280ceaf0sm374240735e9.12.2026.10.05.07.09.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 05 Oct 2026 07:09:43 -0700 (PDT)
+Message-ID: <cf1b312d-66d0-4651-8419-e838a531a7f5@suse.com>
+Date: Mon, 5 Oct 2026 16:09:42 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] usb: uas: quiesce SCSI before stopping endpoints on
+ unbind
+To: Michal Pecio <michal.pecio@gmail.com>
+Cc: Jiayi Li <lijiayi@kylinos.cn>, Alan Stern <stern@rowland.harvard.edu>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+ linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+ linux-kernel@vger.kernel.org
+References: <d3639d68-0213-4b70-a771-aa5dc3ec9767@suse.com>
+ <20260930013332.829717-1-lijiayi@kylinos.cn>
+ <813dcf3a-0615-4152-baa7-47b0046ca113@suse.com>
+ <20261002145112.3ee2b500.michal.pecio@gmail.com>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <20261002145112.3ee2b500.michal.pecio@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-scsifront_do_response() validates the rqid in a backend response against
-VSCSIIF_MAX_REQS before using it to index info->shadow[], but then
-dereferences the entry to test ->inflight without checking that the slot
-is populated.  Shadow slots are NULL before a command is submitted (the
-host private area is zeroed at allocation) and are reset to NULL in
-_scsifront_put_rqid() once a request completes, so an in-range rqid that
-does not correspond to an outstanding request makes the frontend
-dereference a NULL pointer.
 
-A malicious or buggy backend can thus crash the guest by returning a
-response whose rqid is in range but not in flight -- for example a
-spurious response before any command has been issued, or a duplicate of
-one already completed.  The ring has only VSCSIIF_MAX_REQS (16) slots, so
-before the first command every in-range rqid selects a NULL slot.
 
-Reject a response whose shadow slot is not populated.
+On 02.10.26 14:51, Michal Pecio wrote:
+> On Wed, 30 Sep 2026 09:22:49 +0200, Oliver Neukum wrote:
+>>> When URB submission or completion returns -ENODEV or -ESHUTDOWN,
+>>> it marks the transport dead, stops further submissions, clears
+>>
+>> Why this specific trigger?
+>> I am asking because -ENODEV comes relatively late in the process.
+>> URBs tend to fail long before that.
+> 
+> But it's sufficient, right? Apparently all we need is to detect
+> USB disconnection before disconnect() runs. This will do.
 
-Fixes: 6d1c2f48f3fc ("xen/scsifront: harden driver against malicious backend")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/scsi/xen-scsifront.c | 1 +
- 1 file changed, 1 insertion(+)
+I am not sure you will necessarily see anything fail with
+ENODEV
 
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index 989bcaee42caf..aa44a233eac8d 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -367,6 +367,7 @@ static void scsifront_do_response(struct vscsifrnt_info *info,
- 	struct vscsifrnt_shadow *shadow;
- 
- 	if (ring_rsp->rqid >= VSCSIIF_MAX_REQS ||
-+	    !info->shadow[ring_rsp->rqid] ||
- 	    !info->shadow[ring_rsp->rqid]->inflight) {
- 		scsifront_set_error(info, "illegal rqid returned by backend!");
- 		return;
--- 
-2.43.0
+> But UAS driver infamously has no URB error handling; if anything
+> goes wrong it just waits for SCSI core to abort the command. Not
+> sure why things are this way.
+
+Good question.
+
+	Regards
+		Oliver
 
