@@ -1,114 +1,144 @@
-Received: from mail-ej2-f43.google.com (mail-ej2-f43.google.com [74.125.228.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DDDA4CB8B0
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Oct 2026 15:45:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.228.171
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791215157; cv=pass; b=JpuDxTOEUW3MhvoKAL4juhqPbTB+qLhhp7ARAQlbGKhGrvR0gi5vOo7lZnlAJu1UQ3r37n8WJev5ntRnNCHbDra78w6nFytSedLoilvXaVoBTLn1PGZ0w7xX1dRpRlRtUPkF61U1EYFtgvC4Zumep1+dL6GAYtwRb5Iyq8FRFxE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791215157; c=relaxed/simple;
-	bh=qH589Eati1pjOXOcBnGXShBFqiglBE/4FOHESK73PA0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Zvd528Qqmdh4r2CGbXSjInX+od7qpcK1yFGP4uKnQyiOjgR2Ln8/ShTF8RkcIOOgILmJWhFCw8R9kQSWsCAySJVKk4dk0tIwCY/2/S6v06mkmr7bCPM3M3EOdB2Eu5Ctu1hlhQ7GNImsHBGBgmTuyehY+lr13U3MlIHjadWoj/k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=BcF+s0QX; arc=pass smtp.client-ip=74.125.228.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B68964CB8DD;
+	Mon,  5 Oct 2026 15:57:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791215840; cv=none; b=O0isrrvBSRJ7Adez2RZcpSWNHG2H5YpI+0mzIASieJQ1JFIUHBXlyShsiLftqY9WL2j2IhSHUVW27DYjfsayu09p4//DZyzU855ukbDnh7mu+UhePeA6thnImzXGWy+TMQ8pegphiWW4p0riGLHNSo9TbbcUvdAtIsp4vEOM870=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791215840; c=relaxed/simple;
+	bh=4x/rggUe3FoPbP2vQGa0IfGARqg+sTYPhCQM+9x9034=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=qMy/oAC2NHGcce0oGRrG2Q4YJ6IIQ7kUM4Pb+w3YtmBzMJZ2M1LJhfPWUI9oxfmmKQBVqC8vR3OitwNo//+PnJ6uxRd2woCBjt2+L9lPkizNpg2Mwz7xK3FO+xVArDYvhID4zqeF0HVW3xKk5ZBqeMQFBHM0cro5LFplHQQb5wE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zzrp2T7e; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="BcF+s0QX"
-Received: by mail-ej2-f43.google.com with SMTP id a640c23a62f3a-c2a1f611461so135032066b.1
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Oct 2026 08:45:55 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1791215151; cv=none;
-        d=google.com; s=arc-20260327;
-        b=TFKh9KaG64d7N6+pTvC6vMxiAC0wvNaPak9ZwF9snn/5dOVVrQKaifXVNoLJpv0B1s
-         wYzfH6kWkFPKPydP1GTMYG0Qiv9m7GgZ+m+NJkcfgGZI2hkbgQSxA9YB+S0ya1Ht/b98
-         J4Ez+FbjRG1N85fI1phXF/WQuOWtnWiDNrE6Mcf++wLdmHFBMTGQDvEHc8gPWrlp7+q6
-         2c/v2Fi48TkTYqboqrQhVbW0aA11wPaRJf//Vih93eZdSVc9sJyUnj85yzlkb8jzffWD
-         GBgRnlHQP+lAXKCM6vyiOHrUuo3i/ccjLHKYIimQmzEcjIm3LQYqcql7KSMIxFt++Qrp
-         0T8w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=qH589Eati1pjOXOcBnGXShBFqiglBE/4FOHESK73PA0=;
-        fh=WWA4JP6oRLMkRRan6sbjBNP0Nxic21M7742pPPUIYBQ=;
-        b=pTHc3Wq416BLUIlaDiM5v5nGYSDyNKGReoQaDDG6FeSHHqUvNKy6kmHW1WweJaRGe6
-         ++7lW5pTJ76CYVFG9pDiGjJl0BCYN/IEK++wA8WyeL8Kw981QiGeFvjEmeG8wW2axElt
-         +QpaPewNSrDn3jvJAmjPaGwLHAkpGB04CCYNueM3TcAljQEXFlqkVxd98NBVt/vcvPaK
-         SLQPi87Q6aEIxX6/3zaskG7/vkD4qQV2vzST1dU96C+pTI1+aW416/Qv6o6D07fDUK5v
-         jXIM3/7pQPLqynJYENrG0IUqtv7OGcr8PrECOsDXFdK0m7Y71Zmp0y1z0wBF+bGg4N4+
-         0fiw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791215151; x=1791819951; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=qH589Eati1pjOXOcBnGXShBFqiglBE/4FOHESK73PA0=;
-        b=BcF+s0QXXaRAqj8Dprk3wqcsmVi/zAFp8tM7idpQpz3pzcdh32N3KPFAr+5oBK2VSC
-         b9i+KjrOQpgMs87ivBlk2gldNCX/+K75CU2QMy5u+3g4d1CyC7fSqm8e8o1YvssdTPD6
-         p4OxbQCORL3IqjjMupDM8GwUlcqDToCXEVIpwfy525mGqbrYfpvHLLQHnJGCHpBD/4pG
-         gIDwKe6JJoljgbx3hJ0j9f1ZEuE2RkFG2yWXmrxtMD6R5N7nRRdW4dHl22A+BvexZ/1U
-         6YIlYenKps9kayfCSq5YkNtYDT+eFFkDClP+c4MKQKL8jWbLiDPc534MeAmtNTnNjxAE
-         ox6w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791215151; x=1791819951;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=qH589Eati1pjOXOcBnGXShBFqiglBE/4FOHESK73PA0=;
-        b=sDggj0Bixtsy2zXsPr2NGHI3a94+0oxfkqhUUPBVIxktaUfqraMLX8Dxsbg/3GKH+m
-         wp50ScHaujnUtW1OnsZyh5reSh3LaDW4In9LpzlVHwg9iU7HDw/0HZMph0R6JC4UfHd+
-         XH5WbPKZybUiesNFIHoT+4AOdCBh1Hq65Nh4Q+XuLyXfZS/TtU/6ovzE3PTTxHK+e6OL
-         eX/9Aw8XonjiemVYAL4xEOz23AsvQw7E8ta8iqukBj61QJ+nCYhhETdclvJeQQe/9sdw
-         ua/6WNJboAvcGYzgA4qbH5T4Zprec0FN4QG5k/ILaO82GrzkSUhzTYhP9b92ciM5rTnX
-         TsqA==
-X-Forwarded-Encrypted: i=1; AKwUvByBIiIznEsMMehdl7l+336FcQDqK+WN57xGRZSKBt9CXmCetF1Jb476S6SZFoJi8cWUiNvqAtN8xBRu@vger.kernel.org
-X-Gm-Message-State: AFuF++nNMV9ibgNTV8ac3vZen19P7vMZ2WKUZof7bu/URTS7OfHGKLRl
-	CACdK8qlZ6RkfRXnbtUxyqAohHvhTiHi7xL5ErsSv98JqNmJqSyZQYU6qhA0YRm6XpX3y0DFzPS
-	O0j6L6xrr9y7tcAp2hQEtiWxdLlUSCAZTp8Yk4zk5
-X-Gm-Gg: AYBFou1UlN3bpYZ487kYUqp4fCK5rmdTXfIFUzudu6bd8juNvA3lbyH5tIN3yT16LAn
-	dIHEZyDN9KElZl+c2X7uynDQq/35NV4exsikSuFjKun3NDKsbdGqPs6YBG5C3g4iibisk4NLQm2
-	l7bF1tgLHgpXcb5sPxSZs9S2OJ1NlORG2zDf9xXrxgcNoGl/H/BohOLTtly/qL1OrEO2/LKtSQG
-	mihcvZLq0fYp3ZlzYBTOenA18wmWD25US0yLTCX8TlwPUpK85ZAlHz986Cfb80cAqA2ifu0Nzhm
-	8JgKvDqcc9RnmddKYSjpv5JrUkk0ZmLTS6TbCzEDLygnYVzCt8tUhUnq
-X-Received: by 2002:a17:907:3f14:b0:c25:f7db:4beb with SMTP id
- a640c23a62f3a-c3160f1d01fmr894266b.17.1791215150701; Mon, 05 Oct 2026
- 08:45:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zzrp2T7e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BF0F1F00893;
+	Mon,  5 Oct 2026 15:57:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791215838;
+	bh=lDEwT/kJtxLnQzyVwnYdvIREEI0cxdELQ5TKUhzaHBE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=Zzrp2T7elK6M4JBUF+PyMYalrQK25TTX9CMUWpC5s6VXvnWHp3ocfydNIKCsf+CvZ
+	 ebyHz8cbLSQ17XiO63nAK2sPWkV4HyArobsQ4SIAfNK0jrMCANtJxsbT8C2hqMCG9G
+	 AOFbBr04dTJnqBMk/FE2psHmOwVtEaouthoFD0bfwRhdHvryUb1wewiNHj1uaYvP/2
+	 UBizqRRAn6u3+PxoTJVagVGx8UIkOcWHFCOxhhxolKVqPyDxvBasdhcn1b0ZTZzbcj
+	 vB+4/Jue0JZuWjjtbOIauMtOhmBS8Ra5K+8JHNIne4YOhJEMLUUV1MGcipxoy9VTW8
+	 v2h8svXN4Y3Hg==
+From: Kees Cook <kees@kernel.org>
+To: Bill Wendling <morbo@google.com>
+Cc: Kees Cook <kees@kernel.org>,
+	Ian Bridges <icb@fastmail.org>,
+	Justin Tee <justin.tee@broadcom.com>,
+	Paul Ely <paul.ely@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH v5 03/12] scsi: lpfc: Print rx monitor records straight into the seq_buf
+Date: Mon,  5 Oct 2026 08:56:53 -0700
+Message-ID: <20261005155708.1471260-3-kees@kernel.org>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261005155653.late.426-kees@kernel.org>
+References: <20261005155653.late.426-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260914085148.136429-1-peter.wang@mediatek.com> <yq1jyo8pwwc.fsf@mail.kernel.org>
-In-Reply-To: <yq1jyo8pwwc.fsf@mail.kernel.org>
-From: Sandeep Dhavale <dhavale@google.com>
-Date: Mon, 5 Oct 2026 08:45:39 -0700
-X-Gm-Features: AclHuK82KgNqsjE8F2p-fNUCpJ_mW3iXi9stcn4dXlH9FUwkkuZqdBeXATzDN5I
-Message-ID: <CAB=BE-QT1oy=XD_MFWaR+VvKG_Kpk3jszDpAtUy=EyK9uU5fbQ@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] ufs: fix POST_CHANGE pairing and AHIT race condition
-To: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-Cc: peter.wang@mediatek.com, linux-scsi@vger.kernel.org, 
-	martin.petersen@oracle.com, avri.altman@sandisk.com, alim.akhtar@samsung.com, 
-	bvanassche@acm.org, santosh.sy@samsung.com, h.vinayak@samsung.com, 
-	wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org, 
-	chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com, 
-	chaotian.jing@mediatek.com, tun-yu.yu@mediatek.com, naomi.chu@mediatek.com, 
-	ed.tsai@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3097; i=kees@kernel.org; h=from:subject; bh=4x/rggUe3FoPbP2vQGa0IfGARqg+sTYPhCQM+9x9034=; b=owGbwMvMwCVmps19z/KJym7G02pJDFmHT5w+3PUqXONk7tl1q6Q2JTyKigq/we905U7vQTueH DF2tdq6jlIWBjEuBlkxRZYgO/c4F4+37eHucxVh5rAygQxh4OIUgInUqjIynGqP3Mam4Xa1KOCE 2ObVW3NumwmGpcg41EhPWyy4Z2eKDMM/u4TqmNcSWkfu3bL78eYKA4PXEQe7VBU3UYaXE5r5UnL 5AA==
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
->
-> Applied to 7.4/scsi-staging, thanks!
->
-> --
-> Martin K. Petersen
+lpfc_rx_monitor_report() formats each record into a stack buffer, then
+appends it with seq_buf_puts(), relying on seq_buf_puts() appending
+nothing when a string does not fit: the debugfs output then ends at the
+last whole record, and the record left out is read in full next time.
+The next patch makes seq_buf_puts() copy as much as fits instead, as
+seq_buf_printf() and strlcat() do.
 
-Hi Martin,
-I don't see this series in in 7.4/scsi-staging at [1], or perhaps just
-push is missing?
+Print each record with seq_buf_printf(), and when it does not fit, end
+the string where the record began, since the reader takes the buffer up
+to its NUL. This also takes the DBG_LOG_STR_SZ buffer off the stack.
 
-Thanks,
-Sandeep.
+Build tested ARCH=x86_64 with GCC 16.2.0, CONFIG_SCSI_LPFC=m and W=1.
 
-[1]: https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/?h=7.4/scsi-staging
+Assisted-by: LLM
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 45 +++++++++++++++++++++---------------
+ 1 file changed, 27 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index cfa4371169f1..a7b1ea67ed98 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -8108,7 +8108,6 @@ u32 lpfc_rx_monitor_report(struct lpfc_hba *phba,
+ 	spinlock_t *ring_lock = &rx_monitor->lock;
+ 	u32 ring_size = rx_monitor->entries;
+ 	u32 cnt = 0;
+-	char tmp[DBG_LOG_STR_SZ] = {0};
+ 	bool log_to_kmsg = (!buf || !buf_len) ? true : false;
+ 	struct seq_buf s;
+ 
+@@ -8133,27 +8132,37 @@ u32 lpfc_rx_monitor_report(struct lpfc_hba *phba,
+ 
+ 		/* Read out this entry's data. */
+ 		if (!log_to_kmsg) {
++			unsigned int len;
++
++			/* A header that did not fit leaves no room. */
++			if (seq_buf_has_overflowed(&s))
++				break;
++			len = seq_buf_used(&s);
++
++			seq_buf_printf(&s,
++				       "%03d:\t%-16llu%-16llu%-16llu%-16llu%-8llu%-8llu%-8llu%-8u%-8u%-8u%u(%u)\n",
++				       *head_idx,
++				       entry->max_bytes_per_interval,
++				       entry->cmf_bytes,
++				       entry->total_bytes,
++				       entry->rcv_bytes,
++				       entry->avg_io_latency,
++				       entry->avg_io_size,
++				       entry->max_read_cnt,
++				       entry->cmf_busy, entry->io_cnt,
++				       entry->cmf_info,
++				       entry->timer_utilization,
++				       entry->timer_interval);
++
+ 			/*
+ 			 * Drop a record whole if it does not fit, without
+-			 * consuming its ring entry.
++			 * consuming its ring entry: the reader takes the
++			 * string up to its NUL.
+ 			 */
+-			scnprintf(tmp, sizeof(tmp),
+-				  "%03d:\t%-16llu%-16llu%-16llu%-16llu%-8llu%-8llu%-8llu%-8u%-8u%-8u%u(%u)\n",
+-				  *head_idx,
+-				  entry->max_bytes_per_interval,
+-				  entry->cmf_bytes,
+-				  entry->total_bytes,
+-				  entry->rcv_bytes,
+-				  entry->avg_io_latency,
+-				  entry->avg_io_size,
+-				  entry->max_read_cnt,
+-				  entry->cmf_busy, entry->io_cnt,
+-				  entry->cmf_info,
+-				  entry->timer_utilization,
+-				  entry->timer_interval);
+-
+-			if (seq_buf_puts(&s, tmp) < 0)
++			if (seq_buf_has_overflowed(&s)) {
++				buf[len] = '\0';
+ 				break;
++			}
+ 		} else {
+ 			lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
+ 					"4410 %02u: MBPI %llu Xmit %llu "
+-- 
+2.55.0
+
