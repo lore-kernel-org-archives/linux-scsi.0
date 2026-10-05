@@ -1,269 +1,121 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.164])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj2-f12.google.com (mail-pj2-f12.google.com [74.125.227.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70A16221FD4;
-	Mon,  5 Oct 2026 11:55:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.164
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791201323; cv=pass; b=n5lhiRPr2iin1YsuDrcp4pe/bWdSA66uL9nSBHE374niE4P8+gp62YYjn4/gRc4f8RFNnQL/Y0QNrJo6Z6xbJZyGsUEMGqm4wofxjm0yy8Hz6sYDfOpzNWy43+xi8BvqfmY1H5fLCdR8YuBznWHbwZTzLvTWkt7Oy9agum6Xir8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791201323; c=relaxed/simple;
-	bh=ck8/UTx5CCxvmelK4jSyBm8N+nwsqu5R9ItOFQBEQH8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=UYjhxmKe7nh5Qyywe3sWLLrh4Y/213XxBywNulMMvdjiQDISfrxCEdwLLs7LCh/VI7w8mKE2ViWZR585b7jpL+a6H7zO0Xw6qGS6SRrBOlDIcebgkCdaB7POH1KCqwkLI8vkm2HOFN7FapcAgotNDsH28BJLM2Xb9yMA6gbogNQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=GQJ/rxyY; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=BjTpxYHY; arc=pass smtp.client-ip=81.169.146.164
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED8847F787
+	for <linux-scsi@vger.kernel.org>; Mon,  5 Oct 2026 12:36:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.227.140
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791203769; cv=none; b=nAVnkqbFw3EoO8MwOTom4e4sA+fF7hmbzPW4mEatYlam6Or5bR2mpcIqBZCUXe1HwzxC5UwGtm4quVgBLN+qP881nrNXwjPcLFhBCXCeuuzYA6AlWsRvSpl9D1jheNtv/xaLvipX22/lTARvZq8YmLdMZF0cPZ3goXWK9umPWAY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791203769; c=relaxed/simple;
+	bh=QQ//D5UNEFrMdGNsE0x2XqrDjRfkmbQnZlSDOkPsLjM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Sl8ncra3zBpmjF3Ec+48shSHG8jHXpnrdjV8Eq7clofkT8SYzLPyoY4SIIec93NAxgHq4fyMWmb0CveqGBSt+gDXQvjJa+iGVFKHlHKe45VXYmadS8cqqDdPVdQA2Et96S4q+awEr8JBgJoKtx7nhX+ZjJHVJwez9juPwqEJ9x0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=LRrDNRz0; arc=none smtp.client-ip=74.125.227.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="GQJ/rxyY";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="BjTpxYHY"
-ARC-Seal: i=1; a=rsa-sha256; t=1791201271; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=GZjD9ZxuN4+NRA9jvrOsL27KMR/E04LwmXRwbn3flrtQXOCS5tCwajYixVuLsyns9h
-    OerJLKd5xnDtpHTXjkT9IZG4EBR1jBNIzcQ88ZlbV2UH0I9d63iSPkG/PZlKCkCqQNAk
-    rHrxOFxJ4aNg56i+Lw3Msd7GoDwxwSpvF9kfViYweYn8O7XBjPW93daBRuMksB3op+jG
-    HqEL/QFfPClPV9Qc3kkRfLWz0BymR4S2rNVy1fOkXWYEugLHvUS455z8SHd0NvDa9O9o
-    mS46X9UKuXFK+45Fd9Fa4gauOAbBHhJSUCMlLsknxgfJZVIZXQMtlONaS6JMGLsOBWsb
-    kDoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1791201271;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=ck8/UTx5CCxvmelK4jSyBm8N+nwsqu5R9ItOFQBEQH8=;
-    b=e+ktHQR7CNoduKojQMY3gFx5Kn1ucuyGEjn1rTQo0Mjk9lpZk9Fo8IdY4XHsDuegmc
-    uA0GSAxwwB59aCLULGrr4+fkMYXRiUPS1qV+AiHdhtDF0QNXehMWxGMDPvttDwxRV8PE
-    3q6SJibcRN+E7rLe2HN95j5lY07ntV4/caRcRakCGqlz9QPz9JGczaufzs1/BunwC52t
-    e9ggp/BKZwMA3KD5vMM6mQJq2ZvVMoKk2mhkHa5jkffqnPe3wgfjQpk2VlXm5Wws/SzN
-    KT3Cb1Jg3NrkhXiui0Ma/zDbjzNJlcpgIoQ03jxp3tmk4TPk3NnvIhzsdH9O/f9ONyXE
-    jhJw==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1791201271;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=ck8/UTx5CCxvmelK4jSyBm8N+nwsqu5R9ItOFQBEQH8=;
-    b=GQJ/rxyYVHg2reXyHUkB1teDDR55KuAGVsA5mYGvlFb1DGbIr0/tm2yWOGiOb8XqqF
-    5kqK02aTX6penZxg/9c7SyIRsH1O92TPkpeSuVeqwsH1HhhyPbowXm7NMMP+RjO+jV+h
-    RHLbQmccyJ8rSIupA/IxJh0wvjblTFI2NE7GvnHkCeF/LLcAXRdcBwI1zuhqpi4i1Lx4
-    6FkXYFgqvU7bYynUvPMCpWG2coLC2Axu0zIL+Lo9cRDHrYwRMRRcD88h6yTx8J1b3O9v
-    IMo9MYPDyFmP5BjfbnB/g10k0MdSF6z0J6DsKnhw9WiJBiBMUPpcB433busY8BzvqxbR
-    SCgQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1791201271;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=ck8/UTx5CCxvmelK4jSyBm8N+nwsqu5R9ItOFQBEQH8=;
-    b=BjTpxYHYhclzhR1ha2zFbnNNVuuyZTHA9ELB+Ty4toBOFsrKsSAZR8q3EgQI7FgF2H
-    KKPhn2W9H0Z6dptrzKBg==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZuk"
-Received: from [10.176.237.163]
-    by smtp.strato.de (RZmta 55.6.2 AUTH)
-    with ESMTPSA id z04e1c295BsTQ3d
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Mon, 5 Oct 2026 13:54:29 +0200 (CEST)
-Message-ID: <1912caf84d99bc2388960c907184f06689806ee6.camel@iokpp.de>
-Subject: Re: [PATCH 6.18.y] scsi: ufs: core: Re-arm the device command
- completion before submitting
-From: Bean Huo <beanhuo@iokpp.de>
-To: alice.chao@mediatek.com, stable@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, 
- bvanassche@acm.org, avri.altman@sandisk.com, alim.akhtar@samsung.com, 
- wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org, 
- peter.wang@mediatek.com, chun-hung.wu@mediatek.com, cc.chou@mediatek.com, 
- chaotian.jing@mediatek.com, tun-yu.yu@mediatek.com, naomi.chu@mediatek.com,
-  ed.tsai@mediatek.com
-Date: Mon, 05 Oct 2026 13:54:28 +0200
-In-Reply-To: <20260915052638.459390-1-alice.chao@mediatek.com>
-References: <20260915052638.459390-1-alice.chao@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="LRrDNRz0"
+Received: by mail-pj2-f12.google.com with SMTP id d9443c01a7336-2db1ca069c8so7008695ad.3
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Oct 2026 05:36:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791203765; x=1791808565; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=4jU8vbkoMdpm/iDka5HS8l6OLmahdMWqgTkrbnwvknU=;
+        b=LRrDNRz0pHvIpLpLE2H9qGw9RxTzk6KPEJByVvSTdcI1tFZDoj7i+fjzwbHLVVRtD3
+         gpxJcOa4kN5oAMIlIIjX1aH+s8EW5f2m+zEsQ0s0JRIef8mYDo7iUh3DyU5lxbT6Pz/2
+         VaDBzU9Zm50NzDVD66drpFqOyuGdNHTdU+qlxAPuLgVheNowU5BjxlMs7iSq4mNQBw+F
+         2P33Z9u4PwhNUfLS7hEM5vv8FstSBsKehuH2jAuPUTI1YONbm59kB2rWd+BWBf1PMNOi
+         wOKSm2Afa2Xi9OR/yzXxBQekswq5Y2sTrn8y/56E2bCtDBDH/RxV01xpAnDMSqw/89me
+         c4bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791203765; x=1791808565;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=4jU8vbkoMdpm/iDka5HS8l6OLmahdMWqgTkrbnwvknU=;
+        b=2GI6D3jXLIWvxQwYXXPQn3v0Xs/xyIGCyTdK6LpynMQG67mfbvDeR07lV6HiPe0AOe
+         NOwQj1Seu+AVkioWxR3KtwhaFn+UJJbenOKK1UBxIQbb/7pF81tXJx4l/ln4z7DxTOCZ
+         JDs2sA9J2irnW5nNC44jc4qE2FMfLgmoGTW1eMSArYDOOkwPd6MKMnWm9l6Cr9+osN6s
+         92I+mQYYPmdqxbmWPckUmOvBZ3zlVoPmSOG0X+I2KNcgd52y5bbotYB29zwJmynJMcQb
+         +qQ5L5XDkg92p0Mk+pWQvY3pH4mSOcD2lEGW+G8N/9LRVT+VmdKgpehqzSyq2Icc3+TP
+         Z7vg==
+X-Forwarded-Encrypted: i=1; AKwUvBxfVb/E5TBugk3rHaOnjgudcdVOOPx9i1oHhndEa1lh6I/pwLg4CEDX6Q+8JV2Kybsecmz8PwK/3oxm@vger.kernel.org
+X-Gm-Message-State: AFq9FYIzHhbrXE0QSa4VJXN67AhhLXn0NNbVv7/b0vQAXnsmdl5dcfy6
+	ikzWTSRk03wv2CrMtJ0fFttgnnVefPnJ/TOnDKj8SfD9hjmuprEWWIJiisnBf1I6AAo=
+X-Gm-Gg: AYBFou0Mit31kmYmW5TrwM//TfMUByxLkYzFzXruM7ARjJVf+Wuz/jN2/0ernlpZJTm
+	6+ZjT9z8Ww33gofBGKCcs/jxzs3m1RAvqGSiHNF7FOeVCk2YDhu61G4E22UuzKj+kPKRCVnBArL
+	pie5JSkwVjmYkab7ONeqQn3IVs11EZ5RO7opYcBsvsWr5AtrF0TjZyeorm9Kp2cZo45FpGI1bIu
+	jvH2QMlWy1tREwSlbu8F6GysGs/bKi5XNUQnKRJxCc0BTiBfJ9hxROvT+IfnWIHPmDFhPhKRQRX
+	gFNN/7GQlnMqPl7x+Boi7REH45Tc6nLY5qOegqYoRtbGpGUswVlxpJLDYYXAzWOZMDStLvcHxgR
+	AjoPWwvl9lXdC9QFqRg81BSTlPsVAZJrkIAeBFSHJX+8rmjtVR8XHjxpMHaUC/RuyZFDxUYk9BU
+	jPGxziYtirF4y6ZNEyLpQVUGFpHMUHyE6GR7AbotXjrA5RTvTghB53k8OuTcXyaMUBxYkz1MBwh
+	sSHl1EkLZtDrSWotXoojw==
+X-Received: by 2002:a17:903:186:b0:2dd:c053:c209 with SMTP id d9443c01a7336-2e49b6df076mr106567665ad.37.1791203765331;
+        Mon, 05 Oct 2026 05:36:05 -0700 (PDT)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:5364:bba9:2adf:d611])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e5a5caea48sm6542495ad.14.2026.10.05.05.36.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Oct 2026 05:36:04 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	xen-devel@lists.xenproject.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org
+Subject: [PATCH] xen/scsifront: check for a NULL shadow entry on a backend response
+Date: Mon,  5 Oct 2026 21:35:54 +0900
+Message-ID: <20261005123555.253995-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Tue, 2026-09-15 at 13:26 +0800, alice.chao@mediatek.com wrote:
-> From: Alice Chao <alice.chao@mediatek.com>
->=20
-> Commit 20b97acc4caf ("scsi: ufs: core: Fix a race condition related to
-> device commands") moved the device management command completion into
-> struct ufs_hba, initialized once by ufshcd_init(), and dropped the
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0hba->dev_cmd.complete =3D=
- NULL;
->=20
-> assignments that used to make ufshcd_compl_one_cqe() discard completions
-> the submitter had already given up on. Nothing replaced them, so the
-> completion is never reset between two device commands:
->=20
-> =C2=A0 Task A (device command submitter) IRQ (tag =3D=3D hba->reserved_sl=
-ot)
-> =C2=A0 --------------------------------- ------------------------------
-> =C2=A0 ufshcd_read_desc_param()
-> =C2=A0=C2=A0 ufshcd_query_descriptor_retry()
-> =C2=A0=C2=A0=C2=A0 __ufshcd_query_descriptor()
-> =C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_exec_dev_cmd()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_issue_dev_cmd()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_send_command()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_wait_for_dev_cmd()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 wait_for_completion_timeout()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* times out, done =3D=3D 0 */
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_clear_cmd()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* returns 0, no effect */
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EAGAIN
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufs_mtk_mcq=
-_intr()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshc=
-d_mcq_poll_cqe_lock()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
- ufshcd_mcq_process_cqe()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 ufshcd_compl_one_cqe()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 /* lrbp->cmd =3D=3D NULL */
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 complete(&hba->dev_cmd.complete)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 /* done: 0 -> 1 */
-> =C2=A0 ufshcd_query_attr_retry()
-> =C2=A0=C2=A0 ufshcd_query_attr()
-> =C2=A0=C2=A0=C2=A0 ufshcd_exec_dev_cmd()
-> =C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_issue_dev_cmd()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_send_command()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_wait_for_dev_cmd()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 wait_for_completion_timeout()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* returns at once, done: 1 -> 0 */
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ufshcd_dev_cmd_completion()
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* response UPIU not written yet */
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL
->=20
-> Task A then rejects what it reads out of the response UPIU:
->=20
-> =C2=A0 ufshcd_dev_cmd_completion: Invalid device management cmd response:=
- 0
-> =C2=A0 ufshcd_dev_cmd_completion: unexpected response in Query RSP: ff
->=20
-> The skew does not self-correct. On a UFS 4.0 controller in MCQ mode it
-> persisted across more than a thousand consecutive device commands,
-> failing every descriptor and attribute read until the link was reset.
->=20
-> The controller can still complete the timed-out command because in MCQ
-> mode ufshcd_clear_cmd() only issues an SQ cleanup (SQRTC.ICU), which
-> shows the command left the submission queue but not that a CQE is not
-> already posted. The MCQ path also skips the hba->outstanding_reqs
-> re-check that the SDB path does, so it returns -EAGAIN with the
-> completion still armed.
->=20
-> Re-arm the completion in ufshcd_issue_dev_cmd(), immediately before
-> submitting. All submitters - ufshcd_exec_dev_cmd(),
-> ufshcd_issue_devman_upiu_cmd() and ufshcd_advanced_rpmb_op() - reach it
-> holding hba->dev_cmd.lock, so no extra serialization is needed.
->=20
-> This narrows the window rather than closing it: the CQE only carries the
-> tag and every device command uses hba->reserved_slot, so a late
-> completion is still indistinguishable from the expected one. It no
-> longer spans the idle time between two commands.
->=20
-> No mainline commit: commit 08b12cda6c44 ("scsi: ufs: core: Switch to
-> scsi_get_internal_cmd()") moved this path onto the block layer and
-> removed struct ufs_dev_cmd::complete and ufshcd_wait_for_dev_cmd(). Each
-> device command now waits on its own request via blk_execute_rq(), so
-> mainline has no shared completion to skew. That refactor is not a
-> reasonable stable backport; this is the minimal alternative.
->=20
-> Affected versions: v6.15 through v6.18, i.e. the kernels that carry the
-> commit named in the Fixes: tag but not the mainline rewrite above.
->=20
-> Fixes: 20b97acc4caf ("scsi: ufs: core: Fix a race condition related to de=
-vice
-> commands")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Alice Chao <alice.chao@mediatek.com>
-> ---
-> =C2=A0drivers/ufs/core/ufshcd.c | 9 +++++++++
-> =C2=A01 file changed, 9 insertions(+)
->=20
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 87578e8824d2..003fa8af4f4d 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -3312,6 +3312,15 @@ static int ufshcd_issue_dev_cmd(struct ufs_hba *hb=
-a,
-> struct ufshcd_lrb *lrbp,
-> =C2=A0{
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0int err;
-> =C2=A0
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/*
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * A device command that timed=
- out may still be completed by the
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * controller later on. hba->d=
-ev_cmd.complete is shared by all device
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * commands, so re-arm it here=
-, immediately before submitting, to keep
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * such a late completion from=
- being mistaken for the completion of
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * this command.
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0reinit_completion(&hba->dev_cm=
-d.complete);
-> +
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_add_query_upiu_tra=
-ce(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_send_command(hba, =
-tag, hba->dev_cmd_queue);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0err =3D ufshcd_wait_for_d=
-ev_cmd(hba, lrbp, timeout);
-> --
+scsifront_do_response() validates the rqid in a backend response against
+VSCSIIF_MAX_REQS before using it to index info->shadow[], but then
+dereferences the entry to test ->inflight without checking that the slot
+is populated.  Shadow slots are NULL before a command is submitted (the
+host private area is zeroed at allocation) and are reset to NULL in
+_scsifront_put_rqid() once a request completes, so an in-range rqid that
+does not correspond to an outstanding request makes the frontend
+dereference a NULL pointer.
 
+A malicious or buggy backend can thus crash the guest by returning a
+response whose rqid is in range but not in flight -- for example a
+spurious response before any command has been issued, or a duplicate of
+one already completed.  The ring has only VSCSIIF_MAX_REQS (16) slots, so
+before the first command every in-range rqid selects a NULL slot.
 
-I have one question:
+Reject a response whose shadow slot is not populated.
 
-The late CQE can come after the re-arm:
+Fixes: 6d1c2f48f3fc ("xen/scsifront: harden driver against malicious backend")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+ drivers/scsi/xen-scsifront.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-timeout -> cleanup -> retry B -> re-arm -> send B -> A's CQE arrives, and t=
-hen B
-is woken up early and fails, if B's own CQE in turn comes after C's re-arm,=
- C
-fails the same way, and C may even read B's response as its own.=C2=A0
+diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+index 989bcaee42caf..aa44a233eac8d 100644
+--- a/drivers/scsi/xen-scsifront.c
++++ b/drivers/scsi/xen-scsifront.c
+@@ -367,6 +367,7 @@ static void scsifront_do_response(struct vscsifrnt_info *info,
+ 	struct vscsifrnt_shadow *shadow;
+ 
+ 	if (ring_rsp->rqid >= VSCSIIF_MAX_REQS ||
++	    !info->shadow[ring_rsp->rqid] ||
+ 	    !info->shadow[ring_rsp->rqid]->inflight) {
+ 		scsifront_set_error(info, "illegal rqid returned by backend!");
+ 		return;
+-- 
+2.43.0
 
-Whether this stops depends on device latency against our retry path, not on=
- the
-patch.=C2=A0
-
-The root cause is that all device commands share hba->reserved_slot and the=
- CQE
-carries only the tag. Since a successful SQ cleanup must post an ABORTED CQ=
-E,
-could the MCQ timeout path wait for and consume that CQE before=C2=A0return=
-ing -
-EAGAIN?=C2=A0
-
-does this patch only covers a late CQE arriving while no device command is =
-in
-flight. Did you test it with injected timeouts to see whether it recovers?
-
-
-Kind regards,
-Bean
