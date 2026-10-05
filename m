@@ -1,242 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAB8F44A40F
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Oct 2026 10:01:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CDE941A563;
+	Mon,  5 Oct 2026 10:45:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791194508; cv=none; b=n7rbbgXX12CJCJmbtDQpzkvuhKO87QgV+tlq89yzuJ1+bR9aHriy+Tg8YZJA1/xjquVsdJB4aBs7T7TFZu6fqJpKEIvE2ueHc+R8enGxcJ1x2vIGJKIx/35w55kOoAaSzCuIfE7dNfYfXu5Ehin0r/l3sipbGmUUETLJ2luOZ/Y=
+	t=1791197121; cv=none; b=fDyhHqkI6Zt2Glm9iLGHHT+kavP5kfotvkcQri/xOk7ug4UA48V39ZNKw+FfUjqv3QUlQWaAd/dfBjkTE4gLXyJX4Eh+z8HWx7la3/5Bygw0YcpixmRxa3m3MFHt2kVfLjWgDzaX+nplvseomVaohA9dunfAgu7wj9vkagJNAP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791194508; c=relaxed/simple;
-	bh=8D8WTuOU9czgLBzjdJBhxTa9AEClAWxwgm2GPAaJpYA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=P5vtBYYVBBMRXcJ1lOLmVNqmk/AnCTwOlPcWMP2y4yI+JaKv0+DBvOzfJBLf8SZGZMuHA9qwFhb5s27yt7dape9LJryBAEmwt0ieY+mRHj5g47yNH7wXs5a0TosBJ+/RgNErAtXK3gfAeLhdaSy1luA5V1owP5PuLQbiAu157zc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fGBcaauk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791197121; c=relaxed/simple;
+	bh=hqrVZ7eLDvyJ+APK7sQ+UC7k/AAA0TqCmgXNBjyJtgQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ngW4zoeUACy2uwNuXuO0RCON1vL9YEoN1GDJ7oQ1ssouuM78LspHbSJVgGOYWsxuKZ1ZK8S05nCew6/BbgWVBauQC10++LfGxwhMrcq6uUWzDlM/x0GyyOjdeA+REDuD3Ue2M02knLcpPIxQLr/I13rhLRufOBWHgHlUcfTJ8w4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=a1NURU+U; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Rgomq2F8; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=i3f8xTK/; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ISHBS8Hx; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fGBcaauk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2F2D1F000FF;
-	Mon,  5 Oct 2026 10:01:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791194506;
-	bh=1lBYbHbzEtc2HW/3u3Rnhp8fo4q3f63EQxJ4pPnOUnY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fGBcaaukKaRZxAnMPIRIXFFt/2oOCVJKAYkC8amxaeKmzVsVxLeKrK2H+y2wFHPbE
-	 mnE7bBx5JNszMz/u2c4cr2LOyriGepLSRn+JkbF0nT+OR2Yt5QgKfYwo04TGPFS6HC
-	 dgdRxuT5G9n5+yZMB7Xk+3mbBihHqQaUPdmnRfdNXnEbtExPYusdbSAcTa/vsp5Y3c
-	 9yeJfL4xk/pfxdGSwizMfyUJIDA2V0RHuKImg27UYRRpbx8JQPunZblad9uG5YMdQm
-	 I1rTmzIjpoXJWE/qHiFjkSYMdA/eJwFISAoDTKv68HpVkJJGxEa8xEGjbz5w0NXpx8
-	 b8VmaT/Kdh1CQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/7] block: introduce storage element management
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261005094632.580753-3-dlemoal@kernel.org>
-References: <20261005094632.580753-1-dlemoal@kernel.org>
- <20261005094632.580753-3-dlemoal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 05 Oct 2026 10:01:46 +0000
-Message-Id: <20261005100146.B2F2D1F000FF@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="a1NURU+U";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Rgomq2F8";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="i3f8xTK/";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ISHBS8Hx"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id DF0C51F786;
+	Mon,  5 Oct 2026 10:45:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1791197113; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AQL23iedUfQmZWx1bXu3AepEqpmnYcVTLikcXH2ufTU=;
+	b=a1NURU+UQliLJHHpDxXiqikkO95HPAB5atzw2xKbrE6kxTGq9J2kceRvgGXGWoBDMG8kQh
+	6w18J09n8p1jm8NxBK88oGW6iOQomrNbO0XWQbqxXdunXfgLOOFp/w2zjYSP4THcHH1YEb
+	3si75igcXzqX7WNvYuXk0h2voTFW+/I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1791197113;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AQL23iedUfQmZWx1bXu3AepEqpmnYcVTLikcXH2ufTU=;
+	b=Rgomq2F8IXWjPCmiPZx0g0pQKUBrllBahv3h1AJa0RScPnILPUF+nwPTbCCBvptvN5zdgW
+	9DUDEkKo5Yx1M2Bw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1791197108; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AQL23iedUfQmZWx1bXu3AepEqpmnYcVTLikcXH2ufTU=;
+	b=i3f8xTK/t1BWdA5xAlGX+P125WXXTrG6w+4PvWVmJGGhoguCn5QcfpgVH9tJ1ODWJCAHWS
+	bAN4aJwAVfVuD/zCUlxWeAQXgLYdx2Lz7jf+pXeZO8ShPnu1Ws/Xwd+VDdH2yBvPceTs6b
+	Rg0nHRTqqOZRAEPYOipSlFI+znwt/TI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1791197108;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AQL23iedUfQmZWx1bXu3AepEqpmnYcVTLikcXH2ufTU=;
+	b=ISHBS8HxFtOtcC72He7MOu84xyUBtKJkqU6MF2UMd4SWTQm1wpVTvZXSRmBCLBlA+joUJH
+	US5gD3T9RTDxQPDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B0172132D3;
+	Mon,  5 Oct 2026 10:45:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id IRqfHLR/w2rDOAAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 05 Oct 2026 10:45:08 +0000
+Message-ID: <9eb2eec7-f465-4227-aebf-527f89fc735d@suse.de>
+Date: Mon, 5 Oct 2026 12:45:08 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/7] block: fail reads to offline zones early
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>
+References: <20261005094632.580753-1-dlemoal@kernel.org>
+ <20261005094632.580753-2-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20261005094632.580753-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
+X-Spam-Level: 
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
-- [High] block: page index vs byte count mismatch in invalidate_inode_pages=
-2_range
-- [High] block: heap buffer overflow in disk_wait_for_se_mgmt_completion ar=
-ray reuse
-- [High] block: dirty page writeback omission before storage element removal
-- [Medium] block: silent error abort in disk_wait_for_se_mgmt_completion ca=
-uses premature zone revalidation
-- [Low] block: blk_storage_element_status typos and duplicate fields in UAP=
-I header
---
+On 10/5/26 11:46 AM, Damien Le Moal wrote:
+> Any BIO targeting an offline zone of a zoned block device will fail,
+> including read commands. So there is no point in issuing read BIOs.
+> Fail these early if we ever see one, and be quiet about the error.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   block/blk-core.c  |  5 +++++
+>   block/blk-zoned.c | 18 ++++++++++++++++++
+>   block/blk.h       |  6 ++++++
+>   3 files changed, 29 insertions(+)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-commit 71418115a91f7676078cbe8877b24a7405924eb7
-Author: Damien Le Moal <dlemoal@kernel.org>
+Cheers,
 
-block: introduce storage element management
-
-This patch introduces storage element management features for managing hard
-disk heads. It defines generic block device driver operations for reporting,
-removing, and restoring storage elements, allowing file systems to use the
-data-preserving flavor of the depopulation feature.
-
-> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-> index 131c9f50b3da5..b713512f7d48f 100644
-> --- a/block/blk-zoned.c
-> +++ b/block/blk-zoned.c
-[ ... ]
-> +static void disk_wait_for_se_mgmt_completion(struct gendisk *disk)
-> +{
-> +	struct blk_storage_element *elements, *e;
-> +	unsigned int i, nr_se, nr_elements =3D 0;
-> +	int ret;
-> +
-> +	ret =3D (disk->fops->se_ops->report_elements)(disk, &nr_elements, NULL);
-> +	if (ret) {
-> +		pr_err("Failed to get number of storage elements\n");
-> +		return;
-> +	}
-> +
-> +	elements =3D kzalloc_objs(struct blk_storage_element, nr_elements);
-> +	if (!elements)
-> +		return;
-
-[Severity: Medium]
-Will this silently abort on failure instead of returning an error or retryi=
-ng?
-
-If report_elements() or the memory allocation fails, the function simply
-returns. This means callers like bdev_remove_storage_element() will
-immediately proceed to invoke blk_revalidate_disk_zones() while the hardware
-is potentially still actively removing or restoring an element.
-
-> +
-> +	while (1) {
-> +		/*
-> +		 * Check if we have storage elements being removed or restored.
-> +		 */
-> +		nr_se =3D nr_elements;
-> +		ret =3D (disk->fops->se_ops->report_elements)(disk,
-> +						&nr_elements, elements);
-
-[Severity: High]
-Does this code risk a heap buffer overflow if the hardware dynamically
-changes the number of reported elements?
-
-The driver's report_elements() callback modifies nr_elements to the actual
-number of descriptors returned. In the next iteration, nr_se is set to this
-updated count and passed back as the buffer capacity. If the hardware repor=
-ts
-a higher count during polling, nr_elements is treated as a larger capacity
-than what was originally allocated via kzalloc_objs().
-
-> +		if (ret) {
-> +			pr_err("Failed to get storage elements\n");
-> +			break;
-> +		}
-> +
-> +		e =3D elements;
-> +		for (i =3D 0; i < nr_se; i++, e++) {
-> +			if (e->status =3D=3D BLK_SE_STS_REMOVE_IN_PROGRESS ||
-> +			    e->status =3D=3D BLK_SE_STS_RESTORE_IN_PROGRESS)
-> +				break;
-> +		}
-
-[Severity: High]
-Could this read uninitialized or stale memory if the driver returns fewer
-elements than nr_se?
-
-The loop iterates up to the pre-call capacity nr_se instead of the actual
-returned count nr_elements.
-
-[ ... ]
-> +int bdev_remove_storage_element(struct block_device *bdev,
-> +				unsigned int element_id)
-> +{
-[ ... ]
-> +	/*
-> +	 * Flush the volatile write cache if there is any. Note that this may
-> +	 * lead to errors if degraded storage elements are used. So ignore
-> +	 * errors here.
-> +	 */
-> +	blkdev_issue_flush(disk->part0);
-> +
-> +	/* Invalidate all cached data. */
-> +	invalidate_inode_pages2_range(bdev->bd_mapping, 0,
-> +				      get_capacity(disk) << SECTOR_SHIFT);
-
-[Severity: High]
-Does this miss dirty pages in the block device's page cache?
-
-invalidate_inode_pages2_range() skips dirty pages and returns -EBUSY when it
-encounters them. Since sync_blockdev() or filemap_write_and_wait() is not
-called before this invalidation, dirty pages remain in memory and will
-eventually be written back by background threads to obsolete or offline zon=
-es
-after the storage element is removed.
-
-[Severity: High]
-Does this pass a byte size instead of a page index, leading to incomplete
-cache invalidation?
-
-The invalidate_inode_pages2_range() function expects a page index. The
-code here passes get_capacity(disk) << SECTOR_SHIFT, which is the capacity
-in bytes. On 32-bit platforms where pgoff_t is a 32-bit unsigned integer,
-passing a large byte count causes the value to be silently truncated modulo
-2^32. For example, a 1TB disk truncates to 0, meaning only page 0 is
-invalidated.
-
-> +
-> +	ret =3D (disk->fops->se_ops->remove_element)(disk, element_id);
-> +	if (ret)
-> +		return ret;
-[ ... ]
-> +int bdev_restore_storage_elements(struct block_device *bdev)
-> +{
-[ ... ]
-> +	/* Invalidate all cached data. */
-> +	invalidate_inode_pages2_range(bdev->bd_mapping, 0,
-> +				      get_capacity(disk) << SECTOR_SHIFT);
-
-[Severity: High]
-Does this suffer from the same page index vs byte count mismatch as above,
-causing truncation on 32-bit systems?
-
-> +
-> +	ret =3D (disk->fops->se_ops->restore_elements)(disk);
-> +	if (ret)
-> +		return ret;
-[ ... ]
-> diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
-> index 6638361209667..3a4bacfe79797 100644
-> --- a/include/uapi/linux/blkzoned.h
-> +++ b/include/uapi/linux/blkzoned.h
-> @@ -208,4 +208,71 @@ struct blk_zone_range {
->  #define BLKFINISHZONE	_IOW(0x12, 136, struct blk_zone_range)
->  #define BLKREPORTZONEV2	_IOWR(0x12, 142, struct blk_zone_report)
-> =20
-> +/**
-> + * enum blk_storage_element_status - Statuc of a zoned device storage el=
-ements.
-> + *
-> + * @BLK_SE_RDWR: The storage element handles both reads and writes.
-> + * @BLK_SE_READ: The storage element handles reads only.
-> + * @BLK_SE_WRITE: The storage element handles writes only.
-> + * @BLK_SE_WRITE: The storage element type is unknown.
-> + */
-> +enum blk_storage_element_type {
-
-[Severity: Low]
-This isn't a bug, but there are some typos in this UAPI header.
-
-The documentation has a typo in "Statuc" and names the wrong enum in the
-description. Additionally, @BLK_SE_WRITE is duplicated in the docstring
-instead of documenting @BLK_SE_TYPE_UNKNOWN.
-
-[ ... ]
-> +enum blk_storage_element_status {
-> +	BLK_SE_STS_OK			=3D 0x01,
-> +	BLK_SE_STS_DEGRADED		=3D 0x02,
-> +	BLK_SE_STS_REMOVE_IN_PROGRESS	=3D 0x03,
-> +	BLK_SE_STS_REMOVE_ERROR		=3D 0x04,
-> +	BLK_SE_STS_RESTORE_IN_PROGRESS	=3D 0x05,
-> +	BLK_SE_STS_RESTORE_ERROR	=3D 0x06,
-> +	BLK_SE_STS_REMOVED		=3D 0x07,
-> +	BLK_SE_STS_UNKOWN		=3D 0xFF,
-> +};
-
-[Severity: Low]
-This isn't a bug, but the UAPI constant for the unknown state is misspelled
-as BLK_SE_STS_UNKOWN. Correcting this before the UAPI freezes could prevent
-compatibility issues later.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261005094632.5807=
-53-1-dlemoal@kernel.org?part=3D2
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
