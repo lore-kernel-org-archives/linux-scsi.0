@@ -1,80 +1,80 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CB9B1C5D72;
-	Mon,  5 Oct 2026 11:14:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0077475338;
+	Mon,  5 Oct 2026 11:17:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791198881; cv=none; b=RVt+N8PEqRBINQn8I11rQb4VYdrLG6D7jIp3tqFf/aTzPiHo4ufgrXs62ZW+0+fZqNanEV166YSjVWdF2M1B21IoTMeK1ve96pgxGR7qBqwjqusptsiFv0ZYnxwGfqZRfrgNsFtvL6TgCdXGklhlxx7fN3ANRZl0Wsi0kANn0nU=
+	t=1791199064; cv=none; b=iRmQfzn756S11GxGgpKIlGwwpjVuNWIyldHXSDnkEY1utPfeD9/qX5owf7A3KvzDZrx/ZRdltnINWWqPqUhCIxKhHT3gKaY+/xsCy6EeSPQy1kVFWcI1kw65edlWrrHO3UkyqpvLbkoBMrfqQNgDy9zBlX50heBXzzc21KksFVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791198881; c=relaxed/simple;
-	bh=cHk0MW4dB5AVjfBjimXZLZY5V6n0ldrVPIpmP5uI2uQ=;
+	s=arc-20240116; t=1791199064; c=relaxed/simple;
+	bh=E+uvttdsNAzSDo20fcmcEdvtICN4Eh5R3UljBe0+Fxo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=HpOX9/xt89IIlfMQ61pk6OYlcemdEp7wm4QcV6cXF2my/NGkNpNjfM9DRkWnBm/a3pVyS8HVgGWnXRNksf1rXHAxI6nAl7c7EVxuCymMfsrusQ8OWFfFjEVxBiQE4sUKq5B3fZAytpVXOmLSY7RZXrB1AWBGuSuvWZBPPvbIKuE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1d0mUtP7; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=yv4Ub1yI; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=WJEBqa9P; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=/bGmdH2p; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=cEuHYwhjl312pesWVfTtVI3Nybjx0Z7AM1LUMm4bD94WXvoEtmvdrB4oP3HrORGfdWsSG+4/nTmsMuynLZ+zQ4clkbRiCy1DpZ/J4P2C8gPCC4+0w2aBCPtWKPLcJFGT0GoIYvdnOaIAf5qiaQIapE8AEN4KTqM/hKGs04G/3oM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=cbM79Ie/; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=bCYMnKlu; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kKpRxH9X; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=57OLRd6A; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1d0mUtP7";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="yv4Ub1yI";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="WJEBqa9P";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="/bGmdH2p"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="cbM79Ie/";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="bCYMnKlu";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kKpRxH9X";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="57OLRd6A"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 4136C1F7AF;
-	Mon,  5 Oct 2026 11:14:30 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 563F221DD9;
+	Mon,  5 Oct 2026 11:17:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1791198874; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1791199056; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=LQuVkelhplC5ln1sVH8T3GvwFBI0FlaqhViY7Qpnt/8=;
-	b=1d0mUtP7t2F1qZpCWUh2lItoi7k2D4x3crIx7yJfKLMuMnNseIjKbDtsoshsDKauJuZp4G
-	zTXUSipvXaLuf8hoJSIr1BG+oC8NsCL9UCANzdzPlmI2xbkW2PvdHuOX0FGKTKmn4MCOW0
-	WEGEutDwxE9Q0yYqLpK1XPZaIWTkQyY=
+	bh=jQTHz6JHwiw8MwTkMeynQLqvfwk55Pm4WN7odpWTdEM=;
+	b=cbM79Ie/VoQFW53qbKpAFk4+Y2VIzwUz0h+g19koYJuvRiZKenD0/YaDw+rfCa+eUz+6tE
+	wf1v9L0HFqyOrq3gMlA0geM+3tnhzvcvDftyZVZRb8O9/4nNixfUi/TyyNh6/wSA3aMHnu
+	W/idP+/1PDYyn3Nrv5VRkhgdUXVJHc0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1791198874;
+	s=susede2_ed25519; t=1791199056;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=LQuVkelhplC5ln1sVH8T3GvwFBI0FlaqhViY7Qpnt/8=;
-	b=yv4Ub1yI5Pnmlnos5AIO5wssAp4lyyq59VYSqZONQTOhZvKmW1dno/Oj2u0mJ2X9hl9PEG
-	LkqLmZTDPbVM5FCA==
-Authentication-Results: smtp-out2.suse.de;
+	bh=jQTHz6JHwiw8MwTkMeynQLqvfwk55Pm4WN7odpWTdEM=;
+	b=bCYMnKluLBeuHGAUygq2yxMvoiIR6TbSZjrHgIGiD7Z26WP2zateagYiyDNWAalGNxoZWx
+	p3msL+HWQs3VtDCw==
+Authentication-Results: smtp-out1.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1791198870; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1791199052; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=LQuVkelhplC5ln1sVH8T3GvwFBI0FlaqhViY7Qpnt/8=;
-	b=WJEBqa9P+TYOaTpIM9g2Fxm9mVrujpDm+JowgnaoaQOqy27CD/hXfZ/Bo6mpQ1OJfzRi5K
-	iMm9LaqGVX/28QkssVs8dLxV4fSZioMI793CObKoaW7ouPocAFrw1AymF9xPe8XPCKBakT
-	q9yCpL1RNfTLdRF50X4AJY62vviXwqc=
+	bh=jQTHz6JHwiw8MwTkMeynQLqvfwk55Pm4WN7odpWTdEM=;
+	b=kKpRxH9XBj7Ru9VLocamXUgstdTWOUUoCJud/tPJJDrXPGyIjAhn8/KMbIk9ZdqgjPJn+m
+	0aGpq4Yx+gKSc39iy0TgUFPnrySQh7rcYm7wSuRDWFoL0GQMjwzQCZyuDk9KgNLpxvRx9d
+	cq3WU5W6tp/8yHaNLbqMclYG/91/NKs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1791198870;
+	s=susede2_ed25519; t=1791199052;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=LQuVkelhplC5ln1sVH8T3GvwFBI0FlaqhViY7Qpnt/8=;
-	b=/bGmdH2pPmjMRi89R+D97gsonzaLvGzverWz3YzF1i2DNdehnUaJlRciZcbqbV7zo37P00
-	XrbTDnuqdA/eitDA==
+	bh=jQTHz6JHwiw8MwTkMeynQLqvfwk55Pm4WN7odpWTdEM=;
+	b=57OLRd6A/6NeCPBBBvM2aMwl4rCLqUNWeIAPKvO5xpKTgB8Oy5gbFH07MqdAYJTfF0v0xB
+	h0wDETw5TOxFuvCA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0F022132D3;
-	Mon,  5 Oct 2026 11:14:30 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 185FE132D3;
+	Mon,  5 Oct 2026 11:17:32 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id o109OJWGw2rEVwAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 05 Oct 2026 11:14:30 +0000
-Message-ID: <e0822b7b-e516-434d-acbf-3a235bf1eec6@suse.de>
-Date: Mon, 5 Oct 2026 13:14:29 +0200
+	id R3gZOEuHw2o+WwAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 05 Oct 2026 11:17:32 +0000
+Message-ID: <70cfcb24-c36b-445d-8881-e302089d3935@suse.de>
+Date: Mon, 5 Oct 2026 13:17:27 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,22 +82,22 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/7] zloop: add storage element emulation
+Subject: Re: [PATCH 5/7] zloop: add degrade_element control command
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
  linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
  linux-scsi@vger.kernel.org, "Martin K . Petersen"
  <martin.petersen@oracle.com>
 References: <20261005094632.580753-1-dlemoal@kernel.org>
- <20261005094632.580753-5-dlemoal@kernel.org>
+ <20261005094632.580753-6-dlemoal@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20261005094632.580753-5-dlemoal@kernel.org>
+In-Reply-To: <20261005094632.580753-6-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Spamd-Result: default: False [-4.30 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.979];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
 	MIME_GOOD(-0.10)[text/plain];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
 	MIME_TRACE(0.00)[0:+];
@@ -111,42 +111,27 @@ X-Spamd-Result: default: False [-4.30 / 50.00];
 	FROM_EQ_ENVFROM(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
 X-Spam-Flag: NO
 X-Spam-Score: -4.30
 X-Spam-Level: 
 
 On 10/5/26 11:46 AM, Damien Le Moal wrote:
-> Emulate the storage element depopulation feature of SMR disks in the
-> zloop driver. This emulation is controlled using the new stor_elements
-> option.
+> Allow users to mark storage elements of a zloop device as degraded using
+> the new "degrade_element" control command. The element to degrade is
+> indicated using the element_id option. Example:
 > 
-> This option can take several values:
->   - ZLOOP_STOR_ELEMENTS_NONE (0): no emulation (default)
->   - ZLOOP_STOR_ELEMENTS_RDWR (1): emulate all access storage elements
->     (e.g.  read+write heads)
->   - ZLOOP_STOR_ELEMENTS_PAIRS (2): emulate fractional access storage
->     elements (e.g. pairs of read and write heads)
+> echo "degrade_element id=0,element_id=2" > /dev/zloop-control
 > 
-> If enabled with the value 1 or 2, the number of storage elements, or of
-> pairs of fractional access storage elements, is automatically calculated
-> based on the number of zones of the device so that we have at least 2 and
-> at most 32 storage elements (or 2 pairs of fractional access storage
-> elements).
-> 
-> The mapping of zones to storage elements is defined simply as the modulo
-> of a zone number and a storage element ID. E.g, removing a storage
-> element from a set of 4 storage elements will offline 1 zone every 4
-> zones.
-> 
-> The storage element management operations are specified with the
-> zloop_se_ops (struct blk_storage_elements_ops).
+> If the element ID identifies an all access storage element, read and write
+> operations targeting a zone served by the degraded lement are failed.
+> For a partial access storage element, read or write operations are failed
+> depending on the storage element type.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   .../admin-guide/blockdev/zoned_loop.rst       |   8 +-
->   drivers/block/zloop.c                         | 510 +++++++++++++++++-
->   2 files changed, 490 insertions(+), 28 deletions(-)
+>   drivers/block/zloop.c | 112 ++++++++++++++++++++++++++++++++++++++++--
+>   1 file changed, 107 insertions(+), 5 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
