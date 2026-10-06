@@ -1,150 +1,114 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C282367B8
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2026 08:15:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791274508; cv=none; b=cPlkAM0+g6rCniWHXOyjTjyRkHMgygSgQ4VU3xU/ij6YXw+bif5kJW6ekMjgv85s+51j9E2ZEWlGk0um9gD1h/c/KUA27LwzUbW5XZnKcCreCguam1gY/aSV4yWp3Q5sFEdq+hW2fMIu1E0K5UjRjpG4nXEHgIUM6uId/dO2y3A=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791274508; c=relaxed/simple;
-	bh=Htl0ci1tWgMj/biqGASwWms3pXUWKl2FImc1Oh93v4M=;
-	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
-	 Content-Type:References; b=r87agPHZXAWfARa+J4bwvShVorzrUJe/AHfxihL9O1NK0qz86LEKVRxZD1MsuGDKGlchmCdrqLW2vjC+zAS/M+P9KITAL0gJx+33652Qx6ppm9ZeWffLrY0D7E0eFEueZw/p88VTsak55sOgbtvaTK9vTokIv5hME73KulLWkOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=na6I7rjI; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEDF63DEAFA;
+	Tue,  6 Oct 2026 08:29:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791275381; cv=pass; b=ChoSXKRVYwzFaRj8oz5bqkinlwkrrzTB23CZQDIoTW3JRXyiMGC2ENznHoSJCYWw4RUa4832Idy1CaHBibiFbNtsqGxGZgj7PdNkklxS8fw938myj0SfC0lW5jm47o3QCW5zwDqnID3kyUlH55NklKKwynXWahimhYHa5A+anBs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791275381; c=relaxed/simple;
+	bh=4ok4CNjLLt7YE2aQITRKh1c1uP2M1Efp4tUE95JfGrM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=HNbkiuYueKeberKRFOSoRJRBd2pAjXFKYKyzo72dJDub35ZzHIDnRahF9NcwNaEirNMxOWD14t4COqMVl6Cqs1K9Zr+RFY66vMSSzvSnqF1KmPmDByzVHSCQPlnQQRhVd3LxRJGodNbVB5rZLVu06yoQkyU2tryq70PTTK/yMDQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=oY9YUV9+; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=Mse+vnxw; arc=pass smtp.client-ip=85.215.255.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="na6I7rjI"
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261006081503epoutp040f9e9547733c99db2c706676d3d07b34~b4quv8w972166221662epoutp04T
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2026 08:15:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261006081503epoutp040f9e9547733c99db2c706676d3d07b34~b4quv8w972166221662epoutp04T
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1791274503;
-	bh=u5hrVf50ARWV2F+q0jWLTvUB8p3+4UzRCpVj1h6GS8s=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=na6I7rjIqF2X0DTmdqFgfRR8tYVp0mesRfQn2k6g/6f/X2x4AWBmw3OVrFZ/8YAD3
-	 ctrpGWq7FcO+nSm1a+nALqnNSndh2Fza+yMvMj0sgZ5r8z4J5rtStGSt1aU7sXVf07
-	 BwISQ9g2Vz0m9pyg8CHkTLvobjw4ZXdNnW5HlUHk=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTPS id
-	20261006081503epcas2p47640f5ceafd292066798d6306ff97c2f~b4quXZ1hg0322703227epcas2p4F;
-	Tue,  6 Oct 2026 08:15:03 +0000 (GMT)
-Received: from epcpadp1new (unknown [182.195.40.141]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4hzTZb2kfMz2SSKm; Tue,  6 Oct
-	2026 08:15:03 +0000 (GMT)
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="oY9YUV9+";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Mse+vnxw"
+ARC-Seal: i=1; a=rsa-sha256; t=1791275355; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=OKKeVjpwU/Ckbq/6dddXKjou7HHpp5K/DAjPD9rPcQ2bIsN5ol5mfOGTULPvVgiQZD
+    sC46ctr1dd0f75x0PQx74QZN8fpTYvnd2xeT5pV/KZxcuQ+Uk5rshkTwAgnnkgJX0tQW
+    nQFG8aOwDLibPHWz4MbaGadMQ6FzeT0vNcc8NQNZ9QKOV/Y+ztcDbqvKPmLl1ZFYUelr
+    OejwQ47M9i6yXyYkIn3IPuADkEi6v2CdxPzAVJLIx74uQNFwfPWdSrjOPPuuHEqEWVXQ
+    KJf81xZnjLq1kRlI8reEjHfbHMC68ssFo4yZcfXRK6H9imY+OjHMKxCpy/wwK1LriOcW
+    Mrtg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1791275355;
+    s=strato-dkim-0002; d=strato.com;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=DE3fGC9qOKrA9fymSxeZ/Uqcz2Iv3Xz/JK0nunuDjEU=;
+    b=SwPtgXeWczpINL8/2IAwZzXEpHR++JDV0vsRe7sxvYrGrARPKnpDKAGe7TjkLDlh8t
+    PjjuAJWLLnG5nbTAzDV6lBsYjc4n3wkuDLM2EQz+X0OTueXJYqlMHK/IyRMkvj9f79Eb
+    QtFGd2dhfycEsLO/ZcmbXcJzqLC9YolVD9tLLBjuCIe0lSbzxn23H+VW97lKcIBDo4k4
+    V235ib1QvNTjisj+F1xL+LjBxVGOIEcYENzscb8QAUC60l8/HYT9Dd/XjhW86Lg8z7y7
+    AjuNS0uss6lihhYN1TQHfKAIrI6i2vWVSMY0wDP5Ue9XLSqPGvvzCJY/60dQWtLSqVU8
+    cL4A==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo01
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1791275355;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=DE3fGC9qOKrA9fymSxeZ/Uqcz2Iv3Xz/JK0nunuDjEU=;
+    b=oY9YUV9+p5yVsq5Fe+R0+mLGmiNPOdV2UiGPL06lLftVfanVbTHNYL9jlOgBl7pSUt
+    QQT67+5hOCE4jh9EmNsDmlD/qheIFFe2+hDohaVgruAQozBpXE1XoxpMtn1++hTBokzA
+    eHLQ/eD0ZcpUfH1uyS245bpZb2SwnU1JUAjaAtRL4HGVQ7tKtLtgHNWabu88Nv4RaFyF
+    edR20DMgm/K9APqtfTqscWm/yV/bBVtgS6rYUGZIr6UIlm9DVIH38kwwEI7DkHahAt0/
+    seCiAlOTAdp+68AeKQuFogPnkZXTg4DP1pcVxThjkiOXFQkTq8Ti9o88bBUYTpxHr9Ce
+    ITVQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1791275355;
+    s=strato-dkim-0003; d=iokpp.de;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=DE3fGC9qOKrA9fymSxeZ/Uqcz2Iv3Xz/JK0nunuDjEU=;
+    b=Mse+vnxwhaecVrMvNx/VAUUBw1l8mYKZvEjtv0lUQnlsPqeIRWOc37RIMt7GbcDauA
+    xxZggH55QCSzPlhJKvAA==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O2J2YOom0XQaPis+nU/9K"
+Received: from Munilab01-lab.micron.com
+    by smtp.strato.de (RZmta 55.6.2 AUTH)
+    with ESMTPSA id z04e1c2968TFU4o
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Tue, 6 Oct 2026 10:29:15 +0200 (CEST)
+From: Bean Huo <beanhuo@iokpp.de>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Stanley Jhu <stanleyjhu@google.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>
+Subject: [PATCH] scsi: MAINTAINERS: Add Bean Huo and Stanley Jhu as UFS reviewers
+Date: Tue,  6 Oct 2026 10:29:07 +0200
+Message-Id: <20261006082907.3405554-1-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: Re: [PATCH v2 2/2] scsi: ufs: Serve the device init reads from one
- aggregated read
-Reply-To: hyenc.jeong@samsung.com
-Sender: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
-From: Hyeoncheol Jeong <hyenc.jeong@samsung.com>
-To: Bean Huo <beanhuo@iokpp.de>, "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "mkp@kernel.org" <mkp@kernel.org>,
-	"avri.altman@sandisk.com" <avri.altman@sandisk.com>, "bvanassche@acm.org"
-	<bvanassche@acm.org>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC: Jinyoung Choi <j-young.choi@samsung.com>, Alim Akhtar
-	<alim.akhtar@samsung.com>, "beanhuo@micron.com" <beanhuo@micron.com>,
-	"can.guo@oss.qualcomm.com" <can.guo@oss.qualcomm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <5339f61b72b28af335b4761acd2f0f05744501de.camel@iokpp.de>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1582071873.61791274503378.JavaMail.epsvc@epcpadp1new>
-Date: Tue, 06 Oct 2026 17:01:47 +0900
-X-CMS-MailID: 20261006080147epcms2p6699646c32fc450655c747f2f558a86a7
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20260930050201epcms2p13ab67182445b0555acc8d27b927cda86
-References: <5339f61b72b28af335b4761acd2f0f05744501de.camel@iokpp.de>
-	<20260930050201epcms2p13ab67182445b0555acc8d27b927cda86@epcms2p1>
-	<1653986196.21790747102619.JavaMail.epsvc@epcpadp1new>
-	<CGME20260930050201epcms2p13ab67182445b0555acc8d27b927cda86@epcms2p6>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 
-Hi Bean,
+From: Bean Huo <beanhuo@micron.com>
 
-Thank you for the detailed review.
+Bean Huo and Stanley Jhu have been contributing to and reviewing
+changes in the UFS subsystem for a number of years, and would like
+to help share the review load going forward.
 
-On Fri, 02 Oct 2026 17:50:19 +0200, Bean Huo wrote:
-> On Wed, 2026-09-30 at 14:18 +0900, Hyeoncheol Jeong wrote:
-> > (bWriteBoosterBufferLifeTimeEst is served from the packet only in the
-> > shared-buffer mode)
->
-> I suggest we should aggregate-read as many of them as possible. If we lose even
-> one descriptor, this feature becomes useless.
+Add both as reviewers (R:) for the UFS subsystem.
 
-You are right. As this is the first step, I took a conservative approach
-and left out the reads that are issued asynchronously, such as the power
-and unit descriptors. I agree that covering as many of the init reads as
-possible is what makes this worthwhile.
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ MAINTAINERS | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> table 14.28 gives the size of each attribute, but I could not find where Spec
-> defines the layout of the attributes group in the aggregated data packet,
-> section 10.7.9.14 only defines the group header.
->
-> dDynCapNeeded (09h) is an array attribute; its number of indexes is MaxNumberLU.
-> 1Ch-1Fh can also be per-LU in dedicated WB mode. If a device sends one entry per
-> index, or keeps a slot for 01h or 11h-13h, every offset after it moves. Then
-> bMaxNumOfRTT, bRefClkGatingWaitTime and bWriteBoosterBufferLifeTimeEst are read
-> from the wrong bytes, with no error and no fallback to a single query.
-> ufshcd_set_rtt() then writes a value based on that wrong data.
->
-> Has this been tested on more than one vendor's UFS 5.0 device?
-
-You are right, and thank you for the examples. It has been tested
-only on a Samsung UFS 5.0 device.
-
-I think this layout needs to be specified in more detail in the
-specification. Once it is, I plan to rework the patch and submit it
-again.
-
-> if the reply is cut short (the device may return less than requested), a group
-> that is complete but its next offset points past the end is rejected before its
-> type is checked.
-
-I will fix this when I rework the patch.
-
-> > +       if (hba->dev_info.wspecversion < 0x500 ||
-> > +           hba->dev_info.agg_read_unsupported)
-> > +               return;
->
-> is this feature mandatory? or you assume this feature should be supported by
-> defualt?
-
-JESD220H lists AGGREGATED READ in Table 10.32 without marking it
-optional, and I could not find a capability bit for it. The patch
-therefore assumes a UFS 5.0 device supports it, but falls back to
-individual queries if the device rejects it.
-
-> If the device rejects the opcode with a query response error, is there a reason
-> to retry? Retrying makes sense for a transient error, but not for "invalid
-> opcode"
-
-Agreed. A query response error should not be retried.
-
-As I replied to Stanley, I think consuming these groups should wait
-until the JEDEC specification clarifies the intra-group format. In the
-next version I will keep only the interface from patch 1 and drop the
-users in patch 2, and I will address the points above when they come
-back.
-
-Thanks,
-Hyeoncheol
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7b5c27c68e5d..4ad924aeaf16 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -28042,6 +28042,8 @@ F:	lib/union_find.c
+ UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER
+ R:	Alim Akhtar <alim.akhtar@samsung.com>
+ R:	Bart Van Assche <bvanassche@acm.org>
++R:	Bean Huo <beanhuo@micron.com>
++R:	Stanley Jhu <stanleyjhu@google.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	Documentation/devicetree/bindings/ufs/
+-- 
+2.34.1
 
