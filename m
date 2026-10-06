@@ -1,43 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54C26212564;
-	Tue,  6 Oct 2026 01:36:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BA401F192E
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2026 01:39:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791250593; cv=none; b=j2/MMMwYdXOm2w0ZfyE0jraob6HhYZg4iK4L8/2kbcgrFzOEHaD7HAvQ2dgD8CLHOisikTTUjSXJliLHyXJ6dYJSsK/u1GTUp1G8cBW8tcVhi3tHwFtysouEAOlMqqEbVH7AzXVVVLjUECiRxEbp/8LTR/Gc+p5P4cgUDqr22V8=
+	t=1791250755; cv=none; b=HHAeWdjIvrrZumEEOwvURRKqk4f5xs0eVoqe/cLmA6Ggji1/lHBexj4RUr3rtHOiUIanjnMzENj4FavpS6m86IADOO1W4DHQqnE0HX6YhMhwTMjn5PsjiOTJYcF5BlxK8xrSfudvlBJwheICnfekVnzPsH08V4+5baKn+xSkbVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791250593; c=relaxed/simple;
-	bh=i6E5MeaEdIgUeWd5Ijpb2at9MObWyE/kdCk+O/bii1E=;
+	s=arc-20240116; t=1791250755; c=relaxed/simple;
+	bh=3puhlfhXFz6QYnlc6ehD6YFDP1M7VSI+riT96oQQ1Bs=;
 	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 MIME-Version:Content-Type; b=tmuhoNlOqqpJj/LlMtWRC64WXu7wVG2fv5RrN199AAFIuPdC1YANjXipXBIxWSEVsBlCb8wnlezhkispuoYs8A/ijVVmaBBPp1KZT3Sllh50rEbd7pTvcHHElfVFNfUwaEatltt9M8wWVNGqfBIhmjHFtmSq9ZifaaDyJkZUyHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fDR/D9FP; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=m9KmiH1SUqhadvPOtNBPh2VM7FAzDVohiyIzOKVFK5yONGjVzFt+sB+2q4UPE9JAjcWAKIouibgAMK58ZIADalOYUn5erPl2yPR4GonvjV+mXYvuSfd0dKN4FVhXB/XYxirdVaE/A/ga2L44SPTo+dPDW5GuGbaqIC7kDr8mzaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b1zqnj3e; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fDR/D9FP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 589EF1F000FF;
-	Tue,  6 Oct 2026 01:36:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b1zqnj3e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FDBE1F000FF;
+	Tue,  6 Oct 2026 01:39:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791250591;
-	bh=GIvVcW88RZglILDCoyyKFwSsMO7B/P0C1cMLxL640b4=;
+	s=k20260515; t=1791250753;
+	bh=iFbquo8nBihlg4W199Neu5rC7ng/GKHbIF4tZMjFVJI=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=fDR/D9FPhrsjCzG+QJW6GwqhtUAMM0KTHoRu2nSTkBF3WKpPzmF8MXPJCIwohBHfF
-	 dyiiuKlvCsVNCF9yoKT2fdTV5SgbfwZhY+EgYf/yDt/vfDCxn8ONaoBvG9dv3nM3ks
-	 18N+jC0gzvEN6MBBowNONdAI3OoqmhUFgwGQsrYQVzA9gpZGjV6vdKQhDLbiLncdPl
-	 j+tt+Q5UJMcSIyHky9gmxh7ltDXqLYk7E08qHcz2GSTE/QL6ZbYoYbs3HErNeGXNHN
-	 zfJHVyH0LCzo30GXf8DM4RrqXvYBF6tF5XjFgxGEQqLy3wrCDtsMPHq/BWFqX2x4+m
-	 DCXcbrsnScevg==
-To: Stanley Jhu <stanleyjhu@google.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,  Avri Altman
- <avri.altman@sandisk.com>,  Alim Akhtar <alim.akhtar@samsung.com>,  Bart
- Van Assche <bvanassche@acm.org>,  "James E . J . Bottomley"
- <James.Bottomley@HansenPartnership.com>,  linux-scsi@vger.kernel.org,
-  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: Remove Avri Altman as UFS reviewer
-From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-In-Reply-To: <20260930135947.2339918-1-stanleyjhu@google.com>
-Message-ID: <yq1ld8bk3uj.fsf@mail.kernel.org>
-References: <20260930135947.2339918-1-stanleyjhu@google.com>
-Date: Mon, 05 Oct 2026 21:36:30 -0400
+	b=b1zqnj3eh+JDUPlsaNv+qfT9iQV6Jwpsd/GLIlz4tIccFJNTzZitm/P91Vos5q66R
+	 t5KqHT5g3ll6qAfWOb6Lp6qy6y4aMXnRuQYIiLOO84A5k/OTLCih/8FU5FgOSBkuid
+	 RoTKXfO9f71xjo3Gt7b9DxmMeX5Xa5R6lDr3xztj3MUm/0iDUC1rcF6lULijQJthWG
+	 VCpTab3rSlVAPR7DQEQneCYD9kdihLg35EIsufnn/TN56IRO3dRicD7SfUtanzfTuh
+	 n5Ms8LkfpS0SEJEd4fr41LCVEQQzjDH2WHMkPBcb0NxST58IyOTedqypxf1gsYD1D3
+	 TUumgMqTbdFxA==
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3 0/7] scsi_debug: Enable lock context analysis
+From: "Martin K. Petersen" <mkp@kernel.org>
+In-Reply-To: <2fe7fd58-fda8-45db-830f-3197999a2538@acm.org>
+Message-ID: <yq1fqyjk3tm.fsf@mail.kernel.org>
+References: <cover.1790723966.git.bvanassche@acm.org>
+	<yq1a4oulv5e.fsf@mail.kernel.org>
+	<2fe7fd58-fda8-45db-830f-3197999a2538@acm.org>
+Date: Mon, 05 Oct 2026 21:39:12 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,12 +45,16 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Stanley,
+Bart,
 
-> At Avri's request, remove him as a reviewer of the UFS host
-> controller driver. The listed wdc.com address also bounces.
+>> There are several conflicts wrt. Niklas' zoned write series. Please
+>> rebase, thanks!
+>
+> Is Niklas' series already available on kernel.org? This is what I see:
 
-Applied to 7.4/scsi-staging, thanks!
+Ah, a recent infrastructure change meant my trees did not get pushed.
+
+Thanks for spotting! I'll get this resolved shortly.
 
 -- 
 Martin K. Petersen
