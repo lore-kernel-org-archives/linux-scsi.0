@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EA1A388E76;
-	Tue,  6 Oct 2026 23:52:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 478891D54FA;
+	Tue,  6 Oct 2026 23:53:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791330770; cv=none; b=EpHxS2S0duEYRBdi7Kx/WvUdFGUAPCadU/SU7ujU2748zYY3hp9yIWpnQqveqf4AdraWMl2TzeZbZfNlHRqGsTch1XODXfFMPmbYCIhcbNhBEgrtInqM5j1E/8ZoCLYmyIyLv+vN9qRvTRVVxJLcJ7F/KjUvoGgr5iLp5obnav4=
+	t=1791330827; cv=none; b=QSVQzvcJcejBmFdSLi7oenxDaq9o4i+KIg03k8O5TMoZls0Qvd853R+CelLijtjKmVjLwL/dBo3FyZCxBNCnF2PnOzIKbKCL2/TGp5hsWwpatZaSNsI6dNEGilUwCz93xMsgAjqNrThJDxEq0CwPgeenqgzSuTD441yz1YviGuQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791330770; c=relaxed/simple;
-	bh=2Vqjq8TtVtJ/EtFYNTVjMITquBIXW0D1ZW3r1RUbXFw=;
+	s=arc-20240116; t=1791330827; c=relaxed/simple;
+	bh=zuvn9k4hxJ+Tngo984R4MXiS9HaZbEndRoIl2tUOybY=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=OE2Zsr1fbLd4ah2nXCyyI3xNGawxJrNIVwOIVFQdtq8p32tZ5PnFmc8pAxJlGv5nHgFgZBCC1jhFon97BNZc9AyCQBQw8b3Vl5K8oZ1sWsz75K3Nqxw0F7TGslbe84erNDXoOOzNUoRBAZpdeFmtLm0uZJY3GseFFxIL8JOmwG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=THDnYGbP; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=aJNGMwAySVjWMNnCnUbtgGbUC/gs5QhHpv/noKBpRaTWakZQeNfPdKodeQqWzf3qY4jXTefrlIFMRTxk8D4poGXrnVSCFPfLPWqM3AUy5YaH0EV/WhGjvji92wrDQceLmpWtcVfoqsE1WfFFbbwo/4gtIfUlQT4wp1R52CRq86o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DRgJvHst; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="THDnYGbP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D2A61F0089B;
-	Tue,  6 Oct 2026 23:52:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DRgJvHst"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80E2A1F0089B;
+	Tue,  6 Oct 2026 23:53:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791330768;
-	bh=2Vqjq8TtVtJ/EtFYNTVjMITquBIXW0D1ZW3r1RUbXFw=;
+	s=k20260515; t=1791330825;
+	bh=rRKc3JZ3jGbu//7T0wnFkJzhj7nF53QvzvwgHLTH0ZU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=THDnYGbPYn9OM1dFEG0ail0KrF50HEkj8/XZcdLPnKUhkg4YtA14fhRRdnIUJgw6A
-	 lx1vXJBUBKzwUYr5XxBDU4B/u3XQ6Dcjd06Enk6ND3dxvIv6WuR8pV1prJ6SOFM34i
-	 t+KonqFSYu8vxG2iZLYCbRsKn2YEoaU3gl1tuxqCR6JjLlKFXNVa32Xv+e4At4WYM2
-	 TLjE4iO+sodvz+41MCUCybQd6mWDxGuT9EhyQLKbgBAA9Jo+sECtfgIyQ6167zFwXM
-	 MIKa4DArDevOf+XaXM0YvpVYPntadAWeQV5/lGr2pbULM5ztCVuNEZXKey5wevoDla
-	 O+NZUisy6oNoQ==
-Message-ID: <sashiko-outbox-162532@kernel.org>
+	b=DRgJvHstuSTIA06fqzD8vYEMd5PV33qWxS+8Lms0pgGFNiMvhbVyQDvAa/Id7DGLi
+	 v3dzGL8hqY7xbrieJD6SolTyjDekmZfqKzlBlo9//mTneqEF3zAZDfRhKmo0N9pjyA
+	 QOIokgsh+cyY4ddwdkXR+dXZ1y0qWS4DiOuwR8DJm4ySPUhIg9Ru8R/JBcxXDE80jr
+	 Xna6uvy5gmKdOJpH/J6O/35qafiToE065ic49HIKffzNYpJi3hRLVsJn7aI5XenopY
+	 zgiLR/D145b8YshDoNIuuvyPTK5x8DKVPBDTYJVP2VeMOz2krA1oEBU4gHn79eelGA
+	 VvuLo8cJwDGkw==
+Message-ID: <sashiko-outbox-162536@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 05/11] scsi: sr: retry unfinished media revalidation
- on the next open
+Subject: Re: [PATCH v9 04/11] scsi: sr: initialize logical block size before
+ registering the disk
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Phil Pemberton" <philpem@philpem.me.uk>
-Cc: linux-scsi@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20261006234202.1139018-6-philpem@philpem.me.uk>
+Cc: dlemoal@kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20261006234202.1139018-5-philpem@philpem.me.uk>
 References: <20261006234202.1139018-1-philpem@philpem.me.uk>
- <20261006234202.1139018-6-philpem@philpem.me.uk>
+ <20261006234202.1139018-5-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 06 Oct 2026 23:52:47 +0000
+Date: Tue, 06 Oct 2026 23:53:45 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,43 +47,79 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] scsi: sr: uninitialized stack memory read of sshdr in sr_revalid=
-ate_disk()
+- [High] scsi: sr: physical_block_size permanently stuck at 2048 after hot-=
+plugging 512-byte media
 --
 
-commit 6831e2d4751ec5b84e9b7b08a5e93e7b6123ef75
+commit e4bcc9c7bb99e2ad5359e3deb3e003674d2e6c22
 Author: Phil Pemberton <philpem@philpem.me.uk>
 
-scsi: sr: retry unfinished media revalidation on the next open
+scsi: sr: initialize logical block size before registering the disk
 
-This commit updates the scsi sr driver to keep media revalidation pending
-until it completes, handling cases where a new disc is still spinning up.
-It introduces a mechanism to return -ENOMEDIUM for blocking opens if the
-drive reports it is becoming ready, ensuring the queue limits update is
-eventually completed.
+This commit updates the logical block size of the request queue to match
+the driver's default sector size (2048 bytes) if the drive is empty during
+probe. This attempts to prevent mismatched block sizes when reading from
+media inserted later.
 
-[Severity: Medium]
-Could the new check in sr_revalidate_disk() result in an uninitialized stack
-memory read if the scsi command fails early?
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index c36c54ecd354b..268f15a4fdb88 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
 
-In drivers/scsi/sr.c at line 485 within sr_revalidate_disk(), the code
-evaluates scsi_sense_valid(&sshdr) and reads sshdr.sense_key, sshdr.asc,
-and sshdr.ascq. However, sshdr is allocated on the stack without
-zero-initialization.
+[ ... ]
 
-If scsi_test_unit_ready() encounters an early failure (such as an allocation
-failure in scsi_alloc_request() returning -ENOMEM or -ENXIO), it returns the
-negative error code immediately without populating sshdr. Since the new log=
-ic
-checks scsi_sense_valid() whenever scsi_test_unit_ready() returns non-zero,
-it will read the uninitialized sshdr.response_code.
+> @@ -701,6 +702,16 @@ static int sr_probe(struct scsi_device *sdev)
+>  	if (error)
+>  		goto unregister_cdrom;
+> =20
+> +	/* If no medium was ready, match the queue to the driver's guess. */
+> +	if (queue_logical_block_size(sdev->request_queue) !=3D sdev->sector_siz=
+e) {
+> +		lim =3D queue_limits_start_update(sdev->request_queue);
+> +		lim.logical_block_size =3D sdev->sector_size;
+> +		error =3D queue_limits_commit_update_frozen(sdev->request_queue,
+> +							  &lim);
+> +		if (error)
+> +			goto unregister_cdrom;
+> +	}
+> +
 
-If the random stack data happens to match the 0x70 mask required by
-scsi_sense_valid(), the code will further evaluate the uninitialized
-sense_key, asc, and ascq fields. Can this cause unrelated errors to be
-incorrectly masked as -ENOMEDIUM, or trigger KMSAN uninitialized memory
-warnings?
+[Severity: High]
+Does this logic introduce a regression where physical_block_size becomes
+permanently stuck at 2048 when a 512-byte medium is inserted later?
+
+If a drive is empty during sr_probe(), this code promotes the
+logical_block_size to 2048. Because the block layer one-way promotes
+physical_block_size to match logical_block_size, blk_validate_limits()
+will automatically latch physical_block_size to 2048:
+
+block/blk-settings.c:blk_validate_limits() {
+        ...
+        if (lim->physical_block_size < lim->logical_block_size) {
+                lim->physical_block_size =3D lim->logical_block_size;
+        ...
+}
+
+When a 512-byte medium is later hot-plugged, sr_revalidate_disk() shrinks
+logical_block_size back to 512:
+
+drivers/scsi/sr.c:sr_revalidate_disk() {
+        ...
+        lim =3D queue_limits_start_update(q);
+        lim.logical_block_size =3D sector_size;
+        lim.features |=3D BLK_FEAT_ROTATIONAL;
+        return queue_limits_commit_update_frozen(q, &lim);
+        ...
+}
+
+However, blk_validate_limits() never automatically shrinks
+physical_block_size. Could this leave physical_block_size and io_min
+permanently at 2048, continuing to cause mismatched block size issues?
+
+>  	error =3D device_add_disk(&sdev->sdev_gendev, disk, NULL);
+>  	if (error)
+>  		goto unregister_cdrom;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261006234202.1139=
-018-1-philpem@philpem.me.uk?part=3D5
+018-1-philpem@philpem.me.uk?part=3D4
